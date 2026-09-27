@@ -196,6 +196,8 @@ def _nexus(nexus_rows, notebook, room_rows) -> dict:
             if r.get("type") == "strategy" and lab.is_ours(r.get("origin"))}
     verdicts = [v for room, v in _latest(room_rows, "verdict").items()
                 if room not in ours]
+    statuses = [s for room, s in _latest(room_rows, "status").items()
+                if room not in ours]
     return {
         "questions": sum(1 for r in nexus_rows if r.get("type") == "question"),
         "answered": len({str(a.get("id")) for a in answers}),
@@ -203,7 +205,9 @@ def _nexus(nexus_rows, notebook, room_rows) -> dict:
         "gated": len(gates),
         "gate_pass": sum(1 for g in gates if g.get("verdict") == "pass"),
         "survived": sum(1 for v in verdicts if v.get("verdict") == "survived"),
-        "refuted": sum(1 for v in verdicts if v.get("verdict") == "refuted")}
+        "refuted": sum(1 for v in verdicts if v.get("verdict") == "refuted"),
+        "inconclusive": sum(1 for v in verdicts if v.get("verdict") == "inconclusive"),
+        "running": sum(1 for s in statuses if s.get("status") == "running")}
 
 
 def report(nexus_rows: list[dict], notebook: list[dict], room_rows: list[dict],

@@ -86,6 +86,12 @@ def test_the_deep_pass_is_two_lines_what_we_fixed_and_what_went_to_them():
     counted = morning.deep_pass(DEEP.replace(
         "* **Bezpečnostní brána", "* **30 z 31 skutečných nálezů (44 tvrzení: 34 z auditu).** x\n* **Bezpečnostní brána"))
     assert counted["lines"][0]["count"] == 30
+    # A report number is not a count, and "nothing" is none (R05, 3/3):
+    # "#133" read as 133 fixes, "Nic." as one.
+    named = morning.deep_pass("# T\n## Opraveno\n- **#133 ověřen, pass poslán.**\n")
+    assert named["lines"][0]["count"] == 1, named
+    nothing = morning.deep_pass("# T\n## Opraveno\n- **Nic.** noc bez oprav\n")
+    assert nothing["lines"][0]["count"] == 0, nothing
     assert all(len(line["text"]) <= 140 for line in said["lines"])
     assert morning.deep_pass("")["lines"] == [], "no pass on record is no lines"
 
@@ -103,15 +109,22 @@ def test_the_deep_pass_is_two_lines_what_we_fixed_and_what_went_to_them():
          "at": "2026-09-26T05:00:00+00:00"},
         {"type": "vendor_status", "report_id": 132, "status": "pending",
          "at": "2026-09-26T05:10:00+00:00"},
+        # Paid is accepted, not fixed (qa/fold.py): #130 and #132 were paid
+        # and still reproduced, and the report called them fixed (R02, 3/3).
+        {"type": "vendor_status", "report_id": 132, "status": "paid",
+         "at": "2026-09-26T21:30:00+00:00"},
+        {"type": "vendor_status", "report_id": 128, "status": "fixed",
+         "at": "2026-09-26T06:00:00+00:00"},
         {"type": "verification_outcome", "outcome": "accepted", "verdict": "pass",
          "report_id": 113, "at": "2026-09-25T23:20:00+00:00"},
         {"type": "verification_outcome", "outcome": "unknown", "verdict": "pass",
          "report_id": 114, "at": "2026-09-25T23:20:00+00:00"}]
-    ticks = [{"type": "tick", "at": "2026-09-26T00:00:00+00:00", "decide": ["hunt sweep"]},
-             {"type": "tick", "at": "2026-09-26T03:08:00+00:00", "decide": ["hunt bugs"]},
-             {"type": "tick", "at": "2026-09-25T10:00:00+00:00", "decide": ["hunt sweep"]}]
-    theirs = morning.cymetica(events, ticks, since)
-    assert theirs == {"sweeps": 2, "filed": [131], "fixed": [131], "verified": [113]}, theirs
+    # A sweep that RAN preregistered its run; a tick that only decided one
+    # counted, and the operator's own /qa-sweep did not (R06, 3/3).
+    registered = ["2026-09-26T00:05:00+00:00", "2026-09-26T17:03:34+00:00",
+                  "2026-09-25T10:00:00+00:00"]
+    theirs = morning.cymetica(events, registered, since)
+    assert theirs == {"sweeps": 2, "filed": [131], "fixed": [128], "verified": [113]}, theirs
 
 
 def _report(net: float, rooms: list[dict], questions: int = 80) -> dict:
@@ -122,7 +135,8 @@ def _report(net: float, rooms: list[dict], questions: int = 80) -> dict:
                          "memecoins": dict(sector, net_pct=-19.8),
                          "funds": dict(sector, net_pct=None, n=0)},
             "nexus": {"questions": questions, "answered": 50, "picks": 30,
-                      "gated": 30, "gate_pass": 20, "survived": 0, "refuted": 1},
+                      "gated": 30, "gate_pass": 20, "survived": 0, "refuted": 1,
+                      "inconclusive": 2, "running": 7},
             "rooms": rooms}
 
 
@@ -209,6 +223,9 @@ def test_the_page_is_one_short_czech_page_in_the_artifact_shape():
     # the numbers are: went to paper, lost, earned, still running.
     assert "Čeká na tebe" not in html
     assert "na papír" in html and "prodělalo" in html and "ještě běží" in html
+    # Each figure is his rooms' own count, not gate passes minus verdicts:
+    # 20 - 0 - 1 would have said 19 running (R07, 3/3).
+    assert "7 ještě běží" in html and "2 bez závěru" in html, html
     assert "−4,2" in html and "Karty −3,2 % → −4,2 %" in html
     # Both themes, the artifact contract's way.
     assert ':root:not([data-theme="light"])' in html and ':root[data-theme="dark"]' in html

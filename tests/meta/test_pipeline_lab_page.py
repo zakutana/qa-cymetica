@@ -111,7 +111,8 @@ def _report() -> dict:
             "funds": sector(n=0, net_pct=None, usdc=None, stake_usdc=None, wins=0),
         },
         "nexus": {"questions": 88, "answered": 53, "picks": 31, "gated": 31,
-                  "gate_pass": 22, "survived": 0, "refuted": 1},
+                  "gate_pass": 22, "survived": 0, "refuted": 1,
+                  "inconclusive": 2, "running": 9},
         "rooms": [
             {"id": "STR-0001", "product": "cards", "archived": False,
              "net_pct": 0.59, "usdc": 2.95, "stake_usdc": 500.0, "verdict": None},
@@ -163,10 +164,10 @@ def test_each_experiment_lands_in_its_sector_and_its_group():
         "archive", "nothing bought")
     assert by_id["STR-0004"]["group"] == "done"
     assert by_id["STR-0004"]["reason"] == "drawdown 11.8% past 10% limit"
-    # A bot that hit its own take-profit is over: not "live" for two more
-    # days, and the reason says which limit it hit (2026-09-26).
+    # A bot that stopped itself in profit is over: not "live" for two more
+    # days, and the reason says where it stopped (2026-09-26).
     assert (by_id["STR-0003"]["sector"], by_id["STR-0003"]["group"],
-            by_id["STR-0003"]["reason"]) == ("bots", "done", "take-profit +3%")
+            by_id["STR-0003"]["reason"]) == ("bots", "done", "stopped by itself at +3%")
     assert by_id["STR-0003"]["trading"] is False
     # The rest of the stopped-bot rule lives in helpers below, not tests of
     # their own: tests/meta is held to a ceiling.
@@ -376,7 +377,7 @@ def test_the_bots_room_says_whether_each_bot_trades(tmp_path):
     room = _drawn(tmp_path, "bots", after='window.labShow("bots");').get("room", "")
     # A bot that stopped by itself says so once -- its reason -- rather than
     # "idle" and the reason side by side.
-    assert "Bollinger Bandit" in room and "take-profit +3%" in room
+    assert "Bollinger Bandit" in room and "stopped by itself at +3%" in room
     assert ">idle<" not in room
 
     # And the other two answers, which the fixture never drew (deep pass
@@ -503,8 +504,11 @@ def _check_a_bot_that_stopped_itself_is_done_and_says_which_limit_it_hit():
     them in profit. Cymetica's answer to MSG-0060: the platform pauses a paper
     bot at its own stop-loss or take-profit. A stopped bot's result cannot
     change, so it is done, and its reason is the limit and the result."""
+    # A stop in profit that bot_stops calls "unexplained" is not named a
+    # take-profit: their own answer (a2a_42be5226, 2026-09-25) lists self-stops
+    # that fire in profit for other reasons (deep pass 2026-09-27, R08, 2/3).
     take = _bot_room({"trading": False, "stop": {"cause": "unexplained", "pct": 29.0}})
-    assert (take["group"], take["reason"]) == ("done", "take-profit +29%")
+    assert (take["group"], take["reason"]) == ("done", "stopped by itself at +29%")
     assert take["left_days"] is None, "no days left on a test that is over"
     loss = _bot_room({"trading": False, "stop": {"cause": "their_guard", "pct": -10.0}})
     assert (loss["group"], loss["reason"]) == ("done", "stop-loss −10%")

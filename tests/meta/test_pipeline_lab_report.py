@@ -292,6 +292,14 @@ def test_the_nexus_line_follows_his_questions_to_what_survived():
     rooms = _fixture()["room_rows"] + [
         {"type": "strategy", "id": "STR-0099", "origin": "OUR-0001", "title": "ours"}]
     assert _report(room_rows=rooms)["nexus"]["picks"] == said["picks"] == 5, said
+    # What still runs and what closed without a verdict, counted from his rooms
+    # themselves -- not derived as gate passes minus verdicts, which mixed card
+    # gates with bot verdicts and called a stopped room running (deep pass
+    # 2026-09-27, R07, 3/3).
+    assert said["running"] == 2 and said["inconclusive"] == 0, said
+    unsure = _fixture()["room_rows"] + [
+        {"type": "verdict", "room": "STR-0005", "verdict": "inconclusive"}]
+    assert _report(room_rows=unsure)["nexus"]["inconclusive"] == 1
 
 
 @qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")

@@ -1030,6 +1030,9 @@ def _bots_stopped(panel: dict) -> list[dict]:
 
 
 def _stop_reason(stops: list[dict]) -> str:
+    """A loss-side halt is their stop-loss (bot_stops: `their_guard`); a stop
+    bot_stops calls `unexplained` says only where it stopped -- their own
+    answer lists self-stops in profit that are not a take-profit."""
     if len(stops) > 1:
         return f"all {len(stops)} stopped"
     pct = stops[0].get("pct")
@@ -1037,7 +1040,9 @@ def _stop_reason(stops: list[dict]) -> str:
         return "stopped by itself"
     pct = round(pct, 1)
     shown = _signed(pct, 0 if pct == round(pct) else 1)
-    return f"{'take-profit' if pct > 0 else 'stop-loss'} {shown}%"
+    if stops[0].get("cause") == "their_guard":
+        return f"stop-loss {shown}%"
+    return f"stopped by itself at {shown}%"
 
 
 def _reason(group: str, panel: dict) -> str | None:
@@ -1596,7 +1601,9 @@ function nexusLine(ln) {
     `<b>${ln.answered}</b> answers ${ar} <b>${ln.picks}</b> ideas ${ar} ` +
     `<b>${ln.gate_pass}</b> of ${ln.gated} passed backtest ${ar} ` +
     `<b class="${ln.survived ? "up" : ""}">${ln.survived}</b> worked` +
-    (ln.refuted ? `, ${ln.refuted} didn't` : "") + took + quiet;
+    (ln.refuted ? `, ${ln.refuted} didn't` : "") +
+    (ln.inconclusive ? `, ${ln.inconclusive} no verdict` : "") +
+    (ln.running ? `, ${ln.running} running` : "") + took + quiet;
 }
 
 /* ---------- a room's number: how sure, in words ---------- */

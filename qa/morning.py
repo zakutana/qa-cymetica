@@ -94,11 +94,16 @@ def deep_pass(markdown: str) -> dict:
     lines = []
     if "Opraveno" in sections:
         found = _bullets(sections["Opraveno"])
-        # A pass that leads with its count ("**30 z 31 ...**") is read by it.
-        lead = re.match(r"^\W*(\d+)\b", found[0]) if found else None
-        lines.append({"kind": "fixed",
-                      "count": int(lead.group(1)) if lead else len(found),
-                      "text": FIXED_OURS})
+        # A pass that leads with its count ("**30 z 31 ...**") is read by it;
+        # "#133" is a report id, not a count, and "Nic." is none.
+        lead = re.match(r"^[*\s]*(\d+)\b", found[0]) if found else None
+        if lead:
+            count = int(lead.group(1))
+        elif found and re.match(r"^\W*(nic|žádn)", found[0], re.I):
+            count = 0
+        else:
+            count = len(found)
+        lines.append({"kind": "fixed", "count": count, "text": FIXED_OURS})
     if "Co odešlo Cymetice" in sections:
         found = _bullets(sections["Co odešlo Cymetice"])
         lines.append({"kind": "sent", "count": len(found),
@@ -106,18 +111,23 @@ def deep_pass(markdown: str) -> dict:
     return {"title": title, "lines": lines}
 
 
-FIXED_STATUSES = frozenset({"fixed", "paid", "resolved"})
+# Not "paid": paying a report accepts it and does not claim the defect is gone
+# (qa/fold.py), and #130 and #132 were paid while they still reproduced.
+FIXED_STATUSES = frozenset({"fixed", "resolved"})
 
 
-def cymetica(events: list[dict], ticks: list[dict], since: str | None) -> dict:
-    """What happened with Cymetica since the last report: sweeps and bug
-    hunts the lab ran, reports we filed, reports they fixed, fixes we
-    verified. The operator, 2026-09-26: the report did not say."""
+def cymetica(events: list[dict], registered: list[str], since: str | None) -> dict:
+    """What happened with Cymetica since the last report: verification runs
+    against their platform, reports we filed, reports they fixed, fixes we
+    verified. The operator, 2026-09-26: the report did not say.
+
+    `registered` is when each preregistration was made: every sweep that ran
+    registered one, whoever started it. A tick that only decided a hunt is
+    not a sweep that ran."""
     def after(row) -> bool:
         return since is None or str(row.get("at") or "") > since
 
-    sweeps = sum(1 for t in ticks if t.get("type") == "tick" and after(t)
-                 and any(str(d).startswith("hunt") for d in t.get("decide") or []))
+    sweeps = sum(1 for at in registered if since is None or str(at) > since)
     filed = sorted({e["report_id"] for e in events
                     if e.get("type") == "filing_outcome" and e.get("outcome") == "accepted"
                     and e.get("report_id") is not None and after(e)})
@@ -206,11 +216,12 @@ def today(notebook: list[dict], since: str | None = None,
 
 
 def build(report: dict, state: dict | None, deep_md: str, notebook: list[dict],
-          now_local: datetime, events: list[dict] | None = None) -> dict:
+          now_local: datetime, events: list[dict] | None = None,
+          registered: list[str] | None = None) -> dict:
     state = state or {}
     since = state.get("made_at")
     return {
-        "cymetica": cymetica(events or [], notebook, since),
+        "cymetica": cymetica(events or [], registered or [], since),
         "date": now_local.date().isoformat(),
         "made_at": now_local.isoformat(timespec="minutes"),
         "deep_pass": deep_pass(deep_md or ""),

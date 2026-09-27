@@ -94,7 +94,7 @@ def _cymetica(said: dict) -> str:
     """Sweeps, what we filed, what they fixed, what we verified -- since the
     last report (the operator, 2026-09-26)."""
     return _list([
-        f"Kolikrát běžel sweep nebo hledání chyb: {said.get('sweeps', 0)}",
+        f"Ověřovacích běhů proti jejich platformě (sweep): {said.get('sweeps', 0)}",
         f"Našel jsem a nahlásil: {_ids(said.get('filed') or [])}",
         f"Opravili: {_ids(said.get('fixed') or [])}",
         f"Ověřil jsem, že oprava drží: {_ids(said.get('verified') or [])}"], "")
@@ -116,15 +116,15 @@ def _nexus(nexus: dict) -> str:
     if not nexus:
         return ""
     # Said as what happened to the ideas, not as a funnel of nouns: the
-    # operator read "0 vyšlo" as "nothing was tested" (2026-09-26).
-    tested = nexus.get("gate_pass", 0) or 0
+    # operator read "0 vyšlo" as "nothing was tested" (2026-09-26). Each
+    # figure after the arrow is his rooms' own count, never a difference.
     won, lost = nexus.get("survived", 0) or 0, nexus.get("refuted", 0) or 0
-    running = max(tested - won - lost, 0)
     return (f'<p class="nexus"><b>Nexus</b> {nexus.get("questions", 0)} otázek, '
-            f'{nexus.get("answered", 0)} odpovědí, navrhl {nexus.get("picks", 0)} věcí → '
-            f'{tested} prošlo jeho backtestem a šlo na papír → '
+            f'{nexus.get("answered", 0)} odpovědí, navrhl {nexus.get("picks", 0)} věcí, '
+            f'{nexus.get("gate_pass", 0) or 0} prošlo jeho backtestem a šlo na papír → '
             f'<b class="{"up" if won else ""}">{won} vydělalo</b> · {lost} prodělalo'
-            f' · {running} ještě běží</p>')
+            f' · {nexus.get("inconclusive", 0) or 0} bez závěru'
+            f' · {nexus.get("running", 0) or 0} ještě běží</p>')
 
 
 def _heading_date(iso: str) -> str:
