@@ -239,6 +239,24 @@ def _deployed() -> float:
         # test records that a missing position_id happens three ways that are
         # nothing to do with a bug on their side.
         out[str(position or f"order:{row.get('id')}")] = usdc
+    # A buy written `unknown` (timeout, 5xx) whose position the sampler reads
+    # landed all the same, and its money is out (paper.landed).
+    try:
+        from qa.rooms import load_samples
+
+        seen: dict[str, dict] = {}
+        for sample in sorted((r for r in load_samples() if isinstance(r, dict)
+                              and r.get("kind") == "position"),
+                             key=lambda r: str(r.get("at") or "")):
+            seen[str(sample.get("position_id"))] = sample
+    except Exception:  # noqa: BLE001 -- unreadable adds nothing; accepted ones stay
+        seen = {}
+    for order, position in _sibling("paper").landed(rows, list(seen.values())).items():
+        intent = intents.get(order, {})
+        when = _moment(intent.get("at"))
+        usdc = _amount(intent.get("usdc"))
+        if usdc is not None and not (started and when and when < started):
+            out[str(position.get("position_id"))] = usdc
     for position in _closed_on_their_side():
         out.pop(position, None)
     return sum(out.values()) + _in_clones()
@@ -1986,10 +2004,11 @@ def _fund_points(symbol: str) -> list[dict]:
     (points=400). Raises when unread, so a failed read is never an empty
     series (rule 8)."""
     said = _fund_tool("get_fund_history", {"symbol": symbol, "points": FUND_POINTS})
-    if "points" not in said and (said.get("error") or said.get("code")):
-        # A rate limit came back this way on 2026-09-19: an answer, not a
-        # history, and not an empty one.
-        raise RuntimeError(str(said.get("code") or said.get("error"))[:120])
+    if "points" not in said:
+        # A rate limit came back as an error on 2026-09-19, and bare text
+        # arrives here as {}: an answer, not a history, and not an empty one.
+        raise RuntimeError(str(said.get("code") or said.get("error")
+                               or "no points in the answer")[:120])
     return said.get("points") or []
 
 
@@ -2316,9 +2335,21 @@ def night_promote(since: datetime | None = None) -> dict:
                 # A stopped room that held nothing is archived and never
                 # judged (V2), so this says so rather than promising a verdict
                 # (RL07, deep pass of 2026-09-24).
-                why_status = (f"the paper order did not land ({reason}), so "
-                              f"nothing is at stake here; a room that held "
-                              f"nothing is archived and not judged")
+                code = result.get("http_status")
+                # paper.buy refuses before sending (its book, the guidance)
+                # or raises "did not complete" after a POST that timed out.
+                sent_unknown = ("did not complete" in refused if refused
+                                else not (isinstance(code, int) and 400 <= code < 500))
+                if not sent_unknown:
+                    why_status = (f"the paper order did not land ({reason}), so "
+                                  f"nothing is at stake here; a room that held "
+                                  f"nothing is archived and not judged")
+                else:
+                    # A timeout or a 5xx may have landed (paper.landed); the
+                    # book and the ceiling count it once their positions do.
+                    why_status = (f"the paper order's outcome is unknown ({reason}); "
+                                  f"if it landed, the book counts it once their "
+                                  f"positions list it, and this room is not judged")
             try:
                 rooms.set_status(room, status, why=why_status)
             except rooms.RoomError as exc:

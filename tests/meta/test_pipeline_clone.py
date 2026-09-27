@@ -17,6 +17,7 @@ record that looks like a measurement.
 from __future__ import annotations
 
 import importlib.util
+import json
 from pathlib import Path
 
 import pytest
@@ -125,6 +126,21 @@ def test_guidance_that_was_never_answered_is_refused(tmp_path, monkeypatch):
 
     ours = mod._guidance(None)
     assert ours["id"] is None and "ours" in ours["note"]
+
+    # An answer from the shallow lane is recorded guidance too, for a card
+    # order as for a clone: paper.py read the deep diary alone, so a card pick
+    # from nexus_shallow.jsonl opened a room and then was refused as "not a
+    # recorded Nexus answer" (deep pass 2026-09-27, L04, 3/3).
+    (tmp_path / "nexus_shallow.jsonl").write_text(json.dumps(
+        {"type": "answer", "id": "NEX-0094", "at": "2026-09-24T10:00:00+00:00",
+         "text": "Buy card x."}) + "\n", encoding="utf-8")
+    spec = importlib.util.spec_from_file_location(
+        "paper_guidance", REPO / "scripts" / "paper.py")
+    paper = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(paper)
+    assert paper._guidance("NEX-0094")["id"] == "NEX-0094"
+    with pytest.raises(SystemExit, match="not a recorded Nexus answer"):
+        paper._guidance("NEX-9999")
 
 
 def _offline(mod, monkeypatch, client):

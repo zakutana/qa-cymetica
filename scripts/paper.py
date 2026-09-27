@@ -226,7 +226,9 @@ def _guidance(nexus_id: str | None) -> dict:
         "nexus_for_paper", REPO_ROOT / "scripts" / "nexus.py")
     nexus = importlib.util.module_from_spec(spec)
     spec.loader.exec_module(nexus)
-    rows = nexus.load()
+    # Both diaries, as the laboratory's launcher reads them: a card picked from
+    # a shallow-lane answer is recorded guidance too.
+    rows = nexus.load_all()
     answer = next((r for r in rows
                    if r.get("id") == nexus_id and r.get("type") == "answer"), None)
     if answer is None:
@@ -297,8 +299,41 @@ def _positions(client) -> list[dict]:
         CURRENT_TIER.reset(token)
 
 
+def landed(rows: list[dict], positions: list[dict]) -> dict[str, dict]:
+    """Buys whose outcome is UNKNOWN but whose position they list: order id
+    -> that position.
+
+    A timeout, a 5xx or a 2xx with no position id is written `unknown`, and
+    any of them may have landed. It is found by its card: a position of that
+    card that no accepted order of ours claims, each position given to one
+    order at most. A 4xx is their refusal, so nothing landed.
+    """
+    chains: dict[str, dict] = {}
+    for row in rows:
+        chains.setdefault(row.get("id"), {})[row.get("type")] = row
+    claimed = {str((c.get("outcome") or {}).get("position_id"))
+               for c in chains.values()
+               if (c.get("outcome") or {}).get("outcome") == "accepted"}
+    out: dict[str, dict] = {}
+    for order, chain in chains.items():
+        intent, outcome = chain.get("intent") or {}, chain.get("outcome") or {}
+        status = outcome.get("http_status")
+        if (intent.get("kind") or outcome.get("outcome") != "unknown"
+                or (isinstance(status, int) and 400 <= status < 500)):
+            continue
+        card = str(intent.get("card_id") or "").lower()
+        for position in positions:
+            pid = str(position.get("position_id"))
+            if (card and str(position.get("card_id") or "").lower() == card
+                    and pid not in claimed):
+                claimed.add(pid)
+                out[order] = position
+                break
+    return out
+
+
 def book(positions: list[dict], rows: list[dict] | None = None,
-         clone_capital: float | None = None) -> dict:
+         clone_capital: dict | None = None) -> dict:
     """Our own accounting of the campaign, from their position rows.
 
     Their paper balance does not move when a position opens, so no number they
@@ -309,18 +344,22 @@ def book(positions: list[dict], rows: list[dict] | None = None,
     proceeds return to cash -- without that the book leaks, and after enough
     round trips a campaign would refuse to trade with a bankroll it still has.
 
-    `clone_capital` is money funded into paper bots, which is deployed and not
-    cash: the bot spends it on its own schedule and we cannot recall it by
-    deciding not to trade. It is passed in rather than read here because it
-    comes off THEIR my-clones rows (capital_in_bots). `None` means NOT GIVEN
-    -- a caller that holds no bot -- and changes nothing. It used to mean an
-    unreadable balance as well, which freed the money in bots; buy() now
-    refuses on that before asking the book.
+    `clone_capital` is {"moved", "worth"} of our paper bots (capital_in_bots):
+    what went in leaves cash -- the bot spends it on its own schedule and we
+    cannot recall it by deciding not to trade -- and what it is worth now is
+    in equity, so a bot's loss is a loss and never cash. Passed in because it
+    comes off THEIR my-clones rows. `None` means NOT GIVEN -- a caller that
+    holds no bot -- and changes nothing; an unreadable balance is refused by
+    buy() before the book is asked.
     """
     rows = load() if rows is None else rows
     chains: dict[str, dict] = {}
     for row in rows:
         chains.setdefault(row["id"], {})[row.get("type")] = row
+    # An unknown buy whose position they list is read as if accepted.
+    for order, position in landed(rows, positions).items():
+        chains[order]["outcome"] = dict(chains[order]["outcome"], outcome="accepted",
+                                        position_id=position.get("position_id"))
 
     by_position = {p.get("position_id"): p for p in positions}
     deployed = 0.0
@@ -356,8 +395,9 @@ def book(positions: list[dict], rows: list[dict] | None = None,
         else:
             realised += float(held.get("realized_pnl_usdc") or 0)
 
-    in_bots = float(clone_capital or 0)
-    deployed += in_bots
+    moved_in = float((clone_capital or {}).get("moved") or 0)
+    in_bots = float((clone_capital or {}).get("worth") or 0)
+    deployed += moved_in
     cash = BANKROLL - deployed - unaccounted_usdc + realised
     return {"bankroll": BANKROLL, "deployed": round(deployed, 6),
             "in_bots": round(in_bots, 6),
@@ -371,10 +411,11 @@ def book(positions: list[dict], rows: list[dict] | None = None,
             "unaccounted_usdc": round(unaccounted_usdc, 6)}
 
 
-def capital_in_bots(rows, records) -> float | None:
-    """What is ours inside our paper bots: for each bot THEY list, what we
-    moved in -- our own accepted fund transfers in clones.jsonl -- plus what
-    it has made or lost, their `total_profit_usdc`.
+def capital_in_bots(rows, records) -> dict | None:
+    """What is ours inside our paper bots, {"moved", "worth"}: for each bot
+    THEY list, what we moved in -- our own accepted fund transfers in
+    clones.jsonl -- and that plus what it has made or lost, their
+    `total_profit_usdc`.
 
     Not `current_balance_usdc`. Their fix of #94 (2026-09-11) debits a bot's
     stake on entry, so that field stopped holding what sits in open positions:
@@ -382,35 +423,47 @@ def capital_in_bots(rows, records) -> float | None:
     counted the other 400 as cash. What went in plus what it made does not
     depend on how they book a stake.
 
-    None -- refused, never zero -- when a row cannot be read or names a bot we
-    hold no accepted transfer for: capital we cannot state is not capital we
-    have.
+    None -- refused, never zero -- when a row cannot be read, names a bot we
+    have no record of cloning, or one with a transfer whose outcome is
+    unknown: capital we cannot state is not capital we have. A bot we cloned
+    whose every transfer was refused holds none of ours: 0, not unknown.
     """
     if not isinstance(rows, list):
         return None
     asked = {r.get("id"): (r.get("instance_id"), r.get("amount")) for r in records
              if r.get("type") == "intent" and r.get("kind") == "fund"}
+    outcomes = {r.get("id"): r for r in records
+                if r.get("type") == "outcome" and r.get("kind") == "fund"}
+    cloned = {str(r.get("clone_instance_id")) for r in records
+              if r.get("type") == "outcome" and not r.get("kind")
+              and r.get("outcome") == "accepted" and r.get("clone_instance_id")}
     moved: dict[str, float] = {}
-    for row in records:
-        if (row.get("type") == "outcome" and row.get("kind") == "fund"
-                and row.get("outcome") == "accepted" and row.get("id") in asked):
-            instance, amount = asked[row["id"]]
+    unsure: set[str] = set()
+    for order, (instance, amount) in asked.items():
+        said = (outcomes.get(order) or {}).get("outcome")
+        if said == "accepted":
             try:
                 moved[instance] = moved.get(instance, 0.0) + float(amount)
             except (TypeError, ValueError):
                 return None
-    total = 0.0
+        elif said != "rejected":
+            unsure.add(str(instance))
+    went_in = worth = 0.0
     for row in rows:
-        if not isinstance(row, dict) or row.get("id") not in moved:
+        if not isinstance(row, dict):
+            return None
+        bot = str(row.get("id"))
+        if bot in unsure or (bot not in moved and bot not in cloned):
             return None
         try:
-            total += moved[row["id"]] + float(row.get("total_profit_usdc") or 0)
+            went_in += moved.get(bot, 0.0)
+            worth += moved.get(bot, 0.0) + float(row.get("total_profit_usdc") or 0)
         except (TypeError, ValueError):
             return None
-    return round(total, 6)
+    return {"moved": round(went_in, 6), "worth": round(worth, 6)}
 
 
-def clone_capital(client) -> float | None:
+def clone_capital(client) -> dict | None:
     """USDC that is ours inside our paper bots, from THEIR my-clones rows and
     our own transfer records (capital_in_bots).
 
@@ -440,7 +493,7 @@ def clone_capital(client) -> float | None:
 
 def affordable(usdc: float, positions: list[dict],
                rows: list[dict] | None = None,
-               in_bots: float | None = None) -> tuple[bool, str]:
+               in_bots: dict | None = None) -> tuple[bool, str]:
     """Whether the book can pay for this order.
 
     Their side will accept it either way -- it has accepted every order we

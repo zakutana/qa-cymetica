@@ -780,6 +780,28 @@ def test_a_position_they_say_is_closed_is_not_still_deployed(tmp_path,
     assert scripts_lab._deployed() == 11_000.0, (
         "the newest reading of a position is the one that counts")
 
+    # A buy that timed out is written `unknown`, and it may have landed: the
+    # sampler then reads a position of its card that no accepted order of
+    # ours claims. That money is out, under the ceiling like the rest; it was
+    # left out of `_deployed` (deep pass 2026-09-27, L01, 3/3). A 4xx is their
+    # refusal and nothing landed.
+    with (tmp_path / "paper.jsonl").open("a", encoding="utf-8") as handle:
+        for row in ({"type": "intent", "id": "TRD-0003", "card_id": "C3", "usdc": 700.0},
+                    {"type": "outcome", "id": "TRD-0003", "outcome": "unknown",
+                     "error": "ReadTimeout"},
+                    {"type": "intent", "id": "TRD-0004", "card_id": "c4", "usdc": 900.0},
+                    {"type": "outcome", "id": "TRD-0004", "outcome": "unknown",
+                     "http_status": 409}):
+            handle.write(json.dumps(row) + "\n")
+    assert scripts_lab._deployed() == 11_000.0, "nothing of c3 is listed yet"
+    with (tmp_path / "samples.jsonl").open("a", encoding="utf-8") as handle:
+        for pid, card in (("p3", "c3"), ("p4", "c4")):
+            handle.write(json.dumps(
+                {"type": "sample", "kind": "position", "at": "2026-09-13T01:00:00+00:00",
+                 "position_id": pid, "card_id": card, "status": "open"}) + "\n")
+    assert scripts_lab._deployed() == 11_700.0, (
+        "an unknown buy whose position they list is money out; a 409 is not")
+
 
 @qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
 def test_a_simulation_reset_takes_our_older_positions_with_it(tmp_path,
@@ -1651,6 +1673,35 @@ def test_the_night_holds_no_hand_that_trades_files_or_commits():
         walked.add(sibling)
     assert {"keep", "clone"} <= walked, ("the walk no longer reaches the "
                                          "siblings it was written for", walked)
+
+    # And qa/, which the tick calls on every round (lab.note_tick, rooms.*,
+    # lab.decide): a git commit added to a qa function the night reaches
+    # passed, because the walk stopped at scripts/ (deep pass 2026-09-27, B03,
+    # 2/3). Walked the same way, function by function from what the night
+    # names, over the qa modules scripts/lab.py imports, to a fixed point.
+    #
+    # Kept apart from `reached`: qa/state.py names "withdraw" and
+    # "scripts/withdraw.py" as event types and in error text, which is prose,
+    # not a hand. qa/ imports no script, so the only way it can file, commit or
+    # run one is a shell -- and that is what is asserted of it below.
+    qa_mods = ("lab", "rooms", "surface", "morning", "lab_report", "backtests",
+               "state", "evidence", "client", "config", "console", "safety")
+    qa_defs = {m: _module_defs(REPO / "qa" / f"{m}.py") for m in qa_mods}
+    qa_reached = set(reached)
+    while True:
+        grown = set(qa_reached)
+        for defs in qa_defs.values():
+            grown |= _walk(defs, qa_reached & set(defs))
+        if grown == qa_reached:
+            break
+        qa_reached = grown
+    qa_reached -= reached
+    assert len(qa_reached) > 100, f"the qa walk reads nothing: {len(qa_reached)}"
+    for hand in ("subprocess", "system", "popen", "Popen", "execv", "execvp",
+                 "spawnv", "startfile", "check_call", "check_output"):
+        assert hand not in qa_reached, f"the night reaches a shell in qa/: {hand!r}"
+    git = re.compile(r"\bgit\s+(?:commit|push|add|tag|reset)\b")
+    assert not sorted(s for s in qa_reached if git.search(s)), "a git command in qa/"
 
     # [operator 2026-09-12] *"Jasne ze v noci muze spoustet."* So this stopped
     # being "no hand at all" and became "only the braked one". Filing and

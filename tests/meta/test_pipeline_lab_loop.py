@@ -3183,6 +3183,7 @@ def test_a_fund_is_marked_not_bought_and_judged_on_its_own_series(
     import qa.rooms as qa_rooms
 
     scripts_lab = _scripts_lab(tmp_path, monkeypatch)
+    real_points = scripts_lab._fund_points
     start = NOW - timedelta(hours=1)
     series = {"AIB-SPACE": _flat_then(start, [64.0] * 3)}
     sent, calls = _clonepad(
@@ -3216,6 +3217,17 @@ def test_a_fund_is_marked_not_bought_and_judged_on_its_own_series(
                                            for p in series["AIB-SPACE"]])
     said = scripts_lab.verdicts(now=opened + timedelta(days=days, hours=13))
     assert [s["verdict"] for s in said] == ["survived"], said
+
+    # The reader itself: an answer that is not a history -- bare text such as
+    # "Rate limit exceeded", which _fund_tool turns into {} -- is a failed
+    # read, never an empty series. It became [] and the fund was written off
+    # as no_series for good (deep pass 2026-09-27, L05, 3/3). An empty history
+    # they DID send stays empty.
+    monkeypatch.setattr(scripts_lab, "_fund_tool", lambda tool, arguments: {})
+    with pytest.raises(RuntimeError):
+        real_points("AIB-SPACE")
+    monkeypatch.setattr(scripts_lab, "_fund_tool", lambda tool, arguments: {"points": []})
+    assert real_points("AIB-SPACE") == []
 
 
 @qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")

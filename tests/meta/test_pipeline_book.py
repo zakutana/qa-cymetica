@@ -141,6 +141,33 @@ def test_capital_they_accepted_and_do_not_list_is_still_spent(tmp_path, monkeypa
     full = mod.book(both)
     assert full["unaccounted"] == 0 and full["cash"] == 10000.0, full
 
+    # An order whose outcome is UNKNOWN -- a timeout, a 5xx, a 2xx with no
+    # position id -- may have landed. It is found by the card: a position of
+    # its card that no accepted order claims is that order's, and its money
+    # is deployed. The book released it and the room was stopped as "nothing
+    # at stake" (deep pass 2026-09-27, L01, 3/3). A 4xx is their refusal and
+    # nothing landed; nor did an unknown with no unclaimed position of its card.
+    mod._append({"id": "TRD-0003", "type": "intent", "usdc": 5000.0,
+                 "card_id": "C2", "paper": True})
+    mod._append({"id": "TRD-0003", "type": "outcome", "outcome": "unknown",
+                 "error": "ReadTimeout: timed out"})
+    mod._append({"id": "TRD-0004", "type": "intent", "usdc": 7000.0,
+                 "card_id": "c3", "paper": True})
+    mod._append({"id": "TRD-0004", "type": "outcome", "outcome": "unknown",
+                 "http_status": 409})
+    landed = both + [{"position_id": "p9", "card_id": "c2", "status": "open",
+                      "current_value_usdc": 5100.0},
+                     {"position_id": "p8", "card_id": "c3", "status": "open",
+                      "current_value_usdc": 7000.0}]
+    state = mod.book(landed)
+    assert state["deployed"] == 95000.0 and state["cash"] == 5000.0, (
+        f"a timed-out order whose position they list is money out: {state}")
+    assert state["value"] == 95100.0 and state["open"] == 3, state
+    assert mod.landed(mod.load(), landed) == {"TRD-0003": landed[2]}, (
+        "a 409 refusal was taken for an order that landed")
+    assert mod.book(both)["cash"] == 10000.0, (
+        "an unknown order with no position of its card was held as spent")
+
 
 @qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
 def test_an_order_the_book_cannot_pay_for_is_refused(tmp_path, monkeypatch):
@@ -294,7 +321,7 @@ def test_capital_moved_into_a_bot_is_deployed_not_cash(tmp_path, monkeypatch):
                   "status": "open", "notional_usdc": 2.0}]
 
     loose = mod.book(positions)
-    held = mod.book(positions, clone_capital=1000.0)
+    held = mod.book(positions, clone_capital={"moved": 1000.0, "worth": 1000.0})
 
     assert held["cash"] == loose["cash"] - 1000.0, (
         "capital sitting in a bot is not available to trade; the bot spends "
@@ -302,6 +329,14 @@ def test_capital_moved_into_a_bot_is_deployed_not_cash(tmp_path, monkeypatch):
     assert held["deployed"] == loose["deployed"] + 1000.0
     # Equity is unchanged: the money still exists, it is somewhere else.
     assert round(held["equity"], 6) == round(loose["equity"], 6)
+
+    # A bot's loss is not cash: 1,000 went in and it is worth 800. Cash is
+    # what did not go in; equity is down the 200. Cash was 99,200 and equity
+    # never moved (deep pass 2026-09-27, L02, 3/3).
+    lost = mod.book(positions, clone_capital={"moved": 1000.0, "worth": 800.0})
+    assert lost["cash"] == loose["cash"] - 1000.0, lost
+    assert round(lost["equity"], 6) == round(loose["equity"] - 200.0, 6), lost
+    assert lost["in_bots"] == 800.0, lost
 
     # `None` here is "not given" -- the default of every caller that holds no
     # bot -- and changes nothing. An UNREADABLE bot balance is a different
@@ -334,14 +369,32 @@ def test_capital_in_a_bot_is_what_went_in_and_what_it_made(tmp_path, monkeypatch
         {"id": "CLN-0005", "type": "outcome", "kind": "fund", "outcome": "accepted"},
     ]
     ours = {"id": "b1", "current_balance_usdc": 550.0, "total_profit_usdc": -50.0}
-    assert mod.capital_in_bots([ours], records) == 950.0, (
+    assert mod.capital_in_bots([ours], records) == {"moved": 1000.0, "worth": 950.0}, (
         "the capital in a bot is what went in plus what it made, not the "
         "balance left after its open stakes were taken out")
-    assert mod.capital_in_bots([], records) == 0.0
+    assert mod.capital_in_bots([], records) == {"moved": 0.0, "worth": 0.0}
     assert mod.capital_in_bots([dict(ours, id="b2")], records) is None, (
-        "a bot we never funded has no capital we can state")
+        "a bot we have no record of cloning has no capital we can state")
     assert mod.capital_in_bots([dict(ours, total_profit_usdc="n/a")], records) is None
     assert mod.capital_in_bots(["not a row"], records) is None
+
+    # A bot WE cloned whose funding was refused holds nothing of ours: it is
+    # 0, not unknown. As None it refused every later card order for good, and
+    # nothing releases a clone (deep pass 2026-09-27, L03, 3/3). A transfer
+    # whose outcome is unknown is still unknown.
+    cloned = records + [
+        {"id": "CLN-0006", "type": "intent", "source_type": "bot"},
+        {"id": "CLN-0006", "type": "outcome", "outcome": "accepted",
+         "clone_instance_id": "b3"},
+        {"id": "CLN-0007", "type": "intent", "kind": "fund", "instance_id": "b3", "amount": 240.0},
+        {"id": "CLN-0007", "type": "outcome", "kind": "fund", "outcome": "rejected"}]
+    bare = {"id": "b3", "total_profit_usdc": 0.0}
+    assert mod.capital_in_bots([ours, bare], cloned) == {"moved": 1000.0, "worth": 950.0}
+    pending = cloned + [
+        {"id": "CLN-0008", "type": "intent", "kind": "fund", "instance_id": "b3", "amount": 240.0},
+        {"id": "CLN-0008", "type": "outcome", "kind": "fund", "outcome": "unknown"}]
+    assert mod.capital_in_bots([ours, bare], pending) is None, (
+        "a transfer that may have landed was read as none")
 
 
 @qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
