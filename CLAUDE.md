@@ -89,18 +89,27 @@ A paragraph beginning `[operator YYYY-MM-DD]` records something the operator dec
 
 ## What a task needs, said in its first line
 
+Effort is not "trying harder": it buys verification and edge-case coverage, at the cost of tokens and time. A sanitizer check went 1/5 passing at low effort to 5/5 at xhigh purely from the adversarial review, source-reading and fuzzing that low effort skipped -- and the same source found low effort *better*, not worse, for a design sketch meant to be reacted to and redone (Anthropic's "Using Claude Code: Spending your effort"). Low effort is a different shape of work, not a worse one: fast, few assumptions made on our behalf, right for anything a human or a later step is about to look at anyway.
+
+The rule of thumb behind every row below:
+
+* **Low** -- quick and in the loop: a sketch, an easy change, a status read.
+* **Medium** -- regular engineering: one pass against a clear spec.
+* **High** -- verification matters, or the surface has edge cases: a bug in code we did not just write, a check meant to survive input it has not seen.
+* **Max** -- full autonomy on a hard problem, handed off whole: nobody reviews the middle, only the result.
+
 Agents and skills carry their own model and effort in frontmatter. What the session adds is noticing when its own setting does not fit the work.
 
 | Task | Needs |
 |---|---|
-| sweep, filing, verification (`qa-sweep`) | Sonnet 5 · high |
-| correspondence written to the vendor (`correspond.py`, `a2a.py send`) | Sonnet 5 · high |
-| a session in the laboratory (`laborator`) | Sonnet 5 · high |
-| channel status (`/channels`) | Sonnet 5 · low — a status read, not correspondence |
-| writing a new check against their platform — a surface nothing tests yet | Opus 5 · high–xhigh |
-| `qa/state.py`, `qa/fold.py`, `qa/measure.py`, review | Opus 5 · high–xhigh |
-| the deep pass | Opus 5 · xhigh (its frontmatter carries it) |
-| architecture, a plan like `docs/laborator-plan.md` | Fable 5.1 or Opus 5 · max |
+| channel status (`/channels`) | Sonnet 5 · low — a read the operator checks on sight; nothing here goes out unverified |
+| sweep, filing, verification (`qa-sweep`) | Sonnet 5 · high — which claims still reproduce, whose bug it really is, is exactly the edge-case-hunting effort buys |
+| correspondence written to the vendor (`correspond.py`, `a2a.py send`) | Sonnet 5 · high — every claim about Cymetica is checked against their live page before it goes out under our name |
+| a session in the laboratory (`laborator`) | Sonnet 5 · high — one tick, but its rules have a long history of edge cases nobody re-derived (see `MEMORY.md`) |
+| writing a new check against their platform — a surface nothing tests yet | Opus 5 · high–xhigh — a check is a sanitizer: it must survive a population it has not seen, the shape that needed xhigh above |
+| `qa/state.py`, `qa/fold.py`, `qa/measure.py`, review | Opus 5 · high–xhigh — the ledger's own storage engine; a wrong transition is silent, the shape of a storage-engine bug that needed xhigh to catch |
+| the deep pass | Opus 5 · xhigh (its frontmatter carries it) — full autonomy overnight, nobody reviews the middle |
+| architecture, a plan like `docs/laborator-plan.md` | Fable 5.1 or Opus 5 · max — handed off whole and expensive to redo; an early sketch to react to is better done at low, the version that ships at max |
 
 [operator 2026-09-09] *"ano 5. levny protoze jen cte"* -- the `/channels` row. They ruled on it after a session put the mismatch to them: the table says correspondence needs high, and a status read is not correspondence. So that row is theirs now, not the loop's, and the loop may not raise it on its own.
 
