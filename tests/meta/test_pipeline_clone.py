@@ -120,9 +120,18 @@ def test_guidance_that_was_never_answered_is_refused(tmp_path, monkeypatch):
     Behind the same second barrier as the source-type refusal."""
     mod = _clone(tmp_path, monkeypatch)
     _no_client(mod, monkeypatch)
-    (tmp_path / "nexus.jsonl").write_text("", encoding="utf-8")
+    # NEX-9999 was asked and never answered -- a question row with no answer
+    # row beside it, not merely an empty diary. Matching by id alone (the
+    # `type == "answer"` filter dropped) would find this question and hand
+    # it back as if it were guidance.
+    (tmp_path / "nexus.jsonl").write_text(json.dumps(
+        {"type": "question", "id": "NEX-9999",
+         "at": "2026-09-24T10:00:00+00:00", "question": "which bot?"}) + "\n",
+        encoding="utf-8")
     with pytest.raises(SystemExit, match="no recorded answer"):
         mod.clone("wta_species", "dd206f68", None, "NEX-9999", confirm=True)
+    with pytest.raises(SystemExit, match="no recorded answer"):
+        mod._guidance("NEX-9999")
 
     ours = mod._guidance(None)
     assert ours["id"] is None and "ours" in ours["note"]
