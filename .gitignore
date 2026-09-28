@@ -81,6 +81,11 @@ state/clones.jsonl
 state/rooms.jsonl
 state/samples.jsonl
 
+# How long each real request to their host took (qa/timings.py), one line per
+# request, written during every run -- tracked, it would cost each run its
+# level V. Read by scripts/timeouts.py.
+state/timings.jsonl
+
 # The laboratory's own notebook: what a session did, what it learned, what the
 # next one should pick up. Outside git for the reason the four above are --
 # it is appended to while a run may be in flight -- and copied into audits/lab/

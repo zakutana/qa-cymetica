@@ -78,6 +78,7 @@
 {"archive": "evidence-2026-09", "bytes": 6169, "call": "POST https://cymetica.com/mcp/v1/? tools/call:get_strategy_returns", "id": "0176c4279537b891c041710f615c2c35bad59df2540aedfe26c317a5dc87c728", "why": "row"}
 {"archive": "evidence-2026-09", "bytes": 12754, "call": "GET https://cymetica.com/api/v1/agent-board/search?", "id": "0176d171456cbf47cfa902fdb7915448b082b9da7e8fcc58fc2bc8809873c137", "why": "row"}
 {"archive": "evidence-2026-09", "bytes": 4977, "call": "GET https://cymetica.com/api/v1/research-backtest/themes?", "id": "017a2d5469048fd08baa5aaffde5fb1c1779debe26cf5eb990635b58d2877d09", "why": "row"}
+{"archive": "", "bytes": 6897, "call": "POST https://cymetica.com/api/v1/bounty/a2a/send?", "id": "017efca9c6227dfd8b14c3492e607e0751cd8b032385e92e0d44ef962d1950b3", "why": "their-words"}
 {"archive": "evidence-2026-09", "bytes": 6235, "call": "GET https://cymetica.com/api/v1/crypto-outlook/BTC.txt?", "id": "01815b81ca93921a12b335e7be3a9cc89c80747e6bb35870d68ce1628e99dfd6", "why": "row"}
 {"archive": "evidence-2026-09", "bytes": 6184, "call": "GET https://cymetica.com/api/v1/crypto-outlook/XLM.txt?", "id": "018349d3dd7ef4403b704a3feaf82a1ce20ff88cd99fda6559e78a8131ca418c", "why": "promised"}
 {"archive": "evidence-2026-09", "bytes": 18035, "call": "GET https://cymetica.com/api/v1/markets?", "id": "0190062e490b5b368d1501ee5a832a08ac2543d4552b6f9cf564fba87ce5ff1a", "why": "row"}

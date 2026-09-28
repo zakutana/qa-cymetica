@@ -250,7 +250,10 @@ CEILINGS = {
     # the #130 correction with a 422.
     # 803 -> 804 for test_a_card_leg_is_sold_at_his_take_profit_and_the_room_runs_on:
     # 10 of 21 card rooms were 5%+ up and gave it back, never sold on his levels.
-    "meta_tests": 804,
+    # 804 -> 805 for test_every_real_request_is_timed_and_one_command_lists_the_bad_ones:
+    # 77 timeouts Cymetica asked for sat in seven diaries, and ~90% of the
+    # evidence store had no response time.
+    "meta_tests": 805,
 }
 
 BASH_SCRIPT = re.compile(r"python\s+scripts[/\\]([a-z_]+)\.py")

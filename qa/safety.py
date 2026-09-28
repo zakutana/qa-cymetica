@@ -31,6 +31,7 @@ from __future__ import annotations
 
 import json
 import re
+import time
 from contextvars import ContextVar
 from dataclasses import dataclass, field
 from enum import Enum
@@ -40,6 +41,8 @@ from urllib.parse import parse_qsl
 
 import httpx
 import yaml
+
+from qa import timings
 
 REPO_ROOT = Path(__file__).resolve().parent.parent
 COMPONENTS_YAML = REPO_ROOT / "components.yaml"
@@ -205,12 +208,30 @@ class SafetyTransport(httpx.BaseTransport):
         if self.budget is not None:
             self.budget.before_request()
 
-        response = self.inner.handle_request(request)
+        # Timed only when it reaches the real network: a test's MockTransport
+        # or a guard's negative control is never written (qa/timings.py).
+        real = isinstance(self.inner, httpx.HTTPTransport)
+        started = time.perf_counter()
+        try:
+            response = self.inner.handle_request(request)
+        except Exception as exc:
+            if real:
+                timings.record(request, started, tier, error=type(exc).__name__)
+            raise
 
         if self.budget is not None:
             self.budget.after_response(response)
         if self.evidence is not None:
-            self.evidence.capture(request, response, tier, rule.id if rule else None)
+            try:
+                self.evidence.capture(request, response, tier, rule.id if rule else None)
+            except Exception as exc:
+                if real:
+                    timings.record(request, started, tier, status=response.status_code,
+                                   error=type(exc).__name__, to="body")
+                raise
+        if real:
+            timings.record(request, started, tier, status=response.status_code,
+                           to="body" if self.evidence is not None else "headers")
         return response
 
     # -- policy -----------------------------------------------------------
