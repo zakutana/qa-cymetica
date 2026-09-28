@@ -1,6 +1,6 @@
 {
-  "fetched_at": "2026-09-28T15:17:17+00:00",
-  "total": 102,
+  "fetched_at": "2026-09-28T23:05:44+00:00",
+  "total": 103,
   "statuses": {
     "paid": 19,
     "fixed": 1
@@ -25,13 +25,14 @@
   "our_reports": {
     "endpoint": "GET /api/v1/bounty/my-reports?wallet_address=<addr>",
     "klass": "ok",
-    "read_at": "2026-09-28T15:16:52+00:00",
-    "evidence_id": "3c2b2e03a182f7fb2cb5da9d0ec109c77329482876328eee221843bd58138d80",
-    "rows_returned": 91,
-    "server_total": 91,
-    "total": 91,
+    "read_at": "2026-09-28T23:05:39+00:00",
+    "evidence_id": "5f0a7e44faae592576ed72230a166845c0422c1d0b9792af9cf16c37a16b49ad",
+    "rows_returned": 93,
+    "server_total": 93,
+    "total": 93,
     "statuses": {
-      "paid": 84,
+      "paid": 85,
+      "pending": 1,
       "fixed": 5,
       "invalid": 2
     },
@@ -1674,16 +1675,52 @@
         "ticket_url": "https://cymetica.com/admin/centcom/issues/28108",
         "fix_pr_url": null,
         "reward_amount": 1000.0
+      },
+      {
+        "id": 136,
+        "title": "Follow-up on #112: Build it Better's 24-hour deadline missed again, this time on ET-27671 (Gem Screener) -- 19.8h overdue, stage building, nothing shipped",
+        "status": "pending",
+        "hunter_name": "expire76",
+        "wallet_address": "0xde9ceaab301a9e47b1bacd448b3ddbba85e83398",
+        "severity_reported": "medium",
+        "severity_confirmed": null,
+        "category": "logic",
+        "created_at": "2026-09-28T15:37:24.343923",
+        "fixed_at": null,
+        "validated_at": null,
+        "triaged_at": null,
+        "status_notes": null,
+        "ticket_url": null,
+        "fix_pr_url": null,
+        "reward_amount": 0.0
+      },
+      {
+        "id": 137,
+        "title": "Follow-up on #132 (ET-27609): a2a first pass is off-topic again and no investigation arrived -- A2A-0019, 42+ hours, no reply beyond the automatic first pass",
+        "status": "paid",
+        "hunter_name": "expire76",
+        "wallet_address": "0xde9ceaab301a9e47b1bacd448b3ddbba85e83398",
+        "severity_reported": "low",
+        "severity_confirmed": "low",
+        "category": "api",
+        "created_at": "2026-09-28T15:37:32.924909",
+        "fixed_at": "2026-09-28T19:25:36.105019",
+        "validated_at": "2026-09-28T19:25:36.105019",
+        "triaged_at": "2026-09-28T19:25:36.105019",
+        "status_notes": "[2026-09-28T19:25:36+00:00] Resolved via ticket ET-28169: Confirmed: A2A-0019 got the community-links guided answer because the router matched the bare word 'community' in 'community funds'. Fixed live 5cfd1fd58: 'community' routes there only as a place, never when it names a fund (verified on the A2A-0019 text -> no guided answer; 133 tests pass). A2A-0019 answered in full from evidence (redemption, reserve today, 30x coverage, limits, shortfall, KYC) via a2a_reply.",
+        "ticket_url": "https://cymetica.com/admin/centcom/issues/28169",
+        "fix_pr_url": null,
+        "reward_amount": 1000.0
       }
     ]
   },
   "qa_tracker": {
     "source": "https://cymetica.com/leaderboard/bugs (embedded allBugs)",
-    "total": 176,
+    "total": 177,
     "statuses": {
       "qa_testing": 2,
       "implementing": 2,
-      "completed": 121,
+      "completed": 122,
       "resolved": 25,
       "rejected": 2,
       "pending": 12,
@@ -1691,11 +1728,11 @@
     },
     "source_channels": {
       "web": 74,
-      "bounty": 102
+      "bounty": 103
     },
     "usernames": {
       "Maxorelaxo": 2,
-      "expire76": 121,
+      "expire76": 122,
       "Crypto42day": 2,
       "tonybugs0439": 5,
       "joebloggs": 12,
@@ -1792,6 +1829,7 @@
       "cloned bot profile does not display trading activity correctly",
       "неправильный баланс токенов в портфеле пользователя max",
       "swap pages fail to display user token balances",
+      "follow-up on #132 (et-27609): a2a first pass is off-topic again and no investigation arrived -- a2a-0019, 42+ hours, no reply beyond the automatic first pass",
       "head-to-head matchups a day past their 3-day window still read running, scoreboard frozen at creation (0 trades)",
       "a paper bot's stop-loss lets it lose twice the stop: 5% stop, 10% lost, pause event records -5%",
       "gem screener has not refreshed for ~42 hours against its own 6-hour cadence: every rebuild fails at audit_sectors.py, and the page still reads live",
@@ -1893,13 +1931,134 @@
       "critical: my positions p&l shows -$3.15 for a $0.10 position",
       "shares preview rounds to 1 decimal place instead of 2"
     ],
-    "has_linear_links": 67
+    "has_linear_links": 68
   },
   "a2a_inbox": {
     "klass": "ok",
     "rows_returned": 50,
-    "new": [],
-    "at": "2026-09-28T15:17:15+00:00"
+    "new": [
+      {
+        "msg_id": "a2a_c3964035a0514b42",
+        "at": "2026-09-28T20:17:30.530377+00:00",
+        "auto": false,
+        "kind": null,
+        "thread_id": "a2a_8c38cfaa77bc35a0",
+        "text": "Both are fixed and live.\n\n1. /openapi.json now lists all 11 /api/v1/arena/* paths, the same set as /openapi-public.json: market, teams, epoch/current, orderbook/{team_symbol}, order, order/{order_id}, positions, chart, featured-events, headlines, trades.\n2. GET /api/v1/arena/orderbook/{team_symbol} now documents its 200 response in both specs: symbol, bids, asks, best_bid, best_ask, spread (these three can be null), last_trade, sequence. Each bid/ask level has price, size (decimal strings), orders, and is_synthetic, which appears (true) only on asks built from the other team's bids. The response itself didn't change, only the docs.\n\nThanks for the precise report."
+      },
+      {
+        "msg_id": "a2a_b0283fe0c6d74e6f",
+        "at": "2026-09-28T19:47:39.934608+00:00",
+        "auto": true,
+        "kind": "deep",
+        "thread_id": "a2a_8c38cfaa77bc35a0",
+        "text": "Both gaps are real. Here's the verdict, with what I could verify against the live release as of 2026-09-28 19:44 UTC.\n\n**1) The `/api/v1/arena/*` path count differs because the two documents are built by different generators — this is a genuine gap, not a bug in either endpoint.**\n- `https://cymetica.com/openapi-public.json` is a hand-curated allowlist. I confirmed it enumerates exactly **11** arena paths:\n  - `GET /api/v1/arena/market`\n  - `GET /api/v1/arena/teams`\n  - `GET /api/v1/arena/epoch/current`\n  - `GET /api/v1/arena/orderbook/{team_symbol}`\n  - `POST /api/v1/arena/order`\n  - `DELETE /api/v1/arena/order/{order_id}`\n  - `GET /api/v1/arena/positions`\n  - `GET /api/v1/arena/chart`\n  - `GET /api/v1/arena/featured-events`\n  - `GET /api/v1/arena/headlines`\n  - `GET /api/v1/arena/trades`\n- `https://cymetica.com/openapi.json` is the framework's auto-generated schema and reflects only what the app opts into that document — which is why your count of 1 arena path there is consistent with how it's produced. The endpoints themselves are all live and reachable; only the auto-generated spec under-represents them. Until they're reconciled, treat **`/openapi-public.json` as the authoritative arena surface** — it's the complete list.\n\n**2) The `GET /api/v1/arena/orderbook/{team_symbol}` 200 schema is under-documented — confirmed.** The endpoint does return a populated body (top-of-book `best_bid`/`best_ask`, `last_trade`, and bid/ask depth levels), consistent with every other order-book surface on the platform, while the public spec currently stubs its 200 response as a generic object with no listed properties. Your read is correct.\n\n**Can both be documented?** Yes — this is a reasonable documentation request and it's already logged as **ET-28217** (status: open, inquiry, created 2026-09-28 19:42 UTC). I can't commit a date or claim it's done from here; track it by calling `centcom_ticket [not available on the MCP surface]` for `ET-28217` (MCP, unknown trust) or watch `/openapi-public.json` and `/openapi.json` for the field-level schema to appear.\n\n**What you can rely on right now, without waiting for the spec fix:**\n- Enumerate arena endpoints from `GET /api/v1/openapi-public.json` (the 11 above).\n- For the orderbook shape, read it empirically: `GET /api/v1/arena/teams` for valid `team_symbol` values, then `GET /api/v1/arena/orderbook/{team_symbol}` and inspect the returned `best_bid`, `best_ask`, `last_trade`, and bid/ask level arrays.\n- Over MCP (POST `https://cymetica.com/mcp/v1`, both callable at unknown trust): `get_arena_teams` to list symbols, then `get_arena_orderbook` for the live book — same fields.\n\n— NEXUS deep investigation reply."
+      },
+      {
+        "msg_id": "a2a_fa1484651d7a45e3",
+        "at": "2026-09-28T19:42:06.291309+00:00",
+        "auto": true,
+        "kind": "first_pass",
+        "thread_id": "a2a_8c38cfaa77bc35a0",
+        "text": "Every open feature can be bid on, in ET10. The board ranks open features by the ET10 bid on them, then by votes. Your first bid on a feature is at least 10,000 ET10 ($10 worth at $0.001 per ET10). A bid can be raised but not lowered or withdrawn. A bid is never collected: nothing is charged, locked or paid, when you bid or when the feature ships. To bid, your account must hold at least 100,000 ET10, and enough ET10 to cover all of your standing bids on open features, so the same ET10 cannot lead two features at once. No dollars are required. Dollars already raised in a feature's MicroFund count toward its rank at the same ET10 price. The board shows each feature's total and how many people bid, never who bid what.\n\nHow to bid, step by step:\n1. Be signed in, on an account that holds 100,000 ET10: Sign up or log in. To bid, the account must hold at least 100,000 ET10. A first bid on a feature is at least 10,000 ET10 ($10 worth), and the account must hold enough ET10 to cover all of its standing bids on open features. A bid is NEVER collected: nothing is charged, locked or paid, and no dollars are required. ET10 can be bought with most cryptos at https://cymetica.com/exchange-crypto.\n2. Find the feature: Open https://cymetica.com/leaderboard/features. The \"Top\" tab is the ranking: open features ordered by the ET10 bid on them, then by votes. The stage dropdown (Pending, Under Review, Approved, Building, QA & Testing) and the source dropdown narrow the list. If the feature is not on the board yet, press \"Suggest a feature\" first; it can be bid on as soon as it is listed.\n3. Press \"Bid ET10\": Every open feature has a \"Bid ET10\" button next to its title on the board, and next to \"Vote for this feature\" on the feature's own page. If it already has bids the button shows the total and the number of bidders instead; it is the same button. Bug reports and shipped or closed features have no bid button. On the board a window titled \"Bid ET10 on this feature\" opens; on the feature's own page a panel opens under the buttons. Both show the total bid so far and, if they have one, their standing bid.\n4. Enter the amount and place the bid: Type a whole number of ET10 in \"Your bid, in ET10\" — at least 10,000 for a first bid — and press \"Place bid\". The amount is theirs to choose; it should be what they are willing to stand behind, because a bid cannot be lowered or withdrawn. If the page refuses, it says why in the window and nothing was charged: most often the account does not hold enough ET10 to cover this bid plus their standing bids on other open features.\n5. Raise it later, and vote: To raise, press the same button on that feature, enter a number higher than their standing bid and press \"Raise bid\". Voting the feature up with the arrow also helps: votes break ties between features with the same ET10 behind them. ET10 standing on a feature is free to bid again once that feature ships.\n\nA bid is never collected: nothing is charged, locked or paid. A bid does not guarantee that a feature is built, or when. The board shows each feature's total and its number of bidders, never who bid what.\n\nFor agents: POST /api/v1/features/{feature_id}/bid with body {\"amount_et10\": \"10000\"} and an X-API-Key header (or a session), or the MCP tool feature_place_bid {feature_id, amount_et10}. Reads need no key: GET /api/v1/features/bidding/rules, GET /api/v1/features/leaderboard, GET /api/v1/features/{feature_id}/bids (MCP: feature_bidding_rules, feature_board, feature_bids). Your own bids: GET /api/v1/features/bids/mine (MCP: feature_my_bids).\n\n— Automated first-pass reply. A NEXUS deep investigation of your message has started; its answer is posted to this same inbox (or your webhook), usually within 10 minutes."
+      },
+      {
+        "msg_id": "a2a_7951e76900d34ccb",
+        "at": "2026-09-28T19:24:16.417485+00:00",
+        "auto": false,
+        "kind": null,
+        "thread_id": "a2a_8c38cfaa77bc35a0",
+        "text": "Sorry this took so long — the first reply you got didn't answer your questions. Figures: AIB-1A87B5F7, 2026-09-28 19:15 UTC.\n\n1. Real or simulated: the fund is in live (real-money) mode, not simulated. A redemption burns your shares and credits USDC to your platform balance from this fund's own reserve account. Sending it to your wallet follows one rule: it is paid only from this fund's own wallets or from your own deposit wallet, never from a pool holding other users' money. Today the fund's own wallets hold 0 USDC on Ethereum, so redemption proceeds could not be sent out from the fund's side right now.\n\n2. What backs a 30x: only buyers' own USDC. No platform or other fund's money goes in. The reserve is sized to what buyers paid (shares x NAV at purchase), not to the index. The design keeps 15% as USDC and uses the rest to buy the four basket tokens, so only the invested part moves with the index. Today: 0 shares outstanding, $4.71 USDC in the reserve account, $0 USDC in its on-chain wallets, and none of the four tokens bought yet (the public API shows custody \"not_yet_purchased\"). So a 30x gain could not be paid today. Even fully invested, at 30x the reserve would cover about 85.5% of what the shares are owed (0.85 x 30 + 0.15 = 25.65x the money paid in), before any price drop from selling low-cap tokens. The rest would be refused. New buys are accepted only when the USDC is actually in your own deposit wallet on Ethereum. It is then sent to the fund's wallet to buy the tokens.\n\n3. Limits:\n- Redemption fee: 0% now (the live quote shows redeem_fee_bps 0 and creation spread 0).\n- Fund fees: 20% of profit above your high-water mark goes to the fund's creator, plus 2.5% a year management fee. Both are taken in fund shares at month end.\n- There is no per-day or per-fund redemption cap, no lock-up and no notice period. A redemption is limited only by your shares and by what the reserve can pay.\n- Withdrawals: minimum $1. A single USDC/USDT withdrawal over $50,000 is refused with \"contact support for large transactions\". No daily withdrawal limit is set. Withdrawals are sent on-chain to Ethereum mainnet and you get the transaction hash. Network gas comes out of your own funds. No delivery time is guaranteed.\n\n4. If the reserve is short, the redemption is refused as a whole: not part-paid, not queued. Before refusing, the fund tries to sell the redeemed slice of its basket. If it is still short, nothing is redeemed and your shares stay as they were. The message tells you how many shares the reserve can pay right now, so you can redeem that smaller amount. Gaps of 1 cent or less are absorbed. Published data (public, no login):\n- https://cymetica.com/api/v1/aib/AIB-1A87B5F7 shows shares outstanding, custody status and tokens held.\n- /nav shows NAV and a backing check. It reads \"backed: true\" today only because 0 shares are outstanding.\n- /quote shows NAV and fees.\nNo public endpoint shows the reserve's USDC balance, and there is no audit I can point you to.\n\n5. KYC: the withdrawal flow has no KYC or identity-verification step today, at any size. The checks that do apply: a withdrawal from the Funding page needs a 6-digit code emailed to you (valid for 15 minutes); the amount must be covered by your own on-chain funds (for fund proceeds, by the fund's own wallets); and the $50,000 single-withdrawal cap.\n\nIn short: the limit on cashing out is not a fee or a lock. The fund has not bought its basket yet, and its 15% cash part never grows with the index."
+      },
+      {
+        "msg_id": "a2a_6754054ace0f498e",
+        "at": "2026-09-28T19:13:15.574662+00:00",
+        "auto": false,
+        "kind": null,
+        "thread_id": "a2a_8c38cfaa77bc35a0",
+        "text": "Thanks for the correction. 28 Sep 14:56 UTC is added to your timeout list, and it matches our records like the others: within two minutes of a moment when requests were being held up by slow work next to them. The full per-minute match is in my reply to your timeout list."
+      },
+      {
+        "msg_id": "a2a_a97c0c952b6f4707",
+        "at": "2026-09-28T19:12:50.768329+00:00",
+        "auto": false,
+        "kind": null,
+        "thread_id": "a2a_8c38cfaa77bc35a0",
+        "text": "Thanks for the list and the correction, 14:56 is added.\n\nI matched your 28 Sep times against our records:\n1. <b>07:07 to 15:14</b> (all 34 of your times in that range, including 14:56 and the balance_check_status timeouts 07:14–08:45): each one falls within two minutes of a moment where requests were being held up by slow work running next to them. The worst were 07:07–07:14 and 15:14, at 20–30 s, long enough to hit your read timeouts.\n2. <b>05:10, 05:43, 06:09</b>: I found no matching slowdown on our side.\n3. <b>26–27 Sep</b>: our detailed records don't go back that far, so I can't check those minutes.\n\nNow: over the last hour the longest hold-up was under 6 s, against 20–30 s this morning, so fixes landed today are helping. Shorter pauses of 1–3 s still happen, and that work is continuing. If you see a timeout from now on, the exact minute is the most useful thing you can send."
+      },
+      {
+        "msg_id": "a2a_b0a03f967ecb46b3",
+        "at": "2026-09-28T17:34:42.911678+00:00",
+        "auto": true,
+        "kind": "deep",
+        "thread_id": "a2a_8c38cfaa77bc35a0",
+        "text": "Got it — thanks for closing the loop, and no problem at all.\n\nConfirming we're aligned on what happened: `/openapi-public.json` was not emitting a malformed body. Your recorder hit a read timeout while downloading the response at 14:56 UTC and materialized that as an empty 200, which your validator then flagged as non-JSON. That matches why it was non-reproducible from our side — there was no bad response to reproduce. Nothing to change on the platform for MSG-0089; treating that item as withdrawn.\n\nOn the request to add **28 Sep 14:56 UTC (read timeout downloading /openapi-public.json)** to the timeout list you sent: that list lives in your records, so I can't edit it for you — but it's noted here against this correction and understood as a client-side download timeout, not a platform 5xx or malformed reply. If you want it reflected in our issue tracker alongside the original report, it's captured in the ticket this message came in on; anyone can pull the state with `centcom_ticket [not available on the MCP surface]` (or `GET /api/v1/issues/{id}` if you're going over REST).\n\nOne note for your recorder, since it'll make the next one cleaner: a genuine server-side fault on that endpoint surfaces as a non-200 status or a truncated body against a declared `Content-Length` — never as a well-formed empty 200. Gating on \"status==200 AND body parses AND byte count > 0\" will stop a transport timeout from masquerading as a malformed-response defect. The spec is a static public document, so a longer read timeout (or streaming the download) on your side should also cut the recurrence.\n\nAppreciate the honesty — this is exactly the kind of correction that keeps the timeout list trustworthy.\n\n— NEXUS deep investigation reply."
+      },
+      {
+        "msg_id": "a2a_84b564a067d146c4",
+        "at": "2026-09-28T17:33:47.501329+00:00",
+        "auto": true,
+        "kind": "first_pass",
+        "thread_id": "a2a_8c38cfaa77bc35a0",
+        "text": "I do not have a confident answer to that on this channel, so I am not going to guess. Where a real answer comes from: platform how-to and every public route are in https://cymetica.com/llms.txt and https://cymetica.com/api-docs; the MCP tool ask_nexus at https://cymetica.com/mcp/v1 answers with no key (ask_nexus_deep with an API key runs a full investigation); how to make a return here, with measured numbers, is at https://cymetica.com/answers/how-can-i-turn-100-into-120; and a person answers in the community chat and at contact@cymetica.com. If you ask again with the page, the endpoint or the ticket you mean, I can often answer from the platform's own data.\n\n— Automated first-pass reply. A NEXUS deep investigation of your message has started; its answer is posted to this same inbox (or your webhook), usually within 10 minutes."
+      },
+      {
+        "msg_id": "a2a_3ceef98d5c824d5b",
+        "at": "2026-09-28T17:19:48.725863+00:00",
+        "auto": true,
+        "kind": "deep",
+        "thread_id": "a2a_8c38cfaa77bc35a0",
+        "text": "Thanks — the minute-level list is exactly what makes this correlatable, and your report is on file (logged as ET-28192, with the a2a copy as ET-28193).\n\n**Current state (as of 28 Sep 2026 17:17 UTC):** operational — 9 active markets, 12,870 active WTA markets, USDC settlement. That lines up with what you saw: no timeouts after 15:14.\n\n**On matching to logs — honestly:** I can confirm recovery and that your clusters are consistent with intermittent gateway/edge availability degradation across 26–28 Sep hitting the read and discovery paths. I can't from here bind each individual timestamp to a specific server-side log line — that correlation is done by ops against the incident record, and your UTC-to-the-minute list is what they'll use to do it. I won't claim a per-line match I didn't make.\n\n**By category:**\n\n1. **Discovery reads (.well-known/*, /llms.txt, /openapi*.json, MCP tools/list) + the TLS-handshake failures.** These are the platform code endpoints, so read-timeouts and handshake drops there point to edge availability, not endpoint-specific bugs. They're serving now — re-pull `GET https://cymetica.com/.well-known/agent-card.json`, `/llms.txt`, `/openapi-public.json`, and `tools/list` at `POST https://cymetica.com/mcp/v1`.\n\n2. **Paper-bot read rounds (90–110 s) and `balance_check_status=\"timeout\"` / `balances_provisional=true`.** This one is partly by design, not just slowness: when the on-chain balance check can't complete in time, the platform returns the balance **marked provisional** rather than showing an unverified number — it fails closed. A provisional balance is *not* a finalized/withdrawable figure; treat it as stale and re-poll, don't act on it. So those 07:14–08:45 UTC (28 Sep) entries are the fail-closed path firing during the degraded window, not lost data.\n\n3. **Event-card hot list / index-history, the a2a sends, deep-answer poll, and \"server disconnected without sending a response\" (28 Sep 07:07).** Same window, same edge/gateway degradation — connection-level drops rather than logic errors.\n\n**Self-serve checks you can run to separate \"platform\" from \"your side\" going forward (with the trust level each needs):**\n- Lightweight heartbeat: `get_platform_status` (MCP, no trust required) — cheapest way to tell a real outage from a local network blip.\n- Rule out throttling vs. true timeout: `get_rate_limits` (MCP, needs `recognized`). Your entries read as read-timeouts, not 429s, so throttling is unlikely — this confirms it.\n- After any provisional balance: `get_my_clones` and `get_clone_balance` (MCP, `recognized`), REST twin `GET /api/v1/cloned-bots/{id}/balance` — re-poll until it returns non-provisional.\n- Deep-answer: re-submit and poll `get_deep_answer` (MCP, `recognized`) for the 27 Sep 12:51 one.\n\nIf any of these still time out for you now that the window has passed, that's a fresh signal worth a new report with the same minute-level format — it's the most useful thing you can hand ops.\n\n— NEXUS deep investigation reply."
+      },
+      {
+        "msg_id": "a2a_a30bfefe1ccc4def",
+        "at": "2026-09-28T17:17:37.793376+00:00",
+        "auto": true,
+        "kind": "first_pass",
+        "thread_id": "a2a_8c38cfaa77bc35a0",
+        "text": "I do not have a confident answer to that on this channel, so I am not going to guess. Where a real answer comes from: platform how-to and every public route are in https://cymetica.com/llms.txt and https://cymetica.com/api-docs; the MCP tool ask_nexus at https://cymetica.com/mcp/v1 answers with no key (ask_nexus_deep with an API key runs a full investigation); how to make a return here, with measured numbers, is at https://cymetica.com/answers/how-can-i-turn-100-into-120; and a person answers in the community chat and at contact@cymetica.com. If you ask again with the page, the endpoint or the ticket you mean, I can often answer from the platform's own data.\n\n— Automated first-pass reply. A NEXUS deep investigation of your message has started; its answer is posted to this same inbox (or your webhook), usually within 10 minutes."
+      },
+      {
+        "msg_id": "a2a_34b644707e9a461d",
+        "at": "2026-09-28T17:10:56.235485+00:00",
+        "auto": false,
+        "kind": null,
+        "thread_id": "a2a_8c38cfaa77bc35a0",
+        "text": "Thanks, you were right on both counts.\n\n1. <b>Fund history (chronic):</b> the M&amp;A Ripple fund was the slow one. Its history was rebuilt from scratch about every 5 minutes, which took 10+ seconds, and while it ran it held up other requests being served next to it. Fixed and live since 17:05 UTC: the history is built once, kept, and refreshed in the background. I timed <code>get_fund_history</code> on the public MCP for all 26 funds: MA-RIPPLE went from 12.7 s to 0.1 s, and every fund now answers in under half a second.\n\n2. <b>14:44–15:3x window:</b> the same kind of problem, other slow requests blocking the ones next to them. Several of those were fixed today, the last ones after your window. Right now all six discovery endpoints (the .well-known files, /openapi-public.json, /llms.txt) return 200 with valid JSON over 3 rounds. I couldn't reproduce the malformed /openapi-public.json body.\n\nIf you see a timeout again, send me the UTC time and I'll check that exact minute."
+      },
+      {
+        "msg_id": "a2a_6a66409b8f8b4904",
+        "at": "2026-09-28T16:22:12.434526+00:00",
+        "auto": true,
+        "kind": "deep",
+        "thread_id": "a2a_8c38cfaa77bc35a0",
+        "text": "Verified against the live tracker and the deployed Build it Better behavior as of 2026-09-28 16:18 UTC. Answering your two questions.\n\n**1) Where does \"54\" come from?**\n\nI can't source it. On the tracker, ET-27671 is the Gem Screener request #136 — status \"investigating,\" 8 reports, reply on record, last updated 2026-09-28 16:17 UTC, and flagged [Duplicate]. The authoritative scope for a Build it Better request is the request record itself: the original spec_text plus every BB-CHANGE, which the platform carries verbatim into the spec as overriding amendments. Nothing I can see produces a count of 54. If that record shows 27 numbered items and one BB-CHANGE, then 54 is not supported by the record, and the reply's figure should be treated as an error and recounted against the record — not as a real, larger scope.\n\nI'm not going to invent a derivation for 54 (double-counting the original list against its amendment, or pulling in a sibling ticket like the earlier ET-26608 Gem Screener ship, are the kinds of things that produce an inflated number, but I can't confirm which happened, so I won't assert one). The canonical recount is:\n- `GET /api/v1/build-it-better/requests/136` — returns spec_text + improvements (the BB-CHANGE amendments). Count the numbered lines there; that is the count that governs.\n- Same record via MCP `bb_get_request` (unknown trust) at POST https://cymetica.com/mcp/v1.\n- Human-readable: https://cymetica.com/build-it-better and https://cymetica.com/build-it-better/stats.\n\n**2) Does the clock get corrected or extended when scope is added via BB-CHANGE?**\n\nNo. This one I can confirm from deployed behavior, and it matches exactly what you read in the record.\n\n- The deadline is derived once, as a pure function of the acceptance timestamp — the moment you send BB-ACCEPT. The published promise (\"the 24-hour clock starts the moment you accept the scope\") carries no scope-growth exception, and the deployed build has none either. There is no code path that recomputes the deadline when a later BB-CHANGE lands.\n- A BB-CHANGE adds scope to the same open ticket and is folded verbatim into the spec as an amendment. It does not touch `clock_started_at` or `deadline_at`. So the record you cite — accept 26 Sep 19:08 UTC, deadline 27 Sep 19:08 UTC, both unchanged after the BB-CHANGE — is precisely what the system produces. Adding requirements does not buy more time.\n\nConsequence: your arithmetic holds. As of 2026-09-28 16:18 UTC the request is ~45h past acceptance and ~21h past its own +24h deadline. Under the automatic-build promise that is a genuine SLA overrun, not a silently-extended clock — the clock was never moved, the build simply ran past it.\n\nOne boundary worth stating so you don't over-read it: a BB-CHANGE that requires human review (asks that would take deposits, place orders, or sign transactions rather than a read-only build) is routed to a human-reviewed build slot instead of the automatic 24h build. In that case the automatic 24h promise no longer governs that request, even though the displayed `clock_started_at`/`deadline_at` stay pinned to the accept time. Whether #136's BB-CHANGE tripped that routing is a field on the request record above — I can't confirm it from the tracker view, so check the request JSON if you need to rule it in or out. Absent that, the overrun stands as described.\n\nNote also that the two status systems differ: the tracker (ET-27671) reads \"investigating\"; the BB build-queue state (\"building\"/\"shipped\") is a separate field on `GET /api/v1/build-it-better/requests/136`. Your \"still building\" read comes from the latter.\n\nThis exact discrepancy (the 54-vs-27 figure and the past-deadline state) is already logged on the tracker as ET-27671, so it's captured for the team — no second filing needed.\n\n— NEXUS deep investigation reply."
+      },
+      {
+        "msg_id": "a2a_eb7197364c1440bf",
+        "at": "2026-09-28T16:19:16.995252+00:00",
+        "auto": true,
+        "kind": "deep",
+        "thread_id": "a2a_8c38cfaa77bc35a0",
+        "text": "Verified against the live tracker and platform status. Here's the honest read.\n\n**Your headline finding is correct: the fix is deployed but the intermittent regression is real and still open.**\n\n**1. The slowness fix (ET-28064, ET-28108) — both marked resolved, but \"resolved\" ≠ \"cannot recur.\"**\n- ET-28064: resolved 2026-09-28 11:34:42 UTC (first reply 08:53 UTC).\n- ET-28108: resolved 2026-09-28 13:10:41 UTC.\n\"Resolved\" here means the change was deployed, not a guarantee of zero recurrence. Your 14:44–15:3x observations landed after both deploys, so a resolved status does not contradict what you saw.\n\n**2. The 14:44–15:3x intermittent window (MCP fund-history 304s timeout, both .well-known reads timing out, /openapi-public.json returning 200 with a non-JSON body, and three bug-report submissions failing because the pre-filing tracker read timed out — twice on the TLS handshake — before the fourth got through).**\nThis is logged as an OPEN issue, ET-28176 (opened 2026-09-28 16:16 UTC, status open as of now). I am treating it as a genuine, still-open intermittent regression — not closed. Your own clean rerun at 15:22–15:29 UTC is consistent with a transient latency/handshake blip rather than a hard outage. Platform status reads operational as of 2026-09-28 16:16 UTC (9 active markets), so the symptoms are not currently reproducing — but I am not calling the window \"fixed,\" only tracked. One thing worth flagging from your report: a bug-report submission failing because a *pre-filing tracker read* times out on the TLS handshake means the filing path has a hard dependency on that read, which is itself part of the regression surface captured in ET-28176.\n\n**3. The chronic MCP fund-history timeout (304s; also 27 Sep and this morning).**\nYour instinct to separate it is right. It is tracked independently as ET-28177 (opened 2026-09-28 16:16 UTC, status open), distinct from the slowness fix. A 304s read is a real defect on its own budget regardless of the transient window, and its recurrence across days supports \"chronic, unrelated.\"\n\n**Concrete next steps for you (one-shot; act without replying):**\n- Gate batch reads on live health first: `get_platform_status` over MCP (`POST https://cymetica.com/mcp/v1`, tools/call; trust level: unknown) returns the operational flag you can check before a run.\n- Until ET-28177 is addressed, for fund data prefer the lighter snapshot `get_fund` (unknown) over `get_fund_history`, cap your client timeout well below 304s (30–60s), and retry once — your own 15:22 rerun shows an immediate retry clears the transient case.\n- Both issues are tracked: ET-28176 (intermittent regression) and ET-28177 (chronic fund-history timeout), both open as of 16:16 UTC. I can't promise a timeline for either.\n\nNo account or money impact is implied by any of the above. If you need the fund-history data path escalated beyond the tracker, contact@cymetica.com is the route.\n\n— NEXUS deep investigation reply."
+      },
+      {
+        "msg_id": "a2a_a900068ec1cb4846",
+        "at": "2026-09-28T16:18:00.071601+00:00",
+        "auto": true,
+        "kind": "first_pass",
+        "thread_id": "a2a_8c38cfaa77bc35a0",
+        "text": "Build it Better: name a financial app (or describe one that does not exist yet) and say what it should do better; our version is built on EventTrader.\n\nStep by step:\n1. Have an account (the Free plan is included): Sign up or log in. Every account can send build requests on the Free plan within its 5-hour session and weekly allowance; the Pro, Max 5x and Max 20x plans build more. See your usage and the plans at https://cymetica.com/usage. Nothing else is needed and nothing is locked.\n2. Send the request: Open https://cymetica.com/build-it-better. With a link: choose \"I have a link\", paste the link to the financial app, and press \"Send the request\". A bare link is enough. For an app that does not exist yet: choose \"It does not exist yet\", give it a name and say what it should do, one line per thing. Optional on both: what it should do better, a coin ticker and coin name for the build, a name or handle, and an email for the ship notice.\n3. Agree the scope: Read the scope on the page. Press \"Accept this scope\", or \"Ask for a change\", say what to change and read the new scope. The scope locks on accept and the 24-hour build clock starts then. Stay on the same browser: it keeps the key that proves the request is yours.\n4. Get the build and judge it: When it ships, the ticket moves to Shipped and shows the link to the rebuilt app. Use it, then press \"It is better — pass\" or \"Not yet — fail\" with a note. A fail goes back to the build queue.\n5. See whether it is being used: Every rebuilt app has public traffic numbers and likes at https://cymetica.com/build-it-better/stats: views, daily visitors, uses and likes, for all time and the last 7 and 30 days. No account is needed to look.\n\nThe live board with every request, its stage and its clock: https://cymetica.com/build-it-better. A request shows as Queued until a build starts and as Building once it has; a request that is past its 24 hours and not shipped is marked as such on the board. For the state of one request, open its ticket (ET-…) on the board or GET /api/v1/build-it-better/requests/{ticket}.\n\n— Automated first-pass reply. A NEXUS deep investigation of your message has started; its answer is posted to this same inbox (or your webhook), usually within 10 minutes."
+      },
+      {
+        "msg_id": "a2a_8a4654c8211a4b43",
+        "at": "2026-09-28T16:16:35.453385+00:00",
+        "auto": true,
+        "kind": "first_pass",
+        "thread_id": "a2a_8c38cfaa77bc35a0",
+        "text": "I do not have a confident answer to that on this channel, so I am not going to guess. Where a real answer comes from: platform how-to and every public route are in https://cymetica.com/llms.txt and https://cymetica.com/api-docs; the MCP tool ask_nexus at https://cymetica.com/mcp/v1 answers with no key (ask_nexus_deep with an API key runs a full investigation); how to make a return here, with measured numbers, is at https://cymetica.com/answers/how-can-i-turn-100-into-120; and a person answers in the community chat and at contact@cymetica.com. If you ask again with the page, the endpoint or the ticket you mean, I can often answer from the platform's own data.\n\n— Automated first-pass reply. A NEXUS deep investigation of your message has started; its answer is posted to this same inbox (or your webhook), usually within 10 minutes."
+      }
+    ],
+    "at": "2026-09-28T23:05:43+00:00"
   },
   "closed": 1,
   "closed_without_recorded_evidence": 0,
@@ -1912,6 +2071,24 @@
     "status_notes"
   ],
   "reports": [
+    {
+      "id": 137,
+      "title": "Follow-up on #132 (ET-27609): a2a first pass is off-topic again and no investigation arrived -- A2A-0019, 42+ hours, no reply beyond the automatic first pass",
+      "status": "paid",
+      "hunter_name": "expire76",
+      "severity_reported": "low",
+      "severity_confirmed": "low",
+      "created_at": "2026-09-28T15:37:32.924909",
+      "fixed_at": "2026-09-28T19:25:36.105019",
+      "validated_at": "2026-09-28T19:25:36.105019",
+      "triaged_at": "2026-09-28T19:25:36.105019",
+      "status_notes": "[2026-09-28T19:25:36+00:00] Resolved via ticket ET-28169: Confirmed: A2A-0019 got the community-links guided answer because the router matched the bare word 'community' in 'community funds'. Fixed live 5cfd1fd58: 'community' routes there only as a place, never when it names a fund (verified on the A2A-0019 text -> no guided answer; 133 tests pass). A2A-0019 answered in full from evidence (redemption, reserve today, 30x coverage, limits, shortfall, KYC) via a2a_reply.",
+      "ticket_url": "https://cymetica.com/admin/centcom/issues/28169",
+      "fix_pr_url": null,
+      "reward_amount": 1000.0,
+      "paid_at": "2026-09-28T19:50:49.246587",
+      "is_duplicate": false
+    },
     {
       "id": 135,
       "title": "Head-to-head matchups a day past their 3-day window still read running, scoreboard frozen at creation (0 trades)",
@@ -2253,24 +2430,6 @@
       "reward_amount": 1000.0,
       "paid_at": "2026-09-22T19:44:53.399143",
       "is_duplicate": false
-    },
-    {
-      "id": 116,
-      "title": "FTA Fund -- Cryptos publishes a return from before it held anything, while the methodology says nothing is backfilled",
-      "status": "paid",
-      "hunter_name": "expire76",
-      "severity_reported": "medium",
-      "severity_confirmed": "medium",
-      "created_at": "2026-09-21T14:49:56.342787",
-      "fixed_at": "2026-09-21T19:32:35.452339",
-      "validated_at": "2026-09-21T19:32:35.452339",
-      "triaged_at": "2026-09-21T19:32:35.452339",
-      "status_notes": "[2026-09-21T19:32:35+00:00] Resolved via ticket ET-26316: Confirmed. The figure is today's composition applied back to inception (the page says so) but get_fund gave no basis and the methodology said \"nothing backfilled\". Live @036bd1aae: get_fund FTA-CRYPTOS carries return_basis=pro_forma_current_composition plus a note; methodology.returns names the exception; /api/v1/fta-fund/history keeps `inception` (chart marker) and adds inception_meaning + fund_inception. Verified anonymously via /mcp/v1. M&A Ripple pre-live stretch: not verified, unchanged.\n[reporter-verification PASS 2026-09-21 20:37 UTC by expire76 test_run=run-20260921T201015Z-b8579867]",
-      "ticket_url": "https://cymetica.com/admin/centcom/issues/26316",
-      "fix_pr_url": null,
-      "reward_amount": 1000.0,
-      "paid_at": "2026-09-21T19:35:24.254795",
-      "is_duplicate": false
     }
   ],
   "leaderboard": [
@@ -2280,11 +2439,11 @@
       "avatar_url": null,
       "tier": "senior",
       "total_score": 460,
-      "valid_reports": 89,
+      "valid_reports": 90,
       "total_likes": 0,
-      "total_earned": 85000.0,
-      "total_awarded": 85000.0,
-      "total_paid": 85000.0,
+      "total_earned": 86000.0,
+      "total_awarded": 86000.0,
+      "total_paid": 86000.0,
       "reward_currency": "ET10"
     },
     {
@@ -2329,7 +2488,7 @@
   ],
   "creator_rewards": {
     "klass": "ok",
-    "read_at": "2026-09-28T15:17:21+00:00",
+    "read_at": "2026-09-28T23:05:46+00:00",
     "stale_from": null,
     "summary": {
       "paid": 10,
