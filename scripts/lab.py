@@ -2345,15 +2345,24 @@ def night_promote(since: datetime | None = None) -> dict:
                                if levels.get("tp") or levels.get("sl")
                                else "he named no take-profit or stop")
                 # A room with no criterion is one no verdict can ever reach.
-                # The window and the room's stop are OURS, not his -- `adopted`
-                # says so; the leg's exits are his when he named them.
+                # The window is OURS, not his -- `adopted` says so; the leg's
+                # exits are his when he named them. Where he named a stop, it
+                # governs and ours (10% from the PEAK) is left off: a replay of
+                # 22 card rooms on 2026-09-28 found ours throwing out rooms his
+                # would have held into profit (STR-0010, -0013, -0025).
+                his_stop = levels.get("sl") is not None
                 rooms.set_acceptance(
-                    room, window_days=NIGHT_WINDOW_DAYS, stop_pct=NIGHT_STOP_PCT,
+                    room, window_days=NIGHT_WINDOW_DAYS,
+                    stop_pct=None if his_stop else NIGHT_STOP_PCT,
                     legs=plan["legs"], benchmark_card=BTC_PROXY,
                     why=(f"opened unattended from {origin}, one room for this "
-                         f"card; the window and the room's stop are the "
-                         f"laboratory's defaults, not numbers Nexus gave; "
-                         f"{said_levels}. Backtest: "
+                         f"card; the window is the laboratory's default, not "
+                         f"a number Nexus gave; "
+                         + ("the room stop is his leg stop, ours is off; "
+                            if his_stop else
+                            f"the room stop is ours, {NIGHT_STOP_PCT:g}% from "
+                            f"the peak; ")
+                         + f"{said_levels}. Backtest: "
                          f"{card[:8]} {gate_row.get('why')}"
                          + (" -- NOT backtested, half stake" if untested
                             else ""))[:900],

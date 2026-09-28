@@ -1766,8 +1766,15 @@ def test_a_card_leg_is_sold_at_his_take_profit_and_the_room_runs_on(
                readings={("BTC", "ETH"): (6.5, 1.3)})
     scripts_lab.night_promote()
     rooms = {r["origin"]: r["id"] for r in qa_rooms.strategies(qa_rooms.load())}
-    leg = qa_rooms.acceptance_of(qa_rooms.load(), rooms["NEX-0001"])["legs"][0]
+    criterion = qa_rooms.acceptance_of(qa_rooms.load(), rooms["NEX-0001"])
+    leg = criterion["legs"][0]
     assert (leg["tp"], leg["sl"]) == (5.0, -3.0), leg
+    # Replay of 22 card rooms, 2026-09-28: our 10% stop from the PEAK threw
+    # out rooms his own stop would have held into profit. Where he named a
+    # stop, his governs; a leg he gave none keeps ours.
+    assert criterion["stop_pct"] is None, criterion
+    bare_criterion = qa_rooms.acceptance_of(qa_rooms.load(), rooms["NEX-0002"])
+    assert bare_criterion["stop_pct"] == scripts_lab.NIGHT_STOP_PCT, bare_criterion
     opened = qa_rooms.acceptance_of(qa_rooms.load(), rooms["NEX-0001"])["at"]
     buys = []
     for n, (origin, which) in enumerate((("NEX-0001", card), ("NEX-0002", bare)), 1):
