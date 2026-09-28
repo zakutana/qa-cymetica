@@ -1510,9 +1510,23 @@ def test_the_brief_carries_his_track_record_into_the_next_question(
         [{"symbol": "SOL", "weight": 0.5}, {"symbol": "ZEC", "weight": 0.5}],
         30, {"total_return_pct": 91.98, "sharpe_ratio": 9.05,
              "max_drawdown_pct": 12.0, "n_points": 30}, why="search")
+    # His Hot rule too (NEXT.md 2026-09-21): does anything pass NEX-0055 at
+    # all, and when almost nothing does, the number to take back to him.
+    lab.note_hot_reading({
+        "rounds": 167, "first": "2026-09-21T08:52:26+00:00",
+        "last": "2026-09-27T19:24:07+00:00", "watched_hours": 240.0,
+        "entries": {"crypto": 195, "stocks": 306},
+        "follow": {"crypto": [], "stocks": []},
+        "control": {"crypto": [], "stocks": []}, "cards": {},
+        "rules": {"NEX-0055": {"entries": 2, "open": 0, "unobserved": 2,
+                               "n": 0, "verdict": "not yet: 0 of 100 trades"}}})
 
     text = scripts_lab.brief()
 
+    hot_block = text[text.index("Hot headlines"):]
+    assert "does anything pass NEX-0055?" in hot_block, hot_block[:600]
+    assert "NEX-0055 2 (1.0%) of 195 crypto entries" in hot_block, hot_block[:600]
+    assert "ALMOST NOTHING PASSES" in hot_block, hot_block[:600]
     # Since V5 (2026-09-23) the day's figure is said without a cap of ours,
     # and the only limit named is the book's.
     assert "1 in the last 24 h" in text and "of 24" not in text, text

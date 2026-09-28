@@ -3716,11 +3716,15 @@ def brief() -> str:
 
     hot_reading = lab.last_hot_reading()
     if hot_reading:
+        watch = _sibling("hot_watch")
         out.append("")
-        out.append(f"Hot headlines -- does a basket that just entered Hot keep "
-                   f"rising? ({str(hot_reading.get('at'))[:16]}, NEX-0055 is "
-                   f"the rule under test):")
-        for line in _sibling("hot_watch").say_reading(hot_reading):
+        # First whether his rule lets anything through at all (NEXT.md
+        # 2026-09-21): when almost nothing does, that number is the question.
+        out.append(f"Hot headlines -- does anything pass NEX-0055? "
+                   f"({str(hot_reading.get('at'))[:16]}):")
+        out.extend(f"  {line}" for line in watch.say_passing(hot_reading))
+        out.append("  and does a basket that just entered Hot keep rising?")
+        for line in watch.say_reading(hot_reading):
             out.append(f"  {line}")
     out.append("")
     out.append("what we know about Nexus -- read before writing to him:")

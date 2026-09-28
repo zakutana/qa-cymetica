@@ -321,6 +321,7 @@ def reading(rows: list[dict] | None = None) -> dict:
     return {"rounds": len(rounds),
             "first": rounds[0]["at"] if rounds else None,
             "last": rounds[-1]["at"] if rounds else None,
+            "watched_hours": hot.watched_hours(rows),
             "entries": {c: sum(1 for e in found if e["cls"] == c) for c in hot.CLASSES},
             "follow": hot.follow(found, rows),
             "control": hot.control(rows, found),
@@ -355,6 +356,70 @@ def say_reading(said: dict) -> list[str]:
         lines.append(f"  {name}: {rule.get('entries', 0)} qualifying entr(ies), "
                      f"{rule.get('open', 0)} open, {rule.get('unobserved', 0)} unseen "
                      f"-- {rule.get('verdict')}")
+    return lines
+
+
+def say_passing(said: dict) -> list[str]:
+    """Does anything pass his rule at all? Read off a stored reading's own
+    counts -- `rules[*].entries`, what `nexus_rule` let through its gates --
+    over the hours an entry could have been seen. A reading stored before
+    `watched_hours` existed gives its counts over its first..last window and
+    no pace: on 2026-09-28 that window was 7.2 days and the watched hours 35,
+    so a pace off the window would call his rule five times rarer than it is.
+
+    The number for Nexus is how many pass, never how many closed: an exit no
+    round priced is our watch's gap, said apart so it is not taken to him as
+    his rule's fault."""
+    rules = (said or {}).get("rules") or (
+        {"NEX-0055": said["rule"]} if (said or {}).get("rule") else {})
+    if not rules:
+        return []
+    crypto = (said.get("entries") or {}).get("crypto") or 0
+    hours = said.get("watched_hours")
+    if hours is not None:
+        basis = f"{hours:.0f} h watched"
+    else:
+        first, last = _at(said.get("first")), _at(said.get("last"))
+        span = (last - first).total_seconds() / 3600 if first and last else 0.0
+        basis = f"{span / 24:.1f} d window"
+
+    # NEX-0057a..d share one set of gates and differ in exits, so one count.
+    groups: dict[tuple, list[str]] = {}
+    for name, rule in rules.items():
+        base = name.rstrip("abcdefghijklmnopqrstuvwxyz")
+        groups.setdefault((base, rule.get("entries", 0)), []).append(name[len(base):])
+    parts = [f"{base}{'/'.join(s for s in suffixes if s)} {n} "
+             f"({n / crypto * 100 if crypto else 0:.1f}%)"
+             for (base, n), suffixes in groups.items()]
+    lines = [f"  {', '.join(parts)} of {crypto} crypto entries pass, over "
+             f"{basis} ({said.get('rounds', 0)} rounds)"]
+
+    best = max(rule.get("entries", 0) for rule in rules.values())
+    bar = hot.RULE["min_trades"]
+    if not best:
+        lines.append(f"  ALMOST NOTHING PASSES -- the number for Nexus: none of "
+                     f"{crypto} crypto entries in {basis}; ask him which gate "
+                     f"to loosen")
+    elif not hours:
+        lines.append("  pace unknown: this reading predates watched hours, and "
+                     "the window is not watching; the next reading carries them")
+    else:
+        # At best: overlap skips and unpriced exits make fewer trades.
+        pace = best / (hours / 24)
+        away = bar / pace
+        if away > hot.ALMOST_NOTHING_DAYS:
+            lines.append(f"  ALMOST NOTHING PASSES -- the number for Nexus: at "
+                         f"best {pace:.1f} a watched day, so his {bar} trades "
+                         f"are ~{away:.0f} watched d away; ask him which gate "
+                         f"to loosen")
+        else:
+            lines.append(f"  pace: at best {pace:.1f} a watched day, his {bar} "
+                         f"trades ~{away:.0f} watched d away")
+    name, worst = max(rules.items(), key=lambda kv: kv[1].get("unobserved", 0))
+    if worst.get("unobserved"):
+        lines.append(f"  {worst['unobserved']} of {worst.get('entries', 0)} "
+                     f"passing unobserved under {name} -- no round priced the "
+                     f"exit: ours, the watch's gaps, not his rule")
     return lines
 
 

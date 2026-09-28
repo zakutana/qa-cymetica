@@ -72,6 +72,12 @@ VARIANTS = {
                   "vol_stop": True},
 }
 
+# "Almost nothing passes" (NEXT.md, 2026-09-21): at the pace entries pass
+# his gates, his own `min_trades` would take more than this many days to
+# collect. A month is longer than any question to him stays open, so past it
+# the rule cannot be judged in time and the number goes back to him.
+ALMOST_NOTHING_DAYS = 30
+
 VOL_LOOKBACK_HOURS = 6.0
 VOL_MULTIPLE = 1.25
 
@@ -137,6 +143,17 @@ def covered(prev: dict | None, cur: dict, gap_minutes: float = GAP_MINUTES) -> b
     if prev is None:
         return False
     return (_at(cur["at"]) - _at(prev["at"])) <= timedelta(minutes=gap_minutes)
+
+
+def watched_hours(rows) -> float:
+    """The hours in which an entry could have been seen: the covered steps
+    between rounds whose hot read succeeded, as `entries()` walks them. The
+    calendar between the first and the last round is not it -- the loop runs
+    only while the console does (167 rounds over 6.4 days on 2026-09-27)."""
+    seen = [r for r in _rounds(rows) if r.get("hot") is not None]
+    total = sum(((_at(b["at"]) - _at(a["at"])).total_seconds()
+                 for a, b in zip(seen, seen[1:]) if covered(a, b)), 0.0)
+    return round(total / 3600.0, 3)
 
 
 def entries(rows, headlines=None) -> list[dict]:
