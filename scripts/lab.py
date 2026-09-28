@@ -1455,22 +1455,30 @@ def verdicts(now=None) -> list[dict]:
 
     def series_of(leg: dict, acceptance: dict | None = None) -> list:
         """A leg's index, by its kind: a card's from their index-history, a
-        bot's from the sampler's rows on this machine, a fund's from
-        get_fund_history. A read that failed raises Unread and the verdict
-        waits; only an ANSWER with no points is an empty series, which the
-        verdict reads as a gap, never as a loss."""
+        bot's and an Arena team's from the sampler's rows on this machine, a
+        fund's from get_fund_history. A read that failed raises Unread and
+        the verdict waits; only an ANSWER with no points is an empty series,
+        which the verdict reads as a gap, never as a loss."""
         nonlocal samples, funded, entered, clone_rows
         kind, ref = rooms.leg_kind(leg), rooms.leg_ref(leg)
+        if kind in ("bot", "arena") and samples is None:
+            clone_rows = _sibling("clone").load()
+            samples, funded = rooms.load_samples(), lab.funded(clone_rows)
+            entered = lab.funded_at(clone_rows)
         if kind == "arena":
-            # Nothing reads a team's price yet (NEX-0076 asks how a share
-            # settles). A gap, not a card: the fall-through below would have
-            # judged BLUE on /event-cards/BLUE.
-            return []
+            # Never through the fall-through below: that would judge BLUE on
+            # /event-cards/BLUE. The sampler's newest round that read this
+            # team's book failed -> the verdict waits (rule 8), because a
+            # window whose last round is missing reads as short of data.
+            door = rooms.ARENA_DOOR.format(team=ref)
+            tried = [r for r in samples if isinstance(r, dict)
+                     and r.get("type") == "tick"
+                     and door in (r.get("reads") or {})]
+            if tried and tried[-1]["reads"][door] != "ok":
+                raise Unread(f"the sampler's newest read of {door} was "
+                             f"{tried[-1]['reads'][door]}")
+            return lab.arena_series(samples, ref)
         if kind == "bot":
-            if samples is None:
-                clone_rows = _sibling("clone").load()
-                samples, funded = rooms.load_samples(), lab.funded(clone_rows)
-                entered = lab.funded_at(clone_rows)
             # A variant (V5) runs on a RESTART of a clone that ran before:
             # measured from that restart, not from the clone's funding.
             restart = lab.bot_restart(clone_rows, ref,

@@ -13,8 +13,8 @@ running (qa/rooms.py says the rest).
 
 SAFE, GET only, through the guarded client, and only about what is ours by our
 own records: the bots clones.jsonl says we cloned, the positions paper.jsonl
-says we opened and have not closed, and the cards a strategy's plan names while
-that strategy is not stopped (qa/rooms.py). Six doors:
+says we opened and have not closed, and the cards and Arena teams a strategy's
+plan names while that strategy is not stopped (qa/rooms.py). Seven doors:
 
     my-clones              the bot's balance, P&L, trades, and its indicators
     {id}/balance           what is locked in open trades, and what is free
@@ -22,6 +22,7 @@ that strategy is not stopped (qa/rooms.py). Six doors:
     event-cards/positions  each of our positions, live
     event-cards/{card}     what a card holds, and when it closes
     {card}/index-history   the card's index, for the chart
+    arena/orderbook/{team} what a team's share would sell for, every round
 
 Every round writes a `tick`, including a round in which every read failed: on
 the night of 2026-09-10 a sampler hung for four hours behind `| tail` and
@@ -57,6 +58,7 @@ ACTIVITY = "/api/v1/cloned-bots/{id}/activity"
 POSITIONS = "/api/v1/event-cards/positions"
 HISTORY = "/api/v1/event-cards/{id}/index-history"
 CARD = "/api/v1/event-cards/{id}"
+ARENA_BOOK = "/api/v1/arena/orderbook/{team}"
 TIMEOUT = 20.0
 # A whole round may take this long; what is left unread waits for the next
 # one. Five doors at a 20 s timeout each could otherwise hold a round for
@@ -124,15 +126,19 @@ def follow() -> dict:
     status = {row.get("room"): row.get("status") for row in stored
               if row.get("type") == "status"}
     proposed: list[str] = []
+    teams: list[str] = []
     for room, plan in rooms.plans(stored).items():
         if status.get(room) == "stopped":
             continue
         for leg in plan.get("legs") or []:
-            if leg.get("card") and leg["card"] not in proposed:
+            if rooms.leg_kind(leg) == "arena":
+                if rooms.leg_ref(leg) and rooms.leg_ref(leg) not in teams:
+                    teams.append(rooms.leg_ref(leg))
+            elif leg.get("card") and leg["card"] not in proposed:
                 proposed.append(leg["card"])
     return {"bots": bots,
             "positions": {p: c for p, c in opened.items() if p not in closed},
-            "cards": proposed}
+            "cards": proposed, "teams": teams}
 
 
 def _signature(row: dict, fields) -> str:
@@ -328,6 +334,42 @@ def _cards(client, reads: _Reads, positions: dict, proposed: list[str], seen: di
     return rows
 
 
+def _price(value):
+    """Their book quotes prices as strings ("0.55"); null is an empty side."""
+    if value is None:
+        return None
+    if isinstance(value, bool):
+        raise ValueError(value)
+    return float(value)
+
+
+def _arena(client, reads: _Reads, teams: list[str], at: str) -> list[dict]:
+    """Each team's book, one row a round: the price series an arena leg's
+    verdict reads (NEX-0076: a share never pays out, it is sold back into
+    this book). Written every round, not on change -- like a bot's P&L, a
+    price that did not move is still a point in the window."""
+    rows: list[dict] = []
+    for team in teams:
+        door = rooms.ARENA_DOOR.format(team=team)
+        # mode=paper: our share is bought on paper (place_arena_order's
+        # `mode: paper`), and the filter is their published way to see only
+        # the orders a paper sell can meet.
+        body = reads.get(client, door, ARENA_BOOK.format(team=team), mode="paper")
+        if body is None:
+            continue
+        try:
+            if not isinstance(body, dict) or "best_bid" not in body:
+                raise ValueError("no best_bid")
+            quote = {f: _price(body.get(f))
+                     for f in ("best_bid", "best_ask", "last_trade")}
+        except (TypeError, ValueError):
+            reads.say(door, "unreadable")
+            continue
+        rows.append({"type": "sample", "kind": "arena", "at": at, "team": team,
+                     **quote})
+    return rows
+
+
 def tick(client, every: float) -> list[dict]:
     """One round: read, write what changed, and always a tick. Never raises."""
     at = _now()
@@ -339,6 +381,7 @@ def tick(client, every: float) -> list[dict]:
         seen = _seen(rooms.load_samples())
         rows += _bots(client, reads, ours["bots"], seen, at)
         rows += _cards(client, reads, ours["positions"], ours["cards"], seen, at)
+        rows += _arena(client, reads, ours["teams"], at)
     except Exception as exc:  # noqa: BLE001 -- a broken round is a failed round
         reads.say("round", f"broke: {type(exc).__name__}: {exc}"[:200])
     finally:

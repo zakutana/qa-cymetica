@@ -501,6 +501,18 @@ endpoints:
     executable_params: [team, side, amount, size, quantity, price]
     probe_only: true   # an Arena order carries amount/size/price and settles
 
+  # The read an arena leg's verdict stands on (NEXT.md 2026-09-22, NEX-0076: a
+  # share never pays out, it is sold back into this book). GET only, public;
+  # scripts/sampler.py reads each planned team's best bid every round. Its
+  # 200 is a bare `object` in /openapi-public.json -- the fields we read
+  # (best_bid, best_ask, last_trade, as strings) are from the live answer of
+  # 2026-09-28, tests/repo/test_arena_share_price.py.
+  - id: arena.orderbook
+    path: /api/v1/arena/orderbook/{team_symbol}
+    methods: [GET]
+    component: rest.arena
+    executable_params: []
+
   # The clone floor was "cloning funds an agent; the gas policy bills cloned
   # agents to the user's own balance". True before CloneBotRequest published
   # `paper`: "true = paper clone, false = live clone, omitted = inherits the

@@ -3339,11 +3339,12 @@ def test_a_fund_is_marked_not_bought_and_judged_on_its_own_series(
 @qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
 def test_an_arena_leg_is_a_gap_until_something_reads_its_series(
         tmp_path, monkeypatch):
-    """An arena leg (2026-09-22) names a team, BLUE or RED, and nothing here
-    reads a team's price yet: how a share settles is NEX-0076's question. Any
-    kind series_of does not know fell through to a CARD's index-history, so
-    an arena leg would have been judged on /event-cards/BLUE. Until a reader
-    exists it is a gap -- inconclusive, never a loss and never a pass."""
+    """An arena leg (2026-09-22) names a team, BLUE or RED. Any kind
+    series_of does not know fell through to a CARD's index-history, so an
+    arena leg would have been judged on /event-cards/BLUE. Its price is the
+    sampler's read of the team's book (tests/repo/test_arena_share_price.py);
+    with no round of the sampler on record it is a gap -- inconclusive,
+    never a loss and never a pass."""
     import qa.rooms as qa_rooms
 
     scripts_lab = _scripts_lab(tmp_path, monkeypatch)

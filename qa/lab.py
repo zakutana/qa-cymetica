@@ -1101,7 +1101,8 @@ def book_series(index_points, entry_index, filled_at, closed_at=None,
 def _cost(leg: dict) -> float:
     """The live round trip a leg pays, in %: a card or a fund leg is bought
     and sold (GATE's 0.2% taker + 0.5% slippage each side); a bot's P&L is
-    as their engine books it."""
+    as their engine books it. An arena leg is charged nothing and judged bid
+    to bid, so the spread paid on the way in is not counted against it."""
     kind = leg.get("kind") or "card"
     return GATE["round_trip_cost_pct"] if kind in ("card", "fund") else 0.0
 
@@ -1118,6 +1119,30 @@ def fund_series(points) -> list[dict]:
         if isinstance(point, dict) and point.get("t") and isinstance(
                 point.get("v"), (int, float)) and not isinstance(point["v"], bool):
             out.append({"t": point["t"], "index": float(point["v"])})
+    return out
+
+
+def arena_series(samples: list[dict], team: str) -> list[dict]:
+    """An Arena team's share, from the sampler's reads of its book, in the
+    shape the verdict reads a card's index in.
+
+    The best BID: NEX-0076 -- a share never pays out, "You realize value by
+    selling the share back into the book at its live price" -- so what a
+    held share is worth is what the book would pay for it now. Not the last
+    trade (0.45 against a 0.55 bid on 2026-09-28: a price nobody is offering)
+    and not a mid (their ask side was empty). A round with nobody bidding is
+    no point, a gap and never a price of zero. A bear leg is read on the same
+    bids, inverted by the verdict: nothing we have seen says a share can be
+    sold short at all.
+    """
+    out = []
+    for row in samples or []:
+        if (not isinstance(row, dict) or row.get("kind") != "arena"
+                or row.get("team") != team or not row.get("at")):
+            continue
+        bid = row.get("best_bid")
+        if isinstance(bid, (int, float)) and not isinstance(bid, bool):
+            out.append({"t": row["at"], "index": float(bid)})
     return out
 
 
@@ -1142,7 +1167,7 @@ def formula_fingerprint() -> str:
         # alone would not move (A8's lesson, review of 2026-09-23).
         source = "".join(inspect.getsource(f) for f in (
             verdict, _early, _from_peak, _inside, bot_series, fund_series,
-            book_series, _cost, _net_of))
+            arena_series, book_series, _cost, _net_of))
     except (OSError, TypeError):  # pragma: no cover -- frozen or stripped
         return "unknown"
     return hashlib.sha256(source.encode("utf-8")).hexdigest()[:12]

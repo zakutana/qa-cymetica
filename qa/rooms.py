@@ -73,6 +73,9 @@ CARD_ID = re.compile(r"^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]
 # only with `mode: paper`, which qa/safety.py holds it to.
 LEG_KINDS = ("card", "bot", "fund", "arena")
 ARENA_TEAMS = ("BLUE", "RED")
+# The name of the sampler's read of one team's book on a tick's `reads`: the
+# sampler writes it and the verdict looks it up, so it is spelled once.
+ARENA_DOOR = "arena {team}"
 FUND_SYMBOL = re.compile(r"^[A-Z0-9][A-Z0-9-]{0,39}$")
 BOT_REF = re.compile(r"^[A-Za-z0-9][A-Za-z0-9_.:-]{0,79}$")
 # What /lab calls an answered question. lab_page.py's _nexus_questions() reads
