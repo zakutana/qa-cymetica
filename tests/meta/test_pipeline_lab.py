@@ -2328,23 +2328,33 @@ def test_a_room_of_ours_is_judged_when_its_variant_ran_and_archived_when_not():
     archive read "not his pick" as "archive", which would have archived every
     variant the moment it stopped. A room of ours is archived only when
     nothing ran in it -- its restart never accepted -- and judged otherwise."""
-    clones = [*_chain("CLN-0001", "fund", _t(0, 1), amount=240.0),
-              *_chain("CLN-0002", "enable", _t(0, 2)),
-              *_chain("CLN-0003", "disable", _t(5)),
-              *_chain("CLN-0004", "settings", _t(5, 1)),
+    before_restart = [*_chain("CLN-0001", "fund", _t(0, 1), amount=240.0),
+                      *_chain("CLN-0002", "enable", _t(0, 2)),
+                      *_chain("CLN-0003", "disable", _t(5)),
+                      *_chain("CLN-0004", "settings", _t(5, 1))]
+    clones = [*before_restart,
               *_chain("CLN-0005", "enable", _t(5, 2), bot_profit_usdc="20.0")]
     leg = {"kind": "bot", "ref": "inst-1", "side": "bull", "share": 1.0}
 
-    def room(ident, origin, opened):
+    def room(ident, origin, opened, status="stopped"):
         return [{"type": "strategy", "id": ident, "origin": origin, "title": "x",
                  "kind": "bot", "ref": "sp-1", "at": opened},
                 {"type": "acceptance", "room": ident, "window_days": 5.0,
                  "stop_pct": 10.0, "legs": [leg], "at": opened},
-                {"type": "status", "room": ident, "status": "stopped",
+                {"type": "status", "room": ident, "status": status,
                  "why": "x", "at": _t(9)}]
-    rows = room("STR-0002", "OUR-0001", _t(5, 0.5)) + room("STR-0003", "OUR-0002", _t(8))
+    # Deep pass 2026-09-28, A01 (3/3): without the room the clone first ran
+    # in, STR-0002 was that room and held the funding whatever became of its
+    # restart, so a `bot_restart` that never found one stayed green. STR-0001
+    # is that room, still open: the variants are judged by their restart alone.
+    rows = (room("STR-0001", "NEX-0001", _t(0, 1.5), status="running")
+            + room("STR-0002", "OUR-0001", _t(5, 0.5))
+            + room("STR-0003", "OUR-0002", _t(8)))
     archived = lab.archived_rooms(rows, [], [], clones)
     assert archived == {"STR-0003"}, archived
+    # And it is the restart that judged it: take it away and nothing ran.
+    assert lab.archived_rooms(rows, [], [], before_restart) == {
+        "STR-0002", "STR-0003"}, "STR-0002 held nothing without its restart"
 
     # 2026-09-28, STR-0045: a room of ours on FRESH clones -- the head-to-head
     # batch -- has no restart, only the funding that started them. The first
