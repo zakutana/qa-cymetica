@@ -1765,8 +1765,8 @@ def test_a_card_leg_is_sold_at_his_take_profit_and_the_room_runs_on(
     every card; the launch writes them on the leg, and nothing sold on them --
     a card was sold only at a verdict. Now the hourly look sells a card leg
     the first time their index, from our fill, crosses its own take-profit or
-    stop. The room keeps running and is judged at its window's end on what
-    we sold for. A leg he gave no levels is not sold early."""
+    stop. The room keeps running and is judged at its window's end with the
+    leg closed at that exit. A leg he gave no levels is not sold early."""
     import qa.rooms as qa_rooms
 
     scripts_lab = _scripts_lab(tmp_path, monkeypatch)
@@ -1799,45 +1799,68 @@ def test_a_card_leg_is_sold_at_his_take_profit_and_the_room_runs_on(
              "usdc": 480.0, "paper": True, "nexus": {"id": origin}},
             {"id": f"TRD-000{n}", "type": "outcome", "at": opened,
              "outcome": "accepted", "http_status": 200, "position_id": f"P-{n}",
-             "response": json.dumps({"entry_index": 100.0})}]
+             "response": json.dumps({"entry_index": 101.0})}]
     _write(tmp_path, "paper.jsonl", buys)
     closed = []
+    start = datetime.fromisoformat(opened)
+    later = start + timedelta(hours=3)
+    sale_at = later + timedelta(hours=2)
+    realized = {"P-1": 25.0}
 
     def close(position, confirm):
         closed.append(position)
+        ident = f"TRD-01{len(closed):02d}"
         with open(tmp_path / "paper.jsonl", "a", encoding="utf-8") as fh:
-            fh.write(json.dumps({"id": "TRD-0100", "type": "intent", "kind": "close",
-                                 "position_id": position, "paper": True}) + "\n")
-            fh.write(json.dumps({"id": "TRD-0100", "type": "outcome", "kind": "close",
-                                 "outcome": "accepted", "http_status": 200}) + "\n")
-        return {"id": "TRD-0100"}
+            fh.write(json.dumps({"id": ident, "type": "intent", "kind": "close",
+                                 "position_id": position, "paper": True,
+                                 "at": sale_at.isoformat()}) + "\n")
+            fh.write(json.dumps({"id": ident, "type": "outcome", "kind": "close",
+                                 "outcome": "accepted", "http_status": 200,
+                                 "realized_pnl_usdc": realized.get(position, 0.0),
+                                 "at": sale_at.isoformat()}) + "\n")
+        return {"id": ident}
     scripts_lab._sibling("paper").close = close
 
-    start = datetime.fromisoformat(opened)
     points = lambda values: [{"t": (start + timedelta(hours=h)).isoformat(),
                               "index": v} for h, v in enumerate(values)]
-    path = {"now": points([100, 102, 104])}
+    # The series starts at 100 and our fill was at 101, and their index stood
+    # at 108 an hour before we bought. Measured from the series' first point
+    # 105.5 is +5.5% and the leg sells too early; measured from the fill it is
+    # +4.46%. A point from before the fill is not ours to sell on either.
+    before = [{"t": (start - timedelta(hours=1)).isoformat(), "index": 108.0}]
+    path = {"now": before + points([100, 102, 104, 105.5])}
     monkeypatch.setattr(scripts_lab, "_history", lambda client, c: path["now"])
     monkeypatch.setattr(scripts_lab, "_closes_at", lambda client, c: None)
 
-    later = start + timedelta(hours=3)
     said = scripts_lab.verdicts(now=later)
-    assert closed == [] and not any(s.get("verdict") for s in said), said
+    assert closed == [] and not any(s.get("verdict") for s in said), (
+        "sold on a move that was not from our fill", said)
 
-    path["now"] = points([100, 102, 104, 105.5])
-    said = scripts_lab.verdicts(now=later + timedelta(hours=2))
+    path["now"] = before + points([100, 102, 104, 105.5, 106.5])
+    said = scripts_lab.verdicts(now=sale_at)
     assert closed == ["P-1"], ("his take-profit was crossed and the leg not sold"
                                if not closed else f"sold {closed}")
     assert not any(s.get("verdict") for s in said), (
         "a take-profit exit is not a verdict; the window judges", said)
     exits = [s for s in said if s.get("exit")]
     assert [(s["room"], s["exit"]) for s in exits] == [(rooms["NEX-0001"], "tp")], said
+    assert exits[0]["moved"] == pytest.approx((106.5 / 101.0 - 1) * 100, abs=0.001)
     rows = qa_rooms.load()
     assert qa_rooms.status_of(rows, rooms["NEX-0001"]) == "running"
     assert qa_rooms.status_of(rows, rooms["NEX-0002"]) == "running"
 
-    scripts_lab.verdicts(now=later + timedelta(hours=4))
+    scripts_lab.verdicts(now=sale_at + timedelta(hours=2))
     assert closed == ["P-1"], "a leg already sold was sold again"
+
+    # Our own book on the position: rebased on the fill (101, not the series'
+    # 100 or the criterion's static 100), and frozen at what the sale
+    # realized (25 on 480 notional) once it closed.
+    book = scripts_lab._position_book(
+        scripts_lab._sibling("paper").load(), "NEX-0001", card, [])
+    assert book["entry_index"] == 101.0, book
+    assert book["closed_at"] == sale_at.isoformat(), book
+    assert book["closed_value"] == pytest.approx(
+        100.0 * (1.0 + realized["P-1"] / 480.0)), book
 
     # The same crossing, read directly: a stop, a bear leg, no levels.
     fill = opened

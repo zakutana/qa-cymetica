@@ -1362,7 +1362,7 @@ def verdicts(now=None) -> list[dict]:
         take-profit or stop (`qa.lab.leg_exit`) -- 2026-09-28: 10 of 21 card
         rooms were 5% or more up while held and gave it all back, sold only at
         a verdict. An exit is not a verdict: the room runs on and its window
-        judges it on what we sold for. A sale that fails is tried again on the
+        judges the leg at that exit. A sale that fails is tried again on the
         next hourly look, the crossing still being in their history."""
         held = set(holding(strategy, acceptance))
         rows_out: list[dict] = []
@@ -1405,7 +1405,7 @@ def verdicts(now=None) -> list[dict]:
                        f"{'take-profit' if crossed['exit'] == 'tp' else 'stop'} "
                        f"({level:+g}%): their index was {crossed['moved']:+.2f}% "
                        f"from our fill at {crossed['at'][:16]}. The room runs "
-                       f"on; its window judges it on what we sold for."))
+                       f"on; its window judges the leg at that exit."))
         return rows_out
 
     retried = []
