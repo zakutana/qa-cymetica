@@ -236,13 +236,16 @@ CEILINGS = {
     # them. A new guard replaces or merges one; the room above today's 786 is
     # for V8's findings, whose tests the plan already owes.
     #
-    # 2026-09-28: that room is spent. Raised 800 -> 801, one test, for
-    # test_last_full_run_backfill_stays_off_the_committed_page -- the guard
-    # against the D2 gap a narrow sweep found (build_payload() was reading
-    # state/runs/*.json, gitignored, into the committed dashboard). No slack
-    # added on top: the next addition earns its own raise, not headroom left
-    # lying around for it.
-    "meta_tests": 801,
+    # 2026-09-28: that room is spent. Raised 800 -> 801 for
+    # test_last_full_run_backfill_stays_off_the_committed_page (the D2 gap:
+    # build_payload() was reading state/runs/*.json, gitignored, into the
+    # committed dashboard), then 801 -> 802 the same sweep for
+    # test_a_broken_first_read_does_not_poison_the_second (EvidenceStore
+    # .capture() swallowing a read failure left the response unreadable a
+    # second time -- StreamConsumed, reported at the caller's line with no
+    # trace of evidence.py). Two distinct defects the same run turned up. No
+    # slack added on top of either: the next addition earns its own raise.
+    "meta_tests": 802,
 }
 
 BASH_SCRIPT = re.compile(r"python\s+scripts[/\\]([a-z_]+)\.py")

@@ -164,10 +164,26 @@ class EvidenceStore:
             request_body = request.read()
         except Exception:
             request_body = b""
+            # A raise here leaves `request._content` unset, so anything that
+            # reads the request again later (a retry, a redirect replay)
+            # meets a stream that already started iterating once and cannot
+            # start again. Caching an empty body makes that second read a
+            # hit instead of httpx.StreamConsumed -- see the matching
+            # response-side comment below, where this was actually observed.
+            request._content = b""
         try:
             response_body = response.read()
         except Exception:
             response_body = b""
+            # The caller's own read comes right after this one returns
+            # (httpx.Client.send() reads every non-streamed response itself).
+            # Without `_content` cached, that second read does not repeat
+            # this failure -- it raises StreamConsumed instead, pointing at
+            # the caller's line with no trace of the read that actually
+            # broke. Measured 2026-09-28: a sweep re-running
+            # test_public_page_reads_are_documented crashed on it twice in a
+            # row, both times reported far from here.
+            response._content = b""
 
         record = {
             "captured_at": datetime.now(timezone.utc).isoformat(timespec="seconds"),
