@@ -36,7 +36,7 @@ So a tick organises the work across every product Cymetica has and may hand a pr
 
 [operator 2026-09-23] *"Me zajimaji pouze impact data, podle kterych se muzu dal rozhodovat, jasne vysledky a zaden sum."* A dal: *"TO je jedna skupina v laborce, to si spis predstavuji ze by mel byt jeden room. Dalsi sekce, room kde budem operovat a testovat jsou ti jejich boti, tam se mi zda ze zaostavame, musime vic otestovat jejich boty a ruzne kombinace atd."*
 
-A room is a PRODUCT -- cards, bots, memecoins, funds -- showing the net result after costs, how many experiments stand behind it, and how sure we are. Bots are where we are behind: species and settings, in combinations (`qa.lab.variants`).
+A room is a PRODUCT -- cards, bots, memecoins, funds -- showing the net result after costs, how many experiments stand behind it, and how sure we are. Bots are where we are behind: species and settings, in combinations (`qa.lab.variants`). A bot trades within minutes of `enable`, and a window never starts before its room's criterion: **room, plan and `adopt` first, then clone, fund, enable** -- twice the gains or losses went uncounted (STR-0046, STR-0064..0068).
 
 [operator 2026-09-23] *"ty by nam mel poskytnout Hlavne Nexus, a ty jako manager s nim o tom diskutovat a klidne navrhnout i jine navrhy"* A dal: *"Ale melo by to odsypat jako na pasu, zadne limity, proste co je slibne a dava smysl to se jde hend otestvoat."* A o neuspechu: *"A neuspesne pokusy proste zahazujes at tam neni bordel, das je treba doa rchivu nebo enco"*
 
