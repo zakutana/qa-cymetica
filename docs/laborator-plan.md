@@ -108,7 +108,8 @@ Each phase: tests first (red), then code, `pytest tests/meta tests/repo`, commit
 - Fill share = `max_buy_5pct_usd` against $10, plus first-checkpoint latency.
 - The pinned quotes (fomo.py:260/466/489) stay verbatim.
 - Out-of-sample rule: a pattern is dated and judged only on data after its date.
-- *Remaining (NEXT.md):* `fomo.sellable` judges a coin by its NEWEST depth (look-ahead), but switching to the depth at the signal alone moved the stop study from −11.7 % to +85 917 % -- it lands only together with the sell cap at exit depth in every reader (`stop_study`, `stats`, basket), as `ten_dollars` already does. Then split the L553 test; C6; the out-of-sample rule. `stop_study` and `compare` still drop the pair switches, which are rugs (measured 2026-09-23) and so losses; `ten_dollars` counts them.
+- *Done 4bc5baf8 (2026-09-28):* `sellable` judges each signal on the depth when it fired, and `stop_study` / `stats` / basket sell into the exit pool for at most half its liquidity, as `ten_dollars` does; the stop study (−10 %) went −9.1 % → −17.2 % (n 769 → 949). Pair switches are kept as rugs: `stop_study` pays them no gain, `compare` reads their peak up to the switch. The L553 test keeps its case-blind half.
+- *Remaining (NEXT.md):* C6; the out-of-sample rule.
 
 **V4 · Laboratoř jako oddělení + /lab** (Sonnet · high)
 - `lab.py report` → `state/lab/report.json`: per product, net %, n, Wilson band, running, best, archived count; plus a Nexus hit-rate line (questions → picks → gate → survived).
@@ -117,7 +118,7 @@ Each phase: tests first (red), then code, `pytest tests/meta tests/repo`, commit
 - The collectors (fomo, hot, sampler) run on serve.py's timers (reads only), and the tick stops its own fomo round, leaving one writer.
 - `console.cmd --fomo 1` only after this, together with new-signal horizons 0.25/1/4/24 h, a quote cap per round, and bulky captures pruned after 1 day.
 - Tests first: the tests that pin the old tabs are rewritten, and a both-ways field guard is added for `report.json`.
-- *Remaining (NEXT.md):* the new horizons are stored ON the signal, not in the global `HORIZONS_HOURS` -- otherwise old signals lose their checkpoints.
+- *Remaining (NEXT.md):* the new horizons are stored ON the signal (and on its control rows, so both arms are read alike), not in the global `HORIZONS_HOURS` -- otherwise old signals lose their checkpoints. They land with `--fomo 1` and the quote cap, not before: at 20-minute rounds they only thin the curve. The cap has no number yet. Bulky captures: done 1d419933 (uncited `event-cards` walk pages, 1 day).
 - *Done 0f63c4cf + a6037069, except the `--fomo 1` bullet, which is a NEXT.md line. One deviation, decided: the tick keeps its fomo/hot/sample doors and skips exactly the rounds the console's `/status` says it runs -- dropping them outright would lose checkpoints on any night the console is closed (scripts/lab.py said so when it took the sampler over).*
 
 **V5 · Pás a boti** (Opus · high)
