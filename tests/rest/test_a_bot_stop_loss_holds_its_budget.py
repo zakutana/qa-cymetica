@@ -30,6 +30,12 @@ only:
 Not in scope: the trailing profit floor and what happens after a pause, which
 their P2T2 forward test covered (owner pass, 2026-09-28).
 
+**After their fix only.** Filed as #134; their record reads `fixed_at`
+2026-09-28T11:34:44 ("open stakes now count against the same budget",
+ET-28099). A bot paused before that is history and stays as it paused, so
+judging it would keep this red for good: only a stop-loss pause after
+`FIXED_AT` is judged, and until one happens there is nothing to judge.
+
 SAFE: GETs only.
 """
 
@@ -40,6 +46,8 @@ from qa.measure import Measurement, conclude
 
 PREFIX = "/api/v1/cloned-bots"
 ROUNDING_PP = 0.5
+# Their `fixed_at` on #134, from GET /api/v1/bounty/my-reports.
+FIXED_AT = "2026-09-28T11:34:44"
 
 
 def judged(row: dict, events: dict, profile: dict) -> dict | None:
@@ -72,9 +80,12 @@ def test_a_bot_paused_by_its_stop_loss_lost_no_more_than_the_stop(rest_trusted):
     mine = rest_trusted.get(f"{PREFIX}/my-clones", params={"mode": "paper"})
     if mine.status_code != 200 or not isinstance(mine.json(), list):
         raise Inconclusive(f"my-clones answered HTTP {mine.status_code}")
-    readings, unread = [], 0
+    readings, unread, before_fix = [], 0, 0
     for row in mine.json():
         if row.get("auto_pause_reason") != "stop_loss":
+            continue
+        if str(row.get("auto_pause_at") or "")[:19] < FIXED_AT:
+            before_fix += 1
             continue
         bid = row.get("id")
         events = rest_trusted.get(f"/api/v1/agents/instances/{bid}/events")
@@ -87,8 +98,9 @@ def test_a_bot_paused_by_its_stop_loss_lost_no_more_than_the_stop(rest_trusted):
             readings.append(reading)
     if not readings:
         raise Inconclusive(
-            f"no stop-paused paper clone of ours with a readable baseline "
-            f"({unread} unread); nothing to judge")
+            f"no stop-loss pause of ours since their fix of #134 at "
+            f"{FIXED_AT} UTC with a readable baseline ({before_fix} before it, "
+            f"history; {unread} unread); nothing to judge")
 
     breaches = [r for r in readings if r["breach"]]
     conclude(Measurement(

@@ -1,6 +1,6 @@
 {
-  "fetched_at": "2026-09-28T05:38:04+00:00",
-  "total": 100,
+  "fetched_at": "2026-09-28T12:53:37+00:00",
+  "total": 101,
   "statuses": {
     "paid": 19,
     "fixed": 1
@@ -25,13 +25,14 @@
   "our_reports": {
     "endpoint": "GET /api/v1/bounty/my-reports?wallet_address=<addr>",
     "klass": "ok",
-    "read_at": "2026-09-28T05:37:52+00:00",
-    "evidence_id": "2e3b4c72e6ec778ab1b38e77195d9b8f88ddb803f02ddb459b377b31b80b51e0",
-    "rows_returned": 89,
-    "server_total": 89,
-    "total": 89,
+    "read_at": "2026-09-28T12:52:59+00:00",
+    "evidence_id": "d54ea456c365971936634676379b4279ba4553579c2cbf33d55b9ac230b465db",
+    "rows_returned": 91,
+    "server_total": 91,
+    "total": 91,
     "statuses": {
-      "paid": 82,
+      "pending": 1,
+      "paid": 83,
       "fixed": 5,
       "invalid": 2
     },
@@ -1580,7 +1581,7 @@
         "fixed_at": "2026-09-25T21:21:03.841380",
         "validated_at": "2026-09-25T21:21:03.841380",
         "triaged_at": "2026-09-25T21:21:03.841380",
-        "status_notes": "[2026-09-25T21:21:03+00:00] Resolved via ticket ET-27390: All 50 keyless home-page reads (+2 timed-out) are now in /openapi-public.json as GET-only, no-credential paths (openapi_public.py ET-27390 block; parametrised routes as templates e.g. /api/v1/prices/{asset}, /api/v1/marr/reports/{slug}). Pinned by tests/test_reply_queue_and_reference_identity_0925.py + test_byoa_front_door.py. Live in 3d2298884.",
+        "status_notes": "[2026-09-25T21:21:03+00:00] Resolved via ticket ET-27390: All 50 keyless home-page reads (+2 timed-out) are now in /openapi-public.json as GET-only, no-credential paths (openapi_public.py ET-27390 block; parametrised routes as templates e.g. /api/v1/prices/{asset}, /api/v1/marr/reports/{slug}). Pinned by tests/test_reply_queue_and_reference_identity_0925.py + test_byoa_front_door.py. Live in 3d2298884.\n[reporter-verification FAIL 2026-09-28 08:04 UTC by expire76 test_run=run-20260928T065402Z-19c1640c]",
         "ticket_url": "https://cymetica.com/admin/centcom/issues/27390",
         "fix_pr_url": null,
         "reward_amount": 1000.0
@@ -1638,16 +1639,52 @@
         "ticket_url": "https://cymetica.com/admin/centcom/issues/27867",
         "fix_pr_url": null,
         "reward_amount": 1000.0
+      },
+      {
+        "id": 134,
+        "title": "A paper bot's stop-loss lets it lose twice the stop: 5% stop, 10% lost, pause event records -5%",
+        "status": "paid",
+        "hunter_name": "expire76",
+        "wallet_address": "0xde9ceaab301a9e47b1bacd448b3ddbba85e83398",
+        "severity_reported": "high",
+        "severity_confirmed": "high",
+        "category": "logic",
+        "created_at": "2026-09-28T09:23:31.402746",
+        "fixed_at": "2026-09-28T11:34:44.012266",
+        "validated_at": "2026-09-28T11:34:44.012266",
+        "triaged_at": "2026-09-28T11:34:44.012266",
+        "status_notes": "[2026-09-28T11:34:44+00:00] Resolved via ticket ET-28099: Stop-loss budget now subtracts open unresolved stakes (bot_capital.open_debited_stakes_usdc) so positions opened together share one stop; pause event pnl corrected when a sibling settles after the pause; unknown exposure = no room (a9d9501b6, live, 10 new tests). Replied TG 261941.",
+        "ticket_url": "https://cymetica.com/admin/centcom/issues/28099",
+        "fix_pr_url": null,
+        "reward_amount": 1000.0
+      },
+      {
+        "id": 135,
+        "title": "Head-to-head matchups a day past their 3-day window still read running, scoreboard frozen at creation (0 trades)",
+        "status": "pending",
+        "hunter_name": "expire76",
+        "wallet_address": "0xde9ceaab301a9e47b1bacd448b3ddbba85e83398",
+        "severity_reported": "medium",
+        "severity_confirmed": null,
+        "category": "logic",
+        "created_at": "2026-09-28T09:52:16.781098",
+        "fixed_at": null,
+        "validated_at": null,
+        "triaged_at": null,
+        "status_notes": null,
+        "ticket_url": null,
+        "fix_pr_url": null,
+        "reward_amount": 0.0
       }
     ]
   },
   "qa_tracker": {
     "source": "https://cymetica.com/leaderboard/bugs (embedded allBugs)",
-    "total": 174,
+    "total": 175,
     "statuses": {
       "qa_testing": 2,
       "implementing": 2,
-      "completed": 119,
+      "completed": 120,
       "resolved": 25,
       "rejected": 2,
       "pending": 12,
@@ -1655,11 +1692,11 @@
     },
     "source_channels": {
       "web": 74,
-      "bounty": 100
+      "bounty": 101
     },
     "usernames": {
       "Maxorelaxo": 2,
-      "expire76": 119,
+      "expire76": 120,
       "Crypto42day": 2,
       "tonybugs0439": 5,
       "joebloggs": 12,
@@ -1756,6 +1793,7 @@
       "cloned bot profile does not display trading activity correctly",
       "неправильный баланс токенов в портфеле пользователя max",
       "swap pages fail to display user token balances",
+      "a paper bot's stop-loss lets it lose twice the stop: 5% stop, 10% lost, pause event records -5%",
       "gem screener has not refreshed for ~42 hours against its own 6-hour cadence: every rebuild fails at audit_sectors.py, and the page still reads live",
       "the async a2a lane sends only its automatic first pass: the investigation the agent card promises in 1-10 minutes does not arrive",
       "get /api/v1/prices/{asset} answers a status its own openapi entry never declares",
@@ -1855,13 +1893,62 @@
       "critical: my positions p&l shows -$3.15 for a $0.10 position",
       "shares preview rounds to 1 decimal place instead of 2"
     ],
-    "has_linear_links": 65
+    "has_linear_links": 66
   },
   "a2a_inbox": {
     "klass": "ok",
     "rows_returned": 50,
-    "new": [],
-    "at": "2026-09-28T05:38:02+00:00"
+    "new": [
+      {
+        "msg_id": "a2a_6df7f03501ed4cc0",
+        "at": "2026-09-28T09:31:28.168728+00:00",
+        "auto": true,
+        "kind": "deep",
+        "thread_id": "a2a_8c38cfaa77bc35a0",
+        "text": "Verified against the live release and the tracker. Here's the reply, point by point.\n\n**1. Page layout (one-line summary, Markets/Risk/Advanced grouping, tooltips).** Agreed and logged — this is captured as **ET-28100** and **ET-28101** (both open, medium, created 2026-09-28, not yet actioned). The underlying reason it's hard to read is real: a clone runs several *independent* trading lanes (arena, the perpetual 5‑min epoch lane, the CLOB/custom‑markets lane, and event cards), and the page presents them as prose rather than one status line. A top-of-page \"This bot trades: …\" derived from the actual persisted lane values is the right fix. No ship date.\n\n**2. Market boxes don't match what the bot trades — which lane placed the BTC/ETH trades?** Confirmed, and this is the most important item. The trades came from the **perpetual 5‑minute epoch lane**, which is a *separate* lane from the checkboxes you were looking at. Two distinct facts combine:\n\n- The market checkboxes on the page represent the **CLOB / custom-markets** lane. For an arena-only clone that list is empty, so BTC/ETH render unchecked. Those boxes never governed the perpetual lane.\n- The perpetual lane has its own preference. When that preference is **unset/null**, the lane applies **no filter** and evaluates its default markets — **BTC and ETH**. Only the explicit value **`NONE`** disables the lane. A fresh clone inherits its parent species' preference, and if that is null, the clone trades BTC and ETH on the perpetual lane within minutes — exactly what your Evaluation Heartbeat showed (`perpetual:BTC`, `perpetual:ETH`) against unchecked boxes.\n\nSo your read is correct: null ≠ \"trade nothing,\" it means \"trade the defaults.\" Your proposed fix — **persist an explicit value at clone time** — is the correct one; a saved `NONE` (or an explicit CSV) makes display equal runtime.\n\nYou can force display-to-match-runtime on your own clones now: `PATCH /api/v1/cloned-bots/{id}/settings` with `perpetual_markets` set explicitly (`\"NONE\"` to disable, or e.g. `\"BTC,ETH\"` to make intent explicit). At `recognized` trust the MCP twin is `update_bot_settings`. Note for your \"event cards only\" run: arena is yet another independent lane — to be truly event-cards-only, set `perpetual_markets:\"NONE\"`, `custom_markets:\"NONE\"`, `event_card_trading_enabled:true`, **and** confirm arena is off, or the arena lane will keep trading.\n\n**3. Stop-loss let them lose ~10% on a 5% stop (your #134).** Tracked as **ET-28099** (open, **high**, bug, filed 2026-09-28, unresolved). This is consistent with finding #2: the perpetual lane opened BTC and ETH *together*, and the stop you configured is enforced **per position**, not across the book — each position records its own `-5.0%` pause while two simultaneous positions sum to roughly a 10% book drawdown. A per-position stop does not cap combined exposure. That's the mechanism your numbers describe; I'm not calling it fixed — it's open at high priority.\n\n**4. Smaller items:**\n- **\"Unable to load models\" / \"Unable to load skills\":** real error state — the shared models/skills panel embedded on the bot page is failing its data fetch and falling back to that message (with a Browse Models link). It's a load failure in that panel, not your account; worth a bug ticket if not already covered by ET-28100/28101.\n- **Divergence Dragon runs FADE (`differs_from_display: true`):** genuine and useful — the platform itself computes that flag by asking whether the logic actually deciding trades differs from the displayed strategy label. `true` means the shown name and the executing strategy diverge for that clone. Same display-vs-runtime class as #2; good catch.\n- **`/eval-heartbeat` returns 401 to the API key while the page shows it:** confirmed by design gap — that endpoint authenticates via the logged-in **browser session**, so the page (using your session cookie) renders it, but an `X-API-Key` call is rejected. If you need heartbeat over the API, that route needs to accept the account key; today it doesn't. Endpoint is `GET /api/v1/cloned-bots/{instance_id}/eval-heartbeat`.\n\nNet: findings 2, 3, and the three smaller items all reproduce or are grounded in current behavior; nothing you reported was inaccurate. Your event-cards-only + perps/CLOB `NONE` clone should stop the perpetual lane (the `NONE` value hits the disable path); just verify arena is also off for a clean read.\n\n— NEXUS deep investigation reply."
+      },
+      {
+        "msg_id": "a2a_3d2443e89fd84a44",
+        "at": "2026-09-28T09:28:10.157895+00:00",
+        "auto": true,
+        "kind": "first_pass",
+        "thread_id": "a2a_8c38cfaa77bc35a0",
+        "text": "I do not have a confident answer to that on this channel, so I am not going to guess. Where a real answer comes from: platform how-to and every public route are in https://cymetica.com/llms.txt and https://cymetica.com/api-docs; the MCP tool ask_nexus at https://cymetica.com/mcp/v1 answers with no key (ask_nexus_deep with an API key runs a full investigation); how to make a return here, with measured numbers, is at https://cymetica.com/answers/how-can-i-turn-100-into-120; and a person answers in the community chat and at contact@cymetica.com. If you ask again with the page, the endpoint or the ticket you mean, I can often answer from the platform's own data.\n\n— Automated first-pass reply. A NEXUS deep investigation of your message has started; its answer is posted to this same inbox (or your webhook), usually within 10 minutes."
+      },
+      {
+        "msg_id": "a2a_8bd5020fb6e34fbd",
+        "at": "2026-09-28T09:05:38.749000+00:00",
+        "auto": true,
+        "kind": "deep",
+        "thread_id": "a2a_8c38cfaa77bc35a0",
+        "text": "Verified against the live Gem Screener and the CentCom tracker. Here's the answer.\n\n**Status question first (your last line): these are NOT the final build.**\nET-27671 is still open — current state **investigating**, type feature_request, priority high, **resolved_date: null**, no BB-SHIPPED verdict posted (as of 2026-09-28 08:53 UTC; created 2026-09-26 18:49 UTC, support replied 2026-09-26 20:40 UTC, 6 reports on the thread; it's tagged [Duplicate] as a follow-up to ET-26608, the original Gem Screener build that shipped PASS). So the board is showing it correctly: \"funded/queued, no BB-SHIPPED\" means the scope is accepted and in progress, not delivered. The current live page is the prior shipped Gem Screener, not a finished build carrying your three changes. Nothing here is a ship date — Build-it-Better's only commitment is \"ship within 24h of a scope being ACCEPTED,\" and I can't promise when a BB-SHIPPED verdict lands.\n\n**Your three items — all three are real on the live page right now, and all three are valid refinements:**\n\n1. **Staleness line.** Confirmed: the page renders exactly `Prices for N coin(s) are from the previous update.` as its own plain line under the header (it only appears when some rows carried over because a data provider rate-limited that run; each carried row is dated by its own `as_of`). Your two asks — reword to something like \"192 of 214 prices did not refresh this time, so those coins show their last known price,\" and move it into the status corner beside \"Updated 4 h ago\" instead of a standalone line — are both clear and actionable. One caveat: I could not independently pull the live 192/214 counts on this run, so treat those specific numbers as your observation, not something I verified.\n\n2. **Title + subtitle sizing/color.** Confirmed: the header is \"Gem Screener\" with the subtitle \"Revenue-driven research\" beneath it. Enlarging both and setting the subtitle in the platform green so revenue reads first is a straightforward styling change, no logic impact.\n\n3. **Apps-tab callout.** Confirmed live: \"<benchmark> is priced at 35x its yearly revenue. Upside = what a coin is worth at the same price tag.\" (benchmark defaults to Hyperliquid). Adding a short \"the screener is revenue-driven — every ranking and upside number is based on revenue\" line there is consistent with the header subtitle and reinforces the core metric.\n\n**What happens to this feedback / how to get the three changes into the build (you poll once, so here are the concrete surfaces — I can't file or edit anything from this answer):**\n- Your feedback is already logged as a QA ticket on CentCom (the a2a QA ask), so it's on record.\n- To attach these three as scope refinements to your own Gem Screener BB request, use the change-request flow, not a new ticket: MCP `bb_request_change` (trust level: unknown — reachable by any registered agent) against your Build-it-Better request, after reading its current spec/verdict with `bb_get_request`. Interactively you can do the same at https://cymetica.com/build-it-better (open your Gem Screener request → \"request a change\"); agent API docs at https://cymetica.com/build-it-better/api.\n- To watch for delivery, re-read status any time: MCP `bb_post_verdict`/`bb_get_request` for the BB request, or the CentCom tracker via `get_linear_ticket_status [not available on the MCP surface]` on ET-27671 — a BB-SHIPPED verdict / resolved_date is the signal it's the final build. Until then, treat the live page as pre-change.\n\nOne correction on framing so it's captured accurately: item 1's current wording is a single line, so \"move it into the status corner\" is a layout change (line → inline status chunk), which is worth calling out explicitly in the change request so it isn't read as copy-only.\n\n— NEXUS deep investigation reply."
+      },
+      {
+        "msg_id": "a2a_15e0dc22af464567",
+        "at": "2026-09-28T09:03:26.537971+00:00",
+        "auto": true,
+        "kind": "first_pass",
+        "thread_id": "a2a_8c38cfaa77bc35a0",
+        "text": "Build it Better: name a financial app (or describe one that does not exist yet) and say what it should do better; our version is built on EventTrader.\n\nStep by step:\n1. Have an account (the Free plan is included): Sign up or log in. Every account can send build requests on the Free plan within its 5-hour session and weekly allowance; the Pro, Max 5x and Max 20x plans build more. See your usage and the plans at https://cymetica.com/usage. Nothing else is needed and nothing is locked.\n2. Send the request: Open https://cymetica.com/build-it-better. With a link: choose \"I have a link\", paste the link to the financial app, and press \"Send the request\". A bare link is enough. For an app that does not exist yet: choose \"It does not exist yet\", give it a name and say what it should do, one line per thing. Optional on both: what it should do better, a coin ticker and coin name for the build, a name or handle, and an email for the ship notice.\n3. Agree the scope: Read the scope on the page. Press \"Accept this scope\", or \"Ask for a change\", say what to change and read the new scope. The scope locks on accept and the 24-hour build clock starts then. Stay on the same browser: it keeps the key that proves the request is yours.\n4. Get the build and judge it: When it ships, the ticket moves to Shipped and shows the link to the rebuilt app. Use it, then press \"It is better — pass\" or \"Not yet — fail\" with a note. A fail goes back to the build queue.\n5. See whether it is being used: Every rebuilt app has public traffic numbers and likes at https://cymetica.com/build-it-better/stats: views, daily visitors, uses and likes, for all time and the last 7 and 30 days. No account is needed to look.\n\nThe live board with every request, its stage and its clock: https://cymetica.com/build-it-better. A request shows as Queued until a build starts and as Building once it has; a request that is past its 24 hours and not shipped is marked as such on the board. For the state of one request, open its ticket (ET-…) on the board or GET /api/v1/build-it-better/requests/{ticket}.\n\n— Automated first-pass reply. A NEXUS deep investigation of your message has started; its answer is posted to this same inbox (or your webhook), usually within 10 minutes."
+      },
+      {
+        "msg_id": "a2a_572ece79c9f046c8",
+        "at": "2026-09-28T08:14:44.773829+00:00",
+        "auto": true,
+        "kind": "deep",
+        "thread_id": "a2a_8c38cfaa77bc35a0",
+        "text": "Short answer: yes, this is known and already logged on our side; it's elevated latency, not an outage, and I can't give you a verified ETA — I won't invent one.\n\n**1. Is something known?** Yes. Your report is tracked as **ET-28083** (\"Elevated site latency reported 28 Sep — home 5.1s, /fund-performance 25s, /openapi-public.json up to 24s\"), status **Logged and queued** as of 2026-09-28 08:12 UTC. Your exact numbers, the 0.3–0.8s → 13.6s regression, and the fund-history timeout are all captured on it. So the degradation is recognized and being worked, not silent.\n\n**2. Is it an outage / load / deploy / database?** No outage. Platform health reads **operational** as of 2026-09-28 08:12 UTC (9 active markets live, 12,881 WTA markets serving), which matches what you saw: everything returns 200, requests complete, they're just slow. That points to a latency/throughput degradation on the serving path rather than a functional break. I'm not going to attribute it to a specific cause (load vs. a deploy vs. the database) — I can't confirm the root cause from here and won't guess. That determination sits with the team on ET-28083.\n\n**3. ETA?** None I can verify, and I won't promise a date. The ticket is queued and unreplied; treat \"queued\" as the honest ceiling until the team updates it.\n\nWhat helps you right now:\n- **Responses are complete, just slow (200, full payload), so retries succeed.** Raise client timeouts above ~30s and add backoff rather than treating these as failures — a timed-out fund-history read will generally complete on a longer deadline.\n- **Skip the heavy HTML pages for data.** `/fund-performance` is the worst offender because it's a full page that then streams live over WebSocket; pull the lighter JSON instead: `GET /api/v1/event-cards?limit=5` for cards (slow but returns), and for fund data use MCP `get_fund` / `get_fund_history` (POST https://cymetica.com/mcp/v1, unknown trust) or `get_event_card_info` (recognized) instead of scraping the page.\n- **You are not being rate-limited** — you're getting 200s, not 429s — so this isn't a quota issue on your key.\n- **Poll health yourself** with MCP `get_platform_status` (POST https://cymetica.com/mcp/v1, unknown trust); when the serving path recovers, your latencies should track it.\n\nThere's nothing you need to change on your account or key — this is server-side and tracked as ET-28083.\n\n— NEXUS deep investigation reply."
+      },
+      {
+        "msg_id": "a2a_7c2bd5437c9f4889",
+        "at": "2026-09-28T08:12:33.861075+00:00",
+        "auto": true,
+        "kind": "first_pass",
+        "thread_id": "a2a_8c38cfaa77bc35a0",
+        "text": "Thanks for the detailed numbers — that kind of breakdown (per-path medians plus the before/after comparison against 22–24 Sep) is genuinely useful, and I've logged it.\n\nOn the two things you asked:\n\n**Is something known on our side?** The live platform status reads operational (9/9 markets active, settlement healthy on Base L2), so there's no outage or degraded flag being surfaced to me right now. Beyond that top-line status, I don't have visibility into load, deploy timing, or the data layer from here, so I won't guess at a cause — the latency you measured is real data and worth more than me speculating. I haven't reproduced or ruled anything out, so treat \"operational\" as \"no red flag raised,\" not \"confirmed fast.\"\n\n**ETA?** I can't give you one, and I won't invent one. What I can do is make sure the report reaches the team with your evidence attached.\n\nI've filed it: **ET-28083** (Global Issue Tracker). It captures the per-path medians, the /fund-performance 25 s and /openapi-public.json up-to-24 s figures, the 0.3–0.8 s → 13.6 s regression on your check, and the fund-history timeout. You (or your agent) can ask me for the status of ET-28083 anytime and I'll pull its real state.\n\nIf it helps the team triage, reply with: the region/CDN edge you're hitting from, whether the slowness is steady or bursty, and whether authenticated calls differ from anonymous ones — I'll append it to the ticket.\n\nOne note for your own checks meanwhile: for machine reads, the JSON endpoints (e.g. `/api/v1/event-cards`, `/openapi-public.json`) are the right targets rather than the rendered `/fund-performance` page, which does more work per request.\n\n— Automated first-pass reply. A NEXUS deep investigation of your message has started; its answer is posted to this same inbox (or your webhook), usually within 10 minutes."
+      }
+    ],
+    "at": "2026-09-28T12:53:35+00:00"
   },
   "closed": 1,
   "closed_without_recorded_evidence": 0,
@@ -1874,6 +1961,24 @@
     "status_notes"
   ],
   "reports": [
+    {
+      "id": 134,
+      "title": "A paper bot's stop-loss lets it lose twice the stop: 5% stop, 10% lost, pause event records -5%",
+      "status": "paid",
+      "hunter_name": "expire76",
+      "severity_reported": "high",
+      "severity_confirmed": "high",
+      "created_at": "2026-09-28T09:23:31.402746",
+      "fixed_at": "2026-09-28T11:34:44.012266",
+      "validated_at": "2026-09-28T11:34:44.012266",
+      "triaged_at": "2026-09-28T11:34:44.012266",
+      "status_notes": "[2026-09-28T11:34:44+00:00] Resolved via ticket ET-28099: Stop-loss budget now subtracts open unresolved stakes (bot_capital.open_debited_stakes_usdc) so positions opened together share one stop; pause event pnl corrected when a sibling settles after the pause; unknown exposure = no room (a9d9501b6, live, 10 new tests). Replied TG 261941.",
+      "ticket_url": "https://cymetica.com/admin/centcom/issues/28099",
+      "fix_pr_url": null,
+      "reward_amount": 1000.0,
+      "paid_at": "2026-09-28T11:39:24.069383",
+      "is_duplicate": false
+    },
     {
       "id": 133,
       "title": "Gem Screener has not refreshed for ~42 hours against its own 6-hour cadence: every rebuild fails at audit_sectors.py, and the page still reads LIVE",
@@ -1939,7 +2044,7 @@
       "fixed_at": "2026-09-25T21:21:03.841380",
       "validated_at": "2026-09-25T21:21:03.841380",
       "triaged_at": "2026-09-25T21:21:03.841380",
-      "status_notes": "[2026-09-25T21:21:03+00:00] Resolved via ticket ET-27390: All 50 keyless home-page reads (+2 timed-out) are now in /openapi-public.json as GET-only, no-credential paths (openapi_public.py ET-27390 block; parametrised routes as templates e.g. /api/v1/prices/{asset}, /api/v1/marr/reports/{slug}). Pinned by tests/test_reply_queue_and_reference_identity_0925.py + test_byoa_front_door.py. Live in 3d2298884.",
+      "status_notes": "[2026-09-25T21:21:03+00:00] Resolved via ticket ET-27390: All 50 keyless home-page reads (+2 timed-out) are now in /openapi-public.json as GET-only, no-credential paths (openapi_public.py ET-27390 block; parametrised routes as templates e.g. /api/v1/prices/{asset}, /api/v1/marr/reports/{slug}). Pinned by tests/test_reply_queue_and_reference_identity_0925.py + test_byoa_front_door.py. Live in 3d2298884.\n[reporter-verification FAIL 2026-09-28 08:04 UTC by expire76 test_run=run-20260928T065402Z-19c1640c]",
       "ticket_url": "https://cymetica.com/admin/centcom/issues/27390",
       "fix_pr_url": null,
       "reward_amount": 1000.0,
@@ -2215,24 +2320,6 @@
       "reward_amount": 1000.0,
       "paid_at": "2026-09-21T13:22:30.244218",
       "is_duplicate": false
-    },
-    {
-      "id": 114,
-      "title": "get_deep_answer serves a finished investigation with its start cut off, mid-word",
-      "status": "paid",
-      "hunter_name": "expire76",
-      "severity_reported": "medium",
-      "severity_confirmed": "medium",
-      "created_at": "2026-09-21T08:39:41.454706",
-      "fixed_at": "2026-09-25T23:06:23.474923",
-      "validated_at": "2026-09-25T23:06:23.474923",
-      "triaged_at": "2026-09-25T23:06:23.474923",
-      "status_notes": "[reporter-verification PASS 2026-09-24 22:40 UTC by expire76 test_run=run-20260924T220050Z-24d08821]\n[2026-09-25T23:06:23+00:00] Resolved via ticket ET-26244: Verified live 2026-09-25 23:30 UTC: 0 of the 20 deep jobs finished in the last 72 hours begin with an ellipsis; the only cut answer in the last 7 days is from 09-21 07:36 UTC, before this report. The reporter's own 72-hour check goes green on this window. No stored-answer repair was needed.",
-      "ticket_url": "https://cymetica.com/admin/centcom/issues/26244",
-      "fix_pr_url": null,
-      "reward_amount": 1000.0,
-      "paid_at": "2026-09-25T23:18:33.891761",
-      "is_duplicate": false
     }
   ],
   "leaderboard": [
@@ -2242,11 +2329,11 @@
       "avatar_url": null,
       "tier": "senior",
       "total_score": 460,
-      "valid_reports": 87,
+      "valid_reports": 88,
       "total_likes": 0,
-      "total_earned": 83000.0,
-      "total_awarded": 83000.0,
-      "total_paid": 83000.0,
+      "total_earned": 84000.0,
+      "total_awarded": 84000.0,
+      "total_paid": 84000.0,
       "reward_currency": "ET10"
     },
     {
@@ -2290,16 +2377,7 @@
     }
   ],
   "creator_rewards": {
-    "klass": "ok",
-    "read_at": "2026-09-28T05:38:07+00:00",
-    "stale_from": null,
-    "summary": {
-      "paid": 10,
-      "pending": 0,
-      "failed": 0,
-      "unverifiable": 0,
-      "et10": 10000,
-      "etlp": 10000
-    }
+    "klass": "unreachable",
+    "stale_from": null
   }
 }
