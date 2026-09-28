@@ -1582,6 +1582,10 @@ def _tally_verdicts(judged: list[dict]) -> dict:
                         if row.get("verdict") not in (None, "waiting")),
         "verdicts_waiting": [f"{row['room']}: {row.get('why', '')}"
                              for row in judged if row.get("verdict") == "waiting"],
+        "exits": [f"{row['room']}: {row['position']} "
+                  f"{'take-profit' if row['exit'] == 'tp' else 'stop'} "
+                  f"({row['moved']:+.2f}%)" for row in judged
+                  if row.get("exit") and not row.get("close_failed")],
         "close_failed": [f"{row['room']}: {line}" for row in judged
                          for line in row.get("close_failed") or []]}
 
@@ -3240,6 +3244,8 @@ def _say_tick(said: dict, out) -> None:
             f"still retried every tick")
     for line in said.get("verdicts_waiting") or []:
         out(f"  verdict waits:  {line}")
+    for line in said.get("exits") or []:
+        out(f"  sold at his level:  {line}")
     for line in said.get("close_failed") or []:
         out(f"  close failed:  {line}")
     if said.get("resolved"):
@@ -4007,6 +4013,14 @@ def main(argv: list[str] | None = None) -> int:
         if not said:
             print("no window has come due")
         for row in said:
+            if row.get("exit"):
+                # A leg sold at his take-profit or stop is not a verdict.
+                print(f"  {row['room']}: sold {row['position']} at his "
+                      f"{'take-profit' if row['exit'] == 'tp' else 'stop'} "
+                      f"({row['moved']:+.2f}% from our fill)")
+                for line in row.get("close_failed") or []:
+                    print(f"      sale failed: {line}")
+                continue
             # A retry of an owed close carries no verdict (RL01).
             print(f"  {row['room']}: {row.get('verdict', 'close owed')} -- "
                   f"{row.get('why', '')}")
