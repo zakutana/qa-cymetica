@@ -244,6 +244,16 @@ def victims(older_than_days: int = 7) -> list[Path]:
 
 EVIDENCE_DAYS = 3
 
+# The bulky listing walks, young for a day while nothing cites them (plan of
+# 2026-09-23, before `--fomo 1`). Measured 2026-09-28: these two paged walks
+# are 250 of 776 MB on disk, and no other call carries an offset. Named, not
+# matched by shape: a wider rule would cover calls nobody measured.
+BULKY_CALLS = frozenset({
+    "GET https://cymetica.com/api/v1/event-cards?limit,offset",
+    "GET https://cymetica.com/api/v1/event-cards?include_user_submitted,limit,offset",
+})
+BULKY_DAYS = 1
+
 
 def evidence_files() -> list[Path]:
     from qa.evidence import evidence_root
@@ -319,6 +329,7 @@ def evidence_keep_set(older_than_days: int = EVIDENCE_DAYS,
         unarchived the manifest knows it and no bundle here holds it yet --
                    `keep.py archive` first, then it may go (D1)
         young      a run newer than the cutoff still cites it, or it is newer
+                   -- `BULKY_DAYS` for an uncited page of `BULKY_CALLS`
         witness    the newest capture of its call, so the last answer of every
                    surface we touch is always on disk
         unreadable it could not be parsed, so nothing shows it is safe to go
@@ -335,6 +346,8 @@ def evidence_keep_set(older_than_days: int = EVIDENCE_DAYS,
         records = {p.stem: _load(p) for p in records_on_disk()}
     cutoff = (datetime.now(timezone.utc)
               - timedelta(days=older_than_days)).isoformat()
+    bulky_cutoff = max(cutoff, (datetime.now(timezone.utc)
+                                - timedelta(days=BULKY_DAYS)).isoformat())
     cited_at = _cited_by_run(records)
 
     keep: dict[str, str] = {}
@@ -370,7 +383,10 @@ def evidence_keep_set(older_than_days: int = EVIDENCE_DAYS,
         seen = datetime.fromtimestamp(path.stat().st_mtime,
                                       timezone.utc).isoformat()
         age = max(seen, cited_at.get(path.stem, ""))
-        if age >= cutoff:
+        # Only the band between the two cutoffs is read to learn its call:
+        # everything older is a candidate anyway.
+        if age >= cutoff and (age >= bulky_cutoff or path.stem in cited_at
+                              or _call_key(_load(path)) not in BULKY_CALLS):
             keep[path.stem] = "young"
         else:
             candidates.append((age, path))

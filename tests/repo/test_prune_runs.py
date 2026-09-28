@@ -146,6 +146,35 @@ def test_a_capture_is_as_young_as_the_newest_run_that_cites_it(tmp_path,
 
 
 @qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
+def test_an_uncited_page_of_the_bulky_listing_walks_is_young_for_a_day(
+        tmp_path, monkeypatch):
+    """Plan 2026-09-23 (upkeep, then V4): uncited captures of the bulky
+    listing calls are kept 1 day, not 3. Measured 2026-09-28: the two
+    `event-cards` offset walks are 250 of the store's 776 MB, and no other
+    call pages. A page a run still cites keeps the three days; the newest page
+    of each walk stays as its witness; every other call keeps its three."""
+    state, mod = _state(tmp_path, monkeypatch)
+    _no_git(monkeypatch)
+    walk = "https://cymetica.com/api/v1/event-cards?limit=100&offset="
+    fresh, witness, spent, cited, other = (c * 64 for c in "56789")
+    _capture(state, fresh, url=walk + "0", age_days=0.5)
+    _capture(state, witness, url=walk + "100", age_days=2)
+    _capture(state, spent, url=walk + "200", age_days=2.5)
+    _capture(state, cited, url=walk.replace("?", "?include_user_submitted=true&")
+             + "300", age_days=2.5)
+    _write(state, "run-20260926T000000Z-walk", _ago(2), results=[
+        {"nodeid": "tests/x.py::test_y", "evidence_ids": [cited]}])
+    _capture(state, other, url="https://cymetica.com/api/v1/cards", age_days=2.5)
+
+    keep = mod.evidence_keep_set()
+    assert keep.get(fresh) == "young", keep
+    assert keep.get(witness) == "witness", keep
+    assert spent not in keep, "an uncited walk page two days old is spent"
+    assert keep.get(cited) == "young", "a run two days old still stands on it"
+    assert keep.get(other) == "young", "every other call keeps its three days"
+
+
+@qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
 def test_two_mcp_tools_are_two_calls_even_on_one_path(tmp_path, monkeypatch):
     """All 812 MCP calls on this machine go to `/mcp/v1/`. Keyed on the path
     alone, the newest capture of the whole endpoint would be the only one kept
