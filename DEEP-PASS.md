@@ -1,13 +1,15 @@
-# Deep pass — 2026-09-27 v noci (po sweepu, #133 a Build it Better)
+# Deep pass — 2026-09-28 v noci
 ## Opraveno
-- **19 z 20 skutečných nálezů (22 tvrzení: 9 z auditu 44 kontrol, 8 z review, 5 z celého čtení laborky; 3 čtenáři), každý s testem napřed; tests/meta zelené (1058).** Kniha a strop laborky počítají nákup s nejistým výsledkem, který přistál; ztráta bota už není volná hotovost; ranní přehled nehlásí zaplacené bugy jako opravené; kontrola a2a (#132) už čte jejich hluboké odpovědi. Ověřovací běh proti Cymetice nešel složit: při PRE-0193, 0194 i 0195 uprostřed nasazovali — čtyři opravené kontroly ověří příští sweep.
+- **11 z 30 tvrzení skutečných (11 z auditu, 15 z review, 4 z night-0b), test napřed, tests/meta zelené (807, strop zvednut z 805).** Pár, co přešel na jiný token, teď v tabulkách i košíku nevydělává (B03/R01, 64206a15); room se soudí podle restartu klonu, ne podle toho, že drží peníze (A01/R05, 726ed277); místnost bota hlásí, jestli obchoduje aspoň jeden bot v dávce (A02, 674c1a68); prodej na jeho TP/SL se měří od naší ceny plnění, ne od začátku řady (A03, 7679d720); klon i papírová objednávka odmítnou nezodpovězenou otázku, ne prázdný deník (A05, 2e19ad7c); ztráta bota, jejíž pole nedorazilo, se odmítne, ne počítá jako nula (A06, 4a7c57b3).
+- **0b, dokončeno před tímto passem:** Hot blok v briefu, cena podílu Areny přes best bid, memecoiny V3/V4, kontrola openapi rout, kredit Nexuse.
 ## Co odešlo Cymetice
-- **Nic.** Jediný dluh je fail na #130 a ten držím podle tebe (co dokumentovat je jejich volba).
+- **Nic.** Deep pass nic nepodává. Živý ověřovací běh (PRE-0203, level V, 1462 prošlo/11 spadlo) ukázal 5 STILL REPRODUCIBLE + 2 NOT RAISED YET na jejich straně — čeká na příští sweep.
 ## Změněná pravidla
-- **Žádné.** Opravy zpřísnily kontroly a testy, žádné pravidlo neoslabily.
+- **Žádné.**
 ## Čeká na tebe
-- **R04 (2 ze 3): druhá půlka #133 — stránka Gem Screeneru pořád neukazuje, že refresh selhal (sami v #133 píšou „Not done") — nic to neměří; změřit to znamená nový nárok vůči Cymetice, tak je to na tobě.**
-- **#132: dnes v 7:28 odešel „fail" z kontroly, která četla jejich hluboké odpovědi jako automatické (R01); opravená kontrola padá dál, ale už jen proto, že odpovědi na A2A-0017/18/19 nejmenují zprávu, na kterou odpovídají — řeknu ti text na Telegram, jestli chceš.**
-- **Návrh (L01, druhá půlka): nákup s nejistým výsledkem, který přistál, se teď počítá do knihy i stropu, ale jeho room je zastavený a nikdo ho neprodá — mám postavit napojení zpět do roomu?**
+- **B04 (3/3 skutečné): 12 rout z jejich stránek chybí v `openapi-public.json`** — blok na Telegram ve scratchpadu (`msg_routes.md`), zapíšu, až řekneš že jsi ho poslal.
+- **A08 (1 ze 3, menšina): kontrola stop-lossu soudí „pozice otevřená" jen podle `current_position_side`**, co jsme viděli jen `null` — beze změny.
+- **A09–A11 (0 ze 3): zamítnuty jako false positive** (401/403 čtený jako selhání, `deep_failed` bez `auto:true`, sourozenecká stránka co soudí jen anonymní GET).
+- Ještě čekají na tvé „zapiš": časovky (`msg_timeouts2.md`), ET-28211 a fronta odpovědí.
 ## Týden
-- **20.–27. 9.: 7 passů, 318 tvrzení, triáda zamítla 34 — pořád se vyplácí; nic neměnit.** Opakuje se jedna třída: hlídač, který projde, i když věc, kterou jmenuje, je rozbitá (dnes C01, B01, B02, R03). tests/meta 800 z 1 449 a na stropu; dnešní nálezy padly hlavně na náš kód laborky a přehledu (13 z 20), ne na kontroly proti Cymetice. Commity Opus 5.5 319, Opus 5 140, Sonnet 46; žádný report ze Sonnet sweepu se nestahoval.
+- **Není splatný.** Poslední 27. 9., příští kolem 4. 10.
