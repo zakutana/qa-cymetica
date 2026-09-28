@@ -1071,6 +1071,16 @@ def _reason(group: str, panel: dict) -> str | None:
     return _stop_reason(stops) if stops and panel.get("status") == "running" else None
 
 
+def _room_trading(clones: list[dict]):
+    """A bot room trades while any of its bots does -- a batch whose last
+    clone stopped is not idle -- and is idle only when every bot with a known
+    state is off; None when none is known."""
+    marks = [c.get("trading") for c in clones]
+    if any(m is True for m in marks):
+        return True
+    return False if any(m is False for m in marks) else None
+
+
 def _experiment(rid: str, sector: str, report_room: dict, panel: dict,
                 now: datetime) -> dict:
     group = _group(report_room, panel)
@@ -1101,7 +1111,7 @@ def _experiment(rid: str, sector: str, report_room: dict, panel: dict,
         "ours": bool(re.match(r"^OUR-\d{4}$", str(
             report_room.get("origin") or panel.get("origin") or ""))),
         "url": first.get("url"),
-        "trading": clones[-1].get("trading") if clones else None,
+        "trading": _room_trading(clones),
         "tp": first.get("tp"), "sl": first.get("sl")}
 
 

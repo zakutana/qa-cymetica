@@ -383,14 +383,22 @@ def test_the_bots_room_says_whether_each_bot_trades(tmp_path):
     # And the other two answers, which the fixture never drew (deep pass
     # 2026-09-25, C08): a bot that trades says "trading", one that does not
     # and has no reason says "idle".
-    for trading, word in ((True, ">trading<"), (False, ">idle<")):
-        view = _view()
-        bots = [e for e in view["experiments"] if e.get("trading") is not None]
-        assert bots, "the fixture holds no bot experiment to draw"
-        for e in bots:
-            # Only a live room draws the word; the fixture's bot is done now.
-            e.update(trading=trading, reason=None, group="live")
-        code, err, captured = _run_page(_node(), tmp_path / f"bots-{trading}", view,
+    # Deep pass 2026-09-28, A02 (3/3): the word is DERIVED from the room's
+    # clones, so each case sets them and lets `lab_view` derive it -- writing
+    # `e["trading"]` straight into the view skipped exactly that step, and a
+    # batch room whose last clone had stopped drew "idle" over bots trading.
+    one = {"funded": 240.0, "trading": True, "stop": None}
+    two = {"funded": 240.0, "trading": False, "stop": None}
+    for name, trading, clones, word in (
+            ("on", True, [one], ">trading<"), ("off", False, [two], ">idle<"),
+            ("batch-last-stopped", True, [one, two], ">trading<"),
+            ("batch-first-stopped", True, [two, one], ">trading<")):
+        rooms_view = _rooms_view()
+        rooms_view["panels"]["STR-0003"]["clones"] = clones
+        view = _lab_page().lab_view(rooms_view, _report(), CHANNEL, FOMO, now=NOW)
+        bot = next(e for e in view["experiments"] if e["id"] == "STR-0003")
+        assert (bot["group"], bot["trading"], bot["reason"]) == ("live", trading, None), bot
+        code, err, captured = _run_page(_node(), tmp_path / f"bots-{name}", view,
                                         after='window.labShow("bots");',
                                         page=_lab_page())
         assert code == 0, err[:1200]
