@@ -2433,6 +2433,7 @@
 {"archive": "evidence-2026-09", "bytes": 37814, "call": "GET https://cymetica.com/api/v1/build-it-better/apps/leaderboard?days,sort", "id": "2d4cd6106fc9aad8aa577b87b83466bbcaf04de2f0cc5ef70ab8664ccd191995", "why": "row"}
 {"archive": "evidence-2026-09", "bytes": 7381, "call": "GET https://cymetica.com/api/v1/robinhood/perpetual/markets?", "id": "2d4d5580270b00b76e781bc0e72710612e1b6ebfefc945e5ea41c8b40fc89171", "why": "row"}
 {"archive": "evidence-2026-09", "bytes": 46590, "call": "GET https://cymetica.com/api/v1/clones/fomo-radar/signals?chain,filter,limit", "id": "2d528dd9b38f1089c3d7886b5dcfc279ce627685b4e8be0a7cc527a8fe25c036", "why": "row"}
+{"archive": "", "bytes": 6517, "call": "POST https://cymetica.com/api/v1/bounty/a2a/send?", "id": "2d55b98172effbc9d28b831dda9a2671cb06eabcc1920db81940b98b39dba0f3", "why": "their-words"}
 {"archive": "evidence-2026-09", "bytes": 4214, "call": "GET https://cymetica.com/api/v1/aib-builder?", "id": "2d55e604a889d89de02b715989fafe6016897ced88010bf045693defbd8e9577", "why": "promised"}
 {"archive": "evidence-2026-09", "bytes": 6705, "call": "POST https://cymetica.com/mcp/v1/? tools/call:get_fund_methodology", "id": "2d5bc284b27da6507401140977c3446ab4971b35eba1f874925d257e62daa38d", "why": "row"}
 {"archive": "evidence-2026-09", "bytes": 10129, "call": "GET https://cymetica.com/api/v1/event-cards/27c96532-123d-494f-ab89-d7dcdb8af33f?", "id": "2d5c6997905c22a852bb187e05d088fddbdcc1eafc66fda2803b5af41426c6ec", "why": "promised"}
