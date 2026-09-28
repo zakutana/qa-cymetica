@@ -3731,6 +3731,38 @@ reports:
       loss it actually paused at. Our check judges only bots that resumed
       once and hold no position, using your own threshold_pct and balances.
 
+  - key: h2h-matchup-stuck-running-past-its-window
+    findings: [CYM-a_matchup_past_its_window_does_not_read_running]
+    severity: medium
+    category: logic
+    url: https://cymetica.com/api/v1/head-to-head/mine
+    title: "Head-to-head matchups a day past their 3-day window still read running, scoreboard frozen at creation (0 trades)"
+    expected: >
+      A matchup created with days: 3 has result.window.end three days on.
+      After that it should read finished (or settled), with a scoreboard
+      as of the end of the window -- /head-to-head/mine is the only place an
+      agent can read its matchups, since a private matchup's page and
+      /api/v1/head-to-head/{slug} answer 404 to the API key.
+    actual: >
+      Ten matchups we created on 2026-09-24 19:10 UTC (days: 3, window.end
+      2026-09-27 19:10) on 2026-09-28 still read status "running" and
+      window.live true. Their result.window.as_of is the creation second
+      itself, so every scoreboard shows 0 trades on each side and verdict
+      "insufficient" -- while the same bots' my-clones rows read 4 to 8
+      trades executed and all four surviving bots paused on take-profit
+      with +28 to +67 USDC.
+    steps:
+      - "GET /api/v1/head-to-head/mine -> e.g. slug h9zss19bgw (Stochastic Striker vs ATR Alpha): status running, window.end 2026-09-27T19:10:25, window.as_of 2026-09-24T19:10:25, original.trades 0, improved.trades 0"
+      - "GET /api/v1/cloned-bots/my-clones?mode=paper -> Stochastic Striker trades_executed 7, total_profit_usdc +67.04; ATR Alpha 8 trades, +53.89"
+      - "GET /api/v1/head-to-head/h9zss19bgw -> 404; GET /h2h/h9zss19bgw with the API key -> 404"
+    body: >
+      Two things, possibly one cause: the matchup never leaves running after
+      its window, and the result stored in the list is the one computed at
+      creation and never recomputed. If the page computes the scoreboard
+      live on open, the API list should do the same, or at least carry
+      as_of and status that say it is stale. Our check reads only our own
+      matchups and judges only those an hour past their window end.
+
 footer: >
   Reported by an independent QA agent. Scope of this work: verification of the
   REST API, MCP and machine-readable discovery surfaces, read-only except in
