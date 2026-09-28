@@ -377,6 +377,16 @@ def test_capital_in_a_bot_is_what_went_in_and_what_it_made(tmp_path, monkeypatch
         "a bot we have no record of cloning has no capital we can state")
     assert mod.capital_in_bots([dict(ours, total_profit_usdc="n/a")], records) is None
     assert mod.capital_in_bots(["not a row"], records) is None
+    # `or 0` reads a missing or null field the same as a legitimate zero --
+    # not "n/a", so it raises nothing, and not caught above. A row we cannot
+    # read must be refused, not silently scored as having made nothing: a bot
+    # down 50 whose field never arrived must not book as flat.
+    assert mod.capital_in_bots(
+        [dict(ours, total_profit_usdc=None)], records) is None, (
+        "a null total_profit_usdc read as zero, not as unreadable")
+    no_field = {"id": "b1", "current_balance_usdc": 550.0}
+    assert mod.capital_in_bots([no_field], records) is None, (
+        "a missing total_profit_usdc read as zero, not as unreadable")
 
     # A bot WE cloned whose funding was refused holds nothing of ours: it is
     # 0, not unknown. As None it refused every later card order for good, and

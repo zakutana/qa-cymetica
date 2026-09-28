@@ -455,9 +455,12 @@ def capital_in_bots(rows, records) -> dict | None:
         bot = str(row.get("id"))
         if bot in unsure or (bot not in moved and bot not in cloned):
             return None
+        profit = row.get("total_profit_usdc")
+        if profit is None:
+            return None
         try:
             went_in += moved.get(bot, 0.0)
-            worth += moved.get(bot, 0.0) + float(row.get("total_profit_usdc") or 0)
+            worth += moved.get(bot, 0.0) + float(profit)
         except (TypeError, ValueError):
             return None
     return {"moved": round(went_in, 6), "worth": round(worth, 6)}
