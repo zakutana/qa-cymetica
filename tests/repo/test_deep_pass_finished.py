@@ -83,6 +83,8 @@ NEXT_FROM = "2026-09-10"
 COST_FROM = "2026-09-12"
 # The first pass that could write step 3's `review` block starts after this.
 REVIEW_FROM = "2026-09-23"
+# Step 0b, which builds the open NEXT.md work first, was written that day.
+BUILT_FROM = "2026-09-28"
 WEEK = 7
 
 # How long a pass may be in flight before an unwritten `finished` stops
@@ -358,6 +360,21 @@ def problems(progress: dict, nodeids: set[str] | None = None,
                     or said != written):
                 out.append(f"the review returned {said!r} finding(s) and the "
                            f"notebook holds {written} with source review")
+
+    # Step 0b says what it built from NEXT.md and what it left, and why.
+    if at[:10] >= BUILT_FROM and progress.get("finished"):
+        for key, needs in (("implemented", "commit"), ("left", "why")):
+            entries = progress.get(key)
+            if not isinstance(entries, list):
+                out.append(f"no `{key}` list -- step 0b writes `[]` when it "
+                           f"had nothing, or 'took nothing' and 'never ran' "
+                           f"read the same")
+                continue
+            for entry in entries:
+                if not isinstance(entry, dict) or not str(
+                        entry.get(needs) or "").strip():
+                    out.append(f"`{key}` names a line with no `{needs}`: "
+                               f"{str(entry)[:60]!r}")
 
     if at[:10] >= NEXT_FROM:
         out += _next_step_problems(progress, agreed_items)
@@ -764,6 +781,48 @@ def test_the_next_morning_is_handed_the_work_and_not_only_the_notebook():
     # And a fragment is not a sentence anybody can be handed.
     stub = problems(_pass(next=["Clone Hybrid"]), NODEIDS, items)
     assert stub, "a two-word entry matched a longer item and passed"
+
+
+@qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
+def test_step_0b_says_what_it_built_and_what_it_left():
+    """[operator 2026-09-28] the pass builds the open NEXT.md work first.
+
+    Step 0b was written that day with nothing reading what it wrote -- a
+    mechanism nobody could tell had fired. A finished pass writes both lists,
+    `[]` when there was nothing, because a missing key and "0b took nothing"
+    read the same from the morning."""
+    at, done = "2026-09-29T20:00:00+00:00", "2026-09-29T23:00:00+00:00"
+    ran = dict(finished=True, at=at, at_finished=done,
+               review={"done": True, "findings": 0})
+
+    silent = problems(_pass(**ran), NODEIDS, set())
+    assert any("`implemented`" in line for line in silent), silent
+    assert any("`left`" in line for line in silent), silent
+
+    built = problems(_pass(**ran, implemented=[{"line": "Kontrola: každý "
+                                                "/api/v1/ route", "commit": "abc1234"}],
+                           left=[]), NODEIDS, set())
+    assert not any("`implemented`" in line or "`left`" in line
+                   for line in built), built
+
+    # A line built with no commit named is a claim nothing can check.
+    bare = problems(_pass(**ran, implemented=[{"line": "Kontrola: každý "
+                                               "/api/v1/ route"}], left=[]),
+                    NODEIDS, set())
+    assert any("commit" in line for line in bare), bare
+    # A line left with no reason is the veto handed back without a word.
+    mute = problems(_pass(**ran, implemented=[],
+                          left=[{"line": "Degen prompts"}]), NODEIDS, set())
+    assert any("why" in line for line in mute), mute
+
+    # Still running: 0b's lists are filled as it goes.
+    assert not any("`implemented`" in line for line in
+                   problems(_pass(at=at), NODEIDS, set()))
+    # The pass of 2026-09-27 had no step 0b.
+    older = problems(_pass(finished=True, at="2026-09-27T20:15:43+00:00",
+                           at_finished="2026-09-27T22:48:26+00:00",
+                           review={"done": True, "findings": 0}), NODEIDS, set())
+    assert not any("`implemented`" in line for line in older), older
 
 
 @qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")

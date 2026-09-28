@@ -160,9 +160,11 @@ python scripts/memories.py --for deep-pass
 * **Red `tests/meta` ends the run.** Write that to `DEEP-PASS.md` and stop.
   CLAUDE.md: a red test there is the system working, and time spent "fixing"
   it unattended would be time spent relaxing a rule.
-* **Nothing unpushed and the week is due → run the week alone.** Steps 2 to 8
-  have nothing to read: the scope of this pass is the unpushed diff. Go to
-  step 11, then 10, 11b and 12. Without this the retrospective can only happen
+* **Nothing unpushed, nothing step 0b can build, and the week is due → run
+  the week alone.** Steps 2 to 8 have nothing to read: the scope of this pass
+  is the unpushed diff. Go to step 11, then 10, 11b and 12. An open NEXT.md
+  line that 0b takes is work: build it first, and its commits are the diff
+  2 to 8 read. Without this the retrospective can only happen
   in a week somebody happened to commit in, and a quiet week is exactly the one
   worth looking back at. `python scripts/processes.py reminders` says when it
   is due; so does the line the operator sees at the start of a session.
