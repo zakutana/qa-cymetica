@@ -73,7 +73,8 @@ nikdy nebylo další na řadě.
 
 - [x] 2026-09-21  (Zrušeno 22. 9.: operátor rozhodl, že Nexus doporučuje jen karty, které jdou na papír -- laborator/SKILL.md.) **Fondy v laborce: paper-mark pokus pro AIB fond.** NEX-0056 navrhl `AIB-BIOSCIENCES` long na 7 dní (TP +4 %, SL −4 %, časový stop 28. 9.; velikost podle naší brzdy 1,2 %, ne jeho 15 %). Launch ho nevzal, protože umí jen karty, a pro fond neexistuje paper nákup. Postavit pokus, kterému stačí `get_fund` jako vstup a `get_fund_history` jako dráha, s verdiktem stejným vzorcem jako u karet. Test napřed. Než to bude, jsou návrhy fondů jen v deníku. (hotovo 2026-09-22)
 
-- [ ] 2026-09-21  Laborka 24.–26. 9.: Hot blok v `lab.py brief` (projde vůbec něco pravidlu NEX-0055? když skoro nic, s číslem za Nexusem); verdikty STR-0006/0007 (kritérium naše výchozí, ne jeho TP/SL); při 6 uzavřených verdiktech `lab.py grade` -- předpovídá brána?
+- [ ] 2026-09-21  Laborka: verdikty STR-0006/0007 (kritérium naše výchozí, ne jeho TP/SL); při 6 uzavřených verdiktech `lab.py grade` -- předpovídá brána?
+- [x] 2026-09-28  Hot blok v `lab.py brief`: kolik vstupů projde NEX-0055/0057 za sledované hodiny, a při „skoro nic" číslo pro Nexuse (hotovo 2026-09-28, f1439d97)
 
 - [x] 2026-09-23  Laborka: Nexusovy úrovně u fondu a bota se nikam nezapíšou. STR-0035 (AIB-MOLECULAR, jeho stop −6 %) a STR-0041 (AIB-BIOSCIENCES, +8 % / −6 %) mají v plánu `tp`/`sl` null, protože launch je nečte a `rooms.py plan --leg` umí jen kartu (CARD:SIDE:SHARE). Test napřed: `plan` přijme i `fund:SYMBOL` a `bot:ID`, pak ručně doplnit oba plány. (hotovo 2026-09-23)
 
