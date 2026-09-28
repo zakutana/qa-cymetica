@@ -226,6 +226,118 @@ def last_tick(rows: list[dict] | None = None) -> dict | None:
     return seen[-1] if seen else None
 
 
+# --- Nexus's credit ----------------------------------------------------------
+#
+# NEXT.md, agreed 2026-09-26: the tick reads GET /api/v1/nexus/usage -- the
+# build allowance of Cymetica's plan on our account, readable with our key
+# since ET-27414 -- and /lab shows it. Cymetica's credit, NOT the operator's
+# Claude plan: CLAUDE.md keeps that one theirs to watch and nothing reads it.
+# Nor does anything here act on a percentage of this one; it is shown.
+#
+# Their hourly deep-answer limit is not in /usage, so the questions it turned
+# away are counted from the diary: nexus.py writes each as a `gave_up` row
+# whose `error` says so (NEX-0048, NEX-0101, NEX-0102).
+HOURLY_LIMIT = "hourly deep-answer limit"
+
+
+def _units(value) -> float | None:
+    """Their units are decimal strings ("0.650000")."""
+    try:
+        return float(value)
+    except (TypeError, ValueError):
+        return None
+
+
+def credit_reading(status: int | None, body, why: str = "") -> dict:
+    """One read of /usage, trimmed to what /lab shows. Anything short of a 200
+    carrying both windows' `used_pct` is `read: False` with its reason and no
+    number at all -- an unread credit is not an empty one (rule 8)."""
+    if status != 200:
+        return {"read": False, "why": why or f"HTTP {status}"}
+    if not isinstance(body, dict):
+        return {"read": False, "why": "the body is not a JSON object"}
+    windows = {}
+    for name in ("session", "week"):
+        window = body.get(name)
+        pct = window.get("used_pct") if isinstance(window, dict) else None
+        if isinstance(pct, bool) or not isinstance(pct, (int, float)):
+            return {"read": False, "why": f"no {name}.used_pct in the body"}
+        windows[name] = {"pct": pct, "used": _units(window.get("used_units")),
+                         "cap": _units(window.get("cap_units")),
+                         "resets_at": window.get("resets_at")}
+    items = body.get("items") if isinstance(body.get("items"), list) else None
+    newest = next((i for i in items or [] if isinstance(i, dict)), None)
+    return {"read": True, "as_of": body.get("as_of"),
+            "plan": body.get("plan_name") or body.get("plan"), **windows,
+            "warn_pct": body.get("warn_pct"), "critical_pct": body.get("critical_pct"),
+            "items": len(items) if items is not None else None,
+            "last_item": ({"label": newest.get("label") or newest.get("kind"),
+                           "units": _units(newest.get("units")),
+                           "at": newest.get("at")} if newest else None)}
+
+
+def _kept_credits(rows: list[dict]) -> list[dict]:
+    return [r["credit"] for r in rows
+            if r.get("type") == "tick" and isinstance(r.get("credit"), dict)]
+
+
+def credit_to_keep(reading, rows: list[dict]):
+    """The reading as a tick row keeps it: whole when it moved since the last
+    one kept whole, else only that it was read again and when. An unchanged
+    plan read 72 times a day is ~31 KB a day into audits/lab, which git keeps
+    for ever (CLAUDE.md, What we keep). An unread one is kept as it is."""
+    if not isinstance(reading, dict) or not reading.get("read"):
+        return reading
+    last = next((c for c in reversed(_kept_credits(rows))
+                 if c.get("read") and not c.get("same")), None)
+
+    def body(credit):
+        return {k: v for k, v in credit.items() if k != "as_of"}
+    if last is not None and body(last) == body(reading):
+        return {"read": True, "same": True, "as_of": reading.get("as_of")}
+    return reading
+
+
+def hourly_limit_refusals(nexus_rows: list[dict], now: datetime,
+                          hours: float = 1.0) -> int:
+    """Questions their deep lane turned away at its hourly limit within the
+    last `hours`, each question once however many rows say so."""
+    since = now - timedelta(hours=hours)
+    turned = set()
+    for row in nexus_rows:
+        if HOURLY_LIMIT not in str(row.get("error") or "").lower():
+            continue
+        at = _at(row.get("at"))
+        if at is not None and since < at <= now:
+            turned.add(row.get("id") or row.get("job_id") or row.get("at"))
+    return len(turned)
+
+
+def credit_view(rows: list[dict], nexus_rows: list[dict], now: datetime) -> dict:
+    """What /lab's credit line draws: the newest reading a tick took, under
+    its own time; the newest attempt's failure, said beside it rather than
+    turned into a number; and the hourly-limit refusals. Every field is
+    always there, None when nothing was read."""
+    tried = _kept_credits(rows)
+    good = next((c for c in reversed(tried)
+                 if c.get("read") and not c.get("same")), {})
+    # A row that only says "read again, the same" dates the numbers.
+    fresh = next((c for c in reversed(tried) if c.get("read")), {})
+    newest = tried[-1] if tried else None
+    session, week = good.get("session") or {}, good.get("week") or {}
+    return {"plan": good.get("plan"),
+            "session_pct": session.get("pct"), "session_resets": session.get("resets_at"),
+            "week_pct": week.get("pct"), "week_resets": week.get("resets_at"),
+            "warn_pct": good.get("warn_pct"), "critical_pct": good.get("critical_pct"),
+            "items": good.get("items"),
+            "last_item": (good.get("last_item") or {}).get("label"),
+            "at": (fresh.get("as_of") or good.get("as_of")) if good else None,
+            "unread": (None if newest is None or newest.get("read")
+                       else str(newest.get("why") or "unread")),
+            "refusals_hour": hourly_limit_refusals(nexus_rows, now, 1.0),
+            "refusals_day": hourly_limit_refusals(nexus_rows, now, 24.0)}
+
+
 def note_resolved(found: list[dict], rows: list[dict] | None = None) -> list[dict]:
     """Positions that resolved on their own, each written ONCE.
 

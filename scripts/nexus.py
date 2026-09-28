@@ -178,6 +178,48 @@ def _rest_client():
                         timeout=60.0)
 
 
+USAGE = "/api/v1/nexus/usage"
+# A tick reads it every twenty minutes and must not wait out their slow hour.
+USAGE_TIMEOUT = 15.0
+
+
+def credit(client=None) -> dict:
+    """What is left of the credit Cymetica's build plan gives our account:
+    one GET of /api/v1/nexus/usage with our key (ET-27414 made it readable
+    so), trimmed by `qa.lab.credit_reading`. A read, billed as nothing -- its
+    items are the Build it Better requests and pages we filed, and a read of
+    it is not among them (2026-09-28).
+
+    Cymetica's credit, not the operator's Claude plan, which nothing here
+    reads. A server that does not answer is an unread reading, never an
+    exception that stops the tick and never a zero (rule 8)."""
+    from qa import lab
+    from qa.client import build_client
+
+    own = client is None
+    if own:
+        load_dotenv()
+        identity = identities()["trusted"]
+        if not identity.present:
+            return {"read": False, "why": "no QA_TRUSTED_KEY, and /usage is per account"}
+        client = build_client(identity, EndpointRegistry.load(), timeout=USAGE_TIMEOUT)
+    token = CURRENT_TIER.set(SafetyTier.SAFE)
+    try:
+        try:
+            response = client.get(USAGE)
+        except httpx.HTTPError as exc:
+            return lab.credit_reading(None, None, why=type(exc).__name__)
+        try:
+            body = response.json()
+        except ValueError:
+            body = None
+        return lab.credit_reading(response.status_code, body)
+    finally:
+        CURRENT_TIER.reset(token)
+        if own:
+            client.close()
+
+
 def ask_shallow(question: str) -> dict:
     """The same question through their SYNC door, answered in seconds.
 

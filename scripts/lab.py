@@ -3220,6 +3220,7 @@ def _tick_doors() -> dict:
         "surface_drift": lambda: _sibling("processes").surface_drift(),
         "tracker": _tracker_round,
         "vendor": _vendor_news,
+        "credit": lambda: _sibling("nexus").credit(),
     }
 
 
@@ -3301,7 +3302,7 @@ def tick(*, now: datetime | None = None, actions: dict | None = None,
     doors = {**_tick_doors(), **(actions or {})}
     said: dict = {"at": moment.isoformat(timespec="seconds"), "session": None,
                   "skipped": "", "fomo": None, "hot": None, "sample": None,
-                  "cycled": False,
+                  "credit": None, "cycled": False,
                   "truth": False, "backtests": 0, "known": 0,
                   "refilled": False, "rooms": 0, "orders": 0, "held": [],
                   "verdicts": 0, "variants": 0, "resolved": 0, "errors": []}
@@ -3344,6 +3345,12 @@ def tick(*, now: datetime | None = None, actions: dict | None = None,
     said["sample"] = collect("sample")
     # After the hold: these reads append to the journal a deep pass verifies.
     said["tracker"] = collect("tracker")
+    # Nexus's credit (NEXT 2026-09-26), onto this tick's row for /lab. After
+    # the hold, not beside the memecoins: /usage always answers the present,
+    # so a reading a pass skips is not lost. A read that fails comes back
+    # unread rather than raised, so it never wakes the manager as a gap.
+    said["credit"] = lab.credit_to_keep(attempt("credit", doors["credit"]),
+                                        lab.load())
     news = attempt("vendor", doors["vendor"]) or {}
     said["vendor_seq"] = news.get("seq")
     # Narrowed to what came after the last sweep in _decide, and not kept.

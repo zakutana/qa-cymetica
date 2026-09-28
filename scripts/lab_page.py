@@ -1106,11 +1106,12 @@ def _experiment(rid: str, sector: str, report_room: dict, panel: dict,
 
 
 def lab_view(rooms: dict, report: dict, channel: dict, fomo: dict | None,
-             now: datetime | None = None) -> dict:
+             now: datetime | None = None, credit: dict | None = None) -> dict:
     """What /lab draws, joined in one place so a test can hold all of it:
     the four sectors with the report's figures, every experiment as a row of
-    its sector's ranking, the Nexus line, the paper account, the threads for
-    the conversation drawer and the memecoin movers. Pure."""
+    its sector's ranking, the Nexus line with Nexus's credit under it
+    (`qa.lab.credit_view`), the paper account, the threads for the
+    conversation drawer and the memecoin movers. Pure."""
     moment = now or datetime.now(timezone.utc)
     products = report.get("products") or {}
     by_id = {r.get("id"): r for r in report.get("rooms") or []}
@@ -1136,7 +1137,8 @@ def lab_view(rooms: dict, report: dict, channel: dict, fomo: dict | None,
         "experiments": experiments,
         "nexus": {**(report.get("nexus") or {}),
                   **{k: (channel or {}).get(k) for k in
-                     ("median_seconds", "measured", "failed", "refused")}},
+                     ("median_seconds", "measured", "failed", "refused")},
+                  "credit": credit},
         "account": {"free": general.get("balance"),
                     "in_cards": general.get("notional"),
                     "in_bots": round(in_bots, 2) or None,
@@ -1152,10 +1154,23 @@ def build_lab(now=None) -> dict:
     Nexus's channel and the memecoin diary. What /lab embeds and /lab.json
     answers."""
     moment = now or datetime.now(timezone.utc)
-    view = lab_view(build_rooms(), _lab_script().write_report(moment),
-                    _nexus_channel(), _fomo_stats() or {}, now=moment)
+    script = _lab_script()
+    view = lab_view(build_rooms(), script.write_report(moment),
+                    _nexus_channel(), _fomo_stats() or {}, now=moment,
+                    credit=_credit(script, moment))
     view["departments"] = departments_view()
     return view
+
+
+def _credit(script, moment) -> dict | None:
+    """Nexus's credit as the ticks read it, and the hourly-limit refusals
+    from the diary -- None only when the diaries cannot be read at all."""
+    from qa import lab
+
+    try:
+        return lab.credit_view(lab.load(), script._nexus_rows(), moment)
+    except Exception:  # noqa: BLE001 -- an unreadable diary is not a page defect
+        return None
 
 
 def departments_view() -> list[dict]:
@@ -1264,6 +1279,7 @@ button { font: inherit; color: inherit; }
 .nexus { margin: 0; font-size: 14px; color: var(--text-dim); line-height: 1.6; }
 .nexus b { color: var(--text); font-variant-numeric: tabular-nums; }
 .nexus b.up { color: var(--ok); }
+.nexus b.down, .nexus .warn-t { color: var(--bad); } .nexus b.warm { color: var(--c-bots); }
 .nexus .ar { color: var(--text-faint); margin: 0 3px; }
 .nexus small { color: var(--text-faint); font-size: 12.5px; }
 .nx-tag { display: inline-block; font-size: 11.5px; font-weight: 700; letter-spacing: .08em;
@@ -1589,8 +1605,40 @@ function sectorTab(lp, on) {
     <span class="sec-mid">${mid}</span>
     <span class="sec-foot">${foot}</span></button>`;
 }
+/* Nexus's credit, `cr.`: Cymetica's build plan on our account as the tick
+   read it (GET /api/v1/nexus/usage), and the questions their deep lane
+   turned away at its hourly limit, which /usage does not carry. Cymetica's,
+   named so on the tag, never the operator's own plan. Coloured by their
+   own warn/critical marks; nothing acts on them. */
+function creditTone(v, cr) {
+  return v == null ? "" : cr.critical_pct != null && v >= cr.critical_pct ? "down"
+    : cr.warn_pct != null && v >= cr.warn_pct ? "warm" : "";
+}
+function creditLine(cr) {
+  if (!cr) return "";
+  const tip = "Cymetica's Nexus build plan on our account (GET /api/v1/nexus/usage), " +
+    "read by the lab tick; hourly limit = deep answers they refused, from our diary.";
+  const head = `<br><span class="nx-tag" title="${esc(tip)}">Nexus credit</span> `;
+  const win = (label, v, reset) => v == null ? "" :
+    ` · ${label} <b class="${creditTone(v, cr)}">${num(v, 0)}%</b>` +
+    (reset ? ` <small>resets ${clock(reset)}</small>` : "");
+  const refused = ` · hourly limit hit <b>${cr.refusals_hour || 0}×</b> last hour` +
+    ` <small>(${cr.refusals_day || 0}× in 24 h)</small>`;
+  if (cr.at == null) {
+    return head + (cr.unread ? `<span class="warn-t">unread (${esc(cr.unread)})</span>`
+      : "not read yet") + refused;
+  }
+  return head + esc(cr.plan || "") + win("5 h", cr.session_pct, cr.session_resets) +
+    win("week", cr.week_pct, cr.week_resets) +
+    (cr.items != null ? ` · ${num(cr.items, 0)} ${plural(cr.items, "item", "items")}` +
+      (cr.last_item ? ` <small>last: ${esc(cr.last_item)}</small>` : "") : "") +
+    refused + ` <small>(${clock(cr.at)})</small>` +
+    (cr.unread ? ` · <span class="warn-t">newest read failed: ${esc(cr.unread)}</span>` : "");
+}
 function nexusLine(ln) {
-  if (!ln || ln.questions == null) return "";
+  if (!ln) return "";
+  const credit = creditLine(ln.credit);
+  if (ln.questions == null) return credit.replace(/^<br>/, "");
   const ar = '<span class="ar">→</span>';
   const took = ln.median_seconds != null
     ? ` · answers in ~${Math.max(1, Math.round(ln.median_seconds / 60))} min` +
@@ -1603,7 +1651,7 @@ function nexusLine(ln) {
     `<b class="${ln.survived ? "up" : ""}">${ln.survived}</b> worked` +
     (ln.refuted ? `, ${ln.refuted} didn't` : "") +
     (ln.inconclusive ? `, ${ln.inconclusive} no verdict` : "") +
-    (ln.running ? `, ${ln.running} running` : "") + took + quiet;
+    (ln.running ? `, ${ln.running} running` : "") + took + quiet + credit;
 }
 
 /* ---------- a room's number: how sure, in words ---------- */

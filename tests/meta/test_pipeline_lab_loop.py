@@ -909,7 +909,7 @@ def _doors(**over):
     calls = {k: [] for k in ("fomo", "sample", "cycle", "promote", "truth",
                              "search", "verdicts", "variants", "refill", "moves",
                              "fomo_reading", "hot", "hot_reading",
-                             "surface_drift", "tracker")}
+                             "surface_drift", "tracker", "credit")}
 
     def door(name, value):
         return lambda *a: calls[name].append(a) or value
@@ -938,6 +938,8 @@ def _doors(**over):
         # Their tracker and inbox: read, nothing new.
         "tracker": door("tracker", {"tracker": "ok", "inbox": "ok", "new": 0}),
         "vendor": lambda: {"seq": 7, "lines": []},
+        # Nexus's credit (/api/v1/nexus/usage), read and unchanged.
+        "credit": door("credit", {"read": False, "why": "stubbed"}),
     }
 
     def search(bite):
