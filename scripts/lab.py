@@ -3760,6 +3760,13 @@ NEXUS_KNOWN = (
     "A proposal is concrete only if it names what to buy, clone or mark: the "
     "whole card id, the bot's exact species name, the fund's symbol. NEX-0002 "
     "answered at length and named none.",
+    "His species roster is narrower than ours: NEX-0108 confirmed only "
+    "Divergence Dragon and RSI Sniper (wta_species) from a '10-species "
+    "roster' he can read, and could not verify Liquidation Hunter, Delta "
+    "Hunter, Sent Surfer or Corr Catcher -- all perpetual_agent, real and "
+    "clonable on GET /cloned-bots/available. Don't expect him to confirm a "
+    "perpetual_agent species by name; ask what he'd do with it, not whether "
+    "it exists.",
 )
 
 
