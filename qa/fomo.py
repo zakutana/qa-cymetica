@@ -371,6 +371,35 @@ def capped_return(ret, reading: dict, clip_usd: float = SALE_CLIP_USD):
     return min(ret, (liquidity / 2.0 / clip_usd - 1.0) * 100.0)
 
 
+def _after_switch(rows: list[dict]) -> set[int]:
+    """The `id()` of every checkpoint read at or after the point its signal's
+    pair changed (`switch_at`): their prices are another pair's, not this
+    coin's, and pay no gain (`_no_pair_gain`). The readings before the switch
+    are the coin's own and stand."""
+    signals = _signals(rows)
+    per: dict[str, list[dict]] = {}
+    for row in rows or []:
+        if row.get("type") == "checkpoint" and row.get("key") in signals:
+            per.setdefault(row["key"], []).append(row)
+    out: set[int] = set()
+    for key, checkpoints in per.items():
+        ordered = [signals[key]] + sorted(
+            checkpoints, key=lambda c: _hours(c.get("horizon")) or 0.0)
+        cut = switch_at(ordered)
+        if cut is not None:
+            out.update(id(r) for r in ordered[cut:])
+    return out
+
+
+def _no_pair_gain(ret, row: dict, after: set[int]):
+    """`ret`, unless `row` was read on another pair than the signal's: then
+    at most zero, as `ten_dollars` pays a switched pair (B03, deep pass of
+    2026-09-28, 3/3 -- `stats` and `basket` printed PUMP at +31 273 437 %)."""
+    if id(row) in after and isinstance(ret, (int, float)):
+        return min(ret, 0.0)
+    return ret
+
+
 def c_token(checkpoint: dict) -> str:
     """The token a checkpoint belongs to, off its key.
 
@@ -394,11 +423,13 @@ def stats(rows: list[dict], hit_threshold: float = DEFAULT_HIT_THRESHOLD,
     rows, _ = usable(rows, min_liquidity, min_volume)
     signals = {r["key"]: r for r in rows
               if r.get("type") == "signal" and r.get("key")}
+    after = _after_switch(rows)
     by_horizon: dict[str, list[dict]] = {}
     for row in rows:
         if row.get("type") != "checkpoint":
             continue
-        ret = capped_return(row.get("return_pct"), row, clip_usd)
+        ret = _no_pair_gain(capped_return(row.get("return_pct"), row, clip_usd),
+                            row, after)
         if not isinstance(ret, (int, float)):
             continue
         signal = signals.get(row.get("key"))
@@ -458,6 +489,7 @@ def _positions(rows: list[dict], clip_usd: float = SALE_CLIP_USD
     """
     rows = list(rows or [])
     signals = _signals(rows)
+    after = _after_switch(rows)
     per: dict[str, list[dict]] = {}
     for row in in_time(rows):
         if row.get("type") == "checkpoint" and row.get("key") in signals:
@@ -488,7 +520,8 @@ def _positions(rows: list[dict], clip_usd: float = SALE_CLIP_USD
                          "conviction": signal.get("conviction"),
                          "chain": signal.get("chain"), "entry_price": entry,
                          "price_usd": price,
-                         "return_pct": capped_return(ret, row, clip_usd),
+                         "return_pct": _no_pair_gain(
+                             capped_return(ret, row, clip_usd), row, after),
                          "hours": _hours(row.get("horizon")),
                          "horizon": row.get("horizon")}
     return held, {"stale_readings": stale, "fresh_readings": fresh,
@@ -569,12 +602,14 @@ def basket(rows: list[dict], top: int = 5,
     # holding is what costs -- which it is: the median goes from -0.7% at an
     # hour to -24.7% at twenty-three.
     at_hour: dict[str, list[float]] = {}
+    after = _after_switch(rows)
     for row in in_time(rows):
         if row.get("type") != "checkpoint":
             continue
         if isinstance(row.get("return_pct"), (int, float)):
             at_hour.setdefault(str(row.get("horizon")), []).append(
-                capped_return(row["return_pct"], row, clip_usd))
+                _no_pair_gain(capped_return(row["return_pct"], row, clip_usd),
+                              row, after))
     out["by_horizon"] = [
         {"horizon": label, **_spread(at_hour[label], top)}
         for label in sorted(at_hour, key=lambda h: _hours(h) or 0.0)]
@@ -1003,6 +1038,18 @@ def pair_changed(readings: list[dict]) -> bool:
     return switch_at(readings) is not None
 
 
+def _first_exit(path, entry: float, stop: float, target_pct: float | None):
+    """The first point of `path` at or past the stop or the target, as
+    (why, point), or None."""
+    for point in path:
+        ret = (point[1]["price_usd"] / entry - 1.0) * 100.0
+        if ret <= -stop:
+            return "stop", point
+        if target_pct is not None and ret >= target_pct:
+            return "target", point
+    return None
+
+
 def stop_study(rows: list[dict], stop_pct: float, target_pct: float | None = None,
                cost_pct: float | None = None, now=None,
                clip_usd: float = DEFAULT_CLIP_USD, top: int = 5,
@@ -1070,7 +1117,7 @@ def stop_study(rows: list[dict], stop_pct: float, target_pct: float | None = Non
         # drained -- a rug, kept below and paid no gain.
         ordered = [signal] + [r for _, r in sorted(read.get(key) or [],
                                                    key=lambda item: item[0])]
-        switched = pair_changed(ordered)
+        cut = switch_at(ordered)
         if max(h for h, _ in read[key]) < last:
             # The loop never got to the end of this hold (RM05, deep pass of
             # 2026-09-24, 3/3): counted off a path cut short, a stop kept the
@@ -1080,15 +1127,18 @@ def stop_study(rows: list[dict], stop_pct: float, target_pct: float | None = Non
             # and its stop is the loss the stop exists for.
             excluded["unread_at_end"] += 1
             continue
-        why, (hours, at_exit) = "last", path[-1]
-        for point in path:
-            ret = (point[1]["price_usd"] / entry - 1.0) * 100.0
-            if ret <= -stop:
-                why, (hours, at_exit) = "stop", point
-                break
-            if target_pct is not None and ret >= target_pct:
-                why, (hours, at_exit) = "target", point
-                break
+        # An exit found on the pair the coin was bought on, before the switch,
+        # is a real fill and is kept, as `compare` reads the peak up to the
+        # switch (R01, deep pass of 2026-09-28, 2/3). Only a path that
+        # reached the switch without one is the rug below.
+        found = None
+        if cut is not None:
+            before = {id(r) for r in ordered[1:cut]}
+            found = _first_exit([p for p in path if id(p[1]) in before],
+                                entry, stop, target_pct)
+        switched = cut is not None and found is None
+        found = found or _first_exit(path, entry, stop, target_pct)
+        why, (hours, at_exit) = found or ("last", path[-1])
         if why == "last" and hours < last:
             # Held to the end means READ to the end (RM02, deep pass of
             # 2026-09-24, 3/3): a path the loop stopped reading was sold at

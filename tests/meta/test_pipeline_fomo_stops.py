@@ -402,6 +402,79 @@ def test_a_path_that_changes_pair_pays_no_gain_and_a_rug_is_a_trade():
 
 
 @qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
+def test_the_tables_and_the_basket_pay_a_switched_pair_no_gain_either():
+    """B03 of the deep pass of 2026-09-28 (3 of 3). V3 stopped the stop study,
+    `compare` and `ten_dollars` printing PUMP's other pair as a gain, and left
+    `stats` and `basket` reading its checkpoints raw: the best coin on the
+    memecoin tab was +31 273 437 %. A reading taken on another pair is not
+    this coin's price, so it pays no gain there either -- while the readings
+    before the switch, and a real loss after it, stand."""
+    key, other = "0xpump:2026-09-13T12", "0xok:2026-09-13T12"
+    age, off = 37_227_581, 17_588_603
+    rows = [_signal(key, price=0.004302, age_seconds=age),
+            _signal(other, price=1.0, age_seconds=1000)]
+    for hours, price, pair_age in ((1, 0.005, age + 3600),
+                                   (2, 21.72, off), (3, 21.9, off + 3600)):
+        rows.append({"type": "checkpoint", "key": key, "horizon": f"{hours}h",
+                     "at": (T0 + timedelta(hours=hours)).isoformat(),
+                     "price_usd": price, "age_seconds": pair_age,
+                     "return_pct": fomo.return_since_signal(0.004302, price)})
+    rows.append({"type": "checkpoint", "key": other, "horizon": "3h",
+                 "at": (T0 + timedelta(hours=3)).isoformat(), "price_usd": 1.5,
+                 "age_seconds": 1000 + 3 * 3600,
+                 "return_pct": 50.0})
+    said = fomo.stats(rows)["horizons"]
+    assert said["2h"]["top"][0]["return_pct"] <= 0.0, said["2h"]
+    assert max(c["return_pct"] for c in said["3h"]["top"]) == (
+        pytest.approx(50.0)), (
+        "the coin that stayed on its pair keeps its gain; the other pays none")
+    # The reading BEFORE the switch is still a measurement of the coin.
+    assert said["1h"]["mean_pct"] > 0.0
+    b = fomo.basket(rows)
+    assert b["best"]["return_pct"] == pytest.approx(50.0), b["best"]
+    assert b["worst"]["return_pct"] <= 0.0
+    by_h = {h["horizon"]: h for h in b["by_horizon"]}
+    assert by_h["2h"]["pnl_pct"] <= 0.0, by_h["2h"]
+
+
+@qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
+def test_an_exit_earned_before_the_pair_switched_is_kept():
+    """R01 of the deep pass of 2026-09-28 (2 of 3). The study zeroed a trade
+    whenever ANY reading of its path came from another pair, so a coin that
+    reached the target at two hours on the pair it was bought on -- a real
+    fill -- and only later was answered by a drained pool was paid nothing.
+    `compare` cuts the path at the switch and reads the peak up to it; the
+    stop study now cuts the same way. An exit found only at or after the
+    switch is still the other pair's price and still pays no gain."""
+    early, late = "0xearly:2026-09-13T12", "0xlate:2026-09-13T12"
+    # The target is +100 %. The early coin reaches it at 2 h on its own pair;
+    # the late one only on the other pair's price, from 21 h on. Both pairs
+    # switch at 21 h: the age stops keeping time.
+    prices = {early: {1: 1.2, 2: 3.0, 21: 21.0, 24: 0.9},
+              late: {1: 1.2, 2: 1.3, 21: 21.0, 24: 0.9}}
+    rows = []
+    for key, table in prices.items():
+        rows.append(_signal(key, price=1.0, age_seconds=1000))
+        for hours, price in table.items():
+            rows.append({"type": "checkpoint", "key": key,
+                         "horizon": f"{hours}h",
+                         "at": (T0 + timedelta(hours=hours)).isoformat(),
+                         "price_usd": price,
+                         "age_seconds": (1000 + hours * 3600 if hours < 21
+                                         else 17_588_603),
+                         "return_pct": fomo.return_since_signal(1.0, price)})
+    said = fomo.stop_study(rows, stop_pct=50.0, target_pct=100.0,
+                           cost_pct=0.0, now=DONE)
+    by_key = {t["key"]: t for t in said["trades"]}
+    assert by_key[early]["exit"] == "target" and by_key[early]["exit_hours"] == 2
+    assert by_key[early]["gross_pct"] == pytest.approx(200.0), (
+        "the target was earned on the pair it was bought on")
+    assert not by_key[early]["switched"]
+    assert by_key[late]["switched"] and by_key[late]["gross_pct"] <= 0.0
+    assert said["switched"] == 1
+
+
+@qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
 def test_the_report_and_the_brief_print_the_stop_lines(tmp_path, monkeypatch):
     """`fomo_watch.py report` prints stop -10 % alone and with a +100 %
     target; `lab.py brief` prints the same through `say_reading`. A reading
