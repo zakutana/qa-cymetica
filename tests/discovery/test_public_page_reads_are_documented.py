@@ -29,6 +29,21 @@ is left. What stays out of scope, deliberately:
     per-user "me" reads, analytics/telemetry beacons.
 
 SAFE: GETs only -- of their pages, their scripts, and of read-shaped paths.
+
+**Sweep of 2026-09-28, 14:44-14:56 UTC:** the SPEC read itself -- the one
+`.json()` call in this file that was not wrapped -- crashed with
+`json.decoder.JSONDecodeError` on a 200 response, which pytest recorded as a
+`failed` outcome and the fold composed as a new #130 verification-fail. That
+is not the documentation-gap finding this check makes; it is a malformed or
+truncated body on `/openapi-public.json` itself, the same window a prereg'd
+run's own fingerprint read timed out on `/.well-known/agent-card.json` and
+`/.well-known/agent-skills.json` and an MCP fund-history read timed out for
+304s -- platform unreachability, read here as evidence about the vendor
+rather than treated as one. Every other `.json()` in this file, and in the
+sibling checks this file's docstring style follows, is wrapped in
+`try/except ValueError: raise Inconclusive(...)` (rule 8: a failed read is
+not an empty read). This one was not. Fixed in its own commit, change before
+run, per rule 5.
 """
 
 from __future__ import annotations
@@ -101,7 +116,11 @@ def test_what_a_public_page_reads_without_a_key_is_documented(rest_anon):
     spec = rest_anon.get(SPEC)
     if spec.status_code != 200:
         raise Inconclusive(f"{SPEC} answered HTTP {spec.status_code}")
-    documented = documented_patterns(spec.json() or {})
+    try:
+        spec_json = spec.json() or {}
+    except ValueError:
+        raise Inconclusive(f"{SPEC} answered 200 with a body that is not JSON")
+    documented = documented_patterns(spec_json)
     home = rest_anon.get(SITE + "/")
     if home.status_code != 200:
         raise Inconclusive(f"the home page answered HTTP {home.status_code}")
