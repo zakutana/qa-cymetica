@@ -79,12 +79,19 @@ def reminders(facts: dict, now: datetime) -> list[str]:
     """At most a few lines: what is due, and the words that start it."""
     out: list[str] = []
 
+    # [operator 2026-09-28]: the pass begins by doing what NEXT.md holds (its
+    # step 0b), so open lines there are work for it even with nothing unpushed.
     since = _hours_since(facts.get("last_pass"), now)
-    if facts.get("unpushed") and (since is None or since > MISSED_NIGHT_HOURS):
+    unpushed, open_next = facts.get("unpushed") or 0, len(facts.get("open_next") or [])
+    if (unpushed or open_next) and (since is None or since > MISSED_NIGHT_HOURS):
         waited = f"{since:.0f} h" if since is not None else "neznámo jak dlouho"
+        work = " a ".join(part for part in (
+            f"{unpushed} commitů" if unpushed else "",
+            f"{open_next} otevřených položek v NEXT.md (dodělá, co jde bez tebe)"
+            if open_next else "") if part)
         out.append(
-            f"Deep pass neběžel {waited} a čeká na něj {facts['unpushed']} "
-            f"commitů — až půjdeš spát, řekni „jdu spat\".")
+            f"Deep pass neběžel {waited} a čeká na něj {work} — až půjdeš "
+            f"spát, řekni „jdu spat\".")
 
     week = _hours_since(facts.get("week_last"), now)
     if week is None or week / 24.0 >= WEEK_DAYS:

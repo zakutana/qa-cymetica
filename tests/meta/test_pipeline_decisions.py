@@ -213,6 +213,8 @@ PINNED = {
          "c87cf5372cc63054d453a069d8922d430e8c2d2f1b396b4f17f0443cfa7fd166"),
         ("2026-09-07", "nechci behem dne ztracet cas",
          "99c552e7f54ed42777ce76d246f0d2038f0c49be80d8c10eaded976b5b2ae855"),
+        ("2026-09-28", "ze prvne doimplementujes co je tteba",
+         "fd6cca417e6ea5bda4771147d3a4645558a09dc04338223569f5c39e7fc08072"),
         ("2026-09-08", "the night loop may change the rules",
          "e280ab0ad68dc07d06651ec89c6eaafef7a5488130a1e337a6f6f769d834c4b1"),
         ("2026-09-08", "tos celou dobu cekal na me jedno slovo",

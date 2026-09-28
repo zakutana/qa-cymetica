@@ -71,6 +71,8 @@ the file rather than remembering:
   {"id": "T01", "nodeid": "...", "claim": "...", "source": "audit|review",
    "votes": null, "verdict": null, "fixed": false, "commit": null}],
  "review": {"done": true, "findings": 0},
+ "implemented": [{"line": "...", "commit": "..."}],
+ "left": [{"line": "...", "why": "..."}],
  "next": ["one sentence per item, the same ones written into NEXT.md"],
  "retrospective": {"last": "2026-09-09", "done": false},
  "rule_changes": [
@@ -94,6 +96,9 @@ the file rather than remembering:
   2026-09-12 found it in itself (S01). `scripts/processes.py::messages_floor`
   reads `previous_at`, falls back a day when no pass is named, and says which
   of the three floors it used.
+* **Step 0b** appends to `implemented` as each NEXT.md line lands and to
+  `left` as each is passed over, so a compaction mid-build does not build it
+  twice.
 * **Step 2** appends a gap the moment an auditor returns it. `votes` and
   `verdict` stay null. **Step 3** does the same for every review finding,
   `"source": "review"`, the moment the review returns, and sets
@@ -217,6 +222,38 @@ python scripts/memories.py --for deep-pass
   answer — step 1 asked when the last pass was and got "a few minutes ago", so
   it read an empty window on an evening of 23 messages, and nothing went red.
   Carry it here, before the overwrite, or step 1 has nothing to read.
+
+### 0b · Dodělat — the agreed work, before the review
+
+[operator 2026-09-28] *"Tak ale ja na to nechci myslet. Nekde si to dej ze mi to mas pripomenout takove veci a nebo to dej ma zacatek deeppassu ze prvne doimplementujes co je tteba a az pak ho spustis. Musis mi veci pripominat ja na nic nemyslim jen kontroluji laborku"*
+
+So the pass begins with the agreed work the day left. Every open NEXT.md line
+that is ours to do **now** -- code, a check, a tool, a repair -- is built
+here, before step 2 audits and step 3 reviews, so the xhigh review reads it
+with the rest of the diff. Until that day an implementation line in NEXT.md
+waited for the operator to name it, which they had said they would not do.
+
+* **Takes** a line that needs nobody: no answer from Cymetica or Nexus, no
+  delivery or date still to come (a verdict due on a later day), no decision
+  that belongs under `Čeká na tebe`.
+* **Leaves** a line that would spend (a paid Nexus interaction, money), send
+  (a message, a report) or publish, and a line that is only watching. Its
+  reason goes in the notebook.
+* **Oldest first, tests first, one commit per line.** Step 5's rules hold:
+  rule 5 for a check definition, never `state/*.json` or the journal. A new
+  check against their platform lands here and runs in step 6; what it finds
+  shows as NOT RAISED YET and the next sweep files it, because a deep pass
+  files nothing.
+* **Too big for one night:** build the part that stands with its own test,
+  tick that part as its own `[x]` line, leave the rest open with its original
+  date. Never half a feature without its test.
+* **Tick what landed**, `(hotovo YYYY-MM-DD, <short commit>)` inside the 300
+  characters, and write
+  `"implemented": [{"line": ..., "commit": ...}]` and `"left": [{"line": ...,
+  "why": ...}]` in the notebook. `DEEP-PASS.md` names what landed under
+  `## Opraveno`.
+* The other half of the same sentence is the reminder: the session start says
+  when a night was missed and NEXT.md holds work (`processes.py reminders`).
 
 ### 1 · What the work so far taught
 
@@ -713,8 +750,8 @@ else:
   watching. A proposal goes under `Čeká na tebe` where it can be vetoed
   before it costs anything.
 
-Tick nothing here. The morning ticks what it does, and `[x]` lines stay in the
-file as history.
+Tick nothing here beyond what step 0b built, which 0b has already ticked. The
+morning ticks what it does, and `[x]` lines stay in the file as history.
 
 ### 11 · Týden — the look back, when one is due
 

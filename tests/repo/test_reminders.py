@@ -88,6 +88,18 @@ def test_the_deep_pass_is_named_only_when_a_night_was_missed():
     idle = mod.reminders(_facts(unpushed=0, last_pass=_ago(days=4)), NOW)
     assert not _says(idle, "deep pass"), idle
 
+    # [operator 2026-09-28] "Musis mi veci pripominat ja na nic nemyslim": the
+    # pass now starts by doing the agreed work left in NEXT.md (its step 0b),
+    # so open lines there are work for it even with nothing unpushed -- and
+    # the reminder says so, in the same words that start it.
+    owed = mod.reminders(_facts(unpushed=0, last_pass=_ago(hours=40),
+                                open_next=["Kontrola: každý /api/v1/…"]), NOW)
+    assert _says(owed, "jdu spat", "next.md"), owed
+    tonight = mod.reminders(_facts(unpushed=0, last_pass=_ago(hours=6),
+                                   open_next=["Kontrola: každý /api/v1/…"]), NOW)
+    assert not _says(tonight, "deep pass"), (
+        "a pass last night already took what NEXT.md held", tonight)
+
 
 @qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
 def test_a_missing_morning_report_is_named_so_the_session_makes_it():
