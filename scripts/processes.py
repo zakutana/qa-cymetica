@@ -235,7 +235,14 @@ CEILINGS = {
     # functions in fifteen days, most of them guarding us rather than testing
     # them. A new guard replaces or merges one; the room above today's 786 is
     # for V8's findings, whose tests the plan already owes.
-    "meta_tests": 800,
+    #
+    # 2026-09-28: that room is spent. Raised 800 -> 801, one test, for
+    # test_last_full_run_backfill_stays_off_the_committed_page -- the guard
+    # against the D2 gap a narrow sweep found (build_payload() was reading
+    # state/runs/*.json, gitignored, into the committed dashboard). No slack
+    # added on top: the next addition earns its own raise, not headroom left
+    # lying around for it.
+    "meta_tests": 801,
 }
 
 BASH_SCRIPT = re.compile(r"python\s+scripts[/\\]([a-z_]+)\.py")

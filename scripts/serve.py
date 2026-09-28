@@ -273,7 +273,10 @@ class Live:
             # and serving from a module frozen at startup would show markup
             # that no longer matches the file.
             self.render = _render_module()
-            payload = self.render.build_payload()
+            # Live view only: an uncommitted local run may enrich the tiles
+            # here, unlike the committed page (render.py build_payload()
+            # docstring explains why the two must differ).
+            payload = self.render.build_payload(use_last_full_run=True)
             html = self.render.render(payload)
             digest = self.render.payload_hash(payload)
             error = None

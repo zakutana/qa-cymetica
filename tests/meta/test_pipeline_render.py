@@ -1333,6 +1333,62 @@ def test_a_tile_lists_the_tests_behind_its_count(tmp_path, monkeypatch):
 
 
 @qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
+def test_last_full_run_backfill_stays_off_the_committed_page(tmp_path, monkeypatch):
+    """tests/repo/test_diaries_outside_git.py::D2 caught this on 2026-09-28:
+    a narrow sweep's committed dashboard differed from a bare-checkout
+    re-render, because `_last_full_run` filled stale tiles from a
+    `state/runs/*.json` record that was admissible but had never been
+    force-added to git (its prereg had drifted, so no fold ever cited it --
+    an admissible run and a committed one are not the same set).
+
+    `build_payload()`'s default must not touch that file at all: the
+    backfill only runs when a caller opts in with `use_last_full_run=True`,
+    which is what scripts/serve.py's live view does and scripts/render.py's
+    committed-page __main__ does not.
+    """
+    monkeypatch.setenv("QA_STATE_DIR", str(tmp_path))
+    (tmp_path / "runs").mkdir()
+    old_full = {
+        "schema": 2, "run_id": "run-20260101T000000Z-old0000",
+        "started_at": "2026-01-01T00:00:00+00:00",
+        "finished_at": "2026-01-01T00:05:00+00:00",
+        "git_head": "abc123", "git_dirty": False,
+        "prereg_id": "PRE-0001", "prereg_tag_sha": "t", "prereg_commit": "abc123",
+        "platform_fingerprint": "sha256:f", "fingerprint_drifted": False,
+        "selector_full": True,
+        "collected": ["tests/rest/test_support.py::test_old_full_run"],
+        "exit_status": 0,
+        "results": [{"nodeid": "tests/rest/test_support.py::test_old_full_run",
+                     "role": "verdict", "component": "rest.support",
+                     "outcome": "passed", "measurement": {}}],
+        "record_integrity": {"consistent": True},
+    }
+    (tmp_path / "runs" / "run-20260101T000000Z-old0000.json").write_text(
+        json.dumps(old_full), encoding="utf-8")
+
+    render = _render()
+    narrow_run = {"run_id": "run-20260910T000000Z-abc1234", "results": []}
+    inventory = {"totals": {}, "sections": [
+        {"id": "support", "title": "Support desk", "blurb": "", "blast": "",
+         "verdicts": {}, "reachable_pct": None, "endpoint_detail": []},
+    ]}
+
+    committed = {s["id"]: s for s in render.build_payload(
+        ledger=_ledger(), inventory=inventory, run=narrow_run)["sections"]}
+    assert "test_old_full_run" not in {
+        n.rsplit("::", 1)[-1] for n in
+        {t["nodeid"] for t in committed["support"]["tests"]}
+    }, "the default payload read a run record git never committed"
+
+    live = {s["id"]: s for s in render.build_payload(
+        ledger=_ledger(), inventory=inventory, run=narrow_run,
+        use_last_full_run=True)["sections"]}
+    assert "tests/rest/test_support.py::test_old_full_run" in {
+        t["nodeid"] for t in live["support"]["tests"]
+    }, "use_last_full_run=True must still reach the local record -- serve.py needs it"
+
+
+@qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
 def test_the_stats_are_derived_and_a_re_pin_is_not_a_fix(tmp_path, monkeypatch):
     """Five figures the operator asked for, and one judgement inside them.
 

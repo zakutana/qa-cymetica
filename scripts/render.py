@@ -648,8 +648,23 @@ def out_path() -> Path:
 
 def build_payload(ledger: dict | None = None, inventory: dict | None = None,
                   thread: dict | None = None, run: dict | None = None,
-                  earlier_run: dict | None = None) -> dict:
+                  earlier_run: dict | None = None,
+                  use_last_full_run: bool = False) -> dict:
     """Everything the page shows, derived and reconciled before it is shown.
+
+    `use_last_full_run=False` by default: when `earlier_run` is not supplied,
+    the backfill from `_last_full_run` stays off rather than being looked up.
+    That backfill reads `state/runs/*.json`, and not every admissible run
+    that lands there gets force-added to git -- a run whose prereg tag
+    drifted is still usable here (any admissible level counts) but is never
+    the one a fold commits. tests/repo/test_diaries_outside_git.py caught
+    this on 2026-09-28: a narrow sweep's committed page differed from a bare
+    checkout's re-render because the local machine had one such drifted-but-
+    admissible full run sitting uncommitted. Same rule `build_rooms()` in
+    lab_page.py already follows -- anything that can rewrite the committed
+    dashboard must be provable from git alone; serve.py's live view is where
+    an uncommitted local run is allowed to enrich the tiles, so it is the one
+    caller that passes `use_last_full_run=True`.
 
     This used to REFUSE, with `allow_stale_head` as the way past it, when the
     ledger cited anything but the journal's current head. Every caller that
@@ -868,7 +883,9 @@ def build_payload(ledger: dict | None = None, inventory: dict | None = None,
     # same results and the count included every phase of every check, so a
     # tile could say more checks than it could name.
     if earlier_run is None:
-        earlier_run = _last_full_run(run) if not run.get("selector_full") else {}
+        earlier_run = (_last_full_run(run)
+                       if use_last_full_run and not run.get("selector_full")
+                       else {})
     tests_by_section = _tests_by_section(run, earlier_run)
     checks: dict[str, dict[str, int]] = {}
     for section, tests in tests_by_section.items():
