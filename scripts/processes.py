@@ -249,7 +249,9 @@ CEILINGS = {
     # test_a_check_with_hundreds_of_captures_still_fits_their_evidence_field:
     # verify.py listed ~200 evidence ids, their 8000-character field refused
     # the #130 correction with a 422.
-    "meta_tests": 803,
+    # 803 -> 804 for test_a_card_leg_is_sold_at_his_take_profit_and_the_room_runs_on:
+    # 10 of 21 card rooms were 5%+ up and gave it back, never sold on his levels.
+    "meta_tests": 804,
 }
 
 BASH_SCRIPT = re.compile(r"python\s+scripts[/\\]([a-z_]+)\.py")

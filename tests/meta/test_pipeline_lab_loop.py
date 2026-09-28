@@ -1742,6 +1742,91 @@ def test_a_room_past_its_stop_is_stopped_early_and_its_position_closed(
 
 
 @qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
+def test_a_card_leg_is_sold_at_his_take_profit_and_the_room_runs_on(
+        tmp_path, monkeypatch):
+    """2026-09-28: 10 of 21 card rooms were 5% or more up while we held them
+    and gave it all back. Nexus names a take-profit and a stop for nearly
+    every card; the launch writes them on the leg, and nothing sold on them --
+    a card was sold only at a verdict. Now the hourly look sells a card leg
+    the first time their index, from our fill, crosses its own take-profit or
+    stop. The room keeps running and is judged at its window's end on what
+    we sold for. A leg he gave no levels is not sold early."""
+    import qa.rooms as qa_rooms
+
+    scripts_lab = _scripts_lab(tmp_path, monkeypatch)
+    card, bare = _card(0x7E), _card(0x7F)
+    answers = [
+        {"type": "answer", "id": "NEX-0001",
+         "at": (NOW - timedelta(minutes=30)).isoformat(),
+         "text": f"Buy {card} bull, TP +5%, stop -3%. " + "reasoning. " * 40},
+        {"type": "answer", "id": "NEX-0002",
+         "at": (NOW - timedelta(minutes=30)).isoformat(), "text": _whole(bare)}]
+    _launchpad(scripts_lab, tmp_path, monkeypatch, answers,
+               live={c: _basket("BTC", "ETH") for c in (card, bare)},
+               readings={("BTC", "ETH"): (6.5, 1.3)})
+    scripts_lab.night_promote()
+    rooms = {r["origin"]: r["id"] for r in qa_rooms.strategies(qa_rooms.load())}
+    leg = qa_rooms.acceptance_of(qa_rooms.load(), rooms["NEX-0001"])["legs"][0]
+    assert (leg["tp"], leg["sl"]) == (5.0, -3.0), leg
+    opened = qa_rooms.acceptance_of(qa_rooms.load(), rooms["NEX-0001"])["at"]
+    buys = []
+    for n, (origin, which) in enumerate((("NEX-0001", card), ("NEX-0002", bare)), 1):
+        buys += [
+            {"id": f"TRD-000{n}", "type": "intent", "at": opened, "card_id": which,
+             "usdc": 480.0, "paper": True, "nexus": {"id": origin}},
+            {"id": f"TRD-000{n}", "type": "outcome", "at": opened,
+             "outcome": "accepted", "http_status": 200, "position_id": f"P-{n}",
+             "response": json.dumps({"entry_index": 100.0})}]
+    _write(tmp_path, "paper.jsonl", buys)
+    closed = []
+
+    def close(position, confirm):
+        closed.append(position)
+        with open(tmp_path / "paper.jsonl", "a", encoding="utf-8") as fh:
+            fh.write(json.dumps({"id": "TRD-0100", "type": "intent", "kind": "close",
+                                 "position_id": position, "paper": True}) + "\n")
+            fh.write(json.dumps({"id": "TRD-0100", "type": "outcome", "kind": "close",
+                                 "outcome": "accepted", "http_status": 200}) + "\n")
+        return {"id": "TRD-0100"}
+    scripts_lab._sibling("paper").close = close
+
+    start = datetime.fromisoformat(opened)
+    points = lambda values: [{"t": (start + timedelta(hours=h)).isoformat(),
+                              "index": v} for h, v in enumerate(values)]
+    path = {"now": points([100, 102, 104])}
+    monkeypatch.setattr(scripts_lab, "_history", lambda client, c: path["now"])
+    monkeypatch.setattr(scripts_lab, "_closes_at", lambda client, c: None)
+
+    later = start + timedelta(hours=3)
+    said = scripts_lab.verdicts(now=later)
+    assert closed == [] and not any(s.get("verdict") for s in said), said
+
+    path["now"] = points([100, 102, 104, 105.5])
+    said = scripts_lab.verdicts(now=later + timedelta(hours=2))
+    assert closed == ["P-1"], ("his take-profit was crossed and the leg not sold"
+                               if not closed else f"sold {closed}")
+    assert not any(s.get("verdict") for s in said), (
+        "a take-profit exit is not a verdict; the window judges", said)
+    exits = [s for s in said if s.get("exit")]
+    assert [(s["room"], s["exit"]) for s in exits] == [(rooms["NEX-0001"], "tp")], said
+    rows = qa_rooms.load()
+    assert qa_rooms.status_of(rows, rooms["NEX-0001"]) == "running"
+    assert qa_rooms.status_of(rows, rooms["NEX-0002"]) == "running"
+
+    scripts_lab.verdicts(now=later + timedelta(hours=4))
+    assert closed == ["P-1"], "a leg already sold was sold again"
+
+    # The same crossing, read directly: a stop, a bear leg, no levels.
+    fill = opened
+    down = points([100, 98, 96.9])
+    assert lab.leg_exit(down, 100.0, fill, "bull", 5.0, -3.0)["exit"] == "sl"
+    assert lab.leg_exit(down, 100.0, fill, "bear", 3.0, -5.0)["exit"] == "tp", (
+        "a bear leg gains when the index falls")
+    assert lab.leg_exit(down, 100.0, fill, "bull", None, None) is None
+    assert lab.leg_exit(points([100, 104.9]), 100.0, fill, "bull", 5.0, -3.0) is None
+
+
+@qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
 def test_a_room_whose_card_closed_inside_the_window_gets_a_verdict(
         tmp_path, monkeypatch):
     """Every crypto card the laboratory bought on the night of 2026-09-21

@@ -2345,6 +2345,26 @@ def test_a_room_of_ours_is_judged_when_its_variant_ran_and_archived_when_not():
     rows = room("STR-0002", "OUR-0001", _t(5, 0.5)) + room("STR-0003", "OUR-0002", _t(8))
     archived = lab.archived_rooms(rows, [], [], clones)
     assert archived == {"STR-0003"}, archived
+
+    # 2026-09-28, STR-0045: a room of ours on FRESH clones -- the head-to-head
+    # batch -- has no restart, only the funding that started them. The first
+    # room a clone ever ran in held it; a later one on the same clone, with
+    # no restart after its criterion, still held nothing.
+    fresh = [*_chain("CLN-0010", "fund", _t(1), instance="inst-2", amount=477.0),
+             *_chain("CLN-0011", "enable", _t(1, 1), instance="inst-2")]
+    leg2 = {"kind": "bot", "ref": "inst-2", "side": "bull", "share": 1.0}
+
+    def fresh_room(ident, origin, opened):
+        return [{"type": "strategy", "id": ident, "origin": origin, "title": "y",
+                 "at": opened},
+                {"type": "acceptance", "room": ident, "window_days": 3.0,
+                 "stop_pct": 10.0, "legs": [leg2], "at": opened},
+                {"type": "status", "room": ident, "status": "stopped",
+                 "why": "y", "at": _t(9)}]
+    rows2 = fresh_room("STR-0045", "OUR-0003", _t(1, 2)) + fresh_room(
+        "STR-0046", "OUR-0004", _t(2))
+    assert lab.archived_rooms(rows2, [], [], clones + fresh) == {"STR-0046"}, (
+        "the first room on a freshly funded clone held it and is judged")
     assert lab.picked_rooms(rows, []) == set(), "a room of ours is not his pick"
 
     # And what ours earned is not his record: the Nexus line on /lab

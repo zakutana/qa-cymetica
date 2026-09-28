@@ -1148,6 +1148,34 @@ def formula_fingerprint() -> str:
     return hashlib.sha256(source.encode("utf-8")).hexdigest()[:12]
 
 
+def leg_exit(points, entry_index, filled_at, side, tp, sl) -> dict | None:
+    """The first time a held card leg's index, from our fill, reached its own
+    take-profit or stop -- {exit, at, moved} -- or None. `tp` above zero and
+    `sl` below it, in % in the leg's direction; a level he did not name never
+    fires. Entry is the fill's own index when the buy's response gave one,
+    else their first point at or after the fill."""
+    if tp is None and sl is None:
+        return None
+    since = _at(filled_at)
+    inside = [(t, v) for t, v in _points(points) if since is None or t >= since]
+    try:
+        entry = float(entry_index) if entry_index else None
+    except (TypeError, ValueError):
+        entry = None
+    if entry is None and inside:
+        entry = inside[0][1]
+    if not entry:
+        return None
+    way = -1.0 if str(side).lower() == "bear" else 1.0
+    for when, value in inside:
+        moved = way * (value / entry - 1.0) * 100.0
+        if tp is not None and moved >= float(tp):
+            return {"exit": "tp", "at": when.isoformat(), "moved": round(moved, 3)}
+        if sl is not None and moved <= float(sl):
+            return {"exit": "sl", "at": when.isoformat(), "moved": round(moved, 3)}
+    return None
+
+
 def _from_peak(peak: float, value: float) -> float:
     """How far below its best the portfolio stands, in % of that best --
     both given as % returns on what went in. C8, review of 2026-09-23: the
@@ -2285,6 +2313,19 @@ def archived_rooms(room_rows: list[dict], answers: list[dict],
             bought.add((str(origin), str(intent.get("card_id") or "").lower()))
     went_in = funded(clone_rows)
     picks = picked_rooms(room_rows, answers)
+    # The first room each bot ever ran in, by when the room opened: a fresh
+    # clone's funding is what that room held (STR-0045, 2026-09-28).
+    opened_at = {str(r.get("id")): str(r.get("at") or "") for r in room_rows
+                 if r.get("type") == "strategy"}
+    first_room: dict[str, str] = {}
+    for room_id, row in accepted_on.items():
+        for leg in row.get("legs") or []:
+            if leg.get("kind") != "bot":
+                continue
+            ref = str(leg.get("ref"))
+            known = first_room.get(ref)
+            if known is None or opened_at.get(room_id, "") < opened_at.get(known, ""):
+                first_room[ref] = room_id
 
     out: set[str] = set()
     for row in room_rows:
@@ -2304,6 +2345,8 @@ def archived_rooms(room_rows: list[dict], answers: list[dict],
             # ran on the clone after its criterion was written.
             since = (accepted_on.get(room) or {}).get("at")
             ran = any(bot_restart(clone_rows, str(leg.get("ref")), since)
+                      or (first_room.get(str(leg.get("ref"))) == room
+                          and went_in.get(str(leg.get("ref"))))
                       for leg in legs if leg.get("kind") == "bot")
             if not ran:
                 out.add(room)

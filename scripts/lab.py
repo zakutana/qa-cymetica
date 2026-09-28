@@ -1356,6 +1356,58 @@ def verdicts(now=None) -> list[dict]:
                 said.setdefault("close_failed", []).append(
                     f"{instance}: the pause was not accepted")
 
+    def sell_at_exits(room: str, strategy: dict, acceptance: dict, legs: list,
+                      series: dict) -> list[dict]:
+        """Sell each held card leg whose index, from our fill, crossed its own
+        take-profit or stop (`qa.lab.leg_exit`) -- 2026-09-28: 10 of 21 card
+        rooms were 5% or more up while held and gave it all back, sold only at
+        a verdict. An exit is not a verdict: the room runs on and its window
+        judges it on what we sold for. A sale that fails is tried again on the
+        next hourly look, the crossing still being in their history."""
+        held = set(holding(strategy, acceptance))
+        rows_out: list[dict] = []
+        for leg in legs:
+            ref = rooms.leg_ref(leg)
+            if (rooms.leg_kind(leg) != "card" or not ref
+                    or (leg.get("tp") is None and leg.get("sl") is None)):
+                continue
+            book = _position_book(books["paper"], str(strategy.get("origin")),
+                                  str(ref), samples)
+            if book is None or book["closed_at"] or book["position"] not in held:
+                continue
+            crossed = lab.leg_exit(series.get(ref), book["entry_index"],
+                                   book["filled_at"], leg.get("side"),
+                                   leg.get("tp"), leg.get("sl"))
+            if crossed is None:
+                continue
+            row = {"room": room, "position": book["position"], **crossed}
+            rows_out.append(row)
+            if pass_in_flight():
+                row["close_failed"] = [
+                    "a deep pass is running; the sale waits for the next call"]
+                continue
+            paper = _sibling("paper")
+            try:
+                entry = paper.close(book["position"], True)
+            except (Exception, SystemExit) as exc:  # noqa: BLE001
+                row["close_failed"] = [f"{book['position']}: {str(exc)[:160]}"]
+                continue
+            outcome = _paper_outcome(paper, (entry or {}).get("id"))
+            if outcome.get("outcome") != "accepted":
+                row["close_failed"] = [
+                    f"{book['position']}: the sell was not accepted (HTTP "
+                    f"{outcome.get('http_status', '?')})"]
+                continue
+            books["paper"] = paper.load()
+            level = leg.get("tp") if crossed["exit"] == "tp" else leg.get("sl")
+            rooms.add_claude_note(
+                room, (f"Sold {str(ref)[:8]} at his "
+                       f"{'take-profit' if crossed['exit'] == 'tp' else 'stop'} "
+                       f"({level:+g}%): their index was {crossed['moved']:+.2f}% "
+                       f"from our fill at {crossed['at'][:16]}. The room runs "
+                       f"on; its window judges it on what we sold for."))
+        return rows_out
+
     retried = []
     for strategy, acceptance in owed:
         said = {"room": strategy["id"], "retry": True}
@@ -1492,6 +1544,7 @@ def verdicts(now=None) -> list[dict]:
                     stopped=halted).get("return_pct")
             checked[room] = moment.isoformat()
             if said["verdict"] == "open":
+                out.extend(sell_at_exits(room, strategy, acceptance, legs, series))
                 continue
             rooms.record_verdict(room, said)
             rooms.set_status(
