@@ -3692,6 +3692,45 @@ reports:
       old, allowing six times your ten minutes, so it goes green on the
       next five that get their reply.
 
+  - key: bot-stop-loss-exceeds-its-budget
+    findings: [CYM-a_bot_paused_by_its_stop_loss_lost_no_more_than_the_stop]
+    severity: high
+    category: safety_control
+    url: https://cymetica.com/api/v1/cloned-bots/my-clones?mode=paper
+    title: "A paper bot's stop-loss lets it lose twice the stop: 5% stop, 10% lost, pause event records -5%"
+    expected: >
+      The clone settings page (/clone/{id}, "Stop Loss %"): "Max capital
+      drawdown from your resume baseline. Trading pauses when total P&L falls
+      below this %, and each trade's stake is auto-capped so a single loss
+      cannot exceed the remaining stop-loss budget." A bot with a 5% stop
+      should not end a stop-loss pause more than about 5% down.
+    actual: >
+      Four paper clones we started on 28 Sep 07:28-07:32 UTC, 477 USDC each,
+      all paused by stop_loss within minutes. Corr Catcher, Sent Surfer and
+      Delta Hunter (stop 5%) each opened a BTC and an ETH position of 23.85
+      at the same time, lost both stakes whole, and stand at -47.70, i.e.
+      -10.0% of 477 -- twice the stop. Their own stop_loss_triggered events
+      record pnl_pct -5.0 with threshold_pct 5.0, so the record understates
+      the loss by half. Divergence Dragon (stop 6%) is down 9.7% (its event
+      says -10.48). Each stake fit the remaining budget on its own; two
+      opened together spent it twice.
+    steps:
+      - "GET /api/v1/cloned-bots/my-clones?mode=paper -> auto_pause_reason stop_loss, current_balance_usdc 429.30, total_profit_usdc -47.70 (Corr Catcher 5124b7be, Sent Surfer 17efa669, Delta Hunter 741a60e4)"
+      - "GET /api/v1/agents/instances/{id}/events -> one trading_resumed, then stop_loss_triggered pnl_pct -5.0, threshold_pct 5.0"
+      - "GET /api/v1/cloned-bots/{id}/asset-analytics -> BTC 1 trade, ETH 1 trade, each total_pnl -23.85 on total_volume 23.85"
+      - "GET /api/v1/cloned-bots/{id}/profile -> settings.stop_loss_pct 5.0, max_position_pct 10.0, max_open_positions 5"
+    body: >
+      SCOPE: the stop-loss budget with more than one position open at once.
+      Not the trailing profit floor or what happens after a pause, which
+      your P2T2 forward test covered. All four are paper clones on their
+      default settings, nothing changed by us. The cap works per stake but
+      not across stakes that open together: with max_open_positions 5, a 5%
+      stop can in principle be overrun five times. Either cap the combined
+      open stake at the remaining budget, or say on the page that the stop
+      is checked per trade. The pause event's pnl_pct should also carry the
+      loss it actually paused at. Our check judges only bots that resumed
+      once and hold no position, using your own threshold_pct and balances.
+
 footer: >
   Reported by an independent QA agent. Scope of this work: verification of the
   REST API, MCP and machine-readable discovery surfaces, read-only except in
