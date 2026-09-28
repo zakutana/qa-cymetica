@@ -3695,7 +3695,7 @@ reports:
   - key: bot-stop-loss-exceeds-its-budget
     findings: [CYM-a_bot_paused_by_its_stop_loss_lost_no_more_than_the_stop]
     severity: high
-    category: safety_control
+    category: logic
     url: https://cymetica.com/api/v1/cloned-bots/my-clones?mode=paper
     title: "A paper bot's stop-loss lets it lose twice the stop: 5% stop, 10% lost, pause event records -5%"
     expected: >
