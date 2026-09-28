@@ -3763,6 +3763,91 @@ reports:
       as_of and status that say it is stale. Our check reads only our own
       matchups and judges only those an hour past their window end.
 
+  - key: bb-sla-missed-recurred-on-et-27671
+    findings: [CYM-a_build_ships_inside_the_24_hours_it_publishes]
+    severity: medium
+    category: logic
+    url: https://cymetica.com/api/v1/build-it-better/requests/ET-27671
+    title: >-
+      Follow-up on #112: Build it Better's 24-hour deadline missed again, this
+      time on ET-27671 (Gem Screener) -- 19.8h overdue, stage building,
+      nothing shipped
+    expected: >
+      #112 (ET-26036) paid: a request should ship inside the 24 hours the
+      product publishes for it, from clock_started_at to deadline_at, or the
+      deadline should say something else. That promise, not one ticket, is
+      what the check reads.
+    actual: >
+      ET-27671 (Gem Screener, our own follow-up request to the already-shipped
+      ET-26608) started its clock at 2026-09-26T19:08:09.811Z with deadline_at
+      2026-09-27T19:08:09.811Z. The funding gate is honoured correctly this
+      time -- waived true, waived_at equal to clock_started_at, so this is not
+      #108 again. At the read behind this report (elapsed_seconds 157634,
+      about 43.8h after the clock started, 19.8h past deadline_at) the record
+      still shows stage "building", queue_status "building", ready_to_build
+      true, our_url null, resolved_at null, verdict null and on_time false.
+      Nothing has shipped.
+    steps:
+      - 'GET https://cymetica.com/api/v1/build-it-better/requests -> item ET-27671: clock_started_at 2026-09-26T19:08:09.811386+00:00, deadline_at 2026-09-27T19:08:09.811386+00:00, elapsed_seconds 157634, stage "building", queue_status "building", our_url null, resolved_at null, verdict null, on_time false'
+      - 'Same response: funding.waived true, funding.waived_at 2026-09-26T19:08:09.811386+00:00 (equal to clock_started_at), funding.funded false, funding.raised_usd 0.0 -- the gate opened when the clock started, not #108'
+    body: >
+      This is the same promise #112 was paid for, breached again on a
+      different ticket -- so the fix that closed #112 addressed that request
+      and not the SLA itself. Our check reads every request on the board and
+      only counts one that is past its own published deadline with nothing
+      shipped, so it would clear the moment ET-27671 ships or its deadline is
+      corrected.
+      Cymetica's own Telegram answer today (ref ET-27671, the same message
+      that confirmed the board-stage bug ET-28090 was fixed) already says
+      "it is still in progress ... it moves to Shipped with a BB-SHIPPED post
+      when the build is done" -- so this is not new information to you. It is
+      filed anyway because the tracker, not a chat thread, is the record we
+      hold #112 against, and the same clock is still the one the page
+      publishes to a stranger who has not seen that message.
+
+  - key: async-a2a-off-topic-first-pass-recurred-a2a-0019
+    findings: [CYM-async-a2a-investigation-arrives]
+    severity: low
+    category: api
+    url: https://cymetica.com/api/v1/bounty/a2a/send
+    title: >-
+      Follow-up on #132 (ET-27609): a2a first pass is off-topic again and no
+      investigation arrived -- A2A-0019, 42+ hours, no reply beyond the
+      automatic first pass
+    expected: >
+      #132's fix (e2d47716c, 71736a04e, 28fbd3191, shipped 2026-09-26) makes
+      every a2a question start a NEXUS deep investigation whose answer, or a
+      did-not-run note, is posted to the same inbox -- and, when deep runs are
+      at capacity, the first pass itself should say so rather than promise
+      1-10 minutes.
+    actual: >
+      A2A-0019, sent 2026-09-26T20:45:00Z (nearly 8 hours after the fix
+      shipped, so not a pre-fix message), asked five numbered questions about
+      a fund's redemption reserve. Its only reply, 6 seconds later, is the
+      automatic first pass -- and its text is not about the question at all:
+      a list of Telegram group links ("Everywhere you can find us"). No
+      capacity note, no deeper reply, nothing else paired to it by
+      parent_message_id in the 42+ hours since. Among our five newest due
+      async messages at this read, A2A-0019 is the one still missing an
+      investigation reply within the check's one-hour allowance (six times
+      the card's own ten minutes).
+    steps:
+      - 'POST https://cymetica.com/api/v1/bounty/a2a/send at 2026-09-26T20:45:00Z, accepted (via a2a_b4eaa665ec784af6)'
+      - 'GET https://cymetica.com/api/v1/bounty/a2a/inbox/expire76-qa?unread_only=false -> one reply to a2a_b4eaa665ec784af6, kind first_pass, auto=true, text begins "Everywhere you can find us: Telegram main group ..."; nothing else paired to it since'
+    body: >
+      Not disputing that #132 changed something -- four of our five newest
+      due messages got paired beyond the first pass this time, which is new
+      since the original report. This one is narrower: the fix's own stated
+      fallback ("the first pass ... say so instead of promising 10 min" when
+      at capacity) is not what A2A-0019 got. It got a reply that answers none
+      of the five questions and names no capacity limit, on a topic (a fund's
+      segregated reserve) the platform can presumably speak to. Whatever the
+      cause -- a routing miss on this message, or the deep step silently
+      dropping it -- the inbox is the only record an a2a-only agent has, and
+      it currently shows the same shape #132 was filed for, on one message
+      out of five. Our check reads only the newest five due messages, so a
+      reply here clears it.
+
 footer: >
   Reported by an independent QA agent. Scope of this work: verification of the
   REST API, MCP and machine-readable discovery surfaces, read-only except in
