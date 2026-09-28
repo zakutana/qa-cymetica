@@ -13670,6 +13670,10 @@
             "report_id": 112,
             "status": "paid",
             "status_at": "2026-09-21T08:36:14+00:00"
+          },
+          {
+            "report_id": 136,
+            "status": "pending"
           }
         ],
         "refused": [],
@@ -13864,7 +13868,9 @@
       "obligations": {
         "reverify": true,
         "repair_check": false,
-        "reopen": [],
+        "reopen": [
+          136
+        ],
         "retractions": [],
         "verification_owed": [],
         "correction_owed": [],
@@ -18578,6 +18584,10 @@
             "report_id": 132,
             "status": "paid",
             "status_at": "2026-09-26T21:30:13+00:00"
+          },
+          {
+            "report_id": 137,
+            "status": "pending"
           }
         ],
         "refused": [],
@@ -19094,7 +19104,7 @@
     "PASSING, NEVER RAISED": 2
   },
   "events_head": {
-    "seq": 2966,
-    "chain": "67d73a1b25fd662d3c56dad71b1659ac555ae4e75191e471b93bc4fb09dee9df"
+    "seq": 2970,
+    "chain": "55b87f6686d7df5783fdcd81c4aa8c0d047b484eff4a632c1bfef65ee5c9ef7c"
   }
 }
