@@ -253,9 +253,43 @@ def _depth_by_token(rows: list[dict]) -> dict[str, dict]:
     return newest
 
 
+def _depth_at_signals(rows: list[dict]) -> dict[str, dict]:
+    """Signal key -> the depth a buyer had when it fired: the signal's own
+    quote, or else the newest reading of the token (a `depth` seed, an
+    earlier signal's checkpoint) taken no later than the signal. Joined blind
+    to case, as `_depth_by_token` is. Never a reading from after it."""
+    readings: dict[str, list[tuple[datetime, dict]]] = {}
+    for row in rows or []:
+        kind = row.get("type")
+        if kind == "depth":
+            token = str(row.get("token_address") or "").lower()
+        elif kind == "checkpoint":
+            token = str(row.get("key") or "").rsplit(":", 1)[0].lower()
+        else:
+            continue
+        when = _at(row.get("at"))
+        if not token or when is None or (
+                "liquidity_usd" not in row and "listed" not in row):
+            continue
+        readings.setdefault(token, []).append((when, row))
+    out: dict[str, dict] = {}
+    for key, signal in _signals(rows).items():
+        if "liquidity_usd" in signal or "listed" in signal:
+            out[key] = signal
+            continue
+        fired = _at(signal.get("at"))
+        token = str(key).rsplit(":", 1)[0].lower()
+        before = [(when, row) for when, row in readings.get(token) or ()
+                  if fired is not None and when <= fired]
+        if before:
+            out[key] = max(before, key=lambda item: item[0])[1]
+    return out
+
+
 def sellable(rows: list[dict], min_liquidity: float = MIN_LIQUIDITY_USD,
              min_volume: float = MIN_VOLUME_H24) -> tuple[list[dict], dict]:
-    """`rows` without every token nobody could trade, and the three counts.
+    """`rows` without every signal nobody could have bought, and the three
+    counts.
 
     [operator 2026-09-14] *"proc to zobrazuje coiny co se neda obchodvat nebo
     prodavat? ty jsou uplne zbytecne"*. They are worse than useless: over a
@@ -264,25 +298,29 @@ def sellable(rows: list[dict], min_liquidity: float = MIN_LIQUIDITY_USD,
 
     Applied here, once, upstream of everything -- a hit rate over one
     population beside a P&L over another describes nothing.
+
+    Judged on the depth WHEN THE SIGNAL FIRED (V3, 2026-09-23). The newest
+    reading was a look into the future: a coin that rugged at hour six was
+    taken out of its own history, and its loss with it. What the pool held at
+    the exit is the sale's business -- `capped_return` -- and the two land
+    together: the depth at the signal alone let the rugs back in at the dust
+    prints they rugged to, and read the stop study at +85 917 %.
     """
-    depth = _depth_by_token(rows)
-    verdicts = {token: tradeable(row, min_liquidity, min_volume)
-                for token, row in depth.items()}
+    depth = _depth_at_signals(rows)
+    verdicts = {key: tradeable(row, min_liquidity, min_volume)
+                for key, row in depth.items()}
 
-    def token_of(row: dict) -> str | None:
-        if row.get("type") == "depth":
-            return str(row.get("token_address") or "").lower() or None
-        key = row.get("key")
-        return str(key).rsplit(":", 1)[0].lower() if key else None
-
+    # `depth` seeds and anything not a signal's own row are no trade, and
+    # stay; a checkpoint goes with its signal.
     kept = [row for row in rows or []
-            if verdicts.get(token_of(row) or "", None) is not False]
+            if row.get("type") == "depth"
+            or verdicts.get(row.get("key")) is not False]
     # Counted in SIGNALS, not tokens, because they are printed on one strip
     # beside "signals tracked" and a coin can go hot more than once. Three
     # counts in tokens under a total in signals is two units in one row, and
     # the reader has no way to see it.
     signals = [r for r in rows or [] if r.get("type") == "signal"]
-    verdict_of = [verdicts.get(token_of(r) or "") for r in signals]
+    verdict_of = [verdicts.get(r.get("key")) for r in signals]
     counts = {
         "n_tradeable": sum(1 for v in verdict_of if v is True),
         "n_untradeable": sum(1 for v in verdict_of if v is False),
@@ -314,6 +352,25 @@ def usable(rows: list[dict], min_liquidity: float = MIN_LIQUIDITY_USD,
                   "tracked": len(_signals(rows))}
 
 
+# The stake every descriptive reader here sells: the plan's headline clip
+# (V3, 2026-09-23) and `ten_dollars`'s. The cap below is in dollars, so a
+# return needs a size before a pool can cap it.
+SALE_CLIP_USD = 10.0
+
+
+def capped_return(ret, reading: dict, clip_usd: float = SALE_CLIP_USD):
+    """`ret` as far as the pool at `reading` could pay it: a sale of the
+    clip fetches at most half its liquidity -- the quote side -- as in
+    `ten_dollars`. A reading with no liquidity on it (the diary before
+    2026-09-14) cannot say, and the return stands."""
+    if not isinstance(ret, (int, float)):
+        return ret
+    liquidity = (reading or {}).get("liquidity_usd")
+    if not isinstance(liquidity, (int, float)) or isinstance(liquidity, bool):
+        return ret
+    return min(ret, (liquidity / 2.0 / clip_usd - 1.0) * 100.0)
+
+
 def c_token(checkpoint: dict) -> str:
     """The token a checkpoint belongs to, off its key.
 
@@ -326,11 +383,13 @@ def c_token(checkpoint: dict) -> str:
 
 def stats(rows: list[dict], hit_threshold: float = DEFAULT_HIT_THRESHOLD,
          top: int = 5, min_liquidity: float = MIN_LIQUIDITY_USD,
-         min_volume: float = MIN_VOLUME_H24) -> dict:
+         min_volume: float = MIN_VOLUME_H24,
+         clip_usd: float = SALE_CLIP_USD) -> dict:
     """Per horizon: how many resolved, hit rate, mean/median return, the best
     and worst performers. `hit_threshold` is a parameter, not a constant
     baked into the read -- what counts as "it worked" is the operator's call,
-    not a number this function assumes silently.
+    not a number this function assumes silently. Each return is what
+    `clip_usd` could have been sold for at that reading (`capped_return`).
     """
     rows, _ = usable(rows, min_liquidity, min_volume)
     signals = {r["key"]: r for r in rows
@@ -339,7 +398,7 @@ def stats(rows: list[dict], hit_threshold: float = DEFAULT_HIT_THRESHOLD,
     for row in rows:
         if row.get("type") != "checkpoint":
             continue
-        ret = row.get("return_pct")
+        ret = capped_return(row.get("return_pct"), row, clip_usd)
         if not isinstance(ret, (int, float)):
             continue
         signal = signals.get(row.get("key"))
@@ -386,9 +445,11 @@ def stats(rows: list[dict], hit_threshold: float = DEFAULT_HIT_THRESHOLD,
     return out
 
 
-def _positions(rows: list[dict]) -> tuple[dict, dict]:
+def _positions(rows: list[dict], clip_usd: float = SALE_CLIP_USD
+               ) -> tuple[dict, dict]:
     """Every signal that had a price when it fired, marked at its newest
-    reading, plus what had to be set aside to get there.
+    reading -- for what the pool then could pay (`capped_return`) -- plus
+    what had to be set aside to get there.
 
     One position per signal, not per token: a coin that goes hot in two
     consecutive hours was two entries at two prices, and a basket that bought
@@ -426,7 +487,8 @@ def _positions(rows: list[dict]) -> tuple[dict, dict]:
             held[key] = {"key": key, "symbol": signal.get("symbol"),
                          "conviction": signal.get("conviction"),
                          "chain": signal.get("chain"), "entry_price": entry,
-                         "price_usd": price, "return_pct": ret,
+                         "price_usd": price,
+                         "return_pct": capped_return(ret, row, clip_usd),
                          "hours": _hours(row.get("horizon")),
                          "horizon": row.get("horizon")}
     return held, {"stale_readings": stale, "fresh_readings": fresh,
@@ -459,9 +521,10 @@ DEFAULT_CONVICTION_MIN = 70.0
 def basket(rows: list[dict], top: int = 5,
            conviction_min: float = DEFAULT_CONVICTION_MIN,
            min_liquidity: float = MIN_LIQUIDITY_USD,
-           min_volume: float = MIN_VOLUME_H24) -> dict:
-    """What an equal stake in every signal, bought at the moment it fired,
-    would be worth now.
+           min_volume: float = MIN_VOLUME_H24,
+           clip_usd: float = SALE_CLIP_USD) -> dict:
+    """What an equal stake (`clip_usd`) in every signal, bought at the moment
+    it fired, would sell for now.
 
     [operator 2026-09-14] asked for exactly this, big, on the console, and in
     the same breath to check whether the numbers hold -- *"vypadaji az moc
@@ -473,7 +536,7 @@ def basket(rows: list[dict], top: int = 5,
     at all, and how many readings were the same number twice.
     """
     rows, filtered = usable(rows, min_liquidity, min_volume)
-    held, counts = _positions(rows)
+    held, counts = _positions(rows, clip_usd)
     marks = list(held.values())
     out = {**counts, **filtered, **_spread([m["return_pct"] for m in marks], top),
            "top": top,
@@ -511,7 +574,7 @@ def basket(rows: list[dict], top: int = 5,
             continue
         if isinstance(row.get("return_pct"), (int, float)):
             at_hour.setdefault(str(row.get("horizon")), []).append(
-                row["return_pct"])
+                capped_return(row["return_pct"], row, clip_usd))
     out["by_horizon"] = [
         {"horizon": label, **_spread(at_hour[label], top)}
         for label in sorted(at_hour, key=lambda h: _hours(h) or 0.0)]
@@ -744,7 +807,7 @@ def compare(rows: list[dict], multiple: float = 3.0, within_hours: float = 72.0,
     for group, signals in entries.items():
         excluded = {"untradeable": 0, "depth_unknown": 0, "window_open": 0,
                     "unpriced": 0, "unread": 0, "before_period": 0,
-                    "pair_changed": 0, "repeat_call": 0, "also_hot": 0}
+                    "repeat_call": 0, "also_hot": 0}
         measured: dict[str, tuple] = {}
         for key, signal in signals.items():
             fired = _at(signal.get("at"))
@@ -782,24 +845,31 @@ def compare(rows: list[dict], multiple: float = 3.0, within_hours: float = 72.0,
                 continue
             ordered = [signal] + [r for _, r in sorted(
                 paths.get(key) or [], key=lambda item: item[0])]
-            if pair_changed(ordered):
-                excluded["pair_changed"] += 1
-                continue
+            # A switched pair is a rug (all 60 on record, 2026-09-23), not a
+            # coin to leave out: its peak is read on the pair it was bought
+            # on, up to the switch -- the other pair's prices were never this
+            # coin's, as `ten_dollars` pays them no gain.
+            peak = peaks[key]
+            cut = switch_at(ordered)
+            if cut is not None:
+                peak = max([entry] + [r["price_usd"] for r in ordered[1:cut]])
             # One coin, one call: the first measured call of each coin. A coin
             # called hot five times is one coin, not five hits or misses.
             token = token_of(key)
-            hit = peaks[key] / entry >= multiple
+            hit = peak / entry >= multiple
             if token in measured:
                 excluded["repeat_call"] += 1
                 if fired < measured[token][0]:
-                    measured[token] = (fired, hit)
+                    measured[token] = (fired, hit, cut is not None)
                 continue
-            measured[token] = (fired, hit)
+            measured[token] = (fired, hit, cut is not None)
         n = len(measured)
-        hits = sum(1 for _, hit in measured.values() if hit)
+        hits = sum(1 for _, hit, _ in measured.values() if hit)
+        switched = sum(1 for _, _, moved in measured.values() if moved)
         out[group] = {"n": n, "hits": hits, "unit": "coin",
                       "rate": hits / n if n else None,
-                      "ci": _wilson(hits, n), "excluded": excluded}
+                      "ci": _wilson(hits, n), "excluded": excluded,
+                      "switched": switched}
     hot, control = out["hot"]["rate"], out["control"]["rate"]
     out["lift"] = (hot / control) if hot is not None and control else None
     return out
@@ -911,21 +981,26 @@ def round_trip_cost(signal: dict, clip_usd: float = DEFAULT_CLIP_USD
 PAIR_AGE_SLACK_SECONDS = 3600.0
 
 
-def pair_changed(readings: list[dict]) -> bool:
-    """Did memecoin-terminal answer a different PAIR somewhere along these
-    readings (the signal row first, then its checkpoints in order)? A reading
-    without `age_seconds` or a readable `at` cannot say, and is skipped."""
+def switch_at(readings: list[dict]) -> int | None:
+    """The index of the first reading on another pair, or None."""
     previous = None
-    for row in readings:
+    for index, row in enumerate(readings):
         age, when = row.get("age_seconds"), _at(row.get("at"))
         if not isinstance(age, (int, float)) or when is None:
             continue
         if previous is not None:
             elapsed = (when - previous[1]).total_seconds()
             if abs((age - previous[0]) - elapsed) > PAIR_AGE_SLACK_SECONDS:
-                return True
+                return index
         previous = (age, when)
-    return False
+    return None
+
+
+def pair_changed(readings: list[dict]) -> bool:
+    """Did memecoin-terminal answer a different PAIR somewhere along these
+    readings (the signal row first, then its checkpoints in order)? A reading
+    without `age_seconds` or a readable `at` cannot say, and is skipped."""
+    return switch_at(readings) is not None
 
 
 def stop_study(rows: list[dict], stop_pct: float, target_pct: float | None = None,
@@ -940,11 +1015,15 @@ def stop_study(rows: list[dict], stop_pct: float, target_pct: float | None = Non
 
     Through `usable()` like every reader here, so a checkpoint filed under an
     hour it was not read in is not on the path and a coin nobody could trade
-    is not a trade. Only windows that have closed: an open one shows its
-    early stops and none of its late recoveries. The entry is the signal's
-    own price -- a retried `entry` row is never taken for it. A path on which
-    their terminal answered a different pair (`pair_changed`) is counted and
-    left out.
+    is not a trade -- judged, as there, on the depth when the signal fired.
+    Only windows that have closed: an open one shows its early stops and none
+    of its late recoveries. The entry is the signal's own price -- a retried
+    `entry` row is never taken for it.
+
+    The sale is `clip_usd` sold into the pool at the exit reading, for at
+    most half its liquidity (`capped_return`), as `ten_dollars` sells. A path
+    on which their terminal answered a different pair (`pair_changed`) is a
+    rug and stays in, counted as `switched`, paying no gain.
 
     `cost_pct` is a fixed round trip for every trade; left out, each trade
     pays `round_trip_cost` from the radar's published depth.
@@ -955,7 +1034,7 @@ def stop_study(rows: list[dict], stop_pct: float, target_pct: float | None = Non
     kept, filtered = usable(rows, min_liquidity, min_volume)
     signals = _signals(kept)
 
-    paths: dict[str, list[tuple[float, float]]] = {}
+    paths: dict[str, list[tuple[float, dict]]] = {}
     read: dict[str, list[tuple[float, dict]]] = {}
     for row in kept:
         if row.get("type") != "checkpoint" or row.get("key") not in signals:
@@ -965,10 +1044,10 @@ def stop_study(rows: list[dict], stop_pct: float, target_pct: float | None = Non
             continue
         read.setdefault(row["key"], []).append((hours, row))
         if isinstance(price, (int, float)):
-            paths.setdefault(row["key"], []).append((hours, price))
+            paths.setdefault(row["key"], []).append((hours, row))
 
     excluded = {"window_open": 0, "unpriced": 0, "unread": 0,
-                "pair_changed": 0, "unread_at_end": 0}
+                "unread_at_end": 0}
     trades = []
     for key, signal in signals.items():
         fired = _at(signal.get("at"))
@@ -980,18 +1059,18 @@ def stop_study(rows: list[dict], stop_pct: float, target_pct: float | None = Non
         if not isinstance(entry, (int, float)) or entry <= 0:
             excluded["unpriced"] += 1
             continue
-        path = sorted(paths.get(key) or [])
+        path = sorted(paths.get(key) or [], key=lambda item: item[0])
         if not path:
             excluded["unread"] += 1
             continue
         # Their terminal answering another pair for the same address is not
         # a move of this coin: PUMP at 0.004 and 21 in alternate hours put
-        # +31 620 % a trade on the first run of this study.
+        # +31 620 % a trade on the first run of this study. It was left out
+        # until 2026-09-23 measured every switch on record as the main pool
+        # drained -- a rug, kept below and paid no gain.
         ordered = [signal] + [r for _, r in sorted(read.get(key) or [],
                                                    key=lambda item: item[0])]
-        if pair_changed(ordered):
-            excluded["pair_changed"] += 1
-            continue
+        switched = pair_changed(ordered)
         if max(h for h, _ in read[key]) < last:
             # The loop never got to the end of this hold (RM05, deep pass of
             # 2026-09-24, 3/3): counted off a path cut short, a stop kept the
@@ -1001,14 +1080,14 @@ def stop_study(rows: list[dict], stop_pct: float, target_pct: float | None = Non
             # and its stop is the loss the stop exists for.
             excluded["unread_at_end"] += 1
             continue
-        why, (hours, price) = "last", path[-1]
+        why, (hours, at_exit) = "last", path[-1]
         for point in path:
-            ret = (point[1] / entry - 1.0) * 100.0
+            ret = (point[1]["price_usd"] / entry - 1.0) * 100.0
             if ret <= -stop:
-                why, (hours, price) = "stop", point
+                why, (hours, at_exit) = "stop", point
                 break
             if target_pct is not None and ret >= target_pct:
-                why, (hours, price) = "target", point
+                why, (hours, at_exit) = "target", point
                 break
         if why == "last" and hours < last:
             # Held to the end means READ to the end (RM02, deep pass of
@@ -1023,12 +1102,16 @@ def stop_study(rows: list[dict], stop_pct: float, target_pct: float | None = Non
             cost, assumed = float(cost_pct), False
         else:
             cost, assumed = round_trip_cost(signal, clip_usd)
-        gross = (price / entry - 1.0) * 100.0
+        gross = capped_return(
+            (at_exit["price_usd"] / entry - 1.0) * 100.0, at_exit, clip_usd)
+        if switched:
+            gross = min(gross, 0.0)
         depth = signal.get("radar_max_buy_5pct_usd")
         trades.append({
             "key": key, "symbol": signal.get("symbol"), "exit": why,
             "exit_hours": hours, "gross_pct": gross, "cost_pct": cost,
             "net_pct": gross - cost, "cost_assumed": assumed,
+            "switched": switched,
             "thin": isinstance(depth, (int, float)) and depth < clip_usd,
             # A stop can only fire at a point: a path with one inside the
             # first hour, at or before the exit, is where the minutes counted.
@@ -1054,6 +1137,7 @@ def stop_study(rows: list[dict], stop_pct: float, target_pct: float | None = Non
                  "median_round_trip_pct": median(costs) if costs else None,
                  "assumed": sum(1 for t in trades if t["cost_assumed"]),
                  "thin": sum(1 for t in trades if t["thin"])},
+        "switched": sum(1 for t in trades if t["switched"]),
         "excluded": {**excluded,
                      "untradeable": filtered.get("n_untradeable", 0),
                      "late_readings": filtered.get("late_readings", 0)},

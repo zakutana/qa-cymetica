@@ -551,19 +551,18 @@ def test_a_pool_nobody_can_trade_in_is_not_a_position():
 
 
 @qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
-def test_depth_is_joined_case_blind_and_the_newest_reading_wins():
-    """Two ways this join fails silently, and both end with every token
-    reading "unknown" while the filter looks like it is working.
+def test_depth_is_joined_case_blind():
+    """This join fails silently, ending with every token reading "unknown"
+    while the filter looks like it is working.
 
     `signal_key` lowercases the address and `c_token` reads it back
     lowercased. A Solana address is case-sensitive base58 -- the diary holds
     `DE3hyVdxdk8Ehd...` on the signal row and `de3hyvdxdk8ehd...` in the key
     -- so the join has to be blind to case on both sides.
 
-    And depth arrives from two places now: `fomo_watch.py depth` seeds a
-    token once, and every checkpoint from 2026-09-14 carries the same fields
-    hourly. The newest reading wins whichever row type it came on, or a
-    one-off seed would outrank an hour-old truth for a day.
+    Its other half, "the newest reading wins", went in V3 (2026-09-23): a
+    reading after the signal is a look into the future, and the coin is
+    judged on the depth when it fired (tests/repo/test_fomo_depth_at_signal.py).
     """
     mixed = "DE3hyVdxdk8EhdDPUAKwGjNrMWrHHQ9NHcq4FBTaWmD1"
     key = f"{mixed.lower()}:2026-09-13T12"
@@ -574,15 +573,6 @@ def test_depth_is_joined_case_blind_and_the_newest_reading_wins():
 
     assert fomo.basket(rows)["n_tradeable"] == 1, (
         "the depth row did not join: a case-sensitive key matches nothing")
-
-    # An hour later the pool is drained, and the checkpoint says so. The seed
-    # must not outvote it.
-    rows.append({"type": "checkpoint", "key": key, "horizon": "2h",
-                 "at": (T0 + timedelta(hours=2)).isoformat(),
-                 "price_usd": 3.0, "return_pct": 200.0,
-                 "liquidity_usd": 0.01, "volume_h24": 0.2})
-    assert fomo.basket(rows)["n_untradeable"] == 1, (
-        "a stale seed outranked a fresh reading on the checkpoint")
 
 
 @qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")

@@ -286,7 +286,7 @@ def _read(kind, key, hours, price, group=None):
 
 
 @qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
-def test_hot_and_control_are_compared_per_coin_over_one_period_on_one_pair():
+def test_hot_and_control_are_compared_per_coin_over_one_period():
     """C5 of the 2026-09-23 review (3/3). The stored 13.1% against 7.4% was
     three comparisons in one: it counted SIGNALS, so a coin the radar called
     hot five times was five hits or five misses of one coin; it set hot
@@ -295,8 +295,9 @@ def test_hot_and_control_are_compared_per_coin_over_one_period_on_one_pair():
     pair moved by the other pair's price.
 
     Now each group is compared over the period both exist, on the first call
-    of each coin, and a path whose pair switched is left out -- each said,
-    with the Wilson interval over coins."""
+    of each coin -- each said, with the Wilson interval over coins. A path
+    whose pair switched was left out until V3: every switch on record is a
+    rug, so it is kept and its peak read only up to the switch."""
     early = T0 - timedelta(hours=1)
     rows = [
         _row("control", "control:c1:T", T0),
@@ -324,10 +325,11 @@ def test_hot_and_control_are_compared_per_coin_over_one_period_on_one_pair():
                         now=T0 + timedelta(hours=74))  # every window and its tolerance closed
 
     hot = said["hot"]
-    assert (hot["n"], hot["hits"]) == (2, 1), hot
+    # twice (a hit), miss, and the switched coin: 9x on the other pair only.
+    assert (hot["n"], hot["hits"]) == (3, 1), hot
     assert hot["excluded"]["before_period"] == 1, hot["excluded"]
     assert hot["excluded"]["repeat_call"] == 1, hot["excluded"]
-    assert hot["excluded"]["pair_changed"] == 1, hot["excluded"]
+    assert hot["switched"] == 1, hot
     assert (said["control"]["n"], said["control"]["hits"]) == (2, 1), said
     assert said["period_from"] == T0.isoformat(), said
 

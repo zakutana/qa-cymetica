@@ -357,7 +357,7 @@ def test_the_study_counts_the_trades_a_sub_hour_point_could_have_saved():
 
 
 @qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
-def test_a_path_that_changes_pair_is_not_a_trade_but_a_rug_is():
+def test_a_path_that_changes_pair_pays_no_gain_and_a_rug_is_a_trade():
     """The first run over the real diary read +31 620 % a trade, and the top
     of it was two tokens. PUMP, live, 2026-09-19..20: 0.0043 at the signal,
     21.72 an hour later, 0.0044 at six hours, and back and forth all day --
@@ -367,8 +367,10 @@ def test_a_path_that_changes_pair_is_not_a_trade_but_a_rug_is():
     at 1 424 against 0.28.
 
     A pair whose age moves more than an hour away from the clock between two
-    readings is a different pair, and the path is not a trade -- counted, not
-    hidden. A rug is kept: `nub`, the same diary, went 0.00051 -> 0.0000011
+    readings is a different pair, and its price is not this coin's -- so the
+    path pays no gain, counted as `switched`. It was left out until V3
+    (2026-09-23): every switch on record was the main pool drained, a rug.
+    A rug is kept: `nub`, the same diary, went 0.00051 -> 0.0000011
     with its liquidity 63 614 -> 0.03 USD, on ONE pair whose age kept time.
     That is the loss the stop exists for, and dropping it would be the
     opposite lie."""
@@ -388,9 +390,11 @@ def test_a_path_that_changes_pair_is_not_a_trade_but_a_rug_is():
                      "price_usd": price, "age_seconds": 3946 + hours * 3600,
                      "return_pct": fomo.return_since_signal(0.0005091, price)})
     said = fomo.stop_study(rows, stop_pct=10.0, cost_pct=0.0, now=DONE)
-    assert said["n"] == 1, said
-    assert said["trades"][0]["key"] == rug
-    assert said["excluded"]["pair_changed"] == 1, said["excluded"]
+    assert said["n"] == 2 and said["switched"] == 1, said
+    by_key = {t["key"]: t for t in said["trades"]}
+    assert by_key[flip]["switched"] and by_key[flip]["gross_pct"] <= 0.0, (
+        "21.72 was the other pair's price, never a gain of this coin's")
+    assert not by_key[rug]["switched"]
     # A reading that carries no age cannot say, and is not a break.
     blind = [{k: v for k, v in r.items() if k != "age_seconds"} for r in rows]
     assert fomo.stop_study(blind, stop_pct=10.0, cost_pct=0.0,

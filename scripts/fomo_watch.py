@@ -628,8 +628,12 @@ def say_stops(said: dict) -> list[str]:
             f"{_signed(cost.get('median_round_trip_pct'))} at "
             f"${cost.get('clip_usd', 0):,.0f} ({cost.get('assumed', 0)} "
             f"with no radar depth charged the default); "
-            f"{(out.get('excluded') or {}).get('pair_changed', 0)} left out "
-            f"where their terminal switched pair")
+            # Kept since V3 (a switched pair is a rug); a reading the lab
+            # stored before says what it did then.
+            + (f"{out['switched']} kept where their terminal switched pair "
+               f"(a rug, paying no gain)" if "switched" in out else
+               f"{(out.get('excluded') or {}).get('pair_changed', 0)} left "
+               f"out where their terminal switched pair"))
     if said.get("stops"):
         lines.append(said["stops"][0].get("caveat") or fomo.UNMEASURED_FILLS)
     entry = said.get("entries")
@@ -666,7 +670,8 @@ def say_reading(said: dict) -> list[str]:
             + (f", 95% {_pct(cci[0])}-{_pct(cci[1])}" if cci else "")
             + "), lift "
             + (f"{lift:.1f}x" if lift is not None else "-")
-            + (f" -- first call of each coin, one pair, since "
+            + (f" -- first call of each coin, a switched pair judged up to "
+               f"the switch, since "
                f"{str(out['period_from'])[:10]}" if out.get("period_from")
                else ""))
     for chain, claim in sorted(said["claims"].items()):

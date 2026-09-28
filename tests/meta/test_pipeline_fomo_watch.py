@@ -426,14 +426,27 @@ def test_a_failed_read_never_writes_a_delisting(tmp_path, monkeypatch):
         "a 200 with no matching row IS a delisting and must be recorded")
     assert result["failed"] == 1 and result["written"] == 2, result
 
-    # And the filter believes it: the token they still quote survives, the
-    # one they dropped does not, and the one whose read failed is unknown --
-    # which keeps it, because unknown is not a verdict.
+    # And the filter believes it -- for what fires after it. A seed read after
+    # a signal is a look into that signal's future (V3, 2026-09-23), so the
+    # three signals above keep what they had when they fired: SoLfine its own
+    # quote, the other two nothing. The same coins called again an hour
+    # later: the one they still quote survives, the one they dropped does
+    # not, and the one whose read failed is unknown -- which keeps it,
+    # because unknown is not a verdict.
     from qa import fomo
 
-    counts = fomo.basket(mod.load())
-    assert counts["n_tradeable"] == 1 and counts["n_untradeable"] == 1
-    assert counts["n_depth_unknown"] == 1
+    rows = mod.load()
+    counts = fomo.basket(rows)
+    assert (counts["n_tradeable"], counts["n_untradeable"],
+            counts["n_depth_unknown"]) == (1, 0, 2), counts
+    later = T0 + timedelta(hours=1)
+    rows += [{"type": "signal", "at": later.isoformat(),
+              "key": fomo.signal_key(token, later), "token_address": token,
+              "price_usd": 0.002}
+             for token in ("SoLfine", "SoLgone", "SoL503")]
+    counts = fomo.basket(rows)
+    assert (counts["n_tradeable"], counts["n_untradeable"],
+            counts["n_depth_unknown"]) == (2, 1, 3), counts
 
 
 @qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
