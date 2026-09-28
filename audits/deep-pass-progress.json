@@ -498,12 +498,19 @@
  },
  "meta_tests": {
   "start": 805,
-  "end": null,
-  "reason": null
+  "end": 807,
+  "reason": "805 -> 807: two legitimate tests/meta additions earlier tonight (B03, R01), ceiling raised to match (commit 82416270)"
  },
  "size": "full",
  "review": {
   "done": true,
   "findings": 15
- }
+ },
+ "next": [
+  "`qa/fomo.py::curves()` pořád čte syrový `return_pct`, ne `_no_pair_gain` -- stejná třída jako B03 (deep pass 2026-09-28), ale kreslí čáru, ne buňku tabulky; žádné hlasování ho tento pass nejmenovalo.",
+  "`scripts/lab_page.py::lab_view`'s `in_bots` sčítá jen `clones[-1][\"balance\"]` na room bota, takže dávkový room podhodnotí ostatní klony; našlo se při A02 (deep pass 2026-09-28), žádné hlasování ho nejmenovalo."
+ ],
+ "rule_changes": [],
+ "at_finished": "2026-09-28T23:15:45+00:00",
+ "finished": true
 }
