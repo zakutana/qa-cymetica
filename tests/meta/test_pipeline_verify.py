@@ -185,6 +185,22 @@ def test_the_pin_is_read_from_the_journal_by_id_and_by_value(tmp_path, monkeypat
 
 
 @qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
+def test_a_check_with_hundreds_of_captures_still_fits_their_evidence_field():
+    """2026-09-28, #130: their verification endpoint answered 422 -- the
+    `evidence` field has max_length 8000 -- because the public-pages check
+    cites a capture per page it read and `_evidence_offer` listed every id
+    (~200, 66 characters each). The correction was owed and never arrived.
+    A few ids to name what we hold, and the count, is what fits."""
+    verify = _verify()
+    ids = [f"{i:064x}" for i in range(250)]
+    evidence = verify.body(_item(verdict="fail", identity="ast",
+                                 evidence_ids=ids))["evidence"]
+    assert len(evidence) <= 8000, len(evidence)
+    assert ids[0] in evidence, "the offer still names what we hold"
+    assert "250" in evidence, "and says how many there are"
+
+
+@qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
 def test_the_evidence_does_not_describe_a_syntax_tree_hash_it_did_not_send():
     """The sentence explaining the fingerprint was true of only some of them.
 

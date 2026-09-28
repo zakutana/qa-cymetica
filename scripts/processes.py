@@ -245,7 +245,11 @@ CEILINGS = {
     # second time -- StreamConsumed, reported at the caller's line with no
     # trace of evidence.py). Two distinct defects the same run turned up. No
     # slack added on top of either: the next addition earns its own raise.
-    "meta_tests": 802,
+    # 802 -> 803 the same morning for
+    # test_a_check_with_hundreds_of_captures_still_fits_their_evidence_field:
+    # verify.py listed ~200 evidence ids, their 8000-character field refused
+    # the #130 correction with a 422.
+    "meta_tests": 803,
 }
 
 BASH_SCRIPT = re.compile(r"python\s+scripts[/\\]([a-z_]+)\.py")

@@ -310,6 +310,9 @@ def _run_line(item: dict) -> str:
             f"not be narrowed after seeing the results.")
 
 
+EVIDENCE_IDS_SHOWN = 10
+
+
 def _evidence_offer(item: dict) -> str:
     """How they can check this, said truthfully.
 
@@ -318,7 +321,13 @@ def _evidence_offer(item: dict) -> str:
     hash of its content, and one message away.
     """
     ids = [str(i) for i in (item.get("evidence_ids") or []) if i]
-    named = f" under evidence id(s) {', '.join(ids)}" if ids else ""
+    # Their `evidence` field is max_length 8000 (422 on #130, 2026-09-28): a
+    # check citing a capture per page read listed ~200 ids and never arrived.
+    shown = ids[:EVIDENCE_IDS_SHOWN]
+    rest = len(ids) - len(shown)
+    named = (f" under evidence id(s) {', '.join(shown)}"
+             + (f" and {rest} more ({len(ids)} in all)" if rest else "")
+             if ids else "")
     # An R-level run without a preregistration has none to offer (B2); one
     # that carried a preregistration has it (RO06).
     tail = ("as is the check's definition"
