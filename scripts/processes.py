@@ -240,10 +240,9 @@ CEILINGS = {
     # test_last_full_run_backfill_stays_off_the_committed_page (the D2 gap:
     # build_payload() was reading state/runs/*.json, gitignored, into the
     # committed dashboard), then 801 -> 802 the same sweep for
-    # test_a_broken_first_read_does_not_poison_the_second (EvidenceStore
-    # .capture() swallowing a read failure left the response unreadable a
-    # second time -- StreamConsumed, reported at the caller's line with no
-    # trace of evidence.py). Two distinct defects the same run turned up. No
+    # test_a_body_that_could_not_be_read_is_never_an_empty_answer (first
+    # StreamConsumed, then -- the same evening -- a read timeout arriving as
+    # a 200 with an empty body; the read error now goes up as itself). Two distinct defects the same run turned up. No
     # slack added on top of either: the next addition earns its own raise.
     # 802 -> 803 the same morning for
     # test_a_check_with_hundreds_of_captures_still_fits_their_evidence_field:
