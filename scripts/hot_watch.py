@@ -396,7 +396,10 @@ def say_passing(said: dict) -> list[str]:
 
     best = max(rule.get("entries", 0) for rule in rules.values())
     bar = hot.RULE["min_trades"]
-    if not best:
+    if not crypto:
+        lines.append(f"  no crypto entries seen in {basis}: nothing was "
+                     f"rejected, so nothing to say about his gates")
+    elif not best:
         lines.append(f"  ALMOST NOTHING PASSES -- the number for Nexus: none of "
                      f"{crypto} crypto entries in {basis}; ask him which gate "
                      f"to loosen")

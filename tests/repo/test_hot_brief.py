@@ -115,3 +115,19 @@ def test_a_reading_stored_before_watched_hours_gives_counts_and_no_pace():
     none = "\n".join(mod.say_passing(_reading(rules=_rules(0, 0, 0))))
     assert "ALMOST NOTHING PASSES" in none, none
     assert mod.say_passing({}) == []
+
+
+@qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
+def test_no_entries_seen_is_not_a_gate_that_rejects_everything():
+    """Deep pass 2026-09-28, R03 (3/3). "None of 0 crypto entries" is a watch
+    that saw nothing -- a blind window, a first round -- not his gates
+    rejecting every entry; the brief must not send the laboratory to ask him
+    which gate to loosen off it. Neither branch (hours known or not) may."""
+    mod = _module()
+    for kw in ({"watched_hours": 24.0}, {}):
+        said = _reading(entries={"crypto": 0, "stocks": 0},
+                        rules=_rules(0, 0, 0), **kw)
+        text = "\n".join(mod.say_passing(said))
+        assert "ALMOST NOTHING" not in text, text
+        assert "loosen" not in text, text
+        assert "no crypto entries seen" in text, text
