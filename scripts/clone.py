@@ -84,7 +84,12 @@ SETTING_BOUNDS = {"stop_loss_pct": (1.0, 20.0), "take_profit_pct": (5.0, 100.0),
                   "max_open_positions": (0, None)}
 MARKET_TOGGLES = frozenset({"event_card_trading_enabled", "arena_trading_enabled",
                             "catalog_trading_enabled", "tge_trading_enabled"})
-SAFE_SETTINGS = frozenset(SETTING_BOUNDS) | MARKET_TOGGLES
+# The two market lists, switched OFF and never opened: "NONE" is what their
+# page sends for no boxes. A clone that never saved them (null) trades the
+# BTC/ETH 5-min epochs while the page draws both unchecked (2026-09-28), so
+# a bot meant for one market has to say NONE to the others.
+MARKETS_OFF = frozenset({"perpetual_markets", "custom_markets"})
+SAFE_SETTINGS = frozenset(SETTING_BOUNDS) | MARKET_TOGGLES | MARKETS_OFF
 
 # Their two group keys, and the enum value each maps to. The plural/singular
 # mismatch is theirs: `available` returns "perpetual_agents" and
@@ -723,6 +728,11 @@ def safe_settings(changes) -> dict:
         if key in MARKET_TOGGLES:
             if not isinstance(value, bool):
                 raise SystemExit(f"{key} is true or false, not {value!r}")
+        elif key in MARKETS_OFF:
+            if value != "NONE":
+                raise SystemExit(f"{key} may only be switched off (\"NONE\"), "
+                                 f"not {value!r}: opening a market is where "
+                                 f"money goes, not a setting we tune")
         else:
             low, high = SETTING_BOUNDS[key]
             integer = key == "max_open_positions"

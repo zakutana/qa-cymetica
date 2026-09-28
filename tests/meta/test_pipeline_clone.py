@@ -709,9 +709,19 @@ def test_a_settings_patch_carries_only_the_fields_the_grid_walks(
             "max_open_positions", "min_ai_confidence"}
     assert grid <= mod.SAFE_SETTINGS, mod.SAFE_SETTINGS
     unsafe = {"is_trading", "arb_strategy_enabled", "onchain_pct",
-              "perpetual_markets", "custom_markets", "strategy_override",
-              "catalog_watchlist", "custom_avatar_url", "name"}
+              "strategy_override", "catalog_watchlist", "custom_avatar_url",
+              "name"}
     assert not (unsafe & mod.SAFE_SETTINGS), unsafe & mod.SAFE_SETTINGS
+    # 2026-09-28: the two market lists may be switched OFF and nothing else.
+    # A clone that never saved them (null) trades BTC/ETH 5-min epochs while
+    # their page draws both boxes unchecked, so a pure event-card bot needs
+    # "NONE" said out loud -- the value their own page sends for no boxes.
+    assert {"perpetual_markets", "custom_markets"} <= mod.SAFE_SETTINGS
+    for key in ("perpetual_markets", "custom_markets"):
+        assert mod.safe_settings({key: "NONE"}) == {key: "NONE"}
+        for opened in ("BTC", "BTC,ETH", "", None, True, ["BTC"]):
+            with pytest.raises(SystemExit, match=key):
+                mod.safe_settings({key: opened})
 
     raw = yaml.safe_load((REPO / "components.yaml").read_text(encoding="utf-8"))
     rule = next(e for e in raw["endpoints"] if e["id"] == "cloned_bots.settings")

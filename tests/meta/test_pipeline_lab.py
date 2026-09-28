@@ -2219,16 +2219,20 @@ def test_the_settings_grid_is_walked_one_variant_at_a_time_and_each_body_is_whol
             reference["tge_trading_enabled"],
             reference["catalog_trading_enabled"]) == (5, True, False, False, False)
     moved = set()
+    # The market lists may only be switched off, for a bot meant for one
+    # market; the grid does not walk them -- adding them to the reference
+    # would move the control of every variant already run.
+    walked = set(clone.SAFE_SETTINGS) - set(clone.MARKETS_OFF)
     for variant in grid:
         body = variant["settings"]
-        assert set(body) == set(clone.SAFE_SETTINGS), sorted(set(body) ^ set(clone.SAFE_SETTINGS))
+        assert set(body) == walked, sorted(set(body) ^ walked)
         assert clone.safe_settings(body) == body, variant["label"]
         diff = {k for k in body if body[k] != reference[k]}
         assert len(diff) == (0 if variant["label"] == "reference" else 1), variant
         moved |= diff
     # Every factor of the plan's grid is walked, except the catalog toggle,
     # which trades only a watchlist and the watchlist is not ours to set.
-    assert moved == set(clone.SAFE_SETTINGS) - {"catalog_trading_enabled"}, moved
+    assert moved == walked - {"catalog_trading_enabled"}, moved
 
     assert lab.next_variant([]) == grid[0]
     assert lab.next_variant(["reference"]) == grid[1]

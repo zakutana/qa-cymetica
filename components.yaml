@@ -619,7 +619,8 @@ endpoints:
     executable_params: [stop_loss_pct, take_profit_pct, max_position_pct,
                         max_open_positions, min_ai_confidence,
                         event_card_trading_enabled, arena_trading_enabled,
-                        catalog_trading_enabled, tge_trading_enabled]
+                        catalog_trading_enabled, tge_trading_enabled,
+                        perpetual_markets, custom_markets]
     closed_body: true
 
   - id: prop.signup
