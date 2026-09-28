@@ -260,7 +260,12 @@ CEILINGS = {
     # 804 -> 805 for test_every_real_request_is_timed_and_one_command_lists_the_bad_ones:
     # 77 timeouts Cymetica asked for sat in seven diaries, and ~90% of the
     # evidence store had no response time.
-    "meta_tests": 805,
+    # 805 -> 807 for test_the_tables_and_the_basket_pay_a_switched_pair_no_gain_either
+    # and test_an_exit_earned_before_the_pair_switched_is_kept (deep pass
+    # 2026-09-28, B03/R01): a pair switch still paid a gain outside
+    # stop_study/compare, and an exit earned before the switch was zeroed
+    # along with it.
+    "meta_tests": 807,
 }
 
 BASH_SCRIPT = re.compile(r"python\s+scripts[/\\]([a-z_]+)\.py")
