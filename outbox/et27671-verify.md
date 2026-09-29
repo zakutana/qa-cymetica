@@ -29,3 +29,13 @@ F3. `GET /api/v1/gem-screener/coins/{symbol}` returns a `trade_url` for PUMP, KN
     answers for them.
 
 Not filed: a cloud session has no `.env`. The report is owed from a local session.
+(Superseded the same evening: the vendor logged and fixed all three as ET-28334, see the end of this file.)
+
+## ET-28334, the three findings, rechecked live after the vendor's fix (2026-09-29, evening)
+
+- F1 fixed: llms.txt and the MCP tool now say "roughly 0.5 kB per pick"; the OpenAPI text no longer states a size;
+  `picks` returns 3,881 bytes for 9 picks.
+- F2 fixed: my crawl finds 388 tooltips, 0 over 20 words (was 11). One reworded chain tooltip still reads like a
+  formula: "market cap 1,437x that, median 1,846x = 1.3x".
+- F3 fixed: PUMP, KNC, FXN, MNDE and EDGE (and UP) return `trade_url: null` with a `trade_note`.
+- Left open by the vendor, logged separately: `/exchange/{symbol}/bbo` answers for pairs that `/exchange/pairs` does not list.
