@@ -69,6 +69,10 @@ def create(selector: str, window: int, tag: bool, note: str | None) -> str:
     prereg_id = next_id()
     head = _git("rev-parse", "HEAD")
     at = datetime.now(timezone.utc).isoformat(timespec="seconds")
+    # Outside the f-string: a backslash inside a replacement field is a syntax
+    # error before Python 3.12, and pyproject.toml says >=3.11. The text is
+    # what the field always produced, so the document does not change.
+    note_block = ("## Note\\n\\n" + note) if note else ""
 
     body = f"""# {prereg_id}
 
@@ -100,7 +104,7 @@ Sources compared with each other must be fetched within {window}s. Outside
 that, the comparison is inconclusive rather than a contradiction, because a
 difference produced by latency is our artefact, not their defect.
 
-{('## Note\\n\\n' + note) if note else ''}
+{note_block}
 """
 
     prereg_dir().mkdir(parents=True, exist_ok=True)
