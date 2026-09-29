@@ -147,6 +147,8 @@ PINNED = {
          "3f868c8f77d201124d36ead10a6162744af277af13661777bee59bd83e90692a"),
         ("2026-09-25", "vse ma byt anlgicky",
          "6182bf168fce7a202962eb76834ced134de99a9802c2508f95ebe880eae1eaf9"),
+        ("2026-09-29", "nemusim zbytecne uz porad jet na opusovi",
+         "0f66444032a3ad6806f9229bd1aab454622bd9dad57fc355916cdbcf00f1682c"),
     ],
     ".claude/skills/qa-sweep/SKILL.md": [
         ("2026-09-06", "kdyz napisu sweep",

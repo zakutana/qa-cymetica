@@ -96,24 +96,37 @@ The rule of thumb behind every row below:
 * **Low** -- quick and in the loop: a sketch, an easy change, a status read.
 * **Medium** -- regular engineering: one pass against a clear spec.
 * **High** -- verification matters, or the surface has edge cases: a bug in code we did not just write, a check meant to survive input it has not seen.
+* **Xhigh** -- a miss is silent and nothing runs after you: the ledger's engine, a check on a surface nothing tests yet, the unattended pass.
 * **Max** -- full autonomy on a hard problem, handed off whole: nobody reviews the middle, only the result.
+
+[operator 2026-09-29] *"Uz vysel sonet 5.5 a je hodne silny takze nemusim zbytecne uz porad jet na opusovi 5.5 a jen ho vyuzivat na planovani a tvrdsi tasky. ale prepracuj to jak uznas za vhodne"* -- Sonnet 5.5 is the default, and Opus 5.5 is for planning and the harder tasks. Which task is which is ours to keep current in the table below.
+
+The model is a separate choice from the effort, and it follows one question -- **what happens to a wrong answer**:
+
+* **Sonnet 5.5** -- something loud follows it: a test, a review, a reader, a next step. Sweeps, filing, correspondence, the laboratory, everyday code, pages, docs.
+* **Opus 5.5** -- the plan, and work where a miss is silent because nothing after it checks: the ledger's engine, a check on a surface nothing tests yet, the unattended passes. **Opus is the exception, so it is named:** a skill or agent whose frontmatter says opus or fable appears in a row below (`tests/repo/test_model_table.py`).
+
+**Set once: `/model opusplan` and `/effort high`.** `opusplan` is Opus 5.5 while a plan is being made (plan mode, where non-trivial work starts) and Sonnet 5.5 once it is approved, so it fits every row below except the ones that say Opus for the work itself: for those, `/model opus` (the skills and agents carry their own). The first line of a task says when a row wants something else.
 
 Agents and skills carry their own model and effort in frontmatter. What the session adds is noticing when its own setting does not fit the work.
 
 | Task | Needs |
 |---|---|
-| channel status (`/channels`) | Sonnet 5 · low — a read the operator checks on sight; nothing here goes out unverified |
-| sweep, filing, verification (`qa-sweep`) | Sonnet 5 · high — which claims still reproduce, whose bug it really is, is exactly the edge-case-hunting effort buys |
-| correspondence written to the vendor (`correspond.py`, `a2a.py send`) | Sonnet 5 · high — every claim about Cymetica is checked against their live page before it goes out under our name |
-| a session in the laboratory (`laborator`) | Sonnet 5 · high — one tick, but its rules have a long history of edge cases nobody re-derived (see `MEMORY.md`) |
-| writing a new check against their platform — a surface nothing tests yet | Opus 5 · high–xhigh — a check is a sanitizer: it must survive a population it has not seen, the shape that needed xhigh above |
-| `qa/state.py`, `qa/fold.py`, `qa/measure.py`, review | Opus 5 · high–xhigh — the ledger's own storage engine; a wrong transition is silent, the shape of a storage-engine bug that needed xhigh to catch |
-| the deep pass | Opus 5 · xhigh (its frontmatter carries it) — full autonomy overnight, nobody reviews the middle |
-| architecture, a plan like `docs/laborator-plan.md` | Fable 5.1 or Opus 5 · max — handed off whole and expensive to redo; an early sketch to react to is better done at low, the version that ships at max |
+| channel status (`/channels`) | Sonnet 5.5 · low — a read the operator checks on sight; nothing here goes out unverified |
+| sweep, filing, verification (`qa-sweep`) | Sonnet 5.5 · high — which claims still reproduce is exactly the edge-case hunting effort buys |
+| correspondence written to the vendor (`correspond.py`, `a2a.py send`) | Sonnet 5.5 · high — every claim is checked against their live page before it goes out under our name |
+| a session in the laboratory (`laborator`, `pokracuj`) | Sonnet 5.5 · high — one tick, but its rules have a long history of edge cases (see `MEMORY.md`) |
+| everyday work: a fix, a test, a script, a page, the docs | Sonnet 5.5 · medium–high — one pass against a clear spec; high for a bug in code we did not just write |
+| a plan for non-trivial work (plan mode) | Opus 5.5 · high — the work is judged against it; `opusplan` hands over to Sonnet on approval |
+| writing a new check against their platform — a surface nothing tests yet | Opus 5.5 · high–xhigh — a check must survive a population it has not seen, the shape that needed xhigh above |
+| `qa/state.py`, `qa/fold.py`, `qa/measure.py`, review | Opus 5.5 · high–xhigh — the ledger's own storage engine; a wrong transition is silent |
+| the deep pass (`deep-pass`) | Opus 5.5 · xhigh (its frontmatter carries it) — unattended overnight, nobody reviews the middle |
+| the deep pass's readers (`check-auditor`, `finding-triage`) and the look-back (`ohlednuti`) | Opus 5.5 · high (frontmatter carries it) — they judge, and nothing after them checks the verdict |
+| architecture, a plan like `docs/laborator-plan.md` | Opus 5.5 or Fable 5.1 · max — handed off whole and dear to redo; an early sketch is better done at low |
 
 [operator 2026-09-09] *"ano 5. levny protoze jen cte"* -- the `/channels` row. They ruled on it after a session put the mismatch to them: the table says correspondence needs high, and a status read is not correspondence. So that row is theirs now, not the loop's, and the loop may not raise it on its own.
 
-**The first line of a task names its class, what that class needs, and what this session is running on** -- the model from its own system prompt, the effort from `$CLAUDE_EFFORT`. If the setting is above or below the row, say so in that same line and **carry on**: it never blocks, and a session cannot change its own model or effort -- `/model` and `/effort` are the operator's. One sentence, only at the start. The week (deep pass, step 11) reads whether reports filed by a Sonnet sweep were later corrected.
+**The first line of a task names its class, what that class needs, and what this session is running on** -- the model from its own system prompt, the effort from `$CLAUDE_EFFORT`. If the setting is above or below the row, say so in that same line and **carry on**: it never blocks, and a session cannot change its own model or effort -- `/model` and `/effort` are the operator's. One sentence, only at the start. A task that starts in plan mode is the plan row; the hand-over from Opus to Sonnet when the plan is approved is `opusplan` working, not a mismatch, and is not said again. The week (deep pass, step 11) reads whether reports filed by a Sonnet sweep were later corrected.
 
 ## The rule, said once
 
