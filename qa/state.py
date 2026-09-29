@@ -426,6 +426,36 @@ def _honoured_preregistration(run: dict, selector: str) -> list[str]:
     return problems
 
 
+def record_digest(raw: bytes) -> str:
+    """What the journal attests about a run record: its bytes with every
+    newline spelled `\\n`.
+
+    A checkout spells newlines its own way -- CRLF on the Windows workspace,
+    LF on a Linux clone -- so the raw bytes of one record differ between two
+    machines that hold the identical record. On 2026-09-29 the first sweep on
+    a Linux clone found all 267 attestations "changed", every one matching
+    once its `\\n` was `\\r\\n`. Only the spelling is normalised; a changed
+    character is still a changed digest.
+    """
+    return hashlib.sha256(raw.replace(b"\r\n", b"\n")).hexdigest()
+
+
+def record_digests(raw: bytes) -> set[str]:
+    """Every digest an attestation of this record may legitimately carry.
+
+    `record_digest` is what is written now. The journal also holds digests of
+    the raw bytes of a CRLF checkout (all attestations before 2026-09-29), and
+    of an LF one, so those are accepted too: a record attested on either
+    platform verifies on the other.
+    """
+    lf = raw.replace(b"\r\n", b"\n")
+    return {
+        hashlib.sha256(raw).hexdigest(),
+        hashlib.sha256(lf).hexdigest(),
+        hashlib.sha256(lf.replace(b"\n", b"\r\n")).hexdigest(),
+    }
+
+
 def run_integrity(run: dict, path: Path | None = None,
                   events: list[dict] | None = None) -> list[str]:
     """Check a run record against facts it does not control.
@@ -444,7 +474,6 @@ def run_integrity(run: dict, path: Path | None = None,
         when it was first composed, so a record cannot be edited after the
         journal has attested to it.
     """
-    import hashlib
     import subprocess
 
     problems: list[str] = []
@@ -483,11 +512,13 @@ def run_integrity(run: dict, path: Path | None = None,
                     problems.extend(_honoured_preregistration(run, selector))
 
     if path is not None and path.exists():
-        digest = hashlib.sha256(path.read_bytes()).hexdigest()
+        raw = path.read_bytes()
+        digest = record_digest(raw)
+        accepted = record_digests(raw)
         for event in events if events is not None else read_events():
             if event.get("type") == "run_recorded" \
                     and event.get("run_id") == run.get("run_id") \
-                    and event.get("file_sha256") not in (None, digest):
+                    and event.get("file_sha256") not in (None, *accepted):
                 problems.append(
                     f"the record has changed since the journal attested to it "
                     f"({event['file_sha256'][:12]} -> {digest[:12]})"

@@ -47,6 +47,7 @@ from qa.state import (  # noqa: E402
     list_runs,
     load_run,
     read_events,
+    record_digest,
     run_integrity,
     runs_dir,
     write_ledger,
@@ -89,9 +90,7 @@ def _run_recorded(run: dict, path: Path | None) -> dict:
 
     Once written, the record cannot be edited without run_integrity noticing.
     """
-    import hashlib
-
-    digest = hashlib.sha256(path.read_bytes()).hexdigest() if path else None
+    digest = record_digest(path.read_bytes()) if path else None
     return {
         "type": "run_recorded", "at": run.get("finished_at") or run.get("started_at"),
         "by": "agent", "source": "scripts/ledger.py",

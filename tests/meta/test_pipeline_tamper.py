@@ -86,6 +86,55 @@ def test_a_run_record_edited_after_attestation_is_refused(tmp_path):
     problems = run_integrity(record, path=path, events=events)
     assert problems and "changed since the journal attested" in problems[0]
 
+    # 2026-09-29, the first sweep on a Linux clone: 267 of 267 attested runs
+    # refused, and every one of them matched once its `\n` was `\r\n`. The
+    # journal's digests were taken over a Windows checkout (CRLF); git stores
+    # LF and a Linux checkout writes LF back -- same record, different bytes,
+    # and the meta suite aborted the session over it. So the digest must not
+    # depend on how a checkout spells a newline, in either direction (a record
+    # attested on Linux is read on Windows next) ...
+    def spellings(rec: dict) -> tuple[bytes, bytes]:
+        body = json.dumps(rec, indent=2) + "\n"
+        return body.encode(), body.replace("\n", "\r\n").encode()
+
+    def attesting(digest: str) -> list[dict]:
+        return [{"type": "run_recorded", "at": "2026-09-05T00:00:00+00:00",
+                 "by": "agent", "source": "scripts/ledger.py",
+                 "run_id": "run-1", "file_sha256": digest}]
+
+    original = {"schema": 2, "run_id": "run-1", "git_dirty": True,
+                "results": [], "collected": []}
+    lf, crlf = spellings(original)
+    for attested_over, checked_over in ((crlf, lf), (lf, crlf)):
+        path.write_bytes(checked_over)
+        events = attesting(hashlib.sha256(attested_over).hexdigest())
+        assert run_integrity(original, path=path, events=events) == []
+
+    # ... and what ledger.py writes is one digest for one record, not one per
+    # newline, so the other platform recomputes what was attested ...
+    import importlib.util
+    from pathlib import Path
+
+    spec = importlib.util.spec_from_file_location(
+        "ledger_mod", Path(__file__).resolve().parents[2] / "scripts" / "ledger.py")
+    ledger = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(ledger)
+    written = set()
+    for raw in (lf, crlf):
+        path.write_bytes(raw)
+        written.add(ledger._run_recorded(original, path)["file_sha256"])
+    assert len(written) == 1
+
+    # ... but ignoring the spelling must not become ignoring the record: the
+    # one changed value is refused under either, whichever way it arrives.
+    edited = dict(original, git_dirty=False)
+    for attested_over in (lf, crlf):
+        events = attesting(hashlib.sha256(attested_over).hexdigest())
+        for edited_over in spellings(edited):
+            path.write_bytes(edited_over)
+            problems = run_integrity(edited, path=path, events=events)
+            assert problems and "changed since the journal attested" in problems[0]
+
 
 @qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
 def test_a_run_claiming_a_preregistration_that_does_not_exist_is_refused(tmp_path):
