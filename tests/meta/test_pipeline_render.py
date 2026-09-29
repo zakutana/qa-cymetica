@@ -827,8 +827,11 @@ globalThis.localStorage = {
 globalThis.location = { hostname: "test-harness", host: "test-harness" };
 globalThis.window = { addEventListener() {}, scrollY: 0, scrollTo() {} };
 process.on("exit", () => {
-  process.stdout.write("CAPTURED-JSON:"
-    + JSON.stringify(Object.assign({}, captured, {"__appended__": appended})));
+  // A file, not stdout: on Linux a pipe is written asynchronously and whatever
+  // is still queued when the process exits is dropped, so a page that captures
+  // more than the 64 kB pipe buffer arrived cut off mid-string (2026-09-29).
+  require("fs").writeFileSync("captured.json",
+    JSON.stringify(Object.assign({}, captured, {"__appended__": appended})));
 });
 """
 
@@ -865,14 +868,15 @@ def _run_page(node, workdir, payload, after: str = "", page=None):
         'require("./harness.js");\nrequire("./page.js");\n' + after + "\n",
         encoding="utf-8")
 
+    (workdir / "captured.json").unlink(missing_ok=True)   # never read a previous run's
+
     # encoding is named: the page carries the vendor's own text, and this
     # machine's console codepage is cp1250, which cannot decode it.
     result = subprocess.run([node, str(workdir / "run.js")], capture_output=True,
                             text=True, encoding="utf-8", errors="replace",
                             timeout=60, cwd=str(workdir))
-    marker = "CAPTURED-JSON:"
-    raw = (json.loads(result.stdout.split(marker, 1)[1])
-           if marker in result.stdout else {})
+    written = workdir / "captured.json"
+    raw = json.loads(written.read_text(encoding="utf-8")) if written.exists() else {}
     # The append order rides out of the page beside the markup, but NOT inside
     # the same mapping: `captured` is id -> HTML and two tests join its values
     # into one string. So it comes back as an attribute.
