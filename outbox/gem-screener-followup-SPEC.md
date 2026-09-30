@@ -62,6 +62,10 @@ The Degen meter colours and width (A.1), the check circles with the C.5 card (A.
 
 **[40] Trajectory phase.** On a coin detail the pill at the top of the panel is green while the stepper under it is light blue for the same phase (Pharaoh, Ignition). One phase, one colour, in the table, the pill and the stepper.
 
+**[43] The checks, cut to what a degen needs.** Today 18 checks feed six areas (Control 2.5, Supply 2, Earnings 2, Liquidity 1.5, Heat 1, History 1 of 10) and the level is ten times their weighted mean, so the circles are the level. On 96 coins read on 2026-09-30 an average of 5.9 of the 18 are "Not scanned" and count as half a risk, and several circles light up on nearly every coin and so say nothing: "Admin can mint" on 44 of 74 scanned, "Timelock" green on 1 coin, "Audit" green on 1 of 96, "Market cap" under $20M on 72 of 96 (the screener is for small caps). Cut to the questions a degen asks: can the owner rug it (owner type, timelock and mint power as ONE check; "can mint" alone is not a warning); what new tokens are coming (emissions, unlocks in 90 days and the share of tokens out together); does it earn after paying emissions; is it growing; do holders get a share; can I get out (slippage on $10K; market cap as a plain number, not a verdict); already pumped (30-day price run, and price against revenue); is it legit (audit, hacks). Whales, insider flow, hidden supply and team stay, but as one dashed group "Not checked yet" with the "Ask for Degen report" button, until they run for most coins. Weigh the areas by what a degen can lose on: Control weighs most (2.5) while two of its three checks are not scanned on about half the coins.
+
+**[44] The line at the end of each check row** says the key number in plain words, in the colour of its worst check, and the reason for the colour is in the tooltip. Today Supply reads "Unlocks 0.0% unlocks in 90 days, 6.8% of tokens out" in red: nothing unlocks in 90 days, but only 6.8 % of tokens are out (FDV is 14.7× market cap), so the red is the 93 % still to come, which the line never says. Say "7% of tokens out (FDV 15× market cap), 0% unlock in 90 days". Earnings reads "Trend Ignition, 3.6× spike" for a business that earns $2.5M a month and nets +$1.2M after $1.3M of new tokens, and its circle shows "2.0×" for a real value of 1.96, just under where green starts. Say "Earns $2.5M a month, $1.3M goes out as new tokens: +$1.2M", and for the trend "Revenue 3.6× its usual month, one month so far". No jargon (Ignition, spike) on the line.
+
 ## 4. Altseason panel
 
 **[19] The Expand button is easier to see: make it green.**
@@ -87,6 +91,8 @@ The Degen meter colours and width (A.1), the check circles with the C.5 card (A.
 **[28] Go through the whole app** and make sure everything is degen friendly: the number first, plain short words, no statistics jargon on the page (beta, alpha, error bars, r-squared), every explanation in a tooltip or behind an expand.
 
 **[29] One look everywhere:** the same tooltip, the same badge and the same symbol style on every tab and in every panel, so the same thing never looks different on another page. Pick one of each and use it throughout.
+
+**[45] Caution is orange, not light blue:** green, orange, red, and blue-grey only for neutral or does not apply. Light blue looks neutral and sits beside "Does not apply" in the Legend. The same colours on the Degen meter (zone 4 to 6), the tags and the Legend. This changes spec 4 A.1, which says light blue for 4 to 6.
 
 **[42] The Legend shows only what the open tab shows.** On Apps it lists Post-crash, Declining, No data and Thin liquidity, which only the Chains tab draws (4, 3, 5 and 1 of 26 chains; none of the 215 Apps rows, whose flags moved into the Degen meter and the checks), and "Tradeable here", which no row carries (the exchange lists 11 pairs, none a listed coin). The two tabs should not mark the same kind of warning in two different ways.
 
@@ -130,3 +136,6 @@ The Degen meter colours and width (A.1), the check circles with the C.5 card (A.
 - [ ] 40 One phase, one colour: table, pill and stepper.
 - [ ] 41 `ranked` pages through all 215 apps.
 - [ ] 42 The Legend lists only flags the open tab draws; Apps and Chains mark warnings the same way.
+- [ ] 43 The check panel asks about ten questions, not 18; whales, insider flow, hidden supply and team sit in one dashed "Not checked yet" group with the report button; the weights are explained in a tooltip.
+- [ ] 44 Each check row ends in one plain line with the key number (the Supply and Earnings examples above), in the colour of its worst check, with the reason in the tooltip; no jargon.
+- [ ] 45 Caution is orange everywhere (circles, Degen meter zone 4 to 6, tags, Legend); blue-grey is only neutral or does not apply.
