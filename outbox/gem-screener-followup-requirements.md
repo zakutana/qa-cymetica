@@ -9,7 +9,7 @@ Source: the operator's complaints on the live site after ET-28378, 2026-09-30, e
 3. Check circles: the tooltip is the card of spec 4 C.5 (icon, name, verdict pill, value, context, source and date), never the old light box.
 4. The Supply card must agree with the page: Pharaoh (PHAR) says "0.0% of the float a week" and "No new tokens in 30 days" while emissions are $1.26M and net revenue is +$1.1M; Curve the same.
 5. Trajectory stepper in the detail takes the colour of the Trend check (light blue for Ignition).
-6. The Legend lists only icons that still exist; today it still has Micro, New, Post-crash, Declining, No trend, Stale data, Thin liquidity, Cliff and % in 90d, and no row shows them.
+6. The Legend lists only icons that still exist; today it still has Micro, New, Post-crash, Declining, No trend, Stale data, Thin liquidity, Cliff and % in 90d, and no row shows them. (Status 2026-09-30 evening: half done, the list is now five flags; see 42.)
 7. Report section names stay as the spec says ("The bet"), or the change is agreed first.
 8. As the vendor listed itself: the Curve emission mismatch, Legend entries of 8 words or fewer, and the Audit set as the spec says.
 
@@ -43,7 +43,7 @@ Source: the operator's complaints on the live site after ET-28378, 2026-09-30, e
 
 ## C. Added 2026-09-30 from the degen audit (`gem-screener-degen-audit.md`, section 2)
 
-(The request draft also carries three lines that are only in the draft, not here: the audit check, the trajectory phase colour, the ranked list. In the request these nine come last, the Sectors table line (37) after the sector ranking.)
+(Items 39 to 41 were first only in the request draft and are here so the list is whole; 42 is the operator's question about the Legend, evening of 2026-09-30. Since the same evening the request goes out as a spec on GitHub, so the form's 8,000-character limit no longer applies.)
 
 30. An upside a holder can rely on: a coin with 4 % of its tokens out shows 44x (UP) and is 8x with all tokens out (PHAR 50x, 31x). The headline must not flatter a coin with few tokens out. The 11 apps at the 50x cap stand at 72x to 2,291x; keep their order.
 31. Top Picks show their warnings on the pick, not only in its detail: an exit flag (NEST, SOLV), earnings below emissions (NEST -$213K, UP -$762K a month), under 180 days of history (UP, 81 days).
@@ -54,6 +54,10 @@ Source: the operator's complaints on the live site after ET-28378, 2026-09-30, e
 36. Sectors: show where each sector is in its rotation, so a degen sees the ones starting to rise and the ones fading. Today "Hot now" sits on 10 of 12 because everything beats BTC (10 of 12 beat the median alt too). Compare each sector with the median sector and give it a stage: Emerging (below it over 3 months, above over 1), Hot (above on both), Fading (above over 3, below over 1), Falling (below on both). Show the rule in a tooltip; improve it if you can. (On 2026-09-30 numbers this gives Hot: L2, DEX & perps, DePIN, RWA, Privacy; Emerging: AI; Fading: DeFi lending & staking; Falling: Memecoins, Gaming, Infrastructure, Prediction markets, L1.) (Operator's goal, 2026-09-30 evening: sectors rotate every few months in an altseason.)
 37. Sectors chart and table: the four-quadrant chart shows these stages (3-month strength across, 1-month momentum up), a bubble per sector with a trail to where it stood four weeks ago; its names, quadrants and legend are clear and in colour (today grey and barely visible). The table is sorted by stage, one colour each, with only: stage, 1M, 3M, Talked about, Fundamentals, Growth 3M. Alt sensitivity and both vs BTC columns leave it. (Replaces the earlier "Growth 3M and one vs BTC column" wording; supersedes 26 and 27.)
 38. Degen level: 124 of 215 ranges span more than two steps (PHAR 5 to 9) and an unchecked item counts as half a risk. A low level must not hide a high one: show the worst case and what is unchecked.
+39. Audit check: "Audits listed" (yellow) and "None listed" (red) tell a degen little. Say in a few words what an audit actually covers (the token contract, the vault, a fork of someone else's code), and what "None listed" means for this coin. A reader should know at a glance whether the audit is about the thing they are buying.
+40. Trajectory phase: on a coin detail the pill at the top of the panel is green while the stepper under it is light blue for the same phase (Pharaoh, Ignition). One phase, one colour, in the table, the pill and the stepper.
+41. Agent access to the whole list: `GET /api/v1/gem-screener/ranked` takes `limit` up to 100 and ignores `offset`, so an agent cannot list all 215 apps without the 2 MB snapshot. Let it page the full list.
+42. Legend (A.6 is only half done): show only what the open tab shows. On Apps the Legend lists Post-crash, Declining, No data and Thin liquidity, which only the Chains tab draws (4, 3, 5 and 1 of 26 chains; none of the 215 Apps rows, whose flags moved into the Degen meter and the checks), and "Tradeable here", which no row carries (the exchange lists 11 pairs, none a listed coin). The two tabs should not mark the same kind of warning in two different ways.
 
 ## Before it is filed
 
