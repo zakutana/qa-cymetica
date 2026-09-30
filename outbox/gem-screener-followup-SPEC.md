@@ -13,7 +13,7 @@
 
 ## What is already done from ET-28378 part 4 (do not redo)
 
-The Degen meter colours and width (A.1), the check circles with the C.5 card (A.3), the Supply card agreeing with the page for Pharaoh and Curve (A.4), the trajectory stepper colour (A.5), "The bet" section name (A.7), and the new checks: hidden supply, whales, insider flow and team now run (after the 18:50 refresh: hidden supply on 113, insider flow on 97 and team on 72 of 215 apps). What remains of that part is in items 38, 39 and 42.
+The Degen meter colours and width (A.1), the check circles with the C.5 card (A.3), the Supply card agreeing with the page for Pharaoh and Curve (A.4), the trajectory stepper colour (A.5), "The bet" section name (A.7), and the new checks: hidden supply, whales, insider flow and team now run (after the 18:50 refresh: hidden supply on 113, insider flow on 97 and team on 72 of 215 apps). What remains of that part is in items 42 and 43 (the Legend, and how many checks are still not scanned).
 
 ---
 
