@@ -37,7 +37,7 @@ import httpx
 from qa import gemaudit as g
 from qa.marks import Inconclusive, SafetyTier, qa
 from qa.measure import Measurement, conclude
-from tests.rest.test_gem_screener_numbers_match_their_sources import read_snapshot
+from tests.rest.test_gem_screener_numbers_match_their_sources import get_patiently, read_snapshot
 
 
 @qa(component="rest.gem_screener", tier=SafetyTier.SAFE, surface="rest")
@@ -45,7 +45,7 @@ def test_a_degen_pick_opens_the_coin_it_names(rest_anon):
     """Every pick's symbol, read through the coin route, is the same coin: the
     same name, and a market cap within 5 % (two reads, minutes apart)."""
     try:
-        listed = rest_anon.get(g.PICKS)
+        listed = get_patiently(rest_anon, g.PICKS)
         if listed.status_code != 200:
             raise Inconclusive(f"{g.PICKS} answered HTTP {listed.status_code}; a failed read "
                                f"is not an empty shortlist")
@@ -58,7 +58,7 @@ def test_a_degen_pick_opens_the_coin_it_names(rest_anon):
         coins, unread = {}, []
         for pick in picks:
             symbol = pick.get("symbol")
-            one = rest_anon.get(g.COIN.format(symbol=symbol))
+            one = get_patiently(rest_anon, g.COIN.format(symbol=symbol))
             try:
                 body = one.json() if one.status_code == 200 else None
             except ValueError:

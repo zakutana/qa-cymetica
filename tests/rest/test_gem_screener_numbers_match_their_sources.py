@@ -51,11 +51,28 @@ LIQUIDITY = (0.50, 0.05, 0.05, 0.80)
 BENCHMARK_TOL = 0.10
 
 
+def get_patiently(client, url, *, tries: int = 3, pause: float = 3.0, **kw):
+    """`client.get` that tries again when their server stalls. It stalls for 3 to
+    11 seconds every few requests (ET-28064, measured again 2026-09-30), so one
+    timeout is weather and three in a row is a finding -- of a different check's.
+    Raises Inconclusive when every try timed out: a read that failed is not an
+    empty one."""
+    last = None
+    for attempt in range(tries):
+        if attempt:
+            time.sleep(pause)
+        try:
+            return client.get(url, **kw)
+        except httpx.TimeoutException as exc:
+            last = exc
+    raise Inconclusive(f"{url} timed out on all {tries} tries ({type(last).__name__})")
+
+
 def read_snapshot(rest_anon) -> dict:
     """The page's own snapshot, or Inconclusive: a read that failed, a page with
     no snapshot, or one too old to say anything about fidelity."""
     try:
-        response = rest_anon.get(g.APP_PAGE, headers={"Accept": "text/html"})
+        response = get_patiently(rest_anon, g.APP_PAGE, headers={"Accept": "text/html"})
     except httpx.HTTPError as exc:
         raise Inconclusive(f"{g.APP_PAGE} could not be read: {type(exc).__name__}")
     if response.status_code != 200:
