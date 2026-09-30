@@ -156,6 +156,12 @@ PINNED = {
         ("2026-09-07", "libi se mi ze po sweepu",
          "f4798675029b70b2926b9019189a8ddff76b9cb24e4aad1ed409b78ee6fe0c9d"),
     ],
+    # 2026-09-30, added because they said it: the Gem Screener audit and its
+    # rule that the tests cover only the core. Their words, verbatim, typos and all.
+    ".claude/skills/gem-audit/SKILL.md": [
+        ("2026-09-30", "projdi celou apku z pohledu degena",
+         "e3e88c011385036ebd2a680c4f927b10160d52baaa507bba5c5288343ec63ce3"),
+    ],
     ".claude/skills/channels/SKILL.md": [
         ("2026-09-08", "kdyz je server vypnuty",
          "45c092f91272b69262a18cb5e05e107ef404910f4c7d45892d72a73a27c46d91"),

@@ -7,7 +7,7 @@ effort: high
 
 # Gem Screener audit
 
-[operator 2026-09-30] *"projdi celou apku z pohledu degena co se na ni a jeji data chce 100% spolehnou v pristim altseasonu a rekni vsechna mista kde bys ji vylepsil nebo se ti nezdaji data a bojis se jim verit"* -- and, straight after, *"tvor i testy at to muzes cely proces kdykoliv pak zopakovat. gem screener musi byt spickovy produkt spolehlivy"*, then *"testy muzes udelat na core prvky co myslis ze se nebudou menit uz"* because Cymetica will be changing the rest on our suggestions.
+[operator 2026-09-30] *"projdi celou apku z pohledu degena co se na ni a jeji data chce 100% spolehnou v pristim altseasonu a rekni vsechna mista kde bys ji vylepsil nebo se ti nezdaji data a bojis se jim verit"* -- and, straight after, *"tvor i testy at to muzes cely proies kdykoliv pak zopakovat. gem screener musi byt spickovy produkt spolehlivy"*, then *"ikdyz ne testy moc neprehanej, bo oni budou vlastne delat upravy co navrhnem, testy mzues udelatr na core prvky co myslis ze se nebudou menit uz"* -- Cymetica will be changing the rest on our suggestions.
 
 So the audit is four parts, and only the first two are code:
 
