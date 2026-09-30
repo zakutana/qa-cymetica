@@ -66,6 +66,27 @@ def due_tolerance(hours: float) -> float:
     return min(float(hours) / 2.0, DUE_TOLERANCE_HOURS)
 
 
+def closes_at(signal: dict, label: str) -> datetime | None:
+    """When the window of `signal`'s checkpoint `label` ("0.25h", "3h") shuts:
+    the horizon plus its `due_tolerance`. None when either cannot be read."""
+    when = _at(signal.get("at"))
+    try:
+        hours = float(str(label).rstrip("h"))
+    except ValueError:
+        return None
+    if when is None:
+        return None
+    return when + timedelta(hours=hours + due_tolerance(hours))
+
+
+def by_closing(pairs: list[tuple[dict, str]]) -> list[tuple[dict, str]]:
+    """Due (signal, label) pairs, the window that shuts first first -- the
+    order a round spends a capped number of quotes in (fomo_watch.quote_cap).
+    Unreadable ones last; otherwise the order they came in."""
+    last = datetime.max.replace(tzinfo=timezone.utc)
+    return sorted(pairs, key=lambda pair: closes_at(pair[0], pair[1]) or last)
+
+
 def _at(value) -> datetime | None:
     try:
         return datetime.fromisoformat(str(value).replace("Z", "+00:00"))

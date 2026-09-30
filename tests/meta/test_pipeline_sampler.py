@@ -348,6 +348,11 @@ def test_both_launchers_start_the_sampler_and_the_old_watch_goes_through_it():
             line for line in text.splitlines()
             if not line.strip().lower().startswith(("rem", "::", "#")))
         assert "--sample 10" in commands, f"{name} starts the console without its sampler"
+        # A memecoin round a minute (plan v2, V4), now that a round's quotes
+        # are capped by its interval (fomo_watch.quote_cap): with twenty
+        # minutes the first verified price sat a median 67 minutes after the
+        # flag, and the +15 min reading was mostly missed.
+        assert "--fomo 1 " in commands + " ", f"{name} does not watch FOMO Radar every minute"
 
     serve = ast.parse((REPO / "scripts" / "serve.py").read_text(encoding="utf-8"))
     flags = {arg.value for node in ast.walk(serve) if isinstance(node, ast.Call)

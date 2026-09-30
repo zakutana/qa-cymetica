@@ -45,5 +45,7 @@ echo
 # hours went by, each one past its tolerance by the time anything looked, and
 # the measurement filled only when a round was run by hand. Three of the
 # first day's twenty-four hours were captured. `./console.sh --fomo 0` turns
-# it off.
-exec $PY scripts/serve.py --open --ask 15 --sample 10 --fomo 20 --hot 20 "$@"
+# it off. Every minute since 2026-10-01 (plan v2, V4): the first price is read
+# within a minute of the flag, and a round quotes at most 60 coins a minute of
+# its interval (fomo_watch.quote_cap).
+exec $PY scripts/serve.py --open --ask 15 --sample 10 --fomo 1 --hot 20 "$@"

@@ -228,6 +228,70 @@ def test_resolve_checkpoints_only_what_is_due_and_computes_our_own_return(
     assert late["checkpoints"][0]["horizon"] == "5h", (
         "a stale hour was filled with a five-hour-old signal's current price")
 
+    _a_capped_round_reads_the_windows_that_close_first(tmp_path / "cap", monkeypatch)
+
+
+def _a_capped_round_reads_the_windows_that_close_first(tmp_path, monkeypatch):
+    """`console.cmd --fomo 1` (plan v2, V4): a round a minute, and a cap on the
+    quotes one round may ask for, so a console reopened after hours does not
+    spend a burst of hundreds on their terminal in one minute. The cap scales
+    with the interval (60 a minute), so the 20-minute rounds of before, whose
+    largest round quoted 636 coins, are never bound by it. What the cap holds
+    back is not lost: it is still due, inside its window, in the next round --
+    and the round reads first the windows that close first."""
+    tmp_path.mkdir(parents=True, exist_ok=True)
+    mod = _module(tmp_path, monkeypatch)
+    assert mod.quote_cap(60) == 60 and mod.quote_cap(1200) == 1200, (
+        mod.quote_cap(60), mod.quote_cap(1200))
+    assert mod.quote_cap(0) is None and mod.quote_cap(None) is None
+
+    # Three coins whose first hour is due at T0+1h and whose windows close at
+    # +1h10 (C), +1h20 (B) and +1h30 (A).
+    for token, minutes in (("0xa", 0), ("0xb", 10), ("0xc", 20)):
+        at = T0 - timedelta(minutes=minutes)
+        mod._append({"type": "signal", "at": at.isoformat(),
+                     "key": f"{token}:{at.strftime('%Y-%m-%dT%H')}",
+                     "token_address": token, "symbol": token.upper(),
+                     "chain": "robinhood", "price_usd": 0.002})
+    asked = []
+
+    def handler(request):
+        asked.append(request.url.params.get("q"))
+        return httpx.Response(200, json={"rows": [
+            {"address": request.url.params.get("q"), "price_usd": 0.003}]})
+
+    first = mod.resolve(_client(handler), now=T0 + timedelta(hours=1), cap=2)
+    assert first["deferred"] == 1, first
+    assert sorted(c["key"].split(":")[0] for c in first["checkpoints"]) == ["0xb", "0xc"], (
+        "the cap should spend itself on the windows that close first", first)
+    assert len(set(asked)) == 2, asked
+
+    # The coin held back is read in the next round, still inside its window.
+    second = mod.resolve(_client(handler), now=T0 + timedelta(hours=1, minutes=1), cap=2)
+    assert [c["key"].split(":")[0] for c in second["checkpoints"]] == ["0xa"], second
+    assert second["deferred"] == 0, second
+
+    # No cap is no limit (the lab tick's own round, every twenty minutes).
+    (tmp_path / "loose").mkdir()
+    loose = _module(tmp_path / "loose", monkeypatch)
+    for token in ("0xd", "0xe", "0xf"):
+        loose._append({"type": "signal", "at": T0.isoformat(),
+                       "key": f"{token}:{T0.strftime('%Y-%m-%dT%H')}",
+                       "token_address": token, "price_usd": 0.002})
+    uncapped = loose.resolve(_client(handler), now=T0 + timedelta(hours=1))
+    assert uncapped["checked"] == 3 and uncapped["deferred"] == 0, uncapped
+
+    # The console's loop hands its own interval to the round as the cap.
+    seen = {}
+    monkeypatch.setattr(loose, "capture", lambda client, now=None: {"added": 0})
+    monkeypatch.setattr(loose, "resolve",
+                        lambda client, now=None, cap=None: seen.setdefault("cap", cap) or {})
+    import threading
+    stop = threading.Event()
+    stop.set()
+    loose.run(stop, 60, client=object())
+    assert seen == {"cap": 60}, seen
+
 
 @qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
 def test_run_survives_a_round_that_raises_and_stops_on_the_event(tmp_path,

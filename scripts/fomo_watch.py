@@ -322,8 +322,31 @@ def capture(client, now=None) -> dict:
             "unidentified": unidentified, "control": control}
 
 
-def resolve(client, now=None) -> dict:
-    """One round: whatever has crossed a horizon gets checkpointed."""
+# How many coins one round may quote, per minute of the round's interval
+# (plan v2, V4: `console.cmd --fomo 1` only together with a cap). Sized on the
+# diary of 2026-09-13..30: a 20-minute round quoted a median 135 coins, p99
+# 559, at most 636 -- under the 1 200 this gives it, so those rounds are never
+# bound. At a round a minute the same load is about seven coins a round and
+# the cap of 60 only spreads a burst, such as a console reopened after hours,
+# over the next minutes; what it holds back is still due inside its window.
+QUOTES_PER_MINUTE = 60
+
+
+class _Deferred(Exception):
+    """This round's quotes are spent; the reading waits for the next round."""
+
+
+def quote_cap(every_seconds) -> int | None:
+    """The quotes one round may make, from its interval in seconds. No
+    interval (the lab tick's own round) is no cap."""
+    if not every_seconds:
+        return None
+    return max(1, int(round(float(every_seconds) / 60.0 * QUOTES_PER_MINUTE)))
+
+
+def resolve(client, now=None, cap: int | None = None) -> dict:
+    """One round: whatever has crossed a horizon gets checkpointed -- at most
+    `cap` coins quoted, the windows that close first first."""
     now = now or _now()
     rows = load()
     signals = [r for r in rows if r.get("type") == "signal" and r.get("key")]
@@ -338,10 +361,14 @@ def resolve(client, now=None) -> dict:
     # of the loop's first live tick. A failed read is remembered as failed for
     # the round too -- asking again a second later is not a second opinion.
     quoted: dict[str, object] = {}
+    deferred = 0
 
     def quote_once(address):
         token = str(address or "").lower()
         if token not in quoted:
+            # A failed read spent a call too, so it counts against the cap.
+            if cap is not None and len(quoted) >= cap:
+                raise _Deferred()
             try:
                 # `_listing`: a 503 raises, so an outage writes nothing and
                 # the hour is read again inside its window. `_quote` answered
@@ -376,9 +403,12 @@ def resolve(client, now=None) -> dict:
         entries += 1
 
     written = []
-    for signal, horizon in fomo.due_checkpoints(signals, done, now=now):
+    for signal, horizon in fomo.by_closing(fomo.due_checkpoints(signals, done, now=now)):
         try:
             quote = quote_once(signal.get("token_address"))
+        except _Deferred:
+            deferred += 1
+            continue
         except Exception as exc:  # noqa: BLE001
             written.append({"key": signal["key"], "horizon": horizon,
                             "error": str(exc)[:200]})
@@ -407,9 +437,14 @@ def resolve(client, now=None) -> dict:
                   controls, studied, now=now,
                   horizons=fomo.CONTROL_HORIZONS_HOURS)]
     readings = []
+    last = datetime.max.replace(tzinfo=timezone.utc)
+    study.sort(key=lambda item: fomo.closes_at(*item[0]) or last)
     for (signal, horizon), group in study:
         try:
             quote = quote_once(signal.get("token_address"))
+        except _Deferred:
+            deferred += 1
+            continue
         except Exception as exc:  # noqa: BLE001
             readings.append({"key": signal["key"], "horizon": horizon,
                              "error": str(exc)[:200]})
@@ -424,7 +459,7 @@ def resolve(client, now=None) -> dict:
             **_depth(quote),
         }))
     return {"checked": len(written), "checkpoints": written,
-            "studied": len(readings), "entries": entries}
+            "studied": len(readings), "entries": entries, "deferred": deferred}
 
 
 def depth(client, now=None, only_missing: bool = True) -> dict:
@@ -468,7 +503,7 @@ def depth(client, now=None, only_missing: bool = True) -> dict:
             "tokens": len(signals)}
 
 
-def tick(client) -> dict:
+def tick(client, cap: int | None = None) -> dict:
     """One round: capture, then resolve whatever is due. Capture first, so a
     signal that just crossed 1h in the same round it was caught still has to
     wait for the next tick -- never checkpointed against its own birth.
@@ -481,7 +516,7 @@ def tick(client) -> dict:
 
     token = CURRENT_TIER.set(SafetyTier.SAFE)
     try:
-        return {"capture": capture(client), "resolve": resolve(client)}
+        return {"capture": capture(client), "resolve": resolve(client, cap=cap)}
     finally:
         CURRENT_TIER.reset(token)
 
@@ -501,7 +536,7 @@ def run(stop, every: float, client=None) -> int:
         try:
             if client is None:
                 client = _client()
-            tick(client)
+            tick(client, cap=quote_cap(every))
         except Exception as exc:  # noqa: BLE001 -- the loop outlives any one round
             print(f"[fomo] round failed: {type(exc).__name__}: {exc}",
                  file=sys.stderr)

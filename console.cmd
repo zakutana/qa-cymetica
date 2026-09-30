@@ -55,12 +55,17 @@ rem Nexus tab -- our bot and our card positions, GET only -- into
 rem state/samples.jsonl. That file is gitignored, so unlike --ask it never
 rem dirties the tree. Pass --sample 0 to turn it off.
 rem
-rem --fomo 20 and --hot 20 go round the memecoin signals and the Hot headlines,
+rem --fomo 1 and --hot 20 go round the memecoin signals and the Hot headlines,
 rem GET only, into their gitignored diaries. While they run, a lab tick leaves
 rem those rounds to the console (it asks /status) -- one writer per diary -- and
 rem does them itself when the console is closed, so nothing is lost overnight.
+rem The memecoin round runs every minute since 2026-10-01 (plan v2, V4): a
+rem signal's first price is read within a minute of the flag instead of up to
+rem twenty, and a round may quote at most 60 coins a minute of its interval
+rem (fomo_watch.quote_cap), so a console reopened after hours spreads its
+rem backlog instead of asking for hundreds at once.
 rem The laboratory's own page is http://127.0.0.1:8787/lab
-%PY% scripts\serve.py --open --ask 15 --sample 10 --fomo 20 --hot 20 %*
+%PY% scripts\serve.py --open --ask 15 --sample 10 --fomo 1 --hot 20 %*
 
 rem Only pause on a failure; a clean Ctrl-C should just close.
 if errorlevel 1 (
