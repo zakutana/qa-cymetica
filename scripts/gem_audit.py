@@ -39,6 +39,8 @@ from pathlib import Path
 REPO_ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(REPO_ROOT))
 
+import httpx  # noqa: E402
+
 from qa import gemaudit as g  # noqa: E402
 from qa.client import build_client, build_source_client, install_client_guard  # noqa: E402
 from qa.config import identities  # noqa: E402
@@ -121,29 +123,46 @@ def read_everything() -> tuple[dict, dict]:
     token = CURRENT_TIER.set(SafetyTier.SAFE)
     inputs: dict = {"sources": {}}
     try:
-        page = cymetica.get(g.APP_PAGE, headers={"Accept": "text/html"})
+        try:
+            page = cymetica.get(g.APP_PAGE, headers={"Accept": "text/html"})
+        except httpx.HTTPError as exc:
+            raise SystemExit(f"{g.APP_PAGE} did not answer ({type(exc).__name__}): no snapshot, no audit")
         if page.status_code != 200:
             raise SystemExit(f"{g.APP_PAGE} answered HTTP {page.status_code}: no snapshot, no audit")
         inputs["snapshot"] = g.parse_snapshot(page.text)
         inputs["page_text"] = page.text  # the tooltips are in the same page: what each figure says it is
 
-        listed = cymetica.get(g.PICKS)
-        picks = (listed.json() or {}).get("picks") if listed.status_code == 200 else None
+        # R07, deep pass of 2026-09-30: a picks or coin read that stalls or
+        # answers something that is not JSON is named under "not read"; it
+        # never takes the rest of the audit down with it.
+        picks, why = None, None
+        try:
+            listed = cymetica.get(g.PICKS)
+            if listed.status_code == 200:
+                picks = (listed.json() or {}).get("picks")
+            why = f"HTTP {listed.status_code}"
+        except httpx.HTTPError as exc:
+            why = type(exc).__name__
+        except ValueError:
+            why = "a body that is not JSON"
         if not picks:
-            errors["picks"] = f"{g.PICKS} answered HTTP {listed.status_code} or no picks"
+            errors["picks"] = f"{g.PICKS}: {why} or no picks"
         else:
             inputs["picks"], inputs["coins"] = picks, {}
             for pick in picks:
                 symbol = pick.get("symbol")
-                one = cymetica.get(g.COIN.format(symbol=symbol))
                 try:
+                    one = cymetica.get(g.COIN.format(symbol=symbol))
                     body = one.json() if one.status_code == 200 else None
+                    said = f"HTTP {one.status_code}"
+                except httpx.HTTPError as exc:
+                    body, said = None, type(exc).__name__
                 except ValueError:
-                    body = None
+                    body, said = None, "a body that is not JSON"
                 if isinstance(body, dict):
                     inputs["coins"][symbol] = body
                 else:
-                    errors[f"coin {symbol}"] = f"HTTP {one.status_code}"
+                    errors[f"coin {symbol}"] = said
     finally:
         CURRENT_TIER.reset(token)
         cymetica.close()

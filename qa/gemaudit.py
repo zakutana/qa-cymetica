@@ -207,11 +207,15 @@ def benchmark_pairs(snap: dict, cg_rows: Iterable[dict]) -> list[Pair]:
 
 
 def benchmark_arithmetic(snap: dict, *, tol: float = 0.005) -> list[dict]:
-    """The benchmark's multiple is its market cap over its run-rate revenue."""
+    """The benchmark's multiple is its market cap over its run-rate revenue.
+
+    A benchmark whose market cap, run-rate or multiple cannot be read is
+    `SnapshotUnreadable`, as a missing multiple is in `upside_breaches`: an
+    unread field is not a broken formula (C06, deep pass of 2026-09-30)."""
     bench = snap.get("bench") or {}
     mcap, rr, mult = num(bench.get("mcap")), num(bench.get("rr")), num(bench.get("mult"))
     if not (mcap and rr and mult):
-        return [{"what": "the benchmark has no market cap, run-rate or multiple to check"}]
+        raise SnapshotUnreadable("the benchmark has no market cap, run-rate or multiple to check")
     expected = mcap / rr
     if abs(expected / mult - 1.0) > tol:
         return [{"what": "bench.mult is not bench.mcap / bench.rr", "mult": mult, "expected": round(expected, 3)}]
@@ -316,6 +320,19 @@ def judge_deviation(summary: dict, total: int, *, min_compared_share: float,
 
 # -- the page against itself ----------------------------------------------------
 
+def shown_cap(snap: dict) -> float | None:
+    """The upside cap: the value most capped rows show. Taking the largest would
+    let one row that shows too much define the cap it is judged against (found by
+    the negative control: a capped row showing 80 beside rows showing 50). One
+    rule for the check and for the report's table (R06, deep pass of 2026-09-30)."""
+    shown = [round(v, 3) for v in (num(a.get("potential")) for a in snap["apps"]
+                                     if a.get("bench_capped")) if v is not None]
+    counts: dict[float, int] = {}
+    for v in shown:
+        counts[v] = counts.get(v, 0) + 1
+    return min(counts, key=lambda v: (-counts[v], v)) if counts else None
+
+
 def upside_breaches(snap: dict, *, rel_tol: float = 0.01,
                     abs_tol: float = 0.005) -> dict:
     """Every app's upside is the benchmark's multiple divided by its own
@@ -327,15 +344,7 @@ def upside_breaches(snap: dict, *, rel_tol: float = 0.01,
     mult = num((snap.get("bench") or {}).get("mult"))
     if not mult or mult <= 0:
         raise SnapshotUnreadable("the snapshot's benchmark has no multiple")
-    # The cap is what most capped rows show. Taking the largest would let one
-    # row that shows too much define the cap it is judged against (found by the
-    # negative control: a capped row showing 80 beside rows showing 50).
-    shown_capped = [round(v, 3) for v in (num(a.get("potential")) for a in snap["apps"]
-                                            if a.get("bench_capped")) if v is not None]
-    counts: dict[float, int] = {}
-    for v in shown_capped:
-        counts[v] = counts.get(v, 0) + 1
-    cap = min(counts, key=lambda v: (-counts[v], v)) if counts else None
+    cap = shown_cap(snap)
     breaches, checked = [], 0
     for app in snap["apps"]:
         ps, raw, shown = num(app.get("ps")), num(app.get("potential_raw")), num(app.get("potential"))
@@ -451,6 +460,17 @@ def derived_identities(snap: dict, coins: dict | None = None) -> list[dict]:
         return _close(ps, mcap / rr, rel=0.01, abs_tol=0.0006), dev(ps, mcap / rr)
     run("ps", "price/revenue = market cap / run-rate revenue", apps, ps_test)
 
+    # C04, deep pass of 2026-09-30: the market cap every P/S and upside stands
+    # on is price x circulating supply. The supply and the price are held to
+    # CoinGecko elsewhere; this holds the product. Within 1.02 % on all 214
+    # comparable rows of 2026-09-30, so 2 % is a breach, not a timing wobble.
+    def mcap_test(a):
+        mcap, price, circ = num(a.get("mcap")), num(a.get("price")), num((a.get("cg") or {}).get("circ"))
+        if not (mcap and price and circ):
+            return None
+        return _close(mcap, price * circ, rel=0.02), dev(mcap, price * circ)
+    run("market cap", "market cap = price x circulating supply", apps, mcap_test)
+
     def earn_test(a):
         e, r, n = num(a.get("emissions30d")), num(a.get("rev30d")), num(a.get("earnings30d"))
         if e is None or r is None or n is None:
@@ -542,13 +562,42 @@ def derived_identities(snap: dict, coins: dict | None = None) -> list[dict]:
     return out
 
 
+# Identities computed on apps: each must read at least half of them before it
+# says anything. The others (themes, chains, earnings, liquidity) run over
+# fewer rows by nature and must read at least one.
+PER_APP_IDENTITIES = ("ps", "market cap", "30x test", "degen gates")
+
+
+def identities_verdict(identities: list[dict], total: int) -> tuple[str, str]:
+    """("passed" | "failed" | "inconclusive", why) over `derived_identities`.
+
+    A figure recomputed on no row at all is unread, never agreement (R02/C05,
+    deep pass of 2026-09-30: themes and chains could pass on zero rows)."""
+    unread = [i["name"] for i in identities
+              if i["checked"] == 0
+              or (i["name"] in PER_APP_IDENTITIES and i["checked"] < 0.5 * total)]
+    if unread:
+        return "inconclusive", (f"too few of the {total} rows carry the inputs for: "
+                                f"{', '.join(unread)}")
+    broken = [i for i in identities if i["breaches"]]
+    if broken:
+        return "failed", "; ".join(
+            f"{i['name']}: {len(i['breaches'])} row(s) disagree with their own inputs "
+            f"({', '.join(map(str, i['breaches'][:4]))})" for i in broken)
+    return "passed", ("; ".join(f"{i['name']} {i['checked']}" for i in identities)
+                      + " rows recomputed, none disagree")
+
+
 def holders_clipped(snap: dict) -> list[dict]:
     """Rows whose 'share of revenue to holders' the page shows as 100 % while
-    DefiLlama's own holders revenue is larger than its total revenue."""
+    DefiLlama's own holders revenue is larger than its total revenue. A row that
+    shows its true share above 100 % is not clipped (R08, deep pass of
+    2026-09-30)."""
     out = []
     for a in snap["apps"]:
         holders, total, share = num(a.get("holders30d")), num(a.get("total30d")), num(a.get("holders_share"))
-        if holders and total and share is not None and holders > total * 1.001:
+        if holders and total and share is not None and abs(share - 1.0) <= 0.001 \
+                and holders > total * 1.001:
             out.append({"row": label(a), "holders30d": holders, "total30d": total, "shown_share": share})
     return out
 
@@ -728,8 +777,11 @@ def _stats(values: list[float]) -> dict:
 
 
 def freshness(snap: dict) -> dict:
-    gen = snap.get("generated_at") or 0
-    hours = lambda ts: (gen - ts) / HOUR if isinstance(ts, (int, float)) else None
+    """Ages against the snapshot's own time. A snapshot with no time of its own
+    has no ages -- unknown, never fresh (R10, deep pass of 2026-09-30)."""
+    gen = snap.get("generated_at")
+    dated = isinstance(gen, (int, float)) and not isinstance(gen, bool)
+    hours = lambda ts: (gen - ts) / HOUR if dated and isinstance(ts, (int, float)) else None
     prices = [h for h in (hours(a.get("market_price_ts")) for a in snap["apps"]) if h is not None]
     supply = [h for h in (hours(a.get("market_supply_as_of_ts")) for a in snap["apps"]) if h is not None]
     sources: dict[str, int] = {}
@@ -737,7 +789,7 @@ def freshness(snap: dict) -> dict:
         sources[str(a.get("market_source"))] = sources.get(str(a.get("market_source")), 0) + 1
     excluded = snap.get("excluded") or {}
     return {"price_age_h": _stats(prices), "supply_age_h": _stats(supply),
-            "supply_older_than_24h": sum(1 for h in supply if h > 24),
+            "supply_older_than_24h": sum(1 for h in supply if h > 24) if dated else None,
             "market_source": sources,
             "market_fetch_failed": excluded.get("market_fetch_failed_count"),
             "market_from_defillama": excluded.get("market_llama_price_count"),
@@ -778,10 +830,9 @@ def upside_table(snap: dict, top: int = 12) -> dict:
                      "if_all_tokens_out": num(a.get("potential_fdv")), "mcap": mcap,
                      "float_pct": round(100 * mcap / fdv, 1) if mcap and fdv else None,
                      "picked": bool(a.get("degen_ok"))})
-    return {"at_cap": len(capped), "cap": max((num(a.get("potential")) or 0) for a in capped) if capped else None,
-            "raw_range_at_cap": ([round(min(num(a.get("potential_raw")) for a in capped), 1),
-                                  round(max(num(a.get("potential_raw")) for a in capped), 1)]
-                                 if capped else None),
+    raws = [v for v in (num(a.get("potential_raw")) for a in capped) if v is not None]
+    return {"at_cap": len(capped), "cap": shown_cap(snap),
+            "raw_range_at_cap": [round(min(raws), 1), round(max(raws), 1)] if raws else None,
             "top_vetted": rows}
 
 
@@ -800,7 +851,12 @@ def picks_table(snap: dict, coins: dict[str, dict] | None = None) -> list[dict]:
         liq, level = a.get("liq") or {}, a.get("dlevel") or {}
         mcap, fdv = num(a.get("mcap")), num(a.get("fdv"))
         impact = num(liq.get("impact_pct"))
+        # The coin route answers by ticker, and two apps can share one (EDGE,
+        # UP): its record counts only when it is this coin (R05, deep pass of
+        # 2026-09-30).
         coin = (coins or {}).get(a.get("symbol")) or {}
+        if coin and str(coin.get("name") or "").casefold() != str(a.get("name") or "").casefold():
+            coin = {}
         rows.append({
             "row": label(a), "upside": num(a.get("potential")), "if_all_out": num(a.get("potential_fdv")),
             "mcap": mcap, "float_pct": round(100 * mcap / fdv, 1) if mcap and fdv else None,
@@ -920,7 +976,7 @@ def build_report(snap: dict, *, sources: dict | None = None, picks_api: list | N
     now = time.time() if now is None else now
     report = {
         "at": now, "snapshot_generated_at": snap.get("generated_at"),
-        "snapshot_age_h": round(age_hours(snap, now) or 0.0, 2),
+        "snapshot_age_h": (None if age_hours(snap, now) is None else round(age_hours(snap, now), 2)),
         "freshness": freshness(snap), "coverage": coverage(snap),
         "upside": upside_table(snap), "upside_formula": upside_breaches(snap),
         "picks": picks_table(snap, coins_api), "tickers_shared": duplicate_tickers(snap),
@@ -990,7 +1046,8 @@ def render_markdown(report: dict) -> str:
     the column names -- the explanation belongs in the narrative report."""
     out = ["# Gem Screener audit, generated", ""]
     fr = report["freshness"]
-    out += [f"Snapshot age {report['snapshot_age_h']} h. Price age median {fr['price_age_h'].get('median')} h, "
+    age = report["snapshot_age_h"]
+    out += [f"Snapshot age {'unknown' if age is None else f'{age} h'}. Price age median {fr['price_age_h'].get('median')} h, "
             f"supply age median {fr['supply_age_h'].get('median')} h "
             f"({fr['supply_older_than_24h']} rows over 24 h). "
             f"Market source: {fr['market_source']}. Market fetch failed: {fr['market_fetch_failed']}, "

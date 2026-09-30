@@ -105,7 +105,12 @@ def test_the_upside_is_the_benchmarks_multiple_over_the_coins_own(rest_anon):
     total = len(snap["apps"])
     if said["checked"] < 0.5 * total:
         raise Inconclusive(f"only {said['checked']} of {total} rows carry the fields the formula needs")
-    bench = g.benchmark_arithmetic(snap)
+    try:
+        # C06, deep pass of 2026-09-30: an unreadable benchmark field is not a
+        # broken formula -- the same colour as a missing multiple above.
+        bench = g.benchmark_arithmetic(snap)
+    except g.SnapshotUnreadable as exc:
+        raise Inconclusive(str(exc))
     breaches = said["breaches"] + bench
     conclude(Measurement(
         verdict="failed" if breaches else "passed",
@@ -122,26 +127,25 @@ def test_the_upside_is_the_benchmarks_multiple_over_the_coins_own(rest_anon):
 
 @qa(component="rest.gem_screener", tier=SafetyTier.SAFE, surface="rest")
 def test_every_derived_figure_follows_its_published_definition(rest_anon):
-    """Price/revenue, earnings after emissions, the 30x test, slippage, the Degen
-    gates, a theme's edge over BTC and a chain's upside are each a function of
+    """Price/revenue, the market cap (price x circulating supply), earnings after
+    emissions, the 30x test, slippage, the Degen gates, a theme's edge over BTC
+    and a chain's upside are each a function of
     other figures the snapshot publishes. Recomputed on every row that carries
     the inputs: a row where they disagree is a breach. (The level a coin opens
     with is held by the audit script, which reads one coin route per pick.)"""
     snap = read_snapshot(rest_anon)
     identities = g.derived_identities(snap)
     total = len(snap["apps"])
-    thin = [i["name"] for i in identities if i["name"] in ("ps", "30x test", "degen gates")
-            and i["checked"] < 0.5 * total]
-    if thin:
-        raise Inconclusive(f"too few of the {total} rows carry the inputs for: {', '.join(thin)}")
+    # R02/C05, deep pass of 2026-09-30: every figure must have been recomputed
+    # on some rows -- a figure read on none is unread, never agreement.
+    verdict, why = g.identities_verdict(identities, total)
+    if verdict == "inconclusive":
+        raise Inconclusive(why)
     breaches = [{"figure": i["name"], "rows": i["breaches"][:8], "count": len(i["breaches"])}
                 for i in identities if i["breaches"]]
     conclude(Measurement(
-        verdict="failed" if breaches else "passed",
-        reason=("; ".join(f"{b['figure']}: {b['count']} row(s) disagree with their own inputs ({', '.join(map(str, b['rows'][:4]))})"
-                          for b in breaches)
-                if breaches else
-                "; ".join(f"{i['name']} {i['checked']}" for i in identities) + " rows recomputed, none disagree"),
+        verdict=verdict,
+        reason=why,
         left={"breaches": sum(b["count"] for b in breaches), "rows_read": sum(i["checked"] for i in identities)},
         right={"breaches": 0},
         population={"breaches": breaches, "identities": [{k: i[k] for k in ("name", "checked", "max_dev")}

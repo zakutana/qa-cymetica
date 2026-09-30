@@ -107,6 +107,23 @@ def _the_upside_check_sees_a_wrong_multiple_and_a_wrong_cap():
     with pytest.raises(g.SnapshotUnreadable):
         g.upside_breaches({"bench": {}, "apps": [_app("a#1", "AAA", 2.0)]})
 
+    # C06, deep pass of 2026-09-30 (3/3): a benchmark whose market cap or
+    # run-rate cannot be read is an unreadable snapshot, the same colour as a
+    # missing multiple -- never a breach of the formula.
+    with pytest.raises(g.SnapshotUnreadable):
+        g.benchmark_arithmetic({"bench": {"mult": 30.0, "mcap": 1e9}})
+    assert g.benchmark_arithmetic({"bench": {"mult": 10.0, "mcap": 1e9, "rr": 1e8}}) == []
+    assert g.benchmark_arithmetic({"bench": {"mult": 12.0, "mcap": 1e9, "rr": 1e8}}), (
+        "a benchmark multiple that is not its market cap over its run-rate passed")
+
+    # R06 (3 of 3... 2 of 3): the report's table survives a capped row without a
+    # raw value and states the cap the check judges by, the most common shown.
+    table = g.upside_table(_snapshot([_app("c#1", "CCC", 0.3), _app("c#2", "DDD", 0.2, potential_raw=None)]))
+    assert table["raw_range_at_cap"] == [100.0, 100.0], table
+    odd = _snapshot([_app("c#1", "CCC", 0.3), _app("c#3", "EEE", 0.25),
+                     _app("c#4", "FFF", 0.2, potential=80.0)])
+    assert g.upside_table(odd)["cap"] == 50.0 == g.upside_breaches(odd)["cap"], g.upside_table(odd)
+
 
 def _a_pick_that_opens_another_coin_is_seen_and_a_shared_ticker_is_named():
     """2026-09-30: the Degen pick "Definitive" (EDGE) linked to `?coin=EDGE` and
@@ -309,6 +326,29 @@ def _the_derived_figures_are_held_to_their_definitions():
     # a figure shown as 100 % to holders while their holders revenue exceeds the total
     over = _app("a#2", "OVR", 1.0, holders30d=150.0, total30d=100.0, holders_share=1.0)
     assert [c["row"] for c in g.holders_clipped(_snapshot([over]))] == ["OVR(a#2)"]
+    # R08, deep pass of 2026-09-30: "clipped" is the SHOWN share at 100 %. A page
+    # that shows the true 120 % is not clipping anything.
+    shown = _app("a#4", "UNC", 1.0, holders30d=120.0, total30d=100.0, holders_share=1.2)
+    assert g.holders_clipped(_snapshot([shown])) == [], "a share shown as 120 % was called clipped to 100 %"
+
+    # C04, deep pass of 2026-09-30 (3/3): the market cap is price x circulating
+    # supply. On 2026-09-30 the page held it within 1.02 % on all 214 rows; the
+    # ranking stands on it (ps = mcap / run-rate), and nothing compared it.
+    assert breaches([_app("m#1", "MMM", 1.0)], "market cap")["breaches"] == []
+    assert breaches([_app("m#1", "MMM", 1.0, mcap=5000.0)], "market cap")["breaches"] == ["MMM"], (
+        "a market cap five times price x supply passed")
+
+    # R02/C05 (3/3): a figure recomputed on no row at all is unread, never agreement.
+    ids = [{"name": "ps", "checked": 10, "breaches": [], "max_dev": 0.0},
+           {"name": "themes", "checked": 0, "breaches": [], "max_dev": 0.0}]
+    verdict, why = g.identities_verdict(ids, total=10)
+    assert verdict == "inconclusive" and "themes" in why, (verdict, why)
+    ids[1]["checked"] = 12
+    assert g.identities_verdict(ids, total=10)[0] == "passed"
+    ids[1]["breaches"] = ["th"]
+    assert g.identities_verdict(ids, total=10)[0] == "failed"
+    ids[0]["checked"] = 4
+    assert g.identities_verdict(ids, total=10)[0] == "inconclusive", "a P/S read on 4 of 10 rows was judged"
 
     # recomputing from the raw daily series
     import datetime as dt
@@ -386,8 +426,49 @@ def test_the_source_client_carries_the_whole_guard_and_none_of_their_credentials
         live.close()
 
 
+def _a_failed_cymetica_read_is_named_not_fatal(monkeypatch):
+    """R07, deep pass of 2026-09-30 (3/3): a picks or coin read that answers a
+    body that is not JSON, or does not answer, leaves its section out and names
+    it -- the tick still writes its report."""
+    import importlib.util
+    import json as _json
+    from pathlib import Path
+
+    import httpx
+
+    from qa.client import build_mock_client
+
+    spec = importlib.util.spec_from_file_location(
+        "gem_audit_under_test", Path(__file__).resolve().parents[2] / "scripts" / "gem_audit.py")
+    mod = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(mod)
+    snap = _snapshot([_app("a#1", "AAA", 2.0)])
+    page = f'<script id="snapshot-data" type="application/json">{_json.dumps(snap)}</script>'
+
+    def cymetica(request):
+        if "/gem-screener/app" in str(request.url):
+            return httpx.Response(200, text=page)
+        return httpx.Response(200, text="<html>not json</html>")
+
+    monkeypatch.setattr(mod, "build_client", lambda *a, **k: build_mock_client(cymetica, timeout=5.0))
+    monkeypatch.setattr(mod, "build_source_client",
+                        lambda *a, **k: build_mock_client(lambda r: httpx.Response(503, json={}), timeout=5.0))
+    inputs, errors = mod.read_everything()
+    assert inputs["snapshot"]["apps"][0]["key"] == "a#1"
+    assert "picks" in errors and "picks" not in inputs, errors
+
+    def stalled(request):
+        if "/gem-screener/app" in str(request.url):
+            return httpx.Response(200, text=page)
+        raise httpx.ReadTimeout("stalled", request=request)
+
+    monkeypatch.setattr(mod, "build_client", lambda *a, **k: build_mock_client(stalled, timeout=5.0))
+    inputs, errors = mod.read_everything()
+    assert "picks" in errors, errors
+
+
 @qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
-def test_the_audit_builds_a_report_from_a_snapshot_alone():
+def test_the_audit_builds_a_report_from_a_snapshot_alone(monkeypatch):
     """The script must still produce the tables when a third-party source is down
     -- every section that needs one is left out, none invented -- and the lines
     /lab shows must be short."""
@@ -410,3 +491,19 @@ def test_the_audit_builds_a_report_from_a_snapshot_alone():
     cg = [{"id": "aaa", "circulating_supply": 1000.0, "current_price": 1.0}]
     with_source = g.build_report(snap, sources={"coingecko": cg}, now=1_000_000)
     assert with_source["sources"]["supply_vs_coingecko"]["n"] == 1
+
+    # R05 (3/3): a pick's coin record is used only when it IS that coin -- EDGE
+    # and UP are two apps each, and the symbol route answers one of them.
+    coins = {"AAA": {"name": "Aaa", "trade_url": "https://x/aaa"},
+             "BBB": {"name": "Some Other Token", "trade_url": "https://x/other"}}
+    assert [r["tradeable_here"] for r in g.picks_table(snap, coins)] == [True, None], g.picks_table(snap, coins)
+
+    # R10 (3/3): a snapshot that carries no time of its own has no age -- unknown,
+    # never "fresh".
+    undated = _snapshot([_app("u#1", "UUU", 1.0, market_price_ts=990_000, market_supply_as_of_ts=900_000)])
+    undated.pop("generated_at")
+    fresh = g.freshness(undated)
+    assert fresh["supply_older_than_24h"] is None and fresh["price_age_h"] == {"n": 0}, fresh
+    assert g.build_report(undated, now=1_000_000)["snapshot_age_h"] is None
+
+    _a_failed_cymetica_read_is_named_not_fatal(monkeypatch)

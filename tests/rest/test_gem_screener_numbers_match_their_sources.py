@@ -119,15 +119,29 @@ def _verdict(parts: list[tuple[str, str, str]]) -> tuple[str, str]:
 
 @qa(component="rest.gem_screener", tier=SafetyTier.SAFE, surface="rest")
 def test_the_market_caps_rest_on_the_supply_and_price_coingecko_reports(rest_anon, evidence_store):
-    """Market cap is price times circulating supply (the page's own arithmetic
-    holds within 1 % on every row), so it is checked as its two parts against
-    CoinGecko, plus the benchmark's market cap, which every upside is divided by."""
+    """Market cap is price times circulating supply, so it is checked as its two
+    parts against CoinGecko, plus the benchmark's market cap, which every upside
+    is divided by -- and the product itself: each row's market cap must be its
+    own price times its own supply within 2 % (1.02 % at most on 2026-09-30).
+    Without that last part a market cap built from another supply passed while
+    its price and supply both matched (C04, deep pass of 2026-09-30)."""
     snap = read_snapshot(rest_anon)
     rows = from_source(evidence_store, lambda get: g.fetch_coingecko(
         get, [a.get("gecko_id") for a in snap["apps"]]))
     total = len(snap["apps"])
 
     parts = []
+    (product,) = [i for i in g.derived_identities(snap) if i["name"] == "market cap"]
+    if product["checked"] < 0.5 * total:
+        parts.append(("market cap = price x supply", "inconclusive",
+                      f"only {product['checked']} of {total} rows carry market cap, price and supply"))
+    elif product["breaches"]:
+        parts.append(("market cap = price x supply", "failed",
+                      f"{len(product['breaches'])} of {product['checked']} rows are not their own price x "
+                      f"supply within 2 %: {', '.join(map(str, product['breaches'][:5]))}"))
+    else:
+        parts.append(("market cap = price x supply", "passed",
+                      f"all {product['checked']} rows within 2 % (largest {product['max_dev']:.2%})"))
     for name, pairs, (tail, max_median, max_tail, min_share) in (
             ("supply", g.supply_pairs(snap, rows), SUPPLY), ("price", g.price_pairs(snap, rows), PRICE)):
         summary = g.deviation_summary(pairs, tail=tail)
