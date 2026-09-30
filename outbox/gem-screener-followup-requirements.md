@@ -31,6 +31,8 @@ Source: the operator's complaints on the live site after ET-28378, 2026-09-30, e
 22. Top Picks fund line: remove "CyMetica-managed" (it stands twice on one line).
 23. The price-tag lines on Apps ("Hyperliquid is priced at 33x its yearly revenue...") and Chains become a bigger, dense stamp with the explanation in a tooltip.
 
+24. Top Picks, the chart "Revenue over 12 months, start = 100. Top 10 by upside": on a wide screen (about 2000 px) there is a large empty gap between the end of the lines and the legend on the right. The chart uses the width, or the legend sits next to it.
+
 ## Before it is filed
 
 - The vendor's answer on what a fail verdict does may move lines 1 to 8: if a fail note is worked on, they need not be repeated.
