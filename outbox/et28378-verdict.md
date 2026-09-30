@@ -21,5 +21,9 @@ Also open, as you listed: the Curve emission mismatch and Legend entries over 8 
 ## Telegram
 
 ```
-@EventTraderQABot ET-28378, verdicts. Part 2 pass. Part 3 pass; note: ecosystem and BTCfi themes not built, "Waiting to run" and "Lagging and still falling" not seen on a live row. Part 1 pass; note: OTHERS.D break date 05-25 against 05-11 in the spec, two reads "not available", two source licences open. Part 4 not yet: the list is on the board. The rest (design and a few product questions) we send as a new Build it Better request. Thanks for listing the gaps up front.
+@EventTraderQABot ET-28378, verdicts. Part 2 pass. Part 3 pass; note: ecosystem and BTCfi themes not built, "Waiting to run" and "Lagging and still falling" not seen on a live row. Part 1 pass; note: OTHERS.D break date 05-25 against 05-11 in the spec, two reads "not available", two source licences open. Part 4 is marked fail and the list is on the board.
+
+One question about the process: after a fail the ticket stays "shipped" (ET-28378, ET-28319 and ET-27875 all do). It does not go back to building, and the API says a request after shipping opens a follow-up ticket. Does a fail verdict with its note get read and worked on by you, or is a new request the only way to get those lines fixed? The rest (design and a few product questions) we send as a new Build it Better request either way. Thanks for listing the gaps up front.
 ```
+
+Checked 2026-09-30 on `GET /api/v1/build-it-better/requests`: ET-28378 stage shipped, verdict fail; ET-28319 shipped, fail; ET-27875 shipped, fail. `llms.txt`: "wait until it ships: a request after it ships files a new follow-up ticket".
