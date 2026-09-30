@@ -1100,12 +1100,16 @@ def test_a_requirement_split_into_numbered_items_is_not_a_dropped_one():
     assert judge(logged(two, short_spec, change=cut_change))["state"] == "unread", (
         "a BB-CHANGE the log may have cut was checked against the amendments")
 
+    # The check that reports the cut itself (#139), refuted the same way.
+    _a_log_body_is_called_cut_only_when_the_record_holds_the_rest()
 
-@qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
-def test_a_log_body_is_called_cut_only_when_the_record_holds_the_rest():
+
+def _a_log_body_is_called_cut_only_when_the_record_holds_the_rest():
     """test_the_message_log_carries_each_message_whole, refuted before it is
     trusted: a whole copy, a re-rendered spec_text (ET-26608) and a body that
-    merely sits at 8000 characters are not cuts; a strict prefix is."""
+    merely sits at 8000 characters are not cuts; a strict prefix is. Called at
+    the end of test_a_requirement_split_into_numbered_items_is_not_a_dropped_one:
+    tests/meta grows only by replacement, and this is the same check family."""
     from tests.rest.test_build_it_better_log_keeps_whole_bodies import cuts
 
     def record(logged_spec, spec_text, request="App: Do it.", improvements="Do it."):

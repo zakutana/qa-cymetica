@@ -335,6 +335,67 @@ def build_fingerprint_client(
     return httpx.Client(**kwargs)
 
 
+class _Uncounted(httpx.BaseTransport):
+    """Carries a request without `SafetyTransport` writing it to the timings
+    diary. That diary is evidence about THEIR host -- `scripts/timeouts.py` reads
+    every row as theirs -- and a CoinGecko timeout in it would be blamed on them.
+    `SafetyTransport` only times what reaches an `httpx.HTTPTransport`, so
+    wrapping it is enough; nothing else about the request changes."""
+
+    def __init__(self, inner: httpx.BaseTransport):
+        self.inner = inner
+
+    def handle_request(self, request: httpx.Request) -> httpx.Response:
+        return self.inner.handle_request(request)
+
+    def close(self) -> None:
+        self.inner.close()
+
+
+def build_source_client(
+    evidence=None,
+    timeout: float = 60.0,
+    inner: httpx.BaseTransport | None = None,
+) -> httpx.Client:
+    """The client the Gem Screener audit reads public third-party sources with:
+    CoinGecko, DefiLlama and DexScreener, the places their numbers come from.
+
+    It exists so a check can ask "is this number what the source says?" without
+    building its own client, the thing the construction ban refuses. Every layer
+    of the guard is underneath it, as under `build_client`: no tier in scope is
+    refused, and a write to any host is refused because no rule declares one.
+
+    Three arguments are deliberate:
+
+    * **`budget=None`.** `RateLimitBudget` reads `x-ratelimit-*` from every
+      response and stops the whole session at 60 % of a quota. A third party's
+      rate-limit headers are not Cymetica's quota, and one of them tripping it
+      would turn a run partial and cost it level V -- the reason
+      `build_fingerprint_client` has no budget either.
+    * **No credential.** These are anonymous reads of public APIs. An identity's
+      key must never be sent to a host that is not theirs.
+    * **Not timed.** See `_Uncounted`.
+
+    `evidence` is kept: the body of what a source said is what backs a finding
+    made from it. `inner` is for the negative controls.
+    """
+    transport = SafetyTransport(
+        inner=_Uncounted(inner if inner is not None else httpx.HTTPTransport(retries=0)),
+        registry=EndpointRegistry.load(),
+        evidence=evidence,
+        budget=None,
+    )
+    kwargs = dict(
+        headers={"User-Agent": USER_AGENT, "Accept": "application/json"},
+        transport=transport,
+        timeout=timeout,
+        follow_redirects=False,
+    )
+    if _GUARD_INSTALLED:
+        kwargs["_qa_factory"] = _FACTORY_SENTINEL
+    return httpx.Client(**kwargs)
+
+
 class McpError(RuntimeError):
     """A JSON-RPC or tool-level error. Carries the raw payload for evidence."""
 

@@ -265,7 +265,15 @@ CEILINGS = {
     # 2026-09-28, B03/R01): a pair switch still paid a gain outside
     # stop_study/compare, and an exit earned before the switch was zeroed
     # along with it.
-    "meta_tests": 807,
+    # 807 -> 811 for the Gem Screener audit, the four tests in
+    # test_pipeline_gem_audit.py (2026-09-30): the audit's judgements refuted on
+    # data built to be wrong (a column judged as a population, a wrong upside
+    # formula / a pick that opens another coin / a wrong altseason composite),
+    # the source client that reads CoinGecko, DefiLlama and DexScreener (a new
+    # way to reach a host that is not theirs, so its guard is shown), and the
+    # report built from a snapshot alone. Seven were written and merged to four;
+    # the BB log-cut control went into the existing numbered-lines test.
+    "meta_tests": 811,
 }
 
 BASH_SCRIPT = re.compile(r"python\s+scripts[/\\]([a-z_]+)\.py")

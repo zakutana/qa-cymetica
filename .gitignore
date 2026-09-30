@@ -97,6 +97,12 @@ state/lab.jsonl
 # their reason, and so the committed console hashes nothing that is not in git.
 state/lab/
 
+# The Gem Screener audit (scripts/gem_audit.py, a department): its diary and its
+# report. Written by a tick while a sweep may be in flight, so tracked it would
+# cost the run its level V; `keep.py snapshot` copies the diary into audits/.
+state/gem_audit.jsonl
+state/gem_audit/
+
 # Where the loop's last tick stopped: the search queue and the clocks. Rewritten
 # every twenty minutes while a /loop runs, and rebuilt from the diaries if it is
 # lost -- a cache of the walk, not a record of anything.
