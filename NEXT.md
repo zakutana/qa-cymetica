@@ -48,7 +48,7 @@ nikdy nebylo další na řadě.
 - [x] 2026-09-22  Arena: čtení ceny podílu BLUE/RED pro verdikt (`series_of` dnes vrací mezeru). NEX-0076: podíl se nevyplácí, má cenu na CLOB 0,01–1 $; zdroj `get_arena_orderbook` (nejdřív do `components.yaml`) nebo `GET /api/v1/arena/market`. (hotovo 2026-09-28, da3d540e)
 - [ ] 2026-09-21  ET-26036: čekáme na obrazcovou TA (REPLY-0042 ji slibuje; verdikt zůstává fail, MSG-0038). Až ohlásí hotovo: definice obrazců, kombinace s RSI/MACD, backtest (základ, po aktivech, 90% verze), vykreslení v grafu. Verdikt až s operátorem.
 
-- [ ] 2026-09-21  Laborka: verdikty STR-0006/0007 (kritérium naše výchozí, ne jeho TP/SL); při 6 uzavřených verdiktech `lab.py grade` -- předpovídá brána?
+- [x] 2026-09-21  Laborka: verdikty STR-0006/0007 (kritérium naše výchozí, ne jeho TP/SL); při 6 uzavřených verdiktech `lab.py grade` -- předpovídá brána? (obě vyvrácené; grade: řazení podle Sharpe nepředpovídá nic, obě poloviny 0 %; LAB-0028; hotovo 2026-09-30)
 - [x] 2026-09-28  Hot blok v `lab.py brief`: kolik vstupů projde NEX-0055/0057 za sledované hodiny, a při „skoro nic" číslo pro Nexuse (hotovo 2026-09-28, f1439d97)
 
 - [x] 2026-09-23  Laborka: Nexusovy úrovně u fondu a bota se nikam nezapíšou. STR-0035 (AIB-MOLECULAR, jeho stop −6 %) a STR-0041 (AIB-BIOSCIENCES, +8 % / −6 %) mají v plánu `tp`/`sl` null, protože launch je nečte a `rooms.py plan --leg` umí jen kartu (CARD:SIDE:SHARE). Test napřed: `plan` přijme i `fund:SYMBOL` a `bot:ID`, pak ručně doplnit oba plány. (hotovo 2026-09-23)
