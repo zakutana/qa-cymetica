@@ -86,8 +86,19 @@ def test_every_real_request_is_timed_and_one_command_lists_the_bad_ones(
     spec = importlib.util.spec_from_file_location("timeouts_mod", REPO / "scripts" / "timeouts.py")
     mod = importlib.util.module_from_spec(spec)
     spec.loader.exec_module(mod)
+    # B05, deep pass of 2026-09-30 (3/3): and a slow answer is listed while a
+    # fast one is not -- the list goes to Cymetica as "the minute of each
+    # timeout", so a healthy request in it is a false claim.
+    with (tmp_path / "timings.jsonl").open("a", encoding="utf-8") as fh:
+        fh.write(json.dumps({"at": "2026-09-30T00:00:00+00:00", "method": "GET",
+                             "path": "/slow-page", "status": 200, "error": None,
+                             "ms": 12000}) + "\n")
     listed = mod.collect(since="2026-01-01", slow_s=10.0)
     assert [row[1].split()[0] for row in listed][:1] == ["sampler"], listed
     assert any("/openapi-public.json" in row[1] and "ReadTimeout" in row[2]
                for row in listed), listed
+    assert any("/slow-page" in row[1] and "12.0 s" in row[2] for row in listed), (
+        "an answer of 12 s was not listed as slow", listed)
+    assert not any("/llms.txt" in row[1] for row in listed), (
+        "a fast 200 was listed among the timeouts and slow answers", listed)
     assert listed == sorted(listed), "not in time order"
