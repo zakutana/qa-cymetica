@@ -24,7 +24,10 @@ WHAT IS READ. The public board, `GET /api/v1/build-it-better/requests`, and
 each request's own record, `GET .../requests/{ticket}` -- the REST twin of
 the MCP read tool `bb_get_request`, "Read-only, no auth". From the record's
 `messages` log: the BB-REQUEST body (minus the "{app_name}: " prefix the
-product puts in front of it), every BB-CHANGE, and the LATEST BB-SPEC. The
+product puts in front of it), every BB-CHANGE, and the LATEST BB-SPEC -- or,
+where the log cut that copy at 8000 characters, the record's `spec_text` if
+it continues the cut copy word for word (ET-27671, 2026-09-30). Any other body
+at that length is never compared. The
 request text is taken from the message rather than the `improvements` field
 because the field is the thing their old writer appended BB-CHANGE text to.
 
@@ -45,6 +48,8 @@ WHAT IT ASSERTS, per request in that population:
      which does not end a sentence after e.g./i.e./etc., so an "e.g." cut
      still fails). A sentence cut at its semicolons into one item per
      clause is carried too: every word survives (ET-26776, 2026-09-25).
+     A requester's own list label ("1. ", "2) ") is not a word of the
+     line: their writer numbers the items itself (ET-27671, 2026-09-30).
      The request's "{name}: " prefix is stripped under the record's
      `app_name` or the name the spec header carries, since a BB-CHANGE can
      rename the request after it was filed (ET-26608).
@@ -159,18 +164,35 @@ def spec_parts(spec: str) -> tuple[list[str], str]:
     return items, _norm(" ".join(amendments))
 
 
+# A requester's own list label at the start of a line: "1. " or "12) ".
+# Their writer numbers every item itself, so the label is replaced by the
+# spec's number and every word after it survives -- 27 lines of ET-27671 and 4
+# of ET-28378 were called lost on 2026-09-30 for that alone. One to three
+# digits followed by "." or ")" and a space: "2026 roadmap" keeps its number.
+LIST_LABEL = re.compile(r"^\d{1,3}[.)]\s+")
+
+
+def _unlabelled(line: str) -> str:
+    return LIST_LABEL.sub("", line, count=1)
+
+
 def lines_lost(request: str, items: list[str]) -> list[str]:
-    """Request lines that are not carried as items, in REPLY-0021's shapes."""
+    """Request lines that are not carried as items, in REPLY-0021's shapes.
+
+    A line is compared with and without the requester's own list label, and
+    reported as the requester wrote it.
+    """
     have = set(items)
     lines = [_norm(line) for line in lines_of(request)]
     if len(lines) > 1:
         # Several lines ARE the list: one line, one item, never re-split.
-        return [line for line in lines if line not in have]
+        return [line for line in lines
+                if line not in have and _unlabelled(line) not in have]
     lost = []
     for line in lines:
-        if line in have:
+        if line in have or _unlabelled(line) in have:
             continue
-        pieces = [_norm(p) for p in sentences_of(line)]
+        pieces = [_norm(p) for p in sentences_of(_unlabelled(line))]
         if all(_carried(p, have) for p in pieces):
             continue
         lost.append(line)
@@ -191,8 +213,29 @@ def _carried(sentence: str, have: set[str]) -> bool:
     return len(clauses) > 1 and all(c and c in have for c in clauses)
 
 
+# The message log stores at most this many characters of a body and cuts the
+# rest without a marker: ET-27671's two BB-SPEC copies and two of ET-26924's
+# end mid-word at exactly 8000 (2026-09-30), while the record's `spec_text`
+# held the whole spec. A body of exactly this length may be cut, so it is
+# never compared either way (rule 8).
+LOG_CAP = 8000
+
+
+def _may_be_cut(message: dict) -> bool:
+    return len(str(message.get("body") or "")) >= LOG_CAP
+
+
 def judge(record: dict) -> dict:
-    """One request's reading: lost lines, missing changes, or why unread."""
+    """One request's reading: lost lines, missing changes, or why unread.
+
+    The spec compared is the latest BB-SPEC in the log: the text the
+    requester accepted. The record's `spec_text` stands in only where the log
+    cut that copy at LOG_CAP and `spec_text` continues it word for word --
+    it is re-rendered under the CURRENT app name, and on ET-26608 that turned
+    the requester's own amendment into 'Rename ... from "Gem Screener" to "Gem
+    Screener"' (2026-09-30), so it is not the accepted text wherever it
+    differs from the log.
+    """
     messages = [m for m in (record.get("messages") or []) if isinstance(m, dict)]
     messages.sort(key=lambda m: str(m.get("at") or ""))
     asked = [m for m in messages if m.get("kind") == "BB-REQUEST"]
@@ -202,16 +245,30 @@ def judge(record: dict) -> dict:
     if not specs:
         return {"state": "unspecced"}
     latest = specs[-1]
-    request = request_text(asked[0].get("body"),
-                           str(record.get("app_name") or ""),
-                           spec_name(specs[0].get("body")),
-                           spec_name(latest.get("body")))
-    items, amended = spec_parts(latest.get("body"))
-    if not items:
-        return {"state": "unread", "why": "its latest BB-SPEC has no numbered item"}
+    spec = str(latest.get("body") or "")
+    if _may_be_cut(latest):
+        whole = record.get("spec_text")
+        if not (isinstance(whole, str) and len(whole) > len(spec)
+                and whole.startswith(spec)):
+            return {"state": "unread",
+                    "why": f"its logged BB-SPEC is at the log's {LOG_CAP}-"
+                           f"character cap and spec_text does not continue it"}
+        spec = whole
     changes = [m for m in messages if m.get("kind") == "BB-CHANGE"]
     due = [m for m in changes if str(m.get("at") or "") < str(latest.get("at") or "")]
     pending = len(changes) - len(due)
+    if any(_may_be_cut(m) for m in [asked[0], *due]):
+        return {"state": "unread",
+                "why": f"its request or a BB-CHANGE is at the log's "
+                       f"{LOG_CAP}-character cap"}
+    request = request_text(asked[0].get("body"),
+                           str(record.get("app_name") or ""),
+                           spec_name(specs[0].get("body")),
+                           spec_name(latest.get("body")),
+                           spec_name(spec))
+    items, amended = spec_parts(spec)
+    if not items:
+        return {"state": "unread", "why": "its latest BB-SPEC has no numbered item"}
     missing = [_norm(m.get("body")) for m in due
                if _norm(m.get("body")) and _norm(m.get("body")) not in amended]
     # Since 2026-09-24 (ET-26924) the writer leaves withdrawn and repeated
@@ -219,7 +276,7 @@ def judge(record: dict) -> dict:
     # accounting, not a loss, but only while the count covers what is
     # missing and never for the newest change, which nothing can have
     # withdrawn.
-    said = WITHDRAWN.search(str(latest.get("body") or ""))
+    said = WITHDRAWN.search(spec)
     newest = _norm(due[-1].get("body")) if due else ""
     older = [c for c in missing if c != newest]
     if said and len(older) <= int(said.group(1)):

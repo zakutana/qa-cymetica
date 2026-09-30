@@ -1009,6 +1009,97 @@ def test_a_requirement_split_into_numbered_items_is_not_a_dropped_one():
     assert len(judge(record("", ["third change"]))["changes_missing"]) == 2, (
         "with no footer a missing change is a dropped change again")
 
+    # 2026-09-30: the check called 27 lines of ET-27671 and 4 of ET-28378
+    # "lost" and both specs held every one of them. A request that numbers its
+    # own lines ("1. Audience. ...") comes back as spec item "N. Audience. ...":
+    # their writer numbers the items itself and the requester's marker goes
+    # with it, the words all stay. The marker is a list label, not a
+    # requirement. What is still a loss: a line that is gone, a line whose
+    # words changed, a cut, and a number that is part of the text ("2026
+    # roadmap").
+    def numbered(request, items):
+        spec = "BB-SPEC for App\n" + "".join(
+            f"  {i}. {t}\n" for i, t in enumerate(items, 1))
+        return {"app_name": "App", "messages": [
+            {"kind": "BB-REQUEST", "at": "2026-09-30T10:00:00+00:00",
+             "body": "App: " + request},
+            {"kind": "BB-SPEC", "at": "2026-09-30T10:09:00+00:00", "body": spec}]}
+
+    intro = "This request has two parts."
+    request = f"{intro}\n1. Audience. Degens hunting gems.\n2) First load. Under 500 kB."
+    whole = [intro, "Audience. Degens hunting gems.", "First load. Under 500 kB."]
+    assert judge(numbered(request, whole))["lost"] == [], (
+        "a requester's own list numbers, the spec renumbers, and every word "
+        "survived: that is not a lost line")
+    assert judge(numbered(request, whole[:2]))["lost"] == [
+        "2) First load. Under 500 kB."], "a numbered line that is gone passed"
+    changed = [intro, "Audience. Degens hunting coins.", whole[2]]
+    assert judge(numbered(request, changed))["lost"] == [
+        "1. Audience. Degens hunting gems."], (
+        "a numbered line whose words changed passed")
+    cut = "Add indicators (e.g. RSI, MACD) to the chart."
+    assert judge(numbered(f"{intro}\n1. {cut}",
+                          [intro, "Add indicators (e.g.", "RSI, MACD) to the chart."]
+                 ))["lost"] == [f"1. {cut}"], (
+        "stripping the number hid the e.g. cut the whole check exists for")
+    year = "2026 roadmap: ship the chart first."
+    assert judge(numbered(f"{intro}\n{year}", [intro, "roadmap: ship the chart first."]
+                          ))["lost"] == [year], (
+        "a number that belongs to the sentence was read as list numbering")
+
+    # The same day, the second half of ET-27671's "loss": the message log
+    # cuts every body at 8000 characters, mid-word and unmarked (both of its
+    # BB-SPEC copies, and two of ET-26924's), while the record's `spec_text`
+    # carried all 28 items and the BB-CHANGE. But `spec_text` is not the
+    # accepted text either: it is re-rendered under the CURRENT app name, and
+    # on ET-26608 that rewrote the requester's own amendment into 'Rename ...
+    # from "Gem Screener" to "Gem Screener"'. So the spec compared is the
+    # logged one, and `spec_text` only where the log cut it and `spec_text`
+    # continues the cut copy word for word. A body the log may have cut is
+    # never counted either way (rule 8): a cut request compares fewer lines
+    # and passes falsely.
+    CAP = 8000
+    preamble = "BB-SPEC for App\n\nWhat we will build: " + "w" * CAP + "\n"
+    whole_spec = preamble + "  1. Do one thing.\n  2. Do another thing.\n"
+    cut_copy = whole_spec[:CAP]
+    short_spec = "BB-SPEC for App\n  1. Do one thing.\n  2. Do another thing.\n"
+
+    def logged(request, log_spec, spec_text=None, change=None):
+        messages = [{"kind": "BB-REQUEST", "at": "2026-09-30T10:00:00+00:00",
+                     "body": "App: " + request}]
+        if change is not None:
+            messages.append({"kind": "BB-CHANGE", "at": "2026-09-30T10:05:00+00:00",
+                             "body": change})
+        messages.append({"kind": "BB-SPEC", "at": "2026-09-30T10:09:00+00:00",
+                         "body": log_spec})
+        return {"app_name": "App", "spec_text": spec_text, "messages": messages}
+
+    two = "Do one thing.\nDo another thing."
+    said = judge(logged(two, cut_copy, spec_text=whole_spec))
+    assert said["state"] == "read" and said["lost"] == [], (
+        "the log's copy is cut at 8000 characters and the spec itself is whole: "
+        f"read as a loss ({said})")
+    assert judge(logged(two, cut_copy, spec_text=preamble + "  1. Do one thing.\n")
+                 )["lost"] == ["Do another thing."], (
+        "a line missing from the spec behind the cut passed")
+    assert judge(logged(two, cut_copy))["state"] == "unread", (
+        "no spec_text and a logged spec at the cap was counted as read")
+    assert judge(logged(two, cut_copy, spec_text=short_spec))["state"] == "unread", (
+        "a spec_text that does not continue the cut copy was taken for the spec")
+    renamed = "Rename the app from Old to App. Nothing else changes."
+    amended = f"\nYour changes (BB-CHANGE) -- scope:\n  C1. {renamed}\n"
+    rerendered = short_spec + amended.replace("Old", "App")
+    assert judge(logged(two, short_spec + amended, spec_text=rerendered,
+                        change=renamed))["changes_missing"] == [], (
+        "spec_text re-rendered under the new name was read over the accepted "
+        "spec, and the requester's own rename read as dropped (ET-26608)")
+    long_request = ("Do one thing.\n" + "y" * CAP)[:CAP - len("App: ")]
+    assert judge(logged(long_request, short_spec))["state"] == "unread", (
+        "a request the log may have cut was compared as if it were whole")
+    cut_change = ("Add a third thing. " + "z" * CAP)[:CAP]
+    assert judge(logged(two, short_spec, change=cut_change))["state"] == "unread", (
+        "a BB-CHANGE the log may have cut was checked against the amendments")
+
 
 @qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
 def test_a_route_their_ai_names_is_matched_against_the_template_not_the_text(
