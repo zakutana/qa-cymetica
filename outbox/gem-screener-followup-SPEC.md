@@ -9,7 +9,7 @@
 > 2. **Every number is read from the live site on 2026-09-30** (snapshot of 18:50 UTC, 215 apps, 26 chains, 12 sectors). They are there so you can check that a change took effect; they are not the requirement.
 > 3. **English only**, degen-friendly: the number first, plain short words, no statistics jargon on the page, every explanation in a tooltip or behind an expand.
 > 4. **Keep the look.** The owner likes the current design: the circles, the tooltip card (C.5), the check rows by area, the Degen meter, the tables and the layout. Change only what an item names. Where an item is about the circles and their tooltips (43, 44, 45), the look stays exactly as it is: what changes is which checks there are, what their texts say, and the caution colour.
-> 5. **Item numbers are stable** (the list was worked on before it was written down here); 26 and 27 were merged into 37 and do not appear.
+> 5. **Item numbers are stable** (the list was worked on before it was written down here); 26 and 27 were merged into 37, 39 into 43, and 32, 38 and 47 were dropped, so those numbers do not appear.
 
 ## What is already done from ET-28378 part 4 (do not redo)
 
@@ -29,15 +29,11 @@ The Degen meter colours and width (A.1), the check circles with the C.5 card (A.
 
 **[24] Top Picks, the chart "Revenue over 12 months, start = 100. Top 10 by upside":** on a wide screen (about 2000 px) the lines stop halfway and leave a large empty space before the legend on the right. The chart uses the full width, or the legend sits next to it.
 
-**[30] An upside a holder can rely on.** A coin with 4 % of its tokens out shows 44x (UP) and is 8x with all tokens out (PHAR 50x, 31x). The headline must not flatter a coin with few tokens out. The 11 apps at the 50x cap stand at 72x to 2,291x; keep their order.
+**[30] The 50x cap hides the order.** 11 apps sit at the 50x cap and really stand at 72x to 2,291x, so their order is lost. Keep it. (The "if all tokens were out" line under Upside is already there and stays.)
 
-**[31] Top Picks show their warnings on the pick, not only in its detail:** an exit flag (NEST, SOLV), earnings below emissions (NEST -$213K, UP -$762K a month), under 180 days of history (UP, 81 days).
+**[31] A warning icon on the Top Picks card.** A pick can be recommended and still carry a warning that shows only after you open its detail: NEST has the flag "business weakening" and earns $213K a month less than it pays out in new tokens; UP earns $762K a month less than it pays out and has 81 days of history. Put a small warning icon on the card, with the reason in a tooltip.
 
-**[32] Liquidity a degen can use.** SOLV, MNDE and LISTA pass the liquidity gate on 24-hour volume while their on-chain pools hold $20K to $31K (a $10K buy moves the price 64 to 100 %). Say where the liquidity is and how deep.
-
-**[33] Data age on every row.** The supply behind 168 of 215 rows is 43 hours old and no row shows its age. A market cap a fifth off is how a degen overpays (PHAR $4.1M, $3.3M at CoinGecko). Read supply fresh and show each row's age.
-
-**[38] Degen level.** 124 of 215 ranges span more than two steps (PHAR 5 to 9) and an unchecked item counts as half a risk. A low level must not hide a high one: show the worst case and what is unchecked.
+**[33] Old prices: fix the cause, shorten the banner.** The supply behind most market caps is 45 hours old and 189 of 241 prices came from DefiLlama because CoinGecko did not answer (PHAR: $4.1M on the page, $3.3M at CoinGecko). Read supply fresh. The banner that says this ("2 of 241 prices did not refresh this time, so those coins show their last known price, from 45 h ago. 189 of 241 prices came from DeFiLlama because CoinGecko did not answer; market cap uses the last known token supply, from 45 h ago.") is too long: one short line, the detail in a tooltip. No age on every row.
 
 ## 2. Chains tab
 
@@ -46,8 +42,6 @@ The Degen meter colours and width (A.1), the check circles with the C.5 card (A.
 **[12] Drop the share from the Layer, Share, Theme cell** (Apps keep theirs).
 
 **[13] Chains are priced on adoption, Apps on revenue.** Design the best algorithm you can to show a chain's TRUE adoption (method and data are yours): say how it resists wash trading and incentives, and how chains with very low fees are treated. Yearly activity fees say what users paid, not how many use the chain. The price-tag line and the Upside of chains follow that measure.
-
-**[47] Chain fees and the guards.** Chain fees are valued after guards that remove more than half of the raw fees for 19 of the 21 large chains the benchmark rule turns away (Ethereum 54 %, Stellar 90 %, Tron 92 %, TON 95 %). Show what the guards drop and why, so a degen can see whether the price-tag line and the Upside rest on what users really paid. This belongs with the adoption measure in 13.
 
 ## 3. Coin detail
 
@@ -61,11 +55,9 @@ The Degen meter colours and width (A.1), the check circles with the C.5 card (A.
 
 **[25] The report status icon in the detail header.** A ready report glows green (today it is a plain grey outline, hard to tell from "not researched" except for dashed against solid). Not researched stays a dashed grey outline; outdated is a solid outline in light blue with a dot, as in the reference. Spec 4 C.1 names only dashed, solid and solid with a dot; the reference draws ready in its accent colour with a soft fill. Clicking the icon scrolls to the report card (it does today, for every state); when nothing is researched the card it lands on carries the "Ask for Degen report" button, and the tooltip says so, not "Opens the report below."
 
-**[39] Audit check.** "Audits listed" (yellow) and "None listed" (red) tell a degen little. Say in a few words what an audit actually covers (the token contract, the vault, a fork of someone else's code), and what "None listed" means for this coin. A reader should know at a glance whether the audit is about the thing they are buying.
-
 **[40] Trajectory phase.** On a coin detail the pill at the top of the panel is green while the stepper under it is light blue for the same phase (Pharaoh, Ignition). One phase, one colour, in the table, the pill and the stepper.
 
-**[43] The checks, cut to what a degen needs.** Today 18 checks feed six areas (Control 2.5, Supply 2, Earnings 2, Liquidity 1.5, Heat 1, History 1 of 10) and the level is ten times their weighted mean, so the circles are the level. On 96 coins read on 2026-09-30 an average of 5.9 of the 18 are "Not scanned" and count as half a risk, and several circles light up on nearly every coin and so say nothing: "Admin can mint" on 44 of 74 scanned, "Timelock" green on 1 coin, "Audit" green on 1 of 96, "Market cap" under $20M on 72 of 96 (the screener is for small caps). Cut to the questions a degen asks: can the owner rug it (owner type, timelock and mint power as ONE check; "can mint" alone is not a warning); what new tokens are coming (emissions, unlocks in 90 days and the share of tokens out together); does it earn after paying emissions; is it growing; do holders get a share; can I get out (slippage on $10K; market cap as a plain number, not a verdict); already pumped (30-day price run, and price against revenue); is it legit (audit, hacks). Whales, insider flow, hidden supply and team stay, but as one dashed group "Not checked yet" with the "Ask for Degen report" button, until they run for most coins. Weigh the areas by what a degen can lose on: Control weighs most (2.5) while two of its three checks are not scanned on about half the coins. **The level is recomputed from the new set of checks:** say how (the weights, how a check that was not scanned counts: as today it widens the range and never counts as good) and show before and after for the 215 apps, how many change by two steps or more and why. The level stays display only, as today.
+**[43] The checks, cut to what a degen needs.** Today 18 checks feed six areas (Control 2.5, Supply 2, Earnings 2, Liquidity 1.5, Heat 1, History 1 of 10) and the level is ten times their weighted mean, so the circles are the level. On 96 coins read on 2026-09-30 an average of 5.9 of the 18 are "Not scanned" and count as half a risk, and several circles light up on nearly every coin and so say nothing: "Admin can mint" on 44 of 74 scanned, "Timelock" green on 1 coin, "Audit" green on 1 of 96, "Market cap" under $20M on 72 of 96 (the screener is for small caps). Cut to the questions a degen asks: can the owner rug it (owner type, timelock and mint power as ONE check; "can mint" alone is not a warning); what new tokens are coming (emissions, unlocks in 90 days and the share of tokens out together); does it earn after paying emissions; is it growing; do holders get a share; can I get out (slippage on $10K; market cap as a plain number, not a verdict); already pumped (30-day price run, and price against revenue); is it legit (audit, hacks; the audit line says what the audit covers, the token contract, the vault or a fork of someone else's code, and what "None listed" means for this coin). Whales, insider flow, hidden supply and team stay, but as one dashed group "Not checked yet" with the "Ask for Degen report" button, until they run for most coins. Weigh the areas by what a degen can lose on: Control weighs most (2.5) while two of its three checks are not scanned on about half the coins. **The level is recomputed from the new set of checks:** say how (the weights, how a check that was not scanned counts: as today it widens the range and never counts as good) and show before and after for the 215 apps, how many change by two steps or more and why. The level stays display only, as today.
 
 **[44] The line at the end of each check row** says the key number in plain words, in the colour of its worst check, and the reason for the colour is in the tooltip. Today Supply reads "Unlocks 0.0% unlocks in 90 days, 6.8% of tokens out" in red: nothing unlocks in 90 days, but only 6.8 % of tokens are out (FDV is 14.7× market cap), so the red is the 93 % still to come, which the line never says. Say "7% of tokens out (FDV 15× market cap), 0% unlock in 90 days". Earnings reads "Trend Ignition, 3.6× spike" for a business that earns $2.5M a month and nets +$1.2M after $1.3M of new tokens, and its circle shows "2.0×" for a real value of 1.96, just under where green starts. Say "Earns $2.5M a month, $1.3M goes out as new tokens: +$1.2M", and for the trend "Revenue 3.6× its usual month, one month so far". No jargon (Ignition, spike) on the line.
 
@@ -77,7 +69,7 @@ The Degen meter colours and width (A.1), the check circles with the C.5 card (A.
 
 **[34] The latest reading beside the mean.** "49 % of the top 50 alts beat BTC" is the mean of the last four weeks; the latest week is 68 %, three months ago 22 %. Show the latest reading beside the mean.
 
-**[35] The universe.** Three of the 50 "alts" are not alts (a home-equity-loan token, USYC, a euro fund), each under 3 % a month, and they shift breadth by up to 6 points. Leave assets priced at a currency unit out.
+**[35] The altseason number counts three non-alts.** The figure is the share of the top 50 alts that beat BTC. Three of the 50 are dollar-like assets (a home-equity-loan token, USYC, a euro fund) that move under 3 % a month, so they never beat BTC in a rally and always beat it in a fall: up to 6 points of error either way. Leave assets priced at a currency unit out.
 
 ## 5. Sectors tab
 
@@ -134,22 +126,18 @@ The Degen meter colours and width (A.1), the check circles with the C.5 card (A.
 - [ ] 25 Report status icon: ready glows green; not researched dashed grey; outdated solid light blue with a dot; the tooltip says what a click does.
 - [ ] 28 No statistics jargon on the page; explanations behind a tooltip or an expand.
 - [ ] 29 One tooltip, one badge, one symbol style on every tab and panel.
-- [ ] 30 The headline upside does not flatter a coin with few tokens out; capped rows keep their order.
-- [ ] 31 Top Picks show exit flag, earnings below emissions and young history on the pick itself.
-- [ ] 32 A pick says where its liquidity is and how deep.
-- [ ] 33 Each row shows the age of its data; supply is read fresh.
+- [ ] 30 Capped rows (50x) keep their order.
+- [ ] 31 A Top Picks card carries a warning icon (exit flag, earnings below emissions, young history) with the reason in a tooltip.
+- [ ] 33 Supply is read fresh; the stale-price banner is one short line with the detail in a tooltip; no age on every row.
 - [ ] 34 The altseason panel shows the latest reading beside the four-week mean.
 - [ ] 35 The altseason universe has no asset priced at a currency unit.
 - [ ] 36 Every sector has one of four stages against the median sector; the rule is in a tooltip.
 - [ ] 37 Sectors chart: four quadrants with stage names, a bubble and a four-week trail per sector, readable in colour; the table has only stage, 1M, 3M, Talked about, Fundamentals, Growth 3M, sorted by stage.
-- [ ] 38 The level shows the worst case of its range and what is unchecked.
-- [ ] 39 The audit check says what the audit covers and what "None listed" means.
 - [ ] 40 One phase, one colour: table, pill and stepper.
 - [ ] 41 `ranked` pages through all 215 apps.
 - [ ] 42 The Legend lists only flags the open tab draws; Apps and Chains mark warnings the same way.
-- [ ] 43 The check panel asks about ten questions, not 18; whales, insider flow, hidden supply and team sit in one dashed "Not checked yet" group with the report button; the weights are explained in a tooltip; the level is recomputed with a before and after for the 215 apps.
+- [ ] 43 The check panel asks about ten questions, not 18; whales, insider flow, hidden supply and team sit in one dashed "Not checked yet" group with the report button; the weights are explained in a tooltip; the audit line says what the audit covers; the level is recomputed with a before and after for the 215 apps.
 - [ ] 44 Each check row ends in one plain line with the key number (the Supply and Earnings examples above), in the colour of its worst check, with the reason in the tooltip; no jargon.
 - [ ] 45 Caution is orange everywhere (circles, Degen meter zone 4 to 6, tags, Legend); blue-grey is only neutral or does not apply.
 - [ ] 46 A cold visit shows the table within about 3 s; a revisit inside the snapshot's 6 hours downloads nothing new; no request stalls for seconds.
-- [ ] 47 The chain guards' cut is shown (what they drop and why).
 - [ ] 43 to 45 The circles, the tooltip card and the row layout look as before: only the set of checks, the texts and the caution colour differ.
