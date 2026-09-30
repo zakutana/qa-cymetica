@@ -262,6 +262,18 @@ def test_the_view_is_the_newest_reading_and_says_when_the_newest_read_failed():
     none = lab.credit_view([], [], NOW)
     assert none["at"] is None and none["unread"] is None
 
+    # C01, deep pass of 2026-09-30 (3/3): two readings that differ, so the
+    # newest is told from the oldest; and an old failure followed by a good
+    # read is no longer "unread".
+    newer = lab.credit_reading(200, {**USAGE, "week": {**USAGE["week"], "used_pct": 46},
+                                     "as_of": "2026-09-28T20:49:19+00:00"})
+    view = _credit_view([reading, newer])
+    assert view["week_pct"] == 46 and view["at"] == "2026-09-28T20:49:19+00:00", (
+        "the view showed the oldest reading, not the newest", view)
+    view = _credit_view([{"read": False, "why": "HTTP 503"}, reading])
+    assert view["unread"] is None and view["week_pct"] == 38, (
+        "an earlier failure was said over a newer good reading", view)
+
 
 def _lab_view(credit):
     from tests.meta.test_pipeline_lab_page import CHANNEL, FOMO, _report, _rooms_view
