@@ -43,16 +43,17 @@ Source: the operator's complaints on the live site after ET-28378, 2026-09-30, e
 
 ## C. Added 2026-09-30 from the degen audit (`gem-screener-degen-audit.md`, section 2)
 
-(The request draft also carries three lines that are only in the draft, not here: the audit check, the trajectory phase colour, the ranked list. In the request these eight come last.)
+(The request draft also carries three lines that are only in the draft, not here: the audit check, the trajectory phase colour, the ranked list. In the request these nine come last, the Sectors table line (37) after the sector ranking.)
 
 30. An upside a holder can rely on: a coin with 4 % of its tokens out shows 44x (UP) and is 8x with all tokens out (PHAR 50x, 31x). The headline must not flatter a coin with few tokens out. The 11 apps at the 50x cap stand at 72x to 2,291x; keep their order.
-31. Top Picks show their own warnings where the pick is shown, not only in its detail: an exit flag (NEST, SOLV "business weakening"), earnings below emissions (NEST -$213K, UP -$762K a month), under 180 days of history (UP, 81 days, passes the vetting gate).
+31. Top Picks show their warnings on the pick, not only in its detail: an exit flag (NEST, SOLV), earnings below emissions (NEST -$213K, UP -$762K a month), under 180 days of history (UP, 81 days).
 32. Liquidity a degen can use: SOLV, MNDE and LISTA pass the liquidity gate on 24-hour volume while their on-chain pools hold $20K to $31K (a $10K buy moves the price 64 to 100 %). Say where the liquidity is and how deep.
-33. Data age on every row: the supply behind 168 of 215 rows is 43 hours old and no row shows its age. A market cap a fifth off in a fast market is how a degen overpays (PHAR $4.1M, $3.3M at CoinGecko). Read supply fresh and show each row's age.
-34. Altseason panel: "49 % of the top 50 alts beat BTC" is the mean of the last four weeks; the latest week is 68 %, three months ago 22 %. Show the latest reading beside the mean, so the turn is seen.
+33. Data age on every row: the supply behind 168 of 215 rows is 43 hours old and no row shows its age. A market cap a fifth off is how a degen overpays (PHAR $4.1M, $3.3M at CoinGecko). Read supply fresh and show each row's age.
+34. Altseason panel: "49 % of the top 50 alts beat BTC" is the mean of the last four weeks; the latest week is 68 %, three months ago 22 %. Show the latest reading beside the mean.
 35. Altseason universe: three of the 50 "alts" are not alts (a home-equity-loan token, USYC, a euro fund), each under 3 % a month, and they shift breadth by up to 6 points. Leave assets priced at a currency unit out.
-36. Sectors: 10 of 12 themes say "Hot now", so the tag tells them apart no more, and "Talked about" rests on 460 people in seven days ("too few" for half the themes). Rank the sectors.
-37. Degen level: 124 of 215 ranges span more than two steps (PHAR 5 to 9) and an unchecked item counts as half a risk. A degen must not read a low level that hides a high one: show the worst case, and what is unchecked.
+36. Sectors: "Hot now" sits on 10 of 12, so the tag separates nothing, and "Talked about" rests on 460 people in seven days. Rank the sectors.
+37. Sectors table: the Growth 6M column becomes Growth 3M, and of the two vs BTC columns (1M, 3M) keep one, vs BTC 1M (the tags are judged on it). Two columns say the same thing. (Operator, 2026-09-30 evening.)
+38. Degen level: 124 of 215 ranges span more than two steps (PHAR 5 to 9) and an unchecked item counts as half a risk. A low level must not hide a high one: show the worst case and what is unchecked.
 
 ## Before it is filed
 
