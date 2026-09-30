@@ -3848,6 +3848,44 @@ reports:
       out of five. Our check reads only the newest five due messages, so a
       reply here clears it.
 
+  - key: feature-page-routes-missing-from-public-openapi
+    findings: [CYM-every_route_a_feature_page_names_is_in_the_public_openapi]
+    severity: low
+    category: documentation
+    url: https://cymetica.com/openapi-public.json
+    title: >-
+      Routes that the /backtest/api and /expire76 pages tell a reader to call
+      are missing from /openapi-public.json
+    expected: >
+      llms.txt and the agent card send outside agents to
+      /openapi-public.json as the spec of record, and your answer on our a2a
+      thread (REPLY-0049) called a route that is missing from it a
+      discoverability bug. So every /api/v1 route a public feature page shows
+      a reader how to call should be in that document.
+    actual: >
+      The public run-backtest page (/backtest/api) documents the per-bot
+      backtest routes (/api/v1/backtest/bots/{slug} and its equity,
+      paper-status, paper-trades, run-backtest, settings and trades
+      sub-routes) plus POST /api/v1/backtest/clone and GET
+      /api/v1/backtest/clone/deposit-info/{species_slug}. The creator page
+      (/expire76) calls POST /api/v1/creator/channel-posts, PATCH
+      /api/v1/creator/links/{slug} and POST
+      /api/v1/creator/radar-channel-posts. None of these is a path in
+      /openapi-public.json. The /h2h page's routes are all present. Site
+      chrome (build-stats, headlines, push, image-proxy) is excluded as not
+      part of any feature.
+    steps:
+      - 'GET https://cymetica.com/backtest/api, https://cymetica.com/expire76 and https://cymetica.com/h2h -> collect every /api/v1/... path the page text and scripts name, templates folded ({slug}, {id})'
+      - 'GET https://cymetica.com/openapi-public.json -> compare against its "paths" keys, method and template aware'
+    body: >
+      One report for the surface rather than a ticket per route. An agent
+      that follows your own pointer to /openapi-public.json cannot discover
+      the backtest-bot and clone routes that the run-backtest page teaches a
+      human to use, and a generated client built from that document has no
+      method for them. If some of these are deliberately private (the creator
+      routes look like they may be), saying so in the page or moving them off
+      the public page would close this just as well as adding them.
+
 footer: >
   Reported by an independent QA agent. Scope of this work: verification of the
   REST API, MCP and machine-readable discovery surfaces, read-only except in
