@@ -107,6 +107,48 @@ The Degen meter colours and width (A.1), the check circles with the C.5 card (A.
 - **The run-rate multiplier.** The tooltip says "last 30 days × 12"; all 45 rows on that basis carry × 365/30 = 12.1667, 1.4 % higher (the 90-day basis does the same, × 365/90, in the two apps we recomputed). Say one or the other. Report #141.
 - **The method behind four figures is not written anywhere** (ticket ET-28597): Strength 3M's revenue factor, the trajectory's normalisation of each quarter, Growth 6M dropping weeks with missing days and numbering the rest as consecutive, and "share of revenue to holders" clipped to 100 % where holders revenue exceeds total (SPK 175 %, DUST 192 %, FWA 111 %).
 
+## 9. Reference looks: Sectors and Top Picks
+
+The items in this section are 50 to 52. The reference files sit next to this spec in `reference/`; open the two `.html` files in a browser (hovering works). Both were built from the live numbers of 2026-09-30.
+
+**[50] Sectors: the look of the chart and the table (item 37). Inspiration, not literal.** `reference/sector-cycle.png`, `reference/sector-cycle.html`.
+
+![Sector cycle reference](reference/sector-cycle.png)
+
+Take from it:
+- the chart and the table in the look of today's Sectors tab: flat, mono labels, outlined bubbles with a light fill, a dashed line through "average", no glows;
+- the four stage names in the four corners, each in its colour (Emerging top left, Hot top right, Fading bottom right, Falling bottom left), with the two-part rule under each name;
+- a bubble per sector, sized by market cap, with a thin tail to where it stood four weeks ago; the tail runs from the colour of the old stage to the colour of the new one, and the table says "was Falling" (and so on) under a stage that changed;
+- every name sits next to its bubble and touches no other name, bubble or tail (the reference places them with a small collision check; the method is yours);
+- hovering a bubble lights the same sector in the table, and hovering a row lights its bubble;
+- the table grouped by stage in the order Emerging, Hot, Fading, Falling, with a small header and a count per stage.
+
+Do not take literally:
+- **The Theme column keeps its coin icons**: the three overlapping coin logos before the name, as in today's table (`reference/theme-icons.png`). The owner likes them a lot; the reference has none.
+
+  ![Theme column icons](reference/theme-icons.png)
+- **The columns.** Only those of item 37: stage, 1M, 3M, Talked about, Fundamentals, Growth 3M, plus the theme itself. The reference's widths, order and number formats are not final: use the live table's formats (the arrows, "too few", the muted units) and widths, and check that nothing scrolls sideways at 1360 px.
+- **The stage counts.** The reference compares each sector with the median of the top 50 alts and gets Hot 7, Emerging 4, Fading 1, Falling 0. Item 36 compares with the median sector and gives Hot 5, Emerging 1, Fading 1, Falling 5. Item 36 rules; do not copy the reference's counts.
+- **The colours.** The reference uses cyan, green, grey and red. With item 45 (caution is orange) Fading is the natural orange; keep the four clearly different, also for a colour-blind visitor.
+- **Fundamentals and Growth 3M** in the reference are the last 30 days and the last 90 days against the 90 before, read from the daily series. The definition is yours (item 37).
+
+**[51] Near misses become a queue (Top Picks).** `reference/near-misses-queue.png`, `reference/near-misses-queue.html`. The owner likes this as drawn: build it like this.
+
+![Near misses as a queue](reference/near-misses-queue.png)
+
+- Today the box is a list ("RamsesX 31x · thin liquidity"). It becomes a lane: on the left a green "Picks" gate, then the coins standing in line in small cubes, closest to the gate first, in the same order as today (biggest upside first).
+- A cube (about 124 px wide) holds the name, the upside in big green, its place in line (#1, #2, ...) and, at the bottom, the reason it is held back as a small chip with an icon: a drop for thin liquidity, an arrow for business not growing, a frame for too big. "Business not growing" is shortened to "not growing" on the cube; the tooltip has the full words.
+- A dashed rail runs behind the cubes and moves slowly toward the gate; it stands still for visitors who ask for less motion.
+- One short line above the lane says why most of them wait, for example "4 thin liquidity · 1 business not growing · 1 too big".
+- The lane scrolls sideways when the queue is longer than the box; the right edge fades while there is more.
+- Hover and keyboard focus show the tooltip card of item 9: name, upside, what holds it back, place in line. A click opens the coin detail, as the names do today.
+- Live on 2026-09-30 the queue holds RamsesX 31x (thin liquidity), Collector Crypt 25x (business not growing), Pons 15x (too big), Rainbow 14x, Gains Network 11x and Saphyre 10x (thin liquidity each).
+- Two things in the reference change in the build: its reason chips are light blue, use the caution orange of item 45; and its cubes carry no coin logos, add them only if they fit without crowding the cube.
+
+**[52] Top Picks: remove "When to take profit".** The box at the bottom of Top Picks (`reference/when-to-take-profit.png`: the price passes the card's Hyperliquid ceiling; revenue stops growing; its theme lags BTC and the card says "Watch out") goes. Nothing replaces it, and the near-misses queue (item 51) takes the full width. The help text of the Start page also lists it ("near misses, when to take profit and the backtest in one line each"); drop the phrase there too.
+
+![When to take profit, to be removed](reference/when-to-take-profit.png)
+
 ---
 
 ## Checklist (one line each; done when all are true)
@@ -143,7 +185,10 @@ The Degen meter colours and width (A.1), the check circles with the C.5 card (A.
 - [ ] 43 The check panel asks about ten questions, not 18; whales, insider flow, hidden supply and team sit in one dashed "Not checked yet" group with the report button; the weights are explained in a tooltip; the audit line says what the audit covers; the level is recomputed with a before and after for the 215 apps.
 - [ ] 44 Each check row ends in one plain line with the key number (the Supply and Earnings examples above), in the colour of its worst check, with the reason in the tooltip; no jargon.
 - [ ] 45 Caution is orange everywhere (circles, Degen meter zone 4 to 6, tags, Legend); blue-grey is only neutral or does not apply.
-- [ ] 48 Retail has at least one more row for where degens trade now (offshore or perp DEX volume), includes YouTube views of crypto channels (as a scored row or a fact), and says which other social and AI rows it has and why the others are missing.
-- [ ] 49 The Retail score is not driven by price (participation or normalised), not defined by one episode, does not move when a row is added, has a written-down backtest at the tops of 2017/18, 2021 and 2024/25, and says how sure it is.
 - [ ] 46 A cold visit shows the table within about 3 s; a revisit inside the snapshot's 6 hours downloads nothing new; no request stalls for seconds.
 - [ ] 43 to 45 The circles, the tooltip card and the row layout look as before: only the set of checks, the texts and the caution colour differ.
+- [ ] 50 Sectors: the chart and the table look like today's Sectors tab and the reference (inspiration, not literal); the Theme column keeps its coin icons; only the item 37 columns; no name touches another name, a bubble or a tail.
+- [ ] 51 Near misses are a queue of small cubes in front of a green "Picks" gate, as in the reference; the reason is a chip with an icon in the caution orange of item 45.
+- [ ] 52 The "When to take profit" box is gone from Top Picks, and the Start page's help text no longer lists it; the queue takes the full width.
+- [ ] 48 Retail has at least one more row for where degens trade now (offshore or perp DEX volume), includes YouTube views of crypto channels (as a scored row or a fact), and says which other social and AI rows it has and why the others are missing.
+- [ ] 49 The Retail score is not driven by price (participation or normalised), not defined by one episode, does not move when a row is added, has a written-down backtest at the tops of 2017/18, 2021 and 2024/25, and says how sure it is.
