@@ -34,4 +34,6 @@ Fourth batch, from screenshots only (design wishes; spec 1 and spec 3 are met, s
 
 | 21 | Apps and Chains: replace the two wide blue banners ("Hyperliquid is priced at 33x its yearly revenue. Upside = ...", "Solana is priced at 21x its yearly activity fees. ...") by a bigger, dense stamp, with the explanation in a tooltip | spec 2, item 1: chains show "the same one-line price tag as Apps"; the Apps line is the one spec 2 says "we like" | As specified, so a design change. The operator's page rule already says an explanation goes in a tooltip, not in a paragraph. |
 
+| 22 | Chains should be priced on adoption, apps on revenue; the vendor should design the best algorithm to measure adoption | spec 2, item 3: the measure "includes activity (e.g. yearly fees and/or DEX volume)", written down, guarded against wash trading; the vendor chose yearly activity fees | A change of goal, not a defect: fees say what users paid, not how many use the chain, and a chain with very low fees looks worse at the same use. Ask for the goal, not the method (method and data are theirs): a measure of real adoption, how it resists wash trading and incentives, how low-fee chains are treated. The page already has a separate "Adoption growth 6M" column (stablecoins). |
+
 More to come from the operator.
