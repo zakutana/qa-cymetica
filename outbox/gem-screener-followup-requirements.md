@@ -65,6 +65,8 @@ Source: the operator's complaints on the live site after ET-28378, 2026-09-30, e
 46. Loading speed (`gem-screener-load-time.md`). A cold visit shows everything after about 10 s. The app page is 2.1 MB (411 kB gzipped, no brotli), 1.7 MB of it one inline data block, and three API calls (funds, exchange pairs, page-extras) start only after it has loaded; a repeat visit takes about 1 s. Every few requests the server stalls for 3 to 11 s (ET-28064). Goal: a cold visit shows the table within about 3 s, a revisit within the 6-hour snapshot downloads nothing new, and no request stalls for seconds. Ideas, theirs to judge: a cache or CDN in front, the data block as its own versioned cacheable URL, the three calls in parallel, page-extras only when its tab opens.
 47. (Dropped 2026-09-30 evening: the operator did not follow it, and 13 already asks how the adoption measure resists wash trading and incentives. Not in the request.)
 
+48. Retail: more of what degens actually do (operator's questions, 2026-09-30 evening: why so few rows, why no YouTube). The tile is the mean of three scored rows; the App Store row joins at the weekly close of 5 Oct; YouTube stays out because its API terms forbid storing the data (altseason-panel spec 4.2). Add what can be licensed and stored: offshore and perp DEX volume, every finance or crypto app with new ones found automatically, a social feed that allows storing history; AI row as the Anthropic Economic Index fact or a stated reason. The brief of the altseason-panel spec, 4.4.
+
 Also in the spec, section 8, for information only: #140 (pick link opens another token), #141 (run-rate multiplier 12.1667 against a stated 12), ET-28597 (method of four figures not written down).
 
 ## Before it is filed
