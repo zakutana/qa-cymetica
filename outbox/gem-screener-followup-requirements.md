@@ -21,7 +21,7 @@ Source: the operator's complaints on the live site after ET-28378, 2026-09-30, e
 12. Chains tab: drop the share from the Layer, Share, Theme cell (Apps keep theirs).
 13. Chains are priced on adoption, Apps on revenue. Design the best algorithm you can to measure a chain's adoption (method and data are yours): say how it resists wash trading and incentives, and how chains with very low fees are treated. Yearly activity fees say what users paid, not how many use the chain. The price-tag line and the Upside of chains follow that measure.
 14. Supply card: degen-friendly. Fewer words, no "not available" paragraphs, the number first.
-15. Degen report: the one way to get a report is "Ask for Degen report" on the page, which researches, fills the dashed circles and narrows the level's range. Remove the "Ask NEXUS about this coin" chat prompt from the card; a Nexus answer never fills anything.
+15. Degen report: the one way to get a report is "Ask for Degen report" on the page, which researches, fills the dashed circles and narrows the level's range. Remove the "Ask NEXUS about this coin" chat prompt from the card; a Nexus answer never fills anything. Today "Ask for Degen report" shows only on coins without a report (YFI, XVS); on coins that already have one (PHAR, NEST, UP, MNDE) the card carries only the Nexus button, so the visitor sees no way to ask. The card also sits about 3,200 px down the detail, at the very bottom.
 16. Asking for a Degen report needs a Pro plan or higher (NEXUS build plans). Reading a finished report stays free.
 17. The Trajectory cell in the Apps table uses the same colour as the detail (today: a green glow in the table, and light blue in the detail).
 18. Chart card: remove the Copy button; "Open in Chart Analyzer" stays.
