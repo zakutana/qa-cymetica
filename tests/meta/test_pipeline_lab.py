@@ -1774,14 +1774,19 @@ def test_the_night_holds_no_hand_that_trades_files_or_commits():
 
     # Since 2026-09-22 a paper bot is funded from the same book (clone.py's
     # `fund`), so a transfer into a clone is a spend like a buy.
-    spends = ("buy", "fund")
+    # B01, deep pass of 2026-09-30 (3/3): and starting a paused clone again
+    # (`clone.enable`, bot_variants) turns its parked money into exposure --
+    # a spend with no transfer, gated by `restart_affordable`. Without it
+    # here, deleting bot_variants' pass_in_flight() stayed green.
+    spends = ("buy", "fund", "enable")
+    gates = ("affordable", "restart_affordable")
 
     def _gate_then_spend(node) -> bool:
         for block in [b for n in ast.walk(node)
                       for b in (getattr(n, "body", []), getattr(n, "orelse", []))
                       if isinstance(b, list)]:
             gate = next((i for i, s in enumerate(block)
-                         if _calls(s, "affordable")), None)
+                         if any(_calls(s, name) for name in gates)), None)
             spend = next((i for i, s in enumerate(block)
                           if any(_calls(s, name) for name in spends)), None)
             if gate is not None and spend is not None and gate < spend:
@@ -1815,6 +1820,8 @@ def test_the_night_holds_no_hand_that_trades_files_or_commits():
                 and any(_calls(node, name) for name in spends)]
     assert any(_calls(node, "fund") for node in spenders), (
         "nothing in the night funds a paper bot; the operator asked for bots")
+    assert "bot_variants" in {node.name for node in spenders}, (
+        "bot_variants restarts a paused clone and is not read as a spender")
     assert spenders, "nothing in the night can launch; the operator asked for it"
     for node in spenders:
         assert _gate_then_spend(node), (
