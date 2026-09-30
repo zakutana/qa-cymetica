@@ -453,6 +453,36 @@ def test_a_pre_commit_hook_that_stages_a_file_reaches_the_commit(tmp_path):
         sources={"hook": ".githooks/pre-commit"}))
 
 
+def _posix_shell() -> str | None:
+    """A shell that can actually run a hook, or None.
+
+    `shutil.which("bash")` on Windows finds `C:\\Windows\\System32\\bash.exe`
+    first, which is the WSL launcher and fails with "execvpe(/bin/bash)" on a
+    machine that has no distro installed -- so the hook test failed on the
+    operator's machine while the hook itself was fine (2026-09-30, the same on
+    the commit before the cloud handover). Git ships its own `sh`; that is the
+    one git itself runs hooks with, so it is the right one to test with.
+    """
+    import shutil
+
+    found = shutil.which("sh")
+    if found:
+        return found
+    exec_path = subprocess.run(["git", "--exec-path"], capture_output=True,
+                               text=True).stdout.strip()
+    if exec_path:
+        root = Path(exec_path).parents[2]
+        for candidate in (root / "usr" / "bin" / "sh.exe", root / "bin" / "sh.exe"):
+            if candidate.is_file():
+                return str(candidate)
+    bash = shutil.which("bash")
+    if bash:
+        probe = subprocess.run([bash, "-c", "exit 0"], capture_output=True)
+        if probe.returncode == 0:
+            return bash
+    return None
+
+
 @qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
 def test_the_keep_hook_cannot_block_a_commit(tmp_path):
     """Run it where nothing it needs exists. It must still exit 0.
@@ -464,7 +494,7 @@ def test_the_keep_hook_cannot_block_a_commit(tmp_path):
     import shutil
 
     hook = REPO / ".githooks" / "pre-commit"
-    shell = shutil.which("sh") or shutil.which("bash")
+    shell = _posix_shell()
     if not hook.is_file() or not shell:
         conclude(Measurement(
             verdict="inconclusive",
