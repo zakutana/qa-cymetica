@@ -67,6 +67,8 @@ Source: the operator's complaints on the live site after ET-28378, 2026-09-30, e
 
 48. Retail: more of what degens actually do (operator's questions, 2026-09-30 evening: why so few rows, why no YouTube). The tile is the mean of three scored rows; the App Store row joins at the weekly close of 5 Oct; YouTube stays out because its API terms forbid storing the data (altseason-panel spec 4.2). Add what can be licensed and stored: offshore and perp DEX volume, every finance or crypto app with new ones found automatically, a social feed that allows storing history; AI row as the Anthropic Economic Index fact or a stated reason. The brief of the altseason-panel spec, 4.4.
 
+49. The Retail calculation, tuned to the top (operator, 2026-09-30 evening: "the retail calculation is weak, I want them to tune it to the top"). Score per row = 100 × ln(20 × today / 4-year high) / ln(20), reproduced on the live rows (63.2, 29.3, 72.4; mean 55); hot from 41 % of the peak, calm under 14 %. Weak: USD turnover rises with price; all three highs are one episode (Dec 2024 to Feb 2025); the mean moves when a row is added (3 rows now, 4 from 5 Oct); memecoins is the fees of a few apps (GMGN, pump.fun, fomo Wallet = $106M of $178M); no statement of how sure. Ask: best retail measure they can make, with participation not dollars, a scale no single episode defines, a stable index when rows change, a written-down backtest at past tops, and a stated confidence.
+
 Also in the spec, section 8, for information only: #140 (pick link opens another token), #141 (run-rate multiplier 12.1667 against a stated 12), ET-28597 (method of four figures not written down).
 
 ## Before it is filed
