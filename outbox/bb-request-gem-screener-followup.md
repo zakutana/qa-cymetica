@@ -1,6 +1,6 @@
 # Build it Better: Gem Screener, new changes after ET-28378 (paste-ready, not filed)
 
-Made from `gem-screener-followup-requirements.md`, lines 9 and up: 21 lines, 4546 characters (limit 8,000 characters and 40 lines).
+Made from `gem-screener-followup-requirements.md`, lines 9 and up: 22 lines, 4756 characters (limit 8,000 characters and 40 lines).
 The vendor said on 2026-09-30 that lines 1 to 8 (the fail note) are worked under ET-28378, so they are left out.
 ET-28378 has shipped, so a new request opens a follow-up ticket. The web form refused it once with "too many requests": try again after an hour.
 
@@ -26,4 +26,5 @@ The report status icon in the detail header: a ready report glows green (today i
 Sectors bubble chart is hard to read: the grey quadrant words in the background (Own path, Runs hard and ahead, Defensive, Runs hard, behind), the legend, and labels that sit away from their bubble (DEX & perps, DeFi lending & staking, Privacy) make it unclear which name belongs to which bubble. Make the chart and its legend clear and good-looking.
 Alt sensitivity column: the "±0.17" next to each number is not degen friendly. Show how sure the number is in a way a degen gets at a glance, and keep the detail in a tooltip.
 Go through the whole app and make sure everything is degen friendly: the number first, plain short words, no statistics jargon on the page (beta, alpha, error bars, r-squared), every explanation in a tooltip or behind an expand.
+One look everywhere: the same tooltip, the same badge and the same symbol style on every tab and in every panel, so the same thing never looks different on another page. Pick one of each and use it throughout.
 ```

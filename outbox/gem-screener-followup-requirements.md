@@ -39,6 +39,8 @@ Source: the operator's complaints on the live site after ET-28378, 2026-09-30, e
 27. Alt sensitivity column: the "±0.17" next to each number is not degen friendly. Show how sure the number is in a way a degen gets at a glance, and keep the detail in a tooltip.
 28. Go through the whole app and make sure everything is degen friendly: the number first, plain short words, no statistics jargon on the page (beta, alpha, error bars, r-squared), every explanation in a tooltip or behind an expand.
 
+29. One look everywhere: the same tooltip, the same badge and the same symbol style on every tab and in every panel, so the same thing never looks different on another page. Pick one of each and use it throughout.
+
 ## Before it is filed
 
 - The vendor answered (2026-09-30): a fail note is kept as the QA record on the ticket (checked: `verdict_note` is on ET-28378) but does not schedule any build work; a new request is the reliable way, and it opens a follow-up ticket linked to the original. So lines 1 to 8 stay in the new request.
