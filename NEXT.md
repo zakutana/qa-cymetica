@@ -57,4 +57,4 @@ nikdy nebylo další na řadě.
 
 - [x] 2026-09-29  `qa/fomo.py::curves()` pořád čte syrový `return_pct`, ne `_no_pair_gain` -- stejná třída jako B03. (čára platí po přepnutí páru nejvýš 0 %, test napřed; hotovo 2026-09-30)
 - [x] 2026-09-29  `scripts/lab_page.py::lab_view`'s `in_bots` sčítá jen `clones[-1]["balance"]` na room bota. (sčítá všechny klony roomu, test napřed; hotovo 2026-09-30)
-- [ ] 2026-09-30  Po cloudové session: číst outbox/cloud-handover.md (render.py, /code-review nad qa/state.py, 2 nepodané řádky, adresa ranního přehledu, pyproject requests + py3.12, Gem Screener request).
+- [x] 2026-09-30  Po cloudové session: číst outbox/cloud-handover.md (render.py, /code-review nad qa/state.py, 2 nepodané řádky, adresa ranního přehledu, pyproject requests + py3.12, Gem Screener request). (B04 podán jako #138; „ztracené řádky" ET-27671 byla naše kontrola, opravena, a z ní #139 -- log BB useká na 8000 znaků; /code-review a Gem Screener request jsou operátorovy; hotovo 2026-09-30)
