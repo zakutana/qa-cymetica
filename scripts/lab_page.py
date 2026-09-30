@@ -369,7 +369,14 @@ def _lay_out(panel: dict, plan: dict, described: dict, index_points: dict,
     value = round(sum(values), 2) if values else None
     bots = panel["clones"]
     if bots:
-        invested, pnl, value = bots[0]["funded"], bots[0]["pnl"], bots[0]["balance"]
+        # Every bot of the room, not the first: a batch room holds several
+        # (R04, deep pass of 2026-09-30). A bot whose P&L or balance is unread
+        # leaves the room's unread -- never the others' sum shown as the room's.
+        invested = round(sum(b.get("funded") or 0.0 for b in bots), 6)
+        pnls_of = [b.get("pnl") for b in bots]
+        values_of = [b.get("balance") for b in bots]
+        pnl = round(sum(pnls_of), 6) if all(p is not None for p in pnls_of) else None
+        value = round(sum(values_of), 6) if all(v is not None for v in values_of) else None
     panel.update(
         holds="bot" if bots else "cards" if legs else None,
         legs=legs, reserve=_num(plan.get("reserve")), bankroll=bankroll,

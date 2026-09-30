@@ -258,6 +258,18 @@ def test_the_view_carries_the_account_the_nexus_line_and_the_threads():
     rooms_view["panels"]["STR-0003"]["clones"] = [first, dict(first, balance=100.0)]
     batch = _lab_page().lab_view(rooms_view, _report(), CHANNEL, FOMO, now=NOW)
     assert batch["account"]["in_bots"] == 347.2, batch["account"]
+    # R04, deep pass of 2026-09-30 (3/3): the room's own money is every bot's
+    # too. STR-0046 held four clones funded 477 each; its panel showed 477
+    # invested and the first bot's P&L.
+    panel = {"trades": [], "staked": 0.0, "clones": [
+        {"funded": 477.0, "pnl": 66.96, "balance": 543.96},
+        {"funded": 477.0, "pnl": 28.62, "balance": 505.62}]}
+    _lab_page()._lay_out(panel, {}, {}, {}, None)
+    assert (panel["invested"], panel["pnl"], panel["value"]) == (954.0, 95.58, 1049.58), panel
+    panel["clones"][1]["pnl"] = None
+    _lab_page()._lay_out(panel, {}, {}, {}, None)
+    assert panel["pnl"] is None and panel["pnl_pct"] is None, (
+        "a room with one bot's P&L unread showed the other's as the room's")
     nexus = view["nexus"]
     assert nexus["questions"] == 88 and nexus["median_seconds"] == 240.0
     assert "cards" in view["threads"] and "general" in view["threads"]
