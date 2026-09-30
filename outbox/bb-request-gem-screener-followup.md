@@ -4,7 +4,7 @@ Made from `gem-screener-followup-requirements.md`, lines 9 and up, plus three li
 The vendor said on 2026-09-30 that lines 1 to 8 (the fail note) are worked under ET-28378, so they are left out.
 ET-28378 has shipped, so a new request opens a follow-up ticket. The web form refused it once with "too many requests": try again after an hour.
 
-**Preferred, from the operator's word on 2026-09-30 evening ("radky neres, dame to zase do specu v githubu"):** the request is one line pointing at the spec, like the four-part request before it, so the form's 8,000 characters and 40 lines do not apply. The spec is `gem-screener-followup-SPEC.md` (all 45 items and a checklist, written for the public repo). It goes into `zakutana/gem-screener` as `docs/followup-ET-28378/SPEC.md`, is pushed by the operator, and the request then reads:
+**Preferred, from the operator's word on 2026-09-30 evening ("radky neres, dame to zase do specu v githubu"):** the request is one line pointing at the spec, like the four-part request before it, so the form's 8,000 characters and 40 lines do not apply. The spec is `gem-screener-followup-SPEC.md` (all 47 items, the open reports for information and a checklist, written for the public repo). It goes into `zakutana/gem-screener` as `docs/followup-ET-28378/SPEC.md`, is pushed by the operator, and the request then reads:
 
 ```
 This request has one part, to its own checklist: https://github.com/zakutana/gem-screener/blob/<commit>/docs/followup-ET-28378/SPEC.md

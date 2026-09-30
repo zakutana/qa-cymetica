@@ -47,6 +47,8 @@ The Degen meter colours and width (A.1), the check circles with the C.5 card (A.
 
 **[13] Chains are priced on adoption, Apps on revenue.** Design the best algorithm you can to show a chain's TRUE adoption (method and data are yours): say how it resists wash trading and incentives, and how chains with very low fees are treated. Yearly activity fees say what users paid, not how many use the chain. The price-tag line and the Upside of chains follow that measure.
 
+**[47] Chain fees and the guards.** Chain fees are valued after guards that remove more than half of the raw fees for 19 of the 21 large chains the benchmark rule turns away (Ethereum 54 %, Stellar 90 %, Tron 92 %, TON 95 %). Show what the guards drop and why, so a degen can see whether the price-tag line and the Upside rest on what users really paid. This belongs with the adoption measure in 13.
+
 ## 3. Coin detail
 
 **[14] Supply card: degen-friendly.** Fewer words, no "not available" paragraphs, the number first. And in colour: today the card is all grey. Colour the float and not-out parts, the weekly mint and the revenue cover.
@@ -97,9 +99,17 @@ The Degen meter colours and width (A.1), the check circles with the C.5 card (A.
 
 **[42] The Legend shows only what the open tab shows.** On Apps it lists Post-crash, Declining, No data and Thin liquidity, which only the Chains tab draws (4, 3, 5 and 1 of 26 chains; none of the 215 Apps rows, whose flags moved into the Degen meter and the checks), and "Tradeable here", which no row carries (the exchange lists 11 pairs, none a listed coin). The two tabs should not mark the same kind of warning in two different ways.
 
+**[46] Loading speed.** A cold visit shows everything after about 10 s (measured from Czechia on 2026-09-30). The app page is 2.1 MB (411 kB gzipped, no brotli), 1.7 MB of it one inline data block, and three API calls (funds, exchange pairs, page-extras) start only after it has loaded; a repeat visit takes about 1 s. On top of that, every few requests the server stalls for 3 to 11 s (a 2 kB status call took 5.3 s once, funds 11.1 s; the same pattern as ET-28064), and a page that makes four dependent requests meets one of those almost every visit. Goal: a cold visit shows the table within about 3 s, a revisit within the 6-hour snapshot downloads nothing new, and no request stalls for seconds. Ideas, yours to judge: a cache or CDN in front (picks, ranked, coins and funds already send `Cache-Control: public, max-age=60`, but nothing in front honours it), the data block as its own versioned, cacheable URL, the three calls started in parallel with it, page-extras loaded only when its tab opens.
+
 ## 7. Agent access
 
 **[41] The full list for an agent.** `GET /api/v1/gem-screener/ranked` takes `limit` up to 100 and ignores `offset`, so an agent cannot list all 215 apps without the 2 MB snapshot. Let it page the full list.
+
+## 8. Open elsewhere (repeated here so the build does not miss them; not new asks)
+
+- **A Degen pick's link opens another token.** "Definitive" (EDGE) links to `?coin=EDGE` and the symbol route answers edgeX. Four tickers are shared by two apps each (EDGE, UP, MET, INDEX). The route accepts a slug, so the link should carry it. Report #140.
+- **The run-rate multiplier.** The tooltip says "last 30 days × 12"; all 45 rows on that basis carry × 365/30 = 12.1667, 1.4 % higher (the 90-day basis does the same, × 365/90, in the two apps we recomputed). Say one or the other. Report #141.
+- **The method behind four figures is not written anywhere** (ticket ET-28597): Strength 3M's revenue factor, the trajectory's normalisation of each quarter, Growth 6M dropping weeks with missing days and numbering the rest as consecutive, and "share of revenue to holders" clipped to 100 % where holders revenue exceeds total (SPK 175 %, DUST 192 %, FWA 111 %).
 
 ---
 
@@ -140,4 +150,6 @@ The Degen meter colours and width (A.1), the check circles with the C.5 card (A.
 - [ ] 43 The check panel asks about ten questions, not 18; whales, insider flow, hidden supply and team sit in one dashed "Not checked yet" group with the report button; the weights are explained in a tooltip; the level is recomputed with a before and after for the 215 apps.
 - [ ] 44 Each check row ends in one plain line with the key number (the Supply and Earnings examples above), in the colour of its worst check, with the reason in the tooltip; no jargon.
 - [ ] 45 Caution is orange everywhere (circles, Degen meter zone 4 to 6, tags, Legend); blue-grey is only neutral or does not apply.
+- [ ] 46 A cold visit shows the table within about 3 s; a revisit inside the snapshot's 6 hours downloads nothing new; no request stalls for seconds.
+- [ ] 47 The chain guards' cut is shown (what they drop and why).
 - [ ] 43 to 45 The circles, the tooltip card and the row layout look as before: only the set of checks, the texts and the caution colour differ.
