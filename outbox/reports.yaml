@@ -3963,6 +3963,44 @@ reports:
       up, which is why this one stands out: market cap, revenue and pool liquidity
       match CoinGecko, DefiLlama and DexScreener within a median of 1 %.
 
+  - key: gem-screener-runrate-multiplier-is-not-the-one-stated
+    findings: [CYM-the_runrate_uses_the_multipliers_its_page_states]
+    severity: low
+    category: documentation
+    url: https://cymetica.com/gem-screener/app?view=apps
+    title: >-
+      Gem Screener: the run-rate says "last 30 days x 12" but every such row is
+      30-day revenue x 12.1667 (x 365/30)
+    expected: >
+      The run-rate's own tooltip gives the three estimates as "last 30 days x 12",
+      "last 90 days x 4" and "median of the last three months x 12". A row whose
+      estimate is the 30-day one should carry 12 x its 30-day revenue.
+    actual: >
+      All 45 rows whose run-rate basis is "30d" carry exactly 12.1667 x `rev30d`
+      (SKY: rev30d 12,995,681, run-rate 158,114,119, ratio 12.16667; SECZ 2,640,468
+      -> 32,125,694; ORE 2,481,308 -> 30,189,247), which is 365/30, not 12 - the
+      run-rate is 1.39 % above what the page says it is. Recomputed from
+      DefiLlama's daily revenue, the 90-day basis does the same (x 365/90 = 4.0556
+      where the page says x 4, LISTA and FXN) while the median basis really is 12
+      x the median of the three latest 30-day windows (12 apps recomputed, all
+      within 0.2 %). The
+      difference flows into price/revenue and the upside: SKY shows P/S 11.521
+      where market cap over 12 x revenue is 11.681.
+    steps:
+      - 'GET https://cymetica.com/gem-screener/app?view=apps -> the tooltip dictionary: 30d: "last 30 days x 12"; 90d: "last 90 days x 4"; med3: "median of the last three months x 12"'
+      - 'snapshot-data: the 45 apps with runrate.basis "30d" all have runrate.value / rev30d = 12.1667 (none 12)'
+      - 'snapshot-data SKY: ps 11.521 = mcap / runrate.value; mcap / (12 x rev30d) = 11.681'
+    body: >
+      It is small. The rest of what we recomputed from the snapshot's own inputs
+      (price/revenue, earnings after emissions, the 30x test, slippage, the
+      gates, a theme's edge over BTC) agrees on every row that carries them, and
+      the calendar months and the 6-month growth regression agree with
+      DefiLlama's daily revenue within about 1 % on the 12 apps we recomputed.
+      Either the tooltip should say "x 365/30" (and "x 365/90")
+      or the code should use 12 and 4; our check compares the multiplier the
+      page states with the one on the 30-day rows, so it clears whichever way
+      the two are made to agree.
+
 footer: >
   Reported by an independent QA agent. Scope of this work: verification of the
   REST API, MCP and machine-readable discovery surfaces, read-only except in
