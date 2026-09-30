@@ -37,7 +37,7 @@ Every derived figure that is a function of other figures on the page, recomputed
 | chain price/activity, upside | market cap / yearly fees | 21 | exact |
 | Degen level | round(10 × weighted mean of six area scores), inside its range | 96 coins (the tick repeats it on the 10 picks) | exact |
 | 30-day revenue, calendar months | DefiLlama daily revenue | 12 | within 1.1 % (DefiLlama revises) |
-| run-rate, median basis | 12 × median of the three latest 30-day windows | 12 | within 0.2 % |
+| run-rate, median basis | 12 × median of the three latest 30-day windows | 9 (of the 12, on this basis) | within 0.2 % |
 | growth 6M | log-linear fit of weekly sums | 12 | within 0.2 points |
 | **run-rate, 30-day basis** | **tooltip: last 30 days × 12** | 45 | **applies × 12.1667 (365/30), 1.4 % high. Filed #141.** |
 
