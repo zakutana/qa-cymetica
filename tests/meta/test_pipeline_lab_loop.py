@@ -1770,7 +1770,7 @@ def test_a_card_leg_is_sold_at_his_take_profit_and_the_room_runs_on(
     import qa.rooms as qa_rooms
 
     scripts_lab = _scripts_lab(tmp_path, monkeypatch)
-    card, bare = _card(0x7E), _card(0x7F)
+    card, bare, falling, steady = _card(0x7E), _card(0x7F), _card(0x7D), _card(0x7C)
     answers = [
         {"type": "answer", "id": "NEX-0001",
          "at": (NOW - timedelta(minutes=30)).isoformat(),
@@ -1791,9 +1791,27 @@ def test_a_card_leg_is_sold_at_his_take_profit_and_the_room_runs_on(
     assert criterion["stop_pct"] is None, criterion
     bare_criterion = qa_rooms.acceptance_of(qa_rooms.load(), rooms["NEX-0002"])
     assert bare_criterion["stop_pct"] == scripts_lab.NIGHT_STOP_PCT, bare_criterion
+    # B03, deep pass of 2026-09-30 (3/3): the stop half of the same door. A leg
+    # past his stop was never driven through verdicts(), so passing None for
+    # the stop at the sale left every test green -- and such a leg has no room
+    # stop behind it (his stop governs, stop_pct None). A one-leg room past its
+    # stop is refuted early (qa.lab._early) and closed by the verdict, so the
+    # sale only has work in a room of several legs, as `rooms.py plan` writes.
+    with open(tmp_path / "nexus.jsonl", "a", encoding="utf-8") as fh:
+        fh.write(json.dumps({"type": "answer", "id": "NEX-0003",
+                             "at": (NOW - timedelta(minutes=20)).isoformat(),
+                             "text": (f"Buy {falling} bull, TP +50%, stop -3%. Buy {steady} "
+                                      f"bull, TP +50%, stop -30%. " + "reasoning. " * 40)}) + "\n")
+    two = qa_rooms.open_strategy("NEX-0003", "two legs, one past his stop")
+    qa_rooms.set_acceptance(two["id"], 5, None, "two legs, his levels", legs=[
+        {"card": falling, "side": "bull", "share": 0.5, "tp": 50.0, "sl": -3.0},
+        {"card": steady, "side": "bull", "share": 0.5, "tp": 50.0, "sl": -30.0}])
+    qa_rooms.set_status(two["id"], "running", "opened by hand with two legs")
+    rooms["NEX-0003"] = two["id"]
     opened = qa_rooms.acceptance_of(qa_rooms.load(), rooms["NEX-0001"])["at"]
     buys = []
-    for n, (origin, which) in enumerate((("NEX-0001", card), ("NEX-0002", bare)), 1):
+    for n, (origin, which) in enumerate((("NEX-0001", card), ("NEX-0002", bare),
+                                         ("NEX-0003", falling), ("NEX-0003", steady)), 1):
         buys += [
             {"id": f"TRD-000{n}", "type": "intent", "at": opened, "card_id": which,
              "usdc": 480.0, "paper": True, "nexus": {"id": origin}},
@@ -1828,8 +1846,10 @@ def test_a_card_leg_is_sold_at_his_take_profit_and_the_room_runs_on(
     # 105.5 is +5.5% and the leg sells too early; measured from the fill it is
     # +4.46%. A point from before the fill is not ours to sell on either.
     before = [{"t": (start - timedelta(hours=1)).isoformat(), "index": 108.0}]
-    path = {"now": before + points([100, 102, 104, 105.5])}
-    monkeypatch.setattr(scripts_lab, "_history", lambda client, c: path["now"])
+    path = {"now": before + points([100, 102, 104, 105.5]),
+            falling: before + points([100, 101, 100, 99]),
+            steady: before + points([100, 101, 101, 101, 101])}
+    monkeypatch.setattr(scripts_lab, "_history", lambda client, c: path.get(c, path["now"]))
     monkeypatch.setattr(scripts_lab, "_closes_at", lambda client, c: None)
 
     said = scripts_lab.verdicts(now=later)
@@ -1837,20 +1857,31 @@ def test_a_card_leg_is_sold_at_his_take_profit_and_the_room_runs_on(
         "sold on a move that was not from our fill", said)
 
     path["now"] = before + points([100, 102, 104, 105.5, 106.5])
+    # 97.5 from our fill at 101 is -3.47 %: past his -3 % stop.
+    path[falling] = before + points([100, 101, 100, 99, 97.5])
     said = scripts_lab.verdicts(now=sale_at)
-    assert closed == ["P-1"], ("his take-profit was crossed and the leg not sold"
-                               if not closed else f"sold {closed}")
+    assert sorted(closed) == ["P-1", "P-3"], (
+        "his take-profit and his stop were crossed and a leg was not sold", closed)
+    # Neither exit is a verdict: the window judges. (A room whose EVERY leg is
+    # out at a net loss is refuted early by qa.lab._early; NEX-0003 still holds
+    # its steady leg.)
     assert not any(s.get("verdict") for s in said), (
-        "a take-profit exit is not a verdict; the window judges", said)
-    exits = [s for s in said if s.get("exit")]
-    assert [(s["room"], s["exit"]) for s in exits] == [(rooms["NEX-0001"], "tp")], said
-    assert exits[0]["moved"] == pytest.approx((106.5 / 101.0 - 1) * 100, abs=0.001)
+        "a take-profit or stop exit is not a verdict; the window judges", said)
+    exits = sorted((s for s in said if s.get("exit")), key=lambda s: s["room"])
+    assert [(s["room"], s["exit"]) for s in exits] == sorted(
+        [(rooms["NEX-0001"], "tp"), (rooms["NEX-0003"], "sl")]), (
+        "the leg past his stop was not sold at the stop by the hourly look", said)
+    tp = next(s for s in exits if s["exit"] == "tp")
+    assert tp["moved"] == pytest.approx((106.5 / 101.0 - 1) * 100, abs=0.001)
+    sl = next(s for s in exits if s["exit"] == "sl")
+    assert sl["moved"] == pytest.approx((97.5 / 101.0 - 1) * 100, abs=0.001)
     rows = qa_rooms.load()
     assert qa_rooms.status_of(rows, rooms["NEX-0001"]) == "running"
     assert qa_rooms.status_of(rows, rooms["NEX-0002"]) == "running"
+    assert qa_rooms.status_of(rows, rooms["NEX-0003"]) == "running"
 
     scripts_lab.verdicts(now=sale_at + timedelta(hours=2))
-    assert closed == ["P-1"], "a leg already sold was sold again"
+    assert sorted(closed) == ["P-1", "P-3"], "a leg already sold was sold again"
 
     # Our own book on the position: rebased on the fill (101, not the series'
     # 100 or the criterion's static 100), and frozen at what the sale
