@@ -102,4 +102,4 @@ nikdy nebylo další na řadě.
 
 - [ ] 2026-09-29  `qa/fomo.py::curves()` pořád čte syrový `return_pct`, ne `_no_pair_gain` -- stejná třída jako B03 (deep pass 2026-09-28), ale kreslí čáru, ne buňku tabulky; žádné hlasování ho tento pass nejmenovalo.
 - [ ] 2026-09-29  `scripts/lab_page.py::lab_view`'s `in_bots` sčítá jen `clones[-1]["balance"]` na room bota, takže dávkový room podhodnotí ostatní klony; našlo se při A02 (deep pass 2026-09-28), žádné hlasování ho nejmenovalo.
-- [ ] 2026-09-29  Po cloudovém sweepu: v lokálu `render.py` (v cloudu by `stats` degradoval) a podat 2 nepodané řádky (B04, 27 ztracených řádků ET-27671; v cloudu chybí `.env`); pyproject: `requests`, py3.12 (prereg.py:104); 8 tests/repo červených jen v cloudu.
+- [ ] 2026-09-30  Po cloudové session: číst outbox/cloud-handover.md (render.py, /code-review nad qa/state.py, 2 nepodané řádky, adresa ranního přehledu, pyproject requests + py3.12, Gem Screener request).
