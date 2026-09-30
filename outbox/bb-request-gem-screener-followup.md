@@ -7,10 +7,10 @@ ET-28378 has shipped, so a new request opens a follow-up ticket. The web form re
 **Preferred, from the operator's word on 2026-09-30 evening ("radky neres, dame to zase do specu v githubu"):** the request is one line pointing at the spec, like the four-part request before it, so the form's 8,000 characters and 40 lines do not apply. The spec is `gem-screener-followup-SPEC.md` (the items after the operator's pruning of 2026-09-30 evening, the open reports for information and a checklist, written for the public repo). It goes into `zakutana/gem-screener` as `docs/followup-ET-28378/SPEC.md`, is pushed by the operator, and the request then reads:
 
 ```
-This request has one part, to its own checklist: https://github.com/zakutana/gem-screener/blob/3ef7f0cf8d6a0b71bdd7fc16821870596d530c5d/docs/followup-ET-28378/SPEC.md
+This request has one part, to its own checklist: https://github.com/zakutana/gem-screener/blob/c7bd47671b56cccab963b65f53762d87b904aa5e/docs/followup-ET-28378/SPEC.md
 ```
 
-The spec is written and checked: commit `3ef7f0cf` on `main` of `zakutana/gem-screener` is byte-for-byte `gem-screener-followup-SPEC.md` of this folder (verified 2026-09-30 evening), 38 items, six reference files, a checklist without duplicate numbers.
+The spec is written and checked: commit `c7bd4767` on `main` of `zakutana/gem-screener` is line for line `gem-screener-followup-SPEC.md` of this folder (verified 2026-10-01: 0 differences in 198 lines), 39 items (the last is 53, agents find the Gem Screener first), six reference files, a checklist without duplicate numbers. It replaces `3ef7f0cf` (same, without item 53) and `fce17d41` (duplicate numbers).
 
 **The long form text below is the fallback only and is no longer kept up to date** (it lacks item 42, the Legend).
 
