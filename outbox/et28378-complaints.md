@@ -32,4 +32,6 @@ Fourth batch, from screenshots only (design wishes; spec 1 and spec 3 are met, s
 | 19 | Sectors: tags too wide (Hot now, Already leading, Beaten down but turning, Fundamentals rising); use small icons with a tooltip, as in the coin detail and Apps | spec 3: "tags as tags, not filters", the same tags on Top Picks "Hot sectors" | The Legend and the Top Picks cards must follow. |
 | 20 | Top Picks fund line: drop "CyMetica-managed" | from ET-27671 (passed) | The line says it twice: in the title "(CyMetica-managed)" and again after "-4.1% since launch". |
 
+| 21 | Apps and Chains: replace the two wide blue banners ("Hyperliquid is priced at 33x its yearly revenue. Upside = ...", "Solana is priced at 21x its yearly activity fees. ...") by a bigger, dense stamp, with the explanation in a tooltip | spec 2, item 1: chains show "the same one-line price tag as Apps"; the Apps line is the one spec 2 says "we like" | As specified, so a design change. The operator's page rule already says an explanation goes in a tooltip, not in a paragraph. |
+
 More to come from the operator.
