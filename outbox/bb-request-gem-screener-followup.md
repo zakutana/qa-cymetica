@@ -1,6 +1,6 @@
 # Build it Better: Gem Screener, new changes after ET-28378 (paste-ready, not filed)
 
-Made from `gem-screener-followup-requirements.md`, lines 9 and up: 22 lines, 4756 characters (limit 8,000 characters and 40 lines).
+Made from `gem-screener-followup-requirements.md`, lines 9 and up, plus three lines added 2026-09-30 after rechecking the live site (audit, phase colour, the ranked list): 25 lines, 5590 characters (limit 8,000 characters and 40 lines). Rechecked live 2026-09-30 and still true: lines 9 (610 native `title` tooltips on the Apps list), 10 (table 1592 px in a 1281 px box), 15 (PHAR has only "Ask NEXUS", no "Ask for Degen report"), 17 (table phase green), 18 (Copy button).
 The vendor said on 2026-09-30 that lines 1 to 8 (the fail note) are worked under ET-28378, so they are left out.
 ET-28378 has shipped, so a new request opens a follow-up ticket. The web form refused it once with "too many requests": try again after an hour.
 
@@ -27,4 +27,7 @@ Sectors bubble chart is hard to read: the grey quadrant words in the background 
 Alt sensitivity column: the "±0.17" next to each number is not degen friendly. Show how sure the number is in a way a degen gets at a glance, and keep the detail in a tooltip.
 Go through the whole app and make sure everything is degen friendly: the number first, plain short words, no statistics jargon on the page (beta, alpha, error bars, r-squared), every explanation in a tooltip or behind an expand.
 One look everywhere: the same tooltip, the same badge and the same symbol style on every tab and in every panel, so the same thing never looks different on another page. Pick one of each and use it throughout.
+Audit check: "Audits listed" (yellow) and "None listed" (red) tell a degen little. Say in a few words what an audit actually covers (the token contract, the vault, a fork of someone else's code), and what "None listed" means for this coin. Goal, not method: a reader should know at a glance whether the audit is about the thing they are buying.
+Trajectory phase: on a coin detail the pill at the top of the panel is green while the stepper under it is light blue for the same phase (Pharaoh, Ignition). One phase, one colour, in the table, the pill and the stepper.
+Agent access to the whole list: `GET /api/v1/gem-screener/ranked` takes `limit` up to 100 and ignores `offset`, so an agent cannot list all 215 apps without downloading the 2 MB snapshot. A way to page the full list, without the full snapshot.
 ```
