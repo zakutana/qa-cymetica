@@ -251,6 +251,13 @@ def test_the_view_carries_the_account_the_nexus_line_and_the_threads():
     assert view["account"] == {"free": 88593.91, "in_cards": 24329.56,
                                "in_bots": 247.2, "at": "2026-09-23T11:00:00+00:00",
                                "stale": False}
+    # A batch room holds several bots; the account sums every one, not the
+    # last in the list (NEXT 2026-09-29, found at A02 of the 28th's pass).
+    rooms_view = _rooms_view()
+    first = rooms_view["panels"]["STR-0003"]["clones"][0]
+    rooms_view["panels"]["STR-0003"]["clones"] = [first, dict(first, balance=100.0)]
+    batch = _lab_page().lab_view(rooms_view, _report(), CHANNEL, FOMO, now=NOW)
+    assert batch["account"]["in_bots"] == 347.2, batch["account"]
     nexus = view["nexus"]
     assert nexus["questions"] == 88 and nexus["median_seconds"] == 240.0
     assert "cards" in view["threads"] and "general" in view["threads"]

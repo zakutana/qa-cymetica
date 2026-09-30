@@ -435,6 +435,15 @@ def test_the_tables_and_the_basket_pay_a_switched_pair_no_gain_either():
     assert b["worst"]["return_pct"] <= 0.0
     by_h = {h["horizon"]: h for h in b["by_horizon"]}
     assert by_h["2h"]["pnl_pct"] <= 0.0, by_h["2h"]
+    # And the line the tab draws (NEXT 2026-09-29): `curves` read the raw
+    # return, so the same PUMP drew a peak of +504 772 % beside a table that
+    # paid it nothing.
+    drawn = {c["token"]: c for c in fomo.curves(rows)}
+    pump = dict(drawn["0xpump"]["points"])
+    assert pump[1] > 0.0, "the reading before the switch is the coin's own"
+    assert pump[2] <= 0.0 and pump[3] <= 0.0, pump
+    assert drawn["0xpump"]["peak"] == pytest.approx(pump[1]), drawn["0xpump"]
+    assert dict(drawn["0xok"]["points"])[3] == pytest.approx(50.0)
 
 
 @qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")

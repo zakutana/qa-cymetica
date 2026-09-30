@@ -642,6 +642,10 @@ def curves(rows: list[dict], limit: int | None = 40,
         if str(row["key"]) >= str(newest.get(token, {}).get("key", "")):
             newest[token] = row
 
+    # A reading on another pair than the signal's pays no gain, as in `stats`
+    # and `basket` (B03, deep pass of 2026-09-28): the line drew PUMP at
+    # +504 772 % beside a table that paid it nothing.
+    after = _after_switch(rows)
     seen: dict[str, dict[int, float | None]] = {}
     # The price each hour, beside the return: a percentage cannot be checked
     # against anything, and "a memecoin" at 5.561e-06 and at 0.0452 are not
@@ -664,7 +668,8 @@ def curves(rows: list[dict], limit: int | None = 40,
         if hours < 1:
             continue
         hour = int(hours)
-        seen.setdefault(token, {})[hour] = row.get("return_pct")
+        seen.setdefault(token, {})[hour] = _no_pair_gain(
+            row.get("return_pct"), row, after)
         if isinstance(row.get("price_usd"), (int, float)):
             priced.setdefault(token, {})[hour] = row["price_usd"]
 

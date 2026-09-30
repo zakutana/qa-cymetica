@@ -1136,10 +1136,11 @@ def lab_view(rooms: dict, report: dict, channel: dict, fomo: dict | None,
         experiments.append(_experiment(rid, sector, report_room,
                                        panels.get(rid) or {}, moment))
     general = panels.get("general") or {}
-    in_bots = sum(float((panels.get(e["id"], {}).get("clones") or [{}])[-1]
-                        .get("balance") or 0)
+    # Every bot of the room, not the last: a batch room holds several.
+    in_bots = sum(float(clone.get("balance") or 0)
                   for e in experiments
-                  if e["sector"] == "bots" and e["group"] != "archive")
+                  if e["sector"] == "bots" and e["group"] != "archive"
+                  for clone in panels.get(e["id"], {}).get("clones") or [])
     return {
         "generated_at": report.get("generated_at"),
         "sectors": [{"key": key, "name": name, **(products.get(key) or {})}
