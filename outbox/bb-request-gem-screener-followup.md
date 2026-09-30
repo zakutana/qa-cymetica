@@ -1,6 +1,6 @@
 # Build it Better: Gem Screener, new changes after ET-28378 (paste-ready, not filed)
 
-Made from `gem-screener-followup-requirements.md`, lines 9 and up: 18 lines, 3790 characters (limit 8,000 characters and 40 lines).
+Made from `gem-screener-followup-requirements.md`, lines 9 and up: 21 lines, 4546 characters (limit 8,000 characters and 40 lines).
 The vendor said on 2026-09-30 that lines 1 to 8 (the fail note) are worked under ET-28378, so they are left out.
 ET-28378 has shipped, so a new request opens a follow-up ticket. The web form refused it once with "too many requests": try again after an hour.
 
@@ -23,4 +23,7 @@ Top Picks fund line: remove "CyMetica-managed" (it stands twice on one line).
 The price-tag lines on Apps ("Hyperliquid is priced at 33x its yearly revenue...") and Chains become a bigger, dense stamp with the explanation in a tooltip.
 Top Picks, the chart "Revenue over 12 months, start = 100. Top 10 by upside": on a wide screen (about 2000 px) there is a large empty gap between the end of the lines and the legend on the right. The chart uses the width, or the legend sits next to it.
 The report status icon in the detail header: a ready report glows green (today it is a plain grey outline, hard to tell from "not researched" except for dashed against solid). Not researched stays a dashed grey outline; outdated is a solid outline in light blue with a dot, as in the reference. Spec 4 C.1 names only dashed, solid and solid with a dot; the reference draws ready in its accent colour with a soft fill. Clicking the icon scrolls to the report card (it does today, for every state); when nothing is researched the card it lands on carries the "Ask for Degen report" button, and the tooltip says so, not "Opens the report below."
+Sectors bubble chart is hard to read: the grey quadrant words in the background (Own path, Runs hard and ahead, Defensive, Runs hard, behind), the legend, and labels that sit away from their bubble (DEX & perps, DeFi lending & staking, Privacy) make it unclear which name belongs to which bubble. Make the chart and its legend clear and good-looking.
+Alt sensitivity column: the "±0.17" next to each number is not degen friendly. Show how sure the number is in a way a degen gets at a glance, and keep the detail in a tooltip.
+Go through the whole app and make sure everything is degen friendly: the number first, plain short words, no statistics jargon on the page (beta, alpha, error bars, r-squared), every explanation in a tooltip or behind an expand.
 ```
