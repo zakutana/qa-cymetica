@@ -35,6 +35,6 @@ Source: the operator's complaints on the live site after ET-28378, 2026-09-30, e
 
 ## Before it is filed
 
-- The vendor's answer on what a fail verdict does may move lines 1 to 8: if a fail note is worked on, they need not be repeated.
+- The vendor answered (2026-09-30): a fail note is kept as the QA record on the ticket (checked: `verdict_note` is on ET-28378) but does not schedule any build work; a new request is the reliable way, and it opens a follow-up ticket linked to the original. So lines 1 to 8 stay in the new request.
 - Check the new spec against this list line by line (as with ET-27671: no line lost), then file. One open request per app: ET-28378 has shipped, so a new one is a follow-up ticket.
 - Filing needs `build-it-better.key`, which is not in a cloud session.
