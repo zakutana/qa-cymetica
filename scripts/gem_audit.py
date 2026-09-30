@@ -125,6 +125,7 @@ def read_everything() -> tuple[dict, dict]:
         if page.status_code != 200:
             raise SystemExit(f"{g.APP_PAGE} answered HTTP {page.status_code}: no snapshot, no audit")
         inputs["snapshot"] = g.parse_snapshot(page.text)
+        inputs["page_text"] = page.text  # the tooltips are in the same page: what each figure says it is
 
         listed = cymetica.get(g.PICKS)
         picks = (listed.json() or {}).get("picks") if listed.status_code == 200 else None
@@ -167,6 +168,12 @@ def read_everything() -> tuple[dict, dict]:
             inputs["sources"]["dexscreener"] = g.fetch_dexscreener(source.get, g.pair_addresses(snap))
         except (g.SourceUnavailable, Exception) as exc:  # noqa: BLE001
             errors["dexscreener"] = str(exc)[:200]
+        inputs["series"] = {}
+        for app in g.sampled_apps(snap):
+            try:
+                inputs["series"][app["key"]] = g.fetch_llama_series(source.get, app["slug"])
+            except (g.SourceUnavailable, Exception) as exc:  # noqa: BLE001
+                errors[f"daily revenue {app.get('symbol')}"] = str(exc)[:120]
     finally:
         CURRENT_TIER.reset(token)
         source.close()
@@ -196,6 +203,11 @@ def metrics_of(report: dict) -> dict:
         "liquidity_over_tail": col("pool_liquidity_vs_dexscreener", "over_tail"),
         "formula_breaches": len((report.get("upside_formula") or {}).get("breaches") or []),
         "identity_breaches": (len(report["pick_identity"]) if "pick_identity" in report else None),
+        "derived_breaches": sum(len(i["breaches"]) for i in report.get("identities") or []),
+        "runrate_rows_off": (len(report["runrate_factors"]["breaches"]) if "runrate_factors" in report else None),
+        "holders_clipped": len(report.get("holders_clipped") or []),
+        "series_off": sum(1 for s in (report.get("series") or {}).values()
+                          if (s.get("rev30d") or {}).get("dev") is not None and s["rev30d"]["dev"] > 0.02),
         "picks": len(picks),
         "picks_buyable_on_chain": sum(1 for p in picks if p.get("buyable_on_chain")),
         "picks_with_exit_flag": sum(1 for p in picks if p.get("exit_flags")),
@@ -237,7 +249,8 @@ def tick() -> int:
     inputs, errors = read_everything()
     snap = inputs["snapshot"]
     report = g.build_report(snap, sources=inputs["sources"], picks_api=inputs.get("picks"),
-                            coins_api=inputs.get("coins"))
+                            coins_api=inputs.get("coins"), page_text=inputs.get("page_text"),
+                            series=inputs.get("series"))
     report["errors"] = errors
     metrics = metrics_of(report)
     diary = load_diary()

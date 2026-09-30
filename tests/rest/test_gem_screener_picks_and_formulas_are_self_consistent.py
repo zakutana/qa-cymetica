@@ -1,6 +1,6 @@
 """The Gem Screener agrees with itself where it has published the rule.
 
-Three things it says about itself that any redesign has to keep true, because
+Five things it says about itself that any redesign has to keep true, because
 the ranking, the picks and the altseason reading all stand on them:
 
 1. **A Degen pick opens the coin it names.** `GET /api/v1/gem-screener/picks`
@@ -23,6 +23,13 @@ the ranking, the picks and the altseason reading all stand on them:
    `altseason_cycle.rules`; the headline breadth is the 4-week mean of the weekly
    history; `beat / n` is the latest reading.
 
+4. **Every derived figure is a function of the figures beside it**: price/revenue,
+   earnings after emissions, the 30x test, slippage, the Degen gates, a theme's
+   edge over BTC, a chain's upside.
+
+5. **The run-rate uses the multiplier its own page states.** It says x 12 on the
+   30-day estimate; the code applies x 365 / 30 (2026-09-30: 45 of 45 rows, +1.4 %).
+
 NOT asserted: that the formula is a good one (their own backtest says the rank
 has no skill, and that is the audit's finding, not this check's), or that a pick
 is worth buying. A field that cannot be read is INCONCLUSIVE, never agreement.
@@ -37,7 +44,7 @@ import httpx
 from qa import gemaudit as g
 from qa.marks import Inconclusive, SafetyTier, qa
 from qa.measure import Measurement, conclude
-from tests.rest.test_gem_screener_numbers_match_their_sources import get_patiently, read_snapshot
+from tests.rest.test_gem_screener_numbers_match_their_sources import get_patiently, read_page, read_snapshot
 
 
 @qa(component="rest.gem_screener", tier=SafetyTier.SAFE, surface="rest")
@@ -110,6 +117,64 @@ def test_the_upside_is_the_benchmarks_multiple_over_the_coins_own(rest_anon):
         left={"checked": said["checked"], "breaches": len(breaches), "cap": said["cap"]},
         right={"breaches": 0},
         population={"breaches": breaches[:10], "multiple": said["multiple"]},
+        sources={"page": g.APP_PAGE}))
+
+
+@qa(component="rest.gem_screener", tier=SafetyTier.SAFE, surface="rest")
+def test_every_derived_figure_follows_its_published_definition(rest_anon):
+    """Price/revenue, earnings after emissions, the 30x test, slippage, the Degen
+    gates, a theme's edge over BTC and a chain's upside are each a function of
+    other figures the snapshot publishes. Recomputed on every row that carries
+    the inputs: a row where they disagree is a breach. (The level a coin opens
+    with is held by the audit script, which reads one coin route per pick.)"""
+    snap = read_snapshot(rest_anon)
+    identities = g.derived_identities(snap)
+    total = len(snap["apps"])
+    thin = [i["name"] for i in identities if i["name"] in ("ps", "30x test", "degen gates")
+            and i["checked"] < 0.5 * total]
+    if thin:
+        raise Inconclusive(f"too few of the {total} rows carry the inputs for: {', '.join(thin)}")
+    breaches = [{"figure": i["name"], "rows": i["breaches"][:8], "count": len(i["breaches"])}
+                for i in identities if i["breaches"]]
+    conclude(Measurement(
+        verdict="failed" if breaches else "passed",
+        reason=("; ".join(f"{b['figure']}: {b['count']} row(s) disagree with their own inputs ({', '.join(map(str, b['rows'][:4]))})"
+                          for b in breaches)
+                if breaches else
+                "; ".join(f"{i['name']} {i['checked']}" for i in identities) + " rows recomputed, none disagree"),
+        left={"breaches": sum(b["count"] for b in breaches), "rows_read": sum(i["checked"] for i in identities)},
+        right={"breaches": 0},
+        population={"breaches": breaches, "identities": [{k: i[k] for k in ("name", "checked", "max_dev")}
+                                                         for i in identities]},
+        sources={"page": g.APP_PAGE}))
+
+
+@qa(component="rest.gem_screener", tier=SafetyTier.SAFE, surface="rest")
+def test_the_runrate_uses_the_multipliers_its_page_states(rest_anon):
+    """The page says the run-rate is "last 30 days x 12" (or x 4 over 90); the
+    value on a row whose basis is the 30-day estimate over its own 30-day revenue
+    is the multiplier the code applies. On 2026-09-30 the page said 12 and the
+    code applied 365 / 30 = 12.1667, on all 45 rows of that basis -- 1.4 % more
+    than the stated definition, carried into price/revenue and the upside."""
+    snap, text = read_page(rest_anon)
+    stated = g.stated_runrate_factors(text)
+    said = g.runrate_factor_breaches(snap, stated)
+    if said["stated"] is None:
+        raise Inconclusive("the page no longer words its 30-day multiplier as 'last 30 days x N', so there "
+                           "is nothing stated to compare with")
+    if said["checked"] < 10:
+        raise Inconclusive(f"only {said['checked']} rows rest on the 30-day basis")
+    breaches = said["breaches"]
+    conclude(Measurement(
+        verdict="failed" if breaches else "passed",
+        reason=(f"the page states the 30-day run-rate as last 30 days x {said['stated']:g}; "
+                f"{len(breaches)} of {said['checked']} rows apply x {sorted({b['applied'] for b in breaches})[0]:g} "
+                f"({breaches[0]['row']}: applied {breaches[0]['applied']:g})"
+                if breaches else
+                f"all {said['checked']} rows on the 30-day basis apply the x {said['stated']:g} the page states"),
+        left={"rows_off": len(breaches), "checked": said["checked"], "applied": sorted({b["applied"] for b in breaches})[:3]},
+        right={"rows_off": 0, "stated": said["stated"]},
+        population={"breaches": breaches[:10], "stated": stated},
         sources={"page": g.APP_PAGE}))
 
 

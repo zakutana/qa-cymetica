@@ -14,8 +14,8 @@ So the audit is four parts, and only the first two are code:
 | Part | Where | What it holds |
 |---|---|---|
 | the judgements | `qa/gemaudit.py` | pure functions over the page's own snapshot and over what the sources say |
-| the core checks | `tests/rest/test_gem_screener_*.py` | what a redesign will not change: the numbers equal their sources, a pick opens the coin it names, the upside and altseason follow their own rules |
-| the procedure | `scripts/gem_audit.py tick` | reads everything, writes `state/gem_audit/latest.md`, says what moved since the last tick |
+| the core checks | `tests/rest/test_gem_screener_*.py` | what a redesign will not change: the numbers equal their sources, a pick opens the coin it names, the upside and altseason follow their own rules, every derived figure follows its own definition, the run-rate uses the multiplier its page states |
+| the procedure | `scripts/gem_audit.py tick` | reads everything, recomputes the derived figures and (for the shortlist and the top by upside) the revenue figures from DefiLlama's daily series, writes `state/gem_audit/latest.md`, says what moved since the last tick |
 | the browser pass | this file | what a script cannot see |
 
 Read-only throughout. Nothing is sent, filed or drafted to Cymetica from here: a
@@ -38,6 +38,15 @@ operator the moment it is seen.
    `python scripts/gem_audit.py report` prints the tables again; `brief` says how old
    the last tick is. A source that did not answer is named under "not read" and its
    section is absent -- never treat a missing section as agreement.
+
+   The two questions it answers are different and should not be mixed: *is each
+   figure the source's figure* (copies: supply, price, revenue, pool liquidity) and
+   *is each derived figure the function it says it is* (P/S, earnings, slippage,
+   the gates, the run-rate, six-month growth). Neither says whether the rank predicts
+   anything -- that is their own backtest's question, and it reads "inconclusive".
+   What it could not reproduce from their published definition (Strength 3M's
+   revenue factor, the trajectory quarters' normalisation) is a documentation gap to
+   tell the operator, not a defect to file.
 
 2. **The core checks**, under a preregistration like any other run:
    ```

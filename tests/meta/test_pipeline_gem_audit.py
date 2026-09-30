@@ -227,13 +227,117 @@ def test_the_audit_judges_columns_as_populations_and_fails_loudly_when_a_source_
     _a_source_that_fails_is_never_an_empty_answer_and_the_joins_group_as_defillama_does()
 
 
+def _the_derived_figures_are_held_to_their_definitions():
+    """Each identity `derived_identities` recomputes, refuted on one row built to
+    break exactly that one, and let through on the same row made right. A row
+    that lacks an input is skipped -- `checked` says how many were read."""
+    def breaches(apps=(), name=None, coins=None, **extra):
+        snap = _snapshot(list(apps), **extra)
+        by = {i["name"]: i for i in g.derived_identities(snap, coins)}
+        return by[name]
+
+    # ps = market cap / run-rate
+    ok = {"runrate": {"value": 100.0}, "ps": 5.0, "mcap": 500.0, "symbol": "A"}
+    assert breaches([ok], "ps")["breaches"] == [] and breaches([ok], "ps")["checked"] == 1
+    assert breaches([dict(ok, ps=6.0)], "ps")["breaches"] == ["A"], "a P/S of 6 for 500 / 100 passed"
+    assert breaches([{"symbol": "B"}], "ps")["checked"] == 0, "a row with no inputs was counted as read"
+
+    # earnings after emissions, and the 'printed' flag
+    e = {"emissions30d": 40.0, "rev30d": 100.0, "earnings30d": 60.0, "printed": False, "symbol": "E"}
+    assert breaches([e], "earnings")["breaches"] == []
+    assert breaches([dict(e, earnings30d=50.0)], "earnings")["breaches"] == ["E"]
+    assert breaches([dict(e, printed=True)], "earnings")["breaches"] == ["E"], (
+        "'printed' on a row whose emissions are below its revenue passed")
+
+    # 30x test
+    t = {"symbol": "T", "mcap": 1000.0, "test30": {"mult": 30, "implied": 30000.0, "ceiling": 90000.0,
+                                                   "room_x": 90.0, "size_ok": True}}
+    assert breaches([t], "30x test")["breaches"] == []
+    assert breaches([dict(t, test30=dict(t["test30"], size_ok=False))], "30x test")["breaches"] == ["T"]
+    assert breaches([dict(t, test30=dict(t["test30"], implied=40000.0))], "30x test")["breaches"] == ["T"]
+
+    # slippage and the liquidity pass rule
+    liq = {"symbol": "L", "liq": {"ticket": 10000.0, "pair_liq_usd": 500000.0, "impact_pct": 4.0,
+                                  "vol24h": 0.0, "ok": False}}
+    assert breaches([liq], "liquidity", risk_rules={"max_impact_pct": 3.0, "vol_pass": 2e6})["breaches"] == []
+    wrong = dict(liq, liq=dict(liq["liq"], ok=True))
+    assert breaches([wrong], "liquidity", risk_rules={"max_impact_pct": 3.0, "vol_pass": 2e6})["breaches"] == ["L"], (
+        "a 4 % slippage on 10K passed the 3 % rule")
+    assert breaches([dict(liq, liq=dict(liq["liq"], impact_pct=9.0))], "liquidity",
+                    risk_rules={"max_impact_pct": 3.0, "vol_pass": 2e6})["breaches"] == ["L"], (
+        "a slippage that is not 100 x ticket / (pool / 2) passed")
+
+    # the Degen gates
+    rules = {"degen": {"rules": {"min_rev30": 100000, "min_potential": 2.5}}}
+    small = {"symbol": "G", "rev30d": 50000.0, "potential": 10.0, "reliable": True, "degen_ok": False,
+             "degen_fail": ["small_business"]}
+    assert breaches([small], "degen gates", **rules)["breaches"] == []
+    assert breaches([dict(small, degen_fail=[])], "degen gates", **rules)["breaches"] == ["G"], (
+        "a business under the revenue floor with no failed gate passed")
+    assert breaches([dict(small, degen_ok=True)], "degen gates", **rules)["breaches"] == ["G"], (
+        "a pick with a failed gate passed")
+
+    # themes and chains
+    theme = {"theme_4w": 0.5, "btc_4w": 0.1, "rs1m": 0.3636, "hot": True, "symbol": "th"}
+    assert breaches(name="themes", altseason={"alt_4w_median": 0.2}, themes=[theme])["breaches"] == []
+    assert breaches(name="themes", altseason={"alt_4w_median": 0.2},
+                    themes=[dict(theme, hot=False)])["breaches"] == ["th"]
+    assert breaches(name="themes", altseason={"alt_4w_median": 0.2},
+                    themes=[dict(theme, rs1m=0.4)])["breaches"] == ["th"]
+    chain = {"name": "C", "activity": {"value": 100.0}, "mcap": 500.0, "ps": 5.0, "potential_raw": 4.0}
+    bench = {"bench_chains": {"mult": 20.0, "fee_mult": 100.0}}
+    assert breaches(name="chains", chains=[chain], **bench)["breaches"] == []
+    assert breaches(name="chains", chains=[dict(chain, potential_raw=9.0)], **bench)["breaches"] == ["C"]
+
+    # the level is round(10 x the weighted mean of its areas), inside its range
+    level = {"X": {"degen_level": {"level": 6, "low": 5, "high": 9, "areas": [{"weight": 1.0, "value": 0.6}]}}}
+    assert breaches(name="degen level", coins=level)["breaches"] == []
+    bad = {"X": {"degen_level": {"level": 7, "low": 5, "high": 9, "areas": [{"weight": 1.0, "value": 0.6}]}}}
+    assert breaches(name="degen level", coins=bad)["breaches"] == ["X"]
+
+    # the multipliers the page states are read from its words, and compared with what it applies
+    assert g.stated_runrate_factors("<b>last 30 days</b> x 12, last 90 days × 4, twelve times the median") == {30: 12.0, 90: 4.0}
+    assert round(g.stated_runrate_factors("last 30 days × 365/30")[30], 4) == 12.1667
+    assert g.stated_runrate_factors("no multipliers here") == {}
+    row = _app("a#1", "AAA", 1.0, rev30d=100.0, runrate={"value": 1216.67, "basis": "30d"})
+    assert len(g.runrate_factor_breaches(_snapshot([row]), {30: 12.0})["breaches"]) == 1, (
+        "a run-rate of 12.1667 x revenue passed against a stated x 12")
+    assert g.runrate_factor_breaches(_snapshot([row]), {30: 365 / 30})["breaches"] == [], (
+        "the stated factor was assumed, not read")
+    assert g.runrate_factor_breaches(_snapshot([row]), {})["checked"] == 0, "an unread tooltip was read as agreeing"
+
+    # a figure shown as 100 % to holders while their holders revenue exceeds the total
+    over = _app("a#2", "OVR", 1.0, holders30d=150.0, total30d=100.0, holders_share=1.0)
+    assert [c["row"] for c in g.holders_clipped(_snapshot([over]))] == ["OVR(a#2)"]
+
+    # recomputing from the raw daily series
+    import datetime as dt
+    start = dt.date(2026, 1, 1)
+    chart = [[int(dt.datetime(start.year, start.month, start.day, tzinfo=dt.timezone.utc).timestamp()) + 86400 * i,
+              100.0 * 1.01 ** i] for i in range(200)]
+    days = {start + dt.timedelta(days=i): 100.0 * 1.01 ** i for i in range(200)}
+    last = max(days)
+    page30 = sum(days[last - dt.timedelta(days=i)] for i in range(30))
+    app = _app("a#3", "SER", 1.0, rev30d=page30, monthly=[], runrate={"value": page30 * 365 / 30, "basis": "30d"},
+               growth6m={"g": 100 * (1.01 ** 30 - 1), "weeks": 26, "r2": 1.0})
+    made = g.recompute_from_series(app, chart)
+    assert made["rev30d"]["dev"] < 1e-9 and made["runrate"]["dev"] < 1e-9, made
+    assert abs(made["growth6m"]["mine"] - 100 * (1.01 ** 30 - 1)) < 0.01 and made["growth6m"]["weeks_mine"] == 26, made
+    off = g.recompute_from_series(dict(app, rev30d=page30 * 1.2), chart)
+    assert off["rev30d"]["dev"] > 0.15, "a 20 % wrong 30-day revenue was not seen"
+    gappy = [p for n, p in enumerate(chart) if not (100 <= n <= 103)]
+    assert g.recompute_from_series(app, gappy)["growth6m"]["weeks_mine"] < 26, (
+        "a week with missing days was kept in the regression")
+
+
 @qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
-def test_the_audit_sees_a_wrong_upside_a_wrong_identity_and_a_wrong_altseason():
+def test_the_audit_sees_a_wrong_upside_a_wrong_identity_a_wrong_altseason_and_a_wrong_derived_figure():
     """Each judgement the core checks make is refuted here on data built to be
     wrong in exactly its way, and shown to let ordinary readings through."""
     _the_upside_check_sees_a_wrong_multiple_and_a_wrong_cap()
     _a_pick_that_opens_another_coin_is_seen_and_a_shared_ticker_is_named()
     _the_altseason_numbers_are_held_to_their_own_published_rules()
+    _the_derived_figures_are_held_to_their_definitions()
 
 
 @qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")

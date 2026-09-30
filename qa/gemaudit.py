@@ -406,6 +406,286 @@ def altseason_breaches(snap: dict) -> dict:
     return {"breaches": breaches, "unread": unread}
 
 
+def _close(value, expected, *, rel: float = 0.01, abs_tol: float = 0.0) -> bool:
+    if value is None or expected is None:
+        return False
+    return abs(value - expected) <= max(abs_tol, rel * abs(expected))
+
+
+def derived_identities(snap: dict, coins: dict | None = None) -> list[dict]:
+    """Every derived figure the snapshot publishes that is an exact function of
+    other figures it publishes, recomputed. All of these held on 2026-09-30, on
+    every row that carries the inputs; a breach is a row where they did not.
+
+    Returns one dict per identity: name, the definition, rows checked, breaches
+    (each naming its row) and the largest relative deviation seen. A row that
+    lacks an input is skipped, not passed: `checked` says how many were read.
+    """
+    rules, risk = (snap.get("degen") or {}).get("rules") or {}, snap.get("risk_rules") or {}
+    alt4 = num((snap.get("altseason") or {}).get("alt_4w_median"))
+    out: list[dict] = []
+
+    def run(name: str, definition: str, rows, test):
+        checked, breaches, worst = 0, [], 0.0
+        for row in rows:
+            verdict = test(row)
+            if verdict is None:
+                continue
+            checked += 1
+            ok, dev = verdict
+            worst = max(worst, dev or 0.0)
+            if not ok:
+                breaches.append(row.get("symbol") or row.get("key") or row.get("name"))
+        out.append({"name": name, "definition": definition, "checked": checked,
+                    "breaches": breaches, "max_dev": round(worst, 5)})
+
+    apps = snap["apps"]
+
+    def dev(a, b):
+        return abs(a / b - 1.0) if a is not None and b else None
+
+    def ps_test(a):
+        rr, ps, mcap = num((a.get("runrate") or {}).get("value")), num(a.get("ps")), num(a.get("mcap"))
+        if not rr or rr <= 0 or ps is None or not mcap:
+            return None
+        return _close(ps, mcap / rr, rel=0.01, abs_tol=0.0006), dev(ps, mcap / rr)
+    run("ps", "price/revenue = market cap / run-rate revenue", apps, ps_test)
+
+    def earn_test(a):
+        e, r, n = num(a.get("emissions30d")), num(a.get("rev30d")), num(a.get("earnings30d"))
+        if e is None or r is None or n is None:
+            return None
+        return (abs((r - e) - n) <= max(1.0, 0.001 * abs(r)) and bool(a.get("printed")) == (e > r)), None
+    run("earnings", "earnings after emissions = revenue - emissions; 'printed' = emissions > revenue", apps, earn_test)
+
+    def t30_test(a):
+        t = a.get("test30") or {}
+        if not t.get("implied") or not num(a.get("mcap")):
+            return None
+        ok = _close(t["implied"], t["mult"] * a["mcap"], rel=0.001)
+        if t.get("ceiling") and t.get("room_x") is not None:
+            ok = ok and _close(t["room_x"], t["ceiling"] / a["mcap"], rel=0.01)
+        if t.get("ceiling") is not None and t.get("size_ok") is not None:
+            ok = ok and ((t["implied"] <= t["ceiling"]) == bool(t["size_ok"]))
+        return ok, dev(t["implied"], t["mult"] * a["mcap"])
+    run("30x test", "implied = 30 x market cap; room = rival / market cap; size ok = implied <= rival", apps, t30_test)
+
+    def liq_test(a):
+        liq = a.get("liq") or {}
+        pool, impact, ticket = num(liq.get("pair_liq_usd")), num(liq.get("impact_pct")), num(liq.get("ticket"))
+        if not pool or impact is None or not ticket:
+            return None
+        ok = _close(impact, 100.0 * ticket / (pool / 2.0), rel=0.01)
+        if liq.get("ok") is not None and risk.get("max_impact_pct") is not None:
+            passes = impact <= risk["max_impact_pct"] or (num(liq.get("vol24h")) or 0) >= (risk.get("vol_pass") or 0)
+            ok = ok and bool(liq["ok"]) == bool(passes)
+        return ok, dev(impact, 100.0 * ticket / (pool / 2.0))
+    run("liquidity", "slippage = 100 x ticket / (pool / 2); passes if <= 3 % or 24 h volume >= 2M", apps, liq_test)
+
+    def gate_test(a):
+        fails = set(a.get("degen_fail") or [])
+        if not rules or a.get("rev30d") is None or a.get("potential") is None:
+            return None
+        ok = (("small_business" in fails) == (a["rev30d"] < rules["min_rev30"])
+              and ("not_cheap" in fails) == (a["potential"] < rules["min_potential"])
+              and ("not_vetted" in fails) == (not (a.get("reliable") or a.get("young")))
+              and bool(a.get("degen_ok")) == (not fails))
+        if (a.get("liq") or {}).get("ok") is not None:
+            ok = ok and ("thin_liquidity" in fails) == ((a["liq"]["ok"]) is False)
+        return ok, None
+    run("degen gates", "small business, not cheap, not vetted, thin liquidity and 'pick' follow the published rules", apps, gate_test)
+
+    themes = [t for t in snap.get("themes") or [] if isinstance(t, dict)]
+
+    def theme_test(t):
+        pairs = (("rs1m", "theme_4w", "btc_4w"), ("rs3m", "theme_13w", "btc_13w"))
+        ok, read = True, False
+        for target, theme, btc in pairs:
+            if None in (t.get(target), t.get(theme), t.get(btc)):
+                continue
+            read = True
+            ok = ok and abs((1 + t[theme]) / (1 + t[btc]) - 1 - t[target]) <= 0.0015
+        if alt4 is not None and t.get("theme_4w") is not None and t.get("hot") is not None:
+            read = True
+            ok = ok and bool(t["hot"]) == (t["theme_4w"] > alt4 and (t.get("rs1m") or 0) > 0)
+        return (ok, None) if read else None
+    run("themes", "vs BTC = (1 + theme) / (1 + BTC) - 1; 'hot' = beat BTC and the median alt over four weeks", themes, theme_test)
+
+    chains = [c for c in snap.get("chains") or [] if isinstance(c, dict)]
+    bench = snap.get("bench_chains") or {}
+
+    def chain_test(c):
+        act, mcap, ps = num((c.get("activity") or {}).get("value") if isinstance(c.get("activity"), dict) else None), num(c.get("mcap")), num(c.get("ps"))
+        raw, mult = num(c.get("potential_raw")), num(bench.get("mult"))
+        if not (act and mcap and ps and raw is not None and mult):
+            return None
+        ok = _close(ps, mcap / act, rel=0.002) and _close(raw, mult / ps, rel=0.02, abs_tol=0.002)
+        fee, fm, pf = num((c.get("fee_runrate") or {}).get("value")), num(bench.get("fee_mult")), num(c.get("potential_fees_raw"))
+        if fee and fm and pf is not None:
+            ok = ok and _close(pf, fm / (mcap / fee), rel=0.02, abs_tol=0.002)
+        return ok, dev(ps, mcap / act)
+    run("chains", "price/activity = market cap / yearly activity fees; upside = benchmark / that; fee upside likewise", chains, chain_test)
+
+    if coins:
+        def level_test(record):
+            level = (record or {}).get("degen_level") or {}
+            areas = level.get("areas") or []
+            if not areas or level.get("level") is None:
+                return None
+            weight = sum(a["weight"] for a in areas)
+            score = sum(a["weight"] * a["value"] for a in areas) / weight if weight else None
+            low, high = level.get("low"), level.get("high")
+            ok = score is not None and round(10 * score) == level["level"] and (low is None or high is None or low <= level["level"] <= high)
+            return ok, None
+        rows = [dict(record, symbol=symbol) for symbol, record in coins.items() if isinstance(record, dict)]
+        run("degen level", "level = round(10 x weighted mean of the six area scores), inside its own range", rows, level_test)
+    return out
+
+
+def holders_clipped(snap: dict) -> list[dict]:
+    """Rows whose 'share of revenue to holders' the page shows as 100 % while
+    DefiLlama's own holders revenue is larger than its total revenue."""
+    out = []
+    for a in snap["apps"]:
+        holders, total, share = num(a.get("holders30d")), num(a.get("total30d")), num(a.get("holders_share"))
+        if holders and total and share is not None and holders > total * 1.001:
+            out.append({"row": label(a), "holders30d": holders, "total30d": total, "shown_share": share})
+    return out
+
+
+RUNRATE_FACTOR = re.compile(r"last\s+(\d+)\s+days\s*[×x]\s*(\d+)(?:\s*/\s*(\d+))?", re.I)
+
+
+def stated_runrate_factors(text: str) -> dict[int, float]:
+    """{30: 12.0, 90: 4.0}: the multipliers the page's own words give the two
+    estimates ("last 30 days x 12, last 90 days x 4"), read from its text."""
+    out = {}
+    for days, top, bottom in RUNRATE_FACTOR.findall(re.sub(r"<[^>]+>", " ", text or "")):
+        out[int(days)] = float(top) / float(bottom) if bottom else float(top)
+    return out
+
+
+def runrate_factor_breaches(snap: dict, stated: dict[int, float], *, tol: float = 0.003) -> dict:
+    """Rows whose run-rate rests on the 30-day estimate: the value over the
+    30-day revenue is the multiplier, and it should be the one the page states.
+    2026-09-30: stated x 12, applied x 365 / 30 = 12.167 (1.4 % higher) on all 45."""
+    want = stated.get(30)
+    if want is None:
+        return {"stated": None, "checked": 0, "breaches": []}
+    checked, breaches = 0, []
+    for a in snap["apps"]:
+        rr = a.get("runrate") or {}
+        value, revenue = num(rr.get("value")), num(a.get("rev30d"))
+        if rr.get("basis") != "30d" or not value or not revenue or revenue <= 0:
+            continue
+        checked += 1
+        ratio = value / revenue
+        if abs(ratio / want - 1.0) > tol:
+            breaches.append({"row": label(a), "applied": round(ratio, 4), "stated": want})
+    return {"stated": want, "checked": checked, "breaches": breaches}
+
+
+def recompute_from_series(app: dict, chart: list) -> dict:
+    """The page's revenue figures recomputed from DefiLlama's own daily series.
+
+    All of these reproduced on 2026-09-30 for 25 apps: `rev30d` is the sum of
+    the last 30 calendar days to the dollar; each calendar month is its days;
+    the run-rate on the median basis is 12 x the median of the three latest
+    30-day windows (30-day and 90-day bases are annualised x 365 / days); and
+    growth over six months is a log-linear regression of weekly sums in which
+    only weeks with all seven days present are kept and the kept weeks are
+    numbered 0, 1, 2 ... -- so a gap in time is closed, not measured.
+    Missing days count as zero in the sums and as "not known" in the weeks."""
+    import datetime as dt
+    import math
+
+    days = {}
+    for ts, value in chart or []:
+        days[dt.datetime.fromtimestamp(ts, dt.timezone.utc).date()] = float(value or 0.0)
+    if not days:
+        return {"error": "no daily series"}
+    last = max(days)
+    day = dt.timedelta(days=1)
+
+    def window(end, n):
+        return sum(days.get(end - i * day, 0.0) for i in range(n))
+
+    def ratio_dev(mine, page):
+        return abs(mine / page - 1.0) if mine is not None and page else None
+
+    out = {"last_day": str(last)}
+    mine30 = window(last, 30)
+    out["rev30d"] = {"page": num(app.get("rev30d")), "mine": mine30, "dev": ratio_dev(mine30, num(app.get("rev30d")))}
+
+    worst = 0.0
+    for m in app.get("monthly") or []:
+        try:
+            year, month = map(int, str(m.get("m")).split("-"))
+        except ValueError:
+            continue
+        page = num(m.get("v"))
+        if page:
+            total = sum(v for d, v in days.items() if d.year == year and d.month == month)
+            worst = max(worst, abs(total / page - 1.0))
+    out["monthly_worst_dev"] = round(worst, 5)
+
+    rr = app.get("runrate") or {}
+    basis, page_rr = rr.get("basis"), num(rr.get("value"))
+    mine_rr = None
+    if basis == "med3":
+        windows = [window(last - 30 * k * day, 30) for k in range(3)]
+        mine_rr = 12.0 * sorted(windows)[1]
+    elif basis == "30d":
+        mine_rr = mine30 * 365.0 / 30.0
+    elif basis in ("90d", "90d-sparse") and len(days) >= 90:
+        mine_rr = window(last, 90) * 365.0 / 90.0
+    out["runrate"] = {"basis": basis, "page": page_rr, "mine": mine_rr, "dev": ratio_dev(mine_rr, page_rr)}
+
+    weeks = []
+    for i in range(26):
+        end = last - 7 * i * day
+        present = sum(1 for j in range(7) if (end - j * day) in days)
+        if present == 7:
+            total = window(end, 7)
+            if total > 0:
+                weeks.append(total)
+    weeks = weeks[::-1]
+    growth = app.get("growth6m") or {}
+    if len(weeks) >= 4:
+        n = len(weeks)
+        xs, ys = list(range(n)), [math.log(w) for w in weeks]
+        mx, my = sum(xs) / n, sum(ys) / n
+        sxx = sum((x - mx) ** 2 for x in xs)
+        b = sum((x - mx) * (y - my) for x, y in zip(xs, ys)) / sxx
+        r2 = 0.0
+        ss_tot = sum((y - my) ** 2 for y in ys)
+        if ss_tot:
+            a0 = my - b * mx
+            r2 = 1 - sum((y - (a0 + b * x)) ** 2 for x, y in zip(xs, ys)) / ss_tot
+        out["growth6m"] = {"page": num(growth.get("g")), "mine": 100.0 * (math.exp(b * 30.0 / 7.0) - 1.0),
+                           "weeks_page": growth.get("weeks"), "weeks_mine": n, "r2_page": num(growth.get("r2")), "r2_mine": round(r2, 3)}
+    return out
+
+
+def sampled_apps(snap: dict, limit: int = 12) -> list[dict]:
+    """The apps whose daily revenue is recomputed: the shortlist first (it is what
+    a degen would buy), then the rest of the top by stated upside, `limit` in all."""
+    by_key = {a.get("key"): a for a in snap["apps"]}
+    chosen = [by_key[k] for k in (snap.get("degen") or {}).get("shortlist") or [] if k in by_key]
+    rest = sorted((a for a in snap["apps"] if a not in chosen and num(a.get("potential"))),
+                  key=lambda a: -(num(a.get("potential")) or 0.0))
+    return (chosen + rest)[:limit]
+
+
+def fetch_llama_series(get: Callable, slug: str) -> list:
+    body = _json(get(f"https://api.llama.fi/summary/fees/{slug}", params={"dataType": "dailyRevenue"}),
+                 f"DefiLlama fees {slug}")
+    chart = body.get("totalDataChart") if isinstance(body, dict) else None
+    if not isinstance(chart, list) or not chart:
+        raise SourceUnavailable(f"DefiLlama fees {slug} carried no daily series")
+    return chart
+
+
 def duplicate_tickers(snap: dict) -> dict[str, list[dict]]:
     """Tickers shared by more than one app: the ones a symbol route cannot tell
     apart. 2026-09-30: INDEX, MET, EDGE and UP."""
@@ -630,9 +910,13 @@ def source_columns(snap: dict, sources: dict | None) -> dict:
 
 
 def build_report(snap: dict, *, sources: dict | None = None, picks_api: list | None = None,
-                 coins_api: dict | None = None, now: float | None = None) -> dict:
+                 coins_api: dict | None = None, page_text: str | None = None,
+                 series: dict | None = None, now: float | None = None) -> dict:
     """The whole audit as one dict. Pure: give it the snapshot and whatever was
-    fetched, and it says what it can. Missing inputs leave their section empty."""
+    fetched, and it says what it can. Missing inputs leave their section empty.
+
+    `page_text` is the app page's own words (for the multipliers it states);
+    `series` maps an app key to DefiLlama's daily revenue series for it."""
     now = time.time() if now is None else now
     report = {
         "at": now, "snapshot_generated_at": snap.get("generated_at"),
@@ -646,6 +930,14 @@ def build_report(snap: dict, *, sources: dict | None = None, picks_api: list | N
     }
     if picks_api is not None and coins_api is not None:
         report["pick_identity"] = pick_identity_breaches(picks_api, coins_api)
+    report["identities"] = derived_identities(snap, coins_api)
+    report["holders_clipped"] = holders_clipped(snap)
+    if page_text is not None:
+        report["runrate_factors"] = runrate_factor_breaches(snap, stated_runrate_factors(page_text))
+    if series:
+        by_key = {a.get("key"): a for a in snap["apps"]}
+        report["series"] = {label(by_key[k]): recompute_from_series(by_key[k], chart)
+                            for k, chart in series.items() if k in by_key}
     return report
 
 
@@ -663,6 +955,15 @@ def report_lines(report: dict) -> list[str]:
                      + (f" ({', '.join(b['row'] for b in identity)})" if identity else ""))
     fm = report.get("upside_formula") or {}
     lines.append(f"upside formula: {len(fm.get('breaches') or [])} breaches in {fm.get('checked', 0)} apps")
+    idents = report.get("identities") or []
+    if idents:
+        bad = [i["name"] for i in idents if i["breaches"]]
+        lines.append(f"{len(idents)} derived figures recomputed, {sum(i['checked'] for i in idents)} rows: "
+                     + (f"breaches in {', '.join(bad)}" if bad else "no breaches"))
+    rf = report.get("runrate_factors")
+    if rf and rf.get("checked"):
+        lines.append(f"run-rate: page states x{rf['stated']:g}, applies x{rf['breaches'][0]['applied'] if rf['breaches'] else rf['stated']:g} "
+                     f"({len(rf['breaches'])} of {rf['checked']} rows off)")
     picks = report.get("picks") or []
     if picks:
         lines.append(f"{sum(1 for p in picks if not p.get('buyable_on_chain'))} of {len(picks)} picks "
@@ -718,6 +1019,32 @@ def render_markdown(report: dict) -> str:
                    f"{', '.join(p['exit_flags']) or '—'} | {p['price_30d_pct']}% |")
     if "pick_identity" in report:
         out += ["", f"Picks whose symbol opens another coin: {report['pick_identity'] or 'none'}"]
+    if report.get("identities"):
+        out += ["", "## Recomputed from their own inputs", "| figure | definition | rows | breaches | largest deviation |",
+                "|---|---|---|---|---|"]
+        for i in report["identities"]:
+            out.append(f"| {i['name']} | {i['definition']} | {i['checked']} | {len(i['breaches'])} "
+                       f"{i['breaches'][:4] if i['breaches'] else ''} | {i['max_dev']:.2%} |")
+        clipped = report.get("holders_clipped") or []
+        if clipped:
+            out.append(f"\nShown as 100 % to holders while DefiLlama's holders revenue exceeds its total: "
+                       f"{[c['row'] for c in clipped]}")
+        rf = report.get("runrate_factors")
+        if rf and rf.get("checked"):
+            out.append(f"\nRun-rate on the 30-day basis: the page states x{rf['stated']:g}; "
+                       f"{len(rf['breaches'])} of {rf['checked']} rows apply "
+                       f"{sorted({b['applied'] for b in rf['breaches']})[:3]}.")
+    if report.get("series"):
+        out += ["", "## Recomputed from DefiLlama's daily revenue (picks)", "| app | 30-day revenue dev | months worst dev | run-rate (basis, dev) | growth 6M page / mine, weeks |",
+                "|---|---|---|---|---|"]
+        for name, s in report["series"].items():
+            if "error" in s:
+                out.append(f"| {name} | {s['error']} | | | |")
+                continue
+            gr = s.get("growth6m") or {}
+            rr = s.get("runrate") or {}
+            out.append(f"| {name} | {_pct(s['rev30d']['dev'])} | {_pct(s['monthly_worst_dev'])} | {rr.get('basis')}, {_pct(rr.get('dev'))} | "
+                       f"{gr.get('page')} / {round(gr['mine'], 2) if gr.get('mine') is not None else None}, {gr.get('weeks_page')} vs {gr.get('weeks_mine')} |")
     out += ["", f"Tickers shared by two apps: {sorted(report['tickers_shared'])}", "", "## Against independent sources"]
     for name, col in (report["sources"] or {}).items():
         out.append(f"- {name}: n {col['n']}, median {_pct(col.get('median'))}, p90 {_pct(col.get('p90'))}, "

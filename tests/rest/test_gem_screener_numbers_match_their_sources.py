@@ -69,8 +69,13 @@ def get_patiently(client, url, *, tries: int = 3, pause: float = 3.0, **kw):
 
 
 def read_snapshot(rest_anon) -> dict:
-    """The page's own snapshot, or Inconclusive: a read that failed, a page with
-    no snapshot, or one too old to say anything about fidelity."""
+    return read_page(rest_anon)[0]
+
+
+def read_page(rest_anon) -> tuple[dict, str]:
+    """The page's own snapshot and the page's own words (its tooltips say what each
+    figure is), or Inconclusive: a read that failed, a page with no snapshot, or
+    one too old to say anything about fidelity."""
     try:
         response = get_patiently(rest_anon, g.APP_PAGE, headers={"Accept": "text/html"})
     except httpx.HTTPError as exc:
@@ -86,7 +91,7 @@ def read_snapshot(rest_anon) -> dict:
     if age is None or age > MAX_SNAPSHOT_AGE_H:
         raise Inconclusive(f"the snapshot is {age if age is None else round(age, 1)} h old; past "
                            f"{MAX_SNAPSHOT_AGE_H:.0f} h a comparison measures drift, not fidelity")
-    return snap
+    return snap, response.text
 
 
 def from_source(evidence_store, fetch):
