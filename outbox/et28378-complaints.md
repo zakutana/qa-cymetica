@@ -21,4 +21,15 @@ Read-only. Spec = `docs/degen-level-detail/SPEC.md` (spec 4) and its reference s
 | 13 | Where is SUI among the chains | answer | It is there. The default view "Vetted only" shows 17 of 27 chains; SUI is hidden because its data is flagged far below its peak. Under "All by upside" 27 rows show and SUI is number 13. |
 | 14 | Legend still lists old flags | yes | Legend first section still has Micro, New, Post-crash, Declining, No trend, No data, Stale data, Thin liquidity, Cliff and % in 90d. I found 0 flag icons on any Apps or Chains row. Spec A.11: keep the entries of every icon that still exists. |
 
+Fourth batch, from screenshots only (design wishes; spec 1 and spec 3 are met, so these go into the new request, not the "Not yet" note):
+
+| # | Wish | Spec says | Note |
+|---|---|---|---|
+| 15 | Altseason panel: "Expand" button more visible (green or stronger) | spec 1 line 80: an `Expand / Collapse` button on the right; look "keep it the same" (line 20) | Live is a small light-blue text button. |
+| 16 | Slider: labels "Calm" and "Week of Sep 28" are not understood | spec 1 lines 94-97: left `CALM`, tick `TOP ZONE 75`, right `WEEK OF <date>` (date of the data) | As specified. The operator wants it clearer. |
+| 17 | Slider drawn like the scale in the coin's Chart card (three coloured segments and a marker) | spec 1 line 388 already has bands: below 35 calm, below 70 caution, 70 and up hot | Design change to spec 1. |
+| 18 | Chains tab: drop the share from the Layer, Share, Theme cell | part 4 leaves Chains unchanged; the cell is from the old table | Chains only; the Apps cell stays. |
+| 19 | Sectors: tags too wide (Hot now, Already leading, Beaten down but turning, Fundamentals rising); use small icons with a tooltip, as in the coin detail and Apps | spec 3: "tags as tags, not filters", the same tags on Top Picks "Hot sectors" | The Legend and the Top Picks cards must follow. |
+| 20 | Top Picks fund line: drop "CyMetica-managed" | from ET-27671 (passed) | The line says it twice: in the title "(CyMetica-managed)" and again after "-4.1% since launch". |
+
 More to come from the operator.
