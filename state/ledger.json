@@ -19417,6 +19417,20 @@
             "run_id": "run-20260927T071154Z-71d11757",
             "verdict": "fail",
             "at": "2026-09-27T07:28:43+00:00"
+          },
+          {
+            "report_id": 132,
+            "fingerprint": "8465adae960403ddf43c9231c1ad56619cca1ecfa70cefd34e068c80fdbc1216",
+            "run_id": "run-20260930T160239Z-5c0d7f56",
+            "verdict": "pass",
+            "at": "2026-09-30T16:08:49+00:00"
+          },
+          {
+            "report_id": 137,
+            "fingerprint": "8465adae960403ddf43c9231c1ad56619cca1ecfa70cefd34e068c80fdbc1216",
+            "run_id": "run-20260930T160239Z-5c0d7f56",
+            "verdict": "pass",
+            "at": "2026-09-30T16:08:54+00:00"
           }
         ]
       },
@@ -19510,10 +19524,7 @@
         "repair_check": false,
         "reopen": [],
         "retractions": [],
-        "verification_owed": [
-          132,
-          137
-        ],
+        "verification_owed": [],
         "correction_owed": [],
         "disputed": []
       }
@@ -20126,7 +20137,7 @@
     "PASSING, NEVER RAISED": 1
   },
   "events_head": {
-    "seq": 3014,
-    "chain": "c3d9700fefcdbc4a68892f4910bbb0261f283fde07c17daf4ed37bea1ea115bd"
+    "seq": 3018,
+    "chain": "5b6725bea7d1fd87ca63735dcb163378f52077e610100dfd8e1319b9f2e3e1be"
   }
 }
