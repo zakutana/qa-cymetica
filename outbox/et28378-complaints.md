@@ -36,4 +36,6 @@ Fourth batch, from screenshots only (design wishes; spec 1 and spec 3 are met, s
 
 | 22 | Chains should be priced on adoption, apps on revenue; the vendor should design the best algorithm to measure adoption | spec 2, item 3: the measure "includes activity (e.g. yearly fees and/or DEX volume)", written down, guarded against wash trading; the vendor chose yearly activity fees | A change of goal, not a defect: fees say what users paid, not how many use the chain, and a chain with very low fees looks worse at the same use. Ask for the goal, not the method (method and data are theirs): a measure of real adoption, how it resists wash trading and incentives, how low-fee chains are treated. The page already has a separate "Adoption growth 6M" column (stablecoins). |
 
+Parked, not in the request (operator, 2026-09-30: "not yet"): the "Hot now" measure for sectors. Today: beat BTC and the median altcoin over one month, price only; 9 of 12 themes carry the tag; it moves with beta (spec 3 asked "not beta in disguise"). Belief Networks only fill "Talked about" (L2: 2 of 460 people, "too few"; 6 of 12 themes have a reading) and do not touch the tag. Spec 3 offered Belief Networks as a suggestion, so the vendor did not break it.
+
 More to come from the operator.
