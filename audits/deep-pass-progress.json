@@ -1,56 +1,462 @@
 {
-  "run": "deep pass 2026-09-30",
-  "at": "2026-09-30T22:17:13+00:00",
-  "previous_at": "2026-09-28T18:33:40+00:00",
-  "at_finished": null,
-  "start_commit": "cb5ab8869c190bd5fc1b8af080006b17443f1517",
-  "model": "Opus 5.5 (the harness switched to it when the skill loaded); CLAUDE_EFFORT unset",
-  "gaps": [
-    {"id": "R01", "nodeid": "tests/rest/test_build_it_better_log_keeps_whole_bodies.py::test_the_message_log_carries_each_message_whole", "claim": "cuts() calls any longer text that starts with the logged body a cut: a spec_text regenerated with an appended amendment, or an improvements field the old writer appended BB-CHANGE text to, reads as a silent cut (line 59/69), so after #139 is fixed the check can stay red", "source": "review", "votes": null, "verdict": null, "fixed": false, "commit": null},
-    {"id": "R02", "nodeid": "tests/rest/test_gem_screener_picks_and_formulas_are_self_consistent.py::test_every_derived_figure_follows_its_published_definition", "claim": "only ps, 30x test and degen gates must read enough rows; earnings, liquidity, themes, chains with checked == 0 still conclude passed (line 133) -- rule 8", "source": "review", "votes": null, "verdict": null, "fixed": false, "commit": null},
-    {"id": "R03", "nodeid": "tests/rest/test_gem_screener_picks_and_formulas_are_self_consistent.py::test_the_runrate_uses_the_multipliers_its_page_states", "claim": "qa/gemaudit.py:556 stated_runrate_factors understands only 'last N days x M'; a fix by rewording the tooltip makes #141's check inconclusive for ever instead of passing", "source": "review", "votes": null, "verdict": null, "fixed": false, "commit": null},
-    {"id": "R04", "nodeid": "scripts/lab_page.py:372", "claim": "the room panel's invested/pnl/value come from bots[0] only, the same undercount the in_bots fix removed from lab_view", "source": "review", "votes": null, "verdict": null, "fixed": false, "commit": null},
-    {"id": "R05", "nodeid": "qa/gemaudit.py:803", "claim": "picks_table joins coin records by ticker although it promises key; EDGE and UP picks share tickers, so tradeable_here reads another coin", "source": "review", "votes": null, "verdict": null, "fixed": false, "commit": null},
-    {"id": "R06", "nodeid": "qa/gemaudit.py:782", "claim": "upside_table raw_range_at_cap takes min/max over values that may be None (TypeError kills the tick), and its cap is the max shown value, the rule upside_breaches rejected", "source": "review", "votes": null, "verdict": null, "fixed": false, "commit": null},
-    {"id": "R07", "nodeid": "scripts/gem_audit.py:131", "claim": "read_everything does not catch a non-JSON picks/coin body or an httpx timeout on Cymetica reads; one stalled read kills the tick with no report and no 'not read' line", "source": "review", "votes": null, "verdict": null, "fixed": false, "commit": null},
-    {"id": "R08", "nodeid": "qa/gemaudit.py:551", "claim": "holders_clipped never checks that the shown share is 1.0, yet the report says 'shown as 100 %'", "source": "review", "votes": null, "verdict": null, "fixed": false, "commit": null},
-    {"id": "R09", "nodeid": "qa/gemaudit.py:230", "claim": "revenue_pairs counts a child protocol with null total30d as 0, understating the parent's source total", "source": "review", "votes": null, "verdict": null, "fixed": false, "commit": null},
-    {"id": "R10", "nodeid": "qa/gemaudit.py:731", "claim": "freshness uses generated_at or 0, so an undated snapshot yields negative ages and reads as fresh", "source": "review", "votes": null, "verdict": null, "fixed": false, "commit": null},
-    {"id": "R11", "nodeid": "qa/gemaudit.py:563", "claim": "stated_runrate_factors keeps the last match per day count; two wordings on one page resolve by position", "source": "review", "votes": null, "verdict": null, "fixed": false, "commit": null},
-    {"id": "R12", "nodeid": "scripts/fomo_watch.py:351", "claim": "efficiency: at --fomo 1 capture() and resolve() each parse the whole 31 MB diary every minute (~0.5 s each, growing)", "source": "review", "votes": null, "verdict": null, "fixed": false, "commit": null},
-    {"id": "R13", "nodeid": "scripts/fomo_watch.py:441", "claim": "simplification: the study sort re-implements fomo.by_closing inline", "source": "review", "votes": null, "verdict": null, "fixed": false, "commit": null},
-    {"id": "R14", "nodeid": "qa/client.py:338", "claim": "altitude: _Uncounted relies on SafetyTransport timing only HTTPTransport; a timed=False option would state it where timing is decided", "source": "review", "votes": null, "verdict": null, "fixed": false, "commit": null},
-    {"id": "B01", "nodeid": "tests/meta/test_pipeline_lab.py::test_the_night_holds_no_hand_that_trades_files_or_commits", "claim": "spends = ('buy','fund') only: bot_variants' clone.enable (scripts/lab.py:2894, restarts a paused clone = exposure) is not a counted spend, and _calls(s,'affordable') would not match restart_affordable; deleting pass_in_flight() at lab.py:2788 stays green (test lines 1777, 1813-1828)", "source": "audit", "votes": null, "verdict": null, "fixed": false, "commit": null},
-    {"id": "B02", "nodeid": "tests/meta/test_pipeline_lab.py::test_a_room_of_ours_is_judged_when_its_variant_ran_and_archived_when_not", "claim": "picked_rooms(rows, []) == set() is vacuous: with no answers every origin reads None, so a regression that counts OUR rooms as his picks stays green (line 2378); same vacuity at test_pipeline_lab_report.py:292-294", "source": "audit", "votes": null, "verdict": null, "fixed": false, "commit": null},
-    {"id": "B03", "nodeid": "tests/meta/test_pipeline_lab_loop.py::test_a_card_leg_is_sold_at_his_take_profit_and_the_room_runs_on", "claim": "only the take-profit sale through verdicts() is asserted; passing None for leg.get('sl') at scripts/lab.py:1378-1380 (a leg past his stop never sold) stays green here and in the other stop tests; judging at the window end at the exit price is not asserted (lines 1841-1853)", "source": "audit", "votes": null, "verdict": null, "fixed": false, "commit": null},
-    {"id": "B04", "nodeid": "tests/meta/test_pipeline_render.py::test_last_full_run_backfill_stays_off_the_committed_page", "claim": "asserts build_payload()'s default only; if render.py's __main__ (line 2923) passes use_last_full_run=True the committed page carries an uncommitted run's tiles and every guard stays green (test lines 1380-1392)", "source": "audit", "votes": null, "verdict": null, "fixed": false, "commit": null},
-    {"id": "B05", "nodeid": "tests/meta/test_pipeline_timings.py::test_every_real_request_is_timed_and_one_command_lists_the_bad_ones", "claim": "never asserts the fast 200 is left out of the timeouts listing and never produces a slow answer; reducing the filter at scripts/timeouts.py:50 to 'if fresh(r)' or dropping the slow branch stays green (test lines 90-93)", "source": "audit", "votes": null, "verdict": null, "fixed": false, "commit": null},
-    {"id": "C01", "nodeid": "tests/repo/test_nexus_credit.py::test_the_view_is_the_newest_reading_and_says_when_the_newest_read_failed", "claim": "fixtures hold one successful reading and only [reading, failed], never [failed, reading]: a view returning the oldest reading, or 'unread' whenever any earlier read failed, passes (lines 247-256)", "source": "audit", "votes": null, "verdict": null, "fixed": false, "commit": null},
-    {"id": "C02", "nodeid": "tests/rest/test_async_a2a_investigation.py::test_an_async_message_gets_the_investigation_its_card_promises", "claim": "a reply with no parent_message_id / in_reply_to never enters replies (line 111), so its message counts as missing and the verdict is failed; the card does not promise the reply names its parent, and six such kind:deep replies were seen on 2026-09-26 (journal seq 2883..2896) -- a false REPRODUCING against the vendor", "source": "audit", "votes": null, "verdict": null, "fixed": false, "commit": null},
-    {"id": "C03", "nodeid": "tests/rest/test_build_it_better_log_keeps_whole_bodies.py::test_the_message_log_carries_each_message_whole", "claim": "same as R01: a longer text that grew after the message was logged (spec_text amended, improvements extended) is a strict prefix and reads as a cut (lines 59, 69, 132-133)", "source": "audit", "votes": null, "verdict": null, "fixed": false, "commit": null, "duplicate_of": "R01"},
-    {"id": "C04", "nodeid": "tests/rest/test_gem_screener_numbers_match_their_sources.py::test_the_market_caps_rest_on_the_supply_and_price_coingecko_reports", "claim": "checks cg.circ and price against CoinGecko but never mcap ~ price x cg.circ; a pipeline computing mcap from another supply passes while mcap feeds ps and every upside (lines 131-135; qa/gemaudit.py:173-191)", "source": "audit", "votes": null, "verdict": null, "fixed": false, "commit": null},
-    {"id": "C05", "nodeid": "tests/rest/test_gem_screener_picks_and_formulas_are_self_consistent.py::test_every_derived_figure_follows_its_published_definition", "claim": "same as R02: identities outside ps/30x/gates pass on zero rows checked (lines 133-139)", "source": "audit", "votes": null, "verdict": null, "fixed": false, "commit": null, "duplicate_of": "R02"},
-    {"id": "C06", "nodeid": "tests/rest/test_gem_screener_picks_and_formulas_are_self_consistent.py::test_the_upside_is_the_benchmarks_multiple_over_the_coins_own", "claim": "a missing bench.mcap or bench.rr is returned by benchmark_arithmetic as a breach and becomes failed (lines 108-111; gemaudit.py:213-214), while a missing bench.mult is Inconclusive: an unreadable field reads as a broken formula", "source": "audit", "votes": null, "verdict": null, "fixed": false, "commit": null},
-    {"id": "A01", "nodeid": "tests/meta/test_pipeline_clone.py::test_a_settings_patch_carries_only_the_fields_the_grid_walks", "claim": "the docstring (706-707) says the market lists are not ours to move at all while the assertion (728) requires perpetual_markets and custom_markets in SAFE_SETTINGS; scripts/clone.py:74-75 lists them as left out on purpose while :91-92 adds them", "source": "audit", "votes": null, "verdict": null, "fixed": false, "commit": null},
-    {"id": "A02", "nodeid": "tests/meta/test_pipeline_fomo_control.py::test_hot_and_control_are_compared_per_coin_over_one_period", "claim": "only the lower bound of the shared period is asserted; compare() (qa/fomo.py:856-860, 890) has no upper bound, so hot signals from a week the control never saw are set beside it (reproduced: hot at T0 and T0+7d vs control at T0 counts both) and the test stays green (line 334)", "source": "audit", "votes": null, "verdict": null, "fixed": false, "commit": null},
-    {"id": "A03", "nodeid": "tests/meta/test_pipeline_fomo_watch.py::test_a_failed_read_never_writes_a_delisting", "claim": "only a 503 is tried; a 200 with {'rows': null} or an error body is read by _listing (scripts/fomo_watch.py:164) as 'no match', and depth() writes listed:false (492-500) for every coin that round -- the test stays green (line 485)", "source": "audit", "votes": null, "verdict": null, "fixed": false, "commit": null}],
-  "size": "full -- the core moved: qa/state.py",
-  "audit_scope": 83,
-  "review": {"done": true, "findings": 14},
-  "implemented": [
-    {"line": "Zbytky V3 a V4, část: console.cmd --fomo 1 se stropem quote za kolo (60 za minutu intervalu), C6 prozkoumáno (kód beze změny); horizonty zůstaly hodinové kvůli [operator 2026-09-13]", "commit": "7122f3d3"}],
-  "left": [
-    {"line": "Zbytky V3: pravidlo mimo vzorek", "why": "nothing in code is a pattern we fitted ourselves yet (the stop levels are a sweep, NEX-0055/0057 are Nexus's), so the rule has nothing to attach to; kept open, reworded to say so"},
-    {"line": "Degen prompty přes POST /api/v1/chat/stream", "why": "a live chat call spends plan allowance and acts on the account (0b leaves what spends), and the SSE format cannot be built blind without one observed response"},
-    {"line": "Sledovat: verdikty STR-0064..0068, bot STR-0069, #134, ET-28378/28319/27875, BB-SPEC", "why": "watching, and dated for 1 Oct or later"},
-    {"line": "ET-26036 obrazcová TA", "why": "waits for Cymetica"},
-    {"line": "ET-28597", "why": "waits for the senior answer"},
-    {"line": "Altseason Retail 5. 10.", "why": "dated 5 Oct"},
-    {"line": "Gem Screener request podán, BB-ACCEPT a dodání", "why": "waits for the operator's BB-ACCEPT and the delivery"},
-    {"line": "Až Cymetica dodá bod 53 specu", "why": "waits for the delivery"}],
-  "next": [],
-  "retrospective": {"last": "2026-09-27", "done": false},
-  "rule_changes": [],
-  "meta_tests": {"start": 811, "end": null, "reason": null},
-  "finished": false
+ "run": "deep pass 2026-09-30",
+ "at": "2026-09-30T22:17:13+00:00",
+ "previous_at": "2026-09-28T18:33:40+00:00",
+ "at_finished": null,
+ "start_commit": "cb5ab8869c190bd5fc1b8af080006b17443f1517",
+ "model": "Opus 5.5 (the harness switched to it when the skill loaded); CLAUDE_EFFORT unset",
+ "gaps": [
+  {
+   "id": "R01",
+   "nodeid": "tests/rest/test_build_it_better_log_keeps_whole_bodies.py::test_the_message_log_carries_each_message_whole",
+   "claim": "cuts() calls any longer text that starts with the logged body a cut: a spec_text regenerated with an appended amendment, or an improvements field the old writer appended BB-CHANGE text to, reads as a silent cut (line 59/69), so after #139 is fixed the check can stay red",
+   "source": "review",
+   "votes": {
+    "t1": "false_positive",
+    "t2": "real",
+    "t3": "false_positive"
+   },
+   "verdict": "minority",
+   "fixed": false,
+   "commit": null
+  },
+  {
+   "id": "R02",
+   "nodeid": "tests/rest/test_gem_screener_picks_and_formulas_are_self_consistent.py::test_every_derived_figure_follows_its_published_definition",
+   "claim": "only ps, 30x test and degen gates must read enough rows; earnings, liquidity, themes, chains with checked == 0 still conclude passed (line 133) -- rule 8",
+   "source": "review",
+   "votes": {
+    "t1": "real",
+    "t2": "real",
+    "t3": "real"
+   },
+   "verdict": "real",
+   "fixed": false,
+   "commit": null
+  },
+  {
+   "id": "R03",
+   "nodeid": "tests/rest/test_gem_screener_picks_and_formulas_are_self_consistent.py::test_the_runrate_uses_the_multipliers_its_page_states",
+   "claim": "qa/gemaudit.py:556 stated_runrate_factors understands only 'last N days x M'; a fix by rewording the tooltip makes #141's check inconclusive for ever instead of passing",
+   "source": "review",
+   "votes": {
+    "t1": "false_positive",
+    "t2": "false_positive",
+    "t3": "false_positive"
+   },
+   "verdict": "dropped",
+   "fixed": false,
+   "commit": null
+  },
+  {
+   "id": "R04",
+   "nodeid": "scripts/lab_page.py:372",
+   "claim": "the room panel's invested/pnl/value come from bots[0] only, the same undercount the in_bots fix removed from lab_view",
+   "source": "review",
+   "votes": {
+    "t1": "real",
+    "t2": "real",
+    "t3": "real"
+   },
+   "verdict": "real",
+   "fixed": false,
+   "commit": null
+  },
+  {
+   "id": "R05",
+   "nodeid": "qa/gemaudit.py:803",
+   "claim": "picks_table joins coin records by ticker although it promises key; EDGE and UP picks share tickers, so tradeable_here reads another coin",
+   "source": "review",
+   "votes": {
+    "t1": "real",
+    "t2": "real",
+    "t3": "real"
+   },
+   "verdict": "real",
+   "fixed": false,
+   "commit": null
+  },
+  {
+   "id": "R06",
+   "nodeid": "qa/gemaudit.py:782",
+   "claim": "upside_table raw_range_at_cap takes min/max over values that may be None (TypeError kills the tick), and its cap is the max shown value, the rule upside_breaches rejected",
+   "source": "review",
+   "votes": {
+    "t1": "false_positive",
+    "t2": "real",
+    "t3": "real"
+   },
+   "verdict": "real",
+   "fixed": false,
+   "commit": null
+  },
+  {
+   "id": "R07",
+   "nodeid": "scripts/gem_audit.py:131",
+   "claim": "read_everything does not catch a non-JSON picks/coin body or an httpx timeout on Cymetica reads; one stalled read kills the tick with no report and no 'not read' line",
+   "source": "review",
+   "votes": {
+    "t1": "real",
+    "t2": "real",
+    "t3": "real"
+   },
+   "verdict": "real",
+   "fixed": false,
+   "commit": null
+  },
+  {
+   "id": "R08",
+   "nodeid": "qa/gemaudit.py:551",
+   "claim": "holders_clipped never checks that the shown share is 1.0, yet the report says 'shown as 100 %'",
+   "source": "review",
+   "votes": {
+    "t1": "real",
+    "t2": "real",
+    "t3": "real"
+   },
+   "verdict": "real",
+   "fixed": false,
+   "commit": null
+  },
+  {
+   "id": "R09",
+   "nodeid": "qa/gemaudit.py:230",
+   "claim": "revenue_pairs counts a child protocol with null total30d as 0, understating the parent's source total",
+   "source": "review",
+   "votes": {
+    "t1": "false_positive",
+    "t2": "false_positive",
+    "t3": "false_positive"
+   },
+   "verdict": "dropped",
+   "fixed": false,
+   "commit": null
+  },
+  {
+   "id": "R10",
+   "nodeid": "qa/gemaudit.py:731",
+   "claim": "freshness uses generated_at or 0, so an undated snapshot yields negative ages and reads as fresh",
+   "source": "review",
+   "votes": {
+    "t1": "real",
+    "t2": "real",
+    "t3": "real"
+   },
+   "verdict": "real",
+   "fixed": false,
+   "commit": null
+  },
+  {
+   "id": "R11",
+   "nodeid": "qa/gemaudit.py:563",
+   "claim": "stated_runrate_factors keeps the last match per day count; two wordings on one page resolve by position",
+   "source": "review",
+   "votes": {
+    "t1": "false_positive",
+    "t2": "false_positive",
+    "t3": "false_positive"
+   },
+   "verdict": "dropped",
+   "fixed": false,
+   "commit": null
+  },
+  {
+   "id": "R12",
+   "nodeid": "scripts/fomo_watch.py:351",
+   "claim": "efficiency: at --fomo 1 capture() and resolve() each parse the whole 31 MB diary every minute (~0.5 s each, growing)",
+   "source": "review",
+   "votes": {
+    "t1": "false_positive",
+    "t2": "false_positive",
+    "t3": "false_positive"
+   },
+   "verdict": "dropped",
+   "fixed": false,
+   "commit": null
+  },
+  {
+   "id": "R13",
+   "nodeid": "scripts/fomo_watch.py:441",
+   "claim": "simplification: the study sort re-implements fomo.by_closing inline",
+   "source": "review",
+   "votes": {
+    "t1": "false_positive",
+    "t2": "false_positive",
+    "t3": "false_positive"
+   },
+   "verdict": "dropped",
+   "fixed": false,
+   "commit": null
+  },
+  {
+   "id": "R14",
+   "nodeid": "qa/client.py:338",
+   "claim": "altitude: _Uncounted relies on SafetyTransport timing only HTTPTransport; a timed=False option would state it where timing is decided",
+   "source": "review",
+   "votes": {
+    "t1": "false_positive",
+    "t2": "false_positive",
+    "t3": "false_positive"
+   },
+   "verdict": "dropped",
+   "fixed": false,
+   "commit": null
+  },
+  {
+   "id": "B01",
+   "nodeid": "tests/meta/test_pipeline_lab.py::test_the_night_holds_no_hand_that_trades_files_or_commits",
+   "claim": "spends = ('buy','fund') only: bot_variants' clone.enable (scripts/lab.py:2894, restarts a paused clone = exposure) is not a counted spend, and _calls(s,'affordable') would not match restart_affordable; deleting pass_in_flight() at lab.py:2788 stays green (test lines 1777, 1813-1828)",
+   "source": "audit",
+   "votes": {
+    "t1": "false_positive",
+    "t2": "real",
+    "t3": "real"
+   },
+   "verdict": "real",
+   "fixed": false,
+   "commit": null
+  },
+  {
+   "id": "B02",
+   "nodeid": "tests/meta/test_pipeline_lab.py::test_a_room_of_ours_is_judged_when_its_variant_ran_and_archived_when_not",
+   "claim": "picked_rooms(rows, []) == set() is vacuous: with no answers every origin reads None, so a regression that counts OUR rooms as his picks stays green (line 2378); same vacuity at test_pipeline_lab_report.py:292-294",
+   "source": "audit",
+   "votes": {
+    "t1": "false_positive",
+    "t2": "false_positive",
+    "t3": "real"
+   },
+   "verdict": "minority",
+   "fixed": false,
+   "commit": null
+  },
+  {
+   "id": "B03",
+   "nodeid": "tests/meta/test_pipeline_lab_loop.py::test_a_card_leg_is_sold_at_his_take_profit_and_the_room_runs_on",
+   "claim": "only the take-profit sale through verdicts() is asserted; passing None for leg.get('sl') at scripts/lab.py:1378-1380 (a leg past his stop never sold) stays green here and in the other stop tests; judging at the window end at the exit price is not asserted (lines 1841-1853)",
+   "source": "audit",
+   "votes": {
+    "t1": "real",
+    "t2": "real",
+    "t3": "real"
+   },
+   "verdict": "real",
+   "fixed": false,
+   "commit": null
+  },
+  {
+   "id": "B04",
+   "nodeid": "tests/meta/test_pipeline_render.py::test_last_full_run_backfill_stays_off_the_committed_page",
+   "claim": "asserts build_payload()'s default only; if render.py's __main__ (line 2923) passes use_last_full_run=True the committed page carries an uncommitted run's tiles and every guard stays green (test lines 1380-1392)",
+   "source": "audit",
+   "votes": {
+    "t1": "false_positive",
+    "t2": "false_positive",
+    "t3": "false_positive"
+   },
+   "verdict": "dropped",
+   "fixed": false,
+   "commit": null
+  },
+  {
+   "id": "B05",
+   "nodeid": "tests/meta/test_pipeline_timings.py::test_every_real_request_is_timed_and_one_command_lists_the_bad_ones",
+   "claim": "never asserts the fast 200 is left out of the timeouts listing and never produces a slow answer; reducing the filter at scripts/timeouts.py:50 to 'if fresh(r)' or dropping the slow branch stays green (test lines 90-93)",
+   "source": "audit",
+   "votes": {
+    "t1": "real",
+    "t2": "real",
+    "t3": "real"
+   },
+   "verdict": "real",
+   "fixed": false,
+   "commit": null
+  },
+  {
+   "id": "C01",
+   "nodeid": "tests/repo/test_nexus_credit.py::test_the_view_is_the_newest_reading_and_says_when_the_newest_read_failed",
+   "claim": "fixtures hold one successful reading and only [reading, failed], never [failed, reading]: a view returning the oldest reading, or 'unread' whenever any earlier read failed, passes (lines 247-256)",
+   "source": "audit",
+   "votes": {
+    "t1": "real",
+    "t2": "real",
+    "t3": "real"
+   },
+   "verdict": "real",
+   "fixed": false,
+   "commit": null
+  },
+  {
+   "id": "C02",
+   "nodeid": "tests/rest/test_async_a2a_investigation.py::test_an_async_message_gets_the_investigation_its_card_promises",
+   "claim": "a reply with no parent_message_id / in_reply_to never enters replies (line 111), so its message counts as missing and the verdict is failed; the card does not promise the reply names its parent, and six such kind:deep replies were seen on 2026-09-26 (journal seq 2883..2896) -- a false REPRODUCING against the vendor",
+   "source": "audit",
+   "votes": {
+    "t1": "false_positive",
+    "t2": "real",
+    "t3": "real"
+   },
+   "verdict": "real",
+   "fixed": false,
+   "commit": null
+  },
+  {
+   "id": "C03",
+   "nodeid": "tests/rest/test_build_it_better_log_keeps_whole_bodies.py::test_the_message_log_carries_each_message_whole",
+   "claim": "same as R01: a longer text that grew after the message was logged (spec_text amended, improvements extended) is a strict prefix and reads as a cut (lines 59, 69, 132-133)",
+   "source": "audit",
+   "votes": {
+    "t1": "false_positive",
+    "t2": "real",
+    "t3": "false_positive"
+   },
+   "verdict": "minority",
+   "fixed": false,
+   "commit": null,
+   "duplicate_of": "R01"
+  },
+  {
+   "id": "C04",
+   "nodeid": "tests/rest/test_gem_screener_numbers_match_their_sources.py::test_the_market_caps_rest_on_the_supply_and_price_coingecko_reports",
+   "claim": "checks cg.circ and price against CoinGecko but never mcap ~ price x cg.circ; a pipeline computing mcap from another supply passes while mcap feeds ps and every upside (lines 131-135; qa/gemaudit.py:173-191)",
+   "source": "audit",
+   "votes": {
+    "t1": "real",
+    "t2": "real",
+    "t3": "real"
+   },
+   "verdict": "real",
+   "fixed": false,
+   "commit": null
+  },
+  {
+   "id": "C05",
+   "nodeid": "tests/rest/test_gem_screener_picks_and_formulas_are_self_consistent.py::test_every_derived_figure_follows_its_published_definition",
+   "claim": "same as R02: identities outside ps/30x/gates pass on zero rows checked (lines 133-139)",
+   "source": "audit",
+   "votes": {
+    "t1": "real",
+    "t2": "real",
+    "t3": "real"
+   },
+   "verdict": "real",
+   "fixed": false,
+   "commit": null,
+   "duplicate_of": "R02"
+  },
+  {
+   "id": "C06",
+   "nodeid": "tests/rest/test_gem_screener_picks_and_formulas_are_self_consistent.py::test_the_upside_is_the_benchmarks_multiple_over_the_coins_own",
+   "claim": "a missing bench.mcap or bench.rr is returned by benchmark_arithmetic as a breach and becomes failed (lines 108-111; gemaudit.py:213-214), while a missing bench.mult is Inconclusive: an unreadable field reads as a broken formula",
+   "source": "audit",
+   "votes": {
+    "t1": "real",
+    "t2": "real",
+    "t3": "real"
+   },
+   "verdict": "real",
+   "fixed": false,
+   "commit": null
+  },
+  {
+   "id": "A01",
+   "nodeid": "tests/meta/test_pipeline_clone.py::test_a_settings_patch_carries_only_the_fields_the_grid_walks",
+   "claim": "the docstring (706-707) says the market lists are not ours to move at all while the assertion (728) requires perpetual_markets and custom_markets in SAFE_SETTINGS; scripts/clone.py:74-75 lists them as left out on purpose while :91-92 adds them",
+   "source": "audit",
+   "votes": {
+    "t1": "false_positive",
+    "t2": "false_positive",
+    "t3": "false_positive"
+   },
+   "verdict": "dropped",
+   "fixed": false,
+   "commit": null
+  },
+  {
+   "id": "A02",
+   "nodeid": "tests/meta/test_pipeline_fomo_control.py::test_hot_and_control_are_compared_per_coin_over_one_period",
+   "claim": "only the lower bound of the shared period is asserted; compare() (qa/fomo.py:856-860, 890) has no upper bound, so hot signals from a week the control never saw are set beside it (reproduced: hot at T0 and T0+7d vs control at T0 counts both) and the test stays green (line 334)",
+   "source": "audit",
+   "votes": {
+    "t1": "real",
+    "t2": "false_positive",
+    "t3": "false_positive"
+   },
+   "verdict": "minority",
+   "fixed": false,
+   "commit": null
+  },
+  {
+   "id": "A03",
+   "nodeid": "tests/meta/test_pipeline_fomo_watch.py::test_a_failed_read_never_writes_a_delisting",
+   "claim": "only a 503 is tried; a 200 with {'rows': null} or an error body is read by _listing (scripts/fomo_watch.py:164) as 'no match', and depth() writes listed:false (492-500) for every coin that round -- the test stays green (line 485)",
+   "source": "audit",
+   "votes": {
+    "t1": "real",
+    "t2": "false_positive",
+    "t3": "false_positive"
+   },
+   "verdict": "minority",
+   "fixed": false,
+   "commit": null
+  }
+ ],
+ "size": "full -- the core moved: qa/state.py",
+ "audit_scope": 83,
+ "review": {
+  "done": true,
+  "findings": 14
+ },
+ "implemented": [
+  {
+   "line": "Zbytky V3 a V4, část: console.cmd --fomo 1 se stropem quote za kolo (60 za minutu intervalu), C6 prozkoumáno (kód beze změny); horizonty zůstaly hodinové kvůli [operator 2026-09-13]",
+   "commit": "7122f3d3"
+  }
+ ],
+ "left": [
+  {
+   "line": "Zbytky V3: pravidlo mimo vzorek",
+   "why": "nothing in code is a pattern we fitted ourselves yet (the stop levels are a sweep, NEX-0055/0057 are Nexus's), so the rule has nothing to attach to; kept open, reworded to say so"
+  },
+  {
+   "line": "Degen prompty přes POST /api/v1/chat/stream",
+   "why": "a live chat call spends plan allowance and acts on the account (0b leaves what spends), and the SSE format cannot be built blind without one observed response"
+  },
+  {
+   "line": "Sledovat: verdikty STR-0064..0068, bot STR-0069, #134, ET-28378/28319/27875, BB-SPEC",
+   "why": "watching, and dated for 1 Oct or later"
+  },
+  {
+   "line": "ET-26036 obrazcová TA",
+   "why": "waits for Cymetica"
+  },
+  {
+   "line": "ET-28597",
+   "why": "waits for the senior answer"
+  },
+  {
+   "line": "Altseason Retail 5. 10.",
+   "why": "dated 5 Oct"
+  },
+  {
+   "line": "Gem Screener request podán, BB-ACCEPT a dodání",
+   "why": "waits for the operator's BB-ACCEPT and the delivery"
+  },
+  {
+   "line": "Až Cymetica dodá bod 53 specu",
+   "why": "waits for the delivery"
+  }
+ ],
+ "next": [],
+ "retrospective": {
+  "last": "2026-09-27",
+  "done": false
+ },
+ "rule_changes": [],
+ "meta_tests": {
+  "start": 811,
+  "end": null,
+  "reason": null
+ },
+ "finished": false
 }
