@@ -23,7 +23,10 @@ WHAT IT ASSERTS. Each of the newest five messages that are due got a reply
 that is not automatic (`metadata.auto` is not true) within an hour. An hour is
 six times their ten minutes: slack, not the promise. The newest five, not
 every one ever sent, so a fix clears it (a check over a growing log can never
-go green). Fewer than three due messages is inconclusive.
+go green). Fewer than three due messages is inconclusive, and so is a
+message whose only candidate answer names no parent: the card does not
+promise that a reply names its parent, so it cannot be paired and is not a
+miss (deep pass 2026-09-30, C02).
 
 SAFE: one GET. It sends nothing; the messages are the ones the operator had
 us send.
@@ -56,25 +59,37 @@ def _moment(value):
 
 def unanswered(sent: list[dict], replies: list[dict], now: datetime,
                due_after: timedelta = DUE_AFTER, window: int = WINDOW):
-    """(the messages judged, those with no non-automatic reply in time).
+    """(the messages judged, those with no investigation reply in time, those
+    that cannot be told).
 
     `sent`: {"id", "at"}; `replies`: {"reply_to", "at", "auto", "kind"}. An
     investigation is `kind: "deep"` -- which they ALSO mark `auto: true`,
     since NEXUS writes it (deep pass 2026-09-27, R01, 3/3: every deep reply
     was read as the first pass) -- or a reply that is not automatic. A reply
     whose `auto` is None was not classified by them and is not counted as
-    automatic; `first_pass` and `deep_failed` are not investigations."""
+    automatic; `first_pass` and `deep_failed` are not investigations.
+
+    A reply with `reply_to` None names no parent (deep pass 2026-09-30, C02,
+    3/3: six deep replies came back so on 2026-09-26). It cannot be paired,
+    so a message with no reply of its own but such an investigation in its
+    window is unsure, never missing."""
     due = sorted((s for s in sent if now - s["at"] >= due_after),
                  key=lambda s: s["at"])[-window:]
-    missing = []
+
+    def in_time(r, s) -> bool:
+        return (r["at"] is not None
+                and (r.get("kind") == "deep" or r["auto"] is not True)
+                and timedelta(0) <= r["at"] - s["at"] <= due_after)
+
+    missing, unsure = [], []
     for s in due:
-        if not any(r["reply_to"] == s["id"]
-                   and (r.get("kind") == "deep" or r["auto"] is not True)
-                   and r["at"] is not None
-                   and timedelta(0) <= r["at"] - s["at"] <= due_after
-                   for r in replies):
+        if any(r["reply_to"] == s["id"] and in_time(r, s) for r in replies):
+            continue
+        if any(r["reply_to"] is None and in_time(r, s) for r in replies):
+            unsure.append(s)
+        else:
             missing.append(s)
-    return due, missing
+    return due, missing, unsure
 
 
 def _our_sends() -> list[dict]:
@@ -108,13 +123,13 @@ def test_an_async_message_gets_the_investigation_its_card_promises(rest_trusted)
     for m in messages:
         meta = m.get("metadata") or {}
         parent = m.get("parent_message_id") or meta.get("in_reply_to")
-        if parent:
-            replies.append({"reply_to": str(parent), "at": _moment(m.get("created_at")),
-                            "auto": meta.get("auto") if "auto" in meta else None,
-                            "kind": meta.get("kind")})
+        replies.append({"reply_to": str(parent) if parent else None,
+                        "at": _moment(m.get("created_at")),
+                        "auto": meta.get("auto") if "auto" in meta else None,
+                        "kind": meta.get("kind")})
 
     now = datetime.now(timezone.utc)
-    judged, missing = unanswered(_our_sends(), replies, now)
+    judged, missing, unsure = unanswered(_our_sends(), replies, now)
     if len(judged) < MIN_JUDGED:
         raise Inconclusive(f"{len(judged)} async message(s) of ours are due "
                            f"(sent over {DUE_AFTER} ago); {MIN_JUDGED} are needed")
@@ -122,12 +137,17 @@ def test_an_async_message_gets_the_investigation_its_card_promises(rest_trusted)
                                    for s in rows)
     if missing:
         verdict = "failed"
-        # "Nothing but the first pass" was false when a deep reply came back
-        # naming no parent: it cannot be paired, and this says only that.
+        # Only a message with no investigation in its window at all, paired
+        # or not: one naming no parent may be its answer (C02, 2026-09-30).
         reason = (f"{len(missing)} of our {len(judged)} newest due async messages "
-                  f"have no investigation reply paired to them within {DUE_AFTER} "
-                  f"(the card promises 1-10 minutes; a reply that names no parent "
-                  f"message cannot be paired): {names(missing)}")
+                  f"got no investigation reply within {DUE_AFTER}, paired to them "
+                  f"or naming no parent (the card promises 1-10 minutes): "
+                  f"{names(missing)}")
+    elif unsure:
+        raise Inconclusive(
+            f"{len(unsure)} of our {len(judged)} newest due async messages have "
+            f"no reply paired to them, but an investigation naming no parent "
+            f"arrived within {DUE_AFTER} of each and may be theirs: {names(unsure)}")
     else:
         verdict = "passed"
         reason = (f"each of our {len(judged)} newest due async messages got a "
@@ -136,7 +156,9 @@ def test_an_async_message_gets_the_investigation_its_card_promises(rest_trusted)
         verdict=verdict, reason=reason,
         left={"judged": len(judged), "without_investigation": len(missing)},
         right={"without_investigation": 0},
-        population={"inbox_messages": len(messages), "replies_paired": len(replies),
+        population={"inbox_messages": len(messages),
+                    "replies_paired": sum(1 for r in replies if r["reply_to"]),
+                    "replies_unparented": sum(1 for r in replies if not r["reply_to"]),
                     "judged": [s.get("ours") for s in judged]},
         sources={"inbox": INBOX, "ours": "state/journal/events.jsonl (a2a_outcome)",
                  "promise": "/.well-known/agent-card.json communication_guide.async_endpoint"},

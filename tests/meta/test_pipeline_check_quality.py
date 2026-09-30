@@ -437,7 +437,7 @@ def test_the_is_answer_rule_is_self_calibrating_and_still_bites():
     human = lambda q, when: {"reply_to": q, "at": when, "auto": False}
     robot = lambda q, when: {"reply_to": q, "at": when, "auto": True}
     now = at(14)
-    judged, missing = unanswered(sent, [robot(s["id"], s["at"]) for s in sent], now)
+    judged, missing, _ = unanswered(sent, [robot(s["id"], s["at"]) for s in sent], now)
     assert [s["id"] for s in judged] == ["q1", "q2", "q3", "q4", "q5"], (
         "judges the newest five that are due, so a fix clears it")
     assert len(missing) == 5, "an automatic first pass is not the investigation"
@@ -451,7 +451,7 @@ def test_the_is_answer_rule_is_self_calibrating_and_still_bites():
     assert len(unanswered(sent, late, now)[1]) == 5, (
         "a reply hours later is not the lane working")
     fresh = [{"id": "new", "at": now - timedelta(minutes=10)}]
-    assert unanswered(fresh, [], now) == ([], []), "not due yet is not judged"
+    assert unanswered(fresh, [], now) == ([], [], []), "not due yet is not judged"
     # Their deep investigation is marked auto=true too (NEXUS writes it), with
     # kind "deep": it IS the investigation. Every one was read as the first
     # pass (deep pass 2026-09-27, R01, 3/3). first_pass and deep_failed are not.
@@ -461,6 +461,25 @@ def test_the_is_answer_rule_is_self_calibrating_and_still_bites():
     assert len(unanswered(sent, marked("first_pass"), now)[1]) == 5
     assert len(unanswered(sent, marked("deep_failed"), now)[1]) == 5, (
         "an investigation that did not run is not one")
+    # C02, deep pass of 2026-09-30 (3/3): a deep reply that names no parent
+    # cannot be paired, so a message with one in its window is unsure, not
+    # unanswered -- six came back that way on 2026-09-26 (journal seq
+    # 2883..2896) and were read as the lane silent. The card never promised
+    # the reply names its parent.
+    orphans = [{"reply_to": None, "at": s["at"] + timedelta(minutes=4), "auto": True,
+                "kind": "deep"} for s in sent]
+    _, missing, unsure = unanswered(sent, orphans, now)
+    assert missing == [] and [s["id"] for s in unsure] == ["q1", "q2", "q3", "q4", "q5"], (
+        "an unparented investigation in the window was counted as no reply")
+    _, missing, unsure = unanswered(sent, [dict(o, kind="first_pass") for o in orphans], now)
+    assert len(missing) == 5 and unsure == [], (
+        "an unparented first pass is still no investigation")
+    before = [{"reply_to": None, "at": at(6, 30), "auto": True, "kind": "deep"}]
+    assert len(unanswered(sent, before, now)[1]) == 5, (
+        "an unparented reply before every message stands in for none of them")
+    paired_and_orphan = answered[:3] + orphans
+    assert unanswered(sent, paired_and_orphan, now)[1:] == ([], [sent[3], sent[4], sent[5]]), (
+        "a message with its own reply is answered; only the rest are unsure")
 
     # The Gem Screener refresh rule (2026-09-27), held here for the same
     # ceiling. Stuck means BOTH: stale past 3 cycles AND the newest attempt a
