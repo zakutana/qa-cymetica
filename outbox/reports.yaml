@@ -3921,6 +3921,48 @@ reports:
       'Rename the request and the app from "Gem Screener" to "Gem
       Screener"'; the logged spec still has it as written.
 
+  - key: gem-screener-pick-link-opens-another-token
+    findings: [CYM-a_degen_pick_opens_the_coin_it_names]
+    severity: medium
+    category: api
+    url: https://cymetica.com/api/v1/gem-screener/picks
+    title: >-
+      Gem Screener: the Degen pick "Definitive" (EDGE) links to ?coin=EDGE, and
+      that opens a different token, edgeX
+    expected: >
+      A Degen pick's own link and its symbol route should open the coin the pick
+      names. The picks route gives each pick a `detail_url`, and the coin route
+      `GET /api/v1/gem-screener/coins/{symbol}` is how an agent or a shared link
+      reaches it.
+    actual: >
+      `GET /api/v1/gem-screener/picks` lists "Definitive" (EDGE, market cap about
+      $30M) with `detail_url` "https://cymetica.com/gem-screener?coin=EDGE".
+      `GET /api/v1/gem-screener/coins/EDGE` and the page at that link both answer
+      edgeX, a different token with a market cap of about $182M, which fails the
+      very gates the pick passed (not vetted, business not growing) and shows
+      Degen level 5 where Definitive shows 6. The card in the Top Picks tab opens
+      Definitive correctly, so the page can tell them apart; the API route and
+      the deep link cannot. Four tickers are shared by two apps each (EDGE, UP,
+      MET, INDEX), and for each the symbol route answers one of the two: Definitive,
+      Unlock Protocol, Metronome and Index Coop cannot be reached by ticker.
+      The route does accept a slug (`/coins/definitive` answers Definitive), so the
+      pick's link only needs to carry the slug.
+    steps:
+      - 'GET https://cymetica.com/api/v1/gem-screener/picks -> picks[symbol=EDGE]: name "Definitive", market_cap 30.3M, detail_url https://cymetica.com/gem-screener?coin=EDGE'
+      - 'GET https://cymetica.com/api/v1/gem-screener/coins/EDGE -> name "edgeX", market_cap 182.3M'
+      - 'GET https://cymetica.com/api/v1/gem-screener/coins/definitive -> name "Definitive": the same route reaches it by slug'
+      - 'Open https://cymetica.com/gem-screener?coin=EDGE -> the detail panel is edgeX (Degen level 5/10)'
+    body: >
+      This matters for the exact reader the Degen picks are written for: someone
+      follows the pick's link or their agent reads the pick and then fetches the
+      coin by its ticker, and is shown another token's risk checks, liquidity and
+      level. It is a link and a route, not the data, which is correct on both
+      coins. Our check compares each pick with what its symbol opens, by name and
+      market cap, so it clears as soon as the link carries the slug (or the route
+      resolves by the pick's key). Everything else we compared on the page held
+      up, which is why this one stands out: market cap, revenue and pool liquidity
+      match CoinGecko, DefiLlama and DexScreener within a median of 1 %.
+
 footer: >
   Reported by an independent QA agent. Scope of this work: verification of the
   REST API, MCP and machine-readable discovery surfaces, read-only except in
