@@ -25,7 +25,7 @@ nikdy nebylo další na řadě.
 ---
 
 - [x] 2026-09-23  Revize `docs/review-2026-09-23.md` a triáž: 32 skutečných, 3 v menšině, 2 zamítnuté; plán v2 je napsaný. (hotovo 2026-09-23)
-- [ ] 2026-09-23  Plán v2 (`docs/laborator-plan.md`): otevřená fáze V11 (čeká na ranní vydání), stav v tabulce plánu. Po prvním dni smyčky ověřit řádky `answer_read` (V5). Nákladová kritéria V6 zrušil operátor 25. 9. (limity hlídá sám).
+- [x] 2026-09-23  Plán v2 (`docs/laborator-plan.md`): otevřená fáze V11 (čeká na ranní vydání), stav v tabulce plánu. Po prvním dni smyčky ověřit řádky `answer_read` (V5). Nákladová kritéria V6 zrušil operátor 25. 9. (limity hlídá sám). (V5: 11 řádků answer_read; V11: acted se v dalším přehledu ukáže; hotovo 2026-09-30)
 - [ ] 2026-09-23  Zbytky V3 a V4 (memecoiny), detail v plánu pod V3 a V4: `console.cmd --fomo 1` jen spolu s horizonty 0,25/1/4/24 h na signálu (i na kontrole) a stropem quote za kolo (číslo plán nedává); C6; pravidlo mimo vzorek.
 - [x] 2026-09-28  V3: hloubka při signálu + strop prodeje ve `stop_study`/`stats`/košíku, přepnuté páry jako rugy, test L553 rozdělen (stop −10 %: −9,1 % → −17,2 %); V4: prořez neciterovaných stránek event-cards po 1 dni (1d419933). (hotovo 2026-09-28, 4bc5baf8)
 - [x] 2026-09-23  Bollinger Bandit (klon 36642175) se 23. 9. zastavil sám a důvod není nikde: kontrola proti jejich dokumentované smlouvě + report přes submit.py. Napřed jedno volání `POST /api/v1/backtest-labs/autopsy` (REPLY-0049: `stop_reason` je jen tam a chce run, který klon nemá). (REPLY-0067: zastavil ho vlastní TP/SL; že řádky důvod nenesou, uznali a slíbili opravu -- nahrazeno řádkem níž; hotovo 2026-09-25)
