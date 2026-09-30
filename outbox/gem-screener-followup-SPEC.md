@@ -8,7 +8,8 @@
 > 1. **Goals, not methods.** How you build it is your call: data, formulas, thresholds, components. Where an item gives a rule or a number, it is a good default, and you may improve it; say what you changed and why in your spec.
 > 2. **Every number is read from the live site on 2026-09-30** (snapshot of 18:50 UTC, 215 apps, 26 chains, 12 sectors). They are there so you can check that a change took effect; they are not the requirement.
 > 3. **English only**, degen-friendly: the number first, plain short words, no statistics jargon on the page, every explanation in a tooltip or behind an expand.
-> 4. **Item numbers are stable** (the list was worked on before it was written down here); 26 and 27 were merged into 37 and do not appear.
+> 4. **Keep the look.** The owner likes the current design: the circles, the tooltip card (C.5), the check rows by area, the Degen meter, the tables and the layout. Change only what an item names. Where an item is about the circles and their tooltips (43, 44, 45), the look stays exactly as it is: what changes is which checks there are, what their texts say, and the caution colour.
+> 5. **Item numbers are stable** (the list was worked on before it was written down here); 26 and 27 were merged into 37 and do not appear.
 
 ## What is already done from ET-28378 part 4 (do not redo)
 
@@ -139,3 +140,4 @@ The Degen meter colours and width (A.1), the check circles with the C.5 card (A.
 - [ ] 43 The check panel asks about ten questions, not 18; whales, insider flow, hidden supply and team sit in one dashed "Not checked yet" group with the report button; the weights are explained in a tooltip; the level is recomputed with a before and after for the 215 apps.
 - [ ] 44 Each check row ends in one plain line with the key number (the Supply and Earnings examples above), in the colour of its worst check, with the reason in the tooltip; no jargon.
 - [ ] 45 Caution is orange everywhere (circles, Degen meter zone 4 to 6, tags, Legend); blue-grey is only neutral or does not apply.
+- [ ] 43 to 45 The circles, the tooltip card and the row layout look as before: only the set of checks, the texts and the caution colour differ.
