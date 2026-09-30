@@ -41,6 +41,19 @@ Source: the operator's complaints on the live site after ET-28378, 2026-09-30, e
 
 29. One look everywhere: the same tooltip, the same badge and the same symbol style on every tab and in every panel, so the same thing never looks different on another page. Pick one of each and use it throughout.
 
+## C. Added 2026-09-30 from the degen audit (`gem-screener-degen-audit.md`, section 2)
+
+(The request draft also carries three lines that are only in the draft, not here: the audit check, the trajectory phase colour, the ranked list. In the request these eight come last.)
+
+30. An upside a holder can rely on: a coin with 4 % of its tokens out shows 44x (UP) and is 8x with all tokens out (PHAR 50x, 31x). The headline must not flatter a coin with few tokens out. The 11 apps at the 50x cap really stand at 72x to 2,291x, so their order is lost; keep it.
+31. Top Picks show their own warnings where the pick is shown, not only in its detail: an exit flag (NEST, SOLV "business weakening"), earnings below emissions (NEST -$213K, UP -$762K a month), under 180 days of history (UP, 81 days, passes the vetting gate).
+32. Liquidity a degen can use: SOLV, MNDE and LISTA pass the liquidity gate on 24-hour volume while their on-chain pools hold $20K to $31K (a $10K buy moves the price 64 to 100 %). Say where the liquidity is and how deep.
+33. Data age on every row: the supply behind 168 of 215 rows is 43 hours old (186 prices came from DefiLlama because the market reads failed) and no row shows its age. A market cap a fifth off in a fast market is how a degen overpays (PHAR $4.1M, $3.3M at CoinGecko). Read supply fresh and show each row's age.
+34. Altseason panel: "49 % of the top 50 alts beat BTC" is the mean of the last four weeks; the latest week is 68 %, three months ago 22 %. Show the latest reading beside the mean, so the turn is seen.
+35. Altseason universe: three of the 50 "alts" are not alts (a home-equity-loan token, USYC, a euro fund), each under 3 % a month, and they shift breadth by up to 6 points. Leave assets priced at a currency unit out.
+36. Sectors: 10 of 12 themes say "Hot now", so the tag tells them apart no more, and "Talked about" rests on 460 people in seven days ("too few" for half the themes). Rank the sectors.
+37. Degen level: 124 of 215 ranges span more than two steps (PHAR 5 to 9) and an unchecked item counts as half a risk. A degen must not read a low level that hides a high one: show the worst case, and what is unchecked.
+
 ## Before it is filed
 
 - The vendor answered (2026-09-30): a fail note is kept as the QA record on the ticket (checked: `verdict_note` is on ET-28378) but does not schedule any build work; a new request is the reliable way, and it opens a follow-up ticket linked to the original. So lines 1 to 8 stay in the new request.
