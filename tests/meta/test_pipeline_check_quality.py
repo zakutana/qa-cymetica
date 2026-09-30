@@ -1102,6 +1102,33 @@ def test_a_requirement_split_into_numbered_items_is_not_a_dropped_one():
 
 
 @qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
+def test_a_log_body_is_called_cut_only_when_the_record_holds_the_rest():
+    """test_the_message_log_carries_each_message_whole, refuted before it is
+    trusted: a whole copy, a re-rendered spec_text (ET-26608) and a body that
+    merely sits at 8000 characters are not cuts; a strict prefix is."""
+    from tests.rest.test_build_it_better_log_keeps_whole_bodies import cuts
+
+    def record(logged_spec, spec_text, request="App: Do it.", improvements="Do it."):
+        return {"app_name": "App", "spec_text": spec_text,
+                "improvements": improvements, "messages": [
+                    {"kind": "BB-REQUEST", "at": "t0", "body": request},
+                    {"kind": "BB-SPEC", "at": "t1", "body": logged_spec}]}
+
+    spec = "BB-SPEC for App\n  1. Do it.\n" + "w" * 9000
+    assert cuts(record(spec, spec)) == [], "a whole copy was called cut"
+    assert cuts(record(spec[:8000], "BB-SPEC for New\n" + spec[16:])) == [], (
+        "a spec_text re-rendered under a new name was called a cut of the log")
+    assert cuts(record(spec[:8000], None)) == [], (
+        "a body at the cap with nothing to compare it with was called cut")
+    found = cuts(record(spec[:8000], spec))
+    assert [(c["kind"], c["logged"], c["whole"]) for c in found] == [
+        ("BB-SPEC", 8000, len(spec))], found
+    assert [c["kind"] for c in cuts(record(spec, spec, request="App: Do",
+                                           improvements="Do it."))] == [
+        "BB-REQUEST"], "a cut request was not seen"
+
+
+@qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
 def test_a_route_their_ai_names_is_matched_against_the_template_not_the_text(
         monkeypatch):
     """The third check of the #85 family, refuted before it is trusted.
