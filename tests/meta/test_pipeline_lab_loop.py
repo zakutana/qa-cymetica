@@ -970,6 +970,17 @@ def test_a_tick_shows_the_newest_reasons_it_held(tmp_path, monkeypatch):
     assert "NEX-0063/5e25b255: the one that matters" in said["held"], said["held"]
     assert len(said["held"]) <= 6
 
+    # 2026-10-01: the bot variants' refusals -- twelve, the same every tick --
+    # were appended after the launch's and took all six lines, so why NEX-0109
+    # opened nothing was never on screen. The answer's reason is the news.
+    doors, _ = _doors(
+        promote=lambda: {"rooms": 0, "orders": 0, "held": ["NEX-0109/fib: why"]},
+        variants=lambda: {"rooms": 0, "orders": 0, "held": [
+            f"variants: bot {n}: stopped by itself" for n in range(12)]})
+    said = _tick(scripts_lab, NOW + timedelta(minutes=20), doors)
+    assert "NEX-0109/fib: why" in said["held"], said["held"]
+    assert len(said["held"]) <= 6 and said["held_older"] == 7, said
+
 
 @qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
 def test_a_tick_says_how_many_reasons_it_left_off_screen(tmp_path, monkeypatch):
@@ -2993,6 +3004,16 @@ def test_the_catalogue_readers_take_whole_names_and_respect_what_he_ruled_out():
     numbered_out = ("1. MACD Hunter -- clone it.\n2. Doom & Gloom -- clone it.\n"
                     "3. Trend Titan -- excluded, too correlated.\n")
     assert [b["name"] for b in lab.proposed_bots(numbered_out, CATALOGUE)] == [
+        "MACD Hunter", "Doom & Gloom"]
+    # NEX-0109 (2026-10-01): "## 3) What I'd run instead" over lettered items
+    # holds every item, and an item's prose about the trade ("not a
+    # buy-and-hold") does not rule out what its bold lead names.
+    lettered = ("Last time Trend Titan held up.\n\n"
+                "## 3) What I'd run instead -- up to three\n\n"
+                "**a) Bot -- clone \"MACD Hunter\", PAPER.** A rules engine, "
+                "not a buy-and-hold.\n\n"
+                "**b) Bot -- clone \"Doom & Gloom\", PAPER.** Stop 5%.\n")
+    assert [b["name"] for b in lab.proposed_bots(lettered, CATALOGUE)] == [
         "MACD Hunter", "Doom & Gloom"]
     assert lab.proposed_funds("AIB-SPACE and AIB-AI both look fine.\n",
                               FUNDS) == ["AIB-SPACE", "AIB-AI"]

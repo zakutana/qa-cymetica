@@ -1689,7 +1689,11 @@ _RULED_OUT = re.compile(
     # NEX-0073: "**Why it edges the alternatives:** Fibonacci Phoenix ...".
     r"alternatives?|runners?-up|instead of)\b",
     re.I)
-_BULLET = re.compile(r"^\s*(?:[-*•]|\d+[.)])\s")
+# A lettered item counts too, bold or not: NEX-0109's "**a) Bot -- clone
+# "Fibonacci Phoenix" ..., PAPER.** ... not a buy-and-hold" was read as a
+# prose line, and "not a buy" in its description of the trade ruled its own
+# pick out (2026-10-01).
+_BULLET = re.compile(r"^\s*(?:[-*•]|\d+[.)]|[*_`]*[a-h]\))\s")
 _MD_HEADING = re.compile(r"^\s*#{1,6}\s")
 # A qualifier in brackets describes the thing, not a verdict on it: NEX-0086's
 # pick read "**FUND — X — mark/watch (... so this is a watch, not a buy)**".
@@ -1803,8 +1807,9 @@ def _only_picked(text: str, find, names: list[str]) -> list[str]:
     pending = section = False
     for line in str(text or "").split("\n"):
         heading = bool(_MD_HEADING.match(line))
+        runs = heading and bool(_RUN_HEADING.search(line))
         declares = bool(_PICKED.search(line) or (
-            heading and _PICK_WORD.search(line)
+            heading and (_PICK_WORD.search(line) or runs)
             and not _RULED_OUT.search(_BRACKETED.sub("", line))))
         found = find(line)
         if heading:
@@ -1812,9 +1817,14 @@ def _only_picked(text: str, find, names: list[str]) -> list[str]:
             # heading: NEX-0100's "## PICKS" over "**1 -- ...**" and "**2 --
             # ...**" had its second pick dropped (2026-09-25). Plural only:
             # "# ONE PICK ..." still hands itself to the next naming line.
+            # "What I'd run" holds its items too (NEX-0109).
             section = declares and not found and bool(
-                re.search(r"\bpicks\b", line, re.I))
+                re.search(r"\bpicks\b", line, re.I) or runs)
         rules_out = bool(_RULED_OUT.search(_BRACKETED.sub("", line)))
+        if section and _ITEM.match(line):
+            # An item is judged by its lead, not by how its prose describes
+            # the trade (NEX-0109: "not a buy-and-hold").
+            rules_out = bool(_RULED_OUT.search(_BRACKETED.sub("", _lead(line))))
         if declares:
             picked.update(found)
             # A section holds its own items; it hands nothing to a stray line.
@@ -1848,8 +1858,23 @@ def _only_picked(text: str, find, names: list[str]) -> list[str]:
 
 
 _NUMBERED = re.compile(r"^\s*\d+[.)]\s")
-# An item of a list, as markdown or as NEX-0100's bold "**1 -- MACD Hunter**".
-_ITEM = re.compile(r"^\s*(?:[-*•]\s+)?[*_`]*\s*\d+\s*(?:[.):]|--|[—–-])")
+# An item of a list, as markdown or as NEX-0100's bold "**1 -- MACD Hunter**",
+# or lettered as NEX-0109's "**a) Bot -- ...**".
+_ITEM = re.compile(r"^\s*(?:[-*•]\s+)?[*_`]*\s*(?:\d+\s*(?:[.):]|--|[—–-])|[a-h]\))")
+# A heading that announces what he would run: NEX-0109's "## 3) What I'd run
+# instead -- up to three, same format", over a), b) and c).
+_RUN_HEADING = re.compile(r"\bI(?:'d|’d| would)\s+(?:run|clone|trade|buy)\b"
+                          r"|\brun instead\b", re.I)
+# The bold lead of an item, "**a) Bot -- clone X, PAPER.**": what the item
+# IS. The prose after it describes the trade ("not a buy-and-hold") and does
+# not rule the item out.
+_LEAD = re.compile(r"^\s*(?:[-*•]\s+)?(\*\*|__)(.+?)\1")
+
+
+def _lead(line: str) -> str:
+    """The bold lead of a line that opens with one, else the whole line."""
+    hit = _LEAD.match(line)
+    return hit.group(0) if hit else line
 
 
 # A line that DECLARES which one he chooses -- "**Pick: MACD Hunter**",

@@ -3417,7 +3417,11 @@ def tick(*, now: datetime | None = None, actions: dict | None = None,
     varied = attempt("variants", doors["variants"]) or {}
     said["rooms"] += varied.get("rooms", 0)
     said["variants"] = varied.get("orders", 0)
-    every += list(varied.get("held") or [])
+    # Before the launch's, not after: a variant's refusal is the same line
+    # every tick (a bot that stopped by itself is never restarted), and
+    # twelve of them took all six lines, so why NEX-0109 opened nothing was
+    # never on screen (2026-10-01).
+    every = list(varied.get("held") or []) + every
     said["held"] = every[-6:]
     said["held_older"] = len(every) - len(said["held"])
     # Every gap-class line, not the newest six: decide() reads these, and a

@@ -66,6 +66,13 @@ EXPECTED = {
     "NEX-0081": {"funds": ["AIB-MOLECULAR"]},
     "NEX-0086": {"funds": ["AIB-BIOSCIENCES"]},
     "NEX-0088": {"cards": ["5d91bf43-a597-47b0-9abe-5c7f52618bbd"]},
+    # 2026-10-01: "**a) Bot -- clone "Fibonacci Phoenix" ..., PAPER.**" went
+    # on to say "not a buy-and-hold" about the trade's shape, and the reader
+    # took the whole line as ruling the bot out -- while Bollinger Bandit,
+    # named only as our own calibration quoted back, came out as his pick.
+    # 30018bee is the card he says is paused; he picks 27c96532 under b).
+    "NEX-0109": {"bots": ["Fibonacci Phoenix"],
+                 "cards": ["27c96532-123d-494f-ab89-d7dcdb8af33f"]},
 }
 
 
@@ -97,6 +104,7 @@ LEVELS = {
     "NEX-0079": {"97b827ad-b61d-4d3f-8398-8548ebc2a242": (8.0, -5.0)},
     "NEX-0081": {"AIB-MOLECULAR": (None, -6.0)},
     "NEX-0088": {"5d91bf43-a597-47b0-9abe-5c7f52618bbd": (25.0, -12.0)},
+    "NEX-0109": {"27c96532-123d-494f-ab89-d7dcdb8af33f": (15.0, -10.0)},
 }
 
 
