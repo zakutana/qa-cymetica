@@ -140,27 +140,27 @@ Two faults found on the way, both part of this item:
 
 ## 8. The two price-tag stamps become badges
 
-**[13] The two blue price-tag panels become two compact badges; the explanation lives in the tooltip.** The panel above the Apps table reads "35x · HYPERLIQUID'S PRICE TAG · × its yearly revenue · the bar for every Upside", and the one above the Chains table "38x · SOLANA'S PRICE TAG · × its adoption · the bar for every Upside". The owner of the product could not tell what the 35x and the 38x are: "price tag", "× its adoption" and "the bar" are jargon, and the meaning is hidden in a tooltip that is too short.
+**[13] The two blue price-tag panels become two badges; the explanation lives in the tooltip.** The panel above the Apps table reads "35x · HYPERLIQUID'S PRICE TAG · × its yearly revenue · the bar for every Upside", and the one above the Chains table "38x · SOLANA'S PRICE TAG · × its adoption · the bar for every Upside". The owner of the product could not tell what the 35x and the 38x are: "price tag", "× its adoption" and "the bar" are jargon, and the meaning is hidden in a tooltip that is too short.
 
 ![The Apps panel today](reference/followup-2/price-tag-stamp-apps-today.png)
 
 ![The Chains panel today](reference/followup-2/price-tag-stamp-chains-today.png)
 
-Today they are two plain panels (362 x 46 px, a cyan outline on a pale cyan fill) that read as a long bar. The owner wants **two badges**, small emblems of the same family as the new logo (item 1) and the gate (item 5), the top emblems of the page. Not a wide panel and no sentence on the page: the **picture alone gives the first idea** ("this coin, this many times this thing"), and everything else is in the tooltip.
+Today they are two plain panels (362 x 46 px, a cyan outline on a pale cyan fill) that read as a long bar. The owner wants **two real badges**: emblems of the same family as the new logo (item 1) and the gate (item 5), the top emblems of the page. Not a wide panel and no sentence on the page: the **picture alone gives the first idea** ("this coin, this many times this thing"), and everything else is in the tooltip.
 
-What the badge shows, as in the mock below (about 146 x 60 px):
+The owner's picture for the kind of badge is a metal shield, like a police badge: a top edge that dips in the middle with a point at each shoulder, sides that narrow and a point at the bottom, a wide metal rim with a thin line inside it, and a flat face. The shape itself is not binding ("it does not have to be that shape"); the badge look is. The mock below is the shield in the page's colours, about 100 x 120 px on the page:
 
-- a **seal** on the left: the benchmark's own logo (Hyperliquid for Apps, Solana for Chains; the page already serves both) inside the scanner corners of the Gem Screener logo;
-- a **price tag** next to it, the shape of a tag with a point and a hole, in the logo's cyan-to-green outline;
-- on the tag the **number** big, in the logo's gradient and heavy font ("35x", "38x"), and under it one small word for what it is a multiple of: "revenue" on Apps, "adoption" on Chains.
+- the **rim** is metallic, in the logo's cyan-to-green, with the light and dark bands of polished metal;
+- the **face** is a green metal with a soft sheen (the page's bright green against its dark ground is what the owner likes);
+- at the top, a round **medallion** with the benchmark's own logo (Hyperliquid for Apps, Solana for Chains; the page already serves both);
+- the **number** big in the logo's heavy font ("35x", "38x"), and under it one small word for what it is a multiple of: "revenue" on Apps, "adoption" on Chains;
+- a small gem under the word, the gem of the logo.
 
 Nothing else is on the page: no title line, no sentence, no (i). The whole badge opens the tooltip on hover, on focus and on a tap, with the full words in plain language, for instance for Apps: "Hyperliquid's price tag. Hyperliquid is worth 35 times its yearly revenue (market cap ÷ yearly revenue). Every Upside on this page is measured against it: what a coin would gain if it were worth the same multiple of its revenue." and for Chains: "Solana's price tag. Solana is worth 38 times its adoption: market cap ÷ adoption, which is made of daily users (2.2M a day) and the fees they pay ($3.5bn a year). Every Upside on this page is measured against it." The words "× its adoption" and "the bar" are gone. The tooltip is the page's own tooltip card (item 9 of the last request).
 
-![The Apps badge, with its tooltip](reference/followup-2/price-tag-badge-apps-mock.jpg)
+![The two badges: Apps (Hyperliquid, 35x revenue) and Chains (Solana, 38x adoption)](reference/followup-2/price-tag-badges-shield.jpg)
 
-![The Chains badge, with its tooltip](reference/followup-2/price-tag-badge-chains-mock.jpg)
-
-The mock is inspiration, not literal: the seal, the tag, the proportions and the wording are yours to improve. The badge is one small block that fits at 390 px as it is.
+The Apps badge as a vector, for reference (`reference/followup-2/price-tag-badge-apps.svg`; for Chains the logo is `logo/chains/0`, the number 38 and the word ADOPTION). The mock is inspiration, not literal: the shape, the metal, the proportions and the wording are yours to improve, as long as it reads at a glance as a proper badge. Where it sits is yours as well (at the left of the toolbar, with the filters beside it), but it must not make the sticky toolbar grow tall, and it fits at 390 px.
 
 ---
 
