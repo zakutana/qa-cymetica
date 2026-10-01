@@ -2,7 +2,7 @@
 
 **For:** the lead agent of the Cymetica SDLC pipeline
 **From:** Adam (product owner, Gem Screener)
-**Scope:** the Chains tab: which chains it lists, what a chain's adoption is, the benchmark and its badge, and the chart column and card; and on both tabs the size of the badges, the small print on Top Picks, revenue and dilution on Apps, the Supply card and the Degen meter card. Build or change only what is named; leave the rest of the app as it is.
+**Scope:** the Chains tab: which chains it lists, what a chain's adoption is, the benchmark and its badge, and the chart column and card; and on both tabs the size of the badges, the small print on Top Picks, revenue and dilution on Apps, the Supply card, the Degen meter card and the links in a coin's header. Build or change only what is named; leave the rest of the app as it is.
 
 > **HOW TO READ THIS SPEC**
 > 1. **Goals, not methods.** How you build it is your call. Where an item gives a rule or a number, it is a good default, and you may improve it; say what you changed and why in your spec.
@@ -132,6 +132,16 @@ The owner wants:
 
 ---
 
+## 8. The links in a coin's header
+
+**[13] The links in the header get icons, and every coin has a web link.** Live, the header of a coin's detail (and of a chain's) shows three plain underlined links, "web ↗", "CoinGecko ↗" and "DEXTools ↗", and next to them the round, outlined Share button and report icon, so the row looks unfinished. And "web" is missing: the page holds no web address for 39 of the 215 apps and for all 26 chains, although every one of them has a CoinGecko id, and CoinGecko publishes the project's homepage (`links.homepage`; checked 2026-10-01: Sui gives https://sui.io/, ENS gives https://ens.domains/). The owner wants:
+
+- **Icons.** Each link is a small chip with its icon, in the style of the Share button and the report icon beside it: a globe for the web site, the CoinGecko mark, the DEXTools mark, drawn as single-colour glyphs in the page's own colours (not the sites' brand colours). The name is in the tooltip, or stays beside the icon where it fits. The look is yours; the row must read as one row of controls of the same kind.
+- **Every coin has a web link.** The project's own address from DefiLlama where it has one, otherwise CoinGecko's homepage, for apps and for chains. Where neither has one, there is no chip, never a dead one.
+- **DEXTools stays only where the coin has a DEX pair** (36 apps have none today): no chip then.
+
+---
+
 ## Checklist (one line each; done when all are true)
 
 - [ ] 1 The Chains tab lists every chain whose token is in CoinGecko's Layer 1 or Layer 2 category with a market cap of $200M or more (or the cut you chose, named in your spec), joined to DefiLlama by `gecko_id`.
@@ -169,3 +179,6 @@ The owner wants:
 - [ ] 11 The tile "revenue covers the new tokens" and the "no mint" value under it are gone.
 - [ ] 12 The Degen meter card in a coin's detail shows the number, the verdict line, the bar with its dashed segments and the two end labels; "Range … · … checks not checked yet" and "Was … at the last report" are gone from it.
 - [ ] 12 What those two lines said is in the card's tooltip (hover, focus, tap), in plain words.
+- [ ] 13 The web, CoinGecko and DEXTools links in a coin's and a chain's header are icon chips in the style of the Share button and the report icon, in the page's colours, with the name in the tooltip.
+- [ ] 13 Every app and every chain whose project has a homepage in DefiLlama or CoinGecko shows a web chip; none shows a dead or empty one.
+- [ ] 13 The DEXTools chip shows only where the coin has a DEX pair.
