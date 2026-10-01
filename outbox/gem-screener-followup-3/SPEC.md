@@ -10,7 +10,7 @@
 > 3. **English only**, degen-friendly: the number first, plain short words.
 > 4. **Keep the look.** Change only what an item names.
 > 5. **This spec starts from ET-28688 as built.** Two things are not here because they are already in hand: the orange for every warning (item 7 of ET-28688) and the altseason universe without assets priced at a currency unit (item 35 of ET-28606, which you said you are fixing under ET-28688).
-> 6. **The files are in this folder.** `assets/` holds what is ready to use; `reference/` holds a mock of what is wanted (inspiration, not literal).
+> 6. **The files are in this folder.** `assets/` holds what is ready to use; `reference/` holds the mocks of what is wanted (the badge, and the whole detail of an app); they are inspiration, not literal.
 
 ## What is ready to use (`assets/`)
 
@@ -170,6 +170,10 @@ The detail then opens with the header (name and Upside), the Degen meter, Monthl
 ## 12. The collapsed lines go to the bottom
 
 **[17] "30x test", "How it's calculated" and "For AI agents: copy and paste" go to the very bottom of the detail.** Live (order of item 9 of ET-28688), the three collapsed lines stand after Trajectory, above the checks and the Degen report. The owner: hardly anybody is interested in them. They move to the very end of a coin's detail, below the Checks section, and stay collapsed as they are. The detail then runs: header (name, Upside), Degen meter, Monthly revenue, Chart (with Strength 3M), Market cap & supply, Trajectory, the Checks section (the last section; it holds the Generate report button and the report, item 18), and last the three collapsed lines. On a chain, "How it's calculated" and "For AI agents" are already last (item 16 of ET-28688) and stay there.
+
+![The new app detail, drawn from items 10 to 18 (Pharaoh Exchange)](reference/app-detail-mock.svg)
+
+The picture is a mock of the whole detail of an app after items 10 to 18, in the page's own colours: inspiration, not literal. It shows Pharaoh Exchange's live figures, except the Next unlock tile, which carries Stader's data because Pharaoh has none in 90 days.
 
 ---
 
