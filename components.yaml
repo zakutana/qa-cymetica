@@ -215,6 +215,15 @@ components:
     surface: rest
     criticality: medium
     staleness_hours: 24
+  rest.chart_analyzer:
+    # A Build it Better app (ET-28324): pattern score per coin
+    # (/api/v1/chart-analyzer/analyze), the study its rates come from, and its
+    # Gem Screener batch. First check 2026-10-01: a
+    # score that does not average what its own answer marks counted.
+    title: Chart Analyzer (pattern score, its study, the Gem Screener batch)
+    surface: rest
+    criticality: medium
+    staleness_hours: 24
   rest.creator:
     # Tracked links, post-kit, reward ledger and the reddit/twitter lead
     # queues behind cymetica.com/<username>. Added to openapi-public.json and

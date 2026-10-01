@@ -481,6 +481,37 @@ def test_the_is_answer_rule_is_self_calibrating_and_still_bites():
     assert unanswered(sent, paired_and_orphan, now)[1:] == ([], [sent[3], sent[4], sent[5]]), (
         "a message with its own reply is answered; only the rest are unsure")
 
+    # Chart Analyzer (2026-10-01), held here for the same ceiling: chart_rate
+    # against the average of what the same answer marks counted_in_score.
+    # The AAVE answer of that morning fails; either fix passes.
+    from tests.rest.test_chart_analyzer_score_averages_what_it_counts import (
+        TOLERANCE, averaged, candidates)
+    pat = lambda key, rate, counted=True: {"key": key, "success_rate": rate,
+                                           "counted_in_score": counted}
+    aave = {"chart_rate": 0.4765, "patterns": [
+        pat("breakout_volume", 0.4836), pat("bearish_engulfing", 0.4694),
+        pat("bearish_engulfing", 0.4694), pat("bearish_engulfing", 0.4694, False)]}
+    served, average, _ = averaged(aave)
+    assert abs(served - average) > TOLERANCE, "the answer seen on 1 Oct read as consistent"
+    once = dict(aave, patterns=[pat("breakout_volume", 0.4836),
+                                pat("bearish_engulfing", 0.4694),
+                                pat("bearish_engulfing", 0.4694, False)])
+    served, average, _ = averaged(once)
+    assert abs(served - average) <= TOLERANCE, "a repeat counted and marked once is a fix"
+    served, average, _ = averaged(dict(aave, chart_rate=0.4741))
+    assert abs(served - average) <= TOLERANCE, "counting every confirmation is a fix too"
+    assert averaged({"chart_rate": None, "patterns": [pat("x", 0.5)]}) is None
+    assert averaged({"chart_rate": 0.5, "patterns": [pat("x", None)]}) is None, (
+        "a counted pattern without a rate is unread, not averaged as zero")
+    assert averaged({"chart_rate": 0.5, "patterns": [pat("x", 0.5, False)]}) is None
+    batch = [{"status": "scored", "input": {"contract": "a", "chain": "c"},
+              "counted_patterns": ["X"]},
+             {"status": "scored", "input": {"contract": "b", "chain": "c"},
+              "counted_patterns": ["Y", "Y"]},
+             {"status": "no_pool", "input": {"contract": "d", "chain": "c"}}]
+    assert [r["input"]["contract"] for r in candidates(batch)] == ["b", "a"], (
+        "the rows where the two readings differ are sampled first")
+
     # The Gem Screener refresh rule (2026-09-27), held here for the same
     # ceiling. Stuck means BOTH: stale past 3 cycles AND the newest attempt a
     # recorded failure. A missing field is unreadable (None), never "healthy".

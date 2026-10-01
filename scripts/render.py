@@ -62,6 +62,8 @@ COMPONENT_TO_SECTION = {
     "rest.build_it_better": "build_it_better",
     # A Build it Better app (ET-26608), so its checks sit on that tile.
     "rest.gem_screener": "build_it_better",
+    # Chart Analyzer is one too (ET-28324).
+    "rest.chart_analyzer": "build_it_better",
     "rest.creator": "creator", "rest.head_to_head": "head_to_head",
     "meta.guard": "_meta", "meta.classifier": "_meta",
     "meta.pipeline": "_meta",
