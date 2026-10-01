@@ -97,7 +97,9 @@ def _cymetica(said: dict) -> str:
         f"Ověřovacích běhů proti jejich platformě (sweep): {said.get('sweeps', 0)}",
         f"Našel jsem a nahlásil: {_ids(said.get('filed') or [])}",
         f"Opravili: {_ids(said.get('fixed') or [])}",
-        f"Ověřil jsem, že oprava drží: {_ids(said.get('verified') or [])}"], "")
+        f"Ověřil jsem, že oprava drží: {_ids(said.get('verified') or [])}"]
+        + ([f"Znovu selhává, poslal jsem jim to: {_ids(said['failing'])}"]
+           if said.get("failing") else []), "")
 
 
 def _deep(deep: dict) -> str:

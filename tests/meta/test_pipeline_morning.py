@@ -124,7 +124,21 @@ def test_the_deep_pass_is_two_lines_what_we_fixed_and_what_went_to_them():
     registered = ["2026-09-26T00:05:00+00:00", "2026-09-26T17:03:34+00:00",
                   "2026-09-25T10:00:00+00:00"]
     theirs = morning.cymetica(events, registered, since)
-    assert theirs == {"sweeps": 2, "filed": [131], "fixed": [128], "verified": [113]}, theirs
+    assert theirs == {"sweeps": 2, "filed": [131], "fixed": [128], "verified": [113],
+                      "failing": []}, theirs
+
+    # 2026-10-01: a pass on #132 at 16:00 and our correction (fail) on it at
+    # 00:10 the same night -- the report said "the fix holds: #132". The
+    # newest verdict sent decides; a fail is said as one.
+    events += [
+        {"type": "verification_outcome", "outcome": "accepted", "verdict": "pass",
+         "report_id": 132, "at": "2026-09-26T16:00:00+00:00"},
+        {"type": "verification_outcome", "outcome": "accepted", "verdict": "fail",
+         "report_id": 132, "at": "2026-09-27T00:10:00+00:00"},
+        {"type": "verification_outcome", "outcome": "accepted", "verdict": "fail",
+         "report_id": 56, "at": "2026-09-27T00:10:00+00:00"}]
+    theirs = morning.cymetica(events, registered, since)
+    assert (theirs["verified"], theirs["failing"]) == ([113], [56, 132]), theirs
 
 
 def _report(net: float, rooms: list[dict], questions: int = 80) -> dict:

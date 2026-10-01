@@ -135,11 +135,19 @@ def cymetica(events: list[dict], registered: list[str], since: str | None) -> di
                     if e.get("type") == "vendor_status" and after(e)
                     and str(e.get("status") or "").lower() in FIXED_STATUSES
                     and e.get("report_id") is not None})
-    verified = sorted({e["report_id"] for e in events
-                       if e.get("type") == "verification_outcome" and after(e)
-                       and e.get("outcome") == "accepted" and e.get("verdict") == "pass"
-                       and e.get("report_id") is not None})
-    return {"sweeps": sweeps, "filed": filed, "fixed": fixed, "verified": verified}
+    # The newest verdict we sent on a report decides (2026-10-01): a pass on
+    # #132 and our correction on it the same night read "the fix holds: #132".
+    newest: dict = {}
+    for e in sorted((e for e in events
+                     if e.get("type") == "verification_outcome" and after(e)
+                     and e.get("outcome") == "accepted" and e.get("report_id") is not None
+                     and e.get("verdict") in ("pass", "fail")),
+                    key=lambda e: str(e.get("at") or "")):
+        newest[e["report_id"]] = e["verdict"]
+    verified = sorted(r for r, verdict in newest.items() if verdict == "pass")
+    failing = sorted(r for r, verdict in newest.items() if verdict == "fail")
+    return {"sweeps": sweeps, "filed": filed, "fixed": fixed, "verified": verified,
+            "failing": failing}
 
 
 def overnight(report: dict, before: dict | None) -> list[str]:
