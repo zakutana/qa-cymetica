@@ -2,7 +2,7 @@
 
 **For:** the lead agent of the Cymetica SDLC pipeline
 **From:** Adam (product owner, Gem Screener)
-**Scope:** the Chains tab: which chains it lists, what a chain's adoption is, the benchmark and its badge, and the chart column and card; and on both tabs the size of the badges, the small print on Top Picks, revenue and dilution on Apps, the Supply card, the Degen meter card, the links in a coin's header, Monthly revenue in the detail, the Chart card's small lines and the key figures of the detail. Build or change only what is named; leave the rest of the app as it is.
+**Scope:** the Chains tab: which chains it lists, what a chain's adoption is, the benchmark and its badge, and the chart column and card; and on both tabs the size of the badges, the small print on Top Picks, revenue and dilution on Apps, the Supply card, the Degen meter card, the links in a coin's header, Monthly revenue in the detail, the Chart card's small lines, the key figures of the detail and the order of its last lines. Build or change only what is named; leave the rest of the app as it is.
 
 > **HOW TO READ THIS SPEC**
 > 1. **Goals, not methods.** How you build it is your call. Where an item gives a rule or a number, it is a good default, and you may improve it; say what you changed and why in your spec.
@@ -167,6 +167,12 @@ The detail then opens with the header (name and Upside), the Degen meter, Monthl
 
 ---
 
+## 12. The collapsed lines go to the bottom
+
+**[17] "30x test", "How it's calculated" and "For AI agents: copy and paste" go to the very bottom of the detail.** Live (order of item 9 of ET-28688), the three collapsed lines stand after Trajectory, above the checks and the Degen report. The owner: hardly anybody is interested in them. They move to the very end of a coin's detail, below the Degen report, and stay collapsed as they are. The detail then runs: header (name, Upside), Degen meter, Monthly revenue, Chart (with Strength 3M), Market cap & supply, Trajectory, the checks, the Degen report, and last the three collapsed lines. On a chain, "How it's calculated" and "For AI agents" are already last (item 16 of ET-28688) and stay there.
+
+---
+
 ## Checklist (one line each; done when all are true)
 
 - [ ] 1 The Chains tab lists every chain whose token is in CoinGecko's Layer 1 or Layer 2 category with a market cap of $200M or more (or the cut you chose, named in your spec), joined to DefiLlama by `gecko_id`.
@@ -217,3 +223,4 @@ The detail then opens with the header (name and Upside), the Degen meter, Monthl
 - [ ] 16 Strength 3M is a coloured figure in the Chart card and its sentence is in its tooltip.
 - [ ] 16 The Supply card has a new name that says it holds market cap and supply.
 - [ ] 16 A chain's detail has Upside in the header, Strength 3M in the Chart card and one slim row with Market cap and Adoption.
+- [ ] 17 In an app's detail "30x test", "How it's calculated" and "For AI agents: copy and paste" are the last three lines, below the Degen report, still collapsed.
