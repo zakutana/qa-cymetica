@@ -178,6 +178,21 @@ def test_the_sampler_reads_its_six_doors_with_get_and_nothing_else(
     # row and the lines above stayed green (P09, deep pass of 2026-09-11).
     assert list(sampler.follow()["positions"]) == ["P-1"], (
         "follow() keeps a position we closed")
+    # 2026-10-01: ten clones released on 28 Sep ("Bot deleted") were still
+    # followed, so every round read their balance and activity, got 404 "Bot
+    # not found." and marked the whole round NOT ok for three days.
+    with (tmp_path / "clones.jsonl").open("a", encoding="utf-8") as fh:
+        for row in ({"id": "CLN-0090", "type": "intent", "kind": None,
+                     "source_id": "x"},
+                    {"id": "CLN-0090", "type": "outcome", "outcome": "accepted",
+                     "clone_instance_id": "gone-1", "is_paper": True},
+                    {"id": "CLN-0091", "type": "intent", "kind": "release",
+                     "instance_id": "gone-1"},
+                    {"id": "CLN-0091", "type": "outcome", "kind": "release",
+                     "outcome": "accepted", "http_status": 200}):
+            fh.write(json.dumps(row) + "\n")
+    assert sampler.follow()["bots"] == [INSTANCE], (
+        "follow() keeps a bot we released")
     assert [r["trade_id"] for r in rows if r["type"] == "trade"] == ["T-1"]
     (config,) = [r for r in rows if r["type"] == "config"]
     assert [i["name"] for i in config["primary_indicators"]] == ["rsi"]

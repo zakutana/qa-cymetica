@@ -105,10 +105,19 @@ def follow() -> dict:
     positions we opened and have not closed, each with its card, and the cards
     a plan names in a room that is not stopped."""
     bots: list[str] = []
-    for row in rooms.records("clones.jsonl"):
+    clones = rooms.records("clones.jsonl")
+    # A clone we released is deleted on their side ("Bot deleted"), and its
+    # balance and activity answer 404 "Bot not found." -- ten of them marked
+    # every round NOT ok from 28 Sep to 1 Oct.
+    releasing = {row.get("id"): row.get("instance_id") for row in clones
+                 if row.get("type") == "intent" and row.get("kind") == "release"}
+    released = {releasing.get(row.get("id")) for row in clones
+                if row.get("type") == "outcome" and row.get("kind") == "release"
+                and row.get("outcome") == "accepted"}
+    for row in clones:
         instance = row.get("clone_instance_id")
         if (row.get("type") == "outcome" and row.get("outcome") == "accepted"
-                and instance and instance not in bots):
+                and instance and instance not in bots and instance not in released):
             bots.append(instance)
     paper = rooms.records("paper.jsonl")
     intents = {r.get("id"): r for r in paper if r.get("type") == "intent"}
