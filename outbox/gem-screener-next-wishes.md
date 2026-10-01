@@ -34,8 +34,19 @@ Why it changes. Today's adoption is the geometric mean of the chain's yearly fee
 - **Not one leader.** Under today's rule ("most adoption") the leader becomes Ethereum at 90×. ETH's price carries its role as money, so as the yardstick it makes 14 of 22 chains look cheaper, Polygon by 20×; and one chain re-pricing would move every Upside on the tab. A median of 14 does neither.
 
 ### 3c. The badge
-- Keeps its shape and place: **BENCHMARK · 60× · ADOPTION**. No single chain's logo, since no single chain sets it: a neutral benchmark icon.
-- Tooltip, in plain words: "The benchmark. A typical large chain (the median of 14 chains worth $1B or more) is worth 60 times its adoption. Every Upside on this tab is measured against it." The 14 names below it.
+![The Chains benchmark badge: the median of 14 chains, 60x adoption, at three sizes](gem-screener-next-wishes/assets/benchmark-badge-preview.svg)
+
+The badge as a vector, ready to start from: `gem-screener-next-wishes/assets/benchmark-badge-adoption.svg`. It is the Chains badge of spec 2 item 13 (`price-tag-badge-chains.svg`), the same shield, rim, ribbon and type, in the page's own colours (none is new). The mock is inspiration, not literal, as there: the shape, the proportions and the wording are the builder's to improve, as long as it reads at a glance as the same badge with BENCHMARK on it.
+- **Only the Chains badge changes.** The Apps badge (Hyperliquid, revenue) stays as built.
+- **Shape, place and size** as in spec 2 item 13: about 92 x 110 px at the right end of the toolbar under the Legend button; the ribbon word BENCHMARK; the big number and one word under it. Here the number is **60×** and the word is **ADOPTION**; both come from the snapshot at each refresh, not typed.
+- **The medallion is not one chain's logo** (today it is Solana's), because no single chain sets the benchmark. It holds a neutral emblem: five bars with the middle one lit, the median, "the typical one", in the page's cyan and green. At 56 px (390 px) the emblem stays and the ribbon word may drop to the tooltip, as spec 2 already allows.
+- **Tooltip** (hover, focus and tap, the dark card), in plain words: "The benchmark. A typical large chain is worth 60 times its adoption: the median of 14 chains with a market cap of $1B or more and a year of data (Avalanche, Polygon, Ethereum, Stellar, Solana, Sui, TON, Tron, ICP, Hyperliquid L1, Mantle, Arbitrum, BSC, X Layer). Adoption counts daily users, DEX volume, TVL and stablecoins together, so no single number can lift it. Every Upside on this page is measured against it." The 14 names are the chains that qualify at that refresh; the list changes when a chain enters or leaves.
+- **Accessible name:** "Benchmark: the median of 14 large chains, 60x adoption", then the tooltip text, as the live badge does with its `aria-label`.
+
+Checklist, one line each (done when all are true):
+- [ ] 3c The Chains badge's medallion is the neutral five-bar emblem, not a chain's logo; the Apps badge is unchanged.
+- [ ] 3c The Chains badge reads "60×" and "ADOPTION" (the live median of the eligible chains), and its tooltip names the chains the median is made of.
+- [ ] 3c The badge fits at 390 px and at 1360 px without being cut off, and the toolbar is no taller than 124 px.
 
 ### 3d. Tag: the token does not collect the chain's fees
 - Where gas is paid in another token, by DefiLlama's own fields (`gasTokenGeckoId` is not the chain's `gecko_id`), the row and the detail carry a tag: "Gas is paid in ETH: this token does not collect the chain's fees." A tag, not a gate, like Apps' "Reaches you". Today: Arbitrum, OP Mainnet, Linea, ZKsync Era. Two of them are among the largest Upsides below.
