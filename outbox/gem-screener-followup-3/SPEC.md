@@ -2,7 +2,7 @@
 
 **For:** the lead agent of the Cymetica SDLC pipeline
 **From:** Adam (product owner, Gem Screener)
-**Scope:** the Chains tab: which chains it lists, what a chain's adoption is, the benchmark and its badge, and the chart column and card; and on both tabs the size of the badges, the small print on Top Picks, revenue and dilution on Apps and the Supply card. Build or change only what is named; leave the rest of the app as it is.
+**Scope:** the Chains tab: which chains it lists, what a chain's adoption is, the benchmark and its badge, and the chart column and card; and on both tabs the size of the badges, the small print on Top Picks, revenue and dilution on Apps, the Supply card and the Degen meter card. Build or change only what is named; leave the rest of the app as it is.
 
 > **HOW TO READ THIS SPEC**
 > 1. **Goals, not methods.** How you build it is your call. Where an item gives a rule or a number, it is a good default, and you may improve it; say what you changed and why in your spec.
@@ -126,6 +126,12 @@ The owner wants:
 
 ---
 
+## 7. Apps: the Degen meter
+
+**[12] The Degen meter card loses its two small lines.** Live, under "Spicy. Size it small." the Degen meter card in a coin's detail has two lines: "Range 5–8 · 2 checks not checked yet" and "Was 6 at the last report". The owner wants them gone. The card keeps the number (6/10), the verdict line, the bar with its dashed segments and the two end labels (Blue chip, Casino). What the two lines said (the range, how many checks have not been checked yet, the level at the last report) moves into the card's tooltip, in plain words, so nothing is lost.
+
+---
+
 ## Checklist (one line each; done when all are true)
 
 - [ ] 1 The Chains tab lists every chain whose token is in CoinGecko's Layer 1 or Layer 2 category with a market cap of $200M or more (or the cut you chose, named in your spec), joined to DefiLlama by `gecko_id`.
@@ -161,3 +167,5 @@ The owner wants:
 - [ ] 11 It shows the next unlock in a tile of its own: when, how many tokens, the share of circulating supply, the value in USD and who receives it; the 90-day total is in its tooltip.
 - [ ] 11 An app with no unlock data shows "unknown", not zero and not "none"; a daily stream with no single event is shown as a rate.
 - [ ] 11 The tile "revenue covers the new tokens" and the "no mint" value under it are gone.
+- [ ] 12 The Degen meter card in a coin's detail shows the number, the verdict line, the bar with its dashed segments and the two end labels; "Range … · … checks not checked yet" and "Was … at the last report" are gone from it.
+- [ ] 12 What those two lines said is in the card's tooltip (hover, focus, tap), in plain words.
