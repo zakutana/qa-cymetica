@@ -1,6 +1,6 @@
 # Build it Better: Gem Screener, the Chains tab after ET-28688 (paste-ready, not filed)
 
-The spec is `gem-screener-followup-3/SPEC.md` of this folder: 6 items, 13 checklist lines, one asset (`assets/benchmark-badge-adoption.svg`) and one reference (`reference/benchmark-badge-preview.svg`). It covers which chains the Chains tab lists, what a chain's adoption is, the benchmark and its badge. Not in it, because they are in hand: the orange for warnings (item 7 of ET-28688) and the altseason universe without assets priced at a currency unit (item 35 of ET-28606; their answer of 2026-10-01, REPLY-0111: fixed under ET-28688).
+The spec is `gem-screener-followup-3/SPEC.md` of this folder: 6 items, 14 checklist lines, one asset (`assets/benchmark-badge-adoption.svg`) and one reference (`reference/benchmark-badge-preview.svg`). It covers which chains the Chains tab lists, what a chain's adoption is, the benchmark and its badge. Not in it, because they are in hand: the orange for warnings (item 7 of ET-28688) and the altseason universe without assets priced at a currency unit (item 35 of ET-28606; their answer of 2026-10-01, REPLY-0111: fixed under ET-28688).
 
 Made from `gem-screener-next-wishes.md` (the working notes and the numbers behind it). Nothing here was sent or uploaded.
 
