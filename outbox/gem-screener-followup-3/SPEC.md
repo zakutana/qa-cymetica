@@ -2,7 +2,7 @@
 
 **For:** the lead agent of the Cymetica SDLC pipeline
 **From:** Adam (product owner, Gem Screener)
-**Scope:** the Chains tab: which chains it lists, what a chain's adoption is, the benchmark and its badge, and the chart column and card; and on both tabs the size of the badges, the small print on Top Picks, revenue and dilution on Apps, the Supply card, the Degen meter card and the links in a coin's header. Build or change only what is named; leave the rest of the app as it is.
+**Scope:** the Chains tab: which chains it lists, what a chain's adoption is, the benchmark and its badge, and the chart column and card; and on both tabs the size of the badges, the small print on Top Picks, revenue and dilution on Apps, the Supply card, the Degen meter card, the links in a coin's header and Monthly revenue in the detail. Build or change only what is named; leave the rest of the app as it is.
 
 > **HOW TO READ THIS SPEC**
 > 1. **Goals, not methods.** How you build it is your call. Where an item gives a rule or a number, it is a good default, and you may improve it; say what you changed and why in your spec.
@@ -142,6 +142,12 @@ The owner wants:
 
 ---
 
+## 9. Monthly revenue in a coin's detail
+
+**[14] Monthly revenue moves up under the Degen meter, without its small print.** Live, the order of the detail is that of item 9 of ET-28688: header and Degen meter, Chart, Monthly revenue, Supply, the figures, Trajectory and so on. The owner wants **Monthly revenue directly under the Degen meter, above the Chart**; the rest of the order stays. And in the section the small lines go, because nobody reads them: "3.5× the usual month", "0.2× the usual month ($691K)" and "Usual month $691K = median of the previous 12 full months. Source: DeFiLlama." The section keeps its heading, the two figures ("Last month · Sep $2.4M", "This month so far · Oct $122K") and the monthly chart with its hatched partial month. What the lines said (the usual month and how it is worked out, the source) moves into the section's tooltip, in plain words.
+
+---
+
 ## Checklist (one line each; done when all are true)
 
 - [ ] 1 The Chains tab lists every chain whose token is in CoinGecko's Layer 1 or Layer 2 category with a market cap of $200M or more (or the cut you chose, named in your spec), joined to DefiLlama by `gecko_id`.
@@ -182,3 +188,6 @@ The owner wants:
 - [ ] 13 The web, CoinGecko and DEXTools links in a coin's and a chain's header are icon chips in the style of the Share button and the report icon, in the page's colours, with the name in the tooltip.
 - [ ] 13 Every app and every chain whose project has a homepage in DefiLlama or CoinGecko shows a web chip; none shows a dead or empty one.
 - [ ] 13 The DEXTools chip shows only where the coin has a DEX pair.
+- [ ] 14 In a coin's detail Monthly revenue stands directly under the Degen meter, above the Chart; the rest of the order of item 9 of ET-28688 is unchanged.
+- [ ] 14 The Monthly revenue section has no "× the usual month" line and no "Usual month … = median of the previous 12 full months. Source: DeFiLlama." line; it keeps its two figures and the chart.
+- [ ] 14 What those lines said is in the section's tooltip, in plain words.
