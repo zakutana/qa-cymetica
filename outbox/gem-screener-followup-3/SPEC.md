@@ -2,7 +2,7 @@
 
 **For:** the lead agent of the Cymetica SDLC pipeline
 **From:** Adam (product owner, Gem Screener)
-**Scope:** the Chains tab: which chains it lists, what a chain's adoption is, the benchmark and its badge, and the chart column and card; and on both tabs the size of the badges, the small print on Top Picks, revenue and dilution on Apps, the Supply card, the Degen meter card, the links in a coin's header, Monthly revenue in the detail and the Chart card's small lines. Build or change only what is named; leave the rest of the app as it is.
+**Scope:** the Chains tab: which chains it lists, what a chain's adoption is, the benchmark and its badge, and the chart column and card; and on both tabs the size of the badges, the small print on Top Picks, revenue and dilution on Apps, the Supply card, the Degen meter card, the links in a coin's header, Monthly revenue in the detail, the Chart card's small lines and the key figures of the detail. Build or change only what is named; leave the rest of the app as it is.
 
 > **HOW TO READ THIS SPEC**
 > 1. **Goals, not methods.** How you build it is your call. Where an item gives a rule or a number, it is a good default, and you may improve it; say what you changed and why in your spec.
@@ -154,6 +154,19 @@ The owner wants:
 
 ---
 
+## 11. The key figures of a coin's detail
+
+**[16] The six key-figure tiles go; Upside moves to the header and Strength 3M into the Chart card.** Live, a coin's detail has a grid of six tiles on two rows (Market cap, Revenue 30D, Emissions 30D, FDV, Upside, Strength 3M), each with a small explanatory sentence, and it takes a lot of room. Nearly everything in it now has a better place: market cap, FDV and emissions are in the Supply card (item 11) and the revenue has its own section (item 14). The owner wants the grid gone and the two figures that remain placed:
+
+- **Upside in the header**, right at the top on the right, next to the close button: the label "Upside potential" and the number, drawn in the same green as the table cell (">50x"), with the table's symbol for "if all tokens were out" (item 10 of ET-28688). The sentences of the tile ("28x if all tokens were out", "priced at 0.3× yearly revenue (Hyperliquid 34×)", "Yearly revenue $13.0M, worth over $215.6M at that price") move into its tooltip.
+- **Strength 3M in the Chart card**, as a figure beside the score in its own colour (0.32× in red today). Its sentence ("The price ran far ahead of revenue (under 0.5×), 3 months") moves into its tooltip.
+- **The Supply card gets a new name**, because it now holds market cap, FDV, tokens out, dilution and unlocks: "Market cap & supply" is a good default; the name is yours.
+- **On a chain** the same: Upside in the header and Strength 3M in the Chart card (item 7). The two figures that remain, Market cap and Adoption, stay as one slim row, because a chain has no Supply card.
+
+The detail then opens with the header (name and Upside), the Degen meter, Monthly revenue, the Chart with Strength 3M, Market cap & supply, Trajectory and the rest, with no tile grid.
+
+---
+
 ## Checklist (one line each; done when all are true)
 
 - [ ] 1 The Chains tab lists every chain whose token is in CoinGecko's Layer 1 or Layer 2 category with a market cap of $200M or more (or the cut you chose, named in your spec), joined to DefiLlama by `gecko_id`.
@@ -199,3 +212,8 @@ The owner wants:
 - [ ] 14 What those lines said is in the section's tooltip, in plain words.
 - [ ] 15 The Chart card (Apps and Chains) shows the score and band, the 90-day chart, the scale and "Open in Chart Analyzer ↗"; the "Not a forecast…" line, the "Chart Analyzer, last closed candle … · read …" line and the line on where the candles come from are gone from it.
 - [ ] 15 What those lines said, including that the score is not a forecast, is in the card's tooltip (hover, focus, tap), in plain words.
+- [ ] 16 The six-tile key-figure grid is gone from an app's detail; market cap, FDV and emissions are in the Supply card and the revenue is in its own section.
+- [ ] 16 The header shows "Upside potential" and its number on the right, in the table's green, with the table's "if all tokens were out" symbol; the sentences of the old tile are in its tooltip.
+- [ ] 16 Strength 3M is a coloured figure in the Chart card and its sentence is in its tooltip.
+- [ ] 16 The Supply card has a new name that says it holds market cap and supply.
+- [ ] 16 A chain's detail has Upside in the header, Strength 3M in the Chart card and one slim row with Market cap and Adoption.
