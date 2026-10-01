@@ -73,6 +73,23 @@ A pick that has stopped growing still carries the "Watch out: the business is no
 
 ---
 
+## 5. The warning colour
+
+**[7] Every warning is orange, not blue.** This was item 45 of the previous request ("caution is orange, not light blue") and it is still open on the live page: the page's own caution colour (`--warn`) is blue (`#3b82f6`), and only one mention of orange is left in the whole page. The owner wants it done everywhere a warning or a caution is drawn, not in a few places. Two examples the owner pointed at:
+
+- the warning triangle with its count on a Top Picks card ("2 warnings: Earns $1.3M a month less than it pays out in new tokens. Only 82 days of history."),
+- the small clock symbol beside the upside ("27x if all tokens were out: Only 6% of the tokens are out today"), and the line of the same name on the card.
+
+![The warning triangle, blue today](reference/followup-2/warning-icon-blue-today.png)
+
+![The tokens-still-to-come symbol, blue today](reference/followup-2/tokens-out-icon-blue-today.png)
+
+Others that read the same blue on 2026-10-01: the reason chips of the near-misses ("thin liquidity", "not growing", "too big"), the middle band of the Degen meter (its segments and its number, `d-warn`), and the Legend's blue entries. Where the check circles or anything else show a caution state, they follow. Find the rest yourself: the goal is that wherever the app says "watch out", the colour is the same orange.
+
+The colours then mean one thing each: green is good, **orange is caution**, red is bad, and blue-grey is only for neutral or "does not apply". Pick an orange that is clearly different from the page's red (`#ff4444`) and its green (`#00ff88`), also for a colour-blind visitor (a good default: `#ff9f1a`), and use it for the text, the icon, the border and the soft background alike. Where the owner has asked for blue for something that is not a warning (the Chart card's middle band, the altseason panel's first band, item 4), that stays blue.
+
+---
+
 ## Checklist (one line each; done when all are true)
 
 - [ ] 1 The header shows the logo (not text) with "Revenue-driven AI Research" and "by CyMetica" in it; the old title and the old tagline are gone.
@@ -87,3 +104,6 @@ A pick that has stopped growing still carries the "Watch out: the business is no
 - [ ] 6 The gate weighs revenue size and growth together: a business with large revenue that is flat is no longer held back by it (Collector Crypt, $12.4M a month, is judged on the other six gates); a small business still has to show growth.
 - [ ] 6 The spec says what rule was chosen and why, with before and after for the 215 apps (who enters the Degen picks, who leaves, the queue).
 - [ ] 6 A pick whose business has stopped growing keeps the "Watch out" line on its card.
+- [ ] 7 The warning triangle on a Top Picks card and the "if all tokens were out" symbol and line are orange.
+- [ ] 7 Near-miss reason chips, the Degen meter's caution zone (segments and number), the check circles in a caution state and the Legend's caution entries are the same orange; no warning anywhere on any tab is blue.
+- [ ] 7 Green, orange and red stay clearly apart (also for a colour-blind visitor); blue is left only for neutral or "does not apply" and for the owner's named exceptions.
