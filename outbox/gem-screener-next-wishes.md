@@ -12,6 +12,7 @@ Seen, 2026-10-01 (snapshot 13:42 UTC; CoinGecko and DefiLlama read the same even
 - The Layer 2 category is noisy below the top (first is OKB, X Layer's token; the 100th is under $1M), hence the market-cap cut.
 
 ## 2. Chains: the default view hides 11 of 26 without saying so
+**Dropped from spec 3 at the operator's word, 2026-10-01 ("bod 2 tam nedavej"); kept here as a note only.**
 Seen: "Vetted only" shows 15; "All by upside" shows 26. Sui (rank 11 of 26 in All) is hidden by default for `far_below_peak` ("Not vetted: post-crash"); nothing on the page says that chains are hidden or how many.
 Goal: the default view says how many chains it hides and why, in one short line, and a hidden chain such as Sui can be found from the page itself.
 
