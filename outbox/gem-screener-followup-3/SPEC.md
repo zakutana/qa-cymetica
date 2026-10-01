@@ -2,7 +2,7 @@
 
 **For:** the lead agent of the Cymetica SDLC pipeline
 **From:** Adam (product owner, Gem Screener)
-**Scope:** the Chains tab: which chains it lists, what a chain's adoption is, the benchmark and its badge, and the chart column and card. Build or change only what is named; leave the rest of the app as it is.
+**Scope:** the Chains tab: which chains it lists, what a chain's adoption is, the benchmark and its badge, and the chart column and card; and on both tabs the size of the badges, the small print on Top Picks and what the Revenue column on Apps says. Build or change only what is named; leave the rest of the app as it is.
 
 > **HOW TO READ THIS SPEC**
 > 1. **Goals, not methods.** How you build it is your call. Where an item gives a rule or a number, it is a good default, and you may improve it; say what you changed and why in your spec.
@@ -51,7 +51,7 @@ The owner wants the list to be **every chain whose native token is in CoinGecko'
 The badge as a vector, ready to start from: `assets/benchmark-badge-adoption.svg`. It is the same shield, rim, ribbon and type as the badge of ET-28688, in the page's own colours (none is new). The mock is inspiration, not literal: the shape, the proportions and the wording are yours to improve, as long as it reads at a glance as the same badge with BENCHMARK on it.
 
 - **Only the Chains badge changes.** The Apps badge (Hyperliquid, revenue) stays as built.
-- **Shape, place and size** as in ET-28688: about 92 × 110 px at the right end of the toolbar under the Legend button, the toolbar no taller than 124 px. The number is the benchmark multiple (**60×** today) and the word under it is **ADOPTION**; both come from the snapshot at each refresh, not typed.
+- **Shape and place** as in ET-28688: at the right end of the toolbar under the Legend button; the size is that of item 8. The number is the benchmark multiple (**60×** today) and the word under it is **ADOPTION**; both come from the snapshot at each refresh, not typed.
 - **The medallion holds a neutral emblem**: five bars with the middle one lit, the median, "the typical one", in the page's cyan and green. At 56 px (390 px) the emblem stays and the ribbon word may drop to the tooltip, as ET-28688 already allows.
 - **The tooltip** (hover, focus and tap, the dark card), in plain words: "The benchmark. A typical large chain is worth 60 times its adoption: the median of 14 chains with a market cap of $1B or more and a year of data (Avalanche, Polygon, Ethereum, Stellar, Solana, Sui, TON, Tron, ICP, Hyperliquid L1, Mantle, Arbitrum, BSC, X Layer). Adoption counts daily users, DEX volume, TVL and stablecoins together, so no single number can lift it. Every Upside on this page is measured against it." The names are the chains that qualify at that refresh.
 - **The accessible name** is "Benchmark: the median of 14 large chains, 60x adoption", then the tooltip text, as the live badge does with its `aria-label`.
@@ -83,6 +83,29 @@ On the page's own data, the 22 chains that have all four inputs, with TVL as the
 
 ---
 
+## 4. Smaller badges, less small print
+
+**[8] The badges are smaller: the toolbar is as tall as its controls need.** Live, at 1360 px: the badge is 92 × 110 px and the toolbar is 122 px tall around controls that are 31 and 32 px high; the header (130) and the toolbar together pin 252 px of a 900 px screen, and set in a row of small controls the badge looks too big. The owner, looking at both tabs: the badge is too tall for the row and does not look good on Apps or on Chains; a bit smaller would be better. A good default: the badge about 78 px tall (today 110), the toolbar no taller than about 96 px (today 122), the pinned area about 226 px (today 252).
+
+Do not only scale the drawing down: the word BENCHMARK is 8.6 px high today and has to stay readable, at least 8 px; scaled to 78 px tall it would be 6 px (the third badge in the mock under item 4). Draw it flatter instead: a lower shield, the ribbon, the number and the word under it kept at today's size, the medallion and the lower point giving up the height. Both badges, Apps and Chains, get the same size. At 390 px the rule of ET-28688 stays (about 56 px wide, the ribbon word may drop to the tooltip).
+
+**[9] Top Picks: the small grey sentences nobody reads are gone.** The owner, looking at the Hot sectors cards: these small texts are unnecessary, nobody will ever read them. Live, each Hot sectors card has, under its name, a stage pill and trend icons, two grey lines at 10.5 px: "+38% vs the median sector this month, too few people talking to measure" (or "…talked about by 1.1% of people") and "Leaders: Collector Crypt 26x · Securitize 19x · Ready Cards 4.5x". The owner wants:
+
+- **The two lines are gone from the card.** The card keeps the sector name, the stage pill, the trend icons and the fund line ("Gem Screener RWA · +5.4% since launch · Fund →").
+- **Nothing is lost:** what the two lines said (the move against the median sector, how much the sector is talked about, the leaders with their multiples) moves into the card's tooltip, the one dark card of item 17 of ET-28688, on hover, focus and tap, in plain words, the numbers first.
+- **The same for the paragraph under the backtest verdict** ("The criteria were written down and locked before the first result. So treat the cards below as an overview…", 10.5 px grey): it goes behind the verdict's own expand or tooltip; the verdict line itself ("Backtest 2024–2026: INCONCLUSIVE") stays.
+- **What stays:** the reason lines on the pick cards ("Watch out: …", "DEX & perps theme already leads", the "$5.4M → $181.5M if valued like Hyperliquid" line), because they say why a coin is on the list.
+
+---
+
+## 5. Apps: what the Revenue column says
+
+**[10] The Revenue column is revenue, and nothing else.** Live, the Revenue 30d column on Apps shows the revenue and under it a second line: "net +$1.2M" in green, "net −$1.3M" in red, or "net unknown" in grey; its tooltip says "Revenue $2.5M minus $1.3M paid in tokens, last 30 days." In the Vetted view 50 of the 76 rows show a green net, 5 a red one and 21 "net unknown" (the emissions list from DefiLlama covers 117 of the 215 apps). The owner: that does not fit in the revenue column. Revenue is the protocol's income in USDC; minting new tokens is free for the protocol and has nothing to do with it, so a red "net −$1.3M" under a positive revenue reads as a loss the business never made.
+
+The owner wants the column to show the revenue and nothing under it: the "net" line and "net unknown" are gone, and the tooltip says what the number is (the income of the last 30 days, in USD). Tokens paid out are still worth knowing, because they dilute holders, but as a thing of their own: the Earnings check and line in a coin's detail, which set revenue against new tokens, stay as they are. An Emissions column of its own is a later question and not part of this item.
+
+---
+
 ## Checklist (one line each; done when all are true)
 
 - [ ] 1 The Chains tab lists every chain whose token is in CoinGecko's Layer 1 or Layer 2 category with a market cap of $200M or more (or the cut you chose, named in your spec), joined to DefiLlama by `gecko_id`.
@@ -96,10 +119,19 @@ On the page's own data, the 22 chains that have all four inputs, with TVL as the
 - [ ] 3 The benchmark is the median multiple of the eligible large chains (a year of data, $1B or more, all four inputs, no more than half held back), not one chain; the spec says its number and its chains after item 1.
 - [ ] 3 Upside = the benchmark multiple ÷ the chain's multiple; the price-tag line follows.
 - [ ] 4 The Chains badge has the neutral five-bar emblem in the medallion, the live benchmark number and ADOPTION; the Apps badge is unchanged.
-- [ ] 4 The badge's tooltip names the chains the median is made of; it fits at 390 px and at 1360 px, and the toolbar is no taller than 124 px.
+- [ ] 4 The badge's tooltip names the chains the median is made of; it fits at 390 px and at 1360 px at the size of item 8.
 - [ ] 5 Arbitrum, OP Mainnet, Linea and ZKsync Era carry the tag "Gas is paid in ETH: this token does not collect the chain's fees" (when they are listed); the tag does not hide the row or change its Upside.
 - [ ] 6 The Adoption column, the detail tile, the price-tag line and the Upside all use the new adoption; the tooltip names the four inputs; the API record carries the inputs, the held-back values and the adoption, and the fields are documented.
 - [ ] 7 The Chains table has a Chart column in the same place, with the same cell, header, tooltip and sorting as on Apps, scored by the Chart Analyzer on the chain's native token.
 - [ ] 7 A chain's detail has the Chart card, the same component and place as on Apps (band, scale, "Open in Chart Analyzer ↗", its notes).
 - [ ] 7 A chain whose token cannot be scored shows in the column what an app without a score shows, and its detail has no empty card.
 - [ ] 7 The spec says, for each listed chain, whether its token is scored from exchange candles, from a DEX pool, or not at all.
+- [ ] 8 At 1360 px the Apps and the Chains badge are about 78 px tall (today 110), the toolbar no taller than about 96 px (today 122), and the pinned header and toolbar about 226 px (today 252).
+- [ ] 8 The word BENCHMARK on the badge is at least 8 px high; the badge still reads as a badge with the number and its word, and both badges are the same size on both tabs.
+- [ ] 8 At 390 px the badge keeps the rule of ET-28688 (about 56 px wide, the ribbon word may drop to the tooltip) and covers no control.
+- [ ] 9 A Hot sectors card on Top Picks shows the sector name, the stage pill, the trend icons and the fund line; the "vs the median sector" line and the "Leaders" line are gone from it.
+- [ ] 9 What those two lines said is in the card's tooltip (hover, focus, tap), in plain words with the numbers first.
+- [ ] 9 The paragraph under the backtest verdict is behind the verdict's expand or tooltip; the verdict line stays; the reason lines on the pick cards stay.
+- [ ] 10 The Revenue 30d column on Apps shows the revenue only: no "net" line, no "net unknown", no green or red figure under it.
+- [ ] 10 The revenue tooltip says what the number is (income over the last 30 days, in USD) and no longer subtracts tokens paid out.
+- [ ] 10 The Earnings check and line in a coin's detail, which set revenue against new tokens, are unchanged.
