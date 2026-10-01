@@ -4,8 +4,10 @@ Five things it says about itself that any redesign has to keep true, because
 the ranking, the picks and the altseason reading all stand on them:
 
 1. **A Degen pick opens the coin it names.** `GET /api/v1/gem-screener/picks`
-   lists each pick with its symbol and a link `?coin=<SYMBOL>`; the symbol route
-   `GET /api/v1/gem-screener/coins/{symbol}` must answer that coin. On
+   lists each pick with its symbol and a link (`detail_url`, `?coin=<key>`);
+   the coin route `GET /api/v1/gem-screener/coins/{key}` must answer that coin
+   for the key the link carries -- since their fix of #140 (2026-10-01) a slug,
+   before it the symbol. On
    2026-09-30 it did not for one of eight: the pick "Definitive" (EDGE) linked to
    `?coin=EDGE`, and both the route and the page opened edgeX -- a different
    token, six times the market cap, which fails the very gates the pick passed.
@@ -49,7 +51,7 @@ from tests.rest.test_gem_screener_numbers_match_their_sources import get_patient
 
 @qa(component="rest.gem_screener", tier=SafetyTier.SAFE, surface="rest")
 def test_a_degen_pick_opens_the_coin_it_names(rest_anon):
-    """Every pick's symbol, read through the coin route, is the same coin: the
+    """Every pick's link, read through the coin route, is the same coin: the
     same name, and a market cap within 5 % (two reads, minutes apart)."""
     try:
         listed = get_patiently(rest_anon, g.PICKS)
@@ -64,7 +66,9 @@ def test_a_degen_pick_opens_the_coin_it_names(rest_anon):
             raise Inconclusive("the picks route listed no picks, so there is nothing to open")
         coins, unread = {}, []
         for pick in picks:
-            symbol = pick.get("symbol")
+            # What the pick's own link opens (#140, fixed 2026-10-01 by
+            # linking by slug), not the ticker two apps may share.
+            symbol = g.pick_key(pick)
             one = get_patiently(rest_anon, g.COIN.format(symbol=symbol))
             try:
                 body = one.json() if one.status_code == 200 else None
@@ -83,7 +87,7 @@ def test_a_degen_pick_opens_the_coin_it_names(rest_anon):
     conclude(Measurement(
         verdict="failed" if breaches else "passed",
         reason=(f"{len(breaches)} of {len(picks)} Degen picks open another coin: " + "; ".join(
-                    f"{b['row']} is {b['pick']!r} (market cap {b['pick_market_cap']:,.0f}) but its symbol "
+                    f"{b['row']} is {b['pick']!r} (market cap {b['pick_market_cap']:,.0f}) but its link "
                     f"opens {b['opens']!r} ({b['opens_market_cap']:,.0f})" for b in breaches)
                 if breaches else
                 f"all {len(picks)} Degen picks open the coin they name"),

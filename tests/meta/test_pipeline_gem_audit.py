@@ -144,6 +144,22 @@ def _a_pick_that_opens_another_coin_is_seen_and_a_shared_ticker_is_named():
     assert g.pick_identity_breaches([pick], {})[0]["what"] == "the coin route could not be read", (
         "a coin that could not be read was counted as matching")
 
+    # #140, fixed 2026-10-01: the pick links by slug (`?coin=definitive`), and
+    # our report promised the check clears "as soon as the link carries the
+    # slug". It kept opening the TICKER and would have sent them a false fail.
+    linked = dict(pick, slug="definitive",
+                  detail_url="https://cymetica.com/gem-screener?coin=definitive")
+    assert g.pick_key(linked) == "definitive" and g.pick_key(pick) == "EDGE"
+    assert g.pick_key(dict(pick, slug="definitive")) == "definitive"
+    by_link = {"definitive": {"name": "Definitive", "market_cap": {"value": 29_100_000.0}},
+               "EDGE": {"name": "edgeX", "market_cap": {"value": 182_000_000.0}}}
+    assert g.pick_identity_breaches([linked], by_link) == [], (
+        "a pick whose link opens its own coin was judged by its ticker")
+    wrong_link = dict(linked, detail_url="https://cymetica.com/gem-screener?coin=edgex")
+    by_link["edgex"] = by_link["EDGE"]
+    assert [b["row"] for b in g.pick_identity_breaches([wrong_link], by_link)] == ["edgex"], (
+        "a link that opens another coin passed")
+
     snap = _snapshot([_app("leaf#1", "EDGE", 2.0, name="Definitive"),
                       _app("parent#edgex", "EDGE", 3.0, name="edgeX"), _app("a#3", "ZZZ", 1.0)])
     shared = g.duplicate_tickers(snap)
@@ -316,6 +332,16 @@ def _the_derived_figures_are_held_to_their_definitions():
     assert g.stated_runrate_factors("<b>last 30 days</b> x 12, last 90 days × 4, twelve times the median") == {30: 12.0, 90: 4.0}
     assert round(g.stated_runrate_factors("last 30 days × 365/30")[30], 4) == 12.1667
     assert g.stated_runrate_factors("no multipliers here") == {}
+    # #141, fixed 2026-10-01: the page now says "a day's average over the last
+    # 30 days x 365" and its tooltips "last 30 days, a day's average x 365".
+    # The reader took "last 30 days x 365" and failed their fix at x 365.
+    legend = ("right now: a day’s average over the last 30 days × 365, the same "
+              "over the last 90 days × 365, and twelve times the median")
+    tips = ("'30d': ['last 30 days, a day’s average × 365'], "
+            "'90d': ['last 90 days, a day's average × 365']")
+    for words in (legend, tips, legend + " " + tips):
+        said = {d: round(f, 4) for d, f in g.stated_runrate_factors(words).items()}
+        assert said == {30: 12.1667, 90: 4.0556}, (words[:40], said)
     row = _app("a#1", "AAA", 1.0, rev30d=100.0, runrate={"value": 1216.67, "basis": "30d"})
     assert len(g.runrate_factor_breaches(_snapshot([row]), {30: 12.0})["breaches"]) == 1, (
         "a run-rate of 12.1667 x revenue passed against a stated x 12")

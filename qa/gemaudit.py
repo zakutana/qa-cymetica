@@ -33,6 +33,7 @@ import json
 import re
 import statistics
 import time
+import urllib.parse
 from typing import Callable, Iterable
 
 APP_PAGE = "/gem-screener/app?view=apps"
@@ -605,12 +606,26 @@ def holders_clipped(snap: dict) -> list[dict]:
 RUNRATE_FACTOR = re.compile(r"last\s+(\d+)\s+days\s*[×x]\s*(\d+)(?:\s*/\s*(\d+))?", re.I)
 
 
+RUNRATE_DAILY = re.compile(
+    r"last\s+(\d+)\s+days,?\s+(?:a\s+)?day['’]s\s+average\s*[×x]\s*(\d+)", re.I)
+
+
 def stated_runrate_factors(text: str) -> dict[int, float]:
     """{30: 12.0, 90: 4.0}: the multipliers the page's own words give the two
     estimates ("last 30 days x 12, last 90 days x 4"), read from its text."""
     out = {}
-    for days, top, bottom in RUNRATE_FACTOR.findall(re.sub(r"<[^>]+>", " ", text or "")):
-        out[int(days)] = float(top) / float(bottom) if bottom else float(top)
+    plain = re.sub(r"<[^>]+>", " ", text or "")
+    # #141, fixed 2026-10-01: the page now says "a day's average over the last
+    # 30 days x 365" -- 365 is the multiplier on a DAY's average, so on the
+    # window's revenue it is 365 / 30. Read as "x 365" it failed their fix.
+    for match in RUNRATE_FACTOR.finditer(plain):
+        days, top, bottom = match.groups()
+        daily = re.search(r"(?:(?:day|daily)['’]?s?\s+average[^.;]{0,30}|the\s+same\s+over(?:\s+the)?)\s*$",
+                          plain[max(0, match.start() - 60):match.start()], re.I)
+        out[int(days)] = (float(top) / int(days) if daily and not bottom
+                          else float(top) / float(bottom) if bottom else float(top))
+    for days, top in RUNRATE_DAILY.findall(plain):
+        out[int(days)] = float(top) / int(days)
     return out
 
 
@@ -746,15 +761,28 @@ def duplicate_tickers(snap: dict) -> dict[str, list[dict]]:
     return {s: rows for s, rows in by_symbol.items() if len(rows) > 1}
 
 
+def pick_key(pick: dict):
+    """What a pick's own link opens: the `coin` of its detail_url, else its
+    slug, else its symbol. #140 was fixed (2026-10-01) by linking each pick by
+    slug, which is what our report said would clear it; the check kept opening
+    the ticker, which still answers the other coin a shared ticker names."""
+    url = str(pick.get("detail_url") or "")
+    hit = re.search(r"[?&]coin=([^&#]+)", url)
+    if hit:
+        return urllib.parse.unquote(hit.group(1))
+    return pick.get("slug") or pick.get("symbol")
+
+
 def pick_identity_breaches(picks: list[dict], coins: dict[str, dict], *,
                            mcap_tol: float = 0.05) -> list[dict]:
-    """A Degen pick's own symbol must open the coin the pick names. `coins` maps
-    a symbol to what the coin route answered for it. A pick whose symbol opens a
-    different name, or a market cap another coin would have, is a breach; a coin
-    that could not be read at all is reported as such, not as matching."""
+    """A Degen pick's own link must open the coin the pick names. `coins` maps
+    a pick's key (`pick_key`: its link's coin, else slug, else symbol) to what
+    the coin route answered for it. A pick whose link opens a different name,
+    or a market cap another coin would have, is a breach; a coin that could not
+    be read at all is reported as such, not as matching."""
     out = []
     for pick in picks:
-        symbol = pick.get("symbol")
+        symbol = pick_key(pick)
         record = coins.get(symbol)
         if not isinstance(record, dict):
             out.append({"row": symbol, "what": "the coin route could not be read"})

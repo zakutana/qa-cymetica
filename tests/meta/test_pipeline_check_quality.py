@@ -481,6 +481,20 @@ def test_the_is_answer_rule_is_self_calibrating_and_still_bites():
     assert unanswered(sent, paired_and_orphan, now)[1:] == ([], [sent[3], sent[4], sent[5]]), (
         "a message with its own reply is answered; only the rest are unsure")
 
+    # #139 (fixed 2026-10-01 07:07 UTC; "messages logged before the fix stay as
+    # they were"): a cut message logged BEFORE the fix is history, one logged
+    # after it is the defect. Held here for the same ceiling.
+    from tests.rest.test_build_it_better_log_keeps_whole_bodies import FIXED_AT, cuts, logged_since
+    record = {"app_name": "X", "spec_text": "a" * 9000, "improvements": "ask",
+              "messages": [{"kind": "BB-SPEC", "at": "2026-09-29T10:00:00+00:00", "body": "a" * 8000}]}
+    assert cuts(record) == [], "a body logged before their fix was judged"
+    assert logged_since(record) == 0
+    after = dict(record, messages=record["messages"] + [
+        {"kind": "BB-SPEC", "at": "2026-10-02T10:00:00+00:00", "body": "a" * 8000}])
+    assert [c["kind"] for c in cuts(after)] == ["BB-SPEC"] and logged_since(after) == 1, (
+        "a cut message logged after their fix was not seen")
+    assert FIXED_AT.startswith("2026-10-01T07:07")
+
     # Chart Analyzer (2026-10-01), held here for the same ceiling: chart_rate
     # against the average of what the same answer marks counted_in_score.
     # The AAVE answer of that morning fails; either fix passes.

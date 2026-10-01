@@ -46,10 +46,24 @@ BOARD = "/api/v1/build-it-better/requests"
 SEEN_CAP = 8000
 
 
-def cuts(record: dict) -> list[dict]:
-    """Logged bodies that are a strict prefix of a longer text in the record."""
+# Their fix of #139 (2026-10-01 07:07 UTC, ET-28527): "log_message stores a body
+# whole ... Messages logged before the fix stay as they were." So a cut message
+# older than this is history, and only what was logged since can show the
+# defect. Their platform is under development: only what is visible is judged.
+FIXED_AT = "2026-10-01T07:07:13+00:00"
+
+
+def logged_since(record: dict, since: str = FIXED_AT) -> int:
+    """Messages of the record logged at or after their fix."""
+    return sum(1 for m in record.get("messages") or []
+               if isinstance(m, dict) and str(m.get("at") or "") >= since)
+
+
+def cuts(record: dict, since: str = FIXED_AT) -> list[dict]:
+    """Logged bodies, logged since their fix, that are a strict prefix of a
+    longer text in the record."""
     messages = sorted((m for m in record.get("messages") or []
-                       if isinstance(m, dict)),
+                       if isinstance(m, dict) and str(m.get("at") or "") >= since),
                       key=lambda m: str(m.get("at") or ""))
     found = []
     specs = [m for m in messages if m.get("kind") == "BB-SPEC"]
@@ -109,6 +123,8 @@ def test_the_message_log_carries_each_message_whole(rest_anon):
                 record.get("improvements"), str):
             unread.append(f"{ticket} (no spec_text or improvements to compare)")
             continue
+        if not logged_since(record):
+            continue        # nothing logged since their fix: history, not judged
         compared.append(ticket)
         found = cuts(record)
         if found:
@@ -126,8 +142,9 @@ def test_the_message_log_carries_each_message_whole(rest_anon):
     tail = (". NOT in the verdict -- " + " | ".join(tail)) if tail else ""
 
     if not compared:
-        raise Inconclusive(f"no record on the board holds a spec_text or "
-                           f"improvements to compare its log with{tail}")
+        raise Inconclusive(f"no record on the board holds a message logged since "
+                           f"their fix ({FIXED_AT}) beside a spec_text or "
+                           f"improvements to compare it with{tail}")
 
     if cut:
         verdict = "failed"
