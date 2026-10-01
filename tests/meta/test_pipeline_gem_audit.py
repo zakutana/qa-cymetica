@@ -321,6 +321,17 @@ def _the_derived_figures_are_held_to_their_definitions():
     bench = {"bench_chains": {"mult": 20.0, "fee_mult": 100.0}}
     assert breaches(name="chains", chains=[chain], **bench)["breaches"] == []
     assert breaches(name="chains", chains=[dict(chain, potential_raw=9.0)], **bench)["breaches"] == ["C"]
+    # 2026-10-01 (ET-28606): chains are priced on adoption (daily users x fees),
+    # so price/activity is market cap over `adoption.value`, not over the fees.
+    # Judging the new snapshot by the old basis called all 20 priced chains
+    # breaches; a chain with no user count has no price tag and is not judged.
+    adopted = dict(chain, adoption={"value": 50.0}, ps=10.0, potential_raw=2.0)
+    assert breaches(name="chains", chains=[adopted], **bench)["breaches"] == [], (
+        "a chain priced on adoption was judged by its fees")
+    assert breaches(name="chains", chains=[dict(adopted, ps=5.0, potential_raw=4.0)],
+                    **bench)["breaches"] == ["C"], "a chain still priced on fees passed under the adoption basis"
+    unpriced = {k: v for k, v in adopted.items() if k not in ("ps", "potential_raw")}
+    assert breaches(name="chains", chains=[unpriced], **bench)["breaches"] == []
 
     # the level is round(10 x the weighted mean of its areas), inside its range
     level = {"X": {"degen_level": {"level": 6, "low": 5, "high": 9, "areas": [{"weight": 1.0, "value": 0.6}]}}}
@@ -523,6 +534,11 @@ def test_the_audit_builds_a_report_from_a_snapshot_alone(monkeypatch):
     coins = {"AAA": {"name": "Aaa", "trade_url": "https://x/aaa"},
              "BBB": {"name": "Some Other Token", "trade_url": "https://x/other"}}
     assert [r["tradeable_here"] for r in g.picks_table(snap, coins)] == [True, None], g.picks_table(snap, coins)
+    # 2026-10-01: picks are addressed by slug, so the coin records are filed
+    # under the slug; the lookup by ticker then found nothing for every pick.
+    by_slug = {"aaa": coins["AAA"], "bbb": coins["BBB"]}
+    assert [r["tradeable_here"] for r in g.picks_table(snap, by_slug)] == [True, None], (
+        "coin records filed under the slug were not found")
 
     # R10 (3/3): a snapshot that carries no time of its own has no age -- unknown,
     # never "fresh".

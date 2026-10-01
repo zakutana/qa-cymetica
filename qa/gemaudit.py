@@ -536,7 +536,14 @@ def derived_identities(snap: dict, coins: dict | None = None) -> list[dict]:
     bench = snap.get("bench_chains") or {}
 
     def chain_test(c):
-        act, mcap, ps = num((c.get("activity") or {}).get("value") if isinstance(c.get("activity"), dict) else None), num(c.get("mcap")), num(c.get("ps"))
+        # Since 2026-10-01 (ET-28606) a chain is priced on adoption (daily
+        # users x fees); a chain with no user count has no price tag. Before
+        # that the base was the fees alone, which a snapshot without an
+        # `adoption` block still is.
+        def value(block):
+            return num(block.get("value")) if isinstance(block, dict) else None
+        act = value(c.get("adoption")) or value(c.get("activity"))
+        mcap, ps = num(c.get("mcap")), num(c.get("ps"))
         raw, mult = num(c.get("potential_raw")), num(bench.get("mult"))
         if not (act and mcap and ps and raw is not None and mult):
             return None
@@ -882,7 +889,9 @@ def picks_table(snap: dict, coins: dict[str, dict] | None = None) -> list[dict]:
         # The coin route answers by ticker, and two apps can share one (EDGE,
         # UP): its record counts only when it is this coin (R05, deep pass of
         # 2026-09-30).
-        coin = (coins or {}).get(a.get("symbol")) or {}
+        # Picks are addressed by slug since 2026-10-01, and the records are
+        # filed under what the pick's link opens; the ticker is the fallback.
+        coin = (coins or {}).get(a.get("slug")) or (coins or {}).get(a.get("symbol")) or {}
         if coin and str(coin.get("name") or "").casefold() != str(a.get("name") or "").casefold():
             coin = {}
         rows.append({

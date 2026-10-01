@@ -150,7 +150,9 @@ def read_everything() -> tuple[dict, dict]:
         else:
             inputs["picks"], inputs["coins"] = picks, {}
             for pick in picks:
-                symbol = pick.get("symbol")
+                # The key is what the pick's own link opens (#140, fixed
+                # 2026-10-01): the slug, which two apps never share.
+                symbol = g.pick_key(pick)
                 try:
                     one = cymetica.get(g.COIN.format(symbol=symbol))
                     body = one.json() if one.status_code == 200 else None
