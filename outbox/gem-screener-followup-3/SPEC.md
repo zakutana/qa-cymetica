@@ -257,6 +257,12 @@ The picture is a mock, inspiration and not literal, with the real figures of 202
 
 ---
 
+## 20. The near-misses lane
+
+**[26] The near-misses lane runs left to right.** Live, the PICKS gate stands at the left end of the lane, the near-miss cards stand to its right (RamsesX #1 31x, Securitize #2 18x, Rainbow #3 and so on) and the chevron at the gate points left, so the queue moves from right to left: against the way the page reads, and against the row of gates of item 24, which runs left to right into PICKS. The owner wants the direction turned: the PICKS gate at the right end of the lane, the dashed floor running into it from the left, the chevron pointing right, and the queue moving toward the gate with the nearest miss next to it: #1 stands directly in front of the gate and the ranks count down to the left (#6 … #1, gate). Everything on the cards (logo, name, upside, rank, reason chip) stays as it is.
+
+---
+
 ## Checklist (one line each; done when all are true)
 
 - [ ] 1 The Chains tab lists every chain whose token is in CoinGecko's Layer 1 or Layer 2 category with a market cap of $200M or more (or the cut you chose, named in your spec), joined to DefiLlama by `gecko_id`.
@@ -331,3 +337,5 @@ The picture is a mock, inspiration and not literal, with the real figures of 202
 - [ ] 25 An app with no emissions data is not removed by the gate and shows "dilution unknown" in grey.
 - [ ] 25 The headline, the gate row and the picks follow the new gate set (8 of 215 today); apps that fail only Dilution stand in the near-misses lane with the chip "heavy dilution".
 - [ ] 25 The gate set's version changes and the picks ledger starts a new series; the backtest keeps judging the old gates and is labelled so; no other threshold changes.
+- [ ] 26 In the near-misses lane the PICKS gate stands at the right end and the chevron points right; the dashed floor runs into the gate from the left.
+- [ ] 26 The queue is ordered #6 … #1 from the left, so #1 stands directly in front of the gate; the cards themselves are unchanged.
