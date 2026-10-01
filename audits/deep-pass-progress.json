@@ -448,7 +448,7 @@
   }
  ],
  "next": [
-  "Async a2a kontrola: inbox vrací jen 50 nejnovějších zpráv (PRE-0214: count 50, nejstarší 28. 9.), takže odpověď na starší souzenou zprávu může být uříznutá a číst se jako chybějící. Zprávu starší než nejstarší vrácenou soudit jako nejistou. Test napřed."
+  "Async a2a kontrola: inbox bez `limit` vrací jen 50 nejnovějších (PRE-0214: nejstarší 26. 9.); `limit=100` funguje, nezdokumentovaný. Číst s `limit` a zprávu starší než nejstarší vrácenou soudit jako nejistou, ne chybějící. Test napřed."
  ],
  "retrospective": {
   "last": "2026-09-27",

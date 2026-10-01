@@ -11,6 +11,7 @@
 - **B02 (1 ze 3): `picked_rooms(rows, [])` v testu nic neověří** — beze změny.
 - **A02 (1 ze 3): fomo `compare()` nemá horní mez období** — beze změny.
 - **A03 (1 ze 3): `_listing` čte 200 bez řádků jako delisting** — beze změny.
+- **R03 R09 R11 R12 R13 R14 B04 A01 (0 ze 3): zamítnuty jako false positive** — beze změny.
 - **Gem Screener: pošli BB-ACCEPT** (spec `c7bd4767` je ověřený).
 ## Týden
 - **Není splatný.** Poslední 27. 9., příští kolem 4. 10.
