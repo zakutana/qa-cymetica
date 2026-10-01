@@ -2,7 +2,7 @@
 
 **For:** the lead agent of the Cymetica SDLC pipeline
 **From:** Adam (product owner, Gem Screener)
-**Scope:** the Chains tab: which chains it lists, what a chain's adoption is, the benchmark and its badge, and the chart column and card; and on both tabs the size of the badges, the small print on Top Picks and what the Revenue column on Apps says. Build or change only what is named; leave the rest of the app as it is.
+**Scope:** the Chains tab: which chains it lists, what a chain's adoption is, the benchmark and its badge, and the chart column and card; and on both tabs the size of the badges, the small print on Top Picks and revenue and dilution on Apps. Build or change only what is named; leave the rest of the app as it is.
 
 > **HOW TO READ THIS SPEC**
 > 1. **Goals, not methods.** How you build it is your call. Where an item gives a rule or a number, it is a good default, and you may improve it; say what you changed and why in your spec.
@@ -98,11 +98,19 @@ Do not only scale the drawing down: the word BENCHMARK is 8.6 px high today and 
 
 ---
 
-## 5. Apps: what the Revenue column says
+## 5. Apps: revenue and dilution
 
-**[10] The Revenue column is revenue, and nothing else.** Live, the Revenue 30d column on Apps shows the revenue and under it a second line: "net +$1.2M" in green, "net −$1.3M" in red, or "net unknown" in grey; its tooltip says "Revenue $2.5M minus $1.3M paid in tokens, last 30 days." In the Vetted view 50 of the 76 rows show a green net, 5 a red one and 21 "net unknown" (the emissions list from DefiLlama covers 117 of the 215 apps). The owner: that does not fit in the revenue column. Revenue is the protocol's income in USDC; minting new tokens is free for the protocol and has nothing to do with it, so a red "net −$1.3M" under a positive revenue reads as a loss the business never made.
+**[10] Revenue is revenue; dilution is its own red flag, measured against the benchmark.** The owner: revenue and dilution are two different things and are not to be mixed anywhere on the page. Revenue is the protocol's income in USDC. Minting new tokens is free for the protocol and is no part of it. Dilution is what new tokens do to the people who hold the token, and it is a red flag when it is large.
 
-The owner wants the column to show the revenue and nothing under it: the "net" line and "net unknown" are gone, and the tooltip says what the number is (the income of the last 30 days, in USD). Tokens paid out are still worth knowing, because they dilute holders, but as a thing of their own: the Supply card in a coin's detail ("1.9× revenue covers the new tokens", "+$1.2M a month after paying $1.3M of new tokens") and the Earnings check, which set revenue against new tokens, stay as they are. An Emissions column of its own is a later question and not part of this item.
+Live, the page mixes the two in four places: (1) the Revenue 30d column on Apps shows "net +$1.2M", "net −$1.3M" in red or "net unknown" under the revenue, and its tooltip says "Revenue $2.5M minus $1.3M paid in tokens, last 30 days"; (2) the Supply card in a coin's detail has the tile "1.9× revenue covers the new tokens" and the line "+$1.2M a month after paying $1.3M of new tokens"; (3) the key figures say "Earns $2.5M a month, pays out $1.3M in new tokens."; (4) the Earnings row of the checks says "Earns $2.5M a month, $1.3M goes out as new tokens: +$1.2M". On the Top Picks cards one of the warnings is "earnings below emissions", the same mix as a flag.
+
+The owner wants:
+
+- **Revenue is shown as revenue, everywhere.** The four mixes above go; "Earns $2.5M a month" stays and nothing is subtracted from it. The Revenue column shows the revenue and nothing under it, and its tooltip says what the number is (the income of the last 30 days, in USD).
+- **Dilution is its own figure.** It already exists: "+7% new tokens a week" in the Supply card and in the Supply row of the checks (the value of the new tokens of the last 30 days against the market cap, per week: Pharaoh $1.31M against $4.3M is 7.1%). It stays where it is, and nothing else is added to it.
+- **A high dilution is a red flag, compared with the benchmark's, as Upside is.** The benchmark app of Apps is Hyperliquid, and on the page's data its dilution is 0% a week (DefiLlama lists no emissions for it). A good default: caution when an app's dilution is more than 0.5 points a week above the benchmark's, red when it is more than 1 point above; live that is 12 and 9 of the 117 apps whose emissions are known (Topaz 19.7%, Neverland 17.1%, up 8.4%, Pharaoh 7.1%, Hybra 6.0%, nest 4.4%, RamsesX 3.4%, ORE Protocol 1.2% a week). The thresholds move with the benchmark's own dilution, so the comparison keeps its meaning if Hyperliquid starts to dilute. The tooltip names the benchmark's figure ("Hyperliquid, the benchmark: 0% a week").
+- **It is a flag, not a gate or a sort key**, in the same icon style as the page's other warnings (orange from ET-28688), on the Apps row, the Top Picks card and the detail. On the pick cards it replaces the warning "earnings below emissions".
+- **No data stays "unknown", never zero**, as today (98 of the 215 apps have no emissions data).
 
 ---
 
@@ -132,6 +140,7 @@ The owner wants the column to show the revenue and nothing under it: the "net" l
 - [ ] 9 A Hot sectors card on Top Picks shows the sector name, the stage pill, the trend icons and the fund line; the "vs the median sector" line and the "Leaders" line are gone from it.
 - [ ] 9 What those two lines said is in the card's tooltip (hover, focus, tap), in plain words with the numbers first.
 - [ ] 9 The paragraph under the backtest verdict is behind the verdict's expand or tooltip; the verdict line stays; the reason lines on the pick cards stay.
-- [ ] 10 The Revenue 30d column on Apps shows the revenue only: no "net" line, no "net unknown", no green or red figure under it.
-- [ ] 10 The revenue tooltip says what the number is (income over the last 30 days, in USD) and no longer subtracts tokens paid out.
-- [ ] 10 The Supply card and the Earnings check in a coin's detail, which set revenue against new tokens, are unchanged.
+- [ ] 10 Revenue is shown as revenue everywhere: no "net" line or "net unknown" in the Revenue column, no "revenue covers the new tokens" tile or "after paying … of new tokens" line in the Supply card, no "pays out … in new tokens" in the key figures, nothing subtracted in the Earnings row; the revenue tooltip says what the number is (income of the last 30 days, in USD).
+- [ ] 10 Dilution ("+7% new tokens a week") keeps its place in the Supply card and the Supply row of the checks, as a figure of its own.
+- [ ] 10 A high dilution is flagged against the benchmark's (caution above 0.5 points a week over it, red above 1 point, or the thresholds you chose, named in your spec), moving with the benchmark's own dilution; the tooltip names the benchmark's figure.
+- [ ] 10 The flag is not a gate or a sort key; on the pick cards it replaces "earnings below emissions"; an app with no emissions data shows "unknown", never zero.
