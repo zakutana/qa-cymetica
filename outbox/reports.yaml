@@ -4001,6 +4001,49 @@ reports:
       page states with the one on the 30-day rows, so it clears whichever way
       the two are made to agree.
 
+  - key: chart-analyzer-score-does-not-average-what-it-marks-counted
+    findings: [CYM-chart-analyzer-score-averages-what-it-counts]
+    severity: low
+    category: logic
+    url: https://cymetica.com/api/v1/chart-analyzer/analyze?contract=0x63a72806098bd3d9520cc43356dd78afe5d386d9&chain=avalanche&timeframe=1d
+    title: >-
+      Chart Analyzer: a pattern confirmed twice is marked counted twice but
+      averaged once, so chart_rate and the score disagree with the answer's
+      own list
+    expected: >
+      Every analyze answer states its rule: "The score is the average success
+      rate of the patterns confirmed in the last 10 candles". The same answer
+      marks each pattern it found with `counted_in_score` and states the
+      average it put on the scale as `chart_rate`. The average of the
+      patterns marked counted should be that chart_rate.
+    actual: >
+      AAVE on avalanche (1d) marks three patterns counted_in_score: "20-bar
+      breakout on volume" (0.4836, 2 bars ago) and "Bearish engulfing after a
+      rise" (0.4694) at 4 and at 8 bars ago. chart_rate is 0.4765, the
+      average of the two pattern types; the average of the three counted
+      patterns is 0.4741, which is 56 on the answer's own scale against the
+      57 served. In our run of 1 Oct (06:34 UTC) all 6 sampled Gem Screener
+      coins whose counted patterns repeat one disagree the same way; the
+      largest, 0xcf6bb5389c92bdda8a3747ddb454cb7a64626c63 on bsc, states
+      chart_rate 0.5037 against 0.4946 for its six counted patterns, about
+      72 against 67 on the scale. The Gem Screener batch
+      (/api/v1/chart-analyzer/batch/gem-screener?timeframe=1d) lists the same
+      three names for AAVE, the engulfing twice, as its counted_patterns
+      beside the score of 57.
+    steps:
+      - 'GET https://cymetica.com/api/v1/chart-analyzer/analyze?contract=0x63a72806098bd3d9520cc43356dd78afe5d386d9&chain=avalanche&timeframe=1d -> patterns[] with counted_in_score true: breakout_volume 0.4836, bearish_engulfing 0.4694 (bars_ago 4), bearish_engulfing 0.4694 (bars_ago 8); chart_rate 0.4765; score 57'
+      - '(0.4836 + 0.4694 + 0.4694) / 3 = 0.4741; on the answer''s scale (1 = 0.359, 50 = 0.4635, 100 = 0.5533) that is 56'
+      - 'GET https://cymetica.com/api/v1/chart-analyzer/batch/gem-screener?timeframe=1d -> the same coin: score 57, counted_patterns ["20-bar breakout on volume", "Bearish engulfing after a rise", "Bearish engulfing after a rise"]'
+    body: >
+      It moves a score by up to five points in our sample, and it is the
+      published arithmetic: the batch publishes the repeated name too.
+      Either reading is defensible: count a pattern type once (then mark it
+      counted once, and list it once in the batch), or count every
+      confirmation (then average all of them). The rule text does not say
+      which; saying so would settle it. Our check compares chart_rate with
+      the average of what the same answer marks counted_in_score, so it
+      clears whichever way the two are made to agree.
+
 footer: >
   Reported by an independent QA agent. Scope of this work: verification of the
   REST API, MCP and machine-readable discovery surfaces, read-only except in

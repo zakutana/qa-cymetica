@@ -1,9 +1,9 @@
 {
-  "fetched_at": "2026-10-01T05:00:32+00:00",
-  "total": 103,
+  "fetched_at": "2026-10-01T06:56:26+00:00",
+  "total": 106,
   "statuses": {
-    "paid": 19,
-    "fixed": 1
+    "fixed": 2,
+    "paid": 18
   },
   "filing_probe": {
     "endpoint": "POST /api/v1/bounty/reports",
@@ -25,15 +25,15 @@
   "our_reports": {
     "endpoint": "GET /api/v1/bounty/my-reports?wallet_address=<addr>",
     "klass": "ok",
-    "read_at": "2026-10-01T05:46:19+00:00",
-    "evidence_id": "c35a1ba862d65bf3f2b85abfb95ea10909a0abcd660fbecb26ac558b3f949cb4",
+    "read_at": "2026-10-01T06:56:18+00:00",
+    "evidence_id": "ced31e228eaacb6489a78eb9d8b5a3bbd60c92443b969ecb6ce704d26a921403",
     "rows_returned": 97,
     "server_total": 97,
     "total": 97,
     "statuses": {
-      "pending": 5,
+      "pending": 3,
+      "fixed": 7,
       "paid": 85,
-      "fixed": 5,
       "invalid": 2
     },
     "fields_sent_but_not_stored": [],
@@ -1679,20 +1679,20 @@
       {
         "id": 136,
         "title": "Follow-up on #112: Build it Better's 24-hour deadline missed again, this time on ET-27671 (Gem Screener) -- 19.8h overdue, stage building, nothing shipped",
-        "status": "pending",
+        "status": "fixed",
         "hunter_name": "expire76",
         "wallet_address": "0xde9ceaab301a9e47b1bacd448b3ddbba85e83398",
         "severity_reported": "medium",
-        "severity_confirmed": null,
+        "severity_confirmed": "medium",
         "category": "logic",
         "created_at": "2026-09-28T15:37:24.343923",
-        "fixed_at": null,
-        "validated_at": null,
-        "triaged_at": null,
-        "status_notes": null,
-        "ticket_url": null,
+        "fixed_at": "2026-10-01T06:54:26.392795",
+        "validated_at": "2026-10-01T06:54:26.392795",
+        "triaged_at": "2026-10-01T06:54:26.392795",
+        "status_notes": "[2026-10-01T06:54:26+00:00] Resolved via ticket ET-28168: Moot: board /api/v1/build-it-better/requests at 2026-10-01 shows stats overdue=0; ET-27671 stage shipped (shipped 2026-09-29, resolved). Every request past its deadline has shipped; the one build in progress (ET-28606) is inside its own 24h window (deadline 2026-10-01 22:11 UTC). The late builds are history.",
+        "ticket_url": "https://cymetica.com/admin/centcom/issues/28168",
         "fix_pr_url": null,
-        "reward_amount": 0.0
+        "reward_amount": 1000.0
       },
       {
         "id": 137,
@@ -1751,20 +1751,20 @@
       {
         "id": 140,
         "title": "Gem Screener: the Degen pick \"Definitive\" (EDGE) links to ?coin=EDGE, and that opens a different token, edgeX",
-        "status": "pending",
+        "status": "fixed",
         "hunter_name": "expire76",
         "wallet_address": "0xde9ceaab301a9e47b1bacd448b3ddbba85e83398",
         "severity_reported": "medium",
-        "severity_confirmed": null,
+        "severity_confirmed": "medium",
         "category": "api",
         "created_at": "2026-09-30T19:29:12.591558",
-        "fixed_at": null,
-        "validated_at": null,
-        "triaged_at": null,
-        "status_notes": null,
-        "ticket_url": null,
+        "fixed_at": "2026-10-01T06:54:20.378506",
+        "validated_at": "2026-10-01T06:54:20.378506",
+        "triaged_at": "2026-10-01T06:54:20.378506",
+        "status_notes": "[2026-10-01T06:54:20+00:00] Resolved via ticket ET-28573: Already fixed: GET /api/v1/gem-screener/picks (2026-10-01) now returns EDGE as slug 'definitive' with detail_url https://cymetica.com/gem-screener?coin=definitive, and /api/v1/gem-screener/coins/definitive opens Definitive. The pick links by slug (commit 7fcdbabb4e, slugs everywhere); a shared ticker still resolves by ticker only when a caller types the ticker.",
+        "ticket_url": "https://cymetica.com/admin/centcom/issues/28573",
         "fix_pr_url": null,
-        "reward_amount": 0.0
+        "reward_amount": 1000.0
       },
       {
         "id": 141,
@@ -1788,23 +1788,23 @@
   },
   "qa_tracker": {
     "source": "https://cymetica.com/leaderboard/bugs (embedded allBugs)",
-    "total": 177,
+    "total": 180,
     "statuses": {
       "qa_testing": 2,
       "implementing": 2,
       "completed": 122,
-      "resolved": 25,
+      "resolved": 28,
       "rejected": 2,
       "pending": 12,
       "wont_fix": 12
     },
     "source_channels": {
       "web": 74,
-      "bounty": 103
+      "bounty": 106
     },
     "usernames": {
       "Maxorelaxo": 2,
-      "expire76": 122,
+      "expire76": 124,
       "Crypto42day": 2,
       "tonybugs0439": 5,
       "joebloggs": 12,
@@ -1816,7 +1816,7 @@
       "bugrep8372": 7,
       "D10061999M": 1,
       "Tulip": 1,
-      "hunter_0x000000_0099": 3,
+      "hunter_0x000000_0099": 4,
       "null": 7,
       "hunter_0x00000000": 1
     },
@@ -1901,7 +1901,9 @@
       "cloned bot profile does not display trading activity correctly",
       "неправильный баланс токенов в портфеле пользователя max",
       "swap pages fail to display user token balances",
+      "gem screener: the degen pick \"definitive\" (edge) links to ?coin=edge, and that opens a different token, edgex",
       "follow-up on #132 (et-27609): a2a first pass is off-topic again and no investigation arrived -- a2a-0019, 42+ hours, no reply beyond the automatic first pass",
+      "follow-up on #112: build it better's 24-hour deadline missed again, this time on et-27671 (gem screener) -- 19.8h overdue, stage building, nothing shipped",
       "head-to-head matchups a day past their 3-day window still read running, scoreboard frozen at creation (0 trades)",
       "a paper bot's stop-loss lets it lose twice the stop: 5% stop, 10% lost, pause event records -5%",
       "gem screener has not refreshed for ~42 hours against its own 6-hour cadence: every rebuild fails at audit_sectors.py, and the page still reads live",
@@ -1953,6 +1955,7 @@
       "an event-card paper buy opens a position but never debits the paper balance: sim usdc, sim trades and sim p&l all stay at their opening values",
       "ask_nexus_deep fails about half the time, and its failure message sends an agent to the human web chat",
       "nexus tells an agent to call three mcp tools that return tool_not_found, and quotes figures from one of them",
+      "playwright e2e test — middleware body integrity",
       "get /api/v1/portfolio/summary reports total_predictions 0 and total_volume 0 on an account holding 39 positions worth $2,901",
       "post /api/v1/event-cards/{card_id}/short accepts paper=true and opens a real-ledger perp anyway, by your own field description",
       "get /api/v1/trades answers 200 with zero trades on an account your own endpoints credit with 142 predictions and $3,582 of volume",
@@ -2003,15 +2006,15 @@
       "critical: my positions p&l shows -$3.15 for a $0.10 position",
       "shares preview rounds to 1 decimal place instead of 2"
     ],
-    "has_linear_links": 68
+    "has_linear_links": 71
   },
   "a2a_inbox": {
     "klass": "ok",
     "rows_returned": 50,
     "new": [],
-    "at": "2026-10-01T05:00:31+00:00"
+    "at": "2026-10-01T06:56:25+00:00"
   },
-  "closed": 1,
+  "closed": 2,
   "closed_without_recorded_evidence": 0,
   "evidence_fields_checked": [
     "validated_at",
@@ -2022,6 +2025,24 @@
     "status_notes"
   ],
   "reports": [
+    {
+      "id": 140,
+      "title": "Gem Screener: the Degen pick \"Definitive\" (EDGE) links to ?coin=EDGE, and that opens a different token, edgeX",
+      "status": "fixed",
+      "hunter_name": "expire76",
+      "severity_reported": "medium",
+      "severity_confirmed": "medium",
+      "created_at": "2026-09-30T19:29:12.591558",
+      "fixed_at": "2026-10-01T06:54:20.378506",
+      "validated_at": "2026-10-01T06:54:20.378506",
+      "triaged_at": "2026-10-01T06:54:20.378506",
+      "status_notes": "[2026-10-01T06:54:20+00:00] Resolved via ticket ET-28573: Already fixed: GET /api/v1/gem-screener/picks (2026-10-01) now returns EDGE as slug 'definitive' with detail_url https://cymetica.com/gem-screener?coin=definitive, and /api/v1/gem-screener/coins/definitive opens Definitive. The pick links by slug (commit 7fcdbabb4e, slugs everywhere); a shared ticker still resolves by ticker only when a caller types the ticker.",
+      "ticket_url": "https://cymetica.com/admin/centcom/issues/28573",
+      "fix_pr_url": null,
+      "reward_amount": 1000.0,
+      "paid_at": null,
+      "is_duplicate": false
+    },
     {
       "id": 137,
       "title": "Follow-up on #132 (ET-27609): a2a first pass is off-topic again and no investigation arrived -- A2A-0019, 42+ hours, no reply beyond the automatic first pass",
@@ -2038,6 +2059,24 @@
       "fix_pr_url": null,
       "reward_amount": 1000.0,
       "paid_at": "2026-09-28T19:50:49.246587",
+      "is_duplicate": false
+    },
+    {
+      "id": 136,
+      "title": "Follow-up on #112: Build it Better's 24-hour deadline missed again, this time on ET-27671 (Gem Screener) -- 19.8h overdue, stage building, nothing shipped",
+      "status": "fixed",
+      "hunter_name": "expire76",
+      "severity_reported": "medium",
+      "severity_confirmed": "medium",
+      "created_at": "2026-09-28T15:37:24.343923",
+      "fixed_at": "2026-10-01T06:54:26.392795",
+      "validated_at": "2026-10-01T06:54:26.392795",
+      "triaged_at": "2026-10-01T06:54:26.392795",
+      "status_notes": "[2026-10-01T06:54:26+00:00] Resolved via ticket ET-28168: Moot: board /api/v1/build-it-better/requests at 2026-10-01 shows stats overdue=0; ET-27671 stage shipped (shipped 2026-09-29, resolved). Every request past its deadline has shipped; the one build in progress (ET-28606) is inside its own 24h window (deadline 2026-10-01 22:11 UTC). The late builds are history.",
+      "ticket_url": "https://cymetica.com/admin/centcom/issues/28168",
+      "fix_pr_url": null,
+      "reward_amount": 1000.0,
+      "paid_at": null,
       "is_duplicate": false
     },
     {
@@ -2345,42 +2384,6 @@
       "reward_amount": 1000.0,
       "paid_at": "2026-09-22T19:44:53.399143",
       "is_duplicate": false
-    },
-    {
-      "id": 118,
-      "title": "Playwright E2E test — middleware body integrity",
-      "status": "fixed",
-      "hunter_name": "hunter_0x000000_0099",
-      "severity_reported": "low",
-      "severity_confirmed": "low",
-      "created_at": "2026-09-22T02:20:37.813578",
-      "fixed_at": "2026-09-22T19:37:31.104414",
-      "validated_at": "2026-09-22T19:37:31.104414",
-      "triaged_at": "2026-09-22T19:37:31.104414",
-      "status_notes": "[2026-09-22T19:37:31+00:00] Resolved via ticket ET-26380: [QA-STATE: NOT A DEFECT] The submission is the description of an automated test (\"verifying POST body parsing works through production middleware stack\"), repeated twice, with no failing observation, endpoint, request or response. Nothing to fix; closed as a test submission. If the middleware check ever fails, file the measured request/response and it will be handled.",
-      "ticket_url": "https://cymetica.com/admin/centcom/issues/26380",
-      "fix_pr_url": null,
-      "reward_amount": 1000.0,
-      "paid_at": null,
-      "is_duplicate": false
-    },
-    {
-      "id": 117,
-      "title": "A card reading tradeable_now true answers a paper buy with HTTP 500 \"Buy failed\"",
-      "status": "paid",
-      "hunter_name": "expire76",
-      "severity_reported": "medium",
-      "severity_confirmed": "medium",
-      "created_at": "2026-09-21T17:17:44.111402",
-      "fixed_at": "2026-09-22T19:37:14.600766",
-      "validated_at": "2026-09-22T19:37:14.600766",
-      "triaged_at": "2026-09-22T19:37:14.600766",
-      "status_notes": "[2026-09-22T19:37:14+00:00] Resolved via ticket ET-26339: [QA-STATE: FIXED 2026-09-21 18:10 UTC, after your two attempts] Confirmed from our logs, not a guess: both buys (17:01:28 and 17:04:10 UTC, user 113, card a4a5b71e, 1189.04 USDC paper) died on a server-side UnboundLocalError in the buy path — the trade-intent journal handle was bound inside one execution branch but referenced by the pricing/positioning steps that run for every branch — and the route reported it as 500 \"Buy failed\". The zero-weight legs were not the cause. Fix landed as d5b7e8bd1\n[reporter-verification PASS 2026-09-25 08:28 UTC by expire76 test_run=run-20260925T081639Z-c2a862b4]",
-      "ticket_url": "https://cymetica.com/admin/centcom/issues/26339",
-      "fix_pr_url": null,
-      "reward_amount": 1000.0,
-      "paid_at": "2026-09-22T19:44:53.399143",
-      "is_duplicate": false
     }
   ],
   "leaderboard": [
@@ -2390,10 +2393,10 @@
       "avatar_url": null,
       "tier": "senior",
       "total_score": 460,
-      "valid_reports": 90,
+      "valid_reports": 92,
       "total_likes": 0,
       "total_earned": 86000.0,
-      "total_awarded": 86000.0,
+      "total_awarded": 88000.0,
       "total_paid": 86000.0,
       "reward_currency": "ET10"
     },
@@ -2412,6 +2415,19 @@
     },
     {
       "rank": 3,
+      "hunter_name": "hunter_0x000000_0099",
+      "avatar_url": null,
+      "tier": "rookie",
+      "total_score": 0,
+      "valid_reports": 4,
+      "total_likes": 0,
+      "total_earned": 0.0,
+      "total_awarded": 4000.0,
+      "total_paid": 0.0,
+      "reward_currency": "ET10"
+    },
+    {
+      "rank": 4,
       "hunter_name": "hunter_0x00000000",
       "avatar_url": null,
       "tier": "rookie",
@@ -2422,24 +2438,11 @@
       "total_awarded": 1000.0,
       "total_paid": 0.0,
       "reward_currency": "ET10"
-    },
-    {
-      "rank": 4,
-      "hunter_name": "hunter_0x000000_0099",
-      "avatar_url": null,
-      "tier": "rookie",
-      "total_score": 0,
-      "valid_reports": 3,
-      "total_likes": 0,
-      "total_earned": 0.0,
-      "total_awarded": 3000.0,
-      "total_paid": 0.0,
-      "reward_currency": "ET10"
     }
   ],
   "creator_rewards": {
     "klass": "ok",
-    "read_at": "2026-10-01T05:00:34+00:00",
+    "read_at": "2026-10-01T06:56:29+00:00",
     "stale_from": null,
     "summary": {
       "paid": 10,
@@ -2449,6 +2452,5 @@
       "et10": 10000,
       "etlp": 10000
     }
-  },
-  "our_reports_refreshed_at": "2026-10-01T05:46:19+00:00"
+  }
 }
