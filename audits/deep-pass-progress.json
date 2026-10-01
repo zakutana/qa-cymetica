@@ -2,7 +2,7 @@
  "run": "deep pass 2026-09-30",
  "at": "2026-09-30T22:17:13+00:00",
  "previous_at": "2026-09-28T18:33:40+00:00",
- "at_finished": null,
+ "at_finished": "2026-10-01T00:21:34+00:00",
  "start_commit": "cb5ab8869c190bd5fc1b8af080006b17443f1517",
  "model": "Opus 5.5 (the harness switched to it when the skill loaded); CLAUDE_EFFORT unset",
  "gaps": [
@@ -447,7 +447,9 @@
    "why": "waits for the delivery"
   }
  ],
- "next": [],
+ "next": [
+  "Async a2a kontrola: inbox vrací jen 50 nejnovějších zpráv (PRE-0214: count 50, nejstarší 28. 9.), takže odpověď na starší souzenou zprávu může být uříznutá a číst se jako chybějící. Zprávu starší než nejstarší vrácenou soudit jako nejistou. Test napřed."
+ ],
  "retrospective": {
   "last": "2026-09-27",
   "done": false
@@ -455,8 +457,8 @@
  "rule_changes": [],
  "meta_tests": {
   "start": 811,
-  "end": null,
+  "end": 811,
   "reason": null
  },
- "finished": false
+ "finished": true
 }
