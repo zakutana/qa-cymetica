@@ -138,6 +138,14 @@ Two faults found on the way, both part of this item:
 
 ---
 
+## 8. The price-tag stamp
+
+**[13] The price-tag stamp says what it means, in words.** The stamp above the Apps table reads "35x · HYPERLIQUID'S PRICE TAG · × its yearly revenue · the bar for every Upside", and the one above the Chains table "38x · SOLANA'S PRICE TAG · × its adoption · the bar for every Upside". The owner of the product could not tell what the 35x and the 38x are. The meaning is in the tooltip only ("Hyperliquid is priced at 35x its yearly revenue. Upside = what a coin is worth at the same price tag."), and "price tag", "× its adoption" and "the bar" are jargon.
+
+The goal: a degen reads the stamp and knows, without a hover, what the number is and what it is used for. Say it as a sentence with the subject first, in the plain words of the tooltip, for instance "Hyperliquid is worth 35 times its yearly revenue. Upside shows how much a coin would gain if it were worth the same multiple of its revenue." For the chains, "adoption" is said in the words it is made of (daily users and the fees they pay), for instance "Solana is worth 38 times what its users pay in a year". Keep the stamp as dense as it is now (item 23 of the last request); only the words change. The wording is yours.
+
+---
+
 ## Checklist (one line each; done when all are true)
 
 - [ ] 1 The header shows the logo (not text) with "Revenue-driven AI Research" and "by CyMetica" in it; the old title and the old tagline are gone.
@@ -166,3 +174,4 @@ Two faults found on the way, both part of this item:
 - [ ] 12 Opening that link shows the coin's detail; true for every coin, also one outside the default Apps view.
 - [ ] 12 Opening a coin's detail puts its link in the address bar and closing it takes it out; after clicking from one coin to another the address bar names the second.
 - [ ] 12 The link of a coin is previewed with the coin's name and upside, not with the front page's title and image.
+- [ ] 13 The price-tag stamps of Apps and Chains say in a plain sentence what the number is (a multiple of yearly revenue, or of what users pay) and that Upside is measured against it; no "price tag", "adoption" or "the bar" without its meaning; the size of the stamp is unchanged.
