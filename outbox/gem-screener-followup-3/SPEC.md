@@ -2,7 +2,7 @@
 
 **For:** the lead agent of the Cymetica SDLC pipeline
 **From:** Adam (product owner, Gem Screener)
-**Scope:** the Chains tab: which chains it lists, what a chain's adoption is, the benchmark and its badge, and the chart column and card; and on both tabs the size of the badges, the small print on Top Picks, revenue and dilution on Apps, the Supply card, the Degen meter card, the links in a coin's header and Monthly revenue in the detail. Build or change only what is named; leave the rest of the app as it is.
+**Scope:** the Chains tab: which chains it lists, what a chain's adoption is, the benchmark and its badge, and the chart column and card; and on both tabs the size of the badges, the small print on Top Picks, revenue and dilution on Apps, the Supply card, the Degen meter card, the links in a coin's header, Monthly revenue in the detail and the Chart card's small lines. Build or change only what is named; leave the rest of the app as it is.
 
 > **HOW TO READ THIS SPEC**
 > 1. **Goals, not methods.** How you build it is your call. Where an item gives a rule or a number, it is a good default, and you may improve it; say what you changed and why in your spec.
@@ -73,12 +73,12 @@ On the page's own data, the 22 chains that have all four inputs, with TVL as the
 
 ## 3. The chart on Chains
 
-**[7] Chains get the Chart column and the Chart card, as Apps have them.** Live: the Apps table has a Chart column, a score from 1 to 100 (61 on Pharaoh) from the Chart Analyzer, and the Apps detail has the Chart card (the score and its band, below 40, 40 to 60 and 60 and up; the 90-day chart; the scale; "Open in Chart Analyzer ↗" and its notes). The Chains table has no such column and a chain's detail has no such card: none of the 26 chains carries a chart score in the snapshot. The owner wants both on Chains, **the same component as on Apps, not a second look**:
+**[7] Chains get the Chart column and the Chart card, as Apps have them.** Live: the Apps table has a Chart column, a score from 1 to 100 (61 on Pharaoh) from the Chart Analyzer, and the Apps detail has the Chart card (the score and its band, below 40, 40 to 60 and 60 and up; the 90-day chart; the scale; "Open in Chart Analyzer ↗" and some small grey lines). The Chains table has no such column and a chain's detail has no such card: none of the 26 chains carries a chart score in the snapshot. The owner wants both on Chains, **the same component as on Apps, not a second look**:
 
 - **The column** in the Chains table in the same place as on Apps (after the 12-month chart, before Upside), with the same cell, header, tooltip and sorting.
 - **The card** in a chain's detail, the same card as in the Apps detail, in the place it has there: directly under the header.
 - **The data is the same service**, https://cymetica.com/api/v1/chart-analyzer, on the chain's native token. The Chart Analyzer already holds exchange candles (Binance spot) for 292 symbols, and of 42 chain tokens tried (those of the chains on the tab today and the larger Layer 1 coins of item 1) 33 are among them (SOL, ETH, BNB, SUI, TRX, AVAX, ADA, TAO, HBAR, SEI and IOTA, for example), so a chain's token can be scored by its symbol. The 9 it does not hold (today CRO, FLR, HYPE, MNT, MON, OKB, QUAI, TON and XDC) are scored from the token's DEX pool by contract address as Apps are, or left without a score. How you reach each token is yours.
-- **The card carries what the Apps card carries** (its notes and the source of the candles); nothing is added to it or left out of it for chains.
+- **The card is the Apps card, the same component**; nothing is added to it or left out of it for chains (its small lines go, item 15).
 - **A chain whose token cannot be scored** shows in the column what an app without a score shows, and its detail leaves the card out instead of showing an empty one (item 16 of ET-28688: nothing shown empty).
 
 ---
@@ -148,6 +148,12 @@ The owner wants:
 
 ---
 
+## 10. The Chart card
+
+**[15] The Chart card loses its small lines.** Live, the Chart card in a coin's detail has, besides the score and its band, the 90-day chart, the scale and "Open in Chart Analyzer ↗", small grey lines: "Not a forecast. On held-out data, high scores did not rise more often.", "Chart Analyzer, last closed candle Sep 30 · read Oct 1" and the note on where the candles come from ("DEX pool · not covered by the study" on most apps). The owner wants them gone: nobody reads them. What the lines said (that the score is not a forecast and what the study found, the source and the age of the candles) moves into the card's tooltip, in plain words, so the caveat is one hover away and not on the page. It is the same component on Apps and on Chains (item 7), so the Chains card has none of them either.
+
+---
+
 ## Checklist (one line each; done when all are true)
 
 - [ ] 1 The Chains tab lists every chain whose token is in CoinGecko's Layer 1 or Layer 2 category with a market cap of $200M or more (or the cut you chose, named in your spec), joined to DefiLlama by `gecko_id`.
@@ -165,7 +171,7 @@ The owner wants:
 - [ ] 5 Arbitrum, OP Mainnet, Linea and ZKsync Era carry the tag "Gas is paid in ETH: this token does not collect the chain's fees" (when they are listed); the tag does not hide the row or change its Upside.
 - [ ] 6 The Adoption column, the detail tile, the price-tag line and the Upside all use the new adoption; the tooltip names the four inputs; the API record carries the inputs, the held-back values and the adoption, and the fields are documented.
 - [ ] 7 The Chains table has a Chart column in the same place, with the same cell, header, tooltip and sorting as on Apps, scored by the Chart Analyzer on the chain's native token.
-- [ ] 7 A chain's detail has the Chart card, the same component and place as on Apps (band, scale, "Open in Chart Analyzer ↗", its notes).
+- [ ] 7 A chain's detail has the Chart card, the same component and place as on Apps (band, scale, "Open in Chart Analyzer ↗").
 - [ ] 7 A chain whose token cannot be scored shows in the column what an app without a score shows, and its detail has no empty card.
 - [ ] 7 The spec says, for each listed chain, whether its token is scored from exchange candles, from a DEX pool, or not at all.
 - [ ] 8 At 1360 px the Apps and the Chains badge are about 78 px tall (today 110), the toolbar no taller than about 96 px (today 122), and the pinned header and toolbar about 226 px (today 252).
@@ -191,3 +197,5 @@ The owner wants:
 - [ ] 14 In a coin's detail Monthly revenue stands directly under the Degen meter, above the Chart; the rest of the order of item 9 of ET-28688 is unchanged.
 - [ ] 14 The Monthly revenue section has no "× the usual month" line and no "Usual month … = median of the previous 12 full months. Source: DeFiLlama." line; it keeps its two figures and the chart.
 - [ ] 14 What those lines said is in the section's tooltip, in plain words.
+- [ ] 15 The Chart card (Apps and Chains) shows the score and band, the 90-day chart, the scale and "Open in Chart Analyzer ↗"; the "Not a forecast…" line, the "Chart Analyzer, last closed candle … · read …" line and the line on where the candles come from are gone from it.
+- [ ] 15 What those lines said, including that the score is not a forecast, is in the card's tooltip (hover, focus, tap), in plain words.
