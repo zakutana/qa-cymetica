@@ -90,6 +90,22 @@ The colours then mean one thing each: green is good, **orange is caution**, red 
 
 ---
 
+## 6. The Apps table: alignment and width
+
+**[8] The Apps table is tidy: one header line, no empty strip, an aligned Upside column.** Three faults the owner sees on a wide screen:
+
+- **The headers do not sit on one line.** Some column titles stand high and some low (live at 2000 px: the titles of #, Project and Trajectory are at the top or middle of the header row, the others at the bottom; the difference is up to 26 px, and the two-line titles Market cap, Revenue 30D and Strength 3M make it worse). All titles share one baseline.
+- **The width is not used.** The table stops growing, and the last column leaves an empty strip (live at 2000 px: the Trajectory cell is 241 px wide and its content 74 px, so about 170 px at the right edge is empty). Let some columns take the spare width, for instance Category / Share / Theme, the 12 months chart, the Chart column and Trajectory, so the table ends at the edge of its box with no empty strip.
+- **The Upside column is not aligned.** The green upside tag sits further left in the rows that have the small clock symbol ("tokens still to come") than in the rows that do not (live: 7 px from the cell edge with the symbol, 26 px without; the tags are 75 px and 56 px wide). The tag is in the same place in every row, and so is the symbol, whether a row shows it or not (a row without it keeps the space free).
+
+![The table on a wide screen](reference/followup-2/apps-table-today.webp)
+
+![The Upside column, the tags jump](reference/followup-2/apps-upside-column-today.png)
+
+The Chains and Sectors tables are not named, but check them against the same three rules.
+
+---
+
 ## Checklist (one line each; done when all are true)
 
 - [ ] 1 The header shows the logo (not text) with "Revenue-driven AI Research" and "by CyMetica" in it; the old title and the old tagline are gone.
@@ -107,3 +123,6 @@ The colours then mean one thing each: green is good, **orange is caution**, red 
 - [ ] 7 The warning triangle on a Top Picks card and the "if all tokens were out" symbol and line are orange.
 - [ ] 7 Near-miss reason chips, the Degen meter's caution zone (segments and number), the check circles in a caution state and the Legend's caution entries are the same orange; no warning anywhere on any tab is blue.
 - [ ] 7 Green, orange and red stay clearly apart (also for a colour-blind visitor); blue is left only for neutral or "does not apply" and for the owner's named exceptions.
+- [ ] 8 All column titles of the Apps table stand on one baseline (at 1360 and at 2000 px).
+- [ ] 8 At 2000 px the table fills its box: no empty strip at the right of the last column.
+- [ ] 8 The Upside tag starts at the same x in every row, with or without the clock symbol.
