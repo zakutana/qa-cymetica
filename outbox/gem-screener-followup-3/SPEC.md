@@ -102,7 +102,7 @@ Do not only scale the drawing down: the word BENCHMARK is 8.6 px high today and 
 
 **[10] The Revenue column is revenue, and nothing else.** Live, the Revenue 30d column on Apps shows the revenue and under it a second line: "net +$1.2M" in green, "net −$1.3M" in red, or "net unknown" in grey; its tooltip says "Revenue $2.5M minus $1.3M paid in tokens, last 30 days." In the Vetted view 50 of the 76 rows show a green net, 5 a red one and 21 "net unknown" (the emissions list from DefiLlama covers 117 of the 215 apps). The owner: that does not fit in the revenue column. Revenue is the protocol's income in USDC; minting new tokens is free for the protocol and has nothing to do with it, so a red "net −$1.3M" under a positive revenue reads as a loss the business never made.
 
-The owner wants the column to show the revenue and nothing under it: the "net" line and "net unknown" are gone, and the tooltip says what the number is (the income of the last 30 days, in USD). Tokens paid out are still worth knowing, because they dilute holders, but as a thing of their own: the Earnings check and line in a coin's detail, which set revenue against new tokens, stay as they are. An Emissions column of its own is a later question and not part of this item.
+The owner wants the column to show the revenue and nothing under it: the "net" line and "net unknown" are gone, and the tooltip says what the number is (the income of the last 30 days, in USD). Tokens paid out are still worth knowing, because they dilute holders, but as a thing of their own: the Supply card in a coin's detail ("1.9× revenue covers the new tokens", "+$1.2M a month after paying $1.3M of new tokens") and the Earnings check, which set revenue against new tokens, stay as they are. An Emissions column of its own is a later question and not part of this item.
 
 ---
 
@@ -134,4 +134,4 @@ The owner wants the column to show the revenue and nothing under it: the "net" l
 - [ ] 9 The paragraph under the backtest verdict is behind the verdict's expand or tooltip; the verdict line stays; the reason lines on the pick cards stay.
 - [ ] 10 The Revenue 30d column on Apps shows the revenue only: no "net" line, no "net unknown", no green or red figure under it.
 - [ ] 10 The revenue tooltip says what the number is (income over the last 30 days, in USD) and no longer subtracts tokens paid out.
-- [ ] 10 The Earnings check and line in a coin's detail, which set revenue against new tokens, are unchanged.
+- [ ] 10 The Supply card and the Earnings check in a coin's detail, which set revenue against new tokens, are unchanged.
