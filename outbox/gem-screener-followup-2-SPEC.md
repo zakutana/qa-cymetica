@@ -138,11 +138,29 @@ Two faults found on the way, both part of this item:
 
 ---
 
-## 8. The price-tag stamp
+## 8. The two price-tag stamps become badges
 
-**[13] The price-tag stamp says what it means, in words.** The stamp above the Apps table reads "35x · HYPERLIQUID'S PRICE TAG · × its yearly revenue · the bar for every Upside", and the one above the Chains table "38x · SOLANA'S PRICE TAG · × its adoption · the bar for every Upside". The owner of the product could not tell what the 35x and the 38x are. The meaning is in the tooltip only ("Hyperliquid is priced at 35x its yearly revenue. Upside = what a coin is worth at the same price tag."), and "price tag", "× its adoption" and "the bar" are jargon.
+**[13] The two blue price-tag panels become two badges, and say what they mean in words.** The panel above the Apps table reads "35x · HYPERLIQUID'S PRICE TAG · × its yearly revenue · the bar for every Upside", and the one above the Chains table "38x · SOLANA'S PRICE TAG · × its adoption · the bar for every Upside". The owner of the product could not tell what the 35x and the 38x are. The meaning is in the tooltip only ("Hyperliquid is priced at 35x its yearly revenue. Upside = what a coin is worth at the same price tag."), and "price tag", "× its adoption" and "the bar" are jargon.
 
-The goal: a degen reads the stamp and knows, without a hover, what the number is and what it is used for. Say it as a sentence with the subject first, in the plain words of the tooltip, for instance "Hyperliquid is worth 35 times its yearly revenue. Upside shows how much a coin would gain if it were worth the same multiple of its revenue." For the chains, "adoption" is said in the words it is made of (daily users and the fees they pay), for instance "Solana is worth 38 times what its users pay in a year". Keep the stamp as dense as it is now (item 23 of the last request); only the words change. The wording is yours.
+![The Apps panel today](reference/followup-2/price-tag-stamp-apps-today.png)
+
+![The Chains panel today](reference/followup-2/price-tag-stamp-chains-today.png)
+
+Today they are two plain panels (362 x 46 px, a cyan outline on a pale cyan fill). The owner wants them to be **two badges** of the same family as the new logo (item 1) and the gate (item 5): the top emblems of the page.
+
+What the badge shows, as in the mock below:
+
+- a **seal** on the left: the benchmark's own logo (Hyperliquid for Apps, Solana for Chains; the page already serves both) inside the scanner corners of the Gem Screener logo;
+- the **number** big, in the logo's cyan-to-green gradient and its heavy font ("35x", "38x");
+- the **title** in the small capitals the page uses ("HYPERLIQUID'S PRICE TAG", "SOLANA'S PRICE TAG");
+- **one plain sentence** under it that says what the number is and what it is for, for instance "market cap ÷ yearly revenue · every Upside is measured against it", and for Chains "market cap ÷ adoption (daily users and the fees they pay) · every Upside is measured against it". A degen reads the badge and knows, without a hover, what 35x is. The words "× its adoption" and "the bar" are gone; "adoption" is said in the words it is made of;
+- a plate with the logo's cyan-to-green outline, and the little (i) with the full tooltip as now.
+
+![The Apps badge](reference/followup-2/price-tag-badge-apps-mock.jpg)
+
+![The Chains badge](reference/followup-2/price-tag-badge-chains-mock.jpg)
+
+The mock is inspiration, not literal: the seal, the proportions and the wording are yours to improve. The badge may be a little taller than the panel (the mock is 76 px) but stays one compact block, and it must fit at 390 px (it may wrap its sentence or shrink).
 
 ---
 
@@ -174,4 +192,6 @@ The goal: a degen reads the stamp and knows, without a hover, what the number is
 - [ ] 12 Opening that link shows the coin's detail; true for every coin, also one outside the default Apps view.
 - [ ] 12 Opening a coin's detail puts its link in the address bar and closing it takes it out; after clicking from one coin to another the address bar names the second.
 - [ ] 12 The link of a coin is previewed with the coin's name and upside, not with the front page's title and image.
-- [ ] 13 The price-tag stamps of Apps and Chains say in a plain sentence what the number is (a multiple of yearly revenue, or of what users pay) and that Upside is measured against it; no "price tag", "adoption" or "the bar" without its meaning; the size of the stamp is unchanged.
+- [ ] 13 The two price-tag panels are badges: the benchmark's logo in scanner corners, the number big in the logo's gradient, the title, a plate with the logo's outline; the same family as the logo and the gate.
+- [ ] 13 Each badge says in one plain sentence what the number is (market cap ÷ yearly revenue, or ÷ adoption with its meaning) and that every Upside is measured against it; "× its adoption" and "the bar" are gone; the (i) tooltip stays.
+- [ ] 13 The badge fits at 390 px and at 1360 px without being cut off.
