@@ -59,6 +59,20 @@ The full mock below also shows a second design (B, a trampoline that throws the 
 
 ---
 
+## 4. The Degen picks gate "business not growing"
+
+**[6] The size of the revenue counts in the "business not growing" gate.** Today this gate turns away 126 of the 215 apps, more than any other of the seven (not vetted 117, not cheap 110, small business 104, thin liquidity 94, too big 67; live on 2026-10-01). It also turns away businesses that earn a great deal and have simply stopped climbing.
+
+The case that raised it is **Collector Crypt**: upside 26x, vetted, **$12.4M of revenue in the last 30 days** (annual run-rate $138M), and the only gate it fails is this one, so it waits in the near-misses queue ("1 business not growing"). Its numbers: monthly revenue was $2.5M to $5.3M from October 2025 to March 2026, stepped up to $7.2M, $9.4M and $16.1M in April to June, and has held at $10.8M, $11.5M and $12.1M in the last three full months. The last 30 days grew +127% a month (r² 0.85), the last 90 days +1.5% (r² 0.00), six months +7.5%, twelve months +17% a month. Its trajectory phase reads "Flat" and the card says "the business is no longer growing".
+
+The owner's view: a business that earns $12M a month and has held that level for months does not have to keep growing steeply to be worth a degen's look. Growth should weigh on the **small** businesses, where a few hundred thousand dollars of revenue can be a blip, and much less on large ones.
+
+**Goal:** the revenue size and the growth that is asked for are weighed together. The larger the revenue, the less growth the gate demands (a large business is held back only when its revenue is clearly falling); the smaller the revenue, the more growth it must show. Method and thresholds are yours: say what you chose and why. Show before and after for the 215 apps: which apps enter the Degen picks, which leave, and how the near-misses queue changes. For reference, on 2026-10-01 six apps fail only this gate: Collector Crypt ($12.4M a month), GMX ($1.3M), Velodrome ($0.40M), Centrifuge ($0.41M), Tokenlon ($0.36M) and Dolomite ($0.25M).
+
+A pick that has stopped growing still carries the "Watch out: the business is no longer growing" line on its card, as NEST does today: it is flagged, not hidden. The other six gates, and the minimum revenue, stay as they are.
+
+---
+
 ## Checklist (one line each; done when all are true)
 
 - [ ] 1 The header shows the logo (not text) with "Revenue-driven AI Research" and "by CyMetica" in it; the old title and the old tagline are gone.
@@ -70,3 +84,6 @@ The full mock below also shows a second design (B, a trampoline that throws the 
 - [ ] 4 In the altseason panel the "Quiet for alts" band is blue (the Chart card's blue), not grey; the other two bands and all labels are unchanged. The Chart card keeps its three colours.
 - [ ] 5 Every near-miss cube shows the app's round logo; the place in line sits next to the upside; no name is cut off at 1360 px.
 - [ ] 5 The "Picks" box is a gate (arch, gem on the keystone, glowing doorway, check mark, PICKS); the queue stands on a floor line that runs into it; the motion stops for visitors who ask for less motion; the rest of the lane behaves as before.
+- [ ] 6 The gate weighs revenue size and growth together: a business with large revenue that is flat is no longer held back by it (Collector Crypt, $12.4M a month, is judged on the other six gates); a small business still has to show growth.
+- [ ] 6 The spec says what rule was chosen and why, with before and after for the 215 apps (who enters the Degen picks, who leaves, the queue).
+- [ ] 6 A pick whose business has stopped growing keeps the "Watch out" line on its card.
