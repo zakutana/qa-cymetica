@@ -389,6 +389,7 @@
 {"archive": "evidence-2026-09", "bytes": 32256, "call": "GET https://cymetica.com/static/js/adm.js?", "id": "06420199d2545d2982b5ce474e6b52f5b400aee2a263e96de5ebd3863e3be721", "why": "promised"}
 {"archive": "evidence-2026-09", "bytes": 8747, "call": "POST https://cymetica.com/mcp/v1/? tools/call:get_fund_history", "id": "0645876e1baab15a85bcf79d848b90bb4f4fd58734fc79ae03b7010ff4dc00e2", "why": "row"}
 {"archive": "evidence-2026-09", "bytes": 10267, "call": "POST https://cymetica.com/mcp/v1/? tools/call:get_deep_answer", "id": "0649de1444b151b93506d37aeee53cbd2d50a3b6580a4fdec612d706ca2b8010", "why": "row"}
+{"archive": "", "bytes": 6833, "call": "POST https://cymetica.com/api/v1/bounty/a2a/send?", "id": "064cca6173ff752940e0cd0b18b4f65b9500a28938694b42366234e3777958d0", "why": "their-words"}
 {"archive": "evidence-2026-09", "bytes": 150420, "call": "GET https://cymetica.com/api/v1/bounty/my-reports?wallet_address", "id": "064d9e10ed8c1c9b4eb7fa612346f663aa4c8647ac4516c116cefe6166e4c8b1", "why": "their-words"}
 {"archive": "evidence-2026-09", "bytes": 554680, "call": "GET https://cymetica.com/api/v1/event-cards?include_user_submitted,limit,offset", "id": "0651f8f46e1e5e05eeb1cca1656e0f20580ef3466bd50c24e2ca032f7bbfbc87", "why": "row"}
 {"archive": "", "bytes": 178265, "call": "GET https://cymetica.com/fta-fund?", "id": "0654070213b76c17504b043a4085baef9b96b195011fca2bad879dfeaf7af642", "why": "row"}
@@ -1200,6 +1201,7 @@
 {"archive": "evidence-2026-09", "bytes": 4109, "call": "GET https://cymetica.com/chat/history?", "id": "11c77a341d194bc78e7bcc5815b18b18b4c7d6b7a1e3e712c5d9e786759e41e7", "why": "row"}
 {"archive": "", "bytes": 405725, "call": "GET https://cymetica.com/expire76?", "id": "11ca14daa8521e6f8004128213f354d6c5dd68bfb065e313fec69549794653c7", "why": "promised"}
 {"archive": "evidence-2026-09", "bytes": 77385, "call": "GET https://cymetica.com/llms.txt?", "id": "11e0ff5d8fbd5bf1805c2e7be831879b1006a969559d613379fd933cf32be57e", "why": "row"}
+{"archive": "", "bytes": 6416, "call": "POST https://cymetica.com/api/v1/bounty/a2a/send?", "id": "11e21669f150b5cd0aa0a6c1eadb69d348e056ca417cb5895398134d881604d4", "why": "their-words"}
 {"archive": "evidence-2026-09", "bytes": 8748, "call": "POST https://cymetica.com/mcp/v1/? tools/call:get_fund_history", "id": "11e247dbd06350d1a395c172dbc3ccb3974124350117b91c3031050a2c3e7db8", "why": "row"}
 {"archive": "evidence-2026-09", "bytes": 4239, "call": "GET https://cymetica.com/api/v1/cloned-bots/d778102d-cf3f-4d86-ad1e-2d8511b345dc/fund?", "id": "11e2e5c66bda44a509cb8b2f38977731c9d9ec78c654fd25dcd81480b069e979", "why": "row"}
 {"archive": "evidence-2026-09", "bytes": 242367, "call": "GET https://cymetica.com/fund-performance/aib-cybersecurity?", "id": "11e6c9ee17aab5fc3a1140d945c9c939acd4c60965c4857acac9fe9f3a64cee3", "why": "promised"}
@@ -8960,6 +8962,7 @@
 {"archive": "evidence-2026-09", "bytes": 9134, "call": "GET https://cymetica.com/static/js/pull-to-refresh.js?", "id": "8491fd2a0f99f790b829de6ba2914e450d9dcd416b1a744f5e1ba4200b96a171", "why": "promised"}
 {"archive": "evidence-2026-09", "bytes": 4638, "call": "POST https://cymetica.com/mcp/v1/? tools/call:get_strategy_returns", "id": "8497f886bd60c6246cd0b6e6a5936ca973cdfeb564cba62f54e8588aee6a992c", "why": "row"}
 {"archive": "", "bytes": 11786, "call": "GET https://cymetica.com/api/v1/prices?", "id": "849f324117899c447a74371e13cbb00f6dc4bd13943d14e76e4321113f59aa07", "why": "row"}
+{"archive": "", "bytes": 6525, "call": "POST https://cymetica.com/api/v1/bounty/a2a/send?", "id": "84a017c006016aa4b949a7368d15137ccff814f651cab41404710c55690ebfb7", "why": "their-words"}
 {"archive": "evidence-2026-09", "bytes": 4184, "call": "GET https://cymetica.com/api/v1/agents/clone?", "id": "84a6671a57b799bf2be83a0d5420af1824eb77042356095cea05a6e8303ace1d", "why": "row"}
 {"archive": "evidence-2026-09", "bytes": 4179, "call": "POST https://cymetica.com/api/v1/cloned-bots/d778102d-cf3f-4d86-ad1e-2d8511b345dc/fund?", "id": "84a6a4e9bdbbe7a0de810ef347a0bfb5dc9e2b6a5fcc72a9044d9c90e8db982f", "why": "trade"}
 {"archive": "evidence-2026-09", "bytes": 241716, "call": "GET https://cymetica.com/fund-performance/aib-space?", "id": "84a73917033857ad4ef7ed8758e5e74aa2bd35d66a9f1d4b8fe7220f889ce1d1", "why": "promised"}
