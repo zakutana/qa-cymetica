@@ -63,7 +63,7 @@
             "reason": "the platform states this caller is ALLIED; it is served 108 tools, 0 of them declared above allied"
           }
         },
-        "not_checked_in": "run-20261001T063425Z-d7f2e793"
+        "not_checked_in": "run-20261001T071152Z-bc3da15a"
       },
       "filing": {
         "state": "WITHDRAWN",
@@ -208,7 +208,7 @@
             "reason": "attribution is provable: the signing message names the wallet, is bound to sha256(title), and is deterministic"
           }
         },
-        "not_checked_in": "run-20261001T063425Z-d7f2e793"
+        "not_checked_in": "run-20261001T071152Z-bc3da15a"
       },
       "filing": {
         "state": "FIX_CLAIMED",
@@ -432,7 +432,7 @@
             "reason": "llms.txt states the species count in 6 place(s); the live catalogue lists 11, and every one of them agrees"
           }
         },
-        "not_checked_in": "run-20261001T063425Z-d7f2e793"
+        "not_checked_in": "run-20261001T071152Z-bc3da15a"
       },
       "filing": {
         "state": "FIX_CLAIMED",
@@ -873,7 +873,7 @@
             "reason": "mcp_tool_names_documented_exist: Does every tool name llms.txt documents exist on the server? llms.txt says 8 (get_market, get_orderbook, get_platform_status, get_prices, get_trust_signal, list_clob_pairs, list_markets, search_markets), .well-known/mcp.json says 108 (ask_nexus_deep, backtest_event_card_idea, bb_accept_spec, bb_app_stats, bb_apply_startup, bb_file_request, bb_get_request, bb_post_verdict and 100 more), and that satisfies subset."
           }
         },
-        "not_checked_in": "run-20261001T063425Z-d7f2e793"
+        "not_checked_in": "run-20261001T071152Z-bc3da15a"
       },
       "filing": {
         "state": "WITHDRAWN",
@@ -1087,7 +1087,7 @@
         },
         "pinned_fingerprint": "76f53745c4961b0f0a6076e33cd1d16173f41f802d404fbbb746923be506797e",
         "evidence_only": "run-20260930T233314Z-42242d07",
-        "not_checked_in": "run-20261001T063425Z-d7f2e793"
+        "not_checked_in": "run-20261001T071152Z-bc3da15a"
       },
       "filing": {
         "state": "WITHDRAWN",
@@ -1192,7 +1192,7 @@
           "chart-analyzer",
           "clone-ai-agent",
           "crypto-alerts",
-          "crypto-dashboard",
+          "crypto-dashboards",
           "et10-revenue-share",
           "exchange-tokens",
           "gem-screener",
@@ -1214,6 +1214,7 @@
           "ceo-ai-expertise-index",
           "chart-analyzer",
           "clone-ai-agent",
+          "crypto-alerts",
           "crypto-dashboards",
           "et10-revenue-share",
           "exchange-tokens",
@@ -1238,7 +1239,7 @@
             "agent_card": "set:$.skills[*].id"
           }
         },
-        "reason": "skills_subset: Is agent-skills.json the actionable subset of agent-card.json, as stated? agent-skills.json says 16 (arena-trading, asset-discovery, bug-bounty, chart-analyzer, clone-ai-agent, crypto-alerts, crypto-dashboard, et10-revenue-share and 8 more); agent-card.json says 23 (ai-crypto-nativeness-leaderboard, ai-due-diligence, ai-native-provenance, ai-pivot-washing, arena-trading, asset-discovery, bug-bounty, ceo-ai-expertise-index and 15 more). (left has ['crypto-alerts', 'crypto-dashboard'] which right lacks)"
+        "reason": "skills_subset: Is agent-skills.json the actionable subset of agent-card.json, as stated? agent-skills.json says 16 (arena-trading, asset-discovery, bug-bounty, chart-analyzer, clone-ai-agent, crypto-alerts, crypto-dashboards, et10-revenue-share and 8 more), agent-card.json says 24 (ai-crypto-nativeness-leaderboard, ai-due-diligence, ai-native-provenance, ai-pivot-washing, arena-trading, asset-discovery, bug-bounty, ceo-ai-expertise-index and 16 more), and that satisfies subset."
       },
       "checks": [
         "tests/reconciliation/test_reconcile.py::test_sources_agree[skills_subset::agent_card-vs-agent_skills]"
@@ -1251,15 +1252,15 @@
       },
       "reproductions": 10,
       "provenance": {
-        "run_id": "run-20261001T063425Z-d7f2e793",
-        "measured_at": "2026-10-01T06:55:54+00:00"
+        "run_id": "run-20261001T071152Z-bc3da15a",
+        "measured_at": "2026-10-01T07:34:27+00:00"
       },
       "check": {
-        "state": "REPRODUCING",
+        "state": "PASSING",
         "adjudicated_by": {
-          "run_id": "run-20261001T063425Z-d7f2e793",
-          "at": "2026-10-01T06:55:54+00:00",
-          "started_at": "2026-10-01T06:34:30+00:00"
+          "run_id": "run-20261001T071152Z-bc3da15a",
+          "at": "2026-10-01T07:34:27+00:00",
+          "started_at": "2026-10-01T07:12:00+00:00"
         },
         "pinned_fingerprint": "sha256:9e5564057407dd11f05887c86b3b9017",
         "last_exploratory_pass": {
@@ -1339,9 +1340,9 @@
           {
             "report_id": 56,
             "fingerprint": "sha256:9e5564057407dd11f05887c86b3b9017",
-            "run_id": "run-20260910T045212Z-de93be7",
+            "run_id": "run-20261001T071152Z-bc3da15a",
             "verdict": "pass",
-            "at": "2026-09-10T05:09:02+00:00"
+            "at": "2026-10-01T07:37:24+00:00"
           },
           {
             "report_id": 56,
@@ -1415,6 +1416,15 @@
             "run_id": "run-20260930T233314Z-42242d07"
           },
           "at": "2026-10-01T00:10:58+00:00"
+        },
+        {
+          "axis": "check",
+          "from": "REPRODUCING",
+          "to": "PASSING",
+          "cause": {
+            "run_id": "run-20261001T071152Z-bc3da15a"
+          },
+          "at": "2026-10-01T07:34:27+00:00"
         }
       ],
       "regressions": [
@@ -1426,7 +1436,7 @@
         }
       ],
       "obligations": {
-        "reverify": true,
+        "reverify": false,
         "repair_check": false,
         "reopen": [],
         "retractions": [],
@@ -1502,7 +1512,7 @@
             "reason": "llms.txt states no fixed catalogue size and directs the reader to tools/list for their own tier"
           }
         },
-        "not_checked_in": "run-20261001T063425Z-d7f2e793"
+        "not_checked_in": "run-20261001T071152Z-bc3da15a"
       },
       "filing": {
         "state": "FIX_CLAIMED",
@@ -1651,7 +1661,7 @@
           "run_id": "run-20260924T082511Z-74033ba0",
           "at": "2026-09-24T08:57:39+00:00"
         },
-        "not_checked_in": "run-20261001T063425Z-d7f2e793"
+        "not_checked_in": "run-20261001T071152Z-bc3da15a"
       },
       "filing": {
         "state": "FIX_CLAIMED",
@@ -1839,7 +1849,7 @@
             "reason": "agent_names: Does llms.txt name agent symbols that actually exist? Both llms.txt and the live species endpoint now say 11 (ATR, BOLL, DIV, FIB, ICHI, MACD, PCPN, RSI and 3 more)."
           }
         },
-        "not_checked_in": "run-20261001T063425Z-d7f2e793"
+        "not_checked_in": "run-20261001T071152Z-bc3da15a"
       },
       "filing": {
         "state": "FIX_CLAIMED",
@@ -2003,7 +2013,7 @@
             "reason": "agent_count: How many clonable AI trading agents exist? Both the live species endpoint and llms.txt now say 11."
           }
         },
-        "not_checked_in": "run-20261001T063425Z-d7f2e793"
+        "not_checked_in": "run-20261001T071152Z-bc3da15a"
       },
       "filing": {
         "state": "FIX_CLAIMED",
@@ -2108,7 +2118,7 @@
         "state": "UNVERIFIABLE",
         "adjudicated_by": null,
         "pinned_fingerprint": null,
-        "not_checked_in": "run-20261001T063425Z-d7f2e793",
+        "not_checked_in": "run-20261001T071152Z-bc3da15a",
         "missing_checks": [
           "tests/reconciliation/test_reconcile.py::test_sources_agree[chain_count::live_chains-vs-mcp_json]"
         ],
@@ -2230,7 +2240,7 @@
             "reason": "llms.txt promises at least 500 CLOB pairs; list_clob_pairs states total=586."
           }
         },
-        "not_checked_in": "run-20261001T063425Z-d7f2e793"
+        "not_checked_in": "run-20261001T071152Z-bc3da15a"
       },
       "filing": {
         "state": "FIX_CLAIMED",
@@ -2364,17 +2374,17 @@
           "run_id": "legacy"
         }
       },
-      "reproductions": 43,
+      "reproductions": 44,
       "provenance": {
-        "run_id": "run-20261001T063425Z-d7f2e793",
-        "measured_at": "2026-10-01T06:55:54+00:00"
+        "run_id": "run-20261001T071152Z-bc3da15a",
+        "measured_at": "2026-10-01T07:34:27+00:00"
       },
       "check": {
         "state": "REPRODUCING",
         "adjudicated_by": {
-          "run_id": "run-20261001T063425Z-d7f2e793",
-          "at": "2026-10-01T06:55:54+00:00",
-          "started_at": "2026-10-01T06:34:30+00:00"
+          "run_id": "run-20261001T071152Z-bc3da15a",
+          "at": "2026-10-01T07:34:27+00:00",
+          "started_at": "2026-10-01T07:12:00+00:00"
         },
         "pinned_fingerprint": "sha256:f3d9b4a71fbf227f926c530f5d62476d"
       },
@@ -2591,7 +2601,8 @@
         "run-20260929T094730Z-24cabf49",
         "run-20260930T080540Z-4295da50",
         "run-20260930T233314Z-42242d07",
-        "run-20261001T063425Z-d7f2e793"
+        "run-20261001T063425Z-d7f2e793",
+        "run-20261001T071152Z-bc3da15a"
       ]
     },
     "CYM-tracker-closure-rate": {
@@ -2655,7 +2666,7 @@
             "reason": "0 of 20 closed reports carry no evidence field at all (validated_at, triaged_at, severity_confirmed, ticket_url, fix_pr_url, status_notes)"
           }
         },
-        "not_checked_in": "run-20261001T063425Z-d7f2e793"
+        "not_checked_in": "run-20261001T071152Z-bc3da15a"
       },
       "filing": {
         "state": "FIX_CLAIMED",
@@ -2963,7 +2974,7 @@
             "reason": "/api/v1/account was renamed, not withdrawn: llms.txt now documents /api/v1/account/me, /api/v1/account/me/portfolio, which is served"
           }
         },
-        "not_checked_in": "run-20261001T063425Z-d7f2e793"
+        "not_checked_in": "run-20261001T071152Z-bc3da15a"
       },
       "filing": {
         "state": "FIX_CLAIMED",
@@ -3161,7 +3172,7 @@
         "state": "UNVERIFIABLE",
         "adjudicated_by": null,
         "pinned_fingerprint": null,
-        "not_checked_in": "run-20261001T063425Z-d7f2e793",
+        "not_checked_in": "run-20261001T071152Z-bc3da15a",
         "missing_checks": [
           "tests/reconciliation/test_reconcile.py::test_sources_agree[mcp_tool_count::llms_txt-vs-mcp_anon]",
           "tests/reconciliation/test_reconcile.py::test_sources_agree[mcp_tool_count::llms_txt-vs-mcp_json]",
@@ -3563,7 +3574,7 @@
             "reason": "mcp_tool_names_documented_exist: Does every tool name llms.txt documents exist on the server? llms.txt says 8 (get_market, get_orderbook, get_platform_status, get_prices, get_trust_signal, list_clob_pairs, list_markets, search_markets), .well-known/mcp.json says 108 (ask_nexus_deep, backtest_event_card_idea, bb_accept_spec, bb_app_stats, bb_apply_startup, bb_file_request, bb_get_request, bb_post_verdict and 100 more), and that satisfies subset."
           }
         },
-        "not_checked_in": "run-20261001T063425Z-d7f2e793"
+        "not_checked_in": "run-20261001T071152Z-bc3da15a"
       },
       "filing": {
         "state": "FIX_CLAIMED",
@@ -3706,7 +3717,7 @@
           "chart-analyzer",
           "clone-ai-agent",
           "crypto-alerts",
-          "crypto-dashboard",
+          "crypto-dashboards",
           "et10-revenue-share",
           "exchange-tokens",
           "gem-screener",
@@ -3728,6 +3739,7 @@
           "ceo-ai-expertise-index",
           "chart-analyzer",
           "clone-ai-agent",
+          "crypto-alerts",
           "crypto-dashboards",
           "et10-revenue-share",
           "exchange-tokens",
@@ -3752,7 +3764,7 @@
             "agent_card": "set:$.skills[*].id"
           }
         },
-        "reason": "skills_subset: Is agent-skills.json the actionable subset of agent-card.json, as stated? agent-skills.json says 16 (arena-trading, asset-discovery, bug-bounty, chart-analyzer, clone-ai-agent, crypto-alerts, crypto-dashboard, et10-revenue-share and 8 more); agent-card.json says 23 (ai-crypto-nativeness-leaderboard, ai-due-diligence, ai-native-provenance, ai-pivot-washing, arena-trading, asset-discovery, bug-bounty, ceo-ai-expertise-index and 15 more). (left has ['crypto-alerts', 'crypto-dashboard'] which right lacks)"
+        "reason": "skills_subset: Is agent-skills.json the actionable subset of agent-card.json, as stated? agent-skills.json says 16 (arena-trading, asset-discovery, bug-bounty, chart-analyzer, clone-ai-agent, crypto-alerts, crypto-dashboards, et10-revenue-share and 8 more), agent-card.json says 24 (ai-crypto-nativeness-leaderboard, ai-due-diligence, ai-native-provenance, ai-pivot-washing, arena-trading, asset-discovery, bug-bounty, ceo-ai-expertise-index and 16 more), and that satisfies subset."
       },
       "checks": [
         "tests/reconciliation/test_reconcile.py::test_sources_agree[skills_subset::agent_card-vs-agent_skills]"
@@ -3765,15 +3777,15 @@
       },
       "reproductions": 1,
       "provenance": {
-        "run_id": "run-20261001T063425Z-d7f2e793",
-        "measured_at": "2026-10-01T06:55:54+00:00"
+        "run_id": "run-20261001T071152Z-bc3da15a",
+        "measured_at": "2026-10-01T07:34:27+00:00"
       },
       "check": {
-        "state": "REPRODUCING",
+        "state": "PASSING",
         "adjudicated_by": {
-          "run_id": "run-20261001T063425Z-d7f2e793",
-          "at": "2026-10-01T06:55:54+00:00",
-          "started_at": "2026-10-01T06:34:30+00:00"
+          "run_id": "run-20261001T071152Z-bc3da15a",
+          "at": "2026-10-01T07:34:27+00:00",
+          "started_at": "2026-10-01T07:12:00+00:00"
         },
         "pinned_fingerprint": "sha256:9e5564057407dd11f05887c86b3b9017",
         "last_exploratory_pass": {
@@ -3853,9 +3865,9 @@
           {
             "report_id": 51,
             "fingerprint": "sha256:9e5564057407dd11f05887c86b3b9017",
-            "run_id": "run-20260910T045212Z-de93be7",
+            "run_id": "run-20261001T071152Z-bc3da15a",
             "verdict": "pass",
-            "at": "2026-09-10T05:08:52+00:00"
+            "at": "2026-10-01T07:37:18+00:00"
           },
           {
             "report_id": 51,
@@ -3929,6 +3941,15 @@
             "run_id": "run-20260930T233314Z-42242d07"
           },
           "at": "2026-10-01T00:10:58+00:00"
+        },
+        {
+          "axis": "check",
+          "from": "REPRODUCING",
+          "to": "PASSING",
+          "cause": {
+            "run_id": "run-20261001T071152Z-bc3da15a"
+          },
+          "at": "2026-10-01T07:34:27+00:00"
         }
       ],
       "regressions": [
@@ -3940,7 +3961,7 @@
         }
       ],
       "obligations": {
-        "reverify": true,
+        "reverify": false,
         "repair_check": false,
         "reopen": [],
         "retractions": [],
@@ -3965,7 +3986,7 @@
           "chart-analyzer",
           "clone-ai-agent",
           "crypto-alerts",
-          "crypto-dashboard",
+          "crypto-dashboards",
           "et10-revenue-share",
           "exchange-tokens",
           "gem-screener",
@@ -3987,6 +4008,7 @@
           "ceo-ai-expertise-index",
           "chart-analyzer",
           "clone-ai-agent",
+          "crypto-alerts",
           "crypto-dashboards",
           "et10-revenue-share",
           "exchange-tokens",
@@ -4011,7 +4033,7 @@
             "agent_card": "set:$.skills[*].id"
           }
         },
-        "reason": "skills_subset: Is agent-skills.json the actionable subset of agent-card.json, as stated? agent-skills.json says 16 (arena-trading, asset-discovery, bug-bounty, chart-analyzer, clone-ai-agent, crypto-alerts, crypto-dashboard, et10-revenue-share and 8 more); agent-card.json says 23 (ai-crypto-nativeness-leaderboard, ai-due-diligence, ai-native-provenance, ai-pivot-washing, arena-trading, asset-discovery, bug-bounty, ceo-ai-expertise-index and 15 more). (left has ['crypto-alerts', 'crypto-dashboard'] which right lacks)"
+        "reason": "skills_subset: Is agent-skills.json the actionable subset of agent-card.json, as stated? agent-skills.json says 16 (arena-trading, asset-discovery, bug-bounty, chart-analyzer, clone-ai-agent, crypto-alerts, crypto-dashboards, et10-revenue-share and 8 more), agent-card.json says 24 (ai-crypto-nativeness-leaderboard, ai-due-diligence, ai-native-provenance, ai-pivot-washing, arena-trading, asset-discovery, bug-bounty, ceo-ai-expertise-index and 16 more), and that satisfies subset."
       },
       "checks": [
         "tests/reconciliation/test_reconcile.py::test_sources_agree[skills_subset::agent_card-vs-agent_skills]"
@@ -4024,15 +4046,15 @@
       },
       "reproductions": 1,
       "provenance": {
-        "run_id": "run-20261001T063425Z-d7f2e793",
-        "measured_at": "2026-10-01T06:55:54+00:00"
+        "run_id": "run-20261001T071152Z-bc3da15a",
+        "measured_at": "2026-10-01T07:34:27+00:00"
       },
       "check": {
-        "state": "REPRODUCING",
+        "state": "PASSING",
         "adjudicated_by": {
-          "run_id": "run-20261001T063425Z-d7f2e793",
-          "at": "2026-10-01T06:55:54+00:00",
-          "started_at": "2026-10-01T06:34:30+00:00"
+          "run_id": "run-20261001T071152Z-bc3da15a",
+          "at": "2026-10-01T07:34:27+00:00",
+          "started_at": "2026-10-01T07:12:00+00:00"
         },
         "pinned_fingerprint": "sha256:9e5564057407dd11f05887c86b3b9017",
         "last_exploratory_pass": {
@@ -4112,9 +4134,9 @@
           {
             "report_id": 51,
             "fingerprint": "sha256:9e5564057407dd11f05887c86b3b9017",
-            "run_id": "run-20260910T045212Z-de93be7",
+            "run_id": "run-20261001T071152Z-bc3da15a",
             "verdict": "pass",
-            "at": "2026-09-10T05:08:57+00:00"
+            "at": "2026-10-01T07:37:21+00:00"
           },
           {
             "report_id": 51,
@@ -4188,6 +4210,15 @@
             "run_id": "run-20260930T233314Z-42242d07"
           },
           "at": "2026-10-01T00:10:58+00:00"
+        },
+        {
+          "axis": "check",
+          "from": "REPRODUCING",
+          "to": "PASSING",
+          "cause": {
+            "run_id": "run-20261001T071152Z-bc3da15a"
+          },
+          "at": "2026-10-01T07:34:27+00:00"
         }
       ],
       "regressions": [
@@ -4199,7 +4230,7 @@
         }
       ],
       "obligations": {
-        "reverify": true,
+        "reverify": false,
         "repair_check": false,
         "reopen": [],
         "retractions": [],
@@ -4341,7 +4372,7 @@
             "reason": "0 of the 70 reports of ours that have reached a published stage are absent from the tracker where work happens (not counted: [54, 62, 114], which they have not validated)"
           }
         },
-        "not_checked_in": "run-20261001T063425Z-d7f2e793"
+        "not_checked_in": "run-20261001T071152Z-bc3da15a"
       },
       "filing": {
         "state": "FIX_CLAIMED",
@@ -4529,7 +4560,7 @@
             "reason": "0 of the 5 fields we send come back empty on every one of our 73 reports: none"
           }
         },
-        "not_checked_in": "run-20261001T063425Z-d7f2e793"
+        "not_checked_in": "run-20261001T071152Z-bc3da15a"
       },
       "filing": {
         "state": "WITHDRAWN",
@@ -4646,7 +4677,7 @@
             "reason": "hunter_name survives on 73 of 73 of our reports; we send 'expire76' on every one"
           }
         },
-        "not_checked_in": "run-20261001T063425Z-d7f2e793"
+        "not_checked_in": "run-20261001T071152Z-bc3da15a"
       },
       "filing": {
         "state": "WITHDRAWN",
@@ -4726,7 +4757,7 @@
           "at": "2026-09-07T17:40:13+00:00"
         },
         "pinned_fingerprint": "5e9d6943c1eaf398d598a59460e9acdf2a187f99ecb323ce600818b417cefeae",
-        "not_checked_in": "run-20261001T063425Z-d7f2e793",
+        "not_checked_in": "run-20261001T071152Z-bc3da15a",
         "missing_checks": [
           "tests/pinned/test_documented_404.py::test_documented_path_is_served[/api/v1/vaix/prices]"
         ],
@@ -4871,7 +4902,7 @@
             "reason": "the bug-report reward programme is described in agent-card.json, agent-skills.json, llms.txt, mcp.json"
           }
         },
-        "not_checked_in": "run-20261001T063425Z-d7f2e793"
+        "not_checked_in": "run-20261001T071152Z-bc3da15a"
       },
       "filing": {
         "state": "FIX_CLAIMED",
@@ -5052,7 +5083,7 @@
             "reason": "19 of the 20 closed report(s) can be read as paid or awarded from reward_status ['awarded', 'paid'], so a settled report is distinguishable from an unrecorded one; stats still report bugs_fixed=89 and total_paid=76000.0"
           }
         },
-        "not_checked_in": "run-20261001T063425Z-d7f2e793"
+        "not_checked_in": "run-20261001T071152Z-bc3da15a"
       },
       "filing": {
         "state": "FIX_CLAIMED",
@@ -5358,7 +5389,7 @@
             "reason": "/api/v1/account/me answers HTTP 200 to the credential the catalogue names"
           }
         },
-        "not_checked_in": "run-20261001T063425Z-d7f2e793"
+        "not_checked_in": "run-20261001T071152Z-bc3da15a"
       },
       "filing": {
         "state": "FIX_CLAIMED",
@@ -5506,7 +5537,7 @@
             "reason": "the channel reported its own published reward-tier values"
           }
         },
-        "not_checked_in": "run-20261001T063425Z-d7f2e793"
+        "not_checked_in": "run-20261001T071152Z-bc3da15a"
       },
       "filing": {
         "state": "FIX_CLAIMED",
@@ -5728,7 +5759,7 @@
             "reason": "every one of the 35 automated repl(ies) since 2026-09-07T07:53:17.653185+00:00 carries metadata.is_answer (35 of them true, which is their rule for a substantive answer)"
           }
         },
-        "not_checked_in": "run-20261001T063425Z-d7f2e793"
+        "not_checked_in": "run-20261001T071152Z-bc3da15a"
       },
       "filing": {
         "state": "FIX_CLAIMED",
@@ -5926,7 +5957,7 @@
         },
         "pinned_fingerprint": "d8c89bb5d9dfb6abe6d9f240604f15d80183028892047d05a574abc9740d5a4c",
         "evidence_only": "run-20260930T233314Z-42242d07",
-        "not_checked_in": "run-20261001T063425Z-d7f2e793"
+        "not_checked_in": "run-20261001T071152Z-bc3da15a"
       },
       "filing": {
         "state": "FIX_CLAIMED",
@@ -6123,7 +6154,7 @@
             "reason": "all 20 recorded award(s) sit inside the tier each row publishes, and of the 20 row(s) that name a currency on both sides, none contradicts itself"
           }
         },
-        "not_checked_in": "run-20261001T063425Z-d7f2e793"
+        "not_checked_in": "run-20261001T071152Z-bc3da15a"
       },
       "filing": {
         "state": "FIX_CLAIMED",
@@ -6417,7 +6448,7 @@
             "reason": "the aggregate and the leaderboard agree on 82 valid report(s); every hunter's total_earned matches the total_paid it is defined as"
           }
         },
-        "not_checked_in": "run-20261001T063425Z-d7f2e793"
+        "not_checked_in": "run-20261001T071152Z-bc3da15a"
       },
       "filing": {
         "state": "FIX_CLAIMED",
@@ -6682,7 +6713,7 @@
             "reason": "every path a /build recipe sends an agent to is callable: 3 checked against 173 documented paths; /events/universe named as being for people, not called"
           }
         },
-        "not_checked_in": "run-20261001T063425Z-d7f2e793"
+        "not_checked_in": "run-20261001T071152Z-bc3da15a"
       },
       "filing": {
         "state": "FIX_CLAIMED",
@@ -6887,7 +6918,7 @@
             "reason": "POST /mcp/v1/register documents the field /build says to save: 'api_key'"
           }
         },
-        "not_checked_in": "run-20261001T063425Z-d7f2e793"
+        "not_checked_in": "run-20261001T071152Z-bc3da15a"
       },
       "filing": {
         "state": "FIX_CLAIMED",
@@ -7050,7 +7081,7 @@
             "reason": "every surface names the same rungs: ['allied', 'recognized', 'trusted', 'unknown']"
           }
         },
-        "not_checked_in": "run-20261001T063425Z-d7f2e793"
+        "not_checked_in": "run-20261001T071152Z-bc3da15a"
       },
       "filing": {
         "state": "FIX_CLAIMED",
@@ -7214,7 +7245,7 @@
             "reason": "the leaderboard's rows are rankable: the period narrows the set"
           }
         },
-        "not_checked_in": "run-20261001T063425Z-d7f2e793"
+        "not_checked_in": "run-20261001T071152Z-bc3da15a"
       },
       "filing": {
         "state": "FIX_CLAIMED",
@@ -7386,7 +7417,7 @@
             "reason": "all 6 order surfaces take the same control, `paper`, so one helper can state the book everywhere"
           }
         },
-        "not_checked_in": "run-20261001T063425Z-d7f2e793"
+        "not_checked_in": "run-20261001T071152Z-bc3da15a"
       },
       "filing": {
         "state": "FIX_CLAIMED",
@@ -7544,7 +7575,7 @@
             "reason": "the setting the order endpoints resolve against is published as ['simulation_mode']"
           }
         },
-        "not_checked_in": "run-20261001T063425Z-d7f2e793"
+        "not_checked_in": "run-20261001T071152Z-bc3da15a"
       },
       "filing": {
         "state": "FIX_CLAIMED",
@@ -7718,7 +7749,7 @@
             "reason": "trade history reports 0 trade(s) and says what that number spans: identity, covers, does_not_cover, see_also"
           }
         },
-        "not_checked_in": "run-20261001T063425Z-d7f2e793"
+        "not_checked_in": "run-20261001T071152Z-bc3da15a"
       },
       "filing": {
         "state": "FIX_CLAIMED",
@@ -7900,7 +7931,7 @@
             "reason": "no order surface says `paper` may be disobeyed, so a caller that asks for paper is given paper"
           }
         },
-        "not_checked_in": "run-20261001T063425Z-d7f2e793"
+        "not_checked_in": "run-20261001T071152Z-bc3da15a"
       },
       "filing": {
         "state": "FIX_CLAIMED",
@@ -8029,7 +8060,7 @@
           "at": "2026-09-10T04:56:30+00:00"
         },
         "pinned_fingerprint": "05d129030ccb0a67babee3e9b1383e236e0bc719fd5e42f532cb727b83375d1a",
-        "not_checked_in": "run-20261001T063425Z-d7f2e793",
+        "not_checked_in": "run-20261001T071152Z-bc3da15a",
         "missing_checks": [
           "tests/rest/test_portfolio_summary.py::test_the_summary_does_not_report_a_history_the_positions_contradict"
         ],
@@ -8154,13 +8185,13 @@
           "run_id": "run-20260910T110122Z-44e2cd2"
         }
       },
-      "reproductions": 56,
+      "reproductions": 57,
       "check": {
         "state": "REPRODUCING",
         "adjudicated_by": {
-          "run_id": "run-20261001T063425Z-d7f2e793",
-          "at": "2026-10-01T06:55:54+00:00",
-          "started_at": "2026-10-01T06:34:30+00:00"
+          "run_id": "run-20261001T071152Z-bc3da15a",
+          "at": "2026-10-01T07:34:27+00:00",
+          "started_at": "2026-10-01T07:12:00+00:00"
         },
         "pinned_fingerprint": "84885322a72b7450579e6de4f695e915fe4f4d6a9eccac0e0f54fbaec3e20ee8"
       },
@@ -8408,7 +8439,8 @@
         "run-20260928T222506Z-5d1ada92",
         "run-20260930T080540Z-4295da50",
         "run-20260930T233314Z-42242d07",
-        "run-20261001T063425Z-d7f2e793"
+        "run-20261001T063425Z-d7f2e793",
+        "run-20261001T071152Z-bc3da15a"
       ],
       "component": "mcp.tools_call",
       "section": "tools_call",
@@ -8442,8 +8474,8 @@
         "reason": "2 of 5 did not answer at all (NEX-0111: The investigation exceeded its time budget — retry with a narrower question.)"
       },
       "provenance": {
-        "run_id": "run-20261001T063425Z-d7f2e793",
-        "measured_at": "2026-10-01T06:55:54+00:00"
+        "run_id": "run-20261001T071152Z-bc3da15a",
+        "measured_at": "2026-10-01T07:34:27+00:00"
       },
       "obligations": {
         "reverify": true,
@@ -8497,7 +8529,7 @@
             "reason": "every one of the 2 tool(s) Nexus named is served"
           }
         },
-        "not_checked_in": "run-20261001T063425Z-d7f2e793"
+        "not_checked_in": "run-20261001T071152Z-bc3da15a"
       },
       "filing": {
         "state": "FIX_CLAIMED",
@@ -8816,7 +8848,7 @@
             "reason": "the newest paper buy TRD-0041 (2026-09-23T06:01:14+00:00) bought 5.00 and debited 5.00 from the paper balance"
           }
         },
-        "not_checked_in": "run-20261001T063425Z-d7f2e793"
+        "not_checked_in": "run-20261001T071152Z-bc3da15a"
       },
       "filing": {
         "state": "FIX_CLAIMED",
@@ -9073,7 +9105,7 @@
             "reason": "every /api/v1/cloned-bots route that answered 405 with an Allow header is one of the 12 they document"
           }
         },
-        "not_checked_in": "run-20261001T063425Z-d7f2e793"
+        "not_checked_in": "run-20261001T071152Z-bc3da15a"
       },
       "filing": {
         "state": "FIX_CLAIMED",
@@ -9280,13 +9312,13 @@
           "run_id": "run-20260910T205116Z-80ff405"
         }
       },
-      "reproductions": 49,
+      "reproductions": 50,
       "check": {
         "state": "REPRODUCING",
         "adjudicated_by": {
-          "run_id": "run-20261001T063425Z-d7f2e793",
-          "at": "2026-10-01T06:55:54+00:00",
-          "started_at": "2026-10-01T06:34:30+00:00"
+          "run_id": "run-20261001T071152Z-bc3da15a",
+          "at": "2026-10-01T07:34:27+00:00",
+          "started_at": "2026-10-01T07:12:00+00:00"
         },
         "pinned_fingerprint": "4d7dd0f1952c6ea876b8f03aea300fb99f89e1be901dccb238f3d462aecef9cf"
       },
@@ -9462,7 +9494,8 @@
         "run-20260929T094730Z-24cabf49",
         "run-20260930T080540Z-4295da50",
         "run-20260930T233314Z-42242d07",
-        "run-20261001T063425Z-d7f2e793"
+        "run-20261001T063425Z-d7f2e793",
+        "run-20261001T071152Z-bc3da15a"
       ],
       "component": "rest.agents",
       "section": "agents",
@@ -9502,8 +9535,8 @@
         "reason": "10 cloned-bots route(s) accept the agent's x-api-key and 1 do not: GET /api/v1/cloned-bots/{instance_id}/activity. The funding route is not among them, so a clone can be created and paid for with the agent credential; what that same credential cannot reach is the route named above"
       },
       "provenance": {
-        "run_id": "run-20261001T063425Z-d7f2e793",
-        "measured_at": "2026-10-01T06:55:54+00:00"
+        "run_id": "run-20261001T071152Z-bc3da15a",
+        "measured_at": "2026-10-01T07:34:27+00:00"
       },
       "obligations": {
         "reverify": true,
@@ -9534,7 +9567,8 @@
           "at": "2026-10-01T06:55:54+00:00",
           "started_at": "2026-10-01T06:34:30+00:00"
         },
-        "pinned_fingerprint": "7a52ceff1e585acf3435b70f322e83c344d04b06af6d7ae07370c50f443e6fd0"
+        "pinned_fingerprint": "7a52ceff1e585acf3435b70f322e83c344d04b06af6d7ae07370c50f443e6fd0",
+        "not_checked_in": "run-20261001T071152Z-bc3da15a"
       },
       "filing": {
         "state": "FIX_CLAIMED",
@@ -9788,9 +9822,9 @@
       "check": {
         "state": "INCONCLUSIVE",
         "adjudicated_by": {
-          "run_id": "run-20261001T063425Z-d7f2e793",
-          "at": "2026-10-01T06:55:54+00:00",
-          "started_at": "2026-10-01T06:34:30+00:00"
+          "run_id": "run-20261001T071152Z-bc3da15a",
+          "at": "2026-10-01T07:34:27+00:00",
+          "started_at": "2026-10-01T07:12:00+00:00"
         },
         "pinned_fingerprint": "f10984755a3fc80f40bb0b3a95098751d68b43fa5d8026e16a66405692f0bd97",
         "last_exploratory_pass": {
@@ -9985,8 +10019,8 @@
         "reason": "every one of the 10 tradeable card(s) checked appears in the listing"
       },
       "provenance": {
-        "run_id": "run-20261001T063425Z-d7f2e793",
-        "measured_at": "2026-10-01T06:55:54+00:00"
+        "run_id": "run-20261001T071152Z-bc3da15a",
+        "measured_at": "2026-10-01T07:34:27+00:00"
       },
       "obligations": {
         "reverify": true,
@@ -10037,7 +10071,7 @@
             "reason": "the newest recorded deep answer, NEX-0088 (2026-09-23T05:52:09+00:00), cites no internal source location"
           }
         },
-        "not_checked_in": "run-20261001T063425Z-d7f2e793"
+        "not_checked_in": "run-20261001T071152Z-bc3da15a"
       },
       "filing": {
         "state": "FIX_CLAIMED",
@@ -10198,7 +10232,7 @@
             "reason": "all 53 of the documented GET paths that answered read the agent key"
           }
         },
-        "not_checked_in": "run-20261001T063425Z-d7f2e793"
+        "not_checked_in": "run-20261001T071152Z-bc3da15a"
       },
       "filing": {
         "state": "FIX_CLAIMED",
@@ -10350,7 +10384,7 @@
             "reason": "every one of the 5 judged bot(s) counts what it has open: 5 nothing open"
           }
         },
-        "not_checked_in": "run-20261001T063425Z-d7f2e793"
+        "not_checked_in": "run-20261001T071152Z-bc3da15a"
       },
       "filing": {
         "state": "FIX_CLAIMED",
@@ -10506,9 +10540,9 @@
       "check": {
         "state": "INCONCLUSIVE",
         "adjudicated_by": {
-          "run_id": "run-20261001T063425Z-d7f2e793",
-          "at": "2026-10-01T06:55:54+00:00",
-          "started_at": "2026-10-01T06:34:30+00:00"
+          "run_id": "run-20261001T071152Z-bc3da15a",
+          "at": "2026-10-01T07:34:27+00:00",
+          "started_at": "2026-10-01T07:12:00+00:00"
         },
         "pinned_fingerprint": "f6206c3e45fa527784fe102e6836979651737e448416a238fb2b70ef8bd23eb0",
         "last_exploratory_pass": {
@@ -10690,8 +10724,8 @@
         "reason": "1 submission(s) of other users answer 200 to account 113, and every one is among the 8036 cards listed with include_user_submitted=true, so each is public"
       },
       "provenance": {
-        "run_id": "run-20261001T063425Z-d7f2e793",
-        "measured_at": "2026-10-01T06:55:54+00:00"
+        "run_id": "run-20261001T071152Z-bc3da15a",
+        "measured_at": "2026-10-01T07:34:27+00:00"
       },
       "obligations": {
         "reverify": true,
@@ -10757,7 +10791,7 @@
             "reason": "all 12 answers name the period they cover"
           }
         },
-        "not_checked_in": "run-20261001T063425Z-d7f2e793"
+        "not_checked_in": "run-20261001T071152Z-bc3da15a"
       },
       "filing": {
         "state": "FIX_CLAIMED",
@@ -10975,7 +11009,7 @@
             "reason": "the 365-day answer names the window it covered (covered_days)"
           }
         },
-        "not_checked_in": "run-20261001T063425Z-d7f2e793"
+        "not_checked_in": "run-20261001T071152Z-bc3da15a"
       },
       "filing": {
         "state": "FIX_CLAIMED",
@@ -11247,7 +11281,7 @@
             "reason": "the house row matches the live half of their own track record on 5 shared quantities, which is what a leaderboard beside live entrants should show"
           }
         },
-        "not_checked_in": "run-20261001T063425Z-d7f2e793"
+        "not_checked_in": "run-20261001T071152Z-bc3da15a"
       },
       "filing": {
         "state": "FIX_CLAIMED",
@@ -11465,7 +11499,7 @@
             "reason": "the round declares when entries stop being accepted, so the window a late entry could exploit is at least stated"
           }
         },
-        "not_checked_in": "run-20261001T063425Z-d7f2e793"
+        "not_checked_in": "run-20261001T071152Z-bc3da15a"
       },
       "filing": {
         "state": "FIX_CLAIMED",
@@ -11666,7 +11700,7 @@
             "reason": "every hot row on both chains clears the floor: 6 robinhood and 17 solana hot rows, the thinnest allowing $517 of max buy against a $500 floor"
           }
         },
-        "not_checked_in": "run-20261001T063425Z-d7f2e793"
+        "not_checked_in": "run-20261001T071152Z-bc3da15a"
       },
       "filing": {
         "state": "FIX_CLAIMED",
@@ -11975,13 +12009,13 @@
           "run_id": "run-20260919T211126Z-507a7113"
         }
       },
-      "reproductions": 35,
+      "reproductions": 36,
       "check": {
-        "state": "INCONCLUSIVE",
+        "state": "REPRODUCING",
         "adjudicated_by": {
-          "run_id": "run-20261001T063425Z-d7f2e793",
-          "at": "2026-10-01T06:55:54+00:00",
-          "started_at": "2026-10-01T06:34:30+00:00"
+          "run_id": "run-20261001T071152Z-bc3da15a",
+          "at": "2026-10-01T07:34:27+00:00",
+          "started_at": "2026-10-01T07:12:00+00:00"
         },
         "pinned_fingerprint": "4e20d9ebfd70f3e0cd3e778f8f0fd9d6bdde4e3b5e3d2cde024b168bcc03cea8"
       },
@@ -12117,6 +12151,15 @@
             "run_id": "run-20261001T063425Z-d7f2e793"
           },
           "at": "2026-10-01T06:55:54+00:00"
+        },
+        {
+          "axis": "check",
+          "from": "INCONCLUSIVE",
+          "to": "REPRODUCING",
+          "cause": {
+            "run_id": "run-20261001T071152Z-bc3da15a"
+          },
+          "at": "2026-10-01T07:34:27+00:00"
         }
       ],
       "regressions": [],
@@ -12157,7 +12200,8 @@
         "run-20260927T170347Z-41a44743",
         "run-20260929T094730Z-24cabf49",
         "run-20260930T080540Z-4295da50",
-        "run-20260930T233314Z-42242d07"
+        "run-20260930T233314Z-42242d07",
+        "run-20261001T071152Z-bc3da15a"
       ],
       "component": "mcp.fund_research",
       "section": "fund_research",
@@ -12185,7 +12229,7 @@
               "first_v": 146.181,
               "off_pct": -3.27,
               "returned": 80,
-              "return_since_inception_pct": -4.31
+              "return_since_inception_pct": -3.78
             }
           ],
           "unseparated": [
@@ -12196,7 +12240,7 @@
               "first_v": 0.3575,
               "off_pct": 0.49,
               "returned": 80,
-              "return_since_inception_pct": 16.49
+              "return_since_inception_pct": 17.92
             }
           ],
           "within": [
@@ -12211,10 +12255,10 @@
             "AIB-DCA251C8",
             "AMF-BLACKSWAN",
             "AIB-QUANTUM",
-            "AIB-DEFENSE",
-            "AMF-WHITESWAN",
-            "AIB-CYBERSECURITY",
             "AIB-COMPUTE",
+            "AIB-DEFENSE",
+            "AIB-CYBERSECURITY",
+            "AMF-WHITESWAN",
             "AIB-E8E466C9",
             "AIB-ROBOTICS",
             "AIB-SPACE",
@@ -12229,15 +12273,15 @@
           ],
           "roster": 26
         },
-        "reason": "1 of 22 fund histories, fetched as their advisor skill says (symbol only), start more than 2% away from the fund's own inception level -- worst AIB-DATA-CENTERS: first point 146.181 at 2026-07-28T21:00 against inception 151.11975 (-3.27%), while it reports -4.31% since inception"
+        "reason": "1 of 22 fund histories, fetched as their advisor skill says (symbol only), start more than 2% away from the fund's own inception level -- worst AIB-DATA-CENTERS: first point 146.181 at 2026-07-28T21:00 against inception 151.11975 (-3.27%), while it reports -3.78% since inception"
       },
       "provenance": {
-        "run_id": "run-20261001T063425Z-d7f2e793",
-        "measured_at": "2026-10-01T06:55:54+00:00"
+        "run_id": "run-20261001T071152Z-bc3da15a",
+        "measured_at": "2026-10-01T07:34:27+00:00"
       },
       "obligations": {
         "reverify": true,
-        "repair_check": true,
+        "repair_check": false,
         "reopen": [],
         "retractions": [],
         "verification_owed": [],
@@ -12317,7 +12361,7 @@
             "reason": "all 27 listed funds carry profile_url"
           }
         },
-        "not_checked_in": "run-20261001T063425Z-d7f2e793"
+        "not_checked_in": "run-20261001T071152Z-bc3da15a"
       },
       "filing": {
         "state": "FIX_CLAIMED",
@@ -12589,7 +12633,7 @@
             "reason": "every public GET declared in /openapi.json is also in /openapi-public.json (13 vs 173 paths, 4 of the difference private or not a GET)"
           }
         },
-        "not_checked_in": "run-20261001T063425Z-d7f2e793"
+        "not_checked_in": "run-20261001T071152Z-bc3da15a"
       },
       "filing": {
         "state": "FIX_CLAIMED",
@@ -12757,7 +12801,7 @@
           "run_id": "run-20260920T202827Z-34a2af16",
           "at": "2026-09-20T20:44:56+00:00"
         },
-        "not_checked_in": "run-20261001T063425Z-d7f2e793"
+        "not_checked_in": "run-20261001T071152Z-bc3da15a"
       },
       "filing": {
         "state": "FIX_CLAIMED",
@@ -12985,7 +13029,7 @@
             "reason": "every read returned at most its limit (5->5, 50->50)"
           }
         },
-        "not_checked_in": "run-20261001T063425Z-d7f2e793"
+        "not_checked_in": "run-20261001T071152Z-bc3da15a"
       },
       "filing": {
         "state": "FIX_CLAIMED",
@@ -13143,7 +13187,7 @@
             "reason": "on 1 request(s) the clock starts only once the gate is filled or waived, and never before it"
           }
         },
-        "not_checked_in": "run-20261001T063425Z-d7f2e793"
+        "not_checked_in": "run-20261001T071152Z-bc3da15a"
       },
       "filing": {
         "state": "WITHDRAWN",
@@ -13284,7 +13328,7 @@
             "reason": "all 1 advertised channel(s) are named in a machine-readable document: wss://cymetica.com/ws/build-it-better in /llms.txt, /.well-known/mcp.json, /openapi-public.json"
           }
         },
-        "not_checked_in": "run-20261001T063425Z-d7f2e793"
+        "not_checked_in": "run-20261001T071152Z-bc3da15a"
       },
       "filing": {
         "state": "FIX_CLAIMED",
@@ -13513,7 +13557,7 @@
             "reason": "sessions, messages, tool_calls sum the 17 day(s) from 2026-01-31 to 2026-02-16, and the first session they record (2026-01-31) falls inside that window"
           }
         },
-        "not_checked_in": "run-20261001T063425Z-d7f2e793"
+        "not_checked_in": "run-20261001T071152Z-bc3da15a"
       },
       "filing": {
         "state": "FIX_CLAIMED",
@@ -13710,7 +13754,7 @@
             "reason": "their own description of agent-board/search says the order is recency while no row carries verified evidence or a confirmed replication, so the list and the sentence describing it agree and a reader is told what the top of it means"
           }
         },
-        "not_checked_in": "run-20261001T063425Z-d7f2e793"
+        "not_checked_in": "run-20261001T071152Z-bc3da15a"
       },
       "filing": {
         "state": "FIX_CLAIMED",
@@ -13908,13 +13952,13 @@
           "run_id": "run-20260920T202827Z-34a2af16"
         }
       },
-      "reproductions": 20,
+      "reproductions": 21,
       "check": {
-        "state": "INCONCLUSIVE",
+        "state": "REPRODUCING",
         "adjudicated_by": {
-          "run_id": "run-20261001T063425Z-d7f2e793",
-          "at": "2026-10-01T06:55:54+00:00",
-          "started_at": "2026-10-01T06:34:30+00:00"
+          "run_id": "run-20261001T071152Z-bc3da15a",
+          "at": "2026-10-01T07:34:27+00:00",
+          "started_at": "2026-10-01T07:12:00+00:00"
         },
         "pinned_fingerprint": "d68dde5d632e02f6434da646359d6a3efa738a21eed738630bd3c1f06281b5d9",
         "last_exploratory_pass": {
@@ -13966,8 +14010,8 @@
           },
           {
             "report_id": 136,
-            "status": "fixed",
-            "status_at": "2026-10-01T06:56:18+00:00"
+            "status": "paid",
+            "status_at": "2026-10-01T07:08:46+00:00"
           }
         ],
         "refused": [],
@@ -13985,6 +14029,13 @@
             "run_id": "run-20260925T225326Z-b7f75212",
             "verdict": "fail",
             "at": "2026-09-25T23:28:14+00:00"
+          },
+          {
+            "report_id": 136,
+            "fingerprint": "d68dde5d632e02f6434da646359d6a3efa738a21eed738630bd3c1f06281b5d9",
+            "run_id": "run-20261001T071152Z-bc3da15a",
+            "verdict": "fail",
+            "at": "2026-10-01T07:37:28+00:00"
           }
         ]
       },
@@ -14087,6 +14138,15 @@
             "run_id": "run-20260930T233314Z-42242d07"
           },
           "at": "2026-10-01T00:10:58+00:00"
+        },
+        {
+          "axis": "check",
+          "from": "INCONCLUSIVE",
+          "to": "REPRODUCING",
+          "cause": {
+            "run_id": "run-20261001T071152Z-bc3da15a"
+          },
+          "at": "2026-10-01T07:34:27+00:00"
         }
       ],
       "regressions": [
@@ -14124,7 +14184,8 @@
         "run-20260928T144310Z-bf20ee7b",
         "run-20260928T222506Z-5d1ada92",
         "run-20260929T094730Z-24cabf49",
-        "run-20260930T080540Z-4295da50"
+        "run-20260930T080540Z-4295da50",
+        "run-20261001T071152Z-bc3da15a"
       ],
       "component": "rest.build_it_better",
       "section": "build_it_better",
@@ -14135,7 +14196,7 @@
       ],
       "detail": {
         "left": {
-          "overdue": 0,
+          "overdue": 2,
           "unreadable": 0
         },
         "right": {
@@ -14145,13 +14206,13 @@
           "board": "/api/v1/build-it-better/requests"
         },
         "population": {
-          "with_a_deadline": 12,
-          "judged": 1,
-          "late": 0,
-          "met": [],
-          "waiting": [
+          "with_a_deadline": 14,
+          "judged": 3,
+          "late": 2,
+          "met": [
             "ET-28606"
           ],
+          "waiting": [],
           "history": [
             "ET-28378",
             "ET-28324",
@@ -14173,15 +14234,15 @@
           ],
           "settled_within_hours": 24
         },
-        "reason": "no build on the board settled in the last 24 h and none is past its deadline with nothing shipped, so the 24-hour promise was not put to the test: 1 still inside their window (ET-28606). NOT in the verdict: 11 request(s) settled more than 24 h ago and are history: ET-28378, ET-28324, ET-28319, ET-28203, ET-27875 (shipped late), ET-27671 (shipped late), ET-26924 (shipped late), ET-26776, ET-26608, ET-26171, ET-26036 (shipped late)"
+        "reason": "ET-27654 shipped 84.9h after its own published deadline of 2026-09-27T18:01:37; ET-27059 shipped 131.6h after its own published deadline of 2026-09-25T19:21:54. NOT in the verdict: 11 request(s) settled more than 24 h ago and are history: ET-28378, ET-28324, ET-28319, ET-28203, ET-27875 (shipped late), ET-27671 (shipped late), ET-26924 (shipped late), ET-26776, ET-26608, ET-26171, ET-26036 (shipped late)"
       },
       "provenance": {
-        "run_id": "run-20261001T063425Z-d7f2e793",
-        "measured_at": "2026-10-01T06:55:54+00:00"
+        "run_id": "run-20261001T071152Z-bc3da15a",
+        "measured_at": "2026-10-01T07:34:27+00:00"
       },
       "obligations": {
         "reverify": true,
-        "repair_check": true,
+        "repair_check": false,
         "reopen": [],
         "retractions": [],
         "verification_owed": [],
@@ -14210,7 +14271,7 @@
           "run_id": "run-20260920T204931Z-9b10f557",
           "at": "2026-09-20T20:49:59+00:00"
         },
-        "not_checked_in": "run-20261001T063425Z-d7f2e793"
+        "not_checked_in": "run-20261001T071152Z-bc3da15a"
       },
       "filing": {
         "state": "WITHDRAWN",
@@ -14357,7 +14418,7 @@
             "reason": "the Building now tile is computed as 's.building || 0', which counts nothing but what is building"
           }
         },
-        "not_checked_in": "run-20261001T063425Z-d7f2e793"
+        "not_checked_in": "run-20261001T071152Z-bc3da15a"
       },
       "filing": {
         "state": "FIX_CLAIMED",
@@ -14584,9 +14645,9 @@
       "check": {
         "state": "INCONCLUSIVE",
         "adjudicated_by": {
-          "run_id": "run-20261001T063425Z-d7f2e793",
-          "at": "2026-10-01T06:55:54+00:00",
-          "started_at": "2026-10-01T06:34:30+00:00"
+          "run_id": "run-20261001T071152Z-bc3da15a",
+          "at": "2026-10-01T07:34:27+00:00",
+          "started_at": "2026-10-01T07:12:00+00:00"
         },
         "pinned_fingerprint": "2e8b6858e71d177779a21f95ec0e35a6b92cb18ef65e71e7d8adbc6ddd20965b"
       },
@@ -14833,8 +14894,8 @@
         "reason": "all 18 deep answers asked in the last 72 h are served whole"
       },
       "provenance": {
-        "run_id": "run-20261001T063425Z-d7f2e793",
-        "measured_at": "2026-10-01T06:55:54+00:00"
+        "run_id": "run-20261001T071152Z-bc3da15a",
+        "measured_at": "2026-10-01T07:34:27+00:00"
       },
       "obligations": {
         "reverify": true,
@@ -14894,7 +14955,7 @@
             "reason": "each product is on one row in all 3 windows read"
           }
         },
-        "not_checked_in": "run-20261001T063425Z-d7f2e793"
+        "not_checked_in": "run-20261001T071152Z-bc3da15a"
       },
       "filing": {
         "state": "FIX_CLAIMED",
@@ -15061,7 +15122,7 @@
             "reason": "published inception 2026-07-26, recorded 2026-08-09; the methodology discloses the pro-forma stretch"
           }
         },
-        "not_checked_in": "run-20261001T063425Z-d7f2e793"
+        "not_checked_in": "run-20261001T071152Z-bc3da15a"
       },
       "filing": {
         "state": "FIX_CLAIMED",
@@ -15207,7 +15268,7 @@
           "started_at": "2026-09-30T23:33:19+00:00"
         },
         "pinned_fingerprint": "e77176673b270cba67e599aab8b4011f8b1805aed59efc088f93522cef55ffe3",
-        "not_checked_in": "run-20261001T063425Z-d7f2e793"
+        "not_checked_in": "run-20261001T071152Z-bc3da15a"
       },
       "filing": {
         "state": "FIX_CLAIMED",
@@ -15368,13 +15429,13 @@
           "run_id": "run-20260921T201015Z-b8579867"
         }
       },
-      "reproductions": 4,
+      "reproductions": 5,
       "check": {
         "state": "REPRODUCING",
         "adjudicated_by": {
-          "run_id": "run-20261001T063425Z-d7f2e793",
-          "at": "2026-10-01T06:55:54+00:00",
-          "started_at": "2026-10-01T06:34:30+00:00"
+          "run_id": "run-20261001T071152Z-bc3da15a",
+          "at": "2026-10-01T07:34:27+00:00",
+          "started_at": "2026-10-01T07:12:00+00:00"
         },
         "pinned_fingerprint": "799ae81824626c5ec366030934a5032f7862eb51bdf0336d8195bbd0ef487d68"
       },
@@ -15529,7 +15590,8 @@
         "run-20260921T201015Z-b8579867",
         "run-20260922T190547Z-47962a20",
         "run-20260922T221711Z-447350ca",
-        "run-20261001T063425Z-d7f2e793"
+        "run-20261001T063425Z-d7f2e793",
+        "run-20261001T071152Z-bc3da15a"
       ],
       "component": "mcp.fund_research",
       "section": "fund_research",
@@ -15547,7 +15609,7 @@
           ]
         },
         "right": {
-          "published_paths": 294
+          "published_paths": 306
         },
         "sources": {
           "their document": "/openapi-public.json",
@@ -15560,8 +15622,8 @@
         "reason": "NEX-0109 sends an agent to /api/v1/aib/funds, which /openapi-public.json does not publish"
       },
       "provenance": {
-        "run_id": "run-20261001T063425Z-d7f2e793",
-        "measured_at": "2026-10-01T06:55:54+00:00"
+        "run_id": "run-20261001T071152Z-bc3da15a",
+        "measured_at": "2026-10-01T07:34:27+00:00"
       },
       "obligations": {
         "reverify": true,
@@ -15873,7 +15935,7 @@
             "reason": "32 app(s) of the 116 on the board were read one by one, and for 32 of them every figure on the board re-read between the app's two reads is the app's own; the daily series sums to last_30d for 32 app(s) that have moved at all (/weekly-signal, /tradingview, /token-info, /exchange-refugees, /bitmex, /thinkorswim, /benzinga-pro, /bullx, /etoro, /finviz, /mql5, /pickmytrade, /atas, /barchart, /coingecko, /coinglass, /coinigy, /iex-cloud, /interactive-brokers, /moomoo, /motivewave, /myforexfunds, /myfundedfutures, /prorealtime, /wallstreetbets, /sierra-chart, /stockanalysis, /stockcharts, /traderspost, /tradersync, /unusualwhales, /yfinance)"
           }
         },
-        "not_checked_in": "run-20261001T063425Z-d7f2e793"
+        "not_checked_in": "run-20261001T071152Z-bc3da15a"
       },
       "filing": {
         "state": "WITHDRAWN",
@@ -16958,7 +17020,7 @@
             "reason": "every step that moves a clone forward accepts the agent's x-api-key: POST /api/v1/cloned-bots/{instance_id}/fund, POST /api/v1/cloned-bots/{instance_id}/go-live"
           }
         },
-        "not_checked_in": "run-20261001T063425Z-d7f2e793"
+        "not_checked_in": "run-20261001T071152Z-bc3da15a"
       },
       "filing": {
         "state": "FIX_CLAIMED",
@@ -17112,7 +17174,7 @@
           "started_at": "2026-09-30T23:33:19+00:00"
         },
         "pinned_fingerprint": "f9147b657ba9d4d8852f04c3986c958f28c5d72e80c2035d46de64ac4c1e1de4",
-        "not_checked_in": "run-20261001T063425Z-d7f2e793"
+        "not_checked_in": "run-20261001T071152Z-bc3da15a"
       },
       "filing": {
         "state": "FIX_CLAIMED",
@@ -17324,7 +17386,7 @@
             "reason": "all 6 request example(s) on /api-docs that target a published route carry every field it requires"
           }
         },
-        "not_checked_in": "run-20261001T063425Z-d7f2e793"
+        "not_checked_in": "run-20261001T071152Z-bc3da15a"
       },
       "filing": {
         "state": "FIX_CLAIMED",
@@ -17584,7 +17646,7 @@
             "reason": "12 card(s) read closed on both /api/v1/event-cards/{id} and get_event_card_info, and none of the 16 read on both disagrees"
           }
         },
-        "not_checked_in": "run-20261001T063425Z-d7f2e793"
+        "not_checked_in": "run-20261001T071152Z-bc3da15a"
       },
       "filing": {
         "state": "FIX_CLAIMED",
@@ -17838,9 +17900,9 @@
       "check": {
         "state": "CHECK_CHANGED",
         "adjudicated_by": {
-          "run_id": "run-20261001T063425Z-d7f2e793",
-          "at": "2026-10-01T06:55:54+00:00",
-          "started_at": "2026-10-01T06:34:30+00:00"
+          "run_id": "run-20261001T071152Z-bc3da15a",
+          "at": "2026-10-01T07:34:27+00:00",
+          "started_at": "2026-10-01T07:12:00+00:00"
         },
         "pinned_fingerprint": "c8c24b2391af2d1a7a8e6ab30fbddb5c538d271eb97d9972ca529798519dc857",
         "last_exploratory_pass": {
@@ -17971,7 +18033,6 @@
         },
         "population": {
           "window": [
-            130,
             131,
             132,
             133,
@@ -17982,7 +18043,8 @@
             138,
             139,
             140,
-            141
+            141,
+            142
           ],
           "before_fix": [
             "#93 (2026-09-10T22:21 UTC)",
@@ -17994,8 +18056,8 @@
         "reason": "the newest 12 submissions to POST /api/v1/bounty/reports since #123 fixed_at 2026-09-23T02:41:50 UTC (3299e580b) were each answered 2xx with the id of the report they created"
       },
       "provenance": {
-        "run_id": "run-20261001T063425Z-d7f2e793",
-        "measured_at": "2026-10-01T06:55:54+00:00"
+        "run_id": "run-20261001T071152Z-bc3da15a",
+        "measured_at": "2026-10-01T07:34:27+00:00"
       },
       "obligations": {
         "reverify": true,
@@ -18024,7 +18086,7 @@
           "started_at": "2026-09-30T23:33:19+00:00"
         },
         "pinned_fingerprint": "6a0791437c8cc5aa4df286c0c372a8d5513e25d504d40418c4f8ce8a1f1c49a3",
-        "not_checked_in": "run-20261001T063425Z-d7f2e793"
+        "not_checked_in": "run-20261001T071152Z-bc3da15a"
       },
       "filing": {
         "state": "FIX_CLAIMED",
@@ -18184,7 +18246,7 @@
           "started_at": "2026-09-30T23:33:19+00:00"
         },
         "pinned_fingerprint": "2e22cca70cda0f5984ce2f3230718d3230c72fa57acf17d00e4b221e9a9c7fb5",
-        "not_checked_in": "run-20261001T063425Z-d7f2e793"
+        "not_checked_in": "run-20261001T071152Z-bc3da15a"
       },
       "filing": {
         "state": "NOT_RAISED",
@@ -18357,7 +18419,7 @@
           "started_at": "2026-09-30T23:33:19+00:00"
         },
         "pinned_fingerprint": "af6eed9d5de9d1db1d71cb94464f51d41f92bc12524f90c04ac4a47c59cd3183",
-        "not_checked_in": "run-20261001T063425Z-d7f2e793"
+        "not_checked_in": "run-20261001T071152Z-bc3da15a"
       },
       "filing": {
         "state": "FIX_CLAIMED",
@@ -18478,7 +18540,7 @@
           "started_at": "2026-09-30T23:33:19+00:00"
         },
         "pinned_fingerprint": "fe91d5882e53cfd1fce91a6cfe1a44599faaf5d029601ef7df6d3bde8e10c8b1",
-        "not_checked_in": "run-20261001T063425Z-d7f2e793"
+        "not_checked_in": "run-20261001T071152Z-bc3da15a"
       },
       "filing": {
         "state": "FIX_CLAIMED",
@@ -18599,7 +18661,7 @@
           "started_at": "2026-09-30T23:33:19+00:00"
         },
         "pinned_fingerprint": "fbdfc4586936cdbd7509f4c490c45e98a1cac047a92be82fef2283e1d62dfc40",
-        "not_checked_in": "run-20261001T063425Z-d7f2e793"
+        "not_checked_in": "run-20261001T071152Z-bc3da15a"
       },
       "filing": {
         "state": "FIX_CLAIMED",
@@ -18767,7 +18829,7 @@
           "started_at": "2026-09-30T23:33:19+00:00"
         },
         "pinned_fingerprint": "c78808ef1137f82d89f8a7adab87fe7ecd973d11d4772a3238ac149a3884dff3",
-        "not_checked_in": "run-20261001T063425Z-d7f2e793"
+        "not_checked_in": "run-20261001T071152Z-bc3da15a"
       },
       "filing": {
         "state": "FIX_CLAIMED",
@@ -18894,7 +18956,7 @@
           "started_at": "2026-09-30T23:33:19+00:00"
         },
         "pinned_fingerprint": "7cc421db3b5318e7d45b5ce590b490e53ab20a2ee2522a69eded19c3d4e7c53d",
-        "not_checked_in": "run-20261001T063425Z-d7f2e793"
+        "not_checked_in": "run-20261001T071152Z-bc3da15a"
       },
       "filing": {
         "state": "FIX_CLAIMED",
@@ -19058,7 +19120,7 @@
           "started_at": "2026-09-30T23:33:19+00:00"
         },
         "pinned_fingerprint": "9e1db26f74a71b70e18e6ffdec0f85dbc2dfc5c921537a8af6f8603668c75aa6",
-        "not_checked_in": "run-20261001T063425Z-d7f2e793"
+        "not_checked_in": "run-20261001T071152Z-bc3da15a"
       },
       "filing": {
         "state": "FIX_CLAIMED",
@@ -19196,13 +19258,13 @@
           "run_id": "run-20260925T195840Z-d14ceca2"
         }
       },
-      "reproductions": 13,
+      "reproductions": 14,
       "check": {
         "state": "REPRODUCING",
         "adjudicated_by": {
-          "run_id": "run-20261001T063425Z-d7f2e793",
-          "at": "2026-10-01T06:55:54+00:00",
-          "started_at": "2026-10-01T06:34:30+00:00"
+          "run_id": "run-20261001T071152Z-bc3da15a",
+          "at": "2026-10-01T07:34:27+00:00",
+          "started_at": "2026-10-01T07:12:00+00:00"
         },
         "pinned_fingerprint": "cb4c52d8d8735e73ad3d07f1520b42a1566392713c69360b5d357fa976ebdce5"
       },
@@ -19300,7 +19362,8 @@
         "run-20260929T094730Z-24cabf49",
         "run-20260930T080540Z-4295da50",
         "run-20260930T233314Z-42242d07",
-        "run-20261001T063425Z-d7f2e793"
+        "run-20261001T063425Z-d7f2e793",
+        "run-20261001T071152Z-bc3da15a"
       ],
       "component": "discovery.openapi",
       "section": "openapi",
@@ -19347,8 +19410,8 @@
         "tests/discovery/test_public_page_reads_are_documented.py::test_what_a_public_page_reads_without_a_key_is_documented"
       ],
       "provenance": {
-        "run_id": "run-20261001T063425Z-d7f2e793",
-        "measured_at": "2026-10-01T06:55:54+00:00"
+        "run_id": "run-20261001T071152Z-bc3da15a",
+        "measured_at": "2026-10-01T07:34:27+00:00"
       },
       "obligations": {
         "reverify": true,
@@ -19377,7 +19440,7 @@
           "started_at": "2026-09-30T23:33:19+00:00"
         },
         "pinned_fingerprint": "ef2a36ffbdaaf14b6d435fa10fcfb0dc2d064ad8a8c9422a8aec5b6bc7f3f088",
-        "not_checked_in": "run-20261001T063425Z-d7f2e793"
+        "not_checked_in": "run-20261001T071152Z-bc3da15a"
       },
       "filing": {
         "state": "NOT_RAISED",
@@ -19492,9 +19555,9 @@
       "check": {
         "state": "CHECK_CHANGED",
         "adjudicated_by": {
-          "run_id": "run-20261001T063425Z-d7f2e793",
-          "at": "2026-10-01T06:55:54+00:00",
-          "started_at": "2026-10-01T06:34:30+00:00"
+          "run_id": "run-20261001T071152Z-bc3da15a",
+          "at": "2026-10-01T07:34:27+00:00",
+          "started_at": "2026-10-01T07:12:00+00:00"
         },
         "pinned_fingerprint": "5f8d39cde540a88afa44b8cd7abfc78a7498eff2f3c0d047d961398516fbf2fd"
       },
@@ -19612,8 +19675,8 @@
         "tests/rest/test_prices_status_codes_match_its_own_description.py::test_an_unknown_asset_returns_a_status_the_schema_never_declares"
       ],
       "provenance": {
-        "run_id": "run-20261001T063425Z-d7f2e793",
-        "measured_at": "2026-10-01T06:55:54+00:00"
+        "run_id": "run-20261001T071152Z-bc3da15a",
+        "measured_at": "2026-10-01T07:34:27+00:00"
       },
       "obligations": {
         "reverify": true,
@@ -19633,13 +19696,13 @@
           "run_id": "run-20260926T121459Z-289cb66b"
         }
       },
-      "reproductions": 7,
+      "reproductions": 8,
       "check": {
         "state": "REPRODUCING",
         "adjudicated_by": {
-          "run_id": "run-20261001T063425Z-d7f2e793",
-          "at": "2026-10-01T06:55:54+00:00",
-          "started_at": "2026-10-01T06:34:30+00:00"
+          "run_id": "run-20261001T071152Z-bc3da15a",
+          "at": "2026-10-01T07:34:27+00:00",
+          "started_at": "2026-10-01T07:12:00+00:00"
         },
         "pinned_fingerprint": "747f7e4b1c339fe4cba6a385019303051b1505c28ec700a50f69c2b917e7284b"
       },
@@ -19764,7 +19827,8 @@
         "run-20260928T050933Z-b2403d25",
         "run-20260928T144310Z-bf20ee7b",
         "run-20260930T233314Z-42242d07",
-        "run-20261001T063425Z-d7f2e793"
+        "run-20261001T063425Z-d7f2e793",
+        "run-20261001T071152Z-bc3da15a"
       ],
       "component": "rest.support",
       "section": "support",
@@ -19801,8 +19865,8 @@
         "tests/rest/test_async_a2a_investigation.py::test_an_async_message_gets_the_investigation_its_card_promises"
       ],
       "provenance": {
-        "run_id": "run-20261001T063425Z-d7f2e793",
-        "measured_at": "2026-10-01T06:55:54+00:00"
+        "run_id": "run-20261001T071152Z-bc3da15a",
+        "measured_at": "2026-10-01T07:34:27+00:00"
       },
       "obligations": {
         "reverify": true,
@@ -19831,7 +19895,7 @@
           "started_at": "2026-09-30T23:33:19+00:00"
         },
         "pinned_fingerprint": "caa58ab86f9b80366e64eebc61963d1a5e58b6c6f2b7e79b32c4ef3d3bb4a6c6",
-        "not_checked_in": "run-20261001T063425Z-d7f2e793"
+        "not_checked_in": "run-20261001T071152Z-bc3da15a"
       },
       "filing": {
         "state": "FIX_CLAIMED",
@@ -19996,9 +20060,9 @@
       "check": {
         "state": "INCONCLUSIVE",
         "adjudicated_by": {
-          "run_id": "run-20261001T063425Z-d7f2e793",
-          "at": "2026-10-01T06:55:54+00:00",
-          "started_at": "2026-10-01T06:34:30+00:00"
+          "run_id": "run-20261001T071152Z-bc3da15a",
+          "at": "2026-10-01T07:34:27+00:00",
+          "started_at": "2026-10-01T07:12:00+00:00"
         },
         "pinned_fingerprint": "43896d7cab3dd39573d7afc05e353a6b0e27f1ec0ba41ec8ccf30992266a542f"
       },
@@ -20081,8 +20145,8 @@
         "tests/rest/test_a_bot_stop_loss_holds_its_budget.py::test_a_bot_paused_by_its_stop_loss_lost_no_more_than_the_stop"
       ],
       "provenance": {
-        "run_id": "run-20261001T063425Z-d7f2e793",
-        "measured_at": "2026-10-01T06:55:54+00:00"
+        "run_id": "run-20261001T071152Z-bc3da15a",
+        "measured_at": "2026-10-01T07:34:27+00:00"
       },
       "obligations": {
         "reverify": true,
@@ -20126,7 +20190,7 @@
             "reason": "all 10 matchup(s) past their window end read finished"
           }
         },
-        "not_checked_in": "run-20261001T063425Z-d7f2e793"
+        "not_checked_in": "run-20261001T071152Z-bc3da15a"
       },
       "filing": {
         "state": "FIX_CLAIMED",
@@ -20238,28 +20302,37 @@
       },
       "reproductions": 5,
       "check": {
-        "state": "REPRODUCING",
+        "state": "PASSING",
         "adjudicated_by": {
-          "run_id": "run-20261001T063425Z-d7f2e793",
-          "at": "2026-10-01T06:55:54+00:00",
-          "started_at": "2026-10-01T06:34:30+00:00"
+          "run_id": "run-20261001T071152Z-bc3da15a",
+          "at": "2026-10-01T07:34:27+00:00",
+          "started_at": "2026-10-01T07:12:00+00:00"
         },
         "pinned_fingerprint": "a817099df0d150b132916dfcc89014cad3146293837d748373d87c2657449cfe"
       },
       "filing": {
-        "state": "RAISED",
+        "state": "FIX_CLAIMED",
         "adjudicated_by": {
-          "event_id": "389bc30800870b932c6485823a214cc72fe6c679c804af6f8f1bf30f53877f28",
-          "at": "2026-09-30T16:10:38+00:00"
+          "event_id": "97f735a1ababbf24690722aa42ca01471171568d4a36394524e66180d1ff9332",
+          "at": "2026-10-01T07:08:46+00:00"
         },
         "reports": [
           {
             "report_id": 138,
-            "status": "pending"
+            "status": "paid",
+            "status_at": "2026-10-01T07:35:07+00:00"
           }
         ],
         "refused": [],
-        "verifications": []
+        "verifications": [
+          {
+            "report_id": 138,
+            "fingerprint": "a817099df0d150b132916dfcc89014cad3146293837d748373d87c2657449cfe",
+            "run_id": "run-20261001T071152Z-bc3da15a",
+            "verdict": "pass",
+            "at": "2026-10-01T07:37:15+00:00"
+          }
+        ]
       },
       "transitions": [
         {
@@ -20279,6 +20352,24 @@
             "event_id": "389bc30800870b932c6485823a214cc72fe6c679c804af6f8f1bf30f53877f28"
           },
           "at": "2026-09-30T16:10:38+00:00"
+        },
+        {
+          "axis": "filing",
+          "from": "RAISED",
+          "to": "FIX_CLAIMED",
+          "cause": {
+            "event_id": "97f735a1ababbf24690722aa42ca01471171568d4a36394524e66180d1ff9332"
+          },
+          "at": "2026-10-01T07:08:46+00:00"
+        },
+        {
+          "axis": "check",
+          "from": "REPRODUCING",
+          "to": "PASSING",
+          "cause": {
+            "run_id": "run-20261001T071152Z-bc3da15a"
+          },
+          "at": "2026-10-01T07:34:27+00:00"
         }
       ],
       "regressions": [],
@@ -20296,20 +20387,7 @@
       "tag": "DOCS",
       "kind": "check_failure",
       "detail": {
-        "left": [
-          "GET /api/v1/backtest/bots/{slug}",
-          "GET /api/v1/backtest/bots/{slug}/equity",
-          "GET /api/v1/backtest/bots/{slug}/paper-status",
-          "GET /api/v1/backtest/bots/{slug}/paper-trades",
-          "POST /api/v1/backtest/bots/{slug}/run-backtest",
-          "PATCH /api/v1/backtest/bots/{slug}/settings",
-          "GET /api/v1/backtest/bots/{slug}/trades",
-          "POST /api/v1/backtest/clone",
-          "GET /api/v1/backtest/clone/deposit-info/{species_slug}",
-          "POST /api/v1/creator/channel-posts",
-          "PATCH /api/v1/creator/links/{slug}",
-          "POST /api/v1/creator/radar-channel-posts"
-        ],
+        "left": [],
         "right": [],
         "sources": {
           "spec": "/openapi-public.json",
@@ -20365,44 +20443,7 @@
               "/api/v1/research-backtest/run"
             ]
           },
-          "where": {
-            "GET /api/v1/backtest/bots/{slug}": [
-              "/backtest/api"
-            ],
-            "GET /api/v1/backtest/bots/{slug}/equity": [
-              "/backtest/api"
-            ],
-            "GET /api/v1/backtest/bots/{slug}/paper-status": [
-              "/backtest/api"
-            ],
-            "GET /api/v1/backtest/bots/{slug}/paper-trades": [
-              "/backtest/api"
-            ],
-            "POST /api/v1/backtest/bots/{slug}/run-backtest": [
-              "/backtest/api"
-            ],
-            "PATCH /api/v1/backtest/bots/{slug}/settings": [
-              "/backtest/api"
-            ],
-            "GET /api/v1/backtest/bots/{slug}/trades": [
-              "/backtest/api"
-            ],
-            "POST /api/v1/backtest/clone": [
-              "/backtest/api"
-            ],
-            "GET /api/v1/backtest/clone/deposit-info/{species_slug}": [
-              "/backtest/api"
-            ],
-            "POST /api/v1/creator/channel-posts": [
-              "/expire76"
-            ],
-            "PATCH /api/v1/creator/links/{slug}": [
-              "/expire76"
-            ],
-            "POST /api/v1/creator/radar-channel-posts": [
-              "/expire76"
-            ]
-          },
+          "where": {},
           "chrome": [
             "/api/v1/build-stats",
             "/api/v1/build-stats/recent",
@@ -20416,16 +20457,16 @@
           ],
           "unread": [],
           "silent": [],
-          "published_paths": 294
+          "published_paths": 306
         },
-        "reason": "12 route(s) that /backtest/api, /expire76, /h2h name are not in /openapi-public.json (294 paths): GET /api/v1/backtest/bots/{slug}; GET /api/v1/backtest/bots/{slug}/equity; GET /api/v1/backtest/bots/{slug}/paper-status; GET /api/v1/backtest/bots/{slug}/paper-trades; POST /api/v1/backtest/bots/{slug}/run-backtest; PATCH /api/v1/backtest/bots/{slug}/settings; GET /api/v1/backtest/bots/{slug}/trades; POST /api/v1/backtest/clone; GET /api/v1/backtest/clone/deposit-info/{species_slug}; POST /api/v1/creator/channel-posts; PATCH /api/v1/creator/links/{slug}; POST /api/v1/creator/radar-channel-posts"
+        "reason": "every one of the 36 route(s) /backtest/api, /expire76, /h2h name is in /openapi-public.json"
       },
       "checks": [
         "tests/rest/test_feature_pages_name_documented_routes.py::test_every_route_a_feature_page_names_is_in_the_public_openapi"
       ],
       "provenance": {
-        "run_id": "run-20261001T063425Z-d7f2e793",
-        "measured_at": "2026-10-01T06:55:54+00:00"
+        "run_id": "run-20261001T071152Z-bc3da15a",
+        "measured_at": "2026-10-01T07:34:27+00:00"
       },
       "obligations": {
         "reverify": false,
@@ -20445,26 +20486,27 @@
           "run_id": "run-20260930T161856Z-3e168d8e"
         }
       },
-      "reproductions": 3,
+      "reproductions": 4,
       "check": {
         "state": "REPRODUCING",
         "adjudicated_by": {
-          "run_id": "run-20261001T063425Z-d7f2e793",
-          "at": "2026-10-01T06:55:54+00:00",
-          "started_at": "2026-10-01T06:34:30+00:00"
+          "run_id": "run-20261001T071152Z-bc3da15a",
+          "at": "2026-10-01T07:34:27+00:00",
+          "started_at": "2026-10-01T07:12:00+00:00"
         },
         "pinned_fingerprint": "624e05f9b9146c23dd23db94d15ab746f8c93dbd82708f659a97657d39577d82"
       },
       "filing": {
-        "state": "RAISED",
+        "state": "FIX_CLAIMED",
         "adjudicated_by": {
-          "event_id": "afe43dcf821a665f838c058bec45301385c19cd9a3860ca165abd31326c9a375",
-          "at": "2026-09-30T16:26:12+00:00"
+          "event_id": "728d9a91441030dacc262e27bb11fea9dc61d70eea363769510a7884dd7862cb",
+          "at": "2026-10-01T07:08:46+00:00"
         },
         "reports": [
           {
             "report_id": 139,
-            "status": "pending"
+            "status": "paid",
+            "status_at": "2026-10-01T07:35:07+00:00"
           }
         ],
         "refused": [],
@@ -20488,6 +20530,15 @@
             "event_id": "afe43dcf821a665f838c058bec45301385c19cd9a3860ca165abd31326c9a375"
           },
           "at": "2026-09-30T16:26:12+00:00"
+        },
+        {
+          "axis": "filing",
+          "from": "RAISED",
+          "to": "FIX_CLAIMED",
+          "cause": {
+            "event_id": "728d9a91441030dacc262e27bb11fea9dc61d70eea363769510a7884dd7862cb"
+          },
+          "at": "2026-10-01T07:08:46+00:00"
         }
       ],
       "regressions": [],
@@ -20496,7 +20547,8 @@
       "reproduced_in": [
         "run-20260930T161856Z-3e168d8e",
         "run-20260930T233314Z-42242d07",
-        "run-20261001T063425Z-d7f2e793"
+        "run-20261001T063425Z-d7f2e793",
+        "run-20261001T071152Z-bc3da15a"
       ],
       "component": "rest.build_it_better",
       "section": "build_it_better",
@@ -20560,11 +20612,11 @@
         "tests/rest/test_build_it_better_log_keeps_whole_bodies.py::test_the_message_log_carries_each_message_whole"
       ],
       "provenance": {
-        "run_id": "run-20261001T063425Z-d7f2e793",
-        "measured_at": "2026-10-01T06:55:54+00:00"
+        "run_id": "run-20261001T071152Z-bc3da15a",
+        "measured_at": "2026-10-01T07:34:27+00:00"
       },
       "obligations": {
-        "reverify": false,
+        "reverify": true,
         "repair_check": false,
         "reopen": [],
         "retractions": [],
@@ -20581,13 +20633,13 @@
           "run_id": "run-20260930T192140Z-087ea5de"
         }
       },
-      "reproductions": 4,
+      "reproductions": 5,
       "check": {
         "state": "REPRODUCING",
         "adjudicated_by": {
-          "run_id": "run-20261001T063425Z-d7f2e793",
-          "at": "2026-10-01T06:55:54+00:00",
-          "started_at": "2026-10-01T06:34:30+00:00"
+          "run_id": "run-20261001T071152Z-bc3da15a",
+          "at": "2026-10-01T07:34:27+00:00",
+          "started_at": "2026-10-01T07:12:00+00:00"
         },
         "pinned_fingerprint": "5b5cdd3dc214afc195abefe5f8a1d3c8f1141f0cf3e899e4acc25dd9afac504c"
       },
@@ -20600,8 +20652,8 @@
         "reports": [
           {
             "report_id": 140,
-            "status": "fixed",
-            "status_at": "2026-10-01T06:56:18+00:00"
+            "status": "paid",
+            "status_at": "2026-10-01T07:08:46+00:00"
           }
         ],
         "refused": [],
@@ -20643,7 +20695,8 @@
         "run-20260930T192140Z-087ea5de",
         "run-20260930T200531Z-74cd7e27",
         "run-20260930T233314Z-42242d07",
-        "run-20261001T063425Z-d7f2e793"
+        "run-20261001T063425Z-d7f2e793",
+        "run-20261001T071152Z-bc3da15a"
       ],
       "component": "rest.gem_screener",
       "section": "gem_screener",
@@ -20691,8 +20744,8 @@
         "tests/rest/test_gem_screener_picks_and_formulas_are_self_consistent.py::test_a_degen_pick_opens_the_coin_it_names"
       ],
       "provenance": {
-        "run_id": "run-20261001T063425Z-d7f2e793",
-        "measured_at": "2026-10-01T06:55:54+00:00"
+        "run_id": "run-20261001T071152Z-bc3da15a",
+        "measured_at": "2026-10-01T07:34:27+00:00"
       },
       "obligations": {
         "reverify": true,
@@ -20700,7 +20753,9 @@
         "reopen": [],
         "retractions": [],
         "verification_owed": [],
-        "correction_owed": [],
+        "correction_owed": [
+          140
+        ],
         "disputed": []
       }
     },
@@ -20712,26 +20767,27 @@
           "run_id": "run-20260930T200531Z-74cd7e27"
         }
       },
-      "reproductions": 3,
+      "reproductions": 4,
       "check": {
         "state": "REPRODUCING",
         "adjudicated_by": {
-          "run_id": "run-20261001T063425Z-d7f2e793",
-          "at": "2026-10-01T06:55:54+00:00",
-          "started_at": "2026-10-01T06:34:30+00:00"
+          "run_id": "run-20261001T071152Z-bc3da15a",
+          "at": "2026-10-01T07:34:27+00:00",
+          "started_at": "2026-10-01T07:12:00+00:00"
         },
         "pinned_fingerprint": "989432e74dd13c111290120ec788bbfd5833926ea691cd7a5283a9451abb328f"
       },
       "filing": {
-        "state": "RAISED",
+        "state": "FIX_CLAIMED",
         "adjudicated_by": {
-          "event_id": "67a73d1a8b592214ccb4af3c3eb4674252cc2f703971e3058733161f134a9675",
-          "at": "2026-09-30T20:12:34+00:00"
+          "event_id": "d1d22e97579b06ae518873943cfa34816cfe47f90a9cf6248e2fc1cca34ad87e",
+          "at": "2026-10-01T07:08:46+00:00"
         },
         "reports": [
           {
             "report_id": 141,
-            "status": "pending"
+            "status": "paid",
+            "status_at": "2026-10-01T07:35:07+00:00"
           }
         ],
         "refused": [],
@@ -20755,6 +20811,15 @@
             "event_id": "67a73d1a8b592214ccb4af3c3eb4674252cc2f703971e3058733161f134a9675"
           },
           "at": "2026-09-30T20:12:34+00:00"
+        },
+        {
+          "axis": "filing",
+          "from": "RAISED",
+          "to": "FIX_CLAIMED",
+          "cause": {
+            "event_id": "d1d22e97579b06ae518873943cfa34816cfe47f90a9cf6248e2fc1cca34ad87e"
+          },
+          "at": "2026-10-01T07:08:46+00:00"
         }
       ],
       "regressions": [],
@@ -20763,7 +20828,8 @@
       "reproduced_in": [
         "run-20260930T200531Z-74cd7e27",
         "run-20260930T233314Z-42242d07",
-        "run-20261001T063425Z-d7f2e793"
+        "run-20261001T063425Z-d7f2e793",
+        "run-20261001T071152Z-bc3da15a"
       ],
       "component": "rest.gem_screener",
       "section": "gem_screener",
@@ -20779,7 +20845,7 @@
         },
         "right": {
           "rows_off": 0,
-          "stated": 12.0
+          "stated": 365.0
         },
         "sources": {
           "page": "/gem-screener/app?view=apps"
@@ -20789,70 +20855,70 @@
             {
               "row": "NXM(leaf#122)",
               "applied": 12.1667,
-              "stated": 12.0
+              "stated": 365.0
             },
             {
               "row": "SKY(parent#maker)",
               "applied": 12.1667,
-              "stated": 12.0
+              "stated": 365.0
             },
             {
               "row": "PENDLE(parent#pendle)",
               "applied": 12.1667,
-              "stated": 12.0
+              "stated": 365.0
             },
             {
               "row": "QUICK(parent#quickswap)",
               "applied": 12.1667,
-              "stated": 12.0
+              "stated": 365.0
             },
             {
               "row": "MET(parent#metronome)",
               "applied": 12.1667,
-              "stated": 12.0
+              "stated": 365.0
             },
             {
               "row": "STON(leaf#2337)",
               "applied": 12.1667,
-              "stated": 12.0
+              "stated": 365.0
             },
             {
               "row": "FUL(parent#fulcrom)",
               "applied": 12.1667,
-              "stated": 12.0
+              "stated": 365.0
             },
             {
               "row": "SUSHI(parent#sushi)",
               "applied": 12.1667,
-              "stated": 12.0
+              "stated": 365.0
             },
             {
               "row": "SNS(leaf#3877)",
               "applied": 12.1667,
-              "stated": 12.0
+              "stated": 365.0
             },
             {
               "row": "DYDX(parent#dydx)",
               "applied": 12.1667,
-              "stated": 12.0
+              "stated": 365.0
             }
           ],
           "stated": {
-            "30": 12.0,
-            "90": 4.0
+            "30": 365.0,
+            "90": 365.0
           }
         },
-        "reason": "the page states the 30-day run-rate as last 30 days x 12; 43 of 43 rows apply x 12.1667 (NXM(leaf#122): applied 12.1667)"
+        "reason": "the page states the 30-day run-rate as last 30 days x 365; 43 of 43 rows apply x 12.1667 (NXM(leaf#122): applied 12.1667)"
       },
       "checks": [
         "tests/rest/test_gem_screener_picks_and_formulas_are_self_consistent.py::test_the_runrate_uses_the_multipliers_its_page_states"
       ],
       "provenance": {
-        "run_id": "run-20261001T063425Z-d7f2e793",
-        "measured_at": "2026-10-01T06:55:54+00:00"
+        "run_id": "run-20261001T071152Z-bc3da15a",
+        "measured_at": "2026-10-01T07:34:27+00:00"
       },
       "obligations": {
-        "reverify": false,
+        "reverify": true,
         "repair_check": false,
         "reopen": [],
         "retractions": [],
@@ -20869,13 +20935,13 @@
           "run_id": "run-20261001T063425Z-d7f2e793"
         }
       },
-      "reproductions": 1,
+      "reproductions": 2,
       "check": {
         "state": "REPRODUCING",
         "adjudicated_by": {
-          "run_id": "run-20261001T063425Z-d7f2e793",
-          "at": "2026-10-01T06:55:54+00:00",
-          "started_at": "2026-10-01T06:34:30+00:00"
+          "run_id": "run-20261001T071152Z-bc3da15a",
+          "at": "2026-10-01T07:34:27+00:00",
+          "started_at": "2026-10-01T07:12:00+00:00"
         },
         "pinned_fingerprint": "9805004f1b66b7da2419f52dc19a821e6ebfaeddb2330aa32c5e9d59169758d8"
       },
@@ -20918,7 +20984,8 @@
       "severity": "S3-CONTRACT",
       "title": "6 of 6 sampled answers state a chart_rate that is not the average success_rate of the patterns the same answer marks counted_in_score, while its rule says the score averages the patterns confirmed in the last 10 candles: 0xc3c7d422 on polygon: chart_rate 0.4737 against 0.473 over the 6 patterns marked counted_in_score (bearish_engulfing 3 bars ago, higher_highs_lows 4 bars ago, breakout_volume 6 bars ago, bullish_engulfing 7 bars ago, bearish_engulfing 8 bars ago, bos_up 9 bars ago); 0xc00e94cb on ethereum: chart_rate 0.4765 against 0.4729 over the 4 patterns marked counted_in_score (bearish_engulfing 3 bars ago, bearish_engulfing 5 bars ago, breakout_volume 7 bars ago, bearish_engulfing 8 bars ago); 0x63a72806 on avalanche: chart_rate 0.4765 against 0.4741 over the 3 patterns marked counted_in_score (breakout_volume 2 bars ago, bearish_engulfing 4 bars ago, bearish_engulfing 8 bars ago); 0xcf6bb538 on bsc: chart_rate 0.5037 against 0.4946 over the 6 patterns marked counted_in_score (breakout_volume 1 bars ago, bearish_engulfing 3 bars ago, bos_up 4 bars ago, breakout_volume 4 bars ago, bull_flag 4 bars ago, bearish_engulfing 8 bars ago); 0xb3ed0a42 on bsc: chart_rate 0.4497 against 0.4506 over the 4 patterns marked counted_in_score (bullish_engulfing 1 bars ago, bos_down 2 bars ago, bearish_engulfing 3 bars ago, bullish_engulfing 7 bars ago); 0x43dfc415 on ethereum: chart_rate 0.4589 against 0.4615 over the 4 patterns marked counted_in_score (higher_highs_lows 4 bars ago, bearish_engulfing 5 bars ago, bullish_engulfing 7 bars ago, bearish_engulfing 9 bars ago)",
       "reproduced_in": [
-        "run-20261001T063425Z-d7f2e793"
+        "run-20261001T063425Z-d7f2e793",
+        "run-20261001T071152Z-bc3da15a"
       ],
       "component": "rest.chart_analyzer",
       "section": "chart_analyzer",
@@ -21138,8 +21205,8 @@
         "tests/rest/test_chart_analyzer_score_averages_what_it_counts.py::test_a_score_averages_the_patterns_its_answer_marks_counted"
       ],
       "provenance": {
-        "run_id": "run-20261001T063425Z-d7f2e793",
-        "measured_at": "2026-10-01T06:55:54+00:00"
+        "run_id": "run-20261001T071152Z-bc3da15a",
+        "measured_at": "2026-10-01T07:34:27+00:00"
       },
       "obligations": {
         "reverify": false,
@@ -21152,20 +21219,20 @@
       }
     }
   },
-  "run_id": "run-20261001T063425Z-d7f2e793",
+  "run_id": "run-20261001T071152Z-bc3da15a",
   "run_level": "V",
-  "updated_at": "2026-10-01T06:55:54+00:00",
+  "updated_at": "2026-10-01T07:34:27+00:00",
   "counts": {
     "WITHDRAWN": 13,
-    "VERIFIED FIXED": 63,
-    "STILL REPRODUCIBLE": 10,
-    "OUR CHECK CANNOT TELL": 6,
+    "VERIFIED FIXED": 67,
+    "STILL REPRODUCIBLE": 11,
+    "OUR CHECK CANNOT TELL": 4,
     "CHECK CHANGED": 2,
     "PASSING, NEVER RAISED": 2,
-    "RAISED": 4
+    "RAISED": 1
   },
   "events_head": {
-    "seq": 3068,
-    "chain": "ddcb5addef90c290a4adc2aa140185da318ff1ea031836b845177038b11be5bf"
+    "seq": 3085,
+    "chain": "5f5ec86d8bfbfc8019867278807adeb2c3e3d1e1ea3d83329353baaefeba99c2"
   }
 }
