@@ -135,8 +135,6 @@
 <rect x="211" y="767" width="10" height="10" rx="3" fill="#2a4a5e"/>
 <rect x="198" y="754" width="10" height="10" rx="3" fill="#2a4a5e"/>
 <rect x="211" y="754" width="10" height="10" rx="3" fill="#2a4a5e"/>
-<text x="260" y="852" font-family="IBM Plex Mono, Consolas, monospace" font-size="24" font-weight="700" fill="#e6edf7" text-anchor="end">112</text>
-<text x="265" y="852" font-family="IBM Plex Mono, Consolas, monospace" font-size="13" font-weight="600" fill="#ff4444" text-anchor="start">−103</text>
 <text x="398" y="698" font-family="IBM Plex Sans, Segoe UI, Arial, sans-serif" font-size="12" font-weight="700" fill="#e6edf7" text-anchor="middle" letter-spacing="1.0">VETTED</text>
 <text x="398" y="716" font-family="IBM Plex Mono, Consolas, monospace" font-size="10.5" font-weight="400" fill="#6f8199" text-anchor="middle">passes the vetting</text>
 <path d="M360 818V782A38 38 0 0 1 436 782V818Z" fill="url(#door)"/>
@@ -149,8 +147,6 @@
 <rect x="343" y="793" width="10" height="10" rx="3" fill="#2a4a5e"/>
 <rect x="330" y="780" width="10" height="10" rx="3" fill="#2a4a5e"/>
 <rect x="343" y="780" width="10" height="10" rx="3" fill="#2a4a5e"/>
-<text x="392" y="852" font-family="IBM Plex Mono, Consolas, monospace" font-size="24" font-weight="700" fill="#e6edf7" text-anchor="end">76</text>
-<text x="397" y="852" font-family="IBM Plex Mono, Consolas, monospace" font-size="13" font-weight="600" fill="#ff4444" text-anchor="start">−36</text>
 <text x="530" y="698" font-family="IBM Plex Sans, Segoe UI, Arial, sans-serif" font-size="12" font-weight="700" fill="#e6edf7" text-anchor="middle" letter-spacing="1.0">GROWING</text>
 <text x="530" y="716" font-family="IBM Plex Mono, Consolas, monospace" font-size="10.5" font-weight="400" fill="#6f8199" text-anchor="middle">revenue growing</text>
 <path d="M492 818V782A38 38 0 0 1 568 782V818Z" fill="url(#door)"/>
@@ -161,8 +157,6 @@
 <rect x="475" y="806" width="10" height="10" rx="3" fill="#2a4a5e"/>
 <rect x="462" y="793" width="10" height="10" rx="3" fill="#2a4a5e"/>
 <rect x="475" y="793" width="10" height="10" rx="3" fill="#2a4a5e"/>
-<text x="524" y="852" font-family="IBM Plex Mono, Consolas, monospace" font-size="24" font-weight="700" fill="#e6edf7" text-anchor="end">56</text>
-<text x="529" y="852" font-family="IBM Plex Mono, Consolas, monospace" font-size="13" font-weight="600" fill="#ff4444" text-anchor="start">−20</text>
 <text x="662" y="698" font-family="IBM Plex Sans, Segoe UI, Arial, sans-serif" font-size="12" font-weight="700" fill="#e6edf7" text-anchor="middle" letter-spacing="1.0">CHEAP</text>
 <text x="662" y="716" font-family="IBM Plex Mono, Consolas, monospace" font-size="10.5" font-weight="400" fill="#6f8199" text-anchor="middle">upside ≥ 2.5×</text>
 <path d="M624 818V782A38 38 0 0 1 700 782V818Z" fill="url(#door)"/>
@@ -173,8 +167,6 @@
 <rect x="594" y="806" width="10" height="10" rx="3" fill="#2a4a5e"/>
 <rect x="607" y="806" width="10" height="10" rx="3" fill="#2a4a5e"/>
 <rect x="594" y="793" width="10" height="10" rx="3" fill="#2a4a5e"/>
-<text x="656" y="852" font-family="IBM Plex Mono, Consolas, monospace" font-size="24" font-weight="700" fill="#e6edf7" text-anchor="end">30</text>
-<text x="661" y="852" font-family="IBM Plex Mono, Consolas, monospace" font-size="13" font-weight="600" fill="#ff4444" text-anchor="start">−26</text>
 <text x="794" y="698" font-family="IBM Plex Sans, Segoe UI, Arial, sans-serif" font-size="12" font-weight="700" fill="#e6edf7" text-anchor="middle" letter-spacing="1.0">ROOM TO 30×</text>
 <text x="794" y="716" font-family="IBM Plex Mono, Consolas, monospace" font-size="10.5" font-weight="400" fill="#6f8199" text-anchor="middle">30× fits its niche</text>
 <path d="M756 818V782A38 38 0 0 1 832 782V818Z" fill="url(#door)"/>
@@ -184,8 +176,6 @@
 <path d="M794 779v18" fill="none" stroke="#00cfff" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round" stroke-dasharray="2 2"/>
 <rect x="726" y="806" width="10" height="10" rx="3" fill="#2a4a5e"/>
 <rect x="739" y="806" width="10" height="10" rx="3" fill="#2a4a5e"/>
-<text x="788" y="852" font-family="IBM Plex Mono, Consolas, monospace" font-size="24" font-weight="700" fill="#e6edf7" text-anchor="end">20</text>
-<text x="793" y="852" font-family="IBM Plex Mono, Consolas, monospace" font-size="13" font-weight="600" fill="#ff4444" text-anchor="start">−10</text>
 <text x="926" y="698" font-family="IBM Plex Sans, Segoe UI, Arial, sans-serif" font-size="12" font-weight="700" fill="#e6edf7" text-anchor="middle" letter-spacing="1.0">LIQUID</text>
 <text x="926" y="716" font-family="IBM Plex Mono, Consolas, monospace" font-size="10.5" font-weight="400" fill="#6f8199" text-anchor="middle">$10K buy, low slip</text>
 <path d="M888 818V782A38 38 0 0 1 964 782V818Z" fill="url(#door)"/>
@@ -193,8 +183,6 @@
 <path d="M926 736l5 5-5 5-5-5z" fill="#0f1826" stroke="#2fa9c9" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/>
 <path d="M926 777c6 8 9 12 9 17a9 9 0 0 1-18 0c0-5 3-9 9-17z" fill="none" stroke="#00cfff" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/>
 <rect x="858" y="806" width="10" height="10" rx="3" fill="#2a4a5e"/>
-<text x="920" y="852" font-family="IBM Plex Mono, Consolas, monospace" font-size="24" font-weight="700" fill="#e6edf7" text-anchor="end">11</text>
-<text x="925" y="852" font-family="IBM Plex Mono, Consolas, monospace" font-size="13" font-weight="600" fill="#ff4444" text-anchor="start">−9</text>
 <text x="1058" y="698" font-family="IBM Plex Sans, Segoe UI, Arial, sans-serif" font-size="12" font-weight="700" fill="#e6edf7" text-anchor="middle" letter-spacing="1.0">DILUTION</text>
 <text x="1058" y="716" font-family="IBM Plex Mono, Consolas, monospace" font-size="10.5" font-weight="400" fill="#6f8199" text-anchor="middle">≤ 1% of mcap a week</text>
 <path d="M1020 818V782A38 38 0 0 1 1096 782V818Z" fill="url(#door)"/>
@@ -204,28 +192,25 @@
 <path d="M1058 784v8M1054 788h8" fill="none" stroke="#00cfff" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>
 <circle cx="1058" cy="788" r="12" fill="none" stroke="#00cfff" stroke-width="1" stroke-dasharray="2 3"/>
 <rect x="990" y="806" width="10" height="10" rx="3" fill="#2a4a5e"/>
-<text x="1052" y="852" font-family="IBM Plex Mono, Consolas, monospace" font-size="24" font-weight="700" fill="#e6edf7" text-anchor="end">8</text>
-<text x="1057" y="852" font-family="IBM Plex Mono, Consolas, monospace" font-size="13" font-weight="600" fill="#ff4444" text-anchor="start">−3</text>
 <path d="M1160 818V770A50 50 0 0 1 1260 770V818Z" fill="url(#doorg)"/>
 <path d="M1160 818V770A50 50 0 0 1 1260 770V818" fill="none" stroke="#00ff88" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" filter="url(#glow)"/>
 <path d="M1150 818V770A60 60 0 0 1 1270 770V818" fill="none" stroke="#00ff88" stroke-width="1" stroke-linecap="round" stroke-linejoin="round" opacity=".35"/>
 <path d="M1210 708l7 7-7 7-7-7z" fill="#0f1826" stroke="#00ff88" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>
-<path d="M1197 756l9 9 17-19" fill="none" stroke="#00ff88" stroke-width="3.4" stroke-linecap="round" stroke-linejoin="round"/>
-<text x="1210" y="796" font-family="IBM Plex Mono, Consolas, monospace" font-size="16" font-weight="700" fill="#00ff88" text-anchor="middle" letter-spacing="2">PICKS</text>
+<path d="M1197 746l9 9 17-19" fill="none" stroke="#00ff88" stroke-width="3.4" stroke-linecap="round" stroke-linejoin="round"/>
+<text x="1210" y="784" font-family="IBM Plex Mono, Consolas, monospace" font-size="13" font-weight="700" fill="#00ff88" text-anchor="middle" letter-spacing="2">DEGEN</text>
+<text x="1210" y="800" font-family="IBM Plex Mono, Consolas, monospace" font-size="13" font-weight="700" fill="#00ff88" text-anchor="middle" letter-spacing="2">PICKS</text>
 <rect x="1126" y="806" width="10" height="10" rx="3" fill="#00ff88"/>
 <text x="1204" y="852" font-family="IBM Plex Mono, Consolas, monospace" font-size="28" font-weight="700" fill="#00ff88" text-anchor="end">8</text>
 <text x="1212" y="852" font-family="IBM Plex Mono, Consolas, monospace" font-size="13" font-weight="600" fill="#00ff88" text-anchor="start">picks</text>
 <path d="M1110 798l7 6-7 6" fill="none" stroke="#00ff88" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
 <path d="M1050 872l8-9 8 9" fill="#0a111c" stroke="#1f6f86" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"/>
-<rect x="908" y="872" width="300" height="144" rx="10" fill="#0a111c" stroke="#1f6f86" stroke-width="1.2"/>
+<rect x="908" y="872" width="300" height="118" rx="10" fill="#0a111c" stroke="#1f6f86" stroke-width="1.2"/>
 <text x="924" y="898" font-family="IBM Plex Sans, Segoe UI, Arial, sans-serif" font-size="15" font-weight="700" fill="#e6edf7" text-anchor="start">7 · Dilution</text>
 <text x="1192" y="898" font-family="IBM Plex Mono, Consolas, monospace" font-size="11" font-weight="400" fill="#6f8199" text-anchor="end">gate 7 of 7</text>
 <text x="924" y="922" font-family="IBM Plex Sans, Segoe UI, Arial, sans-serif" font-size="12.5" font-weight="400" fill="#a9b8cc" text-anchor="start">New tokens (emissions or unlocks, gross) are</text>
 <text x="924" y="940" font-family="IBM Plex Sans, Segoe UI, Arial, sans-serif" font-size="12.5" font-weight="400" fill="#a9b8cc" text-anchor="start">worth at most 1% of market cap a week.</text>
 <text x="924" y="958" font-family="IBM Plex Sans, Segoe UI, Arial, sans-serif" font-size="12.5" font-weight="400" fill="#a9b8cc" text-anchor="start">Hyperliquid, the benchmark: 0%. Unknown data</text>
 <text x="924" y="976" font-family="IBM Plex Sans, Segoe UI, Arial, sans-serif" font-size="12.5" font-weight="400" fill="#a9b8cc" text-anchor="start">is not a fault: it stays, marked grey.</text>
-<line x1="924" y1="992" x2="1192" y2="992" stroke="#14202f" stroke-width="1"/>
-<text x="924" y="1008" font-family="IBM Plex Mono, Consolas, monospace" font-size="12" font-weight="600" fill="#ff4444" text-anchor="start">19 of 215 fail it · 3 fail nothing else</text>
 <rect x="32" y="1050" width="312" height="296" rx="14" fill="#0b1220" stroke="#172538" stroke-width="1"/>
 <circle cx="72" cy="1090" r="22" fill="#12202e" stroke="#1f3a4d" stroke-width="1.4"/>
 <text x="72" y="1097" font-family="IBM Plex Mono, Consolas, monospace" font-size="20" font-weight="700" fill="#00cfff" text-anchor="middle">C</text>
@@ -353,10 +338,11 @@
 <text x="60" y="1506" font-family="IBM Plex Sans, Segoe UI, Arial, sans-serif" font-size="12" font-weight="400" fill="#6f8199" text-anchor="start">Saphyre · Gains Network · Pons · Rainbow · Securitize · RamsesX · nest · up · Pharaoh Exchange, #1 next to the gate</text>
 <path d="M1110 1482V1432A40 40 0 0 1 1190 1432V1482Z" fill="url(#doorg)"/>
 <path d="M1110 1482V1432A40 40 0 0 1 1190 1432V1482" fill="none" stroke="#00ff88" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" filter="url(#glow)"/>
-<path d="M1141 1438l6 6 12-13" fill="none" stroke="#00ff88" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/>
-<text x="1150" y="1466" font-family="IBM Plex Mono, Consolas, monospace" font-size="12" font-weight="700" fill="#00ff88" text-anchor="middle" letter-spacing="1.6">PICKS</text>
+<path d="M1141 1430l6 6 12-13" fill="none" stroke="#00ff88" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/>
+<text x="1150" y="1456" font-family="IBM Plex Mono, Consolas, monospace" font-size="10.5" font-weight="700" fill="#00ff88" text-anchor="middle" letter-spacing="1.2">DEGEN</text>
+<text x="1150" y="1469" font-family="IBM Plex Mono, Consolas, monospace" font-size="10.5" font-weight="700" fill="#00ff88" text-anchor="middle" letter-spacing="1.2">PICKS</text>
 <path d="M1088 1466l5 4-5 4" fill="none" stroke="#00ff88" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
 <text x="32" y="1564" font-family="IBM Plex Sans, Segoe UI, Arial, sans-serif" font-size="11.5" font-weight="400" fill="#6f8199" text-anchor="start">Mock, inspiration and not literal. Real figures of 2026-10-01 (the altseason panel, the hot sectors, the gate counts, the picks and their Degen levels), as they would read with the proposed seventh gate, Dilution (item 25).</text>
 <text x="32" y="1582" font-family="IBM Plex Sans, Segoe UI, Arial, sans-serif" font-size="11.5" font-weight="400" fill="#6f8199" text-anchor="start">Dilution takes the place of Theme wind: Pharaoh Exchange, up and nest (7.2%, 9.3%, 4.6% of market cap a week) drop out: 11 picks become 8, the picks by upside start with Collector Crypt. Grey chip: dilution unknown, not a fault, stays a pick.</text>
-<text x="32" y="1600" font-family="IBM Plex Sans, Segoe UI, Arial, sans-serif" font-size="11.5" font-weight="400" fill="#6f8199" text-anchor="start">The gate counts run in the order shown (each is what is left after that gate); the order is only for the drawing. Logos are left out, coin icons are letters. The hovered gate (7) shows the tooltip every gate would have.</text>
+<text x="32" y="1600" font-family="IBM Plex Sans, Segoe UI, Arial, sans-serif" font-size="11.5" font-weight="400" fill="#6f8199" text-anchor="start">Only the number of all apps and the number of picks are written in the gate row; the cubes before each gate are only a picture. Logos are left out, coin icons are letters. The hovered gate (7) shows the tooltip every gate would have.</text>
 </svg>
