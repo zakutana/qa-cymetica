@@ -261,7 +261,7 @@ The picture is a mock, inspiration and not literal, with the real figures of 202
 
 ## 20. The near-misses lane
 
-**[26] The near-misses lane runs left to right.** Live, the Degen picks gate stands at the left end of the lane, the near-miss cards stand to its right (RamsesX #1 31x, Securitize #2 18x, Rainbow #3 and so on) and the chevron at the gate points left, so the queue moves from right to left: against the way the page reads, and against the row of gates of item 24, which runs left to right into PICKS. The owner wants the direction turned: the Degen picks gate at the right end of the lane, the dashed floor running into it from the left, the chevron pointing right, and the queue moving toward the gate with the nearest miss next to it: #1 stands directly in front of the gate and the ranks count down to the left (#6 … #1, gate). Everything on the cards (logo, name, upside, rank, reason chip) stays as it is.
+**[26] The near-misses lane runs left to right.** Live, the Degen picks gate stands at the left end of the lane, the near-miss cards stand to its right (RamsesX #1 31x, Securitize #2 18x, Rainbow #3 and so on) and the chevron at the gate points left, so the queue moves from right to left: against the way the page reads, and against the row of gates of item 24, which runs left to right into Degen picks. The owner wants the direction turned: the Degen picks gate at the right end of the lane, the dashed floor running into it from the left, the chevron pointing right, and the queue moving toward the gate with the nearest miss next to it: #1 stands directly in front of the gate and the ranks count down to the left (#6 … #1, gate). Everything on the cards (logo, name, upside, rank, reason chip) stays as it is.
 
 ---
 
