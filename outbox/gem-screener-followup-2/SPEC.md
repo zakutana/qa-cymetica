@@ -197,6 +197,25 @@ Two details: a thin line is hard to hit with a mouse, so the line reacts in a ge
 
 ---
 
+## 10. The Chains detail
+
+**[16] The detail of a chain gets the look and the order of the Apps detail.** The detail of a chain (live: Polygon) is the old design: a grey capital heading with a sentence under it for every block, empty cards, tables of dashes. It has not followed the changes made to the Apps detail. The owner wants it brought **up to date with the Apps detail, in look and structure, without adding the things that belong only to apps** (no Degen meter, checks, Supply card or 30x test copied across because Apps have them).
+
+![The Chains detail today (Polygon)](reference/chains-detail-today.png)
+
+What to do:
+
+- **The same building blocks as the Apps detail**: its cards, the row of key figures (for a chain: Market cap, Adoption, Upside, Strength 3M), its tooltip card, its pills and icons, the Share button and the address-bar link of item 12, the close button. The pills at the top ("Vetted", "Liquidity: a $10K buy moves the price 48%", "100% of tokens out...", "+22% in 30 days...") are drawn as the Apps detail draws its flags, and the liquidity warning is orange (item 7), not blue.
+- **The same order**, as in item 9: the header, the figures, the charts (the chain's own monthly series, in the style of the Apps' Monthly revenue chart, from the data the page already holds for a chain: its monthly activity fees, stablecoins and DEX volume), Trajectory, then the small collapsed lines (How it's calculated, For AI agents) at the bottom.
+- **Nothing shown empty.** A block with nothing to show is left out instead of standing there empty: in the picture, a card that says "Loading..." (it never filled), "Upside over time" with "No price history", and a "Growth by window" table whose cells are all dashes. These three are the ones item 10 removes from the Apps detail as well; none of them comes back on a chain.
+- **Trajectory as on Apps**: the same card, the same one colour for the stage in the pill and the stepper (item 40 of the last request), and no repeated stage name ("Declining." under the pill); the line says the number in plain words.
+- **Plain words, number first**, as on the rest of the page: no capital-letter heading with a sentence under it where a figure or a short label does the job.
+- **Check every control in the chain header** does something for a chain. The picture shows a "Degen report" button; keep it only if a chain has such a report, otherwise take it away.
+
+The result is the Chains detail that looks like the same product as the Apps detail, with only what is true of a chain on it.
+
+---
+
 ## Checklist (one line each; done when all are true)
 
 - [ ] 1 The header shows the logo (not text) with "Revenue-driven AI Research" and "by CyMetica" in it; the old title and the old tagline are gone.
@@ -232,3 +251,7 @@ Two details: a thin line is hard to hit with a mouse, so the line reacts in a ge
 - [ ] 14 The min. revenue slider sits to the left of the badge and is drawn as eight separate rounded segments lit up to a gem-shaped knob, with the value in an outlined pill; it keeps its nine stops, the default of $100K, and works by drag, tap and arrow keys.
 - [ ] 15 On the year chart (Apps and Chains) a hover on a line lights that coin's name in the legend and dims the other lines, as a hover on a name lights its line; a tap does the same on a touch screen.
 - [ ] 15 A line can be hit within a few pixels of it; where lines cross, the nearest wins; the small hover card never covers legend rows.
+- [ ] 16 A chain's detail uses the Apps detail's cards, key-figure tiles, tooltip card, pills and icons, Share button and close button; the liquidity warning pill is orange.
+- [ ] 16 Its order follows item 9 (header, figures, monthly chart, Trajectory, the small collapsed lines last); Trajectory is the Apps card with one colour for the stage and no repeated stage name.
+- [ ] 16 No block stands empty on a chain (no "Loading...", no "No price history", no table of dashes); "Weekly history", "Upside over time" and "Growth windows" are not there.
+- [ ] 16 Nothing that belongs only to apps was added to the chain detail; every control in its header works for a chain.
