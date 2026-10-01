@@ -10,7 +10,7 @@
 > 3. **English only**, degen-friendly: the number first, plain short words.
 > 4. **Keep the look.** Change only what an item names.
 > 5. **This spec starts from ET-28688 as built.** Two things are not here because they are already in hand: the orange for every warning (item 7 of ET-28688) and the altseason universe without assets priced at a currency unit (item 35 of ET-28606, which you said you are fixing under ET-28688). ET-28688 is still being built: where this spec says "live", it means the page on the evening of 2026-10-01; if ET-28688 changes any of those parts when it ships, what it ships is the starting point.
-> 6. **The files are in this folder.** `assets/` holds what is ready to use; `reference/` holds the mocks of what is wanted (the badge, the whole detail of an app and the Top Picks page); they are inspiration, not literal.
+> 6. **The files are in this folder.** `assets/` holds what is ready to use; `reference/` holds the mocks of what is wanted (the badge, the whole detail of an app and the Top Picks page); they are inspiration, not literal, except the row of the seven gates in the Top Picks mock, which is to look exactly as drawn (item 24).
 
 ## What is ready to use (`assets/`)
 
@@ -238,10 +238,11 @@ A chain's detail then runs: header (name, Upside, chips; the pills and the Vette
 - **Hover, focus and tap on a gate open the dark tooltip** (item 17 of ET-28688) with the rule in plain words. **The tooltip floats over the page: it takes no room of its own, so the picks below the row do not move when it opens or closes.**
 - **The seven gates and their rules**, as the page's own reasons word them today: Real revenue (revenue of the last 30 days at least $100,000; smaller income can be inflated by one transaction), Vetted (market cap at least $3M, not far below its best quarter, enough history, a measurable trend that is not declining, fresh data), Growing (revenue still grows over six months; a business over $10M may slip up to 5% a month, over $1M up to 2%), Cheap (priced at least 2.5× cheaper than Hyperliquid against yearly revenue), Room to 30× (a 30× move fits under the largest comparable project in its category or theme), Liquid (a $10K buy moves the price at most 3% in the main pool, or the 24-hour volume is at least $2M; a thin pool with little volume fails) and, as the seventh, Theme wind today (the theme runs harder than the average alt when alts beat BTC, or leads, or its fundamentals rise), which item 25 replaces by Dilution. Names are a good default; the numbers come from the snapshot at each refresh, never typed.
 - **The order of the gates is only for the picture:** an app has to pass all seven in any order.
+- **The row of gates is the one part of the picture that is literal: the owner wants it to look exactly like the mock.** The start block with the number and its grid of cubes, the seven arches with their keystone gems, the icons, the gate names above and the rules in small type under them, the dwindling cubes in front of each gate (they carry no number), the green glowing Degen picks gate with its check mark and "8 picks" under it, and the green glow of the gate that is hovered: same shapes, proportions, spacing, type and colours. The icons and the data are yours to wire; how the row looks is not yours to improve.
 
 ![The redesigned Top Picks page](reference/top-picks-mock.svg)
 
-The picture is a mock, inspiration and not literal, with the real figures of 2026-10-01 (the altseason panel, the hot sectors, the picks), as they would read with item 25: the picks and their Degen levels are those that remain after the Dilution gate. The pick cards in it are those of item 20, ending with the Degen meter, and the hot sectors cards those of item 9.
+The picture is a mock, inspiration and not literal, except the row of the seven gates, which is to look exactly like it, with the real figures of 2026-10-01 (the altseason panel, the hot sectors, the picks), as they would read with item 25: the picks and their Degen levels are those that remain after the Dilution gate. The pick cards in it are those of item 20, ending with the Degen meter, and the hot sectors cards those of item 9.
 
 ---
 
@@ -334,6 +335,7 @@ The picture is a mock, inspiration and not literal, with the real figures of 202
 - [ ] 24 The altseason panel has the title "Altseason index" with an (i); the line "This week: … a new reading every Monday" is gone and its words are in the (i) tooltip.
 - [ ] 24 "N of M apps pass all 7 gates" stands in the Degen picks section, under its label, and no longer above the altseason panel.
 - [ ] 24 Under it the seven gates stand in a row between a start block (the number of all apps) and the last gate, called "Degen picks" like the Apps filter, with the number of picks; each gate shows an icon, its name and its rule in a few words, and no count is written between the gates.
+- [ ] 24 The row of the seven gates looks exactly like the row in `reference/top-picks-mock.svg` (arches, keystones, icons, type, spacing, colours, the glowing Degen picks gate); it is the one literal part of that picture.
 - [ ] 24 Hover, focus and tap on a gate open the dark tooltip with the rule in plain words, floating over the page so that nothing below it moves; the numbers at the start and the end of the row come from the snapshot at each refresh.
 - [ ] 25 The seventh gate is Dilution: an app fails it above 1% of market cap a week of new tokens (or the line you chose, named in your spec); Theme wind is no longer a gate.
 - [ ] 25 New tokens are the larger of the emissions of 30 days and the unlocks of the next 30 days, per week against market cap, labelled gross; Upside and Dilution use one supply figure, named in your spec.
