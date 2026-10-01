@@ -2,7 +2,7 @@
 
 **For:** the lead agent of the Cymetica SDLC pipeline
 **From:** Adam (product owner, Gem Screener)
-**Scope:** the Chains tab: which chains it lists, what a chain's adoption is, the benchmark and its badge, and the chart column and card; and on both tabs the size of the badges, the small print on Top Picks, revenue and dilution on Apps, the Supply card, the Degen meter card, the links in a coin's header, Monthly revenue in the detail, the Chart card's small lines, the key figures of the detail and the order of its last lines. Build or change only what is named; leave the rest of the app as it is.
+**Scope:** the Chains tab: which chains it lists, what a chain's adoption is, the benchmark and its badge, and the chart column and card; and on both tabs the size of the badges, the small print on Top Picks, revenue and dilution on Apps, the Supply card, the Degen meter card, the links in a coin's header, Monthly revenue in the detail, the Chart card's small lines, the key figures of the detail, the order of its last lines, and the report status card and the Trajectory caption. Build or change only what is named; leave the rest of the app as it is.
 
 > **HOW TO READ THIS SPEC**
 > 1. **Goals, not methods.** How you build it is your call. Where an item gives a rule or a number, it is a good default, and you may improve it; say what you changed and why in your spec.
@@ -173,6 +173,16 @@ The detail then opens with the header (name and Upside), the Degen meter, Monthl
 
 ---
 
+## 13. The report status card and the Trajectory caption
+
+**[18] The report status card under the Degen meter goes, and the Trajectory caption.** Live, under the Degen meter a card says "Degen report ready, researched 1 day ago. Read it ↓", holds the button "Ask for a fresh Degen report" with its Pro badge, and says "A fresh report opens in 6 days, or sooner if something changes." The owner wants the card gone. This replaces what item 9 of ET-28688 kept ("Read it ↓" under the meter and the Ask button beside it).
+
+One thing must not be lost: the button is the only way to ask for a report. It moves, with its Pro badge, into the Degen report section at the bottom of the detail, next to the report itself (a Pro plan or higher to ask; reading a finished report stays free). "Researched 1 day ago" and "a fresh report opens in 6 days, or sooner if something changes" go into the tooltip of that section. The report icon in the header (the green document icon beside Share) stays and scrolls to the report.
+
+In the Trajectory section the caption "Growth per month in each quarter; an outlined bar is a fall. Source: DeFiLlama." goes as well; its words go into the section's tooltip.
+
+---
+
 ## Checklist (one line each; done when all are true)
 
 - [ ] 1 The Chains tab lists every chain whose token is in CoinGecko's Layer 1 or Layer 2 category with a market cap of $200M or more (or the cut you chose, named in your spec), joined to DefiLlama by `gecko_id`.
@@ -224,3 +234,6 @@ The detail then opens with the header (name and Upside), the Degen meter, Monthl
 - [ ] 16 The Supply card has a new name that says it holds market cap and supply.
 - [ ] 16 A chain's detail has Upside in the header, Strength 3M in the Chart card and one slim row with Market cap and Adoption.
 - [ ] 17 In an app's detail "30x test", "How it's calculated" and "For AI agents: copy and paste" are the last three lines, below the Degen report, still collapsed.
+- [ ] 18 The card under the Degen meter ("Degen report ready, researched … ago. Read it ↓", the Ask button, "A fresh report opens in …") is gone.
+- [ ] 18 "Ask for a fresh Degen report" with its Pro badge is in the Degen report section at the bottom of the detail and still works (Pro or higher to ask, reading a finished report is free); the age of the report and when a fresh one opens are in the tooltip.
+- [ ] 18 The Trajectory section has no "Growth per month in each quarter… Source: DeFiLlama." caption; its words are in the section's tooltip.
