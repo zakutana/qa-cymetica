@@ -160,7 +160,18 @@ Nothing else is on the page: no title line, no sentence, no (i). The whole badge
 
 ![The two badges: Apps (Hyperliquid, 35x revenue) and Chains (Solana, 38x adoption)](reference/followup-2/price-tag-badges-shield.jpg)
 
-The Apps badge as a vector, for reference (`reference/followup-2/price-tag-badge-apps.svg`; for Chains the logo is `logo/chains/0`, the number 38 and the word ADOPTION). The mock is inspiration, not literal: the shape, the metal, the proportions and the wording are yours to improve, as long as it reads at a glance as a proper badge. Where it sits is yours as well (at the left of the toolbar, with the filters beside it), but it must not make the sticky toolbar grow tall, and it fits at 390 px.
+The Apps badge as a vector, for reference (`reference/followup-2/price-tag-badge-apps.svg`; for Chains the logo is `logo/chains/0`, the number 38 and the word ADOPTION). The mock is inspiration, not literal: the shape, the metal, the proportions and the wording are yours to improve, as long as it reads at a glance as a proper badge.
+
+**Where it sits.** At the right end of the toolbar, **directly under the Legend button**, in the empty space there; it replaces the old panel, and the row that panel takes at the left of the toolbar goes away. The header and the toolbar are sticky together (live: 130 + 116 = 246 px of the screen stay pinned while the list scrolls), so the badge is sized to fit inside the toolbar's height: about 76 x 92 px, and the toolbar is **no taller than today's 116 px**. With the old panel's row gone it may become shorter. The badge shows on the Apps and Chains tabs, as the old panel does. At 390 px it shrinks (about 48 px wide) and stays at the right end of the toolbar without covering a control.
+
+![The badge under Legend, with the slider of item 14 moved left](reference/followup-2/toolbar-placement-mock.svg)
+
+**[14] The "min. revenue / 30d" slider moves left and is restyled.** The slider in the Apps toolbar (live: the browser's own range control, 130 px wide in its default look, the label "min. revenue / 30d" before it and the value, "$100K", after it, pushed to the right end of the toolbar) does two things:
+
+- **It moves a little to the left**, because the right end of the toolbar now belongs to the badge of item 13.
+- **It is restyled to look as dense as the badges.** It keeps its nine stops ($0, $10K, $25K, $50K, $100K, $250K, $500K, $1M, $5M; default $100K) and its behaviour. The look, as in the mock above: the track is eight separate rounded segments with small gaps, between the nine stops (the style of item 4); the segments up to the knob are lit in the logo's cyan-to-green, the rest are dim; the knob is a small gem (a diamond, as in the logo) with a soft glow; the value sits in a pill with the logo's outline; the label is in small capitals. The look is yours to improve.
+
+It stays a real slider for the keyboard, a screen reader (it says "$100K") and a touch screen: drag, tap on a segment, arrow keys.
 
 ---
 
@@ -195,3 +206,5 @@ The Apps badge as a vector, for reference (`reference/followup-2/price-tag-badge
 - [ ] 13 The two price-tag panels are compact badges (about 146 x 60 px): the benchmark's logo in scanner corners and a price tag with the number big in the logo's gradient and one word under it ("revenue", "adoption"); the same family as the logo and the gate. No title line, no sentence, no wide panel on the page.
 - [ ] 13 The whole badge opens a tooltip (hover, focus, tap) that says in plain words what the number is (market cap ÷ yearly revenue, or ÷ adoption with its meaning) and that every Upside is measured against it; "× its adoption" and "the bar" are gone.
 - [ ] 13 The badge fits at 390 px and at 1360 px without being cut off.
+- [ ] 13 The badge stands at the right end of the toolbar under the Legend button (Apps and Chains tabs), and the toolbar is no taller than 116 px; the old panel is gone.
+- [ ] 14 The min. revenue slider sits to the left of the badge and is drawn as eight separate rounded segments lit up to a gem-shaped knob, with the value in an outlined pill; it keeps its nine stops, the default of $100K, and works by drag, tap and arrow keys.
