@@ -50,6 +50,16 @@ He values a token as the **pressure in a pipe**. The width of the pipe is the su
 ### 5. ETH/BTC on the Altseason panel, as a fact row
 **Goal:** ETH/BTC and its trend line stand on the panel as a **fact, not scored**, until a backtest shows that it adds something. The stablecoins fact is treated the same way today. ETH/BTC is the first chart that both Ran and Raoul open: ETH breaking out after nine years is their sign of product-market fit. The panel already has OTHERS.D, the alts-against-the-market line that he draws as OTHERS/BTC.
 
+## Where it goes and how it looks
+![The pipe on a coin's detail: Curve, 54% staked, 0.11% a week of new tokens in, 0.06% a week to holders](gem-screener-pipe-pressure/reference/pipe-mock.svg)
+
+**One picture, four numbers, in the "Market cap & supply" card that spec 3 item 11 builds.** The mock is inspiration, not literal, and uses the page's own colours. Red in is the new tokens a week, the Dilution figure of item 25, gross. Green in is what goes to holders a week (wish 1). The hatched part is staked (wish 2). The thickness of an arrow follows its number (about 60 px per 1% a week). The example is Curve, snapshot 19:32 UTC: market cap $601M, staked $322M (54%), new tokens 0.11% a week, to holders 0.06% a week, all of it payouts.
+
+- **No data is a grey dashed pipe with no arrows**, never a zero (wish 3, Collector Crypt).
+- **Not a new gate.** The page reads "0% to holders" as a warning ("the token may never earn the upside"). Ran reads a fee switch that is not on yet as the best case. A gate would take one side. After spec 3's Dilution gate 8 picks remain, and 6 of them show 0% or no figure to holders (Collector Crypt, Solv Protocol, fx Protocol, KyberSwap, o1.exchange, Meteora), so it would also decide the list. The "No holder share" tag stays a tag, and the numbers are shown. Once the pre-registered series of item 25 exists, a gate can be asked for on its data.
+- **Rows and pick cards get nothing new** (items 9 and 20 take text off them). The tooltip of the Dilution flag names the to-holders figure in one line.
+- **The insider alert (wish 4) fills the existing "Insider flow" check**, a Later check that runs on 98 of 215 apps and does not count in the Degen level. It does not enter the picks.
+
 ## Where the data can be had besides DefiLlama (read 2026-10-01; the build chooses and pays)
 DefiLlama is the base because it is free, its methods are open on GitHub, and it has the longest tail: the picks are $4M to $175M apps, where the paid sources cover the least. No single paid source has all of it.
 
