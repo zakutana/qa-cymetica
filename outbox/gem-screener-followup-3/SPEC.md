@@ -1,4 +1,4 @@
-# Build request: Gem Screener, the Chains tab after ET-28688 (cymetica.com/gem-screener/app)
+# Build request: Gem Screener, changes after ET-28688 (cymetica.com/gem-screener/app)
 
 **For:** the lead agent of the Cymetica SDLC pipeline
 **From:** Adam (product owner, Gem Screener)
@@ -6,10 +6,10 @@
 
 > **HOW TO READ THIS SPEC**
 > 1. **Goals, not methods.** How you build it is your call. Where an item gives a rule or a number, it is a good default, and you may improve it; say what you changed and why in your spec.
-> 2. **Every number is read on 2026-10-01** from the live page's own snapshot (generated 13:42 UTC), from DefiLlama and from CoinGecko. They are there so you can check that a change took effect; they are not the requirement.
+> 2. **Every number is read on 2026-10-01** from the live page (its snapshot, generated 13:42 UTC, and what it draws), from DefiLlama, CoinGecko and the Chart Analyzer. They are there so you can check that a change took effect; they are not the requirement.
 > 3. **English only**, degen-friendly: the number first, plain short words.
 > 4. **Keep the look.** Change only what an item names.
-> 5. **This spec starts from ET-28688 as built.** Two things are not here because they are already in hand: the orange for every warning (item 7 of ET-28688) and the altseason universe without assets priced at a currency unit (item 35 of ET-28606, which you said you are fixing under ET-28688).
+> 5. **This spec starts from ET-28688 as built.** Two things are not here because they are already in hand: the orange for every warning (item 7 of ET-28688) and the altseason universe without assets priced at a currency unit (item 35 of ET-28606, which you said you are fixing under ET-28688). ET-28688 is still being built: where this spec says "live", it means the page on the evening of 2026-10-01; if ET-28688 changes any of those parts when it ships, what it ships is the starting point.
 > 6. **The files are in this folder.** `assets/` holds what is ready to use; `reference/` holds the mocks of what is wanted (the badge, and the whole detail of an app); they are inspiration, not literal.
 
 ## What is ready to use (`assets/`)
@@ -22,9 +22,9 @@
 
 ## 1. Which chains the tab lists
 
-**[1] The tab lists the L1 and L2 chains people look for, not only the chains DefiLlama shows fees for.** Live: 26 chains, taken from the chains that earn fees above a floor ($10K over 30 days, `collection_floor_usd_30d` in the snapshot). Of the 40 largest Layer 1 coins on CoinGecko, 17 have a DefiLlama chain row and are not on the tab: BTC, XRP, ZEC, ADA, BCH, LTC, CC, HBAR, TAO, CRO, ETC, ALGO, STABLE, VET, XDC, FLR, SEI. IOTA (rank 49 of Layer 1, market cap $258M; on DefiLlama its TVL is $2.0M) is not on the tab either.
+**[1] The tab lists the L1 and L2 chains people look for, not only the chains DefiLlama shows fees for.** Live: 26 chains, built from DefiLlama's chains with fee data; the snapshot carries a `collection_floor_usd_30d` of $10K over 30 days, and which rule drops a chain cannot be read from the page. Of the 40 largest Layer 1 coins on CoinGecko, 17 have a DefiLlama chain row and are not on the tab: BTC, XRP, ZEC, ADA, BCH, LTC, CC, HBAR, TAO, CRO, ETC, ALGO, STABLE, VET, XDC, FLR, SEI. IOTA (rank 49 of Layer 1, market cap $258M; on DefiLlama its TVL is $2.0M) is not on the tab either.
 
-The owner wants the list to be **every chain whose native token is in CoinGecko's "Layer 1" or "Layer 2" category with a market cap of $200M or more** (a good default; today that is 59 tokens, 47 of them with a DefiLlama chain row), each joined by its CoinGecko id (`gecko_id`) to DefiLlama's chain list, the data behind https://defillama.com/chains, for TVL, daily active addresses, DEX volume and stablecoins. DefiLlama alone does not give the list: its chain list has 468 chains, 316 of them with a CoinGecko id, and no field that says L1 or L2, while CoinGecko's two categories do. **A chain with no DefiLlama row, or with any of the four inputs missing, so that its adoption cannot be calculated, is not shown at all**: no row, no "no data" line (7 of the 40 largest Layer 1 coins have no DefiLlama row today: XMR, M, KAS, PI, NIGHT, BDX, TIA). Whether the 17 chains above and IOTA have all four inputs is for the build to find out; your spec lists the tokens of the list that were left out and the input each one lacks. Fees above a floor are no longer a condition for being listed. Chains without a token of their own (Base, Robinhood Chain, Ink, Abstract) stay off, as today. The list is rebuilt at every refresh.
+The owner wants the list to be **every chain whose native token is in CoinGecko's "Layer 1" or "Layer 2" category with a market cap of $200M or more** (a good default; today that is 59 tokens, 47 of them with a DefiLlama chain row), each joined by its CoinGecko id (`gecko_id`) to DefiLlama's chain list, the data behind https://defillama.com/chains, for TVL, daily active addresses, DEX volume and stablecoins. DefiLlama alone does not give the list: its chain list has 468 chains, 316 of them with a CoinGecko id, and no field that says L1 or L2, while CoinGecko's two categories do. **A chain with no DefiLlama row, or with any of the four inputs missing, so that its adoption cannot be calculated, is not shown at all**: no row, no "no data" line (7 of the 40 largest Layer 1 coins have no DefiLlama row today: XMR, M, KAS, PI, NIGHT, BDX, TIA). Whether the 17 chains above and IOTA have all four inputs is for the build to find out; your spec lists the tokens of the list that were left out and the input each one lacks. Fees, or a floor on them, are no longer a condition for being listed. Chains without a token of their own (Base, Robinhood Chain, Ink, Abstract) stay off, as today. The list is rebuilt at every refresh.
 
 ---
 
@@ -46,7 +46,7 @@ The owner wants the list to be **every chain whose native token is in CoinGecko'
 
 **[4] The Chains badge shows the median, with a neutral emblem.** Today the Chains badge is the shield of item 13 of ET-28688: ribbon BENCHMARK, Solana's logo in the medallion, "38×", "adoption". The benchmark is no longer one chain, so no chain's logo belongs in it.
 
-![The Chains benchmark badge: 60× adoption, at three sizes](reference/benchmark-badge-preview.svg)
+![The Chains benchmark badge: 60× adoption, at four sizes](reference/benchmark-badge-preview.svg)
 
 The badge as a vector, ready to start from: `assets/benchmark-badge-adoption.svg`. It is the same shield, rim, ribbon and type as the badge of ET-28688, in the page's own colours (none is new). The mock is inspiration, not literal: the shape, the proportions and the wording are yours to improve, as long as it reads at a glance as the same badge with BENCHMARK on it.
 
@@ -102,14 +102,14 @@ Do not only scale the drawing down: the word BENCHMARK is 8.6 px high today and 
 
 **[10] Revenue is revenue; dilution is its own red flag, measured against the benchmark.** The owner: revenue and dilution are two different things and are not to be mixed anywhere on the page. Revenue is the protocol's income in USDC. Minting new tokens is free for the protocol and is no part of it. Dilution is what new tokens do to the people who hold the token, and it is a red flag when it is large.
 
-Live, the page mixes the two in four places: (1) the Revenue 30d column on Apps shows "net +$1.2M", "net −$1.3M" in red or "net unknown" under the revenue, and its tooltip says "Revenue $2.5M minus $1.3M paid in tokens, last 30 days"; (2) the Supply card in a coin's detail has the tile "1.9× revenue covers the new tokens" and the line "+$1.2M a month after paying $1.3M of new tokens"; (3) the key figures say "Earns $2.5M a month, pays out $1.3M in new tokens."; (4) the Earnings row of the checks says "Earns $2.5M a month, $1.3M goes out as new tokens: +$1.2M". On the Top Picks cards one of the warnings is "earnings below emissions", the same mix as a flag.
+Live, the page mixes the two in four places: (1) the Revenue 30d column on Apps shows "net +$1.2M", "net −$1.3M" in red or "net unknown" under the revenue, and its tooltip says "Revenue $2.5M minus $1.3M paid in tokens, last 30 days"; (2) the Supply card in a coin's detail has the tile "1.9× revenue covers the new tokens" and the line "+$1.2M a month after paying $1.3M of new tokens"; (3) the key figures say "Earns $2.5M a month, pays out $1.3M in new tokens."; (4) the Earnings row of the checks says "Earns $2.5M a month, $1.3M goes out as new tokens: +$1.2M". On the Top Picks cards the warning icon can say that earnings are below what the coin pays out in new tokens (item 31 of ET-28606), the same mix as a flag.
 
 The owner wants:
 
 - **Revenue is shown as revenue, everywhere.** The four mixes above go; "Earns $2.5M a month" stays and nothing is subtracted from it. The Revenue column shows the revenue and nothing under it, and its tooltip says what the number is (the income of the last 30 days, in USD).
 - **Dilution is its own figure.** It already exists: "+7% new tokens a week" in the Supply card and in the Supply row of the checks (the value of the new tokens of the last 30 days against the market cap, per week: Pharaoh $1.31M against $4.3M is 7.1%). It stays where it is, and nothing else is added to it.
 - **A high dilution is a red flag, compared with the benchmark's, as Upside is.** The benchmark app of Apps is Hyperliquid, and on the page's data its dilution is 0% a week (DefiLlama lists no emissions for it). A good default: caution when an app's dilution is more than 0.5 points a week above the benchmark's, red when it is more than 1 point above; live that is 12 and 9 of the 117 apps whose emissions are known (Topaz 19.7%, Neverland 17.1%, up 8.4%, Pharaoh 7.1%, Hybra 6.0%, nest 4.4%, RamsesX 3.4%, ORE Protocol 1.2% a week). The thresholds move with the benchmark's own dilution, so the comparison keeps its meaning if Hyperliquid starts to dilute. The tooltip names the benchmark's figure ("Hyperliquid, the benchmark: 0% a week").
-- **It is a flag, not a gate or a sort key**, in the same icon style as the page's other warnings (orange from ET-28688), on the Apps row, the Top Picks card and the detail. On the pick cards it replaces the warning "earnings below emissions".
+- **It is a flag, not a gate or a sort key**, in the same icon style as the page's other warnings (orange from ET-28688), on the Apps row, the Top Picks card and the detail. On the pick cards it replaces the warning that earnings are below what the coin pays out in new tokens.
 - **No data stays "unknown", never zero**, as today (98 of the 215 apps have no emissions data).
 
 ---
@@ -182,7 +182,7 @@ The picture is a mock of the whole detail of an app after items 10 to 18, in the
 
 **[18] The report status card under the Degen meter goes; "Generate report" lives in the Checks section, the last one; and the Trajectory caption goes.** Live, under the Degen meter a card says "Degen report ready, researched 1 day ago. Read it ↓", holds the button "Ask for a fresh Degen report" with its Pro badge, and says "A fresh report opens in 6 days, or sooner if something changes." The owner wants the card gone (this replaces what item 9 of ET-28688 kept: "Read it ↓" under the meter and the Ask button beside it). The Checks section, which comes after Trajectory and is the last section of the detail, is where the report belongs, because a report is what fills the checks that are not checked yet: the button, called **"Generate report"**, goes there, with its Pro badge, and when a report exists its text stands in the same section under the checks, not as a section of its own. The collapsed lines of item 17 come after it. The report icon in the header (the green document icon beside Share) stays and scrolls to the report.
 
-The button must work for a Pro plan and say why when it does not. The owner has a Pro plan and sees it disabled; and a click on "Pro" sends him to https://cymetica.com/usage, which does not help a Pro account. Read on 2026-10-01: the page disables the button in two cases only, while a report is being made and while a report is under 7 days old (`refresh_open: false`); all 16 coins read had a ready report from 2026-09-30 or 10-01 with `refresh_opens_at` 2026-10-07 or 10-08, so today the button is locked on every coin. Plan has no part in that, but nothing on the page says so once the card above is gone. The owner wants:
+The button must work for a Pro plan and say why when it does not. The owner has a Pro plan and sees it disabled; and a click on "Pro" sends the owner to https://cymetica.com/usage, which does not help a Pro account. Read on 2026-10-01: the page disables the button in two cases only, while a report is being made and while a report is under 7 days old (`refresh_open: false`); all 16 coins read had a ready report from 2026-09-30 or 10-01 with `refresh_opens_at` 2026-10-07 or 10-08, so today the button is locked on every coin. Plan has no part in that, but nothing on the page says so once the card above is gone. The owner wants:
 
 - **A locked button says why, next to it, in a few words** ("Opens in 6 days"), not only in a tooltip.
 - **A Pro account is never refused for its plan:** the button is disabled by the lock or while researching, and by nothing else; the Pro badge is not a link for an account that has the plan, and "See the plans" appears only to an account that has not.
@@ -200,7 +200,7 @@ In the Trajectory section the caption "Growth per month in each quarter; an outl
 - **Applies with the chain's own parts:** the monthly series (activity fees, stablecoins, DEX volume) stand directly under the header, above the Chart, as Monthly revenue does on an app (item 14); the slim row with Market cap and Adoption (item 16) stands directly under the header too. The report card under the header goes and "Generate report" moves to the bottom of the detail, in a section of its own above the collapsed lines, with the rules of item 18 (the report text under it, a locked button says why, a Pro account is never refused); a chain has no checks to put it in.
 - **Does not apply:** the Degen meter (item 12), the Supply card and its renaming (item 11), revenue and dilution (item 10): a chain has none of them.
 
-A chain's detail then runs: header (name, Upside, chips), the slim row, the monthly series, the Chart with Strength 3M, Trajectory, Buy & hold, the report section, and last the two collapsed lines.
+A chain's detail then runs: header (name, Upside, chips; the pills and the Vetted line stay under it), the slim row, the monthly series, the Chart with Strength 3M, Trajectory, Buy & hold, the report section, and last the two collapsed lines.
 
 ---
 
@@ -214,7 +214,7 @@ A chain's detail then runs: header (name, Upside, chips), the slim row, the mont
 
 ## 16. Memecoins and the Launchpad
 
-**[22] Memecoins carry a symbol that says "launch your own", linking to the Launchpad.** EventTrader has its own launchpad, https://cymetica.com/launchpad, where anybody can launch a token. The Gem Screener shows Memecoins as a sector and has no link to it anywhere (live: the page links out only to the coin's web site, CoinGecko and DEXTools). The owner wants Memecoins to carry a nice, small symbol that tells a visitor they can make a memecoin of their own, and that opens the Launchpad:
+**[22] Memecoins carry a symbol that says "launch your own", linking to the Launchpad.** EventTrader has its own launchpad, https://cymetica.com/launchpad, where anybody can launch a token. The Gem Screener shows Memecoins as a sector and has no link to it anywhere (live: no link on the page goes to it). The owner wants Memecoins to carry a nice, small symbol that tells a visitor they can make a memecoin of their own, and that opens the Launchpad:
 
 - **Where:** the Memecoins row in the Sectors table, the Memecoins sector's panel, and its card on Top Picks when it shows there as a hot sector. Only the Memecoins sector has it.
 - **What:** a small icon in the page's own style (a rocket, a coin with a plus, or what you draw; one colour, the page's green or cyan, in the style of the chips of item 13). Its tooltip reads "Launch your own memecoin"; a click or tap opens https://cymetica.com/launchpad in a new tab (`rel="noopener"`). Use the address without a trailing slash: with one it redirects.
@@ -233,7 +233,7 @@ A chain's detail then runs: header (name, Upside, chips), the slim row, the mont
 - [ ] 1 The Chains tab lists every chain whose token is in CoinGecko's Layer 1 or Layer 2 category with a market cap of $200M or more (or the cut you chose, named in your spec), joined to DefiLlama by `gecko_id`.
 - [ ] 1 A chain is on the tab only if all four inputs exist for it; a chain with a missing input, or no DefiLlama row, is not shown at all (no row, no "no data" line).
 - [ ] 1 The spec names the chains of the token list that were left out for a missing input, with the input each lacks, and says whether BTC, XRP, ADA, HBAR, TAO, CRO, ALGO, SEI and IOTA are on the tab.
-- [ ] 1 Fees above a floor are not a condition for being listed; chains with no token of their own (Base, Robinhood Chain, Ink, Abstract) are still off.
+- [ ] 1 Fees, or a floor on them, are not a condition for being listed; chains with no token of their own (Base, Robinhood Chain, Ink, Abstract) are still off.
 - [ ] 2 A chain's adoption is made of daily users, DEX volume, TVL without the chain's own token, and stablecoins; fees are not an input.
 - [ ] 2 Users and volume are held back to what the chain's TVL or stablecoins back; the spec says the rule chosen and the cut used.
 - [ ] 2 Multiplying a chain's users and DEX volume by 10 lifts its adoption by less than 3×, and the spec shows the test for at least five chains.
@@ -257,7 +257,7 @@ A chain's detail then runs: header (name, Upside, chips), the slim row, the mont
 - [ ] 10 Revenue is shown as revenue everywhere: no "net" line or "net unknown" in the Revenue column, no "revenue covers the new tokens" tile or "after paying … of new tokens" line in the Supply card, no "pays out … in new tokens" in the key figures, nothing subtracted in the Earnings row; the revenue tooltip says what the number is (income of the last 30 days, in USD).
 - [ ] 10 Dilution ("+7% new tokens a week") keeps its place in the Supply card and the Supply row of the checks, as a figure of its own.
 - [ ] 10 A high dilution is flagged against the benchmark's (caution above 0.5 points a week over it, red above 1 point, or the thresholds you chose, named in your spec), moving with the benchmark's own dilution; the tooltip names the benchmark's figure.
-- [ ] 10 The flag is not a gate or a sort key; on the pick cards it replaces "earnings below emissions"; an app with no emissions data shows "unknown", never zero.
+- [ ] 10 The flag is not a gate or a sort key; on the pick cards it replaces the warning that earnings are below what the coin pays out in new tokens; an app with no emissions data shows "unknown", never zero.
 - [ ] 11 The Supply card shows market cap and FDV side by side with the share of tokens out, and keeps the bar.
 - [ ] 11 It shows the speed of dilution ("+7% new tokens a week", with the flag of item 10).
 - [ ] 11 It shows the next unlock in a tile of its own: when, how many tokens, the share of circulating supply, the value in USD and who receives it; the 90-day total is in its tooltip.
