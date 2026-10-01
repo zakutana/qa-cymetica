@@ -9,7 +9,8 @@
 > 2. **Every number is read from the live site on 2026-10-01.** They are there so you can check that a change took effect; they are not the requirement.
 > 3. **English only**, degen-friendly: the number first, plain short words.
 > 4. **Keep the look.** Change only what an item names.
-> 5. **The files are in this folder.** `assets/` holds what is ready to use; `reference/` holds pictures of what is live today and mocks of what is wanted (inspiration, not literal).
+> 5. **What "the owner sees" says is what the owner observed** on the live page (items 15, 16 and 17 especially): check it first, then fix it.
+> 6. **The files are in this folder.** `assets/` holds what is ready to use; `reference/` holds pictures of what is live today and mocks of what is wanted (inspiration, not literal).
 
 ## What is ready to use (`assets/`)
 
@@ -205,12 +206,12 @@ Two details: a thin line is hard to hit with a mouse, so the line reacts in a ge
 
 What to do:
 
-- **The same building blocks as the Apps detail**: its cards, the row of key figures (for a chain: Market cap, Adoption, Upside, Strength 3M), its tooltip card, its pills and icons, the Share button and the address-bar link of item 12, the close button. The pills at the top ("Vetted", "Liquidity: a $10K buy moves the price 48%", "100% of tokens out...", "+22% in 30 days...") are drawn as the Apps detail draws its flags, and the liquidity warning is orange (item 7), not blue.
+- **The same building blocks as the Apps detail**: its cards, the row of key figures (for a chain: Market cap, Adoption, Upside, Strength 3M), its tooltip card, its pills and icons, the Share button and the address-bar link of item 12 (a chain's link works the same way, by its slug), the close button. The pills at the top ("Vetted", "Liquidity: a $10K buy moves the price 48%", "100% of tokens out...", "+22% in 30 days...") are drawn as the Apps detail draws its flags, and the liquidity warning is orange (item 7), not blue.
 - **The same order**, as in item 9: the header, the figures, the charts (the chain's own monthly series, in the style of the Apps' Monthly revenue chart, from the data the page already holds for a chain: its monthly activity fees, stablecoins and DEX volume), Trajectory, then the small collapsed lines (How it's calculated, For AI agents) at the bottom.
 - **Nothing shown empty.** A block with nothing to show is left out instead of standing there empty: in the picture, a card that says "Loading..." (it never filled), "Upside over time" with "No price history", and a "Growth by window" table whose cells are all dashes. These three are the ones item 10 removes from the Apps detail as well; none of them comes back on a chain.
 - **Trajectory as on Apps**: the same card, the same one colour for the stage in the pill and the stepper (item 40 of the last request), and no repeated stage name ("Declining." under the pill); the line says the number in plain words.
 - **Plain words, number first**, as on the rest of the page: no capital-letter heading with a sentence under it where a figure or a short label does the job.
-- **Check every control in the chain header** does something for a chain. The picture shows a "Degen report" button; keep it only if a chain has such a report, otherwise take it away.
+- **Check that every control in the chain header** does something for a chain. The picture shows a "Degen report" button; keep it only if a chain has such a report, otherwise take it away.
 
 The result is the Chains detail that looks like the same product as the Apps detail, with only what is true of a chain on it.
 
@@ -266,7 +267,7 @@ The goal: **one tooltip, the dark card, for hover, keyboard focus and click or t
 - [ ] 13 The two price-tag panels are metal-shield badges (about 92 x 110 px): a ribbon with the word BENCHMARK, the benchmark's round logo, the number big ("35x", "38x") and one word under it ("revenue", "adoption"); the same family as the logo and the gate. No title line, no sentence, no wide panel on the page, and the word BENCHMARK is readable at the real size.
 - [ ] 13 The whole badge opens a tooltip (hover, focus, tap) that says in plain words what the number is (market cap ÷ yearly revenue, or ÷ adoption with its meaning) and that every Upside is measured against it; "× its adoption" and "the bar" are gone.
 - [ ] 13 The badge fits at 390 px and at 1360 px without being cut off.
-- [ ] 13 The badge stands at the right end of the toolbar under the Legend button (Apps and Chains tabs), and the toolbar is no taller than 116 px; the old panel is gone.
+- [ ] 13 The badge stands at the right end of the toolbar under the Legend button (Apps and Chains tabs), and the toolbar is no taller than 124 px; the old panel is gone.
 - [ ] 14 The min. revenue slider sits to the left of the badge and is drawn as eight separate rounded segments lit up to a gem-shaped knob, with the value in an outlined pill; it keeps its nine stops, the default of $100K, and works by drag, tap and arrow keys.
 - [ ] 15 On the year chart (Apps and Chains) a hover on a line lights that coin's name in the legend and dims the other lines, as a hover on a name lights its line; a tap does the same on a touch screen.
 - [ ] 15 A line can be hit within a few pixels of it; where lines cross, the nearest wins; the small hover card never covers legend rows.
