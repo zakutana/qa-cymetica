@@ -123,6 +123,7 @@ The owner wants:
 - **The next unlock: when, how much, for whom.** In a tile of its own: the date or "in 3 days", the size in tokens, as a share of the circulating supply and in USD, and who receives it (insiders and so on). For example: "in 3 days · 918,750 tokens · 1.2% of circulating · insiders". The 90-day total goes into that tile's tooltip. The page's data has this for 22 of the 115 apps with unlock data (live: the next event with its date, tokens, share of circulating and receiver category, e.g. Stader in 3.3 days, 1.22% of circulating, insiders), and a 30-day amount for 49. Some unlocks are a daily stream, not an event; for those show the nearest event if the source has one, and otherwise the stream as a rate ("+0.4% of supply a week unlocking").
 - **No data stays "unknown", never zero**: 100 of the 215 apps have no unlock data; "none in 90 days" is shown only when the source says so.
 - **The tile "revenue covers the new tokens" is gone**, and so is "no mint" under that label.
+- **The source line goes**: "DeFiLlama · Oct 1" at the bottom of the card. The source and its date move into the card's tooltip.
 
 ---
 
@@ -262,6 +263,7 @@ A chain's detail then runs: header (name, Upside, chips), the slim row, the mont
 - [ ] 11 It shows the next unlock in a tile of its own: when, how many tokens, the share of circulating supply, the value in USD and who receives it; the 90-day total is in its tooltip.
 - [ ] 11 An app with no unlock data shows "unknown", not zero and not "none"; a daily stream with no single event is shown as a rate.
 - [ ] 11 The tile "revenue covers the new tokens" and the "no mint" value under it are gone.
+- [ ] 11 The card has no "DeFiLlama · Oct 1" line at its foot; the source and its date are in the card's tooltip.
 - [ ] 12 The Degen meter card in a coin's detail shows the number, the verdict line, the bar with its dashed segments and the two end labels; "Range … · … checks not checked yet" and "Was … at the last report" are gone from it.
 - [ ] 12 What those two lines said is in the card's tooltip (hover, focus, tap), in plain words.
 - [ ] 13 The web, CoinGecko and DEXTools links in a coin's and a chain's header are icon chips in the style of the Share button and the report icon, in the page's colours, with the name in the tooltip.

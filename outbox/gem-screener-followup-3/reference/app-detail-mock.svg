@@ -1,6 +1,6 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 820 2228" width="820" height="2228" role="img" aria-label="The new app detail, as spec 3 describes it">
-<rect width="820" height="2228" fill="#0a0e17"/>
-<rect x="0" y="0" width="820" height="2128" fill="#0d1422"/>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 820 2202" width="820" height="2202" role="img" aria-label="The new app detail, as spec 3 describes it">
+<rect width="820" height="2202" fill="#0a0e17"/>
+<rect x="0" y="0" width="820" height="2102" fill="#0d1422"/>
 <rect x="0" y="0" width="820" height="10" rx="0" fill="#0a0e17"/>
 <rect x="0" y="0" width="820" height="1" fill="#0a0e17"/>
 <rect x="24" y="24" width="56" height="56" rx="12" fill="#12090d" stroke="#25131a" stroke-width="1"/>
@@ -126,7 +126,7 @@
 <text x="330" y="992" font-family="IBM Plex Sans, Segoe UI, Arial, sans-serif" font-size="11" font-weight="400" fill="#6f8199" text-anchor="middle">40</text>
 <text x="480" y="992" font-family="IBM Plex Sans, Segoe UI, Arial, sans-serif" font-size="11" font-weight="400" fill="#6f8199" text-anchor="middle">60</text>
 <text x="772" y="992" font-family="IBM Plex Sans, Segoe UI, Arial, sans-serif" font-size="11" font-weight="400" fill="#6f8199" text-anchor="end">100</text>
-<rect x="24" y="1020" width="772" height="244" rx="12" fill="#0f1826" stroke="#172538" stroke-width="1"/>
+<rect x="24" y="1020" width="772" height="218" rx="12" fill="#0f1826" stroke="#172538" stroke-width="1"/>
 <text x="44" y="1050" font-family="IBM Plex Sans, Segoe UI, Arial, sans-serif" font-size="12" font-weight="700" fill="#6f8199" text-anchor="start" letter-spacing="1.6">MARKET CAP &amp; SUPPLY</text>
 <circle cx="776" cy="1046" r="8" fill="none" stroke="#6f8199" stroke-width="1.2"/>
 <text x="776" y="1050" font-family="IBM Plex Mono, Consolas, monospace" font-size="11" font-weight="600" fill="#6f8199" text-anchor="middle">i</text>
@@ -149,74 +149,73 @@
 <text x="616" y="1170" font-family="IBM Plex Sans, Segoe UI, Arial, sans-serif" font-size="14" font-weight="400" fill="#a9b8cc" text-anchor="start">918,750 tokens</text>
 <text x="616" y="1192" font-family="IBM Plex Sans, Segoe UI, Arial, sans-serif" font-size="13" font-weight="400" fill="#a9b8cc" text-anchor="start">1.2% of circulating</text>
 <text x="616" y="1210" font-family="IBM Plex Sans, Segoe UI, Arial, sans-serif" font-size="13" font-weight="400" fill="#a9b8cc" text-anchor="start">insiders</text>
-<text x="44" y="1250" font-family="IBM Plex Sans, Segoe UI, Arial, sans-serif" font-size="13" font-weight="400" fill="#6f8199" text-anchor="start">DeFiLlama · Oct 1</text>
-<rect x="24" y="1290" width="772" height="150" rx="12" fill="#0f1826" stroke="#172538" stroke-width="1"/>
-<text x="44" y="1320" font-family="IBM Plex Sans, Segoe UI, Arial, sans-serif" font-size="12" font-weight="700" fill="#6f8199" text-anchor="start" letter-spacing="1.6">TRAJECTORY</text>
-<text x="772" y="1320" font-family="IBM Plex Mono, Consolas, monospace" font-size="18" font-weight="700" fill="#3b82f6" text-anchor="end">95</text>
-<rect x="44" y="1336" width="48.599999999999994" height="26" rx="13" fill="none" stroke="#1d3347" stroke-width="1"/>
-<text x="68.3" y="1354" font-family="IBM Plex Mono, Consolas, monospace" font-size="12" font-weight="500" fill="#6f8199" text-anchor="middle">New</text>
-<rect x="100.6" y="1336" width="89.6" height="26" rx="13" fill="#3b82f6"/>
-<text x="145.39999999999998" y="1354" font-family="IBM Plex Mono, Consolas, monospace" font-size="12" font-weight="700" fill="#0a0e17" text-anchor="middle">Ignition</text>
-<rect x="198.2" y="1336" width="122.39999999999999" height="26" rx="13" fill="none" stroke="#1d3347" stroke-width="1"/>
-<text x="259.4" y="1354" font-family="IBM Plex Mono, Consolas, monospace" font-size="12" font-weight="500" fill="#6f8199" text-anchor="middle">Accelerating</text>
-<rect x="328.59999999999997" y="1336" width="73.19999999999999" height="26" rx="13" fill="none" stroke="#1d3347" stroke-width="1"/>
-<text x="365.19999999999993" y="1354" font-family="IBM Plex Mono, Consolas, monospace" font-size="12" font-weight="500" fill="#6f8199" text-anchor="middle">Steady</text>
-<rect x="409.79999999999995" y="1336" width="81.39999999999999" height="26" rx="13" fill="none" stroke="#1d3347" stroke-width="1"/>
-<text x="450.49999999999994" y="1354" font-family="IBM Plex Mono, Consolas, monospace" font-size="12" font-weight="500" fill="#6f8199" text-anchor="middle">Slowing</text>
-<rect x="499.19999999999993" y="1336" width="56.8" height="26" rx="13" fill="none" stroke="#1d3347" stroke-width="1"/>
-<text x="527.5999999999999" y="1354" font-family="IBM Plex Mono, Consolas, monospace" font-size="12" font-weight="500" fill="#6f8199" text-anchor="middle">Flat</text>
-<rect x="563.9999999999999" y="1336" width="97.8" height="26" rx="13" fill="none" stroke="#1d3347" stroke-width="1"/>
-<text x="612.8999999999999" y="1354" font-family="IBM Plex Mono, Consolas, monospace" font-size="12" font-weight="500" fill="#6f8199" text-anchor="middle">Declining</text>
-<rect x="44" y="1412" width="56" height="10" rx="2" fill="#00b4dc"/>
-<text x="72" y="1434" font-family="IBM Plex Sans, Segoe UI, Arial, sans-serif" font-size="11" font-weight="400" fill="#6f8199" text-anchor="middle">Q4</text>
-<rect x="114" y="1406" width="56" height="16" rx="2" fill="#00b4dc"/>
-<text x="142" y="1434" font-family="IBM Plex Sans, Segoe UI, Arial, sans-serif" font-size="11" font-weight="400" fill="#6f8199" text-anchor="middle">Q1</text>
-<rect x="184" y="1413" width="56" height="9" rx="2" fill="none" stroke="#00cfff" stroke-width="1.5"/>
-<text x="212" y="1434" font-family="IBM Plex Sans, Segoe UI, Arial, sans-serif" font-size="11" font-weight="400" fill="#6f8199" text-anchor="middle">Q2</text>
-<rect x="254" y="1394" width="56" height="28" rx="2" fill="#00b4dc"/>
-<text x="282" y="1434" font-family="IBM Plex Sans, Segoe UI, Arial, sans-serif" font-size="11" font-weight="400" fill="#6f8199" text-anchor="middle">Q3</text>
-<rect x="324" y="1376" width="56" height="46" rx="2" fill="#00b4dc"/>
-<text x="352" y="1434" font-family="IBM Plex Sans, Segoe UI, Arial, sans-serif" font-size="11" font-weight="400" fill="#6f8199" text-anchor="middle">Q4</text>
-<rect x="24" y="1466" width="772" height="464" rx="12" fill="#0f1826" stroke="#172538" stroke-width="1"/>
-<text x="44" y="1496" font-family="IBM Plex Sans, Segoe UI, Arial, sans-serif" font-size="12" font-weight="700" fill="#6f8199" text-anchor="start" letter-spacing="1.6">CHECKS</text>
-<text x="44" y="1538" font-family="IBM Plex Sans, Segoe UI, Arial, sans-serif" font-size="13" font-weight="600" fill="#6f8199" text-anchor="start">Control</text>
-<circle cx="140" cy="1533" r="8" fill="none" stroke="#ff4444" stroke-width="1.2" stroke-dasharray="2.5 2.5"/>
-<circle cx="162" cy="1533" r="8" fill="none" stroke="#ff4444" stroke-width="1.2" stroke-dasharray="2.5 2.5"/>
-<circle cx="184" cy="1533" r="8" fill="none" stroke="#ff4444" stroke-width="1.2" stroke-dasharray="2.5 2.5"/>
-<text x="210" y="1538" font-family="IBM Plex Sans, Segoe UI, Arial, sans-serif" font-size="14" font-weight="400" fill="#a9b8cc" text-anchor="start">Can mint; who holds the key was not read</text>
-<text x="44" y="1578" font-family="IBM Plex Sans, Segoe UI, Arial, sans-serif" font-size="13" font-weight="600" fill="#6f8199" text-anchor="start">Supply</text>
-<circle cx="140" cy="1573" r="8" fill="#ff4444"/>
-<text x="210" y="1578" font-family="IBM Plex Sans, Segoe UI, Arial, sans-serif" font-size="14" font-weight="400" fill="#a9b8cc" text-anchor="start">6% of tokens out · 7% new tokens a week · 0% unlock in 90 days</text>
-<text x="44" y="1618" font-family="IBM Plex Sans, Segoe UI, Arial, sans-serif" font-size="13" font-weight="600" fill="#6f8199" text-anchor="start">Earnings</text>
-<circle cx="140" cy="1613" r="8" fill="#3b82f6"/>
-<text x="210" y="1618" font-family="IBM Plex Sans, Segoe UI, Arial, sans-serif" font-size="14" font-weight="400" fill="#a9b8cc" text-anchor="start">Earns $2.5M a month · Revenue 3.5× its usual month, one month so far</text>
-<text x="44" y="1658" font-family="IBM Plex Sans, Segoe UI, Arial, sans-serif" font-size="13" font-weight="600" fill="#6f8199" text-anchor="start">Liquidity</text>
-<circle cx="140" cy="1653" r="8" fill="#00ff88"/>
-<text x="210" y="1658" font-family="IBM Plex Sans, Segoe UI, Arial, sans-serif" font-size="14" font-weight="400" fill="#a9b8cc" text-anchor="start">A $10K buy moves the price 2.5% (Uniswap pool $5.6bn)</text>
-<text x="44" y="1698" font-family="IBM Plex Sans, Segoe UI, Arial, sans-serif" font-size="13" font-weight="600" fill="#6f8199" text-anchor="start">History</text>
-<circle cx="140" cy="1693" r="8" fill="#00ff88"/>
-<text x="210" y="1698" font-family="IBM Plex Sans, Segoe UI, Arial, sans-serif" font-size="14" font-weight="400" fill="#a9b8cc" text-anchor="start">No hack on record</text>
-<rect x="44" y="1730" width="184" height="40" rx="8" fill="#0d2430" stroke="#123d4f" stroke-width="1"/>
-<text x="136" y="1756" font-family="IBM Plex Sans, Segoe UI, Arial, sans-serif" font-size="15" font-weight="700" fill="#1b8fb0" text-anchor="middle">Generate report</text>
-<rect x="240" y="1738" width="46" height="24" rx="8" fill="none" stroke="#00ff88" stroke-width="1"/>
-<text x="263" y="1755" font-family="IBM Plex Mono, Consolas, monospace" font-size="14" font-weight="700" fill="#00ff88" text-anchor="middle">Pro</text>
-<text x="302" y="1756" font-family="IBM Plex Sans, Segoe UI, Arial, sans-serif" font-size="14" font-weight="400" fill="#a9b8cc" text-anchor="start">Opens in 6 days</text>
-<text x="44" y="1810" font-family="IBM Plex Sans, Segoe UI, Arial, sans-serif" font-size="16" font-weight="700" fill="#e6edf7" text-anchor="start">Degen report</text>
-<text x="772" y="1810" font-family="IBM Plex Sans, Segoe UI, Arial, sans-serif" font-size="11" font-weight="400" fill="#6f8199" text-anchor="end">(the report text stands here once there is one)</text>
-<rect x="44" y="1826" width="700" height="9" rx="4.5" fill="#1b2a3d"/>
-<rect x="44" y="1848" width="640" height="9" rx="4.5" fill="#1b2a3d"/>
-<rect x="44" y="1870" width="560" height="9" rx="4.5" fill="#1b2a3d"/>
-<line x1="24" y1="1950" x2="796" y2="1950" stroke="#14202f" stroke-width="1"/>
-<path d="M30 1969l9 6-9 6z" fill="#e6edf7"/>
-<text x="54" y="1982" font-family="IBM Plex Sans, Segoe UI, Arial, sans-serif" font-size="19" font-weight="700" fill="#e6edf7" text-anchor="start">30x test</text>
-<line x1="24" y1="2004" x2="796" y2="2004" stroke="#14202f" stroke-width="1"/>
-<path d="M30 2023l9 6-9 6z" fill="#e6edf7"/>
-<text x="54" y="2036" font-family="IBM Plex Sans, Segoe UI, Arial, sans-serif" font-size="19" font-weight="700" fill="#e6edf7" text-anchor="start">How it’s calculated</text>
-<line x1="24" y1="2058" x2="796" y2="2058" stroke="#14202f" stroke-width="1"/>
-<path d="M30 2077l9 6-9 6z" fill="#e6edf7"/>
-<text x="54" y="2090" font-family="IBM Plex Sans, Segoe UI, Arial, sans-serif" font-size="19" font-weight="700" fill="#e6edf7" text-anchor="start">For AI agents: copy and paste</text>
-<text x="24" y="2154" font-family="IBM Plex Sans, Segoe UI, Arial, sans-serif" font-size="11.5" font-weight="400" fill="#6f8199" text-anchor="start">Mock, inspiration and not literal. Pharaoh Exchange's live figures; the Next unlock tile shows Stader's data (Pharaoh has none in 90 days).</text>
-<text x="24" y="2172" font-family="IBM Plex Sans, Segoe UI, Arial, sans-serif" font-size="11.5" font-weight="400" fill="#6f8199" text-anchor="start">Order and content as in spec 3: header with Upside potential and icon chips, Degen meter, Monthly revenue, Chart with Strength 3M,</text>
-<text x="24" y="2190" font-family="IBM Plex Sans, Segoe UI, Arial, sans-serif" font-size="11.5" font-weight="400" fill="#6f8199" text-anchor="start">Market cap &amp; supply, Trajectory, Checks with Generate report (last section), then the three collapsed lines.</text>
-<text x="24" y="2208" font-family="IBM Plex Sans, Segoe UI, Arial, sans-serif" font-size="11.5" font-weight="400" fill="#6f8199" text-anchor="start">Trajectory and the Checks rows are only sketched here: the page's own are the reference for how they look.</text>
+<rect x="24" y="1264" width="772" height="150" rx="12" fill="#0f1826" stroke="#172538" stroke-width="1"/>
+<text x="44" y="1294" font-family="IBM Plex Sans, Segoe UI, Arial, sans-serif" font-size="12" font-weight="700" fill="#6f8199" text-anchor="start" letter-spacing="1.6">TRAJECTORY</text>
+<text x="772" y="1294" font-family="IBM Plex Mono, Consolas, monospace" font-size="18" font-weight="700" fill="#3b82f6" text-anchor="end">95</text>
+<rect x="44" y="1310" width="48.599999999999994" height="26" rx="13" fill="none" stroke="#1d3347" stroke-width="1"/>
+<text x="68.3" y="1328" font-family="IBM Plex Mono, Consolas, monospace" font-size="12" font-weight="500" fill="#6f8199" text-anchor="middle">New</text>
+<rect x="100.6" y="1310" width="89.6" height="26" rx="13" fill="#3b82f6"/>
+<text x="145.39999999999998" y="1328" font-family="IBM Plex Mono, Consolas, monospace" font-size="12" font-weight="700" fill="#0a0e17" text-anchor="middle">Ignition</text>
+<rect x="198.2" y="1310" width="122.39999999999999" height="26" rx="13" fill="none" stroke="#1d3347" stroke-width="1"/>
+<text x="259.4" y="1328" font-family="IBM Plex Mono, Consolas, monospace" font-size="12" font-weight="500" fill="#6f8199" text-anchor="middle">Accelerating</text>
+<rect x="328.59999999999997" y="1310" width="73.19999999999999" height="26" rx="13" fill="none" stroke="#1d3347" stroke-width="1"/>
+<text x="365.19999999999993" y="1328" font-family="IBM Plex Mono, Consolas, monospace" font-size="12" font-weight="500" fill="#6f8199" text-anchor="middle">Steady</text>
+<rect x="409.79999999999995" y="1310" width="81.39999999999999" height="26" rx="13" fill="none" stroke="#1d3347" stroke-width="1"/>
+<text x="450.49999999999994" y="1328" font-family="IBM Plex Mono, Consolas, monospace" font-size="12" font-weight="500" fill="#6f8199" text-anchor="middle">Slowing</text>
+<rect x="499.19999999999993" y="1310" width="56.8" height="26" rx="13" fill="none" stroke="#1d3347" stroke-width="1"/>
+<text x="527.5999999999999" y="1328" font-family="IBM Plex Mono, Consolas, monospace" font-size="12" font-weight="500" fill="#6f8199" text-anchor="middle">Flat</text>
+<rect x="563.9999999999999" y="1310" width="97.8" height="26" rx="13" fill="none" stroke="#1d3347" stroke-width="1"/>
+<text x="612.8999999999999" y="1328" font-family="IBM Plex Mono, Consolas, monospace" font-size="12" font-weight="500" fill="#6f8199" text-anchor="middle">Declining</text>
+<rect x="44" y="1386" width="56" height="10" rx="2" fill="#00b4dc"/>
+<text x="72" y="1408" font-family="IBM Plex Sans, Segoe UI, Arial, sans-serif" font-size="11" font-weight="400" fill="#6f8199" text-anchor="middle">Q4</text>
+<rect x="114" y="1380" width="56" height="16" rx="2" fill="#00b4dc"/>
+<text x="142" y="1408" font-family="IBM Plex Sans, Segoe UI, Arial, sans-serif" font-size="11" font-weight="400" fill="#6f8199" text-anchor="middle">Q1</text>
+<rect x="184" y="1387" width="56" height="9" rx="2" fill="none" stroke="#00cfff" stroke-width="1.5"/>
+<text x="212" y="1408" font-family="IBM Plex Sans, Segoe UI, Arial, sans-serif" font-size="11" font-weight="400" fill="#6f8199" text-anchor="middle">Q2</text>
+<rect x="254" y="1368" width="56" height="28" rx="2" fill="#00b4dc"/>
+<text x="282" y="1408" font-family="IBM Plex Sans, Segoe UI, Arial, sans-serif" font-size="11" font-weight="400" fill="#6f8199" text-anchor="middle">Q3</text>
+<rect x="324" y="1350" width="56" height="46" rx="2" fill="#00b4dc"/>
+<text x="352" y="1408" font-family="IBM Plex Sans, Segoe UI, Arial, sans-serif" font-size="11" font-weight="400" fill="#6f8199" text-anchor="middle">Q4</text>
+<rect x="24" y="1440" width="772" height="464" rx="12" fill="#0f1826" stroke="#172538" stroke-width="1"/>
+<text x="44" y="1470" font-family="IBM Plex Sans, Segoe UI, Arial, sans-serif" font-size="12" font-weight="700" fill="#6f8199" text-anchor="start" letter-spacing="1.6">CHECKS</text>
+<text x="44" y="1512" font-family="IBM Plex Sans, Segoe UI, Arial, sans-serif" font-size="13" font-weight="600" fill="#6f8199" text-anchor="start">Control</text>
+<circle cx="140" cy="1507" r="8" fill="none" stroke="#ff4444" stroke-width="1.2" stroke-dasharray="2.5 2.5"/>
+<circle cx="162" cy="1507" r="8" fill="none" stroke="#ff4444" stroke-width="1.2" stroke-dasharray="2.5 2.5"/>
+<circle cx="184" cy="1507" r="8" fill="none" stroke="#ff4444" stroke-width="1.2" stroke-dasharray="2.5 2.5"/>
+<text x="210" y="1512" font-family="IBM Plex Sans, Segoe UI, Arial, sans-serif" font-size="14" font-weight="400" fill="#a9b8cc" text-anchor="start">Can mint; who holds the key was not read</text>
+<text x="44" y="1552" font-family="IBM Plex Sans, Segoe UI, Arial, sans-serif" font-size="13" font-weight="600" fill="#6f8199" text-anchor="start">Supply</text>
+<circle cx="140" cy="1547" r="8" fill="#ff4444"/>
+<text x="210" y="1552" font-family="IBM Plex Sans, Segoe UI, Arial, sans-serif" font-size="14" font-weight="400" fill="#a9b8cc" text-anchor="start">6% of tokens out · 7% new tokens a week · 0% unlock in 90 days</text>
+<text x="44" y="1592" font-family="IBM Plex Sans, Segoe UI, Arial, sans-serif" font-size="13" font-weight="600" fill="#6f8199" text-anchor="start">Earnings</text>
+<circle cx="140" cy="1587" r="8" fill="#3b82f6"/>
+<text x="210" y="1592" font-family="IBM Plex Sans, Segoe UI, Arial, sans-serif" font-size="14" font-weight="400" fill="#a9b8cc" text-anchor="start">Earns $2.5M a month · Revenue 3.5× its usual month, one month so far</text>
+<text x="44" y="1632" font-family="IBM Plex Sans, Segoe UI, Arial, sans-serif" font-size="13" font-weight="600" fill="#6f8199" text-anchor="start">Liquidity</text>
+<circle cx="140" cy="1627" r="8" fill="#00ff88"/>
+<text x="210" y="1632" font-family="IBM Plex Sans, Segoe UI, Arial, sans-serif" font-size="14" font-weight="400" fill="#a9b8cc" text-anchor="start">A $10K buy moves the price 2.5% (Uniswap pool $5.6bn)</text>
+<text x="44" y="1672" font-family="IBM Plex Sans, Segoe UI, Arial, sans-serif" font-size="13" font-weight="600" fill="#6f8199" text-anchor="start">History</text>
+<circle cx="140" cy="1667" r="8" fill="#00ff88"/>
+<text x="210" y="1672" font-family="IBM Plex Sans, Segoe UI, Arial, sans-serif" font-size="14" font-weight="400" fill="#a9b8cc" text-anchor="start">No hack on record</text>
+<rect x="44" y="1704" width="184" height="40" rx="8" fill="#0d2430" stroke="#123d4f" stroke-width="1"/>
+<text x="136" y="1730" font-family="IBM Plex Sans, Segoe UI, Arial, sans-serif" font-size="15" font-weight="700" fill="#1b8fb0" text-anchor="middle">Generate report</text>
+<rect x="240" y="1712" width="46" height="24" rx="8" fill="none" stroke="#00ff88" stroke-width="1"/>
+<text x="263" y="1729" font-family="IBM Plex Mono, Consolas, monospace" font-size="14" font-weight="700" fill="#00ff88" text-anchor="middle">Pro</text>
+<text x="302" y="1730" font-family="IBM Plex Sans, Segoe UI, Arial, sans-serif" font-size="14" font-weight="400" fill="#a9b8cc" text-anchor="start">Opens in 6 days</text>
+<text x="44" y="1784" font-family="IBM Plex Sans, Segoe UI, Arial, sans-serif" font-size="16" font-weight="700" fill="#e6edf7" text-anchor="start">Degen report</text>
+<text x="772" y="1784" font-family="IBM Plex Sans, Segoe UI, Arial, sans-serif" font-size="11" font-weight="400" fill="#6f8199" text-anchor="end">(the report text stands here once there is one)</text>
+<rect x="44" y="1800" width="700" height="9" rx="4.5" fill="#1b2a3d"/>
+<rect x="44" y="1822" width="640" height="9" rx="4.5" fill="#1b2a3d"/>
+<rect x="44" y="1844" width="560" height="9" rx="4.5" fill="#1b2a3d"/>
+<line x1="24" y1="1924" x2="796" y2="1924" stroke="#14202f" stroke-width="1"/>
+<path d="M30 1943l9 6-9 6z" fill="#e6edf7"/>
+<text x="54" y="1956" font-family="IBM Plex Sans, Segoe UI, Arial, sans-serif" font-size="19" font-weight="700" fill="#e6edf7" text-anchor="start">30x test</text>
+<line x1="24" y1="1978" x2="796" y2="1978" stroke="#14202f" stroke-width="1"/>
+<path d="M30 1997l9 6-9 6z" fill="#e6edf7"/>
+<text x="54" y="2010" font-family="IBM Plex Sans, Segoe UI, Arial, sans-serif" font-size="19" font-weight="700" fill="#e6edf7" text-anchor="start">How it’s calculated</text>
+<line x1="24" y1="2032" x2="796" y2="2032" stroke="#14202f" stroke-width="1"/>
+<path d="M30 2051l9 6-9 6z" fill="#e6edf7"/>
+<text x="54" y="2064" font-family="IBM Plex Sans, Segoe UI, Arial, sans-serif" font-size="19" font-weight="700" fill="#e6edf7" text-anchor="start">For AI agents: copy and paste</text>
+<text x="24" y="2128" font-family="IBM Plex Sans, Segoe UI, Arial, sans-serif" font-size="11.5" font-weight="400" fill="#6f8199" text-anchor="start">Mock, inspiration and not literal. Pharaoh Exchange's live figures; the Next unlock tile shows Stader's data (Pharaoh has none in 90 days).</text>
+<text x="24" y="2146" font-family="IBM Plex Sans, Segoe UI, Arial, sans-serif" font-size="11.5" font-weight="400" fill="#6f8199" text-anchor="start">Order and content as in spec 3: header with Upside potential and icon chips, Degen meter, Monthly revenue, Chart with Strength 3M,</text>
+<text x="24" y="2164" font-family="IBM Plex Sans, Segoe UI, Arial, sans-serif" font-size="11.5" font-weight="400" fill="#6f8199" text-anchor="start">Market cap &amp; supply, Trajectory, Checks with Generate report (last section), then the three collapsed lines.</text>
+<text x="24" y="2182" font-family="IBM Plex Sans, Segoe UI, Arial, sans-serif" font-size="11.5" font-weight="400" fill="#6f8199" text-anchor="start">Trajectory and the Checks rows are only sketched here: the page's own are the reference for how they look.</text>
 </svg>
