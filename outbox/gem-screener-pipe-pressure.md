@@ -50,6 +50,18 @@ He values a token as the **pressure in a pipe**. The width of the pipe is the su
 ### 5. ETH/BTC on the Altseason panel, as a fact row
 **Goal:** ETH/BTC and its trend line stand on the panel as a **fact, not scored**, until a backtest shows that it adds something. The stablecoins fact is treated the same way today. ETH/BTC is the first chart that both Ran and Raoul open: ETH breaking out after nine years is their sign of product-market fit. The panel already has OTHERS.D, the alts-against-the-market line that he draws as OTHERS/BTC.
 
+## Where the data can be had besides DefiLlama (read 2026-10-01; the build chooses and pays)
+DefiLlama is the base because it is free, its methods are open on GitHub, and it has the longest tail: the picks are $4M to $175M apps, where the paid sources cover the least. No single paid source has all of it.
+
+| Need (wish) | Source | Price read | Note |
+|---|---|---|---|
+| Buybacks and burns (1) | Tokenomist | Pro $69/month, API from $249.95/month (promo, regularly $749.95) | 600+ tokens. Hyperliquid and Lighter are visible; for Collector Crypt it shows "--" |
+| Buybacks (1) | Artemis | API from about $500/month (checked earlier the same day for the Chains wishes) | Has a BUYBACKS metric (seen on Hyperliquid); coverage not counted |
+| Unlocks (spec 3's Dilution) | Tokenomist | as above | **Collector Crypt is covered**: 45.01% unlocked, next unlock 2026-10-29. The screener shows "dilution unknown" for it, because DefiLlama has no unlock data for it |
+| Team, treasury and investor wallets (4) | Arkham | Intel API since 2026-02-17; price on request | Entity labels across 16 chains; alerts on treasury and investor deposits to exchanges |
+| Flows by holder group (4) | Nansen | API Pro from $49/month (credits) | The `flows` endpoint gives whale, public figure, smart money, top 100 holders and exchange, across 24 chains; it has no team segment |
+| Fundamentals in one standard (1) | Token Terminal | Pro $350/month, API priced on request | Revenue, earnings, users, supply; no buybacks metric found |
+
 ## Not taken from the talk
 - Network effects as a judgement. It cannot be measured from the data the page has; revenue growth already stands in for it.
 - Valuing an L1 by what switching it off would destroy. It cannot be measured.
