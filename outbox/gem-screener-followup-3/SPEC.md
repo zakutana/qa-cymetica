@@ -174,7 +174,7 @@ The detail then opens with the header (name and Upside), the Degen meter, Monthl
 
 ![The new app detail, drawn from items 10 to 18 (Pharaoh Exchange)](reference/app-detail-mock.svg)
 
-The picture is a mock of the whole detail of an app after items 10 to 18, in the page's own colours: inspiration, not literal. It shows Pharaoh Exchange's live figures, except the Next unlock tile, which carries Stader's data because Pharaoh has none in 90 days.
+The picture is a mock of the whole detail of an app after items 10 to 18, in the page's own colours: inspiration, not literal. It shows Pharaoh Exchange's live figures, except the Next unlock tile, which carries Stader's data because Pharaoh has none in 90 days. **A section that no item names stays exactly as it is live, not as drawn here:** Trajectory (except the caption item 18 removes), the rows and circles of the checks, the Chart's graph and the like are only sketched in the picture.
 
 ---
 
