@@ -217,6 +217,12 @@ A chain's detail then runs: header (name, Upside, chips), the slim row, the mont
 
 ---
 
+## 17. Links
+
+**[23] Every link that leaves the page opens in a new tab.** Live (scanned on Top Picks, Apps, Chains, Sectors, the Legend and one coin's detail), 103 links leave the page: 67 open in a new tab (`target="_blank"` with `rel="noopener"`) and 36 use `target="_top"`, which replaces the whole window: the logo in the header (https://cymetica.com), the "Fund →" links on the Hot sectors cards (`/fund-performance/...`) and others of the kind, and in the page's code the "See the plans ↗" link too. The owner wants every link, anywhere in the app, to open in a new tab, with `rel="noopener"`, including the links this spec adds (the web, CoinGecko and DEXTools chips of item 13 and the Launchpad icon of item 22). Links inside the page (a jump to a card, switching a tab, opening a coin) stay as they are.
+
+---
+
 ## Checklist (one line each; done when all are true)
 
 - [ ] 1 The Chains tab lists every chain whose token is in CoinGecko's Layer 1 or Layer 2 category with a market cap of $200M or more (or the cut you chose, named in your spec), joined to DefiLlama by `gecko_id`.
@@ -280,3 +286,5 @@ A chain's detail then runs: header (name, Upside, chips), the slim row, the mont
 - [ ] 21 The Sectors table has Theme as its first column and Stage as its second; the stage groups and the other columns are unchanged.
 - [ ] 22 The Memecoins sector (its row in Sectors, its panel, and its card on Top Picks when it shows there) carries a small icon with the tooltip "Launch your own memecoin"; a click or tap opens https://cymetica.com/launchpad in a new tab.
 - [ ] 22 No other sector has the icon; it is drawn in the page's colours and does not change the sector's numbers, stage or order.
+- [ ] 23 Every link that leaves the page, anywhere in the app, opens in a new tab with `rel="noopener"`; none uses `target="_top"` or replaces the window (the header logo, "Fund →" and "See the plans ↗" included).
+- [ ] 23 Links inside the page (a jump to a card, switching a tab, opening a coin) behave as before.
