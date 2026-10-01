@@ -16,6 +16,9 @@ Seen, 2026-10-01 (snapshot 13:42 UTC; CoinGecko and DefiLlama read the same even
 Seen: "Vetted only" shows 15; "All by upside" shows 26. Sui (rank 11 of 26 in All) is hidden by default for `far_below_peak` ("Not vetted: post-crash"); nothing on the page says that chains are hidden or how many.
 Goal: the default view says how many chains it hides and why, in one short line, and a hidden chain such as Sui can be found from the page itself.
 
+## 4. Chains: the Chart column and card (operator, 2026-10-01; now item 7 of spec 3)
+Seen: the snapshot has `chart` on 215 of 215 apps and on 0 of 26 chains. The Chart Analyzer (`GET /api/v1/chart-analyzer/analyze?symbol=`) holds Binance spot candles for 292 symbols; of 42 chain tokens tried, 33 are among them (not: CRO, FLR, HYPE, MNT, MON, OKB, QUAI, TON, XDC), so a chain's token can be scored from exchange candles, which its own study covers; apps are scored from DEX pools, which it does not.
+
 ## 3. Chains: real adoption, the benchmark and its badge
 Goal: a chain's adoption, its price-tag line and its Upside do not depend on what a transaction costs there, TVL, volume and active users all count, and no single input can be inflated cheaply to lift them.
 
