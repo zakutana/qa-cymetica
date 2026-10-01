@@ -185,6 +185,18 @@ It stays a real slider for the keyboard, a screen reader (it says "$100K") and a
 
 ---
 
+## 9. The year chart: hover both ways
+
+**[15] Hovering a line lights its name, as hovering a name lights its line.** The chart "Top 10 by upside: their year" (Apps and Chains tabs) has a legend on its right with the ten names. Today a hover on a name in the legend lights that coin's line and dims the other nine (and a small card says "Upside 15x · index 41"). The owner wants it to work the other way too: **a hover on a line in the chart lights the matching name in the legend** (the same highlight the row gets today when it is hovered), and the line itself stands out and the others dim. Both directions, on both tabs, the same behaviour.
+
+![The chart today](reference/year-chart-today.webp)
+
+![A hover on a name in the legend today](reference/year-chart-legend-hover-today.webp)
+
+Two details: a thin line is hard to hit with a mouse, so the line reacts in a generous band around it (several pixels either side), and the nearest line wins where lines cross. The small card with "Upside 15x · index 41" covers other rows of the legend in the second picture; it sits where it hides nothing (beside the pointer, or above the row). On a touch screen a tap on a line or a name does what the hover does.
+
+---
+
 ## Checklist (one line each; done when all are true)
 
 - [ ] 1 The header shows the logo (not text) with "Revenue-driven AI Research" and "by CyMetica" in it; the old title and the old tagline are gone.
@@ -218,3 +230,5 @@ It stays a real slider for the keyboard, a screen reader (it says "$100K") and a
 - [ ] 13 The badge fits at 390 px and at 1360 px without being cut off.
 - [ ] 13 The badge stands at the right end of the toolbar under the Legend button (Apps and Chains tabs), and the toolbar is no taller than 116 px; the old panel is gone.
 - [ ] 14 The min. revenue slider sits to the left of the badge and is drawn as eight separate rounded segments lit up to a gem-shaped knob, with the value in an outlined pill; it keeps its nine stops, the default of $100K, and works by drag, tap and arrow keys.
+- [ ] 15 On the year chart (Apps and Chains) a hover on a line lights that coin's name in the legend and dims the other lines, as a hover on a name lights its line; a tap does the same on a touch screen.
+- [ ] 15 A line can be hit within a few pixels of it; where lines cross, the nearest wins; the small hover card never covers legend rows.
