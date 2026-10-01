@@ -2,7 +2,7 @@
 
 **For:** the lead agent of the Cymetica SDLC pipeline
 **From:** Adam (product owner, Gem Screener)
-**Scope:** the Chains tab: which chains it lists, what a chain's adoption is, the benchmark and its badge, and the chart column and card; and on both tabs the size of the badges, the small print on Top Picks and revenue and dilution on Apps. Build or change only what is named; leave the rest of the app as it is.
+**Scope:** the Chains tab: which chains it lists, what a chain's adoption is, the benchmark and its badge, and the chart column and card; and on both tabs the size of the badges, the small print on Top Picks, revenue and dilution on Apps and the Supply card. Build or change only what is named; leave the rest of the app as it is.
 
 > **HOW TO READ THIS SPEC**
 > 1. **Goals, not methods.** How you build it is your call. Where an item gives a rule or a number, it is a good default, and you may improve it; say what you changed and why in your spec.
@@ -114,6 +114,18 @@ The owner wants:
 
 ---
 
+## 6. Apps: the Supply card
+
+**[11] The Supply card is redone: market cap and FDV, the speed of dilution, the next unlock.** Live, the card in a coin's detail is a bar and four tiles: "6% of tokens out", "+7% new tokens a week", "0% unlock in 90 days" and "1.9× revenue covers the new tokens" (on a coin that does not mint the last tile reads "no mint" over the same label). Market cap and FDV are not in it, the unlocks are one percentage for 90 days without a date or an amount, and the last tile is the mix of revenue and dilution that item 10 removes. The owner wants the card to show, number first:
+
+- **Market cap and FDV**, side by side, with the share of tokens out (market cap ÷ FDV, the "6% of tokens out" the card has today) next to them. The bar stays.
+- **The speed of dilution**: "+7% new tokens a week", the figure and the flag of item 10.
+- **The next unlock: when, how much, for whom.** In a tile of its own: the date or "in 3 days", the size in tokens, as a share of the circulating supply and in USD, and who receives it (insiders and so on). For example: "in 3 days · 918,750 tokens · 1.2% of circulating · insiders". The 90-day total goes into that tile's tooltip. The page's data has this for 22 of the 115 apps with unlock data (live: the next event with its date, tokens, share of circulating and receiver category, e.g. Stader in 3.3 days, 1.22% of circulating, insiders), and a 30-day amount for 49. Some unlocks are a daily stream, not an event; for those show the nearest event if the source has one, and otherwise the stream as a rate ("+0.4% of supply a week unlocking").
+- **No data stays "unknown", never zero**: 100 of the 215 apps have no unlock data; "none in 90 days" is shown only when the source says so.
+- **The tile "revenue covers the new tokens" is gone**, and so is "no mint" under that label.
+
+---
+
 ## Checklist (one line each; done when all are true)
 
 - [ ] 1 The Chains tab lists every chain whose token is in CoinGecko's Layer 1 or Layer 2 category with a market cap of $200M or more (or the cut you chose, named in your spec), joined to DefiLlama by `gecko_id`.
@@ -144,3 +156,8 @@ The owner wants:
 - [ ] 10 Dilution ("+7% new tokens a week") keeps its place in the Supply card and the Supply row of the checks, as a figure of its own.
 - [ ] 10 A high dilution is flagged against the benchmark's (caution above 0.5 points a week over it, red above 1 point, or the thresholds you chose, named in your spec), moving with the benchmark's own dilution; the tooltip names the benchmark's figure.
 - [ ] 10 The flag is not a gate or a sort key; on the pick cards it replaces "earnings below emissions"; an app with no emissions data shows "unknown", never zero.
+- [ ] 11 The Supply card shows market cap and FDV side by side with the share of tokens out, and keeps the bar.
+- [ ] 11 It shows the speed of dilution ("+7% new tokens a week", with the flag of item 10).
+- [ ] 11 It shows the next unlock in a tile of its own: when, how many tokens, the share of circulating supply, the value in USD and who receives it; the 90-day total is in its tooltip.
+- [ ] 11 An app with no unlock data shows "unknown", not zero and not "none"; a daily stream with no single event is shown as a rate.
+- [ ] 11 The tile "revenue covers the new tokens" and the "no mint" value under it are gone.
