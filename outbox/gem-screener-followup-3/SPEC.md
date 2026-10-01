@@ -2,7 +2,7 @@
 
 **For:** the lead agent of the Cymetica SDLC pipeline
 **From:** Adam (product owner, Gem Screener)
-**Scope:** the Chains tab: which chains it lists, what a chain's adoption is, the benchmark and its badge, and the chart column and card; and on both tabs the size of the badges, the small print on Top Picks, revenue and dilution on Apps, the Supply card, the Degen meter card, the links in a coin's header, Monthly revenue in the detail, the Chart card's small lines, the key figures of the detail, the order of its last lines, and the report status card and the Trajectory caption. Build or change only what is named; leave the rest of the app as it is.
+**Scope:** the Chains tab (which chains it lists, what a chain's adoption is, the benchmark and its badge, the chart column and card) and a clean-up of what the owner reads: the coin's and the chain's detail, the Top Picks page, the Sectors table and the size of the badges. Build or change only what is named; leave the rest of the app as it is.
 
 > **HOW TO READ THIS SPEC**
 > 1. **Goals, not methods.** How you build it is your call. Where an item gives a rule or a number, it is a good default, and you may improve it; say what you changed and why in your spec.
@@ -94,7 +94,7 @@ Do not only scale the drawing down: the word BENCHMARK is 8.6 px high today and 
 - **The two lines are gone from the card.** The card keeps the sector name, the stage pill, the trend icons and the fund line ("Gem Screener RWA · +5.4% since launch · Fund →").
 - **Nothing is lost:** what the two lines said (the move against the median sector, how much the sector is talked about, the leaders with their multiples) moves into the card's tooltip, the one dark card of item 17 of ET-28688, on hover, focus and tap, in plain words, the numbers first.
 - **The same for the paragraph under the backtest verdict** ("The criteria were written down and locked before the first result. So treat the cards below as an overview…", 10.5 px grey): it goes behind the verdict's own expand or tooltip; the verdict line itself ("Backtest 2024–2026: INCONCLUSIVE") stays.
-- **What stays:** the reason lines on the pick cards ("Watch out: …", "DEX & perps theme already leads", the "$5.4M → $181.5M if valued like Hyperliquid" line), because they say why a coin is on the list.
+- **What stays:** the reason lines on the pick cards ("Watch out: …", "DEX & perps theme already leads"), because they say why a coin is on the list. (The "if valued like Hyperliquid" line goes, item 20.)
 
 ---
 
@@ -169,17 +169,41 @@ The detail then opens with the header (name and Upside), the Degen meter, Monthl
 
 ## 12. The collapsed lines go to the bottom
 
-**[17] "30x test", "How it's calculated" and "For AI agents: copy and paste" go to the very bottom of the detail.** Live (order of item 9 of ET-28688), the three collapsed lines stand after Trajectory, above the checks and the Degen report. The owner: hardly anybody is interested in them. They move to the very end of a coin's detail, below the Degen report, and stay collapsed as they are. The detail then runs: header (name, Upside), Degen meter, Monthly revenue, Chart (with Strength 3M), Market cap & supply, Trajectory, the checks, the Degen report, and last the three collapsed lines. On a chain, "How it's calculated" and "For AI agents" are already last (item 16 of ET-28688) and stay there.
+**[17] "30x test", "How it's calculated" and "For AI agents: copy and paste" go to the very bottom of the detail.** Live (order of item 9 of ET-28688), the three collapsed lines stand after Trajectory, above the checks and the Degen report. The owner: hardly anybody is interested in them. They move to the very end of a coin's detail, below the Checks section, and stay collapsed as they are. The detail then runs: header (name, Upside), Degen meter, Monthly revenue, Chart (with Strength 3M), Market cap & supply, Trajectory, the Checks section (the last section; it holds the Generate report button and the report, item 18), and last the three collapsed lines. On a chain, "How it's calculated" and "For AI agents" are already last (item 16 of ET-28688) and stay there.
 
 ---
 
-## 13. The report status card and the Trajectory caption
+## 13. The report status card, the Generate report button and the Trajectory caption
 
-**[18] The report status card under the Degen meter goes, and the Trajectory caption.** Live, under the Degen meter a card says "Degen report ready, researched 1 day ago. Read it ↓", holds the button "Ask for a fresh Degen report" with its Pro badge, and says "A fresh report opens in 6 days, or sooner if something changes." The owner wants the card gone. This replaces what item 9 of ET-28688 kept ("Read it ↓" under the meter and the Ask button beside it).
+**[18] The report status card under the Degen meter goes; "Generate report" lives in the Checks section, the last one; and the Trajectory caption goes.** Live, under the Degen meter a card says "Degen report ready, researched 1 day ago. Read it ↓", holds the button "Ask for a fresh Degen report" with its Pro badge, and says "A fresh report opens in 6 days, or sooner if something changes." The owner wants the card gone (this replaces what item 9 of ET-28688 kept: "Read it ↓" under the meter and the Ask button beside it). The Checks section, which comes after Trajectory and is the last section of the detail, is where the report belongs, because a report is what fills the checks that are not checked yet: the button, called **"Generate report"**, goes there, with its Pro badge, and when a report exists its text stands in the same section under the checks, not as a section of its own. The collapsed lines of item 17 come after it. The report icon in the header (the green document icon beside Share) stays and scrolls to the report.
 
-One thing must not be lost: the button is the only way to ask for a report. It moves, with its Pro badge, into the Degen report section at the bottom of the detail, next to the report itself (a Pro plan or higher to ask; reading a finished report stays free). "Researched 1 day ago" and "a fresh report opens in 6 days, or sooner if something changes" go into the tooltip of that section. The report icon in the header (the green document icon beside Share) stays and scrolls to the report.
+The button must work for a Pro plan and say why when it does not. The owner has a Pro plan and sees it disabled; and a click on "Pro" sends him to https://cymetica.com/usage, which does not help a Pro account. Read on 2026-10-01: the page disables the button in two cases only, while a report is being made and while a report is under 7 days old (`refresh_open: false`); all 16 coins read had a ready report from 2026-09-30 or 10-01 with `refresh_opens_at` 2026-10-07 or 10-08, so today the button is locked on every coin. Plan has no part in that, but nothing on the page says so once the card above is gone. The owner wants:
+
+- **A locked button says why, next to it, in a few words** ("Opens in 6 days"), not only in a tooltip.
+- **A Pro account is never refused for its plan:** the button is disabled by the lock or while researching, and by nothing else; the Pro badge is not a link for an account that has the plan, and "See the plans" appears only to an account that has not.
+- **If every coin is locked for a week, that is a product question for you to answer in your spec:** why a Pro account cannot ask for a fresh report sooner.
 
 In the Trajectory section the caption "Growth per month in each quarter; an outlined bar is a fall. Source: DeFiLlama." goes as well; its words go into the section's tooltip.
+
+---
+
+## 14. The same on a chain's detail
+
+**[19] The changes of the coin's detail apply to a chain's detail, where they can.** The owner: do the same for the chains. Live, the detail of a chain (Polygon) has: the header with CoinGecko, DEXTools and Share (no web link), three pills, "✓ Vetted — the upside can be taken seriously", the Monthly activity fees, Monthly stablecoins and Monthly DEX volume charts, "How it's calculated", "Buy & hold", "For AI agents: copy and paste", and the report card with "Read it ↓" and "Ask for a fresh Degen report". It has no Degen meter, no Supply card and no checks. What applies and what does not:
+
+- **Applies as it is:** the icon chips and the web link (item 13); Upside in the header and Strength 3M in the Chart card (items 7, 15 and 16); the Chart card without its small lines (item 15); the Trajectory caption goes (item 18); "How it's calculated" and "For AI agents" last and collapsed (item 17); any small grey line of the kind the owner struck on Apps, if a chain's detail carries one (the owner reads nothing of that kind).
+- **Applies with the chain's own parts:** the monthly series (activity fees, stablecoins, DEX volume) stand directly under the header, above the Chart, as Monthly revenue does on an app (item 14); the slim row with Market cap and Adoption (item 16) stands directly under the header too. The report card under the header goes and "Generate report" moves to the bottom of the detail, in a section of its own above the collapsed lines, with the rules of item 18 (the report text under it, a locked button says why, a Pro account is never refused); a chain has no checks to put it in.
+- **Does not apply:** the Degen meter (item 12), the Supply card and its renaming (item 11), revenue and dilution (item 10): a chain has none of them.
+
+A chain's detail then runs: header (name, Upside, chips), the slim row, the monthly series, the Chart with Strength 3M, Trajectory, Buy & hold, the report section, and last the two collapsed lines.
+
+---
+
+## 15. The pick card and the Sectors table
+
+**[20] The Top Picks pick card is trimmed: the "if valued like Hyperliquid" line and the whole bottom block go.** Live, a pick card (Pharaoh Exchange) has, under the big ">50x", the grey line "$4.3M → >$215.6M if valued like Hyperliquid", the blue "28x if all tokens were out", the chips, the Degen meter, and a bottom block of three rows: "30x test ✓ $129.3M Uniswap $5.6bn", "$10K buy ≈ 2.5% slippage · pharaoh ↗" and "HL price ceiling >$6.42 today $0.128". The owner wants the grey line and the whole bottom block gone, so the card ends with the meter. What those lines said (the value if priced like the benchmark, the 30x test, the slippage of a $10K buy, the price ceiling) moves into the card's tooltip, in plain words; the coin's detail has them as well.
+
+**[21] Sectors: Theme is the first column.** Live, the Sectors table starts with Stage and then Theme. The owner wants the two swapped: Theme first (the sector name, its coin icons and trend icons, "15 coins"), Stage second (the pill and "was Falling"). The stage groups (Emerging, Hot, Fading, Falling) and the other columns stay as they are.
 
 ---
 
@@ -233,7 +257,14 @@ In the Trajectory section the caption "Growth per month in each quarter; an outl
 - [ ] 16 Strength 3M is a coloured figure in the Chart card and its sentence is in its tooltip.
 - [ ] 16 The Supply card has a new name that says it holds market cap and supply.
 - [ ] 16 A chain's detail has Upside in the header, Strength 3M in the Chart card and one slim row with Market cap and Adoption.
-- [ ] 17 In an app's detail "30x test", "How it's calculated" and "For AI agents: copy and paste" are the last three lines, below the Degen report, still collapsed.
+- [ ] 17 In an app's detail "30x test", "How it's calculated" and "For AI agents: copy and paste" are the last three lines, below the Checks section, still collapsed.
 - [ ] 18 The card under the Degen meter ("Degen report ready, researched … ago. Read it ↓", the Ask button, "A fresh report opens in …") is gone.
-- [ ] 18 "Ask for a fresh Degen report" with its Pro badge is in the Degen report section at the bottom of the detail and still works (Pro or higher to ask, reading a finished report is free); the age of the report and when a fresh one opens are in the tooltip.
+- [ ] 18 "Generate report" with its Pro badge is in the Checks section, the last section after Trajectory; a report, when there is one, stands in that section under the checks; the report icon in the header still scrolls to it.
+- [ ] 18 A locked button says why next to it in a few words; a Pro account is never refused for its plan (disabled only by the lock or while researching); the Pro badge is not a link for an account that has the plan.
 - [ ] 18 The Trajectory section has no "Growth per month in each quarter… Source: DeFiLlama." caption; its words are in the section's tooltip.
+- [ ] 19 A chain's detail has the icon chips with a web link (item 13), Upside in the header and Strength 3M in the Chart card, the Chart card without small lines, and no Trajectory caption.
+- [ ] 19 A chain's monthly series and the slim row (Market cap, Adoption) stand directly under the header, above the Chart; the report card under the header is gone.
+- [ ] 19 A chain's "Generate report" is in a section of its own above the collapsed lines, with the rules of item 18; "How it's calculated" and "For AI agents" are last and collapsed.
+- [ ] 20 A Top Picks pick card has no "$… → … if valued like Hyperliquid" line and no bottom block (30x test, $10K buy, HL price ceiling); it ends with the Degen meter.
+- [ ] 20 What those lines said is in the card's tooltip (hover, focus, tap), in plain words.
+- [ ] 21 The Sectors table has Theme as its first column and Stage as its second; the stage groups and the other columns are unchanged.
