@@ -207,6 +207,16 @@ A chain's detail then runs: header (name, Upside, chips), the slim row, the mont
 
 ---
 
+## 16. Memecoins and the Launchpad
+
+**[22] Memecoins carry a symbol that says "launch your own", linking to the Launchpad.** EventTrader has its own launchpad, https://cymetica.com/launchpad, where anybody can launch a token. The Gem Screener shows Memecoins as a sector and has no link to it anywhere (live: the page links out only to the coin's web site, CoinGecko and DEXTools). The owner wants Memecoins to carry a nice, small symbol that tells a visitor they can make a memecoin of their own, and that opens the Launchpad:
+
+- **Where:** the Memecoins row in the Sectors table, the Memecoins sector's panel, and its card on Top Picks when it shows there as a hot sector. Only the Memecoins sector has it.
+- **What:** a small icon in the page's own style (a rocket, a coin with a plus, or what you draw; one colour, the page's green or cyan, in the style of the chips of item 13). Its tooltip reads "Launch your own memecoin"; a click or tap opens https://cymetica.com/launchpad in a new tab (`rel="noopener"`). Use the address without a trailing slash: with one it redirects.
+- **What it does not do:** it carries no claim about fees or chains (the Launchpad page says that itself), and it does not change the sector's stage, numbers or order.
+
+---
+
 ## Checklist (one line each; done when all are true)
 
 - [ ] 1 The Chains tab lists every chain whose token is in CoinGecko's Layer 1 or Layer 2 category with a market cap of $200M or more (or the cut you chose, named in your spec), joined to DefiLlama by `gecko_id`.
@@ -268,3 +278,5 @@ A chain's detail then runs: header (name, Upside, chips), the slim row, the mont
 - [ ] 20 A Top Picks pick card has no "$… → … if valued like Hyperliquid" line and no bottom block (30x test, $10K buy, HL price ceiling); it ends with the Degen meter.
 - [ ] 20 What those lines said is in the card's tooltip (hover, focus, tap), in plain words.
 - [ ] 21 The Sectors table has Theme as its first column and Stage as its second; the stage groups and the other columns are unchanged.
+- [ ] 22 The Memecoins sector (its row in Sectors, its panel, and its card on Top Picks when it shows there) carries a small icon with the tooltip "Launch your own memecoin"; a click or tap opens https://cymetica.com/launchpad in a new tab.
+- [ ] 22 No other sector has the icon; it is drawn in the page's colours and does not change the sector's numbers, stage or order.
