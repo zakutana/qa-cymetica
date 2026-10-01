@@ -106,6 +106,29 @@ The Chains and Sectors tables are not named, but check them against the same thr
 
 ---
 
+## 7. The coin detail
+
+**[9] A new order of the sections, with the checks and the report last.** Today the detail of a coin runs (live, Pharaoh Exchange): the header; the Degen level (the meter, with its "Degen report ready, researched today. Read it ↓" line or the "Ask for a fresh Degen report" button); the Chart card; the **Degen report** (verdict, what it is, good, shady, the bet, sources); Monthly revenue; the **check rows** (the circles by area, "Not checked yet", "What changed in the level"); Supply; the figures (Market cap, Revenue 30D, Emissions 30D, FDV, Upside, Strength 3M); Trajectory; 30x test; Weekly history; Upside over time; Growth windows; How it's calculated; For AI agents. The report starts about 1,200 px down and the checks about 2,300 px down, in front of the numbers a degen came for.
+
+The order the owner wants:
+
+1. the header and the Degen meter, as now, with its "Read it ↓" line (it scrolls to the report, wherever the report is) and the "Ask for a fresh Degen report" button, which stay where they are;
+2. the Chart card;
+3. **Monthly revenue**, straight under the chart;
+4. **Supply**;
+5. the figures (Market cap, Revenue 30D, Emissions 30D, FDV, Upside, Strength 3M), and the rest of the sections in the order they have now;
+6. **Trajectory**;
+7. 30x test, How it's calculated, For AI agents, as now;
+8. at the very bottom, the **checks** (the circles by area, "Not checked yet", what changed in the meter), and as the last block of all the **Degen report**.
+
+**[10] Three sections are removed.** "Weekly history", "Upside over time" and "Growth windows" (the three collapsed lines in the detail) go from the page altogether, with any mention of them in the Legend or the help texts. The API keeps its data.
+
+![The three sections to remove](reference/followup-2/sections-to-remove.png)
+
+**[11] "Degen level" is called "Degen meter".** In the detail (the label above the meter, "Degen level 6 of 10" in the spoken label, "What changed in the level", "Not available: this coin has no Degen level yet", the text that starts the Nexus question), in the Apps table (the column title today reads only "Degen"; it becomes "Degen meter"), in the Legend and tooltips, in `llms.txt` and the API descriptions: anywhere a reader sees the name. Field names such as `degen_level` stay, so that no agent breaks.
+
+---
+
 ## Checklist (one line each; done when all are true)
 
 - [ ] 1 The header shows the logo (not text) with "Revenue-driven AI Research" and "by CyMetica" in it; the old title and the old tagline are gone.
@@ -126,3 +149,7 @@ The Chains and Sectors tables are not named, but check them against the same thr
 - [ ] 8 All column titles of the Apps table stand on one baseline (at 1360 and at 2000 px).
 - [ ] 8 At 2000 px the table fills its box: no empty strip at the right of the last column.
 - [ ] 8 The Upside tag starts at the same x in every row, with or without the clock symbol.
+- [ ] 9 In a coin's detail the order is: header and Degen meter, Chart, Monthly revenue, Supply, the figures, Trajectory, 30x test / How it's calculated / For AI agents, then the checks, and last of all the Degen report.
+- [ ] 9 "Read it ↓" under the meter still scrolls to the report, and "Ask for a fresh Degen report" is still beside the meter.
+- [ ] 10 "Weekly history", "Upside over time" and "Growth windows" are gone from the page, and no help text or Legend line mentions them.
+- [ ] 11 No reader-facing text says "Degen level" any more (page, Apps column title, Legend, tooltips, `llms.txt`, API descriptions); it says "Degen meter". Field names are unchanged.
