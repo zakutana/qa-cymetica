@@ -92,8 +92,22 @@ def test_the_deep_pass_is_two_lines_what_we_fixed_and_what_went_to_them():
     assert named["lines"][0]["count"] == 1, named
     nothing = morning.deep_pass("# T\n## Opraveno\n- **Nic.** noc bez oprav\n")
     assert nothing["lines"][0]["count"] == 0, nothing
-    assert all(len(line["text"]) <= 140 for line in said["lines"])
+    assert sent["text"] and len(sent["text"]) <= 140
     assert morning.deep_pass("")["lines"] == [], "no pass on record is no lines"
+    # 2026-10-01, the operator: "opraveno 14, ale vubec nemam paru ceho se to
+    # tyka". The fixed line says WHAT: each fix's lead, or for a pass that
+    # leads with its count, the words after that count.
+    assert "Bezpečnostní brána pustila živý příkaz" in fixed["text"], fixed
+    assert "Kontrola #119 měla tři díry" in fixed["text"], fixed
+    what = morning.deep_pass(
+        "# T\n## Opraveno\n- **14 z 28 tvrzení skutečných, vše opraveno.** Gem audit: "
+        "nová identita market cap; lab stránka sčítá všechny boty. Další věta.\n"
+        "- **0b:** FOMO watch jede po minutě.\n")
+    text = what["lines"][0]["text"]
+    assert "Gem audit: nová identita market cap" in text and "FOMO watch" in text, text
+    assert "14 z 28" not in text, "the count is the tag's, not the words'"
+    long_one = morning.deep_pass("# T\n## Opraveno\n- **3 věci.** " + "slovo " * 200)
+    assert len(long_one["lines"][0]["text"]) <= morning.DEEP_LINE, "an unbounded line"
 
     # And what happened with Cymetica overnight, which the report lacked:
     # sweeps run, bugs we filed, what they fixed, what we verified.
@@ -123,9 +137,26 @@ def test_the_deep_pass_is_two_lines_what_we_fixed_and_what_went_to_them():
     # counted, and the operator's own /qa-sweep did not (R06, 3/3).
     registered = ["2026-09-26T00:05:00+00:00", "2026-09-26T17:03:34+00:00",
                   "2026-09-25T10:00:00+00:00"]
-    theirs = morning.cymetica(events, registered, since)
-    assert theirs == {"sweeps": 2, "filed": [131], "fixed": [128], "verified": [113],
-                      "failing": []}, theirs
+    # The operator, 2026-10-01: every report number says what it is about.
+    titles = {131: "A" * 300, 128: "Fixed thing", 113: "Verified thing", 99: "old"}
+    theirs = morning.cymetica(events, registered, since, titles)
+    assert {k: v for k, v in theirs.items() if k != "titles"} == {
+        "sweeps": 2, "filed": [131], "fixed": [128], "verified": [113],
+        "failing": []}, theirs
+    assert theirs["titles"] == {131: "A" * (morning.TITLE_LINE - 1) + "…",
+                                128: "Fixed thing", 113: "Verified thing"}, theirs["titles"]
+    assert morning.cymetica(events, registered, since)["titles"] == {}, "no titles known"
+    # Our tracker copy keeps only the newest reports; an older one is named by
+    # the finding the ledger filed it for, and the tracker's own title wins.
+    found = morning.titles_from(
+        [{"id": 140, "title": "Tracker title"}, {"id": None, "title": "x"}],
+        {"findings": {
+            "CYM-a": {"title": "Old finding", "filing": {"reports": [
+                {"report_id": 51}, {"report_id": 140}]}},
+            "CYM-b": {"title": "Second", "filing": {"reports": [{"report_id": 51}]}},
+            "CYM-c": {"title": "", "filing": {"reports": [{"report_id": 7}]}},
+            "CYM-d": {"title": "No filing"}}})
+    assert found == {140: "Tracker title", 51: "Old finding"}, found
 
     # 2026-10-01: a pass on #132 at 16:00 and our correction (fail) on it at
     # 00:10 the same night -- the report said "the fix holds: #132". The
@@ -171,7 +202,9 @@ def test_overnight_names_what_moved_since_the_last_report():
     lines = morning.overnight(now, before)
     text = " | ".join(lines)
     assert "Nový pokus: FLOW recovery" in text
-    assert "✗ nevyšlo: SOL doubles" in text
+    # Which product it was, so "nevyšlo" is not read as one kind of thing
+    # (the operator, 2026-10-01: "to sou event karty?").
+    assert "✗ nevyšlo (Karty): SOL doubles" in text
     assert "Karty −3,2 % → −4,2 %" in text
     assert "Nexus: +5 otázek" in text
     assert len(lines) <= morning.MAX_OVERNIGHT
@@ -231,8 +264,25 @@ def test_the_page_is_one_short_czech_page_in_the_artifact_shape():
             f"the publish skeleton supplies <{tag}>")
     for words in ("Deep pass", "Karty", "Boti", "Memecoiny", "Fondy", "Přes noc",
                   "Dnes", "Podle tvé zpětné vazby", "boti mají vlastní room",
-                  "@EventTraderQABot ahoj", "Cymetica", "sweep"):
+                  "@EventTraderQABot ahoj", "Cymetica", "Sweep"):
         assert words in html, f"{words!r} is not on the page"
+    # The lab's figures are totals since it began, said so (the operator,
+    # 2026-10-01: "jsou celkove za celou dobu nebo prez noc?"); overnight is
+    # the section below it.
+    assert "celkem od začátku" in html
+    # Every report number carries what it is about, one line (same day).
+    many = dict(_view(), cymetica={
+        "sweeps": 11, "filed": [138], "fixed": [136], "verified": [135],
+        "failing": [132],
+        "titles": {138: "Feature pages call routes missing from the OpenAPI",
+                   136: "Builds ship late", 135: "Matchups read running",
+                   132: "Async a2a gets no investigation"}})
+    page_html = module.render(many)
+    assert "Sweep: 11" in page_html, "the sweep count is one short line"
+    for line in ("#138 — Feature pages call routes missing from the OpenAPI",
+                 "#136 — Builds ship late", "#135 — Matchups read running",
+                 "#132 — Async a2a gets no investigation"):
+        assert line in page_html, line
     # Nothing waits on the operator (2026-09-26), and the Nexus line says what
     # the numbers are: went to paper, lost, earned, still running.
     assert "Čeká na tebe" not in html

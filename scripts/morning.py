@@ -86,20 +86,29 @@ def _list(items: list[str], empty: str) -> str:
 DEEP_TAGS = {"fixed": ("ok", "Opraveno u nás"), "sent": ("", "Odešlo Cymetice")}
 
 
-def _ids(ids: list) -> str:
-    return ", ".join(f"#{i}" for i in ids) if ids else "žádný"
+def _bucket(label: str, ids: list, titles: dict) -> str:
+    """One kind of news: its label, then each report on a line of its own with
+    what it is about (the operator, 2026-10-01: a bare #138 says nothing)."""
+    if not ids:
+        return f"<li>{escape(label)}: žádný</li>"
+    rows = "".join(
+        f"<li>#{i}" + (f" — {escape(str(titles[i]))}" if titles.get(i) else "") + "</li>"
+        for i in ids)
+    return f'<li>{escape(label)}:<ul class="sub">{rows}</ul></li>'
 
 
 def _cymetica(said: dict) -> str:
     """Sweeps, what we filed, what they fixed, what we verified -- since the
     last report (the operator, 2026-09-26)."""
-    return _list([
-        f"Ověřovacích běhů proti jejich platformě (sweep): {said.get('sweeps', 0)}",
-        f"Našel jsem a nahlásil: {_ids(said.get('filed') or [])}",
-        f"Opravili: {_ids(said.get('fixed') or [])}",
-        f"Ověřil jsem, že oprava drží: {_ids(said.get('verified') or [])}"]
-        + ([f"Znovu selhává, poslal jsem jim to: {_ids(said['failing'])}"]
-           if said.get("failing") else []), "")
+    titles = said.get("titles") or {}
+    rows = [f"<li>Sweep: {said.get('sweeps', 0)}</li>",
+            _bucket("Našel jsem a nahlásil", said.get("filed") or [], titles),
+            _bucket("Opravili", said.get("fixed") or [], titles),
+            _bucket("Ověřil jsem, že oprava drží", said.get("verified") or [], titles)]
+    if said.get("failing"):
+        rows.append(_bucket("Znovu selhává, poslal jsem jim to",
+                            said["failing"], titles))
+    return '<ul class="lines">' + "".join(rows) + "</ul>"
 
 
 def _deep(deep: dict) -> str:
@@ -233,6 +242,8 @@ h2 span {{ font: 400 12.5px var(--mono); letter-spacing: 0; text-transform: none
 .nexus b {{ color: var(--text); }} .nexus b.up {{ color: var(--ok); }}
 .lines {{ margin: 0; padding-left: 20px; display: flex; flex-direction: column; gap: 6px; }}
 .lines li::marker {{ color: var(--accent); }}
+.lines .sub {{ margin: 4px 0 2px; padding-left: 18px; display: flex; flex-direction: column;
+  gap: 3px; font-size: 14px; color: var(--text-dim); }}
 .empty {{ margin: 0; color: var(--text-dim); }}
 .block {{ background: var(--surface); border: 1px solid var(--line); border-radius: 12px;
   padding: 14px 16px; }}
@@ -267,7 +278,7 @@ footer code {{ font-family: var(--mono); }}
   </section>
 
   <section>
-    <h2>Laborka</h2>
+    <h2>Laborka <span>celkem od začátku, ne za noc</span></h2>
     <div class="kpis">{tiles}</div>
     {nexus}
   </section>

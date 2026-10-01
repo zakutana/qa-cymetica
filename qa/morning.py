@@ -78,6 +78,18 @@ def _bullets(section: str) -> list[str]:
 
 
 FIXED_OURS = "chyb v našich vlastních kontrolách a nástrojích, ne v Cymetice"
+DEEP_LINE = 420
+TITLE_LINE = 110
+
+
+def _what(bullet: str) -> str:
+    """What one fix was, as words: its bold lead, or -- for a bullet that
+    leads with its count ("**14 z 28 ...**") -- what follows that lead."""
+    lead = re.match(r"\*\*(.+?)\*\*", bullet)
+    if lead and re.match(r"\d+\b", lead.group(1)):
+        rest = re.sub(r"[`*_]", "", bullet[lead.end():])
+        return " ".join(re.split(r"(?<=[.!?])\s", " ".join(rest.split()), 1)[0].split())
+    return _plain(bullet)
 
 
 def deep_pass(markdown: str) -> dict:
@@ -103,7 +115,13 @@ def deep_pass(markdown: str) -> dict:
             count = 0
         else:
             count = len(found)
-        lines.append({"kind": "fixed", "count": count, "text": FIXED_OURS})
+        # The operator, 2026-10-01: "opraveno 14, ale vubec nemam paru ceho se
+        # to tyka" -- so the line says what, after saying whose they are.
+        said = " · ".join(w for w in (_what(b) for b in found) if w)
+        text = f"{FIXED_OURS}: {said}" if said else FIXED_OURS
+        lines.append({"kind": "fixed", "count": count,
+                      "text": text if len(text) <= DEEP_LINE
+                      else text[:DEEP_LINE - 1].rstrip() + "…"})
     if "Co odešlo Cymetice" in sections:
         found = _bullets(sections["Co odešlo Cymetice"])
         lines.append({"kind": "sent", "count": len(found),
@@ -116,7 +134,29 @@ def deep_pass(markdown: str) -> dict:
 FIXED_STATUSES = frozenset({"fixed", "resolved"})
 
 
-def cymetica(events: list[dict], registered: list[str], since: str | None) -> dict:
+def titles_from(tracker_rows: list[dict], ledger: dict) -> dict:
+    """{report id: what it is about}: the tracker's own title where our copy
+    of it still holds the report, else the title of the first ledger row
+    filed for it."""
+    out: dict = {}
+    for row in tracker_rows or ():
+        if isinstance(row, dict) and row.get("id") is not None and row.get("title"):
+            out[row["id"]] = row["title"]
+    for finding in ((ledger or {}).get("findings") or {}).values():
+        for filed in ((finding.get("filing") or {}).get("reports") or ()):
+            rid = filed.get("report_id") if isinstance(filed, dict) else None
+            if rid is not None and rid not in out and finding.get("title"):
+                out[rid] = finding["title"]
+    return out
+
+
+def _short_title(title) -> str:
+    text = " ".join(str(title or "").split())
+    return text if len(text) <= TITLE_LINE else text[:TITLE_LINE - 1].rstrip() + "…"
+
+
+def cymetica(events: list[dict], registered: list[str], since: str | None,
+             titles: dict | None = None) -> dict:
     """What happened with Cymetica since the last report: verification runs
     against their platform, reports we filed, reports they fixed, fixes we
     verified. The operator, 2026-09-26: the report did not say.
@@ -146,8 +186,13 @@ def cymetica(events: list[dict], registered: list[str], since: str | None) -> di
         newest[e["report_id"]] = e["verdict"]
     verified = sorted(r for r, verdict in newest.items() if verdict == "pass")
     failing = sorted(r for r, verdict in newest.items() if verdict == "fail")
+    # What each number is about (the operator, 2026-10-01: a bare #138 says
+    # nothing): the tracker's own title, one line, for the ones named here.
+    named = {*filed, *fixed, *verified, *failing}
     return {"sweeps": sweeps, "filed": filed, "fixed": fixed, "verified": verified,
-            "failing": failing}
+            "failing": failing,
+            "titles": {r: _short_title(t) for r, t in (titles or {}).items()
+                       if r in named and t}}
 
 
 def overnight(report: dict, before: dict | None) -> list[str]:
@@ -168,7 +213,7 @@ def overnight(report: dict, before: dict | None) -> list[str]:
             word = {"survived": "✓ vyšlo", "refuted": "✗ nevyšlo"}.get(
                 room["verdict"], "? nedá se říct")
             net = room.get("net_pct")
-            out.append(f"{word}: {room.get('title')}"
+            out.append(f"{word} ({SECTOR_NAMES[room['product']]}): {room.get('title')}"
                        + (f" ({_cz(net)} %)" if net is not None else ""))
     for key, name in SECTOR_NAMES.items():
         now = (report.get("products") or {}).get(key, {}).get("net_pct")
@@ -225,11 +270,12 @@ def today(notebook: list[dict], since: str | None = None,
 
 def build(report: dict, state: dict | None, deep_md: str, notebook: list[dict],
           now_local: datetime, events: list[dict] | None = None,
-          registered: list[str] | None = None) -> dict:
+          registered: list[str] | None = None,
+          titles: dict | None = None) -> dict:
     state = state or {}
     since = state.get("made_at")
     return {
-        "cymetica": cymetica(events or [], registered or [], since),
+        "cymetica": cymetica(events or [], registered or [], since, titles),
         "date": now_local.date().isoformat(),
         "made_at": now_local.isoformat(timespec="minutes"),
         "deep_pass": deep_pass(deep_md or ""),

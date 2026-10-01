@@ -3580,9 +3580,28 @@ def morning_page(now_local: datetime | None = None) -> Path:
         found = re.search(r"^\s*Registered\s+(\S+)", pre.read_text(encoding="utf-8"), re.M)
         if found:
             registered.append(found.group(1))
+    # What each report is about, from our copy of their tracker (the
+    # operator, 2026-10-01: the report numbers must say what they are).
+    titles = {}
+    try:
+        from qa.state import state_dir
+        rows, ledger = [], {}
+        try:
+            copy = json.loads((state_dir() / "bounty.json").read_text(encoding="utf-8"))
+            rows = copy.get("reports") or copy.get("items") or []
+        except (OSError, ValueError, AttributeError):
+            pass
+        try:
+            ledger = json.loads((state_dir() / "ledger.json").read_text(encoding="utf-8"))
+        except (OSError, ValueError):
+            pass
+        titles = qa_morning.titles_from(rows, ledger)
+    except Exception:  # noqa: BLE001 -- a title is a nicety; the report still builds
+        titles = {}
     view = qa_morning.build(
         report, state, deep.read_text(encoding="utf-8") if deep.is_file() else "",
-        lab.load(), moment, events=read_events(), registered=registered)
+        lab.load(), moment, events=read_events(), registered=registered,
+        titles=titles)
     page = _morning_file(MORNING_PAGE)
     _write_text(page, _sibling("morning").render(view))
     state["pending"] = {"built_at": _now().isoformat(timespec="seconds"),
