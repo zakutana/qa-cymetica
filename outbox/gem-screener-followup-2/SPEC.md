@@ -216,6 +216,25 @@ The result is the Chains detail that looks like the same product as the Apps det
 
 ---
 
+## 11. Tooltips: one card, every time
+
+**[17] Every tooltip is the same dark card, on hover and on click, everywhere.** This was item 9 of the last request ("one tooltip style everywhere, no browser-native tooltips left") and it is only half done. The owner sees two faults:
+
+- **A hover works in some places and not in others.** Some (i) icons and symbols open their dark card when the pointer rests on them, others open nothing.
+- **A click shows the old design.** A click or tap on an (i) opens a **light** popover (white card, dark text, an underlined "How it's calculated" link), which is the old view. It does so everywhere, so the page has two different tooltips for the same thing.
+
+![A hover: the dark card (the one to keep)](reference/tooltip-hover-dark-card.png)
+
+![A click on the same (i): the old light popover](reference/tooltip-click-light-popover.png)
+
+![A click on the (i) of the year chart: the same old popover](reference/tooltip-click-light-popover-year-chart.png)
+
+The goal: **one tooltip, the dark card, for hover, keyboard focus and click or tap**, on every tab and in every panel: Top Picks, Apps, Chains, Sectors, the Legend, the detail of a coin and of a chain, the altseason panel, the near-misses queue, the badges. The light popover is removed, and what it carries (the "How it's calculated" link) moves into the dark card, which stays open on a click so the link can be used and closes on a click elsewhere or on Escape.
+
+**Check every one.** Go through every (i), every symbol and every table-header hint on every tab and test the three ways (hover, keyboard focus, click or tap), on a wide screen and at 390 px; list what was checked in your spec. A tooltip that never opens or opens the old view is a fault.
+
+---
+
 ## Checklist (one line each; done when all are true)
 
 - [ ] 1 The header shows the logo (not text) with "Revenue-driven AI Research" and "by CyMetica" in it; the old title and the old tagline are gone.
@@ -255,3 +274,6 @@ The result is the Chains detail that looks like the same product as the Apps det
 - [ ] 16 Its order follows item 9 (header, figures, monthly chart, Trajectory, the small collapsed lines last); Trajectory is the Apps card with one colour for the stage and no repeated stage name.
 - [ ] 16 No block stands empty on a chain (no "Loading...", no "No price history", no table of dashes); "Weekly history", "Upside over time" and "Growth windows" are not there.
 - [ ] 16 Nothing that belongs only to apps was added to the chain detail; every control in its header works for a chain.
+- [ ] 17 Every (i), symbol and header hint on every tab and panel opens the same dark card on hover, on keyboard focus and on click or tap; none opens nothing.
+- [ ] 17 The light popover is gone everywhere; its "How it's calculated" link is in the dark card, which stays open on a click and closes on a click elsewhere or Escape.
+- [ ] 17 The spec lists every tooltip checked, on a wide screen and at 390 px.
