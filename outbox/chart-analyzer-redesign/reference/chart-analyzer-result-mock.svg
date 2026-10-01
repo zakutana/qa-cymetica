@@ -46,8 +46,7 @@
 <circle cx="235.6" cy="255.9" r="5" fill="#fff" class="pulse"/>
 <text x="220" y="388" font-family="Archivo Black, Arial Black, sans-serif" font-size="110" font-weight="400" fill="url(#numfill)" text-anchor="middle" letter-spacing="-3" >54</text>
 <rect x="158" y="414" width="124" height="30" rx="15" fill="#3b82f626" stroke="#3b82f6" stroke-width="1.4" /><text x="220" y="434" font-family="JetBrains Mono, IBM Plex Mono, monospace" font-size="13" font-weight="800" fill="#8db8ff" text-anchor="middle" letter-spacing="1.6" >NEUTRAL</text>
-<text x="220" y="480" font-family="IBM Plex Sans, Segoe UI, Arial, sans-serif" font-size="15.5" font-weight="600" fill="#e8eef6" text-anchor="middle" letter-spacing="0" >A little above an average chart.</text>
-<rect x="144" y="504" width="152" height="26" rx="13" fill="#3b82f61c" stroke="#3b82f6" stroke-width="1.2" /><text x="220" y="521.5" font-family="JetBrains Mono, IBM Plex Mono, monospace" font-size="10.5" font-weight="700" fill="#8db8ff" text-anchor="middle" letter-spacing="0.8" >NOT A FORECAST  ⓘ</text>
+<text x="220" y="492" font-family="IBM Plex Sans, Segoe UI, Arial, sans-serif" font-size="15.5" font-weight="600" fill="#e8eef6" text-anchor="middle" letter-spacing="0" >A little above an average chart.</text>
 <rect x="420" y="160" width="980" height="400" rx="24" fill="#0d1626" stroke="url(#cardbd)" stroke-width="1.6" />
 <text x="448" y="194" font-family="JetBrains Mono, IBM Plex Mono, monospace" font-size="11" font-weight="700" fill="#8fa6c2" text-anchor="start" letter-spacing="1.4" >CARDS / USDC · LAST 90 DAYS</text>
 <line x1="446" y1="520" x2="1296" y2="520" stroke="#13243a" stroke-width="1"/><text x="1310" y="524" font-family="JetBrains Mono, IBM Plex Mono, monospace" font-size="10.5" font-weight="500" fill="#6f8199" text-anchor="start" letter-spacing="0" >0.10</text>
