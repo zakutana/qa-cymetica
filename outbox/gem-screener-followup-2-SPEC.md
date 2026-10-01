@@ -127,6 +127,15 @@ The order the owner wants:
 
 **[11] "Degen level" is called "Degen meter".** In the detail (the label above the meter, "Degen level 6 of 10" in the spoken label, "What changed in the level", "Not available: this coin has no Degen level yet", the text that starts the Nexus question), in the Apps table (the column title today reads only "Degen"; it becomes "Degen meter"), in the Legend and tooltips, in `llms.txt` and the API descriptions: anywhere a reader sees the name. Field names such as `degen_level` stay, so that no agent breaks.
 
+**[12] A Share button in the coin's detail, and a link that opens that coin.** The owner wants to send a coin's detail to someone: a button at the top of the detail, in the row with "CoinGecko ↗" and "DEXTools ↗". A click copies the link of that coin and says "Link copied" for a moment; on a phone that has the system share sheet it opens the share sheet instead. The link is `https://cymetica.com/gem-screener?coin=<slug>`, by slug and never by ticker (two apps can share one). Today the only line that carries this link is "Gem Screener ↗" far down in the sources list of the detail.
+
+Whoever opens the link sees that coin's detail already open on the page. Live on 2026-10-01 this part already works (`/gem-screener?coin=collector-crypt` opens Collector Crypt); keep it working, for every coin on the list, also for one that is not in the default view of the Apps tab.
+
+Two faults found on the way, both part of this item:
+
+- **The address bar does not follow the open coin.** Opened plain (`/gem-screener`), a click on Pharaoh Exchange opens its detail and the address bar still says `/gem-screener`. Opened as `?coin=collector-crypt`, a click on Pharaoh Exchange leaves `collector-crypt` in the address bar: a visitor who copies it sends the wrong coin. The address bar carries the coin that is open and loses it when the detail is closed, so the button and the address bar give the same link.
+- **The preview of a shared link is the page's, not the coin's.** The link of a coin is previewed in a chat or on X with the title "Gem Screener | EventTrader" and the page's own description and image, the same as the front page. Give the link of a coin a preview that names the coin and its upside (for instance "Collector Crypt: 26x upside vs revenue") and the Gem Screener's own image.
+
 ---
 
 ## Checklist (one line each; done when all are true)
@@ -153,3 +162,7 @@ The order the owner wants:
 - [ ] 9 "Read it ↓" under the meter still scrolls to the report, and "Ask for a fresh Degen report" is still beside the meter.
 - [ ] 10 "Weekly history", "Upside over time" and "Growth windows" are gone from the page, and no help text or Legend line mentions them.
 - [ ] 11 No reader-facing text says "Degen level" any more (page, Apps column title, Legend, tooltips, `llms.txt`, API descriptions); it says "Degen meter". Field names are unchanged.
+- [ ] 12 The detail of a coin has a Share button at the top beside the CoinGecko and DEXTools links; a click copies `https://cymetica.com/gem-screener?coin=<slug>` and says "Link copied" (on a phone with a share sheet it opens that).
+- [ ] 12 Opening that link shows the coin's detail; true for every coin, also one outside the default Apps view.
+- [ ] 12 Opening a coin's detail puts its link in the address bar and closing it takes it out; after clicking from one coin to another the address bar names the second.
+- [ ] 12 The link of a coin is previewed with the coin's name and upside, not with the front page's title and image.
