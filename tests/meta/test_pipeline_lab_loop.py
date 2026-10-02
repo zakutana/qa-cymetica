@@ -2966,6 +2966,19 @@ def test_the_catalogue_readers_take_whole_names_and_respect_what_he_ruled_out():
     ranked = ("## Pick: **AIB-SPACE** -- mark it, watch 5 days.\n"
               "It sits at the top, ahead of AIB-AI (+9.8%) and FTA-STOCKS.\n")
     assert lab.proposed_funds(ranked, FUNDS) == ["AIB-SPACE"]
+    # NEX-0115 (2026-10-02 23:41): asked for up to five, he opened two cards and said of a
+    # fund, before any heading, "not worth a watch-slot for this window" and, under the
+    # "NOT PROPOSED" heading, that its signal "argues against a watch-mark". The tick
+    # opened a room for it (STR-0078): neither phrase was in the ruling-out words.
+    declined = ("Verified everything I can. AIB-SPACE is a real live fund, but I have no "
+                "3-day momentum read for it and its only forward signal is negative -- not "
+                "worth a watch-slot for this window. Here is the final set.\n\n"
+                "## Open on paper now -- 2 picks\n"
+                "**1. `998acaff-22c8-4735-9e6d-26f055747fbd`** -- long, TP +4%.\n\n"
+                "## NOT PROPOSED -- ruled out, do not open\n"
+                "- **No fund.** AIB-SPACE is a verified live fund, but its only forward "
+                "signal argues against a watch-mark for this window.\n")
+    assert lab.proposed_funds(declined, FUNDS) == [], lab.proposed_funds(declined, FUNDS)
     # NEX-0098 (2026-09-25 01:27): asked for FIVE by name, he surveyed all
     # twelve, numbered his five, and named the rest in prose and an inline
     # "**Excluded:**" -- the tick cloned twelve (seven refused only by their

@@ -1686,6 +1686,9 @@ def proposed_cards(text: str, known) -> dict[str, list[str]]:
 _RULED_OUT = re.compile(
     r"\b(are out|is out|ruled out|rejected|disqualified|excluded|withheld|"
     r"not (?:a )?(?:long|pick|buy|fit|selected)|skip|avoid|pass on|"
+    # NEX-0115: a fund "not worth a watch-slot", whose signal "argues against a
+    # watch-mark" -- the tick opened a room for it (2026-10-02).
+    r"not worth|argues? against|"
     # NEX-0073: "**Why it edges the alternatives:** Fibonacci Phoenix ...".
     r"alternatives?|runners?-up|instead of)\b",
     re.I)
