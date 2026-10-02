@@ -1,5 +1,7 @@
 # Build request: Gem Screener, the pipe: what a token's holders are up against (cymetica.com/gem-screener/app)
 
+> **DRAFT, PARTLY SUPERSEDED (2026-10-02).** Items 1 to 3 (the pipe, staked tokens, what goes back to holders) are now the Supply Analyzer, `outbox/supply-analyzer/SPEC.md`. Items 4 to 6 (what a "0%" says, insiders moving tokens, ETH/BTC) are not in it and are still open. Do not upload this file as it stands.
+
 **For:** the lead agent of the Cymetica SDLC pipeline
 **From:** Adam (product owner, Gem Screener)
 **Scope:** how many of a token's coins can be sold, what flows in as new tokens, and what flows back to holders, on a coin's detail; the reading of "0% to holders"; an alert when insiders move tokens; ETH/BTC on the Altseason panel. Build or change only what is named; leave the rest of the app as it is.

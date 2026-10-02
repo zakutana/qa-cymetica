@@ -2,7 +2,7 @@
 
 The operator's idea: a standalone app like the Chart Analyzer (`cymetica.com/chart-analyzer`), later wired into the Gem Screener. Same input as the Chart Analyzer. The result page has **a vertical meter on the left that pumps up on load** (the strength of the pressure), **a pie of the supply** beside it, and **a month slider** above both that moves the pie and the meter through time. Hyperliquid is the example. **Not a spec yet and not filed.** These are the working notes for the request we write when the operator says how he wants it.
 
-Files: `supply-analyzer/input-page.svg` (the input page, the Chart Analyzer's own layout) and `supply-analyzer/supply-analyzer-hyperliquid.html` (the result page, interactive: the slider, a play button, the pie and the meter move month by month). Cymetica's palette and fonts.
+Files: the spec is `supply-analyzer/SPEC.md`; the look is in `supply-analyzer/reference/`: `input-page.svg` (the input page, the Chart Analyzer's own layout), `supply-analyzer-hyperliquid.html` (the result page, interactive: the slider, a play button, the tank, the pie and the chart move month by month; `?m=15` opens it in the 15th month), two screenshots of it and `gem-screener-integration.svg`. Cymetica's palette and fonts.
 
 ## The supply flow: a tank you can watch (2026-10-02)
 
