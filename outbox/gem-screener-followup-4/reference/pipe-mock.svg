@@ -1,0 +1,26 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 680 290" width="680" height="290" font-family="IBM Plex Sans, Segoe UI, Arial, sans-serif" role="img" aria-label="Curve: 54% of the tokens are staked, 0.11% a week of new tokens flow in, 0.06% a week flows back to holders">
+<defs>
+<pattern id="stk" width="9" height="9" patternUnits="userSpaceOnUse" patternTransform="rotate(45)"><rect width="9" height="9" fill="#0c2a38"/><line x1="0" y1="0" x2="0" y2="9" stroke="#00b4dc" stroke-width="3" opacity="0.5"/></pattern>
+<linearGradient id="bore" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#0f2a38"/><stop offset="1" stop-color="#14405a"/></linearGradient>
+</defs>
+<rect x="0.5" y="0.5" width="679" height="289" rx="12" fill="#0d1422" stroke="#1d3347"/>
+<text x="24" y="32" font-size="14" font-weight="700" fill="#e6edf7">Curve (CRV)</text>
+<text x="656" y="32" font-size="12" fill="#6f8199" text-anchor="end" font-family="IBM Plex Mono, Consolas, monospace">market cap $601M</text>
+
+<rect x="40" y="114" width="600" height="72" rx="24" fill="#0a111c" stroke="#2a4a5e" stroke-width="2"/>
+<rect x="370" y="126" width="262" height="48" rx="10" fill="url(#bore)" stroke="#00cfff" stroke-opacity="0.6"/>
+<rect x="48" y="122" width="322" height="56" rx="12" fill="url(#stk)" stroke="#1f6f86"/>
+<rect x="129" y="136" width="160" height="28" rx="14" fill="#0a0e17" fill-opacity="0.9"/>
+<text x="209" y="156" font-size="15" font-weight="700" fill="#00cfff" text-anchor="middle" font-family="IBM Plex Mono, Consolas, monospace">STAKED 54%</text>
+<text x="501" y="156" font-size="15" fill="#e6edf7" text-anchor="middle" font-family="IBM Plex Mono, Consolas, monospace">FREE 46%</text>
+
+<line x1="501" y1="58" x2="501" y2="98" stroke="#ff4444" stroke-width="7"/>
+<polygon points="487,98 515,98 501,114" fill="#ff4444"/>
+<text x="530" y="76" font-size="14" fill="#ff4444">new tokens</text>
+<text x="530" y="96" font-size="15" font-weight="700" fill="#ff4444" font-family="IBM Plex Mono, Consolas, monospace">+0.11% a week</text>
+
+<line x1="501" y1="246" x2="501" y2="202" stroke="#00ff88" stroke-width="4"/>
+<polygon points="491,202 511,202 501,186" fill="#00ff88"/>
+<text x="530" y="232" font-size="14" fill="#00ff88">to holders</text>
+<text x="530" y="252" font-size="15" font-weight="700" fill="#00ff88" font-family="IBM Plex Mono, Consolas, monospace">0.06% a week</text>
+</svg>
