@@ -811,10 +811,11 @@
       "fingerprints": [
         "d205685e14180c281c17223f81a50491dbaa26e55d86c7f688900baafb0a5877",
         "c80fff4372042146a481dc41b7493e05e4f9cd0eed5ff534ae1e2d488d970102",
-        "935c1571b0375b507c2efb9b3f08fe3aba621db90dafe58be00ee5708b131e45"
+        "935c1571b0375b507c2efb9b3f08fe3aba621db90dafe58be00ee5708b131e45",
+        "4811ad593ede4cbdea918221bb22181c963d958c1a976a75affe8ecc40909f12"
       ],
-      "at": "2026-09-30T23:10:00+00:00",
-      "run_id": "run-20260930T200531Z-74cd7e27",
+      "at": "2026-10-02T21:23:33+00:00",
+      "run_id": "run-20261002T174919Z-7bf09ffc",
       "gap_claimed": false
     },
     "tests/meta/test_pipeline_checks.py::test_a_failed_read_is_never_a_value": {
@@ -2085,10 +2086,11 @@
     },
     "tests/meta/test_pipeline_a2a.py::test_the_inbox_keeps_what_tells_a_human_from_a_robot": {
       "fingerprints": [
-        "5676c1c26ef39a34c2e8cd948ba92f16698a5b51cf1e5a8abfdf2ee285acfcab"
+        "5676c1c26ef39a34c2e8cd948ba92f16698a5b51cf1e5a8abfdf2ee285acfcab",
+        "962c7b43de24b5d2921c4fe4f49d93e85e621d58a45e465e419390e1301f6446"
       ],
-      "at": "2026-09-08T15:18:57+00:00",
-      "run_id": "run-20260908T150954Z-95f0a70",
+      "at": "2026-10-02T21:23:33+00:00",
+      "run_id": "run-20261002T174919Z-7bf09ffc",
       "gap_claimed": true
     },
     "tests/meta/test_pipeline_a2a.py::test_a_send_without_confirm_leaves_nothing_behind": {
@@ -5449,10 +5451,11 @@
     "tests/meta/test_pipeline_sampler.py::test_the_sampler_reads_its_six_doors_with_get_and_nothing_else": {
       "fingerprints": [
         "d12c23908b993869e9e891cca7d66ab61a2af14220a3cc4f36bad0aee30b4352",
-        "1a15cd9b27cc20d4d90da93b2fcd6b0377480277df70d1c1bec84aa917ed8609"
+        "1a15cd9b27cc20d4d90da93b2fcd6b0377480277df70d1c1bec84aa917ed8609",
+        "1d8fcecc91fa5a1b838517ac4cf6a6db523bbfc53fe94f593fbd90a3b861816e"
       ],
-      "at": "2026-09-19T16:19:41+00:00",
-      "run_id": "run-20260913T183644Z-83b0b916",
+      "at": "2026-10-02T21:23:33+00:00",
+      "run_id": "run-20261002T174919Z-7bf09ffc",
       "gap_claimed": false
     },
     "tests/meta/test_pipeline_sampler.py::test_a_trade_is_written_once_and_again_only_when_it_changes": {
@@ -5493,11 +5496,12 @@
     "tests/meta/test_pipeline_sampler.py::test_both_launchers_start_the_sampler_and_the_old_watch_goes_through_it": {
       "fingerprints": [
         "d87c48461ef6c5a8f0ad9b12f491349d4cea22caae0fb41ded7281d7402ea6f2",
-        "63460992f7e8e38e4ec435f1597b8db26527b21838f5c691f3d1008067a64fe5"
+        "63460992f7e8e38e4ec435f1597b8db26527b21838f5c691f3d1008067a64fe5",
+        "84f710a6aec1c287861f728c813bacd6a4379e266f83ed58865dd664d4e93286"
       ],
-      "at": "2026-09-19T16:19:41+00:00",
-      "run_id": "run-20260913T183644Z-83b0b916",
-      "gap_claimed": false
+      "at": "2026-10-02T21:23:33+00:00",
+      "run_id": "run-20261002T174919Z-7bf09ffc",
+      "gap_claimed": true
     },
     "tests/meta/test_pipeline_sampler.py::test_a_card_nexus_proposed_is_followed_and_described_only_when_it_changes": {
       "fingerprints": [
@@ -6708,10 +6712,11 @@
         "f8667f437b201eb6f33ee9c8a7d2f483d4f7a36acce472db2700ed6397975462",
         "ea3e6e5721ab312def1f5234fc9936d9c5c6f99b04c9c8613d43bd6104ad1c0b",
         "2581303d75b8fef248eeb124401e954623f9b778c5ebb602868402c7e06cf77c",
-        "8b4b6bb15e4e8e2c6a29818266b7b9580ad81b33befa65e7ba6faabb32470799"
+        "8b4b6bb15e4e8e2c6a29818266b7b9580ad81b33befa65e7ba6faabb32470799",
+        "3b2bb3f9225216758343cabcb55aa4d2ad7c1cf5ab0de859cb7a46753adae37d"
       ],
-      "at": "2026-09-24T21:05:00+00:00",
-      "run_id": "run-20260924T191628Z-b62689a5",
+      "at": "2026-10-02T21:23:33+00:00",
+      "run_id": "run-20261002T174919Z-7bf09ffc",
       "gap_claimed": false
     },
     "tests/meta/test_pipeline_fomo_watch.py::test_run_survives_a_round_that_raises_and_stops_on_the_event": {
@@ -7004,10 +7009,11 @@
         "1a2d0227d94946cfbfb3e39de6b632bc76765f08c40f394f48b7f97e929efa32",
         "4b8ed46c16fec21ef94a60aea58a0f22d04c10d8c838d0de668ce0e0a520be76",
         "eb965edf9b828e4aae79162721f366ba2660e492e53a98f0b1011dffb31f626a",
-        "84bfaba4ef2bcc17c6a7c4c4c663e6008ccc6e3e5b948d12c0aec6f32d7fe98a"
+        "84bfaba4ef2bcc17c6a7c4c4c663e6008ccc6e3e5b948d12c0aec6f32d7fe98a",
+        "1bf30ed789dbb7824733cf494e1b464cc015b2860060d4a3e9bedaac327ec00c"
       ],
-      "at": "2026-09-30T23:10:00+00:00",
-      "run_id": "run-20260930T200531Z-74cd7e27",
+      "at": "2026-10-02T21:23:33+00:00",
+      "run_id": "run-20261002T174919Z-7bf09ffc",
       "gap_claimed": true
     },
     "tests/meta/test_pipeline_lab.py::test_the_nights_own_doors_are_the_real_ones": {
@@ -7639,10 +7645,11 @@
     },
     "tests/repo/test_evidence_in_git.py::test_the_keep_hook_cannot_block_a_commit": {
       "fingerprints": [
-        "17b19f958ac373f79d3a8a8f65845cbdcf16bae81aa05f65910dad9505940ac6"
+        "17b19f958ac373f79d3a8a8f65845cbdcf16bae81aa05f65910dad9505940ac6",
+        "889a235e0f6989ca6361d8e890fce45cf979e1fdba959139c7a2429215fa554e"
       ],
-      "at": "2026-09-19T16:19:41+00:00",
-      "run_id": "run-20260913T183644Z-83b0b916",
+      "at": "2026-10-02T21:23:33+00:00",
+      "run_id": "run-20261001T054942Z-956e6d67",
       "gap_claimed": false
     },
     "tests/repo/test_evidence_in_git.py::test_the_citations_that_are_not_captures_are_the_migration_s": {
@@ -9552,10 +9559,11 @@
     },
     "tests/meta/test_pipeline_lab_loop.py::test_a_tick_shows_the_newest_reasons_it_held": {
       "fingerprints": [
-        "6e38c0124dbb670513db527ebcb7de4484d61625ee115597edbe9b1465597424"
+        "6e38c0124dbb670513db527ebcb7de4484d61625ee115597edbe9b1465597424",
+        "1ecc718ce300d977991d31013d96c2048dffe7541b20738099a4f5e12ece0b89"
       ],
-      "at": "2026-09-22T15:30:00+00:00",
-      "run_id": "run-20260922T074028Z-a051f15b",
+      "at": "2026-10-02T21:23:33+00:00",
+      "run_id": "run-20261002T174919Z-7bf09ffc",
       "gap_claimed": false
     },
     "tests/meta/test_pipeline_lab_loop.py::test_a_tick_carries_on_the_walk_where_the_last_one_stopped": {
@@ -10350,10 +10358,11 @@
         "eb2adcec05d969fb618e8c19cb9be7c223bce9818f0c2c0782a6d3226a9a1587",
         "715a3545a826fbec372f73105988e753686d452f17ccb986219c3e2784c63e1c",
         "89b548abd1d0c342128959bd8d08cbae31ba848e798105f6ab95c8bad2a0fc8c",
-        "9030d9ecac4cca06a37b48b21e5ac308d4458cc488bdd49981210b8e38c508be"
+        "9030d9ecac4cca06a37b48b21e5ac308d4458cc488bdd49981210b8e38c508be",
+        "42755de9151e72fb18b206b83547547efe77a85e0346ab284eca081781618553"
       ],
-      "at": "2026-09-27T20:40:00+00:00",
-      "run_id": "run-20260927T190820Z-e40accb4",
+      "at": "2026-10-02T21:23:33+00:00",
+      "run_id": "run-20261002T174919Z-7bf09ffc",
       "gap_claimed": false
     },
     "tests/meta/test_pipeline_lab_loop.py::test_a_bot_he_names_is_cloned_funded_and_started_on_paper_in_its_own_room": {
@@ -10391,10 +10400,11 @@
     "tests/meta/test_pipeline_lab_loop.py::test_a_species_we_already_own_a_clone_of_is_not_cloned_again": {
       "fingerprints": [
         "2153d5a89fe1186426cfd547e765447b23b3daa571b2d7f408ddcb063e3621cb",
-        "bfe947736212b974d2f0e25b5633cf57a55b5e70f0fbcb808af96976fe02c646"
+        "bfe947736212b974d2f0e25b5633cf57a55b5e70f0fbcb808af96976fe02c646",
+        "54e0de44575a282956888c567f90b63feff4f4676b81f556e8a1cbb68f2a1f5e"
       ],
-      "at": "2026-09-23T23:11:27+00:00",
-      "run_id": "run-20260923T000429Z-062ab82e",
+      "at": "2026-10-02T21:23:33+00:00",
+      "run_id": "run-20261002T174919Z-7bf09ffc",
       "gap_claimed": false
     },
     "tests/meta/test_pipeline_lab_loop.py::test_a_species_their_api_refused_to_clone_is_not_tried_on_every_answer": {
@@ -10729,10 +10739,11 @@
     "tests/meta/test_pipeline_creator.py::test_a_claim_refuses_before_the_network_without_confirm": {
       "fingerprints": [
         "1d58f911a4680125030faf46a798e9cabf596cec78249c4ea9eac0383a7f35f2",
-        "df86eda7cceead352420f1a7b14263e18a69c497413340338e1c73c049e2277c"
+        "df86eda7cceead352420f1a7b14263e18a69c497413340338e1c73c049e2277c",
+        "1e0af777fd033895512cd7a4972e9f1f670bcade09b3cfb06124d764171267e7"
       ],
-      "at": "2026-09-27T20:40:00+00:00",
-      "run_id": "run-20260927T190820Z-e40accb4",
+      "at": "2026-10-02T21:23:33+00:00",
+      "run_id": "run-20261002T174919Z-7bf09ffc",
       "gap_claimed": false
     },
     "tests/meta/test_pipeline_creator.py::test_a_claim_posts_the_documented_body_and_returns_the_tracked_link": {
@@ -10766,10 +10777,11 @@
     "tests/meta/test_pipeline_creator.py::test_the_claim_routes_are_writes_with_a_closed_body_and_nothing_else": {
       "fingerprints": [
         "0f13455336b1686ff78d067402b6920e8b51be9a6e677edea1977b8666e8b283",
-        "b482bc5e4e7006d5eaed858eafda088882e6e05bbfb04b004022e8524d18bcb9"
+        "b482bc5e4e7006d5eaed858eafda088882e6e05bbfb04b004022e8524d18bcb9",
+        "ffa5b6e1fb1483591be550d00e237c756157ff422144b38606514bacf874e5e7"
       ],
-      "at": "2026-09-25T20:49:03+00:00",
-      "run_id": "run-20260925T195840Z-d14ceca2",
+      "at": "2026-10-02T21:23:33+00:00",
+      "run_id": "run-20261002T174919Z-7bf09ffc",
       "gap_claimed": false
     },
     "tests/meta/test_pipeline_creator.py::test_the_creator_routes_speak_as_the_creator_account_or_not_at_all": {
@@ -11272,11 +11284,12 @@
     "tests/meta/test_pipeline_lab_page.py::test_the_view_carries_the_account_the_nexus_line_and_the_threads": {
       "fingerprints": [
         "64c99d777eaf94aac14a7136498b1302e44b11cdefe21caf02605b0a0dbdd84d",
-        "b5cfd594124792dea9c93a7764eb953a947786dac9d116701921c5fefeb85dcc"
+        "b5cfd594124792dea9c93a7764eb953a947786dac9d116701921c5fefeb85dcc",
+        "892b0184d9b863717cbc6b90e7659ac5cea354e1645f0187b94320b03bfd43fe"
       ],
-      "at": "2026-09-30T23:10:00+00:00",
-      "run_id": "run-20260930T200531Z-74cd7e27",
-      "gap_claimed": false
+      "at": "2026-10-02T21:23:33+00:00",
+      "run_id": "run-20261002T174919Z-7bf09ffc",
+      "gap_claimed": true
     },
     "tests/meta/test_pipeline_lab_page.py::test_the_page_reads_every_field_the_view_writes_and_no_other": {
       "fingerprints": [
@@ -11470,11 +11483,12 @@
     },
     "tests/meta/test_pipeline_morning.py::test_overnight_names_what_moved_since_the_last_report": {
       "fingerprints": [
-        "69e87311ee198bdcfaea5c19c342d127e61163c8b42bb0c3a514fe917248d4e1"
+        "69e87311ee198bdcfaea5c19c342d127e61163c8b42bb0c3a514fe917248d4e1",
+        "ef637a147e32ab1557fd38f8cb5dca3c6b6421b41e1aabed1c3c429494c87b59"
       ],
-      "at": "2026-09-24T21:05:00+00:00",
-      "run_id": "run-20260924T191628Z-b62689a5",
-      "gap_claimed": false
+      "at": "2026-10-02T21:23:33+00:00",
+      "run_id": "run-20261002T174919Z-7bf09ffc",
+      "gap_claimed": true
     },
     "tests/meta/test_pipeline_morning.py::test_the_report_carries_the_feedback_acted_on_and_a_ready_telegram_block": {
       "fingerprints": [
@@ -11488,11 +11502,12 @@
       "fingerprints": [
         "115814f3515ce1a18972d956aa08ebe2f3d3d1d4d651e5ed037e488d5ab453c1",
         "97b8d27351b073b193e4006ee46c2ced612db2c7c2c18d2d63a2e6558eae6198",
-        "ed6b7e300537ef1e56cdfd779caba8dc7d48d8e90eb59d922c54a8e941dc7be2"
+        "ed6b7e300537ef1e56cdfd779caba8dc7d48d8e90eb59d922c54a8e941dc7be2",
+        "a903416dec3899335070ac11ee39cf0ba96629b7078a51b518efb391a9e7eb6b"
       ],
-      "at": "2026-09-30T23:10:00+00:00",
-      "run_id": "run-20260930T200531Z-74cd7e27",
-      "gap_claimed": false
+      "at": "2026-10-02T21:23:33+00:00",
+      "run_id": "run-20261002T174919Z-7bf09ffc",
+      "gap_claimed": true
     },
     "tests/meta/test_pipeline_morning.py::test_lab_py_morning_builds_the_page_and_published_records_the_day": {
       "fingerprints": [
@@ -11514,256 +11529,256 @@
       "fingerprints": [
         "bf0e8d449b8b4f9678c74fe79e1a79d1b99509e22ebeac16edd6cc106f590fe5"
       ],
-      "at": "2026-09-24T21:05:00+00:00",
-      "run_id": "run-20260924T191628Z-b62689a5",
-      "gap_claimed": false
+      "at": "2026-10-02T21:23:33+00:00",
+      "run_id": "run-20261002T174919Z-7bf09ffc",
+      "gap_claimed": true
     },
     "tests/meta/test_pipeline_nexus_picks.py::test_his_take_profit_and_stop_are_read_for_each_pick[NEX-0059]": {
       "fingerprints": [
         "bf0e8d449b8b4f9678c74fe79e1a79d1b99509e22ebeac16edd6cc106f590fe5"
       ],
-      "at": "2026-09-24T21:05:00+00:00",
-      "run_id": "run-20260924T191628Z-b62689a5",
-      "gap_claimed": false
+      "at": "2026-10-02T21:23:33+00:00",
+      "run_id": "run-20261002T174919Z-7bf09ffc",
+      "gap_claimed": true
     },
     "tests/meta/test_pipeline_nexus_picks.py::test_his_take_profit_and_stop_are_read_for_each_pick[NEX-0060]": {
       "fingerprints": [
         "bf0e8d449b8b4f9678c74fe79e1a79d1b99509e22ebeac16edd6cc106f590fe5"
       ],
-      "at": "2026-09-24T21:05:00+00:00",
-      "run_id": "run-20260924T191628Z-b62689a5",
-      "gap_claimed": false
+      "at": "2026-10-02T21:23:33+00:00",
+      "run_id": "run-20261002T174919Z-7bf09ffc",
+      "gap_claimed": true
     },
     "tests/meta/test_pipeline_nexus_picks.py::test_his_take_profit_and_stop_are_read_for_each_pick[NEX-0063]": {
       "fingerprints": [
         "bf0e8d449b8b4f9678c74fe79e1a79d1b99509e22ebeac16edd6cc106f590fe5"
       ],
-      "at": "2026-09-24T21:05:00+00:00",
-      "run_id": "run-20260924T191628Z-b62689a5",
-      "gap_claimed": false
+      "at": "2026-10-02T21:23:33+00:00",
+      "run_id": "run-20261002T174919Z-7bf09ffc",
+      "gap_claimed": true
     },
     "tests/meta/test_pipeline_nexus_picks.py::test_his_take_profit_and_stop_are_read_for_each_pick[NEX-0064]": {
       "fingerprints": [
         "bf0e8d449b8b4f9678c74fe79e1a79d1b99509e22ebeac16edd6cc106f590fe5"
       ],
-      "at": "2026-09-24T21:05:00+00:00",
-      "run_id": "run-20260924T191628Z-b62689a5",
-      "gap_claimed": false
+      "at": "2026-10-02T21:23:33+00:00",
+      "run_id": "run-20261002T174919Z-7bf09ffc",
+      "gap_claimed": true
     },
     "tests/meta/test_pipeline_nexus_picks.py::test_his_take_profit_and_stop_are_read_for_each_pick[NEX-0065]": {
       "fingerprints": [
         "bf0e8d449b8b4f9678c74fe79e1a79d1b99509e22ebeac16edd6cc106f590fe5"
       ],
-      "at": "2026-09-24T21:05:00+00:00",
-      "run_id": "run-20260924T191628Z-b62689a5",
-      "gap_claimed": false
+      "at": "2026-10-02T21:23:33+00:00",
+      "run_id": "run-20261002T174919Z-7bf09ffc",
+      "gap_claimed": true
     },
     "tests/meta/test_pipeline_nexus_picks.py::test_his_take_profit_and_stop_are_read_for_each_pick[NEX-0066]": {
       "fingerprints": [
         "bf0e8d449b8b4f9678c74fe79e1a79d1b99509e22ebeac16edd6cc106f590fe5"
       ],
-      "at": "2026-09-24T21:05:00+00:00",
-      "run_id": "run-20260924T191628Z-b62689a5",
-      "gap_claimed": false
+      "at": "2026-10-02T21:23:33+00:00",
+      "run_id": "run-20261002T174919Z-7bf09ffc",
+      "gap_claimed": true
     },
     "tests/meta/test_pipeline_nexus_picks.py::test_his_take_profit_and_stop_are_read_for_each_pick[NEX-0067]": {
       "fingerprints": [
         "bf0e8d449b8b4f9678c74fe79e1a79d1b99509e22ebeac16edd6cc106f590fe5"
       ],
-      "at": "2026-09-24T21:05:00+00:00",
-      "run_id": "run-20260924T191628Z-b62689a5",
-      "gap_claimed": false
+      "at": "2026-10-02T21:23:33+00:00",
+      "run_id": "run-20261002T174919Z-7bf09ffc",
+      "gap_claimed": true
     },
     "tests/meta/test_pipeline_nexus_picks.py::test_his_take_profit_and_stop_are_read_for_each_pick[NEX-0068]": {
       "fingerprints": [
         "bf0e8d449b8b4f9678c74fe79e1a79d1b99509e22ebeac16edd6cc106f590fe5"
       ],
-      "at": "2026-09-24T21:05:00+00:00",
-      "run_id": "run-20260924T191628Z-b62689a5",
-      "gap_claimed": false
+      "at": "2026-10-02T21:23:33+00:00",
+      "run_id": "run-20261002T174919Z-7bf09ffc",
+      "gap_claimed": true
     },
     "tests/meta/test_pipeline_nexus_picks.py::test_his_take_profit_and_stop_are_read_for_each_pick[NEX-0069]": {
       "fingerprints": [
         "bf0e8d449b8b4f9678c74fe79e1a79d1b99509e22ebeac16edd6cc106f590fe5"
       ],
-      "at": "2026-09-24T21:05:00+00:00",
-      "run_id": "run-20260924T191628Z-b62689a5",
-      "gap_claimed": false
+      "at": "2026-10-02T21:23:33+00:00",
+      "run_id": "run-20261002T174919Z-7bf09ffc",
+      "gap_claimed": true
     },
     "tests/meta/test_pipeline_nexus_picks.py::test_his_take_profit_and_stop_are_read_for_each_pick[NEX-0070]": {
       "fingerprints": [
         "bf0e8d449b8b4f9678c74fe79e1a79d1b99509e22ebeac16edd6cc106f590fe5"
       ],
-      "at": "2026-09-24T21:05:00+00:00",
-      "run_id": "run-20260924T191628Z-b62689a5",
-      "gap_claimed": false
+      "at": "2026-10-02T21:23:33+00:00",
+      "run_id": "run-20261002T174919Z-7bf09ffc",
+      "gap_claimed": true
     },
     "tests/meta/test_pipeline_nexus_picks.py::test_his_take_profit_and_stop_are_read_for_each_pick[NEX-0079]": {
       "fingerprints": [
         "bf0e8d449b8b4f9678c74fe79e1a79d1b99509e22ebeac16edd6cc106f590fe5"
       ],
-      "at": "2026-09-24T21:05:00+00:00",
-      "run_id": "run-20260924T191628Z-b62689a5",
-      "gap_claimed": false
+      "at": "2026-10-02T21:23:33+00:00",
+      "run_id": "run-20261002T174919Z-7bf09ffc",
+      "gap_claimed": true
     },
     "tests/meta/test_pipeline_nexus_picks.py::test_his_take_profit_and_stop_are_read_for_each_pick[NEX-0081]": {
       "fingerprints": [
         "bf0e8d449b8b4f9678c74fe79e1a79d1b99509e22ebeac16edd6cc106f590fe5"
       ],
-      "at": "2026-09-24T21:05:00+00:00",
-      "run_id": "run-20260924T191628Z-b62689a5",
-      "gap_claimed": false
+      "at": "2026-10-02T21:23:33+00:00",
+      "run_id": "run-20261002T174919Z-7bf09ffc",
+      "gap_claimed": true
     },
     "tests/meta/test_pipeline_nexus_picks.py::test_his_take_profit_and_stop_are_read_for_each_pick[NEX-0088]": {
       "fingerprints": [
         "bf0e8d449b8b4f9678c74fe79e1a79d1b99509e22ebeac16edd6cc106f590fe5"
       ],
-      "at": "2026-09-24T21:05:00+00:00",
-      "run_id": "run-20260924T191628Z-b62689a5",
-      "gap_claimed": false
+      "at": "2026-10-02T21:23:33+00:00",
+      "run_id": "run-20261002T174919Z-7bf09ffc",
+      "gap_claimed": true
     },
     "tests/meta/test_pipeline_nexus_picks.py::test_a_pick_is_read_from_the_line_that_declares_it[NEX-0010]": {
       "fingerprints": [
         "3fa5d934f47a16a09a011315044f4e6b3403bf7453db0ac7db92f71b23ea429a"
       ],
-      "at": "2026-09-24T21:05:00+00:00",
-      "run_id": "run-20260924T191628Z-b62689a5",
+      "at": "2026-10-02T21:23:33+00:00",
+      "run_id": "run-20261002T174919Z-7bf09ffc",
       "gap_claimed": false
     },
     "tests/meta/test_pipeline_nexus_picks.py::test_a_pick_is_read_from_the_line_that_declares_it[NEX-0045]": {
       "fingerprints": [
         "3fa5d934f47a16a09a011315044f4e6b3403bf7453db0ac7db92f71b23ea429a"
       ],
-      "at": "2026-09-24T21:05:00+00:00",
-      "run_id": "run-20260924T191628Z-b62689a5",
+      "at": "2026-10-02T21:23:33+00:00",
+      "run_id": "run-20261002T174919Z-7bf09ffc",
       "gap_claimed": false
     },
     "tests/meta/test_pipeline_nexus_picks.py::test_a_pick_is_read_from_the_line_that_declares_it[NEX-0059]": {
       "fingerprints": [
         "3fa5d934f47a16a09a011315044f4e6b3403bf7453db0ac7db92f71b23ea429a"
       ],
-      "at": "2026-09-24T21:05:00+00:00",
-      "run_id": "run-20260924T191628Z-b62689a5",
+      "at": "2026-10-02T21:23:33+00:00",
+      "run_id": "run-20261002T174919Z-7bf09ffc",
       "gap_claimed": false
     },
     "tests/meta/test_pipeline_nexus_picks.py::test_a_pick_is_read_from_the_line_that_declares_it[NEX-0060]": {
       "fingerprints": [
         "3fa5d934f47a16a09a011315044f4e6b3403bf7453db0ac7db92f71b23ea429a"
       ],
-      "at": "2026-09-24T21:05:00+00:00",
-      "run_id": "run-20260924T191628Z-b62689a5",
+      "at": "2026-10-02T21:23:33+00:00",
+      "run_id": "run-20261002T174919Z-7bf09ffc",
       "gap_claimed": false
     },
     "tests/meta/test_pipeline_nexus_picks.py::test_a_pick_is_read_from_the_line_that_declares_it[NEX-0063]": {
       "fingerprints": [
         "3fa5d934f47a16a09a011315044f4e6b3403bf7453db0ac7db92f71b23ea429a"
       ],
-      "at": "2026-09-24T21:05:00+00:00",
-      "run_id": "run-20260924T191628Z-b62689a5",
+      "at": "2026-10-02T21:23:33+00:00",
+      "run_id": "run-20261002T174919Z-7bf09ffc",
       "gap_claimed": false
     },
     "tests/meta/test_pipeline_nexus_picks.py::test_a_pick_is_read_from_the_line_that_declares_it[NEX-0064]": {
       "fingerprints": [
         "3fa5d934f47a16a09a011315044f4e6b3403bf7453db0ac7db92f71b23ea429a"
       ],
-      "at": "2026-09-24T21:05:00+00:00",
-      "run_id": "run-20260924T191628Z-b62689a5",
+      "at": "2026-10-02T21:23:33+00:00",
+      "run_id": "run-20261002T174919Z-7bf09ffc",
       "gap_claimed": false
     },
     "tests/meta/test_pipeline_nexus_picks.py::test_a_pick_is_read_from_the_line_that_declares_it[NEX-0065]": {
       "fingerprints": [
         "3fa5d934f47a16a09a011315044f4e6b3403bf7453db0ac7db92f71b23ea429a"
       ],
-      "at": "2026-09-24T21:05:00+00:00",
-      "run_id": "run-20260924T191628Z-b62689a5",
+      "at": "2026-10-02T21:23:33+00:00",
+      "run_id": "run-20261002T174919Z-7bf09ffc",
       "gap_claimed": false
     },
     "tests/meta/test_pipeline_nexus_picks.py::test_a_pick_is_read_from_the_line_that_declares_it[NEX-0066]": {
       "fingerprints": [
         "3fa5d934f47a16a09a011315044f4e6b3403bf7453db0ac7db92f71b23ea429a"
       ],
-      "at": "2026-09-24T21:05:00+00:00",
-      "run_id": "run-20260924T191628Z-b62689a5",
+      "at": "2026-10-02T21:23:33+00:00",
+      "run_id": "run-20261002T174919Z-7bf09ffc",
       "gap_claimed": false
     },
     "tests/meta/test_pipeline_nexus_picks.py::test_a_pick_is_read_from_the_line_that_declares_it[NEX-0067]": {
       "fingerprints": [
         "3fa5d934f47a16a09a011315044f4e6b3403bf7453db0ac7db92f71b23ea429a"
       ],
-      "at": "2026-09-24T21:05:00+00:00",
-      "run_id": "run-20260924T191628Z-b62689a5",
+      "at": "2026-10-02T21:23:33+00:00",
+      "run_id": "run-20261002T174919Z-7bf09ffc",
       "gap_claimed": false
     },
     "tests/meta/test_pipeline_nexus_picks.py::test_a_pick_is_read_from_the_line_that_declares_it[NEX-0068]": {
       "fingerprints": [
         "3fa5d934f47a16a09a011315044f4e6b3403bf7453db0ac7db92f71b23ea429a"
       ],
-      "at": "2026-09-24T21:05:00+00:00",
-      "run_id": "run-20260924T191628Z-b62689a5",
+      "at": "2026-10-02T21:23:33+00:00",
+      "run_id": "run-20261002T174919Z-7bf09ffc",
       "gap_claimed": false
     },
     "tests/meta/test_pipeline_nexus_picks.py::test_a_pick_is_read_from_the_line_that_declares_it[NEX-0069]": {
       "fingerprints": [
         "3fa5d934f47a16a09a011315044f4e6b3403bf7453db0ac7db92f71b23ea429a"
       ],
-      "at": "2026-09-24T21:05:00+00:00",
-      "run_id": "run-20260924T191628Z-b62689a5",
+      "at": "2026-10-02T21:23:33+00:00",
+      "run_id": "run-20261002T174919Z-7bf09ffc",
       "gap_claimed": false
     },
     "tests/meta/test_pipeline_nexus_picks.py::test_a_pick_is_read_from_the_line_that_declares_it[NEX-0070]": {
       "fingerprints": [
         "3fa5d934f47a16a09a011315044f4e6b3403bf7453db0ac7db92f71b23ea429a"
       ],
-      "at": "2026-09-24T21:05:00+00:00",
-      "run_id": "run-20260924T191628Z-b62689a5",
+      "at": "2026-10-02T21:23:33+00:00",
+      "run_id": "run-20261002T174919Z-7bf09ffc",
       "gap_claimed": false
     },
     "tests/meta/test_pipeline_nexus_picks.py::test_a_pick_is_read_from_the_line_that_declares_it[NEX-0073]": {
       "fingerprints": [
         "3fa5d934f47a16a09a011315044f4e6b3403bf7453db0ac7db92f71b23ea429a"
       ],
-      "at": "2026-09-24T21:05:00+00:00",
-      "run_id": "run-20260924T191628Z-b62689a5",
+      "at": "2026-10-02T21:23:33+00:00",
+      "run_id": "run-20261002T174919Z-7bf09ffc",
       "gap_claimed": false
     },
     "tests/meta/test_pipeline_nexus_picks.py::test_a_pick_is_read_from_the_line_that_declares_it[NEX-0079]": {
       "fingerprints": [
         "3fa5d934f47a16a09a011315044f4e6b3403bf7453db0ac7db92f71b23ea429a"
       ],
-      "at": "2026-09-24T21:05:00+00:00",
-      "run_id": "run-20260924T191628Z-b62689a5",
+      "at": "2026-10-02T21:23:33+00:00",
+      "run_id": "run-20261002T174919Z-7bf09ffc",
       "gap_claimed": false
     },
     "tests/meta/test_pipeline_nexus_picks.py::test_a_pick_is_read_from_the_line_that_declares_it[NEX-0080]": {
       "fingerprints": [
         "3fa5d934f47a16a09a011315044f4e6b3403bf7453db0ac7db92f71b23ea429a"
       ],
-      "at": "2026-09-24T21:05:00+00:00",
-      "run_id": "run-20260924T191628Z-b62689a5",
+      "at": "2026-10-02T21:23:33+00:00",
+      "run_id": "run-20261002T174919Z-7bf09ffc",
       "gap_claimed": false
     },
     "tests/meta/test_pipeline_nexus_picks.py::test_a_pick_is_read_from_the_line_that_declares_it[NEX-0081]": {
       "fingerprints": [
         "3fa5d934f47a16a09a011315044f4e6b3403bf7453db0ac7db92f71b23ea429a"
       ],
-      "at": "2026-09-24T21:05:00+00:00",
-      "run_id": "run-20260924T191628Z-b62689a5",
+      "at": "2026-10-02T21:23:33+00:00",
+      "run_id": "run-20261002T174919Z-7bf09ffc",
       "gap_claimed": false
     },
     "tests/meta/test_pipeline_nexus_picks.py::test_a_pick_is_read_from_the_line_that_declares_it[NEX-0086]": {
       "fingerprints": [
         "3fa5d934f47a16a09a011315044f4e6b3403bf7453db0ac7db92f71b23ea429a"
       ],
-      "at": "2026-09-24T21:05:00+00:00",
-      "run_id": "run-20260924T191628Z-b62689a5",
+      "at": "2026-10-02T21:23:33+00:00",
+      "run_id": "run-20261002T174919Z-7bf09ffc",
       "gap_claimed": false
     },
     "tests/meta/test_pipeline_nexus_picks.py::test_a_pick_is_read_from_the_line_that_declares_it[NEX-0088]": {
       "fingerprints": [
         "3fa5d934f47a16a09a011315044f4e6b3403bf7453db0ac7db92f71b23ea429a"
       ],
-      "at": "2026-09-24T21:05:00+00:00",
-      "run_id": "run-20260924T191628Z-b62689a5",
+      "at": "2026-10-02T21:23:33+00:00",
+      "run_id": "run-20261002T174919Z-7bf09ffc",
       "gap_claimed": false
     },
     "tests/meta/test_pipeline_night_spend.py::test_a_night_room_carries_a_criterion_and_the_ceiling_holds": {
@@ -12652,10 +12667,11 @@
     "tests/meta/test_pipeline_morning.py::test_the_deep_pass_is_two_lines_what_we_fixed_and_what_went_to_them": {
       "fingerprints": [
         "6155ac696d76fe96ba2a07f3d092b9451e2d1b07108afe63a6bb6e9559deef13",
-        "8bb714a10a6fd19621c07b70e79d9a62322599be5acaf8f4c7b34065d4b097e3"
+        "8bb714a10a6fd19621c07b70e79d9a62322599be5acaf8f4c7b34065d4b097e3",
+        "e7736ca9381c86e38ea66a72ef20b57dd9a1edfe9e19a4962832bced90897d5d"
       ],
-      "at": "2026-09-30T23:10:00+00:00",
-      "run_id": "run-20260930T200531Z-74cd7e27",
+      "at": "2026-10-02T21:23:33+00:00",
+      "run_id": "run-20261002T174919Z-7bf09ffc",
       "gap_claimed": false
     },
     "tests/repo/test_reminders.py::test_a_loop_on_opus_is_not_a_reminder_any_more": {
@@ -12669,10 +12685,11 @@
     "tests/rest/test_async_a2a_investigation.py::test_an_async_message_gets_the_investigation_its_card_promises": {
       "fingerprints": [
         "056c45d8a293cf51785745098280a46f4baa9c493f1116ecd7a4d7e8256d4fc8",
-        "8465adae960403ddf43c9231c1ad56619cca1ecfa70cefd34e068c80fdbc1216"
+        "8465adae960403ddf43c9231c1ad56619cca1ecfa70cefd34e068c80fdbc1216",
+        "ef53a88ecee3b4fe16c8011662d82392fd1637d065175bd02e7b7a5dc269fa9b"
       ],
-      "at": "2026-09-30T23:10:00+00:00",
-      "run_id": "run-20260930T160239Z-5c0d7f56",
+      "at": "2026-10-02T21:23:33+00:00",
+      "run_id": "run-20261002T124216Z-84bc993b",
       "gap_claimed": true
     },
     "tests/rest/test_gem_screener_refresh_keeps_its_own_cadence.py::test_the_refresh_is_late_and_the_newest_attempt_failed_twice_running": {
@@ -12782,11 +12799,12 @@
     },
     "tests/meta/test_pipeline_gem_audit.py::test_the_audit_sees_a_wrong_upside_a_wrong_identity_a_wrong_altseason_and_a_wrong_derived_figure": {
       "fingerprints": [
-        "dceb9b2184d724d3b978c544446a803e9043512865b7ea0e841348e99f26da78"
+        "dceb9b2184d724d3b978c544446a803e9043512865b7ea0e841348e99f26da78",
+        "8cb0df9937ee82c9195989822fc716a1c9366d2ff1e26f62a23f0f8e93949f6d"
       ],
-      "at": "2026-09-30T23:10:00+00:00",
-      "run_id": "run-20260930T200531Z-74cd7e27",
-      "gap_claimed": false
+      "at": "2026-10-02T21:23:33+00:00",
+      "run_id": "run-20261002T174919Z-7bf09ffc",
+      "gap_claimed": true
     },
     "tests/meta/test_pipeline_gem_audit.py::test_the_source_client_carries_the_whole_guard_and_none_of_their_credentials": {
       "fingerprints": [
@@ -12798,18 +12816,20 @@
     },
     "tests/meta/test_pipeline_gem_audit.py::test_the_audit_builds_a_report_from_a_snapshot_alone": {
       "fingerprints": [
-        "4805411619363e285963f99f585d44bb2d6ca64501e633640dee664f6f1fa1f4"
+        "4805411619363e285963f99f585d44bb2d6ca64501e633640dee664f6f1fa1f4",
+        "cbf754eb7e85ab23d6d3249855c1131364a2282ffca4ba6847d0f8161caf67f3"
       ],
-      "at": "2026-09-30T23:10:00+00:00",
-      "run_id": "run-20260930T200531Z-74cd7e27",
-      "gap_claimed": false
+      "at": "2026-10-02T21:23:33+00:00",
+      "run_id": "run-20261002T174919Z-7bf09ffc",
+      "gap_claimed": true
     },
     "tests/meta/test_pipeline_lab_loop.py::test_a_card_leg_is_sold_at_his_take_profit_and_the_room_runs_on": {
       "fingerprints": [
-        "f4a70f8582ec4b9d9dc0a1db8ed591650d11118f4fab839662d9e05c196e173e"
+        "f4a70f8582ec4b9d9dc0a1db8ed591650d11118f4fab839662d9e05c196e173e",
+        "12246dfd853e66a88c6c28e3c9df793929802ece39c836ba059c032fb428321e"
       ],
-      "at": "2026-09-30T23:10:00+00:00",
-      "run_id": "run-20260930T200531Z-74cd7e27",
+      "at": "2026-10-02T21:23:33+00:00",
+      "run_id": "run-20261002T174919Z-7bf09ffc",
       "gap_claimed": true
     },
     "tests/meta/test_pipeline_render.py::test_last_full_run_backfill_stays_off_the_committed_page": {
@@ -12822,10 +12842,11 @@
     },
     "tests/meta/test_pipeline_timings.py::test_every_real_request_is_timed_and_one_command_lists_the_bad_ones": {
       "fingerprints": [
-        "863f6d57d34ab78a201431dcfa338eb9b31b0e16bd7759cad99983c6880faef7"
+        "863f6d57d34ab78a201431dcfa338eb9b31b0e16bd7759cad99983c6880faef7",
+        "3517061537284aabc70a23e8ea0765aa9464591c69216fb504310efb9951f7bb"
       ],
-      "at": "2026-09-30T23:10:00+00:00",
-      "run_id": "run-20260930T200531Z-74cd7e27",
+      "at": "2026-10-02T21:23:33+00:00",
+      "run_id": "run-20261002T174919Z-7bf09ffc",
       "gap_claimed": true
     },
     "tests/meta/test_pipeline_verify.py::test_a_check_with_hundreds_of_captures_still_fits_their_evidence_field": {
@@ -12838,11 +12859,12 @@
     },
     "tests/rest/test_gem_screener_numbers_match_their_sources.py::test_the_market_caps_rest_on_the_supply_and_price_coingecko_reports": {
       "fingerprints": [
-        "107bdd837d778f81bc2b328aa6a2a9b48cb73c04e7e749f4417c89d84c3ca6ad"
+        "107bdd837d778f81bc2b328aa6a2a9b48cb73c04e7e749f4417c89d84c3ca6ad",
+        "9452c7ef104ee9f4d3e67ea25dcf97440ed5f8bd1e5dc57f14a16991d064ba73"
       ],
-      "at": "2026-09-30T23:10:00+00:00",
-      "run_id": "run-20260930T200531Z-74cd7e27",
-      "gap_claimed": true
+      "at": "2026-10-02T21:23:33+00:00",
+      "run_id": "run-20261001T083202Z-a8483c28",
+      "gap_claimed": false
     },
     "tests/rest/test_gem_screener_numbers_match_their_sources.py::test_the_revenue_is_what_defillama_reports": {
       "fingerprints": [
@@ -12862,27 +12884,30 @@
     },
     "tests/rest/test_gem_screener_picks_and_formulas_are_self_consistent.py::test_a_degen_pick_opens_the_coin_it_names": {
       "fingerprints": [
-        "5b5cdd3dc214afc195abefe5f8a1d3c8f1141f0cf3e899e4acc25dd9afac504c"
+        "5b5cdd3dc214afc195abefe5f8a1d3c8f1141f0cf3e899e4acc25dd9afac504c",
+        "b3b401f47b31878ff7ed6b269fd84ad8113650b5f0c22d5c06769ff602f1a360"
       ],
-      "at": "2026-09-30T23:10:00+00:00",
-      "run_id": "run-20260930T200531Z-74cd7e27",
-      "gap_claimed": false
+      "at": "2026-10-02T21:23:33+00:00",
+      "run_id": "run-20261001T083202Z-a8483c28",
+      "gap_claimed": true
     },
     "tests/rest/test_gem_screener_picks_and_formulas_are_self_consistent.py::test_the_upside_is_the_benchmarks_multiple_over_the_coins_own": {
       "fingerprints": [
-        "69476b8ef5696f018864888416f66333c6066d18431a54f3b32dd74750364da9"
+        "69476b8ef5696f018864888416f66333c6066d18431a54f3b32dd74750364da9",
+        "ee32e4c46e49774286fc25258cb021f5b06dae938a616d5b7c9677e4ab7a1f38"
       ],
-      "at": "2026-09-30T23:10:00+00:00",
-      "run_id": "run-20260930T200531Z-74cd7e27",
+      "at": "2026-10-02T21:23:33+00:00",
+      "run_id": "run-20261001T083202Z-a8483c28",
       "gap_claimed": true
     },
     "tests/rest/test_gem_screener_picks_and_formulas_are_self_consistent.py::test_every_derived_figure_follows_its_published_definition": {
       "fingerprints": [
-        "aeeb152572adcf1a98970929e5582a4dbe5bdd1ffc93e91291c1a8c6395275a3"
+        "aeeb152572adcf1a98970929e5582a4dbe5bdd1ffc93e91291c1a8c6395275a3",
+        "6473a198ffc5d356cfe696773d4cd4523cab5716305c100c2765673be1b57b90"
       ],
-      "at": "2026-09-30T23:10:00+00:00",
-      "run_id": "run-20260930T200531Z-74cd7e27",
-      "gap_claimed": true
+      "at": "2026-10-02T21:23:33+00:00",
+      "run_id": "run-20261001T083202Z-a8483c28",
+      "gap_claimed": false
     },
     "tests/rest/test_gem_screener_picks_and_formulas_are_self_consistent.py::test_the_runrate_uses_the_multipliers_its_page_states": {
       "fingerprints": [
@@ -12902,10 +12927,11 @@
     },
     "tests/rest/test_build_it_better_log_keeps_whole_bodies.py::test_the_message_log_carries_each_message_whole": {
       "fingerprints": [
-        "624e05f9b9146c23dd23db94d15ab746f8c93dbd82708f659a97657d39577d82"
+        "624e05f9b9146c23dd23db94d15ab746f8c93dbd82708f659a97657d39577d82",
+        "002677ffb08a159c9147c9fe293b79c341b98c60f866f4a28c409ce280b4547f"
       ],
-      "at": "2026-09-30T23:10:00+00:00",
-      "run_id": "run-20260930T161856Z-3e168d8e",
+      "at": "2026-10-02T21:23:33+00:00",
+      "run_id": "run-20261001T075146Z-8bc6d9fc",
       "gap_claimed": true
     },
     "tests/rest/test_a_bot_stop_loss_holds_its_budget.py::test_a_bot_paused_by_its_stop_loss_lost_no_more_than_the_stop": {
@@ -13094,11 +13120,12 @@
     },
     "tests/repo/test_nexus_credit.py::test_the_view_is_the_newest_reading_and_says_when_the_newest_read_failed": {
       "fingerprints": [
-        "2072e51504acb8ff408cb18c16e871d5148e9f24147a3e8ae7529f5731c49479"
+        "2072e51504acb8ff408cb18c16e871d5148e9f24147a3e8ae7529f5731c49479",
+        "fe541924653c99c3919c2e4c54063c5858055b4985efde2c67f586ba6f622b7d"
       ],
-      "at": "2026-09-30T23:10:00+00:00",
-      "run_id": "run-20260928T222506Z-5d1ada92",
-      "gap_claimed": true
+      "at": "2026-10-02T21:23:33+00:00",
+      "run_id": "run-20261001T054942Z-956e6d67",
+      "gap_claimed": false
     },
     "tests/repo/test_nexus_credit.py::test_lab_shows_the_credit_in_numbers_and_reads_every_field_it_is_given": {
       "fingerprints": [
@@ -13123,6 +13150,94 @@
       "at": "2026-09-30T23:10:00+00:00",
       "run_id": "run-20260928T222506Z-5d1ada92",
       "gap_claimed": false
+    },
+    "tests/meta/test_pipeline_nexus_picks.py::test_his_take_profit_and_stop_are_read_for_each_pick[NEX-0109]": {
+      "fingerprints": [
+        "bf0e8d449b8b4f9678c74fe79e1a79d1b99509e22ebeac16edd6cc106f590fe5"
+      ],
+      "at": "2026-10-02T21:23:33+00:00",
+      "run_id": "run-20261002T174919Z-7bf09ffc",
+      "gap_claimed": true
+    },
+    "tests/meta/test_pipeline_nexus_picks.py::test_a_pick_is_read_from_the_line_that_declares_it[NEX-0109]": {
+      "fingerprints": [
+        "3fa5d934f47a16a09a011315044f4e6b3403bf7453db0ac7db92f71b23ea429a"
+      ],
+      "at": "2026-10-02T21:23:33+00:00",
+      "run_id": "run-20261002T174919Z-7bf09ffc",
+      "gap_claimed": false
+    },
+    "tests/rest/test_gem_screener_panels_say_what_their_data_says.py::test_how_sure_follows_its_own_tooltip": {
+      "fingerprints": [
+        "88adffcb096a9d42e2d886e193a04ed087f8ad755fbbc615ac34b863d64b3631"
+      ],
+      "at": "2026-10-02T21:23:33+00:00",
+      "run_id": "run-20261002T174919Z-7bf09ffc",
+      "gap_claimed": false
+    },
+    "tests/rest/test_gem_screener_link_preview_has_an_image.py::test_a_gem_screener_link_preview_has_an_image_that_answers": {
+      "fingerprints": [
+        "c0dccc4780cf197b09296e62e8bc4d890da6d793dc59d91312d0c4717e626872"
+      ],
+      "at": "2026-10-02T21:23:33+00:00",
+      "run_id": "run-20261002T174919Z-7bf09ffc",
+      "gap_claimed": false
+    },
+    "tests/rest/test_chart_analyzer_live_candle_is_current.py::test_the_forming_candle_of_a_gem_screener_coin_is_current_or_agrees_with_its_pool": {
+      "fingerprints": [
+        "6859145386438f12a01dffd7a7ff451a7d593c44d099179799a429a771c3b6cb"
+      ],
+      "at": "2026-10-02T21:23:33+00:00",
+      "run_id": "run-20261002T174919Z-7bf09ffc",
+      "gap_claimed": true
+    },
+    "tests/rest/test_chart_analyzer_score_averages_what_it_counts.py::test_a_score_averages_the_patterns_its_answer_marks_counted": {
+      "fingerprints": [
+        "9805004f1b66b7da2419f52dc19a821e6ebfaeddb2330aa32c5e9d59169758d8"
+      ],
+      "at": "2026-10-02T21:23:33+00:00",
+      "run_id": "run-20261002T151752Z-d308208b",
+      "gap_claimed": false
+    },
+    "tests/rest/test_gem_screener_panels_say_what_their_data_says.py::test_a_theme_is_priced_on_one_date": {
+      "fingerprints": [
+        "fe24b0842d4e87f0c1b8a90db93f76699ceafa800c410798d7e872357dd92cb3"
+      ],
+      "at": "2026-10-02T21:23:33+00:00",
+      "run_id": "run-20261002T151752Z-d308208b",
+      "gap_claimed": true
+    },
+    "tests/rest/test_gem_screener_panels_say_what_their_data_says.py::test_hot_means_one_thing_on_the_sectors_tab": {
+      "fingerprints": [
+        "8ba2de0de4ae253d16ed93fe5419064d6199a69549b87dcb4647ccb1cfb98480"
+      ],
+      "at": "2026-10-02T21:23:33+00:00",
+      "run_id": "run-20261002T151752Z-d308208b",
+      "gap_claimed": true
+    },
+    "tests/rest/test_gem_screener_panels_say_what_their_data_says.py::test_only_btc_runs_is_not_said_over_a_week_most_alts_beat_btc": {
+      "fingerprints": [
+        "928f5d58315a1edeb94cdb3bd8e1e9356ee539337d8e5c75808efec6261505b0"
+      ],
+      "at": "2026-10-02T21:23:33+00:00",
+      "run_id": "run-20261002T151752Z-d308208b",
+      "gap_claimed": true
+    },
+    "tests/repo/test_declared_dependencies.py::test_every_third_party_import_is_a_declared_dependency": {
+      "fingerprints": [
+        "a494e571be653db12b47a021a2627fc06395aa9f193ed0afef0c3f643d04ba32"
+      ],
+      "at": "2026-10-02T21:23:33+00:00",
+      "run_id": "run-20261001T054942Z-956e6d67",
+      "gap_claimed": true
+    },
+    "tests/repo/test_declared_dependencies.py::test_the_promised_python_is_one_the_code_runs_on": {
+      "fingerprints": [
+        "be696edc0835a9c1c2dfdcde4fabf551dcfcd27d3c30558ac3471ecbfddcc7e5"
+      ],
+      "at": "2026-10-02T21:23:33+00:00",
+      "run_id": "run-20261001T054942Z-956e6d67",
+      "gap_claimed": true
     }
   }
 }
