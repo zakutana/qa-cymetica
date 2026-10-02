@@ -209,6 +209,16 @@ def test_overnight_names_what_moved_since_the_last_report():
     assert "Nexus: +5 otázek" in text
     assert len(lines) <= morning.MAX_OVERNIGHT
     assert morning.overnight(now, None) == [], "no earlier report, nothing to compare"
+    # Deep pass 2026-10-02 (T12): the other direction. Bots (1,0 % both times) and
+    # Memecoiny (-19,8 % both times) did not move, so naming them as news is the
+    # report saying something false; and a move under MOVE_PP is not one either.
+    assert "Boti" not in text and "Memecoiny" not in text, text
+    nudged = _report(-3.2 + morning.MOVE_PP / 2, [])
+    assert not [line for line in morning.overnight(nudged, _report(-3.2, []))
+                if line.startswith("Karty")], "a move under MOVE_PP was named"
+    over = _report(-3.2 + morning.MOVE_PP + 0.1, [])
+    assert [line for line in morning.overnight(over, _report(-3.2, []))
+            if line.startswith("Karty")], "a move past MOVE_PP was not named"
 
 
 def _entry(kind, text, at):
@@ -279,6 +289,12 @@ def test_the_page_is_one_short_czech_page_in_the_artifact_shape():
                    132: "Async a2a gets no investigation"}})
     page_html = module.render(many)
     assert "Sweep: 11" in page_html, "the sweep count is one short line"
+    # Deep pass 2026-10-02 (T15): "short" is a number. The page reads 227 words; the
+    # operator does not read long ones (CLAUDE.md, 2026-09-13), so a render that grows
+    # past 400 visible words, with or without the titled report lines, fails here.
+    for shown in (html, page_html):
+        prose = re.sub(r"<(script|style)\b.*?</\1>", " ", shown, flags=re.S | re.I)
+        assert len(re.sub(r"<[^>]+>", " ", prose).split()) <= 400, "the page is not short"
     for line in ("#138 — Feature pages call routes missing from the OpenAPI",
                  "#136 — Builds ship late", "#135 — Matchups read running",
                  "#132 — Async a2a gets no investigation"):
