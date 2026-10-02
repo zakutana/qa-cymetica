@@ -73,8 +73,11 @@ def test_the_forming_candle_of_a_gem_screener_coin_is_current_or_agrees_with_its
                 continue
             token = CURRENT_TIER.set(SafetyTier.SAFE)
             try:
+                # `token=` names whose price the candle is in: without it GeckoTerminal
+                # answers for the pool's BASE token, so a coin that is the pool's quote
+                # token was judged against the other token's price (deep pass 2026-10-02, T03).
                 url = (f"https://api.geckoterminal.com/api/v2/networks/{NETWORKS[entry['chain']]}"
-                       f"/pools/{pool}/ohlcv/day?limit=1")
+                       f"/pools/{pool}/ohlcv/day?limit=1&token={entry['contract']}")
                 response = source.get(url)
                 rows = (((response.json().get("data") or {}).get("attributes") or {}).get("ohlcv_list")
                         if response.status_code == 200 else None) or []

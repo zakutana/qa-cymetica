@@ -349,11 +349,16 @@ def upside_breaches(snap: dict, *, rel_tol: float = 0.01,
     breaches, checked = [], 0
     for app in snap["apps"]:
         ps, raw, shown = num(app.get("ps")), num(app.get("potential_raw")), num(app.get("potential"))
-        if not ps or ps <= 0 or raw is None or shown is None:
+        if not ps or ps <= 0 or shown is None:
             continue
         checked += 1
         expected = mult / ps
-        if abs(expected - raw) > max(abs_tol, rel_tol * abs(raw)):
+        if raw is None:
+            # A row that shows an upside without its raw value is still held to
+            # min(bench.mult / ps, cap) -- the contract is "every row that has a ps"
+            # (deep pass 2026-10-02, T08); it used to be skipped.
+            raw = expected
+        elif abs(expected - raw) > max(abs_tol, rel_tol * abs(raw)):
             breaches.append({"row": label(app), "what": "potential_raw is not bench.mult / ps",
                              "raw": raw, "expected": round(expected, 4)})
         want = raw if cap is None else min(raw, cap)
@@ -554,6 +559,11 @@ def forming_candle_staleness(analysis: dict, source_close, now: float, *,
     age = now - when.timestamp()
     deviation = abs(close / ref - 1.0)
     verdict = "old_and_off" if (age > max_age_s and deviation > tolerance) else "ok"
+    if verdict == "old_and_off" and analysis.get("candles_stale") is True:
+        # An old candle that SAYS it is stale is flagged honestly: one of the ways to
+        # fix this named in the check's docstring. Only an explicit true counts -- a
+        # missing field or `false` beside an old, wrong candle is the defect itself.
+        verdict = "ok"
     return {"verdict": verdict, "age_s": age, "deviation": deviation,
             "last_close": close, "source_close": ref, "fetched_at": fetched}
 

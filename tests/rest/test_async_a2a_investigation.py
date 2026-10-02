@@ -85,7 +85,11 @@ def unanswered(sent: list[dict], replies: list[dict], now: datetime,
                  key=lambda s: s["at"])[-window:]
 
     def in_time(r, s) -> bool:
+        # `first_pass` and `deep_failed` are never investigations, whatever `auto` says
+        # (deep pass 2026-10-02, T06: a reply of that kind with no `auto` key was counted
+        # because only `auto is True` excluded one, against this function's own docstring).
         return (r["at"] is not None
+                and r.get("kind") not in ("first_pass", "deep_failed")
                 and (r.get("kind") == "deep" or r["auto"] is not True)
                 and timedelta(0) <= r["at"] - s["at"] <= due_after)
 

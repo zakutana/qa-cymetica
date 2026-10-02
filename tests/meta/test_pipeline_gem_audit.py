@@ -101,6 +101,15 @@ def _the_upside_check_sees_a_wrong_multiple_and_a_wrong_cap():
     under = _snapshot([_app("a#1", "AAA", 2.0, potential=9.0)])
     assert g.upside_breaches(under)["breaches"], "a shown value below its raw value passed"
 
+    # Deep pass 2026-10-02 (T08): "on every row that has a ps". A row that shows an upside
+    # but carries no potential_raw is still held to min(bench.mult / ps, cap).
+    no_raw_wrong = _snapshot([_app("a#1", "AAA", 2.0, potential_raw=None, potential=9.0)])
+    assert [b["what"] for b in g.upside_breaches(no_raw_wrong)["breaches"]] == [
+        "shown upside is not min(raw, cap)"], "a shown 9 for ps 2.0 (15 expected) with no raw passed"
+    no_raw_right = _snapshot([_app("a#1", "AAA", 2.0, potential_raw=None, potential=15.0)])
+    said = g.upside_breaches(no_raw_right)
+    assert said["breaches"] == [] and said["checked"] == 1, said
+
     # Rounding is not a breach: a tiny number published to three decimals.
     tiny = _snapshot([_app("a#1", "AAA", 12000.0, potential_raw=0.0025, potential=0.0025)])
     assert g.upside_breaches(tiny)["breaches"] == [], "rounding of a tiny upside failed"
@@ -709,6 +718,14 @@ def _a_forming_candle_that_is_old_and_far_from_its_pool_is_seen():
         "an old candle that still agrees with its pool was called wrong")
     assert g.forming_candle_staleness(analysis(134 * 60, forming=False), 0.2707, now)["verdict"] == "unread", (
         "a closed candle was judged against a live price")
+    # Deep pass 2026-10-02: the check's docstring says an honest `candles_stale: true` is
+    # one of the ways to fix it. A candle that is old and off BUT says so is flagged, not a
+    # defect; the same candle saying `candles_stale: false` still is (the 2026-10-02 case).
+    flagged = dict(analysis(134 * 60), candles_stale=True)
+    assert g.forming_candle_staleness(flagged, 0.2707, now)["verdict"] == "ok", (
+        "an old candle that honestly says it is stale was called a defect")
+    denied = dict(analysis(134 * 60), candles_stale=False)
+    assert g.forming_candle_staleness(denied, 0.2707, now)["verdict"] == "old_and_off"
     assert g.forming_candle_staleness({"candles": []}, 0.2707, now)["verdict"] == "unread"
     assert g.forming_candle_staleness(analysis(134 * 60), None, now)["verdict"] == "unread", (
         "a source that did not answer was read as agreement")

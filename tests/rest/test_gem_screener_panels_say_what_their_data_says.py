@@ -136,6 +136,12 @@ def test_only_btc_runs_is_not_said_over_a_week_most_alts_beat_btc(rest_anon):
     if said["unread"] or said["weeks_read"] < 100:
         raise Inconclusive("the weekly phase and breadth could not be read: "
                            + ("; ".join(said["unread"]) or f"only {said['weeks_read']} weeks"))
+    if not said["only_btc_weeks"]:
+        # Deep pass 2026-10-02 (T04): the phase code is read by name. A history with no such
+        # week is either a fix that reclassified all of them or a renamed code, and the page
+        # may still print "Only BTC runs" -- a pass here would verify a fix that never happened.
+        raise Inconclusive(f"none of the {said['weeks_read']} weeks carries the phase 'btc_only': "
+                           f"the code may have been renamed, so no week can be judged")
     breaches = said["breaches"]
     latest = max(breaches, key=lambda b: b["week"]) if breaches else None
     conclude(Measurement(
