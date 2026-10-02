@@ -1,48 +1,54 @@
 # Supply Analyzer: the page, and what it says about Hyperliquid (notes, 2026-10-02)
 
-The operator's idea: a standalone app like the Chart Analyzer (`cymetica.com/chart-analyzer`), later wired into the Gem Screener. Same input as the Chart Analyzer; the result has **a vertical meter on the left that pumps up on load** (the strength of the pressure) and **a pie of the supply with numbered callouts beside it**. Hyperliquid is the example. **Not a spec yet and not filed.** This file is the working notes for the request we write when the operator says how he wants it.
+The operator's idea: a standalone app like the Chart Analyzer (`cymetica.com/chart-analyzer`), later wired into the Gem Screener. Same input as the Chart Analyzer. The result page has **a vertical meter on the left that pumps up on load** (the strength of the pressure), **a pie of the supply** beside it, and **a month slider** above both that moves the pie and the meter through time. Hyperliquid is the example. **Not a spec yet and not filed.** These are the working notes for the request we write when the operator says how he wants it.
 
-Files: `supply-analyzer/input-page.svg` (the input page, Chart Analyzer's own layout) and `supply-analyzer/result-hyperliquid.svg` (the result; the meter's segments pump up on load and fall back to the range, an animation in browsers). Both in Cymetica's palette and fonts, the Chart Analyzer's chrome. The Gem Screener's version of the same idea is the pie card in `gem-screener-pipe-pressure.md`.
+Files: `supply-analyzer/input-page.svg` (the input page, the Chart Analyzer's own layout) and `supply-analyzer/supply-analyzer-hyperliquid.html` (the result page, interactive: the slider, a play button, the pie and the meter move month by month). Cymetica's palette and fonts.
 
-## The meter and the formula
+## The pie: seven slices that always add up to the max supply
 
-10 segments, bottom to top; **it fills upward with pressure**: 10 = buyers squeeze the pipe, 1 = new tokens flood it. Bands: 8 to 10 Squeezing, 4 to 7 Balanced, 1 to 3 Flooding. Dashed segments show the range when something is unknown, as the Degen meter does.
-
-- free part = tokens in circulation minus tokens locked for 7 days or more (unknown terms count half)
-- pull = what buybacks and burns take off the market in a year, % of market cap
-- push = new tokens in a year, % of market cap: scheduled unlocks plus emissions plus staking rewards, gross, the same definition as Dilution
-- net = (pull − push) ÷ free part, % a year
-- **pressure = 6 + floor(net ÷ 2.5%), between 1 and 10**
-- unknown pull counts 0; unknown push counts as the typical app (5% a year); the range shows the better and worse case
-
-The orientation changed from the first Gem Screener sketch (there 10 was bad, to match the Degen meter). In an analyzer whose meter pumps up, a tall bar must mean strong pull, so the Gem Screener card follows the same number.
-
-## Hyperliquid: what the pressure is
-
-**1 of 10 by the team's schedule, up to 5 if the unlocked team tokens stay where they are.** Read 2026-10-02.
-
-| Figure | Value | Where it comes from |
+| Slice | What it is | Moves with the slider |
 |---|---|---|
-| Market cap, FDV | $19.7B, $84.7B; price $88.62 | DefiLlama token page |
-| In circulation | 222.4M HYPE = 22.2% of 1B max | DefiLlama, CoinGecko, Tokenomist agree |
-| Unlocked by schedule | 325.0M HYPE | the screener's own unlock data (DefiLlama) |
-| **Unlocked, not in circulation** | **102.5M HYPE = 10.3%, ten monthly tranches** | 325.0M minus 222.4M; one tranche is 9.92M |
-| Not unlocked yet | 675M HYPE = 67.5% | 1B minus 325.0M |
-| Team schedule | 238M HYPE for core contributors over 24 monthly tranches, about 9.92M a month, next on 6 Oct 2026 | CryptoTicker and Tokenomist; another tracker says 6.4M a month and dates differ, so the amount is not settled |
-| Team unlock as % of market cap | 9.92M × $88.62 = $879M a month = 4.5%, 53.5% a year | computed |
-| Staking | 437.5M HYPE staked (44% of the max supply, more than the 222M in circulation, so it overlaps tokens that are not circulating); 7 days to unstake, 1-day delegation lock | Hyperliquid's public validator list, its docs |
-| Staking rewards | about 9.5M HYPE a year = $843M = 4.3% of market cap; they come from the emissions reserve, not from revenue | validator list (stake-weighted APR 2.18%), DefiLlama Token Rights |
-| Bought back | $145.3M in Q3 2026, so $581M a year = 2.95% of market cap (about $1.6M a day) | DefiLlama income statement, "Token Buy Back" |
-| Burned | all of it: the Assistance Fund's HYPE was formally recognised as burned by a validator vote | DefiLlama Token Rights |
+| Free to sell | in circulation and not staked, including tokens already unlocked that nobody has moved (the operator: "unlocked, not moving" is the same as circulating) | grows with every vesting tranche; shrinks with every buyback |
+| Staked, 7 days to leave | staking without a lock: sellable within the unstake time | (held constant in the sketch) |
+| Staked with a lock | staking locked until a date; it moves to the slice above when the lock ends | for tokens that have such locks; HYPE has none |
+| Vesting | allocations still locked (team, investors) | a tranche a month moves to Free to sell |
+| Reserve, not paid out | part of the max supply nobody holds yet (rewards, community) | shrinks by what is paid out |
+| Paid out from the reserve | emissions and mints since the slider's start: new supply in someone's hands | grows by the same amount |
+| Bought back & burned | bought on the market with fees and burned; for tokens that buy back and keep, a slice "bought back, held" would stand beside it | grows with every buyback |
 
-By schedule: push = 53.5% + 4.3% = 57.8% a year against pull 2.95%, **20 to 1**, net about −55% a year, pressure **1**. If the team keeps what it has unlocked so far (none of the 102.5M has entered circulation), push is the 4.3% of staking rewards, net about −1.3% a year, pressure **5**. One analysis (CryptoTicker) says only 1.75% of a tranche was claimed in March; we did not verify it.
+## The release rate is the push of the pressure
 
-**What it says about Ran's picture.** He prices the pipe at $20B and the buyback at $3 to 5 million a day. DefiLlama's measured buyback is about $1.6M a day, and his pipe leaves out the 102M unlocked tokens that stand outside it and the 9.9M that unlock every month. His point stands that the pipe is narrow; the pressure inside it is not clearly in the buyers' favour.
+The operator asked whether the rate at which tokens become sellable belongs in the pressure. **Yes: it is the push.** Each month the analyzer counts what becomes sellable (vesting tranches + emissions + locks that end) against what is bought back and burned, on the tokens that can be sold within a week:
+
+- net = (burned − becomes sellable) × 12 ÷ (free to sell + staked without a lock + paid out), % a year
+- **pressure = 6 + floor(net ÷ 2.5%), between 1 and 10**; 10 = buyers squeeze the pipe, 1 = new tokens flood it
+- the meter shows the pressure of the month on the slider; the bars at the bottom show the release and the burn for every month
+
+## Hyperliquid, read 2026-10-02
+
+**Pressure 1 of 10 until Nov 2027, while the team receives about 9.9M HYPE a month; 5 of 10 from Dec 2027, when only staking rewards are paid out.**
+
+| Slice today | HYPE | How we know |
+|---|---|---|
+| Free to sell | 206.9M (est.) | what is left of the unlocked supply after the burned and the staked tokens below |
+| Staked, 7 days to leave | 229.7M (est.) | 437.5M staked in total (Hyperliquid's validator list), minus the 207.8M on the Hyper Foundation's own validators; unstaking takes 7 days (Hyperliquid's docs) |
+| Staked with a lock | 0 | HYPE has no time-locked staking |
+| Vesting (team) | 138.8M (est.) | 238M for core contributors, about 9.92M a month, 14 tranches left (trackers differ on the day and the amount) |
+| Reserve, not paid out | 377.0M (est.) | 388.9M allocated to future emissions and community rewards, minus about 12M paid so far; the 207.8M the Foundation stakes is taken to come from here |
+| Bought back & burned | 47.6M | the Assistance Fund's balance on Hyperliquid's own API, formally burned by validator vote |
+
+Flows a month: team +9.92M (until Nov 2027), staking rewards +0.79M (stake-weighted APR 2.18% on 437.5M), bought back and burned −0.55M ($145.3M in Q3 per DefiLlama, at $88.62).
+
+**Not measured, said so on the page:** how the staked tokens split between the Foundation and everyone else; the team's day and amount; future community rewards out of the reserve, which have no schedule; whether stakers leave.
+
+**Correction (2026-10-02).** An earlier version of these notes called the 102.5M between DefiLlama's "unlocked" (325.0M) and CoinGecko's "circulating" (222.4M) "ten team tranches unlocked and not moving". That was inferred from the gap's size alone. DefiLlama's unlock data does not count the team's tranches at all (it carries them as "TBD"), so the gap is something else. The operator then merged "unlocked, not moving" into circulating, and the slice is gone.
+
+**About Ran's picture.** He prices the pipe at $20B with buybacks of $3 to 5 million a day. DefiLlama's measured buyback is about $1.6M a day, and the team's tranches put about 10.7M HYPE a month into the market against 0.55M burned: 20 to 1. His pipe is narrow; until the team is fully vested the pressure in it runs against the holder.
 
 ## A gap in the live Gem Screener, said now (not filed)
 
-On Hyperliquid's detail the card "Market cap & supply" reads **"0% new tokens a week · emissions 30d: $0 · none in 90 days"**. DefiLlama's emissions dataset carries nothing for it (all windows 0), the screener's unlock record marks **61.2% of the supply "TBD"**, and the screener's own supply card has 325.0M unlocked against 222.4M circulating, a gap of ten team tranches. So "none in 90 days" is not what the source knows about this token: it is an absence read as zero, against ET-28821 item 11 ("none in 90 days is shown only when the source says so"). It matters twice: Hyperliquid is the **benchmark of the Dilution flag** (0.0% a week, which sets the 0.5% and 1.0% lines), and a gross-dilution gate that read it right would show about 1% a week, red. To file it by the sweep's rules it needs a check on the unlock record (`tbd_pct` large while `next_unlock.kind` is "none" and the unlocked supply exceeds circulating) and a report; the operator has not said yet, and it can go into the next request as a line under item 3 of the pipe spec ("unknown is never zero").
+On Hyperliquid's detail the card "Market cap & supply" reads **"0% new tokens a week · emissions 30d: $0 · none in 90 days"**. DefiLlama's emissions dataset carries nothing for it, and the screener's own unlock record marks **61.2% of the supply "TBD"**, which is the team's 238M and the rewards reserve. The team's monthly tranches are published by the trackers. So "none in 90 days" is not what is known about this token: it is an absence read as zero, against ET-28821 item 11 ("none in 90 days is shown only when the source says so"). It matters twice: Hyperliquid is the **benchmark of the Dilution flag** (0.0% a week sets the 0.5% and 1.0% lines), and with the tranches its dilution is about 1% a week, red. To file it by the sweep's rules it needs a check on the unlock record (a large `tbd_pct` while `next_unlock.kind` is "none") and a report; the operator has not said yet, and it can go into the next request as a line under the rule "unknown is never zero".
 
 ## What the Analyzer would need that the Gem Screener does not have
 
-Per token: the staking contract and its exit rule, the burn route, the buyback wallet if one is published, and the unlock schedule with who receives it. Nexus said (REPLY-0115) that staked supply and burns are buildable from addresses with a public source, buybacks and unlock schedules partly, and wallet movements only where the project published the wallets. Hyperliquid has most of it public: the validator list, the Assistance Fund address, a published vesting schedule.
+Per token: the staking contracts and their exit rules (lock or not, how long), the vesting schedule with who receives it, the emission schedule, the burn route, and the buyback wallet if one is published. Nexus said (REPLY-0115) that staked supply and burns are buildable from addresses with a public source, buybacks and unlock schedules partly, and wallet movements only where the project published the wallets. Hyperliquid has most of it public: the validator list, the Assistance Fund address, a published vesting schedule.
