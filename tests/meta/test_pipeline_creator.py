@@ -57,8 +57,111 @@ CLAIMED = {"id": 3, "status": "claimed", "reply_slug": "znn8eicp",
            "reply_page_slug": "p497i3fy"}
 
 
+def _chat():
+    spec = importlib.util.spec_from_file_location(
+        "chat_mod", REPO / "scripts" / "chat.py")
+    mod = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(mod)
+    return mod
+
+
+DEGEN_PAGE = (
+    "<h3>Price a launch, spend nothing</h3><pre data-prompt-text>Price a memecoin launch "
+    "(launch_estimate_cost): show the cost breakdown, and stop before spending anything.</pre>"
+    "<h3>Make a fund from today&#39;s news</h3><pre data-prompt-text>Build an AI index basket "
+    "(build_ai_index_basket), paper-trade $500 into it and turn it into an event card.</pre>"
+    "<h3>Sign my bot</h3><pre data-prompt-text>Assign my cloned bot with arena_assign_bot and "
+    "trade one epoch.</pre>")
+
+SSE_BODY = (
+    'event: session\ndata: {"session_id": "s-1", "conversation_id": "c-1"}\n\n'
+    'event: status\ndata: {"state": "thinking"}\n\n'
+    'event: text\ndata: {"content": "Pricing "}\n\n'
+    'event: tool_start\ndata: {"name": "launch_estimate_cost"}\n\n'
+    'event: tool_result\ndata: {"name": "launch_estimate_cost", "result": {"total": 12}}\n\n'
+    'event: text\ndata: {"content": "done."}\n\n'
+    'event: done\ndata: {"usage": {"input_tokens": 10, "output_tokens": 5}}\n\n')
+
+
+def _chat_handler(seen, *, simulation_mode=True, is_sim_mode=True, body=SSE_BODY, status=200):
+    def handler(request):
+        path = request.url.path
+        if request.method == "GET" and path == "/degen":
+            return httpx.Response(200, text=DEGEN_PAGE)
+        if request.method == "GET" and path == "/api/v1/account/me":
+            return httpx.Response(200, json={"simulation_mode": simulation_mode})
+        if request.method == "GET" and path == "/api/v1/nexus/subscription":
+            return httpx.Response(200, json={"is_sim_mode": is_sim_mode})
+        if request.method == "POST" and path == "/api/v1/chat/stream":
+            seen.append(json.loads(request.content or b"{}"))
+            return httpx.Response(status, text=body,
+                                  headers={"content-type": "text/event-stream"})
+        raise AssertionError(f"unexpected request {request.method} {path}")
+    return handler
+
+
+def _the_chat_asks_one_paper_prompt_the_way_the_page_does(tmp_path, monkeypatch):
+    """NEXT 2026-09-24 (ET-28541): the site's NEXUS acts on the account, with no
+    confirmation to approve, so every floor is before the POST: confirm, a prompt that
+    exists on /degen and creates nothing public and no arena order, and an account that
+    says paper twice. The body is the documented one and nothing else."""
+    from tests.meta.test_guard_is_real import as_mutate_tier
+
+    mod = _chat()
+    monkeypatch.setenv("QA_STATE_DIR", str(tmp_path))
+
+    def never(request):
+        raise AssertionError(f"reached the network: {request.url}")
+
+    with pytest.raises(mod.ChatError, match="confirm"):
+        mod.ask(_client(never, mutate=True), 1, confirm=False)
+
+    # The page's prompts, read the way a browser would, unescaped, numbered from 1.
+    found = mod.prompts(DEGEN_PAGE)
+    assert [p["n"] for p in found] == [1, 2, 3] and found[1]["title"] == "Make a fund from today's news"
+    assert "stop before spending anything." in found[0]["text"]
+    # What may not be sent: a public artifact, an arena order, a tool that spends.
+    assert mod.refusal_for(found[0]["text"]) is None
+    assert "public" in (mod.refusal_for(found[1]["text"]) or ""), "a prompt that publishes a card was allowed"
+    assert "arena" in (mod.refusal_for(found[2]["text"]) or "")
+
+    seen = []
+    with as_mutate_tier():
+        for n in (2, 3, 4):
+            with pytest.raises(mod.ChatError):
+                mod.ask(_client(_chat_handler(seen), mutate=True), n, confirm=True)
+        assert seen == [], "a refused prompt reached the stream"
+        for mode, sub in ((False, True), (True, False), (None, True)):
+            with pytest.raises(mod.ChatError, match="paper"):
+                mod.ask(_client(_chat_handler(seen, simulation_mode=mode, is_sim_mode=sub), mutate=True),
+                        1, confirm=True)
+        assert seen == [], "an account that is not paper twice was sent a prompt"
+        said = mod.ask(_client(_chat_handler(seen), mutate=True), 1, confirm=True)
+    assert seen == [{"message": found[0]["text"], "current_page": "/degen"}], seen
+    assert said["done"] is True and said["tools"] == ["launch_estimate_cost"], said
+    assert said["text"] == "Pricing done." and said["session_id"] == "s-1", said
+    assert said["usage"] == {"input_tokens": 10, "output_tokens": 5}, said
+
+    # The diary says what was asked before it says what came back.
+    rows = mod.load()
+    assert [(r["type"], r["id"]) for r in rows] == [("intent", "CHT-0001"), ("outcome", "CHT-0001")], rows
+    assert rows[0]["n"] == 1 and rows[1]["outcome"] == "accepted", rows
+
+    # A stream that stops without `done`, one with an error, and a refusal are each said.
+    events = mod.parse_sse(SSE_BODY.replace('event: done\ndata: {"usage": {"input_tokens": 10, "output_tokens": 5}}\n\n', ""))
+    assert mod.summarise(events)["done"] is False
+    broken = mod.summarise(mod.parse_sse('event: error\ndata: {"error": "limit", "message": "no more"}\n\n'))
+    assert broken["error"] == "no more" and broken["done"] is False, broken
+    capped = mod.summarise(mod.parse_sse('event: usage_limit\ndata: {"message": "cap"}\n\n'))
+    assert capped["usage_limit"] is True, capped
+    with as_mutate_tier(), pytest.raises(mod.ChatError, match="402"):
+        mod.ask(_client(_chat_handler([], status=402, body="{}"), mutate=True), 1, confirm=True)
+    assert mod.load()[-1]["outcome"] == "refused", mod.load()[-1]
+
+
 @qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
-def test_a_claim_refuses_before_the_network_without_confirm():
+def test_a_claim_refuses_before_the_network_without_confirm(tmp_path, monkeypatch):
+    _the_chat_asks_one_paper_prompt_the_way_the_page_does(tmp_path, monkeypatch)
     mod = _module()
 
     def handler(request):
@@ -232,6 +335,11 @@ def test_the_claim_routes_are_writes_with_a_closed_body_and_nothing_else():
             # "nothing more" means both sets (deep pass G03, 3/3).
             assert set(rule.executable_params) | set(rule.inert_params) == {field}
             assert not rule.required_flags
+    # 2026-10-02: the chat stream is a write too -- the NEXUS that acts on the account.
+    chat = rules["chat.stream"]
+    assert chat.path == "/api/v1/chat/stream" and list(chat.methods) == ["POST"]
+    assert chat.closed_body is True
+    assert set(chat.executable_params) | set(chat.inert_params) == {"message", "session_id", "current_page"}
 
 
 @qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")

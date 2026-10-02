@@ -460,6 +460,19 @@ endpoints:
   # hand. Closed body: ClaimBody in /openapi-public.json carries link_slug and
   # nothing else. scripts/creator.py turns MUTATE on for their host and asks
   # for confirm before the network.
+  # The site's NEXUS over REST (2026-10-02): "the NEXUS that acts on your account" --
+  # it places paper orders, clones bots and runs backtests from one sentence, with
+  # nothing to confirm (ET-28541). The only billed door; a paper-mode account is never
+  # charged. Closed body: ChatMessageRequest, message + session_id + current_page.
+  # scripts/chat.py checks confirm, the prompt, and that the account says paper twice
+  # BEFORE the request, and turns MUTATE on for their host only for that command.
+  - id: chat.stream
+    path: /api/v1/chat/stream
+    methods: [POST]
+    component: rest.chat
+    executable_params: [message, session_id, current_page]
+    closed_body: true
+
   - id: creator.twitter_lead_reply
     path: /api/v1/creator/twitter-leads/{lead_id}/reply
     methods: [POST]
