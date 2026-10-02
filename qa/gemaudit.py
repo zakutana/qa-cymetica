@@ -584,6 +584,12 @@ SURE_RULE = re.compile(r"Sure:\s*(\d+)\+\s*rows that agree within\s*(\d+)\s*poin
                        r"Fairly sure:\s*(\d+)\+\s*rows within\s*(\d+)")
 
 
+# The wording from 2026-10-02 15:30 UTC, after the report: one JS string, split by a join.
+SURE_RULE_WHOLE = re.compile(
+    r"Sure:\s*(\d+)\+\s*rows scored and no more than\s*(\d+)\s*points between the highest and the lowest of them\.\s*"
+    r"[\s'\"+]*Fairly sure:\s*(\d+)\+\s*rows,\s*no more than\s*(\d+)\s*points")
+
+
 def _most_within(scores: list[float], span: float) -> int:
     ordered = sorted(scores)
     return max((sum(1 for s in ordered if low <= s <= low + span) for low in ordered), default=0)
@@ -595,21 +601,31 @@ def retail_sure_breach(snap: dict, page_text: str) -> dict:
     of six rows sat between 4 and 14 and the panel said unsure, because the code took the
     spread of all six (84). The rule is read from the page's words, never remembered."""
     rule = SURE_RULE.search(page_text or "")
+    whole = None if rule else SURE_RULE_WHOLE.search(page_text or "")
     retail = ((snap.get("altseason_cycle") or {}).get("components") or {}).get("retail") or {}
     scores = [s for s in (num((p or {}).get("score")) for p in (retail.get("parts") or {}).values())
               if s is not None]
     shown = (retail.get("sure") or {}).get("code")
     unread = []
-    if not rule:
-        unread.append("the page no longer words the 'How sure' rule as 'Sure: N+ rows that agree within S points'")
+    if not rule and not whole:
+        unread.append("the page no longer words the 'How sure' rule as 'Sure: N+ rows that agree within S points' "
+                      "or 'Sure: N+ rows scored and no more than S points between the highest and the lowest'")
     if not scores or not shown:
         unread.append("retail.parts scores or retail.sure.code missing")
     if unread:
         return {"breach": None, "unread": unread}
-    sure_n, sure_span, fair_n, fair_span = (int(x) for x in rule.groups())
-    if _most_within(scores, sure_span) >= sure_n:
+    if whole:
+        # 2026-10-02: their re-worded tooltip -- every scored row, the spread of all of them.
+        sure_n, sure_span, fair_n, fair_span = (int(x) for x in whole.groups())
+        spread = max(scores) - min(scores)
+        sure_n_ok, fair_n_ok = len(scores) >= sure_n and spread <= sure_span, len(scores) >= fair_n and spread <= fair_span
+    else:
+        sure_n, sure_span, fair_n, fair_span = (int(x) for x in rule.groups())
+        sure_n_ok = _most_within(scores, sure_span) >= sure_n
+        fair_n_ok = _most_within(scores, fair_span) >= fair_n
+    if sure_n_ok:
         expected = "sure"
-    elif _most_within(scores, fair_span) >= fair_n:
+    elif fair_n_ok:
         expected = "fairly_sure"
     else:
         expected = "unsure"

@@ -654,6 +654,21 @@ def _how_sure_follows_its_own_tooltip():
         "a page that no longer words the rule was judged against a remembered one")
     assert g.retail_sure_breach({}, page)["unread"]
 
+    # 2026-10-02 15:30 UTC: they re-worded the tooltip to what the code does -- every scored
+    # row, the spread of ALL of them -- and the sentence is split by a JS string join.
+    new = ("<script>var sureTip = 'Sure: 5+ rows scored and no more than 30 points between the "
+           "highest and the lowest of them. ' +     'Fairly sure: 3+ rows, no more than 50 points. "
+           "Otherwise unsure: one row far from the rest is enough.';</script>")
+    assert not g.retail_sure_breach(snap("unsure", *today), new)["unread"], "the new wording was not read"
+    assert g.retail_sure_breach(snap("unsure", *today), new)["breach"] is None   # spread 84: unsure
+    wrong = g.retail_sure_breach(snap("sure", *today), new)
+    assert wrong["breach"] and wrong["breach"]["expected"] == "unsure", wrong
+    tight = (10.0, 12.0, 20.0, 25.0, 33.0)                                       # five rows, spread 23
+    assert g.retail_sure_breach(snap("sure", *tight), new)["breach"] is None
+    assert g.retail_sure_breach(snap("fairly_sure", 10.0, 30.0, 55.0), new)["breach"] is None  # 3 rows, 45
+    assert g.retail_sure_breach(snap("unsure", 10.0, 30.0, 70.0), new)["breach"] is None       # 3 rows, 60
+    assert g.retail_sure_breach(snap("unsure", 10.0, 20.0), new)["breach"] is None             # 2 rows
+
 
 def _a_forming_candle_that_is_old_and_far_from_its_pool_is_seen():
     """2026-10-02, Collector Crypt: the Chart Analyzer's cache was fetched at 12:24 UTC and
