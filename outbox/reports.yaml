@@ -4044,6 +4044,131 @@ reports:
       the average of what the same answer marks counted_in_score, so it
       clears whichever way the two are made to agree.
 
+  - key: gem-screener-sectors-theme-priced-on-two-dates
+    findings: [CYM-a_theme_is_priced_on_one_date]
+    severity: high
+    category: logic
+    url: https://cymetica.com/gem-screener/app?view=sectors
+    title: >-
+      Gem Screener Sectors: when CoinGecko fails, one coin's live move multiplies
+      a whole theme's 1M return (RWA +111.6 % where its weekly closes give about
+      +56 %)
+    expected: >
+      Every coin of a basket is priced at the same moment: all with a live point,
+      or none, falling back to the last weekly close for all of them. That is what
+      the snapshot's own fetch_warnings says happened ("no live point: last weekly
+      close").
+    actual: >
+      In snapshot 1790921065 (2026-10-02 06:04 UTC) fetch_warnings holds
+      api.coingecko.com HTTP 403 and 429 for theme_prices.live, and
+      theme_prices.live has a price for only 11 of 320 coins. RWA has 1 live member
+      of 12 (zebec-network: last weekly close 0.0020492567, live 0.00277118, +35.2 %
+      in four days), DePIN 1 of 15, L2 1 of 15, Privacy 6 of 15. The 1M returns
+      shown are RWA +111.55 %, DePIN +96.26 % and Privacy +33.02 %; taking Zebec's
+      factor of 1.3523 out of the published RWA and DePIN returns leaves +56.4 %
+      and +45.1 %. The stage and the "Hot right now" line (RWA +52 %, DePIN +41 %
+      against the median sector) are built on these returns. The page never shows
+      the warning: its script reads fetch_warning_count nowhere.
+    steps:
+      - 'GET https://cymetica.com/api/v1/gem-screener -> fetch_warnings: two entries, source api.coingecko.com, http_status 403 and 429, affected includes "theme_prices.live"'
+      - 'theme_prices.live has 11 keys (ycash, zama, zano, zcash, zclassic, zcoin, zebec-network, zencash, zephyr-protocol, zksync, zora); theme_prices.coins has 320'
+      - 'themes[key=rwa]: 12 members, only zebec-network is in theme_prices.live; theme_4w 1.1155; (1 + 1.1155) / 1.3523 - 1 = 0.564, where 1.3523 = live 0.00277118 / last weekly close 0.0020492567 (stamp 1790553600)'
+      - 'themes[key=depin]: 15 members, only zebec-network live; theme_4w 0.9626; (1 + 0.9626) / 1.3523 - 1 = 0.451'
+    body: >
+      This is a case that comes and goes with a partial fetch, so our check passes
+      on any snapshot in which every theme is covered (all its coins, none of
+      them, or at least 95 % of its weight) and watches for the next one; the
+      figures above are from the one snapshot in which we saw it. It does not
+      assume how you fix it: pricing every basket at the last weekly close when
+      part of it has no live point, or retrying the live fetch, both clear it.
+      Showing on the page that a source failed is the other half: today a reader
+      cannot tell a 1M return built on 11 live coins from one built on all of them.
+
+  - key: gem-screener-sectors-hot-means-two-things
+    findings: [CYM-hot_means_one_thing_on_the_sectors_tab]
+    severity: medium
+    category: logic
+    url: https://cymetica.com/gem-screener/app?view=sectors
+    title: >-
+      Gem Screener Sectors: "hot" is 4 themes in the table and 8 in the theme panel
+    expected: >
+      One definition of "hot" on the tab: the themes the table and "Hot right now"
+      call hot are the themes the theme panel calls hot.
+    actual: >
+      The table and the "Hot right now" line read stage == "hot": L2, DEX & perps,
+      DePIN and RWA. The theme panel prints "This theme is hot." from the older
+      `hot` flag: L2, AI, DEX & perps, DePIN, RWA, DeFi lending & staking,
+      Infrastructure and Privacy. So AI and Infrastructure (Emerging in the table)
+      and DeFi and Privacy (Fading) are "hot" in their panel.
+    steps:
+      - 'GET https://cymetica.com/gem-screener/app?view=sectors -> snapshot-data themes[]: stage "hot" on l2, dex, depin, rwa; hot true on l2, ai, dex, depin, rwa, defi, infra, privacy'
+      - 'page script: the "Hot right now" line filters th.stage === "hot"; the theme panel text "This theme is hot." is chosen by th.hot'
+    body: >
+      One more wording point on the same tab, so it does not need its own ticket:
+      the L2 theme's blurb says "The fundamentals include chains without a token",
+      but the five chains in its fundamentals (Arbitrum, Mantle, OP Mainnet,
+      Starknet, X Layer) all have tokens, and Base is listed under
+      excluded.chains_no_token. Our check compares the set of themes each
+      definition names, so it clears whichever way the two are made to agree.
+
+  - key: gem-screener-altseason-only-btc-runs-over-majority-weeks
+    findings: [CYM-only_btc_runs_is_not_said_over_a_week_most_alts_beat_btc]
+    severity: medium
+    category: logic
+    url: https://cymetica.com/gem-screener/app?view=apps
+    title: >-
+      Gem Screener Altseason: "Only BTC runs" is the word for 17 weeks in which at
+      least 60 % of the top 50 beat BTC (2024-12-02: 74 %)
+    expected: >
+      The phase word and the breadth printed beside it do not contradict each other:
+      a week in which most of the top 50 beat BTC is not one in which "only BTC runs".
+    actual: >
+      In the weekly series of GET /api/v1/gem-screener/altseason, 154 weeks carry
+      the phase btc_only ("Only BTC runs") and a breadth reading; 17 of them have a
+      breadth of 60 % or more. On 2024-12-02 the phase is btc_only with breadth 74.0
+      %, and OTHERS rose from $198.0bn (2024-11-04) to $396.9bn (2024-12-02); on
+      2024-12-16 it is still btc_only at 63.3 %.
+    steps:
+      - 'GET https://cymetica.com/api/v1/gem-screener/altseason -> altseason.series.phase and altseason.series.breadth (one value per week in altseason.weeks)'
+      - 'count the weeks with phase "btc_only" and breadth >= 60 -> 17 of 154 (breadth is None on one more btc_only week)'
+      - 'the week of 2024-12-02: phase btc_only, breadth 74.0, others_usd 396,936,615,335 (2024-11-04: 198,014,172,403)'
+    body: >
+      We call only this a defect, because it is false on the number printed next to
+      it. Two other words at turning points are a design question for you rather than
+      a finding: "End is near" is the word from 2017-04-03 (OTHERS $1.27bn) for 49
+      weeks, and on 2021-11-08, when OTHERS reached the maximum of its series
+      ($511.8bn), the word is "Alts are starting". Our check compares the phase
+      with the breadth of the same week, so it clears whichever way the two are
+      made to agree.
+
+  - key: gem-screener-retail-how-sure-contradicts-its-tooltip
+    findings: [CYM-how_sure_follows_its_own_tooltip]
+    severity: low
+    category: logic
+    url: https://cymetica.com/gem-screener/app?view=apps
+    title: >-
+      Gem Screener Retail: "How sure: unsure" where the tooltip's own rule gives
+      "sure" (five of six rows between 4 and 14)
+    expected: >
+      The tooltip says "Sure: 5+ rows that agree within 30 points. Fairly sure: 3+
+      rows within 50. Otherwise unsure." Five rows within 30 points is "sure".
+    actual: >
+      The six retail scores are Coinbase 4.0, Binance spot 4.4, Wikipedia 6.1,
+      Binance perps 11.6, Upbit 14.1 and DEXs 88.1: five of them lie within 10.1
+      points of each other. The panel says "How sure: unsure", and its data has
+      retail.sure = {code: unsure, rows: 6, spread: 84.0}, so the spread of all six
+      rows is what was judged.
+    steps:
+      - 'GET https://cymetica.com/gem-screener/app?view=apps -> the page script: sureTip = "Sure: 5+ rows that agree within 30 points. Fairly sure: 3+ rows within 50. Otherwise unsure."'
+      - 'snapshot-data altseason_cycle.components.retail.parts: scores 4.0, 14.1, 4.4, 11.6, 88.1, 6.1; retail.sure.code "unsure", spread 84.0'
+    body: >
+      A related point, for your design rather than a finding: the headline on the
+      same panel is Retail 21, while the cycle's euphoria uses
+      series.retail_euphoria = 55 in GET /api/v1/gem-screener/altseason
+      (euphoria 51.5 = (55 + 48) / 2), so the panel shows two retail numbers. Our
+      check applies the tooltip's rule to the scores shown, so it clears whichever
+      way the rule and the word are made to agree.
+
 footer: >
   Reported by an independent QA agent. Scope of this work: verification of the
   REST API, MCP and machine-readable discovery surfaces, read-only except in

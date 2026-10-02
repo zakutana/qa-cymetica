@@ -415,6 +415,13 @@ def test_the_audit_sees_a_wrong_upside_a_wrong_identity_a_wrong_altseason_and_a_
     _a_pick_that_opens_another_coin_is_seen_and_a_shared_ticker_is_named()
     _the_altseason_numbers_are_held_to_their_own_published_rules()
     _the_derived_figures_are_held_to_their_definitions()
+    # 2026-10-02: the four judgements behind
+    # tests/rest/test_gem_screener_panels_say_what_their_data_says.py, merged here
+    # because tests/meta grows only by replacement.
+    _a_basket_priced_on_two_dates_is_seen()
+    _one_word_for_hot_is_held()
+    _a_word_that_says_only_btc_runs_is_held_to_the_breadth_beside_it()
+    _how_sure_follows_its_own_tooltip()
 
 
 @qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
@@ -644,13 +651,3 @@ def _how_sure_follows_its_own_tooltip():
     assert g.retail_sure_breach(snap("unsure", *today), "<p>no tooltip here</p>")["unread"], (
         "a page that no longer words the rule was judged against a remembered one")
     assert g.retail_sure_breach({}, page)["unread"]
-
-
-@qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
-def test_the_panel_checks_see_a_basket_on_two_dates_two_hots_a_false_word_and_a_wrong_sure():
-    """The four judgements behind tests/rest/test_gem_screener_panels_say_what_their_data_says.py
-    are refuted offline, on data built to be wrong in exactly the way they exist to catch."""
-    _a_basket_priced_on_two_dates_is_seen()
-    _one_word_for_hot_is_held()
-    _a_word_that_says_only_btc_runs_is_held_to_the_breadth_beside_it()
-    _how_sure_follows_its_own_tooltip()
