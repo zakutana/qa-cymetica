@@ -4,6 +4,10 @@ The operator's idea: a standalone app like the Chart Analyzer (`cymetica.com/cha
 
 Files: `supply-analyzer/input-page.svg` (the input page, the Chart Analyzer's own layout) and `supply-analyzer/supply-analyzer-hyperliquid.html` (the result page, interactive: the slider, a play button, the pie and the meter move month by month). Cymetica's palette and fonts.
 
+## The supply flow: a tank you can watch (2026-10-02)
+
+The vertical meter was replaced by an animated tank (the operator: he understood the outflow of a pipe but wanted to see the speed of the flows in motion). The tank is **the sellable pile**: the free tokens plus the staking that can leave at any time. **Red dots pour in** from two sources, the vesting vault and the reserve (the team's tranche and the staking rewards); **green dots leave** through the buyback pump, which splits to a flame (burned) and a vault (kept). The number of dots a second and their speed follow the monthly amount, so a 10.7M inflow against a 0.55M outflow is a stream against a trickle. The water level follows the pile, a dashed line marks where it stood today and a bracket shows the change since, in M. Staking in and out is drawn as a dashed pipe marked "flat", because it is not measured. The hero number is the yearly change of the pile (+28% for HYPE today); the 1 to 10 number stays as a small pill. Hovering any part (vault, reserve, tank, pump, flame, kept vault, staking) says what it is and what the month's figure is. The slider and the play button move the month; below the pie a chart shows the pile month by month against today's level, with the monthly inflow and buyback bars under it.
+
 ## The pie: the tokens in play, seven slices
 
 The pie holds the tokens that exist in someone's hands or are bound to be (623M of the 1,000M max for HYPE). The reserve, the part of the max supply not paid out yet, is **not a slice**: it stands under the pie as one line, because the pie is for reading the pressure and the reserve only says where rewards come from (the operator asked what it was for). The names are generic, so one page works for any token.
