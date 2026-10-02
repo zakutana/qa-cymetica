@@ -1001,6 +1001,57 @@ def test_a_started_clone_starts_again_only_as_a_new_variant(tmp_path, monkeypatc
     with pytest.raises(SystemExit, match="never started again"):
         mod.enable("inst-1", True)
 
+    # Deep pass 2026-10-02, R02 then R01. A write that fails AFTER it may have left
+    # (a read timeout, a stream cut) is `unknown`, never `not_sent` -- rule 9; only a
+    # refusal before the network (the guard, a connection never made) is `not_sent`.
+    # And a start we cannot prove did not happen is still a start: the sampler saw
+    # the bot trade and stop at a loss, which is their guard's stop and a finding,
+    # whatever our own record says about the enable.
+    import httpx
+    from qa.safety import SafetyViolation
+
+    class _Drops(_Tripwire):
+        def __init__(self, failure, rows):
+            super().__init__(rows, 200)
+            self.failure = failure
+
+        def post(self, path, json=None, params=None, **kwargs):
+            raise self.failure
+
+    _ours(mod, instance="inst-2")
+    for failure, outcome in ((SafetyViolation("refused before the network"), "not_sent"),
+                             (httpx.ConnectError("never connected"), "not_sent"),
+                             (httpx.ReadTimeout("slow after the request left"), "unknown"),
+                             (httpx.RemoteProtocolError("peer closed"), "unknown")):
+        # Each attempt needs the floor open: a restart after an unknown start is
+        # refused, so a fresh instance per case.
+        instance = f"inst-{outcome}-{type(failure).__name__}"
+        _ours(mod, instance=instance)
+        _offline(mod, monkeypatch, _Drops(failure, [{**PAPER_ROW, "id": instance}]))
+        with pytest.raises(type(failure)):
+            mod.enable(instance, True)
+        last = [r for r in mod.load() if r.get("type") == "outcome"
+                and r.get("kind") == "enable"][-1]
+        assert last["outcome"] == outcome, (type(failure).__name__, last)
+
+    # inst-2: an enable the platform may have taken (unknown), then the sampler's
+    # trading-then-stopped-at-a-loss. restart_refusal read only ACCEPTED enables and
+    # returned `a first start` before it ever looked at the sampler.
+    _switch(mod, "enable", instance="inst-2", outcome="unknown")
+    samples.write_text("".join(_json.dumps(r) + "\n" for r in (
+        {"type": "sample", "kind": "bot", "instance_id": "inst-2",
+         "at": "2026-10-02T10:00:00+00:00", "is_trading": True},
+        {"type": "sample", "kind": "bot", "instance_id": "inst-2",
+         "at": "2026-10-02T12:00:00+00:00", "is_trading": False,
+         "total_profit_usdc": "-23.85"})), encoding="utf-8")
+    assert "their_guard" in (mod.restart_refusal("inst-2") or ""), (
+        "a bot their guard stopped was open to a restart because our enable was not accepted")
+    # A start that never reached them is still a first start: nothing to refuse.
+    _ours(mod, instance="inst-4")
+    _switch(mod, "enable", instance="inst-4", outcome="not_sent")
+    assert mod.restart_refusal("inst-4") is None
+    samples.write_text("", encoding="utf-8")
+
 
 @qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
 def test_the_transport_holds_a_settings_patch_to_its_declared_fields():

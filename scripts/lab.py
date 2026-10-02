@@ -2694,9 +2694,14 @@ def _bots_running(acceptance: dict, room: str | None = None,
                 if row.get("type") == "outcome"}
     switched: dict[str, str] = {}
     for row in rows:
+        # An enable that may have landed (a read timeout is `unknown`) counts as
+        # running, so a verdict still pauses the bot; only a disable needs the
+        # platform's yes (deep pass 2026-10-02, R02).
+        said = outcomes.get(row.get("id"))
         if (row.get("type") == "intent"
                 and row.get("kind") in ("enable", "disable")
-                and outcomes.get(row.get("id")) == "accepted"):
+                and (said == "accepted"
+                     or (row.get("kind") == "enable" and said == "unknown"))):
             switched[str(row.get("instance_id"))] = row["kind"]
     return [ref for ref in wanted if switched.get(str(ref)) == "enable"]
 

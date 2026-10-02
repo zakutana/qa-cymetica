@@ -3809,6 +3809,25 @@ def test_a_tick_starts_the_next_setting_of_a_judged_bot_on_its_one_clone(
             {"type": "status", "room": "STR-0102", "status": "stopped", "why": "x"}]
     assert scripts_lab._bots_running({"legs": leg}, "STR-0102", stored=held) == []
 
+    # Deep pass 2026-10-02, R02: an enable whose answer never came (a read timeout is
+    # `unknown`) may have started the bot, so the room's close still pauses it; a
+    # disable needs the platform's yes before the bot counts as stopped.
+    mine = [{"kind": "bot", "ref": "inst-9", "side": "bull", "share": 1.0}]
+    rooms9 = [{"type": "strategy", "id": "STR-0201", "origin": "NEX-1", "title": "c"},
+              {"type": "acceptance", "room": "STR-0201", "legs": mine},
+              {"type": "status", "room": "STR-0201", "status": "running", "why": "x"}]
+    _write(tmp_path, "clones.jsonl", [
+        {"id": "CLN-0901", "type": "intent", "kind": "enable", "instance_id": "inst-9"},
+        {"id": "CLN-0901", "type": "outcome", "kind": "enable", "outcome": "unknown"}])
+    assert scripts_lab._bots_running({"legs": mine}, "STR-0201", stored=rooms9) == ["inst-9"]
+    _write(tmp_path, "clones.jsonl", [
+        {"id": "CLN-0901", "type": "intent", "kind": "enable", "instance_id": "inst-9"},
+        {"id": "CLN-0901", "type": "outcome", "kind": "enable", "outcome": "accepted"},
+        {"id": "CLN-0902", "type": "intent", "kind": "disable", "instance_id": "inst-9"},
+        {"id": "CLN-0902", "type": "outcome", "kind": "disable", "outcome": "unknown"}])
+    assert scripts_lab._bots_running({"legs": mine}, "STR-0201", stored=rooms9) == ["inst-9"], (
+        "an unknown disable was read as a pause")
+
 
 @qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
 def test_a_variant_that_cannot_run_starts_nothing_and_says_why(tmp_path, monkeypatch):

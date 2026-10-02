@@ -98,6 +98,24 @@ SOURCE_TYPES = {"wta_species": "wta_species",
                 "perpetual_agents": "perpetual_agent"}
 
 
+def _outcome_of(exc: BaseException) -> str:
+    """What a POST that raised is, in the journal's words (rule 9).
+
+    `not_sent` only when the request cannot have left: our own guard refused it,
+    or the connection was never made. A read timeout, a reset or a cut stream
+    came AFTER the request went out, so the platform may have acted on it:
+    that is `unknown`, settled by looking at their side, never by assuming it did
+    not happen. Every handler here wrote `not_sent` for all of them until the
+    deep pass of 2026-10-02 (R02), and every reader then treated a fund or a
+    start that had landed as one that never did."""
+    import httpx
+
+    never_left = (httpx.ConnectError, httpx.ConnectTimeout, httpx.PoolTimeout)
+    if isinstance(exc, httpx.HTTPError) and not isinstance(exc, never_left):
+        return "unknown"
+    return "not_sent"
+
+
 def _now() -> str:
     return datetime.now(timezone.utc).isoformat(timespec="seconds")
 
@@ -358,7 +376,7 @@ def clone(source_type: str, source_id: str, name: str | None,
         # -- nothing was sent, and the record could not say so. An intent with
         # no outcome is the shape the journal's own `unknown` exists to avoid.
         _append({"id": clone_id, "type": "outcome", "at": _now(),
-                 "outcome": "not_sent", "error": f"{type(exc).__name__}: {exc}"})
+                 "outcome": _outcome_of(exc), "error": f"{type(exc).__name__}: {exc}"})
         raise
     finally:
         CURRENT_TIER.reset(token)
@@ -443,7 +461,7 @@ def fund(instance_id: str, amount: float, confirm: bool) -> dict:
         response = client.post(PREFIX_FUND.format(id=instance_id), json=body)
     except Exception as exc:  # noqa: BLE001
         _append({"id": fund_id, "type": "outcome", "at": _now(), "kind": "fund",
-                 "outcome": "not_sent",
+                 "outcome": _outcome_of(exc),
                  "error": f"{type(exc).__name__}: {exc}"})
         raise
     finally:
@@ -572,11 +590,32 @@ def restart_refusal(instance_id: str, rows: list[dict] | None = None,
                 if row.get("type") == "outcome"}
     # File order is the order they were sent in: every chain is appended
     # intent-first by this module, under its lock.
+    # A stop that was not ours is read FIRST, from the sampler, whatever our own
+    # record says about how the bot was started: an enable that came back rejected,
+    # unknown or not_sent may still have started it, and the sampler saw it trade
+    # and stop at a loss. This used to come after `a first start` returned, so such
+    # a bot was open to a restart (deep pass 2026-10-02, R01).
+    from qa import lab
+    from qa import rooms
+
+    samples = rooms.load_samples() if samples is None else samples
+    theirs = [stop for stop in lab.bot_stops(rows, samples)
+              if stop["instance"] == str(instance_id) and stop["cause"] != "ours"]
+    if theirs:
+        stop = theirs[-1]
+        return (f"{instance_id} stopped by itself ({stop['cause']}, between "
+                f"{stop['after']} and {stop['before']}); a stop that was not "
+                f"ours is a finding, and the bot is never started again")
+    # An enable that may have landed (unknown) counts as a start: the safe side of
+    # not knowing is to treat the bot as started once already. Every other step
+    # needs the platform's yes.
     steps = [row["kind"] for row in rows
              if row.get("type") == "intent"
              and row.get("kind") in ("enable", "disable", "settings")
              and str(row.get("instance_id")) == str(instance_id)
-             and answered.get(row.get("id")) == "accepted"]
+             and (answered.get(row.get("id")) == "accepted"
+                  or (row.get("kind") == "enable"
+                      and answered.get(row.get("id")) == "unknown"))]
     if "enable" not in steps:
         return None      # a first start: enable()'s paper floor is the rest
     since = steps[len(steps) - 1 - steps[::-1].index("enable") + 1:]
@@ -594,17 +633,6 @@ def restart_refusal(instance_id: str, rows: list[dict] | None = None,
     if running:
         return (f"{running} is running on {instance_id}; a variant starts only "
                 f"in a room of its own, after that one stops")
-    from qa import lab
-    from qa import rooms
-
-    samples = rooms.load_samples() if samples is None else samples
-    theirs = [stop for stop in lab.bot_stops(rows, samples)
-              if stop["instance"] == str(instance_id) and stop["cause"] != "ours"]
-    if theirs:
-        stop = theirs[-1]
-        return (f"{instance_id} stopped by itself ({stop['cause']}, between "
-                f"{stop['after']} and {stop['before']}); a stop that was not "
-                f"ours is a finding, and the bot is never started again")
     return None
 
 
@@ -672,7 +700,7 @@ def enable(instance_id: str, confirm: bool, enabled: bool = True) -> dict:
                                params={"enabled": "true" if enabled else "false"})
     except Exception as exc:  # noqa: BLE001
         _append({"id": run_id, "type": "outcome", "at": _now(), "kind": kind,
-                 "outcome": "not_sent", "error": f"{type(exc).__name__}: {exc}"})
+                 "outcome": _outcome_of(exc), "error": f"{type(exc).__name__}: {exc}"})
         raise
     finally:
         CURRENT_TIER.reset(token)
@@ -832,7 +860,7 @@ def release(instance_id: str, confirm: bool) -> dict:
         response = client.delete(PREFIX_RELEASE.format(id=instance_id))
     except Exception as exc:  # noqa: BLE001
         _append({"id": release_id, "type": "outcome", "at": _now(),
-                 "kind": "release", "outcome": "not_sent",
+                 "kind": "release", "outcome": _outcome_of(exc),
                  "error": f"{type(exc).__name__}: {exc}"})
         raise
     finally:
@@ -919,7 +947,7 @@ def settings(instance_id: str, changes: dict, confirm: bool) -> dict:
         response = client.patch(SETTINGS.format(id=instance_id), json=body)
     except Exception as exc:  # noqa: BLE001
         _append({"id": change_id, "type": "outcome", "at": _now(),
-                 "kind": "settings", "outcome": "not_sent",
+                 "kind": "settings", "outcome": _outcome_of(exc),
                  "error": f"{type(exc).__name__}: {exc}"})
         raise
     finally:
