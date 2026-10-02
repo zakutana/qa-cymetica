@@ -518,6 +518,46 @@ def phase_word_breaches(alt: dict) -> dict:
     return {"breaches": breaches, "weeks_read": read, "only_btc_weeks": btc_only, "unread": []}
 
 
+FORMING_MAX_AGE_S = 3600.0
+FORMING_TOLERANCE = 0.02
+
+
+def forming_candle_staleness(analysis: dict, source_close, now: float, *,
+                             max_age_s: float = FORMING_MAX_AGE_S,
+                             tolerance: float = FORMING_TOLERANCE) -> dict:
+    """Is the candle still forming in a Chart Analyzer answer both OLD and wrong?
+
+    `analysis` is `GET /api/v1/chart-analyzer/analyze?...&include_candles=true` for a
+    contract; `source_close` the same pool's current candle close at its source (the
+    page says "LIVE"). Verdict `old_and_off` when the cache was fetched more than
+    `max_age_s` ago and the forming close is more than `tolerance` away from the
+    source; `ok` otherwise (a fresh candle that drifted, or an old one that still
+    agrees, is no defect); `unread` when a field or the source is missing, or the last
+    candle is not forming. On 2026-10-02: fetched 12:24 UTC, read at 14:38 (134 min),
+    0.2567 against 0.2707, 5.2% off, with `candles_stale: false` and a LIVE label."""
+    import datetime as _dt
+
+    candles = analysis.get("candles") or []
+    fetched = analysis.get("candles_fetched_at")
+    close = num(candles[-1][4]) if candles and len(candles[-1]) > 4 else None
+    ref = num(source_close)
+    if not analysis.get("last_candle_forming") or close is None or not ref or not fetched:
+        return {"verdict": "unread", "age_s": None, "deviation": None,
+                "last_close": close, "source_close": ref}
+    try:
+        when = _dt.datetime.fromisoformat(str(fetched).replace("Z", "+00:00"))
+        if when.tzinfo is None:
+            when = when.replace(tzinfo=_dt.timezone.utc)
+    except ValueError:
+        return {"verdict": "unread", "age_s": None, "deviation": None,
+                "last_close": close, "source_close": ref}
+    age = now - when.timestamp()
+    deviation = abs(close / ref - 1.0)
+    verdict = "old_and_off" if (age > max_age_s and deviation > tolerance) else "ok"
+    return {"verdict": verdict, "age_s": age, "deviation": deviation,
+            "last_close": close, "source_close": ref, "fetched_at": fetched}
+
+
 META_TAG = re.compile(r"<meta\b[^>]*>", re.I)
 META_ATTR = re.compile(r'([a-zA-Z:_-]+)\s*=\s*"([^"]*)"')
 SHARE_TAGS = ("og:image", "twitter:image")

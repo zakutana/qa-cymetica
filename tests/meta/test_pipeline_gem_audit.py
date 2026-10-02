@@ -423,6 +423,7 @@ def test_the_audit_sees_a_wrong_upside_a_wrong_identity_a_wrong_altseason_and_a_
     _a_word_that_says_only_btc_runs_is_held_to_the_breadth_beside_it()
     _how_sure_follows_its_own_tooltip()
     _a_share_image_is_read_the_way_a_crawler_reads_it()
+    _a_forming_candle_that_is_old_and_far_from_its_pool_is_seen()
 
 
 @qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
@@ -652,6 +653,34 @@ def _how_sure_follows_its_own_tooltip():
     assert g.retail_sure_breach(snap("unsure", *today), "<p>no tooltip here</p>")["unread"], (
         "a page that no longer words the rule was judged against a remembered one")
     assert g.retail_sure_breach({}, page)["unread"]
+
+
+def _a_forming_candle_that_is_old_and_far_from_its_pool_is_seen():
+    """2026-10-02, Collector Crypt: the Chart Analyzer's cache was fetched at 12:24 UTC and
+    at 14:38 its forming daily candle closed at 0.2567 while the pool's own candle read
+    0.2707 (5.2% off), under a page that says LIVE and `candles_stale: false`. A candle
+    that is more than an hour old AND off by more than 2% is the defect; a fresh one
+    that drifted, or an old one that still agrees, is not."""
+    now = 1_790_000_000.0
+    iso = lambda ago_s: __import__("datetime").datetime.fromtimestamp(
+        now - ago_s, __import__("datetime").timezone.utc).isoformat(timespec="seconds")
+
+    def analysis(ago_s, close=0.2567, forming=True):
+        return {"candles_fetched_at": iso(ago_s), "last_candle_forming": forming,
+                "candles": [[1, 1, 1, 1, 0.20, 5.0], [2, 0.21, 0.26, 0.20, close, 6.0]]}
+
+    said = g.forming_candle_staleness(analysis(134 * 60), 0.2707, now)
+    assert said["verdict"] == "old_and_off" and round(said["deviation"], 3) == 0.052, said
+    assert round(said["age_s"] / 60) == 134, said
+    assert g.forming_candle_staleness(analysis(20 * 60), 0.2707, now)["verdict"] == "ok", (
+        "a candle fetched 20 minutes ago was called stale")
+    assert g.forming_candle_staleness(analysis(134 * 60, close=0.2700), 0.2707, now)["verdict"] == "ok", (
+        "an old candle that still agrees with its pool was called wrong")
+    assert g.forming_candle_staleness(analysis(134 * 60, forming=False), 0.2707, now)["verdict"] == "unread", (
+        "a closed candle was judged against a live price")
+    assert g.forming_candle_staleness({"candles": []}, 0.2707, now)["verdict"] == "unread"
+    assert g.forming_candle_staleness(analysis(134 * 60), None, now)["verdict"] == "unread", (
+        "a source that did not answer was read as agreement")
 
 
 def _a_share_image_is_read_the_way_a_crawler_reads_it():
