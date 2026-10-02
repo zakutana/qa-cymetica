@@ -493,7 +493,9 @@ document.getElementById('play').addEventListener('click', e => {
   playing = setInterval(() => { if (+t.value >= MONTHS){ clearInterval(playing); playing = null; e.target.textContent = '▶'; return; }
     t.value = +t.value + 1; show(+t.value); }, 900); });
 pile0 = pile(0); level0 = pile0/(MAXPILE*1.08); level = levelT = level0; pileShown = pileT = pile0; vaultF = 1; resF = 1;
-drawPie(cur); show(0); heroShown = heroT; requestAnimationFrame(scene);
+const m0 = Math.max(0, Math.min(MONTHS, parseInt(new URLSearchParams(location.search).get('m'), 10) || 0));   // ?m=15 opens the page in that month
+t.value = m0; cur = state(m0); level = levelT = pile(m0)/(MAXPILE*1.08); pileShown = pileT = pile(m0); vaultF = state(m0).vesting/START.vesting; resF = state(m0).reserve/START.reserve;
+drawPie(cur); show(m0); heroShown = heroT; requestAnimationFrame(scene);
 </script>
 </body>
 </html>
