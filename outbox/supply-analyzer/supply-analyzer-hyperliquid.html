@@ -104,12 +104,13 @@ input[type=range]::-moz-range-thumb{width:18px;height:18px;border-radius:50%;bac
     </div>
 
     <div class="card pie">
-      <div class="lab mono">WHERE THE 1,000M HYPE ARE</div>
+      <div class="lab mono" id="pielab">TOKENS IN PLAY</div>
       <div class="prow">
         <svg id="pie" viewBox="-200 -200 400 400" width="360" height="360" role="img" aria-label="Supply pie">
           <defs>
             <pattern id="hv" width="9" height="9" patternUnits="userSpaceOnUse" patternTransform="rotate(45)"><rect width="9" height="9" fill="#3a1218"/><line x1="0" y1="0" x2="0" y2="9" stroke="#ff4444" stroke-width="3.2" opacity=".7"/></pattern>
             <pattern id="hb" width="9" height="9" patternUnits="userSpaceOnUse" patternTransform="rotate(45)"><rect width="9" height="9" fill="#0f2140"/><line x1="0" y1="0" x2="0" y2="9" stroke="#3b82f6" stroke-width="3.2" opacity=".8"/></pattern>
+            <pattern id="hg" width="9" height="9" patternUnits="userSpaceOnUse" patternTransform="rotate(45)"><rect width="9" height="9" fill="#0b2a1c"/><line x1="0" y1="0" x2="0" y2="9" stroke="#00ff88" stroke-width="3.2" opacity=".75"/></pattern>
           </defs>
           <g id="slices"></g><g id="plabels"></g>
         </svg>
@@ -121,36 +122,37 @@ input[type=range]::-moz-range-thumb{width:18px;height:18px;border-radius:50%;bac
   <div class="card rel">
     <div class="rhead">
       <div><div class="lab mono">BECOMES SELLABLE THIS MONTH</div><div class="n mono" id="relN" style="color:var(--red)"></div></div>
-      <div><div class="lab mono">BOUGHT BACK AND BURNED</div><div class="n mono" id="burnN" style="color:var(--green)"></div></div>
+      <div><div class="lab mono">BOUGHT BACK (BURNED OR KEPT)</div><div class="n mono" id="burnN" style="color:var(--green)"></div></div>
       <div><div class="lab mono">NET, A YEAR, OF THE TOKENS FREE TO SELL</div><div class="n mono" id="netN"></div></div>
     </div>
     <svg id="bars" viewBox="0 0 1240 150" width="100%" height="150" style="margin-top:10px" role="img" aria-label="Release and burn by month"></svg>
   </div>
 
   <div class="foot mono">
-    Measured today: 437.5M HYPE staked (Hyperliquid validators, 7 days to unstake), 47.6M burned (the Assistance Fund's balance), buyback $145M in Q3 (DefiLlama).
+    Measured today: 437.5M HYPE staked (Hyperliquid validators, exit takes 7 days), 47.6M burned (the Assistance Fund's balance), buyback $145M in Q3 (DefiLlama).
     Estimated: the 207.8M staked on the Hyper Foundation's validators is taken to come from the reserve; team tranches of 9.92M a month (trackers differ on the day and the amount);
-    staking rewards of 0.79M a month at today's rate; burns at Q3's pace and today's price. A sketch for a build request, not financial advice and not a forecast.
+    staking rewards of 0.79M a month at today's rate; buybacks at Q3's pace and today's price, all of them burned. The pie shows the tokens that are in play; the reserve is the part of the max supply
+    not yet paid out, and rewards come out of it. A sketch for a build request, not financial advice and not a forecast.
   </div>
 </div>
 
 <script>
-const START = {free:206.9, staked:229.7, locked:0, emitted:0, vesting:138.8, reserve:377.0, burned:47.6};
-const TRANCHE = 9.92, REWARD = 0.79, BURN = 0.546, MONTHS = 24;
+const START = {free:206.9, staked:229.7, locked:0, emitted:0, vesting:138.8, reserve:377.0, held:0, burned:47.6};
+const TRANCHE = 9.92, REWARD = 0.79, BURN = 0.546, BURN_SHARE = 1, MONTHS = 24;   // BURN = bought back a month; BURN_SHARE = how much of it is burned (1 = all, 0 = all kept)
 const ORDER = [
   {k:'free',    name:'Free to sell',              sub:'In circulation, not staked',                 fill:'#00cfff'},
-  {k:'staked',  name:'Staked, 7 days to leave',   sub:'No lock: can be sold within a week',         fill:'#3b82f6'},
-  {k:'locked',  name:'Staked with a lock',        sub:'HYPE has none',                              fill:'url(#hb)'},
-  {k:'vesting', name:'Vesting (team)',            sub:'Locked; a tranche a month',                  fill:'url(#hv)'},
-  {k:'reserve', name:'Reserve, not paid out',     sub:'Part of the 1B nobody holds yet',            fill:'#6f8199', op:.38},
-  {k:'emitted', name:'Paid out from the reserve', sub:'Staking rewards since today: new supply',    fill:'#ff4444'},
-  {k:'burned',  name:'Bought back & burned',      sub:'Bought with fees, then burned for good',     fill:'#00ff88', op:.85},
+  {k:'staked',  name:'Staked, free to unlock',    sub:'No lock: can leave any time (HYPE: 7 days)', fill:'#3b82f6'},
+  {k:'locked',  name:'Staked, locked',            sub:'Until a date; then it turns into free (HYPE: none)', fill:'url(#hb)'},
+  {k:'vesting', name:'Vesting',                   sub:'Locked allocation; a tranche a month (team)', fill:'url(#hv)'},
+  {k:'emitted', name:'Newly paid out',            sub:'Emissions and mints since today',            fill:'#ff4444'},
+  {k:'held',    name:'Bought back, kept',         sub:'Bought with fees, held by the project',      fill:'url(#hg)'},
+  {k:'burned',  name:'Bought back, burned',       sub:'Bought with fees, then burned for good',     fill:'#00ff88', op:.85},
 ];
 const label = m => { const d = new Date(2026, 9 + m, 1); return d.toLocaleString('en-US',{month:'short'}) + ' ' + d.getFullYear(); };
 function state(m){
   const vest = Math.max(0, START.vesting - TRANCHE*m), rel = START.vesting - vest;
   return {free:START.free + rel - BURN*m, staked:START.staked, locked:0, emitted:REWARD*m,
-          vesting:vest, reserve:START.reserve - REWARD*m, burned:START.burned + BURN*m};
+          vesting:vest, reserve:START.reserve - REWARD*m, held:START.held + BURN*(1 - BURN_SHARE)*m, burned:START.burned + BURN*BURN_SHARE*m};
 }
 function flows(m){ const left = Math.max(0, START.vesting - TRANCHE*m); const tr = Math.min(TRANCHE, left);
   return {tranche:tr, reward:REWARD, release:tr + REWARD, burn:BURN}; }
@@ -186,6 +188,7 @@ function arc(a0, a1, rad){ const p = a => [rad*Math.sin(a), -rad*Math.cos(a)]; c
   return `M0 0L${x0.toFixed(2)} ${y0.toFixed(2)}A${rad} ${rad} 0 ${a1-a0 > Math.PI ? 1 : 0} 1 ${x1.toFixed(2)} ${y1.toFixed(2)}Z`; }
 function drawPie(s){
   const tot = ORDER.reduce((a,o) => a + s[o.k], 0); let a = 0; P.innerHTML = ''; L.innerHTML = '';
+  document.getElementById('pielab').textContent = `TOKENS IN PLAY · ${Math.round(tot)}M OF 1,000M MAX`;
   for (const o of ORDER){ const v = s[o.k]; if (v <= 0.05) continue; const a1 = a + 2*Math.PI*v/tot;
     P.insertAdjacentHTML('beforeend', `<path d="${arc(a, a1, R)}" fill="${o.fill}" fill-opacity="${o.op ?? 1}" stroke="#0c1421" stroke-width="2.5"/>`);
     const share = 100*v/tot;
@@ -197,11 +200,16 @@ const legend = document.getElementById('legend');
 function drawLegend(s, m){
   const s0 = state(0); legend.innerHTML = '';
   for (const o of ORDER){ const v = s[o.k], d = v - s0[o.k];
-    const dcls = Math.abs(d) < 0.05 ? 'flat' : ((d > 0) === (o.k==='burned' || o.k==='locked' || o.k==='staked') ? 'down' : 'up');
+    const dcls = Math.abs(d) < 0.05 ? 'flat' : ((d > 0) === (o.k==='burned' || o.k==='held' || o.k==='locked' || o.k==='staked') ? 'down' : 'up');
     const dtxt = m === 0 ? '' : `<small class="d ${dcls}">${d >= 0 ? '+' : '−'}${Math.abs(d).toFixed(1)}M since today</small>`;
-    legend.insertAdjacentHTML('beforeend', `<div class="li"><span class="chip" style="background:${o.fill.startsWith('url') ? (o.k==='vesting' ? 'repeating-linear-gradient(45deg,#ff4444 0 3px,#3a1218 3px 7px)' : 'repeating-linear-gradient(45deg,#3b82f6 0 3px,#0f2140 3px 7px)') : o.fill};opacity:${o.op ?? 1}"></span>
+    const hatch = {vesting:'repeating-linear-gradient(45deg,#ff4444 0 3px,#3a1218 3px 7px)', locked:'repeating-linear-gradient(45deg,#3b82f6 0 3px,#0f2140 3px 7px)', held:'repeating-linear-gradient(45deg,#00ff88 0 3px,#0b2a1c 3px 7px)'};
+    legend.insertAdjacentHTML('beforeend', `<div class="li"><span class="chip" style="background:${o.fill.startsWith('url') ? hatch[o.k] : o.fill};opacity:${o.op ?? 1}"></span>
       <div><b>${o.name}</b><small>${o.sub}</small></div>
-      <div class="val mono">${v.toFixed(1)}M <small style="color:var(--mut)">${(v/10).toFixed(1)}%</small>${dtxt}</div></div>`); }
+      <div class="val mono">${v.toFixed(1)}M <small style="color:var(--mut)">${(100*v/ORDER.reduce((a,x) => a + s[x.k], 0)).toFixed(1)}%</small>${dtxt}</div></div>`); }
+  const rd = s.reserve - s0.reserve;
+  legend.insertAdjacentHTML('beforeend', `<div class="li" style="border-top:1px dashed var(--edge);padding-top:9px"><span class="chip" style="border:1.5px dashed var(--mut)"></span>
+      <div><b style="color:var(--soft)">Not in the pie: reserve</b><small>Max supply not paid out yet; rewards come out of it</small></div>
+      <div class="val mono" style="color:var(--soft)">${s.reserve.toFixed(1)}M${m === 0 ? '' : `<small class="d flat">${rd >= 0 ? '+' : '−'}${Math.abs(rd).toFixed(1)}M since today</small>`}</div></div>`);
 }
 let anim = null;
 function tween(to){ const from = {...cur}, t0 = performance.now(); cancelAnimationFrame(anim);
@@ -219,7 +227,7 @@ function drawBars(m){
     h += `<rect x="${x+bw*0.56}" y="${H-20-hb}" width="${bw*0.3}" height="${hb}" rx="2" fill="#00ff88" opacity="${on ? 1 : .45}"/>`;
     if (i % 6 === 0) h += `<text x="${x+bw/2}" y="${H-4}" text-anchor="middle" font-size="11" fill="#6f8199" font-family="JetBrains Mono,monospace">${label(i)}</text>`; }
   h += `<rect x="${m*bw+1}" y="0" width="${bw-2}" height="${H-18}" rx="4" fill="none" stroke="#00cfff" stroke-opacity=".6"/>`;
-  h += `<text x="${W-230}" y="12" font-size="11" fill="#ff4444" font-family="JetBrains Mono,monospace">■ becomes sellable</text><text x="${W-70}" y="12" font-size="11" fill="#00ff88" font-family="JetBrains Mono,monospace">■ burned</text>`;
+  h += `<text x="${W-290}" y="12" font-size="11" fill="#ff4444" font-family="JetBrains Mono,monospace">■ becomes sellable</text><text x="${W-130}" y="12" font-size="11" fill="#00ff88" font-family="JetBrains Mono,monospace">■ bought back</text>`;
   B.innerHTML = h; }
 
 // one month
@@ -230,7 +238,7 @@ function show(m, first){
   const pill = document.getElementById('pill'); pill.textContent = band[0]; pill.style.color = band[1]; pill.style.borderColor = band[1]; pill.style.background = band[2];
   document.getElementById('mline').innerHTML = f.tranche > 0
     ? `New tokens outweigh buybacks <span style="color:var(--red)">${Math.round(f.release/f.burn)} to 1</span>.`
-    : `The team is fully vested. Rewards ${f.reward.toFixed(2)}M against burns ${f.burn.toFixed(2)}M a month.`;
+    : `The team is fully vested. Rewards ${f.reward.toFixed(2)}M against buybacks ${f.burn.toFixed(2)}M a month.`;
   document.getElementById('relN').textContent = `+${f.release.toFixed(2)}M`;
   document.getElementById('relN').title = `team ${f.tranche.toFixed(2)}M + staking rewards ${f.reward.toFixed(2)}M`;
   document.getElementById('burnN').textContent = `−${f.burn.toFixed(2)}M`;

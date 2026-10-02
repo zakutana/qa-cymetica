@@ -4,17 +4,21 @@ The operator's idea: a standalone app like the Chart Analyzer (`cymetica.com/cha
 
 Files: `supply-analyzer/input-page.svg` (the input page, the Chart Analyzer's own layout) and `supply-analyzer/supply-analyzer-hyperliquid.html` (the result page, interactive: the slider, a play button, the pie and the meter move month by month). Cymetica's palette and fonts.
 
-## The pie: seven slices that always add up to the max supply
+## The pie: the tokens in play, seven slices
+
+The pie holds the tokens that exist in someone's hands or are bound to be (623M of the 1,000M max for HYPE). The reserve, the part of the max supply not paid out yet, is **not a slice**: it stands under the pie as one line, because the pie is for reading the pressure and the reserve only says where rewards come from (the operator asked what it was for). The names are generic, so one page works for any token.
 
 | Slice | What it is | Moves with the slider |
 |---|---|---|
 | Free to sell | in circulation and not staked, including tokens already unlocked that nobody has moved (the operator: "unlocked, not moving" is the same as circulating) | grows with every vesting tranche; shrinks with every buyback |
-| Staked, 7 days to leave | staking without a lock: sellable within the unstake time | (held constant in the sketch) |
-| Staked with a lock | staking locked until a date; it moves to the slice above when the lock ends | for tokens that have such locks; HYPE has none |
-| Vesting | allocations still locked (team, investors) | a tranche a month moves to Free to sell |
-| Reserve, not paid out | part of the max supply nobody holds yet (rewards, community) | shrinks by what is paid out |
-| Paid out from the reserve | emissions and mints since the slider's start: new supply in someone's hands | grows by the same amount |
-| Bought back & burned | bought on the market with fees and burned; for tokens that buy back and keep, a slice "bought back, held" would stand beside it | grows with every buyback |
+| Staked, free to unlock | staking without a lock: can leave any time (HYPE: 7 days) | (held constant in the sketch) |
+| Staked, locked | staking locked until a date; at that date it turns into Free to sell | for tokens that have such locks; HYPE has none |
+| Vesting | locked allocations (team, investors) | a tranche a month moves to Free to sell |
+| Newly paid out | emissions and mints since the slider's start: new supply | grows with every reward or mint |
+| Bought back, kept | bought with fees and held by the project; it can return to the market | grows with every buyback that is kept |
+| Bought back, burned | bought with fees and burned | grows with every buyback that is burned |
+
+Buyback and burn are two slices because a project can do only a buyback (Aave, Collector Crypt are listed as buybacks without a burn). Both take tokens off the market now and both count in the pull; a kept one can come back, which the "firmness" line of the spec covers. For HYPE all of it is burned, so "kept" is 0.
 
 ## The release rate is the push of the pressure
 
