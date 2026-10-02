@@ -42,6 +42,7 @@ from qa.marks import Inconclusive, SafetyTier, qa
 from qa.measure import Measurement, conclude
 
 INBOX = "/api/v1/bounty/a2a/inbox/{agent_id}"
+INBOX_LIMIT = 200  # their maximum: 422 above it; the default page is the 50 newest
 AGENT_ID = "expire76-qa"
 JOURNAL = Path(__file__).resolve().parents[2] / "state" / "journal" / "events.jsonl"
 DUE_AFTER = timedelta(hours=1)
@@ -58,7 +59,8 @@ def _moment(value):
 
 
 def unanswered(sent: list[dict], replies: list[dict], now: datetime,
-               due_after: timedelta = DUE_AFTER, window: int = WINDOW):
+               due_after: timedelta = DUE_AFTER, window: int = WINDOW,
+               oldest: datetime | None = None):
     """(the messages judged, those with no investigation reply in time, those
     that cannot be told).
 
@@ -72,7 +74,13 @@ def unanswered(sent: list[dict], replies: list[dict], now: datetime,
     A reply with `reply_to` None names no parent (deep pass 2026-09-30, C02,
     3/3: six deep replies came back so on 2026-09-26). It cannot be paired,
     so a message with no reply of its own but such an investigation in its
-    window is unsure, never missing."""
+    window is unsure, never missing.
+
+    `oldest` is the time of the oldest message the inbox page returned (NEXT
+    2026-10-01: the inbox gave only the 50 newest without a `limit`). A message
+    sent before it has no reply on the page and may have had one on a page we
+    did not read: unsure, never missing. A reply that IS on the page still
+    answers it."""
     due = sorted((s for s in sent if now - s["at"] >= due_after),
                  key=lambda s: s["at"])[-window:]
 
@@ -85,7 +93,9 @@ def unanswered(sent: list[dict], replies: list[dict], now: datetime,
     for s in due:
         if any(r["reply_to"] == s["id"] and in_time(r, s) for r in replies):
             continue
-        if any(r["reply_to"] is None and in_time(r, s) for r in replies):
+        if oldest is not None and s["at"] < oldest:
+            unsure.append(s)
+        elif any(r["reply_to"] is None and in_time(r, s) for r in replies):
             unsure.append(s)
         else:
             missing.append(s)
@@ -110,7 +120,7 @@ def _our_sends() -> list[dict]:
 def test_an_async_message_gets_the_investigation_its_card_promises(rest_trusted):
     """Each recent async message gets more than the automatic first pass."""
     inbox = rest_trusted.get(INBOX.format(agent_id=AGENT_ID),
-                             params={"unread_only": "false"})
+                             params={"unread_only": "false", "limit": INBOX_LIMIT})
     if inbox.status_code != 200:
         raise Inconclusive(f"the inbox answered HTTP {inbox.status_code}; "
                            f"a failed read is not an empty inbox")
@@ -129,7 +139,11 @@ def test_an_async_message_gets_the_investigation_its_card_promises(rest_trusted)
                         "kind": meta.get("kind")})
 
     now = datetime.now(timezone.utc)
-    judged, missing, unsure = unanswered(_our_sends(), replies, now)
+    # Without a limit the page holds the 50 newest; a full page may have cut
+    # older messages off. What it cannot show is unsure, never missing.
+    stamps = [r["at"] for r in replies if r["at"] is not None]
+    oldest = min(stamps) if len(messages) >= INBOX_LIMIT and stamps else None
+    judged, missing, unsure = unanswered(_our_sends(), replies, now, oldest=oldest)
     if len(judged) < MIN_JUDGED:
         raise Inconclusive(f"{len(judged)} async message(s) of ours are due "
                            f"(sent over {DUE_AFTER} ago); {MIN_JUDGED} are needed")

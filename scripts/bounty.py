@@ -363,6 +363,12 @@ def refresh_creator_rewards(client=None) -> dict:
 
 A2A_INBOX = "/api/v1/bounty/a2a/inbox/{agent_id}"
 
+# Without `limit` the inbox returns only the 50 newest messages, so everything
+# older was never read (NEXT 2026-10-01, PRE-0214: the oldest returned was
+# 26 Sep). `limit` is undocumented; 200 is the most they accept (422 above it,
+# measured 2026-10-02, when the whole inbox held 168).
+INBOX_LIMIT = 200
+
 # NOT "scripts/bounty.py". A vendor_read is keyed on at|source|klass, and this
 # function runs in the same second as the tracker read, from the same file,
 # usually with the same klass -- so sharing the source would make the second
@@ -411,7 +417,8 @@ def fetch_inbox(client=None, agent_id: str | None = None) -> dict:
                 EndpointRegistry.load(), timeout=60.0)
         try:
             response = client.get(A2A_INBOX.format(agent_id=agent_id),
-                                  params={"unread_only": "false"})
+                                  params={"unread_only": "false",
+                                          "limit": INBOX_LIMIT})
             klass = classify_read(response)
             evidence_id = _capture(response)
         except Exception:  # noqa: BLE001
@@ -441,7 +448,11 @@ def fetch_inbox(client=None, agent_id: str | None = None) -> dict:
     if klass != "ok":
         return {"klass": klass, "rows_returned": None, "new": [], "at": at}
 
-    return record_inbox(messages, klass=klass, at=at, evidence_id=evidence_id)
+    result = record_inbox(messages, klass=klass, at=at, evidence_id=evidence_id)
+    # A page of exactly the limit may have cut older messages off; the caller
+    # (and the check that pairs answers) must not read that as "no reply".
+    result["full"] = len(messages) >= INBOX_LIMIT
+    return result
 
 
 def record_inbox(messages: list[dict], klass: str = "ok",
@@ -798,7 +809,9 @@ if __name__ == "__main__":
         answers = [m for m in inbox.get("new") or [] if not m["auto"]]
         auto = len(inbox.get("new") or []) - len(answers)
         print(f"   a2a inbox: {inbox.get('rows_returned')} message(s), "
-              f"{len(answers)} new repl(ies), {auto} new automated")
+              f"{len(answers)} new repl(ies), {auto} new automated"
+              + ("  -- the page is FULL: older messages may not have been read"
+                 if inbox.get("full") else ""))
         for message in answers:
             first = (message["text"] or "").strip().splitlines()
             print(f"   >> {message['at']}  {message['msg_id']}")

@@ -481,6 +481,19 @@ def test_the_is_answer_rule_is_self_calibrating_and_still_bites():
     assert unanswered(sent, paired_and_orphan, now)[1:] == ([], [sent[3], sent[4], sent[5]]), (
         "a message with its own reply is answered; only the rest are unsure")
 
+    # NEXT 2026-10-01 (async a2a check): the inbox without `limit` returned the 50
+    # newest, so a message sent before the oldest one on the page looked unanswered
+    # when its answer was on a page we never read. Such a message is unsure --
+    # never missing -- and one whose own reply is on the page is still answered.
+    oldest = at(8, 30)
+    j, missing, unsure = unanswered(sent, [], now, oldest=oldest)
+    assert [s["id"] for s in unsure] == ["q1"] and len(missing) == 4, (
+        "a message sent before the oldest message on the page was judged missing")
+    assert [s["id"] for s in unanswered(sent, [], now, oldest=at(6))[1]] == ["q1", "q2", "q3", "q4", "q5"], (
+        "a page that reaches back before every send hid nothing, so nothing is unsure")
+    assert unanswered(sent, [human("q1", at(8, 20))], now, oldest=oldest)[2] == [], (
+        "a message whose own reply is on the page was called unsure")
+
     # #139 (fixed 2026-10-01 07:07 UTC; "messages logged before the fix stay as
     # they were"): a cut message logged BEFORE the fix is history, one logged
     # after it is the defect. Held here for the same ceiling.

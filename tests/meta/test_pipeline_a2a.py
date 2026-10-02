@@ -92,12 +92,32 @@ def test_the_inbox_keeps_what_tells_a_human_from_a_robot(tmp_path, monkeypatch):
     bounty = importlib.util.module_from_spec(spec)
     spec.loader.exec_module(bounty)
 
-    inbox = _inbox(
+    asked = []
+    rows = [
         _msg("a2a_1", AT, "\U0001f3c6 Reward Pathways Unlocked", auto=True),
         _msg("a2a_2", AT, "You were right about the channel.",
              kind="human", parent="a2a_ours"),
-    )
-    bounty.fetch_inbox(client=inbox, agent_id="expire76-qa")
+    ]
+
+    def answer(request):
+        asked.append(dict(request.url.params))
+        return httpx.Response(200, json={"messages": rows})
+
+    inbox = _client(answer)
+    said = bounty.fetch_inbox(client=inbox, agent_id="expire76-qa")
+    # NEXT 2026-10-01: without `limit` the inbox returns only the 50 newest (168
+    # held on 2026-10-02; 200 is their maximum, 422 above it). A page that comes
+    # back full says so, because an older message may be on the page not read.
+    assert asked == [{"unread_only": "false", "limit": "200"}], asked
+    assert said["full"] is False
+    full = [_msg(f"a2a_{i}", AT) for i in range(200)]
+    rows[:] = full
+    assert bounty.fetch_inbox(client=_client(answer), agent_id="expire76-qa")["full"] is True, (
+        "a page of exactly the limit was not marked as possibly cut")
+    rows[:] = [_msg("a2a_1", AT, "\U0001f3c6 Reward Pathways Unlocked", auto=True),
+               _msg("a2a_2", AT, "You were right about the channel.",
+                    kind="human", parent="a2a_ours")]
+    bounty.fetch_inbox(client=_client(answer), agent_id="expire76-qa")
 
     by_id = {e["msg_id"]: e for e in read_events() if e["type"] == "message"}
     assert by_id["a2a_1"]["auto"] is True
