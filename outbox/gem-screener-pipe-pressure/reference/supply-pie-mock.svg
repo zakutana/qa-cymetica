@@ -1,0 +1,91 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 820 710" width="820" height="710" font-family="IBM Plex Sans, Segoe UI, Arial, sans-serif" role="img" aria-label="The Supply balance on a coin's detail: a pie of the supply (free to sell, locked, not out yet), one number from 1 to 10, and four figures: locked, new tokens, bought back, burned">
+<defs>
+<pattern id="stk" width="9" height="9" patternUnits="userSpaceOnUse" patternTransform="rotate(45)"><rect width="9" height="9" fill="#0c2a38"/><line x1="0" y1="0" x2="0" y2="9" stroke="#00b4dc" stroke-width="3" opacity="0.5"/></pattern>
+</defs>
+<rect width="820" height="710" fill="#0d1422"/>
+<text x="26" y="40" font-size="11" fill="#6f8199" letter-spacing="1">UNDER THE DEGEN METER, IN A COIN'S DETAIL · THREE STATES OF THE SAME CARD</text>
+<g transform="translate(26 66)">
+<rect width="768" height="196" rx="10" fill="#111a28" stroke="#0096ff" stroke-opacity="0.15"/>
+<path d="M110.0 26.0A72 72 0 1 1 83.5 164.9L93.1 140.8A46 46 0 1 0 110.0 52.0Z" fill="#00cfff" fill-opacity="0.85" stroke="#111a28" stroke-width="2"/>
+<path d="M83.5 164.9A72 72 0 0 1 110.0 26.0L110.0 52.0A46 46 0 0 0 93.1 140.8Z" fill="#6f8199" fill-opacity="0.22" stroke="#111a28" stroke-width="2"/>
+<text x="110" y="108" font-size="38" font-weight="700" fill="#ff4444" text-anchor="middle" font-family="IBM Plex Mono, Consolas, monospace">8</text>
+<text x="110" y="126" font-size="12" fill="#6f8199" text-anchor="middle" font-family="IBM Plex Mono, Consolas, monospace">/10</text>
+<text x="214" y="34" font-size="13" font-weight="600" fill="#6f8199" letter-spacing="1">SUPPLY BALANCE · PUMP</text>
+<rect x="418" y="21" width="40" height="17" rx="8.5" fill="#0c2a38" stroke="#1f6f86"/><text x="438" y="34" font-size="10.5" font-weight="700" fill="#00cfff" text-anchor="middle" letter-spacing="0.5">NEW</text>
+<circle cx="745" cy="28" r="11" fill="none" stroke="#6f8199" stroke-opacity="0.6"/><text x="745" y="33" font-size="14" fill="#6f8199" text-anchor="middle">i</text>
+<text x="214" y="66" font-size="18" font-weight="600" fill="#e6edf7">Flooding. New tokens outrun the buyers.</text>
+<g transform="translate(214 90) scale(1.45)" fill="none" stroke="#00cfff" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="7.5" width="10" height="7" rx="1.5"/><path d="M5.5 7.5V5a2.5 2.5 0 0 1 5 0v2.5"/></g>
+<text x="248" y="106" font-size="19" font-weight="700" fill="#00cfff" font-family="IBM Plex Mono, Consolas, monospace">0%</text>
+<text x="248" y="124" font-size="12" fill="#6f8199">locked</text>
+<g transform="translate(350 90) scale(1.45)" fill="none" stroke="#ff4444" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"><path d="M2 3.5v4M2 5.5h6.5a3 3 0 0 1 3 3V10M6 5.5V3M4.5 3h3"/><path d="M12.4 12.6c0 .7-.4 1.2-.9 1.2s-.9-.5-.9-1.2c0-.6.9-1.8.9-1.8s.9 1.2.9 1.8z"/></g>
+<text x="384" y="106" font-size="19" font-weight="700" fill="#ff4444" font-family="IBM Plex Mono, Consolas, monospace">+18.0%</text>
+<text x="384" y="124" font-size="12" fill="#6f8199">new tokens a year</text>
+<g transform="translate(486 90) scale(1.45)" fill="none" stroke="#00ff88" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"><rect x="3.5" y="4.5" width="9" height="6.5" rx="2"/><path d="M6.5 4.5v3M9.5 4.5v3M3.5 8h3.2a1.3 1.3 0 0 1 0 2.6H5.2M5 11v3h6v-3"/></g>
+<text x="520" y="106" font-size="19" font-weight="700" fill="#00ff88" font-family="IBM Plex Mono, Consolas, monospace">10.6%</text>
+<text x="520" y="124" font-size="12" fill="#6f8199">bought back a year</text>
+<g transform="translate(622 90) scale(1.45)" fill="none" stroke="#00ff88" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"><path d="M8 1.8c.6 2.6 3.8 4 3.8 7.4a3.8 3.8 0 0 1-7.6 0c0-1.6.8-2.6 1.6-3.4.3 1.2 1 1.8 1.6 2 .1-2.2-.2-4 .6-6z"/></g>
+<text x="656" y="106" font-size="19" font-weight="700" fill="#00ff88" font-family="IBM Plex Mono, Consolas, monospace">all</text>
+<text x="656" y="124" font-size="12" fill="#6f8199">of it burned</text>
+<rect x="214" y="158" width="12" height="12" rx="2" fill="#00cfff" fill-opacity="0.85"/>
+<text x="233" y="169" font-size="12" fill="#a9b8cc">free to sell 56%</text>
+<rect x="357.4" y="158" width="12" height="12" rx="2" fill="url(#stk)" stroke="#1f6f86"/>
+<text x="376.4" y="169" font-size="12" fill="#a9b8cc">locked 0%</text>
+<rect x="456.0" y="158" width="12" height="12" rx="2" fill="#6f8199" fill-opacity="0.3"/>
+<text x="475.0" y="169" font-size="12" fill="#a9b8cc">not out yet 44%</text>
+</g>
+<g transform="translate(26 278)">
+<rect width="768" height="196" rx="10" fill="#111a28" stroke="#0096ff" stroke-opacity="0.15"/>
+<path d="M110.0 26.0A72 72 0 0 1 179.5 116.8L154.4 110.0A46 46 0 0 0 110.0 52.0Z" fill="#00cfff" fill-opacity="0.85" stroke="#111a28" stroke-width="2"/>
+<path d="M179.5 116.8A72 72 0 0 1 52.3 141.0L73.1 125.5A46 46 0 0 0 154.4 110.0Z" fill="url(#stk)" stroke="#1f6f86" stroke-width="1.5"/>
+<path d="M52.3 141.0A72 72 0 0 1 110.0 26.0L110.0 52.0A46 46 0 0 0 73.1 125.5Z" fill="#6f8199" fill-opacity="0.22" stroke="#111a28" stroke-width="2"/>
+<text x="110" y="108" font-size="38" font-weight="700" fill="#ff4444" text-anchor="middle" font-family="IBM Plex Mono, Consolas, monospace">9</text>
+<text x="110" y="126" font-size="12" fill="#6f8199" text-anchor="middle" font-family="IBM Plex Mono, Consolas, monospace">/10</text>
+<text x="214" y="34" font-size="13" font-weight="600" fill="#6f8199" letter-spacing="1">SUPPLY BALANCE · CURVE</text>
+<circle cx="745" cy="28" r="11" fill="none" stroke="#6f8199" stroke-opacity="0.6"/><text x="745" y="33" font-size="14" fill="#6f8199" text-anchor="middle">i</text>
+<text x="214" y="66" font-size="18" font-weight="600" fill="#e6edf7">Flooding. New tokens outrun the buyers.</text>
+<g transform="translate(214 90) scale(1.45)" fill="none" stroke="#00cfff" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="7.5" width="10" height="7" rx="1.5"/><path d="M5.5 7.5V5a2.5 2.5 0 0 1 5 0v2.5"/></g>
+<text x="248" y="106" font-size="19" font-weight="700" fill="#00cfff" font-family="IBM Plex Mono, Consolas, monospace">36%</text>
+<text x="248" y="124" font-size="12" fill="#6f8199">locked, terms unknown</text>
+<g transform="translate(350 90) scale(1.45)" fill="none" stroke="#ff4444" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"><path d="M2 3.5v4M2 5.5h6.5a3 3 0 0 1 3 3V10M6 5.5V3M4.5 3h3"/><path d="M12.4 12.6c0 .7-.4 1.2-.9 1.2s-.9-.5-.9-1.2c0-.6.9-1.8.9-1.8s.9 1.2.9 1.8z"/></g>
+<text x="384" y="106" font-size="19" font-weight="700" fill="#ff4444" font-family="IBM Plex Mono, Consolas, monospace">+5.7%</text>
+<text x="384" y="124" font-size="12" fill="#6f8199">new tokens a year</text>
+<g transform="translate(486 90) scale(1.45)" fill="none" stroke="#00ff88" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"><rect x="3.5" y="4.5" width="9" height="6.5" rx="2"/><path d="M6.5 4.5v3M9.5 4.5v3M3.5 8h3.2a1.3 1.3 0 0 1 0 2.6H5.2M5 11v3h6v-3"/></g>
+<text x="520" y="106" font-size="19" font-weight="700" fill="#00ff88" font-family="IBM Plex Mono, Consolas, monospace">0%</text>
+<text x="520" y="124" font-size="12" fill="#6f8199">no buyback, payouts</text>
+<g transform="translate(622 90) scale(1.45)" fill="none" stroke="#6f8199" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"><path d="M8 1.8c.6 2.6 3.8 4 3.8 7.4a3.8 3.8 0 0 1-7.6 0c0-1.6.8-2.6 1.6-3.4.3 1.2 1 1.8 1.6 2 .1-2.2-.2-4 .6-6z"/></g>
+<text x="656" y="106" font-size="19" font-weight="700" fill="#6f8199" font-family="IBM Plex Mono, Consolas, monospace">?</text>
+<text x="656" y="124" font-size="12" fill="#6f8199">burned</text>
+<rect x="214" y="158" width="12" height="12" rx="2" fill="#00cfff" fill-opacity="0.85"/>
+<text x="233" y="169" font-size="12" fill="#a9b8cc">free to sell 29%</text>
+<rect x="357.4" y="158" width="12" height="12" rx="2" fill="url(#stk)" stroke="#1f6f86"/>
+<text x="376.4" y="169" font-size="12" fill="#a9b8cc">locked 36%</text>
+<rect x="462.4" y="158" width="12" height="12" rx="2" fill="#6f8199" fill-opacity="0.3"/>
+<text x="481.4" y="169" font-size="12" fill="#a9b8cc">not out yet 35%</text>
+</g>
+<g transform="translate(26 490)">
+<rect width="768" height="196" rx="10" fill="#111a28" stroke="#0096ff" stroke-opacity="0.15"/>
+<path d="M110.0 26.0A72 72 0 0 1 130.5 167.0L123.1 142.1A46 46 0 0 0 110.0 52.0Z" fill="none" stroke="#00cfff" stroke-opacity="0.7" stroke-width="1.5" stroke-dasharray="5 4"/>
+<path d="M130.5 167.0A72 72 0 1 1 110.0 26.0L110.0 52.0A46 46 0 1 0 123.1 142.1Z" fill="#6f8199" fill-opacity="0.22" stroke="#111a28" stroke-width="2"/>
+<text x="110" y="108" font-size="38" font-weight="700" fill="#6f8199" text-anchor="middle" font-family="IBM Plex Mono, Consolas, monospace">?</text>
+<text x="110" y="126" font-size="12" fill="#6f8199" text-anchor="middle" font-family="IBM Plex Mono, Consolas, monospace">/10</text>
+<text x="214" y="34" font-size="13" font-weight="600" fill="#6f8199" letter-spacing="1">SUPPLY BALANCE · COLLECTOR CRYPT</text>
+<circle cx="745" cy="28" r="11" fill="none" stroke="#6f8199" stroke-opacity="0.6"/><text x="745" y="33" font-size="14" fill="#6f8199" text-anchor="middle">i</text>
+<text x="214" y="66" font-size="18" font-weight="600" fill="#e6edf7">Not enough data. Unknown is not good.</text>
+<g transform="translate(214 90) scale(1.45)" fill="none" stroke="#6f8199" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="7.5" width="10" height="7" rx="1.5"/><path d="M5.5 7.5V5a2.5 2.5 0 0 1 5 0v2.5"/></g>
+<text x="248" y="106" font-size="19" font-weight="700" fill="#6f8199" font-family="IBM Plex Mono, Consolas, monospace">?</text>
+<text x="248" y="124" font-size="12" fill="#6f8199">locked</text>
+<g transform="translate(350 90) scale(1.45)" fill="none" stroke="#6f8199" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"><path d="M2 3.5v4M2 5.5h6.5a3 3 0 0 1 3 3V10M6 5.5V3M4.5 3h3"/><path d="M12.4 12.6c0 .7-.4 1.2-.9 1.2s-.9-.5-.9-1.2c0-.6.9-1.8.9-1.8s.9 1.2.9 1.8z"/></g>
+<text x="384" y="106" font-size="19" font-weight="700" fill="#6f8199" font-family="IBM Plex Mono, Consolas, monospace">?</text>
+<text x="384" y="124" font-size="12" fill="#6f8199">new tokens a year</text>
+<g transform="translate(486 90) scale(1.45)" fill="none" stroke="#6f8199" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"><rect x="3.5" y="4.5" width="9" height="6.5" rx="2"/><path d="M6.5 4.5v3M9.5 4.5v3M3.5 8h3.2a1.3 1.3 0 0 1 0 2.6H5.2M5 11v3h6v-3"/></g>
+<text x="520" y="106" font-size="19" font-weight="700" fill="#6f8199" font-family="IBM Plex Mono, Consolas, monospace">?</text>
+<text x="520" y="124" font-size="12" fill="#6f8199">bought back a year</text>
+<g transform="translate(622 90) scale(1.45)" fill="none" stroke="#00ff88" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"><path d="M8 1.8c.6 2.6 3.8 4 3.8 7.4a3.8 3.8 0 0 1-7.6 0c0-1.6.8-2.6 1.6-3.4.3 1.2 1 1.8 1.6 2 .1-2.2-.2-4 .6-6z"/></g>
+<text x="656" y="106" font-size="19" font-weight="700" fill="#00ff88" font-family="IBM Plex Mono, Consolas, monospace">22.5M</text>
+<text x="656" y="124" font-size="12" fill="#6f8199">burned, 29 Aug</text>
+<rect x="214" y="158" width="12" height="12" rx="2" fill="none" stroke="#00cfff" stroke-dasharray="3 2"/>
+<text x="233" y="169" font-size="12" fill="#a9b8cc">out, lock terms unknown 45%</text>
+<rect x="427.8" y="158" width="12" height="12" rx="2" fill="#6f8199" fill-opacity="0.3"/>
+<text x="446.8" y="169" font-size="12" fill="#a9b8cc">not out yet 55%</text>
+</g>
+</svg>
