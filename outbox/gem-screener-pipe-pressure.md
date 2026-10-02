@@ -61,6 +61,8 @@ He values a token as the **pressure in a pipe**. The width of the pipe is the su
 - **Rows and pick cards get nothing new** (items 9 and 20 take text off them). The tooltip of the Dilution flag names the to-holders figure in one line.
 - **The insider alert (wish 4) fills the existing "Insider flow" check**, a Later check that runs on 98 of 215 apps and does not count in the Degen level. It does not enter the picks.
 
+**Tried on ten random apps (2026-10-02): 4 vetted, 3 not vetted, 3 picks; snapshot of 1 Oct 23:35 UTC and DefiLlama's public data.** The pipe could be drawn in full for 2 of 10 (Stader, and up with its "supply sources disagree" tag). Pieces: the width (tokens out) for 10; a figure to holders for 6, and a shown 0% for 4, where the zero can be untracked as with Collector Crypt; new tokens a week known for 4, unknown for 6 (no emissions or unlock data); staked tokens recorded for 1 (KyberSwap, 16% of market cap), and for the other 9 "none recorded" cannot tell none from missing; a Token Rights record for 1 (Meteora). So the pipe is a display of what is known, with grey for the rest, as designed above, and for most apps it will be partial. The 3 picks sampled (Definitive, Meteora, KyberSwap) have none a complete pipe.
+
 ## Where the data can be had besides DefiLlama (read 2026-10-01; the build chooses and pays)
 DefiLlama is the base because it is free, its methods are open on GitHub, and it has the longest tail: the picks are $4M to $175M apps, where the paid sources cover the least. No single paid source has all of it.
 
