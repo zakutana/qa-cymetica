@@ -193,6 +193,14 @@ def _the_altseason_numbers_are_held_to_their_own_published_rules():
     wrong_beat = snap(components={"breadth": {"value": 68.0, "mean4": 49.0, "beat": 20, "n": 50}})
     assert any(b["what"] == "breadth value is not beat / n" for b in g.altseason_breaches(wrong_beat)["breaches"])
 
+    # Deep pass 2026-10-02 (T17): the fourth judgement. `altseason.index` is the latest
+    # breadth, so a headline that differs from the breadth component is a breach; both
+    # fixtures above hold 68.0 on each side, so deleting the branch stayed green.
+    off = snap()
+    off["altseason"]["index"] = 40.0
+    assert [b["what"] for b in g.altseason_breaches(off)["breaches"]] == [
+        "altseason.index and the breadth component differ"]
+
     blind = snap(rules={})
     said = g.altseason_breaches(blind)
     assert said["breaches"] == [] and said["unread"], (
@@ -529,6 +537,14 @@ def test_the_audit_builds_a_report_from_a_snapshot_alone(monkeypatch):
     assert [p["buyable_on_chain"] for p in report["picks"]] == [True, False], report["picks"]
     assert report["upside"]["at_cap"] == 1 and report["backtest"]["live_picks_tracked"] == 0
     assert "pick_identity" not in report, "an identity reading appeared with nothing fetched"
+    # Deep pass 2026-10-02 (T18): every other section a source feeds is absent too, not
+    # empty -- a failed read written as `[]` says "no pegged coins" (rule 8). A source that
+    # answered with nothing IS empty, and says so.
+    assert "series" not in report and "pegged_like_in_universe" not in report["altseason"], (
+        "a section fed by a source that was down was invented")
+    assert "pegged_share" not in report["altseason"]
+    answered = g.build_report(snap, sources={"altseason_universe": []}, now=1_000_000)
+    assert answered["altseason"]["pegged_like_in_universe"] == [], answered["altseason"]
     lines = g.report_lines(report)
     assert lines and all(len(line) < 140 for line in lines), lines
     markdown = g.render_markdown(report)

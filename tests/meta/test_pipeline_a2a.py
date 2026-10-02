@@ -137,6 +137,24 @@ def test_the_inbox_keeps_what_tells_a_human_from_a_robot(tmp_path, monkeypatch):
         "parent_message_id is the only exact pairing key they give us -- the "
         "thread id is one value for the whole account and pairs nothing"
     )
+    # Deep pass 2026-10-02 (T16): the fixture above writes the parent into BOTH
+    # `parent_message_id` and `metadata.in_reply_to`, and gives every automated row kind
+    # first_pass -- so a reader that used only one of the two fields, or one that wrote
+    # first_pass for every automated row (the 2026-09-27 R01 incident: every deep reply
+    # read as the first pass), stayed green. Each field alone, and a deep row.
+    rows[:] = [
+        _msg("z_deep", AT, "the deep answer", auto=True, kind="deep"),
+        _msg("z_field", AT, "answers", kind="human", parent="a2a_ours"),
+        _msg("z_meta", AT, "answers too", kind="human", parent="a2a_ours"),
+        _msg("z_failed", AT, "its investigation failed", auto=True, kind="deep_failed")]
+    rows[1]["metadata"] = {"kind": "human"}               # the parent only in the field
+    rows[2]["parent_message_id"] = None                   # the parent only in the metadata
+    bounty.fetch_inbox(client=_client(answer), agent_id="expire76-qa")
+    again = {e["msg_id"]: e for e in read_events() if e["type"] == "message"}
+    assert again["z_deep"]["kind"] == "deep" and again["z_failed"]["kind"] == "deep_failed", (
+        "an automated reply was written as the first pass")
+    assert again["z_field"]["reply_to"] == "a2a_ours", "parent_message_id alone did not pair"
+    assert again["z_meta"]["reply_to"] == "a2a_ours", "metadata.in_reply_to alone did not pair"
 
 
 # ---------------------------------------------------------------------------
