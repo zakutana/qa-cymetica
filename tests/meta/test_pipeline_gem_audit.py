@@ -422,6 +422,7 @@ def test_the_audit_sees_a_wrong_upside_a_wrong_identity_a_wrong_altseason_and_a_
     _one_word_for_hot_is_held()
     _a_word_that_says_only_btc_runs_is_held_to_the_breadth_beside_it()
     _how_sure_follows_its_own_tooltip()
+    _a_share_image_is_read_the_way_a_crawler_reads_it()
 
 
 @qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
@@ -651,3 +652,17 @@ def _how_sure_follows_its_own_tooltip():
     assert g.retail_sure_breach(snap("unsure", *today), "<p>no tooltip here</p>")["unread"], (
         "a page that no longer words the rule was judged against a remembered one")
     assert g.retail_sure_breach({}, page)["unread"]
+
+
+def _a_share_image_is_read_the_way_a_crawler_reads_it():
+    """The preview image a page names is read from its og:image and twitter:image
+    tags, in either attribute order, with &amp; undone; a page with none names none."""
+    page = ('<head><meta property="og:title" content="Gem Screener">'
+            '<meta property="og:image" content="https://cymetica.com/og/app/gem-screener.png?t=A%20B&amp;v=4">'
+            '<meta content="https://cymetica.com/static/images/og-default.png" name="twitter:image">'
+            '<meta name="twitter:card" content="summary_large_image"></head>')
+    assert g.share_images(page) == {
+        "og:image": "https://cymetica.com/og/app/gem-screener.png?t=A%20B&v=4",
+        "twitter:image": "https://cymetica.com/static/images/og-default.png"}, g.share_images(page)
+    assert g.share_images("<head><title>x</title></head>") == {} and g.share_images("") == {}
+    assert g.share_images('<meta property="og:image" content="">') == {}, "an empty content named an image"

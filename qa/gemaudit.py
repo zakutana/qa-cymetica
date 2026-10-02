@@ -518,6 +518,28 @@ def phase_word_breaches(alt: dict) -> dict:
     return {"breaches": breaches, "weeks_read": read, "only_btc_weeks": btc_only, "unread": []}
 
 
+META_TAG = re.compile(r"<meta\b[^>]*>", re.I)
+META_ATTR = re.compile(r'([a-zA-Z:_-]+)\s*=\s*"([^"]*)"')
+SHARE_TAGS = ("og:image", "twitter:image")
+
+
+def share_images(page_html: str) -> dict:
+    """The preview image a page names for a link posted on X or anywhere else:
+    `{"og:image": url, "twitter:image": url}` for the tags it has. On 2026-10-02
+    /gem-screener/app named /static/images/og-default.png, which answers 404, and
+    the tweet that carried the link showed a grey placeholder instead of a card.
+    HTML entities in the URL (&amp;) are undone, as a crawler does."""
+    import html as htmllib
+
+    found = {}
+    for tag in META_TAG.findall(page_html or ""):
+        attrs = {k.lower(): v for k, v in META_ATTR.findall(tag)}
+        name = (attrs.get("property") or attrs.get("name") or "").lower()
+        if name in SHARE_TAGS and attrs.get("content"):
+            found[name] = htmllib.unescape(attrs["content"]).strip()
+    return found
+
+
 SURE_RULE = re.compile(r"Sure:\s*(\d+)\+\s*rows that agree within\s*(\d+)\s*points\.\s*"
                        r"Fairly sure:\s*(\d+)\+\s*rows within\s*(\d+)")
 
