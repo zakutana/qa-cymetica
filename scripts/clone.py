@@ -683,6 +683,9 @@ def enable(instance_id: str, confirm: bool, enabled: bool = True) -> dict:
              # variant restarts a clone that ran before, and its verdict is
              # measured from here, not from the clone's first funding.
              "bot_profit_usdc": row.get("total_profit_usdc"),
+             # Whether it was trading when we asked: a pause that finds it already
+             # stopped is not what stopped it (`qa.lab.bot_stops`, R04).
+             "their_is_trading": row.get("is_trading"),
              "before": before,
              "sizing": "ours -- Nexus answered QUERY_RESTRICTED to the sizing "
                        "question (NEX-0013, NEX-0014), so no recorded guidance "

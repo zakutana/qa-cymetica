@@ -3644,6 +3644,28 @@ def test_every_bot_stop_is_ours_their_guard_or_unexplained():
     assert stops["macd"]["after"] == "2026-09-22T13:38:30+00:00", (
         "a stop the sampler never saw trading is bounded by our start")
 
+    # Deep pass 2026-10-02, R04: their guard halted the bot BETWEEN the sampler's last
+    # `is_trading: true` and our pause. The pause's own intent read their row first
+    # and recorded `their_is_trading: false`, so the bot was already stopped when we
+    # pressed disable: the stop is theirs, not ours, and a restart must be refused.
+    halted_first = [
+        *fund("CLN-0030", "late", 240.0, "2026-10-02T09:00:00+00:00"),
+        *switch("CLN-0031", "late", "enable", "2026-10-02T09:01:00+00:00"),
+        {"id": "CLN-0032", "type": "intent", "kind": "disable", "instance_id": "late",
+         "at": "2026-10-02T11:00:00+00:00", "their_is_trading": False,
+         "bot_profit_usdc": "-24.5"},
+        {"id": "CLN-0032", "type": "outcome", "outcome": "accepted",
+         "at": "2026-10-02T11:00:02+00:00"}]
+    later = [sample("late", "2026-10-02T10:00:00+00:00", True, "-3.0"),
+             sample("late", "2026-10-02T12:00:00+00:00", False, "-24.5")]
+    late = {s["instance"]: s for s in lab.bot_stops(halted_first, later)}["late"]
+    assert late["cause"] == "their_guard", late
+    # A pause that found the bot still trading stays ours, as before.
+    paused_trading = [dict(r, their_is_trading=True) if r.get("kind") == "disable"
+                      and r.get("type") == "intent" else r for r in halted_first]
+    still = {s["instance"]: s for s in lab.bot_stops(paused_trading, later)}["late"]
+    assert still["cause"] == "ours", still
+
 
 @qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
 def test_free_cash_is_the_newest_account_read_whichever_script_took_it(

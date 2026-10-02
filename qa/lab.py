@@ -2361,7 +2361,22 @@ def bot_stops(clone_rows, samples) -> list[dict]:
             if kind == "enable":
                 trading_since, paused = at, False
             elif kind == "disable":
-                paused = True
+                if row.get("their_is_trading") is False and trading_since is not None:
+                    # Our pause found the bot ALREADY stopped (its intent read their row
+                    # first): the halt landed between the sampler's last reading and our
+                    # disable, so it is not ours (deep pass 2026-10-02, R04).
+                    profit = _money(row.get("bot_profit_usdc"))
+                    base = went_in.get(instance)
+                    out.append({"instance": instance,
+                                "cause": ("their_guard" if profit is not None and profit < 0
+                                          else "unexplained"),
+                                "after": trading_since, "before": at,
+                                "profit_usdc": profit, "funded_usdc": base,
+                                "profit_pct": (profit / base * 100.0
+                                               if profit is not None and base else None)})
+                    trading_since, paused = None, False
+                else:
+                    paused = True
             elif row.get("is_trading") is True:
                 trading_since, paused = at, False
             elif row.get("is_trading") is False and trading_since is not None:
