@@ -416,6 +416,148 @@ def altseason_breaches(snap: dict) -> dict:
     return {"breaches": breaches, "unread": unread}
 
 
+# --- the panels beside the rank: Sectors, the Altseason words, Retail (2026-10-02) -------------
+#
+# Three independent audits of the Altseason panel, the Retail panel and the Sectors tab found
+# the numbers faithful to their sources and four places where the page says two things at once.
+# They are held here as pure functions over what the page publishes; NOT asserted is how
+# Cymetica fixes any of them.
+
+SNAPSHOT_API = "/api/v1/gem-screener"
+ALTSEASON_API = "/api/v1/gem-screener/altseason"
+
+LIVE_COVERAGE_FLOOR = 0.95
+"""A theme is priced on one date when every member has a live point, none does (the
+fallback their own warning names: "no live point: last weekly close"), or at least this
+share of its weight does. 0.95 leaves room for a delisted coin; 0.05 (one Zebec in a
+twelve-coin RWA basket) is a basket priced on two dates."""
+
+ALTS_MAJORITY = 60.0
+"""A week in which at least this share of the top 50 beat BTC is not one in which "only
+BTC runs"."""
+
+
+def theme_live_coverage(api: dict) -> dict:
+    """Which themes were priced on two dates. `theme_prices.live` is the live point per
+    coin (empty for a coin whose price call failed); a theme whose weight is covered
+    only in part has a return that carries the live move of the coins that had one and
+    the weekly close of the rest. On 2026-10-02 (snapshot 1790921065) CoinGecko answered
+    403 and 429, 11 of 320 coins had a live point, and RWA (1 of 12) and DePIN (1 of 15)
+    each showed about twice what their weekly closes give. Returns every theme read,
+    those below the floor under `partial`, and what could not be read under `unread`."""
+    live = (api.get("theme_prices") or {}).get("live")
+    themes = api.get("themes")
+    if not isinstance(live, dict) or not isinstance(themes, list):
+        return {"themes": [], "partial": [], "unread": ["theme_prices.live or themes missing"]}
+    rows, partial, unread = [], [], []
+    for theme in themes:
+        members = [m for m in theme.get("members") or [] if isinstance(m, dict) and m.get("id")]
+        weights = [(m["id"], num(m.get("w"))) for m in members]
+        total = sum(w for _, w in weights if w)
+        if not members or total <= 0:
+            unread.append(f"{theme.get('key')}: no members with a weight")
+            continue
+        covered = sum(w for member_id, w in weights if w and member_id in live)
+        share = covered / total
+        row = {"theme": theme.get("key"), "members": len(members),
+               "with_live": sum(1 for member_id, _ in weights if member_id in live),
+               "weight_share": round(share, 3)}
+        rows.append(row)
+        if 0 < share < LIVE_COVERAGE_FLOOR:
+            partial.append(row)
+    return {"themes": rows, "partial": partial, "unread": unread}
+
+
+def hot_definitions(snap: dict) -> dict:
+    """The table and "Hot right now" read `stage == 'hot'`; the theme
+    panel prints "This theme is hot." from the older `hot` flag. On 2026-10-02: 4 themes
+    against 8. Returns both sets and the themes on which they differ; a snapshot that
+    has lost either field is unread -- there is no second definition left to compare."""
+    themes = snap.get("themes")
+    if not isinstance(themes, list) or not themes:
+        return {"flag_hot": [], "stage_hot": [], "disagree": [], "unread": ["themes missing"]}
+    if not any("hot" in t for t in themes) or not any("stage" in t for t in themes):
+        return {"flag_hot": [], "stage_hot": [], "disagree": [],
+                "unread": ["a theme field the two definitions need is gone: "
+                           + ("hot" if not any("hot" in t for t in themes) else "stage")]}
+    flag = [t["key"] for t in themes if t.get("hot") is True]
+    stage = [t["key"] for t in themes if t.get("stage") == "hot"]
+    disagree = [t["key"] for t in themes if (t.get("hot") is True) != (t.get("stage") == "hot")]
+    return {"flag_hot": flag, "stage_hot": stage, "disagree": disagree, "unread": []}
+
+
+def phase_word_breaches(alt: dict) -> dict:
+    """The Altseason panel prints a phase word and, beside it, the share of the top 50
+    that beat BTC that week. "Only BTC runs" over a week in which most of them did is
+    false on the panel's own data. Reads `GET /api/v1/gem-screener/altseason`
+    (`altseason.series.phase` and `.breadth`, one value per week). On 2026-10-02: 17 of
+    155 such weeks, one of them 2024-12-02 at 74 % with OTHERS up from $198bn to $397bn
+    in four weeks. A week with no breadth reading is neither agreement nor a breach."""
+    block = alt.get("altseason") if isinstance(alt, dict) else None
+    series = (block or {}).get("series") or {}
+    phases, breadth = series.get("phase"), series.get("breadth")
+    if not isinstance(phases, list) or not isinstance(breadth, list) or not phases:
+        return {"breaches": [], "weeks_read": 0, "only_btc_weeks": 0,
+                "unread": ["altseason.series.phase or .breadth missing"]}
+    if len(phases) != len(breadth):
+        return {"breaches": [], "weeks_read": 0, "only_btc_weeks": 0,
+                "unread": [f"phase has {len(phases)} weeks and breadth {len(breadth)}"]}
+    weeks = (block or {}).get("weeks") or list(range(len(phases)))
+    read = btc_only = 0
+    breaches = []
+    for week, phase, value in zip(weeks, phases, breadth):
+        reading = num(value)
+        if phase is None or reading is None:
+            continue
+        read += 1
+        if phase != "btc_only":
+            continue
+        btc_only += 1
+        if reading >= ALTS_MAJORITY:
+            breaches.append({"week": week, "breadth": reading})
+    return {"breaches": breaches, "weeks_read": read, "only_btc_weeks": btc_only, "unread": []}
+
+
+SURE_RULE = re.compile(r"Sure:\s*(\d+)\+\s*rows that agree within\s*(\d+)\s*points\.\s*"
+                       r"Fairly sure:\s*(\d+)\+\s*rows within\s*(\d+)")
+
+
+def _most_within(scores: list[float], span: float) -> int:
+    ordered = sorted(scores)
+    return max((sum(1 for s in ordered if low <= s <= low + span) for low in ordered), default=0)
+
+
+def retail_sure_breach(snap: dict, page_text: str) -> dict:
+    """"How sure" follows the rule its own tooltip states: Sure = N+ rows that agree
+    within S points, Fairly sure = M+ rows within F, otherwise unsure. On 2026-10-02 five
+    of six rows sat between 4 and 14 and the panel said unsure, because the code took the
+    spread of all six (84). The rule is read from the page's words, never remembered."""
+    rule = SURE_RULE.search(page_text or "")
+    retail = ((snap.get("altseason_cycle") or {}).get("components") or {}).get("retail") or {}
+    scores = [s for s in (num((p or {}).get("score")) for p in (retail.get("parts") or {}).values())
+              if s is not None]
+    shown = (retail.get("sure") or {}).get("code")
+    unread = []
+    if not rule:
+        unread.append("the page no longer words the 'How sure' rule as 'Sure: N+ rows that agree within S points'")
+    if not scores or not shown:
+        unread.append("retail.parts scores or retail.sure.code missing")
+    if unread:
+        return {"breach": None, "unread": unread}
+    sure_n, sure_span, fair_n, fair_span = (int(x) for x in rule.groups())
+    if _most_within(scores, sure_span) >= sure_n:
+        expected = "sure"
+    elif _most_within(scores, fair_span) >= fair_n:
+        expected = "fairly_sure"
+    else:
+        expected = "unsure"
+    if expected == shown:
+        return {"breach": None, "unread": []}
+    return {"breach": {"expected": expected, "shown": shown, "scores": sorted(scores),
+                       "rule": {"sure": [sure_n, sure_span], "fairly": [fair_n, fair_span]}},
+            "unread": []}
+
+
 def _close(value, expected, *, rel: float = 0.01, abs_tol: float = 0.0) -> bool:
     if value is None or expected is None:
         return False

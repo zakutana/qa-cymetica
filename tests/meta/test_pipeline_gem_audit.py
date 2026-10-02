@@ -549,3 +549,108 @@ def test_the_audit_builds_a_report_from_a_snapshot_alone(monkeypatch):
     assert g.build_report(undated, now=1_000_000)["snapshot_age_h"] is None
 
     _a_failed_cymetica_read_is_named_not_fatal(monkeypatch)
+
+
+def _a_basket_priced_on_two_dates_is_seen():
+    """2026-10-02: CoinGecko answered 403 and 429, 11 of 320 coins got a live
+    price, and RWA and DePIN each had exactly one member with one. A theme is
+    priced on one date when every member has a live point or none does; a share
+    below the floor is a basket priced on two."""
+    def members(*pairs):
+        return [{"id": i, "w": w} for i, w in pairs]
+
+    api = {"themes": [
+        {"key": "rwa", "members": members(("a", 0.95), ("z", 0.05))},
+        {"key": "ai", "members": members(("b", 0.5), ("c", 0.5))},
+        {"key": "memes", "members": members(("d", 0.5), ("e", 0.5))},
+        {"key": "l2", "members": members(("f", 0.97), ("g", 0.03))},
+    ], "theme_prices": {"live": {"z": 1.3, "b": 1.0, "c": 1.0, "f": 1.0}}}
+    said = g.theme_live_coverage(api)
+    assert [t["theme"] for t in said["partial"]] == ["rwa"], said
+    assert said["partial"][0]["with_live"] == 1 and said["partial"][0]["members"] == 2, said
+    assert {t["theme"] for t in said["themes"]} == {"rwa", "ai", "memes", "l2"}, (
+        "a theme with every point, none, or 97 % of its weight was judged too")
+    assert g.theme_live_coverage({"themes": api["themes"], "theme_prices": {}})["unread"], (
+        "a snapshot with no live map read as full coverage")
+    assert g.theme_live_coverage({"theme_prices": api["theme_prices"]})["unread"]
+    # Members that carry no weight cannot say what share is covered: unread, not agreement.
+    weightless = {"themes": [{"key": "x", "members": [{"id": "a"}]}], "theme_prices": {"live": {"a": 1.0}}}
+    assert g.theme_live_coverage(weightless)["themes"] == [] and g.theme_live_coverage(weightless)["unread"]
+
+
+def _one_word_for_hot_is_held():
+    """The table and "Hot right now" read `stage == 'hot'`; the theme panel reads
+    the older `hot` flag. 2026-10-02: 4 themes against 8."""
+    def snap(*rows):
+        return {"themes": [{"key": k, "hot": h, "stage": s} for k, h, s in rows]}
+
+    same = snap(("l2", True, "hot"), ("l1", False, "falling"))
+    assert g.hot_definitions(same)["disagree"] == [], "two agreeing definitions were called different"
+    split = snap(("l2", True, "hot"), ("defi", True, "fading"), ("memes", False, "hot"), ("l1", False, "falling"))
+    said = g.hot_definitions(split)
+    assert said["disagree"] == ["defi", "memes"], said
+    assert said["flag_hot"] == ["l2", "defi"] and said["stage_hot"] == ["l2", "memes"], said
+    # A field that is gone is unread: there is no second definition left to compare.
+    gone = {"themes": [{"key": "l2", "stage": "hot"}, {"key": "l1", "stage": "falling"}]}
+    assert g.hot_definitions(gone)["disagree"] == [] and g.hot_definitions(gone)["unread"]
+    assert g.hot_definitions({})["unread"]
+
+
+def _a_word_that_says_only_btc_runs_is_held_to_the_breadth_beside_it():
+    """The panel prints a phase word and the share of the top 50 that beat BTC.
+    "Only BTC runs" over a week in which most of them did is false on its own
+    page. Today: 17 of 155 such weeks, one of them 2024-12-02 at 74 %."""
+    def series(phases, breadths):
+        weeks = [1_000_000 + 604_800 * i for i in range(len(phases))]
+        return {"altseason": {"weeks": weeks, "series": {"phase": phases, "breadth": breadths}}}
+
+    ok = series(["btc_only", "btc_only", "no_altseason", "end_near"], [20.0, 49.0, 80.0, 90.0])
+    assert g.phase_word_breaches(ok)["breaches"] == [], "weeks that fit their words were flagged"
+    bad = series(["btc_only", "btc_only", "btc_only"], [74.0, 60.0, 59.9])
+    said = g.phase_word_breaches(bad)
+    assert [b["breadth"] for b in said["breaches"]] == [74.0, 60.0], said
+    assert said["weeks_read"] == 3 and said["only_btc_weeks"] == 3, said
+    # A week with no breadth reading is not counted as agreeing or as breaching.
+    gap = g.phase_word_breaches(series(["btc_only", "btc_only"], [None, 80.0]))
+    assert [b["breadth"] for b in gap["breaches"]] == [80.0] and gap["weeks_read"] == 1, gap
+    assert g.phase_word_breaches({"altseason": {"series": {}}})["unread"]
+    assert g.phase_word_breaches(series(["btc_only"], [10.0, 20.0]))["unread"], (
+        "series of different lengths were paired")
+
+
+def _how_sure_follows_its_own_tooltip():
+    """The tooltip says: Sure = 5+ rows that agree within 30 points; Fairly sure
+    = 3+ rows within 50; otherwise unsure. 2026-10-02: five rows sat between 4
+    and 14 and the panel said unsure, because the spread counted all six (84)."""
+    tip = ("Sure: 5+ rows that agree within 30 points. Fairly sure: 3+ rows within 50. "
+           "Otherwise unsure.")
+    page = "<script>var sureTip = '" + tip + "';</script>"
+
+    def snap(code, *scores):
+        parts = {f"r{i}": {"score": s} for i, s in enumerate(scores)}
+        return {"altseason_cycle": {"components": {"retail": {"parts": parts, "sure": {"code": code}}}}}
+
+    today = (4.0, 14.1, 4.4, 11.6, 88.1, 6.1)
+    said = g.retail_sure_breach(snap("unsure", *today), page)
+    assert said["breach"] and said["breach"]["expected"] == "sure" and said["breach"]["shown"] == "unsure", said
+    assert g.retail_sure_breach(snap("sure", *today), page)["breach"] is None
+    spread = (10.0, 30.0, 55.0, 70.0, 85.0, 99.0)      # three rows within 50, never five within 30
+    assert g.retail_sure_breach(snap("fairly_sure", *spread), page)["breach"] is None
+    assert g.retail_sure_breach(snap("fairly_sure", 10.0, 20.0, 40.0, 70.0, 90.0, 99.0), page)["breach"] is None
+    wrong = g.retail_sure_breach(snap("sure", *spread), page)
+    assert wrong["breach"] and wrong["breach"]["expected"] == "fairly_sure", wrong
+    # With three rows spread over the whole scale no two agree within 50: unsure.
+    assert g.retail_sure_breach(snap("unsure", 0.0, 50.0, 100.0), page)["breach"] is None
+    assert g.retail_sure_breach(snap("unsure", *today), "<p>no tooltip here</p>")["unread"], (
+        "a page that no longer words the rule was judged against a remembered one")
+    assert g.retail_sure_breach({}, page)["unread"]
+
+
+@qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
+def test_the_panel_checks_see_a_basket_on_two_dates_two_hots_a_false_word_and_a_wrong_sure():
+    """The four judgements behind tests/rest/test_gem_screener_panels_say_what_their_data_says.py
+    are refuted offline, on data built to be wrong in exactly the way they exist to catch."""
+    _a_basket_priced_on_two_dates_is_seen()
+    _one_word_for_hot_is_held()
+    _a_word_that_says_only_btc_runs_is_held_to_the_breadth_beside_it()
+    _how_sure_follows_its_own_tooltip()
