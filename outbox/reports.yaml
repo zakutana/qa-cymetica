@@ -4198,6 +4198,45 @@ reports:
       twitter:image of /gem-screener and /gem-screener/app and fetches each, so it
       clears whichever way it is fixed.
 
+  - key: chart-analyzer-live-candle-is-hours-old
+    findings: [CYM-the_forming_candle_of_a_gem_screener_coin_is_current_or_agrees_with_its_pool]
+    severity: medium
+    category: logic
+    url: https://cymetica.com/chart-analyzer?contract=CARDSccUMFKoPRZxt5vt3ksUbxEFEcnZ3H2pd3dKxYjp&chain=solana&tf=1d
+    title: >-
+      Chart Analyzer: the "LIVE" forming candle of a Gem Screener coin is hours old and
+      5% off its pool (Collector Crypt 0.2567 against 0.2707), and candles_stale says false
+    expected: >
+      A candle the page labels "LIVE" and the score is computed on is current, or the
+      response says the candles are stale: `candles_stale` true, or the label does not
+      read LIVE.
+    actual: >
+      Collector Crypt (CARDS), daily, Solana, read at 14:38 UTC on 2026-10-02:
+      `candles_fetched_at` 12:24:02 UTC (134 minutes earlier), `last_candle_forming` true,
+      the forming candle closes at 0.25675 (high 0.25867). The same Raydium CARDS/USDC pool
+      (HnhpJPJgBG2KwniMTNW8cVBHvk1hFog3RC3kjnyc23tD) has a daily candle at GeckoTerminal
+      that closes at 0.27074 (high 0.27492), and DexScreener prices it at 0.2738: the
+      forming candle is 5.2% below the pool, on a day the token was up about 36%. The page
+      says "LIVE - DEX POOL" and the answer has `candles_stale: false`; the score of 53
+      is computed on that candle. The owner saw 0.257 on the page and 0.273 on DEXTools at
+      14:36 UTC. The 12:24 time is the Gem Screener's six-hourly batch (llms.txt: daily
+      candles of every Gem Screener coin "are kept fresh in a shared cache"); opening
+      the page did not refresh it. `candles_stale` is a boolean with no description in
+      /openapi-public.json.
+    steps:
+      - 'GET https://cymetica.com/api/v1/chart-analyzer/analyze?contract=CARDSccUMFKoPRZxt5vt3ksUbxEFEcnZ3H2pd3dKxYjp&chain=solana&timeframe=1d&include_candles=true -> candles_fetched_at 2026-10-02T12:24:02+00:00, candles_stale false, last_candle_forming true, candles[-1] = [1790899200, 0.21212, 0.25867, 0.20239, 0.25675, 4874730]'
+      - 'GET https://api.geckoterminal.com/api/v2/networks/solana/pools/HnhpJPJgBG2KwniMTNW8cVBHvk1hFog3RC3kjnyc23tD/ohlcv/day?limit=1 -> [1790899200, 0.21212, 0.27492, 0.20239, 0.27074, 6068768] (the same day, the same pool)'
+      - 'GET https://api.dexscreener.com/latest/dex/tokens/CARDSccUMFKoPRZxt5vt3ksUbxEFEcnZ3H2pd3dKxYjp -> raydium CARDS/USDC priceUsd 0.2738'
+    body: >
+      Any of three fixes clears it: refresh a coin's candles when its page is opened, a
+      shorter cache for the forming candle, or an honest flag (candles_stale true with a
+      stated age, and no LIVE label) once the cache is older than you choose. Our check
+      takes up to three Gem Screener coins with a pool of at least $500K and fails only
+      when a forming candle is BOTH more than an hour old and more than 2% from the
+      pool's current candle at GeckoTerminal, so a fresh candle that drifted, or an old
+      one that still agrees, passes. Separate, small: please describe `candles_stale`
+      in /openapi-public.json (what age sets it).
+
 footer: >
   Reported by an independent QA agent. Scope of this work: verification of the
   REST API, MCP and machine-readable discovery surfaces, read-only except in
