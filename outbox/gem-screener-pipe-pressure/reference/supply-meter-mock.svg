@@ -1,0 +1,93 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 820 700" width="820" height="700" font-family="IBM Plex Sans, Segoe UI, Arial, sans-serif" role="img" aria-label="A coin's detail, Pump: the Degen meter as it is today, and under it the new Supply meter, 8 of 10, Flooding, with its tooltip open">
+<rect width="820" height="700" fill="#0d1422"/>
+
+<!-- header, as live -->
+<circle cx="44" cy="44" r="18" fill="#172538" stroke="#1d3347"/>
+<text x="44" y="50" font-size="16" font-weight="700" fill="#e6edf7" text-anchor="middle">P</text>
+<text x="74" y="41" font-size="19" font-weight="700" fill="#e6edf7">Pump</text>
+<text x="74" y="61" font-size="12" fill="#6f8199" font-family="IBM Plex Mono, Consolas, monospace">PUMP · Launchpad</text>
+<text x="764" y="24" font-size="10" fill="#6f8199" text-anchor="end" letter-spacing="1">UPSIDE POTENTIAL</text>
+<rect x="712" y="31" width="52" height="26" rx="4" fill="#00ff88"/>
+<text x="738" y="49" font-size="15" font-weight="700" fill="#0a0e17" text-anchor="middle" font-family="IBM Plex Mono, Consolas, monospace">7.2x</text>
+<text x="796" y="26" font-size="15" fill="#6f8199" text-anchor="middle">✕</text>
+
+<!-- the Degen meter, as it is today -->
+<g transform="translate(26 88)">
+<rect width="768" height="161" rx="10" fill="#111a28" stroke="#0096ff" stroke-opacity="0.15"/>
+<text x="20" y="76" font-size="44" font-weight="700" fill="#00ff88" font-family="IBM Plex Mono, Consolas, monospace">3</text>
+<text x="47" y="72" font-size="28" font-weight="600" fill="#00ff88" font-family="IBM Plex Mono, Consolas, monospace">/10</text>
+<text x="127" y="38" font-size="13" font-weight="600" fill="#6f8199" letter-spacing="1">DEGEN METER</text>
+<text x="127" y="64" font-size="18" font-weight="600" fill="#e6edf7">Blue chip. Boring on purpose.</text>
+<text x="745" y="30" font-size="16" fill="#6f8199" text-anchor="middle">ⓘ</text>
+<rect x="21" y="91" width="67" height="22" rx="3" fill="#00ff88"/>
+<rect x="94" y="91" width="67" height="22" rx="3" fill="#00ff88"/>
+<rect x="167" y="91" width="67" height="22" rx="3" fill="#00ff88"/>
+<rect x="240" y="91" width="67" height="22" rx="3" fill="#6f8199" fill-opacity="0.16"/>
+<rect x="314" y="91" width="67" height="22" rx="3" fill="#6f8199" fill-opacity="0.16"/>
+<rect x="387" y="91" width="67" height="22" rx="3" fill="#6f8199" fill-opacity="0.16"/>
+<rect x="460" y="91" width="67" height="22" rx="3" fill="#6f8199" fill-opacity="0.16"/>
+<rect x="534" y="91" width="67" height="22" rx="3" fill="#6f8199" fill-opacity="0.16"/>
+<rect x="607" y="91" width="67" height="22" rx="3" fill="#6f8199" fill-opacity="0.16"/>
+<rect x="680" y="91" width="67" height="22" rx="3" fill="#6f8199" fill-opacity="0.16"/>
+<text x="21" y="137" font-size="15" fill="#6f8199">Blue chip</text>
+<text x="747" y="137" font-size="15" fill="#6f8199" text-anchor="end">Casino</text>
+</g>
+
+<!-- NEW: the Supply meter, the same component -->
+<g transform="translate(26 265)">
+<rect width="768" height="161" rx="10" fill="#111a28" stroke="#00cfff" stroke-opacity="0.45"/>
+<text x="20" y="76" font-size="44" font-weight="700" fill="#ff4444" font-family="IBM Plex Mono, Consolas, monospace">8</text>
+<text x="47" y="72" font-size="28" font-weight="600" fill="#ff4444" font-family="IBM Plex Mono, Consolas, monospace">/10</text>
+<text x="127" y="38" font-size="13" font-weight="600" fill="#6f8199" letter-spacing="1">SUPPLY METER</text>
+<rect x="246" y="25" width="40" height="17" rx="8.5" fill="#0c2a38" stroke="#1f6f86"/>
+<text x="266" y="38" font-size="10.5" font-weight="700" fill="#00cfff" text-anchor="middle" letter-spacing="0.5">NEW</text>
+<text x="127" y="64" font-size="18" font-weight="600" fill="#e6edf7">Flooding. New tokens outrun the buyers.</text>
+<circle cx="745" cy="25" r="11" fill="#0c2a38" stroke="#00cfff" stroke-opacity="0.7"/>
+<text x="745" y="30" font-size="16" fill="#00cfff" text-anchor="middle">ⓘ</text>
+<rect x="21" y="91" width="67" height="22" rx="3" fill="#00ff88"/>
+<rect x="94" y="91" width="67" height="22" rx="3" fill="#00ff88"/>
+<rect x="167" y="91" width="67" height="22" rx="3" fill="#00ff88"/>
+<rect x="240" y="91" width="67" height="22" rx="3" fill="#3b82f6"/>
+<rect x="314" y="91" width="67" height="22" rx="3" fill="#3b82f6"/>
+<rect x="387" y="91" width="67" height="22" rx="3" fill="#3b82f6"/>
+<rect x="460" y="91" width="67" height="22" rx="3" fill="#3b82f6"/>
+<rect x="534" y="91" width="67" height="22" rx="3" fill="#ff4444"/>
+<rect x="607" y="91" width="67" height="22" rx="3" fill="#6f8199" fill-opacity="0.16"/>
+<rect x="680" y="91" width="67" height="22" rx="3" fill="#6f8199" fill-opacity="0.16"/>
+<text x="21" y="137" font-size="15" fill="#6f8199">Squeezed</text>
+<text x="747" y="137" font-size="15" fill="#6f8199" text-anchor="end">Flooding</text>
+</g>
+
+<!-- what stands below today, covered by the tooltip -->
+<text x="26" y="462" font-size="11" font-weight="600" fill="#6f8199" letter-spacing="1">MONTHLY REVENUE</text>
+<g fill="#00b4dc" fill-opacity="0.35">
+<rect x="26" y="560" width="22" height="70"/><rect x="54" y="540" width="22" height="90"/><rect x="82" y="552" width="22" height="78"/>
+<rect x="110" y="520" width="22" height="110"/><rect x="138" y="530" width="22" height="100"/><rect x="166" y="510" width="22" height="120"/>
+<rect x="194" y="525" width="22" height="105"/><rect x="222" y="515" width="22" height="115"/><rect x="250" y="535" width="22" height="95"/>
+</g>
+
+<!-- the tooltip, open on the (i) -->
+<polygon points="758,452 771,436 784,452" fill="#0a0e17" stroke="#1d3347"/>
+<rect x="296" y="451" width="498" height="236" rx="8" fill="#0a0e17" stroke="#1d3347"/>
+<line x1="759" y1="451.5" x2="783" y2="451.5" stroke="#0a0e17" stroke-width="2"/>
+<text x="318" y="480" font-size="14" font-weight="700" fill="#e6edf7">Supply meter · 8/10</text>
+
+<g fill="none" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+  <g transform="translate(316 494) scale(1.25)" stroke="#00cfff"><rect x="3" y="7.5" width="10" height="7" rx="1.5"/><path d="M5.5 7.5V5a2.5 2.5 0 0 1 5 0v2.5"/></g>
+  <g transform="translate(316 526) scale(1.25)" stroke="#ff4444"><path d="M2 3.5v4M2 5.5h6.5a3 3 0 0 1 3 3V10M6 5.5V3M4.5 3h3"/><path d="M12.4 12.6c0 .7-.4 1.2-.9 1.2s-.9-.5-.9-1.2c0-.6.9-1.8.9-1.8s.9 1.2.9 1.8z"/></g>
+  <g transform="translate(316 558) scale(1.25)" stroke="#00ff88"><rect x="3.5" y="4.5" width="9" height="6.5" rx="2"/><path d="M6.5 4.5v3M9.5 4.5v3M3.5 8h3.2a1.3 1.3 0 0 1 0 2.6H5.2M5 11v3h6v-3"/></g>
+  <g transform="translate(316 590) scale(1.25)" stroke="#00ff88"><path d="M8 1.8c.6 2.6 3.8 4 3.8 7.4a3.8 3.8 0 0 1-7.6 0c0-1.6.8-2.6 1.6-3.4.3 1.2 1 1.8 1.6 2 .1-2.2-.2-4 .6-6z"/></g>
+</g>
+<text x="350" y="510" font-size="13" fill="#a9b8cc">Locked or staked</text>
+<text x="774" y="510" font-size="13" font-weight="600" fill="#e6edf7" text-anchor="end" font-family="IBM Plex Mono, Consolas, monospace">0% of tokens out</text>
+<text x="350" y="542" font-size="13" fill="#a9b8cc">New tokens</text>
+<text x="774" y="542" font-size="13" font-weight="600" fill="#ff4444" text-anchor="end" font-family="IBM Plex Mono, Consolas, monospace">+18.0% a year</text>
+<text x="350" y="574" font-size="13" fill="#a9b8cc">Bought back</text>
+<text x="774" y="574" font-size="13" font-weight="600" fill="#00ff88" text-anchor="end" font-family="IBM Plex Mono, Consolas, monospace">10.6% a year</text>
+<text x="350" y="606" font-size="13" fill="#a9b8cc">Burned</text>
+<text x="774" y="606" font-size="13" font-weight="600" fill="#00ff88" text-anchor="end" font-family="IBM Plex Mono, Consolas, monospace">all of it</text>
+<line x1="318" y1="624" x2="774" y2="624" stroke="#1d3347"/>
+<text x="318" y="650" font-size="13" font-weight="700" fill="#e6edf7">Net, on the tokens free to sell</text>
+<text x="774" y="650" font-size="14" font-weight="700" fill="#ff4444" text-anchor="end" font-family="IBM Plex Mono, Consolas, monospace">−7.4% a year</text>
+<text x="318" y="674" font-size="11" fill="#6f8199">One step is 2.5% a year. 5 means nothing moves.</text>
+</svg>
