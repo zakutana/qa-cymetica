@@ -357,7 +357,16 @@ def test_an_older_run_is_not_folded_over_a_newer_one_without_replay(
     on, before it attests anything, unless the run is named `--replay`. The
     same run again is not older, and folds as before. The read-only paths
     (`--check`, rule 12's refold) are untouched: they refold the run the
-    ledger cites, which is never newer than itself."""
+    ledger cites, which is never newer than itself.
+
+    The same write path refuses where it runs, too (2026-10-02). A cloud
+    session folded run-20260929T094730Z-24cabf49 on 2026-09-29: the manifest
+    lines reached the repository in git and the 53 bodies they prove died with
+    the VM, because evidence/ and archive/ are gitignored. Nothing here removed
+    them -- the prune and the archive cannot lose what they never saw -- so
+    `--run` is refused when CLAUDE_CODE_REMOTE is true, before anything is
+    attested. `--events-only` judges no run and stays. Merged into this test
+    rather than added beside it: tests/meta grows only by replacement."""
     import importlib.util
 
     state = tmp_path / "state"
@@ -425,6 +434,20 @@ def test_an_older_run_is_not_folded_over_a_newer_one_without_replay(
     folded = json.loads((state / "ledger.json").read_text(encoding="utf-8"))
     assert folded["run_id"] == "run-old"
     assert folded["findings"]["CYM-a"]["check"]["state"] == "REPRODUCING"
+
+    # In a cloud session the same fold is refused, and nothing moves.
+    monkeypatch.setenv("CLAUDE_CODE_REMOTE", "true")
+    before = (state / "ledger.json").read_bytes()
+    attested = len(read_events())
+    with pytest.raises(SystemExit) as cloud:
+        ledger_mod.main(["--run", "run-new"])
+    assert "run-new" in str(cloud.value) and "cloud" in str(cloud.value).lower()
+    assert (state / "ledger.json").read_bytes() == before, "the ledger moved"
+    assert len(read_events()) == attested, "the refused run was attested"
+    assert ledger_mod.main(["--events-only"]) == 0
+    # The refusal is about WHERE, not about the run.
+    monkeypatch.delenv("CLAUDE_CODE_REMOTE")
+    assert ledger_mod.main(["--run", "run-new"]) == 0
 
 
 @qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
