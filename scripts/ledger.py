@@ -24,6 +24,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import os
 import sys
 from collections.abc import Sequence
 from datetime import datetime
@@ -510,6 +511,20 @@ def main(argv: list[str] | None = None) -> int:
             if before.get(fid) != after.get(fid):
                 print(f"  {fid}: {before.get(fid, '-')} -> {after.get(fid, '-')}")
         return 1
+
+    # A run is composed only where its captures will still be on a disk we
+    # read. The cloud sweep of 2026-09-29 folded here, the manifest lines
+    # travelled home in git and the 53 bodies they prove died with the VM
+    # (tests/meta/test_pipeline_ephemeral_fold.py). `--events-only` judges no
+    # run, so it stays.
+    if not args.events_only and os.environ.get("CLAUDE_CODE_REMOTE") == "true":
+        raise SystemExit(
+            f"ledger: refusing to fold {args.run_id or 'a run'} in a cloud "
+            f"session. Its captures would live on this VM only, and the "
+            f"manifest lines would reach the repository without the bodies "
+            f"they prove -- 53 cited captures were lost that way on "
+            f"2026-09-29. Run the checks here if you like (they move "
+            f"nothing), and fold the sweep on the local machine.")
 
     # --check returned above, so this is always True -- written as the
     # expression anyway, because tests/meta pins it: a fold that writes no
