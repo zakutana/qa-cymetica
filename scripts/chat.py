@@ -234,10 +234,15 @@ def ask(client, n: int, confirm: bool = False, session_id: str | None = None) ->
                       "session_id": session_id}, new_id=True)
     try:
         response = client.post(STREAM, json=body, headers={"Accept": "text/event-stream"})
-    except httpx.TimeoutException:
+    except httpx.HTTPError as exc:
+        # A timeout, a stream cut after the server took the POST, a reset: the request may
+        # have gone out, so every one of them is `unknown` (rule 9), never an intent with no
+        # outcome. Deep pass 2026-10-02 (V02): only the timeout used to be written.
+        what = ("timed out" if isinstance(exc, httpx.TimeoutException)
+                else f"failed ({type(exc).__name__})")
         _append({"type": "outcome", "id": intent["id"], "at": _now(), "outcome": "unknown",
-                 "why": "the request timed out; the NEXUS may have acted"})
-        raise ChatError(f"{intent['id']}: the request timed out -- the NEXUS may have acted; "
+                 "why": f"the request {what}; the NEXUS may have acted"})
+        raise ChatError(f"{intent['id']}: the request {what} -- the NEXUS may have acted; "
                         f"look at the account before asking again")
     evidence_id = _capture(response)
     if response.status_code != 200:

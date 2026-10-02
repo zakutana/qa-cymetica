@@ -158,6 +158,21 @@ def _the_chat_asks_one_paper_prompt_the_way_the_page_does(tmp_path, monkeypatch)
         mod.ask(_client(_chat_handler([], status=402, body="{}"), mutate=True), 1, confirm=True)
     assert mod.load()[-1]["outcome"] == "refused", mod.load()[-1]
 
+    # Deep pass 2026-10-02 (V02): a stream that drops after the server took the POST is as
+    # unclear as a timeout -- the NEXUS may have acted. The intent never stays without an
+    # outcome and the failure reaches the operator as a ChatError, never a bare traceback.
+    for failure in (httpx.RemoteProtocolError("peer closed connection"), httpx.ReadError("reset")):
+        def dropped(request, failure=failure):
+            if request.method == "POST":
+                raise failure
+            return _chat_handler([])(request)
+        before = len(mod.load())
+        with as_mutate_tier(), pytest.raises(mod.ChatError, match="may have acted"):
+            mod.ask(_client(dropped, mutate=True), 1, confirm=True)
+        rows_after = mod.load()[before:]
+        assert [r["type"] for r in rows_after] == ["intent", "outcome"], rows_after
+        assert rows_after[-1]["outcome"] == "unknown", rows_after[-1]
+
 
 @qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
 def test_a_claim_refuses_before_the_network_without_confirm(tmp_path, monkeypatch):
