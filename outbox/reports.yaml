@@ -4169,6 +4169,35 @@ reports:
       check applies the tooltip's rule to the scores shown, so it clears whichever
       way the rule and the word are made to agree.
 
+  - key: gem-screener-app-link-preview-image-404
+    findings: [CYM-a_gem_screener_link_preview_has_an_image_that_answers]
+    severity: medium
+    category: compatibility
+    url: https://cymetica.com/gem-screener/app
+    title: >-
+      Gem Screener: the link preview image of /gem-screener/app is a 404, so a link
+      posted on X shows a grey placeholder
+    expected: >
+      The image a page names in og:image and twitter:image answers 200 with an
+      image, as it does on the sibling page /gem-screener.
+    actual: >
+      https://cymetica.com/gem-screener/app names
+      https://cymetica.com/static/images/og-default.png in both og:image and
+      twitter:image (twitter:card summary_large_image), and that URL answers HTTP
+      404 with text/html. A tweet carrying the link was shown with a placeholder
+      icon instead of a card image. https://cymetica.com/gem-screener names
+      https://cymetica.com/og/app/gem-screener.png?t=EventTrader%20%E2%80%94%20Financial%20AI%20Models&v=4,
+      which answers 200 image/png (66,726 bytes, 1200 x 630).
+    steps:
+      - 'GET https://cymetica.com/gem-screener/app -> <meta property="og:image" content="https://cymetica.com/static/images/og-default.png"> and <meta name="twitter:image" content="https://cymetica.com/static/images/og-default.png">'
+      - 'GET https://cymetica.com/static/images/og-default.png -> HTTP 404, content-type text/html'
+      - 'GET https://cymetica.com/gem-screener -> og:image https://cymetica.com/og/app/gem-screener.png?t=EventTrader%20%E2%80%94%20Financial%20AI%20Models&v=4 -> HTTP 200, image/png'
+    body: >
+      The fix is either to serve the file at that path or to point the app page at
+      the image the wrapper page already uses. Our check reads every og:image and
+      twitter:image of /gem-screener and /gem-screener/app and fetches each, so it
+      clears whichever way it is fixed.
+
 footer: >
   Reported by an independent QA agent. Scope of this work: verification of the
   REST API, MCP and machine-readable discovery surfaces, read-only except in
