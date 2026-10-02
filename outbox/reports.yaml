@@ -4237,6 +4237,48 @@ reports:
       one that still agrees, passes. Separate, small: please describe `candles_stale`
       in /openapi-public.json (what age sets it).
 
+  - key: backtest-rally-run-shape-and-themes
+    findings:
+      - CYM-a_stored_run_carries_the_fields_its_schema_lists
+      - CYM-a_run_on_a_theme_is_listed_with_that_theme
+    severity: low
+    category: documentation
+    url: https://cymetica.com/backtest-rally
+    title: >-
+      Backtest Rally: GET /research-backtest/runs/{run_id} does not return the fields its
+      schema lists, and a run on a theme is listed with no theme
+    expected: >
+      The stored run carries the properties /openapi-public.json lists for it (run_id,
+      label, created_at, algo_model, themes, n_baskets, hold_days, mean_basket_gain_pct,
+      mean_vs_btc_pct, hit_rate_pct, baskets), and a run whose parameters name a theme is
+      listed under it, so `?theme=` finds it.
+    actual: >
+      Read 2026-10-03 on the three stored runs (all created 2026-06-24). The run
+      document has run_id, label, created_at, `parameters`, `summary` and `rows`. Eight of
+      the eleven documented properties are not at the top level: algo_model, themes,
+      n_baskets, hold_days, mean_basket_gain_pct, mean_vs_btc_pct, hit_rate_pct and
+      baskets. The figures sit under `summary`, the rest under `parameters`, and
+      the per-basket detail is called `rows`. The schema requires only run_id and allows
+      extra properties, so a response validates while a client written from it reads
+      nothing. Second: run best-params-macd-gated-20260624T200425 has
+      parameters.theme "defi tokens" (and a defi theme_regex) but is listed with
+      `themes: []` in both GET /runs and its own parameters.themes, so
+      GET /runs?theme=defi%20tokens returns only the other defi run.
+    steps:
+      - 'GET https://cymetica.com/openapi-public.json -> paths["/api/v1/research-backtest/runs/{run_id}"].get 200 schema properties: run_id, label, created_at, algo_model, themes, n_baskets, hold_days, mean_basket_gain_pct, mean_vs_btc_pct, hit_rate_pct, baskets'
+      - 'GET https://cymetica.com/api/v1/research-backtest/runs/defaults-theme-all-20260624T204140 -> keys: run_id, label, created_at, parameters, summary, rows'
+      - 'GET https://cymetica.com/api/v1/research-backtest/runs -> best-params-macd-gated-20260624T200425 themes []; GET .../runs/best-params-macd-gated-20260624T200425 -> parameters.theme "defi tokens", parameters.themes []'
+    body: >
+      Either side can change: bring the schema to the answer or the answer to the schema.
+      Our two checks read the newest run against the properties the schema lists, and every
+      run on a named theme against its listed themes, so they clear whichever way it
+      is fixed. Related, for the same page and not part of this report's checks: the
+      Rally Card creation call (POST /research-backtest/runs/{id}/launch-rally-card) and
+      GET /research-backtest/chart are used by the page but appear in neither /openapi-public.json
+      nor /llms.txt; and the headline figures (table, tiles, GET /runs, the leaderboard) are
+      before the run's own 0.6-point round-trip cost while the equity curve uses
+      the net figure, without a label saying so.
+
 footer: >
   Reported by an independent QA agent. Scope of this work: verification of the
   REST API, MCP and machine-readable discovery surfaces, read-only except in
