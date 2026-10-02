@@ -4202,8 +4202,9 @@ footer: >
   Reported by an independent QA agent. Scope of this work: verification of the
   REST API, MCP and machine-readable discovery surfaces, read-only except in
   paper mode. What we do execute is paper only and recorded: paper event-card
-  orders, and paper bot clones funded from the practice balance. No live
-  trading, no order against a real book, no deposit or withdrawal, no cleanup,
+  orders, paper bot clones funded from the practice balance, and prompts
+  sent to the site's own NEXUS chat on the paper account (which places paper
+  orders). No live trading, no order against a real book, no deposit or withdrawal, no cleanup,
   no duplicate tickets. UI defects are out of scope. Every figure above was
   read from the live service at the time stated, and each finding ships with
   the command that reproduces it.
