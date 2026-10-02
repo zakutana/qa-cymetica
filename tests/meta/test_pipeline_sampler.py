@@ -383,6 +383,16 @@ def test_both_launchers_start_the_sampler_and_the_old_watch_goes_through_it():
     assert "_append" not in called, (
         "clone.py watch still writes its samples into the committed clones.jsonl")
     assert "run" in called, "clone.py watch does not go through the sampler's round"
+    # Deep pass 2026-10-02 (T13): `run` by name was satisfied by `subprocess.run` or any
+    # other `.run`, and a ban on `_append` does not stop a write by another helper. It is
+    # the SAMPLER's run -- the module `watch` loads from scripts/sampler.py -- and nothing in
+    # it names the committed record's helpers.
+    sampler_run = [call for call in ast.walk(watch) if isinstance(call, ast.Call)
+                   and isinstance(call.func, ast.Attribute) and call.func.attr == "run"
+                   and isinstance(call.func.value, ast.Name) and call.func.value.id == "sampler"]
+    assert sampler_run, "watch calls some `.run`, not the sampler's"
+    assert {"_append_intent", "_append", "_capture"}.isdisjoint(called), (
+        "clone.py watch writes through a helper of the committed clone record")
 
 
 @qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")

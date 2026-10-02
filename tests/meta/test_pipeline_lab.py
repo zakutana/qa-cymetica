@@ -1594,6 +1594,22 @@ def test_the_night_holds_no_hand_that_trades_files_or_commits():
                 out.add(child.attr)
             elif isinstance(child, ast.Constant) and isinstance(child.value, str):
                 out.add(child.value)
+            # Deep pass 2026-10-02 (T19): `import subprocess as sp; sp.run([...])` read as
+            # {sp, run}, so no forbidden NAME was reached, and the git regex tests each string
+            # alone, so an argv split across a list escaped it. An import is a name reached
+            # (the module, what it is called, what is taken from it), and the strings of a
+            # list or tuple read together, as an argv.
+            elif isinstance(child, ast.alias):
+                out.add(child.name.split(".")[0])
+                out.update(child.name.split("."))
+                if child.asname:
+                    out.add(child.asname)
+            elif isinstance(child, ast.ImportFrom) and child.module:
+                out.update(child.module.split("."))
+            elif (isinstance(child, (ast.List, ast.Tuple)) and len(child.elts) > 1
+                  and all(isinstance(e, ast.Constant) and isinstance(e.value, str)
+                          for e in child.elts)):
+                out.add(" ".join(e.value for e in child.elts))
         return out
 
     reached = _names(tree)
@@ -1702,6 +1718,11 @@ def test_the_night_holds_no_hand_that_trades_files_or_commits():
         assert hand not in qa_reached, f"the night reaches a shell in qa/: {hand!r}"
     git = re.compile(r"\bgit\s+(?:commit|push|add|tag|reset)\b")
     assert not sorted(s for s in qa_reached if git.search(s)), "a git command in qa/"
+    # The walker itself must see the door shut by this test (T19): an aliased import and an
+    # argv split across a list.
+    bad = _names(ast.parse('import subprocess as sp\nsp.run(["git", "commit", "-am", "night"])'))
+    assert "subprocess" in bad and any(git.search(s) for s in bad), (
+        "the night walker is blind to an aliased subprocess or an argv list")
 
     # [operator 2026-09-12] *"Jasne ze v noci muze spoustet."* So this stopped
     # being "no hand at all" and became "only the braked one". Filing and

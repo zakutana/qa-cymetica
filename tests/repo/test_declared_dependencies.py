@@ -92,15 +92,31 @@ def test_the_promised_python_is_one_the_code_runs_on():
     _, promised = _declared()
     floor = tuple(int(part) for part in
                   promised.replace(">=", "").strip().split(".")[:2])
+    # Deep pass 2026-10-02 (T21): the floor used to be compared only with MIN_PYTHON, our
+    # own constant, so code that needed a newer grammar still passed while the project
+    # promised the old one. The code is read at the promised grammar now.
+    unparsable = []
+    for root in ROOTS:
+        for path in sorted((REPO / root).rglob("*.py")):
+            try:
+                ast.parse(path.read_text(encoding="utf-8"), feature_version=floor)
+            except SyntaxError as exc:
+                unparsable.append(f"{path.relative_to(REPO)}:{exc.lineno}")
+    wrong = floor < MIN_PYTHON or bool(unparsable)
 
     conclude(Measurement(
-        verdict="failed" if floor < MIN_PYTHON else "passed",
+        verdict="failed" if wrong else "passed",
         reason=(f"requires-python {promised!r} admits Python "
                 f"{'.'.join(map(str, floor))}, but scripts/prereg.py needs "
                 f"{'.'.join(map(str, MIN_PYTHON))} (backslash inside an "
                 f"f-string expression)"
                 if floor < MIN_PYTHON else
+                f"these files do not parse at the promised Python "
+                f"{'.'.join(map(str, floor))}: {', '.join(unparsable[:5])}"
+                if unparsable else
                 f"requires-python {promised!r} is at or above "
-                f"{'.'.join(map(str, MIN_PYTHON))}"),
-        left={"floor": list(floor)}, right={"floor_at_least": list(MIN_PYTHON)},
+                f"{'.'.join(map(str, MIN_PYTHON))} and every file under "
+                f"{', '.join(ROOTS)} parses at it"),
+        left={"floor": list(floor), "unparsable": unparsable},
+        right={"floor_at_least": list(MIN_PYTHON), "unparsable": []},
         sources={"pyproject": "pyproject.toml"}))

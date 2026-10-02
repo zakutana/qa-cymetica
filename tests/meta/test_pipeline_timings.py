@@ -70,6 +70,15 @@ def test_every_real_request_is_timed_and_one_command_lists_the_bad_ones(
                 c.get("/openapi-public.json")
         with client(httpx.MockTransport(lambda r: httpx.Response(200))) as c:
             c.get("/not-the-network")
+        # Deep pass 2026-10-02 (T09): a request our own guard REFUSES, through a REAL
+        # transport, never reached the network and is not timed. If the timing moved above
+        # `_check`, it would be written with error SafetyViolation, and `timeouts.py`
+        # lists every row with an error -- as the minute of a timeout, to Cymetica.
+        from qa.safety import SafetyViolation
+
+        with client(_Real(200)) as c:
+            with pytest.raises(SafetyViolation):
+                c.post("/api/v1/never-listed-write", json={"x": 1})
     finally:
         CURRENT_TIER.reset(token)
 
