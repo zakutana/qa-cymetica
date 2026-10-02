@@ -3567,7 +3567,14 @@ def test_money_in_a_clone_is_out_and_a_paused_clone_holds_it_parked(
         *fund("CLN-0005", "inst-2", 240.0),
         *switch("CLN-0006", "inst-2", "enable", "2026-09-22T10:00:00+00:00"),
         *fund("CLN-0007", "inst-3", 100.0),
-        *switch("CLN-0008", "inst-3", "enable", "2026-09-22T10:00:00+00:00")])
+        *switch("CLN-0008", "inst-3", "enable", "2026-09-22T10:00:00+00:00"),
+        # Deep pass 2026-10-02, R03: a clone we RELEASED is deleted on their side and its
+        # balance did not come back (refunded 0.0, our practice balance unchanged), so the
+        # money is neither free nor parked -- ten of them put 3 392 USDC into the book.
+        *fund("CLN-0009", "inst-4", 300.0),
+        {"id": "CLN-0010", "type": "intent", "kind": "release", "instance_id": "inst-4"},
+        {"id": "CLN-0010", "type": "outcome", "kind": "release", "outcome": "accepted",
+         "http_status": 204}])
     _write(tmp_path, "samples.jsonl", [
         {"type": "sample", "kind": "bot", "instance_id": "inst-2",
          "at": "2026-09-22T09:00:00+00:00", "is_trading": False},

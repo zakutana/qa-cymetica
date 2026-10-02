@@ -294,8 +294,18 @@ def _clone_money() -> tuple[float, float]:
             key = str(row.get("instance_id"))
             if str(row.get("at") or "") >= str(newest.get(key, {}).get("at") or ""):
                 newest[key] = row
+    # A clone we RELEASED is deleted on their side and nothing came back (refunded 0.0,
+    # the practice balance unchanged), so its money is neither free, nor parked, nor
+    # exposed: counted as parked it put 3 392 USDC of nothing into the book behind the
+    # 60% ceiling and the 0.48% stake (deep pass 2026-10-02, R03).
+    asked_release = {row.get("id"): str(row.get("instance_id")) for row in rows
+                     if row.get("type") == "intent" and row.get("kind") == "release"}
+    released = {asked_release[i] for i, done in outcomes.items()
+                if i in asked_release and done.get("outcome") == "accepted"}
     active = parked = 0.0
     for instance, amount in went_in.items():
+        if instance in released:
+            continue
         when, kind = switched.get(instance, ("", None))
         reading = newest.get(instance) or {}
         stopped = (kind == "disable"
