@@ -2722,6 +2722,15 @@ def _species_cloned() -> dict[str, str]:
     rows = _sibling("clone").load()
     outcomes = {row.get("id"): row for row in rows
                 if row.get("type") == "outcome" and not row.get("kind")}
+    # NEXT 2026-10-01 (NEX-0109): CLN-0011 was released on 2026-09-28 ("Bot
+    # deleted") and the tick went on saying "we already own a clone of it" --
+    # a clone whose release they ACCEPTED is gone, and the species is free.
+    released_ids = {row.get("id") for row in rows
+                    if row.get("type") == "outcome" and row.get("kind") == "release"
+                    and row.get("outcome") == "accepted"}
+    released = {str(row.get("instance_id")) for row in rows
+                if row.get("type") == "intent" and row.get("kind") == "release"
+                and row.get("id") in released_ids}
     out: dict[str, str] = {}
     for row in rows:
         species = str(row.get("source_id") or "").lower()
@@ -2729,6 +2738,9 @@ def _species_cloned() -> dict[str, str]:
             continue
         result = outcomes.get(row.get("id")) or {}
         if result.get("outcome") == "accepted":
+            if str(result.get("clone_instance_id")) in released:
+                out.pop(species, None)      # owned once, deleted since
+                continue
             out[species] = (f"we already own a clone of it ({row.get('id')}, "
                             f"{result.get('clone_instance_id')})")
         elif species not in out:

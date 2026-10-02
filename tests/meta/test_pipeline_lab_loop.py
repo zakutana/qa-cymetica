@@ -3172,7 +3172,7 @@ def test_a_species_we_already_own_a_clone_of_is_not_cloned_again(
     scripts_lab = _scripts_lab(tmp_path, monkeypatch)
     sent, calls = _clonepad(scripts_lab, tmp_path, monkeypatch,
                             _answer("Clone MACD Hunter on paper."))
-    _write(tmp_path, "clones.jsonl", [
+    owned = [
         {"id": "CLN-0002", "type": "intent", "source_type": "wta_species",
          "source_id": MACD["id"], "paper": True},
         {"id": "CLN-0002", "type": "outcome", "outcome": "accepted",
@@ -3184,7 +3184,8 @@ def test_a_species_we_already_own_a_clone_of_is_not_cloned_again(
         {"id": "CLN-0003", "type": "intent", "kind": "disable",
          "instance_id": "inst-old"},
         {"id": "CLN-0003", "type": "outcome", "kind": "disable",
-         "outcome": "accepted", "http_status": 200}])
+         "outcome": "accepted", "http_status": 200}]
+    _write(tmp_path, "clones.jsonl", owned)
 
     did = scripts_lab.night_promote()
 
@@ -3192,6 +3193,34 @@ def test_a_species_we_already_own_a_clone_of_is_not_cloned_again(
     assert qa_rooms.strategies(qa_rooms.load()) == []
     assert did["rooms"] == 0
     assert any("CLN-0002" in h for h in did["held"]), did["held"]
+
+    # NEXT 2026-10-01 (NEX-0109, Fibonacci Phoenix): CLN-0011 was RELEASED on
+    # 2026-09-28 ("Bot deleted", an accepted release), yet the tick kept saying
+    # "we already own a clone of it" and never cloned the species again. A clone
+    # that was deleted is not owned; a refusal AFTER the release is a new fact.
+    species = MACD["id"].lower()
+    assert species in scripts_lab._species_cloned(), "the clone we own was not held"
+    released = owned + [
+        {"id": "CLN-0004", "type": "intent", "kind": "release", "instance_id": "inst-old"},
+        {"id": "CLN-0004", "type": "outcome", "kind": "release", "outcome": "accepted",
+         "http_status": 200}]
+    _write(tmp_path, "clones.jsonl", released)
+    assert species not in scripts_lab._species_cloned(), (
+        "a clone whose release was accepted still counted as owned")
+    refused_release = owned + [
+        {"id": "CLN-0004", "type": "intent", "kind": "release", "instance_id": "inst-old"},
+        {"id": "CLN-0004", "type": "outcome", "kind": "release", "outcome": "rejected",
+         "http_status": 404}]
+    _write(tmp_path, "clones.jsonl", refused_release)
+    assert species in scripts_lab._species_cloned(), (
+        "a release their API refused freed the species")
+    again = released + [
+        {"id": "CLN-0005", "type": "intent", "source_type": "wta_species",
+         "source_id": MACD["id"], "paper": True},
+        {"id": "CLN-0005", "type": "outcome", "outcome": "rejected", "http_status": 400}]
+    _write(tmp_path, "clones.jsonl", again)
+    assert "CLN-0005" in scripts_lab._species_cloned()[species], (
+        "a refusal after the release was not remembered")
 
 
 @qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
