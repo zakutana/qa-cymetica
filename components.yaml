@@ -224,6 +224,14 @@ components:
     surface: rest
     criticality: medium
     staleness_hours: 24
+  rest.research_backtest:
+    # Backtest Rally (cymetica.com/backtest-rally): theme-basket backtests on the
+    # headline corpus and the Rally Card launched from a run. First check 2026-10-03:
+    # a stored run carries the fields its OpenAPI schema lists.
+    title: Backtest Rally (stored runs, leaderboard, Rally Card)
+    surface: rest
+    criticality: medium
+    staleness_hours: 24
   rest.creator:
     # Tracked links, post-kit, reward ledger and the reddit/twitter lead
     # queues behind cymetica.com/<username>. Added to openapi-public.json and
