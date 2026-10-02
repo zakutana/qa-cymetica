@@ -1,17 +1,15 @@
-# Deep pass — 2026-09-30 v noci (Opus 5.5)
+# Deep pass — 2026-10-02 v noci (Sonnet 5.5, pod řadou Opus 5 xhigh)
 ## Opraveno
-- **14 z 28 tvrzení skutečných (14 z auditu, 14 z review; C05 = R02), všech 14 opraveno, test napřed, tests/meta zelené (811, strop beze změny).** Gem audit: nová identita „market cap = cena × supply“, identita bez přečtených řádků je inconclusive, coin se páruje i podle jména, strop upside podle nejčastější hodnoty, holders jen při 100 %, snapshot bez data = neznámé stáří (5f8bf0c2); lab stránka sčítá všechny boty místnosti (R04, b3abc0ca); stop nohy v místnosti o dvou nohách (B03, a2d0be07); restart klonu je útrata (B01, f770a5f5); a2a odpověď bez rodiče = inconclusive (C02, bcaaf003); časovky a kredit Nexuse (B05, C01).
-- **0b:** FOMO watch jede s `--fomo 1`, strop 60 dotazů na minutu intervalu, okna co se zavírají dřív se čtou první (7122f3d3).
+- **18 z 35 tvrzení skutečných (19 skutečných, 1 odloženo), test napřed, tests/meta zelené (811, strop beze změny).** Laborka: bot, který zastavila jejich ochrana, se už nerestartuje ani po odmítnutém enable; POST po timeoutu je `unknown`, ne `not_sent`; peníze uvolněných klonů nejsou v knize (−3 392 USDC); pauza, která bota našla už zastaveného, nezaprotokoluje stop jako náš. Dále `chat.py` (každá chyba po POSTu = `unknown`), čtyři kontroly vůči Cymetice (GeckoTerminal cena správného tokenu, nula týdnů „btc_only“ je inconclusive, `first_pass` není šetření, upside řádku bez `potential_raw`) a osm slabých self-testů (T17 jen z poloviny: další větve gem auditu — `not_cheap`, `rs3m`, `room_x`, poplatkový upside — zatím nemají vyvracející fixture).
+- **0b:** nic nepostaveno, každý řádek čekal na Cymetiku nebo na termín (ET-28934 8:20 UTC, ET-29001 14:10 UTC).
 ## Co odešlo Cymetice
-- **Žádný nový report.** Běh PRE-0214 (run-20260930T233314Z-42242d07, level V): 1474 prošlo, 13 spadlo. `verify.py` poslal 6 verdiktů, každý napřed ověřen živě: pass #135; fail #132 a #137 (A2A-0032: hluboké šetření „neproběhlo, kapacita“), #51 a #56 (agent-skills.json má `crypto-alerts` a `crypto-dashboard`, karta už ne), #130 (15 cest mimo openapi). tests/repo: červený jen známý `test_evidence_in_git` (53 záznamů z cloudové session).
+- **Žádný nový report ani verdikt.** Běh PRE-0231 (run-20261002T221708Z-2bc44177, level V): 1486 prošlo, 13 spadlo. `verify.py` jsem nespustil: #143 dluží opravu (selhává znovu, CoinGecko 403/429) a #146 pass by tvrdil „kontrola nepřepsána“, ale pomocná funkce se po novém tooltipu měnila.
 ## Změněná pravidla
 - **Žádné.**
 ## Čeká na tebe
-- **R01/C03 (1 ze 3, menšina): kontrola BB logu čte delší `spec_text` jako useknutý** — beze změny.
-- **B02 (1 ze 3): `picked_rooms(rows, [])` v testu nic neověří** — beze změny.
-- **A02 (1 ze 3): fomo `compare()` nemá horní mez období** — beze změny.
-- **A03 (1 ze 3): `_listing` čte 200 bez řádků jako delisting** — beze změny.
-- **R03 R09 R11 R12 R13 R14 B04 A01 (0 ze 3): zamítnuty jako false positive** — beze změny.
-- **Gem Screener: pošli BB-ACCEPT** (spec `c7bd4767` je ověřený).
+- **T01: kontrola „hot“ čte datová pole, ne text panelu** — oprava je rozhodnutí (dvě čtení smlouvy; druhá by shodila `derived_identities`), odloženo.
+- **Menšina 1 ze 3: T02 T05 T07 T14 T20 T22 (+V03 = T05)** — beze změny (dvě jsou latentní: nulový/`null` živý bod v themes, 404 u odkazu picku jako inconclusive).
+- **Dvě nové červené živé kontroly (`derived figures`: 4 témata nesedí s vstupy; `altseason numbers`: mean4 49,0 vs 51,5, index 72 vs breadth 68)** — NOT RAISED YET, založí je příští sweep, deep pass nezakládá.
+- **Červené repo testy z dřívějška, ne z tohoto běhu: evidence 1131 MB nad limitem 1000, 53 ztracených captures (cloud 29. 9.), paměť 51 řádků nad 48** — evidence se vyřeší stárnutím captures za 3 dny.
 ## Týden
 - **Není splatný.** Poslední 27. 9., příští kolem 4. 10.

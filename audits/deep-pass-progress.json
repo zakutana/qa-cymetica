@@ -2,7 +2,7 @@
   "run": "deep pass 2026-10-02",
   "at": "2026-10-02T21:11:32+00:00",
   "previous_at": "2026-09-30T22:17:13+00:00",
-  "at_finished": null,
+  "at_finished": "2026-10-02T22:57:27+00:00",
   "start_commit": "c6c5d2bd528215616571edbb9dfe34f1a716bcc2",
   "model_note": "session ran Sonnet 5.5, below the row (Opus 5 xhigh); the three triage agents and the audit follow their own frontmatter",
   "gaps": [
@@ -554,8 +554,8 @@
   "rule_changes": [],
   "meta_tests": {
     "start": 811,
-    "end": null,
-    "reason": null
+    "end": 811,
+    "reason": "every new assertion merged into an existing test function; none added"
   },
-  "finished": false
+  "finished": true
 }
