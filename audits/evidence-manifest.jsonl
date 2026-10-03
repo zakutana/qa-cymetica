@@ -7711,6 +7711,7 @@
 {"archive": "evidence-2026-09", "bytes": 7750, "call": "GET https://cymetica.com/api/v1/bounty/leaderboard?", "id": "5bbf1dbf0d06f5325750ea9d101322b237d842107dfc2c890887cc016342a51e", "why": "row"}
 {"archive": "evidence-2026-09", "bytes": 8843, "call": "POST https://cymetica.com/mcp/v1/? tools/call:get_fund_history", "id": "5bc098cd390fcd6c97a181e61aa43b941a3fca8aaa1823d3d6c160fea43056d3", "why": "row"}
 {"archive": "evidence-2026-10", "bytes": 231458, "call": "GET https://cymetica.com/exchange/vaix-pro?", "id": "5bc3fca4c402c9d4ef3ff6e316c9f45620f9fb2426736206b816d0a79e4a2b69", "why": "row"}
+{"archive": "", "bytes": 8314, "call": "POST https://cymetica.com/api/v1/bounty/a2a/send?", "id": "5bc68524cfd4a792b77e76c517bad42973e323b500708aeb1a1d064a7044a6ab", "why": "their-words"}
 {"archive": "evidence-2026-10", "bytes": 4113, "call": "GET https://cymetica.com/api/v1/trading-models/probability-markets?", "id": "5bc9279e877de8fa1c68671dbcc86d6eafa0a375a38f471852d7adcf637548c0", "why": "row"}
 {"archive": "evidence-2026-09", "bytes": 5615, "call": "POST https://cymetica.com/mcp/v1/? tools/call:get_fund", "id": "5bca1a2ec055bf829e79632cfb4a1d5a1605caffe0b98b69dd1b5d71f27fd39d", "why": "row"}
 {"archive": "evidence-2026-09", "bytes": 563702, "call": "GET https://cymetica.com/api/v1/event-cards?include_user_submitted,limit,offset", "id": "5bcc4a583c0c6ecb5e28b4c0134884437527557b74b6c1c7b07bcf48834942bc", "why": "promised"}
