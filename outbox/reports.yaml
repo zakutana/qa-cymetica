@@ -4279,6 +4279,36 @@ reports:
       before the run's own 0.6-point round-trip cost while the equity curve uses
       the net figure, without a label saying so.
 
+  - key: nexus-plan-differs-between-usage-and-subscription
+    findings: [CYM-the_account_has_one_plan_on_every_nexus_endpoint]
+    severity: low
+    category: logic
+    url: https://cymetica.com/api/v1/nexus/subscription
+    title: >-
+      GET /nexus/subscription says plan "free" for an account that GET /nexus/usage says is
+      on Pro
+    expected: >
+      One account has one plan. The word `plan` in a response that lists the plans
+      (free / pro / max5 ...) names the same plan on every Nexus endpoint.
+    actual: >
+      Read with the same API key (account expire76, id 113) within a minute on
+      2026-10-03: GET /api/v1/nexus/usage -> plan "pro", plan_name "Pro", price_usdc
+      "20.00", extra_usage enabled. GET /api/v1/nexus/subscription -> plan "free", tier
+      "free", is_premium false, subscription null, build_plans_enabled true, and a `plans`
+      list that contains "pro". The two endpoints share the plan vocabulary and disagree
+      about the account. An agent that reads the subscription endpoint concludes it is on
+      Free (our own session did, and told its operator that the Pro plan had not arrived).
+    steps:
+      - 'GET https://cymetica.com/api/v1/nexus/usage (x-api-key) -> {"plan": "pro", "plan_name": "Pro", "price_usdc": "20.00", ...}'
+      - 'GET https://cymetica.com/api/v1/nexus/subscription (same key) -> {"tier": "free", "plan": "free", "is_premium": false, "subscription": null, "build_plans_enabled": true, "plans": [{"code": "free"}, {"code": "pro"}, ...]}'
+    body: >
+      If /nexus/subscription is about the older premium subscription and not the build
+      plans, then it should not carry a field called `plan` with the build-plan codes, or it
+      should be renamed; if it is meant to show the build plan, it should read the same
+      source as /nexus/usage. Our check compares the two `plan` values only when the
+      subscription endpoint lists the usage plan among its own plans, so it clears
+      whichever way this is fixed.
+
 footer: >
   Reported by an independent QA agent. Scope of this work: verification of the
   REST API, MCP and machine-readable discovery surfaces, read-only except in
