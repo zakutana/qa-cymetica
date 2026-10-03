@@ -1943,6 +1943,44 @@ def exit_levels(text: str, picks: list[str]) -> dict[str, dict]:
     return out
 
 
+HOLD_DAYS_RANGE = (1.0, 14.0)
+_HOLD_WORDS = (
+    re.compile(r"\bhold(?:ing)?(?:\s+period)?\s*(?:for|of|:|~|about|around)?\s*"
+               r"(\d+(?:\.\d+)?)\s*(?:-\s*)?days?\b", re.I),
+    re.compile(r"(\d+(?:\.\d+)?)\s*-?\s*days?\s+hold\b", re.I),
+    re.compile(r"\bhorizon\s*[:=~]?\s*(\d+(?:\.\d+)?)\s*days?\b", re.I))
+
+
+def hold_periods(text: str, picks: list[str]) -> dict[str, float | None]:
+    """How long he says to hold each pick, in days, bounded to HOLD_DAYS_RANGE; None when he
+    names none. Read the way `exit_levels` reads a take-profit: the first period on or after
+    a line that names one pick, before a line that names another.
+
+    The window of a room used to be the laboratory's own 3 days -- a critical choice that
+    the operator, 2026-10-03, wants from Nexus ("to musi rict nexus"). Only a period stated
+    as a hold or a horizon counts: a backtest's "30d" or "90d" is not one, and neither is a
+    count of hours."""
+    wanted = {str(p).lower(): p for p in picks}
+    out: dict[str, float | None] = {p: None for p in picks}
+    current = None
+    low, high = HOLD_DAYS_RANGE
+    for line in str(text or "").split("\n"):
+        lower = line.lower()
+        named = [key for key in wanted if key in lower]
+        if len(named) == 1:
+            current = wanted[named[0]]
+        elif named:
+            current = None
+        if current is None or out[current] is not None:
+            continue
+        for pattern in _HOLD_WORDS:
+            found = pattern.search(line)
+            if found:
+                out[current] = min(high, max(low, float(found.group(1))))
+                break
+    return out
+
+
 def _level(raw: str) -> float:
     return float(raw.replace("−", "-").replace(" ", ""))
 
@@ -2405,6 +2443,74 @@ def bot_stops(clone_rows, samples) -> list[dict]:
                                            else None)})
                 trading_since, paused = None, False
     return sorted(out, key=lambda s: s["before"])
+
+
+def bot_runs(clone_rows, samples) -> dict[str, list[dict]]:
+    """Each paper bot's runs, instance -> [{start, end, why, profit_pct}], oldest first.
+
+    A run starts at our accepted `enable` (or, for a bot we never switched on that the
+    sampler saw trading, at that reading) and ends at our accepted `disable` (why `ours`),
+    or at the reading that shows it stopped by itself (why `their_guard` when it stopped at
+    a loss, else `unexplained`) -- the same reading `bot_stops` makes of a stop. A bot still
+    trading has a run with no end. A restart after a stop is a second run. The operator,
+    2026-10-03: "chci videt delku jakou behlli, kdy je nekdo spustil, kdy se vypli a delku
+    zivota, a kdyz se vypli tak duvod"."""
+    went_in = funded(clone_rows)
+    answered = {row.get("id"): row for row in clone_rows or ()
+                if row.get("type") == "outcome"}
+    events: dict[str, list[tuple[str, str, dict]]] = {}
+    for row in clone_rows or ():
+        done = answered.get(row.get("id")) or {}
+        if (row.get("type") == "intent" and row.get("kind") in ("enable", "disable")
+                and done.get("outcome") == "accepted"):
+            events.setdefault(str(row.get("instance_id")), []).append(
+                (str(done.get("at") or row.get("at") or ""), row["kind"], row))
+    for row in samples or ():
+        if row.get("kind") == "bot" and row.get("instance_id"):
+            events.setdefault(str(row["instance_id"]), []).append(
+                (str(row.get("at") or ""), "sample", row))
+
+    def closed(instance, start, end, why, profit):
+        base = went_in.get(instance)
+        return {"start": start, "end": end, "why": why,
+                "profit_pct": (profit / base * 100.0
+                               if profit is not None and base else None)}
+
+    out: dict[str, list[dict]] = {}
+    for instance, seen in events.items():
+        runs, start, paused = [], None, False
+        for at, kind, row in sorted(seen, key=lambda e: e[0]):
+            if kind == "enable":
+                if start is None:
+                    start = at
+                paused = False
+            elif kind == "disable":
+                if start is None:
+                    paused = True
+                    continue
+                if row.get("their_is_trading") is False:
+                    profit = _money(row.get("bot_profit_usdc"))
+                    runs.append(closed(instance, start, at,
+                                       "their_guard" if profit is not None and profit < 0
+                                       else "unexplained", profit))
+                else:
+                    runs.append(closed(instance, start, at, "ours", None))
+                start, paused = None, True
+            elif row.get("is_trading") is True:
+                if start is None:
+                    start = at
+                paused = False
+            elif row.get("is_trading") is False and start is not None and not paused:
+                profit = _money(row.get("total_profit_usdc"))
+                runs.append(closed(instance, start, at,
+                                   "their_guard" if profit is not None and profit < 0
+                                   else "unexplained", profit))
+                start = None
+        if start is not None:
+            runs.append({"start": start, "end": None, "why": None, "profit_pct": None})
+        if runs:
+            out[instance] = runs
+    return out
 
 
 def _sold_by_us(paper_rows) -> dict[str, float | None]:

@@ -1688,11 +1688,13 @@ def cards_question() -> str:
              else ". No fund: we do not run funds, so name none")
     lines = [
         "Up to five things you would run on paper now, each on its own: "
-        + what + ". Each is held and "
-        f"judged over {NIGHT_WINDOW_DAYS:g} days from the moment we open it, "
-        "after fees, so pick for that window. For each: side where it has "
-        "one, take-profit and stop in percent sized for "
-        f"{NIGHT_WINDOW_DAYS:g} days, and one line on "
+        + what + ". When to close it is yours to say, for each pick: write "
+        "\"hold N days\" (N from "
+        f"{lab.HOLD_DAYS_RANGE[0]:g} to {lab.HOLD_DAYS_RANGE[1]:g}, decimals "
+        "fine) and we close it at the end of that period, or earlier at its "
+        "take-profit or stop, and judge it after fees. A pick with no hold "
+        "period is not opened. For each: side where it has one, take-profit "
+        "and stop in percent sized for the period you name, and one line on "
         "the thesis or the backtest it rests on. Fewer is fine if fewer are "
         "worth it -- we open a room for a card only when its own backtest "
         "after fees holds up, so a weak pick costs a slot and a question, "
@@ -2270,6 +2272,9 @@ def night_promote(since: datetime | None = None) -> dict:
         # His exits, per card, onto the leg before the criterion is written
         # (V2, 2026-09-23). Forward only: a room already open keeps its own.
         exits = lab.exit_levels(text, named)
+        # And how long to hold it, from him (2026-10-03, the operator: "to musi rict
+        # nexus"): a card with no hold period is not opened, whatever else he said of it.
+        holds = lab.hold_periods(text, named)
         spent = ("reject", "unknown_card")
         named = [c for c in named if (origin, c) not in card_linked]
         if all(decided.get((origin, card), {}).get("verdict") in spent
@@ -2291,6 +2296,11 @@ def night_promote(since: datetime | None = None) -> dict:
             if card in held_by:
                 held.append(f"{origin}/{card[:8]}: already held in "
                             f"{held_by[card]} -- not a second experiment")
+                continue
+            if holds.get(card) is None:
+                held.append(f"{origin}/{card[:8]}: he named no hold period -- when to "
+                            f"close is his to say, so it is not opened; the next "
+                            f"question demands one")
                 continue
             prior = decided.get((origin, card))
             if prior and prior.get("verdict") in spent:
@@ -2373,12 +2383,12 @@ def night_promote(since: datetime | None = None) -> dict:
                 # would have held into profit (STR-0010, -0013, -0025).
                 his_stop = levels.get("sl") is not None
                 rooms.set_acceptance(
-                    room, window_days=NIGHT_WINDOW_DAYS,
+                    room, window_days=holds[card],
                     stop_pct=None if his_stop else NIGHT_STOP_PCT,
                     legs=plan["legs"], benchmark_card=BTC_PROXY,
                     why=(f"opened unattended from {origin}, one room for this "
-                         f"card; the window is the laboratory's default, not "
-                         f"a number Nexus gave; "
+                         f"card; the window is his, {holds[card]:g} days -- he named "
+                         f"when to close it; "
                          + ("the room stop is his leg stop, ours is off; "
                             if his_stop else
                             f"the room stop is ours, {NIGHT_STOP_PCT:g}% from "

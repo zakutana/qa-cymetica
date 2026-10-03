@@ -177,6 +177,19 @@ def test_each_experiment_lands_in_its_sector_and_its_group():
     _check_the_stop_a_clone_carries_is_the_diaries_and_only_while_it_is_stopped()
     for e in by_id.values():
         assert not e["reason"] or len(e["reason"]) <= 40, e["reason"]
+    # 2026-10-03, the operator: "z done botu dej do archive ty co nefungovaly". A bot room
+    # that did not work leaves Done for the Archive and still says why; one that worked or
+    # could not be told stays in Done, and a card that did not work stays where it was.
+    page = _lab_page()
+    refuted = {"verdict": {"verdict": "refuted", "why": "ended below its stop",
+                           "return_pct": -10.0}, "status": "stopped"}
+    assert page._group({"archived": False}, refuted, "bots") == "archive"
+    assert page._group({"archived": False}, refuted, "cards") == "done"
+    for kept in ("survived", "inconclusive"):
+        assert page._group({"archived": False},
+                           {"verdict": {"verdict": kept}, "status": "stopped"}, "bots") == "done"
+    assert page._reason("archive", refuted) == "ended −10.0%", page._reason("archive", refuted)
+    assert page._reason("archive", {"invested": True}) == "not Nexus's pick"
 
 
 @qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")

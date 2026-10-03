@@ -991,11 +991,15 @@ def _path(panel: dict) -> list[list]:
     return []
 
 
-def _group(report_room: dict, panel: dict) -> str:
+def _group(report_room: dict, panel: dict, sector: str | None = None) -> str:
     """live: still running; done: judged or stopped; archive: what the report
     archives -- nothing bought, or not his pick (N-0049/N-0050: a failed
-    attempt out of the way, but not deleted)."""
+    attempt out of the way, but not deleted) -- and, for a bot, a room whose
+    verdict is that it did not work (the operator, 2026-10-03: "z done botu dej
+    do archive ty co nefungovaly"); its line and its reason stay readable there."""
     if report_room.get("archived"):
+        return "archive"
+    if sector == "bots" and (panel.get("verdict") or {}).get("verdict") == "refuted":
         return "archive"
     if (panel.get("verdict") or {}).get("verdict") or panel.get("status") == "stopped":
         return "done"
@@ -1058,7 +1062,7 @@ def _reason(group: str, panel: dict) -> str | None:
     verdict = panel.get("verdict") or {}
     name, why = verdict.get("verdict"), str(verdict.get("why") or "")
     ret = verdict.get("return_pct")
-    if group == "archive":
+    if group == "archive" and name != "refuted":
         return "not Nexus's pick" if panel.get("invested") else "nothing bought"
     if name == "survived":
         return f"made {_signed(ret)}%" if ret is not None else None
@@ -1090,7 +1094,7 @@ def _room_trading(clones: list[dict]):
 
 def _experiment(rid: str, sector: str, report_room: dict, panel: dict,
                 now: datetime) -> dict:
-    group = _group(report_room, panel)
+    group = _group(report_room, panel, sector)
     path = _path(panel)
     legs = panel.get("legs") or []
     first = legs[0] if legs else {}
@@ -1716,7 +1720,11 @@ function stateChips(le) {
     const v = VERDICT[le.verdict] || ["", STATUS[le.status] || "ended"];
     return chip(v[0], v[1]) + (le.reason ? chip("", esc(le.reason)) : "");
   }
-  if (le.group === "archive") return chip("", esc(le.reason || "archived"));
+  if (le.group === "archive") {
+    // A bot that did not work is archived with its verdict still on it.
+    const v = VERDICT[le.verdict];
+    return (v ? chip(v[0], v[1]) : "") + chip("", esc(le.reason || "archived"));
+  }
   const out = [];
   // A bot that stopped by itself says so once, in its reason.
   if (le.trading != null && !le.reason) {
@@ -1753,7 +1761,7 @@ function row(le, rank, open) {
     <span class="rk">${rank}</span>
     <span class="nm" title="${esc(le.title)}">${esc(le.title)}${le.ours
       ? ' <span class="ours">ours</span>' : ""}</span>
-    <span class="sp">${le.group === "archive" ? '<span class="sp-none">—</span>' : spark(le.spark)}</span>
+    <span class="sp">${le.group === "archive" && !le.verdict ? '<span class="sp-none">—</span>' : spark(le.spark)}</span>
     <span class="val ${tone(le.net_pct)}">${pctText(le.net_pct)}</span>
     <span class="usd ${tone(le.usdc)}">${le.usdc == null ? "" : usdText(le.usdc)}</span>
     <span class="bt">${btChip(le.backtest)}</span>

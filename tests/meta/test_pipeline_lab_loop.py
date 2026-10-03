@@ -49,6 +49,14 @@ def _scripts_lab(tmp_path, monkeypatch):
         "scripts_lab_loop", REPO / "scripts" / "lab.py")
     module = importlib.util.module_from_spec(spec)
     spec.loader.exec_module(module)
+    # A card room needs the hold period he names (2026-10-03). The older fixtures here name
+    # none, so by default a missing one reads as the 3 days they were written for; a test of
+    # the gate itself restores the real reader from `module._real_hold_periods`.
+    real = lab.hold_periods
+    monkeypatch.setattr(lab, "hold_periods", lambda text, picks: {
+        pick: (days if days is not None else 3.0)
+        for pick, days in real(text, picks).items()})
+    module._real_hold_periods = real
     return module
 
 
@@ -139,13 +147,38 @@ def test_the_question_names_the_window_its_room_is_judged_on(tmp_path, monkeypat
     ze tam konecne specifikuji to okno casove, to nam chybelo a proto vetsina
     karet je prodelecnych". Our question never told Nexus a horizon, and
     every room was then judged on our own 5 days. The window is said in the
-    question and is the same number the room's criterion uses."""
+    question and is the same number the room's criterion uses.
+
+    Since 2026-10-03 (the operator: "to je kriticke rozhodnuti, to musi rict nexus") the
+    number is HIS: the question asks for "hold N days" per pick, within a stated range, and
+    the room's criterion takes it; ours (3 days) remains only the window of a bot."""
     module = _scripts_lab(tmp_path, monkeypatch)
-    days = module.NIGHT_WINDOW_DAYS
-    assert days == 3.0
+    assert module.NIGHT_WINDOW_DAYS == 3.0
     said = module.cards_question()
-    assert f"over {days:g} days" in said, said
-    assert "take-profit and stop" in said
+    assert "hold N days" in said and "from 1 to 14" in said, said
+    assert "not opened" in said and "take-profit and stop" in said
+    assert "over 3 days" not in said, "the window is no longer fixed by the question"
+
+    # And the gate and the wiring, with the real reader: a card whose answer names no hold
+    # period opens nothing and says why; one that says "hold 5 days" opens a room whose
+    # criterion is 5 days, not our 3.
+    import qa.rooms as qa_rooms
+
+    monkeypatch.setattr(lab, "hold_periods", module._real_hold_periods)
+    plain, timed = _card(7), _card(8)
+    answers = [{"type": "answer", "id": "NEX-0001", "at": (NOW - timedelta(hours=1)).isoformat(),
+                "text": _whole(plain)},
+               {"type": "answer", "id": "NEX-0002", "at": (NOW - timedelta(hours=1)).isoformat(),
+                "text": _whole(timed) + " Hold 5 days."}]
+    _launchpad(module, tmp_path, monkeypatch, answers,
+               live={c: _basket("BTC", "ETH") for c in (plain, timed)},
+               readings={("BTC", "ETH"): (6.5, 1.3)})
+    did = module.night_promote()
+    opened = qa_rooms.strategies(qa_rooms.load())
+    assert did["rooms"] == 1 == len(opened), (did["rooms"], did["held"])
+    assert any("no hold period" in line and plain[:8] in line for line in did["held"]), did["held"]
+    criterion = qa_rooms.acceptance_of(qa_rooms.load(), opened[0]["id"])
+    assert criterion["window_days"] == 5.0, criterion
 
 
 @qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
@@ -3662,6 +3695,26 @@ def test_every_bot_stop_is_ours_their_guard_or_unexplained():
     assert stops["macd"]["after"] == "2026-09-22T13:38:30+00:00", (
         "a stop the sampler never saw trading is bounded by our start")
 
+    # 2026-10-03, the operator on the bots table: "chci videt delku jakou behlli, kdy je
+    # nekdo spustil, kdy se vypli a delku zivota, a kdyz se vypli tak duvod". Each bot's
+    # runs: when it started, when it stopped, and why (ours, their guard, unexplained);
+    # a bot still trading has an open run with no end.
+    runs = lab.bot_runs(clones, samples)
+    assert [(r["start"], r["end"], r["why"]) for r in runs["macd"]] == [
+        ("2026-09-22T13:38:30+00:00", "2026-09-22T20:00:00+00:00", "their_guard")], runs["macd"]
+    assert [(r["start"], r["end"], r["why"]) for r in runs["fib"]] == [
+        ("2026-09-22T13:38:41+00:00", "2026-09-22T13:39:55+00:00", "ours")], runs["fib"]
+    assert [(r["start"], r["end"], r["why"]) for r in runs["boll"]] == [
+        ("2026-09-23T01:32:23+00:00", "2026-09-23T02:05:44+00:00", "unexplained")], runs["boll"]
+    assert runs["macd"][0]["profit_pct"] == pytest.approx(-24.02 / 240.21 * 100)
+    live = lab.bot_runs(clones + switch("CLN-0030", "live", "enable", "2026-10-01T00:00:00+00:00"),
+                        samples)["live"]
+    assert live == [{"start": "2026-10-01T00:00:00+00:00", "end": None, "why": None,
+                     "profit_pct": None}], live
+    again = lab.bot_runs(clones + switch("CLN-0031", "fib", "enable", "2026-09-25T00:00:00+00:00"),
+                         samples)["fib"]
+    assert [r["end"] is None for r in again] == [False, True], "a restart is a second run"
+
     # Deep pass 2026-10-02, R04: their guard halted the bot BETWEEN the sampler's last
     # `is_trading: true` and our pause. The pause's own intent read their row first
     # and recorded `their_is_trading: false`, so the bot was already stopped when we
@@ -3752,6 +3805,11 @@ def test_the_question_offers_a_card_a_bot_or_a_fund_and_names_all_we_hold(
     assert "/api/v1/cloned-bots/available" in text
     assert "list_funds" not in text and "fund to mark" not in text, text
     assert "no fund" in text.lower(), text
+    # 2026-10-03, the operator: when to close a card is a critical decision and it is
+    # Nexus's, per card, always. The question demands "hold N days" for each pick and no
+    # longer fixes the window itself.
+    assert "hold" in text.lower() and "days" in text.lower() and "each" in text.lower(), text
+    assert "judged over 3" not in text and "sized for 3" not in text, text
     assert "whole" in text.lower() and "uuid" in text.lower()
     assert "MACD Hunter" in text and "AIB-SPACE" not in text, text
     import qa.rooms as qa_rooms
