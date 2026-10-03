@@ -323,11 +323,28 @@ def test_every_figure_the_report_writes_reaches_the_lab_page(monkeypatch):
         "lab_page_fields", REPO / "scripts" / "lab_page.py")
     page = importlib.util.module_from_spec(spec)
     spec.loader.exec_module(page)
+    # Fields the report still writes but the page hides ON PURPOSE: the operator
+    # cut /lab down to results only (commits e7f95357, 943701cf: no dollars on
+    # stake, no confidence band, no fee table). Named here, so a new field
+    # nobody reads still fails; and each one must still be written, so this
+    # list cannot outlive the field it excuses.
+    hidden_on_purpose = {
+        "lp": {"archived", "excluded", "fee_pct", "fees", "min_n", "stake_usdc",
+               "switched", "usdc", "wilson", "wins"},
+        "ln": {"answered", "inconclusive", "questions"},  # the one-line Nexus
+    }
     for name, keys in written.items():
         read = set(re.findall(rf"\b{name}\.([A-Za-z_][A-Za-z0-9_]*)", page.TEMPLATE))
-        assert not keys - read, (
+        excused = hidden_on_purpose[name]
+        assert not keys - read - excused, (
             f"the report writes `{name}.` fields /lab never shows: "
-            f"{sorted(keys - read)}")
+            f"{sorted(keys - read - excused)}")
+        assert not excused & read, (
+            f"/lab shows `{name}.` fields this test lists as hidden on purpose: "
+            f"{sorted(excused & read)} -- take them off the list")
+        assert not excused - keys, (
+            f"`{name}.` fields listed as hidden on purpose that the report no "
+            f"longer writes: {sorted(excused - keys)} -- take them off the list")
 
 
 @qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")

@@ -69,7 +69,9 @@ def _book(tmp_path, free):
 
 
 def _whole(card):
-    return "Buy " + card + " bull, sized small. " + ("reasoning. " * 40)
+    # He names the hold since 2026-10-03: an answer without one opens no room
+    # ("when to close is his to say"), so the fixture says "hold 5 days".
+    return "Buy " + card + " bull, hold 5 days, sized small. " + ("reasoning. " * 40)
 
 
 def _wire(scripts_lab, monkeypatch, cards):
@@ -216,7 +218,8 @@ def test_a_night_room_carries_a_criterion_and_the_ceiling_holds(
     rows = qa_rooms.load()
     opened = qa_rooms.strategies(rows)
     assert len(opened) == 20, (
-        f"{len(opened)} rooms where the book's 60% had room for twenty")
+        f"{len(opened)} rooms where the book's 60% had room for twenty; "
+        f"held: {did.get('held')}")
     assert any("60%" in line for line in did["held"]), did["held"]
     assert did["rooms"] == len(opened)
     assert opened, "nothing launched on a book that can clearly afford it"
@@ -276,7 +279,10 @@ def test_a_card_that_cannot_trade_does_not_park_the_cards_that_can_for_ever(
               "title": "a card"}
     monkeypatch.setattr(scripts_lab, "_card_live", lambda card: (
         basket if card == CARD else {**basket, "tradeable": False}))
-    text = "Buy " + CARD + " bull. Not " + other + ". " + ("reasoning. " * 40)
+    # One hold per card, each on the line that names it (a line naming two picks
+    # names no hold for either).
+    text = ("Buy " + CARD + " bull, hold 5 days.\nNot " + other + ", hold 5 days. "
+            + ("reasoning. " * 40))
 
     fresh = datetime.now(timezone.utc).isoformat()
     _answers(tmp_path, [{"type": "answer", "id": "NEX-0001", "at": fresh,
@@ -338,7 +344,7 @@ def test_a_room_that_cannot_open_does_not_discard_what_was_already_placed(
         {"type": "answer", "id": "NEX-0001", "at": "2026-09-12T22:00:00+00:00",
          "text": _whole(cards[0])},
         {"type": "answer", "id": "NEX-0002", "at": "2026-09-12T22:01:00+00:00",
-         "text": "Buy " + cards[1] + "."},
+         "text": "Buy " + cards[1] + ", hold 5 days."},
     ])
     _book(tmp_path, 100000.0)
     sent = _wire(scripts_lab, monkeypatch, cards)

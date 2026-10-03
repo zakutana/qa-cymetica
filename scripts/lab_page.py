@@ -1992,8 +1992,10 @@ function memeRoom(lp) {
     [`Conviction ≥ ${num(hc.min || 70, 0)} only`,
      `<span class="${tone(hc.net_pct)}">${pctText(hc.net_pct, 1)}</span>`,
      `${num(hc.n || 0, 0)} ${plural(hc.n || 0, "trade", "trades")}`, ""],
-    // The trade in the middle, which no outlier moves: what says whether the headline is the
-    // signal or one lucky coin.
+    // [operator 2026-09-14] *"to me nezjaima bez top 5 nechapu proc by
+    // to tam melo byt"*. So there is no "without the best five" figure; what
+    // says whether the headline is the signal or one lucky coin is the
+    // median beside it -- the trade in the middle, which no outlier moves.
     ["Typical trade (median)", `<span class="${tone(lp.median_pct)}">${pctText(lp.median_pct, 1)}</span>`,
      "half do worse", ""],
   ];

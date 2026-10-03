@@ -128,7 +128,7 @@ def test_the_lab_page_is_served_to_this_machine_with_its_note_box(console):
     # The view it redraws from, the same doors.
     status, body = _get(port, "/lab.json", f"127.0.0.1:{port}")
     assert status == 200 and [s["key"] for s in json.loads(body)["sectors"]] == [
-        "cards", "bots", "memecoins", "funds"]
+        "cards", "bots", "memecoins"]  # three rooms, no Funds (e7f95357)
     status, _ = _get(port, "/lab.json", f"evil.example:{port}")
     assert status == 403, "the laboratory's data went to a host that is not this machine"
 
