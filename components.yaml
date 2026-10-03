@@ -830,7 +830,13 @@ mcp_tools:
      # line for "Turn your App into a Startup", and the feature-bidding rules.
      # Their two siblings bb_apply_startup and bb_startup_bid write an
      # application and a bid under our name, and stay in no list.
-     bb_app_stats, bb_startup_line, feature_bidding_rules]
+     bb_app_stats, bb_startup_line, feature_bidding_rules,
+     # Classified 2026-10-03, bot research. readOnlyHint: true, "Read one of YOUR
+     # clones' technical-indicator parameters (species defaults + your overrides)";
+     # it is how a change to a clone's algorithm is read back. Its write sibling
+     # update_bot_indicators (destructiveHint: true, no paper argument) stays in no
+     # list (tests/meta/test_pipeline_bot_indicators_tools.py holds both halves).
+     get_bot_indicators]
   contribute:
     [submit_observation, submit_feedback, request_feature, submit_signal]
   trade:
