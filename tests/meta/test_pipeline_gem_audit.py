@@ -334,6 +334,13 @@ def _the_derived_figures_are_held_to_their_definitions():
                     themes=[dict(theme, hot=False)])["breaches"] == ["th"]
     assert breaches(name="themes", altseason={"alt_4w_median": 0.2},
                     themes=[dict(theme, rs1m=0.4)])["breaches"] == ["th"]
+    # 2026-10-03: they made `hot` mean the stage (#144). With a stage on the row it is the
+    # stage that holds the flag -- the four-week rule no longer does, or four correct
+    # themes read as breaches -- and a flag against its own stage is one.
+    staged = dict(theme, stage="hot", theme_4w=0.05, rs1m=-0.0455)  # not ahead of the median alt
+    assert breaches(name="themes", altseason={"alt_4w_median": 0.2}, themes=[staged])["breaches"] == []
+    assert breaches(name="themes", altseason={"alt_4w_median": 0.2},
+                    themes=[dict(staged, stage="falling")])["breaches"] == ["th"]
     chain = {"name": "C", "activity": {"value": 100.0}, "mcap": 500.0, "ps": 5.0, "potential_raw": 4.0}
     bench = {"bench_chains": {"mult": 20.0, "fee_mult": 100.0}}
     assert breaches(name="chains", chains=[chain], **bench)["breaches"] == []

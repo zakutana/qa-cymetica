@@ -756,11 +756,17 @@ def derived_identities(snap: dict, coins: dict | None = None) -> list[dict]:
                 continue
             read = True
             ok = ok and abs((1 + t[theme]) / (1 + t[btc]) - 1 - t[target]) <= 0.0015
-        if alt4 is not None and t.get("theme_4w") is not None and t.get("hot") is not None:
+        if t.get("hot") is not None and t.get("stage") is not None:
+            # Since 2026-10-03 (their statement on #144) `hot` MEANS the stage: the hot flags
+            # and the hot count agree. A theme with a stage is held to that; the older
+            # rule below is only for a snapshot that carries no stage.
+            read = True
+            ok = ok and bool(t["hot"]) == (t["stage"] == "hot")
+        elif alt4 is not None and t.get("theme_4w") is not None and t.get("hot") is not None:
             read = True
             ok = ok and bool(t["hot"]) == (t["theme_4w"] > alt4 and (t.get("rs1m") or 0) > 0)
         return (ok, None) if read else None
-    run("themes", "vs BTC = (1 + theme) / (1 + BTC) - 1; 'hot' = beat BTC and the median alt over four weeks", themes, theme_test)
+    run("themes", "vs BTC = (1 + theme) / (1 + BTC) - 1; 'hot' is the stage (older snapshots: beat BTC and the median alt over four weeks)", themes, theme_test)
 
     chains = [c for c in snap.get("chains") or [] if isinstance(c, dict)]
     bench = snap.get("bench_chains") or {}
