@@ -1102,15 +1102,12 @@ def _h18_stats(experiments: list[dict], sector: str) -> dict | None:
             "pos_pct": 100.0 * sum(1 for v in figures if v > 0) / len(figures)}
 
 
-def _value_at(path: list[list], hours: float, done: bool,
-              cost: float | None = None) -> float | None:
+def _value_at(path: list[list], hours: float, done: bool) -> float | None:
     """What a card would have made if sold `hours` after we went in, after the round-trip fee:
     its line read there, between its two nearest readings. A card sold (or ended) before that
     is what it was sold at; one not yet that old has no figure. The operator, 2026-10-03:
-    every card says "kolik by byl vysledek po 18h", the old ones too. `cost` is the fee taken
-    off: the card round trip by default, 0 for a bot (its line is already what their engine
-    booked)."""
-    cost = CARD_ROUND_TRIP_PCT if cost is None else cost
+    every card says "kolik by byl vysledek po 18h", the old ones too."""
+    cost = CARD_ROUND_TRIP_PCT
     points = [(_moment(t), v) for t, v in path or [] if _moment(t) is not None
               and isinstance(v, (int, float))]
     if len(points) < 2:
@@ -1186,8 +1183,22 @@ def _room_trading(clones: list[dict]):
     return False if any(m is False for m in marks) else None
 
 
+def _decided(report_room: dict, panel: dict) -> dict:
+    """A closed room the lab could not judge ("can't tell: too little data") still has a result,
+    and a result is a verdict: a loss did not work, a gain worked. The operator, 2026-10-03:
+    "karty jsou uzavreny a prodelaly, verdikt je jasny". A room with no result stays unjudged,
+    and one the lab judged keeps its own verdict."""
+    verdict = panel.get("verdict") or {}
+    net = report_room.get("net_pct")
+    if verdict.get("verdict") != "inconclusive" or net is None:
+        return panel
+    return dict(panel, verdict=dict(verdict, verdict="survived" if net > 0 else "refuted",
+                                    return_pct=net, why=""))
+
+
 def _experiment(rid: str, sector: str, report_room: dict, panel: dict,
                 now: datetime) -> dict:
+    panel = _decided(report_room, panel)
     group = _group(report_room, panel, sector)
     path = _path(panel)
     legs = panel.get("legs") or []
@@ -1218,9 +1229,9 @@ def _experiment(rid: str, sector: str, report_room: dict, panel: dict,
         "url": first.get("url"),
         "trading": _room_trading(clones),
         "ran": _ran(clones, now),
-        "at_18h": (_value_at(path, 18, group != "live",
-                             None if sector == "cards" else 0.0)
-                   if sector in ("cards", "bots") else None),
+        # Cards only: a bot is not sold at an hour, it runs until something stops it
+        # (the operator, 2026-10-03: "to se prece tyka jen karet").
+        "at_18h": _value_at(path, 18, group != "live") if sector == "cards" else None,
         "tp": first.get("tp"), "sl": first.get("sl")}
 
 
@@ -1433,7 +1444,7 @@ button { font: inherit; color: inherit; }
 
 .board { list-style: none; margin: 0; padding: 0; }
 .board { --cols: 26px minmax(0, 1fr) 110px 96px 88px 80px 132px 250px 14px; }
-.board.sec-bots { --cols: 26px minmax(0, 1fr) 110px 150px 96px 88px 80px 132px 250px 14px; }
+.board.sec-bots { --cols: 26px minmax(0, 1fr) 110px 150px 88px 80px 132px 250px 14px; }
 .row { display: grid; grid-template-columns: var(--cols);
   align-items: center; gap: 12px; padding: 8px 10px; border-radius: 10px; cursor: pointer;
   min-height: 46px; }
@@ -1846,7 +1857,7 @@ function row(le, rank, open) {
       ? ' <span class="ours">ours</span>' : ""}</span>
     <span class="sp">${le.group === "archive" && !le.verdict ? '<span class="sp-none">—</span>' : spark(le.spark)}</span>
     ${SECTOR === "bots" ? `<span class="rn">${ranCell(le)}</span>` : ""}
-    <span class="h18">${h18Cell(le)}</span>
+    ${SECTOR === "cards" ? `<span class="h18">${h18Cell(le)}</span>` : ""}
     <span class="val ${tone(le.net_pct)}">${pctText(le.net_pct)}</span>
     <span class="usd ${tone(le.usdc)}">${le.usdc == null ? "" : usdText(le.usdc)}</span>
     <span class="bt">${btChip(le.backtest)}</span>
@@ -2046,7 +2057,7 @@ function headRow() {
   return `<li class="head">` +
     cell("rk", null, "#") + cell("nm", "name", "Experiment") + cell("sp", null, "Path") +
     (SECTOR === "bots" ? cell("rn", "ran", "Ran") : "") +
-    cell("h18", "h18", "After 18 h") + cell("val", "net", "Result") + cell("usd", "usd", "Profit") + cell("bt", "bt", "Backtest") +
+    (SECTOR === "cards" ? cell("h18", "h18", "After 18 h") : "") + cell("val", "net", "Result")+ cell("usd", "usd", "Profit") + cell("bt", "bt", "Backtest") +
     cell("st", "state", "Verdict") + '<span class="chev"></span></li>';
 }
 function ordered(list, group) {

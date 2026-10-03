@@ -151,6 +151,10 @@ def test_the_view_is_three_sector_rooms_in_their_order_with_their_names():
     assert stats == {"n": 3, "avg": pytest.approx(2.0 / 3), "pos_pct": pytest.approx(200.0 / 3)}, stats
     assert page._h18_stats([{"sector": "cards", "at_18h": None}], "cards") is None
     assert "h18" in cards
+    # The 18-hour figure is for cards only ("to se prece tyka jen karet"): a bot runs until
+    # something stops it, so no bot row and no bot room carries one.
+    assert view["sectors"][1]["h18"] is None
+    assert all(e["at_18h"] is None for e in view["experiments"] if e["sector"] == "bots")
 
 
 @qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
@@ -194,6 +198,17 @@ def test_each_experiment_lands_in_its_sector_and_its_group():
                            {"verdict": {"verdict": kept}, "status": "stopped"}, "bots") == "done"
     assert page._reason("archive", refuted) == "ended −10.0%", page._reason("archive", refuted)
     assert page._reason("archive", {"invested": True}) == "not Nexus's pick"
+    # 2026-10-03, the operator: "karty jsou uzavreny a prodelaly, verdikt je jasny". A closed
+    # room whose own judgement was "can't tell" (too few readings) still has a result, and the
+    # result is the verdict: a loss did not work, a gain worked; the reason is what it ended at.
+    unsure = {"verdict": {"verdict": "inconclusive", "why": "too few readings"}, "status": "stopped"}
+    lost = page._decided({"net_pct": -0.55}, unsure)
+    assert lost["verdict"]["verdict"] == "refuted" and lost["verdict"]["return_pct"] == -0.55
+    assert page._reason("done", lost).startswith("ended −"), page._reason("done", lost)
+    assert page._decided({"net_pct": 3.0}, unsure)["verdict"]["verdict"] == "survived"
+    assert page._decided({"net_pct": None}, unsure) is unsure, "no result, so still can't tell"
+    assert page._decided({"net_pct": -1.0}, refuted) is refuted, "a judged room keeps its verdict"
+    assert page._group({"archived": False}, page._decided({"net_pct": -4.0}, unsure), "bots") == "archive"
 
 
 @qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
