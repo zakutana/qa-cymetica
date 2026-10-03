@@ -1084,6 +1084,32 @@ def _reason(group: str, panel: dict) -> str | None:
     return _stop_reason(stops) if stops and panel.get("status") == "running" else None
 
 
+CARD_ROUND_TRIP_PCT = 0.4
+"""The live event-card taker fee, 0.2% a fill, as Nexus quoted it (NEX-0114)."""
+
+
+def _value_at(path: list[list], hours: float, done: bool) -> float | None:
+    """What a card would have made if sold `hours` after we went in, after the round-trip fee:
+    its line read there, between its two nearest readings. A card sold (or ended) before that
+    is what it was sold at; one not yet that old has no figure. The operator, 2026-10-03:
+    every card says "kolik by byl vysledek po 18h", the old ones too."""
+    points = [(_moment(t), v) for t, v in path or [] if _moment(t) is not None
+              and isinstance(v, (int, float))]
+    if len(points) < 2:
+        return None
+    points.sort(key=lambda p: p[0])
+    start = points[0][0]
+    target = start + timedelta(hours=hours)
+    if points[-1][0] < target:
+        return points[-1][1] - CARD_ROUND_TRIP_PCT if done else None
+    for (t0, v0), (t1, v1) in zip(points, points[1:]):
+        if t0 <= target <= t1:
+            span = (t1 - t0).total_seconds()
+            value = v0 if span <= 0 else v0 + (v1 - v0) * (target - t0).total_seconds() / span
+            return value - CARD_ROUND_TRIP_PCT
+    return None
+
+
 _RAN_WHY = {"ours": "paused by us"}
 
 
@@ -1174,6 +1200,7 @@ def _experiment(rid: str, sector: str, report_room: dict, panel: dict,
         "url": first.get("url"),
         "trading": _room_trading(clones),
         "ran": _ran(clones, now),
+        "at_18h": (_value_at(path, 18, group != "live") if sector == "cards" else None),
         "tp": first.get("tp"), "sl": first.get("sl")}
 
 
@@ -1796,7 +1823,8 @@ function btChip(lb) {
 function stateChips(le) {
   if (le.group === "done") {
     const v = VERDICT[le.verdict] || ["", STATUS[le.status] || "ended"];
-    return chip(v[0], v[1]) + (le.reason ? chip("", esc(le.reason)) : "");
+    return chip(v[0], v[1]) + (le.reason ? chip("", esc(le.reason)) : "")
+      + (le.at_18h != null ? chip(tone(le.at_18h), "18 h " + pctText(le.at_18h)) : "");
   }
   if (le.group === "archive") {
     // A bot that did not work is archived with its verdict still on it.
@@ -1809,6 +1837,7 @@ function stateChips(le) {
     out.push(chip(le.trading ? "up" : "", le.trading ? "trading" : "idle"));
   }
   if (le.reason) out.push(chip("down", esc(le.reason)));
+  if (le.at_18h != null) out.push(chip(tone(le.at_18h), "18 h " + pctText(le.at_18h)));
   if (STATUS[le.status]) out.push(chip("", STATUS[le.status]));
   if (le.left_days != null) out.push(chip("", leftText(le.left_days)));
   return out.join("");

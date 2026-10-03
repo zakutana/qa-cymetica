@@ -202,6 +202,17 @@ def test_an_experiments_path_is_what_it_is_worth_since_we_went_in():
     card = by_id["STR-0001"]
     assert [p[1] for p in card["path"]] == [0.0, 1.0, 2.0], card["path"]
     assert card["spark"] == card["path"], "short paths are not thinned"
+    # 2026-10-03, the operator: every card, old ones too, says what it would have made if sold
+    # after 18 hours -- after the round-trip fee, between two readings by their line.
+    page = _lab_page()
+    line = [["2026-09-22T02:00:00+00:00", 0.0], ["2026-09-22T10:00:00+00:00", 1.0],
+            ["2026-09-23T02:00:00+00:00", 3.0]]
+    assert page._value_at(line, 18, done=False) == pytest.approx(2.25 - page.CARD_ROUND_TRIP_PCT)
+    assert page._value_at(line[:2], 18, done=False) is None, "not 18 hours old yet"
+    assert page._value_at(line[:2], 18, done=True) == pytest.approx(1.0 - page.CARD_ROUND_TRIP_PCT), (
+        "sold before 18 hours, so its result is what it was sold at")
+    assert page._value_at([], 18, done=True) is None and page._value_at(line[:1], 18, done=False) is None
+    assert card["at_18h"] is None or isinstance(card["at_18h"], float), card["at_18h"]
     assert (card["tp"], card["sl"]) == (8.0, -5.0)
     assert card["backtest"] == {"pct": 26.2, "period": 90, "sharpe": 2.18,
                                 "pass": True}
