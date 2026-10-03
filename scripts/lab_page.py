@@ -1697,6 +1697,14 @@ function whenText(iso) {
 }
 // A bot room: how long it ran, when it started and when it stopped, and why (UTC).
 function ranCell(le) {
+  // A card: what it would have made if sold after 18 hours (after the fee), in a column of
+  // its own -- as a third chip it was cut to "18 h +13..." (the operator, 2026-10-03).
+  if (le.sector === "cards") {
+    return le.at_18h != null
+      ? `<b class="${tone(le.at_18h)}">${pctText(le.at_18h)}</b><small>if sold after 18 h</small>`
+      : (le.group === "live" ? '<small>not 18 h old yet</small>'
+         : le.group === "done" ? '<small>no 18 h figure</small>' : "");
+  }
   const r = le.ran;
   if (!r) return "";
   const word = r.running ? "running " : "ran ";
@@ -1823,8 +1831,7 @@ function btChip(lb) {
 function stateChips(le) {
   if (le.group === "done") {
     const v = VERDICT[le.verdict] || ["", STATUS[le.status] || "ended"];
-    return chip(v[0], v[1]) + (le.reason ? chip("", esc(le.reason)) : "")
-      + (le.at_18h != null ? chip(tone(le.at_18h), "18 h " + pctText(le.at_18h)) : "");
+    return chip(v[0], v[1]) + (le.reason ? chip("", esc(le.reason)) : "");
   }
   if (le.group === "archive") {
     // A bot that did not work is archived with its verdict still on it.
@@ -1837,7 +1844,6 @@ function stateChips(le) {
     out.push(chip(le.trading ? "up" : "", le.trading ? "trading" : "idle"));
   }
   if (le.reason) out.push(chip("down", esc(le.reason)));
-  if (le.at_18h != null) out.push(chip(tone(le.at_18h), "18 h " + pctText(le.at_18h)));
   if (STATUS[le.status]) out.push(chip("", STATUS[le.status]));
   if (le.left_days != null) out.push(chip("", leftText(le.left_days)));
   return out.join("");
