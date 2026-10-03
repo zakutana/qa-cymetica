@@ -2087,10 +2087,11 @@
     "tests/meta/test_pipeline_a2a.py::test_the_inbox_keeps_what_tells_a_human_from_a_robot": {
       "fingerprints": [
         "5676c1c26ef39a34c2e8cd948ba92f16698a5b51cf1e5a8abfdf2ee285acfcab",
-        "962c7b43de24b5d2921c4fe4f49d93e85e621d58a45e465e419390e1301f6446"
+        "962c7b43de24b5d2921c4fe4f49d93e85e621d58a45e465e419390e1301f6446",
+        "eef8302aad85d91ef970e303b2985409a9ae9aac489c34e91e0733fac111e9c5"
       ],
-      "at": "2026-10-02T21:23:33+00:00",
-      "run_id": "run-20261002T174919Z-7bf09ffc",
+      "at": "2026-10-03T22:45:34+00:00",
+      "run_id": "deep-pass-2026-10-04",
       "gap_claimed": true
     },
     "tests/meta/test_pipeline_a2a.py::test_a_send_without_confirm_leaves_nothing_behind": {
@@ -5497,10 +5498,11 @@
       "fingerprints": [
         "d87c48461ef6c5a8f0ad9b12f491349d4cea22caae0fb41ded7281d7402ea6f2",
         "63460992f7e8e38e4ec435f1597b8db26527b21838f5c691f3d1008067a64fe5",
-        "84f710a6aec1c287861f728c813bacd6a4379e266f83ed58865dd664d4e93286"
+        "84f710a6aec1c287861f728c813bacd6a4379e266f83ed58865dd664d4e93286",
+        "539a96ce9064602f8e5803a9f66134d3367a480d529f73ff8e32a0bc9368f9ee"
       ],
-      "at": "2026-10-02T21:23:33+00:00",
-      "run_id": "run-20261002T174919Z-7bf09ffc",
+      "at": "2026-10-03T22:45:34+00:00",
+      "run_id": "deep-pass-2026-10-04",
       "gap_claimed": true
     },
     "tests/meta/test_pipeline_sampler.py::test_a_card_nexus_proposed_is_followed_and_described_only_when_it_changes": {
@@ -7010,10 +7012,11 @@
         "4b8ed46c16fec21ef94a60aea58a0f22d04c10d8c838d0de668ce0e0a520be76",
         "eb965edf9b828e4aae79162721f366ba2660e492e53a98f0b1011dffb31f626a",
         "84bfaba4ef2bcc17c6a7c4c4c663e6008ccc6e3e5b948d12c0aec6f32d7fe98a",
-        "1bf30ed789dbb7824733cf494e1b464cc015b2860060d4a3e9bedaac327ec00c"
+        "1bf30ed789dbb7824733cf494e1b464cc015b2860060d4a3e9bedaac327ec00c",
+        "7ee475c955e958d00a0c5263d0d96c1fd29b18f0b24343287835c66deb70bf3b"
       ],
-      "at": "2026-10-02T21:23:33+00:00",
-      "run_id": "run-20261002T174919Z-7bf09ffc",
+      "at": "2026-10-03T22:45:34+00:00",
+      "run_id": "deep-pass-2026-10-04",
       "gap_claimed": true
     },
     "tests/meta/test_pipeline_lab.py::test_the_nights_own_doors_are_the_real_ones": {
@@ -7450,11 +7453,12 @@
     "tests/meta/test_pipeline_night_spend.py::test_a_room_that_cannot_open_does_not_discard_what_was_already_placed": {
       "fingerprints": [
         "bb9ad092cfb220c5a767c7319d4f043ed01fa19f5c112ec76d77ed76f9f68fe1",
-        "d303afb5e275c9439fd472f4d923a6d1d792c4ca20d8c6145e55c859707a48e9"
+        "d303afb5e275c9439fd472f4d923a6d1d792c4ca20d8c6145e55c859707a48e9",
+        "923c0f1fb88e517c443db2d32c4e319ef4898bd677478b5cac1b034ee5bfa2e7"
       ],
-      "at": "2026-09-22T15:30:00+00:00",
-      "run_id": "run-20260922T074028Z-a051f15b",
-      "gap_claimed": false
+      "at": "2026-10-03T22:45:34+00:00",
+      "run_id": "deep-pass-2026-10-04",
+      "gap_claimed": true
     },
     "tests/meta/test_pipeline_night_spend.py::test_nothing_is_launched_while_a_deep_pass_is_running": {
       "fingerprints": [
@@ -9797,10 +9801,11 @@
     },
     "tests/meta/test_pipeline_night_spend.py::test_a_card_that_cannot_trade_does_not_park_the_cards_that_can_for_ever": {
       "fingerprints": [
-        "0756e9cbecf23ca03da53b451693d130d21f804f8fb27b590eeb6f90df0b8bf8"
+        "0756e9cbecf23ca03da53b451693d130d21f804f8fb27b590eeb6f90df0b8bf8",
+        "43f8df969784c4c26aa6711daf5a8d20f4854ed739ffea92a8a187b26c691794"
       ],
-      "at": "2026-09-22T15:30:00+00:00",
-      "run_id": "run-20260922T074028Z-a051f15b",
+      "at": "2026-10-03T22:45:34+00:00",
+      "run_id": "deep-pass-2026-10-04",
       "gap_claimed": false
     },
     "tests/meta/test_pipeline_night_spend.py::test_an_order_their_side_did_not_accept_is_not_counted_as_placed": {
@@ -10359,10 +10364,11 @@
         "715a3545a826fbec372f73105988e753686d452f17ccb986219c3e2784c63e1c",
         "89b548abd1d0c342128959bd8d08cbae31ba848e798105f6ab95c8bad2a0fc8c",
         "9030d9ecac4cca06a37b48b21e5ac308d4458cc488bdd49981210b8e38c508be",
-        "42755de9151e72fb18b206b83547547efe77a85e0346ab284eca081781618553"
+        "42755de9151e72fb18b206b83547547efe77a85e0346ab284eca081781618553",
+        "36e87870e45162344eeb5daddac36dedb566429f43d566127087106657c4c77b"
       ],
-      "at": "2026-10-02T21:23:33+00:00",
-      "run_id": "run-20261002T174919Z-7bf09ffc",
+      "at": "2026-10-03T22:45:34+00:00",
+      "run_id": "deep-pass-2026-10-04",
       "gap_claimed": false
     },
     "tests/meta/test_pipeline_lab_loop.py::test_a_bot_he_names_is_cloned_funded_and_started_on_paper_in_its_own_room": {
@@ -10443,11 +10449,12 @@
     "tests/meta/test_pipeline_lab_loop.py::test_a_fund_is_marked_not_bought_and_judged_on_its_own_series": {
       "fingerprints": [
         "d7fd364c0aa23a9b060a9a8b9f5fc1bd404baab1d8495c726a2d3e6fcd01b05e",
-        "7ff85c729049fa6cb6ada2886c8757541219d1dcf75d6d17f6451f6e1524d4a3"
+        "7ff85c729049fa6cb6ada2886c8757541219d1dcf75d6d17f6451f6e1524d4a3",
+        "a29250abbf08439b510ba2f24d773af1353487c334a1d8eb7813ee779a871c68"
       ],
-      "at": "2026-09-30T23:10:00+00:00",
-      "run_id": "run-20260930T200531Z-74cd7e27",
-      "gap_claimed": false
+      "at": "2026-10-03T22:45:34+00:00",
+      "run_id": "deep-pass-2026-10-04",
+      "gap_claimed": true
     },
     "tests/meta/test_pipeline_lab_loop.py::test_an_arena_leg_is_a_gap_until_something_reads_its_series": {
       "fingerprints": [
@@ -10461,10 +10468,11 @@
       "fingerprints": [
         "cfd855c12d67134cffa6867b5233a22bd866daf09ad203611674608d758f5cc3",
         "f7d77882f5a1db63d90e9eca02a9f5ea15a2d4c99daee659ca2e0b5c2bfe870d",
-        "9ea138263a6b90c2f4249582a6d1ce2adee17b32831ed3e641dd691fa2e2e632"
+        "9ea138263a6b90c2f4249582a6d1ce2adee17b32831ed3e641dd691fa2e2e632",
+        "f81262331e8398520834a32906427178adad978f9d589c4c8391acfc61b0aa69"
       ],
-      "at": "2026-09-24T21:05:00+00:00",
-      "run_id": "run-20260924T191628Z-b62689a5",
+      "at": "2026-10-03T22:45:34+00:00",
+      "run_id": "deep-pass-2026-10-04",
       "gap_claimed": false
     },
     "tests/meta/test_pipeline_lab_loop.py::test_money_moved_into_a_clone_counts_as_deployed": {
@@ -10494,11 +10502,12 @@
     },
     "tests/meta/test_pipeline_lab_loop.py::test_the_question_offers_a_card_a_bot_or_a_fund_and_names_all_we_hold": {
       "fingerprints": [
-        "bcd72612186267e6068d8bb6b7e27f2fee9aeba6e79194944bc2510403c105c2"
+        "bcd72612186267e6068d8bb6b7e27f2fee9aeba6e79194944bc2510403c105c2",
+        "d675bfdadfac4d91212c2990fb3af8748c92a4228fc1bac500d74f5425d4c961"
       ],
-      "at": "2026-09-22T21:00:49+00:00",
-      "run_id": "run-20260922T190547Z-47962a20",
-      "gap_claimed": false
+      "at": "2026-10-03T22:45:34+00:00",
+      "run_id": "deep-pass-2026-10-04",
+      "gap_claimed": true
     },
     "tests/meta/test_pipeline_rooms.py::test_a_stopped_room_says_why_and_steps_out_of_the_way": {
       "fingerprints": [
@@ -10663,11 +10672,12 @@
     },
     "tests/meta/test_pipeline_admissibility.py::test_an_older_run_is_not_folded_over_a_newer_one_without_replay": {
       "fingerprints": [
-        "b45647a343446098eafdfe39d7f092cdb95120d6e234ba8a732d2d19620112ac"
+        "b45647a343446098eafdfe39d7f092cdb95120d6e234ba8a732d2d19620112ac",
+        "298ae4b6003e20136b3a4a550cc5a9fa4fb382f3c9b916cf62197088ce4a0984"
       ],
-      "at": "2026-09-24T21:05:00+00:00",
-      "run_id": "run-20260924T191628Z-b62689a5",
-      "gap_claimed": false
+      "at": "2026-10-03T22:45:34+00:00",
+      "run_id": "deep-pass-2026-10-04",
+      "gap_claimed": true
     },
     "tests/meta/test_pipeline_book.py::test_an_order_takes_its_id_when_it_is_written_not_before": {
       "fingerprints": [
@@ -10722,11 +10732,12 @@
     "tests/meta/test_pipeline_clone.py::test_a_started_clone_starts_again_only_as_a_new_variant": {
       "fingerprints": [
         "652034664b8d53e4ae8c0d91c4665365e9cdd19b5bfed47b0c32057a267fc87a",
-        "29c1199918ffce1d6421ffdb50db55b3abfddd484b4e759a5e7cea2149936225"
+        "29c1199918ffce1d6421ffdb50db55b3abfddd484b4e759a5e7cea2149936225",
+        "c4a91b73a498d838fb8990feba41aeec831eaaa9a43992778d46557fcba5b049"
       ],
-      "at": "2026-09-25T20:49:03+00:00",
-      "run_id": "run-20260925T195840Z-d14ceca2",
-      "gap_claimed": false
+      "at": "2026-10-03T22:45:34+00:00",
+      "run_id": "deep-pass-2026-10-04",
+      "gap_claimed": true
     },
     "tests/meta/test_pipeline_clone.py::test_the_transport_holds_a_settings_patch_to_its_declared_fields": {
       "fingerprints": [
@@ -11105,27 +11116,30 @@
     },
     "tests/meta/test_pipeline_lab_loop.py::test_money_in_a_clone_is_out_and_a_paused_clone_holds_it_parked": {
       "fingerprints": [
-        "2d0822a5fdc57b66f8839b8bc5f481c0600506f3eb569d68bda23b1b6726f406"
+        "2d0822a5fdc57b66f8839b8bc5f481c0600506f3eb569d68bda23b1b6726f406",
+        "95525a827973b39ecd88d9866de0831063fba189ed14d3e37b9e9c4026221026"
       ],
-      "at": "2026-09-24T21:05:00+00:00",
-      "run_id": "run-20260924T191628Z-b62689a5",
+      "at": "2026-10-03T22:45:34+00:00",
+      "run_id": "deep-pass-2026-10-04",
       "gap_claimed": false
     },
     "tests/meta/test_pipeline_lab_loop.py::test_every_bot_stop_is_ours_their_guard_or_unexplained": {
       "fingerprints": [
-        "614d389fb7868a2a9658828cc2bf2ce517eefa46fefe584016bcc928725f3996"
+        "614d389fb7868a2a9658828cc2bf2ce517eefa46fefe584016bcc928725f3996",
+        "56906e2aecfd5f4e5d8f50f010d3d3f9d1aabb28eb3e559f0276e1b7b1fea985"
       ],
-      "at": "2026-09-24T21:05:00+00:00",
-      "run_id": "run-20260924T191628Z-b62689a5",
-      "gap_claimed": false
+      "at": "2026-10-03T22:45:34+00:00",
+      "run_id": "deep-pass-2026-10-04",
+      "gap_claimed": true
     },
     "tests/meta/test_pipeline_lab_loop.py::test_a_tick_starts_the_next_setting_of_a_judged_bot_on_its_one_clone": {
       "fingerprints": [
         "df2ce1414dc0aa7c2380b19b6639a16ab1a15b7b0f2960b073f7d8e351afcf46",
-        "5d78038c3ac0bd66cbc28b7d253338746b9bd5effd941aee9e7a678924882d89"
+        "5d78038c3ac0bd66cbc28b7d253338746b9bd5effd941aee9e7a678924882d89",
+        "4cfb0ac5b21ae602335247a99b5859991d71fa7a2e5602b05eea628293fdc55e"
       ],
-      "at": "2026-09-25T20:49:03+00:00",
-      "run_id": "run-20260925T195840Z-d14ceca2",
+      "at": "2026-10-03T22:45:34+00:00",
+      "run_id": "deep-pass-2026-10-04",
       "gap_claimed": true
     },
     "tests/meta/test_pipeline_lab_loop.py::test_a_variant_that_cannot_run_starts_nothing_and_says_why": {
@@ -11250,19 +11264,21 @@
         "91c7c500edc367ae6d7180b305ebcf21319051978690e82a2a0f293a3931bb5b",
         "d420751dfa01f545c209ba818b326a2b99509fb157e2afe86305a95a3c4436e4",
         "92d3c3a885e1dd9c4639d760d97bb3687da4692508117681ef0ccbfbd69791cb",
-        "9da75d2a85c896a6141478f2fd352a7c04b13bfec60e080fa1e1f3a6c97dbcd5"
+        "9da75d2a85c896a6141478f2fd352a7c04b13bfec60e080fa1e1f3a6c97dbcd5",
+        "1334260958f0970ff787f593b9c1024747a2de1a6a89a5b758732b395e1982f1"
       ],
-      "at": "2026-09-30T23:10:00+00:00",
-      "run_id": "run-20260930T200531Z-74cd7e27",
+      "at": "2026-10-03T22:45:34+00:00",
+      "run_id": "deep-pass-2026-10-04",
       "gap_claimed": false
     },
     "tests/meta/test_pipeline_lab_page.py::test_an_experiments_path_is_what_it_is_worth_since_we_went_in": {
       "fingerprints": [
-        "eea0b0aac85845a3fd176981028c0cc5e0aaf816954eb4b765a1f8f3324d59e2"
+        "eea0b0aac85845a3fd176981028c0cc5e0aaf816954eb4b765a1f8f3324d59e2",
+        "3079b14b722e7e57137e4f11e40e1d6952e18b85fea332cd6bbd189c2ab47312"
       ],
-      "at": "2026-09-24T21:05:00+00:00",
-      "run_id": "run-20260924T191628Z-b62689a5",
-      "gap_claimed": false
+      "at": "2026-10-03T22:45:34+00:00",
+      "run_id": "deep-pass-2026-10-04",
+      "gap_claimed": true
     },
     "tests/meta/test_pipeline_lab_page.py::test_a_long_path_is_thinned_but_keeps_both_ends": {
       "fingerprints": [
@@ -11285,37 +11301,41 @@
       "fingerprints": [
         "64c99d777eaf94aac14a7136498b1302e44b11cdefe21caf02605b0a0dbdd84d",
         "b5cfd594124792dea9c93a7764eb953a947786dac9d116701921c5fefeb85dcc",
-        "892b0184d9b863717cbc6b90e7659ac5cea354e1645f0187b94320b03bfd43fe"
+        "892b0184d9b863717cbc6b90e7659ac5cea354e1645f0187b94320b03bfd43fe",
+        "2075018c538674480b590a6e0ecb360f776e61fcdc580c589514fc279dbe9862"
       ],
-      "at": "2026-10-02T21:23:33+00:00",
-      "run_id": "run-20261002T174919Z-7bf09ffc",
-      "gap_claimed": true
+      "at": "2026-10-03T22:45:34+00:00",
+      "run_id": "deep-pass-2026-10-04",
+      "gap_claimed": false
     },
     "tests/meta/test_pipeline_lab_page.py::test_the_page_reads_every_field_the_view_writes_and_no_other": {
       "fingerprints": [
-        "5f3a0e84299010451279510b188832dec0765e1f5bedbe0c5bb0689b5198c8ef"
+        "5f3a0e84299010451279510b188832dec0765e1f5bedbe0c5bb0689b5198c8ef",
+        "135b002dc42059941e4844dfb9151e6563f396031cbc4a7dd4f716f609fcd36d"
       ],
-      "at": "2026-09-24T21:05:00+00:00",
-      "run_id": "run-20260924T191628Z-b62689a5",
+      "at": "2026-10-03T22:45:34+00:00",
+      "run_id": "deep-pass-2026-10-04",
       "gap_claimed": false
     },
     "tests/meta/test_pipeline_lab_page.py::test_the_page_opens_on_four_sectors_and_a_ranking_not_on_rooms_per_card": {
       "fingerprints": [
         "ab8e6a318095e0116c74f96f9cb8b6393eb61b7dd5674e83c2fcd06514a48034",
-        "e492c2b3cbd82bca57602974e631da508894d02c94493c9290599a828514183a"
+        "e492c2b3cbd82bca57602974e631da508894d02c94493c9290599a828514183a",
+        "8511fa68d7523d93dda5eb4705cedd790e096da9f264a15069a7331d59eade6e"
       ],
-      "at": "2026-09-25T20:49:03+00:00",
-      "run_id": "run-20260925T195840Z-d14ceca2",
+      "at": "2026-10-03T22:45:34+00:00",
+      "run_id": "deep-pass-2026-10-04",
       "gap_claimed": false
     },
     "tests/meta/test_pipeline_lab_page.py::test_the_archive_and_the_judged_are_one_click_away_with_their_reason": {
       "fingerprints": [
         "5592ae16e7d24e3a263dd9a16de5a858cc29703f5a5525869e8dc679a89148a3",
-        "fe91acaf33c501f990c8ed4913f8f1b8a01711e262428307ccbe70a233b800ef"
+        "fe91acaf33c501f990c8ed4913f8f1b8a01711e262428307ccbe70a233b800ef",
+        "070e106d00faade08ddb470454d3d183d1571fd1edd711300b959a7a7ba03f3d"
       ],
-      "at": "2026-09-25T20:49:03+00:00",
-      "run_id": "run-20260925T195840Z-d14ceca2",
-      "gap_claimed": false
+      "at": "2026-10-03T22:45:34+00:00",
+      "run_id": "deep-pass-2026-10-04",
+      "gap_claimed": true
     },
     "tests/meta/test_pipeline_lab_page.py::test_an_experiment_opens_into_a_chart_and_four_numbers": {
       "fingerprints": [
@@ -11339,10 +11359,11 @@
         "636d6f9307aaf264de1e018a779a52bd3ad591314472ca041e3ddaed1dc6887e",
         "94215918adc8d43767b099c8e9dff7dde37d69c62f2026cd067455cce985eba8",
         "1be9e39d459e57b567ac4038c5281f5620dea0505bc3e9ec2eec5036f65f7d8c",
-        "60d8c5326abe39014da0c005ea9c873747ef2b252357b6c39816f1b5b4b26e3c"
+        "60d8c5326abe39014da0c005ea9c873747ef2b252357b6c39816f1b5b4b26e3c",
+        "05a2358ff8a46a24450d97d802c9542966976ffeb7dc75015b58c87f3ba2ea57"
       ],
-      "at": "2026-09-30T23:10:00+00:00",
-      "run_id": "run-20260930T200531Z-74cd7e27",
+      "at": "2026-10-03T22:45:34+00:00",
+      "run_id": "deep-pass-2026-10-04",
       "gap_claimed": false
     },
     "tests/meta/test_pipeline_lab_page.py::test_the_chat_is_behind_a_button_and_nexus_text_stays_text": {
@@ -11365,19 +11386,21 @@
     "tests/meta/test_pipeline_lab_page.py::test_the_memecoin_room_keeps_the_operators_own_decisions": {
       "fingerprints": [
         "ffa7caa2cbeb1b616e72d43ddd8402559719901f1ecab6138f7c3b1ffd8d5237",
-        "349a273f9af5d5b7da65430240559ace19dcf2b0b6e67153d97e913ed44a0fd1"
+        "349a273f9af5d5b7da65430240559ace19dcf2b0b6e67153d97e913ed44a0fd1",
+        "1ad61aedf3dd63d1163ba1812fd4887f4325878d4c2a28f35c12e5c9a5726b0e"
       ],
-      "at": "2026-09-25T20:49:03+00:00",
-      "run_id": "run-20260925T195840Z-d14ceca2",
-      "gap_claimed": false
+      "at": "2026-10-03T22:45:34+00:00",
+      "run_id": "deep-pass-2026-10-04",
+      "gap_claimed": true
     },
     "tests/meta/test_pipeline_lab_page.py::test_a_memecoin_room_with_nothing_measured_yet_says_so": {
       "fingerprints": [
         "4cd80983ce6d8d3745a93a6e8a594adfa4e31937d9365d09c990e6f07d4137f4",
-        "47e181cba6bea78570dbce187f546be460389fedc9aeb1b0f8739fa25adcf565"
+        "47e181cba6bea78570dbce187f546be460389fedc9aeb1b0f8739fa25adcf565",
+        "79a35afe62b42f056f1f4210ba3147f105d52dd80a58a08f8a9b97b95c3cd075"
       ],
-      "at": "2026-09-25T20:49:03+00:00",
-      "run_id": "run-20260925T195840Z-d14ceca2",
+      "at": "2026-10-03T22:45:34+00:00",
+      "run_id": "deep-pass-2026-10-04",
       "gap_claimed": false
     },
     "tests/meta/test_pipeline_lab_report.py::test_each_product_says_what_it_earned_after_costs": {
@@ -11443,11 +11466,12 @@
     },
     "tests/meta/test_pipeline_lab_report.py::test_every_figure_the_report_writes_reaches_the_lab_page": {
       "fingerprints": [
-        "e09f951bd551c06b2515a9631e36aaef5b07651cc961dbcfd365ea2f244b0e5d"
+        "e09f951bd551c06b2515a9631e36aaef5b07651cc961dbcfd365ea2f244b0e5d",
+        "7b03115b4f12a84a26d22a9bd6c14969ad400a4cc5c48d2c16cb862e8de840a7"
       ],
-      "at": "2026-09-24T21:05:00+00:00",
-      "run_id": "run-20260924T191628Z-b62689a5",
-      "gap_claimed": false
+      "at": "2026-10-03T22:45:34+00:00",
+      "run_id": "deep-pass-2026-10-04",
+      "gap_claimed": true
     },
     "tests/meta/test_pipeline_lab_report.py::test_lab_py_report_writes_state_lab_report_json": {
       "fingerprints": [
@@ -11484,11 +11508,12 @@
     "tests/meta/test_pipeline_morning.py::test_overnight_names_what_moved_since_the_last_report": {
       "fingerprints": [
         "69e87311ee198bdcfaea5c19c342d127e61163c8b42bb0c3a514fe917248d4e1",
-        "ef637a147e32ab1557fd38f8cb5dca3c6b6421b41e1aabed1c3c429494c87b59"
+        "ef637a147e32ab1557fd38f8cb5dca3c6b6421b41e1aabed1c3c429494c87b59",
+        "665fac08f54567df73e7873a32557fc3b731fafbd6f2a34c0ca3a116084cb81e"
       ],
-      "at": "2026-10-02T21:23:33+00:00",
-      "run_id": "run-20261002T174919Z-7bf09ffc",
-      "gap_claimed": true
+      "at": "2026-10-03T22:45:34+00:00",
+      "run_id": "deep-pass-2026-10-04",
+      "gap_claimed": false
     },
     "tests/meta/test_pipeline_morning.py::test_the_report_carries_the_feedback_acted_on_and_a_ready_telegram_block": {
       "fingerprints": [
@@ -11503,11 +11528,12 @@
         "115814f3515ce1a18972d956aa08ebe2f3d3d1d4d651e5ed037e488d5ab453c1",
         "97b8d27351b073b193e4006ee46c2ced612db2c7c2c18d2d63a2e6558eae6198",
         "ed6b7e300537ef1e56cdfd779caba8dc7d48d8e90eb59d922c54a8e941dc7be2",
-        "a903416dec3899335070ac11ee39cf0ba96629b7078a51b518efb391a9e7eb6b"
+        "a903416dec3899335070ac11ee39cf0ba96629b7078a51b518efb391a9e7eb6b",
+        "832480f6c1cce724433018ebd333dc3f584679411c6a93206d226551214b9c1d"
       ],
-      "at": "2026-10-02T21:23:33+00:00",
-      "run_id": "run-20261002T174919Z-7bf09ffc",
-      "gap_claimed": true
+      "at": "2026-10-03T22:45:34+00:00",
+      "run_id": "deep-pass-2026-10-04",
+      "gap_claimed": false
     },
     "tests/meta/test_pipeline_morning.py::test_lab_py_morning_builds_the_page_and_published_records_the_day": {
       "fingerprints": [
@@ -11527,115 +11553,129 @@
     },
     "tests/meta/test_pipeline_nexus_picks.py::test_his_take_profit_and_stop_are_read_for_each_pick[NEX-0045]": {
       "fingerprints": [
-        "bf0e8d449b8b4f9678c74fe79e1a79d1b99509e22ebeac16edd6cc106f590fe5"
+        "bf0e8d449b8b4f9678c74fe79e1a79d1b99509e22ebeac16edd6cc106f590fe5",
+        "395fe5fcb7b984cf57b73698b1bb70cbe5578f11654a7a8f652c344a480da7ff"
       ],
-      "at": "2026-10-02T21:23:33+00:00",
-      "run_id": "run-20261002T174919Z-7bf09ffc",
-      "gap_claimed": true
+      "at": "2026-10-03T22:45:34+00:00",
+      "run_id": "deep-pass-2026-10-04",
+      "gap_claimed": false
     },
     "tests/meta/test_pipeline_nexus_picks.py::test_his_take_profit_and_stop_are_read_for_each_pick[NEX-0059]": {
       "fingerprints": [
-        "bf0e8d449b8b4f9678c74fe79e1a79d1b99509e22ebeac16edd6cc106f590fe5"
+        "bf0e8d449b8b4f9678c74fe79e1a79d1b99509e22ebeac16edd6cc106f590fe5",
+        "395fe5fcb7b984cf57b73698b1bb70cbe5578f11654a7a8f652c344a480da7ff"
       ],
-      "at": "2026-10-02T21:23:33+00:00",
-      "run_id": "run-20261002T174919Z-7bf09ffc",
-      "gap_claimed": true
+      "at": "2026-10-03T22:45:34+00:00",
+      "run_id": "deep-pass-2026-10-04",
+      "gap_claimed": false
     },
     "tests/meta/test_pipeline_nexus_picks.py::test_his_take_profit_and_stop_are_read_for_each_pick[NEX-0060]": {
       "fingerprints": [
-        "bf0e8d449b8b4f9678c74fe79e1a79d1b99509e22ebeac16edd6cc106f590fe5"
+        "bf0e8d449b8b4f9678c74fe79e1a79d1b99509e22ebeac16edd6cc106f590fe5",
+        "395fe5fcb7b984cf57b73698b1bb70cbe5578f11654a7a8f652c344a480da7ff"
       ],
-      "at": "2026-10-02T21:23:33+00:00",
-      "run_id": "run-20261002T174919Z-7bf09ffc",
-      "gap_claimed": true
+      "at": "2026-10-03T22:45:34+00:00",
+      "run_id": "deep-pass-2026-10-04",
+      "gap_claimed": false
     },
     "tests/meta/test_pipeline_nexus_picks.py::test_his_take_profit_and_stop_are_read_for_each_pick[NEX-0063]": {
       "fingerprints": [
-        "bf0e8d449b8b4f9678c74fe79e1a79d1b99509e22ebeac16edd6cc106f590fe5"
+        "bf0e8d449b8b4f9678c74fe79e1a79d1b99509e22ebeac16edd6cc106f590fe5",
+        "395fe5fcb7b984cf57b73698b1bb70cbe5578f11654a7a8f652c344a480da7ff"
       ],
-      "at": "2026-10-02T21:23:33+00:00",
-      "run_id": "run-20261002T174919Z-7bf09ffc",
-      "gap_claimed": true
+      "at": "2026-10-03T22:45:34+00:00",
+      "run_id": "deep-pass-2026-10-04",
+      "gap_claimed": false
     },
     "tests/meta/test_pipeline_nexus_picks.py::test_his_take_profit_and_stop_are_read_for_each_pick[NEX-0064]": {
       "fingerprints": [
-        "bf0e8d449b8b4f9678c74fe79e1a79d1b99509e22ebeac16edd6cc106f590fe5"
+        "bf0e8d449b8b4f9678c74fe79e1a79d1b99509e22ebeac16edd6cc106f590fe5",
+        "395fe5fcb7b984cf57b73698b1bb70cbe5578f11654a7a8f652c344a480da7ff"
       ],
-      "at": "2026-10-02T21:23:33+00:00",
-      "run_id": "run-20261002T174919Z-7bf09ffc",
-      "gap_claimed": true
+      "at": "2026-10-03T22:45:34+00:00",
+      "run_id": "deep-pass-2026-10-04",
+      "gap_claimed": false
     },
     "tests/meta/test_pipeline_nexus_picks.py::test_his_take_profit_and_stop_are_read_for_each_pick[NEX-0065]": {
       "fingerprints": [
-        "bf0e8d449b8b4f9678c74fe79e1a79d1b99509e22ebeac16edd6cc106f590fe5"
+        "bf0e8d449b8b4f9678c74fe79e1a79d1b99509e22ebeac16edd6cc106f590fe5",
+        "395fe5fcb7b984cf57b73698b1bb70cbe5578f11654a7a8f652c344a480da7ff"
       ],
-      "at": "2026-10-02T21:23:33+00:00",
-      "run_id": "run-20261002T174919Z-7bf09ffc",
-      "gap_claimed": true
+      "at": "2026-10-03T22:45:34+00:00",
+      "run_id": "deep-pass-2026-10-04",
+      "gap_claimed": false
     },
     "tests/meta/test_pipeline_nexus_picks.py::test_his_take_profit_and_stop_are_read_for_each_pick[NEX-0066]": {
       "fingerprints": [
-        "bf0e8d449b8b4f9678c74fe79e1a79d1b99509e22ebeac16edd6cc106f590fe5"
+        "bf0e8d449b8b4f9678c74fe79e1a79d1b99509e22ebeac16edd6cc106f590fe5",
+        "395fe5fcb7b984cf57b73698b1bb70cbe5578f11654a7a8f652c344a480da7ff"
       ],
-      "at": "2026-10-02T21:23:33+00:00",
-      "run_id": "run-20261002T174919Z-7bf09ffc",
-      "gap_claimed": true
+      "at": "2026-10-03T22:45:34+00:00",
+      "run_id": "deep-pass-2026-10-04",
+      "gap_claimed": false
     },
     "tests/meta/test_pipeline_nexus_picks.py::test_his_take_profit_and_stop_are_read_for_each_pick[NEX-0067]": {
       "fingerprints": [
-        "bf0e8d449b8b4f9678c74fe79e1a79d1b99509e22ebeac16edd6cc106f590fe5"
+        "bf0e8d449b8b4f9678c74fe79e1a79d1b99509e22ebeac16edd6cc106f590fe5",
+        "395fe5fcb7b984cf57b73698b1bb70cbe5578f11654a7a8f652c344a480da7ff"
       ],
-      "at": "2026-10-02T21:23:33+00:00",
-      "run_id": "run-20261002T174919Z-7bf09ffc",
-      "gap_claimed": true
+      "at": "2026-10-03T22:45:34+00:00",
+      "run_id": "deep-pass-2026-10-04",
+      "gap_claimed": false
     },
     "tests/meta/test_pipeline_nexus_picks.py::test_his_take_profit_and_stop_are_read_for_each_pick[NEX-0068]": {
       "fingerprints": [
-        "bf0e8d449b8b4f9678c74fe79e1a79d1b99509e22ebeac16edd6cc106f590fe5"
+        "bf0e8d449b8b4f9678c74fe79e1a79d1b99509e22ebeac16edd6cc106f590fe5",
+        "395fe5fcb7b984cf57b73698b1bb70cbe5578f11654a7a8f652c344a480da7ff"
       ],
-      "at": "2026-10-02T21:23:33+00:00",
-      "run_id": "run-20261002T174919Z-7bf09ffc",
-      "gap_claimed": true
+      "at": "2026-10-03T22:45:34+00:00",
+      "run_id": "deep-pass-2026-10-04",
+      "gap_claimed": false
     },
     "tests/meta/test_pipeline_nexus_picks.py::test_his_take_profit_and_stop_are_read_for_each_pick[NEX-0069]": {
       "fingerprints": [
-        "bf0e8d449b8b4f9678c74fe79e1a79d1b99509e22ebeac16edd6cc106f590fe5"
+        "bf0e8d449b8b4f9678c74fe79e1a79d1b99509e22ebeac16edd6cc106f590fe5",
+        "395fe5fcb7b984cf57b73698b1bb70cbe5578f11654a7a8f652c344a480da7ff"
       ],
-      "at": "2026-10-02T21:23:33+00:00",
-      "run_id": "run-20261002T174919Z-7bf09ffc",
-      "gap_claimed": true
+      "at": "2026-10-03T22:45:34+00:00",
+      "run_id": "deep-pass-2026-10-04",
+      "gap_claimed": false
     },
     "tests/meta/test_pipeline_nexus_picks.py::test_his_take_profit_and_stop_are_read_for_each_pick[NEX-0070]": {
       "fingerprints": [
-        "bf0e8d449b8b4f9678c74fe79e1a79d1b99509e22ebeac16edd6cc106f590fe5"
+        "bf0e8d449b8b4f9678c74fe79e1a79d1b99509e22ebeac16edd6cc106f590fe5",
+        "395fe5fcb7b984cf57b73698b1bb70cbe5578f11654a7a8f652c344a480da7ff"
       ],
-      "at": "2026-10-02T21:23:33+00:00",
-      "run_id": "run-20261002T174919Z-7bf09ffc",
-      "gap_claimed": true
+      "at": "2026-10-03T22:45:34+00:00",
+      "run_id": "deep-pass-2026-10-04",
+      "gap_claimed": false
     },
     "tests/meta/test_pipeline_nexus_picks.py::test_his_take_profit_and_stop_are_read_for_each_pick[NEX-0079]": {
       "fingerprints": [
-        "bf0e8d449b8b4f9678c74fe79e1a79d1b99509e22ebeac16edd6cc106f590fe5"
+        "bf0e8d449b8b4f9678c74fe79e1a79d1b99509e22ebeac16edd6cc106f590fe5",
+        "395fe5fcb7b984cf57b73698b1bb70cbe5578f11654a7a8f652c344a480da7ff"
       ],
-      "at": "2026-10-02T21:23:33+00:00",
-      "run_id": "run-20261002T174919Z-7bf09ffc",
-      "gap_claimed": true
+      "at": "2026-10-03T22:45:34+00:00",
+      "run_id": "deep-pass-2026-10-04",
+      "gap_claimed": false
     },
     "tests/meta/test_pipeline_nexus_picks.py::test_his_take_profit_and_stop_are_read_for_each_pick[NEX-0081]": {
       "fingerprints": [
-        "bf0e8d449b8b4f9678c74fe79e1a79d1b99509e22ebeac16edd6cc106f590fe5"
+        "bf0e8d449b8b4f9678c74fe79e1a79d1b99509e22ebeac16edd6cc106f590fe5",
+        "395fe5fcb7b984cf57b73698b1bb70cbe5578f11654a7a8f652c344a480da7ff"
       ],
-      "at": "2026-10-02T21:23:33+00:00",
-      "run_id": "run-20261002T174919Z-7bf09ffc",
-      "gap_claimed": true
+      "at": "2026-10-03T22:45:34+00:00",
+      "run_id": "deep-pass-2026-10-04",
+      "gap_claimed": false
     },
     "tests/meta/test_pipeline_nexus_picks.py::test_his_take_profit_and_stop_are_read_for_each_pick[NEX-0088]": {
       "fingerprints": [
-        "bf0e8d449b8b4f9678c74fe79e1a79d1b99509e22ebeac16edd6cc106f590fe5"
+        "bf0e8d449b8b4f9678c74fe79e1a79d1b99509e22ebeac16edd6cc106f590fe5",
+        "395fe5fcb7b984cf57b73698b1bb70cbe5578f11654a7a8f652c344a480da7ff"
       ],
-      "at": "2026-10-02T21:23:33+00:00",
-      "run_id": "run-20261002T174919Z-7bf09ffc",
-      "gap_claimed": true
+      "at": "2026-10-03T22:45:34+00:00",
+      "run_id": "deep-pass-2026-10-04",
+      "gap_claimed": false
     },
     "tests/meta/test_pipeline_nexus_picks.py::test_a_pick_is_read_from_the_line_that_declares_it[NEX-0010]": {
       "fingerprints": [
@@ -11783,10 +11823,11 @@
     },
     "tests/meta/test_pipeline_night_spend.py::test_a_night_room_carries_a_criterion_and_the_ceiling_holds": {
       "fingerprints": [
-        "f7fd4842a89c533b3a1f85b5e5a3e8435231e4c0cf925e0e765528436af10dc2"
+        "f7fd4842a89c533b3a1f85b5e5a3e8435231e4c0cf925e0e765528436af10dc2",
+        "84019eebf95ebe5c9ebd78865b094b440d74c8bf6eda23e27e31f0197293e2db"
       ],
-      "at": "2026-09-24T21:05:00+00:00",
-      "run_id": "run-20260924T191628Z-b62689a5",
+      "at": "2026-10-03T22:45:34+00:00",
+      "run_id": "deep-pass-2026-10-04",
       "gap_claimed": false
     },
     "tests/meta/test_pipeline_render.py::test_the_memecoin_measurement_is_on_the_lab_page_and_the_console_links_there": {
@@ -11800,11 +11841,12 @@
     "tests/meta/test_pipeline_room_notes.py::test_the_lab_page_is_served_to_this_machine_with_its_note_box": {
       "fingerprints": [
         "5f0937c422573a5c344410e8d2ef2ef83888fda378eb6d8ee4509d7d021a2116",
-        "e78110573249f22fa60225ae68784e0ea4d64e46bf97d35b9d63d0153e20d201"
+        "e78110573249f22fa60225ae68784e0ea4d64e46bf97d35b9d63d0153e20d201",
+        "2bb785ef0ed01357a5c38b754562894f4ea5188c3ca4ae78327e467ec08e5a70"
       ],
-      "at": "2026-09-25T20:49:03+00:00",
-      "run_id": "run-20260925T195840Z-d14ceca2",
-      "gap_claimed": false
+      "at": "2026-10-03T22:45:34+00:00",
+      "run_id": "deep-pass-2026-10-04",
+      "gap_claimed": true
     },
     "tests/meta/test_pipeline_room_notes.py::test_the_console_says_which_rounds_it_is_collecting": {
       "fingerprints": [
@@ -12579,10 +12621,11 @@
     },
     "tests/meta/test_pipeline_lab_loop.py::test_the_question_names_the_window_its_room_is_judged_on": {
       "fingerprints": [
-        "ffb1ad36e5c3136230208ea59159b3928af61812b8b222d41d6870bf71617989"
+        "ffb1ad36e5c3136230208ea59159b3928af61812b8b222d41d6870bf71617989",
+        "2a7588262a4f288bf36e79a5a7f7c8b1b0fcf4091a7d46ca4e9bfd32943f46b8"
       ],
-      "at": "2026-09-25T20:49:03+00:00",
-      "run_id": "run-20260925T195840Z-d14ceca2",
+      "at": "2026-10-03T22:45:34+00:00",
+      "run_id": "deep-pass-2026-10-04",
       "gap_claimed": false
     },
     "tests/meta/test_pipeline_lab_loop.py::test_a_blank_question_is_refused_before_anything_is_asked": {
@@ -12622,11 +12665,12 @@
     "tests/meta/test_pipeline_lab_page.py::test_a_room_of_ours_says_ours_and_never_ranks_above_his": {
       "fingerprints": [
         "6a11b49a45c7c59fef21a3d925d09516f5ca9b8401f1bad5d3fb88195cf80373",
-        "c442235f9efb6b757412669dc4514535a09012580b556f3b7d22bc2db745de91"
+        "c442235f9efb6b757412669dc4514535a09012580b556f3b7d22bc2db745de91",
+        "6be8765625802a5a5d0a41cad452ce41b8da9de90970e7f54f6c6f528c58155b"
       ],
-      "at": "2026-09-27T20:40:00+00:00",
-      "run_id": "run-20260927T190820Z-e40accb4",
-      "gap_claimed": false
+      "at": "2026-10-03T22:45:34+00:00",
+      "run_id": "deep-pass-2026-10-04",
+      "gap_claimed": true
     },
     "tests/discovery/test_public_page_reads_are_documented.py::test_what_a_public_page_reads_without_a_key_is_documented": {
       "fingerprints": [
@@ -12668,10 +12712,11 @@
       "fingerprints": [
         "6155ac696d76fe96ba2a07f3d092b9451e2d1b07108afe63a6bb6e9559deef13",
         "8bb714a10a6fd19621c07b70e79d9a62322599be5acaf8f4c7b34065d4b097e3",
-        "e7736ca9381c86e38ea66a72ef20b57dd9a1edfe9e19a4962832bced90897d5d"
+        "e7736ca9381c86e38ea66a72ef20b57dd9a1edfe9e19a4962832bced90897d5d",
+        "52644c6e53f9420f3d6a4c3eed5f36e61d25d0353f7f09aebc3ce77de3d10e14"
       ],
-      "at": "2026-10-02T21:23:33+00:00",
-      "run_id": "run-20261002T174919Z-7bf09ffc",
+      "at": "2026-10-03T22:45:34+00:00",
+      "run_id": "deep-pass-2026-10-04",
       "gap_claimed": false
     },
     "tests/repo/test_reminders.py::test_a_loop_on_opus_is_not_a_reminder_any_more": {
@@ -12817,11 +12862,12 @@
     "tests/meta/test_pipeline_gem_audit.py::test_the_audit_builds_a_report_from_a_snapshot_alone": {
       "fingerprints": [
         "4805411619363e285963f99f585d44bb2d6ca64501e633640dee664f6f1fa1f4",
-        "cbf754eb7e85ab23d6d3249855c1131364a2282ffca4ba6847d0f8161caf67f3"
+        "cbf754eb7e85ab23d6d3249855c1131364a2282ffca4ba6847d0f8161caf67f3",
+        "6d2a84a45157d3604a42b85169837c1d9cb02e4e58132934767d59e3c19dacef"
       ],
-      "at": "2026-10-02T21:23:33+00:00",
-      "run_id": "run-20261002T174919Z-7bf09ffc",
-      "gap_claimed": true
+      "at": "2026-10-03T22:45:34+00:00",
+      "run_id": "deep-pass-2026-10-04",
+      "gap_claimed": false
     },
     "tests/meta/test_pipeline_lab_loop.py::test_a_card_leg_is_sold_at_his_take_profit_and_the_room_runs_on": {
       "fingerprints": [
@@ -12843,10 +12889,11 @@
     "tests/meta/test_pipeline_timings.py::test_every_real_request_is_timed_and_one_command_lists_the_bad_ones": {
       "fingerprints": [
         "863f6d57d34ab78a201431dcfa338eb9b31b0e16bd7759cad99983c6880faef7",
-        "3517061537284aabc70a23e8ea0765aa9464591c69216fb504310efb9951f7bb"
+        "3517061537284aabc70a23e8ea0765aa9464591c69216fb504310efb9951f7bb",
+        "44db777a3350f5dae4d2e809fc2d08146d309759059013383e8604da9739831c"
       ],
-      "at": "2026-10-02T21:23:33+00:00",
-      "run_id": "run-20261002T174919Z-7bf09ffc",
+      "at": "2026-10-03T22:45:34+00:00",
+      "run_id": "deep-pass-2026-10-04",
       "gap_claimed": true
     },
     "tests/meta/test_pipeline_verify.py::test_a_check_with_hundreds_of_captures_still_fits_their_evidence_field": {
@@ -13153,11 +13200,12 @@
     },
     "tests/meta/test_pipeline_nexus_picks.py::test_his_take_profit_and_stop_are_read_for_each_pick[NEX-0109]": {
       "fingerprints": [
-        "bf0e8d449b8b4f9678c74fe79e1a79d1b99509e22ebeac16edd6cc106f590fe5"
+        "bf0e8d449b8b4f9678c74fe79e1a79d1b99509e22ebeac16edd6cc106f590fe5",
+        "395fe5fcb7b984cf57b73698b1bb70cbe5578f11654a7a8f652c344a480da7ff"
       ],
-      "at": "2026-10-02T21:23:33+00:00",
-      "run_id": "run-20261002T174919Z-7bf09ffc",
-      "gap_claimed": true
+      "at": "2026-10-03T22:45:34+00:00",
+      "run_id": "deep-pass-2026-10-04",
+      "gap_claimed": false
     },
     "tests/meta/test_pipeline_nexus_picks.py::test_a_pick_is_read_from_the_line_that_declares_it[NEX-0109]": {
       "fingerprints": [
@@ -13185,11 +13233,12 @@
     },
     "tests/rest/test_chart_analyzer_live_candle_is_current.py::test_the_forming_candle_of_a_gem_screener_coin_is_current_or_agrees_with_its_pool": {
       "fingerprints": [
-        "6859145386438f12a01dffd7a7ff451a7d593c44d099179799a429a771c3b6cb"
+        "6859145386438f12a01dffd7a7ff451a7d593c44d099179799a429a771c3b6cb",
+        "484637b2e9febf0151c4db002321b846c5fea5d77502cce8746cfbb2d72ff85b"
       ],
-      "at": "2026-10-02T21:23:33+00:00",
-      "run_id": "run-20261002T174919Z-7bf09ffc",
-      "gap_claimed": true
+      "at": "2026-10-03T22:45:34+00:00",
+      "run_id": "deep-pass-2026-10-04",
+      "gap_claimed": false
     },
     "tests/rest/test_chart_analyzer_score_averages_what_it_counts.py::test_a_score_averages_the_patterns_its_answer_marks_counted": {
       "fingerprints": [
@@ -13217,11 +13266,12 @@
     },
     "tests/rest/test_gem_screener_panels_say_what_their_data_says.py::test_only_btc_runs_is_not_said_over_a_week_most_alts_beat_btc": {
       "fingerprints": [
-        "928f5d58315a1edeb94cdb3bd8e1e9356ee539337d8e5c75808efec6261505b0"
+        "928f5d58315a1edeb94cdb3bd8e1e9356ee539337d8e5c75808efec6261505b0",
+        "a38a692117a99c13b67941ae2d63a27d29de5a5c2491afdd869e458593bba17b"
       ],
-      "at": "2026-10-02T21:23:33+00:00",
-      "run_id": "run-20261002T151752Z-d308208b",
-      "gap_claimed": true
+      "at": "2026-10-03T22:45:34+00:00",
+      "run_id": "deep-pass-2026-10-04",
+      "gap_claimed": false
     },
     "tests/repo/test_declared_dependencies.py::test_every_third_party_import_is_a_declared_dependency": {
       "fingerprints": [
@@ -13233,11 +13283,60 @@
     },
     "tests/repo/test_declared_dependencies.py::test_the_promised_python_is_one_the_code_runs_on": {
       "fingerprints": [
-        "be696edc0835a9c1c2dfdcde4fabf551dcfcd27d3c30558ac3471ecbfddcc7e5"
+        "be696edc0835a9c1c2dfdcde4fabf551dcfcd27d3c30558ac3471ecbfddcc7e5",
+        "f4a9a632a88677ea0fe419af1ae91744c799b718760fe3da8a6dc4fd110b7364"
       ],
-      "at": "2026-10-02T21:23:33+00:00",
-      "run_id": "run-20261001T054942Z-956e6d67",
+      "at": "2026-10-03T22:45:34+00:00",
+      "run_id": "deep-pass-2026-10-04",
       "gap_claimed": true
+    },
+    "tests/meta/test_pipeline_lab_page.py::test_the_view_is_three_sector_rooms_in_their_order_with_their_names": {
+      "fingerprints": [
+        "a331843cc57f7ece162496d75d1fde07111ffe4c381650a4af2cd5d0ea46f1b2"
+      ],
+      "at": "2026-10-03T22:45:34+00:00",
+      "run_id": "deep-pass-2026-10-04",
+      "gap_claimed": false
+    },
+    "tests/repo/test_morning_is_czech.py::test_every_report_has_a_plain_czech_line_and_the_deep_pass_has_no_code_in_it": {
+      "fingerprints": [
+        "a2afccddb22bd3474824347931ba7e73106b4ac974855d9fc103f9efc66a2b55"
+      ],
+      "at": "2026-10-03T22:45:34+00:00",
+      "run_id": "deep-pass-2026-10-04",
+      "gap_claimed": true
+    },
+    "tests/repo/test_nexus_credit.py::test_lab_no_longer_shows_the_credit": {
+      "fingerprints": [
+        "f319e6f26f88859282847427947d039a48ee09bfa6c9e40f6ffd50abc5940728"
+      ],
+      "at": "2026-10-03T22:45:34+00:00",
+      "run_id": "deep-pass-2026-10-04",
+      "gap_claimed": true
+    },
+    "tests/rest/test_research_backtest_runs_match_their_documentation.py::test_a_stored_run_carries_the_fields_its_schema_lists": {
+      "fingerprints": [
+        "bfa293827eb9920b3c89036b1a8a8548751090261d31f575af8b238187b7fa34"
+      ],
+      "at": "2026-10-03T22:45:34+00:00",
+      "run_id": "deep-pass-2026-10-04",
+      "gap_claimed": true
+    },
+    "tests/rest/test_research_backtest_runs_match_their_documentation.py::test_a_run_on_a_theme_is_listed_with_that_theme": {
+      "fingerprints": [
+        "5ea9a6aa0e78b80c93ab85a857bc9f61e77d60542f96ef740a1a25a7bfe9eebe"
+      ],
+      "at": "2026-10-03T22:45:34+00:00",
+      "run_id": "deep-pass-2026-10-04",
+      "gap_claimed": true
+    },
+    "tests/rest/test_the_account_has_one_plan_on_every_nexus_endpoint.py::test_the_account_has_one_plan_on_every_nexus_endpoint": {
+      "fingerprints": [
+        "f14256e3390d635b87ea9fe52f8cb67b8668e6a46d4225f3912f274860ef6225"
+      ],
+      "at": "2026-10-03T22:45:34+00:00",
+      "run_id": "deep-pass-2026-10-04",
+      "gap_claimed": false
     }
   }
 }
