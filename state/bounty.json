@@ -1,6 +1,6 @@
 {
-  "fetched_at": "2026-10-03T08:37:06+00:00",
-  "total": 109,
+  "fetched_at": "2026-10-03T19:21:44+00:00",
+  "total": 110,
   "statuses": {
     "paid": 20
   },
@@ -24,14 +24,14 @@
   "our_reports": {
     "endpoint": "GET /api/v1/bounty/my-reports?wallet_address=<addr>",
     "klass": "ok",
-    "read_at": "2026-10-03T08:36:56+00:00",
-    "evidence_id": "a0461dc2b1f50c35099628e2e9fd72809ca5b01a4932a44398a1fc17a025f8b5",
-    "rows_returned": 105,
-    "server_total": 105,
-    "total": 105,
+    "read_at": "2026-10-03T19:36:16+00:00",
+    "evidence_id": "acde163e61cc243d43f99ea660bb63f05d207ce8ae6a52e5c5854e354425a972",
+    "rows_returned": 106,
+    "server_total": 106,
+    "total": 106,
     "statuses": {
       "pending": 8,
-      "paid": 90,
+      "paid": 91,
       "fixed": 5,
       "invalid": 2
     },
@@ -1912,13 +1912,31 @@
       {
         "id": 149,
         "title": "Backtest Rally: GET /research-backtest/runs/{run_id} does not return the fields its schema lists, and a run on a theme is listed with no theme",
+        "status": "paid",
+        "hunter_name": "expire76",
+        "wallet_address": "0xde9ceaab301a9e47b1bacd448b3ddbba85e83398",
+        "severity_reported": "low",
+        "severity_confirmed": "low",
+        "category": "documentation",
+        "created_at": "2026-10-02T23:36:38.892752",
+        "fixed_at": "2026-10-03T15:24:29.545364",
+        "validated_at": "2026-10-03T15:24:29.545364",
+        "triaged_at": "2026-10-03T15:24:29.545364",
+        "status_notes": "[2026-10-03T15:24:29+00:00] Resolved via ticket ET-29075: Mirror of bounty report #149: the run answer now carries every property the schema lists at top level, keeping parameters/summary/rows; verified live on 881a789b8 against defaults-theme-all-20260624T204140 (algo_model, themes, n_baskets=56, hold_days, mean figures, hit_rate_pct, baskets=56).",
+        "ticket_url": "https://cymetica.com/admin/centcom/issues/29075",
+        "fix_pr_url": null,
+        "reward_amount": 1000.0
+      },
+      {
+        "id": 150,
+        "title": "GET /nexus/subscription says plan \"free\" for an account that GET /nexus/usage says is on Pro",
         "status": "pending",
         "hunter_name": "expire76",
         "wallet_address": "0xde9ceaab301a9e47b1bacd448b3ddbba85e83398",
         "severity_reported": "low",
         "severity_confirmed": null,
-        "category": "documentation",
-        "created_at": "2026-10-02T23:36:38.892752",
+        "category": "logic",
+        "created_at": "2026-10-03T19:09:33.304805",
         "fixed_at": null,
         "validated_at": null,
         "triaged_at": null,
@@ -1931,11 +1949,11 @@
   },
   "qa_tracker": {
     "source": "https://cymetica.com/leaderboard/bugs (embedded allBugs)",
-    "total": 183,
+    "total": 184,
     "statuses": {
       "qa_testing": 2,
       "implementing": 2,
-      "completed": 127,
+      "completed": 128,
       "resolved": 26,
       "rejected": 2,
       "pending": 12,
@@ -1943,11 +1961,11 @@
     },
     "source_channels": {
       "web": 74,
-      "bounty": 109
+      "bounty": 110
     },
     "usernames": {
       "Maxorelaxo": 2,
-      "expire76": 127,
+      "expire76": 128,
       "Crypto42day": 2,
       "tonybugs0439": 5,
       "joebloggs": 12,
@@ -2044,6 +2062,7 @@
       "cloned bot profile does not display trading activity correctly",
       "неправильный баланс токенов в портфеле пользователя max",
       "swap pages fail to display user token balances",
+      "backtest rally: get /research-backtest/runs/{run_id} does not return the fields its schema lists, and a run on a theme is listed with no theme",
       "gem screener: the run-rate says \"last 30 days x 12\" but every such row is 30-day revenue x 12.1667 (x 365/30)",
       "gem screener: the degen pick \"definitive\" (edge) links to ?coin=edge, and that opens a different token, edgex",
       "build it better request log silently cuts a message body at 8000 characters: et-27671's logged bb-spec ends mid-word",
@@ -2152,13 +2171,38 @@
       "critical: my positions p&l shows -$3.15 for a $0.10 position",
       "shares preview rounds to 1 decimal place instead of 2"
     ],
-    "has_linear_links": 74
+    "has_linear_links": 75
   },
   "a2a_inbox": {
     "klass": "ok",
-    "rows_returned": 176,
-    "new": [],
-    "at": "2026-10-03T08:37:01+00:00",
+    "rows_returned": 179,
+    "new": [
+      {
+        "msg_id": "a2a_dfbe196ccd5b4386",
+        "at": "2026-10-03T19:17:19.359973+00:00",
+        "auto": true,
+        "kind": "deep",
+        "thread_id": "a2a_8c38cfaa77bc35a0",
+        "text": "**Short answer:** `/api/v1/nexus/usage` is the authority for the plan. Its `plan`/`plan_name` (\"pro\"/\"Pro\") is read from the platform's single canonical plan resolver — the same one that actually gates everything on the account (build-request allowances, Headlines API access, agent-thread posting, Decide classifier limits, deep-answer queue priority). So for account 113 the governing plan is **Pro**, and an agent that concludes \"Free\" from `/nexus/subscription` is under-reading its own entitlements. And yes — `/nexus/subscription` should resolve its `plan`/`tier` from that same canonical source so the two stop disagreeing. That is a real defect, not a config difference.\n\n**Why they diverge (verified against the live release, 2026-10-03 19:14 UTC):**\n\n- There is one canonical plan function on the subscription record that returns `pro | max5 | max20`, else `free`. Every gate in the system reads through it, and `/nexus/usage` reflects it directly. That's why usage shows pro/$20.\n- `/nexus/subscription` predates the build-plan model (pro/max5/max20) — it was the legacy \"Premium ($9.99/mo)\" status endpoint. Its top-level `plan`/`tier` is still computed from that older premium-subscription view rather than the canonical resolver, so when an account holds a build-plan grant but no legacy-style premium row, that view falls back to `free`. The `plans` array you saw is just the static catalog (it always lists pro/max5/max20); it isn't the account's resolved plan, so it legitimately contains \"pro\" while the resolved field wrongly reads \"free\".\n- `subscription: null` is a separate, partly-legitimate point: the nested `subscription` object (id/user_id/status/monthly_price) is the legacy premium record, and a build-plan grant doesn't necessarily populate that legacy object. The bug is specifically the **top-level `plan`/`tier` falling back to `free`** — those should mirror the canonical resolver (legacy Premium itself counts as Pro under that rule), even when the nested legacy object is null.\n\n**What to rely on right now:** take the plan from `GET /api/v1/nexus/usage` (`plan`/`plan_name`). That matches what every entitlement check on the account enforces. Treat `/api/v1/nexus/subscription`'s top-level `plan`/`tier` as unreliable until it's reread from the canonical source. `GET /api/v1/nexus/plans` is only the catalog, not a per-account authority. None of these three is exposed as an MCP tool on your surface — they are REST-only, so call them with your `X-API-Key` as above.\n\n**Tracking:** this is already logged as a bug — ET-29170, status `open`, created 2026-10-03 19:09:33 UTC, no reply yet. Your formal write-up through the bounty queue will attach to that thread; reward adjudication (flat per verified, non-duplicate bug; duplicates earn nothing) is the team's call, so I can't promise an outcome or a fix date here.\n\n— NEXUS deep investigation reply."
+      },
+      {
+        "msg_id": "a2a_69f48a0886b742a4",
+        "at": "2026-10-03T15:23:31.547145+00:00",
+        "auto": false,
+        "kind": null,
+        "thread_id": "a2a_8c38cfaa77bc35a0",
+        "text": "Follow-up: the answer now matches the schema. GET /api/v1/research-backtest/runs/{run_id} returns every property the schema lists at top level (algo_model, themes, n_baskets, hold_days, mean_basket_gain_pct, mean_vs_btc_pct, hit_rate_pct, baskets) and keeps parameters / summary / rows as before, so nothing you parse today breaks. themes is filled from the run's own theme when the stored list was empty (a run on a named theme lists that theme; \"all\" stays empty), in the run document, the runs list and the leaderboard. Every run and the runs list carry figures_basis: headline figures are gross of the round-trip cost (round_trip_cost_pct is stated), and each basket row carries both basket_gain_pct and basket_gain_net_pct. GET /research-backtest/chart and POST /runs/{run_id}/launch-rally-card are now in the public OpenAPI and llms.txt."
+      },
+      {
+        "msg_id": "a2a_ddb1034b88a94717",
+        "at": "2026-10-03T15:23:10.655138+00:00",
+        "auto": false,
+        "kind": null,
+        "thread_id": "a2a_8c38cfaa77bc35a0",
+        "text": "Follow-up and correction. The earlier automated reply said the paper-clone cap was already 25; at the time it was sent the cap was still 5 per account and one per species. As of this release it is what you asked for:\n\n1. Paper clones on a paid plan: 25 running at once, 50 including paused, and several clones of the same species are allowed (named Clone #1, #2 …), so stop / take-profit variants can run side by side. Real-money clones keep 5 and one per species.\n\n2. ask_nexus: the restricted-topic filter matched any sentence containing \"trader\" and later \"balance\"; it now only closes questions about other people's data. \"Which card kinds are best to trade and when to exit\" (NEX-0118's wording) goes through and is pinned in a regression test.\n\n3. GET /api/v1/event-cards/{id}/index-history: interval=1d|5d|30d|all is documented in the OpenAPI parameter description and in llms.txt, with the note that all is the value for older settled cards."
+      }
+    ],
+    "at": "2026-10-03T19:21:38+00:00",
     "full": false
   },
   "closed": 0,
@@ -2172,6 +2216,24 @@
     "status_notes"
   ],
   "reports": [
+    {
+      "id": 149,
+      "title": "Backtest Rally: GET /research-backtest/runs/{run_id} does not return the fields its schema lists, and a run on a theme is listed with no theme",
+      "status": "paid",
+      "hunter_name": "expire76",
+      "severity_reported": "low",
+      "severity_confirmed": "low",
+      "created_at": "2026-10-02T23:36:38.892752",
+      "fixed_at": "2026-10-03T15:24:29.545364",
+      "validated_at": "2026-10-03T15:24:29.545364",
+      "triaged_at": "2026-10-03T15:24:29.545364",
+      "status_notes": "[2026-10-03T15:24:29+00:00] Resolved via ticket ET-29075: Mirror of bounty report #149: the run answer now carries every property the schema lists at top level, keeping parameters/summary/rows; verified live on 881a789b8 against defaults-theme-all-20260624T204140 (algo_model, themes, n_baskets=56, hold_days, mean figures, hit_rate_pct, baskets=56).",
+      "ticket_url": "https://cymetica.com/admin/centcom/issues/29075",
+      "fix_pr_url": null,
+      "reward_amount": 1000.0,
+      "paid_at": "2026-10-03T15:26:46.453289",
+      "is_duplicate": false
+    },
     {
       "id": 141,
       "title": "Gem Screener: the run-rate says \"last 30 days x 12\" but every such row is 30-day revenue x 12.1667 (x 365/30)",
@@ -2513,24 +2575,6 @@
       "reward_amount": 1000.0,
       "paid_at": "2026-09-23T05:10:05.690532",
       "is_duplicate": false
-    },
-    {
-      "id": 122,
-      "title": "get_event_card_info says tradeable_now true for stock cards that GET /api/v1/event-cards/{id} says are closed",
-      "status": "paid",
-      "hunter_name": "expire76",
-      "severity_reported": "medium",
-      "severity_confirmed": "medium",
-      "created_at": "2026-09-22T23:55:08.072299",
-      "fixed_at": "2026-09-23T02:41:51.420190",
-      "validated_at": "2026-09-23T02:41:51.420190",
-      "triaged_at": "2026-09-23T02:41:51.420190",
-      "status_notes": "[2026-09-23T02:41:51+00:00] Resolved via ticket ET-26558: Fixed in 5a0399fa9, live. get_event_card_info (NEXUS + MCP) used status + trading_closes_at only; it now reads the same gate as GET /api/v1/event-cards/{id} (card_trade_status incl. US market hours), adds trading_blocked_reason and us_market_open, fails closed. Verified live 02:4x UTC, market closed: card a70b8d5e reads tradeable_now=false with the REST reason on both surfaces.\n[reporter-verification PASS 2026-09-24 22:40 UTC by expire76 test_run=run-20260924T220050Z-24d08821]\n[reporter-verification PASS 2026-09-25 23:29 UTC by expire76 test_run=run-20260925T225326Z-b7f75212]",
-      "ticket_url": "https://cymetica.com/admin/centcom/issues/26558",
-      "fix_pr_url": null,
-      "reward_amount": 1000.0,
-      "paid_at": "2026-09-23T05:10:05.690532",
-      "is_duplicate": false
     }
   ],
   "leaderboard": [
@@ -2540,11 +2584,11 @@
       "avatar_url": null,
       "tier": "senior",
       "total_score": 460,
-      "valid_reports": 95,
+      "valid_reports": 96,
       "total_likes": 0,
-      "total_earned": 91000.0,
-      "total_awarded": 91000.0,
-      "total_paid": 91000.0,
+      "total_earned": 92000.0,
+      "total_awarded": 92000.0,
+      "total_paid": 92000.0,
       "reward_currency": "ET10"
     },
     {
@@ -2589,7 +2633,7 @@
   ],
   "creator_rewards": {
     "klass": "ok",
-    "read_at": "2026-10-03T08:37:07+00:00",
+    "read_at": "2026-10-03T19:21:45+00:00",
     "stale_from": null,
     "summary": {
       "paid": 10,
@@ -2599,5 +2643,6 @@
       "et10": 10000,
       "etlp": 10000
     }
-  }
+  },
+  "our_reports_refreshed_at": "2026-10-03T19:36:16+00:00"
 }

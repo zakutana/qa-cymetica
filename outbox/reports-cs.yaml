@@ -21,3 +21,4 @@ reports:
   147: "Odkaz na aplikaci Gem Screener ukáže na tweetu prázdný obrázek (chyba 404)"
   148: "Chart Analyzer: „živá“ svíčka je hodiny stará a o 5 % jinde než skutečná cena"
   149: "Backtest Rally: dokumentace popisuje jiná pole, než server vrací"
+  150: "Nexus: jeden účet je podle jednoho endpointu Pro a podle druhého Free"
