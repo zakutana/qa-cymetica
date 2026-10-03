@@ -99,8 +99,7 @@ def _case_a_card_counted_twice_by_the_listing_is_judged_once():
 # Folded on the deep pass of 2026-10-04 (tests/meta grows only by replacement): eight functions became two; every case is a _case_ helper.
 
 
-@qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
-def test_the_card_rules_read_only_what_they_were_fixed_to_read():
+def _case_the_card_rules_read_only_what_they_were_fixed_to_read():
     _case_the_rules_and_their_date_are_fixed_before_the_data()
     _case_a_card_belongs_to_one_rule_by_its_basket()
     _case_only_cards_created_after_the_rules_were_written_are_judged()
@@ -109,7 +108,15 @@ def test_the_card_rules_read_only_what_they_were_fixed_to_read():
     _case_a_card_counted_twice_by_the_listing_is_judged_once()
 
 
-@qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
-def test_a_card_rule_passes_only_on_enough_cards_and_a_bound_above_zero():
+def _case_a_card_rule_passes_only_on_enough_cards_and_a_bound_above_zero():
     _case_too_few_cards_is_not_enough_never_a_pass_or_a_fail()
     _case_a_pass_needs_the_lower_bound_above_zero_not_just_a_positive_mean()
+
+
+# Folded on the deep pass of 2026-10-04 (tests/meta grows only by replacement): two functions became one.
+
+
+@qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
+def test_the_card_rules_are_fixed_before_the_data_and_judged_only_on_enough_cards():
+    _case_the_card_rules_read_only_what_they_were_fixed_to_read()
+    _case_a_card_rule_passes_only_on_enough_cards_and_a_bound_above_zero()

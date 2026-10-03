@@ -61,8 +61,7 @@ def _call(tier: SafetyTier, arguments: dict, mutate: bool = True, tool: str = TO
         client.http.close()
 
 
-@qa(component="meta.guard", tier=SafetyTier.SAFE, surface="meta")
-def test_the_write_opens_only_at_mutate_and_only_for_this_tool():
+def _case_the_write_opens_only_at_mutate_and_only_for_this_tool():
     registry = EndpointRegistry.load()
     # The read is classified read; the write stays in no list (its gate is own_clone_write, beside the lists).
     assert registry.tool_class("get_bot_indicators") == "read"
@@ -111,11 +110,19 @@ def test_the_write_refuses_every_argument_it_does_not_document(arguments):
         _call(SafetyTier.MUTATE, arguments)
 
 
-@qa(component="meta.guard", tier=SafetyTier.SAFE, surface="meta")
-def test_a_number_that_is_not_a_setting_never_leaves():
+def _case_a_number_that_is_not_a_setting_never_leaves():
     # JSON cannot carry NaN or infinity, so the client refuses to serialise it before the transport is
     # reached; the guard refuses it too if that ever changes. The one thing that must not happen is the
     # transport being reached.
     for number in (float("nan"), float("inf"), float("-inf")):
         with pytest.raises((SafetyViolation, ValueError)):
             _call(SafetyTier.MUTATE, {**GOOD, "params": {"period": number}})
+
+
+# Folded on the deep pass of 2026-10-04 (tests/meta grows only by replacement): the gate's two plain tests became one; the parametrized refusal list stays its own test.
+
+
+@qa(component="meta.guard", tier=SafetyTier.SAFE, surface="meta")
+def test_the_write_is_opened_at_mutate_only_and_refuses_what_it_does_not_document():
+    _case_the_write_opens_only_at_mutate_and_only_for_this_tool()
+    _case_a_number_that_is_not_a_setting_never_leaves()
