@@ -667,6 +667,8 @@ distinction rule 8 makes. What was fixed, pruned and learned in detail is in
 step 8's commit message and the notebook; `Co se stalo` names both.
 `tests/repo/test_deep_pass_size.py` holds the ten lines.
 
+Plain Czech, written for a trader who is not a programmer: every bold lead says what changed in words, with no function names, file names, backticks or run ids -- the morning page prints those leads, and `tests/repo/test_morning_is_czech.py` fails on code in them. A report filed during the pass also gets its one-sentence Czech line in `outbox/reports-cs.yaml`.
+
 Numbers, not adjectives. Name the run id and the prereg. If something was
 refused or skipped, say which and why — a run that quietly did less is the one
 failure mode they cannot see.

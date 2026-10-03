@@ -118,8 +118,16 @@ def _deep(deep: dict) -> str:
     for line in deep["lines"]:
         cls, word = DEEP_TAGS[line["kind"]]
         count = f" {line['count']}" if line["kind"] == "fixed" and line["count"] else ""
+        items = line.get("items") or []
+        if items:
+            # Whose they are, then each fix on a line of its own (never one run-on paragraph).
+            lead = line["text"].split(": ", 1)[0]
+            body = (f'{escape(lead)}<ul class="sub">'
+                    + "".join(f"<li>{escape(item)}</li>" for item in items) + "</ul>")
+        else:
+            body = escape(line["text"])
         rows.append(f'<li><span class="tag {cls}">{word}{count}</span>'
-                    f'<span>{escape(line["text"])}</span></li>')
+                    f'<span>{body}</span></li>')
     return '<ul class="deep">' + "".join(rows) + "</ul>"
 
 
@@ -223,6 +231,9 @@ h2 span {{ font: 400 12.5px var(--mono); letter-spacing: 0; text-transform: none
   color: var(--text-faint); }}
 .deep {{ list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 8px; }}
 .deep li {{ display: flex; gap: 10px; align-items: baseline; }}
+.deep .sub {{ margin: 6px 0 0; padding-left: 18px; display: flex; flex-direction: column; gap: 5px;
+  font-size: 14px; color: var(--text-dim); }}
+.deep .sub li {{ display: list-item; }}
 .tag {{ flex: none; font-size: 12px; font-weight: 600; padding: 2px 9px; border-radius: 999px;
   background: var(--surface-2); color: var(--text-dim); white-space: nowrap; }}
 .tag.ok {{ background: var(--ok-bg); color: var(--ok); }}

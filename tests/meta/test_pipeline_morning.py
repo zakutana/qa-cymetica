@@ -108,6 +108,18 @@ def test_the_deep_pass_is_two_lines_what_we_fixed_and_what_went_to_them():
     assert "14 z 28" not in text, "the count is the tag's, not the words'"
     long_one = morning.deep_pass("# T\n## Opraveno\n- **3 věci.** " + "slovo " * 200)
     assert len(long_one["lines"][0]["text"]) <= morning.DEEP_LINE, "an unbounded line"
+    # 2026-10-03, the operator, on a line cut in the middle ("... ET-29001 1..."): every fix is
+    # its own item, whole, and a long one is cut at a word, never in the middle of one.
+    items = what["lines"][0]["items"]
+    assert items == ["Gem audit: nová identita market cap; lab stránka sčítá všechny boty.",
+                     "0b: FOMO watch jede po minutě."], items
+    wordy = morning.deep_pass("# T\n## Opraveno\n- **Dlouhá oprava " + "slovíčko " * 60 + "**")
+    cut = wordy["lines"][0]["items"][0]
+    assert len(cut) <= morning.ITEM_LINE and cut.endswith("…") and not cut[:-1].endswith("slov"), cut
+    # What the page may not say: code names, backticks, file names, run ids.
+    assert morning.jargon("Opravil jsem `restart_refusal` v scripts/clone.py") == [
+        "`", "restart_refusal", "`", ".py"], morning.jargon("Opravil jsem `restart_refusal` v scripts/clone.py")
+    assert morning.jargon("Bot se už znovu nespustí, když ho zastavila jejich ochrana.") == []
 
     # And what happened with Cymetica overnight, which the report lacked:
     # sweeps run, bugs we filed, what they fixed, what we verified.
@@ -148,15 +160,23 @@ def test_the_deep_pass_is_two_lines_what_we_fixed_and_what_went_to_them():
     assert morning.cymetica(events, registered, since)["titles"] == {}, "no titles known"
     # Our tracker copy keeps only the newest reports; an older one is named by
     # the finding the ledger filed it for, and the tracker's own title wins.
-    found = morning.titles_from(
-        [{"id": 140, "title": "Tracker title"}, {"id": None, "title": "x"}],
-        {"findings": {
-            "CYM-a": {"title": "Old finding", "filing": {"reports": [
-                {"report_id": 51}, {"report_id": 140}]}},
-            "CYM-b": {"title": "Second", "filing": {"reports": [{"report_id": 51}]}},
-            "CYM-c": {"title": "", "filing": {"reports": [{"report_id": 7}]}},
-            "CYM-d": {"title": "No filing"}}})
-    assert found == {140: "Tracker title", 51: "Old finding"}, found
+    tracker = [{"id": 140, "title": "Tracker title"}, {"id": None, "title": "x"}]
+    ledger = {"findings": {
+        "CYM-a": {"title": "Old finding", "filing": {"reports": [
+            {"report_id": 51}, {"report_id": 140}]}},
+        "CYM-b": {"title": "Second", "filing": {"reports": [{"report_id": 51}]}},
+        "CYM-c": {"title": "", "filing": {"reports": [{"report_id": 7}]}},
+        "CYM-d": {"title": "No filing"}}}
+    # The operator, 2026-10-03: the report is Czech and plain ("zapominas ze ma byt vse degen
+    # friendly ... uplne srozumitelne o co jde"). A report is named by its own Czech line; the
+    # tracker's English title and the check's message are never shown, and one with no Czech
+    # line says so in Czech instead of falling back to English.
+    czech = {140: "Česky o stošestnáctce", 51: "Česky o jedenapadesátce"}
+    none = morning.NO_CZECH
+    assert morning.titles_from(tracker, ledger, czech) == {**czech, 7: none}
+    assert morning.titles_from(tracker, ledger, {140: "Česky"}) == {140: "Česky", 51: none, 7: none}
+    assert morning.titles_from(tracker, ledger) == {140: none, 51: none, 7: none}
+    assert any(ch in morning.NO_CZECH for ch in "ěščřžýáíéůú"), "the placeholder is not Czech"
 
     # 2026-10-01: a pass on #132 at 16:00 and our correction (fail) on it at
     # 00:10 the same night -- the report said "the fix holds: #132". The
@@ -289,6 +309,11 @@ def test_the_page_is_one_short_czech_page_in_the_artifact_shape():
                    132: "Async a2a gets no investigation"}})
     page_html = module.render(many)
     assert "Sweep: 11" in page_html, "the sweep count is one short line"
+    # Each fix is a line of its own under the count, never one run-on paragraph.
+    listed = module.render(dict(_view(), deep_pass={"title": "T", "lines": [
+        {"kind": "fixed", "count": 2, "text": "chyb v našich nástrojích",
+         "items": ["Jedna oprava.", "Druhá oprava."]}]}))
+    assert '<ul class="sub"><li>Jedna oprava.</li><li>Druhá oprava.</li></ul>' in listed, listed[-1800:]
     # Deep pass 2026-10-02 (T15): "short" is a number. The page reads 227 words; the
     # operator does not read long ones (CLAUDE.md, 2026-09-13), so a render that grows
     # past 400 visible words, with or without the titled report lines, fails here.

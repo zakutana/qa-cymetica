@@ -51,9 +51,10 @@ def _cz(value: float, digits: int = 1) -> str:
     return ("−" if value < 0 and text.strip("0,") else "") + text
 
 
-def _plain(text: str) -> str:
+def _plain(text: str, limit: int | None = None) -> str:
     """A markdown bullet as a line: its bold lead if it has one, else its
-    first sentence; no marks, at most MAX_LINE characters."""
+    first sentence; no marks, at most MAX_LINE characters (or `limit`), cut at a word."""
+    limit = limit or MAX_LINE
     lead = re.match(r"\*\*(.+?)\*\*", text)
     first = lambda s: re.split(r"(?<=[.!?])\s", s.strip(), 1)[0]  # noqa: E731
     if lead and lead.group(1).rstrip().endswith(":"):
@@ -63,7 +64,7 @@ def _plain(text: str) -> str:
         words = lead.group(1) if lead else first(text)
     words = re.sub(r"[`*_]", "", words).strip().rstrip(":")
     words = " ".join(words.split())
-    return words if len(words) <= MAX_LINE else words[:MAX_LINE - 1].rstrip() + "…"
+    return _cut(words, limit)
 
 
 def _bullets(section: str) -> list[str]:
@@ -79,7 +80,26 @@ def _bullets(section: str) -> list[str]:
 
 FIXED_OURS = "chyb v našich vlastních kontrolách a nástrojích, ne v Cymetice"
 DEEP_LINE = 420
+ITEM_LINE = 200
 TITLE_LINE = 110
+NO_CZECH = "nová položka, český popis ještě chybí"
+# What the page may not say to someone who reads it in Czech and is not a programmer: a
+# backtick, a snake_case name, a file name. (The operator, 2026-10-03.)
+_JARGON = re.compile(r"`|\b[a-z]+_[a-z_]+\b|\.py\b|\bPRE-\d|\brun-\d|\bSTR-\d")
+
+
+def jargon(text: str) -> list[str]:
+    """The code-looking tokens in a sentence meant for the operator, in order; [] when it
+    is plain language."""
+    return [m.group(0) for m in _JARGON.finditer(text or "")]
+
+
+def _cut(text: str, limit: int) -> str:
+    """At most `limit` characters, cut at a word and marked with an ellipsis, never in the
+    middle of a word (a line ended "... ET-29001 1..." on 2026-10-02)."""
+    if len(text) <= limit:
+        return text
+    return text[:limit - 1].rsplit(" ", 1)[0].rstrip(" ,;:.") + "…"
 
 
 def _what(bullet: str) -> str:
@@ -89,7 +109,7 @@ def _what(bullet: str) -> str:
     if lead and re.match(r"\d+\b", lead.group(1)):
         rest = re.sub(r"[`*_]", "", bullet[lead.end():])
         return " ".join(re.split(r"(?<=[.!?])\s", " ".join(rest.split()), 1)[0].split())
-    return _plain(bullet)
+    return _plain(bullet, ITEM_LINE)
 
 
 def deep_pass(markdown: str) -> dict:
@@ -117,11 +137,14 @@ def deep_pass(markdown: str) -> dict:
             count = len(found)
         # The operator, 2026-10-01: "opraveno 14, ale vubec nemam paru ceho se
         # to tyka" -- so the line says what, after saying whose they are.
-        said = " · ".join(w for w in (_what(b) for b in found) if w)
+        whats = [w for w in (_what(b) for b in found) if w]
+        said = " · ".join(whats)
         text = f"{FIXED_OURS}: {said}" if said else FIXED_OURS
         lines.append({"kind": "fixed", "count": count,
                       "text": text if len(text) <= DEEP_LINE
-                      else text[:DEEP_LINE - 1].rstrip() + "…"})
+                      else text[:DEEP_LINE - 1].rstrip() + "…",
+                      # The page lists these, one line each, so nothing is cut mid-sentence.
+                      "items": [_cut(w, ITEM_LINE) for w in whats]})
     if "Co odešlo Cymetice" in sections:
         found = _bullets(sections["Co odešlo Cymetice"])
         lines.append({"kind": "sent", "count": len(found),
@@ -134,20 +157,22 @@ def deep_pass(markdown: str) -> dict:
 FIXED_STATUSES = frozenset({"fixed", "resolved"})
 
 
-def titles_from(tracker_rows: list[dict], ledger: dict) -> dict:
-    """{report id: what it is about}: the tracker's own title where our copy
-    of it still holds the report, else the title of the first ledger row
-    filed for it."""
-    out: dict = {}
+def titles_from(tracker_rows: list[dict], ledger: dict, czech: dict | None = None) -> dict:
+    """{report id: what it is about, in Czech}: its own line from `outbox/reports-cs.yaml`
+    (`czech`), and NO_CZECH for a report that has none. The tracker's English title and the
+    check's message are never shown (the operator, 2026-10-03: the report is Czech and plain);
+    the ids come from the tracker copy and from the reports the ledger filed."""
+    czech = {int(k): v for k, v in (czech or {}).items() if str(k).lstrip("-").isdigit() and v}
+    ids: list = []
     for row in tracker_rows or ():
-        if isinstance(row, dict) and row.get("id") is not None and row.get("title"):
-            out[row["id"]] = row["title"]
+        if isinstance(row, dict) and row.get("id") is not None:
+            ids.append(row["id"])
     for finding in ((ledger or {}).get("findings") or {}).values():
         for filed in ((finding.get("filing") or {}).get("reports") or ()):
             rid = filed.get("report_id") if isinstance(filed, dict) else None
-            if rid is not None and rid not in out and finding.get("title"):
-                out[rid] = finding["title"]
-    return out
+            if rid is not None:
+                ids.append(rid)
+    return {rid: czech.get(int(rid), NO_CZECH) for rid in ids if str(rid).lstrip("-").isdigit()}
 
 
 def _short_title(title) -> str:

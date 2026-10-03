@@ -3637,7 +3637,17 @@ def morning_page(now_local: datetime | None = None) -> Path:
             ledger = json.loads((state_dir() / "ledger.json").read_text(encoding="utf-8"))
         except (OSError, ValueError):
             pass
-        titles = qa_morning.titles_from(rows, ledger)
+        # Each report is named by its own Czech line (outbox/reports-cs.yaml), never by the
+        # tracker's English title (the operator, 2026-10-03).
+        czech = {}
+        try:
+            import yaml
+
+            czech = (yaml.safe_load((REPO_ROOT / "outbox" / "reports-cs.yaml").read_text(
+                encoding="utf-8")) or {}).get("reports") or {}
+        except (OSError, ValueError, ImportError):
+            czech = {}
+        titles = qa_morning.titles_from(rows, ledger, czech)
     except Exception:  # noqa: BLE001 -- a title is a nicety; the report still builds
         titles = {}
     view = qa_morning.build(
