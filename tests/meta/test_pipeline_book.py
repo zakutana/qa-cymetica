@@ -87,6 +87,25 @@ def test_a_closed_position_returns_its_money_to_the_book(tmp_path, monkeypatch):
     assert book["cash"] == 100600.0, "the proceeds come back, gain and all"
     assert book["equity"] == 100600.0
 
+    # L08, deep pass 2026-10-04: the close we sent for it is in the same log, an
+    # ACCEPTED chain whose outcome carries no top-level position_id, so book()
+    # looked it up as None, found nothing, and counted a phantom unlisted order
+    # -- 34 of them in affordable()'s message on this machine's records. A close
+    # is not an order the book spent anything on (`kind: "close"`, no usdc).
+    mod._append({"id": "TRD-0002", "type": "intent", "kind": "close",
+                 "card_id": "c1", "position_id": "p1", "paper": True,
+                 "notional_usdc": 6000.0})
+    mod._append({"id": "TRD-0002", "type": "outcome", "kind": "close",
+                 "outcome": "accepted", "http_status": 200,
+                 "realized_pnl_usdc": 600.0})
+    closed = mod.book(positions)
+    assert closed["unaccounted"] == 0 and closed["unaccounted_usdc"] == 0.0, (
+        f"an accepted close was counted as an order they did not list: {closed}")
+    assert closed["cash"] == 100600.0 and closed["equity"] == 100600.0, closed
+    ok, why = mod.affordable(10.0, positions)
+    assert ok is True and "unaccounted" not in why, (
+        f"the message reports phantom orders for closes: {why}")
+
 
 @qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
 def test_capital_they_accepted_and_do_not_list_is_still_spent(tmp_path, monkeypatch):
@@ -167,6 +186,16 @@ def test_capital_they_accepted_and_do_not_list_is_still_spent(tmp_path, monkeypa
         "a 409 refusal was taken for an order that landed")
     assert mod.book(both)["cash"] == 10000.0, (
         "an unknown order with no position of its card was held as spent")
+
+    # L08: skipping the accepted CLOSE chains (they carry no position_id and
+    # no usdc) must not hide a real unlisted buy beside them.
+    mod._append({"id": "TRD-0005", "type": "intent", "kind": "close",
+                 "card_id": "c1", "position_id": "p1", "paper": True})
+    mod._append({"id": "TRD-0005", "type": "outcome", "kind": "close",
+                 "outcome": "accepted", "http_status": 200})
+    mixed = mod.book(listed)
+    assert mixed["unaccounted"] == 1 and mixed["unaccounted_usdc"] == 60000.0, (
+        f"a close either hid the unlisted buy or was counted beside it: {mixed}")
 
 
 @qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
@@ -405,6 +434,75 @@ def test_capital_in_a_bot_is_what_went_in_and_what_it_made(tmp_path, monkeypatch
         {"id": "CLN-0008", "type": "outcome", "kind": "fund", "outcome": "unknown"}]
     assert mod.capital_in_bots([ours, bare], pending) is None, (
         "a transfer that may have landed was read as none")
+
+    # L01, deep pass 2026-10-04: a clone we RELEASED is deleted on their side
+    # and nothing came back (refunded 0.0), so my-clones no longer lists it. The
+    # sum ran over the bots they still list, and the release handed its funding
+    # back to cash and equity -- 3,391.73 USDC over ten releases on this
+    # machine, the leak scripts/lab.py::_clone_money (R03) closed on the lab
+    # side. The money moved stays moved; it is worth nothing.
+    gone = cloned + [
+        {"id": "CLN-0009", "type": "intent", "source_type": "bot"},
+        {"id": "CLN-0009", "type": "outcome", "outcome": "accepted",
+         "clone_instance_id": "b4"},
+        {"id": "CLN-0010", "type": "intent", "kind": "fund", "instance_id": "b4", "amount": 300.0},
+        {"id": "CLN-0010", "type": "outcome", "kind": "fund", "outcome": "accepted"},
+        {"id": "CLN-0011", "type": "intent", "kind": "release", "instance_id": "b4"},
+        {"id": "CLN-0011", "type": "outcome", "kind": "release", "outcome": "accepted",
+         "http_status": 204}]
+    assert mod.capital_in_bots([ours, bare], gone) == {"moved": 1300.0, "worth": 950.0}, (
+        "a released clone's funding went back to cash: it is moved, worth nothing")
+    stale = dict(bare, id="b4", total_profit_usdc=12.0)
+    assert mod.capital_in_bots([ours, bare, stale], gone) == {
+        "moved": 1300.0, "worth": 950.0}, (
+        "a released clone their list still shows is counted once and worth nothing")
+    refused = [r for r in gone if r["id"] != "CLN-0011"] + [
+        {"id": "CLN-0011", "type": "intent", "kind": "release", "instance_id": "b4"},
+        {"id": "CLN-0011", "type": "outcome", "kind": "release", "outcome": "rejected",
+         "http_status": 409}]
+    assert mod.capital_in_bots([ours, bare, stale], refused) == {
+        "moved": 1300.0, "worth": 1262.0}, (
+        "a release they refused released nothing: the clone is still ours")
+
+    # Through the book, from the record on disk and a my-clones that does not
+    # list the released clone: it stays out of cash, and out of equity (lost).
+    (tmp_path / "clones.jsonl").write_text(
+        "".join(json.dumps(r) + "\n" for r in gone), encoding="utf-8")
+
+    class Listing:
+        status_code = 200
+
+        def json(self):
+            return [ours, bare]
+
+    class Client:
+        def get(self, *args, **kwargs):
+            return Listing()
+
+    held = mod.clone_capital(Client())
+    assert held == {"moved": 1300.0, "worth": 950.0}, held
+    state = mod.book([], [], clone_capital=held)
+    assert state["cash"] == mod.BANKROLL - 1300.0, state
+    assert state["equity"] == mod.BANKROLL - 350.0, (
+        f"1,000 went in and is worth 950, 300 went and is gone: {state}")
+    ok, why = mod.affordable(mod.BANKROLL - 1299.0, [], [], in_bots=held)
+    assert ok is False, f"the released 300 was spent a second time: {why}"
+
+    # One reading of "released", not two: the lab leaves exactly the instances
+    # this counts as gone out of its own book, so what each counts adds back up
+    # to everything that was ever funded (and a refused release moves neither).
+    spec = importlib.util.spec_from_file_location(
+        "scripts_lab_parity", REPO / "scripts" / "lab.py")
+    scripts_lab = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(scripts_lab)
+    for rows, gone_for_paper in ((gone, 300.0), (refused, 0.0)):
+        (tmp_path / "clones.jsonl").write_text(
+            "".join(json.dumps(r) + "\n" for r in rows), encoding="utf-8")
+        in_lab = sum(scripts_lab._clone_money())
+        assert mod.capital_in_bots([], rows)["moved"] == gone_for_paper, rows[-2:]
+        assert in_lab + gone_for_paper == 1300.0, (
+            f"paper.py and lab.py disagree about which clones were released: "
+            f"the lab books {in_lab}, paper counts {gone_for_paper} gone")
 
 
 @qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")

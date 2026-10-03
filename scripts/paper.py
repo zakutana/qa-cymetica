@@ -372,6 +372,12 @@ def book(positions: list[dict], rows: list[dict] | None = None,
         intent, outcome = chain.get("intent") or {}, chain.get("outcome") or {}
         if outcome.get("outcome") != "accepted":
             continue
+        # A close spends nothing: its proceeds come back through the position's
+        # own realised pnl. Its outcome has no position_id of its own, so it
+        # read as an order they did not list (L08, deep pass 2026-10-04: 34
+        # phantoms in affordable()'s message). `landed()` skips them the same way.
+        if "close" in (intent.get("kind"), outcome.get("kind")):
+            continue
         held = by_position.get(outcome.get("position_id"))
         if held is None:
             # Accepted by them and not in their positions. This said it was
@@ -427,6 +433,17 @@ def capital_in_bots(rows, records) -> dict | None:
     have no record of cloning, or one with a transfer whose outcome is
     unknown: capital we cannot state is not capital we have. A bot we cloned
     whose every transfer was refused holds none of ours: 0, not unknown.
+
+    A clone we RELEASED (an accepted `release` in clones.jsonl, read the way
+    scripts/lab.py::_clone_money reads it) is deleted on their side and nothing
+    came back -- refunded 0.0. Its funding is MOVED and worth nothing, whether
+    their list still shows the row or, as it does once the delete lands, no
+    longer does: summed only over the rows they list, a release handed 3,391.73
+    USDC (ten of them, deep pass 2026-10-04, L01) back to cash and equity.
+    Only its ACCEPTED transfers count, as in lab.py's `funded`: a transfer of
+    unknown outcome into a clone that is already gone is not refused as it is
+    for a listed one, because nothing could ever settle it and the refusal
+    would then stand against every card order for good (none exists today).
     """
     if not isinstance(rows, list):
         return None
@@ -437,22 +454,30 @@ def capital_in_bots(rows, records) -> dict | None:
     cloned = {str(r.get("clone_instance_id")) for r in records
               if r.get("type") == "outcome" and not r.get("kind")
               and r.get("outcome") == "accepted" and r.get("clone_instance_id")}
+    # Which clones were released: lab.py::_clone_money's reading, the same one.
+    asked_release = {r.get("id"): str(r.get("instance_id")) for r in records
+                     if r.get("type") == "intent" and r.get("kind") == "release"}
+    answered = {r.get("id"): r for r in records if r.get("type") == "outcome"}
+    released = {asked_release[order] for order, done in answered.items()
+                if order in asked_release and done.get("outcome") == "accepted"}
     moved: dict[str, float] = {}
     unsure: set[str] = set()
     for order, (instance, amount) in asked.items():
         said = (outcomes.get(order) or {}).get("outcome")
         if said == "accepted":
             try:
-                moved[instance] = moved.get(instance, 0.0) + float(amount)
+                moved[str(instance)] = moved.get(str(instance), 0.0) + float(amount)
             except (TypeError, ValueError):
                 return None
         elif said != "rejected":
             unsure.add(str(instance))
     went_in = worth = 0.0
+    listed: set[str] = set()
     for row in rows:
         if not isinstance(row, dict):
             return None
         bot = str(row.get("id"))
+        listed.add(bot)
         if bot in unsure or (bot not in moved and bot not in cloned):
             return None
         profit = row.get("total_profit_usdc")
@@ -460,9 +485,12 @@ def capital_in_bots(rows, records) -> dict | None:
             return None
         try:
             went_in += moved.get(bot, 0.0)
-            worth += moved.get(bot, 0.0) + float(profit)
+            worth += (0.0 if bot in released
+                      else moved.get(bot, 0.0) + float(profit))
         except (TypeError, ValueError):
             return None
+    # A released clone their list no longer shows: what went in stays moved.
+    went_in += sum(moved.get(bot, 0.0) for bot in released - listed)
     return {"moved": round(went_in, 6), "worth": round(worth, 6)}
 
 
