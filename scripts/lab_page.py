@@ -1426,6 +1426,18 @@ button { font: inherit; color: inherit; }
   align-items: center; gap: 12px; padding: 8px 10px; border-radius: 10px; cursor: pointer;
   min-height: 46px; }
 .board > li + li.row { border-top: 1px solid var(--line-soft); }
+/* The column names, in the rows' own grid; the ones you can sort by are buttons. */
+.head { display: grid; grid-template-columns: 26px minmax(0, 1fr) 110px 150px 88px 80px 132px 250px 14px;
+  align-items: center; gap: 12px; padding: 4px 10px 6px; font-size: 11.5px; font-weight: 600;
+  letter-spacing: .05em; text-transform: uppercase; color: var(--text-faint);
+  border-bottom: 1px solid var(--line); }
+.head .sortable { all: unset; cursor: pointer; white-space: nowrap; overflow: hidden;
+  text-overflow: ellipsis; border-radius: 6px; padding: 2px 4px; margin: -2px -4px; }
+.head .sortable:hover { color: var(--text); background: var(--surface-2); }
+.head .sortable:focus-visible { outline: 2px solid var(--accent); outline-offset: 1px; }
+.head .sortable.on { color: var(--accent); }
+.head .val, .head .usd { text-align: right; }
+.head .val.sortable, .head .usd.sortable { text-align: right; }
 /* How long a bot ran: the length in bold, then when it started and stopped, then why. */
 .rn { display: flex; flex-direction: column; gap: 1px; min-width: 0; line-height: 1.25; }
 .rn b { font-size: 13.5px; font-variant-numeric: tabular-nums; }
@@ -1565,6 +1577,7 @@ button { font: inherit; color: inherit; }
 @media (max-width: 1180px) {
   .row { grid-template-columns: 22px minmax(0, 1fr) 90px 80px 120px 14px; }
   .row .rn { display: none; }
+  .head { display: none; }
   .row .usd, .row .st { display: none; }
   .dt { grid-template-columns: 1fr; }
   .m-tiles { grid-template-columns: repeat(2, minmax(0, 1fr)); }
@@ -1701,9 +1714,9 @@ function ranCell(le) {
   // its own -- as a third chip it was cut to "18 h +13..." (the operator, 2026-10-03).
   if (le.sector === "cards") {
     return le.at_18h != null
-      ? `<b class="${tone(le.at_18h)}">${pctText(le.at_18h)}</b><small>if sold after 18 h</small>`
+      ? `<b class="${tone(le.at_18h)}">${pctText(le.at_18h)}</b>`
       : (le.group === "live" ? '<small>not 18 h old yet</small>'
-         : le.group === "done" ? '<small>no 18 h figure</small>' : "");
+         : le.group === "done" ? '<small>no figure</small>' : "");
   }
   const r = le.ran;
   if (!r) return "";
@@ -2078,10 +2091,48 @@ function groupNow(counts) {
   if (saved && counts[saved]) return saved;
   return (GROUPS.find(([g]) => counts[g]) || ["live"])[0];
 }
+/* ---------- sorting by a column header (the operator, 2026-10-03) ---------- */
+const SORTS = {
+  name: le => String(le.title || "").toLowerCase(),
+  ran: le => le.sector === "cards" ? le.at_18h : (le.ran ? le.ran.seconds : null),
+  net: le => le.net_pct, usd: le => le.usdc,
+  bt: le => le.backtest ? le.backtest.pct : null,
+  state: le => ({survived: 0, inconclusive: 1, refuted: 2}[le.verdict] ?? 3)
+};
+function sortNow() {
+  const [key, dir] = readStore("lab.sort." + SECTOR, "").split(":");
+  return SORTS[key] ? {key: key, dir: dir === "asc" ? "asc" : "desc"} : null;
+}
+function sortedBy(list, s) {
+  const get = SORTS[s.key], sign = s.dir === "asc" ? 1 : -1;
+  return list.slice().sort((a, b) => {
+    const x = get(a), y = get(b);
+    if (x == null && y == null) return 0;
+    if (x == null) return 1;           // nothing to compare goes last, either way
+    if (y == null) return -1;
+    return sign * (typeof x === "string" ? x.localeCompare(y) : x - y);
+  });
+}
+function headRow() {
+  const s = sortNow();
+  const cell = (cls, key, label) => key
+    ? `<button type="button" class="${cls} sortable${s && s.key === key ? " on" : ""}" data-sort="${key}"` +
+      ` aria-label="sort by ${esc(label)}">${esc(label)}${s && s.key === key
+        ? (s.dir === "asc" ? " ▴" : " ▾") : ""}</button>`
+    : `<span class="${cls}">${esc(label)}</span>`;
+  const ranLabel = SECTOR === "cards" ? "After 18 h" : SECTOR === "bots" ? "Ran" : "";
+  return `<li class="head">` +
+    cell("rk", null, "#") + cell("nm", "name", "Experiment") + cell("sp", null, "Path") +
+    (ranLabel ? cell("rn", "ran", ranLabel) : '<span class="rn"></span>') +
+    cell("val", "net", "Result") + cell("usd", "usd", "Profit") + cell("bt", "bt", "Backtest") +
+    cell("st", "state", "Verdict") + '<span class="chev"></span></li>';
+}
 function ordered(list, group) {
   const net = le => le.net_pct == null ? -Infinity : le.net_pct;
   // A room of ours never ranks above his picks (V5, the own lane).
   const lane = (a, b) => Number(!!a.ours) - Number(!!b.ours);
+  const by = sortNow();
+  if (by) return sortedBy(list, by);
   return list.slice().sort(group === "archive"
     ? (a, b) => lane(a, b) || String(b.id).localeCompare(String(a.id))
     : (a, b) => lane(a, b) || net(b) - net(a));
@@ -2106,7 +2157,7 @@ function renderRoom() {
       `<span class="n">${counts[g]}</span></button>`).join("")}</div>
      <span class="bar-hint">${group === "archive" ? "failed tests — nothing is deleted"
        : "by result after fees · click for detail"}</span></div>` +
-    (shown.length ? `<ol class="board">${shown.map((le, i) =>
+    (shown.length ? `<ol class="board">${headRow()}${shown.map((le, i) =>
        row(le, i + 1, le.id === OPEN)).join("")}</ol>` : `<p class="empty">${EMPTY[group]}</p>`) +
     (rows.length > TOP ? `<button type="button" class="more" data-all>${all ? "Less ▴"
        : `All ${rows.length} ▾`}</button>` : "");
@@ -2293,6 +2344,16 @@ document.getElementById("sectors").addEventListener("click", e => {
 });
 document.getElementById("room").addEventListener("click", e => {
   if (e.target.closest("a")) return;
+  const sorter = e.target.closest("[data-sort]");
+  if (sorter) {
+    // The same column again flips it; a new one starts best-first (the name, A to Z).
+    const now = sortNow(), key = sorter.dataset.sort;
+    const dir = now && now.key === key ? (now.dir === "desc" ? "asc" : "desc")
+      : (key === "name" ? "asc" : "desc");
+    writeStore("lab.sort." + SECTOR, key + ":" + dir);
+    renderRoom();
+    return;
+  }
   const g = e.target.closest("[data-group]");
   if (g) { labShow(SECTOR, g.dataset.group); return; }
   const chat = e.target.closest("[data-chat]");
