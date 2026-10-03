@@ -30,6 +30,7 @@ is the one a narrow selector would otherwise leave unproven.)
 from __future__ import annotations
 
 import json
+import math
 import re
 import time
 from contextvars import ContextVar
@@ -145,6 +146,12 @@ class EndpointRegistry:
         # match exactly (place_arena_order's `mode: paper`). The tool-side twin
         # of EndpointRule.required_flags.
         self.tools_paper_gated: dict[str, str | dict] = dict(tools.get("paper_gated", {}))
+        # Writes on one of our own clones that move no money and carry no paper
+        # argument: {tool: {args: [...], <arg>: [allowed values]}}. See the MUTATE
+        # branch of the transport; tool_class stays "unknown" for them, as it does
+        # for the paper-gated tools.
+        self.tools_own_clone_write: dict[str, dict] = {
+            str(name): dict(rule or {}) for name, rule in (tools.get("own_clone_write") or {}).items()}
         self.components = raw.get("components", {})
         self.mutate_enabled = False
         self.mutate_allowed_hosts: frozenset[str] = frozenset()
@@ -393,6 +400,14 @@ class SafetyTransport(httpx.BaseTransport):
             # allowlist (RO05).
             return True
 
+        # A write on one of our clones that moves nothing and has no paper argument.
+        # What the call itself can say is held here; that the clone is a PAPER clone of
+        # ours is the caller's floor (scripts/clone.py indicators()).
+        own = self.registry.tools_own_clone_write.get(str(tool))
+        if own:
+            self._assert_own_clone_write(str(tool), args, own)
+            return True
+
         if klass in ("trade", "provision"):
             raise SafetyViolation(
                 f"MCP tool {tool!r} is classified {klass!r}: it moves money or "
@@ -420,6 +435,47 @@ class SafetyTransport(httpx.BaseTransport):
                 f"Classify it (read / contribute / trade / provision, or "
                 f"paper_gated with the flag that stops it) before calling it."
             )
+
+    @staticmethod
+    def _assert_own_clone_write(tool: str, args: dict, rule: dict) -> None:
+        """Exactly the arguments the tool documents, and nothing the call could smuggle.
+
+        Three arguments and no fourth: a stray `paper` or `force` is refused, not
+        ignored, because a flag the tool does not read is a flag somebody believes
+        in. The enumerated ones (`indicator_name`) must be a listed string, exactly.
+        `instance_id` is a non-empty string and `params` a non-empty object of plain
+        numbers -- a bool is an int in Python and is not a parameter, a string is not
+        a number, and NaN or infinity is not a setting.
+        """
+        wanted = list(rule.get("args") or [])
+        extra = sorted(set(args) - set(wanted))
+        missing = sorted(set(wanted) - set(args))
+        if extra or missing:
+            raise SafetyViolation(
+                f"MCP tool {tool!r} takes exactly {wanted}; this call has "
+                f"extra {extra} and lacks {missing}."
+            )
+        for key, allowed in rule.items():
+            if key == "args":
+                continue
+            value = args.get(key)
+            if not isinstance(value, str) or value not in list(allowed or []):
+                raise SafetyViolation(
+                    f"MCP tool {tool!r}: {key}={value!r} is not one of {list(allowed or [])}."
+                )
+        instance = args.get("instance_id")
+        if "instance_id" in wanted and (not isinstance(instance, str) or not instance.strip()):
+            raise SafetyViolation(f"MCP tool {tool!r}: instance_id must be a non-empty string.")
+        if "params" in wanted:
+            params = args.get("params")
+            plain = (isinstance(params, dict) and params and all(
+                isinstance(k, str) and isinstance(v, (int, float)) and not isinstance(v, bool)
+                and math.isfinite(v) for k, v in params.items()))
+            if not plain:
+                raise SafetyViolation(
+                    f"MCP tool {tool!r}: params must be a non-empty object of plain numbers, "
+                    f"got {params!r}."
+                )
 
     # -- the inert-body proof ---------------------------------------------
     def _assert_declared_flags(self, request, rule) -> None:

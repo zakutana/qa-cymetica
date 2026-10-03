@@ -47,7 +47,8 @@ from pathlib import Path
 REPO_ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(REPO_ROOT))
 
-from qa.client import build_client, install_client_guard  # noqa: E402
+from qa.client import (McpError, build_client, build_mcp_client,  # noqa: E402
+                       install_client_guard)
 from qa.config import identities, load_dotenv  # noqa: E402
 from qa.console import printable  # noqa: E402
 from qa.safety import CURRENT_TIER, EndpointRegistry, SafetyTier  # noqa: E402
@@ -611,7 +612,7 @@ def restart_refusal(instance_id: str, rows: list[dict] | None = None,
     # needs the platform's yes.
     steps = [row["kind"] for row in rows
              if row.get("type") == "intent"
-             and row.get("kind") in ("enable", "disable", "settings")
+             and row.get("kind") in ("enable", "disable", "settings", "indicators")
              and str(row.get("instance_id")) == str(instance_id)
              and (answered.get(row.get("id")) == "accepted"
                   or (row.get("kind") == "enable"
@@ -625,10 +626,13 @@ def restart_refusal(instance_id: str, rows: list[dict] | None = None,
                 f"a new variant needs our own pause first, then a settings "
                 f"change after it")
     after_pause = since[since.index("disable") + 1:]
-    if "settings" not in after_pause and not planned:
+    # A change of the settings OR of an indicator's parameters is a new variant
+    # (2026-10-03: indicators are the one lever on the algorithm a key reaches).
+    if not ({"settings", "indicators"} & set(after_pause)) and not planned:
         return (f"{instance_id} is paused by us, but no accepted settings "
-                f"change follows the pause, so a start now would run the same "
-                f"settings again -- the same experiment, not a new variant")
+                f"or indicator change follows the pause, so a start now would "
+                f"run the same settings again -- the same experiment, not a "
+                f"new variant")
     running = room_running(instance_id)
     if running:
         return (f"{running} is running on {instance_id}; a variant starts only "
@@ -980,6 +984,181 @@ def settings(instance_id: str, changes: dict, confirm: bool) -> dict:
     return {"id": change_id, "outcome": said, **served}
 
 
+# The parameters of the indicators a clone runs, and the bounds we hold them to. Skills and models
+# cannot be equipped with an API key (their routes want a browser session, NEX-0121), so these are
+# the one lever on a clone's algorithm a key reaches: MCP `update_bot_indicators`, "Override one
+# indicator's parameters on one of YOUR clones". Names are the ones `get_bot_indicators` reports
+# (2026-10-03): RSI period/overbought/oversold, MACD fast/slow/signal, Bollinger period/std_dev.
+# `stochastic` is documented by the tool but its parameter names are not read yet, so it is not
+# walked. The bounds are ours, wide enough to be a real change and narrow enough that a typo is
+# not a setting: (low, high, integer?).
+INDICATOR_PARAMS = {
+    "rsi": {"period": (2, 100, True), "overbought": (50, 95, False), "oversold": (5, 50, False)},
+    "macd": {"fast": (2, 50, True), "slow": (5, 120, True), "signal": (2, 50, True)},
+    "ema": {"period": (2, 400, True)},
+    "sma": {"period": (2, 400, True)},
+    "bollinger": {"period": (5, 100, True), "std_dev": (0.5, 4.0, False)},
+    "atr": {"period": (2, 100, True)},
+}
+GET_INDICATORS = "get_bot_indicators"
+SET_INDICATORS = "update_bot_indicators"
+
+
+def safe_indicator(indicator, params) -> dict:
+    """The parameters to send, or a refusal naming the field -- before anything is built."""
+    name = str(indicator or "").strip().lower()
+    if name == "stochastic":
+        raise SystemExit("stochastic: documented by the tool, but its parameter names are not read yet "
+                         "(`get_bot_indicators` on a clone that runs it names them), so it is not walked")
+    if name not in INDICATOR_PARAMS:
+        raise SystemExit(f"{indicator!r} is not an indicator the laboratory tunes; it walks "
+                         f"{', '.join(sorted(INDICATOR_PARAMS))}")
+    if not isinstance(params, dict) or not params:
+        raise SystemExit(f"an indicator change with nothing in it changes nothing ({name})")
+    bounds = INDICATOR_PARAMS[name]
+    out = {}
+    for key, value in params.items():
+        if key not in bounds:
+            raise SystemExit(f"{name}: {key!r} is not a parameter of it; known: {', '.join(sorted(bounds))}")
+        low, high, integer = bounds[key]
+        if isinstance(value, bool) or not isinstance(value, (int, float)) or value != value:
+            raise SystemExit(f"{name}.{key} must be a plain number, got {value!r}")
+        if integer and float(value) != int(value):
+            raise SystemExit(f"{name}.{key} must be a whole number, got {value!r}")
+        if not low <= value <= high:
+            raise SystemExit(f"{name}.{key}={value} is outside {low}..{high}")
+        out[key] = int(value) if integer else value
+    if name == "rsi" and {"overbought", "oversold"} <= set(out) and out["overbought"] <= out["oversold"]:
+        raise SystemExit("rsi.overbought must be above rsi.oversold")
+    if name == "macd" and {"fast", "slow"} <= set(out) and out["fast"] >= out["slow"]:
+        raise SystemExit("macd.fast must be below macd.slow")
+    return out
+
+
+def _descend(payload):
+    """Their envelope is {success, tool, result:{...}} in places; the answer is inside."""
+    node = payload
+    for _ in range(4):
+        if isinstance(node, dict) and isinstance(node.get("result"), (dict, str)):
+            node = node["result"]
+        else:
+            break
+    return node
+
+
+def _effective(read, indicator: str) -> dict:
+    """The effective parameters of one indicator in a `get_bot_indicators` answer, or {}."""
+    node = _descend(read)
+    for item in (node.get("indicators") or []) if isinstance(node, dict) else []:
+        if isinstance(item, dict) and str(item.get("name") or "").lower() == indicator:
+            effective = item.get("effective")
+            return effective if isinstance(effective, dict) else {}
+    return {}
+
+
+def indicators(instance_id: str, indicator: str, params: dict, confirm: bool) -> dict:
+    """Change the parameters of one indicator on a paper clone -- one variant, as `settings()` is.
+
+    The MCP tool has no `paper` argument, so the transport can hold only what the call says (exactly
+    three arguments, a documented indicator, plain numbers -- qa/safety.py, own_clone_write). Floors
+    here, every one before the request:
+
+      * the parameters are inside INDICATOR_PARAMS;
+      * OUR record made this instance as a paper clone, and no room of ours is running on it -- a
+        variant is a new room, never a change under the one being measured;
+      * THEIR row says paper twice over, is_paper and execution_class (`startable`).
+
+    Rule 9: the intent is written before the call and every path out owes an outcome; a call that may
+    have landed is `unknown`. The clone's indicators are read back afterwards and whether they now say
+    what we asked is RECORDED, not assumed.
+    """
+    name = str(indicator or "").strip().lower()
+    body = {"indicator": name, "params": safe_indicator(name, params)}
+    if not paper_by_our_record(instance_id):
+        raise SystemExit(
+            f"{instance_id} is not a paper clone by our record (no accepted clone of ours whose outcome "
+            f"said is_paper true), so its indicators are not ours to change")
+    running = room_running(instance_id)
+    if running:
+        raise SystemExit(
+            f"{running} is running on {instance_id}, and its indicators are what it measures: a variant "
+            f"is a new room, opened after this one stops")
+
+    load_dotenv()
+    install_client_guard()
+    registry = EndpointRegistry.load()
+    registry.mutate_enabled = True
+    registry.mutate_allowed_hosts = frozenset({"cymetica.com"})
+    ids = identities()
+    rest = build_client(ids["trusted"], registry, timeout=60.0)
+    mcp = build_mcp_client(ids["trusted"], registry)
+
+    row = _instance(rest, instance_id)
+    if not startable(row):
+        economics = row.get("execution_economics") or {}
+        raise SystemExit(
+            f"{instance_id}: they say is_paper={row.get('is_paper')!r} and "
+            f"execution_class={economics.get('execution_class')!r}. Both must say paper before its "
+            f"indicators change -- the call carries no flag for the transport to read, so this is the floor.")
+
+    token = CURRENT_TIER.set(SafetyTier.SAFE)
+    try:
+        read_before = mcp.call(GET_INDICATORS, {"instance_id": instance_id})
+    finally:
+        CURRENT_TIER.reset(token)
+    before = _snapshot(rest)
+    change_id = _next_id(load())
+    entry = {"id": change_id, "type": "intent", "at": _now(), "kind": "indicators",
+             "instance_id": instance_id, "body": body,
+             "their_is_paper": row.get("is_paper"),
+             "their_execution_class": (row.get("execution_economics") or {}).get("execution_class"),
+             "their_effective_before": _effective(read_before, name), "before": before}
+    if not confirm:
+        print(json.dumps(entry, indent=2, ensure_ascii=False))
+        print("\nnothing sent, and nothing recorded. Add --confirm.")
+        return entry
+
+    change_id = _append_intent(entry)["id"]
+    arguments = {"instance_id": instance_id, "indicator_name": name, "params": body["params"]}
+    token = CURRENT_TIER.set(SafetyTier.MUTATE)
+    try:
+        answer = mcp.call(SET_INDICATORS, arguments)
+    except McpError as exc:
+        # They answered, and the answer was a refusal: a tool error is HTTP 200 with isError set.
+        _append({"id": change_id, "type": "outcome", "at": _now(), "kind": "indicators",
+                 "outcome": "rejected", "error": str(exc)[:600]})
+        raise SystemExit(f"{change_id}: refused by them: {str(exc)[:300]}")
+    except Exception as exc:  # noqa: BLE001
+        _append({"id": change_id, "type": "outcome", "at": _now(), "kind": "indicators",
+                 "outcome": _outcome_of(exc), "error": f"{type(exc).__name__}: {exc}"})
+        raise
+    finally:
+        CURRENT_TIER.reset(token)
+
+    inner = _descend(answer)
+    said = "accepted" if isinstance(inner, dict) and inner.get("success") is True else "rejected"
+    _append({"id": change_id, "type": "outcome", "at": _now(), "kind": "indicators", "outcome": said,
+             "response": json.dumps(inner, ensure_ascii=False, default=str)[:1200]})
+    reread, effective = "ok", {}
+    token = CURRENT_TIER.set(SafetyTier.SAFE)
+    try:
+        effective = _effective(mcp.call(GET_INDICATORS, {"instance_id": instance_id}), name)
+    except Exception as exc:  # noqa: BLE001
+        reread = f"failed: {type(exc).__name__}: {exc}"
+    finally:
+        CURRENT_TIER.reset(token)
+    matches = bool(effective) and all(effective.get(k) == v for k, v in body["params"].items())
+    try:
+        _append({"id": change_id, "type": "after", "at": _now(), "kind": "indicators", "reread": reread,
+                 "their_effective": effective, "effective_matches": matches, **_snapshot(rest)})
+    finally:
+        rest.close()
+        mcp.http.close()
+    print(f"{change_id}: {said}, {name} of {instance_id} -> {json.dumps(body['params'])}; "
+          f"read back {'matches' if matches else 'DOES NOT MATCH'}")
+    return {"id": change_id, "outcome": said, "effective_matches": matches}
+
+
 def watch(instance_id: str, every: int, until: int) -> int:
     """Sample our bot on a timer -- now one round of the console's sampler.
 
@@ -1031,6 +1210,13 @@ def main() -> int:
     go = sub.add_parser("enable", help="start a paper bot trading")
     go.add_argument("--instance-id", required=True)
     go.add_argument("--confirm", action="store_true")
+
+    algo = sub.add_parser("indicators", help="change the parameters of one indicator on a paper "
+                          "clone (one variant; refused while its room runs)")
+    algo.add_argument("--instance-id", required=True)
+    algo.add_argument("--indicator", required=True, help=f"one of {', '.join(sorted(INDICATOR_PARAMS))}")
+    algo.add_argument("--set", action="append", default=[], metavar="PARAM=NUMBER")
+    algo.add_argument("--confirm", action="store_true")
 
     tune = sub.add_parser("settings", help="change a paper clone's settings "
                           "(one variant; refused while its room runs)")
@@ -1097,6 +1283,14 @@ def main() -> int:
             key, _, value = pair.partition("=")
             changes[key] = json.loads(value)
         settings(args.instance_id, changes, args.confirm)
+        return 0
+
+    if args.cmd == "indicators":
+        changes = {}
+        for pair in args.set:
+            key, _, value = pair.partition("=")
+            changes[key] = json.loads(value)
+        indicators(args.instance_id, args.indicator, changes, args.confirm)
         return 0
 
     if args.cmd == "fund":

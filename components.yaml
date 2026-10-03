@@ -863,6 +863,19 @@ mcp_tools:
   paper_gated:
     trade_event_card: paper
     place_arena_order: {mode: paper}
+
+  # A write on one of OUR clones that moves no money and has no paper argument, so
+  # paper_gated cannot carry it (2026-10-03, bot research). Opened at MUTATE with exactly
+  # the arguments the tool documents -- no fourth, a documented indicator, a non-empty
+  # object of plain numbers. That the clone is a paper clone of ours is not in the call:
+  # it is the caller's floor, scripts/clone.py indicators(), as clone.settings() is for the
+  # settings PATCH. update_bot_indicators: "Override one indicator's parameters on one of
+  # YOUR clones (rsi/macd/ema/sma/bollinger/atr/stochastic)", destructiveHint: true.
+  # tests/meta/test_pipeline_own_clone_write.py holds the gate.
+  own_clone_write:
+    update_bot_indicators:
+      args: [instance_id, indicator_name, params]
+      indicator_name: [rsi, macd, ema, sma, bollinger, atr, stochastic]
   provision:
     [create_aib_fund, edit_aib_fund_basket, launchpad_launch_token,
      register_webhook, subscribe_prices]
