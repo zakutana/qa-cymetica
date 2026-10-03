@@ -1443,8 +1443,8 @@ button { font: inherit; color: inherit; }
 .bar-hint { font-size: 12.5px; color: var(--text-faint); }
 
 .board { list-style: none; margin: 0; padding: 0; }
-.board { --cols: 26px minmax(0, 1fr) 110px 96px 88px 80px 132px 250px 14px; }
-.board.sec-bots { --cols: 26px minmax(0, 1fr) 110px 150px 88px 80px 132px 250px 14px; }
+.board { --cols: 26px minmax(0, 1fr) 110px 96px 88px 80px 132px 14px; }
+.board.sec-bots { --cols: 26px minmax(0, 1fr) 110px 150px 88px 80px 132px 14px; }
 .row { display: grid; grid-template-columns: var(--cols);
   align-items: center; gap: 12px; padding: 8px 10px; border-radius: 10px; cursor: pointer;
   min-height: 46px; }
@@ -1467,6 +1467,7 @@ button { font: inherit; color: inherit; }
 .rn small { font-size: 11.5px; color: var(--text-faint); white-space: nowrap; overflow: hidden;
   text-overflow: ellipsis; }
 .rn small.why { color: var(--text-dim); }
+.nm .left { color: var(--text-faint); font-size: 12px; margin-left: 6px; }
 .h18 { display: flex; flex-direction: column; min-width: 0; }
 .h18 b { font-size: 14px; font-variant-numeric: tabular-nums; }
 .h18 small { font-size: 11.5px; color: var(--text-faint); }
@@ -1485,7 +1486,7 @@ button { font: inherit; color: inherit; }
   white-space: nowrap; }
 .usd { font-size: 13.5px; text-align: right; font-variant-numeric: tabular-nums;
   white-space: nowrap; }
-.bt, .st { display: flex; gap: 6px; min-width: 0; overflow: hidden; }
+.bt { display: flex; gap: 6px; min-width: 0; overflow: hidden; }
 .chev { color: var(--text-faint); font-size: 16px; }
 .chip { font-size: 12.5px; padding: 2px 9px; border-radius: 999px; background: var(--surface-3);
   color: var(--text-dim); white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
@@ -1608,7 +1609,7 @@ button { font: inherit; color: inherit; }
   .row { grid-template-columns: 22px minmax(0, 1fr) 90px 80px 120px 14px; }
   .row .rn, .row .h18 { display: none; }
   .head { display: none; }
-  .row .usd, .row .st { display: none; }
+  .row .usd { display: none; }
   .dt { grid-template-columns: 1fr; }
   .m-tiles { grid-template-columns: repeat(2, minmax(0, 1fr)); }
 }
@@ -1802,32 +1803,22 @@ function roomHead(lp) {
 }
 
 /* ---------- one experiment, one row ---------- */
-const VERDICT = {survived: ["up", "✓ worked"], refuted: ["down", "✗ didn't work"],
-                 inconclusive: ["", "? can't tell"]};
-const STATUS = {paused: "paused", proposed: "proposed", stopped: "stopped"};
 function btChip(lb) {
   if (!lb || lb.pct == null) return chip("", "no backtest");
   return chip(lb.pass ? "up" : "down", "backtest " + pctText(lb.pct, 0));
 }
-function stateChips(le) {
-  if (le.group === "done") {
-    const v = VERDICT[le.verdict] || ["", STATUS[le.status] || "ended"];
-    return chip(v[0], v[1]) + (le.reason ? chip("", esc(le.reason)) : "");
+// What a running room still owes: when it closes, and whether its bot trades. A finished one
+// says nothing here -- its result is the verdict (the operator, 2026-10-03: no Verdict column).
+function liveNote(le) {
+  if (le.group !== "live") return "";
+  const parts = [];
+  if (le.left_days != null) parts.push(`<small class="left">${leftText(le.left_days)}</small>`);
+  if (le.trading != null) {
+    parts.push(`<small class="left ${le.trading ? "up" : ""}">${le.trading ? "trading" : "idle"}</small>`);
   }
-  if (le.group === "archive") {
-    // A bot that did not work is archived with its verdict still on it.
-    const v = VERDICT[le.verdict];
-    return (v ? chip(v[0], v[1]) : "") + chip("", esc(le.reason || "archived"));
-  }
-  const out = [];
-  // A bot that stopped by itself says so once, in its reason.
-  if (le.trading != null && !le.reason) {
-    out.push(chip(le.trading ? "up" : "", le.trading ? "trading" : "idle"));
-  }
-  if (le.reason) out.push(chip("down", esc(le.reason)));
-  if (STATUS[le.status]) out.push(chip("", STATUS[le.status]));
-  if (le.left_days != null) out.push(chip("", leftText(le.left_days)));
-  return out.join("");
+  const held = ({paused: "paused", proposed: "proposed"})[le.status];
+  if (held) parts.push(`<small class="left">${held}</small>`);
+  return parts.length ? " " + parts.join(" ") : "";
 }
 function spark(points) {
   if (!points || points.length < 2) return '<span class="sp-none">—</span>';
@@ -1854,14 +1845,13 @@ function row(le, rank, open) {
       role="button" aria-expanded="${open}">
     <span class="rk">${rank}</span>
     <span class="nm" title="${esc(le.title)}">${esc(le.title)}${le.ours
-      ? ' <span class="ours">ours</span>' : ""}</span>
+      ? ' <span class="ours">ours</span>' : ""}${liveNote(le)}</span>
     <span class="sp">${le.group === "archive" && !le.verdict ? '<span class="sp-none">—</span>' : spark(le.spark)}</span>
     ${SECTOR === "bots" ? `<span class="rn">${ranCell(le)}</span>` : ""}
     ${SECTOR === "cards" ? `<span class="h18">${h18Cell(le)}</span>` : ""}
-    <span class="val ${tone(le.net_pct)}">${pctText(le.net_pct)}</span>
+    <span class="val ${tone(le.net_pct)}" title="${esc(le.reason || "")}">${pctText(le.net_pct)}</span>
     <span class="usd ${tone(le.usdc)}">${le.usdc == null ? "" : usdText(le.usdc)}</span>
     <span class="bt">${btChip(le.backtest)}</span>
-    <span class="st">${stateChips(le)}</span>
     <span class="chev" aria-hidden="true">${open ? "▾" : "›"}</span></li>` +
     (open ? detail(le) : "");
 }
@@ -2030,8 +2020,7 @@ const SORTS = {
   h18: le => le.at_18h,
   ran: le => le.ran ? le.ran.seconds : null,
   net: le => le.net_pct, usd: le => le.usdc,
-  bt: le => le.backtest ? le.backtest.pct : null,
-  state: le => ({survived: 0, inconclusive: 1, refuted: 2}[le.verdict] ?? 3)
+  bt: le => le.backtest ? le.backtest.pct : null
 };
 function sortNow() {
   const [key, dir] = readStore("lab.sort." + SECTOR, "").split(":");
@@ -2058,7 +2047,7 @@ function headRow() {
     cell("rk", null, "#") + cell("nm", "name", "Experiment") + cell("sp", null, "Path") +
     (SECTOR === "bots" ? cell("rn", "ran", "Ran") : "") +
     (SECTOR === "cards" ? cell("h18", "h18", "After 18 h") : "") + cell("val", "net", "Result")+ cell("usd", "usd", "Profit") + cell("bt", "bt", "Backtest") +
-    cell("st", "state", "Verdict") + '<span class="chev"></span></li>';
+    '<span class="chev"></span></li>';
 }
 function ordered(list, group) {
   const net = le => le.net_pct == null ? -Infinity : le.net_pct;

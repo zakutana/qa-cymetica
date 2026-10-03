@@ -396,7 +396,10 @@ def test_the_archive_and_the_judged_are_one_click_away_with_their_reason(tmp_pat
                      after='window.labShow("cards", "archive");').get("room", "")
     assert "Never bought" not in archive, "a room that bought nothing is listed"
     done = _drawn(tmp_path, "done", after='window.labShow("cards", "done");').get("room", "")
-    assert "Solana doubles" in done and "drawdown 11.8%" in done and "didn't work" in done
+    # No Verdict column (the operator, 2026-10-03: "verdict sloupec je zbytecny"): the result is
+    # the verdict, and the reason is on its tooltip.
+    assert "Solana doubles" in done and "drawdown 11.8%" in done
+    assert "didn't work" not in done and "Verdict" not in done and 'class="st"' not in done
 
 
 @qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
@@ -437,7 +440,7 @@ def test_a_room_of_ours_says_ours_and_never_ranks_above_his(tmp_path):
     assert code == 0, err[:1200]
     room = captured.get("room", "")
     assert ">ours<" in room, room[:2000]
-    assert room.index("Bollinger Bandit · SL 5") > room.index("Bollinger Bandit<"), (
+    assert room.index("Bollinger Bandit · SL 5") > room.index("Bollinger Bandit"), (
         "a room of ours ranked above his pick")
 
 
