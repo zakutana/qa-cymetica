@@ -49,6 +49,28 @@ klony: 11 existuje, strop se ověří při F1.
 * **F4 H2H záznam**: `h2h.py` uloží slug, `results` čte `/head-to-head/mine`, `matrix` pustí dávku párů;
   `/lab` ukáže H2H řádek (angličtina, čísla před slovy, barvy Cymetiky).
 
+## Zbývá (stav 2026-10-04, zapsáno na žádost operátora; odškrtávat tady)
+Hotovo: F0 (sondy, Nexus NEX-0121), brána `own_clone_write` + `clone.py indicators()` (první živá změna ATR Alpha
+CLN-0143, read-back sedí), wave 0 spuštěna (12 botů obchoduje, rooms STR-0083..0091, kritérium předem), commit 2cc5d5fe.
+
+- [ ] **Sampler musí běžet** do konce wave 0: `python scripts/sampler.py run --every 600` (dnes běží jako pozadí
+      session; konzole ho dělá taky: `serve.py --sample 10`). Bez něj se room nedá soudit.
+- [ ] **Wave 0 verdikt ~10. 10.** (STR-0083..0091 + sedm starších); `lab.py verdicts` / tick. Jedno okno je měření,
+      ne nález.
+- [ ] **Vlna 2** po verdiktu: stejné druhy, jedna změna parametru (`clone.py indicators`, jen WTA druhy; perpetual agenti
+      indikátory nemají), nové okno, kritérium předem. Tvrzení „druh/parametr vydělává" až po dvou oknech.
+- [ ] **F1 kód (testy napřed):** strop *obchodujících* botů jako konstanta (dnes ≥ 12 ověřeno, 25 ne); refusal „strop"
+      nespotřebuje položku gridu ani se nezapíše jako „API odmítlo klon"; víc klonů na druh až když to Cymetica zapne
+      (dnes 409 ALREADY_CLONED); sampler pro ≥ 25 botů (co čte druhý GET na bota); názvy roomů podle konfigurace.
+- [ ] **F4:** `h2h.py` ukládá slug, `results` čte `/head-to-head/mine`, `matrix` pouští dávky; H2H řádek v `/lab`.
+- [ ] **Tool pro vlnu** (dnes ruční skript): `wave.py` z návrhu → klony, financování, rooms s kritériem předem.
+- [ ] **Karty, dopředný test:** short karet jen s akciemi (−0,35 až −0,55 % za 72 h), long s kryptem; soudit jen na
+      kartách vzniklých po 3. 10. Skript do repa, plán napřed. Nápad k ověření: koncentrace váhy koše (HHI) a počet
+      položek předpovídá „Hot" (Nexus NEX-0120 potvrdil mechanismus).
+- [ ] **Odpovědi Cymetiky ke sledování:** 2. klon druhu (409, A2A-0055), skilly/modely přes API klíč (A2A-0054),
+      report #150 (plán Pro/Free), podání /code-review a push až po deep passu.
+- [ ] **Nepotvrzeno, čeká na operátora:** zpráva Cymetice o soukromí zadání v Build it Better (CoStar chce nasazení).
+
 ## Meze
 Jen paper; žádný nákup skillu/modelu za USDC; MUTATE zůstává trojí brána; Nexus radí, naše strategie se měří,
 nevěří se jim před ním. Platební věci a účty patří operátorovi.
