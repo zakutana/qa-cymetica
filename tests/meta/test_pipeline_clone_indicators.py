@@ -108,8 +108,7 @@ def _offline(mod, monkeypatch, rest, mcp):
         monkeypatch.setattr(mod, name, value)
 
 
-@qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
-def test_the_parameters_are_inside_bounds_written_down_per_indicator(tmp_path, monkeypatch):
+def _case_the_parameters_are_inside_bounds_written_down_per_indicator(tmp_path, monkeypatch):
     mod = _clone(tmp_path, monkeypatch)
     assert mod.safe_indicator("rsi", {"period": 21}) == {"period": 21}
     assert mod.safe_indicator("rsi", {"period": 7, "overbought": 75, "oversold": 25}) == {
@@ -135,8 +134,7 @@ def test_the_parameters_are_inside_bounds_written_down_per_indicator(tmp_path, m
             mod.safe_indicator(indicator, params)
 
 
-@qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
-def test_an_indicator_change_needs_our_paper_record_theirs_and_no_running_room(tmp_path, monkeypatch):
+def _case_an_indicator_change_needs_our_paper_record_theirs_and_no_running_room(tmp_path, monkeypatch):
     mod = _clone(tmp_path, monkeypatch)
     change = ("rsi", {"period": 21})
 
@@ -174,8 +172,7 @@ def test_an_indicator_change_needs_our_paper_record_theirs_and_no_running_room(t
     assert not [r for r in mod.load() if r.get("kind") == "indicators"], "a refused change left a record"
 
 
-@qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
-def test_an_accepted_change_is_written_intent_outcome_after_and_read_back(tmp_path, monkeypatch):
+def _case_an_accepted_change_is_written_intent_outcome_after_and_read_back(tmp_path, monkeypatch):
     mod = _clone(tmp_path, monkeypatch)
     _ours(mod)
     mcp = _Mcp({"period": 14}, update={"success": True, "message": "RSI overridden"})
@@ -198,8 +195,7 @@ def test_an_accepted_change_is_written_intent_outcome_after_and_read_back(tmp_pa
     assert chain[2]["reread"] == "ok" and chain[2]["effective_matches"] is True
 
 
-@qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
-def test_a_change_the_read_back_does_not_show_is_flagged_not_assumed(tmp_path, monkeypatch):
+def _case_a_change_the_read_back_does_not_show_is_flagged_not_assumed(tmp_path, monkeypatch):
     mod = _clone(tmp_path, monkeypatch)
     _ours(mod)
     mcp = _Mcp({"period": 14}, update={"success": True})     # accepted, but the bot still runs 14
@@ -209,8 +205,7 @@ def test_a_change_the_read_back_does_not_show_is_flagged_not_assumed(tmp_path, m
     assert after["effective_matches"] is False
 
 
-@qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
-def test_a_refused_write_is_recorded_rejected_and_a_failed_one_unknown(tmp_path, monkeypatch):
+def _case_a_refused_write_is_recorded_rejected_and_a_failed_one_unknown(tmp_path, monkeypatch):
     mod = _clone(tmp_path, monkeypatch)
     _ours(mod)
     mcp = _Mcp({"period": 14}, update={"success": False, "error": "unknown indicator"})
@@ -232,8 +227,7 @@ def test_a_refused_write_is_recorded_rejected_and_a_failed_one_unknown(tmp_path,
     assert outcome[-1]["outcome"] == "unknown", "rule 9: a call that may have landed is unknown, never absent"
 
 
-@qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
-def test_an_indicator_change_after_our_pause_is_the_variant_that_lets_a_clone_start_again(tmp_path, monkeypatch):
+def _case_an_indicator_change_after_our_pause_is_the_variant_that_lets_a_clone_start_again(tmp_path, monkeypatch):
     mod = _clone(tmp_path, monkeypatch)
     _ours(mod)
 
@@ -249,3 +243,27 @@ def test_an_indicator_change_after_our_pause_is_the_variant_that_lets_a_clone_st
     assert mod.restart_refusal("inst-1"), "a refused indicator change is no variant"
     step("indicators")
     assert mod.restart_refusal("inst-1") is None, mod.restart_refusal("inst-1")
+
+
+# Folded on the deep pass of 2026-10-04 (tests/meta grows only by replacement): six functions became two; every case is a _case_ helper run in its own state directory.
+
+
+@qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
+def test_an_indicator_change_is_bounded_and_floored_before_anything_is_built(tmp_path, monkeypatch):
+    _case_the_parameters_are_inside_bounds_written_down_per_indicator(_fresh(tmp_path, 0), monkeypatch)
+    _case_an_indicator_change_needs_our_paper_record_theirs_and_no_running_room(_fresh(tmp_path, 1), monkeypatch)
+
+
+@qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
+def test_an_indicator_change_is_recorded_whole_and_counts_as_a_variant(tmp_path, monkeypatch):
+    _case_an_accepted_change_is_written_intent_outcome_after_and_read_back(_fresh(tmp_path, 0), monkeypatch)
+    _case_a_change_the_read_back_does_not_show_is_flagged_not_assumed(_fresh(tmp_path, 1), monkeypatch)
+    _case_a_refused_write_is_recorded_rejected_and_a_failed_one_unknown(_fresh(tmp_path, 2), monkeypatch)
+    _case_an_indicator_change_after_our_pause_is_the_variant_that_lets_a_clone_start_again(_fresh(tmp_path, 3), monkeypatch)
+
+
+def _fresh(tmp_path, i):
+    """A state directory of its own for each folded case."""
+    path = tmp_path / f"case{i}"
+    path.mkdir()
+    return path

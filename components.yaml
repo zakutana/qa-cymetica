@@ -835,7 +835,7 @@ mcp_tools:
      # clones' technical-indicator parameters (species defaults + your overrides)";
      # it is how a change to a clone's algorithm is read back. Its write sibling
      # update_bot_indicators (destructiveHint: true, no paper argument) stays in no
-     # list (tests/meta/test_pipeline_bot_indicators_tools.py holds both halves).
+     # list (tests/meta/test_pipeline_own_clone_write.py holds both halves).
      get_bot_indicators]
   contribute:
     [submit_observation, submit_feedback, request_feature, submit_signal]

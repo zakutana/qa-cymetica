@@ -80,6 +80,10 @@ state/clones.jsonl
 # from disk; docs/nexus-rooms-plan.md says why they exist.
 state/rooms.jsonl
 state/samples.jsonl
+# A sampler started as a process of its own once wrote its stdout here (2026-10-03); a
+# running process now logs outside the repository, and these two are kept out of the tree.
+state/sampler-run.log
+state/sampler-run.err
 
 # How long each real request to their host took (qa/timings.py), one line per
 # request, written during every run -- tracked, it would cost each run its

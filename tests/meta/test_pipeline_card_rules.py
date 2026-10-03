@@ -28,16 +28,14 @@ def _card(created, ret_pct, types, cid=None, base=100.0):
             "basket": [{"asset_type": t} for t in types]}
 
 
-@qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
-def test_the_rules_and_their_date_are_fixed_before_the_data():
+def _case_the_rules_and_their_date_are_fixed_before_the_data():
     assert cr.FROM == "2026-10-04T00:00:00+00:00"
     assert set(cr.RULES) == {"short_stock_only", "long_with_crypto"}
     assert cr.RULES["short_stock_only"]["side"] == -1 and cr.RULES["long_with_crypto"]["side"] == 1
     assert cr.MIN_CARDS >= 100
 
 
-@qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
-def test_a_card_belongs_to_one_rule_by_its_basket():
+def _case_a_card_belongs_to_one_rule_by_its_basket():
     assert cr.rule_of(_card("2026-10-05T00:00:00+00:00", 0, ["stock", "stock"])) == "short_stock_only"
     assert cr.rule_of(_card("2026-10-05T00:00:00+00:00", 0, ["stock", "crypto"])) == "long_with_crypto"
     assert cr.rule_of(_card("2026-10-05T00:00:00+00:00", 0, ["crypto"])) == "long_with_crypto"
@@ -45,8 +43,7 @@ def test_a_card_belongs_to_one_rule_by_its_basket():
     assert cr.rule_of({"basket": []}) is None
 
 
-@qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
-def test_only_cards_created_after_the_rules_were_written_are_judged():
+def _case_only_cards_created_after_the_rules_were_written_are_judged():
     cards = [_card("2026-10-03T23:59:59+00:00", -5, ["stock"]),      # the day the rule was fitted: out
              _card("2026-09-20T00:00:00+00:00", -5, ["stock"]),      # the sample it was fitted on: out
              _card("2026-10-04T00:00:00+00:00", -1, ["stock"])]
@@ -55,8 +52,7 @@ def test_only_cards_created_after_the_rules_were_written_are_judged():
     assert said["short_stock_only"]["excluded_before"] == 2
 
 
-@qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
-def test_the_side_return_is_the_index_return_signed_by_the_rule():
+def _case_the_side_return_is_the_index_return_signed_by_the_rule():
     cards = [_card("2026-10-05T00:00:00+00:00", -2.0, ["stock"]),
              _card("2026-10-05T01:00:00+00:00", 3.0, ["crypto", "stock"])]
     said = cr.evaluate(cards)
@@ -64,15 +60,13 @@ def test_the_side_return_is_the_index_return_signed_by_the_rule():
     assert abs(said["long_with_crypto"]["mean_pct"] - 3.0) < 1e-9
 
 
-@qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
-def test_too_few_cards_is_not_enough_never_a_pass_or_a_fail():
+def _case_too_few_cards_is_not_enough_never_a_pass_or_a_fail():
     cards = [_card(f"2026-10-05T00:{i:02d}:00+00:00", -1.0, ["stock"]) for i in range(10)]
     assert cr.evaluate(cards)["short_stock_only"]["verdict"] == "not enough"
     assert cr.evaluate([])["long_with_crypto"]["verdict"] == "not enough"
 
 
-@qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
-def test_a_pass_needs_the_lower_bound_above_zero_not_just_a_positive_mean():
+def _case_a_pass_needs_the_lower_bound_above_zero_not_just_a_positive_mean():
     n = cr.MIN_CARDS
     steady = [_card(f"2026-10-05T{i // 60:02d}:{i % 60:02d}:00+00:00", -0.5, ["stock"], cid=f"s{i}") for i in range(n)]
     assert cr.evaluate(steady)["short_stock_only"]["verdict"] == "pass"
@@ -86,8 +80,7 @@ def test_a_pass_needs_the_lower_bound_above_zero_not_just_a_positive_mean():
     assert cr.evaluate(losing)["short_stock_only"]["verdict"] == "fail"
 
 
-@qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
-def test_a_card_with_nothing_to_read_is_unread_never_a_zero_return():
+def _case_a_card_with_nothing_to_read_is_unread_never_a_zero_return():
     broken = [{"id": "x1", "created_at": "2026-10-05T00:00:00+00:00", "basket": [{"asset_type": "stock"}],
                "current_index": None, "index_base": 100.0},
               {"id": "x2", "created_at": "2026-10-05T00:00:00+00:00", "basket": [{"asset_type": "stock"}],
@@ -98,7 +91,25 @@ def test_a_card_with_nothing_to_read_is_unread_never_a_zero_return():
     assert said["mean_pct"] is None
 
 
-@qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
-def test_a_card_counted_twice_by_the_listing_is_judged_once():
+def _case_a_card_counted_twice_by_the_listing_is_judged_once():
     one = _card("2026-10-05T00:00:00+00:00", -1.0, ["stock"], cid="same")
     assert cr.evaluate([one, dict(one)])["short_stock_only"]["n"] == 1
+
+
+# Folded on the deep pass of 2026-10-04 (tests/meta grows only by replacement): eight functions became two; every case is a _case_ helper.
+
+
+@qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
+def test_the_card_rules_read_only_what_they_were_fixed_to_read():
+    _case_the_rules_and_their_date_are_fixed_before_the_data()
+    _case_a_card_belongs_to_one_rule_by_its_basket()
+    _case_only_cards_created_after_the_rules_were_written_are_judged()
+    _case_the_side_return_is_the_index_return_signed_by_the_rule()
+    _case_a_card_with_nothing_to_read_is_unread_never_a_zero_return()
+    _case_a_card_counted_twice_by_the_listing_is_judged_once()
+
+
+@qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
+def test_a_card_rule_passes_only_on_enough_cards_and_a_bound_above_zero():
+    _case_too_few_cards_is_not_enough_never_a_pass_or_a_fail()
+    _case_a_pass_needs_the_lower_bound_above_zero_not_just_a_positive_mean()
