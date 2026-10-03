@@ -913,10 +913,16 @@ def test_a_started_clone_starts_again_only_as_a_new_variant(tmp_path, monkeypatc
     that stopped is not started again as the SAME experiment. It may start
     again only as a new one, and only in this order, each step accepted:
 
-        our pause  ->  a settings change after it  ->  no room running on it
+        our pause  ->  a settings OR indicators change after it  ->  no room
+        running on it
 
-    and never after a halt that was not ours (their guard, or unexplained):
-    what stopped it is a finding, not a variant.
+    (an indicators change is `clone.py indicators()`: the parameters of an
+    indicator the bot runs, the other lever on a clone a key reaches), and
+    never after a halt that was not ours (their guard, or unexplained): what
+    stopped it is a finding, not a variant. "Each step accepted" holds for the
+    pause too: a disable they refused, or one we cannot prove landed, is not
+    our pause, and a change that came BEFORE the real pause belongs to the
+    experiment that ran.
 
     Every refusal is proved from our record before a client exists
     (`_no_client`), so a floor that broke fails here and toggles nothing."""
@@ -928,14 +934,28 @@ def test_a_started_clone_starts_again_only_as_a_new_variant(tmp_path, monkeypatc
     # Started, never paused: V2's refusal, in its own words.
     with pytest.raises(SystemExit, match="never started again"):
         mod.enable("inst-1", True)
-    # A settings change BEFORE our pause changes the experiment that ran.
+    # T23, deep pass of 2026-10-04. A disable that was not accepted is not our
+    # pause, whatever change follows it: the reason stays V2's, not "paused by
+    # us" (the settings and indicators below are accepted, so only the pause
+    # can be what refuses).
+    for pause, change in (("rejected", "settings"), ("unknown", "indicators"),
+                          ("not_sent", "settings")):
+        _switch(mod, "disable", outcome=pause)
+        _switch(mod, change, body={"stop_loss_pct": 5.0} if change == "settings" else None)
+        with pytest.raises(SystemExit, match="never started again"):
+            mod.enable("inst-1", True)
+    # A settings change BEFORE our pause changes the experiment that ran, and
+    # so does an indicators change before it: neither is the variant.
     _switch(mod, "settings", body={"stop_loss_pct": 5.0})
+    _switch(mod, "indicators")
     _switch(mod, "disable")
-    with pytest.raises(SystemExit, match="settings"):
+    with pytest.raises(SystemExit, match="is paused by us, but no accepted settings or indicator change"):
         mod.enable("inst-1", True)
     # Paused by us, and the change after it was refused by them.
     _switch(mod, "settings", outcome="rejected", body={"stop_loss_pct": 5.0})
-    with pytest.raises(SystemExit, match="settings"):
+    _switch(mod, "indicators", outcome="rejected")
+    _switch(mod, "indicators", outcome="unknown")
+    with pytest.raises(SystemExit, match="no accepted settings or indicator change"):
         mod.enable("inst-1", True)
 
     # Paused by us, an accepted change after it -- but a room runs on it.

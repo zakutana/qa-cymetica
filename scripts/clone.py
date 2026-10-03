@@ -1004,8 +1004,29 @@ GET_INDICATORS = "get_bot_indicators"
 SET_INDICATORS = "update_bot_indicators"
 
 
+def _inverted(name: str, params: dict) -> str | None:
+    """The cross-field rule `params` breaks -- the indicator as it would RUN, not as one call spells it --
+    or None. Only fields that are present and plain numbers are compared."""
+    def number(key):
+        value = params.get(key)
+        return value if isinstance(value, (int, float)) and not isinstance(value, bool) else None
+
+    if name == "rsi":
+        high, low = number("overbought"), number("oversold")
+        if high is not None and low is not None and high <= low:
+            return f"rsi.overbought={high} must be above rsi.oversold={low}"
+    if name == "macd":
+        fast, slow = number("fast"), number("slow")
+        if fast is not None and slow is not None and fast >= slow:
+            return f"macd.fast={fast} must be below macd.slow={slow}"
+    return None
+
+
 def safe_indicator(indicator, params) -> dict:
-    """The parameters to send, or a refusal naming the field -- before anything is built."""
+    """The parameters to send, or a refusal naming the field -- before anything is built.
+
+    The cross-field rules are judged here on what the call says; `indicators()` judges them again
+    against what the clone runs now, because a call that names one field leaves the other as it is."""
     name = str(indicator or "").strip().lower()
     if name == "stochastic":
         raise SystemExit("stochastic: documented by the tool, but its parameter names are not read yet "
@@ -1028,10 +1049,9 @@ def safe_indicator(indicator, params) -> dict:
         if not low <= value <= high:
             raise SystemExit(f"{name}.{key}={value} is outside {low}..{high}")
         out[key] = int(value) if integer else value
-    if name == "rsi" and {"overbought", "oversold"} <= set(out) and out["overbought"] <= out["oversold"]:
-        raise SystemExit("rsi.overbought must be above rsi.oversold")
-    if name == "macd" and {"fast", "slow"} <= set(out) and out["fast"] >= out["slow"]:
-        raise SystemExit("macd.fast must be below macd.slow")
+    broken = _inverted(name, out)
+    if broken:
+        raise SystemExit(broken)
     return out
 
 
@@ -1056,6 +1076,17 @@ def _effective(read, indicator: str) -> dict:
     return {}
 
 
+def _refusal_they_decoded(exc: McpError) -> bool:
+    """True when the McpError carries an answer THEY decoded and it was a no: a tool error (HTTP 200
+    with `result.isError`) or a JSON-RPC `error` object. `McpClient.raw()` also raises McpError, with
+    no payload at all, for a body that is not JSON at ANY HTTP status -- a gateway page after the
+    request reached them -- and that says nothing about whether the change landed (rule 9)."""
+    payload = exc.payload if isinstance(exc.payload, dict) else {}
+    result = payload.get("result")
+    return (isinstance(payload.get("error"), dict) and bool(payload["error"])) or (
+        isinstance(result, dict) and result.get("isError") is True)
+
+
 def indicators(instance_id: str, indicator: str, params: dict, confirm: bool) -> dict:
     """Change the parameters of one indicator on a paper clone -- one variant, as `settings()` is.
 
@@ -1068,9 +1099,14 @@ def indicators(instance_id: str, indicator: str, params: dict, confirm: bool) ->
         variant is a new room, never a change under the one being measured;
       * THEIR row says paper twice over, is_paper and execution_class (`startable`).
 
-    Rule 9: the intent is written before the call and every path out owes an outcome; a call that may
-    have landed is `unknown`. The clone's indicators are read back afterwards and whether they now say
-    what we asked is RECORDED, not assumed.
+    Rule 9: the intent is written before the call and every path out owes an outcome. `accepted` needs
+    `success: true`; `rejected` only a refusal they decoded (a tool error, a JSON-RPC error object);
+    anything else that may have landed -- a body that is not JSON, a 200 without `success: true`, a
+    read timeout -- is `unknown`. The clone's indicators are read back afterwards (except after a
+    transport failure) and whether they now say what we asked is RECORDED, not assumed.
+
+    Before the intent, the cross-field rules (macd fast < slow, rsi overbought > oversold) are judged on
+    the indicator as it would RUN: the fields the call names over the ones the clone runs now.
     """
     name = str(indicator or "").strip().lower()
     body = {"indicator": name, "params": safe_indicator(name, params)}
@@ -1106,13 +1142,22 @@ def indicators(instance_id: str, indicator: str, params: dict, confirm: bool) ->
         read_before = mcp.call(GET_INDICATORS, {"instance_id": instance_id})
     finally:
         CURRENT_TIER.reset(token)
+    # A call that names one field leaves the other as the clone runs it, so the cross-field rules are
+    # judged on the whole indicator as it would run (deep pass 2026-10-04, R01): `fast=40` on a clone
+    # running slow=26 is a MACD that never crosses. Before the intent, so a refusal leaves no record.
+    effective_before = _effective(read_before, name)
+    broken = _inverted(name, {**effective_before, **body["params"]})
+    if broken:
+        raise SystemExit(
+            f"{broken}: the change names {', '.join(sorted(body['params']))}, and {instance_id} runs "
+            f"{json.dumps(effective_before)} now. Nothing was sent.")
     before = _snapshot(rest)
     change_id = _next_id(load())
     entry = {"id": change_id, "type": "intent", "at": _now(), "kind": "indicators",
              "instance_id": instance_id, "body": body,
              "their_is_paper": row.get("is_paper"),
              "their_execution_class": (row.get("execution_economics") or {}).get("execution_class"),
-             "their_effective_before": _effective(read_before, name), "before": before}
+             "their_effective_before": effective_before, "before": before}
     if not confirm:
         print(json.dumps(entry, indent=2, ensure_ascii=False))
         print("\nnothing sent, and nothing recorded. Add --confirm.")
@@ -1121,13 +1166,19 @@ def indicators(instance_id: str, indicator: str, params: dict, confirm: bool) ->
     change_id = _append_intent(entry)["id"]
     arguments = {"instance_id": instance_id, "indicator_name": name, "params": body["params"]}
     token = CURRENT_TIER.set(SafetyTier.MUTATE)
+    lost = None
     try:
         answer = mcp.call(SET_INDICATORS, arguments)
     except McpError as exc:
-        # They answered, and the answer was a refusal: a tool error is HTTP 200 with isError set.
-        _append({"id": change_id, "type": "outcome", "at": _now(), "kind": "indicators",
-                 "outcome": "rejected", "error": str(exc)[:600]})
-        raise SystemExit(f"{change_id}: refused by them: {str(exc)[:300]}")
+        if _refusal_they_decoded(exc):
+            # They answered, and the answer was a refusal: a tool error is HTTP 200 with isError set.
+            _append({"id": change_id, "type": "outcome", "at": _now(), "kind": "indicators",
+                     "outcome": "rejected", "error": str(exc)[:600]})
+            raise SystemExit(f"{change_id}: refused by them: {str(exc)[:300]}")
+        # A body that is not JSON, at any HTTP status (a gateway page after the request reached
+        # them): the change may have landed, so it is `unknown` (rule 9) and the read-back below
+        # settles it -- never `rejected` (deep pass 2026-10-04, L04).
+        answer, lost = None, f"{type(exc).__name__}: {exc}"[:600]
     except Exception as exc:  # noqa: BLE001
         _append({"id": change_id, "type": "outcome", "at": _now(), "kind": "indicators",
                  "outcome": _outcome_of(exc), "error": f"{type(exc).__name__}: {exc}"})
@@ -1135,10 +1186,14 @@ def indicators(instance_id: str, indicator: str, params: dict, confirm: bool) ->
     finally:
         CURRENT_TIER.reset(token)
 
+    # `accepted` needs `success: true`; a 200 that does not say so is read like `_served()` reads a 200
+    # it cannot read: they answered and we cannot say what they made -- `unknown`, not `rejected`.
     inner = _descend(answer)
-    said = "accepted" if isinstance(inner, dict) and inner.get("success") is True else "rejected"
+    said = ("accepted" if lost is None and isinstance(inner, dict) and inner.get("success") is True
+            else "unknown")
     _append({"id": change_id, "type": "outcome", "at": _now(), "kind": "indicators", "outcome": said,
-             "response": json.dumps(inner, ensure_ascii=False, default=str)[:1200]})
+             **({"error": lost} if lost is not None else
+                {"response": json.dumps(inner, ensure_ascii=False, default=str)[:1200]})})
     reread, effective = "ok", {}
     token = CURRENT_TIER.set(SafetyTier.SAFE)
     try:

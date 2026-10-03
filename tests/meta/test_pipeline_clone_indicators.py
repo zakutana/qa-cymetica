@@ -79,17 +79,20 @@ class _Rest:
 
 
 class _Mcp:
-    """Their MCP, where the write is the thing under test. `effective` is what a read-back says."""
+    """Their MCP, where the write is the thing under test. `effective` is what a read-back says, of the
+    indicator called `name`; `failure` is what the write raises instead of answering `update`."""
 
-    def __init__(self, effective, update=None):
-        self.effective, self.update, self.calls = effective, update, []
+    def __init__(self, effective, update=None, name="RSI", failure=None):
+        self.effective, self.update, self.name, self.failure, self.calls = effective, update, name, failure, []
         self.http = self
 
     def call(self, tool, arguments=None):
         self.calls.append((tool, arguments))
         if tool == "get_bot_indicators":
-            return {"success": True, "indicators": [{"name": "RSI", "effective": self.effective}]}
+            return {"success": True, "indicators": [{"name": self.name, "effective": self.effective}]}
         if tool == "update_bot_indicators":
+            if self.failure is not None:
+                raise self.failure
             if self.update is None:
                 raise AssertionError(f"an indicator write was sent: {arguments}")
             return self.update
@@ -172,6 +175,48 @@ def _case_an_indicator_change_needs_our_paper_record_theirs_and_no_running_room(
     assert not [r for r in mod.load() if r.get("kind") == "indicators"], "a refused change left a record"
 
 
+def _case_a_single_field_change_is_checked_against_the_other_field_as_the_clone_runs_it(tmp_path, monkeypatch):
+    """R01, deep pass of 2026-10-04. safe_indicator() judged `fast < slow` and `overbought > oversold` only
+    when both fields came in one call, so `--set fast=40` on a clone running slow=26 sent a MACD that
+    never crosses, and an RSI zone could be walked onto the other one: past every floor, into a variant."""
+    mod = _clone(tmp_path, monkeypatch)
+    _ours(mod)
+    macd = {"fast": 12, "slow": 26, "signal": 9}
+    rsi = {"period": 14, "overbought": 70, "oversold": 30}
+    # Our bounds keep oversold <= 50 <= overbought, so a zone crosses only against a value the clone
+    # already runs: on the shared 50, or on a clone already outside our bounds (theirs to set).
+    for indicator, name, running, params, said in (
+            ("macd", "MACD", macd, {"fast": 40}, r"macd\.fast=40 must be below macd\.slow=26"),
+            ("macd", "MACD", macd, {"fast": 26}, r"macd\.fast=26 must be below macd\.slow=26"),
+            ("macd", "MACD", macd, {"slow": 10}, r"macd\.fast=12 must be below macd\.slow=10"),
+            ("rsi", "RSI", {**rsi, "overbought": 50}, {"oversold": 50},
+             r"rsi\.overbought=50 must be above rsi\.oversold=50"),
+            ("rsi", "RSI", {**rsi, "oversold": 50}, {"overbought": 50},
+             r"rsi\.overbought=50 must be above rsi\.oversold=50"),
+            ("rsi", "RSI", {**rsi, "overbought": 45}, {"oversold": 48},
+             r"rsi\.overbought=45 must be above rsi\.oversold=48")):
+        for confirm in (False, True):    # the dry run refuses too: nothing is shown that could not be sent
+            mcp = _Mcp(running, name=name)          # update=None: a write that goes out fails the test
+            _offline(mod, monkeypatch, _Rest([PAPER_ROW]), mcp)
+            with pytest.raises(SystemExit, match=said):
+                mod.indicators("inst-1", indicator, params, confirm=confirm)
+            assert not [t for t, _ in mcp.calls if t == "update_bot_indicators"], (indicator, params)
+    assert not [r for r in mod.load() if r.get("kind") == "indicators"], "a refused change left a record"
+
+    # What still goes: the single field on the right side of the other one, and both fields in one call
+    # (which is judged on what the call says, as before -- the clone's old values are overwritten).
+    for indicator, name, running, params in (("macd", "MACD", macd, {"fast": 8}),
+                                              ("macd", "MACD", macd, {"slow": 40}),
+                                              ("macd", "MACD", macd, {"fast": 30, "slow": 40}),
+                                              ("rsi", "RSI", rsi, {"oversold": 20}),
+                                              ("rsi", "RSI", rsi, {"overbought": 60})):
+        mcp = _Mcp(running, update={"success": True}, name=name)
+        _offline(mod, monkeypatch, _Rest([PAPER_ROW]), mcp)
+        mod.indicators("inst-1", indicator, params, confirm=True)
+        sent = [a for t, a in mcp.calls if t == "update_bot_indicators"]
+        assert sent == [{"instance_id": "inst-1", "indicator_name": indicator, "params": params}], (params, sent)
+
+
 def _case_an_accepted_change_is_written_intent_outcome_after_and_read_back(tmp_path, monkeypatch):
     mod = _clone(tmp_path, monkeypatch)
     _ours(mod)
@@ -205,26 +250,58 @@ def _case_a_change_the_read_back_does_not_show_is_flagged_not_assumed(tmp_path, 
     assert after["effective_matches"] is False
 
 
-def _case_a_refused_write_is_recorded_rejected_and_a_failed_one_unknown(tmp_path, monkeypatch):
+def _case_only_a_refusal_they_decoded_is_rejected_and_a_call_that_may_have_landed_is_unknown(tmp_path, monkeypatch):
+    """L04, deep pass of 2026-10-04. Rule 9: `rejected` means they answered and said no. McpClient.raw()
+    raises McpError for a body that is not JSON at ANY HTTP status (a 504 page after the request reached
+    them), which says nothing about whether the change landed; and a 200 that does not say `success: true`
+    is, like an unreadable 200 in `_served()`, unknown. Both used to be written `rejected`. (A 200 saying
+    `success: false` moved from rejected to unknown with them: the rule is "accepted needs success: true,
+    rejected needs a refusal they decoded", and a bare success flag is not an error object.)"""
+    from qa.client import McpError
+
     mod = _clone(tmp_path, monkeypatch)
     _ours(mod)
-    mcp = _Mcp({"period": 14}, update={"success": False, "error": "unknown indicator"})
-    _offline(mod, monkeypatch, _Rest([PAPER_ROW]), mcp)
-    mod.indicators("inst-1", "rsi", {"period": 21}, confirm=True)
-    outcome = [r for r in mod.load() if r.get("kind") == "indicators" and r["type"] == "outcome"]
-    assert outcome[-1]["outcome"] == "rejected"
 
-    class Dies(_Mcp):
-        def call(self, tool, arguments=None):
-            if tool == "update_bot_indicators":
-                raise httpx.ReadTimeout("read timed out")
-            return super().call(tool, arguments)
+    def rows(kind):
+        return [r for r in mod.load() if r.get("kind") == "indicators" and r["type"] == kind]
 
-    _offline(mod, monkeypatch, _Rest([PAPER_ROW]), Dies({"period": 14}))
+    # A refusal they decoded: a tool error (HTTP 200, result.isError) or a JSON-RPC error object.
+    for failure in (McpError("tool error: unknown indicator", {"result": {"isError": True, "content": [
+                        {"type": "text", "text": json.dumps({"error": "unknown indicator"})}]}}),
+                    McpError("JSON-RPC error: {'code': -32602}", {"jsonrpc": "2.0", "id": 3, "error": {
+                        "code": -32602, "message": "invalid params"}})):
+        _offline(mod, monkeypatch, _Rest([PAPER_ROW]), _Mcp({"period": 14}, failure=failure))
+        with pytest.raises(SystemExit, match="refused by them"):
+            mod.indicators("inst-1", "rsi", {"period": 21}, confirm=True)
+        assert rows("outcome")[-1]["outcome"] == "rejected", failure.payload
+
+    # What may have landed: no payload (the non-JSON body, any status) and any 200 without
+    # `success: true`. The call is `unknown`, the clone's indicators are still read back, and whether
+    # they now say what we asked is recorded: here the answer was lost but the change had landed,
+    # which is exactly what the read-back settles.
+    for what, failure, update in (
+            ("non-JSON body", McpError("MCP returned non-JSON for tools/call (HTTP 504): '<html>'"), None),
+            ("no success key", None, {"message": "RSI overridden"}),
+            ("plain text", None, "RSI overridden"),
+            ("success false", None, {"success": False, "error": "unknown indicator"})):
+        before = len(rows("outcome"))
+        _offline(mod, monkeypatch, _Rest([PAPER_ROW]), _Mcp({"period": 21}, update=update, failure=failure))
+        said = mod.indicators("inst-1", "rsi", {"period": 21}, confirm=True)
+        assert len(rows("outcome")) == before + 1, what
+        assert rows("outcome")[-1]["outcome"] == "unknown", (what, rows("outcome")[-1])
+        assert said["outcome"] == "unknown" and said["effective_matches"] is True, (what, said)
+        after = rows("after")[-1]
+        assert after["id"] == rows("outcome")[-1]["id"] and after["reread"] == "ok", (what, after)
+        assert after["effective_matches"] is True and after["their_effective"] == {"period": 21}, (what, after)
+
+    # A read timeout is the same: it left, so it may have landed (and nothing was read back).
+    _offline(mod, monkeypatch, _Rest([PAPER_ROW]), _Mcp({"period": 14}, failure=httpx.ReadTimeout("read timed out")))
     with pytest.raises(httpx.ReadTimeout):
         mod.indicators("inst-1", "rsi", {"period": 7}, confirm=True)
-    outcome = [r for r in mod.load() if r.get("kind") == "indicators" and r["type"] == "outcome"]
-    assert outcome[-1]["outcome"] == "unknown", "rule 9: a call that may have landed is unknown, never absent"
+    assert rows("outcome")[-1]["outcome"] == "unknown", "rule 9: a call that may have landed is unknown, never absent"
+
+    # Every intent has an outcome, whatever came out of it.
+    assert {r["id"] for r in rows("intent")} == {r["id"] for r in rows("outcome")}
 
 
 def _case_an_indicator_change_after_our_pause_is_the_variant_that_lets_a_clone_start_again(tmp_path, monkeypatch):
@@ -236,11 +313,17 @@ def _case_an_indicator_change_after_our_pause_is_the_variant_that_lets_a_clone_s
         mod._append({"id": cid, "type": "intent", "kind": kind, "instance_id": "inst-1"})
         mod._append({"id": cid, "type": "outcome", "kind": kind, "outcome": outcome, "http_status": 200})
 
+    # R15, deep pass of 2026-10-04: the reason is asserted whole, because "settings" is in every restart
+    # refusal and a wrong reason (the bot never paused, a room running) read as this one.
+    no_variant = "no accepted settings or indicator change"
     step("enable")
+    refusal = mod.restart_refusal("inst-1") or ""
+    assert "never started again" in refusal and no_variant not in refusal, refusal   # not paused: another reason
     step("disable")
-    assert "no accepted settings" in (mod.restart_refusal("inst-1") or "") or "settings" in (mod.restart_refusal("inst-1") or "")
+    refusal = mod.restart_refusal("inst-1") or ""
+    assert "is paused by us" in refusal and no_variant in refusal, refusal
     step("indicators", outcome="rejected")
-    assert mod.restart_refusal("inst-1"), "a refused indicator change is no variant"
+    assert no_variant in (mod.restart_refusal("inst-1") or ""), "a refused indicator change is no variant"
     step("indicators")
     assert mod.restart_refusal("inst-1") is None, mod.restart_refusal("inst-1")
 
@@ -248,17 +331,16 @@ def _case_an_indicator_change_after_our_pause_is_the_variant_that_lets_a_clone_s
 # Folded on the deep pass of 2026-10-04 (tests/meta grows only by replacement): six functions became two; every case is a _case_ helper run in its own state directory.
 
 
-@qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
-def test_an_indicator_change_is_bounded_and_floored_before_anything_is_built(tmp_path, monkeypatch):
+def _case_an_indicator_change_is_bounded_and_floored_before_anything_is_built(tmp_path, monkeypatch):
     _case_the_parameters_are_inside_bounds_written_down_per_indicator(_fresh(tmp_path, 0), monkeypatch)
     _case_an_indicator_change_needs_our_paper_record_theirs_and_no_running_room(_fresh(tmp_path, 1), monkeypatch)
+    _case_a_single_field_change_is_checked_against_the_other_field_as_the_clone_runs_it(_fresh(tmp_path, 4), monkeypatch)
 
 
-@qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
-def test_an_indicator_change_is_recorded_whole_and_counts_as_a_variant(tmp_path, monkeypatch):
+def _case_an_indicator_change_is_recorded_whole_and_counts_as_a_variant(tmp_path, monkeypatch):
     _case_an_accepted_change_is_written_intent_outcome_after_and_read_back(_fresh(tmp_path, 0), monkeypatch)
     _case_a_change_the_read_back_does_not_show_is_flagged_not_assumed(_fresh(tmp_path, 1), monkeypatch)
-    _case_a_refused_write_is_recorded_rejected_and_a_failed_one_unknown(_fresh(tmp_path, 2), monkeypatch)
+    _case_only_a_refusal_they_decoded_is_rejected_and_a_call_that_may_have_landed_is_unknown(_fresh(tmp_path, 2), monkeypatch)
     _case_an_indicator_change_after_our_pause_is_the_variant_that_lets_a_clone_start_again(_fresh(tmp_path, 3), monkeypatch)
 
 
@@ -267,3 +349,19 @@ def _fresh(tmp_path, i):
     path = tmp_path / f"case{i}"
     path.mkdir()
     return path
+
+
+# Folded on the deep pass of 2026-10-04 (tests/meta grows only by replacement): two functions became one.
+
+
+def _fresh_dir(tmp_path, i):
+    """A state directory of its own for each folded case."""
+    path = tmp_path / f"case{i}"
+    path.mkdir()
+    return path
+
+
+@qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
+def test_an_indicator_change_is_bounded_floored_recorded_whole_and_counts_as_a_variant(tmp_path, monkeypatch):
+    _case_an_indicator_change_is_bounded_and_floored_before_anything_is_built(_fresh_dir(tmp_path, 0), monkeypatch)
+    _case_an_indicator_change_is_recorded_whole_and_counts_as_a_variant(_fresh_dir(tmp_path, 1), monkeypatch)
