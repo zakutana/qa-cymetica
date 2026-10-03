@@ -216,7 +216,10 @@ IDLE_DAYS = 14
 # day whose whole plan was the size of git. 150 is ~3 months at the ~1 MB/day
 # the repository now grows, and fires long before anyone finds gigabytes there.
 CEILINGS = {
-    "evidence_mb": 1000,
+    # 1000 -> 5000 on 2026-10-03: the operator has 800 GB free, so disk is not the limit; the
+    # archives and the manifest keep what git must not hold. Still a ceiling, so a runaway
+    # capture loop is noticed, just not a single heavy day of sweeps.
+    "evidence_mb": 5000,
     # Plan v2, V7: 750 -> 300 when the file was cut to 198 lines (the maps
     # went to ARCHITECTURE.md). A 750 ceiling on a 200-line file is dead.
     "claude_md_lines": 300,
