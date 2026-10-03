@@ -26,7 +26,8 @@ nikdy nebylo další na řadě.
 
 - [x] 2026-09-23  Plán v2 (`docs/laborator-plan.md`): otevřená fáze V11 (čeká na ranní vydání), stav v tabulce plánu. Po prvním dni smyčky ověřit řádky `answer_read` (V5). Nákladová kritéria V6 zrušil operátor 25. 9. (limity hlídá sám). (V5: 11 řádků answer_read; V11: acted se v dalším přehledu ukáže; hotovo 2026-09-30)
 - [x] 2026-09-23  Zbytky V3 a V4, část: `console.cmd --fomo 1` se stropem quote za kolo (60 za minutu intervalu), C6 prozkoumáno (kód beze změny). Horizonty zůstaly hodinové kvůli [operator 2026-09-13]; detail v plánu. (hotovo 2026-10-01)
-- [ ] 2026-10-03  Výzkum botů, VŠE v docs/bots-research-plan.md „Zbývá": sampler musí běžet, wave 0 verdikt ~10. 10., vlna 2 s parametry, F1 kód (strop, víc klonů/druh), H2H do /lab, tool pro vlnu, dopředný test karet po 3. 10., odpovědi Cymetiky (409, skilly, #150), push po deep passu.
+- [ ] 2026-10-03  Výzkum botů, VŠE v docs/bots-research-plan.md „Zbývá": sampler musí běžet, wave 0 verdikt ~10. 10., vlna 2 s parametry, F1 kód (strop, víc klonů/druh), H2H do /lab, tool pro vlnu, karty: `scripts/card_rules.py` po ~10. 10., odpovědi Cymetiky (409, skilly, #150).
+- [x] 2026-10-03  Dopředný test dvou pravidel pro karty (short jen akcie, long s kryptem), soudí jen karty vzniklé od 4. 10.: `python scripts/card_rules.py` (hotovo 2026-10-04, 8d4ddfd1)
 - [x] 2026-09-28  V3: hloubka při signálu + strop prodeje ve `stop_study`/`stats`/košíku, přepnuté páry jako rugy, test L553 rozdělen (stop −10 %: −9,1 % → −17,2 %); V4: prořez neciterovaných stránek event-cards po 1 dni (1d419933). (hotovo 2026-09-28, 4bc5baf8)
 - [x] 2026-09-23  Kontrola: každý `/api/v1/…` z jejich veřejných stránek (creator, head-to-head, `run-backtest`) je v `openapi-public.json`; SAFE, chybějící jedním reportem. Operátor 24.9.: nedávají do dokumentace. (živě chybí 12, podá sweep; hotovo 2026-09-28, 14d13632)
 

@@ -64,8 +64,9 @@ CLN-0143, read-back sedí), wave 0 spuštěna (12 botů obchoduje, rooms STR-008
       (dnes 409 ALREADY_CLONED); sampler pro ≥ 25 botů (co čte druhý GET na bota); názvy roomů podle konfigurace.
 - [ ] **F4:** `h2h.py` ukládá slug, `results` čte `/head-to-head/mine`, `matrix` pouští dávky; H2H řádek v `/lab`.
 - [ ] **Tool pro vlnu** (dnes ruční skript): `wave.py` z návrhu → klony, financování, rooms s kritériem předem.
-- [ ] **Karty, dopředný test:** short karet jen s akciemi (−0,35 až −0,55 % za 72 h), long s kryptem; soudit jen na
-      kartách vzniklých po 3. 10. Skript do repa, plán napřed. Nápad k ověření: koncentrace váhy koše (HHI) a počet
+- [x] **Karty, dopředný test:** short karet jen s akciemi (−0,35 až −0,55 % za 72 h), long s kryptem; soudí jen
+      karty vzniklé od 4. 10. (`qa/card_rules.py`, `python scripts/card_rules.py`; hotovo 2026-10-04, 8d4ddfd1).
+      Verdikt až ~200 karet na pravidlo, tedy po ~10. 10. Nápad k ověření: koncentrace váhy koše (HHI) a počet
       položek předpovídá „Hot" (Nexus NEX-0120 potvrdil mechanismus).
 - [ ] **Odpovědi Cymetiky ke sledování:** 2. klon druhu (409, A2A-0055), skilly/modely přes API klíč (A2A-0054),
       report #150 (plán Pro/Free), podání /code-review a push až po deep passu.
