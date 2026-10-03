@@ -244,8 +244,7 @@ class _Slow(BaseHTTPRequestHandler):
         pass
 
 
-@qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
-def test_a_stalled_read_still_writes_a_tick_and_the_loop_goes_on(tmp_path, monkeypatch):
+def _case_a_stalled_read_still_writes_a_tick_and_the_loop_goes_on(tmp_path, monkeypatch):
     """The night of 2026-09-10: a sampler hung for four hours and the pipe it
     printed into hid it.
 
@@ -294,8 +293,7 @@ def test_a_stalled_read_still_writes_a_tick_and_the_loop_goes_on(tmp_path, monke
         server.server_close()
 
 
-@qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
-def test_the_panel_says_stale_after_three_intervals_without_a_tick(tmp_path, monkeypatch):
+def _case_the_panel_says_stale_after_three_intervals_without_a_tick(tmp_path, monkeypatch):
     monkeypatch.setenv("QA_STATE_DIR", str(tmp_path))
     now = datetime.now(timezone.utc)
 
@@ -374,6 +372,56 @@ def test_both_launchers_start_the_sampler_and_the_old_watch_goes_through_it():
              and getattr(node.func, "attr", None) == "add_argument"
              for arg in node.args if isinstance(arg, ast.Constant)}
     assert "--sample" in flags, "serve.py takes no --sample"
+    # Deep pass 2026-10-04 (T16): a flag that is parsed and never read starts no sampler, and
+    # the console would say "reading their API" on the strength of a tuple nobody runs. Taking
+    # the flag is not starting the round: the loop over (name, script, minutes) has to carry
+    # ("sample", "sampler", args.sample), and what it does for a nonzero `minutes` is start a
+    # thread on `collector_loop` with that name and that script -- which loads
+    # scripts/<script>.py and calls its `run(stop, every)`.
+    loops = [node for node in ast.walk(serve) if isinstance(node, ast.For)
+             and isinstance(node.target, ast.Tuple)
+             and [getattr(e, "id", None) for e in node.target.elts] == ["name", "script", "minutes"]
+             and isinstance(node.iter, (ast.Tuple, ast.List))]
+    assert len(loops) == 1, "serve.py has no loop over its (name, script, minutes) collectors"
+    (loop,) = loops
+
+    def _is_args_sample(e):
+        return (isinstance(e, ast.Attribute) and e.attr == "sample"
+                and isinstance(e.value, ast.Name) and e.value.id == "args")
+
+    assert any(isinstance(item, ast.Tuple) and len(item.elts) == 3
+               and isinstance(item.elts[0], ast.Constant) and item.elts[0].value == "sample"
+               and isinstance(item.elts[1], ast.Constant) and item.elts[1].value == "sampler"
+               and _is_args_sample(item.elts[2]) for item in loop.iter.elts), (
+        "serve.py's collectors do not carry ('sample', 'sampler', args.sample)")
+    guarded = [node for node in loop.body if isinstance(node, ast.If)
+               and isinstance(node.test, ast.Name) and node.test.id == "minutes"]
+    assert guarded, "the collectors are not started only for a nonzero `minutes`"
+    started = [call for call in ast.walk(guarded[0]) if isinstance(call, ast.Call)
+               and isinstance(call.func, ast.Attribute) and call.func.attr == "start"
+               and isinstance(call.func.value, ast.Call)
+               and getattr(call.func.value.func, "attr", None) == "Thread"]
+    assert len(started) == 1, "the collector's thread is built and never started"
+    thread = started[0].func.value
+    keywords = {kw.arg: kw.value for kw in thread.keywords}
+    assert isinstance(keywords.get("target"), ast.Name) and keywords["target"].id == "collector_loop", (
+        "the collector's thread does not run collector_loop")
+    handed = keywords.get("args")
+    assert (isinstance(handed, ast.Tuple) and len(handed.elts) >= 5
+            and [getattr(e, "id", None) for e in handed.elts[:2]] == ["name", "script"]
+            and isinstance(handed.elts[3], ast.BinOp)
+            and getattr(handed.elts[3].left, "id", None) == "minutes"), (
+        "collector_loop is not handed this tuple's name and script and its minutes in seconds")
+    (collector,) = [n for n in ast.walk(serve)
+                    if isinstance(n, ast.FunctionDef) and n.name == "collector_loop"]
+    assert any(isinstance(c, ast.Call) and isinstance(c.func, ast.Attribute) and c.func.attr == "run"
+               and [getattr(a, "id", None) for a in c.args] == ["stop", "every"]
+               for c in ast.walk(collector)), (
+        "collector_loop does not call the script's run(stop, every)")
+    sampler_src = ast.parse((REPO / "scripts" / "sampler.py").read_text(encoding="utf-8"))
+    (run_def,) = [n for n in sampler_src.body if isinstance(n, ast.FunctionDef) and n.name == "run"]
+    assert [a.arg for a in run_def.args.args][:2] == ["stop", "every"], (
+        "collector_loop calls module.run(stop, every); scripts/sampler.py's run does not take them")
 
     clone = ast.parse((REPO / "scripts" / "clone.py").read_text(encoding="utf-8"))
     watch = next(node for node in ast.walk(clone)
@@ -450,3 +498,19 @@ def test_a_card_nexus_proposed_is_followed_and_described_only_when_it_changes(
     settled = dict(moved, status="settled", tradeable_now=False)
     third = sampler.tick(_client({planned: settled, history: points}, []), every=600)
     assert [r["status"] for r in third if r["type"] == "card"] == ["settled"]
+
+
+# Folded on the deep pass of 2026-10-04 (tests/meta grows only by replacement): two functions became one.
+
+
+def _fresh_dir(tmp_path, i):
+    """A state directory of its own for each folded case."""
+    path = tmp_path / f"case{i}"
+    path.mkdir()
+    return path
+
+
+@qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
+def test_a_stalled_read_writes_a_tick_and_the_panel_says_stale_after_three_silent_intervals(tmp_path, monkeypatch):
+    _case_a_stalled_read_still_writes_a_tick_and_the_loop_goes_on(_fresh_dir(tmp_path, 0), monkeypatch)
+    _case_the_panel_says_stale_after_three_intervals_without_a_tick(_fresh_dir(tmp_path, 1), monkeypatch)

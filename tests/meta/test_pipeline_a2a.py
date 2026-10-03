@@ -156,6 +156,25 @@ def test_the_inbox_keeps_what_tells_a_human_from_a_robot(tmp_path, monkeypatch):
     assert again["z_field"]["reply_to"] == "a2a_ours", "parent_message_id alone did not pair"
     assert again["z_meta"]["reply_to"] == "a2a_ours", "metadata.in_reply_to alone did not pair"
 
+    # Deep pass 2026-10-04 (T17): every row asserted above carries an explicit kind, so a
+    # reader that FILLED a missing one -- "human" for a message nobody classified, or `auto:
+    # false` -- stayed green, and the rule this file is named for is the other way round: a
+    # missing kind means UNKNOWN, never human and never robot. The 200 kind-less rows of the
+    # full page above (`a2a_3` to `a2a_199` have no metadata at all) are on the journal with
+    # neither key; the vendor saying "this is a person" (`auto: false`, no kind) is a
+    # different row, `auto` False and `kind` None.
+    kindless = [again[f"a2a_{i}"] for i in range(3, 200)]
+    assert len(kindless) == 197 and not [e for e in kindless if "kind" in e or "auto" in e], (
+        "a message that came with no metadata was written with a kind or an auto flag -- "
+        "unclassified and 'a person' are then the same row",
+        [e for e in kindless if "kind" in e or "auto" in e][:2])
+    rows[:] = [_msg("z_person", AT, "a person, said so")]
+    rows[0]["metadata"] = {"auto": False}
+    bounty.fetch_inbox(client=_client(answer), agent_id="expire76-qa")
+    person = {e["msg_id"]: e for e in read_events() if e["type"] == "message"}["z_person"]
+    assert person["auto"] is False and person["kind"] is None, (
+        "'the vendor says this is not automated' lost its auto flag or was given a kind", person)
+
 
 # ---------------------------------------------------------------------------
 # Outbound: the record that did not exist

@@ -55,8 +55,18 @@ def test_every_real_request_is_timed_and_one_command_lists_the_bad_ones(
 
     token = CURRENT_TIER.set(SafetyTier.SAFE)
     try:
-        def client(inner):
-            kwargs = {"transport": SafetyTransport(inner, EndpointRegistry.load()),
+        class _Evidence:
+            """An evidence store as the transport sees it: `capture` or fail."""
+
+            def __init__(self, fails):
+                self.fails = fails          # None, or the exception the body read raises
+
+            def capture(self, request, response, tier, rule_id):
+                if self.fails is not None:
+                    raise self.fails
+
+        def client(inner, evidence=None):
+            kwargs = {"transport": SafetyTransport(inner, EndpointRegistry.load(), evidence),
                       "base_url": "https://cymetica.com"}
             import qa.client as qc
             if qc._GUARD_INSTALLED:
@@ -79,12 +89,30 @@ def test_every_real_request_is_timed_and_one_command_lists_the_bad_ones(
         with client(_Real(200)) as c:
             with pytest.raises(SafetyViolation):
                 c.post("/api/v1/never-listed-write", json={"x": 1})
+        # Deep pass 2026-10-04 (T15): the third case in the docstring -- a body that could not
+        # be read -- never ran, because every client above is built WITHOUT an evidence store
+        # and `capture` is where the body is read. With one: a body that is stored is timed
+        # `to="body"` with no error, and one whose read timed out is timed with the status it
+        # answered, the error, and `to="body"` -- then the error still reaches the caller. On
+        # a MockTransport it is not timed at all, capture failing or not.
+        with client(_Real(200), _Evidence(fails=None)) as c:
+            assert c.get("/body-stored").status_code == 200
+        with client(_Real(200), _Evidence(fails=httpx.ReadTimeout("body timed out"))) as c:
+            with pytest.raises(httpx.ReadTimeout):
+                c.get("/body-lost")
+        with client(httpx.MockTransport(lambda r: httpx.Response(200)),
+                    _Evidence(fails=httpx.ReadTimeout("body timed out"))) as c:
+            with pytest.raises(httpx.ReadTimeout):
+                c.get("/mock-body-lost")
     finally:
         CURRENT_TIER.reset(token)
 
     rows = _rows(tmp_path)
     assert [(r["path"], r["status"], r["error"]) for r in rows] == [
-        ("/llms.txt", 200, None), ("/openapi-public.json", None, "ReadTimeout")], rows
+        ("/llms.txt", 200, None), ("/openapi-public.json", None, "ReadTimeout"),
+        ("/body-stored", 200, None), ("/body-lost", 200, "ReadTimeout")], rows
+    assert [r["to"] for r in rows] == ["headers", "headers", "body", "body"], (
+        "`to` says how far the request got: the body is read only where an evidence store reads it", rows)
     assert all(isinstance(r["ms"], int) and r["at"].endswith("+00:00") for r in rows), rows
     assert "secret" not in json.dumps(rows), "a query string reached the diary"
 
@@ -110,4 +138,8 @@ def test_every_real_request_is_timed_and_one_command_lists_the_bad_ones(
         "an answer of 12 s was not listed as slow", listed)
     assert not any("/llms.txt" in row[1] for row in listed), (
         "a fast 200 was listed among the timeouts and slow answers", listed)
+    # T15: a body that timed out is a timeout the list owes them; one that was stored is not.
+    assert any("/body-lost" in row[1] and "ReadTimeout" in row[2] for row in listed), (
+        "a body that timed out was not listed", listed)
+    assert not any("/body-stored" in row[1] for row in listed), listed
     assert listed == sorted(listed), "not in time order"

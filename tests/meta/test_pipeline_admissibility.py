@@ -394,7 +394,9 @@ def test_an_older_run_is_not_folded_over_a_newer_one_without_replay(
                            results=[{"nodeid": check, "outcome": outcome}],
                            prereg_id=None, prereg_commit=None,
                            prereg_tag_sha=None)
+    mid_at = "2026-09-21T10:00:00+00:00"
     for run_id, at, outcome in (("run-old", old_at, "failed"),
+                                ("run-mid", mid_at, "failed"),
                                 ("run-new", new_at, "passed")):
         (state / "runs" / f"{run_id}.json").write_text(
             json.dumps(run(run_id, at, outcome)), encoding="utf-8")
@@ -424,6 +426,29 @@ def test_an_older_run_is_not_folded_over_a_newer_one_without_replay(
     assert (state / "ledger.json").read_bytes() == before, "the ledger moved"
     assert not [e for e in read_events() if e.get("type") == "run_recorded"], (
         "the refused run was attested in the journal anyway")
+
+    # Deep pass 2026-10-04 (T18): above, the header's `updated_at` and the row's
+    # `adjudicated_by.at` are one moment, so a guard that read only the header -- or only the
+    # rows -- stayed green. The ledger stands on the LATER of the two, and in a real ledger
+    # they differ: a partial --replay moves the header to the replayed run's time while a row
+    # it did not adjudicate keeps its later stamp. run-mid is newer than one stamp and older
+    # than the other, both ways round, and is refused either way, naming the later moment.
+    for header_at, row_at in ((old_at, new_at), (new_at, old_at)):
+        skewed = json.loads(before)
+        skewed["updated_at"] = header_at
+        skewed["findings"]["CYM-a"]["check"]["adjudicated_by"]["at"] = row_at
+        (state / "ledger.json").write_text(json.dumps(skewed), encoding="utf-8")
+        skewed_bytes = (state / "ledger.json").read_bytes()
+        with pytest.raises(SystemExit) as stale:
+            ledger_mod.main(["--run", "run-mid"])
+        said_mid = str(stale.value)
+        assert "run-mid" in said_mid and "--replay" in said_mid and new_at in said_mid, (
+            f"header {header_at}, row {row_at}: run-mid ({mid_at}) was not refused as older than "
+            f"the later stamp", said_mid)
+        assert (state / "ledger.json").read_bytes() == skewed_bytes, "the ledger moved"
+        assert not [e for e in read_events() if e.get("type") == "run_recorded"], (
+            "the refused run was attested in the journal anyway")
+    (state / "ledger.json").write_bytes(before)
 
     # The same run the ledger stands on is not older than itself.
     assert ledger_mod.main(["--run", "run-new"]) == 0
