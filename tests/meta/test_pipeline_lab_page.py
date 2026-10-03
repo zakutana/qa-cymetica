@@ -172,6 +172,7 @@ def test_each_experiment_lands_in_its_sector_and_its_group():
     # The rest of the stopped-bot rule lives in helpers below, not tests of
     # their own: tests/meta is held to a ceiling.
     _check_a_bot_that_stopped_itself_is_done_and_says_which_limit_it_hit()
+    _check_the_row_says_how_long_each_bot_ran_and_why_it_stopped()
     _check_a_bot_still_trading_or_paused_by_us_or_never_started_stays_live()
     _check_a_batch_room_is_done_only_when_every_bot_in_it_has_stopped()
     _check_the_stop_a_clone_carries_is_the_diaries_and_only_while_it_is_stopped()
@@ -556,6 +557,37 @@ def _check_a_bot_that_stopped_itself_is_done_and_says_which_limit_it_hit():
                                                  "pct": -19.19}})["reason"] == "stop-loss −19.2%"
     flat = _bot_room({"trading": False, "stop": {"cause": "unexplained", "pct": None}})
     assert (flat["group"], flat["reason"]) == ("done", "stopped by itself")
+
+
+def _check_the_row_says_how_long_each_bot_ran_and_why_it_stopped():
+    """2026-10-03, the operator: "u botu chci videt delku jakou behlli, kdy je nekdo
+    spustil, kdy se vypli a delku zivota, a kdyz se vypli tak duvod"."""
+    gone = {"start": "2026-09-22T13:38:30+00:00", "end": "2026-09-22T20:00:00+00:00",
+            "why": "their_guard", "profit_pct": -10.0}
+    one = _bot_room({"trading": False, "stop": {"cause": "their_guard", "pct": -10.0},
+                     "runs": [gone]})["ran"]
+    assert (one["start"], one["end"], one["running"], one["n"]) == (
+        gone["start"], gone["end"], False, 1), one
+    assert one["seconds"] == 6 * 3600 + 21 * 60 + 30, one
+    assert one["why"] == "their stop-loss −10%", one
+    ours = _bot_room({"trading": False, "stop": {"cause": "ours", "pct": 0.0},
+                      "runs": [dict(gone, why="ours", profit_pct=None)]})["ran"]
+    assert ours["why"] == "paused by us", ours
+    free = _bot_room({"trading": False, "stop": {"cause": "unexplained", "pct": 3.0},
+                      "runs": [dict(gone, why="unexplained", profit_pct=3.0)]})["ran"]
+    assert free["why"] == "stopped by itself at +3%", free
+    going = _bot_room({"trading": True, "stop": None, "runs": [
+        {"start": "2026-09-23T00:00:00+00:00", "end": None, "why": None,
+         "profit_pct": None}]})["ran"]
+    assert (going["running"], going["end"], going["why"]) == (True, None, None), going
+    assert going["seconds"] == (NOW - datetime.fromisoformat("2026-09-23T00:00:00+00:00")
+                                ).total_seconds(), going
+    batch = _bot_room({"trading": False, "stop": {"cause": "their_guard", "pct": -9.0},
+                       "runs": [gone]},
+                      {"trading": False, "stop": {"cause": "their_guard", "pct": -10.0},
+                       "runs": [dict(gone, end="2026-09-22T14:00:00+00:00")]})["ran"]
+    assert (batch["n"], batch["why"], batch["seconds"]) == (2, "all 2 stopped", one["seconds"]), batch
+    assert _bot_room({"trading": False, "stop": None})["ran"] is None, "a bot never switched on"
 
 
 def _check_a_bot_still_trading_or_paused_by_us_or_never_started_stays_live():

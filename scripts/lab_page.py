@@ -707,7 +707,9 @@ def build_rooms() -> dict:
     from qa import lab as qa_lab
 
     every_stop = qa_lab.bot_stops(clone_rows, sampled)
+    every_run = qa_lab.bot_runs(clone_rows, sampled)
     for owner in bots.values():
+        owner["bot"]["runs"] = every_run.get(str(owner["bot"]["instance"]), [])
         known = [mark for mark in owner["marks"] if mark[1] is not None]
         if known:
             owner["bot"]["trading"] = max(known, key=lambda mark: mark[0])[1]
@@ -1082,6 +1084,54 @@ def _reason(group: str, panel: dict) -> str | None:
     return _stop_reason(stops) if stops and panel.get("status") == "running" else None
 
 
+_RAN_WHY = {"ours": "paused by us"}
+
+
+def _pct_word(pct: float) -> str:
+    pct = round(pct, 1)
+    return _signed(pct, 0 if pct == round(pct) else 1)
+
+
+def _ran(clones: list[dict], now: datetime) -> dict | None:
+    """How long a bot room's bots ran: when the first started, when the last stopped, the
+    lifespan of the longest-lived bot (its runs added up, an open run counted to now), and
+    why it stopped. None for a room with no bot that ever ran. The operator, 2026-10-03: "u
+    botu chci videt delku jakou behlli, kdy je nekdo spustil, kdy se vypli a delku zivota, a
+    kdyz se vypli tak duvod"."""
+    per_bot = [[r for r in (c.get("runs") or []) if _moment(r.get("start"))] for c in clones]
+    per_bot = [runs for runs in per_bot if runs]
+    if not per_bot:
+        return None
+    runs = [r for runs in per_bot for r in runs]
+    running = any(r.get("end") is None for r in runs)
+
+    def lived(bot_runs):
+        total = 0.0
+        for r in bot_runs:
+            end = _moment(r.get("end")) or now
+            total += max(0.0, (end - _moment(r["start"])).total_seconds())
+        return total
+
+    ended = [r for r in runs if r.get("end")]
+    last = max(ended, key=lambda r: str(r["end"])) if ended else None
+    why = None
+    if not running and last:
+        if len(per_bot) > 1:
+            why = f"all {len(per_bot)} stopped"
+        elif last.get("why") == "their_guard":
+            pct = last.get("profit_pct")
+            why = "their stop-loss" if pct is None else f"their stop-loss {_pct_word(pct)}%"
+        elif last.get("why") == "unexplained":
+            pct = last.get("profit_pct")
+            why = "stopped by itself" if pct is None else f"stopped by itself at {_pct_word(pct)}%"
+        else:
+            why = _RAN_WHY.get(last.get("why"), "stopped")
+    return {"start": min(r["start"] for r in runs),
+            "end": None if running else (last or {}).get("end"),
+            "seconds": max(lived(bot_runs) for bot_runs in per_bot),
+            "running": running, "n": len(per_bot), "why": why}
+
+
 def _room_trading(clones: list[dict]):
     """A bot room trades while any of its bots does -- a batch whose last
     clone stopped is not idle -- and is idle only when every bot with a known
@@ -1123,6 +1173,7 @@ def _experiment(rid: str, sector: str, report_room: dict, panel: dict,
             report_room.get("origin") or panel.get("origin") or ""))),
         "url": first.get("url"),
         "trading": _room_trading(clones),
+        "ran": _ran(clones, now),
         "tp": first.get("tp"), "sl": first.get("sl")}
 
 
@@ -1344,10 +1395,16 @@ button { font: inherit; color: inherit; }
 .bar-hint { font-size: 12.5px; color: var(--text-faint); }
 
 .board { list-style: none; margin: 0; padding: 0; }
-.row { display: grid; grid-template-columns: 26px minmax(0, 1fr) 110px 88px 80px 132px 250px 14px;
+.row { display: grid; grid-template-columns: 26px minmax(0, 1fr) 110px 150px 88px 80px 132px 250px 14px;
   align-items: center; gap: 12px; padding: 8px 10px; border-radius: 10px; cursor: pointer;
   min-height: 46px; }
 .board > li + li.row { border-top: 1px solid var(--line-soft); }
+/* How long a bot ran: the length in bold, then when it started and stopped, then why. */
+.rn { display: flex; flex-direction: column; gap: 1px; min-width: 0; line-height: 1.25; }
+.rn b { font-size: 13.5px; font-variant-numeric: tabular-nums; }
+.rn small { font-size: 11.5px; color: var(--text-faint); white-space: nowrap; overflow: hidden;
+  text-overflow: ellipsis; }
+.rn small.why { color: var(--text-dim); }
 .row:hover, .row.open { background: var(--surface-2); }
 .row.open { border-radius: 10px 10px 0 0; }
 .rk { font: 500 13px var(--mono); color: var(--text-faint); text-align: right; }
@@ -1480,6 +1537,7 @@ button { font: inherit; color: inherit; }
 
 @media (max-width: 1180px) {
   .row { grid-template-columns: 22px minmax(0, 1fr) 90px 80px 120px 14px; }
+  .row .rn { display: none; }
   .row .usd, .row .st { display: none; }
   .dt { grid-template-columns: 1fr; }
   .m-tiles { grid-template-columns: repeat(2, minmax(0, 1fr)); }
@@ -1490,7 +1548,7 @@ button { font: inherit; color: inherit; }
   .sec-val { font-size: 24px; }
   .hero { font-size: 40px; }
   .row { grid-template-columns: minmax(0, 1fr) 76px 12px; gap: 8px; }
-  .row .rk, .row .sp, .row .bt { display: none; }
+  .row .rk, .row .sp, .row .bt, .row .rn { display: none; }
   .detail { padding-left: 12px; }
   .top-r .live { display: none; }
   .mc-g { width: auto; }
@@ -1599,6 +1657,26 @@ function leftText(v) {
   return Math.round(v) + " d left";
 }
 function chip(cls, text) { return `<span class="chip ${cls}">${text}</span>`; }
+function durText(sec) {
+  const m = Math.floor(sec / 60), h = Math.floor(m / 60), d = Math.floor(h / 24);
+  if (d >= 1) return d + "d " + (h % 24) + "h";
+  if (h >= 1) return h + "h " + (m % 60) + "m";
+  return Math.max(1, m) + "m";
+}
+function whenText(iso) {
+  const t = new Date(iso);
+  return isNaN(t) ? "" : t.toLocaleString("en-GB", {day: "numeric", month: "short",
+    hour: "2-digit", minute: "2-digit", timeZone: "UTC"});
+}
+// A bot room: how long it ran, when it started and when it stopped, and why (UTC).
+function ranCell(le) {
+  const r = le.ran;
+  if (!r) return "";
+  const word = r.running ? "running " : "ran ";
+  return `<b title="${esc(r.n > 1 ? "the longest-lived of " + r.n + " bots" : "")}">${word}${durText(r.seconds)}</b>`
+    + `<small>${whenText(r.start)} → ${r.running ? "now" : whenText(r.end)}</small>`
+    + (r.why ? `<small class="why">${esc(r.why)}</small>` : "");
+}
 
 function sectorOf(key) {
   return (V.sectors || []).find(lp => lp.key === key) || {key: key, name: key};
@@ -1762,6 +1840,7 @@ function row(le, rank, open) {
     <span class="nm" title="${esc(le.title)}">${esc(le.title)}${le.ours
       ? ' <span class="ours">ours</span>' : ""}</span>
     <span class="sp">${le.group === "archive" && !le.verdict ? '<span class="sp-none">—</span>' : spark(le.spark)}</span>
+    <span class="rn">${ranCell(le)}</span>
     <span class="val ${tone(le.net_pct)}">${pctText(le.net_pct)}</span>
     <span class="usd ${tone(le.usdc)}">${le.usdc == null ? "" : usdText(le.usdc)}</span>
     <span class="bt">${btChip(le.backtest)}</span>
