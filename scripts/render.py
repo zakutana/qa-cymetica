@@ -1454,10 +1454,27 @@ details.stat summary{cursor:pointer;font-weight:600}
 .figs dt { font-size:12px; color:var(--text-faint); }
 .figs dd { margin:0; font-size:12.5px; color:var(--text-dim); font-family:var(--mono); }
 svg.bars { width:100%; height:80px; display:block; }
-.bars-x {
-  display:flex; justify-content:space-between; font-family:var(--mono);
-  font-size:10px; color:var(--text-faint); margin-top:2px;
-}
+/* A few dates, not every one: twenty "MM-DD" labels at 10px ran into each other and out of
+   their card (the operator, 2026-10-03). Each label sits under its own bar. */
+.bars-x { position:relative; height:14px; margin-top:3px; font-family:var(--mono);
+  font-size:10px; color:var(--text-faint); }
+.bars-x span { position:absolute; top:0; white-space:nowrap; transform:translateX(-50%); }
+.bars-x span.first { transform:none; }
+.bars-x span.last { transform:translateX(-100%); }
+.barwrap { position:relative; }
+.bar-hit { fill:transparent; }
+svg.bars rect.bar-on { filter:brightness(1.45); }
+/* The hover card: the same shape as the Gem Screener's -- a dark card with the date in
+   white, the value large, and a small line saying what it counts. */
+.bartip { position:absolute; z-index:6; pointer-events:none; min-width:132px;
+  padding:9px 12px 10px; border-radius:10px; background:#0d1424;
+  border:1px solid var(--line); box-shadow:0 10px 28px rgba(0,0,0,.5);
+  opacity:0; transform:translateY(4px); transition:opacity .08s, transform .08s; }
+.bartip.on { opacity:1; transform:none; }
+.bartip b { display:block; font-size:12.5px; color:#fff; font-weight:600; }
+.bartip .v { display:block; margin-top:3px; font-family:var(--mono); font-size:16px;
+  font-weight:700; color:var(--ok); }
+.bartip small { display:block; margin-top:2px; font-size:11px; color:var(--text-faint); }
 .stat-t { width:100%; border-collapse:collapse; font-size:13px; }
 .stat-t th {
   text-align:left; font-weight:500; font-size:11.5px; color:var(--text-faint);
@@ -2714,21 +2731,80 @@ const money = n => String(n).replace(/\B(?=(\d{3})+(?!\d))/g, ",");
   });
 })();
 
+function longDay(k) {
+  const d = new Date(k + "T00:00:00Z");
+  return isNaN(d) ? k : d.toLocaleDateString("en-US", {weekday: "short", month: "short",
+    day: "numeric", year: "numeric", timeZone: "UTC"});
+}
+
+// A day under every fifth bar at most, and always the first and the last.
+function barLabelIndexes(n) {
+  if (n <= 1) return [0];
+  const step = Math.max(1, Math.ceil((n - 1) / 4));
+  const out = [];
+  for (let i = 0; i < n - 1; i += step) out.push(i);
+  if (n - 1 - out[out.length - 1] < step / 2) out.pop();
+  out.push(n - 1);
+  return out;
+}
+
 function bars(rows, label) {
   if (!rows.length) return '<p class="blurb">Nothing recorded yet.</p>';
   const top = Math.max.apply(null, rows.map(r => r.v)) || 1;
   const w = 100 / rows.length;
-  return `<svg class="bars" viewBox="0 0 100 34" preserveAspectRatio="none"
+  const marks = barLabelIndexes(rows.length);
+  return `<div class="barwrap"><svg class="bars" viewBox="0 0 100 34" preserveAspectRatio="none"
       role="img" aria-label="${esc(label)}">
     ${rows.map((r, i) => {
       const h = Math.max(1.2, (r.v / top) * 26);
       return `<rect x="${(i * w) + w * 0.18}" y="${28 - h}" width="${w * 0.64}"
-        height="${h}" rx="0.8" fill="var(--accent)"><title>${esc(r.k)}: ${esc(r.t || r.v)}</title></rect>`;
+        height="${h}" rx="0.8" fill="var(--accent)"></rect>
+        <rect class="bar-hit" x="${i * w}" y="0" width="${w}" height="34"
+          data-day="${esc(longDay(r.k))}" data-val="${esc(String(r.t || r.v))}"
+          data-what="${esc(label)}"></rect>`;
     }).join("")}
     <line x1="0" y1="28" x2="100" y2="28" stroke="var(--line)" stroke-width="0.4"/>
   </svg>
-  <div class="bars-x">${rows.map(r => `<span>${esc(r.k.slice(5))}</span>`).join("")}</div>`;
+  <div class="bars-x">${marks.map((i, j) => `<span class="${j === 0 ? "first" : i === rows.length - 1 ? "last" : ""}"
+      style="left:${j === 0 ? 0 : i === rows.length - 1 ? 100 : (i + 0.5) * w}%">${esc(rows[i].k.slice(5))}</span>`).join("")}</div>
+  <div class="bartip" aria-hidden="true"></div></div>`;
 }
+
+// One hover card for every bar chart. Bars were native <title> tooltips: a delay, a grey
+// box and no room for a second line.
+(function () {
+  function show(hit) {
+    const wrap = hit.closest(".barwrap"), tip = wrap && wrap.querySelector(".bartip");
+    if (!tip) return;
+    tip.innerHTML = `<b>${esc(hit.dataset.day)}</b><span class="v">${esc(hit.dataset.val)}</span>`
+      + `<small>${esc(hit.dataset.what)}</small>`;
+    const box = wrap.getBoundingClientRect(), bar = hit.getBoundingClientRect();
+    tip.classList.add("on");
+    const centre = bar.left - box.left + bar.width / 2;
+    const left = Math.min(Math.max(0, centre - tip.offsetWidth / 2), box.width - tip.offsetWidth);
+    tip.style.left = left + "px";
+    tip.style.top = Math.max(0, -tip.offsetHeight - 6) + "px";
+    wrap.querySelectorAll("rect.bar-on").forEach(r => r.classList.remove("bar-on"));
+    if (hit.previousElementSibling) hit.previousElementSibling.classList.add("bar-on");
+  }
+  function hide(wrap) {
+    const tip = wrap.querySelector(".bartip");
+    if (tip) tip.classList.remove("on");
+    wrap.querySelectorAll("rect.bar-on").forEach(r => r.classList.remove("bar-on"));
+  }
+  document.addEventListener("mouseover", e => {
+    const hit = e.target.closest && e.target.closest(".bar-hit");
+    if (hit) show(hit);
+  });
+  document.addEventListener("mouseout", e => {
+    const wrap = e.target.closest && e.target.closest(".barwrap");
+    if (wrap && !(e.relatedTarget && wrap.contains(e.relatedTarget))) hide(wrap);
+  });
+  document.addEventListener("click", e => {
+    const hit = e.target.closest && e.target.closest(".bar-hit");
+    if (hit) show(hit);
+  });
+})();
 
 
 function statBlocks() {
