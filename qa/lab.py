@@ -733,6 +733,12 @@ HUNT_HOURS = 3.0
 # unless one ran inside this many hours. By day a sweep comes on their news
 # instead (vendor_news below).
 SWEEP_HOURS = 20.0
+FUND_ROOMS = False
+"""Whether a fund Nexus names becomes a room (a mark against its index, never a buy).
+Off since 2026-10-03, the operator: "Aib fonds vubec netestuj, to je zbytecne" -- the
+question no longer offers a fund and a fund named in an answer opens nothing. What a fund
+room does when this is on is still held by tests/meta/test_pipeline_lab_loop.py."""
+
 NIGHT_LOCAL_HOURS = range(0, 6)
 # A held reason worth saying to the operator the first time it appears: an
 # error from their side, or an id their API does not know.

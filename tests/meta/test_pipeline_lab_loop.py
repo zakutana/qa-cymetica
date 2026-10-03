@@ -3407,7 +3407,11 @@ def test_a_fund_is_marked_not_bought_and_judged_on_its_own_series(
     fund whose history is empty has nothing to judge and opens no room."""
     import qa.rooms as qa_rooms
 
+    # Fund rooms are off since 2026-10-03 ("Aib fonds vubec netestuj, to je zbytecne");
+    # what a fund room does when it is on is still held here. (`_scripts_lab` reloads
+    # qa.lab, which resets the switch, so it is set after.)
     scripts_lab = _scripts_lab(tmp_path, monkeypatch)
+    monkeypatch.setattr(lab, "FUND_ROOMS", True)
     real_points = scripts_lab._fund_points
     start = NOW - timedelta(hours=1)
     series = {"AIB-SPACE": _flat_then(start, [64.0] * 3)}
@@ -3493,6 +3497,7 @@ def test_the_board_the_brief_and_resume_read_bot_and_fund_rooms(
     -- see the fund test) -- and resume is the first thing a tick after a
     /clear runs."""
     scripts_lab = _scripts_lab(tmp_path, monkeypatch)
+    monkeypatch.setattr(lab, "FUND_ROOMS", True)
     _clonepad(scripts_lab, tmp_path, monkeypatch,
               _answer("Clone MACD Hunter, and mark AIB-SPACE."),
               fund_points={"AIB-SPACE": _flat_then(NOW, [64.0, 64.0])})
@@ -3741,9 +3746,20 @@ def test_the_question_offers_a_card_a_bot_or_a_fund_and_names_all_we_hold(
 
     text = scripts_lab.cards_question()
 
-    assert "/api/v1/cloned-bots/available" in text and "list_funds" in text
+    # Funds are off (the operator, 2026-10-03: "Aib fonds vubec netestuj, to je
+    # zbytecne"): a fund named in an answer opens no room, and the question no longer
+    # offers one, so a pick of that kind is not asked for at all.
+    assert "/api/v1/cloned-bots/available" in text
+    assert "list_funds" not in text and "fund to mark" not in text, text
+    assert "no fund" in text.lower(), text
     assert "whole" in text.lower() and "uuid" in text.lower()
-    assert "MACD Hunter" in text and "AIB-SPACE" in text, text
+    assert "MACD Hunter" in text and "AIB-SPACE" not in text, text
+    import qa.rooms as qa_rooms
+
+    rooms_now = [r for r in qa_rooms.load() if r.get("type") == "strategy"]
+    assert all(r.get("kind") != "fund" for r in rooms_now), rooms_now
+    monkeypatch.setattr(lab, "FUND_ROOMS", True)
+    assert "list_funds" in scripts_lab.cards_question(), "the fund offer cannot be switched back on"
 
 
 # ---------------------------------------------------------------------------

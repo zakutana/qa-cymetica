@@ -1680,12 +1680,15 @@ def cards_question() -> str:
                            else f"fund {ref}" if kind == "fund" else str(ref))
     refused = [row for row in lab.load() if row.get("type") == "gate"
                and row.get("verdict") in ("reject", "unknown_card")][-5:]
+    what = ("an event card (the whole card UUID, status live and tradeable_now "
+            "true), a bot to clone on paper (its exact species name from "
+            "/api/v1/cloned-bots/available)")
+    what += (", or a fund to mark (its symbol from list_funds -- we watch a "
+             "fund, we do not buy one)" if lab.FUND_ROOMS
+             else ". No fund: we do not run funds, so name none")
     lines = [
-        "Up to five things you would run on paper now, each on its own: an "
-        "event card (the whole card UUID, status live and tradeable_now "
-        "true), a bot to clone on paper (its exact species name from "
-        "/api/v1/cloned-bots/available), or a fund to mark (its symbol from "
-        "list_funds -- we watch a fund, we do not buy one). Each is held and "
+        "Up to five things you would run on paper now, each on its own: "
+        + what + ". Each is held and "
         f"judged over {NIGHT_WINDOW_DAYS:g} days from the moment we open it, "
         "after fees, so pick for that window. For each: side where it has "
         "one, take-profit and stop in percent sized for "
@@ -2641,7 +2644,9 @@ def night_promote(since: datetime | None = None) -> dict:
             species = {str(b.get("id")).lower() for b in bots_listed}
             named = [c for c in named if c not in species]
         bots = lab.proposed_bots(text, bots_listed or [])
-        funds = lab.proposed_funds(text, funds_listed or [])
+        # Fund rooms are off (lab.FUND_ROOMS): a fund he names is read and left alone.
+        funds = (lab.proposed_funds(text, funds_listed or [])
+                 if lab.FUND_ROOMS else [])
         if not (named or bots or funds):
             held.append(f"{origin}: names no card, bot or fund we can act on; "
                         f"the morning reads it")

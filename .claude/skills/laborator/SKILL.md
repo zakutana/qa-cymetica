@@ -44,6 +44,8 @@ This narrows "a strategy of ours never becomes a room": Nexus first, ours in the
 
 ## Asking Nexus
 
+Funds are off since 2026-10-03 (said by the operator in chat, in Czech: do not test the AIB funds at all, it is pointless): the question names none and a fund in an answer opens no room. The switch is `qa.lab.FUND_ROOMS`; turn it on only when the operator says so.
+
 [operator 2026-09-19] *"Ano"* -- to whether the laboratory may, on its own, send its question through their sync door (`POST /api/v1/bounty/qa-agent/ask`) while the deep lane is at capacity, as Cymetica advised in REPLY-0018. The a2a `--confirm` condition still holds for everything else.
 
 [operator 2026-09-21] *"tak snad nexusovi rikej ze muze doporucovat jen veci co jdou v papiru jen spustit ne"* -- said when NEX-0056 proposed an AIB fund the laboratory had no paper road for. **Every question tells him what a room can hold: an event card, by its whole UUID, live and tradeable now.** A proposal of anything else is a slot and a question spent on nothing we can measure. The rotation below picks the theme; the answer is still cards.
