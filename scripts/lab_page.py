@@ -917,9 +917,12 @@ def _lab_script():
 # per experiment are the rows of those rankings, and their threads sit behind
 # the page's conversation button.
 
-SECTOR_NAMES = {"cards": "Cards", "bots": "Bots", "memecoins": "Memecoins",
-                "funds": "Funds"}
+SECTOR_NAMES = {"cards": "Cards", "bots": "Bots", "memecoins": "Memecoins"}
+"""Three rooms. Funds were a fourth until 2026-10-03, when the operator stopped measuring
+them; a fund room is now on no page, like an Arena room."""
 SECTORS = tuple(SECTOR_NAMES)
+# What the Nexus line shows of his ideas, and nothing else.
+NEXUS_KEYS = ("picks", "gate_pass", "gated", "survived", "refuted", "running")
 # Points on a row's small line, and on an opened experiment's chart.
 SPARK_POINTS = 40
 PATH_POINTS = 160
@@ -1088,11 +1091,26 @@ CARD_ROUND_TRIP_PCT = 0.4
 """The live event-card taker fee, 0.2% a fill, as Nexus quoted it (NEX-0114)."""
 
 
-def _value_at(path: list[list], hours: float, done: bool) -> float | None:
+def _h18_stats(experiments: list[dict], sector: str) -> dict | None:
+    """What a room's 18-hour column adds up to: how many have a figure, their average and the
+    share in profit. None when none does."""
+    figures = [e["at_18h"] for e in experiments
+               if e.get("sector") == sector and e.get("at_18h") is not None]
+    if not figures:
+        return None
+    return {"n": len(figures), "avg": sum(figures) / len(figures),
+            "pos_pct": 100.0 * sum(1 for v in figures if v > 0) / len(figures)}
+
+
+def _value_at(path: list[list], hours: float, done: bool,
+              cost: float | None = None) -> float | None:
     """What a card would have made if sold `hours` after we went in, after the round-trip fee:
     its line read there, between its two nearest readings. A card sold (or ended) before that
     is what it was sold at; one not yet that old has no figure. The operator, 2026-10-03:
-    every card says "kolik by byl vysledek po 18h", the old ones too."""
+    every card says "kolik by byl vysledek po 18h", the old ones too. `cost` is the fee taken
+    off: the card round trip by default, 0 for a bot (its line is already what their engine
+    booked)."""
+    cost = CARD_ROUND_TRIP_PCT if cost is None else cost
     points = [(_moment(t), v) for t, v in path or [] if _moment(t) is not None
               and isinstance(v, (int, float))]
     if len(points) < 2:
@@ -1101,12 +1119,12 @@ def _value_at(path: list[list], hours: float, done: bool) -> float | None:
     start = points[0][0]
     target = start + timedelta(hours=hours)
     if points[-1][0] < target:
-        return points[-1][1] - CARD_ROUND_TRIP_PCT if done else None
+        return points[-1][1] - cost if done else None
     for (t0, v0), (t1, v1) in zip(points, points[1:]):
         if t0 <= target <= t1:
             span = (t1 - t0).total_seconds()
             value = v0 if span <= 0 else v0 + (v1 - v0) * (target - t0).total_seconds() / span
-            return value - CARD_ROUND_TRIP_PCT
+            return value - cost
     return None
 
 
@@ -1200,17 +1218,18 @@ def _experiment(rid: str, sector: str, report_room: dict, panel: dict,
         "url": first.get("url"),
         "trading": _room_trading(clones),
         "ran": _ran(clones, now),
-        "at_18h": (_value_at(path, 18, group != "live") if sector == "cards" else None),
+        "at_18h": (_value_at(path, 18, group != "live",
+                             None if sector == "cards" else 0.0)
+                   if sector in ("cards", "bots") else None),
         "tp": first.get("tp"), "sl": first.get("sl")}
 
 
-def lab_view(rooms: dict, report: dict, channel: dict, fomo: dict | None,
-             now: datetime | None = None, credit: dict | None = None) -> dict:
+def lab_view(rooms: dict, report: dict, now: datetime | None = None) -> dict:
     """What /lab draws, joined in one place so a test can hold all of it:
-    the four sectors with the report's figures, every experiment as a row of
-    its sector's ranking, the Nexus line with Nexus's credit under it
-    (`qa.lab.credit_view`), the paper account, the threads for the
-    conversation drawer and the memecoin movers. Pure."""
+    the three sectors with the report's figures and their 18-hour totals, every experiment
+    as a row of its sector's ranking, what came of Nexus's ideas, the paper account and the
+    threads for the conversation drawer. Pure. (The memecoin top-movers table went with the
+    rest of what is not a result, 2026-10-03.)"""
     moment = now or datetime.now(timezone.utc)
     products = report.get("products") or {}
     by_id = {r.get("id"): r for r in report.get("rooms") or []}
@@ -1225,27 +1244,18 @@ def lab_view(rooms: dict, report: dict, channel: dict, fomo: dict | None,
         experiments.append(_experiment(rid, sector, report_room,
                                        panels.get(rid) or {}, moment))
     general = panels.get("general") or {}
-    # Every bot of the room, not the last: a batch room holds several.
-    in_bots = sum(float(clone.get("balance") or 0)
-                  for e in experiments
-                  if e["sector"] == "bots" and e["group"] != "archive"
-                  for clone in panels.get(e["id"], {}).get("clones") or [])
     return {
         "generated_at": report.get("generated_at"),
-        "sectors": [{"key": key, "name": name, **(products.get(key) or {})}
+        "sectors": [{"key": key, "name": name, **(products.get(key) or {}),
+                     "h18": _h18_stats(experiments, key)}
                     for key, name in SECTOR_NAMES.items()],
         "experiments": experiments,
-        "nexus": {**(report.get("nexus") or {}),
-                  **{k: (channel or {}).get(k) for k in
-                     ("median_seconds", "measured", "failed", "refused")},
-                  "credit": credit},
+        # Only what came of his ideas: no response times, no refusals, no credit.
+        "nexus": {k: (report.get("nexus") or {}).get(k) for k in NEXUS_KEYS},
         "account": {"free": general.get("balance"),
                     "in_cards": general.get("notional"),
-                    "in_bots": round(in_bots, 2) or None,
-                    "at": general.get("balance_at"), "stale": general.get("stale")},
+                    "stale": general.get("stale")},
         "threads": rooms.get("threads") or {},
-        "movers": ((fomo or {}).get("curves") or [])[:MOVERS],
-        "movers_total": (fomo or {}).get("curves_total") or 0,
     }
 
 
@@ -1255,9 +1265,7 @@ def build_lab(now=None) -> dict:
     answers."""
     moment = now or datetime.now(timezone.utc)
     script = _lab_script()
-    view = lab_view(build_rooms(), script.write_report(moment),
-                    _nexus_channel(), _fomo_stats() or {}, now=moment,
-                    credit=_credit(script, moment))
+    view = lab_view(build_rooms(), script.write_report(moment), now=moment)
     view["departments"] = departments_view()
     return view
 
@@ -1422,12 +1430,14 @@ button { font: inherit; color: inherit; }
 .bar-hint { font-size: 12.5px; color: var(--text-faint); }
 
 .board { list-style: none; margin: 0; padding: 0; }
-.row { display: grid; grid-template-columns: 26px minmax(0, 1fr) 110px 150px 88px 80px 132px 250px 14px;
+.board { --cols: 26px minmax(0, 1fr) 110px 96px 88px 80px 132px 250px 14px; }
+.board.sec-bots { --cols: 26px minmax(0, 1fr) 110px 150px 96px 88px 80px 132px 250px 14px; }
+.row { display: grid; grid-template-columns: var(--cols);
   align-items: center; gap: 12px; padding: 8px 10px; border-radius: 10px; cursor: pointer;
   min-height: 46px; }
 .board > li + li.row { border-top: 1px solid var(--line-soft); }
 /* The column names, in the rows' own grid; the ones you can sort by are buttons. */
-.head { display: grid; grid-template-columns: 26px minmax(0, 1fr) 110px 150px 88px 80px 132px 250px 14px;
+.head { display: grid; grid-template-columns: var(--cols);
   align-items: center; gap: 12px; padding: 4px 10px 6px; font-size: 11.5px; font-weight: 600;
   letter-spacing: .05em; text-transform: uppercase; color: var(--text-faint);
   border-bottom: 1px solid var(--line); }
@@ -1444,6 +1454,13 @@ button { font: inherit; color: inherit; }
 .rn small { font-size: 11.5px; color: var(--text-faint); white-space: nowrap; overflow: hidden;
   text-overflow: ellipsis; }
 .rn small.why { color: var(--text-dim); }
+.h18 { display: flex; flex-direction: column; min-width: 0; }
+.h18 b { font-size: 14px; font-variant-numeric: tabular-nums; }
+.h18 small { font-size: 11.5px; color: var(--text-faint); }
+.hero-block { display: flex; flex-direction: column; gap: 4px; }
+.hero2 { font-size: 36px; }
+.hero-cap { font-size: 13px; color: var(--text-faint); }
+.hero-cap b { color: var(--text-dim); }
 .row:hover, .row.open { background: var(--surface-2); }
 .row.open { border-radius: 10px 10px 0 0; }
 .rk { font: 500 13px var(--mono); color: var(--text-faint); text-align: right; }
@@ -1576,7 +1593,7 @@ button { font: inherit; color: inherit; }
 
 @media (max-width: 1180px) {
   .row { grid-template-columns: 22px minmax(0, 1fr) 90px 80px 120px 14px; }
-  .row .rn { display: none; }
+  .row .rn, .row .h18 { display: none; }
   .head { display: none; }
   .row .usd, .row .st { display: none; }
   .dt { grid-template-columns: 1fr; }
@@ -1588,7 +1605,7 @@ button { font: inherit; color: inherit; }
   .sec-val { font-size: 24px; }
   .hero { font-size: 40px; }
   .row { grid-template-columns: minmax(0, 1fr) 76px 12px; gap: 8px; }
-  .row .rk, .row .sp, .row .bt, .row .rn { display: none; }
+  .row .rk, .row .sp, .row .bt, .row .rn, .row .h18 { display: none; }
   .detail { padding-left: 12px; }
   .top-r .live { display: none; }
   .mc-g { width: auto; }
@@ -1643,7 +1660,7 @@ function writeStore(key, value) {
   try { localStorage.setItem(key, String(value)); } catch (_) {}
 }
 const LOCAL = ["127.0.0.1", "localhost", "[::1]"].includes(location.hostname);
-const SECTORS = ["cards", "bots", "memecoins", "funds"];
+const SECTORS = ["cards", "bots", "memecoins"];
 const GROUPS = [["live", "Live"], ["done", "Done"], ["archive", "Archive"]];
 const EMPTY = {live: "Nothing live right now.", done: "Nothing judged yet.",
                archive: "The archive is empty."};
@@ -1709,15 +1726,14 @@ function whenText(iso) {
     hour: "2-digit", minute: "2-digit", timeZone: "UTC"});
 }
 // A bot room: how long it ran, when it started and when it stopped, and why (UTC).
+function h18Cell(le) {
+  // What it would have made if sold after 18 hours (a card after its fee), in a column of
+  // its own -- as a chip it was cut to "18 h +13..." (the operator, 2026-10-03).
+  return le.at_18h != null
+    ? `<b class="${tone(le.at_18h)}">${pctText(le.at_18h)}</b>`
+    : (le.group === "live" ? '<small>not yet</small>' : le.group === "done" ? '<small>—</small>' : "");
+}
 function ranCell(le) {
-  // A card: what it would have made if sold after 18 hours (after the fee), in a column of
-  // its own -- as a third chip it was cut to "18 h +13..." (the operator, 2026-10-03).
-  if (le.sector === "cards") {
-    return le.at_18h != null
-      ? `<b class="${tone(le.at_18h)}">${pctText(le.at_18h)}</b>`
-      : (le.group === "live" ? '<small>not 18 h old yet</small>'
-         : le.group === "done" ? '<small>no figure</small>' : "");
-  }
   const r = le.ran;
   if (!r) return "";
   const word = r.running ? "running " : "ran ";
@@ -1733,104 +1749,43 @@ function sectorOf(key) {
 /* ---------- the top: the account and the four rooms ---------- */
 function accountLine(la) {
   if (!la || la.free == null) return "Paper trades on Nexus's advice · after fees";
-  return `Paper account <b>${money(la.free)}</b> free · ${money(la.in_cards)} in cards · ` +
-    `${money(la.in_bots)} in bots` + (la.at ? ` <span class="flat">(${clock(la.at)})</span>` : "") +
+  return `Paper account <b>${money(la.free)}</b> free · ${money(la.in_cards)} in cards` +
     (la.stale ? ' · <span class="warn">⚠ API data is stale</span>' : "");
 }
 function sectorTab(lp, on) {
   const meme = lp.key === "memecoins";
-  const mid = meme
-    ? (lp.n ? `${num(lp.n, 0)} trades × $10` : "no trade yet")
-    : lp.usdc != null ? `<span class="${tone(lp.usdc)}">${usdText(lp.usdc)}</span>`
-                         + ` <span class="flat">on ${money(lp.stake_usdc)}</span>`
-    : (lp.running ? "no result yet" : "nothing yet");
-  const foot = meme ? `${num(lp.running || 0, 0)} waiting for a full day`
-    : `${lp.n || 0} ${plural(lp.n || 0, "test", "tests")} · ${lp.running || 0} live`;
+  const foot = meme ? (lp.n ? `${num(lp.n, 0)} ${plural(lp.n, "trade", "trades")}` : "no trade yet")
+    : `${lp.n || 0} ${plural(lp.n || 0, "test", "tests")}` + (lp.running ? ` · ${lp.running} live` : "");
   return `<button class="sec" role="tab" type="button" aria-selected="${on}"
       data-sector="${esc(lp.key)}" style="--hue:var(--c-${esc(lp.key)})">
     <span class="sec-name">${esc(lp.name)}</span>
     <span class="sec-val ${tone(lp.net_pct)}">${pctText(lp.net_pct)}</span>
-    <span class="sec-mid">${mid}</span>
     <span class="sec-foot">${foot}</span></button>`;
 }
-/* Nexus's credit, `cr.`: Cymetica's build plan on our account as the tick
-   read it (GET /api/v1/nexus/usage), and the questions their deep lane
-   turned away at its hourly limit, which /usage does not carry. Cymetica's,
-   named so on the tag, never the operator's own plan. Coloured by their
-   own warn/critical marks; nothing acts on them. */
-function creditTone(v, cr) {
-  return v == null ? "" : cr.critical_pct != null && v >= cr.critical_pct ? "down"
-    : cr.warn_pct != null && v >= cr.warn_pct ? "warm" : "";
-}
-function creditLine(cr) {
-  if (!cr) return "";
-  const tip = "Cymetica's Nexus build plan on our account (GET /api/v1/nexus/usage), " +
-    "read by the lab tick; hourly limit = deep answers they refused, from our diary.";
-  const head = `<br><span class="nx-tag" title="${esc(tip)}">Nexus credit</span> `;
-  const win = (label, v, reset) => v == null ? "" :
-    ` · ${label} <b class="${creditTone(v, cr)}">${num(v, 0)}%</b>` +
-    (reset ? ` <small>resets ${clock(reset)}</small>` : "");
-  const refused = ` · hourly limit hit <b>${cr.refusals_hour || 0}×</b> last hour` +
-    ` <small>(${cr.refusals_day || 0}× in 24 h)</small>`;
-  if (cr.at == null) {
-    return head + (cr.unread ? `<span class="warn-t">unread (${esc(cr.unread)})</span>`
-      : "not read yet") + refused;
-  }
-  return head + esc(cr.plan || "") + win("5 h", cr.session_pct, cr.session_resets) +
-    win("week", cr.week_pct, cr.week_resets) +
-    (cr.items != null ? ` · ${num(cr.items, 0)} ${plural(cr.items, "item", "items")}` +
-      (cr.last_item ? ` <small>last: ${esc(cr.last_item)}</small>` : "") : "") +
-    refused + ` <small>(${clock(cr.at)})</small>` +
-    (cr.unread ? ` · <span class="warn-t">newest read failed: ${esc(cr.unread)}</span>` : "");
-}
+/* What came of his ideas, in one line. No response times, no refusals, no credit. */
 function nexusLine(ln) {
-  if (!ln) return "";
-  const credit = creditLine(ln.credit);
-  if (ln.questions == null) return credit.replace(/^<br>/, "");
+  if (!ln || ln.picks == null) return "";
   const ar = '<span class="ar">→</span>';
-  const took = ln.median_seconds != null
-    ? ` · answers in ~${Math.max(1, Math.round(ln.median_seconds / 60))} min` +
-      ` <small>(measured ${ln.measured}×)</small>` : "";
-  const quiet = (ln.failed || ln.refused)
-    ? ` · <small>${ln.failed || 0} unanswered, ${ln.refused || 0} refused</small>` : "";
-  return `<span class="nx-tag">Nexus</span> <b>${ln.questions}</b> questions ${ar} ` +
-    `<b>${ln.answered}</b> answers ${ar} <b>${ln.picks}</b> ideas ${ar} ` +
+  return `<span class="nx-tag">Nexus</span> <b>${ln.picks}</b> ideas ${ar} ` +
     `<b>${ln.gate_pass}</b> of ${ln.gated} passed backtest ${ar} ` +
     `<b class="${ln.survived ? "up" : ""}">${ln.survived}</b> worked` +
     (ln.refuted ? `, ${ln.refuted} didn't` : "") +
-    (ln.inconclusive ? `, ${ln.inconclusive} no verdict` : "") +
-    (ln.running ? `, ${ln.running} running` : "") + took + quiet + credit;
+    (ln.running ? `, ${ln.running} running` : "");
 }
 
-/* ---------- a room's number: how sure, in words ---------- */
-function confidence(lp) {
-  if (!lp.wilson) return ["flat", "too little data"];
-  if (lp.wilson[0] > 0.5) return ["up", "likely profitable"];
-  if (lp.wilson[1] < 0.5) return ["down", "likely losing"];
-  return ["flat", "undecided"];
-}
-function band(lp) {
-  return lp.wilson
-    ? `<small>${Math.round(lp.wilson[0] * 100)}–${Math.round(lp.wilson[1] * 100)}% of tests in profit, 95% sure</small>`
-    : `<small>fewer than ${lp.min_n} ${plural(lp.min_n, "test", "tests")}</small>`;
-}
+/* ---------- a room's number: the result, and what selling after 18 hours would have made ---------- */
 function roomHead(lp) {
   if (!lp.n) {
-    return `<div class="room-head"><div class="hero flat">—</div><div class="hero-side">
-      <div class="hero-l1">no result yet</div>
-      <div class="hero-l2">${lp.running || 0} live · a number comes when the first window ends</div>
-      </div></div>`;
+    return `<div class="room-head"><div class="hero-block"><div class="hero flat">—</div>
+      <div class="hero-cap">no result yet · ${lp.running || 0} live</div></div></div>`;
   }
-  const [ct, cw] = confidence(lp);
+  const h = lp.h18;
   return `<div class="room-head">
-    <div class="hero ${tone(lp.net_pct)}">${pctText(lp.net_pct)}</div>
-    <div class="hero-side">
-      <div class="hero-l1">average per test, after fees` +
-        (lp.usdc != null ? ` · total <b class="${tone(lp.usdc)}">${usdText(lp.usdc)}</b>` +
-                           ` on ${money(lp.stake_usdc)} in` : "") + `</div>
-      <div class="hero-l2">${lp.wins} of ${lp.n} in profit
-        <span class="conf ${ct}">${cw}</span>${band(lp)}</div>
-    </div></div>`;
+    <div class="hero-block"><div class="hero ${tone(lp.net_pct)}">${pctText(lp.net_pct)}</div>
+      <div class="hero-cap">average result, after fees</div></div>` +
+    (h ? `<div class="hero-block"><div class="hero hero2 ${tone(h.avg)}">${pctText(h.avg)}</div>
+      <div class="hero-cap">if sold after 18 h · <b>${num(h.pos_pct, 0)}%</b> in profit
+        <small>(${h.n} ${plural(h.n, "test", "tests")})</small></div></div>` : "") + `</div>`;
 }
 
 /* ---------- one experiment, one row ---------- */
@@ -1888,7 +1843,8 @@ function row(le, rank, open) {
     <span class="nm" title="${esc(le.title)}">${esc(le.title)}${le.ours
       ? ' <span class="ours">ours</span>' : ""}</span>
     <span class="sp">${le.group === "archive" && !le.verdict ? '<span class="sp-none">—</span>' : spark(le.spark)}</span>
-    <span class="rn">${ranCell(le)}</span>
+    ${SECTOR === "bots" ? `<span class="rn">${ranCell(le)}</span>` : ""}
+    <span class="h18">${h18Cell(le)}</span>
     <span class="val ${tone(le.net_pct)}">${pctText(le.net_pct)}</span>
     <span class="usd ${tone(le.usdc)}">${le.usdc == null ? "" : usdText(le.usdc)}</span>
     <span class="bt">${btChip(le.backtest)}</span>
@@ -2019,35 +1975,12 @@ function curveSvg(points) {
     <line x1="${PAD}" x2="${W - PAD}" y1="${zero}" y2="${zero}" stroke="var(--line)"
       stroke-width="1"/>${lines}${dots}</svg>`;
 }
-const DROPPED = [["unpriced", "unpriced at signal"], ["depth_unknown", "unknown depth"],
-                 ["too_thin", "pool too thin for $10"], ["pair_changed", "pair switched"],
-                 ["unread_at_24h", "unread at 24 h"]];
-function moversTable() {
-  const all = V.movers || [];
-  if (!all.length) return `<p class="empty">No signal has had its first hour yet.</p>`;
-  const open = readStore("lab.movers", "0") === "1";
-  const shown = open ? all : all.slice(0, TOP);
-  const rows = shown.map(c => `<tr>
-      <td class="mc-sym">${esc(c.symbol || "?")}</td>
-      <td class="mc-conv">${c.conviction == null ? "—" : num(c.conviction, 0)}</td>
-      <td class="mc-ret">${pct(c.last)}</td>
-      <td class="mc-ret">${pct(c.peak)}</td>
-      <td class="mc-g">${curveSvg(c.points)}</td></tr>`).join("");
-  return `<div class="movers"><h3>Top movers<small>${shown.length} of ${num(V.movers_total || 0, 0)}
-      · by peak: winners by construction, not the average</small></h3>
-    <table class="mc-list"><thead><tr><th>token</th><th>conviction</th><th>now</th>
-      <th>peak</th><th>first 24 h</th></tr></thead><tbody>${rows}</tbody></table>
-    ${all.length > TOP ? `<button type="button" class="more" data-movers>${open ? "Less ▴"
-      : `All ${all.length} ▾`}</button>` : ""}</div>`;
-}
 function memeRoom(lp) {
-  const [ct, cw] = confidence(lp);
+  if (!lp.n) {
+    return `<div class="room-head"><div class="hero-block"><div class="hero flat">—</div>
+      <div class="hero-cap">No signal has had a full day to settle yet.</div></div></div>`;
+  }
   const hc = lp.conviction_70 || {};
-  const ex = lp.excluded || {};
-  const otherFees = (lp.fees || []).filter(f => f.fee_pct !== lp.fee_pct);
-  const others = otherFees.map(f => pctText(f.net_pct, 1)).join(" / ");
-  const otherWhat = "at " + otherFees.map(f => num(f.fee_pct, 1) + "%").join(" / ") + " a side";
-  const dropped = DROPPED.filter(([k]) => ex[k]).map(([k, w]) => `${num(ex[k], 0)} ${w}`);
   const could = lp.could_buy_share == null ? null : Math.round(lp.could_buy_share * 100);
   const tiles = [
     ["Could have bought", could == null ? "—" : could + "%",
@@ -2056,29 +1989,16 @@ function memeRoom(lp) {
     [`Conviction ≥ ${num(hc.min || 70, 0)} only`,
      `<span class="${tone(hc.net_pct)}">${pctText(hc.net_pct, 1)}</span>`,
      `${num(hc.n || 0, 0)} ${plural(hc.n || 0, "trade", "trades")}`, ""],
-    // [operator 2026-09-14] *"to me nezjaima bez top 5 nechapu proc by
-    // to tam melo byt"*. So there is no "without the best five" figure; what
-    // says whether the headline is the signal or one lucky coin is the
-    // median beside it -- the trade in the middle, which no outlier moves.
+    // The trade in the middle, which no outlier moves: what says whether the headline is the
+    // signal or one lucky coin.
     ["Typical trade (median)", `<span class="${tone(lp.median_pct)}">${pctText(lp.median_pct, 1)}</span>`,
      "half do worse", ""],
-    ["Other fee", others || "—", otherFees.length ? otherWhat : "", ""],
   ];
-  return `<div class="room-head">
+  return `<div class="room-head"><div class="hero-block">
       <div class="hero ${tone(lp.net_pct)}">${pctText(lp.net_pct, 1)}</div>
-      <div class="hero-side">
-        <div class="hero-l1">per trade: <b>$10 into every hot signal</b>, held a day
-          · ${num(lp.fee_pct, 0)}% fee a side</div>
-        <div class="hero-l2">${num(lp.n || 0, 0)} trades · ${num(lp.wins || 0, 0)} in profit
-          <span class="conf ${ct}">${lp.wilson && lp.wilson[1] < 0.5 ? "most lose" : cw}</span>${band(lp)}</div>
-      </div></div>
+      <div class="hero-cap">per trade, $10 into every hot signal, held a day, after fees</div></div></div>
     <div class="m-tiles">${tiles.map(([k, v, s, extra]) =>
-      `<div class="tile"><span>${k}</span><b>${v}</b><i>${s}</i>${extra}</div>`).join("")}</div>
-    ${dropped.length ? `<p class="filt">Left out (could not buy or measure):
-      ${dropped.join(" · ")} — in no figure.${lp.switched
-        ? ` Counted: ${num(lp.switched, 0)} rugs (main pool drained), sold for what
-          was left.` : ""}</p>` : ""}
-    ${moversTable()}`;
+      `<div class="tile"><span>${k}</span><b>${v}</b><i>${s}</i>${extra}</div>`).join("")}</div>`;
 }
 
 /* ---------- the room on screen ---------- */
@@ -2094,7 +2014,8 @@ function groupNow(counts) {
 /* ---------- sorting by a column header (the operator, 2026-10-03) ---------- */
 const SORTS = {
   name: le => String(le.title || "").toLowerCase(),
-  ran: le => le.sector === "cards" ? le.at_18h : (le.ran ? le.ran.seconds : null),
+  h18: le => le.at_18h,
+  ran: le => le.ran ? le.ran.seconds : null,
   net: le => le.net_pct, usd: le => le.usdc,
   bt: le => le.backtest ? le.backtest.pct : null,
   state: le => ({survived: 0, inconclusive: 1, refuted: 2}[le.verdict] ?? 3)
@@ -2120,11 +2041,10 @@ function headRow() {
       ` aria-label="sort by ${esc(label)}">${esc(label)}${s && s.key === key
         ? (s.dir === "asc" ? " ▴" : " ▾") : ""}</button>`
     : `<span class="${cls}">${esc(label)}</span>`;
-  const ranLabel = SECTOR === "cards" ? "After 18 h" : SECTOR === "bots" ? "Ran" : "";
   return `<li class="head">` +
     cell("rk", null, "#") + cell("nm", "name", "Experiment") + cell("sp", null, "Path") +
-    (ranLabel ? cell("rn", "ran", ranLabel) : '<span class="rn"></span>') +
-    cell("val", "net", "Result") + cell("usd", "usd", "Profit") + cell("bt", "bt", "Backtest") +
+    (SECTOR === "bots" ? cell("rn", "ran", "Ran") : "") +
+    cell("h18", "h18", "After 18 h") + cell("val", "net", "Result") + cell("usd", "usd", "Profit") + cell("bt", "bt", "Backtest") +
     cell("st", "state", "Verdict") + '<span class="chev"></span></li>';
 }
 function ordered(list, group) {
@@ -2157,7 +2077,7 @@ function renderRoom() {
       `<span class="n">${counts[g]}</span></button>`).join("")}</div>
      <span class="bar-hint">${group === "archive" ? "failed tests — nothing is deleted"
        : "by result after fees · click for detail"}</span></div>` +
-    (shown.length ? `<ol class="board">${headRow()}${shown.map((le, i) =>
+    (shown.length ? `<ol class="board sec-${SECTOR}">${headRow()}${shown.map((le, i) =>
        row(le, i + 1, le.id === OPEN)).join("")}</ol>` : `<p class="empty">${EMPTY[group]}</p>`) +
     (rows.length > TOP ? `<button type="button" class="more" data-all>${all ? "Less ▴"
        : `All ${rows.length} ▾`}</button>` : "");
@@ -2169,9 +2089,13 @@ function renderAll() {
   document.getElementById("nexus").innerHTML = nexusLine(V.nexus);
   renderRoom();
   // Every other department, by its own report (plan v2, V9).
-  document.getElementById("departments").innerHTML = (V.departments || []).map(d =>
+  // Folded away: the audits' own lines are not results (the operator, 2026-10-03: nothing on
+  // the page he has no use for), but they stay one click away.
+  const deps = (V.departments || []).map(d =>
     `<h2>${esc(d.title)}</h2><ul>${(d.lines || []).map(l => `<li>${esc(l)}</li>`).join("")}</ul>`
   ).join("");
+  document.getElementById("departments").innerHTML = deps
+    ? `<details class="other"><summary>Other reports</summary>${deps}</details>` : "";
 }
 function labShow(sector, group) {
   if (SECTORS.includes(sector)) { SECTOR = sector; writeStore("lab.sector", sector); }
@@ -2361,11 +2285,6 @@ document.getElementById("room").addEventListener("click", e => {
   if (e.target.closest("[data-all]")) {
     const key = "lab.all." + SECTOR + "." + readStore("lab.group." + SECTOR, "live");
     writeStore(key, readStore(key, "0") === "1" ? "0" : "1");
-    renderRoom();
-    return;
-  }
-  if (e.target.closest("[data-movers]")) {
-    writeStore("lab.movers", readStore("lab.movers", "0") === "1" ? "0" : "1");
     renderRoom();
     return;
   }

@@ -275,50 +275,21 @@ def test_the_view_is_the_newest_reading_and_says_when_the_newest_read_failed():
         "an earlier failure was said over a newer good reading", view)
 
 
-def _lab_view(credit):
-    from tests.meta.test_pipeline_lab_page import CHANNEL, FOMO, _report, _rooms_view
-    from tests.meta.test_pipeline_render import _lab_page
-
-    return _lab_page().lab_view(_rooms_view(), _report(), CHANNEL, FOMO,
-                                now=NOW, credit=credit)
-
-
 @qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
-def test_lab_shows_the_credit_in_numbers_and_reads_every_field_it_is_given(tmp_path):
-    """On the Nexus line, English, numbers first: the plan, both windows and
-    when they reset, what used them, and the refusals -- named as Cymetica's,
-    so it cannot be read as the operator's own plan. Every `cr.` field the
-    view writes is drawn and the page reads no other (the rule
-    test_the_page_reads_every_field_the_view_writes_and_no_other holds for
-    the other shapes)."""
-    from qa import lab
+def test_lab_no_longer_shows_the_credit(tmp_path):
+    """The credit line (the plan, both windows, the hourly refusals) was on the Nexus line of
+    /lab until 2026-10-03, when the operator took everything that is not a result off the page:
+    "takove nesmysly nectu a nezajimaji me". The reading itself is still taken and held by the
+    tests above (`credit_view`); the page neither carries nor draws it."""
+    from tests.meta.test_pipeline_lab_page import _report, _rooms_view
     from tests.meta.test_pipeline_render import _lab_page, _run_page
 
-    view = _lab_view(_credit_view([lab.credit_reading(200, USAGE)]))
-    written = set(view["nexus"]["credit"])
-    read = set(re.findall(r"\bcr\.([A-Za-z_][A-Za-z0-9_]*)", _lab_page().TEMPLATE))
-    assert read, "the page reads no `cr.` field"
-    assert not read - written, f"/lab reads credit fields never written: {sorted(read - written)}"
-    assert not written - read, f"credit fields written and never shown: {sorted(written - read)}"
-
+    view = _lab_page().lab_view(_rooms_view(), _report(), now=NOW)
+    assert "credit" not in view["nexus"], view["nexus"]
+    assert not re.search(r"\bcr\.[A-Za-z_]", _lab_page().TEMPLATE), "the page still reads a credit field"
     node = shutil.which("node")
     if not node:
         pytest.skip("node is not installed, so the page cannot be run here")
     code, err, captured = _run_page(node, tmp_path / "credit", view, page=_lab_page())
     assert code == 0, err[:1200]
-    line = captured.get("nexus", "")
-    for shown in ("Nexus credit", "Pro", "65%", "38%", "2 items",
-                  "Build it Better scope changes", "hourly limit"):
-        assert shown in line, (shown, line)
-    assert "Claude" not in line
-
-    unread = _lab_view(_credit_view([lab.credit_reading(200, USAGE),
-                                     {"read": False, "why": "HTTP 503"}]))
-    code, err, captured = _run_page(node, tmp_path / "unread", unread, page=_lab_page())
-    assert code == 0, err[:1200]
-    assert "HTTP 503" in captured.get("nexus", "") and "38%" in captured.get("nexus", "")
-
-    # Without a credit at all the line is the one it was.
-    bare = _lab_view(None)
-    code, err, captured = _run_page(node, tmp_path / "bare", bare, page=_lab_page())
-    assert code == 0 and "Nexus credit" not in captured.get("nexus", ""), err[:1200]
+    assert "credit" not in captured.get("nexus", "").lower(), captured.get("nexus", "")

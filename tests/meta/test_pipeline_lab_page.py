@@ -128,27 +128,29 @@ def _report() -> dict:
     }
 
 
-CHANNEL = {"median_seconds": 240.0, "measured": 42, "failed": 28, "refused": 7}
-FOMO = {"curves": [{"token": "0xa", "symbol": "DOGEX", "conviction": 88.0,
-                    "points": [[1, 38.5], [2, 41.0], [4, 12.0]],
-                    "last": 12.0, "peak": 41.0},
-                   {"token": "0xb", "symbol": "PEPEX", "conviction": 12.0,
-                    "points": [[1, -30.5]], "last": -30.5, "peak": -30.5}],
-        "curves_total": 9}
-
-
 def _view():
-    return _lab_page().lab_view(_rooms_view(), _report(), CHANNEL, FOMO, now=NOW)
+    return _lab_page().lab_view(_rooms_view(), _report(), now=NOW)
 
 
 @qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
-def test_the_view_is_four_sector_rooms_in_their_order_with_their_names():
+def test_the_view_is_three_sector_rooms_in_their_order_with_their_names():
     view = _view()
-    assert [s["key"] for s in view["sectors"]] == ["cards", "bots", "memecoins", "funds"]
+    # Funds are not measured any more (the operator, 2026-10-03: "Funds room uplne zrus,
+    # nebudem merit"), so there is no Funds room and a fund room is on no page.
+    assert [s["key"] for s in view["sectors"]] == ["cards", "bots", "memecoins"]
     # English since 2026-09-25 (CLAUDE.md, How to work with me).
-    assert [s["name"] for s in view["sectors"]] == ["Cards", "Bots", "Memecoins", "Funds"]
+    assert [s["name"] for s in view["sectors"]] == ["Cards", "Bots", "Memecoins"]
     cards = view["sectors"][0]
     assert cards["net_pct"] == 1.0 and cards["usdc"] == 5.0, "the report's figures ride along"
+    # What the room says about the 18-hour column: its average and the share in profit,
+    # over the experiments of that sector that have a figure -- and none when none does.
+    page = _lab_page()
+    stats = page._h18_stats([{"sector": "cards", "at_18h": 1.0}, {"sector": "cards", "at_18h": -3.0},
+                             {"sector": "cards", "at_18h": 4.0}, {"sector": "cards", "at_18h": None},
+                             {"sector": "bots", "at_18h": 9.0}], "cards")
+    assert stats == {"n": 3, "avg": pytest.approx(2.0 / 3), "pos_pct": pytest.approx(200.0 / 3)}, stats
+    assert page._h18_stats([{"sector": "cards", "at_18h": None}], "cards") is None
+    assert "h18" in cards
 
 
 @qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
@@ -273,16 +275,12 @@ def test_a_coin_whose_pair_switched_is_not_among_the_biggest_movers(
 @qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
 def test_the_view_carries_the_account_the_nexus_line_and_the_threads():
     view = _view()
-    assert view["account"] == {"free": 88593.91, "in_cards": 24329.56,
-                               "in_bots": 247.2, "at": "2026-09-23T11:00:00+00:00",
-                               "stale": False}
-    # A batch room holds several bots; the account sums every one, not the
-    # last in the list (NEXT 2026-09-29, found at A02 of the 28th's pass).
+    # The account says what is free and what sits in cards -- no "in bots" (it read a dash)
+    # and no clock (the operator, 2026-10-03: only what matters).
+    assert view["account"] == {"free": 88593.91, "in_cards": 24329.56, "stale": False}
     rooms_view = _rooms_view()
     first = rooms_view["panels"]["STR-0003"]["clones"][0]
     rooms_view["panels"]["STR-0003"]["clones"] = [first, dict(first, balance=100.0)]
-    batch = _lab_page().lab_view(rooms_view, _report(), CHANNEL, FOMO, now=NOW)
-    assert batch["account"]["in_bots"] == 347.2, batch["account"]
     # R04, deep pass of 2026-09-30 (3/3): the room's own money is every bot's
     # too. STR-0046 held four clones funded 477 each; its panel showed 477
     # invested and the first bot's P&L.
@@ -295,10 +293,14 @@ def test_the_view_carries_the_account_the_nexus_line_and_the_threads():
     _lab_page()._lay_out(panel, {}, {}, {}, None)
     assert panel["pnl"] is None and panel["pnl_pct"] is None, (
         "a room with one bot's P&L unread showed the other's as the room's")
+    # The Nexus line is what came of his ideas and nothing else (the operator, 2026-10-03:
+    # no response times, no refusals, no credit): ideas, tested, worked, didn't, running.
     nexus = view["nexus"]
-    assert nexus["questions"] == 88 and nexus["median_seconds"] == 240.0
+    assert set(nexus) == {"picks", "gate_pass", "gated", "survived", "refuted", "running"}, nexus
+    assert nexus["picks"] == 31 and nexus["running"] == 9
     assert "cards" in view["threads"] and "general" in view["threads"]
-    assert view["movers"] == FOMO["curves"] and view["movers_total"] == 9
+    # The memecoin top-movers table is gone: "winners by construction" read +114,809,284%.
+    assert "movers" not in view and "movers_total" not in view
 
 
 @qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
@@ -313,9 +315,15 @@ def test_the_page_reads_every_field_the_view_writes_and_no_other():
     # A sector carries every field the real report writes, not only the ones
     # this test's hand-made report happens to have.
     real = lab_report.report([], [], [], [], [], [], [], now=NOW)["products"]
+    # What the report writes that /lab deliberately does not draw (the operator, 2026-10-03:
+    # "takove nesmysly nectu"): dollars on stake, wins and the confidence band, the fee
+    # variants and the left-out counts. The report keeps them (the morning page and the
+    # tests of the report read them); a field NOT on this list and not drawn still fails.
+    not_drawn = {"excluded", "fee_pct", "fees", "min_n", "stake_usdc", "switched", "usdc",
+                 "wilson", "wins"}
     written = {
         "lp": ({k for s in view["sectors"] for k in s}
-               | {k for p in real.values() for k in p}),
+               | {k for p in real.values() for k in p}) - not_drawn,
         "le": {k for e in view["experiments"] for k in e},
         "ln": set(view["nexus"]),
         "la": set(view["account"]),
@@ -347,9 +355,10 @@ def _drawn(tmp_path, name, after=""):
 def test_the_page_opens_on_four_sectors_and_a_ranking_not_on_rooms_per_card(tmp_path):
     captured = _drawn(tmp_path, "open")
     tabs = captured.get("sectors", "")
-    for name in ("Cards", "Bots", "Memecoins", "Funds"):
+    for name in ("Cards", "Bots", "Memecoins"):
         assert name in tabs, f"no {name} room"
-    assert tabs.count('data-sector="') == 4, "one room per sector, four of them"
+    assert "Funds" not in tabs, "a Funds room is back"
+    assert tabs.count('data-sector="') == 3, "one room per sector, three of them"
     room = captured.get("room", "")
     assert "Zcash (ZEC) Rally Accelerates" in room, "the running card is not ranked"
     assert "Never bought" not in room, "a failed attempt is in the ranking, not the archive"
@@ -402,7 +411,7 @@ def test_a_room_of_ours_says_ours_and_never_ranks_above_his(tmp_path):
                                    if r["id"] == "STR-0003"),
                             "id": "STR-0006", "origin": "OUR-0001",
                             "net_pct": 99.0, "usdc": 99.0})
-    view = _lab_page().lab_view(rooms_view, report, CHANNEL, FOMO, now=NOW)
+    view = _lab_page().lab_view(rooms_view, report, now=NOW)
     by_id = {e["id"]: e for e in view["experiments"]}
     assert by_id["STR-0006"]["ours"] is True and by_id["STR-0003"]["ours"] is False
 
@@ -439,7 +448,7 @@ def test_the_bots_room_says_whether_each_bot_trades(tmp_path):
             ("batch-first-stopped", True, [two, one], ">trading<")):
         rooms_view = _rooms_view()
         rooms_view["panels"]["STR-0003"]["clones"] = clones
-        view = _lab_page().lab_view(rooms_view, _report(), CHANNEL, FOMO, now=NOW)
+        view = _lab_page().lab_view(rooms_view, _report(), now=NOW)
         bot = next(e for e in view["experiments"] if e["id"] == "STR-0003")
         assert (bot["group"], bot["trading"], bot["reason"]) == ("live", trading, None), bot
         code, err, captured = _run_page(_node(), tmp_path / f"bots-{name}", view,
@@ -507,20 +516,15 @@ def test_the_memecoin_room_keeps_the_operators_own_decisions(tmp_path):
     missing -- plus the table saying it is winners by construction."""
     room = _drawn(tmp_path, "memes", after='window.labShow("memecoins");').get("room", "")
     assert "−19.8" in room, "the $10 answer is not the headline"
-    assert room.count("<table") == 1 and "mc-spark" in room
-    assert room.count("<th>") == 5, "five columns: token, conviction, now, peak, the graph"
-    assert "<title>" not in room, "the native tooltip is back"
-    assert 'data-h="1"' in room and 'data-v="38.5"' in room
-    assert 'data-h="3"' not in room, "an hour nobody priced got a point"
-    assert "stroke-dasharray" in room, "an unpriced stretch is not drawn as a gap"
-    up = room[room.index("DOGEX"):]
-    assert "mc-up" in up[:up.index("PEPEX")], "the gain is not green"
-    assert "mc-down" in room[room.index("PEPEX"):][:500], "the loss is not red"
-    assert "price at signal" not in room and "cena při signálu" not in room
+    # 2026-10-03, the operator: "takove nesmysly nectu a nezajimaji me ... kompletni refinement
+    # laborky ať nikde není žádné smetí". The room is the result, how much could have been
+    # bought, the high-conviction figure and the typical trade. The top-movers table
+    # (+114,809,284%), the fee variants, the left-out paragraph and the confidence band are off.
+    assert "<table" not in room and "Top movers" not in room, "the movers table is back"
+    assert "winners by construction" not in room and "Left out" not in room
+    assert "Other fee" not in room and "95% sure" not in room
+    assert "Could have bought" in room
     assert "Conviction ≥ 70" in room and "−12" in room
-    assert "unpriced" in room and "1,200" in room, "the dropped coins are not named"
-    assert "winners by construction" in room, (
-        "the table does not say it is winners by construction")
     # M03, deep pass of 2026-09-13: the figure under the word median must be
     # the median (-40) and not the mean (-19.8).
     typical = room[room.index("Typical trade"):][:300]
@@ -534,7 +538,7 @@ def test_a_memecoin_room_with_nothing_measured_yet_says_so(tmp_path):
     """Never watched and watched-with-nothing-yet must not look like a room
     that is broken: it says there is nothing yet."""
     view = _view()
-    view["movers"], view["movers_total"] = [], 0
+    next(s for s in view["sectors"] if s["key"] == "memecoins")["n"] = 0
     code, err, captured = _run_page(_node(), tmp_path / "nomemes", view,
                                     after='window.labShow("memecoins");',
                                     page=_lab_page())
@@ -547,7 +551,7 @@ def _bot_room(*clones):
     rooms = _rooms_view()
     rooms["panels"]["STR-0003"]["clones"] = [
         {"funded": 240.0, "balance": 240.0, "samples": [], **c} for c in clones]
-    view = _lab_page().lab_view(rooms, _report(), CHANNEL, FOMO, now=NOW)
+    view = _lab_page().lab_view(rooms, _report(), now=NOW)
     return {e["id"]: e for e in view["experiments"]}["STR-0003"]
 
 
