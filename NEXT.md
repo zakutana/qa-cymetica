@@ -26,7 +26,7 @@ nikdy nebylo další na řadě.
 
 - [x] 2026-09-23  Plán v2 (`docs/laborator-plan.md`): otevřená fáze V11 (čeká na ranní vydání), stav v tabulce plánu. Po prvním dni smyčky ověřit řádky `answer_read` (V5). Nákladová kritéria V6 zrušil operátor 25. 9. (limity hlídá sám). (V5: 11 řádků answer_read; V11: acted se v dalším přehledu ukáže; hotovo 2026-09-30)
 - [x] 2026-09-23  Zbytky V3 a V4, část: `console.cmd --fomo 1` se stropem quote za kolo (60 za minutu intervalu), C6 prozkoumáno (kód beze změny). Horizonty zůstaly hodinové kvůli [operator 2026-09-13]; detail v plánu. (hotovo 2026-10-01)
-- [ ] 2026-09-23  Zbytky V3 (memecoiny), detail v plánu pod V3: pravidlo mimo vzorek -- vzor, který si sami napasujeme, dostane datum a soudí se jen na datech po něm. Dnes k němu v kódu není co připnout (stopy jsou sken, NEX-0055/0057 jsou Nexusovy).
+- [ ] 2026-10-03  Pravidla mimo vzorek (V3): karty od 3. 9. -- short karet jen s akciemi (index −0,35 až −0,55 % za 72 h), long s kryptem; FOMO velké tokeny nevychází. Soudit jen na kartách vzniklých po 3. 10.; skript do repa, plán napřed.
 - [x] 2026-09-28  V3: hloubka při signálu + strop prodeje ve `stop_study`/`stats`/košíku, přepnuté páry jako rugy, test L553 rozdělen (stop −10 %: −9,1 % → −17,2 %); V4: prořez neciterovaných stránek event-cards po 1 dni (1d419933). (hotovo 2026-09-28, 4bc5baf8)
 - [x] 2026-09-23  Kontrola: každý `/api/v1/…` z jejich veřejných stránek (creator, head-to-head, `run-backtest`) je v `openapi-public.json`; SAFE, chybějící jedním reportem. Operátor 24.9.: nedávají do dokumentace. (živě chybí 12, podá sweep; hotovo 2026-09-28, 14d13632)
 
