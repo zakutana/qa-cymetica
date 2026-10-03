@@ -298,10 +298,7 @@ def _clone_money() -> tuple[float, float]:
     # the practice balance unchanged), so its money is neither free, nor parked, nor
     # exposed: counted as parked it put 3 392 USDC of nothing into the book behind the
     # 60% ceiling and the 0.48% stake (deep pass 2026-10-02, R03).
-    asked_release = {row.get("id"): str(row.get("instance_id")) for row in rows
-                     if row.get("type") == "intent" and row.get("kind") == "release"}
-    released = {asked_release[i] for i, done in outcomes.items()
-                if i in asked_release and done.get("outcome") == "accepted"}
+    released = lab.released(rows)
     active = parked = 0.0
     for instance, amount in went_in.items():
         if instance in released:
@@ -1688,12 +1685,14 @@ def cards_question() -> str:
              else ". No fund: we do not run funds, so name none")
     lines = [
         "Up to five things you would run on paper now, each on its own: "
-        + what + ". When to close it is yours to say, for each pick: write "
+        + what + ". When to close a card is yours to say, for each card: write "
         "\"hold N days\" (N from "
         f"{lab.HOLD_DAYS_RANGE[0]:g} to {lab.HOLD_DAYS_RANGE[1]:g}, decimals "
         "fine) and we close it at the end of that period, or earlier at its "
-        "take-profit or stop, and judge it after fees. A pick with no hold "
-        "period is not opened. For each: side where it has one, take-profit "
+        "take-profit or stop, and judge it after fees. A card with no hold "
+        "period in that range is not opened. That hold is for a card: a bot "
+        f"you name runs on our own {NIGHT_WINDOW_DAYS:g}-day window, so give it "
+        "none. For each: side where it has one, take-profit "
         "and stop in percent sized for the period you name, and one line on "
         "the thesis or the backtest it rests on. Fewer is fine if fewer are "
         "worth it -- we open a room for a card only when its own backtest "
@@ -1905,9 +1904,12 @@ def night_refill(rows: list[dict] | None = None, limit: int = 8,
 # at its first verdict, whatever it earned. It never fired only because the
 # night never launched anything.
 # 5.0 until 2026-09-24, and never said to Nexus: his picks were judged on a
-# horizon he was not told. Now the question names it (cards_question) and the
-# criterion uses the same number -- 3 days, the horizon of their own card
-# leaderboard ("72h Card Performance") and of their degen card prompts.
+# horizon he was not told. Since 2026-10-03 the window of a CARD room is his
+# ("hold N days", `lab.hold_periods`), and this number is no longer a card's.
+# It stays the window of a BOT room and a variant (launch_bot, bot_variants,
+# 2026-10-04 L02): cards_question tells him so ("a bot you name runs on our own
+# 3-day window"). 3 days is the horizon of their own card leaderboard
+# ("72h Card Performance") and of their degen card prompts.
 NIGHT_WINDOW_DAYS = 3.0
 NIGHT_STOP_PCT = 10.0
 
@@ -2298,9 +2300,13 @@ def night_promote(since: datetime | None = None) -> dict:
                             f"{held_by[card]} -- not a second experiment")
                 continue
             if holds.get(card) is None:
-                held.append(f"{origin}/{card[:8]}: he named no hold period -- when to "
-                            f"close is his to say, so it is not opened; the next "
-                            f"question demands one")
+                # None is "none stated" and also "one stated outside the range he was told"
+                # (qa.lab.hold_periods does not clamp it): a window he did not name is not
+                # written into the criterion as his.
+                held.append(f"{origin}/{card[:8]}: he named no usable hold period "
+                            f"({lab.HOLD_DAYS_RANGE[0]:g} to {lab.HOLD_DAYS_RANGE[1]:g} "
+                            f"days) -- when to close is his to say, so it is not "
+                            f"opened; the next question demands one")
                 continue
             prior = decided.get((origin, card))
             if prior and prior.get("verdict") in spent:
@@ -2741,7 +2747,9 @@ def _funded() -> dict[str, float]:
 def _species_cloned() -> dict[str, str]:
     """Every species our clone record has already asked for, lower-case id ->
     why the launch leaves it alone: a clone we own (accepted, whoever opened
-    it, paused or not), or one their API refused.
+    it, paused or not), or one their API refused -- unless the refusal was
+    the account's cap on bots (`lab.capacity_refusal`), which says nothing
+    about the species and no longer holds once a bot is paused or released.
 
     R01/R06, deep pass of 2026-09-22: the launch knew only the rooms, so
     STR-0001's Perceptron (CLN-0002) was cloned again and refused with a 400
@@ -2755,12 +2763,7 @@ def _species_cloned() -> dict[str, str]:
     # NEXT 2026-10-01 (NEX-0109): CLN-0011 was released on 2026-09-28 ("Bot
     # deleted") and the tick went on saying "we already own a clone of it" --
     # a clone whose release they ACCEPTED is gone, and the species is free.
-    released_ids = {row.get("id") for row in rows
-                    if row.get("type") == "outcome" and row.get("kind") == "release"
-                    and row.get("outcome") == "accepted"}
-    released = {str(row.get("instance_id")) for row in rows
-                if row.get("type") == "intent" and row.get("kind") == "release"
-                and row.get("id") in released_ids}
+    released = lab.released(rows)
     out: dict[str, str] = {}
     for row in rows:
         species = str(row.get("source_id") or "").lower()
@@ -2773,6 +2776,10 @@ def _species_cloned() -> dict[str, str]:
                 continue
             out[species] = (f"we already own a clone of it ({row.get('id')}, "
                             f"{result.get('clone_instance_id')})")
+        elif lab.capacity_refusal(result):
+            # The account's cap on bots, not a verdict on the species (L06, 2026-10-04):
+            # it is lifted by pausing or releasing one, so it is tried again.
+            continue
         elif species not in out:
             out[species] = (f"their API refused to clone it ({row.get('id')}, "
                             f"HTTP {result.get('http_status')}, "
@@ -2826,7 +2833,11 @@ def bot_variants() -> dict:
     proposes the next one rather than the same refusal every tick.
 
     A species' variants run one at a time, so they are one experiment's
-    exposure at any moment: correlated rooms count as one by construction."""
+    exposure at any moment: correlated rooms count as one by construction.
+
+    Two clones are left alone, with a held line: one we RELEASED (deleted on
+    their side; a variant of it is a room `clone.settings()` kills) and one
+    with an indicator change on record (a settings PATCH cannot undo it)."""
     if pass_in_flight():
         return {"rooms": 0, "orders": 0, "held": ["variants: a deep pass is running"]}
     clone = _sibling("clone")
@@ -2834,6 +2845,8 @@ def bot_variants() -> dict:
     stored = rooms.load()
     samples = rooms.load_samples()
     went_in = lab.funded(rows)
+    deleted = lab.released(rows)
+    overridden = lab.indicator_changed(rows)
     intents = {row.get("id"): row for row in rows
                if row.get("type") == "intent" and not row.get("kind")}
     ours: dict[str, tuple[str, str]] = {}
@@ -2871,6 +2884,21 @@ def bot_variants() -> dict:
             if not (lab.is_ours(opened_from) and lab.bot_restart(
                     rows, instance, criterion.get("at"), samples) is None):
                 continue
+        # After the verdict gate (a held line only where a variant WAS about to be proposed)
+        # and before `restart_refusal`, which counts an indicator change as a variant step.
+        if instance in deleted:
+            # L03, 2026-10-04: released clones passed everything above, so each tick wrote
+            # an OUR-NNNN proposal and opened a room that clone.settings() then killed.
+            held.append(f"variants: {tag}: released on their side (deleted) -- "
+                        f"nothing is left to vary")
+            continue
+        if instance in overridden:
+            # L05, 2026-10-04: a settings PATCH cannot reset an indicator override, so a
+            # settings variant would run with that override still on.
+            held.append(f"variants: {tag}: an indicator change is on record for it and a "
+                        f"settings change cannot undo it -- a settings variant would not "
+                        f"be the settings alone")
+            continue
         refused = clone.restart_refusal(instance, rows, samples, planned=True)
         if refused:
             held.append(f"variants: {tag}: {refused}"[:300])

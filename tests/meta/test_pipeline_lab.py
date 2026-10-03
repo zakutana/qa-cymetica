@@ -715,6 +715,24 @@ def test_the_buy_path_reads_what_is_already_deployed(tmp_path, monkeypatch):
     monkeypatch.setattr(scripts_lab, "pass_in_flight", lambda: False)
     assert scripts_lab._archive_diaries() and snapped == [1]
 
+    # T20 (deep pass 2026-10-04): the same interlock on the path that RESTARTS a paused clone.
+    # test_the_night_holds_no_hand... only requires the NAME `pass_in_flight` to appear in
+    # bot_variants, so `if pass_in_flight(): return ...` turned into a bare call stayed green
+    # and a clone restarted during a deep pass ("calling the gate is not obeying it"). Here a
+    # pass is running and bot_variants may not reach for the clone record, the settings PATCH
+    # or the start at all: the first thing it does after its gate is `_sibling("clone")`.
+    reached = []
+
+    def _nothing_else(name):
+        reached.append(name)
+        raise AssertionError(f"bot_variants reached for {name!r} while a deep pass was running")
+    monkeypatch.setattr(scripts_lab, "pass_in_flight", lambda: True)
+    monkeypatch.setattr(scripts_lab, "_sibling", _nothing_else)
+    did = scripts_lab.bot_variants()
+    assert reached == [], reached
+    assert (did["rooms"], did["orders"]) == (0, 0) and any(
+        "deep pass" in line for line in did["held"]), did
+
 
 @qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
 def test_a_position_they_say_is_closed_is_not_still_deployed(tmp_path,

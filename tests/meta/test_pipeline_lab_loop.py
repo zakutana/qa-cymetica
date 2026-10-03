@@ -151,34 +151,50 @@ def test_the_question_names_the_window_its_room_is_judged_on(tmp_path, monkeypat
 
     Since 2026-10-03 (the operator: "to je kriticke rozhodnuti, to musi rict nexus") the
     number is HIS: the question asks for "hold N days" per pick, within a stated range, and
-    the room's criterion takes it; ours (3 days) remains only the window of a bot."""
+    the room's criterion takes it; ours (3 days) remains only the window of a bot.
+
+    The question must not promise what the launch does not do (deep pass 2026-10-04, L02):
+    a bot is opened on our window with no hold read, so the hold is said to apply to a CARD
+    and the bot is told it runs on ours."""
     module = _scripts_lab(tmp_path, monkeypatch)
     assert module.NIGHT_WINDOW_DAYS == 3.0
     said = module.cards_question()
     assert "hold N days" in said and "from 1 to 14" in said, said
     assert "not opened" in said and "take-profit and stop" in said
     assert "over 3 days" not in said, "the window is no longer fixed by the question"
+    assert f"a bot you name runs on our own {module.NIGHT_WINDOW_DAYS:g}-day window" in said, (
+        "the question promises every pick its own hold, but a bot is opened on our window")
+    assert "A pick with no hold" not in said, "the no-hold refusal is a card's, not every pick's"
 
     # And the gate and the wiring, with the real reader: a card whose answer names no hold
     # period opens nothing and says why; one that says "hold 5 days" opens a room whose
-    # criterion is 5 days, not our 3.
+    # criterion is 5 days, not our 3. A period outside 1..14 days is no usable hold either:
+    # it is held, never clamped to the bound and written into the criterion as his window
+    # (deep pass 2026-10-04, R02).
     import qa.rooms as qa_rooms
 
     monkeypatch.setattr(lab, "hold_periods", module._real_hold_periods)
-    plain, timed = _card(7), _card(8)
-    answers = [{"type": "answer", "id": "NEX-0001", "at": (NOW - timedelta(hours=1)).isoformat(),
-                "text": _whole(plain)},
-               {"type": "answer", "id": "NEX-0002", "at": (NOW - timedelta(hours=1)).isoformat(),
-                "text": _whole(timed) + " Hold 5 days."}]
+    plain, timed, long_, short = _card(7), _card(8), _card(9), _card(10)
+    stamp = (NOW - timedelta(hours=1)).isoformat()
+    answers = [{"type": "answer", "id": "NEX-0001", "at": stamp, "text": _whole(plain)},
+               {"type": "answer", "id": "NEX-0002", "at": stamp,
+                "text": _whole(timed) + " Hold 5 days."},
+               {"type": "answer", "id": "NEX-0003", "at": stamp,
+                "text": _whole(long_) + " Hold 30 days."},
+               {"type": "answer", "id": "NEX-0004", "at": stamp,
+                "text": _whole(short) + " Hold 0.2 days."}]
     _launchpad(module, tmp_path, monkeypatch, answers,
-               live={c: _basket("BTC", "ETH") for c in (plain, timed)},
+               live={c: _basket("BTC", "ETH") for c in (plain, timed, long_, short)},
                readings={("BTC", "ETH"): (6.5, 1.3)})
     did = module.night_promote()
     opened = qa_rooms.strategies(qa_rooms.load())
     assert did["rooms"] == 1 == len(opened), (did["rooms"], did["held"])
-    assert any("no hold period" in line and plain[:8] in line for line in did["held"]), did["held"]
+    bound = "{:g} to {:g} days".format(*lab.HOLD_DAYS_RANGE)
+    for origin, card in (("NEX-0001", plain), ("NEX-0003", long_), ("NEX-0004", short)):
+        assert any("no usable hold period" in line and bound in line
+                   and f"{origin}/{card[:8]}" in line for line in did["held"]), (origin, did["held"])
     criterion = qa_rooms.acceptance_of(qa_rooms.load(), opened[0]["id"])
-    assert criterion["window_days"] == 5.0, criterion
+    assert criterion["window_days"] == 5.0 and "5 days" in criterion["why"], criterion
 
 
 @qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
@@ -2917,7 +2933,18 @@ def _clonepad(scripts_lab, tmp_path, monkeypatch, answers, fund_points=None,
                        "http_status": 200})
         return {"bot_balance": amount}
 
+    # The real floors the stubs stand in for (deep pass 2026-10-04, T19): clone.settings() and
+    # clone.enable() both refuse while a room is RUNNING on the instance (`room_running`, read
+    # from the room store as it is at that moment). A stub that skipped them stayed green
+    # when a launch path set its room "running" BEFORE the PATCH, which the real floor refuses
+    # on every variant. A pause is not a start and has no such floor.
+    real_running = clone.room_running
+
     def _enable(instance_id, confirm, enabled=True):
+        running = real_running(instance_id) if enabled else None
+        if running:
+            raise SystemExit(f"{running} is running on {instance_id}; a variant starts only "
+                             f"in a room of its own, after that one stops")
         calls.append(("enable" if enabled else "pause", instance_id, confirm))
         cid = clone._next_id(clone.load())
         kind = "enable" if enabled else "disable"
@@ -2934,6 +2961,10 @@ def _clonepad(scripts_lab, tmp_path, monkeypatch, answers, fund_points=None,
     _enable.profit = None
 
     def _settings(instance_id, changes, confirm):
+        running = real_running(instance_id)
+        if running:
+            raise SystemExit(f"{running} is running on {instance_id}, and its settings are what "
+                             f"it measures: a variant is a new room, opened after this one stops")
         calls.append(("settings", instance_id, dict(changes), confirm))
         cid = clone._next_id(clone.load())
         at = datetime.now(timezone.utc).isoformat()
@@ -3267,6 +3298,40 @@ def test_a_species_we_already_own_a_clone_of_is_not_cloned_again(
     _write(tmp_path, "clones.jsonl", again)
     assert "CLN-0005" in scripts_lab._species_cloned()[species], (
         "a refusal after the release was not remembered")
+
+    # Deep pass 2026-10-04, L06: Doom & Gloom's only attempt was refused for CAPACITY ("Maximum
+    # 5 trading Paper bots per user", their 400 as clone.py records it in `response`) and the
+    # species stayed "their API refused to clone it" for good, long after the cap stopped
+    # applying. A capacity refusal says nothing about the species; any other refusal still does.
+    def refused(ident, response):
+        return [{"id": ident, "type": "intent", "source_type": "wta_species",
+                 "source_id": MACD["id"], "paper": True},
+                {"id": ident, "type": "outcome", "outcome": "rejected", "http_status": 400,
+                 "response": response}]
+
+    def said(message):
+        return json.dumps({"detail": {"error": {"code": "INVALID_CLONE_REQUEST",
+                                                "message": message}}})
+    for wording in ("Maximum 5 trading Paper bots per user (paused bots do not count) -- "
+                    "pause one before cloning another",
+                    "Maximum 5 Paper bots allowed per user"):
+        _write(tmp_path, "clones.jsonl", refused("CLN-0006", said(wording)))
+        assert species not in scripts_lab._species_cloned(), (
+            f"a capacity refusal ({wording[:30]}) marked the species refused for good")
+    for other in (said("source_id is not a cloneable species"), "", None):
+        _write(tmp_path, "clones.jsonl", refused("CLN-0007", other))
+        assert "CLN-0007" in scripts_lab._species_cloned()[species], (
+            f"a refusal that is not the cap ({other!r}) stopped being remembered")
+    # The cap is not a verdict on the species even after another refusal that is one: the
+    # newest word is what stands, and a species we own stays owned whatever came after.
+    _write(tmp_path, "clones.jsonl",
+           refused("CLN-0006", said("Maximum 5 trading Paper bots per user"))
+           + refused("CLN-0007", said("source_id is not a cloneable species")))
+    assert "CLN-0007" in scripts_lab._species_cloned()[species]
+    _write(tmp_path, "clones.jsonl", owned + refused("CLN-0006", said(
+        "Maximum 5 trading Paper bots per user")))
+    assert "CLN-0002" in scripts_lab._species_cloned()[species], (
+        "a capacity refusal after an owned clone dropped the clone we own")
 
 
 @qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
@@ -3956,6 +4021,34 @@ def test_a_variant_that_cannot_run_starts_nothing_and_says_why(tmp_path, monkeyp
 
     scripts_lab = _scripts_lab(tmp_path, monkeypatch)
     room, funded, calls, clone = _judged_bot(scripts_lab, tmp_path, monkeypatch)
+
+    # Deep pass 2026-10-04, L03 and L05: a clone we RELEASED is deleted on their side, so a
+    # variant of it would be a proposal and a room that clone.settings() kills ("they do not
+    # list it") -- up to 14 junk rooms, one a tick; and a clone with an indicator override
+    # on record would run a settings variant with that override still on (a settings PATCH
+    # cannot reset it). Neither opens a proposal or a room or touches the clone; a release or
+    # an override their side did not accept changes nothing.
+    def asked(kind, outcome, ident="CLN-0900"):
+        return [{"id": ident, "type": "intent", "kind": kind, "instance_id": "inst-1"},
+                {"id": ident, "type": "outcome", "kind": kind, "outcome": outcome,
+                 "http_status": 200}]
+    on_record = clone.load()
+    started = len(calls)
+    for kind, outcome, word in (("release", "accepted", "released"),
+                                ("indicators", "accepted", "indicator"),
+                                ("indicators", "unknown", "indicator")):
+        _write(tmp_path, "clones.jsonl", on_record + asked(kind, outcome))
+        did = scripts_lab.bot_variants()
+        assert did["rooms"] == 0 and did["orders"] == 0, (kind, outcome, did)
+        assert any(word in h and "(inst-1)" in h for h in did["held"]), (kind, did["held"])
+        assert not lab.proposals(), f"a {kind} ({outcome}) clone was given a variant proposal"
+        assert len(calls) == started, (kind, outcome, calls[started:])
+        assert len(qa_rooms.strategies(qa_rooms.load())) == 1, "a junk room was opened"
+    for kind, outcome in (("release", "rejected"), ("release", "unknown"),
+                          ("indicators", "rejected")):
+        rows_ = on_record + asked(kind, outcome)
+        assert not lab.released(rows_) and not lab.indicator_changed(rows_), (kind, outcome)
+    _write(tmp_path, "clones.jsonl", on_record)
 
     real = scripts_lab._free_cash
     scripts_lab._free_cash = lambda: None

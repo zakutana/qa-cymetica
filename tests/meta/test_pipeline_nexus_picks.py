@@ -122,18 +122,34 @@ def test_his_take_profit_and_stop_are_read_for_each_pick(answer_id):
 
 def _how_long_to_hold_is_read_from_his_words_and_bounded():
     """2026-10-03, the operator: "to je kriticke rozhodnuti, to musi rict nexus". The window
-    of a card room was the laboratory's own 3 days; it is his now, when he names one."""
+    of a card room was the laboratory's own 3 days; it is his now, when he names one.
+
+    A period outside the range he was told (1 to 14 days) is NOT his window clamped to the
+    bound -- that wrote "the window is his, 14 days" into the criterion of a room he asked
+    21 days for (deep pass 2026-10-04, R02). It reads as no usable period at all."""
     text = ("**1. `aaaaaaaa-1111-2222-3333-444444444444`** -- long, hold 5 days, TP +6 / SL -4.\n"
             "**2. `bbbbbbbb-1111-2222-3333-444444444444`** -- a 7-day hold, TP +9 / stop -6. 30d "
             "backtest +8%, 90d +28%.\n"
             "**3. `cccccccc-1111-2222-3333-444444444444`** -- horizon: 21 days.\n"
             "**4. `dddddddd-1111-2222-3333-444444444444`** -- TP +4 / stop -3, a 90d backtest.\n"
-            "**5. `eeeeeeee-1111-2222-3333-444444444444`** -- hold for 12 hours only.\n")
+            "**5. `eeeeeeee-1111-2222-3333-444444444444`** -- hold for 12 hours only.\n"
+            "**6. `ffffffff-1111-2222-3333-444444444444`** -- hold 30 days.\n"
+            "**7. `99999999-1111-2222-3333-444444444444`** -- hold 0.2 days.\n"
+            "**8. `88888888-1111-2222-3333-444444444444`** -- hold 14 days.\n"
+            "**9. `77777777-1111-2222-3333-444444444444`** -- hold 1 day, not more.\n"
+            "**10. `66666666-1111-2222-3333-444444444444`** -- hold 30 days.\n"
+            "Later: hold 5 days if it works.\n")
     picks = ["aaaaaaaa-1111-2222-3333-444444444444", "bbbbbbbb-1111-2222-3333-444444444444",
              "cccccccc-1111-2222-3333-444444444444", "dddddddd-1111-2222-3333-444444444444",
-             "eeeeeeee-1111-2222-3333-444444444444"]
+             "eeeeeeee-1111-2222-3333-444444444444", "ffffffff-1111-2222-3333-444444444444",
+             "99999999-1111-2222-3333-444444444444", "88888888-1111-2222-3333-444444444444",
+             "77777777-1111-2222-3333-444444444444", "66666666-1111-2222-3333-444444444444"]
     said = lab.hold_periods(text, picks)
-    assert [said[p] for p in picks] == [5.0, 7.0, 14.0, None, None], said
+    # 21, 30 and 0.2 days are outside 1..14: no usable hold, never the bound. The bounds
+    # themselves are inside. And the first period he states decides: the unusable 30 days of
+    # pick 10 is not rescued by the "hold 5 days" on a later line.
+    assert [said[p] for p in picks] == [
+        5.0, 7.0, None, None, None, None, None, 14.0, 1.0, None], said
     # A backtest's "30d" or "90d" is not a holding period, and neither is an hour count.
     assert lab.hold_periods("90d +28%, 30d +3%, Sharpe 3.4", ["x"]) == {"x": None}
 

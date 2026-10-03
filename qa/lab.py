@@ -1952,16 +1952,22 @@ _HOLD_WORDS = (
 
 
 def hold_periods(text: str, picks: list[str]) -> dict[str, float | None]:
-    """How long he says to hold each pick, in days, bounded to HOLD_DAYS_RANGE; None when he
-    names none. Read the way `exit_levels` reads a take-profit: the first period on or after
-    a line that names one pick, before a line that names another.
+    """How long he says to hold each pick, in days; None when he names none, or none inside
+    HOLD_DAYS_RANGE. Read the way `exit_levels` reads a take-profit: the first period on or
+    after a line that names one pick, before a line that names another.
 
     The window of a room used to be the laboratory's own 3 days -- a critical choice that
     the operator, 2026-10-03, wants from Nexus ("to musi rict nexus"). Only a period stated
     as a hold or a horizon counts: a backtest's "30d" or "90d" is not one, and neither is a
-    count of hours."""
+    count of hours.
+
+    A period outside the range he was told is NOT clamped to the nearest bound: the room's
+    criterion says "the window is his", and 14 days written for a hold of 30 is a window he
+    did not name (deep pass 2026-10-04, R02). It reads as no usable hold, so the pick is
+    held. The first period stated decides, so an unusable one is not rescued by a later line."""
     wanted = {str(p).lower(): p for p in picks}
     out: dict[str, float | None] = {p: None for p in picks}
+    stated: set[str] = set()
     current = None
     low, high = HOLD_DAYS_RANGE
     for line in str(text or "").split("\n"):
@@ -1971,12 +1977,14 @@ def hold_periods(text: str, picks: list[str]) -> dict[str, float | None]:
             current = wanted[named[0]]
         elif named:
             current = None
-        if current is None or out[current] is not None:
+        if current is None or current in stated:
             continue
         for pattern in _HOLD_WORDS:
             found = pattern.search(line)
             if found:
-                out[current] = min(high, max(low, float(found.group(1))))
+                days = float(found.group(1))
+                stated.add(current)
+                out[current] = days if low <= days <= high else None
                 break
     return out
 
@@ -2098,8 +2106,16 @@ def note_answer_read(origin: str) -> dict:
 # floor sends numbers only, so a factor one variant moved would leak into
 # every variant after it and "one factor at a time" would be false from the
 # second variant on. Every variant's PATCH carries the whole grid -- the
-# reference with exactly one factor moved -- so a variant is determined by its
-# own body, whatever ran on the clone before it.
+# reference with exactly one factor moved -- so a SETTINGS variant is
+# determined by its own body, whatever settings ran on the clone before it.
+#
+# That holds for settings only. An indicator override (`clone.py indicators`,
+# MCP update_bot_indicators) is a second lever with the same defect and no
+# call that resets it: it persists on the clone, and a settings PATCH does not
+# touch it. A settings variant started after one would run with the override
+# still on, so a clone with an indicator change on record (`indicator_changed`)
+# is given no settings variants (`bot_variants`, deep pass 2026-10-04, L05) --
+# the two levers are never mixed on one clone.
 #
 # THE REFERENCE is their default wherever they have one (the same response:
 # max_open_positions 5, arena on, event cards and TGE off) and ours where
@@ -2365,6 +2381,51 @@ def funded_at(clone_rows) -> dict[str, str]:
             if when and (key not in out or when < out[key]):
                 out[key] = when
     return out
+
+
+def released(clone_rows) -> set[str]:
+    """The instances of our clones whose release THEIR side accepted: deleted there, so the
+    practice money is gone (refunded 0.0), the species is free to clone again, and no
+    setting can be changed on it ("they do not list" it). The one reading of "released" the
+    book (`_clone_money`), the species check (`_species_cloned`) and the variants walk
+    (`bot_variants`) all share: a release they refused, or never answered, deleted nothing."""
+    asked = {row.get("id"): str(row.get("instance_id")) for row in clone_rows or ()
+             if row.get("type") == "intent" and row.get("kind") == "release"}
+    return {asked[row.get("id")] for row in clone_rows or ()
+            if row.get("type") == "outcome" and row.get("id") in asked
+            and row.get("outcome") == "accepted"}
+
+
+def indicator_changed(clone_rows) -> set[str]:
+    """The instances with an indicator override on record that may have landed: an
+    `update_bot_indicators` whose outcome is accepted, or unknown (it was sent and the
+    answer never came -- the safe side of not knowing is to treat it as made, as an enable
+    that may have landed counts as a start).
+
+    A settings PATCH cannot reset an indicator override, so a clone with one runs every
+    later settings variant with that override still on, and the variant is not "determined
+    by its own body" (deep pass 2026-10-04, L05)."""
+    asked = {row.get("id"): str(row.get("instance_id")) for row in clone_rows or ()
+             if row.get("type") == "intent" and row.get("kind") == "indicators"}
+    return {asked[row.get("id")] for row in clone_rows or ()
+            if row.get("type") == "outcome" and row.get("id") in asked
+            and row.get("outcome") in ("accepted", "unknown")}
+
+
+# "Maximum 5 trading Paper bots per user (paused bots do not count) -- pause one before
+# cloning another" (CLN-0058..0064, 2026-09-25) and its older wording "Maximum 5 Paper bots
+# allowed per user" (CLN-0024): the account's cap, said by their API in the body of a 400.
+_CAPACITY_REFUSAL = re.compile(r"\bmaximum\s+\d+\s+(?:trading\s+)?paper\s+bots\b", re.I)
+
+
+def capacity_refusal(outcome: dict | None) -> bool:
+    """Whether a clone's recorded refusal is the account's CAPACITY (a cap on bots, lifted
+    by pausing or releasing one) and not a verdict on the species. Read off the response
+    their API gave, as clone.py records it; a refusal with no recorded reason is not one.
+    Doom & Gloom's only attempt was refused at the cap of five, and the species was marked
+    refused for good long after the cap stopped applying (deep pass 2026-10-04, L06)."""
+    row = outcome or {}
+    return bool(_CAPACITY_REFUSAL.search(f"{row.get('response') or ''} {row.get('error') or ''}"))
 
 
 def bot_stops(clone_rows, samples) -> list[dict]:
