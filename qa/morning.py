@@ -84,8 +84,13 @@ ITEM_LINE = 200
 TITLE_LINE = 110
 NO_CZECH = "nová položka, český popis ještě chybí"
 # What the page may not say to someone who reads it in Czech and is not a programmer: a
-# backtick, a snake_case name, a file name. (The operator, 2026-10-03.)
-_JARGON = re.compile(r"`|\b[a-z]+_[a-z_]+\b|\.py\b|\bPRE-\d|\brun-\d|\bSTR-\d")
+# backtick, a snake_case or camelCase name, a file name (`.py`, or any file we keep: a stem and
+# one of the extensions below), a run or room id. (The operator, 2026-10-03.) camelCase needs two
+# lowercase letters before its capital, so a brand such as eToro or iOS is not taken for code.
+_JARGON = re.compile(
+    r"`|\b[\w-]+\.(?:jsonl|json|yaml|yml|md|html|cmd|sh)\b"
+    r"|\b[a-z]+_[a-z_]+\b|\b[a-z]{2,}[A-Z][A-Za-z]*\b"
+    r"|\.py\b|\bPRE-\d|\brun-\d|\bSTR-\d")
 
 
 def jargon(text: str) -> list[str]:

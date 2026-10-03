@@ -280,12 +280,30 @@ def test_lab_no_longer_shows_the_credit(tmp_path):
     """The credit line (the plan, both windows, the hourly refusals) was on the Nexus line of
     /lab until 2026-10-03, when the operator took everything that is not a result off the page:
     "takove nesmysly nectu a nezajimaji me". The reading itself is still taken and held by the
-    tests above (`credit_view`); the page neither carries nor draws it."""
+    tests above (`credit_view`); the page neither carries nor draws it -- not in the view, and
+    not in what `build_lab()` hands /lab.json and the first paint (T06, deep pass 2026-10-04:
+    only `lab_view()["nexus"]` was looked at, while `build_lab()` still defined an unused
+    `_credit()` that a later line could have attached to the payload unnoticed)."""
     from tests.meta.test_pipeline_lab_page import _report, _rooms_view
     from tests.meta.test_pipeline_render import _lab_page, _run_page
 
     view = _lab_page().lab_view(_rooms_view(), _report(), now=NOW)
     assert "credit" not in view["nexus"], view["nexus"]
+    # The payload the page really gets, over the same fixtures (nothing read from this machine,
+    # nothing written to its state/lab/).
+    page = _lab_page()
+
+    class _Script:
+        def write_report(self, moment):
+            return _report()
+    page._lab_script = _Script
+    page.build_rooms = _rooms_view
+    page.departments_view = list
+    payload = page.build_lab(now=NOW)
+    assert payload["experiments"], "the payload is empty, so 'no credit in it' proves nothing"
+    assert not [k for k in payload if "credit" in k.lower()], sorted(payload)
+    assert not [k for k in payload["nexus"] if "credit" in k.lower()], sorted(payload["nexus"])
+    assert not hasattr(page, "_credit"), "the dead credit reader is back in the page module"
     assert not re.search(r"\bcr\.[A-Za-z_]", _lab_page().TEMPLATE), "the page still reads a credit field"
     node = shutil.which("node")
     if not node:

@@ -3,10 +3,10 @@
 The operator, 2026-09-23, on the first /lab: "proč má každá karta svůj room?
 já myslel že bude 1 room na odvětví ... musím moc scrollovat, nepřehledné.
 Design 3/10." And on the chat: they will hardly ever read it, maybe glance
-at it out of curiosity. So the page is four sector rooms -- Karty, Boti,
-Memecoiny, Fondy -- each a ranking of its experiments by what they made
-after costs, failures folded into an archive, and the conversation behind a
-button.
+at it out of curiosity. So the page is three sector rooms -- Cards, Bots,
+Memecoins (Funds went on 2026-10-03: the operator stopped measuring them) --
+each a ranking of its experiments by what they made after costs, failures
+folded into an archive, and the conversation behind a button.
 
 Two layers, each held here. `lab_view()` joins the rooms, the report, Nexus's
 channel and the memecoin diary into what the page draws -- pure, so a test
@@ -42,8 +42,10 @@ def _rooms_view() -> dict:
         "criterion": {"window_days": 5.0, "stop_pct": 10.0,
                       "at": "2026-09-22T02:00:00+00:00"},
         "verdict": None, "clones": [],
+        # The index we bought at is NOT any reading in the series (99 before the buy, 100 at the
+        # buy hour): a line rebased on the first reading it draws would start at 0 and read 1, 2.
         "legs": [{"card": "c1", "url": "https://cymetica.com/events/c1",
-                  "entry": 100.0, "tp": 8.0, "sl": -5.0,
+                  "entry": 99.5, "tp": 8.0, "sl": -5.0,
                   "series": _series(1, [99.0, 100.0, 101.0, 102.0])}],
         "trades": [{"id": "TRD-1", "at": "2026-09-22T02:00:00+00:00",
                     "outcome": "accepted", "closed_at": None}],
@@ -53,13 +55,13 @@ def _rooms_view() -> dict:
         "rooms": [{"id": "general", "kind": "general", "title": "General"},
                   *[{"id": rid, "kind": "strategy", "title": rid}
                     for rid in ("STR-0001", "STR-0002", "STR-0003",
-                                "STR-0004", "STR-0005")]],
+                                "STR-0004", "STR-0005", "STR-0009")]],
         "threads": {"general": [{"kind": "question", "id": "NEX-1",
                                  "at": "2026-09-20T01:00:00+00:00", "text": "?"}],
                     "cards": [{"kind": "operator_note", "id": "N-1",
                                "at": "2026-09-23T01:00:00+00:00", "text": "hm"}],
                     "STR-0001": [], "STR-0002": [], "STR-0003": [],
-                    "STR-0004": [], "STR-0005": []},
+                    "STR-0004": [], "STR-0005": [], "STR-0009": []},
         "panels": {
             "general": {"balance": 88593.91, "notional": 24329.56,
                         "balance_at": "2026-09-23T11:00:00+00:00",
@@ -87,6 +89,9 @@ def _rooms_view() -> dict:
                                      "why": "its drawdown reached 11.78%, past the "
                                             "10.00% it was accepted with"}},
             "STR-0005": {**card, "title": "Arena BLUE"},
+            # A fund we bought into and that is running: the one kind of room no page draws
+            # now (the operator, 2026-10-03: Funds are not measured).
+            "STR-0009": {**card, "title": "Fund we watch"},
         }}
 
 
@@ -124,7 +129,9 @@ def _report() -> dict:
              "net_pct": -3.1, "usdc": -15.5, "stake_usdc": 500.0,
              "verdict": "refuted"},
             {"id": "STR-0005", "product": None, "archived": False,
-             "net_pct": None, "usdc": None, "stake_usdc": None, "verdict": None}],
+             "net_pct": None, "usdc": None, "stake_usdc": None, "verdict": None},
+            {"id": "STR-0009", "product": "funds", "archived": False,
+             "net_pct": 2.0, "usdc": 10.0, "stake_usdc": 500.0, "verdict": None}],
     }
 
 
@@ -140,6 +147,13 @@ def test_the_view_is_three_sector_rooms_in_their_order_with_their_names():
     assert [s["key"] for s in view["sectors"]] == ["cards", "bots", "memecoins"]
     # English since 2026-09-25 (CLAUDE.md, How to work with me).
     assert [s["name"] for s in view["sectors"]] == ["Cards", "Bots", "Memecoins"]
+    # "A fund room is on no page" is measured, not only said: the fixture holds a running fund
+    # room the report calls a fund (T10, deep pass 2026-10-04), and no sector or row carries it.
+    assert [r["product"] for r in _report()["rooms"] if r["id"] == "STR-0009"] == ["funds"], (
+        "the fixture has no fund room")
+    assert "STR-0009" in {r["id"] for r in _rooms_view()["rooms"]}
+    assert "STR-0009" not in {e["id"] for e in view["experiments"]}, "a fund room is on the page"
+    assert all(e["sector"] != "funds" for e in view["experiments"])
     cards = view["sectors"][0]
     assert cards["net_pct"] == 1.0 and cards["usdc"] == 5.0, "the report's figures ride along"
     # What the room says about the 18-hour column: its average and the share in profit,
@@ -160,9 +174,11 @@ def test_the_view_is_three_sector_rooms_in_their_order_with_their_names():
 @qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
 def test_each_experiment_lands_in_its_sector_and_its_group():
     """Running experiments are live; one with a verdict is done; one the
-    report archived -- nothing bought, or not his pick -- is in the archive
-    with a short reason, never a paragraph (N-0034, N-0049, N-0050). An Arena
-    room is in no sector yet, so it is on no page rather than among cards."""
+    report archived is in the archive with a short reason, never a paragraph
+    (N-0034, N-0049, N-0050) -- if it bought something: a room that bought nothing
+    is in no list at all (2026-10-03, no clutter). An Arena room is in no sector
+    yet, and a fund room is in none any more, so each is on no page rather than
+    among cards."""
     by_id = {e["id"]: e for e in _view()["experiments"]}
     # A room that bought nothing is not listed at all (the operator, 2026-10-03: no clutter):
     # a row of dashes tells nothing. A failed or not-his-pick room that DID buy stays in the
@@ -211,14 +227,18 @@ def test_each_experiment_lands_in_its_sector_and_its_group():
     assert page._group({"archived": False}, page._decided({"net_pct": -4.0}, unsure), "bots") == "archive"
 
 
-@qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
-def test_an_experiments_path_is_what_it_is_worth_since_we_went_in():
+def _case_an_experiments_path_is_what_it_is_worth_since_we_went_in():
     """A card's line is its index rebased on the index we bought at, from our
     buy on -- V2's book -- so its last point is our result before costs. A
     bot's line is its booked profit over what went into it."""
     by_id = {e["id"]: e for e in _view()["experiments"]}
     card = by_id["STR-0001"]
-    assert [p[1] for p in card["path"]] == [0.0, 1.0, 2.0], card["path"]
+    # T05, deep pass 2026-10-04: the leg's entry (99.5) is not a reading of its series (99 before
+    # the buy, then 100, 101, 102), so the line is rebased on the index we bought at -- it starts
+    # above 0 because the buy-hour reading is already 0.5% over our entry -- and not on the first
+    # reading it draws, which would give [0.0, 1.0, 2.0].
+    assert [p[1] for p in card["path"]] == [0.503, 1.508, 2.513], card["path"]
+    assert card["path"][0][1] != 0.0, "rebased on the first reading, not on the index we bought at"
     assert card["spark"] == card["path"], "short paths are not thinned"
     # 2026-10-03, the operator: every card, old ones too, says what it would have made if sold
     # after 18 hours -- after the round-trip fee, between two readings by their line.
@@ -241,8 +261,7 @@ def test_an_experiments_path_is_what_it_is_worth_since_we_went_in():
     assert [p[1] for p in bot["path"]] == [10.0, 3.0]
 
 
-@qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
-def test_a_long_path_is_thinned_but_keeps_both_ends():
+def _case_a_long_path_is_thinned_but_keeps_both_ends():
     page = _lab_page()
     points = [[str(i), float(i)] for i in range(1000)]
     thin = page._thin(points, 40)
@@ -368,7 +387,7 @@ def _drawn(tmp_path, name, after=""):
 
 
 @qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
-def test_the_page_opens_on_four_sectors_and_a_ranking_not_on_rooms_per_card(tmp_path):
+def test_the_page_opens_on_three_sectors_and_a_ranking_not_on_rooms_per_card(tmp_path):
     captured = _drawn(tmp_path, "open")
     tabs = captured.get("sectors", "")
     for name in ("Cards", "Bots", "Memecoins"):
@@ -376,6 +395,7 @@ def test_the_page_opens_on_four_sectors_and_a_ranking_not_on_rooms_per_card(tmp_
     assert "Funds" not in tabs, "a Funds room is back"
     assert tabs.count('data-sector="') == 3, "one room per sector, three of them"
     room = captured.get("room", "")
+    assert "Fund we watch" not in room, "a fund room (the fixture holds one) is drawn among the cards"
     assert "Zcash (ZEC) Rally Accelerates" in room, "the running card is not ranked"
     assert "Never bought" not in room, "a failed attempt is in the ranking, not the archive"
     assert "Solana doubles" not in room, "a judged one is mixed into the running ones"
@@ -395,7 +415,30 @@ def test_the_archive_and_the_judged_are_one_click_away_with_their_reason(tmp_pat
     archive = _drawn(tmp_path, "archive",
                      after='window.labShow("cards", "archive");').get("room", "")
     assert "Never bought" not in archive, "a room that bought nothing is listed"
-    done = _drawn(tmp_path, "done", after='window.labShow("cards", "done");').get("room", "")
+    # T01, deep pass 2026-10-04: the fixture's archive is empty, so this tab fell back to Live
+    # and "Never bought" was absent for the wrong reason -- a broken archive tab passed. A room
+    # that DID buy and was archived (not his pick) is drawn here, with its reason on the result,
+    # and the live room is not.
+    rooms_view, report = _rooms_view(), _report()
+    rooms_view["rooms"].append({"id": "STR-0008", "kind": "strategy",
+                                "title": "Cold fish pick", "status": "stopped"})
+    rooms_view["panels"]["STR-0008"] = {**rooms_view["panels"]["STR-0001"], "status": "stopped",
+                                        "title": "Cold fish pick", "origin": "NEX-0090"}
+    rooms_view["threads"]["STR-0008"] = []
+    report["rooms"].append({"id": "STR-0008", "product": "cards", "archived": True,
+                            "net_pct": -1.2, "usdc": -6.0, "stake_usdc": 500.0, "verdict": None})
+    view = _lab_page().lab_view(rooms_view, report, now=NOW)
+    kept = {e["id"]: e for e in view["experiments"]}["STR-0008"]
+    assert (kept["group"], kept["reason"]) == ("archive", "not Nexus's pick"), kept
+    code, err, captured = _run_page(_node(), tmp_path / "archive-bought", view,
+                                    after='window.labShow("cards", "archive");', page=_lab_page())
+    assert code == 0, err[:1200]
+    bought = captured.get("room", "")
+    assert "Cold fish pick" in bought, "the archive tab does not list an archived room that bought"
+    assert "not Nexus" in bought, "the archived room does not say why"
+    assert "Zcash (ZEC) Rally Accelerates" not in bought, "the archive tab is showing the live room"
+    assert "Never bought" not in bought, "a room that bought nothing is listed"
+    done =_drawn(tmp_path, "done", after='window.labShow("cards", "done");').get("room", "")
     # No Verdict column (the operator, 2026-10-03: "verdict sloupec je zbytecny"): the result is
     # the verdict, and the reason is on its tooltip.
     assert "Solana doubles" in done and "drawdown 11.8%" in done
@@ -442,6 +485,34 @@ def test_a_room_of_ours_says_ours_and_never_ranks_above_his(tmp_path):
     assert ">ours<" in room, room[:2000]
     assert room.index("Bollinger Bandit · SL 5") > room.index("Bollinger Bandit"), (
         "a room of ours ranked above his pick")
+
+    # T03, deep pass 2026-10-04: only the default order was run. With a column sort stored
+    # (the operator clicked "Result" or "Profit"), ours at +99% ranked above his: the lane was
+    # applied by the default comparator alone. The stored order still holds inside each lane.
+    rooms_view["rooms"].append({"id": "STR-0007", "kind": "strategy", "title": "Alpha Bot",
+                                "origin": "NEX-0081", "status": "running"})
+    rooms_view["panels"]["STR-0007"] = {
+        **rooms_view["panels"]["STR-0003"], "title": "Alpha Bot", "origin": "NEX-0081",
+        "status": "running",
+        "clones": [dict(c) for c in rooms_view["panels"]["STR-0003"]["clones"]]}
+    report["rooms"].append({**next(r for r in report["rooms"] if r["id"] == "STR-0003"),
+                            "id": "STR-0007", "origin": "NEX-0081", "net_pct": 1.0, "usdc": 2.4})
+    view = _lab_page().lab_view(rooms_view, report, now=NOW)
+    for stored, expected in (
+            ("net:desc", ["STR-0003", "STR-0007", "STR-0006"]),
+            ("net:asc", ["STR-0007", "STR-0003", "STR-0006"]),
+            ("usd:desc", ["STR-0003", "STR-0007", "STR-0006"]),
+            ("name:asc", ["STR-0007", "STR-0003", "STR-0006"])):
+        code, err, captured = _run_page(
+            _node(), tmp_path / f"ours-{stored.replace(':', '-')}", view,
+            after=f'localStorage.setItem("lab.sort.bots", "{stored}");window.labShow("bots");',
+            page=_lab_page())
+        assert code == 0, err[:1200]
+        sorted_room = captured.get("room", "")
+        order = [sorted_room.index(f'data-id="{rid}"') for rid in expected]
+        assert order == sorted(order), (
+            f"with the sort {stored} stored, the rows are not {expected}: "
+            + str({rid: sorted_room.find(f'data-id="{rid}"') for rid in expected}))
 
 
 @qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
@@ -526,13 +597,12 @@ def test_a_sector_chat_holds_its_own_note_and_the_composer_sits_under_it(tmp_pat
 
 @qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
 def test_the_memecoin_room_keeps_the_operators_own_decisions(tmp_path):
-    """The answer is V3's ($10 into every hot signal, after costs); the list
-    under it is the operator's, decided 2026-09-13/14: ONE list with the graph
-    as a column ("mel to byt jen 1 seznam ... jen nova kolumna s grafem"), our
-    own coloured bubble rather than the browser's grey title, no price
-    columns ("ty dve kolumny smaz"), the conviction >= 70 figure they asked
-    for, and the untradeable coins named as dropped rather than silently
-    missing -- plus the table saying it is winners by construction."""
+    """The answer is V3's ($10 into every hot signal, after costs). Of the list that sat
+    under it (the operator, 2026-09-13/14: one list, a graph column, price columns gone) only
+    what is a result is left, since 2026-10-03: the headline, how much could have been bought,
+    the conviction >= 70 figure they asked for and the typical trade -- no table, no graph
+    column, no top movers, no left-out paragraph, no "winners by construction" note. The
+    hover bubble is our own coloured one rather than the browser's grey title."""
     room = _drawn(tmp_path, "memes", after='window.labShow("memecoins");').get("room", "")
     assert "−19.8" in room, "the $10 answer is not the headline"
     # 2026-10-03, the operator: "takove nesmysly nectu a nezajimaji me ... kompletni refinement
@@ -543,6 +613,11 @@ def test_the_memecoin_room_keeps_the_operators_own_decisions(tmp_path):
     assert "winners by construction" not in room and "Left out" not in room
     assert "Other fee" not in room and "95% sure" not in room
     assert "Could have bought" in room
+    # T04, deep pass 2026-10-04: the label alone was held, so a missing or mis-scaled share still
+    # passed. The report's 0.52 is the tile's 52%, on its meter, under the signal count.
+    could = room[room.index("Could have bought"):][:400]
+    assert "<b>52%</b>" in could and "width:52%" in could, could
+    assert "of2705signals" in re.sub(r"[,\s  ]", "", could), could
     assert "Conviction ≥ 70" in room and "−12" in room
     # M03, deep pass of 2026-09-13: the figure under the word median must be
     # the median (-40) and not the mean (-19.8).
@@ -550,6 +625,9 @@ def test_the_memecoin_room_keeps_the_operators_own_decisions(tmp_path):
     assert "−40" in typical and "−19.8" not in typical, typical
     template = _lab_page().TEMPLATE
     assert 'id="tip"' in template and "mousemove" in template, "no bubble"
+    # The console's hover card is the same kind of bubble: held beside this one, not in a test of
+    # its own (tests/meta is held to a ceiling).
+    _check_the_consoles_hover_card_sits_clear_of_its_bars()
 
 
 @qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
@@ -563,6 +641,28 @@ def test_a_memecoin_room_with_nothing_measured_yet_says_so(tmp_path):
                                     page=_lab_page())
     assert code == 0, err[:900]
     assert "No signal has had" in captured.get("room", "")
+
+
+def _check_the_consoles_hover_card_sits_clear_of_its_bars():
+    """R12, deep pass 2026-10-04: the card was placed at `Math.max(0, -height - 6)`, which is 0
+    for every height, so it sat on top of the bars it describes. It goes above the chart when
+    the window has room there (a negative `top` inside the chart's box) and below it when not;
+    never at 0. The placement is a function of three numbers, run here as the console ships it."""
+    import subprocess
+
+    from tests.meta.test_pipeline_render import _render
+
+    template = _render().TEMPLATE
+    assert "Math.max(0, -tip.offsetHeight" not in template, "the always-zero clamp is back"
+    found = re.search(r"function tipTop\([^)]*\)\s*\{.*?\n  \}", template, re.S)
+    assert found, "the hover card's placement is not a function of its own, so it cannot be held"
+    probe = found.group(0) + "\nconsole.log(JSON.stringify([tipTop(300, 40, 70), tipTop(20, 40, 70)]));"
+    result = subprocess.run([_node(), "-e", probe], capture_output=True, text=True,
+                            encoding="utf-8", errors="replace", timeout=30)
+    assert result.returncode == 0, result.stderr[:600]
+    above, below = json.loads(result.stdout)
+    assert above < 0 and above <= -70, f"with room above, the card is not above the bars: {above}"
+    assert below >= 40, f"with no room above, the card is not below the bars: {below}"
 
 
 def _bot_room(*clones):
@@ -666,3 +766,12 @@ def _check_the_stop_a_clone_carries_is_the_diaries_and_only_while_it_is_stopped(
     assert stop["cause"] == "unexplained" and stop["pct"] == pytest.approx(29.0)
     assert page._current_stop("i1", rows, samples, trading=True) is None
     assert page._current_stop("other", rows, samples, trading=False) is None
+
+
+# Folded on the deep pass of 2026-10-04 (tests/meta grows only by replacement): two functions became one.
+
+
+@qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
+def test_an_experiments_path_is_rebased_on_the_index_we_bought_at_and_a_long_one_keeps_both_ends():
+    _case_an_experiments_path_is_what_it_is_worth_since_we_went_in()
+    _case_a_long_path_is_thinned_but_keeps_both_ends()

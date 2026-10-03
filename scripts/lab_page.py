@@ -2,10 +2,11 @@
 
 Plan v2, V4 (docs/laborator-plan.md), redone after the operator gave the first
 version 3/10 on 2026-09-23: "1 room na odvetvi ... musim moc scrollovat,
-neprehledne". Four sector rooms -- Karty, Boti, Memecoiny, Fondy -- always in
-sight at the top with what each made after costs; the chosen one below as a
-ranking of its experiments, the failures folded into an archive, one click
-opening an experiment into its chart and four numbers. The conversation with
+neprehledne". Three sector rooms -- Cards, Bots, Memecoins (Funds went on
+2026-10-03) -- always in sight at the top with what each made after costs;
+the chosen one below as a ranking of its experiments, the failures folded
+into an archive, one click opening an experiment into its chart and four
+numbers. The conversation with
 Nexus, which they said they will hardly read, is behind a button.
 
 Everything here used to be two tabs of the committed console. Every figure
@@ -912,7 +913,7 @@ def _lab_script():
 # The view: one room per sector, results first
 # ---------------------------------------------------------------------------
 # The operator, 2026-09-23, on the first /lab: "proc ma kazda karta svuj
-# room? ja myslel ze bude 1 room na odvetvi". So the page draws four sector
+# room? ja myslel ze bude 1 room na odvetvi". So the page draws three sector
 # rooms, each a ranking of its experiments; the rooms build_rooms() writes
 # per experiment are the rows of those rankings, and their threads sit behind
 # the page's conversation button.
@@ -961,8 +962,7 @@ def _path(panel: dict) -> list[list]:
 
     A card: its index rebased on the index we bought at (V2's book), from our
     buy to our sale, so the last point is our result before costs. A bot:
-    what their engine booked over what went in. A fund only marked: nothing
-    of ours is in it, so no line.
+    what their engine booked over what went in.
     """
     legs = [leg for leg in panel.get("legs") or [] if leg.get("series")]
     if legs:
@@ -1283,17 +1283,6 @@ def build_lab(now=None) -> dict:
     return view
 
 
-def _credit(script, moment) -> dict | None:
-    """Nexus's credit as the ticks read it, and the hourly-limit refusals
-    from the diary -- None only when the diaries cannot be read at all."""
-    from qa import lab
-
-    try:
-        return lab.credit_view(lab.load(), script._nexus_rows(), moment)
-    except Exception:  # noqa: BLE001 -- an unreadable diary is not a page defect
-        return None
-
-
 def departments_view() -> list[dict]:
     """The other departments, beside the laboratory (plan v2, V9): each by
     its own report, found by its shape rather than listed here."""
@@ -1375,7 +1364,7 @@ button { font: inherit; color: inherit; }
 .live i { width: 7px; height: 7px; border-radius: 50%; background: var(--text-faint); }
 .live.on i { background: var(--ok); } .live.off i { background: var(--bad); }
 
-/* ---------- the four sector rooms, always in sight ---------- */
+/* ---------- the three sector rooms, always in sight ---------- */
 .sectors { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 12px; }
 .sec { position: relative; text-align: left; cursor: pointer; background: var(--surface);
   backdrop-filter: blur(12px);
@@ -1760,7 +1749,7 @@ function sectorOf(key) {
   return (V.sectors || []).find(lp => lp.key === key) || {key: key, name: key};
 }
 
-/* ---------- the top: the account and the four rooms ---------- */
+/* ---------- the top: the account and the three rooms ---------- */
 function accountLine(la) {
   if (!la || la.free == null) return "Paper trades on Nexus's advice · after fees";
   return `Paper account <b>${money(la.free)}</b> free · ${money(la.in_cards)} in cards` +
@@ -1866,9 +1855,7 @@ function niceStep(span) {
 function chart(le) {
   const pts = le.path || [];
   if (pts.length < 2) {
-    return `<figure class="dt-chart"><div class="dt-empty">${le.sector === "funds"
-      ? "A fund we only watch — nothing bought, so no line yet."
-      : "No path yet."}</div></figure>`;
+    return `<figure class="dt-chart"><div class="dt-empty">No path yet.</div></figure>`;
   }
   const W = 640, H = 210, L = 50, R = 84, T = 10, B = 26;
   const ts = pts.map(p => Date.parse(p[0])), vs = pts.map(p => p[1]);
@@ -2056,7 +2043,9 @@ function ordered(list, group) {
   // A room of ours never ranks above his picks (V5, the own lane).
   const lane = (a, b) => Number(!!a.ours) - Number(!!b.ours);
   const by = sortNow();
-  if (by) return sortedBy(list, by);
+  // A column the operator chose orders each lane on its own: his picks, then ours -- the lane
+  // is not the default order's alone (T03, deep pass 2026-10-04).
+  if (by) return sortedBy(list.filter(le => !le.ours), by).concat(sortedBy(list.filter(le => le.ours), by));
   return list.slice().sort(group === "archive"
     ? (a, b) => lane(a, b) || String(b.id).localeCompare(String(a.id))
     : (a, b) => lane(a, b) || net(b) - net(a));

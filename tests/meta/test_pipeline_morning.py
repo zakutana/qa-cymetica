@@ -29,16 +29,14 @@ def _at(day: int, hour: int, minute: int = 0) -> datetime:
     return datetime(2026, 9, day, hour, minute, tzinfo=LOCAL)
 
 
-@qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
-def test_the_report_is_due_from_six_forty_until_it_is_made_that_day():
+def _case_the_report_is_due_from_six_forty_until_it_is_made_that_day():
     assert not morning.due(_at(24, 6, 39), {})
     assert morning.due(_at(24, 6, 40), {})
     assert morning.due(_at(24, 6, 40), {"made_on": "2026-09-23"})
     assert not morning.due(_at(24, 9, 0), {"made_on": "2026-09-24"})
 
 
-@qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
-def test_after_seven_a_missing_report_is_missing():
+def _case_after_seven_a_missing_report_is_missing():
     assert not morning.missing(_at(24, 6, 59), {})
     assert morning.missing(_at(24, 7, 0), {"made_on": "2026-09-23"})
     assert not morning.missing(_at(24, 7, 30), {"made_on": "2026-09-24"})
@@ -120,6 +118,17 @@ def test_the_deep_pass_is_two_lines_what_we_fixed_and_what_went_to_them():
     assert morning.jargon("Opravil jsem `restart_refusal` v scripts/clone.py") == [
         "`", "restart_refusal", "`", ".py"], morning.jargon("Opravil jsem `restart_refusal` v scripts/clone.py")
     assert morning.jargon("Bot se už znovu nespustí, když ho zastavila jejich ochrana.") == []
+    # T08, deep pass 2026-10-04: the promise is "no code name or file name", but only .py names,
+    # snake_case and run ids were caught. A file of ANY kind we keep, and a camelCase name from
+    # the page's own scripts, is code to someone who reads this in Czech and is not a programmer.
+    for code in ("reports-cs.yaml", "DEEP-PASS.md", "report.json", "events.jsonl", "morning.html",
+                 "console.cmd", "console.sh", "lab.yml", "labShow", "restartRefusal"):
+        assert morning.jargon(f"Opraveno v {code} a hotovo.") == [code], (
+            code, morning.jargon(f"Opraveno v {code} a hotovo."))
+    for plain in ("Gem Screener a Build it Better.", "Cena v eToro a iOS aplikaci vzrostla.",
+                  "Stránka OpenAI a GitHub ukazují Nexus.", "Přesně 3.5 % z 12.000 USDC.",
+                  "Konec věty. Další věta začíná velkým písmenem."):
+        assert morning.jargon(plain) == [], (plain, morning.jargon(plain))
 
     # And what happened with Cymetica overnight, which the report lacked:
     # sweeps run, bugs we filed, what they fixed, what we verified.
@@ -340,8 +349,7 @@ def test_the_page_is_one_short_czech_page_in_the_artifact_shape():
     assert "<pre" in html and "navigator.clipboard" in html
 
 
-@qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
-def test_lab_py_morning_builds_the_page_and_published_records_the_day(
+def _case_lab_py_morning_builds_the_page_and_published_records_the_day(
         tmp_path, monkeypatch):
     monkeypatch.setenv("QA_STATE_DIR", str(tmp_path))
     import qa.rooms
@@ -370,8 +378,7 @@ def test_lab_py_morning_builds_the_page_and_published_records_the_day(
     assert state["snapshot"]["products"], "the next report compares against this one"
 
 
-@qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
-def test_the_lab_notebook_takes_feedback_acted_and_telegram_lines(tmp_path, monkeypatch):
+def _case_the_lab_notebook_takes_feedback_acted_and_telegram_lines(tmp_path, monkeypatch):
     monkeypatch.setenv("QA_STATE_DIR", str(tmp_path))
     import qa.state
     from qa import lab
@@ -380,3 +387,25 @@ def test_the_lab_notebook_takes_feedback_acted_and_telegram_lines(tmp_path, monk
     importlib.reload(lab)
     for kind in ("feedback", "acted", "telegram"):
         assert lab.note_entry("LAB-0001", f"a {kind}", kind=kind)["kind"] == kind
+
+
+# Folded on the deep pass of 2026-10-04 (tests/meta grows only by replacement): four functions became two.
+
+
+def _fresh_dir(tmp_path, i):
+    """A state directory of its own for each folded case."""
+    path = tmp_path / f"case{i}"
+    path.mkdir()
+    return path
+
+
+@qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
+def test_the_report_is_due_from_six_forty_and_a_missing_one_is_missing_after_seven():
+    _case_the_report_is_due_from_six_forty_until_it_is_made_that_day()
+    _case_after_seven_a_missing_report_is_missing()
+
+
+@qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
+def test_lab_py_morning_builds_the_page_and_the_notebook_takes_what_the_day_wrote(tmp_path, monkeypatch):
+    _case_lab_py_morning_builds_the_page_and_published_records_the_day(_fresh_dir(tmp_path, 0), monkeypatch)
+    _case_the_lab_notebook_takes_feedback_acted_and_telegram_lines(_fresh_dir(tmp_path, 1), monkeypatch)

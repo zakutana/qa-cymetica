@@ -116,13 +116,18 @@ def test_the_lab_page_is_served_to_this_machine_with_its_note_box(console):
     carries the rooms' composer, since a note from it is the one write the
     page may make; like the rooms, it is served to this machine by name."""
     port = console["port"]
+    # T02, deep pass 2026-10-04: the copy of the committed state also copies THIS machine's
+    # gitignored state/lab/report.json, so the check below passed whether or not the request
+    # wrote it. Take the copy away first: what exists afterwards, GET /lab wrote.
+    report = console["state"] / "lab" / "report.json"
+    report.unlink(missing_ok=True)
+    assert not report.exists()
     status, body = _get(port, "/lab", f"127.0.0.1:{port}")
     page = body.decode("utf-8")
     assert status == 200, page[:300]
     assert "<title>Lab</title>" in page
     assert 'id="compose"' in page and 'fetch("/notes"' in page.replace("'", '"')
-    assert (console["state"] / "lab" / "report.json").is_file(), (
-        "the page drew products that no report was written for")
+    assert report.is_file(), "the page drew products that no report was written for"
     status, _ = _get(port, "/lab", f"evil.example:{port}")
     assert status == 403, "the laboratory went to a host that is not this machine"
     # The view it redraws from, the same doors.

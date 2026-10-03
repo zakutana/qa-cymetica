@@ -2773,6 +2773,12 @@ function bars(rows, label) {
 // One hover card for every bar chart. Bars were native <title> tooltips: a delay, a grey
 // box and no room for a second line.
 (function () {
+  // Where the card sits against its chart, in px from the chart's top edge. Above it when the
+  // window has room there, below it when not -- never 0, which is on the bars (the old clamp
+  // Math.max(0, -height - 6) was 0 for every height; R12, deep pass 2026-10-04).
+  function tipTop(boxTop, boxHeight, tipHeight) {
+    return boxTop >= tipHeight + 6 ? -tipHeight - 6 : boxHeight + 6;
+  }
   function show(hit) {
     const wrap = hit.closest(".barwrap"), tip = wrap && wrap.querySelector(".bartip");
     if (!tip) return;
@@ -2783,7 +2789,7 @@ function bars(rows, label) {
     const centre = bar.left - box.left + bar.width / 2;
     const left = Math.min(Math.max(0, centre - tip.offsetWidth / 2), box.width - tip.offsetWidth);
     tip.style.left = left + "px";
-    tip.style.top = Math.max(0, -tip.offsetHeight - 6) + "px";
+    tip.style.top = tipTop(box.top, box.height, tip.offsetHeight) + "px";
     wrap.querySelectorAll("rect.bar-on").forEach(r => r.classList.remove("bar-on"));
     if (hit.previousElementSibling) hit.previousElementSibling.classList.add("bar-on");
   }
