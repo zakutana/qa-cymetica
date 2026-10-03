@@ -160,10 +160,11 @@ def test_each_experiment_lands_in_its_sector_and_its_group():
     with a short reason, never a paragraph (N-0034, N-0049, N-0050). An Arena
     room is in no sector yet, so it is on no page rather than among cards."""
     by_id = {e["id"]: e for e in _view()["experiments"]}
-    assert set(by_id) == {"STR-0001", "STR-0002", "STR-0003", "STR-0004"}
+    # A room that bought nothing is not listed at all (the operator, 2026-10-03: no clutter):
+    # a row of dashes tells nothing. A failed or not-his-pick room that DID buy stays in the
+    # archive with its reason.
+    assert set(by_id) == {"STR-0001", "STR-0003", "STR-0004"}, set(by_id)
     assert (by_id["STR-0001"]["sector"], by_id["STR-0001"]["group"]) == ("cards", "live")
-    assert (by_id["STR-0002"]["group"], by_id["STR-0002"]["reason"]) == (
-        "archive", "nothing bought")
     assert by_id["STR-0004"]["group"] == "done"
     assert by_id["STR-0004"]["reason"] == "drawdown 11.8% past 10% limit"
     # A bot that stopped itself in profit is over: not "live" for two more
@@ -319,8 +320,8 @@ def test_the_page_reads_every_field_the_view_writes_and_no_other():
     # "takove nesmysly nectu"): dollars on stake, wins and the confidence band, the fee
     # variants and the left-out counts. The report keeps them (the morning page and the
     # tests of the report read them); a field NOT on this list and not drawn still fails.
-    not_drawn = {"excluded", "fee_pct", "fees", "min_n", "stake_usdc", "switched", "usdc",
-                 "wilson", "wins"}
+    not_drawn = {"archived", "excluded", "fee_pct", "fees", "min_n", "stake_usdc", "switched",
+                 "usdc", "wilson", "wins"}
     written = {
         "lp": ({k for s in view["sectors"] for k in s}
                | {k for p in real.values() for k in p}) - not_drawn,
@@ -378,7 +379,7 @@ def test_the_page_opens_on_four_sectors_and_a_ranking_not_on_rooms_per_card(tmp_
 def test_the_archive_and_the_judged_are_one_click_away_with_their_reason(tmp_path):
     archive = _drawn(tmp_path, "archive",
                      after='window.labShow("cards", "archive");').get("room", "")
-    assert "Never bought" in archive and "nothing bought" in archive
+    assert "Never bought" not in archive, "a room that bought nothing is listed"
     done = _drawn(tmp_path, "done", after='window.labShow("cards", "done");').get("room", "")
     assert "Solana doubles" in done and "drawdown 11.8%" in done and "didn't work" in done
 

@@ -1241,8 +1241,10 @@ def lab_view(rooms: dict, report: dict, now: datetime | None = None) -> dict:
         sector = report_room.get("product")
         if room.get("kind") != "strategy" or sector not in SECTOR_NAMES:
             continue
-        experiments.append(_experiment(rid, sector, report_room,
-                                       panels.get(rid) or {}, moment))
+        row = _experiment(rid, sector, report_room, panels.get(rid) or {}, moment)
+        if row["group"] == "archive" and row["reason"] == "nothing bought":
+            continue          # a row of dashes tells nothing
+        experiments.append(row)
     general = panels.get("general") or {}
     return {
         "generated_at": report.get("generated_at"),
@@ -2066,7 +2068,6 @@ function renderRoom() {
   const list = mine();
   const counts = {};
   GROUPS.forEach(([g]) => { counts[g] = list.filter(le => le.group === g).length; });
-  if (lp.archived != null) counts.archive = Math.max(counts.archive, lp.archived);
   const group = groupNow(counts);
   const rows = ordered(list.filter(le => le.group === group), group);
   const all = readStore("lab.all." + SECTOR + "." + group, "0") === "1";
