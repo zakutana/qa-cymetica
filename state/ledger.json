@@ -63,7 +63,7 @@
             "reason": "the platform states this caller is ALLIED; it is served 108 tools, 0 of them declared above allied"
           }
         },
-        "not_checked_in": "run-20261004T105657Z-252ef5c1"
+        "not_checked_in": "run-20261004T115311Z-c318536e"
       },
       "filing": {
         "state": "WITHDRAWN",
@@ -208,7 +208,7 @@
             "reason": "attribution is provable: the signing message names the wallet, is bound to sha256(title), and is deterministic"
           }
         },
-        "not_checked_in": "run-20261004T105657Z-252ef5c1"
+        "not_checked_in": "run-20261004T115311Z-c318536e"
       },
       "filing": {
         "state": "FIX_CLAIMED",
@@ -432,7 +432,7 @@
             "reason": "llms.txt states the species count in 6 place(s); the live catalogue lists 11, and every one of them agrees"
           }
         },
-        "not_checked_in": "run-20261004T105657Z-252ef5c1"
+        "not_checked_in": "run-20261004T115311Z-c318536e"
       },
       "filing": {
         "state": "FIX_CLAIMED",
@@ -873,7 +873,7 @@
             "reason": "mcp_tool_names_documented_exist: Does every tool name llms.txt documents exist on the server? llms.txt says 8 (get_market, get_orderbook, get_platform_status, get_prices, get_trust_signal, list_clob_pairs, list_markets, search_markets), .well-known/mcp.json says 108 (ask_nexus_deep, backtest_event_card_idea, bb_accept_spec, bb_app_stats, bb_apply_startup, bb_file_request, bb_get_request, bb_post_verdict and 100 more), and that satisfies subset."
           }
         },
-        "not_checked_in": "run-20261004T105657Z-252ef5c1"
+        "not_checked_in": "run-20261004T115311Z-c318536e"
       },
       "filing": {
         "state": "WITHDRAWN",
@@ -1095,7 +1095,7 @@
         },
         "pinned_fingerprint": "76f53745c4961b0f0a6076e33cd1d16173f41f802d404fbbb746923be506797e",
         "evidence_only": "run-20261004T004014Z-7939eab7",
-        "not_checked_in": "run-20261004T105657Z-252ef5c1"
+        "not_checked_in": "run-20261004T115311Z-c318536e"
       },
       "filing": {
         "state": "WITHDRAWN",
@@ -1323,7 +1323,7 @@
             "reason": "skills_subset: Is agent-skills.json the actionable subset of agent-card.json, as stated? agent-skills.json says 11 (arena-trading, asset-discovery, bug-bounty, clone-ai-agent, et10-revenue-share, exchange-tokens, market-data, portfolio-management and 3 more), agent-card.json says 19 (ai-crypto-nativeness-leaderboard, ai-due-diligence, ai-native-provenance, ai-pivot-washing, arena-trading, asset-discovery, bug-bounty, ceo-ai-expertise-index and 11 more), and that satisfies subset."
           }
         },
-        "not_checked_in": "run-20261004T105657Z-252ef5c1"
+        "not_checked_in": "run-20261004T115311Z-c318536e"
       },
       "filing": {
         "state": "FIX_CLAIMED",
@@ -1522,7 +1522,7 @@
             "reason": "llms.txt states no fixed catalogue size and directs the reader to tools/list for their own tier"
           }
         },
-        "not_checked_in": "run-20261004T105657Z-252ef5c1"
+        "not_checked_in": "run-20261004T115311Z-c318536e"
       },
       "filing": {
         "state": "FIX_CLAIMED",
@@ -1671,7 +1671,7 @@
           "run_id": "run-20260924T082511Z-74033ba0",
           "at": "2026-09-24T08:57:39+00:00"
         },
-        "not_checked_in": "run-20261004T105657Z-252ef5c1"
+        "not_checked_in": "run-20261004T115311Z-c318536e"
       },
       "filing": {
         "state": "FIX_CLAIMED",
@@ -1859,7 +1859,7 @@
             "reason": "agent_names: Does llms.txt name agent symbols that actually exist? Both llms.txt and the live species endpoint now say 11 (ATR, BOLL, DIV, FIB, ICHI, MACD, PCPN, RSI and 3 more)."
           }
         },
-        "not_checked_in": "run-20261004T105657Z-252ef5c1"
+        "not_checked_in": "run-20261004T115311Z-c318536e"
       },
       "filing": {
         "state": "FIX_CLAIMED",
@@ -2023,7 +2023,7 @@
             "reason": "agent_count: How many clonable AI trading agents exist? Both the live species endpoint and llms.txt now say 11."
           }
         },
-        "not_checked_in": "run-20261004T105657Z-252ef5c1"
+        "not_checked_in": "run-20261004T115311Z-c318536e"
       },
       "filing": {
         "state": "FIX_CLAIMED",
@@ -2128,7 +2128,7 @@
         "state": "UNVERIFIABLE",
         "adjudicated_by": null,
         "pinned_fingerprint": null,
-        "not_checked_in": "run-20261004T105657Z-252ef5c1",
+        "not_checked_in": "run-20261004T115311Z-c318536e",
         "missing_checks": [
           "tests/reconciliation/test_reconcile.py::test_sources_agree[chain_count::live_chains-vs-mcp_json]"
         ],
@@ -2250,7 +2250,7 @@
             "reason": "llms.txt promises at least 500 CLOB pairs; list_clob_pairs states total=586."
           }
         },
-        "not_checked_in": "run-20261004T105657Z-252ef5c1"
+        "not_checked_in": "run-20261004T115311Z-c318536e"
       },
       "filing": {
         "state": "FIX_CLAIMED",
@@ -2362,7 +2362,7 @@
       "note": "Commits legitimately accrue, so a small gap is expected and a large one is not. This is the platform's headline marketing figure, so a stale number here is a measurement defect rather than a cosmetic one.",
       "detail": {
         "left": 21800,
-        "right": 24493,
+        "right": 24513,
         "sources": {
           "llms_txt": "regex_int:With ([\\d,]+)\\+ commits",
           "build_stats": "jsonpath:$.totals.commits"
@@ -2373,7 +2373,7 @@
             "build_stats": "jsonpath:$.totals.commits"
           }
         },
-        "reason": "commit_count: How many commits are in the production codebase? llms.txt says 21800; the build-stats endpoint says 24493. (24493 is 12.4% above the stated minimum of 21800 (tolerance 5.0%), so the published figure is stale rather than wrong)"
+        "reason": "commit_count: How many commits are in the production codebase? llms.txt says 21800; the build-stats endpoint says 24513. (24513 is 12.4% above the stated minimum of 21800 (tolerance 5.0%), so the published figure is stale rather than wrong)"
       },
       "checks": [
         "tests/reconciliation/test_reconcile.py::test_sources_agree[commit_count::build_stats-vs-llms_txt]"
@@ -2384,20 +2384,19 @@
           "run_id": "legacy"
         }
       },
-      "reproductions": 55,
+      "reproductions": 56,
       "provenance": {
-        "run_id": "run-20261004T053743Z-f46fe83d",
-        "measured_at": "2026-10-04T05:58:13+00:00"
+        "run_id": "run-20261004T115311Z-c318536e",
+        "measured_at": "2026-10-04T12:01:28+00:00"
       },
       "check": {
         "state": "REPRODUCING",
         "adjudicated_by": {
-          "run_id": "run-20261004T053743Z-f46fe83d",
-          "at": "2026-10-04T05:58:13+00:00",
-          "started_at": "2026-10-04T05:38:09+00:00"
+          "run_id": "run-20261004T115311Z-c318536e",
+          "at": "2026-10-04T12:01:28+00:00",
+          "started_at": "2026-10-04T11:53:21+00:00"
         },
-        "pinned_fingerprint": "sha256:f3d9b4a71fbf227f926c530f5d62476d",
-        "not_checked_in": "run-20261004T105657Z-252ef5c1"
+        "pinned_fingerprint": "sha256:f3d9b4a71fbf227f926c530f5d62476d"
       },
       "filing": {
         "state": "FIX_CLAIMED",
@@ -2624,7 +2623,8 @@
         "run-20261003T183122Z-7d4a8ca0",
         "run-20261004T004014Z-7939eab7",
         "run-20261004T041620Z-42629849",
-        "run-20261004T053743Z-f46fe83d"
+        "run-20261004T053743Z-f46fe83d",
+        "run-20261004T115311Z-c318536e"
       ]
     },
     "CYM-tracker-closure-rate": {
@@ -2688,7 +2688,7 @@
             "reason": "0 of 20 closed reports carry no evidence field at all (validated_at, triaged_at, severity_confirmed, ticket_url, fix_pr_url, status_notes)"
           }
         },
-        "not_checked_in": "run-20261004T105657Z-252ef5c1"
+        "not_checked_in": "run-20261004T115311Z-c318536e"
       },
       "filing": {
         "state": "FIX_CLAIMED",
@@ -2996,7 +2996,7 @@
             "reason": "/api/v1/account was renamed, not withdrawn: llms.txt now documents /api/v1/account/me, /api/v1/account/me/portfolio, which is served"
           }
         },
-        "not_checked_in": "run-20261004T105657Z-252ef5c1"
+        "not_checked_in": "run-20261004T115311Z-c318536e"
       },
       "filing": {
         "state": "FIX_CLAIMED",
@@ -3194,7 +3194,7 @@
         "state": "UNVERIFIABLE",
         "adjudicated_by": null,
         "pinned_fingerprint": null,
-        "not_checked_in": "run-20261004T105657Z-252ef5c1",
+        "not_checked_in": "run-20261004T115311Z-c318536e",
         "missing_checks": [
           "tests/reconciliation/test_reconcile.py::test_sources_agree[mcp_tool_count::llms_txt-vs-mcp_anon]",
           "tests/reconciliation/test_reconcile.py::test_sources_agree[mcp_tool_count::llms_txt-vs-mcp_json]",
@@ -3596,7 +3596,7 @@
             "reason": "mcp_tool_names_documented_exist: Does every tool name llms.txt documents exist on the server? llms.txt says 8 (get_market, get_orderbook, get_platform_status, get_prices, get_trust_signal, list_clob_pairs, list_markets, search_markets), .well-known/mcp.json says 108 (ask_nexus_deep, backtest_event_card_idea, bb_accept_spec, bb_app_stats, bb_apply_startup, bb_file_request, bb_get_request, bb_post_verdict and 100 more), and that satisfies subset."
           }
         },
-        "not_checked_in": "run-20261004T105657Z-252ef5c1"
+        "not_checked_in": "run-20261004T115311Z-c318536e"
       },
       "filing": {
         "state": "FIX_CLAIMED",
@@ -3862,7 +3862,7 @@
             "reason": "skills_subset: Is agent-skills.json the actionable subset of agent-card.json, as stated? agent-skills.json says 11 (arena-trading, asset-discovery, bug-bounty, clone-ai-agent, et10-revenue-share, exchange-tokens, market-data, portfolio-management and 3 more), agent-card.json says 19 (ai-crypto-nativeness-leaderboard, ai-due-diligence, ai-native-provenance, ai-pivot-washing, arena-trading, asset-discovery, bug-bounty, ceo-ai-expertise-index and 11 more), and that satisfies subset."
           }
         },
-        "not_checked_in": "run-20261004T105657Z-252ef5c1"
+        "not_checked_in": "run-20261004T115311Z-c318536e"
       },
       "filing": {
         "state": "FIX_CLAIMED",
@@ -4133,7 +4133,7 @@
             "reason": "skills_subset: Is agent-skills.json the actionable subset of agent-card.json, as stated? agent-skills.json says 11 (arena-trading, asset-discovery, bug-bounty, clone-ai-agent, et10-revenue-share, exchange-tokens, market-data, portfolio-management and 3 more), agent-card.json says 19 (ai-crypto-nativeness-leaderboard, ai-due-diligence, ai-native-provenance, ai-pivot-washing, arena-trading, asset-discovery, bug-bounty, ceo-ai-expertise-index and 11 more), and that satisfies subset."
           }
         },
-        "not_checked_in": "run-20261004T105657Z-252ef5c1"
+        "not_checked_in": "run-20261004T115311Z-c318536e"
       },
       "filing": {
         "state": "FIX_CLAIMED",
@@ -4398,7 +4398,7 @@
             "reason": "0 of the 70 reports of ours that have reached a published stage are absent from the tracker where work happens (not counted: [54, 62, 114], which they have not validated)"
           }
         },
-        "not_checked_in": "run-20261004T105657Z-252ef5c1"
+        "not_checked_in": "run-20261004T115311Z-c318536e"
       },
       "filing": {
         "state": "FIX_CLAIMED",
@@ -4589,7 +4589,7 @@
             "reason": "0 of the 5 fields we send come back empty on every one of our 73 reports: none"
           }
         },
-        "not_checked_in": "run-20261004T105657Z-252ef5c1"
+        "not_checked_in": "run-20261004T115311Z-c318536e"
       },
       "filing": {
         "state": "WITHDRAWN",
@@ -4706,7 +4706,7 @@
             "reason": "hunter_name survives on 73 of 73 of our reports; we send 'expire76' on every one"
           }
         },
-        "not_checked_in": "run-20261004T105657Z-252ef5c1"
+        "not_checked_in": "run-20261004T115311Z-c318536e"
       },
       "filing": {
         "state": "WITHDRAWN",
@@ -4786,7 +4786,7 @@
           "at": "2026-09-07T17:40:13+00:00"
         },
         "pinned_fingerprint": "5e9d6943c1eaf398d598a59460e9acdf2a187f99ecb323ce600818b417cefeae",
-        "not_checked_in": "run-20261004T105657Z-252ef5c1",
+        "not_checked_in": "run-20261004T115311Z-c318536e",
         "missing_checks": [
           "tests/pinned/test_documented_404.py::test_documented_path_is_served[/api/v1/vaix/prices]"
         ],
@@ -4931,7 +4931,7 @@
             "reason": "the bug-report reward programme is described in agent-card.json, agent-skills.json, llms.txt, mcp.json"
           }
         },
-        "not_checked_in": "run-20261004T105657Z-252ef5c1"
+        "not_checked_in": "run-20261004T115311Z-c318536e"
       },
       "filing": {
         "state": "FIX_CLAIMED",
@@ -5112,7 +5112,7 @@
             "reason": "19 of the 20 closed report(s) can be read as paid or awarded from reward_status ['awarded', 'paid'], so a settled report is distinguishable from an unrecorded one; stats still report bugs_fixed=89 and total_paid=76000.0"
           }
         },
-        "not_checked_in": "run-20261004T105657Z-252ef5c1"
+        "not_checked_in": "run-20261004T115311Z-c318536e"
       },
       "filing": {
         "state": "FIX_CLAIMED",
@@ -5417,7 +5417,7 @@
             "reason": "/api/v1/account/me answers HTTP 200 to the credential the catalogue names"
           }
         },
-        "not_checked_in": "run-20261004T105657Z-252ef5c1"
+        "not_checked_in": "run-20261004T115311Z-c318536e"
       },
       "filing": {
         "state": "FIX_CLAIMED",
@@ -5565,7 +5565,7 @@
             "reason": "the channel reported its own published reward-tier values"
           }
         },
-        "not_checked_in": "run-20261004T105657Z-252ef5c1"
+        "not_checked_in": "run-20261004T115311Z-c318536e"
       },
       "filing": {
         "state": "FIX_CLAIMED",
@@ -5787,7 +5787,7 @@
             "reason": "every one of the 35 automated repl(ies) since 2026-09-07T07:53:17.653185+00:00 carries metadata.is_answer (35 of them true, which is their rule for a substantive answer)"
           }
         },
-        "not_checked_in": "run-20261004T105657Z-252ef5c1"
+        "not_checked_in": "run-20261004T115311Z-c318536e"
       },
       "filing": {
         "state": "FIX_CLAIMED",
@@ -5985,7 +5985,7 @@
         },
         "pinned_fingerprint": "d8c89bb5d9dfb6abe6d9f240604f15d80183028892047d05a574abc9740d5a4c",
         "evidence_only": "run-20261004T004014Z-7939eab7",
-        "not_checked_in": "run-20261004T105657Z-252ef5c1"
+        "not_checked_in": "run-20261004T115311Z-c318536e"
       },
       "filing": {
         "state": "FIX_CLAIMED",
@@ -6182,7 +6182,7 @@
             "reason": "all 20 recorded award(s) sit inside the tier each row publishes, and of the 20 row(s) that name a currency on both sides, none contradicts itself"
           }
         },
-        "not_checked_in": "run-20261004T105657Z-252ef5c1"
+        "not_checked_in": "run-20261004T115311Z-c318536e"
       },
       "filing": {
         "state": "FIX_CLAIMED",
@@ -6476,7 +6476,7 @@
             "reason": "the aggregate and the leaderboard agree on 82 valid report(s); every hunter's total_earned matches the total_paid it is defined as"
           }
         },
-        "not_checked_in": "run-20261004T105657Z-252ef5c1"
+        "not_checked_in": "run-20261004T115311Z-c318536e"
       },
       "filing": {
         "state": "FIX_CLAIMED",
@@ -6741,7 +6741,7 @@
             "reason": "every path a /build recipe sends an agent to is callable: 3 checked against 173 documented paths; /events/universe named as being for people, not called"
           }
         },
-        "not_checked_in": "run-20261004T105657Z-252ef5c1"
+        "not_checked_in": "run-20261004T115311Z-c318536e"
       },
       "filing": {
         "state": "FIX_CLAIMED",
@@ -6946,7 +6946,7 @@
             "reason": "POST /mcp/v1/register documents the field /build says to save: 'api_key'"
           }
         },
-        "not_checked_in": "run-20261004T105657Z-252ef5c1"
+        "not_checked_in": "run-20261004T115311Z-c318536e"
       },
       "filing": {
         "state": "FIX_CLAIMED",
@@ -7109,7 +7109,7 @@
             "reason": "every surface names the same rungs: ['allied', 'recognized', 'trusted', 'unknown']"
           }
         },
-        "not_checked_in": "run-20261004T105657Z-252ef5c1"
+        "not_checked_in": "run-20261004T115311Z-c318536e"
       },
       "filing": {
         "state": "FIX_CLAIMED",
@@ -7273,7 +7273,7 @@
             "reason": "the leaderboard's rows are rankable: the period narrows the set"
           }
         },
-        "not_checked_in": "run-20261004T105657Z-252ef5c1"
+        "not_checked_in": "run-20261004T115311Z-c318536e"
       },
       "filing": {
         "state": "FIX_CLAIMED",
@@ -7445,7 +7445,7 @@
             "reason": "all 6 order surfaces take the same control, `paper`, so one helper can state the book everywhere"
           }
         },
-        "not_checked_in": "run-20261004T105657Z-252ef5c1"
+        "not_checked_in": "run-20261004T115311Z-c318536e"
       },
       "filing": {
         "state": "FIX_CLAIMED",
@@ -7603,7 +7603,7 @@
             "reason": "the setting the order endpoints resolve against is published as ['simulation_mode']"
           }
         },
-        "not_checked_in": "run-20261004T105657Z-252ef5c1"
+        "not_checked_in": "run-20261004T115311Z-c318536e"
       },
       "filing": {
         "state": "FIX_CLAIMED",
@@ -7777,7 +7777,7 @@
             "reason": "trade history reports 0 trade(s) and says what that number spans: identity, covers, does_not_cover, see_also"
           }
         },
-        "not_checked_in": "run-20261004T105657Z-252ef5c1"
+        "not_checked_in": "run-20261004T115311Z-c318536e"
       },
       "filing": {
         "state": "FIX_CLAIMED",
@@ -7959,7 +7959,7 @@
             "reason": "no order surface says `paper` may be disobeyed, so a caller that asks for paper is given paper"
           }
         },
-        "not_checked_in": "run-20261004T105657Z-252ef5c1"
+        "not_checked_in": "run-20261004T115311Z-c318536e"
       },
       "filing": {
         "state": "FIX_CLAIMED",
@@ -8106,7 +8106,7 @@
           "at": "2026-09-10T04:56:30+00:00"
         },
         "pinned_fingerprint": "05d129030ccb0a67babee3e9b1383e236e0bc719fd5e42f532cb727b83375d1a",
-        "not_checked_in": "run-20261004T105657Z-252ef5c1",
+        "not_checked_in": "run-20261004T115311Z-c318536e",
         "missing_checks": [
           "tests/rest/test_portfolio_summary.py::test_the_summary_does_not_report_a_history_the_positions_contradict"
         ],
@@ -8231,16 +8231,15 @@
           "run_id": "run-20260910T110122Z-44e2cd2"
         }
       },
-      "reproductions": 68,
+      "reproductions": 69,
       "check": {
         "state": "REPRODUCING",
         "adjudicated_by": {
-          "run_id": "run-20261004T053743Z-f46fe83d",
-          "at": "2026-10-04T05:58:13+00:00",
-          "started_at": "2026-10-04T05:38:09+00:00"
+          "run_id": "run-20261004T115311Z-c318536e",
+          "at": "2026-10-04T12:01:28+00:00",
+          "started_at": "2026-10-04T11:53:21+00:00"
         },
-        "pinned_fingerprint": "84885322a72b7450579e6de4f695e915fe4f4d6a9eccac0e0f54fbaec3e20ee8",
-        "not_checked_in": "run-20261004T105657Z-252ef5c1"
+        "pinned_fingerprint": "84885322a72b7450579e6de4f695e915fe4f4d6a9eccac0e0f54fbaec3e20ee8"
       },
       "filing": {
         "state": "FIX_CLAIMED",
@@ -8498,7 +8497,8 @@
         "run-20261003T183122Z-7d4a8ca0",
         "run-20261004T004014Z-7939eab7",
         "run-20261004T041620Z-42629849",
-        "run-20261004T053743Z-f46fe83d"
+        "run-20261004T053743Z-f46fe83d",
+        "run-20261004T115311Z-c318536e"
       ],
       "component": "mcp.tools_call",
       "section": "tools_call",
@@ -8509,11 +8509,11 @@
       ],
       "detail": {
         "left": [
-          252.0,
           2091.0,
           1233.0,
           811.0,
-          320.0
+          320.0,
+          906.0
         ],
         "right": 300,
         "sources": {
@@ -8525,15 +8525,15 @@
           "finished": 5,
           "failed": 0,
           "late": 3,
-          "stalled": 0,
+          "stalled": 1,
           "our_read_failed": [],
           "timed_from": "question timestamp, not the poll stopwatch"
         },
-        "reason": "3 answered later than the published 5 min (worst NEX-0115 still running at 1043s)"
+        "reason": "3 answered later than the published 5 min (worst NEX-0115 still running at 1043s); 1 were still unfinished (running) past the published 5 min at our last look (worst NEX-0123 at 1035s)"
       },
       "provenance": {
-        "run_id": "run-20261004T053743Z-f46fe83d",
-        "measured_at": "2026-10-04T05:58:13+00:00"
+        "run_id": "run-20261004T115311Z-c318536e",
+        "measured_at": "2026-10-04T12:01:28+00:00"
       },
       "obligations": {
         "reverify": true,
@@ -8587,7 +8587,7 @@
             "reason": "every one of the 2 tool(s) Nexus named is served"
           }
         },
-        "not_checked_in": "run-20261004T105657Z-252ef5c1"
+        "not_checked_in": "run-20261004T115311Z-c318536e"
       },
       "filing": {
         "state": "FIX_CLAIMED",
@@ -8902,7 +8902,7 @@
             "reason": "the newest paper buy TRD-0041 (2026-09-23T06:01:14+00:00) bought 5.00 and debited 5.00 from the paper balance"
           }
         },
-        "not_checked_in": "run-20261004T105657Z-252ef5c1"
+        "not_checked_in": "run-20261004T115311Z-c318536e"
       },
       "filing": {
         "state": "FIX_CLAIMED",
@@ -9159,7 +9159,7 @@
             "reason": "every /api/v1/cloned-bots route that answered 405 with an Allow header is one of the 12 they document"
           }
         },
-        "not_checked_in": "run-20261004T105657Z-252ef5c1"
+        "not_checked_in": "run-20261004T115311Z-c318536e"
       },
       "filing": {
         "state": "FIX_CLAIMED",
@@ -9366,16 +9366,15 @@
           "run_id": "run-20260910T205116Z-80ff405"
         }
       },
-      "reproductions": 61,
+      "reproductions": 62,
       "check": {
         "state": "REPRODUCING",
         "adjudicated_by": {
-          "run_id": "run-20261004T053743Z-f46fe83d",
-          "at": "2026-10-04T05:58:13+00:00",
-          "started_at": "2026-10-04T05:38:09+00:00"
+          "run_id": "run-20261004T115311Z-c318536e",
+          "at": "2026-10-04T12:01:28+00:00",
+          "started_at": "2026-10-04T11:53:21+00:00"
         },
-        "pinned_fingerprint": "4d7dd0f1952c6ea876b8f03aea300fb99f89e1be901dccb238f3d462aecef9cf",
-        "not_checked_in": "run-20261004T105657Z-252ef5c1"
+        "pinned_fingerprint": "4d7dd0f1952c6ea876b8f03aea300fb99f89e1be901dccb238f3d462aecef9cf"
       },
       "filing": {
         "state": "FIX_CLAIMED",
@@ -9561,7 +9560,8 @@
         "run-20261003T183122Z-7d4a8ca0",
         "run-20261004T004014Z-7939eab7",
         "run-20261004T041620Z-42629849",
-        "run-20261004T053743Z-f46fe83d"
+        "run-20261004T053743Z-f46fe83d",
+        "run-20261004T115311Z-c318536e"
       ],
       "component": "rest.agents",
       "section": "agents",
@@ -9601,8 +9601,8 @@
         "reason": "10 cloned-bots route(s) accept the agent's x-api-key and 1 do not: GET /api/v1/cloned-bots/{instance_id}/activity. The funding route is not among them, so a clone can be created and paid for with the agent credential; what that same credential cannot reach is the route named above"
       },
       "provenance": {
-        "run_id": "run-20261004T053743Z-f46fe83d",
-        "measured_at": "2026-10-04T05:58:13+00:00"
+        "run_id": "run-20261004T115311Z-c318536e",
+        "measured_at": "2026-10-04T12:01:28+00:00"
       },
       "obligations": {
         "reverify": true,
@@ -9634,7 +9634,7 @@
           "started_at": "2026-10-04T00:40:39+00:00"
         },
         "pinned_fingerprint": "7a52ceff1e585acf3435b70f322e83c344d04b06af6d7ae07370c50f443e6fd0",
-        "not_checked_in": "run-20261004T105657Z-252ef5c1"
+        "not_checked_in": "run-20261004T115311Z-c318536e"
       },
       "filing": {
         "state": "FIX_CLAIMED",
@@ -9926,7 +9926,7 @@
             "reason": "every one of the 9 tradeable card(s) checked appears in the listing"
           }
         },
-        "not_checked_in": "run-20261004T105657Z-252ef5c1"
+        "not_checked_in": "run-20261004T115311Z-c318536e"
       },
       "filing": {
         "state": "FIX_CLAIMED",
@@ -10142,7 +10142,7 @@
             "reason": "the newest recorded deep answer, NEX-0088 (2026-09-23T05:52:09+00:00), cites no internal source location"
           }
         },
-        "not_checked_in": "run-20261004T105657Z-252ef5c1"
+        "not_checked_in": "run-20261004T115311Z-c318536e"
       },
       "filing": {
         "state": "FIX_CLAIMED",
@@ -10303,7 +10303,7 @@
             "reason": "all 53 of the documented GET paths that answered read the agent key"
           }
         },
-        "not_checked_in": "run-20261004T105657Z-252ef5c1"
+        "not_checked_in": "run-20261004T115311Z-c318536e"
       },
       "filing": {
         "state": "FIX_CLAIMED",
@@ -10455,7 +10455,7 @@
             "reason": "every one of the 5 judged bot(s) counts what it has open: 5 nothing open"
           }
         },
-        "not_checked_in": "run-20261004T105657Z-252ef5c1"
+        "not_checked_in": "run-20261004T115311Z-c318536e"
       },
       "filing": {
         "state": "FIX_CLAIMED",
@@ -10638,7 +10638,7 @@
             "reason": "2 submission(s) of other users answer 200 to account 113, and every one is among the 6187 cards listed with include_user_submitted=true, so each is public"
           }
         },
-        "not_checked_in": "run-20261004T105657Z-252ef5c1"
+        "not_checked_in": "run-20261004T115311Z-c318536e"
       },
       "filing": {
         "state": "FIX_CLAIMED",
@@ -10863,7 +10863,7 @@
             "reason": "all 12 answers name the period they cover"
           }
         },
-        "not_checked_in": "run-20261004T105657Z-252ef5c1"
+        "not_checked_in": "run-20261004T115311Z-c318536e"
       },
       "filing": {
         "state": "FIX_CLAIMED",
@@ -11086,7 +11086,7 @@
             "reason": "the 365-day answer names the window it covered (covered_days)"
           }
         },
-        "not_checked_in": "run-20261004T105657Z-252ef5c1"
+        "not_checked_in": "run-20261004T115311Z-c318536e"
       },
       "filing": {
         "state": "FIX_CLAIMED",
@@ -11358,7 +11358,7 @@
             "reason": "the house row matches the live half of their own track record on 5 shared quantities, which is what a leaderboard beside live entrants should show"
           }
         },
-        "not_checked_in": "run-20261004T105657Z-252ef5c1"
+        "not_checked_in": "run-20261004T115311Z-c318536e"
       },
       "filing": {
         "state": "FIX_CLAIMED",
@@ -11576,7 +11576,7 @@
             "reason": "the round declares when entries stop being accepted, so the window a late entry could exploit is at least stated"
           }
         },
-        "not_checked_in": "run-20261004T105657Z-252ef5c1"
+        "not_checked_in": "run-20261004T115311Z-c318536e"
       },
       "filing": {
         "state": "FIX_CLAIMED",
@@ -11777,7 +11777,7 @@
             "reason": "every hot row on both chains clears the floor: 6 robinhood and 17 solana hot rows, the thinnest allowing $517 of max buy against a $500 floor"
           }
         },
-        "not_checked_in": "run-20261004T105657Z-252ef5c1"
+        "not_checked_in": "run-20261004T115311Z-c318536e"
       },
       "filing": {
         "state": "FIX_CLAIMED",
@@ -12113,7 +12113,7 @@
           "started_at": "2026-10-04T05:38:09+00:00"
         },
         "pinned_fingerprint": "4e20d9ebfd70f3e0cd3e778f8f0fd9d6bdde4e3b5e3d2cde024b168bcc03cea8",
-        "not_checked_in": "run-20261004T105657Z-252ef5c1"
+        "not_checked_in": "run-20261004T115311Z-c318536e"
       },
       "filing": {
         "state": "FIX_CLAIMED",
@@ -12485,7 +12485,7 @@
             "reason": "all 27 listed funds carry profile_url"
           }
         },
-        "not_checked_in": "run-20261004T105657Z-252ef5c1"
+        "not_checked_in": "run-20261004T115311Z-c318536e"
       },
       "filing": {
         "state": "FIX_CLAIMED",
@@ -12757,7 +12757,7 @@
             "reason": "every public GET declared in /openapi.json is also in /openapi-public.json (13 vs 173 paths, 4 of the difference private or not a GET)"
           }
         },
-        "not_checked_in": "run-20261004T105657Z-252ef5c1"
+        "not_checked_in": "run-20261004T115311Z-c318536e"
       },
       "filing": {
         "state": "FIX_CLAIMED",
@@ -12923,7 +12923,7 @@
           "run_id": "run-20260920T202827Z-34a2af16",
           "at": "2026-09-20T20:44:56+00:00"
         },
-        "not_checked_in": "run-20261004T105657Z-252ef5c1"
+        "not_checked_in": "run-20261004T115311Z-c318536e"
       },
       "filing": {
         "state": "FIX_CLAIMED",
@@ -13151,7 +13151,7 @@
             "reason": "every read returned at most its limit (5->5, 50->50)"
           }
         },
-        "not_checked_in": "run-20261004T105657Z-252ef5c1"
+        "not_checked_in": "run-20261004T115311Z-c318536e"
       },
       "filing": {
         "state": "FIX_CLAIMED",
@@ -13309,7 +13309,7 @@
             "reason": "on 1 request(s) the clock starts only once the gate is filled or waived, and never before it"
           }
         },
-        "not_checked_in": "run-20261004T105657Z-252ef5c1"
+        "not_checked_in": "run-20261004T115311Z-c318536e"
       },
       "filing": {
         "state": "WITHDRAWN",
@@ -13450,7 +13450,7 @@
             "reason": "all 1 advertised channel(s) are named in a machine-readable document: wss://cymetica.com/ws/build-it-better in /llms.txt, /.well-known/mcp.json, /openapi-public.json"
           }
         },
-        "not_checked_in": "run-20261004T105657Z-252ef5c1"
+        "not_checked_in": "run-20261004T115311Z-c318536e"
       },
       "filing": {
         "state": "FIX_CLAIMED",
@@ -13679,7 +13679,7 @@
             "reason": "sessions, messages, tool_calls sum the 17 day(s) from 2026-01-31 to 2026-02-16, and the first session they record (2026-01-31) falls inside that window"
           }
         },
-        "not_checked_in": "run-20261004T105657Z-252ef5c1"
+        "not_checked_in": "run-20261004T115311Z-c318536e"
       },
       "filing": {
         "state": "FIX_CLAIMED",
@@ -13876,7 +13876,7 @@
             "reason": "their own description of agent-board/search says the order is recency while no row carries verified evidence or a confirmed replication, so the list and the sentence describing it agree and a reader is told what the top of it means"
           }
         },
-        "not_checked_in": "run-20261004T105657Z-252ef5c1"
+        "not_checked_in": "run-20261004T115311Z-c318536e"
       },
       "filing": {
         "state": "FIX_CLAIMED",
@@ -14074,13 +14074,13 @@
           "run_id": "run-20260920T202827Z-34a2af16"
         }
       },
-      "reproductions": 27,
+      "reproductions": 28,
       "check": {
         "state": "REPRODUCING",
         "adjudicated_by": {
-          "run_id": "run-20261004T053743Z-f46fe83d",
-          "at": "2026-10-04T05:58:13+00:00",
-          "started_at": "2026-10-04T05:38:09+00:00"
+          "run_id": "run-20261004T115311Z-c318536e",
+          "at": "2026-10-04T12:01:28+00:00",
+          "started_at": "2026-10-04T11:53:21+00:00"
         },
         "pinned_fingerprint": "d68dde5d632e02f6434da646359d6a3efa738a21eed738630bd3c1f06281b5d9",
         "last_exploratory_pass": {
@@ -14116,8 +14116,7 @@
             },
             "reason": "every build that settled in the last 24 h met the 24-hour deadline it publishes (ET-26608), and none is past its deadline with nothing shipped. NOT in the verdict: 2 request(s) settled more than 24 h ago and are history: ET-26171, ET-26036 (shipped late)"
           }
-        },
-        "not_checked_in": "run-20261004T105657Z-252ef5c1"
+        }
       },
       "filing": {
         "state": "FIX_CLAIMED",
@@ -14345,7 +14344,8 @@
         "run-20261003T183122Z-7d4a8ca0",
         "run-20261004T004014Z-7939eab7",
         "run-20261004T041620Z-42629849",
-        "run-20261004T053743Z-f46fe83d"
+        "run-20261004T053743Z-f46fe83d",
+        "run-20261004T115311Z-c318536e"
       ],
       "component": "rest.build_it_better",
       "section": "build_it_better",
@@ -14400,11 +14400,11 @@
           ],
           "settled_within_hours": 24
         },
-        "reason": "ET-29001 passed its own deadline 2026-10-03T14:10:36 15.7h ago and has shipped nothing (stage funded); ET-28934 passed its own deadline 2026-10-03T08:20:20 21.5h ago and has shipped nothing (stage funded). NOT in the verdict: 17 request(s) settled more than 24 h ago and are history: ET-28821, ET-28704, ET-28688, ET-28606, ET-28378, ET-28324, ET-28319, ET-28203, ET-27875 (shipped late), ET-27671 (shipped late), ET-27654 (shipped late), ET-27059 (shipped late), ET-26924 (shipped late), ET-26776, ET-26608, ET-26171, ET-26036 (shipped late)"
+        "reason": "ET-29001 shipped 17.3h after its own published deadline of 2026-10-03T14:10:36; ET-28934 shipped 24.3h after its own published deadline of 2026-10-03T08:20:20. NOT in the verdict: 17 request(s) settled more than 24 h ago and are history: ET-28821, ET-28704, ET-28688, ET-28606, ET-28378, ET-28324, ET-28319, ET-28203, ET-27875 (shipped late), ET-27671 (shipped late), ET-27654 (shipped late), ET-27059 (shipped late), ET-26924 (shipped late), ET-26776, ET-26608, ET-26171, ET-26036 (shipped late)"
       },
       "provenance": {
-        "run_id": "run-20261004T053743Z-f46fe83d",
-        "measured_at": "2026-10-04T05:58:13+00:00"
+        "run_id": "run-20261004T115311Z-c318536e",
+        "measured_at": "2026-10-04T12:01:28+00:00"
       },
       "obligations": {
         "reverify": true,
@@ -14437,7 +14437,7 @@
           "run_id": "run-20260920T204931Z-9b10f557",
           "at": "2026-09-20T20:49:59+00:00"
         },
-        "not_checked_in": "run-20261004T105657Z-252ef5c1"
+        "not_checked_in": "run-20261004T115311Z-c318536e"
       },
       "filing": {
         "state": "WITHDRAWN",
@@ -14587,7 +14587,7 @@
             "reason": "the Building now tile is computed as 's.building || 0', which counts nothing but what is building"
           }
         },
-        "not_checked_in": "run-20261004T105657Z-252ef5c1"
+        "not_checked_in": "run-20261004T115311Z-c318536e"
       },
       "filing": {
         "state": "FIX_CLAIMED",
@@ -14814,12 +14814,11 @@
       "check": {
         "state": "INCONCLUSIVE",
         "adjudicated_by": {
-          "run_id": "run-20261004T053743Z-f46fe83d",
-          "at": "2026-10-04T05:58:13+00:00",
-          "started_at": "2026-10-04T05:38:09+00:00"
+          "run_id": "run-20261004T115311Z-c318536e",
+          "at": "2026-10-04T12:01:28+00:00",
+          "started_at": "2026-10-04T11:53:21+00:00"
         },
-        "pinned_fingerprint": "2e8b6858e71d177779a21f95ec0e35a6b92cb18ef65e71e7d8adbc6ddd20965b",
-        "not_checked_in": "run-20261004T105657Z-252ef5c1"
+        "pinned_fingerprint": "2e8b6858e71d177779a21f95ec0e35a6b92cb18ef65e71e7d8adbc6ddd20965b"
       },
       "filing": {
         "state": "FIX_CLAIMED",
@@ -15064,8 +15063,8 @@
         "reason": "all 18 deep answers asked in the last 72 h are served whole"
       },
       "provenance": {
-        "run_id": "run-20261004T053743Z-f46fe83d",
-        "measured_at": "2026-10-04T05:58:13+00:00"
+        "run_id": "run-20261004T115311Z-c318536e",
+        "measured_at": "2026-10-04T12:01:28+00:00"
       },
       "obligations": {
         "reverify": true,
@@ -15125,7 +15124,7 @@
             "reason": "each product is on one row in all 3 windows read"
           }
         },
-        "not_checked_in": "run-20261004T105657Z-252ef5c1"
+        "not_checked_in": "run-20261004T115311Z-c318536e"
       },
       "filing": {
         "state": "FIX_CLAIMED",
@@ -15292,7 +15291,7 @@
             "reason": "published inception 2026-07-26, recorded 2026-08-09; the methodology discloses the pro-forma stretch"
           }
         },
-        "not_checked_in": "run-20261004T105657Z-252ef5c1"
+        "not_checked_in": "run-20261004T115311Z-c318536e"
       },
       "filing": {
         "state": "FIX_CLAIMED",
@@ -15438,7 +15437,7 @@
           "started_at": "2026-10-04T00:40:39+00:00"
         },
         "pinned_fingerprint": "e77176673b270cba67e599aab8b4011f8b1805aed59efc088f93522cef55ffe3",
-        "not_checked_in": "run-20261004T105657Z-252ef5c1"
+        "not_checked_in": "run-20261004T115311Z-c318536e"
       },
       "filing": {
         "state": "FIX_CLAIMED",
@@ -15608,7 +15607,7 @@
           "started_at": "2026-10-04T00:40:39+00:00"
         },
         "pinned_fingerprint": "799ae81824626c5ec366030934a5032f7862eb51bdf0336d8195bbd0ef487d68",
-        "not_checked_in": "run-20261004T105657Z-252ef5c1"
+        "not_checked_in": "run-20261004T115311Z-c318536e"
       },
       "filing": {
         "state": "FIX_CLAIMED",
@@ -16116,7 +16115,7 @@
             "reason": "32 app(s) of the 116 on the board were read one by one, and for 32 of them every figure on the board re-read between the app's two reads is the app's own; the daily series sums to last_30d for 32 app(s) that have moved at all (/weekly-signal, /tradingview, /token-info, /exchange-refugees, /bitmex, /thinkorswim, /benzinga-pro, /bullx, /etoro, /finviz, /mql5, /pickmytrade, /atas, /barchart, /coingecko, /coinglass, /coinigy, /iex-cloud, /interactive-brokers, /moomoo, /motivewave, /myforexfunds, /myfundedfutures, /prorealtime, /wallstreetbets, /sierra-chart, /stockanalysis, /stockcharts, /traderspost, /tradersync, /unusualwhales, /yfinance)"
           }
         },
-        "not_checked_in": "run-20261004T105657Z-252ef5c1"
+        "not_checked_in": "run-20261004T115311Z-c318536e"
       },
       "filing": {
         "state": "WITHDRAWN",
@@ -17201,7 +17200,7 @@
             "reason": "every step that moves a clone forward accepts the agent's x-api-key: POST /api/v1/cloned-bots/{instance_id}/fund, POST /api/v1/cloned-bots/{instance_id}/go-live"
           }
         },
-        "not_checked_in": "run-20261004T105657Z-252ef5c1"
+        "not_checked_in": "run-20261004T115311Z-c318536e"
       },
       "filing": {
         "state": "FIX_CLAIMED",
@@ -17355,7 +17354,7 @@
           "started_at": "2026-10-04T00:40:39+00:00"
         },
         "pinned_fingerprint": "f9147b657ba9d4d8852f04c3986c958f28c5d72e80c2035d46de64ac4c1e1de4",
-        "not_checked_in": "run-20261004T105657Z-252ef5c1"
+        "not_checked_in": "run-20261004T115311Z-c318536e"
       },
       "filing": {
         "state": "FIX_CLAIMED",
@@ -17572,7 +17571,7 @@
             "reason": "all 6 request example(s) on /api-docs that target a published route carry every field it requires"
           }
         },
-        "not_checked_in": "run-20261004T105657Z-252ef5c1"
+        "not_checked_in": "run-20261004T115311Z-c318536e"
       },
       "filing": {
         "state": "FIX_CLAIMED",
@@ -17832,7 +17831,7 @@
             "reason": "12 card(s) read closed on both /api/v1/event-cards/{id} and get_event_card_info, and none of the 16 read on both disagrees"
           }
         },
-        "not_checked_in": "run-20261004T105657Z-252ef5c1"
+        "not_checked_in": "run-20261004T115311Z-c318536e"
       },
       "filing": {
         "state": "FIX_CLAIMED",
@@ -18126,7 +18125,7 @@
             "reason": "the newest 12 submissions to POST /api/v1/bounty/reports since #123 fixed_at 2026-09-23T02:41:50 UTC (3299e580b) were each answered 2xx with the id of the report they created"
           }
         },
-        "not_checked_in": "run-20261004T105657Z-252ef5c1"
+        "not_checked_in": "run-20261004T115311Z-c318536e"
       },
       "filing": {
         "state": "FIX_CLAIMED",
@@ -18290,7 +18289,7 @@
           "started_at": "2026-10-04T00:40:39+00:00"
         },
         "pinned_fingerprint": "6a0791437c8cc5aa4df286c0c372a8d5513e25d504d40418c4f8ce8a1f1c49a3",
-        "not_checked_in": "run-20261004T105657Z-252ef5c1"
+        "not_checked_in": "run-20261004T115311Z-c318536e"
       },
       "filing": {
         "state": "FIX_CLAIMED",
@@ -18450,7 +18449,7 @@
           "started_at": "2026-10-04T00:40:39+00:00"
         },
         "pinned_fingerprint": "2e22cca70cda0f5984ce2f3230718d3230c72fa57acf17d00e4b221e9a9c7fb5",
-        "not_checked_in": "run-20261004T105657Z-252ef5c1"
+        "not_checked_in": "run-20261004T115311Z-c318536e"
       },
       "filing": {
         "state": "NOT_RAISED",
@@ -18630,7 +18629,7 @@
           "started_at": "2026-10-04T00:40:39+00:00"
         },
         "pinned_fingerprint": "af6eed9d5de9d1db1d71cb94464f51d41f92bc12524f90c04ac4a47c59cd3183",
-        "not_checked_in": "run-20261004T105657Z-252ef5c1"
+        "not_checked_in": "run-20261004T115311Z-c318536e"
       },
       "filing": {
         "state": "FIX_CLAIMED",
@@ -18751,7 +18750,7 @@
           "started_at": "2026-10-04T00:40:39+00:00"
         },
         "pinned_fingerprint": "fe91d5882e53cfd1fce91a6cfe1a44599faaf5d029601ef7df6d3bde8e10c8b1",
-        "not_checked_in": "run-20261004T105657Z-252ef5c1"
+        "not_checked_in": "run-20261004T115311Z-c318536e"
       },
       "filing": {
         "state": "FIX_CLAIMED",
@@ -18872,7 +18871,7 @@
           "started_at": "2026-10-04T00:40:39+00:00"
         },
         "pinned_fingerprint": "fbdfc4586936cdbd7509f4c490c45e98a1cac047a92be82fef2283e1d62dfc40",
-        "not_checked_in": "run-20261004T105657Z-252ef5c1"
+        "not_checked_in": "run-20261004T115311Z-c318536e"
       },
       "filing": {
         "state": "FIX_CLAIMED",
@@ -19040,7 +19039,7 @@
           "started_at": "2026-10-04T00:40:39+00:00"
         },
         "pinned_fingerprint": "c78808ef1137f82d89f8a7adab87fe7ecd973d11d4772a3238ac149a3884dff3",
-        "not_checked_in": "run-20261004T105657Z-252ef5c1"
+        "not_checked_in": "run-20261004T115311Z-c318536e"
       },
       "filing": {
         "state": "FIX_CLAIMED",
@@ -19167,7 +19166,7 @@
           "started_at": "2026-10-04T00:40:39+00:00"
         },
         "pinned_fingerprint": "7cc421db3b5318e7d45b5ce590b490e53ab20a2ee2522a69eded19c3d4e7c53d",
-        "not_checked_in": "run-20261004T105657Z-252ef5c1"
+        "not_checked_in": "run-20261004T115311Z-c318536e"
       },
       "filing": {
         "state": "FIX_CLAIMED",
@@ -19337,7 +19336,7 @@
           "started_at": "2026-10-04T00:40:39+00:00"
         },
         "pinned_fingerprint": "9e1db26f74a71b70e18e6ffdec0f85dbc2dfc5c921537a8af6f8603668c75aa6",
-        "not_checked_in": "run-20261004T105657Z-252ef5c1"
+        "not_checked_in": "run-20261004T115311Z-c318536e"
       },
       "filing": {
         "state": "FIX_CLAIMED",
@@ -19484,7 +19483,7 @@
           "started_at": "2026-10-04T05:38:09+00:00"
         },
         "pinned_fingerprint": "cb4c52d8d8735e73ad3d07f1520b42a1566392713c69360b5d357fa976ebdce5",
-        "not_checked_in": "run-20261004T105657Z-252ef5c1"
+        "not_checked_in": "run-20261004T115311Z-c318536e"
       },
       "filing": {
         "state": "FIX_CLAIMED",
@@ -19683,7 +19682,7 @@
           "started_at": "2026-10-04T00:40:39+00:00"
         },
         "pinned_fingerprint": "ef2a36ffbdaaf14b6d435fa10fcfb0dc2d064ad8a8c9422a8aec5b6bc7f3f088",
-        "not_checked_in": "run-20261004T105657Z-252ef5c1"
+        "not_checked_in": "run-20261004T115311Z-c318536e"
       },
       "filing": {
         "state": "NOT_RAISED",
@@ -19803,7 +19802,7 @@
           "started_at": "2026-10-04T00:40:39+00:00"
         },
         "pinned_fingerprint": "264765cf38a540a6ed56c64912b8920c52c7cc8996b5637321ce4815d699cdbf",
-        "not_checked_in": "run-20261004T105657Z-252ef5c1"
+        "not_checked_in": "run-20261004T115311Z-c318536e"
       },
       "filing": {
         "state": "FIX_CLAIMED",
@@ -19965,7 +19964,7 @@
           "started_at": "2026-10-04T00:40:39+00:00"
         },
         "pinned_fingerprint": "ef53a88ecee3b4fe16c8011662d82392fd1637d065175bd02e7b7a5dc269fa9b",
-        "not_checked_in": "run-20261004T105657Z-252ef5c1"
+        "not_checked_in": "run-20261004T115311Z-c318536e"
       },
       "filing": {
         "state": "FIX_CLAIMED",
@@ -20212,7 +20211,7 @@
           "started_at": "2026-10-04T00:40:39+00:00"
         },
         "pinned_fingerprint": "caa58ab86f9b80366e64eebc61963d1a5e58b6c6f2b7e79b32c4ef3d3bb4a6c6",
-        "not_checked_in": "run-20261004T105657Z-252ef5c1"
+        "not_checked_in": "run-20261004T115311Z-c318536e"
       },
       "filing": {
         "state": "FIX_CLAIMED",
@@ -20382,7 +20381,7 @@
           "started_at": "2026-10-04T00:40:39+00:00"
         },
         "pinned_fingerprint": "59a599b3cc8dc8381e062885507b9fb2858ac8896b899c75bb247017e551c8f8",
-        "not_checked_in": "run-20261004T105657Z-252ef5c1"
+        "not_checked_in": "run-20261004T115311Z-c318536e"
       },
       "filing": {
         "state": "FIX_CLAIMED",
@@ -20534,7 +20533,7 @@
             "reason": "all 10 matchup(s) past their window end read finished"
           }
         },
-        "not_checked_in": "run-20261004T105657Z-252ef5c1"
+        "not_checked_in": "run-20261004T115311Z-c318536e"
       },
       "filing": {
         "state": "FIX_CLAIMED",
@@ -20653,7 +20652,7 @@
           "started_at": "2026-10-04T00:40:39+00:00"
         },
         "pinned_fingerprint": "a817099df0d150b132916dfcc89014cad3146293837d748373d87c2657449cfe",
-        "not_checked_in": "run-20261004T105657Z-252ef5c1"
+        "not_checked_in": "run-20261004T115311Z-c318536e"
       },
       "filing": {
         "state": "FIX_CLAIMED",
@@ -20842,7 +20841,7 @@
           "started_at": "2026-10-04T00:40:39+00:00"
         },
         "pinned_fingerprint": "002677ffb08a159c9147c9fe293b79c341b98c60f866f4a28c409ce280b4547f",
-        "not_checked_in": "run-20261004T105657Z-252ef5c1"
+        "not_checked_in": "run-20261004T115311Z-c318536e"
       },
       "filing": {
         "state": "FIX_CLAIMED",
@@ -20990,7 +20989,7 @@
           "started_at": "2026-10-04T00:40:39+00:00"
         },
         "pinned_fingerprint": "b3b401f47b31878ff7ed6b269fd84ad8113650b5f0c22d5c06769ff602f1a360",
-        "not_checked_in": "run-20261004T105657Z-252ef5c1"
+        "not_checked_in": "run-20261004T115311Z-c318536e"
       },
       "filing": {
         "state": "FIX_CLAIMED",
@@ -21139,7 +21138,7 @@
           "started_at": "2026-10-04T00:40:39+00:00"
         },
         "pinned_fingerprint": "989432e74dd13c111290120ec788bbfd5833926ea691cd7a5283a9451abb328f",
-        "not_checked_in": "run-20261004T105657Z-252ef5c1"
+        "not_checked_in": "run-20261004T115311Z-c318536e"
       },
       "filing": {
         "state": "FIX_CLAIMED",
@@ -21272,7 +21271,7 @@
           "started_at": "2026-10-04T00:40:39+00:00"
         },
         "pinned_fingerprint": "9805004f1b66b7da2419f52dc19a821e6ebfaeddb2330aa32c5e9d59169758d8",
-        "not_checked_in": "run-20261004T105657Z-252ef5c1"
+        "not_checked_in": "run-20261004T115311Z-c318536e"
       },
       "filing": {
         "state": "RAISED",
@@ -21662,7 +21661,7 @@
           "started_at": "2026-10-04T00:40:39+00:00"
         },
         "pinned_fingerprint": "fe24b0842d4e87f0c1b8a90db93f76699ceafa800c410798d7e872357dd92cb3",
-        "not_checked_in": "run-20261004T105657Z-252ef5c1"
+        "not_checked_in": "run-20261004T115311Z-c318536e"
       },
       "filing": {
         "state": "RAISED",
@@ -21821,7 +21820,7 @@
           "started_at": "2026-10-04T00:40:39+00:00"
         },
         "pinned_fingerprint": "8ba2de0de4ae253d16ed93fe5419064d6199a69549b87dcb4647ccb1cfb98480",
-        "not_checked_in": "run-20261004T105657Z-252ef5c1"
+        "not_checked_in": "run-20261004T115311Z-c318536e"
       },
       "filing": {
         "state": "RAISED",
@@ -21951,7 +21950,7 @@
           "started_at": "2026-10-04T00:40:39+00:00"
         },
         "pinned_fingerprint": "88adffcb096a9d42e2d886e193a04ed087f8ad755fbbc615ac34b863d64b3631",
-        "not_checked_in": "run-20261004T105657Z-252ef5c1"
+        "not_checked_in": "run-20261004T115311Z-c318536e"
       },
       "filing": {
         "state": "RAISED",
@@ -22074,7 +22073,7 @@
           "started_at": "2026-10-04T00:40:39+00:00"
         },
         "pinned_fingerprint": "a38a692117a99c13b67941ae2d63a27d29de5a5c2491afdd869e458593bba17b",
-        "not_checked_in": "run-20261004T105657Z-252ef5c1"
+        "not_checked_in": "run-20261004T115311Z-c318536e"
       },
       "filing": {
         "state": "RAISED",
@@ -22215,7 +22214,7 @@
           "started_at": "2026-10-04T00:40:39+00:00"
         },
         "pinned_fingerprint": "c0dccc4780cf197b09296e62e8bc4d890da6d793dc59d91312d0c4717e626872",
-        "not_checked_in": "run-20261004T105657Z-252ef5c1"
+        "not_checked_in": "run-20261004T115311Z-c318536e"
       },
       "filing": {
         "state": "RAISED",
@@ -22367,7 +22366,7 @@
           "started_at": "2026-10-04T00:40:39+00:00"
         },
         "pinned_fingerprint": "484637b2e9febf0151c4db002321b846c5fea5d77502cce8746cfbb2d72ff85b",
-        "not_checked_in": "run-20261004T105657Z-252ef5c1"
+        "not_checked_in": "run-20261004T115311Z-c318536e"
       },
       "filing": {
         "state": "RAISED",
@@ -22499,21 +22498,28 @@
           "run_id": "run-20261002T221708Z-2bc44177"
         }
       },
-      "reproductions": 5,
+      "reproductions": 6,
       "check": {
         "state": "REPRODUCING",
         "adjudicated_by": {
-          "run_id": "run-20261004T053743Z-f46fe83d",
-          "at": "2026-10-04T05:58:13+00:00",
-          "started_at": "2026-10-04T05:38:09+00:00"
+          "run_id": "run-20261004T115311Z-c318536e",
+          "at": "2026-10-04T12:01:28+00:00",
+          "started_at": "2026-10-04T11:53:21+00:00"
         },
-        "pinned_fingerprint": "6473a198ffc5d356cfe696773d4cd4523cab5716305c100c2765673be1b57b90",
-        "not_checked_in": "run-20261004T105657Z-252ef5c1"
+        "pinned_fingerprint": "6473a198ffc5d356cfe696773d4cd4523cab5716305c100c2765673be1b57b90"
       },
       "filing": {
-        "state": "NOT_RAISED",
-        "adjudicated_by": null,
-        "reports": [],
+        "state": "RAISED",
+        "adjudicated_by": {
+          "event_id": "86c55439ea07f64ed7c97e4c1f37e314669fa74fd7e8b179a84760bf234607a5",
+          "at": "2026-10-04T12:02:28+00:00"
+        },
+        "reports": [
+          {
+            "report_id": 166,
+            "status": "pending"
+          }
+        ],
         "refused": [],
         "verifications": []
       },
@@ -22544,6 +22550,15 @@
             "run_id": "run-20261003T183122Z-7d4a8ca0"
           },
           "at": "2026-10-03T19:01:59+00:00"
+        },
+        {
+          "axis": "filing",
+          "from": "NOT_RAISED",
+          "to": "RAISED",
+          "cause": {
+            "event_id": "86c55439ea07f64ed7c97e4c1f37e314669fa74fd7e8b179a84760bf234607a5"
+          },
+          "at": "2026-10-04T12:02:28+00:00"
         }
       ],
       "regressions": [
@@ -22561,7 +22576,8 @@
         "run-20261003T183122Z-7d4a8ca0",
         "run-20261004T004014Z-7939eab7",
         "run-20261004T041620Z-42629849",
-        "run-20261004T053743Z-f46fe83d"
+        "run-20261004T053743Z-f46fe83d",
+        "run-20261004T115311Z-c318536e"
       ],
       "component": "rest.gem_screener",
       "section": "gem_screener",
@@ -22592,7 +22608,7 @@
             {
               "name": "ps",
               "checked": 211,
-              "max_dev": 0.0208
+              "max_dev": 0.01511
             },
             {
               "name": "market cap",
@@ -22637,8 +22653,8 @@
         "tests/rest/test_gem_screener_picks_and_formulas_are_self_consistent.py::test_every_derived_figure_follows_its_published_definition"
       ],
       "provenance": {
-        "run_id": "run-20261004T053743Z-f46fe83d",
-        "measured_at": "2026-10-04T05:58:13+00:00"
+        "run_id": "run-20261004T115311Z-c318536e",
+        "measured_at": "2026-10-04T12:01:28+00:00"
       },
       "obligations": {
         "reverify": false,
@@ -22667,7 +22683,7 @@
           "started_at": "2026-10-04T05:01:43+00:00"
         },
         "pinned_fingerprint": "f373c16833d7a39e3bebf7ea59b3442dcc7ff51f2815f2b320ccf4132ac48796",
-        "not_checked_in": "run-20261004T105657Z-252ef5c1"
+        "not_checked_in": "run-20261004T115311Z-c318536e"
       },
       "filing": {
         "state": "NOT_RAISED",
@@ -22770,7 +22786,7 @@
           "started_at": "2026-10-04T00:40:39+00:00"
         },
         "pinned_fingerprint": "8fe66dcda83fbe5b0d3115552adb7ddfc8a2b538aaf5b7fad4f63e4ba84eb570",
-        "not_checked_in": "run-20261004T105657Z-252ef5c1"
+        "not_checked_in": "run-20261004T115311Z-c318536e"
       },
       "filing": {
         "state": "FIX_CLAIMED",
@@ -22927,7 +22943,7 @@
           "started_at": "2026-10-04T00:40:39+00:00"
         },
         "pinned_fingerprint": "6cd8bc23f9c45b97838b49a95904bd034bcc7cc4b3abdc6d193147d0367b3ef7",
-        "not_checked_in": "run-20261004T105657Z-252ef5c1"
+        "not_checked_in": "run-20261004T115311Z-c318536e"
       },
       "filing": {
         "state": "FIX_CLAIMED",
@@ -23107,7 +23123,7 @@
           "started_at": "2026-10-04T00:40:39+00:00"
         },
         "pinned_fingerprint": "f14256e3390d635b87ea9fe52f8cb67b8668e6a46d4225f3912f274860ef6225",
-        "not_checked_in": "run-20261004T105657Z-252ef5c1"
+        "not_checked_in": "run-20261004T115311Z-c318536e"
       },
       "filing": {
         "state": "FIX_CLAIMED",
@@ -23232,21 +23248,28 @@
           "run_id": "run-20261003T183122Z-7d4a8ca0"
         }
       },
-      "reproductions": 4,
+      "reproductions": 5,
       "check": {
         "state": "REPRODUCING",
         "adjudicated_by": {
-          "run_id": "run-20261004T053743Z-f46fe83d",
-          "at": "2026-10-04T05:58:13+00:00",
-          "started_at": "2026-10-04T05:38:09+00:00"
+          "run_id": "run-20261004T115311Z-c318536e",
+          "at": "2026-10-04T12:01:28+00:00",
+          "started_at": "2026-10-04T11:53:21+00:00"
         },
-        "pinned_fingerprint": "9452c7ef104ee9f4d3e67ea25dcf97440ed5f8bd1e5dc57f14a16991d064ba73",
-        "not_checked_in": "run-20261004T105657Z-252ef5c1"
+        "pinned_fingerprint": "9452c7ef104ee9f4d3e67ea25dcf97440ed5f8bd1e5dc57f14a16991d064ba73"
       },
       "filing": {
-        "state": "NOT_RAISED",
-        "adjudicated_by": null,
-        "reports": [],
+        "state": "RAISED",
+        "adjudicated_by": {
+          "event_id": "86c55439ea07f64ed7c97e4c1f37e314669fa74fd7e8b179a84760bf234607a5",
+          "at": "2026-10-04T12:02:28+00:00"
+        },
+        "reports": [
+          {
+            "report_id": 166,
+            "status": "pending"
+          }
+        ],
         "refused": [],
         "verifications": []
       },
@@ -23259,6 +23282,15 @@
             "run_id": "run-20261003T183122Z-7d4a8ca0"
           },
           "at": "2026-10-03T19:01:59+00:00"
+        },
+        {
+          "axis": "filing",
+          "from": "NOT_RAISED",
+          "to": "RAISED",
+          "cause": {
+            "event_id": "86c55439ea07f64ed7c97e4c1f37e314669fa74fd7e8b179a84760bf234607a5"
+          },
+          "at": "2026-10-04T12:02:28+00:00"
         }
       ],
       "regressions": [],
@@ -23268,7 +23300,8 @@
         "run-20261003T183122Z-7d4a8ca0",
         "run-20261004T004014Z-7939eab7",
         "run-20261004T041620Z-42629849",
-        "run-20261004T053743Z-f46fe83d"
+        "run-20261004T053743Z-f46fe83d",
+        "run-20261004T115311Z-c318536e"
       ],
       "component": "rest.gem_screener",
       "section": "gem_screener",
@@ -23277,7 +23310,7 @@
       "detail": {
         "left": {
           "rows": 211,
-          "snapshot": 1791081467
+          "snapshot": 1791103653
         },
         "right": {
           "source": "CoinGecko /coins/markets"
@@ -23289,77 +23322,77 @@
         "population": {
           "supply_worst": [
             {
-              "row": "ABX(parent#aborean-finance)",
-              "page": 332190052.8147391,
-              "source": 329886378.7816018,
-              "dev": 0.007
-            },
-            {
-              "row": "OPN(leaf#6926)",
-              "page": 181734276.26,
-              "source": 182724750.26,
-              "dev": 0.0054
+              "row": "BLACK(parent#blackhole)",
+              "page": 291723308.3469653,
+              "source": 289387299.9599621,
+              "dev": 0.0081
             },
             {
               "row": "GIGA(parent#giga)",
               "page": 56708221.29732764,
-              "source": 56864663.47320497,
-              "dev": 0.0028
+              "source": 56936263.73037243,
+              "dev": 0.004
+            },
+            {
+              "row": "ABX(parent#aborean-finance)",
+              "page": 332190052.8147391,
+              "source": 330989987.31176317,
+              "dev": 0.0036
+            },
+            {
+              "row": "HYBR(parent#hybra)",
+              "page": 247095543.0145712,
+              "source": 246477850.20308542,
+              "dev": 0.0025
             },
             {
               "row": "EDGE(leaf#4257)",
               "page": 269904808.0710356,
               "source": 270520745.5710356,
               "dev": 0.0023
-            },
-            {
-              "row": "OGN(parent#origin-defi)",
-              "page": 689906414.0,
-              "source": 691206509.0,
-              "dev": 0.0019
             }
           ],
           "price_worst": [
             {
-              "row": "SD(leaf#1044)",
-              "page": 0.134897,
-              "source": 0.120232,
-              "dev": 0.122
-            },
-            {
-              "row": "GAIB(leaf#6535)",
-              "page": 0.022502685767610338,
-              "source": 0.02020504,
-              "dev": 0.1137
+              "row": "FLY(leaf#4457)",
+              "page": 0.00576187581762622,
+              "source": 0.00519942,
+              "dev": 0.1082
             },
             {
               "row": "ORE(leaf#6893)",
-              "page": 117.6,
-              "source": 130.76,
-              "dev": 0.1006
+              "page": 130.63,
+              "source": 119.97,
+              "dev": 0.0889
             },
             {
-              "row": "AXS(leaf#6102)",
-              "page": 1.2385284195382842,
-              "source": 1.37,
-              "dev": 0.096
+              "row": "BTW(leaf#7539)",
+              "page": 1.0759941362685326,
+              "source": 1.16,
+              "dev": 0.0724
             },
             {
-              "row": "DEXT(leaf#5006)",
-              "page": 0.10089605159872728,
-              "source": 0.093214,
-              "dev": 0.0824
+              "row": "FUN(leaf#6625)",
+              "page": 0.020836801522036607,
+              "source": 0.01965447,
+              "dev": 0.0602
+            },
+            {
+              "row": "FWA(parent#fake-world-assets)",
+              "page": 0.013472306193785453,
+              "source": 0.01287255,
+              "dev": 0.0466
             }
           ]
         },
-        "reason": "market cap = price x supply: 1 of 211 rows are not their own price x supply within 2 %: QI; supply: median 0.0%, p90 0.0%, 0 of 211 rows off by more than 25%; price: median 0.6%, p90 2.7%, 0 of 211 rows off by more than 30%; benchmark market cap: 0.3% from CoinGecko"
+        "reason": "market cap = price x supply: 1 of 211 rows are not their own price x supply within 2 %: QI; supply: median 0.0%, p90 0.0%, 0 of 211 rows off by more than 25%; price: median 0.7%, p90 2.5%, 0 of 211 rows off by more than 30%; benchmark market cap: 0.4% from CoinGecko"
       },
       "checks": [
         "tests/rest/test_gem_screener_numbers_match_their_sources.py::test_the_market_caps_rest_on_the_supply_and_price_coingecko_reports"
       ],
       "provenance": {
-        "run_id": "run-20261004T053743Z-f46fe83d",
-        "measured_at": "2026-10-04T05:58:13+00:00"
+        "run_id": "run-20261004T115311Z-c318536e",
+        "measured_at": "2026-10-04T12:01:28+00:00"
       },
       "obligations": {
         "reverify": false,
@@ -23388,7 +23421,28 @@
           "started_at": "2026-10-04T07:34:35+00:00"
         },
         "pinned_fingerprint": "021472e56c2f32eafd405965fe7ca96ab22b72076471a1b63ac23f7363262c79",
-        "not_checked_in": "run-20261004T105657Z-252ef5c1"
+        "last_exploratory_pass": {
+          "run_id": "run-20261004T115311Z-c318536e",
+          "at": "2026-10-04T12:01:28+00:00",
+          "detail": {
+            "left": {
+              "caption": "Click a bubble for the sector.",
+              "first_click_on_a_bubble": "held to touch, or not promised"
+            },
+            "right": {
+              "caption": "says what one click does",
+              "first_click_on_a_bubble": "opens the sector where hover already shows the card"
+            },
+            "sources": {
+              "page": "/gem-screener/app?view=sectors"
+            },
+            "population": {
+              "caption": "Click a bubble for the sector.",
+              "first_click_listener": "document.addEventListener('click', function(ev){\n  var el = ev.target.closest && ev.target.closest('.thcard.cardtip, #themeScatter g.pt');\n  if (!el || tipHostOf(ev.target)) return;\n  var inner = ev.target.closest('.info-btn, a[href], button, .ckt, .caticon, .cardi');\n  if (inner && inner !== el && el.contains(inner)) return;\n  if (popoverOwner === el) { closePopover(); return; }\n  /* ET-29257: a hovering device already shows the card, so one click opens the detail */\n  if (hoverDevice() && ev.pointerType !== 'touch' && ev.pointerType !== 'pen') return;\n  ev.stopPropagation(); ev.preventDefault();\n  pinHost(el);\n}, true);"
+            },
+            "reason": "the first-click card is held to touch: \"Click a bubble for the sector.\""
+          }
+        }
       },
       "filing": {
         "state": "FIX_CLAIMED",
@@ -23497,18 +23551,114 @@
           "started_at": "2026-10-04T08:27:33+00:00"
         },
         "pinned_fingerprint": "03bafa06b3f4073807802972c2851d6184be0fb31c896347df1402bcd9cb65e9",
-        "not_checked_in": "run-20261004T105657Z-252ef5c1"
+        "last_exploratory_pass": {
+          "run_id": "run-20261004T115311Z-c318536e",
+          "at": "2026-10-04T12:01:28+00:00",
+          "detail": {
+            "left": {
+              "calls_before_their_candle_closed": 0
+            },
+            "right": {
+              "calls_before_their_candle_closed": 0
+            },
+            "sources": {
+              "ledger": "/api/v1/chart-analyzer/calls?limit=1000",
+              "context": "/api/v1/chart-analyzer/analyze?symbol=<pair>&timeframe=1M&include_candles=true&closed_only=true"
+            },
+            "population": {
+              "bad": [],
+              "unread": [],
+              "judged": 15,
+              "context": {},
+              "summary": {
+                "recorded": 15,
+                "open": 15,
+                "scored": 0,
+                "withdrawn": 5,
+                "by_verdict": {
+                  "READY TO POP": {
+                    "calls": 2,
+                    "scored": 0,
+                    "hits": 0,
+                    "rate": null,
+                    "ci95": null,
+                    "said_on_average": null,
+                    "base_rate": null,
+                    "reading": "Too few scored calls to read yet."
+                  },
+                  "READY TO DUMP": {
+                    "calls": 13,
+                    "scored": 0,
+                    "hits": 0,
+                    "rate": null,
+                    "ci95": null,
+                    "said_on_average": null,
+                    "base_rate": null,
+                    "reading": "Too few scored calls to read yet."
+                  }
+                },
+                "by_timeframe": {
+                  "1h": {
+                    "calls": 14,
+                    "scored": 0,
+                    "hits": 0,
+                    "rate": null
+                  },
+                  "4h": {
+                    "calls": 0,
+                    "scored": 0,
+                    "hits": 0,
+                    "rate": null
+                  },
+                  "1d": {
+                    "calls": 1,
+                    "scored": 0,
+                    "hits": 0,
+                    "rate": null
+                  },
+                  "5d": {
+                    "calls": 0,
+                    "scored": 0,
+                    "hits": 0,
+                    "rate": null
+                  },
+                  "1w": {
+                    "calls": 0,
+                    "scored": 0,
+                    "hits": 0,
+                    "rate": null
+                  },
+                  "2w": {
+                    "calls": 0,
+                    "scored": 0,
+                    "hits": 0,
+                    "rate": null
+                  },
+                  "1M": {
+                    "calls": 0,
+                    "scored": 0,
+                    "hits": 0,
+                    "rate": null
+                  }
+                }
+              },
+              "rule": "A call is recorded once per chart, timeframe and closed candle when the verdict is READY TO POP or READY TO DUMP, with the probability shown. It is scored against the same target as the study: the close rises up_pct% before it falls down_pct% within window candles (first barrier on closes). NO EDGE verdicts are not calls and are not recorded. Only exchange charts (ticker input) are recorded: a DEX-pool coin gets no verdict. A candle counts as closed by the clock (1M on the 1st of the next month); a row found to have been written on a candle that had not closed, or on an asset that gets no verdict, is withdrawn with its reason and counts in no record."
+            },
+            "reason": "all 15 open or scored calls were recorded after their candle closed"
+          }
+        }
       },
       "filing": {
-        "state": "RAISED",
+        "state": "FIX_CLAIMED",
         "adjudicated_by": {
-          "event_id": "3974434f028dbf65ad582e2f744498ff7d7dbde7e7ebf80ea71d885143ad6dbf",
-          "at": "2026-10-04T08:39:42+00:00"
+          "event_id": "c53aef0b70f369984d4a7f658b23addef9bf3b524a3795aaa15f6a851c2b26c1",
+          "at": "2026-10-04T11:15:11+00:00"
         },
         "reports": [
           {
             "report_id": 153,
-            "status": "pending"
+            "status": "paid",
+            "status_at": "2026-10-04T11:15:11+00:00"
           }
         ],
         "refused": [],
@@ -23532,6 +23682,15 @@
             "event_id": "3974434f028dbf65ad582e2f744498ff7d7dbde7e7ebf80ea71d885143ad6dbf"
           },
           "at": "2026-10-04T08:39:42+00:00"
+        },
+        {
+          "axis": "filing",
+          "from": "RAISED",
+          "to": "FIX_CLAIMED",
+          "cause": {
+            "event_id": "c53aef0b70f369984d4a7f658b23addef9bf3b524a3795aaa15f6a851c2b26c1"
+          },
+          "at": "2026-10-04T11:15:11+00:00"
         }
       ],
       "regressions": [],
@@ -23664,7 +23823,7 @@
         "measured_at": "2026-10-04T08:33:29+00:00"
       },
       "obligations": {
-        "reverify": false,
+        "reverify": true,
         "repair_check": false,
         "reopen": [],
         "retractions": [],
@@ -23690,18 +23849,105 @@
           "started_at": "2026-10-04T08:27:33+00:00"
         },
         "pinned_fingerprint": "c8d15106dc0db00924683e1a8f44533e80941311cf9ea2bbe8c119946f8d8f07",
-        "not_checked_in": "run-20261004T105657Z-252ef5c1"
+        "last_exploratory_pass": {
+          "run_id": "run-20261004T115311Z-c318536e",
+          "at": "2026-10-04T12:01:28+00:00",
+          "detail": {
+            "left": {
+              "dex_answer_labelled": "NO EDGE"
+            },
+            "right": {
+              "dex_answer_labelled": "NO EDGE"
+            },
+            "sources": {
+              "promise": "/llms.txt (## Chart Analyzer)",
+              "coins": "/api/v1/chart-analyzer/batch/gem-screener?timeframe=1d",
+              "answer": "/api/v1/chart-analyzer/analyze?contract=&chain=&timeframe=1h&closed_only=true",
+              "ledger": "/api/v1/chart-analyzer/calls?limit=1000"
+            },
+            "population": {
+              "judged": {
+                "symbol": "SKY",
+                "contract": "0x56072c95faa701256059aa122697b133aded9279",
+                "chain": "ethereum",
+                "timeframe": "1h",
+                "as_of": "2026-10-04T11:58:40.457122+00:00",
+                "last_candle": 1791108000,
+                "label": "NO EDGE",
+                "rule_label": "READY TO POP",
+                "probability": null,
+                "base_rate": null,
+                "cases": null,
+                "coverage_note": "This asset's candles were not in the study (it measured exchange candles; these come from a DEX pool), so no verdict is given for it. The table's figures under up / down are the study's, not this asset's own.",
+                "source": "DEX pool candles (GeckoTerminal public API), chosen by contract address",
+                "candidate": "both"
+              },
+              "readable": [
+                {
+                  "symbol": "SKY",
+                  "contract": "0x56072c95faa701256059aa122697b133aded9279",
+                  "chain": "ethereum",
+                  "timeframe": "1h",
+                  "as_of": "2026-10-04T11:58:40.457122+00:00",
+                  "last_candle": 1791108000,
+                  "label": "NO EDGE",
+                  "rule_label": "READY TO POP",
+                  "probability": null,
+                  "base_rate": null,
+                  "cases": null,
+                  "coverage_note": "This asset's candles were not in the study (it measured exchange candles; these come from a DEX pool), so no verdict is given for it. The table's figures under up / down are the study's, not this asset's own.",
+                  "source": "DEX pool candles (GeckoTerminal public API), chosen by contract address",
+                  "candidate": "both"
+                }
+              ],
+              "unread": [],
+              "promise": "a DEX-pool coin gets the drawings and setups but no verdict (`coverage_note`).",
+              "ledger_contract_calls": [
+                {
+                  "who": "contract:polygon:0xc3c7d422809852031b44ab29eec9f1eff2a58756",
+                  "timeframe": "1h",
+                  "made_at": "2026-10-04T08:15:32+00:00",
+                  "verdict": "READY TO DUMP",
+                  "probability": 0.435
+                },
+                {
+                  "who": "contract:bsc:0xb3ed0a426155b79b898849803e3b36552f7ed507",
+                  "timeframe": "1h",
+                  "made_at": "2026-10-04T07:48:47+00:00",
+                  "verdict": "READY TO DUMP",
+                  "probability": 0.435
+                },
+                {
+                  "who": "contract:bsc:0xcf6bb5389c92bdda8a3747ddb454cb7a64626c63",
+                  "timeframe": "1h",
+                  "made_at": "2026-10-04T07:48:00+00:00",
+                  "verdict": "READY TO DUMP",
+                  "probability": 0.435
+                },
+                {
+                  "who": "contract:ethereum:0x56072c95faa701256059aa122697b133aded9279",
+                  "timeframe": "1h",
+                  "made_at": "2026-10-04T07:45:57+00:00",
+                  "verdict": "READY TO POP",
+                  "probability": 0.4734
+                }
+              ]
+            },
+            "reason": "SKY on ethereum: its figures qualify for both and the answer gives NO EDGE, as llms.txt says"
+          }
+        }
       },
       "filing": {
-        "state": "RAISED",
+        "state": "FIX_CLAIMED",
         "adjudicated_by": {
-          "event_id": "e4f80554de6518d1a518f2fdfd84ccc18cedeb058989f8c9df97253ff440baa3",
-          "at": "2026-10-04T08:40:00+00:00"
+          "event_id": "01a4ebc3d4386459b16a99da2d26305b10d01a6856b6d9a709a69e1c1ad4ee2a",
+          "at": "2026-10-04T11:15:11+00:00"
         },
         "reports": [
           {
             "report_id": 155,
-            "status": "pending"
+            "status": "paid",
+            "status_at": "2026-10-04T11:15:11+00:00"
           }
         ],
         "refused": [],
@@ -23725,6 +23971,15 @@
             "event_id": "e4f80554de6518d1a518f2fdfd84ccc18cedeb058989f8c9df97253ff440baa3"
           },
           "at": "2026-10-04T08:40:00+00:00"
+        },
+        {
+          "axis": "filing",
+          "from": "RAISED",
+          "to": "FIX_CLAIMED",
+          "cause": {
+            "event_id": "01a4ebc3d4386459b16a99da2d26305b10d01a6856b6d9a709a69e1c1ad4ee2a"
+          },
+          "at": "2026-10-04T11:15:11+00:00"
         }
       ],
       "regressions": [],
@@ -23828,7 +24083,7 @@
         "measured_at": "2026-10-04T08:33:29+00:00"
       },
       "obligations": {
-        "reverify": false,
+        "reverify": true,
         "repair_check": false,
         "reopen": [],
         "retractions": [],
@@ -23854,18 +24109,122 @@
           "started_at": "2026-10-04T08:27:33+00:00"
         },
         "pinned_fingerprint": "fd92b78ea823640946eb8de391a3ba64eeb7407e88c48faa35e8bddd244081d1",
-        "not_checked_in": "run-20261004T105657Z-252ef5c1"
+        "last_exploratory_pass": {
+          "run_id": "run-20261004T115311Z-c318536e",
+          "at": "2026-10-04T12:01:28+00:00",
+          "detail": {
+            "left": {
+              "bins_outside": 0,
+              "live_sides_outside": 0
+            },
+            "right": {
+              "bins_outside": 0,
+              "live_sides_outside": 0
+            },
+            "sources": {
+              "study": "/api/v1/chart-analyzer/study/expert",
+              "answers": "/api/v1/chart-analyzer/analyze?symbol=<SOL|BTC|ETH>&timeframe=5d&closed_only=true"
+            },
+            "population": {
+              "outside": [],
+              "bins_judged": 105,
+              "live": [
+                {
+                  "symbol": "SOL",
+                  "timeframe": "5d",
+                  "side": "up",
+                  "calibrated": 0.4307,
+                  "range": [
+                    0.4206,
+                    0.4409
+                  ],
+                  "cases": 477,
+                  "bin": 9,
+                  "label": "NO EDGE"
+                },
+                {
+                  "symbol": "SOL",
+                  "timeframe": "5d",
+                  "side": "down",
+                  "calibrated": 0.5575,
+                  "range": [
+                    0.5473,
+                    0.5677
+                  ],
+                  "cases": 477,
+                  "bin": 10,
+                  "label": "NO EDGE"
+                },
+                {
+                  "symbol": "BTC",
+                  "timeframe": "5d",
+                  "side": "up",
+                  "calibrated": 0.4307,
+                  "range": [
+                    0.4206,
+                    0.4409
+                  ],
+                  "cases": 1166,
+                  "bin": 12,
+                  "label": "NO EDGE"
+                },
+                {
+                  "symbol": "BTC",
+                  "timeframe": "5d",
+                  "side": "down",
+                  "calibrated": 0.5575,
+                  "range": [
+                    0.5473,
+                    0.5677
+                  ],
+                  "cases": 1166,
+                  "bin": 7,
+                  "label": "NO EDGE"
+                },
+                {
+                  "symbol": "ETH",
+                  "timeframe": "5d",
+                  "side": "up",
+                  "calibrated": 0.4307,
+                  "range": [
+                    0.4206,
+                    0.4409
+                  ],
+                  "cases": 855,
+                  "bin": 10,
+                  "label": "NO EDGE"
+                },
+                {
+                  "symbol": "ETH",
+                  "timeframe": "5d",
+                  "side": "down",
+                  "calibrated": 0.5575,
+                  "range": [
+                    0.5473,
+                    0.5677
+                  ],
+                  "cases": 855,
+                  "bin": 9,
+                  "label": "NO EDGE"
+                }
+              ],
+              "unread": []
+            },
+            "reason": "all 105 usable bins and 6 live sides give a probability inside its range"
+          }
+        }
       },
       "filing": {
-        "state": "RAISED",
+        "state": "FIX_CLAIMED",
         "adjudicated_by": {
-          "event_id": "3f7deed4d7f7e9c65b33e05ab8b6fd1bbce8747cc1501e7e1133561b9f4e8a9c",
-          "at": "2026-10-04T08:39:50+00:00"
+          "event_id": "d77a2a92cbbc8a8c04daab09a9e880f7771db012b6776d751bfeb032c951e499",
+          "at": "2026-10-04T11:15:11+00:00"
         },
         "reports": [
           {
             "report_id": 154,
-            "status": "pending"
+            "status": "paid",
+            "status_at": "2026-10-04T11:15:11+00:00"
           }
         ],
         "refused": [],
@@ -23889,6 +24248,15 @@
             "event_id": "3f7deed4d7f7e9c65b33e05ab8b6fd1bbce8747cc1501e7e1133561b9f4e8a9c"
           },
           "at": "2026-10-04T08:39:50+00:00"
+        },
+        {
+          "axis": "filing",
+          "from": "RAISED",
+          "to": "FIX_CLAIMED",
+          "cause": {
+            "event_id": "d77a2a92cbbc8a8c04daab09a9e880f7771db012b6776d751bfeb032c951e499"
+          },
+          "at": "2026-10-04T11:15:11+00:00"
         }
       ],
       "regressions": [],
@@ -24310,7 +24678,7 @@
         "measured_at": "2026-10-04T08:33:29+00:00"
       },
       "obligations": {
-        "reverify": false,
+        "reverify": true,
         "repair_check": false,
         "reopen": [],
         "retractions": [],
@@ -24336,18 +24704,179 @@
           "started_at": "2026-10-04T08:27:33+00:00"
         },
         "pinned_fingerprint": "e555122969945061a5c3dbc7b8ae98a5f49f16f5a9589cbb3ffd278c92470f40",
-        "not_checked_in": "run-20261004T105657Z-252ef5c1"
+        "last_exploratory_pass": {
+          "run_id": "run-20261004T115311Z-c318536e",
+          "at": "2026-10-04T12:01:28+00:00",
+          "detail": {
+            "left": {
+              "/api/v1/chart-analyzer/analyze": [],
+              "/api/v1/chart-analyzer/calls": [],
+              "/api/v1/chart-analyzer/study/expert": []
+            },
+            "right": {
+              "/api/v1/chart-analyzer/analyze": [],
+              "/api/v1/chart-analyzer/calls": [],
+              "/api/v1/chart-analyzer/study/expert": []
+            },
+            "sources": {
+              "schema": "/openapi-public.json",
+              "analyze": "/api/v1/chart-analyzer/analyze?symbol=BTC&timeframe=1M&closed_only=true",
+              "calls": "/api/v1/chart-analyzer/calls?limit=5",
+              "expert": "/api/v1/chart-analyzer/study/expert?timeframe=1d"
+            },
+            "population": {
+              "/api/v1/chart-analyzer/analyze": {
+                "answered": [
+                  "as_of",
+                  "band",
+                  "base_rate",
+                  "calls_url",
+                  "candles_used",
+                  "chart_rate",
+                  "counted_patterns",
+                  "coverage",
+                  "expert_study_url",
+                  "first_candle",
+                  "identity",
+                  "indicators",
+                  "last_candle",
+                  "last_candle_forming",
+                  "midpoint",
+                  "not_advice",
+                  "patterns",
+                  "reading",
+                  "rule",
+                  "scale",
+                  "score",
+                  "setups",
+                  "source",
+                  "structures",
+                  "study_url",
+                  "study_version",
+                  "swings",
+                  "symbol",
+                  "timeframe",
+                  "verdict",
+                  "weekly_signal"
+                ],
+                "missing": [],
+                "mistyped": [],
+                "schema_listed": [
+                  "as_of",
+                  "band",
+                  "base_rate",
+                  "calls_url",
+                  "candles",
+                  "candles_fetched_at",
+                  "candles_stale",
+                  "candles_used",
+                  "chart_rate",
+                  "counted_patterns",
+                  "coverage",
+                  "expert_study_url",
+                  "first_candle",
+                  "forming_note",
+                  "identity",
+                  "indicators",
+                  "last_candle",
+                  "last_candle_forming",
+                  "midpoint",
+                  "not_advice",
+                  "patterns",
+                  "reading",
+                  "rule",
+                  "scale",
+                  "score",
+                  "setups",
+                  "source",
+                  "structures",
+                  "study_url",
+                  "study_version",
+                  "swings",
+                  "symbol",
+                  "timeframe",
+                  "verdict",
+                  "weekly_signal"
+                ],
+                "additionalProperties": false
+              },
+              "/api/v1/chart-analyzer/calls": {
+                "answered": [
+                  "as_of",
+                  "calls",
+                  "not_advice",
+                  "rule",
+                  "summary"
+                ],
+                "missing": [],
+                "mistyped": [],
+                "schema_listed": [
+                  "as_of",
+                  "calls",
+                  "not_advice",
+                  "rule",
+                  "summary"
+                ],
+                "additionalProperties": false
+              },
+              "/api/v1/chart-analyzer/study/expert": {
+                "answered": [
+                  "block",
+                  "combinations_searched",
+                  "data",
+                  "generated_at",
+                  "limits",
+                  "method",
+                  "runtime_s",
+                  "script",
+                  "setup_count",
+                  "setups",
+                  "split",
+                  "targets",
+                  "timeframe",
+                  "verdict_rule",
+                  "version",
+                  "weekly_signal_source"
+                ],
+                "missing": [],
+                "mistyped": [],
+                "schema_listed": [
+                  "block",
+                  "combinations_searched",
+                  "data",
+                  "generated_at",
+                  "limits",
+                  "method",
+                  "runtime_s",
+                  "script",
+                  "setup_count",
+                  "setups",
+                  "split",
+                  "targets",
+                  "timeframe",
+                  "timeframes",
+                  "verdict_rule",
+                  "version",
+                  "weekly_signal_source"
+                ],
+                "additionalProperties": false
+              }
+            },
+            "reason": "every top-level key of /analyze, /calls and /study/expert is listed in its 200 schema"
+          }
+        }
       },
       "filing": {
-        "state": "RAISED",
+        "state": "FIX_CLAIMED",
         "adjudicated_by": {
-          "event_id": "11f0e203d58ad1d3d65d594a52d6b32159dcf8a250b0858cc067e7d5dd10fea1",
-          "at": "2026-10-04T08:39:29+00:00"
+          "event_id": "9797848bdc5ae94708ae8cc2609eba30f628ed3c386001fff0a2a9d4c1cc83d6",
+          "at": "2026-10-04T11:15:11+00:00"
         },
         "reports": [
           {
             "report_id": 152,
-            "status": "pending"
+            "status": "paid",
+            "status_at": "2026-10-04T11:15:11+00:00"
           }
         ],
         "refused": [],
@@ -24371,6 +24900,15 @@
             "event_id": "11f0e203d58ad1d3d65d594a52d6b32159dcf8a250b0858cc067e7d5dd10fea1"
           },
           "at": "2026-10-04T08:39:29+00:00"
+        },
+        {
+          "axis": "filing",
+          "from": "RAISED",
+          "to": "FIX_CLAIMED",
+          "cause": {
+            "event_id": "9797848bdc5ae94708ae8cc2609eba30f628ed3c386001fff0a2a9d4c1cc83d6"
+          },
+          "at": "2026-10-04T11:15:11+00:00"
         }
       ],
       "regressions": [],
@@ -24580,7 +25118,7 @@
         "measured_at": "2026-10-04T08:33:29+00:00"
       },
       "obligations": {
-        "reverify": false,
+        "reverify": true,
         "repair_check": false,
         "reopen": [],
         "retractions": [],
@@ -24597,13 +25135,13 @@
           "run_id": "run-20261004T100022Z-c88f949b"
         }
       },
-      "reproductions": 3,
+      "reproductions": 4,
       "check": {
         "state": "REPRODUCING",
         "adjudicated_by": {
-          "run_id": "run-20261004T105657Z-252ef5c1",
-          "at": "2026-10-04T11:06:54+00:00",
-          "started_at": "2026-10-04T10:57:02+00:00"
+          "run_id": "run-20261004T115311Z-c318536e",
+          "at": "2026-10-04T12:01:28+00:00",
+          "started_at": "2026-10-04T11:53:21+00:00"
         },
         "pinned_fingerprint": "dcb9129f30cb0399cf33fbb03542b4568504b02b93fb08d57df634833945defb"
       },
@@ -24648,7 +25186,8 @@
       "reproduced_in": [
         "run-20261004T100022Z-c88f949b",
         "run-20261004T103618Z-a5d04969",
-        "run-20261004T105657Z-252ef5c1"
+        "run-20261004T105657Z-252ef5c1",
+        "run-20261004T115311Z-c318536e"
       ],
       "component": "rest.gem_screener",
       "section": "gem_screener",
@@ -24672,7 +25211,7 @@
               "slug": "quickswap",
               "checks_row": 0.0,
               "checks_flag": "ok",
-              "supply_card": 0.6755,
+              "supply_card": 0.6756,
               "card_flag": "caution"
             },
             {
@@ -24680,7 +25219,7 @@
               "slug": "velodrome",
               "checks_row": 0.4821,
               "checks_flag": "ok",
-              "supply_card": 0.7776,
+              "supply_card": 0.7775,
               "card_flag": "caution"
             },
             {
@@ -24688,7 +25227,7 @@
               "slug": "fluid",
               "checks_row": 0.0,
               "checks_flag": "ok",
-              "supply_card": 0.533,
+              "supply_card": 0.5338,
               "card_flag": "caution"
             },
             {
@@ -24696,7 +25235,7 @@
               "slug": "morpheusai",
               "checks_row": 1.123,
               "checks_flag": "red",
-              "supply_card": 0.746,
+              "supply_card": 0.885,
               "card_flag": "caution"
             },
             {
@@ -24720,7 +25259,7 @@
               "slug": "shadow-exchange",
               "checks_row": 0.6659,
               "checks_flag": "caution",
-              "supply_card": 1.0897,
+              "supply_card": 1.0892,
               "card_flag": "red"
             },
             {
@@ -24736,16 +25275,16 @@
               "slug": "resupply",
               "checks_row": 0.7002,
               "checks_flag": "caution",
-              "supply_card": 0.403,
-              "card_flag": "ok"
+              "supply_card": 1.0795,
+              "card_flag": "red"
             },
             {
-              "symbol": "ORE",
-              "slug": "ore-protocol",
-              "checks_row": 1.0707,
-              "checks_flag": "red",
-              "supply_card": 0.0018,
-              "card_flag": "ok"
+              "symbol": "BEAN",
+              "slug": "pea",
+              "checks_row": 0.0,
+              "checks_flag": "ok",
+              "supply_card": 9.6191,
+              "card_flag": "red"
             }
           ],
           "judged": 101,
@@ -24755,14 +25294,14 @@
           ],
           "snapshot": "2026-10-04T08:47:33Z"
         },
-        "reason": "10 of 101 apps get two different dilution flags (lines 0.5% and 1.0% a week): the snapshot's figure, which the detail's Checks row reads, and the Supply Analyzer's, which the Supply card reads: QUICK 0.0% (ok) vs 0.6755% (caution); VELO 0.4821% (ok) vs 0.7776% (caution); FLUID 0.0% (ok) vs 0.533% (caution); MOR 1.123% (red) vs 0.746% (caution); HYPE 0.0% (ok) vs 1.0252% (red); ATH 0.9488% (caution) vs 1.0196% (red)"
+        "reason": "10 of 101 apps get two different dilution flags (lines 0.5% and 1.0% a week): the snapshot's figure, which the detail's Checks row reads, and the Supply Analyzer's, which the Supply card reads: QUICK 0.0% (ok) vs 0.6756% (caution); VELO 0.4821% (ok) vs 0.7775% (caution); FLUID 0.0% (ok) vs 0.5338% (caution); MOR 1.123% (red) vs 0.885% (caution); HYPE 0.0% (ok) vs 1.0252% (red); ATH 0.9488% (caution) vs 1.0196% (red)"
       },
       "checks": [
         "tests/rest/test_supply_analyzer_states_what_its_sources_say.py::test_a_coin_carries_one_dilution_flag"
       ],
       "provenance": {
-        "run_id": "run-20261004T105657Z-252ef5c1",
-        "measured_at": "2026-10-04T11:06:54+00:00"
+        "run_id": "run-20261004T115311Z-c318536e",
+        "measured_at": "2026-10-04T12:01:28+00:00"
       },
       "obligations": {
         "reverify": false,
@@ -24782,13 +25321,13 @@
           "run_id": "run-20261004T100022Z-c88f949b"
         }
       },
-      "reproductions": 3,
+      "reproductions": 4,
       "check": {
         "state": "REPRODUCING",
         "adjudicated_by": {
-          "run_id": "run-20261004T105657Z-252ef5c1",
-          "at": "2026-10-04T11:06:54+00:00",
-          "started_at": "2026-10-04T10:57:02+00:00"
+          "run_id": "run-20261004T115311Z-c318536e",
+          "at": "2026-10-04T12:01:28+00:00",
+          "started_at": "2026-10-04T11:53:21+00:00"
         },
         "pinned_fingerprint": "e2b4eb5f876db96b26e7fa73badbad7d0d41625ae86365853f4a3ebaf6440e42"
       },
@@ -24833,7 +25372,8 @@
       "reproduced_in": [
         "run-20261004T100022Z-c88f949b",
         "run-20261004T103618Z-a5d04969",
-        "run-20261004T105657Z-252ef5c1"
+        "run-20261004T105657Z-252ef5c1",
+        "run-20261004T115311Z-c318536e"
       ],
       "component": "rest.gem_screener",
       "section": "gem_screener",
@@ -24908,8 +25448,8 @@
         "tests/rest/test_supply_analyzer_states_what_its_sources_say.py::test_tokens_out_counts_the_max_supply_of_a_coin_still_issuing"
       ],
       "provenance": {
-        "run_id": "run-20261004T105657Z-252ef5c1",
-        "measured_at": "2026-10-04T11:06:54+00:00"
+        "run_id": "run-20261004T115311Z-c318536e",
+        "measured_at": "2026-10-04T12:01:28+00:00"
       },
       "obligations": {
         "reverify": false,
@@ -24931,11 +25471,11 @@
       },
       "reproductions": 3,
       "check": {
-        "state": "REPRODUCING",
+        "state": "INCONCLUSIVE",
         "adjudicated_by": {
-          "run_id": "run-20261004T105657Z-252ef5c1",
-          "at": "2026-10-04T11:06:54+00:00",
-          "started_at": "2026-10-04T10:57:02+00:00"
+          "run_id": "run-20261004T115311Z-c318536e",
+          "at": "2026-10-04T12:01:28+00:00",
+          "started_at": "2026-10-04T11:53:21+00:00"
         },
         "pinned_fingerprint": "0a690b9985c7553ef83f8acf59a72991011c3e8056054d54c991f87b6168f0d7"
       },
@@ -24972,6 +25512,15 @@
             "event_id": "46edd96c8e0917c4baf2c2bdea0e00bf4438309105b7ff1c0aa4cdb450aa9618"
           },
           "at": "2026-10-04T10:13:27+00:00"
+        },
+        {
+          "axis": "check",
+          "from": "REPRODUCING",
+          "to": "INCONCLUSIVE",
+          "cause": {
+            "run_id": "run-20261004T115311Z-c318536e"
+          },
+          "at": "2026-10-04T12:01:28+00:00"
         }
       ],
       "regressions": [],
@@ -25134,12 +25683,12 @@
         "tests/rest/test_supply_analyzer_states_what_its_sources_say.py::test_a_burned_slice_comes_from_a_burn"
       ],
       "provenance": {
-        "run_id": "run-20261004T105657Z-252ef5c1",
-        "measured_at": "2026-10-04T11:06:54+00:00"
+        "run_id": "run-20261004T115311Z-c318536e",
+        "measured_at": "2026-10-04T12:01:28+00:00"
       },
       "obligations": {
         "reverify": false,
-        "repair_check": false,
+        "repair_check": true,
         "reopen": [],
         "retractions": [],
         "verification_owed": [],
@@ -25163,7 +25712,42 @@
           "at": "2026-10-04T11:06:54+00:00",
           "started_at": "2026-10-04T10:57:02+00:00"
         },
-        "pinned_fingerprint": "3166999deb82359731c8d8fe16de78362aa3075640353c16d55d42e54974edba"
+        "pinned_fingerprint": "3166999deb82359731c8d8fe16de78362aa3075640353c16d55d42e54974edba",
+        "last_exploratory_pass": {
+          "run_id": "run-20261004T115311Z-c318536e",
+          "at": "2026-10-04T12:01:28+00:00",
+          "detail": {
+            "left": {
+              "payouts_booked_as_buybacks": 0
+            },
+            "right": {
+              "payouts_booked_as_buybacks": 0
+            },
+            "sources": {
+              "batch": "/api/v1/supply-analyzer/batch/gem-screener",
+              "records": "/api/v1/supply-analyzer/analyze?symbol=<slug>",
+              "methodology": "https://api.llama.fi/summary/fees/{slug}?dataType=dailyHoldersRevenue"
+            },
+            "population": {
+              "payouts": [],
+              "judged": 4,
+              "not_judged": [
+                "LDO (lido): {'Lido': None}",
+                "SWAP (hyperswap): {'HyperSwap V2': 'buyback', 'HyperSwap V3': 'buyback'}",
+                "FWA (fake-world-assets): {'Fake World Assets V1': 'buyback', 'Fake World Assets V2': None}",
+                "PONS (pons): {'Pons V1': 'buyback'}"
+              ],
+              "unread": [],
+              "rows": [
+                "LDO (lido)",
+                "SWAP (hyperswap)",
+                "FWA (fake-world-assets)",
+                "PONS (pons)"
+              ]
+            },
+            "reason": "none of 4 judged records books a payout as a buyback"
+          }
+        }
       },
       "filing": {
         "state": "RAISED",
@@ -25424,7 +26008,47 @@
           "at": "2026-10-04T11:06:54+00:00",
           "started_at": "2026-10-04T10:57:02+00:00"
         },
-        "pinned_fingerprint": "1260485c68b4c69150be8962d6fb7f828cdd26093edb123bed0159e2ccd9b32e"
+        "pinned_fingerprint": "1260485c68b4c69150be8962d6fb7f828cdd26093edb123bed0159e2ccd9b32e",
+        "last_exploratory_pass": {
+          "run_id": "run-20261004T115311Z-c318536e",
+          "at": "2026-10-04T12:01:28+00:00",
+          "detail": {
+            "left": {
+              "contradicted_or_dead": 0
+            },
+            "right": {
+              "contradicted_or_dead": 0
+            },
+            "sources": {
+              "record": "/api/v1/supply-analyzer/analyze?symbol=HYPE",
+              "cited": [
+                "https://hyperliquid.gitbook.io/hyperliquid-docs/hypercore/staking",
+                "https://hyperliquid.gitbook.io/hyperliquid-docs/trading/fees"
+              ]
+            },
+            "population": {
+              "read": [
+                {
+                  "key": "staking_exit",
+                  "url": "https://hyperliquid.gitbook.io/hyperliquid-docs/hypercore/staking",
+                  "status": 200,
+                  "value": 7,
+                  "source": "Hyperliquid docs: Staking"
+                },
+                {
+                  "key": "buyback_disposition",
+                  "url": "https://hyperliquid.gitbook.io/hyperliquid-docs/trading/fees",
+                  "status": 200,
+                  "value": "burned",
+                  "source": "Hyperliquid docs: Fees (the assistance fund)",
+                  "page_says": "burned"
+                }
+              ],
+              "refreshed_at": "2026-10-04T11:36:22+00:00"
+            },
+            "reason": "all 2 cited urls answer and none contradicts what it is credited with"
+          }
+        }
       },
       "filing": {
         "state": "RAISED",
@@ -25550,7 +26174,56 @@
           "at": "2026-10-04T11:06:54+00:00",
           "started_at": "2026-10-04T10:57:02+00:00"
         },
-        "pinned_fingerprint": "109dd20928556e3e109af76428c1c619fa6439546de31389249c3ccb0b4342a5"
+        "pinned_fingerprint": "109dd20928556e3e109af76428c1c619fa6439546de31389249c3ccb0b4342a5",
+        "last_exploratory_pass": {
+          "run_id": "run-20261004T115311Z-c318536e",
+          "at": "2026-10-04T12:01:28+00:00",
+          "detail": {
+            "left": {
+              "links_that_do_not_open": 0
+            },
+            "right": {
+              "links_that_do_not_open": 0
+            },
+            "sources": {
+              "rows": "/api/v1/supply-analyzer/batch/gem-screener",
+              "answer": "/api/v1/supply-analyzer/analyze?symbol=<identifier>&include_months=false"
+            },
+            "population": {
+              "bad": [],
+              "ok": [
+                {
+                  "identifier": "hyperliquid",
+                  "rows": [
+                    "HYPE (hyperliquid)",
+                    "HYPE (hyperliquid-l1)"
+                  ],
+                  "status": 200,
+                  "answer": "hyperliquid"
+                },
+                {
+                  "identifier": "near",
+                  "rows": [
+                    "NEAR (near-protocol)",
+                    "NEAR (near)"
+                  ],
+                  "status": 200,
+                  "answer": "near"
+                },
+                {
+                  "identifier": "sui",
+                  "rows": [
+                    "SUI (sui-foundation)",
+                    "SUI (sui)"
+                  ],
+                  "status": 200,
+                  "answer": "sui"
+                }
+              ]
+            },
+            "reason": "all 3 shared link identifiers open their coin"
+          }
+        }
       },
       "filing": {
         "state": "RAISED",
@@ -25683,7 +26356,31 @@
           "at": "2026-10-04T11:06:54+00:00",
           "started_at": "2026-10-04T10:57:02+00:00"
         },
-        "pinned_fingerprint": "478890a94da093701fdf1b44b5e1f757b1c3e392fa3aa931ccdf652aafb0534e"
+        "pinned_fingerprint": "478890a94da093701fdf1b44b5e1f757b1c3e392fa3aa931ccdf652aafb0534e",
+        "last_exploratory_pass": {
+          "run_id": "run-20261004T115311Z-c318536e",
+          "at": "2026-10-04T12:01:28+00:00",
+          "detail": {
+            "left": {
+              "pile_over_supply": 0
+            },
+            "right": {
+              "pile_over_supply": 0
+            },
+            "sources": {
+              "batch": "/api/v1/supply-analyzer/batch/gem-screener",
+              "snapshot": "/api/v1/gem-screener",
+              "records": "/api/v1/supply-analyzer/analyze?symbol=<slug>"
+            },
+            "population": {
+              "over": [],
+              "judged": 9,
+              "unread": [],
+              "candidates": 9
+            },
+            "reason": "all 9 candidate records keep the pile inside their supply"
+          }
+        }
       },
       "filing": {
         "state": "RAISED",
@@ -25948,13 +26645,13 @@
           "run_id": "run-20261004T100022Z-c88f949b"
         }
       },
-      "reproductions": 3,
+      "reproductions": 4,
       "check": {
         "state": "REPRODUCING",
         "adjudicated_by": {
-          "run_id": "run-20261004T105657Z-252ef5c1",
-          "at": "2026-10-04T11:06:54+00:00",
-          "started_at": "2026-10-04T10:57:02+00:00"
+          "run_id": "run-20261004T115311Z-c318536e",
+          "at": "2026-10-04T12:01:28+00:00",
+          "started_at": "2026-10-04T11:53:21+00:00"
         },
         "pinned_fingerprint": "3fdfdf4e23a798ecb5047447f017c0642b9f188f923c6111ec11ffe2e8513379"
       },
@@ -25999,7 +26696,8 @@
       "reproduced_in": [
         "run-20261004T100022Z-c88f949b",
         "run-20261004T103618Z-a5d04969",
-        "run-20261004T105657Z-252ef5c1"
+        "run-20261004T105657Z-252ef5c1",
+        "run-20261004T115311Z-c318536e"
       ],
       "component": "rest.supply_analyzer",
       "section": "supply_analyzer",
@@ -26007,7 +26705,7 @@
       "kind": "check_failure",
       "detail": {
         "left": {
-          "ranges_with_another_typical": 174
+          "ranges_with_another_typical": 30
         },
         "right": {
           "ranges_with_another_typical": 0
@@ -26021,1408 +26719,256 @@
             {
               "symbol": "SKY",
               "range": [
-                -2.95,
-                2.05
+                -2.81,
+                15.12
               ],
-              "used": 5.0
-            },
-            {
-              "symbol": "LDO",
-              "range": [
-                -6.64,
-                -1.64
-              ],
-              "used": 5.0
-            },
-            {
-              "symbol": "COMP",
-              "range": [
-                0.0,
-                5.0
-              ],
-              "used": 5.0
-            },
-            {
-              "symbol": "AAVE",
-              "range": [
-                0.42,
-                5.42
-              ],
-              "used": 5.0
-            },
-            {
-              "symbol": "RAY",
-              "range": [
-                -3.02,
-                1.98
-              ],
-              "used": 5.0
-            },
-            {
-              "symbol": "NXM",
-              "range": [
-                -0.55,
-                4.45
-              ],
-              "used": 5.0
-            },
-            {
-              "symbol": "DHT",
-              "range": [
-                0.0,
-                5.0
-              ],
-              "used": 5.0
-            },
-            {
-              "symbol": "INDEX",
-              "range": [
-                0.0,
-                5.0
-              ],
-              "used": 5.0
-            },
-            {
-              "symbol": "SWISE",
-              "range": [
-                16.71,
-                21.71
-              ],
-              "used": 5.0
-            },
-            {
-              "symbol": "YFI",
-              "range": [
-                -0.44,
-                4.56
-              ],
-              "used": 5.0
-            },
-            {
-              "symbol": "XVS",
-              "range": [
-                -6.01,
-                -1.01
-              ],
-              "used": 5.0
+              "used": 17.93
             },
             {
               "symbol": "ORCA",
               "range": [
-                -5.74,
-                -0.74
+                -5.62,
+                15.12
               ],
-              "used": 5.0
-            },
-            {
-              "symbol": "PENDLE",
-              "range": [
-                -0.55,
-                4.45
-              ],
-              "used": 5.0
-            },
-            {
-              "symbol": "OHM",
-              "range": [
-                0.0,
-                5.0
-              ],
-              "used": 5.0
-            },
-            {
-              "symbol": "CVX",
-              "range": [
-                -2.44,
-                2.56
-              ],
-              "used": 5.0
-            },
-            {
-              "symbol": "CRV",
-              "range": [
-                -1.47,
-                3.53
-              ],
-              "used": 5.0
+              "used": 20.74
             },
             {
               "symbol": "QUICK",
               "range": [
-                15.76,
-                20.76
+                15.54,
+                50.35
               ],
-              "used": 5.0
-            },
-            {
-              "symbol": "CAKE",
-              "range": [
-                -4.79,
-                0.21
-              ],
-              "used": 5.0
-            },
-            {
-              "symbol": "MLN",
-              "range": [
-                0.0,
-                5.0
-              ],
-              "used": 5.0
+              "used": 34.81
             },
             {
               "symbol": "RUNE",
               "range": [
-                -0.25,
-                4.75
+                -0.24,
+                15.1
               ],
-              "used": 5.0
-            },
-            {
-              "symbol": "BIFI",
-              "range": [
-                -3.84,
-                1.16
-              ],
-              "used": 5.0
-            },
-            {
-              "symbol": "MNDE",
-              "range": [
-                -18.82,
-                -13.82
-              ],
-              "used": 5.0
-            },
-            {
-              "symbol": "JST",
-              "range": [
-                0.0,
-                5.0
-              ],
-              "used": 5.0
-            },
-            {
-              "symbol": "QI",
-              "range": [
-                0.0,
-                5.0
-              ],
-              "used": 5.0
-            },
-            {
-              "symbol": "OVER",
-              "range": [
-                -7.15,
-                -2.15
-              ],
-              "used": 5.0
-            },
-            {
-              "symbol": "LON",
-              "range": [
-                0.0,
-                5.0
-              ],
-              "used": 5.0
-            },
-            {
-              "symbol": "SYRUP",
-              "range": [
-                -0.59,
-                4.41
-              ],
-              "used": 5.0
+              "used": 15.34
             },
             {
               "symbol": "RSR",
               "range": [
-                -0.45,
-                4.55
+                -0.43,
+                15.1
               ],
-              "used": 5.0
-            },
-            {
-              "symbol": "GNS",
-              "range": [
-                -5.08,
-                -0.08
-              ],
-              "used": 5.0
-            },
-            {
-              "symbol": "SIS",
-              "range": [
-                0.0,
-                5.0
-              ],
-              "used": 5.0
+              "used": 15.53
             },
             {
               "symbol": "RAIL",
               "range": [
-                -0.68,
-                4.32
+                -1.61,
+                15.1
               ],
-              "used": 5.0
-            },
-            {
-              "symbol": "VLR",
-              "range": [
-                -0.81,
-                4.19
-              ],
-              "used": 5.0
-            },
-            {
-              "symbol": "MIN",
-              "range": [
-                -6.7,
-                -1.7
-              ],
-              "used": 5.0
-            },
-            {
-              "symbol": "WELL",
-              "range": [
-                5.28,
-                10.28
-              ],
-              "used": 5.0
-            },
-            {
-              "symbol": "MET",
-              "range": [
-                5.38,
-                10.38
-              ],
-              "used": 5.0
-            },
-            {
-              "symbol": "UNI",
-              "range": [
-                -3.06,
-                7.62
-              ],
-              "used": 10.68
+              "used": 16.71
             },
             {
               "symbol": "JUP",
               "range": [
-                -3.45,
-                1.55
+                -2.31,
+                12.9
               ],
-              "used": 5.0
-            },
-            {
-              "symbol": "KMNO",
-              "range": [
-                47.76,
-                52.76
-              ],
-              "used": 5.0
-            },
-            {
-              "symbol": "LQ",
-              "range": [
-                0.0,
-                5.0
-              ],
-              "used": 5.0
-            },
-            {
-              "symbol": "VVS",
-              "range": [
-                -0.88,
-                4.12
-              ],
-              "used": 5.0
-            },
-            {
-              "symbol": "MET",
-              "range": [
-                -11.89,
-                -6.89
-              ],
-              "used": 5.0
-            },
-            {
-              "symbol": "HAWK",
-              "range": [
-                0.0,
-                5.0
-              ],
-              "used": 5.0
+              "used": 15.21
             },
             {
               "symbol": "INV",
               "range": [
-                -0.4,
-                4.6
+                -0.94,
+                15.1
               ],
-              "used": 5.0
-            },
-            {
-              "symbol": "FRAX",
-              "range": [
-                8.0,
-                13.0
-              ],
-              "used": 5.0
-            },
-            {
-              "symbol": "ENS",
-              "range": [
-                0.0,
-                5.0
-              ],
-              "used": 5.0
-            },
-            {
-              "symbol": "T",
-              "range": [
-                0.0,
-                5.0
-              ],
-              "used": 5.0
-            },
-            {
-              "symbol": "COW",
-              "range": [
-                0.0,
-                5.0
-              ],
-              "used": 5.0
-            },
-            {
-              "symbol": "ETHFI",
-              "range": [
-                5.41,
-                10.41
-              ],
-              "used": 5.0
-            },
-            {
-              "symbol": "SDL",
-              "range": [
-                -2.04,
-                2.96
-              ],
-              "used": 5.0
-            },
-            {
-              "symbol": "FUL",
-              "range": [
-                -7.07,
-                -2.07
-              ],
-              "used": 5.0
+              "used": 16.04
             },
             {
               "symbol": "GRAIL",
               "range": [
-                6.43,
-                11.43
+                13.47,
+                39.91
               ],
-              "used": 5.0
+              "used": 26.44
             },
             {
               "symbol": "EXTRA",
               "range": [
                 -0.26,
-                4.74
+                15.1
               ],
-              "used": 5.0
-            },
-            {
-              "symbol": "OGN",
-              "range": [
-                -1.57,
-                3.43
-              ],
-              "used": 5.0
-            },
-            {
-              "symbol": "SUN",
-              "range": [
-                -0.13,
-                9.58
-              ],
-              "used": 9.71
-            },
-            {
-              "symbol": "RNBW",
-              "range": [
-                0.0,
-                5.0
-              ],
-              "used": 5.0
-            },
-            {
-              "symbol": "SAFE",
-              "range": [
-                0.0,
-                9.71
-              ],
-              "used": 9.71
-            },
-            {
-              "symbol": "GMX",
-              "range": [
-                -2.04,
-                7.67
-              ],
-              "used": 9.71
-            },
-            {
-              "symbol": "FOLKS",
-              "range": [
-                0.0,
-                5.0
-              ],
-              "used": 5.0
-            },
-            {
-              "symbol": "THE",
-              "range": [
-                5.37,
-                10.37
-              ],
-              "used": 5.0
-            },
-            {
-              "symbol": "BAL",
-              "range": [
-                0.01,
-                5.01
-              ],
-              "used": 5.0
-            },
-            {
-              "symbol": "VELO",
-              "range": [
-                31.07,
-                40.78
-              ],
-              "used": 9.71
-            },
-            {
-              "symbol": "AARK",
-              "range": [
-                0.0,
-                10.68
-              ],
-              "used": 10.68
-            },
-            {
-              "symbol": "HDX",
-              "range": [
-                -0.27,
-                10.4
-              ],
-              "used": 10.67
-            },
-            {
-              "symbol": "FLIP",
-              "range": [
-                -13.91,
-                -3.24
-              ],
-              "used": 10.67
-            },
-            {
-              "symbol": "COOK",
-              "range": [
-                0.0,
-                10.68
-              ],
-              "used": 10.68
-            },
-            {
-              "symbol": "EKUBO",
-              "range": [
-                -6.57,
-                4.11
-              ],
-              "used": 10.68
-            },
-            {
-              "symbol": "KERNEL",
-              "range": [
-                0.0,
-                10.68
-              ],
-              "used": 10.68
-            },
-            {
-              "symbol": "ENA",
-              "range": [
-                20.14,
-                30.81
-              ],
-              "used": 10.67
-            },
-            {
-              "symbol": "DRV",
-              "range": [
-                0.0,
-                10.68
-              ],
-              "used": 10.68
-            },
-            {
-              "symbol": "REZ",
-              "range": [
-                11.0,
-                21.68
-              ],
-              "used": 10.68
-            },
-            {
-              "symbol": "PEAS",
-              "range": [
-                0.0,
-                10.68
-              ],
-              "used": 10.68
-            },
-            {
-              "symbol": "LINK",
-              "range": [
-                -0.5,
-                10.17
-              ],
-              "used": 10.67
-            },
-            {
-              "symbol": "AERO",
-              "range": [
-                2.51,
-                13.18
-              ],
-              "used": 10.67
-            },
-            {
-              "symbol": "DYDX",
-              "range": [
-                -0.24,
-                10.43
-              ],
-              "used": 10.67
+              "used": 15.36
             },
             {
               "symbol": "EDGE",
               "range": [
-                -4.42,
-                6.25
+                -4.66,
+                15.1
               ],
-              "used": 10.67
-            },
-            {
-              "symbol": "GEOD",
-              "range": [
-                -2.46,
-                8.22
-              ],
-              "used": 10.68
-            },
-            {
-              "symbol": "BONK",
-              "range": [
-                -18.77,
-                -8.09
-              ],
-              "used": 10.68
-            },
-            {
-              "symbol": "FLUID",
-              "range": [
-                27.88,
-                38.56
-              ],
-              "used": 10.68
-            },
-            {
-              "symbol": "FLY",
-              "range": [
-                0.0,
-                10.68
-              ],
-              "used": 10.68
-            },
-            {
-              "symbol": "SUSHI",
-              "range": [
-                4.83,
-                14.54
-              ],
-              "used": 9.71
-            },
-            {
-              "symbol": "F",
-              "range": [
-                22.23,
-                32.91
-              ],
-              "used": 10.68
-            },
-            {
-              "symbol": "AAA",
-              "range": [
-                -0.07,
-                10.6
-              ],
-              "used": 10.67
-            },
-            {
-              "symbol": "V",
-              "range": [
-                0.0,
-                10.68
-              ],
-              "used": 10.68
-            },
-            {
-              "symbol": "SEND",
-              "range": [
-                17.95,
-                28.63
-              ],
-              "used": 10.68
-            },
-            {
-              "symbol": "ELON",
-              "range": [
-                0.0,
-                10.68
-              ],
-              "used": 10.68
-            },
-            {
-              "symbol": "APEX",
-              "range": [
-                -6.48,
-                4.19
-              ],
-              "used": 10.67
+              "used": 19.76
             },
             {
               "symbol": "ZRO",
               "range": [
                 79.92,
-                90.6
+                95.34
               ],
-              "used": 10.68
+              "used": 15.42
             },
             {
-              "symbol": "SECZ",
+              "symbol": "USUAL",
               "range": [
-                0.0,
-                10.68
+                8.98,
+                15.12
               ],
-              "used": 10.68
-            },
-            {
-              "symbol": "PUMP",
-              "range": [
-                7.44,
-                18.12
-              ],
-              "used": 10.68
-            },
-            {
-              "symbol": "SOLV",
-              "range": [
-                37.12,
-                47.79
-              ],
-              "used": 10.67
-            },
-            {
-              "symbol": "KNC",
-              "range": [
-                0.0,
-                10.68
-              ],
-              "used": 10.68
-            },
-            {
-              "symbol": "MPLX",
-              "range": [
-                -1.36,
-                9.31
-              ],
-              "used": 10.67
-            },
-            {
-              "symbol": "JOULE",
-              "range": [
-                0.0,
-                10.68
-              ],
-              "used": 10.68
-            },
-            {
-              "symbol": "SANC",
-              "range": [
-                24.13,
-                34.81
-              ],
-              "used": 10.68
-            },
-            {
-              "symbol": "AQUA",
-              "range": [
-                -7.58,
-                3.1
-              ],
-              "used": 10.68
-            },
-            {
-              "symbol": "DEXT",
-              "range": [
-                -0.26,
-                10.41
-              ],
-              "used": 10.67
-            },
-            {
-              "symbol": "STG",
-              "range": [
-                0.0,
-                10.68
-              ],
-              "used": 10.68
-            },
-            {
-              "symbol": "HYPE",
-              "range": [
-                24.73,
-                29.73
-              ],
-              "used": 5.0
-            },
-            {
-              "symbol": "LMTS",
-              "range": [
-                832.05,
-                842.73
-              ],
-              "used": 10.68
-            },
-            {
-              "symbol": "BARD",
-              "range": [
-                0.0,
-                10.68
-              ],
-              "used": 10.68
-            },
-            {
-              "symbol": "VIRTUAL",
-              "range": [
-                0.0,
-                10.68
-              ],
-              "used": 10.68
-            },
-            {
-              "symbol": "DRIFT",
-              "range": [
-                24.13,
-                34.8
-              ],
-              "used": 10.67
-            },
-            {
-              "symbol": "DEEP",
-              "range": [
-                59.59,
-                70.26
-              ],
-              "used": 10.67
-            },
-            {
-              "symbol": "SHADOW",
-              "range": [
-                18.06,
-                28.74
-              ],
-              "used": 10.68
-            },
-            {
-              "symbol": "KAIO",
-              "range": [
-                0.0,
-                12.88
-              ],
-              "used": 12.88
-            },
-            {
-              "symbol": "SOSO",
-              "range": [
-                66.75,
-                77.43
-              ],
-              "used": 10.68
-            },
-            {
-              "symbol": "TWT",
-              "range": [
-                0.0,
-                10.68
-              ],
-              "used": 10.68
-            },
-            {
-              "symbol": "EUL",
-              "range": [
-                1.27,
-                14.15
-              ],
-              "used": 12.88
-            },
-            {
-              "symbol": "LQTY",
-              "range": [
-                -0.04,
-                10.63
-              ],
-              "used": 10.67
-            },
-            {
-              "symbol": "HPL",
-              "range": [
-                0.0,
-                12.88
-              ],
-              "used": 12.88
-            },
-            {
-              "symbol": "DRG",
-              "range": [
-                0.0,
-                10.68
-              ],
-              "used": 10.68
-            },
-            {
-              "symbol": "IR",
-              "range": [
-                45.23,
-                58.1
-              ],
-              "used": 12.87
-            },
-            {
-              "symbol": "MSY",
-              "range": [
-                0.0,
-                12.88
-              ],
-              "used": 12.88
-            },
-            {
-              "symbol": "CHIP",
-              "range": [
-                13.56,
-                26.44
-              ],
-              "used": 12.88
-            },
-            {
-              "symbol": "JTO",
-              "range": [
-                25.3,
-                38.18
-              ],
-              "used": 12.88
+              "used": 6.14
             },
             {
               "symbol": "SSV",
               "range": [
-                -8.06,
-                4.82
+                -8.01,
+                15.1
               ],
-              "used": 12.88
-            },
-            {
-              "symbol": "AXS",
-              "range": [
-                3.0,
-                15.88
-              ],
-              "used": 12.88
-            },
-            {
-              "symbol": "STRIKE",
-              "range": [
-                -9.89,
-                2.99
-              ],
-              "used": 12.88
+              "used": 23.11
             },
             {
               "symbol": "TREE",
               "range": [
-                -6.58,
-                6.3
+                -6.57,
+                15.1
               ],
-              "used": 12.88
+              "used": 21.67
             },
             {
               "symbol": "KNTQ",
               "range": [
-                -2.04,
-                10.84
+                -0.19,
+                15.09
               ],
-              "used": 12.88
+              "used": 15.28
             },
             {
               "symbol": "NEAR",
               "range": [
-                -0.37,
-                12.51
+                0.98,
+                16.46
               ],
-              "used": 12.88
-            },
-            {
-              "symbol": "CARDS",
-              "range": [
-                0.0,
-                12.88
-              ],
-              "used": 12.88
-            },
-            {
-              "symbol": "BLACK",
-              "range": [
-                -61.45,
-                -46.9
-              ],
-              "used": 14.55
-            },
-            {
-              "symbol": "GAIB",
-              "range": [
-                28.88,
-                41.75
-              ],
-              "used": 12.87
-            },
-            {
-              "symbol": "KITTEN",
-              "range": [
-                -91.79,
-                -78.91
-              ],
-              "used": 12.88
+              "used": 15.48
             },
             {
               "symbol": "LPT",
               "range": [
                 -0.62,
-                12.26
+                15.1
               ],
-              "used": 12.88
-            },
-            {
-              "symbol": "LIT",
-              "range": [
-                -3.44,
-                9.44
-              ],
-              "used": 12.88
-            },
-            {
-              "symbol": "ABX",
-              "range": [
-                -359.57,
-                -346.69
-              ],
-              "used": 12.88
+              "used": 15.72
             },
             {
               "symbol": "ORE",
               "range": [
-                -52.11,
-                -39.23
+                53.93,
+                116.01
               ],
-              "used": 12.88
+              "used": 62.08
             },
             {
               "symbol": "THOR",
               "range": [
-                -8.53,
-                4.35
+                4.84,
+                39.51
               ],
-              "used": 12.88
+              "used": 34.67
             },
             {
-              "symbol": "UP",
+              "symbol": "DUST",
               "range": [
-                0.0,
-                12.88
+                235.04,
+                324.22
               ],
-              "used": 12.88
-            },
-            {
-              "symbol": "OPN",
-              "range": [
-                7.87,
-                20.75
-              ],
-              "used": 12.88
-            },
-            {
-              "symbol": "LIQD",
-              "range": [
-                0.0,
-                14.55
-              ],
-              "used": 14.55
-            },
-            {
-              "symbol": "LV",
-              "range": [
-                0.0,
-                15.08
-              ],
-              "used": 15.08
-            },
-            {
-              "symbol": "GROYP",
-              "range": [
-                0.0,
-                15.08
-              ],
-              "used": 15.08
-            },
-            {
-              "symbol": "META",
-              "range": [
-                0.0,
-                14.55
-              ],
-              "used": 14.55
-            },
-            {
-              "symbol": "TRIA",
-              "range": [
-                0.0,
-                15.08
-              ],
-              "used": 15.08
+              "used": 89.18
             },
             {
               "symbol": "BEAN",
               "range": [
-                -190.89,
-                -175.81
+                100.87,
+                517.01
               ],
-              "used": 15.08
-            },
-            {
-              "symbol": "WET",
-              "range": [
-                0.0,
-                12.88
-              ],
-              "used": 12.88
+              "used": 416.14
             },
             {
               "symbol": "FOX",
               "range": [
-                -0.98,
-                11.9
+                -2.83,
+                15.1
               ],
-              "used": 12.88
+              "used": 17.93
             },
             {
-              "symbol": "ALPHA",
+              "symbol": "SPRK",
               "range": [
-                0.0,
-                15.08
+                -53.19,
+                -2.0
               ],
-              "used": 15.08
-            },
-            {
-              "symbol": "EMBLEM",
-              "range": [
-                0.0,
-                12.88
-              ],
-              "used": 12.88
-            },
-            {
-              "symbol": "READY",
-              "range": [
-                0.0,
-                15.08
-              ],
-              "used": 15.08
-            },
-            {
-              "symbol": "TITN",
-              "range": [
-                -206.24,
-                -191.16
-              ],
-              "used": 15.08
-            },
-            {
-              "symbol": "EDGE",
-              "range": [
-                -4.29,
-                10.79
-              ],
-              "used": 15.08
-            },
-            {
-              "symbol": "SNX",
-              "range": [
-                1.7,
-                16.78
-              ],
-              "used": 15.08
-            },
-            {
-              "symbol": "TOPAZ",
-              "range": [
-                262.61,
-                277.7
-              ],
-              "used": 15.09
-            },
-            {
-              "symbol": "ALCX",
-              "range": [
-                0.0,
-                15.08
-              ],
-              "used": 15.08
-            },
-            {
-              "symbol": "PTS",
-              "range": [
-                0.0,
-                15.08
-              ],
-              "used": 15.08
-            },
-            {
-              "symbol": "FWA",
-              "range": [
-                -19.8,
-                -4.71
-              ],
-              "used": 15.09
-            },
-            {
-              "symbol": "GIGA",
-              "range": [
-                -597.28,
-                -582.19
-              ],
-              "used": 15.09
+              "used": 51.19
             },
             {
               "symbol": "UP",
               "range": [
-                34.52,
-                49.6
+                262.14,
+                283.5
               ],
-              "used": 15.08
-            },
-            {
-              "symbol": "RIP",
-              "range": [
-                0.0,
-                15.08
-              ],
-              "used": 15.08
+              "used": 21.36
             },
             {
               "symbol": "RUSH",
               "range": [
-                -24.58,
-                -9.5
+                -24.39,
+                15.1
               ],
-              "used": 15.08
-            },
-            {
-              "symbol": "O",
-              "range": [
-                0.0,
-                15.08
-              ],
-              "used": 15.08
-            },
-            {
-              "symbol": "VULT",
-              "range": [
-                0.0,
-                15.08
-              ],
-              "used": 15.08
-            },
-            {
-              "symbol": "PONS",
-              "range": [
-                -72.19,
-                -57.1
-              ],
-              "used": 15.09
-            },
-            {
-              "symbol": "IMU",
-              "range": [
-                0.0,
-                15.08
-              ],
-              "used": 15.08
-            },
-            {
-              "symbol": "RENDER",
-              "range": [
-                -0.28,
-                14.81
-              ],
-              "used": 15.09
-            },
-            {
-              "symbol": "INDEX",
-              "range": [
-                -9.36,
-                5.73
-              ],
-              "used": 15.09
-            },
-            {
-              "symbol": "RAM",
-              "range": [
-                -41.49,
-                -26.4
-              ],
-              "used": 15.09
+              "used": 39.49
             },
             {
               "symbol": "STONKBROKER",
               "range": [
-                -30.21,
-                -15.13
+                -31.38,
+                -4.47
               ],
-              "used": 15.08
-            },
-            {
-              "symbol": "1INCH",
-              "range": [
-                0.0,
-                15.08
-              ],
-              "used": 15.08
-            },
-            {
-              "symbol": "ETH",
-              "range": [
-                -0.02,
-                15.06
-              ],
-              "used": 15.08
-            },
-            {
-              "symbol": "HYPE",
-              "range": [
-                24.73,
-                39.82
-              ],
-              "used": 15.09
-            },
-            {
-              "symbol": "BNB",
-              "range": [
-                -0.03,
-                15.06
-              ],
-              "used": 15.09
+              "used": 26.91
             },
             {
               "symbol": "NEAR",
               "range": [
-                -0.37,
-                14.71
+                0.98,
+                16.46
               ],
-              "used": 15.08
-            },
-            {
-              "symbol": "HBAR",
-              "range": [
-                35.05,
-                50.13
-              ],
-              "used": 15.08
+              "used": 15.48
             },
             {
               "symbol": "ICP",
               "range": [
-                -0.12,
-                14.96
+                1.86,
+                17.08
               ],
-              "used": 15.08
-            },
-            {
-              "symbol": "ALGO",
-              "range": [
-                -0.0,
-                15.08
-              ],
-              "used": 15.08
+              "used": 15.22
             },
             {
               "symbol": "XPL",
               "range": [
                 60.24,
-                75.32
+                75.4
               ],
-              "used": 15.08
-            },
-            {
-              "symbol": "HASH",
-              "range": [
-                0.0,
-                15.08
-              ],
-              "used": 15.08
-            },
-            {
-              "symbol": "KAIA",
-              "range": [
-                -0.01,
-                15.07
-              ],
-              "used": 15.08
-            },
-            {
-              "symbol": "GNO",
-              "range": [
-                0.0,
-                15.08
-              ],
-              "used": 15.08
+              "used": 15.16
             }
           ],
-          "wide": 185,
-          "typical": 12.34290441022498,
-          "batch_as_of": "2026-10-04T11:01:22.195356+00:00"
+          "wide": 189,
+          "typical": 15.102196631109589,
+          "batch_as_of": "2026-10-04T11:58:47.043653+00:00"
         },
-        "reason": "/definitions states a typical inflow of 12.34% a year (batch: 12.34290441022498); 174 of 185 ranges add a different figure to their top: 5.0% on 57, 10.68% on 31, 15.08% on 28, 12.88% on 24, 10.67% on 15, 15.09% on 9, 9.71% on 5, 14.55% on 3, 12.87% on 2; HYPE's range is 24.73% to 29.73% (5.0%)"
+        "reason": "/definitions states a typical inflow of 15.10% a year (batch: 15.102196631109589); 30 of 189 ranges add a different figure to their top: 17.93% on 2, 15.48% on 2, 20.74% on 1, 34.81% on 1, 15.34% on 1, 15.53% on 1, 16.71% on 1, 15.21% on 1, 16.04% on 1, 26.44% on 1, 15.36% on 1, 19.76% on 1, 15.42% on 1, 6.14% on 1, 23.11% on 1, 21.67% on 1, 15.28% on 1, 15.72% on 1, 62.08% on 1, 34.67% on 1, 89.18% on 1, 416.14% on 1, 51.19% on 1, 21.36% on 1, 39.49% on 1, 26.91% on 1, 15.22% on 1, 15.16% on 1"
       },
       "checks": [
         "tests/rest/test_supply_analyzer_states_what_its_sources_say.py::test_every_range_uses_the_stated_typical_inflow"
       ],
       "provenance": {
-        "run_id": "run-20261004T105657Z-252ef5c1",
-        "measured_at": "2026-10-04T11:06:54+00:00"
+        "run_id": "run-20261004T115311Z-c318536e",
+        "measured_at": "2026-10-04T12:01:28+00:00"
       },
       "obligations": {
         "reverify": false,
@@ -27442,13 +26988,13 @@
           "run_id": "run-20261004T100022Z-c88f949b"
         }
       },
-      "reproductions": 3,
+      "reproductions": 4,
       "check": {
         "state": "REPRODUCING",
         "adjudicated_by": {
-          "run_id": "run-20261004T105657Z-252ef5c1",
-          "at": "2026-10-04T11:06:54+00:00",
-          "started_at": "2026-10-04T10:57:02+00:00"
+          "run_id": "run-20261004T115311Z-c318536e",
+          "at": "2026-10-04T12:01:28+00:00",
+          "started_at": "2026-10-04T11:53:21+00:00"
         },
         "pinned_fingerprint": "43cce9835f023c4579265e388044b84b69bbbdcd4afd99ac3deaec48bc895c4b"
       },
@@ -27493,7 +27039,8 @@
       "reproduced_in": [
         "run-20261004T100022Z-c88f949b",
         "run-20261004T103618Z-a5d04969",
-        "run-20261004T105657Z-252ef5c1"
+        "run-20261004T105657Z-252ef5c1",
+        "run-20261004T115311Z-c318536e"
       ],
       "component": "rest.supply_analyzer",
       "section": "supply_analyzer",
@@ -27501,7 +27048,7 @@
       "kind": "check_failure",
       "detail": {
         "left": {
-          "undocumented_answers": 3
+          "undocumented_answers": 2
         },
         "right": {
           "undocumented_answers": 0
@@ -27513,32 +27060,32 @@
           "answers": [
             {
               "chain": "dogechain",
-              "status": 500,
-              "code": "INTERNAL_SERVER_ERROR",
+              "status": 400,
+              "code": "UNKNOWN_CHAIN",
               "documented": false
             },
             {
               "chain": "tron",
-              "status": 500,
-              "code": "INTERNAL_SERVER_ERROR",
-              "documented": false
+              "status": 400,
+              "code": "UNSUPPORTED_CHAIN",
+              "documented": true
             },
             {
               "chain": "foo",
-              "status": 500,
-              "code": "INTERNAL_SERVER_ERROR",
+              "status": 400,
+              "code": "UNKNOWN_CHAIN",
               "documented": false
             }
           ]
         },
-        "reason": "3 of 3 reads of UNI's contract (0x1f9840a85d5aF5bf1D1762F925BDADdC4201F984) with an unsupported chain answer chain=dogechain: HTTP 500 INTERNAL_SERVER_ERROR, chain=tron: HTTP 500 INTERNAL_SERVER_ERROR, chain=foo: HTTP 500 INTERNAL_SERVER_ERROR; /openapi-public.json documents 400 \"MISSING_INPUT, INVALID_SYMBOL, INVALID_CONTRACT, CHAIN_NEEDED, UNSUPPORTED_CHAIN, NO_PRICE\" for this route"
+        "reason": "2 of 3 reads of UNI's contract (0x1f9840a85d5aF5bf1D1762F925BDADdC4201F984) with an unsupported chain answer chain=dogechain: HTTP 400 UNKNOWN_CHAIN, chain=foo: HTTP 400 UNKNOWN_CHAIN; /openapi-public.json documents 400 \"MISSING_INPUT, INVALID_SYMBOL, INVALID_CONTRACT, CHAIN_NEEDED, UNSUPPORTED_CHAIN, NO_PRICE\" for this route"
       },
       "checks": [
         "tests/rest/test_supply_analyzer_states_what_its_sources_say.py::test_an_unsupported_chain_gets_a_documented_answer"
       ],
       "provenance": {
-        "run_id": "run-20261004T105657Z-252ef5c1",
-        "measured_at": "2026-10-04T11:06:54+00:00"
+        "run_id": "run-20261004T115311Z-c318536e",
+        "measured_at": "2026-10-04T12:01:28+00:00"
       },
       "obligations": {
         "reverify": false,
@@ -27566,7 +27113,29 @@
           "at": "2026-10-04T11:06:54+00:00",
           "started_at": "2026-10-04T10:57:02+00:00"
         },
-        "pinned_fingerprint": "7bfa1a49d050b618599f302098499cc0b32514185f70b9b824f96085bdbbd9cf"
+        "pinned_fingerprint": "7bfa1a49d050b618599f302098499cc0b32514185f70b9b824f96085bdbbd9cf",
+        "last_exploratory_pass": {
+          "run_id": "run-20261004T115311Z-c318536e",
+          "at": "2026-10-04T12:01:28+00:00",
+          "detail": {
+            "left": {
+              "unknown_served_as_none": 0
+            },
+            "right": {
+              "unknown_served_as_none": 0
+            },
+            "sources": {
+              "batch": "/api/v1/supply-analyzer/batch/gem-screener",
+              "feed": "https://defillama-datasets.llama.fi/emissions/{slug}"
+            },
+            "population": {
+              "served": [],
+              "scheduled_elsewhere": [],
+              "probed": []
+            },
+            "reason": "none of 172 records with an unknown schedule claims none is scheduled"
+          }
+        }
       },
       "filing": {
         "state": "RAISED",
@@ -27907,7 +27476,43 @@
           "at": "2026-10-04T11:06:54+00:00",
           "started_at": "2026-10-04T10:57:02+00:00"
         },
-        "pinned_fingerprint": "66fc9020024e031f69ee9525b874de8f51d0a76696d41d01c42fbec559fb9c70"
+        "pinned_fingerprint": "66fc9020024e031f69ee9525b874de8f51d0a76696d41d01c42fbec559fb9c70",
+        "last_exploratory_pass": {
+          "run_id": "run-20261004T115311Z-c318536e",
+          "at": "2026-10-04T12:01:28+00:00",
+          "detail": {
+            "left": {
+              "locked_shown_as_reserve": false,
+              "staked_shown_share": null
+            },
+            "right": {
+              "locked_shown_as_reserve": false,
+              "staked_shown_share": ">= 0.5"
+            },
+            "sources": {
+              "record": "/api/v1/supply-analyzer/analyze?symbol=pharaoh-exchange",
+              "addresses": "https://docs.phar.gg/pages/contract-addresses",
+              "chain": "https://api.routescan.io/v2/network/mainnet/evm/43114/etherscan/api (tokensupply, tokenbalance)"
+            },
+            "population": {
+              "chain": {
+                "total_supply": 530627319.97148854,
+                "locked_in_staking_token": 497139187.9859134,
+                "xphar_supply": 994278375.9718268,
+                "xphar_staked_in_vote_module": 992673877.2452834
+              },
+              "found": null,
+              "record": {
+                "total_supply": 530627428.673759,
+                "circulating": 33488613.053668678,
+                "pile_today": 530627816.2,
+                "reserve_today": 469372183.8,
+                "refreshed_at": "2026-10-04T11:40:43+00:00"
+              }
+            },
+            "reason": "the PHAR locked in xPHAR is not shown as the reserve, and at least half of it is shown as staked"
+          }
+        }
       },
       "filing": {
         "state": "RAISED",
@@ -28022,13 +27627,13 @@
           "run_id": "run-20261004T105657Z-252ef5c1"
         }
       },
-      "reproductions": 1,
+      "reproductions": 2,
       "check": {
         "state": "REPRODUCING",
         "adjudicated_by": {
-          "run_id": "run-20261004T105657Z-252ef5c1",
-          "at": "2026-10-04T11:06:54+00:00",
-          "started_at": "2026-10-04T10:57:02+00:00"
+          "run_id": "run-20261004T115311Z-c318536e",
+          "at": "2026-10-04T12:01:28+00:00",
+          "started_at": "2026-10-04T11:53:21+00:00"
         },
         "pinned_fingerprint": "6fc1ef9b35530adac23edac06c588380649c5dc4ac4eb1c903f8cfe98d68c5d0"
       },
@@ -28071,7 +27676,8 @@
       "severity": "S3-CONTRACT",
       "title": "30 of 48 sampled records state a max supply whose source is a DeFiLlama unlock schedule, the end total of its issuance horizon; 13 of them then show max minus total as \"Bought back, burned\": ETH (ethereum) max 127,869,954 from \"DeFiLlama unlock schedule (ethereum)\" (total 122,101,617, burned 5,768,336); SOL (solana) max 722,609,018 from \"DeFiLlama unlock schedule (solana)\" (total 635,149,992, burned 87,459,026); TRX (tron) max 126,770,094,880 from \"DeFiLlama unlock schedule (tron)\" (total 94,980,615,708, burned 31,789,479,172); AERO (aerodrome) max 1,994,552,554 from \"DeFiLlama unlock schedule (aerodrome)\" (total 1,992,844,978); CFG (centrifuge) max 816,465,627 from \"DeFiLlama unlock schedule (centrifuge)\" (total 680,000,000, burned 136,465,627)",
       "reproduced_in": [
-        "run-20261004T105657Z-252ef5c1"
+        "run-20261004T105657Z-252ef5c1",
+        "run-20261004T115311Z-c318536e"
       ],
       "component": "rest.supply_analyzer",
       "section": "supply_analyzer",
@@ -28079,7 +27685,7 @@
       "kind": "check_failure",
       "detail": {
         "left": {
-          "max_from_a_schedule": 30
+          "max_from_a_schedule": 19
         },
         "right": {
           "max_from_a_schedule": 0
@@ -28096,21 +27702,21 @@
               "max_supply": 127869953.59475218,
               "source": "DeFiLlama unlock schedule (ethereum)",
               "total_supply": 122101617.2835702,
-              "burned_from_it": 5768336.31
+              "burned_from_it": 0
             },
             {
               "coin": "SOL (solana)",
               "max_supply": 722609017.6609437,
               "source": "DeFiLlama unlock schedule (solana)",
-              "total_supply": 635149992.0103794,
-              "burned_from_it": 87459025.65
+              "total_supply": 635228400.3823009,
+              "burned_from_it": 0
             },
             {
               "coin": "TRX (tron)",
               "max_supply": 126770094880.0,
               "source": "DeFiLlama unlock schedule (tron)",
-              "total_supply": 94980615708.40979,
-              "burned_from_it": 31789479171.59
+              "total_supply": 94981272379.44139,
+              "burned_from_it": 0
             },
             {
               "coin": "AERO (aerodrome)",
@@ -28124,20 +27730,13 @@
               "max_supply": 816465626.8647344,
               "source": "DeFiLlama unlock schedule (centrifuge)",
               "total_supply": 680000000.0,
-              "burned_from_it": 136465626.86
+              "burned_from_it": 0
             },
             {
               "coin": "FIL (filecoin)",
               "max_supply": 2000000000.0,
               "source": "DeFiLlama unlock schedule (filecoin)",
               "total_supply": 1957014948.0,
-              "burned_from_it": 42985052.0
-            },
-            {
-              "coin": "FLIP (chainflip)",
-              "max_supply": 88286722.17799331,
-              "source": "DeFiLlama unlock schedule (chainflip)",
-              "total_supply": 88299652.22584234,
               "burned_from_it": 0
             },
             {
@@ -28145,20 +27744,13 @@
               "max_supply": 109200000000.0,
               "source": "DeFiLlama unlock schedule (flare)",
               "total_supply": 106677212872.9242,
-              "burned_from_it": 2522787127.08
+              "burned_from_it": 0
             },
             {
               "coin": "FRAX (frax-finance)",
               "max_supply": 100000000.42228244,
               "source": "DeFiLlama unlock schedule (frax-finance)",
               "total_supply": 99681495.5911336,
-              "burned_from_it": 318504.83
-            },
-            {
-              "coin": "GRAM (ton)",
-              "max_supply": 5066470400.0,
-              "source": "DeFiLlama unlock schedule (ton)",
-              "total_supply": 5260139373.506103,
               "burned_from_it": 0
             },
             {
@@ -28169,38 +27761,10 @@
               "burned_from_it": 0
             },
             {
-              "coin": "ICP (icp)",
-              "max_supply": 557016670.0,
-              "source": "DeFiLlama unlock schedule (internet-computer)",
-              "total_supply": 557028978.1480458,
-              "burned_from_it": 0
-            },
-            {
-              "coin": "JTO (jito)",
-              "max_supply": 799229491.06,
-              "source": "DeFiLlama unlock schedule (jito)",
-              "total_supply": 1000000000.0,
-              "burned_from_it": 0
-            },
-            {
               "coin": "MON (monad)",
               "max_supply": 101766680375.0,
               "source": "DeFiLlama unlock schedule (monad)",
               "total_supply": 100682925000.0,
-              "burned_from_it": 1083755375.0
-            },
-            {
-              "coin": "NEAR (near-protocol)",
-              "max_supply": 1304544169.3312728,
-              "source": "DeFiLlama unlock schedule (near-protocol)",
-              "total_supply": 1308030305.0,
-              "burned_from_it": 0
-            },
-            {
-              "coin": "NEAR (near-protocol)",
-              "max_supply": 1304544169.3312728,
-              "source": "DeFiLlama unlock schedule (near-protocol)",
-              "total_supply": 1308030305.0,
               "burned_from_it": 0
             },
             {
@@ -28215,20 +27779,6 @@
               "max_supply": 282195956.57853127,
               "source": "DeFiLlama unlock schedule (pendle)",
               "total_supply": 281527448.4585314,
-              "burned_from_it": 668508.12
-            },
-            {
-              "coin": "RSUP (resupply)",
-              "max_supply": 56116175.785053246,
-              "source": "DeFiLlama unlock schedule (resupply)",
-              "total_supply": 77416175.79,
-              "burned_from_it": 0
-            },
-            {
-              "coin": "SEI (sei)",
-              "max_supply": 9999999960.0,
-              "source": "DeFiLlama unlock schedule (sei)",
-              "total_supply": 10000000000.0,
               "burned_from_it": 0
             },
             {
@@ -28246,46 +27796,25 @@
               "burned_from_it": 0
             },
             {
-              "coin": "SWAP (hyperswap)",
-              "max_supply": 69949002.09743436,
-              "source": "DeFiLlama unlock schedule (hyperswap)",
-              "total_supply": 92617574.64021985,
-              "burned_from_it": 0
-            },
-            {
-              "coin": "SYRUP (maple-finance)",
-              "max_supply": 1228740000.0,
-              "source": "DeFiLlama unlock schedule (maple-finance)",
-              "total_supply": 1244677492.511099,
-              "burned_from_it": 0
-            },
-            {
-              "coin": "TOPAZ (topaz)",
-              "max_supply": 870367078.0645895,
-              "source": "DeFiLlama unlock schedule (topaz)",
-              "total_supply": 872378600.104909,
-              "burned_from_it": 0
-            },
-            {
               "coin": "UP (up)",
               "max_supply": 521523535.5581269,
               "source": "DeFiLlama unlock schedule (up)",
               "total_supply": 513095739.5440427,
-              "burned_from_it": 8427796.01
+              "burned_from_it": 0
             },
             {
               "coin": "VELO (velodrome)",
               "max_supply": 3704953981.0157795,
               "source": "DeFiLlama unlock schedule (velodrome)",
-              "total_supply": 2631844952.174943,
-              "burned_from_it": 1073109028.84
+              "total_supply": 2631852659.766198,
+              "burned_from_it": 0
             },
             {
               "coin": "VVV (venice)",
               "max_supply": 114981464.40670668,
               "source": "DeFiLlama unlock schedule (venice)",
-              "total_supply": 81094886.64392948,
-              "burned_from_it": 33886577.76
+              "total_supply": 81096275.65965758,
+              "burned_from_it": 0
             },
             {
               "coin": "XPL (plasma)",
@@ -28298,30 +27827,23 @@
               "coin": "XTZ (tezos)",
               "max_supply": 1183125735.3,
               "source": "DeFiLlama unlock schedule (tezos)",
-              "total_supply": 1117825044.330907,
-              "burned_from_it": 65300690.97
+              "total_supply": 1117836388.313903,
+              "burned_from_it": 0
             }
           ],
-          "judged": 48,
+          "judged": 37,
           "unread": [],
           "sampled": [
             "PENDLE (pendle)",
-            "SYRUP (maple-finance)",
             "FRAX (frax-finance)",
             "VELO (velodrome)",
-            "FLIP (chainflip)",
             "AERO (aerodrome)",
             "SUSHI (sushi)",
             "CFG (centrifuge)",
-            "RSUP (resupply)",
-            "SWAP (hyperswap)",
-            "JTO (jito)",
-            "NEAR (near-protocol)",
             "HYBR (hybra)",
             "NEST (nest)",
             "VVV (venice)",
             "SNX (synthetix)",
-            "TOPAZ (topaz)",
             "UP (up)",
             "SOL (solana)",
             "ETH (ethereum)",
@@ -28333,17 +27855,13 @@
             "SUI (sui)",
             "AVAX (avalanche)",
             "OKB (x-layer)",
-            "NEAR (near)",
             "ARB (arbitrum)",
             "HBAR (hedera)",
             "MNT (mantle)",
-            "ICP (icp)",
             "CRO (cronos)",
             "ALGO (algorand)",
-            "GRAM (ton)",
             "FIL (filecoin)",
             "STABLE (stable)",
-            "SEI (sei)",
             "XPL (plasma)",
             "APT (aptos)",
             "MON (monad)",
@@ -28355,14 +27873,14 @@
             "GNO (gnosis)"
           ]
         },
-        "reason": "30 of 48 sampled records state a max supply whose source is a DeFiLlama unlock schedule, the end total of its issuance horizon; 13 of them then show max minus total as \"Bought back, burned\": ETH (ethereum) max 127,869,954 from \"DeFiLlama unlock schedule (ethereum)\" (total 122,101,617, burned 5,768,336); SOL (solana) max 722,609,018 from \"DeFiLlama unlock schedule (solana)\" (total 635,149,992, burned 87,459,026); TRX (tron) max 126,770,094,880 from \"DeFiLlama unlock schedule (tron)\" (total 94,980,615,708, burned 31,789,479,172); AERO (aerodrome) max 1,994,552,554 from \"DeFiLlama unlock schedule (aerodrome)\" (total 1,992,844,978); CFG (centrifuge) max 816,465,627 from \"DeFiLlama unlock schedule (centrifuge)\" (total 680,000,000, burned 136,465,627)"
+        "reason": "19 of 37 sampled records state a max supply whose source is a DeFiLlama unlock schedule, the end total of its issuance horizon; 0 of them then show max minus total as \"Bought back, burned\": ETH (ethereum) max 127,869,954 from \"DeFiLlama unlock schedule (ethereum)\" (total 122,101,617); SOL (solana) max 722,609,018 from \"DeFiLlama unlock schedule (solana)\" (total 635,228,400); TRX (tron) max 126,770,094,880 from \"DeFiLlama unlock schedule (tron)\" (total 94,981,272,379); AERO (aerodrome) max 1,994,552,554 from \"DeFiLlama unlock schedule (aerodrome)\" (total 1,992,844,978); CFG (centrifuge) max 816,465,627 from \"DeFiLlama unlock schedule (centrifuge)\" (total 680,000,000)"
       },
       "checks": [
         "tests/rest/test_supply_analyzer_states_what_its_sources_say.py::test_a_max_supply_is_not_the_end_of_an_issuance_schedule"
       ],
       "provenance": {
-        "run_id": "run-20261004T105657Z-252ef5c1",
-        "measured_at": "2026-10-04T11:06:54+00:00"
+        "run_id": "run-20261004T115311Z-c318536e",
+        "measured_at": "2026-10-04T12:01:28+00:00"
       },
       "obligations": {
         "reverify": false,
@@ -28375,20 +27893,19 @@
       }
     }
   },
-  "run_id": "run-20261004T105657Z-252ef5c1",
+  "run_id": "run-20261004T115311Z-c318536e",
   "run_level": "R",
-  "updated_at": "2026-10-04T11:06:54+00:00",
+  "updated_at": "2026-10-04T12:01:28+00:00",
   "counts": {
     "WITHDRAWN": 13,
     "VERIFIED FIXED": 85,
-    "STILL REPRODUCIBLE": 7,
-    "OUR CHECK CANNOT TELL": 3,
+    "STILL REPRODUCIBLE": 11,
+    "OUR CHECK CANNOT TELL": 4,
     "PASSING, NEVER RAISED": 3,
-    "NOT RAISED YET": 2,
-    "RAISED": 16
+    "RAISED": 13
   },
   "events_head": {
-    "seq": 3389,
-    "chain": "e69e33365672f477a2fbf48894ee34f45f2f5cd7d7b610d901960291f297d8d9"
+    "seq": 3425,
+    "chain": "be95e7eb395fcf487ab19d163988dd82cf8b18eee4220ec4300db22264224dc9"
   }
 }

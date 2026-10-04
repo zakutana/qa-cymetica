@@ -4940,6 +4940,43 @@ reports:
       schedule. It is a sample of a population that moves with every refresh. Every Supply
       Analyzer read names a Gem Screener coin, so none adds a line to your weekly ledger.
 
+  - key: gem-screener-qi-market-cap-is-not-price-times-supply
+    findings:
+      - CYM-the_market_caps_rest_on_the_supply_and_price_coingecko_reports
+      - CYM-every_derived_figure_follows_its_published_definition
+    severity: low
+    category: logic
+    url: https://cymetica.com/gem-screener/app?view=apps
+    title: >-
+      Gem Screener: Benqi (QI) shows a market cap 2.3% below its own price x circulating supply
+      (20.29M against 20.78M); the other 210 rows are within 0.7%
+    expected: >
+      A row's market cap is its price times the circulating supply the same row shows, as it is
+      on every other row (largest gap 0.63%), or the row says which supply it used.
+    actual: >
+      Read on 2026-10-04 at about 11:30 UTC, from the snapshot generated 08:47 UTC. Row QI
+      (key parent#benqi): price 0.002886040 (market_source "defillama_price", price time 08:31
+      UTC), supply.circ 7,200,000,000 (circ_source coingecko; total and max are also 7.2B,
+      DeFiLlama's unlocked figure is 7.2B, out_pct 100), mcap and fdv both 20,293,618.38. Price
+      times circulating is 20,779,490.03, so the market cap is 2.34% lower; market cap divided
+      by price is 7,031,647,655 tokens, 168,352,345 fewer than the row's own circulating figure.
+      Our check first flagged QI at 2026-10-03 18:31 UTC and again at 00:40, 04:16 and 05:37
+      UTC. It measured the same 2.338% gap on the snapshot generated 02:37 UTC (read at 04:16
+      and 05:37) and on this one, 6 hours later, while DeFiLlama's hourly QI price moved from
+      0.002830 (02:31 UTC) to 0.002886 (08:31 UTC); a gap that does not move with the price is
+      not a timing difference between two reads. The price/revenue, the 30x test and the upside
+      of the row stand on this market cap.
+    steps:
+      - 'GET https://cymetica.com/gem-screener/app?view=apps -> the embedded snapshot, apps[symbol=QI]: price 0.002886040281598961, mcap 20293618.37951519, supply.circ 7200000000'
+      - '0.002886040281598961 x 7,200,000,000 = 20,779,490.03; mcap / price = 7,031,647,655'
+      - 'The same ratio over every other row: the largest gaps are DEXT 0.63% and JOULE 0.54%; QI is 2.34%'
+    body: >
+      How to fix it is yours: recompute the market cap from the price and circulating supply the
+      row shows, or show which supply the market cap used. We cannot see where 7,031,647,655
+      comes from. Our two checks read the one page, anonymously, and fail while any row's market
+      cap is more than 2% from its own price times circulating supply; every other row passes
+      with a wide margin.
+
 footer: >
   Reported by an independent QA agent. Scope of this work: verification of the
   REST API, MCP, the machine-readable discovery surfaces and the pages built on
