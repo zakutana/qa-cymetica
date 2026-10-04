@@ -4353,6 +4353,172 @@ reports:
       that the script alone cannot tell, the check reports that it cannot tell rather
       than passing.
 
+  - key: chart-analyzer-verdict-fields-missing-from-openapi
+    findings: [CYM-chart-analyzer-verdict-fields-are-in-its-openapi-schema]
+    severity: low
+    category: documentation
+    url: https://cymetica.com/openapi-public.json
+    title: >-
+      Chart Analyzer: verdict, structures, setups, indicators and weekly_signal are not in
+      /openapi-public.json, whose analyze schema forbids extra keys; /calls and
+      /study/expert have empty schemas
+    expected: >
+      The fields Build it Better ET-29001 added are documented in /openapi-public.json, as
+      the request asked and your answer says: the 200 schema of GET
+      /api/v1/chart-analyzer/analyze lists verdict, structures, setups, indicators and
+      weekly_signal (and swings, expert_study_url, calls_url, which every answer also
+      carries), and GET /api/v1/chart-analyzer/calls and GET
+      /api/v1/chart-analyzer/study/expert have 200 schemas that list their fields.
+    actual: >
+      Read repeatedly on 2026-10-04 between 07:29 and 08:33 UTC. The 200 schema of GET
+      /api/v1/chart-analyzer/analyze lists 27 properties, none of them verdict,
+      structures, setups, indicators, weekly_signal, swings, expert_study_url or
+      calls_url, and sets additionalProperties: false, so a client that validates answers
+      against the published schema rejects every answer. GET /api/v1/chart-analyzer/calls
+      and GET /api/v1/chart-analyzer/study/expert are listed, each with a 200 schema of {}
+      (no properties). llms.txt and /api-docs do describe the new fields in prose.
+    steps:
+      - 'GET https://cymetica.com/openapi-public.json -> paths["/api/v1/chart-analyzer/analyze"].get.responses["200"].content["application/json"].schema: additionalProperties false, 27 properties, no verdict / structures / setups / indicators / weekly_signal'
+      - 'GET https://cymetica.com/api/v1/chart-analyzer/analyze?symbol=BTC&timeframe=1M&closed_only=true -> top-level keys include verdict, structures, setups, indicators, weekly_signal, swings, expert_study_url, calls_url'
+      - 'The same document -> paths["/api/v1/chart-analyzer/calls"].get and paths["/api/v1/chart-analyzer/study/expert"].get: 200 schema {}'
+    body: >
+      Our check reads every top-level key of a live /analyze, /calls and /study/expert
+      answer and fails while one is not listed in that endpoint's 200 schema (followed
+      through $ref and allOf) with a type the schema allows, so it clears however the
+      schema is written. Setting additionalProperties to true without listing the fields
+      does not clear it, because the request asked for the fields to be documented.
+      Related, in the same documents and not part of this check: the "Input" list in the
+      Chart Analyzer section of llms.txt still says the timeframe is "1h, 4h, 1d (default)
+      or 1w" (a later line lists 5d, 2w, 1M and auto), and the /api-docs endpoint table
+      still says "timeframe 1h, 4h, 1d, 1w" and "Returns score 1-100, band, patterns[]
+      ... rule, base_rate, as_of" for GET /analyze.
+
+  - key: chart-analyzer-ledger-call-on-a-future-candle
+    findings: [CYM-chart-analyzer-calls-are-on-closed-candles]
+    severity: medium
+    category: logic
+    url: https://cymetica.com/api/v1/chart-analyzer/calls
+    title: >-
+      Chart Analyzer public ledger: a READY TO POP call for BTC/USDT 1h was recorded at
+      06:21 UTC on 4 Oct on a candle that opens on 26 Oct, at a close of 229.26
+    expected: >
+      Every call in the public ledger is on a closed candle of the chart it names. The
+      endpoint says "recorded when made (closed candles only)", and its rule says "A call
+      is recorded once per chart, timeframe and closed candle".
+    actual: >
+      GET /api/v1/chart-analyzer/calls holds id "sym:BTC/USDT|1h|1792972800": who
+      sym:BTC/USDT, timeframe 1h, made_at 2026-10-04T06:21:46+00:00, candle_time
+      1792972800 (2026-10-26T00:00:00Z, 22 days after it was made), close 229.263278,
+      verdict READY TO POP, probability 0.4734, base_rate 0.38, cases 39480, status open.
+      BTC/USDT's own candles from the same API do not reach that price: its 110 monthly
+      candles since 2017-08-01 range from 2,817 to 126,200. We cannot see how the row was
+      written; we send no POST to the analyzer. When we first read the ledger at 07:30 UTC
+      it held two calls, this one and COTI/USDT 1d (made 07:27 on the closed candle of 3
+      Oct, whose close and verdict match the analyze answer). Read five more times up to
+      08:36 UTC, unchanged.
+    steps:
+      - 'GET https://cymetica.com/api/v1/chart-analyzer/calls?limit=1000 -> calls[] holds {"id": "sym:BTC/USDT|1h|1792972800", "made_at": "2026-10-04T06:21:46+00:00", "candle_time": 1792972800, "close": 229.263278, "verdict": "READY TO POP", "status": "open", ...}'
+      - '1792972800 is 2026-10-26T00:00:00Z; the call was made 2026-10-04T06:21:46Z'
+      - 'GET https://cymetica.com/api/v1/chart-analyzer/analyze?symbol=BTC&timeframe=1M&include_candles=true&closed_only=true -> 110 monthly candles from 2017-08-01, lows and highs between 2,817 and 126,200'
+    body: >
+      Any fix that keeps the ledger to closed candles of the named chart clears it:
+      remove the row, or give it a status other than open or scored with a reason (our
+      check reads that as your correction), and close whatever path wrote it (we cannot
+      see which). Our check reads /calls only, so it adds nothing to the ledger, and fails
+      while any open or scored call was made before the candle it names had closed (1M
+      closes on the 1st of the next month). So that the ledger's other rows do not
+      surprise you: GET /analyze records every READY TO POP or READY TO DUMP it serves on
+      a closed candle, whoever asks. 17 of the 19 calls on the ledger at 08:36 UTC were
+      written by our own verification reads between 07:36 and 08:16 UTC; all of them are
+      on closed candles.
+
+  - key: chart-analyzer-probability-outside-its-own-range
+    findings: [CYM-chart-analyzer-probability-lies-inside-its-range]
+    severity: low
+    category: logic
+    url: https://cymetica.com/chart-analyzer?symbol=SOL&tf=5d
+    title: >-
+      Chart Analyzer: in 25 of 105 usable calibration bins the calibrated probability lies
+      outside the 95% range given with it (5d: 43.1% shown with a range of 59.5% to 68.1%)
+    expected: >
+      A probability and its 95% range belong together (llms.txt: `range` is "the 95% range
+      of that probability"): the probability lies inside the range shown with it, in the
+      calibration tables of /study/expert and on every answer's verdict.up and
+      verdict.down, which the page prints under "The numbers".
+    actual: >
+      In /study/expert (v3, generated 2026-10-04T06:17:59Z), 25 of the 105 calibration
+      bins marked usable give a `calibrated` value outside that bin's `ci95`: 11 on 5d, 8
+      on 1w, 5 on 1d, 1 on 4h. The widest: 5d up bin 9 (477 cases, bin rate 0.6394):
+      calibrated 0.4307, ci95 0.5954-0.6812; 5d down bin 10 (477 cases): calibrated
+      0.5575, ci95 0.3188-0.4046. The calibrated values look pooled across neighbouring
+      bins (5d up bins 7 to 15 all read 0.4307, while their own rates run from 0.3836 to
+      0.6394), but ci95 stays each bin's own interval. The answers carry the same pairs:
+      GET /analyze?symbol=SOL&timeframe=5d&closed_only=true gives verdict.up calibrated
+      0.4307 with range [0.5954, 0.6812] and verdict.down 0.5575 with range [0.3188,
+      0.4046]. The page /chart-analyzer?symbol=SOL&tf=5d (forming candle) printed under
+      "The numbers" at 07:57 UTC: "RISE FIRST 43.1% calibrated (raw model 51.3%); range
+      49% to 56%; 855 calibration cases in this bin" and "FALL FIRST 55.8% calibrated (raw
+      model 48.7%); range 43% to 50%". No label we saw was affected: in the bins that can
+      give a label, the probability is inside its range.
+    steps:
+      - 'GET https://cymetica.com/api/v1/chart-analyzer/study/expert -> timeframes["5d"].calibration.up, bin 9: {"n": 477, "rate": 0.6394, "calibrated": 0.4307, "ci95": [0.5954, 0.6812], "usable": true}'
+      - 'GET https://cymetica.com/api/v1/chart-analyzer/analyze?symbol=SOL&timeframe=5d&closed_only=true -> verdict.up {"calibrated": 0.4307, "range": [0.5954, 0.6812], ...}, verdict.down {"calibrated": 0.5575, "range": [0.3188, 0.4046], ...}'
+      - 'Open https://cymetica.com/chart-analyzer?symbol=SOL&tf=5d and click "The numbers" -> the rise-first and fall-first lines, each with a probability outside the range beside it'
+    body: >
+      Either of two fixes clears it, and the choice is yours: give the range of the value
+      you show (for a pooled value, the interval over the pooled cases), or show the
+      bin's own rate with its own range. Our check reads every usable bin of /study/expert
+      and the up and down sides of three 5d answers (SOL, BTC, ETH; 5d never carries a
+      label, so these reads add nothing to the public ledger), and fails while a
+      probability lies outside the range given with it, allowing 0.0001 for rounding.
+
+  - key: chart-analyzer-dex-pool-coin-gets-a-verdict-llms-says-none
+    findings: [CYM-chart-analyzer-dex-pool-coin-gets-no-verdict-as-documented]
+    severity: low
+    category: documentation
+    url: https://cymetica.com/llms.txt
+    title: >-
+      Chart Analyzer: llms.txt says a DEX-pool coin gets no verdict, but Gem Screener coins
+      read from their DEX pool get READY TO POP / READY TO DUMP and enter the public ledger
+    expected: >
+      What the Chart Analyzer section of llms.txt says holds: "A verdict is given for symbol
+      pairs the study covers; a DEX-pool coin or your own candles get the drawings and the
+      setups with coverage_note saying the asset is not covered", and "a DEX-pool coin gets
+      the drawings and setups but no verdict (coverage_note)". Or the documents agree with
+      the page about what a DEX-pool coin gets.
+    actual: >
+      On 1h, Gem Screener coins read by contract from their DEX pool are labelled. At
+      07:45-07:48 UTC on 2026-10-04: SKY (ethereum
+      0x56072c95faa701256059aa122697b133aded9279) READY TO POP, 0.4734 against a base rate
+      of 0.38 on 39,480 cases; XVS (bsc 0xcf6bb5389c92bdda8a3747ddb454cb7a64626c63) and
+      PENDLE (bsc 0xb3ed0a426155b79b898849803e3b36552f7ed507) READY TO DUMP. In three
+      reads between 08:15 and 08:33 UTC, LDO (polygon
+      0xc3c7d422809852031b44ab29eec9f1eff2a58756) READY TO DUMP, 0.435 against 0.3833 on
+      172,454 cases. Each answer has verdict.coverage
+      "asset_not_covered" and the coverage_note "This asset's candles were not in the
+      study (it measured exchange candles; these come from a DEX pool or your file). The
+      same table is applied; the probability is the study's, not this asset's own." The
+      public ledger records them as contract: calls. The study's limits say the same table
+      is applied to a DEX pool's candles "and the page says so"; llms.txt says no verdict.
+      The request asked that records be measured on the same kind of candles the score is
+      computed on.
+    steps:
+      - 'GET https://cymetica.com/llms.txt -> section "## Chart Analyzer": "... a DEX-pool coin gets the drawings and setups but no verdict (`coverage_note`)."'
+      - 'GET https://cymetica.com/api/v1/chart-analyzer/analyze?contract=0xc3c7d422809852031b44ab29eec9f1eff2a58756&chain=polygon&timeframe=1h&closed_only=true -> verdict.label "READY TO DUMP", probability 0.435, base_rate 0.3833, cases 172454, coverage "asset_not_covered" (a 1h label changes with the hour; any DEX-pool coin whose up/down figures qualify shows it)'
+      - 'GET https://cymetica.com/api/v1/chart-analyzer/calls -> rows whose who starts with "contract:", e.g. contract:ethereum:0x56072c95faa701256059aa122697b133aded9279 READY TO POP'
+    body: >
+      Which way to resolve it is yours: withhold the label for a DEX-pool coin, as llms.txt
+      says and as the request asked (records on the same kind of candles), or change
+      llms.txt to say that the same table is applied and a label can be given beside the
+      coverage note. Our check reads the promise from the Chart Analyzer section of
+      llms.txt; while it is there, it reads up to 8 Gem Screener coins on 1h and fails if
+      one whose own up/down figures qualify under your published rule (5 points over the
+      base rate, the range above it, 300 or more cases) carries a label. It stops at the
+      first such coin, so it adds at most one call to the ledger per run. If the sentence
+      is removed, our check reports that it can no longer tell rather than calling it
+      fixed. The contract: rows on the ledger are ours: GET /analyze records each label it
+      serves, and our reads requested these coins.
+
 footer: >
   Reported by an independent QA agent. Scope of this work: verification of the
   REST API, MCP, the machine-readable discovery surfaces and the pages built on

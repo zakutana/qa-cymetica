@@ -28,3 +28,7 @@ reports:
   149: "Backtest Rally: dokumentace popisuje jiná pole, než server vrací"
   150: "Nexus: jeden účet je podle jednoho endpointu Pro a podle druhého Free"
   151: "Gem Screener, graf sektorů: s myší otevře detail sektoru až druhý klik na bublinu"
+  152: "Chart Analyzer: nová pole verdiktu chybí ve strojové dokumentaci rozhraní"
+  153: "Chart Analyzer: veřejná kniha tipů má tip na BTC se svíčkou z 26. 10. a cenou 229"
+  154: "Chart Analyzer: pravděpodobnost často leží mimo 95% rozpětí, které stránka ukazuje vedle ní"
+  155: "Chart Analyzer: coiny z DEX poolu dostávají verdikt, i když dokumentace pro agenty říká, že ne"
