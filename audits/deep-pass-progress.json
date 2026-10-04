@@ -2,9 +2,9 @@
   "run": "deep pass 2026-10-04",
   "at": "2026-10-03T22:25:25+00:00",
   "previous_at": "2026-10-02T21:11:32+00:00",
-  "at_finished": null,
+  "at_finished": "2026-10-04T01:29:52+00:00",
   "start_commit": "531fe7f190ce091e6ae91740d789d234ea755f47",
-  "model_note": "session runs Opus 5.5 (the skill's row: Opus xhigh); invoked in the session that did the day's work",
+  "model_note": "Opus 5.5 xhigh through step 6 (12 commits signed Opus 5.5); the closing steps ran on Sonnet 5.5 (2 commits) after the session's model changed -- below the skill's row for those steps; invoked in the session that did the day's work",
   "size": "full -- 2 check(s) against their platform moved; 56 files, review at xhigh",
   "rereads": [
     "lab: qa/lab.py scripts/lab.py scripts/clone.py scripts/paper.py (23 commits since df1a3751)"
@@ -744,26 +744,32 @@
       "why": "each waits on Cymetica or sends to them"
     }
   ],
-  "next": null,
+  "next": [
+    "Výzkum botů, VŠE v docs/bots-research-plan.md „Zbývá\": sampler musí běžet, wave 0 verdikt ~10. 10., vlna 2 s parametry, F1 kód (strop, víc klonů/druh), H2H do /lab, tool pro vlnu, degen prompty, karty: `scripts/card_rules.py` po ~10. 10., odpovědi Cymetiky (409, skilly)."
+  ],
   "retrospective": {
-    "last": "2026-09-27",
-    "done": false
+    "last": "2026-10-04",
+    "done": true
   },
   "rule_changes": [
     {
       "id": "RC1",
       "what": "RateLimitBudget ignores a response header whose x-ratelimit-limit is below 100 (a single route's own allowance); only the platform quota (300 anonymous, 2000 for our key) still stops the session at 60 %",
       "why": "two full runs of the suite (PRE-0236 and PRE-0237) were cut at 1480 of 1541 checks: the Chart Analyzer answers x-ratelimit-limit 30, twelve left of its thirty read as 60 % of the platform quota, and the last 61 checks were refused while the platform's 2000 was nearly unused. Minority reading (t2): if every route answered with a limit under 100, or the platform quota were ever cut below 100, no brake would see it; not seen in 223 run records (limits 2000 and 300).",
-      "votes": {"t1": "no", "t2": "yes", "t3": "no"},
+      "votes": {
+        "t1": "no",
+        "t2": "yes",
+        "t3": "no"
+      },
       "test": "tests/meta/test_pipeline_recorder.py::test_ratelimit_budget_reaches_the_run_record",
-      "commit": null,
+      "commit": "0d66277d",
       "handover": true
     }
   ],
   "meta_tests": {
     "start": 830,
-    "end": null,
-    "reason": "the day added 27 functions (a new MCP gate own_clone_write, clone.py indicators, qa/card_rules.py); step 1b folded them to 7 with every case kept and folded test_pipeline_bot_indicators_tools.py into test_pipeline_own_clone_write.py; the 7 left are a new gate and two new modules with no older test to replace, 7 over the patrol's 811"
+    "end": 811,
+    "reason": "step 0 counted 830 after the day's 27 new functions (a new MCP gate own_clone_write, clone.py indicators, qa/card_rules.py); step 1b folded them with every case kept, so the pass ends at 811, the patrol's ceiling"
   },
-  "finished": false
+  "finished": true
 }
