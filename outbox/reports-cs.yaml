@@ -47,3 +47,7 @@ reports:
   168: "Gem Screener: dokumentace pro agenty pořád popisuje ocenění chainů poplatky proti jednomu vedoucímu chainu"
   169: "Gem Screener, Chains: „Adoption“ znamená dvě různá čísla; prověření chainů stojí na stablecoinech a DEX"
   170: "Gem Screener, Chains: BCH a ETC prý chybí tržní data, CoinGecko je má; chybí jim jiný vstup"
+  171: "Paper boti: 5min sázka se vypořádá cenou z chvíle vypořádání, ne z konce epochy; 9 sázek má opačný výsledek"
+  172: "Smazaný klon bota: přehled obchodů podle aktiv vrací chybu 500 místo zdokumentované 404"
+  173: "Paper boti: sázka doběhlá do konce epochy má v historii jako důvod konce stop-loss nebo take-profit"
+  174: "Klony botů: 9 druhů slibuje své indikátory, klon ale sází podle pravidla jiného bota (sudá/lichá epocha)"

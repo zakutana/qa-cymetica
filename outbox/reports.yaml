@@ -5126,6 +5126,146 @@ reports:
       the tokens left out for that reason, anonymously, and fails while CoinGecko answers a market
       cap at least the listing floor for any of them.
 
+  - key: paper-bot-bet-settled-after-its-epoch
+    findings:
+      - CYM-paper-bot-bet-settles-at-epoch-end
+    severity: medium
+    category: logic
+    url: https://cymetica.com/api/v1/cloned-bots/my-clones
+    title: >-
+      Paper clone bets are settled on the price when settlement runs, not at epoch_end (ETH epoch
+      5967592: 2697.01 of 19:25:53, not 2694.62 of 19:25:00); 9 bets pay the opposite result
+    expected: >
+      Each settled 5-minute bet in a clone's activity names its epoch (epoch_start, epoch_end) and,
+      settled normally, resolution_path "epoch_close". Its price_at_exit is the asset's price at
+      epoch_end, and is_winner follows from price_at_entry and that price.
+    actual: >
+      Read on 2026-10-04 at 18:12 and 18:18 UTC over all 92 settled 5-minute bets of our 21 listed
+      paper clones (every page of /activity), against Binance spot 1-second klines. 25 bets on 9
+      epoch/asset pairs have a price_at_exit more than 0.01% from Binance at epoch_end; where the
+      exit was taken on time, the prices sat within 0.0089% of it. 12 of the 25 equal Binance at the
+      second of their closed_at, 13 to 54 s after epoch_end: ETH epoch 5967592 (2026-09-24) ended
+      19:25:00 at 2694.62 and its bets were closed 19:25:53-54 at 2697.01, Binance's price at
+      19:25:53; ETH epoch 5970201 (2026-10-03) ended 20:50:00 at 2687.21 and was settled 20:50:18 at
+      2688.14. One is a price from before the end: BTC epoch 5967591 was settled at 84557.30,
+      Binance's price at 19:19:36-45, while it stood at 84615.22 at 19:20:00. Taking each bet's own
+      price_at_entry and the price at epoch_end, 9 bets on 3 epoch/asset pairs pay the opposite
+      result: BTC 5967591 (entry 84584.00, end 84615.22: three YES paid as losses, one NO as a win),
+      ETH 5967593 (a YES entered at 2697.00, end 2697.30, settled 19:30:30 at 2695.81 and paid as a
+      loss) and ETH 5970201 (entry 2687.54, end 2687.21: two YES paid as wins, two NO as losses).
+    steps:
+      - 'GET https://cymetica.com/api/v1/cloned-bots/4076d1b0-f78b-452f-b66f-f02506a4f219/activity?page_size=100 (our paper clone) -> the ETH bet of epoch_id 5967592: epoch_end 2026-09-24T19:25:00, closed_at 19:25:53, price_at_exit 2697.01, resolution_path epoch_close'
+      - 'GET https://data-api.binance.vision/api/v3/klines?symbol=ETHUSDT&interval=1s&startTime=1790277899000&limit=60 -> close of 19:24:59 is 2694.62, close of 19:25:53 is 2697.01'
+      - 'GET https://cymetica.com/api/v1/cloned-bots/1b81dff7-8a27-4f9e-abd8-b3265f1a6244/activity -> the ETH buy of epoch 5970201: price_at_entry 2687.54, price_at_exit 2688.14, closed_at 20:50:18, is_winner true; Binance ETHUSDT 1s kline at 1791060599000 (20:49:59) closes at 2687.21'
+    body: >
+      How to fix it is yours: take each bet's exit at its epoch_end, whenever the settlement runs.
+      Scope: paper clones only, our own; BTC and ETH, the two assets our bots bet on. Binance is our
+      reference, not necessarily your source: where your exits were on time they agree with it
+      within 0.0089%, far inside the 0.01% our check allows. The effect runs both ways (it does not
+      favour the bots); it changes which bets win. Our check reads every settled bet of our listed
+      paper clones and Binance's 1-second price at each epoch_end, and fails while any price_at_exit
+      is more than 0.01% from it.
+
+  - key: deleted-clone-asset-analytics-500
+    findings:
+      - CYM-deleted-bot-asset-analytics-answers-404
+    severity: low
+    category: api
+    url: https://cymetica.com/api/v1/cloned-bots/36642175-7210-4ca5-a6be-f94bfe14b382/asset-analytics
+    title: >-
+      Deleted clone bot: GET /api/v1/cloned-bots/{id}/asset-analytics answers HTTP 500 where its
+      activity and balance answer the documented 404 (12 of 12 deleted clones)
+    expected: >
+      llms.txt: a deleted bot "is listed only with ?include_inactive=true; its balance and activity
+      answer 404 'Bot was deleted by its owner'". Its asset-analytics, read the same way, answers the
+      same 404 rather than a server error.
+    actual: >
+      Read on 2026-10-04 at 18:12 and 18:18 UTC: all 12 deleted paper clones of ours listed by
+      my-clones?mode=paper&include_inactive=true answer /asset-analytics with HTTP 500
+      {"error": {"code": "INTERNAL_SERVER_ERROR", "message": "An unexpected error occurred"}}, while
+      their /activity answers 404 "Bot was deleted by its owner; its balance and activity are no
+      longer served." For example 36642175-7210-4ca5-a6be-f94bfe14b382, deleted 2026-09-28 08:07 UTC.
+    steps:
+      - 'GET https://cymetica.com/api/v1/cloned-bots/my-clones?mode=paper&include_inactive=true (our key) -> rows with status "deleted"'
+      - 'GET https://cymetica.com/api/v1/cloned-bots/36642175-7210-4ca5-a6be-f94bfe14b382/activity -> 404 "Bot was deleted by its owner; ..."'
+      - 'GET https://cymetica.com/api/v1/cloned-bots/36642175-7210-4ca5-a6be-f94bfe14b382/asset-analytics -> 500 INTERNAL_SERVER_ERROR'
+    body: >
+      How to fix it is yours: answer asset-analytics of a deleted bot like its activity. Our check
+      reads every deleted paper clone of ours and fails while any answers asset-analytics with a 5xx.
+
+  - key: clone-bet-labelled-stopped-when-it-ran-to-its-epoch-end
+    findings:
+      - CYM-paper-bot-bet-exit-reason-is-how-it-ended
+    severity: low
+    category: logic
+    url: https://cymetica.com/api/v1/cloned-bots/31d18d91-14ae-4ebf-a2d3-b56db92ba6c8/activity
+    title: >-
+      Clone bot activity: the bet whose settlement trips take-profit or stop-loss is labelled
+      exit_reason take_profit/stop_loss although it ran to its epoch's end (15 of 92 bets)
+    expected: >
+      exit_reason says how the trade ended. A 5-minute bet held to the end of its epoch and settled
+      on the epoch's price reads like every other bet of that epoch (epoch_resolved, resolution_path
+      epoch_close); the pause it caused is the bot's (auto_pause_reason, the stop_loss_triggered or
+      take_profit_triggered event).
+    actual: >
+      Read on 2026-10-04 at 18:12 and 18:18 UTC over all 92 settled bets of our listed paper clones:
+      15 bets closed at or after their epoch's end carry exit_reason take_profit or stop_loss; 12 of
+      them have the same price_at_exit as a bet of the same epoch labelled epoch_resolved. Example:
+      MACD Hunter clone 31d18d91, its only bet, a BTC YES of epoch 5970199 (ended 2026-10-03
+      20:40:00), closed 20:40:05 at 84863.35 with exit_reason stop_loss and resolution_path null;
+      the BTC bet of the same epoch on clone 1b81dff7 closed 20:40:06 at 84863.35 as epoch_resolved,
+      epoch_close. The bot's stop_loss_triggered event came after the settlement. A reader of the
+      feed is told a stop closed the bet early, and it did not.
+    steps:
+      - 'GET https://cymetica.com/api/v1/cloned-bots/31d18d91-14ae-4ebf-a2d3-b56db92ba6c8/activity -> epoch_id 5970199, epoch_end 20:40:00, closed_at 20:40:05, price_at_exit 84863.35, exit_reason stop_loss, resolution_path null'
+      - 'GET https://cymetica.com/api/v1/cloned-bots/1b81dff7-8a27-4f9e-abd8-b3265f1a6244/activity -> the BTC bet of epoch 5970199: closed_at 20:40:06, price_at_exit 84863.35, exit_reason epoch_resolved, resolution_path epoch_close'
+      - 'GET https://cymetica.com/api/v1/agents/instances/31d18d91-14ae-4ebf-a2d3-b56db92ba6c8/events -> stop_loss_triggered, pnl_pct -5.0, created 20:40:07'
+    body: >
+      How to fix it is yours: keep the bet's own exit reason and leave the pause reason on the bot.
+      Our check reads every settled bet of our listed paper clones and fails while a bet closed at or
+      after its epoch_end carries take_profit or stop_loss as its exit_reason.
+
+  - key: clone-species-described-by-indicators-it-does-not-trade-on
+    findings:
+      - CYM-cloned-species-trades-its-described-strategy
+    severity: medium
+    category: logic
+    url: https://cymetica.com/api/v1/cloned-bots/available
+    title: >-
+      Clone bots: 9 species are described by their indicators, but their clones' own
+      live_decision_source decides on another bot's epoch rule (Bollinger Bandit clones bet on
+      epoch-number parity)
+    expected: >
+      What a species says it does where it is chosen (GET /api/v1/cloned-bots/available, and llms.txt:
+      "Cloned bot species are price-series indicator strategies") is what its clone decides its bets
+      on; or the list says what the clone decides on.
+    actual: >
+      Read on 2026-10-04 at 18:12 and 18:18 UTC. On our paper clones (GET my-clones?mode=paper),
+      live_decision_source has differs_from_display true for 9 wta species whose description names
+      their indicators: Bollinger Bandit ("Exploits volatility expansions and contractions using
+      Bollinger Bands") and ATR Alpha decide on STAT, "Epoch-number parity heuristic (streak
+      continuation or reversion)"; Trend Titan ("Multi-timeframe trend follower using EMA ribbons and
+      ADX") and Ichimoku Empress on SYNC, "Deterministic epoch-parity alternation (even epoch=YES,
+      odd=NO)"; RSI Sniper, Stochastic Striker and Fibonacci Phoenix on DELTA, "Prior-epoch price
+      swing - reverts big moves (>0.5%), follows small ones"; MACD Hunter ("Hunts for momentum shifts
+      using MACD crossovers") and Volume Viper on CORR, "Prior-epoch direction (cross-market
+      correlation)". Their bets' trade_rationale names that bot ("Stat Oracle takes YES on BTC" on
+      a Bollinger Bandit clone). The clone's own page states "Live/PAPER decision source: ..." after
+      cloning; the list a species is chosen from and llms.txt do not.
+    steps:
+      - 'GET https://cymetica.com/api/v1/cloned-bots/available -> wta_species, Bollinger Bandit: description "Exploits volatility expansions and contractions using Bollinger Bands. ...", primary_indicators Bollinger_Bands, Bollinger_%B, Bandwidth'
+      - 'GET https://cymetica.com/api/v1/cloned-bots/my-clones?mode=paper (our key) -> the Bollinger Bandit clone 1b81dff7: live_decision_source {"strategy_symbol": "STAT", "label": "Epoch-number parity heuristic (streak continuation or reversion)", "differs_from_display": true}'
+      - 'GET https://cymetica.com/api/v1/cloned-bots/1b81dff7-8a27-4f9e-abd8-b3265f1a6244/activity -> trade_rationale "Stat Oracle takes NO on ETH ..."'
+      - 'GET https://cymetica.com/llms.txt -> "Cloned bot species are price-series indicator strategies and do NOT trade event cards."'
+    body: >
+      How to fix it is yours: either a clone decides on its species' strategy, or the species is
+      described where it is chosen by what its clone will decide on. Someone choosing Bollinger
+      Bandit for its Bollinger Bands gets bets placed on the parity of the epoch number. Not about
+      whether any of these rules is good. Perceptron Oracle's clone carries no live_decision_source
+      and is not counted. Our check reads our paper clones and the species list, and fails while a
+      clone whose decision source differs from its display belongs to a species whose description
+      names one of its own indicators.
+
 footer: >
   Reported by an independent QA agent. Scope of this work: verification of the
   REST API, MCP, the machine-readable discovery surfaces and the pages built on

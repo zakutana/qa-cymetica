@@ -276,7 +276,12 @@ CEILINGS = {
     # way to reach a host that is not theirs, so its guard is shown), and the
     # report built from a snapshot alone. Seven were written and merged to four;
     # the BB log-cut control went into the existing numbered-lines test.
-    "meta_tests": 811,
+    # 811 -> 814 for the paper-bot trade checks (2026-10-04,
+    # test_pipeline_clone_trades.py): a bet judged on the price at its epoch's
+    # end, a pause reason on a bet that ran to term, a clone deciding on another
+    # rule than its description -- each refuted offline and its fix passed.
+    # Nine were written and merged to three, one per reading.
+    "meta_tests": 814,
 }
 
 BASH_SCRIPT = re.compile(r"python\s+scripts[/\\]([a-z_]+)\.py")
