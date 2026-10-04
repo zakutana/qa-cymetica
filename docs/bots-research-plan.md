@@ -70,6 +70,9 @@ CLN-0143, read-back sedí), wave 0 spuštěna (12 botů obchoduje, rooms STR-008
       položek předpovídá „Hot" (Nexus NEX-0120 potvrdil mechanismus).
 - [ ] **Odpovědi Cymetiky ke sledování:** 2. klon druhu (409, A2A-0055), skilly/modely přes API klíč (A2A-0054),
       report #150 (plán Pro/Free), podání /code-review a push až po deep passu.
+- [ ] **Degen prompty přes `chat/stream` (paper)**, přesunuto z NEXT.md 2026-10-04 (10 dní nezačato): klient
+      `scripts/chat.py` hotov, běželo 9 a 8 (8: nákup shortlistu nejde). Zbývá room na prompt a zbylé prompty
+      (ne 7: veřejná karta; ne arena); každý otevře pozice mimo rooms, nejdřív návrh room. Až po verdiktu wave 0.
 - [ ] **Nepotvrzeno, čeká na operátora:** zpráva Cymetice o soukromí zadání v Build it Better (CoStar chce nasazení).
 
 ## Meze
