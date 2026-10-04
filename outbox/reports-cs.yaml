@@ -39,3 +39,5 @@ reports:
   160: "Supply Analyzer API: nepodporovaný chain vrací chybu 500 místo zdokumentované 400"
   161: "Gem Screener: 10 coinů má na detailu dvě různá ředění (HYPE 0 % v Checks, +1 % na kartě)"
   162: "Gem Screener: ORE ukazuje „100 % tokenů venku“, i když obíhá 17 % max zásoby a pořád se těží"
+  163: "Supply Analyzer, PHAR: 497M PHAR zamčených držiteli v xPHAR ukazuje jako rezervu projektu"
+  164: "Supply Analyzer: 174 coinů s neznámým vestingem píše „nic naplánováno“, ARB přitom 15. 10. odemyká 92,6M"

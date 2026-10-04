@@ -4808,6 +4808,98 @@ reports:
       be a burn. The Supply Analyzer reads the same difference for ORE as "Bought back,
       burned" (reported separately).
 
+  - key: supply-analyzer-pharaoh-locked-tokens-shown-as-reserve
+    findings: [CYM-supply-analyzer-tokens-locked-by-holders-are-not-a-reserve]
+    severity: medium
+    category: logic
+    url: https://cymetica.com/supply-analyzer?symbol=pharaoh-exchange
+    title: >-
+      Supply Analyzer, PHAR: the 497M PHAR its holders have locked in xPHAR is shown as the
+      project's "Reserve, outside the pie", and staking as 11.4M
+    expected: >
+      Tokens holders have locked in the token's own staking contract show as staked or locked,
+      not as a reserve. The page describes the reserve as "Max supply minus every token in
+      play, plus the project's own stake. It enters the pile only on a decision". Pharaoh's
+      docs (docs.phar.gg, xPHAR and Contract Addresses pages) say xPHAR is minted 1:1 from
+      PHAR with "50% of the PHAR used in the mint" burned, is "non-transferable", and redeems
+      back to PHAR with a "50% penalty"; they list PHAR at
+      0x13A466998Ce03Db73aBc2d4DF3bBD845Ed1f28E7 and xPHAR at
+      0xE8164Ea89665DAb7a553e667F81F30CfDA736B9A on Avalanche.
+    actual: >
+      Read on 2026-10-04 between 10:20 and 10:45 UTC, on chain through Routescan and through
+      a public Avalanche RPC: PHAR totalSupply 530,627,320; the xPHAR contract holds
+      497,139,188 PHAR (93.7% of the supply); xPHAR supply 994,278,376, of which 992,673,877
+      are staked in the VoteModule (0x34F233F868CdB42446a18562710eE705d66f846b). PHAR's
+      record, read three times: total_supply 530,628,031, circulating 33,493,321 (which is
+      the supply outside xPHAR, correct), "Reserve, outside the pie" 497,134,710 (the PHAR
+      in xPHAR, to 0.001%), and staked_total 11,351,535 ("DeFiLlama protocol staking TVL at
+      today's price", 2.3% of the locked PHAR), shown as "Staked, free to unlock". So the page
+      shows 93% of PHAR as either "Bought back, burned" (469,371,969) or the project's
+      reserve, and almost nothing staked, where on chain the holders have 93.7% of it locked.
+      Two related readings: the Minter minted 4,939,305 PHAR at the 1 October epoch flip
+      (transaction 0x97a2069df223503a3b2f73336e4e864ea97378248aa3f70e181882eb0e042886) under a
+      MAX_SUPPLY() of 1,000,000,000, so part of the 469M "burned" is supply still to be minted
+      (#156); and the record's emissions_month of 22,880,209 agrees with the Minter's
+      weeklyEmissions() of 4,939,305 (21.5M per 30.4 days) within 7%.
+    steps:
+      - 'GET https://cymetica.com/api/v1/supply-analyzer/analyze?symbol=pharaoh-exchange -> reserve_today 497134709.9, circulating 33493320.9, total_supply 530628030.8, inputs[key=staked_total] 11351535.32 "DeFiLlama protocol staking TVL at today''s price"'
+      - 'GET https://api.routescan.io/v2/network/mainnet/evm/43114/etherscan/api?module=account&action=tokenbalance&contractaddress=0x13A466998Ce03Db73aBc2d4DF3bBD845Ed1f28E7&address=0xE8164Ea89665DAb7a553e667F81F30CfDA736B9A&tag=latest -> 497139187985913367719307621 (497,139,188 PHAR)'
+      - 'Same API, module=account action=tokenbalance contractaddress=0xE8164Ea89665DAb7a553e667F81F30CfDA736B9A address=0x34F233F868CdB42446a18562710eE705d66f846b -> 992,673,877 xPHAR staked'
+      - 'GET https://docs.phar.gg/pages/contract-addresses -> PHAR Token 0x13A4..., xPHAR Token 0xE816..., VoteModule 0x34F2...'
+    body: >
+      The reserve is max supply minus the tokens in play, and for PHAR that equals total
+      supply minus circulating: exactly the PHAR its holders have locked in xPHAR. Reading
+      the staking contract Pharaoh publishes would put them where they are. Our check reads
+      the PHAR record, Pharaoh's contract-addresses page and the chain through Routescan; it
+      fails while the record calls the PHAR held by xPHAR its reserve (within 1%) or shows
+      under half of it as staked, and reports that it cannot tell if Pharaoh's docs stop
+      listing the two addresses. Not judged: the exit rule. Your record says an unknown exit
+      rule is counted as free to unlock, the cautious reading, and that is documented. We
+      looked at PHAR because its holders say most of it is locked, and the page did not show
+      that.
+
+  - key: supply-analyzer-unknown-schedule-served-as-none
+    findings: [CYM-supply-analyzer-an-unknown-schedule-is-not-none-scheduled]
+    severity: medium
+    category: logic
+    url: https://cymetica.com/gem-screener/app?coin=arbitrum
+    title: >-
+      Supply Analyzer: all 174 records whose vesting schedule is unknown say "none scheduled",
+      which the Gem Screener prints as "none"; DeFiLlama lists 92.6M ARB unlocking on 15 October
+    expected: >
+      "Unknown never counts as good ... the unknown input is named" (/definitions), and, from
+      ET-28934 item 10, "none in 90 days" is shown only when the schedule says so, "unknown"
+      otherwise. The Gem Screener card has an unknown tile for this: "No vesting or unlock
+      schedule on any feed the Supply Analyzer reads. Unknown, not zero."
+    actual: >
+      Read on 2026-10-04 between 08:45 and 10:45 UTC, three times. In
+      /api/v1/supply-analyzer/batch/gem-screener, 174 rows list "vesting schedule" in
+      unknown_names (the record's reason: "No unlock schedule on any feed we read and none
+      hand-entered from a published document for this token."), and all 174 carry
+      next_unlock {"kind": "none_scheduled"}. The Gem Screener's Supply card prints that as
+      "none" over "next unlock scheduled", with the tooltip "Next unlock: none scheduled" and
+      "The schedule on file has no tranche ahead" (seen on ORE's detail around 09:11 UTC). For
+      2 of the 19 chains among them, DeFiLlama's unlock file, the feed the analyzer names and
+      reads for 68 other coins, lists dated unlocks: ARB
+      (https://defillama-datasets.llama.fi/emissions/arbitrum), 56,125,000 Team, Contributors
+      & Advisors and 36,520,833 Investors tokens on 2026-10-15, with 10 events ahead; STRK
+      (https://defillama-datasets.llama.fi/emissions/starknet), 53,309,113 Early Contributors
+      and 53,309,113 Investors tokens on 2026-10-30. Both records are status "unknown",
+      pressure "?", and say no feed they read has a schedule.
+    steps:
+      - 'GET https://cymetica.com/api/v1/supply-analyzer/batch/gem-screener -> items[token.slug=arbitrum]: unknown_names includes "vesting schedule"; next_unlock {"kind": "none_scheduled"}; status "unknown"'
+      - 'GET https://defillama-datasets.llama.fi/emissions/arbitrum -> metadata.events: timestamp 1792072833 (2026-10-15T14:00:33Z), noOfTokens [56125000], "Team, Contributors & Advisors", unlockType cliff; the same timestamp, [36520833.33], "Investors"'
+      - 'Open https://cymetica.com/gem-screener/app?coin=ore-protocol -> Supply card: "none" / "next unlock scheduled"; tooltip "The schedule on file has no tranche ahead"'
+    body: >
+      Two separate things, one check. Serving "none_scheduled" for an unknown schedule is the
+      first; the card's own unknown tile is never reached for these coins. The second is
+      that the feed the record says it read does carry ARB's and STRK's schedules (perhaps
+      a matching key: the two files carry no gecko_id). Our check reads the batch and fails
+      while any record that names its vesting schedule unknown serves "none_scheduled"; for
+      the chains among them it reads DeFiLlama's unlock file to show what is scheduled. Every
+      Supply Analyzer read names a Gem Screener coin, so none adds a line to your weekly
+      ledger.
+
 footer: >
   Reported by an independent QA agent. Scope of this work: verification of the
   REST API, MCP, the machine-readable discovery surfaces and the pages built on
