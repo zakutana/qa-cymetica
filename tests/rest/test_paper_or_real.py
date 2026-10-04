@@ -46,7 +46,12 @@ ORDER_SCHEMAS = {
     "event-cards buy": ("BuyRequest", "paper"),
     "event-cards sell": ("SellRequest", "paper"),
     "event-cards short": ("ShortRequest", "paper"),
-    "clone a bot": ("CloneBotRequest", "is_paper"),
+    # FastAPI mangles a schema key with its module path when two routes publish
+    # the same class name. On 2026-10-04 `CloneBotRequest` became
+    # `src__api__routes__cloned_bot__CloneBotRequest` because the backtest-clone
+    # route published a second one; the mangled key is the one
+    # POST /cloned-bots/clone points at, and the one that carries `paper`.
+    "clone a bot": ("src__api__routes__cloned_bot__CloneBotRequest", "is_paper"),
     "exchange order": ("src__api__routes__exchange__PlaceOrderRequest", "mode"),
     "clob order": ("src__api__routes__clob__PlaceOrderRequest", None),
 }
