@@ -784,6 +784,18 @@ def test_the_is_answer_rule_is_self_calibrating_and_still_bites():
     assert ahead[0]["what"] == "Team, Contributors & Advisors"
     assert future_unlocks({}, 1791109556) == [] and future_unlocks(None, 1791109556) == []
 
+    # 12. Max supply: ETH that afternoon, 127,869,954 "max supply" from DeFiLlama's unlock
+    #     schedule (the end of its issuance horizon); ETH has no max supply.
+    from tests.rest.test_supply_analyzer_states_what_its_sources_say import max_from_a_schedule
+    eth = {"token": {"symbol": "ETH", "slug": "ethereum"}, "max_supply": 127869953.59,
+           "inputs": [{"key": "max_supply", "value": 127869953.59, "source": "DeFiLlama unlock schedule (ethereum)"}],
+           "slices_today": [{"key": "bb_burned", "amount": 5768336.31}]}
+    got = max_from_a_schedule(eth)
+    assert got and got["max_supply"] == 127869953.59 and got["burned_from_it"] == 5768336.31
+    assert max_from_a_schedule(dict(eth, inputs=[dict(eth["inputs"][0], source="CoinGecko via the Gem "
+                                                       "Screener snapshot")])) is None
+    assert max_from_a_schedule(dict(eth, inputs=[], max_supply=None)) is None, "no max stated is the fix"
+
     # The Gem Screener refresh rule (2026-09-27), held here for the same
     # ceiling. Stuck means BOTH: stale past 3 cycles AND the newest attempt a
     # recorded failure. A missing field is unreadable (None), never "healthy".

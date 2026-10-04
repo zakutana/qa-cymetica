@@ -85,6 +85,13 @@ record's own inputs, from the source it names, or from its documentation; one ch
    with an unknown schedule serves "none_scheduled". DeFiLlama is read only for the
    chains among them, to show what is scheduled (a sample, stated in the reason).
 
+12. A MAX SUPPLY THAT IS A SCHEDULE'S END (added the same afternoon). Seen: ETH's record
+   states max_supply 127,869,954, source "DeFiLlama unlock schedule (ethereum)" -- the end
+   total of an issuance horizon, not a cap (ETH has none) -- and shows max minus total,
+   5,768,336, as "Bought back, burned"; SOL and TRX the same. ASSERTS: no sampled record
+   takes its max supply from an unlock schedule. SAMPLE: every chain, and every app whose
+   Gem Screener snapshot has no max supply while the analyzer states one.
+
 NOT asserted: whether the pressure number predicts anything, the weekly test, or the
 page's layout. SIDE EFFECTS: GETs only, anonymous; every Supply Analyzer read here names a
 Gem Screener coin, so none adds a line to the analyzer's ledger. Reads are paced to stay
@@ -124,12 +131,13 @@ CLAIM_FLAGS = "gem-screener-one-dilution-flag-per-coin"
 CLAIM_OUT = "gem-screener-tokens-out-counts-the-max-supply"
 CLAIM_LOCKED = "supply-analyzer-tokens-locked-by-holders-are-not-a-reserve"
 CLAIM_SCHEDULE = "supply-analyzer-an-unknown-schedule-is-not-none-scheduled"
+CLAIM_MAX = "supply-analyzer-max-supply-is-a-cap-not-a-schedule-end"
 LLAMA_EMISSIONS = "https://defillama-datasets.llama.fi/emissions/{slug}"
 
 # The documented limit is 30 requests a minute per IP (llms.txt, /api-docs).
 PACE_S = 2.2
 BURNED_SAMPLE = 12
-MAX_SINGLES = 70
+MAX_SINGLES = 130
 MAX_TOTAL = "max supply minus total supply"
 UNI = "0x1f9840a85d5aF5bf1D1762F925BDADdC4201F984"
 UNSUPPORTED_CHAINS = ("dogechain", "tron", "foo")
@@ -423,6 +431,18 @@ def future_unlocks(dl_file, now) -> list[dict]:
                     "type": event.get("unlockType"), "category": event.get("category"),
                     "what": said.group(1) if said else str(event.get("description") or "")})
     return sorted(out, key=lambda e: e["ts"])
+
+
+def max_from_a_schedule(record) -> dict | None:
+    """The record's max supply when its source is an unlock schedule (the schedule's end
+    total, not a cap), with the burned amount derived from it, else None."""
+    item = _input(record, "max_supply")
+    if not item or "unlock schedule" not in str(item.get("source") or "").lower() or not _num(item.get("value")):
+        return None
+    burned = _slices(record).get("bb_burned")
+    return {"coin": _sym(record), "max_supply": item["value"], "source": item.get("source"),
+            "total_supply": (record or {}).get("total_supply"),
+            "burned_from_it": burned if _num(burned) and burned > 0 else 0}
 
 
 def out_ignores_max(app) -> dict | None:
@@ -938,6 +958,48 @@ def test_an_unknown_schedule_is_not_served_as_none_scheduled(rest_anon, evidence
         population={"served": [_sym(r) for r in served], "scheduled_elsewhere": scheduled, "probed": probed},
         sources={"batch": BATCH, "feed": LLAMA_EMISSIONS},
         claim_id=CLAIM_SCHEDULE))
+
+
+# --- 12. a max supply that is the end of a schedule --------------------------------------
+
+@qa(component="rest.supply_analyzer", tier=SafetyTier.SAFE, surface="rest", claim=CLAIM_MAX)
+def test_a_max_supply_is_not_the_end_of_an_issuance_schedule(rest_anon):
+    """No sampled record states as its max supply the end total of DeFiLlama's unlock
+    schedule. Sample: every chain (the coins most likely to have no cap) and every app whose
+    Gem Screener snapshot has no max supply while the analyzer states one."""
+    batch = _batch(rest_anon)
+    cg_max = {a.get("slug"): (a.get("cg") or {}).get("max") for a in _snapshot(rest_anon)["apps"]}
+    rows = [r for r in batch["items"] if _num(r.get("max_supply")) and (
+        (r.get("token") or {}).get("kind") == "chains" or not _num(cg_max.get((r.get("token") or {}).get("slug"))))]
+    if not rows:
+        raise Inconclusive("no row to sample")
+    judged, bad, unread = 0, [], []
+    for row in rows:
+        record = _single(rest_anon, (row.get("token") or {}).get("slug") or "")
+        if record is None:
+            unread.append(_sym(row))
+            continue
+        judged += 1
+        found = max_from_a_schedule(record)
+        if found:
+            bad.append(found)
+    if not judged:
+        raise Inconclusive(f"none of {len(rows)} sampled records could be read")
+    bad.sort(key=lambda b: (0 if b["coin"].split(" ")[0] in ("ETH", "SOL", "TRX") else 1, b["coin"]))
+    conclude(Measurement(
+        verdict="failed" if bad else "passed",
+        reason=(f"{len(bad)} of {judged} sampled records state a max supply whose source is a DeFiLlama unlock "
+                f"schedule, the end total of its issuance horizon; {sum(1 for b in bad if b['burned_from_it'])} of them "
+                f"then show max minus total as \"Bought back, burned\": "
+                + "; ".join(f"{b['coin']} max {b['max_supply']:,.0f} from \"{b['source']}\" (total {b['total_supply']:,.0f}"
+                            + (f", burned {b['burned_from_it']:,.0f}" if b["burned_from_it"] else "") + ")"
+                            for b in bad[:5])
+                if bad else f"none of {judged} sampled records takes its max supply from an unlock schedule"),
+        left={"max_from_a_schedule": len(bad)},
+        right={"max_from_a_schedule": 0},
+        population={"bad": bad, "judged": judged, "unread": unread, "sampled": [_sym(r) for r in rows]},
+        sources={"batch": BATCH, "snapshot": SNAPSHOT, "records": f"{ANALYZE}?symbol=<slug>"},
+        claim_id=CLAIM_MAX))
 
 
 # --- 9. tokens out (Gem Screener) --------------------------------------------------------
