@@ -17141,6 +17141,7 @@
 {"archive": "evidence-2026-10", "bytes": 41111, "call": "GET https://cymetica.com/api/v1/event-cards/7e02b1cb-4702-4786-b017-4d7a695b08d4/index-history?", "id": "be03ee1dcc716f864fa72d5c1bd8044aee6cbecbb89d6bb28792452f1e9566a7", "why": "row"}
 {"archive": "evidence-2026-09", "bytes": 86918, "call": "GET https://cymetica.com/api/v1/wta/markets?", "id": "be06b51a76494f645ea5be6fb92b08648b147248ebabdbd13654eff60fbd0146", "why": "row"}
 {"archive": "evidence-2026-10", "bytes": 9322, "call": "GET https://cymetica.com/api/v1/build-it-better/apps/stats?path", "id": "be06dbe8d74fa6c818a7832e97c519d2b20960501ff53f1b022062fc2b8095eb", "why": "row"}
+{"archive": "", "bytes": 551111, "call": "GET https://cymetica.com/api/v1/gem-screener?", "id": "be0bbbf61ecb6a331e78bc4d7c20302643606e0224ec251c95dcbe7f48ae8276", "why": "row"}
 {"archive": "evidence-2026-10", "bytes": 4223, "call": "GET https://cymetica.com/api/v1/rst/exchange-address?", "id": "be0c12132b33e63891f0156120c00d8ae2b6c6ed1a4566c796e76c30b5d1588a", "why": "row"}
 {"archive": "evidence-2026-10", "bytes": 9314, "call": "GET https://cymetica.com/api/v1/build-it-better/apps/stats?path", "id": "be10b1e0e47744b882bea8d683b27e04b00e17a3a0b939baa9164fe3e35be97e", "why": "row"}
 {"archive": "evidence-2026-09", "bytes": 518394, "call": "GET https://cymetica.com/openapi-public.json?", "id": "be15e8b6b943913c2f7e910469dc30b958f575e9b74580be46199af821d71a2e", "why": "row"}
