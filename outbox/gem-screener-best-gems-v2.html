@@ -1,0 +1,102 @@
+<!doctype html>
+<html><head><meta charset="utf-8">
+<title>Gem Screener - Best gems</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo+Black&family=JetBrains+Mono:wght@500;700;800&display=swap">
+<style>
+  :root{
+    --bg:#0a101a; --ink:#ffffff; --green:#00ff88; --cyan:#00cfff;
+    --src:url("file:///C:/Users/adamz/AppData/Local/Temp/claude/C--Users-adamz-Documents-Projects-cymetica-qa-agent-qa-cymetica/ccc71008-51b1-4a30-ab39-85cf38562633/images/2.png");
+    --hl-size:68px; --hl-top:178px; --dash-drop:40px;
+  }
+  html,body{margin:0;width:1200px;height:630px;overflow:hidden;background:var(--bg)}
+  .stage{position:relative;width:1200px;height:630px;overflow:hidden;background:var(--bg)}
+
+  /* ---------- background, rebuilt (no painted-over rectangles) ---------- */
+  .bg{position:absolute;inset:0;
+    background:
+      radial-gradient(ellipse 470px 250px at 70px 0px, rgba(14,52,68,.95) 0%, rgba(12,40,55,.55) 45%, rgba(10,16,26,0) 100%),
+      radial-gradient(ellipse 620px 360px at 930px 500px, rgba(0,255,136,.16) 0%, rgba(0,255,136,.06) 45%, rgba(0,255,136,0) 75%),
+      radial-gradient(ellipse 520px 220px at 300px 290px, rgba(0,255,136,.05) 0%, rgba(0,255,136,0) 100%),
+      var(--bg)}
+  .grid{position:absolute;inset:0;
+    background-image:
+      linear-gradient(rgba(0,207,255,.06) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(0,207,255,.06) 1px, transparent 1px);
+    background-size:44px 44px; background-position:-8px -8px;
+    -webkit-mask-image:radial-gradient(ellipse 560px 420px at 960px 300px, #000 0%, rgba(0,0,0,.5) 50%, transparent 85%);
+            mask-image:radial-gradient(ellipse 560px 420px at 960px 300px, #000 0%, rgba(0,0,0,.5) 50%, transparent 85%)}
+  .bar{position:absolute;left:0;top:0;width:10px;height:630px;background:var(--green);
+    box-shadow:0 0 24px rgba(0,255,136,.35)}
+
+  /* ---------- layers cut from Cymetica's own preview image ---------- */
+  .crop{position:absolute;background-image:var(--src);background-size:1200px 630px;background-repeat:no-repeat}
+  .logo{left:57px;top:44px;width:511px;height:87px;background-position:-67px -54px;
+    mix-blend-mode:lighten;
+    -webkit-mask-image:linear-gradient(90deg,transparent,#000 7px,#000 calc(100% - 7px),transparent),
+                       linear-gradient(transparent,#000 7px,#000 calc(100% - 7px),transparent);
+    -webkit-mask-composite:source-in; mask-composite:intersect;
+    transform:scale(.9);transform-origin:0 0}
+
+  /* their coin constellation, kept intact, scaled to .76 and parked top-right clear of the headline */
+  .coins{position:absolute;left:0;top:0;width:1200px;height:630px;transform:translate(310.2px,20.6px) scale(.76);transform-origin:0 0}
+  .coin{position:absolute;width:72px;height:72px;border-radius:50%;
+    box-shadow:0 0 0 1px rgba(10,16,26,.6), 0 10px 26px rgba(0,0,0,.55)}
+
+  /* dashboard mock, clipped inside its own frame, frame re-stroked as a vector;
+     dropped 40px vs. the stop-hand banner so a three-line headline has air above it */
+  .dashwrap{position:absolute;inset:0;transform:translateY(var(--dash-drop))}
+  .dash-glow{position:absolute;left:696px;top:362px;width:600px;height:320px;border-radius:16px;
+    box-shadow:0 0 60px 6px rgba(0,255,136,.20), 0 0 140px 30px rgba(0,255,136,.09)}
+  .dash{left:676px;top:342px;width:580px;height:330px;background-position:-620px -300px;
+    clip-path:path('M19.6,330 L22.46,44 Q22.7,28.5 36,28.37 L580,16.4 L580,330 Z')}
+  .frame{position:absolute;left:676px;top:342px;width:580px;height:330px;overflow:visible;
+    filter:drop-shadow(0 0 6px rgba(0,207,255,.45))}
+
+  /* ---------- type ---------- */
+  .hl{position:absolute;left:62px;top:var(--hl-top);margin:0;
+    font:400 var(--hl-size)/1 "Archivo Black",sans-serif;color:var(--ink);letter-spacing:-.02em;white-space:nowrap}
+  .hl span{display:block}
+  .hl span + span{margin-top:6px}
+  .hl em{font-style:normal;color:var(--green);text-shadow:0 0 34px rgba(0,255,136,.35)}
+
+  .cta{position:absolute;left:64px;top:482px;display:flex;align-items:center;gap:14px;
+    padding:13px 22px 13px 18px;border-radius:12px;
+    background:rgba(0,255,136,.08);border:2px solid rgba(0,255,136,.75);
+    box-shadow:0 0 28px rgba(0,255,136,.18), inset 0 0 18px rgba(0,255,136,.06);
+    font:700 27px/1 "JetBrains Mono",monospace;color:var(--ink);letter-spacing:-.01em}
+  .cta svg{width:22px;height:22px;flex:none}
+</style></head><body>
+<div class="stage">
+  <div class="bg"></div>
+  <div class="grid"></div>
+
+  <div class="dashwrap">
+    <div class="dash-glow"></div>
+    <div class="crop dash"></div>
+    <svg class="frame" viewBox="0 0 580 330" aria-hidden="true">
+      <path d="M19.2,331 L22.06,44 Q22.3,28.0 36,27.97 L581,16.0" fill="none" stroke="#00cfff" stroke-opacity=".7" stroke-width="3" stroke-linecap="round"/>
+    </svg>
+  </div>
+
+  <div class="coins">
+    <div class="crop coin" style="left:676.5px;top:8.5px;background-position:-676.5px -8.5px"></div>
+    <div class="crop coin" style="left:732.5px;top:52.5px;background-position:-732.5px -52.5px"></div>
+    <div class="crop coin" style="left:646.5px;top:114.5px;background-position:-646.5px -114.5px"></div>
+    <div class="crop coin" style="left:820.5px;top:130.5px;background-position:-820.5px -130.5px"></div>
+    <div class="crop coin" style="left:906.5px;top:54.5px;background-position:-906.5px -54.5px"></div>
+    <div class="crop coin" style="left:996.5px;top:4.5px;background-position:-996.5px -4.5px"></div>
+    <div class="crop coin" style="left:1072.5px;top:54.5px;background-position:-1072.5px -54.5px"></div>
+    <div class="crop coin" style="left:988.5px;top:134.5px;background-position:-988.5px -134.5px"></div>
+  </div>
+
+  <div class="bar"></div>
+  <div class="crop logo"></div>
+
+  <h1 class="hl"><span>Best</span><span><em>revenue&#8209;generating</em></span><span>altcoin gems</span></h1>
+
+  <div class="cta">
+    <span>cymetica.com/gem-screener</span>
+    <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 12h14M12 5l7 7-7 7" fill="none" stroke="#00ff88" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/></svg>
+  </div>
+</div>
+</body></html>
