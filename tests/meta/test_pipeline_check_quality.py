@@ -618,6 +618,135 @@ def test_the_is_answer_rule_is_self_calibrating_and_still_bites():
     assert label_candidate(dict(sky, up=side(0.45, 0.38, 0.379, 5000))) is None, (
         "a range that reaches below the base rate")
 
+    # Supply Analyzer (ET-28934, verified 2026-10-04), held here for the same ceiling.
+    # Each reading from the shape seen live that morning, with the fix that must clear it.
+    from tests.rest.test_supply_analyzer_states_what_its_sources_say import (
+        burned_without_a_burn, chain_answer_documented, dilution_flag, emission_dropped,
+        fund_disposition, holders_revenue_kind, out_ignores_max, pile_over_supply,
+        shared_link_identifiers, two_flags, typical_mismatches)
+
+    # 1. The burned slice: ORE that morning, 2,499,496 "burned" from max minus total supply
+    #    while its own emission input said 42,098 new tokens a month and month 0 used 40.
+    ore = {"token": {"symbol": "ORE", "slug": "ore-protocol"},
+           "slices_today": [{"key": "free", "amount": 500464.27},
+                            {"key": "bb_burned", "amount": 2499495.62, "share_pct": 83.32}],
+           "inputs": [{"key": "burned_so_far", "value": 2499495.62, "as_of": None,
+                       "source": "max supply minus total supply (CoinGecko figures)"},
+                      {"key": "emissions_month", "value": 42097.5,
+                       "source": "DeFiLlama unlock schedule (ore-protocol)"}],
+           "unknown": [{"input": "burns", "why": "not on any feed we read; counted as 0."}],
+           "months": [{"in": {"emissions": 40.11}}]}
+    assert burned_without_a_burn(ore)["burned"] == 2499495.62
+    assert burned_without_a_burn(dict(ore, inputs=[dict(ore["inputs"][0], source="balance of the burn "
+                                                        "address on the chain"), ore["inputs"][1]])) is None, (
+        "a burn read from a burn source is the fix")
+    assert burned_without_a_burn(dict(ore, slices_today=[{"key": "free", "amount": 500464.27},
+                                                         {"key": "bb_burned", "amount": 0.0}])) is None, (
+        "max minus total moved out of the burned slice is the fix")
+    assert burned_without_a_burn({"slices_today": [{"key": "bb_burned", "amount": 5.0}]}) is None, (
+        "a burned slice with no source to read is unread, not convicted")
+    assert emission_dropped(ore) == (42097.5, 40.11)
+    assert emission_dropped(dict(ore, months=[{"in": {"emissions": 42097.5}}])) is None
+    assert emission_dropped(dict(ore, months=[])) is None
+
+    # 2. Buybacks: DeFiLlama's own HoldersRevenue sentences, as read that morning.
+    payout = holders_revenue_kind
+    assert payout("Swap fees and vote incentives distributed to xPHAR voters.") == "distribution"
+    assert payout("Share of swap fees distributed to veGIGA stakers (all of the protocol's share).") == "distribution"
+    assert payout("Swap fees and bribes going to holders") == "distribution"
+    assert payout("Part of swap fees go to veNest lockers (based on the gauge rate)") == "distribution"
+    assert payout("Money going to governance token holders") == "distribution"
+    assert payout("Around 80% of revenue is used to buyback and burn $PONS tokens.") == "buyback"
+    assert payout("Vault fee funds automated BEAN buybacks — 90% burned, 10% distributed to "
+                  "BEAN stakers.") == "buyback", "a buyback that also pays stakers is still a buyback"
+    assert payout("veDUST revenue distributions are recognized when notified on-chain and DUST "
+                  "buybacks on the day they reach the Revenue wallet.") == "buyback", "mixed is not judged"
+    assert payout("99% of fees go to Assistance Fund for buying HYPE tokens") == "buyback"
+    assert payout("Not applicable — protocol fees route to Curve DAO fee receivers, not CRV token "
+                  "holders.") is None, "a sentence that says neither is unread"
+    assert payout(None) is None and payout("") is None
+
+    # 3. The pile: CRV that morning, 3.25B sellable against 2.42B total supply.
+    crv = {"token": {"symbol": "CRV"}, "pile_today": 3245081474.0, "total_supply": 2422992570.14,
+           "max_supply": 3030303031.0, "circulating": 1570993126.0,
+           "inputs": [{"key": "staked_total", "value": 1674088348.26}]}
+    over = pile_over_supply(crv)
+    assert over and over["against"] == "total_supply" and round(over["over_by"]) == 822088904
+    assert pile_over_supply(dict(crv, pile_today=1570993126.0)) is None, "a pile inside the supply"
+    assert pile_over_supply(dict(crv, total_supply=None))["against"] == "max_supply"
+    assert pile_over_supply(dict(crv, total_supply=None, max_supply=None)) is None, (
+        "nothing to compare against is unread, not passed or failed")
+
+    # 4. A cited page: Hyperliquid's Fees page that morning, against the record's "kept".
+    fees = ("The assistance fund uses the system address 0xfefefefefefefefefefefefefefefefefefefefe. It "
+            "converts trading fees to HYPE in a fully automated manner as part of the L1 execution. HYPE "
+            "in the assistance fund is burned, removing the tokens permanently from the circulating and "
+            "total supply. Growth mode for HIP-3 perps")
+    assert fund_disposition(fees) == "burned"
+    assert fund_disposition(fees.replace("is burned, removing the tokens permanently from",
+                                         "is held, and stays in")) is None
+    assert fund_disposition("") is None and fund_disposition(None) is None
+
+    # 5. Links: the Gem Screener links by CoinGecko id first; one id on two rows that morning.
+    rows = [{"token": {"symbol": "HYPE", "gecko_id": "hyperliquid", "slug": "hyperliquid",
+                       "key": "parent#hyperliquid"}},
+            {"token": {"symbol": "HYPE", "gecko_id": "hyperliquid", "slug": "hyperliquid-l1",
+                       "key": "hyperliquid-l1"}},
+            {"token": {"symbol": "UNI", "gecko_id": "uniswap", "slug": "uniswap", "key": "parent#uniswap"}},
+            {"token": {"symbol": "ORE", "gecko_id": "ore", "slug": "ore-protocol", "key": "leaf#6893"}}]
+    assert shared_link_identifiers(rows) == ["hyperliquid"]
+    assert shared_link_identifiers(rows[2:]) == []
+
+    # 6. The typical inflow: one number on /definitions, others inside the ranges.
+    batch = [{"token": {"symbol": "HYPE"}, "status": "range", "yearly_range": [24.73, 29.73]},
+             {"token": {"symbol": "PHAR"}, "status": "range", "yearly_range": [41.61, 53.95]},
+             {"token": {"symbol": "SEI"}, "status": "range", "yearly_range": [21.36, 21.36]},
+             {"token": {"symbol": "X"}, "status": "measured", "yearly_range": [3.0, 3.0]},
+             {"token": {"symbol": "Y"}, "status": "unknown", "yearly_range": None}]
+    bad = typical_mismatches(batch, 12.34290441022498)
+    assert [b["symbol"] for b in bad] == ["HYPE"] and bad[0]["used"] == 5.0
+    assert typical_mismatches(batch[1:], 12.34290441022498) == [], (
+        "a range as wide as the stated typical, or no range at all, is not a mismatch")
+
+    # 7. Unsupported chain: what the analyzer answered that morning, and what it documents.
+    assert chain_answer_documented(500, {"error": {"code": "INTERNAL_SERVER_ERROR"}}) is False
+    assert chain_answer_documented(400, {"detail": {"error": {"code": "UNSUPPORTED_CHAIN",
+                                                              "message": "x"}}}) is True
+    assert chain_answer_documented(400, {"detail": {"error": {"code": "INVALID_CONTRACT"}}}) is True, (
+        "any documented 400 code is a documented answer")
+    assert chain_answer_documented(200, {"token": {"chain": "dogechain"}}) is True, (
+        "reading the chain after all is not a defect")
+    assert chain_answer_documented(503, {}) is None, "a 503 says nothing about the chain"
+
+    # 8. Dilution flags: HYPE and ORE that morning, Checks row against the Supply card.
+    assert [dilution_flag(v, 0.5, 1.0) for v in (0.0, 0.5, 0.7, 1.0, 1.0252, None)] == [
+        "ok", "ok", "caution", "caution", "red", None]
+    gs_apps = [{"slug": "hyperliquid", "symbol": "HYPE", "dilution": {"week_pct": 0.0}},
+               {"slug": "ore-protocol", "symbol": "ORE", "dilution": {"week_pct": 1.0707}},
+               {"slug": "pharaoh-exchange", "symbol": "PHAR", "dilution": {"week_pct": 8.6637}},
+               {"slug": "nodata", "symbol": "N", "dilution": {}}]
+    sa = [{"token": {"slug": "hyperliquid"}, "dilution_week_pct": 1.0252},
+          {"token": {"slug": "ore-protocol"}, "dilution_week_pct": 0.0018},
+          {"token": {"slug": "pharaoh-exchange"}, "dilution_week_pct": 15.7105},
+          {"token": {"slug": "nodata"}, "dilution_week_pct": 0.3}]
+    judged, differ = two_flags(gs_apps, sa, 0.5, 1.0)
+    assert judged == 3 and [d["symbol"] for d in differ] == ["HYPE", "ORE"], (
+        "two figures with the same flag are one flag; a missing figure is not judged")
+
+    # 9. Tokens out: ORE that morning, "100% of tokens out" with max supply 6x circulating
+    #    and the same snapshot recording emissions.
+    ore_app = {"symbol": "ORE", "slug": "ore-protocol", "mcap": 65397326, "fdv": 65400201,
+               "supply": {"out_pct": 99.9956, "circ": 500629.75},
+               "cg": {"max": 3000000.0, "total": 500651.75, "circ": 500629.75},
+               "dilution": {"week_pct": 1.0707, "basis": "emissions", "emissions_usd30": 3000944.31}}
+    flagged = out_ignores_max(ore_app)
+    assert flagged and flagged["circ_of_max_pct"] == 16.7
+    assert out_ignores_max(dict(ore_app, dilution={"week_pct": 0.0, "basis": "emissions",
+                                                   "emissions_usd30": 0.0})) is None, (
+        "with no issuance on record, max minus total may be burned: not judged")
+    assert out_ignores_max(dict(ore_app, supply=dict(ore_app["supply"], out_pct=16.7))) is None, "the fix"
+    assert out_ignores_max(dict(ore_app, cg={"total": 500651.75})) is None, "no max supply, nothing to ignore"
+
     # The Gem Screener refresh rule (2026-09-27), held here for the same
     # ceiling. Stuck means BOTH: stale past 3 cycles AND the newest attempt a
     # recorded failure. A missing field is unreadable (None), never "healthy".

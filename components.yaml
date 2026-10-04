@@ -224,6 +224,15 @@ components:
     surface: rest
     criticality: medium
     staleness_hours: 24
+  rest.supply_analyzer:
+    # A Build it Better app (ET-28934): a token's supply as a flow, its pressure
+    # number, and the Supply column and card it feeds in the Gem Screener
+    # (/api/v1/supply-analyzer/*). First checks 2026-10-04: a burned slice made
+    # from max minus total supply, a sellable pile larger than the supply.
+    title: Supply Analyzer (supply flow, pressure number, the Gem Screener batch)
+    surface: rest
+    criticality: medium
+    staleness_hours: 24
   rest.research_backtest:
     # Backtest Rally (cymetica.com/backtest-rally): theme-basket backtests on the
     # headline corpus and the Rally Card launched from a run. First check 2026-10-03:

@@ -64,6 +64,8 @@ COMPONENT_TO_SECTION = {
     "rest.gem_screener": "build_it_better",
     # Chart Analyzer is one too (ET-28324).
     "rest.chart_analyzer": "build_it_better",
+    # And the Supply Analyzer (ET-28934).
+    "rest.supply_analyzer": "build_it_better",
     # Backtest Rally has no tile of its own yet; its checks are shown on that one.
     "rest.research_backtest": "build_it_better",
     "rest.creator": "creator", "rest.head_to_head": "head_to_head",

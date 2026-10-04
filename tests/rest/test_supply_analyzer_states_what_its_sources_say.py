@@ -1,0 +1,778 @@
+"""The Supply Analyzer states what its sources say (ET-28934, verified 2026-10-04).
+
+Build it Better ET-28934 shipped on 2026-10-04 08:38 UTC: a token's supply as a flow,
+month by month, with a 1-10 pressure number, "every input with its source and date",
+"unknown inputs named, never zero", and a Supply column and card in the Gem Screener.
+Verified the same morning over all 244 Gem Screener coins (outbox/supply-analyzer-
+verification.md). Nine places where a number or a sentence does not follow from the
+record's own inputs, from the source it names, or from its documentation; one check each:
+
+1. THE BURNED SLICE. Seen: 81 records show "Bought back, burned"; every one whose input we
+   read takes it from "max supply minus total supply (CoinGecko figures)" with `as_of`
+   null, while the same record names burns as unknown, "counted as 0". For a token still
+   being minted that difference is supply not yet issued: ORE showed 2,499,496 burned
+   (83% of its pie) beside its own emission input of 42,098 tokens a month, of which month
+   0 used 40, because the reserve that pays emissions had become the burned slice.
+   ASSERTS: no sampled record shows a burned amount whose only source is max minus total.
+   SAMPLE: the 12 largest burned shares in the batch (a population that moves daily).
+
+2. BUYBACKS. /definitions: buybacks are "DeFiLlama's holders' revenue of the last 30 days
+   (the share of fees that buys the token)". DeFiLlama's own HoldersRevenue methodology
+   says, for many ve-token DEXes, that the money is paid out to lockers or voters.
+   ASSERTS: among the records shown Squeezing (pressure 8-10) or whose sellable pile reaches
+   0 inside its curve, none takes a buyback from holders' revenue whose every DeFiLlama
+   methodology sentence describes a payout and none a purchase. A sentence that names any
+   buying, or says neither, is not judged. SAMPLE: that population moves with every
+   refresh.
+
+3. THE PILE. Seen: `pile_today` (the tokens that can be sold) larger than the record's own
+   `total_supply` (CRV 3,245,081,474 against 2,422,992,570). ASSERTS: the sellable pile
+   is not larger than the total supply the record states (or its max supply when no
+   total is given). Candidates are preselected from the batch against the Gem Screener
+   snapshot's total supply and confirmed on each record, so a row that crossed between
+   the two snapshots can be missed: SAMPLING, stated.
+
+4. A CITED SOURCE. HYPE's record credits "kept" to "Hyperliquid docs: Fees (Assistance Fund)
+   and HYPE burn" (its url), and the vesting schedule to a Hyperliquid docs url. Seen: the
+   fees page says the assistance fund's HYPE is burned; the vesting url answers 404.
+   ASSERTS: a disposition the record credits to a page is not contradicted by that page,
+   and every url the record cites for its hand-entered inputs answers 200.
+
+5. THE LINK. The Gem Screener's "Open in Supply Analyzer" links `?symbol=` with the coin's
+   CoinGecko id first (`e.gecko_id || e.slug || e.key` in its script); OpenAPI says
+   `symbol` takes a "Ticker (Gem Screener coins), slug or CoinGecko id". Seen:
+   `symbol=hyperliquid` answers 404 UNKNOWN_SYMBOL for both Hyperliquid rows. ASSERTS: every
+   link identifier used by more than one Gem Screener row resolves to a coin with that
+   CoinGecko id.
+
+6. THE TYPICAL INFLOW. /definitions and the batch state one typical inflow (12.34% that
+   morning, "the median of the tokens with data"); HYPE's page printed "(5.0% a year)".
+   ASSERTS: every range is as wide as the stated typical inflow, the only thing the
+   documented rule adds to its top.
+
+7. AN UNSUPPORTED CHAIN. OpenAPI documents 400 UNSUPPORTED_CHAIN for /analyze. Seen: 500
+   INTERNAL_SERVER_ERROR. ASSERTS: a known Gem Screener contract (UNI) with an unsupported
+   chain gets a documented answer. UNI is chosen because a contract the analyzer has not
+   seen is added to its public weekly ledger when read (six of our reads did that).
+
+8. TWO DILUTION FLAGS (Gem Screener). The detail's Checks row and Apps row read the
+   snapshot's `dilution.week_pct`; the new Supply card reads the analyzer's
+   `dilution_week_pct`. Seen: HYPE "0% new tokens a week" in Checks and "+1%, Heavy
+   dilution" on the card, ORE the reverse. ASSERTS: no coin carries two different flags
+   (ok / caution / red on the snapshot's own lines).
+
+9. TOKENS OUT (Gem Screener). Seen: ORE "100% of tokens out" and FDV equal to market cap
+   with a max supply six times its circulating supply, while the same snapshot records
+   its emissions ($3.0M in 30 days). ASSERTS: no app whose snapshot records new tokens
+   being issued is shown ~100% out (>= 99%) while its circulating supply is under 90% of
+   its max supply. Without issuance on record, max minus total may be burned: not judged.
+
+NOT asserted: whether the pressure number predicts anything, the weekly test, or the
+page's layout. SIDE EFFECTS: GETs only, anonymous; every Supply Analyzer read here names a
+Gem Screener coin, so none adds a line to the analyzer's ledger. Reads are paced to stay
+under the documented 30 a minute.
+
+SAFE: GETs only, anonymous.
+"""
+
+from __future__ import annotations
+
+import html as _html
+import math
+import re
+import time
+
+import httpx
+
+from qa.client import build_source_client
+from qa.marks import Inconclusive, SafetyTier, qa
+from qa.measure import Measurement, conclude
+
+BATCH = "/api/v1/supply-analyzer/batch/gem-screener"
+ANALYZE = "/api/v1/supply-analyzer/analyze"
+DEFINITIONS = "/api/v1/supply-analyzer/definitions"
+SNAPSHOT = "/api/v1/gem-screener"
+LLAMA_FEES = "https://api.llama.fi/summary/fees/{slug}"
+
+CLAIM_BURNED = "supply-analyzer-burned-slice-is-a-measured-burn"
+CLAIM_BUYBACK = "supply-analyzer-buyback-is-a-purchase-of-the-token"
+CLAIM_PILE = "supply-analyzer-sellable-pile-fits-inside-the-supply"
+CLAIM_SOURCES = "supply-analyzer-cited-sources-say-what-they-are-credited-with"
+CLAIM_LINK = "supply-analyzer-gem-screener-link-opens-its-coin"
+CLAIM_TYPICAL = "supply-analyzer-typical-inflow-is-the-stated-one"
+CLAIM_CHAIN = "supply-analyzer-unsupported-chain-gets-a-documented-answer"
+CLAIM_FLAGS = "gem-screener-one-dilution-flag-per-coin"
+CLAIM_OUT = "gem-screener-tokens-out-counts-the-max-supply"
+
+# The documented limit is 30 requests a minute per IP (llms.txt, /api-docs).
+PACE_S = 2.2
+BURNED_SAMPLE = 12
+MAX_SINGLES = 70
+MAX_TOTAL = "max supply minus total supply"
+UNI = "0x1f9840a85d5aF5bf1D1762F925BDADdC4201F984"
+UNSUPPORTED_CHAINS = ("dogechain", "tron", "foo")
+DOCUMENTED_400 = frozenset({"MISSING_INPUT", "INVALID_SYMBOL", "INVALID_CONTRACT", "CHAIN_NEEDED",
+                            "UNSUPPORTED_CHAIN", "NO_PRICE"})
+
+_cache: dict = {}
+_last = [0.0]
+
+
+def _paced_get(client, url, **params):
+    wait = PACE_S - (time.monotonic() - _last[0])
+    if wait > 0:
+        time.sleep(wait)
+    try:
+        return client.get(url, params=params or None, timeout=120.0)
+    except httpx.HTTPError as exc:
+        raise Inconclusive(f"{url} could not be read: {type(exc).__name__}")
+    finally:
+        _last[0] = time.monotonic()
+
+
+def _json(response, what: str):
+    if response.status_code != 200:
+        raise Inconclusive(f"{what} answered HTTP {response.status_code}; a failed read is not an empty one")
+    try:
+        return response.json()
+    except ValueError:
+        raise Inconclusive(f"{what} answered 200 with a body that is not JSON")
+
+
+def _batch(client) -> dict:
+    if "batch" not in _cache:
+        body = _json(_paced_get(client, BATCH), BATCH)
+        if not isinstance(body, dict) or not isinstance(body.get("items"), list) or not body["items"]:
+            raise Inconclusive(f"{BATCH} carries no items")
+        _cache["batch"] = body
+    return _cache["batch"]
+
+
+def _snapshot(client) -> dict:
+    if "snapshot" not in _cache:
+        try:
+            response = client.get(SNAPSHOT, timeout=180.0)
+        except httpx.HTTPError as exc:
+            raise Inconclusive(f"{SNAPSHOT} could not be read: {type(exc).__name__}")
+        body = _json(response, SNAPSHOT)
+        if not isinstance(body, dict) or not isinstance(body.get("apps"), list):
+            raise Inconclusive(f"{SNAPSHOT} carries no apps")
+        _cache["snapshot"] = body
+    return _cache["snapshot"]
+
+
+def _single(client, ident: str):
+    """One coin's record by the identifier given, cached for the session; None when it
+    could not be read (the caller counts it as unread)."""
+    if ident in _cache.setdefault("singles", {}):
+        return _cache["singles"][ident]
+    if len(_cache["singles"]) >= MAX_SINGLES:
+        return None
+    response = _paced_get(client, ANALYZE, symbol=ident)
+    record = None
+    if response.status_code == 200:
+        try:
+            record = response.json()
+        except ValueError:
+            record = None
+    _cache["singles"][ident] = record if isinstance(record, dict) and record.get("token") else None
+    return _cache["singles"][ident]
+
+
+def _sym(row) -> str:
+    token = (row or {}).get("token") or {}
+    return f"{token.get('symbol')} ({token.get('slug')})"
+
+
+def _slices(row) -> dict:
+    return {s.get("key"): s.get("amount") for s in (row or {}).get("slices_today") or []
+            if isinstance(s, dict)}
+
+
+def _input(record, key):
+    for item in (record or {}).get("inputs") or []:
+        if isinstance(item, dict) and item.get("key") == key:
+            return item
+    return None
+
+
+def _num(value) -> bool:
+    return isinstance(value, (int, float)) and not isinstance(value, bool) and math.isfinite(value)
+
+
+# --- pure readings (held in tests/meta) -------------------------------------------------
+
+def burned_without_a_burn(record) -> dict | None:
+    """The burned slice of a record when its only source is max supply minus total supply,
+    else None. No source to read is unread, not convicted."""
+    amount = _slices(record).get("bb_burned")
+    if not _num(amount) or amount <= 0:
+        return None
+    source = _input(record, "burned_so_far")
+    if not source or MAX_TOTAL not in str(source.get("source") or "").lower():
+        return None
+    unknown = [u.get("input") for u in (record or {}).get("unknown") or [] if isinstance(u, dict)]
+    share = next((s.get("share_pct") for s in record.get("slices_today") or []
+                  if isinstance(s, dict) and s.get("key") == "bb_burned"), None)
+    return {"coin": _sym(record), "burned": amount, "share_pct": share, "source": source.get("source"),
+            "as_of": source.get("as_of"), "burns_named_unknown": "burns" in unknown}
+
+
+def emission_dropped(record) -> tuple[float, float] | None:
+    """(the emission input, the emissions month 0 counts) when month 0 counts under 90% of
+    a known emission input, else None."""
+    item = _input(record, "emissions_month")
+    months = (record or {}).get("months") or []
+    if not item or not _num(item.get("value")) or item["value"] <= 0 or not months:
+        return None
+    used = ((months[0] or {}).get("in") or {}).get("emissions")
+    if not _num(used) or used >= 0.9 * item["value"]:
+        return None
+    return item["value"], used
+
+
+_BUYING = re.compile(r"\bbuy(?:s|ing)?\b|buy[- ]?backs?|repurchas", re.I)
+_PAYOUT = re.compile(r"(?i:distribut|\bgo(?:es|ing)? to (?:\w+ )?(?:token )?holders|\bvoters\b|\bstakers\b"
+                     r"|\blockers\b|holders who vote)|\bto (?:ve|x|s)[A-Z]\w* (?:holders|voters|stakers|lockers)")
+
+
+def holders_revenue_kind(text) -> str | None:
+    """'buyback' when a DeFiLlama HoldersRevenue sentence names any buying, 'distribution'
+    when it only describes a payout to holders, voters, stakers or lockers, else None."""
+    if not isinstance(text, str) or not text.strip():
+        return None
+    if _BUYING.search(text):
+        return "buyback"
+    if _PAYOUT.search(text):
+        return "distribution"
+    return None
+
+
+def pile_over_supply(record) -> dict | None:
+    """The sellable pile when it is larger than the record's total supply (or its max
+    supply when it states no total), else None. Nothing to compare against is unread."""
+    pile = (record or {}).get("pile_today")
+    for field in ("total_supply", "max_supply"):
+        cap = (record or {}).get(field)
+        if _num(cap) and cap > 0:
+            break
+    else:
+        return None
+    if not _num(pile) or pile <= cap * 1.001:
+        return None
+    staked = _input(record, "staked_total")
+    return {"coin": _sym(record), "pile": pile, "against": field, "supply": cap, "over_by": pile - cap,
+            "circulating": record.get("circulating"),
+            "staked_total": staked.get("value") if staked else None,
+            "circulating_includes_staked": record.get("circulating_includes_staked")}
+
+
+def fund_disposition(text) -> str | None:
+    """'burned' when the page says the assistance fund's tokens are burned, else None."""
+    if not isinstance(text, str):
+        return None
+    if re.search(r"assistance fund[^.]{0,40}\bis (?:permanently )?burned", text, flags=re.I):
+        return "burned"
+    return None
+
+
+def link_identifier(row) -> str | None:
+    token = (row or {}).get("token") or {}
+    return token.get("gecko_id") or token.get("slug") or token.get("key")
+
+
+def shared_link_identifiers(rows) -> list[str]:
+    """Link identifiers used by more than one row, or equal to another row's slug."""
+    count: dict[str, int] = {}
+    slugs: dict[str, int] = {}
+    for i, row in enumerate(rows or ()):
+        ident = link_identifier(row)
+        if ident:
+            count[ident] = count.get(ident, 0) + 1
+        slug = ((row or {}).get("token") or {}).get("slug")
+        if slug:
+            slugs.setdefault(slug, i)
+    shared = set()
+    for i, row in enumerate(rows or ()):
+        ident = link_identifier(row)
+        if ident and (count[ident] > 1 or (ident in slugs and slugs[ident] != i)):
+            shared.add(ident)
+    return sorted(shared)
+
+
+def typical_mismatches(rows, typical) -> list[dict]:
+    """Range rows whose width (the typical inflow added to the top) is not the stated one."""
+    out = []
+    for row in rows or ():
+        rng = (row or {}).get("yearly_range")
+        if row.get("status") != "range" or not isinstance(rng, list) or len(rng) != 2:
+            continue
+        if not all(_num(x) for x in rng):
+            continue
+        width = rng[1] - rng[0]
+        if width > 0.005 and abs(width - typical) > 0.01:
+            out.append({"symbol": ((row.get("token") or {}).get("symbol")), "range": rng,
+                        "used": round(width, 2)})
+    return out
+
+
+def chain_answer_documented(status, body) -> bool | None:
+    """True for a read (200) or a documented 400 code, False for a 500, None otherwise."""
+    if status == 200:
+        return True
+    if status == 400:
+        detail = (body or {}).get("detail") if isinstance(body, dict) else None
+        code = ((detail or {}).get("error") or {}).get("code") if isinstance(detail, dict) else None
+        return code in DOCUMENTED_400
+    if isinstance(status, int) and status >= 500 and status != 503:
+        return False
+    return None
+
+
+def dilution_flag(value, caution, red) -> str | None:
+    if not _num(value):
+        return None
+    return "red" if value > red else ("caution" if value > caution else "ok")
+
+
+def two_flags(apps, items, caution, red) -> tuple[int, list[dict]]:
+    """(judged, coins whose snapshot dilution and analyzer dilution carry different flags)."""
+    by_slug = {((i or {}).get("token") or {}).get("slug"): i for i in items or ()}
+    judged, differ = 0, []
+    for app in apps or ():
+        item = by_slug.get((app or {}).get("slug"))
+        if not item:
+            continue
+        a = ((app.get("dilution") or {}).get("week_pct"))
+        b = item.get("dilution_week_pct")
+        fa, fb = dilution_flag(a, caution, red), dilution_flag(b, caution, red)
+        if fa is None or fb is None:
+            continue
+        judged += 1
+        if fa != fb:
+            differ.append({"symbol": app.get("symbol"), "slug": app.get("slug"),
+                           "checks_row": a, "checks_flag": fa, "supply_card": b, "card_flag": fb})
+    return judged, differ
+
+
+def out_ignores_max(app) -> dict | None:
+    """An app shown >= 99% out while its circulating supply is under 90% of its max supply
+    and the same snapshot records new tokens being issued."""
+    supply, cg, dil = (app or {}).get("supply") or {}, app.get("cg") or {}, app.get("dilution") or {}
+    out, mx = supply.get("out_pct"), cg.get("max")
+    circ = supply.get("circ") or cg.get("circ")
+    if not all(_num(x) for x in (out, mx, circ)) or mx <= 0 or out < 99 or circ / mx >= 0.9:
+        return None
+    issuing = (_num(dil.get("week_pct")) and dil["week_pct"] > 0 and dil.get("basis") == "emissions") or (
+        _num(dil.get("emissions_usd30")) and dil["emissions_usd30"] > 0)
+    if not issuing:
+        return None
+    return {"symbol": app.get("symbol"), "slug": app.get("slug"), "out_pct": round(out, 2),
+            "circ_of_max_pct": round(circ / mx * 100, 1), "max_supply": mx, "circulating": circ,
+            "fdv": app.get("fdv"), "mcap": app.get("mcap"), "dilution_week_pct": dil.get("week_pct"),
+            "emissions_usd30": dil.get("emissions_usd30")}
+
+
+# --- 1. the burned slice -----------------------------------------------------------------
+
+@qa(component="rest.supply_analyzer", tier=SafetyTier.SAFE, surface="rest", claim=CLAIM_BURNED)
+def test_a_burned_slice_comes_from_a_burn(rest_anon):
+    """No sampled record shows a "Bought back, burned" amount whose only source is max
+    supply minus total supply."""
+    batch = _batch(rest_anon)
+    rows = [r for r in batch["items"] if (_slices(r).get("bb_burned") or 0) > 0]
+    if not rows:
+        raise Inconclusive(f"{BATCH} shows no burned slice on any row")
+    share = lambda r: next((s.get("share_pct") or 0 for s in r.get("slices_today") or []
+                            if s.get("key") == "bb_burned"), 0)
+    sample = sorted(rows, key=share, reverse=True)[:BURNED_SAMPLE]
+    judged, bad, unread, dropped = 0, [], [], []
+    for row in sample:
+        record = _single(rest_anon, ((row.get("token") or {}).get("slug")) or "")
+        if record is None:
+            unread.append(_sym(row))
+            continue
+        judged += 1
+        found = burned_without_a_burn(record)
+        if found:
+            gone = emission_dropped(record)
+            if gone:
+                found["emission_input"], found["emission_month0"] = gone
+                found["yearly_pct"], found["band"] = record.get("yearly_pct"), record.get("band")
+                dropped.append(found["coin"])
+            bad.append(found)
+    if not judged:
+        raise Inconclusive(f"none of the {len(sample)} sampled records could be read: {unread[:5]}")
+    said = lambda b: (f"{b['coin']}: {b['burned']:,.0f} burned ({b['share_pct']}% of the pie) from "
+                      f"\"{b['source']}\""
+                      + (f", own emission input {b['emission_input']:,.0f} a month of which month 0 "
+                         f"counts {b['emission_month0']:,.2f}, shown {b['yearly_pct']}% a year, {b['band']}"
+                         if "emission_input" in b else ""))
+    conclude(Measurement(
+        verdict="failed" if bad else "passed",
+        reason=(f"{len(bad)} of {judged} sampled records (the largest burned shares; {len(rows)} rows of "
+                f"the batch show a burned slice) take the burned amount only from max supply minus total "
+                f"supply, with no date, while {sum(b['burns_named_unknown'] for b in bad)} of them name burns "
+                f"as unknown, counted as 0; {len(dropped)} also count under 90% of their own emission input: "
+                + "; ".join(said(b) for b in sorted(bad, key=lambda b: -(b["share_pct"] or 0))[:4])
+                if bad else
+                f"none of {judged} sampled burned slices comes only from max minus total supply"),
+        left={"burned_from_max_minus_total": len(bad)},
+        right={"burned_from_max_minus_total": 0},
+        population={"bad": bad, "judged": judged, "unread": unread, "rows_with_burned_slice": len(rows),
+                    "emission_dropped": dropped, "batch_as_of": batch.get("as_of")},
+        sources={"batch": BATCH, "records": f"{ANALYZE}?symbol=<slug>"},
+        claim_id=CLAIM_BURNED))
+
+
+# --- 2. buybacks -------------------------------------------------------------------------
+
+def _children(source: str) -> list[str]:
+    match = re.search(r"holders' revenue[^(]*\(([^)]*)\)", source or "", flags=re.I)
+    return [c.strip() for c in match.group(1).split(",")] if match else []
+
+
+@qa(component="rest.supply_analyzer", tier=SafetyTier.SAFE, surface="rest", claim=CLAIM_BUYBACK)
+def test_a_buyback_is_a_purchase_of_the_token(rest_anon, evidence_store):
+    """Among records shown Squeezing or whose pile reaches 0, none books a buyback from
+    holders' revenue that DeFiLlama's own methodology describes only as a payout."""
+    batch = _batch(rest_anon)
+    rows = [r for r in batch["items"]
+            if (_num(r.get("pressure")) and r["pressure"] >= 8)
+            or (isinstance(r.get("pile_24m"), list) and r["pile_24m"] and _num(r["pile_24m"][0])
+                and r["pile_24m"][0] > 0 and min(x for x in r["pile_24m"] if _num(x)) <= 0)]
+    if not rows:
+        raise Inconclusive("no row is shown Squeezing or drains its pile")
+    source = build_source_client(evidence=evidence_store, timeout=60.0)
+    judged, payouts, unread, not_judged = 0, [], [], []
+    try:
+        for row in rows:
+            slug = (row.get("token") or {}).get("slug") or ""
+            record = _single(rest_anon, slug)
+            if record is None:
+                unread.append(_sym(row))
+                continue
+            item = _input(record, "buyback_month")
+            if not item or not _num(item.get("value")) or item["value"] <= 0:
+                continue
+            children = _children(item.get("source") or "")
+            if not children:
+                not_judged.append(f"{_sym(row)}: source names no DeFiLlama protocol")
+                continue
+            try:
+                response = source.get(LLAMA_FEES.format(slug=slug),
+                                      params={"dataType": "dailyHoldersRevenue", "excludeTotalDataChart": "true",
+                                              "excludeTotalDataChartBreakdown": "true"})
+                body = response.json() if response.status_code == 200 else None
+            except (httpx.HTTPError, ValueError):
+                body = None
+            if not isinstance(body, dict):
+                unread.append(f"{_sym(row)}: DeFiLlama methodology not readable")
+                continue
+            said = {c.get("name"): (c.get("methodology") or {}).get("HoldersRevenue")
+                    for c in body.get("childProtocols") or [] if isinstance(c, dict)}
+            if not said:
+                said = {body.get("name"): (body.get("methodology") or {}).get("HoldersRevenue")}
+            kinds = {c: holders_revenue_kind(said.get(c)) for c in children}
+            judged += 1
+            if kinds and all(k == "distribution" for k in kinds.values()):
+                payouts.append({"coin": _sym(record), "band": record.get("band"), "pressure": record.get("pressure"),
+                                "yearly_pct": record.get("yearly_pct"), "buyback_month": item["value"],
+                                "buyback_note": item.get("note"), "pile_today": record.get("pile_today"),
+                                "methodology": {c: said.get(c) for c in children}})
+            else:
+                not_judged.append(f"{_sym(row)}: {kinds}")
+    finally:
+        source.close()
+    if not judged:
+        raise Inconclusive(f"none of {len(rows)} Squeezing or draining rows had a readable buyback and "
+                           f"methodology (unread: {unread[:5]})")
+    conclude(Measurement(
+        verdict="failed" if payouts else "passed",
+        reason=(f"{len(payouts)} of {judged} records shown Squeezing or draining their pile (a sample: "
+                f"{len(rows)} such rows that day) book holders' revenue as a buyback of the token while "
+                f"DeFiLlama's methodology for every protocol named describes a payout: "
+                + "; ".join(f"{p['coin']} {p['band']} {p['yearly_pct']}% a year, buyback {p['buyback_month']:,.0f} "
+                            f"tokens a month ({p['buyback_note']}); DeFiLlama: \""
+                            f"{next(iter(p['methodology'].values()))}\"" for p in payouts[:4])
+                if payouts else
+                f"none of {judged} judged records books a payout as a buyback"),
+        left={"payouts_booked_as_buybacks": len(payouts)},
+        right={"payouts_booked_as_buybacks": 0},
+        population={"payouts": payouts, "judged": judged, "not_judged": not_judged, "unread": unread,
+                    "rows": [_sym(r) for r in rows]},
+        sources={"batch": BATCH, "records": f"{ANALYZE}?symbol=<slug>",
+                 "methodology": LLAMA_FEES + "?dataType=dailyHoldersRevenue"},
+        claim_id=CLAIM_BUYBACK))
+
+
+# --- 3. the pile -------------------------------------------------------------------------
+
+@qa(component="rest.supply_analyzer", tier=SafetyTier.SAFE, surface="rest", claim=CLAIM_PILE)
+def test_the_sellable_pile_fits_inside_the_supply(rest_anon):
+    """No record's sellable pile is larger than the total supply it states."""
+    batch = _batch(rest_anon)
+    totals = {a.get("slug"): ((a.get("cg") or {}).get("total")) for a in _snapshot(rest_anon)["apps"]}
+    candidates = []
+    for row in batch["items"]:
+        pile = row.get("pile_today")
+        if not _num(pile):
+            continue
+        total = totals.get((row.get("token") or {}).get("slug"))
+        if (_num(total) and pile > total) or (not _num(total) and (_slices(row).get("staked_free") or 0) > 0):
+            candidates.append(row)
+    judged, over, unread = 0, [], []
+    for row in candidates:
+        record = _single(rest_anon, (row.get("token") or {}).get("slug") or "")
+        if record is None:
+            unread.append(_sym(row))
+            continue
+        judged += 1
+        found = pile_over_supply(record)
+        if found:
+            over.append(found)
+    if not judged:
+        raise Inconclusive(f"none of {len(candidates)} candidate records could be read")
+    over.sort(key=lambda o: -(o["over_by"] / o["supply"]))
+    conclude(Measurement(
+        verdict="failed" if over else "passed",
+        reason=(f"{len(over)} records state a sellable pile larger than the {'/'.join(sorted({o['against'] for o in over}))} "
+                f"they state themselves: "
+                + "; ".join(f"{o['coin']} pile {o['pile']:,.0f} against {o['against']} {o['supply']:,.0f} "
+                            f"(circulating {o['circulating']:,.0f} plus staked {o['staked_total'] or 0:,.0f})"
+                            for o in over[:4])
+                if over else
+                f"all {judged} candidate records keep the pile inside their supply"),
+        left={"pile_over_supply": len(over)},
+        right={"pile_over_supply": 0},
+        population={"over": over, "judged": judged, "unread": unread, "candidates": len(candidates)},
+        sources={"batch": BATCH, "snapshot": SNAPSHOT, "records": f"{ANALYZE}?symbol=<slug>"},
+        claim_id=CLAIM_PILE))
+
+
+# --- 4. a cited source -------------------------------------------------------------------
+
+def _page_text(body: str) -> str:
+    body = re.sub(r"(?is)<(script|style)[^>]*>.*?</\1>", " ", body or "")
+    return " ".join(_html.unescape(re.sub(r"<[^>]+>", " ", body)).split())
+
+
+@qa(component="rest.supply_analyzer", tier=SafetyTier.SAFE, surface="rest", claim=CLAIM_SOURCES)
+def test_a_cited_source_says_what_it_is_credited_with(rest_anon, evidence_store):
+    """HYPE's record: a disposition credited to a page is not contradicted by that page,
+    and every url cited for a hand-entered input answers 200."""
+    record = _single(rest_anon, "HYPE")
+    if record is None:
+        raise Inconclusive(f"{ANALYZE}?symbol=HYPE could not be read")
+    cited = [i for i in record.get("inputs") or [] if isinstance(i, dict)
+             and str(i.get("url") or "").startswith("http") and "cymetica.com" not in str(i.get("url"))
+             and i.get("key") in ("vesting_schedule", "staking_exit", "buyback_disposition")]
+    if not cited:
+        raise Inconclusive("HYPE's record cites no hand-entered input with a url")
+    source = build_source_client(evidence=evidence_store, timeout=60.0)
+    problems, read = [], []
+    try:
+        for item in cited:
+            try:
+                response = source.get(item["url"])
+            except httpx.HTTPError as exc:
+                read.append({"key": item["key"], "url": item["url"], "status": type(exc).__name__})
+                continue
+            entry = {"key": item["key"], "url": item["url"], "status": response.status_code,
+                     "value": item.get("value"), "source": item.get("source")}
+            read.append(entry)
+            if response.status_code == 404:
+                problems.append(f"the {item['key']} url {item['url']} (cited as \"{item.get('source')}\") "
+                                f"answers 404")
+            elif response.status_code == 200 and item["key"] == "buyback_disposition":
+                page = fund_disposition(_page_text(response.text))
+                entry["page_says"] = page
+                if page and page != str(item.get("value")).lower():
+                    problems.append(f"the record says buybacks are \"{item.get('value')}\" and credits "
+                                    f"\"{item.get('source')}\" ({item['url']}); that page says the "
+                                    f"assistance fund's HYPE \"is burned\"")
+    finally:
+        source.close()
+    if not any(isinstance(r.get("status"), int) for r in read):
+        raise Inconclusive(f"none of the {len(cited)} cited urls could be read: {read}")
+    conclude(Measurement(
+        verdict="failed" if problems else "passed",
+        reason=("HYPE's record: " + "; ".join(problems)) if problems else
+               f"all {len(read)} cited urls answer and none contradicts what it is credited with",
+        left={"contradicted_or_dead": len(problems)},
+        right={"contradicted_or_dead": 0},
+        population={"read": read, "refreshed_at": record.get("refreshed_at")},
+        sources={"record": f"{ANALYZE}?symbol=HYPE", "cited": [c["url"] for c in cited]},
+        claim_id=CLAIM_SOURCES))
+
+
+# --- 5. the link -------------------------------------------------------------------------
+
+@qa(component="rest.supply_analyzer", tier=SafetyTier.SAFE, surface="rest", claim=CLAIM_LINK)
+def test_the_gem_screener_link_opens_its_coin(rest_anon):
+    """Every link identifier used by more than one Gem Screener row opens a coin with that
+    CoinGecko id."""
+    rows = _batch(rest_anon)["items"]
+    shared = shared_link_identifiers(rows)
+    if not shared:
+        raise Inconclusive("no link identifier is shared by two rows; nothing to judge")
+    users = {i: [_sym(r) for r in rows if link_identifier(r) == i] for i in shared}
+    bad, ok = [], []
+    for ident in shared:
+        response = _paced_get(rest_anon, ANALYZE, symbol=ident, include_months="false")
+        try:
+            body = response.json()
+        except ValueError:
+            body = None
+        got = ((body or {}).get("token") or {}) if isinstance(body, dict) else {}
+        entry = {"identifier": ident, "rows": users[ident], "status": response.status_code,
+                 "answer": got.get("gecko_id") or ((body or {}).get("detail") if isinstance(body, dict) else None)}
+        if response.status_code == 200 and got.get("gecko_id") == ident:
+            ok.append(entry)
+        elif response.status_code in (300, 404) or (response.status_code == 200 and got.get("gecko_id") != ident):
+            bad.append(entry)
+    if not bad and not ok:
+        raise Inconclusive(f"no shared identifier could be read: {shared}")
+    conclude(Measurement(
+        verdict="failed" if bad else "passed",
+        reason=("; ".join(f"/supply-analyzer?symbol={b['identifier']}, the link of {', '.join(b['rows'])}, "
+                          f"answers HTTP {b['status']}: {b['answer']}" for b in bad)
+                + "; OpenAPI says symbol takes a \"Ticker (Gem Screener coins), slug or CoinGecko id\""
+                if bad else f"all {len(ok)} shared link identifiers open their coin"),
+        left={"links_that_do_not_open": len(bad)},
+        right={"links_that_do_not_open": 0},
+        population={"bad": bad, "ok": ok},
+        sources={"rows": BATCH, "answer": f"{ANALYZE}?symbol=<identifier>&include_months=false"},
+        claim_id=CLAIM_LINK))
+
+
+# --- 6. the typical inflow ---------------------------------------------------------------
+
+@qa(component="rest.supply_analyzer", tier=SafetyTier.SAFE, surface="rest", claim=CLAIM_TYPICAL)
+def test_every_range_uses_the_stated_typical_inflow(rest_anon):
+    """Every range is as wide as the typical inflow /definitions and the batch state."""
+    batch = _batch(rest_anon)
+    definitions = _json(_paced_get(rest_anon, DEFINITIONS), DEFINITIONS)
+    typical = (definitions or {}).get("typical_inflow_pct") if isinstance(definitions, dict) else None
+    if not _num(typical):
+        raise Inconclusive(f"{DEFINITIONS} states no typical_inflow_pct")
+    ranges = [r for r in batch["items"] if r.get("status") == "range"]
+    wide = [r for r in ranges if isinstance(r.get("yearly_range"), list) and len(r["yearly_range"]) == 2
+            and all(_num(x) for x in r["yearly_range"]) and r["yearly_range"][1] - r["yearly_range"][0] > 0.005]
+    if not wide:
+        raise Inconclusive("no range row has a width to compare")
+    bad = typical_mismatches(batch["items"], typical)
+    used: dict[float, int] = {}
+    for b in bad:
+        used[b["used"]] = used.get(b["used"], 0) + 1
+    hype = next((b for b in bad if b["symbol"] == "HYPE"), None)
+    conclude(Measurement(
+        verdict="failed" if bad else "passed",
+        reason=(f"/definitions states a typical inflow of {typical:.2f}% a year (batch: {batch.get('typical_inflow_pct')}); "
+                f"{len(bad)} of {len(wide)} ranges add a different figure to their top: "
+                + ", ".join(f"{k}% on {v}" for k, v in sorted(used.items(), key=lambda kv: -kv[1]))
+                + (f"; HYPE's range is {hype['range'][0]}% to {hype['range'][1]}% ({hype['used']}%)" if hype else "")
+                if bad else f"all {len(wide)} ranges add the stated {typical:.2f}%"),
+        left={"ranges_with_another_typical": len(bad)},
+        right={"ranges_with_another_typical": 0},
+        population={"bad": bad, "wide": len(wide), "typical": typical, "batch_as_of": batch.get("as_of")},
+        sources={"batch": BATCH, "definitions": DEFINITIONS},
+        claim_id=CLAIM_TYPICAL))
+
+
+# --- 7. an unsupported chain -------------------------------------------------------------
+
+@qa(component="rest.supply_analyzer", tier=SafetyTier.SAFE, surface="rest", claim=CLAIM_CHAIN)
+def test_an_unsupported_chain_gets_a_documented_answer(rest_anon):
+    """UNI's contract with a chain the analyzer does not read gets a documented answer."""
+    answers = []
+    for chain in UNSUPPORTED_CHAINS:
+        response = _paced_get(rest_anon, ANALYZE, contract=UNI, chain=chain, include_months="false")
+        try:
+            body = response.json()
+        except ValueError:
+            body = None
+        verdict = chain_answer_documented(response.status_code, body)
+        code = None
+        if isinstance(body, dict):
+            code = ((body.get("error") or {}).get("code")
+                    or (((body.get("detail") or {}) if isinstance(body.get("detail"), dict) else {}).get("error") or {}).get("code"))
+        answers.append({"chain": chain, "status": response.status_code, "code": code, "documented": verdict})
+    judged = [a for a in answers if a["documented"] is not None]
+    if not judged:
+        raise Inconclusive(f"no answer could be judged: {answers}")
+    bad = [a for a in judged if a["documented"] is False]
+    conclude(Measurement(
+        verdict="failed" if bad else "passed",
+        reason=(f"{len(bad)} of {len(judged)} reads of UNI's contract ({UNI}) with an unsupported chain answer "
+                + ", ".join(f"chain={a['chain']}: HTTP {a['status']} {a['code']}" for a in bad)
+                + "; /openapi-public.json documents 400 \"MISSING_INPUT, INVALID_SYMBOL, INVALID_CONTRACT, "
+                  "CHAIN_NEEDED, UNSUPPORTED_CHAIN, NO_PRICE\" for this route"
+                if bad else f"all {len(judged)} unsupported chains get a documented answer"),
+        left={"undocumented_answers": len(bad)},
+        right={"undocumented_answers": 0},
+        population={"answers": answers},
+        sources={"answer": f"{ANALYZE}?contract={UNI}&chain=<unsupported>&include_months=false"},
+        claim_id=CLAIM_CHAIN))
+
+
+# --- 8. two dilution flags (Gem Screener) ------------------------------------------------
+
+@qa(component="rest.gem_screener", tier=SafetyTier.SAFE, surface="rest", claim=CLAIM_FLAGS)
+def test_a_coin_carries_one_dilution_flag(rest_anon):
+    """No coin's snapshot dilution (Checks row, Apps row) and Supply Analyzer dilution
+    (Supply card) carry different flags on the snapshot's own lines."""
+    snapshot = _snapshot(rest_anon)
+    meta = snapshot.get("dilution_meta") or {}
+    caution, red = meta.get("caution_line"), meta.get("red_line")
+    if not _num(caution) or not _num(red):
+        raise Inconclusive(f"{SNAPSHOT} states no caution_line / red_line in dilution_meta")
+    judged, differ = two_flags(snapshot["apps"], _batch(rest_anon)["items"], caution, red)
+    if not judged:
+        raise Inconclusive("no app carries both dilution figures")
+    conclude(Measurement(
+        verdict="failed" if differ else "passed",
+        reason=(f"{len(differ)} of {judged} apps get two different dilution flags (lines {caution}% and "
+                f"{red}% a week): the snapshot's figure, which the detail's Checks row reads, and the Supply "
+                f"Analyzer's, which the Supply card reads: "
+                + "; ".join(f"{d['symbol']} {d['checks_row']}% ({d['checks_flag']}) vs {d['supply_card']}% "
+                            f"({d['card_flag']})" for d in differ[:6])
+                if differ else f"all {judged} apps carry one flag"),
+        left={"apps_with_two_flags": len(differ)},
+        right={"apps_with_two_flags": 0},
+        population={"differ": differ, "judged": judged, "lines": [caution, red],
+                    "snapshot": snapshot.get("generated_at_iso")},
+        sources={"snapshot": SNAPSHOT, "analyzer": BATCH},
+        claim_id=CLAIM_FLAGS))
+
+
+# --- 9. tokens out (Gem Screener) --------------------------------------------------------
+
+@qa(component="rest.gem_screener", tier=SafetyTier.SAFE, surface="rest", claim=CLAIM_OUT)
+def test_tokens_out_counts_the_max_supply_of_a_coin_still_issuing(rest_anon):
+    """No app with issuance on record is shown ~100% out while under 90% of its max supply
+    circulates."""
+    snapshot = _snapshot(rest_anon)
+    apps = snapshot["apps"]
+    judged = [a for a in apps if _num((a.get("supply") or {}).get("out_pct")) and _num((a.get("cg") or {}).get("max"))]
+    if not judged:
+        raise Inconclusive(f"{SNAPSHOT} has no app with both an out share and a max supply")
+    bad = [x for x in (out_ignores_max(a) for a in apps) if x]
+    near = [a.get("symbol") for a in judged if (a["supply"]["out_pct"] >= 99
+            and _num((a.get("supply") or {}).get("circ") or (a.get("cg") or {}).get("circ"))
+            and ((a["supply"].get("circ") or a["cg"].get("circ")) / a["cg"]["max"]) < 0.9)]
+    conclude(Measurement(
+        verdict="failed" if bad else "passed",
+        reason=(f"{len(bad)} apps with new tokens on record are shown as ~100% of tokens out, FDV equal to market "
+                f"cap, while under 90% of their max supply circulates ({len(near)} apps in all are shown ~100% out "
+                f"under that line): "
+                + "; ".join(f"{b['symbol']} {b['out_pct']}% out, circulating {b['circulating']:,.0f} of max "
+                            f"{b['max_supply']:,.0f} ({b['circ_of_max_pct']}%), FDV {b['fdv']:,.0f} vs market cap "
+                            f"{b['mcap']:,.0f}, new tokens {b['dilution_week_pct']}% a week "
+                            f"(${b['emissions_usd30'] or 0:,.0f} in 30 days)" for b in bad[:4])
+                if bad else f"no app with issuance on record is shown ~100% out under its max supply"),
+        left={"issuing_apps_shown_all_out": len(bad)},
+        right={"issuing_apps_shown_all_out": 0},
+        population={"bad": bad, "near": near, "judged": len(judged), "snapshot": snapshot.get("generated_at_iso")},
+        sources={"snapshot": SNAPSHOT},
+        claim_id=CLAIM_OUT))
