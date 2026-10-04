@@ -4900,6 +4900,46 @@ reports:
       Supply Analyzer read names a Gem Screener coin, so none adds a line to your weekly
       ledger.
 
+  - key: supply-analyzer-max-supply-from-a-schedule
+    findings: [CYM-supply-analyzer-max-supply-is-a-cap-not-a-schedule-end]
+    severity: medium
+    category: logic
+    url: https://cymetica.com/supply-analyzer?symbol=ethereum
+    title: >-
+      Supply Analyzer: ETH, SOL and TRX show a "max supply" that is the end of DeFiLlama's
+      issuance schedule (ETH 127.9M), and the gap to it as "Bought back, burned"
+    expected: >
+      The max supply chip and input state a cap the token has, or say there is none: Ether,
+      Solana's SOL and TRX have no maximum supply. Supply still to be issued under a schedule
+      is future inflow, not tokens "bought back and destroyed, or burned so far: out of play
+      for good" (the page's words for that slice).
+    actual: >
+      Read on 2026-10-04 between 10:53 and 11:06 UTC, twice through our check and once
+      before. In a sample of 48 records (every chain, and every app whose Gem Screener
+      snapshot has no max supply while the analyzer states one), 30 take max_supply from a
+      DeFiLlama unlock schedule, the end total of its issuance horizon: ETH 127,869,954
+      ("DeFiLlama unlock schedule (ethereum)", total 122,101,617), SOL 722,609,018 (total
+      635,149,992), TRX 126,770,094,880 (total 94,980,615,708), also AERO, CFG, FIL, FLR, MON,
+      XTZ, VELO, NEAR, ICP, SEI, SNX and others. For 13 of them the record then shows max
+      minus total as "Bought back, burned", with burned_so_far sourced to "max supply minus
+      total supply (CoinGecko figures)" although the max is not CoinGecko's: ETH 5,768,336
+      burned, SOL 87,459,026, TRX 31,789,479,172. CoinGecko lists no max supply for ETH, SOL
+      or TRX. Solana's own RPC (getSupply) gives a total of 635,228,290 and circulating
+      588,216,328, matching the record's total and circulating; the 87.5M "burned" is the
+      rest of DeFiLlama's issuance horizon.
+    steps:
+      - 'GET https://cymetica.com/api/v1/supply-analyzer/analyze?symbol=ethereum -> max_supply 127869953.59 with inputs[key=max_supply].source "DeFiLlama unlock schedule (ethereum)"; slices_today bb_burned 5768336.31; inputs[key=burned_so_far].source "max supply minus total supply (CoinGecko figures)"'
+      - 'GET https://cymetica.com/api/v1/supply-analyzer/analyze?symbol=solana -> max_supply 722609017.66 (DeFiLlama unlock schedule (solana)), total_supply 635149992.01, bb_burned 87459025.65'
+      - 'POST https://api.mainnet-beta.solana.com {"method":"getSupply"} -> total 635,228,290 SOL, circulating 588,216,328 (no max supply exists)'
+    body: >
+      How to fix it is yours: take a max supply only from a source that states a cap, and
+      show "no max" where there is none (your page already does "3.2M (total)" for a coin
+      without one); never derive a burn from a schedule's end. Our check samples every chain
+      and every app whose Gem Screener snapshot has no max supply while the analyzer states
+      one, reads each record, and fails while any takes its max supply from an unlock
+      schedule. It is a sample of a population that moves with every refresh. Every Supply
+      Analyzer read names a Gem Screener coin, so none adds a line to your weekly ledger.
+
 footer: >
   Reported by an independent QA agent. Scope of this work: verification of the
   REST API, MCP, the machine-readable discovery surfaces and the pages built on

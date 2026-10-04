@@ -41,3 +41,4 @@ reports:
   162: "Gem Screener: ORE ukazuje „100 % tokenů venku“, i když obíhá 17 % max zásoby a pořád se těží"
   163: "Supply Analyzer, PHAR: 497M PHAR zamčených držiteli v xPHAR ukazuje jako rezervu projektu"
   164: "Supply Analyzer: 174 coinů s neznámým vestingem píše „nic naplánováno“, ARB přitom 15. 10. odemyká 92,6M"
+  165: "Supply Analyzer: ETH, SOL a TRX mají „max supply“ z emisního plánu a budoucí emise jako spálené"
