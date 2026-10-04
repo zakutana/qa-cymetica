@@ -469,6 +469,8 @@ def test_the_audit_sees_a_wrong_upside_a_wrong_identity_a_wrong_altseason_and_a_
     _a_forming_candle_that_is_old_and_far_from_its_pool_is_seen()
     # 2026-10-04: tests/rest/test_gem_screener_sectors_chart_does_what_its_caption_says.py
     _a_chart_click_is_held_to_its_caption()
+    # 2026-10-04: tests/rest/test_gem_screener_chains_say_what_their_sources_say.py
+    _the_chains_tab_is_held_to_its_sources_and_its_own_words()
 
 
 @qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
@@ -834,3 +836,133 @@ def _a_chart_click_is_held_to_its_caption():
     assert g.sector_click_promise(page().replace("openThemePanel(th.key)", "noop()"))["verdict"] == "unread"
     assert g.sector_click_promise("")["verdict"] == "unread"
     assert g.sector_click_promise(None)["verdict"] == "unread"
+
+
+def _the_chains_tab_is_held_to_its_sources_and_its_own_words():
+    """2026-10-04, Chains tab (snapshot 08:47 UTC), verified over all 33 chains: users, DEX
+    volume, TVL, market cap and every derived figure follow their sources and the page's own
+    rules. Three places do not, each refuted here on the shape seen live and cleared by the fix.
+
+    1. Stablecoins, "dollars parked on the chain": the page shows DeFiLlama's token count
+       (`totalCirculating`), not its dollar value (`totalCirculatingUSD`). Stellar showed
+       $840.9M where DeFiLlama's dollar figure for the same day was $909.5M (USDY at $1.147)."""
+    day = 1791072000
+
+    def chain(slug, shown, as_of=day):
+        return {"slug": slug, "name": slug.title(),
+                "adoption": {"inputs": {"stablecoins": shown}, "as_of": {"stablecoins": as_of}}}
+
+    def point(usd, tokens, date=day):
+        return {"date": str(date), "totalCirculating": {"peggedUSD": tokens},
+                "totalCirculatingUSD": {"peggedUSD": usd, "peggedEUR": 2.0e7}}
+
+    chains = [chain("stellar", 840929169.43), chain("solana", 16799590747.15), chain("gnosis", 14966829.54)]
+    charts = {"stellar": [point(960342849.0, 900000000.0, day - 86400), point(909523394.0, 840929169.0)],
+              "solana": [point(16818415410.0, 16799590747.0)],
+              "gnosis": [point(14966065.0, 14966830.0)]}
+    said = g.chain_stablecoin_gaps(chains, charts)
+    assert [x["name"] for x in said["gaps"]] == ["Stellar"], said
+    assert said["judged"] == 3 and said["gaps"][0]["tokens_match"] is True, said
+    assert round(said["gaps"][0]["gap_pct"], 1) == -7.5, said
+    # EUR-pegged coins are not dollars: a chain that shows only its USD-pegged coins passes.
+    assert "Gnosis" not in [x["name"] for x in said["gaps"]]
+    # The fix: the dollar value shown.
+    fixed = [chain("stellar", 909523394.0)] + chains[1:]
+    assert g.chain_stablecoin_gaps(fixed, charts)["gaps"] == []
+    # A failed read, or no point on the input's own day, is unread, never agreement.
+    gone = g.chain_stablecoin_gaps(chains, dict(charts, stellar=None))
+    assert gone["judged"] == 2 and gone["gaps"] == [] and gone["unread"], gone
+    other_day = g.chain_stablecoin_gaps([chain("stellar", 840929169.43, day + 86400)], charts)
+    assert other_day["judged"] == 0 and other_day["unread"], other_day
+
+    # 2. The chain price tag as described: llms.txt's "What it is" and the chain detail's
+    #    agent prompt still describe yearly activity fees against a named leader chain;
+    #    the snapshot (and llms.txt a few lines lower) say adoption against the median.
+    bench = {"basis": "market_cap/adoption", "measure": "adoption", "adoption_version": "four-inputs-1",
+             "kind": "median", "mult": 127.927}
+    # The live file names the section in quotes long before the section itself
+    # ('see the "## Gem Screener" section below'): only a heading line starts it.
+    llms = ("# Cymetica\n- [Gem Screener](/gem-screener): see the \"## Gem Screener\" section below.\n"
+            "## Chart Analyzer\nA chain's is market cap / yearly activity fees elsewhere.\n"
+            "## Gem Screener\n\nWhat it is: a research screen of tokenized crypto apps and chains, ranked by "
+            "how cheap they are for the revenue they earn. An app's multiple is its market cap / annual revenue "
+            "run-rate, compared with Hyperliquid’s multiple; a chain’s is market cap / yearly activity "
+            "fees (what users paid to the apps on the chain and to the chain itself), compared with a named "
+            "leader chain, not the median.\n"
+            "- `price_vs_revenue` (x): market cap / annual run-rate (chains: market cap / yearly activity fees); "
+            "lower is cheaper\n"
+            "- Chains (`kind=chains`, ET-28378): `activity_fees` (USD per year) on the ranked list; `benchmark` "
+            "names the leader chain, its rule\n"
+            "- Chains from ET-28821: a chain is priced on `adoption`, the fourth root of daily users x DEX "
+            "volume; `benchmark` is the median price tag of the large chains\n## Supply Analyzer\nx\n")
+    claims = g.chain_price_tag_claims(llms, bench)
+    assert [c["claim"] for c in claims["stale"]] == ["fees_multiple", "named_leader", "pvr_fees",
+                                                     "benchmark_leader"], claims
+    assert not claims["unread"], claims
+    # The fix: the section says what the snapshot computes; a field name alone is no claim.
+    fixed_llms = ("## Gem Screener\nWhat it is: ... a chain's is market cap / adoption (daily users, DEX "
+                  "volume, TVL and stablecoins), compared with the median of the large chains.\n"
+                  "- `activity_fees` (USD per year) stays on the ranked list as context\n## Next\n")
+    assert g.chain_price_tag_claims(fixed_llms, bench)["stale"] == []
+    # A snapshot still on fees and a leader makes the same words true, not stale.
+    old = {"basis": "market_cap/activity_fees", "measure": "activity_fees", "kind": "leader"}
+    assert g.chain_price_tag_claims(llms, old)["stale"] == []
+    assert g.chain_price_tag_claims("no section here", bench)["unread"]
+    assert g.chain_price_tag_claims(llms, {})["unread"], "a snapshot that names no measure was judged"
+
+    page = ("<script>function chainAgents(e){\n  var paste = 'Read ' + api + ' and tell me about ' + e.name + "
+            "' (' + sym + '): its adoption (daily users and fees), its upside against ' +\n"
+            "    'the benchmark chain and its trajectory. Every number there carries its unit.';\n}</script>")
+    prompt = g.chain_agent_prompt_claims(page, bench)
+    assert prompt["stale"] == ["adoption (daily users and fees)", "the benchmark chain"], prompt
+    fixed_page = page.replace("(daily users and fees)", "(daily users, DEX volume, TVL and stablecoins)") \
+                     .replace("the benchmark chain", "the median large chain")
+    assert g.chain_agent_prompt_claims(fixed_page, bench)["stale"] == []
+    assert g.chain_agent_prompt_claims("<script>nothing</script>", bench)["unread"]
+
+    # 3. One word, two measures: the Adoption column is four inputs with "no monthly
+    #    history"; Growth 6M, the trajectory and the vetting tags are a stablecoins-and-DEX
+    #    index the page also calls Adoption (Mantle: "Adoption falling 12.8% a month").
+    words = ("<script>var INFO = {chainadopt4: '<b>Adoption</b> — the new measure: four inputs together, "
+             "no fees in it.', 'monthly@chains': 'Not the adoption measure, which has no monthly history.'};\n"
+             "var R = {'klesající trend': function(e){ return 'Adoption (stablecoins and DEX volume) has been "
+             "falling ' + g + '% a month over the ' +\n 'last six months.'; }};\n"
+             "stats += statCell(isChains ? 'Adoption growth 6M' : 'Revenue growth 6M', fmtPct(g.g));</script>")
+    rows = [{"name": "Mantle", "reliable": False, "reliable_fail": ["far_below_peak", "declining_trend"]},
+            {"name": "Solana", "reliable": True, "reliable_fail": []}]
+    two = g.chain_adoption_two_measures(words, rows)
+    assert two["verdict"] == "two_measures", two
+    assert two["readings"] == ["Adoption (stablecoins and DEX volume)", "Adoption growth 6M"], two
+    assert [r["name"] for r in two["rows"]] == ["Mantle"], two
+    # The fix either way: name the index for what it is, or measure the readings on the
+    # four-input adoption (and stop saying it has no history).
+    renamed = words.replace("Adoption (stablecoins and DEX volume)", "Stablecoins and DEX volume") \
+                   .replace("Adoption growth 6M", "Stablecoins & DEX growth 6M")
+    assert g.chain_adoption_two_measures(renamed, rows)["verdict"] == "ok"
+    measured = words.replace("Adoption (stablecoins and DEX volume)", "Adoption") \
+                    .replace(", which has no monthly history", "")
+    assert g.chain_adoption_two_measures(measured, rows)["verdict"] == "ok"
+    assert g.chain_adoption_two_measures("<script></script>", rows)["verdict"] == "unread"
+    assert g.chain_adoption_two_measures(None, rows)["verdict"] == "unread"
+
+    # 4. Why a chain is not listed: "Not listed, no market data: BCH, ETC." while CoinGecko
+    #    gave Bitcoin Cash $6.4bn and Ethereum Classic $1.4bn, both with missing: [].
+    universe = {"min_mcap": 2.0e8, "left_out": [
+        {"symbol": "BCH", "gecko_id": "bitcoin-cash", "chain": "Bitcoincash", "reason": "no_market_data", "missing": []},
+        {"symbol": "ETC", "gecko_id": "ethereum-classic", "chain": "EthereumClassic", "reason": "no_market_data",
+         "missing": []},
+        {"symbol": "XMR", "gecko_id": "monero", "chain": None, "reason": "no_defillama_row", "missing": ["tvl"]}]}
+    markets = {"bitcoin-cash": 6383422929.0, "ethereum-classic": 1403766651.0}
+    said = g.chain_left_out_reason_breaches(universe, markets)
+    assert [b["symbol"] for b in said["breaches"]] == ["BCH", "ETC"] and said["judged"] == 2, said
+    # A coin CoinGecko really has no market cap for, or one under the listing floor's
+    # reach, is what the reason says; one not read is unread.
+    assert g.chain_left_out_reason_breaches(universe, {"bitcoin-cash": None, "ethereum-classic": 0.0})["breaches"] == []
+    partial = g.chain_left_out_reason_breaches(universe, {"bitcoin-cash": 6383422929.0})
+    assert [b["symbol"] for b in partial["breaches"]] == ["BCH"] and partial["unread"] == ["ETC"], partial
+    # The fix: the two say which input they lack; nothing is left out for market data.
+    fixed = {"min_mcap": 2.0e8, "left_out": [dict(universe["left_out"][0], reason="missing_input",
+                                                   missing=["stablecoins"])]}
+    assert g.chain_left_out_reason_breaches(fixed, markets) == {"judged": 0, "breaches": [], "unread": [],
+                                                                  "with_reason": 0}
+    assert g.chain_left_out_reason_breaches({}, markets)["unread"], "no left-out list was read as agreement"

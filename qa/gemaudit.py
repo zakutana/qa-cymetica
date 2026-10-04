@@ -761,6 +761,228 @@ def sector_click_promise(page_html: str | None) -> dict:
     return out
 
 
+# --- the Chains tab against its sources and its own words (2026-10-04) --------------------------
+#
+# Verified over all 33 chains of the 08:47 UTC snapshot: daily users, DEX volume, TVL, market cap
+# and every derived figure (held-back caps, adoption, price tag, the median benchmark, Upside)
+# follow DeFiLlama, CoinGecko and the page's own rules. What did not is held here.
+
+LLAMA_STABLECOIN_CHART = "https://stablecoins.llama.fi/stablecoincharts/{chain}"
+STABLECOIN_TOLERANCE = 0.03
+"""A chain's stablecoins against DeFiLlama's dollar figure for the input's own day. On
+2026-10-04 every chain showed DeFiLlama's token count exactly; it was within 0.9 % of the
+dollar figure on 27 chains and 2.5 % on 31 (Avalanche +2.5 %, Filecoin -1.8 %, BSC -1.6 %),
+while Stellar (-7.5 %) and Sei (-10.7 %) hold USDY, priced at $1.147. 3 % leaves the small
+depegs alone and catches a coin that is not worth a dollar."""
+
+
+def chain_stablecoin_gaps(chains: list, charts: dict, *, tol: float = STABLECOIN_TOLERANCE) -> dict:
+    """The page's "Stablecoins: dollars parked on the chain" (`adoption.inputs.stablecoins`)
+    against DeFiLlama's dollar value of the USD-pegged coins on that chain, on the day the
+    snapshot says the input is from (`adoption.as_of.stablecoins`).
+
+    `charts` maps a chain's slug to DeFiLlama's stablecoin chart for it (a list of daily
+    points), or None when the read failed. A failed read, or no point on the input's day, is
+    unread, never agreement. EUR-, CHF- and other non-dollar coins are not dollars and are not
+    counted. Each gap also says whether the figure shown is DeFiLlama's token count
+    (`totalCirculating`) instead."""
+    judged, gaps, unread, ok_gaps = 0, [], [], []
+    for chain in chains or []:
+        if not isinstance(chain, dict):
+            continue
+        name = chain.get("name") or chain.get("slug")
+        ad = chain.get("adoption") or {}
+        shown = num((ad.get("inputs") or {}).get("stablecoins"))
+        as_of = (ad.get("as_of") or {}).get("stablecoins")
+        points = (charts or {}).get(chain.get("slug"))
+        if points is None:
+            unread.append(f"{name}: DeFiLlama's stablecoin chart was not read")
+            continue
+        if not shown or not isinstance(as_of, (int, float)):
+            unread.append(f"{name}: no stablecoin figure or date in the snapshot")
+            continue
+        point = next((p for p in points if isinstance(p, dict) and str(p.get("date")).isdigit()
+                      and int(p["date"]) == int(as_of)), None)
+        if point is None:
+            unread.append(f"{name}: DeFiLlama has no point on {time.strftime('%Y-%m-%d', time.gmtime(as_of))}")
+            continue
+        usd = num((point.get("totalCirculatingUSD") or {}).get("peggedUSD"))
+        tokens = num((point.get("totalCirculating") or {}).get("peggedUSD"))
+        if not usd:
+            unread.append(f"{name}: DeFiLlama's point carries no USD-pegged dollar value")
+            continue
+        judged += 1
+        gap = shown / usd - 1.0
+        if abs(gap) > tol:
+            gaps.append({"name": name, "slug": chain.get("slug"), "shown": shown, "usd": usd, "tokens": tokens,
+                         "gap_pct": 100.0 * gap, "as_of": int(as_of),
+                         "tokens_match": bool(tokens) and abs(shown / tokens - 1.0) <= 0.005})
+        else:
+            ok_gaps.append(abs(gap))
+    return {"judged": judged, "gaps": gaps, "unread": unread,
+            "max_ok_gap_pct": round(100.0 * max(ok_gaps), 3) if ok_gaps else None}
+
+
+PRICE_TAG_CLAIMS = (
+    ("fees_multiple", "fees", re.compile(
+        r"a chain'?s (?:multiple |price tag )?is market cap\s*/\s*(?:yearly|annual) activity fees", re.I)),
+    ("named_leader", "leader", re.compile(r"compared with a named leader chain", re.I)),
+    ("pvr_fees", "fees", re.compile(r"chains:\s*market cap\s*/\s*(?:yearly|annual) activity fees", re.I)),
+    ("benchmark_leader", "leader", re.compile(r"`benchmark` names the leader chain", re.I)),
+)
+
+
+def _chain_measure(bench: dict) -> tuple[str | None, str | None]:
+    """(what a chain's price tag divides by, how the benchmark is made) as the snapshot says."""
+    bench = bench or {}
+    basis = str(bench.get("basis") or "")
+    measure = bench.get("measure") or (basis.split("/", 1)[1] if "/" in basis else None)
+    return measure, bench.get("kind")
+
+
+def chain_price_tag_claims(llms_text: str, bench: dict) -> dict:
+    """Sentences in llms.txt's Gem Screener section that describe a chain's price tag as
+    something the live snapshot does not compute.
+
+    2026-10-04: the snapshot's `bench_chains` says market cap / adoption against the median
+    of the large chains (and llms.txt says so too, under "Chains from ET-28821"), while the
+    section's opening ("What it is"), the `price_vs_revenue` field line and the older Chains
+    line still say market cap / yearly activity fees against a named leader chain. A claim is
+    stale only against a snapshot that computes something else: the same words beside a
+    snapshot on fees and a leader are true. Only the Gem Screener section is read."""
+    out = {"stale": [], "unread": [], "measure": None, "kind": None}
+    measure, kind = _chain_measure(bench)
+    out["measure"], out["kind"] = measure, kind
+    if not measure:
+        out["unread"].append("the snapshot's bench_chains names no measure")
+        return out
+    text = (llms_text or "").replace("’", "'")
+    # A heading line starts the section; the file also names it in quotes long before
+    # ('see the "## Gem Screener" section below'), which is not the section.
+    heading = re.search(r"(?m)^## Gem Screener[ \t]*\r?$", text)
+    if not heading:
+        out["unread"].append("llms.txt has no '## Gem Screener' section")
+        return out
+    following = re.compile(r"(?m)^## ").search(text, heading.end())
+    section = text[heading.start(): following.start() if following else len(text)]
+    for key, kind_of_claim, pattern in PRICE_TAG_CLAIMS:
+        if kind_of_claim == "fees" and "activity" in str(measure):
+            continue
+        if kind_of_claim == "leader" and kind != "median":
+            continue
+        found = pattern.search(section)
+        if found:
+            line_start = section.rfind("\n", 0, found.start()) + 1
+            line_end = section.find("\n", found.end())
+            line = section[line_start: line_end if line_end > 0 else len(section)].strip()
+            out["stale"].append({"claim": key, "said": found.group(0), "line": line[:400]})
+    return out
+
+
+def _join_js(page_html: str) -> str:
+    """The page source with adjacent quoted pieces of a `+` chain joined, so a sentence
+    split over two source lines reads as one."""
+    joined = re.sub(r"'\s*\+\s*'", "", page_html or "")
+    return re.sub(r'"\s*\+\s*"', "", joined)
+
+
+AGENT_PROMPT = re.compile(r"tell me about[^\n]{0,200}?its adoption \(([^)]*)\)", re.I)
+AGENT_AGAINST = re.compile(r"its upside against (the [a-z ]+?)(?= and |[.,;])", re.I)
+
+
+def chain_agent_prompt_claims(page_html: str, bench: dict) -> dict:
+    """The chain detail's "Paste into your agent" prompt against the snapshot's measure.
+
+    2026-10-04 it asked an agent for a chain's "adoption (daily users and fees)" and "its
+    upside against the benchmark chain", while the page defines adoption as four inputs with
+    "no fees in it" and the benchmark as the median of the large chains. Unread when the
+    prompt is not on the page."""
+    out = {"stale": [], "unread": [], "prompt": None}
+    joined = _join_js(page_html)
+    found = AGENT_PROMPT.search(joined)
+    if not found:
+        out["unread"].append("the chain agent prompt ('tell me about ... its adoption (...)') is not on the page")
+        return out
+    measure, kind = _chain_measure(bench)
+    window = joined[found.start(): found.start() + 600]
+    out["prompt"] = window[:300]
+    four_inputs = bool((bench or {}).get("adoption_version")) or measure == "adoption"
+    if four_inputs and re.search(r"\bfees?\b", found.group(1), re.I):
+        out["stale"].append(f"adoption ({found.group(1)})")
+    against = AGENT_AGAINST.search(window)
+    if against and kind == "median" and re.search(r"\b(?:benchmark|leader) chain\b", against.group(1), re.I):
+        out["stale"].append(against.group(1))
+    return out
+
+
+ADOPTION_READINGS = ("Adoption (stablecoins and DEX volume)", "Adoption growth 6M")
+NO_ADOPTION_HISTORY = re.compile(r"adoption[^.<]{0,80}?has no (?:monthly|3-month|three-month) (?:history|series)",
+                                 re.I)
+
+
+def chain_adoption_two_measures(page_html: str | None, chains: list) -> dict:
+    """Does "Adoption" on the Chains tab name one measure?
+
+    2026-10-04: the Adoption column, its tooltip and the Upside are the four-input measure,
+    which the page says "has no monthly history"; the detail's "Adoption growth 6M", the
+    trajectory sentence and the vetting tags ("Declining: Adoption falling 12.8% a month",
+    "Post-crash") read a stablecoins-and-DEX-volume index the page also calls Adoption, and
+    vetting decides which chains "Vetted only" shows.
+
+      two_measures  the page defines adoption as four inputs and calls a reading Adoption that
+                    its own text says is stablecoins and DEX volume, or that it says adoption
+                    cannot have (no history)
+      ok            no reading is called Adoption, or nothing says it measures something else
+      unread        the four-input definition is not on the page (its shape changed)"""
+    out = {"verdict": "unread", "readings": [], "no_history": False, "rows": [], "why": ""}
+    joined = _join_js(page_html or "")
+    if "four inputs together" not in joined:
+        out["why"] = "the four-input definition of adoption ('four inputs together') is not on the page"
+        return out
+    out["readings"] = [label for label in ADOPTION_READINGS if label in joined]
+    out["no_history"] = bool(NO_ADOPTION_HISTORY.search(joined))
+    out["rows"] = [{"name": c.get("name"), "reliable_fail": c.get("reliable_fail")}
+                   for c in chains or [] if isinstance(c, dict) and not c.get("reliable")
+                   and set(c.get("reliable_fail") or []) & {"declining_trend", "far_below_peak"}]
+    other = ADOPTION_READINGS[0] in out["readings"]
+    if out["readings"] and (other or out["no_history"]):
+        out["verdict"] = "two_measures"
+        out["why"] = ("readings the page calls Adoption measure stablecoins and DEX volume"
+                      if other else "a reading is called Adoption growth while the page says adoption has no history")
+    else:
+        out["verdict"], out["why"] = "ok", "Adoption names one measure"
+    return out
+
+
+def chain_left_out_reason_breaches(universe: dict, markets: dict) -> dict:
+    """Chains the tab leaves out "for no market data" while CoinGecko has a market cap at
+    least the listing floor for that token.
+
+    2026-10-04: the page's Chains note said "Not listed, no market data: BCH, ETC." and
+    `chains_universe.left_out` gave both `missing: []`, while CoinGecko's markets answered
+    Bitcoin Cash $6.4bn and Ethereum Classic $1.4bn (on DeFiLlama, Bitcoin Cash has no
+    stablecoin chart and Ethereum Classic no DEX volume). `markets` maps a CoinGecko id to
+    the market cap CoinGecko answered (None or 0 = it has none); an id not in it was not
+    read. No row left out for that reason is the fix, not an unread list."""
+    rows = (universe or {}).get("left_out")
+    if not isinstance(rows, list):
+        return {"judged": 0, "breaches": [], "unread": ["chains_universe.left_out is missing"], "with_reason": 0}
+    floor = num((universe or {}).get("min_mcap")) or 0.0
+    judged, breaches, unread = 0, [], []
+    with_reason = [r for r in rows if isinstance(r, dict) and r.get("reason") == "no_market_data"]
+    for row in with_reason:
+        gid = row.get("gecko_id")
+        if gid not in (markets or {}):
+            unread.append(row.get("symbol") or gid)
+            continue
+        judged += 1
+        cap = num(markets[gid])
+        if cap and cap >= floor:
+            breaches.append({"symbol": row.get("symbol"), "gecko_id": gid, "chain": row.get("chain"),
+                             "coingecko_market_cap": cap, "missing_stated": row.get("missing")})
+    return {"judged": judged, "breaches": breaches, "unread": unread, "with_reason": len(with_reason)}
+
+
 def _close(value, expected, *, rel: float = 0.01, abs_tol: float = 0.0) -> bool:
     if value is None or expected is None:
         return False
