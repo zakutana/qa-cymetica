@@ -51,3 +51,4 @@ reports:
   172: "Smazaný klon bota: přehled obchodů podle aktiv vrací chybu 500 místo zdokumentované 404"
   173: "Paper boti: sázka doběhlá do konce epochy má v historii jako důvod konce stop-loss nebo take-profit"
   174: "Klony botů: 9 druhů slibuje své indikátory, klon ale sází podle pravidla jiného bota (sudá/lichá epocha)"
+  175: "Žebříček backtestů: 10 z 16 botů stojí na smyšlených obchodech (BTC za 92), stránka slibuje historická data"

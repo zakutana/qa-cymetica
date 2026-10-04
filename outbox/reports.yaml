@@ -5266,6 +5266,44 @@ reports:
       clone whose decision source differs from its display belongs to a species whose description
       names one of its own indicators.
 
+  - key: backtest-leaderboard-ranked-on-synthetic-trades
+    findings:
+      - CYM-backtest-leaderboard-ranks-historical-trades
+    severity: medium
+    category: logic
+    url: https://cymetica.com/backtest
+    title: >-
+      Backtest leaderboard: 10 of 16 bots (the top one +61.2% over 6 months) are ranked on trades
+      all marked is_synthetic, priced 90-110 for every asset (BTC at 92.56), under "historical data"
+    expected: >
+      /backtest says "Backtest your AI trading strategies against historical data on EventTrader",
+      and the leaderboard rows name their data_sources (polymarket, kalshi, eventtrader). A bot
+      ranked there is ranked on trades at its assets' historical prices, or the leaderboard and
+      page say the run is synthetic.
+    actual: >
+      Read on 2026-10-04 at 18:38 and 18:44 UTC. Of the 16 bots on GET /api/v1/backtest/leaderboard,
+      the ten bot-* bots, including the top four (Multi-Indicator Ensemble 61.2%, Hybrid RSI ML
+      52.8%, Gradient Boost Classifier 47.3%, Bollinger Breakout 41.5%, each over "6 months"), rest
+      on 1,521 trades and all 1,521 carry is_synthetic: true on /api/v1/backtest/bots/{slug}/trades.
+      Every entry price lies between 90.00 and 110.00 whatever the symbol: Trend Following SMA
+      bought BTC on 2026-04-07 at 92.56, and TSLA, AAPL, ETH and SOL trade in the same band. Neither
+      the leaderboard row nor the bot profile says synthetic. The page's trade table
+      (backtest-ops.js) labels a row "LABS/SYNTHETIC" only when it has no entry and exit times and
+      no prices, so these rows are drawn as ordinary trades.
+    steps:
+      - 'GET https://cymetica.com/backtest -> meta description "Backtest your AI trading strategies against historical data on EventTrader."'
+      - 'GET https://cymetica.com/api/v1/backtest/leaderboard?limit=50 -> bots[0] bot-multi-indicator-ensemble, headline_return_pct 61.2, headline_period "6 months", data_sources ["polymarket", "kalshi", "eventtrader"]; no field says synthetic'
+      - 'GET https://cymetica.com/api/v1/backtest/bots/bot-trend-following-sma/trades?limit=200 -> 67 trades, all is_synthetic true; {"entry_time": "2026-04-07T18:22:09", "symbol": "BTC", "entry_price": 92.56, "exit_price": 93.1613}'
+      - 'The same for the other nine bot-* slugs: 1,521 of 1,521 trades is_synthetic, entry prices 90.00-110.00'
+    body: >
+      How to fix it is yours: run these backtests on the assets' historical prices, or say on the
+      leaderboard, the profile and the page that the run is synthetic and what its return means.
+      Someone ranking strategies by this board reads a synthetic run as a six-month backtest of BTC
+      and TSLA. Not about whether any strategy is good, nor whether a headline follows from its
+      trade list. Our check reads the page, the leaderboard and every listed bot's trade list,
+      anonymously, and fails while a ranked bot's trades are marked synthetic and the page says its
+      backtests run against historical data.
+
 footer: >
   Reported by an independent QA agent. Scope of this work: verification of the
   REST API, MCP, the machine-readable discovery surfaces and the pages built on
