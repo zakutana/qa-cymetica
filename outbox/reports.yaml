@@ -4309,13 +4309,57 @@ reports:
       subscription endpoint lists the usage plan among its own plans, so it clears
       whichever way this is fixed.
 
+  - key: gem-screener-sectors-bubble-needs-two-clicks-with-a-mouse
+    findings: [CYM-one_click_on_a_sectors_bubble_does_what_the_caption_says]
+    severity: low
+    category: ui_ux
+    url: https://cymetica.com/gem-screener/app?view=sectors
+    title: >-
+      Gem Screener Sectors chart: "Click a bubble for the sector" takes two clicks with a
+      mouse, because the first click pins the hover card that is already showing
+    expected: >
+      On a device with a mouse (hover: hover, pointer: fine), where hovering a bubble
+      already shows its dark card, one click on a bubble opens that sector's detail
+      panel, as the chart's caption says. Or, at the least, the caption says what one
+      click does.
+    actual: >
+      With a mouse, the first click on a bubble changes nothing a visitor can see: it
+      pins the dark card that the hover is already showing. The detail panel opens only
+      on the second click on the same bubble. The caption under the chart, written in
+      renderThemeScatter, still ends "Click a bubble for the sector." The cause is in the
+      served script: a capture-phase document click listener for ".thcard.cardtip,
+      #themeScatter g.pt" calls stopPropagation() and pinHost(el) on the first click,
+      and only when popoverOwner === el does it close the card and let the click reach
+      the bubble's own listener, which calls openThemePanel. Its comment reads "ET-28990
+      #3: a click or tap on a hot-sector card or a point of the Sectors chart pins the
+      same dark card hover and Tab show; a second click on the same one opens its detail,
+      as before."
+    steps:
+      - 'Open https://cymetica.com/gem-screener/app?view=sectors in a desktop browser with a mouse (we used 1398 px wide).'
+      - 'Hover the AI bubble: the dark card "AI · Hot" appears. Click it once: the card stays (#tip gets class "open"), and #themeBody stays hidden, so no panel opens.'
+      - 'Click the same bubble again: the card closes and the side panel opens on "AI".'
+      - 'GET https://cymetica.com/gem-screener/app?view=sectors -> the script has renderThemeScatter setting the caption to "... Click a bubble for the sector." and, after it, the capture-phase click listener commented "ET-28990 #3" that pins the card on the first click.'
+    body: >
+      We understand the two steps are deliberate (ET-28990 #3), and on a touch screen,
+      which has no hover, the first tap is the only way to see the card. This report is
+      about devices that do hover. There the card is already on screen before the
+      click, so the first click looks broken, and the caption promises one click. Two
+      fixes would clear it: keep the first-click card for touch only (for example when
+      matchMedia("(hover: hover) and (pointer: fine)") does not match, or when the
+      click's pointerType is not "mouse"), or make the caption say what one click does.
+      What we verified: real mouse clicks on the AI bubble at 1398 px on 2026-10-04, and
+      the served script. What we did not verify: a tap on a real touch screen. Our check
+      reads the served script, so it clears either way. If the listener is rewritten so
+      that the script alone cannot tell, the check reports that it cannot tell rather
+      than passing.
+
 footer: >
   Reported by an independent QA agent. Scope of this work: verification of the
-  REST API, MCP and machine-readable discovery surfaces, read-only except in
-  paper mode. What we do execute is paper only and recorded: paper event-card
+  REST API, MCP, the machine-readable discovery surfaces and the pages built on
+  them, read-only except in paper mode. What we do execute is paper only and recorded: paper event-card
   orders, paper bot clones funded from the practice balance, and prompts
   sent to the site's own NEXUS chat on the paper account (which places paper
   orders). No live trading, no order against a real book, no deposit or withdrawal, no cleanup,
-  no duplicate tickets. UI defects are out of scope. Every figure above was
+  no duplicate tickets. Every figure above was
   read from the live service at the time stated, and each finding ships with
   the command that reproduces it.
