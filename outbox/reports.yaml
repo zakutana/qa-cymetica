@@ -4977,6 +4977,155 @@ reports:
       cap is more than 2% from its own price times circulating supply; every other row passes
       with a wide margin.
 
+  - key: gem-screener-chain-stablecoins-are-a-token-count
+    findings:
+      - CYM-gem-screener-chain-stablecoins-are-dollars
+    severity: low
+    category: logic
+    url: https://cymetica.com/gem-screener/app?view=chains
+    title: >-
+      Gem Screener Chains: Stablecoins shows DeFiLlama's token count, not dollars: Stellar $840.9M
+      against DeFiLlama's $909.7M, Sei $273.1M against $305.7M (USDY is priced at $1.147)
+    expected: >
+      The page defines the input as "Stablecoins: dollars parked on the chain. Source: DeFiLlama."
+      The figure in the Adoption tooltip, the chain detail and adoption itself is DeFiLlama's
+      dollar value of the USD-pegged stablecoins on the chain for the day the snapshot dates it.
+    actual: >
+      Read on 2026-10-04 between 14:30 and 15:15 UTC, from the snapshot generated 08:47 UTC, over
+      all 33 chains. Every chain's adoption.inputs.stablecoins equals DeFiLlama's
+      totalCirculating.peggedUSD for 2026-10-04 (the token count) to the dollar, not
+      totalCirculatingUSD.peggedUSD (the dollar value). The two differ where a coin is not worth
+      $1: Stellar shows $840.9M against $909.7M (-7.6%; $909.5M when first read at 14:30) and Sei
+      $273.1M against $305.7M (-10.7%). Both hold USDY, which DeFiLlama prices at $1.147; on its
+      chart the gap between the two totals is that $0.147 on about 467M USDY on Stellar and about
+      222M on Sei. The other 31 chains are within 2.5% (27 within 0.9%). The same chain record carries
+      stablecoin_supply 910,363,363 for Stellar, DeFiLlama's dollar figure from its chain list.
+      The figure enters adoption at the fourth root, so the Upside of Stellar and Sei is about 2%
+      and 3% low.
+    steps:
+      - 'GET https://cymetica.com/gem-screener/app?view=chains -> snapshot chains[slug=stellar].adoption.inputs.stablecoins 840929169.43, adoption.as_of.stablecoins 1791072000 (2026-10-04)'
+      - 'GET https://stablecoins.llama.fi/stablecoincharts/Stellar -> the point with date 1791072000: totalCirculating.peggedUSD 840929169.43, totalCirculatingUSD.peggedUSD 909694432.63 (909523394 at 14:30)'
+      - 'GET https://stablecoins.llama.fi/stablecoins?includePrices=true -> USDY (Ondo) price 1.1468; it is on both Stellar and Sei'
+      - 'The same for Sei: page 273077616.29, DeFiLlama token count 273077616.29, dollar value 305744653.97'
+    body: >
+      How to fix it is yours: read DeFiLlama's dollar value (totalCirculatingUSD) where the page
+      says dollars. Our check reads the Chains tab and DeFiLlama's stablecoin chart of every
+      chain, anonymously, and fails while any chain's stablecoins are more than 3% from
+      DeFiLlama's dollar value of its USD-pegged coins on the snapshot's own day. Non-dollar
+      stablecoins (EUR and others) are not counted, as the page does not count them.
+
+  - key: gem-screener-chain-price-tag-described-as-fees-and-a-leader
+    findings:
+      - CYM-gem-screener-chain-price-tag-described-as-computed
+    severity: low
+    category: documentation
+    url: https://cymetica.com/llms.txt
+    title: >-
+      Gem Screener: llms.txt and the chain agent prompt still describe a chain's price tag as
+      yearly activity fees against a named leader chain; the page uses adoption and the median
+    expected: >
+      What llms.txt tells an agent about the Chains tab, and the "Paste into your agent" prompt in
+      a chain's detail, describe the price tag the snapshot computes: market cap / adoption (daily
+      users, DEX volume, TVL and stablecoins, "no fees in it") against the median price tag of the
+      large chains, as the snapshot's bench_chains and llms.txt's own "Chains from ET-28821" line
+      say.
+    actual: >
+      Read on 2026-10-04 at about 15:10 UTC. The snapshot (generated 08:47 UTC) has
+      bench_chains.basis "market_cap/adoption", kind "median", 19 members, mult 127.927, and the
+      ranked API labels price_vs_revenue for chains "market cap / adoption". llms.txt's Gem
+      Screener section opens: "a chain's is market cap / yearly activity fees (what users paid
+      to the apps on the chain and to the chain itself), compared with a named leader chain, not
+      the median"; its field list says "price_vs_revenue (x): market cap / annual run-rate
+      (chains: market cap / yearly activity fees)"; the older Chains line says "benchmark names
+      the leader chain ... trading volume and TVL are not used". A few lines lower the same
+      section says the opposite ("a chain is priced on adoption ... benchmark is the median price
+      tag of the large chains"). The chain detail's agent prompt asks: "tell me about Stellar
+      (XLM): its adoption (daily users and fees), its upside against the benchmark chain and its
+      trajectory". Also, on chain rows the ranked API labels strength_3m "x (revenue growth /
+      price growth)" while the page says that on Chains it is the growth of stablecoins.
+    steps:
+      - 'GET https://cymetica.com/llms.txt -> section "## Gem Screener", "What it is:" line; the "price_vs_revenue" line; the "Chains (kind=chains, ET-28378)" line; then the "Chains from ET-28821" line'
+      - 'GET https://cymetica.com/gem-screener/app?view=chains -> snapshot bench_chains: basis market_cap/adoption, kind median, mult 127.927, n_members 19'
+      - 'Open a chain on the Chains tab (e.g. ?view=chains&coin=stellar), expand the agent section: "Paste into your agent" prompt'
+      - 'GET https://cymetica.com/api/v1/gem-screener/ranked?kind=chains&limit=100 -> items[].price_vs_revenue.unit "x (market cap / adoption: ...)", items[].strength_3m.unit "x (revenue growth / price growth)"'
+    body: >
+      How to fix it is yours: say once, in llms.txt and in the agent prompt, what a chain's price
+      tag is today. An agent reading the opening sentence will explain a chain's Upside with the
+      wrong measure. Our check reads llms.txt and the Chains tab, anonymously, and fails while any
+      sentence of the Gem Screener section or the agent prompt describes the price tag as something
+      the live snapshot does not compute; the same words beside a snapshot on fees and a leader
+      would pass.
+
+  - key: gem-screener-chain-adoption-names-two-measures
+    findings:
+      - CYM-gem-screener-chain-adoption-is-one-measure
+    severity: low
+    category: logic
+    url: https://cymetica.com/gem-screener/app?view=chains&coin=mantle
+    title: >-
+      Gem Screener Chains: "Adoption" names two measures; Growth 6M, the trajectory and the
+      Declining/Post-crash tags that decide "Vetted only" read a stablecoins and DEX volume index
+    expected: >
+      One word, one measure. The Adoption column, its tooltip and Upside are the four-input
+      measure (users, DEX volume, TVL, stablecoins), which the page says "has no monthly history".
+      A reading the page calls Adoption measures that, or the page names it for what it is.
+    actual: >
+      Read on 2026-10-04 at about 15:10 UTC (snapshot 08:47 UTC). Mantle's detail shows
+      "Adoption 11.0M" (four inputs) and, below it, "Adoption growth 6M -12.8%"; its tags say
+      "Declining. Adoption falling 12.8% a month for six months." and "Post-crash. Adoption is at
+      29% of its best quarter: cheap because it fell."; its trajectory card says "Adoption grew
+      3.6% a month over the last 3 months". The page's own longer text for those tags says
+      "Adoption (stablecoins and DEX volume) has been falling ...", and the row-history endpoint
+      serves that series as "index (weekly mean)". The 12-month column says the four-input
+      measure is "Not the adoption measure, which has no monthly history", and Strength 3M says
+      "the four-input adoption the ranking uses has no 3-month history". "Vetted: ... adoption not
+      declining, close to its peak" is decided on the index: 9 of 33 chains are not vetted on it
+      and hidden in "Vetted only" (Sui, Hedera, Mantle, Algorand, Filecoin, Stable, Plasma,
+      Starknet, Gnosis).
+    steps:
+      - 'Open https://cymetica.com/gem-screener/app?view=chains&coin=mantle -> stats "Adoption 11.0M", "Adoption growth 6M -12.8%"; the row tags "Declining", "Post-crash"; "Why not to trust this number"'
+      - 'GET https://cymetica.com/api/v1/gem-screener/row-history?view=chains&key=mantle -> unit "index (weekly mean)"'
+      - 'The Chains tab, column headers: 12 months info ("Not the adoption measure, which has no monthly history"), Strength 3M info'
+    body: >
+      How to fix it is yours: name the index for what it is (stablecoins and DEX volume) wherever
+      it is shown and wherever it vets a chain, or measure those readings on the four-input
+      adoption. Our check reads the Chains tab's source, anonymously, and fails while the page
+      calls a reading Adoption that its own words say is stablecoins and DEX volume, or that it
+      says adoption cannot have.
+
+  - key: gem-screener-chain-left-out-for-no-market-data-that-coingecko-lists
+    findings:
+      - CYM-gem-screener-chain-left-out-for-a-true-reason
+    severity: low
+    category: logic
+    url: https://cymetica.com/gem-screener/app?view=chains
+    title: >-
+      Gem Screener Chains: tokens are left out "for no market data" that CoinGecko lists (BCH $6.4bn,
+      ETC $1.4bn; earlier ZEC $22.5bn, VET, THETA), with no missing input named
+    expected: >
+      The Chains note says which tokens of the listing rule are left out and why. A token left out
+      "for no market data" has none, and one that lacks a DeFiLlama input says which (as the note
+      does for BTC, LTC, INJ and the others).
+    actual: >
+      Read on 2026-10-04. The snapshot generated 08:47 UTC lists BCH and ETC under "Not listed, no
+      market data" with chains_universe.left_out[].missing [] (no input missing), while
+      CoinGecko's markets answered Bitcoin Cash $6.38bn and Ethereum Classic $1.40bn, above the
+      $200M floor. On DeFiLlama, Bitcoin Cash has no stablecoin chart (404) and Ethereum Classic no
+      DEX volume, so each lacks an input the note does not name. The snapshot generated 04:10 UTC
+      (served at ?view=apps from the cache at 15:01) said the same of ZEC ($22.5bn on CoinGecko),
+      VET and THETA, which the 08:47 snapshot lists as missing an input: the set moves between
+      snapshots and the reason is false each time. The other 25 reasons held.
+    steps:
+      - 'GET https://cymetica.com/gem-screener/app?view=chains -> snapshot chains_universe.left_out: {"symbol": "BCH", "gecko_id": "bitcoin-cash", "reason": "no_market_data", "missing": []}, the same for ETC; the note "Not listed, no market data: BCH, ETC."'
+      - 'GET https://api.coingecko.com/api/v3/coins/markets?vs_currency=usd&ids=bitcoin-cash,ethereum-classic -> market_cap 6383422929 and 1403766651'
+      - 'GET https://stablecoins.llama.fi/stablecoincharts/Bitcoincash -> 404; GET https://api.llama.fi/overview/dexs/EthereumClassic -> no volume'
+    body: >
+      How to fix it is yours: give the reason the token actually fails (the missing input), and say
+      "no market data" only when the market source has none. No number on the tab changes: both
+      tokens would be left out anyway. Our check reads the Chains tab and CoinGecko's markets for
+      the tokens left out for that reason, anonymously, and fails while CoinGecko answers a market
+      cap at least the listing floor for any of them.
+
 footer: >
   Reported by an independent QA agent. Scope of this work: verification of the
   REST API, MCP, the machine-readable discovery surfaces and the pages built on

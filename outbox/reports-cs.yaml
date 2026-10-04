@@ -43,3 +43,7 @@ reports:
   164: "Supply Analyzer: 174 coinů s neznámým vestingem píše „nic naplánováno“, ARB přitom 15. 10. odemyká 92,6M"
   165: "Supply Analyzer: ETH, SOL a TRX mají „max supply“ z emisního plánu a budoucí emise jako spálené"
   166: "Gem Screener: market cap coinu QI je o 2,3 % pod jeho vlastní cenou krát oběžná zásoba"
+  167: "Gem Screener, Chains: stablecoiny jsou počet tokenů, ne dolary (Stellar 841M místo 910M, Sei −11 %)"
+  168: "Gem Screener: dokumentace pro agenty pořád popisuje ocenění chainů poplatky proti jednomu vedoucímu chainu"
+  169: "Gem Screener, Chains: „Adoption“ znamená dvě různá čísla; prověření chainů stojí na stablecoinech a DEX"
+  170: "Gem Screener, Chains: BCH a ETC prý chybí tržní data, CoinGecko je má; chybí jim jiný vstup"
