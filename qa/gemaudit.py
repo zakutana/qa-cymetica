@@ -649,6 +649,118 @@ def retail_sure_breach(snap: dict, page_text: str) -> dict:
             "unread": []}
 
 
+SCATTER_RENDERER = re.compile(r"function\s+renderThemeScatter\s*\(")
+SCATTER_CAPTION_VAR = re.compile(
+    r"(?:var|let|const)\s+([A-Za-z_$][\w$]*)\s*=\s*document\.getElementById\(\s*['\"]scatterSub['\"]\s*\)")
+JS_STRING = re.compile(r"'((?:[^'\\\n]|\\.)*)'|\"((?:[^\"\\\n]|\\.)*)\"")
+ONE_CLICK = re.compile(r"\b(?:click|tap)(?:\s+or\s+(?:click|tap))?(?:\s+on)?\s+(?:a|any|the)\s+"
+                       r"(?:bubble|point|dot)s?\b", re.I)
+TWO_STEP = re.compile(r"\b(?:twice|again|second|double|2nd|two\s+clicks|then)\b", re.I)
+CLICK_LISTENER = re.compile(r"\.addEventListener\(\s*['\"]click['\"]")
+ANY_LISTENER = re.compile(r"\.addEventListener\(")
+POINTS_SELECTOR = re.compile(r"closest\(\s*['\"][^'\"]*#themeScatter[^'\"]*['\"]")
+PINS_A_CARD = re.compile(r"\b(?:pinHost|pinTipTo|togglePopover)\s*\(")
+# A first-click card held to touch: a hover/pointer media query, the event's pointer
+# type, or a touch probe -- in the listener, in the statement that registers it, or
+# through a name the page computes from one of them.
+HOVER_GATE = re.compile(r"matchMedia\(\s*['\"][^'\"]*(?:hover|pointer)[^'\"]*['\"]|pointerType|"
+                        r"maxTouchPoints|ontouchstart|firesTouchEvents")
+HOVER_GATE_NAME = re.compile(
+    r"(?:(?:var|let|const)\s+([A-Za-z_$][\w$]*)\s*=[^;\n]*?|function\s+([A-Za-z_$][\w$]*)\s*\([^)]*\)\s*\{"
+    r"[^{}]{0,400}?)(?:" + HOVER_GATE.pattern + ")")
+
+
+def _js_text(expression: str) -> str:
+    """The string literals of a JS expression, joined: what a `+` chain of quoted text
+    shows a visitor, less the variables spliced into it."""
+    return "".join(a or b for a, b in JS_STRING.findall(expression or "")).replace("\\'", "'")
+
+
+def sector_click_promise(page_html: str | None) -> dict:
+    """Does one click on a Sectors-chart bubble do what the chart's caption says?
+
+    2026-10-04: the caption ends "Click a bubble for the sector.", and a capture-phase
+    click listener (their ET-28990 #3) takes `#themeScatter g.pt`, pins the dark card
+    that hover already shows and stops the event, so the bubble's own
+    `openThemePanel` runs only on the second click. Read from the page's served
+    script, never from a browser, so the verdict is about the code a browser runs:
+
+      two_clicks  the caption promises one click AND that listener intercepts the first
+                  click on a chart point with no hover/pointer/touch gate
+      ok          the caption no longer promises one click, or every such listener is
+                  held to touch
+      unread      the renderer, its caption or its bubble click is not where it was read,
+                  or the listener is gone: whether one click now opens the sector is then
+                  a question for a browser, and a static read does not answer it
+
+    NOT read: which way a hover gate points (a gate is taken as the fix it would be),
+    or anything the browser does that the served script does not say.
+    """
+    out = {"verdict": "unread", "why": "", "caption": None, "caption_at": None,
+           "interceptor": None, "interceptor_at": None}
+    page = page_html or ""
+    found = SCATTER_RENDERER.search(page)
+    if not found:
+        out["why"] = "the page has no renderThemeScatter, so the Sectors chart was not read"
+        return out
+    end = page.find("\nfunction ", found.end())
+    region = page[found.start(): end if end != -1 else found.start() + 40000]
+
+    names = {m.group(1) for m in SCATTER_CAPTION_VAR.finditer(region)} | {"sub"}
+    captions = []
+    for name in names:
+        for m in re.finditer(r"\b" + re.escape(name) + r"\.textContent\s*=(?!=)\s*([^;]*);(\s*return\b)?", region):
+            if not m.group(2):                       # `...; return;` is the not-enough-data branch
+                captions.append((found.start() + m.start(), _js_text(m.group(1))))
+    if not captions:
+        out["why"] = "renderThemeScatter no longer writes the chart's caption as textContent"
+        return out
+    if not re.search(r"\.addEventListener\(\s*['\"]click['\"][^;]*?openThemePanel\s*\(", region):
+        out["why"] = "no click on a chart bubble opens openThemePanel any more"
+        return out
+    out["caption_at"], text = captions[-1]
+    sentences = [s.strip() for s in re.findall(r"[^.]*\.?", text) if s.strip()]
+    promise = next((s for s in sentences if ONE_CLICK.search(s)), None)
+    out["caption"] = promise or text.strip()
+    if not promise or TWO_STEP.search(promise):
+        out["verdict"], out["why"] = "ok", "the caption does not promise that one click opens the sector"
+        return out
+
+    gate_names = {a or b for a, b, *_ in HOVER_GATE_NAME.findall(page)} - {""}
+    intercepting = []
+    for m in CLICK_LISTENER.finditer(page):
+        nxt = ANY_LISTENER.search(page, m.end())
+        stop = min(nxt.start() if nxt else len(page), m.start() + 2500)
+        body = page[m.start(): stop]
+        if not (POINTS_SELECTOR.search(body) and PINS_A_CARD.search(body)
+                and re.search(r"stopPropagation\s*\(", body)):
+            continue
+        before = page[max(0, m.start() - 300): m.start()]
+        cut = max(before.rfind(";"), before.rfind("}"), before.rfind("*/"))
+        statement = before[cut + 1:] + body
+        gated = bool(HOVER_GATE.search(statement)) or any(
+            re.search(r"(?<![\w$.])" + re.escape(n) + r"(?![\w$])", statement) for n in gate_names)
+        line_start = page.rfind("\n", 0, m.start()) + 1
+        code = page[line_start: m.start() + len(body)]
+        close = code.rfind("}, true)")
+        code = code[: close + len("}, true);")] if close > 0 else code
+        intercepting.append({"at": line_start, "gated": gated, "code": code.strip()[:700]})
+    if not intercepting:
+        out["why"] = ("the first-click listener on #themeScatter points is no longer on the page; "
+                      "whether one click now opens the sector needs a browser")
+        return out
+    bare = [i for i in intercepting if not i["gated"]]
+    first = (bare or intercepting)[0]
+    out["interceptor"], out["interceptor_at"] = first["code"], first["at"]
+    if bare:
+        out["verdict"] = "two_clicks"
+        out["why"] = ("the caption promises one click, and a capture-phase click listener pins the hover "
+                      "card on a chart point and stops the event, on every device")
+    else:
+        out["verdict"], out["why"] = "ok", "the first-click card is held to touch"
+    return out
+
+
 def _close(value, expected, *, rel: float = 0.01, abs_tol: float = 0.0) -> bool:
     if value is None or expected is None:
         return False

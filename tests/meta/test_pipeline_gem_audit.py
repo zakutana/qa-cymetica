@@ -467,6 +467,8 @@ def test_the_audit_sees_a_wrong_upside_a_wrong_identity_a_wrong_altseason_and_a_
     _how_sure_follows_its_own_tooltip()
     _a_share_image_is_read_the_way_a_crawler_reads_it()
     _a_forming_candle_that_is_old_and_far_from_its_pool_is_seen()
+    # 2026-10-04: tests/rest/test_gem_screener_sectors_chart_does_what_its_caption_says.py
+    _a_chart_click_is_held_to_its_caption()
 
 
 @qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
@@ -769,3 +771,66 @@ def _a_share_image_is_read_the_way_a_crawler_reads_it():
         "twitter:image": "https://cymetica.com/static/images/og-default.png"}, g.share_images(page)
     assert g.share_images("<head><title>x</title></head>") == {} and g.share_images("") == {}
     assert g.share_images('<meta property="og:image" content="">') == {}, "an empty content named an image"
+
+
+def _a_chart_click_is_held_to_its_caption():
+    """2026-10-04, Sectors tab: the chart's caption says "Click a bubble for the sector",
+    and a capture-phase listener (ET-28990 #3) pins the hover card on the first click and
+    lets only the second one reach the bubble's openThemePanel. The judgement fails only on
+    that known mechanism beside a one-click caption; a caption that says what happens, or a
+    listener held to touch, passes; a page whose shape it cannot read is unread, never ok."""
+    renderer = ("function renderThemeScatter(){\n"
+                "  var sub = document.getElementById('scatterSub');\n"
+                "  if (pts.length < 2) { sub.textContent = 'Not enough data for the chart.'; return; }\n"
+                "  sub.textContent = 'Bubble size = market cap.' + (hasTrail ? ' Tail = where it stood ' + back + "
+                "' weeks ago.' : '') +\n    CAPTION;\n"
+                "  g.addEventListener('click', function(){ openThemePanel(th.key); });\n"
+                "  sub.textContent += ' No room for a name next to: ' + unlabelled.join(', ') + '.';\n"
+                "}\n/* ET-28378 part 3 */\nfunction themesChangeNote(){ return ''; }\n")
+    listener = ("/* ET-28990 #3: a click or tap on a hot-sector card or a point of the Sectors chart pins the\n"
+                "   same dark card hover and Tab show; a second click on the same one opens its detail. */\n"
+                "document.addEventListener('click', function(ev){\n"
+                "  var el = ev.target.closest && ev.target.closest('.thcard.cardtip, #themeScatter g.pt');\n"
+                "  if (!el || tipHostOf(ev.target)) return;\nGATE"
+                "  if (popoverOwner === el) { closePopover(); return; }\n"
+                "  ev.stopPropagation(); ev.preventDefault();\n  pinHost(el);\n}, true);\n"
+                "document.addEventListener('keydown', function(ev){ if (ev.key !== 'Enter') return; }, true);\n")
+    one_click = "' Click a bubble for the sector.'"
+
+    def page(caption=one_click, gate="", head="", tail=listener):
+        return "<script>" + head + renderer.replace("CAPTION", caption) + tail.replace("GATE", gate) + "</script>"
+
+    today = g.sector_click_promise(page())
+    assert today["verdict"] == "two_clicks", today
+    assert today["caption"] == "Click a bubble for the sector.", today
+    assert "#themeScatter g.pt" in today["interceptor"] and "pinHost" in today["interceptor"], today
+
+    # A caption that says what happens clears it, however the click itself is left.
+    for said in ("' Click a bubble for its card, and again for the sector.'",
+                 "' Click a bubble twice for the sector.'", "''"):
+        assert g.sector_click_promise(page(caption=said))["verdict"] == "ok", said
+    # A first-click card kept for touch only clears it: in the listener, before it, or
+    # through a name the page computes from a hover/pointer media query.
+    for gate in ("  if (window.matchMedia('(hover: hover)').matches) return;\n",
+                 "  if (ev.pointerType === 'mouse') return;\n",
+                 "  if (CAN_HOVER) return;\n"):
+        head = "var CAN_HOVER = window.matchMedia('(hover: hover) and (pointer: fine)').matches;\n"
+        assert g.sector_click_promise(page(gate=gate, head=head))["verdict"] == "ok", gate
+    wrapped = listener.replace("document.addEventListener('click'",
+                               "if (!matchMedia('(any-hover: hover)').matches) document.addEventListener('click'", 1)
+    assert g.sector_click_promise(page(tail=wrapped))["verdict"] == "ok", "a listener registered for touch only was judged"
+    # A media query about width is not a hover gate.
+    narrow = "var NARROW = matchMedia('(max-width: 720px)').matches;\n"
+    assert g.sector_click_promise(page(gate="  if (NARROW && !el) return;\n", head=narrow))["verdict"] == "two_clicks"
+
+    # What it cannot read is unread, never a pass: the listener gone (a browser has to say
+    # whether one click now opens the sector), the renderer gone, the caption gone, or no
+    # click on a bubble that opens the panel at all.
+    gone = g.sector_click_promise(page(tail=listener.replace("#themeScatter g.pt", ".other")))
+    assert gone["verdict"] == "unread" and gone["why"], gone
+    assert g.sector_click_promise(page().replace("renderThemeScatter", "renderOther"))["verdict"] == "unread"
+    no_caption = page().replace("sub.textContent = 'Bubble", "sub.innerHTML = 'Bubble")
+    assert g.sector_click_promise(no_caption)["verdict"] == "unread", "a caption it could not find was read as silent"
+    assert g.sector_click_promise(page().replace("openThemePanel(th.key)", "noop()"))["verdict"] == "unread"
+    assert g.sector_click_promise("")["verdict"] == "unread"
+    assert g.sector_click_promise(None)["verdict"] == "unread"
