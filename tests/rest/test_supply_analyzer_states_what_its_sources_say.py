@@ -67,6 +67,24 @@ record's own inputs, from the source it names, or from its documentation; one ch
    being issued is shown ~100% out (>= 99%) while its circulating supply is under 90% of
    its max supply. Without issuance on record, max minus total may be burned: not judged.
 
+10. TOKENS LOCKED BY HOLDERS (added the same afternoon; the operator's named case, PHAR).
+   Pharaoh's docs list PHAR and xPHAR on Avalanche; read on-chain through Routescan, the
+   xPHAR contract held 497,139,188 of 530,627,320 PHAR and 992.7M of 994.3M xPHAR were
+   staked in the VoteModule. The record showed "Reserve, outside the pie" 497,134,710 --
+   the page: "Max supply minus every token in play, plus the project's own stake. It enters
+   the pile only on a decision" -- and "Staked, free to unlock" 11,351,535 (DeFiLlama
+   staking TVL). ASSERTS: when the token's own staking contract holds 10%+ of the supply,
+   the record neither calls those tokens its reserve (within 1%) nor shows under half of
+   them as staked. Inconclusive if Pharaoh's docs stop listing the two addresses.
+
+11. AN UNKNOWN SCHEDULE SERVED AS NONE (added the same afternoon). Seen: all 174 records that
+   name their vesting schedule unknown ("No unlock schedule on any feed we read") serve
+   next_unlock {"kind": "none_scheduled"}, which the Gem Screener card prints as "none"
+   with "The schedule on file has no tranche ahead"; for ARB, DeFiLlama's unlock file
+   listed 56,125,000 team and 36,520,833 investor tokens on 2026-10-15. ASSERTS: no record
+   with an unknown schedule serves "none_scheduled". DeFiLlama is read only for the
+   chains among them, to show what is scheduled (a sample, stated in the reason).
+
 NOT asserted: whether the pressure number predicts anything, the weekly test, or the
 page's layout. SIDE EFFECTS: GETs only, anonymous; every Supply Analyzer read here names a
 Gem Screener coin, so none adds a line to the analyzer's ledger. Reads are paced to stay
@@ -81,6 +99,7 @@ import html as _html
 import math
 import re
 import time
+from datetime import datetime, timezone
 
 import httpx
 
@@ -103,6 +122,9 @@ CLAIM_TYPICAL = "supply-analyzer-typical-inflow-is-the-stated-one"
 CLAIM_CHAIN = "supply-analyzer-unsupported-chain-gets-a-documented-answer"
 CLAIM_FLAGS = "gem-screener-one-dilution-flag-per-coin"
 CLAIM_OUT = "gem-screener-tokens-out-counts-the-max-supply"
+CLAIM_LOCKED = "supply-analyzer-tokens-locked-by-holders-are-not-a-reserve"
+CLAIM_SCHEDULE = "supply-analyzer-an-unknown-schedule-is-not-none-scheduled"
+LLAMA_EMISSIONS = "https://defillama-datasets.llama.fi/emissions/{slug}"
 
 # The documented limit is 30 requests a minute per IP (llms.txt, /api-docs).
 PACE_S = 2.2
@@ -353,6 +375,54 @@ def two_flags(apps, items, caution, red) -> tuple[int, list[dict]]:
             differ.append({"symbol": app.get("symbol"), "slug": app.get("slug"),
                            "checks_row": a, "checks_flag": fa, "supply_card": b, "card_flag": fb})
     return judged, differ
+
+
+def locked_as_reserve(record, chain) -> dict | None:
+    """When the token's own staking contract holds a real share of the supply (10%+), the
+    record either calls those locked tokens its reserve (within 1%) or shows under half of
+    them as staked. None when the chain was not read or holds too little to prove it."""
+    locked, total = (chain or {}).get("locked_in_staking_token"), (chain or {}).get("total_supply")
+    if not _num(locked) or not _num(total) or total <= 0 or locked < 0.1 * total:
+        return None
+    reserve = (record or {}).get("reserve_today")
+    staked_item = _input(record, "staked_total")
+    staked = staked_item.get("value") if staked_item and _num(staked_item.get("value")) else 0.0
+    is_reserve = _num(reserve) and abs(reserve - locked) <= 0.01 * locked
+    share = staked / locked
+    if not is_reserve and share >= 0.5:
+        return None
+    return {"coin": _sym(record), "locked_in_staking_token": locked, "reserve_today": reserve,
+            "reserve_is_the_locked_tokens": bool(is_reserve), "staked_shown": staked,
+            "staked_shown_share": round(share, 4), "total_supply_onchain": total,
+            "record_total_supply": record.get("total_supply"), "record_circulating": record.get("circulating")}
+
+
+def unknown_served_as_none(row) -> bool:
+    """True when a record names its vesting schedule unknown yet serves next_unlock as
+    "none_scheduled" (the Gem Screener card then prints "none scheduled")."""
+    unknown = (row or {}).get("unknown_names") or []
+    unlock = (row or {}).get("next_unlock")
+    return "vesting schedule" in unknown and isinstance(unlock, dict) and unlock.get("kind") == "none_scheduled"
+
+
+def future_unlocks(dl_file, now) -> list[dict]:
+    """Dated unlock events at or after `now` in a DeFiLlama emissions file, soonest first."""
+    events = (((dl_file or {}).get("metadata") or {}).get("events") or []) if isinstance(dl_file, dict) else []
+    out = []
+    for event in events:
+        try:
+            ts = int(float(event.get("timestamp")))
+        except (TypeError, ValueError, AttributeError):
+            continue
+        if ts < now:
+            continue
+        tokens = event.get("noOfTokens")
+        said = re.search(r"\bof (.+?) tokens\b", str(event.get("description") or ""))
+        out.append({"ts": ts, "date": datetime.fromtimestamp(ts, timezone.utc).date().isoformat(),
+                    "tokens": tokens[0] if isinstance(tokens, list) and tokens else tokens,
+                    "type": event.get("unlockType"), "category": event.get("category"),
+                    "what": said.group(1) if said else str(event.get("description") or "")})
+    return sorted(out, key=lambda e: e["ts"])
 
 
 def out_ignores_max(app) -> dict | None:
@@ -744,6 +814,130 @@ def test_a_coin_carries_one_dilution_flag(rest_anon):
                     "snapshot": snapshot.get("generated_at_iso")},
         sources={"snapshot": SNAPSHOT, "analyzer": BATCH},
         claim_id=CLAIM_FLAGS))
+
+
+# --- 10. tokens locked by holders (PHAR, the operator's named case) ----------------------
+
+PHARAOH_DOCS = "https://docs.phar.gg/pages/contract-addresses"
+PHAR = "0x13A466998Ce03Db73aBc2d4DF3bBD845Ed1f28E7"
+XPHAR = "0xE8164Ea89665DAb7a553e667F81F30CfDA736B9A"
+VOTE_MODULE = "0x34F233F868CdB42446a18562710eE705d66f846b"
+ROUTESCAN = "https://api.routescan.io/v2/network/mainnet/evm/43114/etherscan/api"
+
+
+def _routescan(source, **params) -> float | None:
+    try:
+        response = source.get(ROUTESCAN, params=params)
+        body = response.json() if response.status_code == 200 else None
+    except (httpx.HTTPError, ValueError):
+        return None
+    if not isinstance(body, dict) or body.get("status") != "1":
+        return None
+    try:
+        return int(body["result"]) / 1e18
+    except (KeyError, TypeError, ValueError):
+        return None
+
+
+@qa(component="rest.supply_analyzer", tier=SafetyTier.SAFE, surface="rest", claim=CLAIM_LOCKED)
+def test_tokens_locked_by_holders_are_not_shown_as_a_reserve(rest_anon, evidence_store):
+    """PHAR: the PHAR its holders have locked in xPHAR (read on Avalanche) is not shown as the
+    reserve, and at least half of it is shown as staked."""
+    record = _single(rest_anon, "pharaoh-exchange")
+    if record is None:
+        raise Inconclusive(f"{ANALYZE}?symbol=pharaoh-exchange could not be read")
+    source = build_source_client(evidence=evidence_store, timeout=60.0)
+    try:
+        try:
+            docs = source.get(PHARAOH_DOCS)
+        except httpx.HTTPError as exc:
+            raise Inconclusive(f"{PHARAOH_DOCS} could not be read: {type(exc).__name__}")
+        page = docs.text.lower() if docs.status_code == 200 else ""
+        if PHAR.lower() not in page or XPHAR.lower() not in page:
+            raise Inconclusive(f"{PHARAOH_DOCS} no longer lists PHAR {PHAR} and xPHAR {XPHAR}; the addresses "
+                               f"this check reads are the project's own, so it cannot tell")
+        chain = {
+            "total_supply": _routescan(source, module="stats", action="tokensupply", contractaddress=PHAR),
+            "locked_in_staking_token": _routescan(source, module="account", action="tokenbalance",
+                                                  contractaddress=PHAR, address=XPHAR, tag="latest"),
+            "xphar_supply": _routescan(source, module="stats", action="tokensupply", contractaddress=XPHAR),
+            "xphar_staked_in_vote_module": _routescan(source, module="account", action="tokenbalance",
+                                                      contractaddress=XPHAR, address=VOTE_MODULE, tag="latest"),
+        }
+    finally:
+        source.close()
+    if not _num(chain["total_supply"]) or not _num(chain["locked_in_staking_token"]):
+        raise Inconclusive(f"the chain could not be read through {ROUTESCAN}: {chain}")
+    found = locked_as_reserve(record, chain)
+    reserve_tip = ("Max supply minus every token in play, plus the project's own stake. It enters the pile only "
+                   "on a decision")
+    conclude(Measurement(
+        verdict="failed" if found else "passed",
+        reason=(f"PHAR on Avalanche: the xPHAR contract ({XPHAR}) holds {chain['locked_in_staking_token']:,.0f} PHAR "
+                f"of a total supply of {chain['total_supply']:,.0f}, and {chain['xphar_staked_in_vote_module'] or 0:,.0f} "
+                f"of {chain['xphar_supply'] or 0:,.0f} xPHAR are staked in the VoteModule. The record shows "
+                f"\"Reserve, outside the pie\" {found['reserve_today']:,.0f}"
+                + (" (the same tokens)" if found["reserve_is_the_locked_tokens"] else "")
+                + f", described on the page as \"{reserve_tip}\", and \"Staked, free to unlock\" "
+                f"{found['staked_shown']:,.0f} ({found['staked_shown_share'] * 100:.1f}% of the locked PHAR)"
+                if found else
+                "the PHAR locked in xPHAR is not shown as the reserve, and at least half of it is shown as staked"),
+        left={"locked_shown_as_reserve": bool(found and found["reserve_is_the_locked_tokens"]),
+              "staked_shown_share": found["staked_shown_share"] if found else None},
+        right={"locked_shown_as_reserve": False, "staked_shown_share": ">= 0.5"},
+        population={"chain": chain, "found": found, "record": {k: record.get(k) for k in (
+            "total_supply", "circulating", "pile_today", "reserve_today", "refreshed_at")}},
+        sources={"record": f"{ANALYZE}?symbol=pharaoh-exchange", "addresses": PHARAOH_DOCS,
+                 "chain": ROUTESCAN + " (tokensupply, tokenbalance)"},
+        claim_id=CLAIM_LOCKED))
+
+
+# --- 11. an unknown schedule served as "none scheduled" ----------------------------------
+
+@qa(component="rest.supply_analyzer", tier=SafetyTier.SAFE, surface="rest", claim=CLAIM_SCHEDULE)
+def test_an_unknown_schedule_is_not_served_as_none_scheduled(rest_anon, evidence_store):
+    """No record that names its vesting schedule unknown serves next_unlock as
+    "none_scheduled"; for the chains among them, DeFiLlama's unlock file (the feed the
+    analyzer names) is read to show what is scheduled."""
+    batch = _batch(rest_anon)
+    rows = [r for r in batch["items"] if "vesting schedule" in (r.get("unknown_names") or [])]
+    if not rows:
+        raise Inconclusive("no record names its vesting schedule unknown")
+    served = [r for r in rows if unknown_served_as_none(r)]
+    now = int(time.time())
+    probed, scheduled = [], []
+    source = build_source_client(evidence=evidence_store, timeout=60.0)
+    try:
+        for row in [r for r in served if (r.get("token") or {}).get("kind") == "chains"]:
+            slug = (row.get("token") or {}).get("slug") or ""
+            try:
+                response = source.get(LLAMA_EMISSIONS.format(slug=slug))
+                body = response.json() if response.status_code == 200 else None
+            except (httpx.HTTPError, ValueError):
+                body = None
+            probed.append(f"{_sym(row)}: {'file' if isinstance(body, dict) else 'no file'}")
+            ahead = future_unlocks(body, now)
+            if ahead:
+                scheduled.append({"coin": _sym(row), "next": ahead[:2], "events_ahead": len(ahead),
+                                  "url": LLAMA_EMISSIONS.format(slug=slug)})
+    finally:
+        source.close()
+    said = lambda s: (f"{s['coin']}: {s['events_ahead']} unlock events ahead in {s['url']}, the first "
+                      + "; ".join(f"{e['date']} {e['tokens']:,.0f} ({e['what'].strip()})" if _num(e["tokens"])
+                                  else f"{e['date']} ({e['what'].strip()})" for e in s["next"]))
+    conclude(Measurement(
+        verdict="failed" if served else "passed",
+        reason=(f"{len(served)} of {len(rows)} records that name their vesting schedule unknown serve next_unlock "
+                f"{{\"kind\": \"none_scheduled\"}}, which the Gem Screener's Supply card prints as \"none\" with "
+                f"\"The schedule on file has no tranche ahead\""
+                + (f". Among the {len(probed)} chains of them, DeFiLlama's unlock file lists dated unlocks for "
+                   f"{len(scheduled)}: " + " | ".join(said(s) for s in scheduled) if scheduled else "")
+                if served else f"none of {len(rows)} records with an unknown schedule claims none is scheduled"),
+        left={"unknown_served_as_none": len(served)},
+        right={"unknown_served_as_none": 0},
+        population={"served": [_sym(r) for r in served], "scheduled_elsewhere": scheduled, "probed": probed},
+        sources={"batch": BATCH, "feed": LLAMA_EMISSIONS},
+        claim_id=CLAIM_SCHEDULE))
 
 
 # --- 9. tokens out (Gem Screener) --------------------------------------------------------

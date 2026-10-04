@@ -747,6 +747,43 @@ def test_the_is_answer_rule_is_self_calibrating_and_still_bites():
     assert out_ignores_max(dict(ore_app, supply=dict(ore_app["supply"], out_pct=16.7))) is None, "the fix"
     assert out_ignores_max(dict(ore_app, cg={"total": 500651.75})) is None, "no max supply, nothing to ignore"
 
+    # 10. Locked tokens: PHAR that afternoon. The record's reserve was the PHAR the xPHAR
+    #     contract holds for its holders, and its staked figure a 44th of it.
+    from tests.rest.test_supply_analyzer_states_what_its_sources_say import locked_as_reserve
+    phar = {"token": {"symbol": "PHAR"}, "total_supply": 530628030.8, "circulating": 33493320.9,
+            "reserve_today": 497134709.9, "inputs": [{"key": "staked_total", "value": 11351535.32}]}
+    chain = {"total_supply": 530627319.97, "locked_in_staking_token": 497139187.99}
+    seen = locked_as_reserve(phar, chain)
+    assert seen and seen["reserve_is_the_locked_tokens"] and seen["staked_shown_share"] < 0.03
+    fixed = dict(phar, reserve_today=0.0, inputs=[{"key": "staked_total", "value": 497139187.99}])
+    assert locked_as_reserve(fixed, chain) is None, "the locked tokens shown as staked is the fix"
+    assert locked_as_reserve(dict(phar, reserve_today=250000000.0,
+                                  inputs=[{"key": "staked_total", "value": 497000000.0}]), chain) is None
+    assert locked_as_reserve(phar, {"total_supply": 530627319.97, "locked_in_staking_token": 1000.0}) is None, (
+        "a staking contract that holds almost nothing proves nothing")
+    assert locked_as_reserve(phar, {}) is None, "an unread chain is unread"
+
+    # 11. Unknown schedules: ARB that afternoon. Its record named the vesting schedule
+    #     unknown and served next_unlock "none_scheduled"; DeFiLlama's file had 15 Oct.
+    from tests.rest.test_supply_analyzer_states_what_its_sources_say import (
+        future_unlocks, unknown_served_as_none)
+    arb = {"token": {"symbol": "ARB", "slug": "arbitrum"}, "status": "unknown",
+           "unknown_names": ["vesting schedule", "emissions"], "next_unlock": {"kind": "none_scheduled"}}
+    assert unknown_served_as_none(arb) is True
+    assert unknown_served_as_none(dict(arb, next_unlock={"kind": "unknown"})) is False, "the fix"
+    assert unknown_served_as_none(dict(arb, next_unlock=None)) is False, "no claim is not a false claim"
+    assert unknown_served_as_none(dict(arb, unknown_names=["emissions"])) is False, (
+        "a known schedule with nothing ahead may say none")
+    dl = {"metadata": {"events": [
+        {"timestamp": 1792072833, "noOfTokens": [56125000], "category": "insiders", "unlockType": "cliff",
+         "description": "On {timestamp} {tokens[0]} of Team, Contributors & Advisors tokens will be unlocked"},
+        {"timestamp": "1790000000", "noOfTokens": [1], "unlockType": "cliff"},
+        {"timestamp": "not a time"}]}}
+    ahead = future_unlocks(dl, 1791109556)
+    assert [a["date"] for a in ahead] == ["2026-10-15"] and ahead[0]["tokens"] == 56125000
+    assert ahead[0]["what"] == "Team, Contributors & Advisors"
+    assert future_unlocks({}, 1791109556) == [] and future_unlocks(None, 1791109556) == []
+
     # The Gem Screener refresh rule (2026-09-27), held here for the same
     # ceiling. Stuck means BOTH: stale past 3 cycles AND the newest attempt a
     # recorded failure. A missing field is unreadable (None), never "healthy".
