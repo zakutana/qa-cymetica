@@ -189,8 +189,24 @@ def test_the_runrate_uses_the_multipliers_its_page_states(rest_anon):
 @qa(component="rest.gem_screener", tier=SafetyTier.SAFE, surface="rest")
 def test_the_altseason_numbers_follow_their_own_published_rules(rest_anon):
     """The composite, the 4-week breadth mean and `beat / n`, each against the
-    rule the snapshot itself publishes."""
-    snap = read_snapshot(rest_anon)
+    rule the snapshot itself publishes.
+
+    Read from the API snapshot, not the page's embedded copy: the page trims
+    `altseason_cycle.series` (the weekly history the mean is taken over), the API
+    carries it (checked 2026-10-04)."""
+    try:
+        response = get_patiently(rest_anon, g.SNAPSHOT_API)
+    except httpx.HTTPError as exc:
+        raise Inconclusive(f"{g.SNAPSHOT_API} could not be read: {type(exc).__name__}")
+    if response.status_code != 200:
+        raise Inconclusive(f"{g.SNAPSHOT_API} answered HTTP {response.status_code}; a failed "
+                           f"read is not an empty snapshot")
+    try:
+        snap = response.json()
+    except ValueError:
+        raise Inconclusive(f"{g.SNAPSHOT_API} answered 200 with a body that is not JSON")
+    if not isinstance(snap, dict):
+        raise Inconclusive(f"{g.SNAPSHOT_API} answered a {type(snap).__name__}, not an object")
     said = g.altseason_breaches(snap)
     if said["unread"]:
         raise Inconclusive("the altseason block could not be read whole: " + "; ".join(said["unread"]))
@@ -204,4 +220,4 @@ def test_the_altseason_numbers_follow_their_own_published_rules(rest_anon):
         left={"breaches": len(breaches), "index": cyc.get("index")},
         right={"breaches": 0},
         population={"breaches": breaches},
-        sources={"page": g.APP_PAGE, "cycle": "altseason_cycle"}))
+        sources={"api": g.SNAPSHOT_API, "cycle": "altseason_cycle"}))
