@@ -4519,6 +4519,295 @@ reports:
       fixed. The contract: rows on the ledger are ours: GET /analyze records each label it
       serves, and our reads requested these coins.
 
+  - key: supply-analyzer-burned-slice-is-max-minus-total
+    findings: [CYM-supply-analyzer-burned-slice-is-a-measured-burn]
+    severity: medium
+    category: logic
+    url: https://cymetica.com/supply-analyzer?symbol=ore
+    title: >-
+      Supply Analyzer: "Bought back, burned" is max supply minus total supply, so supply not
+      minted yet is shown as burned (ORE 83% of its pie) while the record lists burns as unknown
+    expected: >
+      The "Bought back, burned" slice holds tokens that were burned, from a source that
+      measures burns, as the page promises every figure "with its source and date". Where no
+      burn is measured, the record does not show one: your own text says burns are "named as
+      unknown" and "Unknown never counts as good". Supply that has not been minted yet stays
+      in the reserve that pays emissions.
+    actual: >
+      Read on 2026-10-04 between 08:45 and 10:09 UTC, three times. 81 of the 244 rows of
+      /batch/gem-screener show a burned slice. In each of the 12 records with the largest
+      burned share, the only input behind it is burned_so_far, source "max supply minus total
+      supply (CoinGecko figures)", as_of null, and the same record lists burns as unknown
+      ("Fee and supply burns a month are not on any feed we read; counted as 0."): RUSH
+      2,056,917 (98.4% of the pie), PHAR 469,371,969 (93.3%), BEAN 2,861,934 (93.0%), RAM
+      756,287,109 (90.1%), STG 879,202,268 (87.9%), ORE 2,499,496 (83.3%), and six more. For
+      a token still being minted, max minus total is supply not issued yet, and taking it
+      out of the reserve also stops the emissions the record itself knows: ORE's record
+      carries emissions_month 42,097.5 (DeFiLlama unlock schedule) but a reserve of 40.11, so
+      month 0 counts 40.11 new tokens; ORE is shown -52.11% a year, 10/10 Squeezing, "Buybacks
+      outweigh new tokens 543 to 1", and its 24-month curve reaches 0 in September 2028. The
+      Gem Screener snapshot records $3,000,944 of ORE emissions in 30 days (1.07% a week). Of
+      the 12 sampled records, 5 count less than 90% of their own emission input in month 0:
+      BEAN 42,825 a month, 0 counted (-190.89% a year, Squeezing); STREAM 6,868,132, 0
+      counted; STG 1,442, 0 counted; MOR 349,870, 294,470 counted; ORE as above.
+    steps:
+      - 'GET https://cymetica.com/api/v1/supply-analyzer/batch/gem-screener -> 81 items with slices_today[key=bb_burned].amount > 0'
+      - 'GET https://cymetica.com/api/v1/supply-analyzer/analyze?symbol=ore-protocol -> slices_today bb_burned 2499495.62 (share_pct 83.32); inputs[key=burned_so_far] source "max supply minus total supply (CoinGecko figures)", as_of null; inputs[key=emissions_month] value 42097.5; unknown[input=burns] "counted as 0"; reserve_today 40.11; months[0].in.emissions 40.11; yearly_pct -52.11, pressure 10, band Squeezing'
+      - 'GET https://cymetica.com/api/v1/gem-screener -> apps[slug=ore-protocol].dilution: week_pct 1.0707, basis "emissions", emissions_usd30 3000944.31'
+    body: >
+      How to fix it is yours: show a burned amount only where a source measures one (a burn
+      address, a published burn), and leave max minus total supply in the reserve, or name
+      it "not minted or burned: unknown". Our check reads the 12 rows of the batch with the
+      largest burned share (a sample of a population that moves with every refresh) and fails
+      while any of them takes its burned amount only from max supply minus total supply. It
+      does not decide which tokens really burned: for some (BNB, for example) the difference
+      is a burn, for ORE and BEAN it is supply not minted yet, and the record cannot tell the
+      reader which. Every Supply Analyzer read of this check names a Gem Screener coin, so
+      none adds a line to your weekly ledger.
+
+  - key: supply-analyzer-payouts-booked-as-buybacks
+    findings: [CYM-supply-analyzer-buyback-is-a-purchase-of-the-token]
+    severity: medium
+    category: logic
+    url: https://cymetica.com/supply-analyzer?symbol=giga
+    title: >-
+      Supply Analyzer: fees paid out to ve-lockers and voters are counted as buybacks of the
+      token, so coins whose fees are paid out show as Squeezing (9 of 23 sampled)
+    expected: >
+      /api/v1/supply-analyzer/definitions: "Buybacks: DeFiLlama's holders' revenue of the last
+      30 days (the share of fees that buys the token), at today's price." A buyback is taken
+      out of the sellable pile only where that revenue buys the token. Where DeFiLlama's
+      methodology says the revenue is paid out to lockers, voters or stakers, nothing is
+      bought and the pile does not shrink.
+    actual: >
+      Read on 2026-10-04 between 09:45 and 10:09 UTC, three times. A sample: the 23 rows of
+      /batch/gem-screener shown Squeezing (pressure 8-10) or whose sellable pile reaches 0
+      inside its 24-month curve. For 9 of them the record's buyback_month comes from
+      DeFiLlama holders' revenue of protocols whose DeFiLlama HoldersRevenue methodology
+      describes only a payout: BEND, Squeezing, -102.81% a year, 418,956,196 tokens "bought"
+      a month from $17,308 ("Protocol's share of borrow interest, 100% distributed to veBEND
+      holders proportionally."); GIGA, Squeezing, -582.19% ("Share of swap fees distributed
+      to veGIGA stakers (all of the protocol's share)."); ABX, Squeezing, -346.69% ("... forwarded
+      to veABX voters ..."); TITN, Squeezing, -191.16% ("50% of THORChain/Maya/Near Intents fees
+      distributed to $TITN stakers ..."); KITTEN, Squeezing, -78.91% ("100% of swap fees are
+      distributed weekly to veKITTEN voters/holders."); BLACK, Squeezing, -61.45% ("...
+      distributed to veBLACK voters"); RAM, Squeezing, -41.49% ("Swap fees and bribes going to
+      holders."); MET, Squeezing, -6.89% ("MET distributed to holders."); TOPAZ, Flooding,
+      whose pile reaches 0 ("Entire swap fees and bribes go to holders"). Six of these piles
+      reach 0 inside the curve (GIGA in 3 months, ABX 4, TITN 7, TOPAZ 15, KITTEN 16, BLACK
+      20). The other 14 rows were not
+      judged: their methodology names buying (PONS "used to buyback and burn", BEAN, ORE and
+      others) or says neither. In a wider read the same morning (the 15 records with the
+      largest buyback against their pile), 12 were of this kind, adding PHAR, UP, HYBR and
+      NEST, which are shown Flooding.
+    steps:
+      - 'GET https://cymetica.com/api/v1/supply-analyzer/analyze?symbol=giga -> inputs[key=buyback_month] value 28225411.0, source "DeFiLlama holders'' revenue, last 30 days (GIGA V2, GIGA V3), at today''s price", note "$184,576 in 30 days"; yearly_pct -582.19; band Squeezing'
+      - 'GET https://api.llama.fi/summary/fees/giga?dataType=dailyHoldersRevenue -> childProtocols[name=GIGA V2].methodology.HoldersRevenue "Share of swap fees distributed to veGIGA stakers (all of the protocol''s share)."'
+      - 'GET https://cymetica.com/api/v1/supply-analyzer/definitions -> sources and definitions: buybacks are holders'' revenue, "the share of fees that buys the token"'
+    body: >
+      How to fix it is yours: count holders' revenue as a buyback only where the protocol buys
+      its token (DeFiLlama's breakdownMethodology names the stream for most protocols), and
+      otherwise name buybacks as unknown. Our check reads the batch, takes the rows shown
+      Squeezing or whose pile reaches 0, and for each one whose buyback comes from holders'
+      revenue reads DeFiLlama's methodology for every protocol the record names. It fails
+      while one is booked as a buyback although every one of those sentences describes a
+      payout and none describes buying; a sentence that names any buying, or says neither, is
+      not judged. It is a sample of a population that moves with every refresh. Every Supply
+      Analyzer read names a Gem Screener coin, so none adds a line to your weekly ledger.
+
+  - key: supply-analyzer-pile-larger-than-supply
+    findings: [CYM-supply-analyzer-sellable-pile-fits-inside-the-supply]
+    severity: medium
+    category: logic
+    url: https://cymetica.com/supply-analyzer?symbol=curve-finance
+    title: >-
+      Supply Analyzer: in 17 records the sellable pile is larger than the total supply the same
+      record states (CRV 3.25B against 2.42B, THOR 600M against 253M)
+    expected: >
+      The sellable pile ("the tokens in circulation that are not locked, plus the staked
+      tokens that can leave at any time") is part of the supply, so it is never larger than
+      the total supply the record states.
+    actual: >
+      Read on 2026-10-04 between 09:41 and 10:09 UTC, three times. 17 records state a
+      pile_today larger than their own total_supply. In every one the pile is circulating
+      plus staked_total, with circulating_includes_staked false: CRV pile 3,245,081,474
+      against total_supply 2,422,992,570 (circulating 1,570,993,126 plus staked
+      1,674,088,348); THOR 599,595,886 against 253,198,973; FOX 29,882,588 against 10,321,540;
+      RAIL 142,343,727 against 60,000,000; GMX 22,800,370 against 10,460,789; BIFI 187,035
+      against 80,000; also INV, OHM, LON, LQTY, USUAL, CVX, BEAN, VVV, OGN, PENDLE, RSUP. In 10
+      of them staked_total alone ("DeFiLlama protocol staking TVL at today's price") is larger
+      than the total supply (BIFI: 107,035 staked of 80,000). For CRV the pie's tokens in play
+      (3,852,391,935) then exceed the max supply (3,030,303,031), the reserve is set to 0, and
+      the emissions paid from the reserve drop to 0 too: the record knows 8,777,646 new CRV a
+      month and counts none.
+    steps:
+      - 'GET https://cymetica.com/api/v1/supply-analyzer/analyze?symbol=curve-finance -> pile_today 3245081474.0, total_supply 2422992570.14, circulating 1570993126.0, inputs[key=staked_total] 1674088348.26 "DeFiLlama protocol staking TVL at today''s price", circulating_includes_staked false, reserve_today 0.0'
+      - 'GET https://cymetica.com/api/v1/supply-analyzer/analyze?symbol=beefy -> pile_today 187034.52, total_supply 80000.0, max_supply 80000.0, staked_total 107034.52'
+    body: >
+      Two things go wrong here, as far as we can see from the outside: staking TVL divided by
+      the price can count more than the token (BIFI, OHM, GMX: staked above the total supply),
+      and staked tokens are added on top of a circulating figure that, for these tokens, may
+      already contain them. How to fix it is yours. Our check preselects the rows whose pile
+      exceeds the total supply in the Gem Screener snapshot (or that have staking and no
+      total there), reads each record, and fails while one states a pile larger than its own
+      total_supply (its max_supply when it states no total). A row that crosses between the
+      two snapshots can be missed, so it is a sample. Every Supply Analyzer read names a Gem
+      Screener coin, so none adds a line to your weekly ledger.
+
+  - key: supply-analyzer-hyperliquid-sources-and-link
+    findings: [CYM-supply-analyzer-cited-sources-say-what-they-are-credited-with, CYM-supply-analyzer-gem-screener-link-opens-its-coin, CYM-supply-analyzer-typical-inflow-is-the-stated-one]
+    severity: medium
+    category: logic
+    url: https://cymetica.com/supply-analyzer?symbol=HYPE
+    title: >-
+      Supply Analyzer, Hyperliquid: "kept" credited to a page that says burned, a dead vesting
+      link, a Gem Screener link that opens "Not in the Gem Screener", and a 5.0% typical inflow
+    expected: >
+      Every figure carries a source that says it (the page: "Every input with source and
+      date"). The Gem Screener's "Open in Supply Analyzer" opens the coin: OpenAPI says symbol
+      takes a "Ticker (Gem Screener coins), slug or CoinGecko id". An unknown inflow counts
+      as "the typical token's (the median of the tokens with data)", one figure, which
+      /definitions states.
+    actual: >
+      Read on 2026-10-04 between 08:45 and 10:09 UTC, three times. (1) HYPE's record says the
+      buyback is "kept" and credits "Hyperliquid docs: Fees (Assistance Fund) and HYPE burn",
+      https://hyperliquid.gitbook.io/hyperliquid-docs/trading/fees; the page shows it under
+      "Sources that disagree" as the project's docs saying kept. That page, read the same
+      morning, says "HYPE in the assistance fund is burned". (2) The vesting schedule is
+      cited to https://hyperliquid.gitbook.io/hyperliquid-docs/hyperliquid-l1/hype-and-staking,
+      which answers 404. (3) The Gem Screener's link on both Hyperliquid rows is
+      /supply-analyzer?symbol=hyperliquid (the coin's CoinGecko id); the API answers 404
+      UNKNOWN_SYMBOL "No token called HYPERLIQUID is in the Gem Screener" and the page shows
+      "Not in the Gem Screener". symbol=HYPE works. (4) /definitions states a typical inflow of
+      12.34% a year, and the page's "How the numbers are made" prints "12.3% of the pile a
+      year". HYPE's range adds 5.0% ("the typical token's (5.0% a year)" on the same page):
+      24.73% to 29.73%. Across the batch, 174 of 185 ranges add a figure other than the
+      stated 12.34%: 5.0% on 57, 10.68% on 31, 15.08% on 28, 12.88% on 24, and five others.
+    steps:
+      - 'GET https://cymetica.com/api/v1/supply-analyzer/analyze?symbol=HYPE -> inputs[key=buyback_disposition] value "kept", url https://hyperliquid.gitbook.io/hyperliquid-docs/trading/fees; inputs[key=vesting_schedule] url https://hyperliquid.gitbook.io/hyperliquid-docs/hyperliquid-l1/hype-and-staking; typical_inflow_pct 5.0; yearly_range [24.73, 29.73]'
+      - 'GET https://hyperliquid.gitbook.io/hyperliquid-docs/trading/fees -> "HYPE in the assistance fund is burned, removing the tokens permanently from the circulating and total supply."'
+      - 'GET https://hyperliquid.gitbook.io/hyperliquid-docs/hyperliquid-l1/hype-and-staking -> HTTP 404'
+      - 'GET https://cymetica.com/api/v1/supply-analyzer/analyze?symbol=hyperliquid -> HTTP 404 UNKNOWN_SYMBOL'
+      - 'GET https://cymetica.com/api/v1/supply-analyzer/definitions -> typical_inflow_pct 12.34290441022498'
+    body: >
+      Hyperliquid is the request's own worked example, so these are the first things a reader
+      checks. Not part of our checks, and not a claim that you are wrong: the record puts the
+      next core-contributor unlock at 2026-10-28 (23.7 days); third parties put the monthly
+      date on the 6th: Tokenomist ("The next unlock for Hyperliquid is scheduled for October
+      6, 2026. Released to Core Contributors."), the Blockworks token transparency filing for
+      HYPE (9.92 million HYPE "on September 6, 2026", vesting "completing between 2027 and
+      2028", the record's last tranche is 2027-10-28), and CoinMarketCap quoting the
+      co-founder ("on the sixth of each month"). We found no primary Hyperliquid page with the
+      schedule. Our checks: one reads every url HYPE's record cites for a hand-entered input
+      and fails on a 404 or on a page that contradicts what it is credited with; one resolves
+      every link identifier the Gem Screener uses for more than one row (today only
+      "hyperliquid"); one compares the width of every range in the batch with the typical
+      inflow /definitions states. Every Supply Analyzer read names a Gem Screener coin, so
+      none adds a line to your weekly ledger.
+
+  - key: supply-analyzer-unsupported-chain-500
+    findings: [CYM-supply-analyzer-unsupported-chain-gets-a-documented-answer]
+    severity: low
+    category: api
+    url: https://cymetica.com/api/v1/supply-analyzer/analyze?contract=0x1f9840a85d5aF5bf1D1762F925BDADdC4201F984&chain=dogechain
+    title: >-
+      Supply Analyzer API: a contract with an unsupported chain answers HTTP 500
+      INTERNAL_SERVER_ERROR instead of the documented 400 UNSUPPORTED_CHAIN
+    expected: >
+      /openapi-public.json, GET /api/v1/supply-analyzer/analyze, response 400: "MISSING_INPUT,
+      INVALID_SYMBOL, INVALID_CONTRACT, CHAIN_NEEDED, UNSUPPORTED_CHAIN, NO_PRICE." A chain
+      the analyzer does not read gets 400 UNSUPPORTED_CHAIN.
+    actual: >
+      Read on 2026-10-04 between 09:07 and 10:09 UTC, at least four times each. UNI's contract
+      0x1f9840a85d5aF5bf1D1762F925BDADdC4201F984 with chain=dogechain, chain=tron or chain=foo
+      answers HTTP 500 {"error":{"code":"INTERNAL_SERVER_ERROR","message":"An unexpected error
+      occurred","details":{"error":"Internal server error"}}}. The same contract with
+      chain=ethereum answers 200, with no chain 200, and 0x123 with chain=ethereum answers
+      400 INVALID_CONTRACT.
+    steps:
+      - 'GET https://cymetica.com/api/v1/supply-analyzer/analyze?contract=0x1f9840a85d5aF5bf1D1762F925BDADdC4201F984&chain=dogechain -> HTTP 500 INTERNAL_SERVER_ERROR'
+      - 'GET https://cymetica.com/api/v1/supply-analyzer/analyze?contract=0x1f9840a85d5aF5bf1D1762F925BDADdC4201F984&chain=tron -> HTTP 500 INTERNAL_SERVER_ERROR'
+      - 'GET https://cymetica.com/api/v1/supply-analyzer/analyze?contract=0x1f9840a85d5aF5bf1D1762F925BDADdC4201F984&chain=foo -> HTTP 500 INTERNAL_SERVER_ERROR'
+    body: >
+      Our check sends those three reads and fails while one answers anything but a documented
+      answer (a 400 with one of the documented codes, or a 200 if you decide to read the
+      chain). It uses UNI, a Gem Screener coin, because reading a contract the analyzer has
+      not seen adds it to your public weekly ledger. So that the ledger's count does not
+      surprise you: /ledger said 245 lines at 08:45 UTC and 251 at 09:25 UTC, and in between
+      we read six contracts outside the Gem Screener once each (PEPE on ethereum and on base,
+      BabyDoge on bsc, WIF on solana, 0x...dEaD on ethereum, UNI's address on bsc); all six
+      answered status "unknown". We cannot see the lines, so we cannot confirm they are those
+      six, but the count matches.
+
+  - key: gem-screener-two-dilution-flags
+    findings: [CYM-gem-screener-one-dilution-flag-per-coin]
+    severity: low
+    category: logic
+    url: https://cymetica.com/gem-screener/app?coin=hyperliquid
+    title: >-
+      Gem Screener: 10 apps carry two different dilution flags; on HYPE's detail the Checks row
+      says 0% new tokens a week and the new Supply card says +1%, Heavy dilution
+    expected: >
+      One figure and one flag per coin. ET-28934 (item 9) asked that the Supply card's dilution
+      chip and "the Supply row of the checks and the Apps row still read the same figure", and
+      (item 10) that "where the Supply Analyzer knows a schedule, the Gem Screener's next
+      unlock, its Dilution figure and its flag read that schedule".
+    actual: >
+      Read on 2026-10-04 between 08:47 and 10:09 UTC, three times, and seen in the browser
+      around 09:12 UTC. The snapshot's dilution.week_pct (which the detail's Checks row and the Apps
+      row read) and the Supply Analyzer's dilution_week_pct (which the Supply card reads) give
+      10 of 101 apps different flags on the snapshot's own lines (0.5% and 1% a week): HYPE
+      0.0% (ok) vs 1.0252% (red); ORE 1.0707% (red) vs 0.0018% (ok); QUICK 0.0% vs 0.6755%;
+      VELO 0.4821% vs 0.7776%; FLUID 0.0% vs 0.533%; MOR 1.123% vs 0.746%; ATH 0.9488% vs
+      1.0196%; SHADOW 0.6659% vs 1.0897%; BLUE 1.0057% vs 0.9912%; RSUP 0.7002% vs 0.403%. On
+      HYPE's detail the Checks row reads "0% unlock in 90 days, 0% new tokens a week" while the
+      Supply card reads "+1% new tokens a week" (Heavy dilution) and "in 24 days, next unlock
+      9.9M tokens to core contributors"; the card's tooltip also says "Hyperliquid, the
+      benchmark: 0% a week". On ORE's detail the Checks row says "1% new tokens a week", the
+      card "under 0.1%".
+    steps:
+      - 'GET https://cymetica.com/api/v1/gem-screener -> apps[slug=hyperliquid].dilution.week_pct 0.0; dilution_meta caution_line 0.5, red_line 1.0, bench_week_pct 0.0'
+      - 'GET https://cymetica.com/api/v1/supply-analyzer/batch/gem-screener -> items[token.slug=hyperliquid].dilution_week_pct 1.0252'
+      - 'Open https://cymetica.com/gem-screener/app?coin=hyperliquid -> CHECKS, Supply: "0% unlock in 90 days, 0% new tokens a week"; Supply card: "+1% new tokens a week", "in 24 days"'
+    body: >
+      Which figure is right is yours to decide; the request asked for one schedule behind
+      both. Our check compares, for every app, the snapshot's dilution with the Supply
+      Analyzer's and fails while any app's two figures fall on different sides of the
+      snapshot's own caution and red lines. Two different figures with the same flag are
+      not counted.
+
+  - key: gem-screener-all-out-while-issuing
+    findings: [CYM-gem-screener-tokens-out-counts-the-max-supply]
+    severity: low
+    category: logic
+    url: https://cymetica.com/gem-screener/app?coin=ore-protocol
+    title: >-
+      Gem Screener: ORE shows "100% of tokens out" and FDV equal to market cap while 16.7% of
+      its 3M max supply circulates and the snapshot records $3.0M of new ORE in 30 days
+    expected: >
+      For a coin that is still being minted, the share of tokens out and the FDV count the
+      tokens still to come (the max supply), as the request's FDV view and the Checks row
+      ("x% of tokens out") describe.
+    actual: >
+      Read on 2026-10-04 between 08:47 and 10:09 UTC, three times, and seen in ORE's detail in
+      the browser around 09:11 UTC. /api/v1/gem-screener, ORE: supply.out_pct 99.9956, fdv
+      65,400,201 against mcap 65,397,326, cg.max 3,000,000, circulating 500,630 (16.7% of the
+      max), while the same row's dilution says 1.0707% a week, basis "emissions", $3,000,944
+      in 30 days. The detail's Checks row reads "100% of tokens out, 0% unlock in 90 days, 1%
+      new tokens a week". GMX (78.9% of max out, $12,714 of emissions in 30 days) and STG
+      (12.1%, $582) are shown 100% out the same way. In all, 9 apps are shown at least 99% out
+      while under 90% of their max supply circulates; for the other 6 the snapshot records no
+      issuance, so the difference may be burned and we do not count them.
+    steps:
+      - 'GET https://cymetica.com/api/v1/gem-screener -> apps[slug=ore-protocol]: supply.out_pct 99.9956, fdv 65400201, mcap 65397326, cg.max 3000000.0, supply.circ 500629.75, dilution.week_pct 1.0707, dilution.basis "emissions", dilution.emissions_usd30 3000944.31'
+      - 'Open https://cymetica.com/gem-screener/app?coin=ore-protocol -> CHECKS, Supply: "100% of tokens out, 0% unlock in 90 days, 1% new tokens a week"'
+    body: >
+      Our check reads the snapshot and fails while an app whose own row records new tokens
+      being issued is shown at least 99% out with under 90% of its max supply circulating.
+      Where no issuance is on record it does not judge, because max minus total supply can
+      be a burn. The Supply Analyzer reads the same difference for ORE as "Bought back,
+      burned" (reported separately).
+
 footer: >
   Reported by an independent QA agent. Scope of this work: verification of the
   REST API, MCP, the machine-readable discovery surfaces and the pages built on
