@@ -539,6 +539,85 @@ def test_the_is_answer_rule_is_self_calibrating_and_still_bites():
     assert [r["input"]["contract"] for r in candidates(batch)] == ["b", "a"], (
         "the rows where the two readings differ are sampled first")
 
+    # Chart Analyzer's verdict layer (ET-29001, verified 2026-10-04), held here for
+    # the same ceiling. Four readings, each from the shape seen live that morning,
+    # and each with the fix that must clear it.
+    from tests.rest.test_chart_analyzer_verdict_layer_keeps_its_word import (
+        closes_at, dex_promise, label_candidate, not_on_a_closed_candle,
+        outside_their_range, undocumented)
+
+    # 1. Schema: a live key the 200 schema does not list is undocumented, however the
+    #    schema reaches its properties ($ref, allOf); `{}` documents nothing; turning
+    #    additionalProperties on is tolerance, not documentation.
+    spec = {"components": {"schemas": {"V": {"type": "object", "properties": {
+        "label": {"type": "string"}}}}}}
+    flat = {"type": "object", "additionalProperties": False,
+            "properties": {"score": {"type": "integer"}}}
+    live = {"score": 50, "verdict": {"label": "NO EDGE"}}
+    assert [m["key"] for m in undocumented(live, flat, spec)[0]] == ["verdict"]
+    assert undocumented(live, dict(flat, additionalProperties=True), spec)[0], (
+        "tolerating an unlisted key was read as documenting it")
+    listed = {"allOf": [flat, {"properties": {"verdict": {"$ref": "#/components/schemas/V"}}}]}
+    assert undocumented(live, listed, spec) == ([], []), "a key listed through allOf/$ref"
+    assert [m["key"] for m in undocumented({"summary": {}, "calls": []}, {}, spec)[0]] == [
+        "calls", "summary"], "an empty schema documents nothing"
+    wrong = {"properties": {"score": {"type": "integer"}, "verdict": {"type": "array"}}}
+    assert [m["key"] for m in undocumented(live, wrong, spec)[1]] == ["verdict"], (
+        "a listed key of the wrong type is not documented")
+
+    # 2. Ledger: the BTC/USDT 1h row of that morning opens 22 days after it was made.
+    assert closes_at(1792972800, "1h") == 1792976400
+    assert closes_at(1790985600, "1d") == 1791072000
+    assert closes_at(1788220800, "1M") == 1790812800, "a month closes on the 1st of the next"
+    assert closes_at(1790985600, "3d") is None
+    btc = {"id": "sym:BTC/USDT|1h|1792972800", "who": "sym:BTC/USDT", "timeframe": "1h",
+           "made_at": "2026-10-04T06:21:46+00:00", "candle_time": 1792972800,
+           "close": 229.263278, "verdict": "READY TO POP", "status": "open"}
+    coti = {"id": "sym:COTI/USDT|1d|1790985600", "who": "sym:COTI/USDT", "timeframe": "1d",
+            "made_at": "2026-10-04T07:27:42+00:00", "candle_time": 1790985600,
+            "close": 0.01407, "verdict": "READY TO DUMP", "status": "open"}
+    judged, bad, unread = not_on_a_closed_candle([btc, coti])
+    assert len(judged) == 2 and [b["id"] for b in bad] == [btc["id"]] and unread == []
+    forming = dict(coti, made_at="2026-10-03T23:59:00+00:00")
+    assert len(not_on_a_closed_candle([forming])[1]) == 1, "a still-forming candle passed"
+    assert not_on_a_closed_candle([dict(btc, status="void")])[0] == [], (
+        "a call they voided with a reason is their fix, not a defect")
+    assert not_on_a_closed_candle([dict(btc, made_at=None)])[2], "unreadable is unread, not closed"
+
+    # 3. Range: the 5d up bin of /study/expert that morning -- 43.1% shown, 59.5-68.1% beside it.
+    block = {"timeframes": {"5d": {"calibration": {"up": [
+        {"bin": 9, "n": 477, "calibrated": 0.4307, "ci95": [0.5954, 0.6812], "usable": True},
+        {"bin": 17, "n": 900, "calibrated": 0.52, "ci95": [0.49, 0.55], "usable": True},
+        {"bin": 3, "n": 12, "calibrated": 0.9, "ci95": [0.1, 0.3], "usable": False}], "down": [],
+        # Live, the block carries these beside the tables; the first run read them as
+        # a side and raised (2026-10-04).
+        "base_up": 0.4447, "base_down": 0.5441, "n": 11085, "range": ["2021-01-03", "2022-08-21"]}}}}
+    judged, outside = outside_their_range(block)
+    assert len(judged) == 2 and [o["bin"] for o in outside] == [9], (
+        "an unusable bin is not shown as a probability, so it is not judged")
+    pooled = {"timeframes": {"5d": {"calibration": {"up": [
+        dict(block["timeframes"]["5d"]["calibration"]["up"][0], ci95=[0.40, 0.46])]}}}}
+    assert outside_their_range(pooled)[1] == [], "a range computed for the pooled value is the fix"
+    assert outside_their_range({"timeframes": {"1M": {"covered": False}}}) == ([], [])
+
+    # 4. DEX-pool coins: the promise is read from llms.txt's Chart Analyzer section; the
+    #    candidate is computed from up/down, never from rule_label (which can be zeroed).
+    llms = ("## Chart Analyzer\nCoverage: ... a DEX-pool coin gets the drawings and setups "
+            "but no verdict (`coverage_note`). What it does not do.\n## Pure Crypto Apps\nx")
+    assert "no verdict" in (dex_promise(llms) or "")
+    assert dex_promise(llms.replace("but no verdict", "and the same table")) is None
+    assert dex_promise("## Supply Analyzer\na DEX-pool coin gets no verdict\n") is None, (
+        "a sentence outside the Chart Analyzer section is not its promise")
+    side = lambda c, b, lo, n: {"calibrated": c, "base_rate": b, "range": [lo, lo + 0.04], "cases": n}
+    sky = {"label": "READY TO POP", "rule_label": "READY TO POP",
+           "up": side(0.4734, 0.38, 0.4685, 39480), "down": side(0.30, 0.3833, 0.29, 9000)}
+    assert label_candidate(sky) == "READY TO POP"
+    assert label_candidate(dict(sky, rule_label="NO EDGE", label="NO EDGE")) == "READY TO POP"
+    assert label_candidate(dict(sky, up=side(0.4734, 0.38, 0.4685, 299))) is None, "299 cases"
+    assert label_candidate(dict(sky, up=side(0.4299, 0.38, 0.41, 5000))) is None, "4.99 points"
+    assert label_candidate(dict(sky, up=side(0.45, 0.38, 0.379, 5000))) is None, (
+        "a range that reaches below the base rate")
+
     # The Gem Screener refresh rule (2026-09-27), held here for the same
     # ceiling. Stuck means BOTH: stale past 3 cycles AND the newest attempt a
     # recorded failure. A missing field is unreadable (None), never "healthy".
