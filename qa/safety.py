@@ -634,6 +634,15 @@ class RateLimitBudget:
     run that cannot verify fixes for components it never reached.
     """
 
+    # A limit below this is one ROUTE's own allowance (the Chart Analyzer answers
+    # `x-ratelimit-limit: 30`, the backtest 30 a minute), not the platform's quota
+    # (300 anonymous, 2000 for our key). Exhausting a route's allowance 429s that route's
+    # checks -- a finding about that route; it must not stop the whole session. On
+    # 2026-10-04 twelve left of the Chart Analyzer's thirty read as "60 % of the platform
+    # quota used", and the last 61 of 1541 checks of two full runs were refused with a
+    # SafetyViolation while the platform's quota (2000) was nearly untouched.
+    MIN_PLATFORM_QUOTA = 100
+
     def __init__(self, stop_at_fraction: float = 0.6):
         self.stop_at_fraction = stop_at_fraction
         self.limit: int | None = None
@@ -658,6 +667,9 @@ class RateLimitBudget:
         try:
             limit = response.headers.get("x-ratelimit-limit")
             remaining = response.headers.get("x-ratelimit-remaining")
+            # Only the platform's own quota is the budget; a route's smaller allowance is not.
+            if limit and int(limit) < self.MIN_PLATFORM_QUOTA:
+                return
             if limit:
                 self.limit = int(limit)
             if remaining:

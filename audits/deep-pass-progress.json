@@ -749,7 +749,17 @@
     "last": "2026-09-27",
     "done": false
   },
-  "rule_changes": null,
+  "rule_changes": [
+    {
+      "id": "RC1",
+      "what": "RateLimitBudget ignores a response header whose x-ratelimit-limit is below 100 (a single route's own allowance); only the platform quota (300 anonymous, 2000 for our key) still stops the session at 60 %",
+      "why": "two full runs of the suite (PRE-0236 and PRE-0237) were cut at 1480 of 1541 checks: the Chart Analyzer answers x-ratelimit-limit 30, twelve left of its thirty read as 60 % of the platform quota, and the last 61 checks were refused while the platform's 2000 was nearly unused. Minority reading (t2): if every route answered with a limit under 100, or the platform quota were ever cut below 100, no brake would see it; not seen in 223 run records (limits 2000 and 300).",
+      "votes": {"t1": "no", "t2": "yes", "t3": "no"},
+      "test": "tests/meta/test_pipeline_recorder.py::test_ratelimit_budget_reaches_the_run_record",
+      "commit": null,
+      "handover": true
+    }
+  ],
   "meta_tests": {
     "start": 830,
     "end": null,

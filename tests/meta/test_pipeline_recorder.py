@@ -366,10 +366,40 @@ def test_ratelimit_budget_reaches_the_run_record(pytester, tmp_path):
     quota cut short therefore looked exactly like a complete one -- and a
     partial run may not verify anything."""
     _, run = _run_inner(pytester, tmp_path, """
-        from qa.safety import RateLimitBudget
+        import httpx
+        import pytest
+        from qa.safety import RateLimitBudget, SafetyViolation
+
+        def answer(limit, remaining):
+            return httpx.Response(200, headers={"x-ratelimit-limit": str(limit),
+                                                "x-ratelimit-remaining": str(remaining)})
 
         @qa(**TAG)
-        def test_spends_some_quota():
+        def test_a_route_limit_is_not_the_platform_quota():
+            # 2026-10-04, the deep pass's full run PRE-0236/0237: the Chart Analyzer answers
+            # with `x-ratelimit-limit: 30`. Twelve left of THAT route's thirty read as 60 %
+            # of the platform quota, the whole session stopped and the last 61 of 1541
+            # checks were refused with a SafetyViolation, while the platform's own quota
+            # (2000) was nearly untouched -- a run that could verify nothing.
+            budget = RateLimitBudget(stop_at_fraction=0.6)
+            budget.after_response(answer(2000, 1931))
+            budget.after_response(answer(30, 12))
+            budget.before_request()
+            assert not budget.exhausted
+            assert budget.snapshot()["limit"] == 2000 and budget.snapshot()["remaining"] == 1931
+            # The platform's own quota still stops the session at 60 %.
+            budget.after_response(answer(2000, 700))
+            with pytest.raises(SafetyViolation):
+                budget.before_request()
+            # A route's limit alone, before any platform answer, is never the platform quota.
+            lone = RateLimitBudget(stop_at_fraction=0.6)
+            lone.after_response(answer(30, 1))
+            lone.before_request()
+            assert not lone.exhausted
+
+        # Last, because the run record reads the budget built last.
+        @qa(**TAG)
+        def test_zz_spends_some_quota():
             budget = RateLimitBudget(stop_at_fraction=0.6)
             budget.before_request()
             budget.before_request()
@@ -379,6 +409,8 @@ def test_ratelimit_budget_reaches_the_run_record(pytester, tmp_path):
     assert run["ratelimit"]["requests"] == 2
     assert run["ratelimit"]["exhausted"] is False
     assert run["record_integrity"]["budget_truncated"] is False
+    outcomes = {r["nodeid"].rsplit("::", 1)[-1]: r["outcome"] for r in run["results"]}
+    assert outcomes["test_a_route_limit_is_not_the_platform_quota"] == "passed", outcomes
 
 
 @qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
