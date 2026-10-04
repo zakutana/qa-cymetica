@@ -378,11 +378,15 @@ def altseason_breaches(snap: dict) -> dict:
 
     * the composite index is the weighted mean of rotation and euphoria, with the
       weights the snapshot publishes in `altseason_cycle.rules`;
-    * the breadth line in the headline is the 4-week mean of the weekly history;
-    * `beat / n` is the latest breadth, and `altseason.index` is the same number.
+    * the breadth line in the headline is the 4-week mean of the weekly series the
+      CYCLE publishes (`altseason_cycle.series.breadth`), and its value is that
+      series' last point;
+    * `beat / n` is that latest breadth.
+    NOT held: `altseason.index` equal to the breadth component. It is a second,
+    older block on another basis and runs 2-4 points above the cycle's series every
+    week; nothing the snapshot publishes says the two are one number (2026-10-04).
     A field that is missing is reported as unread, never as agreeing."""
     cyc = snap.get("altseason_cycle") or {}
-    alt = snap.get("altseason") or {}
     rules = cyc.get("rules") or {}
     breaches, unread = [], []
 
@@ -397,10 +401,11 @@ def altseason_breaches(snap: dict) -> dict:
                              "index": index, "expected": round(expected, 2)})
 
     breadth = (cyc.get("components") or {}).get("breadth") or {}
-    history = [row[1] for row in alt.get("history") or [] if isinstance(row, list) and len(row) > 1]
+    series = (cyc.get("series") or {}).get("breadth")
+    history = [v for v in series] if isinstance(series, list) else []
     mean4, shown4 = mean_of_last(history), num(breadth.get("mean4"))
     if mean4 is None or shown4 is None:
-        unread.append("breadth: no 4-week history or no mean4")
+        unread.append("breadth: no 4-week series or no mean4")
     elif abs(mean4 - shown4) > 1.0:
         breaches.append({"what": "breadth mean4 is not the mean of the last four weeks",
                          "mean4": shown4, "expected": round(mean4, 1)})
@@ -412,12 +417,10 @@ def altseason_breaches(snap: dict) -> dict:
         breaches.append({"what": "breadth value is not beat / n",
                          "value": value, "expected": round(100.0 * beat / n, 2)})
 
-    latest = num(alt.get("index"))
-    if latest is None or value is None:
-        unread.append("altseason.index or breadth.value missing")
-    elif abs(latest - value) > 0.51:
-        breaches.append({"what": "altseason.index and the breadth component differ",
-                         "altseason_index": latest, "breadth_value": value})
+    last = next((v for v in reversed(history) if isinstance(v, (int, float))), None)
+    if last is not None and value is not None and abs(last - value) > 0.51:
+        breaches.append({"what": "breadth value is not the last point of its own series",
+                         "value": value, "last": last})
     return {"breaches": breaches, "unread": unread}
 
 

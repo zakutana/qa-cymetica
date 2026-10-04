@@ -19716,6 +19716,7 @@
 {"archive": "evidence-2026-09", "bytes": 73163, "call": "GET https://cymetica.com/llms.txt?", "id": "da2f863658f59480f4a0388f16489e9cd358ba32da4fb714bce6eff9b81643c2", "why": "row"}
 {"archive": "evidence-2026-09", "bytes": 562692, "call": "GET https://cymetica.com/api/v1/event-cards?limit,offset", "id": "da33ac4a20f069012c61441a48836d4a36c92403a6beb6061531d3e588805595", "why": "row"}
 {"archive": "evidence-2026-09", "bytes": 4885, "call": "GET https://cymetica.com/static/js/install-prompt.js?", "id": "da36b70ffcada1332c772c9a385da5662b91d143ff7d4cb850c6e6d0f888ff7e", "why": "promised"}
+{"archive": "", "bytes": 5010, "call": "POST https://cymetica.com/api/v1/cloned-bots/clone?", "id": "da37188c99dc444c1bf96ab4ffe16ab59dae3f8a93012991934f038b843de86b", "why": "trade"}
 {"archive": "evidence-2026-09", "bytes": 15614, "call": "GET https://cymetica.com/api/v1/build-it-better/requests?", "id": "da3c2873e1faf702d32a0f24f06a204e52c07d4e8d8a7792208541f30ed8276f", "why": "row"}
 {"archive": "", "bytes": 255628, "call": "GET https://cymetica.com/fund-performance/aib-data-centers?", "id": "da41c928b18c256f5c1ad662237989eb31e155672f0d213574503e195e5b0f1d", "why": "row"}
 {"archive": "evidence-2026-09", "bytes": 4206, "call": "GET https://cymetica.com/api/v1/crypto-outlook/XRP.txt?", "id": "da433132d12ee09cc80965a8aa8416ea9f4985aee9a71079adef589d2bd3cc37", "why": "row"}

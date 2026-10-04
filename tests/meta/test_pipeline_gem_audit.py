@@ -177,15 +177,23 @@ def _a_pick_that_opens_another_coin_is_seen_and_a_shared_ticker_is_named():
 
 def _the_altseason_numbers_are_held_to_their_own_published_rules():
     """The composite follows the weights the snapshot publishes, the headline
-    breadth is the 4-week mean of the weekly history, and `beat / n` is the
-    latest reading. A field that is missing is unread -- it never agrees."""
+    breadth is the 4-week mean of the weekly series the CYCLE publishes
+    (`altseason_cycle.series.breadth`), and `beat / n` is its latest reading. A
+    field that is missing is unread -- it never agrees.
+
+    2026-10-04: the mean was read from the legacy `altseason.history`, a second
+    breadth series that runs 2-4 points above the cycle's own in every one of the
+    last six weeks (44/42, 32/28, 40/38, 36/34, 60/56, 72/68), so two checks failed
+    on a live page whose numbers were consistent. The fixture keeps that gap on
+    purpose: a mean read from the legacy block fails here."""
     def snap(**cyc):
         c = {"index": 28.1, "rotation": 16.5, "euphoria": 51.5,
              "rules": {"rot_weight": 2, "euph_weight": 1},
+             "series": {"breadth": [30.0, 38.0, 34.0, 56.0, 68.0]},
              "components": {"breadth": {"value": 68.0, "mean4": 49.0, "beat": 34, "n": 50}}}
         c.update(cyc)
-        return {"altseason_cycle": c, "altseason": {"index": 68.0,
-                "history": [[1, 36.0, 50], [2, 34.0, 50], [3, 56.0, 50], [4, 68.0, 50]]}}
+        return {"altseason_cycle": c, "altseason": {"index": 72.0,
+                "history": [[1, 40.0, 50], [2, 36.0, 50], [3, 60.0, 50], [4, 72.0, 50]]}}
 
     assert g.altseason_breaches(snap()) == {"breaches": [], "unread": []}
     assert g.altseason_breaches(snap(index=41.0))["breaches"][0]["what"].startswith(
@@ -202,23 +210,34 @@ def _the_altseason_numbers_are_held_to_their_own_published_rules():
     wrong_beat = snap(components={"breadth": {"value": 68.0, "mean4": 49.0, "beat": 20, "n": 50}})
     assert any(b["what"] == "breadth value is not beat / n" for b in g.altseason_breaches(wrong_beat)["breaches"])
 
-    # Deep pass 2026-10-02 (T17): the fourth judgement. `altseason.index` is the latest
-    # breadth, so a headline that differs from the breadth component is a breach; both
-    # fixtures above hold 68.0 on each side, so deleting the branch stayed green.
+    # The component's value is the last point of the series it is the mean of.
+    stale_series = snap(series={"breadth": [30.0, 38.0, 34.0, 56.0, 60.0]})
+    assert "breadth value is not the last point of its own series" in [
+        b["what"] for b in g.altseason_breaches(stale_series)["breaches"]]
+
+    # Deep pass 2026-10-02 (T17) added a fourth judgement: `altseason.index` must equal the
+    # breadth component. NOT a published rule -- it is a second, older block on a different
+    # basis (72.0 against 68.0 for the same week, +2..4 every week), so on 2026-10-04 it
+    # failed a consistent page. A difference between the two is not a breach.
     off = snap()
     off["altseason"]["index"] = 40.0
-    assert [b["what"] for b in g.altseason_breaches(off)["breaches"]] == [
-        "altseason.index and the breadth component differ"]
+    assert g.altseason_breaches(off)["breaches"] == [], (
+        "the legacy altseason.index was held to equal the cycle's breadth, which nothing publishes")
 
     blind = snap(rules={})
     said = g.altseason_breaches(blind)
     assert said["breaches"] == [] and said["unread"], (
         "missing weights read as agreement instead of unread")
 
+    # No weekly series is unread, never an agreement and never a mean over the legacy block.
+    no_series = snap()
+    del no_series["altseason_cycle"]["series"]
+    said = g.altseason_breaches(no_series)
+    assert said["breaches"] == [] and said["unread"], "a missing series read as agreement"
+
     # A week with no reading does not break the mean while three weeks remain.
-    gappy = snap()
-    gappy["altseason"]["history"] = [[1, 36.0, 50], [2, None, 50], [3, 56.0, 50], [4, 68.0, 50]]
-    gappy["altseason_cycle"]["components"]["breadth"]["mean4"] = 53.3
+    gappy = snap(series={"breadth": [30.0, 38.0, None, 56.0, 68.0]})
+    gappy["altseason_cycle"]["components"]["breadth"]["mean4"] = 54.0
     assert g.altseason_breaches(gappy)["breaches"] == [], "a gap in the history failed the mean"
 
 
