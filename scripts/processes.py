@@ -281,7 +281,14 @@ CEILINGS = {
     # end, a pause reason on a bet that ran to term, a clone deciding on another
     # rule than its description -- each refuted offline and its fix passed.
     # Nine were written and merged to three, one per reading.
-    "meta_tests": 814,
+    # 814 -> 820 for the wave tool and the manager's file (2026-10-05,
+    # test_pipeline_wave.py and test_pipeline_lab_manager.py): a bot never funded
+    # before its criterion, with settings that read back wrong or on a clone they do
+    # not call paper; what stops a wave and what only stops one bot (the first live
+    # run lost nineteen bots to one ReadTimeout); a species already trading left
+    # out; the agreed settings. And that feedback and `acted` reach docs/lab-manager.md.
+    # Fourteen were written and merged to six.
+    "meta_tests": 820,
 }
 
 BASH_SCRIPT = re.compile(r"python\s+scripts[/\\]([a-z_]+)\.py")

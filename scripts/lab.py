@@ -3916,6 +3916,9 @@ def cmd_resume() -> int:
     today = [s for s in lab.open_sessions(notebook)]
     for entry in lab.entries(notebook, today[-1] if today else None)[-6:]:
         print(f"  diary [{entry.get('kind')}] {entry.get('text')}")
+    # What the manager still owes the operator's feedback, from docs/lab-manager.md.
+    for owed in lab.manager_open_lines():
+        print(f"  manager owes: {owed}")
     print()
 
     fomo_rows = []

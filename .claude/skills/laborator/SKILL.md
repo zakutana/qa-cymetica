@@ -26,6 +26,8 @@ Every invocation is **one tick** of a laboratory that runs all day, towards a fi
 3. Only after a tick that decided something: `lab.py log "…"` (what and why), `--lesson`, `--next`. `lab.py resume` only after a `/clear`.
 4. Two or three Czech lines: the delta. Everything else is on http://127.0.0.1:8787/lab.
 
+How the manager itself gets better lives in ONE file, `docs/lab-manager.md`: the operator's feedback and what changed (`lab.py log --feedback` / `--acted` write it), how the manager has gone wrong, ten open improvements that `lab.py resume` prints. A bot is live when the sampler's `is_trading` says so -- a room's `running` is only a label.
+
 `lab.py` refuses rather than warns; a refusal is a reason, never arbitrary. The brakes are in code (`qa/lab.py`), not here: paper only; THEIR pace (three asks an hour, six outstanding, their backoff); 0.48 % of the book a room under a 60 % ceiling, the only count limit; a live read and their backtest after fees before a card room; nothing but memecoins and Hot while a deep pass runs.
 
 ## The manager

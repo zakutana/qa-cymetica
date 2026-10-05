@@ -31,6 +31,7 @@ finished plan, removed in plan v2, V7).
 from __future__ import annotations
 
 import json
+import os
 import re
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
@@ -177,8 +178,54 @@ def note_entry(session: str, text: str, kind: str = "log") -> dict:
     words = " ".join(str(text or "").split())
     if not words:
         raise LabError("an empty diary line says nothing")
-    return _append({"type": "entry", "at": _now(), "session": session,
-                    "kind": kind, "text": words[:600]})
+    record = _append({"type": "entry", "at": _now(), "session": session,
+                      "kind": kind, "text": words[:600]})
+    if kind in MANAGER_KINDS:
+        _mirror_to_manager_file(record)
+    return record
+
+
+# The manager's own improvement lives in ONE file (operator, 2026-10-05: it was in
+# the diary, in memory files and in NEXT.md, and a feedback given that day was in
+# none of them). The diary keeps writing -- the morning report reads it -- and a
+# feedback or an `acted` is also a line of this file, so it cannot stay in one place.
+MANAGER_KINDS = ("feedback", "acted")
+MANAGER_LOG_HEADING = "## Feedback and what changed"
+MANAGER_OPEN_HEADING = "## Open improvements"
+
+
+def manager_path() -> Path:
+    override = os.environ.get("QA_LAB_MANAGER_FILE")
+    if override:
+        return Path(override)
+    return Path(__file__).resolve().parent.parent / "docs" / "lab-manager.md"
+
+
+def _mirror_to_manager_file(record: dict) -> None:
+    target = manager_path()
+    line = f"- {str(record['at'])[:10]} · {record['kind']} · {record['text']}\n"
+    # The lock is the notebook's, in the ignored state directory: a lock file
+    # beside a document would be an untracked file in docs/.
+    with file_lock(path()):
+        text = target.read_text(encoding="utf-8") if target.is_file() else ""
+        if MANAGER_LOG_HEADING not in text:
+            text = (text.rstrip("\n") + "\n\n" if text else "") + MANAGER_LOG_HEADING + "\n\n"
+        target.parent.mkdir(parents=True, exist_ok=True)
+        # Written by `lab.py log --feedback/--acted`; newest at the end of the file.
+        target.write_text(text.rstrip("\n") + "\n" + line, encoding="utf-8")
+
+
+def manager_open_lines() -> list[str]:
+    """The lines of `## Open improvements`, for `lab.py resume` -- what the
+    manager still owes, said at the start of a session after a /clear."""
+    target = manager_path()
+    if not target.is_file():
+        return []
+    text = target.read_text(encoding="utf-8")
+    if MANAGER_OPEN_HEADING not in text:
+        return []
+    section = text.split(MANAGER_OPEN_HEADING, 1)[1].split("\n## ", 1)[0]
+    return [ln[2:].strip() for ln in section.splitlines() if ln.startswith("- ")]
 
 
 def entries(rows: list[dict] | None = None, session: str | None = None,

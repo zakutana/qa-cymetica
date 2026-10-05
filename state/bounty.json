@@ -24,8 +24,8 @@
   "our_reports": {
     "endpoint": "GET /api/v1/bounty/my-reports?wallet_address=<addr>",
     "klass": "ok",
-    "read_at": "2026-10-05T08:48:36+00:00",
-    "evidence_id": "447a080360a5b66f1b5d96788d0afbdfb6bc413ead6fbce58c4087bf29df1994",
+    "read_at": "2026-10-05T14:09:01+00:00",
+    "evidence_id": "1a5e8984b9b067db36c9879aed5945831df47af3e2fdc8277e18de0f56a47aad",
     "rows_returned": 131,
     "server_total": 131,
     "total": 131,
@@ -1616,7 +1616,7 @@
         "fixed_at": "2026-09-26T12:53:04.197776",
         "validated_at": "2026-09-26T12:53:04.197776",
         "triaged_at": "2026-09-26T12:53:04.197776",
-        "status_notes": "[2026-09-26T12:53:04+00:00] Resolved via ticket ET-27609: Confirmed: nothing ran the deeper step. Fixed live (e2d47716c, 71736a04e, 28fbd3191): each a2a question starts a NEXUS deep investigation whose answer, or a did-not-run note, is posted to the same inbox. While deep runs are at capacity, the first pass and send response say so instead of promising 10 min.\n[reporter-verification FAIL 2026-09-27 07:28 UTC by expire76 test_run=run-20260927T071154Z-71d11757]\n[reporter-verification PASS 2026-09-30 16:08 UTC by expire76 test_run=run-20260930T160239Z-5c0d7f56]\n[reporter-verification FAIL 2026-10-01 00:16 UTC by expire76 test_run=run-20260930T233314Z-42242d07]\n[reporter-verification PASS 2026-10-02 12:26 UTC by expire76 test_run=run-20261001T205019Z-92c854db]\n[reporter-verification PASS 2026-10-02 12:49 UTC by expire76 test_run=run-20261002T124216Z-84bc993b]",
+        "status_notes": "[2026-09-26T12:53:04+00:00] Resolved via ticket ET-27609: Confirmed: nothing ran the deeper step. Fixed live (e2d47716c, 71736a04e, 28fbd3191): each a2a question starts a NEXUS deep investigation whose answer, or a did-not-run note, is posted to the same inbox. While deep runs are at capacity, the first pass and send response say so instead of promising 10 min.\n[reporter-verification FAIL 2026-09-27 07:28 UTC by expire76 test_run=run-20260927T071154Z-71d11757]\n[reporter-verification PASS 2026-09-30 16:08 UTC by expire76 test_run=run-20260930T160239Z-5c0d7f56]\n[reporter-verification FAIL 2026-10-01 00:16 UTC by expire76 test_run=run-20260930T233314Z-42242d07]\n[reporter-verification PASS 2026-10-02 12:26 UTC by expire76 test_run=run-20261001T205019Z-92c854db]\n[reporter-verification PASS 2026-10-02 12:49 UTC by expire76 test_run=run-20261002T124216Z-84bc993b]\n[reporter-verification FAIL 2026-10-05 09:05 UTC by expire76 test_run=run-20261005T075423Z-72ea19f3]",
         "ticket_url": "https://cymetica.com/admin/centcom/issues/27609",
         "fix_pr_url": null,
         "reward_amount": 1000.0
@@ -1634,7 +1634,7 @@
         "fixed_at": "2026-09-27T16:58:49.379924",
         "validated_at": "2026-09-27T16:58:49.379924",
         "triaged_at": "2026-09-27T16:58:49.379924",
-        "status_notes": "[2026-09-27T16:58:49+00:00] Resolved via ticket ET-27867: Fixed + live: audit_sectors.py treated a net-negative 6-month revenue base (Luck Games Mar-Apr 2026) as a share-sign contradiction (@4dba658f2, test_gem_screener_audit_negative_base.py); audit_static.js CSS-var fix @ce15faaab1 by another session. Snapshot 1790528207 published 16:57 UTC, /status shows age 19s + last_attempt ok. Not done: the page 'updated X h ago, last refresh failed' line (UI change, needs before/after screenshots).\n[reporter-verification PASS 2026-09-27 17:26 UTC by expire76 test_run=run-20260927T170347Z-41a44743]",
+        "status_notes": "[2026-09-27T16:58:49+00:00] Resolved via ticket ET-27867: Fixed + live: audit_sectors.py treated a net-negative 6-month revenue base (Luck Games Mar-Apr 2026) as a share-sign contradiction (@4dba658f2, test_gem_screener_audit_negative_base.py); audit_static.js CSS-var fix @ce15faaab1 by another session. Snapshot 1790528207 published 16:57 UTC, /status shows age 19s + last_attempt ok. Not done: the page 'updated X h ago, last refresh failed' line (UI change, needs before/after screenshots).\n[reporter-verification PASS 2026-09-27 17:26 UTC by expire76 test_run=run-20260927T170347Z-41a44743]\n[reporter-verification FAIL 2026-10-05 09:06 UTC by expire76 test_run=run-20261005T075423Z-72ea19f3]",
         "ticket_url": "https://cymetica.com/admin/centcom/issues/27867",
         "fix_pr_url": null,
         "reward_amount": 1000.0
@@ -1706,7 +1706,7 @@
         "fixed_at": "2026-09-28T19:25:36.105019",
         "validated_at": "2026-09-28T19:25:36.105019",
         "triaged_at": "2026-09-28T19:25:36.105019",
-        "status_notes": "[2026-09-28T19:25:36+00:00] Resolved via ticket ET-28169: Confirmed: A2A-0019 got the community-links guided answer because the router matched the bare word 'community' in 'community funds'. Fixed live 5cfd1fd58: 'community' routes there only as a place, never when it names a fund (verified on the A2A-0019 text -> no guided answer; 133 tests pass). A2A-0019 answered in full from evidence (redemption, reserve today, 30x coverage, limits, shortfall, KYC) via a2a_reply.\n[reporter-verification PASS 2026-09-30 16:08 UTC by expire76 test_run=run-20260930T160239Z-5c0d7f56]\n[reporter-verification FAIL 2026-10-01 00:16 UTC by expire76 test_run=run-20260930T233314Z-42242d07]\n[reporter-verification PASS 2026-10-02 12:27 UTC by expire76 test_run=run-20261001T205019Z-92c854db]\n[reporter-verification PASS 2026-10-02 12:49 UTC by expire76 test_run=run-20261002T124216Z-84bc993b]",
+        "status_notes": "[2026-09-28T19:25:36+00:00] Resolved via ticket ET-28169: Confirmed: A2A-0019 got the community-links guided answer because the router matched the bare word 'community' in 'community funds'. Fixed live 5cfd1fd58: 'community' routes there only as a place, never when it names a fund (verified on the A2A-0019 text -> no guided answer; 133 tests pass). A2A-0019 answered in full from evidence (redemption, reserve today, 30x coverage, limits, shortfall, KYC) via a2a_reply.\n[reporter-verification PASS 2026-09-30 16:08 UTC by expire76 test_run=run-20260930T160239Z-5c0d7f56]\n[reporter-verification FAIL 2026-10-01 00:16 UTC by expire76 test_run=run-20260930T233314Z-42242d07]\n[reporter-verification PASS 2026-10-02 12:27 UTC by expire76 test_run=run-20261001T205019Z-92c854db]\n[reporter-verification PASS 2026-10-02 12:49 UTC by expire76 test_run=run-20261002T124216Z-84bc993b]\n[reporter-verification FAIL 2026-10-05 09:05 UTC by expire76 test_run=run-20261005T075423Z-72ea19f3]",
         "ticket_url": "https://cymetica.com/admin/centcom/issues/28169",
         "fix_pr_url": null,
         "reward_amount": 1000.0
@@ -2012,7 +2012,7 @@
         "fixed_at": "2026-10-04T09:59:34.488738",
         "validated_at": "2026-10-04T09:59:34.488738",
         "triaged_at": "2026-10-04T09:59:34.488738",
-        "status_notes": "[2026-10-04T09:59:34+00:00] Resolved via ticket ET-29276: Fixed and live (canonical 1992787622, served in release ccd9798a7c, verified by content and on the public API). ET-29274: /openapi-public.json now documents verdict, setups, structures, swings, indicators, weekly_signal, expert_study_url and calls_url on /analyze, with full 200 schemas for /calls and /study/expert and the real timeframe set (1h 4h 1d 5d 1w 2w 1M auto) in llms.txt and /api-docs. ET-29275: the ledger refuses any candle not closed by the wall clock, record_call picks the last clock\n[reporter-verification PASS 2026-10-04 17:45 UTC by expire76 test_run=run-20261004T165402Z-3d611b0c]",
+        "status_notes": "[2026-10-04T09:59:34+00:00] Resolved via ticket ET-29276: Fixed and live (canonical 1992787622, served in release ccd9798a7c, verified by content and on the public API). ET-29274: /openapi-public.json now documents verdict, setups, structures, swings, indicators, weekly_signal, expert_study_url and calls_url on /analyze, with full 200 schemas for /calls and /study/expert and the real timeframe set (1h 4h 1d 5d 1w 2w 1M auto) in llms.txt and /api-docs. ET-29275: the ledger refuses any candle not closed by the wall clock, record_call picks the last clock\n[reporter-verification PASS 2026-10-04 17:45 UTC by expire76 test_run=run-20261004T165402Z-3d611b0c]\n[reporter-verification PASS 2026-10-05 09:06 UTC by expire76 test_run=run-20261005T075423Z-72ea19f3]",
         "ticket_url": "https://cymetica.com/admin/centcom/issues/29276",
         "fix_pr_url": null,
         "reward_amount": 1000.0
@@ -2030,7 +2030,7 @@
         "fixed_at": "2026-10-04T09:59:34.931966",
         "validated_at": "2026-10-04T09:59:34.931966",
         "triaged_at": "2026-10-04T09:59:34.931966",
-        "status_notes": "[2026-10-04T09:59:34+00:00] Resolved via ticket ET-29277: Fixed and live (canonical 1992787622, served in release ccd9798a7c, verified by content and on the public API). ET-29274: /openapi-public.json now documents verdict, setups, structures, swings, indicators, weekly_signal, expert_study_url and calls_url on /analyze, with full 200 schemas for /calls and /study/expert and the real timeframe set (1h 4h 1d 5d 1w 2w 1M auto) in llms.txt and /api-docs. ET-29275: the ledger refuses any candle not closed by the wall clock, record_call picks the last clock\n[reporter-verification PASS 2026-10-04 17:45 UTC by expire76 test_run=run-20261004T165402Z-3d611b0c]",
+        "status_notes": "[2026-10-04T09:59:34+00:00] Resolved via ticket ET-29277: Fixed and live (canonical 1992787622, served in release ccd9798a7c, verified by content and on the public API). ET-29274: /openapi-public.json now documents verdict, setups, structures, swings, indicators, weekly_signal, expert_study_url and calls_url on /analyze, with full 200 schemas for /calls and /study/expert and the real timeframe set (1h 4h 1d 5d 1w 2w 1M auto) in llms.txt and /api-docs. ET-29275: the ledger refuses any candle not closed by the wall clock, record_call picks the last clock\n[reporter-verification PASS 2026-10-04 17:45 UTC by expire76 test_run=run-20261004T165402Z-3d611b0c]\n[reporter-verification PASS 2026-10-05 09:06 UTC by expire76 test_run=run-20261005T075423Z-72ea19f3]",
         "ticket_url": "https://cymetica.com/admin/centcom/issues/29277",
         "fix_pr_url": null,
         "reward_amount": 1000.0
@@ -2066,7 +2066,7 @@
         "fixed_at": null,
         "validated_at": null,
         "triaged_at": null,
-        "status_notes": "[reporter-verification PASS 2026-10-04 17:46 UTC by expire76 test_run=run-20261004T165402Z-3d611b0c]",
+        "status_notes": "[reporter-verification PASS 2026-10-04 17:46 UTC by expire76 test_run=run-20261004T165402Z-3d611b0c]\n[reporter-verification PASS 2026-10-05 09:06 UTC by expire76 test_run=run-20261005T075423Z-72ea19f3]",
         "ticket_url": null,
         "fix_pr_url": null,
         "reward_amount": 0.0
@@ -2084,7 +2084,7 @@
         "fixed_at": null,
         "validated_at": null,
         "triaged_at": null,
-        "status_notes": "[reporter-verification PASS 2026-10-04 17:46 UTC by expire76 test_run=run-20261004T165402Z-3d611b0c]",
+        "status_notes": "[reporter-verification PASS 2026-10-04 17:46 UTC by expire76 test_run=run-20261004T165402Z-3d611b0c]\n[reporter-verification PASS 2026-10-05 09:06 UTC by expire76 test_run=run-20261005T075423Z-72ea19f3]",
         "ticket_url": null,
         "fix_pr_url": null,
         "reward_amount": 0.0
@@ -2102,7 +2102,7 @@
         "fixed_at": null,
         "validated_at": null,
         "triaged_at": null,
-        "status_notes": "[reporter-verification PASS 2026-10-04 17:46 UTC by expire76 test_run=run-20261004T165402Z-3d611b0c]\n[reporter-verification PASS 2026-10-04 17:46 UTC by expire76 test_run=run-20261004T165402Z-3d611b0c]",
+        "status_notes": "[reporter-verification PASS 2026-10-04 17:46 UTC by expire76 test_run=run-20261004T165402Z-3d611b0c]\n[reporter-verification PASS 2026-10-04 17:46 UTC by expire76 test_run=run-20261004T165402Z-3d611b0c]\n[reporter-verification PASS 2026-10-05 09:06 UTC by expire76 test_run=run-20261005T075423Z-72ea19f3]\n[reporter-verification PASS 2026-10-05 09:06 UTC by expire76 test_run=run-20261005T075423Z-72ea19f3]",
         "ticket_url": null,
         "fix_pr_url": null,
         "reward_amount": 0.0
@@ -2174,7 +2174,7 @@
         "fixed_at": null,
         "validated_at": null,
         "triaged_at": null,
-        "status_notes": "[reporter-verification PASS 2026-10-04 17:46 UTC by expire76 test_run=run-20261004T165402Z-3d611b0c]",
+        "status_notes": "[reporter-verification PASS 2026-10-04 17:46 UTC by expire76 test_run=run-20261004T165402Z-3d611b0c]\n[reporter-verification PASS 2026-10-05 09:06 UTC by expire76 test_run=run-20261005T075423Z-72ea19f3]",
         "ticket_url": null,
         "fix_pr_url": null,
         "reward_amount": 0.0
@@ -3131,5 +3131,6 @@
       "et10": 11000,
       "etlp": 11000
     }
-  }
+  },
+  "our_reports_refreshed_at": "2026-10-05T14:09:01+00:00"
 }
