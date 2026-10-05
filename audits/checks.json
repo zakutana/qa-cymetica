@@ -812,11 +812,12 @@
         "d205685e14180c281c17223f81a50491dbaa26e55d86c7f688900baafb0a5877",
         "c80fff4372042146a481dc41b7493e05e4f9cd0eed5ff534ae1e2d488d970102",
         "935c1571b0375b507c2efb9b3f08fe3aba621db90dafe58be00ee5708b131e45",
-        "4811ad593ede4cbdea918221bb22181c963d958c1a976a75affe8ecc40909f12"
+        "4811ad593ede4cbdea918221bb22181c963d958c1a976a75affe8ecc40909f12",
+        "fbf244a18358406db8b2fae12611a519c85875e4c0b1ccc2bf12c9c1349fd7b4"
       ],
-      "at": "2026-10-02T21:23:33+00:00",
-      "run_id": "run-20261002T174919Z-7bf09ffc",
-      "gap_claimed": false
+      "at": "2026-10-04T21:02:29+00:00",
+      "run_id": "run-20261004T184429Z-9e0ac133",
+      "gap_claimed": true
     },
     "tests/meta/test_pipeline_checks.py::test_a_failed_read_is_never_a_value": {
       "fingerprints": [
@@ -1414,11 +1415,12 @@
     },
     "tests/meta/test_pipeline_recorder.py::test_ratelimit_budget_reaches_the_run_record": {
       "fingerprints": [
-        "15e9723c7ce534f7f92cab5ce3312b80b16eee3733be1adcd0b56d37ea0c71ce"
+        "15e9723c7ce534f7f92cab5ce3312b80b16eee3733be1adcd0b56d37ea0c71ce",
+        "d93fb37350f35d8bee375c854d43ac33ee51ce5707a0f5b3d287b8b8f3a38b39"
       ],
-      "at": "2026-09-07T20:50:41+00:00",
-      "run_id": "run-20260907T201230Z-7fee4cf",
-      "gap_claimed": false
+      "at": "2026-10-04T21:02:29+00:00",
+      "run_id": "run-20261004T184429Z-9e0ac133",
+      "gap_claimed": true
     },
     "tests/meta/test_pipeline_recorder.py::test_records_collected_nodeids_and_check_fingerprint": {
       "fingerprints": [
@@ -2088,11 +2090,12 @@
       "fingerprints": [
         "5676c1c26ef39a34c2e8cd948ba92f16698a5b51cf1e5a8abfdf2ee285acfcab",
         "962c7b43de24b5d2921c4fe4f49d93e85e621d58a45e465e419390e1301f6446",
-        "eef8302aad85d91ef970e303b2985409a9ae9aac489c34e91e0733fac111e9c5"
+        "eef8302aad85d91ef970e303b2985409a9ae9aac489c34e91e0733fac111e9c5",
+        "aa83b96c258e8ee04137df074f6d055877c1bd3133a457e6bfce8041f15661f4"
       ],
-      "at": "2026-10-03T22:45:34+00:00",
-      "run_id": "deep-pass-2026-10-04",
-      "gap_claimed": true
+      "at": "2026-10-04T21:02:29+00:00",
+      "run_id": "run-20261004T184429Z-9e0ac133",
+      "gap_claimed": false
     },
     "tests/meta/test_pipeline_a2a.py::test_a_send_without_confirm_leaves_nothing_behind": {
       "fingerprints": [
@@ -4716,19 +4719,21 @@
     },
     "tests/meta/test_pipeline_book.py::test_a_closed_position_returns_its_money_to_the_book": {
       "fingerprints": [
-        "4b160b32744dc0009c8c5c2f8ea797e7b2b22ec77a512e3a95eef5dd108f9967"
+        "4b160b32744dc0009c8c5c2f8ea797e7b2b22ec77a512e3a95eef5dd108f9967",
+        "b057e6a88403e37777cf3a835d162f2e80a39bac72f21aac5cf65bcf62649840"
       ],
-      "at": "2026-09-11T16:42:43+00:00",
-      "run_id": "run-20260911T151835Z-31ec9b3e",
+      "at": "2026-10-04T21:02:29+00:00",
+      "run_id": "run-20261004T184429Z-9e0ac133",
       "gap_claimed": false
     },
     "tests/meta/test_pipeline_book.py::test_capital_they_accepted_and_do_not_list_is_still_spent": {
       "fingerprints": [
         "91c72ae8f0c7943aa2f87a30a2ead8608da7a825d9ea993ebae6ecc9c414384e",
-        "e4d2214523503ca0a6b33251824d6fb3f9e5f3ea94ad0db36b3372e0f69fc610"
+        "e4d2214523503ca0a6b33251824d6fb3f9e5f3ea94ad0db36b3372e0f69fc610",
+        "53e1deb36f56b54db6d5879644977a84407bd6bd11e2fb60b83f8b74d6c9e3ed"
       ],
-      "at": "2026-09-30T23:10:00+00:00",
-      "run_id": "run-20260930T200531Z-74cd7e27",
+      "at": "2026-10-04T21:02:29+00:00",
+      "run_id": "run-20261004T184429Z-9e0ac133",
       "gap_claimed": false
     },
     "tests/meta/test_pipeline_book.py::test_an_order_the_book_cannot_pay_for_is_refused": {
@@ -5499,11 +5504,12 @@
         "d87c48461ef6c5a8f0ad9b12f491349d4cea22caae0fb41ded7281d7402ea6f2",
         "63460992f7e8e38e4ec435f1597b8db26527b21838f5c691f3d1008067a64fe5",
         "84f710a6aec1c287861f728c813bacd6a4379e266f83ed58865dd664d4e93286",
-        "539a96ce9064602f8e5803a9f66134d3367a480d529f73ff8e32a0bc9368f9ee"
+        "539a96ce9064602f8e5803a9f66134d3367a480d529f73ff8e32a0bc9368f9ee",
+        "cf2e0800fa5592f72c0146b06beac3f6f39a15b3c6ea685314965b744e844b6a"
       ],
-      "at": "2026-10-03T22:45:34+00:00",
-      "run_id": "deep-pass-2026-10-04",
-      "gap_claimed": true
+      "at": "2026-10-04T21:02:29+00:00",
+      "run_id": "run-20261004T184429Z-9e0ac133",
+      "gap_claimed": false
     },
     "tests/meta/test_pipeline_sampler.py::test_a_card_nexus_proposed_is_followed_and_described_only_when_it_changes": {
       "fingerprints": [
@@ -6166,10 +6172,11 @@
     "tests/meta/test_pipeline_book.py::test_capital_in_a_bot_is_what_went_in_and_what_it_made": {
       "fingerprints": [
         "1bc8a7ee2a985084f1b8ab6d82c4fe8bfe062dfc5a3b840f7f60b10905c24481",
-        "a42594a045d50319a4d06aa9875bdb2dbb49d234ad5470dd1b9491457b92de2d"
+        "a42594a045d50319a4d06aa9875bdb2dbb49d234ad5470dd1b9491457b92de2d",
+        "4c55150d3d5ea1ab6c10e170f4dabe7536ce25660027cb6cda9bb4fdca9a3480"
       ],
-      "at": "2026-09-30T23:10:00+00:00",
-      "run_id": "run-20260930T200531Z-74cd7e27",
+      "at": "2026-10-04T21:02:29+00:00",
+      "run_id": "run-20261004T184429Z-9e0ac133",
       "gap_claimed": false
     },
     "tests/meta/test_pipeline_book.py::test_an_order_is_refused_when_the_money_in_bots_cannot_be_read": {
@@ -6836,10 +6843,11 @@
       "fingerprints": [
         "a0d55c408d2733460795d5515a0e6f297327fbc8bcdb598392da14eb5856df44",
         "adae474462c4494010e74a27b6c81685a698a2753ef2052f20f012693e5f82f5",
-        "77b6b668a0bb1ed79be3a94afe59d0a5b7ee4830b26c564f6d653d84bc9136e3"
+        "77b6b668a0bb1ed79be3a94afe59d0a5b7ee4830b26c564f6d653d84bc9136e3",
+        "5d3839d3213ff7c6e1ef14690e0f38b083c943ee47ae32ad3b3ba96b7468ac44"
       ],
-      "at": "2026-09-24T21:05:00+00:00",
-      "run_id": "run-20260924T191628Z-b62689a5",
+      "at": "2026-10-04T21:02:29+00:00",
+      "run_id": "run-20261004T184429Z-9e0ac133",
       "gap_claimed": false
     },
     "tests/meta/test_pipeline_lab.py::test_a_position_they_say_is_closed_is_not_still_deployed": {
@@ -10407,10 +10415,11 @@
       "fingerprints": [
         "2153d5a89fe1186426cfd547e765447b23b3daa571b2d7f408ddcb063e3621cb",
         "bfe947736212b974d2f0e25b5633cf57a55b5e70f0fbcb808af96976fe02c646",
-        "54e0de44575a282956888c567f90b63feff4f4676b81f556e8a1cbb68f2a1f5e"
+        "54e0de44575a282956888c567f90b63feff4f4676b81f556e8a1cbb68f2a1f5e",
+        "977806de1a0b403dfda33e0fae87ab685c0ca29f53dbd8f98139aac4a3754be3"
       ],
-      "at": "2026-10-02T21:23:33+00:00",
-      "run_id": "run-20261002T174919Z-7bf09ffc",
+      "at": "2026-10-04T21:02:29+00:00",
+      "run_id": "run-20261004T184429Z-9e0ac133",
       "gap_claimed": false
     },
     "tests/meta/test_pipeline_lab_loop.py::test_a_species_their_api_refused_to_clone_is_not_tried_on_every_answer": {
@@ -10673,11 +10682,12 @@
     "tests/meta/test_pipeline_admissibility.py::test_an_older_run_is_not_folded_over_a_newer_one_without_replay": {
       "fingerprints": [
         "b45647a343446098eafdfe39d7f092cdb95120d6e234ba8a732d2d19620112ac",
-        "298ae4b6003e20136b3a4a550cc5a9fa4fb382f3c9b916cf62197088ce4a0984"
+        "298ae4b6003e20136b3a4a550cc5a9fa4fb382f3c9b916cf62197088ce4a0984",
+        "944ea879b4252361d206bb09cd5891a9fa9f414c1359839db4e67be87b02ee84"
       ],
-      "at": "2026-10-03T22:45:34+00:00",
-      "run_id": "deep-pass-2026-10-04",
-      "gap_claimed": true
+      "at": "2026-10-04T21:02:29+00:00",
+      "run_id": "run-20261004T184429Z-9e0ac133",
+      "gap_claimed": false
     },
     "tests/meta/test_pipeline_book.py::test_an_order_takes_its_id_when_it_is_written_not_before": {
       "fingerprints": [
@@ -10733,11 +10743,12 @@
       "fingerprints": [
         "652034664b8d53e4ae8c0d91c4665365e9cdd19b5bfed47b0c32057a267fc87a",
         "29c1199918ffce1d6421ffdb50db55b3abfddd484b4e759a5e7cea2149936225",
-        "c4a91b73a498d838fb8990feba41aeec831eaaa9a43992778d46557fcba5b049"
+        "c4a91b73a498d838fb8990feba41aeec831eaaa9a43992778d46557fcba5b049",
+        "bd4cabc778b48de56b13ef8c0b48124c47df282a56011f7a09077b4e1be237bc"
       ],
-      "at": "2026-10-03T22:45:34+00:00",
-      "run_id": "deep-pass-2026-10-04",
-      "gap_claimed": true
+      "at": "2026-10-04T21:02:29+00:00",
+      "run_id": "run-20261004T184429Z-9e0ac133",
+      "gap_claimed": false
     },
     "tests/meta/test_pipeline_clone.py::test_the_transport_holds_a_settings_patch_to_its_declared_fields": {
       "fingerprints": [
@@ -11145,11 +11156,12 @@
     "tests/meta/test_pipeline_lab_loop.py::test_a_variant_that_cannot_run_starts_nothing_and_says_why": {
       "fingerprints": [
         "e180f4b535c6be983a96513a6ee44c60130171a3087fca532b0f1c9311e6ef41",
-        "b12749404facd4ae3c4972631e82bc923c21d208fff115ddd4f8b61adc9377b9"
+        "b12749404facd4ae3c4972631e82bc923c21d208fff115ddd4f8b61adc9377b9",
+        "308e824240c5df1aa1f9689293e91cf6f548159156ab1e44aa9b26a541b51a73"
       ],
-      "at": "2026-09-27T20:40:00+00:00",
-      "run_id": "run-20260927T190820Z-e40accb4",
-      "gap_claimed": false
+      "at": "2026-10-04T21:02:29+00:00",
+      "run_id": "run-20261004T184429Z-9e0ac133",
+      "gap_claimed": true
     },
     "tests/meta/test_pipeline_lab_loop.py::test_a_bot_their_side_halted_is_never_varied": {
       "fingerprints": [
@@ -11331,11 +11343,12 @@
       "fingerprints": [
         "5592ae16e7d24e3a263dd9a16de5a858cc29703f5a5525869e8dc679a89148a3",
         "fe91acaf33c501f990c8ed4913f8f1b8a01711e262428307ccbe70a233b800ef",
-        "070e106d00faade08ddb470454d3d183d1571fd1edd711300b959a7a7ba03f3d"
+        "070e106d00faade08ddb470454d3d183d1571fd1edd711300b959a7a7ba03f3d",
+        "b6f3f9a552abcfab77fccf845284c178ddf8e5952062dd0b5fed43a15dc27fe4"
       ],
-      "at": "2026-10-03T22:45:34+00:00",
-      "run_id": "deep-pass-2026-10-04",
-      "gap_claimed": true
+      "at": "2026-10-04T21:02:29+00:00",
+      "run_id": "run-20261004T184429Z-9e0ac133",
+      "gap_claimed": false
     },
     "tests/meta/test_pipeline_lab_page.py::test_an_experiment_opens_into_a_chart_and_four_numbers": {
       "fingerprints": [
@@ -11387,11 +11400,12 @@
       "fingerprints": [
         "ffa7caa2cbeb1b616e72d43ddd8402559719901f1ecab6138f7c3b1ffd8d5237",
         "349a273f9af5d5b7da65430240559ace19dcf2b0b6e67153d97e913ed44a0fd1",
-        "1ad61aedf3dd63d1163ba1812fd4887f4325878d4c2a28f35c12e5c9a5726b0e"
+        "1ad61aedf3dd63d1163ba1812fd4887f4325878d4c2a28f35c12e5c9a5726b0e",
+        "751557f29018dd9196d294f9d28afa20faf9525aedd9768fbf4f7c85db33c8f7"
       ],
-      "at": "2026-10-03T22:45:34+00:00",
-      "run_id": "deep-pass-2026-10-04",
-      "gap_claimed": true
+      "at": "2026-10-04T21:02:29+00:00",
+      "run_id": "run-20261004T184429Z-9e0ac133",
+      "gap_claimed": false
     },
     "tests/meta/test_pipeline_lab_page.py::test_a_memecoin_room_with_nothing_measured_yet_says_so": {
       "fingerprints": [
@@ -11842,11 +11856,12 @@
       "fingerprints": [
         "5f0937c422573a5c344410e8d2ef2ef83888fda378eb6d8ee4509d7d021a2116",
         "e78110573249f22fa60225ae68784e0ea4d64e46bf97d35b9d63d0153e20d201",
-        "2bb785ef0ed01357a5c38b754562894f4ea5188c3ca4ae78327e467ec08e5a70"
+        "2bb785ef0ed01357a5c38b754562894f4ea5188c3ca4ae78327e467ec08e5a70",
+        "baaf0e6c76238596cdd27c3df82212f11cebcdda33c35ad3742448a6bace0da3"
       ],
-      "at": "2026-10-03T22:45:34+00:00",
-      "run_id": "deep-pass-2026-10-04",
-      "gap_claimed": true
+      "at": "2026-10-04T21:02:29+00:00",
+      "run_id": "run-20261004T184429Z-9e0ac133",
+      "gap_claimed": false
     },
     "tests/meta/test_pipeline_room_notes.py::test_the_console_says_which_rounds_it_is_collecting": {
       "fingerprints": [
@@ -12622,10 +12637,11 @@
     "tests/meta/test_pipeline_lab_loop.py::test_the_question_names_the_window_its_room_is_judged_on": {
       "fingerprints": [
         "ffb1ad36e5c3136230208ea59159b3928af61812b8b222d41d6870bf71617989",
-        "2a7588262a4f288bf36e79a5a7f7c8b1b0fcf4091a7d46ca4e9bfd32943f46b8"
+        "2a7588262a4f288bf36e79a5a7f7c8b1b0fcf4091a7d46ca4e9bfd32943f46b8",
+        "60a71ac550ac08cefa7edf359fe0af89a6b4de9f881453e333997ac2345d5faa"
       ],
-      "at": "2026-10-03T22:45:34+00:00",
-      "run_id": "deep-pass-2026-10-04",
+      "at": "2026-10-04T21:02:29+00:00",
+      "run_id": "run-20261004T184429Z-9e0ac133",
       "gap_claimed": false
     },
     "tests/meta/test_pipeline_lab_loop.py::test_a_blank_question_is_refused_before_anything_is_asked": {
@@ -12666,11 +12682,12 @@
       "fingerprints": [
         "6a11b49a45c7c59fef21a3d925d09516f5ca9b8401f1bad5d3fb88195cf80373",
         "c442235f9efb6b757412669dc4514535a09012580b556f3b7d22bc2db745de91",
-        "6be8765625802a5a5d0a41cad452ce41b8da9de90970e7f54f6c6f528c58155b"
+        "6be8765625802a5a5d0a41cad452ce41b8da9de90970e7f54f6c6f528c58155b",
+        "78b1fc7d66050127062e08869c022080fccd822448490b18d0cf2496cbe4bb5e"
       ],
-      "at": "2026-10-03T22:45:34+00:00",
-      "run_id": "deep-pass-2026-10-04",
-      "gap_claimed": true
+      "at": "2026-10-04T21:02:29+00:00",
+      "run_id": "run-20261004T184429Z-9e0ac133",
+      "gap_claimed": false
     },
     "tests/discovery/test_public_page_reads_are_documented.py::test_what_a_public_page_reads_without_a_key_is_documented": {
       "fingerprints": [
@@ -12713,10 +12730,11 @@
         "6155ac696d76fe96ba2a07f3d092b9451e2d1b07108afe63a6bb6e9559deef13",
         "8bb714a10a6fd19621c07b70e79d9a62322599be5acaf8f4c7b34065d4b097e3",
         "e7736ca9381c86e38ea66a72ef20b57dd9a1edfe9e19a4962832bced90897d5d",
-        "52644c6e53f9420f3d6a4c3eed5f36e61d25d0353f7f09aebc3ce77de3d10e14"
+        "52644c6e53f9420f3d6a4c3eed5f36e61d25d0353f7f09aebc3ce77de3d10e14",
+        "dc3cde4c7b00f86fd8db713307109d93052b023871895d38ef541ef88e64aa78"
       ],
-      "at": "2026-10-03T22:45:34+00:00",
-      "run_id": "deep-pass-2026-10-04",
+      "at": "2026-10-04T21:02:29+00:00",
+      "run_id": "run-20261004T184429Z-9e0ac133",
       "gap_claimed": false
     },
     "tests/repo/test_reminders.py::test_a_loop_on_opus_is_not_a_reminder_any_more": {
@@ -12845,11 +12863,12 @@
     "tests/meta/test_pipeline_gem_audit.py::test_the_audit_sees_a_wrong_upside_a_wrong_identity_a_wrong_altseason_and_a_wrong_derived_figure": {
       "fingerprints": [
         "dceb9b2184d724d3b978c544446a803e9043512865b7ea0e841348e99f26da78",
-        "8cb0df9937ee82c9195989822fc716a1c9366d2ff1e26f62a23f0f8e93949f6d"
+        "8cb0df9937ee82c9195989822fc716a1c9366d2ff1e26f62a23f0f8e93949f6d",
+        "a2efa65f34c10700a9aa69e073cf35ab920c8f83f02a5158d6939da43ce81554"
       ],
-      "at": "2026-10-02T21:23:33+00:00",
-      "run_id": "run-20261002T174919Z-7bf09ffc",
-      "gap_claimed": true
+      "at": "2026-10-04T21:02:29+00:00",
+      "run_id": "run-20261004T184429Z-9e0ac133",
+      "gap_claimed": false
     },
     "tests/meta/test_pipeline_gem_audit.py::test_the_source_client_carries_the_whole_guard_and_none_of_their_credentials": {
       "fingerprints": [
@@ -12890,11 +12909,12 @@
       "fingerprints": [
         "863f6d57d34ab78a201431dcfa338eb9b31b0e16bd7759cad99983c6880faef7",
         "3517061537284aabc70a23e8ea0765aa9464591c69216fb504310efb9951f7bb",
-        "44db777a3350f5dae4d2e809fc2d08146d309759059013383e8604da9739831c"
+        "44db777a3350f5dae4d2e809fc2d08146d309759059013383e8604da9739831c",
+        "a8e981aa7e3dc7282477f3984a0e8edb5c11ac2e3901ade7d974da13776288b7"
       ],
-      "at": "2026-10-03T22:45:34+00:00",
-      "run_id": "deep-pass-2026-10-04",
-      "gap_claimed": true
+      "at": "2026-10-04T21:02:29+00:00",
+      "run_id": "run-20261004T184429Z-9e0ac133",
+      "gap_claimed": false
     },
     "tests/meta/test_pipeline_verify.py::test_a_check_with_hundreds_of_captures_still_fits_their_evidence_field": {
       "fingerprints": [
@@ -12966,10 +12986,11 @@
     },
     "tests/rest/test_gem_screener_picks_and_formulas_are_self_consistent.py::test_the_altseason_numbers_follow_their_own_published_rules": {
       "fingerprints": [
-        "ec8caeafe9dbdad94e67d7384507f3776cfa10801daec29f5daca128e0aaea10"
+        "ec8caeafe9dbdad94e67d7384507f3776cfa10801daec29f5daca128e0aaea10",
+        "f373c16833d7a39e3bebf7ea59b3442dcc7ff51f2815f2b320ccf4132ac48796"
       ],
-      "at": "2026-09-30T23:10:00+00:00",
-      "run_id": "run-20260930T200531Z-74cd7e27",
+      "at": "2026-10-04T21:02:29+00:00",
+      "run_id": "run-20261004T165402Z-3d611b0c",
       "gap_claimed": false
     },
     "tests/rest/test_build_it_better_log_keeps_whole_bodies.py::test_the_message_log_carries_each_message_whole": {
@@ -13292,42 +13313,47 @@
     },
     "tests/meta/test_pipeline_lab_page.py::test_the_view_is_three_sector_rooms_in_their_order_with_their_names": {
       "fingerprints": [
-        "a331843cc57f7ece162496d75d1fde07111ffe4c381650a4af2cd5d0ea46f1b2"
+        "a331843cc57f7ece162496d75d1fde07111ffe4c381650a4af2cd5d0ea46f1b2",
+        "f6fa378ff8dd582b17041842171672ce27b24b2890c57b337993fbb27bb005b2"
       ],
-      "at": "2026-10-03T22:45:34+00:00",
-      "run_id": "deep-pass-2026-10-04",
+      "at": "2026-10-04T21:02:29+00:00",
+      "run_id": "run-20261004T184429Z-9e0ac133",
       "gap_claimed": false
     },
     "tests/repo/test_morning_is_czech.py::test_every_report_has_a_plain_czech_line_and_the_deep_pass_has_no_code_in_it": {
       "fingerprints": [
-        "a2afccddb22bd3474824347931ba7e73106b4ac974855d9fc103f9efc66a2b55"
+        "a2afccddb22bd3474824347931ba7e73106b4ac974855d9fc103f9efc66a2b55",
+        "65e5e038708d3f1f25897a954679ea136a5982a1a842ed0176a4870e15447f6d"
       ],
-      "at": "2026-10-03T22:45:34+00:00",
-      "run_id": "deep-pass-2026-10-04",
+      "at": "2026-10-04T21:02:29+00:00",
+      "run_id": "run-20261004T165402Z-3d611b0c",
       "gap_claimed": true
     },
     "tests/repo/test_nexus_credit.py::test_lab_no_longer_shows_the_credit": {
       "fingerprints": [
-        "f319e6f26f88859282847427947d039a48ee09bfa6c9e40f6ffd50abc5940728"
+        "f319e6f26f88859282847427947d039a48ee09bfa6c9e40f6ffd50abc5940728",
+        "36f66baa23fed5ff730e890bd58b4a4ee4fad06b9e0e5d3a7c29ca9e3c22298f"
       ],
-      "at": "2026-10-03T22:45:34+00:00",
-      "run_id": "deep-pass-2026-10-04",
+      "at": "2026-10-04T21:02:29+00:00",
+      "run_id": "run-20261004T165402Z-3d611b0c",
       "gap_claimed": true
     },
     "tests/rest/test_research_backtest_runs_match_their_documentation.py::test_a_stored_run_carries_the_fields_its_schema_lists": {
       "fingerprints": [
-        "bfa293827eb9920b3c89036b1a8a8548751090261d31f575af8b238187b7fa34"
+        "bfa293827eb9920b3c89036b1a8a8548751090261d31f575af8b238187b7fa34",
+        "6cd8bc23f9c45b97838b49a95904bd034bcc7cc4b3abdc6d193147d0367b3ef7"
       ],
-      "at": "2026-10-03T22:45:34+00:00",
-      "run_id": "deep-pass-2026-10-04",
-      "gap_claimed": true
+      "at": "2026-10-04T21:02:29+00:00",
+      "run_id": "run-20261004T165402Z-3d611b0c",
+      "gap_claimed": false
     },
     "tests/rest/test_research_backtest_runs_match_their_documentation.py::test_a_run_on_a_theme_is_listed_with_that_theme": {
       "fingerprints": [
-        "5ea9a6aa0e78b80c93ab85a857bc9f61e77d60542f96ef740a1a25a7bfe9eebe"
+        "5ea9a6aa0e78b80c93ab85a857bc9f61e77d60542f96ef740a1a25a7bfe9eebe",
+        "8fe66dcda83fbe5b0d3115552adb7ddfc8a2b538aaf5b7fad4f63e4ba84eb570"
       ],
-      "at": "2026-10-03T22:45:34+00:00",
-      "run_id": "deep-pass-2026-10-04",
+      "at": "2026-10-04T21:02:29+00:00",
+      "run_id": "run-20261004T165402Z-3d611b0c",
       "gap_claimed": true
     },
     "tests/rest/test_the_account_has_one_plan_on_every_nexus_endpoint.py::test_the_account_has_one_plan_on_every_nexus_endpoint": {
@@ -13336,6 +13362,518 @@
       ],
       "at": "2026-10-03T22:45:34+00:00",
       "run_id": "deep-pass-2026-10-04",
+      "gap_claimed": false
+    },
+    "tests/meta/test_pipeline_card_rules.py::test_the_card_rules_are_fixed_before_the_data_and_judged_only_on_enough_cards": {
+      "fingerprints": [
+        "1857b6fcd4c584711e70e1914e913619f64441c8d898abfcb75d5cd6ce2cd172"
+      ],
+      "at": "2026-10-04T21:02:29+00:00",
+      "run_id": "run-20261004T184429Z-9e0ac133",
+      "gap_claimed": true
+    },
+    "tests/meta/test_pipeline_clone_indicators.py::test_an_indicator_change_is_bounded_floored_recorded_whole_and_counts_as_a_variant": {
+      "fingerprints": [
+        "c16695408df2c3fd0292cf3d371b911e4c52b9b05a0f566b4b4d4474a4842dd1"
+      ],
+      "at": "2026-10-04T21:02:29+00:00",
+      "run_id": "run-20261004T184429Z-9e0ac133",
+      "gap_claimed": false
+    },
+    "tests/meta/test_pipeline_clone_trades.py::test_a_bet_is_judged_on_the_price_at_its_epoch_end": {
+      "fingerprints": [
+        "65d81bc4bc4e4619949e92765c155e4e2ce5478e7213d6068f206b01ffde744b"
+      ],
+      "at": "2026-10-04T21:02:29+00:00",
+      "run_id": "run-20261004T184429Z-9e0ac133",
+      "gap_claimed": false
+    },
+    "tests/meta/test_pipeline_clone_trades.py::test_a_pause_reason_on_a_bet_that_ran_to_its_epoch_end_is_caught": {
+      "fingerprints": [
+        "566ca99ed679ab518c4b06486586e7ba4d5548c22662fc71ce8c15f24442f512"
+      ],
+      "at": "2026-10-04T21:02:29+00:00",
+      "run_id": "run-20261004T184429Z-9e0ac133",
+      "gap_claimed": false
+    },
+    "tests/meta/test_pipeline_clone_trades.py::test_a_clone_deciding_on_another_rule_than_its_description_is_caught": {
+      "fingerprints": [
+        "11adc03dc2e4b5998f0399d17617d4ae795e30d2ad931450bff37184be48a68e"
+      ],
+      "at": "2026-10-04T21:02:29+00:00",
+      "run_id": "run-20261004T184429Z-9e0ac133",
+      "gap_claimed": true
+    },
+    "tests/meta/test_pipeline_lab_page.py::test_the_page_opens_on_three_sectors_and_a_ranking_not_on_rooms_per_card": {
+      "fingerprints": [
+        "d6b1b51c43cb989203aaa854f31700a248fb9cd7ca8333a93f652aac757150c4"
+      ],
+      "at": "2026-10-04T21:02:29+00:00",
+      "run_id": "run-20261004T184429Z-9e0ac133",
+      "gap_claimed": false
+    },
+    "tests/meta/test_pipeline_lab_page.py::test_an_experiments_path_is_rebased_on_the_index_we_bought_at_and_a_long_one_keeps_both_ends": {
+      "fingerprints": [
+        "6fca72fd1ac81cdb7134bbf5503c09979c9ee94ccea0afda41ba53d4c0137492"
+      ],
+      "at": "2026-10-04T21:02:29+00:00",
+      "run_id": "run-20261004T184429Z-9e0ac133",
+      "gap_claimed": false
+    },
+    "tests/meta/test_pipeline_morning.py::test_the_report_is_due_from_six_forty_and_a_missing_one_is_missing_after_seven": {
+      "fingerprints": [
+        "8b49ea789e4be8d41f10bb1338ef4830da89fe434d70f1ba5aa027daca26240a"
+      ],
+      "at": "2026-10-04T21:02:29+00:00",
+      "run_id": "run-20261004T184429Z-9e0ac133",
+      "gap_claimed": false
+    },
+    "tests/meta/test_pipeline_morning.py::test_lab_py_morning_builds_the_page_and_the_notebook_takes_what_the_day_wrote": {
+      "fingerprints": [
+        "b062d1ed00d8336d3fa41778b634b151a53f71786cf342b02b3c928f9e35bc45"
+      ],
+      "at": "2026-10-04T21:02:29+00:00",
+      "run_id": "run-20261004T184429Z-9e0ac133",
+      "gap_claimed": true
+    },
+    "tests/meta/test_pipeline_own_clone_write.py::test_the_write_refuses_every_argument_it_does_not_document[arguments0]": {
+      "fingerprints": [
+        "a1992a66aae9c16980fa793885793bebe2d92f455d4dbc829d271ce3bfc44d9d"
+      ],
+      "at": "2026-10-04T21:02:29+00:00",
+      "run_id": "run-20261004T184429Z-9e0ac133",
+      "gap_claimed": false
+    },
+    "tests/meta/test_pipeline_own_clone_write.py::test_the_write_refuses_every_argument_it_does_not_document[arguments1]": {
+      "fingerprints": [
+        "a1992a66aae9c16980fa793885793bebe2d92f455d4dbc829d271ce3bfc44d9d"
+      ],
+      "at": "2026-10-04T21:02:29+00:00",
+      "run_id": "run-20261004T184429Z-9e0ac133",
+      "gap_claimed": false
+    },
+    "tests/meta/test_pipeline_own_clone_write.py::test_the_write_refuses_every_argument_it_does_not_document[arguments2]": {
+      "fingerprints": [
+        "a1992a66aae9c16980fa793885793bebe2d92f455d4dbc829d271ce3bfc44d9d"
+      ],
+      "at": "2026-10-04T21:02:29+00:00",
+      "run_id": "run-20261004T184429Z-9e0ac133",
+      "gap_claimed": false
+    },
+    "tests/meta/test_pipeline_own_clone_write.py::test_the_write_refuses_every_argument_it_does_not_document[arguments3]": {
+      "fingerprints": [
+        "a1992a66aae9c16980fa793885793bebe2d92f455d4dbc829d271ce3bfc44d9d"
+      ],
+      "at": "2026-10-04T21:02:29+00:00",
+      "run_id": "run-20261004T184429Z-9e0ac133",
+      "gap_claimed": false
+    },
+    "tests/meta/test_pipeline_own_clone_write.py::test_the_write_refuses_every_argument_it_does_not_document[arguments4]": {
+      "fingerprints": [
+        "a1992a66aae9c16980fa793885793bebe2d92f455d4dbc829d271ce3bfc44d9d"
+      ],
+      "at": "2026-10-04T21:02:29+00:00",
+      "run_id": "run-20261004T184429Z-9e0ac133",
+      "gap_claimed": false
+    },
+    "tests/meta/test_pipeline_own_clone_write.py::test_the_write_refuses_every_argument_it_does_not_document[arguments5]": {
+      "fingerprints": [
+        "a1992a66aae9c16980fa793885793bebe2d92f455d4dbc829d271ce3bfc44d9d"
+      ],
+      "at": "2026-10-04T21:02:29+00:00",
+      "run_id": "run-20261004T184429Z-9e0ac133",
+      "gap_claimed": false
+    },
+    "tests/meta/test_pipeline_own_clone_write.py::test_the_write_refuses_every_argument_it_does_not_document[arguments6]": {
+      "fingerprints": [
+        "a1992a66aae9c16980fa793885793bebe2d92f455d4dbc829d271ce3bfc44d9d"
+      ],
+      "at": "2026-10-04T21:02:29+00:00",
+      "run_id": "run-20261004T184429Z-9e0ac133",
+      "gap_claimed": false
+    },
+    "tests/meta/test_pipeline_own_clone_write.py::test_the_write_refuses_every_argument_it_does_not_document[arguments7]": {
+      "fingerprints": [
+        "a1992a66aae9c16980fa793885793bebe2d92f455d4dbc829d271ce3bfc44d9d"
+      ],
+      "at": "2026-10-04T21:02:29+00:00",
+      "run_id": "run-20261004T184429Z-9e0ac133",
+      "gap_claimed": false
+    },
+    "tests/meta/test_pipeline_own_clone_write.py::test_the_write_refuses_every_argument_it_does_not_document[arguments8]": {
+      "fingerprints": [
+        "a1992a66aae9c16980fa793885793bebe2d92f455d4dbc829d271ce3bfc44d9d"
+      ],
+      "at": "2026-10-04T21:02:29+00:00",
+      "run_id": "run-20261004T184429Z-9e0ac133",
+      "gap_claimed": false
+    },
+    "tests/meta/test_pipeline_own_clone_write.py::test_the_write_refuses_every_argument_it_does_not_document[arguments9]": {
+      "fingerprints": [
+        "a1992a66aae9c16980fa793885793bebe2d92f455d4dbc829d271ce3bfc44d9d"
+      ],
+      "at": "2026-10-04T21:02:29+00:00",
+      "run_id": "run-20261004T184429Z-9e0ac133",
+      "gap_claimed": false
+    },
+    "tests/meta/test_pipeline_own_clone_write.py::test_the_write_refuses_every_argument_it_does_not_document[arguments10]": {
+      "fingerprints": [
+        "a1992a66aae9c16980fa793885793bebe2d92f455d4dbc829d271ce3bfc44d9d"
+      ],
+      "at": "2026-10-04T21:02:29+00:00",
+      "run_id": "run-20261004T184429Z-9e0ac133",
+      "gap_claimed": false
+    },
+    "tests/meta/test_pipeline_own_clone_write.py::test_the_write_refuses_every_argument_it_does_not_document[arguments11]": {
+      "fingerprints": [
+        "a1992a66aae9c16980fa793885793bebe2d92f455d4dbc829d271ce3bfc44d9d"
+      ],
+      "at": "2026-10-04T21:02:29+00:00",
+      "run_id": "run-20261004T184429Z-9e0ac133",
+      "gap_claimed": false
+    },
+    "tests/meta/test_pipeline_own_clone_write.py::test_the_write_refuses_every_argument_it_does_not_document[arguments12]": {
+      "fingerprints": [
+        "a1992a66aae9c16980fa793885793bebe2d92f455d4dbc829d271ce3bfc44d9d"
+      ],
+      "at": "2026-10-04T21:02:29+00:00",
+      "run_id": "run-20261004T184429Z-9e0ac133",
+      "gap_claimed": false
+    },
+    "tests/meta/test_pipeline_own_clone_write.py::test_the_write_refuses_every_argument_it_does_not_document[arguments13]": {
+      "fingerprints": [
+        "a1992a66aae9c16980fa793885793bebe2d92f455d4dbc829d271ce3bfc44d9d"
+      ],
+      "at": "2026-10-04T21:02:29+00:00",
+      "run_id": "run-20261004T184429Z-9e0ac133",
+      "gap_claimed": false
+    },
+    "tests/meta/test_pipeline_own_clone_write.py::test_the_write_refuses_every_argument_it_does_not_document[arguments14]": {
+      "fingerprints": [
+        "a1992a66aae9c16980fa793885793bebe2d92f455d4dbc829d271ce3bfc44d9d"
+      ],
+      "at": "2026-10-04T21:02:29+00:00",
+      "run_id": "run-20261004T184429Z-9e0ac133",
+      "gap_claimed": false
+    },
+    "tests/meta/test_pipeline_own_clone_write.py::test_the_write_refuses_every_argument_it_does_not_document[arguments15]": {
+      "fingerprints": [
+        "a1992a66aae9c16980fa793885793bebe2d92f455d4dbc829d271ce3bfc44d9d"
+      ],
+      "at": "2026-10-04T21:02:29+00:00",
+      "run_id": "run-20261004T184429Z-9e0ac133",
+      "gap_claimed": false
+    },
+    "tests/meta/test_pipeline_own_clone_write.py::test_the_write_refuses_every_argument_it_does_not_document[arguments16]": {
+      "fingerprints": [
+        "a1992a66aae9c16980fa793885793bebe2d92f455d4dbc829d271ce3bfc44d9d"
+      ],
+      "at": "2026-10-04T21:02:29+00:00",
+      "run_id": "run-20261004T184429Z-9e0ac133",
+      "gap_claimed": false
+    },
+    "tests/meta/test_pipeline_own_clone_write.py::test_the_write_refuses_every_argument_it_does_not_document[arguments17]": {
+      "fingerprints": [
+        "a1992a66aae9c16980fa793885793bebe2d92f455d4dbc829d271ce3bfc44d9d"
+      ],
+      "at": "2026-10-04T21:02:29+00:00",
+      "run_id": "run-20261004T184429Z-9e0ac133",
+      "gap_claimed": false
+    },
+    "tests/meta/test_pipeline_own_clone_write.py::test_the_write_refuses_every_argument_it_does_not_document[arguments18]": {
+      "fingerprints": [
+        "a1992a66aae9c16980fa793885793bebe2d92f455d4dbc829d271ce3bfc44d9d"
+      ],
+      "at": "2026-10-04T21:02:29+00:00",
+      "run_id": "run-20261004T184429Z-9e0ac133",
+      "gap_claimed": false
+    },
+    "tests/meta/test_pipeline_own_clone_write.py::test_the_write_refuses_every_argument_it_does_not_document[arguments19]": {
+      "fingerprints": [
+        "a1992a66aae9c16980fa793885793bebe2d92f455d4dbc829d271ce3bfc44d9d"
+      ],
+      "at": "2026-10-04T21:02:29+00:00",
+      "run_id": "run-20261004T184429Z-9e0ac133",
+      "gap_claimed": false
+    },
+    "tests/meta/test_pipeline_own_clone_write.py::test_the_write_refuses_every_argument_it_does_not_document[arguments20]": {
+      "fingerprints": [
+        "a1992a66aae9c16980fa793885793bebe2d92f455d4dbc829d271ce3bfc44d9d"
+      ],
+      "at": "2026-10-04T21:02:29+00:00",
+      "run_id": "run-20261004T184429Z-9e0ac133",
+      "gap_claimed": false
+    },
+    "tests/meta/test_pipeline_own_clone_write.py::test_the_write_refuses_every_argument_it_does_not_document[arguments21]": {
+      "fingerprints": [
+        "a1992a66aae9c16980fa793885793bebe2d92f455d4dbc829d271ce3bfc44d9d"
+      ],
+      "at": "2026-10-04T21:02:29+00:00",
+      "run_id": "run-20261004T184429Z-9e0ac133",
+      "gap_claimed": false
+    },
+    "tests/meta/test_pipeline_own_clone_write.py::test_the_write_refuses_every_argument_it_does_not_document[arguments22]": {
+      "fingerprints": [
+        "a1992a66aae9c16980fa793885793bebe2d92f455d4dbc829d271ce3bfc44d9d"
+      ],
+      "at": "2026-10-04T21:02:29+00:00",
+      "run_id": "run-20261004T184429Z-9e0ac133",
+      "gap_claimed": false
+    },
+    "tests/meta/test_pipeline_own_clone_write.py::test_the_write_refuses_every_argument_it_does_not_document[arguments23]": {
+      "fingerprints": [
+        "a1992a66aae9c16980fa793885793bebe2d92f455d4dbc829d271ce3bfc44d9d"
+      ],
+      "at": "2026-10-04T21:02:29+00:00",
+      "run_id": "run-20261004T184429Z-9e0ac133",
+      "gap_claimed": false
+    },
+    "tests/meta/test_pipeline_own_clone_write.py::test_the_write_refuses_every_argument_it_does_not_document[arguments24]": {
+      "fingerprints": [
+        "a1992a66aae9c16980fa793885793bebe2d92f455d4dbc829d271ce3bfc44d9d"
+      ],
+      "at": "2026-10-04T21:02:29+00:00",
+      "run_id": "run-20261004T184429Z-9e0ac133",
+      "gap_claimed": false
+    },
+    "tests/meta/test_pipeline_own_clone_write.py::test_the_write_refuses_every_argument_it_does_not_document[arguments25]": {
+      "fingerprints": [
+        "a1992a66aae9c16980fa793885793bebe2d92f455d4dbc829d271ce3bfc44d9d"
+      ],
+      "at": "2026-10-04T21:02:29+00:00",
+      "run_id": "run-20261004T184429Z-9e0ac133",
+      "gap_claimed": false
+    },
+    "tests/meta/test_pipeline_own_clone_write.py::test_the_write_refuses_every_argument_it_does_not_document[arguments26]": {
+      "fingerprints": [
+        "a1992a66aae9c16980fa793885793bebe2d92f455d4dbc829d271ce3bfc44d9d"
+      ],
+      "at": "2026-10-04T21:02:29+00:00",
+      "run_id": "run-20261004T184429Z-9e0ac133",
+      "gap_claimed": false
+    },
+    "tests/meta/test_pipeline_own_clone_write.py::test_the_write_is_opened_at_mutate_only_and_refuses_what_it_does_not_document": {
+      "fingerprints": [
+        "f357995da4169ab90f9343eb7f9be2b12f20ae012fdc10b59ab367889f80f028"
+      ],
+      "at": "2026-10-04T21:02:29+00:00",
+      "run_id": "run-20261004T184429Z-9e0ac133",
+      "gap_claimed": false
+    },
+    "tests/meta/test_pipeline_sampler.py::test_a_stalled_read_writes_a_tick_and_the_panel_says_stale_after_three_silent_intervals": {
+      "fingerprints": [
+        "7d84882ccc8b3012fe18e9b483b6185f6f923ff023f18fab35d84f518965910a"
+      ],
+      "at": "2026-10-04T21:02:29+00:00",
+      "run_id": "run-20261004T184429Z-9e0ac133",
+      "gap_claimed": false
+    },
+    "tests/rest/test_backtest_leaderboard_ranks_backtests_on_historical_data.py::test_the_leaderboard_ranks_no_bot_on_synthetic_trades": {
+      "fingerprints": [
+        "d45a2e92a462130367f2fc0504f3ce98aabf12ac94d946f755278dea15e3b184"
+      ],
+      "at": "2026-10-04T21:02:29+00:00",
+      "run_id": "run-20261004T184429Z-9e0ac133",
+      "gap_claimed": true
+    },
+    "tests/rest/test_a_paper_bot_trade_says_what_happened.py::test_a_settled_bet_is_paid_on_the_price_at_its_epoch_end": {
+      "fingerprints": [
+        "dca79831edfe090de8a1b54fcd0b931ac35ee950d6a15adea95e9728bf005be1"
+      ],
+      "at": "2026-10-04T21:02:29+00:00",
+      "run_id": "run-20261004T181825Z-0dcfd6f8",
+      "gap_claimed": true
+    },
+    "tests/rest/test_a_paper_bot_trade_says_what_happened.py::test_a_deleted_bot_answers_asset_analytics_like_its_activity": {
+      "fingerprints": [
+        "49712c55b23907d19cdfcde1efd829e0b4dee7e5149511f7db21d5ffc35faefc"
+      ],
+      "at": "2026-10-04T21:02:29+00:00",
+      "run_id": "run-20261004T181825Z-0dcfd6f8",
+      "gap_claimed": true
+    },
+    "tests/rest/test_a_paper_bot_trade_says_what_happened.py::test_a_bet_held_to_its_epoch_end_is_not_labelled_as_stopped": {
+      "fingerprints": [
+        "2073aa83f29af8896f3cdd0c567cb334ff2a9b804d7b2908cf38a88daf96272d"
+      ],
+      "at": "2026-10-04T21:02:29+00:00",
+      "run_id": "run-20261004T181825Z-0dcfd6f8",
+      "gap_claimed": false
+    },
+    "tests/rest/test_a_paper_bot_trade_says_what_happened.py::test_a_clone_decides_on_the_strategy_its_species_is_described_by": {
+      "fingerprints": [
+        "de610be6bbb154951df3b55e8416bc0cb9715b67ab13479b9652715c7445d7e2"
+      ],
+      "at": "2026-10-04T21:02:29+00:00",
+      "run_id": "run-20261004T181825Z-0dcfd6f8",
+      "gap_claimed": true
+    },
+    "tests/rest/test_chart_analyzer_verdict_layer_keeps_its_word.py::test_the_verdict_fields_are_listed_in_the_openapi_schema": {
+      "fingerprints": [
+        "e555122969945061a5c3dbc7b8ae98a5f49f16f5a9589cbb3ffd278c92470f40"
+      ],
+      "at": "2026-10-04T21:02:29+00:00",
+      "run_id": "run-20261004T165402Z-3d611b0c",
+      "gap_claimed": false
+    },
+    "tests/rest/test_chart_analyzer_verdict_layer_keeps_its_word.py::test_every_recorded_call_is_on_a_closed_candle": {
+      "fingerprints": [
+        "03bafa06b3f4073807802972c2851d6184be0fb31c896347df1402bcd9cb65e9"
+      ],
+      "at": "2026-10-04T21:02:29+00:00",
+      "run_id": "run-20261004T165402Z-3d611b0c",
+      "gap_claimed": false
+    },
+    "tests/rest/test_chart_analyzer_verdict_layer_keeps_its_word.py::test_a_probability_lies_inside_the_range_shown_with_it": {
+      "fingerprints": [
+        "fd92b78ea823640946eb8de391a3ba64eeb7407e88c48faa35e8bddd244081d1"
+      ],
+      "at": "2026-10-04T21:02:29+00:00",
+      "run_id": "run-20261004T165402Z-3d611b0c",
+      "gap_claimed": true
+    },
+    "tests/rest/test_chart_analyzer_verdict_layer_keeps_its_word.py::test_a_dex_pool_coin_gets_no_verdict_while_llms_txt_says_so": {
+      "fingerprints": [
+        "c8d15106dc0db00924683e1a8f44533e80941311cf9ea2bbe8c119946f8d8f07"
+      ],
+      "at": "2026-10-04T21:02:29+00:00",
+      "run_id": "run-20261004T165402Z-3d611b0c",
+      "gap_claimed": true
+    },
+    "tests/rest/test_gem_screener_chains_say_what_their_sources_say.py::test_a_chains_stablecoins_are_the_dollars_defillama_counts": {
+      "fingerprints": [
+        "8b2dfa2134e4117161887a3e8fe7a3aa34cbef18e57dba47950e4df2d5af6e3e"
+      ],
+      "at": "2026-10-04T21:02:29+00:00",
+      "run_id": "run-20261004T165402Z-3d611b0c",
+      "gap_claimed": true
+    },
+    "tests/rest/test_gem_screener_chains_say_what_their_sources_say.py::test_the_chain_price_tag_is_described_as_the_snapshot_computes_it": {
+      "fingerprints": [
+        "692a59f3053f2b1264e9f9fe5da672f4a1e0ff332a7f2d068d8e3d29f2bda768"
+      ],
+      "at": "2026-10-04T21:02:29+00:00",
+      "run_id": "run-20261004T165402Z-3d611b0c",
+      "gap_claimed": true
+    },
+    "tests/rest/test_gem_screener_chains_say_what_their_sources_say.py::test_adoption_names_one_measure_on_the_chains_tab": {
+      "fingerprints": [
+        "480d2daeca8090890485940c294cc4b8d630a2e07c8d5c895bddb5d9b2839ed0"
+      ],
+      "at": "2026-10-04T21:02:29+00:00",
+      "run_id": "run-20261004T165402Z-3d611b0c",
+      "gap_claimed": true
+    },
+    "tests/rest/test_gem_screener_chains_say_what_their_sources_say.py::test_a_chain_left_out_for_no_market_data_has_none": {
+      "fingerprints": [
+        "7236a654da5b139856ba7659a41d7b7a39c2f2fb55732111b8b04e93c4903ce9"
+      ],
+      "at": "2026-10-04T21:02:29+00:00",
+      "run_id": "run-20261004T165402Z-3d611b0c",
+      "gap_claimed": false
+    },
+    "tests/rest/test_gem_screener_sectors_chart_does_what_its_caption_says.py::test_one_click_on_a_sectors_bubble_does_what_the_caption_says": {
+      "fingerprints": [
+        "021472e56c2f32eafd405965fe7ca96ab22b72076471a1b63ac23f7363262c79"
+      ],
+      "at": "2026-10-04T21:02:29+00:00",
+      "run_id": "run-20261004T165402Z-3d611b0c",
+      "gap_claimed": false
+    },
+    "tests/rest/test_supply_analyzer_states_what_its_sources_say.py::test_a_burned_slice_comes_from_a_burn": {
+      "fingerprints": [
+        "0a690b9985c7553ef83f8acf59a72991011c3e8056054d54c991f87b6168f0d7"
+      ],
+      "at": "2026-10-04T21:02:29+00:00",
+      "run_id": "run-20261004T165402Z-3d611b0c",
+      "gap_claimed": true
+    },
+    "tests/rest/test_supply_analyzer_states_what_its_sources_say.py::test_a_buyback_is_a_purchase_of_the_token": {
+      "fingerprints": [
+        "3166999deb82359731c8d8fe16de78362aa3075640353c16d55d42e54974edba"
+      ],
+      "at": "2026-10-04T21:02:29+00:00",
+      "run_id": "run-20261004T165402Z-3d611b0c",
+      "gap_claimed": true
+    },
+    "tests/rest/test_supply_analyzer_states_what_its_sources_say.py::test_the_sellable_pile_fits_inside_the_supply": {
+      "fingerprints": [
+        "478890a94da093701fdf1b44b5e1f757b1c3e392fa3aa931ccdf652aafb0534e"
+      ],
+      "at": "2026-10-04T21:02:29+00:00",
+      "run_id": "run-20261004T165402Z-3d611b0c",
+      "gap_claimed": false
+    },
+    "tests/rest/test_supply_analyzer_states_what_its_sources_say.py::test_a_cited_source_says_what_it_is_credited_with": {
+      "fingerprints": [
+        "1260485c68b4c69150be8962d6fb7f828cdd26093edb123bed0159e2ccd9b32e"
+      ],
+      "at": "2026-10-04T21:02:29+00:00",
+      "run_id": "run-20261004T165402Z-3d611b0c",
+      "gap_claimed": true
+    },
+    "tests/rest/test_supply_analyzer_states_what_its_sources_say.py::test_the_gem_screener_link_opens_its_coin": {
+      "fingerprints": [
+        "109dd20928556e3e109af76428c1c619fa6439546de31389249c3ccb0b4342a5"
+      ],
+      "at": "2026-10-04T21:02:29+00:00",
+      "run_id": "run-20261004T165402Z-3d611b0c",
+      "gap_claimed": true
+    },
+    "tests/rest/test_supply_analyzer_states_what_its_sources_say.py::test_every_range_uses_the_stated_typical_inflow": {
+      "fingerprints": [
+        "3fdfdf4e23a798ecb5047447f017c0642b9f188f923c6111ec11ffe2e8513379"
+      ],
+      "at": "2026-10-04T21:02:29+00:00",
+      "run_id": "run-20261004T165402Z-3d611b0c",
+      "gap_claimed": false
+    },
+    "tests/rest/test_supply_analyzer_states_what_its_sources_say.py::test_an_unsupported_chain_gets_a_documented_answer": {
+      "fingerprints": [
+        "43cce9835f023c4579265e388044b84b69bbbdcd4afd99ac3deaec48bc895c4b"
+      ],
+      "at": "2026-10-04T21:02:29+00:00",
+      "run_id": "run-20261004T165402Z-3d611b0c",
+      "gap_claimed": true
+    },
+    "tests/rest/test_supply_analyzer_states_what_its_sources_say.py::test_a_coin_carries_one_dilution_flag": {
+      "fingerprints": [
+        "dcb9129f30cb0399cf33fbb03542b4568504b02b93fb08d57df634833945defb"
+      ],
+      "at": "2026-10-04T21:02:29+00:00",
+      "run_id": "run-20261004T165402Z-3d611b0c",
+      "gap_claimed": false
+    },
+    "tests/rest/test_supply_analyzer_states_what_its_sources_say.py::test_tokens_locked_by_holders_are_not_shown_as_a_reserve": {
+      "fingerprints": [
+        "66fc9020024e031f69ee9525b874de8f51d0a76696d41d01c42fbec559fb9c70"
+      ],
+      "at": "2026-10-04T21:02:29+00:00",
+      "run_id": "run-20261004T165402Z-3d611b0c",
+      "gap_claimed": true
+    },
+    "tests/rest/test_supply_analyzer_states_what_its_sources_say.py::test_an_unknown_schedule_is_not_served_as_none_scheduled": {
+      "fingerprints": [
+        "7bfa1a49d050b618599f302098499cc0b32514185f70b9b824f96085bdbbd9cf"
+      ],
+      "at": "2026-10-04T21:02:29+00:00",
+      "run_id": "run-20261004T165402Z-3d611b0c",
+      "gap_claimed": false
+    },
+    "tests/rest/test_supply_analyzer_states_what_its_sources_say.py::test_a_max_supply_is_not_the_end_of_an_issuance_schedule": {
+      "fingerprints": [
+        "6fc1ef9b35530adac23edac06c588380649c5dc4ac4eb1c903f8cfe98d68c5d0"
+      ],
+      "at": "2026-10-04T21:02:29+00:00",
+      "run_id": "run-20261004T165402Z-3d611b0c",
+      "gap_claimed": true
+    },
+    "tests/rest/test_supply_analyzer_states_what_its_sources_say.py::test_tokens_out_counts_the_max_supply_of_a_coin_still_issuing": {
+      "fingerprints": [
+        "e2b4eb5f876db96b26e7fa73badbad7d0d41625ae86365853f4a3ebaf6440e42"
+      ],
+      "at": "2026-10-04T21:02:29+00:00",
+      "run_id": "run-20261004T165402Z-3d611b0c",
       "gap_claimed": false
     }
   }
