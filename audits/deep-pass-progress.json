@@ -2,7 +2,7 @@
   "run": "deep pass 2026-10-04 (evening)",
   "at": "2026-10-04T20:49:07+00:00",
   "previous_at": "2026-10-03T22:25:25+00:00",
-  "at_finished": null,
+  "at_finished": "2026-10-05T09:08:11+00:00",
   "start_commit": "9bcfcf7f3599222f30784108e89c17eb0a70ffba",
   "model_note": "session ran Sonnet 5.5 high; the skill asks Opus xhigh through step 6, so the review and the audit run through Opus agents",
   "size": "full",
@@ -641,7 +641,10 @@
       "why": "date not reached"
     }
   ],
-  "next": [],
+  "next": [
+    "Spec Gem Screener (větev spec-followup-2026-10-04, push na slovo): sektor Launchpads (PUMP, PONS, STONK), vyřazené appky se jménem a důvodem, příjmy+buybacky+spálené %+„raised\", velké peněženky (outbox/gem-screener-pipe-pressure.md). STONK (stonk-3) chybí: kontrola.",
+    "#175 po opravě kontroly změřit znovu"
+  ],
   "retrospective": {
     "last": "2026-10-04",
     "done": false
@@ -649,8 +652,8 @@
   "rule_changes": [],
   "meta_tests": {
     "start": 814,
-    "end": null,
+    "end": 814,
     "reason": null
   },
-  "finished": false
+  "finished": true
 }

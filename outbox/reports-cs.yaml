@@ -9,6 +9,7 @@ reports:
   123: "Vytvoření hlášení vrátí chybu 500, přestože hlášení vznikne"
   130: "50 čtecích adres, které volají veřejné stránky, chybí ve veřejné dokumentaci rozhraní"
   131: "Ceny: neznámé aktivum vrátí stavový kód, který dokumentace nezná"
+  133: "Gem Screener: obnovení dat zůstane stát za svým slíbeným intervalem, snímek je starý skoro den"
   134: "Paper bot se stop-lossem ztratí dvojnásobek stopu (stop 5 %, ztráta 10 %)"
   132: "Asynchronní a2a pošle jen první automatickou odpověď, bez slíbeného šetření"
   135: "Přímé souboje po konci svého okna dál ukazují „běží“ a skóre zmrazené při vzniku"

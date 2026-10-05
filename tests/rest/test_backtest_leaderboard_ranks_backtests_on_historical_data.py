@@ -88,15 +88,14 @@ def test_the_leaderboard_ranks_no_bot_on_synthetic_trades(rest_anon):
     if not bots:
         raise Inconclusive(f"{LEADERBOARD} lists no bot")
     read, unread, ranked_on_synthetic = [], [], []
+    flagged_anywhere = False        # a bot with real trades carries no flag; the flag gone EVERYWHERE is not "clean"
     for b in bots:
         trades = _trades(rest_anon, b["slug"])
         if trades is None:
             unread.append(b["slug"])
             continue
-        if trades and not any("is_synthetic" in t for t in trades):
-            unread.append(b["slug"])               # the flag is gone: not "no synthetic trades"
-            continue
-        synth = [t for t in trades if t.get("is_synthetic") is True]
+        flagged_anywhere = flagged_anywhere or any("is_synthetic" in t for t in trades)
+        synth =[t for t in trades if t.get("is_synthetic") is True]
         prices = [float(t["entry_price"]) for t in synth
                   if isinstance(t.get("entry_price"), (int, float, str)) and str(t["entry_price"]).strip()]
         btc = [t for t in synth if t.get("symbol") == "BTC"]
@@ -112,6 +111,9 @@ def test_the_leaderboard_ranks_no_bot_on_synthetic_trades(rest_anon):
             ranked_on_synthetic.append(row)
     if len(read) < MIN_READ_SHARE * len(bots):
         raise Inconclusive(f"only {len(read)} of {len(bots)} trade lists could be read: {unread[:5]}")
+    if not flagged_anywhere:
+        raise Inconclusive("no trade of any bot carries an is_synthetic field any more, so what the "
+                           "check judged by is gone; whether the trades are real is not observed")
     total_synth = sum(r["synthetic"] for r in ranked_on_synthetic)
     total_trades = sum(r["trades"] for r in ranked_on_synthetic)
     conclude(Measurement(
