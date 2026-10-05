@@ -135,7 +135,10 @@ def test_every_report_has_a_plain_czech_line_and_the_deep_pass_has_no_code_in_it
             bad.append(f"#{rid} carries code: {token!r}")
     deep = (REPO / "DEEP-PASS.md").read_text(encoding="utf-8")
     fixed = re.search(r"(?ms)^## Opraveno\s*\n(.*?)(?=^## |\Z)", deep)
-    for bullet in re.findall(r"(?m)^[-*] (.+)$", fixed.group(1) if fixed else ""):
+    # T19, deep pass 2026-10-05: a bullet wrapped onto indented continuation lines is ONE bullet
+    # on the page (qa/morning.py joins them), so the whole of it is read, not its first line.
+    for bullet in re.findall(r"(?m)^[-*] (.+(?:\n[ \t]+\S.*)*)", fixed.group(1) if fixed else ""):
+        bullet = " ".join(bullet.split())
         for token in jargon(bullet):
             bad.append(f"DEEP-PASS.md, Opraveno, carries code: {token!r} in {bullet[:60]!r}")
     problems = ([f"no Czech line for report #{i}" for i in missing]

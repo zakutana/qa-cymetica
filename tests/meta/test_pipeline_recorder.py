@@ -24,6 +24,7 @@ from __future__ import annotations
 
 import json
 import os
+import shutil
 import subprocess
 import sys
 import textwrap
@@ -411,6 +412,32 @@ def test_ratelimit_budget_reaches_the_run_record(pytester, tmp_path):
     assert run["record_integrity"]["budget_truncated"] is False
     outcomes = {r["nodeid"].rsplit("::", 1)[-1]: r["outcome"] for r in run["results"]}
     assert outcomes["test_a_route_limit_is_not_the_platform_quota"] == "passed", outcomes
+    _a_run_the_quota_cut_short_says_so_in_its_record(pytester, tmp_path)
+
+
+def _a_run_the_quota_cut_short_says_so_in_its_record(pytester, tmp_path):
+    """The other half of the test above (T22, deep pass 2026-10-05): it only asserts the
+    uncut case, so a recorder that wrote `budget_truncated: false` for ever passed it, and
+    that field is what `prereg.py` and the fold read to know a run is partial. A session whose
+    budget was spent says so in the run record, in both fields."""
+    shutil.rmtree(pytester.path / "tests")          # a second inner session in the same directory
+    _, run = _run_inner(pytester, tmp_path / "cut", """
+        import httpx
+        import pytest
+        from qa.safety import RateLimitBudget, SafetyViolation
+
+        @qa(**TAG)
+        def test_zz_spends_the_quota():
+            budget = RateLimitBudget(stop_at_fraction=0.6)
+            budget.after_response(httpx.Response(200, headers={"x-ratelimit-limit": "2000",
+                                                               "x-ratelimit-remaining": "700"}))
+            with pytest.raises(SafetyViolation):
+                budget.before_request()
+            assert budget.exhausted
+    """)
+
+    assert run["ratelimit"]["exhausted"] is True, run["ratelimit"]
+    assert run["record_integrity"]["budget_truncated"] is True, run["record_integrity"]
 
 
 @qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")

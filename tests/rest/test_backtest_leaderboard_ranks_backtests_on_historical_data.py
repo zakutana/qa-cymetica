@@ -26,6 +26,8 @@ SAFE: GETs only, anonymous.
 
 from __future__ import annotations
 
+import re
+
 from qa.marks import Inconclusive, SafetyTier, qa
 from qa.measure import Measurement, conclude
 
@@ -34,8 +36,21 @@ TRADES = "/api/v1/backtest/bots/{slug}/trades"
 PAGE = "/backtest"
 CLAIM = "backtest-leaderboard-ranks-historical-trades"
 HISTORICAL = "against historical data"
+HISTORICAL_CLAIM = re.compile(r"historical\s+(?:market\s+|price\s+)?(?:data|prices)", re.I)
+"""The page's claim, in any wording that still says the run uses historical data."""
 PAGE_SIZE = 200
 MIN_READ_SHARE = 0.8
+
+
+def _row_says_synthetic(value) -> bool:
+    """A leaderboard row SAYS synthetic when a text value of it does, or a field named for
+    it is true; a key like `is_synthetic: false` says the opposite and must not count."""
+    if isinstance(value, dict):
+        return any((("synthetic" in str(k).lower() and v is True) or _row_says_synthetic(v))
+                   for k, v in value.items())
+    if isinstance(value, (list, tuple)):
+        return any(_row_says_synthetic(v) for v in value)
+    return isinstance(value, str) and "synthetic" in value.lower()
 
 
 def _trades(rest_anon, slug: str) -> list[dict] | None:
@@ -61,8 +76,11 @@ def test_the_leaderboard_ranks_no_bot_on_synthetic_trades(rest_anon):
     page = rest_anon.get(PAGE, headers={"Accept": "text/html"})
     if page.status_code != 200:
         raise Inconclusive(f"{PAGE} answered HTTP {page.status_code}")
-    says_historical = HISTORICAL in page.text
+    says_historical = bool(HISTORICAL_CLAIM.search(page.text))
     synthetic_word = "synthetic" in page.text.lower()
+    if not says_historical and not synthetic_word:
+        raise Inconclusive(f"{PAGE} no longer says what its backtests run against: neither "
+                           f"\"historical data\" nor \"synthetic\" is on the page")
     board = rest_anon.get(LEADERBOARD, params={"limit": 50})
     if board.status_code != 200 or not isinstance(board.json(), dict):
         raise Inconclusive(f"{LEADERBOARD} answered HTTP {board.status_code}")
@@ -75,6 +93,9 @@ def test_the_leaderboard_ranks_no_bot_on_synthetic_trades(rest_anon):
         if trades is None:
             unread.append(b["slug"])
             continue
+        if trades and not any("is_synthetic" in t for t in trades):
+            unread.append(b["slug"])               # the flag is gone: not "no synthetic trades"
+            continue
         synth = [t for t in trades if t.get("is_synthetic") is True]
         prices = [float(t["entry_price"]) for t in synth
                   if isinstance(t.get("entry_price"), (int, float, str)) and str(t["entry_price"]).strip()]
@@ -85,7 +106,7 @@ def test_the_leaderboard_ranks_no_bot_on_synthetic_trades(rest_anon):
                "entry_price_range": [min(prices), max(prices)] if prices else None,
                "btc_example": ({k: btc[0].get(k) for k in ("entry_time", "entry_price", "exit_price")}
                                if btc else None),
-               "leaderboard_says_synthetic": "synthetic" in str(b).lower()}
+               "leaderboard_says_synthetic": _row_says_synthetic(b)}
         read.append(row)
         if synth and says_historical and not row["leaderboard_says_synthetic"]:
             ranked_on_synthetic.append(row)

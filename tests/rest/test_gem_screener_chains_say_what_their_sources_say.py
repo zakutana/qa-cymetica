@@ -145,6 +145,11 @@ def test_a_chains_stablecoins_are_the_dollars_defillama_counts(rest_anon, eviden
     if said["judged"] < MIN_JUDGED_SHARE * len(chains):
         raise Inconclusive(f"only {said['judged']} of {len(chains)} chains could be compared: "
                            + "; ".join(said["unread"][:5]))
+    if not said["gaps"] and said["unread"]:
+        # "Every chain" is the contract: a pass with the chains that carried the defect among
+        # the unread says nothing about them, so only a gap found may stand on a partial read.
+        raise Inconclusive(f"no chain is off, but {len(said['unread'])} of {len(chains)} could not be compared: "
+                           + "; ".join(said["unread"][:5]))
     gaps = sorted(said["gaps"], key=lambda x: x["gap_pct"])
     counted = sum(1 for x in gaps if x["tokens_match"])
     conclude(Measurement(
@@ -182,7 +187,10 @@ def test_the_chain_price_tag_is_described_as_the_snapshot_computes_it(rest_anon)
     if docs["unread"]:
         raise Inconclusive("; ".join(docs["unread"]))
     prompt = g.chain_agent_prompt_claims(page, bench)
-    stale = [f"llms.txt: \"{c['said']}\"" for c in docs["stale"]] + [f"agent prompt: \"{s}\"" for s in prompt["stale"]]
+    if prompt["unread"] and not prompt["stale"] and not docs["stale"]:
+        # Half of the contract is the agent prompt: unread, the pass would say nothing about it.
+        raise Inconclusive("the agent prompt was not read: " + "; ".join(prompt["unread"]))
+    stale =[f"llms.txt: \"{c['said']}\"" for c in docs["stale"]] + [f"agent prompt: \"{s}\"" for s in prompt["stale"]]
     conclude(Measurement(
         verdict="failed" if stale else "passed",
         reason=(f"the snapshot prices a chain on market cap / {docs['measure']} against the {docs['kind']} of "

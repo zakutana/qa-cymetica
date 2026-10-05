@@ -282,6 +282,11 @@ def test_a_clone_decides_on_the_strategy_its_species_is_described_by(rest_truste
     llms = rest_anon.get("/llms.txt")
     llms_says = llms.status_code == 200 and LLMS_SENTENCE in llms.text
     found = ct.decision_source_contradictions(clones, species)
+    judged = ct.decision_source_reads(clones, species)
+    if not found and judged == 0:
+        # A renamed flag, or species ids that no longer join, judges nothing: not a clean read.
+        raise Inconclusive(f"{len(read)} clones carry a decision source, but none carries "
+                           f"differs_from_display as true/false beside a species it joins in {PREFIX}/available")
     by_species = {}
     for f in found:
         by_species.setdefault(f["species"], f)
@@ -293,7 +298,7 @@ def test_a_clone_decides_on_the_strategy_its_species_is_described_by(rest_truste
                             f"\"{f['decides_on']}\"" for f in list(by_species.values())[:5])
                 + (f"; llms.txt says \"{LLMS_SENTENCE}\"" if llms_says else "")
                 if found else
-                f"all {len(read)} clones with a decision source decide on what their species is described by"),
+                f"all {judged} clones with a decision source decide on what their species is described by"),
         left={"species_contradicted": len(by_species)},
         right={"species_contradicted": 0},
         population={"contradictions": list(by_species.values()), "clones_read": len(read),

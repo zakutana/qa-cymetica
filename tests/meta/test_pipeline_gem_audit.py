@@ -825,6 +825,16 @@ def _a_chart_click_is_held_to_its_caption():
     narrow = "var NARROW = matchMedia('(max-width: 720px)').matches;\n"
     assert g.sector_click_promise(page(gate="  if (NARROW && !el) return;\n", head=narrow))["verdict"] == "two_clicks"
 
+    # Deep pass 2026-10-05 (R11): the listener's body must end where the listener does. Read
+    # up to the next addEventListener it ran on into a following hover-media-query helper, and
+    # an ungated listener read as gated, so the check could never see the defect come back.
+    bare_then_helper = ("document.addEventListener('click', function(ev){\n"
+                        "  var el = ev.target.closest && ev.target.closest('#themeScatter g.pt');\n"
+                        "  if (!el) return;\n  ev.stopPropagation(); ev.preventDefault();\n  pinHost(el);\n}, true);\n"
+                        "function hoverDevice(){ return matchMedia('(hover: hover) and (pointer: fine)').matches; }\n")
+    assert g.sector_click_promise(page(tail=bare_then_helper))["verdict"] == "two_clicks", (
+        "a hover helper declared AFTER the listener was read as the listener's gate")
+
     # What it cannot read is unread, never a pass: the listener gone (a browser has to say
     # whether one click now opens the sector), the renderer gone, the caption gone, or no
     # click on a bubble that opens the panel at all.
@@ -872,6 +882,11 @@ def _the_chains_tab_is_held_to_its_sources_and_its_own_words():
     # A failed read, or no point on the input's own day, is unread, never agreement.
     gone = g.chain_stablecoin_gaps(chains, dict(charts, stellar=None))
     assert gone["judged"] == 2 and gone["gaps"] == [] and gone["unread"], gone
+    # Deep pass 2026-10-05 (T01): a shown $0 is a figure, a -100 % gap -- not an unread chain.
+    zero = g.chain_stablecoin_gaps([chain("stellar", 0)], charts)
+    assert zero["judged"] == 1 and zero["unread"] == [] and zero["gaps"][0]["gap_pct"] == -100.0, zero
+    missing = g.chain_stablecoin_gaps([chain("stellar", None)], charts)
+    assert missing["judged"] == 0 and missing["unread"], missing
     other_day = g.chain_stablecoin_gaps([chain("stellar", 840929169.43, day + 86400)], charts)
     assert other_day["judged"] == 0 and other_day["unread"], other_day
 
@@ -942,6 +957,14 @@ def _the_chains_tab_is_held_to_its_sources_and_its_own_words():
     measured = words.replace("Adoption (stablecoins and DEX volume)", "Adoption") \
                     .replace(", which has no monthly history", "")
     assert g.chain_adoption_two_measures(measured, rows)["verdict"] == "ok"
+    # Deep pass 2026-10-05 (T03): the two labels renamed but the vetting tags kept is the same
+    # defect; the check read only the two labels and called it ok.
+    tagged = renamed.replace("</script>", "var T = 'Declining: Adoption falling 12.8% a month for six months';</script>")
+    tagged_two = g.chain_adoption_two_measures(tagged, rows)
+    assert tagged_two["verdict"] == "two_measures" and tagged_two["readings"], tagged_two
+    assert g.chain_adoption_two_measures(
+        measured.replace("</script>", "var T = 'Declining: Adoption falling 12.8% a month';</script>"),
+        rows)["verdict"] == "ok", "a tag on the measure the page defines was called a second measure"
     assert g.chain_adoption_two_measures("<script></script>", rows)["verdict"] == "unread"
     assert g.chain_adoption_two_measures(None, rows)["verdict"] == "unread"
 

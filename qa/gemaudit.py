@@ -732,6 +732,9 @@ def sector_click_promise(page_html: str | None) -> dict:
         nxt = ANY_LISTENER.search(page, m.end())
         stop = min(nxt.start() if nxt else len(page), m.start() + 2500)
         body = page[m.start(): stop]
+        closed = body.find("}, true)")                  # the listener ends here, not at the next one
+        if closed > 0:
+            body = body[: closed + len("}, true)")]
         if not (POINTS_SELECTOR.search(body) and PINS_A_CARD.search(body)
                 and re.search(r"stopPropagation\s*\(", body)):
             continue
@@ -798,7 +801,7 @@ def chain_stablecoin_gaps(chains: list, charts: dict, *, tol: float = STABLECOIN
         if points is None:
             unread.append(f"{name}: DeFiLlama's stablecoin chart was not read")
             continue
-        if not shown or not isinstance(as_of, (int, float)):
+        if shown is None or not isinstance(as_of, (int, float)):       # a shown $0 is a figure: a -100 % gap
             unread.append(f"{name}: no stablecoin figure or date in the snapshot")
             continue
         point = next((p for p in points if isinstance(p, dict) and str(p.get("date")).isdigit()
@@ -916,6 +919,12 @@ def chain_agent_prompt_claims(page_html: str, bench: dict) -> dict:
 
 
 ADOPTION_READINGS = ("Adoption (stablecoins and DEX volume)", "Adoption growth 6M")
+ADOPTION_VETTING_TAGS = (
+    ("vetting tag 'Adoption falling ... a month'", re.compile(r"Adoption falling\b[^<'\"]{0,60}month")),
+    ("vetting tag 'Adoption is at ...%'", re.compile(r"Adoption is at \d[\d.,]*\s*%")),
+)
+"""The vetting tags that read a monthly adoption trajectory: found by their own words, so a
+page that renames the two labels above but keeps the tags is still caught (deep pass 2026-10-05)."""
 NO_ADOPTION_HISTORY = re.compile(r"adoption[^.<]{0,80}?has no (?:monthly|3-month|three-month) (?:history|series)",
                                  re.I)
 
@@ -939,7 +948,8 @@ def chain_adoption_two_measures(page_html: str | None, chains: list) -> dict:
     if "four inputs together" not in joined:
         out["why"] = "the four-input definition of adoption ('four inputs together') is not on the page"
         return out
-    out["readings"] = [label for label in ADOPTION_READINGS if label in joined]
+    out["readings"] = ([label for label in ADOPTION_READINGS if label in joined]
+                       + [label for label, rx in ADOPTION_VETTING_TAGS if rx.search(joined)])
     out["no_history"] = bool(NO_ADOPTION_HISTORY.search(joined))
     out["rows"] = [{"name": c.get("name"), "reliable_fail": c.get("reliable_fail")}
                    for c in chains or [] if isinstance(c, dict) and not c.get("reliable")

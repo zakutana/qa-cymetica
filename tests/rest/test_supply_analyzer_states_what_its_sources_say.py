@@ -230,6 +230,12 @@ def _num(value) -> bool:
     return isinstance(value, (int, float)) and not isinstance(value, bool) and math.isfinite(value)
 
 
+def _f(value, spec: str = ",.0f") -> str:
+    """A figure for a failure reason; an unknown one prints as n/a instead of raising, so a
+    record that names its unknowns (null, never zero) still produces a measurement."""
+    return format(value, spec) if _num(value) else "n/a"
+
+
 # --- pure readings (held in tests/meta) -------------------------------------------------
 
 def burned_without_a_burn(record) -> dict | None:
@@ -482,6 +488,9 @@ def test_a_burned_slice_comes_from_a_burn(rest_anon):
         if record is None:
             unread.append(_sym(row))
             continue
+        if not str((_input(record, "burned_so_far") or {}).get("source") or "").strip():
+            unread.append(f"{_sym(row)}: no burned_so_far source to read")     # unread, not clean
+            continue
         judged += 1
         found = burned_without_a_burn(record)
         if found:
@@ -564,6 +573,11 @@ def test_a_buyback_is_a_purchase_of_the_token(rest_anon, evidence_store):
             if not said:
                 said = {body.get("name"): (body.get("methodology") or {}).get("HoldersRevenue")}
             kinds = {c: holders_revenue_kind(said.get(c)) for c in children}
+            if not any(kinds.values()):
+                # "Says neither" is not judged -- and not counted as judged, or a day on which
+                # no sentence was classified would pass with the Inconclusive gate bypassed.
+                not_judged.append(f"{_sym(row)}: {kinds}")
+                continue
             judged += 1
             if kinds and all(k == "distribution" for k in kinds.values()):
                 payouts.append({"coin": _sym(record), "band": record.get("band"), "pressure": record.get("pressure"),
@@ -628,8 +642,8 @@ def test_the_sellable_pile_fits_inside_the_supply(rest_anon):
         verdict="failed" if over else "passed",
         reason=(f"{len(over)} records state a sellable pile larger than the {'/'.join(sorted({o['against'] for o in over}))} "
                 f"they state themselves: "
-                + "; ".join(f"{o['coin']} pile {o['pile']:,.0f} against {o['against']} {o['supply']:,.0f} "
-                            f"(circulating {o['circulating']:,.0f} plus staked {o['staked_total'] or 0:,.0f})"
+                + "; ".join(f"{o['coin']} pile {_f(o['pile'])} against {o['against']} {_f(o['supply'])} "
+                            f"(circulating {_f(o['circulating'])} plus staked {_f(o['staked_total'] or 0)})"
                             for o in over[:4])
                 if over else
                 f"all {judged} candidate records keep the pile inside their supply"),
@@ -671,9 +685,9 @@ def test_a_cited_source_says_what_it_is_credited_with(rest_anon, evidence_store)
             entry = {"key": item["key"], "url": item["url"], "status": response.status_code,
                      "value": item.get("value"), "source": item.get("source")}
             read.append(entry)
-            if response.status_code == 404:
+            if response.status_code in (404, 410):
                 problems.append(f"the {item['key']} url {item['url']} (cited as \"{item.get('source')}\") "
-                                f"answers 404")
+                                f"answers {response.status_code}")
             elif response.status_code == 200 and item["key"] == "buyback_disposition":
                 page = fund_disposition(_page_text(response.text))
                 entry["page_says"] = page
@@ -683,8 +697,12 @@ def test_a_cited_source_says_what_it_is_credited_with(rest_anon, evidence_store)
                                     f"assistance fund's HYPE \"is burned\"")
     finally:
         source.close()
-    if not any(isinstance(r.get("status"), int) for r in read):
-        raise Inconclusive(f"none of the {len(cited)} cited urls could be read: {read}")
+    unreadable = [r for r in read if r.get("status") not in (200, 404, 410)]
+    if not problems and unreadable:
+        # "Every url answers 200" is the contract: a 403, a 5xx or a timeout is neither a pass
+        # nor a dead link we can name, so it is not a clean read.
+        raise Inconclusive(f"{len(unreadable)} of the {len(cited)} cited urls could not be read as live or "
+                           f"dead: {[(r['key'], r['status']) for r in unreadable]}")
     conclude(Measurement(
         verdict="failed" if problems else "passed",
         reason=("HYPE's record: " + "; ".join(problems)) if problems else
@@ -707,7 +725,7 @@ def test_the_gem_screener_link_opens_its_coin(rest_anon):
     if not shared:
         raise Inconclusive("no link identifier is shared by two rows; nothing to judge")
     users = {i: [_sym(r) for r in rows if link_identifier(r) == i] for i in shared}
-    bad, ok = [], []
+    bad, ok, unread = [], [], []
     for ident in shared:
         response = _paced_get(rest_anon, ANALYZE, symbol=ident, include_months="false")
         try:
@@ -719,10 +737,13 @@ def test_the_gem_screener_link_opens_its_coin(rest_anon):
                  "answer": got.get("gecko_id") or ((body or {}).get("detail") if isinstance(body, dict) else None)}
         if response.status_code == 200 and got.get("gecko_id") == ident:
             ok.append(entry)
-        elif response.status_code in (300, 404) or (response.status_code == 200 and got.get("gecko_id") != ident):
+        elif response.status_code in (300, 400, 404, 422) or (response.status_code == 200 and got.get("gecko_id") != ident):
             bad.append(entry)
-    if not bad and not ok:
-        raise Inconclusive(f"no shared identifier could be read: {shared}")
+        else:
+            unread.append(entry)                   # 429, 5xx...: neither opens nor fails to open
+    if not bad and (unread or not ok):
+        raise Inconclusive(f"{len(unread)} of {len(shared)} shared identifiers could not be read "
+                           f"({[(u['identifier'], u['status']) for u in unread]}); the others open their coin")
     conclude(Measurement(
         verdict="failed" if bad else "passed",
         reason=("; ".join(f"/supply-analyzer?symbol={b['identifier']}, the link of {', '.join(b['rows'])}, "
@@ -896,7 +917,7 @@ def test_tokens_locked_by_holders_are_not_shown_as_a_reserve(rest_anon, evidence
         reason=(f"PHAR on Avalanche: the xPHAR contract ({XPHAR}) holds {chain['locked_in_staking_token']:,.0f} PHAR "
                 f"of a total supply of {chain['total_supply']:,.0f}, and {chain['xphar_staked_in_vote_module'] or 0:,.0f} "
                 f"of {chain['xphar_supply'] or 0:,.0f} xPHAR are staked in the VoteModule. The record shows "
-                f"\"Reserve, outside the pie\" {found['reserve_today']:,.0f}"
+                f"\"Reserve, outside the pie\" {_f(found['reserve_today'])}"
                 + (" (the same tokens)" if found["reserve_is_the_locked_tokens"] else "")
                 + f", described on the page as \"{reserve_tip}\", and \"Staked, free to unlock\" "
                 f"{found['staked_shown']:,.0f} ({found['staked_shown_share'] * 100:.1f}% of the locked PHAR)"
@@ -985,13 +1006,20 @@ def test_a_max_supply_is_not_the_end_of_an_issuance_schedule(rest_anon):
             bad.append(found)
     if not judged:
         raise Inconclusive(f"none of {len(rows)} sampled records could be read")
+    named_unread = [u for u in unread if u.split(" ")[0] in ("ETH", "SOL", "TRX")]
+    if not bad and (named_unread or judged < 0.9 * len(rows)):
+        # "Every chain" is the sample, and ETH, SOL and TRX are the three the finding names: a
+        # clean read that skipped them (a failed read, or the session's cap spent by earlier
+        # checks) says nothing about them.
+        raise Inconclusive(f"{len(unread)} of {len(rows)} sampled records could not be read "
+                           f"(named coins unread: {named_unread}): {unread[:6]}")
     bad.sort(key=lambda b: (0 if b["coin"].split(" ")[0] in ("ETH", "SOL", "TRX") else 1, b["coin"]))
     conclude(Measurement(
         verdict="failed" if bad else "passed",
         reason=(f"{len(bad)} of {judged} sampled records state a max supply whose source is a DeFiLlama unlock "
                 f"schedule, the end total of its issuance horizon; {sum(1 for b in bad if b['burned_from_it'])} of them "
                 f"then show max minus total as \"Bought back, burned\": "
-                + "; ".join(f"{b['coin']} max {b['max_supply']:,.0f} from \"{b['source']}\" (total {b['total_supply']:,.0f}"
+                + "; ".join(f"{b['coin']} max {_f(b['max_supply'])} from \"{b['source']}\" (total {_f(b['total_supply'])}"
                             + (f", burned {b['burned_from_it']:,.0f}" if b["burned_from_it"] else "") + ")"
                             for b in bad[:5])
                 if bad else f"none of {judged} sampled records takes its max supply from an unlock schedule"),
@@ -1016,6 +1044,7 @@ def test_tokens_out_counts_the_max_supply_of_a_coin_still_issuing(rest_anon):
     bad = [x for x in (out_ignores_max(a) for a in apps) if x]
     near = [a.get("symbol") for a in judged if (a["supply"]["out_pct"] >= 99
             and _num((a.get("supply") or {}).get("circ") or (a.get("cg") or {}).get("circ"))
+            and a["cg"]["max"] > 0                                  # 0 is a value out_ignores_max guards too
             and ((a["supply"].get("circ") or a["cg"].get("circ")) / a["cg"]["max"]) < 0.9)]
     conclude(Measurement(
         verdict="failed" if bad else "passed",
@@ -1023,8 +1052,8 @@ def test_tokens_out_counts_the_max_supply_of_a_coin_still_issuing(rest_anon):
                 f"cap, while under 90% of their max supply circulates ({len(near)} apps in all are shown ~100% out "
                 f"under that line): "
                 + "; ".join(f"{b['symbol']} {b['out_pct']}% out, circulating {b['circulating']:,.0f} of max "
-                            f"{b['max_supply']:,.0f} ({b['circ_of_max_pct']}%), FDV {b['fdv']:,.0f} vs market cap "
-                            f"{b['mcap']:,.0f}, new tokens {b['dilution_week_pct']}% a week "
+                            f"{_f(b['max_supply'])} ({b['circ_of_max_pct']}%), FDV {_f(b['fdv'])} vs market cap "
+                            f"{_f(b['mcap'])}, new tokens {b['dilution_week_pct']}% a week "
                             f"(${b['emissions_usd30'] or 0:,.0f} in 30 days)" for b in bad[:4])
                 if bad else f"no app with issuance on record is shown ~100% out under its max supply"),
         left={"issuing_apps_shown_all_out": len(bad)},

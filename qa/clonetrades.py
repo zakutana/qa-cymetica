@@ -134,6 +134,16 @@ def _indicator_words(species: dict) -> list[str]:
     return words
 
 
+def decision_source_reads(clones: list[dict], species_by_id: dict) -> int:
+    """How many clones `decision_source_contradictions` could actually judge: the platform
+    answered `differs_from_display` as a boolean AND the clone's species is in the list.
+    Zero is an unread population, not a clean one."""
+    return sum(1 for c in clones or []
+               if isinstance(c, dict) and isinstance(c.get("live_decision_source"), dict)
+               and isinstance(c["live_decision_source"].get("differs_from_display"), bool)
+               and species_by_id.get(c.get("source_id")))
+
+
 def decision_source_contradictions(clones: list[dict], species_by_id: dict) -> list[dict]:
     """Clones whose own `live_decision_source` says they decide on another rule
     than the one their species is described by.

@@ -107,4 +107,14 @@ def test_a_clone_deciding_on_another_rule_than_its_description_is_caught():
     redescribed = {"s1": dict(species["s1"], description="Bets on epoch-number parity.",
                               primary_indicators=[])}
     assert ct.decision_source_contradictions([other], redescribed) == []
+    # Deep pass 2026-10-05 (T24): the description alone, the indicators left as they were --
+    # the case above also empties the indicators, so it cannot tell the two paths apart.
+    described_otherwise = {"s1": dict(species["s1"], description="Bets on epoch-number parity.")}
+    assert ct.decision_source_contradictions([other], described_otherwise) == []
     assert ct.decision_source_contradictions([dict(other, live_decision_source=None)], species) == []
+    # ... and (T14) a population it could not judge is counted as such, never as clean.
+    assert ct.decision_source_reads([other, own], species) == 2
+    assert ct.decision_source_reads([other], {}) == 0, "clones whose species do not join were read"
+    renamed = dict(other, live_decision_source={"strategy_symbol": "STAT", "differs": True})
+    assert ct.decision_source_reads([renamed], species) == 0, "a renamed flag was read"
+    assert ct.decision_source_contradictions([renamed], species) == []

@@ -380,6 +380,11 @@ def test_a_probability_lies_inside_the_range_shown_with_it(rest_anon):
     for entry in outside:
         usable_by_tf[entry["timeframe"]] = usable_by_tf.get(entry["timeframe"], 0) + 1
     failed = bool(outside or live_outside)
+    if not failed and unread and not live:
+        # The live answers are half the contract (the user-visible defect was SOL 5d's range):
+        # with none of them read, a clean study says nothing about them.
+        raise Inconclusive(f"no live 5d answer could be read ({'; '.join(unread)}); the study bins alone "
+                           f"are not the whole claim")
     conclude(Measurement(
         verdict="failed" if failed else "passed",
         reason=(f"{len(outside)} of {len(judged)} usable calibration bins in /study/expert give a calibrated "
@@ -472,6 +477,7 @@ def test_a_dex_pool_coin_gets_no_verdict_while_llms_txt_says_so(rest_anon):
         entry = {"symbol": body.get("symbol"), "contract": coin["contract"], "chain": coin["chain"],
                  "timeframe": body.get("timeframe"), "as_of": body.get("as_of"),
                  "last_candle": body.get("last_candle"), "label": verdict.get("label"),
+                 "label_present": "label" in verdict,
                  "rule_label": verdict.get("rule_label"), "probability": verdict.get("probability"),
                  "base_rate": verdict.get("base_rate"), "cases": verdict.get("cases"),
                  "coverage_note": verdict.get("coverage_note"), "source": body.get("source"),
@@ -488,7 +494,11 @@ def test_a_dex_pool_coin_gets_no_verdict_while_llms_txt_says_so(rest_anon):
     if found is None:
         raise Inconclusive(f"none of {len(readable)} DEX-pool answers on 1h had figures that qualify for a "
                            f"label, so whether one would be labelled was not observed (unread: {unread[:4]})")
-    labelled = found["label"] in ("READY TO POP", "READY TO DUMP")
+    if found["label"] is None and not found["label_present"]:
+        raise Inconclusive("the DEX-pool answer carries no `label` field at all: a renamed field is not "
+                           "the absence of a verdict")
+    # The promise is "no verdict": NO EDGE, or an explicit null, holds it; any other label breaks it.
+    labelled = found["label"] not in (None, "NO EDGE")
     conclude(Measurement(
         verdict="failed" if labelled else "passed",
         reason=(f"{found['symbol']} ({found['contract']} on {found['chain']}), read from its DEX pool on "
@@ -498,7 +508,7 @@ def test_a_dex_pool_coin_gets_no_verdict_while_llms_txt_says_so(rest_anon):
                 f"coins (`contract:` rows)"
                 if labelled else
                 f"{found['symbol']} on {found['chain']}: its figures qualify for {found['candidate']} and the "
-                f"answer gives NO EDGE, as llms.txt says"),
+                f"answer gives {found['label'] or 'no verdict'}, as llms.txt says"),
         left={"dex_answer_labelled": found["label"]},
         right={"dex_answer_labelled": "NO EDGE"},
         population={"judged": found, "readable": readable, "unread": unread, "promise": promise,

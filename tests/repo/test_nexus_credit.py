@@ -305,6 +305,15 @@ def test_lab_no_longer_shows_the_credit(tmp_path):
     assert not [k for k in payload["nexus"] if "credit" in k.lower()], sorted(payload["nexus"])
     assert not hasattr(page, "_credit"), "the dead credit reader is back in the page module"
     assert not re.search(r"\bcr\.[A-Za-z_]", _lab_page().TEMPLATE), "the page still reads a credit field"
+    # T18, deep pass 2026-10-05: none of credit_view's own keys (plan, session_pct, week_pct...)
+    # contains the word "credit", so the word checks above cannot see `payload["nexus"].update(
+    # credit_view(...))`. Hold the payload and the page to the keys the view really has.
+    own = set(_credit_view([{"read": False, "why": "x"}])) - {"at"}
+    leaked = own & (set(payload["nexus"]) | set(payload))
+    assert not leaked, ("credit_view's fields are on the /lab payload", sorted(leaked))
+    for key in sorted(own):
+        assert not re.search(r"\bn\." + re.escape(key) + r"\b", _lab_page().TEMPLATE), (
+            f"the page draws the credit field {key!r}")
     node = shutil.which("node")
     if not node:
         pytest.skip("node is not installed, so the page cannot be run here")
