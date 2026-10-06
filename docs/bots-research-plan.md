@@ -68,7 +68,7 @@ CLN-0143, read-back sedí), wave 0 spuštěna (12 botů obchoduje, rooms STR-008
       Tři boty ze 2. dávky H2H (cbdc3ecd, 17efa669, 5124b7be) stojí na `stop_loss` z 28. 9., před opravou #134.
 - [ ] **F4:** `h2h.py` ukládá slug, `results` čte `/head-to-head/mine`, `matrix` pouští dávky; H2H řádek v `/lab`.
 - [x] **Tool pro vlnu:** `scripts/wave.py` (plan / run --confirm), testy `tests/meta/test_pipeline_wave.py`; wave 0 uzavřena 5. 10. (platforma zastavila všech 9 po jednom obchodu na výchozím SL 5 / TP 15).
-- [ ] **Wave 2 živě** (SL 15 / TP 40, 20 druhů): první běh 5. 10. spadl na ReadTimeout po 1. klonu (MACD Hunter, klon 9ba3d9e8, room STR-0097, nastavení přijato, bez peněz). Dokončit: fund + enable MACD, pak `wave.py run --confirm --skip "MACD Hunter"`.
+- [x] **Wave 2 živě** (SL 15 / TP 40, 20 druhů, rooms STR-0097..0116): spuštěna 6. 10. ráno, 20 botů `is_trading` při čtení samplerem; verdikt ~13. 10. (hotovo 2026-10-06)
 - [x] **Karty, dopředný test:** short karet jen s akciemi (−0,35 až −0,55 % za 72 h), long s kryptem; soudí jen
       karty vzniklé od 4. 10. (`qa/card_rules.py`, `python scripts/card_rules.py`; hotovo 2026-10-04, 8d4ddfd1).
       Verdikt až ~200 karet na pravidlo, tedy po ~10. 10. Nápad k ověření: koncentrace váhy koše (HHI) a počet

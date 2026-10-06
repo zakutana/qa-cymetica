@@ -13,7 +13,7 @@ Ten lines at most, like `NEXT.md`.
 - A room's `running` is a label. Before saying what is live, read the sampler's `is_trading` per bot; a bot the platform auto-paused is not live (wave 0 sat dead two days under `running` rooms).
 - `qa/lab.py::bot_stops` must read `auto_pause_reason` (test first), and a dead bot's room must be stopped by the tick, not by me noticing. Also `VARIANT_REFERENCE` defaults are 5 / 15, not 10 / 20.
 - The tick ran past the 30-minute background limit and was killed (marker held the lab 45 min). Find the slow read (balance `timeout`, ~90 s a round) and bound it.
-- Wave 2 (`scripts/wave.py`, SL 15 / TP 40, 20 species): finish the live run, then compare each species with its wave-0 baseline. One window is a measurement, not a finding.
+- Wave 2 is live since 2026-10-06 (`scripts/wave.py`, SL 15 / TP 40, 20 species, rooms STR-0097..0116, 7-day window, verdict ~13. 10.): then compare each species with its wave-0 baseline. One window is a measurement, not a finding. Two bots read balance 0 on the sampler: check which.
 - The tick's duplicate-clone block (`_species_cloned`, `live_refs`) is stale since REPLY-0122 (2026-10-04, repeat clones allowed on Pro): lift it, test first.
 
 ## How the manager goes wrong
@@ -47,3 +47,4 @@ Newest at the end. Written by `lab.py log --feedback` / `--acted`; the first six
 - 2026-10-05 · acted · a acted
 - 2026-10-06 · feedback · a feedback
 - 2026-10-06 · acted · a acted
+- 2026-10-06 · acted · Wave 2 spustena 6. 10.: 20 botu obchoduje (SL 15 / TP 40, rooms STR-0097..0116, verdikt ~13. 10.). wave.py opraveno dvakrat: cteni nastaveni z odpovedi PATCH a vysledek fund/enable ze zaznamu. Sweep 39 otevrenych radku, nic noveho k podani. Dlazdice Fondy z ranni stranky smazana.
