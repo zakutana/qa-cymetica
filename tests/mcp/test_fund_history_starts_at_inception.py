@@ -118,7 +118,30 @@ def test_a_fund_history_fetched_as_their_skill_says_starts_at_inception(mcp_anon
                 "first_v": first["v"], "off_pct": off, "returned": len(points),
                 "return_since_inception_pct": fund.get("return_since_inception_pct")}
         if abs(off) > TOLERANCE_PCT:
-            clipped.append(seen)
+            # A gap is a clip only if a longer read starts EARLIER. The first
+            # sweep after their fix (2026-10-06) found AIB-DATA-CENTERS 3.27% off
+            # with the same first point (2026-07-28T21:00, 146.181) at the default
+            # and at points=400: nothing was clipped, the stored series simply
+            # begins that far from inception -- a late first sample, which this
+            # comparison cannot tell from a clip without the control. Their fix
+            # keeps the oldest point whatever the limit, so the old reading of
+            # every gap as a clip had become wrong.
+            try:
+                time.sleep(PAUSE_S)
+                full = _body(mcp_anon.call("get_fund_history",
+                                           {"symbol": symbol, "points": 400}))
+            except McpError as exc:
+                unmeasured.append(f"{symbol}: control read failed ({str(exc)[:80]})")
+                continue
+            full_points = full.get("points") or []
+            if not full_points or not isinstance(full_points[0], dict):
+                unmeasured.append(f"{symbol}: control read had no readable point")
+                continue
+            seen["full_first_t"], seen["full_returned"] = full_points[0].get("t"), len(full_points)
+            if full_points[0].get("t") == first.get("t"):
+                unseparated.append(seen)
+            else:
+                clipped.append(seen)
         elif abs(off) > UNSEPARATED_PCT:
             unseparated.append(seen)
         else:
