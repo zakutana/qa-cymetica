@@ -198,6 +198,11 @@ def manager_path() -> Path:
     override = os.environ.get("QA_LAB_MANAGER_FILE")
     if override:
         return Path(override)
+    # A run with its own state directory (every test that isolates state) keeps the
+    # file there: two lines, "a feedback" and "a acted", went into the real
+    # docs/lab-manager.md from tests that never heard of it (2026-10-06).
+    if os.environ.get("QA_STATE_DIR"):
+        return state_dir() / "lab-manager.md"
     return Path(__file__).resolve().parent.parent / "docs" / "lab-manager.md"
 
 

@@ -53,8 +53,9 @@ class FakeClone:
     the instances whose settings call raises after the PATCH was accepted."""
 
     def __init__(self, rooms, refuse_at=None, drift=False, not_paper=None,
-                 settings_time_out=()):
+                 settings_time_out=(), reject=None):
         self.settings_time_out = set(settings_time_out)
+        self.reject = reject or {}
         self.rooms, self.calls, self.rows = rooms, [], []
         from qa.state import state_dir
         self.record = state_dir() / "clones.jsonl"
@@ -96,18 +97,30 @@ class FakeClone:
     def load(self):
         return self.rows
 
+    def _answer(self, kind, instance):
+        """What the real fund() and enable() do: record intent and outcome, and
+        RETURN THEIR RESPONSE BODY -- which carries no `outcome`. The first live
+        wave read `outcome` off that body; a fake that returned it hid the bug."""
+        number = len(self.rows) + 1
+        self.rows.append({"id": f"{kind.upper()}-{number}", "type": "intent",
+                          "kind": kind, "instance_id": instance})
+        outcome = self.reject.get(kind, "accepted")
+        self.rows.append({"id": f"{kind.upper()}-{number}", "type": "outcome",
+                          "kind": kind, "outcome": outcome})
+        return {"id": instance, "is_paper": True}
+
     def fund(self, instance, amount, confirm):
         self.calls.append(("fund", instance))
         assert self._acceptance_exists(instance), (
             "funded before its room had a criterion: the window must never start "
             "before the criterion is written (STR-0046, STR-0064..0068)")
-        return {"outcome": "accepted"}
+        return self._answer("fund", instance)
 
     def enable(self, instance, confirm, enabled=True):
         self.calls.append(("enable", instance))
         assert self._acceptance_exists(instance), (
             "started before its room had a criterion")
-        return {"outcome": "accepted"}
+        return self._answer("enable", instance)
 
 
 def _run(wave, rooms, lab, fake, species=SPECIES):
@@ -185,6 +198,15 @@ def test_what_stops_a_wave_and_what_only_stops_one_bot(tmp_path, monkeypatch):
     result = _run(wave, rooms, lab, fake)
     assert len(result) == 3 and not any(r["ok"] for r in result)
     assert len([c for c in fake.calls if c[0] == "clone"]) == 3
+
+    for kind in ("fund", "enable"):
+        wave, rooms, lab = _wave(tmp_path, monkeypatch, f"reject-{kind}")
+        fake = FakeClone(rooms, reject={kind: "rejected"})
+        result = _run(wave, rooms, lab, fake)
+        assert [r["ok"] for r in result] == [False], (
+            f"a {kind} the platform rejected stops the wave: the body they send back "
+            f"says nothing, only the record does")
+        assert _statuses(rooms)[result[0]["room"]] == "stopped"
 
     wave, rooms, lab = _wave(tmp_path, monkeypatch, "cap")
     fake = FakeClone(rooms)

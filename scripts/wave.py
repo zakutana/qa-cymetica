@@ -93,6 +93,23 @@ def _read_back(changed: dict, sent: dict) -> str | None:
     return None
 
 
+def _recorded_outcome(clone, kind: str, instance: str) -> str | None:
+    """What clone.py recorded for its newest `kind` call on this instance.
+
+    `fund()` and `enable()` return their response BODY, not whether it was accepted
+    (the same reading `launch_bot` does through `_clone_outcome`). The first live
+    wave read `outcome` off the body, found none, and stopped a bot whose 500 USDC
+    had already moved."""
+    rows = clone.load()
+    asked = [row.get("id") for row in rows
+             if row.get("type") == "intent" and row.get("kind") == kind
+             and row.get("instance_id") == instance]
+    if not asked:
+        return None
+    return next((row.get("outcome") for row in reversed(rows)
+                 if row.get("type") == "outcome" and row.get("id") == asked[-1]), None)
+
+
 def launch_one(bot: dict, *, clone, rooms, lab, settings: dict, stake: float,
                window_days: float, stop_pct: float, name: str) -> dict:
     """One bot, in the order that keeps the criterion ahead of the money."""
@@ -166,11 +183,11 @@ def launch_one(bot: dict, *, clone, rooms, lab, settings: dict, stake: float,
     if differs:
         return stop(f"the settings read back wrong -- {differs}; not funded, not started")
 
-    funded, raised = attempt(clone.fund, instance, stake, True)
-    if raised or funded.get("outcome") != "accepted":
+    _, raised = attempt(clone.fund, instance, stake, True)
+    if raised or _recorded_outcome(clone, "fund", instance) != "accepted":
         return stop(raised or f"funding {instance} was not accepted")
-    started, raised = attempt(clone.enable, instance, True)
-    if raised or started.get("outcome") != "accepted":
+    _, raised = attempt(clone.enable, instance, True)
+    if raised or _recorded_outcome(clone, "enable", instance) != "accepted":
         return stop((raised or f"starting {instance} was not accepted")
                     + f"; its {stake:g} stays in the clone")
 

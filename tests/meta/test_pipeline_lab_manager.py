@@ -51,6 +51,13 @@ def test_feedback_and_acted_reach_the_manager_file_and_nothing_else_does(
     assert any(r["kind"] == "feedback" for r in lab.entries()), \
         "the diary keeps writing: the morning report reads it"
 
+    # A test that isolates its state and says nothing about the manager's file
+    # must not reach the real one (2026-10-06: "a feedback" landed in docs/).
+    monkeypatch.delenv("QA_LAB_MANAGER_FILE")
+    other = lab.manager_path()
+    assert other != FILE and str(other).startswith(str(tmp_path)), other
+    monkeypatch.setenv("QA_LAB_MANAGER_FILE", str(target))
+
     target.write_text("# x\n\n## Open improvements\n\n- first thing\n- second thing\n\n"
                       "## Log\n\n- 2026-10-05 · feedback · y\n", encoding="utf-8")
     assert lab.manager_open_lines() == ["first thing", "second thing"]
