@@ -89,9 +89,9 @@ class FakeClone:
         sent = dict(changes)
         if self.drift:
             sent["stop_loss_pct"] = 5.0
-        self.rows.append({"id": f"SET-{instance}", "type": "after",
-                          "their_settings": sent})
-        return {"id": f"SET-{instance}", "outcome": "accepted"}
+        # As the real PATCH answers: `settings` in the response body. The my-clones
+        # row they would be re-read from has none (2026-10-06).
+        return {"id": f"SET-{instance}", "outcome": "accepted", "settings": sent}
 
     def load(self):
         return self.rows

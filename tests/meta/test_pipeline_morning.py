@@ -301,7 +301,8 @@ def test_the_page_is_one_short_czech_page_in_the_artifact_shape():
     for tag in ("html", "body", "!doctype", "head"):
         assert not re.search(rf"<{tag}[\s>]", html, re.I), (
             f"the publish skeleton supplies <{tag}>")
-    for words in ("Deep pass", "Karty", "Boti", "Memecoiny", "Fondy", "Přes noc",
+    assert "Fondy" not in html, "the Funds tile is gone (operator, 2026-10-06)"
+    for words in ("Deep pass", "Karty", "Boti", "Memecoiny", "Přes noc",
                   "Dnes", "Podle tvé zpětné vazby", "boti mají vlastní room",
                   "@EventTraderQABot ahoj", "Cymetica", "Sweep"):
         assert words in html, f"{words!r} is not on the page"

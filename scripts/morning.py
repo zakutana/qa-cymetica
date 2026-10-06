@@ -18,7 +18,7 @@ from datetime import date
 from html import escape
 
 SECTOR_HUES = {"cards": ("#2a78d6", "#00aaff"), "bots": ("#eda100", "#ffb020"),
-               "memecoins": ("#4a3aa7", "#b08cff"), "funds": ("#e87ba4", "#ff6fae")}
+               "memecoins": ("#4a3aa7", "#b08cff")}
 DAYS = ("pondělí", "úterý", "středa", "čtvrtek", "pátek", "sobota", "neděle")
 NB = " "
 

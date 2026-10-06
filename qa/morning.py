@@ -26,8 +26,9 @@ MISSING_AT = time(7, 0)
 MAX_OVERNIGHT = 6
 MAX_LINE = 140
 HANDLE = "@EventTraderQABot"
-SECTOR_NAMES = {"cards": "Karty", "bots": "Boti", "memecoins": "Memecoiny",
-                "funds": "Fondy"}
+# No Funds tile: the operator, 2026-10-06, "Fondy dlazdici smaz, nepotrebuji" (funds
+# have been off since 2026-10-03, qa.lab.FUND_ROOMS).
+SECTOR_NAMES = {"cards": "Karty", "bots": "Boti", "memecoins": "Memecoiny"}
 # A sector's figure has to move this much overnight to be news.
 MOVE_PP = 0.5
 

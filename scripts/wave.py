@@ -73,14 +73,15 @@ def without_trading(species: list[dict], clone_rows: list[dict],
     return [s for s in species if str(s["id"]).lower() not in running]
 
 
-def _read_back(clone, change_id: str, sent: dict) -> str | None:
-    """None when their row says what we sent, else what differed."""
-    seen = None
-    for row in clone.load():
-        if row.get("id") == change_id and row.get("their_settings") is not None:
-            seen = row["their_settings"]
+def _read_back(changed: dict, sent: dict) -> str | None:
+    """None when THEIR answer to the PATCH says what we sent, else what differed.
+
+    Their `settings` are in the PATCH response itself. The `my-clones` list row has
+    no `settings` key (the first live read-back, 2026-10-06, found `their_settings`
+    None on a bot whose PATCH had answered 15 / 40), so the list is not the place."""
+    seen = changed.get("settings")
     if not isinstance(seen, dict):
-        return "their row was not read back"
+        return "their answer carried no settings to read back"
     for key, want in sent.items():
         got = seen.get(key)
         try:
@@ -161,7 +162,7 @@ def launch_one(bot: dict, *, clone, rooms, lab, settings: dict, stake: float,
         return stop(f"{raised}; not funded, not started")
     if changed.get("outcome") != "accepted":
         return stop(f"the settings were not accepted ({changed.get('outcome')})")
-    differs = _read_back(clone, changed.get("id"), settings)
+    differs = _read_back(changed, settings)
     if differs:
         return stop(f"the settings read back wrong -- {differs}; not funded, not started")
 
