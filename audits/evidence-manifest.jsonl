@@ -3806,6 +3806,7 @@
 {"archive": "", "bytes": 205424, "call": "GET https://cymetica.com/events?", "id": "2138f277dca5737d039a967c896a4f2b603564e79a42a058177c0abafe0955e0", "why": "row"}
 {"archive": "evidence-2026-09", "bytes": 8799, "call": "POST https://cymetica.com/mcp/v1/? tools/call:get_fund_history", "id": "213a74b49dd0d70c81dd66719c98466597b91c525aeaeda656aea9c64b9b9a3f", "why": "row"}
 {"archive": "evidence-2026-09", "bytes": 5637, "call": "GET https://cymetica.com/api/v1/research-backtest/runs?", "id": "213d007f714131e457c78c6de7afa8001b40ead5dd6e39e4d92ec80129cc3094", "why": "row"}
+{"archive": "", "bytes": 566688, "call": "GET https://cymetica.com/gem-screener/app?view", "id": "213fe852d95e84d0f328d997a7ac076b06f2d01b096782cb43791b48a2e62ecc", "why": "promised"}
 {"archive": "evidence-2026-09", "bytes": 8726, "call": "POST https://cymetica.com/mcp/v1/? tools/call:get_fund_history", "id": "21450fb6c60df3cd1c486c3f0f231784617b4f74af504c5324bfed44540a7b9c", "why": "row"}
 {"archive": "evidence-2026-10", "bytes": 228092, "call": "GET https://cymetica.com/transactions?", "id": "21482825811dc3319c05d18b9dbccf8d3df64c7ce1bbbec44c0aab4afec7e750", "why": "row"}
 {"archive": "evidence-2026-09", "bytes": 4246, "call": "GET https://cymetica.com/api/v1/account/me/balances?", "id": "2148f8625386f9fc7f2d68438c6dfd691d31af724efb3f5fcae43bf872c4d08b", "why": "promised"}
@@ -8102,6 +8103,7 @@
 {"archive": "evidence-2026-09", "bytes": 6317, "call": "GET https://cymetica.com/api/v1/bounty/reward-tiers?", "id": "4800361aa42baa7d41977b109e092e909d2b3cfbc0cb947226dac0d6971ed696", "why": "row"}
 {"archive": "evidence-2026-10", "bytes": 14031, "call": "GET https://cymetica.com/api/v1/cloned-bots/7864de32-9dc6-443a-9c06-80e63dbb2af6/activity?page,page_size", "id": "4801939664a80aceba9ce568afa36acbf9b586b787b8e9c30fc64605fde46483", "why": "promised"}
 {"archive": "evidence-2026-10", "bytes": 177602, "call": "GET https://cymetica.com/gem-screener?", "id": "480363c8e70b3df8867d68c6f5b30db6d206ea1d7bd3b440c9d8892814f3e451", "why": "row"}
+{"archive": "", "bytes": 8824, "call": "POST https://cymetica.com/api/v1/bounty/reports?", "id": "4805ae867eb03426460407961ad95cece84946eda4cb01b8dba52ddfda00178a", "why": "their-words"}
 {"archive": "evidence-2026-10", "bytes": 168524, "call": "GET https://cymetica.com/flows?", "id": "4806f7aaca9f54c6d136fab9ef75e5a0b73c69f5c4b4c61ed0ed6bb76013e036", "why": "row"}
 {"archive": "evidence-2026-10", "bytes": 549873, "call": "GET https://cymetica.com/api/v1/gem-screener?", "id": "480743f351e70122a141196bc2e04cdf0da7b6c5e5c3d771ceca134cbd2ca8bc", "why": "promised"}
 {"archive": "evidence-2026-10", "bytes": 38416, "call": "GET https://cymetica.com/api/v1/build-it-better/apps/leaderboard?days,sort", "id": "480aac4f2733e11aa64306ab4a4bb7c5ea0e66dc917c14d536107687bf719ed2", "why": "row"}
@@ -10492,6 +10494,7 @@
 {"archive": "evidence-2026-09", "bytes": 208049, "call": "GET https://cymetica.com/exchange/sbio-pro?", "id": "5dcb438c248cfa9e8dddfa9a57ba4030f3280f94de07314fb6268d0856e3d762", "why": "row"}
 {"archive": "evidence-2026-09", "bytes": 253475, "call": "GET https://cymetica.com/fund-performance/aib-data-centers?", "id": "5dd3c1143ed7017b9e012088eb5b29ce6cc39e06c453d1f9078ff4238530cdce", "why": "row"}
 {"archive": "evidence-2026-09", "bytes": 43357, "call": "GET https://cymetica.com/api/v1/clones/fomo-radar/signals?chain,filter,limit", "id": "5dd68618e58c518c4fd5a41a6385957519ef205f6719395d1a99f208a47e611e", "why": "row"}
+{"archive": "", "bytes": 8354, "call": "POST https://cymetica.com/api/v1/bounty/a2a/send?", "id": "5dd7d1d2d5884a8c96cba68d8535804f16205534ac0cbc73928e68ecc040772a", "why": "their-words"}
 {"archive": "evidence-2026-09", "bytes": 41803, "call": "GET https://cymetica.com/llms.txt?", "id": "5ddb8c6768e5ac71cf10da2b29a2dbbe8ff1e4bffdeb8edbc3f7a02d1c597597", "why": "row"}
 {"archive": "evidence-2026-09", "bytes": 562875, "call": "GET https://cymetica.com/api/v1/event-cards?limit,offset", "id": "5ddca0e5207a680f8f4e385779b12deb2024a7fd41db631cc49139c5cb54191a", "why": "row"}
 {"archive": "evidence-2026-10", "bytes": 4884, "call": "POST https://cymetica.com/mcp/v1/? tools/call:get_fund_history", "id": "5ddd6b3af3fa0b1e9eea2f8b971edc8f97623be14959382bb89cac76c4eaa1ff", "why": "row"}
