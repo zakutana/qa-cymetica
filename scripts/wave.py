@@ -451,7 +451,9 @@ def _resume_cli(args) -> int:
         mark = "ok  " if row["ok"] else ("GONE" if row.get("discarded") and
                                          "thrown" in row["why"] else "SKIP")
         print(f"  {mark} {row['instance']}  {row['room'] or '-'}  {row['why']}")
-    return 0 if all(r["ok"] or r.get("discarded") or "ago" in r["why"] for r in done) else 1
+    # Waiting for a slot, or for six hours, is the order of things, not a failure.
+    return 0 if all(r["ok"] or r.get("discarded") or "ago" in r["why"]
+                    or r["why"].startswith("no free slot") for r in done) else 1
 
 
 def main() -> int:

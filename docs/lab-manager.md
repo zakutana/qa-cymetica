@@ -48,3 +48,4 @@ Newest at the end. Written by `lab.py log --feedback` / `--acted`; the first six
 - 2026-10-06 · feedback · a feedback
 - 2026-10-06 · acted · a acted
 - 2026-10-06 · acted · Wave 2 spustena 6. 10.: 20 botu obchoduje (SL 15 / TP 40, rooms STR-0097..0116, verdikt ~13. 10.). wave.py opraveno dvakrat: cteni nastaveni z odpovedi PATCH a vysledek fund/enable ze zaznamu. Sweep 39 otevrenych radku, nic noveho k podani. Dlazdice Fondy z ranni stranky smazana.
+- 2026-10-07 · acted · Boti: wave.py resume spusten 7. 10.: 18 botu obnoveno po pauze platformy na SL/TP, kazdy v novem roomu (STR-0117..0134) s kriteriem pred enable; 25 obchoduje (strop platformy), 14 ceka na volny slot. 3x stop-loss po sobe = zahozen (operator), zatim zadny.
