@@ -5304,6 +5304,40 @@ reports:
       anonymously, and fails while a ranked bot's trades are marked synthetic and the page says its
       backtests run against historical data.
 
+  - key: gem-screener-degen-meter-empty-on-every-row
+    findings:
+      - CYM-gem-screener-degen-meter-has-levels
+    severity: medium
+    category: logic
+    url: https://cymetica.com/gem-screener/app?view=apps
+    title: >-
+      Gem Screener: the Degen meter is empty on every row (dlevel is null for all 232 apps and 33 chains
+      in the published snapshot), and the page does not say why
+    expected: >
+      The Degen meter column shows the engine's risk level, 1 to 10, for the coins the tab lists
+      (the page's degenMeter() reads row.dlevel.level), as it did on 2026-10-02 when dlevel_meta
+      carried checks_run and nearly every row had a level. When a level cannot be computed, the
+      page or the snapshot says so.
+    actual: >
+      Read on 2026-10-07. The snapshot generated 02:52 UTC (7 h old, its 6-hour refresh overdue and
+      /api/v1/gem-screener/status still "refreshing": true) has "dlevel": null on all 232 apps and
+      all 33 chains, "dlevel_meta": null, and the coin detail answers "degen_level": null. The
+      seven gates did run: degen.n_ok is 8 of 232. Every row of the table shows the dash with
+      dotted empty cells; the page's own aria-label is "Degen meter not available". The same
+      snapshot carries CoinGecko 429 and DeFiLlama source warnings (fetch_warning_count 7), one of
+      them naming coin_meta. No notice on the page or in the snapshot says the meter is off.
+    steps:
+      - 'GET https://cymetica.com/api/v1/gem-screener -> apps[*].dlevel is null for 232 of 232; chains[*].dlevel null for 33 of 33; dlevel_meta null; degen.n_ok 8, n_total 232'
+      - 'GET https://cymetica.com/api/v1/gem-screener/coins/STONK -> "degen_level": null'
+      - 'GET https://cymetica.com/api/v1/gem-screener/status -> age_seconds about 25000, refresh_every_seconds 21600, "refreshing": true'
+      - 'Open https://cymetica.com/gem-screener/app?view=apps -> the Degen meter column is a dash with empty segments on every row'
+    body: >
+      The cause is yours to say; we only read the result. If the level cannot be computed for a
+      snapshot, a line on the page ("Degen meter unavailable in this snapshot, source limits")
+      would tell a visitor it is not the coin that has no level. Our check reads the Apps tab
+      anonymously and fails while fewer than half of the listed apps carry a level between 1 and 10;
+      it passes the moment they do.
+
 footer: >
   Reported by an independent QA agent. Scope of this work: verification of the
   REST API, MCP, the machine-readable discovery surfaces and the pages built on
