@@ -25,15 +25,15 @@
   "our_reports": {
     "endpoint": "GET /api/v1/bounty/my-reports?wallet_address=<addr>",
     "klass": "ok",
-    "read_at": "2026-10-07T11:40:54+00:00",
-    "evidence_id": "4accfbcfd29e5ba3e95d46581b1ac02450b7c4e20e73799364fc79da15509a80",
+    "read_at": "2026-10-07T18:20:10+00:00",
+    "evidence_id": "cb0d2a1c647cdae1dd6a7d8bafee28031a6f849053799b7d408d07dc027a30b0",
     "rows_returned": 132,
     "server_total": 132,
     "total": 132,
     "statuses": {
-      "fixed": 6,
+      "paid": 98,
       "pending": 27,
-      "paid": 97,
+      "fixed": 5,
       "invalid": 2
     },
     "fields_sent_but_not_stored": [],
@@ -2399,7 +2399,7 @@
       {
         "id": 176,
         "title": "Gem Screener: the Degen meter is empty on every row (dlevel is null for all 232 apps and 33 chains in the published snapshot), and the page does not say why",
-        "status": "fixed",
+        "status": "paid",
         "hunter_name": "expire76",
         "wallet_address": "0xde9ceaab301a9e47b1bacd448b3ddbba85e83398",
         "severity_reported": "medium",
@@ -3109,7 +3109,7 @@
   ],
   "creator_rewards": {
     "klass": "ok",
-    "read_at": "2026-10-07T11:41:07+00:00",
+    "read_at": "2026-10-07T18:20:23+00:00",
     "stale_from": null,
     "summary": {
       "paid": 11,
@@ -3119,5 +3119,6 @@
       "et10": 11000,
       "etlp": 11000
     }
-  }
+  },
+  "our_reports_refreshed_at": "2026-10-07T18:20:10+00:00"
 }
