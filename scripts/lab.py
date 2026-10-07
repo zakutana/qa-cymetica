@@ -2847,6 +2847,7 @@ def bot_variants() -> dict:
     went_in = lab.funded(rows)
     deleted = lab.released(rows)
     overridden = lab.indicator_changed(rows)
+    thrown = lab.discarded_bots(rows, samples)
     intents = {row.get("id"): row for row in rows
                if row.get("type") == "intent" and not row.get("kind")}
     ours: dict[str, tuple[str, str]] = {}
@@ -2898,6 +2899,12 @@ def bot_variants() -> dict:
             held.append(f"variants: {tag}: an indicator change is on record for it and a "
                         f"settings change cannot undo it -- a settings variant would not "
                         f"be the settings alone")
+            continue
+        if instance in thrown:
+            # [operator 2026-10-07] three stop-losses in a row: not varied again. The wave
+            # tool's `resume` releases such a clone; the walk only leaves it alone.
+            held.append(f"variants: {tag}: three stop-losses in a row -- thrown away, "
+                        f"not varied again")
             continue
         refused = clone.restart_refusal(instance, rows, samples, planned=True)
         if refused:

@@ -3989,6 +3989,16 @@ def test_a_tick_starts_the_next_setting_of_a_judged_bot_on_its_one_clone(
     clone = scripts_lab._sibling("clone")
 
     clone.enable.profit = str(funded * 0.05)
+    # [operator 2026-10-07] a bot that ends on its stop-loss three times in a row is
+    # thrown away: the walk of the grid never varies it, whatever its room's verdict. The
+    # first tick after `bot_stops` learned the platform's bands varied 23 bots at once
+    # and knew nothing of the rule.
+    calls_before = len(calls)
+    with monkeypatch.context() as patched:
+        patched.setattr(lab, "discarded_bots", lambda *a, **k: {"inst-1"})
+        thrown = scripts_lab.bot_variants()
+    assert thrown["rooms"] == 0 and len(calls) == calls_before, (thrown, calls)
+    assert any("three stop-losses" in line for line in thrown["held"]), thrown
     did = scripts_lab.bot_variants()
 
     assert [c[0] for c in calls[-2:]] == ["settings", "enable"], calls
