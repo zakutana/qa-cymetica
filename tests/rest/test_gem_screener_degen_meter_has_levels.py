@@ -43,6 +43,7 @@ def _has_level(app: dict) -> bool:
 
 @qa(component="rest.gem_screener", tier=SafetyTier.SAFE, surface="rest", claim=CLAIM)
 def test_the_degen_meter_has_a_level_for_the_coins_it_lists(rest_anon):
+    """At least half of the Gem Screener's apps carry a Degen meter level from 1 to 10 in the published snapshot."""
     try:
         response = get_patiently(rest_anon, APPS_PAGE, headers={"Accept": "text/html"})
     except httpx.HTTPError as exc:
