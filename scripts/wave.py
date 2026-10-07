@@ -28,6 +28,7 @@ import argparse
 import importlib.util
 import json
 import sys
+from datetime import datetime, timezone
 from pathlib import Path
 
 REPO_ROOT = Path(__file__).resolve().parent.parent
@@ -222,6 +223,166 @@ def launch_wave(species: list[dict], *, clone, rooms, lab, settings: dict,
     return done
 
 
+RESUME_SPACING_H = 6.0
+
+
+def _rooms_of(rooms, instance: str) -> list[dict]:
+    """Every room whose plan holds this bot: id, status (the newest), species, opened."""
+    rows = rooms.load()
+    status = {r["room"]: r["status"] for r in rows if r.get("type") == "status"}
+    strategy = {r["id"]: r for r in rows if r.get("type") == "strategy"}
+    held = {r["room"] for r in rows if r.get("type") == "plan"
+            and any(str(leg.get("ref")) == instance for leg in r.get("legs") or [])}
+    return [{"id": room, "status": status.get(room), "species": strategy[room].get("ref"),
+             "opened": strategy[room].get("at")}
+            for room in sorted(held) if room in strategy]
+
+
+def resume_wave(*, clone, rooms, lab, samples: list[dict], verdicts, now,
+                name: str, window_days: float = WINDOW_DAYS,
+                stop_pct: float = STOP_PCT, spacing_h: float = RESUME_SPACING_H,
+                max_trading: int = MAX_TRADING) -> list[dict]:
+    """Start again the bots the platform paused at their first stop-loss or take-profit.
+
+    The platform pauses EVERY clone at the first band it hits, by design (llms.txt,
+    Nexus NEX-0124, 2026-10-07), and `toggle-trading` resumes it. Fifteen of the twenty
+    wave-2 bots stood still within hours, so the wave was one trade each, not a week.
+    A resume is a SECOND window of the SAME configuration -- the repeat the research plan
+    wants before any claim about a species -- so nothing is cloned, funded or re-set: the
+    bot keeps what it holds. The order is the wave's: the old room stops and is judged,
+    then a new proposal, room and criterion, THEN the enable (`launch_one` has the same
+    spine), then the room runs.
+
+    [operator 2026-10-07] a bot that ends on its stop-loss three times in a row is thrown
+    away instead: its rooms stop and its paper clone is released, never started again.
+    A stop that was not a band is a finding and is not touched, and a bot started less
+    than `spacing_h` ago is left, so one that hits its band at once cannot loop."""
+    rows = clone.load()
+    released = {str(r.get("instance_id")) for r in rows
+                if r.get("type") == "intent" and r.get("kind") == "release"
+                and any(o.get("id") == r.get("id") and o.get("type") == "outcome"
+                        and o.get("outcome") == "accepted" for o in rows)}
+    candidates = {k: v for k, v in lab.trigger_stops_now(rows, samples).items()
+                  if k not in released}
+    thrown = lab.discarded_bots(rows, samples)
+    latest: dict[str, bool] = {}
+    for sample in sorted((s for s in samples if s.get("kind") == "bot"),
+                         key=lambda s: str(s.get("at"))):
+        latest[str(sample.get("instance_id"))] = sample.get("is_trading") is True
+    free = max(0, max_trading - sum(latest.values()))
+    results: list[dict] = []
+    plan: list[tuple[str, dict]] = []
+    # Newest stop first: the ones that stopped most recently keep their settings fresh.
+    for instance, stop in sorted(candidates.items(), key=lambda kv: kv[1]["before"], reverse=True):
+        result = {"name": instance, "instance": instance, "ok": False, "room": None,
+                  "why": "", "transient": False, "discarded": False}
+        started = lab.last_accepted_start(rows, instance)
+        try:
+            ago = (now - datetime.fromisoformat(started.replace("Z", "+00:00"))).total_seconds() / 3600
+        except ValueError:
+            ago = None
+        if instance not in thrown and ago is not None and ago < spacing_h:
+            result["why"] = (f"started {ago:.1f} h ago; a bot is resumed at most once in "
+                             f"{spacing_h:g} h, so one that hits its band at once cannot loop")
+            results.append(result)
+            continue
+        if instance not in thrown:
+            if free <= 0:
+                result["why"] = (f"no free slot: the platform lets {max_trading} bots "
+                                 f"trade at once, and they do")
+                results.append(result)
+                continue
+            free -= 1
+        plan.append((instance, result))
+
+    # Every old room of a bot we act on stops FIRST, and is judged once, together.
+    for instance, _ in plan:
+        for room in _rooms_of(rooms, instance):
+            if room["status"] == "running":
+                rooms.set_status(room["id"], "stopped",
+                                 why=(f"the platform paused {instance} at its "
+                                      f"{candidates[instance].get('reason')}; this window is "
+                                      f"over, judged up to the stop"))
+    if plan:
+        try:
+            verdicts()
+        except (Exception, SystemExit) as exc:  # noqa: BLE001
+            # Their reads time out all day. The old rooms are stopped either way and the
+            # next tick judges them; the new windows must not wait on that.
+            print(f"  note: judging the old rooms raised ({str(exc)[:160]}); "
+                  f"the next tick does it")
+
+    failed_in_a_row = 0
+    for instance, result in plan:
+        history = _rooms_of(rooms, instance)
+        if instance in thrown:
+            result["discarded"] = True
+            try:
+                clone.release(instance, True)
+            except (Exception, SystemExit) as exc:  # noqa: BLE001
+                result["why"] = f"release raised: {str(exc)[:200]}"
+            else:
+                if _recorded_outcome(clone, "release", instance) != "accepted":
+                    result["why"] = "the platform did not accept the release"
+                else:
+                    result["why"] = "three stop-losses in a row: thrown away"
+            results.append(result)
+            continue
+        species = str((history[-1] if history else {}).get("species") or "")
+        windows = sum(1 for r in rows if r.get("type") == "intent" and r.get("kind") == "enable"
+                      and str(r.get("instance_id")) == instance)
+        record = next((r["id"] for r in rows if r.get("type") == "outcome"
+                       and str(r.get("clone_instance_id")) == instance), None)
+        if not species or not record:
+            result["why"] = "its species or its clone record is not in our files"
+            results.append(result)
+            continue
+        proposal = lab.note_proposal(
+            "bot", species, instance,
+            {"label": f"resume {windows}", "settings": {}},
+            f"{name}: the platform paused {instance} at its {candidates[instance].get('reason')}, "
+            f"as it does every clone at its first band; started again with the same "
+            f"settings as window {windows + 1}.")
+        room = rooms.open_strategy(proposal["id"], f"{name} · {instance[:8]} resume {windows}"[:rooms.MAX_TITLE],
+                                   kind="bot", ref=species)["id"]
+        result["room"] = room
+        rooms.add_link(room, record, why=f"the paper clone {instance} this room runs again")
+        legs = rooms.set_plan(room, [{"kind": "bot", "ref": instance, "side": "bull",
+                                      "share": 1.0}])["legs"]
+        rooms.set_acceptance(
+            room, window_days=window_days, stop_pct=stop_pct, legs=legs,
+            benchmark_card=BTC_PROXY, adopted=True,
+            why=(f"written before the window opens. {name}: {instance} resumed after its "
+                 f"{candidates[instance].get('reason')}, window {windows + 1}, same settings, "
+                 f"{window_days:g} days. Accepted only if it made more than it put in, more "
+                 f"than the BTC proxy, and drew down no more than {stop_pct:g}%. It counts "
+                 f"only if it repeats")[:900])
+        try:
+            clone.enable(instance, True)
+            accepted = _recorded_outcome(clone, "enable", instance) == "accepted"
+            why = "" if accepted else "the platform did not accept the start"
+            transient = False
+        except (Exception, SystemExit) as exc:  # noqa: BLE001
+            accepted, why, transient = False, f"enable raised: {str(exc)[:200]}", True
+        if not accepted:
+            result["why"], result["transient"] = why, transient
+            try:
+                rooms.set_status(room, "stopped", why=why[:400])
+            except rooms.RoomError:
+                pass
+            results.append(result)
+            failed_in_a_row += 1
+            if not transient or failed_in_a_row >= 3:
+                break
+            continue
+        rooms.set_status(room, "running", why=f"{instance} resumed after its band (window "
+                                              f"{windows + 1}), same settings ({name})")
+        result["ok"] = True
+        failed_in_a_row = 0
+        results.append(result)
+    return results
+
+
 def _sibling(name: str):
     spec = importlib.util.spec_from_file_location(
         f"wave_{name}", REPO_ROOT / "scripts" / f"{name}.py")
@@ -262,6 +423,37 @@ def _samples() -> list[dict]:
     return rows
 
 
+def _resume_cli(args) -> int:
+    """`resume`: read the platform's reason for every stop first (a fresh sampler round,
+    so `auto_pause_reason` is on our record), list who would resume, and only with
+    --confirm start them. Paper only: it calls clone.enable, whose floors are unchanged."""
+    from qa import lab, rooms
+    clone, lab_script = _sibling("clone"), _sibling("lab")
+    _sibling("sampler").main(["once"])
+    samples = rooms.load_samples()
+    rows = clone.load()
+    candidates = lab.trigger_stops_now(rows, samples)
+    thrown = lab.discarded_bots(rows, samples)
+    print(f"{args.name}: {len(candidates)} bot(s) the platform paused at a band, "
+          f"{len([c for c in candidates if c in thrown])} of them to be thrown away "
+          f"(three stop-losses in a row)")
+    for instance, stop in sorted(candidates.items(), key=lambda kv: kv[1]["before"]):
+        print(f"  {instance}  {stop.get('reason')}  {stop.get('profit_pct') or 0:+.1f}%  "
+              f"stopped {str(stop['before'])[:16]}"
+              f"{'  -> thrown away' if instance in thrown else ''}")
+    if not args.confirm:
+        print("nothing sent: resume needs --confirm")
+        return 0
+    done = resume_wave(clone=clone, rooms=rooms, lab=lab, samples=samples,
+                       verdicts=lambda: lab_script.verdicts(),
+                       now=datetime.now(timezone.utc), name=args.name)
+    for row in done:
+        mark = "ok  " if row["ok"] else ("GONE" if row.get("discarded") and
+                                         "thrown" in row["why"] else "SKIP")
+        print(f"  {mark} {row['instance']}  {row['room'] or '-'}  {row['why']}")
+    return 0 if all(r["ok"] or r.get("discarded") or "ago" in r["why"] for r in done) else 1
+
+
 def main() -> int:
     from qa.console import printable
     printable()
@@ -276,7 +468,14 @@ def main() -> int:
                               "or running and not yet in the sampler)")
         if cmd == "run":
             one.add_argument("--confirm", action="store_true")
+    again = sub.add_parser("resume", help="start again the bots the platform paused at "
+                                          "their first stop-loss or take-profit")
+    again.add_argument("--name", default="Wave 2")
+    again.add_argument("--confirm", action="store_true")
     args = parser.parse_args()
+
+    if args.cmd == "resume":
+        return _resume_cli(args)
 
     clone = _sibling("clone")
     chosen = [b for b in without_trading(_available(clone), clone.load(), _samples())

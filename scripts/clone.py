@@ -600,13 +600,28 @@ def restart_refusal(instance_id: str, rows: list[dict] | None = None,
     from qa import rooms
 
     samples = rooms.load_samples() if samples is None else samples
-    theirs = [stop for stop in lab.bot_stops(rows, samples)
-              if stop["instance"] == str(instance_id) and stop["cause"] != "ours"]
+    every = [stop for stop in lab.bot_stops(rows, samples)
+             if stop["instance"] == str(instance_id)]
+    # A stop at one of the two bands WE configured (`their_trigger`: the platform
+    # pauses every clone at its first stop_loss or take_profit, by design, and
+    # toggle-trading resumes it -- llms.txt, Nexus NEX-0124, 2026-10-07) is not a
+    # finding. Every other stop that was not ours still is.
+    theirs = [stop for stop in every if stop["cause"] not in ("ours", "their_trigger")]
     if theirs:
         stop = theirs[-1]
         return (f"{instance_id} stopped by itself ({stop['cause']}, between "
                 f"{stop['after']} and {stop['before']}); a stop that was not "
                 f"ours is a finding, and the bot is never started again")
+    if str(instance_id) in lab.trigger_stops_now(rows, samples):
+        # Stopped at its band and not started since: a resume is a second window of the
+        # same configuration. No pause of ours and no settings change are needed -- the
+        # bot stopped by itself and the settings are the point -- but the old room must
+        # have stopped, so the window never starts before its own criterion.
+        running = room_running(instance_id)
+        if running:
+            return (f"{running} is running on {instance_id}; a resume starts only in a "
+                    f"room of its own, after that one stops")
+        return None
     # An enable that may have landed (unknown) counts as a start: the safe side of
     # not knowing is to treat the bot as started once already. Every other step
     # needs the platform's yes.

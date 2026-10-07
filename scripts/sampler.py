@@ -247,7 +247,13 @@ def _bots(client, reads: _Reads, instances: list[str], seen: dict, at: str) -> l
                          "win_rate": mine.get("win_rate"),
                          "last_trade_at": mine.get("last_trade_at"),
                          "locked_usdc": split.get("locked_in_trades"),
-                         "available_usdc": split.get("available")})
+                         "available_usdc": split.get("available"),
+                         # Why it stopped, when the platform did it: `stop_loss` or
+                         # `take_profit` is the band WE configured (qa.lab.bot_stops).
+                         "status": mine.get("status"),
+                         "auto_pause_reason": mine.get("auto_pause_reason"),
+                         "auto_pause_pnl_pct": mine.get("auto_pause_pnl_pct"),
+                         "auto_pause_at": mine.get("auto_pause_at")})
             economics = mine.get("execution_economics")
             config = {"type": "config", "at": at, "instance_id": instance,
                       "strategy_type": mine.get("strategy_type"),

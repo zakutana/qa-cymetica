@@ -28,6 +28,10 @@ Every invocation is **one tick** of a laboratory that runs all day, towards a fi
 
 How the manager itself gets better lives in ONE file, `docs/lab-manager.md`: the operator's feedback and what changed (`lab.py log --feedback` / `--acted` write it), how the manager has gone wrong, ten open improvements that `lab.py resume` prints. A bot is live when the sampler's `is_trading` says so -- a room's `running` is only a label.
 
+The platform pauses EVERY paper clone at its first stop-loss or take-profit, by design (their `llms.txt`, Nexus NEX-0124): that is the band we set, not a finding, and a paused bot is a bot waiting for its next window. When the wave tool's `resume` command (docs/bots-research-plan.md, "Wave 2 živě": a dry run first, then with `--confirm`) lists bots, run it: the old room is stopped and judged, a new room and criterion are written, then the bot is started again with the same settings. A stop that was not one of the two bands is still a finding.
+
+[operator 2026-10-07] *"ok muze je restartovat ale pokud 3x po sobe prodela stop losem pak ho zahod a uz ho nechci videt"* -- a bot that ends on its stop-loss three times in a row is released instead of resumed (`qa.lab.discarded_bots`); a take-profit in between breaks the run.
+
 `lab.py` refuses rather than warns; a refusal is a reason, never arbitrary. The brakes are in code (`qa/lab.py`), not here: paper only; THEIR pace (three asks an hour, six outstanding, their backoff); 0.48 % of the book a room under a 60 % ceiling, the only count limit; a live read and their backtest after fees before a card room; nothing but memecoins and Hot while a deep pass runs.
 
 ## The manager

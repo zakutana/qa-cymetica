@@ -183,6 +183,10 @@ PINNED = {
          "e994b217789eb581924c033f2c0f37023a9470382a15936ac364993e59ae88fa"),
     ],
     ".claude/skills/laborator/SKILL.md": [
+        # 2026-10-07, added because they said it: a bot is resumed after the platform
+        # pauses it at a band, and thrown away after three stop-losses in a row.
+        ("2026-10-07", "pak ho zahod a uz ho nechci videt",
+         "a4b30467e1675462df9c391ab2266ad06c6b7cfec9d4ebe655158418e6936272"),
         ("2026-09-11", "budete skoumat same nove strategie",
          "4510b8cf12e72ee56b866aac91d4a984790023cc0f7140508a277a462b2a20c0"),
         ("2026-09-19", "jako realny laborant v laboratori",

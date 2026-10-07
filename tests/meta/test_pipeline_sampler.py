@@ -171,6 +171,10 @@ def test_the_sampler_reads_its_six_doors_with_get_and_nothing_else(
     (bot,) = [r for r in rows if r.get("kind") == "bot"]
     assert (bot["instance_id"], bot["balance_usdc"], bot["locked_usdc"],
             bot["available_usdc"]) == (INSTANCE, 950.0, 0.0, 550.0)
+    # 2026-10-07: the platform pauses a clone at its first stop_loss/take_profit and says
+    # which in `auto_pause_reason`; nothing on this machine kept it, so fifteen wave-2
+    # stops read as "their guard" and were never restarted. The sampler copies it now.
+    assert {"status", "auto_pause_reason", "auto_pause_pnl_pct", "auto_pause_at"} <= set(bot)
     assert [r["position_id"] for r in rows if r.get("kind") == "position"] == ["P-1"], (
         "a position that is not ours, or one we closed, was followed")
     # Asked of follow() itself: the closed P-2 shares P-1's card and their
@@ -199,6 +203,16 @@ def test_the_sampler_reads_its_six_doors_with_get_and_nothing_else(
     (index,) = [r for r in rows if r["type"] == "index"]
     assert [point[1] for point in index["points"]] == [92.0, 93.0]
     assert _samples(tmp_path) == rows, "what the round returned is not what it wrote"
+
+    # A clone the platform paused at its band carries WHY in the sample.
+    paused = _api()
+    paused[BOTS][0].update({"is_trading": False, "status": "stopped",
+                            "auto_pause_reason": "stop_loss", "auto_pause_pnl_pct": -15.0,
+                            "auto_pause_at": "2026-10-06T04:40:00+00:00"})
+    (stopped,) = [r for r in sampler.tick(_client(paused, []), every=600)
+                  if r.get("kind") == "bot"]
+    assert (stopped["is_trading"], stopped["status"], stopped["auto_pause_reason"],
+            stopped["auto_pause_pnl_pct"]) == (False, "stopped", "stop_loss", -15.0)
 
 
 @qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")

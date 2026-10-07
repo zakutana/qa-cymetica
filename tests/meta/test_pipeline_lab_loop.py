@@ -3802,6 +3802,64 @@ def test_every_bot_stop_is_ours_their_guard_or_unexplained():
     still = {s["instance"]: s for s in lab.bot_stops(paused_trading, later)}["late"]
     assert still["cause"] == "ours", still
 
+    # 2026-10-07: the platform pauses EVERY clone at its first stop_loss or take_profit
+    # (their llms.txt: `stopped` = auto-paused, see `auto_pause_reason`; Nexus NEX-0124),
+    # and the sampler now keeps that reason. Fifteen of twenty wave-2 bots stopped this
+    # way within hours and were read as `their_guard` (a loss) or `unexplained` (a take
+    # profit): findings, never restarted. A stop whose reason is one of the two bands is
+    # the band WE configured, and it is a trigger -- also a LATER reading of the same
+    # stop (`is_trading` false again, reason now present), which is how the nineteen of
+    # the day were read, since the sampler had not yet copied the field at the stop.
+    def reading(instance, at, trading, profit, reason=None):
+        return {**sample(instance, at, trading, profit), "auto_pause_reason": reason}
+    wave = [*fund("CLN-0040", "sl", 500.0, "2026-10-06T04:00:00+00:00"),
+            *switch("CLN-0041", "sl", "enable", "2026-10-06T04:00:10+00:00"),
+            *fund("CLN-0042", "tp", 500.0, "2026-10-06T04:00:20+00:00"),
+            *switch("CLN-0043", "tp", "enable", "2026-10-06T04:00:30+00:00"),
+            *fund("CLN-0044", "odd", 500.0, "2026-10-06T04:00:40+00:00"),
+            *switch("CLN-0045", "odd", "enable", "2026-10-06T04:00:50+00:00")]
+    seen = [reading("sl", "2026-10-06T04:30:00+00:00", True, "0.0"),
+            reading("sl", "2026-10-06T05:00:00+00:00", False, "-75.0"),
+            reading("sl", "2026-10-07T11:00:00+00:00", False, "-75.0", "stop_loss"),
+            reading("tp", "2026-10-06T04:30:00+00:00", True, "0.0"),
+            reading("tp", "2026-10-06T05:50:00+00:00", False, "225.0", "take_profit"),
+            reading("odd", "2026-10-06T04:30:00+00:00", True, "0.0"),
+            reading("odd", "2026-10-06T05:00:00+00:00", False, "-5.0", "risk_engine"),
+            reading("odd", "2026-10-07T11:00:00+00:00", False, "-5.0", "risk_engine")]
+    got = {s["instance"]: s for s in lab.bot_stops(wave, seen)}
+    assert {k: v["cause"] for k, v in got.items()} == {
+        "sl": "their_trigger", "tp": "their_trigger", "odd": "their_guard"}, got
+    assert got["sl"]["reason"] == "stop_loss" and got["tp"]["reason"] == "take_profit"
+    assert [r["why"] for r in lab.bot_runs(wave, seen)["sl"]] == ["their_trigger"]
+    assert [r["why"] for r in lab.bot_runs(wave, seen)["odd"]] == ["their_guard"], (
+        "any other reason, or none, keeps today's reading and is never restarted")
+
+    # A trigger read while the bot trades again is the NEXT stop's, not the old one's: the
+    # first stop stays a trigger after the resume, whatever the newest reading says.
+    resumed = wave + switch("CLN-0050", "sl", "enable", "2026-10-07T12:00:00+00:00")
+    after = seen + [reading("sl", "2026-10-07T13:00:00+00:00", True, "-75.0")]
+    assert [s["cause"] for s in lab.bot_stops(resumed, after) if s["instance"] == "sl"] \
+        == ["their_trigger"]
+
+    # [operator 2026-10-07] "ok muze je restartovat ale pokud 3x po sobe prodela stop
+    # losem pak ho zahod": three stop-losses in a row and the bot is discarded; a
+    # take-profit in between breaks the run; two are not enough.
+    def stops_of(instance, kinds):
+        rows, readings, t = [*fund("CLN-0060", instance, 500.0, "2026-10-08T00:00:00+00:00")], [], 1
+        for number, kind in enumerate(kinds):
+            rows += switch(f"CLN-01{number}", instance, "enable", f"2026-10-08T{t:02d}:00:00+00:00")
+            readings += [reading(instance, f"2026-10-08T{t:02d}:10:00+00:00", True, "0.0"),
+                         reading(instance, f"2026-10-08T{t:02d}:40:00+00:00", False,
+                                 "-75.0" if kind == "sl" else "225.0",
+                                 "stop_loss" if kind == "sl" else "take_profit")]
+            t += 2
+        return rows, readings
+    for kinds, discarded in ((["sl", "sl", "sl"], True), (["sl", "sl"], False),
+                             (["sl", "tp", "sl"], False), (["tp", "sl", "sl", "sl"], True),
+                             (["sl", "sl", "sl", "tp"], False)):
+        rows, readings = stops_of("run", kinds)
+        assert (("run" in lab.discarded_bots(rows, readings)) is discarded), kinds
+
 
 @qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
 def test_free_cash_is_the_newest_account_read_whichever_script_took_it(

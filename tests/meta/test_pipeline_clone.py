@@ -1072,6 +1072,68 @@ def test_a_started_clone_starts_again_only_as_a_new_variant(tmp_path, monkeypatc
     assert mod.restart_refusal("inst-4") is None
     samples.write_text("", encoding="utf-8")
 
+    # 2026-10-07. The platform pauses EVERY clone at its first stop_loss / take_profit
+    # (their llms.txt, Nexus NEX-0124) and `toggle-trading?enabled=true` resumes it; nine
+    # of twenty wave-2 bots stopped at -15 % and six at +40 % within hours and our rule
+    # called all fifteen "their guard" and never started them again. A stop at one of the
+    # two bands is the band WE configured: it may resume, with no pause of ours, no
+    # settings change -- the point is a repeat of the same configuration, a second
+    # window -- and only once its old room has stopped. Any other reason keeps V2's
+    # refusal, and so does a bot that is simply trading.
+    def started(instance, at):
+        cid = mod._next_id(mod.load())
+        mod._append({"id": cid, "type": "intent", "kind": "enable",
+                     "instance_id": instance, "at": at})
+        mod._append({"id": cid, "type": "outcome", "kind": "enable",
+                     "outcome": "accepted", "http_status": 200, "at": at})
+
+    def readings(instance, *marks):
+        return [{"type": "sample", "kind": "bot", "instance_id": instance, "at": at,
+                 "is_trading": trading, "total_profit_usdc": profit,
+                 "auto_pause_reason": reason} for at, trading, profit, reason in marks]
+
+    for name in ("t-sl", "t-tp", "t-odd", "t-live"):
+        _ours(mod, instance=name)
+        started(name, "2026-10-06T04:00:00+00:00")
+    seen = [
+        *readings("t-sl", ("2026-10-06T04:30:00+00:00", True, "0", None),
+                  ("2026-10-06T05:00:00+00:00", False, "-75.0", None),
+                  ("2026-10-07T11:00:00+00:00", False, "-75.0", "stop_loss")),
+        *readings("t-tp", ("2026-10-06T04:30:00+00:00", True, "0", None),
+                  ("2026-10-06T05:50:00+00:00", False, "225.0", "take_profit")),
+        *readings("t-odd", ("2026-10-06T04:30:00+00:00", True, "0", None),
+                  ("2026-10-06T05:00:00+00:00", False, "-5.0", "risk_engine")),
+        *readings("t-live", ("2026-10-06T04:30:00+00:00", True, "0", None))]
+    samples.write_text("".join(_json.dumps(r) + "\n" for r in seen), encoding="utf-8")
+    assert mod.restart_refusal("t-sl") is None, "a stop-loss stop is the band we set"
+    assert mod.restart_refusal("t-tp") is None, "a take-profit stop is the band we set"
+    assert "their_guard" in (mod.restart_refusal("t-odd") or ""), (
+        "a stop with any other reason is still a finding")
+    assert "started once already" in (mod.restart_refusal("t-live") or ""), (
+        "a bot that is simply trading is not restarted")
+    # Its old room must have stopped first: a variant starts only in a room of its own.
+    (tmp_path / qa_rooms.path().name).write_text("".join(_json.dumps(r) + "\n" for r in (
+        {"type": "strategy", "id": "STR-0099", "origin": "OUR-0001", "title": "bot",
+         "kind": "bot", "ref": "sp-9", "at": "2026-10-06T04:00:00+00:00"},
+        {"type": "plan", "room": "STR-0099", "legs": [
+            {"kind": "bot", "ref": "t-sl", "side": "bull", "share": 1.0}],
+         "at": "2026-10-06T04:00:01+00:00"},
+        {"type": "status", "room": "STR-0099", "status": "running", "why": "x",
+         "at": "2026-10-06T04:00:02+00:00"})), encoding="utf-8")
+    assert "STR-0099" in (mod.restart_refusal("t-sl") or ""), "its room still runs"
+    (tmp_path / qa_rooms.path().name).write_text("", encoding="utf-8")
+    # Resumed: trading again, so it is not restarted again until it stops AGAIN; the
+    # second stop is read as a trigger too, and may resume again.
+    started("t-sl", "2026-10-07T12:00:00+00:00")
+    again = [*seen, *readings("t-sl", ("2026-10-07T13:00:00+00:00", True, "-75.0", None))]
+    samples.write_text("".join(_json.dumps(r) + "\n" for r in again), encoding="utf-8")
+    assert "started once already" in (mod.restart_refusal("t-sl") or "")
+    twice = [*again, *readings("t-sl", ("2026-10-07T15:00:00+00:00", False, "-150.0", None),
+                               ("2026-10-07T16:00:00+00:00", False, "-150.0", "stop_loss"))]
+    samples.write_text("".join(_json.dumps(r) + "\n" for r in twice), encoding="utf-8")
+    assert mod.restart_refusal("t-sl") is None, "a second trigger may resume a second time"
+    samples.write_text("", encoding="utf-8")
+
 
 @qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
 def test_the_transport_holds_a_settings_patch_to_its_declared_fields():

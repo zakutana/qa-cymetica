@@ -1056,6 +1056,8 @@ def _stop_reason(stops: list[dict]) -> str:
         return "stopped by itself"
     pct = round(pct, 1)
     shown = _signed(pct, 0 if pct == round(pct) else 1)
+    if stops[0].get("cause") == "their_trigger":
+        return f"{'stop-loss' if pct < 0 else 'take-profit'} {shown}%"
     if stops[0].get("cause") == "their_guard":
         return f"stop-loss {shown}%"
     return f"stopped by itself at {shown}%"
@@ -1159,6 +1161,10 @@ def _ran(clones: list[dict], now: datetime) -> dict | None:
     if not running and last:
         if len(per_bot) > 1:
             why = f"all {len(per_bot)} stopped"
+        elif last.get("why") == "their_trigger":
+            pct = last.get("profit_pct")
+            word = "take-profit" if pct is not None and pct > 0 else "stop-loss"
+            why = f"its {word}" if pct is None else f"its {word} {_pct_word(pct)}%"
         elif last.get("why") == "their_guard":
             pct = last.get("profit_pct")
             why = "their stop-loss" if pct is None else f"their stop-loss {_pct_word(pct)}%"

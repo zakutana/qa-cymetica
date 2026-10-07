@@ -2517,9 +2517,10 @@ def bot_stops(clone_rows, samples) -> list[dict]:
     out = []
     for instance, seen in events.items():
         trading_since, paused = None, False
+        last_stop = None
         for at, kind, row in sorted(seen, key=lambda e: e[0]):
             if kind == "enable":
-                trading_since, paused = at, False
+                trading_since, paused, last_stop = at, False, None
             elif kind == "disable":
                 if row.get("their_is_trading") is False and trading_since is not None:
                     # Our pause found the bot ALREADY stopped (its intent read their row
@@ -2527,13 +2528,14 @@ def bot_stops(clone_rows, samples) -> list[dict]:
                     # disable, so it is not ours (deep pass 2026-10-02, R04).
                     profit = _money(row.get("bot_profit_usdc"))
                     base = went_in.get(instance)
-                    out.append({"instance": instance,
-                                "cause": ("their_guard" if profit is not None and profit < 0
-                                          else "unexplained"),
-                                "after": trading_since, "before": at,
-                                "profit_usdc": profit, "funded_usdc": base,
-                                "profit_pct": (profit / base * 100.0
-                                               if profit is not None and base else None)})
+                    last_stop = {"instance": instance,
+                                 "cause": ("their_guard" if profit is not None and profit < 0
+                                           else "unexplained"),
+                                 "after": trading_since, "before": at,
+                                 "profit_usdc": profit, "funded_usdc": base,
+                                 "profit_pct": (profit / base * 100.0
+                                                if profit is not None and base else None)}
+                    out.append(last_stop)
                     trading_since, paused = None, False
                 else:
                     paused = True
@@ -2548,14 +2550,67 @@ def bot_stops(clone_rows, samples) -> list[dict]:
                 else:
                     cause = "unexplained"
                 base = went_in.get(instance)
-                out.append({"instance": instance, "cause": cause,
-                            "after": trading_since, "before": at,
-                            "profit_usdc": profit, "funded_usdc": base,
-                            "profit_pct": (profit / base * 100.0
-                                           if profit is not None and base
-                                           else None)})
+                last_stop = {"instance": instance, "cause": cause,
+                             "after": trading_since, "before": at,
+                             "profit_usdc": profit, "funded_usdc": base,
+                             "profit_pct": (profit / base * 100.0
+                                            if profit is not None and base
+                                            else None)}
+                out.append(last_stop)
                 trading_since, paused = None, False
+            if (kind == "sample" and last_stop is not None and last_stop["cause"] != "ours"
+                    and row.get("is_trading") is False):
+                # The reason arrives on THIS reading or a later one of the same stop
+                # (the sampler only started copying it on 2026-10-07): a stop at a band
+                # we configured is the platform working as documented, not a finding.
+                if row.get("auto_pause_reason") in TRIGGER_REASONS:
+                    last_stop["cause"] = "their_trigger"
+                    last_stop["reason"] = row["auto_pause_reason"]
     return sorted(out, key=lambda s: s["before"])
+
+
+# The two bands of a stop WE configure. The platform pauses every clone at the first one
+# it hits -- their llms.txt: `stopped` is auto-paused, see `auto_pause_reason` -- and
+# `toggle-trading?enabled=true` resumes it (Nexus, NEX-0124, 2026-10-07).
+TRIGGER_REASONS = ("stop_loss", "take_profit")
+# [operator 2026-10-07] a bot that ends on its stop-loss this many times IN A ROW is thrown
+# away: released, and not resumed again.
+DISCARD_AFTER_STOP_LOSSES = 3
+
+
+def last_accepted_start(clone_rows, instance) -> str:
+    """When our newest ACCEPTED enable of this instance went through ('' if none)."""
+    answered = {row.get("id"): str(row.get("at") or "") for row in clone_rows or ()
+                if row.get("type") == "outcome" and row.get("outcome") == "accepted"}
+    return max((answered[row["id"]] or str(row.get("at") or "")
+                for row in clone_rows or ()
+                if row.get("type") == "intent" and row.get("kind") == "enable"
+                and str(row.get("instance_id")) == str(instance)
+                and row.get("id") in answered), default="")
+
+
+def trigger_stops_now(clone_rows, samples) -> dict[str, dict]:
+    """instance -> its newest stop, for the bots whose LAST stop was a band we configured
+    (`their_trigger`) and which no accepted enable of ours has started since. Those, and
+    only those, may be resumed (scripts/clone.py restart_refusal, scripts/wave.py resume)."""
+    newest: dict[str, dict] = {}
+    for stop in bot_stops(clone_rows, samples):
+        newest[stop["instance"]] = stop
+    return {instance: stop for instance, stop in newest.items()
+            if stop["cause"] == "their_trigger"
+            and stop["before"] >= last_accepted_start(clone_rows, instance)}
+
+
+def discarded_bots(clone_rows, samples, n: int = DISCARD_AFTER_STOP_LOSSES) -> set[str]:
+    """Bots whose last `n` stops were all at their stop-loss, in a row. A take-profit
+    in between breaks the run, and a stop that was not a band at all (their guard, an
+    unexplained halt) is not counted here: those are findings, not losses."""
+    by_bot: dict[str, list[str]] = {}
+    for stop in bot_stops(clone_rows, samples):
+        by_bot.setdefault(stop["instance"], []).append(
+            stop.get("reason") if stop["cause"] == "their_trigger" else stop["cause"])
+    return {bot for bot, reasons in by_bot.items()
+            if len(reasons) >= n and all(r == "stop_loss" for r in reasons[-n:])}
 
 
 def bot_runs(clone_rows, samples) -> dict[str, list[dict]]:
@@ -2592,11 +2647,12 @@ def bot_runs(clone_rows, samples) -> dict[str, list[dict]]:
     out: dict[str, list[dict]] = {}
     for instance, seen in events.items():
         runs, start, paused = [], None, False
+        last_run = None
         for at, kind, row in sorted(seen, key=lambda e: e[0]):
             if kind == "enable":
                 if start is None:
                     start = at
-                paused = False
+                paused, last_run = False, None
             elif kind == "disable":
                 if start is None:
                     paused = True
@@ -2606,6 +2662,7 @@ def bot_runs(clone_rows, samples) -> dict[str, list[dict]]:
                     runs.append(closed(instance, start, at,
                                        "their_guard" if profit is not None and profit < 0
                                        else "unexplained", profit))
+                    last_run = runs[-1]
                 else:
                     runs.append(closed(instance, start, at, "ours", None))
                 start, paused = None, True
@@ -2618,7 +2675,12 @@ def bot_runs(clone_rows, samples) -> dict[str, list[dict]]:
                 runs.append(closed(instance, start, at,
                                    "their_guard" if profit is not None and profit < 0
                                    else "unexplained", profit))
+                last_run = runs[-1]
                 start = None
+            if (kind == "sample" and last_run is not None and last_run["why"] != "ours"
+                    and row.get("is_trading") is False
+                    and row.get("auto_pause_reason") in TRIGGER_REASONS):
+                last_run["why"] = "their_trigger"      # the same reading bot_stops makes
         if start is not None:
             runs.append({"start": start, "end": None, "why": None, "profit_pct": None})
         if runs:

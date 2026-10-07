@@ -301,7 +301,12 @@ CEILINGS = {
     # spacing shared by every process plus a slower route's own, and a 429 that waits
     # and re-asks only a read. The reopen-not-duplicate rule went into two existing
     # tests instead of new ones.
-    "meta_tests": 822,
+    # 822 -> 823 for resuming paused bots (2026-10-07, test_pipeline_wave.py): a bot the
+    # platform paused at its band starts again in a room of its own, one that ended on
+    # its stop-loss three times in a row is released, the slot cap and the six-hour
+    # spacing hold. The stop classification and the restart rule went into the three
+    # tests that already pinned them.
+    "meta_tests": 823,
 }
 
 BASH_SCRIPT = re.compile(r"python\s+scripts[/\\]([a-z_]+)\.py")
