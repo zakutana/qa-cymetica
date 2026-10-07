@@ -41,6 +41,7 @@
       "Bash(python scripts/gem_audit.py:*)",
       "Bash(python scripts/a2a.py:*)",
       "Bash(python scripts/clone.py:*)",
+      "Bash(python scripts/wave.py:*)",
       "Bash(python scripts/paper.py:*)",
       "Bash(python scripts/hot_watch.py:*)"
     ]
