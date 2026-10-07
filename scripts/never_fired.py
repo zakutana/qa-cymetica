@@ -59,6 +59,8 @@ BLOCK_REASONS = (
     # Added 2026-09-12: git_dirty is sampled once, at the starting pistol, so a
     # run could record a clean tree and be edited under it while it ran.
     "code_moved_during_run",
+    # Added 2026-10-07: a run our own rate-limit budget cut short verifies nothing.
+    "budget_truncated",
 )
 OBLIGATIONS = ("reverify", "repair_check", "reopen", "retractions", "disputed",
                "verification_owed", "correction_owed")

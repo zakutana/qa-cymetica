@@ -54,7 +54,18 @@ def test_withdrawal_is_an_event_with_obligations(tmp_path, monkeypatch):
     events = read_events(path=journal)
     assert len(events) == 1
     e = events[0]
-    assert e["type"] == "withdraw" and e["by"] == "operator"
+    # Who wrote it. Every withdraw.py event said "operator" -- 121 pins among them,
+    # nearly all made by the AI agent -- so the record claimed a human decided what
+    # an agent did (architecture review, 2026-10-07). The operator never runs this
+    # script (CLAUDE.md: a shell command is ours), so the default is the agent, and
+    # a decision they asked for in chat says so on its own field.
+    assert e["type"] == "withdraw" and e["by"] == "agent", e
+    assert "requested_by" not in e
+    withdraw.main(["note", "CYM-mcp_tool_count",
+                   "--text", "they asked for this one in chat", "--asked-by-operator"])
+    asked = read_events(path=journal)[-1]
+    assert asked["by"] == "agent" and asked["requested_by"] == "operator", asked
+    events = events[:1]
     assert e["finding_id"] == "CYM-mcp_tool_count"
     assert "tier gating" in e["reason"]
 

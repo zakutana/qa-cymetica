@@ -351,6 +351,16 @@ def test_a_transport_failure_is_inconclusive_not_a_defect(pytester, tmp_path):
         @qa(**TAG)
         def test_a_real_disagreement():
             assert 46 == 25, "documented 46, served 25"
+
+        @qa(**TAG)
+        def test_our_guard_said_no():
+            from qa.safety import BudgetExhausted
+            raise BudgetExhausted("Rate-limit budget exhausted at 60% of the platform quota")
+
+        @qa(**TAG)
+        def test_our_check_is_misdeclared():
+            from qa.safety import SafetyViolation
+            raise SafetyViolation("POST /api/v1/x requires MUTATE; this test declares SAFE")
     """)
 
     by_id = {r["nodeid"].rsplit("::", 1)[-1]: r for r in run["results"]}
@@ -358,6 +368,20 @@ def test_a_transport_failure_is_inconclusive_not_a_defect(pytester, tmp_path):
     assert "ReadTimeout" in by_id["test_the_network_gave_up"]["reason"]
     assert by_id["test_a_real_disagreement"]["outcome"] == "failed", \
         "a genuine assertion failure must still be a failure"
+    # Architecture review, 2026-10-07: a check our own guard refused -- the budget,
+    # a tier rule -- measured nothing on their side. Recorded `failed` it was one
+    # fold away from a finding about them (findings.py proposes every failure);
+    # run-20261003T233416Z held 58 of them at level V.
+    assert by_id["test_our_guard_said_no"]["outcome"] == "inconclusive", by_id
+    assert "our own guard" in by_id["test_our_guard_said_no"]["reason"]
+    # Any other refusal is our check misdeclared, and stays loud (code review).
+    assert by_id["test_our_check_is_misdeclared"]["outcome"] == "failed", by_id
+    # ...but never in our OWN self-tests: there a SafetyViolation nobody expected
+    # is the guard misbehaving, and it must stay red and abort the session.
+    from qa import report_plugin
+    assert report_plugin._is_self_test("tests/meta/test_guard_is_real.py::test_x")
+    assert report_plugin._is_self_test("tests\\repo\\test_state_guard.py::test_y")
+    assert not report_plugin._is_self_test("tests/rest/test_cards.py::test_z")
 
 
 @qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
@@ -418,7 +442,8 @@ def test_ratelimit_budget_reaches_the_run_record(pytester, tmp_path):
 def _a_run_the_quota_cut_short_says_so_in_its_record(pytester, tmp_path):
     """The other half of the test above (T22, deep pass 2026-10-05): it only asserts the
     uncut case, so a recorder that wrote `budget_truncated: false` for ever passed it, and
-    that field is what `prereg.py` and the fold read to know a run is partial. A session whose
+    that field is what `qa.state.admissibility` reads (since 2026-10-07; until then nothing
+    did) to keep a partial run from verifying a fix. A session whose
     budget was spent says so in the run record, in both fields."""
     shutil.rmtree(pytester.path / "tests")          # a second inner session in the same directory
     _, run = _run_inner(pytester, tmp_path / "cut", """

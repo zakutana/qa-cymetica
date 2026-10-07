@@ -316,6 +316,11 @@ def _apply_run(row: dict, run: dict, level: str) -> None:
         # Pin the fingerprint the row failed under. A later pass counts as a
         # verification only under this same definition.
         check["pinned_fingerprint"] = _fingerprint_of(mine)
+        # And remember it was SEEN failing under it: a hand pin on a definition
+        # in this list is no longer only our word (see _mark_repins).
+        failed_under = check.setdefault("failed_under", [])
+        if check["pinned_fingerprint"] not in failed_under:
+            failed_under.append(check["pinned_fingerprint"])
         # Every state a level-V pass establishes, not PASSING alone (A7 of
         # the review of 2026-09-23, 3/3): failing after a pass under a
         # changed or never-failed definition is a regression too. Read
@@ -432,11 +437,41 @@ def _apply_check_definition(rows: dict, events: Iterable[dict]) -> None:
             # that run -- which a failing run has since re-pinned -- came back
             # on every fold without a run and undid it (2026-09-22: 09-11's pin
             # over 09-21's, and a correction owed on #98 vanished).
+            # As moments, not strings (architecture review, 2026-10-07): a pin in
+            # another offset sorted after the run it preceded and undid its pin.
             check = row.setdefault("check", {})
-            judged = str((check.get("adjudicated_by") or {}).get("at") or "")
-            if judged and str(event.get("at") or "") < judged:
+            judged = _instant((check.get("adjudicated_by") or {}).get("at"))
+            pinned_at = _instant(event.get("at"))
+            if judged is not None and (pinned_at is None or pinned_at < judged):
                 continue
             check["pinned_fingerprint"] = event.get("value")
+
+
+def _mark_repins(rows: dict, events: Sequence[dict]) -> None:
+    """Say which rows stand on a definition pinned by hand and never seen failing.
+
+    Architecture review, 2026-10-07: `pin-fingerprint --from-run` can make a
+    changed check's own passing run read VERIFIED FIXED -- legitimately when the
+    change was a refactor, and with nothing on the record to tell the two apart.
+    The state is unchanged; the row carries `check.repinned` (when, by whom, why)
+    so the page can say "re-pinned" beside it, until a run sees that definition
+    fail (`failed_under`), after which the pin is the failure's. `failed_under`
+    is recorded from 2026-10-07 on, so an older row may be marked although a run
+    once failed under the same value: the mark says "pinned by hand", never
+    "never seen failing"."""
+    latest: dict[tuple, dict] = {}
+    for event in events:
+        if event.get("type") == "pin_fingerprint":
+            latest[(event.get("finding_id"), event.get("value"))] = event
+    for fid, row in rows.items():
+        check = row.get("check") or {}
+        pinned = check.get("pinned_fingerprint")
+        pin = latest.get((fid, pinned)) if pinned else None
+        if pin is not None and pinned not in (check.get("failed_under") or []):
+            check["repinned"] = {"at": pin.get("at"), "by": pin.get("by"),
+                                 "reason": str(pin.get("reason") or "")[:300]}
+        else:
+            check.pop("repinned", None)
 
 
 def _filing_targets(event: dict, rows: dict) -> list[str]:
@@ -1142,6 +1177,7 @@ def fold(prev: dict | None = None, run: dict | None = None,
                 out[field] = carried
         out["run_carried"] = "run_id" in out
 
+    _mark_repins(rows, events)
     before_events = set(rows)
     _apply_events(rows, events)
     if run is not None:

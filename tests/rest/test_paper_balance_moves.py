@@ -47,7 +47,7 @@ either side of one POST.
 from __future__ import annotations
 
 import importlib.util
-from datetime import datetime
+from datetime import datetime, timezone
 from pathlib import Path
 
 from qa.marks import Inconclusive, SafetyTier, qa
@@ -177,6 +177,17 @@ def test_a_paper_buy_debits_the_paper_balance(rest_trusted):
             "scripts/paper.py buy --card <id> --usdc 1 --confirm` records one")
 
     subject = newest(measured)
+    # The trade judged is read from OUR diary, so how old it is matters: a verdict
+    # dated today about a trade from weeks ago says nothing about their platform
+    # today (architecture review, 2026-10-07). Older than a week is unmeasured.
+    placed = _moment(subject["at"])
+    if placed is not None and placed.tzinfo is None:
+        placed = placed.replace(tzinfo=timezone.utc)  # our diary writes UTC
+    if placed is None or (datetime.now(timezone.utc) - placed).days >= 7:
+        raise Inconclusive(
+            f"the newest paper trade ({subject['id']}, {subject['at'] or 'undated'}) "
+            f"is a week old or more, so it says nothing about a buy today; "
+            f"`python scripts/paper.py buy --card <id> --usdc 1 --confirm` records one")
     if subject["unread"]:
         raise Inconclusive(
             f"the newest trade {subject['id']} is missing a read "

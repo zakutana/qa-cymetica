@@ -71,6 +71,18 @@ def test_every_process_shares_one_spacing_and_a_slower_route_its_own(tmp_path):
     console.wait(mcp)
     assert clock.slept and clock.slept[0] >= 38.0, clock.slept
 
+    # Code review, 2026-10-07: the request waiting for its ROUTE must not take the
+    # HOST's slot at that late time, or one held route stalls every other route in
+    # every process. Two processes at the same instant: one is held 120 s on its
+    # route, the other asks a different route and goes within a second.
+    waits: list[float] = []
+    held = ratelimit.Pacer(state, now=clock.now, sleep=waits.append)
+    other = ratelimit.Pacer(state, now=clock.now, sleep=waits.append)
+    held.hold(mcp, 120)
+    held.wait(mcp)
+    other.wait(page)
+    assert waits[0] >= 119 and (len(waits) == 1 or waits[1] <= 1.0), waits
+
 
 @qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
 def test_a_429_waits_for_retry_after_and_only_a_read_is_asked_again(tmp_path):

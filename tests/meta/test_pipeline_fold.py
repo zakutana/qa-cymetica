@@ -1590,6 +1590,26 @@ def test_an_old_pin_event_does_not_undo_a_newer_run():
     out = fold(ledger(adjudicated), events=[old_pin, newer])
     assert out["findings"]["CYM-a"]["check"]["pinned_fingerprint"] == "sha256:operator"
 
+    # Compared as moments, not as strings (architecture review, 2026-10-07). A pin
+    # written twenty seconds BEFORE the run, spelled in another offset, sorts after
+    # it as a string and undid what the run had pinned.
+    earlier_z = dict(old_pin, at="2026-09-21T21:33:00+01:00", value="sha256:stale")
+    out = fold(ledger(adjudicated), events=[earlier_z])
+    assert out["findings"]["CYM-a"]["check"]["pinned_fingerprint"] == "sha256:new"
+
+    # A pin by hand is visible as one. The row above stands on "sha256:operator",
+    # which no run ever saw fail: a VERIFIED FIXED on it rests on our word that the
+    # changed check still catches the defect, and the page must be able to say so.
+    out = fold(ledger(adjudicated), events=[old_pin, newer])
+    repinned = out["findings"]["CYM-a"]["check"].get("repinned") or {}
+    assert repinned.get("at") == "2026-09-22T10:00:00+00:00", repinned
+    assert repinned.get("reason") == "then"
+    # Not once a run has seen that definition fail: then it is the failure's pin.
+    seen_failing = dict(adjudicated, check=dict(adjudicated["check"],
+                                                failed_under=["sha256:operator"]))
+    out = fold(ledger(seen_failing), events=[old_pin, newer])
+    assert "repinned" not in out["findings"]["CYM-a"]["check"]
+
 
 def _split(report_id=89, to_id="CYM-s", nodeid=CHECK_B,
            at="2026-09-22T09:00:00+00:00", fid="CYM-a"):

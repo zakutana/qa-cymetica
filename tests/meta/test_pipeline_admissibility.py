@@ -233,6 +233,15 @@ def test_two_levels_reproduce_vs_verify():
     r = admissibility(_admissible("r", "2026-09-05T00:00:00+00:00", prereg_commit="other"))
     assert r.level == "R" and r.reasons == ["prereg_commit_mismatch"]
 
+    # A run our own rate-limit budget cut short verifies nothing: prereg.py has
+    # promised so since 2026-09-07 and nothing read the field until 2026-10-07
+    # (run-20261003T233416Z and run-20261004T000526Z were level V). It may still
+    # open a defect -- what it measured before the cut is real.
+    r = admissibility(_admissible("r", "2026-09-05T00:00:00+00:00",
+                                  record_integrity={"consistent": True,
+                                                    "budget_truncated": True}))
+    assert r.level == "R" and r.reasons == ["budget_truncated"], r
+
     none = admissibility(_admissible("r", "2026-09-05T00:00:00+00:00", fingerprint_drifted=True))
     assert none.level == "none" and "fingerprint_drifted" in none.reasons
 

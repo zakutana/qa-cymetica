@@ -45,6 +45,19 @@ _TRANSPORT_ERRORS = (
     httpx.TooManyRedirects, httpx.RemoteProtocolError,
 )
 
+def _budget_exhausted():
+    """Imported late: qa.safety imports this module's neighbours at load."""
+    from qa.safety import BudgetExhausted
+    return BudgetExhausted
+
+
+def _is_self_test(nodeid: str) -> bool:
+    """Our own tests (tests/meta, tests/repo), where a SafetyViolation nobody
+    expected is the guard misbehaving -- never a measurement to re-label."""
+    path = str(nodeid).replace("\\", "/")
+    return "tests/meta/" in path or "tests/repo/" in path
+
+
 REPO_ROOT = Path(__file__).resolve().parent.parent
 SCHEMA = 2
 
@@ -424,6 +437,19 @@ def pytest_runtest_makereport(item, call):
         # files a finding about their platform on the strength of our network.
         # One did: a ReadTimeout on /api/v1/vaix/prices minted a defect.
         reason = f"{type(call.excinfo.value).__name__}: could not reach the platform"
+        report.outcome = "skipped"
+        report.longrepr = (str(item.path), item.location[1] + 1, f"INCONCLUSIVE: {reason}")
+        kind = "inconclusive"
+    elif (report.when in ("setup", "call") and call.excinfo is not None
+          and call.excinfo.errisinstance(_budget_exhausted())
+          and not _is_self_test(item.nodeid)):
+        # OUR rate-limit budget was spent. Nothing reached their platform, so
+        # nothing about it was measured; recorded `failed`, it was one fold away
+        # from a finding about them (architecture review, 2026-10-07: 58 such
+        # results in each of two level-V runs). Any other refusal -- a tier or
+        # rule our check misdeclared -- stays red, and so does anything in our
+        # own self-tests, where it is the guard misbehaving.
+        reason = f"refused by our own guard: {str(call.excinfo.value)[:200]}"
         report.outcome = "skipped"
         report.longrepr = (str(item.path), item.location[1] + 1, f"INCONCLUSIVE: {reason}")
         kind = "inconclusive"

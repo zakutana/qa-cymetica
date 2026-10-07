@@ -102,8 +102,14 @@ class Pacer:
         def reserve(state: dict) -> float:
             now = self.now()
             nexts = state.setdefault("next", {})
-            slot = max(now, nexts.get(host, 0.0), nexts.get(route, 0.0))
-            nexts[host] = slot + self.interval
+            # The host slot is taken where the HOST is free, not where this route
+            # is: a request held on its route must not push every other route of
+            # the host -- in every process -- back behind it (code review,
+            # 2026-10-07). The held request may then share a second with another;
+            # that is the cost, and it is one request.
+            host_slot = max(now, nexts.get(host, 0.0))
+            slot = max(host_slot, nexts.get(route, 0.0))
+            nexts[host] = host_slot + self.interval
             gap = state.get("route_interval", {}).get(route)
             if gap:
                 nexts[route] = max(nexts.get(route, 0.0), slot + gap)
@@ -131,6 +137,10 @@ class Pacer:
         exhausted = remaining is not None and remaining.strip() == "0" and reset > self.now()
         if not (slower or exhausted):
             return
+        if not exhausted and self._read().get("route_interval", {}).get(route) == 60.0 / limit:
+            return  # already known: no lock, no write, on the busiest routes
+
+
 
         def note(state: dict) -> None:
             if slower:

@@ -158,6 +158,12 @@ def admissibility(run: dict) -> Verdict:
     # level it was folded at; only an explicit True blocks.
     if run.get("code_dirty_after") is True:
         blocks_v.append("code_moved_during_run")
+    # A run our own rate-limit budget cut short is partial: it may open a defect
+    # from what it measured, never verify a fix. prereg.py promised this from the
+    # start and nothing read the field until 2026-10-07 -- two truncated runs of
+    # 2026-10-03/04 were level V.
+    if (run.get("record_integrity") or {}).get("budget_truncated") is True:
+        blocks_v.append("budget_truncated")
     if not run.get("prereg_id"):
         blocks_v.append("no_prereg")
     elif not run.get("prereg_commit") or not run.get("git_head"):
@@ -738,6 +744,9 @@ ALLOWED_EVENT_KEYS = frozenset({
     # parent_message_id, which is the only exact pairing key they give us --
     # the thread id is one value for the whole account.
     "auto", "kind",
+    # scripts/withdraw.py: a decision the operator asked for in chat, beside
+    # `by: agent` -- the agent is who wrote it (2026-10-07).
+    "requested_by",
 })
 
 

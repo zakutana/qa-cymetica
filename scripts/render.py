@@ -847,6 +847,10 @@ def build_payload(ledger: dict | None = None, inventory: dict | None = None,
             # as a table of field names -- accurate, and unreadable.
             "summary": _summary(row),
             "owed": _owed(row),
+            # A VERIFIED FIXED that stands on a definition pinned by hand and never
+            # seen failing (qa/fold.py::_mark_repins) says so, with the pin's reason.
+            "repinned": ((row.get("check") or {}).get("repinned")
+                         if shown == "VERIFIED FIXED" else None),
         })
 
         for transition in row.get("transitions", []):
@@ -2213,6 +2217,7 @@ function finding(f) {
           ${f.filed && f.filed.length ? `<span class="filed">${f.filed.map(x=>"#"+x.report_id).join(", ")}</span>` : ""}
           ${f.unmeasured ? `<span class="unmeasured" title="The wording and numbers here are from the day this was written; no run since has confirmed they still hold.">figures not re-measured</span>` : ""}
           ${f.not_checked_in ? `<span class="unchecked" title="not re-checked by the last sweep${f.last_checked_at ? " &middot; last checked " + esc(stamp(f.last_checked_at)) : ""}">&#8635; ${f.last_checked_at ? esc(stamp(f.last_checked_at).slice(5)) : "old"}</span>` : ""}
+          ${f.repinned ? `<span class="unmeasured" title="Verified under a check definition that was changed and then pinned by hand (${esc(stamp(f.repinned.at))}). Why: ${esc(f.repinned.reason)}">re-pinned</span>` : ""}
           ${(f.owed || []).map(o => `<span class="owed" title="Something is still owed on this row: the fold works it out from the events, and it stays here until an event settles it. A re-verify is cleared by a level-V run under the pinned fingerprint; a retraction by a retraction-sent event.">${esc(o)}</span>`).join("")}
           ${f.stale_from ? `<span class="unheard" title="The last attempt to read their bug tracker did not succeed, so what they say here is as of the last clean read and may have moved since. A failed read is not an empty one: nothing on the vendor's side was allowed to change on the strength of it.">their side unread &middot; since ${esc(stamp(f.stale_from))}</span>` : ""}
           ${changed ? `<span class="changed" title="${f.last_change.axis

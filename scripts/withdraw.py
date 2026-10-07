@@ -223,9 +223,20 @@ def main(argv: list[str] | None = None) -> int:
     p.add_argument("finding_id")
     p.add_argument("--text", required=True)
 
+    # Who decided. The agent runs this script (CLAUDE.md: a shell command is ours,
+    # never the operator's), so every event is `by: agent`; a decision the operator
+    # asked for in chat carries `requested_by: operator` as well. Until 2026-10-07
+    # everything here said "operator", so 121 pins read as a human's decisions.
+    # On every subcommand, after its own arguments, where it is naturally written.
+    for each in sub.choices.values():
+        each.add_argument("--asked-by-operator", action="store_true",
+                          help="the operator asked for this in chat")
+
     args = parser.parse_args(argv)
     at, source = _now(), "scripts/withdraw.py"
-    base = {"at": at, "by": "operator", "source": source}
+    base = {"at": at, "by": "agent", "source": source}
+    if args.asked_by_operator:
+        base["requested_by"] = "operator"
 
     # Before anything is written. supersede names two rows and both have to be
     # real, or half the event lands and the other half points at nothing.

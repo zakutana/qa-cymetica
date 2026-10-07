@@ -53,6 +53,13 @@ class SafetyViolation(RuntimeError):
     """Raised BEFORE a request reaches the network. Never caught internally."""
 
 
+class BudgetExhausted(SafetyViolation):
+    """Our own rate-limit budget is spent: the session is partial, and a check
+    stopped by it measured nothing on their side. Told apart from every other
+    refusal so the recorder can call it inconclusive -- a tier or rule refusal is
+    OUR check misdeclared and stays red (code review, 2026-10-07)."""
+
+
 class SafetyTier(str, Enum):
     """Ordered. A test declares the most it is allowed to do, not what it does."""
 
@@ -242,9 +249,18 @@ class SafetyTransport(httpx.BaseTransport):
                 # Retry-After and ask a READ once more. A write is never resent.
                 if real:
                     timings.record(request, started, tier, status=429, to="headers")
+                if self.evidence is not None:
+                    # Their 429 is kept: it is what a finding about their rate
+                    # limiting would stand on (code review, 2026-10-07).
+                    try:
+                        self.evidence.capture(request, response, tier, rule.id if rule else None)
+                    except Exception:  # noqa: BLE001 -- the retry is what matters here
+                        pass
                 pause = retry_after(response)
                 response.close()
                 self.pacer.hold(request, pause)
+                if self.budget is not None:
+                    self.budget.before_request()   # the second send is counted too
                 self.pacer.wait(request)
                 started = time.perf_counter()
                 try:
@@ -685,7 +701,7 @@ class RateLimitBudget:
 
     def before_request(self) -> None:
         if self.exhausted:
-            raise SafetyViolation(
+            raise BudgetExhausted(
                 f"Rate-limit budget exhausted at {self.stop_at_fraction:.0%} of "
                 f"the platform quota ({self.remaining}/{self.limit} left). "
                 f"This run is partial and may not verify any fix."

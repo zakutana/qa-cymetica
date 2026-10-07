@@ -810,7 +810,7 @@ plus `audits/checks.json` (what was audited, when) and the memory directory
 (how many files, what was merged, what was retired). The transcripts are step
 1's material, not this one's — they are too large to sweep a week of.
 
-Four questions, answered in Czech under **Týden**, in that order:
+Five questions, answered in Czech under **Týden**, in that order:
 
 1. **What repeated?** The same class of defect in two passes, the same manual
    step done by hand twice, the same question asked of the vendor twice.
@@ -856,6 +856,27 @@ Four questions, answered in Czech under **Týden**, in that order:
    numbers. A part that did nothing all week is either a cut candidate or a
    mechanism nobody can reach — say which, in one line, and put a cut in the
    commit message rather than here.
+
+5. **What would an outside reviewer hold against us?** Three readers, launched
+   in parallel, read-only, each under 600 words with evidence, one review
+   each and not an army. This is the review that on 2026-10-07 found six groups
+   of duplicate reports, 187 requests a minute against a vendor who asked for
+   no load, our own guard's refusals recorded as their defects, and 121 pins
+   signed by the operator that an agent had made. No sweep or code review saw
+   any of those: each looks at one change, and these were patterns.
+   - **Architecture:** read like a demanding senior engineer, verified at
+     file:line. Weaknesses in design, correctness, operability and data.
+   - **Conduct toward Cymetica:** `outbox/reports.yaml`, the journal's sends,
+     withdrawals and retractions, and `state/timings.jsonl` against their bounty
+     rules (`cymetica.com/bounty`) and REPLY-0030. Look for duplicates, wrong
+     claims never retracted, volume and tone.
+   - **Documents, AI rules and history:** CLAUDE.md, the skills and hooks,
+     commit messages, and the lab's diaries. Look for anything disparaging,
+     private, or acting on a foreign agent.
+
+   Only medium-and-up. What survives goes under **Týden**, and a fix that is
+   ours goes to NEXT.md in the same pass. The operator asked for this to recur
+   rather than to wait for a job application.
 
 **"Nic neměnit" is a complete answer** and is written as such. Then set
 `retrospective.last` to today and `done` to true.
