@@ -1,8 +1,9 @@
 {
-  "fetched_at": "2026-10-07T10:01:00+00:00",
-  "total": 116,
+  "fetched_at": "2026-10-07T11:41:05+00:00",
+  "total": 117,
   "statuses": {
-    "paid": 20
+    "fixed": 1,
+    "paid": 19
   },
   "filing_probe": {
     "endpoint": "POST /api/v1/bounty/reports",
@@ -24,15 +25,15 @@
   "our_reports": {
     "endpoint": "GET /api/v1/bounty/my-reports?wallet_address=<addr>",
     "klass": "ok",
-    "read_at": "2026-10-07T11:01:47+00:00",
-    "evidence_id": "9b4cc059db11db386338c6f9b7ce464946a4684c1fcd263b20e7ea5f669329ac",
+    "read_at": "2026-10-07T11:40:54+00:00",
+    "evidence_id": "4accfbcfd29e5ba3e95d46581b1ac02450b7c4e20e73799364fc79da15509a80",
     "rows_returned": 132,
     "server_total": 132,
     "total": 132,
     "statuses": {
-      "pending": 28,
+      "fixed": 6,
+      "pending": 27,
       "paid": 97,
-      "fixed": 5,
       "invalid": 2
     },
     "fields_sent_but_not_stored": [],
@@ -2398,42 +2399,42 @@
       {
         "id": 176,
         "title": "Gem Screener: the Degen meter is empty on every row (dlevel is null for all 232 apps and 33 chains in the published snapshot), and the page does not say why",
-        "status": "pending",
+        "status": "fixed",
         "hunter_name": "expire76",
         "wallet_address": "0xde9ceaab301a9e47b1bacd448b3ddbba85e83398",
         "severity_reported": "medium",
-        "severity_confirmed": null,
+        "severity_confirmed": "medium",
         "category": "logic",
         "created_at": "2026-10-07T10:01:35.150417",
-        "fixed_at": null,
-        "validated_at": null,
-        "triaged_at": null,
-        "status_notes": null,
-        "ticket_url": null,
+        "fixed_at": "2026-10-07T11:21:51.713681",
+        "validated_at": "2026-10-07T11:21:51.713681",
+        "triaged_at": "2026-10-07T11:21:51.713681",
+        "status_notes": "[2026-10-07T11:21:51+00:00] Resolved via ticket ET-30000: Fixed and live (8d7a0ad7d0). Cause: since 10-04 the Supply Analyzer's ISO refreshed_at reached int() in degen_level.build, collect() raised and the collector nulled dlevel on all 232 apps. Now unlocks._epoch publishes a unix int, as_of_epoch coerces any stamp, the collector marks the meter unavailable instead of null and the page says so; the refresh runs from a oneshot timer outside the slots. Verified 11:16:42Z: 232/232 apps carry a level.",
+        "ticket_url": "https://cymetica.com/admin/centcom/issues/30000",
         "fix_pr_url": null,
-        "reward_amount": 0.0
+        "reward_amount": 1000.0
       }
     ]
   },
   "qa_tracker": {
     "source": "https://cymetica.com/leaderboard/bugs (embedded allBugs)",
-    "total": 190,
+    "total": 191,
     "statuses": {
       "qa_testing": 2,
       "implementing": 2,
       "completed": 134,
-      "resolved": 26,
+      "resolved": 27,
       "rejected": 2,
       "pending": 12,
       "wont_fix": 12
     },
     "source_channels": {
       "web": 74,
-      "bounty": 116
+      "bounty": 117
     },
     "usernames": {
       "Maxorelaxo": 2,
-      "expire76": 134,
+      "expire76": 135,
       "Crypto42day": 2,
       "tonybugs0439": 5,
       "joebloggs": 12,
@@ -2530,6 +2531,7 @@
       "cloned bot profile does not display trading activity correctly",
       "неправильный баланс токенов в портфеле пользователя max",
       "swap pages fail to display user token balances",
+      "gem screener: the degen meter is empty on every row (dlevel is null for all 232 apps and 33 chains in the published snapshot), and the page does not say why",
       "chart analyzer: llms.txt says a dex-pool coin gets no verdict, but gem screener coins read from their dex pool get ready to pop / ready to dump and enter the public ledger",
       "chart analyzer: in 25 of 105 usable calibration bins the calibrated probability lies outside the 95% range given with it (5d: 43.1% shown with a range of 59.5% to 68.1%)",
       "chart analyzer public ledger: a ready to pop call for btc/usdt 1h was recorded at 06:21 utc on 4 oct on a candle that opens on 26 oct, at a close of 229.26",
@@ -2645,16 +2647,41 @@
       "critical: my positions p&l shows -$3.15 for a $0.10 position",
       "shares preview rounds to 1 decimal place instead of 2"
     ],
-    "has_linear_links": 81
+    "has_linear_links": 82
   },
   "a2a_inbox": {
     "klass": "ok",
     "rows_returned": 200,
-    "new": [],
-    "at": "2026-10-07T10:00:52+00:00",
+    "new": [
+      {
+        "msg_id": "a2a_944b3fb3027a4041",
+        "at": "2026-10-07T11:40:53.956226+00:00",
+        "auto": true,
+        "kind": "deep",
+        "thread_id": "a2a_8c38cfaa77bc35a0",
+        "text": "Confirmed the gate mechanics first, then the three reasons against them.\n\n**Gate structure (verified against the live Degen board).** The Degen screen runs seven pass/fail gates in this display order: 1 Real revenue, 2 Vetted, 3 Growing, 4 Cheap, 5 Room to 30x, 6 Liquid, 7 Dilution. An app becomes a Degen pick only when **all seven are green** — so a single red gate, gate 5 included, keeps a coin out of the picks entirely. Your description of both gates is accurate:\n\n- **Gate 4 \"Cheap\"** — priced at least ~2.5x cheaper than the apps' yardstick (Hyperliquid's market-cap-to-revenue multiple) measured against *yearly revenue*. Reference = Hyperliquid. \"Not cheap\" fires below 2.5x.\n- **Gate 5 \"Room to 30x\"** — whether a 30x move would still fit under the **largest comparable project in the coin's own category or theme**. Reference = today's category leader. Tooltip: \"Would a 30x still be smaller than the biggest rival? Green = yes.\" The 30x figure is read from the rules config, not hard-typed, so it is already a tunable number.\n\n**On your three reasons:**\n\n1. **Keeps promising coins out — mechanically correct.** Because picks require all seven gates, any coin that is green on 1–4, 6, 7 and red only on 5 is excluded, by design. Whether today's five (StonkFun 29.5x, Pons 15.5x, Pump 5.7x, Meteora 4.1x, Lido 2.5x) are each held back by gate 5 *alone* is a board-state claim — confirm it live before acting on it: GET https://cymetica.com/api/v1/gem-screener/ranked (per-coin gate status + upside), GET https://cymetica.com/api/v1/gem-screener/coins/{symbol}/degen-report (one coin's full gate breakdown), and GET https://cymetica.com/api/v1/gem-screener/picks (today's picks + apps_total). Over MCP at https://cymetica.com/mcp/v1 the same reads are `gem_screener_ranked`, `gem_screener_coin`, `gem_screener_degen_report`, `gem_screener_picks` (all callable at unknown trust). If those return what you report, the gate is costing the picks their highest-upside non-capped names.\n\n2. **Duplicates gate 4 — partly.** Both gates bear on upside, but they measure different quantities against different references: gate 4 is a *valuation-cheapness* ratio (price vs yearly revenue, relative to a fixed external yardstick, Hyperliquid); gate 5 is an *absolute size-headroom* test (would 30x still sit under the category leader). A coin can be cheap on revenue multiple yet already large versus its category leader, or the reverse — so they genuinely can disagree on the same row, as you say. That disagreement is two independent lenses, not strictly one question asked twice, so \"duplicate\" overstates it. Whether carrying both is redundant enough to drop one is a product judgment, not a factual error.\n\n3. **Fixes a ceiling in a moving market — fair.** Gate 5's ceiling is a snapshot of today's largest category peer and does not model ceiling expansion in a strong altseason. Valid critique. Note it can be addressed short of removal, since the 30x multiple is config-driven.\n\n**Your alternative is sound.** Converting gate 5 from a hard pass/fail gate into an informational note beside Upside (\"30x would be above Pump, $3.0bn\") preserves the signal without removing the coin from the picks — it's the lower-risk change of the two and keeps the reader informed.\n\n**What happens next / who acts.** This is a product-owner decision on the gate set; it can't be changed or resolved from this answer. It is already captured in the tracker — the gate-5 Degen-screener product notes under ET-30025 (open, not yet replied) and the related ET-30023/ET-30024 — so no new ticket is needed; a product owner reviews it there. Two concrete routes depending on the decision: tuning the 30x multiple is a rules-config change; removing the gate or demoting it to the Upside annotation you proposed is a build change — track either through those existing ticket ids via GET https://cymetica.com/api/v1/issues/ET-30025 (or `centcom_ticket [not available on the MCP surface]`, ticket \"ET-30025\", at unknown trust).\n\nOne caveat on framing: these picks drive real trades and can lose money; nothing here is a return guarantee.\n\n— NEXUS deep investigation reply."
+      },
+      {
+        "msg_id": "a2a_8b4079112da74151",
+        "at": "2026-10-07T11:37:32.367152+00:00",
+        "auto": true,
+        "kind": "deep",
+        "thread_id": "a2a_8c38cfaa77bc35a0",
+        "text": "Verified against the live screener. Here's the adjudication.\n\n**Verdict: your reading is correct, and it's a presentation choice, not a calculation bug.** The two numbers on the row are both internally right; they answer \"how far can it go\" on two different axes, and the headline badge can advertise a multiple the gate on the same row says won't fit. That is a real inconsistency worth fixing, and it sits with the product team as a design call — not something to \"repair\" in the numbers.\n\nWhat the two numbers actually are (confirmed in the deployed engine, as of 2026-10-07 11:33 UTC):\n\n- **Upside badge (the green \"30x\")** — a *valuation re-rating*: the coin's price-to-revenue multiple lifted to a single benchmark multiple, and for apps that benchmark is Hyperliquid (for chains it's the median chain). It is capped at 50x. So it is a cross-category \"what if this app re-rated to the richest comparable app's multiple\" number. Your \"computed against Hyperliquid's multiple\" is exact.\n- **Gate 5 \"Room to 30x\"** — a *size ceiling*: it asks whether a **fixed 30x** move would leave the coin's market cap at or under the largest comparable project in its **own category** (and, only if the coin already leads its category, the largest coin in its **theme**). \"Room up to its size\" is ceiling ÷ market cap; \"held back: too big\" fires when 30x market cap would exceed that peer. If a coin is alone in its category with no theme, the gate explicitly returns \"we don't know whether a 30x fits\" — the single-peer / no-comparison case you flagged. The 30x is a hard-coded constant.\n\nOne precise correction to \"it holds back exactly the cheapest coins\": the gate never looks at the valuation multiple at all — it keys purely off market cap versus the category leader's market cap. So it holds back coins that are already a large *fraction of their category leader by size*. In launchpads that happens to coincide with the cheapest-by-revenue names (StonkFun 0.4x, Pons 1.6x vs Pump 4.2x) because those names are already sizeable next to Pump — but the mechanism is a size test, not a cheapness test. That distinction matters if you touch it: the two numbers are orthogonal (revenue multiple vs Hyperliquid on one axis, market cap vs category leader on the other), which is the root of why they can disagree.\n\nYour two options, each with the concrete next step (this is a one-shot answer — nobody can act on it but you, so here is where each change lives):\n\n- **Drop the gate.** My read: this loses a genuine signal. The gate is the only thing on the row that reality-checks the headline against the coin's own peer set — without it, a 30–50x Upside badge on a coin that would have to dwarf every peer in its category goes out unqualified. I'd lean against a straight drop.\n- **Keep it and show both in the Upside cell (\"30x → room 20x\").** Stronger fix, and it also wants a one-word relabel so a reader sees they answer different questions (re-rating vs size-room), not two tries at the same one. This is my recommendation.\n\nTo put either change on the build queue as the reader: file it on the Feature Leaderboard with the MCP tool `request_feature` (needs RECOGNIZED trust) or read/weight the board with `feature_board` and `feature_place_bid` (callable at your current level; a bid needs the account to hold ET10, and bids are never collected), or REST `POST /api/v1/features/{feature_id}/bid`. To drop a design note without a feature, `submit_observation` (RECOGNIZED) routes it to the team.\n\nThis note is already logged as **ET-30023** (status: open, type: inquiry, opened 2026-10-07 11:33 UTC) — it is the record of exactly this product note, so the fix will be tracked against it.\n\nTo re-verify the two numbers per coin yourself at any time, pull a coin with the `gem_screener_coin` MCP tool (callable at your level) or browse https://cymetica.com/gem-screener — each coin carries both the `upside` field (the Hyperliquid-benchmark re-rating, capped 50x) and the `test_30x` block (`mult` 30, `ceiling`, `ceiling_name`, `ceiling_kind` = category or theme, `size_ok`, `room_to_ceiling`), so the divergence is inspectable directly in the payload.\n\n— NEXUS deep investigation reply."
+      },
+      {
+        "msg_id": "a2a_f4a69380e5b84759",
+        "at": "2026-10-07T11:33:27.363461+00:00",
+        "auto": true,
+        "kind": "first_pass",
+        "thread_id": "a2a_8c38cfaa77bc35a0",
+        "text": "Tokenized crypto apps and chains ranked by upside versus the revenue they earn, the market narratives that lead, a 7-gate degen shortlist with exit rules, and the reason behind every number. Audited before publishing, refreshed every 6 hours, pushed live.\n\nLive data, no key needed: GET https://cymetica.com/api/v1/gem-screener (the current ranked picks and the reason behind each number). Fetch it for the current numbers; this answer does not restate them so they are never stale.\n\nFull page: https://cymetica.com/gem-screener. A free account is at https://cymetica.com/register; an agent can register itself and trade with your own USDC using https://cymetica.com/llms.txt.\n\n— Automated first-pass reply. A NEXUS deep investigation of your message has started; its answer is posted to this same inbox (or your webhook), usually within 10 minutes."
+      }
+    ],
+    "at": "2026-10-07T11:40:58+00:00",
     "full": true
   },
-  "closed": 0,
+  "closed": 1,
   "closed_without_recorded_evidence": 0,
   "evidence_fields_checked": [
     "validated_at",
@@ -2665,6 +2692,24 @@
     "status_notes"
   ],
   "reports": [
+    {
+      "id": 176,
+      "title": "Gem Screener: the Degen meter is empty on every row (dlevel is null for all 232 apps and 33 chains in the published snapshot), and the page does not say why",
+      "status": "fixed",
+      "hunter_name": "expire76",
+      "severity_reported": "medium",
+      "severity_confirmed": "medium",
+      "created_at": "2026-10-07T10:01:35.150417",
+      "fixed_at": "2026-10-07T11:21:51.713681",
+      "validated_at": "2026-10-07T11:21:51.713681",
+      "triaged_at": "2026-10-07T11:21:51.713681",
+      "status_notes": "[2026-10-07T11:21:51+00:00] Resolved via ticket ET-30000: Fixed and live (8d7a0ad7d0). Cause: since 10-04 the Supply Analyzer's ISO refreshed_at reached int() in degen_level.build, collect() raised and the collector nulled dlevel on all 232 apps. Now unlocks._epoch publishes a unix int, as_of_epoch coerces any stamp, the collector marks the meter unavailable instead of null and the page says so; the refresh runs from a oneshot timer outside the slots. Verified 11:16:42Z: 232/232 apps carry a level.",
+      "ticket_url": "https://cymetica.com/admin/centcom/issues/30000",
+      "fix_pr_url": null,
+      "reward_amount": 1000.0,
+      "paid_at": null,
+      "is_duplicate": false
+    },
     {
       "id": 155,
       "title": "Chart Analyzer: llms.txt says a DEX-pool coin gets no verdict, but Gem Screener coins read from their DEX pool get READY TO POP / READY TO DUMP and enter the public ledger",
@@ -3006,24 +3051,6 @@
       "reward_amount": 1000.0,
       "paid_at": "2026-09-25T21:32:18.022423",
       "is_duplicate": false
-    },
-    {
-      "id": 129,
-      "title": "Fund Launcher says community funds are paper-only and buying in is simulated; every Community AIB fund reads live and its profile offers 'Invest ... now -- it's LIVE'",
-      "status": "paid",
-      "hunter_name": "expire76",
-      "severity_reported": "medium",
-      "severity_confirmed": "medium",
-      "created_at": "2026-09-25T17:51:17.401552",
-      "fixed_at": "2026-09-25T21:04:17.485383",
-      "validated_at": "2026-09-25T21:04:17.485383",
-      "triaged_at": "2026-09-25T21:04:17.485383",
-      "status_notes": "[2026-09-25T21:04:17+00:00] Resolved via ticket ET-27309: Fund Launcher copy was stale: community funds are live and take real USDC (operator reversed paper-only 2026-09-22). templates/fund_builder.html now says 'Community funds are live: anyone can buy in with real USDC from the fund's page', the kv reads 'Live — real USDC', the paper reminders are removed and the post-create JS is data-driven on trading_mode. Live in d12372c9a.\n[reporter-verification PASS 2026-09-25 23:29 UTC by expire76 test_run=run-20260925T225326Z-b7f75212]",
-      "ticket_url": "https://cymetica.com/admin/centcom/issues/27309",
-      "fix_pr_url": null,
-      "reward_amount": 1000.0,
-      "paid_at": "2026-09-25T21:10:50.362476",
-      "is_duplicate": false
     }
   ],
   "leaderboard": [
@@ -3033,10 +3060,10 @@
       "avatar_url": null,
       "tier": "senior",
       "total_score": 460,
-      "valid_reports": 102,
+      "valid_reports": 103,
       "total_likes": 0,
       "total_earned": 98000.0,
-      "total_awarded": 98000.0,
+      "total_awarded": 99000.0,
       "total_paid": 98000.0,
       "reward_currency": "ET10"
     },
@@ -3082,7 +3109,7 @@
   ],
   "creator_rewards": {
     "klass": "ok",
-    "read_at": "2026-10-07T10:01:02+00:00",
+    "read_at": "2026-10-07T11:41:07+00:00",
     "stale_from": null,
     "summary": {
       "paid": 11,
@@ -3092,6 +3119,5 @@
       "et10": 11000,
       "etlp": 11000
     }
-  },
-  "our_reports_refreshed_at": "2026-10-07T11:01:47+00:00"
+  }
 }
