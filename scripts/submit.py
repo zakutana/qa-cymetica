@@ -96,6 +96,39 @@ def evidence_runs(findings: dict, cited: list[str]) -> dict[str, str]:
     return out
 
 
+def select_items(payloads: list, reports: list, findings: dict,
+                 seen: set) -> tuple[list[dict], list[tuple[str, str]]]:
+    """What may be filed now, and why the rest may not.
+
+    A finding is reported ONCE. [operator 2026-10-07] "mas otevrit stary bug
+    kdyz je stejne a ne tvorit duplicitni": six groups of paid reports shared
+    one finding each, because the sweep wrote a new report for a recurrence.
+    A finding that already holds a report is refused here, whatever a skill
+    says; what reopens it is a FAIL verification on the original
+    (scripts/verify.py), which their server answers `reopened`. The title
+    dedupe below it stays, for a report whose findings are new."""
+    reported = {row.get("id"): [r.get("report_id") for r in
+                                (row.get("filing") or {}).get("reports") or []]
+                for row in findings.get("findings") or []}
+    items, skipped = [], []
+    for key, payload in payloads:
+        cited = [r["findings"] for r in reports if r["key"] == key][0]
+        old = {fid: reported[fid] for fid in cited if reported.get(fid)}
+        if old:
+            named = ", ".join(f"{fid} (#{', #'.join(str(i) for i in ids)})"
+                              for fid, ids in old.items())
+            skipped.append((key, f"already reported: {named}. A recurrence reopens "
+                                 f"the original -- scripts/verify.py sends the FAIL "
+                                 f"verification; nothing new is filed"))
+            continue
+        if payload["title"].strip().lower() in seen:
+            skipped.append((key, "a report with this title already exists"))
+            continue
+        items.append({"key": key, "payload": payload, "findings": cited,
+                      "runs": evidence_runs(findings, cited)})
+    return items, skipped
+
+
 def compose(report: dict, findings: dict, footer: str) -> dict:
     """Build one submission. Numbers come from the ledger, never typed."""
     by_id = {f["id"]: f for f in findings["findings"]}
@@ -533,14 +566,9 @@ def main() -> None:
             CURRENT_TIER.reset(token)
         print(f"tracker currently holds {len(seen)} reports\n")
 
-        items = []
-        for key, payload in payloads:
-            if payload["title"].strip().lower() in seen:
-                print(f"  SKIP  {key}: a report with this title already exists")
-                continue
-            cited = [r["findings"] for r in reports if r["key"] == key][0]
-            items.append({"key": key, "payload": payload, "findings": cited,
-                          "runs": evidence_runs(findings, cited)})
+        items, skipped = select_items(payloads, reports, findings, seen)
+        for key, why in skipped:
+            print(f"  SKIP  {key}: {why}")
 
         for result in submit_batch(client, items, confirm=True, pause=PAUSE_SECONDS):
             detail = f"  id={result['report_id']}" if result.get("report_id") else ""

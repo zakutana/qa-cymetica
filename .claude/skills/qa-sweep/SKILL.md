@@ -170,7 +170,7 @@ judgement, one row at a time. Read the states off the folded ledger.
 | **WITHDRAWN**, **SUPERSEDED** | Nothing. Terminal and ours. |
 | **PASSING, UNCLAIMED** | Nothing owed. They fixed it without saying so. |
 | **RAISED** | Look at whether they answered (step 3 already fetched it). If not, nothing to do — do not chase. |
-| **STILL REPRODUCIBLE** | They engaged and it still fails. If no re-report exists yet, write one and **file it** (`scripts/submit.py --confirm --only <key>`). **If they marked it fixed and our check still fails, dump the live field set of the endpoint the check reads before writing anything** — see below. |
+| **STILL REPRODUCIBLE** | They engaged and it still fails. **Reopen the original report, never file a new one** (the operator's rule, under *Rules that hold during a sweep*): `scripts/verify.py --confirm --only <finding>` sends the owed FAIL verification on the original report (`correction_owed` or `reopen`), and their server answers `reopened`. `submit.py` refuses a finding that already holds a report. **If they marked it fixed and our check still fails, dump the live field set of the endpoint the check reads before sending anything** — see below. |
 | **NOT RAISED YET** | It fails and has never been filed. Write the report and **file it**. |
 | **CHECK CHANGED** | The check's definition moved. Either `rebind-check` onto the right nodeid or `pin-fingerprint` — both need a stated reason. |
 | **PASSING (UNPINNED)** | It passes but was never seen failing under this definition. Pin only if a filed report documents the original failure; cite the report number in the reason. Otherwise leave it. |
@@ -178,6 +178,9 @@ judgement, one row at a time. Read the states off the folded ledger.
 | **UNVERIFIABLE** | No check can settle it. Either write one or withdraw the finding. Say which you recommend. |
 
 ## Rules that hold during a sweep
+
+* [operator 2026-10-07] *"mas otevrit stary bug kdyz je stejne a ne tvorit duplicitni"*
+  -- a defect that comes back reopens its original report; it is never filed again.
 
 * [operator 2026-09-06] **File without asking.** Their standing instruction:
   they will not read or approve drafts. Write the report and send it.

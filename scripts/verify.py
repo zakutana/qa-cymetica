@@ -130,8 +130,15 @@ def owed(ledger: dict, only: list[str] | None) -> list[dict]:
         if only and fid not in only:
             continue
         obligations = row.get("obligations") or {}
+        corrections = list(obligations.get("correction_owed") or [])
+        # `reopen` -- the row passed after their fix and now fails again -- was
+        # sent by nothing until 2026-10-07, so a recurrence became a NEW report
+        # (six duplicate groups, all paid). A fail on the ORIGINAL report is what
+        # reopens their ticket ([operator 2026-10-07] "mas otevrit stary bug").
+        reopened = [r for r in obligations.get("reopen") or [] if r not in corrections]
         due = ([(r, "pass") for r in obligations.get("verification_owed") or []]
-               + [(r, "fail") for r in obligations.get("correction_owed") or []])
+               + [(r, "fail") for r in corrections]
+               + [(r, "fail") for r in reopened])
         if not due:
             continue
         reports = [r for r, _ in due]
@@ -176,6 +183,7 @@ def owed(ledger: dict, only: list[str] | None) -> list[dict]:
                 # carries it have to come from one reading, or they drift the
                 # way the two a2a readers did.
                 "correction_reason": (
+                    "regressed" if report_id in reopened else
                     fold_correction_reason(by_id.get(report_id) or {},
                                            row["filing"].get("verifications")
                                            or [])
@@ -405,6 +413,12 @@ def body(item: dict) -> dict:
             "That definition matches the one recorded at the failure. The "
             "helper functions the check calls were not fingerprinted then, so "
             "we do not claim more than that."
+        )
+    elif item.get("correction_reason") == "regressed":
+        headline = (
+            "VERDICT fail -- this defect is back. After your fix the check that "
+            "recorded it passed; it now fails again. We are reopening this report "
+            "instead of filing a new report for the same defect."
         )
     elif item.get("correction_reason") == "accepted":
         # The third case, and the reason two paid reports sat with them under

@@ -50,3 +50,34 @@ def test_a_report_is_composed_only_about_a_defect_our_check_reproduces(state):
         assert "REPRODUCING" not in str(other), other
     except Exception:  # noqa: BLE001 -- the fixture is thin past this guard
         pass
+
+
+@qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
+def test_a_finding_already_reported_is_reopened_never_filed_again():
+    """[operator 2026-10-07] "mas otevrit stary bug kdyz je stejne a ne tvorit
+    duplicitni". Six groups of paid reports shared one finding each (#49/#59,
+    #53/#60/#74, #94/#96, #112/#136, #132/#137, #89/#98): the sweep wrote a new
+    report for a recurrence because its skill said so. A finding that already
+    has a report is refused here, whatever a skill or a session says, and the
+    refusal names the way that does reopen it: a FAIL verification on the
+    original (scripts/verify.py), which their server answers `reopened`."""
+    submit = _submit()
+    findings = {"findings": [
+        {"id": "CYM-old", "filing": {"state": "FIX_CLAIMED",
+                                     "reports": [{"report_id": 112}]}},
+        {"id": "CYM-new", "filing": {"state": "NOT_RAISED", "reports": []}}]}
+    reports = [{"key": "again", "findings": ["CYM-old"]},
+               {"key": "mixed", "findings": ["CYM-new", "CYM-old"]},
+               {"key": "fresh", "findings": ["CYM-new"]}]
+    payloads = [(r["key"], {"title": r["key"]}) for r in reports]
+
+    items, skipped = submit.select_items(payloads, reports, findings, seen=set())
+
+    assert [i["key"] for i in items] == ["fresh"]
+    assert {k for k, _ in skipped} == {"again", "mixed"}
+    why = dict(skipped)["again"]
+    assert "#112" in why and "verify.py" in why, why
+
+    # The title dedupe still applies to what is left.
+    items, skipped = submit.select_items(payloads, reports, findings, seen={"fresh"})
+    assert items == [] and "title" in dict(skipped)["fresh"]

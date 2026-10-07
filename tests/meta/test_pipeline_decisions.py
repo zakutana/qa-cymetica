@@ -155,6 +155,10 @@ PINNED = {
          "06d4c8a79677483d48c429b42d7fd00bba92f7d808e098992f599a141dd0b28c"),
         ("2026-09-07", "libi se mi ze po sweepu",
          "f4798675029b70b2926b9019189a8ddff76b9cb24e4aad1ed409b78ee6fe0c9d"),
+        # 2026-10-07, added because they said it, after six groups of duplicate
+        # reports were found: a recurrence reopens the original.
+        ("2026-10-07", "mas otevrit stary bug",
+         "67716ff08fb4f5780d8a4e671b52fdbbc401fbcbc324fd26565528557ca98d9c"),
     ],
     # 2026-09-30, added because they said it: the Gem Screener audit and its
     # rule that the tests cover only the core. Their words, verbatim, typos and all.

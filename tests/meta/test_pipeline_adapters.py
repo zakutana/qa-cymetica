@@ -959,9 +959,16 @@ def test_the_reason_reaches_the_message_from_the_ledger():
                   "adjudicated_by": {"run_id": "run-1",
                                      "at": "2026-09-20T09:00:00+00:00"}},
         "filing": {"reports": [{"report_id": 89, "status": "paid"},
-                               {"report_id": 90, "status": "fixed"}],
+                               {"report_id": 90, "status": "fixed"},
+                               {"report_id": 91, "status": "fixed"}],
                    "verifications": []},
-        "obligations": {"correction_owed": [89, 90], "verification_owed": []},
+        # `reopen` (a fall from PASSING after their fix) was sent by nothing
+        # until 2026-10-07, so the sweep filed a NEW report for a recurrence --
+        # the duplicates the operator asked to stop ("otevrit stary bug").
+        # A fail on the ORIGINAL report reopens their ticket. 90 is owed both
+        # ways and must go once.
+        "obligations": {"correction_owed": [89, 90], "verification_owed": [],
+                        "reopen": [90, 91]},
     }}}
 
     run = {"run_id": "run-1", "git_head": "abc", "prereg_id": "PRE-0001",
@@ -973,12 +980,15 @@ def test_the_reason_reaches_the_message_from_the_ledger():
            "started_at": "2026-09-20T09:00:00+00:00"}
     verify.load_run = lambda *a, **k: run
 
-    reasons = {item["report_id"]: item["correction_reason"]
-               for item in verify.owed(ledger, None)}
-    assert reasons == {89: "accepted", 90: "fix_claimed"}, reasons
+    work = verify.owed(ledger, None)
+    assert sorted(i["report_id"] for i in work) == [89, 90, 91], "90 goes once"
+    reasons = {item["report_id"]: item["correction_reason"] for item in work}
+    assert reasons == {89: "accepted", 90: "fix_claimed", 91: "regressed"}, reasons
+    assert all(item["verdict"] == "fail" for item in work)
     assert "accepted and paid" in verify.body(
-        next(i for i in verify.owed(ledger, None)
-             if i["report_id"] == 89))["evidence"]
+        next(i for i in work if i["report_id"] == 89))["evidence"]
+    back = verify.body(next(i for i in work if i["report_id"] == 91))["evidence"]
+    assert "again" in back and "instead of filing a new report" in back, back
 
 
 @qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
