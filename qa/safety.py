@@ -190,11 +190,15 @@ class SafetyTransport(httpx.BaseTransport):
         registry: EndpointRegistry,
         evidence=None,
         budget=None,
+        pacer=None,
     ):
         self.inner = inner
         self.registry = registry
         self.evidence = evidence
         self.budget = budget
+        # The shared brake (qa/ratelimit.py). qa/client.py passes one for the real
+        # network; a negative control's transport has none.
+        self.pacer = pacer
 
     # -- entry point ------------------------------------------------------
     def handle_request(self, request: httpx.Request) -> httpx.Response:
@@ -218,6 +222,9 @@ class SafetyTransport(httpx.BaseTransport):
         # Timed only when it reaches the real network: a test's MockTransport
         # or a guard's negative control is never written (qa/timings.py).
         real = isinstance(self.inner, httpx.HTTPTransport)
+        if self.pacer is not None:
+            # Before the clock starts: a wait for our own brake is not their latency.
+            self.pacer.wait(request)
         started = time.perf_counter()
         try:
             response = self.inner.handle_request(request)
@@ -225,6 +232,28 @@ class SafetyTransport(httpx.BaseTransport):
             if real:
                 timings.record(request, started, tier, error=type(exc).__name__)
             raise
+
+        if self.pacer is not None:
+            from qa.ratelimit import may_retry, retry_after
+
+            self.pacer.learn(request, response)
+            if response.status_code == 429 and may_retry(method):
+                # Their 429 is written down, then honoured: hold the route for
+                # Retry-After and ask a READ once more. A write is never resent.
+                if real:
+                    timings.record(request, started, tier, status=429, to="headers")
+                pause = retry_after(response)
+                response.close()
+                self.pacer.hold(request, pause)
+                self.pacer.wait(request)
+                started = time.perf_counter()
+                try:
+                    response = self.inner.handle_request(request)
+                except Exception as exc:
+                    if real:
+                        timings.record(request, started, tier, error=type(exc).__name__)
+                    raise
+                self.pacer.learn(request, response)
 
         if self.budget is not None:
             self.budget.after_response(response)

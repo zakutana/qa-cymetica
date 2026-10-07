@@ -215,7 +215,16 @@ IDLE_DAYS = 14
 # aimed at the operator's actual question about GitHub could never fire, on the
 # day whose whole plan was the size of git. 150 is ~3 months at the ~1 MB/day
 # the repository now grows, and fires long before anyone finds gigabytes there.
+# When qa/ratelimit.py went in. The traffic peak is counted from here, so the
+# 187-a-minute week before it does not hold the ceiling red for seven days.
+BRAKE_SINCE = "2026-10-07T00:00:00+00:00"
+
 CEILINGS = {
+    # The busiest minute on their host (sizes(), from state/timings.jsonl). The brake
+    # allows 60 started a minute; rows are stamped when a request ENDS, so a slow
+    # answer lands in the next minute and a few in flight can stack -- hence 70, not
+    # 60. Above it, something is sending past the brake. 2026-10-07, REPLY-0030.
+    "peak_requests_per_minute": 70,
     # 1000 -> 5000 on 2026-10-03: the operator has 800 GB free, so disk is not the limit; the
     # archives and the manifest keep what git must not hold. Still a ceiling, so a runaway
     # capture loop is noticed, just not a single heavy day of sweeps.
@@ -288,7 +297,11 @@ CEILINGS = {
     # run lost nineteen bots to one ReadTimeout); a species already trading left
     # out; the agreed settings. And that feedback and `acted` reach docs/lab-manager.md.
     # Fourteen were written and merged to six.
-    "meta_tests": 820,
+    # 820 -> 822 for the request brake (2026-10-07, test_pipeline_ratelimit.py): one
+    # spacing shared by every process plus a slower route's own, and a 429 that waits
+    # and re-asks only a read. The reopen-not-duplicate rule went into two existing
+    # tests instead of new ones.
+    "meta_tests": 822,
 }
 
 BASH_SCRIPT = re.compile(r"python\s+scripts[/\\]([a-z_]+)\.py")
@@ -604,6 +617,31 @@ def sizes(root: Path | None = None) -> dict:
     for line in pack.splitlines():
         if line.startswith("size-pack:"):
             out["pack_mb"] = round(int(line.split()[1]) / 1024, 1)
+
+    # The busiest minute we put on their host in the last week, counted from
+    # state/timings.jsonl. They asked for no load or volume testing (REPLY-0030)
+    # and we still peaked at 187 a minute on 2026-10-03; qa/ratelimit.py holds every
+    # process to 60. Counted only since the brake went in, so the ceiling is held
+    # above where the repository stands and still catches a process that slips
+    # past it -- a client built outside qa/client.py, a brake switched off.
+    timings = base / "state" / "timings.jsonl"
+    week_ago = (datetime.now(timezone.utc) - timedelta(days=7)).isoformat()
+    since = max(week_ago, BRAKE_SINCE)
+    try:
+        per_minute: dict[str, int] = {}
+        with open(timings, encoding="utf-8") as fh:
+            for line in fh:
+                if '"cymetica.com"' not in line:
+                    continue
+                try:
+                    at = str(json.loads(line).get("at") or "")
+                except ValueError:
+                    continue
+                if at >= since:
+                    per_minute[at[:16]] = per_minute.get(at[:16], 0) + 1
+        out["peak_requests_per_minute"] = max(per_minute.values(), default=0)
+    except OSError:
+        pass
     return out
 
 

@@ -13,6 +13,7 @@ from typing import Any
 
 import httpx
 
+from qa import ratelimit
 from qa.config import DEFAULT_TIMEOUT, USER_AGENT, Identity, base_urls
 from qa.safety import EndpointRegistry, SafetyTransport, SafetyViolation
 
@@ -235,6 +236,8 @@ def build_client(
         registry=registry,
         evidence=evidence,
         budget=budget,
+        # The shared brake, on the real network only (qa/ratelimit.py).
+        pacer=ratelimit.shared() if inner is None else None,
     )
     kwargs = dict(
         base_url=base_url or base_urls()["rest"],
@@ -323,6 +326,7 @@ def build_fingerprint_client(
         registry=registry if registry is not None else EndpointRegistry.load(),
         evidence=None,
         budget=None,
+        pacer=ratelimit.shared() if inner is None else None,
     )
     kwargs = dict(
         headers={"User-Agent": USER_AGENT, "Accept": "*/*"},
@@ -384,6 +388,7 @@ def build_source_client(
         registry=EndpointRegistry.load(),
         evidence=evidence,
         budget=None,
+        pacer=ratelimit.shared() if inner is None else None,
     )
     kwargs = dict(
         headers={"User-Agent": USER_AGENT, "Accept": "application/json"},

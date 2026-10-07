@@ -89,6 +89,8 @@ state/sampler-run.err
 # request, written during every run -- tracked, it would cost each run its
 # level V. Read by scripts/timeouts.py.
 state/timings.jsonl
+# The request brake's shared slots (qa/ratelimit.py), rewritten on every request.
+state/pace.json
 
 # The laboratory's own notebook: what a session did, what it learned, what the
 # next one should pick up. Outside git for the reason the four above are --
