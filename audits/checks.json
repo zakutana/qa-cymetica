@@ -727,10 +727,11 @@
     },
     "tests/meta/test_pipeline_admissibility.py::test_two_levels_reproduce_vs_verify": {
       "fingerprints": [
-        "7c91fb6ece15c717354cc25862f6b445225e89f36cd2966cde638b659f3d944b"
+        "7c91fb6ece15c717354cc25862f6b445225e89f36cd2966cde638b659f3d944b",
+        "f6de00c132906ce486b2c4ba521691b89a6a8b3a7b81d59bdb6bc0045c4d388d"
       ],
-      "at": "2026-09-07T20:50:41+00:00",
-      "run_id": "run-20260907T201230Z-7fee4cf",
+      "at": "2026-10-08T07:05:00+00:00",
+      "run_id": "run-20261008T054544Z-c1ef9d5d",
       "gap_claimed": false
     },
     "tests/meta/test_pipeline_check_quality.py::test_a_field_missing_from_one_row_is_not_a_claim_about_all_of_them": {
@@ -813,11 +814,12 @@
         "c80fff4372042146a481dc41b7493e05e4f9cd0eed5ff534ae1e2d488d970102",
         "935c1571b0375b507c2efb9b3f08fe3aba621db90dafe58be00ee5708b131e45",
         "4811ad593ede4cbdea918221bb22181c963d958c1a976a75affe8ecc40909f12",
-        "fbf244a18358406db8b2fae12611a519c85875e4c0b1ccc2bf12c9c1349fd7b4"
+        "fbf244a18358406db8b2fae12611a519c85875e4c0b1ccc2bf12c9c1349fd7b4",
+        "45adaae3586b01fa824daa280c4ef87c812c05d58a845a650dbbdec8d54af1fb"
       ],
-      "at": "2026-10-04T21:02:29+00:00",
-      "run_id": "run-20261004T184429Z-9e0ac133",
-      "gap_claimed": true
+      "at": "2026-10-08T07:05:00+00:00",
+      "run_id": "run-20261008T054544Z-c1ef9d5d",
+      "gap_claimed": false
     },
     "tests/meta/test_pipeline_checks.py::test_a_failed_read_is_never_a_value": {
       "fingerprints": [
@@ -1358,10 +1360,11 @@
     },
     "tests/meta/test_pipeline_recorder.py::test_a_transport_failure_is_inconclusive_not_a_defect": {
       "fingerprints": [
-        "3c0bc2c5d76a3bb7cd55c021c24c234f9e6d5fafc3a7a2a4bdef8287200bd366"
+        "3c0bc2c5d76a3bb7cd55c021c24c234f9e6d5fafc3a7a2a4bdef8287200bd366",
+        "f9a61cd5509fc2f9011bd2fb3d82373934fb6065103d3e87f6ea72fbe52bbf30"
       ],
-      "at": "2026-09-07T20:50:41+00:00",
-      "run_id": "run-20260907T201230Z-7fee4cf",
+      "at": "2026-10-08T07:05:00+00:00",
+      "run_id": "run-20261008T054544Z-c1ef9d5d",
       "gap_claimed": false
     },
     "tests/meta/test_pipeline_recorder.py::test_an_option_value_is_not_a_test_path": {
@@ -1416,11 +1419,12 @@
     "tests/meta/test_pipeline_recorder.py::test_ratelimit_budget_reaches_the_run_record": {
       "fingerprints": [
         "15e9723c7ce534f7f92cab5ce3312b80b16eee3733be1adcd0b56d37ea0c71ce",
-        "d93fb37350f35d8bee375c854d43ac33ee51ce5707a0f5b3d287b8b8f3a38b39"
+        "d93fb37350f35d8bee375c854d43ac33ee51ce5707a0f5b3d287b8b8f3a38b39",
+        "3124d2c2963813099ed9ea92f38ad5b63127e4775d72093b65022fa33c37eb24"
       ],
-      "at": "2026-10-04T21:02:29+00:00",
-      "run_id": "run-20261004T184429Z-9e0ac133",
-      "gap_claimed": true
+      "at": "2026-10-08T07:05:00+00:00",
+      "run_id": "run-20261008T054544Z-c1ef9d5d",
+      "gap_claimed": false
     },
     "tests/meta/test_pipeline_recorder.py::test_records_collected_nodeids_and_check_fingerprint": {
       "fingerprints": [
@@ -1732,10 +1736,11 @@
     },
     "tests/meta/test_pipeline_withdraw.py::test_withdrawal_is_an_event_with_obligations": {
       "fingerprints": [
-        "5f5a34f5571acb5288c9ccfee2f304f24427fff8422e3392ac3c98205d6a1223"
+        "5f5a34f5571acb5288c9ccfee2f304f24427fff8422e3392ac3c98205d6a1223",
+        "7d6f90f84360442b0eb6e68a750166643b9df26ca8a835d8c8abde55c6d016a5"
       ],
-      "at": "2026-09-07T20:50:41+00:00",
-      "run_id": "run-20260907T201230Z-7fee4cf",
+      "at": "2026-10-08T07:05:00+00:00",
+      "run_id": "run-20261008T054544Z-c1ef9d5d",
       "gap_claimed": false
     },
     "tests/repo/test_live_server.py::test_a_broken_render_keeps_serving_the_last_good_page": {
@@ -4979,8 +4984,8 @@
       "fingerprints": [
         "25024653ae3ed0ca220b6cfea2bfbef7df46d326167f00c41e8c45e5df1283d1"
       ],
-      "at": "2026-09-11T16:42:43+00:00",
-      "run_id": "run-20260911T151835Z-31ec9b3e",
+      "at": "2026-10-08T07:05:00+00:00",
+      "run_id": "run-20261008T054544Z-c1ef9d5d",
       "gap_claimed": false
     },
     "tests/meta/test_pipeline_decisions.py::test_no_decision_was_added_or_reworded_without_the_operator": {
@@ -5458,10 +5463,11 @@
       "fingerprints": [
         "d12c23908b993869e9e891cca7d66ab61a2af14220a3cc4f36bad0aee30b4352",
         "1a15cd9b27cc20d4d90da93b2fcd6b0377480277df70d1c1bec84aa917ed8609",
-        "1d8fcecc91fa5a1b838517ac4cf6a6db523bbfc53fe94f593fbd90a3b861816e"
+        "1d8fcecc91fa5a1b838517ac4cf6a6db523bbfc53fe94f593fbd90a3b861816e",
+        "31246bfc701b1435d4f8d87831763d13f910e243afe38438bc4f5405bd219faf"
       ],
-      "at": "2026-10-02T21:23:33+00:00",
-      "run_id": "run-20261002T174919Z-7bf09ffc",
+      "at": "2026-10-08T07:05:00+00:00",
+      "run_id": "run-20261008T054544Z-c1ef9d5d",
       "gap_claimed": false
     },
     "tests/meta/test_pipeline_sampler.py::test_a_trade_is_written_once_and_again_only_when_it_changes": {
@@ -8260,10 +8266,11 @@
     },
     "tests/meta/test_pipeline_adapters.py::test_the_reason_reaches_the_message_from_the_ledger": {
       "fingerprints": [
-        "f6baee1820894ce8f908ed8b650a47fae4b7810350c377a02759b9006c493a8d"
+        "f6baee1820894ce8f908ed8b650a47fae4b7810350c377a02759b9006c493a8d",
+        "161f4cbca196aa9ae69700d722646da8301df9e8cce6bc209f7fc62c6c7ec1c5"
       ],
-      "at": "2026-09-22T15:30:00+00:00",
-      "run_id": "run-20260922T074028Z-a051f15b",
+      "at": "2026-10-08T07:05:00+00:00",
+      "run_id": "run-20261008T054544Z-c1ef9d5d",
       "gap_claimed": false
     },
     "tests/meta/test_pipeline_adapters.py::test_one_unreadable_report_does_not_take_the_whole_run_with_it": {
@@ -8736,10 +8743,11 @@
     },
     "tests/meta/test_pipeline_fold.py::test_an_old_pin_event_does_not_undo_a_newer_run": {
       "fingerprints": [
-        "70d9122a7452e86f9d29dba85d2a143dfc0be777c1ebb2014ad060f3e3f5e582"
+        "70d9122a7452e86f9d29dba85d2a143dfc0be777c1ebb2014ad060f3e3f5e582",
+        "9ed181e4eb22417c364ffd19a834cd1cef068fa8c6a459119c1f0001b460602b"
       ],
-      "at": "2026-09-22T15:30:00+00:00",
-      "run_id": "run-20260922T074028Z-a051f15b",
+      "at": "2026-10-08T07:05:00+00:00",
+      "run_id": "run-20261008T054544Z-c1ef9d5d",
       "gap_claimed": false
     },
     "tests/meta/test_pipeline_fold.py::test_a_split_gives_one_report_its_own_row_and_its_own_verdict": {
@@ -9876,11 +9884,12 @@
     },
     "tests/mcp/test_fund_history_starts_at_inception.py::test_a_fund_history_fetched_as_their_skill_says_starts_at_inception": {
       "fingerprints": [
-        "4e20d9ebfd70f3e0cd3e778f8f0fd9d6bdde4e3b5e3d2cde024b168bcc03cea8"
+        "4e20d9ebfd70f3e0cd3e778f8f0fd9d6bdde4e3b5e3d2cde024b168bcc03cea8",
+        "eb10506f151d65b22c30745959fb8e72859a367c3a888755912a1277f3fa461b"
       ],
-      "at": "2026-09-22T15:30:00+00:00",
-      "run_id": "run-20260922T074028Z-a051f15b",
-      "gap_claimed": false
+      "at": "2026-10-08T07:05:00+00:00",
+      "run_id": "run-20261006T192929Z-d392d4ab",
+      "gap_claimed": true
     },
     "tests/mcp/test_fund_profile_link_is_where_the_skill_says.py::test_every_listed_fund_carries_the_profile_link_the_skill_names": {
       "fingerprints": [
@@ -10744,10 +10753,11 @@
         "652034664b8d53e4ae8c0d91c4665365e9cdd19b5bfed47b0c32057a267fc87a",
         "29c1199918ffce1d6421ffdb50db55b3abfddd484b4e759a5e7cea2149936225",
         "c4a91b73a498d838fb8990feba41aeec831eaaa9a43992778d46557fcba5b049",
-        "bd4cabc778b48de56b13ef8c0b48124c47df282a56011f7a09077b4e1be237bc"
+        "bd4cabc778b48de56b13ef8c0b48124c47df282a56011f7a09077b4e1be237bc",
+        "f02ef1dfefdacd95a355f7ab000f54c38ebe4aa8bc3f8c04076e0b53567929d9"
       ],
-      "at": "2026-10-04T21:02:29+00:00",
-      "run_id": "run-20261004T184429Z-9e0ac133",
+      "at": "2026-10-08T07:05:00+00:00",
+      "run_id": "run-20261008T054544Z-c1ef9d5d",
       "gap_claimed": false
     },
     "tests/meta/test_pipeline_clone.py::test_the_transport_holds_a_settings_patch_to_its_declared_fields": {
@@ -11137,21 +11147,23 @@
     "tests/meta/test_pipeline_lab_loop.py::test_every_bot_stop_is_ours_their_guard_or_unexplained": {
       "fingerprints": [
         "614d389fb7868a2a9658828cc2bf2ce517eefa46fefe584016bcc928725f3996",
-        "56906e2aecfd5f4e5d8f50f010d3d3f9d1aabb28eb3e559f0276e1b7b1fea985"
+        "56906e2aecfd5f4e5d8f50f010d3d3f9d1aabb28eb3e559f0276e1b7b1fea985",
+        "c42a84b834aa1d017b6bc2dcfe1a2ef4d05caa17109451ba8adf3baf2e460c80"
       ],
-      "at": "2026-10-03T22:45:34+00:00",
-      "run_id": "deep-pass-2026-10-04",
+      "at": "2026-10-08T07:05:00+00:00",
+      "run_id": "run-20261008T054544Z-c1ef9d5d",
       "gap_claimed": true
     },
     "tests/meta/test_pipeline_lab_loop.py::test_a_tick_starts_the_next_setting_of_a_judged_bot_on_its_one_clone": {
       "fingerprints": [
         "df2ce1414dc0aa7c2380b19b6639a16ab1a15b7b0f2960b073f7d8e351afcf46",
         "5d78038c3ac0bd66cbc28b7d253338746b9bd5effd941aee9e7a678924882d89",
-        "4cfb0ac5b21ae602335247a99b5859991d71fa7a2e5602b05eea628293fdc55e"
+        "4cfb0ac5b21ae602335247a99b5859991d71fa7a2e5602b05eea628293fdc55e",
+        "9219b56930ecff651dbb2767b881e724015cb0d8110260b81fac1a03243de22d"
       ],
-      "at": "2026-10-03T22:45:34+00:00",
-      "run_id": "deep-pass-2026-10-04",
-      "gap_claimed": true
+      "at": "2026-10-08T07:05:00+00:00",
+      "run_id": "run-20261008T054544Z-c1ef9d5d",
+      "gap_claimed": false
     },
     "tests/meta/test_pipeline_lab_loop.py::test_a_variant_that_cannot_run_starts_nothing_and_says_why": {
       "fingerprints": [
@@ -11543,10 +11555,11 @@
         "97b8d27351b073b193e4006ee46c2ced612db2c7c2c18d2d63a2e6558eae6198",
         "ed6b7e300537ef1e56cdfd779caba8dc7d48d8e90eb59d922c54a8e941dc7be2",
         "a903416dec3899335070ac11ee39cf0ba96629b7078a51b518efb391a9e7eb6b",
-        "832480f6c1cce724433018ebd333dc3f584679411c6a93206d226551214b9c1d"
+        "832480f6c1cce724433018ebd333dc3f584679411c6a93206d226551214b9c1d",
+        "e6375f90430c3c2e67607fa17ccff89d8a364db1094931a2670ef36b5fbbf783"
       ],
-      "at": "2026-10-03T22:45:34+00:00",
-      "run_id": "deep-pass-2026-10-04",
+      "at": "2026-10-08T07:05:00+00:00",
+      "run_id": "run-20261008T054544Z-c1ef9d5d",
       "gap_claimed": false
     },
     "tests/meta/test_pipeline_morning.py::test_lab_py_morning_builds_the_page_and_published_records_the_day": {
@@ -13323,20 +13336,22 @@
     "tests/repo/test_morning_is_czech.py::test_every_report_has_a_plain_czech_line_and_the_deep_pass_has_no_code_in_it": {
       "fingerprints": [
         "a2afccddb22bd3474824347931ba7e73106b4ac974855d9fc103f9efc66a2b55",
-        "65e5e038708d3f1f25897a954679ea136a5982a1a842ed0176a4870e15447f6d"
+        "65e5e038708d3f1f25897a954679ea136a5982a1a842ed0176a4870e15447f6d",
+        "d3ffd8c2b01d94a0889095bb1b4b1491a54fc3c7e2c504cf50c59709264fb01b"
       ],
-      "at": "2026-10-04T21:02:29+00:00",
-      "run_id": "run-20261004T165402Z-3d611b0c",
-      "gap_claimed": true
+      "at": "2026-10-08T07:05:00+00:00",
+      "run_id": "run-20261005T153115Z-e87e168b",
+      "gap_claimed": false
     },
     "tests/repo/test_nexus_credit.py::test_lab_no_longer_shows_the_credit": {
       "fingerprints": [
         "f319e6f26f88859282847427947d039a48ee09bfa6c9e40f6ffd50abc5940728",
-        "36f66baa23fed5ff730e890bd58b4a4ee4fad06b9e0e5d3a7c29ca9e3c22298f"
+        "36f66baa23fed5ff730e890bd58b4a4ee4fad06b9e0e5d3a7c29ca9e3c22298f",
+        "c8e63df3bfdd84bc500b30f5992661d1073c6c4b8146a1382eb8e957ba2a5596"
       ],
-      "at": "2026-10-04T21:02:29+00:00",
-      "run_id": "run-20261004T165402Z-3d611b0c",
-      "gap_claimed": true
+      "at": "2026-10-08T07:05:00+00:00",
+      "run_id": "run-20261005T153115Z-e87e168b",
+      "gap_claimed": false
     },
     "tests/rest/test_research_backtest_runs_match_their_documentation.py::test_a_stored_run_carries_the_fields_its_schema_lists": {
       "fingerprints": [
@@ -13398,11 +13413,12 @@
     },
     "tests/meta/test_pipeline_clone_trades.py::test_a_clone_deciding_on_another_rule_than_its_description_is_caught": {
       "fingerprints": [
-        "11adc03dc2e4b5998f0399d17617d4ae795e30d2ad931450bff37184be48a68e"
+        "11adc03dc2e4b5998f0399d17617d4ae795e30d2ad931450bff37184be48a68e",
+        "39331883af5ad7b5665c4349b6a3b77a13fb784f9777bbfa746bfb5fce1205fd"
       ],
-      "at": "2026-10-04T21:02:29+00:00",
-      "run_id": "run-20261004T184429Z-9e0ac133",
-      "gap_claimed": true
+      "at": "2026-10-08T07:05:00+00:00",
+      "run_id": "run-20261008T054544Z-c1ef9d5d",
+      "gap_claimed": false
     },
     "tests/meta/test_pipeline_lab_page.py::test_the_page_opens_on_three_sectors_and_a_ranking_not_on_rooms_per_card": {
       "fingerprints": [
@@ -13670,10 +13686,11 @@
     },
     "tests/rest/test_backtest_leaderboard_ranks_backtests_on_historical_data.py::test_the_leaderboard_ranks_no_bot_on_synthetic_trades": {
       "fingerprints": [
-        "d45a2e92a462130367f2fc0504f3ce98aabf12ac94d946f755278dea15e3b184"
+        "d45a2e92a462130367f2fc0504f3ce98aabf12ac94d946f755278dea15e3b184",
+        "3601d2cfa18186eb4ff6318b42c7f60c598cf9aac5e031d3d96c16d1b6f9efcc"
       ],
-      "at": "2026-10-04T21:02:29+00:00",
-      "run_id": "run-20261004T184429Z-9e0ac133",
+      "at": "2026-10-08T07:05:00+00:00",
+      "run_id": "run-20261007T205757Z-4be82f5c",
       "gap_claimed": true
     },
     "tests/rest/test_a_paper_bot_trade_says_what_happened.py::test_a_settled_bet_is_paid_on_the_price_at_its_epoch_end": {
@@ -13702,10 +13719,11 @@
     },
     "tests/rest/test_a_paper_bot_trade_says_what_happened.py::test_a_clone_decides_on_the_strategy_its_species_is_described_by": {
       "fingerprints": [
-        "de610be6bbb154951df3b55e8416bc0cb9715b67ab13479b9652715c7445d7e2"
+        "de610be6bbb154951df3b55e8416bc0cb9715b67ab13479b9652715c7445d7e2",
+        "cef5de364c8b65c44ee08fadeaa9903953ffcc41fa0ab4435f007a7ef6930a0f"
       ],
-      "at": "2026-10-04T21:02:29+00:00",
-      "run_id": "run-20261004T181825Z-0dcfd6f8",
+      "at": "2026-10-08T07:05:00+00:00",
+      "run_id": "run-20261007T205757Z-4be82f5c",
       "gap_claimed": true
     },
     "tests/rest/test_chart_analyzer_verdict_layer_keeps_its_word.py::test_the_verdict_fields_are_listed_in_the_openapi_schema": {
@@ -13726,34 +13744,38 @@
     },
     "tests/rest/test_chart_analyzer_verdict_layer_keeps_its_word.py::test_a_probability_lies_inside_the_range_shown_with_it": {
       "fingerprints": [
-        "fd92b78ea823640946eb8de391a3ba64eeb7407e88c48faa35e8bddd244081d1"
+        "fd92b78ea823640946eb8de391a3ba64eeb7407e88c48faa35e8bddd244081d1",
+        "ded287983e1477ef5e53e67215216f4196bf70e31eff66513c8cef657c2e04e1"
       ],
-      "at": "2026-10-04T21:02:29+00:00",
-      "run_id": "run-20261004T165402Z-3d611b0c",
+      "at": "2026-10-08T07:05:00+00:00",
+      "run_id": "run-20261005T075423Z-72ea19f3",
       "gap_claimed": true
     },
     "tests/rest/test_chart_analyzer_verdict_layer_keeps_its_word.py::test_a_dex_pool_coin_gets_no_verdict_while_llms_txt_says_so": {
       "fingerprints": [
-        "c8d15106dc0db00924683e1a8f44533e80941311cf9ea2bbe8c119946f8d8f07"
+        "c8d15106dc0db00924683e1a8f44533e80941311cf9ea2bbe8c119946f8d8f07",
+        "ed450e3fa47c9604f7470823dc8132c030d12c3a8191b908ddb2ece6ed587143"
       ],
-      "at": "2026-10-04T21:02:29+00:00",
-      "run_id": "run-20261004T165402Z-3d611b0c",
+      "at": "2026-10-08T07:05:00+00:00",
+      "run_id": "run-20261005T075423Z-72ea19f3",
       "gap_claimed": true
     },
     "tests/rest/test_gem_screener_chains_say_what_their_sources_say.py::test_a_chains_stablecoins_are_the_dollars_defillama_counts": {
       "fingerprints": [
-        "8b2dfa2134e4117161887a3e8fe7a3aa34cbef18e57dba47950e4df2d5af6e3e"
+        "8b2dfa2134e4117161887a3e8fe7a3aa34cbef18e57dba47950e4df2d5af6e3e",
+        "6191c0de7a0853df57594dc311cf1ed0d72d79c53260c7ec1b7c756b609aef0c"
       ],
-      "at": "2026-10-04T21:02:29+00:00",
-      "run_id": "run-20261004T165402Z-3d611b0c",
+      "at": "2026-10-08T07:05:00+00:00",
+      "run_id": "run-20261007T205757Z-4be82f5c",
       "gap_claimed": true
     },
     "tests/rest/test_gem_screener_chains_say_what_their_sources_say.py::test_the_chain_price_tag_is_described_as_the_snapshot_computes_it": {
       "fingerprints": [
-        "692a59f3053f2b1264e9f9fe5da672f4a1e0ff332a7f2d068d8e3d29f2bda768"
+        "692a59f3053f2b1264e9f9fe5da672f4a1e0ff332a7f2d068d8e3d29f2bda768",
+        "695b635cdd9ad10b2a67ab2205aae5301d388c54d216d7e4d283eab2e8dbb08f"
       ],
-      "at": "2026-10-04T21:02:29+00:00",
-      "run_id": "run-20261004T165402Z-3d611b0c",
+      "at": "2026-10-08T07:05:00+00:00",
+      "run_id": "run-20261007T205757Z-4be82f5c",
       "gap_claimed": true
     },
     "tests/rest/test_gem_screener_chains_say_what_their_sources_say.py::test_adoption_names_one_measure_on_the_chains_tab": {
@@ -13782,43 +13804,48 @@
     },
     "tests/rest/test_supply_analyzer_states_what_its_sources_say.py::test_a_burned_slice_comes_from_a_burn": {
       "fingerprints": [
-        "0a690b9985c7553ef83f8acf59a72991011c3e8056054d54c991f87b6168f0d7"
+        "0a690b9985c7553ef83f8acf59a72991011c3e8056054d54c991f87b6168f0d7",
+        "5cc2339c1dd37340e6a430c3581644f9f5cfd00d017aa56858ed848146978956"
       ],
-      "at": "2026-10-04T21:02:29+00:00",
-      "run_id": "run-20261004T165402Z-3d611b0c",
+      "at": "2026-10-08T07:05:00+00:00",
+      "run_id": "run-20261008T014414Z-b79b19f8",
       "gap_claimed": true
     },
     "tests/rest/test_supply_analyzer_states_what_its_sources_say.py::test_a_buyback_is_a_purchase_of_the_token": {
       "fingerprints": [
-        "3166999deb82359731c8d8fe16de78362aa3075640353c16d55d42e54974edba"
+        "3166999deb82359731c8d8fe16de78362aa3075640353c16d55d42e54974edba",
+        "eb931904ec83efddc80e1c9e310a3b64f52cb3a31e2102391aba606cd1761fe8"
       ],
-      "at": "2026-10-04T21:02:29+00:00",
-      "run_id": "run-20261004T165402Z-3d611b0c",
-      "gap_claimed": true
+      "at": "2026-10-08T07:05:00+00:00",
+      "run_id": "run-20261008T013200Z-521e0dab",
+      "gap_claimed": false
     },
     "tests/rest/test_supply_analyzer_states_what_its_sources_say.py::test_the_sellable_pile_fits_inside_the_supply": {
       "fingerprints": [
-        "478890a94da093701fdf1b44b5e1f757b1c3e392fa3aa931ccdf652aafb0534e"
+        "478890a94da093701fdf1b44b5e1f757b1c3e392fa3aa931ccdf652aafb0534e",
+        "7cd78a3dcebc8e52ff1edeb483300b44770bee703393131b627bba60075b4b25"
       ],
-      "at": "2026-10-04T21:02:29+00:00",
-      "run_id": "run-20261004T165402Z-3d611b0c",
+      "at": "2026-10-08T07:05:00+00:00",
+      "run_id": "run-20261008T013200Z-521e0dab",
       "gap_claimed": false
     },
     "tests/rest/test_supply_analyzer_states_what_its_sources_say.py::test_a_cited_source_says_what_it_is_credited_with": {
       "fingerprints": [
-        "1260485c68b4c69150be8962d6fb7f828cdd26093edb123bed0159e2ccd9b32e"
+        "1260485c68b4c69150be8962d6fb7f828cdd26093edb123bed0159e2ccd9b32e",
+        "317f83f5aa48c2328d037f890f5a225526ea69b85748d59e043175340c6904b1"
       ],
-      "at": "2026-10-04T21:02:29+00:00",
-      "run_id": "run-20261004T165402Z-3d611b0c",
+      "at": "2026-10-08T07:05:00+00:00",
+      "run_id": "run-20261008T013200Z-521e0dab",
       "gap_claimed": true
     },
     "tests/rest/test_supply_analyzer_states_what_its_sources_say.py::test_the_gem_screener_link_opens_its_coin": {
       "fingerprints": [
-        "109dd20928556e3e109af76428c1c619fa6439546de31389249c3ccb0b4342a5"
+        "109dd20928556e3e109af76428c1c619fa6439546de31389249c3ccb0b4342a5",
+        "f6189bbeee5c8d483d7b8830f0c759f6b4b710417aaa2c996e3e942a7bdb5246"
       ],
-      "at": "2026-10-04T21:02:29+00:00",
-      "run_id": "run-20261004T165402Z-3d611b0c",
-      "gap_claimed": true
+      "at": "2026-10-08T07:05:00+00:00",
+      "run_id": "run-20261008T013200Z-521e0dab",
+      "gap_claimed": false
     },
     "tests/rest/test_supply_analyzer_states_what_its_sources_say.py::test_every_range_uses_the_stated_typical_inflow": {
       "fingerprints": [
@@ -13846,11 +13873,12 @@
     },
     "tests/rest/test_supply_analyzer_states_what_its_sources_say.py::test_tokens_locked_by_holders_are_not_shown_as_a_reserve": {
       "fingerprints": [
-        "66fc9020024e031f69ee9525b874de8f51d0a76696d41d01c42fbec559fb9c70"
+        "66fc9020024e031f69ee9525b874de8f51d0a76696d41d01c42fbec559fb9c70",
+        "d720d23481c928da99bd53d24f785f04d8a6678e04c09c5f710ac9b61ab89958"
       ],
-      "at": "2026-10-04T21:02:29+00:00",
-      "run_id": "run-20261004T165402Z-3d611b0c",
-      "gap_claimed": true
+      "at": "2026-10-08T07:05:00+00:00",
+      "run_id": "run-20261008T013200Z-521e0dab",
+      "gap_claimed": false
     },
     "tests/rest/test_supply_analyzer_states_what_its_sources_say.py::test_an_unknown_schedule_is_not_served_as_none_scheduled": {
       "fingerprints": [
@@ -13862,18 +13890,108 @@
     },
     "tests/rest/test_supply_analyzer_states_what_its_sources_say.py::test_a_max_supply_is_not_the_end_of_an_issuance_schedule": {
       "fingerprints": [
-        "6fc1ef9b35530adac23edac06c588380649c5dc4ac4eb1c903f8cfe98d68c5d0"
+        "6fc1ef9b35530adac23edac06c588380649c5dc4ac4eb1c903f8cfe98d68c5d0",
+        "4efaf1605cc889fb424c25276c395226073f7c8674d1227252f0f9a4109c7ed2"
       ],
-      "at": "2026-10-04T21:02:29+00:00",
-      "run_id": "run-20261004T165402Z-3d611b0c",
-      "gap_claimed": true
+      "at": "2026-10-08T07:05:00+00:00",
+      "run_id": "run-20261008T014414Z-b79b19f8",
+      "gap_claimed": false
     },
     "tests/rest/test_supply_analyzer_states_what_its_sources_say.py::test_tokens_out_counts_the_max_supply_of_a_coin_still_issuing": {
       "fingerprints": [
-        "e2b4eb5f876db96b26e7fa73badbad7d0d41625ae86365853f4a3ebaf6440e42"
+        "e2b4eb5f876db96b26e7fa73badbad7d0d41625ae86365853f4a3ebaf6440e42",
+        "e767f5cb7c9e7c0ee70462d9a73b5c8650b232a66e0fb168b726489956262860"
       ],
-      "at": "2026-10-04T21:02:29+00:00",
-      "run_id": "run-20261004T165402Z-3d611b0c",
+      "at": "2026-10-08T07:05:00+00:00",
+      "run_id": "run-20261008T013200Z-521e0dab",
+      "gap_claimed": false
+    },
+    "tests/meta/test_pipeline_lab_manager.py::test_feedback_and_acted_reach_the_manager_file_and_nothing_else_does": {
+      "fingerprints": [
+        "509fbac59e3a84c1348fcec896b044431874f5cae38f96420adda6933336d824"
+      ],
+      "at": "2026-10-08T07:05:00+00:00",
+      "run_id": "run-20261008T054544Z-c1ef9d5d",
+      "gap_claimed": false
+    },
+    "tests/meta/test_pipeline_lab_manager.py::test_the_repository_file_has_its_sections_and_at_most_ten_open_lines": {
+      "fingerprints": [
+        "5a229b60fab5351d187bfab9637e4d9058f0615f7b06e144b4a0abbac6dbbb3b"
+      ],
+      "at": "2026-10-08T07:05:00+00:00",
+      "run_id": "run-20261008T054544Z-c1ef9d5d",
+      "gap_claimed": false
+    },
+    "tests/meta/test_pipeline_ratelimit.py::test_a_429_waits_for_retry_after_and_only_a_read_is_asked_again": {
+      "fingerprints": [
+        "5f487cc81f05e812ba67130040076a8f347e2ac3082dea2680bfc7a0745af20b"
+      ],
+      "at": "2026-10-08T07:05:00+00:00",
+      "run_id": "run-20261008T054544Z-c1ef9d5d",
+      "gap_claimed": true
+    },
+    "tests/meta/test_pipeline_ratelimit.py::test_every_process_shares_one_spacing_and_a_slower_route_its_own": {
+      "fingerprints": [
+        "be7ce0831818a6d8a69543f014b9159e49547993596ad6df631bf35cc00074bd"
+      ],
+      "at": "2026-10-08T07:05:00+00:00",
+      "run_id": "run-20261008T054544Z-c1ef9d5d",
+      "gap_claimed": false
+    },
+    "tests/meta/test_pipeline_wave.py::test_a_bot_is_funded_and_started_only_with_its_criterion_and_its_settings": {
+      "fingerprints": [
+        "4cb4a59b00ffa205b9588bc94819b075d8dbf6066d2b0e394d8a637c0f3f68fd"
+      ],
+      "at": "2026-10-08T07:05:00+00:00",
+      "run_id": "run-20261008T054544Z-c1ef9d5d",
+      "gap_claimed": false
+    },
+    "tests/meta/test_pipeline_wave.py::test_a_bot_paused_at_its_band_resumes_in_a_room_of_its_own": {
+      "fingerprints": [
+        "480c807cdbaa85838199551ac9d3c17fc7ca462f0cd1f62289f3d518bad1a075"
+      ],
+      "at": "2026-10-08T07:05:00+00:00",
+      "run_id": "run-20261008T054544Z-c1ef9d5d",
+      "gap_claimed": true
+    },
+    "tests/meta/test_pipeline_wave.py::test_species_already_trading_are_left_out_of_the_wave": {
+      "fingerprints": [
+        "f3cfa3c5915b02541e5d7c70193278631491338089cc47eea00a552565da902d"
+      ],
+      "at": "2026-10-08T07:05:00+00:00",
+      "run_id": "run-20261008T054544Z-c1ef9d5d",
+      "gap_claimed": true
+    },
+    "tests/meta/test_pipeline_wave.py::test_the_benchmark_and_the_settings_are_the_ones_agreed": {
+      "fingerprints": [
+        "30fd5cca3a1e2a30084848f9f88735dca51ef1231f7b81305cb45d0d169c6fe8"
+      ],
+      "at": "2026-10-08T07:05:00+00:00",
+      "run_id": "run-20261008T054544Z-c1ef9d5d",
+      "gap_claimed": false
+    },
+    "tests/meta/test_pipeline_wave.py::test_what_stops_a_wave_and_what_only_stops_one_bot": {
+      "fingerprints": [
+        "16b55a5ece27a537c2a4ddfb3e088a4718d3dac9bc1b75ed711ac684510cf8ff"
+      ],
+      "at": "2026-10-08T07:05:00+00:00",
+      "run_id": "run-20261008T054544Z-c1ef9d5d",
+      "gap_claimed": true
+    },
+    "tests/rest/test_gem_screener_degen_meter_has_levels.py::test_the_degen_meter_has_a_level_for_the_coins_it_lists": {
+      "fingerprints": [
+        "eb8b38d7c28020031fdb70916ee8fa584e9542a6fafa85b51ccc90790851fe7e"
+      ],
+      "at": "2026-10-08T07:05:00+00:00",
+      "run_id": "run-20261007T112716Z-e101e56e",
+      "gap_claimed": false
+    },
+    "tests/rest/test_supply_analyzer_states_what_its_sources_say.py::test_a_pile_cannot_shrink_by_more_than_all_of_it": {
+      "fingerprints": [
+        "e108538ab60938a34851424674a5896f4308ea748addfe888fc0e6e5678dbcf9"
+      ],
+      "at": "2026-10-08T07:05:00+00:00",
+      "run_id": "run-20261008T054544Z-c1ef9d5d",
       "gap_claimed": false
     }
   }
