@@ -973,10 +973,12 @@ def test_a_strategy_that_made_money_inside_its_stop_survives():
     # exactly on the closing edge and is inside it. This test said 3.0 first,
     # from counting four steps and assuming the edge was exclusive -- the code
     # was right and the expectation was not. Since V2 (2026-09-23) a card leg
-    # pays the live round trip, 1.4%, on what it made.
+    # pays the round trip GATE charges on what it made -- 1.4% until 2026-10-08, 0 since: a
+    # paper fill pays none (REPLY-0136).
     (leg,) = said["legs"]
     assert round(leg["gross_return_pct"], 2) == 4.0, said
-    assert said["return_pct"] == pytest.approx((1.04 * 0.986 - 1) * 100), said
+    cost = lab.GATE["round_trip_cost_pct"] / 100
+    assert said["return_pct"] == pytest.approx((1.04 * (1 - cost) - 1) * 100), said
     assert said["max_drawdown_pct"] <= 5.0
     assert said["formula"], "a verdict records the formula that produced it"
 

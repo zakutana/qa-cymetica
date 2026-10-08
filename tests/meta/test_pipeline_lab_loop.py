@@ -1656,18 +1656,61 @@ def test_the_gate_charges_what_a_trade_costs_not_their_stress_test():
     0.2% a fill. The gate asked for "positive after fees" through that
     toggle, so a card up 3% gross over a quarter was refused for a cost it
     would never pay. The gate now reads the GROSS return and charges the live
-    round trip: two fills of 0.2% and 0.5% of slippage each side."""
+    round trip: two fills of 0.2% and 0.5% of slippage each side.
+
+    2026-10-08: everything the laboratory measures is a PAPER fill, and a paper card fill pays
+    no fee, no spread and no slippage (REPLY-0136, and llms.txt's Fees section since that day);
+    the operator, the same morning: "zadne fees pocitat nemas", and "vse ve labu prepocitej
+    podle toho zpetne". So the cost is 0: a reading is judged as it stands, and the card
+    verdicts charged the 1.4 % are judged again (`rejudged_without_cost`)."""
     gross = {"p": 90, "r": 3.0, "s": 1.1, "d": 2.0}
     said = lab.gate([gross])
     assert said["verdict"] == "pass", said
     cost = lab.GATE["round_trip_cost_pct"]
-    assert cost == 1.4
-    assert round(said["return_pct"], 4) == round(((1.03) * (1 - cost / 100) - 1) * 100, 4)
-    # Under the live cost, still a loss.
-    assert lab.gate([dict(gross, r=1.0)])["verdict"] == "reject"
+    assert cost == 0.0
+    assert round(said["return_pct"], 4) == 3.0
+    # Gross is what a paper fill earns: a small gain passes, a loss does not.
+    assert lab.gate([dict(gross, r=1.0)])["verdict"] == "pass"
+    assert lab.gate([dict(gross, r=-0.5)])["verdict"] == "reject"
+    assert lab._cost({"kind": "card"}) == 0.0 and lab._cost({"kind": "fund"}) == 0.0
     # A reading their toggle already charged is not charged twice.
     stressed = lab.gate([_reading(90, 2.0, 1.1)])
     assert stressed["verdict"] == "pass" and stressed["return_pct"] == 2.0, stressed
+
+    # The verdicts charged the 1.4 % (card and fund legs, from 2026-09-23 13:21 UTC) are judged
+    # again on what the legs moved, by the verdict's own rules; nothing else is touched.
+    def card_leg(net, gross=None, share=1.0):
+        leg = {"card": "c1", "side": "bull", "share": share, "return_pct": net}
+        return leg if gross is None else dict(leg, gross_return_pct=gross)
+    full = {"type": "verdict", "room": "STR-0019", "at": "2026-09-30T10:00:00+00:00",
+            "verdict": "refuted", "return_pct": -0.1, "benchmark_pct": -1.02,
+            "max_drawdown_pct": 2.0, "legs": [card_leg(-0.1, 1.31)], "formula": "f"}
+    again = lab.rejudged_without_cost(full, {"stop_pct": 10.0})
+    assert again["verdict"] == "survived" and again["return_pct"] == pytest.approx(1.31), again
+    assert again["legs"][0]["return_pct"] == pytest.approx(1.31) and again["cost_pct"] == 0.0
+    # A leg written without its gross is read back through the 1.4 % it was charged.
+    bare = dict(full, legs=[card_leg(0.48)], benchmark_pct=1.26)
+    assert lab.rejudged_without_cost(bare, {"stop_pct": 10.0})["return_pct"] == pytest.approx(
+        (1.0048 / 0.986 - 1) * 100), "net 0.48 % was 1.9 % before the round trip"
+    # The verdict's own rules: under its benchmark, past its stop, no benchmark at all.
+    assert lab.rejudged_without_cost(dict(full, benchmark_pct=2.0), {})["verdict"] == "refuted"
+    assert lab.rejudged_without_cost(dict(full, max_drawdown_pct=12.0), {"stop_pct": 10.0})[
+        "verdict"] == "refuted"
+    assert lab.rejudged_without_cost(dict(full, benchmark_pct=None), {})["verdict"] == "inconclusive"
+    # An early refusal that rested on the cost cannot be redrawn without the close it skipped.
+    early = dict(full, early=True, closes_at="2026-10-01T00:00:00+00:00",
+                 why="every leg reached its exit before the window closed, at -0.10%")
+    assert lab.rejudged_without_cost(early, {})["verdict"] == "inconclusive"
+    stopped_out = dict(early, why="its drawdown reached 12.00%, past the 10.00% it was accepted with")
+    assert lab.rejudged_without_cost(dict(stopped_out, max_drawdown_pct=12.0),
+                                     {"stop_pct": 10.0})["verdict"] == "refuted"
+    # Untouched: a verdict from before the cost, a bot's (never charged), one already judged
+    # again, a verdict with no return.
+    assert lab.rejudged_without_cost(dict(full, at="2026-09-22T23:00:00+00:00"), {}) is None
+    bot = dict(full, legs=[{"kind": "bot", "ref": "i1", "share": 1.0, "return_pct": -0.1}])
+    assert lab.rejudged_without_cost(bot, {}) is None
+    assert lab.rejudged_without_cost(dict(full, cost_pct=0.0), {}) is None
+    assert lab.rejudged_without_cost(dict(full, return_pct=None), {}) is None
 
 
 def _launchpad(scripts_lab, tmp_path, monkeypatch, answers, live, readings,
@@ -2194,7 +2237,7 @@ def test_a_card_room_is_judged_on_our_position_net_of_the_round_trip(
     Our book: 100 at our fill (`entry_index`, from the buy's own response),
     their index rebased on it while we hold (a paper position is worth units
     x index), and the realised value from our sale on, frozen to the end.
-    The live round trip (1.4%) is charged once on the leg's return. Their
+    The round trip (GATE's; 1.4% until 2026-10-08, 0 on paper since) is charged once on the leg's return. Their
     index-only reading rides beside as the cross-check."""
     import qa.rooms as qa_rooms
 
@@ -2251,7 +2294,9 @@ def test_a_card_room_is_judged_on_our_position_net_of_the_round_trip(
 
     said = {s["room"]: s for s in scripts_lab.verdicts(now=end + timedelta(hours=1))}
 
-    net = lambda gross: ((1 + gross / 100) * (1 - 0.014) - 1) * 100  # noqa: E731
+    # The round trip GATE charges -- 0 since 2026-10-08, a paper fill pays none (REPLY-0136).
+    cost = lab.GATE["round_trip_cost_pct"] / 100
+    net = lambda gross: ((1 + gross / 100) * (1 - cost) - 1) * 100  # noqa: E731
     mine = said[first["id"]]
     last = 200.0 + 10.0 * (hours - 1) / hours
     assert mine["return_pct"] == pytest.approx(net((last / 200.0 - 1) * 100)), mine
@@ -2369,7 +2414,8 @@ def test_a_stopped_room_is_archived_or_judged_up_to_its_stop(
     assert [s["room"] for s in said if s.get("verdict")] == ["STR-0001"], said
     (judged,) = [s for s in said if s["room"] == "STR-0001"]
     assert judged["window"]["to"] == stopped_at.isoformat(), judged
-    assert judged["return_pct"] == pytest.approx((1.024 * 0.986 - 1) * 100), (
+    paid = 1 - lab.GATE["round_trip_cost_pct"] / 100      # 0 on paper since 2026-10-08
+    assert judged["return_pct"] == pytest.approx((1.024 * paid - 1) * 100), (
         "judged over the window up to the stop, 24 hours at +0.1 an hour, "
         "after the round trip")
     rows = qa_rooms.load()

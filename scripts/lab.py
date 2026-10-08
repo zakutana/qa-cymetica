@@ -4003,6 +4003,9 @@ def main(argv: list[str] | None = None) -> int:
     adopt_cmd.add_argument("--stop-pct", type=float, default=5.0)
     adopt_cmd.add_argument("--no-benchmark", action="store_true")
     sub.add_parser("verdicts", help="close every window that has come due")
+    again_cmd = sub.add_parser("rejudge-costs", help="judge again, without the 1.4%% round trip, "
+                                                     "every card verdict it was charged on")
+    again_cmd.add_argument("--confirm", action="store_true")
     sub.add_parser("surface", help="their catalogue against the baseline")
     sub.add_parser("ask-cards", help="ask Nexus for up to five cards, with brakes")
     ask_cmd = sub.add_parser("ask", help="one question to Nexus, with brakes")
@@ -4156,6 +4159,25 @@ def main(argv: list[str] | None = None) -> int:
         print(f"{args.room}: criterion written, window {record['window_days']} "
               f"day(s), stop {record['stop_pct']}%, benchmark "
               f"{record.get('benchmark_card') or 'none'}")
+    elif args.cmd == "rejudge-costs":
+        # 2026-10-08: paper fills pay nothing (REPLY-0136), and the operator asked for every
+        # result in the laboratory to be counted again that way. A new verdict row per room,
+        # the newest wins everywhere it is read; the charged one stays in the diary.
+        stored = rooms.load()
+        changed = 0
+        for room in sorted({r.get("room") for r in stored if r.get("type") == "verdict"}):
+            again = lab.rejudged_without_cost(rooms.verdict_of(stored, room),
+                                              rooms.acceptance_of(stored, room))
+            if again is None:
+                continue
+            changed += 1
+            was = again["was"]
+            print(f"  {room}: {was['verdict']} {was['return_pct']:+.2f}% -> "
+                  f"{again['verdict']} {again['return_pct']:+.2f}%")
+            if args.confirm:
+                rooms.record_verdict(room, again)
+        print(f"{changed} verdict(s) judged again"
+              + ("" if args.confirm else " -- nothing written: --confirm writes them"))
     elif args.cmd == "verdicts":
         said = verdicts()
         if not said:

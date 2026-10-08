@@ -2085,8 +2085,94 @@ def proposed_funds(text: str, catalogue) -> list[str]:
 # stress estimate, not the live fee schedule" (REPLY-0047, verified live
 # 2026-09-22) -- and gating on it refused cards for a cost no trade pays.
 # Sharpe is theirs, on the gross path either way.
+#
+# 2026-10-08: the cost is 0. Everything the laboratory buys is a PAPER fill, and a paper card
+# fill pays no fee, no spread and no slippage -- it earns exactly the legs' move (REPLY-0136;
+# llms.txt's Fees section since that day). The 1.4 % was a live round trip charged on paper,
+# and the operator said the same morning that no fees are to be counted. The verdicts it was
+# charged on are judged again by `rejudged_without_cost` (`lab.py rejudge-costs`).
 GATE = {"periods": (30, 90), "min_sharpe": 0.5, "min_return_pct": 0.0,
-        "round_trip_cost_pct": 1.4}
+        "round_trip_cost_pct": 0.0}
+# What the card and fund verdicts were charged from e821b87c (2026-09-23 13:21 UTC) until the
+# cost went to 0 -- kept only so those verdicts can be read back before the round trip.
+CHARGED_ROUND_TRIP_PCT = 1.4
+CHARGED_FROM = "2026-09-23T13:21:57+00:00"
+
+
+def _charged_leg(leg: dict) -> bool:
+    """A leg `_cost` charged: a card or a fund, never a bot or an arena."""
+    return (leg.get("kind") or "card") in ("card", "fund")
+
+
+def rejudged_without_cost(row: dict, acceptance: dict | None) -> dict | None:
+    """A charged verdict judged again on what its legs moved, or None to leave it.
+
+    Only a verdict with a return, written from CHARGED_FROM on, with a card or fund leg, and
+    not already judged without the cost (`cost_pct`). Each charged leg reads its own
+    `gross_return_pct` where the verdict kept it, else its net read back through the 1.4 %
+    (exact: `_net_of` is invertible); a bot leg is as it was. The verdict's own rules then
+    decide again on the drawdown and benchmark it recorded (the drawdown was always on the
+    gross path): a loss, a return under the benchmark or a drawdown past the stop is refuted,
+    no benchmark is inconclusive, the rest survived. An EARLY refusal settled only on a
+    drawdown past the stop or on every leg out at a loss; one that rested on the cost cannot
+    be redrawn without the close it skipped, so it is inconclusive."""
+    if not isinstance(row, dict) or row.get("return_pct") is None or "cost_pct" in row:
+        return None
+    when, since = _at(row.get("at")), _at(CHARGED_FROM)
+    if when is None or when < since:
+        return None
+    scored = [leg for leg in row.get("legs") or [] if isinstance(leg, dict)
+              and isinstance(leg.get("return_pct"), (int, float))]
+    if not any(_charged_leg(leg) for leg in scored):
+        return None
+    legs = []
+    for leg in scored:
+        if _charged_leg(leg):
+            gross = leg.get("gross_return_pct")
+            if not isinstance(gross, (int, float)):
+                gross = ((1.0 + leg["return_pct"] / 100.0)
+                         / (1.0 - CHARGED_ROUND_TRIP_PCT / 100.0) - 1.0) * 100.0
+            legs.append({**leg, "return_pct": gross, "gross_return_pct": gross,
+                         "charged_return_pct": leg["return_pct"]})
+        else:
+            legs.append(dict(leg))
+    weight = sum(float(leg.get("share") or 1.0) for leg in legs) or 1.0
+    ret = sum(float(leg.get("share") or 1.0) * leg["return_pct"] for leg in legs) / weight
+    drawdown = row.get("max_drawdown_pct")
+    benchmark = row.get("benchmark_pct")
+    stop = float((acceptance or {}).get("stop_pct") or 0) or None
+    past_stop = stop is not None and isinstance(drawdown, (int, float)) and drawdown > stop
+    if row.get("early"):
+        if past_stop:
+            name, why = "refuted", (f"its drawdown reached {drawdown:.2f}%, past the {stop:.2f}% "
+                                    f"it was accepted with, before the window closed")
+        elif ret <= 0:
+            name, why = "refuted", (f"every leg reached its exit before the window closed, "
+                                    f"at {ret:+.2f}%")
+        else:
+            name, why = "inconclusive", (
+                f"refuted early at {row['return_pct']:+.2f}% after a 1.4% round trip a paper "
+                f"fill never paid; before it, {ret:+.2f}%, and the close that would weigh that "
+                f"against its benchmark was skipped")
+    elif ret <= 0:
+        name, why = "refuted", f"it returned {ret:+.2f}%"
+    elif benchmark is not None and ret <= benchmark:
+        name, why = "refuted", f"it returned {ret:+.2f}% against the benchmark's {benchmark:+.2f}%"
+    elif past_stop:
+        name, why = "refuted", (f"its drawdown reached {drawdown:.2f}%, past the {stop:.2f}% it "
+                                f"was accepted with")
+    elif benchmark is None:
+        name, why = "inconclusive", (f"it returned {ret:+.2f}%, but its benchmark has no marks "
+                                     f"over the window, so beating it cannot be claimed")
+    else:
+        name, why = "survived", (f"it returned {ret:+.2f}% inside a {drawdown or 0:.2f}% drawdown, "
+                                 f"against the benchmark's {benchmark:+.2f}%")
+    kept = {k: row[k] for k in ("window", "coverage", "early", "closes_at", "formula")
+            if k in row}
+    return {**kept, "verdict": name, "why": "judged again without the round trip: " + why,
+            "return_pct": ret, "max_drawdown_pct": drawdown, "benchmark_pct": benchmark,
+            "legs": legs, "cost_pct": 0.0, "rejudged_from": row.get("at"),
+            "was": {"verdict": row.get("verdict"), "return_pct": row.get("return_pct")}}
 
 
 def _net(row: dict) -> float:
