@@ -16,8 +16,8 @@
     "t3": "real"
    },
    "verdict": "real",
-   "fixed": false,
-   "commit": null
+   "fixed": true,
+   "commit": "bd35b756"
   },
   {
    "id": "R02",
@@ -30,8 +30,8 @@
     "t3": "real"
    },
    "verdict": "real",
-   "fixed": false,
-   "commit": null
+   "fixed": true,
+   "commit": "bd35b756"
   },
   {
    "id": "R03",
@@ -44,8 +44,8 @@
     "t3": "real"
    },
    "verdict": "real",
-   "fixed": false,
-   "commit": null
+   "fixed": true,
+   "commit": "bd35b756"
   },
   {
    "id": "R04",
@@ -58,8 +58,8 @@
     "t3": "real"
    },
    "verdict": "real",
-   "fixed": false,
-   "commit": null,
+   "fixed": true,
+   "commit": "bd35b756",
    "note": "all three: true but harmless, 7-16 ms a call, under a second a tick"
   },
   {
@@ -88,8 +88,8 @@
     "t3": "real"
    },
    "verdict": "real",
-   "fixed": false,
-   "commit": null
+   "fixed": true,
+   "commit": "bd35b756"
   },
   {
    "id": "R07",
@@ -102,8 +102,8 @@
     "t3": "real"
    },
    "verdict": "real",
-   "fixed": false,
-   "commit": null
+   "fixed": true,
+   "commit": "bd35b756"
   },
   {
    "id": "R08",
@@ -118,7 +118,9 @@
    "verdict": "minority",
    "fixed": false,
    "commit": null,
-   "note": "t3: the lag is _apply_check_definition skipping a pin on a row a split has not created yet (fold.py:418-420); moving _mark_repins fixes nothing; the one real split was pinned 31 min later"
+   "note": "t3: the lag is _apply_check_definition skipping a pin on a row a split has not created yet (fold.py:418-420); moving _mark_repins fixes nothing; the one real split was pinned 31 min later",
+   "deferred_to_operator": false,
+   "note_minority": "1 of 3; t3's trace: a pin on a row a split has not created yet is skipped by _apply_check_definition (fold.py:418-420); the one real split was pinned 31 min after it. Reported, not fixed."
   },
   {
    "id": "T01",
@@ -132,8 +134,8 @@
     "t3": "real"
    },
    "verdict": "real",
-   "fixed": false,
-   "commit": null
+   "fixed": true,
+   "commit": "2f6c8c1b"
   },
   {
    "id": "T02",
@@ -147,8 +149,8 @@
     "t3": "real"
    },
    "verdict": "real",
-   "fixed": false,
-   "commit": null
+   "fixed": true,
+   "commit": "2f6c8c1b"
   },
   {
    "id": "T03",
@@ -178,8 +180,8 @@
     "t3": "real"
    },
    "verdict": "real",
-   "fixed": false,
-   "commit": null
+   "fixed": true,
+   "commit": "2f6c8c1b"
   },
   {
    "id": "T05",
@@ -209,8 +211,8 @@
     "t3": "real"
    },
    "verdict": "real",
-   "fixed": false,
-   "commit": null
+   "fixed": true,
+   "commit": "2f6c8c1b"
   },
   {
    "id": "T07",
@@ -224,8 +226,8 @@
     "t3": "real"
    },
    "verdict": "real",
-   "fixed": false,
-   "commit": null
+   "fixed": true,
+   "commit": "2f6c8c1b"
   },
   {
    "id": "T08",
@@ -239,8 +241,8 @@
     "t3": "real"
    },
    "verdict": "real",
-   "fixed": false,
-   "commit": null
+   "fixed": true,
+   "commit": "bd35b756"
   },
   {
    "id": "T09",
@@ -254,8 +256,8 @@
     "t3": "real"
    },
    "verdict": "real",
-   "fixed": false,
-   "commit": null,
+   "fixed": true,
+   "commit": "bd35b756",
    "note": "docstring only"
   },
   {
@@ -270,8 +272,8 @@
     "t3": "real"
    },
    "verdict": "real",
-   "fixed": false,
-   "commit": null
+   "fixed": true,
+   "commit": "17c93cc7"
   },
   {
    "id": "T11",
@@ -285,8 +287,8 @@
     "t3": "real"
    },
    "verdict": "real",
-   "fixed": false,
-   "commit": null,
+   "fixed": true,
+   "commit": "bd35b756",
    "note": "t2: the real gap is that restart_refusal never checks discarded_bots"
   },
   {
@@ -301,8 +303,8 @@
     "t3": "real"
    },
    "verdict": "real",
-   "fixed": false,
-   "commit": null
+   "fixed": true,
+   "commit": "bd35b756"
   },
   {
    "id": "T13",
@@ -316,8 +318,8 @@
     "t3": "real"
    },
    "verdict": "real",
-   "fixed": false,
-   "commit": null,
+   "fixed": true,
+   "commit": "bd35b756",
    "note": "{0,2,3} catches the missing reset, {0,2,4} does not"
   },
   {
@@ -332,8 +334,8 @@
     "t3": "real"
    },
    "verdict": "real",
-   "fixed": false,
-   "commit": null
+   "fixed": true,
+   "commit": "2f6c8c1b"
   },
   {
    "id": "T15",
@@ -347,8 +349,8 @@
     "t3": "real"
    },
    "verdict": "real",
-   "fixed": false,
-   "commit": null,
+   "fixed": true,
+   "commit": "2f6c8c1b",
    "note": "only the burned_so_far -> supply_gap half; Inconclusive on 0/265 is rule 10"
   },
   {
@@ -363,8 +365,8 @@
     "t3": "real"
    },
    "verdict": "real",
-   "fixed": false,
-   "commit": null
+   "fixed": true,
+   "commit": "2f6c8c1b"
   }
  ],
  "review": {
