@@ -261,6 +261,40 @@ def _case_an_experiments_path_is_what_it_is_worth_since_we_went_in():
     assert [p[1] for p in bot["path"]] == [10.0, 3.0]
 
 
+def _case_a_restarted_bots_line_starts_at_zero_at_its_restart():
+    """2026-10-08, the operator on /lab: "co to ma jako byt same nuly?" -- a resumed bot's row read
+    0.00% (what it made since its restart, as qa.lab.board counts it) beside a red line drawn from
+    its lifetime profit over its first funding (-25 made before the restart). The line is the
+    number's own path: from the restart on, what it made since, over what it held then."""
+    page = _lab_page()
+    t = ["2026-10-07T20:00:00+00:00", "2026-10-07T20:43:54+00:00",
+         "2026-10-08T02:00:00+00:00", "2026-10-08T05:00:00+00:00"]
+    bot = {"funded": 500.0, "instance": "inst-1",
+           "samples": [{"at": t[0], "pnl": -25.0}, {"at": t[1], "pnl": -25.0},
+                       {"at": t[2], "pnl": -25.0}, {"at": t[3], "pnl": -5.0}]}
+    first_run = page._path({"clones": [dict(bot)]})
+    assert [p[1] for p in first_run] == [-5.0, -5.0, -5.0, -1.0], "a first run: lifetime over funding"
+    resumed = page._path({"clones": [dict(bot, window={"at": t[1], "profit": -25.0})]})
+    assert resumed == [[t[1], 0.0], [t[2], 0.0], [t[3], round(20.0 / 475.0 * 100.0, 3)]], resumed
+
+    # The wiring: a room whose criterion predates the bot's second start gets that start as its
+    # window; a room on the bot's first run gets none.
+    from qa import lab as qa_lab
+    clones = [{"id": "CLN-1", "type": "intent", "kind": "enable", "instance_id": "inst-1",
+               "at": "2026-10-01T00:00:00+00:00"},
+              {"id": "CLN-1", "type": "outcome", "kind": "enable", "outcome": "accepted",
+               "at": "2026-10-01T00:00:00+00:00"},
+              {"id": "CLN-2", "type": "intent", "kind": "enable", "instance_id": "inst-1",
+               "at": t[1], "bot_profit_usdc": "-25.0"},
+              {"id": "CLN-2", "type": "outcome", "kind": "enable", "outcome": "accepted",
+               "at": t[1]}]
+    later = {"criterion": {"at": "2026-10-07T20:40:00+00:00"}, "clones": [dict(bot)]}
+    first = {"criterion": {"at": "2026-09-30T00:00:00+00:00"}, "clones": [dict(bot)]}
+    page._bot_windows({"A": later, "B": first}, clones, [], qa_lab)
+    assert later["clones"][0]["window"] == {"at": t[1], "profit": -25.0}, later["clones"][0]
+    assert first["clones"][0]["window"] is None
+
+
 def _case_a_long_path_is_thinned_but_keeps_both_ends():
     page = _lab_page()
     points = [[str(i), float(i)] for i in range(1000)]
@@ -775,3 +809,4 @@ def _check_the_stop_a_clone_carries_is_the_diaries_and_only_while_it_is_stopped(
 def test_an_experiments_path_is_rebased_on_the_index_we_bought_at_and_a_long_one_keeps_both_ends():
     _case_an_experiments_path_is_what_it_is_worth_since_we_went_in()
     _case_a_long_path_is_thinned_but_keeps_both_ends()
+    _case_a_restarted_bots_line_starts_at_zero_at_its_restart()

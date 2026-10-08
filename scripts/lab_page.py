@@ -719,6 +719,7 @@ def build_rooms() -> dict:
             stops=every_stop)
         owner["bot"]["activity"].sort(key=lambda a: str(a.get("executed_at") or ""),
                                       reverse=True)
+    _bot_windows(panels, clone_rows, sampled, qa_lab)
 
     # Each of our positions as the sampler last read it, and its card's index.
     live_positions: dict[str, dict] = {}
@@ -989,11 +990,35 @@ def _path(panel: dict) -> list[list]:
         return [[t, round((v / base - 1.0) * 100.0, 3)] for t, v in points]
     for clone in panel.get("clones") or []:
         funded = clone.get("funded")
-        if funded:
-            return [[s.get("at"), round(float(s["pnl"]) / float(funded) * 100.0, 3)]
-                    for s in clone.get("samples") or []
-                    if isinstance(s.get("pnl"), (int, float))]
+        if not funded:
+            continue
+        window = clone.get("window")
+        if window:
+            # A room on a restart (qa.lab.bot_restart): what it made since, over what it held
+            # then -- the same money qa.lab.board counts, so the line ends where the number is.
+            start, made = _moment(window.get("at")), float(window["profit"])
+            held = float(funded) + made
+            if start is None or not held:
+                return []
+            return [[window.get("at"), 0.0]] + [
+                [s.get("at"), round((float(s["pnl"]) - made) / held * 100.0, 3)]
+                for s in clone.get("samples") or []
+                if isinstance(s.get("pnl"), (int, float))
+                and (_moment(s.get("at")) or start) > start]
+        return [[s.get("at"), round(float(s["pnl"]) / float(funded) * 100.0, 3)]
+                for s in clone.get("samples") or []
+                if isinstance(s.get("pnl"), (int, float))]
     return []
+
+
+def _bot_windows(panels: dict, clone_rows, sampled, qa_lab) -> None:
+    """Each room's bots get the restart its criterion runs on, or None for a first run."""
+    for panel in panels.values():
+        at = (panel.get("criterion") or {}).get("at")
+        for bot in panel.get("clones") or []:
+            restart = (qa_lab.bot_restart(clone_rows, str(bot.get("instance")), at, sampled)
+                       if at else None)
+            bot["window"] = restart if restart and restart.get("profit") is not None else None
 
 
 def _group(report_room: dict, panel: dict, sector: str | None = None) -> str:

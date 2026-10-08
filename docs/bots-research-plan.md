@@ -62,7 +62,7 @@ CLN-0143, read-back sedí), wave 0 spuštěna (12 botů obchoduje, rooms STR-008
 - [ ] **F1 kód (testy napřed):** strop *obchodujících* botů jako konstanta (dnes ≥ 12 ověřeno, 25 ne); refusal „strop"
       nespotřebuje položku gridu ani se nezapíše jako „API odmítlo klon"; víc klonů na druh až když to Cymetica zapne
       (dnes 409 ALREADY_CLONED); sampler pro ≥ 25 botů (co čte druhý GET na bota); názvy roomů podle konfigurace.
-- [ ] **`qa/lab.py::bot_stops` čte `auto_pause_reason`** (sweep 2026-10-04): my-clones dnes nese `status: stopped` +
+- [x] **`qa/lab.py::bot_stops` čte `auto_pause_reason`** (hotovo 2026-10-07: sampler ukládá důvod, stop na pásmu je `their_trigger`, `wave.py resume`) (sweep 2026-10-04): my-clones dnes nese `status: stopped` +
       `auto_pause_reason` (`stop_loss` / `take_profit`, v llms.txt), takže `their_guard` („nezdokumentováno", odvozeno
       ze znaménka zisku) a `unexplained` (zisk = ve skutečnosti take_profit) jsou zastaralé štítky. Test napřed.
       Tři boty ze 2. dávky H2H (cbdc3ecd, 17efa669, 5124b7be) stojí na `stop_loss` z 28. 9., před opravou #134.
