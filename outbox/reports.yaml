@@ -5338,6 +5338,53 @@ reports:
       anonymously and fails while fewer than half of the listed apps carry a level between 1 and 10;
       it passes the moment they do.
 
+  - key: supply-analyzer-pile-shrinks-past-all-of-it
+    findings:
+      - CYM-supply-analyzer-a-pile-cannot-shrink-more-than-all-of-it
+    severity: medium
+    category: logic
+    url: https://cymetica.com/supply-analyzer?symbol=stonkfun
+    title: >-
+      Supply Analyzer: STONK's sellable pile is shown changing -130% to -114% a year, and its curve keeps
+      buying back 86.2M a month after the pile is empty (1.03B bought back by Oct 2027, max supply 1B)
+    expected: >
+      A sellable pile can lose at most all of it. The hero, "Yearly change of the sellable pile", is
+      never below -100%, and the 24-month curve takes nothing out of a pile that holds nothing: what
+      goes out in a month is at most what the pile holds plus what comes in that month, so the
+      bought-back slice never holds more tokens than exist.
+    actual: >
+      Read on 2026-10-08 between 05:27 and 05:46 UTC (batch as_of 05:27, record refreshed 00:53).
+      StonkFun (STONK) is the only one of 245 rows with a yearly figure below -100% (the next is
+      PONS at -47.37): status "range", yearly_pct -114.31, yearly_range [-129.65, -114.31], which
+      the page prints as "-130% to -114%" "a year". The arithmetic follows /definitions ("The yearly
+      change = (in - out) x 12 / the pile, in %"): (10,199,876 typical inflow - 86,217,494 buyback)
+      x 12 / 797,998,322 = -114.31%, and -129.65% with no inflow. The buyback input matches its
+      source: DeFiLlama's holders' revenue for StonkFun, $14,438,154 in 30 days at $0.167462
+      (DeFiLlama showed $13,917,445 at our read). But the record's own months empty the pile in
+      11 months: in Aug 2027 the curve takes out 86,217,494 while the pile holds 37,822,138 and
+      10,199,876 comes in, and from Sep 2027, with the pile at 0, it keeps taking out 86,217,494 a
+      month (14 months take out more than there is, Aug 2027 to Sep 2028). "Bought back, kept"
+      grows to 1,034,609,929 in Oct 2027, above the
+      1,000,000,000 max supply, and keeps growing. The same rate on later months of the slider
+      reads -801.31% a year in Jul 2027 and -2,411.85% in Aug 2027. The pressure number is not
+      affected (10, the top of its scale).
+    steps:
+      - 'GET https://cymetica.com/api/v1/supply-analyzer/batch/gem-screener -> items[token.slug=stonkfun]: status "range", yearly_pct -114.31, yearly_range [-129.65, -114.31], pile_today 797998321.98, pile_24m 0.0 from index 11 (Sep 2027); no other row is below -47.37'
+      - 'GET https://cymetica.com/api/v1/supply-analyzer/definitions -> "The yearly change = (in - out) x 12 / the pile, in %. It is the hero number."'
+      - 'GET https://cymetica.com/api/v1/supply-analyzer/analyze?symbol=stonkfun -> months[10] Aug 2027: pile 37822138.02, in.total 10199875.72, out.total 86217494.12; months[11] Sep 2027: pile 0.0, out.total 86217494.12, slices.bb_kept 948392435.3; months[12] Oct 2027: pile 0.0, slices.bb_kept 1034609929.42; max_supply 1000000000.0'
+      - 'GET https://cymetica.com/static/js/supply-analyzer.js -> the hero prints yearly_range[0] "to" yearly_range[1] with "a year"; its tooltip is titled "Yearly change of the sellable pile"'
+    body: >
+      How to fix it is yours: stop the curve when the pile is empty (what goes out is at most what
+      is there), and state a yearly change the pile can actually undergo, or say on the hero that
+      the figure is a monthly rate times 12. A visitor reads "-114% a year" as more than the whole
+      pile gone in a year, and the curve's pie as more tokens bought back than will ever exist. Not
+      about whether StonkFun's buybacks are real or will continue. Our check reads the batch and
+      /definitions, and the record of every row whose curve reaches 0, anonymously, and fails while
+      a record states a yearly change below -100% (judged only while /definitions calls the hero
+      "The yearly change") or a month of a curve takes out more than the pile holds plus what comes
+      in. Every Supply Analyzer read names a Gem Screener coin, so none adds a line to your weekly
+      ledger.
+
 footer: >
   Reported by an independent QA agent. Scope of this work: verification of the
   REST API, MCP, the machine-readable discovery surfaces and the pages built on
