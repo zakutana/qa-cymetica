@@ -337,7 +337,14 @@ def shared_link_identifiers(rows) -> list[str]:
 
 
 def typical_mismatches(rows, typical) -> list[dict]:
-    """Range rows whose width (the typical inflow added to the top) is not the stated one."""
+    """Range rows whose width is not the stated typical inflow plus the one named part they declare.
+
+    Since 2026-10-08 a range is two named parts (`yearly_range_parts`: the typical inflow and an
+    unstated buyback share), so a width above the typical is explained when the row names the
+    buyback part that makes it up. A row that declares no parts, a typical part that is not the
+    stated one (or 0, a row with no inflow assumed), or a width the parts do not add up to (to the
+    0.03 the batch's own rounding of two parts and a sum allows) is still an unnamed figure.
+    """
     out = []
     for row in rows or ():
         rng = (row or {}).get("yearly_range")
@@ -346,7 +353,18 @@ def typical_mismatches(rows, typical) -> list[dict]:
         if not all(_num(x) for x in rng):
             continue
         width = rng[1] - rng[0]
-        if width > 0.005 and abs(width - typical) > 0.01:
+        parts = row.get("yearly_range_parts")
+        named = 0.0
+        stated = typical
+        if isinstance(parts, dict) and _num(parts.get("typical_inflow_pct")) \
+                and _num(parts.get("unstated_buyback_share_pct")):
+            stated = parts["typical_inflow_pct"]
+            named = parts["unstated_buyback_share_pct"]
+            if abs(stated - typical) > 0.01 and stated != 0:
+                out.append({"symbol": ((row.get("token") or {}).get("symbol")), "range": rng,
+                            "used": round(stated, 2)})
+                continue
+        if width > 0.005 and abs(width - (stated + named)) > 0.03:
             out.append({"symbol": ((row.get("token") or {}).get("symbol")), "range": rng,
                         "used": round(width, 2)})
     return out
@@ -761,7 +779,8 @@ def test_the_gem_screener_link_opens_its_coin(rest_anon):
 
 @qa(component="rest.supply_analyzer", tier=SafetyTier.SAFE, surface="rest", claim=CLAIM_TYPICAL)
 def test_every_range_uses_the_stated_typical_inflow(rest_anon):
-    """Every range is as wide as the typical inflow /definitions and the batch state."""
+    """Every range is as wide as the typical inflow /definitions and the batch state, plus the
+    one buyback part it names."""
     batch = _batch(rest_anon)
     definitions = _json(_paced_get(rest_anon, DEFINITIONS), DEFINITIONS)
     typical = (definitions or {}).get("typical_inflow_pct") if isinstance(definitions, dict) else None
