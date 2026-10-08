@@ -1230,8 +1230,12 @@ def stop_study(rows: list[dict], stop_pct: float, target_pct: float | None = Non
 
 TEN_DOLLAR_CLIP = 10.0
 TEN_DOLLAR_HOLD_HOURS = 24.0
-# Their swap fee is not published per pool; the answer is given at three.
-SWAP_FEES_PCT = (0.5, 1.0, 2.0)
+# Their swap fee is not published per pool; the answer is given at several. The headline is
+# the one with no swap fee: the operator, 2026-10-08, after the laboratory dropped every fee it
+# had assumed on paper -- "1% u memecoinu taky vyhod". The price impact of the clip against the
+# radar's depth stays in every figure: it is measured, not a fee.
+HEADLINE_FEE_PCT = 0.0
+SWAP_FEES_PCT = (HEADLINE_FEE_PCT, 0.5, 1.0, 2.0)
 
 
 def ten_dollars(rows: list[dict], now=None, clip_usd: float = TEN_DOLLAR_CLIP,

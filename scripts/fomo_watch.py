@@ -607,13 +607,15 @@ def say_ten_dollars(said: dict) -> list[str]:
     # keys round-tripped through JSON as strings -- silently falling back to
     # WHICHEVER fee is first in the dict, not the 1% the headline claims
     # (found live, 2026-09-24, beside the `:g` crash below).
-    one = next((v for fee, v in fees.items() if float(fee) == 1.0),
+    head = fomo.HEADLINE_FEE_PCT
+    one = next((v for fee, v in fees.items() if float(fee) == head),
               next(iter(fees.values()), {}))
+    at_fee = "with no swap fee" if head == 0 else f"at {head:g}% a side"
     left = out.get("excluded") or {}
     return [
         f"${out['clip_usd']:g} into every hot signal, held "
         f"{out['hold_hours']:g} h, no stop: {_signed(one.get('mean_net_pct'))} "
-        f"a trade after costs at 1% a side (median "
+        f"a trade after the price impact, {at_fee} (median "
         f"{_signed(one.get('median_net_pct'))}, without the best "
         f"{out.get('top', 5)} {_signed(one.get('mean_net_without_top_pct'))}, "
         f"win {_pct(one.get('win_rate'))}), n={out['bought']}; at "

@@ -40,8 +40,8 @@ KIND_PRODUCT = {"card": "cards", "bot": "bots", "fund": "funds"}
 CONVICTION_MIN = 70.0
 # Under this many experiments no band is printed; the page says "málo dat".
 MIN_N = 5
-# The memecoin headline is read at this swap fee a side; 0.5 and 2 ride beside.
-MEMECOIN_FEE_PCT = 1.0
+# The memecoin headline is read at this swap fee a side; 0.5, 1 and 2 ride beside.
+MEMECOIN_FEE_PCT = fomo.HEADLINE_FEE_PCT      # 1.0 until 2026-10-08; no swap fee since
 
 
 def _latest(room_rows: list[dict], kind: str) -> dict[str, dict]:

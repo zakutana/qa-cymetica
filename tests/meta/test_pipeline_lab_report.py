@@ -213,7 +213,7 @@ def test_memecoins_carry_the_median_and_the_high_conviction_answer(monkeypatch):
         return {"signals": 40, "window_open": 0, "could_buy_share": 0.5,
                 # Different medians for the two calls, so a median read off
                 # the conviction subset cannot pass (deep pass B11, 3/3).
-                "by_fee": {1.0: {"n": n, "mean_net_pct": -4.0 if n == 20 else 6.0,
+                "by_fee": {0.0: {"n": n, "mean_net_pct": -4.0 if n == 20 else 6.0,
                                  "median_net_pct": -9.0 if n == 20 else -3.0,
                                  "win_rate": 0.25}}}
 
@@ -260,24 +260,26 @@ def test_a_band_is_given_only_when_there_is_enough_to_band():
 @qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
 def test_memecoins_are_ten_dollars_into_every_hot_signal(monkeypatch):
     """The memecoin product is V3's answer, not a room: $10 into every hot
-    signal, held a day, at 1% a side -- with 0.5 and 2 beside it and the
-    share we could have bought ("stihli bychom")."""
+    signal, held a day, with no swap fee since 2026-10-08 (the operator: "1% u
+    memecoinu taky vyhod"; 1% a side until then) -- with 0.5, 1 and 2 beside it
+    and the share we could have bought ("stihli bychom")."""
     seen = {}
 
     def fake(rows, now=None, **kw):
         seen["now"] = now
         return {"signals": 40, "window_open": 7, "bought": 20,
                 "could_buy_share": 0.6,
-                "by_fee": {0.5: {"n": 20, "mean_net_pct": -3.0, "win_rate": 0.3},
+                "by_fee": {0.0: {"n": 20, "mean_net_pct": -2.0, "win_rate": 0.35},
+                           0.5: {"n": 20, "mean_net_pct": -3.0, "win_rate": 0.3},
                            1.0: {"n": 20, "mean_net_pct": -4.0, "win_rate": 0.25},
                            2.0: {"n": 20, "mean_net_pct": -6.0, "win_rate": 0.2}}}
 
     monkeypatch.setattr(lab_report.fomo, "ten_dollars", fake)
     memes = _report(fomo_rows=[{"type": "signal"}])["products"]["memecoins"]
     assert seen["now"] == NOW
-    assert memes["n"] == 20 and memes["net_pct"] == -4.0, memes
+    assert memes["n"] == 20 and memes["net_pct"] == -2.0 and memes["fee_pct"] == 0.0, memes
     assert memes["running"] == 7 and memes["could_buy_share"] == 0.6
-    assert [f["fee_pct"] for f in memes["fees"]] == [0.5, 1.0, 2.0]
+    assert [f["fee_pct"] for f in memes["fees"]] == [0.0, 0.5, 1.0, 2.0]
     assert memes["wilson"] is not None
 
 
@@ -313,7 +315,7 @@ def test_every_figure_the_report_writes_reaches_the_lab_page(monkeypatch):
 
     monkeypatch.setattr(lab_report.fomo, "ten_dollars", lambda rows, now=None: {
         "signals": 1, "window_open": 0, "could_buy_share": 1.0,
-        "by_fee": {1.0: {"n": 1, "mean_net_pct": 1.0, "win_rate": 1.0}}})
+        "by_fee": {0.0: {"n": 1, "mean_net_pct": 1.0, "win_rate": 1.0}}})
     said = _report(fomo_rows=[{"type": "signal"}])
     written = {
         "lp": {k for p in said["products"].values() for k in p},

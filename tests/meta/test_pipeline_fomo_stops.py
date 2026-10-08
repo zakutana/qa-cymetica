@@ -567,7 +567,8 @@ def test_ten_dollars_into_every_hot_signal_is_answered_honestly():
         impact = fomo.RADAR_IMPACT_PCT * 10.0 / depth
         return (proceeds / 10.0 * (1 - fee / 100) ** 2
                 * (1 - impact / 100) ** 2 - 1) * 100
-    for fee in (0.5, 1.0, 2.0):
+    assert tuple(said["by_fee"]) == (0.0, 0.5, 1.0, 2.0), "no swap fee first (2026-10-08)"
+    for fee in (0.0, 0.5, 1.0, 2.0):
         mine = said["by_fee"][fee]
         want = [net(15.0, 5000.0, fee), net(2.0, 3000.0, fee),
                 net(10.0, 5000.0, fee),   # switched: capped at the $10 it cost
@@ -590,7 +591,8 @@ def test_the_report_opens_with_the_ten_dollar_answer(tmp_path, monkeypatch):
     first = mod.say_reading(said)[0]
     assert first.startswith("$10 into every hot signal"), first
     assert "n=1" in first and "Could buy 100.0% of 1" in first, first
-    assert "after costs at 1% a side" in first, first
+    # The operator, 2026-10-08: no swap fee in the headline; the price impact stays.
+    assert "after the price impact, with no swap fee" in first, first
 
 
 @qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
@@ -613,15 +615,15 @@ def test_a_reading_read_back_off_disk_still_prints_the_ten_dollar_line(
     fresh = "\n".join(mod.say_reading(said))
     stale = "\n".join(mod.say_reading(stored))
     assert stale.startswith("$10 into every hot signal"), stale
-    # And the headline's "at 1% a side" figure is still the 1% row, not
-    # whichever fee happens to be first in the dict (the fallback silently
-    # picked 0.5% off a stored reading).
+    # And the headline's figure is still its own fee's row, not whichever fee
+    # happens to be first in the dict (the fallback silently picked 0.5% off a
+    # stored reading when the headline was 1%).
     assert stale == fresh, (fresh, stale)
-    # ...pinned to the 1% row's own figure, since `stale == fresh` holds too
-    # when both pick the first fee (deep pass 2026-09-24, B01, 3/3).
+    # ...pinned to the headline row's own figure (no swap fee since 2026-10-08),
+    # held apart from another fee's (deep pass 2026-09-24, B01, 3/3).
     rows = said["ten_dollars"]["by_fee"]
-    one = next(v for fee, v in rows.items() if float(fee) == 1.0)
-    first = next(v for fee, v in sorted(rows.items(), key=lambda kv: float(kv[0])))
-    assert one["mean_net_pct"] != first["mean_net_pct"], "the fixture cannot tell 1% from 0.5%"
-    headline = fresh.split(" a trade after costs at 1% a side")[0]
+    one = next(v for fee, v in rows.items() if float(fee) == 0.0)
+    other = next(v for fee, v in rows.items() if float(fee) == 1.0)
+    assert one["mean_net_pct"] != other["mean_net_pct"], "the fixture cannot tell 0% from 1%"
+    headline = fresh.split(" a trade after the price impact, with no swap fee")[0]
     assert headline.endswith(mod._signed(one["mean_net_pct"])), (headline, one)
