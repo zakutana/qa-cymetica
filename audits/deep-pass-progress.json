@@ -10,8 +10,12 @@
    "nodeid": "scripts/wave.py:46",
    "claim": "MAX_TRADING = 25 is below what the platform runs (34 paper bots trading at 06:16 UTC), so resume_wave's free slots are 0 and every non-discarded bot is skipped as 'no free slot'.",
    "source": "review",
-   "votes": null,
-   "verdict": null,
+   "votes": {
+    "t1": "real",
+    "t2": "real",
+    "t3": "real"
+   },
+   "verdict": "real",
    "fixed": false,
    "commit": null
   },
@@ -20,8 +24,12 @@
    "nodeid": "scripts/wave.py::resume_wave",
    "claim": "resume_wave never asks clone.restart_refusal before stopping old rooms and opening a new proposal and room; a bot with an older their_guard/unexplained stop is refused inside clone.enable, counted transient, and gets a new room on every run.",
    "source": "review",
-   "votes": null,
-   "verdict": null,
+   "votes": {
+    "t1": "real",
+    "t2": "false",
+    "t3": "real"
+   },
+   "verdict": "real",
    "fixed": false,
    "commit": null
   },
@@ -30,8 +38,12 @@
    "nodeid": "scripts/lab_page.py::_stop_reason/_ran",
    "claim": "A their_trigger stop is labelled stop-loss/take-profit from the sign of the bot's cumulative profit, not from the recorded auto_pause_reason; a bot in profit that hits its stop-loss reads 'take-profit'.",
    "source": "review",
-   "votes": null,
-   "verdict": null,
+   "votes": {
+    "t1": "real",
+    "t2": "real",
+    "t3": "real"
+   },
+   "verdict": "real",
    "fixed": false,
    "commit": null
   },
@@ -40,28 +52,42 @@
    "nodeid": "scripts/clone.py::restart_refusal",
    "claim": "restart_refusal recomputes bot_stops over all samples plus trigger_stops_now (bot_stops again, last_accepted_start per instance over all clone rows) for every instance; bot_variants calls it per bot each tick.",
    "source": "review",
-   "votes": null,
-   "verdict": null,
+   "votes": {
+    "t1": "real",
+    "t2": "real",
+    "t3": "real"
+   },
+   "verdict": "real",
    "fixed": false,
-   "commit": null
+   "commit": null,
+   "note": "all three: true but harmless, 7-16 ms a call, under a second a tick"
   },
   {
    "id": "R05",
    "nodeid": "scripts/submit.py::select_items",
    "claim": "select_items refuses any finding holding an accepted report whatever its filing state; a WITHDRAWN row's genuine recurrence can be neither filed nor reopened (reopen exists only for FIX_CLAIMED).",
    "source": "review",
-   "votes": null,
-   "verdict": null,
+   "votes": {
+    "t1": "false",
+    "t2": "false",
+    "t3": "false"
+   },
+   "verdict": "dropped",
    "fixed": false,
-   "commit": null
+   "commit": null,
+   "note": "WITHDRAWN is terminal by design; the only such row is #53, the closed wallet item"
   },
   {
    "id": "R06",
    "nodeid": "qa/lab.py::bot_runs",
    "claim": "bot_runs duplicates bot_stops' stop classification without carrying the reason; the two copies have already drifted.",
    "source": "review",
-   "votes": null,
-   "verdict": null,
+   "votes": {
+    "t1": "real",
+    "t2": "real",
+    "t3": "real"
+   },
+   "verdict": "real",
    "fixed": false,
    "commit": null
   },
@@ -70,8 +96,12 @@
    "nodeid": "scripts/wave.py::resume_wave",
    "claim": "The free-slot count takes each instance's latest sample ever, so a released clone whose last reading said is_trading holds a slot for ever.",
    "source": "review",
-   "votes": null,
-   "verdict": null,
+   "votes": {
+    "t1": "real",
+    "t2": "real",
+    "t3": "real"
+   },
+   "verdict": "real",
    "fixed": false,
    "commit": null
   },
@@ -80,10 +110,15 @@
    "nodeid": "qa/fold.py::fold",
    "claim": "_mark_repins runs before _apply_events and before the run is applied to rows the journal creates (splits), so their repinned mark lags a fold.",
    "source": "review",
-   "votes": null,
-   "verdict": null,
+   "votes": {
+    "t1": "false",
+    "t2": "false",
+    "t3": "real"
+   },
+   "verdict": "minority",
    "fixed": false,
-   "commit": null
+   "commit": null,
+   "note": "t3: the lag is _apply_check_definition skipping a pin on a row a split has not created yet (fold.py:418-420); moving _mark_repins fixes nothing; the one real split was pinned 31 min later"
   },
   {
    "id": "T01",
@@ -91,8 +126,12 @@
    "claim": "Docstring: a fix passes only when the page AND the leaderboard say the run is synthetic. Code exempts a bot once its leaderboard row says synthetic and never asks the page; it passed (VERIFIED FIXED, #175) while /backtest still says 'against historical data' and nowhere 'synthetic' (lines 18-19 vs 108-111; run 20261007T205757Z page_mentions_synthetic false).",
    "source": "audit",
    "severity": "high",
-   "votes": null,
-   "verdict": null,
+   "votes": {
+    "t1": "real",
+    "t2": "real",
+    "t3": "real"
+   },
+   "verdict": "real",
    "fixed": false,
    "commit": null
   },
@@ -102,8 +141,12 @@
    "claim": "Contract: the series begins where the fund began. Code only checks the default read starts where a points=400 read starts and never compares the first timestamp with inception; a series that starts late in both reads passes (lines 31-33 vs 141-142; AIB-DATA-CENTERS -3.27% passed as 'unseparated').",
    "source": "audit",
    "severity": "medium",
-   "votes": null,
-   "verdict": null,
+   "votes": {
+    "t1": "false",
+    "t2": "real",
+    "t3": "real"
+   },
+   "verdict": "real",
    "fixed": false,
    "commit": null
   },
@@ -113,10 +156,15 @@
    "claim": "The page says 'dollars parked on the chain'; the check compares against peggedUSD only, so a fix showing DeFiLlama's dollar value of all stablecoins (Gnosis: USD 15.1M + EUR 20.2M + CHF 1.8M) would be a false FAIL (qa/gemaudit.py:812).",
    "source": "audit",
    "severity": "medium",
-   "votes": null,
-   "verdict": null,
+   "votes": {
+    "t1": "false",
+    "t2": "false",
+    "t3": "false"
+   },
+   "verdict": "dropped",
    "fixed": false,
-   "commit": null
+   "commit": null,
+   "note": "peggedUSD only is documented in qa/gemaudit.py:787-790; 31/33 chains within 2.4%"
   },
   {
    "id": "T04",
@@ -124,8 +172,12 @@
    "claim": "`judged` counts clones without checking primary_indicators exist; if /available drops or renames that field nothing is found and the check passes while clones still decide on epoch parity (qa/clonetrades.py:141-144 vs 164-166).",
    "source": "audit",
    "severity": "medium",
-   "votes": null,
-   "verdict": null,
+   "votes": {
+    "t1": "real",
+    "t2": "real",
+    "t3": "real"
+   },
+   "verdict": "real",
    "fixed": false,
    "commit": null
   },
@@ -135,10 +187,15 @@
    "claim": "Promise: a DEX-pool coin gets no verdict. The check judges only the first coin whose up/down figures qualify and stops; one coin's NO EDGE passes the whole claim (lines 460-462, 486-487, 501).",
    "source": "audit",
    "severity": "medium",
-   "votes": null,
-   "verdict": null,
+   "votes": {
+    "t1": "false",
+    "t2": "false",
+    "t3": "false"
+   },
+   "verdict": "dropped",
    "fixed": false,
-   "commit": null
+   "commit": null,
+   "note": "one coin is the stated trade-off: every /analyze POP/DUMP writes their public ledger"
   },
   {
    "id": "T06",
@@ -146,8 +203,12 @@
    "claim": "If all three live answers are 200 but calibrated/range are renamed, live=[] and unread=[] and the check passes on the study bins alone, though its comment calls the live answers half the contract (lines 369-371, 383).",
    "source": "audit",
    "severity": "low",
-   "votes": null,
-   "verdict": null,
+   "votes": {
+    "t1": "real",
+    "t2": "real",
+    "t3": "real"
+   },
+   "verdict": "real",
    "fixed": false,
    "commit": null
   },
@@ -157,8 +218,12 @@
    "claim": "A 'named leader chain' sentence is flagged only when bench kind is exactly 'median'; under any other non-leader kind the stale sentence passes (qa/gemaudit.py:874, 916).",
    "source": "audit",
    "severity": "low",
-   "votes": null,
-   "verdict": null,
+   "votes": {
+    "t1": "real",
+    "t2": "real",
+    "t3": "real"
+   },
+   "verdict": "real",
    "fixed": false,
    "commit": null
   },
@@ -168,8 +233,12 @@
    "claim": "Docstring and comment say the old rooms are stopped and judged BEFORE the new windows open; the verdicts spy only records which rooms are stopped, so the test stays green if resume_wave judged after the enable loop (test :328-331, :347-348; wave.py:306-308).",
    "source": "audit",
    "severity": "medium",
-   "votes": null,
-   "verdict": null,
+   "votes": {
+    "t1": "real",
+    "t2": "real",
+    "t3": "real"
+   },
+   "verdict": "real",
    "fixed": false,
    "commit": null
   },
@@ -179,10 +248,15 @@
    "claim": "Docstring says a bot that 'stopped less than six hours after its start' is left; code measures hours since the last accepted start counted from now, and the fixture 'sl' that ran one hour is asserted resumed (test :253-254, :299-300, :337).",
    "source": "audit",
    "severity": "low",
-   "votes": null,
-   "verdict": null,
+   "votes": {
+    "t1": "real",
+    "t2": "real",
+    "t3": "real"
+   },
+   "verdict": "real",
    "fixed": false,
-   "commit": null
+   "commit": null,
+   "note": "docstring only"
   },
   {
    "id": "T10",
@@ -190,8 +264,12 @@
    "claim": "'A read once more' is unbounded (the handler 429s only the first call) and 'a write is never sent twice' is asserted only on may_retry(), never by sending a POST through SafetyTransport; dropping `and may_retry(method)` at safety.py:247 stays green.",
    "source": "audit",
    "severity": "medium",
-   "votes": null,
-   "verdict": null,
+   "votes": {
+    "t1": "real",
+    "t2": "real",
+    "t3": "real"
+   },
+   "verdict": "real",
    "fixed": false,
    "commit": null
   },
@@ -201,10 +279,15 @@
    "claim": "The case ['sl','sl','sl','tp'] asserts NOT discarded: a take-profit AFTER the third stop-loss un-discards the bot, which pins 'last n stops', not the operator's 'three in a row, then thrown away' (lab_loop :3844-3861; lab.py:2612-2613).",
    "source": "audit",
    "severity": "low",
-   "votes": null,
-   "verdict": null,
+   "votes": {
+    "t1": "real",
+    "t2": "false",
+    "t3": "real"
+   },
+   "verdict": "real",
    "fixed": false,
-   "commit": null
+   "commit": null,
+   "note": "t2: the real gap is that restart_refusal never checks discarded_bots"
   },
   {
    "id": "T12",
@@ -212,8 +295,12 @@
    "claim": "Only fixture is samples False then True; 'any sample ever True' passes. No True-then-False case that must be kept (test :236-242).",
    "source": "audit",
    "severity": "low",
-   "votes": null,
-   "verdict": null,
+   "votes": {
+    "t1": "real",
+    "t2": "real",
+    "t3": "real"
+   },
+   "verdict": "real",
    "fixed": false,
    "commit": null
   },
@@ -223,10 +310,15 @@
    "claim": "'Three IN A ROW end it' is exercised only with one or four consecutive timeouts; a counter that never resets on success passes ({0,2,4} missing; test :194-206).",
    "source": "audit",
    "severity": "low",
-   "votes": null,
-   "verdict": null,
+   "votes": {
+    "t1": "real",
+    "t2": "real",
+    "t3": "real"
+   },
+   "verdict": "real",
    "fixed": false,
-   "commit": null
+   "commit": null,
+   "note": "{0,2,3} catches the missing reset, {0,2,4} does not"
   },
   {
    "id": "T14",
@@ -234,8 +326,12 @@
    "claim": "The new acceptance (rewritten 2026-10-08) trusts the parts the judged record declares: a typical part of 0 is accepted whatever the row's unknown_names say, though /definitions applies the typical part 'when an inflow is unknown'; a row naming vesting/emissions unknown with parts {typical 0, buyback 5.0} and width 5.0 passes -- the original HYPE defect read as fixed (lines 372-380).",
    "source": "audit",
    "severity": "medium",
-   "votes": null,
-   "verdict": null,
+   "votes": {
+    "t1": "real",
+    "t2": "real",
+    "t3": "real"
+   },
+   "verdict": "real",
    "fixed": false,
    "commit": null
   },
@@ -245,10 +341,15 @@
    "claim": "After the vendor's fix the check is Inconclusive for good: with no burned slice on any row (bb_burned measured 0 on 265/265) the contract holds and the honest verdict is passed; and it keys on an input `burned_so_far` that no longer exists (now `supply_gap`), so a burned slice derived from the gap would read unread, not failed (lines 563-565, 575-576, 260-261).",
    "source": "audit",
    "severity": "medium",
-   "votes": null,
-   "verdict": null,
+   "votes": {
+    "t1": "real",
+    "t2": "real",
+    "t3": "real"
+   },
+   "verdict": "real",
    "fixed": false,
-   "commit": null
+   "commit": null,
+   "note": "only the burned_so_far -> supply_gap half; Inconclusive on 0/265 is rule 10"
   },
   {
    "id": "T16",
@@ -256,8 +357,12 @@
    "claim": "The disposition extractor can return only 'burned' or nothing; the record now says 'burned', so if the fees page changed to 'retained'/'held' the extractor returns None and the check passes -- the disposition half can no longer go red (lines 319-325, 776-778).",
    "source": "audit",
    "severity": "low",
-   "votes": null,
-   "verdict": null,
+   "votes": {
+    "t1": "real",
+    "t2": "real",
+    "t3": "real"
+   },
+   "verdict": "real",
    "fixed": false,
    "commit": null
   }
