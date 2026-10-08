@@ -5,7 +5,7 @@ reports:
   51: "Cymetica uvádí různé počty agentních skillů (čísla si neodpovídají)"
   56: "Seznam skillů pro agenty má být podmnožinou karty agenta, ale není"
   103: "Fondy: historie, jak ji čte jejich poradce, nezačíná při založení fondu (AIB-DATA-CENTERS o 3,3 %)"
-  112:"Zakázka ET-26036 přesáhla termín a nic nedodali"
+  112: "Zakázka ET-26036 přesáhla termín a nic nedodali"
   121: "Nexus posílá agenta na adresu, kterou dokumentace nezná"
   123: "Vytvoření hlášení vrátí chybu 500, přestože hlášení vznikne"
   130: "50 čtecích adres, které volají veřejné stránky, chybí ve veřejné dokumentaci rozhraní"
