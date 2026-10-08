@@ -2,7 +2,7 @@
  "run": "deep-pass-2026-10-08",
  "at": "2026-10-08T06:07:10+00:00",
  "previous_at": "2026-10-04T20:49:07+00:00",
- "at_finished": null,
+ "at_finished": "2026-10-08T07:53:47+00:00",
  "start_commit": "1f83df78522dcdf94e4c24307d59c2f4d245ef6d",
  "gaps": [
   {
@@ -431,9 +431,51 @@
  },
  "meta_tests": {
   "start": 823,
-  "end": null,
-  "reason": null
+  "end": 823,
+  "reason": "the new cases went into existing tests"
  },
- "finished": false,
- "size": "full"
+ "finished": true,
+ "size": "full",
+ "rule_changes": [
+  {
+   "id": "RC1",
+   "what": "discarded_bots: a bot that EVER ended three runs in a row at its stop-loss is thrown away for good (was: only its last three stops); restart_refusal refuses it, also a start by hand",
+   "why": "the operator's 2026-10-07 'zahod a uz ho nechci videt' is for good; T11 of this pass (2/3)",
+   "votes": {
+    "t1": "no",
+    "t2": "no",
+    "t3": "no"
+   },
+   "test": "tests/meta/test_pipeline_lab_loop.py::test_every_bot_stop_is_ours_their_guard_or_unexplained",
+   "commit": "bd35b756",
+   "handover": true
+  },
+  {
+   "id": "RC2",
+   "what": "scripts/wave.py MAX_TRADING 25 -> 50",
+   "why": "the sampler read 34 (and 37 at 2026-10-07T21:03) of our bots trading at once, refuting 25; REPLY-0122's 50 total is the bound our data does not contradict; R01 of this pass (3/3)",
+   "votes": {
+    "t1": "no",
+    "t2": "no",
+    "t3": "no"
+   },
+   "test": "tests/meta/test_pipeline_wave.py::test_what_stops_a_wave_and_what_only_stops_one_bot",
+   "commit": "bd35b756",
+   "handover": true
+  }
+ ],
+ "next": [],
+ "run_id": "run-20261008T070907Z-a271e3ce",
+ "prereg": "PRE-0259",
+ "sent": {
+  "pass": 9,
+  "fail": 7,
+  "held": [
+   "#159 typical-inflow fail: /definitions read 15.10 during the run, 15.338 again at 07:36"
+  ]
+ },
+ "refused": [
+  "the mutation check for T10 (deleting the method test in qa/safety.py) was refused by the harness and not performed",
+  "step 1b's consolidate-memory skill is not available in this session; the memory change was one merge into an existing file by hand"
+ ]
 }
