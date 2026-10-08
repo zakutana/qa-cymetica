@@ -796,6 +796,43 @@ def test_the_is_answer_rule_is_self_calibrating_and_still_bites():
                                                        "Screener snapshot")])) is None
     assert max_from_a_schedule(dict(eth, inputs=[], max_supply=None)) is None, "no max stated is the fix"
 
+    # 13. A pile cannot shrink by more than all of it: STONK on 2026-10-08, "-129.65% to -114.31%
+    #     a year" while its own curve emptied the pile in Sep 2027 and kept buying back after.
+    from tests.rest.test_supply_analyzer_states_what_its_sources_say import (
+        hero_as_a_change, shrinks_past_all, takes_out_more_than_there_is)
+    said = {"definitions": ["The sellable pile = ...",
+                            "The yearly change = (in - out) x 12 / the pile, in %. It is the hero number."]}
+    assert hero_as_a_change(said).startswith("The yearly change = (in - out) x 12")
+    assert hero_as_a_change({"definitions": ["The yearly rate = (in - out) x 12 / the pile"]}) is None, (
+        "a hero renamed to a rate is not judged as a change")
+    assert hero_as_a_change(None) is None and hero_as_a_change({}) is None
+    stonk = {"token": {"symbol": "STONK", "slug": "stonkfun"}, "status": "range", "yearly_pct": -114.31,
+             "yearly_range": [-129.65, -114.31], "pile_today": 797998321.98}
+    got = shrinks_past_all(stonk)
+    assert got and got["lowest"] == -129.65 and got["slug"] == "stonkfun"
+    assert shrinks_past_all(dict(stonk, yearly_pct=-100.0, yearly_range=[-100.0, -100.0])) is None, (
+        "all of the pile in a year is the most it can lose, not more")
+    assert shrinks_past_all(dict(stonk, yearly_pct=-90.0, yearly_range=[-105.0, -90.0]))["lowest"] == -105.0, (
+        "either end of the range the hero prints counts")
+    assert shrinks_past_all(dict(stonk, yearly_pct=None, yearly_range=None)) is None, "nothing stated"
+    flow = lambda i, pile, kept: {"i": i, "label": f"m{i}", "pile": pile,
+                                  "in": {"typical": 10199875.72, "total": 10199875.72},
+                                  "out": {"buyback": 86217494.12, "total": 86217494.12},
+                                  "slices": {"free": pile, "bb_kept": kept, "bb_burned": 0.0}}
+    curve = {"token": stonk["token"], "max_supply": 1000000000.0, "total_supply": 797913707.79,
+             "months": [flow(9, 113839756.41, 775957447.06), flow(10, 37822138.02, 862174941.18),
+                        flow(11, 0.0, 948392435.3), flow(12, 0.0, 1034609929.42)]}
+    seen = takes_out_more_than_there_is(curve)
+    assert seen and seen["first"]["label"] == "m10" and seen["months_over"] == 3 and seen["empty_at"] == "m11"
+    assert seen["bought_back_past_cap"] == {"label": "m12", "bought_back": 1034609929.42}
+    stops = dict(curve, months=[flow(9, 113839756.41, 775957447.06),
+                                dict(flow(10, 37822138.02, 862174941.18), out={"buyback": 48022013.74,
+                                                                                "total": 48022013.74}),
+                                dict(flow(11, 0.0, 910196954.92), out={"buyback": 10199875.72,
+                                                                       "total": 10199875.72})])
+    assert takes_out_more_than_there_is(stops) is None, "a curve that stops at an empty pile is the fix"
+    assert takes_out_more_than_there_is({"months": []}) is None and takes_out_more_than_there_is(None) is None
+
     # The Gem Screener refresh rule (2026-09-27), held here for the same
     # ceiling. Stuck means BOTH: stale past 3 cycles AND the newest attempt a
     # recorded failure. A missing field is unreadable (None), never "healthy".

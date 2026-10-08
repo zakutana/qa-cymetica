@@ -92,6 +92,18 @@ record's own inputs, from the source it names, or from its documentation; one ch
    takes its max supply from an unlock schedule. SAMPLE: every chain, and every app whose
    Gem Screener snapshot has no max supply while the analyzer states one.
 
+13. A PILE CANNOT SHRINK BY MORE THAN ALL OF IT (added 2026-10-08). /definitions: "The yearly
+   change = (in - out) x 12 / the pile, in %. It is the hero number"; the page titles it
+   "Yearly change of the sellable pile". Seen: STONK (stonkfun) "-129.65% to -114.31% a
+   year" ((10,199,876 in - 86,217,494 out) x 12 / 797,998,322: the formula holds), while its
+   own 24-month curve empties the pile in Sep 2027 and still takes out 86,217,494 a month after
+   that, so "Bought back, kept" reaches 1,034,609,929 in Oct 2027 against a max supply of
+   1,000,000,000. ASSERTS: no record states a yearly change below -100% while /definitions
+   calls the hero a yearly change (renamed to a rate, that half is not judged), and no month
+   of a record's curve takes out more than the pile holds plus what comes in that month.
+   Only a curve whose pile reaches 0 can do that, so those rows are preselected from the
+   batch's pile_24m and each record is read: the whole population, not a sample.
+
 NOT asserted: whether the pressure number predicts anything, the weekly test, or the
 page's layout. SIDE EFFECTS: GETs only, anonymous; every Supply Analyzer read here names a
 Gem Screener coin, so none adds a line to the analyzer's ledger. Reads are paced to stay
@@ -132,6 +144,7 @@ CLAIM_OUT = "gem-screener-tokens-out-counts-the-max-supply"
 CLAIM_LOCKED = "supply-analyzer-tokens-locked-by-holders-are-not-a-reserve"
 CLAIM_SCHEDULE = "supply-analyzer-an-unknown-schedule-is-not-none-scheduled"
 CLAIM_MAX = "supply-analyzer-max-supply-is-a-cap-not-a-schedule-end"
+CLAIM_PAST_ALL = "supply-analyzer-a-pile-cannot-shrink-more-than-all-of-it"
 LLAMA_EMISSIONS = "https://defillama-datasets.llama.fi/emissions/{slug}"
 
 # The documented limit is 30 requests a minute per IP (llms.txt, /api-docs).
@@ -485,6 +498,59 @@ def out_ignores_max(app) -> dict | None:
             "circ_of_max_pct": round(circ / mx * 100, 1), "max_supply": mx, "circulating": circ,
             "fdv": app.get("fdv"), "mcap": app.get("mcap"), "dilution_week_pct": dil.get("week_pct"),
             "emissions_usd30": dil.get("emissions_usd30")}
+
+
+def hero_as_a_change(definitions) -> str | None:
+    """The /definitions line that defines the hero number as "The yearly change" (of the pile),
+    the reading under which a figure below -100% claims more than a pile can lose; None when
+    no line does."""
+    lines = (definitions or {}).get("definitions") if isinstance(definitions, dict) else None
+    return next((d.strip() for d in lines or () if isinstance(d, str)
+                 and d.strip().lower().startswith("the yearly change")), None)
+
+
+def shrinks_past_all(row) -> dict | None:
+    """The row's stated yearly change of its sellable pile when it, or either end of its range
+    (the page's hero prints both), is below -100%: the most a pile can lose is all of it. None
+    when nothing is stated or nothing is below -100."""
+    rng = (row or {}).get("yearly_range")
+    figures = [x for x in [(row or {}).get("yearly_pct")] + (list(rng) if isinstance(rng, list) else [])
+               if _num(x)]
+    if not figures or min(figures) >= -100:
+        return None
+    return {"coin": _sym(row), "slug": ((row.get("token") or {}).get("slug")), "yearly_pct": row.get("yearly_pct"),
+            "yearly_range": rng, "lowest": min(figures), "pile_today": row.get("pile_today")}
+
+
+def takes_out_more_than_there_is(record) -> dict | None:
+    """The months of a record's curve that take out more than the pile holds plus what comes
+    in that month (only a pile floored at 0 can show one), with the month the pile first reads
+    0 and the most the curve books bought back (kept + burned) against the max supply, or the
+    total when no max is stated. None when no month does, or there is no curve to read."""
+    months = [m for m in (record or {}).get("months") or [] if isinstance(m, dict)]
+    over = []
+    for m in months:
+        pile, came, went = m.get("pile"), (m.get("in") or {}).get("total"), (m.get("out") or {}).get("total")
+        if all(_num(x) for x in (pile, came, went)) and went > (pile + came) * 1.001 + 1:
+            over.append({"label": m.get("label"), "i": m.get("i"), "pile": pile, "in": came, "out": went})
+    if not over:
+        return None
+    cap_field = "max_supply" if _num(record.get("max_supply")) and record["max_supply"] > 0 else "total_supply"
+    cap = record.get(cap_field)
+    peak, peak_at, past_cap = 0.0, None, None
+    for m in months:
+        sl = m.get("slices") or {}
+        if isinstance(sl, list):
+            sl = {s.get("key"): s.get("amount") for s in sl if isinstance(s, dict)}
+        bought = sum(v for v in (sl.get("bb_kept"), sl.get("bb_burned")) if _num(v))
+        if bought > peak:
+            peak, peak_at = bought, m.get("label")
+        if past_cap is None and _num(cap) and cap > 0 and bought > cap:
+            past_cap = {"label": m.get("label"), "bought_back": bought}
+    empty = next((m.get("label") for m in months if _num(m.get("pile")) and m["pile"] <= 0), None)
+    return {"coin": _sym(record), "months_over": len(over), "first": over[0], "empty_at": empty,
+            "bought_back_peak": peak, "peak_at": peak_at, "cap_field": cap_field, "cap": cap,
+            "bought_back_past_cap": past_cap}
 
 
 # --- 1. the burned slice -----------------------------------------------------------------
@@ -1080,3 +1146,90 @@ def test_tokens_out_counts_the_max_supply_of_a_coin_still_issuing(rest_anon):
         population={"bad": bad, "near": near, "judged": len(judged), "snapshot": snapshot.get("generated_at_iso")},
         sources={"snapshot": SNAPSHOT},
         claim_id=CLAIM_OUT))
+
+
+# --- 13. a pile cannot shrink by more than all of it -------------------------------------
+
+def _hero_text(row) -> str:
+    rng = (row or {}).get("yearly_range")
+    if isinstance(rng, list) and len(rng) == 2 and all(_num(x) for x in rng) and abs(rng[1] - rng[0]) > 0.05:
+        return f"{rng[0]}% to {rng[1]}% a year"
+    return f"{(row or {}).get('yearly_pct')}% a year"
+
+
+@qa(component="rest.supply_analyzer", tier=SafetyTier.SAFE, surface="rest", claim=CLAIM_PAST_ALL)
+def test_a_pile_cannot_shrink_by_more_than_all_of_it(rest_anon):
+    """No record states a yearly change of its sellable pile below -100%, and no month of a
+    record's curve takes out more than the pile holds plus what comes in that month."""
+    batch = _batch(rest_anon)
+    rows = [r for r in batch["items"] if _num(r.get("yearly_pct"))]
+    if not rows:
+        raise Inconclusive(f"{BATCH} states a yearly change on no row")
+    definitions = _json(_paced_get(rest_anon, DEFINITIONS), DEFINITIONS)
+    a_change = hero_as_a_change(definitions)
+    hero = [x for x in (shrinks_past_all(r) for r in rows) if x] if a_change else []
+    drains = [r for r in batch["items"] if isinstance(r.get("pile_24m"), list) and r["pile_24m"]
+              and _num(r["pile_24m"][0]) and r["pile_24m"][0] > 0
+              and any(_num(x) and x <= 0 for x in r["pile_24m"])]
+    slugs = sorted(({(r.get("token") or {}).get("slug") for r in drains} | {h["slug"] for h in hero}) - {None, ""})
+    records, curves, unread = {}, {}, []
+    for slug in slugs:
+        record = _single(rest_anon, slug)
+        if record is None:
+            unread.append(slug)
+            continue
+        records[slug] = record
+        curves[slug] = takes_out_more_than_there_is(record)
+    overdrawn = {s: c for s, c in curves.items() if c}
+    if not hero and not overdrawn:
+        if not a_change:
+            # A hero renamed to a rate may lawfully read below -100%; a reworded definition may
+            # not. Either way the check can no longer say what the figure claims: loud, not a pass.
+            raise Inconclusive(f"{DEFINITIONS} no longer defines the hero as \"The yearly change\"; what a "
+                               f"figure below -100% claims cannot be read, and no curve overdraws its pile")
+        if unread:
+            raise Inconclusive(f"{len(unread)} of {len(slugs)} records whose curve empties the pile could not "
+                               f"be read: {unread[:6]}")
+    by_slug = {(r.get("token") or {}).get("slug"): r for r in batch["items"]}
+    hero_slugs = {h["slug"] for h in hero}
+
+    def said(slug) -> str:
+        row, record, curve = by_slug.get(slug) or {}, records.get(slug) or {}, overdrawn.get(slug)
+        parts = []
+        if slug in hero_slugs:
+            text = f"\"{_hero_text(row)}\""
+            today = record.get("today") or {}
+            came, went, pile = (today.get("in") or {}).get("total"), (today.get("out") or {}).get("total"), today.get("pile")
+            if all(_num(x) for x in (came, went, pile)):
+                text += f" (({came:,.0f} in - {went:,.0f} out) x 12 / {pile:,.0f})"
+            parts.append(text)
+        if curve:
+            first = curve["first"]
+            text = (f"its curve takes out {first['out']:,.0f} in {first['label']} with {first['pile']:,.0f} in the "
+                    f"pile and {first['in']:,.0f} coming in ({curve['months_over']} such months), the pile reads 0 "
+                    f"from {curve['empty_at']}")
+            past = curve["bought_back_past_cap"]
+            if past:
+                text += (f", and it books {past['bought_back']:,.0f} bought back by {past['label']}, more than its "
+                         f"{curve['cap_field'].replace('_', ' ')} of {_f(curve['cap'])}")
+            parts.append(text)
+        return f"{_sym(row) if row else slug}: " + "; ".join(parts)
+
+    bad = sorted(hero_slugs | set(overdrawn))
+    hero_part = (f"{len(hero)} of {len(rows)} records state a yearly change of the sellable pile below -100% "
+                 f"(/definitions: \"{a_change}\")" if a_change else
+                 "the hero is no longer defined as a yearly change (not judged)")
+    conclude(Measurement(
+        verdict="failed" if bad else "passed",
+        reason=(f"{hero_part}, and {len(overdrawn)} of "
+                f"{len(curves)} records whose curve empties the pile take out more than it holds: "
+                + " | ".join(said(s) for s in bad[:4])
+                if bad else
+                f"none of {len(rows)} records states a yearly change below -100%, and none of {len(curves)} curves "
+                f"that empty the pile takes out more than it holds"),
+        left={"yearly_below_minus_100": len(hero), "curves_taking_out_more_than_the_pile": len(overdrawn)},
+        right={"yearly_below_minus_100": 0, "curves_taking_out_more_than_the_pile": 0},
+        population={"hero": hero, "overdrawn": overdrawn, "unread": unread, "drains": [_sym(r) for r in drains],
+                    "rows": len(rows), "hero_definition": a_change, "batch_as_of": batch.get("as_of")},
+        sources={"batch": BATCH, "definitions": DEFINITIONS, "records": f"{ANALYZE}?symbol=<slug>"},
+        claim_id=CLAIM_PAST_ALL))
