@@ -2540,7 +2540,9 @@ def bot_stops(clone_rows, samples) -> list[dict]:
                 else:
                     paused = True
             elif row.get("is_trading") is True:
-                trading_since, paused = at, False
+                # Trading again: a reason read from here on belongs to the NEXT stop, never
+                # to the one before (deep pass 2026-10-08, R06).
+                trading_since, paused, last_stop = at, False, None
             elif row.get("is_trading") is False and trading_since is not None:
                 profit = _money(row.get("total_profit_usdc"))
                 if paused:
@@ -2589,28 +2591,41 @@ def last_accepted_start(clone_rows, instance) -> str:
                 and row.get("id") in answered), default="")
 
 
-def trigger_stops_now(clone_rows, samples) -> dict[str, dict]:
+def trigger_stops_now(clone_rows, samples, stops=None) -> dict[str, dict]:
     """instance -> its newest stop, for the bots whose LAST stop was a band we configured
     (`their_trigger`) and which no accepted enable of ours has started since. Those, and
-    only those, may be resumed (scripts/clone.py restart_refusal, scripts/wave.py resume)."""
+    only those, may be resumed (scripts/clone.py restart_refusal, scripts/wave.py resume).
+    `stops` is bot_stops already computed, so a caller that has it reads the diaries once."""
     newest: dict[str, dict] = {}
-    for stop in bot_stops(clone_rows, samples):
+    for stop in bot_stops(clone_rows, samples) if stops is None else stops:
         newest[stop["instance"]] = stop
     return {instance: stop for instance, stop in newest.items()
             if stop["cause"] == "their_trigger"
             and stop["before"] >= last_accepted_start(clone_rows, instance)}
 
 
-def discarded_bots(clone_rows, samples, n: int = DISCARD_AFTER_STOP_LOSSES) -> set[str]:
-    """Bots whose last `n` stops were all at their stop-loss, in a row. A take-profit
+def discarded_bots(clone_rows, samples, n: int = DISCARD_AFTER_STOP_LOSSES,
+                   stops=None) -> set[str]:
+    """Bots that have ever ended `n` runs in a row at their stop-loss. A take-profit
     in between breaks the run, and a stop that was not a band at all (their guard, an
-    unexplained halt) is not counted here: those are findings, not losses."""
+    unexplained halt) is not counted here: those are findings, not losses.
+
+    EVER, not "the last n": the operator's "zahod a uz ho nechci videt" is for good, so a
+    take-profit after the third stop-loss -- reachable only through a start by hand --
+    does not bring the bot back (deep pass 2026-10-08, T11)."""
     by_bot: dict[str, list[str]] = {}
-    for stop in bot_stops(clone_rows, samples):
+    for stop in bot_stops(clone_rows, samples) if stops is None else stops:
         by_bot.setdefault(stop["instance"], []).append(
             stop.get("reason") if stop["cause"] == "their_trigger" else stop["cause"])
-    return {bot for bot, reasons in by_bot.items()
-            if len(reasons) >= n and all(r == "stop_loss" for r in reasons[-n:])}
+    out = set()
+    for bot, reasons in by_bot.items():
+        streak = 0
+        for reason in reasons:
+            streak = streak + 1 if reason == "stop_loss" else 0
+            if streak >= n:
+                out.add(bot)
+                break
+    return out
 
 
 def bot_runs(clone_rows, samples) -> dict[str, list[dict]]:
@@ -2665,10 +2680,11 @@ def bot_runs(clone_rows, samples) -> dict[str, list[dict]]:
                     last_run = runs[-1]
                 else:
                     runs.append(closed(instance, start, at, "ours", None))
+                    last_run = None
                 start, paused = None, True
             elif row.get("is_trading") is True:
                 if start is None:
-                    start = at
+                    start, last_run = at, None
                 paused = False
             elif row.get("is_trading") is False and start is not None and not paused:
                 profit = _money(row.get("total_profit_usdc"))
@@ -2681,6 +2697,7 @@ def bot_runs(clone_rows, samples) -> dict[str, list[dict]]:
                     and row.get("is_trading") is False
                     and row.get("auto_pause_reason") in TRIGGER_REASONS):
                 last_run["why"] = "their_trigger"      # the same reading bot_stops makes
+                last_run["reason"] = row["auto_pause_reason"]
         if start is not None:
             runs.append({"start": start, "end": None, "why": None, "profit_pct": None})
         if runs:

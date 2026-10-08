@@ -1051,7 +1051,8 @@ def _current_stop(instance: str, clone_rows, samples, trading,
     if stops is None:
         stops = qa_lab.bot_stops(clone_rows, samples)
     mine = [s for s in stops if s["instance"] == str(instance)]
-    return ({"cause": mine[-1]["cause"], "pct": mine[-1]["profit_pct"]}
+    return ({"cause": mine[-1]["cause"], "pct": mine[-1]["profit_pct"],
+             "reason": mine[-1].get("reason")}
             if mine else None)
 
 
@@ -1070,6 +1071,9 @@ def _bots_stopped(panel: dict) -> list[dict]:
     return []
 
 
+_BAND_WORDS = {"stop_loss": "stop-loss", "take_profit": "take-profit"}
+
+
 def _stop_reason(stops: list[dict]) -> str:
     """A loss-side halt is their stop-loss (bot_stops: `their_guard`); a stop
     bot_stops calls `unexplained` says only where it stopped -- their own
@@ -1077,12 +1081,15 @@ def _stop_reason(stops: list[dict]) -> str:
     if len(stops) > 1:
         return f"all {len(stops)} stopped"
     pct = stops[0].get("pct")
+    # A band is named by the reason the platform gave, never by the sign of the bot's
+    # lifetime profit: a bot in profit can stop at its stop-loss (deep pass 2026-10-08, R03).
+    band = _BAND_WORDS.get(stops[0].get("reason")) if stops[0].get("cause") == "their_trigger" else None
     if pct is None or pct == 0:
-        return "stopped by itself"
+        return band or "stopped by itself"
     pct = round(pct, 1)
     shown = _signed(pct, 0 if pct == round(pct) else 1)
-    if stops[0].get("cause") == "their_trigger":
-        return f"{'stop-loss' if pct < 0 else 'take-profit'} {shown}%"
+    if band:
+        return f"{band} {shown}%"
     if stops[0].get("cause") == "their_guard":
         return f"stop-loss {shown}%"
     return f"stopped by itself at {shown}%"
@@ -1188,7 +1195,7 @@ def _ran(clones: list[dict], now: datetime) -> dict | None:
             why = f"all {len(per_bot)} stopped"
         elif last.get("why") == "their_trigger":
             pct = last.get("profit_pct")
-            word = "take-profit" if pct is not None and pct > 0 else "stop-loss"
+            word = _BAND_WORDS.get(last.get("reason")) or "band"
             why = f"its {word}" if pct is None else f"its {word} {_pct_word(pct)}%"
         elif last.get("why") == "their_guard":
             pct = last.get("profit_pct")

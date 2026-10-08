@@ -41,9 +41,11 @@ SETTINGS = {"stop_loss_pct": 15.0, "take_profit_pct": 40.0}
 STAKE_USDC = 500.0
 WINDOW_DAYS = 7.0
 STOP_PCT = 10.0
-# The platform's cap on bots trading at once (Telegram, 2026-10-03). A bigger
-# wave is refused outright rather than discovered at the 26th clone.
-MAX_TRADING = 25
+# The cap on bots trading at once. REPLY-0122 (2026-10-04) said 25 trading and 50 in
+# all; on 2026-10-08 the sampler read 34 of ours trading at once, so 25 is not their
+# limit and held every resume at "no free slot" (deep pass, R01). 50 is the one number of
+# theirs our data does not contradict; past it the platform's own refusal stops a wave.
+MAX_TRADING = 50
 BTC_PROXY = "a4a5b71e-de11-4805-b8a3-ed9c3f8f8161"
 
 
@@ -262,20 +264,32 @@ def resume_wave(*, clone, rooms, lab, samples: list[dict], verdicts, now,
                 if r.get("type") == "intent" and r.get("kind") == "release"
                 and any(o.get("id") == r.get("id") and o.get("type") == "outcome"
                         and o.get("outcome") == "accepted" for o in rows)}
-    candidates = {k: v for k, v in lab.trigger_stops_now(rows, samples).items()
+    stops = lab.bot_stops(rows, samples)
+    candidates = {k: v for k, v in lab.trigger_stops_now(rows, samples, stops=stops).items()
                   if k not in released}
-    thrown = lab.discarded_bots(rows, samples)
+    thrown = lab.discarded_bots(rows, samples, stops=stops)
+    # A bot with any stop that was neither ours nor a band is a finding: clone.enable's
+    # restart guard refuses it, so it gets no new room either -- until the deep pass of
+    # 2026-10-08 (R02) it got one on every run, which enable then refused.
+    findings = {s["instance"] for s in stops if s["cause"] not in ("ours", "their_trigger")}
     latest: dict[str, bool] = {}
     for sample in sorted((s for s in samples if s.get("kind") == "bot"),
                          key=lambda s: str(s.get("at"))):
         latest[str(sample.get("instance_id"))] = sample.get("is_trading") is True
-    free = max(0, max_trading - sum(latest.values()))
+    # A clone we released is no longer sampled, so its last reading may say it trades for
+    # ever: it holds no slot (R07).
+    free = max(0, max_trading - sum(v for k, v in latest.items() if k not in released))
     results: list[dict] = []
     plan: list[tuple[str, dict]] = []
     # Newest stop first: the ones that stopped most recently keep their settings fresh.
     for instance, stop in sorted(candidates.items(), key=lambda kv: kv[1]["before"], reverse=True):
         result = {"name": instance, "instance": instance, "ok": False, "room": None,
                   "why": "", "transient": False, "discarded": False}
+        if instance in findings and instance not in thrown:
+            result["why"] = ("an earlier stop of it was neither ours nor a band: a finding, "
+                             "and the bot is never started again")
+            results.append(result)
+            continue
         started = lab.last_accepted_start(rows, instance)
         try:
             ago = (now - datetime.fromisoformat(started.replace("Z", "+00:00"))).total_seconds() / 3600

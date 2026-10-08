@@ -1132,6 +1132,13 @@ def test_a_started_clone_starts_again_only_as_a_new_variant(tmp_path, monkeypatc
                                ("2026-10-07T16:00:00+00:00", False, "-150.0", "stop_loss"))]
     samples.write_text("".join(_json.dumps(r) + "\n" for r in twice), encoding="utf-8")
     assert mod.restart_refusal("t-sl") is None, "a second trigger may resume a second time"
+    # A third stop-loss in a row: thrown away, and a start by hand is refused too (deep pass
+    # 2026-10-08, T11 -- [operator 2026-10-07] "uz ho nechci videt").
+    started("t-sl", "2026-10-07T17:00:00+00:00")
+    thrice = [*twice, *readings("t-sl", ("2026-10-07T18:00:00+00:00", True, "-150.0", None),
+                                ("2026-10-07T19:00:00+00:00", False, "-225.0", "stop_loss"))]
+    samples.write_text("".join(_json.dumps(r) + "\n" for r in thrice), encoding="utf-8")
+    assert "thrown away" in (mod.restart_refusal("t-sl") or ""), "three in a row: never again"
     samples.write_text("", encoding="utf-8")
 
 

@@ -3854,11 +3854,32 @@ def test_every_bot_stop_is_ours_their_guard_or_unexplained():
                                  "stop_loss" if kind == "sl" else "take_profit")]
             t += 2
         return rows, readings
+    # Deep pass 2026-10-08 (T11): "uz ho nechci videt" is for good -- a take-profit AFTER
+    # the third stop-loss (only a start by hand gets it there) does not bring it back.
     for kinds, discarded in ((["sl", "sl", "sl"], True), (["sl", "sl"], False),
                              (["sl", "tp", "sl"], False), (["tp", "sl", "sl", "sl"], True),
-                             (["sl", "sl", "sl", "tp"], False)):
+                             (["sl", "sl", "sl", "tp"], True), (["sl", "sl", "tp", "sl"], False)):
         rows, readings = stops_of("run", kinds)
         assert (("run" in lab.discarded_bots(rows, readings)) is discarded), kinds
+
+    # R06/R03: a band read after the bot traded again belongs to the NEXT stop, in
+    # bot_stops and bot_runs alike, and a run carries the band's reason, so a page never
+    # names a stop-loss from the sign of a profit. A stop at a loss, trading again without
+    # an enable of ours, our pause, then a reading with a stop_loss reason: the first stop
+    # stays their_guard in both readings.
+    drift = [*fund("CLN-0070", "drift", 500.0, "2026-10-08T00:00:00+00:00"),
+             *switch("CLN-0071", "drift", "enable", "2026-10-08T00:00:10+00:00"),
+             *switch("CLN-0072", "drift", "disable", "2026-10-08T05:00:00+00:00")]
+    drifted = [reading("drift", "2026-10-08T01:00:00+00:00", True, "0.0"),
+               reading("drift", "2026-10-08T02:00:00+00:00", False, "-10.0"),
+               reading("drift", "2026-10-08T03:00:00+00:00", True, "-10.0"),
+               reading("drift", "2026-10-08T06:00:00+00:00", False, "-10.0", "stop_loss")]
+    assert [s["cause"] for s in lab.bot_stops(drift, drifted)] == ["their_guard", "ours"]
+    assert [r["why"] for r in lab.bot_runs(drift, drifted)["drift"]] == ["their_guard", "ours"]
+    gained = [reading("tp", "2026-10-06T04:30:00+00:00", True, "0.0"),
+              reading("tp", "2026-10-06T05:50:00+00:00", False, "116.0", "stop_loss")]
+    assert lab.bot_runs(wave, gained)["tp"][0]["reason"] == "stop_loss", (
+        "in profit and stopped at its stop-loss: the run says stop_loss, not the sign")
 
 
 @qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")

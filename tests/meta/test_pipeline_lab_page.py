@@ -725,6 +725,21 @@ def _check_a_bot_that_stopped_itself_is_done_and_says_which_limit_it_hit():
                                                  "pct": -19.19}})["reason"] == "stop-loss −19.2%"
     flat = _bot_room({"trading": False, "stop": {"cause": "unexplained", "pct": None}})
     assert (flat["group"], flat["reason"]) == ("done", "stopped by itself")
+    # Deep pass 2026-10-08 (R03): a band is named by the reason the platform gave, never by
+    # the sign of the bot's lifetime profit -- 3b1512cb stopped at its stop-loss at +23.25%
+    # and the page would have said "take-profit".
+    sl_up = _bot_room({"trading": False, "stop": {"cause": "their_trigger", "pct": 23.26,
+                                                  "reason": "stop_loss"}})
+    assert sl_up["reason"] == "stop-loss +23.3%", sl_up["reason"]
+    tp_flat = _bot_room({"trading": False, "stop": {"cause": "their_trigger", "pct": None,
+                                                    "reason": "take_profit"}})
+    assert tp_flat["reason"] == "take-profit", tp_flat["reason"]
+    ran = _bot_room({"trading": False, "stop": {"cause": "their_trigger", "pct": 23.26,
+                                                "reason": "stop_loss"},
+                     "runs": [{"start": "2026-10-07T04:00:00+00:00",
+                               "end": "2026-10-07T18:22:00+00:00", "why": "their_trigger",
+                               "reason": "stop_loss", "profit_pct": 23.26}]})["ran"]
+    assert ran["why"] == "its stop-loss +23.3%", ran
 
 
 def _check_the_row_says_how_long_each_bot_ran_and_why_it_stopped():
@@ -798,6 +813,9 @@ def _check_the_stop_a_clone_carries_is_the_diaries_and_only_while_it_is_stopped(
                 "total_profit_usdc": 29.0}]
     stop = page._current_stop("i1", rows, samples, trading=False)
     assert stop["cause"] == "unexplained" and stop["pct"] == pytest.approx(29.0)
+    banded = [dict(samples[0], auto_pause_reason="stop_loss")]
+    assert page._current_stop("i1", rows, banded, trading=False)["reason"] == "stop_loss", (
+        "the band's reason reaches the page with the stop")
     assert page._current_stop("i1", rows, samples, trading=True) is None
     assert page._current_stop("other", rows, samples, trading=False) is None
 

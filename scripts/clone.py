@@ -600,8 +600,13 @@ def restart_refusal(instance_id: str, rows: list[dict] | None = None,
     from qa import rooms
 
     samples = rooms.load_samples() if samples is None else samples
-    every = [stop for stop in lab.bot_stops(rows, samples)
-             if stop["instance"] == str(instance_id)]
+    stops = lab.bot_stops(rows, samples)       # read once, used three times below
+    every = [stop for stop in stops if stop["instance"] == str(instance_id)]
+    # [operator 2026-10-07] three stop-losses in a row: thrown away, for good -- also for
+    # a start by hand, which until the deep pass of 2026-10-08 (T11) nothing refused.
+    if str(instance_id) in lab.discarded_bots(rows, samples, stops=stops):
+        return (f"{instance_id} ended three runs in a row at its stop-loss; it is thrown "
+                f"away and never started again")
     # A stop at one of the two bands WE configured (`their_trigger`: the platform
     # pauses every clone at its first stop_loss or take_profit, by design, and
     # toggle-trading resumes it -- llms.txt, Nexus NEX-0124, 2026-10-07) is not a
@@ -612,7 +617,7 @@ def restart_refusal(instance_id: str, rows: list[dict] | None = None,
         return (f"{instance_id} stopped by itself ({stop['cause']}, between "
                 f"{stop['after']} and {stop['before']}); a stop that was not "
                 f"ours is a finding, and the bot is never started again")
-    if str(instance_id) in lab.trigger_stops_now(rows, samples):
+    if str(instance_id) in lab.trigger_stops_now(rows, samples, stops=stops):
         # Stopped at its band and not started since: a resume is a second window of the
         # same configuration. No pause of ours and no settings change are needed -- the
         # bot stopped by itself and the settings are the point -- but the old room must
