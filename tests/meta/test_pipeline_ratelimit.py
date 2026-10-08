@@ -115,3 +115,27 @@ def test_a_429_waits_for_retry_after_and_only_a_read_is_asked_again(tmp_path):
     # A write is never sent a second time: a POST that 429'd may still have landed.
     assert ratelimit.may_retry("GET") and not ratelimit.may_retry("POST")
     assert not ratelimit.may_retry("PATCH") and not ratelimit.may_retry("DELETE")
+
+    # Deep pass 2026-10-08 (T10): both halves through the transport itself, not the
+    # predicate. A read is asked ONCE more, never in a loop: a route that keeps answering
+    # 429 gets two requests and its 429 back. And a POST -- here an MCP read, which the
+    # guard lets through at SAFE -- that answers 429 is sent once, whatever it carried.
+    def always(request):
+        calls.append(request.method)
+        return httpx.Response(429, headers={"Retry-After": "3"})
+
+    for method, url, body, sent in (
+            ("GET", "https://cymetica.com/api/v1/gem-screener", None, ["GET", "GET"]),
+            ("POST", "https://cymetica.com/mcp/v1",
+             b'{"jsonrpc": "2.0", "id": 1, "method": "tools/list"}', ["POST"])):
+        calls.clear()
+        stubborn = SafetyTransport(inner=httpx.MockTransport(always),
+                                   registry=EndpointRegistry.load(), pacer=pacer)
+        token = CURRENT_TIER.set(SafetyTier.SAFE)
+        try:
+            answer = stubborn.handle_request(httpx.Request(
+                method, url, content=body,
+                headers={"content-type": "application/json"} if body else None))
+        finally:
+            CURRENT_TIER.reset(token)
+        assert answer.status_code == 429 and calls == sent, (method, calls)
