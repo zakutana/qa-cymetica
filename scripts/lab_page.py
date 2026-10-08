@@ -1121,8 +1121,10 @@ def _reason(group: str, panel: dict) -> str | None:
     return _stop_reason(stops) if stops and panel.get("status") == "running" else None
 
 
-CARD_ROUND_TRIP_PCT = 0.4
-"""The live event-card taker fee, 0.2% a fill, as Nexus quoted it (NEX-0114)."""
+CARD_ROUND_TRIP_PCT = 0.0
+"""What selling a card costs on the way in and out. 0.4 (the live taker fee, 0.2% a fill,
+NEX-0114) until 2026-10-08; a PAPER fill pays no fee, spread or slippage (REPLY-0136), and the
+laboratory buys only on paper."""
 
 
 def _h18_stats(experiments: list[dict], sector: str) -> dict | None:
