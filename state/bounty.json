@@ -24,14 +24,14 @@
   "our_reports": {
     "endpoint": "GET /api/v1/bounty/my-reports?wallet_address=<addr>",
     "klass": "ok",
-    "read_at": "2026-10-08T07:50:13+00:00",
-    "evidence_id": "7944016b4bffb6c146a73a9f95d9ea0688fe91578ba71dc827899ff5525ca632",
+    "read_at": "2026-10-08T09:37:15+00:00",
+    "evidence_id": "b1fde488db8987fe676da3c59472a5b0305dafb245b337116bfa0a754d2d7139",
     "rows_returned": 133,
     "server_total": 133,
     "total": 133,
     "statuses": {
-      "paid": 116,
-      "pending": 10,
+      "paid": 119,
+      "pending": 7,
       "fixed": 5,
       "invalid": 2
     },
@@ -2254,56 +2254,56 @@
       {
         "id": 168,
         "title": "Gem Screener: llms.txt and the chain agent prompt still describe a chain's price tag as yearly activity fees against a named leader chain; the page uses adoption and the median",
-        "status": "pending",
+        "status": "paid",
         "hunter_name": "expire76",
         "wallet_address": "0xde9ceaab301a9e47b1bacd448b3ddbba85e83398",
         "severity_reported": "low",
-        "severity_confirmed": null,
+        "severity_confirmed": "low",
         "category": "documentation",
         "created_at": "2026-10-04T15:16:52.373429",
-        "fixed_at": null,
-        "validated_at": null,
-        "triaged_at": null,
-        "status_notes": null,
-        "ticket_url": null,
+        "fixed_at": "2026-10-08T08:41:56.825026",
+        "validated_at": "2026-10-08T08:41:56.825026",
+        "triaged_at": "2026-10-08T08:41:56.825026",
+        "status_notes": "[2026-10-08T08:41:56+00:00] Resolved via ticket ET-29357: Live since 08:39Z (35ee03bb1), verified anonymously: the /llms.txt Gem Screener section now says a chain's price tag is market cap / adoption (fourth root of daily users x 30-day DEX volume x TVL x stablecoins, no fees) against the median price tag of the large chains (bench_chains); the fee-era sentences (yearly activity fees, named leader chain, benchmark names the leader) are gone. The Chains-tab agent prompt asks for the four-input adoption and the median price tag. Test pins it.",
+        "ticket_url": "https://cymetica.com/admin/centcom/issues/29357",
         "fix_pr_url": null,
-        "reward_amount": 0.0
+        "reward_amount": 1000.0
       },
       {
         "id": 169,
         "title": "Gem Screener Chains: \"Adoption\" names two measures; Growth 6M, the trajectory and the Declining/Post-crash tags that decide \"Vetted only\" read a stablecoins and DEX volume index",
-        "status": "pending",
+        "status": "paid",
         "hunter_name": "expire76",
         "wallet_address": "0xde9ceaab301a9e47b1bacd448b3ddbba85e83398",
         "severity_reported": "low",
-        "severity_confirmed": null,
+        "severity_confirmed": "low",
         "category": "logic",
         "created_at": "2026-10-04T15:17:10.672412",
-        "fixed_at": null,
-        "validated_at": null,
-        "triaged_at": null,
-        "status_notes": null,
-        "ticket_url": null,
+        "fixed_at": "2026-10-08T08:41:40.015185",
+        "validated_at": "2026-10-08T08:41:40.015185",
+        "triaged_at": "2026-10-08T08:41:40.015185",
+        "status_notes": "[2026-10-08T08:41:40+00:00] Resolved via ticket ET-29358: Live since 08:39Z (35ee03bb1), verified anonymously on /gem-screener/app?view=chains: every reading of the two-input stablecoins x DEX volume index (vetting chips far_below_peak / declining_trend / no-trend, 'Why not to trust', Strength 3M, Trajectory, the 6M growth stat now 'Stables x DEX growth 6M', the slim-row sentence, Czech variants) is named 'Stablecoins x DEX volume'; 'Adoption' is reserved for the four-input column. Test pins it.",
+        "ticket_url": "https://cymetica.com/admin/centcom/issues/29358",
         "fix_pr_url": null,
-        "reward_amount": 0.0
+        "reward_amount": 1000.0
       },
       {
         "id": 170,
         "title": "Gem Screener Chains: tokens are left out \"for no market data\" that CoinGecko lists (BCH $6.4bn, ETC $1.4bn; earlier ZEC $22.5bn, VET, THETA), with no missing input named",
-        "status": "pending",
+        "status": "paid",
         "hunter_name": "expire76",
         "wallet_address": "0xde9ceaab301a9e47b1bacd448b3ddbba85e83398",
         "severity_reported": "low",
-        "severity_confirmed": null,
+        "severity_confirmed": "low",
         "category": "logic",
         "created_at": "2026-10-04T15:17:24.697007",
-        "fixed_at": null,
-        "validated_at": null,
-        "triaged_at": null,
-        "status_notes": "[reporter-verification PASS 2026-10-08 07:39 UTC by expire76 test_run=run-20261007T112716Z-e101e56e]",
-        "ticket_url": null,
+        "fixed_at": "2026-10-08T07:57:42.370560",
+        "validated_at": "2026-10-08T07:57:42.370560",
+        "triaged_at": "2026-10-08T07:57:42.370560",
+        "status_notes": "[reporter-verification PASS 2026-10-08 07:39 UTC by expire76 test_run=run-20261007T112716Z-e101e56e]\n[2026-10-08T07:57:42+00:00] Resolved via ticket ET-29359: Verified on the live snapshot (generated 2026-10-08 07:50Z): BCH is left out as missing_input ['stablecoins'] and ETC as missing_input ['dex_volume_30d'], no longer 'no market data'; the independent QA re-check (report #170, run-20261007T112716Z) also recorded PASS. The left-out reason now names the input DeFiLlama lacks, and 'no market data' is reserved for tokens without a live market cap or price.",
+        "ticket_url": "https://cymetica.com/admin/centcom/issues/29359",
         "fix_pr_url": null,
-        "reward_amount": 0.0
+        "reward_amount": 1000.0
       },
       {
         "id": 171,
@@ -3119,7 +3119,7 @@
   ],
   "creator_rewards": {
     "klass": "ok",
-    "read_at": "2026-10-08T07:50:30+00:00",
+    "read_at": "2026-10-08T09:37:30+00:00",
     "stale_from": null,
     "summary": {
       "paid": 11,
@@ -3130,5 +3130,5 @@
       "etlp": 11000
     }
   },
-  "our_reports_refreshed_at": "2026-10-08T07:50:13+00:00"
+  "our_reports_refreshed_at": "2026-10-08T09:37:15+00:00"
 }
