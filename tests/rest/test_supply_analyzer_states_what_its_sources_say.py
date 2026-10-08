@@ -251,13 +251,21 @@ def _f(value, spec: str = ",.0f") -> str:
 
 # --- pure readings (held in tests/meta) -------------------------------------------------
 
+def _burn_source(record) -> dict | None:
+    """The input a burned slice would stand on. `burned_so_far` until 2026-10-08; the
+    record now carries max minus total as `supply_gap` ("max supply minus total supply"),
+    and a burned slice drawn from it again must be read, not taken as unread (deep pass
+    2026-10-08, T15, 3/3)."""
+    return _input(record, "burned_so_far") or _input(record, "supply_gap")
+
+
 def burned_without_a_burn(record) -> dict | None:
     """The burned slice of a record when its only source is max supply minus total supply,
     else None. No source to read is unread, not convicted."""
     amount = _slices(record).get("bb_burned")
     if not _num(amount) or amount <= 0:
         return None
-    source = _input(record, "burned_so_far")
+    source = _burn_source(record)
     if not source or MAX_TOTAL not in str(source.get("source") or "").lower():
         return None
     unknown = [u.get("input") for u in (record or {}).get("unknown") or [] if isinstance(u, dict)]
@@ -317,12 +325,18 @@ def pile_over_supply(record) -> dict | None:
 
 
 def fund_disposition(text) -> str | None:
-    """'burned' when the page says the assistance fund's tokens are burned, else None."""
+    """'burned' or 'kept' as the page says the assistance fund's tokens are, else None.
+
+    Both, in the record's own two words (/definitions: "buybacks (burned or kept)"): with only
+    'burned' readable, a record that says burned could never be contradicted by its page
+    (deep pass 2026-10-08, T16, 3/3)."""
     if not isinstance(text, str):
         return None
-    if re.search(r"assistance fund[^.]{0,40}\bis (?:permanently )?burned", text, flags=re.I):
-        return "burned"
-    return None
+    said = re.search(r"assistance fund[^.]{0,40}\bis (?:permanently |still )?"
+                     r"(burned|held|kept|retained|accumulated)", text, flags=re.I)
+    if not said:
+        return None
+    return "burned" if said.group(1).lower() == "burned" else "kept"
 
 
 def link_identifier(row) -> str | None:
@@ -349,6 +363,9 @@ def shared_link_identifiers(rows) -> list[str]:
     return sorted(shared)
 
 
+INFLOW_UNKNOWN_WORDS = ("vesting", "emission", "unlock", "mint", "airdrop", "reward", "distribution")
+
+
 def typical_mismatches(rows, typical) -> list[dict]:
     """Range rows whose width is not the stated typical inflow plus the one named part they declare.
 
@@ -357,6 +374,12 @@ def typical_mismatches(rows, typical) -> list[dict]:
     buyback part that makes it up. A row that declares no parts, a typical part that is not the
     stated one (or 0, a row with no inflow assumed), or a width the parts do not add up to (to the
     0.03 the batch's own rounding of two parts and a sum allows) is still an unnamed figure.
+
+    A typical part of 0 is held to the row's own `unknown_names`: /definitions applies the
+    typical inflow "when an inflow is unknown", so a row that names an inflow unknown (vesting,
+    emissions, unlocks, mints, airdrops, rewards) and assumes none is the 2026-10-04 defect again,
+    whatever parts it declares (deep pass 2026-10-08, T14, 3/3). "staking flow" runs both ways
+    and is not read as an inflow.
     """
     out = []
     for row in rows or ():
@@ -373,9 +396,11 @@ def typical_mismatches(rows, typical) -> list[dict]:
                 and _num(parts.get("unstated_buyback_share_pct")):
             stated = parts["typical_inflow_pct"]
             named = parts["unstated_buyback_share_pct"]
-            if abs(stated - typical) > 0.01 and stated != 0:
+            inflow_unknown = [n for n in row.get("unknown_names") or []
+                              if any(w in str(n).lower() for w in INFLOW_UNKNOWN_WORDS)]
+            if (abs(stated - typical) > 0.01 and stated != 0) or (stated == 0 and inflow_unknown):
                 out.append({"symbol": ((row.get("token") or {}).get("symbol")), "range": rng,
-                            "used": round(stated, 2)})
+                            "used": round(stated, 2), "inflow_unknown": inflow_unknown})
                 continue
         if width > 0.005 and abs(width - (stated + named)) > 0.03:
             out.append({"symbol": ((row.get("token") or {}).get("symbol")), "range": rng,
@@ -572,8 +597,8 @@ def test_a_burned_slice_comes_from_a_burn(rest_anon):
         if record is None:
             unread.append(_sym(row))
             continue
-        if not str((_input(record, "burned_so_far") or {}).get("source") or "").strip():
-            unread.append(f"{_sym(row)}: no burned_so_far source to read")     # unread, not clean
+        if not str((_burn_source(record) or {}).get("source") or "").strip():
+            unread.append(f"{_sym(row)}: no burned_so_far or supply_gap source to read")  # unread, not clean
             continue
         judged += 1
         found = burned_without_a_burn(record)

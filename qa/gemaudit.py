@@ -871,7 +871,12 @@ def chain_price_tag_claims(llms_text: str, bench: dict) -> dict:
     for key, kind_of_claim, pattern in PRICE_TAG_CLAIMS:
         if kind_of_claim == "fees" and "activity" in str(measure):
             continue
-        if kind_of_claim == "leader" and kind != "median":
+        # A "named leader" sentence is true only beside a snapshot on a leader; stale beside
+        # ANY other kind, not only "median" (deep pass 2026-10-08, T07, 3/3). With no kind
+        # named, whether it is stale cannot be read.
+        if kind_of_claim == "leader" and kind in (None, "leader"):
+            if kind is None and "the snapshot's bench_chains names no kind" not in out["unread"]:
+                out["unread"].append("the snapshot's bench_chains names no kind")
             continue
         found = pattern.search(section)
         if found:
@@ -913,7 +918,7 @@ def chain_agent_prompt_claims(page_html: str, bench: dict) -> dict:
     if four_inputs and re.search(r"\bfees?\b", found.group(1), re.I):
         out["stale"].append(f"adoption ({found.group(1)})")
     against = AGENT_AGAINST.search(window)
-    if against and kind == "median" and re.search(r"\b(?:benchmark|leader) chain\b", against.group(1), re.I):
+    if against and kind not in (None, "leader") and re.search(r"\b(?:benchmark|leader) chain\b", against.group(1), re.I):
         out["stale"].append(against.group(1))
     return out
 

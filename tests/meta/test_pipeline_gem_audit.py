@@ -924,6 +924,12 @@ def _the_chains_tab_is_held_to_its_sources_and_its_own_words():
     assert g.chain_price_tag_claims(llms, old)["stale"] == []
     assert g.chain_price_tag_claims("no section here", bench)["unread"]
     assert g.chain_price_tag_claims(llms, {})["unread"], "a snapshot that names no measure was judged"
+    # Deep pass 2026-10-08 (T07): a "named leader" sentence is stale beside ANY kind that is
+    # not a leader -- a mean is not one -- and unread when the snapshot names no kind.
+    mean = dict(bench, kind="mean")
+    assert "named_leader" in [c["claim"] for c in g.chain_price_tag_claims(llms, mean)["stale"]]
+    nameless = {k: v for k, v in bench.items() if k != "kind"}
+    assert g.chain_price_tag_claims(llms, nameless)["unread"], "no kind, yet a leader claim was judged"
 
     page = ("<script>function chainAgents(e){\n  var paste = 'Read ' + api + ' and tell me about ' + e.name + "
             "' (' + sym + '): its adoption (daily users and fees), its upside against ' +\n"

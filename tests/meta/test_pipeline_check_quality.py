@@ -645,6 +645,12 @@ def test_the_is_answer_rule_is_self_calibrating_and_still_bites():
         "max minus total moved out of the burned slice is the fix")
     assert burned_without_a_burn({"slices_today": [{"key": "bb_burned", "amount": 5.0}]}) is None, (
         "a burned slice with no source to read is unread, not convicted")
+    # Deep pass 2026-10-08 (T15): the record now names max minus total `supply_gap`; a burned
+    # slice drawn from it again is the same defect, not an unread record.
+    regap = dict(ore, inputs=[{"key": "supply_gap", "value": 2499495.62, "as_of": None,
+                               "source": "max supply minus total supply (both from the market feed)"},
+                              ore["inputs"][1]])
+    assert burned_without_a_burn(regap)["burned"] == 2499495.62
     assert emission_dropped(ore) == (42097.5, 40.11)
     assert emission_dropped(dict(ore, months=[{"in": {"emissions": 42097.5}}])) is None
     assert emission_dropped(dict(ore, months=[])) is None
@@ -683,8 +689,11 @@ def test_the_is_answer_rule_is_self_calibrating_and_still_bites():
             "in the assistance fund is burned, removing the tokens permanently from the circulating and "
             "total supply. Growth mode for HIP-3 perps")
     assert fund_disposition(fees) == "burned"
+    # Deep pass 2026-10-08 (T16): the other word is read too, so a record saying "burned" can
+    # be contradicted by a page that says the fund holds them.
     assert fund_disposition(fees.replace("is burned, removing the tokens permanently from",
-                                         "is held, and stays in")) is None
+                                         "is held, and stays in")) == "kept"
+    assert fund_disposition("The assistance fund trades HYPE daily.") is None, "says neither"
     assert fund_disposition("") is None and fund_disposition(None) is None
 
     # 5. Links: the Gem Screener links by CoinGecko id first; one id on two rows that morning.
@@ -707,6 +716,18 @@ def test_the_is_answer_rule_is_self_calibrating_and_still_bites():
     assert [b["symbol"] for b in bad] == ["HYPE"] and bad[0]["used"] == 5.0
     assert typical_mismatches(batch[1:], 12.34290441022498) == [], (
         "a range as wide as the stated typical, or no range at all, is not a mismatch")
+    # Deep pass 2026-10-08 (T14): since the ranges carry `yearly_range_parts`, a typical part of
+    # 0 passes only for a row naming no inflow unknown -- HYPE's 5.0 dressed as {0, 5.0} beside
+    # an unknown vesting schedule is the 2026-10-04 defect again; RHEA (only staking flow,
+    # buybacks and burns unknown) is a row with no inflow assumed.
+    parts = lambda t, b: {"typical_inflow_pct": t, "unstated_buyback_share_pct": b}
+    dressed = [{"token": {"symbol": "HYPE"}, "status": "range", "yearly_range": [24.73, 29.73],
+                "yearly_range_parts": parts(0.0, 5.0), "unknown_names": ["vesting schedule", "burns"]},
+               {"token": {"symbol": "RHEA"}, "status": "range", "yearly_range": [11.43, 11.43],
+                "yearly_range_parts": parts(0.0, 0.0), "unknown_names": ["staking flow", "buybacks"]},
+               {"token": {"symbol": "SKY"}, "status": "range", "yearly_range": [-3.49, 15.35],
+                "yearly_range_parts": parts(12.34, 6.5), "unknown_names": ["emissions"]}]
+    assert [b["symbol"] for b in typical_mismatches(dressed, 12.34290441022498)] == ["HYPE"]
 
     # 7. Unsupported chain: what the analyzer answered that morning, and what it documents.
     assert chain_answer_documented(500, {"error": {"code": "INTERNAL_SERVER_ERROR"}}) is False

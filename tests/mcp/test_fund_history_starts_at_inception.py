@@ -33,7 +33,8 @@ some minutes after inception) sits under half a percent in today's data; the
 clipped ones were 2.6-15% off. Funds clipped by only hours sit at 0.5-1.1%
 -- they cannot be told apart from a late first sample by this comparison, so
 they are listed in `population` as unseparated rather than counted either
-way. A fund with no published inception price (MA-RIPPLE, the
+way. Past the tolerance the series fails whether the default clipped it or it is
+stored that far from inception; a `points=400` control read names which (`cause`). A fund with no published inception price (MA-RIPPLE, the
 FTA sleeves, EVENT-CARD) or whose history call fails is unmeasured for that
 fund, never a defect: a failed read is not an empty read (rule 8).
 
@@ -138,10 +139,14 @@ def test_a_fund_history_fetched_as_their_skill_says_starts_at_inception(mcp_anon
                 unmeasured.append(f"{symbol}: control read had no readable point")
                 continue
             seen["full_first_t"], seen["full_returned"] = full_points[0].get("t"), len(full_points)
-            if full_points[0].get("t") == first.get("t"):
-                unseparated.append(seen)
-            else:
-                clipped.append(seen)
+            # Either way the series an advisor charts starts more than the tolerance away
+            # from inception, which is what this check asserts. The control only says WHY:
+            # clipped by the default limit, or stored that far from inception. Counting the
+            # second as "unseparated" passed AIB-DATA-CENTERS at -3.27%, past the very bound
+            # the header gives a late first sample (deep pass 2026-10-08, T02, 2/3).
+            seen["cause"] = ("stored from there" if full_points[0].get("t") == first.get("t")
+                             else "clipped by the default")
+            clipped.append(seen)
         elif abs(off) > UNSEPARATED_PCT:
             unseparated.append(seen)
         else:
@@ -160,7 +165,7 @@ def test_a_fund_history_fetched_as_their_skill_says_starts_at_inception(mcp_anon
                 f"{TOLERANCE_PCT:g}% away from the fund's own inception level -- "
                 f"worst {worst['symbol']}: first point {worst['first_v']} at "
                 f"{worst['first_t']} against inception {worst['inception']} "
-                f"({worst['off_pct']:+}%), while it reports "
+                f"({worst['off_pct']:+}%, {worst.get('cause', 'clipped')}), while it reports "
                 f"{worst['return_since_inception_pct']}% since inception"
                 if clipped else
                 f"all {measured} measurable fund histories start within "

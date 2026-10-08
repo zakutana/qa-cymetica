@@ -380,11 +380,13 @@ def test_a_probability_lies_inside_the_range_shown_with_it(rest_anon):
     for entry in outside:
         usable_by_tf[entry["timeframe"]] = usable_by_tf.get(entry["timeframe"], 0) + 1
     failed = bool(outside or live_outside)
-    if not failed and unread and not live:
+    if not failed and not live:
         # The live answers are half the contract (the user-visible defect was SOL 5d's range):
-        # with none of them read, a clean study says nothing about them.
-        raise Inconclusive(f"no live 5d answer could be read ({'; '.join(unread)}); the study bins alone "
-                           f"are not the whole claim")
+        # with none of them read -- unreadable, or read with no calibrated/range to judge,
+        # which a renamed field would also produce (deep pass 2026-10-08, T06, 3/3) -- a
+        # clean study says nothing about them.
+        raise Inconclusive(f"no live 5d side could be judged ({'; '.join(unread) or 'answers carry no calibrated/range'}); "
+                           f"the study bins alone are not the whole claim")
     conclude(Measurement(
         verdict="failed" if failed else "passed",
         reason=(f"{len(outside)} of {len(judged)} usable calibration bins in /study/expert give a calibrated "

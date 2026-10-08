@@ -279,6 +279,13 @@ def test_a_clone_decides_on_the_strategy_its_species_is_described_by(rest_truste
     read = [c for c in clones if isinstance(c.get("live_decision_source"), dict)]
     if not read:
         raise Inconclusive("no clone of ours carries a live_decision_source to read")
+    # A contradiction is a description naming one of the species' own primary indicators.
+    # If no species carries a readable primary_indicators any more, nothing can be found,
+    # and "nothing found" would read as every clone deciding as described (deep pass
+    # 2026-10-08, T04, 3/3).
+    if not any(ct._indicator_words(s) for s in species.values()):
+        raise Inconclusive(f"no species in {PREFIX}/available carries readable "
+                           f"primary_indicators, so no description can be held against them")
     llms = rest_anon.get("/llms.txt")
     llms_says = llms.status_code == 200 and LLMS_SENTENCE in llms.text
     found = ct.decision_source_contradictions(clones, species)

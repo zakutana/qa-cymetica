@@ -107,7 +107,10 @@ def test_the_leaderboard_ranks_no_bot_on_synthetic_trades(rest_anon):
                                if btc else None),
                "leaderboard_says_synthetic": _row_says_synthetic(b)}
         read.append(row)
-        if synth and says_historical and not row["leaderboard_says_synthetic"]:
+        # The page AND the row must say synthetic (ASSERTS): a leaderboard flag under a page
+        # that still says "historical data" and nowhere "synthetic" is the defect with a
+        # label nobody reading the page sees (deep pass 2026-10-08, T01, 3/3).
+        if synth and says_historical and not (row["leaderboard_says_synthetic"] and synthetic_word):
             ranked_on_synthetic.append(row)
     if len(read) < MIN_READ_SHARE * len(bots):
         raise Inconclusive(f"only {len(read)} of {len(bots)} trade lists could be read: {unread[:5]}")
@@ -120,7 +123,11 @@ def test_the_leaderboard_ranks_no_bot_on_synthetic_trades(rest_anon):
         verdict="failed" if ranked_on_synthetic else "passed",
         reason=(f"{len(ranked_on_synthetic)} of {len(read)} leaderboard bots are ranked on trades their own trade "
                 f"list marks is_synthetic ({total_synth} of their {total_trades} trades), while {PAGE} says "
-                f"\"{HISTORICAL}\" and no leaderboard row says synthetic: "
+                f"\"{HISTORICAL}\" and "
+                + ("does not say synthetic anywhere (their leaderboard rows do)"
+                   if any(r["leaderboard_says_synthetic"] for r in ranked_on_synthetic)
+                   else "no leaderboard row says synthetic")
+                + ": "
                 + "; ".join(f"{r['slug']} {r['headline_return_pct']}% over {r['headline_period']}, "
                             f"{r['synthetic']}/{r['trades']} synthetic, entry prices "
                             f"{r['entry_price_range'][0]:g}-{r['entry_price_range'][1]:g}"
