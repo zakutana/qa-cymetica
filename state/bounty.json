@@ -1,6 +1,6 @@
 {
-  "fetched_at": "2026-10-08T05:52:32+00:00",
-  "total": 133,
+  "fetched_at": "2026-10-08T07:35:25+00:00",
+  "total": 135,
   "statuses": {
     "paid": 20
   },
@@ -24,8 +24,8 @@
   "our_reports": {
     "endpoint": "GET /api/v1/bounty/my-reports?wallet_address=<addr>",
     "klass": "ok",
-    "read_at": "2026-10-08T07:04:20+00:00",
-    "evidence_id": "50766d9fc0e93533061eece5aaabec0e61de888cd75c84bcbbe8501d3a7f8ed0",
+    "read_at": "2026-10-08T07:35:12+00:00",
+    "evidence_id": "3b8514a1b6edee1e885138a5cd3057245dca1f706d387e8cd0f72bca06014e35",
     "rows_returned": 133,
     "server_total": 133,
     "total": 133,
@@ -2435,11 +2435,11 @@
   },
   "qa_tracker": {
     "source": "https://cymetica.com/leaderboard/bugs (embedded allBugs)",
-    "total": 207,
+    "total": 209,
     "statuses": {
       "qa_testing": 2,
       "implementing": 2,
-      "completed": 151,
+      "completed": 153,
       "resolved": 26,
       "rejected": 2,
       "pending": 12,
@@ -2447,11 +2447,11 @@
     },
     "source_channels": {
       "web": 74,
-      "bounty": 133
+      "bounty": 135
     },
     "usernames": {
       "Maxorelaxo": 2,
-      "expire76": 151,
+      "expire76": 153,
       "Crypto42day": 2,
       "tonybugs0439": 5,
       "joebloggs": 12,
@@ -2548,6 +2548,7 @@
       "cloned bot profile does not display trading activity correctly",
       "неправильный баланс токенов в портфеле пользователя max",
       "swap pages fail to display user token balances",
+      "supply analyzer: stonk's sellable pile is shown changing -130% to -114% a year, and its curve keeps buying back 86.2m a month after the pile is empty (1.03b bought back by oct 2027, max supply 1b)",
       "gem screener: the degen meter is empty on every row (dlevel is null for all 232 apps and 33 chains in the published snapshot), and the page does not say why",
       "backtest leaderboard: 10 of 16 bots (the top one +61.2% over 6 months) are ranked on trades all marked is_synthetic, priced 90-110 for every asset (btc at 92.56), under \"historical data\"",
       "clone bots: 9 species are described by their indicators, but their clones' own live_decision_source decides on another bot's epoch rule (bollinger bandit clones bet on epoch-number parity)",
@@ -2572,6 +2573,7 @@
       "gem screener sectors chart: \"click a bubble for the sector\" takes two clicks with a mouse, because the first click pins the hover card that is already showing",
       "get /nexus/subscription says plan \"free\" for an account that get /nexus/usage says is on pro",
       "backtest rally: get /research-backtest/runs/{run_id} does not return the fields its schema lists, and a run on a theme is listed with no theme",
+      "gem screener sectors: when coingecko fails, one coin's live move multiplies a whole theme's 1m return (rwa +111.6 % where its weekly closes give about +56 %)",
       "gem screener: the run-rate says \"last 30 days x 12\" but every such row is 30-day revenue x 12.1667 (x 365/30)",
       "gem screener: the degen pick \"definitive\" (edge) links to ?coin=edge, and that opens a different token, edgex",
       "build it better request log silently cuts a message body at 8000 characters: et-27671's logged bb-spec ends mid-word",
@@ -2680,13 +2682,13 @@
       "critical: my positions p&l shows -$3.15 for a $0.10 position",
       "shares preview rounds to 1 decimal place instead of 2"
     ],
-    "has_linear_links": 98
+    "has_linear_links": 100
   },
   "a2a_inbox": {
     "klass": "ok",
     "rows_returned": 200,
     "new": [],
-    "at": "2026-10-08T05:52:24+00:00",
+    "at": "2026-10-08T07:35:17+00:00",
     "full": true
   },
   "closed": 0,
@@ -2700,6 +2702,24 @@
     "status_notes"
   ],
   "reports": [
+    {
+      "id": 177,
+      "title": "Supply Analyzer: STONK's sellable pile is shown changing -130% to -114% a year, and its curve keeps buying back 86.2M a month after the pile is empty (1.03B bought back by Oct 2027, max supply 1B)",
+      "status": "paid",
+      "hunter_name": "expire76",
+      "severity_reported": "medium",
+      "severity_confirmed": "medium",
+      "created_at": "2026-10-08T05:54:56.803423",
+      "fixed_at": "2026-10-08T06:51:39.756614",
+      "validated_at": "2026-10-08T06:51:39.756614",
+      "triaged_at": "2026-10-08T06:51:39.756614",
+      "status_notes": "[2026-10-08T06:51:39+00:00] Resolved via ticket ET-30211: Fixed and live (canonical 890483aef, serving since the 06:48Z train, live SHA 43cd757f3). src/services/supply_analyzer/flow.py: a month's outflow (buybacks, burn, staking) is fitted to what the pile holds plus what comes in that month, and the yearly change is floored at -100%; the definition sentence in records.py says so. Test: tests/test_supply_analyzer_pile_floor_30211.py (STONK-like fixture). Served-release grep confirms the fix is in /opt/eventtrader/current.",
+      "ticket_url": "https://cymetica.com/admin/centcom/issues/30211",
+      "fix_pr_url": null,
+      "reward_amount": 1000.0,
+      "paid_at": "2026-10-08T06:52:23.940631",
+      "is_duplicate": false
+    },
     {
       "id": 176,
       "title": "Gem Screener: the Degen meter is empty on every row (dlevel is null for all 232 apps and 33 chains in the published snapshot), and the page does not say why",
@@ -3041,24 +3061,6 @@
       "reward_amount": 1000.0,
       "paid_at": "2026-10-04T10:00:32.067856",
       "is_duplicate": false
-    },
-    {
-      "id": 153,
-      "title": "Chart Analyzer public ledger: a READY TO POP call for BTC/USDT 1h was recorded at 06:21 UTC on 4 Oct on a candle that opens on 26 Oct, at a close of 229.26",
-      "status": "paid",
-      "hunter_name": "expire76",
-      "severity_reported": "medium",
-      "severity_confirmed": "medium",
-      "created_at": "2026-10-04T08:39:39.299933",
-      "fixed_at": "2026-10-04T09:59:33.415007",
-      "validated_at": "2026-10-04T09:59:33.415007",
-      "triaged_at": "2026-10-04T09:59:33.415007",
-      "status_notes": "[2026-10-04T09:59:33+00:00] Resolved via ticket ET-29275: Fixed and live (canonical 1992787622, served in release ccd9798a7c, verified by content and on the public API). ET-29274: /openapi-public.json now documents verdict, setups, structures, swings, indicators, weekly_signal, expert_study_url and calls_url on /analyze, with full 200 schemas for /calls and /study/expert and the real timeframe set (1h 4h 1d 5d 1w 2w 1M auto) in llms.txt and /api-docs. ET-29275: the ledger refuses any candle not closed by the wall clock, record_call picks the last clock\n[reporter-verification PASS 2026-10-04 17:45 UTC by expire76 test_run=run-20261004T165402Z-3d611b0c]",
-      "ticket_url": "https://cymetica.com/admin/centcom/issues/29275",
-      "fix_pr_url": null,
-      "reward_amount": 1000.0,
-      "paid_at": "2026-10-04T10:00:32.067856",
-      "is_duplicate": false
     }
   ],
   "leaderboard": [
@@ -3068,11 +3070,11 @@
       "avatar_url": null,
       "tier": "senior",
       "total_score": 460,
-      "valid_reports": 119,
+      "valid_reports": 121,
       "total_likes": 0,
-      "total_earned": 115000.0,
-      "total_awarded": 115000.0,
-      "total_paid": 115000.0,
+      "total_earned": 117000.0,
+      "total_awarded": 117000.0,
+      "total_paid": 117000.0,
       "reward_currency": "ET10"
     },
     {
@@ -3117,7 +3119,7 @@
   ],
   "creator_rewards": {
     "klass": "ok",
-    "read_at": "2026-10-08T07:04:35+00:00",
+    "read_at": "2026-10-08T07:35:27+00:00",
     "stale_from": null,
     "summary": {
       "paid": 11,
@@ -3127,6 +3129,5 @@
       "et10": 11000,
       "etlp": 11000
     }
-  },
-  "our_reports_refreshed_at": "2026-10-08T07:04:20+00:00"
+  }
 }
