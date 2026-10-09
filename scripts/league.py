@@ -308,7 +308,8 @@ def summary() -> dict:
     sent = sum(1 for r in rows if r.get("type") == "outcome" and r.get("kind") == "answer"
                and r.get("outcome") == "accepted")
     et10 = sum(float(p.get("amount_et10") or 0) for p in mine if p.get("status") == "credited")
-    lines = [f"{theirs.get('answers', sent)} answers, mean score {theirs.get('mean_score')}",
+    # Theirs counts SCORED answers; an answer is scored when its puzzle resolves.
+    lines = [f"{sent} answers sent, {theirs.get('answers', 0)} scored, mean score {theirs.get('mean_score')}",
              f"{theirs.get('division_name')}, {theirs.get('points')} points",
              f"{et10:g} ET10 credited" + (f", {len(mine)} prize(s)" if mine else "")]
     return {"player": pid, "lines": lines, "answers": theirs.get("answers", sent),
