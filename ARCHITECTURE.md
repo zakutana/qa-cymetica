@@ -101,6 +101,15 @@ scripts/lab.py    that loop from our side: `tick` (the day's session, answers
                   room, the search, verdicts; state in state/lab_tick.json),
                   `brief`, `board` (his proposals by what they earned), `log`,
                   `ask`, `truth`, `buy`. It refuses rather than warns.
+scripts/league.py Cymetica's Agent League (2026-10-09): `puzzles`, `join`,
+                  `answer`, `tick`, `brief`, `report`. Two declared writes
+                  (`agent_league.enrol`, `agent_league.answer`, closed body in
+                  components.yaml) and nothing else under /agent-league. What
+                  is answered is `qa/league.py`: only the families that are
+                  exact arithmetic on the puzzle's snapshot (edit distance, the
+                  CEX-DEX net edge), with a reasoning that is the computation.
+                  Skill `.claude/skills/league/SKILL.md`; diary
+                  state/league.jsonl, report state/league/report.json.
 NEXT.md           what we agreed to do next and have not done. Plain markdown,
                   one line per item, `- [ ] YYYY-MM-DD  sentence`; ticked, it
                   gets `(hotovo DATE)` and goes a week after that stamp. At

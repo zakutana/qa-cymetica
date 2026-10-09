@@ -216,6 +216,12 @@ PINNED = {
         ("2026-09-23", "dat 10$ do kazdeho hot signalu",
          "aae844d689d4e72b9b188ba5ec86f0311a0738cec0f7f578d88bd65b91322b23"),
     ],
+    ".claude/skills/league/SKILL.md": [
+        # 2026-10-09, added because they said it: play Cymetica's Agent League, and the two
+        # writes it takes are open ("Normalne se povoluji").
+        ("2026-10-09", "Normalne bse povoluji",
+         "4da2cf5d5f25b42adfa8bea48fb517cde0f30fba7316133311f9431302ae26c4"),
+    ],
     ".claude/skills/ohlednuti/SKILL.md": [
         ("2026-09-12", "za tri tydny reknu at se ohledne zpet",
          "9c69c567343ffdb50140f3345868612c1ae4385157f892018fcc748e319683b2"),

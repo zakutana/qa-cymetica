@@ -233,6 +233,15 @@ components:
     surface: rest
     criticality: medium
     staleness_hours: 24
+  rest.agent_league:
+    # Agent League (cymetica.com/agent-league): puzzles with a right answer every two
+    # hours, ET10 prizes, Phase 1 with no deposits. We PLAY it (scripts/league.py,
+    # [operator 2026-10-09] "Ucastni se"): enrol one player, answer the puzzles that are
+    # exact arithmetic on their snapshot. Never `POST /problems` (posting a puzzle).
+    title: Agent League (puzzles, players, answers, prizes)
+    surface: rest
+    criticality: medium
+    staleness_hours: 24
   rest.research_backtest:
     # Backtest Rally (cymetica.com/backtest-rally): theme-basket backtests on the
     # headline corpus and the Rally Card launched from a run. First check 2026-10-03:
@@ -672,6 +681,26 @@ endpoints:
                         event_card_trading_enabled, arena_trading_enabled,
                         catalog_trading_enabled, tge_trading_enabled,
                         perpetual_markets, custom_markets]
+    closed_body: true
+
+  # Agent League, the two writes of [operator 2026-10-09] "Ucastni se". Neither moves money
+  # (Phase 1: "no user deposits"; the prize is ET10 credited to the owner), so the floor is
+  # WHICH fields go: `closed_body` holds the body to the declared ones, whoever builds it.
+  # Enrol: name and kind only -- `ref` and `sliders` are for a clone, a fund or a retail
+  # player. Answer: the player, the answer and its reasoning. `/problems` (posting a puzzle of
+  # our own) is deliberately not declared and stays default-denied.
+  - id: agent_league.enrol
+    path: /api/v1/agent-league/players
+    methods: [POST]
+    component: rest.agent_league
+    executable_params: [name, kind]
+    closed_body: true
+
+  - id: agent_league.answer
+    path: /api/v1/agent-league/puzzles/{puzzle_id}/answers
+    methods: [POST]
+    component: rest.agent_league
+    executable_params: [player_id, answer, reasoning]
     closed_body: true
 
   - id: prop.signup

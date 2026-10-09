@@ -306,7 +306,10 @@ CEILINGS = {
     # its stop-loss three times in a row is released, the slot cap and the six-hour
     # spacing hold. The stop classification and the restart rule went into the three
     # tests that already pinned them.
-    "meta_tests": 823,
+    # 823 -> 824 for the Agent League door (2026-10-09, test_pipeline_league.py): the two
+    # exact families and their reasoning, the refusals around them, and the transport holding
+    # the two writes to their declared fields. Nothing equivalent existed to fold it into.
+    "meta_tests": 824,
 }
 
 BASH_SCRIPT = re.compile(r"python\s+scripts[/\\]([a-z_]+)\.py")
