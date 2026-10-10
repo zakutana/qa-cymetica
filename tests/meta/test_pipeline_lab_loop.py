@@ -2269,7 +2269,9 @@ def test_a_card_room_is_judged_on_our_position_net_of_the_round_trip(
                                          "notional_usdc": 100.0})}]
     sale_at = start + timedelta(days=2)
     _write(tmp_path, "paper.jsonl", [
-        *buy("TRD-0001", held, "NEX-0001", "P-1", 200.0),
+        # 199, not the 200 their index reads at the fill hour: a book that dropped our own
+        # entry and fell back to their index would read the same 200 (deep pass 2026-10-10, T03).
+        *buy("TRD-0001", held, "NEX-0001", "P-1", 199.0),
         *buy("TRD-0002", sold, "NEX-0002", "P-2", 50.0),
         {"id": "TRD-0003", "type": "intent", "kind": "close",
          "position_id": "P-2", "at": sale_at.isoformat()},
@@ -2299,7 +2301,8 @@ def test_a_card_room_is_judged_on_our_position_net_of_the_round_trip(
     net = lambda gross: ((1 + gross / 100) * (1 - cost) - 1) * 100  # noqa: E731
     mine = said[first["id"]]
     last = 200.0 + 10.0 * (hours - 1) / hours
-    assert mine["return_pct"] == pytest.approx(net((last / 200.0 - 1) * 100)), mine
+    assert mine["return_pct"] == pytest.approx(net((last / 199.0 - 1) * 100)), (
+        "our book starts at the entry the buy answered, not at their index", mine)
     assert mine["index_return_pct"] == pytest.approx(net((last / 190.0 - 1) * 100)), (
         "the cross-check is their index alone, net the same way")
     assert said[second["id"]]["return_pct"] == pytest.approx(net(2.0)), (
@@ -3847,6 +3850,13 @@ def test_every_bot_stop_is_ours_their_guard_or_unexplained():
                       and r.get("type") == "intent" else r for r in halted_first]
     still = {s["instance"]: s for s in lab.bot_stops(paused_trading, later)}["late"]
     assert still["cause"] == "ours", still
+    # Deep pass 2026-10-10, T01: only an ACCEPTED pause is ours. A disable they refused (or
+    # whose answer never came) paused nothing, so the halt after it is not ours to explain away.
+    for refused in ("rejected", "unknown", "not_sent"):
+        tried = [dict(r, outcome=refused) if r.get("id") == "CLN-0032" and r.get("type") == "outcome"
+                 else r for r in paused_trading]
+        stop = {s["instance"]: s for s in lab.bot_stops(tried, later)}["late"]
+        assert stop["cause"] != "ours", (refused, stop)
 
     # 2026-10-07: the platform pauses EVERY clone at its first stop_loss or take_profit
     # (their llms.txt: `stopped` = auto-paused, see `auto_pause_reason`; Nexus NEX-0124),
