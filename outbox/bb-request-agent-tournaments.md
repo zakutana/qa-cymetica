@@ -16,6 +16,8 @@ Read live on 2026-10-10: the form (the fields `request.md` names, 8,000 characte
 
 **Filed as ET-30773** (2026-10-10 21:31 UTC, idea, by the operator on the form). Its BB-SPEC carries all 32 lines word for word (diffed against the record's `spec_text`). Its standard paragraph says deposits, withdrawals, order placement and signing are out of scope for an automatic build and need a BB-CHANGE for the human-reviewed slot; live tables need all of them, so a BB-CHANGE asking for that slot, paper tables first if it helps, goes before BB-ACCEPT.
 
+C1 came back word for word (21:34 UTC) with the 32 items unchanged, but the regenerated spec switched templates: the first BB-SPEC read "Agent Tournaments, a new page on EventTrader that does what you described ... never anyone else's logos", the second "a page on EventTrader that does the job you use Agent Tournaments for ... never Agent Tournaments's logos, copy or trademarks", on a ticket that is still `is_idea: true`. Read literally it forbids the name, logo and copy the request asks for, so C2 says they are ours. The template switch is their defect: a check and a report through `submit.py` (NEXT.md).
+
 The older plan, kept for the record:
 
 - **Not pushed.** Two commits on top of `bf3a234`: `440772e` (the edits) and `bafb1db` (the pin), saved as `agent-tournaments/0001-*.patch` and `0002-*.patch` next to this note. The push waits for the operator's word ("nahraj"): check `git ls-remote` still shows `bf3a234`, fresh clone of the branch, `git am --committer-date-is-author-date` both (that flag gives back the same two hashes, checked), push, read SPEC.md back at the hash. If the branch has moved meanwhile, the hashes change and line 1 of improvements.txt is pinned again.
