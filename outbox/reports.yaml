@@ -5385,6 +5385,79 @@ reports:
       in. Every Supply Analyzer read names a Gem Screener coin, so none adds a line to your weekly
       ledger.
 
+  - key: supply-analyzer-pile-grows-past-max-supply
+    findings:
+      - CYM-supply-analyzer-a-pile-cannot-grow-past-its-max-supply
+    severity: medium
+    category: logic
+    url: https://cymetica.com/supply-analyzer?symbol=yearn
+    title: >-
+      Supply Analyzer: YFI's sellable pile is shown changing "0% to 15.1%" a year with 590 YFI (1.64%)
+      left before its 36,666 max supply; 32 of 190 coins state a yearly growth past their max supply
+    expected: >
+      The hero, "Yearly change of the sellable pile", never states a growth the pile cannot undergo.
+      In a year the pile can gain at most what lies between it and the max supply, which /definitions
+      calls "a cap the market feed states"; the hero's own definition says what comes in "is at most
+      what the reserve outside the pile still holds".
+    actual: >
+      Read on 2026-10-10 at 09:18 UTC (batch as_of 09:18:19). Yearn (YFI): status "range",
+      yearly_range [0.0, 15.1], pile_today 36,075.94, reserve_today 590.06, max_supply 36,666, which
+      the page prints as "0% to 15.1%". 15.1% of 36,075.94 is 5,447 YFI; 590.06 exist outside the
+      pile. The record's own curve gains 454.02 in Oct 2026 and 136.04 in Nov 2026 and stands at
+      36,666.0 from Dec 2026 on: +1.64% for the year. The hero is the first month times 12
+      ((454.02 in - 0 out) x 12 / 36,075.94 = 15.1%), the inflow side of what #177 fixed for the
+      outflow. Liquity (LQTY): yearly_range [0.38, 14.08], pile 98,840,059.58, max_supply and total
+      supply 100,000,000, reserve 1,159,940.42 (1.17% of the pile); the top is the whole reserve
+      times 12 (1,159,940.42 x 12 / 98,840,059.58 = 14.08%). Of the 190 records with a max supply,
+      32 state a top above the room to it, among them SHROOM, INDEX, GROYP, SIS and LQ at 15.1%
+      with 1.4% to 3.4% left, ETHFI at 20.51% with 3.59%, and AAVE at 15.53% with 3.66%.
+    steps:
+      - 'GET https://cymetica.com/api/v1/supply-analyzer/batch/gem-screener -> items[token.slug=yearn]: status "range", yearly_range [0.0, 15.1], pile_today 36075.94, reserve_today 590.06, max_supply 36666.0; 32 of the 190 rows with a max_supply have yearly_range[1] above 100 x (max_supply - pile_today) / pile_today'
+      - 'GET https://cymetica.com/api/v1/supply-analyzer/analyze?symbol=yearn&include_months=true -> months[0] Oct 2026: pile 36075.94, in.total 454.02; months[1] Nov 2026: in.total 136.04; months[2] Dec 2026: pile 36666.0, in.total 0.0; months[12]: pile 36666.0'
+      - 'GET https://cymetica.com/api/v1/supply-analyzer/definitions -> "The yearly change = (in - out) x 12 / the pile, in %. It is the hero number. ... what comes in ... is at most what the reserve outside the pile still holds"'
+      - 'GET https://cymetica.com/static/js/supply-analyzer.js -> heroAt() prints yearly_range[0] "to" yearly_range[1]; the hero tooltip is titled "Yearly change of the sellable pile"'
+    body: >
+      How to fix it is yours: state a yearly change the pile can undergo (the curve already stops at
+      the max supply), or say on the hero that the figure is a monthly rate times 12. A visitor reads
+      "15.1% a year" for YFI as 5,447 new sellable YFI against a cap 590 away. Not about whether
+      these tokens will vest or be emitted. Our check reads the batch and /definitions anonymously
+      and fails while a record with a max supply states a yearly change above 100 x (max supply -
+      pile) / pile (judged only while /definitions calls the hero "The yearly change"). Every
+      Supply Analyzer read names a Gem Screener coin, so none adds a line to your weekly ledger.
+
+  - key: gem-screener-runrate-counts-missing-days-as-zero
+    findings:
+      - CYM-a_runrate_states_only_the_days_its_revenue_has
+    severity: low
+    category: logic
+    url: https://cymetica.com/gem-screener/app?view=apps&coin=kyberswap
+    title: >-
+      Gem Screener: KyberSwap's run-rate and P/S rest on 19 days of revenue summed as 30 (runrate
+      cov30 30, sparse false; 11 days absent from DeFiLlama too); 4 of 233 apps
+    expected: >
+      A run-rate counts the days it has. runrate.cov30, the days of the last 30 the revenue rests on,
+      matches the row's own daily series, and a 30-day window with days missing is marked sparse or
+      annualised from the days present, not summed as if the missing days earned $0.
+    actual: >
+      Read on 2026-10-10 (snapshot generated 03:54:24 UTC). KyberSwap (KNC): rev_series ends
+      2026-10-09 and holds 19 of the 30 days from 2026-09-10; absent are 12 to 20, 23 and 24
+      September. DeFiLlama's daily revenue for kyberswap has no point on those 11 days either. runrate
+      is {"value": 4599776.72, "basis": "30d", "cov30": 30, "sparse": false}; rev30d 378,063.84 is
+      the sum of the 19 days present, 378,063.84 x 365 / 30 = 4,599,776.72, and ps 6.322 = mcap
+      29,077,918 / 4,599,776.72. From the 19 days present the run-rate would be 378,063.84 / 19 x 365
+      = 7,262,806 and P/S 4.00. The same on DeepBook (DEEP, 19 of 30, basis med3), Fulcrom (FUL, 24
+      of 30, basis 30d) and Derive (DRV, 29 of 30, basis 90d), each with cov30 30 and sparse false.
+    steps:
+      - 'GET https://cymetica.com/api/v1/gem-screener -> apps[symbol=KNC]: rev_series has 19 daily points between 2026-09-10 and 2026-10-09 (none for 2026-09-12..20, 09-23, 09-24); runrate {"value": 4599776.72, "basis": "30d", "cov30": 30, "sparse": false}; rev30d 378063.84; mcap 29077918; ps 6.322'
+      - 'GET https://api.llama.fi/summary/fees/kyberswap?dataType=dailyRevenue -> totalDataChart has no point for 2026-09-12 to 2026-09-20, 2026-09-23 or 2026-09-24'
+    body: >
+      How to fix it is yours: count cov30 as the days present and mark a window with gaps as sparse,
+      or annualise from the days present. A visitor reads KyberSwap at 6.3x revenue where its own
+      19 days of data say 4.0x. This is item 5 of ET-28597 (asked 2026-09-30); item 4 there is
+      answered, the page now prints DeFiLlama's raw holders share beside the 100%. Our check reads
+      /api/v1/gem-screener anonymously and fails while a row's runrate.cov30 is larger than the days
+      its own rev_series holds in the 30 days ending at its last day. It passes the moment they agree.
+
 footer: >
   Reported by an independent QA agent. Scope of this work: verification of the
   REST API, MCP, the machine-readable discovery surfaces and the pages built on
