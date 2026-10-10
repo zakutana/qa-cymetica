@@ -15,7 +15,8 @@ an account cannot read its own USDC history past the newest 100 by paging.
 
 **The rule.** For the unfiltered history, `currency=USDC` and `currency=ET10`, offsets 0, 100
 and 200: when a page says `has_more`, the next one is not a repeat of it. An overlap of a few
-rows (one added between the reads) is not a repeat; the same ids are.
+rows (one added between the reads) is not a repeat; more than half of the page again is, and
+so is an empty page the `has_more` promised.
 
 SAFE. GETs only, our own account's read key.
 """
@@ -32,12 +33,18 @@ OFFSETS = (0, LIMIT, 2 * LIMIT)
 
 
 def page_repeats(first: list[dict], second: list[dict], *, has_more) -> bool | None:
-    """True when the next page is the first page again; None when nothing was promised."""
+    """True when the next page fails to move on: empty although `has_more` promised rows, or
+    more than half of it the previous page again (a row or two added between the reads shifts
+    a working pager by that much, never by most of a page). None when nothing was promised.
+    Deep pass 2026-10-10, B02: the first version needed every id repeated, so one row added
+    between the reads hid the captured defect, and an empty page read as moving forward."""
     ids1 = [r.get("id") for r in first or [] if isinstance(r, dict)]
     ids2 = [r.get("id") for r in second or [] if isinstance(r, dict)]
     if has_more is not True or not ids1:
         return None
-    return bool(ids2) and set(ids2) <= set(ids1)
+    if not ids2:
+        return True
+    return len(set(ids2) & set(ids1)) / len(set(ids2)) > 0.5
 
 
 @qa(component="rest.account", tier=SafetyTier.SAFE, surface="rest")

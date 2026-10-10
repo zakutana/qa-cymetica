@@ -662,10 +662,14 @@ def test_a_card_that_is_closed_on_rest_and_open_on_mcp_fails():
     first = [{"id": i} for i in range(100)]
     assert page_repeats(first, first, has_more=True) is True, "the same page again was read as the next one"
     assert page_repeats(first, [{"id": i} for i in range(100, 200)], has_more=True) is False
-    assert page_repeats(first, [{"id": i} for i in range(50, 150)], has_more=True) is False, (
-        "an overlap from a row added between reads is not a repeat")
+    assert page_repeats(first, [{"id": i} for i in range(99, 199)], has_more=True) is False, (
+        "an overlap of one row, added between the reads, is not a repeat")
     assert page_repeats(first, first, has_more=False) is None, "no next page was promised"
     assert page_repeats([], [], has_more=True) is None, "an empty first page has nothing to repeat"
+    # Deep pass 2026-10-10, B02: the captured defect with one row added between the reads
+    # (99 of 100 ids again) is still a repeat, and so is an empty page that has_more promised.
+    assert page_repeats(first, [{"id": 999}] + first[:99], has_more=True) is True, "99 of 100 again"
+    assert page_repeats(first, [], has_more=True) is True, "has_more promised rows that never came"
 
     # And a fund's: the launcher's paper-only sentence and a profile's live
     # invest offer, read from what a visitor sees -- the markup as served on
