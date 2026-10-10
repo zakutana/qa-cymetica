@@ -1,0 +1,241 @@
+From 440772e5a3b225a6101649b0f848ef1b241276f5 Mon Sep 17 00:00:00 2001
+From: Adam Zakutansky <adam.zakutansky@outlook.com>
+Date: Sat, 10 Oct 2026 23:11:22 +0200
+Subject: [PATCH 1/2] Prompts are Cymetica's to write; agents that find
+ Cymetica learn about the tables
+
+Section 6 says what each prompt must do, not its words; the prompt text in
+the mockups is a placeholder. New section 7: an outside agent learns about
+the tournaments at every entry point and can ask for a seat, its owner
+approving once. Left to you gains the prompts' words, the agent path and a
+table that does not fill. The request text stays at 32 lines, under 8,000
+characters.
+
+Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>
+---
+ README.md                        |  2 +-
+ SPEC.md                          | 77 +++++++++++---------------------
+ build-it-better/improvements.txt | 16 +++----
+ build-it-better/request.md       |  6 +--
+ 4 files changed, 39 insertions(+), 62 deletions(-)
+
+diff --git a/README.md b/README.md
+index 3f6c220..0b90103 100644
+--- a/README.md
++++ b/README.md
+@@ -6,7 +6,7 @@ This repository holds a **proposal for a [Build it Better](https://cymetica.com/
+ 
+ | What | Where |
+ |---|---|
+-| Design brief: the screens, the copy, the two prompts, the rules of the game, paper mode. How to build it is left to Cymetica. | [`SPEC.md`](SPEC.md) |
++| Design brief: the screens, the copy, what the two prompts must do, the rules of the game, paper mode, agents that find Cymetica on their own. How to build it, and the prompts' words, are left to Cymetica. | [`SPEC.md`](SPEC.md) |
+ | Design mockups: static HTML and CSS, **no functionality**, sample data | [`design/`](design/) |
+ | Screenshots of the mockups, for the request's design upload | [`design/screenshots/`](design/screenshots/) |
+ | The text for the request form (under 8,000 characters, one item per line) and how to file it | [`build-it-better/`](build-it-better/) |
+diff --git a/SPEC.md b/SPEC.md
+index c42352b..90d26ac 100644
+--- a/SPEC.md
++++ b/SPEC.md
+@@ -1,9 +1,9 @@
+ # Agent Tournaments: design brief
+ 
+ **For:** Cymetica, as a Build it Better request · **Date:** 2026-10-10
+-**Click through it:** [open the clickable mockup](https://htmlpreview.github.io/?https://github.com/zakutana/agent-tournaments/blob/claude/upbeat-archimedes-d2yurc/design/preview.html) (all seven screens in one page; the file is [`design/preview.html`](design/preview.html)) · **Pictures:** [`design/screenshots/`](design/screenshots/)
++**Click through it:** [`design/preview.html`](design/preview.html), all seven screens in one page (the clickable link is in the request) · **Pictures:** [`design/screenshots/`](design/screenshots/)
+ 
+-This brief is the **design**, the **copy** and the **two prompts** for an Agent Tournaments page on cymetica.com, plus the rules of the game that the screens show. **How you build it is your call.** You know your code: registration, keys, approvals, escrow, settlement, payouts, live updates and anti-abuse are yours to design. Section 8 lists what we leave to you on purpose.
++This brief is the **design** and the **copy** for an Agent Tournaments page on cymetica.com, plus the rules of the game that the screens show. **How you build it is your call, and so are the words of the prompts for agents:** section 6 says what a prompt must do, not what it says. You know your code: registration, keys, approvals, escrow, settlement, payouts, live updates and anti-abuse are yours to design. Section 9 lists what we leave to you on purpose.
+ 
+ ---
+ 
+@@ -17,6 +17,7 @@ This brief is the **design**, the **copy** and the **two prompts** for an Agent
+    - **manual setup**, no AI at all: pick one of Cymetica's bots by its backtest and confirm.
+ 4. With a prompt, your agent asks you **once** to OK the buy-in.
+ 5. You watch: where your agent sits, its ROI, **every trade it made and where the ROI came from**, the pot and how long is left. Running ten agents? The Lobby sums them up and lists them all.
++6. **An AI agent that finds Cymetica on its own learns about the tournaments at once, and wants to play** (section 7).
+ 
+ Built for degens: big numbers, few words, everything that matters readable at a glance. Anything longer than one line goes into the folded *Fine print*.
+ 
+@@ -58,7 +59,7 @@ A Cymetica account is either in **PAPER** or **LIVE** mode (the switch in the si
+ - **Live mode: you see only live tournaments.** Paper and live never mix: separate tables, separate pots, separate *Top agents*.
+ - **In paper mode everything runs on the paper account:** the buy-in, the trading capital, the pot, the prizes, the balance on Manual setup, the agent's trades and its trade history. A cloned agent or a picked bot is a paper one.
+ - **Same tables, same rules, same numbers** as live: $5 and $50, 10 seats, 7 days, 3× volume, ROI %, 60 / 30 / 10.
+-- **The prompts say it.** In paper mode both prompts name the paper table and tell the agent to use the paper account. For example, the first line becomes *"Join paper table Micro #15 on Cymetica Agent Tournaments for me, with my paper account."*
++- **The prompts say it.** In paper mode both prompts say the table is a paper table and tell the agent to use the paper account.
+ - **The design does not change.** The screens look the same in both modes; the site's own PAPER / LIVE pill already shows which one you are in.
+ 
+ ---
+@@ -175,62 +176,35 @@ Every screen works at 390 px wide with no sideways scrolling. The tables turn up
+ 
+ ---
+ 
+-## 6. The two prompts
++## 6. The two prompts: what they must do
+ 
+-The text the owner copies on *Take a seat*. Each is written for **one table**; the table, its link, the invite code and the amounts are filled in. **The links and the invite code are placeholders:** put in whatever your implementation uses. The table link is the natural place for an agent to find the steps to join (your site already serves markdown to agents). *Manual setup* needs no prompt.
++*Take a seat* has two prompts the owner copies: **Your agent** and **Clone our agent**. **You write them.** The prompt text in the mockups and screenshots is a placeholder that shows where a prompt sits and how long it is, not its words. What a prompt must do:
+ 
+-### 6.1 Your agent
++- **One table.** Each prompt is one copyable block for the table the owner opened: the table, its link, its buy-in, trading capital, the most the owner can lose and the minimum volume are filled in, and so is the owner's invite code (signed in only; how it works is yours).
++- **Enough on its own.** With the prompt alone, any AI agent (Claude, ChatGPT, OpenClaw or the owner's own bot) can take the seat. The table link is the natural place for the steps to join (your site already serves markdown to agents).
++- **The owner approves.** The owner OKs the buy-in once; the agent never spends on its own and never asks for a password or a key.
++- **Cymetica only.** The agent trades only on Cymetica, only with the table's capital, and tells its owner its rank and ROI once a day.
++- **Clone our agent:** the agent compares Cymetica's bots by their backtests and clones one that is not at the table yet (section 2).
++- **Paper mode:** the prompt says it is a paper table and the paper account (section 3).
+ 
+-```text
+-Join Micro #15 on Cymetica Agent Tournaments for me.
+-Table: https://cymetica.com/agent-tournaments/micro-15
+-My invite code: AT-7K2Q-91XF
++*Manual setup* needs no prompt.
+ 
+-The deal: 10 AI agents, 7 days, real trades only on Cymetica.
+-Highest ROI % wins; the top 3 split the pot 60/30/10.
+-Buy-in $5 + $25 trading capital. The most I can lose is $30.
+-To win a prize, trade at least $75 (3x the capital).
+-
+-Your rules:
+-- Take the seat with my invite code. I approve the buy-in myself;
+-  never ask me for a password or key.
+-- Trade only on Cymetica and only with this table's capital.
+-- Send me your rank and ROI once a day.
+-```
+-
+-### 6.2 Clone our agent
+-
+-```text
+-Clone a Cymetica trading agent for me and seat it at Micro #15.
+-Table: https://cymetica.com/agent-tournaments/micro-15
+-My invite code: AT-7K2Q-91XF
++---
+ 
+-The deal: 10 AI agents, 7 days, real trades only on Cymetica.
+-Highest ROI % wins; the top 3 split the pot 60/30/10.
+-Buy-in $5 + $25 trading capital. The most I can lose is $30.
+-To win a prize, trade at least $75 (3x the capital).
++## 7. Agents that find Cymetica on their own
+ 
+-Your rules:
+-- Pick the Cymetica bot to clone yourself: compare their backtests
+-  and take one that is not at this table yet.
+-- Seat the clone with my invite code. I approve the buy-in myself;
+-  never ask me for a password or key.
+-- Send me the clone's rank and ROI once a day.
+-```
++An AI agent that comes to Cymetica without a prompt from its owner must **learn at once that it can play Agent Tournaments, and want to**.
+ 
+-### 6.3 What changes in the prompts
++- **Where it reads it:** on the first screen of every place an agent starts: `llms.txt`, the agent card (`/.well-known/agent.json`, a skill near the top), MCP (the `initialize` instructions and a tool that lists open tables), `/build` (Bring Your Own Agent) and `/api-docs`. The Gem Screener keeps its place there; the tournaments come next to it.
++- **What makes it want to play:** numbers first. What it can win ($5 → $30, $50 → $300), the most its owner can lose, seats open right now, the top agents and their ROI, and the free way to start: a paper table.
++- **How it gets in:** it can see the open tables and ask for a seat without its owner opening the page first; the owner gets one link and OKs the buy-in once. The rules of sections 2 and 6 hold: it never spends on its own and never asks for a password or a key.
++- **Done when:** a fresh agent with no instructions gets from Cymetica's front door to a seat request in a few calls.
+ 
+-| Part | Filled with |
+-|---|---|
+-| `Micro #15`, `micro-15` | the table the owner opened |
+-| `$5`, `$25`, `$30`, `$75` | that table's buy-in, capital, max loss, minimum volume |
+-| `AT-7K2Q-91XF` | the owner's personal code that ties the agent to their account (signed in only; how it works is yours to decide) |
+-| Which bot to clone | not in the prompt: the agent picks it (section 2) |
+-| Paper mode | "paper table … with my paper account", and "paper trades" instead of "real trades" (section 3) |
++The words, the tools and the flow are yours (section 9).
+ 
+ ---
+ 
+-## 7. Look and feel
++## 8. Look and feel
+ 
+ - **Colours: cymetica.com's palette only.** Background `#0a0e17`, panels `#0d1520` / `#111a28`, sunk `#070b12`; text `#E6EDF7`, secondary `#A9B8CC`, muted `#6F8199`; cyan `#00cfff` (you, $5 tables, links), green `#00ff88` (money won, qualified, go buttons, $50 tables), red `#ff4444` (losses), blue `#3b82f6` (caution, waiting for your OK); lines `rgba(0,150,255,.15)`. No amber, orange or yellow.
+ - **Type:** Unbounded (big headings and money), Space Grotesk (interface), JetBrains Mono (numbers, codes, prompts).
+@@ -241,15 +215,18 @@ Your rules:
+ 
+ ---
+ 
+-## 8. Left to you
++## 9. Left to you
+ 
+ We don't prescribe these. Build them the way your platform already works:
+ 
++- the words of the two prompts (section 6);
++- how an agent that finds Cymetica on its own learns about the tables, asks for a seat and reaches its owner (section 7);
+ - how agents register and get claimed, and how the invite code works;
+ - how a seat request reaches the owner, how they OK it and how monthly limits work (there is no separate approval screen in this design: reuse your own flow, or the confirm card of *Manual setup*);
+ - which bots an agent may clone, and how it reads their backtests to pick one (the same data as *Manual setup*);
+ - how a bot picked on *Manual setup* takes its seat (for example as a clone under the hood), and keeping that list in step with your backtest leaderboard;
+ - where the buy-in and capital sit (holds, escrow, a separate account) and how prizes and capital come back;
++- what happens to a table that does not fill;
+ - how ROI, volume and the final value are measured, and the checks against two agents of one owner, or of one table, trading with each other;
+ - the trade history behind *Your trades*: fills, fees, realised and open P&L of a tournament account, and keeping it private to its owner while the table runs;
+ - how the pages update live;
+@@ -264,7 +241,7 @@ Three things worth checking early:
+ 
+ ---
+ 
+-## 9. Files
++## 10. Files
+ 
+ | Path | What |
+ |---|---|
+diff --git a/build-it-better/improvements.txt b/build-it-better/improvements.txt
+index c2fd3e1..d0dc3d4 100644
+--- a/build-it-better/improvements.txt
++++ b/build-it-better/improvements.txt
+@@ -1,10 +1,10 @@
+-Build "Agent Tournaments" at /agent-tournaments to match the attached design: weekly trading tournaments for AI agents on Cymetica. Design brief (screens, copy, prompts, rules, paper mode): https://github.com/zakutana/agent-tournaments/blob/claude/upbeat-archimedes-d2yurc/SPEC.md . Clickable mockup of all 7 screens: https://htmlpreview.github.io/?https://github.com/zakutana/agent-tournaments/blob/claude/upbeat-archimedes-d2yurc/design/preview.html . We give you the design, copy and prompts; how you build it is your call.
++Build "Agent Tournaments" at /agent-tournaments to match the design in the brief: weekly trading tournaments for AI agents on Cymetica. Design brief: https://github.com/zakutana/agent-tournaments/blob/claude/upbeat-archimedes-d2yurc/SPEC.md . Clickable mockup of all 7 screens: https://htmlpreview.github.io/?https://github.com/zakutana/agent-tournaments/blob/claude/upbeat-archimedes-d2yurc/design/preview.html . We give you the design and the copy; the prompts' words and how you build it are yours.
+ The idea: every table is a poker table with 10 seats. 10 AI agents, 7 days, 1 pot, best ROI % takes it. Stakes $5 and $50. Pick a table, take a seat one of 3 ways, approve once, watch.
+ Rules ($5 / $50 table): buy-in to the pot $5 / $50; trading capital $25 / $250 (yours, back after 7 days +- P&L); max loss $30 / $300; top 3 get 60/30/10%; to take a prize trade 3x the capital ($75 / $750), else the place passes on. Starts when the 10th seat is taken. No rake in the pilot.
+ Cymetica only: agents trade only on Cymetica's own order books; trades anywhere else never count. Live mode is real trading, so every table makes real volume.
+ The owner approves every entry (one click or a monthly auto limit); the agent never spends on its own. One seat per owner per table; one copy of each Cymetica bot per table; leverage 2x max; same-owner or same-table trades don't count as volume.
+ While a table runs only the owner sees their agent's trades and open positions; everyone sees rank, ROI and volume.
+-Paper mode: follow the account's PAPER / LIVE switch. Paper mode shows only paper tournaments and runs everything on the paper account (buy-in, capital, prizes, balances, trades, clones, bots); live mode only live ones; never mixed. Same rules and screens; prompts say "paper table ... with my paper account".
++Paper mode: follow the account's PAPER / LIVE switch. Paper mode shows only paper tournaments and runs everything on the paper account (buy-in, capital, prizes, balances, trades, clones, bots); live mode only live ones; never mixed. Same rules and screens; the prompts say it is a paper table and the paper account.
+ Flow: Lobby -> pick a table -> Take a seat -> (a) copy a prompt, your AI takes the seat and asks you once to OK the buy-in (your own approval flow, no extra screen), or (b) Manual setup: pick a bot and confirm on one screen -> Live table -> Results.
+ Look: cymetica.com colours only (navy #0a0e17 / #0d1520, cyan #00cfff, green #00ff88, red #ff4444, blue #3b82f6; no amber, orange, yellow). Fonts Unbounded, Space Grotesk, JetBrains Mono. Big numbers, few words. Tokens: design/assets/at.css.
+ Header: logo (poker chip with bot eyes), Lobby, Top agents, How it works, LIVE + money in pots, your pill (one agent: avatar, rank, ROI; several: stacked avatars, count, total P&L). No action button: you always start by picking a table.
+@@ -17,8 +17,7 @@ Take a seat (3-take-a-seat.png): OPEN 3 SEATS LEFT; big table with free seats gl
+ Way 1, Your agent: "Claude, ChatGPT, OpenClaw or your own bot joins this table", the prompt, COPY PROMPT (copies all, turns into "COPIED, PASTE IT TO YOUR AI"), invite code + 24h.
+ Way 2, Clone our agent: no bot picker on the page; the prompt tells your AI to pick a Cymetica bot by its backtest (one not at the table yet), clone it and seat it. COPY PROMPT.
+ Way 3, Manual setup, no AI: the 3 best bots by backtest return and PICK FROM 11 BOTS.
+-Prompt "Your agent" (brief 6.1): join <table> for me; table link; my invite code; the deal (10 agents, 7 days, only on Cymetica, top 3 split 60/30/10, buy-in + capital, most I can lose, min volume); rules: take the seat with my code, I approve myself, never ask for a password or key, trade only on Cymetica with this table's capital, report rank and ROI daily.
+-Prompt "Clone our agent" (brief 6.2): clone a Cymetica trading agent and seat it at <table>; link; code; same deal; pick the bot yourself by its backtest, one not at the table; seat it with my code, I approve myself, report the clone's rank and ROI daily. Links and code format are yours.
++Prompts: you write both; the prompt text in the mockups is a placeholder. Each is one copyable block filled for the opened table (link, stakes, max loss, min volume, the owner's invite code). With it alone any AI agent takes the seat; the owner OKs the buy-in once; the agent never spends on its own, never asks for a password or key, trades only on Cymetica with the table's capital, reports rank and ROI daily.
+ Manual setup (4-manual-setup.png), one screen. Left: filter All / Crypto / Stocks, sort Return / Win rate / Drawdown; per bot: name, BLUE UPSIDE or RED DOWNSIDE, category, equity curve, backtest return + period, win rate, Sharpe, max drawdown, trades, clones; one already at the table dimmed.
+ Manual setup, right: "<bot> takes seat 4", mini table with the bot in the seat, buy-in, capital, max you can lose, balance, APPROVE $30 / BACK. Data: your backtest leaderboard behind /perpetual/agents (GET /api/v1/backtest/leaderboard).
+ Live table (5-live-table.png): LIVE day 4/7; big table with avatar, rank badge and ROI per seat, your seat pulsing YOU; POT, ticking countdown, payouts in the middle; Your agent (rank, ROI, wins now, volume, "Where +8.44% came from"); If it ended now.
+@@ -26,7 +25,8 @@ Leaderboard: rank, avatar, name with model or clone type and Elo, big ROI, volum
+ Your trades (owner only): tiles Start $25.00 + Closed trades +$0.24 + Open now +$1.91 - Fees $0.04 = Now $27.11 +8.44%; fills newest first (time, BUY/SELL or LONG/CLOSE, market, size @ price, value, fee, P&L or OPEN + P&L), All N trades; Open now (entry -> now, P&L).
+ The race chart (you cyan with a ring at each of your trades, leader light grey, field dark grey, time left hatched) and rule chips led by "Trades on Cymetica only".
+ Results (6-results.png): winner in the middle; Your result (place, ROI, capital back, PLAY AGAIN); Paid out 1-3 with the line when a place passed down; Final standings; Your trades, final, positions handed back at the final price.
+-How it works (7-how-it-works.png): "Pick a table. Send your agent."; 4 steps; PICK A TABLE; stakes; four one-line answers.
+-Phone (8-, 9-, 10-...-phone.png): 390 px, no sideways scroll; tables upright with the same 10 seats; cards stack; leaderboard, Your agents rows and fills become two-line cards. Footer: folded Fine print.
+-Left to you: registration and the invite code, approvals and limits, seating a picked bot, where the money sits, settlement and payouts, how ROI, volume and the final value (last 15-min average) are measured, anti-collusion, trade history, live updates, agent API/MCP, paper bookkeeping.
+-Check early: legal review of buy-in + prize pool (may count as gambling, e.g. in Czechia; a free sponsored table keeps the design); clones and bots trade 5-minute rounds today, so 7-day seats need a tournament mode (hide those cards until then) and 10 agents may need a higher bot limit; enough market depth for 3x volume.
++How it works (7-how-it-works.png, in the brief): "Pick a table. Send your agent."; 4 steps; PICK A TABLE; stakes; four one-line answers.
++Phone (8-, 9-, 10-...-phone.png, in the brief): 390 px, no sideways scroll; tables upright with the same 10 seats; cards stack; leaderboard, Your agents rows and fills become two-line cards. Footer: folded Fine print.
++Agents that find Cymetica on their own learn at once that they can play, and want to: llms.txt, the agent card (a skill near the top), MCP (instructions and a tool listing open tables), /build and /api-docs say it on their first screen in numbers (what an agent can win, the most its owner can lose, seats open now, top agents, a free paper table to start), and the Gem Screener keeps its place. An agent can ask for a seat without its owner opening the page first; the owner OKs it with one link. Done when a fresh agent gets from Cymetica's front door to a seat request in a few calls.
++Left to you: the prompts' words, registration and the invite code, approvals and limits, seating a picked bot, where the money sits, settlement and payouts, a table that does not fill, how ROI, volume and the final value (last 15-min average) are measured, anti-collusion, trade history, live updates, agent API/MCP, paper bookkeeping.
++Check early (brief section 9): legal review of a buy-in + prize pool (a free sponsored table keeps the design); a 7-day tournament mode for clones and bots, which trade 5-minute rounds today (hide those cards until then); market depth for 3x volume.
+diff --git a/build-it-better/request.md b/build-it-better/request.md
+index b5240f9..95b3cda 100644
+--- a/build-it-better/request.md
++++ b/build-it-better/request.md
+@@ -9,8 +9,8 @@ Choose **It does not exist yet**, then:
+ | Field | What to put in |
+ |---|---|
+ | What should we call your app? | `Agent Tournaments` |
+-| What should it do? | Click **Load the list from a .md or .txt file** and pick [`improvements.txt`](improvements.txt). 32 lines, about 7,500 characters; the limit is 8,000 characters and 40 items, one item per line. The first line links to the design brief [SPEC.md](../SPEC.md) and the [design mockups](../design/) (open `design/preview.html` to click through). The text asks for the design, the copy and the two prompts, adds paper mode, manual setup, your trades and the many-agents Lobby, and leaves the implementation to Cymetica. |
+-| Show us the design you want | Upload the 10 images in [`design/screenshots/`](../design/screenshots/): `1-lobby.png`, `2-lobby-10-agents.png`, `3-take-a-seat.png`, `4-manual-setup.png`, `5-live-table.png`, `6-results.png`, `7-how-it-works.png`, `8-lobby-10-agents-phone.png`, `9-take-a-seat-phone.png`, `10-live-table-phone.png`. |
++| What should it do? | Click **Load the list from a .md or .txt file** and pick [`improvements.txt`](improvements.txt). 32 lines, about 7,900 characters; the limit is 8,000 characters and 40 items, one item per line. The first line links to the design brief [SPEC.md](../SPEC.md) and the clickable mockup, both pinned to one commit. The text asks for the design and the copy, says what the two prompts and the entry points for outside agents must do, adds paper mode, manual setup, your trades and the many-agents Lobby, and leaves the prompts' words and the implementation to Cymetica. |
++| Show us the design you want (optional) | Leave it empty: the brief, the mockups and all 10 pictures are on GitHub, and the request links them. (The form would take at most 6 pictures.) |
+ | Coin ticker / coin name (optional) | Your choice, for example `ATOUR` / `Agent Tournaments`, or leave blank. |
+ | Your name, email (optional) | Yours, for the ship notice. |
+ 
+@@ -36,4 +36,4 @@ The response carries `ticket`, `spec_text` and a one-time `request_token` (send
+ 
+ ## What to expect in the scope
+ 
+-The request gives Cymetica the design, the copy, the prompts and the rules, and leaves the implementation to them (brief section 8). Build it Better builds read-only parts automatically and sends anything that moves money (buy-ins, approvals, payouts) to a person for review, so expect the scope to split that way. Before real-money tables go live, Cymetica should check the legal side of a buy-in + prize pool (brief section 8).
++The request gives Cymetica the design, the copy and the rules, says what the prompts and the agent entry points must do, and leaves their words and the implementation to them (brief section 9). Build it Better builds read-only parts automatically and sends anything that moves money (buy-ins, approvals, payouts) to a person for review, so expect the scope to split that way. Before real-money tables go live, Cymetica should check the legal side of a buy-in + prize pool (brief section 9).
+-- 
+2.54.0.windows.1
+

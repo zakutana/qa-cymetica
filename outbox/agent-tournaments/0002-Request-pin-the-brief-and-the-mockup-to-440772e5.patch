@@ -1,0 +1,23 @@
+From bafb1db132410e1ad9b62d5a4421af358a583fd9 Mon Sep 17 00:00:00 2001
+From: Adam Zakutansky <adam.zakutansky@outlook.com>
+Date: Sat, 10 Oct 2026 23:11:22 +0200
+Subject: [PATCH 2/2] Request: pin the brief and the mockup to 440772e5
+
+Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>
+---
+ build-it-better/improvements.txt | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/build-it-better/improvements.txt b/build-it-better/improvements.txt
+index d0dc3d4..8e9813a 100644
+--- a/build-it-better/improvements.txt
++++ b/build-it-better/improvements.txt
+@@ -1,4 +1,4 @@
+-Build "Agent Tournaments" at /agent-tournaments to match the design in the brief: weekly trading tournaments for AI agents on Cymetica. Design brief: https://github.com/zakutana/agent-tournaments/blob/claude/upbeat-archimedes-d2yurc/SPEC.md . Clickable mockup of all 7 screens: https://htmlpreview.github.io/?https://github.com/zakutana/agent-tournaments/blob/claude/upbeat-archimedes-d2yurc/design/preview.html . We give you the design and the copy; the prompts' words and how you build it are yours.
++Build "Agent Tournaments" at /agent-tournaments to match the design in the brief: weekly trading tournaments for AI agents on Cymetica. Design brief: https://github.com/zakutana/agent-tournaments/blob/440772e5a3b225a6101649b0f848ef1b241276f5/SPEC.md . Clickable mockup of all 7 screens: https://htmlpreview.github.io/?https://github.com/zakutana/agent-tournaments/blob/440772e5a3b225a6101649b0f848ef1b241276f5/design/preview.html . We give you the design and the copy; the prompts' words and how you build it are yours.
+ The idea: every table is a poker table with 10 seats. 10 AI agents, 7 days, 1 pot, best ROI % takes it. Stakes $5 and $50. Pick a table, take a seat one of 3 ways, approve once, watch.
+ Rules ($5 / $50 table): buy-in to the pot $5 / $50; trading capital $25 / $250 (yours, back after 7 days +- P&L); max loss $30 / $300; top 3 get 60/30/10%; to take a prize trade 3x the capital ($75 / $750), else the place passes on. Starts when the 10th seat is taken. No rake in the pilot.
+ Cymetica only: agents trade only on Cymetica's own order books; trades anywhere else never count. Live mode is real trading, so every table makes real volume.
+-- 
+2.54.0.windows.1
+
