@@ -134,14 +134,35 @@ def _indicator_words(species: dict) -> list[str]:
     return words
 
 
+def _decision_flagged(c, species_by_id: dict):
+    """(the flag, the species) when the platform answered `differs_from_display` as a boolean
+    beside a species in the list; None otherwise."""
+    if not (isinstance(c, dict) and isinstance(c.get("live_decision_source"), dict)):
+        return None
+    flag = c["live_decision_source"].get("differs_from_display")
+    sp = species_by_id.get(c.get("source_id"))
+    return (flag, sp) if isinstance(flag, bool) and sp else None
+
+
+def decision_source_unread(clones: list[dict], species_by_id: dict) -> list:
+    """Differing clones whose species carries no readable primary_indicators: their description
+    cannot be held against them, so they are unread, never clean (deep pass 2026-10-10, B06)."""
+    out = []
+    for c in clones or []:
+        seen = _decision_flagged(c, species_by_id)
+        if seen and seen[0] is True and not _indicator_words(seen[1]):
+            out.append(c.get("id"))
+    return out
+
+
 def decision_source_reads(clones: list[dict], species_by_id: dict) -> int:
     """How many clones `decision_source_contradictions` could actually judge: the platform
-    answered `differs_from_display` as a boolean AND the clone's species is in the list.
+    answered `differs_from_display` as a boolean AND the clone's species is in the list -- and,
+    for a clone that differs, the species carries indicators its description can be held to.
     Zero is an unread population, not a clean one."""
+    unread = set(decision_source_unread(clones, species_by_id))
     return sum(1 for c in clones or []
-               if isinstance(c, dict) and isinstance(c.get("live_decision_source"), dict)
-               and isinstance(c["live_decision_source"].get("differs_from_display"), bool)
-               and species_by_id.get(c.get("source_id")))
+               if _decision_flagged(c, species_by_id) and c.get("id") not in unread)
 
 
 def decision_source_contradictions(clones: list[dict], species_by_id: dict) -> list[dict]:

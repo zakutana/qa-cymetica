@@ -290,6 +290,8 @@ def test_a_clone_decides_on_the_strategy_its_species_is_described_by(rest_truste
     llms_says = llms.status_code == 200 and LLMS_SENTENCE in llms.text
     found = ct.decision_source_contradictions(clones, species)
     judged = ct.decision_source_reads(clones, species)
+    # A differing clone whose species has no readable indicators is unread, not clean (B06).
+    unread = ct.decision_source_unread(clones, species)
     if not found and judged == 0:
         # A renamed flag, or species ids that no longer join, judges nothing: not a clean read.
         raise Inconclusive(f"{len(read)} clones carry a decision source, but none carries "
@@ -305,10 +307,12 @@ def test_a_clone_decides_on_the_strategy_its_species_is_described_by(rest_truste
                             f"\"{f['decides_on']}\"" for f in list(by_species.values())[:5])
                 + (f"; llms.txt says \"{LLMS_SENTENCE}\"" if llms_says else "")
                 if found else
-                f"all {judged} clones with a decision source decide on what their species is described by"),
+                f"all {judged} clones with a decision source decide on what their species is described by"
+                + (f"; {len(unread)} differing clone(s) of a species with no readable primary_indicators "
+                   f"were not judged" if unread else "")),
         left={"species_contradicted": len(by_species)},
         right={"species_contradicted": 0},
-        population={"contradictions": list(by_species.values()), "clones_read": len(read),
+        population={"contradictions": list(by_species.values()), "clones_read": len(read), "unread": unread,
                     "llms_sentence_present": llms_says},
         sources={"clones": f"{PREFIX}/my-clones?mode=paper", "species": f"{PREFIX}/available", "llms": "/llms.txt"},
         claim_id=CLAIM_DECIDES))

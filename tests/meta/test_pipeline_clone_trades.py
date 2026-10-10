@@ -117,4 +117,12 @@ def test_a_clone_deciding_on_another_rule_than_its_description_is_caught():
     assert ct.decision_source_reads([other], {}) == 0, "clones whose species do not join were read"
     renamed = dict(other, live_decision_source={"strategy_symbol": "STAT", "differs": True})
     assert ct.decision_source_reads([renamed], species) == 0, "a renamed flag was read"
+    # Deep pass 2026-10-10, B06: a differing clone whose species carries no readable
+    # primary_indicators cannot be held to its description -- it is unread, not judged clean,
+    # whatever the other species carry. One that decides on its own rule is still read.
+    stripped = {"s1": dict(species["s1"], primary_indicators=[])}
+    assert ct.decision_source_reads([other], stripped) == 0, "an unreadable species was judged clean"
+    assert ct.decision_source_unread([other], stripped) == ["c1"]
+    assert ct.decision_source_reads([own], stripped) == 1 and ct.decision_source_unread([own], stripped) == []
+    assert ct.decision_source_unread([other], species) == []
     assert ct.decision_source_contradictions([renamed], species) == []
