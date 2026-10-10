@@ -28055,7 +28055,15 @@
           }
         ],
         "refused": [],
-        "verifications": []
+        "verifications": [
+          {
+            "report_id": 169,
+            "fingerprint": "480d2daeca8090890485940c294cc4b8d630a2e07c8d5c895bddb5d9b2839ed0",
+            "run_id": "run-20261010T082244Z-eee166fa",
+            "verdict": "pass",
+            "at": "2026-10-10T08:52:35+00:00"
+          }
+        ]
       },
       "transitions": [
         {
@@ -28211,9 +28219,7 @@
         "repair_check": false,
         "reopen": [],
         "retractions": [],
-        "verification_owed": [
-          169
-        ],
+        "verification_owed": [],
         "correction_owed": [],
         "disputed": []
       }
@@ -28411,7 +28417,15 @@
           }
         ],
         "refused": [],
-        "verifications": []
+        "verifications": [
+          {
+            "report_id": 168,
+            "fingerprint": "695b635cdd9ad10b2a67ab2205aae5301d388c54d216d7e4d283eab2e8dbb08f",
+            "run_id": "run-20261010T082244Z-eee166fa",
+            "verdict": "pass",
+            "at": "2026-10-10T08:52:39+00:00"
+          }
+        ]
       },
       "transitions": [
         {
@@ -28520,9 +28534,7 @@
         "repair_check": false,
         "reopen": [],
         "retractions": [],
-        "verification_owed": [
-          168
-        ],
+        "verification_owed": [],
         "correction_owed": [],
         "disputed": []
       }
@@ -35055,6 +35067,13 @@
             "run_id": "run-20261008T070907Z-a271e3ce",
             "verdict": "fail",
             "at": "2026-10-08T07:40:15+00:00"
+          },
+          {
+            "report_id": 177,
+            "fingerprint": "e108538ab60938a34851424674a5896f4308ea748addfe888fc0e6e5678dbcf9",
+            "run_id": "run-20261010T082244Z-eee166fa",
+            "verdict": "pass",
+            "at": "2026-10-10T08:52:43+00:00"
           }
         ]
       },
@@ -35146,9 +35165,7 @@
         "repair_check": false,
         "reopen": [],
         "retractions": [],
-        "verification_owed": [
-          177
-        ],
+        "verification_owed": [],
         "correction_owed": [],
         "disputed": []
       }
@@ -35166,7 +35183,7 @@
     "CHECK CHANGED": 1
   },
   "events_head": {
-    "seq": 3689,
-    "chain": "7ff7fc07058845820ea76a9db20248aa10531a0697d912fa382a568df8175b23"
+    "seq": 3695,
+    "chain": "f58676024a5ae141635fa741cafa4417edcf09fece7ae0e853396b9098c7c12d"
   }
 }
