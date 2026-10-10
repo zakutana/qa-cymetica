@@ -5502,6 +5502,43 @@ reports:
       card settled 2 to 72 hours ago shows an index more than 0.5% from its last point at or before
       resolution_at_utc; cards resolved earlier are not judged again, so a fix shows within three days.
 
+  - key: station-default-clob-tab-404
+    findings:
+      - CYM-the_station_opens_every_default_tab_for_its_default_symbol
+    severity: low
+    category: ui_ux
+    url: https://cymetica.com/station?symbol=BTC&tabs=clob%2Cweekly%2Cnews%2Calerts
+    title: >-
+      Trading Station: the default BTC station opens its "Order book & trade" tab on /exchange/btc-pro,
+      a 404, and its "Trade BTC on the CLOB" button goes there too; BTC is not a CLOB market
+    expected: >
+      /api/v1/station/apps says "A tab is any app already live on the platform; nothing gets a tab before
+      it ships", and the page says "One symbol drives the chart and every tab around it". So every tab the
+      station opens by default works for the symbol it opens with, and the "Trade {symbol} on the CLOB"
+      button leads to a market that exists.
+    actual: >
+      Read on 2026-10-10 at 14:42 UTC. /api/v1/station/apps: default_symbol "BTC", default_tabs chart,
+      clob, weekly, news, alerts; the clob app's url is "/exchange/{sym_lower}-pro". For BTC that is
+      /exchange/btc-pro, which answers HTTP 404, and the tab shows "404 Page Not Found ... Let's get you
+      back to trading" inside the station; the "Trade BTC on the CLOB" button links to the same address,
+      and /exchange/btc redirects (301) there. /api/v1/exchange/markets lists 16 markets (ET10, BRRR,
+      VAIX, SBIO, ... AIB-COMPUTE) and BTC is not one of them. This is the link posted on X
+      (utm_source=x). For other symbols the same tab answered: ETH 200 (/exchange/eth-pro), and 404 for
+      SOL, XRP, DOGE, NVDA and PEPE. The other four default tabs open for BTC.
+    steps:
+      - 'GET https://cymetica.com/api/v1/station/apps -> default_symbol "BTC", default_tabs ["chart","clob","weekly","news","alerts"], apps[id=clob].url "/exchange/{sym_lower}-pro", takes_symbol true; rule "A tab is any app already live on the platform; nothing gets a tab before it ships."'
+      - 'GET https://cymetica.com/exchange/btc-pro -> HTTP 404, title "404 - Page Not Found | EventTrader"'
+      - 'GET https://cymetica.com/exchange/btc -> HTTP 301 to /exchange/btc-pro'
+      - 'GET https://cymetica.com/api/v1/exchange/markets -> 16 markets, none with symbol BTC'
+    body: >
+      How to fix it is yours: open the station on a symbol every default tab can serve, give the CLOB
+      tab and the Trade button only to symbols that have a market (or say "no BTC market yet" in the
+      tab), or list BTC/USDC. A visitor who follows the posted link sees a 404 in the first trading tab.
+      Our check reads /api/v1/station/apps and each default tab's page for the default symbol
+      anonymously, and fails while one of them answers outside 2xx. Not covered by it: the News tab
+      for BTC (/headlines?q=BTC) also lists headlines on BNP Paribas, BTS and BTQ, a text match rather
+      than the symbol.
+
 footer: >
   Reported by an independent QA agent. Scope of this work: verification of the
   REST API, MCP, the machine-readable discovery surfaces and the pages built on
