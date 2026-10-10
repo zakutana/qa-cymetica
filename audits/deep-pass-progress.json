@@ -17,8 +17,8 @@
     "t3": "real"
    },
    "verdict": "real",
-   "fixed": false,
-   "commit": null
+   "fixed": true,
+   "commit": "c145e3f1"
   },
   {
    "id": "R02",
@@ -31,8 +31,8 @@
     "t3": "real"
    },
    "verdict": "real",
-   "fixed": false,
-   "commit": null
+   "fixed": true,
+   "commit": "f483c184"
   },
   {
    "id": "R03",
@@ -45,8 +45,8 @@
     "t3": "real"
    },
    "verdict": "real",
-   "fixed": false,
-   "commit": null
+   "fixed": true,
+   "commit": "f483c184"
   },
   {
    "id": "R04",
@@ -129,8 +129,8 @@
     "t3": "real"
    },
    "verdict": "real",
-   "fixed": false,
-   "commit": null
+   "fixed": true,
+   "commit": "fcf22edd"
   },
   {
    "id": "R10",
@@ -199,8 +199,8 @@
     "t3": "real"
    },
    "verdict": "real",
-   "fixed": false,
-   "commit": null
+   "fixed": true,
+   "commit": "eaf763cf"
   },
   {
    "id": "T02",
@@ -213,8 +213,8 @@
     "t3": "real"
    },
    "verdict": "real",
-   "fixed": false,
-   "commit": null
+   "fixed": true,
+   "commit": "e02f1579"
   },
   {
    "id": "T03",
@@ -227,8 +227,8 @@
     "t3": "real"
    },
    "verdict": "real",
-   "fixed": false,
-   "commit": null
+   "fixed": true,
+   "commit": "eaf763cf"
   },
   {
    "id": "T04",
@@ -241,8 +241,8 @@
     "t3": "real"
    },
    "verdict": "real",
-   "fixed": false,
-   "commit": null
+   "fixed": true,
+   "commit": "f483c184"
   },
   {
    "id": "T05",
@@ -255,8 +255,8 @@
     "t3": "real"
    },
    "verdict": "real",
-   "fixed": false,
-   "commit": null
+   "fixed": true,
+   "commit": "fcf22edd"
   },
   {
    "id": "T06",
@@ -283,8 +283,8 @@
     "t3": "real"
    },
    "verdict": "real",
-   "fixed": false,
-   "commit": null
+   "fixed": true,
+   "commit": "ed30909c"
   },
   {
    "id": "A01",
@@ -297,8 +297,8 @@
     "t3": "real"
    },
    "verdict": "real",
-   "fixed": false,
-   "commit": null
+   "fixed": true,
+   "commit": "75618ae6"
   },
   {
    "id": "A02",
@@ -312,7 +312,9 @@
    },
    "verdict": "minority",
    "fixed": false,
-   "commit": null
+   "commit": null,
+   "deferred_to_operator": true,
+   "note": "minority (1 of 3): Inconclusive when no row shows a burned slice keeps #156 from ever verifying; the other two readers called it the house rule (an empty population is never a pass)"
   },
   {
    "id": "A03",
@@ -326,8 +328,8 @@
     "t3": "real"
    },
    "verdict": "real",
-   "fixed": false,
-   "commit": null
+   "fixed": true,
+   "commit": "c145e3f1"
   },
   {
    "id": "A04",
@@ -369,7 +371,9 @@
    },
    "verdict": "minority",
    "fixed": false,
-   "commit": null
+   "commit": null,
+   "deferred_to_operator": true,
+   "note": "minority (1 of 3): tagged() accepts is_answer false on a first pass while the #67 resolution says true; the other two readers found the comment that excuses it on purpose"
   },
   {
    "id": "B02",
@@ -382,8 +386,8 @@
     "t3": "real"
    },
    "verdict": "real",
-   "fixed": false,
-   "commit": null
+   "fixed": true,
+   "commit": "239bca31"
   },
   {
    "id": "B03",
@@ -396,8 +400,8 @@
     "t3": "real"
    },
    "verdict": "real",
-   "fixed": false,
-   "commit": null
+   "fixed": true,
+   "commit": "6279d701"
   },
   {
    "id": "B04",
@@ -439,8 +443,8 @@
     "t3": "real"
    },
    "verdict": "real",
-   "fixed": false,
-   "commit": null
+   "fixed": true,
+   "commit": "db1b9951"
   },
   {
    "id": "B07",
