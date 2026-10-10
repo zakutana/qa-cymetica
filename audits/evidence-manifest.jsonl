@@ -5230,6 +5230,7 @@
 {"archive": "", "bytes": 242690, "call": "GET https://cymetica.com/fund-performance/aib-compute?", "id": "2a601e5b52a69d555b7dd46b9fbd92c789e00503c1d2b721aa96c25ff79738d3", "why": "row"}
 {"archive": "evidence-2026-09", "bytes": 4743, "call": "GET https://cymetica.com/api/v1/bounty/filing-message?title,wallet_address", "id": "2a60a29eda2ae045f84a3098363c79138e4f4871fc3f8fe815a0e6c1374e7ecf", "why": "row"}
 {"archive": "evidence-2026-09", "bytes": 48287, "call": "GET https://cymetica.com/api/v1/clones/fomo-radar/signals?chain,filter,limit", "id": "2a61c5577c1d5ad4289cb181a002ea89d55b70f9898882e5e19515ea65e7db7c", "why": "row"}
+{"archive": "", "bytes": 7418, "call": "POST https://cymetica.com/api/v1/bounty/a2a/send?", "id": "2a624575c1688036e18fb2e5fd67b75da8030ed4fa5e9004c667b95abc8d554a", "why": "their-words"}
 {"archive": "", "bytes": 11681, "call": "GET https://cymetica.com/api/v1/trading-models/prob-models?", "id": "2a644711b837b7f9d128109a7ab60605e848df196d7a5f38be4812f2a381ec99", "why": "row"}
 {"archive": "evidence-2026-10", "bytes": 4245, "call": "GET https://cymetica.com/api/v1/aib/portfolio/holdings?", "id": "2a69c130bdff86be112fc7ad9be0389ef17fc1c676eecf400f6943fc1486789b", "why": "row"}
 {"archive": "evidence-2026-10", "bytes": 158405, "call": "GET https://cymetica.com/telegram?", "id": "2a6beba8cffd7853b069ef3b2a7a1cc3ae5f13c14c40d587c219effcaf3e2491", "why": "row"}
