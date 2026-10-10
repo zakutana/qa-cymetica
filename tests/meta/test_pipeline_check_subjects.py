@@ -608,6 +608,28 @@ def test_a_card_that_is_closed_on_rest_and_open_on_mcp_fails():
     assert steps([], since) == [] and steps([{"ts": 1, "value": 2}] * 3, since) == []
     assert len(steps(path, since)) == 2
 
+    # And a settled card's index is its value at resolution (2026-10-10): 6fb50de3 read
+    # 100.42 at its resolution_at_utc, 2026-10-08 09:06, and settled at 203.16 -- the
+    # step 99.80 -> 203.23 came 26 hours after trading closed.
+    from tests.rest.test_a_settled_card_stops_at_its_resolution import (
+        MAX_DRIFT_PCT, drift_after_resolution)
+    hist = [{"t": "2026-10-08T08:59:33+00:00", "index": 100.42},
+            {"t": "2026-10-09T11:28:40+00:00", "index": 99.80316},
+            {"t": "2026-10-09T11:59:14+00:00", "index": 203.233801}]
+    settled = {"id": "6fb50de3", "status": "settled", "current_index": 203.162223,
+               "contract_spec": {"resolution_at_utc": "2026-10-08T09:06:53.220722+00:00"}}
+    seen = drift_after_resolution(settled, hist)
+    assert seen["at_resolution"] == 100.42 and round(seen["drift_pct"], 1) == 102.3, seen
+    assert seen["points_after"] == 2 and abs(seen["drift_pct"]) > MAX_DRIFT_PCT
+    held = drift_after_resolution(dict(settled, current_index=100.5), hist)
+    assert abs(held["drift_pct"]) < MAX_DRIFT_PCT, "a card that stopped at resolution was failed"
+    # Unread, never agreement: no resolution time, no point near it, no current index.
+    assert drift_after_resolution(dict(settled, contract_spec={}), hist) is None
+    assert drift_after_resolution(settled, hist[1:]) is None, "no point at or before resolution"
+    assert drift_after_resolution(settled, [{"t": "2026-10-08T04:00:00+00:00", "index": 100.0}]
+                                  + hist[1:]) is None, "a point five hours before is not the close"
+    assert drift_after_resolution(dict(settled, current_index=None), hist) is None
+
     # And a fund's: the launcher's paper-only sentence and a profile's live
     # invest offer, read from what a visitor sees -- the markup as served on
     # 2026-09-25, tags and a comment in the way.
