@@ -347,6 +347,17 @@ def test_every_figure_the_report_writes_reaches_the_lab_page(monkeypatch):
         assert not excused - keys, (
             f"`{name}.` fields listed as hidden on purpose that the report no "
             f"longer writes: {sorted(excused - keys)} -- take them off the list")
+    # Deep pass 2026-10-10, T07: the fields above are pooled across products, so a whole
+    # product the page never draws counted as read through the cards' names. Each product the
+    # report writes is a room the page draws, or named here: funds, which the operator stopped
+    # measuring on 2026-10-03 (the page's SECTOR_NAMES says so). A new product fails.
+    products_hidden_on_purpose = {"funds"}
+    drawn = set(page.SECTOR_NAMES)
+    assert not set(said["products"]) - drawn - products_hidden_on_purpose, (
+        f"the report writes products /lab never draws: "
+        f"{sorted(set(said['products']) - drawn - products_hidden_on_purpose)}")
+    assert not products_hidden_on_purpose & drawn, "a product listed as hidden is drawn -- unlist it"
+    assert products_hidden_on_purpose <= set(said["products"]), "unlist a product the report no longer writes"
 
 
 @qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
