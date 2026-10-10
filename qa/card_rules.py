@@ -52,9 +52,38 @@ def rule_of(card: dict) -> str | None:
     return None
 
 
+CLOSE_GAP_MINUTES = 120    # their index history is thinned to half-hourly points as it ages
+
+
+def index_at_resolution(card: dict, points) -> float | None:
+    """The last published index at or before the card's `contract_spec.resolution_at_utc`, at
+    most CLOSE_GAP_MINUTES before it; None when there is none. 2026-10-10: a settled card's
+    `current_index` keeps moving after resolution (6fb50de3: 100.42 at resolution, 203.16 shown),
+    so it is not what the card settled at. The same rule as
+    tests/rest/test_a_settled_card_stops_at_its_resolution.py."""
+    resolution = _at(((card or {}).get("contract_spec") or {}).get("resolution_at_utc"))
+    if resolution is None:
+        return None
+    best = None
+    for point in points or ():
+        moment, value = _at((point or {}).get("t")), (point or {}).get("index")
+        if (moment is None or isinstance(value, bool) or not isinstance(value, (int, float))
+                or not math.isfinite(value) or value <= 0 or moment > resolution):
+            continue
+        if best is None or moment > best[0]:
+            best = (moment, float(value))
+    if best is None or (resolution - best[0]).total_seconds() > CLOSE_GAP_MINUTES * 60:
+        return None
+    return best[1]
+
+
 def index_return_pct(card: dict) -> float | None:
-    """The card's index move from its base, in percent; None when it cannot be read."""
+    """The card's index move from its base, in percent; None when it cannot be read. A card with
+    a resolution time is read at it (`index_at_resolution`, set by the caller from its history),
+    never at the `current_index` shown after."""
     now, base = card.get("current_index"), card.get("index_base")
+    if ((card.get("contract_spec") or {}).get("resolution_at_utc")) is not None:
+        now = card.get("index_at_resolution")
     if (isinstance(now, bool) or isinstance(base, bool)
             or not isinstance(now, (int, float)) or not isinstance(base, (int, float))
             or not base or not math.isfinite(now) or not math.isfinite(base)):

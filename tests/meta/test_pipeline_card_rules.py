@@ -96,6 +96,23 @@ def _case_a_card_counted_twice_by_the_listing_is_judged_once():
     assert cr.evaluate([one, dict(one)])["short_stock_only"]["n"] == 1
 
 
+def _case_a_settled_card_is_judged_at_its_resolution_not_after():
+    """2026-10-10: their settled cards keep moving after resolution_at_utc (6fb50de3 100.42 at
+    resolution, 203.16 shown), and this test read the shown figure: short_stock_only at a
+    -98 % median on six cards, four of them one basket doubled by a stale OTC leg."""
+    card = dict(_card("2026-10-05T09:06:53+00:00", 103.16, ["stock"], cid="6fb50de3"),
+                contract_spec={"resolution_at_utc": "2026-10-08T09:06:53+00:00"})
+    points = [{"t": "2026-10-08T08:59:33+00:00", "index": 100.42},
+              {"t": "2026-10-09T11:59:14+00:00", "index": 203.23}]
+    assert cr.index_at_resolution(card, points) == 100.42
+    assert cr.index_at_resolution(card, points[1:]) is None, "no point at or before resolution"
+    assert cr.index_at_resolution(card, [{"t": "2026-10-08T04:00:00+00:00", "index": 100.0}]) is None
+    assert abs(cr.index_return_pct(dict(card, index_at_resolution=100.42)) - 0.42) < 1e-9
+    said = cr.evaluate([card])["short_stock_only"]
+    assert said["n"] == 0 and said["unread"] == 1, (
+        "a card with a resolution time and no reading at it was judged on the index shown after")
+
+
 # Folded on the deep pass of 2026-10-04 (tests/meta grows only by replacement): eight functions became two; every case is a _case_ helper.
 
 
@@ -106,6 +123,7 @@ def _case_the_card_rules_read_only_what_they_were_fixed_to_read():
     _case_the_side_return_is_the_index_return_signed_by_the_rule()
     _case_a_card_with_nothing_to_read_is_unread_never_a_zero_return()
     _case_a_card_counted_twice_by_the_listing_is_judged_once()
+    _case_a_settled_card_is_judged_at_its_resolution_not_after()
 
 
 def _case_a_card_rule_passes_only_on_enough_cards_and_a_bound_above_zero():

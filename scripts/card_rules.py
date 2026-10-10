@@ -23,6 +23,7 @@ from qa.console import printable  # noqa: E402
 from qa.safety import CURRENT_TIER, EndpointRegistry, SafetyTier  # noqa: E402
 
 LISTING = "/api/v1/event-cards"
+HISTORY = "/api/v1/event-cards/{card}/index-history"
 PAGE = 200
 MAX_PAGES = 400
 
@@ -45,6 +46,21 @@ def read_since(client) -> tuple[list[dict], str | None]:
     return cards, f"stopped after {MAX_PAGES} pages without reaching {cr.FROM}"
 
 
+def read_resolutions(client, cards) -> int:
+    """Set `index_at_resolution` on every card a rule judges, from its index history: a settled
+    card's `current_index` keeps moving after it resolves (2026-10-10). Returns the cards read."""
+    start, read = cr._at(cr.FROM), 0
+    for card in cards:
+        created = cr._at(card.get("created_at"))
+        if cr.rule_of(card) is None or created is None or created < start or "index_at_resolution" in card:
+            continue
+        response = client.get(HISTORY.format(card=card.get("id")))
+        points = (response.json() or {}).get("points") if response.status_code == 200 else None
+        card["index_at_resolution"] = cr.index_at_resolution(card, points)
+        read += 1
+    return read
+
+
 def main() -> int:
     printable()
     load_dotenv()
@@ -53,6 +69,7 @@ def main() -> int:
     token = CURRENT_TIER.set(SafetyTier.SAFE)
     try:
         cards, why = read_since(client)
+        read_resolutions(client, cards)
     finally:
         CURRENT_TIER.reset(token)
         client.close()
