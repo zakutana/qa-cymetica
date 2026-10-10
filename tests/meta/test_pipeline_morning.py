@@ -53,10 +53,28 @@ def _case_no_night_in_the_laboratory_is_no_report():
     assert morning.night_ran(_at(24, 7, 0), [_at(24, 6, 39)])
     assert not morning.night_ran(_at(24, 10, 30), [_at(24, 10, 4), _at(24, 10, 8)]), (
         "the day's own ticks made the night's report owed")
-    assert not morning.night_ran(_at(24, 7, 0), [_at(23, 20, 59), _at(22, 3, 0)])
+    # 21:00 with an hour of slack for the night the clocks change (R09): 19:59 is the evening.
+    assert not morning.night_ran(_at(24, 7, 0), [_at(23, 19, 59), _at(22, 3, 0)])
     assert not morning.night_ran(_at(24, 7, 0), [])
     assert not morning.due(_at(24, 10, 30), {}, ticks=[_at(24, 10, 4)])
     assert not morning.missing(_at(24, 10, 30), {}, ticks=[_at(22, 3, 0)])
+    assert not morning.night_ran(_at(24, 7, 0), [_at(24, 6, 40)]), "06:40 is the report's own tick"
+    # Deep pass 2026-10-10, R09: the night the clocks go back. 07:00 on 25 October is +01:00,
+    # and a tick at 21:30 summer time the evening before must still count.
+    cet, cest = timezone(timedelta(hours=1)), timezone(timedelta(hours=2))
+    after = datetime(2026, 10, 25, 7, 0, tzinfo=cet)
+    assert morning.night_ran(after, [datetime(2026, 10, 24, 21, 30, tzinfo=cest)])
+    assert not morning.night_ran(after, [datetime(2026, 10, 24, 19, 30, tzinfo=cest)])
+    # T05: the ticks come from the laboratory's diary, through qa.lab.tick_times, and a row
+    # that is not a tick, or carries no readable time, is not one.
+    from qa import lab
+    rows = [{"type": "tick", "at": "2026-09-24T00:15:00+00:00"},
+            {"type": "entry", "at": "2026-09-24T00:20:00+00:00"},
+            {"type": "tick", "at": "not a time"}, {"type": "tick"},
+            {"type": "tick", "at": "2026-09-24T00:35:00"}]
+    times = lab.tick_times(rows)
+    assert times == [datetime(2026, 9, 24, 0, 15, tzinfo=timezone.utc)], times
+    assert morning.missing(_at(24, 7, 0), {}, ticks=times), "a diary tick at 02:15 local owes the report"
 
 
 DEEP = """# Deep pass — 2026-09-22 večer

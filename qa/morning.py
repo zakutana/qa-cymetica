@@ -41,7 +41,10 @@ def _made_today(now_local: datetime, state: dict | None) -> bool:
 def night_ran(now_local: datetime, ticks) -> bool:
     """A laboratory tick from NIGHT_FROM the evening before until DUE_AT today. The report
     is about the night: [operator 2026-10-10] "na ranni prehled kaslu v noci nebyla laborka"."""
-    start = datetime.combine(now_local.date() - timedelta(days=1), NIGHT_FROM, tzinfo=now_local.tzinfo)
+    # The window is built with this morning's UTC offset; on the night the clocks go back the
+    # evening before ran an hour ahead of it, so an hour of slack keeps its 21:00 (R09).
+    start = (datetime.combine(now_local.date() - timedelta(days=1), NIGHT_FROM, tzinfo=now_local.tzinfo)
+             - timedelta(hours=1))
     end = datetime.combine(now_local.date(), DUE_AT, tzinfo=now_local.tzinfo)
     return any(start <= t < end for t in ticks or ())
 
