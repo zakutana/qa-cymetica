@@ -119,3 +119,47 @@ def test_the_league_answers_only_what_it_computes_exactly_and_only_once():
                 transport.handle_request(httpx.Request("POST", url, json=body))
     finally:
         CURRENT_TIER.reset(token)
+
+    # 6. The script around it (deep pass 2026-10-10, R02, R03, T04). A write's outcome follows
+    #    rule 9: a 5xx or a 2xx with no body may have landed and is `unknown`, never `rejected`;
+    #    the answered set counts `unknown` and their `recent` list, so a possibly-landed answer is
+    #    not POSTed again; and a failed read on /lab is said, never shown as zero (rule 8).
+    import importlib.util
+    from pathlib import Path
+
+    spec = importlib.util.spec_from_file_location(
+        "league_script", Path(__file__).resolve().parents[2] / "scripts" / "league.py")
+    script = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(script)
+    assert script.outcome_of(200, {"id": 1}) == "accepted"
+    assert script.outcome_of(422, {"detail": "x"}) == "rejected"
+    assert script.outcome_of(502, None) == "unknown", "a 5xx may have landed"
+    assert script.outcome_of(200, None) == "unknown", "a 2xx with no body may have landed"
+
+    class Reply:
+        def __init__(self, status, body):
+            self.status_code, self._body = status, body
+
+        def json(self):
+            return self._body
+
+    class Client:
+        def __init__(self, status, body):
+            self.reply = Reply(status, body)
+
+        def get(self, url, params=None):
+            return self.reply
+
+    rows = [{"type": "outcome", "kind": "answer", "puzzle_id": 5, "outcome": "unknown"},
+            {"type": "outcome", "kind": "answer", "puzzle_id": 6, "outcome": "accepted"},
+            {"type": "outcome", "kind": "answer", "puzzle_id": 7, "outcome": "rejected"}]
+    assert script.answered_ids(Client(200, {"recent": [{"puzzle_id": 8}]}), 2, rows) == {5, 6, 8}
+    with pytest.raises(SystemExit):
+        script.answered_ids(Client(503, None), 2, rows)
+    lines = script.summary_lines(3, None, None)
+    said = " | ".join(lines)
+    assert "0 scored" not in said and "0 ET10" not in said, "a failed read was shown as zero"
+    assert "unread" in lines[0] and "unread" in lines[2], lines
+    seen = script.summary_lines(3, {"answers": 2, "mean_score": 0.99, "division_name": "D", "points": 5},
+                                [{"amount_et10": 1000, "status": "credited"}])
+    assert seen[0].startswith("3 answers sent, 2 scored") and seen[2].startswith("1000 ET10 credited"), seen

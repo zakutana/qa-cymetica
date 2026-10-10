@@ -91,6 +91,17 @@ def _outcome_of(exc: BaseException) -> str:
     return "not_sent"
 
 
+def outcome_of(status: int, served) -> str:
+    """Rule 9: `accepted` is a 2xx with a body; `rejected` is their 4xx refusal; anything else
+    (a 5xx, a 2xx with no body) may have landed and is `unknown` -- which answered_ids counts,
+    so a puzzle is never answered twice on a guess (deep pass 2026-10-10, R02)."""
+    if 200 <= status < 300 and isinstance(served, dict):
+        return "accepted"
+    if 400 <= status < 500:
+        return "rejected"
+    return "unknown"
+
+
 def _client(write: bool = False):
     load_dotenv()
     install_client_guard()
@@ -173,9 +184,8 @@ def _send(client, kind: str, url: str, body: dict, **intent_fields) -> dict:
     finally:
         CURRENT_TIER.reset(token)
     served = _json(response)
-    ok = 200 <= response.status_code < 300 and isinstance(served, dict)
     outcome = {"id": intent["id"], "type": "outcome", "kind": kind, "at": _now(),
-               "outcome": "accepted" if ok else "rejected",
+               "outcome": outcome_of(response.status_code, served),
                "http_status": response.status_code, "evidence_id": _capture(response),
                "response": served if isinstance(served, dict) else (response.text or "")[:300],
                **{k: v for k, v in intent_fields.items() if k == "puzzle_id"}}
@@ -299,21 +309,42 @@ def summary() -> dict:
             return {"player": None, "lines": ["not enrolled yet"], "answers": 0}
         pid = players[0].get("id")
         response = _get(client, f"{BASE}/players/{pid}")
-        theirs = _json(response) if response.status_code == 200 else {}
-        prizes = _json(_get(client, f"{BASE}/prizes")) or {}
+        body = _json(response) if response.status_code == 200 else None
+        theirs = body if isinstance(body, dict) else None
+        response = _get(client, f"{BASE}/prizes")
+        body = _json(response) if response.status_code == 200 else None
+        prizes = body.get("prizes") if isinstance(body, dict) else None
     finally:
         client.close()
-    mine = [p for p in prizes.get("prizes") or [] if isinstance(p, dict) and p.get("player_id") == pid]
+    mine = ([p for p in prizes if isinstance(p, dict) and p.get("player_id") == pid]
+            if isinstance(prizes, list) else None)
     rows = load()
     sent = sum(1 for r in rows if r.get("type") == "outcome" and r.get("kind") == "answer"
                and r.get("outcome") == "accepted")
-    et10 = sum(float(p.get("amount_et10") or 0) for p in mine if p.get("status") == "credited")
+    et10 = (sum(float(p.get("amount_et10") or 0) for p in mine if p.get("status") == "credited")
+            if mine is not None else None)
+    return {"player": pid, "lines": summary_lines(sent, theirs, mine),
+            "answers": (theirs or {}).get("answers", sent),
+            "mean_score": (theirs or {}).get("mean_score"), "et10_credited": et10,
+            "prizes": len(mine) if mine is not None else None}
+
+
+def summary_lines(sent: int, theirs: dict | None, mine: list | None) -> list[str]:
+    """The three /lab lines. `theirs` None: their player record did not answer; `mine` None: the
+    prize list did not answer. Rule 8: an unread figure is said, never printed as 0 (R03)."""
     # Theirs counts SCORED answers; an answer is scored when its puzzle resolves.
-    lines = [f"{sent} answers sent, {theirs.get('answers', 0)} scored, mean score {theirs.get('mean_score')}",
-             f"{theirs.get('division_name')}, {theirs.get('points')} points",
-             f"{et10:g} ET10 credited" + (f", {len(mine)} prize(s)" if mine else "")]
-    return {"player": pid, "lines": lines, "answers": theirs.get("answers", sent),
-            "mean_score": theirs.get("mean_score"), "et10_credited": et10, "prizes": len(mine)}
+    if theirs is None:
+        first = f"{sent} answers sent, scored: unread (their player record did not answer)"
+        second = "division: unread"
+    else:
+        first = f"{sent} answers sent, {theirs.get('answers', 0)} scored, mean score {theirs.get('mean_score')}"
+        second = f"{theirs.get('division_name')}, {theirs.get('points')} points"
+    if mine is None:
+        third = "ET10 credited: unread (the prize list did not answer)"
+    else:
+        et10 = sum(float(p.get("amount_et10") or 0) for p in mine if p.get("status") == "credited")
+        third = f"{et10:g} ET10 credited" + (f", {len(mine)} prize(s)" if mine else "")
+    return [first, second, third]
 
 
 def cmd_brief() -> int:
