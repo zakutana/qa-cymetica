@@ -622,8 +622,8 @@ def test_the_is_answer_rule_is_self_calibrating_and_still_bites():
     # Each reading from the shape seen live that morning, with the fix that must clear it.
     from tests.rest.test_supply_analyzer_states_what_its_sources_say import (
         burned_without_a_burn, chain_answer_documented, dilution_flag, emission_dropped,
-        fund_disposition, holders_revenue_kind, out_ignores_max, pile_over_supply,
-        shared_link_identifiers, two_flags, typical_mismatches)
+        fund_disposition, growth_past_max_supply, holders_revenue_kind, out_ignores_max,
+        pile_over_supply, shared_link_identifiers, two_flags, typical_mismatches)
 
     # 1. The burned slice: ORE that morning, 2,499,496 "burned" from max minus total supply
     #    while its own emission input said 42,098 new tokens a month and month 0 used 40.
@@ -728,6 +728,42 @@ def test_the_is_answer_rule_is_self_calibrating_and_still_bites():
                {"token": {"symbol": "SKY"}, "status": "range", "yearly_range": [-3.49, 15.35],
                 "yearly_range_parts": parts(12.34, 6.5), "unknown_names": ["emissions"]}]
     assert [b["symbol"] for b in typical_mismatches(dressed, 12.34290441022498)] == ["HYPE"]
+    # 2026-10-10: /definitions caps what comes in at "what the reserve outside the pile still
+    # holds", so a range narrower than its parts is the cap, not another typical figure -- but
+    # only on a row whose reserve is smaller than the stated typical. SKY that morning: parts
+    # {15.1, 3.68}, width 5.56, reserve 0.16 % of the pile. How far the cap narrows it is
+    # growth_past_max_supply's to judge, not this one's.
+    capped = {"token": {"symbol": "SKY"}, "status": "range", "yearly_range": [-3.66, 1.9],
+              "yearly_range_parts": parts(15.1, 3.68), "unknown_names": ["vesting schedule"],
+              "pile_today": 23425500345.39, "reserve_today": 37164801.91}
+    assert typical_mismatches([capped], 15.102208788677919) == [], "the documented cap was read as a typical"
+    roomy = dict(capped, reserve_today=23425500345.39)
+    assert [b["symbol"] for b in typical_mismatches([roomy], 15.102208788677919)] == ["SKY"], (
+        "a range narrower than its parts passed on a row whose reserve could supply the typical")
+    unread = {k: v for k, v in capped.items() if k != "reserve_today"}
+    assert [b["symbol"] for b in typical_mismatches([unread], 15.102208788677919)] == ["SKY"], (
+        "a row stating no reserve was given the cap")
+
+    # 6b. A pile grows at most to the max supply ("Max supply = a cap the market feed states").
+    #     2026-10-10: YFI's range topped at +15.1 % a year with 590 tokens, 1.64 % of the pile,
+    #     left to its max; LQTY +14.09 % with 1.17 %. ENA had reserve 0 and a vesting slice, so the
+    #     room is max minus pile, not the reserve: 11.9 % there.
+    yfi = {"token": {"symbol": "YFI"}, "status": "range", "yearly_pct": 0.0, "yearly_range": [0.0, 15.1],
+           "pile_today": 36076.0, "max_supply": 36666.06, "reserve_today": 590.06}
+    lqty = {"token": {"symbol": "LQTY"}, "status": "range", "yearly_pct": 0.37, "yearly_range": [0.37, 14.09],
+            "pile_today": 98839600.29, "max_supply": 100000000.0, "reserve_today": 1160399.71}
+    ena = {"token": {"symbol": "ENA"}, "status": "range", "yearly_range": [11.5, 11.5],
+           "pile_today": 13406250000.0, "max_supply": 15000000000.0, "reserve_today": 0.0}
+    shrinking = {"token": {"symbol": "DN"}, "status": "measured", "yearly_pct": -5.0, "yearly_range": None,
+                 "pile_today": 1000.0, "max_supply": 1000.0}
+    no_cap = {"token": {"symbol": "NA"}, "status": "range", "yearly_range": [0.0, 15.1], "pile_today": 1000.0,
+              "max_supply": None}
+    above = {"token": {"symbol": "UP"}, "status": "range", "yearly_range": [0.0, 15.1], "pile_today": 1000.0,
+             "max_supply": 900.0}
+    judged, over = growth_past_max_supply([yfi, lqty, ena, shrinking, no_cap, above])
+    assert judged == 4 and [o["symbol"] for o in over] == ["YFI", "LQTY"], (judged, over)
+    assert round(over[0]["room_pct"], 2) == 1.64 and over[0]["top"] == 15.1, over
+    assert growth_past_max_supply([dict(yfi, yearly_range=[0.0, 1.64])])[1] == [], "the room itself was over"
 
     # 7. Unsupported chain: what the analyzer answered that morning, and what it documents.
     assert chain_answer_documented(500, {"error": {"code": "INTERNAL_SERVER_ERROR"}}) is False

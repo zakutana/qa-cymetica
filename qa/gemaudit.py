@@ -788,8 +788,9 @@ def chain_stablecoin_gaps(chains: list, charts: dict, *, tol: float = STABLECOIN
     points), or None when the read failed. A failed read, or no point on the input's day, is
     unread, never agreement. EUR-, CHF- and other non-dollar coins are not dollars and are not
     counted. Each gap also says whether the figure shown is DeFiLlama's token count
-    (`totalCirculating`) instead."""
-    judged, gaps, unread, ok_gaps = 0, [], [], []
+    (`totalCirculating`) instead. When the input's day is the chart's newest, still-open point,
+    a figure between it and the closed day before is listed under `moving`, not as a gap."""
+    judged, gaps, unread, ok_gaps, moving = 0, [], [], [], []
     for chain in chains or []:
         if not isinstance(chain, dict):
             continue
@@ -816,14 +817,34 @@ def chain_stablecoin_gaps(chains: list, charts: dict, *, tol: float = STABLECOIN
             continue
         judged += 1
         gap = shown / usd - 1.0
+        if abs(gap) > tol and _within_open_day(shown, int(as_of), points, usd, tol):
+            # 2026-10-10: the input's day is DeFiLlama's latest, still-open point, and the
+            # figure lies between it and the closed day before -- a value the source passed.
+            moving.append({"name": name, "shown": shown, "usd": usd, "gap_pct": round(100.0 * gap, 2)})
+            continue
         if abs(gap) > tol:
             gaps.append({"name": name, "slug": chain.get("slug"), "shown": shown, "usd": usd, "tokens": tokens,
                          "gap_pct": 100.0 * gap, "as_of": int(as_of),
                          "tokens_match": bool(tokens) and abs(shown / tokens - 1.0) <= 0.005})
         else:
             ok_gaps.append(abs(gap))
-    return {"judged": judged, "gaps": gaps, "unread": unread,
+    return {"judged": judged, "gaps": gaps, "unread": unread, "moving": moving,
             "max_ok_gap_pct": round(100.0 * max(ok_gaps), 3) if ok_gaps else None}
+
+
+def _within_open_day(shown: float, as_of: int, points: list, usd: float, tol: float) -> bool:
+    """True when `as_of` is the newest day of DeFiLlama's chart (a point that keeps moving until
+    the day closes) and `shown` lies, within `tol`, between that point and the closed day before."""
+    dated = [(int(p["date"]), p) for p in points
+             if isinstance(p, dict) and str(p.get("date")).isdigit()]
+    if not dated or max(d for d, _ in dated) != as_of:
+        return False
+    before = [p for d, p in dated if d == as_of - 86400]
+    prev = num(((before[0].get("totalCirculatingUSD") or {}) if before else {}).get("peggedUSD"))
+    if not prev:
+        return False
+    low, high = min(prev, usd), max(prev, usd)
+    return low * (1.0 - tol) <= shown <= high * (1.0 + tol)
 
 
 PRICE_TAG_CLAIMS = (

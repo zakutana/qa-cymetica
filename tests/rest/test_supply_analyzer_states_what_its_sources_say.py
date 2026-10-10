@@ -145,6 +145,7 @@ CLAIM_LOCKED = "supply-analyzer-tokens-locked-by-holders-are-not-a-reserve"
 CLAIM_SCHEDULE = "supply-analyzer-an-unknown-schedule-is-not-none-scheduled"
 CLAIM_MAX = "supply-analyzer-max-supply-is-a-cap-not-a-schedule-end"
 CLAIM_PAST_ALL = "supply-analyzer-a-pile-cannot-shrink-more-than-all-of-it"
+CLAIM_PAST_MAX = "supply-analyzer-a-pile-cannot-grow-past-its-max-supply"
 LLAMA_EMISSIONS = "https://defillama-datasets.llama.fi/emissions/{slug}"
 
 # The documented limit is 30 requests a minute per IP (llms.txt, /api-docs).
@@ -366,6 +367,42 @@ def shared_link_identifiers(rows) -> list[str]:
 INFLOW_UNKNOWN_WORDS = ("vesting", "emission", "unlock", "mint", "airdrop", "reward", "distribution")
 
 
+def reserve_pct(row) -> float | None:
+    """The reserve outside the pile as a % of the pile, or None when the row states neither."""
+    pile, reserve = (row or {}).get("pile_today"), (row or {}).get("reserve_today")
+    if not (_num(pile) and _num(reserve)) or pile <= 0 or reserve < 0:
+        return None
+    return 100.0 * reserve / pile
+
+
+def growth_past_max_supply(rows, *, tol: float = 0.02) -> tuple[int, list[dict]]:
+    """Rows whose yearly figure (the top of a range) grows the pile past the max supply.
+
+    /definitions: "Max supply = a cap the market feed states", and what comes in "is at most
+    what the reserve outside the pile still holds". Whatever feeds the pile -- the reserve,
+    vesting, emissions -- a year can add at most max supply minus the pile, whatever the hero's
+    (in - out) x 12 says. 2026-10-10: YFI topped at +15.1 % a year with 1.64 % left to its max,
+    LQTY +14.09 % with 1.17 % (12 x the reserve that caps its first month). A row with no max
+    supply, or a pile already above it (pile_over_supply's), is not judged."""
+    judged, over = 0, []
+    for row in rows or ():
+        pile, cap = (row or {}).get("pile_today"), (row or {}).get("max_supply")
+        rng = (row or {}).get("yearly_range")
+        figures = [x for x in (rng if isinstance(rng, list) else []) if _num(x)]
+        if not figures and _num((row or {}).get("yearly_pct")):
+            figures = [row["yearly_pct"]]
+        if not (_num(pile) and _num(cap)) or pile <= 0 or cap < pile or not figures:
+            continue
+        judged += 1
+        room = 100.0 * (cap - pile) / pile
+        top = max(figures)
+        if top > room + tol:
+            over.append({"symbol": ((row.get("token") or {}).get("symbol")), "top": top,
+                         "room_pct": room, "pile": pile, "max_supply": cap,
+                         "reserve": row.get("reserve_today"), "range": rng, "status": row.get("status")})
+    return judged, over
+
+
 def typical_mismatches(rows, typical) -> list[dict]:
     """Range rows whose width is not the stated typical inflow plus the one named part they declare.
 
@@ -403,6 +440,12 @@ def typical_mismatches(rows, typical) -> list[dict]:
                             "used": round(stated, 2), "inflow_unknown": inflow_unknown})
                 continue
         if width > 0.005 and abs(width - (stated + named)) > 0.03:
+            # Narrower than its parts is the documented cap ("what comes in ... is at most what
+            # the reserve outside the pile still holds") on a row whose reserve is smaller than
+            # the stated typical; how far it narrows is growth_past_max_supply's (2026-10-10).
+            reserve = reserve_pct(row)
+            if width < stated + named and reserve is not None and reserve < stated:
+                continue
             out.append({"symbol": ((row.get("token") or {}).get("symbol")), "range": rng,
                         "used": round(width, 2)})
     return out
@@ -1258,3 +1301,36 @@ def test_a_pile_cannot_shrink_by_more_than_all_of_it(rest_anon):
                     "rows": len(rows), "hero_definition": a_change, "batch_as_of": batch.get("as_of")},
         sources={"batch": BATCH, "definitions": DEFINITIONS, "records": f"{ANALYZE}?symbol=<slug>"},
         claim_id=CLAIM_PAST_ALL))
+
+
+@qa(component="rest.supply_analyzer", tier=SafetyTier.SAFE, surface="rest", claim=CLAIM_PAST_MAX)
+def test_a_pile_cannot_grow_past_its_max_supply(rest_anon):
+    """No record states a yearly change of its sellable pile (the top of a range) that would
+    take the pile past its max supply -- the inflow side of #177. Judged only while
+    /definitions calls the hero "The yearly change"."""
+    batch = _batch(rest_anon)
+    definitions = _json(_paced_get(rest_anon, DEFINITIONS), DEFINITIONS)
+    a_change = hero_as_a_change(definitions)
+    if not a_change:
+        raise Inconclusive(f"{DEFINITIONS} no longer defines the hero as \"The yearly change\"; what a figure "
+                           f"above the room to the max supply claims cannot be read")
+    judged, over = growth_past_max_supply(batch["items"])
+    if judged < 50:
+        raise Inconclusive(f"only {judged} records state a pile, a max supply and a yearly change")
+    over.sort(key=lambda o: o["room_pct"])
+    by_symbol = {o["symbol"]: o for o in over}
+    conclude(Measurement(
+        verdict="failed" if over else "passed",
+        reason=(f"{len(over)} of {judged} records state a yearly change that takes the sellable pile past its max "
+                f"supply (/definitions: \"{a_change}\"): "
+                + "; ".join(f"{o['symbol']} up to +{o['top']}% a year with {o['room_pct']:.2f}% "
+                            f"({_f(o['max_supply'] - o['pile'])} tokens) left to its max of {_f(o['max_supply'])}"
+                            for o in over[:5])
+                if over else
+                f"none of {judged} records states a yearly change past the room to its max supply"),
+        left={"records_growing_past_max": len(over)},
+        right={"records_growing_past_max": 0},
+        population={"over": over[:20], "judged": judged, "hero_definition": a_change,
+                    "batch_as_of": batch.get("as_of"), "symbols": sorted(by_symbol)},
+        sources={"batch": BATCH, "definitions": DEFINITIONS},
+        claim_id=CLAIM_PAST_MAX))

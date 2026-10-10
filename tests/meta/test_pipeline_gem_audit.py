@@ -910,6 +910,17 @@ def _the_chains_tab_is_held_to_its_sources_and_its_own_words():
     assert missing["judged"] == 0 and missing["unread"], missing
     other_day = g.chain_stablecoin_gaps([chain("stellar", 840929169.43, day + 86400)], charts)
     assert other_day["judged"] == 0 and other_day["unread"], other_day
+    # 2026-10-10: the input's day can be today, DeFiLlama's still-open point, which moves until
+    # the day closes. Filecoin showed $218,386 while that point read $230,634 an hour later and
+    # the closed day before it $216,283: a value the source's own point passed through is not a
+    # gap. A closed day is held as before, and Stellar's token count is outside both.
+    open_day = {"filecoin": [point(216283.0, 206299.0, day - 86400), point(230633.95, 208320.02)]}
+    assert g.chain_stablecoin_gaps([chain("filecoin", 218385.5)], open_day)["gaps"] == [], (
+        "a figure between the source's closed day and its still-open point was failed")
+    closed = {"filecoin": open_day["filecoin"] + [point(231000.0, 208000.0, day + 86400)]}
+    assert [x["name"] for x in g.chain_stablecoin_gaps([chain("filecoin", 218385.5)], closed)["gaps"]] == ["Filecoin"]
+    assert [x["name"] for x in g.chain_stablecoin_gaps(chains, charts)["gaps"]] == ["Stellar"], (
+        "the token count passed as a moving point")
 
     # 2. The chain price tag as described: llms.txt's "What it is" and the chain detail's
     #    agent prompt still describe yearly activity fees against a named leader chain;

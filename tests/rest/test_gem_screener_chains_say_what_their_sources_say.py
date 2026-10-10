@@ -125,7 +125,10 @@ def _money(x) -> str:
 @qa(component="rest.gem_screener", tier=SafetyTier.SAFE, surface="rest", claim=CLAIM_STABLES)
 def test_a_chains_stablecoins_are_the_dollars_defillama_counts(rest_anon, evidence_store):
     """Every chain's stablecoins are within 3 % of DeFiLlama's dollar value of the
-    USD-pegged coins on that chain, on the day the snapshot dates the input."""
+    USD-pegged coins on that chain, on the day the snapshot dates the input -- or, when
+    that day is DeFiLlama's still-open newest point, between it and the closed day
+    before (2026-10-10: Filecoin, $0.2M, -5.3 % against an open point 6.6 % above the
+    closed day before, while 32 chains agreed within 0.075 %)."""
     snap, _ = _page(rest_anon)
     chains = _chains(snap)
     charts: dict = {}
@@ -162,10 +165,14 @@ def test_a_chains_stablecoins_are_the_dollars_defillama_counts(rest_anon, eviden
                 + f"; {counted} of them equal DeFiLlama's token count (totalCirculating) instead; the other "
                   f"{said['judged'] - len(gaps)} are within {said['max_ok_gap_pct']}%"
                 if gaps else
-                f"all {said['judged']} chains are within {said['max_ok_gap_pct']}% of DeFiLlama's dollar figure"),
+                f"all {said['judged']} chains are within {said['max_ok_gap_pct']}% of DeFiLlama's dollar figure"
+                + (f", or between its still-open day and the closed day before: "
+                   + "; ".join(f"{x['name']} {_money(x['shown'])} ({x['gap_pct']:+.1f}% against the open point)"
+                               for x in said["moving"][:5])
+                   if said.get("moving") else "")),
         left={"chains_off_by_more_than_3pct": len(gaps)},
         right={"chains_off_by_more_than_3pct": 0},
-        population={"gaps": gaps, "judged": said["judged"], "unread": said["unread"],
+        population={"gaps": gaps, "judged": said["judged"], "unread": said["unread"], "moving": said["moving"],
                     "max_ok_gap_pct": said["max_ok_gap_pct"], "snapshot_generated_at": snap.get("generated_at")},
         sources={"page": CHAINS_PAGE, "defillama": g.LLAMA_STABLECOIN_CHART},
         claim_id=CLAIM_STABLES))
