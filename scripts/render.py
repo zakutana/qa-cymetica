@@ -66,6 +66,9 @@ COMPONENT_TO_SECTION = {
     "rest.chart_analyzer": "build_it_better",
     # And the Supply Analyzer (ET-28934).
     "rest.supply_analyzer": "build_it_better",
+    # The Agent League we play (scripts/league.py) has no checks of its own yet; the tile is
+    # where they will sit, beside the other agents' surfaces.
+    "rest.agent_league": "clones",
     # Backtest Rally has no tile of its own yet; its checks are shown on that one.
     "rest.research_backtest": "build_it_better",
     "rest.creator": "creator", "rest.head_to_head": "head_to_head",
