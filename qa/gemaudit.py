@@ -1265,6 +1265,29 @@ def runrate_factor_breaches(snap: dict, stated: dict[int, float], *, tol: float 
     return {"stated": want, "checked": checked, "breaches": breaches}
 
 
+def paths_missing_from_openapi(llms_text: str, openapi: dict, prefix: str = "/api/v1/gem-screener") -> list[str]:
+    """Paths under `prefix` that llms.txt names and the OpenAPI does not describe, with every
+    `{x}` or `<x>` placeholder read as one parameter. 2026-10-10: report-access, which their
+    own reply called "in both llms.txt and the OpenAPI"."""
+    norm = lambda p: re.sub(r"\{[^}]*\}|<[^>]*>", "{}", p.rstrip("/"))  # noqa: E731
+    have = {norm(p) for p in (openapi or {}).get("paths") or {}}
+    named = {norm(m) for m in re.findall(re.escape(prefix) + r"(?:/[A-Za-z0-9_\-{}<>]+)*", llms_text or "")}
+    return sorted(p for p in named if p not in have)
+
+
+def dilution_band_breach(meta: dict | None) -> dict | None:
+    """The dilution bands in the wrong order: a caution line at or above the red line leaves
+    "caution" empty, because a coin reaches red first. None when the order is right or a line is
+    not stated. 2026-10-10: caution_line 1.5253, red_line 1.0; 0 caution, 19 red."""
+    meta = meta or {}
+    caution, red = num(meta.get("caution_line")), num(meta.get("red_line"))
+    if caution is None or red is None or caution < red:
+        return None
+    levels = meta.get("levels") or {}
+    return {"caution_line": caution, "red_line": red,
+            "caution_n": levels.get("caution"), "red_n": levels.get("red")}
+
+
 def coverage_breaches(snap: dict, *, window: int = 30) -> dict:
     """Rows whose `runrate.cov30` names more of the last 30 days than their own
     `rev_series` holds, counted back from the series' last day (the window

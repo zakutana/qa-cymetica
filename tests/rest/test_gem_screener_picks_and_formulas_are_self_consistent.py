@@ -218,6 +218,61 @@ def test_a_runrate_states_only_the_days_its_revenue_has(rest_anon):
 
 
 @qa(component="rest.gem_screener", tier=SafetyTier.SAFE, surface="rest")
+def test_the_dilution_caution_band_lies_below_the_red_band(rest_anon):
+    """`dilution_meta` states `caution_line` and `red_line` in % of market cap a week; the page
+    says "Caution above 1.5% a week, red above 1%". A caution line at or above the red line
+    leaves "caution" empty: a coin passes red first. 2026-10-10: 1.5253 against 1.0, 0 of 233
+    apps at caution (10 at ET-28821 on 2026-10-02), 19 at red."""
+    snap = read_api(rest_anon, g.SNAPSHOT_API, dated=True)
+    meta = snap.get("dilution_meta")
+    if not isinstance(meta, dict) or meta.get("caution_line") is None or meta.get("red_line") is None:
+        raise Inconclusive("the snapshot states no caution_line and red_line")
+    seen = g.dilution_band_breach(meta)
+    conclude(Measurement(
+        verdict="failed" if seen else "passed",
+        reason=(f"dilution_meta puts the caution line at {seen['caution_line']:g}% a week and the red line at "
+                f"{seen['red_line']:g}%: a coin over {seen['red_line']:g}% is red before it can be caution, "
+                f"so {seen['caution_n']} apps read caution and {seen['red_n']} read red"
+                if seen else
+                f"caution starts at {meta['caution_line']:g}% a week, below the red line at {meta['red_line']:g}%"),
+        left={"caution_line": meta.get("caution_line"), "red_line": meta.get("red_line")},
+        right={"caution_below_red": True},
+        population={"dilution_meta": {k: meta.get(k) for k in ("caution_line", "red_line", "gate_pct", "caution_pts",
+                                                               "red_pts", "bench_week_pct", "levels")},
+                    "generated_at": snap.get("generated_at")},
+        sources={"api": g.SNAPSHOT_API}))
+
+
+@qa(component="rest.gem_screener", tier=SafetyTier.SAFE, surface="rest")
+def test_every_gem_screener_route_llms_txt_names_is_in_the_openapi(rest_anon):
+    """llms.txt names `GET /api/v1/gem-screener/report-access`; /openapi-public.json, which
+    /api-docs is built from, does not describe it. Their reply of 2026-10-10 (ET-28821 point 4)
+    says it is "in both"."""
+    pages = {}
+    for path in ("/llms.txt", "/openapi-public.json"):
+        response = get_patiently(rest_anon, path)
+        if response.status_code != 200:
+            raise Inconclusive(f"{path} answered HTTP {response.status_code}; a failed read is not an empty document")
+        pages[path] = response
+    try:
+        spec = pages["/openapi-public.json"].json()
+    except ValueError:
+        raise Inconclusive("/openapi-public.json is not JSON")
+    if not isinstance(spec, dict) or not spec.get("paths"):
+        raise Inconclusive("/openapi-public.json carries no paths")
+    missing = g.paths_missing_from_openapi(pages["/llms.txt"].text, spec)
+    conclude(Measurement(
+        verdict="failed" if missing else "passed",
+        reason=(f"/llms.txt names {len(missing)} Gem Screener route(s) that /openapi-public.json does not "
+                f"describe: {', '.join(missing)}" if missing else
+                "every /api/v1/gem-screener route /llms.txt names is in /openapi-public.json"),
+        left={"routes_missing_from_openapi": len(missing)},
+        right={"routes_missing_from_openapi": 0},
+        population={"missing": missing},
+        sources={"llms": "/llms.txt", "openapi": "/openapi-public.json"}))
+
+
+@qa(component="rest.gem_screener", tier=SafetyTier.SAFE, surface="rest")
 def test_the_altseason_numbers_follow_their_own_published_rules(rest_anon):
     """The composite, the 4-week breadth mean and `beat / n`, each against the
     rule the snapshot itself publishes.

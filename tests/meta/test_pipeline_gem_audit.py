@@ -432,6 +432,26 @@ def _the_derived_figures_are_held_to_their_definitions():
     bare["runrate"] = {"value": 1.0, "basis": "30d"}
     assert g.coverage_breaches(_snapshot([bare]))["checked"] == 0, "a row that states no coverage was judged"
 
+    # 2026-10-10: the dilution bands. dilution_meta said caution_line 1.5253 and red_line 1.0
+    # (the page: "Caution above 1.5% a week, red above 1%"), so a coin over 1.0 is red before it
+    # can be caution: 0 of 233 apps read caution (10 at ET-28821), 19 red.
+    meta = {"caution_line": 1.5253, "red_line": 1.0, "levels": {"ok": 97, "caution": 0, "red": 19, "unknown": 117}}
+    seen = g.dilution_band_breach(meta)
+    assert seen == {"caution_line": 1.5253, "red_line": 1.0, "caution_n": 0, "red_n": 19}, seen
+    assert g.dilution_band_breach(dict(meta, caution_line=0.5)) is None, "caution below red is the order a reader expects"
+    assert g.dilution_band_breach(dict(meta, caution_line=1.0)) is not None, "equal lines leave caution empty too"
+    assert g.dilution_band_breach({"caution_line": None, "red_line": 1.0}) is None, "a line not stated is not judged"
+    assert g.dilution_band_breach({}) is None
+
+    # A path llms.txt names and the OpenAPI lacks (report-access, 2026-10-10), placeholders alike.
+    llms = ("`GET /api/v1/gem-screener/report-access`: may THIS caller ask; "
+            "GET https://cymetica.com/api/v1/gem-screener/coins/<symbol>/degen-report; /api/v1/gem-screener/picks; "
+            "/api/v1/chart-analyzer/x")
+    spec = {"paths": {"/api/v1/gem-screener/coins/{symbol}/degen-report": {}, "/api/v1/gem-screener/picks": {}}}
+    assert g.paths_missing_from_openapi(llms, spec) == ["/api/v1/gem-screener/report-access"]
+    assert g.paths_missing_from_openapi(llms, {"paths": dict(spec["paths"], **{"/api/v1/gem-screener/report-access": {}})}) == []
+    assert g.paths_missing_from_openapi("", spec) == [] and g.paths_missing_from_openapi(llms, {}) != []
+
     # C04, deep pass of 2026-09-30 (3/3): the market cap is price x circulating
     # supply. On 2026-09-30 the page held it within 1.02 % on all 214 rows; the
     # ranking stands on it (ps = mcap / run-rate), and nothing compared it.
