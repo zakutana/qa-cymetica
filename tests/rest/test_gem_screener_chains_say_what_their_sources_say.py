@@ -144,7 +144,8 @@ def test_a_chains_stablecoins_are_the_dollars_defillama_counts(rest_anon, eviden
             charts[chain.get("slug")] = body if isinstance(body, list) else None
     finally:
         source.close()
-    said = g.chain_stablecoin_gaps(chains, charts)
+    # Whether the input's day was open is read off the snapshot's own time, not ours (A01).
+    said = g.chain_stablecoin_gaps(chains, charts, generated_at=snap.get("generated_at"))
     if said["judged"] < MIN_JUDGED_SHARE * len(chains):
         raise Inconclusive(f"only {said['judged']} of {len(chains)} chains could be compared: "
                            + "; ".join(said["unread"][:5]))

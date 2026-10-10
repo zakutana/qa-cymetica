@@ -941,6 +941,16 @@ def _the_chains_tab_is_held_to_its_sources_and_its_own_words():
     assert [x["name"] for x in g.chain_stablecoin_gaps([chain("filecoin", 218385.5)], closed)["gaps"]] == ["Filecoin"]
     assert [x["name"] for x in g.chain_stablecoin_gaps(chains, charts)["gaps"]] == ["Stellar"], (
         "the token count passed as a moving point")
+    # Deep pass 2026-10-10, A01: whether the day was open is a fact about when THEY read it, the
+    # snapshot's generated_at, not about when we run. Read after midnight, DeFiLlama's newest point
+    # is the next day, yet a snapshot generated during the input's day still read it open.
+    during = day + 16 * 3600
+    assert g.chain_stablecoin_gaps([chain("filecoin", 218385.5)], closed, generated_at=during)["gaps"] == [], (
+        "a figure read while its day was open was failed because the day has since closed")
+    after = day + 86400 + 3600
+    assert [x["name"] for x in g.chain_stablecoin_gaps([chain("filecoin", 218385.5)], closed,
+                                                       generated_at=after)["gaps"]] == ["Filecoin"], (
+        "a snapshot made after the day closed read a closed figure")
 
     # 2. The chain price tag as described: llms.txt's "What it is" and the chain detail's
     #    agent prompt still describe yearly activity fees against a named leader chain;

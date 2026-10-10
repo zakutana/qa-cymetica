@@ -779,7 +779,8 @@ while Stellar (-7.5 %) and Sei (-10.7 %) hold USDY, priced at $1.147. 3 % leaves
 depegs alone and catches a coin that is not worth a dollar."""
 
 
-def chain_stablecoin_gaps(chains: list, charts: dict, *, tol: float = STABLECOIN_TOLERANCE) -> dict:
+def chain_stablecoin_gaps(chains: list, charts: dict, *, tol: float = STABLECOIN_TOLERANCE,
+                          generated_at=None) -> dict:
     """The page's "Stablecoins: dollars parked on the chain" (`adoption.inputs.stablecoins`)
     against DeFiLlama's dollar value of the USD-pegged coins on that chain, on the day the
     snapshot says the input is from (`adoption.as_of.stablecoins`).
@@ -817,7 +818,7 @@ def chain_stablecoin_gaps(chains: list, charts: dict, *, tol: float = STABLECOIN
             continue
         judged += 1
         gap = shown / usd - 1.0
-        if abs(gap) > tol and _within_open_day(shown, int(as_of), points, usd, tol):
+        if abs(gap) > tol and _within_open_day(shown, int(as_of), points, usd, tol, generated_at):
             # 2026-10-10: the input's day is DeFiLlama's latest, still-open point, and the
             # figure lies between it and the closed day before -- a value the source passed.
             moving.append({"name": name, "shown": shown, "usd": usd, "gap_pct": round(100.0 * gap, 2)})
@@ -832,12 +833,22 @@ def chain_stablecoin_gaps(chains: list, charts: dict, *, tol: float = STABLECOIN
             "max_ok_gap_pct": round(100.0 * max(ok_gaps), 3) if ok_gaps else None}
 
 
-def _within_open_day(shown: float, as_of: int, points: list, usd: float, tol: float) -> bool:
-    """True when `as_of` is the newest day of DeFiLlama's chart (a point that keeps moving until
-    the day closes) and `shown` lies, within `tol`, between that point and the closed day before."""
+def _within_open_day(shown: float, as_of: int, points: list, usd: float, tol: float,
+                     generated_at=None) -> bool:
+    """True when the input's day was still open when THEY read it, and `shown` lies, within
+    `tol`, between that day's point and the closed day before. Open means: `generated_at` (the
+    snapshot's own time) falls inside the input's UTC day; with no `generated_at`, that the
+    day is still DeFiLlama's newest point. The first version only had the second reading, so
+    the same snapshot passed before midnight UTC and failed after it (deep pass 2026-10-10, A01)."""
     dated = [(int(p["date"]), p) for p in points
              if isinstance(p, dict) and str(p.get("date")).isdigit()]
-    if not dated or max(d for d, _ in dated) != as_of:
+    if not dated:
+        return False
+    made = num(generated_at)
+    if made is not None:
+        if not as_of <= made < as_of + 86400:
+            return False
+    elif max(d for d, _ in dated) != as_of:
         return False
     before = [p for d, p in dated if d == as_of - 86400]
     prev = num(((before[0].get("totalCirculatingUSD") or {}) if before else {}).get("peggedUSD"))
