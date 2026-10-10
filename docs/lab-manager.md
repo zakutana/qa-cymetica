@@ -49,3 +49,5 @@ Newest at the end. Written by `lab.py log --feedback` / `--acted`; the first six
 - 2026-10-06 · acted · a acted
 - 2026-10-06 · acted · Wave 2 spustena 6. 10.: 20 botu obchoduje (SL 15 / TP 40, rooms STR-0097..0116, verdikt ~13. 10.). wave.py opraveno dvakrat: cteni nastaveni z odpovedi PATCH a vysledek fund/enable ze zaznamu. Sweep 39 otevrenych radku, nic noveho k podani. Dlazdice Fondy z ranni stranky smazana.
 - 2026-10-07 · acted · Boti: wave.py resume spusten 7. 10.: 18 botu obnoveno po pauze platformy na SL/TP, kazdy v novem roomu (STR-0117..0134) s kriteriem pred enable; 25 obchoduje (strop platformy), 14 ceka na volny slot. 3x stop-loss po sobe = zahozen (operator), zatim zadny.
+- 2026-10-10 · feedback · 2026-10-10: no morning report after a night the laboratory did not run ('na ranni prehled kaslu v noci nebyla laborka').
+- 2026-10-10 · acted · 2026-10-10: the report is due only after a night with a laboratory tick (21:00 to 06:40), qa.morning.night_ran; the tick and the session start no longer ask for it otherwise.
