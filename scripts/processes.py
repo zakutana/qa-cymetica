@@ -1170,8 +1170,11 @@ def _morning_missing() -> bool:
                                .read_text(encoding="utf-8"))
         except (OSError, ValueError):
             state = {}
+        from qa import lab
+
         return morning.missing(datetime.now().astimezone(),
-                               state if isinstance(state, dict) else {})
+                               state if isinstance(state, dict) else {},
+                               ticks=lab.tick_times())
     except Exception:  # noqa: BLE001 -- a reminder never fails a session
         return False
 

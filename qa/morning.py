@@ -19,10 +19,11 @@ scripts/morning.py draws the page.
 from __future__ import annotations
 
 import re
-from datetime import datetime, time
+from datetime import datetime, time, timedelta
 
 DUE_AT = time(6, 40)
 MISSING_AT = time(7, 0)
+NIGHT_FROM = time(21, 0)      # the evening before: a tick from here to DUE_AT is a night's work
 MAX_OVERNIGHT = 6
 MAX_LINE = 140
 HANDLE = "@EventTraderQABot"
@@ -37,14 +38,25 @@ def _made_today(now_local: datetime, state: dict | None) -> bool:
     return (state or {}).get("made_on") == now_local.date().isoformat()
 
 
-def due(now_local: datetime, state: dict | None) -> bool:
-    """From 06:40 local until today's report is published."""
-    return now_local.time() >= DUE_AT and not _made_today(now_local, state)
+def night_ran(now_local: datetime, ticks) -> bool:
+    """A laboratory tick from NIGHT_FROM the evening before until DUE_AT today. The report
+    is about the night: [operator 2026-10-10] "na ranni prehled kaslu v noci nebyla laborka"."""
+    start = datetime.combine(now_local.date() - timedelta(days=1), NIGHT_FROM, tzinfo=now_local.tzinfo)
+    end = datetime.combine(now_local.date(), DUE_AT, tzinfo=now_local.tzinfo)
+    return any(start <= t < end for t in ticks or ())
 
 
-def missing(now_local: datetime, state: dict | None) -> bool:
-    """Past 07:00 local and still not published: what a session start says."""
-    return now_local.time() >= MISSING_AT and not _made_today(now_local, state)
+def due(now_local: datetime, state: dict | None, *, ticks) -> bool:
+    """From 06:40 local until today's report is published, after a night the laboratory ran."""
+    return (now_local.time() >= DUE_AT and not _made_today(now_local, state)
+            and night_ran(now_local, ticks))
+
+
+def missing(now_local: datetime, state: dict | None, *, ticks) -> bool:
+    """Past 07:00 local and still not published after a night the laboratory ran: what a
+    session start says."""
+    return (now_local.time() >= MISSING_AT and not _made_today(now_local, state)
+            and night_ran(now_local, ticks))
 
 
 def _cz(value: float, digits: int = 1) -> str:

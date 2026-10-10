@@ -512,6 +512,22 @@ def note_n_eff(said: dict) -> dict:
     return _append({"type": "n_eff", "at": _now(), **said})
 
 
+def tick_times(rows: list[dict] | None = None) -> list[datetime]:
+    """When the laboratory ticked (aware datetimes); qa.morning.night_ran reads them."""
+    rows = load() if rows is None else rows
+    out = []
+    for row in rows:
+        if row.get("type") != "tick":
+            continue
+        try:
+            moment = datetime.fromisoformat(str(row.get("at")).replace("Z", "+00:00"))
+        except ValueError:
+            continue
+        if moment.tzinfo is not None:
+            out.append(moment)
+    return out
+
+
 def last_n_eff(rows: list[dict] | None = None) -> dict | None:
     rows = load() if rows is None else rows
     seen = [r for r in rows if r.get("type") == "n_eff"]

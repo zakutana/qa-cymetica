@@ -3238,7 +3238,7 @@ def _vendor_news() -> dict:
 def _morning_due() -> bool:
     from qa import morning as qa_morning
 
-    return qa_morning.due(datetime.now().astimezone(), load_morning())
+    return qa_morning.due(datetime.now().astimezone(), load_morning(), ticks=lab.tick_times())
 
 
 MORNING_LINE = ("  ranní přehled je na řadě -- `python scripts/lab.py morning`, "

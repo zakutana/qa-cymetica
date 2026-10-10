@@ -29,17 +29,34 @@ def _at(day: int, hour: int, minute: int = 0) -> datetime:
     return datetime(2026, 9, day, hour, minute, tzinfo=LOCAL)
 
 
+NIGHT = [_at(24, 2, 15)]       # the laboratory ticked in the night before the 24th
+
+
 def _case_the_report_is_due_from_six_forty_until_it_is_made_that_day():
-    assert not morning.due(_at(24, 6, 39), {})
-    assert morning.due(_at(24, 6, 40), {})
-    assert morning.due(_at(24, 6, 40), {"made_on": "2026-09-23"})
-    assert not morning.due(_at(24, 9, 0), {"made_on": "2026-09-24"})
+    assert not morning.due(_at(24, 6, 39), {}, ticks=NIGHT)
+    assert morning.due(_at(24, 6, 40), {}, ticks=NIGHT)
+    assert morning.due(_at(24, 6, 40), {"made_on": "2026-09-23"}, ticks=NIGHT)
+    assert not morning.due(_at(24, 9, 0), {"made_on": "2026-09-24"}, ticks=NIGHT)
 
 
 def _case_after_seven_a_missing_report_is_missing():
-    assert not morning.missing(_at(24, 6, 59), {})
-    assert morning.missing(_at(24, 7, 0), {"made_on": "2026-09-23"})
-    assert not morning.missing(_at(24, 7, 30), {"made_on": "2026-09-24"})
+    assert not morning.missing(_at(24, 6, 59), {}, ticks=NIGHT)
+    assert morning.missing(_at(24, 7, 0), {"made_on": "2026-09-23"}, ticks=NIGHT)
+    assert not morning.missing(_at(24, 7, 30), {"made_on": "2026-09-24"}, ticks=NIGHT)
+
+
+def _case_no_night_in_the_laboratory_is_no_report():
+    """[operator 2026-10-10] "na ranni prehled kaslu v noci nebyla laborka": the report is
+    about the night. A tick from 21:00 the evening before until 06:40 makes one owed; a
+    morning loop started at 10:00, or a laboratory that last ran two days ago, does not."""
+    assert morning.night_ran(_at(24, 7, 0), [_at(23, 21, 0)])
+    assert morning.night_ran(_at(24, 7, 0), [_at(24, 6, 39)])
+    assert not morning.night_ran(_at(24, 10, 30), [_at(24, 10, 4), _at(24, 10, 8)]), (
+        "the day's own ticks made the night's report owed")
+    assert not morning.night_ran(_at(24, 7, 0), [_at(23, 20, 59), _at(22, 3, 0)])
+    assert not morning.night_ran(_at(24, 7, 0), [])
+    assert not morning.due(_at(24, 10, 30), {}, ticks=[_at(24, 10, 4)])
+    assert not morning.missing(_at(24, 10, 30), {}, ticks=[_at(22, 3, 0)])
 
 
 DEEP = """# Deep pass — 2026-09-22 večer
@@ -370,7 +387,8 @@ def _case_lab_py_morning_builds_the_page_and_published_records_the_day(
     assert page.is_file() and "Ranní přehled laborky" in page.read_text(encoding="utf-8")
     state = json.loads((tmp_path / "lab" / "morning.json").read_text(encoding="utf-8"))
     assert not state.get("made_on"), "made only once it is published"
-    assert morning.due(datetime.now().astimezone().replace(hour=7), state)
+    seven = datetime.now().astimezone().replace(hour=7, minute=0)
+    assert morning.due(seven, state, ticks=[seven.replace(hour=3)])
 
     assert module.main(["morning", "--published", "https://claude.ai/code/artifact/x"]) == 0
     state = json.loads((tmp_path / "lab" / "morning.json").read_text(encoding="utf-8"))
@@ -404,6 +422,7 @@ def _fresh_dir(tmp_path, i):
 def test_the_report_is_due_from_six_forty_and_a_missing_one_is_missing_after_seven():
     _case_the_report_is_due_from_six_forty_until_it_is_made_that_day()
     _case_after_seven_a_missing_report_is_missing()
+    _case_no_night_in_the_laboratory_is_no_report()
 
 
 @qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
