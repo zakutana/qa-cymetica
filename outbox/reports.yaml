@@ -5599,6 +5599,39 @@ reports:
       /llms.txt and /openapi-public.json anonymously and fails while a route under /api/v1/gem-screener
       that llms.txt names is missing from the OpenAPI.
 
+  - key: account-history-offset-repeats-the-page
+    findings:
+      - CYM-the_account_history_pages_forward
+    severity: medium
+    category: api
+    url: https://cymetica.com/transactions
+    title: >-
+      Account history: /api/v1/account/me/transactions answers the same 100 rows at every offset for
+      currency=USDC (and unfiltered from offset 100); USDC history cannot be paged back
+    expected: >
+      The endpoint returns {transactions, has_more, total_count} and takes limit (at most 100, its own 422
+      says so) and offset. When has_more is true, the next offset holds the next rows, so a client can read
+      the whole history page by page, as it does for currency=ET10.
+    actual: >
+      Read on 2026-10-10 at 19:10 UTC with our own account's key. currency=USDC: offsets 0, 100 and 200
+      answer the same 100 rows (ids 1613303830 to 371000858), with total_count 1000 and has_more true; an
+      earlier read the same day saw the same page at offsets 0, 100, 200, 900, 1000 and 2000. No filter:
+      offset 0 answers a first page (ids 81674124 to 1392891235), and offsets 100 and 200 both answer that
+      same USDC page (total_count 4710). currency=ET10 pages forward (653 rows, three different pages). Only
+      from_date and to_date reach older USDC rows. The endpoint, which the Transaction History page reads, is
+      in none of llms.txt, llms-full.txt, openapi.json or openapi-public.json, so neither paging nor the date
+      filters are documented.
+    steps:
+      - 'GET https://cymetica.com/api/v1/account/me/transactions?currency=USDC&limit=100&offset=0 (X-API-Key) -> 100 rows, first id 1613303830, last 371000858, has_more true, total_count 1000'
+      - 'GET https://cymetica.com/api/v1/account/me/transactions?currency=USDC&limit=100&offset=100 -> the same 100 rows (and the same at offset 200)'
+      - 'GET https://cymetica.com/api/v1/account/me/transactions?limit=100&offset=100 and offset=200 -> the same 100 rows both times, total_count 4710'
+      - 'GET https://cymetica.com/api/v1/account/me/transactions?currency=ET10&limit=100&offset=100 -> a different page (first id 61463805): ET10 pages forward'
+    body: >
+      How to fix it is yours: honour offset for every currency filter (or return a cursor), and document the
+      endpoint with limit, offset, currency, from_date and to_date. We found it reconciling our own ET10
+      purchases, where the USDC side of each purchase could only be read by date windows. Our check reads the
+      history with our own read key, GETs only, for no filter, USDC and ET10, offsets 0, 100 and 200, and fails while a page that says has_more is followed by the same page again or by none.
+
 footer: >
   Reported by an independent QA agent. Scope of this work: verification of the
   REST API, MCP, the machine-readable discovery surfaces and the pages built on

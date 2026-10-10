@@ -36125,9 +36125,17 @@
         ]
       },
       "filing": {
-        "state": "NOT_RAISED",
-        "adjudicated_by": null,
-        "reports": [],
+        "state": "RAISED",
+        "adjudicated_by": {
+          "event_id": "6b339434959d64d89344fae0000a87ee6082769b02fccfa82ff71d9a90b08922",
+          "at": "2026-10-10T19:49:32+00:00"
+        },
+        "reports": [
+          {
+            "report_id": 184,
+            "status": "pending"
+          }
+        ],
         "refused": [],
         "verifications": []
       },
@@ -36140,6 +36148,15 @@
             "run_id": "run-20261010T191002Z-58b31627"
           },
           "at": "2026-10-10T19:31:49+00:00"
+        },
+        {
+          "axis": "filing",
+          "from": "NOT_RAISED",
+          "to": "RAISED",
+          "cause": {
+            "event_id": "6b339434959d64d89344fae0000a87ee6082769b02fccfa82ff71d9a90b08922"
+          },
+          "at": "2026-10-10T19:49:32+00:00"
         }
       ],
       "regressions": [],
@@ -36294,11 +36311,10 @@
     "OUR CHECK CANNOT TELL": 4,
     "PASSING, NEVER RAISED": 3,
     "CHECK CHANGED": 1,
-    "RAISED": 3,
-    "NOT RAISED YET": 1
+    "RAISED": 4
   },
   "events_head": {
-    "seq": 3766,
-    "chain": "2f446aba5b62ff78a466b8b1a8851e9c9659f5bc19aaf786074cdac48ccfca54"
+    "seq": 3768,
+    "chain": "ef96d2694bd6e6556b00730810ce98767131a21adcb9972f31e07fb4714b5ae3"
   }
 }

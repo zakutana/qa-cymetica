@@ -62,3 +62,4 @@ reports:
   181: "Trading Station: výchozí BTC stanice otevírá order book na 404 a tlačítko Trade BTC vede tamtéž"
   182: "Gem Screener: pásmo „caution“ u ředění (1,5 % týdně) leží nad „red“ (1 %), žádný coin v něm být nemůže"
   183: "Dokumentace: report-access je v llms.txt, ale není v OpenAPI, ze kterého se staví /api-docs"
+  184: "Historie účtu: u USDC vrací každá další stránka těch samých 100 řádků, starší historie nejde projít"

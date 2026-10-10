@@ -43,6 +43,6 @@ nikdy nebylo další na řadě.
 - [ ] 2026-10-04  Další spec pro Supply Analyzer (staking/lock): žádný jeden zdroj nepokryje 244 coinů; spojit řetězcová data tam, kde je kontrakt znám (PHAR xPHAR, CRV veCRV), DeFiLlama jako záloha. Dnes staking u 68 z 244, tok nikde. ET-29381. Připomenout operátorovi.
 - [x] 2026-10-08  #175: kontrolu přepsat na jejich nový štítek „synthetic“ (hotovo 2026-10-10, c164b580)
 - [x] 2026-10-10  Kontrola, že historie transakcí stránkuje dopředu (hotovo 2026-10-10, 609c4032)
-- [ ] 2026-10-10  Report přes submit.py: /api/v1/account/me/transactions u USDC (i bez filtru) vrací při dalším offsetu stejnou stránku; endpoint není v žádné dokumentaci. Kontrola už je (609c4032), podá ji příští sweep.
+- [x] 2026-10-10  Report přes submit.py: historie transakcí u USDC vrací při dalším offsetu stejnou stránku (podáno #184; hotovo 2026-10-10)
 - [ ] 2026-10-10  audits/lab/fomo_signals.jsonl má v gitu 84 MB a keep.py snapshot ho kopíruje celý každým deep passem; nad 100 MB GitHub push odmítne. Snapshot dělit po měsících nebo balit (jako evidence), test na strop velikosti.
 - [ ] 2026-10-04  11. 10.: připomenout operátorovi test X (jeho odpovědi nejsou vidět): otevřít odpověď v anonymním okně. Do té doby žádné odpovědi s odkazem ani šablonou, jen vlastní tweety a lajky. Podle výsledku další týden, nebo Premium.
