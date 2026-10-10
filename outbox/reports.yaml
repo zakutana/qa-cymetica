@@ -5539,6 +5539,66 @@ reports:
       for BTC (/headlines?q=BTC) also lists headlines on BNP Paribas, BTS and BTQ, a text match rather
       than the symbol.
 
+  - key: gem-screener-dilution-caution-above-red
+    findings:
+      - CYM-the_dilution_caution_band_lies_below_the_red_band
+    severity: low
+    category: logic
+    url: https://cymetica.com/gem-screener/app?view=picks
+    title: >-
+      Gem Screener: the dilution "caution" line (1.5253% a week) lies above the "red" line (1%), so no coin can
+      read caution: 0 of 233 apps, 19 red (10 caution on 2026-10-02)
+    expected: >
+      Caution is the lower level of the two: a coin reads caution from a lower weekly dilution than it
+      reads red, so the caution line is below the red line and both levels occur.
+    actual: >
+      Read on 2026-10-10 (snapshot generated 10:21 UTC). /api/v1/gem-screener, dilution_meta: gate_pct 1,
+      caution_pts 0.5, red_pts 1, caution_line 1.5253, red_line 1, bench_week_pct 1.0253, levels
+      {ok 97, caution 0, red 19, unknown 117}. The Stader coin panel's tooltip reads "New tokens in the next
+      30 days at today's price, as a share of the market cap a week ... Caution above 1.5% a week, red above
+      1%." Every app over 1% a week is red (the lowest red is 1.0054%, the highest ok is 0.981%), and the
+      caution band between 1.0% and 1.5253% can never be reached, because red starts at 1%. The 1.5253 is
+      the benchmark's 1.0253 plus the 0.5-point caution step; the red line is the gate, 1%, not the
+      benchmark plus 1 point (2.0253). At ET-28821 (2026-10-02) 88 apps read ok, 10 caution and 19 red.
+    steps:
+      - 'GET https://cymetica.com/api/v1/gem-screener -> dilution_meta: gate_pct 1, caution_pts 0.5, red_pts 1, caution_line 1.5253, red_line 1, bench_week_pct 1.0253, levels {"ok":97,"caution":0,"red":19,"unknown":117}'
+      - 'GET https://cymetica.com/api/v1/gem-screener -> apps[].dilution.level counted: ok 97 (week_pct 0 to 0.981), red 19 (1.0054 to 27.2604), caution 0'
+      - 'GET https://cymetica.com/gem-screener/app?view=apps&coin=stader -> the "+0.3% new tokens a week" tile, its tooltip: "Caution above 1.5% a week, red above 1%."'
+    body: >
+      How to fix it is yours: put the caution line below the red line (for example 0.5% a week, red at 1%),
+      or drop the caution level and say so in the tooltip. A visitor reads "Caution above 1.5%, red above
+      1%" and cannot tell what a coin at 1.2% is. Our check reads dilution_meta anonymously and fails
+      while caution_line is at or above red_line; it passes the moment caution is below red.
+
+  - key: gem-screener-report-access-missing-from-openapi
+    findings:
+      - CYM-every_gem_screener_route_llms_txt_names_is_in_the_openapi
+    severity: low
+    category: documentation
+    url: https://cymetica.com/openapi-public.json
+    title: >-
+      Documentation: GET /api/v1/gem-screener/report-access is in llms.txt but not in /openapi-public.json,
+      which /api-docs is built from
+    expected: >
+      A route llms.txt documents is also in the OpenAPI document an agent reads from /api-docs, with its
+      response described. Your reply on ET-28821 (point 4, 2026-10-10) says report-access "is in both
+      llms.txt and the OpenAPI".
+    actual: >
+      Read on 2026-10-10 at 15:10 UTC. /llms.txt describes `GET /api/v1/gem-screener/report-access`
+      ("may THIS caller ask for a Degen report? {can_ask, reason}"), and the route answers
+      {"can_ask":false,"reason":"sign_in"} HTTP 200 anonymously. /openapi-public.json (340 paths) lists
+      no path containing "report-access"; the other seven Gem Screener routes llms.txt names are in it
+      (/api/v1/gem-screener, /altseason, /coins/{symbol}, /coins/{symbol}/degen-report, /picks, /ranked,
+      /status). /openapi.json (23 paths) does not list it either.
+    steps:
+      - 'GET https://cymetica.com/llms.txt -> the Gem Screener line: "`GET /api/v1/gem-screener/report-access`: may THIS caller ask for a Degen report? {can_ask (true | false | null), reason (ok | sign_in | plan | unknown)}"'
+      - 'GET https://cymetica.com/api/v1/gem-screener/report-access -> HTTP 200 {"can_ask":false,"reason":"sign_in"}'
+      - 'GET https://cymetica.com/openapi-public.json -> paths: 340 entries, none ending in /report-access'
+    body: >
+      How to fix it is yours: add the route and its two response fields to the OpenAPI. Our check reads
+      /llms.txt and /openapi-public.json anonymously and fails while a route under /api/v1/gem-screener
+      that llms.txt names is missing from the OpenAPI.
+
 footer: >
   Reported by an independent QA agent. Scope of this work: verification of the
   REST API, MCP, the machine-readable discovery surfaces and the pages built on

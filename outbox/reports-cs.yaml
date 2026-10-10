@@ -60,3 +60,5 @@ reports:
   179: "Gem Screener: KyberSwap počítá run-rate a P/S z 19 dnů, jako by jich bylo 30 (4 appky)"
   180: "Event karty: index vypořádané karty se hýbe dál; 6fb50de3 skončila na 100,42, ukazuje 203 (4 ze 7)"
   181: "Trading Station: výchozí BTC stanice otevírá order book na 404 a tlačítko Trade BTC vede tamtéž"
+  182: "Gem Screener: pásmo „caution“ u ředění (1,5 % týdně) leží nad „red“ (1 %), takže žádný coin nemůže být ve výstraze"
+  183: "Dokumentace: report-access je v llms.txt, ale není v OpenAPI, ze kterého se staví /api-docs"
