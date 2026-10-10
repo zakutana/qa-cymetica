@@ -10,6 +10,5 @@
 - **Bot, který třikrát po sobě skončí na stop-lossu, je zahozen natrvalo, i když později vydělá; ručně ho nejde znovu spustit.** Tvoje pravidlo ze 7. 10. jsem dřív četl jen jako „poslední tři"; 3 ze 3 čtenářů: nic neoslabuje.
 - **Strop obchodujících botů je 50 místo 25: platforma jich teď nechává obchodovat 34.** 3 ze 3 čtenářů: neoslabuje, číslo 25 vyvrátila data.
 ## Čeká na tebe
-- **Papírový nákup tří karet od Nexuse (místnost STR-0160) čeká na tvoje „povol" pro nákupní příkaz.**
 - **Menšinový nález (1 ze 3): u řádku vzniklého rozdělením reportu se značka „ručně připnuto" může o jedno skládání opozdit.** Neopravoval jsem; jediný skutečný případ byl připnut za 31 minut.
 - **Verdikt nového Gem Screeneru (ET-29379) až po 15. 10.; náklady karet (1,4 %) změním po odpovědi Cymetiky na MSG-0145.**
