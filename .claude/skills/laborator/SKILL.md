@@ -66,7 +66,7 @@ Each question names what a room can hold -- a card by its whole id, a bot by its
 
 [operator 2026-09-23] *"jo a jeste chci pridat do planu ze kazde rano chci vygenerovany krasny vecny strucny artifakt o tom co se vnoci udalo v laborce. takovy top prehled chapes. Na ktery ti dam pak feedback, jako manageorvi laborky a ty udelas podle nej patricne upravy a tak. Tento artikaft chci mit pripraven vzdy v 7 hodin rano. Bude tam strucna sekce o deep passu jak probihal a pak na stav laborky."*
 
-The one Artifact this project publishes, at one address. No scheduler: the overnight tick from 06:40 says `report`, and a session after 7:00 without one is reminded.
+The one Artifact this project publishes, at one address. No scheduler: the overnight tick from 06:40 says `report`, and a session after 7:00 without one is reminded -- only after a night the laboratory ran (a tick from 21:00 the evening before until 06:40, `qa.morning.night_ran`): the report is about the night (2026-10-10).
 
 1. `python scripts/lab.py morning` builds `state/lab/morning.html` and prints the address if one exists.
 2. Publish that file with the Artifact tool -- the first time a new one (icon `report`); after that `action: "read"` on the address, then publish with `url` set to it.
