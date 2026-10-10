@@ -630,6 +630,20 @@ def test_a_card_that_is_closed_on_rest_and_open_on_mcp_fails():
                                   + hist[1:]) is None, "a point five hours before is not the close"
     assert drift_after_resolution(dict(settled, current_index=None), hist) is None
 
+    # And the trading station's default tabs open for its default symbol (2026-10-10:
+    # /api/v1/station/apps defaults to BTC with the CLOB tab, /exchange/{sym_lower}-pro, and
+    # /exchange/btc-pro answered 404 -- the tab and the "Trade BTC on the CLOB" button).
+    from tests.rest.test_the_station_opens_its_default_tabs import default_tab_paths
+    body = {"default_symbol": "BTC", "default_tabs": ["chart", "clob", "screener", "gone"],
+            "apps": [{"id": "chart", "url": "/chart-analyzer?symbol={sym}&tf=1d", "takes_symbol": True},
+                     {"id": "clob", "url": "/exchange/{sym_lower}-pro", "takes_symbol": True},
+                     {"id": "screener", "url": "/gem-screener", "takes_symbol": False}]}
+    paths = default_tab_paths(body)
+    assert paths == [("chart", "/chart-analyzer?symbol=BTC&tf=1d"), ("clob", "/exchange/btc-pro"),
+                     ("screener", "/gem-screener"), ("gone", None)], paths
+    assert default_tab_paths({"default_tabs": ["chart"], "apps": body["apps"]}) == [], (
+        "a station with no default symbol has nothing to fill in, so nothing is judged")
+
     # And a fund's: the launcher's paper-only sentence and a profile's live
     # invest offer, read from what a visitor sees -- the markup as served on
     # 2026-09-25, tags and a comment in the way.
