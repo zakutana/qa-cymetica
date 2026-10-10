@@ -11,8 +11,12 @@
    "source": "review",
    "nodeid": "tests/rest/test_supply_analyzer_states_what_its_sources_say.py:447",
    "claim": "typical_mismatches' cap allowance accepts any range narrower than its parts when reserve < stated; a range understating its inflow far below what the reserve could supply passes this check and growth_past_max_supply",
-   "votes": null,
-   "verdict": null,
+   "votes": {
+    "t2": "real",
+    "t1": "real",
+    "t3": "real"
+   },
+   "verdict": "real",
    "fixed": false,
    "commit": null
   },
@@ -21,8 +25,12 @@
    "source": "review",
    "nodeid": "scripts/league.py:178",
    "claim": "_send records a 5xx as rejected, not unknown; answered_ids then lets the next tick answer the same puzzle again (rule 9)",
-   "votes": null,
-   "verdict": null,
+   "votes": {
+    "t2": "real",
+    "t1": "real",
+    "t3": "real"
+   },
+   "verdict": "real",
    "fixed": false,
    "commit": null
   },
@@ -31,8 +39,12 @@
    "source": "review",
    "nodeid": "scripts/league.py:303",
    "claim": "summary() shows a failed prizes/player read as 0 ET10 credited / 0 scored on /lab (rule 8)",
-   "votes": null,
-   "verdict": null,
+   "votes": {
+    "t2": "real",
+    "t1": "real",
+    "t3": "real"
+   },
+   "verdict": "real",
    "fixed": false,
    "commit": null
   },
@@ -41,8 +53,12 @@
    "source": "review",
    "nodeid": "tests/rest/test_the_station_opens_its_default_tabs.py:61",
    "claim": "the station check never follows redirects, so a tab fixed by a redirect to a working page still fails",
-   "votes": null,
-   "verdict": null,
+   "votes": {
+    "t2": "not",
+    "t1": "not",
+    "t3": "not"
+   },
+   "verdict": "dropped",
    "fixed": false,
    "commit": null
   },
@@ -51,8 +67,12 @@
    "source": "review",
    "nodeid": "scripts/fomo_watch.py:611",
    "claim": "a stored reading without a 0.0 fee key prints another fee's figure as 'with no swap fee'",
-   "votes": null,
-   "verdict": null,
+   "votes": {
+    "t2": "not",
+    "t1": "not",
+    "t3": "not"
+   },
+   "verdict": "dropped",
    "fixed": false,
    "commit": null
   },
@@ -61,8 +81,12 @@
    "source": "review",
    "nodeid": "scripts/league.py:262",
    "claim": "cmd_answer calls .get on a text response body and crashes with AttributeError",
-   "votes": null,
-   "verdict": null,
+   "votes": {
+    "t2": "not",
+    "t1": "not",
+    "t3": "not"
+   },
+   "verdict": "dropped",
    "fixed": false,
    "commit": null
   },
@@ -71,8 +95,12 @@
    "source": "review",
    "nodeid": "qa/card_rules.py:58",
    "claim": "index_at_resolution duplicates the check's drift_after_resolution rule; the two can drift apart",
-   "votes": null,
-   "verdict": null,
+   "votes": {
+    "t2": "not",
+    "t1": "not",
+    "t3": "not"
+   },
+   "verdict": "dropped",
    "fixed": false,
    "commit": null
   },
@@ -81,8 +109,12 @@
    "source": "review",
    "nodeid": "qa/gemaudit.py:1268",
    "claim": "paths_missing_from_openapi reads a concrete example path in llms.txt as an undocumented route",
-   "votes": null,
-   "verdict": null,
+   "votes": {
+    "t2": "not",
+    "t1": "not",
+    "t3": "not"
+   },
+   "verdict": "dropped",
    "fixed": false,
    "commit": null
   },
@@ -91,8 +123,12 @@
    "source": "review",
    "nodeid": "qa/morning.py:44",
    "claim": "night_ran builds the evening-before window with today's UTC offset; off by an hour on a DST night",
-   "votes": null,
-   "verdict": null,
+   "votes": {
+    "t2": "real",
+    "t1": "real",
+    "t3": "real"
+   },
+   "verdict": "real",
    "fixed": false,
    "commit": null
   },
@@ -101,8 +137,12 @@
    "source": "review",
    "nodeid": "qa/lab.py:2155",
    "claim": "rejudged_without_cost weighs a leg with share 0.0 as 1.0 (falsy zero)",
-   "votes": null,
-   "verdict": null,
+   "votes": {
+    "t2": "not",
+    "t1": "not",
+    "t3": "not"
+   },
+   "verdict": "dropped",
    "fixed": false,
    "commit": null
   },
@@ -111,8 +151,12 @@
    "source": "review",
    "nodeid": "scripts/card_rules.py:49",
    "claim": "read_resolutions parses any 200 as JSON unguarded and reads one history per card sequentially",
-   "votes": null,
-   "verdict": null,
+   "votes": {
+    "t2": "not",
+    "t1": "not",
+    "t3": "not"
+   },
+   "verdict": "dropped",
    "fixed": false,
    "commit": null
   },
@@ -121,8 +165,12 @@
    "source": "review",
    "nodeid": "scripts/lab.py:3238",
    "claim": "_morning_due and _morning_missing parse the whole lab diary on every tick and session start",
-   "votes": null,
-   "verdict": null,
+   "votes": {
+    "t2": "not",
+    "t1": "not",
+    "t3": "not"
+   },
+   "verdict": "dropped",
    "fixed": false,
    "commit": null
   },
@@ -131,8 +179,12 @@
    "source": "review",
    "nodeid": "scripts/processes.py:312",
    "claim": "the meta_tests ceiling was raised 823 -> 824 instead of folding the league test into an existing one",
-   "votes": null,
-   "verdict": null,
+   "votes": {
+    "t2": "not",
+    "t1": "not",
+    "t3": "not"
+   },
+   "verdict": "dropped",
    "fixed": false,
    "commit": null
   },
@@ -141,8 +193,12 @@
    "source": "audit",
    "nodeid": "tests/meta/test_pipeline_lab_loop.py::test_every_bot_stop_is_ours_their_guard_or_unexplained",
    "claim": "every switch() row in the test is outcome accepted; dropping `and done.get('outcome') == 'accepted'` at qa/lab.py:2610-2611 stays green, so a refused pause followed by a halt reads as ours",
-   "votes": null,
-   "verdict": null,
+   "votes": {
+    "t2": "real",
+    "t1": "real",
+    "t3": "real"
+   },
+   "verdict": "real",
    "fixed": false,
    "commit": null
   },
@@ -151,8 +207,12 @@
    "source": "audit",
    "nodeid": "tests/meta/test_pipeline_fomo_stops.py::test_ten_dollars_into_every_hot_signal_is_answered_honestly",
    "claim": "every coin has exactly one checkpoint at 24h, so selling at the last reading inside the window, at the best checkpoint, or adding a stop (qa/fomo.py:1274) stays green; the docstring also says a switched pair is left out while the test asserts it is kept",
-   "votes": null,
-   "verdict": null,
+   "votes": {
+    "t2": "real",
+    "t1": "real",
+    "t3": "real"
+   },
+   "verdict": "real",
    "fixed": false,
    "commit": null
   },
@@ -161,8 +221,12 @@
    "source": "audit",
    "nodeid": "tests/meta/test_pipeline_lab_loop.py::test_a_card_room_is_judged_on_our_position_net_of_the_round_trip",
    "claim": "the fixture's entry_index (200) equals their index at the fill hour, so dropping entry_index at scripts/lab.py:1193 falls back to the fill-hour index and stays green",
-   "votes": null,
-   "verdict": null,
+   "votes": {
+    "t2": "not",
+    "t1": "real",
+    "t3": "real"
+   },
+   "verdict": "real",
    "fixed": false,
    "commit": null
   },
@@ -171,8 +235,12 @@
    "source": "audit",
    "nodeid": "tests/meta/test_pipeline_league.py::test_the_league_answers_only_what_it_computes_exactly_and_only_once",
    "claim": "the answered set is written by hand; scripts/league.py::answered_ids (which counts unknown outcomes and their recent list) has no test, so dropping 'unknown' or the union with recent stays green and a possibly-landed answer is POSTed again",
-   "votes": null,
-   "verdict": null,
+   "votes": {
+    "t2": "real",
+    "t1": "real",
+    "t3": "real"
+   },
+   "verdict": "real",
    "fixed": false,
    "commit": null
   },
@@ -181,8 +249,12 @@
    "source": "audit",
    "nodeid": "tests/meta/test_pipeline_morning.py::test_the_report_is_due_from_six_forty_and_a_missing_one_is_missing_after_seven",
    "claim": "qa/lab.py::tick_times, the only producer of ticks, has no test; returning [] or reading another row type stays green (report never due); no case has a tick at or after 06:40, so moving the window end stays green",
-   "votes": null,
-   "verdict": null,
+   "votes": {
+    "t2": "real",
+    "t1": "real",
+    "t3": "real"
+   },
+   "verdict": "real",
    "fixed": false,
    "commit": null
   },
@@ -191,8 +263,12 @@
    "source": "audit",
    "nodeid": "tests/meta/test_pipeline_decisions.py::test_no_decision_was_added_or_reworded_without_the_operator",
    "claim": "SOURCES covers only CLAUDE.md and SKILL.md files; docs/laborator-plan.md:123 already carries an [operator 2026-09-13] tag nothing pins",
-   "votes": null,
-   "verdict": null,
+   "votes": {
+    "t2": "not",
+    "t1": "not",
+    "t3": "not"
+   },
+   "verdict": "dropped",
    "fixed": false,
    "commit": null
   },
@@ -201,8 +277,12 @@
    "source": "audit",
    "nodeid": "tests/meta/test_pipeline_lab_report.py::test_every_figure_the_report_writes_reaches_the_lab_page",
    "claim": "a field counts as read when lp.<field> appears anywhere in TEMPLATE, and fields are pooled across products, so a product the page never draws counts as read",
-   "votes": null,
-   "verdict": null,
+   "votes": {
+    "t2": "real",
+    "t1": "real",
+    "t3": "real"
+   },
+   "verdict": "real",
    "fixed": false,
    "commit": null
   },
@@ -211,8 +291,12 @@
    "source": "audit",
    "nodeid": "tests/rest/test_gem_screener_chains_say_what_their_sources_say.py::test_a_chains_stablecoins_are_the_dollars_defillama_counts",
    "claim": "the open-day exemption tests max(date) == as_of against DeFiLlama as fetched at run time (qa/gemaudit.py:840); a snapshot up to 12 h old read after midnight UTC finds the day closed and fails Filecoin against a closed value that did not exist when they read it",
-   "votes": null,
-   "verdict": null,
+   "votes": {
+    "t2": "real",
+    "t1": "real",
+    "t3": "real"
+   },
+   "verdict": "real",
    "fixed": false,
    "commit": null
   },
@@ -221,8 +305,12 @@
    "source": "audit",
    "nodeid": "tests/rest/test_supply_analyzer_states_what_its_sources_say.py::test_a_burned_slice_comes_from_a_burn",
    "claim": "with no burned slice on any row (0 of 267 live) the contract holds trivially but the check raises Inconclusive (lines 631-633), so #156 (FIX_CLAIMED, paid) can never verify; and _burn_source picks burned_so_far over supply_gap by key name, not by which input the slice came from",
-   "votes": null,
-   "verdict": null,
+   "votes": {
+    "t2": "not",
+    "t1": "real",
+    "t3": "not"
+   },
+   "verdict": "minority",
    "fixed": false,
    "commit": null
   },
@@ -232,8 +320,12 @@
    "dup_of": "R01",
    "nodeid": "tests/rest/test_supply_analyzer_states_what_its_sources_say.py::test_every_range_uses_the_stated_typical_inflow",
    "claim": "the reserve-cap exemption compares a stock (reserve % of pile) with a yearly flow (stated % a year) and never checks the width it excuses: reserve 5 % (cap 60 %/yr) with width 2.0 passes (same defect as R01)",
-   "votes": null,
-   "verdict": null,
+   "votes": {
+    "t2": "real",
+    "t1": "real",
+    "t3": "real"
+   },
+   "verdict": "real",
    "fixed": false,
    "commit": null
   },
@@ -242,8 +334,12 @@
    "source": "audit",
    "nodeid": "tests/mcp/test_fund_history_starts_at_inception.py::test_a_fund_history_fetched_as_their_skill_says_starts_at_inception",
    "claim": "the contract is about time (starts at inception) but the assertion compares only the first value with the inception price; inception_date and first_t are never compared, so a clipped series whose first value is within 2 % passes",
-   "votes": null,
-   "verdict": null,
+   "votes": {
+    "t2": "not",
+    "t1": "not",
+    "t3": "not"
+   },
+   "verdict": "dropped",
    "fixed": false,
    "commit": null
   },
@@ -252,8 +348,12 @@
    "source": "audit",
    "nodeid": "tests/rest/test_gem_screener_picks_and_formulas_are_self_consistent.py::test_the_dilution_caution_band_lies_below_the_red_band",
    "claim": "the docstring's harm is an empty caution level, but the assertion checks only the order of the two stated lines; lines swapped back while every row still reads red and levels.caution stays 0 passes",
-   "votes": null,
-   "verdict": null,
+   "votes": {
+    "t2": "not",
+    "t1": "not",
+    "t3": "not"
+   },
+   "verdict": "dropped",
    "fixed": false,
    "commit": null
   },
@@ -262,8 +362,12 @@
    "source": "audit",
    "nodeid": "tests/meta/test_pipeline_check_quality.py::test_the_is_answer_rule_is_self_calibrating_and_still_bites",
    "claim": "tagged() only checks is_answer is a bool; the fixture always builds first_pass and pins a first pass tagged False as clean, so an inbox where every first pass says is_answer false passes against the #67 resolution (is_answer true on every substantive answer)",
-   "votes": null,
-   "verdict": null,
+   "votes": {
+    "t2": "not",
+    "t1": "real",
+    "t3": "not"
+   },
+   "verdict": "minority",
    "fixed": false,
    "commit": null
   },
@@ -272,8 +376,12 @@
    "source": "audit",
    "nodeid": "tests/rest/test_account_history_pages_forward.py::test_the_account_history_pages_forward",
    "claim": "page_repeats is all-or-nothing (set(ids2) <= set(ids1)): one row added between the reads turns the captured defect (same 100 ids at every offset) green; an empty next page under has_more reads as moving forward",
-   "votes": null,
-   "verdict": null,
+   "votes": {
+    "t2": "real",
+    "t1": "real",
+    "t3": "real"
+   },
+   "verdict": "real",
    "fixed": false,
    "commit": null
   },
@@ -282,8 +390,12 @@
    "source": "audit",
    "nodeid": "tests/repo/test_submit_guards.py::test_a_finding_already_reported_is_reopened_never_filed_again",
    "claim": "select_items reads filing.reports, filled only by a folded accepted outcome; an original whose outcome is unknown or not yet folded, cited by a new yaml key under another title, is filed again; the test only gives a folded report_id",
-   "votes": null,
-   "verdict": null,
+   "votes": {
+    "t2": "real",
+    "t1": "real",
+    "t3": "real"
+   },
+   "verdict": "real",
    "fixed": false,
    "commit": null
   },
@@ -293,8 +405,12 @@
    "dup_of": "R04",
    "nodeid": "tests/rest/test_the_station_opens_its_default_tabs.py::test_the_station_opens_every_default_tab_for_its_default_symbol",
    "claim": "follow_redirects=False makes a redirect to a working page read as 'does not open' (same as R04); a soft 404 (200 'Market not found') passes",
-   "votes": null,
-   "verdict": null,
+   "votes": {
+    "t2": "not",
+    "t1": "not",
+    "t3": "not"
+   },
+   "verdict": "dropped",
    "fixed": false,
    "commit": null
   },
@@ -303,8 +419,12 @@
    "source": "audit",
    "nodeid": "tests/rest/test_backtest_leaderboard_ranks_backtests_on_historical_data.py::test_the_leaderboard_ranks_no_bot_on_synthetic_trades",
    "claim": "synthetic_in ignores the response's third key `synthetic` (live), so {synthetic: true, data_kind: labs} reads labelled and clean; a bot whose first page is labelled synthetic and second unlabelled falls back to per-trade flags and is dropped",
-   "votes": null,
-   "verdict": null,
+   "votes": {
+    "t2": "not",
+    "t1": "not",
+    "t3": "not"
+   },
+   "verdict": "dropped",
    "fixed": false,
    "commit": null
   },
@@ -313,8 +433,12 @@
    "source": "audit",
    "nodeid": "tests/rest/test_a_paper_bot_trade_says_what_happened.py::test_a_clone_decides_on_the_strategy_its_species_is_described_by",
    "claim": "the readability guard at :286 is across all species, not per judged clone; a species whose primary_indicators become [] is counted judged and clean although its description still names its indicator",
-   "votes": null,
-   "verdict": null,
+   "votes": {
+    "t2": "real",
+    "t1": "real",
+    "t3": "real"
+   },
+   "verdict": "real",
    "fixed": false,
    "commit": null
   },
@@ -323,8 +447,12 @@
    "source": "audit",
    "nodeid": "tests/rest/test_a_settled_card_stops_at_its_resolution.py::test_a_settled_card_shows_its_index_at_resolution",
    "claim": "a NaN current_index passes isinstance and abs(NaN) > 0.5 is False, so the card counts as held (card_rules guards isfinite); the docstring's 13 of 25 and 50c6fca6 lie outside the code's 72 h window; spec_resolution_at_utc (48 h earlier) is unmentioned",
-   "votes": null,
-   "verdict": null,
+   "votes": {
+    "t2": "not",
+    "t1": "not",
+    "t3": "not"
+   },
+   "verdict": "dropped",
    "fixed": false,
    "commit": null
   }
@@ -378,7 +506,21 @@
   "last": "2026-10-04",
   "done": false
  },
- "rule_changes": [],
+ "rule_changes": [
+  {
+   "id": "RC1",
+   "what": "the 7:00 morning report is owed (tick from 06:40, session-start reminder after 07:00) only after a night the laboratory ran: a tick between 21:00 the evening before and 06:40 (qa.morning.night_ran over qa.lab.tick_times); the laborator skill's sentence says so",
+   "why": "the operator, 2026-10-10, after a reminder asked for a report following a night with no laboratory: 'na ranni prehled kaslu v noci nebyla laborka'; the 2026-09-23 tagged instruction asks for a report on what happened in the lab overnight",
+   "votes": {
+    "t1": "no",
+    "t2": "no",
+    "t3": "no"
+   },
+   "test": "tests/meta/test_pipeline_morning.py::test_the_report_is_due_from_six_forty_and_a_missing_one_is_missing_after_seven",
+   "commit": "9e8fe127, 574f9e11",
+   "handover": true
+  }
+ ],
  "meta_tests": {
   "start": 824,
   "end": null,
