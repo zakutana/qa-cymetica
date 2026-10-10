@@ -1,6 +1,6 @@
 """The Gem Screener agrees with itself where it has published the rule.
 
-Five things it says about itself that any redesign has to keep true, because
+Six things it says about itself that any redesign has to keep true, because
 the ranking, the picks and the altseason reading all stand on them:
 
 1. **A Degen pick opens the coin it names.** `GET /api/v1/gem-screener/picks`
@@ -32,6 +32,9 @@ the ranking, the picks and the altseason reading all stand on them:
 5. **The run-rate uses the multiplier its own page states.** It says x 12 on the
    30-day estimate; the code applies x 365 / 30 (2026-09-30: 45 of 45 rows, +1.4 %).
 
+6. **A run-rate states only the days its revenue has.** `runrate.cov30` is
+   held to the row's own daily series (2026-10-10: KNC 30 of 30 stated, 19 held).
+
 NOT asserted: that the formula is a good one (their own backtest says the rank
 has no skill, and that is the audit's finding, not this check's), or that a pick
 is worth buying. A field that cannot be read is INCONCLUSIVE, never agreement.
@@ -47,6 +50,7 @@ from qa import gemaudit as g
 from qa.marks import Inconclusive, SafetyTier, qa
 from qa.measure import Measurement, conclude
 from tests.rest.test_gem_screener_numbers_match_their_sources import get_patiently, read_page, read_snapshot
+from tests.rest.test_gem_screener_panels_say_what_their_data_says import read_api
 
 
 @qa(component="rest.gem_screener", tier=SafetyTier.SAFE, surface="rest")
@@ -184,6 +188,33 @@ def test_the_runrate_uses_the_multipliers_its_page_states(rest_anon):
         right={"rows_off": 0, "stated": said["stated"]},
         population={"breaches": breaches[:10], "stated": stated},
         sources={"page": g.APP_PAGE}))
+
+
+@qa(component="rest.gem_screener", tier=SafetyTier.SAFE, surface="rest")
+def test_a_runrate_states_only_the_days_its_revenue_has(rest_anon):
+    """`runrate.cov30` names how many of the last 30 days a row's revenue rests
+    on; its own `rev_series` holds the days. On 2026-10-10 KNC said 30 with 11
+    absent (between 12 and 24 September, absent from DeFiLlama too) and `sparse` false, so
+    the 30-day sum, the run-rate and price/revenue counted them as zero.
+    ET-28597 item 5, asked 2026-09-30 and not explained since. The series is in
+    the snapshot API only; the page's embedded copy leaves it out."""
+    snap = read_api(rest_anon, g.SNAPSHOT_API, dated=True)
+    said = g.coverage_breaches(snap)
+    if said["checked"] < 10:
+        raise Inconclusive(f"only {said['checked']} rows state a 30-day coverage beside a revenue series")
+    breaches = said["breaches"]
+    conclude(Measurement(
+        verdict="failed" if breaches else "passed",
+        reason=(f"{len(breaches)} of {said['checked']} rows state more days of revenue in the last 30 than their "
+                f"own daily series holds, and count the absent days as zero: "
+                + "; ".join(f"{b['row']} cov30 {b['cov30']:g} with {b['present']} days present "
+                            f"(run-rate basis {b['basis']}, sparse {b['sparse']})" for b in breaches[:5])
+                if breaches else
+                f"all {said['checked']} rows state no more days than their revenue series holds"),
+        left={"rows_overstating": len(breaches), "checked": said["checked"]},
+        right={"rows_overstating": 0},
+        population={"breaches": breaches[:10], "generated_at": snap.get("generated_at")},
+        sources={"api": g.SNAPSHOT_API}))
 
 
 @qa(component="rest.gem_screener", tier=SafetyTier.SAFE, surface="rest")

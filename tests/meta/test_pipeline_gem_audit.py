@@ -411,6 +411,27 @@ def _the_derived_figures_are_held_to_their_definitions():
     shown = _app("a#4", "UNC", 1.0, holders30d=120.0, total30d=100.0, holders_share=1.2)
     assert g.holders_clipped(_snapshot([shown])) == [], "a share shown as 120 % was called clipped to 100 %"
 
+    # ET-28597 item 5 (2026-10-10): `runrate.cov30` is how many of the last 30
+    # days the revenue rests on. KNC said 30 with 11 of them absent from its own
+    # `rev_series`, so its run-rate and P/S counted those days as earning nothing
+    # while `sparse` stayed false. A day present at 0 is a day with data.
+    day0 = 1_790_000_000 - 1_790_000_000 % 86400
+    def served(n_missing, cov30, zero_day=False):
+        kept = [i for i in range(40) if not (5 <= i < 5 + n_missing)]
+        series = [[day0 - 86400 * i, 0.0 if zero_day and i == 1 else 10.0] for i in sorted(kept, reverse=True)]
+        return _app(f"c#{n_missing}", f"C{n_missing}", 1.0, rev_series=series,
+                    runrate={"value": 1.0, "basis": "30d", "cov30": cov30, "sparse": False})
+    seen = g.coverage_breaches(_snapshot([served(11, 30)]))
+    assert seen["checked"] == 1 and [b["row"] for b in seen["breaches"]] == ["C11(c#11)"], seen
+    assert seen["breaches"][0]["present"] == 19 and seen["breaches"][0]["cov30"] == 30, seen
+    assert g.coverage_breaches(_snapshot([served(0, 30, zero_day=True)]))["breaches"] == [], (
+        "a day present at 0 was read as a missing day")
+    assert g.coverage_breaches(_snapshot([served(11, 19)]))["breaches"] == [], (
+        "a row that states its 19 days honestly was failed")
+    bare = served(11, 30)
+    bare["runrate"] = {"value": 1.0, "basis": "30d"}
+    assert g.coverage_breaches(_snapshot([bare]))["checked"] == 0, "a row that states no coverage was judged"
+
     # C04, deep pass of 2026-09-30 (3/3): the market cap is price x circulating
     # supply. On 2026-09-30 the page held it within 1.02 % on all 214 rows; the
     # ranking stands on it (ps = mcap / run-rate), and nothing compared it.

@@ -1244,6 +1244,31 @@ def runrate_factor_breaches(snap: dict, stated: dict[int, float], *, tol: float 
     return {"stated": want, "checked": checked, "breaches": breaches}
 
 
+def coverage_breaches(snap: dict, *, window: int = 30) -> dict:
+    """Rows whose `runrate.cov30` names more of the last 30 days than their own
+    `rev_series` holds, counted back from the series' last day (the window
+    `rev30d` sums). A day present at 0 has data; an absent day has none.
+    2026-10-10: KNC said 30 with 11 days absent (DeFiLlama has none for them
+    either), so the 30-day sum, the run-rate and P/S counted them as zero."""
+    day = 86400
+    checked, breaches = 0, []
+    for a in snap["apps"]:
+        rr = a.get("runrate") or {}
+        stated = num(rr.get("cov30"))
+        series = a.get("rev_series") or []
+        days = {int(p[0]) for p in series if isinstance(p, (list, tuple)) and len(p) == 2 and num(p[0])}
+        if stated is None or not days:
+            continue
+        checked += 1
+        last = max(days)
+        missing = [last - i * day for i in range(window) if last - i * day not in days]
+        present = window - len(missing)
+        if stated > present:
+            breaches.append({"row": label(a), "cov30": stated, "present": present, "basis": rr.get("basis"),
+                             "sparse": rr.get("sparse"), "missing": sorted(missing)})
+    return {"checked": checked, "breaches": breaches}
+
+
 def recompute_from_series(app: dict, chart: list) -> dict:
     """The page's revenue figures recomputed from DefiLlama's own daily series.
 
