@@ -12,5 +12,9 @@ Read live on 2026-10-10: the form (the fields `request.md` names, 8,000 characte
 
 ## State
 
+**Superseded, 2026-10-10 21:20 UTC.** The operator had the spec's own agent apply the fixes instead of pushing ours: `1f9566a` (brief) and `97951cb` (request pinned to `1f9566a`). Checked: sections 6 and 7 as above, the verbatim prompts gone, the Gem Screener keeps its place, "a table that doesn't fill" in Left to you, the picture field left empty, 32 lines, 7,907 characters. Two words changed in the text handed to the operator for the form (not in their repository): line 7 no longer quotes prompt words ("the prompts say paper table and paper account"), and line 30 says "paper tables free" instead of "first paper table free" (paper tables are always free). The SPEC's own click-through link still points at the branch; the request's link is pinned. The patches below are kept only as the record of what we asked for.
+
+The older plan, kept for the record:
+
 - **Not pushed.** Two commits on top of `bf3a234`: `440772e` (the edits) and `bafb1db` (the pin), saved as `agent-tournaments/0001-*.patch` and `0002-*.patch` next to this note. The push waits for the operator's word ("nahraj"): check `git ls-remote` still shows `bf3a234`, fresh clone of the branch, `git am --committer-date-is-author-date` both (that flag gives back the same two hashes, checked), push, read SPEC.md back at the hash. If the branch has moved meanwhile, the hashes change and line 1 of improvements.txt is pinned again.
 - **Not filed.** The operator files on the web form: "It does not exist yet", name `Agent Tournaments`, the text from improvements.txt, no pictures. Keep the request token the form shows once.
