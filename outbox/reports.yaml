@@ -5458,6 +5458,50 @@ reports:
       /api/v1/gem-screener anonymously and fails while a row's runrate.cov30 is larger than the days
       its own rev_series holds in the 30 days ending at its last day. It passes the moment they agree.
 
+  - key: event-card-index-moves-after-resolution
+    findings:
+      - CYM-a_settled_card_shows_its_index_at_resolution
+    severity: medium
+    category: logic
+    url: https://cymetica.com/events/6fb50de3-c116-4c99-9295-903d09c6abf2
+    title: >-
+      Event cards: a settled card's index keeps moving after resolution; 6fb50de3 resolved at 100.42
+      and shows 203.16 (+102%), the step 26 h after trading closed; 4 of 7 cards settled in 72 h
+    expected: >
+      Once a card resolves (contract_spec.resolution_at_utc, the same moment as trading_closes_at;
+      methodology "last-tick", max_price_staleness "30s"), its index stops there: a settled card
+      shows the index it had at resolution, and its index-history ends at that point.
+    actual: >
+      Read on 2026-10-10 at 10:45 UTC, the newest 50 settled cards, of which 7 resolved between 2 and
+      72 hours earlier. 4 of the 7 show a current_index more than 0.5% from their last index-history
+      point at or before resolution_at_utc, the history running on after it: 6fb50de3 ("KMM Group
+      Expands Leadership ...") 100.42 at 2026-10-08 09:06 UTC, shown 203.16 (63 points after, the
+      last 2026-10-09 16:11); ee01fadb, the same basket, 100.28 at 2026-10-08 13:48, shown 202.98 (59
+      points after); f4bd9964 100.29 at 2026-10-08 10:38, shown 104.76 (27 points after); 29aa15ca
+      103.39 at 2026-10-08 12:25, shown 107.25 (64 points after). In 6fb50de3's history the index
+      reads 99.80 at 2026-10-09 11:28 and 203.23 at 11:59, 26 hours after trading closed. That step
+      is one leg: TSGMY (23.6% of the basket), an OTC ADR whose quote sat at $66.00 with no volume
+      on any day from 24 September to 7 October, then printed 200 ADRs at $355 on 8 October
+      (Yahoo Finance daily bars), while the Tokyo shares it stands for (6101.T) closed at 5,710 yen
+      on 5 October and 5,580 on 8 October. In a wider read of 25 settled cards earlier that morning,
+      13 differed by more than 0.5%, among them 50c6fca6 (crypto legs only, 100.47 at resolution,
+      93.13 shown, 182 points after).
+    steps:
+      - 'GET https://cymetica.com/api/v1/event-cards?status=settled&limit=50 -> cards[id=6fb50de3-c116-4c99-9295-903d09c6abf2]: status "settled", current_index 203.162223, index_base 100.0, contract_spec.resolution_at_utc "2026-10-08T09:06:53.220722+00:00", trading_closes_at the same'
+      - 'GET https://cymetica.com/api/v1/event-cards/6fb50de3-c116-4c99-9295-903d09c6abf2/index-history -> points: 2026-10-08T08:59:33 index 100.42 (the last at or before resolution); 2026-10-09T11:28:40 99.80316; 2026-10-09T11:59:14 203.233801; last point 2026-10-09T16:11:31 203.162223'
+      - 'GET https://cymetica.com/api/v1/event-cards/6fb50de3-c116-4c99-9295-903d09c6abf2 -> basket: XMTR 0.3669, PATK 0.2404, TSGMY 0.2362, HURC 0.0798, SSYS 0.0311, MTLS 0.0306, DDD 0.0135, VEEMF 0.0015, all asset_type "stock", venue "finnhub"'
+    body: >
+      How to fix it is yours: freeze a card's index at its resolution and show that figure once it is
+      settled, or say which moment a settled card's index belongs to. A visitor reads 6fb50de3 as a
+      card that doubled, where it resolved at +0.42%. Whether positions were paid on the figure at
+      resolution or on the one shown is not visible to us; these four cards show no bull or bear
+      notional. Separately, a basket leg quoted for two weeks without a trade (TSGMY at $66.00, no
+      volume) can double a stock card on its first print; two cards on the same
+      basket (46255539, 99f255da) resolved after that print and settled at 197.63 and 199.14. Our
+      check reads the settled listing and each card's index-history anonymously and fails while a
+      card settled 2 to 72 hours ago shows an index more than 0.5% from its last point at or before
+      resolution_at_utc; cards resolved earlier are not judged again, so a fix shows within three days.
+
 footer: >
   Reported by an independent QA agent. Scope of this work: verification of the
   REST API, MCP, the machine-readable discovery surfaces and the pages built on
