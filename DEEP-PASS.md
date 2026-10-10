@@ -1,14 +1,14 @@
-# Deep pass — 2026-10-08 ráno (Opus 5.5 xhigh)
+# Deep pass — 2026-10-10 večer (Opus 5.5 xhigh)
 ## Opraveno
-- **20 děr opraveno (z 24 podezření: 20 potvrdili aspoň 2 ze 3 posuzovatelů, 1 menšinové, 3 zamítnuté).** Kontrola žebříčku backtestů proto už neříká „opraveno", stránka dál slibuje historická data.
-- **Boti: obnova po pauze už nestojí na „není volné místo" (strop 25 → 50, obchoduje jich 34) a popisek čte skutečný důvod zastavení, ne znaménko zisku.**
-- **Čárka u restartovaného bota v laborce začíná na nule od restartu, takže končí na svém čísle.**
-- **Ověřovací běh s předem zapsaným výběrem (úzký, podle tvého pravidla): 1 416 prošlo, 16 selhalo (vady Cymetiky), 6 přeskočeno.**
+- **15 děr opraveno (z 32 podezření: 15 potvrdili aspoň 2 ze 3 posuzovatelů, 2 menšinové, 15 zamítnuté).** Liga po výpadku serveru neodešle odpověď podruhé a neukazuje nulu, když se údaj nepodaří přečíst; ranní přehled počítá se změnou času.
+- **Šest našich kontrol a pojistek je přísnějších: rozsah přítoku u Supply Analyzeru, stablecoiny podle času snapshotu, stránkování historie, klony bez čitelných indikátorů, odpovědi ligy a podání reportu, který ještě není v knize.**
+- **Z NEXT hotovo: kontrola žebříčku backtestů čte jejich nový štítek a nová kontrola stránkování historie transakcí.** Report k ní podá příští sweep.
+- **Ověřovací běh s předem zapsaným výběrem (úzký, podle tvého pravidla): 1 125 prošlo, 12 selhalo (všechno vady Cymetiky), 5 přeskočeno.**
 ## Co odešlo Cymetice
-- **16 ověření: 9× splněno (#133, #160, #161, #162, #165, #166 dvakrát, #170, #172, #176), 7× selhalo (#103, #171, #173, #174, #175, #177).** Selhání na #159 jsem neposlal: jejich definice se během běhu přepočítala a teď zase sedí.
+- **6 ověření: 5× opraveno (#132, #137, #167, #175, #180), 1× pořád selhává (#174).** Karty po vypořádání (#180) opravili ještě týž den.
 ## Změněná pravidla
-- **Bot, který třikrát po sobě skončí na stop-lossu, je zahozen natrvalo, i když později vydělá; ručně ho nejde znovu spustit.** Tvoje pravidlo ze 7. 10. jsem dřív četl jen jako „poslední tři"; 3 ze 3 čtenářů: nic neoslabuje.
-- **Strop obchodujících botů je 50 místo 25: platforma jich teď nechává obchodovat 34.** 3 ze 3 čtenářů: neoslabuje, číslo 25 vyvrátila data.
+- **Ranní přehled se chce jen po noci, kdy běžela laborka (záznam laborky mezi 21. a 6:40 hodinou).** Tvoje slova z 10. 10.; 3 ze 3 čtenářů: nic neoslabuje.
 ## Čeká na tebe
-- **Menšinový nález (1 ze 3): u řádku vzniklého rozdělením reportu se značka „ručně připnuto" může o jedno skládání opozdit.** Neopravoval jsem; jediný skutečný případ byl připnut za 31 minut.
-- **Verdikt nového Gem Screeneru (ET-29379) až po 15. 10.** (Náklady karet jsou od 8. 10. nulové, papír nic neplatí: REPLY-0136, 41b57c37.)
+- **Menšinový nález (1 ze 3): kontrola spálené části u Supply Analyzeru je nerozhodná, dokud žádný coin nic nespálil, takže report #156 nikdy nedojde k „opraveno“.** Dva čtenáři to mají za správné pravidlo: prázdná skupina nikdy neprochází.
+- **Menšinový nález (1 ze 3): kontrola automatické první odpovědi Nexuse bere záporný štítek jako v pořádku, i když jejich oprava #67 slibuje kladný.** Dva čtenáři našli poznámku, která to záměrně připouští.
+- **Verdikt nového Gem Screeneru (ET-29379) až po 15. 10.**

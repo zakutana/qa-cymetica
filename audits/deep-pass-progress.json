@@ -2,7 +2,7 @@
  "run": "deep-pass-2026-10-10",
  "at": "2026-10-10T17:59:18+00:00",
  "previous_at": "2026-10-08T06:07:10+00:00",
- "at_finished": null,
+ "at_finished": "2026-10-10T19:46:00+00:00",
  "start_commit": "de5e6ce8df11e6ef4ad2a1d96a40194a004b4c39",
  "size": "full",
  "gaps": [
@@ -505,7 +505,9 @@
    "why": "a deep pass files nothing; the check is in, the next sweep files it"
   }
  ],
- "next": [],
+ "next": [
+  "Report přes submit.py: /api/v1/account/me/transactions u USDC (i bez filtru) vrací při dalším offsetu stejnou stránku; endpoint není v žádné dokumentaci. Kontrola už je (609c4032), podá ji příští sweep."
+ ],
  "retrospective": {
   "last": "2026-10-04",
   "done": false
@@ -527,8 +529,8 @@
  ],
  "meta_tests": {
   "start": 824,
-  "end": null,
-  "reason": null
+  "end": 824,
+  "reason": "the new cases went into existing tests (league, morning, lab loop, fomo stops, lab report, clone trades, check subjects, check quality, gem audit)"
  },
- "finished": false
+ "finished": true
 }
