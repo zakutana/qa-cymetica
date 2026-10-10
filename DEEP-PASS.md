@@ -11,4 +11,4 @@
 - **Strop obchodujících botů je 50 místo 25: platforma jich teď nechává obchodovat 34.** 3 ze 3 čtenářů: neoslabuje, číslo 25 vyvrátila data.
 ## Čeká na tebe
 - **Menšinový nález (1 ze 3): u řádku vzniklého rozdělením reportu se značka „ručně připnuto" může o jedno skládání opozdit.** Neopravoval jsem; jediný skutečný případ byl připnut za 31 minut.
-- **Verdikt nového Gem Screeneru (ET-29379) až po 15. 10.; náklady karet (1,4 %) změním po odpovědi Cymetiky na MSG-0145.**
+- **Verdikt nového Gem Screeneru (ET-29379) až po 15. 10.** (Náklady karet jsou od 8. 10. nulové, papír nic neplatí: REPLY-0136, 41b57c37.)
