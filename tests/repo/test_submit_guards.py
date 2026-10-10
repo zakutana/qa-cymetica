@@ -81,3 +81,23 @@ def test_a_finding_already_reported_is_reopened_never_filed_again():
     # The title dedupe still applies to what is left.
     items, skipped = submit.select_items(payloads, reports, findings, seen={"fresh"})
     assert items == [] and "title" in dict(skipped)["fresh"]
+
+    # Deep pass 2026-10-10, B03: the ledger's reports are filled only by a FOLDED accepted
+    # outcome. A filing whose outcome is unknown, accepted and not yet folded, or not written
+    # at all, is in the journal only -- and a new key under another title citing the same
+    # finding was filed again. The journal is read too; a rejected filing is not a report.
+    def filing(key, fid, outcome=None, report_id=None):
+        rows = [{"type": "filing_intent", "key": key, "findings": [fid]}]
+        if outcome:
+            rows.append({"type": "filing_outcome", "key": key, "findings": [fid],
+                         "outcome": outcome, "report_id": report_id})
+        return rows
+    for events, why in ((filing("first", "CYM-new", "unknown"), "unknown"),
+                        (filing("first", "CYM-new", "accepted", 201), "#201"),
+                        (filing("first", "CYM-new"), "no outcome")):
+        items, skipped = submit.select_items(payloads, reports, findings, seen=set(), events=events)
+        assert "fresh" not in [i["key"] for i in items], (why, items)
+        assert why in dict(skipped)["fresh"], (why, skipped)
+    items, _ = submit.select_items(payloads, reports, findings, seen=set(),
+                                   events=filing("first", "CYM-new", "rejected"))
+    assert [i["key"] for i in items] == ["fresh"], "a rejected filing is not a report"

@@ -96,8 +96,33 @@ def evidence_runs(findings: dict, cited: list[str]) -> dict[str, str]:
     return out
 
 
+def filed_in_journal(events) -> dict[str, list[str]]:
+    """Findings the journal shows filed or possibly filed, folded or not: an accepted outcome
+    (`#id`), an `unknown` one, or an intent with no outcome yet. The ledger's reports are filled
+    only by a FOLDED accepted outcome, so between a filing and the fold -- and for ever after an
+    unknown one until --reconcile -- the ledger alone said 'never reported' (deep pass
+    2026-10-10, B03). A rejected filing is not a report."""
+    answered = {}
+    for e in events or ():
+        if e.get("type") == "filing_outcome":
+            answered.setdefault(e.get("key"), []).append(e)
+    out: dict[str, list[str]] = {}
+    for e in events or ():
+        if e.get("type") == "filing_outcome" and e.get("outcome") in ("accepted", "unknown"):
+            label = f"#{e['report_id']}" if e.get("report_id") else e.get("outcome")
+        elif e.get("type") == "filing_intent" and not answered.get(e.get("key")):
+            label = "no outcome"
+        else:
+            continue
+        for fid in e.get("findings") or []:
+            out.setdefault(fid, [])
+            if label not in out[fid]:
+                out[fid].append(label)
+    return out
+
+
 def select_items(payloads: list, reports: list, findings: dict,
-                 seen: set) -> tuple[list[dict], list[tuple[str, str]]]:
+                 seen: set, events=None) -> tuple[list[dict], list[tuple[str, str]]]:
     """What may be filed now, and why the rest may not.
 
     A finding is reported ONCE. [operator 2026-10-07] "mas otevrit stary bug
@@ -107,15 +132,17 @@ def select_items(payloads: list, reports: list, findings: dict,
     says; what reopens it is a FAIL verification on the original
     (scripts/verify.py), which their server answers `reopened`. The title
     dedupe below it stays, for a report whose findings are new."""
-    reported = {row.get("id"): [r.get("report_id") for r in
+    reported = {row.get("id"): [f"#{r.get('report_id')}" for r in
                                 (row.get("filing") or {}).get("reports") or []]
                 for row in findings.get("findings") or []}
+    for fid, labels in filed_in_journal(events).items():
+        reported[fid] = list(dict.fromkeys((reported.get(fid) or []) + labels))
     items, skipped = [], []
     for key, payload in payloads:
         cited = [r["findings"] for r in reports if r["key"] == key][0]
         old = {fid: reported[fid] for fid in cited if reported.get(fid)}
         if old:
-            named = ", ".join(f"{fid} (#{', #'.join(str(i) for i in ids)})"
+            named = ", ".join(f"{fid} ({', '.join(str(i) for i in ids)})"
                               for fid, ids in old.items())
             skipped.append((key, f"already reported: {named}. A recurrence reopens "
                                  f"the original -- scripts/verify.py sends the FAIL "
@@ -566,7 +593,9 @@ def main() -> None:
             CURRENT_TIER.reset(token)
         print(f"tracker currently holds {len(seen)} reports\n")
 
-        items, skipped = select_items(payloads, reports, findings, seen)
+        from qa.state import read_events
+
+        items, skipped = select_items(payloads, reports, findings, seen, events=read_events())
         for key, why in skipped:
             print(f"  SKIP  {key}: {why}")
 
