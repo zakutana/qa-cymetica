@@ -443,8 +443,12 @@ def typical_mismatches(rows, typical) -> list[dict]:
             # Narrower than its parts is the documented cap ("what comes in ... is at most what
             # the reserve outside the pile still holds") on a row whose reserve is smaller than
             # the stated typical; how far it narrows is growth_past_max_supply's (2026-10-10).
+            # Narrowed TO the reserve, not below it: the inflow part (the width less the named
+            # buyback part) must still carry what the reserve can supply in a year, within the
+            # batch's rounding (deep pass 2026-10-10, R01/A03).
             reserve = reserve_pct(row)
-            if width < stated + named and reserve is not None and reserve < stated:
+            if (width < stated + named and reserve is not None and reserve < stated
+                    and width - named >= reserve - 0.03):
                 continue
             out.append({"symbol": ((row.get("token") or {}).get("symbol")), "range": rng,
                         "used": round(width, 2)})

@@ -743,6 +743,17 @@ def test_the_is_answer_rule_is_self_calibrating_and_still_bites():
     unread = {k: v for k, v in capped.items() if k != "reserve_today"}
     assert [b["symbol"] for b in typical_mismatches([unread], 15.102208788677919)] == ["SKY"], (
         "a row stating no reserve was given the cap")
+    # Deep pass 2026-10-10, R01/A03: the cap explains a range narrowed TO the reserve, not below
+    # it. A reserve of 14 % of the pile can supply 14 % a year; a range adding 0.06 % is an
+    # understated inflow, and so is one whose width does not even cover its named buyback part.
+    shallow = dict(capped, yearly_range=[0.0, 0.06], yearly_range_parts=parts(15.1, 0.0),
+                   pile_today=1000.0, reserve_today=140.0)
+    assert [b["symbol"] for b in typical_mismatches([shallow], 15.102208788677919)] == ["SKY"], (
+        "a range far below what the reserve could supply passed as the cap")
+    under = dict(capped, yearly_range=[1.0, 1.1], yearly_range_parts=parts(15.1, 3.0),
+                 pile_today=1000.0, reserve_today=20.0)
+    assert [b["symbol"] for b in typical_mismatches([under], 15.102208788677919)] == ["SKY"], (
+        "a width below its own named buyback part passed as the cap")
 
     # 6b. A pile grows at most to the max supply ("Max supply = a cap the market feed states").
     #     2026-10-10: YFI's range topped at +15.1 % a year with 590 tokens, 1.64 % of the pile,
