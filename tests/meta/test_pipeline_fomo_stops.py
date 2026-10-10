@@ -520,9 +520,12 @@ def test_ten_dollars_into_every_hot_signal_is_answered_honestly():
     (`max_buy_5pct_usd`) took $10; it is held 24 hours, no stop; the sale is
     capped by what the pool holds then (half its liquidity, the quote side),
     so a drained pool pays about nothing; a path on which their terminal
-    switched pair is left out; a swap fee is charged each side, at 0.5, 1 and
+    switched pair is kept, capped at the $10 it cost (a switch on record is a
+    rug, never left out); a swap fee is charged each side, at 0, 0.5, 1 and
     2 %. And "stihli bychom" is the share of hot signals that could have been
-    bought at all."""
+    bought at all. The sale is the 24-hour reading: a better or a later one
+    inside the window is not what a buyer holding for 24 hours gets (deep
+    pass 2026-10-10, T02)."""
     def sig(n, **extra):
         return _signal(f"0x{n:03x}:2026-09-13T12", **extra)
     good, drained, unpriced, thin, blind, unread, young, switched = (
@@ -540,7 +543,11 @@ def test_ten_dollars_into_every_hot_signal_is_answered_honestly():
         (row,) = _path(signal["key"], signal["price_usd"], [(24, price)])
         return {**row, "liquidity_usd": liquidity, **extra}
     rugged = sig(9, radar_max_buy_5pct_usd=5000.0, age_seconds=100.0)
-    rows = [good, drained, unpriced, thin, blind, unread, young, switched, rugged,
+    # Readings inside the window that are NOT the sale: a peak at 6 h and a dip at 23 h. Selling
+    # at the best checkpoint, or at the last one before 24 h, would change every figure below.
+    inside = [{**row, "liquidity_usd": 100_000.0}
+              for row in _path(good["key"], good["price_usd"], [(6, 3.0), (23, 1.0)])]
+    rows = [good, drained, unpriced, thin, blind, unread, young, switched, rugged, *inside,
             exit24(good, 1.5, 100_000.0), exit24(drained, 2.0, 4.0),
             exit24(thin, 3.0, 100_000.0), exit24(blind, 3.0, 100_000.0),
             # the terminal answered another pair: age jumped by days in a day,
