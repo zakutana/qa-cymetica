@@ -644,6 +644,18 @@ def test_a_card_that_is_closed_on_rest_and_open_on_mcp_fails():
     assert default_tab_paths({"default_tabs": ["chart"], "apps": body["apps"]}) == [], (
         "a station with no default symbol has nothing to fill in, so nothing is judged")
 
+    # And the backtest leaderboard's synthetic label where it lives now (#175, 2026-10-10): on the
+    # trade list's own response (`is_synthetic`, `data_kind`), no longer on each trade.
+    from tests.rest.test_backtest_leaderboard_ranks_backtests_on_historical_data import synthetic_in
+    real = {"trades": [{"symbol": "BTC"}] * 3, "is_synthetic": False, "data_kind": "historical"}
+    fake = {"trades": [{"symbol": "BTC"}] * 3, "is_synthetic": True, "data_kind": "synthetic"}
+    old = {"trades": [{"symbol": "BTC", "is_synthetic": True}, {"symbol": "ETH", "is_synthetic": False}]}
+    assert synthetic_in(real) == (0, True), "a list labelled historical holds no synthetic trade"
+    assert synthetic_in(fake) == (3, True), "a list labelled synthetic makes every trade in it synthetic"
+    assert synthetic_in(dict(fake, is_synthetic=None)) == (3, True), "data_kind alone says synthetic"
+    assert synthetic_in(old) == (1, True), "the per-trade flag of 2026-10-04 is still read"
+    assert synthetic_in({"trades": [{"symbol": "BTC"}]}) == (0, False), "no label anywhere is not a clean list"
+
     # And a fund's: the launcher's paper-only sentence and a profile's live
     # invest offer, read from what a visitor sees -- the markup as served on
     # 2026-09-25, tags and a comment in the way.

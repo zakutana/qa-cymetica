@@ -18,6 +18,11 @@ ASSERTS: no bot on the leaderboard is ranked on trades that its own trade list m
 of the fix passes: trades on the assets' historical prices, or a page and leaderboard that
 say the run is synthetic (the check reads the page's sentence each time).
 
+Their fix of #175 (seen 2026-10-10): the leaderboard leaves synthetic runs out by default
+(`include_synthetic: false`, `synthetic_excluded: 5`, 11 bots), and the label moved from each
+trade to the trade list's own response (`is_synthetic`, `data_kind`). The check reads it there
+(`synthetic_in`); the per-trade flag is still read.
+
 NOT asserted: whether a backtest's headline return follows from its trade list (their
 endpoint describes the two as possibly different), or any strategy's merit.
 
@@ -53,8 +58,22 @@ def _row_says_synthetic(value) -> bool:
     return isinstance(value, str) and "synthetic" in value.lower()
 
 
-def _trades(rest_anon, slug: str) -> list[dict] | None:
-    rows, offset = [], 0
+def synthetic_in(body: dict) -> tuple[int, bool]:
+    """(trades on this page that are synthetic, whether the page says synthetic-or-not at all).
+    Since 2026-10-10 (#175) the label is on the trade list's own response, `is_synthetic` and
+    `data_kind`, and no longer on each trade; a list labelled synthetic makes every trade in it
+    synthetic. The per-trade `is_synthetic` of 2026-10-04 is still read."""
+    trades = [t for t in (body or {}).get("trades") or [] if isinstance(t, dict)]
+    whole = (body or {}).get("is_synthetic") is True or (body or {}).get("data_kind") == "synthetic"
+    labelled = ("is_synthetic" in (body or {}) or "data_kind" in (body or {})
+                or any("is_synthetic" in t for t in trades))
+    count = len(trades) if whole else sum(1 for t in trades if t.get("is_synthetic") is True)
+    return count, labelled
+
+
+def _trades(rest_anon, slug: str) -> tuple[list[dict], int, bool] | None:
+    """Every trade of a bot, how many are synthetic, and whether any page carried a label."""
+    rows, offset, synthetic, labelled = [], 0, 0, False
     while True:
         r = rest_anon.get(TRADES.format(slug=slug), params={"limit": PAGE_SIZE, "offset": offset})
         if r.status_code != 200:
@@ -64,10 +83,12 @@ def _trades(rest_anon, slug: str) -> list[dict] | None:
         if not isinstance(page, list):
             return None
         rows += [t for t in page if isinstance(t, dict)]
+        n, says = synthetic_in(body)
+        synthetic, labelled = synthetic + n, labelled or says
         total = body.get("total")
         offset += PAGE_SIZE
         if not page or not isinstance(total, int) or offset >= total:
-            return rows
+            return rows, synthetic, labelled
 
 
 @qa(component="rest.backtest", tier=SafetyTier.SAFE, surface="rest", claim=CLAIM)
@@ -90,12 +111,15 @@ def test_the_leaderboard_ranks_no_bot_on_synthetic_trades(rest_anon):
     read, unread, ranked_on_synthetic = [], [], []
     flagged_anywhere = False        # a bot with real trades carries no flag; the flag gone EVERYWHERE is not "clean"
     for b in bots:
-        trades = _trades(rest_anon, b["slug"])
-        if trades is None:
+        got = _trades(rest_anon, b["slug"])
+        if got is None:
             unread.append(b["slug"])
             continue
-        flagged_anywhere = flagged_anywhere or any("is_synthetic" in t for t in trades)
-        synth =[t for t in trades if t.get("is_synthetic") is True]
+        trades, n_synthetic, labelled = got
+        flagged_anywhere = flagged_anywhere or labelled
+        # A list labelled synthetic (#175's fix, 2026-10-10) makes every trade in it synthetic.
+        synth = (trades if n_synthetic == len(trades) and n_synthetic
+                 else [t for t in trades if t.get("is_synthetic") is True])
         prices = [float(t["entry_price"]) for t in synth
                   if isinstance(t.get("entry_price"), (int, float, str)) and str(t["entry_price"]).strip()]
         btc = [t for t in synth if t.get("symbol") == "BTC"]
@@ -115,8 +139,8 @@ def test_the_leaderboard_ranks_no_bot_on_synthetic_trades(rest_anon):
     if len(read) < MIN_READ_SHARE * len(bots):
         raise Inconclusive(f"only {len(read)} of {len(bots)} trade lists could be read: {unread[:5]}")
     if not flagged_anywhere:
-        raise Inconclusive("no trade of any bot carries an is_synthetic field any more, so what the "
-                           "check judged by is gone; whether the trades are real is not observed")
+        raise Inconclusive("no trade list carries an is_synthetic or data_kind label any more, so what "
+                           "the check judged by is gone; whether the trades are real is not observed")
     total_synth = sum(r["synthetic"] for r in ranked_on_synthetic)
     total_trades = sum(r["trades"] for r in ranked_on_synthetic)
     conclude(Measurement(
