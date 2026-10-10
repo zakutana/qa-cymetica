@@ -656,6 +656,17 @@ def test_a_card_that_is_closed_on_rest_and_open_on_mcp_fails():
     assert synthetic_in(old) == (1, True), "the per-trade flag of 2026-10-04 is still read"
     assert synthetic_in({"trades": [{"symbol": "BTC"}]}) == (0, False), "no label anywhere is not a clean list"
 
+    # And the account history pages forward (2026-10-10): with currency=USDC, and with no filter
+    # past the first page, every offset answered the same 100 rows while has_more said true.
+    from tests.rest.test_account_history_pages_forward import page_repeats
+    first = [{"id": i} for i in range(100)]
+    assert page_repeats(first, first, has_more=True) is True, "the same page again was read as the next one"
+    assert page_repeats(first, [{"id": i} for i in range(100, 200)], has_more=True) is False
+    assert page_repeats(first, [{"id": i} for i in range(50, 150)], has_more=True) is False, (
+        "an overlap from a row added between reads is not a repeat")
+    assert page_repeats(first, first, has_more=False) is None, "no next page was promised"
+    assert page_repeats([], [], has_more=True) is None, "an empty first page has nothing to repeat"
+
     # And a fund's: the launcher's paper-only sentence and a profile's live
     # invest offer, read from what a visitor sees -- the markup as served on
     # 2026-09-25, tags and a comment in the way.
