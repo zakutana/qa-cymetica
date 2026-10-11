@@ -816,10 +816,11 @@
         "4811ad593ede4cbdea918221bb22181c963d958c1a976a75affe8ecc40909f12",
         "fbf244a18358406db8b2fae12611a519c85875e4c0b1ccc2bf12c9c1349fd7b4",
         "45adaae3586b01fa824daa280c4ef87c812c05d58a845a650dbbdec8d54af1fb",
-        "f725e3f40aa7de0697411363b1f9e7158debdfd057718925d27fc603c157369d"
+        "f725e3f40aa7de0697411363b1f9e7158debdfd057718925d27fc603c157369d",
+        "0bc77860a5308135cca5195aa395433a6d46217ee067b7efe8ee36ae38484a89"
       ],
-      "at": "2026-10-10T18:27:04+00:00",
-      "run_id": "run-20261010T163657Z-a15a9c6d",
+      "at": "2026-10-11T19:49:16+00:00",
+      "run_id": "run-20261011T065815Z-2a8bea98",
       "gap_claimed": true
     },
     "tests/meta/test_pipeline_checks.py::test_a_failed_read_is_never_a_value": {
@@ -10625,11 +10626,12 @@
         "7c5a1794ea8cb50548833ccb92d4f57e9e5944ea79baa934865c34597c0f0b4d",
         "202350a86a46ad3e551d487356d027ebde12ab719cbbd30851326a441e921f64",
         "fa0037a2e3ce0294766bb580272547a93d715cc4646ea1b76d04f36d5ac80842",
-        "ae5c921746a98727a14fe54aca38aa6eb3ea3def5dc2cfdef1a3085fa6a229a0"
+        "ae5c921746a98727a14fe54aca38aa6eb3ea3def5dc2cfdef1a3085fa6a229a0",
+        "19d8b0c592802659fd9c0ff00085017bba0abf1a409ae7a8d1838f4e3eb59b7d"
       ],
-      "at": "2026-10-10T18:27:04+00:00",
-      "run_id": "run-20261010T163657Z-a15a9c6d",
-      "gap_claimed": false
+      "at": "2026-10-11T19:49:16+00:00",
+      "run_id": "run-20261011T184621Z-7f825264",
+      "gap_claimed": true
     },
     "tests/meta/test_pipeline_check_subjects.py::test_a_report_created_behind_a_500_fails_and_a_clean_run_of_twelve_passes": {
       "fingerprints": [
@@ -10906,10 +10908,11 @@
     "tests/meta/test_pipeline_fomo_stops.py::test_ten_dollars_into_every_hot_signal_is_answered_honestly": {
       "fingerprints": [
         "dd1341763ba54d568f7173614d9bd2610d22b48bb7aa23cf7fe2841ef670e893",
-        "956209cf7c7736a79e23841b53c249be8cb7f67ffaec056029e5814ecbae6df0"
+        "956209cf7c7736a79e23841b53c249be8cb7f67ffaec056029e5814ecbae6df0",
+        "da6896fdd8222754426030f1ae634064dbaec0209c039fb956914a747cbfeece"
       ],
-      "at": "2026-10-10T18:27:04+00:00",
-      "run_id": "run-20261010T163657Z-a15a9c6d",
+      "at": "2026-10-11T19:49:16+00:00",
+      "run_id": "run-20261011T065815Z-2a8bea98",
       "gap_claimed": true
     },
     "tests/meta/test_pipeline_fomo_stops.py::test_the_report_opens_with_the_ten_dollar_answer": {
@@ -11081,10 +11084,11 @@
     "tests/meta/test_pipeline_lab_loop.py::test_a_card_room_is_judged_on_our_position_net_of_the_round_trip": {
       "fingerprints": [
         "1ab95076d95339795a0e5909d860cb412c5c5e09f4022e9511bac694ee3a3c06",
-        "a61603088c4234a47f6d5ddc0fb02e488a516c9fe23692d0c345d5dde020a5bb"
+        "a61603088c4234a47f6d5ddc0fb02e488a516c9fe23692d0c345d5dde020a5bb",
+        "ba289db94b397c66b1d9f9811e1bed9c095b2f67a6ac6124874125d73adecb71"
       ],
-      "at": "2026-10-10T18:27:04+00:00",
-      "run_id": "run-20261010T163657Z-a15a9c6d",
+      "at": "2026-10-11T19:49:16+00:00",
+      "run_id": "run-20261011T065815Z-2a8bea98",
       "gap_claimed": true
     },
     "tests/meta/test_pipeline_lab_loop.py::test_his_exits_are_on_the_leg_the_criterion_judges": {
@@ -11160,10 +11164,11 @@
         "614d389fb7868a2a9658828cc2bf2ce517eefa46fefe584016bcc928725f3996",
         "56906e2aecfd5f4e5d8f50f010d3d3f9d1aabb28eb3e559f0276e1b7b1fea985",
         "c42a84b834aa1d017b6bc2dcfe1a2ef4d05caa17109451ba8adf3baf2e460c80",
-        "3e9143b943497807583fc908f1557262d934f1411bd75d99dd5c152c4717c2ec"
+        "3e9143b943497807583fc908f1557262d934f1411bd75d99dd5c152c4717c2ec",
+        "e28a728be3a37f91ff533a605eac605de5c434cb9ed868693ca3b20c0f639c64"
       ],
-      "at": "2026-10-10T18:27:04+00:00",
-      "run_id": "run-20261010T163657Z-a15a9c6d",
+      "at": "2026-10-11T19:49:16+00:00",
+      "run_id": "run-20261011T065815Z-2a8bea98",
       "gap_claimed": true
     },
     "tests/meta/test_pipeline_lab_loop.py::test_a_tick_starts_the_next_setting_of_a_judged_bot_on_its_one_clone": {
@@ -11508,10 +11513,11 @@
       "fingerprints": [
         "e09f951bd551c06b2515a9631e36aaef5b07651cc961dbcfd365ea2f244b0e5d",
         "7b03115b4f12a84a26d22a9bd6c14969ad400a4cc5c48d2c16cb862e8de840a7",
-        "57749ab8fd17e1b50fd4c832353cc30172de826f0e614e18103d45e0497bca1c"
+        "57749ab8fd17e1b50fd4c832353cc30172de826f0e614e18103d45e0497bca1c",
+        "1c3f5ff14b1a540b9ebf65fc16830be44abd99b8ddb77fa7a3ba4e8f3750c671"
       ],
-      "at": "2026-10-10T18:27:04+00:00",
-      "run_id": "run-20261010T163657Z-a15a9c6d",
+      "at": "2026-10-11T19:49:16+00:00",
+      "run_id": "run-20261011T065815Z-2a8bea98",
       "gap_claimed": true
     },
     "tests/meta/test_pipeline_lab_report.py::test_lab_py_report_writes_state_lab_report_json": {
@@ -11596,127 +11602,141 @@
     "tests/meta/test_pipeline_nexus_picks.py::test_his_take_profit_and_stop_are_read_for_each_pick[NEX-0045]": {
       "fingerprints": [
         "bf0e8d449b8b4f9678c74fe79e1a79d1b99509e22ebeac16edd6cc106f590fe5",
-        "395fe5fcb7b984cf57b73698b1bb70cbe5578f11654a7a8f652c344a480da7ff"
+        "395fe5fcb7b984cf57b73698b1bb70cbe5578f11654a7a8f652c344a480da7ff",
+        "0676341e4fa46515fa50bd7bd379b0814c41739ebfc4ae4014e58121d4ebf3a4"
       ],
-      "at": "2026-10-03T22:45:34+00:00",
-      "run_id": "deep-pass-2026-10-04",
+      "at": "2026-10-11T19:49:16+00:00",
+      "run_id": "run-20261011T065815Z-2a8bea98",
       "gap_claimed": false
     },
     "tests/meta/test_pipeline_nexus_picks.py::test_his_take_profit_and_stop_are_read_for_each_pick[NEX-0059]": {
       "fingerprints": [
         "bf0e8d449b8b4f9678c74fe79e1a79d1b99509e22ebeac16edd6cc106f590fe5",
-        "395fe5fcb7b984cf57b73698b1bb70cbe5578f11654a7a8f652c344a480da7ff"
+        "395fe5fcb7b984cf57b73698b1bb70cbe5578f11654a7a8f652c344a480da7ff",
+        "0676341e4fa46515fa50bd7bd379b0814c41739ebfc4ae4014e58121d4ebf3a4"
       ],
-      "at": "2026-10-03T22:45:34+00:00",
-      "run_id": "deep-pass-2026-10-04",
+      "at": "2026-10-11T19:49:16+00:00",
+      "run_id": "run-20261011T065815Z-2a8bea98",
       "gap_claimed": false
     },
     "tests/meta/test_pipeline_nexus_picks.py::test_his_take_profit_and_stop_are_read_for_each_pick[NEX-0060]": {
       "fingerprints": [
         "bf0e8d449b8b4f9678c74fe79e1a79d1b99509e22ebeac16edd6cc106f590fe5",
-        "395fe5fcb7b984cf57b73698b1bb70cbe5578f11654a7a8f652c344a480da7ff"
+        "395fe5fcb7b984cf57b73698b1bb70cbe5578f11654a7a8f652c344a480da7ff",
+        "0676341e4fa46515fa50bd7bd379b0814c41739ebfc4ae4014e58121d4ebf3a4"
       ],
-      "at": "2026-10-03T22:45:34+00:00",
-      "run_id": "deep-pass-2026-10-04",
+      "at": "2026-10-11T19:49:16+00:00",
+      "run_id": "run-20261011T065815Z-2a8bea98",
       "gap_claimed": false
     },
     "tests/meta/test_pipeline_nexus_picks.py::test_his_take_profit_and_stop_are_read_for_each_pick[NEX-0063]": {
       "fingerprints": [
         "bf0e8d449b8b4f9678c74fe79e1a79d1b99509e22ebeac16edd6cc106f590fe5",
-        "395fe5fcb7b984cf57b73698b1bb70cbe5578f11654a7a8f652c344a480da7ff"
+        "395fe5fcb7b984cf57b73698b1bb70cbe5578f11654a7a8f652c344a480da7ff",
+        "0676341e4fa46515fa50bd7bd379b0814c41739ebfc4ae4014e58121d4ebf3a4"
       ],
-      "at": "2026-10-03T22:45:34+00:00",
-      "run_id": "deep-pass-2026-10-04",
+      "at": "2026-10-11T19:49:16+00:00",
+      "run_id": "run-20261011T065815Z-2a8bea98",
       "gap_claimed": false
     },
     "tests/meta/test_pipeline_nexus_picks.py::test_his_take_profit_and_stop_are_read_for_each_pick[NEX-0064]": {
       "fingerprints": [
         "bf0e8d449b8b4f9678c74fe79e1a79d1b99509e22ebeac16edd6cc106f590fe5",
-        "395fe5fcb7b984cf57b73698b1bb70cbe5578f11654a7a8f652c344a480da7ff"
+        "395fe5fcb7b984cf57b73698b1bb70cbe5578f11654a7a8f652c344a480da7ff",
+        "0676341e4fa46515fa50bd7bd379b0814c41739ebfc4ae4014e58121d4ebf3a4"
       ],
-      "at": "2026-10-03T22:45:34+00:00",
-      "run_id": "deep-pass-2026-10-04",
+      "at": "2026-10-11T19:49:16+00:00",
+      "run_id": "run-20261011T065815Z-2a8bea98",
       "gap_claimed": false
     },
     "tests/meta/test_pipeline_nexus_picks.py::test_his_take_profit_and_stop_are_read_for_each_pick[NEX-0065]": {
       "fingerprints": [
         "bf0e8d449b8b4f9678c74fe79e1a79d1b99509e22ebeac16edd6cc106f590fe5",
-        "395fe5fcb7b984cf57b73698b1bb70cbe5578f11654a7a8f652c344a480da7ff"
+        "395fe5fcb7b984cf57b73698b1bb70cbe5578f11654a7a8f652c344a480da7ff",
+        "0676341e4fa46515fa50bd7bd379b0814c41739ebfc4ae4014e58121d4ebf3a4"
       ],
-      "at": "2026-10-03T22:45:34+00:00",
-      "run_id": "deep-pass-2026-10-04",
+      "at": "2026-10-11T19:49:16+00:00",
+      "run_id": "run-20261011T065815Z-2a8bea98",
       "gap_claimed": false
     },
     "tests/meta/test_pipeline_nexus_picks.py::test_his_take_profit_and_stop_are_read_for_each_pick[NEX-0066]": {
       "fingerprints": [
         "bf0e8d449b8b4f9678c74fe79e1a79d1b99509e22ebeac16edd6cc106f590fe5",
-        "395fe5fcb7b984cf57b73698b1bb70cbe5578f11654a7a8f652c344a480da7ff"
+        "395fe5fcb7b984cf57b73698b1bb70cbe5578f11654a7a8f652c344a480da7ff",
+        "0676341e4fa46515fa50bd7bd379b0814c41739ebfc4ae4014e58121d4ebf3a4"
       ],
-      "at": "2026-10-03T22:45:34+00:00",
-      "run_id": "deep-pass-2026-10-04",
+      "at": "2026-10-11T19:49:16+00:00",
+      "run_id": "run-20261011T065815Z-2a8bea98",
       "gap_claimed": false
     },
     "tests/meta/test_pipeline_nexus_picks.py::test_his_take_profit_and_stop_are_read_for_each_pick[NEX-0067]": {
       "fingerprints": [
         "bf0e8d449b8b4f9678c74fe79e1a79d1b99509e22ebeac16edd6cc106f590fe5",
-        "395fe5fcb7b984cf57b73698b1bb70cbe5578f11654a7a8f652c344a480da7ff"
+        "395fe5fcb7b984cf57b73698b1bb70cbe5578f11654a7a8f652c344a480da7ff",
+        "0676341e4fa46515fa50bd7bd379b0814c41739ebfc4ae4014e58121d4ebf3a4"
       ],
-      "at": "2026-10-03T22:45:34+00:00",
-      "run_id": "deep-pass-2026-10-04",
+      "at": "2026-10-11T19:49:16+00:00",
+      "run_id": "run-20261011T065815Z-2a8bea98",
       "gap_claimed": false
     },
     "tests/meta/test_pipeline_nexus_picks.py::test_his_take_profit_and_stop_are_read_for_each_pick[NEX-0068]": {
       "fingerprints": [
         "bf0e8d449b8b4f9678c74fe79e1a79d1b99509e22ebeac16edd6cc106f590fe5",
-        "395fe5fcb7b984cf57b73698b1bb70cbe5578f11654a7a8f652c344a480da7ff"
+        "395fe5fcb7b984cf57b73698b1bb70cbe5578f11654a7a8f652c344a480da7ff",
+        "0676341e4fa46515fa50bd7bd379b0814c41739ebfc4ae4014e58121d4ebf3a4"
       ],
-      "at": "2026-10-03T22:45:34+00:00",
-      "run_id": "deep-pass-2026-10-04",
+      "at": "2026-10-11T19:49:16+00:00",
+      "run_id": "run-20261011T065815Z-2a8bea98",
       "gap_claimed": false
     },
     "tests/meta/test_pipeline_nexus_picks.py::test_his_take_profit_and_stop_are_read_for_each_pick[NEX-0069]": {
       "fingerprints": [
         "bf0e8d449b8b4f9678c74fe79e1a79d1b99509e22ebeac16edd6cc106f590fe5",
-        "395fe5fcb7b984cf57b73698b1bb70cbe5578f11654a7a8f652c344a480da7ff"
+        "395fe5fcb7b984cf57b73698b1bb70cbe5578f11654a7a8f652c344a480da7ff",
+        "0676341e4fa46515fa50bd7bd379b0814c41739ebfc4ae4014e58121d4ebf3a4"
       ],
-      "at": "2026-10-03T22:45:34+00:00",
-      "run_id": "deep-pass-2026-10-04",
+      "at": "2026-10-11T19:49:16+00:00",
+      "run_id": "run-20261011T065815Z-2a8bea98",
       "gap_claimed": false
     },
     "tests/meta/test_pipeline_nexus_picks.py::test_his_take_profit_and_stop_are_read_for_each_pick[NEX-0070]": {
       "fingerprints": [
         "bf0e8d449b8b4f9678c74fe79e1a79d1b99509e22ebeac16edd6cc106f590fe5",
-        "395fe5fcb7b984cf57b73698b1bb70cbe5578f11654a7a8f652c344a480da7ff"
+        "395fe5fcb7b984cf57b73698b1bb70cbe5578f11654a7a8f652c344a480da7ff",
+        "0676341e4fa46515fa50bd7bd379b0814c41739ebfc4ae4014e58121d4ebf3a4"
       ],
-      "at": "2026-10-03T22:45:34+00:00",
-      "run_id": "deep-pass-2026-10-04",
+      "at": "2026-10-11T19:49:16+00:00",
+      "run_id": "run-20261011T065815Z-2a8bea98",
       "gap_claimed": false
     },
     "tests/meta/test_pipeline_nexus_picks.py::test_his_take_profit_and_stop_are_read_for_each_pick[NEX-0079]": {
       "fingerprints": [
         "bf0e8d449b8b4f9678c74fe79e1a79d1b99509e22ebeac16edd6cc106f590fe5",
-        "395fe5fcb7b984cf57b73698b1bb70cbe5578f11654a7a8f652c344a480da7ff"
+        "395fe5fcb7b984cf57b73698b1bb70cbe5578f11654a7a8f652c344a480da7ff",
+        "0676341e4fa46515fa50bd7bd379b0814c41739ebfc4ae4014e58121d4ebf3a4"
       ],
-      "at": "2026-10-03T22:45:34+00:00",
-      "run_id": "deep-pass-2026-10-04",
+      "at": "2026-10-11T19:49:16+00:00",
+      "run_id": "run-20261011T065815Z-2a8bea98",
       "gap_claimed": false
     },
     "tests/meta/test_pipeline_nexus_picks.py::test_his_take_profit_and_stop_are_read_for_each_pick[NEX-0081]": {
       "fingerprints": [
         "bf0e8d449b8b4f9678c74fe79e1a79d1b99509e22ebeac16edd6cc106f590fe5",
-        "395fe5fcb7b984cf57b73698b1bb70cbe5578f11654a7a8f652c344a480da7ff"
+        "395fe5fcb7b984cf57b73698b1bb70cbe5578f11654a7a8f652c344a480da7ff",
+        "0676341e4fa46515fa50bd7bd379b0814c41739ebfc4ae4014e58121d4ebf3a4"
       ],
-      "at": "2026-10-03T22:45:34+00:00",
-      "run_id": "deep-pass-2026-10-04",
+      "at": "2026-10-11T19:49:16+00:00",
+      "run_id": "run-20261011T065815Z-2a8bea98",
       "gap_claimed": false
     },
     "tests/meta/test_pipeline_nexus_picks.py::test_his_take_profit_and_stop_are_read_for_each_pick[NEX-0088]": {
       "fingerprints": [
         "bf0e8d449b8b4f9678c74fe79e1a79d1b99509e22ebeac16edd6cc106f590fe5",
-        "395fe5fcb7b984cf57b73698b1bb70cbe5578f11654a7a8f652c344a480da7ff"
+        "395fe5fcb7b984cf57b73698b1bb70cbe5578f11654a7a8f652c344a480da7ff",
+        "0676341e4fa46515fa50bd7bd379b0814c41739ebfc4ae4014e58121d4ebf3a4"
       ],
-      "at": "2026-10-03T22:45:34+00:00",
-      "run_id": "deep-pass-2026-10-04",
+      "at": "2026-10-11T19:49:16+00:00",
+      "run_id": "run-20261011T065815Z-2a8bea98",
       "gap_claimed": false
     },
     "tests/meta/test_pipeline_nexus_picks.py::test_a_pick_is_read_from_the_line_that_declares_it[NEX-0010]": {
@@ -13250,10 +13270,11 @@
     "tests/meta/test_pipeline_nexus_picks.py::test_his_take_profit_and_stop_are_read_for_each_pick[NEX-0109]": {
       "fingerprints": [
         "bf0e8d449b8b4f9678c74fe79e1a79d1b99509e22ebeac16edd6cc106f590fe5",
-        "395fe5fcb7b984cf57b73698b1bb70cbe5578f11654a7a8f652c344a480da7ff"
+        "395fe5fcb7b984cf57b73698b1bb70cbe5578f11654a7a8f652c344a480da7ff",
+        "0676341e4fa46515fa50bd7bd379b0814c41739ebfc4ae4014e58121d4ebf3a4"
       ],
-      "at": "2026-10-03T22:45:34+00:00",
-      "run_id": "deep-pass-2026-10-04",
+      "at": "2026-10-11T19:49:16+00:00",
+      "run_id": "run-20261011T065815Z-2a8bea98",
       "gap_claimed": false
     },
     "tests/meta/test_pipeline_nexus_picks.py::test_a_pick_is_read_from_the_line_that_declares_it[NEX-0109]": {
@@ -13429,11 +13450,12 @@
     "tests/meta/test_pipeline_clone_trades.py::test_a_clone_deciding_on_another_rule_than_its_description_is_caught": {
       "fingerprints": [
         "11adc03dc2e4b5998f0399d17617d4ae795e30d2ad931450bff37184be48a68e",
-        "39331883af5ad7b5665c4349b6a3b77a13fb784f9777bbfa746bfb5fce1205fd"
+        "39331883af5ad7b5665c4349b6a3b77a13fb784f9777bbfa746bfb5fce1205fd",
+        "0ab382b26376aa90b56d2a0486de5d91a475b3fe0d3907ab06f90626c2eda692"
       ],
-      "at": "2026-10-08T07:05:00+00:00",
-      "run_id": "run-20261008T054544Z-c1ef9d5d",
-      "gap_claimed": false
+      "at": "2026-10-11T19:49:16+00:00",
+      "run_id": "run-20261011T065815Z-2a8bea98",
+      "gap_claimed": true
     },
     "tests/meta/test_pipeline_lab_page.py::test_the_page_opens_on_three_sectors_and_a_ranking_not_on_rooms_per_card": {
       "fingerprints": [
@@ -13739,10 +13761,11 @@
       "fingerprints": [
         "de610be6bbb154951df3b55e8416bc0cb9715b67ab13479b9652715c7445d7e2",
         "cef5de364c8b65c44ee08fadeaa9903953ffcc41fa0ab4435f007a7ef6930a0f",
-        "a6e10a19bf45d2735840415483940b44b6ba43f4ac43b976013584259cf29e83"
+        "a6e10a19bf45d2735840415483940b44b6ba43f4ac43b976013584259cf29e83",
+        "7060973547dc4173a7b0aee1958e86ac0ded842dada403f374c78db3783176e3"
       ],
-      "at": "2026-10-10T18:27:04+00:00",
-      "run_id": "run-20261010T082244Z-eee166fa",
+      "at": "2026-10-11T19:49:16+00:00",
+      "run_id": "run-20261011T062754Z-8b6a7acb",
       "gap_claimed": true
     },
     "tests/rest/test_chart_analyzer_verdict_layer_keeps_its_word.py::test_the_verdict_fields_are_listed_in_the_openapi_schema": {
@@ -13784,11 +13807,12 @@
       "fingerprints": [
         "8b2dfa2134e4117161887a3e8fe7a3aa34cbef18e57dba47950e4df2d5af6e3e",
         "6191c0de7a0853df57594dc311cf1ed0d72d79c53260c7ec1b7c756b609aef0c",
-        "5043042c6908230591592d0db2edf7c4194ae27eb6ab5a4c13d129ef2e0c03bc"
+        "5043042c6908230591592d0db2edf7c4194ae27eb6ab5a4c13d129ef2e0c03bc",
+        "cb8fd0a468b8dffd15dc55c40147759794244d8b054107a7a5ac219f3e8c39e1"
       ],
-      "at": "2026-10-10T18:27:04+00:00",
-      "run_id": "run-20261010T091250Z-8ea617d8",
-      "gap_claimed": true
+      "at": "2026-10-11T19:49:16+00:00",
+      "run_id": "run-20261010T191002Z-58b31627",
+      "gap_claimed": false
     },
     "tests/rest/test_gem_screener_chains_say_what_their_sources_say.py::test_the_chain_price_tag_is_described_as_the_snapshot_computes_it": {
       "fingerprints": [
@@ -14070,10 +14094,11 @@
     },
     "tests/meta/test_pipeline_league.py::test_the_league_answers_only_what_it_computes_exactly_and_only_once": {
       "fingerprints": [
-        "2ac5f765248c01db2fa85665e0aa620ca06c45cfc6ff20d35fadceddbe2a2a72"
+        "2ac5f765248c01db2fa85665e0aa620ca06c45cfc6ff20d35fadceddbe2a2a72",
+        "44cf96d3b414689bf90e02047f7361d7aaac02b0e0573bc69eac8b43036f1d66"
       ],
-      "at": "2026-10-10T18:27:04+00:00",
-      "run_id": "run-20261010T163657Z-a15a9c6d",
+      "at": "2026-10-11T19:49:16+00:00",
+      "run_id": "run-20261011T065815Z-2a8bea98",
       "gap_claimed": true
     },
     "tests/rest/test_gem_screener_picks_and_formulas_are_self_consistent.py::test_the_dilution_caution_band_lies_below_the_red_band": {
@@ -14130,6 +14155,94 @@
       ],
       "at": "2026-10-10T18:27:04+00:00",
       "run_id": "run-20261008T070907Z-a271e3ce",
+      "gap_claimed": true
+    },
+    "tests/rest/test_agent_tournaments_offers_only_bots_that_exist.py::test_agent_tournaments_offers_only_bots_that_exist": {
+      "fingerprints": [
+        "c7c554c3ca61fbb9c9ab19e85d505045e03a797dcf6ad905bb7439ba117551ef"
+      ],
+      "at": "2026-10-11T19:49:16+00:00",
+      "run_id": "run-20261011T184621Z-7f825264",
+      "gap_claimed": true
+    },
+    "tests/rest/test_build_it_better_routes_are_in_the_openapi.py::test_every_build_it_better_route_llms_txt_names_is_in_the_openapi": {
+      "fingerprints": [
+        "17d4463ed23c11a03829fb6f1052fa348586bf11c920cfe053d3d4be31b9375e"
+      ],
+      "at": "2026-10-11T19:49:16+00:00",
+      "run_id": "run-20261011T144205Z-01ff0224",
+      "gap_claimed": false
+    },
+    "tests/rest/test_build_it_better_token_place_is_documented_one_way.py::test_llms_txt_and_the_openapi_name_the_same_place_for_the_request_token": {
+      "fingerprints": [
+        "b0e748f421c385c31e7002c45a4f2d881a37913e6717ea58c886c4f0d47fabba"
+      ],
+      "at": "2026-10-11T19:49:16+00:00",
+      "run_id": "run-20261011T144205Z-01ff0224",
+      "gap_claimed": true
+    },
+    "tests/rest/test_supply_analyzer_states_what_its_sources_say.py::test_a_next_unlock_states_what_its_day_releases": {
+      "fingerprints": [
+        "247dc550eb75d16362a88bdf1f45d16d63cf152e85611a0aa64868c62ad962b9"
+      ],
+      "at": "2026-10-11T19:49:16+00:00",
+      "run_id": "run-20261011T121251Z-771a0cb6",
+      "gap_claimed": true
+    },
+    "tests/rest/test_movers_page_ranks_every_card.py::test_the_movers_boards_rank_every_card_of_the_listing": {
+      "fingerprints": [
+        "50e39cf990ff4bf2579188011198394678726ca300f896ae4e372104569ad332"
+      ],
+      "at": "2026-10-11T19:49:16+00:00",
+      "run_id": "run-20261011T121251Z-771a0cb6",
+      "gap_claimed": true
+    },
+    "tests/rest/test_a_clone_summary_names_what_it_trades.py::test_a_clone_summary_names_every_market_it_trades_and_no_other": {
+      "fingerprints": [
+        "5b5b8c24e08c9f1a74eb5846f8bbac2161d73aa0b543f20b225ab51db372c6ba"
+      ],
+      "at": "2026-10-11T19:49:16+00:00",
+      "run_id": "run-20261011T121251Z-771a0cb6",
+      "gap_claimed": true
+    },
+    "tests/rest/test_agent_tournaments_routes_are_in_the_openapi.py::test_every_agent_tournaments_route_llms_txt_names_is_in_the_openapi": {
+      "fingerprints": [
+        "63a5bf49fc4ae402681a7bb2fda86c2889740e4ec93aa1617b396bea437240d9"
+      ],
+      "at": "2026-10-11T19:49:16+00:00",
+      "run_id": "run-20261011T121251Z-771a0cb6",
+      "gap_claimed": false
+    },
+    "tests/rest/test_build_it_better_spec_keeps_the_request.py::test_an_idea_keeps_its_new_app_spec_after_a_change": {
+      "fingerprints": [
+        "87e65799ba5b9247573b93b391a7afcebf23ba77163ee71b46478afa81c052df"
+      ],
+      "at": "2026-10-11T19:49:16+00:00",
+      "run_id": "run-20261011T121251Z-771a0cb6",
+      "gap_claimed": true
+    },
+    "tests/rest/test_a_coins_supply_figures_can_all_be_true.py::test_a_coins_supply_figures_can_all_be_true": {
+      "fingerprints": [
+        "8984efbed9ab8f785352b1f6ea3f1a40be24c292e42fc0f1538edafd476dd367"
+      ],
+      "at": "2026-10-11T19:49:16+00:00",
+      "run_id": "run-20261011T062754Z-8b6a7acb",
+      "gap_claimed": true
+    },
+    "tests/rest/test_launchpad_discovery_tool_hides_what_rest_keeps_internal.py::test_the_discovery_tool_does_not_list_what_the_rest_list_keeps_internal": {
+      "fingerprints": [
+        "f9c6b80f3cb2099b45d4a9d7676641754230d28b10c5546015f06312401d3362"
+      ],
+      "at": "2026-10-11T19:49:16+00:00",
+      "run_id": "run-20261011T062754Z-8b6a7acb",
+      "gap_claimed": true
+    },
+    "tests/rest/test_launchpad_tokens_list_without_a_chain_is_not_empty.py::test_the_token_list_without_a_chain_is_not_empty_while_a_chain_lists_launches": {
+      "fingerprints": [
+        "fb72b5b1acdbf41cd7615ea8702f9bd9c329cea645fdfb81b419a343ecb9cf1b"
+      ],
+      "at": "2026-10-11T19:49:16+00:00",
+      "run_id": "run-20261011T062754Z-8b6a7acb",
       "gap_claimed": true
     }
   }
