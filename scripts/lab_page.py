@@ -919,10 +919,26 @@ def _lab_script():
 # per experiment are the rows of those rankings, and their threads sit behind
 # the page's conversation button.
 
-SECTOR_NAMES = {"cards": "Cards", "bots": "Bots", "memecoins": "Memecoins"}
-"""Three rooms. Funds were a fourth until 2026-10-03, when the operator stopped measuring
-them; a fund room is now on no page, like an Arena room."""
+SECTOR_NAMES = {"own": "Our cards", "cards": "Nexus cards", "bots": "Bots",
+                "h2h": "Head-to-head", "memecoins": "Memecoins", "outsider": "Outsider",
+                "desk": "Desk"}
+"""Seven sections since 2026-10-11 (the laborator skill, "Seven sections"), in the operator's
+order and with qa.rooms.SECTIONS' keys. Funds were a fourth room until 2026-10-03, when the
+operator stopped measuring them; a fund room is now on no page, like an Arena room."""
 SECTORS = tuple(SECTOR_NAMES)
+# What a section is for: the tooltip on its tab, one short line, never a paragraph on the page.
+SECTION_ABOUT = {
+    "own": "Cards we pick ourselves, by their backtest after fees. No Nexus.",
+    "cards": "Cards Nexus picked, each in its own room.",
+    "bots": "Every bot species at every setting, ours and Nexus's.",
+    "h2h": "An improved bot against the same species at its defaults.",
+    "memecoins": "Does FOMO Radar's hot call a pump? And Hot headlines.",
+    "outsider": "A fresh agent finds Cymetica, picks what it would buy, and we measure it.",
+    "desk": "Our own lab: how money is made on Cymetica, by any route.",
+}
+# Sections of cards (the 18-hour column) and of bots (a refuted bot goes to the archive).
+CARD_SECTIONS = ("own", "cards")
+BOT_SECTIONS = ("bots", "h2h")
 # What the Nexus line shows of his ideas, and nothing else.
 NEXUS_KEYS = ("picks", "gate_pass", "gated", "survived", "refuted", "running")
 # Points on a row's small line, and on an opened experiment's chart.
@@ -1029,7 +1045,7 @@ def _group(report_room: dict, panel: dict, sector: str | None = None) -> str:
     do archive ty co nefungovaly"); its line and its reason stay readable there."""
     if report_room.get("archived"):
         return "archive"
-    if sector == "bots" and (panel.get("verdict") or {}).get("verdict") == "refuted":
+    if sector in BOT_SECTIONS and (panel.get("verdict") or {}).get("verdict") == "refuted":
         return "archive"
     if (panel.get("verdict") or {}).get("verdict") or panel.get("status") == "stopped":
         return "done"
@@ -1271,13 +1287,13 @@ def _experiment(rid: str, sector: str, report_room: dict, panel: dict,
         "ran": _ran(clones, now),
         # Cards only: a bot is not sold at an hour, it runs until something stops it
         # (the operator, 2026-10-03: "to se prece tyka jen karet").
-        "at_18h": _value_at(path, 18, group != "live") if sector == "cards" else None,
+        "at_18h": _value_at(path, 18, group != "live") if sector in CARD_SECTIONS else None,
         "tp": first.get("tp"), "sl": first.get("sl")}
 
 
 def lab_view(rooms: dict, report: dict, now: datetime | None = None) -> dict:
     """What /lab draws, joined in one place so a test can hold all of it:
-    the three sectors with the report's figures and their 18-hour totals, every experiment
+    the seven sections with the report's figures and their 18-hour totals, every experiment
     as a row of its sector's ranking, what came of Nexus's ideas, the paper account and the
     threads for the conversation drawer. Pure. (The memecoin top-movers table went with the
     rest of what is not a result, 2026-10-03.)"""
@@ -1299,7 +1315,8 @@ def lab_view(rooms: dict, report: dict, now: datetime | None = None) -> dict:
     general = panels.get("general") or {}
     return {
         "generated_at": report.get("generated_at"),
-        "sectors": [{"key": key, "name": name, **(products.get(key) or {}),
+        "sectors": [{"key": key, "name": name, "about": SECTION_ABOUT[key],
+                     **(products.get(key) or {}),
                      "h18": _h18_stats(experiments, key)}
                     for key, name in SECTOR_NAMES.items()],
         "experiments": experiments,
@@ -1347,10 +1364,10 @@ TEMPLATE = r"""<!doctype html>
 /* [hidden] first: a class with display set must never beat it. */
 [hidden] { display: none !important; }
 
-/* One set of tokens, light and dark, the console's own surfaces. Sector hues
-   are the reference categorical slots in the order that passes the dataviz
-   validator on both surfaces (blue, amber, violet, pink); they mark identity
-   only -- a tab's edge, a dot -- and never colour a number. Green and red
+/* One set of tokens, light and dark, the console's own surfaces. Section hues
+   are Cymetica's own (CLAUDE.md, 2026-09-25: no amber, violet or pink): cyan for
+   the card sections, blue for the bot ones, slate and white for the rest. They mark
+   identity only -- a tab's edge, a dot -- and never colour a number. Green and red
    are for money: a gain and a loss. */
 :root {
   /* Cymetica's own palette (cymetica.com main.css), the console's twin. */
@@ -1360,7 +1377,8 @@ TEMPLATE = r"""<!doctype html>
   --text:#ffffff; --text-dim:#9fb3c8; --text-faint:#7b8794;
   --ok:#00ff88; --ok-bg:rgba(0,255,136,.12); --bad:#ff4444; --bad-bg:rgba(255,68,68,.14);
   --accent:#00cfff;
-  --c-cards:#00aaff; --c-bots:#ffb020; --c-memecoins:#b08cff; --c-funds:#ff6fae;
+  --c-own:#00cfff; --c-cards:#00cfff; --c-bots:#3b82f6; --c-h2h:#3b82f6;
+  --c-memecoins:#9fb3c8; --c-outsider:#9fb3c8; --c-desk:#ffffff;
   --glow-ok:0 0 14px rgba(0,255,136,.35); --glow-bad:0 0 14px rgba(255,68,68,.3);
   --shadow:0 8px 32px rgba(0,0,0,.5);
   --sans:"Inter",system-ui,-apple-system,"Segoe UI",sans-serif;
@@ -1404,8 +1422,8 @@ button { font: inherit; color: inherit; }
 .live i { width: 7px; height: 7px; border-radius: 50%; background: var(--text-faint); }
 .live.on i { background: var(--ok); } .live.off i { background: var(--bad); }
 
-/* ---------- the three sector rooms, always in sight ---------- */
-.sectors { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 12px; }
+/* ---------- the seven sections, always in sight ---------- */
+.sectors { display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); gap: 10px; }
 .sec { position: relative; text-align: left; cursor: pointer; background: var(--surface);
   backdrop-filter: blur(12px);
   border: 1px solid var(--line); border-radius: 10px; padding: 13px 16px 12px 20px;
@@ -1562,6 +1580,8 @@ button { font: inherit; color: inherit; }
 
 /* ---------- the memecoin room ---------- */
 .m-tiles { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 10px; }
+.m-sub { margin: 18px 0 8px; font: 700 12px var(--mono); letter-spacing: .1em;
+  text-transform: uppercase; color: var(--text-dim); }
 .filt { margin: 0; font-size: 12.5px; color: var(--text-faint); }
 .movers h3 { margin: 4px 0 8px; font-size: 15px; }
 .movers h3 small { font-weight: 400; color: var(--text-faint); font-size: 12.5px; margin-left: 6px; }
@@ -1635,6 +1655,7 @@ button { font: inherit; color: inherit; }
 .nx-tick { color: var(--ok); margin-left: .3rem; }
 
 @media (max-width: 1180px) {
+  .sectors { grid-template-columns: repeat(4, minmax(0, 1fr)); }
   .row { grid-template-columns: 22px minmax(0, 1fr) 90px 80px 120px 14px; }
   .row .rn, .row .h18 { display: none; }
   .head { display: none; }
@@ -1660,7 +1681,7 @@ button { font: inherit; color: inherit; }
   <header class="top">
     <div class="brand">
       <h1>Cymetica <em>Lab</em></h1>
-      <p id="account">Paper trades on Nexus's advice · after fees</p>
+      <p id="account">Paper trades · after fees</p>
     </div>
     <div class="top-r">
       <span class="live" id="live"><i></i><span>static</span></span>
@@ -1703,7 +1724,9 @@ function writeStore(key, value) {
   try { localStorage.setItem(key, String(value)); } catch (_) {}
 }
 const LOCAL = ["127.0.0.1", "localhost", "[::1]"].includes(location.hostname);
-const SECTORS = ["cards", "bots", "memecoins"];
+// The sections, in their order, as lab_view() writes them (qa.rooms.SECTIONS).
+const SECTORS = (V.sectors || []).map(lp => lp.key);
+const CARD_SECTIONS = ["own", "cards"], BOT_SECTIONS = ["bots", "h2h"];
 const GROUPS = [["live", "Live"], ["done", "Done"], ["archive", "Archive"]];
 const EMPTY = {live: "Nothing live right now.", done: "Nothing judged yet.",
                archive: "The archive is empty."};
@@ -1791,7 +1814,7 @@ function sectorOf(key) {
 
 /* ---------- the top: the account and the three rooms ---------- */
 function accountLine(la) {
-  if (!la || la.free == null) return "Paper trades on Nexus's advice · after fees";
+  if (!la || la.free == null) return "Paper trades · after fees";
   return `Paper account <b>${money(la.free)}</b> free · ${money(la.in_cards)} in cards` +
     (la.stale ? ' · <span class="warn">⚠ API data is stale</span>' : "");
 }
@@ -1800,7 +1823,7 @@ function sectorTab(lp, on) {
   const foot = meme ? (lp.n ? `${num(lp.n, 0)} ${plural(lp.n, "trade", "trades")}` : "no trade yet")
     : `${lp.n || 0} ${plural(lp.n || 0, "test", "tests")}` + (lp.running ? ` · ${lp.running} live` : "");
   return `<button class="sec" role="tab" type="button" aria-selected="${on}"
-      data-sector="${esc(lp.key)}" style="--hue:var(--c-${esc(lp.key)})">
+      data-sector="${esc(lp.key)}" style="--hue:var(--c-${esc(lp.key)})" title="${esc(lp.about || "")}">
     <span class="sec-name">${esc(lp.name)}</span>
     <span class="sec-val ${tone(lp.net_pct)}">${pctText(lp.net_pct)}</span>
     <span class="sec-foot">${foot}</span></button>`;
@@ -1876,8 +1899,8 @@ function row(le, rank, open) {
     <span class="nm" title="${esc(le.title)}">${esc(le.title)}${le.ours
       ? ' <span class="ours">ours</span>' : ""}${liveNote(le)}</span>
     <span class="sp">${le.group === "archive" && !le.verdict ? '<span class="sp-none">—</span>' : spark(le.spark)}</span>
-    ${SECTOR === "bots" ? `<span class="rn">${ranCell(le)}</span>` : ""}
-    ${SECTOR === "cards" ? `<span class="h18">${h18Cell(le)}</span>` : ""}
+    ${BOT_SECTIONS.includes(SECTOR) ? `<span class="rn">${ranCell(le)}</span>` : ""}
+    ${CARD_SECTIONS.includes(SECTOR) ? `<span class="h18">${h18Cell(le)}</span>` : ""}
     <span class="val ${tone(le.net_pct)}" title="${esc(le.reason || "")}">${pctText(le.net_pct)}</span>
     <span class="usd ${tone(le.usdc)}">${le.usdc == null ? "" : usdText(le.usdc)}</span>
     <span class="bt">${btChip(le.backtest)}</span>
@@ -1940,7 +1963,7 @@ function detail(le) {
   const lb = le.backtest;
   const now = le.stake != null && le.usdc != null ? le.stake + le.usdc : null;
   const tiles = [
-    ["In", money(le.stake), le.sector === "bots" ? "in the bot" : "paper money"],
+    ["In", money(le.stake), BOT_SECTIONS.includes(le.sector) ? "in the bot" : "paper money"],
     ["Now", money(now), now == null ? "" : "after fees"],
     ["Result", `<span class="${tone(le.net_pct)}">${pctText(le.net_pct)}</span>`,
      le.usdc == null ? "" : `<span class="${tone(le.usdc)}">${usdText(le.usdc)}</span>`],
@@ -2005,10 +2028,30 @@ function curveSvg(points) {
     <line x1="${PAD}" x2="${W - PAD}" y1="${zero}" y2="${zero}" stroke="var(--line)"
       stroke-width="1"/>${lines}${dots}</svg>`;
 }
+/* Hot headlines (laboratory v3): crypto that entered Hot against crypto that did not, a day
+   on, and the Nexus rule with the most trades behind it. Numbers only; nothing when unread. */
+function hotTiles(h) {
+  if (!h) return "";
+  const day = (d, what) => d && d.n
+    ? [what, `<span class="${tone(d.mean)}">${pctText(d.mean, 1)}</span>`,
+       `${num(d.n, 0)} ${plural(d.n, "basket", "baskets")} · ${num(100 * d.up / d.n, 0)}% up`, ""]
+    : [what, "—", "nothing settled yet", ""];
+  const r = h.rule;
+  const tiles = [
+    day(h.entered, "Entered Hot, 24 h later"),
+    day(h.not_in_hot, "Not in Hot, 24 h later"),
+    r ? [`Nexus rule ${esc(r.id)}`, `${num(r.n, 0)}${r.of ? " / " + num(r.of, 0) : ""}`,
+         r.mean_net == null ? "trades so far" : `trades · ${pctText(r.mean_net, 1)} each`, ""]
+      : ["Nexus rule", "—", "no trade yet", ""]];
+  return `<h3 class="m-sub" title="Crypto baskets on Cymetica's Hot list, followed from the round they entered it">Hot headlines</h3>
+    <div class="m-tiles">${tiles.map(([k, v, s, extra]) =>
+      `<div class="tile"><span>${k}</span><b>${v}</b><i>${s}</i>${extra}</div>`).join("")}</div>`;
+}
 function memeRoom(lp) {
   if (!lp.n) {
     return `<div class="room-head"><div class="hero-block"><div class="hero flat">—</div>
-      <div class="hero-cap">No signal has had a full day to settle yet.</div></div></div>`;
+      <div class="hero-cap">No signal has had a full day to settle yet.</div></div></div>` +
+      hotTiles(lp.hot);
   }
   const hc = lp.conviction_70 || {};
   const could = lp.could_buy_share == null ? null : Math.round(lp.could_buy_share * 100);
@@ -2030,7 +2073,8 @@ function memeRoom(lp) {
       <div class="hero ${tone(lp.net_pct)}">${pctText(lp.net_pct, 1)}</div>
       <div class="hero-cap">per trade, $10 into every hot signal, held a day, after fees</div></div></div>
     <div class="m-tiles">${tiles.map(([k, v, s, extra]) =>
-      `<div class="tile"><span>${k}</span><b>${v}</b><i>${s}</i>${extra}</div>`).join("")}</div>`;
+      `<div class="tile"><span>${k}</span><b>${v}</b><i>${s}</i>${extra}</div>`).join("")}</div>` +
+    hotTiles(lp.hot);
 }
 
 /* ---------- the room on screen ---------- */
@@ -2074,8 +2118,8 @@ function headRow() {
     : `<span class="${cls}">${esc(label)}</span>`;
   return `<li class="head">` +
     cell("rk", null, "#") + cell("nm", "name", "Experiment") + cell("sp", null, "Path") +
-    (SECTOR === "bots" ? cell("rn", "ran", "Ran") : "") +
-    (SECTOR === "cards" ? cell("h18", "h18", "After 18 h") : "") + cell("val", "net", "Result")+ cell("usd", "usd", "Profit") + cell("bt", "bt", "Backtest") +
+    (BOT_SECTIONS.includes(SECTOR) ? cell("rn", "ran", "Ran") : "") +
+    (CARD_SECTIONS.includes(SECTOR) ? cell("h18", "h18", "After 18 h") : "") + cell("val", "net", "Result")+ cell("usd", "usd", "Profit") + cell("bt", "bt", "Backtest") +
     '<span class="chev"></span></li>';
 }
 function ordered(list, group) {

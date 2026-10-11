@@ -1788,11 +1788,12 @@ def test_the_memecoin_measurement_is_on_the_lab_page_and_the_console_links_there
         "rooms are reachable only by typing a URL nobody was told")
     assert 'id="memecoins"' not in console, "drawn in the console as well"
 
-    # On /lab the memecoins are one of the four sector rooms (2026-09-23): in
-    # the list of sectors the tabs are drawn from, and a room of their own.
+    # On /lab the memecoins are one of the sections (2026-09-23, seven since 2026-10-11): in
+    # the list of sections lab_view() writes and the tabs are drawn from, and a room of their own.
     page = _lab_page().TEMPLATE
-    assert re.search(r'const SECTORS = \[[^\]]*"memecoins"', page), (
-        "no Memecoiny room among the sectors")
+    assert "memecoins" in _lab_page().SECTOR_NAMES, "no Memecoiny room among the sections"
+    assert "const SECTORS = (V.sectors || []).map(lp => lp.key);" in page, (
+        "the tabs are not drawn from the sections the view writes")
     assert "function memeRoom(" in page and 'SECTOR === "memecoins"' in page, (
         "nothing draws the memecoin room, so it opens empty")
     # The hover bubble is ours: an element to draw into and a handler that

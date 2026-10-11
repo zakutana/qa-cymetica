@@ -702,6 +702,23 @@ def test_a_room_of_ours_opens_from_our_own_proposal_on_record_and_nothing_else(
     with pytest.raises(rooms.RoomError):
         rooms.open_strategy("OUR-0001", "the same idea again", kind="bot", ref="sp-1")
 
+    # Laboratory v3 (2026-10-11): a room is opened IN a section and carries it, so where it
+    # is drawn is what it was opened as, not what a later reading makes of it. A section that
+    # does not exist is refused before anything is written; a room opened with none is
+    # written as before (its section is the one its kind always gave it).
+    lab.note_proposal("bot", "sp-2", "inst-2", lab.variants()[1], why="an h2h pair")
+    before = (tmp_path / "rooms.jsonl").read_text(encoding="utf-8")
+    with pytest.raises(rooms.RoomError):
+        rooms.open_strategy("OUR-0003", "nowhere", kind="bot", ref="sp-2", section="funds")
+    assert (tmp_path / "rooms.jsonl").read_text(encoding="utf-8") == before
+    paired = rooms.open_strategy("OUR-0003", "MACD improved vs original", kind="bot",
+                                 ref="sp-2", section="h2h")
+    assert paired["section"] == "h2h"
+    assert "section" not in made, "a room opened with no section was given one"
+    assert rooms.SECTIONS == ("own", "cards", "bots", "h2h", "memecoins", "outsider", "desk")
+    # Notes may go to every section, and to the funds sector its old notes were written to.
+    assert set(rooms.SECTIONS) | {"funds"} <= rooms.note_rooms([])
+
 
 @qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
 def test_one_answer_opens_one_room_per_card_and_each_card_once(tmp_path, monkeypatch):

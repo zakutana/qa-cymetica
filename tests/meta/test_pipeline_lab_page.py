@@ -140,13 +140,29 @@ def _view():
 
 
 @qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
-def test_the_view_is_three_sector_rooms_in_their_order_with_their_names():
+def test_the_view_is_seven_sections_in_their_order_with_their_names():
     view = _view()
+    # Laboratory v3 (2026-10-11): seven sections, in the operator's order. The keys of the
+    # three that existed stay what they were -- cards are his, bots, memecoins -- so no room
+    # and no note written to one of them moves.
     # Funds are not measured any more (the operator, 2026-10-03: "Funds room uplne zrus,
     # nebudem merit"), so there is no Funds room and a fund room is on no page.
-    assert [s["key"] for s in view["sectors"]] == ["cards", "bots", "memecoins"]
+    assert [s["key"] for s in view["sectors"]] == [
+        "own", "cards", "bots", "h2h", "memecoins", "outsider", "desk"]
     # English since 2026-09-25 (CLAUDE.md, How to work with me).
-    assert [s["name"] for s in view["sectors"]] == ["Cards", "Bots", "Memecoins"]
+    assert [s["name"] for s in view["sectors"]] == [
+        "Our cards", "Nexus cards", "Bots", "Head-to-head", "Memecoins", "Outsider", "Desk"]
+    # What a section is for goes in a tooltip, never a paragraph on the page: one short line.
+    assert all(0 < len(s.get("about") or "") <= 120 for s in view["sectors"]), [
+        s.get("about") for s in view["sectors"]]
+    # A section with nothing in it yet is drawn all the same, with no figure invented.
+    outsider = next(s for s in view["sectors"] if s["key"] == "outsider")
+    assert outsider.get("net_pct") is None and not outsider.get("n")
+    page = _lab_page()
+    # Our own cards are cards: the 18-hour column is theirs too; head-to-head bots are bots.
+    assert page.CARD_SECTIONS == ("own", "cards") and page.BOT_SECTIONS == ("bots", "h2h")
+    assert page._group({}, {"verdict": {"verdict": "refuted"}}, "h2h") == "archive"
+    assert page._group({}, {"verdict": {"verdict": "refuted"}}, "own") == "done"
     # "A fund room is on no page" is measured, not only said: the fixture holds a running fund
     # room the report calls a fund (T10, deep pass 2026-10-04), and no sector or row carries it.
     assert [r["product"] for r in _report()["rooms"] if r["id"] == "STR-0009"] == ["funds"], (
@@ -154,7 +170,7 @@ def test_the_view_is_three_sector_rooms_in_their_order_with_their_names():
     assert "STR-0009" in {r["id"] for r in _rooms_view()["rooms"]}
     assert "STR-0009" not in {e["id"] for e in view["experiments"]}, "a fund room is on the page"
     assert all(e["sector"] != "funds" for e in view["experiments"])
-    cards = view["sectors"][0]
+    cards = next(s for s in view["sectors"] if s["key"] == "cards")
     assert cards["net_pct"] == 1.0 and cards["usdc"] == 5.0, "the report's figures ride along"
     # What the room says about the 18-hour column: its average and the share in profit,
     # over the experiments of that sector that have a figure -- and none when none does.
@@ -167,7 +183,7 @@ def test_the_view_is_three_sector_rooms_in_their_order_with_their_names():
     assert "h18" in cards
     # The 18-hour figure is for cards only ("to se prece tyka jen karet"): a bot runs until
     # something stops it, so no bot row and no bot room carries one.
-    assert view["sectors"][1]["h18"] is None
+    assert next(s for s in view["sectors"] if s["key"] == "bots")["h18"] is None
     assert all(e["at_18h"] is None for e in view["experiments"] if e["sector"] == "bots")
 
 
@@ -421,13 +437,18 @@ def _drawn(tmp_path, name, after=""):
 
 
 @qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
-def test_the_page_opens_on_three_sectors_and_a_ranking_not_on_rooms_per_card(tmp_path):
+def test_the_page_opens_on_seven_sections_and_a_ranking_not_on_rooms_per_card(tmp_path):
     captured = _drawn(tmp_path, "open")
     tabs = captured.get("sectors", "")
-    for name in ("Cards", "Bots", "Memecoins"):
-        assert name in tabs, f"no {name} room"
+    for name in ("Our cards", "Nexus cards", "Bots", "Head-to-head", "Memecoins", "Outsider",
+                 "Desk"):
+        assert name in tabs, f"no {name} section"
     assert "Funds" not in tabs, "a Funds room is back"
-    assert tabs.count('data-sector="') == 3, "one room per sector, three of them"
+    assert tabs.count('data-sector="') == 7, "one tab per section, seven of them"
+    # What a section is for is a tooltip on its tab, not a sentence on the page.
+    assert tabs.count('title="') >= 7, "a section tab has no tooltip saying what it holds"
+    # The page still opens on his cards, the section with results in it.
+    assert re.search(r'aria-selected="true"\s+data-sector="cards"', tabs), "it opens elsewhere"
     room = captured.get("room", "")
     assert "Fund we watch" not in room, "a fund room (the fixture holds one) is drawn among the cards"
     assert "Zcash (ZEC) Rally Accelerates" in room, "the running card is not ranked"

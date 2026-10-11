@@ -178,14 +178,21 @@ def known_rooms(rows: list[dict]) -> set[str]:
     return {GENERAL} | {r["id"] for r in strategies(rows)}
 
 
+# The laboratory's seven sections, in the operator's order (2026-10-11, the laborator skill,
+# "Seven sections"): our own cards, his cards, bots, head-to-head, memecoins, the outsider and
+# the desk. The keys of the three that existed before stay what they were -- `cards` is his --
+# so no room and no note moves. A room may be opened in one (`open_strategy(section=...)`).
+SECTIONS = ("own", "cards", "bots", "h2h", "memecoins", "outsider", "desk")
+
 # One room per sector on /lab (the operator, 2026-09-23: "1 room pro karty,
 # 1 pro boty, 1 na memecoiny"). They hold notes -- the operator's and ours --
-# and exist without being opened, the way General does.
-SECTORS = ("cards", "bots", "memecoins", "funds")
+# and exist without being opened, the way General does. Funds stay, for the notes written
+# to them before they were switched off.
+SECTORS = SECTIONS + ("funds",)
 
 
 def note_rooms(rows: list[dict]) -> set[str]:
-    """Where a note may go: every room a question may, and the four sectors."""
+    """Where a note may go: every room a question may, and every sector."""
     return known_rooms(rows) | set(SECTORS)
 
 
@@ -343,7 +350,8 @@ def room_key(row: dict) -> str | None:
 
 
 def open_strategy(origin: str, title: str, card: str | None = None, *,
-                  kind: str | None = None, ref: str | None = None) -> dict:
+                  kind: str | None = None, ref: str | None = None,
+                  section: str | None = None) -> dict:
     """A room for a strategy Nexus proposed, opened from its whole answer.
 
     One answer opens one room -- or, when `card` is given, one room per card
@@ -355,6 +363,9 @@ def open_strategy(origin: str, title: str, card: str | None = None, *,
 
     `kind` and `ref` open a room for one bot (its species id) or one fund
     (its symbol) of the answer, the same way `card` does for a card.
+
+    `section` (laboratory v3, 2026-10-11) is the section of `SECTIONS` the room is opened in,
+    written on its row; a room opened with none keeps the section its kind gives it.
     """
     name = " ".join(str(title or "").split())
     if not name or len(name) > MAX_TITLE:
@@ -362,6 +373,9 @@ def open_strategy(origin: str, title: str, card: str | None = None, *,
     if kind is not None and (kind not in LEG_KINDS or kind == "card" or not ref):
         raise RoomError("a bot or fund room names its kind and what it holds; "
                         "a card room is opened with `card`")
+    if section is not None and section not in SECTIONS:
+        raise RoomError(f"{section!r} is not a section of the laboratory "
+                        f"({', '.join(SECTIONS)})")
     if OUR_ORIGIN.match(str(origin)):
         # Our own lane (V5, under the 2026-09-23 pin): a room we propose
         # opens from our proposal on record, and its origin says it is ours.
@@ -391,6 +405,8 @@ def open_strategy(origin: str, title: str, card: str | None = None, *,
             row["card"] = wanted
         elif kind:
             row["kind"], row["ref"] = kind, str(ref)
+        if section:
+            row["section"] = section
         return [row]
     return _append(build)[0]
 

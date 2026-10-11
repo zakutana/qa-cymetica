@@ -26,14 +26,17 @@ Pure: every input is handed in, so a test holds the whole of it.
 
 from __future__ import annotations
 
+import re
 from datetime import datetime, timezone
 
 from qa import fomo, lab
 from qa import rooms as rooms_mod
 from qa.rooms import names as room_names
 
-PRODUCTS = ("cards", "bots", "memecoins", "funds")
-# A room's kind -> its product. An Arena room is none of the four yet, so it
+# The laboratory's sections (v3, 2026-10-11) and funds, which the report still adds up for
+# the rooms opened before they were switched off and the page no longer draws.
+PRODUCTS = rooms_mod.SECTIONS + ("funds",)
+# A room's kind -> its product. An Arena room is none of these yet, so it
 # is in no product rather than quietly among the cards.
 KIND_PRODUCT = {"card": "cards", "bot": "bots", "fund": "funds"}
 # Their own score, the line the operator asked about on 2026-09-14.
@@ -70,15 +73,21 @@ def _room_net(room: dict, verdict: dict | None, money: dict | None) -> float | N
 
 
 def _product(room: dict, bot_origins: set[str], plan: dict | None = None) -> str | None:
-    """A room's product. Rooms opened before 2026-09-21 carry no kind: one
+    """A room's product -- since v3 (2026-10-11) its section. The section it was opened in,
+    when its row names one. Otherwise: rooms opened before 2026-09-21 carry no kind: one
     naming a card holds cards, and one whose answer's order was a clone
     (STR-0001, Perceptron Oracle) holds a bot. And a kindless room whose plan
     holds legs of one kind is that kind -- STR-0045, five bots from our own
-    proposal, showed under the cards (2026-09-24)."""
+    proposal, showed under the cards (2026-09-24). A card room of ours is ours, never among
+    his cards (none was opened before v3, so this moves no room)."""
+    if room.get("section") in rooms_mod.SECTIONS:
+        return room["section"]
     kind = rooms_mod.room_kind(room, plan)
     if kind:
-        return KIND_PRODUCT.get(kind)
-    return "bots" if str(room.get("origin")) in bot_origins else "cards"
+        product = KIND_PRODUCT.get(kind)
+    else:
+        product = "bots" if str(room.get("origin")) in bot_origins else "cards"
+    return "own" if product == "cards" and lab.is_ours(room.get("origin")) else product
 
 
 def _rooms(answers, notebook, room_rows, paper_rows, sample_rows,
@@ -185,6 +194,35 @@ def _memecoins(fomo_rows: list[dict], now) -> dict:
                   "n": row.get("n")} for fee, row in sorted(by_fee.items())]}
 
 
+def _hot(notebook: list[dict]) -> dict | None:
+    """The newest Hot headlines reading the tick wrote (`hot_reading`, qa/hot.py), as the
+    memecoin section shows it: crypto that entered Hot against crypto that did not, 24 h on,
+    and the Nexus rule with the most trades behind it. None when nothing was read."""
+    readings = [r for r in notebook or () if r.get("type") == "hot_reading"]
+    if not readings:
+        return None
+    newest = max(readings, key=lambda r: str(r.get("at") or ""))
+
+    def day(rows):
+        row = next((r for r in rows or () if r.get("hours") == 24.0), None)
+        return ({"n": row.get("n"), "mean": row.get("mean"), "up": row.get("up")}
+                if row else None)
+
+    rules = newest.get("rules") or {}
+    best = max(rules, key=lambda k: (rules[k].get("n") or 0, k), default=None)
+    rule = None
+    if best:
+        verdict = str(rules[best].get("verdict") or "")
+        of = re.search(r"of (\d+) trades", verdict)
+        rule = {"id": best, "n": rules[best].get("n") or 0,
+                "of": int(of.group(1)) if of else None,
+                "mean_net": rules[best].get("mean_net")}
+    return {"at": newest.get("at"),
+            "entered": day((newest.get("follow") or {}).get("crypto")),
+            "not_in_hot": day((newest.get("control") or {}).get("crypto")),
+            "rule": rule}
+
+
 def _nexus(nexus_rows, notebook, room_rows) -> dict:
     """His questions followed to the end: asked, answered, what his answers
     picked (the rooms holding a pick), what the gate passed, what survived."""
@@ -219,7 +257,7 @@ def report(nexus_rows: list[dict], notebook: list[dict], room_rows: list[dict],
                    clone_rows)
     products = {p: _sector([r for r in rooms if r["product"] == p])
                 for p in PRODUCTS if p != "memecoins"}
-    products["memecoins"] = _memecoins(fomo_rows, moment)
+    products["memecoins"] = dict(_memecoins(fomo_rows, moment), hot=_hot(notebook))
     return {"generated_at": moment.isoformat(timespec="seconds"),
             "products": {p: products[p] for p in PRODUCTS},
             "nexus": _nexus(nexus_rows, notebook, room_rows),

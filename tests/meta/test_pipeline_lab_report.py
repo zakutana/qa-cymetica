@@ -180,6 +180,38 @@ def test_a_room_that_holds_a_bot_is_a_bot_even_from_before_rooms_had_kinds():
         {"type": "status", "room": "STR-0045", "status": "running"}]
     said = _report(room_rows=fx["room_rows"], clone_rows=fx["clone_rows"])
     assert {r["id"]: r for r in said["rooms"]}["STR-0045"]["product"] == "bots"
+    _a_rooms_section_is_the_one_it_was_opened_in()
+
+
+def _a_rooms_section_is_the_one_it_was_opened_in():
+    """Laboratory v3 (2026-10-11): seven sections. A room opened in one carries it on its
+    strategy row and the report counts it there; a card room of ours that names none is ours,
+    never among Nexus's cards; and every room from before keeps the product it had, under the
+    same key -- cards, bots, memecoins -- so nothing judged moves (a better mapping rewrites
+    the past). Every section is in the report, the empty ones too, so the page draws seven."""
+    from qa import rooms as qa_rooms
+
+    fx = _fixture()
+    fx["room_rows"] += [
+        {"type": "strategy", "id": "STR-0010", "origin": "OUR-0010", "card": _card(0x10),
+         "title": "Ours, by our backtest", "section": "own"},
+        {"type": "status", "room": "STR-0010", "status": "running"},
+        {"type": "strategy", "id": "STR-0011", "origin": "OUR-0011", "card": _card(0x11),
+         "title": "Ours, no section written"},
+        {"type": "strategy", "id": "STR-0012", "origin": "OUR-0012", "kind": "bot",
+         "ref": "sp-macd", "title": "MACD improved vs original", "section": "h2h"},
+        {"type": "strategy", "id": "STR-0013", "origin": "OUR-0013", "card": _card(0x13),
+         "title": "The desk's experiment", "section": "desk"}]
+    said = _report(room_rows=fx["room_rows"])
+    product = {r["id"]: r["product"] for r in said["rooms"]}
+    assert (product["STR-0010"], product["STR-0011"], product["STR-0012"],
+            product["STR-0013"]) == ("own", "own", "h2h", "desk"), product
+    assert (product["STR-0001"], product["STR-0002"], product["STR-0003"]) == (
+        "cards", "cards", "bots"), "a room from before changed its section"
+    assert set(said["products"]) == set(qa_rooms.SECTIONS) | {"funds"}, said["products"]
+    assert said["products"]["own"]["running"] == 1
+    assert said["products"]["outsider"]["n"] == 0
+    assert said["products"]["cards"]["n"] == 2, "ours were counted among his cards"
 
 
 @qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
@@ -234,6 +266,32 @@ def test_memecoins_carry_the_median_and_the_high_conviction_answer(monkeypatch):
     edge = [{"type": "signal", "key": "at", "conviction": 70.0},
             {"type": "signal", "key": "under", "conviction": 69.99}]
     assert [r["key"] for r in lab_report._high_conviction(edge)] == ["at"]
+    _memecoins_carry_the_newest_hot_reading()
+
+
+def _memecoins_carry_the_newest_hot_reading():
+    """Laboratory v3 (2026-10-11): the Hot headlines study was only in `lab.py brief`, never
+    on the page. The memecoin section carries the newest `hot_reading` the tick wrote: crypto
+    that entered Hot against crypto that did not, 24 h on, and the Nexus rule with the most
+    trades behind it. No reading, no figures -- never zeros."""
+    def reading(at, mean):
+        return {"type": "hot_reading", "at": at,
+                "follow": {"crypto": [{"hours": 6.0, "n": 155, "mean": 1.9, "up": 79},
+                                      {"hours": 24.0, "n": 65, "mean": mean, "up": 40}]},
+                "control": {"crypto": [{"hours": 24.0, "n": 482, "mean": 1.415, "up": 299}]},
+                "rules": {"NEX-0055": {"n": 0, "verdict": "not yet: 0 of 100 trades",
+                                       "mean_net": None},
+                          "NEX-0057c": {"n": 9, "verdict": "not yet: 9 of 100 trades",
+                                        "mean_net": -1.296}}}
+
+    notebook = _fixture()["notebook"] + [reading("2026-10-10T08:00:00+00:00", 9.9),
+                                         reading("2026-10-11T08:09:37+00:00", 3.877)]
+    hot = _report(notebook=notebook)["products"]["memecoins"]["hot"]
+    assert hot == {"at": "2026-10-11T08:09:37+00:00",
+                   "entered": {"n": 65, "mean": 3.877, "up": 40},
+                   "not_in_hot": {"n": 482, "mean": 1.415, "up": 299},
+                   "rule": {"id": "NEX-0057c", "n": 9, "of": 100, "mean_net": -1.296}}, hot
+    assert _report()["products"]["memecoins"]["hot"] is None
 
 
 @qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
@@ -388,7 +446,8 @@ def test_lab_py_report_writes_state_lab_report_json(tmp_path, monkeypatch):
     assert module.main(["report"]) == 0
     written = json.loads((tmp_path / "lab" / "report.json")
                          .read_text(encoding="utf-8"))
-    assert set(written["products"]) == {"cards", "bots", "memecoins", "funds"}
+    assert set(written["products"]) == {"own", "cards", "bots", "h2h", "memecoins",
+                                        "outsider", "desk", "funds"}
     assert written["products"]["cards"]["n"] == 2
 
     # R03 (deep pass of 2026-09-24, 3/3): /lab and /lab.json on the console's

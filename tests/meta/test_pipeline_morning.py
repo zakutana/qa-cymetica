@@ -268,8 +268,12 @@ def test_overnight_names_what_moved_since_the_last_report():
     assert "Nový pokus: FLOW recovery" in text
     # Which product it was, so "nevyšlo" is not read as one kind of thing
     # (the operator, 2026-10-01: "to sou event karty?").
-    assert "✗ nevyšlo (Karty): SOL doubles" in text
-    assert "Karty −3,2 % → −4,2 %" in text
+    assert "✗ nevyšlo (Karty Nexus): SOL doubles" in text
+    # Laboratory v3 (2026-10-11): a tile per section, in the page's order, from the one list.
+    from qa import rooms as qa_rooms
+
+    assert list(morning.SECTOR_NAMES) == list(qa_rooms.SECTIONS), morning.SECTOR_NAMES
+    assert "Karty Nexus −3,2 % → −4,2 %" in text
     assert "Nexus: +5 otázek" in text
     assert len(lines) <= morning.MAX_OVERNIGHT
     assert morning.overnight(now, None) == [], "no earlier report, nothing to compare"
@@ -376,7 +380,7 @@ def test_the_page_is_one_short_czech_page_in_the_artifact_shape():
     # Each figure is his rooms' own count, not gate passes minus verdicts:
     # 20 - 0 - 1 would have said 19 running (R07, 3/3).
     assert "7 ještě běží" in html and "2 bez závěru" in html, html
-    assert "−4,2" in html and "Karty −3,2 % → −4,2 %" in html
+    assert "−4,2" in html and "Karty Nexus −3,2 % → −4,2 %" in html
     # Both themes, the artifact contract's way.
     assert ':root:not([data-theme="light"])' in html and ':root[data-theme="dark"]' in html
     assert re.search(r"body\s*\{[^}]*background", html), "the body paints its own ground"

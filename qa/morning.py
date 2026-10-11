@@ -28,8 +28,11 @@ MAX_OVERNIGHT = 6
 MAX_LINE = 140
 HANDLE = "@EventTraderQABot"
 # No Funds tile: the operator, 2026-10-06, "Fondy dlazdici smaz, nepotrebuji" (funds
-# have been off since 2026-10-03, qa.lab.FUND_ROOMS).
-SECTOR_NAMES = {"cards": "Karty", "bots": "Boti", "memecoins": "Memecoiny"}
+# have been off since 2026-10-03, qa.lab.FUND_ROOMS). A tile per section since 2026-10-11, in
+# qa.rooms.SECTIONS' order (the laborator skill, "Seven sections").
+SECTOR_NAMES = {"own": "Naše karty", "cards": "Karty Nexus", "bots": "Boti",
+                "h2h": "Head-to-head", "memecoins": "Memecoiny", "outsider": "Outsider",
+                "desk": "Desk"}
 # A sector's figure has to move this much overnight to be news.
 MOVE_PP = 0.5
 
