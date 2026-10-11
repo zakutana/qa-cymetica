@@ -8,7 +8,8 @@ Two verbs, both idempotent, both safe to run at any moment:
                                       the rooms, what Nexus was asked, the
                                       paper orders, the laboratory's notebook --
                                       into audits/lab/, so months of them do
-                                      not sit on one disk
+                                      not sit on one disk (the ones in
+                                      BY_DAY one packed file per day)
 
 `track` runs from three places, and three is the point. `.githooks/pre-commit`
 calls it, so a commit that records a new answer brings the capture that answer
@@ -29,6 +30,10 @@ two copies of that walk would be free to disagree about what "cited" means.
 from __future__ import annotations
 
 import argparse
+import json
+import lzma
+import os
+import re
 import shutil
 import subprocess
 import sys
@@ -58,6 +63,16 @@ DIARIES = ("rooms.jsonl", "nexus.jsonl", "paper.jsonl", "lab.jsonl",
            # The outsider's runs, picks and coin checkpoints (scripts/outsider.py,
            # the laboratory's section 6, 2026-10-11): one run a day, none twice.
            "outsider.jsonl")
+
+# The diaries too big for one file in git, archived by the day each row was
+# written and packed. fomo_signals.jsonl's flat copy was 87 MB in HEAD on
+# 2026-10-11, growing up to 20 MB a day, and GitHub refuses a file over 100 MB
+# -- at the push that ends a deep pass (tests/repo/test_evidence_in_git.py).
+BY_DAY = ("fomo_signals.jsonl",)
+
+_UNDATED = "undated"
+
+
 def snapshot_dir() -> Path:
     """Beside the state it archives, not beside the repository.
 
@@ -83,9 +98,62 @@ def snapshot() -> list[str]:
         source = state_dir() / name
         if not source.is_file():
             continue
-        shutil.copyfile(source, target / name)
+        if name in BY_DAY:
+            _snapshot_by_day(source, target)
+        else:
+            shutil.copyfile(source, target / name)
         copied.append(name)
     return copied
+
+
+def _day_of(line: bytes) -> str:
+    try:
+        at = json.loads(line).get("at")
+    except (ValueError, AttributeError):
+        return _UNDATED
+    day = str(at)[:10] if at else ""
+    return day if re.fullmatch(r"\d{4}-\d{2}-\d{2}", day) else _UNDATED
+
+
+def _snapshot_by_day(source: Path, target: Path) -> None:
+    """One `<stem>/YYYY-MM-DD.jsonl.xz` per day, the lines in diary order.
+
+    A day whose archive already unpacks to the same bytes is not written, so a
+    closed day is one blob in git for good; today's is rewritten while it
+    grows. A day the diary no longer holds stays -- this is the copy that
+    outlives the disk. `undated` (a line with no readable `at`) mirrors the
+    diary, and a last line without its newline is mid-append and waits for
+    the next snapshot. The flat copy goes only once every day is written.
+    """
+    folder = target / source.name[:-len(".jsonl")]
+    folder.mkdir(parents=True, exist_ok=True)
+    days: dict[str, list[bytes]] = {}
+    with source.open("rb") as handle:
+        for line in handle:
+            if line.endswith(b"\n"):
+                days.setdefault(_day_of(line), []).append(line)
+    for day, lines in days.items():
+        raw = b"".join(lines)
+        path = folder / f"{day}.jsonl.xz"
+        if path.is_file():
+            try:
+                if lzma.decompress(path.read_bytes()) == raw:
+                    continue
+            except lzma.LZMAError:
+                pass
+        packed = lzma.compress(raw, preset=6)
+        if lzma.decompress(packed) != raw:
+            raise RuntimeError(f"keep: {path.name} does not unpack to its "
+                               f"own rows; nothing replaced")
+        part = path.with_name(path.name + ".part")
+        part.write_bytes(packed)
+        os.replace(part, path)
+    stale = folder / f"{_UNDATED}.jsonl.xz"
+    if _UNDATED not in days and stale.is_file():
+        stale.unlink()
+    flat = target / source.name
+    if flat.is_file():
+        flat.unlink()
 
 
 def _archive(month: str, release: bool) -> int:

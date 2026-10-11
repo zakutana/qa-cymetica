@@ -154,6 +154,31 @@ def test_every_capture_the_committed_state_cites_can_still_be_produced():
 
 
 @qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
+def test_no_file_in_git_nears_the_size_github_refuses():
+    """GitHub refuses a push that carries a file over 100 MB, and warns from 50.
+
+    audits/lab/fomo_signals.jsonl -- `keep.py snapshot`'s flat copy of a diary
+    growing up to 20 MB a day -- was 87 MB in HEAD on 2026-10-11, a day or two
+    from a refused push at the end of a deep pass, the one step nothing runs
+    after. Half the hard limit is the ceiling, so the day it is crossed is a
+    red test and not a push that fails at night. Read from HEAD: that is what
+    a push sends.
+    """
+    ceiling = 50 * 1024 * 1024
+    out = subprocess.run(["git", "ls-tree", "-r", "-l", "HEAD"], cwd=REPO,
+                         capture_output=True, text=True, check=True,
+                         encoding="utf-8").stdout
+    big = []
+    for line in out.splitlines():
+        meta, _, path = line.partition("\t")
+        size = meta.split()[-1]
+        if size.isdigit() and int(size) > ceiling:
+            big.append(f"{path} {int(size) / 1e6:.1f} MB")
+    assert not big, (f"{len(big)} file(s) in HEAD over 50 MB, half of what "
+                     f"GitHub accepts: {big}")
+
+
+@qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
 def test_git_holds_no_capture_body_at_all():
     """The other direction, and the one that keeps the repository small.
 

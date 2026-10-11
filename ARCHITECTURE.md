@@ -266,7 +266,8 @@ qa/archive.py        the monthly bundle, and the check before the move: build,
                      read back off disk, hash every member, THEN release.
 scripts/keep.py      `track` writes the manifest (bodies stay on disk since
                      D3); `archive --month [--release]` bundles and lets go;
-                     `snapshot` copies the lab diaries into audits/lab/.
+                     `snapshot` copies the lab diaries into audits/lab/
+                     (fomo_signals one .jsonl.xz per day: 87 MB flat).
                      `.githooks/pre-commit` calls track at every commit, the
                      fold when a row starts standing on a new run, the deep
                      pass for a clone with no hooksPath, and `lab.py close`

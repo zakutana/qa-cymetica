@@ -597,6 +597,45 @@ def test_the_archive_follows_the_state_it_archives(tmp_path, monkeypatch):
     assert (target / "lab.jsonl").read_text(encoding="utf-8").strip() == \
         '{"type":"open"}'
 
+    # And the diary that outgrew one file in git: audits/lab/fomo_signals.jsonl
+    # was 87 MB in HEAD on 2026-10-11, growing up to 20 MB a day, and GitHub
+    # refuses a file over 100 MB -- at the push that ends a deep pass. So it
+    # goes by the day each row was written, packed; a day already archived
+    # unchanged is never rewritten, and a day the diary no longer holds stays.
+    import lzma
+
+    rows = [b'{"type": "signal", "at": "2026-10-10T23:59:00+00:00"}\r\n',
+            b'{"type": "checkpoint", "at": "2026-10-11T00:01:00+00:00"}\r\n',
+            b'not json\r\n',
+            b'{"type": "checkpoint", "at": "2026-10-11T00:05:00+00:00"}\r\n']
+    mid_append = b'{"type": "checkpoint", "at": "2026-10-11T00:0'
+    (tmp_path / "fomo_signals.jsonl").write_bytes(b"".join(rows) + mid_append)
+    (target / "fomo_signals.jsonl").write_bytes(b"the old flat copy")
+    assert "fomo_signals.jsonl" in keep.snapshot()
+    folder = target / "fomo_signals"
+
+    def packed():
+        return {p.name: lzma.decompress(p.read_bytes())
+                for p in folder.iterdir()}
+
+    assert packed() == {"2026-10-10.jsonl.xz": rows[0],
+                        "2026-10-11.jsonl.xz": rows[1] + rows[3],
+                        "undated.jsonl.xz": rows[2]}, packed()
+    assert not (target / "fomo_signals.jsonl").exists(), (
+        "the flat copy GitHub will refuse is still in the archive")
+
+    closed = (folder / "2026-10-10.jsonl.xz").stat().st_mtime_ns
+    finished = mid_append + b'5:00+00:00"}\r\n'
+    later = b'{"type": "signal", "at": "2026-10-12T08:00:00+00:00"}\r\n'
+    (tmp_path / "fomo_signals.jsonl").write_bytes(
+        rows[1] + rows[3] + finished + later)
+    keep.snapshot()
+    assert packed() == {"2026-10-10.jsonl.xz": rows[0],
+                        "2026-10-11.jsonl.xz": rows[1] + rows[3] + finished,
+                        "2026-10-12.jsonl.xz": later}, packed()
+    assert (folder / "2026-10-10.jsonl.xz").stat().st_mtime_ns == closed, (
+        "an unchanged day was written again: every snapshot a new blob in git")
+
 
 @qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
 def test_the_free_cash_reader_takes_their_decimal_strings(tmp_path, monkeypatch):
