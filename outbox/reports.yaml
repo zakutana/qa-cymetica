@@ -5676,6 +5676,80 @@ reports:
       more than 1% above its max supply, or an fdv more than 5% under its market cap, on two reads 20 seconds
       apart; it passes the moment those coins are withheld or consistent.
 
+  - key: launchpad-token-list-without-a-chain-is-empty
+    findings: [CYM-launchpad-tokens-without-a-chain-lists-launches]
+    severity: medium
+    category: api
+    url: https://cymetica.com/api/v1/launchpad/onchain/tokens
+    title: >-
+      GET /launchpad/onchain/tokens without chain_id answers 200 [] while chain_id=5042 lists 518 launches;
+      the screener and launchpad_list_tokens list both chains
+    expected: >
+      The schema declares chain_id on GET /api/v1/launchpad/onchain/tokens as anyOf [integer, null] with no
+      default, and the developer page (/launchpad/robinhood/api) lists it among the query parameters of "List
+      launches -- a JSON array of token rows". The screener on the same page has the identical chain_id
+      declaration and answers without one with the launches of every chain, and so does the MCP twin
+      launchpad_list_tokens. So the call that names no chain should return launches (any of them), or a 422 that
+      names chain_id. A 200 with an empty array is the one answer that reads, to a caller with no reason to
+      suspect a missing parameter, as "there are no launches".
+    actual: >
+      Read on 2026-10-11 between 05:30 and 06:00 UTC, anonymously, every variant at least twice. GET
+      /api/v1/launchpad/onchain/tokens with no chain_id answers HTTP 200 with [] for the default call and for
+      sort=volume, sort=graduating, limit=5, limit=200, offset=0 and include_internal=true. The same endpoint with
+      chain_id=4663 returns 1 launch and with chain_id=5042 returns 518 (read in pages of 200). The unfiltered
+      GET /api/v1/launchpad/onchain/screener?include_external=false&limit=500 returns 500 rows from both chains
+      (499 on 5042, 1 on 4663), and launchpad_list_tokens with no arguments returns 25 rows (24 on 5042, 1 on
+      4663). Our check reads the unfiltered list twice, 20 seconds apart, and counts it only when both reads are [].
+    steps:
+      - 'GET https://cymetica.com/api/v1/launchpad/onchain/tokens -> 200 []  (also ?sort=volume, ?sort=graduating, ?limit=5, ?limit=200, ?offset=0, ?include_internal=true)'
+      - 'GET https://cymetica.com/api/v1/launchpad/onchain/tokens?chain_id=4663 -> 1 row (RUG)'
+      - 'GET https://cymetica.com/api/v1/launchpad/onchain/tokens?chain_id=5042&limit=200&offset=0, 200, 400 -> 200, 200 and 118 rows'
+      - 'GET https://cymetica.com/api/v1/launchpad/onchain/screener?include_external=false&limit=500 -> 500 rows, chains 5042 (499) and 4663 (1)'
+      - 'MCP launchpad_list_tokens with {} -> 25 rows, chain_id 5042 (24) and 4663 (1)'
+    body: >
+      The Launchpad page itself always passes chain_id, so a person never sees this; an agent or script that
+      follows the developer page and does not pass one gets an empty list. How to fix it is yours. One thing we
+      noticed and cannot confirm from outside: launch/prepare documents "Default: the first enabled chain", and
+      GET /api/v1/launchpad/onchain/config currently answers chains [] with 4663, 5042 and 5042002 all in
+      paused_chain_ids, so if the list follows that convention the empty answer would be explained, but a paused
+      chain asked for by number is still listed (the page does it), so the unfiltered call returning nothing is
+      not what a paused chain should mean. A separate gap, not part of our check: paused_chain_ids is not
+      described in openapi-public.json, llms.txt, llms-full.txt, /launchpad/robinhood/api or /launchpad/arc/api
+      (we searched all five), while llms.txt ("Launch a token on Robinhood Chain for $0") and the
+      launchpad_launch_token description offer launching without mentioning a pause; the Robinhood page says
+      "Token launches on this chain are paused for now". We did not call the launch endpoints and do not know
+      what they answer. Our check passes the moment the unfiltered call returns any row, or a 422.
+
+  - key: launchpad-discovery-tool-lists-internal-launches
+    findings: [CYM-launchpad-discovery-feed-lists-no-internal-launch]
+    severity: low
+    category: api
+    url: https://cymetica.com/api/v1/launchpad/onchain/tokens?chain_id=4663
+    title: >-
+      launchpad_list_tokens lists the 5 test launches that GET /launchpad/onchain/tokens keeps behind
+      include_internal ("Admin/debug") on chain 4663
+    expected: >
+      GET /api/v1/launchpad/onchain/tokens declares include_internal (default false) as "Admin/debug: include
+      platform seed + test launches", so those launches are not part of the public list, and the Launchpad page,
+      which reads chain_id=4663 from it, shows one launch. launchpad_list_tokens is described as the free
+      discovery feed, llms.txt says it is for finding "what to buy", and it has no include_internal argument, so we
+      expected the same public list.
+    actual: >
+      Read on 2026-10-11 between 05:35 and 06:10 UTC, anonymously, twice 20 seconds apart. On chain 4663 the REST
+      list answers 1 launch (RUG) by default and 6 with include_internal=true (NXSOC, NXTEST, GTEST, CYMHS and
+      CYMG added, each with at most 1 holder and a total volume of at most 0.0006). launchpad_list_tokens with
+      chain_id=4663 returns those same 6 rows, each with a buy_via hint pointing at launchpad_trade_quote. The
+      unfiltered screener lists 1 launch on 4663. We judge only a chain whose whole public list fits one page, so
+      chain 5042 (518 public launches, 1 internal) was not judged: the tool has no offset to reach past its 100 rows.
+    steps:
+      - 'GET https://cymetica.com/api/v1/launchpad/onchain/tokens?chain_id=4663&limit=200 -> 1 row (RUG)'
+      - 'GET https://cymetica.com/api/v1/launchpad/onchain/tokens?chain_id=4663&limit=200&include_internal=true -> 6 rows (RUG, NXSOC, NXTEST, GTEST, CYMHS, CYMG)'
+      - 'MCP launchpad_list_tokens with {"chain_id": 4663, "limit": 100} -> 6 rows, the same six, each with buy_via'
+    body: >
+      Low, but it is the feed an agent is told to read before buying: a test token with a buy hint beside the real
+      one. Either filter the tool the way the endpoint does by default, or document that the tool lists everything;
+      our check passes when none of the launches the REST list keeps internal appears in the tool's answer.
+
 footer: >
   Reported by an independent QA agent. Scope of this work: verification of the
   REST API, MCP, the machine-readable discovery surfaces and the pages built on

@@ -64,3 +64,5 @@ reports:
   183: "Dokumentace: report-access je v llms.txt, ale není v OpenAPI, ze kterého se staví /api-docs"
   184: "Historie účtu: u USDC vrací každá další stránka těch samých 100 řádků, starší historie nejde projít"
   185: "Krypto dashboardy: HBAR má max supply 1 mld pod celkovou zásobou 50 mld, FDV 44× pod kapitalizací (4 coiny)"
+  186: "Launchpad: seznam tokenů bez zadaného řetězce je prázdný, ačkoli jeden řetězec jich má 518"
+  187: "Launchpad: MCP výpis tokenů ukazuje 5 testovacích launchů, které REST schovává jako interní"

@@ -1,0 +1,240 @@
+{
+  "schema": 2,
+  "run_id": "run-20261011T054618Z-afcca1c8",
+  "started_at": "2026-10-11T05:46:29+00:00",
+  "finished_at": "2026-10-11T05:47:45+00:00",
+  "git_head": "afcca1c8e370295ebdf91c876d44506dc5bf78ae",
+  "git_short": "afcca1c8",
+  "git_dirty": true,
+  "prereg_id": null,
+  "prereg_tag_sha": null,
+  "prereg_commit": null,
+  "platform_fingerprint": "sha256:a7838a601f02eb66652c6efae8c285c56bc987b37d4fccf6245b7db0bac210a3",
+  "fingerprint_parts": {
+    "/.well-known/mcp.json": "c90c66f9fe1af1e61407fcae5a14724e1ea2a706140a882f2c2383f09fd0874c",
+    "/.well-known/agent-card.json": "7419274439d47fc23618eb4e234810e6478d6ec9cf80e6d90ae264830f7e0db0",
+    "/.well-known/agent-skills.json": "3b84f287322c79c7925e8a44688d5d537da9ca244192f8d4f4d889fd7a1e616d",
+    "/.well-known/ai-plugin.json": "efcfd6d8f00827534cc1298a80a3e70fa2878c139998cb73793dc659b5bac998",
+    "/.well-known/udc.json": "1ec34383ede550c71fb3e81b989b8b92b0da3ce7ccbdc497c9edf5a8fcbd6c14",
+    "/openapi.json": "686dd7a03ba5cbf1e21bdcabd6e6b75bcf578967ae8f69bddfa98574fa118b17",
+    "/openapi-public.json": "b6bd90ad9b7dfaa108de403ffb25cf2c176ac20b3721fc8e8d74b5079944e4e8",
+    "/llms.txt": "1d256c659910dddfe165dfc0785b83c24ef29cddc23f20e50200984426ad5ca1",
+    "mcp:tools/list:none": "f7c126c9c31f25eaefce1b814ac2e8c4aaa53928acfa53e23c73b1a9423ebbc4"
+  },
+  "fingerprint_errors": {},
+  "fingerprint_drifted": false,
+  "fingerprint_changed_parts": [],
+  "identities_present": {
+    "anon": true,
+    "trusted": true,
+    "recognized": false
+  },
+  "python_version": "3.13.13",
+  "pytest_version": "8.3.4",
+  "selector": "tests/rest/test_launchpad_tokens_list_without_a_chain_is_not_empty.py tests/rest/test_launchpad_discovery_tool_hides_what_rest_keeps_internal.py -p no:cacheprovider -q",
+  "selector_full": false,
+  "narrowing": [],
+  "paths": [
+    "tests/rest/test_launchpad_tokens_list_without_a_chain_is_not_empty.py",
+    "tests/rest/test_launchpad_discovery_tool_hides_what_rest_keeps_internal.py"
+  ],
+  "allow_mutate": false,
+  "collected": [
+    "tests/rest/test_launchpad_tokens_list_without_a_chain_is_not_empty.py::test_the_token_list_without_a_chain_is_not_empty_while_a_chain_lists_launches",
+    "tests/rest/test_launchpad_discovery_tool_hides_what_rest_keeps_internal.py::test_the_discovery_tool_does_not_list_what_the_rest_list_keeps_internal"
+  ],
+  "results": [
+    {
+      "nodeid": "tests/rest/test_launchpad_tokens_list_without_a_chain_is_not_empty.py::test_the_token_list_without_a_chain_is_not_empty_while_a_chain_lists_launches",
+      "component": "chain.launchpad",
+      "tier": "SAFE",
+      "surface": "rest",
+      "claim_id": "launchpad-tokens-without-a-chain-lists-launches",
+      "ticket_id": null,
+      "volatile": false,
+      "outcome": "failed",
+      "phase": "call",
+      "role": "verdict",
+      "duration_ms": 32258,
+      "evidence_ids": [
+        "13ce1fa21555d923665175c8d131e85ba22be262e950e1fdd987399ffa54c3bd",
+        "0e0e9cf1a93b5569d901d234b23c50f85205985eeec9071a83b9658cae68ba6d",
+        "91766f71e9c2900a6e9c4bad0bdba92bd0aa9940509c365de466f4420a548c2c",
+        "09a83ac9dce71d5fc376bada131a08980f6052769c56b536c9c2ed447d9c0a5f",
+        "5734209dc89a69a61178ca913fe6c82994860e68cd49557bf5fbe74309ec1198",
+        "9c38aae7e12d802fdc8a2c07772a296f27adebabec6d75fe39b4742f5cc14400"
+      ],
+      "measurement": {
+        "verdict": "failed",
+        "reason": "GET /api/v1/launchpad/onchain/tokens with no chain_id answered 200 with [] on both reads, 20 seconds apart, while the same endpoint chain_id=4663 lists 1, chain_id=5042 lists 5+ (limit=5); the unfiltered screener lists 500 rows over chains [4663, 5042] and launchpad_list_tokens with no arguments returns 25 rows",
+        "left": {
+          "unfiltered_rows": 0,
+          "second_read_rows": 0
+        },
+        "right": {
+          "rows_where_a_chain_is_named": {
+            "4663": 1,
+            "5042": 5
+          }
+        },
+        "sources": {
+          "contract": "openapi-public.json GET /api/v1/launchpad/onchain/tokens: chain_id anyOf [integer, null], no default; /launchpad/robinhood/api: 'List launches -- a JSON array of token rows'",
+          "endpoint": "/api/v1/launchpad/onchain/tokens",
+          "sibling": "/api/v1/launchpad/onchain/screener"
+        },
+        "provenance": {},
+        "evidence_ids": [],
+        "fingerprint": null,
+        "claim_id": "launchpad-tokens-without-a-chain-lists-launches",
+        "role": "verdict",
+        "population": {
+          "chains_in_screener": [
+            4663,
+            5042
+          ],
+          "per_chain": {
+            "4663": 1,
+            "5042": 5
+          },
+          "unread": [],
+          "unfiltered_status": 200,
+          "screener_rows": 500,
+          "mcp_launchpad_list_tokens_no_args_rows": 25
+        }
+      },
+      "check_fingerprint": "fb72b5b1acdbf41cd7615ea8702f9bd9c329cea645fdfb81b419a343ecb9cf1b",
+      "helpers_fingerprint": "601ba93f6be0cc004bb5751cdc616be5c0d26597f9889c2b5676a6efbe6c66b1",
+      "helpers_formula": 2,
+      "reason": null,
+      "failure_repr": "tests\\rest\\test_launchpad_tokens_list_without_a_chain_is_not_empty.py:115: in test_the_token_list_without_a_chain_is_not_empty_while_a_chain_lists_launches\n    conclude(Measurement(\nqa\\measure.py:165: in conclude\n    raise AssertionError(explain(m))\nE   AssertionError: GET /api/v1/launchpad/onchain/tokens with no chain_id answered 200 with [] on both reads, 20 seconds apart, while the same endpoint chain_id=4663 lists 1, chain_id=5042 lists 5+ (limit=5); the unfiltered screener lists 500 rows over chains [4663, 5042] and launchpad_list_tokens with no arguments returns 25 rows\nE     left  = {'unfiltered_rows': 0, 'second_read_rows': 0}\nE     right = {'rows_where_a_chain_is_named': {'4663': 1, '5042': 5}}"
+    },
+    {
+      "nodeid": "tests/rest/test_launchpad_discovery_tool_hides_what_rest_keeps_internal.py::test_the_discovery_tool_does_not_list_what_the_rest_list_keeps_internal",
+      "component": "chain.launchpad",
+      "tier": "SAFE",
+      "surface": "mcp",
+      "claim_id": "launchpad-discovery-feed-lists-no-internal-launch",
+      "ticket_id": null,
+      "volatile": false,
+      "outcome": "failed",
+      "phase": "call",
+      "role": "verdict",
+      "duration_ms": 34924,
+      "evidence_ids": [
+        "a8c050fb5702f9b3bb33f4018f0b8f113797eb4a4953fb1176a75ffd647d8c46",
+        "8c2154dadee660fff5cfe0c698c5396f3f7e80b10962e077001a88ab536e8208",
+        "ecedae20c5a874aac0d89912839f8bfc80051c4e2f591e96de596ef412d7a7dd",
+        "543e8d8de43298c551b5cc3b0c3c38fe07659cdfdff06e9dfcef945aae24fb43",
+        "29125c4c2dc90308ed44d838e811fc784d7b61331ab90188a84f592fba33a08e",
+        "ea2d4cb9f6be41c66f8ce8ea5191bd2abcca85b212b152b7054ec2f1e1f99a53",
+        "17556af9190927d8a40f3d46cb794c888b5bb765a2e184da59d4dd3087972a01",
+        "d30b6dd28e9a7cb034a20f7e1bdd2f6a1527bc12bca0fc5a6484c42a975348bd"
+      ],
+      "measurement": {
+        "verdict": "failed",
+        "reason": "the discovery tool lists launches that GET /api/v1/launchpad/onchain/tokens marks admin/debug, on both reads, 20 seconds apart: chain_id=4663: REST lists 1 (default) or 6 (include_internal=true), launchpad_list_tokens returns 6 including 5 the REST list keeps internal (NXTEST, CYMG, NXSOC, CYMHS, GTEST)",
+        "left": {
+          "internal_launches_in_the_discovery_feed": {
+            "4663": [
+              "NXTEST",
+              "CYMG",
+              "NXSOC",
+              "CYMHS",
+              "GTEST"
+            ]
+          }
+        },
+        "right": {
+          "internal_launches_in_the_discovery_feed": {}
+        },
+        "sources": {
+          "contract": "openapi-public.json GET /api/v1/launchpad/onchain/tokens: include_internal (default false) 'Admin/debug: include platform seed + test launches'; MCP launchpad_list_tokens: 'Free discovery feed'; llms.txt: 'discover what to buy'",
+          "rest": "/api/v1/launchpad/onchain/tokens",
+          "mcp": "launchpad_list_tokens"
+        },
+        "provenance": {},
+        "evidence_ids": [],
+        "fingerprint": null,
+        "claim_id": "launchpad-discovery-feed-lists-no-internal-launch",
+        "role": "verdict",
+        "population": {
+          "chains": [
+            4663,
+            5042
+          ],
+          "first_read": {
+            "4663": {
+              "rest_public": 1,
+              "rest_with_internal": 6,
+              "mcp_rows": 6,
+              "internal_by_rest": 5,
+              "leaked": [
+                "0x1c6916c49c25709b808bd7a31e8684157fac3dce",
+                "0x575d6db78017fced1ccd6f7941192b480cbbd16f",
+                "0x7258fd1a930ec7c0b81c68e8bfc1a8aaa3faca4d",
+                "0x83e55b12d59233f77042ace1fc5df81e74c804a3",
+                "0xf7758c2d8a593de16f8241dff41b9b096f0508ac"
+              ],
+              "leaked_symbols": [
+                "NXTEST",
+                "CYMG",
+                "NXSOC",
+                "CYMHS",
+                "GTEST"
+              ]
+            }
+          },
+          "confirmed": {
+            "4663": {
+              "rest_public": 1,
+              "rest_with_internal": 6,
+              "mcp_rows": 6,
+              "internal_by_rest": 5,
+              "leaked": [
+                "0x1c6916c49c25709b808bd7a31e8684157fac3dce",
+                "0x575d6db78017fced1ccd6f7941192b480cbbd16f",
+                "0x7258fd1a930ec7c0b81c68e8bfc1a8aaa3faca4d",
+                "0x83e55b12d59233f77042ace1fc5df81e74c804a3",
+                "0xf7758c2d8a593de16f8241dff41b9b096f0508ac"
+              ],
+              "leaked_symbols": [
+                "NXTEST",
+                "CYMG",
+                "NXSOC",
+                "CYMHS",
+                "GTEST"
+              ]
+            }
+          },
+          "unmeasured": [
+            "chain_id=5042: the public list is a full page (200), 'not in it' cannot be known from one page"
+          ]
+        }
+      },
+      "check_fingerprint": "f9c6b80f3cb2099b45d4a9d7676641754230d28b10c5546015f06312401d3362",
+      "helpers_fingerprint": "d134c3458bc153388a8d2a77b2f1f864f3703034c499c606980a2fa5a893ad7a",
+      "helpers_formula": 2,
+      "reason": null,
+      "failure_repr": "tests\\rest\\test_launchpad_discovery_tool_hides_what_rest_keeps_internal.py:139: in test_the_discovery_tool_does_not_list_what_the_rest_list_keeps_internal\n    conclude(Measurement(\nqa\\measure.py:165: in conclude\n    raise AssertionError(explain(m))\nE   AssertionError: the discovery tool lists launches that GET /api/v1/launchpad/onchain/tokens marks admin/debug, on both reads, 20 seconds apart: chain_id=4663: REST lists 1 (default) or 6 (include_internal=true), launchpad_list_tokens returns 6 including 5 the REST list keeps internal (NXTEST, CYMG, NXSOC, CYMHS, GTEST)\nE     left  = {'internal_launches_in_the_discovery_feed': {'4663': ['NXTEST', 'CYMG', 'NXSOC', 'CYMHS', 'GTEST']}}\nE     right = {'internal_launches_in_the_discovery_feed': {}}"
+    }
+  ],
+  "totals": {
+    "failed": 2
+  },
+  "ratelimit": {
+    "requests": 14,
+    "limit": 2000,
+    "remaining": 1992,
+    "fraction_used": 0.004,
+    "exhausted": false
+  },
+  "record_integrity": {
+    "consistent": true,
+    "results_not_in_collected": [],
+    "collected_not_run": [],
+    "budget_truncated": false
+  },
+  "code_dirty_after": false,
+  "fingerprint_after": "sha256:a7838a601f02eb66652c6efae8c285c56bc987b37d4fccf6245b7db0bac210a3",
+  "exit_status": 1
+}
