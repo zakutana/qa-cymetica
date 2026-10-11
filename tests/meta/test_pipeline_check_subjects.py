@@ -686,6 +686,11 @@ def test_a_card_that_is_closed_on_rest_and_open_on_mcp_fails():
     _the_tournament_route_readings()
     _the_idea_template_readings()
 
+    # And the two Build it Better documentation checks of the evening of 2026-10-11 (the routes
+    # llms.txt names against the OpenAPI, the place it gives for the request token), the same way.
+    _the_build_it_better_route_readings()
+    _the_request_token_place_readings()
+
     # And the account history pages forward (2026-10-10): with currency=USDC, and with no filter
     # past the first page, every offset answered the same 100 rows while has_more said true.
     from tests.rest.test_account_history_pages_forward import page_repeats
@@ -1119,3 +1124,131 @@ def _the_idea_template_readings():
     assert idea_after_a_change(dict(record, messages=record["messages"][:2])) is None, "no BB-CHANGE: not judged"
     assert idea_after_a_change(dict(record, messages=record["messages"][:3])) is None, "no spec after it yet"
     assert idea_after_a_change(dict(record, is_idea=False)) is None, "a rebuild request may say 'the job you use'"
+
+
+_BB_SECTION = """\
+## Build it Better
+
+Name a financial app, agree a scope, and a better version is built in the open.
+
+- MCP tools: `bb_search_rebuilt_apps`, `bb_file_request`, `bb_withdraw_request`
+- REST: `GET /api/v1/build-it-better/apps`, `GET /api/v1/build-it-better/requests`,
+  `GET /api/v1/build-it-better/requests/{ticket}`, `POST /api/v1/build-it-better/requests`
+  (X-API-Key; NEXUS build plan, or >=100 ET10 only while plans are off), `POST
+  .../requests/{ticket}/accept|change|verdict|withdraw` (request token in the body)
+- Limits: `improvements` up to 8,000 characters. `POST .../requests/{ticket}/withdraw` takes back
+  your own request while it is requested or funded.
+- Traffic and likes, no key: `GET /api/v1/build-it-better/apps/stats`
+- Real-time: `wss://cymetica.com/ws/build-it-better` (public). Sends
+  `{"type":"hello","channel":"build-it-better"}` on connect.
+- Pages: https://cymetica.com/build-it-better?utm_source=llms , https://cymetica.com/build-it-better/api
+
+## Feature Leaderboard
+
+- REST: `GET /api/v1/features/leaderboard?sort=top`, `POST /api/v1/features/{feature_id}/bid` (auth)
+"""
+
+
+def _the_build_it_better_route_readings():
+    """The readings behind the Build it Better routes check (2026-10-11): the section as read that
+    day names eight routes, four of them as `.../requests/{ticket}/accept|change|verdict|withdraw`;
+    an OpenAPI with every one but withdraw misses exactly withdraw, one with it misses none (any
+    parameter names), a route on the wrong method is missing, another section's routes are not read."""
+    from tests.rest.test_build_it_better_routes_are_in_the_openapi import (
+        build_it_better_section, missing_from, named_routes)
+
+    p = "/api/v1/build-it-better"
+    routes = named_routes(_BB_SECTION)
+    assert routes == sorted([
+        ("GET", f"{p}/apps"), ("GET", f"{p}/requests"), ("GET", f"{p}/requests/{{}}"), ("POST", f"{p}/requests"),
+        ("POST", f"{p}/requests/{{}}/accept"), ("POST", f"{p}/requests/{{}}/change"),
+        ("POST", f"{p}/requests/{{}}/verdict"), ("POST", f"{p}/requests/{{}}/withdraw"),
+        ("GET", f"{p}/apps/stats")]), routes
+    assert "Feature Leaderboard" not in build_it_better_section(_BB_SECTION), "the next section is not read"
+    assert not any("features" in path for _, path in routes), "the leaderboard's routes are another section's"
+    assert not any("ws/" in path or "hello" in path for _, path in routes), "a socket and a JSON line are not routes"
+    op = lambda *methods: {m: {} for m in methods}  # noqa: E731
+    described = {"paths": {
+        f"{p}/apps": op("get"), f"{p}/apps/stats": op("get"), f"{p}/requests": op("get", "post"),
+        f"{p}/requests/{{ticket}}": op("get"), f"{p}/requests/{{ticket}}/accept": op("post"),
+        f"{p}/requests/{{ticket}}/change": op("post"), f"{p}/requests/{{ticket}}/verdict": op("post")}}
+    assert missing_from(routes, described) == [("POST", f"{p}/requests/{{}}/withdraw")], (
+        "the day's reading: every route but withdraw")
+    described["paths"][f"{p}/requests/{{ticket_id}}/withdraw"] = op("post")
+    assert missing_from(routes, described) == [], "any parameter name is the same route"
+    wrong = {"paths": dict(described["paths"], **{f"{p}/requests/{{ticket}}/withdraw": op("get")})}
+    wrong["paths"].pop(f"{p}/requests/{{ticket_id}}/withdraw")
+    assert missing_from(routes, wrong) == [("POST", f"{p}/requests/{{}}/withdraw")], "a path on another method is missing"
+    assert missing_from(routes, {"paths": {}}) == routes
+    assert named_routes("## Feature Leaderboard\n\n- REST: `GET /api/v1/features/leaderboard`") == [], (
+        "no Build it Better section: nothing named")
+    assert named_routes("## Build it Better\n\nNo routes here, see `bb_file_request`.") == []
+
+
+def _the_request_token_place_readings():
+    """The readings behind the request token check (2026-10-11): llms.txt writes '(request token in
+    the body)' for accept|change|verdict|withdraw while the OpenAPI declares an x-bb-token header
+    on accept, change and verdict and nothing token-shaped in a body: it fails on those three and
+    leaves withdraw unread; naming the header, declaring a body token, or naming both passes."""
+    from tests.rest.test_build_it_better_token_place_is_documented_one_way import (
+        disagreements, llms_token_sentence, openapi_token_places)
+
+    p = "/api/v1/build-it-better/requests/{ticket}"
+    header = {"name": "x-bb-token", "in": "header", "required": False, "schema": {"type": "string"}}
+    key = {"name": "x-api-key", "in": "header", "required": False, "schema": {"type": "string"}}
+
+    def spec(change_body=None, verdict_body=None, withdraw=False, **extra):
+        post = lambda body=None: dict(  # noqa: E731
+            {"parameters": [{"name": "ticket", "in": "path"}, header, key]},
+            **({"requestBody": {"content": {"application/json": {"schema": body}}}} if body else {}))
+        paths = {f"{p}/accept": {"post": post()},
+                 f"{p}/change": {"post": post(change_body or {"$ref": "#/components/schemas/BBChangeIn"})},
+                 f"{p}/verdict": {"post": post(verdict_body or {"$ref": "#/components/schemas/BBVerdictIn"})}}
+        if withdraw:
+            paths[f"{p}/withdraw"] = {"post": post()}
+        schemas = {"BBChangeIn": {"properties": {"changes": {"type": "string"}}},
+                   "BBVerdictIn": {"properties": {"verdict": {"type": "string"}, "note": {"type": "string"}}}}
+        schemas.update(extra)
+        return {"paths": paths, "components": {"schemas": schemas}}
+
+    said = llms_token_sentence(_BB_SECTION)
+    assert said["ops"] == ["accept", "change", "verdict", "withdraw"], said
+    assert said["phrase"] == "request token in the body" and said["places"] == {"body"}, said
+    assert said["per_op"] == {o: {"body"} for o in said["ops"]}, "each op the sentence names states the place"
+    got = disagreements(said, spec())
+    assert got["mismatched"] == {"accept": ["header"], "change": ["header"], "verdict": ["header"]}, got
+    assert got["unread"] == ["withdraw"], "a route the OpenAPI does not describe is the routes check's"
+    assert openapi_token_places(spec(), "accept") == {"places": {"header"}, "header": "x-bb-token", "body_fields": []}
+    assert openapi_token_places(spec(), "withdraw") is None
+
+    named_header = llms_token_sentence(_BB_SECTION.replace("(request token in the body)",
+                                                           "(X-BB-Token header)"))
+    assert named_header["places"] == {"header"}
+    assert disagreements(named_header, spec())["mismatched"] == {}, "naming the header is the fix"
+    both = llms_token_sentence(_BB_SECTION.replace("(request token in the body)",
+                                                   "(the X-BB-Token header, or request_token in the body)"))
+    assert both["places"] == {"body", "header"} and disagreements(both, spec())["mismatched"] == {}, (
+        "naming both places is a fix")
+    # The other fix: the OpenAPI takes the token in a body. accept has no body, so it stays a mismatch.
+    token_body = {"properties": {"changes": {"type": "string"}, "request_token": {"type": "string"}}}
+    both_ways = spec(change_body=token_body, verdict_body={"anyOf": [token_body, {"type": "null"}]})
+    assert openapi_token_places(both_ways, "change")["places"] == {"header", "body"}
+    assert openapi_token_places(both_ways, "verdict")["body_fields"] == ["request_token"]
+    assert disagreements(said, both_ways)["mismatched"] == {"accept": ["header"]}, (
+        "per route: the routes with a body token are right, accept has none")
+    no_header = {"paths": {f"{p}/accept": {"post": {"parameters": [{"$ref": "#/components/parameters/Tok"}]}}},
+                 "components": {"parameters": {"Tok": header}}}
+    assert openapi_token_places(no_header, "accept")["places"] == {"header"}, "a $ref'd parameter is read"
+    assert disagreements(said, spec(withdraw=True))["mismatched"].get("withdraw") == ["header"], (
+        "withdraw is judged the day it is described")
+    silent = llms_token_sentence(_BB_SECTION.replace(" (request token in the body)", ""))
+    assert silent["places"] == set() and disagreements(silent, spec())["mismatched"] == {}, (
+        "a line that states no place contradicts nothing")
+    split = llms_token_sentence(_BB_SECTION.replace(
+        "(request token in the body)", "(X-BB-Token header)").replace(
+        "`POST .../requests/{ticket}/withdraw` takes back", "`POST .../requests/{ticket}/withdraw` (request token in the body) takes back"))
+    assert split["per_op"]["withdraw"] == {"header", "body"} and split["per_op"]["accept"] == {"header"}, (
+        "a later line about one route adds its own place to that route only")
+    assert disagreements(split, spec(withdraw=True))["mismatched"] == {}, "header is among withdraw's places"
+    assert llms_token_sentence("## Build it Better\n\nSee `bb_file_request`.") is None
+    assert llms_token_sentence(_BB_SECTION.replace("## Build it Better", "## Something else")) is None
