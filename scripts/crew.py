@@ -48,9 +48,6 @@ BACKOFF_MAX_MINUTES = 60
 # timeout but one (the desk's 50 minutes). Past it, the run goes at level R instead.
 HOLD_WAIT_SECONDS = 50 * 60
 HOLD_POLL_SECONDS = 10.0
-# How often a running worker's loop looks whether a deep pass has started: the pass then
-# has the tree to itself, so the run is ended and its ticket given back (C8 review).
-ABORT_POLL_SECONDS = 15.0
 # `QA_CREW_SETTINGS` points the dry run at a settings file of its own; a worker cannot use
 # it, because `crew.py start` is denied to every worker.
 SETTINGS = Path(os.environ.get("QA_CREW_SETTINGS") or REPO_ROOT / ".claude" / "settings.json")
@@ -199,38 +196,28 @@ def loop_pid(name: str) -> int | None:
 
 # -- one worker run --------------------------------------------------------------------------
 
-def run_process(args: list[str], env: dict, timeout: int, abort=None) -> dict:
-    """Run one process to its end, its timeout, or `abort()` turning true -- a deep pass
-    starting -- whichever comes first; the last two kill its whole tree."""
+def run_process(args: list[str], env: dict, timeout: int) -> dict:
+    """Run one process to its end or its timeout; past the timeout its whole tree is killed.
+
+    Not ended when a deep pass starts: killed mid-edit, a worker would leave half-written
+    files the pass then commits (second read). The pass holds the company still before it
+    begins instead (`crew.py hold`, its step 0), and the run finishes first."""
     started = time.monotonic()
     proc = subprocess.Popen(args, stdout=subprocess.PIPE, stderr=subprocess.PIPE,
                             stdin=subprocess.DEVNULL, text=True, encoding="utf-8",
                             errors="replace", cwd=str(REPO_ROOT), env=env, **_group_flags())
-    timed_out = aborted = False
-    deadline = started + timeout
-    out = err = ""
-    while True:
-        left = deadline - time.monotonic()
+    timed_out = False
+    try:
+        out, err = proc.communicate(timeout=timeout)
+    except subprocess.TimeoutExpired:
+        timed_out = True
+        kill_tree(proc.pid)
         try:
-            # Retrying communicate after its timeout loses no output (the docs say so).
-            out, err = proc.communicate(timeout=max(0.1, min(left, ABORT_POLL_SECONDS)
-                                                    if abort else left))
-            break
+            out, err = proc.communicate(timeout=30)
         except subprocess.TimeoutExpired:
-            if time.monotonic() >= deadline:
-                timed_out = True
-            elif abort is not None and abort():
-                aborted = True
-            else:
-                continue
-            kill_tree(proc.pid)
-            try:
-                out, err = proc.communicate(timeout=30)
-            except subprocess.TimeoutExpired:
-                out, err = "", ""
-            break
+            out, err = "", ""
     return {"pid": proc.pid, "code": proc.returncode, "stdout": out or "",
-            "stderr": err or "", "timed_out": timed_out, "aborted": aborted,
+            "stderr": err or "", "timed_out": timed_out,
             "seconds": round(time.monotonic() - started, 1)}
 
 
@@ -297,7 +284,7 @@ def run_outsider(ticket: dict) -> dict:
 CODE_DEPARTMENTS = {"outsider": run_outsider}
 
 
-def run_ticket(dept: str, ticket: dict, abort=None) -> dict:
+def run_ticket(dept: str, ticket: dict) -> dict:
     """Start the department's worker on one ticket and wait for it, within its timeout."""
     spec = crew.DEPARTMENTS[dept]
     if spec.model is None:
@@ -307,18 +294,18 @@ def run_ticket(dept: str, ticket: dict, abort=None) -> dict:
         return {"pid": None, "code": 127, "stdout": "no claude executable on this machine",
                 "stderr": "", "timed_out": False, "seconds": 0.0}
     args = crew.argv(dept, crew.prompt(dept, ticket), command)
-    return run_process(args, worker_env(dept, ticket), spec.timeout, abort=abort)
+    return run_process(args, worker_env(dept, ticket), spec.timeout)
 
 
-def work_once(dept: str, abort=None) -> dict | None:
+def work_once(dept: str) -> dict | None:
     """Claim one ticket, run it, and settle it; the run's row, or None when nothing waits.
 
     A worker closes its own ticket (`crew.py done`/`fail`). One that ends without having
-    done so is settled here from how it ended: success closes it, a failure of the work
-    spends an attempt, a failure of the machinery gives it back -- counted against the
-    ticket only when it is unexplained, never when it is everyone's (logged out, a usage
-    limit, a deep pass starting). `abort` is the loop's: the run is ended when it turns
-    true. None by default, so a test that runs during a deep pass is not ended by it.
+    done so is settled here from how it ended: success closes it -- unless one of the
+    company's own commands was refused in it, and then its close or hand-over is what was
+    lost, so an attempt is spent; a failure of the work spends an attempt; a failure of the
+    machinery gives it back, counted against the ticket only when it is unexplained, never
+    when it is everyone's (logged out, a usage limit).
     """
     # The marker goes up before the look at the hold, and `hold` sets the hold before it
     # looks at the markers: so either the hold sees this run coming, or this run sees the
@@ -335,7 +322,7 @@ def work_once(dept: str, abort=None) -> dict | None:
     crew.set_active(dept, ticket, pid=os.getpid())
     crew.beat(dept, "running", f"{ticket['id']} {ticket['kind']}")
     try:
-        ran = run_ticket(dept, ticket, abort=abort)
+        ran = run_ticket(dept, ticket)
     except Exception as exc:  # noqa: BLE001 -- a worker that cannot start is machinery
         ran = {"pid": None, "code": None, "stdout": "",
                "stderr": f"the worker could not be started: {exc!r}"[:400],
@@ -343,10 +330,14 @@ def work_once(dept: str, abort=None) -> dict | None:
     finally:
         crew.set_active(dept, None)
     said = crew.outcome(ran["code"], ran["stdout"], ran["timed_out"], ran["stderr"])
-    if ran.get("aborted"):
-        said = {**said, "outcome": "infra", "widespread": True,
-                "why": "a deep pass started; the run was ended and its ticket given back"}
     after = crew.tickets().get(ticket["id"]) or {}
+    if after.get("status") == "claimed" and said["outcome"] == "ok" and said.get(
+            "company_refused"):
+        # It ended well and never closed its ticket, and one of the company's commands was
+        # refused: the close or the hand-over it reports is what did not happen. Not done
+        # quietly, not released for ever: an attempt, so three end with the manager.
+        said = {**said, "outcome": "work",
+                "why": f"a company command was refused: {said['company_refused'][:160]}"}
     if after.get("status") == "claimed":
         releases = after.get("releases", 0)
         if said["outcome"] == "ok":
@@ -568,7 +559,7 @@ def look(name: str, paused=deep_pass_running) -> tuple[str, str]:
         why = f"the tree is held still by {hold.get('by')}: {hold.get('why')}"
         crew.beat(name, "held", why)
         return "held", why
-    row = work_once(name, abort=paused)
+    row = work_once(name)
     if row is None:
         crew.beat(name, "idle", "no tickets")
         return "idle", "no tickets"
@@ -961,7 +952,7 @@ def main(argv: list[str] | None = None) -> int:
             if deep_pass_running():
                 print("[crew] refused: a deep pass is running")
                 return 2
-            row = work_once(args.dept, abort=deep_pass_running)
+            row = work_once(args.dept)
         print(json.dumps(row, ensure_ascii=False) if row else "no tickets")
         return 0
     if args.cmd == "ticket":

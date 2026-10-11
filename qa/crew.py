@@ -83,8 +83,14 @@ _DENIED_COMMANDS = ("git push", "git tag", "git commit", "git add", "git revert"
                     # a second worker beside a department's loop (C8 review)
                     "python scripts/crew.py once")
 # The files that speak to the operator (NEXT.md and DEEP-PASS.md reach every session
-# start) or rule the repository: a worker edits neither (C8 review).
-_PROTECTED_FILES = ("CLAUDE.md", "NEXT.md", "DEEP-PASS.md", ".claude/**")
+# start) or rule the repository: a worker edits neither (C8 review). Nor the company's own
+# code, git's hooks or the declared writes: an edited .githooks/pre-commit pushes on every
+# commit, an edited brake sends unbraked, an edited script drops QA_CREW_DEPT and speaks as
+# the operator's session (second read). Every script here is allowlisted, so what a worker
+# may run must not be what it may rewrite.
+_PROTECTED_FILES = ("CLAUDE.md", "NEXT.md", "DEEP-PASS.md", ".claude/**", "scripts/**",
+                    "qa/**", ".githooks/**", "components.yaml", "tests/meta/**",
+                    "tests/conftest.py", "pyproject.toml", ".env")
 # Both shells: on this Windows host a worker has the PowerShell tool beside Bash, and a
 # deny written for one does not cover the other.
 DENY_ALL = (
@@ -369,6 +375,7 @@ def denied(dept: str) -> tuple[str, ...]:
         # that pushes or files would walk past every deny above (C8 review). Checks are
         # Bugs' to write and run.
         out += _shells("python -m pytest")
+        out += ["Edit(tests/**)", "Write(tests/**)"]
     if dept != "lab":
         # Nexus is the laboratory's lane, and the one Artifact this project publishes is
         # its morning report (CLAUDE.md, "Do not publish an Artifact").
@@ -395,6 +402,9 @@ Your ticket: {id} ({kind}), from {source}: {text}
 Read your memory before the work: {memory}.
 
 How a worker of the company works:
+- Run the company's own commands (`python scripts/crew.py ...`, `python scripts/commit.py
+  ...`) with the Bash tool, exactly as written here -- no `cd` before them, no pipe after:
+  any other form is refused, and a refused close or hand-over costs your ticket an attempt.
 - Commit only with `python scripts/commit.py -m "..." -- <paths>`; `git add` and `git commit`
   are denied to you, and nothing is ever pushed or tagged.
 {handoff}- What only the operator can decide goes to the manager, never to the operator directly:
@@ -848,11 +858,13 @@ def stuck_departments(state: dict[str, dict], runs: list[dict], now: datetime,
 
 
 def login_lost(runs: list[dict], now: datetime) -> bool:
-    """A run in the last hour found the CLI logged out. Pure."""
+    """A run in the last hour found the CLI logged out -- read off the CLI's own refusal
+    (`widespread`), never off a worker's words about a login page. Pure."""
     for row in runs:
         at = moment(row.get("at"))
         why = str(row.get("why") or "").lower()
-        if (row.get("type") == "run" and row.get("outcome") == "infra" and at is not None
+        if (row.get("type") == "run" and row.get("outcome") == "infra"
+                and row.get("widespread") and at is not None
                 and now - at < timedelta(hours=1) and ("logged in" in why or "/login" in why)):
             return True
     return False
@@ -1009,6 +1021,14 @@ def outcome(code: int | None, stdout: str, timed_out: bool, stderr: str = "") ->
     and a hunt that filed a defect on /login must not read as a CLI that is logged out. A
     failed run with no result object never ran the work at all (a flag refused, a crash at
     start), and its reason is on stderr.
+
+    Everyone's (`widespread`, never counted against a ticket) is read only off the CLI's own
+    signals -- an api_error, an HTTP status of theirs, or its one-line refusal before any
+    turn of work -- never off the work's own words: a run that ran out of turns after
+    meeting a login page, or reported a vendor's 429, failed at its work, counted and
+    bounded (second read). A refused call to the company's own commands is named in
+    `company_refused`; whether it mattered is work_once's call, from whether the ticket was
+    closed.
     """
     said: dict = {}
     start, end = stdout.find("{"), stdout.rfind("}")
@@ -1028,22 +1048,26 @@ def outcome(code: int | None, stdout: str, timed_out: bool, stderr: str = "") ->
                         if usage.get(k) is not None},
              "subtype": said.get("subtype"), "result": result[:400],
              "denials": len(denials), "widespread": False}
-    # The company's own commands refused: whatever the run says it handed over or
-    # committed did not happen, and no ticket can be done by such a run (C8 review).
-    ours = [json.dumps(d, ensure_ascii=False) for d in denials
-            if any(script in json.dumps(d) for script in COMPANY_COMMANDS)]
+    ours = next((json.dumps(d, ensure_ascii=False) for d in denials
+                 if any(script in json.dumps(d) for script in COMPANY_COMMANDS)), None)
+    facts["company_refused"] = ours[:200] if ours else None
     if timed_out:
         return {**facts, "outcome": "work", "why": "timed out; the run was killed"}
-    if ours:
-        return {**facts, "outcome": "infra", "widespread": True,
-                "why": f"the allowlist refused the company's own command: {ours[0][:160]}"}
     if code == 0 and said and not said.get("is_error"):
         return {**facts, "outcome": "ok", "why": ""}
-    if said.get("terminal_reason") == "api_error" or INFRA.search(result):
+    status = said.get("api_error_status")
+    cli_refused = (said.get("terminal_reason") == "api_error"
+                   or (isinstance(status, int) and (status in (401, 429) or status >= 500))
+                   or (said and said.get("subtype") != "error_max_turns"
+                       and (said.get("num_turns") or 0) <= 1 and len(result) <= 200
+                       and bool(INFRA.search(result))))
+    if cli_refused:
         return {**facts, "outcome": "infra", "widespread": True,
                 "why": result[:200] or "api error"}
     if not said:
         why = (stderr or stdout or "").strip()[:200] or f"exit {code}"
+        if INFRA.search(why):
+            return {**facts, "outcome": "infra", "widespread": True, "why": why}
         return {**facts, "outcome": "infra", "why": f"the CLI produced no result: {why}"}
     if said.get("subtype") == "error_max_turns":
         return {**facts, "outcome": "work", "why": "ran out of turns"}

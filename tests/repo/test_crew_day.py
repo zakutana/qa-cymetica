@@ -63,7 +63,11 @@ def _env(tmp_path: Path) -> dict:
     settings.write_text(json.dumps({"permissions": {"allow": [
         "Bash(python scripts/crew.py:*)", "Bash(python scripts/commit.py:*)"]}}),
         encoding="utf-8")
+    # The loops ask processes.pass_in_flight, which reads the deep pass's notebook under
+    # QA_REPO_ROOT: pointed here, a deep pass running this very suite does not pause the dry
+    # run's company (second read, finding 5).
     return {"QA_STATE_DIR": str(tmp_path / "state"), "QA_CREW_SETTINGS": str(settings),
+            "QA_REPO_ROOT": str(tmp_path),
             "QA_CREW_CLAUDE": json.dumps([sys.executable, str(FAKE)]),
             "QA_CREW_TICK": json.dumps([sys.executable, str(tick), str(tmp_path / "ticks")]),
             "FAKE_CLAUDE_PLAN": str(plan), "QA_CREW_POLL": "0.5"}

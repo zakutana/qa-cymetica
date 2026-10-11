@@ -173,8 +173,15 @@ def test_every_worker_is_denied_push_tag_and_raw_commits():
         denied = crew.denied(name)
         assert "Bash(python scripts/crew.py once:*)" in denied, name
         assert ("Bash(python -m pytest:*)" in denied) == (name != "bugs"), name
-        for path in ("CLAUDE.md", "NEXT.md", "DEEP-PASS.md", ".claude/**"):
+        for path in ("CLAUDE.md", "NEXT.md", "DEEP-PASS.md", ".claude/**",
+                     # the company's own code, git's hooks and the declared writes: edited,
+                     # a worker could push from a hook, lift a brake or drop its own name
+                     # (second read, finding 1)
+                     "scripts/**", "qa/**", ".githooks/**", "components.yaml",
+                     "tests/meta/**", "tests/conftest.py"):
             assert f"Edit({path})" in denied and f"Write({path})" in denied, (name, path)
+        # Checks are Bugs' to write; no other department edits a test.
+        assert ("Edit(tests/**)" in denied) == (name != "bugs"), name
 
     # Who may open which ticket: the operator's words come only from a session, the
     # manager's day and the watchdog's alarms only from the code that makes them.
@@ -207,18 +214,35 @@ def _ends_are_read():
     # failed is on stderr (finding 4).
     lost = crew.outcome(1, "", False, stderr="error: unknown option '--effort'")
     assert lost["outcome"] == "infra" and "unknown option" in lost["why"]
-    # C8 review, finding 1: a run whose call to the company's own commands was refused
-    # did not hand anything over, whatever it says: the machinery is broken, not the work.
+    # C8 review: a refused call to the company's own commands is named, never read as
+    # everyone's failure (with the allowlist preflight, only the run itself can cause it --
+    # a pipe, a `cd &&`, PowerShell); a run that succeeded stays a success, and work_once
+    # decides from whether the ticket was closed (second read, finding 2).
     refused = json.dumps({"is_error": False, "result": "handed the bug to Bugs",
                           "permission_denials": [{"tool_name": "Bash", "tool_input": {
                               "command": "python scripts/crew.py ticket --to bugs ..."}}]})
     said = crew.outcome(0, refused, False)
-    assert said["outcome"] == "infra" and said["widespread"] and "crew.py" in said["why"]
+    assert said["outcome"] == "ok" and not said["widespread"]
+    assert "crew.py ticket" in said["company_refused"]
     pushed = json.dumps({"is_error": False, "result": "done", "permission_denials": [
         {"tool_name": "Bash", "tool_input": {"command": "git push"}}]})
     assert crew.outcome(0, pushed, False)["outcome"] == "ok", "a refused push is the floor"
     assert crew.outcome(0, pushed, False)["denials"] == 1
+    assert crew.outcome(0, pushed, False)["company_refused"] is None
     assert crew.outcome(1, out, False)["widespread"], "logged out is everyone's"
+    # Everyone's is read only off the CLI's own signals, never off the work's words: a run
+    # that ran out of turns after a refused /auth/login, or a result about their 429, is
+    # the work's failure, counted and bounded (second read, finding 3).
+    worked = json.dumps({"is_error": True, "subtype": "error_max_turns", "num_turns": 150,
+                         "result": "", "permission_denials": [{"tool_input": {
+                             "command": "curl https://cymetica.com/api/v1/auth/login"}}]})
+    assert not crew.outcome(1, worked, False)["widespread"]
+    their_429 = json.dumps({"is_error": True, "num_turns": 40,
+                            "result": "stopped: their rate limit answered 429 three times"})
+    assert crew.outcome(1, their_429, False)["outcome"] == "work"
+    limit = json.dumps({"is_error": True, "num_turns": 1,
+                        "result": "Claude AI usage limit reached|1760241600"})
+    assert crew.outcome(1, limit, False)["widespread"], "the CLI's own refusal is everyone's"
 
 
 @qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
@@ -285,20 +309,19 @@ def test_a_run_settles_its_ticket_by_how_it_ended(company, monkeypatch):
     after = crew.tickets()[patient["id"]]
     assert after["status"] == "open" and after["attempts"] == 0 and after["releases"] == 0
 
-    # A deep pass that starts while a worker runs: the run is ended and the ticket given
-    # back, so the pass never works beside it (C8 review, finding 2).
-    monkeypatch.setenv("FAKE_CLAUDE_MODE", "sleep")
-    monkeypatch.setattr(sup, "ABORT_POLL_SECONDS", 0.2)
-    started = time.monotonic()
-    ran = sup.run_process([sys.executable, str(FAKE), "-p", "x"], sup.worker_env(
-        "bugs", {"id": "T-9"}), 60, abort=lambda: time.monotonic() - started > 1.0)
-    assert ran["aborted"] and time.monotonic() - started < 30
-    passing, _ = crew.add_ticket("bugs", "sweep", "a sweep the pass interrupts", now=NOW)
-    monkeypatch.setattr(sup, "deep_pass_running", lambda: time.monotonic() - started > 2.0)
-    row = sup.work_once("bugs", abort=lambda: time.monotonic() - started > 2.0)
-    assert row["outcome"] == "infra" and "deep pass" in row["why"]
-    after = crew.tickets()[passing["id"]]
-    assert after["status"] == "open" and after["attempts"] == 0
+    # A run that ended well but whose own close or hand-over was refused did not do what
+    # it says: its ticket spends an attempt (and so ends in three, with the manager), it is
+    # never quietly closed "done" nor released for ever (second read, finding 2).
+    for tid, waiting in crew.tickets().items():  # the queue cleared before the next case
+        if waiting["status"] == "open":
+            crew.close(tid, "done", by="bugs", note="cleared", now=NOW)
+    monkeypatch.setenv("FAKE_CLAUDE_MODE", "refused")
+    lost_close, _ = crew.add_ticket("bugs", "bug", "its close is refused", now=NOW)
+    row = sup.work_once("bugs")
+    assert row["ticket"] == lost_close["id"]
+    after = crew.tickets()[lost_close["id"]]
+    assert after["status"] == "open" and after["attempts"] == 1
+    assert "refused" in after["why"] and row["outcome"] == "work"
 
 
 @qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
@@ -714,8 +737,13 @@ def test_the_watchdog_leaves_nothing_stuck_in_the_mud(company, monkeypatch):
     # A department sitting on a ticket for a day.
     old, _ = crew.add_ticket("desk", "input", "low scores", now=now - timedelta(hours=26))
     # A CLI that logged out, and a tick that failed three times running.
-    crew.record({"type": "run", "dept": "bugs", "outcome": "infra",
+    crew.record({"type": "run", "dept": "bugs", "outcome": "infra", "widespread": True,
                  "why": "Not logged in · Please run /login"}, now=now)
+    # A worker's own words about a login page are not the CLI logged out (second read).
+    crew.record({"type": "run", "dept": "lab", "outcome": "infra",
+                 "why": "the CLI produced no result: GET /login answered 500"}, now=now)
+    assert crew.login_lost([{"type": "run", "outcome": "infra", "at": crew.stamp(now),
+                             "why": "GET /login answered 500"}], now) is False
     for minutes in (60, 40, 20):
         crew.record({"type": "tick", "ok": False, "decide": [],
                      "tail": "Traceback: boom"}, now=now - timedelta(minutes=minutes))

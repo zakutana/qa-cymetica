@@ -16,6 +16,7 @@ from it does "ok"):
     notloggedin   what an unauthenticated CLI says: an infrastructure failure
     bug-ticket    hand a bug to the Bugs department, then close its own ticket
     fail-ticket   close its ticket as failed (`crew.py fail`) and exit 0
+    refused       succeed without closing, its `crew.py done` among the refused calls
 
 Every start is appended to `FAKE_CLAUDE_LOG` (when set) with its argv, so a test can
 read what the worker was allowed and denied.
@@ -85,6 +86,12 @@ def main(argv: list[str]) -> int:
     if mode == "fail":
         print(_result("the work failed", error=True, reason="error"))
         return 1
+    if mode == "refused":
+        said = json.loads(_result(f"closed {ticket}"))
+        said["permission_denials"] = [{"tool_name": "Bash", "tool_input": {
+            "command": f"python scripts/crew.py done {ticket} --note done"}}]
+        print(json.dumps(said))
+        return 0
     if mode == "bug-ticket" and ticket:
         _crew("ticket", "--to", "bugs", "--kind", "bug", "--key", f"fake-bug:{ticket}",
               "--text", f"a bug met while working {ticket}")

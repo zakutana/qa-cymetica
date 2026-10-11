@@ -160,6 +160,13 @@ python scripts/memories.py --for deep-pass
 * **Red `tests/meta` ends the run.** Write that to `DEEP-PASS.md` and stop.
   CLAUDE.md: a red test there is the system working, and time spent "fixing"
   it unattended would be time spent relaxing a rule.
+* **The company first, before anything else touches git.** When `python
+  scripts/crew.py status` says it runs, `python scripts/crew.py hold --why
+  "deep pass"` -- no worker starts, and it returns once every running worker
+  has finished and committed. From the notebook on, the loops stay paused by
+  themselves until the pass writes `finished`. A worker killed mid-edit, or
+  one still editing, would leave files that a `console poll` commit then takes
+  past the review (docs/crew-plan.md, C8).
 * **Nothing unpushed, nothing step 0b can build, and the week is due → run
   the week alone.** Steps 2 to 8 have nothing to read: the scope of this pass
   is the unpushed diff. Go to step 11, then 10, 11b and 12. An open NEXT.md
