@@ -321,7 +321,9 @@ CEILINGS = {
     # 833 -> 835 for the clock and the outsider (C3): the laboratory's tick routed to the
     # department whose work each item is, a chat /loop refused beside it, and the
     # outsider's look as code whose stumbles become Bugs' tickets.
-    "meta_tests": 835,
+    # 835 -> 836 for the desk under the company (C4): its own pace, its sleep on purpose,
+    # and its brakes on Build it Better and a2a refused before a body exists.
+    "meta_tests": 836,
 }
 
 BASH_SCRIPT = re.compile(r"python\s+scripts[/\\]([a-z_]+)\.py")

@@ -336,6 +336,13 @@ def denied(dept: str) -> tuple[str, ...]:
         # its morning report (CLAUDE.md, "Do not publish an Artifact").
         out += _shells("python scripts/lab.py ask", "python scripts/nexus.py ask")
         out.append("Artifact")
+    if dept != "desk":
+        # Build it Better and feature requests are the desk's to file.
+        out += _shells("python scripts/bb.py")
+    if dept in ("lab", "manager"):
+        # a2a carries questions to Cymetica: the desk's and Bugs'. The laboratory asks
+        # Nexus; the manager talks only to the operator and the departments.
+        out += _shells("python scripts/a2a.py")
     return tuple(out)
 
 
@@ -394,6 +401,18 @@ says, and then its step 3 (`lab.py log`), with three differences under the compa
 - a bug -- from `gap` or met anywhere -- is a ticket to Bugs, never a filing of yours. A
   gap in their documentation goes to the manager as a `decision` ticket carrying the text
   the operator relays to Cymetica.
+""",
+    "desk": """\
+You are the desk: one goal, to prove that money can be made on Cymetica. Your procedure
+is `.claude/agents/desk.md` -- read it and do its ONE step, with these differences under
+the company:
+- an `input` ticket is what the outsider would not put money into, and why: weigh it in
+  this step as input for your Build it Better and feature requests;
+- your brakes are code: at most 2 Build it Better filings a day and 3 a2a messages an
+  hour; a refusal is a reason, not a fault;
+- commit `docs/lab-desk.md` through scripts/commit.py, never `git commit`;
+- when nothing can move until a date (a room's window, an answer owed), say so and
+  sleep: `python scripts/crew.py snooze --until <ISO time> --why "..."` (a day at most).
 """,
 }
 
@@ -484,6 +503,99 @@ def outsider_tickets(run: dict) -> list[dict]:
                             + "; ".join(f"{s.get('name')} {s.get('score')}/10: {s.get('why')}"
                                         for s in low)})
     return out
+
+
+# -- the desk (C4) ---------------------------------------------------------------------------
+#
+# One goal, worked step after step: a step, a pause, the next. It sleeps on purpose when
+# it says nothing can move until a date -- a room's window, an answer owed -- and says why,
+# so a quiet desk is never mistaken for a stuck one.
+DESK_PAUSE = timedelta(minutes=30)
+SNOOZE_MAX = timedelta(hours=24)
+# Its brakes, in code (docs/crew-plan.md): a Build it Better filing costs half a unit of
+# their build plan, and a2a is a person's inbox at Cymetica.
+BB_PER_DAY = 2
+A2A_PER_HOUR = 3
+
+
+def desk_due(state: dict[str, dict], last_end: datetime | None, snooze: dict | None,
+             now: datetime) -> bool:
+    """Whether the clock gives the desk its next step. Pure."""
+    if any(t.get("to") == "desk" and t.get("status") in ("open", "claimed")
+           for t in state.values()):
+        return False
+    until = moment((snooze or {}).get("until"))
+    if until is not None and until > now:
+        return False
+    return last_end is None or now - last_end >= DESK_PAUSE
+
+
+def _snooze_path(dept: str) -> Path:
+    return crew_dir() / "snooze" / f"{dept}.json"
+
+
+def set_snooze(dept: str, until: datetime | None, why: str = "",
+               now: datetime | None = None) -> None:
+    """A department asleep on purpose until `until`, with its reason; None wakes it."""
+    if until is None:
+        if _snooze_path(dept).exists():
+            _snooze_path(dept).unlink()
+        return
+    if until - _now(now) > SNOOZE_MAX:
+        raise ValueError(f"a day at most; {until.isoformat()} is further")
+    _write_json(_snooze_path(dept), {"until": stamp(until), "why": str(why)[:300],
+                                     "since": stamp(_now(now))})
+
+
+def snoozed(dept: str, now: datetime | None = None) -> dict | None:
+    said = _read_json(_snooze_path(dept))
+    until = moment((said or {}).get("until"))
+    return said if said and until is not None and until > _now(now) else None
+
+
+def last_run_end(dept: str) -> datetime | None:
+    """When the department's last run ended: a run's row is written as it ends."""
+    ends = [moment(r.get("at")) for r in load(runs_path())
+            if r.get("type") == "run" and r.get("dept") == dept]
+    ends = [e for e in ends if e is not None]
+    return max(ends) if ends else None
+
+
+def _within(rows: list[dict], window: timedelta, now: datetime, **match) -> int:
+    count = 0
+    for row in rows:
+        if not isinstance(row, dict) or any(row.get(k) != v for k, v in match.items()):
+            continue
+        at = moment(row.get("at"))
+        if at is not None and now - at < window:
+            count += 1
+    return count
+
+
+def bb_brake(rows: list[dict], now: datetime | None = None) -> str | None:
+    """Why another Build it Better filing is refused now, or None. Pure over bb.jsonl."""
+    filed = _within(rows, timedelta(days=1), _now(now), type="intent", kind="file")
+    if filed >= BB_PER_DAY:
+        return (f"{filed} Build it Better filings in the last 24 h; the company files at "
+                f"most {BB_PER_DAY} a day (each costs half a unit of their build plan)")
+    return None
+
+
+def a2a_brake(events: list[dict], now: datetime | None = None) -> str | None:
+    """Why another a2a message is refused now, or None. Pure over the journal."""
+    sent = _within(events, timedelta(hours=1), _now(now), type="a2a_intent")
+    if sent >= A2A_PER_HOUR:
+        return (f"{sent} a2a messages in the last hour; the company sends at most "
+                f"{A2A_PER_HOUR} an hour")
+    return None
+
+
+def crew_brake(kind: str, rows: list, now: datetime | None = None) -> str | None:
+    """The company's brake on one outward write, applied only to its workers: the
+    operator's own sends from a session are theirs (`QA_CREW_DEPT` unset)."""
+    if not os.environ.get("QA_CREW_DEPT"):
+        return None
+    return {"bb": bb_brake, "a2a": a2a_brake}[kind](rows, now)
 
 
 def clock_state() -> dict:

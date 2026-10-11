@@ -376,8 +376,9 @@ def test_the_clock_runs_the_laboratorys_tick_and_routes_what_it_decided(company,
     sup.clock_look(now=first)
     assert (company / "tick.env").read_text(encoding="utf-8") == "clock"
     state = crew.tickets()
+    # The desk's own step comes from the clock too (C4), not from the tick's `desk`.
     assert sorted((t["to"], t["kind"]) for t in state.values()) == [
-        ("bugs", "sweep"), ("lab", "lab"), ("outsider", "outsider")]
+        ("bugs", "sweep"), ("desk", "step"), ("lab", "lab"), ("outsider", "outsider")]
     assert all(t["from"] == "clock" for t in state.values())
     ticks = [r for r in crew.load(crew.runs_path()) if r.get("type") == "tick"]
     assert len(ticks) == 1 and ticks[0]["decide"][0] == "answer NEX-0201"
@@ -468,6 +469,84 @@ def test_the_outsiders_look_is_code_and_its_stumbles_become_tickets(company, mon
     assert sup.work_once("outsider")["outcome"] == "infra"
     assert [Path(c[0]).name + " " + c[1] for c in calls] == ["outsider.py probe"]
     assert crew.tickets()[again["id"]]["status"] == "open"
+
+
+@qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
+def test_the_desk_keeps_its_own_pace_sleeps_on_purpose_and_its_brakes_are_code(
+        company, monkeypatch):
+    """C4. The desk works one step after another with a pause, sleeps when it says nothing
+    can move until a date, and cannot file past two Build it Better requests a day or send
+    past three a2a messages an hour while it works for the company -- a refusal before any
+    body exists. Every send here has a second barrier: the client raises if reached."""
+    now = datetime(2026, 10, 11, 18, 0, tzinfo=timezone.utc)
+    assert crew.desk_due({}, None, None, now)
+    step = {"T-0001": {"to": "desk", "kind": "step", "status": "claimed"}}
+    assert not crew.desk_due(step, None, None, now), "one step at a time"
+    assert not crew.desk_due({}, now - timedelta(minutes=10), None, now), "the pause"
+    assert crew.desk_due({}, now - crew.DESK_PAUSE, None, now)
+    asleep = {"until": crew.stamp(now + timedelta(hours=5)), "why": "STR-0130 closes at 23:00"}
+    assert not crew.desk_due({}, None, asleep, now)
+
+    sup = _script("crew")
+    monkeypatch.setenv("QA_CREW_DEPT", "desk")
+    assert sup.main(["snooze", "--hours", "5", "--why", "STR-0130 closes at 23:00"]) == 0
+    assert "STR-0130" in crew.snoozed("desk")["why"]
+    assert sup.main(["snooze", "--hours", "30", "--why", "a long sleep"]) == 2, "a day at most"
+    crew.set_snooze("desk", None)
+
+    monkeypatch.setenv("QA_CREW_TICK", json.dumps([sys.executable, "-c",
+                                                   "print('decide: none')"]))
+    sup.clock_look(now=datetime.now(timezone.utc))
+    made = [t for t in crew.tickets().values() if t["to"] == "desk"]
+    assert [t["kind"] for t in made] == ["step"]
+
+    told = crew.prompt("desk", made[0])
+    assert ".claude/agents/desk.md" in told and "crew.py snooze" in told
+    for name, spec in crew.DEPARTMENTS.items():
+        if spec.model:
+            assert ("Bash(python scripts/bb.py:*)" in crew.denied(name)) == (name != "desk")
+    assert "Bash(python scripts/a2a.py:*)" in crew.denied("manager")
+    assert "Bash(python scripts/a2a.py:*)" not in crew.denied("desk")
+
+    # The brakes, pure ...
+    filed = [{"type": "intent", "kind": "file", "at": crew.stamp(now - timedelta(hours=h))}
+             for h in (2, 20)]
+    assert "2 Build it Better" in crew.bb_brake(filed, now)
+    assert crew.bb_brake(filed[:1], now) is None
+    assert crew.bb_brake([{**filed[0], "kind": "verdict"}] * 5, now) is None
+    sent = [{"type": "a2a_intent", "at": crew.stamp(now - timedelta(minutes=m))}
+            for m in (5, 20, 50)]
+    assert "3 a2a" in crew.a2a_brake(sent, now)
+    older = {"type": "a2a_intent", "at": crew.stamp(now - timedelta(minutes=70))}
+    assert crew.a2a_brake(sent[:2] + [older], now) is None, "an hour is an hour"
+
+    # ... and where the sends are: refused before an intent or a client exists.
+    a2a = _script("a2a")
+    bb = _script("bb")
+
+    def no_network(*args, **kwargs):
+        raise AssertionError("the brake let a send through")
+
+    monkeypatch.setattr(a2a, "_client_for", no_network)
+    monkeypatch.setattr(a2a, "append_event", no_network)
+    monkeypatch.setattr(a2a, "read_events", lambda: [
+        {"type": "a2a_intent", "at": crew.stamp(datetime.now(timezone.utc)
+                                                - timedelta(minutes=m))} for m in (1, 2, 3)])
+    message = company / "q.md"
+    message.write_text("a question", encoding="utf-8")
+    assert a2a.main(["send", "--text-file", str(message), "--confirm"]) == 2
+    monkeypatch.setattr(bb, "_client", no_network)
+    monkeypatch.setattr(bb, "load", lambda: [
+        {"type": "intent", "kind": "file", "at": crew.stamp(datetime.now(timezone.utc)
+                                                            - timedelta(hours=h))}
+        for h in (1, 3)])
+    improvements = company / "improvements.txt"
+    improvements.write_text("1. Show the bot's record.", encoding="utf-8")
+    assert bb.main(["file", "--app-name", "Bots", "--improvements-file", str(improvements),
+                    "--confirm"]) == 2
+    # Outside the company the operator's own sends are not braked here.
+    monkeypatch.delenv("QA_CREW_DEPT")
+    assert crew.crew_brake("a2a", list(range(9)), now) is None
 
 
 # -- the loops ------------------------------------------------------------------------------

@@ -403,6 +403,12 @@ def clock_look(now: datetime | None = None) -> tuple[str, str]:
     else:
         left = crew.TICK_EVERY - (now - last)
         said.append(f"next tick in {int(left.total_seconds() // 60)}m")
+    if crew.desk_due(crew.tickets(), crew.last_run_end("desk"), crew.snoozed("desk", now), now):
+        ticket, new = crew.add_ticket(
+            "desk", "step", "one step towards proving that money can be made on Cymetica",
+            key=f"desk:{crew.stamp(now)}", by="clock", now=now)
+        if new:
+            said.append(f"desk: {ticket['id']}")
     crew.beat("clock", "idle", "; ".join(said), now=now)
     write_report(now)
     return "idle", "; ".join(said)
@@ -612,6 +618,27 @@ def hold(why: str) -> int:
         time.sleep(HOLD_POLL_SECONDS)
 
 
+def snooze(hours: float | None, until: str | None, why: str) -> int:
+    """A department sleeps on purpose, and says why -- quiet, not stuck."""
+    dept = _by()
+    if dept not in crew.DEPARTMENTS:
+        print("[crew] refused: a department sleeps, not a session")
+        return 2
+    now = datetime.now(timezone.utc)
+    when = crew.moment(until) if until else (now + timedelta(hours=hours)
+                                             if hours is not None else None)
+    if when is None:
+        print("[crew] refused: --hours N or --until <ISO time>")
+        return 2
+    try:
+        crew.set_snooze(dept, when, why, now=now)
+    except ValueError as exc:
+        print(f"[crew] refused: {exc}")
+        return 2
+    print(f"[crew] {dept} sleeps until {crew.stamp(when)}: {why}")
+    return 0
+
+
 def unhold() -> int:
     held, by = crew.holder(), _by()
     if held is None:
@@ -676,6 +703,10 @@ def main(argv: list[str] | None = None) -> int:
     held = sub.add_parser("hold", help="hold the tree still for a level-V run")
     held.add_argument("--why", required=True)
     sub.add_parser("unhold")
+    sleep = sub.add_parser("snooze", help="a department sleeps on purpose until a moment")
+    sleep.add_argument("--hours", type=float)
+    sleep.add_argument("--until")
+    sleep.add_argument("--why", required=True)
     args = parser.parse_args(argv)
 
     with contextlib.suppress(AttributeError, ValueError):
@@ -721,6 +752,8 @@ def main(argv: list[str] | None = None) -> int:
         return hold(args.why)
     if args.cmd == "unhold":
         return unhold()
+    if args.cmd == "snooze":
+        return snooze(args.hours, args.until, args.why)
     if args.cmd == "list":
         for ticket in crew.tickets().values():
             if args.open and ticket["status"] not in ("open", "claimed"):

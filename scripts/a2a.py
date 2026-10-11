@@ -41,6 +41,7 @@ sys.path.insert(0, str(REPO_ROOT))
 from qa.client import build_client, install_client_guard  # noqa: E402
 from qa.console import printable  # noqa: E402
 from qa.config import identities, load_dotenv  # noqa: E402
+from qa.crew import crew_brake  # noqa: E402
 from qa.safety import CURRENT_TIER, EndpointRegistry, SafetyTier  # noqa: E402
 from qa.state import append_event, journal_path, read_events  # noqa: E402
 
@@ -161,7 +162,14 @@ def cmd_send(args) -> int:
         print("\n  send it with the same command plus --confirm")
         return 0
 
-    msg_id = next_a2a_id(read_events())
+    events = read_events()
+    # The company's brake (docs/crew-plan.md): a worker sends at most three an hour. Not
+    # applied to a session -- the operator's own sends are theirs.
+    braked = crew_brake("a2a", events)
+    if braked:
+        print(f"refused, nothing sent: {braked}")
+        return 2
+    msg_id = next_a2a_id(events)
     at = _now()
     append_event({"type": "a2a_intent", "at": at, "by": "operator",
                   "source": SOURCE, "msg_id": msg_id, "text": text,

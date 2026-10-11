@@ -53,6 +53,7 @@ sys.path.insert(0, str(REPO_ROOT))
 from qa.client import build_client, install_client_guard  # noqa: E402
 from qa.config import identities, load_dotenv  # noqa: E402
 from qa.console import printable  # noqa: E402
+from qa.crew import crew_brake  # noqa: E402
 from qa.safety import CURRENT_TIER, EndpointRegistry, SafetyTier  # noqa: E402
 from qa.state import file_lock, state_dir  # noqa: E402
 
@@ -389,6 +390,12 @@ def cmd_file(app_url, app_name, improvements_file, design_urls, confirm: bool) -
     if not confirm:
         print("nothing sent: file needs --confirm")
         return 0
+    # The company's brake (docs/crew-plan.md): its workers file at most two a day. Not
+    # applied to a session -- the operator's own filings are theirs.
+    braked = crew_brake("bb", load())
+    if braked:
+        print(f"refused, nothing sent: {braked}")
+        return 2
     client = _client(write=True)
     try:
         outcome, spec = _send(client, "file", BASE, body)
