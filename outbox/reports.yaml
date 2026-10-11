@@ -5923,6 +5923,84 @@ reports:
       idea's own logos. The four specs above are frozen, so our check can show a fix only on the next idea that
       gets a BB-CHANGE after it; we will read your fix time before saying anything about it.
 
+  - key: build-it-better-withdraw-route-missing-from-openapi
+    findings: [CYM-build-it-better-rest-routes-are-in-the-openapi]
+    severity: low
+    category: documentation
+    url: https://cymetica.com/openapi-public.json
+    title: >-
+      Documentation: POST /api/v1/build-it-better/requests/{ticket}/withdraw is in llms.txt, mcp.json
+      (bb_withdraw_request) and the page's own button, but not in /openapi-public.json
+    expected: >
+      A route llms.txt documents is also in the OpenAPI an agent reads, with its parameters and responses
+      described, as the other Build it Better request routes are: accept, change and verdict are.
+    actual: >
+      Read on 2026-10-11 between 14:30 and 14:45 UTC. llms.txt's "## Build it Better" section names
+      `POST .../requests/{ticket}/accept|change|verdict|withdraw` and says "`POST
+      .../requests/{ticket}/withdraw` takes back your own request while it is requested or funded (not once it
+      is building); the ticket is then marked declined". /.well-known/mcp.json lists the MCP tool
+      bb_withdraw_request, and the page's "Withdraw this request" button posts to that route (its script calls
+      act('/withdraw') against /api/v1/build-it-better). /openapi-public.json (345 paths) declares accept, change
+      and verdict under /api/v1/build-it-better/requests/{ticket}/ and has no withdraw route there: the only
+      paths containing "withdraw" are /api/v1/cloned-bots/{instance_id}/withdraw and
+      /api/v1/withdrawals/token-gates. /openapi.json (27 paths) has no Build it Better route. Of the 15 routes
+      the section names, 14 are in /openapi-public.json; this is the one that is not. The schema already knows
+      the outcome (the message kinds list BB-WITHDRAW and closed_reason lists "withdrawn") but names the three
+      other actions only: the 201's request_token ("the X-BB-Token for accept/change/verdict"), `yours`, and the
+      endpoint table of /build-it-better/api, which has no withdraw row either.
+    steps:
+      - 'GET https://cymetica.com/llms.txt -> "## Build it Better": "`POST .../requests/{ticket}/accept|change|verdict|withdraw` (request token in the body)" and "`POST .../requests/{ticket}/withdraw` takes back your own request while it is requested or funded"'
+      - 'GET https://cymetica.com/openapi-public.json -> 345 paths; /api/v1/build-it-better/requests/{ticket}/accept, /change and /verdict are there, /withdraw is not; the only paths containing "withdraw" are /api/v1/cloned-bots/{instance_id}/withdraw and /api/v1/withdrawals/token-gates'
+      - 'GET https://cymetica.com/openapi.json -> 27 paths, none under /api/v1/build-it-better'
+      - 'GET https://cymetica.com/.well-known/mcp.json -> tools[] bb_withdraw_request: "BB-WITHDRAW — take back your own request before it is built"'
+      - 'GET https://cymetica.com/build-it-better -> the page script: the #bb-withdraw click calls act(''/withdraw''), which posts to API + ''/requests/'' + ticket + path with API = ''/api/v1/build-it-better'''
+      - 'GET https://cymetica.com/build-it-better/api -> the endpoint table lists /requests/{ticket}/accept, /change and /verdict; no /withdraw row'
+    body: >
+      How to fix it is yours: add the route to /openapi-public.json with its token and auth parameters, its 200
+      response and what it answers once the build has started (llms.txt says it is refused), and a withdraw row
+      to the endpoint table of /build-it-better/api; the descriptions of the 201's request_token and of `yours`
+      can then name withdraw too. A visitor who reads the schema cannot find the call that takes a request back.
+      Our check reads /llms.txt and /openapi-public.json anonymously and fails while a route the Build it
+      Better section names, in full or as .../x with a|b read as one route each, is not a path of the OpenAPI
+      with that method. Not about what the route does or answers.
+
+  - key: build-it-better-request-token-place-llms-vs-openapi
+    findings: [CYM-build-it-better-request-token-place-is-documented-one-way]
+    severity: low
+    category: documentation
+    url: https://cymetica.com/llms.txt
+    title: >-
+      Documentation: llms.txt says the Build it Better request token goes "in the body" on
+      accept|change|verdict|withdraw; /openapi-public.json, the API page and the 201 say the X-BB-Token header
+    expected: >
+      One place for the request token: the llms.txt line and the OpenAPI that describes the same routes name the
+      same one, so a reader of either can call accept, change and verdict.
+    actual: >
+      Read on 2026-10-11 between 14:30 and 14:45 UTC. llms.txt's "## Build it Better" section writes
+      `POST .../requests/{ticket}/accept|change|verdict|withdraw` (request token in the body). /openapi-public.json
+      declares, on accept, change and verdict, an optional header parameter x-bb-token and no token in any request
+      body: accept has no requestBody, BBChangeIn is {changes} and BBVerdictIn is {verdict, note}. The 201 of POST
+      /api/v1/build-it-better/requests says request_token "is the X-BB-Token for accept/change/verdict" and that
+      `yours` means "accept/change/verdict allowed without X-BB-Token"; the endpoint table of /build-it-better/api
+      gives "X-BB-Token, or the signed-in session of the account that filed it" for the same three; and the page's
+      own script sets the X-BB-Token header before it posts any of its actions. So a reader of llms.txt puts the
+      token in a body the OpenAPI does not define, and a reader of the OpenAPI sends a header llms.txt does not
+      mention.
+    steps:
+      - 'GET https://cymetica.com/llms.txt -> "## Build it Better": "`POST .../requests/{ticket}/accept|change|verdict|withdraw` (request token in the body)"'
+      - 'GET https://cymetica.com/openapi-public.json -> POST /api/v1/build-it-better/requests/{ticket}/accept: parameters ticket, x-bb-token (header), authorization, x-api-key and no requestBody; /change: requestBody BBChangeIn {changes}; /verdict: requestBody BBVerdictIn {verdict, note}'
+      - 'Same document, POST /api/v1/build-it-better/requests -> 201 schema: request_token "New filings only: keep it — it is the X-BB-Token for accept/change/verdict."; yours "True when the signed-in caller filed this build (accept/change/verdict allowed without X-BB-Token)."'
+      - 'GET https://cymetica.com/build-it-better/api -> the endpoint table: "X-BB-Token, or the signed-in session of the account that filed it" on /accept, /change and /verdict'
+      - 'GET https://cymetica.com/build-it-better -> the page script act(): if (tok) hdr[''X-BB-Token''] = tok, then POST with a JSON body that carries no token'
+    body: >
+      We sent no write to see what the server accepts, so this does not say a token in the body is refused: it
+      says the two documents name different places. How to fix it is yours: name the header in llms.txt, or, if
+      a body token works too, declare it in the schema and say both places. The same four routes are in the
+      companion report on the missing withdraw path in /openapi-public.json (#193). Our check reads
+      /llms.txt and /openapi-public.json anonymously, route by route, and fails while the place llms.txt gives
+      for the token and the places the OpenAPI declares for that route (the x-bb-token header, a token field
+      of the request body) have nothing in common.
+
 footer: >
   Reported by an independent QA agent. Scope of this work: verification of the
   REST API, MCP, the machine-readable discovery surfaces and the pages built on

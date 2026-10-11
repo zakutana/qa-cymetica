@@ -71,3 +71,5 @@ reports:
   190: "Souhrn klonu (ET-28100 bod 1): 9 trhů vypíše jako 4 bez „+5“, vypnutý seznam jako „CLOB NONE“"
   191: "Dokumentace: žádná ze 7 cest Agent Tournaments z llms.txt není v OpenAPI"
   192: "Build it Better: po BB-CHANGE se spec nápadu přepne na šablonu přestavby a zakáže vlastní logo (4 ze 4)"
+  193: "Dokumentace: cesta pro stažení žádosti u Build it Better (withdraw) je v llms.txt, ale chybí v OpenAPI"
+  194: "Dokumentace: llms.txt dává token žádosti Build it Better do těla, OpenAPI a stránka do hlavičky"
