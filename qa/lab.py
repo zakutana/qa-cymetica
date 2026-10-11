@@ -2047,8 +2047,10 @@ def hold_periods(text: str, picks: list[str]) -> dict[str, float | None]:
             current = None
         if current is None or current in stated:
             continue
+        # Bold, italics and code marks only dress the words (NEX-0133/0134: "**Hold:** **5 days**").
+        plain = re.sub(r"[*_`]", "", line)
         for pattern in _HOLD_WORDS:
-            found = pattern.search(line)
+            found = pattern.search(plain)
             if found:
                 days = float(found.group(1))
                 stated.add(current)

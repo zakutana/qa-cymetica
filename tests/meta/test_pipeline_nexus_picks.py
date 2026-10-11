@@ -118,6 +118,7 @@ def test_his_take_profit_and_stop_are_read_for_each_pick(answer_id):
         assert (said[pick]["tp"], said[pick]["sl"]) == (tp, sl), (
             f"{answer_id} {pick[:12]}: read {said[pick]}, he said tp {tp} sl {sl}")
     _how_long_to_hold_is_read_from_his_words_and_bounded()
+    _a_hold_period_wrapped_in_markdown_is_still_his()
 
 
 def _how_long_to_hold_is_read_from_his_words_and_bounded():
@@ -152,6 +153,28 @@ def _how_long_to_hold_is_read_from_his_words_and_bounded():
         5.0, 7.0, None, None, None, None, None, 14.0, 1.0, None], said
     # A backtest's "30d" or "90d" is not a holding period, and neither is an hour count.
     assert lab.hold_periods("90d +28%, 30d +3%, Sharpe 3.4", ["x"]) == {"x": None}
+
+
+def _a_hold_period_wrapped_in_markdown_is_still_his():
+    """NEX-0133 and NEX-0134 (2026-10-11): he named a hold and the launcher said he had not.
+
+    He wrote "**Hold:** **5 days**" and "- **hold:** 10 days", the bold markers sitting between
+    the colon and the number, and the reader's pattern allowed a colon and spaces there but not
+    two asterisks. The DePIN card he proposed twice, with a hold, a take-profit and a stop,
+    was held both times for "no usable hold period" -- and the next question was spent asking
+    for what he had already said. A marker that only dresses the text is not part of what it
+    says; a period that is out of range is still not rescued by it."""
+    depin = "047996d8-369c-47ee-a942-d2d44761fa6f"
+    other = "5d91bf43-a597-47b0-9abe-5c7f52618bbd"
+    text = (f"## Card -- Gem Screener DePIN\n- **id:** `{depin}` (EVCDX-GEM-SCREENER-DEPIN)\n"
+            "- **side:** UP (bull / long).\n"
+            "- **hold:** 10 days -- close at end of that period, or earlier at TP/stop.\n"
+            "- **take-profit +15% / stop -10%**\n"
+            f"**Card UUID:** `{other}`\n"
+            "- **Hold:** **5 days** (short, to cap exposure)\n")
+    assert lab.hold_periods(text, [depin, other]) == {depin: 10.0, other: 5.0}
+    # Dressed up, out of range stays unusable.
+    assert lab.hold_periods(f"`{depin}`: **hold:** **30 days**", [depin]) == {depin: None}
 
 
 def _read(answer_id: str) -> dict:
