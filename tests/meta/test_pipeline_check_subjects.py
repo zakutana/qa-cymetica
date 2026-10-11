@@ -660,6 +660,9 @@ def test_a_card_that_is_closed_on_rest_and_open_on_mcp_fails():
     # rather than a test of its own: tests/meta has a counted ceiling.
     _the_crypto_supply_readings()
 
+    # And the launchpad token lists (2026-10-11), held the same way.
+    _the_launchpad_list_readings()
+
     # And the account history pages forward (2026-10-10): with currency=USDC, and with no filter
     # past the first page, every offset answered the same 100 rows while has_more said true.
     from tests.rest.test_account_history_pages_forward import page_repeats
@@ -958,3 +961,26 @@ def _the_crypto_supply_readings():
     assert supply_contradiction({"market_cap": None, "fdv": None, "max_supply": 1e9, "total_supply": 5e9,
                                  "flags": []}) == {"total_over_max": 5.0}
     assert supply_contradiction(None) is None
+
+
+def _the_launchpad_list_readings():
+    """The readings behind the two launchpad list checks (2026-10-11): an unfiltered token list that
+    is a 200 with no rows while a chain lists some fails, a 422 or any row passes, a read that is
+    not a 200 is not judged; a discovery feed that lists a launch the REST list keeps internal fails,
+    one that lists only public launches or an address in neither list does not."""
+    from tests.rest.test_launchpad_discovery_tool_hides_what_rest_keeps_internal import leaked_internal
+    from tests.rest.test_launchpad_tokens_list_without_a_chain_is_not_empty import empty_while_filtered_lists
+
+    named = {4663: 1, 5042: 5}
+    assert empty_while_filtered_lists(200, [], named) is True, "200 [] beside a chain that lists launches"
+    assert empty_while_filtered_lists(200, [{"address": "0x1"}], named) is False
+    assert empty_while_filtered_lists(422, {"detail": "chain_id required"}, named) is False, (
+        "an honest refusal that names the parameter is not an empty list")
+    assert empty_while_filtered_lists(500, None, named) is None and empty_while_filtered_lists(200, {}, named) is None
+    assert empty_while_filtered_lists(200, [], {4663: 0, 5042: 0}) is None, "no chain lists anything: nothing to compare"
+
+    public, internal = ["0xRUG"], ["0xRUG", "0xNXTEST", "0xGTEST"]
+    assert leaked_internal(["0xrug", "0xNXTEST", "0xgtest"], public, internal) == ["0xgtest", "0xnxtest"]
+    assert leaked_internal(["0xRUG"], public, internal) == [], "the public launch is the feed's to list"
+    assert leaked_internal(["0xYOUNG"], public, internal) == [], "an address in neither list is not judged"
+    assert leaked_internal([], public, internal) == []
