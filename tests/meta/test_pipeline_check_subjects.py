@@ -691,6 +691,9 @@ def test_a_card_that_is_closed_on_rest_and_open_on_mcp_fails():
     _the_build_it_better_route_readings()
     _the_request_token_place_readings()
 
+    # And the bots Agent Tournaments offers for a seat (the evening of 2026-10-11), the same way.
+    _the_tournament_bot_readings()
+
     # And the account history pages forward (2026-10-10): with currency=USDC, and with no filter
     # past the first page, every offset answered the same 100 rows while has_more said true.
     from tests.rest.test_account_history_pages_forward import page_repeats
@@ -1093,6 +1096,23 @@ def _the_tournament_route_readings():
                            f"{p}/tables/{{table_id}}/seat": {}, f"{p}/seats/{{seat_id}}/leave": {}}}
     assert missing_from(routes, described) == [], "any parameter name is the same route"
     assert tournament_routes(other) == [], "a line without a full tournament route lends none of its paths"
+
+
+def _the_tournament_bot_readings():
+    """The readings behind the Agent Tournaments bot check (2026-10-11): a bot in our clone list
+    is known without asking; one whose profile answers 404 is offered but gone (lab MACD Hunter,
+    deleted 2026-09-28, offered with trading: true); one that answers 200 exists; one that could
+    not be read is unread, never gone."""
+    from tests.rest.test_agent_tournaments_offers_only_bots_that_exist import offered_but_gone
+
+    offered = [{"instance_id": "aaa", "name": "lab Wave 2 MACD Hunter", "trading": False},
+               {"instance_id": "996cd23e", "name": "lab MACD Hunter", "trading": True},
+               {"instance_id": "ccc", "name": "a live clone", "trading": True},
+               {"instance_id": "ddd", "name": "unreadable", "trading": False}]
+    gone, unread = offered_but_gone(offered, {"aaa"}, {"996cd23e": 404, "ccc": 200, "ddd": 503})
+    assert [b["name"] for b in gone] == ["lab MACD Hunter"] and unread == ["ddd"]
+    assert offered_but_gone(offered[:1], {"aaa"}, {}) == ([], []), "a known bot needs no profile"
+    assert offered_but_gone(offered, {"aaa", "996cd23e", "ccc", "ddd"}, {}) == ([], [])
 
 
 def _the_idea_template_readings():
