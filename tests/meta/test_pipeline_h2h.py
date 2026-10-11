@@ -93,6 +93,17 @@ def test_a_matchup_is_refused_early_never_public_and_carries_only_its_fields():
         "is_public": False})], seen
     assert said["slug"] == "abc123"
 
+    # Deep pass 2026-10-11, R02: a 5xx may have created the matchup -- rule 9 calls that
+    # unknown, never refused; a 4xx, or a refusal of ours before the network, is refused.
+    def busy(request):
+        return httpx.Response(503, text="upstream timeout")
+
+    with as_mutate_tier(), pytest.raises(mod.H2HError) as raised:
+        mod.create(_client(busy, mutate=True), "clone:i-1", "clone:i-2", days=7, confirm=True)
+    assert raised.value.status == 503 and mod.error_outcome(raised.value) == "unknown"
+    assert mod.error_outcome(mod.H2HError("matchup refused: HTTP 422", status=422)) == "refused"
+    assert mod.error_outcome(mod.H2HError("pass confirm=True")) == "refused"
+
     from qa.safety import EndpointRegistry
     rule = {r.id: r for r in EndpointRegistry.load().rules}["head_to_head.create"]
     assert list(rule.methods) == ["POST"] and rule.closed_body is True

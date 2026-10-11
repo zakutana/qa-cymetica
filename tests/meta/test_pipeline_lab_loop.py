@@ -2853,6 +2853,28 @@ def _our_cards_hold_a_book_of_the_best_backtested_cards(tmp_path, monkeypatch):
     assert desk["id"] == room["room"] and sent[-1][0] == a, (room, sent)
     assert qa_rooms.acceptance_of(stored, desk["id"])["window_days"] == 1.0
 
+    # Deep pass 2026-10-11: a card read twice in one tick is bought once (R03, which the
+    # listing's pages can do), and a card whose order failed -- refused, or unknown and maybe
+    # landed -- is not bought again the next tick, a new room and order every 20 minutes (W02).
+    e = _card(0x15)
+    tries = []
+    paper = scripts_lab._sibling("paper")
+    real_buy = paper.buy
+
+    def refusing(card, usdc, *x, **k):
+        if card == e:
+            tries.append(card)
+            raise SystemExit("their order answered 422")
+        return real_buy(card, usdc, *x, **k)
+    paper.buy = refusing
+    monkeypatch.setattr(scripts_lab, "OWN_BOOK", 10)
+    monkeypatch.setattr(scripts_lab, "_live_cards", lambda: [{"card": e, "title": "E", "legs": legs("SOL", "XRP")}] * 2)
+    first = scripts_lab.own_cards()
+    assert tries == [e], "one card read twice was ordered twice in one tick"
+    assert first["rooms"] == 1 and first["orders"] == 0, first
+    scripts_lab.own_cards()
+    assert tries == [e], "a card whose order failed was ordered again the next tick"
+
 
 @qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
 def test_an_id_their_api_does_not_know_is_not_called_an_invented_card(

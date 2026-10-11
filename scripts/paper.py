@@ -444,7 +444,8 @@ def capital_in_bots(rows, records) -> dict | None:
     None -- refused, never zero -- when a row cannot be read, names a bot we
     have no record of cloning, or one with a transfer whose outcome is
     unknown: capital we cannot state is not capital we have. A bot we cloned
-    whose every transfer was refused holds none of ours: 0, not unknown.
+    whose every transfer was refused, or never left (`not_sent`), holds none of
+    ours: 0, not unknown.
 
     A clone we RELEASED (an accepted `release` in clones.jsonl, read the way
     scripts/lab.py::_clone_money reads it) is deleted on their side and nothing
@@ -481,7 +482,9 @@ def capital_in_bots(rows, records) -> dict | None:
                 moved[str(instance)] = moved.get(str(instance), 0.0) + float(amount)
             except (TypeError, ValueError):
                 return None
-        elif said != "rejected":
+        elif said not in ("rejected", "not_sent"):
+            # `not_sent` never left (a refused connection, our own guard): nothing moved,
+            # like a refusal. As unsure it refused every card order (deep pass 2026-10-11, W01).
             unsure.add(str(instance))
     went_in = worth = 0.0
     listed: set[str] = set()

@@ -2495,6 +2495,8 @@ GRID_BANDS = (
 # How many new cells one tick starts: each is a clone, a PATCH, a funding and a start, and
 # their reads time out all day; the trading cap (wave.MAX_TRADING) is the real limit.
 GRID_PER_TICK = 4
+# How many launches of one cell may stop before any verdict (never ran) before the grid leaves it.
+GRID_LAUNCH_TRIES = 3
 
 
 def grid_next(register_rows: list[dict], species: list[str], thrown: set[str],
@@ -2521,12 +2523,18 @@ def grid_next(register_rows: list[dict], species: list[str], thrown: set[str],
                 continue
             tried = by_key.get(key) or []
             judged = [r for r in tried if r.get("verdict")]
-            if len(tried) != len(judged):
-                continue          # one is still open, or never ran: not a second room
-            if tried and not (len(judged) == 1 and judged[0]["verdict"] == "survived"):
+            # A room stopped before any verdict is a launch that never ran: tried again, at
+            # most GRID_LAUNCH_TRIES times -- one ReadTimeout on the settings retired the cell
+            # for good (deep pass 2026-10-11, R01).
+            failed = [r for r in tried if not r.get("verdict") and r.get("status") == "stopped"]
+            if len(judged) + len(failed) != len(tried):
+                continue          # one is still open: not a second room
+            if len(failed) >= GRID_LAUNCH_TRIES:
+                continue
+            if judged and not (len(judged) == 1 and judged[0]["verdict"] == "survived"):
                 continue
             out.append({"species": sp, "settings": dict(band), "label": label, "key": key,
-                        "second": bool(tried)})
+                        "second": bool(judged)})
             if len(out) >= limit:
                 return out
     return out

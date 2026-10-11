@@ -3012,8 +3012,16 @@ def _open_card_room(origin: str, card: str, title: str, section: str, hold_days:
         rooms.set_status(room, "running", why=f"bought on paper from {origin} ({section})")
         return {"room": room, "ok": True, "why": ""}
     reason = refused or f"HTTP {result.get('http_status')}, no position returned"
-    rooms.set_status(room, "stopped", why=f"the paper order did not land ({reason}); a room "
-                                          f"that held nothing is archived and not judged")
+    # night_promote's reading: paper.buy refuses before sending, or raises "did not complete"
+    # after a POST that timed out; a timeout or a 5xx may have landed (W02).
+    code = result.get("http_status")
+    sent_unknown = ("did not complete" in refused if refused
+                    else not (isinstance(code, int) and 400 <= code < 500))
+    rooms.set_status(room, "stopped", why=(
+        f"the paper order's outcome is unknown ({reason}); if it landed, the book counts it once "
+        f"their positions list it, and this room is not judged" if sent_unknown else
+        f"the paper order did not land ({reason}); a room that held nothing is archived and not "
+        f"judged"))
     return {"room": room, "ok": False, "why": reason}
 
 
@@ -3037,16 +3045,25 @@ def own_cards() -> dict:
     held_live = {str(leg.get("card")).lower() for room_id, plan in rooms.plans(stored).items()
                  if rooms.status_of(stored, room_id) != "stopped"
                  for leg in plan.get("legs") or [] if leg.get("card")}
+    # A card whose order of ours failed lately -- refused, or unknown and perhaps landed -- left a
+    # room stopped with no verdict: not ordered again every tick, a new room and order each 20
+    # minutes (deep pass 2026-10-11, W02). A week, the book's own hold.
+    failed_lately = {str(r["key"])[len("card:"):] for r in tried
+                     if r["section"] == "own" and not r["verdict"] and r["status"] == "stopped"
+                     and str(r.get("key") or "").startswith("card:")
+                     and (lab_register.days_since(r, moment) or 0.0) < OWN_HOLD_DAYS}
     try:
         live = _live_cards()
     except Exception as exc:  # noqa: BLE001 -- unread is not empty
         return {"rooms": 0, "orders": 0,
                 "held": [f"own cards: their card listing did not answer ({str(exc)[:120]})"]}
-    passing = []
+    passing, seen = [], set()
     for row in live[:OWN_CANDIDATES]:
         card = row["card"]
-        if card in held_live or card == BTC_PROXY:
+        # Once each: a card the listing's pages served twice is one candidate (R03).
+        if card in held_live or card in failed_lately or card in seen or card == BTC_PROXY:
             continue
+        seen.add(card)
         before = lab_register.last_judged(tried, f"card:{card}")
         age = lab_register.days_since(before, moment) if before else None
         if before and age is not None and age < lab_register.RETRY_DAYS:
@@ -3069,7 +3086,9 @@ def own_cards() -> dict:
             f"our cards: their backtest after fees, {said.get('why')}", section="own")
         done = _open_card_room(proposal["id"], row["card"], row["title"], "own",
                                OWN_HOLD_DAYS, stake, f"their backtest {said.get('why')}")
-        opened += 1
+        # A room counted only when one was opened: a deep pass starting in between opens none
+        # (deep pass 2026-10-11, R12).
+        opened += 1 if done["room"] else 0
         if done["ok"]:
             placed += 1
         else:
@@ -3207,7 +3226,9 @@ def bot_grid() -> dict:
     by_id = {sp.lower(): b for sp, b in zip(species, catalogue)}
     keys = {f"bot:{sp.lower()}:{lab_register.band_label(band)}"
             for band in lab.GRID_BANDS for sp in species}
-    tried = len({r["key"] for r in tried_rows if r["key"] in keys})
+    # A cell whose every room stopped before a verdict never ran: not tried (R01).
+    tried = len({r["key"] for r in tried_rows if r["key"] in keys
+                 and (r.get("verdict") or r.get("status") != "stopped")})
     trading = _trading_now(clone_rows, samples)
     slots = max(0, wave.MAX_TRADING - trading)
     cells = lab.grid_next(tried_rows, species, set(_thrown_cells(clone_rows, samples)),

@@ -434,6 +434,14 @@ def test_capital_in_a_bot_is_what_went_in_and_what_it_made(tmp_path, monkeypatch
         {"id": "CLN-0008", "type": "outcome", "kind": "fund", "outcome": "unknown"}]
     assert mod.capital_in_bots([ours, bare], pending) is None, (
         "a transfer that may have landed was read as none")
+    # Deep pass 2026-10-11, W01: `not_sent` is a request that provably never left (a refused
+    # connection, our own guard) -- nothing moved, so it is 0 like a refusal, never unknown:
+    # as unknown it refused every card order for as long as that clone was listed.
+    never = cloned + [
+        {"id": "CLN-0009", "type": "intent", "kind": "fund", "instance_id": "b3", "amount": 240.0},
+        {"id": "CLN-0009", "type": "outcome", "kind": "fund", "outcome": "not_sent"}]
+    assert mod.capital_in_bots([ours, bare], never) == {"moved": 1000.0, "worth": 950.0}, (
+        "a transfer that never left blocked the book")
 
     # L01, deep pass 2026-10-04: a clone we RELEASED is deleted on their side
     # and nothing came back (refunded 0.0), so my-clones no longer lists it. The

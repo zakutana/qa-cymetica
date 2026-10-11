@@ -29,7 +29,18 @@ ROUTE = "/api/v1/head-to-head"
 
 
 class H2HError(RuntimeError):
-    """A matchup refused, by us before the network or by them."""
+    """A matchup refused, by us before the network or by them -- or, with a 5xx `status`, an
+    answer that does not say whether it was created."""
+
+    def __init__(self, message: str, status: int | None = None):
+        super().__init__(message)
+        self.status = status
+
+
+def error_outcome(exc: H2HError) -> str:
+    """Rule 9: their 4xx, or our own refusal before the network, is `refused`; a 5xx may have
+    created the matchup, and that is `unknown` (deep pass 2026-10-11, R02)."""
+    return "unknown" if isinstance(exc.status, int) and exc.status >= 500 else "refused"
 
 
 def side(text: str) -> dict:
@@ -56,7 +67,7 @@ def create(client, original: str, improved: str, days: int = 7,
     response = client.post(ROUTE, json=body)
     if response.status_code not in (200, 201):
         raise H2HError(f"matchup refused: HTTP {response.status_code} "
-                       f"{response.text[:300]!r}")
+                       f"{response.text[:300]!r}", status=response.status_code)
     return response.json() or {}
 
 
@@ -105,7 +116,7 @@ def start_matchup(original: str, improved: str, days: int, title: str, room: str
         outcome = {"outcome": "accepted" if said.get("slug") else "unknown",
                    "slug": said.get("slug"), "status": said.get("status")}
     except H2HError as exc:
-        outcome = {"outcome": "refused", "error": str(exc)[:300]}
+        outcome = {"outcome": error_outcome(exc), "error": str(exc)[:300]}
     except Exception as exc:  # noqa: BLE001 -- sent or not, unknown
         outcome = {"outcome": "unknown", "error": f"{type(exc).__name__}: {exc}"[:300]}
     finally:

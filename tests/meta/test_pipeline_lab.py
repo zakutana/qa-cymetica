@@ -2375,6 +2375,15 @@ def _the_bot_grid_tries_every_species_at_every_band_and_a_survivor_twice():
     every = lab.grid_next([], ["sp-a", "sp-b"], set(), limit=1000)
     assert len(every) == 2 * len(lab.GRID_BANDS), "a cell of the grid is never proposed"
     assert lab.grid_next(tried, ["sp-a"], thrown, limit=0) == []
+    # Deep pass 2026-10-11, R01 (2/3): a room stopped before any verdict is a launch that never ran
+    # (a timeout on the settings, a refused funding). The cell is tried again -- GRID_LAUNCH_TRIES
+    # at most -- instead of leaving the grid for good on one ReadTimeout.
+    never = [row("STR-8", "sp-e", "defaults")]
+    assert [(c["species"], c["label"], c["second"]) for c in lab.grid_next(never, ["sp-e"], set(), 1)] == [
+        ("sp-e", "defaults", False)], "one failed launch retired the cell"
+    gave_up = [row(f"STR-9{i}", "sp-e", "defaults") for i in range(lab.GRID_LAUNCH_TRIES)]
+    assert lab.grid_next(gave_up, ["sp-e"], set(), 1)[0]["label"] == bands[1], (
+        "a cell that never launched in GRID_LAUNCH_TRIES tries is left for the next band")
 
     # P7, head-to-head: a cell is PROVEN when two windows of it survived -- and only then is
     # it put against its species' defaults. A defaults cell has nothing to be improved on,
