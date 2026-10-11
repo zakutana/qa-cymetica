@@ -2286,6 +2286,42 @@ def test_the_settings_grid_is_walked_one_variant_at_a_time_and_each_body_is_whol
     assert lab.next_variant(["reference"]) == grid[1]
     assert lab.next_variant(labels[:5]) == lab.next_variant(labels[:5]) == grid[5]
     assert lab.next_variant(labels) is None, "a walk that is done proposes nothing"
+    _the_bot_grid_tries_every_species_at_every_band_and_a_survivor_twice()
+
+
+def _the_bot_grid_tries_every_species_at_every_band_and_a_survivor_twice():
+    """Laboratory v3, P3 ([operator 2026-10-11] "musis otestovat vsechny boty a konfigurace"):
+    every species at every band of GRID_BANDS -- the species' own defaults first, then the
+    bands -- walked band by band, each cell ONCE, read from the register (what any room of
+    any lane already tried at that band counts), and a cell whose one window survived gets
+    its second (a claim needs two). A cell running is not started twice; a refuted one is
+    done; a cell the three-stop-loss rule threw away never comes back, while the same species
+    at another band does."""
+    from qa import lab_register
+
+    def row(room, species, label, status="stopped", verdict=None):
+        return {"room": room, "section": "bots", "key": f"bot:{species}:{label}",
+                "status": status, "verdict": verdict, "return_pct": None, "at": None}
+
+    bands = [lab_register.band_label(b) for b in lab.GRID_BANDS]
+    assert bands[0] == "defaults" and len(set(bands)) == len(bands) == 6, bands
+    assert "SL 15 / TP 40" in bands
+    tried = [row("STR-1", "sp-a", "defaults", verdict="refuted"),
+             row("STR-2", "sp-b", "defaults", status="running"),
+             row("STR-3", "sp-c", "defaults", verdict="survived")]
+    thrown = {"bot:sp-d:defaults"}
+    cells = lab.grid_next(tried, ["sp-a", "sp-b", "sp-c", "sp-d"], thrown, limit=3)
+    assert [(c["species"], c["label"], c["second"]) for c in cells] == [
+        ("sp-c", "defaults", True), ("sp-a", bands[1], False), ("sp-b", bands[1], False)], cells
+    assert cells[1]["settings"] == lab.GRID_BANDS[1]
+    assert cells[0]["settings"] == {}, "the species' defaults send no settings at all"
+    # A survivor with its second window judged is done, whatever the second said.
+    twice = tried + [row("STR-4", "sp-c", "defaults", verdict="survived")]
+    assert all(c["key"] != "bot:sp-c:defaults"
+               for c in lab.grid_next(twice, ["sp-a", "sp-b", "sp-c", "sp-d"], thrown, 50))
+    every = lab.grid_next([], ["sp-a", "sp-b"], set(), limit=1000)
+    assert len(every) == 2 * len(lab.GRID_BANDS), "a cell of the grid is never proposed"
+    assert lab.grid_next(tried, ["sp-a"], thrown, limit=0) == []
 
 
 def _chain(ident, kind, at, instance="inst-1", **intent):

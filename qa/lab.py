@@ -2465,6 +2465,57 @@ VARIANT_MOVES = (
 OUR_ID = re.compile(r"^OUR-(\d{4})$")
 
 
+# Laboratory v3, P3 ([operator 2026-10-11] "musis otestovat vsechny boty a konfigurace"):
+# every species at every band, the species' own defaults first, then the bands most of what
+# ran so far used, then wider ones. Within the platform's bounds (stop 1-20, target 5-100).
+GRID_BANDS = (
+    {},
+    {"stop_loss_pct": 5.0, "take_profit_pct": 20.0},
+    {"stop_loss_pct": 10.0, "take_profit_pct": 20.0},
+    {"stop_loss_pct": 10.0, "take_profit_pct": 30.0},
+    {"stop_loss_pct": 15.0, "take_profit_pct": 40.0},
+    {"stop_loss_pct": 20.0, "take_profit_pct": 60.0},
+)
+# How many new cells one tick starts: each is a clone, a PATCH, a funding and a start, and
+# their reads time out all day; the trading cap (wave.MAX_TRADING) is the real limit.
+GRID_PER_TICK = 4
+
+
+def grid_next(register_rows: list[dict], species: list[str], thrown: set[str],
+              limit: int) -> list[dict]:
+    """The next cells of the bot grid to start, band by band, at most `limit`: a cell no
+    room has tried, or a cell whose one judged window survived (a claim needs two). Read from
+    the register (`qa.lab_register`), so what any room of any lane tried at that band counts;
+    a cell with a room still open, a refuted one, one judged twice, and a cell in `thrown`
+    (the three-stop-loss rule) are not started. Pure."""
+    from qa.lab_register import band_label
+
+    by_key: dict[str, list[dict]] = {}
+    for row in register_rows or ():
+        if str(row.get("key") or "").startswith("bot:"):
+            by_key.setdefault(row["key"], []).append(row)
+    out: list[dict] = []
+    if limit <= 0:
+        return out
+    for band in GRID_BANDS:
+        label = band_label(band)
+        for sp in species:
+            key = f"bot:{str(sp).lower()}:{label}"
+            if key in thrown:
+                continue
+            tried = by_key.get(key) or []
+            judged = [r for r in tried if r.get("verdict")]
+            if len(tried) != len(judged):
+                continue          # one is still open, or never ran: not a second room
+            if tried and not (len(judged) == 1 and judged[0]["verdict"] == "survived"):
+                continue
+            out.append({"species": sp, "settings": dict(band), "label": label, "key": key,
+                        "second": bool(tried)})
+            if len(out) >= limit:
+                return out
+    return out
+
+
 def variants() -> list[dict]:
     """The grid in the order it is walked: [{label, settings}], the reference
     first. Pure and deterministic -- the same list on every call."""

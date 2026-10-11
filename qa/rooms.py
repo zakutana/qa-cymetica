@@ -371,7 +371,7 @@ def room_key(row: dict) -> str | None:
 
 def open_strategy(origin: str, title: str, card: str | None = None, *,
                   kind: str | None = None, ref: str | None = None,
-                  section: str | None = None) -> dict:
+                  section: str | None = None, settings: dict | None = None) -> dict:
     """A room for a strategy Nexus proposed, opened from its whole answer.
 
     One answer opens one room -- or, when `card` is given, one room per card
@@ -386,7 +386,15 @@ def open_strategy(origin: str, title: str, card: str | None = None, *,
 
     `section` (laboratory v3, 2026-10-11) is the section of `SECTIONS` the room is opened in,
     written on its row; a room opened with none keeps the section its kind gives it.
+    `settings` is a bot room's band as it was opened with it (P3), which the register keys
+    the room by: {"stop_loss_pct": .., "take_profit_pct": ..}.
     """
+    if settings is not None and (
+            not isinstance(settings, dict)
+            or set(settings) - {"stop_loss_pct", "take_profit_pct"}
+            or not all(isinstance(v, (int, float)) and not isinstance(v, bool)
+                       for v in settings.values())):
+        raise RoomError("a room's settings are its band: stop_loss_pct and take_profit_pct")
     name = " ".join(str(title or "").split())
     if not name or len(name) > MAX_TITLE:
         raise RoomError(f"a title of 1 to {MAX_TITLE} characters")
@@ -427,6 +435,8 @@ def open_strategy(origin: str, title: str, card: str | None = None, *,
             row["kind"], row["ref"] = kind, str(ref)
         if section:
             row["section"] = section
+        if settings:
+            row["settings"] = dict(settings)
         return [row]
     return _append(build)[0]
 

@@ -114,7 +114,8 @@ def _recorded_outcome(clone, kind: str, instance: str) -> str | None:
 
 
 def launch_one(bot: dict, *, clone, rooms, lab, settings: dict, stake: float,
-               window_days: float, stop_pct: float, name: str) -> dict:
+               window_days: float, stop_pct: float, name: str,
+               why: str | None = None) -> dict:
     """One bot, in the order that keeps the criterion ahead of the money."""
     species, bot_name = str(bot["id"]), str(bot.get("name") or bot["id"])
     result = {"species": species, "name": bot_name, "ok": False, "room": None,
@@ -147,12 +148,15 @@ def launch_one(bot: dict, *, clone, rooms, lab, settings: dict, stake: float,
                          f"funded nor started")
         return result
 
-    label = "SL {stop_loss_pct:g} / TP {take_profit_pct:g}".format(**settings)
+    # A cell of the bot grid at the species' own defaults (laboratory v3, P3) sends no
+    # settings at all: a fresh clone runs its species' band.
+    label = ("SL {stop_loss_pct:g} / TP {take_profit_pct:g}".format(**settings)
+             if settings else "defaults")
     proposal = lab.note_proposal(
         "bot", species, instance, {"label": label, "settings": dict(settings)},
-        f"{name}, {bot_name}: the platform's stop-loss 5 % / take-profit 15 % stopped "
-        f"every wave-0 bot after one trade; this one runs {label} for the whole "
-        f"window. One change, the same for the whole wave.")
+        why or (f"{name}, {bot_name}: the platform's stop-loss 5 % / take-profit 15 % "
+                f"stopped every wave-0 bot after one trade; this one runs {label} for the "
+                f"whole window. One change, the same for the whole wave."))
     room = rooms.open_strategy(proposal["id"], f"{name} · {bot_name} {label}"[:rooms.MAX_TITLE],
                                kind="bot", ref=species)["id"]
     result["room"] = room
@@ -177,14 +181,15 @@ def launch_one(bot: dict, *, clone, rooms, lab, settings: dict, stake: float,
              f"{stop_pct:g}%. One window is a measurement, not a finding: it counts "
              f"only if it repeats in the next window")[:900])
 
-    changed, raised = attempt(clone.settings, instance, dict(settings), True)
-    if raised:
-        return stop(f"{raised}; not funded, not started")
-    if changed.get("outcome") != "accepted":
-        return stop(f"the settings were not accepted ({changed.get('outcome')})")
-    differs = _read_back(changed, settings)
-    if differs:
-        return stop(f"the settings read back wrong -- {differs}; not funded, not started")
+    if settings:
+        changed, raised = attempt(clone.settings, instance, dict(settings), True)
+        if raised:
+            return stop(f"{raised}; not funded, not started")
+        if changed.get("outcome") != "accepted":
+            return stop(f"the settings were not accepted ({changed.get('outcome')})")
+        differs = _read_back(changed, settings)
+        if differs:
+            return stop(f"the settings read back wrong -- {differs}; not funded, not started")
 
     _, raised = attempt(clone.fund, instance, stake, True)
     if raised or _recorded_outcome(clone, "fund", instance) != "accepted":

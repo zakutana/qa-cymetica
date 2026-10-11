@@ -21,11 +21,41 @@ from qa import rooms as rooms_mod
 RETRY_DAYS = 30.0
 
 
-def key_of(room: dict) -> str | None:
-    """What a room tried: `card:<id>` for a card, `<kind>:<ref>` for a bot, a fund or an
-    Arena room. A room from before rooms named what they held has no key."""
+BAND_FIELDS = ("stop_loss_pct", "take_profit_pct")
+
+
+def band_label(settings: dict | None) -> str:
+    """"SL 10 / TP 30" for a bot's band, or "defaults" when it was given none -- a fresh
+    clone runs the species' own band (CLN-0018: their stop and target were null)."""
+    settings = settings or {}
+    if all(isinstance(settings.get(f), (int, float)) for f in BAND_FIELDS):
+        return "SL {stop_loss_pct:g} / TP {take_profit_pct:g}".format(**settings)
+    return "defaults"
+
+
+def bands_by_instance(clone_rows: list[dict]) -> dict[str, dict]:
+    """Each clone's band as their side ACCEPTED it, field by field, the newest change
+    winning -- wave.py's, a variant's or a launch's alike. A clone never set has none."""
+    accepted = {row.get("id") for row in clone_rows or () if row.get("type") == "outcome"
+                and row.get("kind") == "settings" and row.get("outcome") == "accepted"}
+    out: dict[str, dict] = {}
+    for row in clone_rows or ():
+        if (row.get("type") == "intent" and row.get("kind") == "settings"
+                and row.get("id") in accepted):
+            for field in BAND_FIELDS:
+                if field in (row.get("body") or {}):
+                    out.setdefault(str(row.get("instance_id")), {})[field] = row["body"][field]
+    return out
+
+
+def key_of(room: dict, settings: dict | None = None) -> str | None:
+    """What a room tried: `card:<id>` for a card; `bot:<species>:<band>` for a bot (P3: a
+    species at another band is another experiment); `<kind>:<ref>` for a fund or an Arena
+    room. A room from before rooms named what they held has no key."""
     if room.get("card"):
         return f"card:{str(room['card']).lower()}"
+    if room.get("kind") == "bot" and room.get("ref"):
+        return f"bot:{str(room['ref']).lower()}:{band_label(settings)}"
     if room.get("kind") and room.get("ref"):
         return f"{room['kind']}:{str(room['ref']).lower()}"
     return None
@@ -39,10 +69,14 @@ def _moment(stamp) -> datetime | None:
     return when if when.tzinfo else when.replace(tzinfo=timezone.utc)
 
 
-def register(room_rows: list[dict], bot_origins=()) -> list[dict]:
+def register(room_rows: list[dict], bot_origins=(), proposals: dict | None = None) -> list[dict]:
     """Every strategy room as {room, section, key, title, status, verdict, return_pct, at},
     oldest first. `status` is the room's newest status; `verdict` and `return_pct` its newest
-    verdict, and `at` when that verdict (or, without one, that status) was written."""
+    verdict, and `at` when that verdict (or, without one, that status) was written.
+
+    A bot room's band is the one it was opened with: on its own row (`settings`, a band
+    Nexus named) or on the proposal of ours it opened from (`proposals`, id -> row)."""
+    proposals = proposals or {}
     latest_status: dict[str, dict] = {}
     latest_verdict: dict[str, dict] = {}
     for row in room_rows or ():
@@ -60,7 +94,9 @@ def register(room_rows: list[dict], bot_origins=()) -> list[dict]:
         out.append({
             "room": rid, "origin": room.get("origin"),
             "section": rooms_mod.section_of(room, plans.get(rid), bot_origins),
-            "key": key_of(room), "title": titles.get(rid, room.get("title")),
+            "key": key_of(room, room.get("settings")
+                          or (proposals.get(str(room.get("origin"))) or {}).get("settings")),
+            "title": titles.get(rid, room.get("title")),
             "status": status.get("status") or "proposed",
             "verdict": verdict.get("verdict"),
             "return_pct": verdict.get("return_pct"),

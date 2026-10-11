@@ -2250,10 +2250,10 @@ def night_promote(since: datetime | None = None, only: str | None = None) -> dic
             band_state["running"] = _bands_running(stored, _sibling("clone").load())
         return band_state["running"]
 
-    def thrown_species() -> dict[str, str]:
+    def thrown_cells() -> dict[str, str]:
         if "thrown" not in band_state:
-            band_state["thrown"] = _thrown_species(_sibling("clone").load(),
-                                                   rooms.load_samples())
+            band_state["thrown"] = _thrown_cells(_sibling("clone").load(),
+                                                 rooms.load_samples())
         return band_state["thrown"]
     catalogues: dict[str, list | None] = {}
 
@@ -2522,11 +2522,11 @@ def night_promote(since: datetime | None = None, only: str | None = None) -> dic
                 held.append(f"{tag}: {cloned} -- not cloned again")
                 return
         else:
-            thrown = thrown_species().get(species.lower())
+            thrown = thrown_cells().get(f"bot:{species.lower()}:{label}")
             if thrown:
                 held.append(f"{tag} {label}: its clone {thrown[:8]} ended on three stop-losses "
-                            f"in a row and was thrown away (the operator's rule, 2026-10-07); "
-                            f"bringing the species back is the operator's call")
+                            f"in a row at this band and was thrown away (the operator's rule, "
+                            f"2026-10-07) -- the band never comes back, another band may")
                 return
             owner = bands_running().get((species.lower(), label))
             if owner:
@@ -2553,7 +2553,8 @@ def night_promote(since: datetime | None = None, only: str | None = None) -> dic
         try:
             title = f"{name} {label}" if label else name
             room = rooms.open_strategy(origin, title[:rooms.MAX_TITLE],
-                                       kind="bot", ref=species)["id"]
+                                       kind="bot", ref=species,
+                                       settings=dict(band) if band else None)["id"]
         except rooms.RoomError as exc:
             held.append(f"{tag}: {exc}")
             return
@@ -2837,18 +2838,9 @@ def _instance_species(rows: list[dict]) -> dict[str, str]:
 def _bands_running(stored: list[dict], rows: list[dict]) -> dict[tuple[str, str], str]:
     """(species, "SL 12 / TP 30") -> the room not yet stopped whose bot runs at that band.
 
-    The band is what our clone record says their side ACCEPTED on the instance, field by
-    field, the newest settings change winning -- wave.py's, a variant's or a launch's alike."""
-    accepted = {row.get("id") for row in rows if row.get("type") == "outcome"
-                and row.get("kind") == "settings" and row.get("outcome") == "accepted"}
-    held: dict[str, dict] = {}
-    for row in rows:
-        if (row.get("type") == "intent" and row.get("kind") == "settings"
-                and row.get("id") in accepted):
-            body = row.get("body") or {}
-            for field in lab.BOT_BAND_BOUNDS:
-                if field in body:
-                    held.setdefault(str(row.get("instance_id")), {})[field] = body[field]
+    The band is what our clone record says their side ACCEPTED on the instance
+    (`qa.lab_register.bands_by_instance`)."""
+    held = lab_register.bands_by_instance(rows)
     out: dict[tuple[str, str], str] = {}
     plans = rooms.plans(stored)
     for row in rooms.strategies(stored):
@@ -2861,14 +2853,15 @@ def _bands_running(stored: list[dict], rows: list[dict]) -> dict[tuple[str, str]
     return out
 
 
-def _thrown_species(rows: list[dict], samples: list[dict]) -> dict[str, str]:
-    """Species -> the instance of ours the operator's rule threw away (three stop-losses in a
-    row, `qa.lab.discarded_bots`). Their "zahod a uz ho nechci videt" (2026-10-07) was said of
-    a bot; whether it covers the species is theirs to say, so a band Nexus names for it is held
-    and said, never launched."""
+def _thrown_cells(rows: list[dict], samples: list[dict]) -> dict[str, str]:
+    """Cell -> the instance of ours the operator's rule threw away (three stop-losses in a
+    row, `qa.lab.discarded_bots`), the cell being `bot:<species>:<band>` as the register keys
+    it. The rule retires a configuration, not the species (laboratory v3, P3: "otestovat vsechny
+    boty a konfigurace"); the band that lost three times never comes back."""
     species = _instance_species(rows)
-    return {species[inst]: inst for inst in sorted(lab.discarded_bots(rows, samples))
-            if inst in species}
+    bands = lab_register.bands_by_instance(rows)
+    return {f"bot:{species[inst]}:{lab_register.band_label(bands.get(inst))}": inst
+            for inst in sorted(lab.discarded_bots(rows, samples)) if inst in species}
 
 
 def _species_cloned() -> dict[str, str]:
@@ -2935,6 +2928,80 @@ def _clone_outcome(clone, kind: str, instance: str) -> str | None:
     return next((row.get("outcome") for row in reversed(rows)
                  if row.get("type") == "outcome" and row.get("id") == asked[-1]),
                 None)
+
+
+def _trading_now(clone_rows: list[dict], samples: list[dict]) -> int:
+    """How many clones of ours their side says are trading, by each one's newest sample --
+    what the platform's cap on trading bots counts (wave.MAX_TRADING)."""
+    ours = set(_instance_species(clone_rows))
+    latest: dict[str, dict] = {}
+    for row in samples or ():
+        if row.get("type") == "sample" and row.get("kind") == "bot":
+            key = str(row.get("instance_id"))
+            if key not in latest or str(row.get("at")) >= str(latest[key].get("at")):
+                latest[key] = row
+    return sum(1 for inst, row in latest.items() if inst in ours and row.get("is_trading") is True)
+
+
+def bot_grid() -> dict:
+    """The bots section's walker (laboratory v3, P3): every species of their catalogue at
+    every band of `lab.GRID_BANDS`, each cell once and a survivor twice (`lab.grid_next`, read
+    from the register), started on paper through `wave.launch_one` -- clone, room and
+    criterion, the band and its read-back, money, start -- at most GRID_PER_TICK a tick and
+    never past the platform's cap on trading bots. It replaced `bot_variants`, which walked one
+    factor at a time on ONE clone per species and had reached 44 of 308 cells in three weeks.
+
+    [operator 2026-10-11] "musis otestovat vsechny boty a konfigurace at najdes co je
+    nejvydelecnejsi". A cell the three-stop-loss rule threw away (`_thrown_cells`) is never
+    started again; the same species at another band is a cell of its own."""
+    if pass_in_flight():
+        return {"rooms": 0, "orders": 0, "held": ["grid: a deep pass is running"]}
+    try:
+        catalogue = [b for b in (_bot_catalogue() or []) if isinstance(b, dict) and b.get("id")]
+    except Exception as exc:  # noqa: BLE001 -- unread is not empty
+        return {"rooms": 0, "orders": 0,
+                "held": [f"grid: their bot catalogue did not answer ({str(exc)[:120]})"]}
+    clone, wave = _sibling("clone"), _sibling("wave")
+    clone_rows, samples, stored = clone.load(), rooms.load_samples(), rooms.load()
+    proposals = {str(p.get("id")): p for p in lab.proposals()}
+    tried_rows = lab_register.register(stored, proposals=proposals)
+    species = [str(b["id"]) for b in catalogue]
+    by_id = {sp.lower(): b for sp, b in zip(species, catalogue)}
+    keys = {f"bot:{sp.lower()}:{lab_register.band_label(band)}"
+            for band in lab.GRID_BANDS for sp in species}
+    tried = len({r["key"] for r in tried_rows if r["key"] in keys})
+    trading = _trading_now(clone_rows, samples)
+    slots = max(0, wave.MAX_TRADING - trading)
+    cells = lab.grid_next(tried_rows, species, set(_thrown_cells(clone_rows, samples)),
+                          min(lab.GRID_PER_TICK, slots))
+    opened, started, held = 0, 0, []
+    if not slots:
+        held.append(f"grid: {trading} bots trading, the platform's cap is "
+                    f"{wave.MAX_TRADING} -- the next cell waits for a slot")
+    for cell in cells:
+        free, deployed, parked = _free_cash(), _deployed(), _parked()
+        ok, why = lab.affordable(wave.STAKE_USDC, free, _running_experiments(),
+                                 deployed=deployed, parked=parked)
+        if not ok:
+            held.append(f"grid: {why or 'no money for a cell'} -- the rest waits")
+            break
+        bot = by_id[cell["species"].lower()]
+        said = wave.launch_one(
+            bot, clone=clone, rooms=rooms, lab=lab, settings=cell["settings"],
+            stake=wave.STAKE_USDC, window_days=wave.WINDOW_DAYS, stop_pct=wave.STOP_PCT,
+            name="Grid",
+            why=(f"the bot grid (laboratory v3): {bot.get('name')} at {cell['label']}"
+                 + (", its second window -- the first survived" if cell["second"] else "")))
+        if said.get("room"):
+            opened += 1
+        if said.get("ok"):
+            started += 1
+            tried += 0 if cell["second"] else 1
+        else:
+            held.append(f"grid {bot.get('name')} {cell['label']}: {said.get('why')}")
+    return {"rooms": opened, "orders": started, "held": held,
+            "grid": {"tried": tried, "of": len(keys), "trading": trading + started,
+                     "cap": wave.MAX_TRADING}}
 
 
 def bot_variants() -> dict:
@@ -3417,7 +3484,8 @@ def _tick_doors() -> dict:
         "moves": night_moves,
         "refill": lambda: night_refill(live=_live_card_seeds()),
         "verdicts": verdicts,
-        "variants": bot_variants,
+        # Laboratory v3, P3: the bot grid is the one walker (bot_variants is no longer run).
+        "variants": bot_grid,
         "fomo_reading": lambda: _sibling("fomo_watch").reading(),
         "hot": _hot_round,
         "hot_reading": lambda: _sibling("hot_watch").reading(),
@@ -3454,8 +3522,10 @@ def _say_tick(said: dict, out) -> None:
         f"{'answers picked up' if said['cycled'] else 'no cycle due'}, "
         f"{said['rooms']} room(s) / {said['orders']} order(s), "
         f"{said['verdicts']} verdict(s), "
-        + (f"{said['variants']} bot variant(s) started, "
+        + (f"{said['variants']} grid cell(s) started, "
            if said.get("variants") else "")
+        + ("grid {tried}/{of} cells tried, {trading}/{cap} bots trading, ".format(
+            **said["grid"]) if said.get("grid") else "")
         + f"{memecoins}, {hot_said}"
         + (", samples by the console"
            if (said.get("sample") or {}).get("by") == "console" else ""))
@@ -3621,6 +3691,8 @@ def tick(*, now: datetime | None = None, actions: dict | None = None,
     varied = attempt("variants", doors["variants"]) or {}
     said["rooms"] += varied.get("rooms", 0)
     said["variants"] = varied.get("orders", 0)
+    if varied.get("grid"):
+        said["grid"] = varied["grid"]
     # Before the launch's, not after: a variant's refusal is the same line
     # every tick (a bot that stopped by itself is never restarted), and
     # twelve of them took all six lines, so why NEX-0109 opened nothing was

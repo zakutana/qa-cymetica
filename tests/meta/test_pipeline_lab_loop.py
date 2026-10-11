@@ -3469,14 +3469,30 @@ def _a_band_he_names_is_a_new_experiment_on_a_species_we_own(tmp_path, monkeypat
     assert calls[5][1:3] == ("inst-5", {"stop_loss_pct": 10.0, "take_profit_pct": 24.0})
     assert any("NEX-0002" in h and "SL 12 / TP 36" in h for h in again["held"]), again["held"]
 
-    # A species the operator's rule threw away stays away, band or not.
+    # The three-stop-loss rule retires a CONFIGURATION (laboratory v3, P3): the clone it threw
+    # away ran Trend Titan at 8/20, so 8/20 stays away and 10/30 is a new cell.
     monkeypatch.setattr(lab, "discarded_bots", lambda *a, **k: {"inst-titan"})
+    with (tmp_path / "clones.jsonl").open("a", encoding="utf-8") as fh:
+        for row in ({"id": "CLN-0009", "type": "intent", "kind": "settings",
+                     "instance_id": "inst-titan",
+                     "body": {"stop_loss_pct": 8.0, "take_profit_pct": 20.0}},
+                    {"id": "CLN-0009", "type": "outcome", "kind": "settings",
+                     "outcome": "accepted", "http_status": 200}):
+            fh.write(json.dumps(row) + "\n")
     titan = _answer("**Trend Titan** — stop_loss_pct 8, take_profit_pct 20.", "NEX-0004")
     _write(tmp_path, "nexus.jsonl", answers + same + other + titan)
     thrown = scripts_lab.night_promote()
     assert len(calls) == 8, calls
     assert any("NEX-0004" in h and "three stop-losses" in h for h in thrown["held"]), (
         thrown["held"])
+    titan_wider = _answer("**Trend Titan** — stop_loss_pct 10, take_profit_pct 30.", "NEX-0005")
+    _write(tmp_path, "nexus.jsonl", answers + same + other + titan + titan_wider)
+    scripts_lab.night_promote()
+    assert len(calls) == 12 and calls[-3][2] == {"stop_loss_pct": 10.0,
+                                                 "take_profit_pct": 30.0}, calls
+    (wider,) = [r for r in qa_rooms.strategies(qa_rooms.load()) if r["origin"] == "NEX-0005"]
+    assert wider.get("settings") == {"stop_loss_pct": 10.0, "take_profit_pct": 30.0}, (
+        "the band a room was opened with is not on its row, so the register cannot read it")
 
     # NEX-0137 itself had been marked read by the launcher that could not act on it: one
     # answer is read again by hand (`lab.py launch NEX-...`), and only that one.
@@ -3514,6 +3530,41 @@ def test_a_species_their_api_refused_to_clone_is_not_tried_on_every_answer(
     assert first["rooms"] + second["rooms"] == 1
     assert any("NEX-0003" in h and "refused" in h and "MACD Hunter" in h
                for h in second["held"]), second["held"]
+    grid_dir = tmp_path / "grid"
+    grid_dir.mkdir()
+    _the_grid_starts_untried_cells_on_paper_up_to_its_limit(grid_dir, monkeypatch)
+
+
+def _the_grid_starts_untried_cells_on_paper_up_to_its_limit(tmp_path, monkeypatch):
+    """Laboratory v3, P3: the tick's bot step is the grid -- every species at every band of
+    `lab.GRID_BANDS` -- replacing the one-clone variant walk, which had reached 44 of 308
+    cells in three weeks. Each tick starts the next cells up to GRID_PER_TICK, each through
+    wave.launch_one (clone, room and criterion, the band and its read-back, money, start). A
+    cell at the species' defaults sends no settings; a cell any room already tried at that
+    band -- here MACD Hunter's defaults, a wave-0 room of ours judged refuted -- is skipped."""
+    scripts_lab = _scripts_lab(tmp_path, monkeypatch)
+    sent, calls = _clonepad(scripts_lab, tmp_path, monkeypatch, [])
+    monkeypatch.setattr(lab, "GRID_PER_TICK", 3)
+    at = (NOW - timedelta(days=9)).isoformat()
+    _write(tmp_path, "lab.jsonl", [
+        {"type": "proposal", "id": "OUR-0001", "kind": "bot", "ref": MACD["id"],
+         "instance": "inst-old", "variant": "defaults", "settings": {}, "why": "wave 0"}])
+    _write(tmp_path, "rooms.jsonl", [
+        {"type": "strategy", "id": "STR-0001", "origin": "OUR-0001", "kind": "bot",
+         "ref": MACD["id"], "title": "Wave 0 · MACD Hunter", "at": at},
+        {"type": "status", "room": "STR-0001", "status": "stopped", "why": "x", "at": at},
+        {"type": "verdict", "room": "STR-0001", "verdict": "refuted", "return_pct": -4.0,
+         "at": at}])
+
+    did = scripts_lab.bot_grid()
+
+    assert [c[2] for c in calls if c[0] == "clone"] == [TITAN["id"], DOOM["id"], LIQ["id"]], calls
+    assert not [c for c in calls if c[0] == "settings"], "a cell at its defaults sent settings"
+    assert did["orders"] == 3 and did["grid"]["of"] == 4 * len(lab.GRID_BANDS), did
+    assert did["grid"]["tried"] == 1 + 3, did["grid"]
+    scripts_lab.bot_grid()
+    assert [c[2] for c in calls if c[0] == "clone"][3:] == [MACD["id"], TITAN["id"], DOOM["id"]]
+    assert [c[2] for c in calls if c[0] == "settings"] == [lab.GRID_BANDS[1]] * 3, calls
 
 
 def _bot_room(scripts_lab, tmp_path, monkeypatch):
