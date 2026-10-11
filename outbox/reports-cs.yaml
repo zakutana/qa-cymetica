@@ -63,3 +63,4 @@ reports:
   182: "Gem Screener: pásmo „caution“ u ředění (1,5 % týdně) leží nad „red“ (1 %), žádný coin v něm být nemůže"
   183: "Dokumentace: report-access je v llms.txt, ale není v OpenAPI, ze kterého se staví /api-docs"
   184: "Historie účtu: u USDC vrací každá další stránka těch samých 100 řádků, starší historie nejde projít"
+  185: "Krypto dashboardy: HBAR má max supply 1 mld pod celkovou zásobou 50 mld, FDV 44× pod kapitalizací (4 coiny)"

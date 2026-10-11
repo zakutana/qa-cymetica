@@ -63,7 +63,7 @@
             "reason": "the platform states this caller is ALLIED; it is served 108 tools, 0 of them declared above allied"
           }
         },
-        "not_checked_in": "run-20261010T225115Z-3a0a5b08"
+        "not_checked_in": "run-20261011T030319Z-edc4ddd8"
       },
       "filing": {
         "state": "WITHDRAWN",
@@ -208,7 +208,7 @@
             "reason": "attribution is provable: the signing message names the wallet, is bound to sha256(title), and is deterministic"
           }
         },
-        "not_checked_in": "run-20261010T225115Z-3a0a5b08",
+        "not_checked_in": "run-20261011T030319Z-edc4ddd8",
         "repinned": {
           "at": "2026-09-07T21:45:02+00:00",
           "by": "operator",
@@ -437,7 +437,7 @@
             "reason": "llms.txt states the species count in 6 place(s); the live catalogue lists 11, and every one of them agrees"
           }
         },
-        "not_checked_in": "run-20261010T225115Z-3a0a5b08",
+        "not_checked_in": "run-20261011T030319Z-edc4ddd8",
         "repinned": {
           "at": "2026-09-06T21:58:48+00:00",
           "by": "operator",
@@ -887,7 +887,7 @@
             "reason": "mcp_tool_names_documented_exist: Does every tool name llms.txt documents exist on the server? llms.txt says 8 (get_market, get_orderbook, get_platform_status, get_prices, get_trust_signal, list_clob_pairs, list_markets, search_markets), .well-known/mcp.json says 108 (ask_nexus_deep, backtest_event_card_idea, bb_accept_spec, bb_app_stats, bb_apply_startup, bb_file_request, bb_get_request, bb_post_verdict and 100 more), and that satisfies subset."
           }
         },
-        "not_checked_in": "run-20261010T225115Z-3a0a5b08"
+        "not_checked_in": "run-20261011T030319Z-edc4ddd8"
       },
       "filing": {
         "state": "WITHDRAWN",
@@ -1134,7 +1134,7 @@
         },
         "pinned_fingerprint": "76f53745c4961b0f0a6076e33cd1d16173f41f802d404fbbb746923be506797e",
         "evidence_only": "run-20261005T075423Z-72ea19f3",
-        "not_checked_in": "run-20261010T225115Z-3a0a5b08"
+        "not_checked_in": "run-20261011T030319Z-edc4ddd8"
       },
       "filing": {
         "state": "WITHDRAWN",
@@ -1364,7 +1364,7 @@
             "reason": "skills_subset: Is agent-skills.json the actionable subset of agent-card.json, as stated? agent-skills.json says 11 (arena-trading, asset-discovery, bug-bounty, clone-ai-agent, et10-revenue-share, exchange-tokens, market-data, portfolio-management and 3 more), agent-card.json says 19 (ai-crypto-nativeness-leaderboard, ai-due-diligence, ai-native-provenance, ai-pivot-washing, arena-trading, asset-discovery, bug-bounty, ceo-ai-expertise-index and 11 more), and that satisfies subset."
           }
         },
-        "not_checked_in": "run-20261010T225115Z-3a0a5b08",
+        "not_checked_in": "run-20261011T030319Z-edc4ddd8",
         "repinned": {
           "at": "2026-09-10T05:02:09+00:00",
           "by": "operator",
@@ -1568,7 +1568,7 @@
             "reason": "llms.txt states no fixed catalogue size and directs the reader to tools/list for their own tier"
           }
         },
-        "not_checked_in": "run-20261010T225115Z-3a0a5b08",
+        "not_checked_in": "run-20261011T030319Z-edc4ddd8",
         "repinned": {
           "at": "2026-09-07T17:41:34+00:00",
           "by": "operator",
@@ -1722,7 +1722,7 @@
           "run_id": "run-20260924T082511Z-74033ba0",
           "at": "2026-09-24T08:57:39+00:00"
         },
-        "not_checked_in": "run-20261010T225115Z-3a0a5b08",
+        "not_checked_in": "run-20261011T030319Z-edc4ddd8",
         "repinned": {
           "at": "2026-09-05T16:35:17+00:00",
           "by": "operator",
@@ -1915,7 +1915,7 @@
             "reason": "agent_names: Does llms.txt name agent symbols that actually exist? Both llms.txt and the live species endpoint now say 11 (ATR, BOLL, DIV, FIB, ICHI, MACD, PCPN, RSI and 3 more)."
           }
         },
-        "not_checked_in": "run-20261010T225115Z-3a0a5b08",
+        "not_checked_in": "run-20261011T030319Z-edc4ddd8",
         "repinned": {
           "at": "2026-09-10T05:02:31+00:00",
           "by": "operator",
@@ -2084,7 +2084,7 @@
             "reason": "agent_count: How many clonable AI trading agents exist? Both the live species endpoint and llms.txt now say 11."
           }
         },
-        "not_checked_in": "run-20261010T225115Z-3a0a5b08",
+        "not_checked_in": "run-20261011T030319Z-edc4ddd8",
         "repinned": {
           "at": "2026-09-05T18:08:36+00:00",
           "by": "operator",
@@ -2194,7 +2194,7 @@
         "state": "UNVERIFIABLE",
         "adjudicated_by": null,
         "pinned_fingerprint": null,
-        "not_checked_in": "run-20261010T225115Z-3a0a5b08",
+        "not_checked_in": "run-20261011T030319Z-edc4ddd8",
         "missing_checks": [
           "tests/reconciliation/test_reconcile.py::test_sources_agree[chain_count::live_chains-vs-mcp_json]"
         ],
@@ -2316,7 +2316,7 @@
             "reason": "llms.txt promises at least 500 CLOB pairs; list_clob_pairs states total=586."
           }
         },
-        "not_checked_in": "run-20261010T225115Z-3a0a5b08"
+        "not_checked_in": "run-20261011T030319Z-edc4ddd8"
       },
       "filing": {
         "state": "FIX_CLAIMED",
@@ -2465,7 +2465,8 @@
         "pinned_fingerprint": "sha256:f3d9b4a71fbf227f926c530f5d62476d",
         "failed_under": [
           "sha256:f3d9b4a71fbf227f926c530f5d62476d"
-        ]
+        ],
+        "not_checked_in": "run-20261011T030319Z-edc4ddd8"
       },
       "filing": {
         "state": "FIX_CLAIMED",
@@ -2768,7 +2769,7 @@
             "reason": "0 of 20 closed reports carry no evidence field at all (validated_at, triaged_at, severity_confirmed, ticket_url, fix_pr_url, status_notes)"
           }
         },
-        "not_checked_in": "run-20261010T225115Z-3a0a5b08",
+        "not_checked_in": "run-20261011T030319Z-edc4ddd8",
         "repinned": {
           "at": "2026-09-07T17:41:32+00:00",
           "by": "operator",
@@ -3081,7 +3082,7 @@
             "reason": "/api/v1/account was renamed, not withdrawn: llms.txt now documents /api/v1/account/me, /api/v1/account/me/portfolio, which is served"
           }
         },
-        "not_checked_in": "run-20261010T225115Z-3a0a5b08",
+        "not_checked_in": "run-20261011T030319Z-edc4ddd8",
         "repinned": {
           "at": "2026-09-07T17:56:54+00:00",
           "by": "operator",
@@ -3284,7 +3285,7 @@
         "state": "UNVERIFIABLE",
         "adjudicated_by": null,
         "pinned_fingerprint": null,
-        "not_checked_in": "run-20261010T225115Z-3a0a5b08",
+        "not_checked_in": "run-20261011T030319Z-edc4ddd8",
         "missing_checks": [
           "tests/reconciliation/test_reconcile.py::test_sources_agree[mcp_tool_count::llms_txt-vs-mcp_anon]",
           "tests/reconciliation/test_reconcile.py::test_sources_agree[mcp_tool_count::llms_txt-vs-mcp_json]",
@@ -3690,7 +3691,7 @@
             "reason": "mcp_tool_names_documented_exist: Does every tool name llms.txt documents exist on the server? llms.txt says 8 (get_market, get_orderbook, get_platform_status, get_prices, get_trust_signal, list_clob_pairs, list_markets, search_markets), .well-known/mcp.json says 108 (ask_nexus_deep, backtest_event_card_idea, bb_accept_spec, bb_app_stats, bb_apply_startup, bb_file_request, bb_get_request, bb_post_verdict and 100 more), and that satisfies subset."
           }
         },
-        "not_checked_in": "run-20261010T225115Z-3a0a5b08",
+        "not_checked_in": "run-20261011T030319Z-edc4ddd8",
         "repinned": {
           "at": "2026-09-10T05:02:34+00:00",
           "by": "operator",
@@ -3963,7 +3964,7 @@
             "reason": "skills_subset: Is agent-skills.json the actionable subset of agent-card.json, as stated? agent-skills.json says 11 (arena-trading, asset-discovery, bug-bounty, clone-ai-agent, et10-revenue-share, exchange-tokens, market-data, portfolio-management and 3 more), agent-card.json says 19 (ai-crypto-nativeness-leaderboard, ai-due-diligence, ai-native-provenance, ai-pivot-washing, arena-trading, asset-discovery, bug-bounty, ceo-ai-expertise-index and 11 more), and that satisfies subset."
           }
         },
-        "not_checked_in": "run-20261010T225115Z-3a0a5b08",
+        "not_checked_in": "run-20261011T030319Z-edc4ddd8",
         "repinned": {
           "at": "2026-09-10T05:02:19+00:00",
           "by": "operator",
@@ -4241,7 +4242,7 @@
             "reason": "skills_subset: Is agent-skills.json the actionable subset of agent-card.json, as stated? agent-skills.json says 11 (arena-trading, asset-discovery, bug-bounty, clone-ai-agent, et10-revenue-share, exchange-tokens, market-data, portfolio-management and 3 more), agent-card.json says 19 (ai-crypto-nativeness-leaderboard, ai-due-diligence, ai-native-provenance, ai-pivot-washing, arena-trading, asset-discovery, bug-bounty, ceo-ai-expertise-index and 11 more), and that satisfies subset."
           }
         },
-        "not_checked_in": "run-20261010T225115Z-3a0a5b08",
+        "not_checked_in": "run-20261011T030319Z-edc4ddd8",
         "repinned": {
           "at": "2026-09-10T05:02:21+00:00",
           "by": "operator",
@@ -4511,7 +4512,7 @@
             "reason": "0 of the 70 reports of ours that have reached a published stage are absent from the tracker where work happens (not counted: [54, 62, 114], which they have not validated)"
           }
         },
-        "not_checked_in": "run-20261010T225115Z-3a0a5b08",
+        "not_checked_in": "run-20261011T030319Z-edc4ddd8",
         "repinned": {
           "at": "2026-09-07T12:43:10+00:00",
           "by": "operator",
@@ -4744,7 +4745,7 @@
             "reason": "0 of the 5 fields we send come back empty on every one of our 73 reports: none"
           }
         },
-        "not_checked_in": "run-20261010T225115Z-3a0a5b08"
+        "not_checked_in": "run-20261011T030319Z-edc4ddd8"
       },
       "filing": {
         "state": "WITHDRAWN",
@@ -4861,7 +4862,7 @@
             "reason": "hunter_name survives on 73 of 73 of our reports; we send 'expire76' on every one"
           }
         },
-        "not_checked_in": "run-20261010T225115Z-3a0a5b08"
+        "not_checked_in": "run-20261011T030319Z-edc4ddd8"
       },
       "filing": {
         "state": "WITHDRAWN",
@@ -4941,7 +4942,7 @@
           "at": "2026-09-07T17:40:13+00:00"
         },
         "pinned_fingerprint": "5e9d6943c1eaf398d598a59460e9acdf2a187f99ecb323ce600818b417cefeae",
-        "not_checked_in": "run-20261010T225115Z-3a0a5b08",
+        "not_checked_in": "run-20261011T030319Z-edc4ddd8",
         "missing_checks": [
           "tests/pinned/test_documented_404.py::test_documented_path_is_served[/api/v1/vaix/prices]"
         ],
@@ -5086,7 +5087,7 @@
             "reason": "the bug-report reward programme is described in agent-card.json, agent-skills.json, llms.txt, mcp.json"
           }
         },
-        "not_checked_in": "run-20261010T225115Z-3a0a5b08",
+        "not_checked_in": "run-20261011T030319Z-edc4ddd8",
         "repinned": {
           "at": "2026-09-07T21:45:15+00:00",
           "by": "operator",
@@ -5272,7 +5273,7 @@
             "reason": "19 of the 20 closed report(s) can be read as paid or awarded from reward_status ['awarded', 'paid'], so a settled report is distinguishable from an unrecorded one; stats still report bugs_fixed=89 and total_paid=76000.0"
           }
         },
-        "not_checked_in": "run-20261010T225115Z-3a0a5b08",
+        "not_checked_in": "run-20261011T030319Z-edc4ddd8",
         "repinned": {
           "at": "2026-09-08T15:13:40+00:00",
           "by": "operator",
@@ -5582,7 +5583,7 @@
             "reason": "/api/v1/account/me answers HTTP 200 to the credential the catalogue names"
           }
         },
-        "not_checked_in": "run-20261010T225115Z-3a0a5b08"
+        "not_checked_in": "run-20261011T030319Z-edc4ddd8"
       },
       "filing": {
         "state": "FIX_CLAIMED",
@@ -5730,7 +5731,7 @@
             "reason": "the channel reported its own published reward-tier values"
           }
         },
-        "not_checked_in": "run-20261010T225115Z-3a0a5b08",
+        "not_checked_in": "run-20261011T030319Z-edc4ddd8",
         "repinned": {
           "at": "2026-09-07T17:41:33+00:00",
           "by": "operator",
@@ -5957,7 +5958,7 @@
             "reason": "every one of the 35 automated repl(ies) since 2026-09-07T07:53:17.653185+00:00 carries metadata.is_answer (35 of them true, which is their rule for a substantive answer)"
           }
         },
-        "not_checked_in": "run-20261010T225115Z-3a0a5b08",
+        "not_checked_in": "run-20261011T030319Z-edc4ddd8",
         "repinned": {
           "at": "2026-09-07T14:26:55+00:00",
           "by": "operator",
@@ -6159,7 +6160,7 @@
         },
         "pinned_fingerprint": "d8c89bb5d9dfb6abe6d9f240604f15d80183028892047d05a574abc9740d5a4c",
         "evidence_only": "run-20261005T075423Z-72ea19f3",
-        "not_checked_in": "run-20261010T225115Z-3a0a5b08",
+        "not_checked_in": "run-20261011T030319Z-edc4ddd8",
         "repinned": {
           "at": "2026-09-07T07:54:53+00:00",
           "by": "operator",
@@ -6361,7 +6362,7 @@
             "reason": "all 20 recorded award(s) sit inside the tier each row publishes, and of the 20 row(s) that name a currency on both sides, none contradicts itself"
           }
         },
-        "not_checked_in": "run-20261010T225115Z-3a0a5b08",
+        "not_checked_in": "run-20261011T030319Z-edc4ddd8",
         "repinned": {
           "at": "2026-09-08T15:13:40+00:00",
           "by": "operator",
@@ -6660,7 +6661,7 @@
             "reason": "the aggregate and the leaderboard agree on 82 valid report(s); every hunter's total_earned matches the total_paid it is defined as"
           }
         },
-        "not_checked_in": "run-20261010T225115Z-3a0a5b08",
+        "not_checked_in": "run-20261011T030319Z-edc4ddd8",
         "repinned": {
           "at": "2026-09-08T15:13:40+00:00",
           "by": "operator",
@@ -6930,7 +6931,7 @@
             "reason": "every path a /build recipe sends an agent to is callable: 3 checked against 173 documented paths; /events/universe named as being for people, not called"
           }
         },
-        "not_checked_in": "run-20261010T225115Z-3a0a5b08",
+        "not_checked_in": "run-20261011T030319Z-edc4ddd8",
         "repinned": {
           "at": "2026-09-08T15:13:40+00:00",
           "by": "operator",
@@ -7158,7 +7159,7 @@
             "reason": "POST /mcp/v1/register documents the field /build says to save: 'api_key'"
           }
         },
-        "not_checked_in": "run-20261010T225115Z-3a0a5b08"
+        "not_checked_in": "run-20261011T030319Z-edc4ddd8"
       },
       "filing": {
         "state": "FIX_CLAIMED",
@@ -7321,7 +7322,7 @@
             "reason": "every surface names the same rungs: ['allied', 'recognized', 'trusted', 'unknown']"
           }
         },
-        "not_checked_in": "run-20261010T225115Z-3a0a5b08",
+        "not_checked_in": "run-20261011T030319Z-edc4ddd8",
         "repinned": {
           "at": "2026-09-07T21:45:16+00:00",
           "by": "operator",
@@ -7490,7 +7491,7 @@
             "reason": "the leaderboard's rows are rankable: the period narrows the set"
           }
         },
-        "not_checked_in": "run-20261010T225115Z-3a0a5b08",
+        "not_checked_in": "run-20261011T030319Z-edc4ddd8",
         "repinned": {
           "at": "2026-09-08T15:13:41+00:00",
           "by": "operator",
@@ -7667,7 +7668,7 @@
             "reason": "all 6 order surfaces take the same control, `paper`, so one helper can state the book everywhere"
           }
         },
-        "not_checked_in": "run-20261010T225115Z-3a0a5b08",
+        "not_checked_in": "run-20261011T030319Z-edc4ddd8",
         "repinned": {
           "at": "2026-09-08T13:25:04+00:00",
           "by": "operator",
@@ -7830,7 +7831,7 @@
             "reason": "the setting the order endpoints resolve against is published as ['simulation_mode']"
           }
         },
-        "not_checked_in": "run-20261010T225115Z-3a0a5b08",
+        "not_checked_in": "run-20261011T030319Z-edc4ddd8",
         "repinned": {
           "at": "2026-09-08T15:13:41+00:00",
           "by": "operator",
@@ -8009,7 +8010,7 @@
             "reason": "trade history reports 0 trade(s) and says what that number spans: identity, covers, does_not_cover, see_also"
           }
         },
-        "not_checked_in": "run-20261010T225115Z-3a0a5b08",
+        "not_checked_in": "run-20261011T030319Z-edc4ddd8",
         "repinned": {
           "at": "2026-09-08T15:13:41+00:00",
           "by": "operator",
@@ -8196,7 +8197,7 @@
             "reason": "no order surface says `paper` may be disobeyed, so a caller that asks for paper is given paper"
           }
         },
-        "not_checked_in": "run-20261010T225115Z-3a0a5b08",
+        "not_checked_in": "run-20261011T030319Z-edc4ddd8",
         "repinned": {
           "at": "2026-09-08T15:13:39+00:00",
           "by": "operator",
@@ -8348,7 +8349,7 @@
           "at": "2026-09-10T04:56:30+00:00"
         },
         "pinned_fingerprint": "05d129030ccb0a67babee3e9b1383e236e0bc719fd5e42f532cb727b83375d1a",
-        "not_checked_in": "run-20261010T225115Z-3a0a5b08",
+        "not_checked_in": "run-20261011T030319Z-edc4ddd8",
         "missing_checks": [
           "tests/rest/test_portfolio_summary.py::test_the_summary_does_not_report_a_history_the_positions_contradict"
         ],
@@ -8484,7 +8485,8 @@
         "pinned_fingerprint": "84885322a72b7450579e6de4f695e915fe4f4d6a9eccac0e0f54fbaec3e20ee8",
         "failed_under": [
           "84885322a72b7450579e6de4f695e915fe4f4d6a9eccac0e0f54fbaec3e20ee8"
-        ]
+        ],
+        "not_checked_in": "run-20261011T030319Z-edc4ddd8"
       },
       "filing": {
         "state": "FIX_CLAIMED",
@@ -8843,7 +8845,7 @@
             "reason": "every one of the 2 tool(s) Nexus named is served"
           }
         },
-        "not_checked_in": "run-20261010T225115Z-3a0a5b08",
+        "not_checked_in": "run-20261011T030319Z-edc4ddd8",
         "repinned": {
           "at": "2026-09-25T13:45:35+00:00",
           "by": "operator",
@@ -9165,7 +9167,7 @@
             "reason": "the newest paper buy TRD-0041 (2026-09-23T06:01:14+00:00) bought 5.00 and debited 5.00 from the paper balance"
           }
         },
-        "not_checked_in": "run-20261010T225115Z-3a0a5b08",
+        "not_checked_in": "run-20261011T030319Z-edc4ddd8",
         "repinned": {
           "at": "2026-09-11T17:57:53+00:00",
           "by": "operator",
@@ -9427,7 +9429,7 @@
             "reason": "every /api/v1/cloned-bots route that answered 405 with an Allow header is one of the 12 they document"
           }
         },
-        "not_checked_in": "run-20261010T225115Z-3a0a5b08",
+        "not_checked_in": "run-20261011T030319Z-edc4ddd8",
         "repinned": {
           "at": "2026-09-21T20:35:20+00:00",
           "by": "operator",
@@ -9650,7 +9652,8 @@
         "pinned_fingerprint": "4d7dd0f1952c6ea876b8f03aea300fb99f89e1be901dccb238f3d462aecef9cf",
         "failed_under": [
           "4d7dd0f1952c6ea876b8f03aea300fb99f89e1be901dccb238f3d462aecef9cf"
-        ]
+        ],
+        "not_checked_in": "run-20261011T030319Z-edc4ddd8"
       },
       "filing": {
         "state": "FIX_CLAIMED",
@@ -9928,7 +9931,7 @@
           "by": "operator",
           "reason": "V07, deep pass 2026-09-13, triage 3/3. The only change is the reason TEXT: it asserted that Nexus tells an agent to trade the card, and neither card_ids_in nor known_non_cards reads trade-ness. The extraction, the fetch and the verdict rule are untouched, so the measurement is identical to the one t"
         },
-        "not_checked_in": "run-20261010T225115Z-3a0a5b08"
+        "not_checked_in": "run-20261011T030319Z-edc4ddd8"
       },
       "filing": {
         "state": "FIX_CLAIMED",
@@ -10238,7 +10241,7 @@
             "reason": "every one of the 9 tradeable card(s) checked appears in the listing"
           }
         },
-        "not_checked_in": "run-20261010T225115Z-3a0a5b08",
+        "not_checked_in": "run-20261011T030319Z-edc4ddd8",
         "repinned": {
           "at": "2026-09-11T17:57:56+00:00",
           "by": "operator",
@@ -10470,7 +10473,7 @@
             "reason": "the newest recorded deep answer, NEX-0088 (2026-09-23T05:52:09+00:00), cites no internal source location"
           }
         },
-        "not_checked_in": "run-20261010T225115Z-3a0a5b08",
+        "not_checked_in": "run-20261011T030319Z-edc4ddd8",
         "repinned": {
           "at": "2026-09-11T05:42:08+00:00",
           "by": "operator",
@@ -10636,7 +10639,7 @@
             "reason": "all 53 of the documented GET paths that answered read the agent key"
           }
         },
-        "not_checked_in": "run-20261010T225115Z-3a0a5b08"
+        "not_checked_in": "run-20261011T030319Z-edc4ddd8"
       },
       "filing": {
         "state": "FIX_CLAIMED",
@@ -10788,7 +10791,7 @@
             "reason": "every one of the 5 judged bot(s) counts what it has open: 5 nothing open"
           }
         },
-        "not_checked_in": "run-20261010T225115Z-3a0a5b08",
+        "not_checked_in": "run-20261011T030319Z-edc4ddd8",
         "repinned": {
           "at": "2026-09-11T17:57:53+00:00",
           "by": "operator",
@@ -10976,7 +10979,7 @@
             "reason": "2 submission(s) of other users answer 200 to account 113, and every one is among the 6187 cards listed with include_user_submitted=true, so each is public"
           }
         },
-        "not_checked_in": "run-20261010T225115Z-3a0a5b08",
+        "not_checked_in": "run-20261011T030319Z-edc4ddd8",
         "repinned": {
           "at": "2026-09-11T17:57:54+00:00",
           "by": "operator",
@@ -11215,7 +11218,7 @@
             "reason": "all 12 answers name the period they cover"
           }
         },
-        "not_checked_in": "run-20261010T225115Z-3a0a5b08",
+        "not_checked_in": "run-20261011T030319Z-edc4ddd8",
         "repinned": {
           "at": "2026-09-12T20:53:51+00:00",
           "by": "operator",
@@ -11443,7 +11446,7 @@
             "reason": "the 365-day answer names the window it covered (covered_days)"
           }
         },
-        "not_checked_in": "run-20261010T225115Z-3a0a5b08",
+        "not_checked_in": "run-20261011T030319Z-edc4ddd8",
         "repinned": {
           "at": "2026-09-13T18:46:45+00:00",
           "by": "operator",
@@ -11720,7 +11723,7 @@
             "reason": "the house row matches the live half of their own track record on 5 shared quantities, which is what a leaderboard beside live entrants should show"
           }
         },
-        "not_checked_in": "run-20261010T225115Z-3a0a5b08"
+        "not_checked_in": "run-20261011T030319Z-edc4ddd8"
       },
       "filing": {
         "state": "FIX_CLAIMED",
@@ -11938,7 +11941,7 @@
             "reason": "the round declares when entries stop being accepted, so the window a late entry could exploit is at least stated"
           }
         },
-        "not_checked_in": "run-20261010T225115Z-3a0a5b08",
+        "not_checked_in": "run-20261011T030319Z-edc4ddd8",
         "repinned": {
           "at": "2026-09-13T18:46:57+00:00",
           "by": "operator",
@@ -12144,7 +12147,7 @@
             "reason": "every hot row on both chains clears the floor: 6 robinhood and 17 solana hot rows, the thinnest allowing $517 of max buy against a $500 floor"
           }
         },
-        "not_checked_in": "run-20261010T225115Z-3a0a5b08",
+        "not_checked_in": "run-20261011T030319Z-edc4ddd8",
         "repinned": {
           "at": "2026-09-21T20:35:18+00:00",
           "by": "operator",
@@ -12506,7 +12509,7 @@
         "failed_under": [
           "45c920e97e226ba1ef2e204fd3c5c0aa0b49481a98dde22cfaaa9ae1626baae6"
         ],
-        "not_checked_in": "run-20261010T225115Z-3a0a5b08"
+        "not_checked_in": "run-20261011T030319Z-edc4ddd8"
       },
       "filing": {
         "state": "FIX_CLAIMED",
@@ -12943,7 +12946,7 @@
             "reason": "all 27 listed funds carry profile_url"
           }
         },
-        "not_checked_in": "run-20261010T225115Z-3a0a5b08",
+        "not_checked_in": "run-20261011T030319Z-edc4ddd8",
         "repinned": {
           "at": "2026-09-21T20:35:20+00:00",
           "by": "operator",
@@ -13220,7 +13223,7 @@
             "reason": "every public GET declared in /openapi.json is also in /openapi-public.json (13 vs 173 paths, 4 of the difference private or not a GET)"
           }
         },
-        "not_checked_in": "run-20261010T225115Z-3a0a5b08",
+        "not_checked_in": "run-20261011T030319Z-edc4ddd8",
         "repinned": {
           "at": "2026-09-21T20:35:21+00:00",
           "by": "operator",
@@ -13391,7 +13394,7 @@
           "run_id": "run-20260920T202827Z-34a2af16",
           "at": "2026-09-20T20:44:56+00:00"
         },
-        "not_checked_in": "run-20261010T225115Z-3a0a5b08",
+        "not_checked_in": "run-20261011T030319Z-edc4ddd8",
         "repinned": {
           "at": "2026-09-21T20:35:19+00:00",
           "by": "operator",
@@ -13642,7 +13645,7 @@
             "reason": "every read returned at most its limit (5->5, 50->50)"
           }
         },
-        "not_checked_in": "run-20261010T225115Z-3a0a5b08"
+        "not_checked_in": "run-20261011T030319Z-edc4ddd8"
       },
       "filing": {
         "state": "FIX_CLAIMED",
@@ -13800,7 +13803,7 @@
             "reason": "on 1 request(s) the clock starts only once the gate is filled or waived, and never before it"
           }
         },
-        "not_checked_in": "run-20261010T225115Z-3a0a5b08"
+        "not_checked_in": "run-20261011T030319Z-edc4ddd8"
       },
       "filing": {
         "state": "WITHDRAWN",
@@ -13941,7 +13944,7 @@
             "reason": "all 1 advertised channel(s) are named in a machine-readable document: wss://cymetica.com/ws/build-it-better in /llms.txt, /.well-known/mcp.json, /openapi-public.json"
           }
         },
-        "not_checked_in": "run-20261010T225115Z-3a0a5b08",
+        "not_checked_in": "run-20261011T030319Z-edc4ddd8",
         "repinned": {
           "at": "2026-09-21T20:35:19+00:00",
           "by": "operator",
@@ -14175,7 +14178,7 @@
             "reason": "sessions, messages, tool_calls sum the 17 day(s) from 2026-01-31 to 2026-02-16, and the first session they record (2026-01-31) falls inside that window"
           }
         },
-        "not_checked_in": "run-20261010T225115Z-3a0a5b08",
+        "not_checked_in": "run-20261011T030319Z-edc4ddd8",
         "repinned": {
           "at": "2026-09-21T20:35:22+00:00",
           "by": "operator",
@@ -14374,7 +14377,7 @@
             "reason": "their own description of agent-board/search says the order is recency while no row carries verified evidence or a confirmed replication, so the list and the sentence describing it agree and a reader is told what the top of it means"
           }
         },
-        "not_checked_in": "run-20261010T225115Z-3a0a5b08",
+        "not_checked_in": "run-20261011T030319Z-edc4ddd8",
         "repinned": {
           "at": "2026-09-22T22:38:10+00:00",
           "by": "operator",
@@ -14622,7 +14625,8 @@
         },
         "failed_under": [
           "d68dde5d632e02f6434da646359d6a3efa738a21eed738630bd3c1f06281b5d9"
-        ]
+        ],
+        "not_checked_in": "run-20261011T030319Z-edc4ddd8"
       },
       "filing": {
         "state": "FIX_CLAIMED",
@@ -14973,7 +14977,7 @@
           "run_id": "run-20260920T204931Z-9b10f557",
           "at": "2026-09-20T20:49:59+00:00"
         },
-        "not_checked_in": "run-20261010T225115Z-3a0a5b08"
+        "not_checked_in": "run-20261011T030319Z-edc4ddd8"
       },
       "filing": {
         "state": "WITHDRAWN",
@@ -15125,7 +15129,7 @@
             "reason": "the Building now tile is computed as 's.building || 0', which counts nothing but what is building"
           }
         },
-        "not_checked_in": "run-20261010T225115Z-3a0a5b08",
+        "not_checked_in": "run-20261011T030319Z-edc4ddd8",
         "repinned": {
           "at": "2026-09-25T23:28:35+00:00",
           "by": "operator",
@@ -15361,7 +15365,8 @@
           "at": "2026-10-10T23:08:25+00:00",
           "started_at": "2026-10-10T22:51:24+00:00"
         },
-        "pinned_fingerprint": "2e8b6858e71d177779a21f95ec0e35a6b92cb18ef65e71e7d8adbc6ddd20965b"
+        "pinned_fingerprint": "2e8b6858e71d177779a21f95ec0e35a6b92cb18ef65e71e7d8adbc6ddd20965b",
+        "not_checked_in": "run-20261011T030319Z-edc4ddd8"
       },
       "filing": {
         "state": "FIX_CLAIMED",
@@ -15667,7 +15672,7 @@
             "reason": "each product is on one row in all 3 windows read"
           }
         },
-        "not_checked_in": "run-20261010T225115Z-3a0a5b08"
+        "not_checked_in": "run-20261011T030319Z-edc4ddd8"
       },
       "filing": {
         "state": "FIX_CLAIMED",
@@ -15852,7 +15857,7 @@
             "reason": "published inception 2026-07-26, recorded 2026-08-09; the methodology discloses the pro-forma stretch"
           }
         },
-        "not_checked_in": "run-20261010T225115Z-3a0a5b08",
+        "not_checked_in": "run-20261011T030319Z-edc4ddd8",
         "repinned": {
           "at": "2026-09-21T20:35:23+00:00",
           "by": "operator",
@@ -16003,7 +16008,7 @@
           "started_at": "2026-10-05T07:54:27+00:00"
         },
         "pinned_fingerprint": "e77176673b270cba67e599aab8b4011f8b1805aed59efc088f93522cef55ffe3",
-        "not_checked_in": "run-20261010T225115Z-3a0a5b08"
+        "not_checked_in": "run-20261011T030319Z-edc4ddd8"
       },
       "filing": {
         "state": "FIX_CLAIMED",
@@ -16178,7 +16183,7 @@
           "by": "operator",
           "reason": "deep pass 2026-09-22 A11: a route named in a denial or to steer away from it is not one he tells an agent to call. Passes at level V (PRE-0148)."
         },
-        "not_checked_in": "run-20261010T225115Z-3a0a5b08"
+        "not_checked_in": "run-20261011T030319Z-edc4ddd8"
       },
       "filing": {
         "state": "FIX_CLAIMED",
@@ -16706,7 +16711,7 @@
             "reason": "32 app(s) of the 116 on the board were read one by one, and for 32 of them every figure on the board re-read between the app's two reads is the app's own; the daily series sums to last_30d for 32 app(s) that have moved at all (/weekly-signal, /tradingview, /token-info, /exchange-refugees, /bitmex, /thinkorswim, /benzinga-pro, /bullx, /etoro, /finviz, /mql5, /pickmytrade, /atas, /barchart, /coingecko, /coinglass, /coinigy, /iex-cloud, /interactive-brokers, /moomoo, /motivewave, /myforexfunds, /myfundedfutures, /prorealtime, /wallstreetbets, /sierra-chart, /stockanalysis, /stockcharts, /traderspost, /tradersync, /unusualwhales, /yfinance)"
           }
         },
-        "not_checked_in": "run-20261010T225115Z-3a0a5b08"
+        "not_checked_in": "run-20261011T030319Z-edc4ddd8"
       },
       "filing": {
         "state": "WITHDRAWN",
@@ -17799,7 +17804,7 @@
             "reason": "every step that moves a clone forward accepts the agent's x-api-key: POST /api/v1/cloned-bots/{instance_id}/fund, POST /api/v1/cloned-bots/{instance_id}/go-live"
           }
         },
-        "not_checked_in": "run-20261010T225115Z-3a0a5b08",
+        "not_checked_in": "run-20261011T030319Z-edc4ddd8",
         "repinned": {
           "at": "2026-09-22T16:00:38+00:00",
           "by": "operator",
@@ -17958,7 +17963,7 @@
           "started_at": "2026-10-05T07:54:27+00:00"
         },
         "pinned_fingerprint": "f9147b657ba9d4d8852f04c3986c958f28c5d72e80c2035d46de64ac4c1e1de4",
-        "not_checked_in": "run-20261010T225115Z-3a0a5b08"
+        "not_checked_in": "run-20261011T030319Z-edc4ddd8"
       },
       "filing": {
         "state": "FIX_CLAIMED",
@@ -18175,7 +18180,7 @@
             "reason": "all 6 request example(s) on /api-docs that target a published route carry every field it requires"
           }
         },
-        "not_checked_in": "run-20261010T225115Z-3a0a5b08",
+        "not_checked_in": "run-20261011T030319Z-edc4ddd8",
         "repinned": {
           "at": "2026-09-22T22:39:24+00:00",
           "by": "operator",
@@ -18459,7 +18464,7 @@
             "reason": "12 card(s) read closed on both /api/v1/event-cards/{id} and get_event_card_info, and none of the 16 read on both disagrees"
           }
         },
-        "not_checked_in": "run-20261010T225115Z-3a0a5b08",
+        "not_checked_in": "run-20261011T030319Z-edc4ddd8",
         "repinned": {
           "at": "2026-09-25T23:28:33+00:00",
           "by": "operator",
@@ -18758,7 +18763,7 @@
             "reason": "the newest 12 submissions to POST /api/v1/bounty/reports since #123 fixed_at 2026-09-23T02:41:50 UTC (3299e580b) were each answered 2xx with the id of the report they created"
           }
         },
-        "not_checked_in": "run-20261010T225115Z-3a0a5b08",
+        "not_checked_in": "run-20261011T030319Z-edc4ddd8",
         "repinned": {
           "at": "2026-10-04T01:23:15+00:00",
           "by": "operator",
@@ -18927,7 +18932,7 @@
           "started_at": "2026-10-05T07:54:27+00:00"
         },
         "pinned_fingerprint": "6a0791437c8cc5aa4df286c0c372a8d5513e25d504d40418c4f8ce8a1f1c49a3",
-        "not_checked_in": "run-20261010T225115Z-3a0a5b08"
+        "not_checked_in": "run-20261011T030319Z-edc4ddd8"
       },
       "filing": {
         "state": "FIX_CLAIMED",
@@ -19087,7 +19092,7 @@
           "started_at": "2026-10-06T04:26:28+00:00"
         },
         "pinned_fingerprint": "2e22cca70cda0f5984ce2f3230718d3230c72fa57acf17d00e4b221e9a9c7fb5",
-        "not_checked_in": "run-20261010T225115Z-3a0a5b08"
+        "not_checked_in": "run-20261011T030319Z-edc4ddd8"
       },
       "filing": {
         "state": "NOT_RAISED",
@@ -19286,7 +19291,7 @@
           "started_at": "2026-10-05T07:54:27+00:00"
         },
         "pinned_fingerprint": "af6eed9d5de9d1db1d71cb94464f51d41f92bc12524f90c04ac4a47c59cd3183",
-        "not_checked_in": "run-20261010T225115Z-3a0a5b08"
+        "not_checked_in": "run-20261011T030319Z-edc4ddd8"
       },
       "filing": {
         "state": "FIX_CLAIMED",
@@ -19407,7 +19412,7 @@
           "started_at": "2026-10-05T07:54:27+00:00"
         },
         "pinned_fingerprint": "fe91d5882e53cfd1fce91a6cfe1a44599faaf5d029601ef7df6d3bde8e10c8b1",
-        "not_checked_in": "run-20261010T225115Z-3a0a5b08"
+        "not_checked_in": "run-20261011T030319Z-edc4ddd8"
       },
       "filing": {
         "state": "FIX_CLAIMED",
@@ -19528,7 +19533,7 @@
           "started_at": "2026-10-05T07:54:27+00:00"
         },
         "pinned_fingerprint": "fbdfc4586936cdbd7509f4c490c45e98a1cac047a92be82fef2283e1d62dfc40",
-        "not_checked_in": "run-20261010T225115Z-3a0a5b08",
+        "not_checked_in": "run-20261011T030319Z-edc4ddd8",
         "repinned": {
           "at": "2026-09-25T23:28:34+00:00",
           "by": "operator",
@@ -19701,7 +19706,7 @@
           "started_at": "2026-10-05T07:54:27+00:00"
         },
         "pinned_fingerprint": "c78808ef1137f82d89f8a7adab87fe7ecd973d11d4772a3238ac149a3884dff3",
-        "not_checked_in": "run-20261010T225115Z-3a0a5b08"
+        "not_checked_in": "run-20261011T030319Z-edc4ddd8"
       },
       "filing": {
         "state": "FIX_CLAIMED",
@@ -19832,7 +19837,8 @@
           "at": "2026-09-25T23:28:32+00:00",
           "by": "operator",
           "reason": "Deep pass 2026-09-25 A04 (3/3): a history with no dated step in the window counted as judged; it is unread now, and a pass needs every held card read. Same claim, stricter reading (e7f42902)."
-        }
+        },
+        "not_checked_in": "run-20261011T030319Z-edc4ddd8"
       },
       "filing": {
         "state": "FIX_CLAIMED",
@@ -20011,7 +20017,7 @@
           "started_at": "2026-10-05T07:54:27+00:00"
         },
         "pinned_fingerprint": "9e1db26f74a71b70e18e6ffdec0f85dbc2dfc5c921537a8af6f8603668c75aa6",
-        "not_checked_in": "run-20261010T225115Z-3a0a5b08",
+        "not_checked_in": "run-20261011T030319Z-edc4ddd8",
         "repinned": {
           "at": "2026-09-25T23:28:33+00:00",
           "by": "operator",
@@ -20163,7 +20169,7 @@
           "started_at": "2026-10-06T19:02:23+00:00"
         },
         "pinned_fingerprint": "cb4c52d8d8735e73ad3d07f1520b42a1566392713c69360b5d357fa976ebdce5",
-        "not_checked_in": "run-20261010T225115Z-3a0a5b08"
+        "not_checked_in": "run-20261011T030319Z-edc4ddd8"
       },
       "filing": {
         "state": "FIX_CLAIMED",
@@ -20365,7 +20371,7 @@
           "started_at": "2026-10-05T07:54:27+00:00"
         },
         "pinned_fingerprint": "ef2a36ffbdaaf14b6d435fa10fcfb0dc2d064ad8a8c9422a8aec5b6bc7f3f088",
-        "not_checked_in": "run-20261010T225115Z-3a0a5b08"
+        "not_checked_in": "run-20261011T030319Z-edc4ddd8"
       },
       "filing": {
         "state": "NOT_RAISED",
@@ -20485,7 +20491,7 @@
           "started_at": "2026-10-05T07:54:27+00:00"
         },
         "pinned_fingerprint": "264765cf38a540a6ed56c64912b8920c52c7cc8996b5637321ce4815d699cdbf",
-        "not_checked_in": "run-20261010T225115Z-3a0a5b08",
+        "not_checked_in": "run-20261011T030319Z-edc4ddd8",
         "repinned": {
           "at": "2026-10-04T01:23:16+00:00",
           "by": "operator",
@@ -20655,7 +20661,7 @@
         "failed_under": [
           "ef53a88ecee3b4fe16c8011662d82392fd1637d065175bd02e7b7a5dc269fa9b"
         ],
-        "not_checked_in": "run-20261010T225115Z-3a0a5b08"
+        "not_checked_in": "run-20261011T030319Z-edc4ddd8"
       },
       "filing": {
         "state": "FIX_CLAIMED",
@@ -20948,7 +20954,7 @@
           "started_at": "2026-10-06T04:26:28+00:00"
         },
         "pinned_fingerprint": "caa58ab86f9b80366e64eebc61963d1a5e58b6c6f2b7e79b32c4ef3d3bb4a6c6",
-        "not_checked_in": "run-20261010T225115Z-3a0a5b08"
+        "not_checked_in": "run-20261011T030319Z-edc4ddd8"
       },
       "filing": {
         "state": "FIX_CLAIMED",
@@ -21151,7 +21157,7 @@
           "started_at": "2026-10-05T07:54:27+00:00"
         },
         "pinned_fingerprint": "59a599b3cc8dc8381e062885507b9fb2858ac8896b899c75bb247017e551c8f8",
-        "not_checked_in": "run-20261010T225115Z-3a0a5b08",
+        "not_checked_in": "run-20261011T030319Z-edc4ddd8",
         "repinned": {
           "at": "2026-10-04T01:23:15+00:00",
           "by": "operator",
@@ -21308,7 +21314,7 @@
             "reason": "all 10 matchup(s) past their window end read finished"
           }
         },
-        "not_checked_in": "run-20261010T225115Z-3a0a5b08"
+        "not_checked_in": "run-20261011T030319Z-edc4ddd8"
       },
       "filing": {
         "state": "FIX_CLAIMED",
@@ -21427,7 +21433,7 @@
           "started_at": "2026-10-05T07:54:27+00:00"
         },
         "pinned_fingerprint": "a817099df0d150b132916dfcc89014cad3146293837d748373d87c2657449cfe",
-        "not_checked_in": "run-20261010T225115Z-3a0a5b08"
+        "not_checked_in": "run-20261011T030319Z-edc4ddd8"
       },
       "filing": {
         "state": "FIX_CLAIMED",
@@ -21616,7 +21622,7 @@
           "started_at": "2026-10-05T07:54:27+00:00"
         },
         "pinned_fingerprint": "002677ffb08a159c9147c9fe293b79c341b98c60f866f4a28c409ce280b4547f",
-        "not_checked_in": "run-20261010T225115Z-3a0a5b08",
+        "not_checked_in": "run-20261011T030319Z-edc4ddd8",
         "repinned": {
           "at": "2026-10-01T08:14:08+00:00",
           "by": "operator",
@@ -21770,7 +21776,7 @@
           "started_at": "2026-10-05T07:54:27+00:00"
         },
         "pinned_fingerprint": "b3b401f47b31878ff7ed6b269fd84ad8113650b5f0c22d5c06769ff602f1a360",
-        "not_checked_in": "run-20261010T225115Z-3a0a5b08",
+        "not_checked_in": "run-20261011T030319Z-edc4ddd8",
         "repinned": {
           "at": "2026-10-01T08:14:07+00:00",
           "by": "operator",
@@ -21922,7 +21928,7 @@
           "started_at": "2026-10-06T04:26:28+00:00"
         },
         "pinned_fingerprint": "989432e74dd13c111290120ec788bbfd5833926ea691cd7a5283a9451abb328f",
-        "not_checked_in": "run-20261010T225115Z-3a0a5b08"
+        "not_checked_in": "run-20261011T030319Z-edc4ddd8"
       },
       "filing": {
         "state": "FIX_CLAIMED",
@@ -22073,7 +22079,7 @@
           "started_at": "2026-10-05T07:54:27+00:00"
         },
         "pinned_fingerprint": "9805004f1b66b7da2419f52dc19a821e6ebfaeddb2330aa32c5e9d59169758d8",
-        "not_checked_in": "run-20261010T225115Z-3a0a5b08"
+        "not_checked_in": "run-20261011T030319Z-edc4ddd8"
       },
       "filing": {
         "state": "FIX_CLAIMED",
@@ -22323,7 +22329,7 @@
           "started_at": "2026-10-06T04:26:28+00:00"
         },
         "pinned_fingerprint": "fe24b0842d4e87f0c1b8a90db93f76699ceafa800c410798d7e872357dd92cb3",
-        "not_checked_in": "run-20261010T225115Z-3a0a5b08"
+        "not_checked_in": "run-20261011T030319Z-edc4ddd8"
       },
       "filing": {
         "state": "FIX_CLAIMED",
@@ -22514,7 +22520,7 @@
           "started_at": "2026-10-06T04:26:28+00:00"
         },
         "pinned_fingerprint": "8ba2de0de4ae253d16ed93fe5419064d6199a69549b87dcb4647ccb1cfb98480",
-        "not_checked_in": "run-20261010T225115Z-3a0a5b08"
+        "not_checked_in": "run-20261011T030319Z-edc4ddd8"
       },
       "filing": {
         "state": "FIX_CLAIMED",
@@ -22670,7 +22676,7 @@
           "started_at": "2026-10-06T04:26:28+00:00"
         },
         "pinned_fingerprint": "88adffcb096a9d42e2d886e193a04ed087f8ad755fbbc615ac34b863d64b3631",
-        "not_checked_in": "run-20261010T225115Z-3a0a5b08"
+        "not_checked_in": "run-20261011T030319Z-edc4ddd8"
       },
       "filing": {
         "state": "FIX_CLAIMED",
@@ -22821,7 +22827,7 @@
           "started_at": "2026-10-05T07:54:27+00:00"
         },
         "pinned_fingerprint": "a38a692117a99c13b67941ae2d63a27d29de5a5c2491afdd869e458593bba17b",
-        "not_checked_in": "run-20261010T225115Z-3a0a5b08",
+        "not_checked_in": "run-20261011T030319Z-edc4ddd8",
         "repinned": {
           "at": "2026-10-04T01:23:17+00:00",
           "by": "operator",
@@ -22977,7 +22983,7 @@
           "started_at": "2026-10-05T07:54:27+00:00"
         },
         "pinned_fingerprint": "c0dccc4780cf197b09296e62e8bc4d890da6d793dc59d91312d0c4717e626872",
-        "not_checked_in": "run-20261010T225115Z-3a0a5b08"
+        "not_checked_in": "run-20261011T030319Z-edc4ddd8"
       },
       "filing": {
         "state": "FIX_CLAIMED",
@@ -23139,7 +23145,7 @@
           "started_at": "2026-10-05T07:54:27+00:00"
         },
         "pinned_fingerprint": "484637b2e9febf0151c4db002321b846c5fea5d77502cce8746cfbb2d72ff85b",
-        "not_checked_in": "run-20261010T225115Z-3a0a5b08"
+        "not_checked_in": "run-20261011T030319Z-edc4ddd8"
       },
       "filing": {
         "state": "FIX_CLAIMED",
@@ -23301,7 +23307,7 @@
           "started_at": "2026-10-06T17:41:58+00:00"
         },
         "pinned_fingerprint": "6473a198ffc5d356cfe696773d4cd4523cab5716305c100c2765673be1b57b90",
-        "not_checked_in": "run-20261010T225115Z-3a0a5b08"
+        "not_checked_in": "run-20261011T030319Z-edc4ddd8"
       },
       "filing": {
         "state": "FIX_CLAIMED",
@@ -23517,7 +23523,7 @@
           "started_at": "2026-10-05T07:54:27+00:00"
         },
         "pinned_fingerprint": "f373c16833d7a39e3bebf7ea59b3442dcc7ff51f2815f2b320ccf4132ac48796",
-        "not_checked_in": "run-20261010T225115Z-3a0a5b08",
+        "not_checked_in": "run-20261011T030319Z-edc4ddd8",
         "repinned": {
           "at": "2026-10-04T05:06:36+00:00",
           "by": "operator",
@@ -23625,7 +23631,7 @@
           "started_at": "2026-10-05T07:54:27+00:00"
         },
         "pinned_fingerprint": "8fe66dcda83fbe5b0d3115552adb7ddfc8a2b538aaf5b7fad4f63e4ba84eb570",
-        "not_checked_in": "run-20261010T225115Z-3a0a5b08",
+        "not_checked_in": "run-20261011T030319Z-edc4ddd8",
         "repinned": {
           "at": "2026-10-04T01:23:03+00:00",
           "by": "operator",
@@ -23787,7 +23793,7 @@
           "started_at": "2026-10-05T07:54:27+00:00"
         },
         "pinned_fingerprint": "6cd8bc23f9c45b97838b49a95904bd034bcc7cc4b3abdc6d193147d0367b3ef7",
-        "not_checked_in": "run-20261010T225115Z-3a0a5b08",
+        "not_checked_in": "run-20261011T030319Z-edc4ddd8",
         "repinned": {
           "at": "2026-10-04T01:23:03+00:00",
           "by": "operator",
@@ -23972,7 +23978,7 @@
           "started_at": "2026-10-05T07:54:27+00:00"
         },
         "pinned_fingerprint": "f14256e3390d635b87ea9fe52f8cb67b8668e6a46d4225f3912f274860ef6225",
-        "not_checked_in": "run-20261010T225115Z-3a0a5b08"
+        "not_checked_in": "run-20261011T030319Z-edc4ddd8"
       },
       "filing": {
         "state": "FIX_CLAIMED",
@@ -24106,7 +24112,7 @@
           "started_at": "2026-10-06T17:41:58+00:00"
         },
         "pinned_fingerprint": "9452c7ef104ee9f4d3e67ea25dcf97440ed5f8bd1e5dc57f14a16991d064ba73",
-        "not_checked_in": "run-20261010T225115Z-3a0a5b08"
+        "not_checked_in": "run-20261011T030319Z-edc4ddd8"
       },
       "filing": {
         "state": "FIX_CLAIMED",
@@ -24340,7 +24346,7 @@
             "reason": "the first-click card is held to touch: \"Click a bubble for the sector.\""
           }
         },
-        "not_checked_in": "run-20261010T225115Z-3a0a5b08"
+        "not_checked_in": "run-20261011T030319Z-edc4ddd8"
       },
       "filing": {
         "state": "FIX_CLAIMED",
@@ -24562,7 +24568,7 @@
             "reason": "all 15 open or scored calls were recorded after their candle closed"
           }
         },
-        "not_checked_in": "run-20261010T225115Z-3a0a5b08"
+        "not_checked_in": "run-20261011T030319Z-edc4ddd8"
       },
       "filing": {
         "state": "FIX_CLAIMED",
@@ -24849,7 +24855,7 @@
             "reason": "SKY on ethereum: its figures qualify for both and the answer gives NO EDGE, as llms.txt says"
           }
         },
-        "not_checked_in": "run-20261010T225115Z-3a0a5b08",
+        "not_checked_in": "run-20261011T030319Z-edc4ddd8",
         "repinned": {
           "at": "2026-10-05T08:51:28+00:00",
           "by": "operator",
@@ -25197,7 +25203,8 @@
           "at": "2026-10-05T08:51:29+00:00",
           "by": "operator",
           "reason": "Deep pass 2026-10-05, commit 70c8ee05, found by the deep-pass review and confirmed by two of three reviewers: a clean study with no live 5d answer read is now inconclusive instead of a pass; the claim (calibrated probability inside its range) is unchanged. Level-V run run-20261005T075423Z-72ea19f3 ("
-        }
+        },
+        "not_checked_in": "run-20261011T030319Z-edc4ddd8"
       },
       "filing": {
         "state": "FIX_CLAIMED",
@@ -25600,7 +25607,7 @@
             "reason": "every top-level key of /analyze, /calls and /study/expert is listed in its 200 schema"
           }
         },
-        "not_checked_in": "run-20261010T225115Z-3a0a5b08"
+        "not_checked_in": "run-20261011T030319Z-edc4ddd8"
       },
       "filing": {
         "state": "FIX_CLAIMED",
@@ -25865,7 +25872,7 @@
           "started_at": "2026-10-06T04:26:28+00:00"
         },
         "pinned_fingerprint": "dcb9129f30cb0399cf33fbb03542b4568504b02b93fb08d57df634833945defb",
-        "not_checked_in": "run-20261010T225115Z-3a0a5b08"
+        "not_checked_in": "run-20261011T030319Z-edc4ddd8"
       },
       "filing": {
         "state": "FIX_CLAIMED",
@@ -26000,7 +26007,7 @@
           "started_at": "2026-10-06T04:26:28+00:00"
         },
         "pinned_fingerprint": "e767f5cb7c9e7c0ee70462d9a73b5c8650b232a66e0fb168b726489956262860",
-        "not_checked_in": "run-20261010T225115Z-3a0a5b08"
+        "not_checked_in": "run-20261011T030319Z-edc4ddd8"
       },
       "filing": {
         "state": "FIX_CLAIMED",
@@ -26138,7 +26145,8 @@
           "at": "2026-10-10T23:08:25+00:00",
           "started_at": "2026-10-10T22:51:24+00:00"
         },
-        "pinned_fingerprint": "0a690b9985c7553ef83f8acf59a72991011c3e8056054d54c991f87b6168f0d7"
+        "pinned_fingerprint": "0a690b9985c7553ef83f8acf59a72991011c3e8056054d54c991f87b6168f0d7",
+        "not_checked_in": "run-20261011T030319Z-edc4ddd8"
       },
       "filing": {
         "state": "FIX_CLAIMED",
@@ -26419,7 +26427,7 @@
             "reason": "none of 4 judged records books a payout as a buyback"
           }
         },
-        "not_checked_in": "run-20261010T225115Z-3a0a5b08",
+        "not_checked_in": "run-20261011T030319Z-edc4ddd8",
         "repinned": {
           "at": "2026-10-05T08:51:30+00:00",
           "by": "operator",
@@ -26635,7 +26643,7 @@
           "by": "operator",
           "reason": "Deep pass 2026-10-05, commit 70c8ee05, found by the deep-pass review and confirmed by two of three reviewers: 410 now counts as a dead url and an unreadable one (403, 5xx, timeout) is inconclusive instead of passing; claim unchanged. Level-V run run-20261005T075423Z-72ea19f3 (PRE-0246) passes under "
         },
-        "not_checked_in": "run-20261010T225115Z-3a0a5b08"
+        "not_checked_in": "run-20261011T030319Z-edc4ddd8"
       },
       "filing": {
         "state": "FIX_CLAIMED",
@@ -26855,7 +26863,7 @@
             "reason": "all 3 shared link identifiers open their coin"
           }
         },
-        "not_checked_in": "run-20261010T225115Z-3a0a5b08",
+        "not_checked_in": "run-20261011T030319Z-edc4ddd8",
         "repinned": {
           "at": "2026-10-05T08:51:32+00:00",
           "by": "operator",
@@ -27064,7 +27072,7 @@
             "reason": "all 9 candidate records keep the pile inside their supply"
           }
         },
-        "not_checked_in": "run-20261010T225115Z-3a0a5b08",
+        "not_checked_in": "run-20261011T030319Z-edc4ddd8",
         "repinned": {
           "at": "2026-10-05T08:51:33+00:00",
           "by": "operator",
@@ -27227,7 +27235,7 @@
         "failed_under": [
           "3fdfdf4e23a798ecb5047447f017c0642b9f188f923c6111ec11ffe2e8513379"
         ],
-        "not_checked_in": "run-20261010T225115Z-3a0a5b08"
+        "not_checked_in": "run-20261011T030319Z-edc4ddd8"
       },
       "filing": {
         "state": "FIX_CLAIMED",
@@ -27394,7 +27402,7 @@
         "failed_under": [
           "43cce9835f023c4579265e388044b84b69bbbdcd4afd99ac3deaec48bc895c4b"
         ],
-        "not_checked_in": "run-20261010T225115Z-3a0a5b08"
+        "not_checked_in": "run-20261011T030319Z-edc4ddd8"
       },
       "filing": {
         "state": "FIX_CLAIMED",
@@ -27568,7 +27576,7 @@
             "reason": "none of 172 records with an unknown schedule claims none is scheduled"
           }
         },
-        "not_checked_in": "run-20261010T225115Z-3a0a5b08"
+        "not_checked_in": "run-20261011T030319Z-edc4ddd8"
       },
       "filing": {
         "state": "FIX_CLAIMED",
@@ -27731,7 +27739,7 @@
             "reason": "the PHAR locked in xPHAR is not shown as the reserve, and at least half of it is shown as staked"
           }
         },
-        "not_checked_in": "run-20261010T225115Z-3a0a5b08",
+        "not_checked_in": "run-20261011T030319Z-edc4ddd8",
         "repinned": {
           "at": "2026-10-05T08:51:33+00:00",
           "by": "operator",
@@ -27905,7 +27913,7 @@
         "failed_under": [
           "4efaf1605cc889fb424c25276c395226073f7c8674d1227252f0f9a4109c7ed2"
         ],
-        "not_checked_in": "run-20261010T225115Z-3a0a5b08"
+        "not_checked_in": "run-20261011T030319Z-edc4ddd8"
       },
       "filing": {
         "state": "FIX_CLAIMED",
@@ -28063,7 +28071,7 @@
         "failed_under": [
           "480d2daeca8090890485940c294cc4b8d630a2e07c8d5c895bddb5d9b2839ed0"
         ],
-        "not_checked_in": "run-20261010T225115Z-3a0a5b08"
+        "not_checked_in": "run-20261011T030319Z-edc4ddd8"
       },
       "filing": {
         "state": "FIX_CLAIMED",
@@ -28268,7 +28276,7 @@
         "failed_under": [
           "7236a654da5b139856ba7659a41d7b7a39c2f2fb55732111b8b04e93c4903ce9"
         ],
-        "not_checked_in": "run-20261010T225115Z-3a0a5b08"
+        "not_checked_in": "run-20261011T030319Z-edc4ddd8"
       },
       "filing": {
         "state": "FIX_CLAIMED",
@@ -28426,7 +28434,7 @@
         "failed_under": [
           "695b635cdd9ad10b2a67ab2205aae5301d388c54d216d7e4d283eab2e8dbb08f"
         ],
-        "not_checked_in": "run-20261010T225115Z-3a0a5b08"
+        "not_checked_in": "run-20261011T030319Z-edc4ddd8"
       },
       "filing": {
         "state": "FIX_CLAIMED",
@@ -28589,7 +28597,7 @@
           "by": "agent",
           "reason": "Repaired by deep pass 2026-10-10 (75618ae6, triage A01 3/3): whether the input's day was still open is read off the snapshot's generated_at, not off DeFiLlama's newest point at run time, so a snapshot no longer passes before midnight UTC and fails after it. Readings in tests/meta."
         },
-        "not_checked_in": "run-20261010T225115Z-3a0a5b08"
+        "not_checked_in": "run-20261011T030319Z-edc4ddd8"
       },
       "filing": {
         "state": "FIX_CLAIMED",
@@ -28782,7 +28790,8 @@
           "cef5de364c8b65c44ee08fadeaa9903953ffcc41fa0ab4435f007a7ef6930a0f",
           "a6e10a19bf45d2735840415483940b44b6ba43f4ac43b976013584259cf29e83",
           "7060973547dc4173a7b0aee1958e86ac0ded842dada403f374c78db3783176e3"
-        ]
+        ],
+        "not_checked_in": "run-20261011T030319Z-edc4ddd8"
       },
       "filing": {
         "state": "FIX_CLAIMED",
@@ -28939,7 +28948,7 @@
         "failed_under": [
           "49712c55b23907d19cdfcde1efd829e0b4dee7e5149511f7db21d5ffc35faefc"
         ],
-        "not_checked_in": "run-20261010T225115Z-3a0a5b08"
+        "not_checked_in": "run-20261011T030319Z-edc4ddd8"
       },
       "filing": {
         "state": "FIX_CLAIMED",
@@ -29152,7 +29161,8 @@
         "pinned_fingerprint": "2073aa83f29af8896f3cdd0c567cb334ff2a9b804d7b2908cf38a88daf96272d",
         "failed_under": [
           "2073aa83f29af8896f3cdd0c567cb334ff2a9b804d7b2908cf38a88daf96272d"
-        ]
+        ],
+        "not_checked_in": "run-20261011T030319Z-edc4ddd8"
       },
       "filing": {
         "state": "FIX_CLAIMED",
@@ -29627,7 +29637,8 @@
         "pinned_fingerprint": "dca79831edfe090de8a1b54fcd0b931ac35ee950d6a15adea95e9728bf005be1",
         "failed_under": [
           "dca79831edfe090de8a1b54fcd0b931ac35ee950d6a15adea95e9728bf005be1"
-        ]
+        ],
+        "not_checked_in": "run-20261011T030319Z-edc4ddd8"
       },
       "filing": {
         "state": "FIX_CLAIMED",
@@ -34599,7 +34610,7 @@
           "by": "agent",
           "reason": "Repaired by deep pass 2026-10-10 (c164b580, NEXT 2026-10-08): their fix of #175 moved the synthetic label from each trade to the trade list's response (is_synthetic, data_kind) and left synthetic runs off the default board; synthetic_in reads it there, the per-trade flag included. Readings in tests/"
         },
-        "not_checked_in": "run-20261010T225115Z-3a0a5b08"
+        "not_checked_in": "run-20261011T030319Z-edc4ddd8"
       },
       "filing": {
         "state": "FIX_CLAIMED",
@@ -34804,7 +34815,7 @@
         "failed_under": [
           "eb8b38d7c28020031fdb70916ee8fa584e9542a6fafa85b51ccc90790851fe7e"
         ],
-        "not_checked_in": "run-20261010T225115Z-3a0a5b08"
+        "not_checked_in": "run-20261011T030319Z-edc4ddd8"
       },
       "filing": {
         "state": "FIX_CLAIMED",
@@ -34938,7 +34949,7 @@
         "failed_under": [
           "e108538ab60938a34851424674a5896f4308ea748addfe888fc0e6e5678dbcf9"
         ],
-        "not_checked_in": "run-20261010T225115Z-3a0a5b08"
+        "not_checked_in": "run-20261011T030319Z-edc4ddd8"
       },
       "filing": {
         "state": "FIX_CLAIMED",
@@ -35083,7 +35094,8 @@
         "pinned_fingerprint": "83d911d6050bbd4736e7c4cf243f9d58e5b7d43fc1433d2229b6b29788976c99",
         "failed_under": [
           "83d911d6050bbd4736e7c4cf243f9d58e5b7d43fc1433d2229b6b29788976c99"
-        ]
+        ],
+        "not_checked_in": "run-20261011T030319Z-edc4ddd8"
       },
       "filing": {
         "state": "FIX_CLAIMED",
@@ -35205,7 +35217,8 @@
         "pinned_fingerprint": "8d8c0108aa215cd7e1c738efc2e243d2c545c464ae478724f72f055dfa12f0a0",
         "failed_under": [
           "8d8c0108aa215cd7e1c738efc2e243d2c545c464ae478724f72f055dfa12f0a0"
-        ]
+        ],
+        "not_checked_in": "run-20261011T030319Z-edc4ddd8"
       },
       "filing": {
         "state": "FIX_CLAIMED",
@@ -35623,7 +35636,7 @@
         "failed_under": [
           "c15d7e9e8a2c137a784a1487fdab78c9530f1dc6bd46187609ec126c22881d3f"
         ],
-        "not_checked_in": "run-20261010T225115Z-3a0a5b08"
+        "not_checked_in": "run-20261011T030319Z-edc4ddd8"
       },
       "filing": {
         "state": "FIX_CLAIMED",
@@ -35752,7 +35765,8 @@
         "pinned_fingerprint": "1fb599a6e77a51ef1a7c104304eb0db1736e99e82b32d3e3cfc10aeefe087b96",
         "failed_under": [
           "1fb599a6e77a51ef1a7c104304eb0db1736e99e82b32d3e3cfc10aeefe087b96"
-        ]
+        ],
+        "not_checked_in": "run-20261011T030319Z-edc4ddd8"
       },
       "filing": {
         "state": "FIX_CLAIMED",
@@ -35896,7 +35910,8 @@
         "pinned_fingerprint": "3a4cd18b23da100aa08d66f89c7ecfd4ebec6b2694de4d7d7037f75e297864ce",
         "failed_under": [
           "3a4cd18b23da100aa08d66f89c7ecfd4ebec6b2694de4d7d7037f75e297864ce"
-        ]
+        ],
+        "not_checked_in": "run-20261011T030319Z-edc4ddd8"
       },
       "filing": {
         "state": "FIX_CLAIMED",
@@ -36017,7 +36032,8 @@
         "pinned_fingerprint": "48b46cf0fa32d320ed2bff9a414d4868ed4f9c810e3cecc649c5449fdbf3299a",
         "failed_under": [
           "48b46cf0fa32d320ed2bff9a414d4868ed4f9c810e3cecc649c5449fdbf3299a"
-        ]
+        ],
+        "not_checked_in": "run-20261011T030319Z-edc4ddd8"
       },
       "filing": {
         "state": "FIX_CLAIMED",
@@ -36152,7 +36168,8 @@
         "pinned_fingerprint": "baed35855a3010cb0647da4bda5fe59c1b83c7d4369560fb6a05a27ccb339e9f",
         "failed_under": [
           "baed35855a3010cb0647da4bda5fe59c1b83c7d4369560fb6a05a27ccb339e9f"
-        ]
+        ],
+        "not_checked_in": "run-20261011T030319Z-edc4ddd8"
       },
       "filing": {
         "state": "FIX_CLAIMED",
@@ -36350,21 +36367,381 @@
         "correction_owed": [],
         "disputed": []
       }
+    },
+    "CYM-a_coins_supply_figures_can_all_be_true": {
+      "id": "CYM-a_coins_supply_figures_can_all_be_true",
+      "first_seen": {
+        "at": "2026-10-11T03:06:49+00:00",
+        "cause": {
+          "run_id": "run-20261011T030319Z-edc4ddd8"
+        }
+      },
+      "reproductions": 1,
+      "check": {
+        "state": "REPRODUCING",
+        "adjudicated_by": {
+          "run_id": "run-20261011T030319Z-edc4ddd8",
+          "at": "2026-10-11T03:06:49+00:00",
+          "started_at": "2026-10-11T03:03:28+00:00"
+        },
+        "pinned_fingerprint": "8984efbed9ab8f785352b1f6ea3f1a40be24c292e42fc0f1538edafd476dd367",
+        "failed_under": [
+          "8984efbed9ab8f785352b1f6ea3f1a40be24c292e42fc0f1538edafd476dd367"
+        ]
+      },
+      "filing": {
+        "state": "RAISED",
+        "adjudicated_by": {
+          "event_id": "5a47722cc476b1f85bda279d0b793bc5e33a1b43dd4930e5478f83d12a5adb8a",
+          "at": "2026-10-11T03:07:53+00:00"
+        },
+        "reports": [
+          {
+            "report_id": 185,
+            "status": "pending"
+          }
+        ],
+        "refused": [],
+        "verifications": []
+      },
+      "transitions": [
+        {
+          "axis": "check",
+          "from": "UNVERIFIED",
+          "to": "REPRODUCING",
+          "cause": {
+            "run_id": "run-20261011T030319Z-edc4ddd8"
+          },
+          "at": "2026-10-11T03:06:49+00:00"
+        },
+        {
+          "axis": "filing",
+          "from": "NOT_RAISED",
+          "to": "RAISED",
+          "cause": {
+            "event_id": "5a47722cc476b1f85bda279d0b793bc5e33a1b43dd4930e5478f83d12a5adb8a"
+          },
+          "at": "2026-10-11T03:07:53+00:00"
+        }
+      ],
+      "regressions": [],
+      "severity": "S3-CONTRACT",
+      "title": "4 of 140 dashboards (the 140 largest coins by market cap) publish supply figures that cannot all be true, with flags empty on both reads: HBAR (rank 38, source updated 2026-10-11T02:59:13Z): circulating 44.00B against a max of 1.00B (43.998x), total 50.00B against a max of 1.00B (50.0x), FDV 92.27M under a market cap of 4.06B (0.023x); ICP (rank 58, source updated 2026-10-11T02:59:13Z): circulating 557.36M against a max of 469.21M (1.188x), total 555.12M against a max of 469.21M (1.183x), FDV 1.45B under a market cap of 1.72B (0.842x); IOTA (rank 178, source updated 2026-10-11T02:59:13Z): circulating 4.31B against a max of 2.78B (1.551x), total 4.83B against a max of 2.78B (1.738x), FDV 142.72M under a market cap of 221.40M (0.645x); TAG (rank 327, source updated 2026-10-11T02:59:13Z): total 405.38B against a max of 400.00B (1.013x)",
+      "reproduced_in": [
+        "run-20261011T030319Z-edc4ddd8"
+      ],
+      "component": "rest.markets",
+      "section": "markets",
+      "tag": "EXCHANGE",
+      "kind": "check_failure",
+      "detail": {
+        "left": {
+          "dashboards_with_impossible_figures": [
+            "hbar",
+            "icp",
+            "iota",
+            "tag"
+          ]
+        },
+        "right": {
+          "dashboards_with_impossible_figures": []
+        },
+        "sources": {
+          "manifest": "/api/v1/crypto",
+          "coin": "/api/v1/crypto/{slug}",
+          "contract": "MCP crypto_dashboard: 'a number that failed a plausibility check is withheld, never guessed'"
+        },
+        "population": {
+          "manifest": 371,
+          "tried": [
+            "btc",
+            "eth",
+            "xrp",
+            "sol",
+            "trx",
+            "zec",
+            "doge",
+            "link",
+            "xmr",
+            "bch",
+            "ltc",
+            "uni",
+            "avax",
+            "hbar",
+            "btw",
+            "ena",
+            "tao",
+            "okb",
+            "aave",
+            "pump",
+            "ondo",
+            "wld",
+            "mnt",
+            "icp",
+            "pepe",
+            "jst",
+            "gt",
+            "syrupusdc",
+            "susde",
+            "jup",
+            "aster",
+            "kas",
+            "algo",
+            "kcs",
+            "jlp",
+            "xaut",
+            "render",
+            "fil",
+            "lit",
+            "night",
+            "cake",
+            "inj",
+            "jupsol",
+            "ethfi",
+            "vet",
+            "ray",
+            "fet",
+            "crv",
+            "nexo",
+            "solvbtc",
+            "pengu",
+            "stkaave",
+            "grass",
+            "xdc",
+            "pendle",
+            "ldo",
+            "ub",
+            "kaia",
+            "spx",
+            "xtz",
+            "op",
+            "dcr",
+            "syrup",
+            "ebtc",
+            "bonk",
+            "grt",
+            "jasmy",
+            "shfl",
+            "rune",
+            "pieverse",
+            "tibbir",
+            "kite",
+            "theta",
+            "iota",
+            "akt",
+            "zro",
+            "bat",
+            "cvx",
+            "useless",
+            "trac",
+            "mx",
+            "zbcn",
+            "xcn",
+            "sand",
+            "stg",
+            "jto",
+            "imx",
+            "npc",
+            "fartcoin",
+            "chz",
+            "btse",
+            "scnsol",
+            "b",
+            "aioz",
+            "dgai",
+            "orca",
+            "bbsol",
+            "beam",
+            "glm",
+            "ath",
+            "cards",
+            "mina",
+            "zrx",
+            "cashcat",
+            "peaq",
+            "dydx",
+            "rsr",
+            "super",
+            "uusd",
+            "prom",
+            "qubic",
+            "superoeth",
+            "geod",
+            "gala",
+            "pros",
+            "lpt",
+            "spcxb",
+            "hnt",
+            "rif",
+            "qrl",
+            "psol",
+            "hsol",
+            "fluid",
+            "uai",
+            "omi",
+            "arkm",
+            "hot",
+            "mubarak",
+            "tfuel",
+            "zil",
+            "kava",
+            "ckb",
+            "turbo",
+            "tag",
+            "unp",
+            "merl",
+            "vtho",
+            "snek",
+            "babydoge",
+            "io"
+          ],
+          "judged": 140,
+          "unread": [],
+          "first_look": {
+            "hbar": {
+              "circulating_over_max": 43.998,
+              "total_over_max": 50.0,
+              "fdv_under_market_cap": 0.023
+            },
+            "icp": {
+              "circulating_over_max": 1.188,
+              "total_over_max": 1.183,
+              "fdv_under_market_cap": 0.842
+            },
+            "iota": {
+              "circulating_over_max": 1.551,
+              "total_over_max": 1.738,
+              "fdv_under_market_cap": 0.645
+            },
+            "tag": {
+              "total_over_max": 1.013
+            }
+          },
+          "confirmed": {
+            "hbar": {
+              "broken": {
+                "circulating_over_max": 43.998,
+                "total_over_max": 50.0,
+                "fdv_under_market_cap": 0.023
+              },
+              "first_look": {
+                "circulating_over_max": 43.998,
+                "total_over_max": 50.0,
+                "fdv_under_market_cap": 0.023
+              },
+              "price": 0.09226653170265925,
+              "market_cap": 4059520152.0,
+              "fdv": 92266531.70265925,
+              "circulating_supply": 43997753866.83359,
+              "circulating_is_derived": true,
+              "total_supply": 50000000000.0,
+              "max_supply": 1000000000.0,
+              "pct_issued": 1.0,
+              "market_cap_rank": 38,
+              "source_updated": "2026-10-11T02:59:13Z",
+              "summary": "Hedera Hashgraph (HBAR) is $0.0923, +0.25% in 24 hours. Market cap $4.06B; circulating supply 44.00B of 1.00B. Trades on Coinbase, Binance, XT. Source: CoinPaprika, 2026-10-11 03:02 UTC."
+            },
+            "icp": {
+              "broken": {
+                "circulating_over_max": 1.188,
+                "total_over_max": 1.183,
+                "fdv_under_market_cap": 0.842
+              },
+              "first_look": {
+                "circulating_over_max": 1.188,
+                "total_over_max": 1.183,
+                "fdv_under_market_cap": 0.842
+              },
+              "price": 3.0859015644908374,
+              "market_cap": 1719952674.0,
+              "fdv": 1447947321.76955,
+              "circulating_supply": 557358242.9819942,
+              "circulating_is_derived": true,
+              "total_supply": 555123004.0,
+              "max_supply": 469213710.0,
+              "pct_issued": 1.0,
+              "market_cap_rank": 58,
+              "source_updated": "2026-10-11T02:59:13Z",
+              "summary": "Internet Computer (ICP) is $3.09, -0.58% in 24 hours. Market cap $1.72B; circulating supply 557.36M of 469.21M. Trades on Binance, Coinbase, Toobit. Source: CoinPaprika, 2026-10-11 03:02 UTC."
+            },
+            "iota": {
+              "broken": {
+                "circulating_over_max": 1.551,
+                "total_over_max": 1.738,
+                "fdv_under_market_cap": 0.645
+              },
+              "first_look": {
+                "circulating_over_max": 1.551,
+                "total_over_max": 1.738,
+                "fdv_under_market_cap": 0.645
+              },
+              "price": 0.05134611329672944,
+              "market_cap": 221404385.0,
+              "fdv": 142718076.82260844,
+              "circulating_supply": 4311998918.408936,
+              "circulating_is_derived": true,
+              "total_supply": 4831556199.0,
+              "max_supply": 2779530283.0,
+              "pct_issued": 1.0,
+              "market_cap_rank": 178,
+              "source_updated": "2026-10-11T02:59:13Z",
+              "summary": "IOTA (IOTA) is $0.0513, -2.62% in 24 hours. Market cap $221.40M; circulating supply 4.31B of 2.78B. Trades on Upbit, Binance, OKX. Source: CoinPaprika, 2026-10-11 03:02 UTC."
+            },
+            "tag": {
+              "broken": {
+                "total_over_max": 1.013
+              },
+              "first_look": {
+                "total_over_max": 1.013
+              },
+              "price": 0.0006337989058365027,
+              "market_cap": 68706699.0,
+              "fdv": 253519562.33460107,
+              "circulating_supply": 108404571808.6548,
+              "circulating_is_derived": true,
+              "total_supply": 405380800000.0,
+              "max_supply": 400000000000.0,
+              "pct_issued": 0.271011429521637,
+              "market_cap_rank": 327,
+              "source_updated": "2026-10-11T02:59:13Z",
+              "summary": "Tagger (TAG) is $0.0006337, -2.25% in 24 hours. Market cap $68.71M; circulating supply 108.40B of 400.00B. Trading venues are being collected. Source: CoinPaprika, 2026-10-11 03:02 UTC."
+            }
+          }
+        },
+        "reason": "4 of 140 dashboards (the 140 largest coins by market cap) publish supply figures that cannot all be true, with flags empty on both reads: HBAR (rank 38, source updated 2026-10-11T02:59:13Z): circulating 44.00B against a max of 1.00B (43.998x), total 50.00B against a max of 1.00B (50.0x), FDV 92.27M under a market cap of 4.06B (0.023x); ICP (rank 58, source updated 2026-10-11T02:59:13Z): circulating 557.36M against a max of 469.21M (1.188x), total 555.12M against a max of 469.21M (1.183x), FDV 1.45B under a market cap of 1.72B (0.842x); IOTA (rank 178, source updated 2026-10-11T02:59:13Z): circulating 4.31B against a max of 2.78B (1.551x), total 4.83B against a max of 2.78B (1.738x), FDV 142.72M under a market cap of 221.40M (0.645x); TAG (rank 327, source updated 2026-10-11T02:59:13Z): total 405.38B against a max of 400.00B (1.013x)"
+      },
+      "checks": [
+        "tests/rest/test_a_coins_supply_figures_can_all_be_true.py::test_a_coins_supply_figures_can_all_be_true"
+      ],
+      "provenance": {
+        "run_id": "run-20261011T030319Z-edc4ddd8",
+        "measured_at": "2026-10-11T03:06:49+00:00"
+      },
+      "obligations": {
+        "reverify": false,
+        "repair_check": false,
+        "reopen": [],
+        "retractions": [],
+        "verification_owed": [],
+        "correction_owed": [],
+        "disputed": []
+      }
     }
   },
-  "run_id": "run-20261010T225115Z-3a0a5b08",
-  "run_level": "V",
-  "updated_at": "2026-10-10T23:08:25+00:00",
+  "run_id": "run-20261011T030319Z-edc4ddd8",
+  "run_level": "R",
+  "updated_at": "2026-10-11T03:06:49+00:00",
   "counts": {
     "WITHDRAWN": 13,
     "VERIFIED FIXED": 117,
     "STILL REPRODUCIBLE": 10,
     "OUR CHECK CANNOT TELL": 3,
     "PASSING, NEVER RAISED": 3,
-    "CHECK CHANGED": 1
+    "CHECK CHANGED": 1,
+    "RAISED": 1
   },
   "events_head": {
-    "seq": 3786,
-    "chain": "c05b806d26ff1d9eb9957396b10642d72969b68d01c778750d26867ea18ead73"
+    "seq": 3789,
+    "chain": "9bc76271625ce971d57c0573371e3c9e1a08c10c044315d62c19c8edd11667f2"
   }
 }

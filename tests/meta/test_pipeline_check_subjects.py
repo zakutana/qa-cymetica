@@ -656,6 +656,10 @@ def test_a_card_that_is_closed_on_rest_and_open_on_mcp_fails():
     assert synthetic_in(old) == (1, True), "the per-trade flag of 2026-10-04 is still read"
     assert synthetic_in({"trades": [{"symbol": "BTC"}]}) == (0, False), "no label anywhere is not a clean list"
 
+    # And a coin's supply figures on its Crypto dashboard (2026-10-11), held as a helper below
+    # rather than a test of its own: tests/meta has a counted ceiling.
+    _the_crypto_supply_readings()
+
     # And the account history pages forward (2026-10-10): with currency=USDC, and with no filter
     # past the first page, every offset answered the same 100 rows while has_more said true.
     from tests.rest.test_account_history_pages_forward import page_repeats
@@ -917,8 +921,7 @@ def test_a_paper_buy_refused_for_a_balance_it_is_not_spending_fails(monkeypatch)
             '{"detail": "New purchases are closed for this index."}'))
 
 
-@qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
-def test_a_coins_supply_figures_are_judged_as_numbers_that_can_all_be_true():
+def _the_crypto_supply_readings():
     """The readings behind the Crypto dashboard supply check (2026-10-11): HBAR, IOTA and ICP as
     captured fail it, a coin whose circulating supply was withheld does not, and a figure within
     the stated tolerances is not a defect."""

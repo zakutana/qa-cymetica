@@ -5632,6 +5632,50 @@ reports:
       purchases, where the USDC side of each purchase could only be read by date windows. Our check reads the
       history with our own read key, GETs only, for no filter, USDC and ET10, offsets 0, 100 and 200, and fails while a page that says has_more is followed by the same page again or by none.
 
+  - key: crypto-dashboard-supply-figures-contradict
+    findings:
+      - CYM-a_coins_supply_figures_can_all_be_true
+    severity: medium
+    category: api
+    url: https://cymetica.com/crypto/hbar
+    title: >-
+      Crypto dashboards: HBAR prints "circulating supply 44.00B of 1.00B" and an FDV 44x under its market cap;
+      IOTA, ICP, TAG have a max supply below their total, flags empty
+    expected: >
+      A dashboard states that "a number that failed a plausibility check is withheld, never guessed" (the
+      crypto_dashboard tool description), and it does withhold: 10 of the 371 coins carry
+      `stats.flags: ["circulating_supply"]` with `circulating_supply` null, each of them a coin whose derived
+      circulating supply (market cap / price, `circulating_is_derived: true`) is above its max supply, or above
+      its total supply when no max is published. So the figures a dashboard does publish can be true together:
+      circulating not above max, total not above max, and the fully diluted value not below the market cap.
+    actual: >
+      Read on 2026-10-11 at 03:03 UTC (HBAR also at 02:50 and as text; the other coins twice, 20 seconds apart).
+      GET /api/v1/crypto/hbar (market cap rank 38): max_supply 1,000,000,000, total_supply 50,000,000,000,
+      circulating_supply 43,997,753,874 (derived), market_cap $4.06B, fdv $92.3M, pct_issued 1.0, flags []. The
+      summary and /crypto/hbar.txt read "circulating supply 44.00B of 1.00B". CoinPaprika, which the dashboard
+      names as its source, lists the same two figures for HBAR (max 1,000,000,000, total 50,000,000,000, no
+      circulating supply), so the dashboard republishes them and builds on them. The same shape, flags empty:
+      ICP (rank 58) circulating 557.4M and total 555.1M against a max of 469.2M, fdv $1.45B under a market cap of
+      $1.72B; IOTA (rank 178) circulating 4.31B and total 4.83B against a max of 2.78B, fdv $142.8M under a market
+      cap of $221.5M; TAG (rank 327) total 405.38B against a max of 400.00B. CHZ has ICP's relation (total 9.44B
+      against a max of 8.89B, derived circulating 1.19x the max, as ICP's is 1.19x its max) and IS withheld
+      (flags ["circulating_supply"], circulating null); HBAR, ICP and IOTA are not. Of the 140 largest coins by
+      market cap, these 4 fail on both reads.
+    steps:
+      - 'GET https://cymetica.com/api/v1/crypto/hbar -> stats: max_supply 1000000000, total_supply 50000000000, circulating_supply 43997753874.0, circulating_is_derived true, market_cap 4.06e9, fdv 9.23e7, pct_issued 1.0, flags []'
+      - 'GET https://cymetica.com/crypto/hbar.txt -> "... Market cap $4.06B; circulating supply 44.00B of 1.00B."'
+      - 'GET https://api.coinpaprika.com/v1/tickers/hbar-hedera-hashgraph -> total_supply 50000000000, max_supply 1000000000, circulating_supply null (same for icp-internet-computer: total 555123004, max 469213710; miota-iota: total 4831556199, max 2779530283)'
+      - 'GET https://cymetica.com/api/v1/crypto/icp and /iota -> flags [], fdv below market_cap (0.84x and 0.65x), circulating_supply above max_supply'
+      - 'GET https://cymetica.com/api/v1/crypto/chz -> flags ["circulating_supply"], circulating_supply null, total_supply 9444481889 above max_supply 8888888888: the same relation, withheld'
+    body: >
+      How to fix it is yours: apply the check that withholds a circulating supply also to the max supply (a max
+      below the total or the derived circulating supply is not a max), and leave fdv and pct_issued out when
+      their base is withheld, since an FDV under the market cap cannot be true and pct_issued is capped at 1.0
+      where the ratio is 44. Our check reads GET /api/v1/crypto and the dashboard of the 140 largest coins by
+      market cap, anonymously, and fails while a coin with empty flags publishes a circulating or total supply
+      more than 1% above its max supply, or an fdv more than 5% under its market cap, on two reads 20 seconds
+      apart; it passes the moment those coins are withheld or consistent.
+
 footer: >
   Reported by an independent QA agent. Scope of this work: verification of the
   REST API, MCP, the machine-readable discovery surfaces and the pages built on
