@@ -1,0 +1,222 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Supply Analyzer page, redesign</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Archivo+Black&family=JetBrains+Mono:wght@400;600;700&family=Inter:wght@400;500;600&display=block" rel="stylesheet">
+<style>
+:root {
+  --bg: #0a0e17; --panel: #0d1520; --panel2: #111a28; --sunk: #070b12;
+  --line: rgba(0,150,255,.15); --text: #E6EDF7; --dim: #A9B8CC; --faint: #6F8199;
+  --cyan: #00cfff; --green: #00ff88; --red: #ff4444; --blue: #3b82f6;
+}
+* { box-sizing: border-box; }
+body { margin: 0; background: var(--bg); color: var(--text); font: 15px/1.45 Inter, system-ui, sans-serif; }
+.page { max-width: 1240px; margin: 0 auto; padding: 28px 32px 56px; display: flex; flex-direction: column; gap: 20px; }
+.mono { font-family: "JetBrains Mono", monospace; }
+.red { color: var(--red); } .green { color: var(--green); } .muted { color: var(--faint); }
+
+/* mock tool */
+.mock { display: flex; gap: 8px; align-items: center; font: 600 12px "JetBrains Mono", monospace; color: var(--faint); }
+.mock button { font: 700 12px "JetBrains Mono", monospace; color: var(--dim); background: var(--panel2); border: 1px solid var(--line); border-radius: 999px; padding: 5px 12px; cursor: pointer; }
+.mock button[aria-pressed=true] { color: var(--bg); background: var(--cyan); border-color: var(--cyan); }
+
+/* header */
+.top { display: flex; align-items: flex-end; gap: 16px; }
+.top h1 { font: 40px "Archivo Black", sans-serif; margin: 0; line-height: 1.05; }
+.top .id { font: 600 13px "JetBrains Mono", monospace; color: var(--faint); margin-top: 8px; letter-spacing: .04em; }
+.top .id a { color: var(--cyan); text-decoration: none; }
+.top .act { margin-left: auto; display: flex; gap: 8px; }
+.btn { font: 600 14px Inter, sans-serif; color: var(--text); background: var(--panel2); border: 1px solid var(--line); border-radius: 10px; padding: 8px 14px; }
+.btn.go { color: var(--bg); background: var(--green); border-color: var(--green); }
+.tip { display: inline-grid; place-items: center; width: 18px; height: 18px; margin-left: 8px; vertical-align: 2px;
+  border-radius: 50%; border: 1.5px solid var(--blue); color: var(--blue); font: 700 11px "JetBrains Mono", monospace; cursor: help; }
+
+/* tiles */
+.kpis { display: grid; grid-template-columns: repeat(4, minmax(0,1fr)); gap: 12px; }
+.kpi { background: var(--panel); border: 1px solid var(--line); border-radius: 14px; padding: 16px 18px 15px; min-width: 0; }
+.kpi .n { font: 700 12px "JetBrains Mono", monospace; letter-spacing: .14em; color: var(--faint); text-transform: uppercase; }
+.kpi .v { font: 32px "Archivo Black", sans-serif; line-height: 1.15; margin-top: 8px; white-space: nowrap; }
+.kpi .v small { font: 600 15px Inter, sans-serif; color: var(--dim); margin-left: 4px; }
+.kpi .s { font-size: 13.5px; color: var(--dim); margin-top: 6px; }
+.bar { height: 6px; border-radius: 3px; background: var(--sunk); margin-top: 10px; overflow: hidden; }
+.bar i { display: block; height: 100%; background: var(--cyan); border-radius: 3px; }
+.unlock { display: flex; align-items: center; gap: 14px; padding: 13px 18px; border-radius: 14px; background: var(--sunk); border: 1px solid var(--line); }
+.unlock .n { font: 700 12px "JetBrains Mono", monospace; letter-spacing: .14em; color: var(--faint); white-space: nowrap; }
+.unlock .when { font: 700 16px "JetBrains Mono", monospace; white-space: nowrap; }
+.unlock .what { font-size: 14.5px; color: var(--dim); } .unlock .what b { color: var(--text); font-weight: 600; }
+
+/* timeline */
+.panel { background: var(--panel); border: 1px solid var(--line); border-radius: 16px; padding: 20px 22px; }
+.ph { display: flex; align-items: baseline; gap: 12px; }
+.ph h2 { font: 700 13px "JetBrains Mono", monospace; letter-spacing: .16em; color: var(--dim); margin: 0; text-transform: uppercase; }
+.ph .read { margin-left: auto; font: 700 16px "JetBrains Mono", monospace; } .ph .read em { font-style: normal; color: var(--cyan); }
+.ph .read em.red { color: var(--red); } .ph .read em.green { color: var(--green); }
+.tip { text-transform: none; }
+.play { width: 34px; height: 34px; border-radius: 50%; border: 0; background: var(--cyan); color: var(--bg); font-size: 14px; cursor: pointer; }
+.chart { height: 170px; margin-top: 10px; } .chart svg { width: 100%; height: 100%; display: block; }
+.slide { display: flex; align-items: center; gap: 12px; margin-top: 4px; }
+input[type=range] { -webkit-appearance: none; appearance: none; flex: 1; height: 26px; background: transparent; }
+input[type=range]::-webkit-slider-runnable-track { height: 6px; background: var(--sunk); border-radius: 3px; border: 1px solid var(--line); }
+input[type=range]::-webkit-slider-thumb { -webkit-appearance: none; width: 22px; height: 22px; border-radius: 50%; background: var(--cyan); border: 3px solid var(--bg); margin-top: -9px; box-shadow: 0 0 12px rgba(0,207,255,.6); cursor: pointer; }
+.axis { display: flex; justify-content: space-between; font: 12.5px "JetBrains Mono", monospace; color: var(--faint); margin: 2px 0 0 46px; }
+.rows { display: grid; grid-template-columns: repeat(4, minmax(0,1fr)); gap: 12px; margin-top: 14px; padding-top: 14px; border-top: 1px solid var(--line); }
+.rows div { font-size: 13px; color: var(--faint); } .rows b { display: block; font: 700 19px "JetBrains Mono", monospace; color: var(--text); margin-top: 2px; }
+
+/* flow */
+.flow { display: grid; grid-template-columns: 1fr 230px 1fr; gap: 0; align-items: center; margin-top: 14px; min-height: 230px; }
+.col { display: flex; flex-direction: column; gap: 10px; }
+.box { background: var(--panel2); border: 1px solid var(--line); border-radius: 12px; padding: 11px 14px; position: relative; }
+.box .k { font: 700 11.5px "JetBrains Mono", monospace; letter-spacing: .12em; color: var(--faint); text-transform: uppercase; }
+.box .a { font: 700 18px "JetBrains Mono", monospace; margin-top: 3px; }
+.box .w { font-size: 12.5px; color: var(--dim); }
+.box.in { border-color: rgba(255,68,68,.45); } .box.in .a { color: var(--red); }
+.box.out { border-color: rgba(0,255,136,.45); } .box.out .a { color: var(--green); }
+.none { font-size: 13.5px; color: var(--faint); padding: 10px 14px; border: 1px dashed var(--line); border-radius: 12px; }
+.left .box::after, .right .box::before { content: ""; position: absolute; top: 50%; width: 46px; height: 3px; }
+.left .box::after { right: -50px; background: linear-gradient(90deg, rgba(255,68,68,.7), rgba(255,68,68,.15)); }
+.right .box::before { left: -50px; background: linear-gradient(90deg, rgba(0,255,136,.15), rgba(0,255,136,.7)); }
+.left { padding-right: 52px; } .right { padding-left: 52px; }
+.tank { border: 2px solid rgba(0,207,255,.55); border-radius: 18px; height: 210px; position: relative; overflow: hidden; background: var(--sunk); }
+.tank .fill { position: absolute; left: 0; right: 0; bottom: 0; background: linear-gradient(180deg, rgba(0,207,255,.35), rgba(0,207,255,.12)); transition: height .4s; }
+.tank .lab { position: absolute; inset: 14px 0 auto; text-align: center; }
+.tank .lab .k { font: 700 11.5px "JetBrains Mono", monospace; letter-spacing: .14em; color: var(--dim); }
+.tank .lab .a { font: 24px "Archivo Black", sans-serif; margin-top: 6px; }
+.tank .lab .w { font: 600 12.5px "JetBrains Mono", monospace; color: var(--dim); margin-top: 2px; }
+.gap { margin-top: 12px; font-size: 13px; color: var(--faint); text-align: center; }
+
+.foot { display: flex; gap: 18px; align-items: center; font-size: 12.5px; color: var(--faint); }
+.foot a { color: var(--cyan); text-decoration: none; }
+.foot .stats { margin-left: auto; font-family: "JetBrains Mono", monospace; }
+</style>
+</head>
+<body>
+<main class="page">
+  <div class="mock">MOCK · SWITCH COIN (mockup tool, not part of the page):
+    <button data-c="HYPE">HYPE</button><button data-c="ARB">ARB</button><button data-c="PHAR">PHAR</button></div>
+  <div id="root"></div>
+</main>
+<script>
+const DATA = {"HYPE":{"name":"Hyperliquid","chain":"Hyperliquid L1 · native token","price":83.93,"mcap":18669359378,"circ":222445714,"total":955307079,"max":1000000000,"gap":44692921,"labels":["Oct 2026","Nov 2026","Dec 2026","Jan 2027","Feb 2027","Mar 2027","Apr 2027","May 2027","Jun 2027","Jul 2027","Aug 2027","Sep 2027","Oct 2027","Nov 2027","Dec 2027","Jan 2028","Feb 2028","Mar 2028","Apr 2028","May 2028","Jun 2028","Jul 2028","Aug 2028","Sep 2028"],"inflow":[9916667,9916667,9916667,9916667,9916667,9916667,9916667,9916667,9916667,9916667,9916667,9916667,0,0,0,0,0,0,0,0,0,0,0,0],"kind":"vesting","buyback":854044,"burn":0,"events":[{"Nov 6":[["core contributors",9916667]]},{"Dec 6":[["core contributors",9916667]]},{"Jan 6":[["core contributors",9916667]]},{"Feb 6":[["core contributors",9916667]]},{"Mar 6":[["core contributors",9916667]]},{"Apr 6":[["core contributors",9916667]]},{"May 6":[["core contributors",9916667]]},{"Jun 6":[["core contributors",9916667]]},{"Jul 6":[["core contributors",9916667]]},{"Aug 6":[["core contributors",9916667]]},{"Sep 6":[["core contributors",9916667]]},{"Oct 6":[["core contributors",9916667]]},{},{},{},{},{},{},{},{},{},{},{},{}],"next":{"days":27}},
+"ARB":{"name":"Arbitrum","chain":"Arbitrum · 0x912c…6548","price":0.1833991276453305,"mcap":1243758941,"circ":6785574605,"total":10000000000,"max":10000000000,"gap":0,"labels":["Oct 2026","Nov 2026","Dec 2026","Jan 2027","Feb 2027","Mar 2027","Apr 2027","May 2027","Jun 2027","Jul 2027","Aug 2027","Sep 2027","Oct 2027","Nov 2027","Dec 2027","Jan 2028","Feb 2028","Mar 2028","Apr 2028","May 2028","Jun 2028","Jul 2028","Aug 2028","Sep 2028"],"inflow":[108046244,108559591,108046244,108559591,108046244,108559591,2566735,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],"kind":"vesting","buyback":0,"burn":0,"events":[{"Oct 16":[["Team, Contributors & Advisors",56125000],["Investors",36520833]],"Nov 9":[["Foundation",15400411]]},{"Nov 16":[["Team, Contributors & Advisors",56125000],["Investors",36520833]],"Dec 10":[["Foundation",15913758]]},{"Dec 16":[["Team, Contributors & Advisors",56125000],["Investors",36520833]],"Jan 9":[["Foundation",15400411]]},{"Jan 15":[["Team, Contributors & Advisors",56125000],["Investors",36520833]],"Feb 9":[["Foundation",15913758]]},{"Feb 15":[["Team, Contributors & Advisors",56125000],["Investors",36520833]],"Mar 11":[["Foundation",15400411]]},{"Mar 17":[["Team, Contributors & Advisors",56125000],["Investors",36520833]],"Apr 11":[["Foundation",15913758]]},{"Apr 16":[["Foundation",2566735]]},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{}],"next":{"days":6}},
+"PHAR":{"name":"Pharaoh Exchange","chain":"Avalanche · 0x13a4…28e7","price":0.093107,"mcap":3307799,"circ":35526817,"total":534091214,"max":1000000000,"gap":465908786,"labels":["Oct 2026","Nov 2026","Dec 2026","Jan 2027","Feb 2027","Mar 2027","Apr 2027","May 2027","Jun 2027","Jul 2027","Aug 2027","Sep 2027","Oct 2027","Nov 2027","Dec 2027","Jan 2028","Feb 2028","Mar 2028","Apr 2028","May 2028","Jun 2028","Jul 2028","Aug 2028","Sep 2028"],"inflow":[22705677,22705677,22705677,22705677,22705677,22705677,22705677,22705677,22705677,22705677,22705677,22705677,22705677,22705677,22705677,22705677,22705677,22705677,22705677,22705677,11795106,0,0,0],"kind":"emissions","buyback":0,"burn":0,"events":[{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{}],"next":null}};
+
+const SOURCES = "Circulating, price and market cap: CoinGecko. Unlock schedule: DeFiLlama and project docs. Buybacks: DeFiLlama holders' revenue. FDV = max supply × price. Read Oct 10. Not financial advice.";
+const fmt = (n) => { const a = Math.abs(n);
+  if (a >= 1e9) return (n/1e9).toFixed(a >= 1e10 ? 1 : 2) + "B";
+  if (a >= 1e6) return (n/1e6).toFixed(1) + "M";
+  if (a >= 1e3) return (n/1e3).toFixed(a >= 1e5 ? 0 : 1) + "K";
+  return n.toFixed(0); };
+const usd = (n) => "$" + fmt(n);
+const pct = (x) => (x >= 0 ? "+" : "") + (Math.abs(x) >= 100 ? x.toFixed(0) : x.toFixed(1)) + "%";
+
+function render(sym) {
+  const d = DATA[sym], base = d.max || d.total, fdv = base * d.price, ratio = fdv / d.mcap, n = d.labels.length;
+  const in12 = d.inflow.slice(0, 12).reduce((a, b) => a + b, 0), dil = 100 * in12 / d.circ, perMonth = d.inflow[0];
+  const rc = ratio >= 3 ? "red" : ratio <= 1.5 ? "green" : "", dc = dil >= 25 ? "red" : dil < 5 ? "green" : "";
+  const net = d.buyback ? `<div class="s">net of buybacks: ${pct(100*(in12 - 12*d.buyback)/d.circ)}</div>` : "";
+  const bb = d.buyback
+    ? `<div class="v green">${fmt(d.buyback)}<small>a month</small></div><div class="s">bought back · ${usd(d.buyback*d.price)} a month · burns: none found</div>`
+    : `<div class="v muted">None</div><div class="s">no buybacks or burns found</div>`;
+  const fm = d.events.findIndex(e => Object.keys(e).length);
+  let unlock;
+  if (fm >= 0) {
+    const day = Object.keys(d.events[fm])[0], parts = d.events[fm][day], tot = parts.reduce((a, p) => a + p[1], 0);
+    const who = parts.length === 1 ? parts[0][0] : parts.map(p => `${p[0]} <b>${fmt(p[1])}</b>`).join(" · ");
+    unlock = `<span class="n">NEXT UNLOCK</span><span class="when">${day} · in ${d.next.days} days</span><span class="what"><b>${fmt(tot)} ${sym}</b> (${(100*tot/d.circ).toFixed(1)}% of circulating) → ${who}</span>`;
+  } else {
+    unlock = `<span class="n">NEXT UNLOCK</span><span class="when muted">No schedule published</span><span class="what">Only emissions are known: <b>${fmt(perMonth)} ${sym} a month</b> to stakers.</span>`;
+  }
+  document.getElementById("root").innerHTML = `
+  <div style="display:flex;flex-direction:column;gap:18px">
+    <div class="top">
+      <div><h1>${d.name}</h1><div class="id">${sym} · ${d.chain} · <a href="#">from Gem Screener ›</a></div></div>
+      <div class="act"><span class="btn">Share</span><span class="btn go">+ New token</span></div>
+    </div>
+    <div class="kpis">
+      <div class="kpi"><div class="n">Circulating<span class="tip" title="${SOURCES}">i</span></div>
+        <div class="v">${fmt(d.circ)}<small>of ${fmt(base)}</small></div>
+        <div class="bar"><i style="width:${(100*d.circ/base).toFixed(1)}%"></i></div>
+        <div class="s">${(100*d.circ/base).toFixed(1)}% of max supply is out · price ${d.price >= 1 ? "$"+d.price.toFixed(2) : "$"+d.price.toPrecision(3)}</div></div>
+      <div class="kpi"><div class="n">Market cap → FDV</div>
+        <div class="v" style="font-size:25px;margin-top:12px">${usd(d.mcap)} <span class="muted">→</span> ${usd(fdv)}</div>
+        <div class="s"><span class="${rc}">FDV ${ratio.toFixed(1)}× the market cap</span></div></div>
+      <div class="kpi"><div class="n">Dilution, 12 months</div>
+        <div class="v ${dc}">${pct(dil)}</div><div class="s">${fmt(perMonth)} new ${sym} a month · ${d.kind}</div>${net}</div>
+      <div class="kpi"><div class="n">Buybacks & burns</div>${bb}</div>
+    </div>
+    <div class="unlock">${unlock}</div>
+
+    <section class="panel">
+      <div class="ph"><h2>What is out, month by month${d.kind === "emissions" ? " · emissions only, no vesting schedule published" : ""}</h2><span class="read" id="read"></span></div>
+      <div class="chart"><svg id="svg" viewBox="0 0 1000 170" preserveAspectRatio="none"></svg></div>
+      <div class="slide"><button class="play" id="play" aria-label="Play">▶</button><input type="range" min="0" max="${n}" value="1" id="rng" aria-label="Month"></div>
+      <div class="axis"><span>Today</span><span>${d.labels[n-1]}</span></div>
+      <div class="rows" id="rows"></div>
+    </section>
+
+    <section class="panel">
+      <div class="ph"><h2>Where new tokens come from, and where they go</h2><span class="read" id="fread"></span></div>
+      <div class="flow">
+        <div class="col left" id="ins"></div>
+        <div class="tank"><div class="fill" id="fill"></div><div class="lab"><div class="k" id="tankK">CIRCULATING</div><div class="a" id="tankA"></div><div class="w" id="tankW"></div></div></div>
+        <div class="col right" id="outs"></div>
+      </div>
+      ${d.gap > 0 ? `<div class="gap">Not issued yet: <b class="mono">${fmt(d.gap)}</b> (max supply minus total supply)</div>` : ""}
+    </section>
+
+    <div class="foot"><a href="#">How the numbers are made ›</a><span>Read Oct 10 · refreshes daily</span>
+      <span class="stats">14 visitors · 35 views · 24 uses · last 30 days</span></div>
+  </div>`;
+
+  const out = [d.circ]; d.inflow.forEach(v => out.push(out[out.length-1] + v - (d.burn || 0)));
+  const bought = [0]; d.inflow.forEach(() => bought.push(bought[bought.length-1] + (d.buyback || 0)));
+  const lo = d.circ * 0.92, hi = Math.max(...out) * 1.04;
+  const X = i => 10 + i * (980 / n), Y = v => 160 - (v - lo) / (hi - lo) * 140;
+  let path = `M${X(0)},${Y(out[0])}`; out.forEach((v, i) => { if (i) path += ` L${X(i)},${Y(out[i-1])} L${X(i)},${Y(v)}`; });
+  let ticks = ""; d.events.forEach((e, i) => { if (Object.keys(e).length) ticks += `<circle cx="${X(i+1)}" cy="${Y(out[i+1])}" r="4" fill="#00cfff"/>`; });
+  document.getElementById("svg").innerHTML = `<path d="${path} L${X(n)},${Y(out[n])} L${X(n)},165 L${X(0)},165 Z" fill="rgba(0,207,255,.10)"/>
+    <path d="${path} L${X(n)},${Y(out[n])}" fill="none" stroke="#00cfff" stroke-width="2.5" vector-effect="non-scaling-stroke"/>${ticks}
+    <line id="mk" y1="6" y2="166" stroke="#00ff88" stroke-width="2" vector-effect="non-scaling-stroke"/>`;
+
+  const rng = document.getElementById("rng");
+  const show = () => {
+    const i = +rng.value, label = i === 0 ? "Today" : d.labels[i-1], mk = document.getElementById("mk");
+    mk.setAttribute("x1", X(i)); mk.setAttribute("x2", X(i));
+    document.getElementById("read").innerHTML = `${label} · <em>${fmt(out[i])} out</em>`;
+    document.getElementById("rows").innerHTML = `<div>Out of max supply<b>${(100*out[i]/base).toFixed(1)}%</b></div>
+      <div>New since today<b>+${fmt(out[i]-d.circ)}</b></div><div>Bought back since today<b>${bought[i] ? fmt(bought[i]) : "—"}</b></div>
+      <div>Market cap at today's price<b>${usd(out[i]*d.price)}</b></div>`;
+    // the flow for the month after the marker (or the first month at "today")
+    const m = i === 0 ? 0 : i - 1, ev = d.events[m] || {};
+    const by = {}; Object.values(ev).forEach(list => list.forEach(([who, a]) => by[who] = (by[who] || 0) + a));
+    let ins = Object.entries(by).map(([who, a]) => `<div class="box in"><div class="k">Vesting</div><div class="a">+${fmt(a)}</div><div class="w">${who}</div></div>`).join("");
+    if (!ins && d.inflow[m]) ins = `<div class="box in"><div class="k">Emissions</div><div class="a">+${fmt(d.inflow[m])}</div><div class="w">rewards to stakers</div></div>`;
+    if (!ins) ins = `<div class="none">No scheduled tokens this month</div>`;
+    const outs = d.buyback ? `<div class="box out"><div class="k">Buyback</div><div class="a">−${fmt(d.buyback)}</div><div class="w">${usd(d.buyback*d.price)} of revenue a month</div></div>`
+      : `<div class="none">No buybacks or burns found</div>`;
+    document.getElementById("ins").innerHTML = ins; document.getElementById("outs").innerHTML = outs;
+    const netM = d.inflow[m] - (d.buyback || 0);
+    document.getElementById("fread").innerHTML = `${d.labels[m]} · <em class="${netM > 0 ? "red" : netM < 0 ? "green" : ""}">${netM > 0 ? "+" : netM < 0 ? "−" : ""}${fmt(Math.abs(netM))} net this month</em>`;
+    document.getElementById("tankK").textContent = `OUT · ${label.toUpperCase()}`;
+    document.getElementById("tankA").textContent = fmt(out[i]);
+    document.getElementById("tankW").textContent = `${(100*out[i]/base).toFixed(1)}% of max`;
+    document.getElementById("fill").style.height = `${Math.max(4, 100*out[i]/base)}%`;
+  };
+  rng.addEventListener("input", show); show();
+  let timer = null;
+  document.getElementById("play").onclick = () => {
+    if (timer) { clearInterval(timer); timer = null; return; }
+    rng.value = 0; show();
+    timer = setInterval(() => { if (+rng.value >= n) { clearInterval(timer); timer = null; return; } rng.value = +rng.value + 1; show(); }, 350);
+  };
+  document.querySelectorAll(".mock button").forEach(b => b.setAttribute("aria-pressed", b.dataset.c === sym));
+}
+document.querySelectorAll(".mock button").forEach(b => b.onclick = () => render(b.dataset.c));
+const q = new URLSearchParams(location.search).get("c");
+render(DATA[q] ? q : "HYPE");
+</script>
+</body>
+</html>
