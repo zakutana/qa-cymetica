@@ -18,6 +18,8 @@ body { margin: 0; background: var(--bg); color: var(--text); font: 15px/1.45 Int
 .intro .k { font: 700 14px "JetBrains Mono", monospace; letter-spacing: .2em; color: var(--cyan); }
 .intro h1 { font: 34px "Archivo Black", sans-serif; margin: 8px 0 6px; }
 .intro p { margin: 0; color: var(--dim); }
+.sec { margin: 0 0 14px; } .sec h2 { font: 22px "Archivo Black", sans-serif; margin: 0 0 4px; } .sec p { margin: 0; color: var(--dim); font-size: 14px; }
+.head .tip { vertical-align: 1px; }
 
 .card { background: var(--panel); border: 1px solid var(--line); border-radius: 16px; padding: 24px 26px 18px; }
 .head { display: flex; align-items: baseline; gap: 14px; margin-bottom: 18px; }
@@ -71,8 +73,8 @@ input[type=range]::-moz-range-thumb { width: 18px; height: 18px; border-radius: 
 <main class="page">
   <section class="intro">
     <div class="k">GEM SCREENER · SUPPLY CARD · REDESIGN MOCK</div>
-    <h1>Five numbers and one slider</h1>
-    <p>Real figures from the Supply Analyzer API, read 2026-10-10. Three coins: a published schedule with buybacks, a big unlock next week, no schedule at all.</p>
+    <h1>Five numbers on top</h1>
+    <p>Real figures from the Supply Analyzer API, read 2026-10-10. Three coins: a published schedule with buybacks, a big unlock next week, no schedule at all. Sources sit behind the (i).</p>
   </section>
   <div id="cards"></div>
 </main>
@@ -90,7 +92,9 @@ const fmt = (n) => { const a = Math.abs(n);
 const usd = (n) => "$" + fmt(n);
 const pct = (x) => (x >= 0 ? "+" : "") + (Math.abs(x) >= 100 ? x.toFixed(0) : x.toFixed(1)) + "%";
 
-function card(sym, d) {
+const SOURCES = "Circulating, price and market cap: CoinGecko. Unlock schedule: DeFiLlama and project docs. FDV = max supply × price. Read Oct 10. Not financial advice.";
+
+function card(sym, d, full) {
   const fdvBase = d.max || d.total, fdv = fdvBase * d.price, ratio = fdv / d.mcap;
   const in12 = d.inflow.slice(0, 12).reduce((a, b) => a + b, 0);
   const dil = 100 * in12 / d.circ, perMonth = d.inflow[0];
@@ -117,10 +121,11 @@ function card(sym, d) {
     unlock = `<span class="n">NEXT UNLOCK</span><span class="when muted">No schedule published</span>
       <span class="what">Only emissions are known: <b>${fmt(perMonth)} ${sym} a month</b> to stakers.</span>`;
   }
-  const id = "c" + sym;
+  const id = (full ? "f" : "c") + sym;
   return `<section class="card" id="${id}">
     <div class="head"><span class="lab">SUPPLY</span><span class="coin">${sym} <span>${d.name}</span></span>
-      <a class="open" href="#">Open in Supply Analyzer ↗</a></div>
+      <span class="tip" title="${SOURCES}">i</span>
+      ${full ? "" : `<a class="open" href="#">Open in Supply Analyzer ↗</a>`}</div>
     <div class="kpis">
       <div class="kpi"><div class="n">Circulating</div>
         <div class="v">${fmt(d.circ)}<small>of ${fmt(fdvBase)}</small>${tip}</div>
@@ -135,20 +140,19 @@ function card(sym, d) {
       <div class="kpi"><div class="n">Buybacks & burns</div>${bb}</div>
     </div>
     <div class="unlock">${unlock}</div>
-    <div class="flow">
+    ${full ? `<div class="flow">
       <div class="top"><span class="n">WHAT IS OUT, MONTH BY MONTH ${d.kind === "emissions" ? "· emissions only, no vesting schedule published" : ""}</span>
         <span class="read" id="${id}r"></span></div>
       <div class="chart"><svg id="${id}s" viewBox="0 0 1000 150" preserveAspectRatio="none"></svg></div>
       <input type="range" min="0" max="${d.labels.length}" value="12" id="${id}i" aria-label="Month">
       <div class="axis"><span>Today</span><span>${d.labels[d.labels.length-1]}</span></div>
       <div class="rows" id="${id}rows"></div>
-    </div>
-    <div class="foot">Circulating, price and market cap: CoinGecko · unlock schedule: DeFiLlama and project docs · read Oct 10 · FDV = max supply × price · not financial advice</div>
+    </div>` : ""}
   </section>`;
 }
 
 function wire(sym, d) {
-  const id = "c" + sym, base = d.max || d.total, n = d.labels.length;
+  const id = "f" + sym, base = d.max || d.total, n = d.labels.length;
   const out = [d.circ]; d.inflow.forEach(v => out.push(out[out.length-1] + v - (d.burn || 0)));
   const bought = [0]; d.inflow.forEach(() => bought.push(bought[bought.length-1] + (d.buyback || 0)));
   const lo = d.circ * 0.92, hi = Math.max(...out) * 1.04;
@@ -173,8 +177,14 @@ function wire(sym, d) {
 }
 
 const host = document.getElementById("cards");
-host.innerHTML = Object.entries(DATA).map(([s, d]) => card(s, d)).join('<div style="height:28px"></div>');
-Object.entries(DATA).forEach(([s, d]) => wire(s, d));
+const h2 = (t, s) => `<div class="sec"><h2>${t}</h2><p>${s}</p></div>`;
+host.innerHTML =
+  h2("1. Gem Screener coin detail: the Supply card", "Everything at the top, no slider. The slider lives on the Supply Analyzer page.") +
+  Object.entries(DATA).map(([s, d]) => card(s, d, false)).join('<div style="height:20px"></div>') +
+  '<div style="height:44px"></div>' +
+  h2("2. Supply Analyzer page", "The same five numbers on top, then the slider month by month. Shown for HYPE.") +
+  card("HYPE", DATA.HYPE, true);
+wire("HYPE", DATA.HYPE);
 </script>
 </body>
 </html>
