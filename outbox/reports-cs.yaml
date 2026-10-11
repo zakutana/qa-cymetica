@@ -73,3 +73,4 @@ reports:
   192: "Build it Better: po BB-CHANGE se spec nápadu přepne na šablonu přestavby a zakáže vlastní logo (4 ze 4)"
   193: "Dokumentace: cesta pro stažení žádosti u Build it Better (withdraw) je v llms.txt, ale chybí v OpenAPI"
   194: "Dokumentace: llms.txt dává token žádosti Build it Better do těla, OpenAPI a stránka do hlavičky"
+  195: "Agent Tournaments nabízí ke stolu 12 smazaných botů; smazaný „lab MACD Hunter“ sedí u stolu 2 s 0 obchody"

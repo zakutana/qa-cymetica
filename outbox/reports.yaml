@@ -6001,6 +6001,41 @@ reports:
       for the token and the places the OpenAPI declares for that route (the x-bb-token header, a token field
       of the request body) have nothing in common.
 
+  - key: agent-tournaments-offers-deleted-bots
+    findings: [CYM-agent-tournaments-offers-only-bots-that-exist]
+    severity: medium
+    category: logic
+    url: https://cymetica.com/api/v1/agent-tournaments/my-bots
+    title: >-
+      Agent Tournaments: /api/v1/agent-tournaments/my-bots offers 12 bots that no longer exist for a seat
+      (profile 404 "Bot not found."), and one of them holds seat 1 at table 2 with 0 trades
+    expected: >
+      The list an owner seats a bot from holds only bots that exist and can trade, so a seat goes to a bot that
+      starts trading on approval, as the rules say: "On approval your bot gets the table's trading capital from
+      your paper USDC and starts trading."
+    actual: >
+      Read on 2026-10-11 between 17:30 and 18:50 UTC with our X-API-Key. GET /api/v1/agent-tournaments/my-bots
+      lists 53 bots. GET /api/v1/cloned-bots/my-clones lists 41 (paper and live together). For each of the 12
+      others, GET /api/v1/cloned-bots/{id}/profile answers 404 {"detail":"Bot not found."}: they are clones that
+      were deleted. One of them is "lab MACD Hunter" (996cd23e-2838-432c-aca7-5437fbd1ecbc), which we deleted on
+      2026-09-28 (DELETE /api/v1/cloned-bots/{id} -> 200, success true), twelve days before Agent Tournaments
+      shipped; /my-bots lists it with trading: true. Table 2 (paper, Pro, status running since 2026-10-11 16:46
+      UTC) has a member seat, seat_id 1, named "lab MACD Hunter", with 0 trades and 0 volume, while the house
+      seats have 1 to 20 trades each; it counts in seats_taken (10 of 10) and the table's pot is 100 USDC.
+    steps:
+      - 'GET https://cymetica.com/api/v1/agent-tournaments/my-bots (X-API-Key) -> 53 bots, each {instance_id, name, species, species_id, trading}'
+      - 'GET https://cymetica.com/api/v1/cloned-bots/my-clones?mode=paper and ?mode=live (X-API-Key) -> 41 clones together'
+      - 'GET https://cymetica.com/api/v1/cloned-bots/996cd23e-2838-432c-aca7-5437fbd1ecbc/profile -> 404 {"detail":"Bot not found."}; the same 404 for the other 11 offered bots not in my-clones'
+      - 'The same /my-bots answer -> {"instance_id": "996cd23e-2838-432c-aca7-5437fbd1ecbc", "name": "lab MACD Hunter", "trading": true}'
+      - 'GET https://cymetica.com/api/v1/agent-tournaments/tables/2 -> status running, seats_taken 10, pot_usdc 100.0; standings: seat_id 1 "lab MACD Hunter", trades 0, volume_usdc 0.0, house false'
+    body: >
+      In a paper table this costs a member seat for seven days and a buy-in in the pot for a bot that can never
+      trade; in a live table the buy-in would be real money. How to fix it is yours: leave deleted bots out of
+      /my-bots, refuse a seat for a bot that no longer exists, and decide what happens to a seat whose bot is
+      deleted while the table runs. We do not know who asked for seat 1: our account's view of table 2 reads
+      my_seat null. Our check reads /my-bots against our clone lists and, for the rest, each bot's profile, and
+      fails while any offered bot's profile answers 404. GET requests only.
+
 footer: >
   Reported by an independent QA agent. Scope of this work: verification of the
   REST API, MCP, the machine-readable discovery surfaces and the pages built on
