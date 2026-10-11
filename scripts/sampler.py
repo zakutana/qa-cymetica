@@ -218,10 +218,15 @@ class _Reads:
         return body
 
 
-def _bots(client, reads: _Reads, instances: list[str], seen: dict, at: str) -> list[dict]:
+def _bots(client, reads: _Reads, instances: list[str], seen: dict, at: str
+          ) -> tuple[list[dict], dict[str, dict]]:
+    """Every bot of ours from ONE call, `my-clones`: its sample (profit, trading, why the
+    platform stopped it) and its config when that changed. The sample rows come back keyed
+    by instance too, so `_bot_detail` can add the balance split to the ones it reads."""
     if not instances:
-        return []
+        return [], {}
     rows: list[dict] = []
+    samples: dict[str, dict] = {}
     listed = reads.get(client, "bots", BOTS, mode="paper")
     theirs: dict[str, dict] = {}
     if listed is not None:
@@ -232,38 +237,64 @@ def _bots(client, reads: _Reads, instances: list[str], seen: dict, at: str) -> l
             if isinstance(row, dict) and row.get("id") in instances:
                 theirs[row["id"]] = row
     for instance in instances:
+        mine = theirs.get(instance)
+        if mine is None:
+            continue
+        sample = {"type": "sample", "kind": "bot", "at": at,
+                  "instance_id": instance,
+                  "is_trading": mine.get("is_trading"),
+                  "is_paper": mine.get("is_paper"),
+                  "balance_usdc": mine.get("current_balance_usdc"),
+                  "total_profit_usdc": mine.get("total_profit_usdc"),
+                  "trades_executed": mine.get("trades_executed"),
+                  "win_rate": mine.get("win_rate"),
+                  "last_trade_at": mine.get("last_trade_at"),
+                  # Why it stopped, when the platform did it: `stop_loss` or
+                  # `take_profit` is the band WE configured (qa.lab.bot_stops).
+                  "status": mine.get("status"),
+                  "auto_pause_reason": mine.get("auto_pause_reason"),
+                  "auto_pause_pnl_pct": mine.get("auto_pause_pnl_pct"),
+                  "auto_pause_at": mine.get("auto_pause_at")}
+        rows.append(sample)
+        samples[instance] = sample
+        economics = mine.get("execution_economics")
+        config = {"type": "config", "at": at, "instance_id": instance,
+                  "strategy_type": mine.get("strategy_type"),
+                  "risk_profile": mine.get("risk_profile"),
+                  "primary_indicators": mine.get("primary_indicators"),
+                  "secondary_indicators": mine.get("secondary_indicators"),
+                  "execution_class": (economics.get("execution_class")
+                                      if isinstance(economics, dict) else None)}
+        if _signature(config, CONFIG_FIELDS) != seen["configs"].get(instance):
+            rows.append(config)
+    return rows, samples
+
+
+# Where the next round's bot detail starts (NEXT 2026-10-11): a round reads as many bots'
+# balance and trades as its time allows AFTER the cards, and the next one carries on from
+# there, so every bot is read every few rounds and no card is ever starved by them.
+_DETAIL = {"next": 0}
+
+
+def _bot_detail(client, reads: _Reads, instances: list[str], samples: dict[str, dict],
+                seen: dict, at: str) -> tuple[list[dict], dict]:
+    """Each bot's balance split and its trades, in turn, while the round has time. A bot
+    not reached this round is not a failed read: the tick says how many were read."""
+    rows: list[dict] = []
+    if not instances:
+        return rows, {"read": 0, "of": 0}
+    start = _DETAIL["next"] % len(instances)
+    order = instances[start:] + instances[:start]
+    done = 0
+    for instance in order:
+        if time.monotonic() - reads.started > ROUND_SECONDS:
+            break
         balance = reads.get(client, "balance", BALANCE.format(id=instance))
         activity = reads.get(client, "activity", ACTIVITY.format(id=instance))
-        mine = theirs.get(instance)
-        if mine is not None:
-            split = balance if isinstance(balance, dict) else {}
-            rows.append({"type": "sample", "kind": "bot", "at": at,
-                         "instance_id": instance,
-                         "is_trading": mine.get("is_trading"),
-                         "is_paper": mine.get("is_paper"),
-                         "balance_usdc": mine.get("current_balance_usdc"),
-                         "total_profit_usdc": mine.get("total_profit_usdc"),
-                         "trades_executed": mine.get("trades_executed"),
-                         "win_rate": mine.get("win_rate"),
-                         "last_trade_at": mine.get("last_trade_at"),
-                         "locked_usdc": split.get("locked_in_trades"),
-                         "available_usdc": split.get("available"),
-                         # Why it stopped, when the platform did it: `stop_loss` or
-                         # `take_profit` is the band WE configured (qa.lab.bot_stops).
-                         "status": mine.get("status"),
-                         "auto_pause_reason": mine.get("auto_pause_reason"),
-                         "auto_pause_pnl_pct": mine.get("auto_pause_pnl_pct"),
-                         "auto_pause_at": mine.get("auto_pause_at")})
-            economics = mine.get("execution_economics")
-            config = {"type": "config", "at": at, "instance_id": instance,
-                      "strategy_type": mine.get("strategy_type"),
-                      "risk_profile": mine.get("risk_profile"),
-                      "primary_indicators": mine.get("primary_indicators"),
-                      "secondary_indicators": mine.get("secondary_indicators"),
-                      "execution_class": (economics.get("execution_class")
-                                          if isinstance(economics, dict) else None)}
-            if _signature(config, CONFIG_FIELDS) != seen["configs"].get(instance):
-                rows.append(config)
+        done += 1
+        if instance in samples and isinstance(balance, dict):
+            samples[instance]["locked_usdc"] = balance.get("locked_in_trades")
+            samples[instance]["available_usdc"] = balance.get("available")
         items = activity.get("items") if isinstance(activity, dict) else None
         if activity is not None and not isinstance(items, list):
             reads.say("activity", "unreadable")
@@ -274,7 +305,8 @@ def _bots(client, reads: _Reads, instances: list[str], seen: dict, at: str) -> l
                      "trade_id": item["id"], **{f: item.get(f) for f in TRADE_FIELDS}}
             if _signature(trade, TRADE_FIELDS) != seen["trades"].get(item["id"]):
                 rows.append(trade)
-    return rows
+    _DETAIL["next"] = start + done
+    return rows, {"read": done, "of": len(instances)}
 
 
 def _describe(card: str, body, at: str) -> dict:
@@ -390,20 +422,26 @@ def tick(client, every: float) -> list[dict]:
     at = _now()
     reads = _Reads()
     rows: list[dict] = []
+    detail = {"read": 0, "of": 0}
     token = CURRENT_TIER.set(SafetyTier.SAFE)
     try:
         ours = follow()
         seen = _seen(rooms.load_samples())
-        rows += _bots(client, reads, ours["bots"], seen, at)
+        # The list of bots, then the cards, then each bot's detail with what time is left:
+        # 41 bots read first starved the cards in 40 rounds of 40 (NEXT 2026-10-11).
+        listed, samples = _bots(client, reads, ours["bots"], seen, at)
+        rows += listed
         rows += _cards(client, reads, ours["positions"], ours["cards"], seen, at)
         rows += _arena(client, reads, ours["teams"], at)
+        more, detail = _bot_detail(client, reads, ours["bots"], samples, seen, at)
+        rows += more
     except Exception as exc:  # noqa: BLE001 -- a broken round is a failed round
         reads.say("round", f"broke: {type(exc).__name__}: {exc}"[:200])
     finally:
         CURRENT_TIER.reset(token)
     rows.append({"type": "tick", "at": at, "every": every,
                  "ok": all(v == "ok" for v in reads.verdicts.values()),
-                 "reads": reads.verdicts,
+                 "reads": reads.verdicts, "detail": detail,
                  "seconds": round(time.monotonic() - reads.started, 2),
                  "rows": len(rows)})
     try:

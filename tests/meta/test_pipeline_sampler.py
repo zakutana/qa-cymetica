@@ -213,6 +213,63 @@ def test_the_sampler_reads_its_six_doors_with_get_and_nothing_else(
                   if r.get("kind") == "bot"]
     assert (stopped["is_trading"], stopped["status"], stopped["auto_pause_reason"],
             stopped["auto_pause_pnl_pct"]) == (False, "stopped", "stop_loss", -15.0)
+    _many_bots_do_not_starve_the_cards(tmp_path / "many", monkeypatch)
+
+
+def _many_bots_do_not_starve_the_cards(state_dir, monkeypatch):
+    """NEXT 2026-10-11: with 41 bots each round spent its 90 seconds on two reads a bot, and
+    the cards, positions and history were skipped in 40 rounds of 40 -- the card rooms showed
+    a "now" five days old (L1 99.98 for 91.33). The bot grid of laboratory v3 adds more bots.
+
+    So one call lists every bot (and is every bot's sample: profit, trading, why it stopped);
+    the cards are read next; and each bot's balance split and trades are read after them, as
+    many as the round's time allows, starting where the last round stopped. A round that ran
+    out of time for them says how many it read; it did not fail, so it is ok."""
+    state_dir.mkdir()
+    sampler = _sampler(state_dir, monkeypatch)
+    _ours(state_dir)
+    many = [f"inst-{n:02d}" for n in range(30)]
+    real = sampler.follow
+    monkeypatch.setattr(sampler, "follow", lambda: {**real(), "bots": list(many)})
+    monkeypatch.setattr(sampler, "ROUND_SECONDS", 1.0)
+    bodies = _api()
+    bodies[BOTS] = [{"id": i, "is_trading": True, "is_paper": True,
+                     "current_balance_usdc": 500.0, "total_profit_usdc": 1.0}
+                    for i in many]
+    detail: list[str] = []
+
+    def answer(request):
+        path = request.url.path
+        if path.endswith("/balance") or path.endswith("/activity"):
+            detail.append(path.split("/")[-2])
+            time.sleep(0.05)
+            return httpx.Response(200, json={"items": []} if path.endswith("/activity")
+                                  else {"locked_in_trades": 0.0, "available": 500.0})
+        body = bodies.get(path)
+        return (httpx.Response(200, json=body) if body is not None
+                else httpx.Response(404, json={"detail": "not found"}))
+
+    from qa.client import build_client
+    from qa.config import identities
+    from qa.safety import EndpointRegistry
+
+    client = build_client(identities()["anon"], EndpointRegistry.load(),
+                          base_url="https://cymetica.com", inner=httpx.MockTransport(answer))
+    rows = sampler.tick(client, every=600)
+    (tick,) = [r for r in rows if r["type"] == "tick"]
+    for door in ("positions", "card", "history"):
+        assert tick["reads"].get(door) == "ok", f"{door} was starved: {tick['reads']}"
+    assert sorted(r["instance_id"] for r in rows if r.get("kind") == "bot") == many, (
+        "a bot the list named got no sample")
+    read = tick["detail"]
+    assert read["of"] == 30 and 0 < read["read"] < 30, read
+    assert tick["ok"] is True, f"a round that ran out of time for bot detail failed: {tick}"
+    first = list(dict.fromkeys(detail))
+    detail.clear()
+    sampler.tick(client, every=600)
+    second = list(dict.fromkeys(detail))
+    assert second[0] == many[len(first) % 30], (
+        f"the next round did not start where this one stopped: {first[:3]} then {second[:3]}")
 
 
 @qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
