@@ -27,7 +27,7 @@ nikdy nebylo další na řadě.
 - [ ] 2026-10-03  Výzkum botů, VŠE v docs/bots-research-plan.md „Zbývá": sampler musí běžet, wave 0 verdikt ~10. 10., vlna 2 s parametry, F1 kód (strop, víc klonů/druh), H2H do /lab, tool pro vlnu, degen prompty, karty: `scripts/card_rules.py` po ~10. 10., odpovědi Cymetiky (409, skilly).
 - [x] 2026-10-03  Dopředný test dvou pravidel pro karty (short jen akcie, long s kryptem), soudí jen karty vzniklé od 4. 10.: `python scripts/card_rules.py` (hotovo 2026-10-04, 8d4ddfd1)
 
-- [ ] 2026-10-08  Sledovat: #142, #136, #121, #51. #171/#173/#174 selhávají i po opravě (PRE-0261, FAIL poslán 8. 10.). Liga: `league.py tick --confirm` po 2 h, jen na slovo/`/loop`. ET-29325: odpověď na MSG-0146, PR awesome-web3 #831.
+- [ ] 2026-10-08  Sledovat: #142, #136, #121, #51; FOMO #762 (backtest panel: path_coverage Robinhood 0 → 0,9 do ~13. 10., Solana 0,011). #171/#173/#174 selhávají i po opravě. Liga: po 2 h, jen na slovo/`/loop`. ET-29325: PR awesome-web3 #831.
 - [x] 2026-09-24  Degen prompty přes `chat/stream` (paper): klient `scripts/chat.py` hotov, běželo 9 a 8. Zbytek (room na prompt) přesunut do docs/bots-research-plan.md „Zbývá", kde sedí s ostatním výzkumem botů. (hotovo 2026-10-04)
 - [x] 2026-10-01  ET-26036 dál jen indikátorová půlka: /weekly-signal 1. 10. píše „No chart patterns are detected“, obrazce navrženy jako feature 791. Až se pohne: definice obrazců, kombinace s RSI/MACD, backtest (základ, po aktivech, 90% verze), graf. Verdikt s operátorem. (10. 10. pořád bez obrazců; čekání na Cymetiku drží nezodpovězené MSG-0035/0051, plán zůstává tady v gitu; hotovo 2026-10-10)
 
