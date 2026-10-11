@@ -2,7 +2,7 @@
  "run": "deep-pass-2026-10-11",
  "at": "2026-10-11T19:31:00+00:00",
  "previous_at": "2026-10-10T17:59:18+00:00",
- "at_finished": null,
+ "at_finished": "2026-10-11T22:26:29+00:00",
  "start_commit": "c3700b795cceb18c4f87ac17ebd1e5bab10db1de",
  "size": "full",
  "gaps": [
@@ -686,15 +686,15 @@
   }
  ],
  "retrospective": {
-  "last": "2026-10-04",
-  "done": false
+  "last": "2026-10-11",
+  "done": true
  },
  "meta_tests": {
   "start": 839,
-  "end": null,
+  "end": 839,
   "reason": null
  },
- "finished": false,
+ "finished": true,
  "rule_changes": [
   {
    "id": "RC1",
@@ -722,5 +722,28 @@
    "commit": "58890461",
    "handover": true
   }
- ]
+ ],
+ "next": [
+  "Před „zapni laborku“ (C9) nejdřív body 1–8 z docs/crew-before-c9.md (deep pass 11. 10.): špinavý strom bez majitele, zápis „odesláno“ za operátora, cizí BB tikety, hold v jednom Bash volání, zaseknutý tick, push přes testy, poznámka manažera = data, skill. Testy napřed.",
+  "FOMO sběr: 9. 10. 48 557 dotazů na cymetica.com, 39 784 na nezdokumentované /clones/memecoin-terminal/search; REPLY-0030 žádá žádnou zátěž. Denní strop ve fomo_watch a denní strop requestů v patrolu (dnes jen špička za minutu). docs/crew-before-c9.md bod 10; bod 9 grid."
+ ],
+ "week": {
+  "readers": [
+   "architecture",
+   "conduct toward Cymetica",
+   "documents and rules"
+  ],
+  "findings": "docs/crew-before-c9.md (11 items, 8 before the company's first start)",
+  "tests": {
+   "guard_us": 1454,
+   "measure_them": 165,
+   "meta_functions": 839
+  },
+  "commits_7d": 262,
+  "by_model": {
+   "Opus 5.5": 153,
+   "Sonnet 5.5": 81
+  },
+  "triad_over": 9
+ }
 }
