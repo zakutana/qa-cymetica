@@ -96,10 +96,11 @@ def call_key(record: dict) -> str:
 
 REDACTED = "<redacted>"
 
-# Header names whose values never reach disk.
+# Header names whose values never reach disk. `x-bb-token` is a Build it Better request
+# token: whoever holds it may accept, change, judge or withdraw that ticket (scripts/bb.py).
 SECRET_HEADERS = frozenset({
     "x-api-key", "authorization", "cookie", "set-cookie",
-    "x-hmac-signature", "x-signature", "proxy-authorization",
+    "x-hmac-signature", "x-signature", "proxy-authorization", "x-bb-token",
 })
 
 # Body/URL patterns that look like key material regardless of where they appear.
@@ -108,6 +109,10 @@ SECRET_PATTERNS = [
     re.compile(r"\b[0-9a-fA-F]{48,}\b"),
     re.compile(r"\bBearer\s+[A-Za-z0-9._\-]{20,}", re.IGNORECASE),
     re.compile(r"\beyJ[A-Za-z0-9._\-]{20,}"),  # JWT
+    # The value of a JSON `request_token` (the 201 that files a Build it Better request), in
+    # the two spacings a serialiser writes; the quotes stay, so the body is still JSON.
+    re.compile(r'(?<="request_token":")[^"]+'),
+    re.compile(r'(?<="request_token": ")[^"]+'),
 ]
 
 # Evidence ids captured during the currently-running test. Drained by the

@@ -110,6 +110,14 @@ scripts/league.py Cymetica's Agent League (2026-10-09): `puzzles`, `join`,
                   CEX-DEX net edge), with a reasoning that is the computation.
                   Skill `.claude/skills/league/SKILL.md`; diary
                   state/league.jsonl, report state/league/report.json.
+scripts/bb.py     Build it Better requests the desk files itself (2026-10-11):
+                  `file`, `accept`, `change`, `verdict`, `withdraw` (each a
+                  dry run without --confirm), `get`, `mine`. Five declared
+                  writes, closed body (`build_it_better.*` in components.yaml);
+                  their limits refused before a body exists. Diary
+                  state/bb.jsonl (rule 9, BB-NNNN); the one-time request token
+                  goes as the X-BB-Token header and lives only in
+                  state/bb_tokens.json, gitignored.
 NEXT.md           what we agreed to do next and have not done. Plain markdown,
                   one line per item, `- [ ] YYYY-MM-DD  sentence`; ticked, it
                   gets `(hotovo DATE)` and goes a week after that stamp. At

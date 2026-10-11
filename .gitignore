@@ -2,6 +2,9 @@
 .env
 *.key
 *.pem
+# Build it Better request tokens, ticket -> token (scripts/bb.py). Each is shown once, in the
+# 201 that files the request, and lets its holder accept, change, judge or withdraw that ticket.
+state/bb_tokens.json
 
 # Rebuildable projection of the journal. The journal is the source of truth.
 state/qa.sqlite
