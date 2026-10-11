@@ -321,6 +321,155 @@ def test_a_level_v_run_holds_the_tree_still_and_the_hold_cannot_freeze_the_compa
     assert crew.holder()["by"] == "bugs"
 
 
+# -- the clock -------------------------------------------------------------------------------
+
+TICK_OUTPUT = """\
+[lab] tick 2026-10-11 18:00
+  answered: NEX-0201 opened STR-0130
+  failed: /api/v1/movers answered 500 twice
+  their side moved: #201 status FIXED, A2A-0090 answered
+decide: answer NEX-0201 + gap + hunt sweep + outsider + desk
+"""
+
+
+@qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
+def test_the_clock_runs_the_laboratorys_tick_and_routes_what_it_decided(company,
+                                                                       monkeypatch):
+    """C3. The laboratory's tick stays the company's one clock for vendor news and hunts;
+    what it decides becomes tickets for the department whose work it is. The desk keeps
+    its own pace, so the tick's `desk` is dropped; a chat /loop does not tick beside it."""
+    assert crew.decide_items(TICK_OUTPUT) == ["answer NEX-0201", "gap", "hunt sweep",
+                                              "outsider", "desk"]
+    assert crew.decide_items("decide: none\n") == []
+    assert crew.moved_lines(TICK_OUTPUT) == ["#201 status FIXED, A2A-0090 answered"]
+    at = "2026-10-11T18:00:00+00:00"
+    routed = crew.route(crew.decide_items(TICK_OUTPUT), TICK_OUTPUT, at, {})
+    by_to = {t["to"]: t for t in routed}
+    assert set(by_to) == {"lab", "bugs", "outsider"}, "the desk keeps its own pace"
+    assert by_to["lab"]["payload"]["items"] == ["answer NEX-0201", "gap"]
+    assert "answered 500 twice" in by_to["lab"]["payload"]["tick"]
+    assert by_to["bugs"]["kind"] == "sweep"
+    assert by_to["bugs"]["payload"]["moved"] == ["#201 status FIXED, A2A-0090 answered"]
+    assert by_to["outsider"]["key"] == "outsider:2026-10-11"
+    # A hunt waits behind an open sweep or hunt; a sweep does not wait behind a hunt.
+    open_hunt = {"T-0001": {"to": "bugs", "kind": "hunt", "status": "open"}}
+    assert not crew.route(["hunt bugs"], "", at, open_hunt)
+    assert crew.route(["hunt sweep"], "", at, open_hunt)[0]["kind"] == "sweep"
+    # The laboratory still working on a question when the next tick decides it again: the
+    # item is not handed over twice (a /loop never overlapped itself; the company does).
+    busy = {"T-0002": {"to": "lab", "kind": "lab", "status": "claimed",
+                       "payload": {"items": ["question"]}}}
+    again = crew.route(["question", "learn"], "", at, busy)
+    assert [t["payload"]["items"] for t in again] == [["learn"]]
+    assert not crew.route(["question"], "", at, busy)
+
+    # The clock itself: due every twenty minutes, the tick a process of its own, run with
+    # QA_CREW_DEPT=clock and marked active so a hold waits for it.
+    sup = _script("crew")
+    fake_tick = company / "fake_tick.py"
+    fake_tick.write_text(
+        "import os, sys\n"
+        f"open(r'{company / 'tick.env'}', 'w').write(os.environ.get('QA_CREW_DEPT', ''))\n"
+        f"sys.stdout.write({TICK_OUTPUT!r})\n", encoding="utf-8")
+    monkeypatch.setenv("QA_CREW_TICK", json.dumps([sys.executable, str(fake_tick)]))
+    first = datetime.now(timezone.utc)
+    sup.clock_look(now=first)
+    assert (company / "tick.env").read_text(encoding="utf-8") == "clock"
+    state = crew.tickets()
+    assert sorted((t["to"], t["kind"]) for t in state.values()) == [
+        ("bugs", "sweep"), ("lab", "lab"), ("outsider", "outsider")]
+    assert all(t["from"] == "clock" for t in state.values())
+    ticks = [r for r in crew.load(crew.runs_path()) if r.get("type") == "tick"]
+    assert len(ticks) == 1 and ticks[0]["decide"][0] == "answer NEX-0201"
+    sup.clock_look(now=first + timedelta(minutes=5))
+    assert len([r for r in crew.load(crew.runs_path()) if r.get("type") == "tick"]) == 1
+    # Held still for a level-V run, the tick waits: it can append to the journal.
+    crew.set_hold("bugs", "level V")
+    sup.clock_look(now=first + timedelta(minutes=25))
+    assert len([r for r in crew.load(crew.runs_path()) if r.get("type") == "tick"]) == 1
+    crew.clear_hold()
+
+    # The lab worker is told the laboratory's step, without the parts that are not its own.
+    told = crew.prompt("lab", state[next(t for t in state if state[t]["to"] == "lab")])
+    assert "laborator" in told and "answer NEX-0201" in told and "--to bugs" in told
+    for name in crew.DEPARTMENTS:
+        if crew.DEPARTMENTS[name].model and name != "lab":
+            assert "Artifact" in crew.denied(name), name
+            assert "Bash(python scripts/lab.py ask:*)" in crew.denied(name), name
+    assert "Artifact" not in crew.denied("lab"), "the morning report is the lab's"
+
+    # A chat /loop does not tick beside the company's clock.
+    lab_script = _script("lab")
+    said: list[str] = []
+    with sup.loop_lock("clock"):
+        result = lab_script.tick_exclusive(out=said.append)
+    assert result.get("company") and said[-1] == "decide: none"
+
+
+@qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
+def test_the_outsiders_look_is_code_and_its_stumbles_become_tickets(company, monkeypatch):
+    """C3. The outsider department starts no model of ours: the stranger is its own
+    `claude -p` outside the repository. What it stumbled on goes to Bugs, one ticket a
+    stumble; the surfaces it would not put money into go to the desk as input."""
+    run_row = {"type": "run", "id": "OUT-0004", "at": "2026-10-11T18:00:00+00:00",
+               "stumbles": [{"where": "/agent-league", "what": "the join button 404s"},
+                            {"where": "llms.txt", "what": "no word on paper mode"}],
+               "surfaces": [{"name": "Bots", "score": 3, "why": "no track record shown"},
+                            {"name": "Gem Screener", "score": 8, "why": "clear"},
+                            {"name": "Event cards", "score": None, "why": ""}]}
+    made = crew.outsider_tickets(run_row)
+    bugs = [t for t in made if t["to"] == "bugs"]
+    assert [t["key"] for t in bugs] == ["OUT-0004-S1", "OUT-0004-S2"]
+    assert "join button 404s" in bugs[0]["text"]
+    desk = [t for t in made if t["to"] == "desk"]
+    assert len(desk) == 1 and desk[0]["kind"] == "input" and "Bots 3/10" in desk[0]["text"]
+    assert "Gem Screener" not in desk[0]["text"]
+
+    sup = _script("crew")
+    calls: list[list[str]] = []
+
+    def fake_process(args, env, timeout):
+        calls.append(args[1:])
+        out = ""
+        if args[-1] == "run":
+            out = "OUT-0004: would deposit False, 2 pick(s) -- next: ..."
+            path = Path(os.environ["QA_STATE_DIR"]) / "outsider.jsonl"
+            path.parent.mkdir(parents=True, exist_ok=True)
+            path.write_text(json.dumps(run_row) + "\n", encoding="utf-8")
+        return {"pid": 1, "code": 0, "stdout": out, "stderr": "", "timed_out": False,
+                "seconds": 0.1}
+
+    monkeypatch.setattr(sup, "run_process", fake_process)
+    monkeypatch.setattr(sup, "outsider_proven", lambda: True)
+    ticket, _ = crew.add_ticket("outsider", "outsider", "the daily look", now=NOW)
+    row = sup.work_once("outsider")
+    assert row["outcome"] == "ok"
+    steps = [" ".join(Path(a).name if i == 0 else a for i, a in enumerate(c)) for c in calls]
+    assert steps == ["outsider.py run", "lab.py outsider-act OUT-0004", "outsider.py track"]
+    assert not _fake_log(company), "no model of ours was started"
+    state = crew.tickets()
+    assert state[ticket["id"]]["status"] == "done"
+    assert sorted(t["key"] for t in state.values() if t["from"] == "outsider") == [
+        "OUT-0004-S1", "OUT-0004-S2", "OUT-0004-input"]
+
+    # Without a stranger proven independent, the look is the probe first; a probe that
+    # cannot run (logged out) gives the ticket back.
+    calls.clear()
+    monkeypatch.setattr(sup, "outsider_proven", lambda: False)
+
+    def logged_out(args, env, timeout):
+        calls.append(args[1:])
+        return {"pid": 1, "code": 1, "stdout": "probe: NOT a stranger -- the probe did not "
+                "run (exit 1): Not logged in", "stderr": "", "timed_out": False,
+                "seconds": 0.1}
+
+    monkeypatch.setattr(sup, "run_process", logged_out)
+    again, _ = crew.add_ticket("outsider", "outsider", "tomorrow's look", now=NOW)
+    assert sup.work_once("outsider")["outcome"] == "infra"
+    assert [Path(c[0]).name + " " + c[1] for c in calls] == ["outsider.py probe"]
+    assert crew.tickets()[again["id"]]["status"] == "open"
+
+
 # -- the loops ------------------------------------------------------------------------------
 
 @qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")

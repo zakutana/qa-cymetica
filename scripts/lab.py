@@ -3625,10 +3625,25 @@ def _tick_marker() -> Path:
     return state_dir() / "lab_tick.running"
 
 
+def _company_clock_runs() -> bool:
+    try:
+        return bool(_sibling("crew").loop_alive("clock"))
+    except Exception:  # noqa: BLE001 -- no company is a company that does not run
+        return False
+
+
 def tick_exclusive(*, now: datetime | None = None, actions: dict | None = None,
                    out=print) -> dict:
     """`tick`, unless another one is still running. Two ticks walk the same
-    answers and would place two paper orders for one proposal."""
+    answers and would place two paper orders for one proposal.
+
+    And not beside the company (docs/crew-plan.md): while its clock runs, the tick is
+    the clock's, and a chat /loop firing beside it would decide everything twice."""
+    if os.environ.get("QA_CREW_DEPT") != "clock" and _company_clock_runs():
+        out("tick skipped -- the company runs the laboratory's clock "
+            "(python scripts/crew.py status)")
+        out(lab.decide_line([]))
+        return {"company": True}
     moment = now or _now()
     marker = _tick_marker()
     marker.parent.mkdir(parents=True, exist_ok=True)

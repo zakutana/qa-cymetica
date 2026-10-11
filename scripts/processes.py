@@ -318,7 +318,10 @@ CEILINGS = {
     # 832 -> 833 for the tree held still (C2): a level-V run needs a clean tree while four
     # departments edit it, and a hold must neither be ignored nor freeze the company. The
     # bug pipeline's one writer went into the existing argv test.
-    "meta_tests": 833,
+    # 833 -> 835 for the clock and the outsider (C3): the laboratory's tick routed to the
+    # department whose work each item is, a chat /loop refused beside it, and the
+    # outsider's look as code whose stumbles become Bugs' tickets.
+    "meta_tests": 835,
 }
 
 BASH_SCRIPT = re.compile(r"python\s+scripts[/\\]([a-z_]+)\.py")

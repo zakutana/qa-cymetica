@@ -331,6 +331,11 @@ def denied(dept: str) -> tuple[str, ...]:
     out = list(DENY_ALL)
     if dept != "bugs":
         out += _shells(*(f"python scripts/{script}" for script in BUG_PIPELINE))
+    if dept != "lab":
+        # Nexus is the laboratory's lane, and the one Artifact this project publishes is
+        # its morning report (CLAUDE.md, "Do not publish an Artifact").
+        out += _shells("python scripts/lab.py ask", "python scripts/nexus.py ask")
+        out.append("Artifact")
     return tuple(out)
 
 
@@ -379,7 +384,114 @@ nobody else is mid-run), and `python scripts/crew.py unhold` once its commit is 
 when it fails. After any change to state: `python scripts/ledger.py --run <id>` and
 `python scripts/render.py`, then the ledger, the journal and the dashboard in one commit.
 """,
+    "lab": """\
+Your ticket holds what the laboratory's tick decided (`items` in the details) and the
+tick's own output (`tick`). Do for each item exactly what the laborator skill's step 2
+says, and then its step 3 (`lab.py log`), with three differences under the company:
+- the clock runs the tick; you never run it yourself. After `lab.py ask --no-wait`, do
+  not wait for the answer: the next tick picks it up;
+- hunts, the outsider and the desk are other departments' and never in your items;
+- a bug -- from `gap` or met anywhere -- is a ticket to Bugs, never a filing of yours. A
+  gap in their documentation goes to the manager as a `decision` ticket carrying the text
+  the operator relays to Cymetica.
+""",
 }
+
+# -- the clock (C3) --------------------------------------------------------------------------
+#
+# The laboratory's tick stays the company's one clock for vendor news and hunts: it already
+# knows when their side moved, when a hunt is due and when the outsider is, and a second
+# cadence for Bugs would be the same decision made twice.
+TICK_EVERY = timedelta(minutes=20)
+TICK_TIMEOUT = 40 * 60
+# What the company's own pace replaces: the desk works steps of its own (C4).
+OWN_PACE = ("desk",)
+TICK_TAIL = 4000
+
+
+def decide_items(output: str) -> list[str]:
+    """The items of a tick's last `decide:` line; [] for `none` or for no line at all."""
+    lines = [line for line in str(output).splitlines() if line.startswith("decide: ")]
+    if not lines:
+        return []
+    body = lines[-1][len("decide: "):].strip()
+    return [] if body == "none" else [item.strip() for item in body.split(" + ")
+                                      if item.strip()]
+
+
+def moved_lines(output: str) -> list[str]:
+    """What the tick said moved on their side -- what woke a sweep."""
+    return [line.split("their side moved:", 1)[1].strip()
+            for line in str(output).splitlines() if "their side moved:" in line]
+
+
+def route(items: list[str], output: str, at: str, state: dict[str, dict]) -> list[dict]:
+    """The tickets one tick's decision makes, for the department whose work each is. Pure.
+
+    The laboratory's own items go to it as one ticket with the tick's output; a hunt or a
+    sweep to Bugs with what moved; the outsider's look to the outsider, once a day. A hunt
+    waits behind a hunt or sweep already open, a sweep only behind a sweep: the open one
+    reads their side when it runs, and a second would read it again.
+    """
+    live = [t for t in state.values() if t.get("status") in ("open", "claimed")]
+    waiting = {(t.get("to"), t.get("kind")) for t in live}
+    # What the laboratory already holds: a /loop never overlapped itself, the company does,
+    # and a tick twenty minutes on decides a question the worker is still asking.
+    held = {item for t in live if t.get("to") == "lab"
+            for item in (t.get("payload") or {}).get("items") or []}
+    tickets, mine = [], []
+    for item in items:
+        if item in ("hunt bugs", "hunt sweep"):
+            kind = "sweep" if item == "hunt sweep" else "hunt"
+            if ("bugs", "sweep") in waiting or (kind == "hunt" and ("bugs", "hunt") in waiting):
+                continue
+            tickets.append({"to": "bugs", "kind": kind, "key": f"{kind}:{at}",
+                            "text": item, "payload": {"moved": moved_lines(output)}})
+        elif item == "outsider":
+            tickets.append({"to": "outsider", "kind": "outsider",
+                            "key": f"outsider:{at[:10]}", "text": "the outsider's daily look"})
+        elif item in OWN_PACE or item in held:
+            continue
+        else:
+            # Its own items, and any the tick learns later: the laboratory reads them first.
+            mine.append(item)
+    if mine:
+        tickets.insert(0, {"to": "lab", "kind": "lab", "key": f"lab:{at}",
+                           "text": " + ".join(mine),
+                           "payload": {"items": mine, "tick": str(output)[-TICK_TAIL:]}})
+    return tickets
+
+
+# A surface the stranger scored below this is one it would not put money into; why goes to
+# the desk as input for its requests (laborator skill, `outsider`).
+LOW_SCORE = 5
+
+
+def outsider_tickets(run: dict) -> list[dict]:
+    """What one recorded look of the stranger hands on. Pure: each stumble to Bugs (it
+    reproduces and files, or passes a gap to the manager), the low scores to the desk."""
+    rid = run.get("id") or "OUT-?"
+    out = []
+    for i, item in enumerate(run.get("stumbles") or [], 1):
+        out.append({"to": "bugs", "kind": "bug", "key": f"{rid}-S{i}",
+                    "text": f"The outsider ({rid}) stumbled at {item.get('where')}: "
+                            f"{item.get('what')}"})
+    low = [s for s in run.get("surfaces") or []
+           if isinstance(s.get("score"), (int, float)) and s["score"] < LOW_SCORE]
+    if low:
+        out.append({"to": "desk", "kind": "input", "key": f"{rid}-input",
+                    "text": f"Surfaces a stranger would not put money into ({rid}): "
+                            + "; ".join(f"{s.get('name')} {s.get('score')}/10: {s.get('why')}"
+                                        for s in low)})
+    return out
+
+
+def clock_state() -> dict:
+    return _read_json(crew_dir() / "clock.json") or {}
+
+
+def save_clock_state(state: dict) -> None:
+    _write_json(crew_dir() / "clock.json", state)
 
 
 def prompt(dept: str, ticket: dict) -> str:

@@ -27,6 +27,7 @@ import contextlib
 import importlib.util
 import json
 import os
+import re
 import subprocess
 import sys
 import time
@@ -210,9 +211,67 @@ def worker_env(dept: str, ticket: dict) -> dict:
     return env
 
 
+def _python(script: str, *args: str) -> list[str]:
+    return [sys.executable, str(REPO_ROOT / "scripts" / script), *args]
+
+
+def outsider_proven() -> bool:
+    """A probe in the stranger's own process showed nothing of ours (`outsider.py probe`)."""
+    from qa import outsider
+
+    return bool(outsider.proven(_sibling("outsider").load()))
+
+
+def _result(text: str, error: bool = False) -> str:
+    """A code department's end, in the shape `claude -p --output-format json` ends in, so
+    one reader settles every ticket."""
+    return json.dumps({"is_error": error, "result": text, "num_turns": 0})
+
+
+def run_outsider(ticket: dict) -> dict:
+    """The outsider's daily look, as code: the probe when none has passed, the stranger's
+    run (its own `claude -p` outside the repository), the actions its picks may take, the
+    coins' checkpoints -- and its stumbles and low scores handed on as tickets."""
+    env = worker_env("outsider", ticket)
+    deadline = time.monotonic() + crew.DEPARTMENTS["outsider"].timeout
+
+    def step(*args: str) -> dict:
+        left = max(60, int(deadline - time.monotonic()))
+        return run_process(_python(*args), env, left)
+
+    def ended(ran: dict, text: str, error: bool) -> dict:
+        return {**ran, "stdout": _result(text, error)}
+
+    if not outsider_proven():
+        probed = step("outsider.py", "probe")
+        if probed["code"] != 0:
+            # Not a stranger yet, or not logged in: the machinery, not the look.
+            return {**probed, "code": 1, "stdout": "", "stderr": probed["stdout"][-400:]}
+    ran = step("outsider.py", "run")
+    found = re.search(r"\b(OUT-\d+)\b", ran["stdout"])
+    if ran["code"] != 0 or not found:
+        return {**ran, "code": ran["code"] or 1, "stdout": "",
+                "stderr": (ran["stdout"] + ran["stderr"])[-400:]}
+    run_id = found.group(1)
+    step("lab.py", "outsider-act", run_id)
+    step("outsider.py", "track")
+    row = next((r for r in reversed(_sibling("outsider").load())
+                if r.get("type") == "run" and r.get("id") == run_id), {})
+    made = [crew.add_ticket(t["to"], t["kind"], t["text"], key=t["key"], by="outsider")
+            for t in crew.outsider_tickets(row)]
+    opened = [ticket_["id"] for ticket_, new in made if new]
+    return ended(ran, f"{run_id}: {len(opened)} ticket(s) handed on "
+                      f"({', '.join(opened) or 'none'})", False)
+
+
+CODE_DEPARTMENTS = {"outsider": run_outsider}
+
+
 def run_ticket(dept: str, ticket: dict) -> dict:
     """Start the department's worker on one ticket and wait for it, within its timeout."""
     spec = crew.DEPARTMENTS[dept]
+    if spec.model is None:
+        return CODE_DEPARTMENTS[dept](ticket)
     command = crew.claude_command()
     if command is None:
         return {"pid": None, "code": 127, "stdout": "no claude executable on this machine",
@@ -292,11 +351,61 @@ def deep_pass_running() -> bool:
     return bool(_sibling("processes").pass_in_flight())
 
 
-def clock_look() -> tuple[str, str]:
-    """The clock's look. It makes tickets on the departments' behalf (C3 on)."""
-    crew.beat("clock", "idle", "nothing on the clock yet")
-    write_report()
-    return "idle", "nothing on the clock yet"
+def tick_command() -> list[str]:
+    """The laboratory's tick; `QA_CREW_TICK` (a JSON list) puts a stand-in there."""
+    override = os.environ.get("QA_CREW_TICK")
+    return json.loads(override) if override else [sys.executable, "-u",
+                                                  str(REPO_ROOT / "scripts" / "lab.py"),
+                                                  "tick"]
+
+
+def run_tick(now: datetime) -> dict:
+    """One tick of the laboratory as a process of its own, and its decision routed."""
+    env = os.environ.copy()
+    env["QA_CREW_DEPT"] = "clock"
+    crew.set_active("clock", {"id": None, "kind": "tick"})
+    try:
+        ran = run_process(tick_command(), env, crew.TICK_TIMEOUT)
+    finally:
+        crew.set_active("clock", None)
+    output = ran["stdout"]
+    items = crew.decide_items(output)
+    decided = any(line.startswith("decide: ") for line in output.splitlines())
+    made = []
+    at = crew.stamp(now)
+    for spec in crew.route(items, output, at, crew.tickets()):
+        ticket, new = crew.add_ticket(spec["to"], spec["kind"], spec["text"], key=spec["key"],
+                                      payload=spec.get("payload"), by="clock", now=now)
+        if new:
+            made.append(ticket["id"])
+    return crew.record({"type": "tick", "decide": items, "made": made, "exit": ran["code"],
+                        "ok": ran["code"] == 0 and decided, "timed_out": ran["timed_out"],
+                        "seconds": ran["seconds"],
+                        "tail": "" if decided else (output + ran["stderr"])[-400:]}, now=now)
+
+
+def clock_look(now: datetime | None = None) -> tuple[str, str]:
+    """The clock's look: the tickets it makes on the departments' behalf, when each is due."""
+    now = now or datetime.now(timezone.utc)
+    said = []
+    hold = crew.holder(now)
+    state = crew.clock_state()
+    last = crew.moment(state.get("tick_at"))
+    if hold:
+        # Held still for a level-V run: the tick can append to the journal, so it waits.
+        said.append(f"tick waits: the tree is held by {hold.get('by')}")
+    elif last is None or now - last >= crew.TICK_EVERY:
+        state["tick_at"] = crew.stamp(now)
+        crew.save_clock_state(state)
+        row = run_tick(now)
+        said.append(f"tick: decide {' + '.join(row['decide']) or 'none'}"
+                    + (f", {len(row['made'])} ticket(s)" if row["made"] else ""))
+    else:
+        left = crew.TICK_EVERY - (now - last)
+        said.append(f"next tick in {int(left.total_seconds() // 60)}m")
+    crew.beat("clock", "idle", "; ".join(said), now=now)
+    write_report(now)
+    return "idle", "; ".join(said)
 
 
 def look(name: str, paused=deep_pass_running) -> tuple[str, str]:
@@ -443,6 +552,11 @@ def start() -> int:
     if not ok:
         print(f"[crew] {why}; nothing started")
         return 1
+    if not os.environ.get("QA_CREW_CLAUDE") and not outsider_proven():
+        # The laboratory decides the outsider's look only once a probe has passed, and
+        # the first one can run only now that the CLI is logged in.
+        probed = run_process(_python("outsider.py", "probe"), os.environ.copy(), 600)
+        print(f"[crew] {(probed['stdout'] or probed['stderr']).strip()[:200]}")
     crew.set_stop(False)
     started = []
     for name in LOOPS:
