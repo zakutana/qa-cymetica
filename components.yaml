@@ -242,6 +242,14 @@ components:
     surface: rest
     criticality: medium
     staleness_hours: 24
+  rest.agent_tournaments:
+    # A Build it Better app (ET-30773, shipped 2026-10-10): 10-seat, 7-day paper tables for
+    # cloned bots (/api/v1/agent-tournaments/*). First check 2026-10-11: none of the seven
+    # routes llms.txt names is in the OpenAPI. Read only; we take no seat.
+    title: Agent Tournaments (lobby, tables, seat prompts)
+    surface: rest
+    criticality: medium
+    staleness_hours: 24
   rest.research_backtest:
     # Backtest Rally (cymetica.com/backtest-rally): theme-basket backtests on the
     # headline corpus and the Rally Card launched from a run. First check 2026-10-03:

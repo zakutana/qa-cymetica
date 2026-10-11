@@ -901,6 +901,36 @@ def test_the_is_answer_rule_is_self_calibrating_and_still_bites():
     assert takes_out_more_than_there_is(stops) is None, "a curve that stops at an empty pile is the fix"
     assert takes_out_more_than_there_is({"months": []}) is None and takes_out_more_than_there_is(None) is None
 
+    # 14. The next unlock: ARB on 2026-10-11, 56,125,000 to "Team, Contributors & Advisors" served while
+    #     its own tranches put 92,645,833 on that ts (Investors 36,520,833 too).
+    from tests.rest.test_supply_analyzer_states_what_its_sources_say import next_unlock_against_its_day
+    day = 1792108800
+    team = {"ts": day, "amount": 56125000.0, "who": "Team, Contributors & Advisors", "moved": None}
+    inv = {"ts": day, "amount": 36520833.333333254, "who": "Investors", "moved": None}
+    later = {"ts": 1794268800, "amount": 15400410.68, "who": "Foundation", "moved": None}
+    arb = {"token": {"symbol": "ARB", "slug": "arbitrum"},
+           "next_unlock": {"ts": day, "tokens": 56125000.0, "who": "Team, Contributors & Advisors", "days": 4.6},
+           "today": {"tranches": [team, inv, later]}, "months": [{"tranches": [team, inv, later]}]}
+    got = next_unlock_against_its_day(arb)
+    assert got["short"] and round(got["day_total"]) == 92645833 and got["day"] == "2026-10-16"
+    assert len(got["recipients"]) == 2, "today repeats month 0: each tranche counts once"
+    assert not next_unlock_against_its_day(dict(arb, next_unlock=dict(arb["next_unlock"], tokens=92645833.33)))[
+        "short"], "the day's total in tokens is the fix"
+    assert not next_unlock_against_its_day(dict(arb, next_unlock=dict(arb["next_unlock"], day_total=92645833.33)))[
+        "short"], "a total in a field of its own is a fix too"
+    assert not next_unlock_against_its_day(dict(arb, next_unlock=dict(arb["next_unlock"], recipients=[
+        {"who": "Team", "tokens": 56125000.0}, {"who": "Investors", "tokens": 36520833.33}])))["short"], (
+        "naming every recipient of the day is a fix")
+    assert not next_unlock_against_its_day(dict(arb, next_unlock=[
+        {"ts": day, "tokens": 56125000.0, "who": "Team"}, {"ts": day, "tokens": 36520833.33, "who": "Investors"},
+        {"ts": 1794268800, "tokens": 15400410.68, "who": "Foundation"}]))["short"], "a list shape is read, not unread"
+    assert not next_unlock_against_its_day(dict(arb, today={"tranches": [team, later]},
+                                                 months=[{"tranches": [team, later]}]))["short"], (
+        "one recipient on its day is its whole day")
+    assert next_unlock_against_its_day(dict(arb, today={}, months=[])) is None, "no tranche read is unread"
+    assert next_unlock_against_its_day(dict(arb, next_unlock={"kind": "unknown", "why": "x"})) is None
+    assert next_unlock_against_its_day(None) is None
+
     # The Gem Screener refresh rule (2026-09-27), held here for the same
     # ceiling. Stuck means BOTH: stale past 3 cycles AND the newest attempt a
     # recorded failure. A missing field is unreadable (None), never "healthy".

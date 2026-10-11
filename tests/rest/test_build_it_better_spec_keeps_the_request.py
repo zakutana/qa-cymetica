@@ -386,3 +386,119 @@ def test_a_spec_written_after_their_fix_keeps_every_line_and_change(rest_anon):
                     "unspecced": unspecced, "unread": unread,
                     "change_pending": pending, "fixed_at": FIX_SOURCE},
         sources={"board": BOARD, "record": f"{BOARD}/{{ticket}}"}))
+
+
+# --- An idea stays an idea after a BB-CHANGE (2026-10-11) -----------------------------------
+#
+# A request filed as an idea (`is_idea: true`: an app that does not exist yet, ours to name) gets
+# a first BB-SPEC in the new-app wording: "What we will build: <Name>, a new page on EventTrader
+# that does what you described ... never anyone else's logos, copy or trademarks". Seen on all four
+# ideas that ever got a BB-CHANGE (ET-26776 2026-09-23, ET-26924 09-24, ET-28203 09-28, ET-30773
+# 10-10): every BB-SPEC written after the first BB-CHANGE switches to the wording for rebuilding an
+# app the requester uses -- "a page on EventTrader that does the job you use <Name> for, with these
+# changes ... never <Name>'s logos, copy or trademarks" -- which forbids the name, logo and copy the
+# idea is made of. On ET-30773 the requester had to send a second BB-CHANGE to undo it.
+#
+# JUDGED: the NEWEST idea whose log holds a BB-CHANGE followed by a BB-SPEC. The older ones are
+# history, counted in the reason: their specs are frozen, so judging them would hold the row red
+# after any fix. So this check passes only on the first idea whose post-change spec keeps the
+# new-app wording -- a fix cannot be verified until a new idea gets a BB-CHANGE after it; read
+# their fix time before any FAIL goes out. Not asserted: anything else in the spec.
+
+BUILD_LINE = re.compile(r"What we will build:[^\n]*")
+REBUILD = re.compile(r"does the job you use (.+?) for\b")
+OWN_LOGOS = re.compile(r"never (.+?)'s logos")
+
+
+def spec_template(spec: str) -> dict:
+    """The spec's own wording for what it builds: `new` ("a new page on EventTrader"), `rebuild`
+    ("does the job you use X for"), or None; and the name whose logos it forbids, if not "anyone
+    else"."""
+    line = BUILD_LINE.search(str(spec or ""))
+    line = line.group(0) if line else ""
+    kind = "rebuild" if REBUILD.search(line) else ("new" if "a new page on EventTrader" in line else None)
+    forbids = OWN_LOGOS.search(str(spec or ""))
+    forbids = forbids.group(1) if forbids and forbids.group(1).strip().lower() != "anyone else" else None
+    return {"kind": kind, "forbids": forbids}
+
+
+def idea_after_a_change(record: dict) -> dict | None:
+    """An idea's specs before and after its first BB-CHANGE. None when it is not an idea, or has no
+    BB-CHANGE followed by a BB-SPEC. `switched` when a post-change spec uses the rebuild wording or
+    forbids the idea's own logos."""
+    if not (record or {}).get("is_idea"):
+        return None
+    messages = sorted((m for m in record.get("messages") or [] if isinstance(m, dict)),
+                      key=lambda m: str(m.get("at") or ""))
+    changes = [m for m in messages if m.get("kind") == "BB-CHANGE"]
+    if not changes:
+        return None
+    first_change = str(changes[0].get("at") or "")
+    before = [m for m in messages if m.get("kind") == "BB-SPEC" and str(m.get("at") or "") < first_change]
+    after = [m for m in messages if m.get("kind") == "BB-SPEC" and str(m.get("at") or "") >= first_change]
+    if not after:
+        return None
+    said = [spec_template(m.get("body")) for m in after]
+    bad = [s for s in said if s["kind"] == "rebuild" or s["forbids"]]
+    return {"ticket": record.get("ticket"), "app_name": record.get("app_name"), "first_change_at": first_change,
+            "before": [spec_template(m.get("body")) for m in before], "after": said, "switched": bool(bad),
+            "example": bad[0] if bad else None}
+
+
+@qa(component="rest.build_it_better", tier=SafetyTier.SAFE, surface="rest",
+    claim="build-it-better-idea-keeps-the-new-app-spec-after-a-change")
+def test_an_idea_keeps_its_new_app_spec_after_a_change(rest_anon):
+    """The newest idea with a BB-CHANGE: its post-change BB-SPEC still builds a new app."""
+    board = rest_anon.get(BOARD)
+    if board.status_code != 200:
+        raise Inconclusive(f"{BOARD} answered HTTP {board.status_code}; a failed read is not an empty board")
+    try:
+        items = (board.json() or {}).get("items") or []
+    except ValueError:
+        raise Inconclusive(f"{BOARD} answered 200 with a body that is not JSON")
+    ideas = [i for i in items if isinstance(i, dict) and i.get("is_idea") is True and i.get("ticket")]
+    if not ideas:
+        raise Inconclusive(f"{BOARD} lists no idea ({len(items)} requests)")
+    judged, unread = [], []
+    for item in ideas:
+        one = rest_anon.get(f"{BOARD}/{item['ticket']}")
+        if one.status_code != 200:
+            unread.append(f"{item['ticket']} (HTTP {one.status_code})")
+            continue
+        try:
+            said = idea_after_a_change(one.json() or {})
+        except ValueError:
+            unread.append(f"{item['ticket']} (not JSON)")
+            continue
+        if said:
+            said["ticket"] = said["ticket"] or item["ticket"]
+            said["app_name"] = said["app_name"] or item.get("app_name")
+            judged.append(said)
+    if not judged:
+        raise Inconclusive(f"none of {len(ideas)} ideas has a BB-SPEC written after a BB-CHANGE; unread {unread}")
+    judged.sort(key=lambda s: s["first_change_at"])
+    newest = judged[-1]
+    switched = [s for s in judged if s["switched"]]
+
+    def said(s) -> str:
+        ex = s["example"] or {}
+        return (f"{s['ticket']} ({s['app_name']}, first BB-CHANGE {s['first_change_at'][:16]} UTC): before it "
+                f"{[b['kind'] for b in s['before']]}, after it {[a['kind'] for a in s['after']]}"
+                + (f", forbidding \"{ex['forbids']}'s logos\"" if ex.get("forbids") else ""))
+
+    conclude(Measurement(
+        verdict="failed" if newest["switched"] else "passed",
+        reason=(f"the newest idea with a BB-CHANGE, {said(newest)}: its spec after the change builds \"a page on "
+                f"EventTrader that does the job you use {newest['app_name']} for\" instead of a new page. "
+                f"{len(switched)} of {len(judged)} ideas with a BB-CHANGE switched the same way: "
+                + "; ".join(said(s) for s in judged if s is not newest)
+                if newest["switched"] else
+                f"the newest idea with a BB-CHANGE, {said(newest)}, keeps the new-app wording after it "
+                f"({len(switched)} of {len(judged)} older ideas switched, history)"),
+        left={"newest_switched": newest["switched"], "ideas_switched": len(switched), "ideas_judged": len(judged)},
+        right={"newest_switched": False},
+        population={"judged": judged, "ideas_on_board": [i["ticket"] for i in ideas], "unread": unread},
+        sources={"board": BOARD, "record": f"{BOARD}/{{ticket}}",
+                 "contract": "the first BB-SPEC of an idea: '<Name>, a new page on EventTrader that does what "
+                             "you described ... never anyone else's logos, copy or trademarks'"},
+        claim_id="build-it-better-idea-keeps-the-new-app-spec-after-a-change"))

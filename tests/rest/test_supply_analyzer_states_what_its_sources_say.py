@@ -104,6 +104,17 @@ record's own inputs, from the source it names, or from its documentation; one ch
    Only a curve whose pile reaches 0 can do that, so those rows are preselected from the
    batch's pile_24m and each record is read: the whole population, not a sample.
 
+14. THE NEXT UNLOCK IS ONE RECIPIENT'S SHARE OF ITS DAY (added 2026-10-11). The record serves
+   `next_unlock` {ts, tokens, who, days}; nothing defines it (/definitions, the page and the
+   OpenAPI schema, `properties: {}`, say nothing), and the Gem Screener card prints it as the
+   next unlock. Seen: ARB's next_unlock 56,125,000 "Team, Contributors & Advisors" at ts
+   1792108800, while the record's own `today.tranches` put two tranches at that ts, the second
+   36,520,833 "Investors": 92,645,833 unlock that day. 36 of the 59 dated rows that morning.
+   ASSERTS: when the record's tranches put more on the next unlock's day than next_unlock
+   carries, next_unlock states that day's total in some field, or names every recipient of the
+   day (a list shape is read too). Not asserted: which recipient it names, or that it must be
+   a sum. SAMPLE: the NEXT_UNLOCK_SAMPLE dated batch rows with the largest market cap, stated.
+
 NOT asserted: whether the pressure number predicts anything, the weekly test, or the
 page's layout. SIDE EFFECTS: GETs only, anonymous; every Supply Analyzer read here names a
 Gem Screener coin, so none adds a line to the analyzer's ledger. Reads are paced to stay
@@ -146,11 +157,13 @@ CLAIM_SCHEDULE = "supply-analyzer-an-unknown-schedule-is-not-none-scheduled"
 CLAIM_MAX = "supply-analyzer-max-supply-is-a-cap-not-a-schedule-end"
 CLAIM_PAST_ALL = "supply-analyzer-a-pile-cannot-shrink-more-than-all-of-it"
 CLAIM_PAST_MAX = "supply-analyzer-a-pile-cannot-grow-past-its-max-supply"
+CLAIM_NEXT_UNLOCK = "supply-analyzer-next-unlock-states-its-whole-day"
 LLAMA_EMISSIONS = "https://defillama-datasets.llama.fi/emissions/{slug}"
 
 # The documented limit is 30 requests a minute per IP (llms.txt, /api-docs).
 PACE_S = 2.2
 BURNED_SAMPLE = 12
+NEXT_UNLOCK_SAMPLE = 20
 MAX_SINGLES = 130
 MAX_TOTAL = "max supply minus total supply"
 UNI = "0x1f9840a85d5aF5bf1D1762F925BDADdC4201F984"
@@ -623,6 +636,72 @@ def takes_out_more_than_there_is(record) -> dict | None:
     return {"coin": _sym(record), "months_over": len(over), "first": over[0], "empty_at": empty,
             "bought_back_peak": peak, "peak_at": peak_at, "cap_field": cap_field, "cap": cap,
             "bought_back_past_cap": past_cap}
+
+
+_NOT_AN_AMOUNT = ("ts", "days", "as_of", "stale")
+
+
+def _amount(entry) -> float | None:
+    """A tranche's or a recipient entry's token amount, under either name the record uses."""
+    for key in ("amount", "tokens"):
+        if isinstance(entry, dict) and _num(entry.get(key)):
+            return float(entry[key])
+    return None
+
+
+def tranches_on(record, ts) -> list[dict]:
+    """Every tranche the record puts on `ts`, read from `today` and every month of its curve,
+    each (ts, who, amount) once -- `today` repeats month 0's tranches."""
+    pools = [((record or {}).get("today") or {}).get("tranches")]
+    pools += [m.get("tranches") for m in (record or {}).get("months") or [] if isinstance(m, dict)]
+    seen, out = set(), []
+    for pool in pools:
+        for t in pool if isinstance(pool, list) else ():
+            amount = _amount(t)
+            if t.get("ts") != ts or amount is None:
+                continue
+            key = (t.get("ts"), t.get("who"), round(amount, 3))
+            if key not in seen:
+                seen.add(key)
+                out.append(t)
+    return out
+
+
+def next_unlock_against_its_day(record, *, tol: float = 0.005) -> dict | None:
+    """The record's next unlock beside what its own tranches release on that day.
+
+    None when it cannot be judged: no dated next unlock, or no tranche on its day. Otherwise a
+    dict whose `short` is True when the day releases more than next_unlock carries in ANY of its
+    amount fields (or in a list of recipients inside it, or summed over a list-shaped next_unlock):
+    the fix is theirs to shape, a total field or every recipient both clear it."""
+    nu = (record or {}).get("next_unlock")
+    entries = [e for e in nu if isinstance(e, dict)] if isinstance(nu, list) else []
+    if entries:
+        dated = [e.get("ts") for e in entries if _num(e.get("ts"))]
+        if not dated:
+            return None
+        ts = min(dated)
+        served = [sum(a for a in (_amount(e) for e in entries if e.get("ts") == ts) if a is not None)]
+        who = [e.get("who") for e in entries if e.get("ts") == ts]
+    elif isinstance(nu, dict) and _num(nu.get("ts")):
+        ts = nu["ts"]
+        served = [float(v) for k, v in nu.items() if k not in _NOT_AN_AMOUNT and _num(v)
+                  and not k.endswith("pct") and "usd" not in k]
+        for v in nu.values():
+            if isinstance(v, list) and v and all(isinstance(x, dict) for x in v):
+                served.append(sum(a for a in (_amount(x) for x in v) if a is not None))
+        who = [nu.get("who")]
+    else:
+        return None
+    day = tranches_on(record, ts)
+    if not day:
+        return None
+    total = sum(_amount(t) for t in day)
+    best = max(served) if served else 0.0
+    return {"coin": _sym(record), "ts": ts, "day": datetime.fromtimestamp(ts, timezone.utc).strftime("%Y-%m-%d"),
+            "served": best, "served_who": who, "day_total": total,
+            "recipients": [{"who": t.get("who"), "amount": _amount(t)} for t in day],
+            "short": total > best * (1 + tol) + 1}
 
 
 # --- 1. the burned slice -----------------------------------------------------------------
@@ -1338,3 +1417,64 @@ def test_a_pile_cannot_grow_past_its_max_supply(rest_anon):
                     "batch_as_of": batch.get("as_of"), "symbols": sorted(by_symbol)},
         sources={"batch": BATCH, "definitions": DEFINITIONS},
         claim_id=CLAIM_PAST_MAX))
+
+
+# --- 14. the next unlock and its day -----------------------------------------------------
+
+def _dated(row) -> bool:
+    nu = (row or {}).get("next_unlock")
+    if isinstance(nu, list):
+        return any(isinstance(e, dict) and _num(e.get("ts")) for e in nu)
+    return isinstance(nu, dict) and _num(nu.get("ts"))
+
+
+@qa(component="rest.supply_analyzer", tier=SafetyTier.SAFE, surface="rest", claim=CLAIM_NEXT_UNLOCK)
+def test_a_next_unlock_states_what_its_day_releases(rest_anon):
+    """No sampled record serves a next unlock smaller than what its own tranches release on that
+    day, unless next_unlock also states the day's total or names every recipient of it."""
+    batch = _batch(rest_anon)
+    dated = [r for r in batch["items"] if _dated(r)]
+    if not dated:
+        raise Inconclusive(f"{BATCH} dates no next unlock on any row")
+    dated.sort(key=lambda r: -(r.get("market_cap_usd") if _num(r.get("market_cap_usd")) else 0.0))
+    sample = dated[:NEXT_UNLOCK_SAMPLE]
+    judged, unread = [], []
+    for row in sample:
+        token = row.get("token") or {}
+        record = None
+        for ident in dict.fromkeys(x for x in (token.get("slug"), token.get("gecko_id")) if x):
+            record = _single(rest_anon, ident)
+            if record is not None:
+                break
+        seen = next_unlock_against_its_day(record) if record is not None else None
+        if seen is None:
+            unread.append(_sym(row))
+            continue
+        judged.append(seen)
+    if len(judged) < 5:
+        raise Inconclusive(f"only {len(judged)} of {len(sample)} dated records could be judged against their "
+                           f"tranches; unread: {unread[:6]}")
+    short = [s for s in judged if s["short"]]
+    short.sort(key=lambda s: -(s["day_total"] - s["served"]))
+
+    def said(s) -> str:
+        parts = ", ".join(f"{p['who']} {_f(p['amount'])}" for p in s["recipients"])
+        return (f"{s['coin']} next_unlock {_f(s['served'])} ({', '.join(str(w) for w in s['served_who'])}) on "
+                f"{s['day']} while its tranches release {_f(s['day_total'])} that day ({parts})")
+
+    conclude(Measurement(
+        verdict="failed" if short else "passed",
+        reason=(f"{len(short)} of {len(judged)} records (the {len(sample)} dated rows of the Gem Screener batch "
+                f"with the largest market cap) serve a next unlock smaller than what their own tranches release "
+                f"on that day: " + "; ".join(said(s) for s in short[:4])
+                if short else
+                f"all {len(judged)} records judged (the {len(sample)} dated rows with the largest market cap) "
+                f"state what their next unlock's day releases"),
+        left={"records_short_of_their_day": len(short), "judged": len(judged)},
+        right={"records_short_of_their_day": 0},
+        population={"short": short[:12], "judged": len(judged), "unread": unread, "dated_rows": len(dated),
+                    "sample": [_sym(r) for r in sample], "batch_as_of": batch.get("as_of")},
+        sources={"batch": BATCH, "records": f"{ANALYZE}?symbol=<slug>",
+                 "contract": "undocumented: next_unlock is an object with no properties in openapi-public.json "
+                             "and is absent from /definitions"},
+        claim_id=CLAIM_NEXT_UNLOCK))

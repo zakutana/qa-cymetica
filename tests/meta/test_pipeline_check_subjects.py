@@ -679,6 +679,13 @@ def test_a_card_that_is_closed_on_rest_and_open_on_mcp_fails():
     # And the launchpad token lists (2026-10-11), held the same way.
     _the_launchpad_list_readings()
 
+    # And the four checks of the afternoon of 2026-10-11 (/movers, the clone summary line, the
+    # Agent Tournaments routes in the OpenAPI, the idea template after a BB-CHANGE), the same way.
+    _the_movers_page_readings()
+    _the_clone_summary_readings()
+    _the_tournament_route_readings()
+    _the_idea_template_readings()
+
     # And the account history pages forward (2026-10-10): with currency=USDC, and with no filter
     # past the first page, every offset answered the same 100 rows while has_more said true.
     from tests.rest.test_account_history_pages_forward import page_repeats
@@ -1000,3 +1007,115 @@ def _the_launchpad_list_readings():
     assert leaked_internal(["0xRUG"], public, internal) == [], "the public launch is the feed's to list"
     assert leaked_internal(["0xYOUNG"], public, internal) == [], "an address in neither list is not judged"
     assert leaked_internal([], public, internal) == []
+
+
+def _the_movers_page_readings():
+    """The readings behind the /movers check (2026-10-11): the script's one request for 100 cards
+    is read as one page, a request built to page through the listing passes, and a card of the
+    true top ten that the page never reads is named on its board."""
+    from tests.rest.test_movers_page_ranks_every_card import board_script, card_requests, outside_the_page
+
+    script = ("var el = document.getElementById('pm-gainers'); function load() { var cards = "
+              "fetch('/api/v1/event-cards/?limit=100', { credentials: 'same-origin' }).then(function (r) {});")
+    page = f"<html><script>var x = 1;</script><script>{script}</script></html>"
+    assert board_script(page) == script, "the board's script is found by its element id"
+    assert board_script("<script>fetch('/api/v1/event-cards/')</script>") is None
+    assert card_requests(script) == (["/api/v1/event-cards/?limit=100"], False)
+    assert card_requests("fetch('/api/v1/event-cards/?limit=100&offset=' + off, {})")[1] is True, (
+        "a request built per offset pages through the listing")
+    assert card_requests("fetch(`/api/v1/event-cards/?limit=100&offset=${o}`)")[1] is True
+    assert card_requests("fetch('/api/v1/movers/products')") == ([], False), "another source is not read"
+
+    card = lambda i, cur: {"id": f"c{i}", "title": f"card {i}", "index_base": "100.0", "current_index": str(cur)}
+    every = [card(i, 100 + (i - 50) * 0.5) for i in range(100)] + [card(900, 16.08), card(901, 154.91)]
+    first = every[:100]
+    missed = outside_the_page(first, every)
+    assert [r["id"] for r in missed["losers"]] == ["c900"] and [r["id"] for r in missed["gainers"]] == ["c901"], (
+        "Corteva's -83.92% and Moderna's +54.91% shape: outside the first page, top of their boards")
+    assert outside_the_page(every, every) == {"gainers": [], "losers": []}, "a page that reads every card"
+    assert outside_the_page(first, every + [card(902, 0), {"id": "c903", "index_base": 0, "current_index": 5}])[
+        "losers"] == missed["losers"], "a card with no index or no base has no move and is not ranked"
+
+
+def _the_clone_summary_readings():
+    """The readings behind the clone summary check (2026-10-11): nine perpetual markets printed as
+    four with no count fails, a list set to 'NONE' printed as a market fails, a line that names
+    them all or counts the rest passes, a clone with nothing switched on is right to say nothing."""
+    from tests.rest.test_a_clone_summary_names_what_it_trades import summary_misstates, switched_on
+
+    nine = {"perpetual_markets": "BTC,ETH,VAIX,SBIO,ET10,ETLP,CYM42,TBIG,TBIGS", "custom_markets": None,
+            "arena_trading_enabled": False}
+    cut = "This bot trades: BTC/ETH/VAIX/SBIO 5-min epochs (paper)"
+    got = summary_misstates(nine, cut)
+    assert got["perpetual_left_out"]["left_out"] == ["ET10", "ETLP", "CYM42", "TBIG", "TBIGS"]
+    assert summary_misstates(nine, "This bot trades: BTC/ETH/VAIX/SBIO +5 5-min epochs (paper)") == {}, (
+        "a count that covers the rest is a fix")
+    assert summary_misstates(nine, "This bot trades: BTC, ETH, VAIX, SBIO, ET10, ETLP, CYM42, TBIG, TBIGS "
+                                   "5-min epochs (paper)") == {}, "every market named is a fix"
+    assert summary_misstates(nine, "This bot trades: BTC/ETH/VAIX/SBIO +4 5-min epochs")["perpetual_left_out"], (
+        "a count that is not the number left out is not a count of them")
+    off = {"perpetual_markets": "NONE", "custom_markets": "NONE", "arena_trading_enabled": True}
+    assert switched_on(off) == {"perpetual": [], "clob": []}
+    assert summary_misstates(off, "This bot trades: CLOB NONE · Arena headline assets (paper)") == {
+        "off_named_as_a_market": ["custom_markets", "perpetual_markets"]}
+    assert summary_misstates(off, "This bot trades: Arena headline assets (paper)") == {}
+    nothing = {"perpetual_markets": None, "custom_markets": None}
+    assert summary_misstates(nothing, "This bot trades: nothing yet — turn on a market below") == {}
+    assert switched_on({"perpetual_markets": None, "custom_markets": "BTC,ETH"})["perpetual"] == ["BTC", "ETH"], (
+        "no perpetual list means the CLOB list, their rule's fallback")
+    assert summary_misstates(nine, None) is None and summary_misstates(None, cut) is None, "unread, not judged"
+
+
+def _the_tournament_route_readings():
+    """The readings behind the Agent Tournaments OpenAPI check (2026-10-11): the llms.txt entry
+    as read that day names seven routes, five of them relative to the first full one; an OpenAPI
+    with none of them misses all seven, one with all of them (any parameter names) misses none."""
+    from tests.rest.test_agent_tournaments_routes_are_in_the_openapi import missing_from, tournament_routes
+
+    line = ("- [Agent Tournaments](https://cymetica.com/agent-tournaments?utm_source=llms&utm_medium=agent) — "
+            "10-seat, 7-day tables for cloned bots. `GET https://cymetica.com/api/v1/agent-tournaments/rules`, "
+            "`/lobby?mode=paper|live`, `/tables/{id}`, `/tables/{id}/prompt?kind=own|clone` (no auth); "
+            "`GET /my-bots`, `POST /tables/{id}/seat` {\"instance_id\"} (X-API-Key: the seat waits until the "
+            "owner approves at the returned approve_url), `POST /seats/{id}/leave`")
+    other = "- [Gem Screener](x) — `GET /api/v1/gem-screener/status`, `/coins/{symbol}`"
+    routes = tournament_routes(f"{other}\n{line}\n")
+    p = "/api/v1/agent-tournaments"
+    assert routes == sorted([f"{p}/rules", f"{p}/lobby", f"{p}/tables/{{}}", f"{p}/tables/{{}}/prompt",
+                             f"{p}/my-bots", f"{p}/tables/{{}}/seat", f"{p}/seats/{{}}/leave"]), routes
+    assert missing_from(routes, {"paths": {"/api/v1/gem-screener/status": {}}}) == routes
+    described = {"paths": {f"{p}/rules": {}, f"{p}/lobby": {}, f"{p}/tables/{{table_id}}": {},
+                           f"{p}/tables/{{table_id}}/prompt": {}, f"{p}/my-bots": {},
+                           f"{p}/tables/{{table_id}}/seat": {}, f"{p}/seats/{{seat_id}}/leave": {}}}
+    assert missing_from(routes, described) == [], "any parameter name is the same route"
+    assert tournament_routes(other) == [], "a line without a full tournament route lends none of its paths"
+
+
+def _the_idea_template_readings():
+    """The readings behind the idea-template check (2026-10-11): ET-30773's log as read that day
+    switches to the rebuild wording after its BB-CHANGE and fails; an idea whose post-change spec
+    keeps the new-app wording passes; an idea with no BB-CHANGE, or not an idea, is not judged."""
+    from tests.rest.test_build_it_better_spec_keeps_the_request import idea_after_a_change, spec_template
+
+    first = ("BB-SPEC for Agent Tournaments\n\nWhat we will build: Agent Tournaments, a new page on EventTrader that "
+             "does what you described. Each line is a check you can run on the live page:\n  1. Build it.\n"
+             "Look and branding: ... never anyone else's logos, copy or trademarks.")
+    regen = ("BB-SPEC for Agent Tournaments\n\nWhat we will build: a page on EventTrader that does the job you use "
+             "Agent Tournaments for, with these changes. Each line is a check you can run on the live page:\n"
+             "  1. Build it.\nLook and branding: ... never Agent Tournaments's logos, copy or trademarks.")
+    assert spec_template(first) == {"kind": "new", "forbids": None}
+    assert spec_template(regen) == {"kind": "rebuild", "forbids": "Agent Tournaments"}
+    log = lambda *ms: [{"kind": k, "at": at, "body": b} for k, at, b in ms]  # noqa: E731
+    record = {"ticket": "ET-30773", "app_name": "Agent Tournaments", "is_idea": True,
+              "messages": log(("BB-REQUEST", "2026-10-10T21:31:57.059708+00:00", "Agent Tournaments: ..."),
+                              ("BB-SPEC", "2026-10-10T21:31:57.067933+00:00", first),
+                              ("BB-CHANGE", "2026-10-10T21:34:47.136273+00:00", "C1"),
+                              ("BB-SPEC", "2026-10-10T21:34:47.142562+00:00", regen))}
+    got = idea_after_a_change(record)
+    assert got["switched"] and got["example"]["forbids"] == "Agent Tournaments"
+    assert [b["kind"] for b in got["before"]] == ["new"] and [a["kind"] for a in got["after"]] == ["rebuild"]
+    kept = dict(record, messages=record["messages"][:3] + log(("BB-SPEC", "2026-10-10T21:34:47.142562+00:00",
+                                                               first)))
+    assert idea_after_a_change(kept)["switched"] is False, "the new-app wording after the change is the fix"
+    assert idea_after_a_change(dict(record, messages=record["messages"][:2])) is None, "no BB-CHANGE: not judged"
+    assert idea_after_a_change(dict(record, messages=record["messages"][:3])) is None, "no spec after it yet"
+    assert idea_after_a_change(dict(record, is_idea=False)) is None, "a rebuild request may say 'the job you use'"
