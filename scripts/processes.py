@@ -335,7 +335,10 @@ CEILINGS = {
     # 836 -> 837 for the manager (C5): it alone speaks to the operator, a session reads and
     # marks its notes, each department writes its own memory, the day's review is told what
     # grew past ten lines. The session-start line went into tests/repo/test_reminders.py.
-    "meta_tests": 837,
+    # 837 -> 838 for the watchdog (C6): a dead claim, three failures, a stuck day, a
+    # logged-out CLI, a failing tick and a dead loop, each said once and each ending with a
+    # person.
+    "meta_tests": 838,
 }
 
 BASH_SCRIPT = re.compile(r"python\s+scripts[/\\]([a-z_]+)\.py")

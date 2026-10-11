@@ -611,6 +611,76 @@ def test_the_manager_alone_speaks_to_the_operator_and_curates_every_memory(compa
     assert "crew.py tell" in told and "Archive" in told
 
 
+@qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
+def test_the_watchdog_leaves_nothing_stuck_in_the_mud(company, monkeypatch):
+    """C6. What multi-agent systems die of, each answered by the clock's watchdog: a claim
+    whose loop died; a ticket that failed three times; a department that moved nothing for
+    a day; a CLI that logged out; a tick that keeps failing; a loop that died. Each one is
+    said once -- a key per incident -- and every chain ends with a person: a failure goes to
+    the manager, the manager's own failure goes to the operator."""
+    sup = _script("crew")
+    now = datetime.now(timezone.utc)
+    # A claim outliving its lease: its loop died mid-run.
+    lost, _ = crew.add_ticket("lab", "lab", "learn", now=now - timedelta(hours=2))
+    crew.claim("lab", now=now - timedelta(hours=2))
+    # A ticket at its end after three failures, and one of the manager's.
+    dead, _ = crew.add_ticket("bugs", "bug", "the 500 on /movers", now=now)
+    mine, _ = crew.add_ticket("manager", "decision", "money for H1?", now=now)
+    for ticket in (dead, mine):
+        for _ in range(crew.MAX_ATTEMPTS):
+            crew.claim(ticket["to"], now=now)
+            crew.close(ticket["id"], "fail", by="supervisor", note="it broke", now=now)
+    # A department sitting on a ticket for a day.
+    old, _ = crew.add_ticket("desk", "input", "low scores", now=now - timedelta(hours=26))
+    # A CLI that logged out, and a tick that failed three times running.
+    crew.record({"type": "run", "dept": "bugs", "outcome": "infra",
+                 "why": "Not logged in · Please run /login"}, now=now)
+    for minutes in (60, 40, 20):
+        crew.record({"type": "tick", "ok": False, "decide": [],
+                     "tail": "Traceback: boom"}, now=now - timedelta(minutes=minutes))
+
+    for _ in range(2):  # twice: everything is said once
+        sup.watch(now)
+    state = crew.tickets()
+    assert state[lost["id"]]["attempts"] == 1 and state[lost["id"]]["status"] == "open"
+    help_ = [t for t in state.values() if t["kind"] == "help"]
+    assert sorted(t["key"] for t in help_) == [f"help:{dead['id']}",
+                                              f"tick:{now.astimezone().date()}"]
+    stuck = [t for t in state.values() if t["kind"] == "stuck"]
+    assert [t["key"] for t in stuck] == [f"stuck:desk:{now.astimezone().date()}"]
+    notes = crew.unread_notes()
+    keys = sorted(n["key"] for n in notes)
+    assert keys == [f"failed:{mine['id']}", f"login:{now.astimezone().date()}"], keys
+    assert all(n["from"] == "watchdog" for n in notes)
+
+    # Pure halves, both directions.
+    assert crew.stuck_departments({}, [], now) == []
+    runs = [{"type": "run", "dept": "lab", "outcome": "work",
+             "at": crew.stamp(now - timedelta(hours=h))} for h in (1, 2, 3)]
+    assert crew.stuck_departments({}, runs, now) == ["lab"]
+    assert crew.stuck_departments({}, runs + [{**runs[0], "outcome": "ok"}], now) == []
+
+    # A dead loop is started again while the company is on, three times an hour at most;
+    # then the operator hears of it instead.
+    started: list[list[str]] = []
+    monkeypatch.setattr(sup, "spawn", lambda args, log: started.append(args) or 99)
+    monkeypatch.setattr(sup, "loop_alive", lambda name: name != "desk")
+    sup.heal(now)
+    assert not started, "a company nobody started is not healed"
+    crew.set_running(True)
+    for minutes in range(4):
+        sup.heal(now + timedelta(minutes=minutes))
+    assert [a[-1] for a in started] == ["desk", "desk", "desk"]
+    assert any(n["key"].startswith("dead:desk") for n in crew.unread_notes())
+    crew.set_stop(True)
+    sup.heal(now + timedelta(minutes=10))
+    assert len(started) == 3, "a stopping company is not healed"
+
+    # A department asleep says why.
+    crew.set_snooze("desk", now + timedelta(hours=3), "STR-0130 closes at 23:00", now=now)
+    assert "STR-0130" in next(l for l in sup.status_lines(now) if l.startswith("desk"))
+
+
 # -- the loops ------------------------------------------------------------------------------
 
 @qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")

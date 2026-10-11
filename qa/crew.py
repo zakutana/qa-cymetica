@@ -747,6 +747,89 @@ def daily_key(now: datetime) -> str | None:
     return None if local.hour < DAILY_HOUR else f"daily:{local.date().isoformat()}"
 
 
+# -- the watchdog (C6) -----------------------------------------------------------------------
+#
+# What multi-agent systems die of, each with its answer, run by the clock every look. Every
+# chain ends with a person: a failure goes to the manager, the manager's own to the operator.
+STUCK_AFTER = timedelta(hours=24)
+STUCK_RUNS = 3
+TICK_FAILURES = 3
+RESPAWNS_PER_HOUR = 3
+
+
+def set_running(on: bool, now: datetime | None = None) -> None:
+    """The company is on from `start` to `stop`; only then is a dead loop started again."""
+    marker = crew_dir() / "running"
+    if on:
+        marker.parent.mkdir(parents=True, exist_ok=True)
+        marker.write_text(stamp(_now(now)), encoding="utf-8")
+    elif marker.exists():
+        marker.unlink()
+
+
+def running_since() -> datetime | None:
+    try:
+        return moment((crew_dir() / "running").read_text(encoding="utf-8").strip())
+    except OSError:
+        return None
+
+
+def expired_leases(state: dict[str, dict], now: datetime) -> list[str]:
+    """Claims whose run never reported back: the supervisor kills a run at its timeout, so
+    a lease that ran out means the loop holding it died. Pure."""
+    out = []
+    for tid, ticket in state.items():
+        until = moment(ticket.get("lease_until"))
+        if ticket.get("status") == "claimed" and until is not None and until < now:
+            out.append(tid)
+    return out
+
+
+def stuck_departments(state: dict[str, dict], runs: list[dict], now: datetime,
+                      since: datetime | None = None) -> list[str]:
+    """Departments that moved nothing for a day. Pure.
+
+    Stuck is not quiet: a department with no tickets is idle and says so. Stuck is a
+    ticket waiting on it for a day -- counted from when the company last started, so a
+    weekend switched off is not a stuck weekend -- or a day of runs none of which worked.
+    """
+    out = []
+    for dept in DEPARTMENTS:
+        floor = since or datetime.min.replace(tzinfo=timezone.utc)
+        waiting = [max(moment(t.get("at")) or now, floor) for t in state.values()
+                   if t.get("to") == dept and t.get("status") in ("open", "claimed")]
+        mine = [r for r in runs if r.get("type") == "run" and r.get("dept") == dept
+                and (moment(r.get("at")) or datetime.min.replace(tzinfo=timezone.utc))
+                > now - STUCK_AFTER]
+        if (waiting and now - min(waiting) >= STUCK_AFTER) or (
+                len(mine) >= STUCK_RUNS and not any(r.get("outcome") == "ok" for r in mine)):
+            out.append(dept)
+    return out
+
+
+def login_lost(runs: list[dict], now: datetime) -> bool:
+    """A run in the last hour found the CLI logged out. Pure."""
+    for row in runs:
+        at = moment(row.get("at"))
+        why = str(row.get("why") or "").lower()
+        if (row.get("type") == "run" and row.get("outcome") == "infra" and at is not None
+                and now - at < timedelta(hours=1) and ("logged in" in why or "/login" in why)):
+            return True
+    return False
+
+
+def tick_failing(runs: list[dict]) -> str | None:
+    """The tail of the last failed tick when the last three all failed, else None. Pure."""
+    ticks = [r for r in runs if r.get("type") == "tick"][-TICK_FAILURES:]
+    if len(ticks) == TICK_FAILURES and not any(r.get("ok") for r in ticks):
+        return str(ticks[-1].get("tail") or "no decide line")[:300]
+    return None
+
+
+def respawns(runs: list[dict], name: str, now: datetime) -> int:
+    return _within(runs, timedelta(hours=1), now, type="respawn", loop=name)
+
+
 def clock_state() -> dict:
     return _read_json(crew_dir() / "clock.json") or {}
 

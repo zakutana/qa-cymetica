@@ -384,10 +384,92 @@ def run_tick(now: datetime) -> dict:
                         "tail": "" if decided else (output + ran["stderr"])[-400:]}, now=now)
 
 
+def watch(now: datetime) -> list[str]:
+    """The watchdog's look (C6): every incident said once, by key, and every chain ending
+    with a person -- a failure goes to the manager, the manager's own to the operator."""
+    said = []
+    for tid in crew.expired_leases(crew.tickets(), now):
+        crew.close(tid, "fail", by="watchdog", now=now,
+                   note="the lease ran out: the loop holding it never reported back")
+        said.append(f"lease {tid}")
+    state = crew.tickets()
+    runs = crew.load(crew.runs_path())
+    keys = {t.get("key") for t in state.values()}
+    told = {n.get("key") for n in crew.load(crew.operator_path()) if n.get("type") == "note"}
+    day = now.astimezone().date().isoformat()
+
+    def to_manager(kind: str, key: str, text: str, payload: dict | None = None) -> None:
+        if key not in keys:
+            ticket, new = crew.add_ticket("manager", kind, text, key=key, payload=payload,
+                                          by="watchdog", now=now)
+            keys.add(key)
+            if new:
+                said.append(f"{kind} {ticket['id']}")
+
+    def to_operator(key: str, text: str) -> None:
+        if key not in told:
+            crew.tell(text, by="watchdog", key=key, now=now)
+            told.add(key)
+            said.append(f"note {key}")
+
+    for ticket in state.values():
+        if ticket["status"] != "failed":
+            continue
+        if ticket["to"] == "manager":
+            to_operator(f"failed:{ticket['id']}",
+                        f"Manažer nezvládl {ticket['id']} ({ticket['kind']}) ani na třetí "
+                        f"pokus: {ticket['text'][:160]} — {ticket.get('why') or ''}")
+        else:
+            to_manager("help", f"help:{ticket['id']}",
+                       f"{ticket['id']} ({ticket['to']}, {ticket['kind']}) failed "
+                       f"{crew.MAX_ATTEMPTS} times: {ticket.get('why') or ''}",
+                       {"ticket": ticket["id"]})
+    for dept in crew.stuck_departments(state, runs, now, crew.running_since()):
+        if dept == "manager":
+            to_operator(f"stuck:manager:{day}",
+                        "Manažer firmy se den nepohnul: lístky na něj čekají nebo mu "
+                        "nevychází žádný běh. `python scripts/crew.py status` ukáže proč.")
+        else:
+            to_manager("stuck", f"stuck:{dept}:{day}",
+                       f"{dept} moved nothing for a day", {"dept": dept})
+    if crew.login_lost(runs, now):
+        to_operator(f"login:{day}", "claude na tomhle počítači není přihlášený, takže firma "
+                                    "stojí. Spusť jednou `claude` a dej /login.")
+    tail = crew.tick_failing(runs)
+    if tail:
+        to_manager("help", f"tick:{day}",
+                   f"the laboratory's tick failed {crew.TICK_FAILURES} times running: {tail}")
+    return said
+
+
+def heal(now: datetime, me: str = "clock") -> list[str]:
+    """Start again a loop that died while the company is on -- three times an hour at most,
+    then the operator hears of it instead. The clock heals the departments, and each
+    department the clock: a loop's lock makes a second start of one name exit at once."""
+    if crew.stopping() or crew.running_since() is None:
+        return []
+    names = [n for n in LOOPS if n != me] if me == "clock" else ["clock"]
+    runs = crew.load(crew.runs_path())
+    said = []
+    for name in names:
+        if loop_alive(name):
+            continue
+        if crew.respawns(runs, name, now) >= crew.RESPAWNS_PER_HOUR:
+            key = f"dead:{name}:{now.astimezone().date().isoformat()}"
+            crew.tell(f"Smyčka {name} umřela {crew.RESPAWNS_PER_HOUR}× za hodinu, dál ji "
+                      f"nespouštím. Log: state/crew/logs/{name}.log", by="watchdog", key=key,
+                      now=now)
+            continue
+        pid = spawn(_python("crew.py", "loop", name), crew.crew_dir() / "logs" / f"{name}.log")
+        runs.append(crew.record({"type": "respawn", "loop": name, "pid": pid}, now=now))
+        said.append(f"restarted {name}")
+    return said
+
+
 def clock_look(now: datetime | None = None) -> tuple[str, str]:
     """The clock's look: the tickets it makes on the departments' behalf, when each is due."""
     now = now or datetime.now(timezone.utc)
-    said = []
+    said = [*heal(now), *watch(now)]
     hold = crew.holder(now)
     state = crew.clock_state()
     last = crew.moment(state.get("tick_at"))
@@ -425,6 +507,7 @@ def look(name: str, paused=deep_pass_running) -> tuple[str, str]:
     """One look of a loop: what it did, and why."""
     if name == "clock":
         return clock_look()
+    heal(datetime.now(timezone.utc), me=name)
     if paused():
         crew.beat(name, "paused", "a deep pass is running")
         return "paused", "a deep pass is running"
@@ -514,9 +597,12 @@ def status_lines(now: datetime | None = None) -> list[str]:
         beat = beats.get(name) or {}
         light = "alive" if alive[name] else "not running"
         doing = beat.get("state") or "-"
+        asleep = crew.snoozed(name, now) if name in crew.DEPARTMENTS else None
         if name in running:
             doing = (f"running {running[name].get('ticket')} "
                      f"{_age(running[name].get('since'), now)}")
+        elif asleep:
+            doing = f"asleep until {asleep['until'][:16]}: {asleep.get('why')}"
         elif beat.get("why"):
             doing = f"{doing}: {beat['why']}"
         line = f"{name:<9}{light}, seen {_age(beat.get('at'), now)} ago; {doing}"
@@ -571,6 +657,7 @@ def start() -> int:
         probed = run_process(_python("outsider.py", "probe"), os.environ.copy(), 600)
         print(f"[crew] {(probed['stdout'] or probed['stderr']).strip()[:200]}")
     crew.set_stop(False)
+    crew.set_running(True)
     started = []
     for name in LOOPS:
         if loop_alive(name):
@@ -585,6 +672,7 @@ def start() -> int:
 
 def stop(grace: float = 20.0) -> int:
     crew.set_stop(True)
+    crew.set_running(False)
     for name in LOOPS:
         if loop_alive(name):
             kill_tree(loop_pid(name))
