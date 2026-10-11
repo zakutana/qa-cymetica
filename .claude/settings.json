@@ -44,7 +44,9 @@
       "Bash(python scripts/wave.py:*)",
       "Bash(python scripts/league.py:*)",
       "Bash(python scripts/paper.py:*)",
-      "Bash(python scripts/hot_watch.py:*)"
+      "Bash(python scripts/hot_watch.py:*)",
+      "Bash(python scripts/outsider.py:*)",
+      "Bash(python scripts/bb.py:*)"
     ]
   },
   "hooks": {

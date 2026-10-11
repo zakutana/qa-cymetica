@@ -239,9 +239,25 @@ def _nexus(nexus_rows, notebook, room_rows) -> dict:
         "running": sum(1 for s in statuses if s.get("status") == "running")}
 
 
+def _look(outsider_rows: list[dict] | None) -> dict | None:
+    """The stranger's newest run (laboratory v3, P6, scripts/outsider.py): its mean score over
+    the surfaces it judged, whether it would deposit, its verdict, and how many runs there are."""
+    runs = [r for r in outsider_rows or () if r.get("type") == "run"]
+    if not runs:
+        return None
+    newest = max(runs, key=lambda r: str(r.get("at") or ""))
+    scores = [s.get("score") for s in newest.get("surfaces") or []
+              if isinstance(s, dict) and isinstance(s.get("score"), (int, float))]
+    return {"at": newest.get("at"), "runs": len(runs),
+            "score": round(sum(scores) / len(scores), 1) if scores else None,
+            "would_deposit": newest.get("would_deposit"),
+            "verdict": str(newest.get("verdict") or "")[:300]}
+
+
 def report(nexus_rows: list[dict], notebook: list[dict], room_rows: list[dict],
            paper_rows: list[dict], sample_rows: list[dict],
-           clone_rows: list[dict], fomo_rows: list[dict], now=None) -> dict:
+           clone_rows: list[dict], fomo_rows: list[dict], now=None,
+           outsider_rows: list[dict] | None = None) -> dict:
     moment = now or datetime.now(timezone.utc)
     answers = [r for r in nexus_rows if r.get("type") == "answer"]
     rooms = _rooms(answers, notebook, room_rows, paper_rows, sample_rows,
@@ -249,6 +265,7 @@ def report(nexus_rows: list[dict], notebook: list[dict], room_rows: list[dict],
     products = {p: _sector([r for r in rooms if r["product"] == p])
                 for p in PRODUCTS if p != "memecoins"}
     products["memecoins"] = dict(_memecoins(fomo_rows, moment), hot=_hot(notebook))
+    products["outsider"] = dict(products["outsider"], look=_look(outsider_rows))
     return {"generated_at": moment.isoformat(timespec="seconds"),
             "products": {p: products[p] for p in PRODUCTS},
             "nexus": _nexus(nexus_rows, notebook, room_rows),

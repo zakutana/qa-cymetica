@@ -115,7 +115,7 @@ def _recorded_outcome(clone, kind: str, instance: str) -> str | None:
 
 def launch_one(bot: dict, *, clone, rooms, lab, settings: dict, stake: float,
                window_days: float, stop_pct: float, name: str,
-               why: str | None = None) -> dict:
+               why: str | None = None, section: str | None = None) -> dict:
     """One bot, in the order that keeps the criterion ahead of the money."""
     species, bot_name = str(bot["id"]), str(bot.get("name") or bot["id"])
     result = {"species": species, "name": bot_name, "ok": False, "room": None,
@@ -156,9 +156,11 @@ def launch_one(bot: dict, *, clone, rooms, lab, settings: dict, stake: float,
         "bot", species, instance, {"label": label, "settings": dict(settings)},
         why or (f"{name}, {bot_name}: the platform's stop-loss 5 % / take-profit 15 % "
                 f"stopped every wave-0 bot after one trade; this one runs {label} for the "
-                f"whole window. One change, the same for the whole wave."))
+                f"whole window. One change, the same for the whole wave."),
+        section=section)
     room = rooms.open_strategy(proposal["id"], f"{name} · {bot_name} {label}"[:rooms.MAX_TITLE],
-                               kind="bot", ref=species)["id"]
+                               kind="bot", ref=species, section=section,
+                               settings=dict(settings) if settings else None)["id"]
     result["room"] = room
 
     def stop(why: str) -> dict:

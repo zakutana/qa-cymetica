@@ -3100,6 +3100,74 @@ def desk_card(card: str, hold_days: float, why: str, half: bool = False) -> dict
                            float(hold_days), stake, why)
 
 
+def outsider_act(run_id: str) -> dict:
+    """Section 6, the outsider (laboratory v3, P6): what the stranger agent picked in one run
+    (scripts/outsider.py `record`), done on paper in section `outsider` -- a card at HALF stake
+    with no backtest gate (`qa.outsider.actions`: the number is its judgement, not gate and
+    stranger), a bot cloned at its band through wave.launch_one. Its coins are watched by
+    `outsider.py track`; a tournament seat is the operator's to approve and is only said here.
+    A pick already acted on (its id on a proposal of ours) is not acted on again."""
+    picks = [r for r in _sibling("outsider").load()
+             if r.get("type") == "pick" and r.get("run") == run_id]
+    if not picks:
+        raise SystemExit(f"{run_id}: no picks of that run on record")
+    done = {str(p.get("why") or "").split(" ", 1)[0] for p in lab.proposals()
+            if p.get("section") == "outsider"}
+    opened, placed, held = 0, 0, []
+    catalogue = None
+    for pick in picks:
+        if pick["id"] in done or pick["kind"] == "coin":
+            continue
+        why = f"{pick['id']} the outsider's pick: {pick.get('why') or ''}"[:500]
+        if pick["kind"] == "tournament":
+            held.append(f"{pick['id']}: it wants a seat at table {pick.get('table_id')} -- "
+                        f"`python scripts/outsider.py seat {pick.get('table_id')} <its bot's "
+                        f"instance> --confirm`, approved by the operator at approve_url")
+            continue
+        if pick["kind"] == "card":
+            live = _card_live(pick["card_id"])
+            if live is None or live.get("tradeable") is False:
+                held.append(f"{pick['id']}: the card is unknown or not tradeable now")
+                continue
+            free, deployed, parked = _free_cash(), _deployed(), _parked()
+            stake = _leg_stakes(free, deployed, 1, half=True, parked=parked)[0] if free else 0.0
+            proposal = lab.note_proposal("card", pick["card_id"], "",
+                                         {"label": "outsider", "settings": {}}, why,
+                                         section="outsider")
+            said = _open_card_room(proposal["id"], pick["card_id"], live.get("title") or "",
+                                   "outsider", float(pick.get("hold_days") or 3), stake, why)
+            opened += 1 if said["room"] else 0
+            placed += 1 if said["ok"] else 0
+            if not said["ok"]:
+                held.append(f"{pick['id']}: {said['why']}")
+        elif pick["kind"] == "bot":
+            if catalogue is None:
+                catalogue = {str(b.get("name")).lower(): b for b in (_bot_catalogue() or [])
+                             if isinstance(b, dict)}
+            bot = catalogue.get(str(pick.get("species")).lower())
+            if bot is None:
+                held.append(f"{pick['id']}: no clonable species named {pick.get('species')!r}")
+                continue
+            wave = _sibling("wave")
+            free, deployed, parked = _free_cash(), _deployed(), _parked()
+            ok, short = lab.affordable(wave.STAKE_USDC, free, _running_experiments(),
+                                       deployed=deployed, parked=parked)
+            if not ok:
+                held.append(f"{pick['id']}: the book's caps refuse it ({short})")
+                continue
+            band = {"stop_loss_pct": float(pick["stop_loss_pct"]),
+                    "take_profit_pct": float(pick["take_profit_pct"])}
+            said = wave.launch_one(bot, clone=_sibling("clone"), rooms=rooms, lab=lab,
+                                   settings=band, stake=wave.STAKE_USDC,
+                                   window_days=wave.WINDOW_DAYS, stop_pct=wave.STOP_PCT,
+                                   name="Outsider", why=why, section="outsider")
+            opened += 1 if said.get("room") else 0
+            placed += 1 if said.get("ok") else 0
+            if not said.get("ok"):
+                held.append(f"{pick['id']}: {said.get('why')}")
+    return {"rooms": opened, "orders": placed, "held": held}
+
+
 def _trading_now(clone_rows: list[dict], samples: list[dict]) -> int:
     """How many clones of ours their side says are trading, by each one's newest sample --
     what the platform's cap on trading bots counts (wave.MAX_TRADING)."""
@@ -4084,11 +4152,23 @@ def tick(*, now: datetime | None = None, actions: dict | None = None,
 def _parts_ready() -> dict:
     """Whether the desk (section 7) and the outsider (section 6) have their parts on this
     machine: a tick wakes neither before its plan, its agent and its script exist."""
+    from qa import outsider as qa_outsider
+    from qa.state import state_dir
+
     agents = REPO_ROOT / ".claude" / "agents"
+    diary = state_dir() / "outsider.jsonl"
+    rows = []
+    if diary.is_file():
+        for line in diary.read_text(encoding="utf-8").splitlines():
+            try:
+                rows.append(json.loads(line))
+            except json.JSONDecodeError:
+                continue
     return {"desk_ready": (REPO_ROOT / "docs" / "lab-desk.md").is_file()
             and (agents / "desk.md").is_file(),
-            "outsider_ready": (agents / "outsider.md").is_file()
-            and (REPO_ROOT / "scripts" / "outsider.py").is_file()}
+            # Only a stranger PROVEN in its own process (`lab.py outsider-probe`): as a
+            # subagent of this session it quoted our CLAUDE.md (2026-10-11).
+            "outsider_ready": qa_outsider.proven(rows)}
 
 
 def _decide(said: dict, moment: datetime, nexus_rows: list[dict] | None = None) -> None:
@@ -4132,7 +4212,8 @@ def write_report(now: datetime | None = None) -> dict:
     said = lab_report.report(
         _nexus_rows(), lab.load(), rooms.load(), _sibling("paper").load(),
         load_samples(), _sibling("clone").load(),
-        _sibling("fomo_watch").load(), now=now or _now())
+        _sibling("fomo_watch").load(), now=now or _now(),
+        outsider_rows=_sibling("outsider").load())
     _write_text(report_path(), json.dumps(said, ensure_ascii=False, indent=1))
     return said
 
@@ -4574,6 +4655,9 @@ def main(argv: list[str] | None = None) -> int:
     desk_cmd.add_argument("--hold", type=float, required=True, help="days, 1 to 14")
     desk_cmd.add_argument("--why", required=True)
     desk_cmd.add_argument("--half", action="store_true", help="half a stake")
+    outsider_cmd = sub.add_parser(
+        "outsider-act", help="the outsider (section 6): act on one recorded run's picks")
+    outsider_cmd.add_argument("run", help="OUT-NNNN")
     ask_cmd = sub.add_parser("ask", help="one question to Nexus, with brakes")
     ask_cmd.add_argument("question")
     ask_cmd.add_argument("--no-wait", action="store_true")
@@ -4777,6 +4861,8 @@ def main(argv: list[str] | None = None) -> int:
     elif args.cmd == "launch":
         print(json.dumps(night_promote(only=args.answer), ensure_ascii=False, indent=1,
                          default=str))
+    elif args.cmd == "outsider-act":
+        print(json.dumps(outsider_act(args.run), ensure_ascii=False, indent=1))
     elif args.cmd == "desk-card":
         print(json.dumps(desk_card(args.card, args.hold, args.why, half=args.half),
                          ensure_ascii=False, indent=1))

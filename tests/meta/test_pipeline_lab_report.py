@@ -212,6 +212,29 @@ def _a_rooms_section_is_the_one_it_was_opened_in():
     assert said["products"]["own"]["running"] == 1
     assert said["products"]["outsider"]["n"] == 0
     assert said["products"]["cards"]["n"] == 2, "ours were counted among his cards"
+    _the_outsider_section_carries_its_latest_look()
+
+
+def _the_outsider_section_carries_its_latest_look():
+    """Laboratory v3, P6: section 6 says, numbers first, what the stranger concluded on its
+    newest run -- its mean score over the surfaces, whether it would deposit, its verdict --
+    and how many runs stand behind it. No run, no look."""
+    runs = [{"type": "run", "id": "OUT-0001", "at": "2026-10-11T10:00:00+00:00",
+             "verdict": "Too early.", "would_deposit": False,
+             "surfaces": [{"name": "Gem Screener", "score": 6}, {"name": "Nexus", "score": 2}]},
+            {"type": "pick", "id": "OUT-0001-C1", "run": "OUT-0001"},
+            {"type": "run", "id": "OUT-0002", "at": "2026-10-12T10:00:00+00:00",
+             "verdict": "Gem Screener is worth it; the rest is not yet.", "would_deposit": True,
+             "surfaces": [{"name": "Gem Screener", "score": 8}, {"name": "Nexus", "score": 4}]}]
+    parts = {**_fixture(), "fomo_rows": [], "now": NOW}
+    said = lab_report.report(
+        parts["questions"] + parts["answers"], parts["notebook"], parts["room_rows"],
+        parts["paper_rows"], parts["sample_rows"], parts["clone_rows"], [], now=NOW,
+        outsider_rows=runs)
+    assert said["products"]["outsider"]["look"] == {
+        "at": "2026-10-12T10:00:00+00:00", "runs": 2, "score": 6.0, "would_deposit": True,
+        "verdict": "Gem Screener is worth it; the rest is not yet."}, said["products"]["outsider"]
+    assert _report()["products"]["outsider"]["look"] is None
 
 
 @qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")

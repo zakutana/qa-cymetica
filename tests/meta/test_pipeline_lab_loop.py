@@ -3683,6 +3683,55 @@ def _a_proven_cell_meets_its_defaults_head_to_head(tmp_path, monkeypatch):
     assert did["rooms"] == 1
     again = scripts_lab.h2h_step()
     assert again["rooms"] == 0 and len(matchups) == 1, "a proven cell was paired twice"
+    stranger_dir = tmp_path / "stranger"
+    stranger_dir.mkdir()
+    _the_outsiders_picks_run_on_paper_in_its_section(stranger_dir, monkeypatch)
+
+
+def _the_outsiders_picks_run_on_paper_in_its_section(tmp_path, monkeypatch):
+    """Laboratory v3, P6: what the stranger agent picked (scripts/outsider.py record) is
+    acted on by `lab.py outsider-act OUT-NNNN`, in section `outsider`: a card bought on paper
+    at HALF stake with NO backtest gate -- the number is its judgement, not gate and stranger
+    -- and a bot cloned at its band through wave.launch_one. A tournament seat is a wish the
+    operator approves, said, never sent from here. Acting twice acts once."""
+    import qa.rooms as qa_rooms
+
+    scripts_lab = _scripts_lab(tmp_path, monkeypatch)
+    sent, calls = _clonepad(scripts_lab, tmp_path, monkeypatch, [])
+    card = _card(0x99)
+    monkeypatch.setattr(scripts_lab, "_card_live", lambda c: {
+        "legs": [{"symbol": "PEPE", "weight": 1.0}], "tradeable": True, "title": "Pepe pump"})
+    monkeypatch.setattr(scripts_lab, "_gate", lambda *a: (_ for _ in ()).throw(
+        AssertionError("the outsider's card went through our backtest gate")))
+    picks = [
+        {"type": "run", "id": "OUT-0001", "verdict": "x"},
+        {"type": "pick", "kind": "card", "id": "OUT-0001-K1", "run": "OUT-0001",
+         "card_id": card, "hold_days": 3, "why": "looked hot"},
+        {"type": "pick", "kind": "bot", "id": "OUT-0001-B1", "run": "OUT-0001",
+         "species": "MACD Hunter", "stop_loss_pct": 8.0, "take_profit_pct": 25.0, "why": "trend"},
+        {"type": "pick", "kind": "tournament", "id": "OUT-0001-T1", "run": "OUT-0001",
+         "table_id": "1", "why": "cheap seat"}]
+    pinned = scripts_lab._sibling
+
+    class Outsider:
+        @staticmethod
+        def load():
+            return list(picks)
+    monkeypatch.setattr(scripts_lab, "_sibling",
+                        lambda n: Outsider if n == "outsider" else pinned(n))
+
+    did = scripts_lab.outsider_act("OUT-0001")
+
+    full = scripts_lab._leg_stakes(100000.0, 0.0, 1)[0]
+    assert sent and sent[-1][0] == card and sent[-1][1] < full, (sent, full)
+    assert [c[0] for c in calls] == ["clone", "settings", "fund", "enable"], calls
+    assert calls[1][2] == {"stop_loss_pct": 8.0, "take_profit_pct": 25.0}
+    stored = qa_rooms.load()
+    sections = sorted(r.get("section") for r in qa_rooms.strategies(stored))
+    assert sections == ["outsider", "outsider"], sections
+    assert any("seat" in line and "1" in line for line in did["held"]), did
+    scripts_lab.outsider_act("OUT-0001")
+    assert len(sent) == 1 and len(calls) == 4, "a pick was acted on twice"
 
 
 def _bot_room(scripts_lab, tmp_path, monkeypatch):

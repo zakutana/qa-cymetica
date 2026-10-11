@@ -66,6 +66,36 @@ def test_feedback_and_acted_reach_the_manager_file_and_nothing_else_does(
     _the_outsiders_coins_are_measured_against_btc_and_only_when_due()
     _the_outsider_run_is_recorded_with_prices_read_once(tmp_path)
     _a_seat_is_asked_only_at_a_paper_table_and_never_on_a_dry_run(tmp_path)
+    _the_outsider_runs_only_as_a_proven_stranger(tmp_path / "stranger-proof")
+
+
+def _the_outsider_runs_only_as_a_proven_stranger(tmp_path):
+    """2026-10-11: spawned as a subagent from this repository, the outsider quoted our
+    CLAUDE.md's first line and our memory index -- it was not a stranger. So it runs as its
+    own `claude -p` process from a folder outside the repository, and only after a probe in
+    that process showed nothing of ours: a probe that is not logged in, that fails, or that
+    quotes any of our markers is not independence. Until a passing probe is on record the
+    tick never wakes the outsider."""
+    tmp_path.mkdir()
+    out = _outsider_script("outsider")
+    clean = "I know nothing about Cymetica. I was given no project files or rules."
+    assert out.independent(clean, 0) == (True, "")
+    for leak in ("# Operating rules for qa-cymetica", "a memory: Verify a workflow is live",
+                 "the handle @EventTraderQABot", "its founder Kasian (@DeepHedge)"):
+        ok, why = out.independent(f"I know this: {leak}", 0)
+        assert not ok and why, leak
+    assert out.independent("Not logged in · Please run /login", 1)[0] is False
+    assert out.independent(clean, 2)[0] is False, "a failed run passed as a probe"
+    rows = [{"type": "probe", "at": "2026-10-11T10:00:00+00:00", "ok": False}]
+    assert out.proven(rows) is False
+    assert out.proven(rows + [{"type": "probe", "at": "2026-10-11T11:00:00+00:00",
+                               "ok": True}]) is True
+    assert out.proven(rows + [{"type": "probe", "at": "2026-10-11T11:00:00+00:00",
+                               "ok": True},
+                              {"type": "probe", "at": "2026-10-11T12:00:00+00:00",
+                               "ok": False}]) is False, "the newest probe decides"
+    assert out.home().resolve().parts[:len(REPO.resolve().parts)] != REPO.resolve().parts, (
+        "the stranger's folder is inside the repository, under its CLAUDE.md")
 
 
 def _a_lesson_of_a_section_is_what_that_section_knows(lab, tmp_path, monkeypatch):

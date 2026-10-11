@@ -2144,6 +2144,19 @@ function ordered(list, group) {
     ? (a, b) => lane(a, b) || String(b.id).localeCompare(String(a.id))
     : (a, b) => lane(a, b) || net(b) - net(a));
 }
+/* The outsider's newest look (laboratory v3, P6): would it deposit, its mean score, its
+   runs -- numbers first, its verdict in the tooltip. */
+function lookBlock(lp) {
+  const k = lp.look;
+  if (!k) return "";
+  const tiles = [
+    ["Would deposit", k.would_deposit ? '<span class="up">yes</span>' : '<span class="down">no</span>',
+     `newest look · ${esc(stamp(k.at))}`],
+    ["Mean score", k.score == null ? "—" : `${num(k.score, 1)}<small>/10</small>`, "over what it judged"],
+    ["Looks", num(k.runs, 0), "one a day"]];
+  return `<div class="m-tiles" title="${esc(k.verdict || "")}">${tiles.map(([n, v, s]) =>
+    `<div class="tile"><span>${n}</span><b>${v}</b><i>${s}</i></div>`).join("")}</div>`;
+}
 /* What the section knows (laboratory v3, P2): folded under its numbers, one click away. */
 function knownFold(lp) {
   const lines = lp.known || [];
@@ -2164,7 +2177,7 @@ function renderRoom() {
   const rows = ordered(list.filter(le => le.group === group), group);
   const all = readStore("lab.all." + SECTOR + "." + group, "0") === "1";
   const shown = all ? rows : rows.slice(0, TOP);
-  room.innerHTML = roomHead(lp) + knownFold(lp) +
+  room.innerHTML = roomHead(lp) + lookBlock(lp) + knownFold(lp) +
     `<div class="bar"><div class="seg" role="tablist">${GROUPS.map(([g, w]) =>
       `<button type="button" role="tab" data-group="${g}" aria-selected="${g === group}">${w}` +
       `<span class="n">${counts[g]}</span></button>`).join("")}</div>

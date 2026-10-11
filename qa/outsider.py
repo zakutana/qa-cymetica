@@ -1,6 +1,6 @@
 """Section 6 of the laboratory: the outsider.
 
-Once a day an AI trading agent with none of our memory (`.claude/agents/outsider.md`,
+Once a day an AI trading agent with none of our memory (`docs/outsider-prompt.md`, its own process,
 WebFetch and WebSearch only) discovers Cymetica from cymetica.com and its llms.txt,
 scores each surface on "would I put money here", says whether it would deposit, and
 picks. Its run arrives as one JSON object; `scripts/outsider.py` records it in
@@ -235,6 +235,16 @@ def digest(run: dict) -> str:
 
 
 # -- what the laboratory may do ---------------------------------------------------------
+
+def proven(rows: list[dict]) -> bool:
+    """Whether the newest independence probe on record passed (scripts/outsider.py `probe`):
+    only then may the stranger run. Pure, so the laboratory's tick can ask it without
+    reaching the process that runs the stranger."""
+    probes = [r for r in rows or () if r.get("type") == "probe"]
+    if not probes:
+        return False
+    return max(probes, key=lambda r: str(r.get("at") or "")).get("ok") is True
+
 
 def actions(run) -> list[dict]:
     """Every pick as an action the laboratory may take, all on paper, in section 6.

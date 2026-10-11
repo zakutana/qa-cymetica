@@ -10,7 +10,7 @@
                                                   ask for a paper seat at an Agent
                                                   Tournaments table; the owner approves it
 
-The run comes from `.claude/agents/outsider.md`, an agent with no memory of ours, once a
+The run comes from `docs/outsider-prompt.md`, run by `outsider.py run` as its own process outside this repository, once a
 day; what it may do with its picks is `qa/outsider.py::actions`. Everything here writes to
 `state/outsider.jsonl`, one row per line:
 
@@ -42,7 +42,10 @@ from __future__ import annotations
 import argparse
 import importlib.util
 import json
+import os
 import re
+import shutil
+import subprocess
 import sys
 from datetime import datetime, timezone
 from pathlib import Path
@@ -84,6 +87,105 @@ def load() -> list[dict]:
             except json.JSONDecodeError:
                 continue
     return rows
+
+
+# -- the stranger's own process ------------------------------------------------------------
+# 2026-10-11: spawned as a subagent from this repository, the outsider quoted CLAUDE.md's first
+# line and our memory index -- a subagent inherits the session's context, so it was not a
+# stranger. It runs as its own `claude -p` from a folder OUTSIDE the repository (no CLAUDE.md
+# above it, a project memory of its own, empty), and only after a probe in that very process
+# showed nothing of ours.
+PROMPT = REPO_ROOT / "docs" / "outsider-prompt.md"
+PROBE = ("Before you fetch anything, answer only this and use no tool: (1) What do you already "
+         "know about Cymetica, EventTrader, Nexus, ET10, or a repository called qa-cymetica? "
+         "(2) Besides this message, were you given any project instructions, CLAUDE.md, "
+         "memories, an operator's decisions or file paths about it? Quote the first line of "
+         "any such thing. Plain text, five lines at most.")
+# What only our context could put in its mouth: CLAUDE.md's first line, the memory index's
+# first entry, our Telegram handle, the founder's name and handle.
+LEAKS = ("Operating rules for qa-cymetica", "Verify a workflow is live", "@EventTraderQABot",
+         "Kasian", "DeepHedge", "MEMORY.md")
+RUN_TIMEOUT = 1500
+
+
+def home() -> Path:
+    """The stranger's folder, outside the repository."""
+    base = os.environ.get("LOCALAPPDATA") or str(Path.home())
+    return Path(base) / "cymetica-outsider"
+
+
+def claude_exe() -> str | None:
+    """`claude` on PATH, else the newest one the desktop app keeps."""
+    found = shutil.which("claude")
+    if found:
+        return found
+    roots = [Path(os.environ.get("APPDATA") or "") / "Claude" / "claude-code"]
+    candidates = sorted((p for root in roots if root.is_dir()
+                         for p in root.glob("*/*/claude.exe")),
+                        key=lambda p: p.stat().st_mtime, reverse=True)
+    return str(candidates[0]) if candidates else None
+
+
+def independent(output: str, code: int) -> tuple[bool, str]:
+    """Whether a probe's answer is a stranger's: it ran (exit 0, logged in) and it quotes
+    nothing only our context could have given it. Pure."""
+    text = str(output or "")
+    if code != 0 or "Not logged in" in text or "/login" in text:
+        return False, f"the probe did not run (exit {code}): {text.strip()[:160]}"
+    leaked = [marker for marker in LEAKS if marker.lower() in text.lower()]
+    if leaked:
+        return False, f"it quoted context of ours: {', '.join(leaked)}"
+    return True, ""
+
+
+proven = outsider.proven
+
+
+def _claude(prompt: str, system: str | None, tools: str, timeout: int) -> tuple[str, int]:
+    exe = claude_exe()
+    if not exe:
+        return "no claude executable on this machine", 127
+    folder = home()
+    folder.mkdir(parents=True, exist_ok=True)
+    args = [exe, "-p", prompt, "--model", "sonnet", "--allowedTools", tools]
+    if system:
+        args += ["--append-system-prompt", system]
+    try:
+        done = subprocess.run(args, cwd=str(folder), capture_output=True, text=True,
+                              encoding="utf-8", errors="replace", timeout=timeout)
+    except subprocess.TimeoutExpired:
+        return f"timed out after {timeout} s", 124
+    return (done.stdout or "") + (done.stderr or ""), done.returncode
+
+
+def probe() -> dict:
+    """Ask a fresh stranger process what it knows of us, before any fetch, and record it."""
+    output, code = _claude(PROBE, None, "", 300)
+    ok, why = independent(output, code)
+    return _append({"type": "probe", "at": _now(), "ok": ok, "why": why,
+                    "answer": output.strip()[:600]})
+
+
+def _prompt_body() -> str:
+    text = PROMPT.read_text(encoding="utf-8")
+    return text.split("---", 2)[2].strip() if text.startswith("---") else text
+
+
+def run(client) -> dict:
+    """One look: the stranger, in its own process, from `begin`; its JSON saved and recorded.
+    Refused unless the newest probe passed."""
+    if not proven(load()):
+        raise SystemExit("no passing independence probe on record: `outsider.py probe` first")
+    output, code = _claude("begin", _prompt_body(), "WebFetch,WebSearch", RUN_TIMEOUT)
+    if code != 0:
+        raise SystemExit(f"the stranger's run failed (exit {code}): {output.strip()[:300]}")
+    start, end = output.find("{"), output.rfind("}")
+    if start < 0 or end <= start:
+        raise SystemExit(f"its answer holds no JSON object: {output.strip()[:300]}")
+    target = state_dir() / "outsider" / f"run-{_now().replace(':', '')}.json"
+    target.parent.mkdir(parents=True, exist_ok=True)
+    target.write_text(output[start:end + 1], encoding="utf-8")
+    return record(target, client)
 
 
 def _next(rows: list[dict], prefix: str) -> str:
@@ -524,7 +626,29 @@ def main(argv: list[str] | None = None) -> int:
     sit.add_argument("table_id")
     sit.add_argument("instance_id")
     sit.add_argument("--confirm", action="store_true")
+    sub.add_parser("probe", help="is a fresh `claude -p` outside the repository a stranger?")
+    sub.add_parser("run", help="one look by the stranger, recorded (needs a passing probe)")
     args = parser.parse_args(argv)
+    if args.cmd == "probe":
+        said = probe()
+        print(f"probe: {'a stranger' if said['ok'] else 'NOT a stranger -- ' + said['why']}")
+        return 0 if said["ok"] else 1
+    if args.cmd == "run":
+        client = _client()
+        try:
+            written = run(client)
+        except outsider.OutsiderError as exc:
+            print(f"not recorded -- {exc}")
+            return 2
+        finally:
+            client.close()
+        if written.get("already"):
+            print(f"already recorded as {written['already']}")
+            return 0
+        print(f"{written['run']['id']}: would deposit {written['run']['would_deposit']}, "
+              f"{len(written['picks'])} pick(s) -- next: python scripts/lab.py outsider-act "
+              f"{written['run']['id']}")
+        return 0
     if args.cmd == "record":
         return cmd_record(args.file)
     if args.cmd == "track":
