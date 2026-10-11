@@ -915,3 +915,43 @@ def test_a_paper_buy_refused_for_a_balance_it_is_not_spending_fails(monkeypatch)
         _run_paper_book_check(monkeypatch, rows + _paper_buy(
             "TRD-0051", PRIV, "09:00:00", 409,
             '{"detail": "New purchases are closed for this index."}'))
+
+
+@qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
+def test_a_coins_supply_figures_are_judged_as_numbers_that_can_all_be_true():
+    """The readings behind the Crypto dashboard supply check (2026-10-11): HBAR, IOTA and ICP as
+    captured fail it, a coin whose circulating supply was withheld does not, and a figure within
+    the stated tolerances is not a defect."""
+    from tests.rest.test_a_coins_supply_figures_can_all_be_true import supply_contradiction
+
+    hbar = {"price": 0.0923, "market_cap": 4059900322.0, "fdv": 92275172.36,
+            "circulating_supply": 43997753873.97, "total_supply": 50000000000.0,
+            "max_supply": 1000000000.0, "pct_issued": 1.0, "flags": []}
+    broken = supply_contradiction(hbar)
+    assert set(broken) == {"circulating_over_max", "total_over_max", "fdv_under_market_cap"}, broken
+    assert broken["circulating_over_max"] == 43.998 and broken["total_over_max"] == 50.0
+    icp = {"market_cap": 1725493408.0, "fdv": 1452611805.4, "circulating_supply": 557358242.9,
+           "total_supply": 555123004.0, "max_supply": 469213710.0, "flags": []}
+    assert set(supply_contradiction(icp)) == {"circulating_over_max", "total_over_max", "fdv_under_market_cap"}
+    iota = {"market_cap": 221428838.0, "fdv": 142733838.9, "circulating_supply": 4311998930.6,
+            "total_supply": 4831556199.0, "max_supply": 2779530283.0, "flags": []}
+    assert "fdv_under_market_cap" in supply_contradiction(iota)
+
+    # CHZ has the same relation as ICP and IS withheld: the dashboard already knows, nothing to judge.
+    chz = {"market_cap": 163492876.0, "fdv": 137708331.5, "circulating_supply": None,
+           "total_supply": 9444481889.0, "max_supply": 8888888888.0, "flags": ["circulating_supply"]}
+    assert supply_contradiction(chz) is None, "a withheld circulating supply was judged"
+
+    # ETH: FDV 1.5% under the market cap because its total is net of burns; inside the tolerance.
+    eth = {"market_cap": 306623046415.0, "fdv": 301871251577.0, "circulating_supply": 122124805.0,
+           "total_supply": 120232214.0, "max_supply": None, "flags": []}
+    assert supply_contradiction(eth) is None, "ETH's 1.5% was read as a defect"
+    # A max a hair under the total (GRT, 0.03%) is rounding between two reads, not a contradiction.
+    grt = {"market_cap": 1e9, "fdv": 1.2e9, "circulating_supply": 9e9, "total_supply": 10799706720.0,
+           "max_supply": 10796188903.0, "flags": []}
+    assert supply_contradiction(grt) is None
+    # No maximum, nothing missing is a number: not judged, never a pass by guessing.
+    assert supply_contradiction({"market_cap": 1e9, "fdv": 1.1e9, "total_supply": 5e9, "flags": []}) is None
+    assert supply_contradiction({"market_cap": None, "fdv": None, "max_supply": 1e9, "total_supply": 5e9,
+                                 "flags": []}) == {"total_over_max": 5.0}
+    assert supply_contradiction(None) is None
