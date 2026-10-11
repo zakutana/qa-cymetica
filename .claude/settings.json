@@ -46,7 +46,9 @@
       "Bash(python scripts/paper.py:*)",
       "Bash(python scripts/hot_watch.py:*)",
       "Bash(python scripts/outsider.py:*)",
-      "Bash(python scripts/bb.py:*)"
+      "Bash(python scripts/bb.py:*)",
+      "Bash(python scripts/crew.py:*)",
+      "Bash(python scripts/commit.py:*)"
     ]
   },
   "hooks": {

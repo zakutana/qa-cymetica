@@ -86,14 +86,14 @@ Building since 2026-10-11 ("stav firmu podle docs/crew-plan.md"). The status col
 
 | Phase | What | Status |
 |---|---|---|
-| C0 | design decisions below, memory files for Bugs and Manager; the operator's decision in CLAUDE.md and the `crew` skill wait for their word in chat (the auto-mode guard refused the write) | open |
+| C0 | design decisions below, memory files for Bugs and Manager; the operator's decision in CLAUDE.md, the `crew` skill and the allowlist (on their word in chat, "ano zapis to") | in the commit that follows this line |
 | C1 | `qa/crew.py` (bus, departments, argv, outcome), `scripts/crew.py` (loops, start, stop, status), `scripts/commit.py` | hotovo 2c64db05 |
 | C2 | Bugs department: tickets in, the one writer of the bug pipeline, the tree held still for level V | hotovo 6e4956e7 |
 | C3 | the clock: the laboratory's tick routed to lab, bugs and outsider; the outsider's code run | hotovo 179cc957 |
 | C4 | Desk under the company: its own pace, its snooze, its brakes in code | hotovo fb0eebe4 |
 | C5 | Manager: escalations, daily review, memory curation, operator channel | hotovo 4277ae18 |
 | C6 | watchdog: leases, three failures, a stuck department, a dead loop restarted | hotovo 5506421d |
-| C7 | process auditor: the day's numbers on the clock and in the patrol (built), the week in deep pass step 11 (waits with the allowlist entry for crew.py: a skill naming a script needs it, tests/repo/test_allowlist.py) | open |
+| C7 | process auditor: the day's numbers on the clock and in the patrol (b5def5f3), the week in deep pass step 11 | in the commit that follows this line |
 | C8 | reviews and the dry run | open |
 | C9 | first live start on "zapni laborku" | open |
 

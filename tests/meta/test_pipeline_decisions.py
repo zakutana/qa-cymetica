@@ -147,6 +147,8 @@ PINNED = {
          "3f868c8f77d201124d36ead10a6162744af277af13661777bee59bd83e90692a"),
         ("2026-09-25", "vse ma byt anlgicky",
          "6182bf168fce7a202962eb76834ced134de99a9802c2508f95ebe880eae1eaf9"),
+        ("2026-10-11", "jela nonstop kdyz ji zapnu",
+         "75c291499117943aeda1cf2cfe7aee7bbb4aef4a0932a05b6d84e54873066027"),
     ],
     ".claude/skills/qa-sweep/SKILL.md": [
         ("2026-09-06", "kdyz napisu sweep",
@@ -239,6 +241,18 @@ PINNED = {
         # writes it takes are open ("Normalne se povoluji").
         ("2026-10-09", "Normalne bse povoluji",
          "4da2cf5d5f25b42adfa8bea48fb517cde0f30fba7316133311f9431302ae26c4"),
+    ],
+    ".claude/skills/crew/SKILL.md": [
+        ("2026-10-11", "nemelo by cele vedeni labroky uz mit vice delniku",
+         "18f8d6a04c73d07214ba7e9474ea1e8b0f1207e54025f14c50af693eace9f1f6"),
+        ("2026-10-11", "Vsechna oddeleni mluvi jen do managera",
+         "37d6e09736eb271f32ce2d3fc63b955c51a2311c04c86a2249bc384d2fc1b148"),
+        ("2026-10-11", "aby tento cely navrh byl efektivni",
+         "2572a94b4e44d3c8beb95959d078b88d3be24d58e07328ac3e1b1e74ea439eec"),
+        ("2026-10-11", "auditor musi hodnotit vsehcny procesy",
+         "149d568f34e7bb618e9ead7d1beaa7bcc2c8657a1cd2d93bd0d159561633129f"),
+        ("2026-10-11", "Cela firma musi davat smysl",
+         "873d21c2bc502a4dfc5bf9e682b536582d4b4c8e943eb7139752c4ec80897325"),
     ],
     ".claude/skills/ohlednuti/SKILL.md": [
         ("2026-09-12", "za tri tydny reknu at se ohledne zpet",

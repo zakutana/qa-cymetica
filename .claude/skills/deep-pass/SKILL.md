@@ -857,6 +857,15 @@ Five questions, answered in Czech under **Týden**, in that order:
    mechanism nobody can reach — say which, in one line, and put a cut in the
    commit message rather than here.
 
+   The company (docs/crew-plan.md) is one more process the patrol measures: its
+   `company` lines and flags, and `python scripts/crew.py audit --days 7`. This
+   step is its weekly auditor, independent of the manager it also judges. Name
+   the bad flows, the waste and the stuck places with numbers ("Bugs ran 14
+   sweeps, 11 found nothing new: one in two is enough"); what touches the
+   operator's rules goes under **Týden**, and what is the company's own goes to
+   the manager: `python scripts/crew.py ticket --to manager --kind audit --key
+   audit:<date> --text "..."`.
+
 5. **What would an outside reviewer hold against us?** Three readers, launched
    in parallel, read-only, each under 600 words with evidence, one review
    each and not an army. This is the review that on 2026-10-07 found six groups

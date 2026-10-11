@@ -28,7 +28,7 @@ Memory runs across all seven: before a section starts anything it asks the regis
 
 ## A tick
 
-1. `python -u scripts/lab.py tick` with `run_in_background`, never under a timeout (a killed tick holds its marker for 45 min). End the turn without a word; its notification wakes you.
+1. `python -u scripts/lab.py tick` with `run_in_background`, never under a timeout (a killed tick holds its marker for 45 min). End the turn without a word; its notification wakes you. While the company runs (the `crew` skill), the tick is its clock's: a chat tick says so and decides none -- answer `laborka: běží ve firmě` and stop.
 2. Read only its **last line**, `decide: ...`, and do exactly what it names -- nothing else:
    - `none` -- one Czech line (`laborka: klid`) and stop. No resume, no brief, no diary, no memory, no Nexus.
    - `report` -- the morning report, first (below).

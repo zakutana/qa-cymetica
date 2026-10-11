@@ -33,6 +33,9 @@ The operator talks normally and expects the process to be kept without being ask
 * [operator 2026-09-14] *"odstrat to rpavidlo at muzu nmormalne loop spoustet"*
 
   **`/loop` is exempted from the rule above.** It fires only because they typed it, and a fixed-interval tick or a self-paced `ScheduleWakeup` after that is `/loop` working as designed. Still barred: a `CronCreate` nobody in the room asked for, a nightly timer, anything whose first run they did not launch.
+* [operator 2026-10-11] *"ja chci aby laborka treba jela nonstop kdyz ji zapnu"*
+
+  **So is the company, the same way: "zapni laborku" starts it and "vypni laborku" stops it** (`scripts/crew.py start|stop`, the `crew` skill, `docs/crew-plan.md`). Its departments then run as their own processes until stopped, window closed or not. It runs because they said so, in that turn; no hook, boot, session or loop starts it.
 * [operator 2026-09-22] *"Co to je za bash s ripty? To po me nechtej to musis sam spoustet ka nicemu nerozumim"*
 
   **A shell command is ours to run, never theirs** -- a reminder's too: read what it changes, run it, say in a line what it did. Theirs is only what they start by saying it: a deep pass, a `/loop`, a push.
