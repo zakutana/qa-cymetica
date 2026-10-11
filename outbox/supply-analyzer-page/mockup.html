@@ -35,7 +35,8 @@ body { margin: 0; background: var(--bg); color: var(--text); font: 15px/1.45 Int
   border-radius: 50%; border: 1.5px solid var(--blue); color: var(--blue); font: 700 11px "JetBrains Mono", monospace; cursor: help; }
 
 /* tiles */
-.kpis { display: grid; grid-template-columns: repeat(4, minmax(0,1fr)); gap: 12px; }
+.kpis { display: grid; grid-auto-flow: column; grid-auto-columns: minmax(0,1fr); gap: 12px; }
+.kpi .v { font-size: 28px; }
 .kpi { background: var(--panel); border: 1px solid var(--line); border-radius: 14px; padding: 16px 18px 15px; min-width: 0; }
 .kpi .n { font: 700 12px "JetBrains Mono", monospace; letter-spacing: .14em; color: var(--faint); text-transform: uppercase; }
 .kpi .v { font: 32px "Archivo Black", sans-serif; line-height: 1.15; margin-top: 8px; white-space: nowrap; }
@@ -103,7 +104,10 @@ const DATA = {"HYPE":{"name":"Hyperliquid","chain":"Hyperliquid L1 · native tok
 "ARB":{"name":"Arbitrum","chain":"Arbitrum · 0x912c…6548","price":0.1833991276453305,"mcap":1243758941,"circ":6785574605,"total":10000000000,"max":10000000000,"gap":0,"labels":["Oct 2026","Nov 2026","Dec 2026","Jan 2027","Feb 2027","Mar 2027","Apr 2027","May 2027","Jun 2027","Jul 2027","Aug 2027","Sep 2027","Oct 2027","Nov 2027","Dec 2027","Jan 2028","Feb 2028","Mar 2028","Apr 2028","May 2028","Jun 2028","Jul 2028","Aug 2028","Sep 2028"],"inflow":[108046244,108559591,108046244,108559591,108046244,108559591,2566735,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],"kind":"vesting","buyback":0,"burn":0,"events":[{"Oct 16":[["Team, Contributors & Advisors",56125000],["Investors",36520833]],"Nov 9":[["Foundation",15400411]]},{"Nov 16":[["Team, Contributors & Advisors",56125000],["Investors",36520833]],"Dec 10":[["Foundation",15913758]]},{"Dec 16":[["Team, Contributors & Advisors",56125000],["Investors",36520833]],"Jan 9":[["Foundation",15400411]]},{"Jan 15":[["Team, Contributors & Advisors",56125000],["Investors",36520833]],"Feb 9":[["Foundation",15913758]]},{"Feb 15":[["Team, Contributors & Advisors",56125000],["Investors",36520833]],"Mar 11":[["Foundation",15400411]]},{"Mar 17":[["Team, Contributors & Advisors",56125000],["Investors",36520833]],"Apr 11":[["Foundation",15913758]]},{"Apr 16":[["Foundation",2566735]]},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{}],"next":{"days":6}},
 "PHAR":{"name":"Pharaoh Exchange","chain":"Avalanche · 0x13a4…28e7","price":0.093107,"mcap":3307799,"circ":35526817,"total":534091214,"max":1000000000,"gap":465908786,"labels":["Oct 2026","Nov 2026","Dec 2026","Jan 2027","Feb 2027","Mar 2027","Apr 2027","May 2027","Jun 2027","Jul 2027","Aug 2027","Sep 2027","Oct 2027","Nov 2027","Dec 2027","Jan 2028","Feb 2028","Mar 2028","Apr 2028","May 2028","Jun 2028","Jul 2028","Aug 2028","Sep 2028"],"inflow":[22705677,22705677,22705677,22705677,22705677,22705677,22705677,22705677,22705677,22705677,22705677,22705677,22705677,22705677,22705677,22705677,22705677,22705677,22705677,22705677,11795106,0,0,0],"kind":"emissions","buyback":0,"burn":0,"events":[{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{}],"next":null}};
 
-const SOURCES = "Circulating, price and market cap: CoinGecko. Unlock schedule: DeFiLlama and project docs. Buybacks: DeFiLlama holders' revenue. FDV = max supply × price. Read Oct 10. Not financial advice.";
+// Staking, from the Supply Analyzer API (flow_inputs): HYPE from Hyperliquid's validator feed, PHAR on-chain (xPHAR contract); ARB has none measured.
+Object.assign(DATA.HYPE, {staked: 232189337, stakedOwn: 207845813, exitDays: 7});
+Object.assign(DATA.PHAR, {staked: 498564542, stakedOwn: 0, exitDays: 0});
+const SOURCES = "Circulating, price and market cap: CoinGecko. Staking: the chain or the project's own API. Unlock schedule: DeFiLlama and project docs. Buybacks: DeFiLlama holders' revenue. FDV = max supply × price. Read Oct 10. Not financial advice.";
 const fmt = (n) => { const a = Math.abs(n);
   if (a >= 1e9) return (n/1e9).toFixed(a >= 1e10 ? 1 : 2) + "B";
   if (a >= 1e6) return (n/1e6).toFixed(1) + "M";
@@ -112,14 +116,30 @@ const fmt = (n) => { const a = Math.abs(n);
 const usd = (n) => "$" + fmt(n);
 const pct = (x) => (x >= 0 ? "+" : "") + (Math.abs(x) >= 100 ? x.toFixed(0) : x.toFixed(1)) + "%";
 
+Object.assign(DATA.HYPE, {toHolders: 100, holdersUsd: 854044 * 83.93, how: "bought back and burned", tokens: 854044});
+Object.assign(DATA.PHAR, {toHolders: 99.8, holdersUsd: 2664401, how: "paid to stakers in fees"});
+const SMILE = `<svg viewBox="0 0 24 24" width="26" height="26" style="vertical-align:-4px;margin-right:6px"><circle cx="12" cy="12" r="10.5" fill="none" stroke="#00ff88" stroke-width="2"/><circle cx="8.5" cy="10" r="1.4" fill="#00ff88"/><circle cx="15.5" cy="10" r="1.4" fill="#00ff88"/><path d="M7.5 14.5c1.2 1.8 2.7 2.6 4.5 2.6s3.3-.8 4.5-2.6" fill="none" stroke="#00ff88" stroke-width="2" stroke-linecap="round"/></svg>`;
+function holdersTile(sym, d) {
+  if (!d.toHolders) return `<div class="v muted">None</div><div class="s">no payouts, buybacks or burns found</div>`;
+  return `<div class="v green">${SMILE}$${fmt(d.holdersUsd)}<small>a month</small></div>
+    <div class="s">${d.toHolders}% of revenue · ${d.how}${d.tokens ? ` (${fmt(d.tokens)} ${sym})` : ""}</div>`;
+}
+function stakeTile(sym, d) {
+  if (!d.staked) return "";          // nothing measured: no tile, no "unknown"
+  const x = d.staked / d.circ, exit = d.exitDays === 0 ? "can leave at once" : `${d.exitDays}-day exit`;
+  const cls = x >= 1 && d.exitDays <= 7 ? "red" : "";
+  return `<div class="kpi"><div class="n">Staked</div>
+    <div class="v ${cls}">${fmt(d.staked)}</div>
+    <div class="s">${exit} · ${x.toFixed(1)}× circulating</div>
+    ${d.stakedOwn ? `<div class="s">+ ${fmt(d.stakedOwn)} staked by the foundation</div>` : ""}</div>`;
+}
+
 function render(sym) {
   const d = DATA[sym], base = d.max || d.total, fdv = base * d.price, ratio = fdv / d.mcap, n = d.labels.length;
   const in12 = d.inflow.slice(0, 12).reduce((a, b) => a + b, 0), dil = 100 * in12 / d.circ, perMonth = d.inflow[0];
   const rc = ratio >= 3 ? "red" : ratio <= 1.5 ? "green" : "", dc = dil >= 25 ? "red" : dil < 5 ? "green" : "";
   const net = d.buyback ? `<div class="s">net of buybacks: ${pct(100*(in12 - 12*d.buyback)/d.circ)}</div>` : "";
-  const bb = d.buyback
-    ? `<div class="v green">${fmt(d.buyback)}<small>a month</small></div><div class="s">bought back · ${usd(d.buyback*d.price)} a month · burns: none found</div>`
-    : `<div class="v muted">None</div><div class="s">no buybacks or burns found</div>`;
+  const bb = holdersTile(sym, d);
   const fm = d.events.findIndex(e => Object.keys(e).length);
   let unlock;
   if (fm >= 0) {
@@ -141,11 +161,12 @@ function render(sym) {
         <div class="bar"><i style="width:${(100*d.circ/base).toFixed(1)}%"></i></div>
         <div class="s">${(100*d.circ/base).toFixed(1)}% of max supply is out · price ${d.price >= 1 ? "$"+d.price.toFixed(2) : "$"+d.price.toPrecision(3)}</div></div>
       <div class="kpi"><div class="n">Market cap → FDV</div>
-        <div class="v" style="font-size:25px;margin-top:12px">${usd(d.mcap)} <span class="muted">→</span> ${usd(fdv)}</div>
+        <div class="v" style="font-size:21px;margin-top:12px">${usd(d.mcap)} <span class="muted">→</span> ${usd(fdv)}</div>
         <div class="s"><span class="${rc}">FDV ${ratio.toFixed(1)}× the market cap</span></div></div>
       <div class="kpi"><div class="n">Dilution, 12 months</div>
         <div class="v ${dc}">${pct(dil)}</div><div class="s">${fmt(perMonth)} new ${sym} a month · ${d.kind}</div>${net}</div>
-      <div class="kpi"><div class="n">Buybacks & burns</div>${bb}</div>
+      <div class="kpi"><div class="n">To holders</div>${bb}</div>
+      ${stakeTile(sym, d)}
     </div>
     <div class="unlock">${unlock}</div>
 
@@ -195,7 +216,7 @@ function render(sym) {
     let ins = Object.entries(by).map(([who, a]) => `<div class="box in"><div class="k">Vesting</div><div class="a">+${fmt(a)}</div><div class="w">${who}</div></div>`).join("");
     if (!ins && d.inflow[m]) ins = `<div class="box in"><div class="k">Emissions</div><div class="a">+${fmt(d.inflow[m])}</div><div class="w">rewards to stakers</div></div>`;
     if (!ins) ins = `<div class="none">No scheduled tokens this month</div>`;
-    const outs = d.buyback ? `<div class="box out"><div class="k">Buyback</div><div class="a">−${fmt(d.buyback)}</div><div class="w">${usd(d.buyback*d.price)} of revenue a month</div></div>`
+    const outs = d.buyback ? `<div class="box out"><div class="k">Buyback</div><div class="a">−${fmt(d.buyback)}</div><div class="w">${d.how || "bought back"} · ${usd(d.buyback*d.price)} a month</div></div>`
       : `<div class="none">No buybacks or burns found</div>`;
     document.getElementById("ins").innerHTML = ins; document.getElementById("outs").innerHTML = outs;
     const netM = d.inflow[m] - (d.buyback || 0);

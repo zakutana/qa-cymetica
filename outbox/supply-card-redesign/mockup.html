@@ -28,10 +28,10 @@ body { margin: 0; background: var(--bg); color: var(--text); font: 15px/1.45 Int
 .head .coin span { color: var(--faint); font-weight: 500; }
 .head .open { margin-left: auto; font: 600 14px Inter, sans-serif; color: var(--cyan); text-decoration: none; }
 
-.kpis { display: grid; grid-template-columns: repeat(4, minmax(0,1fr)); gap: 12px; }
+.kpis { display: grid; grid-auto-flow: column; grid-auto-columns: minmax(0,1fr); gap: 12px; }
 .kpi { background: var(--panel2); border: 1px solid var(--line); border-radius: 12px; padding: 14px 16px 13px; min-width: 0; }
 .kpi .n { font: 700 12px "JetBrains Mono", monospace; letter-spacing: .14em; color: var(--faint); text-transform: uppercase; }
-.kpi .v { font: 30px "Archivo Black", sans-serif; line-height: 1.15; margin-top: 8px; white-space: nowrap; }
+.kpi .v { font: 26px "Archivo Black", sans-serif; line-height: 1.15; margin-top: 8px; white-space: nowrap; }
 .kpi .v small { font: 600 15px Inter, sans-serif; color: var(--dim); margin-left: 4px; }
 .kpi .s { font-size: 13.5px; color: var(--dim); margin-top: 6px; }
 .kpi .note { font-size: 12.5px; color: var(--blue); margin-top: 6px; }
@@ -92,7 +92,28 @@ const fmt = (n) => { const a = Math.abs(n);
 const usd = (n) => "$" + fmt(n);
 const pct = (x) => (x >= 0 ? "+" : "") + (Math.abs(x) >= 100 ? x.toFixed(0) : x.toFixed(1)) + "%";
 
-const SOURCES = "Circulating, price and market cap: CoinGecko. Unlock schedule: DeFiLlama and project docs. FDV = max supply × price. Read Oct 10. Not financial advice.";
+Object.assign(DATA.HYPE, {staked: 232189337, stakedOwn: 207845813, exitDays: 7});
+Object.assign(DATA.PHAR, {staked: 498564542, stakedOwn: 0, exitDays: 0});
+// What reaches holders, from the Gem Screener coin record (to_holders) and the Supply Analyzer inputs:
+// HYPE's buybacks go to the assistance fund and count as burned (Hyperliquid docs); PHAR pays its fees to xPHAR stakers.
+Object.assign(DATA.HYPE, {toHolders: 100, holdersUsd: 854044 * 83.93, how: "bought back and burned", tokens: 854044});
+Object.assign(DATA.PHAR, {toHolders: 99.8, holdersUsd: 2664401, how: "paid to stakers in fees"});
+const SMILE = `<svg viewBox="0 0 24 24" width="26" height="26" style="vertical-align:-4px;margin-right:6px"><circle cx="12" cy="12" r="10.5" fill="none" stroke="#00ff88" stroke-width="2"/><circle cx="8.5" cy="10" r="1.4" fill="#00ff88"/><circle cx="15.5" cy="10" r="1.4" fill="#00ff88"/><path d="M7.5 14.5c1.2 1.8 2.7 2.6 4.5 2.6s3.3-.8 4.5-2.6" fill="none" stroke="#00ff88" stroke-width="2" stroke-linecap="round"/></svg>`;
+function holdersTile(sym, d) {
+  if (!d.toHolders) return `<div class="v muted">None</div><div class="s">no payouts, buybacks or burns found</div>`;
+  return `<div class="v green">${SMILE}$${fmt(d.holdersUsd)}<small>a month</small></div>
+    <div class="s">${d.toHolders}% of revenue · ${d.how}${d.tokens ? ` (${fmt(d.tokens)} ${sym})` : ""}</div>`;
+}
+function stakeTile(sym, d) {
+  if (!d.staked) return "";          // nothing measured: no tile, no "unknown"
+  const x = d.staked / d.circ, exit = d.exitDays === 0 ? "can leave at once" : `${d.exitDays}-day exit`;
+  const cls = x >= 1 && d.exitDays <= 7 ? "red" : "";
+  return `<div class="kpi"><div class="n">Staked</div>
+    <div class="v ${cls}">${fmt(d.staked)}</div>
+    <div class="s">${exit} · ${x.toFixed(1)}× circulating</div>
+    ${d.stakedOwn ? `<div class="s">+ ${fmt(d.stakedOwn)} staked by the foundation</div>` : ""}</div>`;
+}
+const SOURCES = "Circulating, price and market cap: CoinGecko. Staking: the chain or the project's own API. Unlock schedule: DeFiLlama and project docs. FDV = max supply × price. Read Oct 10. Not financial advice.";
 
 function card(sym, d, full) {
   const fdvBase = d.max || d.total, fdv = fdvBase * d.price, ratio = fdv / d.mcap;
@@ -105,9 +126,7 @@ function card(sym, d, full) {
   const disNote = "";
   const net = d.buyback ? `<div class="s">net of buybacks: ${pct(100*(in12 - 12*d.buyback)/d.circ)}</div>` : "";
   const bbUsd = d.buyback * d.price;
-  const bb = d.buyback
-    ? `<div class="v green">${fmt(d.buyback)}<small>a month</small></div><div class="s">bought back · ${usd(bbUsd)} a month · burns: none found</div>`
-    : `<div class="v muted">None</div><div class="s">no buybacks or burns found</div>`;
+  const bb = holdersTile(sym, d);
   // next unlock: everything on the first event day
   let unlock;
   const firstMonth = d.events.findIndex(e => Object.keys(e).length);
@@ -132,12 +151,13 @@ function card(sym, d, full) {
         <div class="bar"><i style="width:${(100*d.circ/fdvBase).toFixed(1)}%"></i></div>
         <div class="s">${(100*d.circ/fdvBase).toFixed(1)}% of max supply is out</div></div>
       <div class="kpi"><div class="n">Market cap → FDV</div>
-        <div class="v" style="font-size:24px;margin-top:12px">${usd(d.mcap)} <span class="muted">→</span> ${usd(fdv)}</div>
+        <div class="v" style="font-size:20px;margin-top:12px">${usd(d.mcap)} <span class="muted">→</span> ${usd(fdv)}</div>
         <div class="s"><span class="${ratioCls}">FDV ${ratio.toFixed(1)}× the market cap</span></div></div>
       <div class="kpi"><div class="n">Dilution, 12 months</div>
         <div class="v ${dilCls}">${pct(dil)}</div>
         <div class="s">${fmt(perMonth)} new ${sym} a month · ${d.kind}</div>${net}${disNote}</div>
-      <div class="kpi"><div class="n">Buybacks & burns</div>${bb}</div>
+      <div class="kpi"><div class="n">To holders</div>${bb}</div>
+      ${stakeTile(sym, d)}
     </div>
     <div class="unlock">${unlock}</div>
     ${full ? `<div class="flow">
