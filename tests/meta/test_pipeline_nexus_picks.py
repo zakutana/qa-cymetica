@@ -193,6 +193,9 @@ def _a_bots_band_is_read_in_the_field_names_he_wrote():
             "- **MACD Hunter** — stop_loss_pct **25**, take_profit_pct **36**.\n"
             "- For **RSI Sniper** and **Stochastic Striker** +40 is too far: stop_loss_pct 10, "
             "take_profit_pct 24.\n"
+            # The line is about the species it opens with; the one it compares it to is prose.
+            "- **ATR Alpha** — stop_loss_pct **10**, take_profit_pct **24** (2.4:1). Same logic "
+            "as Fibonacci Phoenix: bounces fade.\n"
             "- **Trend Titan** — a stop-loss of 8 % and a take-profit of 20 %.\n"
             "- **Trend Titan** — stop-loss 8 %, take-profit 20 %.\n"
             "- **Divergence Dragon**: your 15/40 is fine; take_profit_pct 60 alone.\n"
@@ -208,7 +211,7 @@ def _a_bots_band_is_read_in_the_field_names_he_wrote():
         "Trend Titan": {"stop_loss_pct": 8.0, "take_profit_pct": 20.0},
         # A target alone is half a band.
         "Divergence Dragon": None,
-        "ATR Alpha": None}
+        "ATR Alpha": {"stop_loss_pct": 10.0, "take_profit_pct": 24.0}}
 
 
 def _read(answer_id: str) -> dict:

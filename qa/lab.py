@@ -2020,6 +2020,8 @@ _BAND_GAP = r"(?:\s*\[no such tool\])?[\s*:=_`]*"
 _BAND_NUMBER = r"(\d+(?:\.\d+)?)\s*%?"
 _BAND_FIELDS = {field: re.compile(re.escape(field) + _BAND_GAP + _BAND_NUMBER, re.I)
                 for field in BOT_BAND_BOUNDS}
+# What may stand before the name a line opens with: a list marker, a number, markdown.
+_LINE_LEAD = re.compile(r"[\s#>*_`\-–—•\d.)]*")
 
 
 def bot_bands(text: str, names: list[str]) -> dict[str, dict | None]:
@@ -2038,8 +2040,12 @@ def bot_bands(text: str, names: list[str]) -> dict[str, dict | None]:
     for line in str(text or "").split("\n"):
         lower = line.lower()
         named = [key for key in wanted if key in lower]
-        if len(named) == 1:
-            current = wanted[named[0]]
+        # A line that OPENS with a species is about it, whatever it compares it to after:
+        # "- **RSI Sniper** — stop_loss_pct **10** ... Same logic as Fibonacci Phoenix" (NEX-0137).
+        rest = lower[_LINE_LEAD.match(lower).end():]
+        opens = [key for key in named if rest.startswith(key)]
+        if len(named) == 1 or opens:
+            current = wanted[(opens or named)[0]]
         elif named:
             current = None
         if current is None:
