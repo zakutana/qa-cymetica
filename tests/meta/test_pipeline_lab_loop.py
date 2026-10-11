@@ -956,7 +956,7 @@ def _doors(**over):
     """Every door a tick reaches, stubbed and counted. Nothing here touches
     their API; the real doors are named in `_tick_doors` and checked apart."""
     calls = {k: [] for k in ("fomo", "sample", "cycle", "promote", "truth",
-                             "search", "verdicts", "variants", "refill", "moves",
+                             "search", "verdicts", "variants", "own", "refill", "moves",
                              "fomo_reading", "hot", "hot_reading",
                              "surface_drift", "tracker", "credit")}
 
@@ -976,6 +976,9 @@ def _doors(**over):
         "truth": door("truth", []),
         "verdicts": door("verdicts", []),
         "variants": door("variants", {"rooms": 0, "orders": 0, "held": []}),
+        "own": door("own", {"rooms": 0, "orders": 0, "held": []}),
+        # The desk and the outsider wake only when a test says their parts exist.
+        "ready": lambda: {"desk_ready": False, "outsider_ready": False},
         "moves": door("moves", [{"legs": [], "period": 30, "why": f"m{n}"}
                                 for n in range(150)]),
         "refill": door("refill", [{"legs": [], "period": 90, "why": f"r{n}"}
@@ -2795,6 +2798,59 @@ def test_a_card_already_held_is_not_launched_again_by_a_later_answer(
     (retry,) = [r for r in qa_rooms.strategies(stored) if r["origin"] == "NEX-0004"]
     assert "STR-0001" in qa_rooms.acceptance_of(stored, retry["id"])["why"], (
         "the new room does not say the card was tried before")
+    own_dir = tmp_path / "own"
+    own_dir.mkdir()
+    _our_cards_hold_a_book_of_the_best_backtested_cards(own_dir, monkeypatch)
+
+
+def _our_cards_hold_a_book_of_the_best_backtested_cards(tmp_path, monkeypatch):
+    """Laboratory v3, P4 ([operator 2026-10-11] "event karty ktere obchodujes sam za sebe,
+    neradis se z nexusem"): `own_cards` opens, with no question to Nexus, the live tradeable
+    crypto cards their backtest rates best after fees -- the same gate his picks pass -- best
+    first, at most OWN_PER_TICK a tick and OWN_BOOK rooms at once, each a room of section
+    `own` opened from a proposal of ours and bought on paper citing it. A card the gate
+    rejects is never bought; a card a live room holds is not bought twice.
+
+    And the desk (P5) opens a card of its own choosing the same way, in section `desk`,
+    without the gate: its judgement is the experiment."""
+    import qa.rooms as qa_rooms
+
+    scripts_lab = _scripts_lab(tmp_path, monkeypatch)
+    a, b, c, d = (_card(n) for n in (0x11, 0x12, 0x13, 0x14))
+
+    def legs(x, y):
+        return [{"symbol": x, "weight": 0.5}, {"symbol": y, "weight": 0.5}]
+    sent, _ = _launchpad(scripts_lab, tmp_path, monkeypatch, [],
+                         live={a: _basket("BTC", "ETH")},
+                         readings={("BTC", "ETH"): (6.5, 1.3), ("SOL", "XRP"): (9.0, 2.0),
+                                   ("ADA", "DOT"): (-4.0, 0.2), ("BNB", "LTC"): (12.0, 2.5)})
+    monkeypatch.setattr(scripts_lab, "_live_cards", lambda: [
+        {"card": a, "title": "A", "legs": legs("BTC", "ETH")},
+        {"card": b, "title": "B", "legs": legs("SOL", "XRP")},
+        {"card": c, "title": "C", "legs": legs("ADA", "DOT")},
+        {"card": d, "title": "D", "legs": legs("BNB", "LTC")}])
+    monkeypatch.setattr(scripts_lab, "OWN_PER_TICK", 2)
+
+    did = scripts_lab.own_cards()
+
+    assert [card for card, _ in sent] == [d, b], sent
+    assert did["orders"] == 2, did
+    stored = qa_rooms.load()
+    own = [r for r in qa_rooms.strategies(stored) if r.get("section") == "own"]
+    assert len(own) == 2 and all(r["origin"].startswith("OUR-") for r in own), own
+    assert all(qa_rooms.acceptance_of(stored, r["id"]) for r in own), "a room with no criterion"
+    assert not [r for r in scripts_lab._nexus_rows() if r.get("type") == "question"], (
+        "our own cards asked Nexus")
+    scripts_lab.own_cards()
+    assert [card for card, _ in sent] == [d, b, a], "the next best was not bought, or one twice"
+    monkeypatch.setattr(scripts_lab, "OWN_BOOK", 3)
+    assert scripts_lab.own_cards()["orders"] == 0, "the book was over its size"
+
+    room = scripts_lab.desk_card(a, hold_days=1.0, why="entered Hot this round")
+    stored = qa_rooms.load()
+    (desk,) = [r for r in qa_rooms.strategies(stored) if r.get("section") == "desk"]
+    assert desk["id"] == room["room"] and sent[-1][0] == a, (room, sent)
+    assert qa_rooms.acceptance_of(stored, desk["id"])["window_days"] == 1.0
 
 
 @qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
@@ -4572,6 +4628,19 @@ def test_an_answer_a_gap_and_the_report_wake_the_manager_in_that_order():
     learned = _decide(_said(verdicts=2), last_question=None)
     assert learned == ["learn", "question"], learned
     assert "learn" not in _decide(_said(verdicts=0), last_question=None)
+    # Laboratory v3, P5 and P6: the desk works when nothing else is due and a bug hunt is not
+    # (the hunt keeps its three hours); the outsider runs once a day. Each only once its parts
+    # exist (`desk_ready`, `outsider_ready`, which the tick reads off the files).
+    asked = NOW - timedelta(minutes=30)
+    hunted = _tick_row(NOW - timedelta(hours=1), decide=["hunt bugs"])
+    assert _decide(_said(desk_ready=True), [hunted], asked) == ["desk"]
+    assert _decide(_said(), [hunted], asked) == [], "the desk ran without its plan"
+    desked = _tick_row(NOW - timedelta(minutes=40), decide=["desk"])
+    assert _decide(_said(desk_ready=True), [hunted, desked], asked) == [], (
+        "the desk ran twice inside its hours")
+    assert _decide(_said(outsider_ready=True), [hunted], asked) == ["outsider"]
+    outsidered = _tick_row(NOW - timedelta(hours=5), decide=["outsider"])
+    assert _decide(_said(outsider_ready=True), [hunted, outsidered], asked) == []
 
 
 @qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")

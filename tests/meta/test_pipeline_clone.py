@@ -148,6 +148,19 @@ def test_guidance_that_was_never_answered_is_refused(tmp_path, monkeypatch):
     paper = importlib.util.module_from_spec(spec)
     spec.loader.exec_module(paper)
     assert paper._guidance("NEX-0094")["id"] == "NEX-0094"
+
+    # Laboratory v3 (P4, P5): a card order of OUR section -- our cards, the desk -- cites the
+    # proposal of ours on record, OUR-NNNN, and says it is ours; an OUR id that is not on
+    # record is refused like an answer that was never given.
+    with pytest.raises(SystemExit, match="no proposal of ours"):
+        paper._guidance("OUR-0042")
+    (tmp_path / "lab.jsonl").write_text(json.dumps(
+        {"type": "proposal", "id": "OUR-0042", "kind": "card", "ref": "card-x",
+         "instance": "", "variant": "own", "settings": {}, "section": "own",
+         "why": "their backtest after fees rates it best"}) + "\n", encoding="utf-8")
+    said = paper._guidance("OUR-0042")
+    assert said["id"] == "OUR-0042" and "ours" in said["note"], said
+    assert "backtest" in said["advice"]
     with pytest.raises(SystemExit, match="not a recorded Nexus answer"):
         paper._guidance("NEX-9999")
 

@@ -193,6 +193,14 @@ PINNED = {
          "bb8c6329af4078e4f32faf832de1139495f3352d26a494987b7a2f395297d123"),
         ("2026-10-11", "vedes taky zaznam at nedels stejne veci",
          "728bc389c3cf7afe7cfb2c694d2b112e813d3e9f3128783c2f4016b3e5ffa33d"),
+        # The same day, a fourth: the desk may propose features and its own Build it Better
+        # apps (drafts the operator files).
+        ("2026-10-11", "delat sve build it better na svoje aplikace",
+         "f84078cba0e3b840c0dfe51005e236855c0284c4b9ae2265deb5e73cb36e20ef"),
+        # And a fifth, minutes later: the operator files nothing; the desk files its own Build
+        # it Better requests and features itself.
+        ("2026-10-11", "ty muzes sam klidne build it better podavat",
+         "405c0dccf617f4d3a85838e7ce9dc03d35d4ebe508d719d48c2a9af1fc2b8887"),
         # 2026-10-07, added because they said it: a bot is resumed after the platform
         # pauses it at a band, and thrown away after three stop-losses in a row.
         ("2026-10-07", "pak ho zahod a uz ho nechci videt",

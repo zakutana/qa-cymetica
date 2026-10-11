@@ -895,6 +895,11 @@ HUNT_HOURS = 3.0
 # unless one ran inside this many hours. By day a sweep comes on their news
 # instead (vendor_news below).
 SWEEP_HOURS = 20.0
+# Laboratory v3: the desk (section 7) works this often when nothing else is due and no hunt
+# is; the outsider (section 6) runs once a day -- a stranger's first look does not change by
+# the hour, and each look is an LLM run.
+DESK_HOURS = 2.0
+OUTSIDER_HOURS = 24.0
 FUND_ROOMS = False
 """Whether a fund Nexus names becomes a room (a mark against its index, never a buy).
 Off since 2026-10-03, the operator: "Aib fonds vubec netestuj, to je zbytecne" -- the
@@ -1046,6 +1051,12 @@ def decide(said: dict, earlier: list[dict], last_question: datetime | None,
     if theirs is not None and baseline is not None and int(theirs) > baseline:
         items.append("hunt sweep")
 
+    # Laboratory v3, P6: the outsider, once a day, once its parts exist.
+    if said.get("outsider_ready"):
+        ran = _last_decided(earlier, "outsider")
+        if ran is None or (now - ran).total_seconds() >= OUTSIDER_HOURS * 3600:
+            items.append("outsider")
+
     if not items:
         hunted = _last_decided(earlier, "hunt")
         if hunted is None or (now - hunted).total_seconds() >= HUNT_HOURS * 3600:
@@ -1053,6 +1064,11 @@ def decide(said: dict, earlier: list[dict], last_question: datetime | None,
             night = local_hour in NIGHT_LOCAL_HOURS and (
                 swept is None or (now - swept).total_seconds() >= SWEEP_HOURS * 3600)
             items.append("hunt sweep" if night else "hunt bugs")
+        elif said.get("desk_ready"):
+            # Laboratory v3, P5: the desk works when nothing else is due and no hunt is.
+            desked = _last_decided(earlier, "desk")
+            if desked is None or (now - desked).total_seconds() >= DESK_HOURS * 3600:
+                items.append("desk")
     return items
 
 
@@ -2536,10 +2552,11 @@ def next_variant(tried) -> dict | None:
 
 
 def note_proposal(kind: str, ref: str, instance: str, variant: dict,
-                  why: str) -> dict:
+                  why: str, section: str | None = None) -> dict:
     """One idea of OURS, OUR-NNNN -- what a room of our own lane opens from
     (`qa.rooms.open_strategy` asks `on_record`). The id is taken under the
-    lock, in the step that writes it."""
+    lock, in the step that writes it. `section` (laboratory v3) is the section the idea is
+    for -- our cards, the desk, the outsider -- when it is not the bot grid's."""
     target = path()
     target.parent.mkdir(parents=True, exist_ok=True)
     with file_lock(target):
@@ -2550,6 +2567,8 @@ def note_proposal(kind: str, ref: str, instance: str, variant: dict,
                   "at": _now(), "kind": kind, "ref": str(ref),
                   "instance": str(instance), "variant": variant["label"],
                   "settings": dict(variant["settings"]), "why": str(why)}
+        if section:
+            record["section"] = section
         with open(target, "a", encoding="utf-8") as handle:
             handle.write(json.dumps(record, ensure_ascii=False) + "\n")
     return record

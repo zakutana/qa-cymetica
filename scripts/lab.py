@@ -2930,6 +2930,176 @@ def _clone_outcome(clone, kind: str, instance: str) -> str | None:
                 None)
 
 
+# Laboratory v3, P4: our own cards. A top-10 book is the strategy's own parameter (not a
+# brake): ten rooms at once, refilled as they close, the best of the newest live cards first.
+OWN_BOOK = 10
+OWN_PER_TICK = 3
+OWN_HOLD_DAYS = 7.0
+OWN_CANDIDATES = 24          # the newest live crypto cards the gate reads each tick (cached after)
+LISTING_PATH = "/api/v1/event-cards"
+
+
+def _live_cards() -> list[dict]:
+    """Their live, tradeable cards whose basket their backtest can price -- crypto legs, two
+    at least -- newest first, as {card, title, legs}. Read through the guarded client, a page
+    of 100 at a time (their cap). Raises when a page cannot be read: unread is not empty."""
+    from qa.client import build_client
+    from qa.config import identities, load_dotenv
+    from qa.safety import CURRENT_TIER, EndpointRegistry, SafetyTier
+
+    load_dotenv()
+    ids = identities()
+    identity = ids["trusted"] if ids["trusted"].present else ids["anon"]
+    client = build_client(identity, EndpointRegistry.load(), timeout=30.0)
+    token = CURRENT_TIER.set(SafetyTier.SAFE)
+    rows: list[dict] = []
+    try:
+        for page in range(10):
+            response = client.get(LISTING_PATH, params={"status": "live", "limit": 100,
+                                                        "offset": page * 100})
+            if response.status_code != 200:
+                raise RuntimeError(f"the card listing answered HTTP {response.status_code}")
+            found = (response.json() or {}).get("cards") or []
+            rows += [r for r in found if isinstance(r, dict)]
+            if len(found) < 100:
+                break
+    finally:
+        client.close()
+        CURRENT_TIER.reset(token)
+    out = []
+    for row in sorted(rows, key=lambda r: str(r.get("created_at") or ""), reverse=True):
+        basket = [leg for leg in row.get("basket") or [] if isinstance(leg, dict)]
+        if (row.get("tradeable_now") is not True or not row.get("id")
+                or any(leg.get("asset_type") != "crypto" for leg in basket)):
+            continue
+        legs = [{"symbol": str(leg["symbol"]).upper(), "weight": float(leg["weight"])}
+                for leg in basket if leg.get("symbol") and isinstance(leg.get("weight"), (int, float))]
+        if len(legs) >= qa_backtests.MIN_LEGS:
+            out.append({"card": str(row["id"]).lower(), "title": str(row.get("title") or ""),
+                        "legs": sorted(legs, key=lambda leg: -leg["weight"])[:qa_backtests.MAX_LEGS]})
+    return out
+
+
+def _open_card_room(origin: str, card: str, title: str, section: str, hold_days: float,
+                    stake: float, why: str) -> dict:
+    """One card room of OUR sections (our cards, the desk, the outsider), in the order every
+    room keeps -- room, plan, criterion, then the paper order -- citing the proposal of ours
+    it opened from. Returns {room, ok, why}."""
+    if pass_in_flight():
+        # A deep pass verifies #85-#87 over these very trades: nothing is bought meanwhile.
+        return {"room": None, "ok": False, "why": "a deep pass is running"}
+    paper = _sibling("paper")
+    room = rooms.open_strategy(origin, (title or card)[:rooms.MAX_TITLE], card=card,
+                               section=section)["id"]
+    plan = rooms.set_plan(room, [{"card": card, "side": "bull", "share": 1.0}])
+    rooms.set_acceptance(room, window_days=float(hold_days), stop_pct=NIGHT_STOP_PCT,
+                         legs=plan["legs"], benchmark_card=BTC_PROXY, adopted=True,
+                         why=(f"opened by the laboratory's {section} section from {origin}: "
+                              f"{why}; held {hold_days:g} days, the room stop "
+                              f"{NIGHT_STOP_PCT:g}% from the peak")[:900])
+    try:
+        # The caps, here where the money goes, whatever the caller checked.
+        free, deployed, parked = _free_cash(), _deployed(), _parked()
+        ok, short = lab.affordable(stake, free, _running_experiments(), deployed=deployed,
+                                   parked=parked)
+        if not ok:
+            raise SystemExit(f"the book's caps refuse it: {short}")
+        result = paper.buy(card, stake, origin, True) or {}
+        refused = None
+    except (Exception, SystemExit) as exc:  # noqa: BLE001
+        result, refused = {}, str(exc)[:200]
+    if result.get("outcome") == "accepted":
+        rooms.set_status(room, "running", why=f"bought on paper from {origin} ({section})")
+        return {"room": room, "ok": True, "why": ""}
+    reason = refused or f"HTTP {result.get('http_status')}, no position returned"
+    rooms.set_status(room, "stopped", why=f"the paper order did not land ({reason}); a room "
+                                          f"that held nothing is archived and not judged")
+    return {"room": room, "ok": False, "why": reason}
+
+
+def own_cards() -> dict:
+    """Section 1, our cards (laboratory v3, P4): [operator 2026-10-11] "event karty ktere
+    obchodujes sam za sebe, neradis se z nexusem". No question to Nexus: the newest live crypto
+    cards go through the SAME gate his picks pass (`_gate`, their backtest after fees, cached
+    after the first read), and the passing ones, best return first, fill a book of OWN_BOOK
+    rooms, at most OWN_PER_TICK a tick. A card a live room holds is not bought again, and one
+    judged inside the register's RETRY_DAYS is not reopened."""
+    if pass_in_flight():
+        return {"rooms": 0, "orders": 0, "held": ["own cards: a deep pass is running"]}
+    stored = rooms.load()
+    tried = lab_register.register(stored)
+    moment = datetime.now(timezone.utc)
+    live_own = [r for r in tried if r["section"] == "own" and not r["verdict"]
+                and r["status"] in ("running", "proposed")]
+    slots = min(OWN_PER_TICK, OWN_BOOK - len(live_own))
+    if slots <= 0:
+        return {"rooms": 0, "orders": 0, "held": []}
+    held_live = {str(leg.get("card")).lower() for room_id, plan in rooms.plans(stored).items()
+                 if rooms.status_of(stored, room_id) != "stopped"
+                 for leg in plan.get("legs") or [] if leg.get("card")}
+    try:
+        live = _live_cards()
+    except Exception as exc:  # noqa: BLE001 -- unread is not empty
+        return {"rooms": 0, "orders": 0,
+                "held": [f"own cards: their card listing did not answer ({str(exc)[:120]})"]}
+    passing = []
+    for row in live[:OWN_CANDIDATES]:
+        card = row["card"]
+        if card in held_live or card == BTC_PROXY:
+            continue
+        before = lab_register.last_judged(tried, f"card:{card}")
+        age = lab_register.days_since(before, moment) if before else None
+        if before and age is not None and age < lab_register.RETRY_DAYS:
+            continue
+        said = _gate(card, row["legs"])
+        if said.get("verdict") == "pass":
+            passing.append((float(said.get("return_pct") or 0.0), row, said))
+    passing.sort(key=lambda item: -item[0])
+    opened, placed, held = 0, 0, []
+    for _, row, said in passing[:slots]:
+        free, deployed, parked = _free_cash(), _deployed(), _parked()
+        stake = _leg_stakes(free, deployed, 1, parked=parked)[0] if free else 0.0
+        ok, why = lab.affordable(stake, free, _running_experiments(), deployed=deployed,
+                                 parked=parked)
+        if not ok or stake <= 0:
+            held.append(f"own cards: {why or 'no stake'} -- the rest waits")
+            break
+        proposal = lab.note_proposal(
+            "card", row["card"], "", {"label": "own", "settings": {}},
+            f"our cards: their backtest after fees, {said.get('why')}", section="own")
+        done = _open_card_room(proposal["id"], row["card"], row["title"], "own",
+                               OWN_HOLD_DAYS, stake, f"their backtest {said.get('why')}")
+        opened += 1
+        if done["ok"]:
+            placed += 1
+        else:
+            held.append(f"own cards {row['card'][:8]}: {done['why']}")
+    return {"rooms": opened, "orders": placed, "held": held}
+
+
+def desk_card(card: str, hold_days: float, why: str, half: bool = False) -> dict:
+    """Section 7, the desk (laboratory v3, P5): one card of its own choosing, on paper, in a
+    room of section `desk` -- no gate, since its judgement is the experiment. The card is read
+    live first: one their API does not know, or cannot trade now, is refused."""
+    live = _card_live(card)
+    if live is None:
+        raise SystemExit(f"{card}: their API knows no such card")
+    if live.get("tradeable") is False:
+        raise SystemExit(f"{card}: not tradeable now")
+    if not lab.HOLD_DAYS_RANGE[0] <= float(hold_days) <= lab.HOLD_DAYS_RANGE[1]:
+        raise SystemExit(f"hold {hold_days:g} days is outside {lab.HOLD_DAYS_RANGE}")
+    free, deployed, parked = _free_cash(), _deployed(), _parked()
+    stake = _leg_stakes(free, deployed, 1, half=half, parked=parked)[0] if free else 0.0
+    ok, reason = lab.affordable(stake, free, _running_experiments(), deployed=deployed,
+                                parked=parked)
+    if not ok or stake <= 0:
+        raise SystemExit(f"no money for it: {reason or 'no stake'}")
+    proposal = lab.note_proposal("card", card.lower(), "", {"label": "desk", "settings": {}},
+                                 f"the desk: {why}", section="desk")
+    return _open_card_room(proposal["id"], card.lower(), live.get("title") or card, "desk",
+                           float(hold_days), stake, why)
+
+
 def _trading_now(clone_rows: list[dict], samples: list[dict]) -> int:
     """How many clones of ours their side says are trading, by each one's newest sample --
     what the platform's cap on trading bots counts (wave.MAX_TRADING)."""
@@ -3486,6 +3656,8 @@ def _tick_doors() -> dict:
         "verdicts": verdicts,
         # Laboratory v3, P3: the bot grid is the one walker (bot_variants is no longer run).
         "variants": bot_grid,
+        # Laboratory v3, P4: section 1, our cards, after his.
+        "own": own_cards,
         "fomo_reading": lambda: _sibling("fomo_watch").reading(),
         "hot": _hot_round,
         "hot_reading": lambda: _sibling("hot_watch").reading(),
@@ -3677,6 +3849,12 @@ def tick(*, now: datetime | None = None, actions: dict | None = None,
     # The newest six: the launch lists oldest answer first, and the first six
     # were the same four answers all night while NEX-0063's reason sat unseen.
     every = list(launched.get("held") or [])
+    # Our own cards (P4), after his: what they opened counts with the rest.
+    own = attempt("own", doors["own"]) if "own" in doors else None
+    own = own or {}
+    said["rooms"] += own.get("rooms", 0)
+    said["orders"] += own.get("orders", 0)
+    every += list(own.get("held") or [])
     said["held"] = every[-6:]
     # And how many that cut, said: NEX-0078 slid off unannounced (2026-09-23).
     said["held_older"] = len(every) - len(said["held"])
@@ -3736,12 +3914,24 @@ def tick(*, now: datetime | None = None, actions: dict | None = None,
         may, why = True, (f"through the shallow lane -- the deep one is "
                           f"held: {why}")
     said.update(may_ask=may, why=why)
+    # Laboratory v3: the desk and the outsider are woken only once their parts exist.
+    said.update((doors.get("ready") or _parts_ready)())
     _decide(said, moment, rows)
     state["queue"] = queue
     _save_tick_state(state)
     lab.note_tick(said)
     _say_tick(said, out)
     return said
+
+
+def _parts_ready() -> dict:
+    """Whether the desk (section 7) and the outsider (section 6) have their parts on this
+    machine: a tick wakes neither before its plan, its agent and its script exist."""
+    agents = REPO_ROOT / ".claude" / "agents"
+    return {"desk_ready": (REPO_ROOT / "docs" / "lab-desk.md").is_file()
+            and (agents / "desk.md").is_file(),
+            "outsider_ready": (agents / "outsider.md").is_file()
+            and (REPO_ROOT / "scripts" / "outsider.py").is_file()}
 
 
 def _decide(said: dict, moment: datetime, nexus_rows: list[dict] | None = None) -> None:
@@ -4221,6 +4411,12 @@ def main(argv: list[str] | None = None) -> int:
     launch_cmd = sub.add_parser(
         "launch", help="read one answer of his again and open what it names, read or not")
     launch_cmd.add_argument("answer", help="NEX-NNNN")
+    desk_cmd = sub.add_parser(
+        "desk-card", help="the desk (section 7): one card of its own choosing, on paper")
+    desk_cmd.add_argument("card", help="the card's whole UUID")
+    desk_cmd.add_argument("--hold", type=float, required=True, help="days, 1 to 14")
+    desk_cmd.add_argument("--why", required=True)
+    desk_cmd.add_argument("--half", action="store_true", help="half a stake")
     ask_cmd = sub.add_parser("ask", help="one question to Nexus, with brakes")
     ask_cmd.add_argument("question")
     ask_cmd.add_argument("--no-wait", action="store_true")
@@ -4424,6 +4620,9 @@ def main(argv: list[str] | None = None) -> int:
     elif args.cmd == "launch":
         print(json.dumps(night_promote(only=args.answer), ensure_ascii=False, indent=1,
                          default=str))
+    elif args.cmd == "desk-card":
+        print(json.dumps(desk_card(args.card, args.hold, args.why, half=args.half),
+                         ensure_ascii=False, indent=1))
     elif args.cmd == "buy":
         print(json.dumps(buy(args.card, args.usdc, args.nexus, args.confirm),
                          ensure_ascii=False, indent=1, default=str)[:2000])

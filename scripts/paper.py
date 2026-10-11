@@ -220,6 +220,18 @@ def _guidance(nexus_id: str | None) -> dict:
     if not nexus_id:
         return {"id": None, "job_id": None, "note": "no recorded guidance; "
                 "this order is ours, not Cymetica's"}
+    if str(nexus_id).startswith("OUR-"):
+        # Laboratory v3 (P4, P5): an order of one of OUR sections cites the proposal of ours
+        # it acts on, as a room of ours opens only from one (qa.rooms.on_record).
+        from qa import lab as qa_lab
+
+        proposal = next((p for p in qa_lab.proposals() if p.get("id") == nexus_id), None)
+        if proposal is None:
+            raise SystemExit(f"{nexus_id} is no proposal of ours on record; an order of ours "
+                             f"cites the proposal it acts on")
+        return {"id": nexus_id, "job_id": None,
+                "note": f"ours, proposal {nexus_id} ({proposal.get('section') or 'own lane'})",
+                "advice": str(proposal.get("why") or "")[:2000]}
     import importlib.util
 
     spec = importlib.util.spec_from_file_location(
