@@ -830,6 +830,89 @@ def respawns(runs: list[dict], name: str, now: datetime) -> int:
     return _within(runs, timedelta(hours=1), now, type="respawn", loop=name)
 
 
+# -- the process auditor's daily half (C7) ---------------------------------------------------
+#
+# Code, free, once a day: how long tickets waited, how many failed or were retried, who sat
+# idle (and that idle is not stuck), what was done twice, and the tokens one useful result
+# cost. The week's judgement of it is the deep pass's step 11, an Opus reader independent
+# of the manager it also audits.
+FAILED_SHARE = 0.5
+
+
+def _tokens(run: dict) -> int:
+    used = run.get("tokens") or {}
+    return int(used.get("input_tokens") or 0) + int(used.get("output_tokens") or 0)
+
+
+def metrics(state: dict[str, dict], runs: list[dict], now: datetime,
+            window: timedelta = timedelta(days=1)) -> dict:
+    """Each department's numbers over the window, and the work done twice. Pure."""
+    since = now - window
+    stuck = set(stuck_departments(state, runs, now))
+
+    def inside(value) -> bool:
+        at = moment(value)
+        return at is not None and at >= since
+
+    out: dict = {"at": stamp(now), "window_hours": round(window.total_seconds() / 3600, 1),
+                 "departments": {}, "duplicates": []}
+    for dept in DEPARTMENTS:
+        mine = [t for t in state.values() if t.get("to") == dept]
+        opened = [t for t in mine if inside(t.get("at"))]
+        closed = [t for t in mine if t.get("status") in ("done", "failed")
+                  and inside(t.get("closed_at"))]
+        done = [t for t in closed if t["status"] == "done"]
+        waiting = [t for t in mine if t.get("status") in ("open", "claimed")]
+        leads = sorted((moment(t["closed_at"]) - moment(t["at"])).total_seconds() / 60
+                       for t in done if moment(t.get("at")) and moment(t.get("closed_at")))
+        ran = [r for r in runs if r.get("type") == "run" and r.get("dept") == dept
+               and inside(r.get("at"))]
+        tokens = sum(_tokens(r) for r in ran)
+        oldest = min((moment(t.get("at")) or now for t in waiting), default=None)
+        row = {"opened": len(opened), "done": len(done),
+               "failed": sum(t["status"] == "failed" for t in closed),
+               "retried": sum(1 for t in opened + closed if t.get("attempts")),
+               "waiting": len(waiting),
+               "oldest_open_hours": round((now - oldest).total_seconds() / 3600, 1)
+               if oldest else None,
+               "lead_minutes": round(leads[len(leads) // 2]) if leads else None,
+               "runs": len(ran), "failed_runs": sum(r.get("outcome") != "ok" for r in ran),
+               "timeouts": sum(bool(r.get("timed_out")) for r in ran),
+               "infra": sum(r.get("outcome") == "infra" for r in ran),
+               "tokens": tokens, "tokens_per_done": round(tokens / len(done)) if done else None}
+        if dept in stuck:
+            row["state"] = "stuck"
+        elif not opened and not waiting and not ran:
+            row["state"] = "idle: no work came"
+        else:
+            row["state"] = "working"
+        out["departments"][dept] = row
+    groups: dict[tuple, list[str]] = {}
+    for tid, ticket in sorted(state.items()):
+        if inside(ticket.get("at")):
+            text = " ".join(str(ticket.get("text") or "").lower().split())[:120]
+            groups.setdefault((ticket.get("to"), text), []).append(tid)
+    out["duplicates"] = [{"to": to, "text": text, "tickets": ids}
+                         for (to, text), ids in groups.items() if len(ids) > 1]
+    return out
+
+
+def metric_flags(numbers: dict) -> list[str]:
+    """What the day's numbers say is off, one line each. Pure; no data says nothing."""
+    out = []
+    for dept, row in (numbers.get("departments") or {}).items():
+        if row.get("runs", 0) >= STUCK_RUNS and row["failed_runs"] / row["runs"] >= FAILED_SHARE:
+            out.append(f"{dept}: {row['failed_runs']} of {row['runs']} runs failed")
+        if row.get("failed"):
+            out.append(f"{dept}: {row['failed']} ticket(s) failed three times")
+        if row.get("state") == "stuck":
+            out.append(f"{dept}: stuck -- a ticket waiting a day, or no run worked")
+    for dup in numbers.get("duplicates") or []:
+        out.append(f"{dup['to']} got the same work twice or more: "
+                   f"{', '.join(dup['tickets'])} ({dup['text'][:60]})")
+    return out
+
+
 def clock_state() -> dict:
     return _read_json(crew_dir() / "clock.json") or {}
 

@@ -92,8 +92,8 @@ Building since 2026-10-11 ("stav firmu podle docs/crew-plan.md"). The status col
 | C3 | the clock: the laboratory's tick routed to lab, bugs and outsider; the outsider's code run | hotovo 179cc957 |
 | C4 | Desk under the company: its own pace, its snooze, its brakes in code | hotovo fb0eebe4 |
 | C5 | Manager: escalations, daily review, memory curation, operator channel | hotovo 4277ae18 |
-| C6 | watchdog: leases, three failures, a stuck department, a dead loop restarted | open |
-| C7 | process auditor: the day's numbers on the clock and in the patrol, the week in deep pass step 11 | open |
+| C6 | watchdog: leases, three failures, a stuck department, a dead loop restarted | hotovo 5506421d |
+| C7 | process auditor: the day's numbers on the clock and in the patrol (built), the week in deep pass step 11 (waits with the allowlist entry for crew.py: a skill naming a script needs it, tests/repo/test_allowlist.py) | open |
 | C8 | reviews and the dry run | open |
 | C9 | first live start on "zapni laborku" | open |
 

@@ -338,7 +338,10 @@ CEILINGS = {
     # 837 -> 838 for the watchdog (C6): a dead claim, three failures, a stuck day, a
     # logged-out CLI, a failing tick and a dead loop, each said once and each ending with a
     # person.
-    "meta_tests": 838,
+    # 838 -> 839 for the process auditor's daily half (C7): lead time, failures, retries,
+    # idle against stuck, work done twice and tokens per result, in the clock's day, the
+    # manager's review and the patrol -- and no flag from a company that never ran.
+    "meta_tests": 839,
 }
 
 BASH_SCRIPT = re.compile(r"python\s+scripts[/\\]([a-z_]+)\.py")
@@ -745,6 +748,7 @@ def flags(state: dict) -> list[str]:
         if value is not None and value > ceiling:
             out.append(f"{key} is {value}, over the {ceiling} this was held to "
                        f"on 2026-09-12")
+    out += [f"company: {line}" for line in (state.get("crew") or {}).get("flags") or []]
     return out
 
 
@@ -798,7 +802,7 @@ def patrol(root: Path | None = None, since: str | None = None) -> dict:
 
     out = {"at": now.isoformat(timespec="seconds"),
            "day": now.date().isoformat(), "parts": {}, "sizes": sizes(base),
-           "unwired": unwired_hooks(base)}
+           "unwired": unwired_hooks(base), "crew": crew_section(base, since)}
     for part in parts(base):
         row = dict(seen.get(part["name"], {"runs": 0, "last": None,
                                            "errors": 0}))
@@ -826,6 +830,28 @@ def patrol(root: Path | None = None, since: str | None = None) -> dict:
     return out
 
 
+def crew_section(base: Path, since: str | None = None) -> dict:
+    """The company's numbers (docs/crew-plan.md, C7): each department's tickets, runs,
+    lead time, failures, retries, idleness and tokens per result, and the work done twice
+    -- over the patrol's window, a day without one. A company that never ran is {}: no
+    data is no verdict, so no flag is on from the first day."""
+    from datetime import timedelta
+
+    from qa import crew
+
+    state = base / "state"
+    tickets = crew.fold(crew.load(state / "crew_tickets.jsonl"))
+    runs = crew.load(state / "crew.jsonl")
+    if not tickets and not runs:
+        return {}
+    now = datetime.now(timezone.utc)
+    start = _moment(since) if since else None
+    window = (now - start) if start else timedelta(days=1)
+    numbers = crew.metrics(tickets, runs, now, window)
+    numbers["flags"] = crew.metric_flags(numbers)
+    return numbers
+
+
 def messages_rows(since: str | None):
     """Transcript rows since a moment, or an empty list when there are none."""
     floor = _moment(since) if since else None
@@ -851,6 +877,10 @@ def render(state: dict) -> str:
                  "counted -- only its wiring")
     lines.append("  ".join(f"{k}={v}" for k, v in sorted(
         (state.get("sizes") or {}).items())))
+    for dept, row in ((state.get("crew") or {}).get("departments") or {}).items():
+        lines.append(f"company {dept:9} {row['state'][:20]:20} opened {row['opened']}, "
+                     f"done {row['done']}, failed {row['failed']}, runs {row['runs']} "
+                     f"({row['failed_runs']} bad), tokens/done {row['tokens_per_done'] or '-'}")
     warned = flags(state)
     lines.append("")
     lines.extend(warned or ["nothing over a ceiling, nothing idle"])

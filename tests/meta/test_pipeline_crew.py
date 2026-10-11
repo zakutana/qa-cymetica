@@ -681,6 +681,67 @@ def test_the_watchdog_leaves_nothing_stuck_in_the_mud(company, monkeypatch):
     assert "STR-0130" in next(l for l in sup.status_lines(now) if l.startswith("desk"))
 
 
+@qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
+def test_the_auditor_counts_what_each_department_cost_and_produced(company, monkeypatch):
+    """C7. The process auditor's daily half is code and free: how long tickets waited,
+    how many failed or were retried, who sat idle (and that idle is not stuck), what was
+    done twice, and the tokens one useful result cost. The patrol carries it, the manager's
+    day reads it, and the deep pass's week judges it. No data is no verdict: a company
+    that never ran raises no flag."""
+    now = datetime(2026, 10, 11, 18, 0, tzinfo=timezone.utc)
+    rows = [
+        {"type": "ticket", "id": "T-0001", "at": crew.stamp(now - timedelta(hours=5)),
+         "to": "bugs", "kind": "bug", "key": "a", "text": "500 on /movers"},
+        {"type": "done", "id": "T-0001", "at": crew.stamp(now - timedelta(hours=4)),
+         "by": "bugs", "note": "filed #201"},
+        {"type": "ticket", "id": "T-0002", "at": crew.stamp(now - timedelta(hours=3)),
+         "to": "bugs", "kind": "bug", "key": "b", "text": "500 on /movers"},
+        {"type": "fail", "id": "T-0002", "at": crew.stamp(now - timedelta(hours=2)),
+         "by": "bugs", "why": "no repro"},
+        {"type": "ticket", "id": "T-0003", "at": crew.stamp(now - timedelta(hours=1)),
+         "to": "lab", "kind": "lab", "key": "c", "text": "learn"},
+    ]
+    state = crew.fold(rows)
+    runs = [{"type": "run", "dept": "bugs", "outcome": o, "timed_out": False,
+             "at": crew.stamp(now - timedelta(hours=h)),
+             "tokens": {"input_tokens": 9000, "output_tokens": 1000}}
+            for o, h in (("ok", 4), ("work", 2), ("work", 1.5))]
+    numbers = crew.metrics(state, runs, now)
+    bugs = numbers["departments"]["bugs"]
+    assert bugs["opened"] == 2 and bugs["done"] == 1 and bugs["retried"] == 1
+    assert bugs["lead_minutes"] == 60 and bugs["runs"] == 3 and bugs["failed_runs"] == 2
+    assert bugs["tokens"] == 30000 and bugs["tokens_per_done"] == 30000
+    assert numbers["departments"]["lab"]["oldest_open_hours"] == 1.0
+    assert numbers["departments"]["desk"]["state"] == "idle: no work came"
+    assert numbers["duplicates"] == [{"to": "bugs", "text": "500 on /movers",
+                                      "tickets": ["T-0001", "T-0002"]}]
+    said = crew.metric_flags(numbers)
+    assert any("bugs" in f and "2 of 3 runs failed" in f for f in said), said
+    assert any("twice" in f and "T-0001" in f for f in said), said
+    assert crew.metric_flags(crew.metrics({}, [], now)) == [], "no data, no verdict"
+
+    # The clock writes the day's numbers once, and the manager's day carries them.
+    sup = _script("crew")
+    for row in rows:
+        crew._append(crew.tickets_path(), row)
+    monkeypatch.setenv("QA_CREW_TICK", json.dumps([sys.executable, "-c",
+                                                   "print('decide: none')"]))
+    morning = datetime.now(timezone.utc).replace(hour=10)
+    sup.clock_look(now=morning)
+    sup.clock_look(now=morning + timedelta(minutes=30))
+    daily_numbers = [r for r in crew.load(crew.runs_path()) if r.get("type") == "metrics"]
+    assert len(daily_numbers) == 1 and "bugs" in daily_numbers[0]["departments"]
+    day = next(t for t in crew.tickets().values() if t["kind"] == "daily")
+    assert "metrics" in day["payload"]
+
+    # The audit command, and the patrol: the company is one more part it measures.
+    assert sup.main(["audit", "--days", "7"]) == 0
+    procs = _script("processes")
+    section = procs.crew_section(company)
+    assert "bugs" in section["departments"]
+    assert "crew_section(" in (REPO / "scripts" / "processes.py").read_text(encoding="utf-8")
+
+
 # -- the loops ------------------------------------------------------------------------------
 
 @qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")

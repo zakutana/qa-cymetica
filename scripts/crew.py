@@ -486,10 +486,17 @@ def clock_look(now: datetime | None = None) -> tuple[str, str]:
         left = crew.TICK_EVERY - (now - last)
         said.append(f"next tick in {int(left.total_seconds() // 60)}m")
     daily = crew.daily_key(now)
-    if daily:
+    if daily and state.get("metrics_day") != daily:
+        # The auditor's daily half, written before the manager's day so the day reads it.
+        numbers = crew.metrics(crew.tickets(), crew.load(crew.runs_path()), now)
+        crew.record({"type": "metrics", **numbers, "flags": crew.metric_flags(numbers)},
+                    now=now)
+        state["metrics_day"] = daily
+        crew.save_clock_state(state)
         ticket, new = crew.add_ticket(
             "manager", "daily", "the day's review: progress, memories, a note if needed",
-            key=daily, payload={"memory_over": crew.memories_over()}, by="clock", now=now)
+            key=daily, payload={"memory_over": crew.memories_over(), "metrics": numbers,
+                                "flags": crew.metric_flags(numbers)}, by="clock", now=now)
         if new:
             said.append(f"daily review: {ticket['id']}")
     if crew.desk_due(crew.tickets(), crew.last_run_end("desk"), crew.snoozed("desk", now), now):
@@ -775,6 +782,23 @@ def lesson(dept: str, heading: str, text: str) -> int:
     return 0
 
 
+def audit(days: float) -> int:
+    """The auditor's numbers over a window, for the manager and the deep pass's week."""
+    now = datetime.now(timezone.utc)
+    numbers = crew.metrics(crew.tickets(), crew.load(crew.runs_path()), now,
+                           timedelta(days=days))
+    print(f"the company over {days:g} day(s), to {numbers['at'][:16]}")
+    print(f"{'dept':9} {'state':20} {'open':>4} {'done':>4} {'fail':>4} {'retry':>5} "
+          f"{'lead m':>6} {'runs':>4} {'bad':>4} {'tok/done':>9}")
+    for dept, row in numbers["departments"].items():
+        print(f"{dept:9} {row['state'][:20]:20} {row['opened']:>4} {row['done']:>4} "
+              f"{row['failed']:>4} {row['retried']:>5} {row['lead_minutes'] or '-':>6} "
+              f"{row['runs']:>4} {row['failed_runs']:>4} {row['tokens_per_done'] or '-':>9}")
+    for line in crew.metric_flags(numbers) or ["nothing off"]:
+        print(printable(line))
+    return 0
+
+
 def unhold() -> int:
     held, by = crew.holder(), _by()
     if held is None:
@@ -851,6 +875,8 @@ def main(argv: list[str] | None = None) -> int:
     learned.add_argument("dept", choices=list(crew.DEPARTMENTS))
     learned.add_argument("--heading", required=True, choices=list(crew.HEADINGS))
     learned.add_argument("--text", required=True)
+    audited = sub.add_parser("audit", help="each department's numbers over a window")
+    audited.add_argument("--days", type=float, default=1.0)
     args = parser.parse_args(argv)
 
     with contextlib.suppress(AttributeError, ValueError):
@@ -904,6 +930,8 @@ def main(argv: list[str] | None = None) -> int:
         return inbox()
     if args.cmd == "lesson":
         return lesson(args.dept, args.heading, args.text)
+    if args.cmd == "audit":
+        return audit(args.days)
     if args.cmd == "list":
         for ticket in crew.tickets().values():
             if args.open and ticket["status"] not in ("open", "claimed"):
