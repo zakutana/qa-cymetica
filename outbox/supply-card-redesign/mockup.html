@@ -97,7 +97,7 @@ function card(sym, d) {
   const ratioCls = ratio >= 3 ? "red" : ratio <= 1.5 ? "green" : "";
   const dilCls = dil >= 25 ? "red" : dil < 5 ? "green" : "";
   const dis = d.disagree[0];
-  const tip = dis ? `<span class="tip" title="Sources differ: CoinGecko counts ${fmt(d.circ)} in circulation, ${dis[0]} ${fmt(dis[1])}. With ${dis[0]}'s count the 12-month dilution is ${pct(100*in12/dis[1])}.">i</span>` : "";
+  const tip = "";
   const disNote = "";
   const net = d.buyback ? `<div class="s">net of buybacks: ${pct(100*(in12 - 12*d.buyback)/d.circ)}</div>` : "";
   const bbUsd = d.buyback * d.price;
@@ -143,7 +143,7 @@ function card(sym, d) {
       <div class="axis"><span>Today</span><span>${d.labels[d.labels.length-1]}</span></div>
       <div class="rows" id="${id}rows"></div>
     </div>
-    <div class="foot">CoinGecko · DeFiLlama · project docs · read Oct 10 · FDV = max supply × price · not financial advice</div>
+    <div class="foot">Circulating, price and market cap: CoinGecko · unlock schedule: DeFiLlama and project docs · read Oct 10 · FDV = max supply × price · not financial advice</div>
   </section>`;
 }
 
