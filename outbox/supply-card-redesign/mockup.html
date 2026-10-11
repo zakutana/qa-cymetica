@@ -36,6 +36,8 @@ body { margin: 0; background: var(--bg); color: var(--text); font: 15px/1.45 Int
 .bar { height: 6px; border-radius: 3px; background: var(--sunk); margin-top: 10px; overflow: hidden; }
 .bar i { display: block; height: 100%; background: var(--cyan); border-radius: 3px; }
 .red { color: var(--red); } .green { color: var(--green); } .muted { color: var(--faint); }
+.tip { display: inline-grid; place-items: center; width: 18px; height: 18px; margin-left: 8px; vertical-align: 6px;
+  border-radius: 50%; border: 1.5px solid var(--blue); color: var(--blue); font: 700 11px "JetBrains Mono", monospace; cursor: help; }
 
 .unlock { display: flex; align-items: center; gap: 14px; margin-top: 12px; padding: 12px 16px; border-radius: 12px;
   background: var(--sunk); border: 1px solid var(--line); }
@@ -95,7 +97,8 @@ function card(sym, d) {
   const ratioCls = ratio >= 3 ? "red" : ratio <= 1.5 ? "green" : "";
   const dilCls = dil >= 25 ? "red" : dil < 5 ? "green" : "";
   const dis = d.disagree[0];
-  const disNote = dis ? `<div class="note">on ${dis[0]}'s count: ${pct(100*in12/dis[1])}</div>` : "";
+  const tip = dis ? `<span class="tip" title="Sources differ: CoinGecko counts ${fmt(d.circ)} in circulation, ${dis[0]} ${fmt(dis[1])}. With ${dis[0]}'s count the 12-month dilution is ${pct(100*in12/dis[1])}.">i</span>` : "";
+  const disNote = "";
   const net = d.buyback ? `<div class="s">net of buybacks: ${pct(100*(in12 - 12*d.buyback)/d.circ)}</div>` : "";
   const bbUsd = d.buyback * d.price;
   const bb = d.buyback
@@ -120,9 +123,9 @@ function card(sym, d) {
       <a class="open" href="#">Open in Supply Analyzer ↗</a></div>
     <div class="kpis">
       <div class="kpi"><div class="n">Circulating</div>
-        <div class="v">${fmt(d.circ)}<small>of ${fmt(fdvBase)}</small></div>
+        <div class="v">${fmt(d.circ)}<small>of ${fmt(fdvBase)}</small>${tip}</div>
         <div class="bar"><i style="width:${(100*d.circ/fdvBase).toFixed(1)}%"></i></div>
-        <div class="s">${(100*d.circ/fdvBase).toFixed(1)}% of max supply is out</div>${dis ? `<div class="note">${dis[0]} counts ${fmt(dis[1])}</div>` : ""}</div>
+        <div class="s">${(100*d.circ/fdvBase).toFixed(1)}% of max supply is out</div></div>
       <div class="kpi"><div class="n">Market cap → FDV</div>
         <div class="v" style="font-size:24px;margin-top:12px">${usd(d.mcap)} <span class="muted">→</span> ${usd(fdv)}</div>
         <div class="s"><span class="${ratioCls}">FDV ${ratio.toFixed(1)}× the market cap</span></div></div>
