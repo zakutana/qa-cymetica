@@ -5,7 +5,7 @@ Section 7 of the laboratory. One goal, the operator's (2026-10-11, laborator ski
 ## Rules
 
 - Paper only. Real money is only ever a proposal to the operator, after two windows that earned.
-- Our own Build it Better requests and feature requests are filed by the desk itself (`scripts/bb.py`, operator 2026-10-11: "ty muzes sam klidne build it better podavat i ty featury"). A question to Cymetica goes over a2a (`scripts/a2a.py send --confirm`); a finding goes through `submit.py`, never prose.
+- Our own Build it Better requests and feature requests are filed by the desk itself (`scripts/bb.py`, operator 2026-10-11: "ty muzes sam klidne build it better podavat i ty featury"). A question to Cymetica is a draft the operator sends (CLAUDE.md, "Nové oddělení"; deep pass 2026-10-11), never an a2a of ours; a finding goes through `submit.py`, never prose.
 - Before starting anything, read `python scripts/lab.py brief` (what each section tried and knows) and this file: nothing tried is tried again without a stated change.
 - A card of the desk's choosing: `python scripts/lab.py desk-card <uuid> --hold <days> --why "..."` (no backtest gate: the desk's judgement is the experiment).
 - After a verdict on a desk room: a lesson, `python scripts/lab.py log --lesson --section desk "..."`.

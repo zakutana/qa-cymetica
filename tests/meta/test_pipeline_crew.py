@@ -604,8 +604,13 @@ def test_the_desk_keeps_its_own_pace_sleeps_on_purpose_and_its_brakes_are_code(
     for name, spec in crew.DEPARTMENTS.items():
         if spec.model:
             assert ("Bash(python scripts/bb.py:*)" in crew.denied(name)) == (name != "desk")
-    assert "Bash(python scripts/a2a.py:*)" in crew.denied("manager")
-    assert "Bash(python scripts/a2a.py:*)" not in crew.denied("desk")
+    # Deep pass 2026-10-11, R04 (3/3): a message to Cymetica is a draft the operator sends
+    # (CLAUDE.md, "Nové oddělení"; the laborator skill), so no worker sends a2a -- the desk's
+    # question goes to the manager as a decision carrying the draft.
+    for name, spec in crew.DEPARTMENTS.items():
+        if spec.model:
+            assert "Bash(python scripts/a2a.py:*)" in crew.denied(name), name
+    assert "draft" in told and "a2a.py send" not in told
 
     # The brakes, pure ...
     filed = [{"type": "intent", "kind": "file", "at": crew.stamp(now - timedelta(hours=h))}
@@ -780,13 +785,23 @@ def test_the_watchdog_leaves_nothing_stuck_in_the_mud(company, monkeypatch):
     sup.heal(now + timedelta(seconds=30))
     assert not started, "just after start a loop not yet alive is starting, not dead"
     crew.set_running(True, now=now - timedelta(hours=1))
-    for minutes in range(4):
+    for minutes in range(0, 12, 3):     # each look past the start grace of the last respawn
         sup.heal(now + timedelta(minutes=minutes))
     assert [a[-1] for a in started] == ["desk", "desk", "desk"]
     assert any(n["key"].startswith("dead:desk") for n in crew.unread_notes())
     crew.set_stop(True)
     sup.heal(now + timedelta(minutes=10))
     assert len(started) == 3, "a stopping company is not healed"
+    # Deep pass 2026-10-11, R06: one death, seen by two departments inside the new clock's start,
+    # is one respawn -- not two of the three an hour allows.
+    crew.set_stop(False)
+    later = now + timedelta(hours=3)
+    started.clear()
+    monkeypatch.setattr(sup, "loop_alive", lambda name: name != "clock")
+    sup.heal(later, me="bugs")
+    sup.heal(later + timedelta(seconds=1), me="lab")
+    assert [a[-1] for a in started] == ["clock"], "two departments each started the dead clock"
+    assert crew.respawns(crew.load(crew.runs_path()), "clock", later + timedelta(seconds=2)) == 1
 
     # A department asleep says why.
     crew.set_snooze("desk", now + timedelta(hours=3), "STR-0130 closes at 23:00", now=now)
@@ -822,6 +837,13 @@ def test_the_auditor_counts_what_each_department_cost_and_produced(company, monk
     numbers = crew.metrics(state, runs, now)
     bugs = numbers["departments"]["bugs"]
     assert bugs["opened"] == 2 and bugs["done"] == 1 and bugs["retried"] == 1
+    # Deep pass 2026-10-11, R09: opened, retried and done inside the window is ONE retried ticket.
+    once = crew.fold([
+        {"type": "ticket", "id": "T-0009", "at": crew.stamp(now - timedelta(hours=3)), "to": "desk",
+         "kind": "step", "key": "z", "text": "a step"},
+        {"type": "fail", "id": "T-0009", "at": crew.stamp(now - timedelta(hours=2)), "by": "desk", "why": "w"},
+        {"type": "done", "id": "T-0009", "at": crew.stamp(now - timedelta(hours=1)), "by": "desk"}])
+    assert crew.metrics(once, [], now)["departments"]["desk"]["retried"] == 1, "counted twice"
     assert bugs["lead_minutes"] == 60 and bugs["runs"] == 3 and bugs["failed_runs"] == 2
     assert bugs["tokens"] == 30000 and bugs["tokens_per_done"] == 30000
     assert numbers["departments"]["lab"]["oldest_open_hours"] == 1.0
@@ -941,6 +963,14 @@ def test_a_detached_loop_outlives_its_parent_and_stop_kills_its_tree(company):
     # each open a window of its own -- closing one kills the run (C8 review, finding 7).
     if os.name == "nt":
         assert sup._group_flags()["creationflags"] & subprocess.CREATE_NO_WINDOW
+    # Deep pass 2026-10-11, R10: the stop the operator asks for gives a running ticket back as
+    # everyone's, so five stops cannot spend the ticket's release budget.
+    ticket, _ = crew.add_ticket("bugs", "sweep", "a sweep", key="stop-test", by="session")
+    crew.claim("bugs")
+    sup.stop(grace=0.0)
+    after = crew.tickets()[ticket["id"]]
+    assert after["status"] == "open" and after["releases"] == 0, after
+    crew.set_stop(False)
 
 
 @qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")

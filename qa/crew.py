@@ -384,10 +384,10 @@ def denied(dept: str) -> tuple[str, ...]:
     if dept != "desk":
         # Build it Better and feature requests are the desk's to file.
         out += _shells("python scripts/bb.py")
-    if dept in ("lab", "manager"):
-        # a2a carries questions to Cymetica: the desk's and Bugs'. The laboratory asks
-        # Nexus; the manager talks only to the operator and the departments.
-        out += _shells("python scripts/a2a.py")
+    # a2a is a message to Cymetica under our name, and a message to anyone is a draft the
+    # operator sends (CLAUDE.md, "Nové oddělení"; the laborator skill): no worker sends one. A
+    # question goes to the manager as a decision carrying its draft (deep pass 2026-10-11, R04).
+    out += _shells("python scripts/a2a.py")
     return tuple(out)
 
 
@@ -456,8 +456,10 @@ is `.claude/agents/desk.md` -- read it and do its ONE step, with these differenc
 the company:
 - an `input` ticket is what the outsider would not put money into, and why: weigh it in
   this step as input for your Build it Better and feature requests;
-- your brakes are code: at most 2 Build it Better filings a day and 3 a2a messages an
-  hour; a refusal is a reason, not a fault;
+- your brake is code: at most 2 Build it Better filings a day; a refusal is a reason, not
+  a fault;
+- a question to Cymetica is a draft the operator sends, never a send of yours: English,
+  opening with @EventTraderQABot, carried to the manager as a `decision` ticket;
 - commit `docs/lab-desk.md` through scripts/commit.py, never `git commit`;
 - when nothing can move until a date (a room's window, an answer owed), say so and
   sleep: `python scripts/crew.py snooze --until <ISO time> --why "..."` (a day at most).
@@ -585,7 +587,8 @@ def outsider_tickets(run: dict) -> list[dict]:
 DESK_PAUSE = timedelta(minutes=30)
 SNOOZE_MAX = timedelta(hours=24)
 # Its brakes, in code (docs/crew-plan.md): a Build it Better filing costs half a unit of
-# their build plan, and a2a is a person's inbox at Cymetica.
+# their build plan, and a2a is a person's inbox at Cymetica. a2a is denied to every worker
+# since 2026-10-11 (R04, `denied`); its brake stays as the second barrier behind the deny.
 BB_PER_DAY = 2
 A2A_PER_HOUR = 3
 
@@ -882,6 +885,11 @@ def respawns(runs: list[dict], name: str, now: datetime) -> int:
     return _within(runs, timedelta(hours=1), now, type="respawn", loop=name)
 
 
+def respawning(runs: list[dict], name: str, now: datetime) -> bool:
+    """A respawn of `name` younger than the start grace: its process is still starting."""
+    return _within(runs, HEAL_GRACE, now, type="respawn", loop=name) > 0
+
+
 # -- the process auditor's daily half (C7) ---------------------------------------------------
 #
 # Code, free, once a day: how long tickets waited, how many failed or were retried, who sat
@@ -923,7 +931,8 @@ def metrics(state: dict[str, dict], runs: list[dict], now: datetime,
         oldest = min((moment(t.get("at")) or now for t in waiting), default=None)
         row = {"opened": len(opened), "done": len(done),
                "failed": sum(t["status"] == "failed" for t in closed),
-               "retried": sum(1 for t in opened + closed if t.get("attempts")),
+               # By id: a ticket opened and closed inside the window is one ticket (R09).
+               "retried": len({t["id"] for t in opened + closed if t.get("attempts")}),
                "waiting": len(waiting),
                "oldest_open_hours": round((now - oldest).total_seconds() / 3600, 1)
                if oldest else None,

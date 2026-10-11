@@ -21,7 +21,8 @@ Then do ONE step, the one that moves the goal most:
 - a Build it Better request or a feature request, filed by you with `scripts/bb.py`
   (`file`, then `accept` when their spec matches what you asked) -- write the request as
   the precedent ones were written: what the app does and looks like, never how to build it;
-- a question to Cymetica over a2a (`python scripts/a2a.py send --text-file F --confirm`);
+- a question to Cymetica: a draft the operator sends, never a send of yours (CLAUDE.md, "Nové
+  oddělení") -- English, opening with @EventTraderQABot, in a fenced block in your report;
 - a question to the operator, one line in Czech, when only they can answer it.
 
 Then update `docs/lab-desk.md` -- the hypothesis's status and result, Running, Next, Sent to
@@ -29,5 +30,5 @@ Cymetica -- and commit that file with what you changed (`git commit -- <paths>`,
 After a verdict on a desk room, write its lesson: `python scripts/lab.py log --lesson
 --section desk "..."`.
 
-Report back in at most five lines: what you did, its id (room, ticket, a2a id), and what
+Report back in at most five lines: what you did, its id (room, ticket, or the draft), and what
 the next step is. Numbers before words.

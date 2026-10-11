@@ -480,19 +480,25 @@ def heal(now: datetime, me: str = "clock") -> list[str]:
     if crew.stopping() or since is None or now - since < crew.HEAL_GRACE:
         return []
     names = [n for n in LOOPS if n != me] if me == "clock" else ["clock"]
-    runs = crew.load(crew.runs_path())
     said = []
     for name in names:
         if loop_alive(name):
             continue
-        if crew.respawns(runs, name, now) >= crew.RESPAWNS_PER_HOUR:
-            key = f"dead:{name}:{now.astimezone().date().isoformat()}"
-            crew.tell(f"Smyčka {name} umřela {crew.RESPAWNS_PER_HOUR}× za hodinu, dál ji "
-                      f"nespouštím. Log: state/crew/logs/{name}.log", by="watchdog", key=key,
-                      now=now)
-            continue
-        pid = spawn(_python("crew.py", "loop", name), crew.crew_dir() / "logs" / f"{name}.log")
-        runs.append(crew.record({"type": "respawn", "loop": name, "pid": pid}, now=now))
+        # Every department heals the clock, so two may find it dead inside the second its new
+        # process takes to lock: one at a time, and a respawn younger than the start grace is
+        # one already under way -- one death is one respawn (deep pass 2026-10-11, R06).
+        with crew.file_lock(crew.crew_dir() / f"spawn-{name}"):
+            runs = crew.load(crew.runs_path())
+            if loop_alive(name) or crew.respawning(runs, name, now):
+                continue
+            if crew.respawns(runs, name, now) >= crew.RESPAWNS_PER_HOUR:
+                key = f"dead:{name}:{now.astimezone().date().isoformat()}"
+                crew.tell(f"Smyčka {name} umřela {crew.RESPAWNS_PER_HOUR}× za hodinu, dál ji "
+                          f"nespouštím. Log: state/crew/logs/{name}.log", by="watchdog", key=key,
+                          now=now)
+                continue
+            pid = spawn(_python("crew.py", "loop", name), crew.crew_dir() / "logs" / f"{name}.log")
+            crew.record({"type": "respawn", "loop": name, "pid": pid}, now=now)
         said.append(f"restarted {name}")
     return said
 
@@ -743,7 +749,9 @@ def stop(grace: float = 20.0) -> int:
         crew.set_active(dept, None)
     for ticket in crew.tickets().values():
         if ticket["status"] == "claimed":
-            crew.close(ticket["id"], "release", by="supervisor", note="the company stopped")
+            # Everyone's, not the ticket's: a stop the operator asked for spends nothing (R10).
+            crew.close(ticket["id"], "release", by="supervisor", note="the company stopped",
+                       widespread=True)
     still = [n for n in LOOPS if loop_alive(n)]
     crew.record({"type": "company", "event": "stop", "still": still})
     print("[crew] stopped" + (f"; still ending: {', '.join(still)}" if still else ""))
