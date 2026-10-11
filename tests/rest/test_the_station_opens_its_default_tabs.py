@@ -12,6 +12,13 @@ clob, weekly, news, alerts. The clob tab is /exchange/btc-pro, which answers 404
 Found" inside the tab, and so does the "Trade BTC on the CLOB" button; /exchange/btc
 redirects there too. BTC is not among the 16 markets of /api/v1/exchange/markets.
 
+**Their answer (ET-30731, 2026-10-10 22:49 UTC).** /api/v1/station/apps now lists the symbols
+with a CLOB terminal (`clob_symbols`, BTC is not one) and a `clob_fallback`
+(`/exchange?q={sym}`); the served page sends the CLOB tab and the Trade button to the fallback
+for any other symbol. The `url` template of the `clob` app is unchanged, so the rule they publish
+is applied here; a catalogue that lists symbols but names no fallback keeps the template, and the
+404 is seen again.
+
 **The rule.** Every default tab's page, filled with the default symbol, answers 2xx. A
 default tab the catalogue does not describe is a failure too: the page could not open it.
 A catalogue that cannot be read, or names no default symbol, is unread.
@@ -34,10 +41,19 @@ def default_tab_paths(body: dict) -> list[tuple[str, str | None]]:
     if not sym:
         return []
     apps = {a.get("id"): a for a in (body or {}).get("apps") or [] if isinstance(a, dict)}
+    clob_symbols = (body or {}).get("clob_symbols")
+    clob_fallback = (body or {}).get("clob_fallback")
     out = []
     for tab in (body or {}).get("default_tabs") or []:
         app = apps.get(tab)
         url = (app or {}).get("url")
+        # ET-30731 (2026-10-10, the answer to #181): the CLOB tab opens its -pro terminal only
+        # for a symbol in `clob_symbols`; any other goes to `clob_fallback`. The catalogue still
+        # carries the one -pro template, so the rule they publish has to be applied, as the
+        # served /station script applies it, or this check fails a defect they fixed.
+        if (tab == "clob" and isinstance(clob_symbols, list) and sym not in clob_symbols
+                and isinstance(clob_fallback, str) and clob_fallback):
+            url = clob_fallback
         out.append((tab, url.replace("{sym_lower}", sym.lower()).replace("{sym}", sym)
                     if isinstance(url, str) and url else None))
     return out

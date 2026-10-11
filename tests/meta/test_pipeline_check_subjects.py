@@ -643,6 +643,22 @@ def test_a_card_that_is_closed_on_rest_and_open_on_mcp_fails():
                      ("screener", "/gem-screener"), ("gone", None)], paths
     assert default_tab_paths({"default_tabs": ["chart"], "apps": body["apps"]}) == [], (
         "a station with no default symbol has nothing to fill in, so nothing is judged")
+    # #181 answered (ET-30731, 2026-10-10): the catalogue still carries the one -pro template, but
+    # now publishes `clob_symbols` and `clob_fallback`, and the page sends a symbol outside the list
+    # to the fallback. Read the rule they publish, or the check keeps failing a defect they fixed.
+    ruled = dict(body, clob_symbols=["ET10", "SBIO"], clob_fallback="/exchange?q={sym}")
+    assert dict(default_tab_paths(ruled))["clob"] == "/exchange?q=BTC", (
+        "a symbol outside clob_symbols opens the published fallback, not the -pro terminal")
+    assert dict(default_tab_paths(dict(ruled, default_symbol="ET10")))["clob"] == "/exchange/et10-pro", (
+        "a symbol the CLOB lists still opens its own terminal")
+    assert dict(default_tab_paths(dict(body, clob_symbols=["ET10"])))["clob"] == "/exchange/btc-pro", (
+        "a list with no fallback published leaves the template, so the 404 is still seen")
+    assert dict(default_tab_paths(dict(ruled, clob_symbols=[])))["clob"] == "/exchange?q=BTC", (
+        "an empty list is a list: no symbol has a terminal")
+    assert dict(default_tab_paths(dict(ruled, default_symbol="btc")))["clob"] == "/exchange?q=btc", (
+        "the symbol is matched as the page matches it, exactly")
+    assert dict(default_tab_paths(ruled))["chart"] == "/chart-analyzer?symbol=BTC&tf=1d", (
+        "only the CLOB tab has a fallback")
 
     # And the backtest leaderboard's synthetic label where it lives now (#175, 2026-10-10): on the
     # trade list's own response (`is_synthetic`, `data_kind`), no longer on each trade.
