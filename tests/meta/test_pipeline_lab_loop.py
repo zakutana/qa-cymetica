@@ -2769,6 +2769,33 @@ def test_a_card_already_held_is_not_launched_again_by_a_later_answer(
     assert any("NEX-0002" in h and "STR-0001" in h for h in again["held"]), (
         again["held"])
 
+    # Laboratory v3, P2 (2026-10-11), the register: a card whose room was JUDGED is not
+    # reopened by a later answer for 30 days -- the brief tells him how it went instead. A
+    # stopped room no longer holds its card, which is how a refuted card used to come back.
+    # After 30 days it may be tried again, and the new room says it was tried before.
+    qa_rooms.set_status("STR-0001", "stopped", why="its window closed")
+    qa_rooms.record_verdict("STR-0001", {"verdict": "refuted", "return_pct": -3.1})
+    third = dict(answers[0], id="NEX-0003")
+    _write(tmp_path, "nexus.jsonl", answers + [third])
+    judged = scripts_lab.night_promote()
+    assert [card for card, _ in sent] == [a], "a card judged this month was bought again"
+    assert any("NEX-0003" in h and "STR-0001" in h and "refuted" in h
+               for h in judged["held"]), judged["held"]
+    rows = [json.loads(line) for line in
+            (tmp_path / "rooms.jsonl").read_text(encoding="utf-8").splitlines() if line.strip()]
+    long_ago = (datetime.now(timezone.utc) - timedelta(days=31)).isoformat()
+    for row in rows:
+        if row.get("room") == "STR-0001" and row.get("type") in ("status", "verdict"):
+            row["at"] = long_ago
+    _write(tmp_path, "rooms.jsonl", rows)
+    _write(tmp_path, "nexus.jsonl", answers + [third, dict(answers[0], id="NEX-0004")])
+    scripts_lab.night_promote()
+    assert [card for card, _ in sent] == [a, a], "a month on, the card was not tried again"
+    stored = qa_rooms.load()
+    (retry,) = [r for r in qa_rooms.strategies(stored) if r["origin"] == "NEX-0004"]
+    assert "STR-0001" in qa_rooms.acceptance_of(stored, retry["id"])["why"], (
+        "the new room does not say the card was tried before")
+
 
 @qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
 def test_an_id_their_api_does_not_know_is_not_called_an_invented_card(
@@ -4465,7 +4492,8 @@ def test_a_question_is_due_on_news_or_after_its_hours_not_on_every_tick():
     assert _decide(_said(), [hunted], None) == ["question"], (
         "never asked is due")
     # News since the last question, in this tick or an earlier one.
-    assert _decide(_said(verdicts=1), [hunted], asked) == ["question"]
+    # (Since P2 of laboratory v3 a verdict in this tick also wakes the manager to learn.)
+    assert _decide(_said(verdicts=1), [hunted], asked) == ["learn", "question"]
     verdict_after = _tick_row(NOW - timedelta(minutes=20), verdicts=2)
     assert _decide(_said(), [hunted, verdict_after], asked) == ["question"]
     verdict_before = _tick_row(NOW - timedelta(hours=1), resolved=1,
@@ -4473,7 +4501,8 @@ def test_a_question_is_due_on_news_or_after_its_hours_not_on_every_tick():
     assert _decide(_said(), [verdict_before], asked) == [], (
         "news he already carried in the last question is not news")
     # Their pace still decides whether one may go at all.
-    assert _decide(_said(may_ask=False, verdicts=1), [hunted], later) == []
+    assert _decide(_said(may_ask=False, verdicts=1), [hunted], later) == ["learn"], (
+        "no question may go, but the verdict is still learned from")
 
 
 @qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
@@ -4487,6 +4516,11 @@ def test_an_answer_a_gap_and_the_report_wake_the_manager_in_that_order():
     assert items == ["report", "gap", "answer NEX-0090", "question"], items
     assert lab.decide_line(items) == (
         "decide: report + gap + answer NEX-0090 + question")
+    # Laboratory v3, P2: a verdict is what a section learns from, so a tick that wrote one
+    # wakes the manager to write the lesson down -- before a question, which then carries it.
+    learned = _decide(_said(verdicts=2), last_question=None)
+    assert learned == ["learn", "question"], learned
+    assert "learn" not in _decide(_said(verdicts=0), last_question=None)
 
 
 @qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")

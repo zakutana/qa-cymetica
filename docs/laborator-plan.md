@@ -73,7 +73,7 @@ Steps: … promote (2), own_cards (1), grid (3), h2h read (4), fomo/hot (5) … 
 |---|---|---|---|
 | P0 | rozhodnutí zapsaná a zamčená, plán v3 v repu, řádek v NEXT.md | test pinů zelený se třemi novými rozhodnutími | hotovo 05b5042e |
 | P1 | `section` + stránka se 7 záložkami + ranní dlaždice + Hot na stránce | screenshoty desktop a 390 px; staré roomy tam, kde byly | hotovo b6674216: 7 záložek viděno na 2000 px, na 390 px dva sloupce bez přetečení; žádný z 201 roomů nezměnil sekci |
-| P2 | registr + `docs/lab-knowledge.md` + „co dál" v každé záložce | každý existující room v registru pod svou sekcí; test pro každého vybírače, že odmítne, co registr drží; lekce po sekcích čte `brief` | |
+| P2 | registr + `docs/lab-knowledge.md` + „co dál" v každé záložce | každý existující room v registru pod svou sekcí; test pro každého vybírače, že odmítne, co registr drží; lekce po sekcích čte `brief` | hotovo (commit s tímto řádkem): `qa/lab_register.py`, karty Nexuse posouzené do 30 dnů se znovu neotevřou, `learn` po verdiktu, `docs/lab-knowledge.md` se 6 lekcemi, „What we know" v záložkách; vybírače P3–P6 se testují proti registru ve svých fázích, ranní přehled lekce zatím nečte |
 | P3 | oprava sampleru, mřížka, 3-SL po buňkách, `launch NEX-0137` | řádek mřížky „buňky X/132, obchoduje N/50"; roomy z NEX-0137 otevřené | |
 | P4 | naše karty (sekce 1) | první OUR karetní roomy běží, v jejich stopě žádná otázka Nexusovi | |
 | P5 | desk (sekce 7) | `docs/lab-desk.md` se 3+ hypotézami, 1+ pokus běží, první návrh pro Cymeticu předán | |

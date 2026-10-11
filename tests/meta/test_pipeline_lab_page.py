@@ -159,6 +159,13 @@ def test_the_view_is_seven_sections_in_their_order_with_their_names():
     outsider = next(s for s in view["sectors"] if s["key"] == "outsider")
     assert outsider.get("net_pct") is None and not outsider.get("n")
     page = _lab_page()
+    # P2: what a section knows (qa.lab.knowledge, docs/lab-knowledge.md) rides on its tab's
+    # entry, so the room can show it folded; a section that knows nothing has an empty list.
+    known = page.lab_view(_rooms_view(), _report(), now=NOW,
+                          known={"bots": ["15/40: 39 stop-losses to 13 take-profits"]})
+    by_key = {s["key"]: s for s in known["sectors"]}
+    assert by_key["bots"]["known"] == ["15/40: 39 stop-losses to 13 take-profits"]
+    assert by_key["desk"]["known"] == [] and by_key["cards"]["known"] == []
     # Our own cards are cards: the 18-hour column is theirs too; head-to-head bots are bots.
     assert page.CARD_SECTIONS == ("own", "cards") and page.BOT_SECTIONS == ("bots", "h2h")
     assert page._group({}, {"verdict": {"verdict": "refuted"}}, "h2h") == "archive"
@@ -508,6 +515,18 @@ def test_an_experiment_opens_into_a_chart_and_four_numbers(tmp_path):
     for label in ("In<", "Now<", "Result<", "Backtest<"):
         assert label in room, f"the opened experiment has no {label}"
     assert "cymetica.com/events/c1" in room, "no way to the card itself"
+    # P2: what the section knows sits folded under its numbers -- numbers first, the lines one
+    # click away -- in the card rooms, the bot rooms and the memecoins alike.
+    view = _lab_page().lab_view(_rooms_view(), _report(), now=NOW, known={
+        "cards": ["his cards fade after a day"], "memecoins": ["hot is a lift, not a profit"]})
+    for sector, line in (("cards", "his cards fade after a day"),
+                         ("memecoins", "hot is a lift, not a profit")):
+        code, err, captured = _run_page(_node(), tmp_path / f"known-{sector}", view,
+                                        after=f'window.labShow("{sector}");', page=_lab_page())
+        assert code == 0, err[:1200]
+        drawn = captured.get("room", "")
+        assert "<details" in drawn and "What we know" in drawn and line in drawn, drawn[:600]
+        assert drawn.index("What we know") > drawn.index("hero"), "the lines came before the numbers"
 
 
 @qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")

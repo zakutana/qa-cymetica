@@ -61,6 +61,44 @@ def test_feedback_and_acted_reach_the_manager_file_and_nothing_else_does(
     target.write_text("# x\n\n## Open improvements\n\n- first thing\n- second thing\n\n"
                       "## Log\n\n- 2026-10-05 · feedback · y\n", encoding="utf-8")
     assert lab.manager_open_lines() == ["first thing", "second thing"]
+    _a_lesson_of_a_section_is_what_that_section_knows(lab, tmp_path, monkeypatch)
+
+
+def _a_lesson_of_a_section_is_what_that_section_knows(lab, tmp_path, monkeypatch):
+    """Laboratory v3, P2 ([operator 2026-10-11] "zaznam at nedels stejne veci a udrzujes si a
+    vyvojis pamet"): what we know is kept per section, in one file the manager may also correct
+    by hand -- `docs/lab-knowledge.md`, ten lines a section at most. A lesson logged for a
+    section goes under its heading, newest first; the eleventh pushes the oldest into the
+    archive at the bottom with its section and date, never out of the file. A lesson with no
+    section stays in the diary only, and a section that does not exist is refused."""
+    knowledge = tmp_path / "lab-knowledge.md"
+    monkeypatch.setenv("QA_LAB_KNOWLEDGE_FILE", str(knowledge))
+    lab.note_entry("LAB-0001", "a lesson about nothing in particular", kind="lesson")
+    assert not knowledge.exists(), "a lesson with no section went into the knowledge file"
+    try:
+        lab.note_entry("LAB-0001", "x", kind="lesson", section="funds")
+    except lab.LabError:
+        pass
+    else:
+        raise AssertionError("a lesson for a section that does not exist was taken")
+
+    for n in range(1, 12):
+        lab.note_entry("LAB-0001", f"bots lesson {n}", kind="lesson", section="bots")
+    lab.note_entry("LAB-0001", "his cards fade after a day", kind="lesson", section="cards")
+    known = lab.knowledge()
+    assert known["bots"] == [f"bots lesson {n}" for n in range(11, 1, -1)], known["bots"]
+    assert known["cards"] == ["his cards fade after a day"]
+    assert known["outsider"] == [], "a section with nothing learned is empty, not missing"
+    text = knowledge.read_text(encoding="utf-8")
+    archive = text.split("## Archive", 1)[1]
+    assert "bots lesson 1" in archive and "(bots)" in archive, archive
+    assert text.index("## Bots") < text.index("## Archive")
+    # The manager corrects a line by hand; what the file says is what is known.
+    knowledge.write_text(text.replace("bots lesson 11", "15/40 hits its stop 3x as often"),
+                         encoding="utf-8")
+    assert lab.knowledge()["bots"][0] == "15/40 hits its stop 3x as often"
+    # The diary keeps every lesson, with its section, for the morning report.
+    assert [r.get("section") for r in lab.entries() if r["kind"] == "lesson"][-1] == "cards"
 
 
 @qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")

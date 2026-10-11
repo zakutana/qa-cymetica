@@ -1291,7 +1291,8 @@ def _experiment(rid: str, sector: str, report_room: dict, panel: dict,
         "tp": first.get("tp"), "sl": first.get("sl")}
 
 
-def lab_view(rooms: dict, report: dict, now: datetime | None = None) -> dict:
+def lab_view(rooms: dict, report: dict, now: datetime | None = None,
+             known: dict | None = None) -> dict:
     """What /lab draws, joined in one place so a test can hold all of it:
     the seven sections with the report's figures and their 18-hour totals, every experiment
     as a row of its sector's ranking, what came of Nexus's ideas, the paper account and the
@@ -1317,7 +1318,9 @@ def lab_view(rooms: dict, report: dict, now: datetime | None = None) -> dict:
         "generated_at": report.get("generated_at"),
         "sectors": [{"key": key, "name": name, "about": SECTION_ABOUT[key],
                      **(products.get(key) or {}),
-                     "h18": _h18_stats(experiments, key)}
+                     "h18": _h18_stats(experiments, key),
+                     # What the section knows (P2, qa.lab.knowledge), folded in its room.
+                     "known": list((known or {}).get(key) or [])}
                     for key, name in SECTOR_NAMES.items()],
         "experiments": experiments,
         # Only what came of his ideas: no response times, no refusals, no credit.
@@ -1335,7 +1338,10 @@ def build_lab(now=None) -> dict:
     answers."""
     moment = now or datetime.now(timezone.utc)
     script = _lab_script()
-    view = lab_view(build_rooms(), script.write_report(moment), now=moment)
+    from qa import lab as qa_lab
+
+    view = lab_view(build_rooms(), script.write_report(moment), now=moment,
+                    known=qa_lab.knowledge())
     view["departments"] = departments_view()
     return view
 
@@ -1582,6 +1588,10 @@ button { font: inherit; color: inherit; }
 .m-tiles { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 10px; }
 .m-sub { margin: 18px 0 8px; font: 700 12px var(--mono); letter-spacing: .1em;
   text-transform: uppercase; color: var(--text-dim); }
+.known { margin: 6px 0 12px; font-size: 13px; color: var(--text-dim); }
+.known summary { cursor: pointer; font: 700 12px var(--mono); letter-spacing: .08em;
+  text-transform: uppercase; color: var(--accent); }
+.known ul { margin: 8px 0 0; padding-left: 18px; } .known li { margin: 3px 0; }
 .filt { margin: 0; font-size: 12.5px; color: var(--text-faint); }
 .movers h3 { margin: 4px 0 8px; font-size: 15px; }
 .movers h3 small { font-weight: 400; color: var(--text-faint); font-size: 12.5px; margin-left: 6px; }
@@ -2134,12 +2144,19 @@ function ordered(list, group) {
     ? (a, b) => lane(a, b) || String(b.id).localeCompare(String(a.id))
     : (a, b) => lane(a, b) || net(b) - net(a));
 }
+/* What the section knows (laboratory v3, P2): folded under its numbers, one click away. */
+function knownFold(lp) {
+  const lines = lp.known || [];
+  if (!lines.length) return "";
+  return `<details class="known"><summary>What we know · ${lines.length}</summary><ul>` +
+    lines.map(l => `<li>${esc(l)}</li>`).join("") + `</ul></details>`;
+}
 function renderRoom() {
   const room = document.getElementById("room");
   const lp = sectorOf(SECTOR);
   room.setAttribute("style", "--hue:var(--c-" + SECTOR + ")");
   room.setAttribute("aria-label", lp.name || SECTOR);
-  if (SECTOR === "memecoins") { room.innerHTML = memeRoom(lp); return; }
+  if (SECTOR === "memecoins") { room.innerHTML = memeRoom(lp) + knownFold(lp); return; }
   const list = mine();
   const counts = {};
   GROUPS.forEach(([g]) => { counts[g] = list.filter(le => le.group === g).length; });
@@ -2147,7 +2164,7 @@ function renderRoom() {
   const rows = ordered(list.filter(le => le.group === group), group);
   const all = readStore("lab.all." + SECTOR + "." + group, "0") === "1";
   const shown = all ? rows : rows.slice(0, TOP);
-  room.innerHTML = roomHead(lp) +
+  room.innerHTML = roomHead(lp) + knownFold(lp) +
     `<div class="bar"><div class="seg" role="tablist">${GROUPS.map(([g, w]) =>
       `<button type="button" role="tab" data-group="${g}" aria-selected="${g === group}">${w}` +
       `<span class="n">${counts[g]}</span></button>`).join("")}</div>

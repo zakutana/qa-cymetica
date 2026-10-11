@@ -32,6 +32,7 @@ Memory runs across all seven: before a section starts anything it asks the regis
    - `report` -- the morning report, first (below).
    - `gap` -- the tick's new `failed:` or `held:` line. A bug gets a check and a report, filed; a gap is said in the answer with a Telegram block.
    - `answer NEX-…` -- `python scripts/nexus.py show NEX-…`. Sides, shares or levels he gave go in with `python scripts/rooms.py plan`; a short English gist into each room it opened (the page is English, CLAUDE.md): `rooms.py note STR-… "…" --re NEX-… --gist`.
+   - `learn` -- the tick wrote a verdict: what it taught, one lesson per section it judged, `lab.py log --lesson --section <s> "…"` (docs/lab-knowledge.md, ten a section); correct a line there by hand when it stops being true.
    - `question` -- `python scripts/lab.py brief` (his memory: the board, the gate's refusals, what we know about him), then `python scripts/lab.py ask --no-wait "…"`. Start `python scripts/nexus.py answer NEX-…` in the background and run the tick again when it finishes.
    - `hunt bugs` / `hunt sweep` -- ONE Sonnet agent: a bug hunt (their newest surface first, SAFE reads) or the `qa-sweep` skill at narrow width. A `their side moved:` line above says what woke the sweep; hand it to the agent.
 3. Only after a tick that decided something: `lab.py log "…"` (what and why), `--lesson`, `--next`. `lab.py resume` only after a `/clear`.

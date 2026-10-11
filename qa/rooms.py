@@ -191,6 +191,26 @@ SECTIONS = ("own", "cards", "bots", "h2h", "memecoins", "outsider", "desk")
 SECTORS = SECTIONS + ("funds",)
 
 
+_KIND_SECTION = {"card": "cards", "bot": "bots", "fund": "funds"}
+
+
+def section_of(room: dict, plan: dict | None = None, bot_origins=()) -> str | None:
+    """A strategy room's section: the one it was opened in, when its row names one. Otherwise
+    what its kind always made it -- rooms opened before 2026-09-21 carry no kind: one naming a
+    card holds cards, and one whose answer's order was a clone (STR-0001, Perceptron Oracle)
+    holds a bot; a kindless room whose plan holds legs of one kind is that kind (STR-0045). A
+    card room of ours is ours, never among his cards (none was opened before v3, so this moves
+    no room). Funds keep their old name, which no section has; an Arena room is in none."""
+    if room.get("section") in SECTIONS:
+        return room["section"]
+    kind = room_kind(room, plan)
+    if kind:
+        found = _KIND_SECTION.get(kind)
+    else:
+        found = "bots" if str(room.get("origin")) in set(bot_origins or ()) else "cards"
+    return "own" if found == "cards" and OUR_ORIGIN.match(str(room.get("origin"))) else found
+
+
 def note_rooms(rows: list[dict]) -> set[str]:
     """Where a note may go: every room a question may, and every sector."""
     return known_rooms(rows) | set(SECTORS)

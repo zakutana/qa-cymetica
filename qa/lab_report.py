@@ -36,9 +36,6 @@ from qa.rooms import names as room_names
 # The laboratory's sections (v3, 2026-10-11) and funds, which the report still adds up for
 # the rooms opened before they were switched off and the page no longer draws.
 PRODUCTS = rooms_mod.SECTIONS + ("funds",)
-# A room's kind -> its product. An Arena room is none of these yet, so it
-# is in no product rather than quietly among the cards.
-KIND_PRODUCT = {"card": "cards", "bot": "bots", "fund": "funds"}
 # Their own score, the line the operator asked about on 2026-09-14.
 CONVICTION_MIN = 70.0
 # Under this many experiments no band is printed; the page says "málo dat".
@@ -79,15 +76,9 @@ def _product(room: dict, bot_origins: set[str], plan: dict | None = None) -> str
     (STR-0001, Perceptron Oracle) holds a bot. And a kindless room whose plan
     holds legs of one kind is that kind -- STR-0045, five bots from our own
     proposal, showed under the cards (2026-09-24). A card room of ours is ours, never among
-    his cards (none was opened before v3, so this moves no room)."""
-    if room.get("section") in rooms_mod.SECTIONS:
-        return room["section"]
-    kind = rooms_mod.room_kind(room, plan)
-    if kind:
-        product = KIND_PRODUCT.get(kind)
-    else:
-        product = "bots" if str(room.get("origin")) in bot_origins else "cards"
-    return "own" if product == "cards" and lab.is_ours(room.get("origin")) else product
+    his cards (none was opened before v3, so this moves no room). One reading, the rooms'
+    own (`qa.rooms.section_of`), so the register and this report cannot disagree."""
+    return rooms_mod.section_of(room, plan, bot_origins)
 
 
 def _rooms(answers, notebook, room_rows, paper_rows, sample_rows,

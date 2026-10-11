@@ -164,7 +164,8 @@ def open_session(mode: str = "session", note: str | None = None,
 ENTRY_KINDS = ("log", "lesson", "next", "feedback", "acted", "telegram")
 
 
-def note_entry(session: str, text: str, kind: str = "log") -> dict:
+def note_entry(session: str, text: str, kind: str = "log",
+               section: str | None = None) -> dict:
     """One line of the laboratory's diary, in whoever-ran-the-tick's words.
 
     [operator 2026-09-19] asked for a laboratory that keeps a diary -- where it
@@ -172,17 +173,110 @@ def note_entry(session: str, text: str, kind: str = "log") -> dict:
     this is the other half, the judgement: what a question was for, what an
     answer changed, what to try next. `lesson` and `next` are what the day's
     close carries forward, at most three and eight of them.
+
+    A `lesson` or a `next` may name the section it is about (laboratory v3, P2); a lesson
+    that does is also what that section knows (`knowledge()`, docs/lab-knowledge.md).
     """
     if kind not in ENTRY_KINDS:
         raise LabError(f"an entry is one of {', '.join(ENTRY_KINDS)}, not {kind!r}")
     words = " ".join(str(text or "").split())
     if not words:
         raise LabError("an empty diary line says nothing")
-    record = _append({"type": "entry", "at": _now(), "session": session,
-                      "kind": kind, "text": words[:600]})
+    if section is not None:
+        from qa.rooms import SECTIONS
+
+        if kind not in ("lesson", "next"):
+            raise LabError("only a lesson or a next names a section")
+        if section not in SECTIONS:
+            raise LabError(f"{section!r} is not a section ({', '.join(SECTIONS)})")
+    entry = {"type": "entry", "at": _now(), "session": session, "kind": kind,
+             "text": words[:600]}
+    if section:
+        entry["section"] = section
+    record = _append(entry)
     if kind in MANAGER_KINDS:
         _mirror_to_manager_file(record)
+    if kind == "lesson" and section:
+        _mirror_to_knowledge_file(record)
     return record
+
+
+# What the laboratory knows, per section (v3, P2): ten lines a section, newest first, in ONE
+# file the manager may also correct by hand -- what the file says is what is known. A line
+# pushed out by an eleventh goes to the archive at the bottom with its section and date.
+KNOWLEDGE_MAX = 10
+KNOWLEDGE_ARCHIVE = "## Archive"
+_KNOWLEDGE_LINE = re.compile(r"^- (\d{4}-\d{2}-\d{2}) · (.+)$")
+
+
+def knowledge_path() -> Path:
+    override = os.environ.get("QA_LAB_KNOWLEDGE_FILE")
+    if override:
+        return Path(override)
+    if os.environ.get("QA_STATE_DIR"):
+        return state_dir() / "lab-knowledge.md"
+    return Path(__file__).resolve().parent.parent / "docs" / "lab-knowledge.md"
+
+
+def _knowledge_sections(text: str) -> tuple[dict[str, list[str]], list[str]]:
+    """The file as {section: [its '- date · text' lines]} and the archive's lines."""
+    from qa.rooms import SECTIONS
+
+    titles = {_section_title(s): s for s in SECTIONS}
+    known: dict[str, list[str]] = {s: [] for s in SECTIONS}
+    archive: list[str] = []
+    current = None
+    for line in text.splitlines():
+        if line.startswith("## "):
+            current = ("archive" if line.strip() == KNOWLEDGE_ARCHIVE
+                       else titles.get(line[3:].strip()))
+            continue
+        if not line.startswith("- ") or current is None:
+            continue
+        (archive if current == "archive" else known[current]).append(line)
+    return known, archive
+
+
+def _section_title(section: str) -> str:
+    return {"own": "Our cards", "cards": "Nexus cards", "bots": "Bots", "h2h": "Head-to-head",
+            "memecoins": "Memecoins", "outsider": "Outsider", "desk": "Desk"}[section]
+
+
+def _write_knowledge(target: Path, known: dict[str, list[str]], archive: list[str]) -> None:
+    out = ["# What the laboratory knows, per section", "",
+           "Ten lines a section, newest first. `lab.py log --lesson --section <s>` adds one; "
+           "correct a line by hand when it stops being true. Read by `lab.py brief`, the desk "
+           "and the morning report; the outsider never reads it.", ""]
+    for section, lines in known.items():
+        out += [f"## {_section_title(section)}", "", *lines, ""]
+    out += [KNOWLEDGE_ARCHIVE, "", *archive, ""]
+    target.parent.mkdir(parents=True, exist_ok=True)
+    target.write_text("\n".join(out), encoding="utf-8")
+
+
+def _mirror_to_knowledge_file(record: dict) -> None:
+    target = knowledge_path()
+    section = record["section"]
+    with file_lock(path()):
+        text = target.read_text(encoding="utf-8") if target.is_file() else ""
+        known, archive = _knowledge_sections(text)
+        known[section].insert(0, f"- {str(record['at'])[:10]} · {record['text']}")
+        while len(known[section]) > KNOWLEDGE_MAX:
+            gone = known[section].pop()
+            archive.insert(0, f"{gone} ({section})")
+        _write_knowledge(target, known, archive)
+
+
+def knowledge() -> dict[str, list[str]]:
+    """What each section knows, newest first: the text of its lines in the file."""
+    target = knowledge_path()
+    text = target.read_text(encoding="utf-8") if target.is_file() else ""
+    known, _ = _knowledge_sections(text)
+    out = {}
+    for section, lines in known.items():
+        out[section] = [m.group(2) if (m := _KNOWLEDGE_LINE.match(line)) else line[2:]
+                        for line in lines]
+    return out
 
 
 # The manager's own improvement lives in ONE file (operator, 2026-10-05: it was in
@@ -929,6 +1023,10 @@ def decide(said: dict, earlier: list[dict], last_question: datetime | None,
     if new_gaps(said, earlier):
         items.append("gap")
     items += [f"answer {origin}" for origin in said.get("answered") or []]
+    # Laboratory v3, P2: a verdict is what a section learns from. The manager writes what it
+    # taught (`lab.py log --lesson --section <s>`) before a question, which then carries it.
+    if said.get("verdicts"):
+        items.append("learn")
 
     if said.get("may_ask"):
         news = bool(said.get("verdicts") or said.get("resolved"))

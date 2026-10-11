@@ -45,7 +45,7 @@ REPO_ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(REPO_ROOT))
 
 from qa import backtests as qa_backtests  # noqa: E402
-from qa import lab, rooms  # noqa: E402
+from qa import lab, lab_register, rooms  # noqa: E402
 from qa.console import printable  # noqa: E402
 
 BASELINE = REPO_ROOT / "audits" / "nexus-baseline.json"
@@ -2193,6 +2193,11 @@ def night_promote(since: datetime | None = None, only: str | None = None) -> dic
     decided = lab.gates()
     paper = _sibling("paper")
     opened, placed, held = 0, 0, []
+    # What was already tried (laboratory v3, P2): a card judged inside RETRY_DAYS is not
+    # reopened by a later answer, and one tried longer ago says so in its new room.
+    tried = lab_register.register(stored)
+    moment = datetime.now(timezone.utc)
+    tried_before: dict[str, dict] = {}
     # Answers are read ONCE (V5, 2026-09-23): an answer whose every pick was
     # decided is marked read and skipped from then on. `pending` holds the
     # answers with something still waiting -- a card unread or not tradeable
@@ -2315,6 +2320,17 @@ def night_promote(since: datetime | None = None, only: str | None = None) -> dic
                 held.append(f"{origin}/{card[:8]}: already held in "
                             f"{held_by[card]} -- not a second experiment")
                 continue
+            # A stopped room no longer holds its card, which is how a refuted card came
+            # back from his next answer: the register remembers it was judged.
+            before = lab_register.last_judged(tried, f"card:{card.lower()}")
+            age = lab_register.days_since(before, moment) if before else None
+            if before and age is not None and age < lab_register.RETRY_DAYS:
+                held.append(f"{origin}/{card[:8]}: tried in "
+                            f"{lab_register.said(before, moment)} -- not reopened for "
+                            f"{lab_register.RETRY_DAYS:g} days; the brief tells him")
+                continue
+            if before:
+                tried_before[card] = before
             if holds.get(card) is None:
                 # None is "none stated" and also "one stated outside the range he was told"
                 # (qa.lab.hold_periods does not clamp it): a window he did not name is not
@@ -2409,7 +2425,11 @@ def night_promote(since: datetime | None = None, only: str | None = None) -> dic
                     stop_pct=None if his_stop else NIGHT_STOP_PCT,
                     legs=plan["legs"], benchmark_card=BTC_PROXY,
                     why=(f"opened unattended from {origin}, one room for this "
-                         f"card; the window is his, {holds[card]:g} days -- he named "
+                         f"card; "
+                         + (f"tried before in {lab_register.said(tried_before[card], moment)}"
+                            f", so this is a new window on it; " if card in tried_before
+                            else "")
+                         + f"the window is his, {holds[card]:g} days -- he named "
                          f"when to close it; "
                          + ("the room stop is his leg stop, ours is off; "
                             if his_stop else
@@ -3961,6 +3981,17 @@ def brief() -> str:
     out.append("")
     out.append("what we know about Nexus -- read before writing to him:")
     out.extend(f"  - {line}" for line in NEXUS_KNOWN)
+    # Laboratory v3, P2: what each section has tried and what it knows, so a question does not
+    # ask him for what was already measured, and a section does not repeat itself.
+    out.append("")
+    out.append("what each section has tried (rooms by where they stand) and knows:")
+    tried = lab_register.summary(lab_register.register(rooms.load()))
+    known = lab.knowledge()
+    for section in rooms.SECTIONS:
+        stands = tried.get(section) or {}
+        counts = ", ".join(f"{n} {stand}" for stand, n in sorted(stands.items())) or "nothing yet"
+        out.append(f"  {section}: {counts}")
+        out.extend(f"    - {line}" for line in known.get(section) or [])
     return "\n".join(out)
 
 
@@ -4156,6 +4187,9 @@ def main(argv: list[str] | None = None) -> int:
     kind.add_argument("--acted", action="store_const", const="acted", dest="kind")
     kind.add_argument("--telegram", action="store_const", const="telegram",
                       dest="kind")
+    # Laboratory v3, P2: a lesson for a section is what that section knows
+    # (docs/lab-knowledge.md, ten lines each).
+    log_cmd.add_argument("--section", choices=rooms.SECTIONS)
     open_cmd = sub.add_parser("open", help="start a session")
     open_cmd.add_argument("--mode", default="session", choices=["session"])
     close_cmd = sub.add_parser("close", help="end it, with what it learned")
@@ -4351,8 +4385,10 @@ def main(argv: list[str] | None = None) -> int:
             print("no proposal of his has come to anything yet")
     elif args.cmd == "log":
         session = _day_session(_now())
-        record = lab.note_entry(session, args.text, kind=args.kind or "log")
-        print(f"{session}: {record['kind']} written")
+        record = lab.note_entry(session, args.text, kind=args.kind or "log",
+                                section=args.section)
+        print(f"{session}: {record['kind']} written"
+              + (f" for {args.section}" if args.section else ""))
     elif args.cmd == "open":
         record = lab.open_session(mode=args.mode)
         print(f"{record['session']} open ({record['mode']})")
