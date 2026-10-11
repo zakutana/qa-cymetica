@@ -570,6 +570,19 @@ def _a_seat_is_asked_only_at_a_paper_table_and_never_on_a_dry_run(tmp_path):
         {"instance_id": "inst-1"}
     assert seat_rows[1]["outcome"] == "accepted" and \
         seat_rows[1]["approve_url"].endswith("/approve/abc")
+
+    # Our seat gone from their table -- the owner left it by hand (2026-10-11, table 5) --
+    # ends the earlier ask: a new one may go. Still standing, or a table that lists no
+    # standings at all, and the earlier ask still holds.
+    for standings, allowed in (([{"seat_id": 9, "bot": "x"}], False), (None, False),
+                               ([{"seat_id": 3, "bot": "theirs"}], True)):
+        body = dict(table, standings=standings) if standings is not None else table
+        client = build_mock_client(handler_for(body, posted), registry=registry)
+        try:
+            said = script.seat("2", "inst-1", confirm=False, client=client)
+        finally:
+            client.close()
+        assert (said == 0) == allowed, (standings, said)
     assert script.outcome_of(200, {"seat_id": 1}) == "unknown", "no approve_url, no acceptance"
     assert script.outcome_of(422, {"detail": "x"}) == "rejected"
     assert script.outcome_of(502, None) == "unknown"

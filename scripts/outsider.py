@@ -507,17 +507,27 @@ def _capture(response) -> str | None:
         return None
 
 
-def asked_before(table_id: str, rows: list[dict]) -> str | None:
+def asked_before(table_id: str, rows: list[dict], table: dict | None = None) -> str | None:
     """A seat intent of ours at this table that went through or may have: one with no
-    outcome, or with `accepted` / `unknown`. One seat per owner per table."""
+    outcome, or with `accepted` / `unknown`. One seat per owner per table.
+
+    Unless their table says the seat is gone: an accepted ask whose seat_id their standings
+    no longer list was left (the owner can leave by hand before a table starts). Only a
+    table that lists its standings can say that; one that does not leaves the ask standing."""
     outcomes = {r.get("id"): r for r in rows if r.get("type") == "outcome"
                 and r.get("kind") == "seat"}
+    standings = (table or {}).get("standings")
+    seated = ({str(s.get("seat_id")) for s in standings if isinstance(s, dict)}
+              if isinstance(standings, list) else None)
     for intent in rows:
         if intent.get("type") != "intent" or intent.get("kind") != "seat" \
                 or str(intent.get("table_id")) != str(table_id):
             continue
         said = outcomes.get(intent.get("id"))
         if said is None or said.get("outcome") in ("accepted", "unknown"):
+            seat_id = (said or {}).get("seat_id")
+            if seated is not None and seat_id is not None and str(seat_id) not in seated:
+                continue
             return intent.get("id")
     return None
 
@@ -555,11 +565,6 @@ def seat(table_id: str, instance_id: str, confirm: bool, client=None) -> int:
     if not outsider.TABLE.match(table_id) or not INSTANCE.match(instance_id):
         print(f"refused: {table_id!r} / {instance_id!r} is not a table id and a bot id")
         return 2
-    earlier = asked_before(table_id, load())
-    if earlier:
-        print(f"refused: {earlier} already asked for a seat at table {table_id} (it went "
-              f"through or may have); one seat per owner per table")
-        return 1
     clone = _sibling("clone")
     if not clone.paper_by_our_record(instance_id):
         print(f"refused: {instance_id} is not a paper clone of ours by our record "
@@ -575,6 +580,12 @@ def seat(table_id: str, instance_id: str, confirm: bool, client=None) -> int:
         why = outsider.seat_refusal(table_id, table_body, rules_body)
         if why:
             print(f"refused: {why}")
+            return 1
+        earlier = asked_before(table_id, load(), table_body)
+        if earlier:
+            print(f"refused: {earlier} already asked for a seat at table {table_id} (it went "
+                  f"through or may have, and their table still lists it); one seat per "
+                  f"owner per table")
             return 1
         try:
             theirs = clone._instance(client, instance_id)
