@@ -76,6 +76,30 @@ def supply_contradiction(stats: dict | None) -> dict | None:
     return broken or None
 
 
+def _num(x) -> bool:
+    return isinstance(x, (int, float)) and not isinstance(x, bool) and x > 0
+
+
+def judgeable(stats) -> bool:
+    """Whether a dashboard's stats can be judged at all: unflagged, with both figures of at least
+    one relation. A 200 without them is not a coin judged (deep pass 2026-10-11, B03: a renamed
+    `stats` passed 'all 140 can be true' with nothing compared)."""
+    if not isinstance(stats, dict) or stats.get("flags"):
+        return False
+    get = stats.get
+    return (_num(get("circulating_supply")) and _num(get("max_supply"))) or (
+        _num(get("total_supply")) and _num(get("max_supply"))) or (
+        _num(get("market_cap")) and _num(get("fdv")))
+
+
+def second_look(stats) -> str:
+    """The second read of a coin the first found impossible: `confirmed`, `cleared` (judged and
+    possible), or `unread` -- a failed read leaves the first look standing, never clears it (rule 8)."""
+    if not judgeable(stats):
+        return "unread"
+    return "confirmed" if supply_contradiction(stats) else "cleared"
+
+
 def _compact(n) -> str:
     if not isinstance(n, (int, float)):
         return str(n)
@@ -106,6 +130,10 @@ def test_a_coins_supply_figures_can_all_be_true(rest_anon):
             unread.append(f"{slug}: HTTP {r.status_code}")
             continue
         stats = (r.json() or {}).get("stats")
+        if not judgeable(stats):
+            if not (isinstance(stats, dict) and stats.get("flags")):
+                unread.append(f"{slug}: no supply figures to compare")
+            continue
         judged += 1
         broken = supply_contradiction(stats)
         if broken:
@@ -113,7 +141,7 @@ def test_a_coins_supply_figures_can_all_be_true(rest_anon):
     if judged < SAMPLE // 2:
         raise Inconclusive(f"only {judged} of {SAMPLE} dashboards could be read: {unread[:5]}")
 
-    confirmed = {}
+    confirmed, unsettled = {}, []
     if first_look:
         time.sleep(SECOND_LOOK_S)
     for slug, first in first_look.items():
@@ -121,9 +149,13 @@ def test_a_coins_supply_figures_can_all_be_true(rest_anon):
         r = rest_anon.get(COIN.format(slug=slug))
         body = r.json() if r.status_code == 200 else None
         stats = (body or {}).get("stats") if isinstance(body, dict) else None
-        again = supply_contradiction(stats)
-        if not again:
+        seen = second_look(stats)
+        if seen == "unread":
+            unsettled.append(f"{slug}: HTTP {r.status_code}")
             continue
+        if seen == "cleared":
+            continue
+        again = supply_contradiction(stats)
         confirmed[slug] = {
             "broken": again, "first_look": first,
             "price": stats.get("price"), "market_cap": stats.get("market_cap"), "fdv": stats.get("fdv"),
@@ -147,6 +179,9 @@ def test_a_coins_supply_figures_can_all_be_true(rest_anon):
                          f"({row['broken']['fdv_under_market_cap']}x)")
         return f"{slug.upper()} (rank {row['market_cap_rank']}, source updated {row['source_updated']}): " + ", ".join(parts)
 
+    if unsettled and not confirmed:
+        raise Inconclusive(f"{len(unsettled)} coin(s) the first look found impossible could not be read "
+                           f"again: {unsettled[:5]}; neither confirmed nor cleared")
     conclude(Measurement(
         verdict="failed" if confirmed else "passed",
         reason=(f"{len(confirmed)} of {judged} dashboards (the {SAMPLE} largest coins by market cap) publish "

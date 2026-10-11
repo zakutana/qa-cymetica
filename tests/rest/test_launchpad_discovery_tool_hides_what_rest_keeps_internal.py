@@ -72,7 +72,24 @@ def _mcp_addresses(mcp, chain: int):
     rows = ((body or {}).get("result") or {}).get("tokens") if isinstance(body, dict) else None
     if not isinstance(rows, list):
         return None
-    return [(t.get("address"), t.get("symbol")) for t in rows if isinstance(t, dict) and t.get("address")]
+    named = [(t.get("address"), t.get("symbol")) for t in rows if isinstance(t, dict) and t.get("address")]
+    # Rows that name no address are a shape we cannot read, never a feed that leaks nothing (C06).
+    return None if rows and not named else named
+
+
+def settle(first: dict, second: dict) -> tuple[dict, list]:
+    """The first read's leaks as the second look leaves them: (confirmed, unsettled). A chain the
+    second look could not judge is unsettled -- a failed read is not a leak that went away (rule 8,
+    deep pass 2026-10-11, C06); one it judged without the leak was a moment."""
+    confirmed, unsettled = {}, []
+    for chain, v in first.items():
+        if not v.get("leaked"):
+            continue
+        if chain not in second:
+            unsettled.append(chain)
+        elif set(second[chain].get("leaked") or []) & set(v["leaked"]):
+            confirmed[chain] = second[chain]
+    return confirmed, unsettled
 
 
 def _one_read(rest, mcp, chains):
@@ -124,12 +141,14 @@ def test_the_discovery_tool_does_not_list_what_the_rest_list_keeps_internal(rest
                            "nothing for the discovery feed to leak")
 
     candidates = {c: v for c, v in first.items() if v["leaked"]}
-    confirmed = {}
+    confirmed, unsettled = {}, []
     if candidates:
         time.sleep(SECOND_LOOK_S)
         second, _ = _one_read(rest_anon, mcp_anon, sorted(candidates))
-        confirmed = {c: v for c, v in second.items()
-                     if v["leaked"] and set(v["leaked"]) & set(first[c]["leaked"])}
+        confirmed, unsettled = settle(first, second)
+    if unsettled and not confirmed:
+        raise Inconclusive(f"the first read saw internal launches in the feed on chain(s) {unsettled}, and "
+                           f"the second look could not read them again; neither a leak nor its absence")
 
     def line(chain, v):
         return (f"chain_id={chain}: REST lists {v['rest_public']} (default) or {v['rest_with_internal']} "

@@ -992,6 +992,15 @@ def _the_crypto_supply_readings():
     assert supply_contradiction({"market_cap": None, "fdv": None, "max_supply": 1e9, "total_supply": 5e9,
                                  "flags": []}) == {"total_over_max": 5.0}
     assert supply_contradiction(None) is None
+    # Deep pass 2026-10-11, B03: a 200 without the figures is not a dashboard judged, and a second
+    # look that could not read the coin leaves the first look's contradiction standing, unsettled.
+    from tests.rest.test_a_coins_supply_figures_can_all_be_true import judgeable, second_look
+
+    assert judgeable(hbar) and judgeable(eth), "a coin with two figures of a relation is judged"
+    assert not judgeable(None) and not judgeable({"flags": []}), "a renamed `stats` counted as judged"
+    assert not judgeable(chz), "a withheld coin is not judged"
+    assert second_look(hbar) == "confirmed" and second_look(eth) == "cleared"
+    assert second_look(None) == "unread", "a failed second read cleared the first look's contradiction"
 
 
 def _the_launchpad_list_readings():
@@ -1015,6 +1024,16 @@ def _the_launchpad_list_readings():
     assert leaked_internal(["0xRUG"], public, internal) == [], "the public launch is the feed's to list"
     assert leaked_internal(["0xYOUNG"], public, internal) == [], "an address in neither list is not judged"
     assert leaked_internal([], public, internal) == []
+    # Deep pass 2026-10-11: a 422 that names something else never measured the no-chain answer (C08);
+    # a leak the second look could not read is unsettled, not cleared (C06, rule 8).
+    assert empty_while_filtered_lists(422, {"detail": [{"loc": ["query", "limit"], "msg": "<= 20"}]},
+                                      named) is None, "a 422 for another parameter was read as the honest refusal"
+    from tests.rest.test_launchpad_discovery_tool_hides_what_rest_keeps_internal import settle
+
+    first = {4663: {"leaked": ["0xnxtest"]}, 5042: {"leaked": []}}
+    assert settle(first, {}) == ({}, [4663]), "a second look that read nothing cleared the first look's leak"
+    assert settle(first, {4663: {"leaked": ["0xnxtest"]}}) == ({4663: {"leaked": ["0xnxtest"]}}, [])
+    assert settle(first, {4663: {"leaked": []}}) == ({}, []), "gone on the second read: a moment, not a leak"
 
 
 def _the_movers_page_readings():
@@ -1033,6 +1052,16 @@ def _the_movers_page_readings():
         "a request built per offset pages through the listing")
     assert card_requests("fetch(`/api/v1/event-cards/?limit=100&offset=${o}`)")[1] is True
     assert card_requests("fetch('/api/v1/movers/products')") == ([], False), "another source is not read"
+    # Deep pass 2026-10-11, C07: paging is an offset whose value is built, not a URL that looks like one.
+    assert card_requests("fetch('/api/v1/event-cards/?limit=100&offset=0')")[1] is False, (
+        "a literal offset 0 is still one page")
+    assert card_requests("fetch('/api/v1/event-cards/?limit=' + n)")[1] is None, (
+        "a URL built some other way: which cards it reads cannot be read from the text")
+    from tests.rest.test_movers_page_ranks_every_card import adds_nothing
+
+    assert adds_nothing({"c1", "c2"}, [{"id": "c1"}, {"id": "c2"}]) is True, (
+        "a listing that ignores offset answered the same page again, read as more of the listing")
+    assert adds_nothing({"c1"}, [{"id": "c1"}, {"id": "c3"}]) is False and adds_nothing({"c1"}, []) is False
 
     card = lambda i, cur: {"id": f"c{i}", "title": f"card {i}", "index_base": "100.0", "current_index": str(cur)}
     every = [card(i, 100 + (i - 50) * 0.5) for i in range(100)] + [card(900, 16.08), card(901, 154.91)]
@@ -1113,6 +1142,10 @@ def _the_tournament_bot_readings():
     assert [b["name"] for b in gone] == ["lab MACD Hunter"] and unread == ["ddd"]
     assert offered_but_gone(offered[:1], {"aaa"}, {}) == ([], []), "a known bot needs no profile"
     assert offered_but_gone(offered, {"aaa", "996cd23e", "ccc", "ddd"}, {}) == ([], [])
+    # A row that names no instance is not judged, and says so (deep pass 2026-10-11, C01):
+    # /my-bots renaming the key passed "all 53 bots exist" having judged none.
+    renamed = [{"id": "996cd23e", "name": "lab MACD Hunter", "trading": True}]
+    assert offered_but_gone(renamed, set(), {}) == ([], ["no instance_id: 'lab MACD Hunter'"])
 
 
 def _the_idea_template_readings():
@@ -1144,6 +1177,19 @@ def _the_idea_template_readings():
     assert idea_after_a_change(dict(record, messages=record["messages"][:2])) is None, "no BB-CHANGE: not judged"
     assert idea_after_a_change(dict(record, messages=record["messages"][:3])) is None, "no spec after it yet"
     assert idea_after_a_change(dict(record, is_idea=False)) is None, "a rebuild request may say 'the job you use'"
+    # Deep pass 2026-10-11, C02 and C03: a post-change spec in neither wording is unread, never "keeps the
+    # new-app wording"; and an idea whose record did not read may be the newest, so no verdict rests on the rest.
+    from tests.rest.test_build_it_better_spec_keeps_the_request import newest_verdict
+
+    reworded = dict(record, messages=record["messages"][:3] + log(("BB-SPEC", "2026-10-10T21:34:47.142562+00:00",
+                                                                   "BB-SPEC, worded some third way")))
+    vague = idea_after_a_change(reworded)
+    assert vague["switched"] is False and vague["unread_wording"] is True
+    assert newest_verdict([vague], [])[0] == "inconclusive", "a spec neither template reads was passed"
+    assert newest_verdict([idea_after_a_change(kept)], [])[0] == "passed"
+    assert newest_verdict([got], [])[0] == "failed"
+    assert newest_verdict([got], ["ET-31000 (HTTP 503)"])[0] == "inconclusive", (
+        "an unread idea may be the newest: the frozen history was judged in its place")
 
 
 _BB_SECTION = """\
@@ -1271,4 +1317,14 @@ def _the_request_token_place_readings():
         "a later line about one route adds its own place to that route only")
     assert disagreements(split, spec(withdraw=True))["mismatched"] == {}, "header is among withdraw's places"
     assert llms_token_sentence("## Build it Better\n\nSee `bb_file_request`.") is None
+    # Deep pass 2026-10-11, C04 and C05: the place is what the words after the route say about the
+    # TOKEN. Outside a parenthesis it is still said; a parenthesis about the body but not the token
+    # says nothing of the token's place.
+    dashed = llms_token_sentence(_BB_SECTION.replace(" (request token in the body)",
+                                                     " -- the request token goes in the body"))
+    assert dashed["places"] == {"body"}, "a place said outside a parenthesis was read as none"
+    assert disagreements(dashed, spec())["mismatched"] == {"accept": ["header"], "change": ["header"],
+                                                           "verdict": ["header"]}
+    shape = llms_token_sentence(_BB_SECTION.replace("(request token in the body)", "(JSON body {changes})"))
+    assert shape["places"] == set(), "a body shape that names no token was read as the token's place"
     assert llms_token_sentence(_BB_SECTION.replace("## Build it Better", "## Something else")) is None

@@ -48,9 +48,11 @@ def empty_while_filtered_lists(status: int, body, per_chain: dict) -> bool | Non
     """True when the unfiltered read is a 200 with no rows although a chain named by number lists some.
 
     None when the read cannot be judged (not a 200 or a 422, not a list) -- never a defect by
-    guessing. A 422 is an honest refusal and is False, as is any non-empty list."""
+    guessing. A 422 that names `chain_id` is an honest refusal and is False, as is any non-empty
+    list; a 422 about anything else (a `limit` they capped) never measured the no-chain answer and
+    is None (deep pass 2026-10-11, C08)."""
     if status == 422:
-        return False
+        return False if "chain_id" in str(body) else None
     if status != 200 or not isinstance(body, list):
         return None
     if not any(n for n in per_chain.values() if isinstance(n, int) and n > 0):

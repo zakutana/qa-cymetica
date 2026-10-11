@@ -42,11 +42,17 @@ from tests.rest.test_build_it_better_routes_are_in_the_openapi import (
 CLAIM = "build-it-better-request-token-place-is-documented-one-way"
 API_PAGE = "/build-it-better/api"
 
-# `POST .../requests/{ticket}/accept|change|verdict|withdraw` (request token in the body)
+# `POST .../requests/{ticket}/accept|change|verdict|withdraw` (request token in the body) -- the words
+# after the route: its parenthesis, or else the clause up to the next backtick or sentence end, so
+# "... -- the request token goes in the body" says the place too (deep pass 2026-10-11, C04).
 _SENTENCE = re.compile(
-    r"`(?:POST\s+)?(?:\.\.\.|" + re.escape(PREFIX) + r")/requests/\{[^}]*\}/([a-z|]+)`\s*(?:\(([^)]*)\))?")
+    r"`(?:POST\s+)?(?:\.\.\.|" + re.escape(PREFIX) + r")/requests/\{[^}]*\}/([a-z|]+)`\s*"
+    r"(?:\(([^)]*)\)|([^`.;]*))")
 _HEADER = re.compile(r"header|x-bb-token", re.I)
 _BODY = re.compile(r"\bbody\b|\bjson\b|\bpayload\b", re.I)
+# A place is the token's only when the words name the token: "(JSON body {changes})" is the body's
+# shape, not where the token goes (C05).
+_TOKEN = re.compile(r"token", re.I)
 
 
 def llms_token_sentence(llms_text: str) -> dict | None:
@@ -61,12 +67,13 @@ def llms_token_sentence(llms_text: str) -> dict | None:
     for m in _SENTENCE.finditer(re.sub(r"\s+", " ", section)):
         names = m.group(1).split("|")
         ops.extend(o for o in names if o not in ops)
-        said = (m.group(2) or "").strip()
+        said = (m.group(2) if m.group(2) is not None else m.group(3) or "").strip()
         places = set()
-        if _BODY.search(said):
-            places.add("body")
-        if _HEADER.search(said):
-            places.add("header")
+        if _TOKEN.search(said):
+            if _BODY.search(said):
+                places.add("body")
+            if _HEADER.search(said):
+                places.add("header")
         if places:
             phrase = phrase or said
             for o in names:

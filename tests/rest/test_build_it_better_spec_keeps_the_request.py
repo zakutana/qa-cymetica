@@ -442,7 +442,26 @@ def idea_after_a_change(record: dict) -> dict | None:
     bad = [s for s in said if s["kind"] == "rebuild" or s["forbids"]]
     return {"ticket": record.get("ticket"), "app_name": record.get("app_name"), "first_change_at": first_change,
             "before": [spec_template(m.get("body")) for m in before], "after": said, "switched": bool(bad),
-            "example": bad[0] if bad else None}
+            "example": bad[0] if bad else None,
+            # Neither wording read: not the new-app one this check passes on (deep pass 2026-10-11, C02).
+            "unread_wording": not bad and any(s["kind"] != "new" for s in said)}
+
+
+def newest_verdict(judged: list[dict], unread: list[str]) -> tuple[str, dict | None]:
+    """("passed" | "failed" | "inconclusive", the newest judged idea). An idea whose record did not
+    read may be the newest, so with one unread no verdict rests on the others: the frozen history
+    would be judged in its place, a FAIL after their fix (rule 8; deep pass 2026-10-11, C03). And a
+    newest spec in neither wording is unread, not passed (C02)."""
+    if not judged:
+        return "inconclusive", None
+    newest = sorted(judged, key=lambda s: s["first_change_at"])[-1]
+    if unread:
+        return "inconclusive", newest
+    if newest["switched"]:
+        return "failed", newest
+    if newest.get("unread_wording"):
+        return "inconclusive", newest
+    return "passed", newest
 
 
 @qa(component="rest.build_it_better", tier=SafetyTier.SAFE, surface="rest",
@@ -477,7 +496,12 @@ def test_an_idea_keeps_its_new_app_spec_after_a_change(rest_anon):
     if not judged:
         raise Inconclusive(f"none of {len(ideas)} ideas has a BB-SPEC written after a BB-CHANGE; unread {unread}")
     judged.sort(key=lambda s: s["first_change_at"])
-    newest = judged[-1]
+    verdict, newest = newest_verdict(judged, unread)
+    if verdict == "inconclusive":
+        raise Inconclusive(
+            f"{len(unread)} idea record(s) did not read and any may be the newest: {unread[:6]}" if unread else
+            f"the newest idea with a BB-CHANGE, {newest['ticket']}, has a spec after it in neither wording "
+            f"({[a['kind'] for a in newest['after']]}); nothing is passed on a spec this check cannot read")
     switched = [s for s in judged if s["switched"]]
 
     def said(s) -> str:
@@ -487,7 +511,7 @@ def test_an_idea_keeps_its_new_app_spec_after_a_change(rest_anon):
                 + (f", forbidding \"{ex['forbids']}'s logos\"" if ex.get("forbids") else ""))
 
     conclude(Measurement(
-        verdict="failed" if newest["switched"] else "passed",
+        verdict=verdict,
         reason=(f"the newest idea with a BB-CHANGE, {said(newest)}: its spec after the change builds \"a page on "
                 f"EventTrader that does the job you use {newest['app_name']} for\" instead of a new page. "
                 f"{len(switched)} of {len(judged)} ideas with a BB-CHANGE switched the same way: "

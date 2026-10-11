@@ -58,16 +58,29 @@ def board_script(page_html: str) -> str | None:
     return None
 
 
-def card_requests(script: str | None) -> tuple[list[str], bool]:
-    """(the event-card URLs the script fetches, whether it pages through the listing). A URL
-    built by concatenation, or a script that sends an offset with it, pages."""
+def card_requests(script: str | None) -> tuple[list[str], bool | None]:
+    """(the event-card URLs the script fetches, whether it pages through the listing): True when
+    an `offset` is built per request (`offset=' + o`, `offset=${o}`), False when every URL is a
+    literal -- `offset=0` included, one page all the same -- and None when a URL is built some
+    other way, so which cards it reads cannot be told from the text (deep pass 2026-10-11, C07:
+    "offset" anywhere, a trailing "=" or any "+" passed without a card read)."""
     urls, pages = [], False
     for m in _FETCH.finditer(script or ""):
         url = _html.unescape(m.group(2))
         urls.append(url)
-        if m.group(3) or url.endswith("=") or "offset" in url:
+        built = bool(m.group(3)) or "${" in url
+        if built and re.search(r"[?&]offset=(?:\$\{|$)", url):
             pages = True
+        elif built and pages is not True:
+            pages = None
     return urls, pages
+
+
+def adds_nothing(seen: set, cards: list[dict]) -> bool:
+    """A page of the listing that holds only cards already read: the listing answered the same
+    page again (an offset it ignores), so it cannot be read whole by paging (C07)."""
+    ids = {c.get("id") for c in cards if isinstance(c, dict) and c.get("id")}
+    return bool(ids) and ids <= set(seen)
 
 
 def move(card) -> float | None:
@@ -121,6 +134,9 @@ def test_the_movers_boards_rank_every_card_of_the_listing(rest_anon):
     urls, pages = card_requests(script)
     if not urls:
         raise Inconclusive(f"{PAGE}'s board script no longer fetches {LISTING}; re-point the check")
+    if pages is None:
+        raise Inconclusive(f"{PAGE}'s board script builds its request ({urls}) in a way whose cards "
+                           f"cannot be read from the text; re-point the check")
     if pages:
         conclude(Measurement(
             verdict="passed",
@@ -150,10 +166,15 @@ def test_the_movers_boards_rank_every_card_of_the_listing(rest_anon):
         if cards is None:
             raise Inconclusive(f"{LISTING} offset {offset} answered HTTP {r.status_code}; the listing could "
                                f"not be read whole")
+        if offset and adds_nothing(set(every), cards):
+            raise Inconclusive(f"{LISTING} offset {offset} answered only cards already read; the listing "
+                               f"cannot be read whole by paging")
         every.update({c.get("id"): c for c in cards if c.get("id")})
         offset += PAGE_SIZE
         if not cards or (total is not None and offset >= total):
             break
+    else:
+        raise Inconclusive(f"{LISTING} still had cards after {MAX_PAGES} pages; not read whole")
     if total is not None and len(every) < total * 0.95:
         raise Inconclusive(f"read {len(every)} of the {total} cards the listing totals")
     big = _get(rest_anon, LISTING, limit=500)

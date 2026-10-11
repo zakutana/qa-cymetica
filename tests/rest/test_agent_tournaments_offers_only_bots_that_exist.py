@@ -43,11 +43,15 @@ def _rows(said) -> list[dict]:
 def offered_but_gone(offered: list[dict], have: set[str],
                      statuses: dict[str, int]) -> tuple[list[dict], list[str]]:
     """The offered bots the platform no longer knows (their profile answered 404), and the ones
-    that could not be read. A bot in our own clone list is known without asking."""
+    that could not be read. A bot in our own clone list is known without asking. A row that names
+    no instance is unread, never known: a renamed key must not pass every row unjudged."""
     gone, unread = [], []
     for bot in offered:
         bot_id = bot.get("instance_id")
-        if not bot_id or bot_id in have:
+        if not bot_id:
+            unread.append(f"no instance_id: {bot.get('name')!r}")
+            continue
+        if bot_id in have:
             continue
         status = statuses.get(bot_id)
         if status == 404:
