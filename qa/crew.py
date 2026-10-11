@@ -313,9 +313,25 @@ def claude_command() -> list[str] | None:
     return [exe] if exe else None
 
 
+# The bug pipeline has one writer, the Bugs department (C2): every other department hands a
+# bug over as a ticket, and cannot file, fold, render, withdraw, verify or preregister.
+# One writer per resource is what removes the races on the ledger, the journal and the page.
+BUG_PIPELINE = ("submit.py", "ledger.py", "render.py", "withdraw.py", "verify.py",
+                "prereg.py")
+
+
+def _shells(*commands: str) -> tuple[str, ...]:
+    return tuple(f"{shell}({command}:*)" for command in commands
+                 for shell in ("Bash", "PowerShell"))
+
+
 def denied(dept: str) -> tuple[str, ...]:
-    """What `dept`'s workers may not do: the company's floor."""
-    return DENY_ALL
+    """What `dept`'s workers may not do: the company's floor, and what is another
+    department's resource."""
+    out = list(DENY_ALL)
+    if dept != "bugs":
+        out += _shells(*(f"python scripts/{script}" for script in BUG_PIPELINE))
+    return tuple(out)
 
 
 PREAMBLE = """\
@@ -345,7 +361,25 @@ HANDOFF = """\
 """
 
 # What each department does with its ticket, beyond the preamble.
-BODIES: dict[str, str] = {}
+BODIES: dict[str, str] = {
+    "bugs": """\
+You are the one department that tests, verifies and files; CLAUDE.md is your manual and
+the qa-sweep skill your procedure. By the ticket's kind:
+- `bug`: a bug another department met. Reproduce it through our client first -- the
+  ticket's wording is a lead, not evidence. A defect gets a check and a report through
+  `scripts/submit.py`, as CLAUDE.md and the qa-sweep skill say. A gap in their
+  documentation goes to the manager as a `decision` ticket carrying the text the operator
+  relays to Cymetica. Not reproducible: close the ticket done and say so.
+- `sweep`: the qa-sweep skill at narrow width. `moved` in the details is what woke it
+  (their side moved); read it first.
+- `hunt`: a bug hunt, their newest surface first, SAFE reads only.
+A level-V run needs a clean tree while four other departments edit it: before
+`prereg.py new ... --tag`, `python scripts/crew.py hold --why "<what>"` (it waits until
+nobody else is mid-run), and `python scripts/crew.py unhold` once its commit is in, or
+when it fails. After any change to state: `python scripts/ledger.py --run <id>` and
+`python scripts/render.py`, then the ledger, the journal and the dashboard in one commit.
+""",
+}
 
 
 def prompt(dept: str, ticket: dict) -> str:
@@ -468,6 +502,38 @@ def beats() -> dict[str, dict]:
         if data:
             out[path.stem] = data
     return out
+
+
+# The tree held still for a level-V run (C2): no loop starts a run while another holds it.
+# A hold nobody lets go expires, so a worker killed mid-verification cannot freeze the
+# company; an hour is a narrow sweep's worst (8 to 25 minutes) with room to commit.
+HOLD_MAX = timedelta(hours=1)
+
+
+def _hold_path() -> Path:
+    return crew_dir() / "hold.json"
+
+
+def set_hold(by: str, why: str, now: datetime | None = None) -> dict:
+    moment_now = _now(now)
+    hold = {"by": by, "why": str(why)[:300], "since": stamp(moment_now),
+            "until": stamp(moment_now + HOLD_MAX)}
+    _write_json(_hold_path(), hold)
+    return hold
+
+
+def holder(now: datetime | None = None) -> dict | None:
+    """Who holds the tree still, or None -- an expired hold is nobody's."""
+    hold = _read_json(_hold_path())
+    until = moment((hold or {}).get("until"))
+    if not hold or until is None or until <= _now(now):
+        return None
+    return hold
+
+
+def clear_hold() -> None:
+    if _hold_path().exists():
+        _hold_path().unlink()
 
 
 def set_active(dept: str, ticket: dict | None, pid: int | None = None,

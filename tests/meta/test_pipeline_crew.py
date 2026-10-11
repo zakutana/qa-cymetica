@@ -146,6 +146,24 @@ def test_every_worker_is_denied_push_tag_and_raw_commits():
     # One executable for the workers and the outsider's stranger (finding 9).
     assert _script("outsider").claude_exe is crew.claude_exe
 
+    # C2: the bug pipeline has one writer. Every other department hands a bug over as a
+    # ticket; it cannot file, fold, render, withdraw, verify or preregister.
+    pipeline = ("submit.py", "ledger.py", "render.py", "withdraw.py", "verify.py",
+                "prereg.py")
+    for name, spec in crew.DEPARTMENTS.items():
+        if spec.model is None:
+            continue
+        denied = crew.denied(name)
+        for script in pipeline:
+            for shell in ("Bash", "PowerShell"):
+                rule = f"{shell}(python scripts/{script}:*)"
+                assert (rule in denied) == (name != "bugs"), (name, rule)
+    told = crew.prompt("bugs", {"id": "T-0009", "kind": "sweep", "from": "clock",
+                                "text": "hunt sweep", "payload": {"moved": ["#201 fixed"]}})
+    assert "crew.py hold" in told and "submit.py" in told and "#201 fixed" in told
+    assert "--to bugs" not in told, "Bugs is not told to hand a bug to itself"
+    assert "--to bugs" in crew.prompt("desk", {"id": "T-1", "kind": "step", "text": "x"})
+
 
 def _ends_are_read():
     ok = json.dumps({"is_error": False, "result": "done", "num_turns": 4,
@@ -246,6 +264,61 @@ def test_a_run_past_its_timeout_is_killed_with_its_children(company, monkeypatch
     assert not sup.pid_alive(child), "the worker's own child outlived the kill"
     assert crew.tickets()[ticket["id"]]["attempts"] == 1
     assert not crew.active(), "a finished run leaves no active marker"
+
+
+@qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
+def test_a_level_v_run_holds_the_tree_still_and_the_hold_cannot_freeze_the_company(
+        company, monkeypatch):
+    """C2. Verification needs a clean tree (CLAUDE.md, rule 6) while four other departments
+    edit it. Bugs holds the tree: it waits until nobody else is mid-run, and nothing new
+    starts until it lets go. A hold that is never let go expires, and one that cannot get
+    quiet in time is given up rather than waited on for ever."""
+    sup = _script("crew")
+    monkeypatch.setenv("QA_CREW_DEPT", "bugs")
+    assert sup.main(["hold", "--why", "level-V run of PRE-0300"]) == 0
+    held = crew.holder()
+    assert held["by"] == "bugs" and "PRE-0300" in held["why"]
+
+    step, _ = crew.add_ticket("desk", "step", "a desk step", now=NOW)
+    assert sup.look("desk", paused=lambda: False)[0] == "held"
+    assert crew.tickets()[step["id"]]["status"] == "open"
+    assert crew.beats()["desk"]["state"] == "held"
+
+    # The race between the two: a loop that read "nobody holds it" a moment before the
+    # hold was set still finds it before it claims -- its marker goes up first, then it
+    # looks, so either the hold sees the marker or the loop sees the hold.
+    assert sup.work_once("desk") is None
+    after = crew.tickets()[step["id"]]
+    assert after["status"] == "open" and after["releases"] == 0
+    assert not crew.active()
+
+    assert sup.main(["unhold"]) == 0 and crew.holder() is None
+    assert sup.look("desk", paused=lambda: False)[0] == "worked"
+
+    # Somebody is mid-run: the hold waits for them, and gives up if they do not finish.
+    crew.set_active("lab", {"id": "T-0400", "kind": "lab"})
+    monkeypatch.setattr(sup, "HOLD_WAIT_SECONDS", 1.5)
+    monkeypatch.setattr(sup, "HOLD_POLL_SECONDS", 0.2)
+    assert sup.main(["hold", "--why", "another run"]) == 1
+    assert crew.holder() is None, "a hold that could not get quiet is not left behind"
+    crew.set_active("lab", None)
+
+    # The hour starts when the tree is still, not when the wait began: a wait of fifty
+    # minutes must not leave ten for the run.
+    crew.set_hold("bugs", "waited long", now=datetime.now(timezone.utc) - timedelta(minutes=50))
+    assert sup.main(["hold", "--why", "waited long"]) == 0
+    left = crew.moment(crew.holder()["until"]) - datetime.now(timezone.utc)
+    assert left > timedelta(minutes=55)
+    sup.main(["unhold"])
+
+    # A hold nobody let go expires by itself.
+    crew.set_hold("bugs", "forgotten", now=NOW - timedelta(hours=3))
+    assert crew.holder() is None
+
+    monkeypatch.setenv("QA_CREW_DEPT", "desk")
+    crew.set_hold("bugs", "mine", now=datetime.now(timezone.utc))
+    assert sup.main(["unhold"]) == 2, "only its holder lets go of a hold"
+    assert crew.holder()["by"] == "bugs"
 
 
 # -- the loops ------------------------------------------------------------------------------

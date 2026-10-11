@@ -87,7 +87,7 @@ Building since 2026-10-11 ("stav firmu podle docs/crew-plan.md"). The status col
 | Phase | What | Status |
 |---|---|---|
 | C0 | design decisions below, memory files for Bugs and Manager; the operator's decision in CLAUDE.md and the `crew` skill wait for their word in chat (the auto-mode guard refused the write) | open |
-| C1 | `qa/crew.py` (bus, departments, argv, outcome), `scripts/crew.py` (loops, start, stop, status), `scripts/commit.py` | open |
+| C1 | `qa/crew.py` (bus, departments, argv, outcome), `scripts/crew.py` (loops, start, stop, status), `scripts/commit.py` | hotovo 2c64db05 |
 | C2 | Bugs department: tickets in, the one writer of the bug pipeline, the tree held still for level V | open |
 | C3 | the clock: the laboratory's tick routed to lab, bugs and outsider; the outsider's code run | open |
 | C4 | Desk under the company: its own pace, its snooze, its brakes in code | open |

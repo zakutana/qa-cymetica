@@ -42,6 +42,10 @@ from qa.console import printable  # noqa: E402
 LOOPS = ("clock", *crew.DEPARTMENTS)
 POLL_SECONDS = 30.0
 BACKOFF_MAX_MINUTES = 60
+# How long a hold waits for the others to finish what they are running: the longest
+# timeout but one (the desk's 50 minutes). Past it, the run goes at level R instead.
+HOLD_WAIT_SECONDS = 50 * 60
+HOLD_POLL_SECONDS = 10.0
 
 
 # -- processes -------------------------------------------------------------------------------
@@ -225,8 +229,17 @@ def work_once(dept: str) -> dict | None:
     spends an attempt, a failure of the machinery (not logged in, overloaded) gives it
     back without spending one.
     """
+    # The marker goes up before the look at the hold, and `hold` sets the hold before it
+    # looks at the markers: so either the hold sees this run coming, or this run sees the
+    # hold. Looked at the other way round, both could see nothing and both go ahead.
+    crew.set_active(dept, {"id": None, "kind": "starting"})
+    held = crew.holder()
+    if held and held.get("by") != dept:
+        crew.set_active(dept, None)
+        return None
     ticket = crew.claim(dept)
     if ticket is None:
+        crew.set_active(dept, None)
         return None
     crew.set_active(dept, ticket, pid=os.getpid())
     crew.beat(dept, "running", f"{ticket['id']} {ticket['kind']}")
@@ -293,6 +306,11 @@ def look(name: str, paused=deep_pass_running) -> tuple[str, str]:
     if paused():
         crew.beat(name, "paused", "a deep pass is running")
         return "paused", "a deep pass is running"
+    hold = crew.holder()
+    if hold and hold.get("by") != name:
+        why = f"the tree is held still by {hold.get('by')}: {hold.get('why')}"
+        crew.beat(name, "held", why)
+        return "held", why
     row = work_once(name)
     if row is None:
         crew.beat(name, "idle", "no tickets")
@@ -457,6 +475,42 @@ def stop(grace: float = 20.0) -> int:
     return 0 if not still else 1
 
 
+# -- the tree held still ---------------------------------------------------------------------
+
+def hold(why: str) -> int:
+    """Hold the tree still for a level-V run: no new run starts, and this returns once
+    nobody else is mid-run. Given up -- and let go -- if they are not done in time."""
+    by = _by()
+    crew.set_hold(by, why)
+    deadline = time.monotonic() + HOLD_WAIT_SECONDS
+    while True:
+        others = sorted(name for name in crew.active() if name != by)
+        if not others:
+            # The hour runs from here: the wait must not eat the run's time.
+            crew.set_hold(by, why)
+            print(f"[crew] held by {by}: the tree is still")
+            return 0
+        if time.monotonic() > deadline:
+            crew.clear_hold()
+            print(f"[crew] {', '.join(others)} still running after "
+                  f"{HOLD_WAIT_SECONDS / 60:.0f} min; let go -- run at level R, or later")
+            return 1
+        time.sleep(HOLD_POLL_SECONDS)
+
+
+def unhold() -> int:
+    held, by = crew.holder(), _by()
+    if held is None:
+        print("[crew] nothing is held")
+        return 0
+    if by not in (held.get("by"), "session", "manager"):
+        print(f"[crew] refused: the hold is {held.get('by')}'s")
+        return 2
+    crew.clear_hold()
+    print(f"[crew] let go of {held.get('by')}'s hold")
+    return 0
+
+
 # -- the CLI ---------------------------------------------------------------------------------
 
 def _by() -> str:
@@ -505,6 +559,9 @@ def main(argv: list[str] | None = None) -> int:
     show.add_argument("id")
     listing = sub.add_parser("list")
     listing.add_argument("--open", action="store_true")
+    held = sub.add_parser("hold", help="hold the tree still for a level-V run")
+    held.add_argument("--why", required=True)
+    sub.add_parser("unhold")
     args = parser.parse_args(argv)
 
     with contextlib.suppress(AttributeError, ValueError):
@@ -546,6 +603,10 @@ def main(argv: list[str] | None = None) -> int:
         return 0
     if args.cmd == "show":
         return _show(args.id)
+    if args.cmd == "hold":
+        return hold(args.why)
+    if args.cmd == "unhold":
+        return unhold()
     if args.cmd == "list":
         for ticket in crew.tickets().values():
             if args.open and ticket["status"] not in ("open", "claimed"):

@@ -315,7 +315,10 @@ CEILINGS = {
     # one loop per name, waiting out a deep pass, ending on stop; a detached loop
     # outliving its window; the status; a commit taking only its own paths. Thirteen were
     # written and merged to eight, one per reading.
-    "meta_tests": 832,
+    # 832 -> 833 for the tree held still (C2): a level-V run needs a clean tree while four
+    # departments edit it, and a hold must neither be ignored nor freeze the company. The
+    # bug pipeline's one writer went into the existing argv test.
+    "meta_tests": 833,
 }
 
 BASH_SCRIPT = re.compile(r"python\s+scripts[/\\]([a-z_]+)\.py")
