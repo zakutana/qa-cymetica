@@ -163,3 +163,236 @@ def test_the_league_answers_only_what_it_computes_exactly_and_only_once():
     seen = script.summary_lines(3, {"answers": 2, "mean_score": 0.99, "division_name": "D", "points": 5},
                                 [{"amount_et10": 1000, "status": "credited"}])
     assert seen[0].startswith("3 answers sent, 2 scored") and seen[2].startswith("1000 ET10 credited"), seen
+
+    # 7. Build it Better, the desk's own door (2026-10-11), the same shape one product over: five
+    #    declared writes held to their body keys, the limits refused before a byte leaves, and the
+    #    records of rule 9 -- with the one-time request token kept out of everything git tracks.
+    bb = _bb_script()
+    _bb_gate(bb)
+    _bb_refusals(bb)
+    _bb_records(bb)
+
+
+# -- Build it Better: the desk files its own requests ------------------------------------------
+#
+# [operator 2026-10-11] "Ja nic podavat kebudu ty muzes sam klidne build it better podavat i ty
+# featury". Their /openapi-public.json is the contract, read 2026-10-11: the 201 carries
+# `request_token` once ("it is the X-BB-Token for accept/change/verdict"); accept takes no body,
+# BBChangeIn is {changes}, BBVerdictIn is {verdict, note}, and the token rides as the X-BB-Token
+# HEADER. llms.txt's "(request token in the body)" is the MCP tools' shape, not REST's. Withdraw is
+# in llms.txt and the MCP tool list only, so it is declared in accept's shape: no body.
+
+BB_BASE = "https://cymetica.com/api/v1/build-it-better/requests"
+BB_RULES = {"build_it_better.file": {"app_url", "app_name", "improvements", "agent", "design_urls"},
+            "build_it_better.accept": set(), "build_it_better.change": {"changes"},
+            "build_it_better.verdict": {"verdict", "note"}, "build_it_better.withdraw": set()}
+
+
+def _bb_script():
+    import importlib.util
+    from pathlib import Path
+
+    spec = importlib.util.spec_from_file_location(
+        "bb_script", Path(__file__).resolve().parents[2] / "scripts" / "bb.py")
+    module = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(module)
+    return module
+
+
+def _bb_gate(bb):
+    """Five writes declared closed, exactly the keys the script builds: the exact bodies reach the
+    transport underneath; an extra key, a token in a body, a query key or an undeclared path is
+    refused before it gets there."""
+    import httpx
+
+    from qa.safety import CURRENT_TIER, EndpointRegistry, SafetyTransport, SafetyViolation
+
+    registry = EndpointRegistry.load()
+    declared = {r.id: set(r.executable_params) for r in registry.rules
+                if r.component == "rest.build_it_better"}
+    assert declared == BB_RULES, declared
+    assert all(r.closed_body and not r.inert_params and r.methods == {"POST"}
+               for r in registry.rules if r.id in BB_RULES)
+    assert set(bb.FILE_KEYS) == BB_RULES["build_it_better.file"], bb.FILE_KEYS
+
+    class Inner(httpx.BaseTransport):
+        def handle_request(self, request):
+            raise AssertionError("the request reached the network")
+
+    registry.mutate_enabled = True
+    registry.mutate_allowed_hosts = frozenset({"cymetica.com"})
+    transport = SafetyTransport(Inner(), registry)
+    filed = bb.file_body(app_name="Agent Tournaments", improvements="One line.\nTwo lines.",
+                         design_urls=["https://cymetica.com/a.png"])
+    assert filed == {"app_name": "Agent Tournaments", "improvements": "One line.\nTwo lines.",
+                     "agent": "qa-cymetica desk", "design_urls": ["https://cymetica.com/a.png"]}, filed
+    assert bb.verdict_body("pass", None) == {"verdict": "pass"}
+    exact = ((BB_BASE, filed),
+             (BB_BASE, bb.file_body(app_url="https://example.com/screener", improvements="One.")),
+             (f"{BB_BASE}/ET-30773/accept", None),
+             (f"{BB_BASE}/ET-30773/change", bb.change_body("Say on the page when a table is empty.")),
+             (f"{BB_BASE}/ET-30773/verdict", bb.verdict_body("fail", "The lobby never fills.")),
+             (f"{BB_BASE}/ET-30773/verdict", bb.verdict_body("pass", None)),
+             (f"{BB_BASE}/ET-30773/withdraw", None))
+    refused = ((BB_BASE, dict(filed, email="someone@example.com")),
+               (BB_BASE, dict(filed, symbol="TOUR")),
+               (f"{BB_BASE}/ET-30773/change", {"changes": "Say so.", "request_token": "bb_x"}),
+               (f"{BB_BASE}/ET-30773/accept", {"request_token": "bb_x"}),
+               (f"{BB_BASE}/ET-30773/withdraw?force=true", None),
+               (f"{BB_BASE}/ET-30773/tokenize", {"symbol": "TOUR"}),
+               (f"{BB_BASE}/ET-30773", {}),
+               ("https://cymetica.com/api/v1/build-it-better/startups", {"startup_name": "x"}))
+    token = CURRENT_TIER.set(SafetyTier.MUTATE)
+    try:
+        for url, body in exact:
+            with pytest.raises(AssertionError, match="reached the network"):
+                transport.handle_request(httpx.Request("POST", url, json=body))
+        for url, body in refused:
+            with pytest.raises(SafetyViolation):
+                transport.handle_request(httpx.Request("POST", url, json=body))
+        registry.mutate_enabled = False
+        with pytest.raises(SafetyViolation):
+            transport.handle_request(httpx.Request("POST", BB_BASE, json=filed))
+    finally:
+        CURRENT_TIER.reset(token)
+
+
+def _bb_refusals(bb):
+    """Their limits, refused before any body exists: 8,000 characters and 40 lines of
+    improvements, 8 to 4,000 for a change, 4,000 for a note, and a fail that says why."""
+    forty = "\n".join(f"item {i}" for i in range(40))
+    assert bb.file_body(app_name="A", improvements=forty)["improvements"] == forty
+    assert len(bb.file_body(app_name="A", improvements="x" * 8000)["improvements"]) == 8000
+    for text in ("x" * 8001, forty + "\nitem 41", "", "  \n "):
+        with pytest.raises(bb.Refused):
+            bb.file_body(app_name="A", improvements=text)
+    for kwargs in ({}, {"design_urls": ["C:/Users/me/mockup.png"]},
+                   {"design_urls": [f"https://cymetica.com/{i}.png" for i in range(7)]}):
+        with pytest.raises(bb.Refused):
+            bb.file_body(improvements="One.", **({"app_name": "A"} if kwargs else {}), **kwargs)
+    for text in ("x" * 4001, "short", ""):
+        with pytest.raises(bb.Refused):
+            bb.change_body(text)
+    for verdict, note in (("fail", None), ("fail", ""), ("fail", "x" * 4001), ("maybe", "x"),
+                          ("pass", "x" * 4001)):
+        with pytest.raises(bb.Refused):
+            bb.verdict_body(verdict, note)
+    assert bb.ticket("ET-30773") == "ET-30773"
+    for bad in ("ET-1/../startups", "30773", "ET-", "et-30773", "ET-1?x=1"):
+        with pytest.raises(bb.Refused):
+            bb.ticket(bad)
+
+
+def _bb_records(bb):
+    """The script end to end over httpx.MockTransport, never a live server: a dry run sends and
+    records nothing, an over-long list is refused before any request, a 201 is an intent and an
+    outcome with the token in bb_tokens.json alone, the token rides back as X-BB-Token, and a 409
+    OPEN_REQUEST_EXISTS is `refused` naming their open ticket."""
+    import json
+    import secrets
+    import subprocess
+    import tempfile
+    from pathlib import Path
+
+    import httpx
+
+    secret = secrets.token_urlsafe(24)
+    sent = []
+
+    def handler(request):
+        body = json.loads(request.content) if request.content else None
+        sent.append((request.method, request.url.path, request.headers.get("x-bb-token"), body))
+        path = request.url.path
+        if request.method == "POST" and path.endswith("/requests"):
+            if body.get("app_name") == "Busy app":
+                return httpx.Response(409, json={
+                    "detail": "One open request per app.", "code": "OPEN_REQUEST_EXISTS",
+                    "open_ticket": "ET-30773", "stage": "requested",
+                    "your_text_was_not_filed": True, "improvements": body.get("improvements")})
+            if body.get("app_name") == "Unsure app":
+                return httpx.Response(201, json={"ticket": "ET-40002", "request_token": secret + "2"})
+            return httpx.Response(201, json={
+                "ticket": "ET-40001", "app_name": body.get("app_name"), "created": True,
+                "is_idea": True, "stage": "requested", "spec_status": "proposed",
+                "messages": [{"kind": "BB-REQUEST", "body": body.get("improvements")}],
+                "request_token": secret, "message": f"Filed. Keep {secret}: it is shown once."})
+        if path.endswith("/ET-40001/accept"):
+            return httpx.Response(200, json={"ticket": "ET-40001", "stage": "funded",
+                                             "spec_status": "accepted", "yours": True})
+        if request.method == "GET" and path.endswith("/requests/ET-40001"):
+            return httpx.Response(200, json={"ticket": "ET-40001", "app_name": "Agent Tournaments",
+                                             "stage": "funded", "spec_status": "accepted",
+                                             "messages": [], "yours": True})
+        return httpx.Response(404, json={"detail": "not here"})
+
+    with tempfile.TemporaryDirectory() as tmp, pytest.MonkeyPatch.context() as mp:
+        state = Path(tmp)
+        mp.setenv("QA_STATE_DIR", str(state))
+        mp.setattr(bb, "INNER", httpx.MockTransport(handler))
+        wish = state / "wish.txt"
+        wish.write_text("Every table says when it is empty.\nThe lobby counts free seats.\n",
+                        encoding="utf-8")
+        files = ["file", "--app-name", "Agent Tournaments", "--improvements-file", str(wish)]
+
+        # A dry run prints the body, sends nothing and records nothing.
+        assert bb.main(files) == 0 and bb.main(["accept", "ET-40001"]) == 0
+        assert sent == [] and not (state / "bb.jsonl").exists()
+        assert not (state / "bb_tokens.json").exists()
+
+        # Over the limit: refused before any request, and nothing recorded either.
+        long = state / "long.txt"
+        long.write_text("x" * 8001, encoding="utf-8")
+        assert bb.main(["file", "--app-name", "A", "--improvements-file", str(long), "--confirm"]) != 0
+        assert sent == [] and not (state / "bb.jsonl").exists()
+
+        # A 201: intent, then outcome, one id; the token kept in bb_tokens.json.
+        assert bb.main(files + ["--confirm"]) == 0
+        rows = bb.load()
+        assert [r["type"] for r in rows] == ["intent", "outcome"], rows
+        assert rows[0]["id"] == rows[1]["id"] == "BB-0001"
+        assert rows[0]["body"] == {"app_name": "Agent Tournaments", "agent": "qa-cymetica desk",
+                                   "improvements": wish.read_text(encoding="utf-8").strip()}
+        assert rows[1]["outcome"] == "accepted" and rows[1]["ticket"] == "ET-40001", rows[1]
+        assert rows[1]["token_held"] is True and rows[1]["evidence_id"], rows[1]
+        assert json.loads((state / "bb_tokens.json").read_text(encoding="utf-8")) == {"ET-40001": secret}
+
+        # Acting on it: the body is empty, the token is the X-BB-Token header.
+        assert bb.main(["accept", "ET-40001", "--confirm"]) == 0
+        assert sent[-1] == ("POST", "/api/v1/build-it-better/requests/ET-40001/accept", secret, None), sent[-1]
+        assert bb.load()[-1]["outcome"] == "accepted" and bb.load()[-1]["kind"] == "accept"
+
+        # One open request per app: 409 OPEN_REQUEST_EXISTS is `refused`, naming theirs.
+        assert bb.main(["file", "--app-name", "Busy app", "--improvements-file", str(wish),
+                        "--confirm"]) == 1
+        last = bb.load()[-1]
+        assert last["outcome"] == "refused" and last["open_ticket"] == "ET-30773", last
+        assert last.get("ticket") is None and last["token_held"] is False, last
+
+        # A 2xx that does not say whether it filed is `unknown` -- and a token it carries is
+        # still kept: it is shown once, and there is no asking for it again.
+        assert bb.main(["file", "--app-name", "Unsure app", "--improvements-file", str(wish),
+                        "--confirm"]) == 1
+        assert bb.load()[-1]["outcome"] == "unknown" and bb.load()[-1]["token_held"] is True
+        assert bb.tokens()["ET-40002"] == secret + "2"
+
+        # Ours, from the diary; and a ticket read back.
+        mine = bb.mine(bb.load())
+        assert [(m["ticket"], m["outcome"]) for m in mine] == [
+            ("ET-40001", "accepted"), (None, "refused"), ("ET-40002", "unknown")], mine
+        assert mine[0]["token_held"] is True and mine[1]["open_ticket"] == "ET-30773"
+        assert bb.main(["get", "ET-40001"]) == 0 and sent[-1][:2] == (
+            "GET", "/api/v1/build-it-better/requests/ET-40001")
+
+        # The token is in bb_tokens.json and nowhere else: not the diary, not the evidence
+        # (their 201 body and the accept's X-BB-Token header were both captured).
+        assert list((state / "evidence").rglob("*.json")), "nothing was captured to scan"
+        holders = sorted(str(p.relative_to(state)) for p in state.rglob("*")
+                         if p.is_file() and secret in p.read_text(encoding="utf-8", errors="replace"))
+        assert holders == ["bb_tokens.json"], holders
+
+    # And that one file is one git does not track.
+    repo = Path(__file__).resolve().parents[2]
+    assert subprocess.run(["git", "-C", str(repo), "check-ignore", "-q", "state/bb_tokens.json"],
+                          capture_output=True).returncode == 0, "state/bb_tokens.json is not gitignored"
+    assert subprocess.run(["git", "-C", str(repo), "ls-files", "state/bb_tokens.json"],
+                          capture_output=True, text=True).stdout.strip() == ""

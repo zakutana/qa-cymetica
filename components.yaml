@@ -711,6 +711,55 @@ endpoints:
     executable_params: [player_id, answer, reasoning]
     closed_body: true
 
+  # Build it Better, the desk's own requests -- [operator 2026-10-11] "Ja nic podavat kebudu ty
+  # muzes sam klidne build it better podavat i ty featury". scripts/bb.py is the only writer.
+  # Nothing here moves money (a filing costs 0.5 units of the account's NEXUS build plan), so
+  # the floor is WHICH fields go, held by `closed_body`. Read from /openapi-public.json on
+  # 2026-10-11:
+  #   * file: BBRequestIn has nine fields; five are declared. `email` and `name` are personal
+  #     data the X-API-Key makes unnecessary, and `symbol` / `coin_name` choose a coin for the
+  #     build, which is not ours to choose -- so all four are refused, not merely unused.
+  #   * accept takes no body, BBChangeIn is {changes}, BBVerdictIn is {verdict, note}. The
+  #     one-time request token rides as the X-BB-Token HEADER (their schema and their
+  #     /build-it-better/api page), never in a body: a body carrying it is refused here.
+  #   * withdraw is in llms.txt and the MCP tool list, not in the OpenAPI; declared in
+  #     accept's shape, no body.
+  # Anything else under /build-it-better (tokenize, startups, a bid) stays default-denied.
+  - id: build_it_better.file
+    path: /api/v1/build-it-better/requests
+    methods: [POST]
+    component: rest.build_it_better
+    executable_params: [app_url, app_name, improvements, agent, design_urls]
+    closed_body: true
+
+  - id: build_it_better.accept
+    path: /api/v1/build-it-better/requests/{ticket}/accept
+    methods: [POST]
+    component: rest.build_it_better
+    executable_params: []
+    closed_body: true
+
+  - id: build_it_better.change
+    path: /api/v1/build-it-better/requests/{ticket}/change
+    methods: [POST]
+    component: rest.build_it_better
+    executable_params: [changes]
+    closed_body: true
+
+  - id: build_it_better.verdict
+    path: /api/v1/build-it-better/requests/{ticket}/verdict
+    methods: [POST]
+    component: rest.build_it_better
+    executable_params: [verdict, note]
+    closed_body: true
+
+  - id: build_it_better.withdraw
+    path: /api/v1/build-it-better/requests/{ticket}/withdraw
+    methods: [POST]
+    component: rest.build_it_better
+    executable_params: []
+    closed_body: true
+
   - id: prop.signup
     path: /api/v1/prop/signup
     methods: [POST]
