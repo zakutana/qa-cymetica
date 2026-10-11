@@ -2532,6 +2532,29 @@ def grid_next(register_rows: list[dict], species: list[str], thrown: set[str],
     return out
 
 
+def proven_cells(register_rows: list[dict], paired: set[str]) -> list[dict]:
+    """Section 4, head-to-head (laboratory v3, P7): the grid cells two of whose windows
+    survived -- a claim, by the rule that one window is a measurement and two are a finding --
+    at a band of the grid other than the species' defaults, and not yet in a head-to-head
+    room (`paired`, their keys). Each is what an "improved" bot is: put against the same
+    species at its defaults. Pure."""
+    from qa.lab_register import band_label
+
+    bands = {band_label(b): dict(b) for b in GRID_BANDS if b}
+    survived: dict[str, int] = {}
+    for row in register_rows or ():
+        key = str(row.get("key") or "")
+        if key.startswith("bot:") and row.get("verdict") == "survived":
+            survived[key] = survived.get(key, 0) + 1
+    out = []
+    for key, n in survived.items():
+        _, species, label = key.split(":", 2)
+        if n >= 2 and label in bands and key not in paired:
+            out.append({"species": species, "label": label, "settings": bands[label],
+                        "key": key})
+    return out
+
+
 def variants() -> list[dict]:
     """The grid in the order it is walked: [{label, settings}], the reference
     first. Pure and deterministic -- the same list on every call."""

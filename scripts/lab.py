@@ -3174,6 +3174,158 @@ def bot_grid() -> dict:
                      "cap": wave.MAX_TRADING}}
 
 
+H2H_DAYS = 7
+
+
+def _launch_pair(bot: dict, cell: dict, origin: str) -> dict:
+    """One head-to-head room (section h2h): the species cloned twice on paper, the improved
+    clone set to the proven band and the original left at its defaults, half the room each --
+    clones, room and criterion, the band and its read-back, then the money, then the start.
+    Returns {room, improved, original, ok, why}."""
+    out = {"room": None, "improved": None, "original": None, "ok": False, "why": ""}
+    if pass_in_flight():
+        out["why"] = "a deep pass is running"
+        return out
+    clone, wave = _sibling("clone"), _sibling("wave")
+    species, name = str(bot["id"]), str(bot.get("name") or bot["id"])
+    for side in ("improved", "original"):
+        try:
+            made = clone.clone(bot.get("source_type"), species, f"lab h2h {name} {side}"[:60],
+                               None, True) or {}
+        except (Exception, SystemExit) as exc:  # noqa: BLE001
+            out["why"] = f"the {side} clone was refused ({str(exc)[:160]})"
+            return out
+        if made.get("outcome") != "accepted" or made.get("is_paper") is not True:
+            out["why"] = f"the {side} clone was not accepted as paper"
+            return out
+        out[side] = made["clone_instance_id"]
+    room = rooms.open_strategy(origin, f"H2H · {name} {cell['label']} vs defaults"
+                               [:rooms.MAX_TITLE], kind="bot", ref=species, section="h2h",
+                               settings=dict(cell["settings"]))["id"]
+    out["room"] = room
+
+    def stop(why: str) -> dict:
+        out["why"] = why
+        rooms.set_status(room, "stopped", why=why[:400])
+        return out
+    plan = rooms.set_plan(room, [{"kind": "bot", "ref": out["improved"], "side": "bull",
+                                  "share": 0.5},
+                                 {"kind": "bot", "ref": out["original"], "side": "bull",
+                                  "share": 0.5}])
+    rooms.set_acceptance(room, window_days=float(H2H_DAYS), stop_pct=NIGHT_STOP_PCT,
+                         legs=plan["legs"], benchmark_card=BTC_PROXY, adopted=True,
+                         why=(f"head-to-head from {origin}: {name} at {cell['label']}, proven "
+                              f"in two windows, against {name} at its defaults, "
+                              f"{H2H_DAYS} days, half the room each"))
+    try:
+        changed = clone.settings(out["improved"], dict(cell["settings"]), True) or {}
+    except (Exception, SystemExit) as exc:  # noqa: BLE001
+        return stop(f"setting {cell['label']} was refused ({str(exc)[:160]})")
+    if changed.get("outcome") != "accepted" or wave._read_back(changed, cell["settings"]):
+        return stop(f"{cell['label']} was not accepted or read back wrong")
+    free, deployed, parked = _free_cash(), _deployed(), _parked()
+    ok, short = lab.affordable(2 * wave.STAKE_USDC, free, _running_experiments(),
+                               deployed=deployed, parked=parked)
+    if not ok:
+        return stop(f"the book's caps refuse it: {short}")
+    for side in ("improved", "original"):
+        try:
+            clone.fund(out[side], wave.STAKE_USDC, True)
+        except (Exception, SystemExit) as exc:  # noqa: BLE001
+            return stop(f"funding the {side} side was refused ({str(exc)[:160]})")
+        if _clone_outcome(clone, "fund", out[side]) != "accepted":
+            return stop(f"funding the {side} side was not accepted")
+    for side in ("improved", "original"):
+        try:
+            clone.enable(out[side], True)
+        except (Exception, SystemExit) as exc:  # noqa: BLE001
+            return stop(f"starting the {side} side was refused ({str(exc)[:160]})")
+        if _clone_outcome(clone, "enable", out[side]) != "accepted":
+            return stop(f"starting the {side} side was not accepted")
+    rooms.set_status(room, "running", why=f"head-to-head started: {out['improved']} "
+                                          f"({cell['label']}) against {out['original']}")
+    out["ok"] = True
+    return out
+
+
+def h2h_step() -> dict:
+    """Section 4, head-to-head (laboratory v3, P7): [operator 2026-10-11] "h2h boti
+    upgradovani ti improved testujes". A grid cell proven in two windows (`lab.proven_cells`)
+    is the improved bot; one pair a tick is started against the same species at its defaults
+    (`_launch_pair`), and its private matchup on their side (`h2h.start_matchup`, never
+    public) keeps the slug their scoreboard is read back by."""
+    if pass_in_flight():
+        return {"rooms": 0, "orders": 0, "held": ["h2h: a deep pass is running"]}
+    stored = rooms.load()
+    proposals = {str(p.get("id")): p for p in lab.proposals()}
+    tried = lab_register.register(stored, proposals=proposals)
+    paired = {r["key"] for r in tried if r["section"] == "h2h" and r["key"]}
+    cells = lab.proven_cells(tried, paired)[:1]
+    held_read = _read_matchups()
+    if not cells:
+        return {"rooms": 0, "orders": 0, "held": held_read}
+    try:
+        catalogue = {str(b["id"]).lower(): b for b in (_bot_catalogue() or [])
+                     if isinstance(b, dict) and b.get("id")}
+    except Exception as exc:  # noqa: BLE001 -- unread is not empty
+        return {"rooms": 0, "orders": 0,
+                "held": [f"h2h: their bot catalogue did not answer ({str(exc)[:120]})"]}
+    opened, started, held = 0, 0, []
+    for cell in cells:
+        bot = catalogue.get(cell["species"])
+        if bot is None:
+            held.append(f"h2h {cell['key']}: the species is no longer in their catalogue")
+            continue
+        proposal = lab.note_proposal(
+            "bot", str(bot["id"]), "", {"label": f"{cell['label']} vs defaults",
+                                        "settings": dict(cell["settings"])},
+            f"head-to-head: {bot.get('name')} at {cell['label']}, proven in two windows, "
+            f"against its defaults", section="h2h")
+        said = _launch_pair(bot, cell, proposal["id"])
+        opened += 1 if said["room"] else 0
+        if not said["ok"]:
+            held.append(f"h2h {bot.get('name')} {cell['label']}: {said['why']}")
+            continue
+        started += 1
+        matchup = _sibling("h2h").start_matchup(
+            f"clone:{said['original']}", f"clone:{said['improved']}", H2H_DAYS,
+            f"{bot.get('name')} {cell['label']} vs defaults", said["room"])
+        if matchup.get("outcome") != "accepted":
+            held.append(f"h2h {said['room']}: their matchup was {matchup.get('outcome')} "
+                        f"({matchup.get('error') or 'no slug'}) -- our room runs anyway")
+    return {"rooms": opened, "orders": started, "held": held_read + held}
+
+
+def _read_matchups() -> list[str]:
+    """Their scoreboard for every matchup we started (GET /head-to-head/mine), written to
+    state/h2h.jsonl when a matchup's status or scoreboard changed. Nothing started, nothing
+    read. A failed read is said, never an empty board (rule 8)."""
+    h2h = _sibling("h2h")
+    load = getattr(h2h, "load", None)
+    ours = {r.get("slug"): r for r in (load() if load else [])
+            if r.get("type") == "outcome" and r.get("slug")}
+    if not ours:
+        return []
+    try:
+        theirs = h2h.results()
+    except Exception as exc:  # noqa: BLE001
+        return [f"h2h: their scoreboard was not read ({str(exc)[:120]})"]
+    seen = {r.get("slug"): r.get("sig") for r in (load() if load else [])
+            if r.get("type") == "result"}
+    for matchup in theirs:
+        slug = matchup.get("slug")
+        if slug not in ours:
+            continue
+        sig = json.dumps([matchup.get("status"), matchup.get("scoreboard")], sort_keys=True,
+                         default=str)[:2000]
+        if seen.get(slug) != sig:
+            h2h._append({"type": "result", "at": _now().isoformat(timespec="seconds"),
+                         "slug": slug, "room": ours[slug].get("room"),
+                         "status": matchup.get("status"),
+                         "scoreboard": matchup.get("scoreboard"), "sig": sig})
+    return []
+
+
 def bot_variants() -> dict:
     """The next setting of every paper bot of ours whose last room has its
     verdict (V5 of plan v2) -- the tick door that walks the grid in TIME.
@@ -3658,6 +3810,8 @@ def _tick_doors() -> dict:
         "variants": bot_grid,
         # Laboratory v3, P4: section 1, our cards, after his.
         "own": own_cards,
+        # Laboratory v3, P7: section 4, a proven grid cell against its defaults.
+        "h2h": h2h_step,
         "fomo_reading": lambda: _sibling("fomo_watch").reading(),
         "hot": _hot_round,
         "hot_reading": lambda: _sibling("hot_watch").reading(),
@@ -3871,6 +4025,9 @@ def tick(*, now: datetime | None = None, actions: dict | None = None,
     said["variants"] = varied.get("orders", 0)
     if varied.get("grid"):
         said["grid"] = varied["grid"]
+    paired = (attempt("h2h", doors["h2h"]) if "h2h" in doors else None) or {}
+    said["rooms"] += paired.get("rooms", 0)
+    varied = dict(varied, held=list(varied.get("held") or []) + list(paired.get("held") or []))
     # Before the launch's, not after: a variant's refusal is the same line
     # every tick (a bot that stopped by itself is never restarted), and
     # twelve of them took all six lines, so why NEX-0109 opened nothing was

@@ -977,6 +977,7 @@ def _doors(**over):
         "verdicts": door("verdicts", []),
         "variants": door("variants", {"rooms": 0, "orders": 0, "held": []}),
         "own": door("own", {"rooms": 0, "orders": 0, "held": []}),
+        "h2h": lambda: {"rooms": 0, "orders": 0, "held": []},
         # The desk and the outsider wake only when a test says their parts exist.
         "ready": lambda: {"desk_ready": False, "outsider_ready": False},
         "moves": door("moves", [{"legs": [], "period": 30, "why": f"m{n}"}
@@ -3621,6 +3622,67 @@ def _the_grid_starts_untried_cells_on_paper_up_to_its_limit(tmp_path, monkeypatc
     scripts_lab.bot_grid()
     assert [c[2] for c in calls if c[0] == "clone"][3:] == [MACD["id"], TITAN["id"], DOOM["id"]]
     assert [c[2] for c in calls if c[0] == "settings"] == [lab.GRID_BANDS[1]] * 3, calls
+    pair_dir = tmp_path / "pair"
+    pair_dir.mkdir()
+    _a_proven_cell_meets_its_defaults_head_to_head(pair_dir, monkeypatch)
+
+
+def _a_proven_cell_meets_its_defaults_head_to_head(tmp_path, monkeypatch):
+    """Laboratory v3, P7 ([operator 2026-10-11] "h2h boti upgradovani ti improved testujes"):
+    a grid cell two of whose windows survived is the improved bot; the step clones it again at
+    its band and the same species at its defaults, both in ONE room of section h2h (half the
+    room each), in the order every bot room keeps -- clones, room and criterion, the band and
+    its read-back, money, start -- and starts their private matchup with both, its slug kept.
+    A cell already paired is not paired again."""
+    import qa.rooms as qa_rooms
+
+    scripts_lab = _scripts_lab(tmp_path, monkeypatch)
+    sent, calls = _clonepad(scripts_lab, tmp_path, monkeypatch, [])
+    band = lab.GRID_BANDS[2]
+    at = (NOW - timedelta(days=9)).isoformat()
+    proposals, room_rows = [], []
+    for n in (1, 2):
+        proposals.append({"type": "proposal", "id": f"OUR-000{n}", "kind": "bot",
+                          "ref": MACD["id"], "instance": f"old-{n}", "variant": "x",
+                          "settings": dict(band), "why": "grid"})
+        room_rows += [
+            {"type": "strategy", "id": f"STR-000{n}", "origin": f"OUR-000{n}", "kind": "bot",
+             "ref": MACD["id"], "title": "Grid · MACD Hunter", "at": at},
+            {"type": "status", "room": f"STR-000{n}", "status": "stopped", "why": "x", "at": at},
+            {"type": "verdict", "room": f"STR-000{n}", "verdict": "survived", "return_pct": 3.0,
+             "at": at}]
+    _write(tmp_path, "lab.jsonl", proposals)
+    _write(tmp_path, "rooms.jsonl", room_rows)
+    matchups = []
+    pinned = scripts_lab._sibling
+
+    class H2H:
+        @staticmethod
+        def start_matchup(original, improved, days, title, room):
+            matchups.append((original, improved, days, room))
+            return {"outcome": "accepted", "slug": "abc123", "room": room}
+
+        @staticmethod
+        def results():
+            return []
+    monkeypatch.setattr(scripts_lab, "_sibling", lambda n: H2H if n == "h2h" else pinned(n))
+
+    did = scripts_lab.h2h_step()
+
+    assert [c[0] for c in calls] == ["clone", "clone", "settings", "fund", "fund",
+                                     "enable", "enable"], calls
+    assert calls[2][1:3] == ("inst-1", band), calls[2]
+    stored = qa_rooms.load()
+    (room,) = [r for r in qa_rooms.strategies(stored) if r.get("section") == "h2h"]
+    assert room.get("settings") == band and room["ref"] == MACD["id"]
+    legs = qa_rooms.acceptance_of(stored, room["id"])["legs"]
+    assert [(qa_rooms.leg_ref(g), g["share"]) for g in legs] == [("inst-1", 0.5),
+                                                                  ("inst-2", 0.5)], legs
+    assert qa_rooms.status_of(stored, room["id"]) == "running"
+    assert matchups == [("clone:inst-2", "clone:inst-1", 7, room["id"])], matchups
+    assert did["rooms"] == 1
+    again = scripts_lab.h2h_step()
+    assert again["rooms"] == 0 and len(matchups) == 1, "a proven cell was paired twice"
 
 
 def _bot_room(scripts_lab, tmp_path, monkeypatch):

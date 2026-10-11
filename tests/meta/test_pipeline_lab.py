@@ -732,6 +732,17 @@ def test_the_buy_path_reads_what_is_already_deployed(tmp_path, monkeypatch):
     assert reached == [], reached
     assert (did["rooms"], did["orders"]) == (0, 0) and any(
         "deep pass" in line for line in did["held"]), did
+    # Laboratory v3: the same interlock on every step that spends since -- the bot grid, our
+    # own cards, the head-to-head pair -- and on the card room every one of ours opens.
+    for name in ("_bot_catalogue", "_live_cards"):
+        monkeypatch.setattr(scripts_lab, name, lambda *a, _n=name: _nothing_else(_n))
+    for step in (scripts_lab.bot_grid, scripts_lab.own_cards, scripts_lab.h2h_step):
+        said = step()
+        assert reached == [] and (said["rooms"], said["orders"]) == (0, 0), (step, reached)
+        assert any("deep pass" in line for line in said["held"]), (step, said)
+    assert scripts_lab._open_card_room("OUR-0001", "c", "t", "own", 7.0, 10.0, "x") == {
+        "room": None, "ok": False, "why": "a deep pass is running"}
+    assert reached == [], reached
 
 
 @qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
@@ -1863,6 +1874,9 @@ def test_the_night_holds_no_hand_that_trades_files_or_commits():
         "nothing in the night funds a paper bot; the operator asked for bots")
     assert "bot_variants" in {node.name for node in spenders}, (
         "bot_variants restarts a paused clone and is not read as a spender")
+    # Laboratory v3: the card room of our sections and the head-to-head pair spend too.
+    assert {"_open_card_room", "_launch_pair"} <= {node.name for node in spenders}, (
+        "a spender of laboratory v3 is not read as one")
     assert spenders, "nothing in the night can launch; the operator asked for it"
     for node in spenders:
         assert _gate_then_spend(node), (
@@ -2322,6 +2336,17 @@ def _the_bot_grid_tries_every_species_at_every_band_and_a_survivor_twice():
     every = lab.grid_next([], ["sp-a", "sp-b"], set(), limit=1000)
     assert len(every) == 2 * len(lab.GRID_BANDS), "a cell of the grid is never proposed"
     assert lab.grid_next(tried, ["sp-a"], thrown, limit=0) == []
+
+    # P7, head-to-head: a cell is PROVEN when two windows of it survived -- and only then is
+    # it put against its species' defaults. A defaults cell has nothing to be improved on,
+    # and a cell already in a head-to-head room is not paired again.
+    proven = twice + [row("STR-5", "sp-a", bands[2], verdict="survived"),
+                      row("STR-6", "sp-a", bands[2], verdict="survived"),
+                      row("STR-7", "sp-b", bands[3], verdict="survived")]
+    assert lab.proven_cells(proven, paired=set()) == [
+        {"species": "sp-a", "label": bands[2], "settings": lab.GRID_BANDS[2],
+         "key": f"bot:sp-a:{bands[2]}"}], "sp-c's defaults or sp-b's one window was proven"
+    assert lab.proven_cells(proven, paired={f"bot:sp-a:{bands[2]}"}) == []
 
 
 def _chain(ident, kind, at, instance="inst-1", **intent):
