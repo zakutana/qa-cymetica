@@ -19,7 +19,7 @@ A manager (Opus) talks only with the operator and the departments; Bugs (Sonnet)
 
 ## What the operator says, and what this session does
 
-- „zapni laborku" -- `python scripts/crew.py start`. It refuses while `claude` is not logged in on this machine; then one Czech line: run `claude` once and `/login`. Once on, a chat `/loop` tick says the company runs the clock and does nothing.
+- „zapni laborku" -- `python scripts/crew.py start`. It refuses while `claude` is not logged in on this machine; then one Czech line: run `claude` once and `/login`. Once on, a chat `/loop` tick says the company runs the clock and does nothing. The first day is a watched trial (no headless worker had run here before it): after the first tick read `crew.py list` and the first run rows in `state/crew.jsonl` -- a `company_refused` or `denials` on run one is the rule syntax, not the worker -- and the first session after the app window was closed opens with `crew.py status`, to see the loops outlived it.
 - „vypni laborku" -- `python scripts/crew.py stop`.
 - „jak jede firma", „stav firmy" -- `python scripts/crew.py status`, then three Czech lines at most: what runs, what moved today, what waits on them. The numbers: `python scripts/crew.py audit --days 7`.
 - The session start names notes from the manager, or they ask -- `python scripts/crew.py inbox`, said in Czech, numbers first.
