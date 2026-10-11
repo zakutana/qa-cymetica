@@ -1711,6 +1711,10 @@ def test_the_gate_charges_what_a_trade_costs_not_their_stress_test():
     # Untouched: a verdict from before the cost, a bot's (never charged), one already judged
     # again, a verdict with no return.
     assert lab.rejudged_without_cost(dict(full, at="2026-09-22T23:00:00+00:00"), {}) is None
+    # Deep pass 2026-10-11, W07: nor one written after the cost went to 0 (41b57c37) -- its legs
+    # were never charged, and un-charging a 1.4 % nobody paid turned a -1 % refusal inconclusive.
+    assert lab.rejudged_without_cost(dict(full, at="2026-10-10T10:00:00+00:00"), {}) is None, (
+        "a verdict never charged was judged again")
     bot = dict(full, legs=[{"kind": "bot", "ref": "i1", "share": 1.0, "return_pct": -0.1}])
     assert lab.rejudged_without_cost(bot, {}) is None
     assert lab.rejudged_without_cost(dict(full, cost_pct=0.0), {}) is None
@@ -1999,6 +2003,18 @@ def test_a_card_leg_is_sold_at_his_take_profit_and_the_room_runs_on(
     assert book["closed_at"] == sale_at.isoformat(), book
     assert book["closed_value"] == pytest.approx(
         100.0 * (1.0 + realized["P-1"] / 480.0)), book
+    # Deep pass 2026-10-11, W08: an accepted sale whose answer carried no realized P&L still
+    # reads the sampler's closed record for what it made -- it skipped it, and the leg was
+    # judged as held for the rest of the window after it was sold.
+    rows = [dict(r) for r in scripts_lab._sibling("paper").load()]
+    for r in rows:
+        if r.get("type") == "outcome" and r.get("kind") == "close":
+            r.pop("realized_pnl_usdc", None)
+    closed_sample = {"kind": "position", "position_id": "P-1", "status": "closed",
+                     "realized_pnl_usdc": 25.0, "at": (sale_at + timedelta(minutes=5)).isoformat()}
+    blank = scripts_lab._position_book(rows, "NEX-0001", card, [closed_sample])
+    assert blank["closed_at"] == sale_at.isoformat() and blank["closed_value"] == pytest.approx(
+        100.0 * (1.0 + 25.0 / 480.0)), blank
 
     # The same crossing, read directly: a stop, a bear leg, no levels.
     fill = opened
@@ -2008,6 +2024,26 @@ def test_a_card_leg_is_sold_at_his_take_profit_and_the_room_runs_on(
         "a bear leg gains when the index falls")
     assert lab.leg_exit(down, 100.0, fill, "bull", None, None) is None
     assert lab.leg_exit(points([100, 104.9]), 100.0, fill, "bull", 5.0, -3.0) is None
+    # Deep pass 2026-10-11, W09: with no entry_index the sale and the verdict read ONE entry --
+    # book_series' last point at or before the fill -- not the first point after it.
+    mixed = [{"t": (start - timedelta(minutes=30)).isoformat(), "index": 100.0},
+             {"t": (start + timedelta(hours=1)).isoformat(), "index": 95.0}]
+    assert lab.leg_exit(mixed, None, fill, "bull", 5.0, -3.0)["exit"] == "sl", (
+        "the sale measured from another entry than the book")
+    assert lab.book_series(mixed, None, fill)[-1]["index"] == pytest.approx(95.0)
+    # W03: a leg we SOLD is judged at what the sale realized, not at the crossing that set it
+    # off -- +6 % seen at 11:00, sold an hour later for +3 %: the leg made +3 %.
+    raw = [{"t": (start + timedelta(hours=h)).isoformat(), "index": v}
+           for h, v in ((0, 100.0), (1, 106.0), (2, 103.0))]
+    accepted = {"at": start.isoformat(), "window_days": 1.0, "stop_pct": 50.0,
+                "legs": [{"card": "cw", "side": "bull", "share": 1.0, "tp": 5.0, "sl": -50.0}]}
+    book = {"cw": lab.book_series(raw, 100.0, start.isoformat(), (start + timedelta(hours=2)).isoformat(),
+                                  103.0, until=(start + timedelta(days=1)).isoformat())}
+    judged = lab.verdict(accepted, book, start + timedelta(days=1, hours=1), sold={"cw"})
+    assert judged["legs"][0]["gross_return_pct"] == pytest.approx(3.0), judged["legs"][0]
+    assert judged["legs"][0]["exit"] == "tp", "the crossing that set the sale off is still named"
+    held = lab.verdict(accepted, {"cw": raw}, start + timedelta(days=1, hours=1))
+    assert held["legs"][0]["gross_return_pct"] == pytest.approx(6.0), "an unsold leg exits at its crossing"
 
 
 @qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
@@ -3705,6 +3741,43 @@ def _a_proven_cell_meets_its_defaults_head_to_head(tmp_path, monkeypatch):
     assert did["rooms"] == 1
     again = scripts_lab.h2h_step()
     assert again["rooms"] == 0 and len(matchups) == 1, "a proven cell was paired twice"
+
+    # Deep pass 2026-10-11, R08: the room comes before the clones, so a pair whose second clone
+    # is refused leaves its first clone linked to a stopped room -- not an orphan with no room,
+    # and not one more orphan every tick the second keeps failing.
+    band2 = lab.GRID_BANDS[3]
+    with open(tmp_path / "lab.jsonl", "a", encoding="utf-8") as fh:
+        for n in (3, 4):
+            fh.write(json.dumps({"type": "proposal", "id": f"OUR-000{n}", "kind": "bot",
+                                 "ref": MACD["id"], "instance": f"old-{n}", "variant": "y",
+                                 "settings": dict(band2), "why": "grid"}) + "\n")
+    with open(tmp_path / "rooms.jsonl", "a", encoding="utf-8") as fh:
+        for n in (3, 4):
+            for row in ({"type": "strategy", "id": f"STR-090{n}", "origin": f"OUR-000{n}",
+                         "kind": "bot", "ref": MACD["id"], "title": "Grid · MACD Hunter", "at": at},
+                        {"type": "status", "room": f"STR-090{n}", "status": "stopped", "why": "x",
+                         "at": at},
+                        {"type": "verdict", "room": f"STR-090{n}", "verdict": "survived",
+                         "return_pct": 2.0, "at": at}):
+                fh.write(json.dumps(row) + "\n")
+    clone_mod = pinned("clone")
+    real_clone, tries = clone_mod.clone, []
+
+    def second_refused(*a, **k):
+        tries.append(a)
+        if len(tries) == 2:
+            raise SystemExit("their clone answered 503")
+        return real_clone(*a, **k)
+    clone_mod.clone = second_refused
+    failed = scripts_lab.h2h_step()
+    stored = qa_rooms.load()
+    (pair,) = [r for r in qa_rooms.strategies(stored)
+               if r.get("section") == "h2h" and r.get("settings") == band2]
+    assert qa_rooms.status_of(stored, pair["id"]) == "stopped" and failed["rooms"] == 1, failed
+    assert [r for r in stored if r.get("type") == "link" and r.get("room") == pair["id"]], (
+        "the clone made before the refusal belongs to no room")
+    scripts_lab.h2h_step()
+    assert len(tries) == 2, "a pair that failed was cloned again the next tick"
     stranger_dir = tmp_path / "stranger"
     stranger_dir.mkdir()
     _the_outsiders_picks_run_on_paper_in_its_section(stranger_dir, monkeypatch)

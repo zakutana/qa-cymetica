@@ -1478,17 +1478,21 @@ def leg_exit(points, entry_index, filled_at, side, tp, sl) -> dict | None:
     take-profit or stop -- {exit, at, moved} -- or None. `tp` above zero and
     `sl` below it, in % in the leg's direction; a level he did not name never
     fires. Entry is the fill's own index when the buy's response gave one,
-    else their first point at or after the fill."""
+    else book_series' own: their last point at or before the fill, or the
+    first after it -- one entry for the sale and the verdict (deep pass
+    2026-10-11, W09)."""
     if tp is None and sl is None:
         return None
     since = _at(filled_at)
-    inside = [(t, v) for t, v in _points(points) if since is None or t >= since]
+    every = _points(points)
+    inside = [(t, v) for t, v in every if since is None or t >= since]
     try:
         entry = float(entry_index) if entry_index else None
     except (TypeError, ValueError):
         entry = None
-    if entry is None and inside:
-        entry = inside[0][1]
+    if entry is None:
+        before = [v for t, v in every if since is not None and t <= since]
+        entry = before[-1] if before else (inside[0][1] if inside else None)
     if not entry:
         return None
     way = -1.0 if str(side).lower() == "bear" else 1.0
@@ -1509,7 +1513,7 @@ def _from_peak(peak: float, value: float) -> float:
     return max(0.0, (1.0 - (1.0 + value / 100.0) / (1.0 + peak / 100.0)) * 100.0)
 
 
-def _early(acceptance: dict, series: dict, start, moment) -> dict | None:
+def _early(acceptance: dict, series: dict, start, moment, sold=()) -> dict | None:
     """A verdict that is already settled inside the window, or None.
 
     2026-09-21, the operator: rooms that fail are dropped rather than carried
@@ -1531,14 +1535,17 @@ def _early(acceptance: dict, series: dict, start, moment) -> dict | None:
         way = -1.0 if str(leg.get("side")).lower() == "bear" else 1.0
         take, stop = leg.get("tp"), leg.get("sl")
         exit_kind, curve = None, []
+        mine = _ref(leg) in sold
         for when, value in inside:
             moved = way * (value / entry - 1.0) * 100.0
             curve.append((when, moved))
+            if exit_kind is not None:
+                continue          # a sold leg's book runs on to its sale (W03)
             if take is not None and moved >= float(take):
                 exit_kind = "tp"
-                break
-            if stop is not None and moved <= float(stop):
+            elif stop is not None and moved <= float(stop):
                 exit_kind = "sl"
+            if exit_kind is not None and not mine:
                 break
         legs.append({**leg, "exit": exit_kind, "curve": curve,
                      "return_pct": _net_of(curve[-1][1], _cost(leg))})
@@ -1595,7 +1602,7 @@ def _inside(points, start, end):
 
 
 def verdict(acceptance: dict, series: dict, now, closes: dict | None = None,
-            stopped=None) -> dict:
+            stopped=None, sold=None) -> dict:
     """Did the strategy do what it was accepted on? Numbers only, no opinion.
 
     The acceptance is written BEFORE the room goes running, so nothing here can
@@ -1617,7 +1624,14 @@ def verdict(acceptance: dict, series: dict, now, closes: dict | None = None,
     pick, ends the window there: it is judged over what it ran (V2 of the
     2026-09-23 plan -- a stopped room used to wait for a window that no
     longer meant anything).
+
+    `sold`: the legs whose series is our book ending in our own sale
+    (book_series froze it at the realized value). Their take-profit or stop
+    crossing set the sale off, an hour or so before it filled; what the sale
+    realized is what the leg made, so the crossing is named and the sale is
+    credited (deep pass 2026-10-11, W03: +6 % seen, +3 % sold, +6 % judged).
     """
+    sold = set(sold or ())
     start = _at(acceptance.get("at"))
     days = float(acceptance.get("window_days") or 0)
     if start is None or days <= 0:
@@ -1629,7 +1643,7 @@ def verdict(acceptance: dict, series: dict, now, closes: dict | None = None,
         end = halted
     moment = _at(now) or datetime.now(timezone.utc)
     if moment < end:
-        early = _early(acceptance, series, start, moment)
+        early = _early(acceptance, series, start, moment, sold)
         if early is not None:
             return {**early, "early": True, "closes_at": end.isoformat(),
                     "formula": formula_fingerprint()}
@@ -1656,15 +1670,22 @@ def verdict(acceptance: dict, series: dict, now, closes: dict | None = None,
         way = -1.0 if str(leg.get("side")).lower() == "bear" else 1.0
         take, stop = leg.get("tp"), leg.get("sl")
         exit_kind, exit_value, curve = "window", inside[-1][1], []
+        mine = _ref(leg) in sold
         for when, value in inside:
             moved = way * (value / entry - 1.0) * 100.0
             curve.append((when, moved))
+            if exit_kind != "window":
+                continue          # a sold leg's book runs on to its sale (W03)
             if take is not None and moved >= float(take):
                 exit_kind, exit_value = "tp", value
-                break
-            if stop is not None and moved <= float(stop):
+                if not mine:
+                    break
+            elif stop is not None and moved <= float(stop):
                 exit_kind, exit_value = "sl", value
-                break
+                if not mine:
+                    break
+        if mine:
+            exit_value = inside[-1][1]
         gross = way * (exit_value / entry - 1.0) * 100.0
         legs.append({**leg, "exit": exit_kind, "entry_index": entry,
                      "exit_index": exit_value,
@@ -2291,6 +2312,10 @@ GATE = {"periods": (30, 90), "min_sharpe": 0.5, "min_return_pct": 0.0,
 # cost went to 0 -- kept only so those verdicts can be read back before the round trip.
 CHARGED_ROUND_TRIP_PCT = 1.4
 CHARGED_FROM = "2026-09-23T13:21:57+00:00"
+# ... and to: 41b57c37 (2026-10-08 09:38 UTC) set it to 0. A verdict written after it was never
+# charged, and un-charging a 1.4 % nobody paid turned a -1 % refusal inconclusive (deep pass
+# 2026-10-11, W07).
+CHARGED_UNTIL = "2026-10-08T09:38:28+00:00"
 
 
 def _charged_leg(leg: dict) -> bool:
@@ -2301,7 +2326,7 @@ def _charged_leg(leg: dict) -> bool:
 def rejudged_without_cost(row: dict, acceptance: dict | None) -> dict | None:
     """A charged verdict judged again on what its legs moved, or None to leave it.
 
-    Only a verdict with a return, written from CHARGED_FROM on, with a card or fund leg, and
+    Only a verdict with a return, written from CHARGED_FROM to CHARGED_UNTIL, with a card or fund leg, and
     not already judged without the cost (`cost_pct`). Each charged leg reads its own
     `gross_return_pct` where the verdict kept it, else its net read back through the 1.4 %
     (exact: `_net_of` is invertible); a bot leg is as it was. The verdict's own rules then
@@ -2312,8 +2337,8 @@ def rejudged_without_cost(row: dict, acceptance: dict | None) -> dict | None:
     be redrawn without the close it skipped, so it is inconclusive."""
     if not isinstance(row, dict) or row.get("return_pct") is None or "cost_pct" in row:
         return None
-    when, since = _at(row.get("at")), _at(CHARGED_FROM)
-    if when is None or when < since:
+    when, since, until = _at(row.get("at")), _at(CHARGED_FROM), _at(CHARGED_UNTIL)
+    if when is None or when < since or when >= until:
         return None
     scored = [leg for leg in row.get("legs") or [] if isinstance(leg, dict)
               and isinstance(leg.get("return_pct"), (int, float))]
@@ -3197,6 +3222,9 @@ def archived_rooms(room_rows: list[dict], answers: list[dict],
                       or (first_room.get(str(leg.get("ref"))) == room
                           and went_in.get(str(leg.get("ref"))))
                       for leg in legs if leg.get("kind") == "bot")
+            # A CARD room of ours (our cards, the desk, the outsider) held what its own paper
+            # order bought: stopped by hand it is judged (deep pass 2026-10-11, W06).
+            ran = ran or any((str(row.get("origin")), c) in bought for c in cards if c)
             if not ran:
                 out.add(room)
             continue
@@ -3285,8 +3313,12 @@ def board(answers: list[dict], notebook: list[dict], room_rows: list[dict],
                      or "")
         position = row.get("position_id") or intent.get("position_id")
         stake = _money(intent.get("usdc"))
-        if (position and stake is not None and str(intent.get("card_id") or "")
-                .lower() in picked.get(origin, ())):
+        # His picks, by his answer's text -- and every card an order of OURS bought: the order
+        # cites the proposal of ours it acts on, which names no Nexus pick (deep pass
+        # 2026-10-11, W05: our cards, desk and outsider rooms showed no money at all).
+        if (position and stake is not None
+                and (is_ours(origin) or str(intent.get("card_id") or "").lower()
+                     in picked.get(origin, ()))):
             held[str(position)] = (origin, stake,
                                    str(intent.get("card_id") or "").lower())
 

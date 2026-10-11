@@ -1203,7 +1203,10 @@ def _position_book(paper_rows: list[dict], origin: str, card: str,
             realized = _amount(close.get("realized_pnl_usdc"))
             closed_at = close.get("at") or ask.get("at")
             break
-    if closed_at is None:
+    # Their closed record also prices OUR sale when its answer carried no realized P&L: the
+    # leg was judged as held after it was sold (deep pass 2026-10-11, W08). Our own sale's
+    # time stands; only the amount is read from the sampler.
+    if closed_at is None or realized is None:
         newest = None
         for sample in samples or ():
             if (sample.get("kind") == "position"
@@ -1213,7 +1216,7 @@ def _position_book(paper_rows: list[dict], origin: str, card: str,
                 newest = sample
         if newest and newest.get("status") == "closed":
             realized = _amount(newest.get("realized_pnl_usdc"))
-            closed_at = newest.get("at")
+            closed_at = closed_at or newest.get("at")
     if closed_at and realized is not None and notional:
         out["closed_at"] = closed_at
         out["closed_value"] = 100.0 * (1.0 + realized / notional)
@@ -1540,6 +1543,7 @@ def verdicts(now=None) -> list[dict]:
                 samples, funded = rooms.load_samples(), lab.funded(clone_rows)
                 entered = lab.funded_at(clone_rows)
             booked = dict(series)
+            sold = set()
             for leg in legs:
                 ref = rooms.leg_ref(leg)
                 if rooms.leg_kind(leg) != "card" or not ref:
@@ -1551,8 +1555,10 @@ def verdicts(now=None) -> list[dict]:
                         series.get(ref), book["entry_index"], book["filled_at"],
                         book["closed_at"], book["closed_value"],
                         until=until.isoformat())
+                    if book["closed_at"] and isinstance(book["closed_value"], (int, float)):
+                        sold.add(ref)    # the book ends in our sale: credited at it (W03)
             said = lab.verdict(acceptance, booked, moment, closes=closes,
-                               stopped=halted)
+                               stopped=halted, sold=sold)
             if booked != series:
                 said["index_return_pct"] = lab.verdict(
                     acceptance, series, moment, closes=closes,
@@ -3269,25 +3275,17 @@ H2H_DAYS = 7
 def _launch_pair(bot: dict, cell: dict, origin: str) -> dict:
     """One head-to-head room (section h2h): the species cloned twice on paper, the improved
     clone set to the proven band and the original left at its defaults, half the room each --
-    clones, room and criterion, the band and its read-back, then the money, then the start.
-    Returns {room, improved, original, ok, why}."""
+    room, clones (each linked to it) and criterion, the band and its read-back, then the money,
+    then the start. Returns {room, improved, original, ok, why}."""
     out = {"room": None, "improved": None, "original": None, "ok": False, "why": ""}
     if pass_in_flight():
         out["why"] = "a deep pass is running"
         return out
     clone, wave = _sibling("clone"), _sibling("wave")
     species, name = str(bot["id"]), str(bot.get("name") or bot["id"])
-    for side in ("improved", "original"):
-        try:
-            made = clone.clone(bot.get("source_type"), species, f"lab h2h {name} {side}"[:60],
-                               None, True) or {}
-        except (Exception, SystemExit) as exc:  # noqa: BLE001
-            out["why"] = f"the {side} clone was refused ({str(exc)[:160]})"
-            return out
-        if made.get("outcome") != "accepted" or made.get("is_paper") is not True:
-            out["why"] = f"the {side} clone was not accepted as paper"
-            return out
-        out[side] = made["clone_instance_id"]
+    # The room before the clones (deep pass 2026-10-11, R08): a pair whose second clone is
+    # refused leaves its first linked to a stopped room -- the cell paired, nothing orphaned,
+    # not one more clone every tick the second keeps failing.
     room = rooms.open_strategy(origin, f"H2H · {name} {cell['label']} vs defaults"
                                [:rooms.MAX_TITLE], kind="bot", ref=species, section="h2h",
                                settings=dict(cell["settings"]))["id"]
@@ -3297,6 +3295,17 @@ def _launch_pair(bot: dict, cell: dict, origin: str) -> dict:
         out["why"] = why
         rooms.set_status(room, "stopped", why=why[:400])
         return out
+    for side in ("improved", "original"):
+        try:
+            made = clone.clone(bot.get("source_type"), species, f"lab h2h {name} {side}"[:60],
+                               None, True) or {}
+        except (Exception, SystemExit) as exc:  # noqa: BLE001
+            return stop(f"the {side} clone was refused ({str(exc)[:160]})")
+        if made.get("id"):
+            rooms.add_link(room, made["id"], why=f"the {side} paper clone of {name} this room runs")
+        if made.get("outcome") != "accepted" or made.get("is_paper") is not True:
+            return stop(f"the {side} clone was not accepted as paper")
+        out[side] = made["clone_instance_id"]
     plan = rooms.set_plan(room, [{"kind": "bot", "ref": out["improved"], "side": "bull",
                                   "share": 0.5},
                                  {"kind": "bot", "ref": out["original"], "side": "bull",

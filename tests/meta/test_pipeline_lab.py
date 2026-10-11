@@ -2534,6 +2534,25 @@ def test_a_room_of_ours_is_judged_when_its_variant_ran_and_archived_when_not():
         "the first room on a freshly funded clone held it and is judged")
     assert lab.picked_rooms(rows, []) == set(), "a room of ours is not his pick"
 
+    # Deep pass 2026-10-11, W05 and W06: a CARD room of ours (our cards, the desk, the outsider)
+    # holds what its paper order bought: stopped by hand it is judged, not archived, and its
+    # money is counted -- not only a pick in a Nexus answer's text.
+    card = "c0ffee00-0000-4000-8000-000000000000"
+    own = [{"type": "strategy", "id": "STR-0090", "origin": "OUR-0090", "title": "own",
+            "card": card, "section": "own", "at": _t(1)},
+           {"type": "acceptance", "room": "STR-0090", "window_days": 7.0, "stop_pct": 10.0,
+            "legs": [{"card": card, "side": "bull", "share": 1.0}], "at": _t(1)},
+           {"type": "status", "room": "STR-0090", "status": "stopped", "why": "by hand", "at": _t(3)}]
+    bought = [{"id": "TRD-0090", "type": "intent", "card_id": card, "usdc": 10.0,
+               "nexus": {"id": "OUR-0090"}, "at": _t(1, 1)},
+              {"id": "TRD-0090", "type": "outcome", "outcome": "accepted", "position_id": "P-90",
+               "at": _t(1, 1)}]
+    assert "STR-0090" not in lab.archived_rooms(own, [], bought, []), (
+        "a card room of ours that held its buy was archived unjudged")
+    assert "STR-0090" in lab.archived_rooms(own, [], [], []), "one that bought nothing held nothing"
+    (line,) = lab.board([], [], own, bought, [])
+    assert line["rooms"][0]["money"]["stake"] == 10.0, line["rooms"][0]
+
     # And what ours earned is not his record: the Nexus line on /lab
     # (questions -> picks -> gate -> survived) counts his rooms' verdicts only.
     from qa import lab_report
