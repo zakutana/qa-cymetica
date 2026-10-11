@@ -30,6 +30,7 @@ import json
 import os
 import re
 import shutil
+import time
 from dataclasses import dataclass
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
@@ -755,6 +756,9 @@ STUCK_AFTER = timedelta(hours=24)
 STUCK_RUNS = 3
 TICK_FAILURES = 3
 RESPAWNS_PER_HOUR = 3
+# `start` spawns the loops one after another; for this long after it, a loop not yet alive
+# is starting, not dead (the dry run caught the clock re-spawning departments mid-start).
+HEAL_GRACE = timedelta(minutes=2)
 
 
 def set_running(on: bool, now: datetime | None = None) -> None:
@@ -1013,10 +1017,22 @@ def set_stop(on: bool) -> None:
 
 
 def _write_json(path: Path, data: dict) -> None:
+    """Atomically, and alongside readers in other processes. On Windows a replace is
+    refused while another process has the target open -- the clock reading every heartbeat
+    while a department writes its own -- so it is retried for a moment; and each writer has
+    its own temporary file, so two writers of one file never share one."""
     path.parent.mkdir(parents=True, exist_ok=True)
-    tmp = path.with_name(path.name + ".tmp")
+    tmp = path.with_name(f"{path.name}.{os.getpid()}.tmp")
     tmp.write_text(json.dumps(data, ensure_ascii=False), encoding="utf-8")
-    os.replace(tmp, path)
+    for attempt in range(20):
+        try:
+            os.replace(tmp, path)
+            return
+        except PermissionError:
+            if attempt == 19:
+                tmp.unlink(missing_ok=True)
+                raise
+            time.sleep(0.05)
 
 
 def _read_json(path: Path) -> dict | None:
@@ -1028,10 +1044,14 @@ def _read_json(path: Path) -> dict | None:
 
 
 def beat(name: str, state: str, why: str = "", now: datetime | None = None) -> None:
-    """A loop says it is alive and what it is doing; overwritten every look."""
-    _write_json(crew_dir() / "alive" / f"{name}.json",
-                {"name": name, "at": stamp(_now(now)), "pid": os.getpid(),
-                 "state": state, "why": why})
+    """A loop says it is alive and what it is doing; overwritten every look. A heartbeat
+    that cannot be written this time is skipped: it must never be what kills the loop."""
+    try:
+        _write_json(crew_dir() / "alive" / f"{name}.json",
+                    {"name": name, "at": stamp(_now(now)), "pid": os.getpid(),
+                     "state": state, "why": why})
+    except OSError:
+        pass
 
 
 def beats() -> dict[str, dict]:

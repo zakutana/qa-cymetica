@@ -41,7 +41,8 @@ from qa import crew  # noqa: E402
 from qa.console import printable  # noqa: E402
 
 LOOPS = ("clock", *crew.DEPARTMENTS)
-POLL_SECONDS = 30.0
+# How often an idle loop looks again; `QA_CREW_POLL` shortens it for the dry run.
+POLL_SECONDS = float(os.environ.get("QA_CREW_POLL") or 30.0)
 BACKOFF_MAX_MINUTES = 60
 # How long a hold waits for the others to finish what they are running: the longest
 # timeout but one (the desk's 50 minutes). Past it, the run goes at level R instead.
@@ -446,7 +447,8 @@ def heal(now: datetime, me: str = "clock") -> list[str]:
     """Start again a loop that died while the company is on -- three times an hour at most,
     then the operator hears of it instead. The clock heals the departments, and each
     department the clock: a loop's lock makes a second start of one name exit at once."""
-    if crew.stopping() or crew.running_since() is None:
+    since = crew.running_since()
+    if crew.stopping() or since is None or now - since < crew.HEAL_GRACE:
         return []
     names = [n for n in LOOPS if n != me] if me == "clock" else ["clock"]
     runs = crew.load(crew.runs_path())
@@ -563,7 +565,8 @@ def loop(name: str, poll: float = POLL_SECONDS, paused=deep_pass_running) -> int
                 state, why = look(name, paused=paused)
             except Exception as exc:  # noqa: BLE001 -- a loop reports and carries on
                 state, why = "worked", "error"
-                crew.record({"type": "error", "loop": name, "error": repr(exc)[:400]})
+                with contextlib.suppress(Exception):
+                    crew.record({"type": "error", "loop": name, "error": repr(exc)[:400]})
             if state == "worked":
                 failures = 0 if why == "ok" else failures + 1
                 resume_at = now + backoff(failures) if failures else None
@@ -759,7 +762,7 @@ def inbox() -> int:
         return 2
     notes = crew.unread_notes()
     for note in notes:
-        print(printable(f"{note['id']} {note['at'][:16]} {note['from']}: {note['text']}"))
+        print(f"{note['id']} {note['at'][:16]} {note['from']}: {note['text']}")
     crew.mark_read([note["id"] for note in notes])
     if not notes:
         print("nothing unread")
@@ -795,7 +798,7 @@ def audit(days: float) -> int:
               f"{row['failed']:>4} {row['retried']:>5} {row['lead_minutes'] or '-':>6} "
               f"{row['runs']:>4} {row['failed_runs']:>4} {row['tokens_per_done'] or '-':>9}")
     for line in crew.metric_flags(numbers) or ["nothing off"]:
-        print(printable(line))
+        print(line)
     return 0
 
 
@@ -879,14 +882,13 @@ def main(argv: list[str] | None = None) -> int:
     audited.add_argument("--days", type=float, default=1.0)
     args = parser.parse_args(argv)
 
-    with contextlib.suppress(AttributeError, ValueError):
-        sys.stdout.reconfigure(encoding="utf-8", errors="replace")
+    printable()
     if args.cmd == "start":
         return start()
     if args.cmd == "stop":
         return stop()
     if args.cmd == "status":
-        print("\n".join(printable(line) for line in write_report()))
+        print("\n".join(write_report()))
         return 0
     if args.cmd == "loop":
         return loop(args.name)
@@ -936,8 +938,8 @@ def main(argv: list[str] | None = None) -> int:
         for ticket in crew.tickets().values():
             if args.open and ticket["status"] not in ("open", "claimed"):
                 continue
-            print(printable(f"{ticket['id']} {ticket['status']:<8} {ticket['to']:<9} "
-                            f"{ticket['kind']:<9} {ticket['text'][:90]}"))
+            print(f"{ticket['id']} {ticket['status']:<8} {ticket['to']:<9} "
+                  f"{ticket['kind']:<9} {ticket['text'][:90]}")
         return 0
     return 2
 

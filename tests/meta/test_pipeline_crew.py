@@ -551,9 +551,14 @@ def test_the_desk_keeps_its_own_pace_sleeps_on_purpose_and_its_brakes_are_code(
     assert crew.crew_brake("a2a", list(range(9)), now) is None
 
 
+def told_text(notes: list[dict]) -> str:
+    return " ".join(note["text"] for note in notes)
+
+
 @qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
 def test_the_manager_alone_speaks_to_the_operator_and_curates_every_memory(company,
-                                                                         monkeypatch):
+                                                                         monkeypatch,
+                                                                         capsys):
     """C5. Departments talk to the manager, and only the manager (and the supervisor's
     own alarms) talks to the operator; what it says waits, unread, until a session reads it.
     Each department writes its own memory under three headings; the manager's daily
@@ -569,7 +574,9 @@ def test_the_manager_alone_speaks_to_the_operator_and_curates_every_memory(compa
     assert [n["text"] for n in unread] == ["Desk: STR-0130 +4,1 % po 3 dnech; nic po tobě"]
     assert unread[0]["id"] == "OP-0001" and unread[0]["from"] == "manager"
     monkeypatch.delenv("QA_CREW_DEPT")
+    capsys.readouterr()
     assert sup.main(["inbox"]) == 0
+    assert "OP-0001" in capsys.readouterr().out and "STR-0130" in told_text(unread)
     assert crew.unread_notes() == [], "read once, by a session, and marked read"
 
     # Memory: its own file, its own headings, written by itself or the manager.
@@ -667,7 +674,10 @@ def test_the_watchdog_leaves_nothing_stuck_in_the_mud(company, monkeypatch):
     monkeypatch.setattr(sup, "loop_alive", lambda name: name != "desk")
     sup.heal(now)
     assert not started, "a company nobody started is not healed"
-    crew.set_running(True)
+    crew.set_running(True, now=now)
+    sup.heal(now + timedelta(seconds=30))
+    assert not started, "just after start a loop not yet alive is starting, not dead"
+    crew.set_running(True, now=now - timedelta(hours=1))
     for minutes in range(4):
         sup.heal(now + timedelta(minutes=minutes))
     assert [a[-1] for a in started] == ["desk", "desk", "desk"]
@@ -682,7 +692,8 @@ def test_the_watchdog_leaves_nothing_stuck_in_the_mud(company, monkeypatch):
 
 
 @qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
-def test_the_auditor_counts_what_each_department_cost_and_produced(company, monkeypatch):
+def test_the_auditor_counts_what_each_department_cost_and_produced(company, monkeypatch,
+                                                                   capsys):
     """C7. The process auditor's daily half is code and free: how long tickets waited,
     how many failed or were retried, who sat idle (and that idle is not stuck), what was
     done twice, and the tokens one useful result cost. The patrol carries it, the manager's
@@ -734,8 +745,13 @@ def test_the_auditor_counts_what_each_department_cost_and_produced(company, monk
     day = next(t for t in crew.tickets().values() if t["kind"] == "daily")
     assert "metrics" in day["payload"]
 
-    # The audit command, and the patrol: the company is one more part it measures.
+    # The audit command, and the patrol: the company is one more part it measures. Read
+    # as printed: the dry run found every CLI line printing "None" (printable() was taken
+    # for a filter; it configures the stream).
+    capsys.readouterr()
     assert sup.main(["audit", "--days", "7"]) == 0
+    printed = capsys.readouterr().out
+    assert "bugs" in printed and "twice" in printed and "None" not in printed, printed
     procs = _script("processes")
     section = procs.crew_section(company)
     assert "bugs" in section["departments"]
@@ -760,6 +776,16 @@ def test_a_loop_runs_once_per_name_waits_out_a_deep_pass_and_ends_on_stop(compan
         with sup.loop_lock("bugs") as second:
             assert not second, "two loops of one department would claim side by side"
     assert not sup.loop_alive("bugs")
+
+    # A heartbeat that cannot be written -- Windows refuses a replace while another process
+    # reads the file -- is skipped, never raised: the dry run lost a loop to exactly that.
+    def refused(*args, **kwargs):
+        raise PermissionError(13, "access denied")
+
+    with pytest.MonkeyPatch.context() as patch:
+        patch.setattr(crew.os, "replace", refused)
+        patch.setattr(crew.time, "sleep", lambda seconds: None)
+        crew.beat("bugs", "backoff", "after 1 failed run(s)")
 
     crew.set_stop(True)
     started = time.monotonic()
