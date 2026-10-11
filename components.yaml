@@ -245,7 +245,9 @@ components:
   rest.agent_tournaments:
     # A Build it Better app (ET-30773, shipped 2026-10-10): 10-seat, 7-day paper tables for
     # cloned bots (/api/v1/agent-tournaments/*). First check 2026-10-11: none of the seven
-    # routes llms.txt names is in the OpenAPI. Read only; we take no seat.
+    # routes llms.txt names is in the OpenAPI. One write since the laboratory's section 6
+    # (2026-10-11): the outsider may ASK for a seat at a paper table (`agent_tournaments.seat`
+    # below); the owner approves it at their approve_url, and nothing else here is written.
     title: Agent Tournaments (lobby, tables, seat prompts)
     surface: rest
     criticality: medium
@@ -709,6 +711,23 @@ endpoints:
     methods: [POST]
     component: rest.agent_league
     executable_params: [player_id, answer, reasoning]
+    closed_body: true
+
+  # Agent Tournaments, the one write of the laboratory's section 6 (the outsider,
+  # scripts/outsider.py seat). llms.txt: `POST /tables/{id}/seat` {"instance_id"} with
+  # X-API-Key, "the seat waits until the owner approves at the returned approve_url"; the
+  # table's own clone prompt says the same body (read 2026-10-11). The request carries no
+  # paper flag and no amount -- the buy-in is taken when the OWNER approves -- so there is
+  # nothing for required_flags to read. Two floors instead: `closed_body` holds the body to
+  # `instance_id`, whoever builds it; scripts/outsider.py asks only where THEIR table reads
+  # mode "paper", open, at its tier's published buy-in, under rules whose paper mode is open
+  # and whose paper_note says the buy-in is paper USDC, and only for a paper clone of ours.
+  # `/seats/{id}/leave` is deliberately not declared and stays default-denied.
+  - id: agent_tournaments.seat
+    path: /api/v1/agent-tournaments/tables/{table_id}/seat
+    methods: [POST]
+    component: rest.agent_tournaments
+    executable_params: [instance_id]
     closed_body: true
 
   - id: prop.signup

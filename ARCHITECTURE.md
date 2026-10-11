@@ -110,6 +110,14 @@ scripts/league.py Cymetica's Agent League (2026-10-09): `puzzles`, `join`,
                   CEX-DEX net edge), with a reasoning that is the computation.
                   Skill `.claude/skills/league/SKILL.md`; diary
                   state/league.jsonl, report state/league/report.json.
+scripts/outsider.py the laboratory's section 6 (2026-10-11): `record` a run of
+                  the stranger agent `.claude/agents/outsider.md` (WebFetch and
+                  WebSearch only, 40 fetches, no memory of ours), `track` its
+                  coins at 1/7/28 days against BTC, `report`, and `seat` -- one
+                  declared write (`agent_tournaments.seat`, closed body), asked
+                  only at a table their API calls paper. What its picks may do
+                  is `qa/outsider.py::actions` (a card at half stake, no backtest
+                  gate). Diary state/outsider.jsonl, gitignored and snapshotted.
 NEXT.md           what we agreed to do next and have not done. Plain markdown,
                   one line per item, `- [ ] YYYY-MM-DD  sentence`; ticked, it
                   gets `(hotovo DATE)` and goes a week after that stamp. At
