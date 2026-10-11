@@ -1,215 +1,83 @@
-# Laboratoř jako produkt, systém bez ceremonií — plán v2, 2026-09-23
+# Laborka v3: sedm sekcí — plán, 2026-10-11
 
-v1 (schválený ráno, fáze L0–L8) je v gitu. v2 ho nahrazuje po revizi celého
-projektu (`docs/review-2026-09-23.md`): architekt došel k tomu, že návrh
-vizi nesplňuje, a pět čtenářů našlo 38 vad. Operátor dal volnou ruku
-k předělání čehokoli.
+v2 (2026-09-23, fáze V0–V11, všechny hotové) je v gitu: `git show 7122f3d3:docs/laborator-plan.md`.
 
 ## Pro tebe
 
-**Tvůj den**
-- Jednou: založ session „Laborka" a vyber v ní model Sonnet.
-- Ráno v ní napiš `/loop 20m jdi do laborky`, večer v hlavní session „jdu spát". Nic dalšího.
-- Výsledky čteš na stránce Laboratoř. Připomenu ti jen tyhle věci, a když něco nesedí (třeba laborka jede na Opusu), napíšu jak to spravit.
-- **Každé ráno v 7:00 hotový přehled:** krátce deep pass, pak stav laborky. Vždy na stejné adrese, otevřeš ho i z mobilu. K přehledu mi napiš, co chceš jinak. Zapíšu to do deníku laborky a v dalším přehledu uvidíš řádek, co jsem podle toho změnil.
+| # | Sekce (na stránce) | Co dělá | Kdo vybírá |
+|---|---|---|---|
+| 1 | Our cards | 10 nejlepších event karet podle našeho backtestu po poplatcích, doplňuje se, jak roomy končí | my, bez Nexuse |
+| 2 | Nexus cards | jako dnes, jen karty | Nexus |
+| 3 | Bots | všech 22 druhů × 6 nastavení systematicky, nejlepší dostanou druhé okno | my i Nexus |
+| 4 | Head-to-head | vylepšený bot (vítěz ze sekce 3) proti původnímu nastavení | my |
+| 5 | Memecoins | FOMO Radar + Hot headlines (Hot dnes na stránce chybí) | studie |
+| 6 | Outsider | jednou denně cizí agent bez naší paměti objeví Cymeticu, řekne „wow" nebo ne, sám vybere, co by koupil a jestli si sedne k turnaji; jeho tipy měříme | cizí agent |
+| 7 | Desk | moje volná laboratoř: jediný cíl, prokázat, jak se na Cymetice vydělá; návrhy a feedback pro Cymeticu jdou přes tebe | já |
 
-**Co se mění**
-- **Nejdřív opravím čísla,** podle kterých by ses rozhodoval o penězích. Verdikt pokusu bude z našich papírových pozic, ne z jejich indexu. Tam, kde dnes vychází „nedá se říct", prostě bude číslo.
-- **Laborka je hlavní produkt.** Stránka Laboratoř: roomy Karty · Boti · Memecoiny · Fondy. U každého jen čistý výsledek po nákladech, počet pokusů a jak jisté to je. Neúspěchy jsou v archivu.
-- **Pás bez našich stropů.** AI se probudí jen když je co rozhodnout (otázka pro Nexuse, jeho odpověď, díra k nahlášení). Klidné kolo stojí jeden krátký řádek.
-- **Boti:** všechny druhy a jejich nastavení na papíře.
-- **Memecoiny:** poctivá odpověď na „10 $ do každého hot signálu".
-- **Systém se zmenší.**
-  - Pravidla pro mě (CLAUDE.md) na třetinu.
-  - Jeden hook při startu místo šesti, rychlý a krátký.
-  - Deep pass jen tak velký, jak velké byly změny dne.
-  - NEXT.md nejvýš 10 řádků, hotové dokumenty pryč.
-- **Údržba, která opravdu dojde:** připomínka se ukáže vždy a paměti se čtou celé, ne jen titulky.
-- **Nové oddělení** (propagační centrum) má jeden tvar a test hlídá, že se napojí samo.
+**Paměť ve všech sekcích, i v mojí:** zčásti už v laborce je. Je tu deník, lekce a „co dál" a Nexusovy tipy ani varianty botů se neopakují. Nové sekce 1, 4, 6 a 7 ji ale nemají, každá část si pamatuje po svém a lekce nejsou rozdělené po sekcích. Nestavím ji tedy znovu, jen ji rozšiřuju na všech sedm sekcí: každá sekce bude mít záznam „co už jsme zkusili a jak to dopadlo". Než něco spustí, podívá se do něj a stejnou věc nezopakuje. Výjimka je, když výsledek potřebuje druhé okno nebo se platforma změnila, a to se napíše. Ke každé sekci se navíc vede krátké „co víme" (nejvýš 10 řádků), které se po každém výsledku doplní nebo opraví. Odtud vychází „co dál", které uvidíš v sekci i v ranním přehledu. Outsider je výjimka: má být pokaždé čerstvý. Jeho běhy si zapisujeme my a sledujeme, jak se jeho dojem mění.
 
-**Proč tomu věřit:**
-- každá fáze má „hotovo, když" s testy;
-- každý nález ověřili tři nezávislí rozhodčí;
-- každou noc deep pass nad změnami;
-- díl jádra se přečte celý, když se v něm hodně změnilo, nebo jednou za měsíc;
-- na konci nezávislý audit celého plánu.
+**Na bod 3 „to už děláš, ne?":** zčásti. Všech 22 druhů jsme naklonovali, ale z kombinací druh × nastavení jsme měli jen 65 a indikátory jednou. Mřížka to dodělá.
+
+**Co jsem rozhodl za tebe** (stačí slovo a změním to):
+- Pravidlo „3× stop-loss po sobě = zahodit" zahodí *to nastavení*, ne celý druh. Ráno jsem psal opak, ale dnes chceš otestovat všechny konfigurace a kód to tak počítal i dřív (pro jednoho bota). Celý druh jsem dnes ráno blokoval jen já. MACD Hunter a RSI Sniper se tedy vrátí s Nexusovým nastavením z NEX-0137. Nastavení, které 3× prodělalo, už nikdy.
+- Sekce 1, 6 a 7 obchodují podle našeho úsudku, vedle Nexuse, ne místo něj. Zapsáno jako tvoje rozhodnutí z dneška, tvými slovy (skill laborator, „Seven sections").
+- Outsider si k turnaji sedne jen ke stolu, který je podle jejich API papírový a nestojí nic skutečného. Místo u stolu navíc potvrzuješ ty na jejich odkazu (tak to mají v llms.txt).
+- Všechno dál jen na papíře. Skutečné peníze jen jako návrh tobě, až něco vydělá dvě okna po sobě.
+- Laborku spouštíš dál ty: při stavbě ji jen testuju a čtu, žádný tah sám nepustím.
+
+**Hotovo, když:** /lab má 7 záložek a v každé nahoře čísla (čistý výsledek po nákladech, počet pokusů, jak jisté). V každé sekci běží první pokus a testy jsou zelené. Bude to na 2–3 sezení, po fázích, každá v commitu.
 
 ---
 
 ## Pro implementaci (číst nemusíš)
 
-### What the review established
-See `docs/review-2026-09-23.md`. The architect's target, adopted here:
-- **A department is one shape:** skill + `scripts/<d>.py` (tick · brief · report) + `state/<d>*.jsonl` + `state/<d>/report.json`; everything else discovers it by glob.
-- **The lab tick ends in `decide: none | question | answer NEX-… | gap`.** Only the last three cost an LLM turn.
-- **The verdict comes from our paper book;** their index is secondary, used for marks.
-- **One local `/lab` page,** served, not committed.
-- **Collectors live on serve.py's timers,** which only read.
-- **The deep pass is sized by the diff.**
-- **Ceilings:** CLAUDE.md ≤ 300 lines, one SessionStart hook, NEXT.md ≤ 10 open lines, tests/meta grows only by replacement.
+### Context
+Operator, 2026-10-11, three messages, quoted verbatim in `.claude/skills/laborator/SKILL.md` ("Seven sections") and pinned in `tests/meta/test_pipeline_decisions.py`: clearly separated sections 1–6; a seventh "where you are master", whose sole goal is to prove how money is made on Cymetica, with requests, proposals, feature requests and feedback sent to Cymetica through the operator; and in every section a record so nothing is done twice and a memory that keeps it moving forward. Today a room's section is derived (`qa/lab_report.py:_product`, `KIND_PRODUCT`). /lab has three tabs (`scripts/lab_page.py:1706`). No path opens a card room from our own idea (`scripts/lab.py:2148`; `scripts/paper.py:_guidance` refuses non-Nexus ids). Bots have no grid (44 of 308 variant cells proposed; 1 indicator change ever). H2H has no reader (F4 open). Hot is only in `brief`. The outsider view and the desk do not exist.
 
-The findings, as triage confirms them, are the work of V1, V2, V7 and V8. A finding triage rejects is dropped with its reason recorded in the review file.
+### Data model (`qa/rooms.py`)
+- `SECTIONS = ("own-cards", "nexus-cards", "bots", "h2h", "memecoins", "outsider", "desk")`. `open_strategy(..., section=None)` stores `section` on new strategy rows and validates it.
+- `section_of(row, proposals)`: the stored value, else the mapping today's `_product` already makes (card → nexus-cards, bot → bots, fund → hidden as today). No existing room changes section (memory: improving a derivation rewrites the past).
+- `qa/lab.py note_proposal` gains `section` and a card kind (today bot-shaped). `scripts/paper.py _guidance` accepts an `OUR-` id that `rooms.on_record` knows ("ours, proposal OUR-NNNN"), and still refuses anything else.
 
-### Decisions pinned verbatim (unchanged from v1)
-In `.claude/skills/laborator/SKILL.md`, pins 1–4 of v1: manager and technicians; impact data and product rooms; Nexus mainly, our ideas too, no limits, failures archived; memecoin data must hold and "$10 into every hot signal" must be executable. In CLAUDE.md, pins 5–6: never think about it, reminders welcome; the future inherits all of it. The quotes are in git at 1e43a1ef:docs/laborator-plan.md. PINNED rows go in the same commit. No existing pin is edited; the 2026-09-10 pin stays, and the 2026-09-23 one narrows it. When they land: pins 1–4 in V1's first commit; pins 5–6 in V7, once CLAUDE.md has room under its 750-line ceiling; pin 7 in V11.
+### Sections
+1. **own-cards** (`scripts/lab.py own_cards()`, a new tick step after the backtest search): a top-10 book (the strategy's own parameter, not a brake: the skill's "0.48 % of the book a room under a 60 % ceiling, the only count limit" is reconciled to say so) of the live cards whose basket passes the SAME gate his picks pass (their backtest after fees, longest window priced whole: `gate`/`search` already compute it), best first, refilled as rooms close; same stake (`_leg_stakes`), window 7 d, room stop `NIGHT_STOP_PCT`; no Nexus question. Never called a control for section 2, on the page or in a test (the control group of 2026-09-21 stays refused). `card_rules.py` becomes a second chooser only if its forward verdict passes (~200 cards).
+2. **nexus-cards**: `night_promote` cards, unchanged.
+3. **bots**: `qa/lab.py grid()` = 22 species × bands {species defaults, 5/20, 10/20, 10/30, 15/40, 20/60}, plus every band Nexus names (`bot_bands`). Walk: fill the untried cells up to the trading cap (`wave.MAX_TRADING` 50), 500 USDC each, 7-day window; cells that survive get a second window (a claim needs two); indicator moves (`clone.indicators`, WTA only) only on the top species. Reuse `wave.launch_one` (clone → room+criterion → settings → read-back → fund → enable) and `bot_variants`' proposal records. ONE walker: `VARIANT_MOVES`/`bot_variants` is retired into the grid (two walkers would propose on the same clone, and `clone.settings` refuses while a room runs). The 3-SL rule (`qa.lab.discarded_bots`, per clone since deep pass T11) retires the CELL: the species-wide `_thrown_species` in `scripts/lab.py` (added 2026-10-11) becomes (species, band). Then `lab.py launch NEX-0137`.
+   **Before the grid:** the sampler fix (NEXT.md 2026-10-11): 41 bots already starve cards/positions/history in a 90 s round, and the grid adds more.
+4. **h2h** (`scripts/h2h.py`, F4): store the slug (`state/h2h.jsonl`, intent/outcome), `results` reads `/head-to-head/mine`; a section-3 cell that survived a window → matchup improved (that clone) vs original (a clone of the species at defaults), 7 d, one room in h2h with both bot legs, both sides kept trading by `wave.py resume` for the 7 days (wave 0's defaults paused within an hour: without it the matchup is one trade), judged on our own P&L of both; their scoreboard shown beside it (stuck "running" is already a check, `tests/rest/test_a_finished_matchup_reads_finished.py`).
+5. **memecoins**: as today; add the Hot reading (`qa/hot.py`, `lab.jsonl hot_reading`) to `qa/lab_report.py` and the page.
+6. **outsider**: `.claude/agents/outsider.md` (tools: WebFetch, WebSearch only, no repo, no memory, model sonnet/high). **The first step of P6 proves the independence before anything is built on it:** a throwaway agent from the definition reports what it already knows about Cymetica / Nexus / EventTrader; if anything of ours leaks (CLAUDE.md, the memory index), the outsider runs as a separate process outside the repo (`claude -p` from a cwd with no CLAUDE.md, or a plain API call), never as a subagent. It starts at cymetica.com and its llms.txt and returns JSON: per surface (Gem Screener, Agent Tournaments, Agent League, cards, bots, Nexus) a 0–10 "would I put money here" + why, its picks (coins, cards by id, species + band, a tournament table), where it got stuck. A run is capped at a fixed number of fetches (WebFetch bypasses our client, its brake and its captures) and the count goes in its diary. `qa/outsider.py` (pure: validate, map picks to allowed actions) + `scripts/outsider.py record|report`, diary `state/outsider.jsonl`. Its cards go to paper at half stake WITHOUT the backtest gate (the existing "untested, half stake" path), so the number is its judgement, not gate∩stranger; its bots run its band; its Gem Screener coins are forward-tracked vs BTC at 1/7/28 d (pattern `qa/hot.py forward()`, `qa/fomo.py`). Stumbles → reproduced through our client, then a gap to the operator or a filing. Tournament seat: llms.txt documents it (`POST /api/v1/agent-tournaments/tables/{id}/seat` {"instance_id"}, X-API-Key, paper buy-in, "the seat waits until the owner approves at the returned approve_url"), so the owner's click is the operator's. New `rest.agent_tournaments` rule in `components.yaml` with `closed_body`, written only after `/rules` and `/lobby` are read and the body confirmed; refused unless the table reads paper by their API and the buy-in is paper (pattern `cloned_bots.fund`); otherwise its wish to join is a gap sent through the operator.
+7. **desk**: `docs/lab-desk.md` (living: goal, hypotheses, running, next, sent to Cymetica). A desk step = one Opus agent that may open paper experiments in any product (section desk), ask the operator one question, and draft feedback or feature requests (`@EventTraderQABot` block, recorded with `correspond.py sent` + a2a copy; BB requests to `outbox/`). Proof = net after costs over two windows; real money only ever as a proposal to the operator.
+
+### Memory across sections
+- **What exists and is kept, not rebuilt:** the diary and its `--lesson` / `--next` (`lab.py log`, `lab.py resume`), `docs/lab-manager.md`, `NEXUS_KNOWN`, the gate's records of his refused picks, `answers_read`, `tried_variants` per clone, `_species_cloned`. What is missing: one view all choosers share (each of those remembers for its own mechanism only, and sections 1, 4, 6, 7 have none), and lessons per section.
+- **Register, derived, not a second store** (`qa/lab_register.py register(rooms_rows, lab_rows)`): one row per (section, key) -- key = card id, species+band, matchup pair, outsider run date, desk hypothesis id -- with status (running · survived · refuted · inconclusive · retired), the net after costs, the room and the date. Built from rooms (section, plan legs, verdicts), proposals and the desk's hypothesis rows, so it cannot disagree with them. A register of what was tested, not a diary of sessions.
+- **Every chooser asks it first and is tested for it:** own-cards skips a card judged in the last 30 days; the grid skips a cell with a verdict except a survivor's second window; a Nexus pick already tried is not reopened, and the brief tells him how it went (today's "his proposals" lines); the desk does not reopen a refuted hypothesis without a stated change (new window, platform moved). A retry always carries its reason in the room's `why`.
+- **What we know, per section** (`docs/lab-knowledge.md`, at most 10 lines a section, the Nexus part being today's `NEXUS_KNOWN`): after a verdict the manager adds or corrects a line (`lab.py log --lesson --section <s>`); a line that stops being true moves to an archive at the bottom with its date, never silently deleted. `lab.py brief`, the desk agent and the morning report read it; the outsider never does (it must stay a stranger: its runs are recorded by us and compared over time).
+- **What next, per section**: derived from the register (the grid's next cells, the cards waiting for a slot, the desk's next hypothesis), shown at the top of each tab under its three numbers and in the morning tiles.
+
+### Tick and decide (`qa/lab.py decide`, `scripts/lab.py tick`)
+Steps: … promote (2), own_cards (1), grid (3), h2h read (4), fomo/hot (5) … New decide values: `outsider` (once a day) and `desk` (idle, alternating with `hunt bugs`). Priority: report > gap > answer > question > hunt sweep (their side moved: acted on within a tick, CLAUDE.md 2026-09-25) > outsider > desk / hunt bugs.
+
+### Page and morning report
+`scripts/lab_page.py`: `SECTORS` → the seven sections in order, English names (Our cards, Nexus cards, Bots, Head-to-head, Memecoins, Outsider, Desk), each tab opening with three numbers (net after costs, experiments, how sure), Live/Done/Archive kept; explanations only in tooltips; Cymetica palette. `qa/morning.py`: one tile per section. Fix the sector lists that disagree (`rooms.SECTORS`, `lab_report.PRODUCTS`, `lab_page.SECTOR_NAMES`, `morning.SECTOR_NAMES`).
+
+### Rules and docs
+- `.claude/skills/laborator/SKILL.md`: the seven sections and the three decisions (P0), the new decide values (P5, P6), the top-10 book reconciled with "the only count limit" (P4).
+- `CLAUDE.md` "Who decides what to trade": one sentence (not a pin): sections of our own judgement beside Nexus's lane, never in its place (P0).
+- NEXT.md: one line carrying the open phases of this plan (the session-start reminder checks it).
 
 ### Phases
 
 | Fáze | Co | Hotovo, když | Stav |
 |---|---|---|---|
-| V0 | Úklid a záznamy dne | MSG-0045 zapsaná; archiv zabalený a na OneDrive se stejným hashem; 460 MB worktrees pryč; revize v repu | hotovo 3db2de5d |
-| V1 | Kritické opravy (před 26. 9. 00:52 UTC) | B1, C1, C3, A1, D1 mají každá test pojmenovaný po incidentu a jsou zelené | hotovo ce8a0b1e |
-| V2 | Poctivá čísla laborky | verdikt z naší knihy; Bollinger ≈ +3 %; NEX-0064 na desce +4,17 %; NEX-0080 → 1 volba; zastavený bez pozice = archiv | hotovo dcac9077 |
-| V3 | Memecoiny poctivě | report řekne „10 $ do každého hot signálu = X % po nákladech, n, stihli bychom Y %"; srovnání s kontrolou po tokenech a bez přepnutých párů | hotovo be97cb6d |
-| V4 | Laboratoř jako oddělení + stránka /lab | screenshot 2000 px viděný; commitnutá stránka nemá žádný vstup mimo git (test); poznámka ze stránky dojde do `rooms.py unread`; **jeden room na odvětví a operátor stránku viděl a dal ≥ 9/10** | hotovo de9b43b7 — operátor 23. 9.: „nová lab je perfektní“ (a6037069 dostala 3/10) |
-| V5 | Pás a boti | tik spustí variantu bota s jiným nastavením přes bránu papíru; jediný limit je 60 % knihy; odpověď se čte jednou | hotovo 4af17a57 (s 11685b1e, 1028c377, 59cde5f2, 4ac9694b, d0609c5e, 3a07a9f4); řádky `answer_read` ověřeny 2026-09-30: 11 v `state/lab.jsonl` od 24. 9. (NEX-0089) do 28. 9. (NEX-0107) |
-| V6 | Manažer za pár tokenů | klidné kolo = 1 krátký tah AI; den smyčky ≤ 20 tahů AI při stejném počtu spuštění | hotovo 1b8e6ac4; po prvním dni smyčky ověřit `processes.py loop`: pracovních kol ≤ 20, klidné ≤ 4 volání, model Sonnet |
-| V7 | Údržba, která dojde | start session ≤ 8 řádků za ≤ 3 s; `memories.py --for lab` ≤ 8 KB celé; MEMORY.md v limitu harnessu; CLAUDE.md ≤ 300 ř.; NEXT.md ≤ 10 otevřených | hotovo 0e2406c9 (s 127f969b, 1a2ee286, 566e85fb, 2ce72f21, 3aee1398): start 7 řádků za 1 s, `--for lab` 7,9 KB, MEMORY.md 48 ř. / 10 KB, CLAUDE.md 198 ř., NEXT.md 9 otevřených |
-| V8 | Jádro QA | každý potvrzený nález A/B/D má test; `/code-review` přes fold/state prošel | hotovo 61371ac7 (A3–A8, B2–B6, D3, D6 s testy; A2 odloženo s důvodem; review 10 nálezů, 3 opravené, 7 pro deep pass) |
-| V9 | Oddělení do budoucna | testovací oddělení (skill + skript + deník) se objeví v hlídce, archivu a na /lab bez jediné úpravy | hotovo 92db70a8: `qa/departments.py`, test `tests/repo/test_department_shape.py`, CLAUDE.md „Nové oddělení“ |
-| V10 | Závěrečný audit | nezávislý audit plánu proti repu; každé „hotovo, když" pravdivé | hotovo 76f6c23e (2026-09-24): jeden nezávislý čtenář (Opus), 0 nepravdivých; čekají jen řádky po prvním dni smyčky (V5 `answer_read`, V6 počet kol) a první ranní vydání (V11). Jeho vedlejší nálezy: dvě opravy z review bez testu (doplněno), zastaralá věta ve V8 (opravena), sedm odložených nálezů bez čtenáře (předány deep passu), CLAUDE.md zkrácen o 50 % bajtů, ne 73 % |
-| V11 | Ranní přehled v 7:00 (jde hned po V4) | v 7:00 je na stejné adrese nová verze: deep pass ≤ 3 řádky, laborka po roomech, co se změnilo přes noc, co dnes udělám; desktop viděný (operátor mobil nepoužívá, 2026-09-24); poznámka k přehledu se v dalším přehledu ukáže jako provedená změna | postaveno b9a79e8a, první ranní vydání 2026-09-24 na https://claude.ai/artifact/GuKb2rfBC1hxeDrUDtVXkL, v 08:19 místního, ne do 7:00: přehled staví první tick laborky po 06:40 místního (`qa/morning.py`, `datetime.now().astimezone()`), a tu noc místo laborky běžel deep pass. Hotový v 7:00 bude, když přes noc běží smyčka laborky (dřívější zápis „06:40 UTC, posun na NEXT.md“ byl omyl); operátor ho viděl na desktopu: „vypadalo to skvěle“; první zpětná vazba zapsána (LAB-0015) a zpracována; ověřeno 2026-09-30: zpětná vazba 24. 9. a 26. 9. má řádek `acted` a `qa/morning.py::acted` ho vrací v dalším přehledu (26. 9. „nový oddíl Cymetica přes noc …“) -- hotovo |
+| P0 | rozhodnutí zapsaná a zamčená, plán v3 v repu, řádek v NEXT.md | test pinů zelený se třemi novými rozhodnutími | |
+| P1 | `section` + stránka se 7 záložkami + ranní dlaždice + Hot na stránce | screenshoty desktop a 390 px; staré roomy tam, kde byly | |
+| P2 | registr + `docs/lab-knowledge.md` + „co dál" v každé záložce | každý existující room v registru pod svou sekcí; test pro každého vybírače, že odmítne, co registr drží; lekce po sekcích čte `brief` | |
+| P3 | oprava sampleru, mřížka, 3-SL po buňkách, `launch NEX-0137` | řádek mřížky „buňky X/132, obchoduje N/50"; roomy z NEX-0137 otevřené | |
+| P4 | naše karty (sekce 1) | první OUR karetní roomy běží, v jejich stopě žádná otázka Nexusovi | |
+| P5 | desk (sekce 7) | `docs/lab-desk.md` se 3+ hypotézami, 1+ pokus běží, první návrh pro Cymeticu předán | |
+| P6 | outsider (sekce 6) + zápis místa u turnaje | jeden běh zapsaný: verdikty, tipy, zakopnutí; jeho coiny se sledují | |
+| P7 | h2h (sekce 4) | jeden zápas s uloženým slugem a přečteným výsledkem | |
 
-Order: V1 V2 V3 V4 V11 V5 V6 V7 V8 V9 V10. V11 follows V4 directly because the morning report is what the operator sees first.
-
-Each phase: tests first (red), then code, `pytest tests/meta tests/repo`, commit on `main`, no push. A NEXT.md line is written when a phase starts, and the row gets `hotovo <hash>` when it ends. The first line of each phase session states class · needs · running. `get_usage` is read before each phase.
-
-### Phase details
-
-**V1 · Kritické opravy** (Opus · high; before 2026-09-26 00:52 UTC)
-- **B1:** PROBE judges inertness from the whole request — query string, form or non-JSON body, and MCP `{}` arguments on non-read tools — so `toggle-trading?enabled=true` is refused. Test first in the existing gate tests; the 2026-09-22 RC1 test is the pattern. *Done 5f5f5d6b: the query string and the body are read; the MCP `{}` half stays, triage found it deliberate 3/3 (the anonymous authorization probe).*
-- **C1:** a failed benchmark or card-history read is `unread`, not `[]`. The verdict waits (rule 8) and is re-judged on the next tick; it is never written without its benchmark.
-- **C3:** a normal window close sells the room's card positions (the early path already does). It has already fired: STR-0003's TRD-0006 is still open, and it is closed in the same change. The next case is STR-0006. *Done 40ea9e2e: TRD-0006 had already resolved on their side on 2026-09-19 (+85.76 USDC), so there was nothing left to sell; a position their record shows closed is no longer sold again.*
-- **A1:** `ledger.py --run` refuses a run older than the ledger's newest adjudicating run unless it is named `--replay`. `/code-review` (fold/state). *Done f0af8234, in `scripts/ledger.py` alone: fold/state/measure are untouched, so CLAUDE.md's review trigger did not fire.*
-- **D1:** `prune_runs.py` never deletes a capture the manifest knows that no verified bundle holds, and it prints how many it held back. The deep pass's step 0 stops the prune when the archive fails.
-
-**V2 · Poctivá čísla laborky** (Opus · high)
-- **Verdict = our paper book.** Realized + unrealized P&L from our positions, net of fees, against the BTC proxy over the same window. Their index history is used for marks (funds) and as a cross-check. The formula fingerprint moves; old verdicts keep theirs.
-  - *Design, 2026-09-23:* a paper position is worth `units × current_index` (their sample: 0.02164 × 231.30 = 5.0064, to the cent), so a card leg's book IS their index rebased on OUR entry: 100 at the buy (`entry_index` from the buy's own response), `100 × index / entry_index` at every index point after it, and after our close (or their resolution) the realised value `100 × (1 + realised / notional)` at the close. The path stays dense because it is their history; the entry and the exit are ours. The live round trip (`GATE["round_trip_cost_pct"]`, 1.4 %) is charged once on a card or fund leg's return in `verdict` -- the path, the drawdown and his TP/SL (index-level, as NEX-0065 says) stay gross. A bot is as they book it, from its funding. A card leg with no position of ours falls back to the index. The index-only return rides beside as `index_return_pct`, the cross-check.
-- Bot leg enters at funding (the Bollinger fixture: +2.96 %). Nexus's TP/SL go into the plan legs before `set_acceptance`, forward only.
-- Status first:
-  - stopped without a position → `archived`, no verdict;
-  - stopped with one → judged up to the stop.
-  - STR-0008 is closed with its reason.
-- Parked money in paused bots is counted apart from active money.
-- C2: `board` reads realized P&L from our close records.
-- C4: n_eff on time-aligned returns.
-- C7: picks are read only from pick lines, tested against the real answers in `nexus.jsonl`. C8: drawdown from the peak. C9: `_next_id` taken under the lock.
-- Bot stop cause is one of three: ours, their guard, or unexplained. An unexplained stop gets a check + report. A stopped bot is never re-enabled.
-  - *Done 9f141b82, except the report:* Bollinger Bandit (36642175) halted at +7.11 on 240.18 with no reason anywhere -- their settings are PATCH-only (no read-back), my-clones has no reason field, /activity no halt event, and their docs describe no automatic halt at all. The Telegram line went to the operator on 2026-09-23; the check and the report are a NEXT.md line, because the contract to hold has to be their documented one, not Nexus's NEX-0049.
-- `board`/`brief` include bots and funds. clones.jsonl leaves git via a `keep.py` subcommand.
-
-**V3 · Memecoiny poctivě** (Opus · high)
-- Headline = `stop_study()` at a $10 clip: no stop, 24 h hold, pair-clean, swap fee per side with sensitivity at 0.5/1/2 %.
-- Depth at entry decides the buy; depth at exit caps the sell. Split the test at L553 and keep its case-blind half.
-- C5: `compare()` counts per token, pair-clean, over the same period for both groups, with an honest interval.
-- C6 is a minority finding (1 of 3), so it is examined but not assumed: whether dropping unobserved time exits biases the hot-headline sample.
-- `RADAR_FIELDS` += price_usd, first_buy_seconds_ago, exit_signal, exit_reason, updated_at.
-- Fill share = `max_buy_5pct_usd` against $10, plus first-checkpoint latency.
-- The pinned quotes (fomo.py:260/466/489) stay verbatim.
-- Out-of-sample rule: a pattern is dated and judged only on data after its date.
-- *Done 4bc5baf8 (2026-09-28):* `sellable` judges each signal on the depth when it fired, and `stop_study` / `stats` / basket sell into the exit pool for at most half its liquidity, as `ten_dollars` does; the stop study (−10 %) went −9.1 % → −17.2 % (n 769 → 949). Pair switches are kept as rugs: `stop_study` pays them no gain, `compare` reads their peak up to the switch. The L553 test keeps its case-blind half.
-- *Remaining (NEXT.md):* C6; the out-of-sample rule.
-- *C6 examined, deep pass of 2026-09-30:* the outcome-dependent time exit was fixed by RM05 (2026-09-24: a stop or target also needs a priced round at the hold's end), and NEX-0055/0057 have 2 entries and 0 trades today, so nothing is left to bias. `follow()` has 71-92 % of its horizons unobserved, from gaps in the rounds rather than from outcomes: a small n, not a bias. `control()` is still n = 0 at every horizon, because no entry has a fully watched day before it (35.3 watched hours in the whole diary): the rule is right, the control needs a day of Hot rounds without a gap. No code change. The out-of-sample rule stays open: nothing in code is a pattern we fitted ourselves yet (the stop levels are a sweep, NEX-0055/0057 are Nexus's), so it has nothing to attach to until the first one.
-
-**V4 · Laboratoř jako oddělení + /lab** (Sonnet · high)
-- `lab.py report` → `state/lab/report.json`: per product, net %, n, Wilson band, running, best, archived count; plus a Nexus hit-rate line (questions → picks → gate → survived).
-- serve.py serves `/lab` from it, and the page is not committed.
-- The Nexus and Memecoiny tabs, `build_rooms` and the `fomo`/`nexus` payload inputs are removed from render.py. The committed page then hashes nothing outside git (the D2 half those inputs cause). render.py:4931's quote is re-pinned where the memecoin room now lives, same hash.
-- The collectors (fomo, hot, sampler) run on serve.py's timers (reads only), and the tick stops its own fomo round, leaving one writer.
-- `console.cmd --fomo 1` only after this, together with new-signal horizons 0.25/1/4/24 h, a quote cap per round, and bulky captures pruned after 1 day.
-- Tests first: the tests that pin the old tabs are rewritten, and a both-ways field guard is added for `report.json`.
-- *Remaining (NEXT.md):* the new horizons are stored ON the signal (and on its control rows, so both arms are read alike), not in the global `HORIZONS_HOURS` -- otherwise old signals lose their checkpoints. They land with `--fomo 1` and the quote cap, not before: at 20-minute rounds they only thin the curve. The cap has no number yet. Bulky captures: done 1d419933 (uncited `event-cards` walk pages, 1 day).
-- *`--fomo 1`, deep pass of 2026-09-30:* both launchers run the memecoin round every minute, and a round quotes at most 60 coins a minute of its interval, the windows that close first first (`fomo_watch.quote_cap`, `fomo.by_closing`); a 20-minute round (largest seen: 636 coins) is never bound. **The horizons were NOT thinned to 0.25/1/4/24 h:** [operator 2026-09-13] asked for the hourly curve of every coin (the docstring of `test_every_hour_of_the_first_day_is_a_checkpoint`), and at a round a minute the hourly set is about seven quotes a round, so the thinning the plan paired with `--fomo 1` buys nothing the cap does not.
-- *Done 0f63c4cf + a6037069, except the `--fomo 1` bullet, which is a NEXT.md line. One deviation, decided: the tick keeps its fomo/hot/sample doors and skips exactly the rounds the console's `/status` says it runs -- dropping them outright would lose checkpoints on any night the console is closed (scripts/lab.py said so when it took the sampler over).*
-
-**V5 · Pás a boti** (Opus · high)
-- Our caps go: questions/day, rooms/day, running_experiments, the 20-min spacing, IN_FLIGHT_HOURS.
-- Theirs stay: OUTSTANDING_BOUND 6, ASKS_PER_HOUR 3, backoff, and `pass_in_flight`.
-- Stake = a fixed share of the book, so 60 % exposure is the only count limit. Answers are read once.
-- `clone.py settings()` gets the paper floor before it exists (the `enable()` check). B7 was dropped only because nothing calls the PATCH yet, and this phase adds the caller. components.yaml declares only safe fields (no arb, custodial or onchain). Each variant is a new room, and a PATCH is refused while its room runs.
-- Grid per species: SL / TP / max_position / max_open_positions / min_ai_confidence / market toggles.
-- *2026-09-23, REPLY-0049:* one active paper clone per species per account (a second is 409 ALREADY_CLONED; several is a feature ask they logged). So a species' variants run one after another on its one clone, never side by side, and the grid is walked in time.
-- Own lane under the 2026-09-23 pin:
-  - origin `OUR-…`, labelled „naše";
-  - each also asked to Nexus;
-  - never ranked above his picks;
-  - correlated rooms count as one.
-- *Done, three commits:* 11685b1e `clone.py settings()` -- the body carries only `SAFE_SETTINGS` (the grid's fields; no `is_trading`, arb, on-chain share or market lists), our record says the instance is a paper clone of ours, no room of ours runs on it, their row says paper twice; the transport's new `closed_body` refuses any undeclared field at MUTATE, and components.yaml declares exactly the grid. 1028c377 our caps gone, each replaced in a comment by the brake that covers it (60 % of the book at a fixed 0.48 % a room, ASKS_PER_HOUR, OUTSTANDING_BOUND, backoff, `pass_in_flight`). 59cde5f2 an answer is read once; only one with a pick still waiting is read again.
-- *The variant launcher, which is what the done-when names (done, see below):*
-  1. `qa.lab.next_variant(tried)`: the grid per species, one factor at a time from their baseline (SL, TP, max_position, max_open_positions, min_ai_confidence, the four market toggles), deterministic, walked in time on the species' one clone.
-  2. A tick door: for a clone of ours whose rooms are all stopped, the next variant opens a NEW room, PATCHes through `clone.settings()` (the gate above) and starts it; the 60 % check counts the clone's parked money becoming exposure.
-  3. `clone.enable()` narrowed: a started clone may start again only as a new variant -- our own accepted pause, then an accepted settings PATCH after it, and no room running on it. A halt by their guard or an unexplained one stays never restarted (V2).
-  4. The own lane: `rooms.open_strategy` accepts an `OUR-NNNN` origin without a Nexus answer, labelled „naše"; `brief` lists each running one as a question for him; the board ranks them after his; a species' variants are one at a time, so they count as one.
-  5. A variant's verdict starts at its restart: `bot_series` measures from total funding, so a reused clone would carry the previous variant's P&L. The enable intent already records `bot_balance_usdc` at the start.
-- *Done, three more commits:* 4ac9694b `clone.restart_refusal` -- a clone that ran starts again only after our accepted pause, then an accepted settings change, with no room running on it, and never after a halt that was not ours; the enable intent records `bot_profit_usdc`. d0609c5e `qa.lab.variants()`/`next_variant`: every body carries the WHOLE grid (a reference with one factor moved) because a PATCH cannot unset a field and a fresh clone's SL/TP/max_position/confidence are null (CLN-0018), so a moved factor would leak into every later variant; the reference is their default wherever they have one, ours inside their bounds where theirs is unset; the catalog toggle stays off (it trades only a watchlist). OUR-NNNN proposals in the notebook, `open_strategy` from one on record, `restart_affordable` (parked money becoming exposure, 60 % of the book, not the 2 % per-order cap), `bot_restart` + `bot_series(entry_profit=)`. 3a07a9f4 the tick's `variants` door after the verdicts; the board and /lab rank ours after his, /lab says „naše", `brief` lists each running one as a question for him. 4af17a57, from review: a settled room pauses only a clone it still owns (the variant's start is not its bot "still trading"), and the Nexus line on /lab counts his rooms' verdicts only. Correlated rooms count as one by construction: a species' variants run one at a time on one clone, so they are one exposure at any moment; the report's sector n still counts each judged variant.
-  - And verify after the loop's first day that `answer_read` rows appear in `state/lab.jsonl`: an answer is not marked read while their bot or fund catalogue is unread (`_bot_catalogue`/`_fund_catalogue` return None on any non-200 or reshaped body), so a chronically unread catalogue would quietly keep the old re-reading.
-
-**V6 · Manažer za pár tokenů** (Sonnet · high)
-- The tick's last line is `decide: none | question | answer NEX-… | gap`. On `none` the skill writes one line and stops, with no brief, no diary and no memory read.
-- `laborator/SKILL.md` ≤ 100 lines, pins verbatim; "What we know about Nexus" moves into `lab.py brief`.
-- The reminder names `/model sonnet` when the transcripts show the loop ran on Opus.
-- An idle bug hunt runs only in the normal budget mode, with one Sonnet agent at most.
-- `clone.py`/`paper.py`/`hot_watch.py` are added to the allowlist; paper-only stays enforced in code.
-- *Done 1b8e6ac4.* The done-when as written could not be met: at 20-minute firings a day is 72 firings, so it is read as **working firings** (the tick decided something) **≤ 20 a day while the tick still runs on every firing**, and a quiet firing is the tick in the background plus one line -- two short turns, because ticks take 2-13 min and a foreground one was killed at the tool's ten minutes (2026-09-22). Measured before: 2026-09-21, 49 firings, 342 calls, all Opus. `qa.lab.decide` replayed over the 160 stored ticks says `none` on 100 (`may_ask` alone woke the manager on 97) and 8-22 working ticks a day, fewer firings since a question and its answer share one. A question is due on news (a verdict, a resolved position) or every 2 h within their pace; a hunt every 8 h, the first of a local night the sweep, only under 85 % of both windows (`lab.py budget`). Skill 400 → 89 lines, pins at their hashes; the patrol holds it at 100.
-
-**V7 · Údržba, která dojde** (Sonnet · high)
-- **One SessionStart hook,** ≤ 8 lines in ≤ 3 s: what is due · threads · notes · NEXT. There is no surface scan in the hook; drift is computed by the tick and the pass and cached (E1). The two hook quotes are re-pinned at the new path, same hash.
-- **Memories:**
-  - `memories.py --for` prints complete bodies ≤ 8 KB, ranked by relevance (E2);
-  - MEMORY.md stays under the harness's load limit (200 lines / 25 000 characters): retired lines move to `MEMORY-retired.md`. This is prevention, not a fix: E3 was dropped as a forecast.
-- **Patrol:**
-  - counts slash commands and `.md` preregistrations;
-  - an idle flag only where a part can leave a record (E4).
-- **A pass that died** says so at the next session start. Its real, unfixed gaps are carried forward by the next step 0 (E5).
-- **Step-1 readers:** drop `/loop` noise and say when they truncate (E6). Rename the processes.jsonl field (E8).
-- **CLAUDE.md ≤ 300 lines:** the file maps go to `ARCHITECTURE.md`, which is rewritten as the current map. NEXT.md ≤ 10 open lines of ≤ 300 characters. DEEP-PASS.md ≤ 10 lines.
-- **Deep pass sized by the diff:**
-  - full: state/fold/measure, a check or vendor-facing code changed, or ≥ 15 commits;
-  - light: Sonnet triad otherwise;
-  - minimal: at ≥ 85 % weekly use.
-  - It lands in the 1c form.
-- **Triggered re-read:** an area is read whole after ≥ 15 commits or 30 days.
-- **tests/meta** grows only by replacement.
-- **Deleted:** the finished plans in docs/, the stray `f`, the dead `night_running` reminder.
-- *Done, 2026-09-23, one commit per slice:* 127f969b NEXT.md 9 open lines of ≤ 300 characters (the detail moved into this plan under V3/V4/V8). 1a2ee286 `memories.py --for` prints whole bodies to 8 KB, most specific first (lab 28 → 7.9 KB); retired lines in `MEMORY-retired.md`, the index 48 lines / 10 KB. 566e85fb one SessionStart hook, `.claude/hooks/session_start.py`: fixed slots, 7 lines in 1.0 s; the surface drift cached by the patrol and the tick. 2ce72f21 CLAUDE.md 750 → 198 lines, pins 5 and 6 landed, the maps now `ARCHITECTURE.md` §0 (the current map; §1–§9 stay the reading of 2026-09-20, not re-read). The deep-pass slice went through 1c in rounds: the first two drafts were voted down 3/3 each (vendor-facing scripts and the guards themselves called light; a minimal pass still sending verifications, leaving a dirty tree, silencing the "pass owed" reminder and failing its own guard; the morning report's headings dropped; the operator's items hidden by the ten lines or the one-line slot; a dead pass's deferred and minority gaps shown nowhere), all fixed before the next round. **Two deviations, decided:** (1) the plan said "light: Sonnet triad otherwise", expecting light to be the common case; the readers showed that tests, audits, hooks and every script are guards or talk to their platform, so light covers prose only (`LIGHT_SAFE`), lowers only the code review's effort, and keeps the Opus triad (step 4 also judges the audit, the carried gaps and the whole readings, none of which come from the diff); most passes stay full. (2) "minimal at ≥ 85 %" became **deferred**: the pass does not run at all, because every version of a pass that finished without reviewing had a hole (it could push, verify, silence the "pass owed" reminder or fail its own guard). The saving is in not running on a spent week and in the whole reading being scheduled rather than nightly. Of the finished plans, `UPGRADE-PLAN.md` and `lab-plan.md` went; `data-plan.md` and `nexus-rooms-plan.md` stay, because nine files of code cite them as the reason for their shape. R10 (the deep pass's minority report) decided: the reminder says the session runs the command.
-
-**V8 · Jádro QA** (Opus · high, `/code-review`)
-- The confirmed A, B and D findings not already fixed in V1 or V4: A2–A8, B2–B6, D3, D6. D5 is a minority finding and is examined only.
-- Since V7 `tests/meta` grows only by replacement (the patrol's `meta_tests` ceiling is 800, 786 on 2026-09-23): a finding's test goes into an existing test where one already drives that path, or into tests/repo, and a new meta guard replaces or merges one.
-- `vendor_read` is journaled only when a read's health changes (ok→fail, fail→ok); status changes are kept. This keeps rule 8 and removes the "console poll" commits.
-- *Progress (a line per landed finding, so a compacted loop knows where it is):* A6 done (protect_state walks the command: cd, absolute and /c/ redirects, Python writes). A8 done by recording, not by a new formula: every result carries `helpers_fingerprint` beside the unchanged `check_fingerprint` (a new formula would have moved every row to CHECK_CHANGED), and verify.py says "the same test" only when the helpers match the failure's -- otherwise "the same recorded definition", or that a helper changed. The `correction_owed` half is still open. B2 done (an R-level fail says it is R-level), B3 done (a withdrawn row owes no pass), A3 done (a run adds checks to a row, never removes them; a retired check stays retired), A4 done (UNVERIFIABLE entered with its transition; --deselect/--ignore/--lf/--stepwise are not full runs). A5 done (a clean read clears only its own door's failure), A7 done (regression from every V-established pass state), B4 done (filing events carry the run behind each finding; the keepset keeps it). A2 decided and deferred: the stored history cannot carry a state-equals-last-transition invariant (36 rows disagree -- transitions sharing one timestamp sort alphabetically, and UNVERIFIABLE before A4 had none), and the hand edit it depends on is refused before the write since A6. D3 done (a loopback-bound console serves every route to this machine only; restart the console to load it), D6 done (an a2a message names its capture). B5 done (compose refuses a not-yet-raised finding whose check is not REPRODUCING; its commit went in with one meta test red, fixed in c2668d80), B6 done (reconcile: accepted without a capture is not settled), vendor_read done (journaled on a door's health change only). correction_owed over our own pre-fix writes decided: it belongs to the #117/#119 checks, whose change goes through rule 5 (change, commit, tag, run), and to the NEXT.md line that settles it with a new write -- not to the fold, which cannot know what a check's subject was written before. D5 examined (minority): qa/manifest.py only accumulates and a thinner entry never replaces a fuller one, so no path produces the thinned manifest it needs; no change. `/code-review` (high) over the V8 core ran: 10 findings; fixed at once -- a check restored by rebind stayed stripped, a fall from CHECK_CHANGED/UNPINNED could have owed a false reopen (regressions now carry `from_state`, reopen reads PASSING only), the patrol lost bounty.py's trace (state/bounty.json's mtime now). Left for the deep pass, recorded here: helpers_fingerprint misses fixtures and imported helpers, hashes partially on an exception and is not cached; health_changed reads the whole journal per poll; the B5 guard skips RAISED rows; the events-only UNVERIFIABLE cause can name an unrelated event; and the core commits landed before the review (CLAUDE.md). Nothing left open in V8; the seven deferred review findings were handed to the deep pass by name when the loop started it (V10).
-- The fingerprint covers the module helpers a check calls (A8). Today `verify.py` says "the same test, not a rewritten one" after a helper was rewritten (#119, #113, #89, #121, #116; #120 was pinned by hand for that reason): fix the fingerprint or the sentence. And no `correction_owed` for a check that judges our own writes from before their fix (#117, #119).
-
-**V9 · Oddělení do budoucna** (Sonnet · high)
-- The department shape, plus one fixture-department test.
-- CLAUDE.md "Nové oddělení", ≤ 8 lines.
-- Outward writes stay denied by default. A tweet is a draft the operator posts.
-
-**V11 · Ranní přehled v 7:00** (Sonnet · high; runs right after V4, which it depends on for `report.json`)
-- **Pin 7,** in `.claude/skills/laborator/SKILL.md`, verbatim: *"jo a jeste chci pridat do planu ze kazde rano chci vygenerovany krasny vecny strucny artifakt o tom co se vnoci udalo v laborce. takovy top prehled chapes. Na ktery ti dam pak feedback, jako manageorvi laborky a ty udelas podle nej patricne upravy a tak. Tento artikaft chci mit pripraven vzdy v 7 hodin rano. Bude tam strucna sekce o deep passu jak probihal a pak na stav laborky."*
-  - It narrows the 2026-09-06 "no artifacts" decision for this one report. CLAUDE.md's own sentence "Do not publish an Artifact." gains the exception on the same line; the pinned quote under it is untouched.
-- **No new scheduler.**
-  - The lab `/loop` runs overnight anyway, and its first tick at or after 06:40 local returns `decide: report`.
-  - If no tick ran, the next session start says the report is missing and makes it at once.
-  - This respects the 2026-09-12 and 09-14 decisions: the loop is theirs.
-- **Content:** one short page, impact only, Czech. Published to one fixed artifact URL, updated in place; artifact-design skill first.
-  1. Deep pass: fixed / sent / needs you, ≤ 3 lines, from DEEP-PASS.md.
-  2. Lab: KPI strip; per product room, net % after costs, n and confidence; what changed overnight; Nexus in one line; what the manager does today.
-  3. A ready Telegram block when something needs Cymetica.
-  4. "Podle tvé zpětné vazby: …".
-- **Feedback loop:**
-  - The operator's feedback, in chat or as comments on the artifact (`ArtifactComments`), goes into the lab notebook as `lab.py log --feedback`.
-  - The manager acts on it, and the next report names what changed because of it.
-  - Feedback is kept for the week's look back, so a repeated wish becomes a rule rather than a daily correction.
-
-**V10 · Závěrečný audit** (Opus · high)
-- One independent agent reads this plan against the repository; any false done-when reopens its row.
-
-### Not doing
-- No scheduler or cron. No timer that trades: serve.py's timers only read.
-- No real money.
-- Run records stay in git (rule 12 needs the cited ones).
-- The listing checks keep their captures.
-- No standing AI technician.
-- The channels and pokracuj skills stay, because they carry pinned decisions. a2a.py stays dormant.
+Order: P0 P1 P2 P3 P4 P5 P6 P7. Each phase: tests first (red), then code, `pytest tests/meta tests/repo` to a file with the exit code read, commit on `main`, no push; the row gets `hotovo <hash>` when it ends. The meta-test ceiling stays where it is: the three-sector pins in `tests/meta/test_pipeline_lab_page.py`, `test_pipeline_lab_report.py` and `test_pipeline_morning.py` are rewritten for seven sections in P1, and new cases go into existing tests as helpers. `/lab` checked in the browser at desktop and 390 px after P1 and at the end. No live tick during the build (the loop is off, the operator turned it off): each phase is verified by tests and read-only reads (`lab.py brief`, the served `/lab`, room listings); the first real tick is theirs to start.

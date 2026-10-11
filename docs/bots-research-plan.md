@@ -80,11 +80,10 @@ CLN-0143, read-back sedí), wave 0 spuštěna (12 botů obchoduje, rooms STR-008
       `scripts/chat.py` hotov, běželo 9 a 8 (8: nákup shortlistu nejde). Zbývá room na prompt a zbylé prompty
       (ne 7: veřejná karta; ne arena); každý otevře pozice mimo rooms, nejdřív návrh room. Až po verdiktu wave 0.
 - [ ] **Nepotvrzeno, čeká na operátora:** zpráva Cymetice o soukromí zadání v Build it Better (CoStar chce nasazení).
-- [ ] **NEX-0137, pásma od Nexuse (11. 10.):** spustit `python scripts/lab.py launch NEX-0137` při příští laborce
-      (smyčka vypnuta operátorem dřív, než to doběhlo). Otevře Perceptron Oracle SL 12 / TP 30 a Fibonacci Phoenix
-      SL 10 / TP 22, každý nový paper klon ve vlastním roomu (6961592c, a0bf524e). MACD Hunter 12/36 a RSI Sniper
-      10/24 drží pravidlo „3× stop-loss = zahodit"; Nexus ho má za předčasné (3 SL po sobě potká i férový druh
-      v 39 %), to je otázka pro operátora, ne pro launch.
+- [ ] **NEX-0137, pásma od Nexuse (11. 10.):** `python scripts/lab.py launch NEX-0137` ve fázi P3 laborky v3
+      (docs/laborator-plan.md), až pravidlo „3× stop-loss = zahodit" bude platit pro buňku (druh + pásmo), ne pro
+      druh. Pak se otevřou všechny čtyři: Perceptron Oracle 12/30, Fibonacci Phoenix 10/22, MACD Hunter 12/36,
+      RSI Sniper 10/24, každý nový paper klon ve vlastním roomu (6961592c, a0bf524e).
 
 ## Meze
 Jen paper; žádný nákup skillu/modelu za USDC; MUTATE zůstává trojí brána; Nexus radí, naše strategie se měří,

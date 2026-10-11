@@ -183,6 +183,16 @@ PINNED = {
          "e994b217789eb581924c033f2c0f37023a9470382a15936ac364993e59ae88fa"),
     ],
     ".claude/skills/laborator/SKILL.md": [
+        # 2026-10-11, added because they said it, in three messages: seven separated
+        # sections (our own cards without Nexus, his cards, every bot and configuration,
+        # head-to-head, memecoins, a stranger agent's view), a seventh that is ours with
+        # one goal (how money is made on Cymetica), and a record and memory in all of them.
+        ("2026-10-11", "chci tam mit jasne oddeleny sekce",
+         "7baa75c050f9fcae703693299c1aad664196d89045a69b977e9581b7d919e3a5"),
+        ("2026-10-11", "ti dovoluji v laborce mit i svou 7 sekci",
+         "bb8c6329af4078e4f32faf832de1139495f3352d26a494987b7a2f395297d123"),
+        ("2026-10-11", "vedes taky zaznam at nedels stejne veci",
+         "728bc389c3cf7afe7cfb2c694d2b112e813d3e9f3128783c2f4016b3e5ffa33d"),
         # 2026-10-07, added because they said it: a bot is resumed after the platform
         # pauses it at a band, and thrown away after three stop-losses in a row.
         ("2026-10-07", "pak ho zahod a uz ho nechci videt",

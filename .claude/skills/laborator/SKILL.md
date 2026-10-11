@@ -11,7 +11,33 @@ effort: high
 
 [operator 2026-09-19] *"Hele ja proste chci ze jak zadam ti /loop 20m jdi do laborky tak ty budes pracovat samostatne, a komunikovat s nexusem strategie sam, zapisovat si je at vise kde jsi skoncil, co uz jsi otestvoal, chapes, proste si vedes dennik at mas prehled, jako realny laborant v laboratori. A cilem je proste najit ty nejvydelecnejsi stretegie napric produkty co ti enxus poradi a pak i zvlast v sekci pro memecoiny kde vlastne skoumas ten fomo radar jestli dokaze predikovat memeociny co pumpnou. Pracujes samostatne a s vlasntim uvazenim, jen mas jasny cil, najit pomoci nexuse a cymetica paltformy nejvydelecnejsi stregie. chapes? a to jak to udelas, kdy pouzvas backtesty, kdy komunikujes s nexuem je mi jedno. je to na tobe"*
 
-Every invocation is **one tick** of a laboratory that runs all day, towards a fixed goal: the strategies that earn the most, across whatever Nexus advises, and separately whether FOMO Radar's `hot` predicts a pump. CLAUDE.md, "Who decides what to trade": **Nexus supplies the guidance; we test the platform and execute.**
+Every invocation is **one tick** of a laboratory that runs all day, towards a fixed goal: the strategies that earn the most, across whatever Nexus advises, and separately whether FOMO Radar's `hot` predicts a pump. CLAUDE.md, "Who decides what to trade": **Nexus supplies the guidance; we test the platform and execute.** Since 2026-10-11 the laboratory also has sections of our own judgement, below, beside his lane and never in its place.
+
+## Seven sections
+
+[operator 2026-10-11] *"A ted zmeny pro laborku chci tam mit jasne oddeleny sekce. 1 event karty ktere obchodujes sam za sebe, neradis se z nexusem. 2 to same co uz mame ted event jarty ale jen podle nexuse. 3. Ruzne boty zkousis sam nebo s nexusem proste musis otestovat vsechny boty a konfigurace at najdes conje nejvydelecnejsi , ale to myslim uz delas ne? 4. Tady jen ty h2h boti upgradovani ti improved testujes. 5. Memecoiny 6. Nova sekce musis nezavisle z pohledu ciziho agenta testovat jal je cymetica atraktivni k vydelavani penez. Musis kdyz narazis na cymeticu si rict wow na treba gem screener a protkoumat ho a dobyt dojmu ze jsi fakt nalezl dobre potencionalni investice. A pak ty turnaje agenti co jsme udelali ze se budes chtit tucastnit a pak vse na vlastni pest co znas za vhodne. Proste vis co je smysl tezo sekce ne?"*
+
+[operator 2026-10-11] *"Jo a uz vis o cymwtice dost i o tom jak opracujem tak ti dovoluji v laborce mit i svou 7 sekci kde si muzes delat a planovat co chces ale budes mit jen jasny cil a to zjistit jak na cymetice bydelat penize. Chapes to je hlavni moto, pokud prokazes ze na cymetice se daji vydelat penize pak platforma bude uspesna a to je ultimatni cil. Mas volnost k tomu dojit jak chces, ty si tady v teto nove lab sekci panem, muzes semnou konzultovat, posilat skrze mne pozadavky na cymeticu, muzes jim i navrhy posilat, feature requesty chapes davat jim feedback cokoli, oni jsou velmi vstricni k dobremu feedbacku"*
+
+[operator 2026-10-11] *"A je doufam napric celou laborkou a vsemi sekcemi a tou tvou zahrnuto ze si vedes taky zaznam at nedels stejne veci a udrzujes si a vyvojis pamet aby se to porad nekam posouvalo jo"*
+
+| # | Section (on /lab) | Who chooses | What it holds |
+|---|---|---|---|
+| 1 | Our cards | us, no Nexus question | a top-10 book of the live cards their backtest rates best after fees |
+| 2 | Nexus cards | Nexus | the cards he names, as before |
+| 3 | Bots | us and Nexus | every species at every band of the grid, and every band he names |
+| 4 | Head-to-head | us | a section-3 winner (improved) against its species' defaults (original) |
+| 5 | Memecoins | a study | FOMO Radar's hot against a control, and Hot headlines |
+| 6 | Outsider | a stranger agent | once a day, an agent with none of our memory finds Cymetica, says whether it would put money in, picks, and we measure its picks |
+| 7 | Desk | us, freely | one goal, how money is made on Cymetica; requests, proposals and feedback to Cymetica go through the operator |
+
+Sections 1, 6 and 7 trade on our own judgement beside his lane (2, and his picks in 3), never in its place, and none of them is ever called a control for his picks: the control group of 2026-09-21 stays refused. What the desk wants said to Cymetica is a draft the operator sends, one `@EventTraderQABot` block recorded when it is written; real money is only ever a proposal to the operator, after two windows that earned.
+
+The three-stop-loss rule (2026-10-07, under "The manager") retires a configuration, the clone at its band, not the species: the first decision of 2026-10-11 asks for every bot in every configuration, and `qa.lab.discarded_bots` has read per clone since deep pass T11. The band that lost three times never comes back.
+
+Memory runs across all seven: before a section starts anything it asks the register of what was already tried, and it does not repeat it unless the result needs a second window or the platform moved, which the room's `why` then says. What we know lives per section in `docs/lab-knowledge.md`, at most ten lines each, corrected after every verdict. The outsider alone never reads it: it has to stay a stranger.
+
+The sections are being built in phases, `docs/laborator-plan.md` (v3, phases P0 to P7). Until a phase lands, a tick does what the steps below describe.
 
 ## A tick
 
