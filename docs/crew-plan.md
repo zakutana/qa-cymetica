@@ -94,7 +94,7 @@ Building since 2026-10-11 ("stav firmu podle docs/crew-plan.md"). The status col
 | C5 | Manager: escalations, daily review, memory curation, operator channel | hotovo 4277ae18 |
 | C6 | watchdog: leases, three failures, a stuck department, a dead loop restarted | hotovo 5506421d |
 | C7 | process auditor: the day's numbers on the clock and in the patrol (b5def5f3), the week in deep pass step 11 | hotovo ba2108d7 |
-| C8 | reviews and the dry run | open |
+| C8 | reviews and the dry run: a reader, three triage agents (8 of 11 stood), fixes, a second reader (5 more, 4 from the fixes), fixes; the dry run green three times; tests/meta + tests/repo 1452 passed | hotovo 627f4a3e |
 | C9 | first live start on "zapni laborku" | open |
 
 ### Implementation decisions (2026-10-11, while building)
