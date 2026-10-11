@@ -545,8 +545,10 @@ def test_ten_dollars_into_every_hot_signal_is_answered_honestly():
     rugged = sig(9, radar_max_buy_5pct_usd=5000.0, age_seconds=100.0)
     # Readings inside the window that are NOT the sale: a peak at 6 h and a dip at 23 h. Selling
     # at the best checkpoint, or at the last one before 24 h, would change every figure below.
+    # The dip is BELOW the entry (1.0): a stop from entry, at any level to -60 %, fires on it and
+    # changes the figure too -- at 1.0 no stop below entry ever fired (deep pass 2026-10-11, A04).
     inside = [{**row, "liquidity_usd": 100_000.0}
-              for row in _path(good["key"], good["price_usd"], [(6, 3.0), (23, 1.0)])]
+              for row in _path(good["key"], good["price_usd"], [(6, 3.0), (23, 0.4)])]
     rows = [good, drained, unpriced, thin, blind, unread, young, switched, rugged, *inside,
             exit24(good, 1.5, 100_000.0), exit24(drained, 2.0, 4.0),
             exit24(thin, 3.0, 100_000.0), exit24(blind, 3.0, 100_000.0),

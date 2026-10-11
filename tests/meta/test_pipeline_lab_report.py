@@ -439,6 +439,18 @@ def test_every_figure_the_report_writes_reaches_the_lab_page(monkeypatch):
         f"{sorted(set(said['products']) - drawn - products_hidden_on_purpose)}")
     assert not products_hidden_on_purpose & drawn, "a product listed as hidden is drawn -- unlist it"
     assert products_hidden_on_purpose <= set(said["products"]), "unlist a product the report no longer writes"
+    # Deep pass 2026-10-11, B01: the names are still pooled within a product, so the cards'
+    # `lp.running` stood for a memecoin figure no memecoin code reads. The memecoin room is its own
+    # code -- memeRoom, and on its tab the value and the trade count (sectorTab's meme branch) --
+    # and each memecoin field is read there or named here. `running`: its tab counts settled
+    # trades on purpose; an open 24-hour window is not a result.
+    meme_body = page.TEMPLATE.split("function memeRoom(lp) {", 1)[1].split("\n}\n", 1)[0]
+    meme_read = set(re.findall(r"\blp\.([A-Za-z_][A-Za-z0-9_]*)", meme_body)) | {"net_pct", "n"}
+    meme_hidden = {"running"}
+    meme_unread = set(said["products"]["memecoins"]) - meme_read - hidden_on_purpose["lp"] - meme_hidden
+    assert not meme_unread, f"the report writes memecoin fields the memecoin room never shows: {sorted(meme_unread)}"
+    assert not meme_hidden & meme_read, "a memecoin field listed as hidden is shown -- unlist it"
+    assert meme_hidden <= set(said["products"]["memecoins"]), "unlist a memecoin field no longer written"
 
 
 @qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")

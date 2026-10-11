@@ -641,6 +641,18 @@ def takes_out_more_than_there_is(record) -> dict | None:
 _NOT_AN_AMOUNT = ("ts", "days", "as_of", "stale")
 
 
+def _says_amount(key: str) -> bool:
+    """A next_unlock field that can carry the day's tokens: `tokens`, `amount`, or one named a total
+    or an amount (`day_total`, `total_tokens`). Not a time (`end_ts`, `*_at`), a stock
+    (`circulating_after`, a supply), a share or a dollar figure: every other number read as a
+    possible total let a timestamp clear a short day (deep pass 2026-10-11, B07)."""
+    k = str(key).lower()
+    if k in _NOT_AN_AMOUNT or k.endswith(("_ts", "_at", "pct")) or "usd" in k or "circulating" in k \
+            or "supply" in k:
+        return False
+    return k in ("tokens", "amount") or "total" in k or k.endswith(("_tokens", "_amount"))
+
+
 def _amount(entry) -> float | None:
     """A tranche's or a recipient entry's token amount, under either name the record uses."""
     for key in ("amount", "tokens"):
@@ -658,7 +670,10 @@ def tranches_on(record, ts) -> list[dict]:
     for pool in pools:
         for t in pool if isinstance(pool, list) else ():
             amount = _amount(t)
-            if t.get("ts") != ts or amount is None:
+            # On that DAY (UTC), not to the second: a tranche a minute off is the same day's
+            # release (deep pass 2026-10-11, B07).
+            if not (_num(t.get("ts")) and _num(ts) and int(t["ts"] // 86400) == int(ts // 86400)) \
+                    or amount is None:
                 continue
             key = (t.get("ts"), t.get("who"), round(amount, 3))
             if key not in seen:
@@ -681,12 +696,12 @@ def next_unlock_against_its_day(record, *, tol: float = 0.005) -> dict | None:
         if not dated:
             return None
         ts = min(dated)
-        served = [sum(a for a in (_amount(e) for e in entries if e.get("ts") == ts) if a is not None)]
-        who = [e.get("who") for e in entries if e.get("ts") == ts]
+        same_day = [e for e in entries if _num(e.get("ts")) and int(e["ts"] // 86400) == int(ts // 86400)]
+        served = [sum(a for a in (_amount(e) for e in same_day) if a is not None)]
+        who = [e.get("who") for e in same_day]
     elif isinstance(nu, dict) and _num(nu.get("ts")):
         ts = nu["ts"]
-        served = [float(v) for k, v in nu.items() if k not in _NOT_AN_AMOUNT and _num(v)
-                  and not k.endswith("pct") and "usd" not in k]
+        served = [float(v) for k, v in nu.items() if _says_amount(k) and _num(v)]
         for v in nu.values():
             if isinstance(v, list) and v and all(isinstance(x, dict) for x in v):
                 served.append(sum(a for a in (_amount(x) for x in v) if a is not None))

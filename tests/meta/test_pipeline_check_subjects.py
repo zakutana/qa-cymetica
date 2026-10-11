@@ -492,10 +492,10 @@ def test_every_way_a_curl_can_be_written_is_read():
 CLOSED = "US equity markets are closed -- this card holds stocks."
 
 
-def _run_tradeability_check(rest_cards, mcp_cards, listing=None):
+def _run_tradeability_check(rest_cards, mcp_cards, listing=None, reason=CLOSED):
     """The check whole: REST answered from `rest_cards` (id -> tradeable_now),
     the listing from the same unless given, MCP from `mcp_cards` (id ->
-    tradeable_now, or an Exception to raise)."""
+    tradeable_now, or an Exception to raise); a closed card says `reason`."""
     from qa.client import McpError
 
     check = _load("tests/mcp/test_card_tradeability_agrees_across_surfaces.py",
@@ -503,7 +503,7 @@ def _run_tradeability_check(rest_cards, mcp_cards, listing=None):
 
     def card(cid, now):
         return {"id": cid, "status": "live", "tradeable_now": now,
-                "trading_blocked_reason": None if now else CLOSED}
+                "trading_blocked_reason": None if now else reason}
 
     rows = listing if listing is not None else [card(c, v) for c, v in rest_cards.items()]
     answers = {check.LIST: (200, {"cards": rows, "us_market_open": False})}
@@ -560,6 +560,14 @@ def test_a_card_that_is_closed_on_rest_and_open_on_mcp_fails():
     # A card the tool no longer returns is unread too.
     with pytest.raises(Inconclusive):
         _run_tradeability_check({c: False}, {c: None})
+    # Deep pass 2026-10-11, A02: the two guards behind a pass, each reached. Two cards closed on
+    # both and a third unread is no pass (every single-card case above raised before the guard);
+    # and while US markets are shut, cards closed only by their date never exercised the gate.
+    with pytest.raises(Inconclusive, match="could not be read"):
+        _run_tradeability_check({a: False, b: False, c: False}, {a: False, b: False, c: McpError("x", {})})
+    with pytest.raises(Inconclusive, match="market-hours gate"):
+        _run_tradeability_check({a: False, b: False}, {a: False, b: False},
+                                reason="This card's window has ended.")
 
     # The other card-state check, merged here (the tests/meta ceiling): a
     # card's index does not move further in one step than its basket can.
@@ -1101,6 +1109,13 @@ def _the_clone_summary_readings():
     assert switched_on({"perpetual_markets": None, "custom_markets": "BTC,ETH"})["perpetual"] == ["BTC", "ETH"], (
         "no perpetual list means the CLOB list, their rule's fallback")
     assert summary_misstates(nine, None) is None and summary_misstates(None, cut) is None, "unread, not judged"
+    # Deep pass 2026-10-11, B04: a count is its own list's. Nine perpetual and nine CLOB markets, four of
+    # each named, the "+5" only on the CLOB part: the 2026-10-10 perpetual defect, passed on the CLOB's count.
+    both = dict(nine, custom_markets="AAA,BBB,CCC,DDD,EEE,FFF,GGG,HHH,III")
+    pooled = summary_misstates(both, "This bot trades: BTC/ETH/VAIX/SBIO 5-min epochs · CLOB AAA/BBB/CCC/DDD +5 (paper)")
+    assert list(pooled) == ["perpetual_left_out"], pooled
+    assert summary_misstates(both, "This bot trades: BTC/ETH/VAIX/SBIO +5 5-min epochs · CLOB AAA/BBB/CCC/DDD +5 "
+                                   "(paper)") == {}, "each list counted in its own part is a fix"
 
 
 def _the_tournament_route_readings():

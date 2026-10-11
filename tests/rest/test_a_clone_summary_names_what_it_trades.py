@@ -74,18 +74,29 @@ def _named(symbol: str, line: str) -> bool:
     return re.search(rf"(?<![A-Z0-9]){re.escape(symbol)}(?![A-Z0-9])", line.upper()) is not None
 
 
+_PART_OF = {"perpetual": "epoch", "clob": "clob"}
+
+
+def _count_in_part(kind: str, summary: str) -> list[int]:
+    """The "+N" counts of one list's own part of the line ("... 5-min epochs", "CLOB ..."), parts
+    split at the line's separators. A count in another list's part covers nothing of this one
+    (deep pass 2026-10-11, B04: the CLOB's "+5" excused five perpetual markets left out)."""
+    parts = re.split(r"\s*[·•|]\s*", summary)
+    mine = [p for p in parts if _PART_OF[kind] in p.lower()]
+    return [int(n) for p in mine for n in re.findall(r"\+\s?(\d+)", p)]
+
+
 def summary_misstates(settings, summary) -> dict | None:
     """What a summary line gets wrong about its own settings, or None when it can't be judged
     (no line or no settings). `{}` when the line is right."""
     if not isinstance(summary, str) or not summary.strip() or not isinstance(settings, dict):
         return None
     wrong = {}
-    counts = [int(n) for n in re.findall(r"\+\s?(\d+)", summary)]
     for kind, symbols in switched_on(settings).items():
         if not symbols:
             continue
         left_out = [s for s in symbols if not _named(s, summary)]
-        if left_out and len(left_out) not in counts:
+        if left_out and len(left_out) not in _count_in_part(kind, summary):
             wrong[f"{kind}_left_out"] = {"on": len(symbols), "named": len(symbols) - len(left_out),
                                          "left_out": left_out}
     off = [k for k in ("custom_markets", "perpetual_markets") if str(settings.get(k) or "").strip().upper() == OFF]

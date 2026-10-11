@@ -73,6 +73,11 @@ def test_the_league_answers_only_what_it_computes_exactly_and_only_once():
         assert all(key in puzzle["snapshot"] for key in body["reasoning"]["data_used"])
     arb_text = " ".join(f["name"] for f in league.answer_body(ARB, 7)["reasoning"]["factors"])
     assert f"{gap:.2f}" in arb_text and f"{gas:.2f}" in arb_text, arb_text
+    # Deep pass 2026-10-11, B02: the sequence's reasoning is held to its numbers too -- the distance
+    # it quotes, both ways, and the two lengths.
+    seq_text = " ".join(f["name"] for f in league.answer_body(SEQ, 7)["reasoning"]["factors"])
+    assert f": {_brute(a, b)}" in seq_text and f"({_brute(b, a)})" in seq_text, seq_text
+    assert f"({len(a)} and {len(b)} bases" in seq_text, seq_text
     assert not league.explained({"data_used": ["x"], "factors": [{"name": "one", "weight": 1}],
                                  "rejected_options": ["y"]}), "one factor is not explained"
     assert not league.explained({"data_used": [], "factors": [{}, {}], "rejected_options": ["y"]})
@@ -135,6 +140,14 @@ def test_the_league_answers_only_what_it_computes_exactly_and_only_once():
     assert script.outcome_of(422, {"detail": "x"}) == "rejected"
     assert script.outcome_of(502, None) == "unknown", "a 5xx may have landed"
     assert script.outcome_of(200, None) == "unknown", "a 2xx with no body may have landed"
+    # Deep pass 2026-10-11, B02: what a raised POST was. A timeout came after the request left and
+    # may have landed (`unknown`, so answered_ids keeps it); only a connection never made is not_sent.
+    import httpx
+
+    request = httpx.Request("POST", "https://cymetica.com/api/v1/agent-league/puzzles/72/answers")
+    assert script._outcome_of(httpx.ReadTimeout("slow", request=request)) == "unknown", (
+        "a timeout after the POST left was read as never sent: the answer would go twice")
+    assert script._outcome_of(httpx.ConnectError("refused", request=request)) == "not_sent"
 
     class Reply:
         def __init__(self, status, body):

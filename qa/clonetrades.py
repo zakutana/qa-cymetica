@@ -165,6 +165,18 @@ def decision_source_reads(clones: list[dict], species_by_id: dict) -> int:
                if _decision_flagged(c, species_by_id) and c.get("id") not in unread)
 
 
+def decision_verdict(found: list, judged: int, unread: list) -> str:
+    """The decision-source check's verdict: `failed` on any contradiction; otherwise
+    `inconclusive` while a differing clone is unread or nothing was judged -- the clones that
+    could carry the defect were not read, so the rest reading clean is no pass (deep pass
+    2026-10-11, B06) -- and `passed` only then."""
+    if found:
+        return "failed"
+    if unread or not judged:
+        return "inconclusive"
+    return "passed"
+
+
 def decision_source_contradictions(clones: list[dict], species_by_id: dict) -> list[dict]:
     """Clones whose own `live_decision_source` says they decide on another rule
     than the one their species is described by.
@@ -182,7 +194,10 @@ def decision_source_contradictions(clones: list[dict], species_by_id: dict) -> l
         if not sp:
             continue
         text = str(sp.get("description") or "").lower()
-        named = [w for w in _indicator_words(sp) if w.lower() in text]
+        # As a word: "ema" inside "systematic", "rsi" inside "persistent" named nothing
+        # (deep pass 2026-10-11, B05). A digit may follow ("EMA20").
+        named = [w for w in _indicator_words(sp)
+                 if re.search(rf"(?<![a-z0-9]){re.escape(w.lower())}(?![a-z])", text)]
         if not named:
             continue
         found.append({

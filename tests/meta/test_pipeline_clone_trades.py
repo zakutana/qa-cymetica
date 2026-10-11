@@ -126,3 +126,15 @@ def test_a_clone_deciding_on_another_rule_than_its_description_is_caught():
     assert ct.decision_source_reads([own], stripped) == 1 and ct.decision_source_unread([own], stripped) == []
     assert ct.decision_source_unread([other], species) == []
     assert ct.decision_source_contradictions([renamed], species) == []
+    # Deep pass 2026-10-11, B05: an indicator is named as a word, not as letters inside one.
+    ema = {"s1": dict(species["s1"], description="A systematic trend follower with a persistent pattern filter.",
+                      primary_indicators=[{"name": "EMA_20"}, {"name": "RSI_14"}])}
+    assert ct.decision_source_contradictions([other], ema) == [], "'ema' inside 'systematic' read as naming EMA"
+    named = {"s1": dict(ema["s1"], description="Trades EMA crossovers, filtered by RSI.")}
+    assert ct.decision_source_contradictions([other], named)[0]["named"] == ["EMA", "RSI"]
+    # B06: every differing clone unread, the rest read clean: not a pass.
+    assert ct.decision_verdict([], judged=1, unread=["c1"]) == "inconclusive", (
+        "the clones that could carry the defect were unread and the verdict was passed")
+    assert ct.decision_verdict([], judged=3, unread=[]) == "passed"
+    assert ct.decision_verdict([], judged=0, unread=[]) == "inconclusive"
+    assert ct.decision_verdict(found, judged=1, unread=["c2"]) == "failed"

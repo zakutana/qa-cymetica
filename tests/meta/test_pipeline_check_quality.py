@@ -928,6 +928,15 @@ def test_the_is_answer_rule_is_self_calibrating_and_still_bites():
                                                  months=[{"tranches": [team, later]}]))["short"], (
         "one recipient on its day is its whole day")
     assert next_unlock_against_its_day(dict(arb, today={}, months=[])) is None, "no tranche read is unread"
+    # Deep pass 2026-10-11, B07: a timestamp or a stock beside the amount is no total of the day,
+    # and a tranche a minute off the unlock's second is on its day all the same.
+    for extra in ({"end_ts": day + 3600}, {"circulating_after": 3.2e9}):
+        assert next_unlock_against_its_day(dict(arb, next_unlock=dict(arb["next_unlock"], **extra)))["short"], (
+            f"{extra} was read as the day's total")
+    minute = dict(inv, ts=day + 60)
+    assert next_unlock_against_its_day(dict(arb, today={"tranches": [team, minute, later]},
+                                            months=[{"tranches": [team, minute, later]}]))["short"], (
+        "a tranche 60 s after the unlock's second was read as another day")
     assert next_unlock_against_its_day(dict(arb, next_unlock={"kind": "unknown", "why": "x"})) is None
     assert next_unlock_against_its_day(None) is None
 

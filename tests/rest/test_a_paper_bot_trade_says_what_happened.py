@@ -296,6 +296,11 @@ def test_a_clone_decides_on_the_strategy_its_species_is_described_by(rest_truste
         # A renamed flag, or species ids that no longer join, judges nothing: not a clean read.
         raise Inconclusive(f"{len(read)} clones carry a decision source, but none carries "
                            f"differs_from_display as true/false beside a species it joins in {PREFIX}/available")
+    if ct.decision_verdict(found, judged, unread) == "inconclusive":
+        # B06 (deep pass 2026-10-11): the differing clones unread, the rest clean, is no pass.
+        raise Inconclusive(f"{len(unread)} clone(s) that differ from their display belong to species "
+                           f"with no readable primary_indicators: {unread[:6]}; the rest reading clean "
+                           f"says nothing of them")
     by_species = {}
     for f in found:
         by_species.setdefault(f["species"], f)
