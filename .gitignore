@@ -135,6 +135,11 @@ state/backtests.jsonl
 # above: appended to by a running poller, snapshotted by the deep pass.
 state/fomo_signals.jsonl
 
+# The outsider, the laboratory's section 6 (scripts/outsider.py): a stranger agent's runs,
+# its picks and its coins' checkpoints. Written by a laboratory tick, so tracked it would
+# cost a run its level V; `keep.py snapshot` copies it into audits/lab/.
+state/outsider.jsonl
+
 # The Hot headlines watch -- scripts/hot_watch.py, a round every tick. Unlike
 # the diaries above it is NOT snapshotted: about 2 MB a day would grow git for
 # ever. The six-hourly reading goes into lab.jsonl, which is.

@@ -54,7 +54,10 @@ DIARIES = ("rooms.jsonl", "nexus.jsonl", "paper.jsonl", "lab.jsonl",
            "fomo_signals.jsonl",
            # Every paper clone, transfer and pause (scripts/clone.py). In git
            # until 2026-09-23, written mid-tick; `release` let go of it.
-           "clones.jsonl")
+           "clones.jsonl",
+           # The outsider's runs, picks and coin checkpoints (scripts/outsider.py,
+           # the laboratory's section 6, 2026-10-11): one run a day, none twice.
+           "outsider.jsonl")
 def snapshot_dir() -> Path:
     """Beside the state it archives, not beside the repository.
 
