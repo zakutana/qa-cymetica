@@ -36202,15 +36202,16 @@
         "not_checked_in": "run-20261011T065815Z-2a8bea98"
       },
       "filing": {
-        "state": "RAISED",
+        "state": "FIX_CLAIMED",
         "adjudicated_by": {
-          "event_id": "5a47722cc476b1f85bda279d0b793bc5e33a1b43dd4930e5478f83d12a5adb8a",
-          "at": "2026-10-11T03:07:53+00:00"
+          "event_id": "26f2fa32b67ac62240c80e65f4e1660ed860c3b6c939de2d2ec942115e8f054c",
+          "at": "2026-10-11T07:26:20+00:00"
         },
         "reports": [
           {
             "report_id": 185,
-            "status": "pending"
+            "status": "paid",
+            "status_at": "2026-10-11T07:26:20+00:00"
           }
         ],
         "refused": [],
@@ -36243,6 +36244,15 @@
             "run_id": "run-20261011T062754Z-8b6a7acb"
           },
           "at": "2026-10-11T06:47:35+00:00"
+        },
+        {
+          "axis": "filing",
+          "from": "RAISED",
+          "to": "FIX_CLAIMED",
+          "cause": {
+            "event_id": "26f2fa32b67ac62240c80e65f4e1660ed860c3b6c939de2d2ec942115e8f054c"
+          },
+          "at": "2026-10-11T07:26:20+00:00"
         }
       ],
       "regressions": [],
@@ -36468,8 +36478,8 @@
         "reports": [
           {
             "report_id": 187,
-            "status": "fixed",
-            "status_at": "2026-10-11T06:47:58+00:00"
+            "status": "paid",
+            "status_at": "2026-10-11T07:26:20+00:00"
           }
         ],
         "refused": [],
@@ -36607,8 +36617,8 @@
         "reports": [
           {
             "report_id": 186,
-            "status": "fixed",
-            "status_at": "2026-10-11T06:47:58+00:00"
+            "status": "paid",
+            "status_at": "2026-10-11T07:26:20+00:00"
           }
         ],
         "refused": [],
@@ -36726,7 +36736,7 @@
     "CHECK CHANGED": 1
   },
   "events_head": {
-    "seq": 3805,
-    "chain": "1accddcb18909f640236c29b996ec30f894a8b907dbb1011c92b208e715b66a8"
+    "seq": 3828,
+    "chain": "075bd4ecccdad4ecb291355d80317bb87f9779c3102a01f08ff139976ca46b1b"
   }
 }
