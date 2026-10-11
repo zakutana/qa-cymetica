@@ -45,7 +45,7 @@ nikdy nebylo další na řadě.
 - [x] 2026-10-08  #175: kontrolu přepsat na jejich nový štítek „synthetic“ (hotovo 2026-10-10, c164b580)
 - [x] 2026-10-10  Kontrola, že historie transakcí stránkuje dopředu (hotovo 2026-10-10, 609c4032)
 - [x] 2026-10-10  Report přes submit.py: /api/v1/account/me/transactions u USDC (i bez filtru) vrací při dalším offsetu stejnou stránku; endpoint není v žádné dokumentaci. Kontrola už je (609c4032), podá ji příští sweep. (podáno #184; hotovo 2026-10-10)
-- [ ] 2026-10-10  audits/lab/fomo_signals.jsonl má v gitu 84 MB a keep.py snapshot ho kopíruje celý každým deep passem; nad 100 MB GitHub push odmítne. Snapshot dělit po měsících nebo balit (jako evidence), test na strop velikosti.
+- [x] 2026-10-10  audits/lab/fomo_signals.jsonl má v gitu 84 MB; nad 100 MB GitHub push odmítne. Snapshot dělit nebo balit, test na strop velikosti. (po dnech, xz, 87 → 5,8 MB; strop 50 MB v HEAD; hotovo 2026-10-11, e450656a)
 - [ ] 2026-10-04  11. 10.: připomenout operátorovi test X (jeho odpovědi nejsou vidět): otevřít odpověď v anonymním okně. Do té doby žádné odpovědi s odkazem ani šablonou, jen vlastní tweety a lajky. Podle výsledku další týden, nebo Premium.
 - [x] 2026-10-10  Agent Tournaments (BB): opravy zadal agentovi, co psal spec. Až pošle odkaz, porovnat jeho verzi s outbox/agent-tournaments/*.patch (prompty, sekce 7, pin na commit, ≤8 000 znaků), než to podá. Detail: outbox/bb-request-agent-tournaments.md. (hotovo 2026-10-10, 1f9566a)
 - [x] 2026-10-11  Dvě kontroly + report přes submit.py: /movers čte 100 z 641 karet; ET-28100 bod 1: 9 trhů jako 4 bez „+5“, „CLOB NONE“. (podáno #189 a #190; „leading“ $0.00 je jejich řazení, nepodáno; hotovo 2026-10-11)
