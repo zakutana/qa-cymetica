@@ -714,6 +714,7 @@
    "what": "no company worker runs scripts/a2a.py; the desk's question to Cymetica is a draft the operator sends (desk.md, the desk body, lab-desk.md)",
    "why": "R04, 3/3: CLAUDE.md 'Nove oddeleni' -- a message to anyone is a draft the operator sends -- and the laborator skill said the same while the desk sent a2a itself",
    "votes": {
+    "t1": "no",
     "t2": "no",
     "t3": "no"
    },
