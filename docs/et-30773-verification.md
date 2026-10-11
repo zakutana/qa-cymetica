@@ -1,13 +1,15 @@
 # ET-30773 Agent Tournaments: the 32 lines read against the live page
 
 Read 2026-10-11 05:40-06:30 UTC, anonymous (the page, its API, llms.txt, the agent card, /apps, /build, /api-docs, the OpenAPI, the MCP tool list) plus the repo's own client for the MCP read. BB-SHIPPED 2026-10-10 22:50 UTC, on time; the deadline is 2026-10-11 21:38 UTC. **The verdict is the operator's; nothing was posted.**
-Not done, on purpose: a seat request (POST /tables/{id}/seat is a write), anything signed in, anything that needs a running table, phone width (operator, 2026-10-08), spacing and looks (operator, 2026-10-04).
+Not done, on purpose: a seat request (POST /tables/{id}/seat is a write), anything signed in, anything that needs a running table, phone width (operator, 2026-10-08). Pixel spacing is left out too (operator, 2026-10-04).
 
-**Tally: 7 PASS, 10 PARTIAL, 5 FAIL, 8 NOT CHECKED, 1 skipped (29), 1 n/a (31).**
+**The look comes first, and it fails (operator, 2026-10-11: "to je nepripustne").** Put beside `design/screenshots/1-lobby.png` and `3-take-a-seat.png` at 1440 px, the live page has the structure and the colours of the design and none of its look: the site's plain header instead of the chip logo and the Lobby / Top agents / How it works bar; a small hero instead of the three-line display headline, with no PICK A TABLE button; tables as thin ellipses with dots instead of poker-table cards with robot avatars, a crown, YOU and a large POT; no All / $5 / $50 / Mine filters; Top agents as a plain table instead of five rating cards; the prompts in small scrolling boxes; Manual setup without the bot list. The Gem Screener came out as drawn; this did not.
+
+**Tally: 7 PASS, 8 PARTIAL, 7 FAIL, 8 NOT CHECKED, 1 skipped (29), 1 n/a (31).** (Lines 1 and 15 are graded FAIL on the look.)
 
 | # | Line | Read | Why |
 |---|---|---|---|
-| 1 | Page at /agent-tournaments | PARTIAL | Exists, titled "10 trading bots, 7 days, best ROI". Six of the seven screens in the brief are not there as screens (see 10, 19, 21, 22, 28). |
+| 1 | Page at /agent-tournaments "to match the attached design" | FAIL | Exists and carries the structure and colours, but not the look (see above); six of the seven screens in the brief are not there as screens (10, 19, 21, 22, 28). |
 | 2 | The idea | PASS | Hero, tables of 10 seats, 7 days, best ROI %, stakes $5 and $50. |
 | 3 | Rules numbers | PARTIAL | Every number matches: buy-in 5/50, capital 25/250, max loss 30/300, prizes 30/15/5 and 300/150/50, 60/30/10, volume 75/750, starts at the 10th seat. "No rake in the pilot" is not stated anywhere. |
 | 4 | Cymetica only | PASS | "Where it trades: Cymetica only"; "only the seated bot's own closed trades on Cymetica count". Live mode is closed (C1). |
@@ -21,7 +23,7 @@ Not done, on purpose: a seat request (POST /tables/{id}/seat is a write), anythi
 | 12 | One seat: Your agent card, filters, top 5 by Elo | NOT CHECKED / PARTIAL | Signed-in card not read. No All / $5 / $50 / Mine filter. Top agents are ranked by return and come from the Bot Olympics (our own "lab Wave 2 ..." clones lead it), not by Elo and not from the tournaments. |
 | 13 | 2+ seats hero | NOT CHECKED | Needs seats. |
 | 14 | Your agents board | NOT CHECKED | Needs seats. |
-| 15 | Table cards | PARTIAL | Mini table with ten seat marks, pot, "10 seats left". Live, final-day and done states need a running table. |
+| 15 | Table cards | FAIL | A thin ellipse with ten dots, pot, "10 seats left"; the brief draws poker-table cards with robot avatars, a crown, YOU and a large POT. Live, final-day and done states need a running table. |
 | 16 | Take a seat | PASS | The deal (buy-in, capital, max loss, prizes when full, volume for a prize, Cymetica only), "3 ways in, pick one". |
 | 17 | Way 1, your agent | PASS | Prompt block, "Copy prompt". No invite code and no 24 h: their own design (API key plus an approve link), which the brief left to them. |
 | 18 | Way 2, clone | PASS | No picker on the page; the prompt tells the AI to read the backtests, pick one not at the table, clone it in paper mode and seat it. |
