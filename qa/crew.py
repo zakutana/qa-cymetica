@@ -414,6 +414,30 @@ the company:
 - when nothing can move until a date (a room's window, an answer owed), say so and
   sleep: `python scripts/crew.py snooze --until <ISO time> --why "..."` (a day at most).
 """,
+    "manager": """\
+You are the manager: you talk only with the operator and the departments, decide who does
+what, and keep every department's memory worth reading. You do no department's work
+yourself. What is the company's to decide you decide; only the operator's own rules,
+money, and a message that goes out under their name are theirs. The operator reads
+little: a note to them is the number and the decision, in Czech, a few lines --
+`python scripts/crew.py tell --text "..." [--key <stable key>]`. By the ticket's kind:
+- `operator`: the operator's own words. Act on them -- a ticket to the department whose
+  work it is, a changed approach -- and answer with `crew.py tell`.
+- `help`: a ticket failed three times (its id is in the details; `crew.py show <id>`
+  prints its runs). Never the same try a fourth time: a new ticket with a changed approach,
+  another department, or -- when it is theirs -- the operator.
+- `stuck`: a department moved nothing for a day. Read its runs and its memory, change its
+  "How we work", or tell the operator why it cannot move.
+- `decision`: a department needs a decision. Decide what is the company's; pass on what is
+  the operator's, with what each answer would do.
+- `audit`: the process auditor's proposals (the deep pass's weekly look back). Carry out
+  what is the company's; what touches the operator's rules goes to them.
+- `daily`: the day's review. `python scripts/crew.py status`; each department's progress;
+  then curate every department's memory (`memory_over` in the details names what grew):
+  merge, correct, and move what stopped being true to `## Archive`, never silently away
+  -- ten lines a heading. A note to the operator only if something needs them.
+Your own lessons: `python scripts/crew.py lesson manager --heading know|work|wrong --text "..."`.
+""",
 }
 
 # -- the clock (C3) --------------------------------------------------------------------------
@@ -596,6 +620,131 @@ def crew_brake(kind: str, rows: list, now: datetime | None = None) -> str | None
     if not os.environ.get("QA_CREW_DEPT"):
         return None
     return {"bb": bb_brake, "a2a": a2a_brake}[kind](rows, now)
+
+
+# -- the manager (C5) ------------------------------------------------------------------------
+#
+# Departments talk to the manager; the manager -- and the supervisor's own alarms -- talk
+# to the operator, through one diary a session reads and marks read (`crew.py inbox`), and
+# whose unread count the session start names (`processes.reminders`).
+CODE_ROOT = Path(__file__).resolve().parent.parent
+SPEAKERS = ("manager", "supervisor", "watchdog")
+DAILY_HOUR = 6
+HEADINGS = {"know": "## What we know", "work": "## How we work",
+            "wrong": "## How we went wrong"}
+MEMORY_LINES = 10
+# Whose lessons go into a file of their own under docs/dept/. The laboratory keeps its per
+# section (`lab.py log --lesson --section`), the desk its plan (docs/lab-desk.md).
+LESSON_DEPARTMENTS = ("bugs", "manager")
+
+
+def operator_path() -> Path:
+    return state_dir() / "crew_operator.jsonl"
+
+
+def tell(text: str, *, by: str, key: str | None = None,
+         now: datetime | None = None) -> tuple[dict, bool]:
+    """A note to the operator, and whether this call wrote it (a key writes once)."""
+    if by not in SPEAKERS:
+        raise PermissionError(f"{by} talks to the manager, not to the operator")
+    path = operator_path()
+    with file_lock(path):
+        rows = load(path)
+        if key:
+            for row in rows:
+                if row.get("type") == "note" and row.get("key") == key:
+                    return row, False
+        numbers = [int(m.group(1)) for row in rows if row.get("type") == "note"
+                   for m in [re.match(r"OP-(\d+)$", str(row.get("id") or ""))] if m]
+        row = {"type": "note", "id": f"OP-{(max(numbers) if numbers else 0) + 1:04d}",
+               "at": stamp(_now(now)), "from": by, "key": key, "text": str(text)[:2000]}
+        _append(path, row)
+    return row, True
+
+
+def unread_notes() -> list[dict]:
+    rows = load(operator_path())
+    read = {row.get("id") for row in rows if row.get("type") == "read"}
+    return [row for row in rows if row.get("type") == "note" and row.get("id") not in read]
+
+
+def mark_read(ids: list[str], now: datetime | None = None) -> None:
+    path = operator_path()
+    with file_lock(path):
+        for note_id in ids:
+            _append(path, {"type": "read", "id": note_id, "at": stamp(_now(now))})
+
+
+def memory_file(dept: str) -> Path | None:
+    spec = DEPARTMENTS[dept]
+    return (CODE_ROOT / spec.memory[0]) if spec.memory else None
+
+
+def add_lesson(dept: str, heading: str, text: str, now: datetime | None = None) -> Path:
+    """One dated line at the end of a heading's list in the department's own memory."""
+    if dept not in LESSON_DEPARTMENTS:
+        raise ValueError(f"{dept} keeps its lessons elsewhere: "
+                         + ("`lab.py log --lesson --section <s>`" if dept == "lab"
+                            else "its own file, docs/lab-desk.md"))
+    if heading not in HEADINGS:
+        raise ValueError(f"heading is one of {', '.join(HEADINGS)}")
+    path = memory_file(dept)
+    lines = path.read_text(encoding="utf-8").splitlines()
+    try:
+        start = lines.index(HEADINGS[heading])
+    except ValueError as exc:
+        raise ValueError(f"{path} has no {HEADINGS[heading]!r}") from exc
+    end = next((i for i in range(start + 1, len(lines)) if lines[i].startswith("## ")),
+               len(lines))
+    items = [i for i in range(start + 1, end) if lines[i].startswith("- ")]
+    line = f"- {_now(now).date().isoformat()} {' '.join(str(text).split())}"
+    if items:
+        lines.insert(items[-1] + 1, line)
+    else:
+        lines[start + 1:start + 1] = ["", line]
+    path.write_text("\n".join(lines) + "\n", encoding="utf-8")
+    return path
+
+
+# Which headings of a memory file keep to ten lines, by the file's own rule; a file not
+# named here keeps every heading to ten but its archive. The laboratory's manager file is
+# ten open improvements beside a log of feedback, and the desk's file is a plan.
+MEMORY_LIMITS = {"docs/lab-manager.md": ("Open improvements",), "docs/lab-desk.md": ()}
+
+
+def memory_over(path: Path, headings: tuple[str, ...] | None = None) -> dict[str, int]:
+    """The headings of a memory file holding more than ten lines -- the archive aside,
+    which is where lines go so the rest stays read. `headings` limits the count to those."""
+    try:
+        lines = Path(path).read_text(encoding="utf-8").splitlines()
+    except OSError:
+        return {}
+    counts: dict[str, int] = {}
+    heading = None
+    for line in lines:
+        if line.startswith("## "):
+            heading = line[3:].strip()
+        elif heading and heading != "Archive" and line.startswith("- ") and (
+                headings is None or heading in headings):
+            counts[heading] = counts.get(heading, 0) + 1
+    return {h: n for h, n in counts.items() if n > MEMORY_LINES}
+
+
+def memories_over() -> dict[str, dict[str, int]]:
+    """Every department memory file past its size, for the manager's daily review."""
+    out = {}
+    for spec in DEPARTMENTS.values():
+        for rel in spec.memory:
+            over = memory_over(CODE_ROOT / rel, MEMORY_LIMITS.get(rel))
+            if over:
+                out[rel] = over
+    return out
+
+
+def daily_key(now: datetime) -> str | None:
+    """The day's review is due from six on the operator's clock, once a local day."""
+    local = now.astimezone()
+    return None if local.hour < DAILY_HOUR else f"daily:{local.date().isoformat()}"
 
 
 def clock_state() -> dict:

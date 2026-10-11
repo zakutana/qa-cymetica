@@ -93,6 +93,15 @@ def reminders(facts: dict, now: datetime) -> list[str]:
             f"Deep pass neběžel {waited} a čeká na něj {work} — až půjdeš "
             f"spát, řekni „jdu spat\".")
 
+    # The company's manager writes to the operator (docs/crew-plan.md, C5): named until a
+    # session reads the notes out, in Czech, and marks them read.
+    crew_notes = facts.get("crew_unread") or []
+    if crew_notes:
+        first = " ".join(str(crew_notes[0].get("text") or "").split())
+        first = first if len(first) <= 120 else first[:117] + "..."
+        out.append(f"Manažer firmy ti píše ({len(crew_notes)}): {first} — přečte je "
+                   f"`python scripts/crew.py inbox`.")
+
     week = _hours_since(facts.get("week_last"), now)
     if week is None or week / 24.0 >= WEEK_DAYS:
         due = "nikdy neproběhl" if week is None else f"je {week / 24:.0f} dní starý"
@@ -323,7 +332,10 @@ CEILINGS = {
     # outsider's look as code whose stumbles become Bugs' tickets.
     # 835 -> 836 for the desk under the company (C4): its own pace, its sleep on purpose,
     # and its brakes on Build it Better and a2a refused before a body exists.
-    "meta_tests": 836,
+    # 836 -> 837 for the manager (C5): it alone speaks to the operator, a session reads and
+    # marks its notes, each department writes its own memory, the day's review is told what
+    # grew past ten lines. The session-start line went into tests/repo/test_reminders.py.
+    "meta_tests": 837,
 }
 
 BASH_SCRIPT = re.compile(r"python\s+scripts[/\\]([a-z_]+)\.py")
@@ -1167,9 +1179,20 @@ def facts() -> dict:
         "plan_phases": plan_phases(),
         "evidence_unarchived": _unarchived(),
         "morning_missing": _morning_missing(),
+        "crew_unread": _crew_unread(),
         **_lab_facts(),
         **_surface_facts(),
     }
+
+
+def _crew_unread() -> list[dict]:
+    """The manager's notes nobody has read yet; none when the company never ran."""
+    try:
+        from qa import crew
+
+        return crew.unread_notes()
+    except Exception:  # noqa: BLE001 -- a reminder never fails a session
+        return []
 
 
 def _morning_missing() -> bool:

@@ -403,6 +403,13 @@ def clock_look(now: datetime | None = None) -> tuple[str, str]:
     else:
         left = crew.TICK_EVERY - (now - last)
         said.append(f"next tick in {int(left.total_seconds() // 60)}m")
+    daily = crew.daily_key(now)
+    if daily:
+        ticket, new = crew.add_ticket(
+            "manager", "daily", "the day's review: progress, memories, a note if needed",
+            key=daily, payload={"memory_over": crew.memories_over()}, by="clock", now=now)
+        if new:
+            said.append(f"daily review: {ticket['id']}")
     if crew.desk_due(crew.tickets(), crew.last_run_end("desk"), crew.snoozed("desk", now), now):
         ticket, new = crew.add_ticket(
             "desk", "step", "one step towards proving that money can be made on Cymetica",
@@ -639,6 +646,47 @@ def snooze(hours: float | None, until: str | None, why: str) -> int:
     return 0
 
 
+def tell(text: str, key: str | None) -> int:
+    try:
+        note, new = crew.tell(text, by=_by(), key=key)
+    except PermissionError as exc:
+        print(f"[crew] refused: {exc}")
+        return 2
+    print(f"[crew] {note['id']} {'written' if new else 'already written'}")
+    return 0
+
+
+def inbox() -> int:
+    """What the manager says to the operator, printed once and marked read. A session's
+    to read; a department marking them read would hide them from the operator."""
+    if os.environ.get("QA_CREW_DEPT"):
+        print("[crew] refused: the operator's inbox is read by a session")
+        return 2
+    notes = crew.unread_notes()
+    for note in notes:
+        print(printable(f"{note['id']} {note['at'][:16]} {note['from']}: {note['text']}"))
+    crew.mark_read([note["id"] for note in notes])
+    if not notes:
+        print("nothing unread")
+    return 0
+
+
+def lesson(dept: str, heading: str, text: str) -> int:
+    by = _by()
+    if by in crew.DEPARTMENTS and by not in (dept, "manager"):
+        print(f"[crew] refused: {dept}'s memory is written by {dept} or the manager")
+        return 2
+    try:
+        path = crew.add_lesson(dept, heading, text)
+    except (ValueError, OSError) as exc:
+        print(f"[crew] refused: {exc}")
+        return 2
+    over = crew.memory_over(path)
+    print(f"[crew] written to {path.name}"
+          + (f"; over ten lines: {over} -- the manager's daily review curates" if over else ""))
+    return 0
+
+
 def unhold() -> int:
     held, by = crew.holder(), _by()
     if held is None:
@@ -707,6 +755,14 @@ def main(argv: list[str] | None = None) -> int:
     sleep.add_argument("--hours", type=float)
     sleep.add_argument("--until")
     sleep.add_argument("--why", required=True)
+    note = sub.add_parser("tell", help="the manager's note to the operator")
+    note.add_argument("--text", required=True)
+    note.add_argument("--key")
+    sub.add_parser("inbox", help="the manager's notes, printed and marked read")
+    learned = sub.add_parser("lesson", help="one line into a department's memory")
+    learned.add_argument("dept", choices=list(crew.DEPARTMENTS))
+    learned.add_argument("--heading", required=True, choices=list(crew.HEADINGS))
+    learned.add_argument("--text", required=True)
     args = parser.parse_args(argv)
 
     with contextlib.suppress(AttributeError, ValueError):
@@ -754,6 +810,12 @@ def main(argv: list[str] | None = None) -> int:
         return unhold()
     if args.cmd == "snooze":
         return snooze(args.hours, args.until, args.why)
+    if args.cmd == "tell":
+        return tell(args.text, args.key)
+    if args.cmd == "inbox":
+        return inbox()
+    if args.cmd == "lesson":
+        return lesson(args.dept, args.heading, args.text)
     if args.cmd == "list":
         for ticket in crew.tickets().values():
             if args.open and ticket["status"] not in ("open", "claimed"):

@@ -376,12 +376,14 @@ def test_the_clock_runs_the_laboratorys_tick_and_routes_what_it_decided(company,
     sup.clock_look(now=first)
     assert (company / "tick.env").read_text(encoding="utf-8") == "clock"
     state = crew.tickets()
-    # The desk's own step comes from the clock too (C4), not from the tick's `desk`.
-    assert sorted((t["to"], t["kind"]) for t in state.values()) == [
-        ("bugs", "sweep"), ("desk", "step"), ("lab", "lab"), ("outsider", "outsider")]
-    assert all(t["from"] == "clock" for t in state.values())
     ticks = [r for r in crew.load(crew.runs_path()) if r.get("type") == "tick"]
     assert len(ticks) == 1 and ticks[0]["decide"][0] == "answer NEX-0201"
+    # What the tick made; the desk's step and the manager's day come from the clock's own
+    # pace (C4, C5), never from the tick's `desk`.
+    routed = [state[tid] for tid in ticks[0]["made"]]
+    assert sorted((t["to"], t["kind"]) for t in routed) == [
+        ("bugs", "sweep"), ("lab", "lab"), ("outsider", "outsider")]
+    assert all(t["from"] == "clock" for t in state.values())
     sup.clock_look(now=first + timedelta(minutes=5))
     assert len([r for r in crew.load(crew.runs_path()) if r.get("type") == "tick"]) == 1
     # Held still for a level-V run, the tick waits: it can append to the journal.
@@ -547,6 +549,66 @@ def test_the_desk_keeps_its_own_pace_sleeps_on_purpose_and_its_brakes_are_code(
     # Outside the company the operator's own sends are not braked here.
     monkeypatch.delenv("QA_CREW_DEPT")
     assert crew.crew_brake("a2a", list(range(9)), now) is None
+
+
+@qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
+def test_the_manager_alone_speaks_to_the_operator_and_curates_every_memory(company,
+                                                                         monkeypatch):
+    """C5. Departments talk to the manager, and only the manager (and the supervisor's
+    own alarms) talks to the operator; what it says waits, unread, until a session reads it.
+    Each department writes its own memory under three headings; the manager's daily
+    review is told which of them have grown past ten lines."""
+    sup = _script("crew")
+    monkeypatch.setenv("QA_CREW_DEPT", "desk")
+    assert sup.main(["tell", "--text", "I need money"]) == 2, "a department tells the manager"
+    monkeypatch.setenv("QA_CREW_DEPT", "manager")
+    assert sup.main(["tell", "--text", "Desk: STR-0130 +4,1 % po 3 dnech; nic po tobě",
+                     "--key", "desk-2026-10-11"]) == 0
+    assert sup.main(["tell", "--text", "the same again", "--key", "desk-2026-10-11"]) == 0
+    unread = crew.unread_notes()
+    assert [n["text"] for n in unread] == ["Desk: STR-0130 +4,1 % po 3 dnech; nic po tobě"]
+    assert unread[0]["id"] == "OP-0001" and unread[0]["from"] == "manager"
+    monkeypatch.delenv("QA_CREW_DEPT")
+    assert sup.main(["inbox"]) == 0
+    assert crew.unread_notes() == [], "read once, by a session, and marked read"
+
+    # Memory: its own file, its own headings, written by itself or the manager.
+    memory = company / "repo-docs" / "bugs.md"
+    memory.parent.mkdir()
+    memory.write_text("# Bugs\n\n## What we know\n\n- 2026-10-01 one\n\n## How we work\n\n"
+                      "## How we went wrong\n\n## Archive\n", encoding="utf-8")
+    monkeypatch.setitem(crew.DEPARTMENTS, "bugs", dataclasses.replace(
+        crew.DEPARTMENTS["bugs"], memory=(str(memory),)))
+    monkeypatch.setenv("QA_CREW_DEPT", "bugs")
+    assert sup.main(["lesson", "bugs", "--heading", "wrong",
+                     "--text", "trusted a ticket's wording; reproduce first"]) == 0
+    text = memory.read_text(encoding="utf-8")
+    wrong = text.split("## How we went wrong", 1)[1].split("## Archive", 1)[0]
+    assert "trusted a ticket's wording" in wrong
+    assert sup.main(["lesson", "manager", "--heading", "know", "--text", "x"]) == 2
+    assert sup.main(["lesson", "lab", "--heading", "know", "--text", "x"]) == 2, \
+        "the laboratory keeps its lessons per section (lab.py log --lesson)"
+    for n in range(12):
+        crew.add_lesson("bugs", "know", f"fact {n}")
+    assert crew.memory_over(memory) == {"What we know": 13}
+
+    # The daily review: once a local day from six, told which memories grew past ten.
+    prague = timezone(timedelta(hours=2))
+    assert crew.daily_key(datetime(2026, 10, 12, 5, 59, tzinfo=prague)) is None
+    assert crew.daily_key(datetime(2026, 10, 12, 6, 0, tzinfo=prague)) == "daily:2026-10-12"
+    monkeypatch.delenv("QA_CREW_DEPT")
+    monkeypatch.setenv("QA_CREW_TICK", json.dumps([sys.executable, "-c",
+                                                   "print('decide: none')"]))
+    morning = datetime.now(timezone.utc).replace(hour=10)
+    sup.clock_look(now=morning)
+    sup.clock_look(now=morning + timedelta(hours=1))
+    daily = [t for t in crew.tickets().values() if t["kind"] == "daily"]
+    assert len(daily) == 1 and daily[0]["to"] == "manager"
+    assert daily[0]["payload"]["memory_over"] == {str(memory): {"What we know": 13}}
+    told = crew.prompt("manager", daily[0])
+    for kind in ("operator", "help", "stuck", "decision", "audit", "daily"):
+        assert f"`{kind}`" in told, kind
+    assert "crew.py tell" in told and "Archive" in told
 
 
 # -- the loops ------------------------------------------------------------------------------

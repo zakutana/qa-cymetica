@@ -114,6 +114,20 @@ def test_a_missing_morning_report_is_named_so_the_session_makes_it():
 
 
 @qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
+def test_what_the_companys_manager_wrote_is_named_until_a_session_reads_it():
+    """docs/crew-plan.md, C5: the manager's notes to the operator wait in one diary. The
+    session start names how many and the first, so the session reads them out in Czech
+    (`crew.py inbox` marks them read); read, nothing is said. The session start has no
+    room for a slot of its own (eight lines), so this rides the reminders."""
+    mod = _module()
+    notes = [{"id": "OP-0003", "from": "manager", "text": "Desk: H1 10 obchodů, +2,1 % "
+              "čistě; rozhodnutí o penězích je tvoje"}]
+    said = mod.reminders(_facts(crew_unread=notes), NOW)
+    assert _says(said, "manažer", "(1)", "H1 10 obchodů", "crew.py inbox"), said
+    assert not _says(mod.reminders(_facts(crew_unread=[]), NOW), "manažer")
+
+
+@qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
 def test_a_loop_on_opus_is_not_a_reminder_any_more():
     """Plan v2, V6 reminded them to type `/model sonnet` when the lab's loop
     ran on Opus, because it cost. The operator took the cost off our hands on

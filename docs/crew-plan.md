@@ -90,7 +90,7 @@ Building since 2026-10-11 ("stav firmu podle docs/crew-plan.md"). The status col
 | C1 | `qa/crew.py` (bus, departments, argv, outcome), `scripts/crew.py` (loops, start, stop, status), `scripts/commit.py` | hotovo 2c64db05 |
 | C2 | Bugs department: tickets in, the one writer of the bug pipeline, the tree held still for level V | hotovo 6e4956e7 |
 | C3 | the clock: the laboratory's tick routed to lab, bugs and outsider; the outsider's code run | hotovo 179cc957 |
-| C4 | Desk under the company: its own pace, its snooze, its brakes in code | open |
+| C4 | Desk under the company: its own pace, its snooze, its brakes in code | hotovo fb0eebe4 |
 | C5 | Manager: escalations, daily review, memory curation, operator channel | open |
 | C6 | watchdog: leases, three failures, a stuck department, a dead loop restarted | open |
 | C7 | process auditor: the day's numbers on the clock and in the patrol, the week in deep pass step 11 | open |
