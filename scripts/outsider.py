@@ -44,7 +44,6 @@ import importlib.util
 import json
 import os
 import re
-import shutil
 import subprocess
 import sys
 from datetime import datetime, timezone
@@ -53,7 +52,7 @@ from pathlib import Path
 REPO_ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(REPO_ROOT))
 
-from qa import outsider  # noqa: E402
+from qa import crew, outsider  # noqa: E402
 from qa.client import build_client, install_client_guard  # noqa: E402
 from qa.config import identities, load_dotenv  # noqa: E402
 from qa.console import printable  # noqa: E402
@@ -114,16 +113,9 @@ def home() -> Path:
     return Path(base) / "cymetica-outsider"
 
 
-def claude_exe() -> str | None:
-    """`claude` on PATH, else the newest one the desktop app keeps."""
-    found = shutil.which("claude")
-    if found:
-        return found
-    roots = [Path(os.environ.get("APPDATA") or "") / "Claude" / "claude-code"]
-    candidates = sorted((p for root in roots if root.is_dir()
-                         for p in root.glob("*/*/claude.exe")),
-                        key=lambda p: p.stat().st_mtime, reverse=True)
-    return str(candidates[0]) if candidates else None
+# `claude` on PATH, else the newest one the desktop app keeps: one computation, shared
+# with the company's workers (docs/crew-plan.md).
+claude_exe = crew.claude_exe
 
 
 def independent(output: str, code: int) -> tuple[bool, str]:

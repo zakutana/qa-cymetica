@@ -1,6 +1,6 @@
 # Laborka jako firma: manažer a oddělení
 
-Zatím jen návrh k pochopení. Stavět začnu až na tvoje slovo.
+Stavím od 11. 10. na tvoje „stav firmu“. Spustí se až na „zapni laborku“.
 
 ## Pro tebe
 
@@ -80,6 +80,33 @@ Operator, 2026-10-11 (verbatim vision, to be pinned): a main manager, Opus at th
 
 ### Phases (each test-first, commit on main; nothing starts until the operator says so)
 C0 pins and design doc -> C1 supervisor + ticket bus + status (fake `claude` in tests) -> C2 Bugs department (tickets in, single writer) -> C3 Laboratory department routing -> C4 Desk under the crew -> C5 Manager: escalations, daily review, memory curation, operator channel -> C6 anti-stuck watchdog -> C7 process auditor (patrol metrics daily, weekly Opus review via ohlednuti) -> C8 reviews -> C9 first live start on "zapni laborku".
+
+Building since 2026-10-11 ("stav firmu podle docs/crew-plan.md"). The status column is what
+`processes.py plan_phases` reads: a phase is done when it names a commit this repository has.
+
+| Phase | What | Status |
+|---|---|---|
+| C0 | design decisions below, memory files for Bugs and Manager; the operator's decision in CLAUDE.md and the `crew` skill wait for their word in chat (the auto-mode guard refused the write) | open |
+| C1 | `qa/crew.py` (bus, departments, argv, outcome), `scripts/crew.py` (loops, start, stop, status), `scripts/commit.py` | open |
+| C2 | Bugs department: tickets in, the one writer of the bug pipeline, the tree held still for level V | open |
+| C3 | the clock: the laboratory's tick routed to lab, bugs and outsider; the outsider's code run | open |
+| C4 | Desk under the company: its own pace, its snooze, its brakes in code | open |
+| C5 | Manager: escalations, daily review, memory curation, operator channel | open |
+| C6 | watchdog: leases, three failures, a stuck department, a dead loop restarted | open |
+| C7 | process auditor: the day's numbers on the clock and in the patrol, the week in deep pass step 11 | open |
+| C8 | reviews and the dry run | open |
+| C9 | first live start on "zapni laborku" | open |
+
+### Implementation decisions (2026-10-11, while building)
+- **Files ride the department shape** (`qa/departments.py`): `state/crew.jsonl` (runs, loop events, the day's numbers), `state/crew_tickets.jsonl` (the bus), `state/crew_operator.jsonl` (to the operator), `state/crew/report.json` (the /lab report). The patrol counts them as `crew.py`'s records and `keep.py snapshot` copies the diaries; `state/crew/tickets.jsonl` would have been missed by both. All gitignored: tracked, a loop's write would cost a sweep its level V.
+- **Loops**: one per department (bugs, lab, desk, outsider, manager) plus **the clock**, each a detached process holding a lock for its life, so a name runs once and a dead loop frees its name by itself. Departments only consume tickets; the clock makes them: the laboratory's tick every 20 min (its `decide:` items routed: lab items to lab, hunts to bugs, `outsider` to outsider, `desk` dropped because the desk keeps its own pace), the desk's next step, the manager's daily review, the watchdog and the day's numbers. So the laboratory's tick stays the company's one clock for vendor news and hunts -- no second cadence for Bugs.
+- **Tickets**: idempotent by key (a key never makes a second ticket); claimed under `qa.state.file_lock` with a lease (timeout + 10 min); `done`, `fail` (an attempt spent), `release` (none spent). Three failures end a ticket and the watchdog gives it to the manager; a failed manager ticket goes to the operator. A failure of the machinery (not logged in, overloaded) releases the ticket without spending an attempt, and consecutive failed runs back a loop off 1, 2, 4 ... 60 minutes.
+- **Git**: a worker commits only through `scripts/commit.py` (one lock, named paths, a `Crew: <dept> <ticket>` trailer); `git add`, `git commit`, `git push`, `git tag`, `git revert`, `crew.py start|stop`, cron and wakeups are denied in every worker's argv. No script here pushes (grep, 2026-10-11).
+- **The deep pass**: no loop claims a ticket while `processes.pass_in_flight()`; a running worker finishes within its timeout.
+- **Memory**: lab = `docs/lab-knowledge.md` + `docs/lab-manager.md`, desk = `docs/lab-desk.md` (both existing), bugs and manager = `docs/dept/*.md`; the outsider reads none.
+- **The weekly auditor is the deep pass's step 11** (the one weekly look back, one checkpoint), widened with the company's numbers; no second weekly run. The daily auditor is code on the clock.
+- **The operator channel** reaches the session start through `processes.reminders()`: the hook's eight-line cap leaves no new slot.
+- **No budget brake**: `--max-budget-usd` would stand a worker down on cost, which CLAUDE.md bars (2026-09-25); turns and timeouts bound a run.
 
 ### C8, reviews (operator, 2026-10-11: "nekolikanasobne review celeho kodu a vseho ... cela firma musi davat smysl")
 1. Per phase: `/code-review` over that phase's diff before its commit (state/fold-adjacent code at high-xhigh, as CLAUDE.md asks for qa/state.py, fold.py, measure.py).

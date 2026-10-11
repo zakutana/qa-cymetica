@@ -140,6 +140,16 @@ state/fomo_signals.jsonl
 # cost a run its level V; `keep.py snapshot` copies it into audits/lab/.
 state/outsider.jsonl
 
+# The company (docs/crew-plan.md, scripts/crew.py): what its loops did, the ticket bus,
+# what the manager says to the operator, and its small per-loop files (heartbeats, the
+# worker a department is running, logs, the stop flag). Written by detached loops while a
+# sweep may be in flight, so tracked they would cost a run its level V; the three diaries
+# are a department's, so `keep.py snapshot` copies them into audits/lab/.
+state/crew.jsonl
+state/crew_tickets.jsonl
+state/crew_operator.jsonl
+state/crew/
+
 # The Hot headlines watch -- scripts/hot_watch.py, a round every tick. Unlike
 # the diaries above it is NOT snapshotted: about 2 MB a day would grow git for
 # ever. The six-hourly reading goes into lab.jsonl, which is.

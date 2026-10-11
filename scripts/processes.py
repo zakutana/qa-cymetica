@@ -309,7 +309,13 @@ CEILINGS = {
     # 823 -> 824 for the Agent League door (2026-10-09, test_pipeline_league.py): the two
     # exact families and their reasoning, the refusals around them, and the transport holding
     # the two writes to their declared fields. Nothing equivalent existed to fold it into.
-    "meta_tests": 824,
+    # 824 -> 832 for the company's shell (2026-10-11, docs/crew-plan.md C1,
+    # test_pipeline_crew.py): a ticket made, claimed and ended once; what every worker is
+    # denied; a run settling its ticket by how it ended; a timeout killing the whole tree;
+    # one loop per name, waiting out a deep pass, ending on stop; a detached loop
+    # outliving its window; the status; a commit taking only its own paths. Thirteen were
+    # written and merged to eight, one per reading.
+    "meta_tests": 832,
 }
 
 BASH_SCRIPT = re.compile(r"python\s+scripts[/\\]([a-z_]+)\.py")
