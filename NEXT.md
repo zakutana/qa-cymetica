@@ -24,7 +24,7 @@ nikdy nebylo další na řadě.
 
 ---
 
-- [ ] 2026-10-11  Laborka v3 (docs/laborator-plan.md) postavená, P3–P7 čekají na první tahy: v prvním `python scripts/lab.py launch NEX-0137`; outsider až po jednorázovém přihlášení `claude` (operátor) a `outsider.py probe`. Zbytek výzkumu botů (degen prompty, odpovědi Cymetiky): docs/bots-research-plan.md „Zbývá".
+- [ ] 2026-10-11  Laborka v3 (docs/laborator-plan.md) postavená, P3–P7 čekají na tahy: v prvním `python scripts/lab.py launch NEX-0137`; outsider až po přihlášení `claude` (operátor) a `outsider.py probe`. Zbytek výzkumu botů (degen prompty, odpovědi Cymetiky): docs/bots-research-plan.md „Zbývá".
 - [x] 2026-10-03  Dopředný test dvou pravidel pro karty (short jen akcie, long s kryptem), soudí jen karty vzniklé od 4. 10.: `python scripts/card_rules.py` (hotovo 2026-10-04, 8d4ddfd1)
 
 - [ ] 2026-10-08  Sledovat: #142, #136, #121, #51; FOMO #762 (path_coverage Robinhood 0 → 0,9 do ~13. 10., Solana 0,011). #171/#173/#174 selhávají i po opravě. Liga jen na slovo/`/loop`. ET-30676: SaaSHub čeká na review, 3 formuláře u nich; PR awesome-web3 #831 otevřený.
