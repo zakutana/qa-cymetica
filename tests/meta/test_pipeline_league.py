@@ -309,6 +309,8 @@ def _bb_records(bb):
                     "detail": "One open request per app.", "code": "OPEN_REQUEST_EXISTS",
                     "open_ticket": "ET-30773", "stage": "requested",
                     "your_text_was_not_filed": True, "improvements": body.get("improvements")})
+            if body.get("app_name") == "Unsure app":
+                return httpx.Response(201, json={"ticket": "ET-40002", "request_token": secret + "2"})
             return httpx.Response(201, json={
                 "ticket": "ET-40001", "app_name": body.get("app_name"), "created": True,
                 "is_idea": True, "stage": "requested", "spec_status": "proposed",
@@ -366,10 +368,17 @@ def _bb_records(bb):
         assert last["outcome"] == "refused" and last["open_ticket"] == "ET-30773", last
         assert last.get("ticket") is None and last["token_held"] is False, last
 
+        # A 2xx that does not say whether it filed is `unknown` -- and a token it carries is
+        # still kept: it is shown once, and there is no asking for it again.
+        assert bb.main(["file", "--app-name", "Unsure app", "--improvements-file", str(wish),
+                        "--confirm"]) == 1
+        assert bb.load()[-1]["outcome"] == "unknown" and bb.load()[-1]["token_held"] is True
+        assert bb.tokens()["ET-40002"] == secret + "2"
+
         # Ours, from the diary; and a ticket read back.
         mine = bb.mine(bb.load())
-        assert [(m["ticket"], m["outcome"]) for m in mine] == [("ET-40001", "accepted"),
-                                                              (None, "refused")], mine
+        assert [(m["ticket"], m["outcome"]) for m in mine] == [
+            ("ET-40001", "accepted"), (None, "refused"), ("ET-40002", "unknown")], mine
         assert mine[0]["token_held"] is True and mine[1]["open_ticket"] == "ET-30773"
         assert bb.main(["get", "ET-40001"]) == 0 and sent[-1][:2] == (
             "GET", "/api/v1/build-it-better/requests/ET-40001")

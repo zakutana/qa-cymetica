@@ -345,8 +345,12 @@ def _send(client, kind: str, url: str, body: dict | None, ticket_id: str | None 
     secret = said.pop("request_token", None)
     secret = secret if isinstance(secret, str) and secret else None
     outcome = outcome_of(kind, response.status_code, served)
-    named = said.get("ticket") if outcome in ("accepted", "joined") else None
-    if kind == "file" and secret and isinstance(named, str):
+    named = said.get("ticket")
+    named = named if (200 <= response.status_code < 300 and isinstance(named, str)
+                      and TICKET.fullmatch(named)) else None
+    # Kept whatever the outcome is called: shown once, it cannot be asked for again, and a 2xx
+    # that does not say whether it filed (`unknown`) may still have.
+    if kind == "file" and secret and named:
         _keep_token(named, secret)
     done = ticket_id or named
     record = {"id": intent["id"], "type": "outcome", "kind": kind, "at": _now(),
