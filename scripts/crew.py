@@ -48,6 +48,15 @@ BACKOFF_MAX_MINUTES = 60
 # timeout but one (the desk's 50 minutes). Past it, the run goes at level R instead.
 HOLD_WAIT_SECONDS = 50 * 60
 HOLD_POLL_SECONDS = 10.0
+# How often a running worker's loop looks whether a deep pass has started: the pass then
+# has the tree to itself, so the run is ended and its ticket given back (C8 review).
+ABORT_POLL_SECONDS = 15.0
+# `QA_CREW_SETTINGS` points the dry run at a settings file of its own; a worker cannot use
+# it, because `crew.py start` is denied to every worker.
+SETTINGS = Path(os.environ.get("QA_CREW_SETTINGS") or REPO_ROOT / ".claude" / "settings.json")
+# What every worker runs to hand over, close and commit; a company started without them
+# in the allowlist closes every ticket with nothing done (C8 review).
+REQUIRED_ALLOW = ("Bash(python scripts/crew.py:*)", "Bash(python scripts/commit.py:*)")
 
 
 # -- processes -------------------------------------------------------------------------------
@@ -86,7 +95,8 @@ def kill_tree(pid: int | None) -> None:
         return
     if os.name == "nt":
         subprocess.run(["taskkill", "/T", "/F", "/PID", str(int(pid))],
-                       capture_output=True, text=True)
+                       capture_output=True, text=True,
+                       creationflags=subprocess.CREATE_NO_WINDOW)
         return
     import signal
 
@@ -95,8 +105,12 @@ def kill_tree(pid: int | None) -> None:
 
 
 def _group_flags() -> dict:
+    """A worker or a tick in a group of its own, so its whole tree can be killed -- and,
+    on Windows, without a console window: a detached loop has none, and a console program
+    started from it would open one, which closed by hand kills the run (C8 review)."""
     if os.name == "nt":
-        return {"creationflags": subprocess.CREATE_NEW_PROCESS_GROUP}
+        return {"creationflags": subprocess.CREATE_NEW_PROCESS_GROUP
+                | subprocess.CREATE_NO_WINDOW}
     return {"start_new_session": True}
 
 
@@ -185,23 +199,38 @@ def loop_pid(name: str) -> int | None:
 
 # -- one worker run --------------------------------------------------------------------------
 
-def run_process(args: list[str], env: dict, timeout: int) -> dict:
+def run_process(args: list[str], env: dict, timeout: int, abort=None) -> dict:
+    """Run one process to its end, its timeout, or `abort()` turning true -- a deep pass
+    starting -- whichever comes first; the last two kill its whole tree."""
     started = time.monotonic()
     proc = subprocess.Popen(args, stdout=subprocess.PIPE, stderr=subprocess.PIPE,
                             stdin=subprocess.DEVNULL, text=True, encoding="utf-8",
                             errors="replace", cwd=str(REPO_ROOT), env=env, **_group_flags())
-    timed_out = False
-    try:
-        out, err = proc.communicate(timeout=timeout)
-    except subprocess.TimeoutExpired:
-        timed_out = True
-        kill_tree(proc.pid)
+    timed_out = aborted = False
+    deadline = started + timeout
+    out = err = ""
+    while True:
+        left = deadline - time.monotonic()
         try:
-            out, err = proc.communicate(timeout=30)
+            # Retrying communicate after its timeout loses no output (the docs say so).
+            out, err = proc.communicate(timeout=max(0.1, min(left, ABORT_POLL_SECONDS)
+                                                    if abort else left))
+            break
         except subprocess.TimeoutExpired:
-            out, err = "", ""
+            if time.monotonic() >= deadline:
+                timed_out = True
+            elif abort is not None and abort():
+                aborted = True
+            else:
+                continue
+            kill_tree(proc.pid)
+            try:
+                out, err = proc.communicate(timeout=30)
+            except subprocess.TimeoutExpired:
+                out, err = "", ""
+            break
     return {"pid": proc.pid, "code": proc.returncode, "stdout": out or "",
-            "stderr": err or "", "timed_out": timed_out,
+            "stderr": err or "", "timed_out": timed_out, "aborted": aborted,
             "seconds": round(time.monotonic() - started, 1)}
 
 
@@ -268,7 +297,7 @@ def run_outsider(ticket: dict) -> dict:
 CODE_DEPARTMENTS = {"outsider": run_outsider}
 
 
-def run_ticket(dept: str, ticket: dict) -> dict:
+def run_ticket(dept: str, ticket: dict, abort=None) -> dict:
     """Start the department's worker on one ticket and wait for it, within its timeout."""
     spec = crew.DEPARTMENTS[dept]
     if spec.model is None:
@@ -278,16 +307,18 @@ def run_ticket(dept: str, ticket: dict) -> dict:
         return {"pid": None, "code": 127, "stdout": "no claude executable on this machine",
                 "stderr": "", "timed_out": False, "seconds": 0.0}
     args = crew.argv(dept, crew.prompt(dept, ticket), command)
-    return run_process(args, worker_env(dept, ticket), spec.timeout)
+    return run_process(args, worker_env(dept, ticket), spec.timeout, abort=abort)
 
 
-def work_once(dept: str) -> dict | None:
+def work_once(dept: str, abort=None) -> dict | None:
     """Claim one ticket, run it, and settle it; the run's row, or None when nothing waits.
 
     A worker closes its own ticket (`crew.py done`/`fail`). One that ends without having
     done so is settled here from how it ended: success closes it, a failure of the work
-    spends an attempt, a failure of the machinery (not logged in, overloaded) gives it
-    back without spending one.
+    spends an attempt, a failure of the machinery gives it back -- counted against the
+    ticket only when it is unexplained, never when it is everyone's (logged out, a usage
+    limit, a deep pass starting). `abort` is the loop's: the run is ended when it turns
+    true. None by default, so a test that runs during a deep pass is not ended by it.
     """
     # The marker goes up before the look at the hold, and `hold` sets the hold before it
     # looks at the markers: so either the hold sees this run coming, or this run sees the
@@ -304,7 +335,7 @@ def work_once(dept: str) -> dict | None:
     crew.set_active(dept, ticket, pid=os.getpid())
     crew.beat(dept, "running", f"{ticket['id']} {ticket['kind']}")
     try:
-        ran = run_ticket(dept, ticket)
+        ran = run_ticket(dept, ticket, abort=abort)
     except Exception as exc:  # noqa: BLE001 -- a worker that cannot start is machinery
         ran = {"pid": None, "code": None, "stdout": "",
                "stderr": f"the worker could not be started: {exc!r}"[:400],
@@ -312,23 +343,30 @@ def work_once(dept: str) -> dict | None:
     finally:
         crew.set_active(dept, None)
     said = crew.outcome(ran["code"], ran["stdout"], ran["timed_out"], ran["stderr"])
+    if ran.get("aborted"):
+        said = {**said, "outcome": "infra", "widespread": True,
+                "why": "a deep pass started; the run was ended and its ticket given back"}
     after = crew.tickets().get(ticket["id"]) or {}
     if after.get("status") == "claimed":
+        releases = after.get("releases", 0)
         if said["outcome"] == "ok":
             crew.close(ticket["id"], "done", by="supervisor",
                        note=said["result"][:300] or "the run ended without a word")
-        elif said["outcome"] == "infra" and after.get("releases", 0) + 1 < crew.MAX_RELEASES:
-            crew.close(ticket["id"], "release", by="supervisor", note=said["why"])
+        elif said["outcome"] == "infra" and (said["widespread"]
+                                             or releases < crew.MAX_RELEASES):
+            crew.close(ticket["id"], "release", by="supervisor", note=said["why"],
+                       widespread=said["widespread"])
         elif said["outcome"] == "infra":
             crew.close(ticket["id"], "fail", by="supervisor",
-                       note=f"released {crew.MAX_RELEASES} times: {said['why']}")
+                       note=f"released {releases} times: {said['why']}")
         else:
             crew.close(ticket["id"], "fail", by="supervisor", note=said["why"])
     return crew.record({"type": "run", "dept": dept, "ticket": ticket["id"],
                         "kind": ticket["kind"], "pid": ran["pid"], "exit": ran["code"],
                         "timed_out": ran["timed_out"], "seconds": ran["seconds"],
                         **{k: said[k] for k in ("outcome", "why", "turns", "cost_usd",
-                                                "tokens", "result")}})
+                                                "tokens", "result", "denials",
+                                                "widespread")}})
 
 
 # -- the loops -------------------------------------------------------------------------------
@@ -472,18 +510,23 @@ def clock_look(now: datetime | None = None) -> tuple[str, str]:
     """The clock's look: the tickets it makes on the departments' behalf, when each is due."""
     now = now or datetime.now(timezone.utc)
     said = [*heal(now), *watch(now)]
-    hold = crew.holder(now)
     state = crew.clock_state()
     last = crew.moment(state.get("tick_at"))
-    if hold:
-        # Held still for a level-V run: the tick can append to the journal, so it waits.
-        said.append(f"tick waits: the tree is held by {hold.get('by')}")
-    elif last is None or now - last >= crew.TICK_EVERY:
-        state["tick_at"] = crew.stamp(now)
-        crew.save_clock_state(state)
-        row = run_tick(now)
-        said.append(f"tick: decide {' + '.join(row['decide']) or 'none'}"
-                    + (f", {len(row['made'])} ticket(s)" if row["made"] else ""))
+    if last is None or now - last >= crew.TICK_EVERY:
+        # work_once's protocol: the marker up before the look at the hold, so a hold set in
+        # between still sees the tick coming (C8 review). Held, the tick waits: it can
+        # append to the journal under a level-V run.
+        crew.set_active("clock", {"id": None, "kind": "tick"})
+        hold = crew.holder(now)
+        if hold:
+            crew.set_active("clock", None)
+            said.append(f"tick waits: the tree is held by {hold.get('by')}")
+        else:
+            state["tick_at"] = crew.stamp(now)
+            crew.save_clock_state(state)
+            row = run_tick(now)
+            said.append(f"tick: decide {' + '.join(row['decide']) or 'none'}"
+                        + (f", {len(row['made'])} ticket(s)" if row["made"] else ""))
     else:
         left = crew.TICK_EVERY - (now - last)
         said.append(f"next tick in {int(left.total_seconds() // 60)}m")
@@ -525,7 +568,7 @@ def look(name: str, paused=deep_pass_running) -> tuple[str, str]:
         why = f"the tree is held still by {hold.get('by')}: {hold.get('why')}"
         crew.beat(name, "held", why)
         return "held", why
-    row = work_once(name)
+    row = work_once(name, abort=paused)
     if row is None:
         crew.beat(name, "idle", "no tickets")
         return "idle", "no tickets"
@@ -652,7 +695,23 @@ def logged_in(command: list[str]) -> tuple[bool, str]:
     return True, ""
 
 
+def allowlist_missing() -> list[str]:
+    """What the project's allowlist lacks of what every worker must run."""
+    try:
+        allow = json.loads(SETTINGS.read_text(encoding="utf-8"))["permissions"]["allow"]
+    except (OSError, ValueError, KeyError, TypeError):
+        allow = []
+    return [rule for rule in REQUIRED_ALLOW if rule not in allow]
+
+
 def start() -> int:
+    missing = allowlist_missing()
+    if missing:
+        # A headless worker cannot be asked: refused, its hand-over, its close and its
+        # commit would all be lost while its ticket read "done".
+        print(f"[crew] .claude/settings.json does not allow {', '.join(missing)}; every "
+              f"worker needs them -- nothing started")
+        return 1
     command = crew.claude_command()
     if command is None:
         print("[crew] no claude executable on this machine; nothing started")
@@ -893,7 +952,16 @@ def main(argv: list[str] | None = None) -> int:
     if args.cmd == "loop":
         return loop(args.name)
     if args.cmd == "once":
-        row = work_once(args.dept)
+        # Beside a running loop it would be a second writer of the department, and its end
+        # would delete the loop's marker under a live worker (C8 review).
+        with loop_lock(args.dept) as held:
+            if not held:
+                print(f"[crew] refused: the {args.dept} loop is running")
+                return 2
+            if deep_pass_running():
+                print("[crew] refused: a deep pass is running")
+                return 2
+            row = work_once(args.dept, abort=deep_pass_running)
         print(json.dumps(row, ensure_ascii=False) if row else "no tickets")
         return 0
     if args.cmd == "ticket":
@@ -901,7 +969,7 @@ def main(argv: list[str] | None = None) -> int:
             ticket, made = crew.add_ticket(args.to, args.kind, args.text, key=args.key,
                                            payload=json.loads(args.payload)
                                            if args.payload else None, by=_by())
-        except ValueError as exc:
+        except (ValueError, PermissionError) as exc:
             print(f"[crew] refused: {exc}")
             return 2
         print(f"{ticket['id']} {'opened' if made else 'already exists: ' + ticket['status']}")

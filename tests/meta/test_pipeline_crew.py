@@ -164,6 +164,26 @@ def test_every_worker_is_denied_push_tag_and_raw_commits():
     assert "--to bugs" not in told, "Bugs is not told to hand a bug to itself"
     assert "--to bugs" in crew.prompt("desk", {"id": "T-1", "kind": "step", "text": "x"})
 
+    # C8 review: a second worker beside a department's loop (`once`), an allowlisted
+    # interpreter running a file the worker just wrote (pytest), and the files that speak
+    # to the operator or rule the repository -- closed to every worker; pytest stays Bugs'.
+    for name, spec in crew.DEPARTMENTS.items():
+        if spec.model is None:
+            continue
+        denied = crew.denied(name)
+        assert "Bash(python scripts/crew.py once:*)" in denied, name
+        assert ("Bash(python -m pytest:*)" in denied) == (name != "bugs"), name
+        for path in ("CLAUDE.md", "NEXT.md", "DEEP-PASS.md", ".claude/**"):
+            assert f"Edit({path})" in denied and f"Write({path})" in denied, (name, path)
+
+    # Who may open which ticket: the operator's words come only from a session, the
+    # manager's day and the watchdog's alarms only from the code that makes them.
+    assert not crew.may_open("lab", "manager", "operator")
+    assert crew.may_open("session", "manager", "operator")
+    assert not crew.may_open("desk", "manager", "help")
+    assert crew.may_open("desk", "bugs", "bug") and crew.may_open("desk", "manager", "decision")
+    assert crew.may_open("manager", "bugs", "sweep") and not crew.may_open("lab", "bugs", "sweep")
+
 
 def _ends_are_read():
     ok = json.dumps({"is_error": False, "result": "done", "num_turns": 4,
@@ -187,6 +207,18 @@ def _ends_are_read():
     # failed is on stderr (finding 4).
     lost = crew.outcome(1, "", False, stderr="error: unknown option '--effort'")
     assert lost["outcome"] == "infra" and "unknown option" in lost["why"]
+    # C8 review, finding 1: a run whose call to the company's own commands was refused
+    # did not hand anything over, whatever it says: the machinery is broken, not the work.
+    refused = json.dumps({"is_error": False, "result": "handed the bug to Bugs",
+                          "permission_denials": [{"tool_name": "Bash", "tool_input": {
+                              "command": "python scripts/crew.py ticket --to bugs ..."}}]})
+    said = crew.outcome(0, refused, False)
+    assert said["outcome"] == "infra" and said["widespread"] and "crew.py" in said["why"]
+    pushed = json.dumps({"is_error": False, "result": "done", "permission_denials": [
+        {"tool_name": "Bash", "tool_input": {"command": "git push"}}]})
+    assert crew.outcome(0, pushed, False)["outcome"] == "ok", "a refused push is the floor"
+    assert crew.outcome(0, pushed, False)["denials"] == 1
+    assert crew.outcome(1, out, False)["widespread"], "logged out is everyone's"
 
 
 @qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
@@ -234,12 +266,39 @@ def test_a_run_settles_its_ticket_by_how_it_ended(company, monkeypatch):
     stuck, _ = crew.add_ticket("bugs", "bug", "the CLI is gone", now=NOW)
     assert sup.work_once("bugs")["outcome"] == "infra"
     assert crew.tickets()[stuck["id"]]["status"] == "open"
-    # ... and machinery that keeps failing on one ticket spends its attempt in the end,
-    # so an infrastructure failure cannot hold a ticket in a loop for ever.
+    # ... and machinery that keeps failing on one ticket spends its attempt in the end, so
+    # an unexplained failure cannot hold a ticket in a loop for ever: exactly MAX_RELEASES
+    # releases, then an attempt (C8 review, finding 5: it was one fewer than it said).
     monkeypatch.setattr(crew, "MAX_RELEASES", 2)
+    sup.work_once("bugs")
+    assert crew.tickets()[stuck["id"]]["releases"] == 2
     sup.work_once("bugs")
     after = crew.tickets()[stuck["id"]]
     assert after["attempts"] == 1 and "released 2 times" in after["why"]
+    # A failure that is everyone's -- logged out, a usage limit, a deep pass starting --
+    # never counts against a ticket: an hour's outage must not fail the front of the queue.
+    monkeypatch.setenv("QA_CREW_CLAUDE", json.dumps([sys.executable, str(FAKE)]))
+    monkeypatch.setenv("FAKE_CLAUDE_MODE", "notloggedin")
+    patient, _ = crew.add_ticket("bugs", "bug", "waits out an outage", now=NOW)
+    for _ in range(crew.MAX_RELEASES + 3):
+        assert sup.work_once("bugs")["outcome"] == "infra"
+    after = crew.tickets()[patient["id"]]
+    assert after["status"] == "open" and after["attempts"] == 0 and after["releases"] == 0
+
+    # A deep pass that starts while a worker runs: the run is ended and the ticket given
+    # back, so the pass never works beside it (C8 review, finding 2).
+    monkeypatch.setenv("FAKE_CLAUDE_MODE", "sleep")
+    monkeypatch.setattr(sup, "ABORT_POLL_SECONDS", 0.2)
+    started = time.monotonic()
+    ran = sup.run_process([sys.executable, str(FAKE), "-p", "x"], sup.worker_env(
+        "bugs", {"id": "T-9"}), 60, abort=lambda: time.monotonic() - started > 1.0)
+    assert ran["aborted"] and time.monotonic() - started < 30
+    passing, _ = crew.add_ticket("bugs", "sweep", "a sweep the pass interrupts", now=NOW)
+    monkeypatch.setattr(sup, "deep_pass_running", lambda: time.monotonic() - started > 2.0)
+    row = sup.work_once("bugs", abort=lambda: time.monotonic() - started > 2.0)
+    assert row["outcome"] == "infra" and "deep pass" in row["why"]
+    after = crew.tickets()[passing["id"]]
+    assert after["status"] == "open" and after["attempts"] == 0
 
 
 @qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
@@ -391,6 +450,21 @@ def test_the_clock_runs_the_laboratorys_tick_and_routes_what_it_decided(company,
     sup.clock_look(now=first + timedelta(minutes=25))
     assert len([r for r in crew.load(crew.runs_path()) if r.get("type") == "tick"]) == 1
     crew.clear_hold()
+    assert "clock" not in crew.active(), "a tick that waited leaves no marker behind"
+    # And the clock follows the protocol work_once does: its marker goes up before it
+    # looks at the hold, so a hold set in between still sees the tick coming (C8 review,
+    # finding 9).
+    seen: list[bool] = []
+    real_holder = crew.holder
+
+    def holder_watching(now=None):
+        seen.append("clock" in crew.active())
+        return real_holder(now)
+
+    monkeypatch.setattr(crew, "holder", holder_watching)
+    sup.clock_look(now=first + timedelta(minutes=50))
+    assert seen and seen[0], "the clock read the hold before its marker was up"
+    monkeypatch.setattr(crew, "holder", real_holder)
 
     # The lab worker is told the laboratory's step, without the parts that are not its own.
     told = crew.prompt("lab", state[next(t for t in state if state[t]["to"] == "lab")])
@@ -796,6 +870,21 @@ def test_a_loop_runs_once_per_name_waits_out_a_deep_pass_and_ends_on_stop(compan
     crew.beat("bugs", "idle", "written by somebody else")
     assert sup.loop_pid("bugs") == os.getpid()
 
+    # C8 review: `once` beside a running loop would be a second writer of its department,
+    # and its end would delete the loop's marker under a live worker. Refused.
+    crew.set_stop(False)
+    with sup.loop_lock("bugs"):
+        assert sup.main(["once", "bugs"]) == 2
+    # A marker that cannot be deleted this moment (Windows, a reader holding it) is
+    # retried and never raised: raised in work_once's finally, it skipped the settlement.
+    crew.set_active("bugs", {"id": "T-7", "kind": "bug"})
+    with pytest.MonkeyPatch.context() as patch:
+        patch.setattr(Path, "unlink", refused)
+        patch.setattr(crew.time, "sleep", lambda seconds: None)
+        crew.set_active("bugs", None)
+        crew.clear_hold()
+        crew.set_stop(False)
+
 
 @qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
 def test_a_detached_loop_outlives_its_parent_and_stop_kills_its_tree(company):
@@ -820,10 +909,14 @@ def test_a_detached_loop_outlives_its_parent_and_stop_kills_its_tree(company):
             break
         time.sleep(0.1)
     assert not sup.pid_alive(pid)
+    # A detached loop has no console, so a worker, a tick or taskkill started from it would
+    # each open a window of its own -- closing one kills the run (C8 review, finding 7).
+    if os.name == "nt":
+        assert sup._group_flags()["creationflags"] & subprocess.CREATE_NO_WINDOW
 
 
 @qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
-def test_status_names_every_loop_and_what_each_waits_on(company):
+def test_status_names_every_loop_and_what_each_waits_on(company, monkeypatch):
     sup = _script("crew")
     crew.add_ticket("bugs", "bug", "open one", now=NOW)
     crew.beat("bugs", "idle", "no tickets")
@@ -834,6 +927,18 @@ def test_status_names_every_loop_and_what_each_waits_on(company):
         assert any(line.split()[0] == name for line in lines[1:]), (name, text)
     bugs = next(line for line in lines if line.startswith("bugs"))
     assert "open 1" in bugs and "not running" in bugs
+
+    # A company whose workers could not run its own commands would close every ticket
+    # "done" with nothing handed over: start refuses until the allowlist has them (C8 review,
+    # finding 1). Checked before anything else, the CLI included.
+    settings = company / "settings.json"
+    settings.write_text(json.dumps({"permissions": {"allow": ["Bash(git status:*)"]}}),
+                        encoding="utf-8")
+    monkeypatch.setattr(sup, "SETTINGS", settings)
+    monkeypatch.delenv("QA_CREW_CLAUDE")
+    assert sup.start() == 1 and not crew.running_since()
+    assert sup.allowlist_missing() == ["Bash(python scripts/crew.py:*)",
+                                       "Bash(python scripts/commit.py:*)"]
 
     # The department shape: the report is what /lab lists, with nobody wiring it in.
     from qa import departments
@@ -893,3 +998,8 @@ def test_a_commit_takes_the_lock_and_only_the_paths_it_names(company, monkeypatc
     started = time.monotonic()
     assert commit.main(["-m", "x", "--", "desk.md"]) == 1
     assert time.monotonic() - started < 30
+
+    # A worker commits nothing while a deep pass runs: a commit landing between the pass's
+    # review and its push would go out unreviewed (C8 review, finding 2).
+    monkeypatch.setattr(commit, "pass_in_flight", lambda: True)
+    assert commit.main(["-m", "x", "--", "desk.md"]) == 2

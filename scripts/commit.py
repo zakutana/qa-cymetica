@@ -19,6 +19,7 @@ from __future__ import annotations
 
 import argparse
 import contextlib
+import importlib.util
 import os
 import subprocess
 import sys
@@ -71,11 +72,25 @@ def _git(base: Path, *args: str) -> subprocess.CompletedProcess:
                           encoding="utf-8", errors="replace")
 
 
+def pass_in_flight() -> bool:
+    """The deep pass's own notebook says it runs (`processes.pass_in_flight`)."""
+    spec = importlib.util.spec_from_file_location("commit_processes",
+                                                  CODE_ROOT / "scripts" / "processes.py")
+    module = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(module)
+    return bool(module.pass_in_flight())
+
+
 def commit(text: str, paths: list[str]) -> int:
     base = root()
     why = refused(paths, base)
     if why:
         print(f"[commit] refused: {why}")
+        return 2
+    if os.environ.get("QA_CREW_DEPT") and pass_in_flight():
+        # A worker's commit landing between the pass's review and its push would go out
+        # unreviewed (C8 review). The pass has the tree; the work waits for the next run.
+        print("[commit] refused: a deep pass is running")
         return 2
     lock = crew_dir() / "commit"
     deadline = time.monotonic() + LOCK_WAIT_SECONDS

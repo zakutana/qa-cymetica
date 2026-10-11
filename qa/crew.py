@@ -79,15 +79,34 @@ DEPARTMENTS: dict[str, Dept] = {d.name: d for d in (
 # which holds the one lock and names its paths, so `git add`/`git commit` are closed; and
 # nothing a worker starts may outlive it or start the company again.
 _DENIED_COMMANDS = ("git push", "git tag", "git commit", "git add", "git revert",
-                    "python scripts/crew.py start", "python scripts/crew.py stop")
+                    "python scripts/crew.py start", "python scripts/crew.py stop",
+                    # a second worker beside a department's loop (C8 review)
+                    "python scripts/crew.py once")
+# The files that speak to the operator (NEXT.md and DEEP-PASS.md reach every session
+# start) or rule the repository: a worker edits neither (C8 review).
+_PROTECTED_FILES = ("CLAUDE.md", "NEXT.md", "DEEP-PASS.md", ".claude/**")
 # Both shells: on this Windows host a worker has the PowerShell tool beside Bash, and a
 # deny written for one does not cover the other.
 DENY_ALL = (
     *(f"{shell}({command}:*)" for command in _DENIED_COMMANDS
       for shell in ("Bash", "PowerShell")),
+    *(f"{tool}({path})" for path in _PROTECTED_FILES for tool in ("Edit", "Write")),
     "CronCreate", "CronDelete", "ScheduleWakeup", "Workflow", "PushNotification",
     "RemoteTrigger",
 )
+
+# Who may open which kind of ticket. The operator's words come only from a session; the
+# manager's day and the watchdog's alarms only from the code that makes them; a hunt, a
+# sweep or another department's own work from the clock or the manager. A bug, a decision
+# and an input are anybody's to hand over. Without this, a worker steered by text it read
+# could open `operator` and be taken for the operator (C8 review).
+KIND_OPENERS = {
+    "operator": ("session",), "audit": ("session",),
+    "daily": ("clock", "session"), "stuck": ("watchdog", "session"),
+    "help": ("watchdog", "session"),
+    **{kind: ("clock", "manager", "session")
+       for kind in ("lab", "step", "outsider", "sweep", "hunt")},
+}
 
 
 # -- where things are ----------------------------------------------------------------------
@@ -180,7 +199,10 @@ def fold(rows: list[dict]) -> dict[str, dict]:
             ticket.update(status="claimed", claimed_by=row.get("by"),
                           claimed_at=row.get("at"), lease_until=row.get("lease_until"))
         elif kind == "release":
-            ticket["releases"] += 1
+            # A failure that is everyone's (logged out, a usage limit, a deep pass starting)
+            # is not counted against the ticket; only an unexplained one is.
+            if not row.get("widespread"):
+                ticket["releases"] += 1
             ticket.update(status="open", claimed_by=None, lease_until=None)
         elif kind == "done":
             ticket.update(status="done", note=row.get("note"), closed_at=row.get("at"),
@@ -206,19 +228,28 @@ def _next_id(rows: list[dict]) -> str:
     return f"T-{(max(numbers) if numbers else 0) + 1:04d}"
 
 
+def may_open(by: str, to: str, kind: str) -> bool:
+    """Whether `by` may open a ticket of `kind` for `to`. Pure."""
+    openers = KIND_OPENERS.get(kind)
+    return openers is None or by in openers
+
+
 def add_ticket(to: str, kind: str, text: str, *, key: str | None = None,
                payload: dict | None = None, by: str = "clock",
                now: datetime | None = None) -> tuple[dict, bool]:
     """A ticket for one department, and whether this call made it.
 
     Refused for a department or kind nobody takes: a ticket without an owner is a ticket
-    that never ends. With a key, a second call returns the first ticket instead of
-    making another, whatever has happened to it since.
+    that never ends; and refused to a sender that kind is not theirs to open. With a key,
+    a second call returns the first ticket instead of making another, whatever has
+    happened to it since.
     """
     if to not in DEPARTMENTS:
         raise ValueError(f"no department {to!r}: {', '.join(DEPARTMENTS)}")
     if kind not in DEPARTMENTS[to].kinds:
         raise ValueError(f"{to} takes {', '.join(DEPARTMENTS[to].kinds)}, not {kind!r}")
+    if not may_open(by, to, kind):
+        raise PermissionError(f"a {kind!r} ticket is not {by}'s to open")
     path = tickets_path()
     with file_lock(path):
         rows = load(path)
@@ -258,7 +289,7 @@ def claim(dept: str, now: datetime | None = None) -> dict | None:
 
 
 def close(ticket_id: str, how: str, *, by: str, note: str = "",
-          now: datetime | None = None) -> dict | None:
+          now: datetime | None = None, widespread: bool = False) -> dict | None:
     """End a claim: `done`, `fail` (one attempt spent) or `release` (none spent).
 
     Returns the ticket as it now stands, or None when it does not exist. A ticket already
@@ -284,6 +315,8 @@ def close(ticket_id: str, how: str, *, by: str, note: str = "",
             row["note"] = str(note)[:600]
         elif note:
             row["why"] = str(note)[:600]
+        if how == "release" and widespread:
+            row["widespread"] = True
         _append(path, row)
         return fold(rows + [row])[ticket_id]
 
@@ -332,6 +365,10 @@ def denied(dept: str) -> tuple[str, ...]:
     out = list(DENY_ALL)
     if dept != "bugs":
         out += _shells(*(f"python scripts/{script}" for script in BUG_PIPELINE))
+        # An allowlisted interpreter runs whatever file a worker just wrote: a test file
+        # that pushes or files would walk past every deny above (C8 review). Checks are
+        # Bugs' to write and run.
+        out += _shells("python -m pytest")
     if dept != "lab":
         # Nexus is the laboratory's lane, and the one Artifact this project publishes is
         # its morning report (CLAUDE.md, "Do not publish an Artifact").
@@ -563,8 +600,7 @@ def set_snooze(dept: str, until: datetime | None, why: str = "",
                now: datetime | None = None) -> None:
     """A department asleep on purpose until `until`, with its reason; None wakes it."""
     if until is None:
-        if _snooze_path(dept).exists():
-            _snooze_path(dept).unlink()
+        _unlink(_snooze_path(dept))
         return
     if until - _now(now) > SNOOZE_MAX:
         raise ValueError(f"a day at most; {until.isoformat()} is further")
@@ -767,8 +803,8 @@ def set_running(on: bool, now: datetime | None = None) -> None:
     if on:
         marker.parent.mkdir(parents=True, exist_ok=True)
         marker.write_text(stamp(_now(now)), encoding="utf-8")
-    elif marker.exists():
-        marker.unlink()
+    else:
+        _unlink(marker)
 
 
 def running_since() -> datetime | None:
@@ -957,6 +993,9 @@ def argv(dept: str, prompt: str, command: list[str]) -> list[str]:
 
 INFRA = re.compile(r"not logged in|/login|overloaded|rate.?limit|usage limit|"
                    r"no claude executable|connection (?:error|refused)", re.I)
+# What every worker depends on to hand over, close and commit.
+COMPANY_COMMANDS = ("scripts/crew.py", "scripts\\\\crew.py", "scripts/commit.py",
+                    "scripts\\\\commit.py")
 
 
 def outcome(code: int | None, stdout: str, timed_out: bool, stderr: str = "") -> dict:
@@ -981,18 +1020,28 @@ def outcome(code: int | None, stdout: str, timed_out: bool, stderr: str = "") ->
     said = said if isinstance(said, dict) else {}
     result = str(said.get("result") or stdout or stderr or "").strip()
     usage = said.get("usage") or {}
+    denials = said.get("permission_denials") or []
     facts = {"turns": said.get("num_turns"), "cost_usd": said.get("total_cost_usd"),
              "tokens": {k: usage.get(k) for k in ("input_tokens", "output_tokens",
                                                   "cache_read_input_tokens",
                                                   "cache_creation_input_tokens")
                         if usage.get(k) is not None},
-             "subtype": said.get("subtype"), "result": result[:400]}
+             "subtype": said.get("subtype"), "result": result[:400],
+             "denials": len(denials), "widespread": False}
+    # The company's own commands refused: whatever the run says it handed over or
+    # committed did not happen, and no ticket can be done by such a run (C8 review).
+    ours = [json.dumps(d, ensure_ascii=False) for d in denials
+            if any(script in json.dumps(d) for script in COMPANY_COMMANDS)]
     if timed_out:
         return {**facts, "outcome": "work", "why": "timed out; the run was killed"}
+    if ours:
+        return {**facts, "outcome": "infra", "widespread": True,
+                "why": f"the allowlist refused the company's own command: {ours[0][:160]}"}
     if code == 0 and said and not said.get("is_error"):
         return {**facts, "outcome": "ok", "why": ""}
     if said.get("terminal_reason") == "api_error" or INFRA.search(result):
-        return {**facts, "outcome": "infra", "why": result[:200] or "api error"}
+        return {**facts, "outcome": "infra", "widespread": True,
+                "why": result[:200] or "api error"}
     if not said:
         why = (stderr or stdout or "").strip()[:200] or f"exit {code}"
         return {**facts, "outcome": "infra", "why": f"the CLI produced no result: {why}"}
@@ -1012,8 +1061,8 @@ def set_stop(on: bool) -> None:
     if on:
         flag.parent.mkdir(parents=True, exist_ok=True)
         flag.write_text(stamp(_now()), encoding="utf-8")
-    elif flag.exists():
-        flag.unlink()
+    else:
+        _unlink(flag)
 
 
 def _write_json(path: Path, data: dict) -> None:
@@ -1033,6 +1082,22 @@ def _write_json(path: Path, data: dict) -> None:
                 tmp.unlink(missing_ok=True)
                 raise
             time.sleep(0.05)
+
+
+def _unlink(path: Path) -> None:
+    """Delete a marker, alongside readers: Windows refuses a delete while another process
+    has the file open, so it is retried for a moment and then left -- a marker that stays
+    a little longer is better than a raise in a `finally` that skips a run's settlement."""
+    for _ in range(20):
+        try:
+            path.unlink()
+            return
+        except FileNotFoundError:
+            return
+        except PermissionError:
+            time.sleep(0.05)
+        except OSError:
+            return
 
 
 def _read_json(path: Path) -> dict | None:
@@ -1091,16 +1156,14 @@ def holder(now: datetime | None = None) -> dict | None:
 
 
 def clear_hold() -> None:
-    if _hold_path().exists():
-        _hold_path().unlink()
+    _unlink(_hold_path())
 
 
 def set_active(dept: str, ticket: dict | None, pid: int | None = None,
                now: datetime | None = None) -> None:
     path = crew_dir() / "active" / f"{dept}.json"
     if ticket is None:
-        if path.exists():
-            path.unlink()
+        _unlink(path)
         return
     _write_json(path, {"dept": dept, "ticket": ticket.get("id"), "kind": ticket.get("kind"),
                        "pid": pid, "since": stamp(_now(now))})
