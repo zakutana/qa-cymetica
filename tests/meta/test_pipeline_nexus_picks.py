@@ -119,6 +119,7 @@ def test_his_take_profit_and_stop_are_read_for_each_pick(answer_id):
             f"{answer_id} {pick[:12]}: read {said[pick]}, he said tp {tp} sl {sl}")
     _how_long_to_hold_is_read_from_his_words_and_bounded()
     _a_hold_period_wrapped_in_markdown_is_still_his()
+    _a_bots_band_is_read_in_the_field_names_he_wrote()
 
 
 def _how_long_to_hold_is_read_from_his_words_and_bounded():
@@ -175,6 +176,39 @@ def _a_hold_period_wrapped_in_markdown_is_still_his():
     assert lab.hold_periods(text, [depin, other]) == {depin: 10.0, other: 5.0}
     # Dressed up, out of range stays unusable.
     assert lab.hold_periods(f"`{depin}`: **hold:** **30 days**", [depin]) == {depin: None}
+
+
+def _a_bots_band_is_read_in_the_field_names_he_wrote():
+    """NEX-0137 (2026-10-11): asked which species to run next and on which band, he named four,
+    each on its own line in the platform's own field names -- "stop_loss_pct **12**,
+    take_profit_pct **30**" -- and the launcher read none of them: `exit_levels` wants a % sign
+    and a word boundary that the underscores do not give, and our tool-name check had written
+    "[no such tool]" between one field and its number. A band is both numbers inside the
+    platform's bounds (stop 1-20, target 5-100), or it is no band; a line naming two species
+    gives neither of them one."""
+    text = ("- **Perceptron Oracle** — stop_loss_pct **12**, take_profit_pct **30** (2.5:1).\n"
+            "  Largest sample on the platform.\n"
+            "- **Fibonacci Phoenix** — stop_loss_pct [no such tool] **10**, take_profit_pct "
+            "**22** (2.2:1, breakeven 31.3%).\n"
+            "- **MACD Hunter** — stop_loss_pct **25**, take_profit_pct **36**.\n"
+            "- For **RSI Sniper** and **Stochastic Striker** +40 is too far: stop_loss_pct 10, "
+            "take_profit_pct 24.\n"
+            "- **Trend Titan** — a stop-loss of 8 % and a take-profit of 20 %.\n"
+            "- **Trend Titan** — stop-loss 8 %, take-profit 20 %.\n"
+            "- **Divergence Dragon**: your 15/40 is fine; take_profit_pct 60 alone.\n"
+            "Set the band via update_bot_settings (stop_loss_pct [no such tool] / take_profit_pct).\n")
+    names = ["Perceptron Oracle", "Fibonacci Phoenix", "MACD Hunter", "RSI Sniper",
+             "Stochastic Striker", "Trend Titan", "Divergence Dragon", "ATR Alpha"]
+    assert lab.bot_bands(text, names) == {
+        "Perceptron Oracle": {"stop_loss_pct": 12.0, "take_profit_pct": 30.0},
+        "Fibonacci Phoenix": {"stop_loss_pct": 10.0, "take_profit_pct": 22.0},
+        # 25 is past their stop bound: no band, never 20.
+        "MACD Hunter": None,
+        "RSI Sniper": None, "Stochastic Striker": None,
+        "Trend Titan": {"stop_loss_pct": 8.0, "take_profit_pct": 20.0},
+        # A target alone is half a band.
+        "Divergence Dragon": None,
+        "ATR Alpha": None}
 
 
 def _read(answer_id: str) -> dict:

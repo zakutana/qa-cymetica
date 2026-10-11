@@ -2138,7 +2138,7 @@ def _fresh(row: dict, since: datetime | None) -> bool:
     return when is not None and when >= since
 
 
-def night_promote(since: datetime | None = None) -> dict:
+def night_promote(since: datetime | None = None, only: str | None = None) -> dict:
     """Launch what Nexus endorsed tonight, on paper, under the day's brakes.
 
     [operator 2026-09-12] *"Jasne ze v noci muze spoustet."* The night used to
@@ -2182,8 +2182,10 @@ def night_promote(since: datetime | None = None) -> dict:
     if pass_in_flight():
         return {"rooms": 0, "orders": 0, "held": ["a deep pass is running"]}
 
+    # `only`: one answer read again by hand (`lab.py launch NEX-...`), fresh or not and read or
+    # not -- for an answer a launcher that could not act on it had already marked read (NEX-0137).
     answers = [row for row in _nexus_rows() if row.get("type") == "answer"
-               and _fresh(row, since)]
+               and (str(row.get("id")) == only if only else _fresh(row, since))]
     if not answers:
         return {"rooms": 0, "orders": 0, "held": []}
 
@@ -2196,7 +2198,7 @@ def night_promote(since: datetime | None = None) -> dict:
     # answers with something still waiting -- a card unread or not tradeable
     # yet, a gate or catalogue that did not answer, money not there yet, a
     # deep pass -- and those are read again on the next tick.
-    already = lab.answers_read()
+    already = lab.answers_read() - {only}
     pending: set[str] = set()
 
     def later(origin: str, line: str) -> None:
@@ -2234,6 +2236,20 @@ def night_promote(since: datetime | None = None) -> dict:
         if row.get("ref") and rooms.status_of(stored, row["id"]) != "stopped":
             live_refs.setdefault((str(row.get("kind")), str(row["ref"]).lower()),
                                  row["id"])
+    # A band he names for a bot (NEX-0137): what runs at which band, and which species the
+    # operator's rule threw away -- read once, and only when an answer names a band.
+    band_state: dict[str, dict] = {}
+
+    def bands_running() -> dict[tuple[str, str], str]:
+        if "running" not in band_state:
+            band_state["running"] = _bands_running(stored, _sibling("clone").load())
+        return band_state["running"]
+
+    def thrown_species() -> dict[str, str]:
+        if "thrown" not in band_state:
+            band_state["thrown"] = _thrown_species(_sibling("clone").load(),
+                                                   rooms.load_samples())
+        return band_state["thrown"]
     catalogues: dict[str, list | None] = {}
 
     def catalogue(kind: str):
@@ -2458,27 +2474,45 @@ def night_promote(since: datetime | None = None) -> dict:
             except rooms.RoomError as exc:
                 held.append(f"{room}: {exc}")
 
-    def launch_bot(origin: str, bot: dict) -> None:
+    def launch_bot(origin: str, bot: dict, band: dict | None = None) -> None:
         """One bot he named, cloned on paper through clone.py -- its paper
         flag, its is_paper floors and its CLN record, none of them ours to
         repeat -- funded with half a stake (a bot has no backtest) and
         started. Its room's leg is the clone's instance; the room opens
         before the clone, as a card's does before its order, so a clone that
-        fails leaves a stopped room saying why rather than a silence."""
+        fails leaves a stopped room saying why rather than a silence.
+
+        With a `band` he named (NEX-0137), the clone is set to it before the
+        money, and read back, as wave.py does; a species we already own is no
+        reason to hold it -- that band is a setting nothing of ours measured."""
         nonlocal opened, capped
         name, species = str(bot.get("name")), str(bot.get("id"))
         tag = f"{origin}/{name}"
+        label = lab.band_label(band) if band else None
         if (origin, species.lower()) in ref_linked:
             return
-        owner = live_refs.get(("bot", species.lower()))
-        if owner:
-            held.append(f"{tag}: already cloned in {owner} -- not a second "
-                        f"experiment")
-            return
-        cloned = _species_cloned().get(species.lower())
-        if cloned:
-            held.append(f"{tag}: {cloned} -- not cloned again")
-            return
+        if band is None:
+            owner = live_refs.get(("bot", species.lower()))
+            if owner:
+                held.append(f"{tag}: already cloned in {owner} -- not a second "
+                            f"experiment")
+                return
+            cloned = _species_cloned().get(species.lower())
+            if cloned:
+                held.append(f"{tag}: {cloned} -- not cloned again")
+                return
+        else:
+            thrown = thrown_species().get(species.lower())
+            if thrown:
+                held.append(f"{tag} {label}: its clone {thrown[:8]} ended on three stop-losses "
+                            f"in a row and was thrown away (the operator's rule, 2026-10-07); "
+                            f"bringing the species back is the operator's call")
+                return
+            owner = bands_running().get((species.lower(), label))
+            if owner:
+                held.append(f"{tag}: {owner} already runs it at {label} -- not a second "
+                            f"experiment")
+                return
         if pass_in_flight():
             later(origin, f"{tag}: a deep pass is running")
             capped = True
@@ -2497,7 +2531,8 @@ def night_promote(since: datetime | None = None) -> dict:
                 "verdict": "unbacktestable",
                 "why": "their backtest prices a basket of coins, not a bot"})
         try:
-            room = rooms.open_strategy(origin, name[:rooms.MAX_TITLE],
+            title = f"{name} {label}" if label else name
+            room = rooms.open_strategy(origin, title[:rooms.MAX_TITLE],
                                        kind="bot", ref=species)["id"]
         except rooms.RoomError as exc:
             held.append(f"{tag}: {exc}")
@@ -2505,6 +2540,8 @@ def night_promote(since: datetime | None = None) -> dict:
         opened += 1
         ref_linked.add((origin, species.lower()))
         live_refs[("bot", species.lower())] = room
+        if label:
+            bands_running()[(species.lower(), label)] = room
         clone = _sibling("clone")
 
         def stop(why: str) -> None:
@@ -2537,13 +2574,33 @@ def night_promote(since: datetime | None = None) -> dict:
                 room, window_days=NIGHT_WINDOW_DAYS, stop_pct=NIGHT_STOP_PCT,
                 legs=plan["legs"], benchmark_card=BTC_PROXY,
                 why=(f"opened unattended from {origin}, one room for the bot "
-                     f"{name}, cloned on paper as {instance}; the window and "
-                     f"the stop are the laboratory's defaults, not numbers "
-                     f"Nexus gave. Judged on what it made against what went "
+                     f"{name}, cloned on paper as {instance}; "
+                     + (f"the band is his, {label}, set on the clone before it is "
+                        f"funded; the window and the room stop are the laboratory's "
+                        f"defaults. " if label else
+                        f"the window and the stop are the laboratory's defaults, "
+                        f"not numbers Nexus gave. ")
+                     + f"Judged on what it made against what went "
                      f"in -- NOT backtested, half stake")[:900],
                 adopted=True)
         except (rooms.RoomError, KeyError) as exc:
             return stop(f"the room could not be written ({exc})")
+        if band:
+            # The settings before the money, then read back from their answer (wave.py's order
+            # and its reader): a bot funded on the species' defaults would be measured under
+            # his name on a band he did not give.
+            try:
+                changed = clone.settings(instance, dict(band), True) or {}
+            except (Exception, SystemExit) as exc:  # noqa: BLE001
+                return stop(f"setting {label} on {instance} was refused "
+                            f"({str(exc)[:160]}); not funded, not started")
+            if changed.get("outcome") != "accepted":
+                return stop(f"setting {label} on {instance} was not accepted "
+                            f"({changed.get('outcome')}); not funded, not started")
+            differs = _sibling("wave")._read_back(changed, band)
+            if differs:
+                return stop(f"{label} read back wrong on {instance} -- {differs}; "
+                            f"not funded, not started")
         try:
             clone.fund(instance, stake, True)
         except (Exception, SystemExit) as exc:  # noqa: BLE001
@@ -2560,8 +2617,9 @@ def night_promote(since: datetime | None = None) -> dict:
                         f"{stake:.2f} stays in the clone")
         try:
             rooms.set_status(room, "running", why=(
-                f"cloned on paper from {origin}: {name} as {instance}, funded "
-                f"{stake:.2f} USDC (half stake, not backtested) and started"))
+                f"cloned on paper from {origin}: {name} as {instance}"
+                + (f", set to {label}" if label else "")
+                + f", funded {stake:.2f} USDC (half stake, not backtested) and started"))
         except rooms.RoomError as exc:
             held.append(f"{room}: {exc}")
 
@@ -2660,6 +2718,9 @@ def night_promote(since: datetime | None = None) -> dict:
             species = {str(b.get("id")).lower() for b in bots_listed}
             named = [c for c in named if c not in species]
         bots = lab.proposed_bots(text, bots_listed or [])
+        # Every species name, so a line naming two gives neither a band.
+        bands = lab.bot_bands(text, [str(b.get("name")) for b in bots_listed or []
+                                     if b.get("name")])
         # Fund rooms are off (lab.FUND_ROOMS): a fund he names is read and left alone.
         funds = (lab.proposed_funds(text, funds_listed or [])
                  if lab.FUND_ROOMS else [])
@@ -2672,7 +2733,7 @@ def night_promote(since: datetime | None = None) -> dict:
             for bot in bots:
                 if capped:
                     break
-                launch_bot(origin, bot)
+                launch_bot(origin, bot, bands.get(str(bot.get("name"))))
             for symbol in funds:
                 if capped:
                     break
@@ -2742,6 +2803,52 @@ def _funded() -> dict[str, float]:
     base a bot's index is measured against (`qa.lab.bot_series`). One
     reading, `qa.lab.funded`, shared with the board."""
     return lab.funded(_sibling("clone").load())
+
+
+def _instance_species(rows: list[dict]) -> dict[str, str]:
+    """Our clone record's instance -> the species it is a clone of, lower case."""
+    asked = {row.get("id"): str(row.get("source_id") or "").lower() for row in rows
+             if row.get("type") == "intent" and not row.get("kind") and row.get("source_id")}
+    return {str(row["clone_instance_id"]): asked[row.get("id")] for row in rows
+            if row.get("type") == "outcome" and not row.get("kind")
+            and row.get("clone_instance_id") and row.get("id") in asked}
+
+
+def _bands_running(stored: list[dict], rows: list[dict]) -> dict[tuple[str, str], str]:
+    """(species, "SL 12 / TP 30") -> the room not yet stopped whose bot runs at that band.
+
+    The band is what our clone record says their side ACCEPTED on the instance, field by
+    field, the newest settings change winning -- wave.py's, a variant's or a launch's alike."""
+    accepted = {row.get("id") for row in rows if row.get("type") == "outcome"
+                and row.get("kind") == "settings" and row.get("outcome") == "accepted"}
+    held: dict[str, dict] = {}
+    for row in rows:
+        if (row.get("type") == "intent" and row.get("kind") == "settings"
+                and row.get("id") in accepted):
+            body = row.get("body") or {}
+            for field in lab.BOT_BAND_BOUNDS:
+                if field in body:
+                    held.setdefault(str(row.get("instance_id")), {})[field] = body[field]
+    out: dict[tuple[str, str], str] = {}
+    plans = rooms.plans(stored)
+    for row in rooms.strategies(stored):
+        if row.get("kind") != "bot" or rooms.status_of(stored, row["id"]) == "stopped":
+            continue
+        for leg in (plans.get(row["id"]) or {}).get("legs") or []:
+            band = held.get(str(rooms.leg_ref(leg))) or {}
+            if rooms.leg_kind(leg) == "bot" and all(f in band for f in lab.BOT_BAND_BOUNDS):
+                out.setdefault((str(row.get("ref")).lower(), lab.band_label(band)), row["id"])
+    return out
+
+
+def _thrown_species(rows: list[dict], samples: list[dict]) -> dict[str, str]:
+    """Species -> the instance of ours the operator's rule threw away (three stop-losses in a
+    row, `qa.lab.discarded_bots`). Their "zahod a uz ho nechci videt" (2026-10-07) was said of
+    a bot; whether it covers the species is theirs to say, so a band Nexus names for it is held
+    and said, never launched."""
+    species = _instance_species(rows)
+    return {species[inst]: inst for inst in sorted(lab.discarded_bots(rows, samples))
+            if inst in species}
 
 
 def _species_cloned() -> dict[str, str]:
@@ -4008,6 +4115,9 @@ def main(argv: list[str] | None = None) -> int:
     again_cmd.add_argument("--confirm", action="store_true")
     sub.add_parser("surface", help="their catalogue against the baseline")
     sub.add_parser("ask-cards", help="ask Nexus for up to five cards, with brakes")
+    launch_cmd = sub.add_parser(
+        "launch", help="read one answer of his again and open what it names, read or not")
+    launch_cmd.add_argument("answer", help="NEX-NNNN")
     ask_cmd = sub.add_parser("ask", help="one question to Nexus, with brakes")
     ask_cmd.add_argument("question")
     ask_cmd.add_argument("--no-wait", action="store_true")
@@ -4205,6 +4315,9 @@ def main(argv: list[str] | None = None) -> int:
     elif args.cmd == "ask-cards":
         said = ask(cards_question(), wait=False)
         print(f"{said.get('id')}: asked for up to five cards")
+    elif args.cmd == "launch":
+        print(json.dumps(night_promote(only=args.answer), ensure_ascii=False, indent=1,
+                         default=str))
     elif args.cmd == "buy":
         print(json.dumps(buy(args.card, args.usdc, args.nexus, args.confirm),
                          ensure_ascii=False, indent=1, default=str)[:2000])

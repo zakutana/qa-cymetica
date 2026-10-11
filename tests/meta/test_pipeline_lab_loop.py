@@ -3021,7 +3021,9 @@ def _clonepad(scripts_lab, tmp_path, monkeypatch, answers, fund_points=None,
                        "instance_id": instance_id, "body": dict(changes)})
         clone._append({"id": cid, "type": "outcome", "at": at, "kind": "settings",
                        "outcome": _settings.outcome, "http_status": 200})
-        return {"id": cid, "outcome": _settings.outcome}
+        # The real one returns their PATCH answer too, whose `settings` are what a launch
+        # reads back (wave.py's `_read_back`).
+        return {"id": cid, "outcome": _settings.outcome, "settings": dict(changes)}
     _settings.outcome = "accepted"
 
     clone.clone, clone.fund, clone.enable = _clone, _fund, _enable
@@ -3381,6 +3383,83 @@ def test_a_species_we_already_own_a_clone_of_is_not_cloned_again(
         "Maximum 5 trading Paper bots per user")))
     assert "CLN-0002" in scripts_lab._species_cloned()[species], (
         "a capacity refusal after an owned clone dropped the clone we own")
+
+    band_dir = tmp_path / "band"
+    band_dir.mkdir()
+    _a_band_he_names_is_a_new_experiment_on_a_species_we_own(band_dir, monkeypatch)
+
+
+def _a_band_he_names_is_a_new_experiment_on_a_species_we_own(tmp_path, monkeypatch):
+    """NEX-0137 (2026-10-11): asked which species to run next and on which band, he named four,
+    each with its own stop_loss_pct and take_profit_pct. Not one opened: wave 2 had cloned every
+    species there is, so "we already own a clone of it" held all of them, and the launch had no
+    way to send a band anyway -- every bot room it ever opened ran the species' defaults. The
+    rule was right for a species named bare (the same bot twice is one experiment) and wrong for
+    a band: Cymetica lifted one-clone-per-species (REPLY-0122), and a band he names is a setting
+    nothing of ours has measured.
+
+    So a band he names opens a new paper clone set to it -- the settings before the money, read
+    back, as wave.py does -- unless a room of ours already runs that species at that band, or a
+    clone of the species was thrown away under the operator's rule ("pokud 3x po sobe prodela
+    stop losem pak ho zahod", 2026-10-07): his advice to bring it back is the operator's to
+    take, not the launch's."""
+    import qa.rooms as qa_rooms
+
+    scripts_lab = _scripts_lab(tmp_path, monkeypatch)
+    answers = _answer("- **MACD Hunter** — stop_loss_pct [no such tool] **12**, take_profit_pct "
+                      "**36** (3:1). Momentum runs.", "NEX-0001")
+    sent, calls = _clonepad(scripts_lab, tmp_path, monkeypatch, answers)
+    owned = [{"id": "CLN-0002", "type": "intent", "source_type": "wta_species",
+              "source_id": MACD["id"], "paper": True},
+             {"id": "CLN-0002", "type": "outcome", "outcome": "accepted",
+              "http_status": 200, "clone_instance_id": "inst-old"},
+             {"id": "CLN-0003", "type": "intent", "source_type": "wta_species",
+              "source_id": TITAN["id"], "paper": True},
+             {"id": "CLN-0003", "type": "outcome", "outcome": "accepted",
+              "http_status": 200, "clone_instance_id": "inst-titan"}]
+    _write(tmp_path, "clones.jsonl", owned)
+    band = {"stop_loss_pct": 12.0, "take_profit_pct": 36.0}
+
+    did = scripts_lab.night_promote()
+
+    assert [c[0] for c in calls] == ["clone", "settings", "fund", "enable"], calls
+    assert calls[1][1:3] == ("inst-1", band), calls[1]
+    assert sent == [] and did["rooms"] == 1, did
+    rows = qa_rooms.load()
+    (room,) = qa_rooms.strategies(rows)
+    assert (room["kind"], room["ref"], room["origin"]) == ("bot", MACD["id"], "NEX-0001")
+    assert "SL 12 / TP 36" in room["title"], room["title"]
+    criterion = qa_rooms.acceptance_of(rows, room["id"])
+    assert "SL 12 / TP 36" in criterion["why"] and "his" in criterion["why"], criterion["why"]
+    assert qa_rooms.status_of(rows, room["id"]) == "running"
+
+    # The same band from a later answer is the same experiment; another band is a new one.
+    same = _answer("**MACD Hunter**: stop_loss_pct 12, take_profit_pct 36.", "NEX-0002")
+    other = _answer("**MACD Hunter**: stop_loss_pct 10, take_profit_pct 24.", "NEX-0003")
+    _write(tmp_path, "nexus.jsonl", answers + same + other)
+    again = scripts_lab.night_promote()
+    assert [c[0] for c in calls] == ["clone", "settings", "fund", "enable"] * 2, calls
+    assert calls[5][1:3] == ("inst-5", {"stop_loss_pct": 10.0, "take_profit_pct": 24.0})
+    assert any("NEX-0002" in h and "SL 12 / TP 36" in h for h in again["held"]), again["held"]
+
+    # A species the operator's rule threw away stays away, band or not.
+    monkeypatch.setattr(lab, "discarded_bots", lambda *a, **k: {"inst-titan"})
+    titan = _answer("**Trend Titan** — stop_loss_pct 8, take_profit_pct 20.", "NEX-0004")
+    _write(tmp_path, "nexus.jsonl", answers + same + other + titan)
+    thrown = scripts_lab.night_promote()
+    assert len(calls) == 8, calls
+    assert any("NEX-0004" in h and "three stop-losses" in h for h in thrown["held"]), (
+        thrown["held"])
+
+    # NEX-0137 itself had been marked read by the launcher that could not act on it: one
+    # answer is read again by hand (`lab.py launch NEX-...`), and only that one.
+    lab.note_answer_read("NEX-0006")
+    doom = _answer("**Doom & Gloom** — stop_loss_pct 6, take_profit_pct 18.", "NEX-0006")
+    _write(tmp_path, "nexus.jsonl", answers + same + other + titan + doom)
+    assert scripts_lab.night_promote()["rooms"] == 0
+    assert scripts_lab.night_promote(only="NEX-0006")["rooms"] == 1
+    assert calls[-3][0] == "settings" and calls[-3][2] == {"stop_loss_pct": 6.0,
+                                                          "take_profit_pct": 18.0}, calls
 
 
 @qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")

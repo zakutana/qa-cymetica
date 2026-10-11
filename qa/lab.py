@@ -2011,6 +2011,62 @@ def exit_levels(text: str, picks: list[str]) -> dict[str, dict]:
     return out
 
 
+# A bot's band, in the platform's own field names and bounds (scripts/clone.py SETTING_BOUNDS,
+# which refuses anything outside them a second time). "stop_loss_pct **12**", with or without a
+# % sign, with markdown -- and with the "[no such tool]" our tool-name check writes into his text
+# after a name it does not find on tools/list (NEX-0137).
+BOT_BAND_BOUNDS = {"stop_loss_pct": (1.0, 20.0), "take_profit_pct": (5.0, 100.0)}
+_BAND_GAP = r"(?:\s*\[no such tool\])?[\s*:=_`]*"
+_BAND_NUMBER = r"(\d+(?:\.\d+)?)\s*%?"
+_BAND_FIELDS = {field: re.compile(re.escape(field) + _BAND_GAP + _BAND_NUMBER, re.I)
+                for field in BOT_BAND_BOUNDS}
+
+
+def bot_bands(text: str, names: list[str]) -> dict[str, dict | None]:
+    """The stop-loss and take-profit he names for each bot, as the settings a clone takes --
+    {"stop_loss_pct": 12.0, "take_profit_pct": 30.0} -- or None.
+
+    Scoped the way `exit_levels` scopes a card's: the first values after a line that names the
+    species alone, before a line that names another; a line naming two gives neither one. Pass
+    every species name the catalogue has, so that a line naming one we are not asking about
+    still counts as naming two. His field names first, then "stop-loss 8 % / take-profit 20 %".
+    A band is BOTH numbers inside the platform's bounds: a target alone is half a band, and a
+    stop past 20 is no band at all, never 20 (NEX-0137)."""
+    wanted = {str(n).lower(): n for n in names}
+    seen = {n: {"stop_loss_pct": None, "take_profit_pct": None} for n in names}
+    current = None
+    for line in str(text or "").split("\n"):
+        lower = line.lower()
+        named = [key for key in wanted if key in lower]
+        if len(named) == 1:
+            current = wanted[named[0]]
+        elif named:
+            current = None
+        if current is None:
+            continue
+        values = seen[current]
+        for field, pattern in _BAND_FIELDS.items():
+            found = pattern.search(line)
+            if found and values[field] is None:
+                values[field] = float(found.group(1))
+        take, stop = _TAKE.search(line), _STOP.search(line)
+        if take and values["take_profit_pct"] is None:
+            values["take_profit_pct"] = abs(_level(take.group(1)))
+        if stop and values["stop_loss_pct"] is None:
+            values["stop_loss_pct"] = abs(_level(stop.group(1)))
+    out: dict[str, dict | None] = {}
+    for name, values in seen.items():
+        inside = all(value is not None and BOT_BAND_BOUNDS[field][0] <= value
+                     <= BOT_BAND_BOUNDS[field][1] for field, value in values.items())
+        out[name] = dict(values) if inside else None
+    return out
+
+
+def band_label(band: dict) -> str:
+    """"SL 12 / TP 30" -- the way wave.py names a band in a room's title."""
+    return "SL {stop_loss_pct:g} / TP {take_profit_pct:g}".format(**band)
+
+
 HOLD_DAYS_RANGE = (1.0, 14.0)
 _HOLD_WORDS = (
     re.compile(r"\bhold(?:ing)?(?:\s+period)?\s*(?:for|of|:|~|about|around)?\s*"
