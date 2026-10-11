@@ -66,3 +66,8 @@ reports:
   185: "Krypto dashboardy: HBAR má max supply 1 mld pod celkovou zásobou 50 mld, FDV 44× pod kapitalizací (4 coiny)"
   186: "Launchpad: seznam tokenů bez zadaného řetězce je prázdný, ačkoli jeden řetězec jich má 518"
   187: "Launchpad: MCP výpis tokenů ukazuje 5 testovacích launchů, které REST schovává jako interní"
+  188: "Supply Analyzer: další unlock ukazuje jen jednoho příjemce dne, ARB 56,1 mil. místo 92,6 mil. (12 z 20 coinů)"
+  189: "/movers řadí jen prvních 100 ze 641 karet: největší propad ukazuje −19 %, skutečný je Corteva −84 %"
+  190: "Souhrn klonu (ET-28100 bod 1): 9 trhů vypíše jako 4 bez „+5“, vypnutý seznam jako „CLOB NONE“"
+  191: "Dokumentace: žádná ze 7 cest Agent Tournaments z llms.txt není v OpenAPI"
+  192: "Build it Better: po BB-CHANGE se spec nápadu přepne na šablonu přestavby a zakáže vlastní logo (4 ze 4)"

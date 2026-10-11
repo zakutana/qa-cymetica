@@ -1,0 +1,1326 @@
+{
+  "schema": 2,
+  "run_id": "run-20261011T121251Z-771a0cb6",
+  "started_at": "2026-10-11T12:13:02+00:00",
+  "finished_at": "2026-10-11T12:16:13+00:00",
+  "git_head": "771a0cb6147d997058825d8beb7be0b95986deea",
+  "git_short": "771a0cb6",
+  "git_dirty": true,
+  "prereg_id": null,
+  "prereg_tag_sha": null,
+  "prereg_commit": null,
+  "platform_fingerprint": "sha256:9dd3668a2d8de5ce4949bd8a74068b5ab8c10f8f9034a2f45c70dc1385c156ca",
+  "fingerprint_parts": {
+    "/.well-known/mcp.json": "c90c66f9fe1af1e61407fcae5a14724e1ea2a706140a882f2c2383f09fd0874c",
+    "/.well-known/agent-card.json": "7419274439d47fc23618eb4e234810e6478d6ec9cf80e6d90ae264830f7e0db0",
+    "/.well-known/agent-skills.json": "3b84f287322c79c7925e8a44688d5d537da9ca244192f8d4f4d889fd7a1e616d",
+    "/.well-known/ai-plugin.json": "efcfd6d8f00827534cc1298a80a3e70fa2878c139998cb73793dc659b5bac998",
+    "/.well-known/udc.json": "1ec34383ede550c71fb3e81b989b8b92b0da3ce7ccbdc497c9edf5a8fcbd6c14",
+    "/openapi.json": "686dd7a03ba5cbf1e21bdcabd6e6b75bcf578967ae8f69bddfa98574fa118b17",
+    "/openapi-public.json": "f6418b1b361f24e7e92978445fa342b3e113dfa981610d5d94c89f5cc9bff30f",
+    "/llms.txt": "18c6e627359fb179da9166d8209f309431a341b9f3905cdd11750e04843cada4",
+    "mcp:tools/list:none": "f7c126c9c31f25eaefce1b814ac2e8c4aaa53928acfa53e23c73b1a9423ebbc4"
+  },
+  "fingerprint_errors": {},
+  "fingerprint_drifted": false,
+  "fingerprint_changed_parts": [],
+  "identities_present": {
+    "anon": true,
+    "trusted": true,
+    "recognized": false
+  },
+  "python_version": "3.13.13",
+  "pytest_version": "8.3.4",
+  "selector": "tests/rest/test_supply_analyzer_states_what_its_sources_say.py::test_a_next_unlock_states_what_its_day_releases tests/rest/test_movers_page_ranks_every_card.py::test_the_movers_boards_rank_every_card_of_the_listing tests/rest/test_a_clone_summary_names_what_it_trades.py::test_a_clone_summary_names_every_market_it_trades_and_no_other tests/rest/test_agent_tournaments_routes_are_in_the_openapi.py::test_every_agent_tournaments_route_llms_txt_names_is_in_the_openapi tests/rest/test_build_it_better_spec_keeps_the_request.py::test_an_idea_keeps_its_new_app_spec_after_a_change -p no:cacheprovider -q",
+  "selector_full": false,
+  "narrowing": [],
+  "paths": [
+    "tests/rest/test_supply_analyzer_states_what_its_sources_say.py::test_a_next_unlock_states_what_its_day_releases",
+    "tests/rest/test_movers_page_ranks_every_card.py::test_the_movers_boards_rank_every_card_of_the_listing",
+    "tests/rest/test_a_clone_summary_names_what_it_trades.py::test_a_clone_summary_names_every_market_it_trades_and_no_other",
+    "tests/rest/test_agent_tournaments_routes_are_in_the_openapi.py::test_every_agent_tournaments_route_llms_txt_names_is_in_the_openapi",
+    "tests/rest/test_build_it_better_spec_keeps_the_request.py::test_an_idea_keeps_its_new_app_spec_after_a_change"
+  ],
+  "allow_mutate": false,
+  "collected": [
+    "tests/rest/test_supply_analyzer_states_what_its_sources_say.py::test_a_next_unlock_states_what_its_day_releases",
+    "tests/rest/test_movers_page_ranks_every_card.py::test_the_movers_boards_rank_every_card_of_the_listing",
+    "tests/rest/test_a_clone_summary_names_what_it_trades.py::test_a_clone_summary_names_every_market_it_trades_and_no_other",
+    "tests/rest/test_agent_tournaments_routes_are_in_the_openapi.py::test_every_agent_tournaments_route_llms_txt_names_is_in_the_openapi",
+    "tests/rest/test_build_it_better_spec_keeps_the_request.py::test_an_idea_keeps_its_new_app_spec_after_a_change"
+  ],
+  "results": [
+    {
+      "nodeid": "tests/rest/test_supply_analyzer_states_what_its_sources_say.py::test_a_next_unlock_states_what_its_day_releases",
+      "component": "rest.supply_analyzer",
+      "tier": "SAFE",
+      "surface": "rest",
+      "claim_id": "supply-analyzer-next-unlock-states-its-whole-day",
+      "ticket_id": null,
+      "volatile": false,
+      "outcome": "failed",
+      "phase": "call",
+      "role": "verdict",
+      "duration_ms": 71409,
+      "evidence_ids": [
+        "4926a6af69fbe8e23dec7d393e6e95172d98f88adb69149803ec0060e3871eb6",
+        "770818f223f1af7743f7d9af64786843703e7ffecefd429eedfcef389c237253",
+        "26feef96072e283179d2400267765d16c494d269468b58eb17034ed16169f120",
+        "6652136283403effe72ec436c955ae5acdb5ad99488325f059e4b343380b965d",
+        "e2888c60865891a25efb3c0978c1d4e33551e558c9e183b742fcfe6d7e7f6ddc",
+        "dd355257c0d6d9b74a80b1cd4527715bc7d1a303251178165fb931fe384c7c37",
+        "a747e2d5a87720afa24688a7be7ccc732a5df8962dc6ef13a0c2acabc5556915",
+        "af438c2297b0f039db625c57ae3461bad34bafde4cc6f007b86339f329b4edec",
+        "99d377629048c41b324448a7c5d6282690753e75557078abd1a7642576077d77",
+        "c39862924303ae18933732c5a271e926db28e4e6b5f301097547fb20c8493fd4",
+        "27d5b4edfe34f113c52957694bc1579c0e32f845fb3acf9c894e760517f8ceab",
+        "ffdab8a19ccd4428b7e48f2fc13382c1aebf26dbfa415f910ad0a325da352cca",
+        "3b1cf9e422c85b34f8978ad9f27c45bf61a9a87379b1a78687161c932c96d8c7",
+        "ac346c2beab34a51f947a80cc7698605b86c6c90a50eaad85132870d5598a49f",
+        "ce5f26953ad8fb960737d04ea4be781ae24515f46775fcee2a787d309f7fe582",
+        "c735c33c84402cd4ce8d5853ed161065c9830903cbbd4a8ec543bd53ead92cc5",
+        "d06f8f48f287287f7300d9a5337aaed8b0f08a8476f3cf6a5d19f9a8f3f52164",
+        "636bed8214fbf2f75edf7ea4464b62a6028021f6ee15915f244496aed052fa7c",
+        "6c2747f5a28e40cc0543e2c9120b55edff9ee85514082725ed2a91766154b7f9",
+        "d51a9e02f612b3618fa78bc11c506939843f7beb1087c262d9c5501984d6ba86",
+        "acf1cd0d543c5fd573fb2a09cccc435c7432e259b19409e7b07be203625495bd"
+      ],
+      "measurement": {
+        "verdict": "failed",
+        "reason": "12 of 20 records (the 20 dated rows of the Gem Screener batch with the largest market cap) serve a next unlock smaller than what their own tranches release on that day: PUMP (pump) next_unlock 4,166,666,667 (Team) on 2026-10-13 while its tranches release 6,875,000,000 that day (Team 4,166,666,667, Existing Investors 2,708,333,333); MON (monad) next_unlock 4,925,000,000 (Investors) on 2026-11-25 while its tranches release 5,912,500,000 that day (Investors 4,925,000,000, Category Labs Treasury 987,500,000); STABLE (stable) next_unlock 694,444,444 (Team) on 2027-01-08 while its tranches release 1,388,888,889 that day (Team 694,444,444, Investors & Advisors 694,444,444); XPL (plasma) next_unlock 69,444,444 (Team) on 2026-10-26 while its tranches release 227,777,778 that day (Team 69,444,444, Investors 69,444,444, Ecosystem & Growth 88,888,889)",
+        "left": {
+          "records_short_of_their_day": 12,
+          "judged": 20
+        },
+        "right": {
+          "records_short_of_their_day": 0
+        },
+        "sources": {
+          "batch": "/api/v1/supply-analyzer/batch/gem-screener",
+          "records": "/api/v1/supply-analyzer/analyze?symbol=<slug>",
+          "contract": "undocumented: next_unlock is an object with no properties in openapi-public.json and is absent from /definitions"
+        },
+        "provenance": {},
+        "evidence_ids": [],
+        "fingerprint": null,
+        "claim_id": "supply-analyzer-next-unlock-states-its-whole-day",
+        "role": "verdict",
+        "population": {
+          "short": [
+            {
+              "coin": "PUMP (pump)",
+              "ts": 1791849600,
+              "day": "2026-10-13",
+              "served": 4166666666.67,
+              "served_who": [
+                "Team"
+              ],
+              "day_total": 6875000000.0,
+              "recipients": [
+                {
+                  "who": "Team",
+                  "amount": 4166666666.666664
+                },
+                {
+                  "who": "Existing Investors",
+                  "amount": 2708333333.333336
+                }
+              ],
+              "short": true
+            },
+            {
+              "coin": "MON (monad)",
+              "ts": 1795564800,
+              "day": "2026-11-25",
+              "served": 4925000000.0,
+              "served_who": [
+                "Investors"
+              ],
+              "day_total": 5912500000.0,
+              "recipients": [
+                {
+                  "who": "Investors",
+                  "amount": 4925000000.0
+                },
+                {
+                  "who": "Category Labs Treasury",
+                  "amount": 987500000.0
+                }
+              ],
+              "short": true
+            },
+            {
+              "coin": "STABLE (stable)",
+              "ts": 1799366400,
+              "day": "2027-01-08",
+              "served": 694444444.44,
+              "served_who": [
+                "Team"
+              ],
+              "day_total": 1388888888.8888888,
+              "recipients": [
+                {
+                  "who": "Team",
+                  "amount": 694444444.4444444
+                },
+                {
+                  "who": "Investors & Advisors",
+                  "amount": 694444444.4444444
+                }
+              ],
+              "short": true
+            },
+            {
+              "coin": "XPL (plasma)",
+              "ts": 1792972800,
+              "day": "2026-10-26",
+              "served": 69444444.44,
+              "served_who": [
+                "Team"
+              ],
+              "day_total": 227777777.77777767,
+              "recipients": [
+                {
+                  "who": "Team",
+                  "amount": 69444444.44444442
+                },
+                {
+                  "who": "Investors",
+                  "amount": 69444444.44444442
+                },
+                {
+                  "who": "Ecosystem & Growth",
+                  "amount": 88888888.88888884
+                }
+              ],
+              "short": true
+            },
+            {
+              "coin": "ENA (ethena)",
+              "ts": 1794268800,
+              "day": "2026-11-10",
+              "served": 77003722.42,
+              "served_who": [
+                "Investors"
+              ],
+              "day_total": 169408189.31735897,
+              "recipients": [
+                {
+                  "who": "Investors",
+                  "amount": 77003722.41698122
+                },
+                {
+                  "who": "Team",
+                  "amount": 92404466.90037775
+                }
+              ],
+              "short": true
+            },
+            {
+              "coin": "STRK (starknet)",
+              "ts": 1793404800,
+              "day": "2026-10-31",
+              "served": 53309112.9,
+              "served_who": [
+                "Early Contributors"
+              ],
+              "day_total": 106618225.8064518,
+              "recipients": [
+                {
+                  "who": "Early Contributors",
+                  "amount": 53309112.9032259
+                },
+                {
+                  "who": "Investors",
+                  "amount": 53309112.9032259
+                }
+              ],
+              "short": true
+            },
+            {
+              "coin": "SEI (sei)",
+              "ts": 1791936000,
+              "day": "2026-10-14",
+              "served": 55555555.0,
+              "served_who": [
+                "Private Sale"
+              ],
+              "day_total": 106111110.0,
+              "recipients": [
+                {
+                  "who": "Private Sale",
+                  "amount": 55555555.0
+                },
+                {
+                  "who": "Strategic Allocation",
+                  "amount": 8333333.0
+                },
+                {
+                  "who": "Team",
+                  "amount": 42222222.0
+                }
+              ],
+              "short": true
+            },
+            {
+              "coin": "ARB (arbitrum)",
+              "ts": 1792108800,
+              "day": "2026-10-16",
+              "served": 56125000.0,
+              "served_who": [
+                "Team, Contributors & Advisors"
+              ],
+              "day_total": 92645833.33333325,
+              "recipients": [
+                {
+                  "who": "Team, Contributors & Advisors",
+                  "amount": 56125000.0
+                },
+                {
+                  "who": "Investors",
+                  "amount": 36520833.333333254
+                }
+              ],
+              "short": true
+            },
+            {
+              "coin": "JTO (jito)",
+              "ts": 1794268800,
+              "day": "2026-11-10",
+              "served": 4435413.01,
+              "served_who": [
+                "Investors"
+              ],
+              "day_total": 11143290.699480295,
+              "recipients": [
+                {
+                  "who": "Investors",
+                  "amount": 4435413.005690098
+                },
+                {
+                  "who": "Core Contributors",
+                  "amount": 6707877.693790197
+                }
+              ],
+              "short": true
+            },
+            {
+              "coin": "APT (aptos)",
+              "ts": 1791763200,
+              "day": "2026-10-12",
+              "served": 3958333.33,
+              "served_who": [
+                "Core Contributors"
+              ],
+              "day_total": 6766305.0048541725,
+              "recipients": [
+                {
+                  "who": "Core Contributors",
+                  "amount": 3958333.3333333433
+                },
+                {
+                  "who": "Investors",
+                  "amount": 2807971.671520829
+                }
+              ],
+              "short": true
+            },
+            {
+              "coin": "LIT (lighter)",
+              "ts": 1799539200,
+              "day": "2027-01-10",
+              "served": 2847425.63,
+              "served_who": [
+                "Team"
+              ],
+              "day_total": 5475818.525543331,
+              "recipients": [
+                {
+                  "who": "Team",
+                  "amount": 2847425.6332825324
+                },
+                {
+                  "who": "Investors",
+                  "amount": 2628392.8922607987
+                }
+              ],
+              "short": true
+            },
+            {
+              "coin": "FIL (filecoin)",
+              "ts": 1792022400,
+              "day": "2026-10-15",
+              "served": 383386.58,
+              "served_who": [
+                "Protocol Labs"
+              ],
+              "day_total": 547695.1163852215,
+              "recipients": [
+                {
+                  "who": "Protocol Labs",
+                  "amount": 383386.58146965504
+                },
+                {
+                  "who": "Protocol Labs Team & Contributors",
+                  "amount": 164308.53491556644
+                }
+              ],
+              "short": true
+            }
+          ],
+          "judged": 20,
+          "unread": [],
+          "dated_rows": 59,
+          "sample": [
+            "HYPE (hyperliquid)",
+            "HYPE (hyperliquid-l1)",
+            "AVAX (avalanche)",
+            "SUI (sui-foundation)",
+            "SUI (sui)",
+            "ENA (ethena)",
+            "PUMP (pump)",
+            "ARB (arbitrum)",
+            "VVV (venice)",
+            "FIL (filecoin)",
+            "LIT (lighter)",
+            "STRK (starknet)",
+            "APT (aptos)",
+            "STABLE (stable)",
+            "ETHFI (ether.fi)",
+            "SEI (sei)",
+            "XPL (plasma)",
+            "MON (monad)",
+            "JTO (jito)",
+            "MET (meteora)"
+          ],
+          "batch_as_of": "2026-10-11T12:13:03.640051+00:00"
+        }
+      },
+      "check_fingerprint": "247dc550eb75d16362a88bdf1f45d16d63cf152e85611a0aa64868c62ad962b9",
+      "helpers_fingerprint": "a0d8e70cfd20ca1f12124bb51bca37a779ed41832b7751955287a848a83fcc50",
+      "helpers_formula": 2,
+      "reason": null,
+      "failure_repr": "tests\\rest\\test_supply_analyzer_states_what_its_sources_say.py:1465: in test_a_next_unlock_states_what_its_day_releases\n    conclude(Measurement(\nqa\\measure.py:165: in conclude\n    raise AssertionError(explain(m))\nE   AssertionError: 12 of 20 records (the 20 dated rows of the Gem Screener batch with the largest market cap) serve a next unlock smaller than what their own tranches release on that day: PUMP (pump) next_unlock 4,166,666,667 (Team) on 2026-10-13 while its tranches release 6,875,000,000 that day (Team 4,166,666,667, Existing Investors 2,708,333,333); MON (monad) next_unlock 4,925,000,000 (Investors) on 2026-11-25 while its tranches release 5,912,500,000 that day (Investors 4,925,000,000, Category Labs Treasury 987,500,000); STABLE (stable) next_unlock 694,444,444 (Team) on 2027-01-08 while its tranches release 1,388,888,889 that day (Team 694,444,444, Investors & Advisors 694,444,444); XPL (plasma) next_unlock 69,444,444 (Team) on 2026-10-26 while its tranches release 227,777,778 that day (Team 69,444,444, Investors 69,444,444, Ecosystem & Growth 88,888,889)\nE     left  = {'records_short_of_their_day': 12, 'judged': 20}\nE     right = {'records_short_of_their_day': 0}"
+    },
+    {
+      "nodeid": "tests/rest/test_movers_page_ranks_every_card.py::test_the_movers_boards_rank_every_card_of_the_listing",
+      "component": "rest.event_cards",
+      "tier": "SAFE",
+      "surface": "rest",
+      "claim_id": "movers-page-ranks-every-event-card",
+      "ticket_id": null,
+      "volatile": false,
+      "outcome": "failed",
+      "phase": "call",
+      "role": "verdict",
+      "duration_ms": 23633,
+      "evidence_ids": [
+        "88506aa325a6215e7a490a0e2b3f40d9e915fa5c22e690fba5ee90434f0f5660",
+        "0d1b3656c7ea07d251d2741d8d28a1778aebac123e381a398d82f19d5b65e829",
+        "3caa3f4897b6eb7a5d60d6150795bac0b0d3beee8808d2319fc3630c98eaddde",
+        "401a714919ab7a7e2e4b805b0ad1233c4a8e86f3c5b5358ae8b21d160fa81590",
+        "d972ed7394e7d66e3e1c21cd910a8ed1059d90898e63b1f77b2bcd5000776926",
+        "81a26ec4d89dddbf27407f91c22f02998d032d6f158e303d40535e6f098a5d12",
+        "7bc3360c37db9f5283b828d7d199c634c8b7e863409525c563f757bbae862451",
+        "4e782d99ce80e6943709b5f81cc1c7cc61be066a7796a9781c3149a59bc9a01d",
+        "b7c23f216dbbb0aa14239a33efa622db0905c4046f1ef7c56f21c85465b225cf",
+        "a127fb17b80246134797f2d2c9bdab2db39b72d43cbcb8b16c9119ad4abe143a"
+      ],
+      "measurement": {
+        "verdict": "failed",
+        "reason": "/movers ranks the 100 cards its script reads (/api/v1/event-cards/?limit=100) of the 641 the listing totals: 10 of the 10 biggest losers and 7 of the 10 biggest gainers are cards the page never reads. Biggest loser over every card: SAIB: CTVA — Corteva -83.92%; the page's: SAIB: TTD — Trade Desk (The) -19.17%. Biggest gainer over every card: Launch HN: Discovered Materials (YC P26) – AI agents to disc +101.96%; the page's: Launch HN: Discovered Materials (YC P26) – AI agents to disc +101.96%. /api/v1/event-cards/?limit=500 answers HTTP 422",
+        "left": {
+          "top_cards_the_page_never_reads": 17,
+          "cards_the_page_reads": 100
+        },
+        "right": {
+          "top_cards_the_page_never_reads": 0
+        },
+        "sources": {
+          "page": "/movers",
+          "listing": "/api/v1/event-cards/",
+          "contract": "/movers: 'event cards, index funds and platform tokens ranked by move and by activity'; llms.txt: 'Biggest gainers, losers and most active across EventTrader's own products'"
+        },
+        "provenance": {},
+        "evidence_ids": [],
+        "fingerprint": null,
+        "claim_id": "movers-page-ranks-every-event-card",
+        "role": "verdict",
+        "population": {
+          "requests": [
+            "/api/v1/event-cards/?limit=100"
+          ],
+          "listing_total": 641,
+          "cards_read": 641,
+          "missed": {
+            "gainers": [
+              "SAIB: MRNA — Moderna +54.91%",
+              "SAIB: PTC — PTC Inc. +42.30%",
+              "SAIB: CIEN — Ciena +40.88%",
+              "SAIB: GME — GameStop +38.83%",
+              "SAIB: PENG — Penguin Solutions +38.27%",
+              "SAIB: SNPS — Synopsys +33.70%",
+              "SAIB: HPE — Hewlett Packard Enterprise +32.97%"
+            ],
+            "losers": [
+              "SAIB: CTVA — Corteva -83.92%",
+              "Traders are skeptical of Iran timeline for Strait of Hormuz  -47.79%",
+              "SAIB: BULL — Webull -35.42%",
+              "SAIB: FICO — Fair Isaac -32.47%",
+              "SoftBank extends scorching rally, surging over 12%, as inves -30.94%",
+              "SAIB: USAR — USA Rare Earth -28.28%",
+              "SAIB: CHTR — Charter Communications -27.45%",
+              "SAIB: MGM — MGM Resorts -26.29%",
+              "SAIB: GEN — Gen Digital -26.23%",
+              "SAIB: SMR — NuScale Power -25.77%"
+            ]
+          },
+          "page_boards": {
+            "gainers": [
+              "Launch HN: Discovered Materials (YC P26) – AI agents to disc +101.96%",
+              "The nuclear revival will be decided by supply chains—and SMR +90.52%",
+              "Antero Resources’ (AR) Strategic Role in AI Infrastructure E +61.98%",
+              "UCOP: A 2X Bet on the Metal the World Can’t Electrify Withou +20.07%",
+              "South Korea's 'bipolar' stock market: meltdowns, a record ra +15.81%",
+              "SAIB: VST — Vistra Corp. +14.74%",
+              "SAIB: VLO — Valero Energy +13.54%",
+              "SAIB: TT — Trane Technologies +11.96%",
+              "SAIB: VEEV — Veeva Systems +11.48%",
+              "SAIB: WBD — Warner Bros. Discovery +10.14%"
+            ],
+            "losers": [
+              "SAIB: TTD — Trade Desk (The) -19.17%",
+              "SAIB: VZ — Verizon -18.48%",
+              "SAIB: WY — Weyerhaeuser -13.92%",
+              "SAIB: WYNN — Wynn Resorts -13.54%",
+              "Foundation Future Industries is building humanoid robots tha -13.54%",
+              "Gem Screener L1 -9.32%",
+              "SAIB: USB — U.S. Bancorp -9.00%",
+              "SAIB: WTW — Willis Towers Watson -8.48%",
+              "SAIB: VICI — Vici Properties -8.35%",
+              "SAIB: TYL — Tyler Technologies -8.34%"
+            ]
+          },
+          "true_boards": {
+            "gainers": [
+              "Launch HN: Discovered Materials (YC P26) – AI agents to disc +101.96%",
+              "The nuclear revival will be decided by supply chains—and SMR +90.52%",
+              "Antero Resources’ (AR) Strategic Role in AI Infrastructure E +61.98%",
+              "SAIB: MRNA — Moderna +54.91%",
+              "SAIB: PTC — PTC Inc. +42.30%",
+              "SAIB: CIEN — Ciena +40.88%",
+              "SAIB: GME — GameStop +38.83%",
+              "SAIB: PENG — Penguin Solutions +38.27%",
+              "SAIB: SNPS — Synopsys +33.70%",
+              "SAIB: HPE — Hewlett Packard Enterprise +32.97%"
+            ],
+            "losers": [
+              "SAIB: CTVA — Corteva -83.92%",
+              "Traders are skeptical of Iran timeline for Strait of Hormuz  -47.79%",
+              "SAIB: BULL — Webull -35.42%",
+              "SAIB: FICO — Fair Isaac -32.47%",
+              "SoftBank extends scorching rally, surging over 12%, as inves -30.94%",
+              "SAIB: USAR — USA Rare Earth -28.28%",
+              "SAIB: CHTR — Charter Communications -27.45%",
+              "SAIB: MGM — MGM Resorts -26.29%",
+              "SAIB: GEN — Gen Digital -26.23%",
+              "SAIB: SMR — NuScale Power -25.77%"
+            ]
+          },
+          "limit_500_status": 422
+        }
+      },
+      "check_fingerprint": "50e39cf990ff4bf2579188011198394678726ca300f896ae4e372104569ad332",
+      "helpers_fingerprint": "99ae976d87483a037da8d42a49bee6ab786fe058dc341420a34b88fa4460fc40",
+      "helpers_formula": 2,
+      "reason": null,
+      "failure_repr": "tests\\rest\\test_movers_page_ranks_every_card.py:166: in test_the_movers_boards_rank_every_card_of_the_listing\n    conclude(Measurement(\nqa\\measure.py:165: in conclude\n    raise AssertionError(explain(m))\nE   AssertionError: /movers ranks the 100 cards its script reads (/api/v1/event-cards/?limit=100) of the 641 the listing totals: 10 of the 10 biggest losers and 7 of the 10 biggest gainers are cards the page never reads. Biggest loser over every card: SAIB: CTVA — Corteva -83.92%; the page's: SAIB: TTD — Trade Desk (The) -19.17%. Biggest gainer over every card: Launch HN: Discovered Materials (YC P26) – AI agents to disc +101.96%; the page's: Launch HN: Discovered Materials (YC P26) – AI agents to disc +101.96%. /api/v1/event-cards/?limit=500 answers HTTP 422\nE     left  = {'top_cards_the_page_never_reads': 17, 'cards_the_page_reads': 100}\nE     right = {'top_cards_the_page_never_reads': 0}"
+    },
+    {
+      "nodeid": "tests/rest/test_a_clone_summary_names_what_it_trades.py::test_a_clone_summary_names_every_market_it_trades_and_no_other",
+      "component": "rest.agents",
+      "tier": "SAFE",
+      "surface": "rest",
+      "claim_id": "clone-summary-names-every-market-it-trades",
+      "ticket_id": null,
+      "volatile": false,
+      "outcome": "failed",
+      "phase": "call",
+      "role": "verdict",
+      "duration_ms": 46821,
+      "evidence_ids": [
+        "98145f6135fd0f9940566378efeb6dd1be176064822c25d37efaa1166374a936",
+        "e096be5a682b00379d966f040b4d884afdb85c325c4c3611bc8a463f055898e3",
+        "b8fc0bcf86175253a9ce1dfcaade8fe60b9ab506d8b8c26198e43b199ca15d65",
+        "b555695c1f690f53716f9a03d9998c87ab193b1811e6a0f9dde520b0e16de930",
+        "486094798b4bc618cd79ee0bb9bbf9d03e0bc9db2ba49618458a676fdce4a9d4",
+        "d73198d9183149616bda14f1adc7ce82dac1495cffd81e38e7d59d0d3d05ed8a",
+        "b5b8ff683b08ab1aa90a383ef0bcca4484a0259a78d59fde59bce351dec39d9f",
+        "c9ebe3159f3a4324e545fb2753abb917845d8fbe398c3ceea1b5a56b3d9bc6d2",
+        "d3d6770489a0fa8c19c8e1b366cfed535ad5b10cf26a848360730d81b7ab875f",
+        "a3c115e16a2b1a62e858c79042c622f62a47fd8cbacb118745cac236f099581a",
+        "3da77fc62ec57c57477e822562133e2b68bd9337a0831d0c4da5dd76ac66693b",
+        "1daabf4d7361badb88497323748f0a42328f4c822d55808770b297de9335da39",
+        "779ab6aad8cac538e5d8adeb7e1b3a5b279659bf4f9c4caab69497c320f95857",
+        "131b5531709e023550986c8530496d099fee1fb704d48eb2a9666e0f5d6928fe",
+        "035cee8d14ae206cf8ad3a5ee8b05f2f04ce54ccec03b31a179877d04bdee0df",
+        "9e98afdbd0ef3df3d06c7abb4bd33fe7727f876a45e09db4ec3592370c907a61",
+        "56c1265b8405ceea243a99dcac889a45c7e8c2427cc0bc1f7c61969dad1965ad",
+        "9b4d4fdf8894da20a2bc8e552ab08ed36e8077f9694c6120e298a7a8367eeb0e",
+        "9c0e199f0d4121a84ff83a32bda546522febad4d43d10b693d7aa9b38299a7a7",
+        "b2d612d705ddb23f428867876ea93f8e158bb11e9da477e07409210753c91913",
+        "fd72c09860e70b426c08496cd9e22816764b989ef8c9393a43454fe7ff0e73d1",
+        "821b33e0325e07fdd05383980e3eda1e8dd08b4a78083465ec7c3d1bf484192d",
+        "9405ec0f071fd1ac3e7805204d283275cfb496f7f4b938052216f8d773683261",
+        "be81b0b49c5103605fdc0909df69b1fa97432eed6ab2c65be76c12ef90456535",
+        "4e72554e802e50eb65e1f51841727d7a060aaf5496267a5c7505c1f9e06cbcd6",
+        "8ec05d4578a83b4afd783eac3222eeb001f8839926b0aa0e9dd44f00aa341899",
+        "10d9f072ce0be2446ec7fdeec70aa7e7ccd490684862d87a92eb83ef0ebbd1ff",
+        "debc4c6b15b316d771e25b4d7c353ca708f25df0c2848c55a76a1525abfb0562",
+        "b725bde2280104c2b6e9baf3c407eb28a0116acc3d3cb1d2ab7a7b9049a3e8bd",
+        "12b38120ec603c18ac0196a2f190183d125a80faeaa009c11136db51f66e9bb0",
+        "c9232b81e4052253d370a4f0acfd16fec0e02d9544968cab8d4e24f35ad14116",
+        "008652371483f1c9bb4f418236d393e5221048788b40b1d7a351bb99a2a6ce8a",
+        "821c210465cc65fb2340c704459c9b4faf9d1cbc1559b596b334c87bbad3d67b",
+        "f568c9c26ace62b7046d75c1c49e56f7dd016a9ca2a385ae17698e1c33ed1fc5",
+        "b12ef70c09e791db589161ccec0a4933b34a65d0faa274863307b259c4511f46",
+        "4ef50b0a3878894a183058ef8cdbb563bd02d78ee8e242306bdc1729828adb38",
+        "64a51a1771a15d3c6286b87e6553e249160944209ad2e34ee8ec5409eeeb8ec4",
+        "fd668acec7670cd195a73eb8b5f6a714c41499aece9dc522deae5524157dbd03",
+        "5e135a0391865fe402c409c8a65f09eacf1ddbec4553232387142ede4652b307",
+        "70a7be37667aea07ed3c1077c1d9009630850b3891b18218a56bd03d55c1624e",
+        "96ab0ec48d59cf77866a86c7b0837d57c2125f2e5d886af0e249833525c3f739",
+        "7e65c3cbd9a37c1ba454c71a8086f7e97bde8d2344b895b00929340ec33f5c79"
+      ],
+      "measurement": {
+        "verdict": "failed",
+        "reason": "31 of 41 paper clones state a trades_summary that misstates their own settings: 30 leave switched-on markets out with no \"+N\", 1 print a list set to 'NONE' as a market. 3453bac2 \"This bot trades: BTC/ETH/VAIX/SBIO 5-min epochs · Arena headline assets (paper)\" with perpetual_markets 'BTC,ETH,VAIX,SBIO,ET10,ETLP,CYM42,TBIG,TBIGS', custom_markets None: 4 of 9 perpetual markets named, ET10, ETLP, CYM42, TBIG, TBIGS left out with no count | f6af3fd1 \"This bot trades: CLOB NONE · Arena headline assets (paper)\" with perpetual_markets 'NONE', custom_markets 'NONE': custom_markets and perpetual_markets set to 'NONE' (off) printed as a market called NONE",
+        "left": {
+          "clones_misstated": 31,
+          "left_out": 30,
+          "none_named": 1
+        },
+        "right": {
+          "clones_misstated": 0
+        },
+        "sources": {
+          "list": "/api/v1/cloned-bots/my-clones?mode=paper",
+          "profile": "/api/v1/cloned-bots/{id}/profile",
+          "contract": "ET-28100 item 1 (REPLY-0151): one line built from the bot's live settings; the settings form: 'NONE' = explicitly off, CSV = those symbols"
+        },
+        "provenance": {},
+        "evidence_ids": [],
+        "fingerprint": null,
+        "claim_id": "clone-summary-names-every-market-it-trades",
+        "role": "verdict",
+        "population": {
+          "judged": 41,
+          "clones": 41,
+          "unread": [],
+          "wrong": [
+            {
+              "id": "3453bac2",
+              "name": "lab Wave 2 Corr Catcher",
+              "trades_summary": "This bot trades: BTC/ETH/VAIX/SBIO 5-min epochs · Arena headline assets (paper)",
+              "perpetual_markets": "BTC,ETH,VAIX,SBIO,ET10,ETLP,CYM42,TBIG,TBIGS",
+              "custom_markets": null,
+              "switched_on": {
+                "perpetual": [
+                  "BTC",
+                  "ETH",
+                  "VAIX",
+                  "SBIO",
+                  "ET10",
+                  "ETLP",
+                  "CYM42",
+                  "TBIG",
+                  "TBIGS"
+                ],
+                "clob": []
+              },
+              "wrong": {
+                "perpetual_left_out": {
+                  "on": 9,
+                  "named": 4,
+                  "left_out": [
+                    "ET10",
+                    "ETLP",
+                    "CYM42",
+                    "TBIG",
+                    "TBIGS"
+                  ]
+                }
+              }
+            },
+            {
+              "id": "82578fef",
+              "name": "lab Wave 2 Stat Oracle",
+              "trades_summary": "This bot trades: BTC/ETH/VAIX/SBIO 5-min epochs · Arena headline assets (paper)",
+              "perpetual_markets": "BTC,ETH,VAIX,SBIO,ET10,ETLP,CYM42,TBIG,TBIGS",
+              "custom_markets": null,
+              "switched_on": {
+                "perpetual": [
+                  "BTC",
+                  "ETH",
+                  "VAIX",
+                  "SBIO",
+                  "ET10",
+                  "ETLP",
+                  "CYM42",
+                  "TBIG",
+                  "TBIGS"
+                ],
+                "clob": []
+              },
+              "wrong": {
+                "perpetual_left_out": {
+                  "on": 9,
+                  "named": 4,
+                  "left_out": [
+                    "ET10",
+                    "ETLP",
+                    "CYM42",
+                    "TBIG",
+                    "TBIGS"
+                  ]
+                }
+              }
+            },
+            {
+              "id": "a581e0e0",
+              "name": "lab Wave 2 Dread Gauge",
+              "trades_summary": "This bot trades: BTC/ETH/VAIX/SBIO 5-min epochs (paper)",
+              "perpetual_markets": "BTC,ETH,VAIX,SBIO,ET10,ETLP,CYM42,TBIG,TBIGS",
+              "custom_markets": null,
+              "switched_on": {
+                "perpetual": [
+                  "BTC",
+                  "ETH",
+                  "VAIX",
+                  "SBIO",
+                  "ET10",
+                  "ETLP",
+                  "CYM42",
+                  "TBIG",
+                  "TBIGS"
+                ],
+                "clob": []
+              },
+              "wrong": {
+                "perpetual_left_out": {
+                  "on": 9,
+                  "named": 4,
+                  "left_out": [
+                    "ET10",
+                    "ETLP",
+                    "CYM42",
+                    "TBIG",
+                    "TBIGS"
+                  ]
+                }
+              }
+            },
+            {
+              "id": "8ff88782",
+              "name": "lab Wave 2 Crash Detector",
+              "trades_summary": "This bot trades: BTC/ETH/VAIX/SBIO 5-min epochs · Arena headline assets (paper)",
+              "perpetual_markets": "BTC,ETH,VAIX,SBIO,ET10,ETLP,CYM42,TBIG,TBIGS",
+              "custom_markets": null,
+              "switched_on": {
+                "perpetual": [
+                  "BTC",
+                  "ETH",
+                  "VAIX",
+                  "SBIO",
+                  "ET10",
+                  "ETLP",
+                  "CYM42",
+                  "TBIG",
+                  "TBIGS"
+                ],
+                "clob": []
+              },
+              "wrong": {
+                "perpetual_left_out": {
+                  "on": 9,
+                  "named": 4,
+                  "left_out": [
+                    "ET10",
+                    "ETLP",
+                    "CYM42",
+                    "TBIG",
+                    "TBIGS"
+                  ]
+                }
+              }
+            },
+            {
+              "id": "6cb21a44",
+              "name": "lab Wave 2 Sync Master",
+              "trades_summary": "This bot trades: BTC/ETH/VAIX/SBIO 5-min epochs (paper)",
+              "perpetual_markets": "BTC,ETH,VAIX,SBIO,ET10,ETLP,CYM42,TBIG,TBIGS",
+              "custom_markets": null,
+              "switched_on": {
+                "perpetual": [
+                  "BTC",
+                  "ETH",
+                  "VAIX",
+                  "SBIO",
+                  "ET10",
+                  "ETLP",
+                  "CYM42",
+                  "TBIG",
+                  "TBIGS"
+                ],
+                "clob": []
+              },
+              "wrong": {
+                "perpetual_left_out": {
+                  "on": 9,
+                  "named": 4,
+                  "left_out": [
+                    "ET10",
+                    "ETLP",
+                    "CYM42",
+                    "TBIG",
+                    "TBIGS"
+                  ]
+                }
+              }
+            },
+            {
+              "id": "1eb11e58",
+              "name": "lab Wave 2 Vortex Drain",
+              "trades_summary": "This bot trades: BTC/ETH/VAIX/SBIO 5-min epochs · Arena headline assets (paper)",
+              "perpetual_markets": "BTC,ETH,VAIX,SBIO,ET10,ETLP,CYM42,TBIG,TBIGS",
+              "custom_markets": null,
+              "switched_on": {
+                "perpetual": [
+                  "BTC",
+                  "ETH",
+                  "VAIX",
+                  "SBIO",
+                  "ET10",
+                  "ETLP",
+                  "CYM42",
+                  "TBIG",
+                  "TBIGS"
+                ],
+                "clob": []
+              },
+              "wrong": {
+                "perpetual_left_out": {
+                  "on": 9,
+                  "named": 4,
+                  "left_out": [
+                    "ET10",
+                    "ETLP",
+                    "CYM42",
+                    "TBIG",
+                    "TBIGS"
+                  ]
+                }
+              }
+            },
+            {
+              "id": "c5c988d3",
+              "name": "lab Wave 2 Doom & Gloom",
+              "trades_summary": "This bot trades: BTC/ETH/VAIX/SBIO 5-min epochs · Arena headline assets (paper)",
+              "perpetual_markets": "BTC,ETH,VAIX,SBIO,ET10,ETLP,CYM42,TBIG,TBIGS",
+              "custom_markets": null,
+              "switched_on": {
+                "perpetual": [
+                  "BTC",
+                  "ETH",
+                  "VAIX",
+                  "SBIO",
+                  "ET10",
+                  "ETLP",
+                  "CYM42",
+                  "TBIG",
+                  "TBIGS"
+                ],
+                "clob": []
+              },
+              "wrong": {
+                "perpetual_left_out": {
+                  "on": 9,
+                  "named": 4,
+                  "left_out": [
+                    "ET10",
+                    "ETLP",
+                    "CYM42",
+                    "TBIG",
+                    "TBIGS"
+                  ]
+                }
+              }
+            },
+            {
+              "id": "abc0e242",
+              "name": "lab Wave 2 Fade the Rally",
+              "trades_summary": "This bot trades: BTC/ETH/VAIX/SBIO 5-min epochs · Arena headline assets (paper)",
+              "perpetual_markets": "BTC,ETH,VAIX,SBIO,ET10,ETLP,CYM42,TBIG,TBIGS",
+              "custom_markets": null,
+              "switched_on": {
+                "perpetual": [
+                  "BTC",
+                  "ETH",
+                  "VAIX",
+                  "SBIO",
+                  "ET10",
+                  "ETLP",
+                  "CYM42",
+                  "TBIG",
+                  "TBIGS"
+                ],
+                "clob": []
+              },
+              "wrong": {
+                "perpetual_left_out": {
+                  "on": 9,
+                  "named": 4,
+                  "left_out": [
+                    "ET10",
+                    "ETLP",
+                    "CYM42",
+                    "TBIG",
+                    "TBIGS"
+                  ]
+                }
+              }
+            },
+            {
+              "id": "3b1512cb",
+              "name": "lab Wave 2 Sent Surfer",
+              "trades_summary": "This bot trades: BTC/ETH/VAIX/SBIO 5-min epochs · Arena headline assets (paper)",
+              "perpetual_markets": "BTC,ETH,VAIX,SBIO,ET10,ETLP,CYM42,TBIG,TBIGS",
+              "custom_markets": null,
+              "switched_on": {
+                "perpetual": [
+                  "BTC",
+                  "ETH",
+                  "VAIX",
+                  "SBIO",
+                  "ET10",
+                  "ETLP",
+                  "CYM42",
+                  "TBIG",
+                  "TBIGS"
+                ],
+                "clob": []
+              },
+              "wrong": {
+                "perpetual_left_out": {
+                  "on": 9,
+                  "named": 4,
+                  "left_out": [
+                    "ET10",
+                    "ETLP",
+                    "CYM42",
+                    "TBIG",
+                    "TBIGS"
+                  ]
+                }
+              }
+            },
+            {
+              "id": "da83f3d1",
+              "name": "lab Wave 2 Perceptron Oracle",
+              "trades_summary": "This bot trades: BTC/ETH/VAIX/SBIO 5-min epochs · Arena headline assets (paper)",
+              "perpetual_markets": "BTC,ETH,VAIX,SBIO,ET10,ETLP,CYM42,TBIG,TBIGS",
+              "custom_markets": null,
+              "switched_on": {
+                "perpetual": [
+                  "BTC",
+                  "ETH",
+                  "VAIX",
+                  "SBIO",
+                  "ET10",
+                  "ETLP",
+                  "CYM42",
+                  "TBIG",
+                  "TBIGS"
+                ],
+                "clob": []
+              },
+              "wrong": {
+                "perpetual_left_out": {
+                  "on": 9,
+                  "named": 4,
+                  "left_out": [
+                    "ET10",
+                    "ETLP",
+                    "CYM42",
+                    "TBIG",
+                    "TBIGS"
+                  ]
+                }
+              }
+            },
+            {
+              "id": "8f05f8dd",
+              "name": "lab Wave 2 Divergence Dragon",
+              "trades_summary": "This bot trades: BTC/ETH/VAIX/SBIO 5-min epochs · Arena headline assets (paper)",
+              "perpetual_markets": "BTC,ETH,VAIX,SBIO,ET10,ETLP,CYM42,TBIG,TBIGS",
+              "custom_markets": null,
+              "switched_on": {
+                "perpetual": [
+                  "BTC",
+                  "ETH",
+                  "VAIX",
+                  "SBIO",
+                  "ET10",
+                  "ETLP",
+                  "CYM42",
+                  "TBIG",
+                  "TBIGS"
+                ],
+                "clob": []
+              },
+              "wrong": {
+                "perpetual_left_out": {
+                  "on": 9,
+                  "named": 4,
+                  "left_out": [
+                    "ET10",
+                    "ETLP",
+                    "CYM42",
+                    "TBIG",
+                    "TBIGS"
+                  ]
+                }
+              }
+            },
+            {
+              "id": "cec6eddf",
+              "name": "lab Wave 2 ATR Alpha",
+              "trades_summary": "This bot trades: BTC/ETH/VAIX/SBIO 5-min epochs · Arena headline assets (paper)",
+              "perpetual_markets": "BTC,ETH,VAIX,SBIO,ET10,ETLP,CYM42,TBIG,TBIGS",
+              "custom_markets": null,
+              "switched_on": {
+                "perpetual": [
+                  "BTC",
+                  "ETH",
+                  "VAIX",
+                  "SBIO",
+                  "ET10",
+                  "ETLP",
+                  "CYM42",
+                  "TBIG",
+                  "TBIGS"
+                ],
+                "clob": []
+              },
+              "wrong": {
+                "perpetual_left_out": {
+                  "on": 9,
+                  "named": 4,
+                  "left_out": [
+                    "ET10",
+                    "ETLP",
+                    "CYM42",
+                    "TBIG",
+                    "TBIGS"
+                  ]
+                }
+              }
+            }
+          ]
+        }
+      },
+      "check_fingerprint": "5b5b8c24e08c9f1a74eb5846f8bbac2161d73aa0b543f20b225ab51db372c6ba",
+      "helpers_fingerprint": "6fd708bfe44cf75a45fd95480b50a38784235121afb5eb1866be29c87469e49e",
+      "helpers_formula": 2,
+      "reason": null,
+      "failure_repr": "tests\\rest\\test_a_clone_summary_names_what_it_trades.py:148: in test_a_clone_summary_names_every_market_it_trades_and_no_other\n    conclude(Measurement(\nqa\\measure.py:165: in conclude\n    raise AssertionError(explain(m))\nE   AssertionError: 31 of 41 paper clones state a trades_summary that misstates their own settings: 30 leave switched-on markets out with no \"+N\", 1 print a list set to 'NONE' as a market. 3453bac2 \"This bot trades: BTC/ETH/VAIX/SBIO 5-min epochs · Arena headline assets (paper)\" with perpetual_markets 'BTC,ETH,VAIX,SBIO,ET10,ETLP,CYM42,TBIG,TBIGS', custom_markets None: 4 of 9 perpetual markets named, ET10, ETLP, CYM42, TBIG, TBIGS left out with no count | f6af3fd1 \"This bot trades: CLOB NONE · Arena headline assets (paper)\" with perpetual_markets 'NONE', custom_markets 'NONE': custom_markets and perpetual_markets set to 'NONE' (off) printed as a market called NONE\nE     left  = {'clones_misstated': 31, 'left_out': 30, 'none_named': 1}\nE     right = {'clones_misstated': 0}"
+    },
+    {
+      "nodeid": "tests/rest/test_agent_tournaments_routes_are_in_the_openapi.py::test_every_agent_tournaments_route_llms_txt_names_is_in_the_openapi",
+      "component": "rest.agent_tournaments",
+      "tier": "SAFE",
+      "surface": "rest",
+      "claim_id": "agent-tournaments-routes-are-in-the-openapi",
+      "ticket_id": null,
+      "volatile": false,
+      "outcome": "failed",
+      "phase": "call",
+      "role": "verdict",
+      "duration_ms": 25029,
+      "evidence_ids": [
+        "5efec75417b5f08f8c634042c40c44c8f5af8a218f4fc9b0f8ea4e7ac6eed24d",
+        "b99aa79c95768e1c43636335876bdb0a46f369a8926493a9e3f8bb6ae8764579",
+        "ccf1cf52c18a854f3ea27f221e2a6889699862a7e557a57141c99b0f42a8b133"
+      ],
+      "measurement": {
+        "verdict": "failed",
+        "reason": "/llms.txt names 7 route(s) under /api/v1/agent-tournaments; /openapi-public.json (345 paths) describes 0 of them. Missing: /api/v1/agent-tournaments/lobby, /api/v1/agent-tournaments/my-bots, /api/v1/agent-tournaments/rules, /api/v1/agent-tournaments/seats/{}/leave, /api/v1/agent-tournaments/tables/{}, /api/v1/agent-tournaments/tables/{}/prompt, /api/v1/agent-tournaments/tables/{}/seat. /openapi.json (27 paths) describes 0",
+        "left": {
+          "routes_missing_from_openapi": 7,
+          "routes_named": 7
+        },
+        "right": {
+          "routes_missing_from_openapi": 0
+        },
+        "sources": {
+          "llms": "/llms.txt",
+          "openapi": "/openapi-public.json",
+          "context": "/openapi.json"
+        },
+        "provenance": {},
+        "evidence_ids": [],
+        "fingerprint": null,
+        "claim_id": "agent-tournaments-routes-are-in-the-openapi",
+        "role": "verdict",
+        "population": {
+          "named": [
+            "/api/v1/agent-tournaments/lobby",
+            "/api/v1/agent-tournaments/my-bots",
+            "/api/v1/agent-tournaments/rules",
+            "/api/v1/agent-tournaments/seats/{}/leave",
+            "/api/v1/agent-tournaments/tables/{}",
+            "/api/v1/agent-tournaments/tables/{}/prompt",
+            "/api/v1/agent-tournaments/tables/{}/seat"
+          ],
+          "missing": [
+            "/api/v1/agent-tournaments/lobby",
+            "/api/v1/agent-tournaments/my-bots",
+            "/api/v1/agent-tournaments/rules",
+            "/api/v1/agent-tournaments/seats/{}/leave",
+            "/api/v1/agent-tournaments/tables/{}",
+            "/api/v1/agent-tournaments/tables/{}/prompt",
+            "/api/v1/agent-tournaments/tables/{}/seat"
+          ],
+          "openapi_paths": 345,
+          "in_openapi_json": []
+        }
+      },
+      "check_fingerprint": "63a5bf49fc4ae402681a7bb2fda86c2889740e4ec93aa1617b396bea437240d9",
+      "helpers_fingerprint": "a950e7941a76f25c9a297091ef8d0c15a7dc850ee2a398af17b3886104b692fd",
+      "helpers_formula": 2,
+      "reason": null,
+      "failure_repr": "tests\\rest\\test_agent_tournaments_routes_are_in_the_openapi.py:92: in test_every_agent_tournaments_route_llms_txt_names_is_in_the_openapi\n    conclude(Measurement(\nqa\\measure.py:165: in conclude\n    raise AssertionError(explain(m))\nE   AssertionError: /llms.txt names 7 route(s) under /api/v1/agent-tournaments; /openapi-public.json (345 paths) describes 0 of them. Missing: /api/v1/agent-tournaments/lobby, /api/v1/agent-tournaments/my-bots, /api/v1/agent-tournaments/rules, /api/v1/agent-tournaments/seats/{}/leave, /api/v1/agent-tournaments/tables/{}, /api/v1/agent-tournaments/tables/{}/prompt, /api/v1/agent-tournaments/tables/{}/seat. /openapi.json (27 paths) describes 0\nE     left  = {'routes_missing_from_openapi': 7, 'routes_named': 7}\nE     right = {'routes_missing_from_openapi': 0}"
+    },
+    {
+      "nodeid": "tests/rest/test_build_it_better_spec_keeps_the_request.py::test_an_idea_keeps_its_new_app_spec_after_a_change",
+      "component": "rest.build_it_better",
+      "tier": "SAFE",
+      "surface": "rest",
+      "claim_id": "build-it-better-idea-keeps-the-new-app-spec-after-a-change",
+      "ticket_id": null,
+      "volatile": false,
+      "outcome": "failed",
+      "phase": "call",
+      "role": "verdict",
+      "duration_ms": 14122,
+      "evidence_ids": [
+        "7393f164c251724790c4f62c7d0d60e5f27761223ee8f147ea54430c84f82109",
+        "fa605daf1fc4584fa937c4679c5c801c27abea8232b1243acc3421adc3b2ac34",
+        "f8d7a1143e0ebda2f4ec69954b0fbd0b50852123bfae4a0dbb661db4129a00fb",
+        "36a66e79d12f567dca7f6b1f2643bbb2c5d0a7fc57343be3dcc63b78585dd724",
+        "2e82c8d1a9e95ea99d23c50bac6c308b90111ca4552a7c099338219465e500a2",
+        "204fc2f2558a630fcc70a5341fd9e991e56ea730289fd8dc74453e262a461ae4",
+        "8abe68e9a4a97e4151bf7f1006adcb6c6804050d40a8d0124600777cc31f138d"
+      ],
+      "measurement": {
+        "verdict": "failed",
+        "reason": "the newest idea with a BB-CHANGE, ET-30773 (Agent Tournaments, first BB-CHANGE 2026-10-10T21:34 UTC): before it ['new'], after it ['rebuild', 'rebuild'], forbidding \"Agent Tournaments's logos\": its spec after the change builds \"a page on EventTrader that does the job you use Agent Tournaments for\" instead of a new page. 4 of 4 ideas with a BB-CHANGE switched the same way: ET-26776 (EIDOLON, first BB-CHANGE 2026-09-23T19:08 UTC): before it ['new'], after it ['rebuild', 'rebuild', 'rebuild', 'rebuild'], forbidding \"EIDOLON's logos\"; ET-26924 (Agent League, first BB-CHANGE 2026-09-24T10:46 UTC): before it ['new', 'new'], after it ['rebuild', 'rebuild', 'rebuild', 'rebuild', 'rebuild', 'rebuild', 'rebuild', 'rebuild', 'rebuild'], forbidding \"Agent League's logos\"; ET-28203 (Team Dump Radar, first BB-CHANGE 2026-09-28T18:38 UTC): before it ['new'], after it ['rebuild'], forbidding \"Team Dump Radar's logos\"",
+        "left": {
+          "newest_switched": true,
+          "ideas_switched": 4,
+          "ideas_judged": 4
+        },
+        "right": {
+          "newest_switched": false
+        },
+        "sources": {
+          "board": "/api/v1/build-it-better/requests",
+          "record": "/api/v1/build-it-better/requests/{ticket}",
+          "contract": "the first BB-SPEC of an idea: '<Name>, a new page on EventTrader that does what you described ... never anyone else's logos, copy or trademarks'"
+        },
+        "provenance": {},
+        "evidence_ids": [],
+        "fingerprint": null,
+        "claim_id": "build-it-better-idea-keeps-the-new-app-spec-after-a-change",
+        "role": "verdict",
+        "population": {
+          "judged": [
+            {
+              "ticket": "ET-26776",
+              "app_name": "EIDOLON",
+              "first_change_at": "2026-09-23T19:08:17.781185+00:00",
+              "before": [
+                {
+                  "kind": "new",
+                  "forbids": null
+                }
+              ],
+              "after": [
+                {
+                  "kind": "rebuild",
+                  "forbids": "EIDOLON"
+                },
+                {
+                  "kind": "rebuild",
+                  "forbids": "EIDOLON"
+                },
+                {
+                  "kind": "rebuild",
+                  "forbids": "EIDOLON"
+                },
+                {
+                  "kind": "rebuild",
+                  "forbids": "EIDOLON"
+                }
+              ],
+              "switched": true,
+              "example": {
+                "kind": "rebuild",
+                "forbids": "EIDOLON"
+              }
+            },
+            {
+              "ticket": "ET-26924",
+              "app_name": "Agent League",
+              "first_change_at": "2026-09-24T10:46:01.704758+00:00",
+              "before": [
+                {
+                  "kind": "new",
+                  "forbids": null
+                },
+                {
+                  "kind": "new",
+                  "forbids": null
+                }
+              ],
+              "after": [
+                {
+                  "kind": "rebuild",
+                  "forbids": "Agent League"
+                },
+                {
+                  "kind": "rebuild",
+                  "forbids": "Agent League"
+                },
+                {
+                  "kind": "rebuild",
+                  "forbids": "Agent League"
+                },
+                {
+                  "kind": "rebuild",
+                  "forbids": "Agent League"
+                },
+                {
+                  "kind": "rebuild",
+                  "forbids": "Agent League"
+                },
+                {
+                  "kind": "rebuild",
+                  "forbids": "Agent League"
+                },
+                {
+                  "kind": "rebuild",
+                  "forbids": "Agent League"
+                },
+                {
+                  "kind": "rebuild",
+                  "forbids": null
+                },
+                {
+                  "kind": "rebuild",
+                  "forbids": "Agent League"
+                }
+              ],
+              "switched": true,
+              "example": {
+                "kind": "rebuild",
+                "forbids": "Agent League"
+              }
+            },
+            {
+              "ticket": "ET-28203",
+              "app_name": "Team Dump Radar",
+              "first_change_at": "2026-09-28T18:38:29.784214+00:00",
+              "before": [
+                {
+                  "kind": "new",
+                  "forbids": null
+                }
+              ],
+              "after": [
+                {
+                  "kind": "rebuild",
+                  "forbids": "Team Dump Radar"
+                }
+              ],
+              "switched": true,
+              "example": {
+                "kind": "rebuild",
+                "forbids": "Team Dump Radar"
+              }
+            },
+            {
+              "ticket": "ET-30773",
+              "app_name": "Agent Tournaments",
+              "first_change_at": "2026-10-10T21:34:47.136273+00:00",
+              "before": [
+                {
+                  "kind": "new",
+                  "forbids": null
+                }
+              ],
+              "after": [
+                {
+                  "kind": "rebuild",
+                  "forbids": "Agent Tournaments"
+                },
+                {
+                  "kind": "rebuild",
+                  "forbids": "Agent Tournaments"
+                }
+              ],
+              "switched": true,
+              "example": {
+                "kind": "rebuild",
+                "forbids": "Agent Tournaments"
+              }
+            }
+          ],
+          "ideas_on_board": [
+            "ET-30773",
+            "ET-28934",
+            "ET-28203",
+            "ET-27875",
+            "ET-26924",
+            "ET-26776"
+          ],
+          "unread": []
+        }
+      },
+      "check_fingerprint": "87e65799ba5b9247573b93b391a7afcebf23ba77163ee71b46478afa81c052df",
+      "helpers_fingerprint": "6d5668e7e542d09ce7a36f8e6bab566545658e5ab90d580c906be8327f35bdce",
+      "helpers_formula": 2,
+      "reason": null,
+      "failure_repr": "tests\\rest\\test_build_it_better_spec_keeps_the_request.py:489: in test_an_idea_keeps_its_new_app_spec_after_a_change\n    conclude(Measurement(\nqa\\measure.py:165: in conclude\n    raise AssertionError(explain(m))\nE   AssertionError: the newest idea with a BB-CHANGE, ET-30773 (Agent Tournaments, first BB-CHANGE 2026-10-10T21:34 UTC): before it ['new'], after it ['rebuild', 'rebuild'], forbidding \"Agent Tournaments's logos\": its spec after the change builds \"a page on EventTrader that does the job you use Agent Tournaments for\" instead of a new page. 4 of 4 ideas with a BB-CHANGE switched the same way: ET-26776 (EIDOLON, first BB-CHANGE 2026-09-23T19:08 UTC): before it ['new'], after it ['rebuild', 'rebuild', 'rebuild', 'rebuild'], forbidding \"EIDOLON's logos\"; ET-26924 (Agent League, first BB-CHANGE 2026-09-24T10:46 UTC): before it ['new', 'new'], after it ['rebuild', 'rebuild', 'rebuild', 'rebuild', 'rebuild', 'rebuild', 'rebuild', 'rebuild', 'rebuild'], forbidding \"Agent League's logos\"; ET-28203 (Team Dump Radar, first BB-CHANGE 2026-09-28T18:38 UTC): before it ['new'], after it ['rebuild'], forbidding \"Team Dump Radar's logos\"\nE     left  = {'newest_switched': True, 'ideas_switched': 4, 'ideas_judged': 4}\nE     right = {'newest_switched': False}"
+    }
+  ],
+  "totals": {
+    "failed": 5
+  },
+  "ratelimit": {
+    "requests": 83,
+    "limit": 2000,
+    "remaining": 1990,
+    "fraction_used": 0.005,
+    "exhausted": false
+  },
+  "record_integrity": {
+    "consistent": true,
+    "results_not_in_collected": [],
+    "collected_not_run": [],
+    "budget_truncated": false
+  },
+  "code_dirty_after": true,
+  "fingerprint_after": "sha256:9dd3668a2d8de5ce4949bd8a74068b5ab8c10f8f9034a2f45c70dc1385c156ca",
+  "exit_status": 1
+}

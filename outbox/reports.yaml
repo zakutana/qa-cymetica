@@ -5750,6 +5750,179 @@ reports:
       one. Either filter the tool the way the endpoint does by default, or document that the tool lists everything;
       our check passes when none of the launches the REST list keeps internal appears in the tool's answer.
 
+  - key: supply-analyzer-next-unlock-is-one-recipient-of-its-day
+    findings: [CYM-supply-analyzer-next-unlock-states-its-whole-day]
+    severity: low
+    category: logic
+    url: https://cymetica.com/api/v1/supply-analyzer/analyze?symbol=arbitrum
+    title: >-
+      Supply Analyzer: next_unlock carries one recipient's tranche of its day: ARB 56.1M (Team) on Oct 16 while
+      the record's own tranches release 92.6M that day; 12 of the 20 largest dated coins
+    expected: >
+      The next unlock a record serves says what unlocks on that day: when the record's own tranches put several
+      recipients on the next unlock's date, next_unlock carries that day's total, or names every recipient of it.
+      We read it by its name, because nothing defines it: /api/v1/supply-analyzer/definitions has no line on it,
+      and openapi-public.json types it as an object with no properties.
+    actual: >
+      Read on 2026-10-11 between 12:13 and 12:16 UTC (and at 11:15). ARB: next_unlock {ts 1792108800 (2026-10-16),
+      tokens 56,125,000, who "Team, Contributors & Advisors"}, while the same record's today.tranches and
+      months[0].tranches hold two tranches at ts 1792108800: 56,125,000 to Team, Contributors & Advisors and
+      36,520,833 to Investors, 92,645,833 in all. Of the 20 dated rows of the Gem Screener batch with the largest
+      market cap, 12 are short the same way, among them PUMP 4,166,666,667 (Team) of 6,875,000,000 on 2026-10-13
+      (Existing Investors 2,708,333,333 the same day), MON 4,925,000,000 of 5,912,500,000 on 2026-11-25, STABLE
+      694,444,444 of 1,388,888,889 on 2027-01-08 and XPL 69,444,444 of 227,777,778 on 2026-10-26. The batch, which
+      llms.txt describes as what the Gem Screener's Supply column and card read, serves the same next_unlock object.
+    steps:
+      - 'GET https://cymetica.com/api/v1/supply-analyzer/analyze?symbol=arbitrum -> next_unlock {"ts": 1792108800, "tokens": 56125000.0, "who": "Team, Contributors & Advisors"}; today.tranches: {"ts": 1792108800, "amount": 56125000.0, "who": "Team, Contributors & Advisors"}, {"ts": 1792108800, "amount": 36520833.33, "who": "Investors"}, {"ts": 1794268800, "amount": 15400410.68, "who": "Foundation"}'
+      - 'GET https://cymetica.com/api/v1/supply-analyzer/analyze?symbol=pump -> next_unlock 4166666666.67 "Team" at 1791849600; tranches at that ts: Team 4166666666.67, Existing Investors 2708333333.33'
+      - 'GET https://cymetica.com/api/v1/supply-analyzer/batch/gem-screener -> items[token.slug=arbitrum].next_unlock: the same object'
+      - 'GET https://cymetica.com/api/v1/supply-analyzer/definitions and /openapi-public.json -> no definition of next_unlock ("next_unlock": {"type": "object", "properties": {}})'
+    body: >
+      How to fix it is yours: carry the day's total in next_unlock (in tokens or in a field of its own), or list
+      every recipient of that day, and say in /definitions and the schema what next_unlock is. An agent or a page
+      reading next_unlock for ARB prepares for 56.1M tokens on Oct 16; the record's own schedule releases 92.6M.
+      Not about which recipient it names or whether the schedule is right. Our check reads the batch and the
+      records of the 20 dated rows with the largest market cap, anonymously, and fails while a record's
+      next_unlock carries less than its own tranches put on that day and neither states the day's total in any
+      field nor names every recipient of it. Every Supply Analyzer read names a Gem Screener coin, so none adds a
+      line to your weekly ledger.
+
+  - key: movers-page-ranks-the-first-100-cards
+    findings: [CYM-movers-page-ranks-every-event-card]
+    severity: medium
+    category: logic
+    url: https://cymetica.com/movers
+    title: >-
+      /movers ranks only the first 100 of 641 event cards: its biggest loser is TTD -19.17% while Corteva is at
+      -83.92%; none of the true ten biggest losers is among the cards it reads
+    expected: >
+      The page says "What is hot on EventTrader right now, products only: event cards, index funds and platform
+      tokens ranked by move and by activity", and llms.txt lists it as "Biggest gainers, losers and most active
+      across EventTrader's own products". So "Biggest gainers" and "Biggest losers" rank every card of the live
+      listing, not one page of it.
+    actual: >
+      Read on 2026-10-11 between 12:13 and 12:16 UTC (also 2026-10-10 at 22:00 and 2026-10-11 at 11:20). The page's
+      board script fetches /api/v1/event-cards/?limit=100 once, with no offset; the listing's total is 641 and the
+      endpoint refuses limit=500 with HTTP 422, so the boards rank the first 100 of 641 cards. Over every card, by
+      the page's own move (current_index / index_base - 1), the biggest loser is SAIB: CTVA (Corteva) at -83.92%,
+      then "Traders are skeptical of Iran timeline for Strait of Hormuz" -47.79% and SAIB: BULL (Webull) -35.42%;
+      the page's biggest loser is SAIB: TTD (Trade Desk) at -19.17%. None of the true ten biggest losers is among
+      the cards the page reads, and 7 of the true ten biggest gainers are not either, among them SAIB: MRNA
+      (Moderna) +54.91% and SAIB: PTC +42.30%.
+    steps:
+      - 'GET https://cymetica.com/movers -> the script that writes #pm-gainers: fetch(''/api/v1/event-cards/?limit=100'', ...), one request, no offset'
+      - 'GET https://cymetica.com/api/v1/event-cards/?limit=100 -> count 100, total 641'
+      - 'GET https://cymetica.com/api/v1/event-cards/?limit=500 -> HTTP 422'
+      - 'GET https://cymetica.com/api/v1/event-cards/?limit=100&offset=0 ... offset=600 -> 641 cards; SAIB: CTVA current_index / index_base - 1 = -83.92%, not on the first page'
+    body: >
+      How to fix it is yours: read every page of the listing, sort it by move on your side, or give the page an
+      endpoint of its own. A visitor reads the boards as the biggest movers on EventTrader; today they are the
+      biggest movers of one page in the listing's default order. Not about whether a move since listing is the
+      right window, or about the token rows. Our check reads /movers, the request its board script makes and
+      every page of /api/v1/event-cards/, anonymously, and fails while a card of the true ten biggest gainers or
+      losers is not among the cards the page reads.
+
+  - key: clone-summary-line-leaves-markets-out
+    findings: [CYM-clone-summary-names-every-market-it-trades]
+    severity: low
+    category: logic
+    url: https://cymetica.com/api/v1/cloned-bots/my-clones?mode=paper
+    title: >-
+      Clone summary line (ET-28100 item 1): 30 of our 41 paper clones trade nine 5-min-epoch markets and read
+      "BTC/ETH/VAIX/SBIO 5-min epochs" with no "+5"; a clone with both lists off reads "CLOB NONE"
+    expected: >
+      Your ET-28100 item 1 message: the line "is built from the bot's live settings: perpetual epochs, CLOB pairs,
+      arena, ..." and agents get the same line as trades_summary from GET /api/v1/cloned-bots/{id}/profile. The
+      settings form reads a market list as "'NONE' = explicitly off, CSV = those symbols". So the line names every
+      market the settings switch on, or counts the rest the way its own CLOB part does ("+N" past four), and never
+      prints a list that is off as a market.
+    actual: >
+      Read on 2026-10-11 between 12:13 and 12:16 UTC with our own key: my-clones?mode=paper and each of our 41 paper
+      clones' /profile. 30 clones have perpetual_markets "BTC,ETH,VAIX,SBIO,ET10,ETLP,CYM42,TBIG,TBIGS" and a
+      trades_summary of "This bot trades: BTC/ETH/VAIX/SBIO 5-min epochs (paper)", some with " · Arena headline
+      assets": ET10, ETLP, CYM42, TBIG and TBIGS are neither named nor counted. One clone (f6af3fd1) has
+      custom_markets "NONE" and perpetual_markets "NONE" and reads "This bot trades: CLOB NONE · Arena headline
+      assets (paper)". The page's client-side twin of the rule (static/js/cloned-bot-profile.js,
+      ClonedBotProfile.tradesSummary) shows both: the epochs part is perp.slice(0, 4).join('/') with no count,
+      while the CLOB part uses listed(), which adds " +N" past four; and custom_markets "NONE" is split as a symbol.
+    steps:
+      - 'GET https://cymetica.com/api/v1/cloned-bots/my-clones?mode=paper (X-API-Key) -> 41 paper clones'
+      - 'GET https://cymetica.com/api/v1/cloned-bots/{id}/profile for clone 3453bac2 (X-API-Key) -> settings.perpetual_markets "BTC,ETH,VAIX,SBIO,ET10,ETLP,CYM42,TBIG,TBIGS", trades_summary "This bot trades: BTC/ETH/VAIX/SBIO 5-min epochs · Arena headline assets (paper)"'
+      - 'GET the same for clone f6af3fd1 -> settings.custom_markets "NONE", settings.perpetual_markets "NONE", trades_summary "This bot trades: CLOB NONE · Arena headline assets (paper)"'
+      - 'GET https://cymetica.com/static/js/cloned-bot-profile.js -> tradesSummary: perp.slice(0, 4).join(''/'') + '' 5-min epochs''; ''CLOB '' + listed(clob), listed() adding '' +'' + (items.length - 4)'
+    body: >
+      How to fix it is yours: name all the epoch markets or count the rest as the CLOB part does, and treat 'NONE'
+      as off there too. The line itself is there: all 41 of our paper clones carry it, and 10 of them read
+      right. Our check reads our own paper clones'
+      profiles with our key, GETs only, and fails while a trades_summary leaves a switched-on market out without
+      a count covering it, or prints a list set to 'NONE' as a market.
+
+  - key: agent-tournaments-routes-missing-from-openapi
+    findings: [CYM-agent-tournaments-routes-are-in-the-openapi]
+    severity: low
+    category: documentation
+    url: https://cymetica.com/openapi-public.json
+    title: >-
+      Documentation: none of the seven /api/v1/agent-tournaments routes llms.txt names (rules, lobby, tables/{id},
+      prompt, my-bots, seat, leave) is in /openapi-public.json or /openapi.json
+    expected: >
+      A route llms.txt documents is also in the OpenAPI an agent reads, with its parameters and responses
+      described, as the other apps' routes are.
+    actual: >
+      Read on 2026-10-11 between 12:13 and 12:16 UTC (and at 11:30). The Agent Tournaments entry of llms.txt names
+      GET https://cymetica.com/api/v1/agent-tournaments/rules and, relative to it, /lobby, /tables/{id},
+      /tables/{id}/prompt (no auth), GET /my-bots, POST /tables/{id}/seat {"instance_id"} and POST
+      /seats/{id}/leave (X-API-Key). /openapi-public.json (345 paths) describes none of the seven, and has no path
+      containing "agent-tournaments"; /openapi.json (27 paths) has none either. The routes answer: rules,
+      lobby?mode=paper and tables/2/prompt?kind=own return 200 anonymously, and tables/3 returns 404 with
+      {"detail": {"error": {"code": "not_found", "message": "No such table."}}}. So the seat request an agent is
+      told to make has no documented request or response shape.
+    steps:
+      - 'GET https://cymetica.com/llms.txt -> the Agent Tournaments line: "`GET https://cymetica.com/api/v1/agent-tournaments/rules`, `/lobby?mode=paper|live`, `/tables/{id}`, `/tables/{id}/prompt?kind=own|clone` (no auth); `GET /my-bots`, `POST /tables/{id}/seat` {\"instance_id\"} (X-API-Key ...), `POST /seats/{id}/leave`"'
+      - 'GET https://cymetica.com/openapi-public.json -> 345 paths, none containing "agent-tournaments"'
+      - 'GET https://cymetica.com/openapi.json -> 27 paths, none containing "agent-tournaments"'
+      - 'GET https://cymetica.com/api/v1/agent-tournaments/rules -> 200'
+    body: >
+      How to fix it is yours: add the seven routes with their parameters and responses (the seat's approve_url
+      and what a refused seat answers would help an agent most). Found while reading ET-30773 against its live
+      page. Our check reads /llms.txt and /openapi-public.json anonymously and fails while a route the Agent
+      Tournaments entry names, in full or relative to the first one, is not a path of the OpenAPI.
+
+  - key: build-it-better-idea-spec-switches-to-rebuild-after-a-change
+    findings: [CYM-build-it-better-idea-keeps-the-new-app-spec-after-a-change]
+    severity: low
+    category: logic
+    url: https://cymetica.com/api/v1/build-it-better/requests/ET-30773
+    title: >-
+      Build it Better: after a BB-CHANGE, an idea's BB-SPEC switches to the rebuild wording ("does the job you
+      use <Name> for ... never <Name>'s logos"), forbidding the idea's own logo; 4 of 4 ideas
+    expected: >
+      An idea (is_idea true) is a new app its requester names. Its first BB-SPEC says "<Name>, a new page on
+      EventTrader that does what you described ... never anyone else's logos, copy or trademarks", and a
+      BB-CHANGE amends that spec: the spec written after it still builds a new app under the idea's own name.
+    actual: >
+      Read on 2026-10-11 between 12:13 and 12:16 UTC from the board and each idea's record. All four ideas that
+      got a BB-CHANGE switch wording at their first one: ET-30773 (Agent Tournaments, change at 2026-10-10 21:34
+      UTC), ET-28203 (Team Dump Radar, 2026-09-28 18:38), ET-26924 (Agent League, 2026-09-24 10:46) and ET-26776
+      (EIDOLON, 2026-09-23 19:08). On ET-30773 the spec before the change says "What we will build: Agent
+      Tournaments, a new page on EventTrader that does what you described" and "never anyone else's logos, copy
+      or trademarks"; every spec after it says "What we will build: a page on EventTrader that does the job you
+      use Agent Tournaments for, with these changes" and "never Agent Tournaments's logos, copy or trademarks",
+      which read literally forbids the name, logo and copy the idea is made of. The requester sent a second
+      BB-CHANGE to say the name and logo are theirs; the spec after it still carries the clause. The two ideas
+      with no BB-CHANGE (ET-28934, ET-27875) keep the new-app wording.
+    steps:
+      - 'GET https://cymetica.com/api/v1/build-it-better/requests -> six items with is_idea true: ET-30773, ET-28934, ET-28203, ET-27875, ET-26924, ET-26776'
+      - 'GET https://cymetica.com/api/v1/build-it-better/requests/ET-30773 -> messages: BB-SPEC 21:31:57 "What we will build: Agent Tournaments, a new page on EventTrader that does what you described" ... "never anyone else''s logos"; BB-CHANGE 21:34:47; BB-SPEC 21:34:47 "What we will build: a page on EventTrader that does the job you use Agent Tournaments for, with these changes" ... "never Agent Tournaments''s logos, copy or trademarks"'
+      - 'GET the same for ET-28203, ET-26924, ET-26776 -> the same switch at the first BB-CHANGE'
+    body: >
+      How to fix it is yours: keep the idea's own wording in every spec regenerated after a change. On a ticket
+      that is in its 24-hour build, a spec that forbids the app's own name and logo is a line the builder may
+      follow. Our check reads the board and every idea's record anonymously, judges the newest idea whose log
+      has a BB-SPEC written after a BB-CHANGE, and fails while that spec uses the rebuild wording or forbids the
+      idea's own logos. The four specs above are frozen, so our check can show a fix only on the next idea that
+      gets a BB-CHANGE after it; we will read your fix time before saying anything about it.
+
 footer: >
   Reported by an independent QA agent. Scope of this work: verification of the
   REST API, MCP, the machine-readable discovery surfaces and the pages built on
