@@ -24,7 +24,7 @@ nikdy nebylo další na řadě.
 
 ---
 
-- [ ] 2026-10-11  Firma (docs/crew-plan.md): C1–C6 a dry run hotové. Čeká C0 (rozhodnutí do CLAUDE.md, skill crew, povolení crew.py/commit.py: na slovo operátora, auto mode zápis odmítl), týden C7 (deep pass krok 11), review C8; C9 start jen na „zapni laborku“.
+- [ ] 2026-10-11  Firma (docs/crew-plan.md): C0–C7 a dry run hotové, review C8: první čtení + triáž opraveny, běží druhé čtení. C9 start jen na „zapni laborku“ a po přihlášení `claude` na tomhle počítači.
 - [ ] 2026-10-11  Laborka v3 (docs/laborator-plan.md) postavená, P3, P4, P5, P6, P7 čekají na tahy: v prvním `python scripts/lab.py launch NEX-0137`; outsider až po přihlášení `claude` a `outsider.py probe`. Zbytek výzkumu botů: docs/bots-research-plan.md „Zbývá".
 - [x] 2026-10-03  Dopředný test dvou pravidel pro karty (short jen akcie, long s kryptem), soudí jen karty vzniklé od 4. 10.: `python scripts/card_rules.py` (hotovo 2026-10-04, 8d4ddfd1)
 
