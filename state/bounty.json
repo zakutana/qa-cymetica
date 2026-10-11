@@ -1,8 +1,9 @@
 {
-  "fetched_at": "2026-10-10T23:09:14+00:00",
-  "total": 152,
+  "fetched_at": "2026-10-11T06:48:11+00:00",
+  "total": 154,
   "statuses": {
-    "paid": 20
+    "fixed": 2,
+    "paid": 18
   },
   "filing_probe": {
     "endpoint": "POST /api/v1/bounty/reports",
@@ -24,15 +25,15 @@
   "our_reports": {
     "endpoint": "GET /api/v1/bounty/my-reports?wallet_address=<addr>",
     "klass": "ok",
-    "read_at": "2026-10-11T06:22:10+00:00",
-    "evidence_id": "e301ae3eb1328c285df727a60a578d51730a8f650d26fbe37e785d5c18de1def",
+    "read_at": "2026-10-11T06:47:58+00:00",
+    "evidence_id": "154612fa26fa72fbf27c354b969bd288d61595cb307b19db80b35c31296efb5b",
     "rows_returned": 143,
     "server_total": 143,
     "total": 143,
     "statuses": {
-      "pending": 3,
+      "fixed": 7,
+      "pending": 1,
       "paid": 133,
-      "fixed": 5,
       "invalid": 2
     },
     "fields_sent_but_not_stored": [],
@@ -2578,60 +2579,60 @@
       {
         "id": 186,
         "title": "GET /launchpad/onchain/tokens without chain_id answers 200 [] while chain_id=5042 lists 518 launches; the screener and launchpad_list_tokens list both chains",
-        "status": "pending",
+        "status": "fixed",
         "hunter_name": "expire76",
         "wallet_address": "0xde9ceaab301a9e47b1bacd448b3ddbba85e83398",
         "severity_reported": "medium",
-        "severity_confirmed": null,
+        "severity_confirmed": "medium",
         "category": "api",
         "created_at": "2026-10-11T05:49:06.835451",
-        "fixed_at": null,
-        "validated_at": null,
-        "triaged_at": null,
-        "status_notes": null,
-        "ticket_url": null,
+        "fixed_at": "2026-10-11T06:45:28.130673",
+        "validated_at": "2026-10-11T06:45:28.130673",
+        "triaged_at": "2026-10-11T06:45:28.130673",
+        "status_notes": "[2026-10-11T06:45:28+00:00] Resolved via ticket ET-30806: Fixed in ec875325a (live 06:21 UTC 10-11). Cause: GET /launchpad/onchain/tokens without chain_id dropped every chain in LAUNCHPAD_HIDDEN_CHAIN_IDS; all three chains are paused, so it answered [] while the launch pages, screener and launchpad_list_tokens listed them. Paused now means new launches paused (config chains / paused_chain_ids); existing tokens stay listed. REST list, screener and MCP tool share public_launch_list_query(). Live: anonymous ?limit=200 -> 200 rows (5042:199, 4663:1).",
+        "ticket_url": "https://cymetica.com/admin/centcom/issues/30806",
         "fix_pr_url": null,
-        "reward_amount": 0.0
+        "reward_amount": 1000.0
       },
       {
         "id": 187,
         "title": "launchpad_list_tokens lists the 5 test launches that GET /launchpad/onchain/tokens keeps behind include_internal (\"Admin/debug\") on chain 4663",
-        "status": "pending",
+        "status": "fixed",
         "hunter_name": "expire76",
         "wallet_address": "0xde9ceaab301a9e47b1bacd448b3ddbba85e83398",
         "severity_reported": "low",
-        "severity_confirmed": null,
+        "severity_confirmed": "low",
         "category": "api",
         "created_at": "2026-10-11T05:49:22.265027",
-        "fixed_at": null,
-        "validated_at": null,
-        "triaged_at": null,
-        "status_notes": null,
-        "ticket_url": null,
+        "fixed_at": "2026-10-11T06:45:28.710025",
+        "validated_at": "2026-10-11T06:45:28.710025",
+        "triaged_at": "2026-10-11T06:45:28.710025",
+        "status_notes": "[2026-10-11T06:45:28+00:00] Resolved via ticket ET-30807: Fixed in ec875325a (live 06:21 UTC 10-11). Cause: MCP launchpad_list_tokens built its own query without the public launch filter, so it listed 5 platform test launches (NXTEST, CYMG, NXSOC, CYMHS, GTEST) that the REST list keeps behind include_internal. The tool now uses the same public_launch_list_query() as REST and the screener. Live: POST /mcp/v1 launchpad_list_tokens {chain_id:4663} -> RUG only; with {} -> none of the five; REST unfiltered list -> none of the five.",
+        "ticket_url": "https://cymetica.com/admin/centcom/issues/30807",
         "fix_pr_url": null,
-        "reward_amount": 0.0
+        "reward_amount": 1000.0
       }
     ]
   },
   "qa_tracker": {
     "source": "https://cymetica.com/leaderboard/bugs (embedded allBugs)",
-    "total": 226,
+    "total": 228,
     "statuses": {
       "qa_testing": 2,
       "implementing": 2,
       "completed": 170,
-      "resolved": 26,
+      "resolved": 28,
       "rejected": 2,
       "pending": 12,
       "wont_fix": 12
     },
     "source_channels": {
       "web": 74,
-      "bounty": 152
+      "bounty": 154
     },
     "usernames": {
       "Maxorelaxo": 2,
-      "expire76": 170,
+      "expire76": 172,
       "Crypto42day": 2,
       "tonybugs0439": 5,
       "joebloggs": 12,
@@ -2728,6 +2729,8 @@
       "cloned bot profile does not display trading activity correctly",
       "неправильный баланс токенов в портфеле пользователя max",
       "swap pages fail to display user token balances",
+      "launchpad_list_tokens lists the 5 test launches that get /launchpad/onchain/tokens keeps behind include_internal (\"admin/debug\") on chain 4663",
+      "get /launchpad/onchain/tokens without chain_id answers 200 [] while chain_id=5042 lists 518 launches; the screener and launchpad_list_tokens list both chains",
       "account history: /api/v1/account/me/transactions answers the same 100 rows at every offset for currency=usdc (and unfiltered from offset 100); usdc history cannot be paged back",
       "documentation: get /api/v1/gem-screener/report-access is in llms.txt but not in /openapi-public.json, which /api-docs is built from",
       "gem screener: the dilution \"caution\" line (1.5253% a week) lies above the \"red\" line (1%), so no coin can read caution: 0 of 233 apps, 19 red (10 caution on 2026-10-02)",
@@ -2879,16 +2882,16 @@
       "critical: my positions p&l shows -$3.15 for a $0.10 position",
       "shares preview rounds to 1 decimal place instead of 2"
     ],
-    "has_linear_links": 108
+    "has_linear_links": 110
   },
   "a2a_inbox": {
     "klass": "ok",
     "rows_returned": 200,
     "new": [],
-    "at": "2026-10-10T23:09:06+00:00",
+    "at": "2026-10-11T06:48:03+00:00",
     "full": true
   },
-  "closed": 0,
+  "closed": 2,
   "closed_without_recorded_evidence": 0,
   "evidence_fields_checked": [
     "validated_at",
@@ -2899,6 +2902,42 @@
     "status_notes"
   ],
   "reports": [
+    {
+      "id": 187,
+      "title": "launchpad_list_tokens lists the 5 test launches that GET /launchpad/onchain/tokens keeps behind include_internal (\"Admin/debug\") on chain 4663",
+      "status": "fixed",
+      "hunter_name": "expire76",
+      "severity_reported": "low",
+      "severity_confirmed": "low",
+      "created_at": "2026-10-11T05:49:22.265027",
+      "fixed_at": "2026-10-11T06:45:28.710025",
+      "validated_at": "2026-10-11T06:45:28.710025",
+      "triaged_at": "2026-10-11T06:45:28.710025",
+      "status_notes": "[2026-10-11T06:45:28+00:00] Resolved via ticket ET-30807: Fixed in ec875325a (live 06:21 UTC 10-11). Cause: MCP launchpad_list_tokens built its own query without the public launch filter, so it listed 5 platform test launches (NXTEST, CYMG, NXSOC, CYMHS, GTEST) that the REST list keeps behind include_internal. The tool now uses the same public_launch_list_query() as REST and the screener. Live: POST /mcp/v1 launchpad_list_tokens {chain_id:4663} -> RUG only; with {} -> none of the five; REST unfiltered list -> none of the five.",
+      "ticket_url": "https://cymetica.com/admin/centcom/issues/30807",
+      "fix_pr_url": null,
+      "reward_amount": 1000.0,
+      "paid_at": null,
+      "is_duplicate": false
+    },
+    {
+      "id": 186,
+      "title": "GET /launchpad/onchain/tokens without chain_id answers 200 [] while chain_id=5042 lists 518 launches; the screener and launchpad_list_tokens list both chains",
+      "status": "fixed",
+      "hunter_name": "expire76",
+      "severity_reported": "medium",
+      "severity_confirmed": "medium",
+      "created_at": "2026-10-11T05:49:06.835451",
+      "fixed_at": "2026-10-11T06:45:28.130673",
+      "validated_at": "2026-10-11T06:45:28.130673",
+      "triaged_at": "2026-10-11T06:45:28.130673",
+      "status_notes": "[2026-10-11T06:45:28+00:00] Resolved via ticket ET-30806: Fixed in ec875325a (live 06:21 UTC 10-11). Cause: GET /launchpad/onchain/tokens without chain_id dropped every chain in LAUNCHPAD_HIDDEN_CHAIN_IDS; all three chains are paused, so it answered [] while the launch pages, screener and launchpad_list_tokens listed them. Paused now means new launches paused (config chains / paused_chain_ids); existing tokens stay listed. REST list, screener and MCP tool share public_launch_list_query(). Live: anonymous ?limit=200 -> 200 rows (5042:199, 4663:1).",
+      "ticket_url": "https://cymetica.com/admin/centcom/issues/30806",
+      "fix_pr_url": null,
+      "reward_amount": 1000.0,
+      "paid_at": null,
+      "is_duplicate": false
+    },
     {
       "id": 184,
       "title": "Account history: /api/v1/account/me/transactions answers the same 100 rows at every offset for currency=USDC (and unfiltered from offset 100); USDC history cannot be paged back",
@@ -3018,7 +3057,7 @@
       "fixed_at": null,
       "validated_at": "2026-10-10T16:11:28.368429",
       "triaged_at": null,
-      "status_notes": "Confirmed, genuine defect. Cause: the yearly sellable-pile change was computed from inflow/outflow without the max-supply ceiling, so YFI (fixed supply, pile near max) showed a 15.1% yearly change that cannot happen. Fix (lands with the next release): the yearly figure is capped at the room left to the max supply, floor(100 x (max - pile) / pile, 2 dp), and the definition text says so. Pinned by tests/test_supply_analyzer_yearly_room_30685.py.",
+      "status_notes": "Confirmed, genuine defect. Cause: the yearly sellable-pile change was computed from inflow/outflow without the max-supply ceiling, so YFI (fixed supply, pile near max) showed a 15.1% yearly change that cannot happen. Fix (lands with the next release): the yearly figure is capped at the room left to the max supply, floor(100 x (max - pile) / pile, 2 dp), and the definition text says so. Pinned by tests/test_supply_analyzer_yearly_room_30685.py.\n[reporter-verification FAIL 2026-10-10 23:13 UTC by expire76 test_run=run-20261010T225115Z-3a0a5b08]",
       "ticket_url": null,
       "fix_pr_url": null,
       "reward_amount": 1000.0,
@@ -3222,42 +3261,6 @@
       "reward_amount": 1000.0,
       "paid_at": "2026-10-08T09:58:08.609652",
       "is_duplicate": false
-    },
-    {
-      "id": 166,
-      "title": "Gem Screener: Benqi (QI) shows a market cap 2.3% below its own price x circulating supply (20.29M against 20.78M); the other 210 rows are within 0.7%",
-      "status": "paid",
-      "hunter_name": "expire76",
-      "severity_reported": "low",
-      "severity_confirmed": "low",
-      "created_at": "2026-10-04T12:02:26.102531",
-      "fixed_at": "2026-10-08T03:31:53.761070",
-      "validated_at": "2026-10-08T03:31:53.761070",
-      "triaged_at": "2026-10-08T03:31:53.761070",
-      "status_notes": "[2026-10-08T03:31:53+00:00] Resolved via ticket ET-29334: Fix landed on main and is served live (release 8f94e33d0a, verified via /healthz/version 2026-10-08). Gem Screener: a market cap more than 2% away from price x circulating supply is rebased to that price, FDV by the same factor (commit db7011f150).\n[reporter-verification PASS 2026-10-08 07:38 UTC by expire76 test_run=run-20261006T174153Z-f462ea2b]\n[reporter-verification PASS 2026-10-08 07:40 UTC by expire76 test_run=run-20261006T174153Z-f462ea2b]",
-      "ticket_url": "https://cymetica.com/admin/centcom/issues/29334",
-      "fix_pr_url": null,
-      "reward_amount": 1000.0,
-      "paid_at": "2026-10-08T05:10:20.821592",
-      "is_duplicate": false
-    },
-    {
-      "id": 165,
-      "title": "Supply Analyzer: ETH, SOL and TRX show a \"max supply\" that is the end of DeFiLlama's issuance schedule (ETH 127.9M), and the gap to it as \"Bought back, burned\"",
-      "status": "paid",
-      "hunter_name": "expire76",
-      "severity_reported": "medium",
-      "severity_confirmed": "medium",
-      "created_at": "2026-10-04T11:07:39.917674",
-      "fixed_at": "2026-10-08T03:31:53.358411",
-      "validated_at": "2026-10-08T03:31:53.358411",
-      "triaged_at": "2026-10-08T03:31:53.358411",
-      "status_notes": "[2026-10-08T03:31:53+00:00] Resolved via ticket ET-29316: Fix landed on main and is served live (release 8f94e33d0a, verified via /healthz/version 2026-10-08). Supply Analyzer: a max supply is only a cap a source states, never the end of DeFiLlama's modelled issuance horizon — ETH, SOL and TRX no longer show one (commits a45b08f63b, aa6a6abb61).\n[reporter-verification PASS 2026-10-08 07:40 UTC by expire76 test_run=run-20261008T014414Z-b79b19f8]",
-      "ticket_url": "https://cymetica.com/admin/centcom/issues/29316",
-      "fix_pr_url": null,
-      "reward_amount": 1000.0,
-      "paid_at": "2026-10-08T05:10:20.821592",
-      "is_duplicate": false
     }
   ],
   "leaderboard": [
@@ -3267,10 +3270,10 @@
       "avatar_url": null,
       "tier": "elite",
       "total_score": 2125,
-      "valid_reports": 138,
+      "valid_reports": 140,
       "total_likes": 0,
       "total_earned": 134000.0,
-      "total_awarded": 134000.0,
+      "total_awarded": 136000.0,
       "total_paid": 134000.0,
       "reward_currency": "ET10"
     },
@@ -3316,7 +3319,7 @@
   ],
   "creator_rewards": {
     "klass": "ok",
-    "read_at": "2026-10-10T23:09:16+00:00",
+    "read_at": "2026-10-11T06:48:12+00:00",
     "stale_from": null,
     "summary": {
       "paid": 11,
@@ -3326,6 +3329,5 @@
       "et10": 11000,
       "etlp": 11000
     }
-  },
-  "our_reports_refreshed_at": "2026-10-11T06:22:10+00:00"
+  }
 }
