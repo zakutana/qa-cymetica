@@ -9,6 +9,11 @@ Section 7 of the laboratory. One goal, the operator's (2026-10-11, laborator ski
 - Before starting anything, read `python scripts/lab.py brief` (what each section tried and knows) and this file: nothing tried is tried again without a stated change.
 - A card of the desk's choosing: `python scripts/lab.py desk-card <uuid> --hold <days> --why "..."` (no backtest gate: the desk's judgement is the experiment).
 - After a verdict on a desk room: a lesson, `python scripts/lab.py log --lesson --section desk "..."`.
+- The outsider's looks are input: `python scripts/outsider.py report` shows what a stranger scored low and why. A surface a stranger would not put money into is a feature or Build it Better request worth filing -- what would make it say yes.
+
+## From the outsider
+
+(its low scores and their whys land here after each look)
 
 ## Hypotheses
 
