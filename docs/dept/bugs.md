@@ -8,7 +8,7 @@ that stops being true moves to the archive, never silently away. Write with
 ## What we know
 
 - Every other department hands a bug over as a ticket and stops caring; the filing, the check, the ledger and the dashboard are ours alone (`submit.py`, `ledger.py`, `render.py`).
-- A narrow sweep is 8 to 25 minutes; a level-V run needs a clean tree, so hold it still first (`crew.py hold`).
+- A narrow sweep is 8 to 25 minutes; a level-V run needs a clean tree: `crew.py hold`, then `crew.py held --wait 90` until 0, then `crew.py tidy`, then prereg.
 
 ## How we work
 

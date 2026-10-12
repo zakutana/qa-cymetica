@@ -71,6 +71,8 @@ COMPONENT_TO_SECTION = {
     # The Agent League we play (scripts/league.py) has no checks of its own yet; the tile is
     # where they will sit, beside the other agents' surfaces.
     "rest.agent_league": "clones",
+    # Build a Company (feature #911): a Manager agent and its departments, an agent surface too.
+    "rest.company": "clones",
     # Backtest Rally has no tile of its own yet; its checks are shown on that one.
     "rest.research_backtest": "build_it_better",
     "rest.creator": "creator", "rest.head_to_head": "head_to_head",

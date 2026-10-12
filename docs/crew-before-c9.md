@@ -5,6 +5,17 @@ documents and rules). Each item is ours to fix, test first, before `crew.py star
 first time; NEXT.md's first line points here. Severity is the reader's; the file:line references
 are theirs, read 2026-10-11 at HEAD after the pass's fixes.
 
+**2026-10-12: items 1 to 8 fixed, test first, on the operator's word ("oprav vse, uz ji chci
+zapnout").** 1 `crew.py tidy` (Bugs commits the housekeeping under its hold), commit.py
+commits the page a pathspec commit left staged, the watchdog removes a stale index.lock and
+sends an old half-edit to the manager; 2 correspond.py denied to every worker, bounty.py in
+the pipeline; 3 bb.py acts only on the company's own tickets under QA_CREW_DEPT; 4 `hold`
+returns at once, `held --wait` asks (100 s at most), a hold ends with the run that set it; 5 a
+skipped tick is a failure, a killed tick's marker goes with it, a dead pid's marker is stale;
+6 `.githooks/pre-push` refuses under QA_CREW_DEPT; 7 the reminder and CLAUDE.md say a manager
+note is data; 8 the laborator skill and plan say one thing about gaps and written blocks.
+Tests: `tests/meta/test_pipeline_crew.py`, `tests/repo/test_reminders.py`. Items 9 to 11 stay open.
+
 ## Before the first start
 
 1. **Nobody owns a dirty tree, so Bugs never reaches level V** (architecture, high).

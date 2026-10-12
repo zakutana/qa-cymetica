@@ -11,6 +11,11 @@
     python scripts/crew.py fail T-NNNN --why "..."
     python scripts/crew.py show T-NNNN | list [--open]
 
+    python scripts/crew.py hold --why "..."    hold the tree still; returns at once (0 still, 3 waiting)
+    python scripts/crew.py held [--wait S]     ask again, S seconds at most (100)
+    python scripts/crew.py tidy                under your hold: commit the housekeeping, name what is left
+    python scripts/crew.py unhold
+
 A loop per department claims its tickets and runs one worker at a time: `claude -p` with
 the department's model, effort, turn cap and timeout (`qa.crew.DEPARTMENTS`), killed with
 its children when the timeout passes. Nothing is claimed while a deep pass runs -- that pass
@@ -46,8 +51,10 @@ POLL_SECONDS = float(os.environ.get("QA_CREW_POLL") or 30.0)
 BACKOFF_MAX_MINUTES = 60
 # How long a hold waits for the others to finish what they are running: the longest
 # timeout but one (the desk's 50 minutes). Past it, the run goes at level R instead.
-HOLD_WAIT_SECONDS = 50 * 60
+HOLD_WAIT_SECONDS = crew.HOLD_WAIT.total_seconds()
 HOLD_POLL_SECONDS = 10.0
+# `held --wait` asks for at most this long: one Bash call times out at two minutes.
+HELD_WAIT_MAX = 100.0
 # `QA_CREW_SETTINGS` points the dry run at a settings file of its own; a worker cannot use
 # it, because `crew.py start` is denied to every worker.
 SETTINGS = Path(os.environ.get("QA_CREW_SETTINGS") or REPO_ROOT / ".claude" / "settings.json")
@@ -329,6 +336,14 @@ def work_once(dept: str) -> dict | None:
                "timed_out": False, "seconds": 0.0}
     finally:
         crew.set_active(dept, None)
+        # A hold never outlives the run that set it: a worker killed in its wait, or one
+        # that never said `unhold`, would otherwise keep every department still for up to
+        # an hour (crew-before-c9, item 4).
+        mine = crew.holder()
+        if mine and mine.get("by") == dept:
+            crew.clear_hold()
+            crew.record({"type": "hold_released", "dept": dept, "ticket": ticket["id"],
+                         "why": mine.get("why")})
     said = crew.outcome(ran["code"], ran["stdout"], ran["timed_out"], ran["stderr"])
     after = crew.tickets().get(ticket["id"]) or {}
     if after.get("status") == "claimed" and said["outcome"] == "ok" and said.get(
@@ -398,9 +413,19 @@ def run_tick(now: datetime) -> dict:
         ran = run_process(tick_command(), env, crew.TICK_TIMEOUT)
     finally:
         crew.set_active("clock", None)
+    if ran["timed_out"]:
+        # Killed with its tree, the tick never ran its `finally`; its marker would hold the
+        # next tick off for 45 minutes (crew-before-c9, item 5). The clock is the only one
+        # ticking while the company runs, so the marker is the one it just killed.
+        _tick_marker().unlink(missing_ok=True)
     output = ran["stdout"]
     items = crew.decide_items(output)
     decided = any(line.startswith("decide: ") for line in output.splitlines())
+    # A tick that did not run because another one "is running" did nothing: counted as a
+    # failure, or a hung tick alternates with skipped ones recorded ok and the watchdog's
+    # three in a row never trips (item 5).
+    skipped = next((line for line in output.splitlines()
+                    if line.startswith("tick skipped")), None)
     made = []
     at = crew.stamp(now)
     for spec in crew.route(items, output, at, crew.tickets()):
@@ -408,10 +433,18 @@ def run_tick(now: datetime) -> dict:
                                       payload=spec.get("payload"), by="clock", now=now)
         if new:
             made.append(ticket["id"])
+    ok = ran["code"] == 0 and decided and not skipped
+    tail = "" if ok else (f"skipped: {skipped}" if skipped else (output + ran["stderr"]))[-400:]
     return crew.record({"type": "tick", "decide": items, "made": made, "exit": ran["code"],
-                        "ok": ran["code"] == 0 and decided, "timed_out": ran["timed_out"],
-                        "seconds": ran["seconds"],
-                        "tail": "" if decided else (output + ran["stderr"])[-400:]}, now=now)
+                        "ok": ok, "timed_out": ran["timed_out"], "seconds": ran["seconds"],
+                        "tail": tail}, now=now)
+
+
+def _tick_marker() -> Path:
+    """The laboratory's own marker of a running tick (`lab.py tick_exclusive`)."""
+    from qa.state import state_dir
+
+    return state_dir() / "lab_tick.running"
 
 
 def watch(now: datetime) -> list[str]:
@@ -469,7 +502,34 @@ def watch(now: datetime) -> list[str]:
     if tail:
         to_manager("help", f"tick:{day}",
                    f"the laboratory's tick failed {crew.TICK_FAILURES} times running: {tail}")
+    # The tree (crew-before-c9, item 1): a worker killed at its timeout leaves git's lock,
+    # which blocks every commit, or a half-done edit, which no level-V run gets past.
+    base = tree_root()
+    lock = stale_index_lock(base, now)
+    if lock:
+        lock.unlink(missing_ok=True)
+        crew.record({"type": "index_lock_removed"}, now=now)
+        said.append("removed a stale .git/index.lock")
+    if not crew.active():
+        left = [path for path in dirty_paths(base) or []
+                if path not in HOUSEKEEPING and _untouched(base / path, now, HALF_EDIT_AGE)]
+        if left:
+            to_manager("help", f"dirty:{day}",
+                       f"the tree has {len(left)} edit(s) nobody is making: "
+                       f"{', '.join(left[:8])} -- left by a worker killed at its timeout, or "
+                       f"the operator's own work in a session; no level-V run gets past them. "
+                       f"Yours is to tell the operator (`crew.py tell`), never to commit, undo "
+                       f"or move them: they may be the operator's", {"paths": left[:20]})
     return said
+
+
+def _untouched(path: Path, now: datetime, age: timedelta) -> bool:
+    """Not changed for `age`; a path that is gone (a deletion nobody committed) counts."""
+    try:
+        changed = datetime.fromtimestamp(path.stat().st_mtime, timezone.utc)
+    except OSError:
+        return True
+    return now - changed > age
 
 
 def heal(now: datetime, me: str = "clock") -> list[str]:
@@ -761,24 +821,156 @@ def stop(grace: float = 20.0) -> int:
 # -- the tree held still ---------------------------------------------------------------------
 
 def hold(why: str) -> int:
-    """Hold the tree still for a level-V run: no new run starts, and this returns once
-    nobody else is mid-run. Given up -- and let go -- if they are not done in time."""
+    """Hold the tree still for a level-V run: from now no new run starts. Returns at once
+    (crew-before-c9, item 4): it used to wait up to fifty minutes inside one call, past the
+    Bash tool's two-minute timeout, so a killed call left the company frozen and the caller
+    never learned whether the tree went still. Exit 0 still, 3 waiting (ask `held`)."""
     by = _by()
-    crew.set_hold(by, why)
-    deadline = time.monotonic() + HOLD_WAIT_SECONDS
+    current = crew.holder()
+    if current and current.get("by") != by:
+        print(f"[crew] refused: the tree is held by {current.get('by')} "
+              f"({current.get('why')})")
+        return 2
+    if not current:
+        crew.set_hold(by, why, still=False)
+    return hold_state(0)
+
+
+def hold_state(wait: float = 0) -> int:
+    """Where the caller's hold stands, asking for up to `wait` seconds (no more than one
+    Bash call allows). 0 the tree is still and the hour starts; 3 others are still mid-run;
+    1 no hold of the caller's (given up after HOLD_WAIT_SECONDS, expired, or never set)."""
+    if wait > HELD_WAIT_MAX:
+        print(f"[crew] refused: --wait is at most {HELD_WAIT_MAX:.0f} s, one Bash call")
+        return 2
+    by = _by()
+    deadline = time.monotonic() + wait
     while True:
+        hold = crew.holder()
+        if not hold or hold.get("by") != by:
+            print("[crew] not held by you: `crew.py hold` again, or run at level R")
+            return 1
         others = sorted(name for name in crew.active() if name != by)
         if not others:
-            # The hour runs from here: the wait must not eat the run's time.
-            crew.set_hold(by, why)
+            if not hold.get("still"):
+                # The hour runs from here: the wait must not eat the run's time.
+                crew.set_hold(by, hold.get("why") or "", still=True)
             print(f"[crew] held by {by}: the tree is still")
             return 0
-        if time.monotonic() > deadline:
+        since = crew.moment(hold.get("since"))
+        waited = (datetime.now(timezone.utc) - since).total_seconds() if since else 0.0
+        if waited > HOLD_WAIT_SECONDS:
             crew.clear_hold()
-            print(f"[crew] {', '.join(others)} still running after "
-                  f"{HOLD_WAIT_SECONDS / 60:.0f} min; let go -- run at level R, or later")
+            print(f"[crew] {', '.join(others)} still running after {waited / 60:.0f} min; "
+                  f"let go -- run at level R, or later")
             return 1
+        if time.monotonic() >= deadline:
+            print(f"[crew] waiting for {', '.join(others)} ({waited / 60:.0f} min so far); "
+                  f"nothing new starts. Ask again: python scripts/crew.py held --wait 90")
+            return 3
         time.sleep(HOLD_POLL_SECONDS)
+
+
+# What the clock, the console, the hooks and the pipeline write into tracked files while no
+# department is editing them. Bugs commits them under its hold (`tidy`); anything else left
+# changed is somebody's half-edit (crew-before-c9, item 1).
+HOUSEKEEPING = ("state/bounty.json", "state/journal/events.jsonl", "state/ledger.json",
+                "dashboard/index.html", "audits/evidence-manifest.jsonl", "state/chat.jsonl",
+                "state/league.jsonl", "state/league/report.json", "audits/processes.jsonl")
+# git's own lock outlives a git killed with its worker; no git operation here holds it this
+# long, so past it the lock is a leftover that blocks every commit.
+INDEX_LOCK_STALE = timedelta(minutes=10)
+# An edit nobody is making any more: changed this long ago, with no run under way.
+HALF_EDIT_AGE = timedelta(hours=2)
+
+
+def tree_root() -> Path:
+    """The working tree the company commits into (`QA_REPO_ROOT`, as scripts/commit.py)."""
+    return Path(os.environ.get("QA_REPO_ROOT") or REPO_ROOT).resolve()
+
+
+def dirty_paths(base: Path) -> list[str] | None:
+    """Every path `git status --porcelain` names (what prereg calls dirty), or None when
+    git cannot read the tree -- unread, never clean."""
+    try:
+        ran = subprocess.run(["git", "-C", str(base), "status", "--porcelain",
+                              "--untracked-files=all"], capture_output=True, text=True,
+                             encoding="utf-8", errors="replace", timeout=60)
+    except (OSError, subprocess.SubprocessError):
+        return None
+    if ran.returncode != 0:
+        return None
+    out = []
+    for line in ran.stdout.splitlines():
+        path = line[3:].strip()
+        if " -> " in path:
+            path = path.split(" -> ", 1)[1]
+        out.append(path.strip('"'))
+    return out
+
+
+def stale_index_lock(base: Path, now: datetime) -> Path | None:
+    lock = base / ".git" / "index.lock"
+    try:
+        changed = datetime.fromtimestamp(lock.stat().st_mtime, timezone.utc)
+    except OSError:
+        return None
+    return lock if now - changed > INDEX_LOCK_STALE else None
+
+
+def fold_and_render(base: Path) -> str | None:
+    """The ledger folded on the run it already stands on, the page rendered, the captures
+    tracked: what a session did by hand before a `console poll` commit. None, or why not."""
+    try:
+        cited = json.loads((base / "state" / "ledger.json").read_text(
+            encoding="utf-8")).get("run_id")
+    except (OSError, ValueError):
+        cited = None
+    steps = ([["ledger.py", "--run", cited]] if cited else []) + [["render.py"],
+                                                                 ["keep.py", "track"]]
+    for step in steps:
+        ran = subprocess.run([sys.executable, str(base / "scripts" / step[0]), *step[1:]],
+                             cwd=str(base), capture_output=True, text=True, encoding="utf-8",
+                             errors="replace", timeout=900)
+        if ran.returncode != 0:
+            return f"{' '.join(step)} failed: {(ran.stdout + ran.stderr)[-300:]}"
+    return None
+
+
+def tidy() -> int:
+    """Bugs' housekeeping before a level-V run (crew-before-c9, item 1): under its own hold,
+    commit what the clock, the console and the hooks wrote, folded and rendered, and name
+    what is left. 0 clean, 1 something another department left, 2 not held by the caller."""
+    by = _by()
+    hold = crew.holder()
+    if by != "session" and (not hold or hold.get("by") != by or not hold.get("still")):
+        print("[crew] refused: tidy runs under your own still hold (`crew.py hold`, `held`)")
+        return 2
+    base = tree_root()
+    lock = stale_index_lock(base, datetime.now(timezone.utc))
+    if lock:
+        lock.unlink(missing_ok=True)
+        print("[crew] removed a stale .git/index.lock")
+    dirty = dirty_paths(base)
+    if dirty is None:
+        print("[crew] git could not read the tree")
+        return 1
+    if any(path in HOUSEKEEPING for path in dirty):
+        why = fold_and_render(base)
+        if why:
+            print(f"[crew] {why}")
+            return 1
+        ours = [path for path in (dirty_paths(base) or []) if path in HOUSEKEEPING]
+        if ours and _sibling("commit").commit("console poll", ours) != 0:
+            print("[crew] the console poll commit failed")
+            return 1
+    left = [path for path in (dirty_paths(base) or []) if path not in HOUSEKEEPING]
+    if left:
+        print(f"[crew] not clean, {len(left)} path(s) nobody here wrote: "
+              f"{', '.join(left[:8])}{' ...' if len(left) > 8 else ''}")
+        return 1
+    print("[crew] the tree is clean")
+    return 0
 
 
 def snooze(hours: float | None, until: str | None, why: str) -> int:
@@ -921,9 +1113,12 @@ def main(argv: list[str] | None = None) -> int:
     show.add_argument("id")
     listing = sub.add_parser("list")
     listing.add_argument("--open", action="store_true")
-    held = sub.add_parser("hold", help="hold the tree still for a level-V run")
-    held.add_argument("--why", required=True)
+    holding = sub.add_parser("hold", help="hold the tree still for a level-V run")
+    holding.add_argument("--why", required=True)
+    asking = sub.add_parser("held", help="is my hold still yet? (asks up to --wait seconds)")
+    asking.add_argument("--wait", type=float, default=0.0)
     sub.add_parser("unhold")
+    sub.add_parser("tidy", help="commit the housekeeping under my hold; name what is left")
     sleep = sub.add_parser("snooze", help="a department sleeps on purpose until a moment")
     sleep.add_argument("--hours", type=float)
     sleep.add_argument("--until")
@@ -989,8 +1184,12 @@ def main(argv: list[str] | None = None) -> int:
         return _show(args.id)
     if args.cmd == "hold":
         return hold(args.why)
+    if args.cmd == "held":
+        return hold_state(args.wait)
     if args.cmd == "unhold":
         return unhold()
+    if args.cmd == "tidy":
+        return tidy()
     if args.cmd == "snooze":
         return snooze(args.hours, args.until, args.why)
     if args.cmd == "tell":

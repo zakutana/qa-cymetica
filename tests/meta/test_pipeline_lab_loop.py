@@ -23,6 +23,7 @@ from __future__ import annotations
 import importlib
 import importlib.util
 import json
+import os
 import re
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
@@ -1125,7 +1126,10 @@ def test_a_tick_that_finds_another_one_running_does_nothing(tmp_path, monkeypatc
     scripts_lab = _scripts_lab(tmp_path, monkeypatch)
     doors, calls = _doors()
     marker = scripts_lab._tick_marker()
-    marker.write_text(json.dumps({"pid": 1, "at": NOW.isoformat()}), encoding="utf-8")
+    # A running tick is a live process: this one. (pid 1 stood here until 2026-10-12, when a
+    # marker whose process is gone stopped holding ticks off -- crew-before-c9, item 5.)
+    marker.write_text(json.dumps({"pid": os.getpid(), "at": NOW.isoformat()}),
+                      encoding="utf-8")
 
     printed = []
     said = scripts_lab.tick_exclusive(now=NOW + timedelta(minutes=10),

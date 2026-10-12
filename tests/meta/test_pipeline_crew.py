@@ -24,6 +24,7 @@ import dataclasses
 import importlib.util
 import json
 import os
+import shutil
 import subprocess
 import sys
 import time
@@ -57,6 +58,9 @@ def company(tmp_path, monkeypatch):
     monkeypatch.delenv("FAKE_CLAUDE_PLAN", raising=False)
     monkeypatch.delenv("QA_CREW_DEPT", raising=False)
     monkeypatch.delenv("QA_CREW_TICKET", raising=False)
+    # The watchdog reads the working tree's git status; here that is no repository at all, so
+    # no test reads the real tree's edits (a test that does makes its own, below).
+    monkeypatch.setenv("QA_REPO_ROOT", str(tmp_path / "no-repo"))
     return tmp_path
 
 
@@ -137,6 +141,9 @@ def test_every_worker_is_denied_push_tag_and_raw_commits():
         denied = args[args.index("--disallowedTools") + 1:]
         for rule in ("Bash(git push:*)", "Bash(git tag:*)", "Bash(git commit:*)",
                      "Bash(git add:*)", "Bash(python scripts/crew.py start:*)",
+                     # an edit a worker did not make is not its to undo (crew-before-c9, 1)
+                     "Bash(git checkout:*)", "Bash(git restore:*)", "Bash(git reset:*)",
+                     "Bash(git stash:*)", "Bash(git clean:*)", "PowerShell(git checkout:*)",
                      "PowerShell(git push:*)", "PowerShell(git tag:*)",
                      "PowerShell(git commit:*)", "CronCreate", "ScheduleWakeup"):
             assert rule in denied, (name, rule)
@@ -148,8 +155,10 @@ def test_every_worker_is_denied_push_tag_and_raw_commits():
 
     # C2: the bug pipeline has one writer. Every other department hands a bug over as a
     # ticket; it cannot file, fold, render, withdraw, verify or preregister.
+    # bounty.py appends their side to the journal, so it is the pipeline's too (crew-before-c9,
+    # item 2).
     pipeline = ("submit.py", "ledger.py", "render.py", "withdraw.py", "verify.py",
-                "prereg.py")
+                "prereg.py", "bounty.py")
     for name, spec in crew.DEPARTMENTS.items():
         if spec.model is None:
             continue
@@ -158,9 +167,33 @@ def test_every_worker_is_denied_push_tag_and_raw_commits():
             for shell in ("Bash", "PowerShell"):
                 rule = f"{shell}(python scripts/{script}:*)"
                 assert (rule in denied) == (name != "bugs"), (name, rule)
+            # A worker never records a send the operator did not make: MSG-0115 was written
+            # that way, and the memory index loaded into every run says a written block is
+            # recorded as sent. correspond.py is closed to every worker, Bugs included.
+            assert f"{shell}(python scripts/correspond.py:*)" in denied, (name, shell)
     told = crew.prompt("bugs", {"id": "T-0009", "kind": "sweep", "from": "clock",
                                 "text": "hunt sweep", "payload": {"moved": ["#201 fixed"]}})
     assert "crew.py hold" in told and "submit.py" in told and "#201 fixed" in told
+    # The hold returns at once and is asked again (item 4); the tree is tidied by code before
+    # a preregistration (item 1).
+    assert "crew.py held" in told and "crew.py tidy" in told
+
+    # crew-before-c9, item 6: Bugs keeps pytest, and a test file it writes runs anything, a
+    # push included. git's own pre-push hook refuses every push made from a worker's run.
+    hook = REPO / ".githooks" / "pre-push"
+    assert "QA_CREW_DEPT" in hook.read_text(encoding="utf-8")
+    staged = subprocess.run(["git", "-C", str(REPO), "ls-files", "-s", ".githooks/pre-push"],
+                            capture_output=True, text=True).stdout
+    assert staged.startswith("100755"), "git runs a hook only when it is executable"
+    sh = shutil.which("sh") or next((str(p) for p in (
+        Path(os.environ.get("ProgramFiles") or "C:/Program Files") / "Git" / "bin" / "sh.exe",)
+        if p.exists()), None)
+    if sh:
+        env = {k: v for k, v in os.environ.items() if k != "QA_CREW_DEPT"}
+        assert subprocess.run([sh, str(hook)], env=env, capture_output=True).returncode == 0
+        refused = subprocess.run([sh, str(hook)], env={**env, "QA_CREW_DEPT": "bugs"},
+                                 capture_output=True, text=True)
+        assert refused.returncode != 0 and "bugs" in refused.stderr
     assert "--to bugs" not in told, "Bugs is not told to hand a bug to itself"
     assert "--to bugs" in crew.prompt("desk", {"id": "T-1", "kind": "step", "text": "x"})
 
@@ -377,21 +410,50 @@ def test_a_level_v_run_holds_the_tree_still_and_the_hold_cannot_freeze_the_compa
     assert sup.main(["unhold"]) == 0 and crew.holder() is None
     assert sup.look("desk", paused=lambda: False)[0] == "worked"
 
-    # Somebody is mid-run: the hold waits for them, and gives up if they do not finish.
+    # Somebody is mid-run (crew-before-c9, item 4): the hold is set at once -- nothing new
+    # starts -- and the call returns without waiting, so no single call outlives the Bash
+    # tool's two minutes and the caller always learns where it stands. `held` asks again.
     crew.set_active("lab", {"id": "T-0400", "kind": "lab"})
-    monkeypatch.setattr(sup, "HOLD_WAIT_SECONDS", 1.5)
     monkeypatch.setattr(sup, "HOLD_POLL_SECONDS", 0.2)
-    assert sup.main(["hold", "--why", "another run"]) == 1
+    started = time.monotonic()
+    assert sup.main(["hold", "--why", "another run"]) == 3
+    assert time.monotonic() - started < 5, "the hold waited inside the call"
+    assert crew.holder()["by"] == "bugs" and crew.holder()["still"] is False
+    assert sup.look("desk", paused=lambda: False)[0] == "held", "a waiting hold still holds"
+    assert sup.main(["held"]) == 3
+    started = time.monotonic()
+    assert sup.main(["held", "--wait", "1"]) == 3
+    assert time.monotonic() - started < 10, "--wait is bounded"
+    assert sup.main(["held", "--wait", "900"]) == 2, "no wait longer than one Bash call"
+    # Quiet: the hour starts now, not when the wait began -- a wait of fifty minutes must
+    # not leave ten for the run.
+    crew.set_active("lab", None)
+    assert sup.main(["held"]) == 0
+    left = crew.moment(crew.holder()["until"]) - datetime.now(timezone.utc)
+    assert crew.holder()["still"] is True and left > timedelta(minutes=55)
+    sup.main(["unhold"])
+
+    # Never quiet in time: let go, and the caller hears it.
+    crew.set_active("lab", {"id": "T-0401", "kind": "lab"})
+    # (Two seconds, not less: a hold's `since` is stamped to the second.)
+    monkeypatch.setattr(sup, "HOLD_WAIT_SECONDS", 2.0)
+    assert sup.main(["hold", "--why", "never quiet"]) == 3
+    time.sleep(3.2)
+    assert sup.main(["held"]) == 1
     assert crew.holder() is None, "a hold that could not get quiet is not left behind"
     crew.set_active("lab", None)
+    # A waiting hold nobody asks about again expires inside the wait, not after an hour.
+    crew.set_hold("bugs", "asked once", now=datetime.now(timezone.utc) - crew.HOLD_WAIT,
+                  still=False)
+    assert crew.holder() is None
 
-    # The hour starts when the tree is still, not when the wait began: a wait of fifty
-    # minutes must not leave ten for the run.
-    crew.set_hold("bugs", "waited long", now=datetime.now(timezone.utc) - timedelta(minutes=50))
-    assert sup.main(["hold", "--why", "waited long"]) == 0
-    left = crew.moment(crew.holder()["until"]) - datetime.now(timezone.utc)
-    assert left > timedelta(minutes=55)
-    sup.main(["unhold"])
+    # And a hold never outlives the run that set it: a worker killed in its wait, or one
+    # that forgot `unhold`, leaves the company free when its run ends.
+    crew.set_hold("bugs", "set inside the run", now=datetime.now(timezone.utc))
+    crew.add_ticket("bugs", "sweep", "a narrow sweep", now=NOW)
+    assert sup.work_once("bugs") is not None
+    assert crew.holder() is None, "the run ended and its hold stayed"
+    assert any(r.get("type") == "hold_released" for r in crew.load(crew.runs_path()))
 
     # A hold nobody let go expires by itself.
     crew.set_hold("bugs", "forgotten", now=NOW - timedelta(hours=3))
@@ -504,6 +566,46 @@ def test_the_clock_runs_the_laboratorys_tick_and_routes_what_it_decided(company,
     with sup.loop_lock("clock"):
         result = lab_script.tick_exclusive(out=said.append)
     assert result.get("company") and said[-1] == "decide: none"
+
+    # crew-before-c9, item 5: a tick the clock killed at its timeout never removed its marker
+    # (taskkill /F skips the `finally`), so the next tick printed "tick skipped" with
+    # `decide: none` and was recorded ok -- failed, ok, failed, ok, and the watchdog's three
+    # in a row never tripped. A skipped tick is not ok; a killed tick's marker goes with it;
+    # and a marker whose process is gone holds nothing off.
+    skipped = company / "skipped_tick.py"
+    skipped.write_text("print('tick skipped -- another tick is running since 18:00 (pid 1); "
+                       "it will finish the work')\nprint('decide: none')\n", encoding="utf-8")
+    monkeypatch.setenv("QA_CREW_TICK", json.dumps([sys.executable, str(skipped)]))
+    row = sup.run_tick(datetime.now(timezone.utc))
+    assert row["ok"] is False and "skipped" in row["tail"], row
+    for _ in range(2):
+        sup.run_tick(datetime.now(timezone.utc))
+    assert crew.tick_failing(crew.load(crew.runs_path())), "three skipped ticks went unseen"
+
+    from qa.state import state_dir
+    marker = state_dir() / "lab_tick.running"
+    hung = company / "hung_tick.py"
+    hung.write_text("import json, os, sys, time\n"
+                    f"open(r'{marker}', 'w').write(json.dumps({{'pid': os.getpid(), "
+                    "'at': '2026-10-12T00:00:00+00:00'}))\n"
+                    "sys.stdout.flush()\ntime.sleep(60)\n", encoding="utf-8")
+    monkeypatch.setenv("QA_CREW_TICK", json.dumps([sys.executable, str(hung)]))
+    monkeypatch.setattr(crew, "TICK_TIMEOUT", 3)
+    row = sup.run_tick(datetime.now(timezone.utc))
+    assert row["timed_out"] and not marker.exists(), "the killed tick's marker stayed"
+
+    gone = subprocess.Popen([sys.executable, "-c", "pass"])
+    gone.wait()
+    marker.write_text(json.dumps({"pid": gone.pid, "at": datetime.now(timezone.utc).isoformat()}),
+                      encoding="utf-8")
+    monkeypatch.setattr(lab_script, "tick", lambda **kwargs: {"ran": True})
+    assert lab_script.tick_exclusive(out=said.append).get("ran"), (
+        "a dead tick's marker held the next one off")
+    marker.write_text(json.dumps({"pid": os.getpid(),
+                                  "at": datetime.now(timezone.utc).isoformat()}),
+                      encoding="utf-8")
+    assert lab_script.tick_exclusive(out=said.append).get("busy"), "a live tick was run over"
+    marker.unlink()
 
 
 @qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
@@ -648,6 +750,24 @@ def test_the_desk_keeps_its_own_pace_sleeps_on_purpose_and_its_brakes_are_code(
     improvements.write_text("1. Show the bot's record.", encoding="utf-8")
     assert bb.main(["file", "--app-name", "Bots", "--improvements-file", str(improvements),
                     "--confirm"]) == 2
+    # crew-before-c9, item 3: the operator's grant was to FILE. Accept, change, verdict and
+    # withdraw act only on a ticket the company filed itself (`bb.mine`) -- refused before a
+    # client exists, the same barrier as above.
+    filed_here = [{"type": "intent", "kind": "file", "id": "BB-0001", "body": {"app_name": "Bots"}},
+                  {"type": "outcome", "kind": "file", "id": "BB-0001", "ticket": "ET-31000",
+                   "outcome": "accepted"}]
+    monkeypatch.setattr(bb, "load", lambda: filed_here)
+    assert bb.ours("ET-31000", filed_here) and not bb.ours("ET-30773", filed_here)
+    assert bb.main(["verdict", "ET-30773", "pass", "--confirm"]) == 2, "someone else's ticket"
+    assert bb.main(["withdraw", "ET-30773", "--confirm"]) == 2
+
+    # crew-before-c9, item 8: one rule for a gap and for a written block, in the skill the lab
+    # worker follows and in the plan behind it (CLAUDE.md: a gap is said and relayed, a defect
+    # is filed; a written block is recorded in the turn it is written; no worker sends a2a).
+    skill = (REPO / ".claude" / "skills" / "laborator" / "SKILL.md").read_text(encoding="utf-8")
+    assert "only once they say it went" not in skill
+    assert "or a documentation gap gets a check and a report" not in skill
+    assert "a2a copy" not in (REPO / "docs" / "laborator-plan.md").read_text(encoding="utf-8")
     # Outside the company the operator's own sends are not braked here.
     monkeypatch.delenv("QA_CREW_DEPT")
     assert crew.crew_brake("a2a", list(range(9)), now) is None
@@ -1038,6 +1158,72 @@ def test_a_commit_takes_the_lock_and_only_the_paths_it_names(company, monkeypatc
     assert "desk.md" in shown and "new.md" in shown and "other.md" not in shown
     assert "Crew: desk T-0007" in shown
     assert "other.md" in _git(root, "status", "--porcelain")
+
+    # crew-before-c9, item 1: the pre-commit hook renders the page and stages it, and a
+    # pathspec commit leaves it staged and changed (MM) -- a dirty tree nobody owns, which
+    # prereg refuses. Rendered from a clean state/, the page is committed right after.
+    (root / "dashboard").mkdir()
+    (root / "dashboard" / "index.html").write_text("page 1\n", encoding="utf-8")
+    _git(root, "add", "dashboard/index.html")
+    _git(root, "commit", "-q", "-m", "page")
+    (root / "dashboard" / "index.html").write_text("page 2\n", encoding="utf-8")
+    _git(root, "add", "dashboard/index.html")        # what the hook does
+    (root / "desk.md").write_text("three\n", encoding="utf-8")
+    assert commit.main(["-m", "Desk: H4", "--", "desk.md"]) == 0
+    assert "dashboard/index.html" not in _git(root, "status", "--porcelain"), "the page left MM"
+    assert "page 2" in _git(root, "show", "HEAD:dashboard/index.html")
+
+    # Bugs owns the tree's housekeeping (item 1): under its own hold, `crew.py tidy` folds and
+    # renders (stubbed here), commits what the clock, the console and the hooks wrote, and
+    # names what is left -- another department's half-edit, which no level-V run gets past.
+    sup = _script("crew")
+    (root / "state" / "journal").mkdir(parents=True)
+    for name in ("state/bounty.json", "state/journal/events.jsonl"):
+        (root / name).write_text("{}\n", encoding="utf-8")
+        _git(root, "add", name)
+    _git(root, "commit", "-q", "-m", "state")
+    (root / "state" / "bounty.json").write_text('{"polled": 1}\n', encoding="utf-8")
+    with (root / "state" / "journal" / "events.jsonl").open("a", encoding="utf-8") as fh:
+        fh.write('{"type": "tick"}\n')
+    folded: list[Path] = []
+    monkeypatch.setattr(sup, "fold_and_render", lambda base: folded.append(base) or None)
+    monkeypatch.setenv("QA_CREW_DEPT", "bugs")
+    monkeypatch.setenv("QA_CREW_TICKET", "T-0010")
+    assert sup.main(["tidy"]) == 2, "tidy runs under the caller's own hold"
+    crew.set_hold("bugs", "level V of PRE-0300")
+    assert sup.main(["tidy"]) == 1, "another department's half-edit is still there"
+    assert folded == [root]
+    left = _git(root, "status", "--porcelain")
+    assert "bounty.json" not in left and "events.jsonl" not in left and "other.md" in left
+    assert "console poll" in _git(root, "log", "-1", "--format=%B")
+    _git(root, "checkout", "--", "other.md")
+    assert sup.main(["tidy"]) == 0
+    crew.clear_hold()
+
+    # The watchdog reads the tree too: git's lock left by a killed worker is removed once it
+    # is stale, and an edit nobody is making any more goes to the manager, once a day.
+    lock = root / ".git" / "index.lock"
+    lock.write_text("", encoding="utf-8")
+    old = time.time() - 3600
+    os.utime(lock, (old, old))
+    (root / "other.md").write_text("left by a worker killed at its timeout\n", encoding="utf-8")
+    os.utime(root / "other.md", (old - 7200, old - 7200))
+    now = datetime.now(timezone.utc)
+    sup.watch(now)
+    sup.watch(now)
+    assert not lock.exists(), "a stale index.lock blocks every commit"
+    left = [t for t in crew.tickets().values() if t["to"] == "manager"
+            and str(t.get("key", "")).startswith("dirty:")]
+    assert len(left) == 1 and "other.md" in left[0]["text"], left
+    assert "never to commit, undo" in left[0]["text"], "they may be the operator's own"
+    fresh = root / ".git" / "index.lock"
+    fresh.write_text("", encoding="utf-8")
+    sup.watch(now)
+    assert fresh.exists(), "a lock a commit holds right now was taken away"
+    fresh.unlink()
+    _git(root, "checkout", "--", "other.md")
+    monkeypatch.setenv("QA_CREW_DEPT", "desk")
+    monkeypatch.setenv("QA_CREW_TICKET", "T-0007")
 
     assert commit.main(["-m", "everything"]) == 2, "no paths: nothing is committed"
     assert commit.main(["-m", "everything", "--", "."]) == 2, "the whole tree is not a path"

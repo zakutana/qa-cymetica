@@ -113,11 +113,30 @@ def commit(text: str, paths: list[str]) -> int:
                     print(f"[commit] git add failed: {added.stderr.strip()[:300]}")
                     return 1
                 done = _git(base, "commit", "-m", message(text), "--", *paths)
+                if done.returncode == 0:
+                    _commit_the_page(base)
             except OSError as exc:
                 print(f"[commit] git could not be run: {exc}")
                 return 1
             print((done.stdout or done.stderr).strip()[:600])
             return 0 if done.returncode == 0 else 1
+
+
+PAGE = "dashboard/index.html"
+
+
+def _commit_the_page(base: Path) -> None:
+    """The pre-commit hook renders the page and stages it; a commit of named paths leaves it
+    out, staged and changed (MM) -- a dirty tree nobody owns, which prereg refuses
+    (crew-before-c9, item 1). The hook stages it only when state/ is clean, so the page is a
+    render of what is committed: it goes in right after, on its own."""
+    staged = _git(base, "diff", "--cached", "--name-only")
+    if staged.returncode != 0 or PAGE not in staged.stdout.split():
+        return
+    state = _git(base, "status", "--porcelain", "--", "state/")
+    if state.returncode != 0 or state.stdout.strip():
+        return
+    _git(base, "commit", "-m", message("render"), "--", PAGE)
 
 
 def main(argv: list[str] | None = None) -> int:

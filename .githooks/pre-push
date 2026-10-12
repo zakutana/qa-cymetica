@@ -1,0 +1,19 @@
+#!/bin/sh
+# No push from a company worker (crew-before-c9, item 6).
+#
+# Pushing is the operator's and the deep pass's (CLAUDE.md: "Commit to main. Do not push.",
+# and its two exceptions). Every worker's argv denies `git push`, but Bugs keeps pytest and
+# writes tests, and a test file runs anything -- a push included. A worker runs with
+# QA_CREW_DEPT set (scripts/crew.py worker_env); the operator's session and the deep pass
+# never do. So a push from inside a worker's run is refused here, in git itself.
+#
+# This stops a push made through git by mistake, not code set on getting round it
+# (--no-verify skips every hook); that is what the deep pass's review of tests/** is for.
+# Installed with `git config core.hooksPath .githooks`, which the deep pass's step 0 repairs.
+
+if [ -n "$QA_CREW_DEPT" ]; then
+    echo "pre-push: refused -- the company's $QA_CREW_DEPT department never pushes;" \
+         "pushing is the operator's and the deep pass's (CLAUDE.md)" >&2
+    exit 1
+fi
+exit 0

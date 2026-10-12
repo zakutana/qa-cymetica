@@ -79,6 +79,10 @@ DEPARTMENTS: dict[str, Dept] = {d.name: d for d in (
 # which holds the one lock and names its paths, so `git add`/`git commit` are closed; and
 # nothing a worker starts may outlive it or start the company again.
 _DENIED_COMMANDS = ("git push", "git tag", "git commit", "git add", "git revert",
+                    # an edit the worker did not make -- a session's, another department's
+                    # -- is not its to undo or put aside (crew-before-c9, item 1: the
+                    # watchdog now names such edits to the manager)
+                    "git checkout", "git restore", "git reset", "git stash", "git clean",
                     "python scripts/crew.py start", "python scripts/crew.py stop",
                     # a second worker beside a department's loop (C8 review)
                     "python scripts/crew.py once")
@@ -356,8 +360,10 @@ def claude_command() -> list[str] | None:
 # The bug pipeline has one writer, the Bugs department (C2): every other department hands a
 # bug over as a ticket, and cannot file, fold, render, withdraw, verify or preregister.
 # One writer per resource is what removes the races on the ledger, the journal and the page.
+# bounty.py appends their side to the journal, so it is the pipeline's too (crew-before-c9,
+# item 2).
 BUG_PIPELINE = ("submit.py", "ledger.py", "render.py", "withdraw.py", "verify.py",
-                "prereg.py")
+                "prereg.py", "bounty.py")
 
 
 def _shells(*commands: str) -> tuple[str, ...]:
@@ -387,7 +393,10 @@ def denied(dept: str) -> tuple[str, ...]:
     # a2a is a message to Cymetica under our name, and a message to anyone is a draft the
     # operator sends (CLAUDE.md, "Nové oddělení"; the laborator skill): no worker sends one. A
     # question goes to the manager as a decision carrying its draft (deep pass 2026-10-11, R04).
-    out += _shells("python scripts/a2a.py")
+    # And no worker records one as sent: correspond.py writes "the operator sent this" into the
+    # journal, which only the operator's own session knows (MSG-0115 was written for a block
+    # never sent; crew-before-c9, item 2).
+    out += _shells("python scripts/a2a.py", "python scripts/correspond.py")
     return tuple(out)
 
 
@@ -433,10 +442,21 @@ the qa-sweep skill your procedure. By the ticket's kind:
 - `sweep`: the qa-sweep skill at narrow width. `moved` in the details is what woke it
   (their side moved); read it first.
 - `hunt`: a bug hunt, their newest surface first, SAFE reads only.
-A level-V run needs a clean tree while four other departments edit it: before
-`prereg.py new ... --tag`, `python scripts/crew.py hold --why "<what>"` (it waits until
-nobody else is mid-run), and `python scripts/crew.py unhold` once its commit is in, or
-when it fails. After any change to state: `python scripts/ledger.py --run <id>` and
+A level-V run needs a clean tree while four other departments edit it. Before
+`prereg.py new ... --tag`:
+1. `python scripts/crew.py hold --why "<what>"` -- it returns at once; no new run starts.
+   Exit 0: the tree is still. Exit 3: others are mid-run; ask again with
+   `python scripts/crew.py held --wait 90` until it answers 0. Exit 1: let go, run at
+   level R instead.
+2. `python scripts/crew.py tidy` -- commits what the clock, the console and the hooks wrote
+   (journal, bounty.json, the page), folded and rendered. Exit 1 names files another
+   department left half-edited: no level V today; say so in your close and run at level R.
+   Never undo or commit those files yourself: they may be the operator's own work.
+   It folds, renders and commits, which can outlast two minutes: give it, and every
+   `scripts/commit.py`, the Bash tool's ten-minute timeout.
+3. Preregister, run, fold; `python scripts/crew.py unhold` once its commit is in, or when
+   it fails. Your hold also ends with your run.
+After any change to state: `python scripts/ledger.py --run <id>` and
 `python scripts/render.py`, then the ledger, the journal and the dashboard in one commit.
 """,
     "lab": """\
@@ -1165,16 +1185,22 @@ def beats() -> dict[str, dict]:
 # A hold nobody lets go expires, so a worker killed mid-verification cannot freeze the
 # company; an hour is a narrow sweep's worst (8 to 25 minutes) with room to commit.
 HOLD_MAX = timedelta(hours=1)
+# How long a hold may wait for the others to finish (crew-before-c9, item 4). A waiting hold
+# expires at the end of it, so one whose caller stopped asking frees the company in this
+# time, not in HOLD_MAX.
+HOLD_WAIT = timedelta(minutes=50)
 
 
 def _hold_path() -> Path:
     return crew_dir() / "hold.json"
 
 
-def set_hold(by: str, why: str, now: datetime | None = None) -> dict:
+def set_hold(by: str, why: str, now: datetime | None = None, still: bool = True) -> dict:
+    """`still`: the tree is quiet and the run's hour starts now. Not still: waiting for the
+    runs already under way -- nothing new starts, and the hold ends with HOLD_WAIT."""
     moment_now = _now(now)
-    hold = {"by": by, "why": str(why)[:300], "since": stamp(moment_now),
-            "until": stamp(moment_now + HOLD_MAX)}
+    hold = {"by": by, "why": str(why)[:300], "since": stamp(moment_now), "still": still,
+            "until": stamp(moment_now + (HOLD_MAX if still else HOLD_WAIT))}
     _write_json(_hold_path(), hold)
     return hold
 

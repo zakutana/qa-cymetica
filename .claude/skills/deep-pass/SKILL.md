@@ -162,8 +162,10 @@ python scripts/memories.py --for deep-pass
   it unattended would be time spent relaxing a rule.
 * **The company first, before anything else touches git.** When `python
   scripts/crew.py status` says it runs, `python scripts/crew.py hold --why
-  "deep pass"` -- no worker starts, and it returns once every running worker
-  has finished and committed. From the notebook on, the loops stay paused by
+  "deep pass"` -- no worker starts from then on, and it returns at once; ask
+  `python scripts/crew.py held --wait 90` until it answers 0 (every running
+  worker finished). 1 means it was let go after fifty minutes: write that in
+  the notebook and go on. From the notebook on, the loops stay paused by
   themselves until the pass writes `finished`. A worker killed mid-edit, or
   one still editing, would leave files that a `console poll` commit then takes
   past the review (docs/crew-plan.md, C8).

@@ -3655,6 +3655,20 @@ def _tick_marker() -> Path:
     return state_dir() / "lab_tick.running"
 
 
+def _marker_pid_alive(held: dict | None) -> bool:
+    """A marker holds the next tick off only while its process lives. A tick killed with
+    its tree (the company's timeout, taskkill /F) never ran its `finally`, and its marker
+    held every tick off for 45 minutes (crew-before-c9, item 5). A marker without a pid, or
+    one that cannot be checked, is believed."""
+    pid = (held or {}).get("pid")
+    if not pid:
+        return True
+    try:
+        return bool(_sibling("crew").pid_alive(int(pid)))
+    except Exception:  # noqa: BLE001 -- a check that cannot run must not run over a tick
+        return True
+
+
 def _company_clock_runs() -> bool:
     try:
         return bool(_sibling("crew").loop_alive("clock"))
@@ -3682,7 +3696,8 @@ def tick_exclusive(*, now: datetime | None = None, actions: dict | None = None,
     except (OSError, ValueError):
         held = None
     since = lab._at((held or {}).get("at"))
-    if since is not None and moment - since < timedelta(minutes=TICK_STALE_MINUTES):
+    if since is not None and moment - since < timedelta(minutes=TICK_STALE_MINUTES) \
+            and _marker_pid_alive(held):
         out(f"tick skipped -- another tick is running since {since.isoformat()[11:16]} "
             f"(pid {held.get('pid')}); it will finish the work")
         # That tick decides; this firing has nothing to wake the manager for.
