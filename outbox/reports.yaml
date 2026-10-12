@@ -6224,6 +6224,44 @@ reports:
       its 30-day history; it will read the hole until it leaves that window around Oct 25, so a pass
       after that date is the window, and a backfill is what we would see before it. GET requests only.
 
+  - key: vaix-orderbook-arbitrage-buys-on-an-excluded-venue
+    findings: [CYM-vaix-orderbook-arbitrage-does-not-use-an-excluded-venue]
+    severity: low
+    category: logic
+    url: https://cymetica.com/api/v1/vaix/orderbook
+    title: >-
+      VAIX orderbook: arbitrage.buy_chain is base at 0.00031 (+514 %), the same venue and figure
+      excluded_venues lists as price_divergence -83.75 %
+    expected: >
+      A response that sets a chain aside as a price divergence from its reference price does not
+      then offer that chain's price as the buy leg of an arbitrage with a 514 % profit. If
+      `arbitrage` is meant to range over the excluded venues too, the route says so. It does not:
+      /api/v1/vaix/orderbook is one line in llms.txt ("VAIX orderbook") and is in neither
+      openapi-public.json (397 paths, none with vaix) nor /api-docs, so what `excluded_venues` and
+      `arbitrage` mean is written nowhere we can read.
+    actual: >
+      GET /api/v1/vaix/orderbook, anonymous, read on 2026-10-12 at 22:32:27 UTC (figures below), and
+      again at 22:39:04 and 22:39:37 with the same overlap (base 0.00031079, potential_profit_pct
+      514.44). `orderbook.excluded_venues` holds base (mid 0.00031077, divergence_pct -83.75, reason
+      price_divergence), arbitrum (-54.91) and solana (-80.54), with `reference_price` 0.00191274. In
+      the same object `orderbook.arbitrage` reads buy_chain base, buy_price 0.00031077 (the excluded
+      mid to the last digit), sell_chain ethereum, sell_price 0.00191274, spread_pct 515.48,
+      potential_profit_pct 514.48. From the same body, base holds liquidity_usd 164.17, arbitrum
+      13.16 and solana 7.26, against ethereum's 25,128.27.
+    steps:
+      - 'GET https://cymetica.com/api/v1/vaix/orderbook -> orderbook.excluded_venues.base: {mid, divergence_pct -83.75, reason price_divergence}'
+      - 'same body -> orderbook.arbitrage: {buy_chain base, buy_price equal to that mid, potential_profit_pct 514.48}'
+      - 'GET https://cymetica.com/openapi-public.json -> no path containing vaix (397 paths); GET /llms.txt -> "VAIX orderbook" and nothing about either block'
+    body: >
+      We do not know which is meant, and do not assert one. A client that reads `excluded_venues` as
+      "do not trust these prices" and a client that reads `arbitrage` as "a trade the book offers" are
+      both reading the response as written, and they disagree about base. It is either an arbitrage
+      computed over venues the book itself withholds (then say so, or leave it out of the headline),
+      or a block that should have used the venues the book kept. Our check fails only while both of
+      two reads, thirty seconds apart, show a leg of `arbitrage` that is a key of `excluded_venues`;
+      it passes when `arbitrage` is absent or neither leg is excluded, and we retire it if you
+      publish that the overlap is intended. GET requests only.
+
 footer: >
   Reported by an independent QA agent. Scope of this work: verification of the
   REST API, MCP, the machine-readable discovery surfaces and the pages built on
