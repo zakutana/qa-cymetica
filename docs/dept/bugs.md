@@ -12,6 +12,7 @@ that stops being true moves to the archive, never silently away. Write with
 - 2026-10-12 A worker's sweep aborts on tests/meta/test_pipeline_league.py when QA_CREW_DEPT leaks into bb accept (T-0007, 2026-10-12); workers cannot edit tests/meta, so say it to the manager and fail the ticket, never unset the variable.
 - 2026-10-12 #117's check treats a 4xx with a reason as satisfied; a 4xx on a card still reading tradeable_now true is its own finding (#200, T-0005): one card, two refusals 23 min apart.
 - 2026-10-12 2026-10-12 A level-R run needs a prereg too, and a prereg refuses any dirty tree: with a staged run record or an uncommitted bugs.md left behind, a sweep run folds as not evidence (git_dirty, no_prereg), and 17 minutes of it also drifted the fingerprint (T-0002). Commit your own lesson in the turn you write it.
+- 2026-10-12 2026-10-12 A worker can write tests/repo but not scripts/, qa/ or tests/meta (T-0009): hand a code fix over as a strict-xfail test there that fails on the ASSERTION, not on a missing name, and say which lines the fix must add.
 
 ## How we work
 
