@@ -6188,6 +6188,41 @@ reports:
       while it was trading is 3 h). It cannot tell a limit from a stall. If the limit is published, we
       retire the check. GET requests only.
 
+  - key: event-card-index-history-hole-on-live-crypto-card
+    findings: [CYM-live-crypto-card-index-history-has-no-multi-day-hole]
+    severity: low
+    category: logic
+    url: https://cymetica.com/api/v1/event-cards/a4a5b71e-de11-4805-b8a3-ed9c3f8f8161/index-history?interval=30d
+    title: >-
+      Event cards: the index history of the live BTC-basket card a4a5b71e has no point for 51.6 h
+      (Sep 23 14:16 to Sep 25 17:54 UTC) while its index moved and other crypto cards recorded
+    expected: >
+      A card that reads status live, tradeable_now true and trading_closes_at null, and whose basket
+      is 99% BTC, is priced around the clock, and its index-history keeps its cadence. Nothing in
+      llms.txt, the OpenAPI or the card says its history may stop recording for days.
+    actual: >
+      GET /api/v1/event-cards/a4a5b71e-de11-4805-b8a3-ed9c3f8f8161/index-history?interval=30d,
+      anonymous, read on 2026-10-12 (the same on an earlier read the same day): one point every
+      3 h, 8 a day, on every day of the window except Sep 23 (5 points, the last 14:16:52 UTC, index
+      137.714), Sep 24 (none) and Sep 25 (3 points, the first 17:54:33 UTC, index 134.256). That is
+      51.6 h between two consecutive points, while the index moved by 3.46. interval=all shows the
+      same hole (56.8 h). It is this card only: the crypto-only cards 30408a4b, 30015006 and 5d91bf43
+      hold 17, 17 and 18 points inside those same hours, widest gap 3.0 to 3.2 h. The only stretch
+      every card shares is Sep 17 14:40 to 20:59 UTC (6.3 h). The card reads live and tradeable
+      today (trading_closes_at null, trading_blocked_reason null).
+    steps:
+      - 'GET https://cymetica.com/api/v1/event-cards/a4a5b71e-de11-4805-b8a3-ed9c3f8f8161 -> status live, tradeable_now true, trading_closes_at null, basket BTC 0.9922'
+      - 'GET https://cymetica.com/api/v1/event-cards/a4a5b71e-de11-4805-b8a3-ed9c3f8f8161/index-history?interval=30d -> points[].t: 2026-09-23T14:16:52Z, then 2026-09-25T17:54:33Z'
+      - 'GET /api/v1/event-cards/{id}/index-history?interval=30d for the ids starting 30408a4b, 30015006 and 5d91bf43 (ids from /api/v1/event-cards) -> 17, 17 and 18 points between those two times'
+    body: >
+      Why this matters to a client: we use this card as the BTC benchmark, and 46 of our paper rooms
+      had a window spanning the hole, so a return was set against a series that was not recording.
+      How to repair it is yours: backfill the missing hours if the prices exist, or say on the card
+      that a history can have holes. We do not know the cause and do not assert one. Our check reads
+      every open crypto card of the list and fails while one has more than 12 h between two points of
+      its 30-day history; it will read the hole until it leaves that window around Oct 25, so a pass
+      after that date is the window, and a backfill is what we would see before it. GET requests only.
+
 footer: >
   Reported by an independent QA agent. Scope of this work: verification of the
   REST API, MCP, the machine-readable discovery surfaces and the pages built on
