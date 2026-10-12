@@ -13,7 +13,7 @@ Ten lines at most, like `NEXT.md`.
 - A room's `running` is a label. Before saying what is live, read the sampler's `is_trading` per bot; a bot the platform auto-paused is not live (wave 0 sat dead two days under `running` rooms).
 - A dead bot's room must be stopped by the tick, not by me noticing. Also `VARIANT_REFERENCE` defaults are 5 / 15, not 10 / 20.
 - The tick ran past the 30-minute background limit and was killed (marker held the lab 45 min). Find the slow read (balance `timeout`, ~90 s a round) and bound it. Under the company (limit 40 min) it is not killed but still slow: 824 s on 2026-10-12, four real-balance reads ending `timeout`.
-- Wave 2 is live since 2026-10-06 (`scripts/wave.py`, SL 15 / TP 40, 20 species, rooms STR-0097..0116, 7-day window, verdict ~13. 10.): then compare each species with its wave-0 baseline. One window is a measurement, not a finding. Two bots read balance 0 on the sampler: check which.
+- Wave 2 is live since 2026-10-06 (`scripts/wave.py`, SL 15 / TP 40, 20 species, rooms STR-0097..0116, 7-day window, verdict ~13. 10.): then compare each species with its wave-0 baseline. One window is a measurement, not a finding. 2026-10-12 16:54: 19 of the 22 bots trading read balance 0 (e.g. 8cda9152 in STR-0172, running since 10-10, last trade 09-24) and hold 19 of the platform's 25 trading slots (CLN-0461); their rooms measure nothing. Stopping such a room by hand (`rooms.py status`) leaves its bot trading: only a verdict's close pauses it.
 - The tick's duplicate-clone block (`_species_cloned`, `live_refs`) is stale since REPLY-0122 (2026-10-04, repeat clones allowed on Pro): lift it, test first.
 
 ## How the manager goes wrong
