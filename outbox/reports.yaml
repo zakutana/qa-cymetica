@@ -6250,7 +6250,7 @@ reports:
       13.16 and solana 7.26, against ethereum's 25,128.27.
     steps:
       - 'GET https://cymetica.com/api/v1/vaix/orderbook -> orderbook.excluded_venues.base: {mid, divergence_pct -83.75, reason price_divergence}'
-      - 'same body -> orderbook.arbitrage: {buy_chain base, buy_price equal to that mid, potential_profit_pct 514.48}'
+      - 'same body -> orderbook.arbitrage: {buy_chain base, buy_price equal to that mid, potential_profit_pct about 514}'
       - 'GET https://cymetica.com/openapi-public.json -> no path containing vaix (397 paths); GET /llms.txt -> "VAIX orderbook" and nothing about either block'
     body: >
       We do not know which is meant, and do not assert one. A client that reads `excluded_venues` as
