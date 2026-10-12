@@ -9,6 +9,7 @@ that stops being true moves to the archive, never silently away. Write with
 
 - Every other department hands a bug over as a ticket and stops caring; the filing, the check, the ledger and the dashboard are ours alone (`submit.py`, `ledger.py`, `render.py`).
 - A narrow sweep is 8 to 25 minutes; a level-V run needs a clean tree: `crew.py hold`, then `crew.py held --wait 90` until 0, then `crew.py tidy`, then prereg.
+- 2026-10-12 A worker's sweep aborts on tests/meta/test_pipeline_league.py when QA_CREW_DEPT leaks into bb accept (T-0007, 2026-10-12); workers cannot edit tests/meta, so say it to the manager and fail the ticket, never unset the variable.
 
 ## How we work
 
