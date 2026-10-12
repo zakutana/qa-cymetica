@@ -6103,6 +6103,49 @@ reports:
       /llms.txt and /openapi-public.json anonymously and fails while a route the entry names, in full or relative
       to its URL with a|b read as one route each, is not a path of the OpenAPI with that method. GET requests only.
 
+  - key: tradeable-card-not-priceable
+    findings: [CYM-a_card_that_reads_tradeable_now_can_be_priced]
+    severity: medium
+    category: api
+    url: https://cymetica.com/api/v1/event-cards/8ffd61fa-f469-45be-a717-a4dcfe9f9508/buy
+    title: "A card reading tradeable_now true, with no blocked reason, is refused a paper buy: 400 \"Basket is not fully priceable right now\""
+    expected: >
+      The card's own tradeability block: tradeable_now is "True when a
+      position can be opened on this card RIGHT NOW via POST /buy, /sell or
+      /short (paper or live per your account mode); False carries
+      trading_blocked_reason. This is the only trade gate." So while a card
+      reads true, a paper buy on it opens a position; when the basket cannot
+      be priced the gate reads false and says why.
+    actual: >
+      Card 8ffd61fa-f469-45be-a717-a4dcfe9f9508 (five legs ARB, STRK, OP, ZK
+      and SOON at 0.2 each) read status live, tradeable_now true,
+      trading_blocked_reason null on every read we made on 2026-10-12,
+      including one a few seconds before each order. A paper POST /buy of 593.63 USDC
+      answered HTTP 400 {"detail": "Basket is not fully priceable right now
+      -- try again shortly"} twice, 23 minutes apart, at 16:25:45 and
+      16:48:39 UTC. No position was created and the account did not change.
+      In the first minute another card took a paper buy (HTTP 200). The card
+      itself still showed a current_index of 105.29 when the check read it at
+      17:02 UTC, so the card prices; the buy does not.
+    steps:
+      - 'GET https://cymetica.com/api/v1/event-cards/8ffd61fa-f469-45be-a717-a4dcfe9f9508 -> status live, tradeable_now true, trading_blocked_reason null (16:25:40 and 16:48:35 UTC)'
+      - 'POST /api/v1/event-cards/8ffd61fa-f469-45be-a717-a4dcfe9f9508/buy with an X-API-Key, {"amount_usdc": 593.63, "paper": true} -> HTTP 400 {"detail":"Basket is not fully priceable right now — try again shortly"} (16:25:45 UTC)'
+      - 'Repeat 23 minutes later, the card read true again a few seconds before -> the same 400 (16:48:39 UTC); GET the account and positions -> unchanged'
+    body: >
+      Not #117: that was a 500 "Buy failed" and its fix arrived as an answer
+      that names its reason, which is what we asked for there. What is left is
+      the gate itself, which reads true and carries no reason while the buy is
+      refused for one. A refusal of the same kind on another card, on
+      2026-09-13 (HTTP 400 "This card's price is not currently available"),
+      is not counted: we did not record the gate then. How to fix it is yours: fold the pricing of the
+      basket into tradeable_now so an agent that trusts the flag is told, or
+      say in the docs that the flag does not cover it. We do not know which
+      leg cannot be priced. Our check places no order: it reads our own record
+      of every paper buy and the gate we read just before it, and fails while
+      the newest buy of a card refused this way is still refused and the card
+      still reads true. It goes green when a buy of that card is accepted, or
+      when the card reads false with a reason.
+
 footer: >
   Reported by an independent QA agent. Scope of this work: verification of the
   REST API, MCP, the machine-readable discovery surfaces and the pages built on
