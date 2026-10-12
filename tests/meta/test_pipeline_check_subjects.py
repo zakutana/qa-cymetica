@@ -705,6 +705,9 @@ def test_a_card_that_is_closed_on_rest_and_open_on_mcp_fails():
     # And a free Agent Tournaments table at each buy-in (2026-10-12), the same way.
     _the_free_table_readings()
 
+    # And the Build a Company routes in the OpenAPI (2026-10-12), the same way.
+    _the_company_route_readings()
+
     # And the account history pages forward (2026-10-10): with currency=USDC, and with no filter
     # past the first page, every offset answered the same 100 rows while has_more said true.
     from tests.rest.test_account_history_pages_forward import page_repeats
@@ -1164,6 +1167,39 @@ def _the_tournament_bot_readings():
     # /my-bots renaming the key passed "all 53 bots exist" having judged none.
     renamed = [{"id": "996cd23e", "name": "lab MACD Hunter", "trading": True}]
     assert offered_but_gone(renamed, set(), {}) == ([], ["no instance_id: 'lab MACD Hunter'"])
+
+
+def _the_company_route_readings():
+    """The readings behind the Build a Company routes check (2026-10-12): the entry as read that
+    day names nine routes relative to its ticked URL, `POST /` being the URL and `pause|resume`
+    two; an OpenAPI with all nine misses none, one without the company paths misses all, a route
+    on the wrong method is missing, and a line without the ticked URL lends none of its paths."""
+    from tests.rest.test_company_routes_are_in_the_openapi import company_routes, missing_from
+
+    line = ("- [Build a Company](https://cymetica.com/company?utm_source=llms&utm_medium=agent) — "
+            "Feature #911: one company per account. Owner-only API `https://cymetica.com/api/v1/company`: "
+            "`GET /templates`, `POST /`, `GET /mine`, `POST /{id}/message` {\"text\"}, "
+            "`GET /{id}/messages?after=`, `POST /{id}/approvals/{aid}` {\"decision\",\"note\"}, "
+            "`POST /{id}/pause|resume`, `GET /{id}/audits`. MCP: company_status")
+    routes = company_routes(line)
+    p = "/api/v1/company"
+    assert routes == sorted([("GET", f"{p}/templates"), ("POST", p), ("GET", f"{p}/mine"),
+                             ("POST", f"{p}/{{}}/message"), ("GET", f"{p}/{{}}/messages"),
+                             ("POST", f"{p}/{{}}/approvals/{{}}"), ("POST", f"{p}/{{}}/pause"),
+                             ("POST", f"{p}/{{}}/resume"), ("GET", f"{p}/{{}}/audits")]), routes
+    described = {"paths": {p: {"post": {}}, f"{p}/templates": {"get": {}}, f"{p}/mine": {"get": {}},
+                           f"{p}/{{company_id}}/message": {"post": {}},
+                           f"{p}/{{company_id}}/messages": {"get": {}},
+                           f"{p}/{{company_id}}/approvals/{{approval_id}}": {"post": {}},
+                           f"{p}/{{company_id}}/pause": {"post": {}},
+                           f"{p}/{{company_id}}/resume": {"post": {}},
+                           f"{p}/{{company_id}}/audits": {"get": {}}}}
+    assert missing_from(routes, described) == [], "any parameter name is the same route"
+    assert len(missing_from(routes, {"paths": {"/api/v1/other": {"get": {}}}})) == 9
+    wrong = dict(described["paths"], **{f"{p}/mine": {"post": {}}})
+    assert missing_from(routes, {"paths": wrong}) == [("GET", f"{p}/mine")], "a wrong method passed"
+    assert company_routes(line.replace("`https://cymetica.com/api/v1/company`", "the company API")) == [], (
+        "a line without the ticked URL lent its relative paths to the company")
 
 
 def _the_free_table_readings():

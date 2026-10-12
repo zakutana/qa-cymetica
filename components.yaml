@@ -207,6 +207,14 @@ components:
     surface: rest
     criticality: medium
     staleness_hours: 24
+  rest.company:
+    # Build a Company (feature #911, /company): a Manager agent running departments for the
+    # account owner, owner-only API /api/v1/company. First check 2026-10-12: none of the nine
+    # routes llms.txt names is in /openapi-public.json. We have no company (GET /mine 404).
+    title: Build a Company (the Manager agent and its departments)
+    surface: rest
+    criticality: medium
+    staleness_hours: 24
   rest.gem_screener:
     # A Build it Better app (ET-26608, follow-up ET-27671) with its own REST
     # reads: /api/v1/gem-screener and /api/v1/gem-screener/status. First
