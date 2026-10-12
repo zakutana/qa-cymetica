@@ -6146,6 +6146,48 @@ reports:
       still reads true. It goes green when a buy of that card is accepted, or
       when the card reads false with a reason.
 
+  - key: agent-tournaments-table-goes-dead
+    findings: [CYM-agent-tournaments-running-table-keeps-trading]
+    severity: low
+    category: logic
+    url: https://cymetica.com/api/v1/agent-tournaments/tables/2
+    title: >-
+      Agent Tournaments: on a running table every house bot stops trading for most of the day, five of
+      them at exactly 40 trades; the rules promise 7 days of trading and name no limit
+    expected: >
+      GET /api/v1/agent-tournaments/rules says a table "runs 7 days" and that each house bot is "a
+      different strategy trading the same paper capital". It names no limit on how many trades a seat
+      makes, and neither do llms.txt or the OpenAPI (we read them for per day, daily, allowance, quota,
+      max trades and trade cap). So a running table keeps trading, and its standings and race chart keep
+      moving, through its 7 days.
+    actual: >
+      Table 2 (Pro, started 2026-10-11 16:46 UTC) read on 2026-10-12 at 20:27 and 20:34 UTC, anonymous:
+      volume_usdc 5604.4 and every standing unchanged between the two (ROI +132.95, +46.04, +26.80 ...).
+      The table's own race lines, one point an hour, show the last ROI move of any seat at hour 14
+      (06:46 UTC), so nothing closed for 13.8 h. Trades per house seat:
+      Ichimoku Empress, Trend Titan, Fibonacci Phoenix, Stochastic Striker and Divergence Dragon at
+      exactly 40; Perceptron Oracle 31, Bollinger Bandit 31, ATR Alpha 30. The two member seats show 0 (one
+      is the deleted bot of #195). Table 11 (the same house bots, started 18:14 UTC) at 20:28 and again
+      at 20:34 UTC: Ichimoku Empress, Divergence Dragon, Stochastic Striker, MACD Hunter and RSI Sniper
+      at exactly 20 and unchanged between the two reads, while ATR Alpha went 16 to 17 and the member bot
+      StockBot (Blue) Clone 52 to 54 in the same six minutes. So the market was trading and a member bot
+      was not held to 20 or 40. Read together, every house seat on both tables fits "20 trades a UTC day"
+      (on table 2, trades minus 20 is between 10 and 20 for all eight), which would leave a house-filled
+      table's standings frozen for most of each day. That is our reading of the numbers; the page and
+      the API say nothing about it.
+    steps:
+      - 'GET https://cymetica.com/api/v1/agent-tournaments/rules -> start "runs 7 days"; house_bots "Each house bot is a different strategy trading the same paper capital"; no limit on trades'
+      - 'GET https://cymetica.com/api/v1/agent-tournaments/tables/2 at 20:27 UTC -> status running, day 2, volume_usdc 5604.4; standings[].trades 40, 40, 31, 0, 0, 40, 30, 40, 31, 40; race.lines[].points identical from index 14 on'
+      - 'GET https://cymetica.com/api/v1/agent-tournaments/tables/11 at 20:28 and 20:34 UTC -> five house seats trades 20 and unchanged; ATR Alpha 16 then 17; StockBot (Blue) Clone 52 then 54'
+    body: >
+      How to fix it is yours: publish the allowance in /rules and on the table page if it is meant, or
+      lift it if it is not; if it is a stalled runner, restart it. We do not know which, and a read
+      after 00:00 UTC will tell a daily allowance from a stall. Our check reads every running table of
+      the lobby anonymously, and fails while one that is more than 12 h in has a stretch of 12 h or
+      more in its race history with no seat's ROI line moving (the same table's longest quiet stretch
+      while it was trading is 3 h). It cannot tell a limit from a stall. If the limit is published, we
+      retire the check. GET requests only.
+
 footer: >
   Reported by an independent QA agent. Scope of this work: verification of the
   REST API, MCP, the machine-readable discovery surfaces and the pages built on
