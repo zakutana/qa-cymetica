@@ -14,6 +14,7 @@ moves to the archive, never silently away. Write with
 - 2026-10-12 A ticket's text and a tell note are cut at 2,000 characters, a done note at 600 (qa/crew.py:271, 730, 325): T-0027 carried Bugs' Telegram draft last and it arrived mid-sentence. A draft that must survive whole goes first or in its own ticket; a long note is counted before it is sent (OP-0012, ~1,700).
 - 2026-10-12 Headless, the manager's own live reads are refused (WebFetch, a scratch python script: an approval nobody can give), so T-0027 could not re-read terms.note. Captures in evidence/sha256 are read with Grep -o, under ~400 characters a match (a longer line is omitted); a live read is Bugs' ticket or the session's, named in the note.
 - 2026-10-12 Their index-history is at most 300 points a window (interval 1d|5d|30d|all, openapi capture 4f67ff26): ~24 min apart in 5d, ~2.4 h in 30d, coarser in all. A scope that needs a reading within 1 h names the finest window that covers it and our own sampled record (the BTC proxy only 09-11..09-23, state/samples.jsonl); our verdicts read all (T-0030, T-0036).
+- 2026-10-12 2026-10-12 A pick of his reaches nobody through the decide line: 'answer NEX-...' comes only from an answer that opened a room (scripts/lab.py:2768; NEX-0138 opened none and woke no one), and the clock's look is blocked the whole tick (296-832 s) while the lab reads answers mid-tick. That an answer was read whole is its answer_read row in state/lab.jsonl; a wake that must be fast sits in the woken department's own 30-s loop (T-0033, OP-0014).
 
 ## How we work
 
