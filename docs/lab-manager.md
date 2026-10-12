@@ -11,8 +11,8 @@ Ten lines at most, like `NEXT.md`.
 
 - Event cards are not the first thing a tick reaches for: bots and memecoins lead, a card room opens when Nexus names one (operator 2026-10-05: the platform profile is green, our card rooms read -1.8 %).
 - A room's `running` is a label. Before saying what is live, read the sampler's `is_trading` per bot; a bot the platform auto-paused is not live (wave 0 sat dead two days under `running` rooms).
-- `qa/lab.py::bot_stops` must read `auto_pause_reason` (test first), and a dead bot's room must be stopped by the tick, not by me noticing. Also `VARIANT_REFERENCE` defaults are 5 / 15, not 10 / 20.
-- The tick ran past the 30-minute background limit and was killed (marker held the lab 45 min). Find the slow read (balance `timeout`, ~90 s a round) and bound it.
+- A dead bot's room must be stopped by the tick, not by me noticing. Also `VARIANT_REFERENCE` defaults are 5 / 15, not 10 / 20.
+- The tick ran past the 30-minute background limit and was killed (marker held the lab 45 min). Find the slow read (balance `timeout`, ~90 s a round) and bound it. Under the company (limit 40 min) it is not killed but still slow: 824 s on 2026-10-12, four real-balance reads ending `timeout`.
 - Wave 2 is live since 2026-10-06 (`scripts/wave.py`, SL 15 / TP 40, 20 species, rooms STR-0097..0116, 7-day window, verdict ~13. 10.): then compare each species with its wave-0 baseline. One window is a measurement, not a finding. Two bots read balance 0 on the sampler: check which.
 - The tick's duplicate-clone block (`_species_cloned`, `live_refs`) is stale since REPLY-0122 (2026-10-04, repeat clones allowed on Pro): lift it, test first.
 
@@ -23,6 +23,12 @@ Manager behaviour only -- what Nexus or Cymetica did is in the diary and the mem
 - 2026-10-05 Answered "why is nothing live" with a recap and an offer, not with a fix. The operator: a manager who acts. See [[cut-the-prose-not-the-answer]].
 - 2026-10-05 Told the operator to send a Telegram message that goes out by itself and wait for "poslano". See [[the-journal-records-our-pipeline-not-the-operator]].
 - 2026-10-05 The first live run of `wave.py` lost nineteen bots to one uncaught ReadTimeout that came AFTER an accepted PATCH; every call to their API inside a loop is now wrapped and a bad read stops one bot, not the wave.
+
+## Archive
+Above the log on purpose: `lab.py log --feedback/--acted` appends at the end of the file.
+
+- 2026-10-12 (company manager) Done, out of Open improvements: `qa/lab.py::bot_stops` reads `auto_pause_reason` (qa/lab.py:2958).
+- 2026-10-12 (company manager) Out of the log: eight lines "a feedback" / "a acted" (2026-10-05..06). Test runs wrote them into this file, not the operator; the leak was closed 2026-10-06 (qa/lab.py `manager_path`). Git holds them.
 
 ## Feedback and what changed
 Newest at the end. Written by `lab.py log --feedback` / `--acted`; the first six are copied from the diary.
@@ -39,14 +45,6 @@ Newest at the end. Written by `lab.py log --feedback` / `--acted`; the first six
 - 2026-10-05 · feedback · 2026-10-05: mas jako manager laborky nejakou soubor kde si pises imprvmenty jak lepe runovat laborky podle mych feedbacku? ... tak to pekne sjednot ne at je to na jednom miste tvezlepsovani jako managera laborky
 - 2026-10-05 · acted · docs/lab-manager.md je jedno misto pro zlepsovani manazera; feedback a acted se tam zapisuji samy; resume tiskne otevrene body. Boti: wave 0 uzavrena (5 prezilo, 4 vyvracena, vsichni zastaveni platformou po jednom obchodu), scripts/wave.py spusten pro 20 botu SL 15 / TP 40; stihl jen klon MACD Hunter s nastavenim (bez penez, nestartuje), pak spadl na timeoutu cteni; zbytek ceka
 - 2026-10-05 · acted · oprava predchoziho zapisu: wave.py stihl jen klon MACD Hunter s nastavenim, bez penez a bez startu; stav je v docs/bots-research-plan.md Wave 2 zive
-- 2026-10-05 · feedback · a feedback
-- 2026-10-05 · acted · a acted
-- 2026-10-05 · feedback · a feedback
-- 2026-10-05 · acted · a acted
-- 2026-10-05 · feedback · a feedback
-- 2026-10-05 · acted · a acted
-- 2026-10-06 · feedback · a feedback
-- 2026-10-06 · acted · a acted
 - 2026-10-06 · acted · Wave 2 spustena 6. 10.: 20 botu obchoduje (SL 15 / TP 40, rooms STR-0097..0116, verdikt ~13. 10.). wave.py opraveno dvakrat: cteni nastaveni z odpovedi PATCH a vysledek fund/enable ze zaznamu. Sweep 39 otevrenych radku, nic noveho k podani. Dlazdice Fondy z ranni stranky smazana.
 - 2026-10-07 · acted · Boti: wave.py resume spusten 7. 10.: 18 botu obnoveno po pauze platformy na SL/TP, kazdy v novem roomu (STR-0117..0134) s kriteriem pred enable; 25 obchoduje (strop platformy), 14 ceka na volny slot. 3x stop-loss po sobe = zahozen (operator), zatim zadny.
 - 2026-10-10 · feedback · 2026-10-10: no morning report after a night the laboratory did not run ('na ranni prehled kaslu v noci nebyla laborka').
