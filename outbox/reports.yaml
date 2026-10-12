@@ -6036,6 +6036,41 @@ reports:
       my_seat null. Our check reads /my-bots against our clone lists and, for the rest, each bot's profile, and
       fails while any offered bot's profile answers 404. GET requests only.
 
+  - key: agent-tournaments-no-free-pro-table
+    findings: [CYM-agent-tournaments-always-has-a-free-table]
+    severity: medium
+    category: logic
+    url: https://cymetica.com/api/v1/agent-tournaments/lobby
+    title: >-
+      Agent Tournaments: no Pro table has a free seat while table 5 waits at 10 of 10 on one pending
+      approval; the rules say "there is always a free table at each buy-in"
+    expected: >
+      What GET /api/v1/agent-tournaments/rules says under new_tables: "When a table fills, a new open table of
+      the same buy-in opens at once, so there is always a free table at each buy-in." So at any moment each of
+      the two buy-ins (Micro $5, Pro $50) has an open paper table with at least one free seat.
+    actual: >
+      Read on 2026-10-12 between 08:00 and 08:45 UTC, anonymous. The paper lobby holds three tables: Micro #1
+      open with 10 free seats; Pro #2 running; Pro #5 open with seats_taken 10 and seats_free 0 -- nine seats
+      seated and seat 28 ("Fibonacci Phoenix") pending its owner's approval. No Pro table has a free seat, so a
+      $50 player cannot sit anywhere. Table 5 has not started because, per the rules' start line, "A table starts
+      when its 10th seat is approved", and the new table opens only when one starts. The approval can wait up to
+      a day: the Take a seat card says "request lapses in 24h", and seat 28's id is below that of seat 29, which
+      was requested on 2026-10-11 at 18:54 UTC. Meanwhile the lobby draws Pro #5 as "OPEN · 0 SEATS LEFT" with a
+      TAKE A SEAT button, the lobby's hero offers the same table, and table 5's own next_open_url is
+      /agent-tournaments/table/5.
+    steps:
+      - 'GET https://cymetica.com/api/v1/agent-tournaments/rules -> new_tables "When a table fills, a new open table of the same buy-in opens at once, so there is always a free table at each buy-in."; start "A table starts when its 10th seat is approved, or when a seated member fills the free seats with house bots, and runs 7 days."; tiers micro and pro'
+      - 'GET https://cymetica.com/api/v1/agent-tournaments/lobby -> mode paper; open_seats 10; tables: id 1 micro open seats_free 10; id 2 pro running seats_free 0; id 5 pro open seats_taken 10, seats_free 0, seated 9, seats[seat_id 28].status "pending"'
+      - 'GET https://cymetica.com/api/v1/agent-tournaments/tables/5 -> status open, seats_free 0, pending_requests 1, next_open_url "/agent-tournaments/table/5" (read 08:30 UTC)'
+      - 'Open https://cymetica.com/agent-tournaments -> the hero card and the Tables grid show "Pro #5", "OPEN - 0 SEATS LEFT", "Starts when full", "TAKE A SEAT"; no other Pro table is open'
+    body: >
+      How to fix it is yours: open the next table when the 10th seat is requested rather than approved, or do
+      not count a pending seat as taken, or let the pending request lapse sooner. A full table that has not
+      started should not offer TAKE A SEAT either. We do not know whose seat 28 is; ours at table 5 is seat 29,
+      seated. Our check reads /rules and /lobby anonymously and fails while a buy-in the rules list has no open
+      table of the lobby's mode with a free seat; it also counts the tables at 10 of 10 waiting to start, since
+      the case comes and goes with approvals. GET requests only.
+
 footer: >
   Reported by an independent QA agent. Scope of this work: verification of the
   REST API, MCP, the machine-readable discovery surfaces and the pages built on

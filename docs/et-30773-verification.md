@@ -58,3 +58,25 @@ The ranking counts closed trades only (the brief valued open positions at the en
 ## Their Telegram message of 2026-10-11 ("live in paper mode")
 
 Matches the page and the rules API on every number it gives: 10 bots, 7 days, 60/30/10, 5 with 25 and 50 with 250, 3x volume, one seat per owner, 2x, Cymetica books only, three ways in, the API address. Recorded as REPLY-0154.
+
+## Re-read 2026-10-12, after "the FAIL list is built" (REPLY-0156)
+
+Read 08:00-08:50 UTC, anonymous, 1440 px, each screen beside `design/screenshots/` at `1f9566a`. **The look is delivered**: five of the six screens we can see without a seat or a finished table now look as drawn.
+
+| Screen | Read | What differs from the mockup |
+|---|---|---|
+| Header | PASS | Chip logo, Lobby / Top agents / How it works, "RUNNING · $200 in pots". No owner pill (signed out). |
+| Lobby | PASS | Three-line hero, tiles $5→$30, $50→$300, Top 3, plus 1000 ET10; PICK A TABLE with the three steps; poker-table cards with robot avatars, crown, state chips, POT, footer line; All / $5 / $50 / Mine. Headline flat green, not the cyan-to-green gradient. |
+| Top agents | PARTIAL | Five cards as drawn, but "return this season" from the Bot Olympics, not Elo and wins; our own "lab Wave 2" clones are 3 to 5. |
+| Take a seat | PASS | Big table with OPEN seats, The deal column (Max you can lose highlighted, ET10 600/300/100), 3 ways in, full prompts with COPY PROMPT, Manual card with the best three by backtest and PICK FROM 11 BOTS. **The "Your agent" prompt still numbers 1, 3, 4, 5.** |
+| Manual setup | PASS | `/table/{id}/manual`: 11 bots, BLUE/RED team chips, sparkline, All/Crypto/Stocks, Return/Win rate/Drawdown, confirm card with mini table and SIGN IN TO APPROVE. |
+| Live table | PARTIAL | Table 2: countdown, prize chips, If it ended now, leaderboard with All/Qualified and volume bars, BOT DELETED tag, rules strip, Pick the winner. **No "The race" chart.** Your trades not seen (no seat on this account's browser). |
+| Results | NOT CHECKED | `/table/2/results` says "Results appear when this table ends." Table 2 ends 2026-10-18 16:47 UTC. |
+| How it works | PASS | `/agent-tournaments/how`: "Pick a table. Send your agent.", four steps, stakes, four quick answers. |
+| Fonts | PARTIAL | The site's Archivo Black and JetBrains Mono; the brief's Unbounded and Space Grotesk are not loaded. |
+
+Also read: the rules API now carries `et10_prizes` [600, 300, 100] and `et10_per_table` 1000 on every tier and table; "Places nobody qualifies for are returned to the seated members in equal parts" (why table 2's If it ended now pays the two unqualified members $50 each); the signed-out "Your account is in LIVE mode" line is hidden; `/table/3` still answers 200 with "No such table." (left as before). Checks #191 (OpenAPI routes) and #195 (deleted bots) pass in an exploratory run (`run-20261012T082009Z`, not folded); the sweep verifies them.
+
+**New defect, filed #196**: no Pro table has a free seat. Pro #5 is open at 10 of 10 with seat 28 pending approval, Pro #2 runs, and the new table opens only when a table starts, while the rules say "there is always a free table at each buy-in". Check `tests/rest/test_agent_tournaments_always_has_a_free_table.py`.
+
+Told Nexus in MSG-0157 (a2a twin A2A-0087): race chart, Top agents by Elo, fonts, prompt step 2, #196. The follow-up ticket's number is not in our records (filed on the form by the operator); its verdict is the operator's.
