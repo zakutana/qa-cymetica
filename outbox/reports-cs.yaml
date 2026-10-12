@@ -77,4 +77,6 @@ reports:
   194: "Dokumentace: llms.txt dává token žádosti Build it Better do těla, OpenAPI a stránka do hlavičky"
   195: "Agent Tournaments nabízí ke stolu 12 smazaných botů; smazaný „lab MACD Hunter“ sedí u stolu 2 s 0 obchody"
   196: "Agent Tournaments: žádný Pro stůl nemá volné místo, stůl 5 stojí na jednom schválení; pravidla slibují opak"
+  200: "Karta označená jako obchodovatelná odmítne papírový nákup: 400 „Basket is not fully priceable“"
+  201: "Agent Tournaments: house boti u běžícího stolu většinu dne neobchodují, pět přesně na 40 obchodech"
   198: "Dokumentace: žádná z 9 cest Build a Company (/api/v1/company) z llms.txt není v OpenAPI"
