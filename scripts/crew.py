@@ -512,7 +512,7 @@ def watch(now: datetime) -> list[str]:
         said.append("removed a stale .git/index.lock")
     if not crew.active():
         left = [path for path in dirty_paths(base) or []
-                if path not in HOUSEKEEPING and _untouched(base / path, now, HALF_EDIT_AGE)]
+                if not housekeeping(path) and _untouched(base / path, now, HALF_EDIT_AGE)]
         if left:
             to_manager("help", f"dirty:{day}",
                        f"the tree has {len(left)} edit(s) nobody is making: "
@@ -877,6 +877,13 @@ def hold_state(wait: float = 0) -> int:
 HOUSEKEEPING = ("state/bounty.json", "state/journal/events.jsonl", "state/ledger.json",
                 "dashboard/index.html", "audits/evidence-manifest.jsonl", "state/chat.jsonl",
                 "state/league.jsonl", "state/league/report.json", "audits/processes.jsonl")
+# And everything under these: the tick's diary snapshots (`keep.py snapshot`), which the
+# company's first tick left changed (2026-10-12).
+HOUSEKEEPING_DIRS = ("audits/lab/",)
+
+
+def housekeeping(path: str) -> bool:
+    return path in HOUSEKEEPING or path.startswith(HOUSEKEEPING_DIRS)
 # git's own lock outlives a git killed with its worker; no git operation here holds it this
 # long, so past it the lock is a leftover that blocks every commit.
 INDEX_LOCK_STALE = timedelta(minutes=10)
@@ -955,16 +962,16 @@ def tidy() -> int:
     if dirty is None:
         print("[crew] git could not read the tree")
         return 1
-    if any(path in HOUSEKEEPING for path in dirty):
+    if any(housekeeping(path) for path in dirty):
         why = fold_and_render(base)
         if why:
             print(f"[crew] {why}")
             return 1
-        ours = [path for path in (dirty_paths(base) or []) if path in HOUSEKEEPING]
+        ours = [path for path in (dirty_paths(base) or []) if housekeeping(path)]
         if ours and _sibling("commit").commit("console poll", ours) != 0:
             print("[crew] the console poll commit failed")
             return 1
-    left = [path for path in (dirty_paths(base) or []) if path not in HOUSEKEEPING]
+    left = [path for path in (dirty_paths(base) or []) if not housekeeping(path)]
     if left:
         print(f"[crew] not clean, {len(left)} path(s) nobody here wrote: "
               f"{', '.join(left[:8])}{' ...' if len(left) > 8 else ''}")

@@ -1178,11 +1178,15 @@ def test_a_commit_takes_the_lock_and_only_the_paths_it_names(company, monkeypatc
     # names what is left -- another department's half-edit, which no level-V run gets past.
     sup = _script("crew")
     (root / "state" / "journal").mkdir(parents=True)
-    for name in ("state/bounty.json", "state/journal/events.jsonl"):
+    (root / "audits" / "lab").mkdir(parents=True)
+    # The tick's diary snapshots (keep.py snapshot) are housekeeping too: the company's first
+    # tick left audits/lab/lab.jsonl and outsider.jsonl changed (2026-10-12).
+    for name in ("state/bounty.json", "state/journal/events.jsonl", "audits/lab/lab.jsonl"):
         (root / name).write_text("{}\n", encoding="utf-8")
         _git(root, "add", name)
     _git(root, "commit", "-q", "-m", "state")
     (root / "state" / "bounty.json").write_text('{"polled": 1}\n', encoding="utf-8")
+    (root / "audits" / "lab" / "lab.jsonl").write_text('{"snapshot": 2}\n', encoding="utf-8")
     with (root / "state" / "journal" / "events.jsonl").open("a", encoding="utf-8") as fh:
         fh.write('{"type": "tick"}\n')
     folded: list[Path] = []
@@ -1195,6 +1199,7 @@ def test_a_commit_takes_the_lock_and_only_the_paths_it_names(company, monkeypatc
     assert folded == [root]
     left = _git(root, "status", "--porcelain")
     assert "bounty.json" not in left and "events.jsonl" not in left and "other.md" in left
+    assert "audits/lab/lab.jsonl" not in left, "the tick's snapshot was left as a half-edit"
     assert "console poll" in _git(root, "log", "-1", "--format=%B")
     _git(root, "checkout", "--", "other.md")
     assert sup.main(["tidy"]) == 0
