@@ -6071,6 +6071,38 @@ reports:
       table of the lobby's mode with a free seat; it also counts the tables at 10 of 10 waiting to start, since
       the case comes and goes with approvals. GET requests only.
 
+  - key: company-routes-missing-from-openapi
+    findings: [CYM-company-routes-are-in-the-openapi]
+    severity: low
+    category: documentation
+    url: https://cymetica.com/openapi-public.json
+    title: >-
+      Documentation: none of the nine /api/v1/company routes llms.txt names for Build a Company is in
+      /openapi-public.json or /openapi.json
+    expected: >
+      A route llms.txt documents is also in the OpenAPI an agent reads, with its request and response described,
+      as the other apps' routes are.
+    actual: >
+      Read on 2026-10-12 between 12:55 and 14:40 UTC. The Build a Company entry of llms.txt (feature #911) names the
+      owner-only API https://cymetica.com/api/v1/company and, relative to it, GET /templates, POST /, GET /mine,
+      POST /{id}/message {"text"}, GET /{id}/messages?after=, POST /{id}/approvals/{aid} {"decision","note"},
+      POST /{id}/pause|resume and GET /{id}/audits. /openapi-public.json (370 paths) describes none of the nine and
+      has no path under /api/v1/company; /openapi.json (27 paths) has none either. The routes answer: GET
+      /api/v1/company/templates returns 200 anonymously, GET /api/v1/company/mine 401 without a key and 404
+      {"detail": "no company"} with ours. So the body of POST / (which departments, which charter, a custom
+      department) and the shape of what /mine returns are not documented anywhere an agent can read.
+    steps:
+      - 'GET https://cymetica.com/llms.txt -> the Build a Company line: "Owner-only API `https://cymetica.com/api/v1/company`: `GET /templates`, `POST /`, `GET /mine`, `POST /{id}/message` {\"text\"}, `GET /{id}/messages?after=`, `POST /{id}/approvals/{aid}` {\"decision\",\"note\"}, `POST /{id}/pause|resume`, `GET /{id}/audits`"'
+      - 'GET https://cymetica.com/openapi-public.json -> 370 paths, none under /api/v1/company'
+      - 'GET https://cymetica.com/openapi.json -> 27 paths, none under /api/v1/company'
+      - 'GET https://cymetica.com/api/v1/company/templates -> 200, departments development, design, testing, testing_lab, trading_desk'
+    body: >
+      How to fix it is yours: add the nine routes with their requests and responses; the body of POST / and the
+      shape of GET /mine (each department's status, results and 7-day cost, in which unit) would help an agent
+      most. The same shape as #191 (Agent Tournaments) and #193 (Build it Better withdraw). Our check reads
+      /llms.txt and /openapi-public.json anonymously and fails while a route the entry names, in full or relative
+      to its URL with a|b read as one route each, is not a path of the OpenAPI with that method. GET requests only.
+
 footer: >
   Reported by an independent QA agent. Scope of this work: verification of the
   REST API, MCP, the machine-readable discovery surfaces and the pages built on
