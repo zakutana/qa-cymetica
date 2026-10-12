@@ -702,6 +702,9 @@ def test_a_card_that_is_closed_on_rest_and_open_on_mcp_fails():
     # And the bots Agent Tournaments offers for a seat (the evening of 2026-10-11), the same way.
     _the_tournament_bot_readings()
 
+    # And a free Agent Tournaments table at each buy-in (2026-10-12), the same way.
+    _the_free_table_readings()
+
     # And the account history pages forward (2026-10-10): with currency=USDC, and with no filter
     # past the first page, every offset answered the same 100 rows while has_more said true.
     from tests.rest.test_account_history_pages_forward import page_repeats
@@ -1161,6 +1164,36 @@ def _the_tournament_bot_readings():
     # /my-bots renaming the key passed "all 53 bots exist" having judged none.
     renamed = [{"id": "996cd23e", "name": "lab MACD Hunter", "trading": True}]
     assert offered_but_gone(renamed, set(), {}) == ([], ["no instance_id: 'lab MACD Hunter'"])
+
+
+def _the_free_table_readings():
+    """The readings behind the free-table check (2026-10-12): Pro #5 at 10 of 10 with one seat
+    pending and Pro #2 running left the Pro buy-in with no free seat while Micro #1 had ten; a
+    tier with one open table that has a free seat passes; a table with no seats_free is unread,
+    never full; a live table does not lend the paper lobby its seats."""
+    from tests.rest.test_agent_tournaments_always_has_a_free_table import (
+        tiers_without_a_free_table, waiting_to_start)
+
+    tiers = [{"tier": "micro"}, {"tier": "pro"}]
+    seen = [{"id": 2, "tier": "pro", "mode": "paper", "status": "running", "seats_free": 0},
+            {"id": 5, "tier": "pro", "mode": "paper", "status": "open", "seats_free": 0,
+             "seats_taken": 10, "seated": 9, "next_open_url": "/agent-tournaments/table/5",
+             "seats": [{"status": "pending"}] + [{"status": "seated"}] * 9},
+            {"id": 1, "tier": "micro", "mode": "paper", "status": "open", "seats_free": 10}]
+    without, unread = tiers_without_a_free_table(tiers, seen, "paper")
+    assert [w["tier"] for w in without] == ["pro"] and unread == [], without
+    assert [t["id"] for t in without[0]["tables"]] == [2, 5] and without[0]["tables"][1]["pending"] == 1
+    assert waiting_to_start(seen, "paper") == [5]
+    opened = seen + [{"id": 6, "tier": "pro", "mode": "paper", "status": "open", "seats_free": 10}]
+    assert tiers_without_a_free_table(tiers, opened, "paper") == ([], []), "a new Pro table was missed"
+    renamed = [dict(t, seats_free=None, free=t["seats_free"]) for t in seen]
+    assert tiers_without_a_free_table(tiers, renamed, "paper") == ([], ["micro", "pro"]), (
+        "a renamed seats_free failed a tier unseen")
+    live = seen + [{"id": 9, "tier": "pro", "mode": "live", "status": "open", "seats_free": 10}]
+    assert [w["tier"] for w in tiers_without_a_free_table(tiers, live, "paper")[0]] == ["pro"], (
+        "a live table lent the paper lobby a free seat")
+    assert tiers_without_a_free_table(tiers, [], "paper")[0][0]["tables"] == [], (
+        "a buy-in with no table at all has no free table")
 
 
 def _the_idea_template_readings():
