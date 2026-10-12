@@ -1,0 +1,170 @@
+{
+  "schema": 2,
+  "run_id": "run-20261012T170213Z-a898f46d",
+  "started_at": "2026-10-12T17:02:24+00:00",
+  "finished_at": "2026-10-12T17:02:44+00:00",
+  "git_head": "a898f46db84cb65a4dd9e8c9e560923aa42c3c4d",
+  "git_short": "a898f46d",
+  "git_dirty": false,
+  "prereg_id": "PRE-0273",
+  "prereg_tag_sha": "f98dfcb26ef84aa8fbe20098e1ea0513b0ab8189",
+  "prereg_commit": "a898f46db84cb65a4dd9e8c9e560923aa42c3c4d",
+  "platform_fingerprint": "sha256:825714ed9ae2fb297f06ab68716503a9f3f69ffded5d4d3b4904b1491cad2957",
+  "fingerprint_parts": {
+    "/.well-known/mcp.json": "7c567bbebce0f36b3ae7a1ba4570d53f34e11fdd1687c919ff79b1c9819de5f2",
+    "/.well-known/agent-card.json": "7419274439d47fc23618eb4e234810e6478d6ec9cf80e6d90ae264830f7e0db0",
+    "/.well-known/agent-skills.json": "3b84f287322c79c7925e8a44688d5d537da9ca244192f8d4f4d889fd7a1e616d",
+    "/.well-known/ai-plugin.json": "ec5569dd7dc0a367cfcad58e8ca36c8e05447e379d40b69a86fb07aac71513c0",
+    "/.well-known/udc.json": "1ec34383ede550c71fb3e81b989b8b92b0da3ce7ccbdc497c9edf5a8fcbd6c14",
+    "/openapi.json": "01b820bba1d043d5f292b0175bff1a60a24b54fee0b238bfdc778efc2091f3fe",
+    "/openapi-public.json": "d66e3d0cb4e5aab14433a9a15efa1bc8fc92da3ec6a203e5223d2c92a2f9f881",
+    "/llms.txt": "8230acc4bf5fa841dec836a78d696f27a7a0c0e102fbe5c24fc4671ec65a0ea6",
+    "mcp:tools/list:none": "f7c126c9c31f25eaefce1b814ac2e8c4aaa53928acfa53e23c73b1a9423ebbc4"
+  },
+  "fingerprint_errors": {},
+  "fingerprint_drifted": false,
+  "fingerprint_changed_parts": [],
+  "identities_present": {
+    "anon": true,
+    "trusted": true,
+    "recognized": false
+  },
+  "python_version": "3.13.13",
+  "pytest_version": "8.3.4",
+  "selector": "tests/rest/test_a_tradeable_card_can_be_priced.py --prereg PRE-0273 -q -p no:cacheprovider",
+  "selector_full": false,
+  "narrowing": [],
+  "paths": [
+    "tests/rest/test_a_tradeable_card_can_be_priced.py"
+  ],
+  "allow_mutate": false,
+  "collected": [
+    "tests/rest/test_a_tradeable_card_can_be_priced.py::test_a_card_that_reads_tradeable_now_can_be_priced"
+  ],
+  "results": [
+    {
+      "nodeid": "tests/rest/test_a_tradeable_card_can_be_priced.py::test_a_card_that_reads_tradeable_now_can_be_priced",
+      "component": "rest.event_cards",
+      "tier": "SAFE",
+      "surface": "rest",
+      "claim_id": null,
+      "ticket_id": null,
+      "volatile": false,
+      "outcome": "failed",
+      "phase": "call",
+      "role": "verdict",
+      "duration_ms": 2372,
+      "evidence_ids": [
+        "dbecb8f8e94b2c0dcf22b4ad6e539d466a5608afc8d618c77119f61d03301208"
+      ],
+      "measurement": {
+        "verdict": "failed",
+        "reason": "card 8ffd61fa-f469-45be-a717-a4dcfe9f9508 reads status live, tradeable_now true, trading_blocked_reason None -- at the buy as well -- and our paper buy of it was refused HTTP 400 {\"detail\": \"Basket is not fully priceable right now — try again shortly\"} (2 time(s): TRD-0113 16:25:40, TRD-0115 16:48:33, newest TRD-0115)",
+        "left": 400,
+        "right": "2xx",
+        "sources": {
+          "contract": "GET /api/v1/event-cards/{id} tradeability.tradeable_now: 'True when a position can be opened on this card RIGHT NOW ... This is the only trade gate.'",
+          "log": "state/paper.jsonl (TRD intent / outcome, with evidence ids)"
+        },
+        "provenance": {},
+        "evidence_ids": [],
+        "fingerprint": null,
+        "claim_id": null,
+        "role": "verdict",
+        "population": {
+          "refusals_on_card": [
+            {
+              "id": "TRD-0113",
+              "at": "2026-10-12T16:25:40+00:00",
+              "card": "8ffd61fa-f469-45be-a717-a4dcfe9f9508",
+              "usdc": 593.63,
+              "status": 400,
+              "outcome": "unknown",
+              "response": "{\"detail\": \"Basket is not fully priceable right now — try again shortly\"}",
+              "evidence_id": "607eda20b72970de66fa9d28469a462415bdc3aecf2036b16d6627b4738e463a",
+              "card_before": {
+                "at": "2026-10-12T16:25:40+00:00",
+                "http_status": 200,
+                "status": "live",
+                "tradeable_now": true,
+                "trading_blocked_reason": null
+              }
+            },
+            {
+              "id": "TRD-0115",
+              "at": "2026-10-12T16:48:33+00:00",
+              "card": "8ffd61fa-f469-45be-a717-a4dcfe9f9508",
+              "usdc": 593.63,
+              "status": 400,
+              "outcome": "unknown",
+              "response": "{\"detail\": \"Basket is not fully priceable right now — try again shortly\"}",
+              "evidence_id": "6dceff9bdb37f794fc65f4542c5986f950fc06b0cb475fd0da2b765f697a7f1a",
+              "card_before": {
+                "at": "2026-10-12T16:48:35+00:00",
+                "http_status": 200,
+                "status": "live",
+                "tradeable_now": true,
+                "trading_blocked_reason": null
+              }
+            }
+          ],
+          "other_cards": [],
+          "card": {
+            "status": "live",
+            "tradeable_now": true,
+            "trading_blocked_reason": null,
+            "pw_live": false,
+            "current_index": 105.294043,
+            "share_price_usd": null
+          },
+          "legs": [
+            [
+              "ARB",
+              0.2
+            ],
+            [
+              "STRK",
+              0.2
+            ],
+            [
+              "OP",
+              0.2
+            ],
+            [
+              "ZK",
+              0.2
+            ],
+            [
+              "SOON",
+              0.2
+            ]
+          ]
+        }
+      },
+      "check_fingerprint": "96bf814248b3c28ac6cc42070f2970ae89dd7bb28f9a4f226f5327a899758b29",
+      "helpers_fingerprint": "e5b5061c64a7c186a74999e82500e2fa317499defc518a971e6193b9a54fbf81",
+      "helpers_formula": 2,
+      "reason": null,
+      "failure_repr": "tests\\rest\\test_a_tradeable_card_can_be_priced.py:141: in test_a_card_that_reads_tradeable_now_can_be_priced\n    conclude(Measurement(\nqa\\measure.py:165: in conclude\n    raise AssertionError(explain(m))\nE   AssertionError: card 8ffd61fa-f469-45be-a717-a4dcfe9f9508 reads status live, tradeable_now true, trading_blocked_reason None -- at the buy as well -- and our paper buy of it was refused HTTP 400 {\"detail\": \"Basket is not fully priceable right now — try again shortly\"} (2 time(s): TRD-0113 16:25:40, TRD-0115 16:48:33, newest TRD-0115)\nE     left  = 400\nE     right = '2xx'"
+    }
+  ],
+  "totals": {
+    "failed": 1
+  },
+  "ratelimit": {
+    "requests": 1,
+    "limit": 2000,
+    "remaining": 1956,
+    "fraction_used": 0.022,
+    "exhausted": false
+  },
+  "record_integrity": {
+    "consistent": true,
+    "results_not_in_collected": [],
+    "collected_not_run": [],
+    "budget_truncated": false
+  },
+  "code_dirty_after": true,
+  "fingerprint_after": "sha256:825714ed9ae2fb297f06ab68716503a9f3f69ffded5d4d3b4904b1491cad2957",
+  "exit_status": 1
+}
