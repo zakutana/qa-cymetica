@@ -13,6 +13,7 @@ that stops being true moves to the archive, never silently away. Write with
 - 2026-10-12 #117's check treats a 4xx with a reason as satisfied; a 4xx on a card still reading tradeable_now true is its own finding (#200, T-0005): one card, two refusals 23 min apart.
 - 2026-10-12 2026-10-12 A level-R run needs a prereg too, and a prereg refuses any dirty tree: with a staged run record or an uncommitted bugs.md left behind, a sweep run folds as not evidence (git_dirty, no_prereg), and 17 minutes of it also drifted the fingerprint (T-0002). Commit your own lesson in the turn you write it.
 - 2026-10-12 2026-10-12 A worker can write tests/repo but not scripts/, qa/ or tests/meta (T-0009): hand a code fix over as a strict-xfail test there that fails on the ASSERTION, not on a missing name, and say which lines the fix must add.
+- 2026-10-12 A fund 500 'Failed to fund bot' after 31 s (CLN-0464, T-0013) was a one-off: the same call on the orphan 50 min later answered 200 (CLN-0476, practice -500), so not filed. Whether it funded is already in the 'after' snapshot's clone list: current_balance_usdc 0.0 (the 'timeout' there is balance_check_status, their real-balance read, not the paper pocket).
 
 ## How we work
 
