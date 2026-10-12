@@ -6194,8 +6194,8 @@ reports:
     category: logic
     url: https://cymetica.com/api/v1/event-cards/a4a5b71e-de11-4805-b8a3-ed9c3f8f8161/index-history?interval=30d
     title: >-
-      Event cards: the index history of the live BTC-basket card a4a5b71e has no point for 51.6 h
-      (Sep 23 14:16 to Sep 25 17:54 UTC) while its index moved and other crypto cards recorded
+      Event cards: the live BTC-basket card a4a5b71e has no index-history point for 51.6 h
+      (Sep 23 14:16 to Sep 25 17:54 UTC) while 14 other crypto cards kept recording
     expected: >
       A card that reads status live, tradeable_now true and trading_closes_at null, and whose basket
       is 99% BTC, is priced around the clock, and its index-history keeps its cadence. Nothing in
