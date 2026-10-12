@@ -23,4 +23,6 @@ moves to the archive, never silently away. Write with
 
 ## How we went wrong
 
+- 2026-10-12 2026-10-12 T-0010's first run did all its work and ran out of turns 6 s after its commit, before done; the ticket came back for a second claim. A decision run is facts, decision, ticket, commit, done, in few turns; a run that finds the work committed checks the facts it rests on and closes.
+
 ## Archive
