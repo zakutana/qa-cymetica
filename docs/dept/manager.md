@@ -25,5 +25,6 @@ moves to the archive, never silently away. Write with
 ## How we went wrong
 
 - 2026-10-12 2026-10-12 T-0010's first run did all its work and ran out of turns 6 s after its commit, before done; the ticket came back for a second claim. A decision run is facts, decision, ticket, commit, done, in few turns; a run that finds the work committed checks the facts it rests on and closes.
+- 2026-10-12 T-0019 b. let the grid release a clone that 'never started (no accepted enable)': an absence, which Bugs' three roomless fixtures and 692c35b3 (CLN-0436, no room) both fit. A release is a DELETE: it rests on a record that says finished (a room of ours, judged or stopped by its own launch), never on a missing one (T-0021).
 
 ## Archive
