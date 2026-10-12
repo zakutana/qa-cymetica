@@ -11,6 +11,7 @@ Ten lines a section, newest first. `lab.py log --lesson --section <s>` adds one;
 
 ## Bots
 
+- 2026-10-12 · 2026-10-12 · Grid ATR Alpha SL 5 / TP 20 measured nothing: its fund failed (HTTP 500), the room was stopped, the fund went through 49 min later outside it, and the verdict read 0 % coverage -- a cell is only a result once a room, a funded clone and an index window overlap.
 - 2026-10-11 · Nexus gives a band per species (NEX-0137): Perceptron Oracle 12/30, Fibonacci Phoenix 10/22, MACD Hunter 12/36, RSI Sniper 10/24 -- a closer target for mean-reversion, a wider one for momentum.
 - 2026-10-11 · The platform pauses every paper clone at its first stop-loss or take-profit (NEX-0124): without a resume after each pause a week is one trade.
 - 2026-10-11 · SL 15 / TP 40 on 20 species (2026-10-06..11): 39 stop-losses to 13 take-profits in 52 runs, 25 % against the band's 27 % break-even -- the entries carried no edge at that band.

@@ -23,6 +23,7 @@ Manager behaviour only -- what Nexus or Cymetica did is in the diary and the mem
 - 2026-10-05 Answered "why is nothing live" with a recap and an offer, not with a fix. The operator: a manager who acts. See [[cut-the-prose-not-the-answer]].
 - 2026-10-05 Told the operator to send a Telegram message that goes out by itself and wait for "poslano". See [[the-journal-records-our-pipeline-not-the-operator]].
 - 2026-10-05 The first live run of `wave.py` lost nineteen bots to one uncaught ReadTimeout that came AFTER an accepted PATCH; every call to their API inside a loop is now wrapped and a bad read stops one bot, not the wave.
+- 2026-10-12 (company manager, T-0029) Logged a lesson under the company (T-0025, Bots) and ended the run without committing it: docs/lab-knowledge.md sat changed, and Bugs' sweep failed on the dirty tree (T-0002). A run that writes docs/lab-knowledge.md or this file commits it before done, by name: `python scripts/commit.py -m "lab T-NNNN: lesson" -- docs/lab-knowledge.md`.
 
 ## Archive
 Above the log on purpose: `lab.py log --feedback/--acted` appends at the end of the file.
