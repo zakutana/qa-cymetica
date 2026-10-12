@@ -81,3 +81,4 @@ reports:
   201: "Agent Tournaments: house boti u běžícího stolu většinu dne neobchodují, pět přesně na 40 obchodech"
   198: "Dokumentace: žádná z 9 cest Build a Company (/api/v1/company) z llms.txt není v OpenAPI"
   202: "Event karty: BTC karta nemá v historii indexu 51,6 h, 14 ostatních krypto karet ve stejné době zapisovalo"
+  203: "VAIX orderbook: arbitráž nakupuje na Base, kterou tatáž odpověď vyřadila pro odchylku ceny −83,75 %"
