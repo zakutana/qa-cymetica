@@ -258,6 +258,7 @@
 {"archive": "evidence-2026-10", "bytes": 9314, "call": "GET https://cymetica.com/api/v1/build-it-better/apps/stats?path", "id": "01f0575e2f056a59098a48698858492080b90d80bdbf9a41c45591e02b216a51", "why": "row"}
 {"archive": "evidence-2026-09", "bytes": 123006, "call": "GET https://cymetica.com/api/v1/clones/fomo-radar/signals?chain,filter,limit", "id": "01f0617e687e803373623d9370a72d4e948a6d28bf0ccb0b7d20fdfa3169a5f4", "why": "row"}
 {"archive": "evidence-2026-10", "bytes": 9370, "call": "GET https://cymetica.com/api/v1/build-it-better/apps/stats?path", "id": "01f0631d1859883fdefeeffb368842fe49a0e97b4e31e0bea9d5c8a474f4e549", "why": "row"}
+{"archive": "", "bytes": 6475, "call": "POST https://cymetica.com/api/v1/cloned-bots/4c1200a4-3cef-4ff7-9959-b578fc04133c/toggle-trading?enabled", "id": "01f18e1307eda046742c2b24b27ee190ad54b5331f17a8399a78b852fb4c0347", "why": "trade"}
 {"archive": "evidence-2026-09", "bytes": 15526, "call": "GET https://cymetica.com/api/v1/build-it-better/requests/ET-26608?", "id": "01f1cdfc850b2bd6b982b002475c80903a7160fe445a34b85bf6bedf5c891630", "why": "row"}
 {"archive": "evidence-2026-10", "bytes": 9111, "call": "POST https://cymetica.com/mcp/v1/? tools/call:get_fund_history", "id": "01f87a119c7c22be6ba133b2e70077e4fc8615640a0c6d900b5f86d5b57c7a94", "why": "row"}
 {"archive": "evidence-2026-09", "bytes": 4742, "call": "GET https://cymetica.com/api/v1/bounty/filing-message?title,wallet_address", "id": "01fa986cb09671c8b3127d407c0cd3f7aa4d0f3ed86e9a00f3c4a75ca9bae7a3", "why": "row"}
@@ -10625,6 +10626,7 @@
 {"archive": "evidence-2026-10", "bytes": 9257, "call": "GET https://cymetica.com/api/v1/cloned-bots/6cb21a44-67c4-4b45-b8d0-cf874a8d6b0e/activity?page,page_size", "id": "4c05e8533169a8e810f67488c2db23418b2c29aad3d472572d1ae9134156d097", "why": "row"}
 {"archive": "evidence-2026-09", "bytes": 8916, "call": "POST https://cymetica.com/mcp/v1/? tools/call:get_fund_history", "id": "4c06ab52ca3ef6f1738f01791ee26937437f8b5313bc3925e586455b096a8394", "why": "row"}
 {"archive": "evidence-2026-10", "bytes": 9322, "call": "GET https://cymetica.com/api/v1/build-it-better/apps/stats?path", "id": "4c06cb8d1d85d723ddedd36f2c20b4bd501c52b905c14419bcb7b9f6ddfcf81a", "why": "row"}
+{"archive": "", "bytes": 5774, "call": "POST https://cymetica.com/api/v1/cloned-bots/7b5f05b8-fb3d-4ba9-b0e6-ca1c4673e3a6/fund?", "id": "4c074904a1931bb076c8d8e5921651d840fce61c7555239a77127738983053da", "why": "trade"}
 {"archive": "evidence-2026-09", "bytes": 8514, "call": "GET https://cymetica.com/api/v1/swap/chains?", "id": "4c09508ddc19c8163302a384e89c1cb4199332f30f572c9fa1e44d2bf9daaf1d", "why": "row"}
 {"archive": "evidence-2026-10", "bytes": 4111, "call": "GET https://cymetica.com/api/v1/perpetual/agents?", "id": "4c0a7242f383bc1365035d4099e39b457e1b4af53781e57d5fb1971eb9b5f2d0", "why": "row"}
 {"archive": "evidence-2026-10", "bytes": 38715, "call": "GET https://cymetica.com/api/v1/build-it-better/apps/leaderboard?days,sort", "id": "4c0cc95f529dce0f34c9657d406ea677a35d245ee9c78954bd9e67ec847fa0e6", "why": "row"}
@@ -11536,6 +11538,7 @@
 {"archive": "evidence-2026-10", "bytes": 2463, "call": "GET https://cymetica.com/static/js/csp-utilities.js?", "id": "5281216f113ef3563674c6bf98b1071c98285b11bd8e1143c83c9fd1b9a826f1", "why": "row"}
 {"archive": "evidence-2026-09", "bytes": 4569, "call": "POST https://cymetica.com/api/v1/cloned-bots/clone?", "id": "5281a024ab2a860f47e3d45abfe728dace42004469ff9d4154d87bc548c447a2", "why": "trade"}
 {"archive": "evidence-2026-10", "bytes": 9134, "call": "GET https://cymetica.com/static/js/pull-to-refresh.js?", "id": "52824d6247354a31797ace204fa3101d1a8f3641a2f5a47afbfe3d8390b2833f", "why": "row"}
+{"archive": "", "bytes": 4608, "call": "POST https://cymetica.com/api/v1/cloned-bots/clone?", "id": "5286d001f13082a9ee882bba0d8b6726a933452c59699aed866b765f384175c1", "why": "trade"}
 {"archive": "evidence-2026-10", "bytes": 60515, "call": "GET https://cymetica.com/api/v1/cloned-bots/3453bac2-409b-451d-b360-43ac9c5ef3a0/activity?page,page_size", "id": "528d8d921c5b5422ab12cb64846448845d208ba9a745bf214a9e4d44543ce612", "why": "row"}
 {"archive": "evidence-2026-09", "bytes": 4192, "call": "GET https://cymetica.com/api/v1/ceo-ai-leaderboard/score?", "id": "52910ee5c439667a16472c143c376dd8ab36e0f70a7b48b260d82c771ece7e6e", "why": "row"}
 {"archive": "evidence-2026-10", "bytes": 4880, "call": "GET https://cymetica.com/static/js/touch-physics.js?", "id": "52959f5fad5fdd19ebb75a7f1914837c491135861baaf08dd82ce0200ed0911e", "why": "row"}
@@ -12838,6 +12841,7 @@
 {"archive": "evidence-2026-09", "bytes": 8843, "call": "POST https://cymetica.com/mcp/v1/? tools/call:get_fund_history", "id": "5bc098cd390fcd6c97a181e61aa43b941a3fca8aaa1823d3d6c160fea43056d3", "why": "row"}
 {"archive": "evidence-2026-10", "bytes": 76460, "call": "GET https://cymetica.com/api/v1/backtest/bots/bot-volume-surge/trades?limit,offset", "id": "5bc30d86ea0361b66f4e5d9821e41550701948438c452f8d84e4b81a0e894695", "why": "row"}
 {"archive": "evidence-2026-10", "bytes": 231458, "call": "GET https://cymetica.com/exchange/vaix-pro?", "id": "5bc3fca4c402c9d4ef3ff6e316c9f45620f9fb2426736206b816d0a79e4a2b69", "why": "row"}
+{"archive": "", "bytes": 6485, "call": "POST https://cymetica.com/api/v1/cloned-bots/7b5f05b8-fb3d-4ba9-b0e6-ca1c4673e3a6/toggle-trading?enabled", "id": "5bc56c07aa3167233165ec72446bbcdcb93cf9e2ae349cdc0b3edce268b10dce", "why": "trade"}
 {"archive": "evidence-2026-10", "bytes": 8314, "call": "POST https://cymetica.com/api/v1/bounty/a2a/send?", "id": "5bc68524cfd4a792b77e76c517bad42973e323b500708aeb1a1d064a7044a6ab", "why": "their-words"}
 {"archive": "evidence-2026-10", "bytes": 4113, "call": "GET https://cymetica.com/api/v1/trading-models/probability-markets?", "id": "5bc9279e877de8fa1c68671dbcc86d6eafa0a375a38f471852d7adcf637548c0", "why": "row"}
 {"archive": "evidence-2026-09", "bytes": 5615, "call": "POST https://cymetica.com/mcp/v1/? tools/call:get_fund", "id": "5bca1a2ec055bf829e79632cfb4a1d5a1605caffe0b98b69dd1b5d71f27fd39d", "why": "row"}
@@ -18843,6 +18847,7 @@
 {"archive": "evidence-2026-10", "bytes": 38715, "call": "GET https://cymetica.com/api/v1/build-it-better/apps/leaderboard?days,sort", "id": "860df01fa3337445d4d385bcfd00d2530a2f2232f769cd9e43ad1b1af233d029", "why": "row"}
 {"archive": "evidence-2026-09", "bytes": 518395, "call": "GET https://cymetica.com/openapi-public.json?", "id": "861068917557b2a0835037baa9274175abeb79bdad3b971e618424de98a55758", "why": "row"}
 {"archive": "evidence-2026-09", "bytes": 4570, "call": "POST https://cymetica.com/api/v1/event-cards/5d91bf43-a597-47b0-9abe-5c7f52618bbd/sell?", "id": "8610e0e174c9faac0f6d76069feb419ebb90efbd52476c5cf03a5d2501817528", "why": "trade"}
+{"archive": "", "bytes": 5774, "call": "POST https://cymetica.com/api/v1/cloned-bots/b2d9f0c0-26d5-4f50-873d-f604310652bb/fund?", "id": "861443947c75de51987c7d3084372b9d36dd3c16fc5eb6c71a22549f0b0c82bb", "why": "trade"}
 {"archive": "evidence-2026-10", "bytes": 5881, "call": "POST https://cymetica.com/mcp/v1/? tools/call:get_fund", "id": "8614b712273a3d90ab10f38bcd4703e5f7c4b66b99fe9cd8c832e96cbcbd42ae", "why": "row"}
 {"archive": "evidence-2026-10", "bytes": 5822, "call": "POST https://cymetica.com/mcp/v1/? tools/call:get_fund", "id": "86161ee69e53457dd3799970d56f3de70b1449281c8bb594c006d12fc7830870", "why": "row"}
 {"archive": "evidence-2026-09", "bytes": 4177, "call": "GET https://cymetica.com/api/v1/agentbook/posts/%7Bid%7D/comments?", "id": "8617b9f56e2f094bc412800905e370a0f9774bbfef06c187622cd9461c1d075e", "why": "row"}
@@ -23027,6 +23032,7 @@
 {"archive": "evidence-2026-10", "bytes": 6586, "call": "POST https://cymetica.com/mcp/v1/? tools/call:get_fund", "id": "a4382ae243345387de545bfb73cff01c7df7ff3f795fa1f36ee6ce9de298d340", "why": "row"}
 {"archive": "evidence-2026-09", "bytes": 8638, "call": "GET https://cymetica.com/api/v1/event-cards/e579581b-0ad3-463f-8c3d-e80bd2624d40?", "id": "a43c759b970de2c88f923aaa39d24ed6762d08f212d1765af2d74b0a4510fad1", "why": "row"}
 {"archive": "evidence-2026-09", "bytes": 42890, "call": "GET https://cymetica.com/static/js/agentbook.js?", "id": "a43c8fd72fe3c070f77b52435b230f0f9a9460beed2b43b4fdd7f11153d95ee6", "why": "promised"}
+{"archive": "", "bytes": 6494, "call": "POST https://cymetica.com/api/v1/cloned-bots/b2d9f0c0-26d5-4f50-873d-f604310652bb/toggle-trading?enabled", "id": "a43fa6550830708e502ffa4235ca329504755590bc35159b6345faba46543e72", "why": "trade"}
 {"archive": "evidence-2026-09", "bytes": 7984, "call": "GET https://cymetica.com/api/v1/bounty/leaderboard?", "id": "a43fde9e8632ba5ee01ee1579a6a9c020212353fcb0e4ccd51b8cc3e5740b7e0", "why": "row"}
 {"archive": "evidence-2026-09", "bytes": 482865, "call": "GET https://cymetica.com/api/v1/product-radar/leaderboard?limit,window", "id": "a44082c22d3a0b1bf3d670746db0b502be3f12337b2c7b00e2635ac687cd7f7c", "why": "row"}
 {"archive": "evidence-2026-10", "bytes": 236359, "call": "GET https://cymetica.com/perpetual/agents/upside?", "id": "a440e6ba9d82871a1df44bb558df6a0a2d199013a6faa4e6f284eb551c407802", "why": "row"}
@@ -25996,6 +26002,7 @@
 {"archive": "evidence-2026-10", "bytes": 4193, "call": "GET https://cymetica.com/api/v1/support/ai-agent/investor?", "id": "ba1be97f8003fc2f4dfadcf284a1f4963871eb13e91ef7a054a4730c33292ece", "why": "row"}
 {"archive": "evidence-2026-10", "bytes": 559437, "call": "GET https://stablecoins.llama.fi/stablecoincharts/Kaia?", "id": "ba1dc9175684e97ecbdbd323c9a2a98a85f9686c989be86e62bf6845efe6aa53", "why": "row"}
 {"archive": "evidence-2026-09", "bytes": 5703, "call": "POST https://cymetica.com/mcp/v1/? tools/call:get_fund", "id": "ba1e696a533ed3f4469cc9b44b5e7028cf35178e3e169cae7ff82e8cc4e13856", "why": "row"}
+{"archive": "", "bytes": 5107, "call": "POST https://cymetica.com/api/v1/cloned-bots/clone?", "id": "ba230935b55aa2df0e4d18764c285099eed1cc3acb8c3a1a51bd07b0029331ed", "why": "trade"}
 {"archive": "evidence-2026-09", "bytes": 8463, "call": "GET https://cymetica.com/static/js/attribution-tracker.js?", "id": "ba2375057d8f4a974ed14c901277b210ea8ab5d973e71f7ee33fb746c0d82ace", "why": "promised"}
 {"archive": "evidence-2026-10", "bytes": 5692, "call": "POST https://cymetica.com/api/v1/cloned-bots/6cb21a44-67c4-4b45-b8d0-cf874a8d6b0e/toggle-trading?enabled", "id": "ba23c9bd948ea150e51d68b2a0671e8682c9929b65dfbfdad2de9957a9a0f0a1", "why": "trade"}
 {"archive": "evidence-2026-09", "bytes": 5625, "call": "POST https://cymetica.com/mcp/v1/? tools/call:get_fund", "id": "ba25fba5162f9e1ad1aca248123fadb1750173970546f5c36b0bb86a1b484293", "why": "row"}
@@ -27252,6 +27259,7 @@
 {"archive": "evidence-2026-10", "bytes": 75878, "call": "GET https://cymetica.com/api/v1/backtest/bots/bot-volume-surge/trades?limit,offset", "id": "c3662679b081ce51d8609a986871d4df9366fb9d2d69704c25b85c01eb82c4c1", "why": "row"}
 {"archive": "evidence-2026-10", "bytes": 567800, "call": "GET https://stablecoins.llama.fi/stablecoincharts/OP%20Mainnet?", "id": "c3677e5d7dcdb10ce3efc2df62684ea5a190cb876f638d28c854b3f0757df974", "why": "row"}
 {"archive": "evidence-2026-10", "bytes": 5178, "call": "GET https://cymetica.com/static/js/company-menu.js?", "id": "c368342d305c3e397767b20ca04fe143957279c2afd99292b2e252c02282ea5e", "why": "row"}
+{"archive": "", "bytes": 5804, "call": "PATCH https://cymetica.com/api/v1/cloned-bots/7b5f05b8-fb3d-4ba9-b0e6-ca1c4673e3a6/settings?", "id": "c36e0f3d0b33b3dd588b03e995d9fc41cec91610ba34405a2611b71ef240b3d3", "why": "trade"}
 {"archive": "evidence-2026-10", "bytes": 6099, "call": "PATCH https://cymetica.com/api/v1/cloned-bots/f63d0fb9-4bc2-46c6-8e0d-27ae804e090c/settings?", "id": "c36f9a9367cea5800b44d9576d83fe58413f88ed50ca3a86e2a353d4bdc26381", "why": "trade"}
 {"archive": "evidence-2026-10", "bytes": 14620, "call": "GET https://cymetica.com/api/v1/crypto/xdc?", "id": "c371f0d49996e427effc6d66c58e497c24ddf39213db9e14c1289f22c1f97eb6", "why": "promised"}
 {"archive": "evidence-2026-10", "bytes": 76195, "call": "GET https://cymetica.com/api/v1/backtest/bots/bot-volume-surge/trades?limit,offset", "id": "c3720afb3c13f3943013f8ce8000840660ecf0c69e23e1ee3f65b8dcab5a1fca", "why": "promised"}
@@ -29721,6 +29729,7 @@
 {"archive": "evidence-2026-10", "bytes": 4885, "call": "GET https://data-api.binance.vision/api/v3/klines?interval,limit,startTime,symbol", "id": "d46039fa069aacf190b06f1efd30a3deedeaaa26da44f8a6f351fa3e6fe78930", "why": "row"}
 {"archive": "evidence-2026-10", "bytes": 149874, "call": "GET https://cymetica.com/api/v1/backtest/bots/stockbull-blue/trades?limit,offset", "id": "d46823f7c5ed945273e1cec245f5e9ec5c5e836de1d64c019dc20faefdeba69c", "why": "promised"}
 {"archive": "evidence-2026-10", "bytes": 57469, "call": "GET https://cymetica.com/api/v1/clones/fomo-radar/signals?chain,filter,limit", "id": "d468a37000229ccd72851fa89b27cc271596686b7f5657e6deaa3ad2ad47308a", "why": "row"}
+{"archive": "", "bytes": 5108, "call": "POST https://cymetica.com/api/v1/cloned-bots/clone?", "id": "d46b78601e695c774cb334dd0e9ffad5e6a45392fb5598e0d4b5070954c23b91", "why": "trade"}
 {"archive": "evidence-2026-10", "bytes": 3255, "call": "GET https://data-api.binance.vision/api/v3/klines?interval,limit,startTime,symbol", "id": "d46d36bfb495dd1924b8f3477af1f2d4aa2e17a70414eb2c922bfa5b2198c298", "why": "row"}
 {"archive": "evidence-2026-09", "bytes": 32256, "call": "GET https://cymetica.com/static/js/adm.js?", "id": "d470c301af28107e72782936b101fc9188e4889d18f8a2a4552e04028264b0ac", "why": "row"}
 {"archive": "evidence-2026-10", "bytes": 4630, "call": "PATCH https://cymetica.com/api/v1/cloned-bots/8ff88782-0f7c-443f-a77c-74bf4f7805d2/settings?", "id": "d470dd86995f22f9cabe1bae69ca0e30bc90f94c994ef8b31c30982070d2853b", "why": "trade"}
@@ -30908,6 +30917,7 @@
 {"archive": "evidence-2026-10", "bytes": 12454, "call": "POST https://cymetica.com/mcp/v1/? tools/call:list_funds", "id": "dceb9ac889e5007e5d0f0f20ae1d688373d9d6cc8ba8c7d7f778abb07b372f0c", "why": "row"}
 {"archive": "evidence-2026-09", "bytes": 8717, "call": "POST https://cymetica.com/api/v1/bounty/reports?", "id": "dcebc82d7315276925c3e1e537246b8fb7a188aa497ee9ffdc9d57c22ed2cc2c", "why": "their-words"}
 {"archive": "evidence-2026-09", "bytes": 65023, "call": "GET https://cymetica.com/llms.txt?", "id": "dcebe307d6e80c73ee76b5efe9a0aa3846d7e9b8aa84951754b85763c1ec802e", "why": "row"}
+{"archive": "", "bytes": 5774, "call": "POST https://cymetica.com/api/v1/cloned-bots/4c1200a4-3cef-4ff7-9959-b578fc04133c/fund?", "id": "dced8e21dc281a1a63c3098cbd272d3e774296193734fe8510a9c939314634aa", "why": "trade"}
 {"archive": "evidence-2026-09", "bytes": 12497, "call": "GET https://cymetica.com/api/v1/agents/species?", "id": "dcf0102da8cd26a73ac6d85fcf6d87e802c1b37de690f565bc61667305d6a890", "why": "row"}
 {"archive": "", "bytes": 75767, "call": "POST https://cymetica.com/mcp/v1/? tools/list", "id": "dcf3c5cecbe46d275fc26cb5a27535860970bed80d005393a73299ff768892e3", "why": "row"}
 {"archive": "", "bytes": 27000, "call": "GET https://cymetica.com/api/v1/build-it-better/requests/ET-28203?", "id": "dcf60746591420941bd4b4bcdc768bd5a81cce5cecdfbe9ca545e4749b786f88", "why": "row"}
@@ -31220,6 +31230,7 @@
 {"archive": "evidence-2026-09", "bytes": 562392, "call": "GET https://cymetica.com/api/v1/event-cards?limit,offset", "id": "df1a635b2a347204ee77ed1c71dfe838c8042e7b730c7e7b251b37249ddd1142", "why": "row"}
 {"archive": "evidence-2026-09", "bytes": 556081, "call": "GET https://cymetica.com/api/v1/event-cards?limit,offset", "id": "df1b15cd7c8a7978756881cf53f6c6111528248ffb37ecafc136f9274f3332a1", "why": "row"}
 {"archive": "evidence-2026-09", "bytes": 5782, "call": "POST https://cymetica.com/mcp/v1/? tools/call:get_fund", "id": "df1b1c7e88f1ec258509e0e6570801f947784523947aeb9f8af0d115a98106ee", "why": "row"}
+{"archive": "", "bytes": 5114, "call": "POST https://cymetica.com/api/v1/cloned-bots/clone?", "id": "df1b2fef327c0522c6abbb8f2edd54eacc52f768877572d323c90a2be98db5fa", "why": "trade"}
 {"archive": "evidence-2026-09", "bytes": 64957, "call": "GET https://cymetica.com/llms.txt?", "id": "df20f88293242c9f89aba765677f5295c931f5d79882586434f75faa28cf36d5", "why": "row"}
 {"archive": "evidence-2026-10", "bytes": 5170, "call": "GET https://data-api.binance.vision/api/v3/klines?interval,limit,startTime,symbol", "id": "df21e4d85afb281c38fbc3030bfbe5783520a7b962e5276f6cda671636565f8c", "why": "row"}
 {"archive": "evidence-2026-10", "bytes": 33393, "call": "GET https://cymetica.com/api/v1/event-cards/88fa6eb9-f998-4319-826d-4bfc8fefe416/index-history?", "id": "df235235184d32393c963d4683b0589731ea74104cb509ad359289395743c757", "why": "row"}
@@ -34020,6 +34031,7 @@
 {"archive": "evidence-2026-10", "bytes": 2927, "call": "GET https://data-api.binance.vision/api/v3/klines?interval,limit,startTime,symbol", "id": "f3c03d9439afa01843c1b2f863f8444ef662ef2eeea31d703b94232ff3a02cf2", "why": "row"}
 {"archive": "evidence-2026-10", "bytes": 10161, "call": "POST https://cymetica.com/api/v1/bounty/reports/174/verification?", "id": "f3c14c010c1090230f05fd37bae20e367ab8548f6ef2d9e5784b7799d4d6bdbd", "why": "their-words"}
 {"archive": "", "bytes": 4099, "call": "GET https://cymetica.com/api/v1/vaults/cym42/cancel-redemption?", "id": "f3c314e8ee5f581dff69710f55d2e410c11a62ab67c58bb7c458e748a4d65235", "why": "row"}
+{"archive": "", "bytes": 5808, "call": "PATCH https://cymetica.com/api/v1/cloned-bots/b2d9f0c0-26d5-4f50-873d-f604310652bb/settings?", "id": "f3c3ae566ec2699f63588a6380e49b48a02fc410d5a2592c3790eb21025c860d", "why": "trade"}
 {"archive": "evidence-2026-10", "bytes": 2792, "call": "GET https://cymetica.com/static/js/format-percent.js?", "id": "f3c42cafb750e1e1ef1b3a50befac0107ec288fdab55cc6a4d34a7c52af60dce", "why": "row"}
 {"archive": "", "bytes": 4101, "call": "GET https://cymetica.com/api/v1/notifications/unread-count?", "id": "f3c5cf07d59ea2a56dc5decb5e6fad809cc6d275e9aacbdf549d3016be367dfa", "why": "row"}
 {"archive": "evidence-2026-09", "bytes": 5006, "call": "GET https://cymetica.com/api/v1/trades?", "id": "f3c7ffb3fc97436262fd11edb90ff94137a91344b76726baebfecaaa6d3900f2", "why": "row"}
