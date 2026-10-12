@@ -25,5 +25,6 @@ that stops being true moves to the archive, never silently away. Write with
 ## How we went wrong
 
 - 2026-10-12 2026-10-12 T-0016 told the manager '/api-docs says nothing' on the bot caps; /openapi-public.json carries them in the clone route's 400 description (5 trading / 25 total, the same stale numbers as llms.txt). Before saying a thing is absent from their docs, read BOTH llms.txt and openapi-public.json. A SAFE @qa test run with -p tests.conftest reads them when no fetch command is allowed (T-0017, T-0026).
+- 2026-10-12 2026-10-12 T-0018: our league.py read /prizes as the whole list; it is the newest 50 of 90 (no total, no next page, offset/page/status ignored, only ?limit=200 widens it), so 8,000 ET10 credited to us read as 0. A list whose ids stop at 41 is a window: count rows and retry with limit before saying what is in it. Raw dump with no fetch command allowed: a scratchpad test_*.py importing scripts/league.py, run by python -m pytest.
 
 ## Archive
