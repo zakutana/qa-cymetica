@@ -24,4 +24,6 @@ that stops being true moves to the archive, never silently away. Write with
 
 ## How we went wrong
 
+- 2026-10-12 2026-10-12 T-0016 told the manager '/api-docs says nothing' on the bot caps; /openapi-public.json carries them in the clone route's 400 description (5 trading / 25 total, the same stale numbers as llms.txt). Before saying a thing is absent from their docs, read BOTH llms.txt and openapi-public.json. A SAFE @qa test run with -p tests.conftest reads them when no fetch command is allowed (T-0017, T-0026).
+
 ## Archive
