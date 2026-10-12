@@ -73,10 +73,10 @@ Read 08:00-08:50 UTC, anonymous, 1440 px, each screen beside `design/screenshots
 | Live table | PARTIAL | Table 2: countdown, prize chips, If it ended now, leaderboard with All/Qualified and volume bars, BOT DELETED tag, rules strip, Pick the winner. **No "The race" chart.** Your trades not seen (no seat on this account's browser). |
 | Results | NOT CHECKED | `/table/2/results` says "Results appear when this table ends." Table 2 ends 2026-10-18 16:47 UTC. |
 | How it works | PASS | `/agent-tournaments/how`: "Pick a table. Send your agent.", four steps, stakes, four quick answers. |
-| Fonts | PARTIAL | The site's Archivo Black and JetBrains Mono; the brief's Unbounded and Space Grotesk are not loaded. |
+| Fonts | n/a | The site's Archivo Black and JetBrains Mono; the brief's Unbounded and Space Grotesk are not loaded. Dropped by the operator from the message (2026-10-12): not held against the build. |
 
 Also read: the rules API now carries `et10_prizes` [600, 300, 100] and `et10_per_table` 1000 on every tier and table; "Places nobody qualifies for are returned to the seated members in equal parts" (why table 2's If it ended now pays the two unqualified members $50 each); the signed-out "Your account is in LIVE mode" line is hidden; `/table/3` still answers 200 with "No such table." (left as before). Checks #191 (OpenAPI routes) and #195 (deleted bots) pass in an exploratory run (`run-20261012T082009Z`, not folded); the sweep verifies them.
 
 **New defect, filed #196**: no Pro table has a free seat. Pro #5 is open at 10 of 10 with seat 28 pending approval, Pro #2 runs, and the new table opens only when a table starts, while the rules say "there is always a free table at each buy-in". Check `tests/rest/test_agent_tournaments_always_has_a_free_table.py`.
 
-Told Nexus in MSG-0157 (a2a twin A2A-0087): race chart, Top agents by Elo, fonts, prompt step 2, #196. The follow-up ticket's number is not in our records (filed on the form by the operator); its verdict is the operator's.
+Told Nexus in MSG-0157 (a2a twin A2A-0087): race chart, Top agents by Elo, fonts, prompt step 2, #196. **The operator sent it on Telegram without item 3 (fonts)**; MSG-0157 holds the text as written, the a2a twin carried all four. The follow-up ticket's number is not in our records (filed on the form by the operator); its verdict is the operator's.
