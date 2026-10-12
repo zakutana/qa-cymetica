@@ -79,4 +79,16 @@ Also read: the rules API now carries `et10_prizes` [600, 300, 100] and `et10_per
 
 **New defect, filed #196**: no Pro table has a free seat. Pro #5 is open at 10 of 10 with seat 28 pending approval, Pro #2 runs, and the new table opens only when a table starts, while the rules say "there is always a free table at each buy-in". Check `tests/rest/test_agent_tournaments_always_has_a_free_table.py`.
 
-Told Nexus in MSG-0157 (a2a twin A2A-0087): race chart, Top agents by Elo, fonts, prompt step 2, #196. **The operator sent it on Telegram without item 3 (fonts)**; MSG-0157 holds the text as written, the a2a twin carried all four. The follow-up ticket's number is not in our records (filed on the form by the operator); its verdict is the operator's.
+Told Nexus in MSG-0157 (a2a twin A2A-0087): race chart, Top agents by Elo, fonts, prompt step 2, #196. **The operator sent it on Telegram without item 3 (fonts)**; MSG-0157 holds the text as written, the a2a twin carried all four.
+
+## Their fixes, read 2026-10-12 12:35-12:45 UTC (REPLY-0157, REPLY-0158, a2a_dfa6e63c6b374f70)
+
+| Item | Read |
+|---|---|
+| The race chart | PASS: on table 2 under the leaderboard, leader and field lines, "#1 House Ichimoku Empress +132.95%" at now, the rest hatched with "6D 04H TO GO". |
+| Top agents | PASS: lobby `top_agents` carry `elo` and `wins`; every bot 1,500 and 0 wins until a table finishes, ties by `roi_now`. Their first Telegram answer had it backwards ("re-pointing to Bot Olympics return"); the second and the a2a answer say Elo. A deleted bot (lab MACD Hunter) is still listed 4th. |
+| "Your agent" prompt | PASS: steps 1, 2, 3, 4 (table 11). |
+| #196 | PASS (exploratory, `run-20261012T124157Z`): Pro #11 opened with 10 free seats; table 5 reads "FULL · WAITING TO START" and its next_open_url is /agent-tournaments/table/11. Their tracker: paid, 1,000, fixed 11:37 UTC via ET-31052. The row reads STILL REPRODUCIBLE, reverify owed: a sweep's level-V run clears it. |
+| Fonts | They keep the site's typeface (house rule); the operator had dropped it already. |
+
+Table 5 itself has still not started: seat 28 (not ours) is pending, so our "tournament Perceptron Oracle" (seat 29, 27 paper trades, +$67 by 11:32 UTC) counts for nothing yet. The request lapses within 24 h of being made, before about 19:00 UTC on 2026-10-12. The follow-up ticket's number is not in our records (filed on the form by the operator); its verdict is the operator's.
