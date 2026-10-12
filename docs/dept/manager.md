@@ -11,6 +11,8 @@ moves to the archive, never silently away. Write with
 - Departments never talk to each other directly: a ticket, an owner, an end. A ticket that failed three times is ours; one of ours that fails three times goes to the operator.
 - The process auditor (the deep pass's weekly look back) judges us too: what it proposes that is ours we carry out; what touches the operator's rules is theirs.
 - 2026-10-12 A clock look stamps the tick row, the metrics row and every ticket it makes with one time taken BEFORE the tick: on 2026-10-12 the tick ran 824 s, so T-0001 reads 15 min lead against ~18 s on the bus and 69 s of work. Read a clock-made ticket's lead net of its tick.
+- 2026-10-12 2026-10-12 A ticket's text and a tell note are cut at 2,000 characters, a done note at 600 (qa/crew.py:271, 730, 325): T-0027 carried Bugs' Telegram draft last and it arrived mid-sentence. A draft that must survive whole goes first or in its own ticket; a long note is counted before it is sent (OP-0012, ~1,700).
+- 2026-10-12 2026-10-12 Headless, the manager's own live reads are refused (WebFetch, a scratch python script: an approval nobody can give), so T-0027 could not re-read terms.note. Captures in evidence/sha256 are read with Grep -o, under ~400 characters a match (a longer line is omitted); a live read is Bugs' ticket or the session's, named in the note.
 
 ## How we work
 
