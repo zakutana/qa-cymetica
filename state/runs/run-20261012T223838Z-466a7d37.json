@@ -1,0 +1,159 @@
+{
+  "schema": 2,
+  "run_id": "run-20261012T223838Z-466a7d37",
+  "started_at": "2026-10-12T22:39:00+00:00",
+  "finished_at": "2026-10-12T22:39:46+00:00",
+  "git_head": "466a7d37c9ff75a820c8d1711073ff38d06d87c7",
+  "git_short": "466a7d37",
+  "git_dirty": true,
+  "prereg_id": null,
+  "prereg_tag_sha": null,
+  "prereg_commit": null,
+  "platform_fingerprint": "sha256:ff03d5036e923d4effc401a6e51c96f426a42ef862e976fd80acc21e050d2665",
+  "fingerprint_parts": {
+    "/.well-known/mcp.json": "5322cc20b00307eb01dc5ab76e7bf0f5d8e3fc1dc968b871b1399b11b4ccdbd9",
+    "/.well-known/agent-card.json": "7419274439d47fc23618eb4e234810e6478d6ec9cf80e6d90ae264830f7e0db0",
+    "/.well-known/agent-skills.json": "3b84f287322c79c7925e8a44688d5d537da9ca244192f8d4f4d889fd7a1e616d",
+    "/.well-known/ai-plugin.json": "ec5569dd7dc0a367cfcad58e8ca36c8e05447e379d40b69a86fb07aac71513c0",
+    "/.well-known/udc.json": "1ec34383ede550c71fb3e81b989b8b92b0da3ce7ccbdc497c9edf5a8fcbd6c14",
+    "/openapi.json": "01b820bba1d043d5f292b0175bff1a60a24b54fee0b238bfdc778efc2091f3fe",
+    "/openapi-public.json": "385344f5b00b88ff136253ce9f6bc99823be4c8177f1c51b423a8162dd4a2e50",
+    "/llms.txt": "72b8cd1c8786cbd05a2244d1cd55bb59a507e635e78f448b7cce97a4b9e5a5e4",
+    "mcp:tools/list:none": "f7c126c9c31f25eaefce1b814ac2e8c4aaa53928acfa53e23c73b1a9423ebbc4"
+  },
+  "fingerprint_errors": {},
+  "fingerprint_drifted": false,
+  "fingerprint_changed_parts": [],
+  "identities_present": {
+    "anon": true,
+    "trusted": true,
+    "recognized": false
+  },
+  "python_version": "3.13.13",
+  "pytest_version": "8.3.4",
+  "selector": "tests/rest/test_vaix_orderbook_arbitrage_does_not_use_an_excluded_venue.py -q",
+  "selector_full": false,
+  "narrowing": [],
+  "paths": [
+    "tests/rest/test_vaix_orderbook_arbitrage_does_not_use_an_excluded_venue.py"
+  ],
+  "allow_mutate": false,
+  "collected": [
+    "tests/rest/test_vaix_orderbook_arbitrage_does_not_use_an_excluded_venue.py::test_the_vaix_orderbook_arbitrage_does_not_use_an_excluded_venue"
+  ],
+  "results": [
+    {
+      "nodeid": "tests/rest/test_vaix_orderbook_arbitrage_does_not_use_an_excluded_venue.py::test_the_vaix_orderbook_arbitrage_does_not_use_an_excluded_venue",
+      "component": "rest.markets",
+      "tier": "SAFE",
+      "surface": "rest",
+      "claim_id": "vaix-orderbook-arbitrage-does-not-use-an-excluded-venue",
+      "ticket_id": null,
+      "volatile": false,
+      "outcome": "failed",
+      "phase": "call",
+      "role": "verdict",
+      "duration_ms": 36745,
+      "evidence_ids": [
+        "cbad224a6c5857480c4fa4a73737e56183a71dcd1e4e5dd59fc937f941e6c707",
+        "e6648eebd233fb43df39237bbdfc3227aa219fef47b17ef0b972a433a88b4616"
+      ],
+      "measurement": {
+        "verdict": "failed",
+        "reason": "the VAIX orderbook's arbitrage uses a venue its own excluded_venues withheld, on both reads (2026-10-12T22:39:04.838379+00:00, 2026-10-12T22:39:37.322447+00:00): buy_chain: base at 0.00031079 while excluded_venues says mid 0.00031079, -83.75 % from the reference (price_divergence); potential_profit_pct 514.44",
+        "left": {
+          "arbitrage_legs_on_an_excluded_venue": 1
+        },
+        "right": {
+          "arbitrage_legs_on_an_excluded_venue": 0
+        },
+        "sources": {
+          "book": "/api/v1/vaix/orderbook orderbook.arbitrage.buy_chain / sell_chain, orderbook.excluded_venues"
+        },
+        "provenance": {},
+        "evidence_ids": [],
+        "fingerprint": null,
+        "claim_id": "vaix-orderbook-arbitrage-does-not-use-an-excluded-venue",
+        "role": "verdict",
+        "population": {
+          "reads": [
+            {
+              "timestamp": "2026-10-12T22:39:04.838379+00:00",
+              "legs": {
+                "buy_chain": {
+                  "chain": "base",
+                  "price": "0.00031079",
+                  "excluded_mid": "0.00031079",
+                  "divergence_pct": "-83.75",
+                  "reason": "price_divergence"
+                }
+              },
+              "arbitrage": {
+                "buy_chain": "base",
+                "sell_chain": "ethereum",
+                "buy_price": "0.00031079",
+                "sell_price": "0.00191274",
+                "spread_pct": "515.44",
+                "potential_profit_pct": "514.44"
+              },
+              "excluded": [
+                "arbitrum",
+                "base",
+                "solana"
+              ]
+            },
+            {
+              "timestamp": "2026-10-12T22:39:37.322447+00:00",
+              "legs": {
+                "buy_chain": {
+                  "chain": "base",
+                  "price": "0.00031079",
+                  "excluded_mid": "0.00031079",
+                  "divergence_pct": "-83.75",
+                  "reason": "price_divergence"
+                }
+              },
+              "arbitrage": {
+                "buy_chain": "base",
+                "sell_chain": "ethereum",
+                "buy_price": "0.00031079",
+                "sell_price": "0.00191274",
+                "spread_pct": "515.44",
+                "potential_profit_pct": "514.44"
+              },
+              "excluded": [
+                "arbitrum",
+                "base",
+                "solana"
+              ]
+            }
+          ]
+        }
+      },
+      "check_fingerprint": "f8d524d107d846470254793f8ab9b9ab74183f3994f8f31cd45b2fa947709f0a",
+      "helpers_fingerprint": "6016d4d3f66adafc658d079212eaccf0ac3767094c57009043503ed2e6ec0b55",
+      "helpers_formula": 2,
+      "reason": null,
+      "failure_repr": "tests\\rest\\test_vaix_orderbook_arbitrage_does_not_use_an_excluded_venue.py:95: in test_the_vaix_orderbook_arbitrage_does_not_use_an_excluded_venue\n    conclude(Measurement(\nqa\\measure.py:165: in conclude\n    raise AssertionError(explain(m))\nE   AssertionError: the VAIX orderbook's arbitrage uses a venue its own excluded_venues withheld, on both reads (2026-10-12T22:39:04.838379+00:00, 2026-10-12T22:39:37.322447+00:00): buy_chain: base at 0.00031079 while excluded_venues says mid 0.00031079, -83.75 % from the reference (price_divergence); potential_profit_pct 514.44\nE     left  = {'arbitrage_legs_on_an_excluded_venue': 1}\nE     right = {'arbitrage_legs_on_an_excluded_venue': 0}"
+    }
+  ],
+  "totals": {
+    "failed": 1
+  },
+  "ratelimit": {
+    "requests": 2,
+    "limit": 2000,
+    "remaining": 1977,
+    "fraction_used": 0.0115,
+    "exhausted": false
+  },
+  "record_integrity": {
+    "consistent": true,
+    "results_not_in_collected": [],
+    "collected_not_run": [],
+    "budget_truncated": false
+  },
+  "code_dirty_after": false,
+  "fingerprint_after": "sha256:ff03d5036e923d4effc401a6e51c96f426a42ef862e976fd80acc21e050d2665",
+  "exit_status": 1
+}

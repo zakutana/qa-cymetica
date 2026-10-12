@@ -1,0 +1,144 @@
+{
+  "schema": 2,
+  "run_id": "run-20261012T223001Z-84c06b10",
+  "started_at": "2026-10-12T22:30:18+00:00",
+  "finished_at": "2026-10-12T22:30:45+00:00",
+  "git_head": "84c06b10666c415c120ef727da84b633434b78d2",
+  "git_short": "84c06b10",
+  "git_dirty": true,
+  "prereg_id": null,
+  "prereg_tag_sha": null,
+  "prereg_commit": null,
+  "platform_fingerprint": "sha256:ff03d5036e923d4effc401a6e51c96f426a42ef862e976fd80acc21e050d2665",
+  "fingerprint_parts": {
+    "/.well-known/mcp.json": "5322cc20b00307eb01dc5ab76e7bf0f5d8e3fc1dc968b871b1399b11b4ccdbd9",
+    "/.well-known/agent-card.json": "7419274439d47fc23618eb4e234810e6478d6ec9cf80e6d90ae264830f7e0db0",
+    "/.well-known/agent-skills.json": "3b84f287322c79c7925e8a44688d5d537da9ca244192f8d4f4d889fd7a1e616d",
+    "/.well-known/ai-plugin.json": "ec5569dd7dc0a367cfcad58e8ca36c8e05447e379d40b69a86fb07aac71513c0",
+    "/.well-known/udc.json": "1ec34383ede550c71fb3e81b989b8b92b0da3ce7ccbdc497c9edf5a8fcbd6c14",
+    "/openapi.json": "01b820bba1d043d5f292b0175bff1a60a24b54fee0b238bfdc778efc2091f3fe",
+    "/openapi-public.json": "385344f5b00b88ff136253ce9f6bc99823be4c8177f1c51b423a8162dd4a2e50",
+    "/llms.txt": "72b8cd1c8786cbd05a2244d1cd55bb59a507e635e78f448b7cce97a4b9e5a5e4",
+    "mcp:tools/list:none": "f7c126c9c31f25eaefce1b814ac2e8c4aaa53928acfa53e23c73b1a9423ebbc4"
+  },
+  "fingerprint_errors": {},
+  "fingerprint_drifted": false,
+  "fingerprint_changed_parts": [],
+  "identities_present": {
+    "anon": true,
+    "trusted": true,
+    "recognized": false
+  },
+  "python_version": "3.13.13",
+  "pytest_version": "8.3.4",
+  "selector": "tests/rest/test_agent_tournaments_running_table_keeps_trading.py -q -p no:cacheprovider",
+  "selector_full": false,
+  "narrowing": [],
+  "paths": [
+    "tests/rest/test_agent_tournaments_running_table_keeps_trading.py"
+  ],
+  "allow_mutate": false,
+  "collected": [
+    "tests/rest/test_agent_tournaments_running_table_keeps_trading.py::test_agent_tournaments_running_table_keeps_trading"
+  ],
+  "results": [
+    {
+      "nodeid": "tests/rest/test_agent_tournaments_running_table_keeps_trading.py::test_agent_tournaments_running_table_keeps_trading",
+      "component": "rest.agent_tournaments",
+      "tier": "SAFE",
+      "surface": "rest",
+      "claim_id": "agent-tournaments-running-table-keeps-trading",
+      "ticket_id": null,
+      "volatile": false,
+      "outcome": "failed",
+      "phase": "call",
+      "role": "verdict",
+      "duration_ms": 8887,
+      "evidence_ids": [
+        "7bfacad9e71f14381258cf45a4821477568c098f4a35dcc34a622315b0a78a54",
+        "f7f469946183375c636131ca213c5401b14f3fe74fe32f740a687a8970ee165c",
+        "2b04b44a38a3a477a2c848a68f71ca33e7e4297afe26b0452bcd2f3049499a88",
+        "7c8b1b457c5ced636c4cea448441c4e3a663636a6415c82feea8580428f80e46"
+      ],
+      "measurement": {
+        "verdict": "failed",
+        "reason": "1 of 1 running paper table(s) went at least 12 h with no seat trading, while /api/v1/agent-tournaments/rules says a table runs 7 days and names no limit on a seat's trades. table 2 (pro, 29.7 h in): within the last 48 h no seat's ROI moved for 15.72 h, volume_usdc 5604.4, trades by seat {'24 house': 40, '27 house': 40, '25 house': 31, '1': 0, '2': 0, '23 house': 40, '20 house': 30, '26 house': 40, '21 house': 31, '22 house': 40}",
+        "left": {
+          "tables_with_a_12h_still_stretch": 1
+        },
+        "right": {
+          "tables_with_a_12h_still_stretch": 0
+        },
+        "sources": {
+          "promise": "/api/v1/agent-tournaments/rules start/days: 'runs 7 days'; house_bots: 'trading the same paper capital'",
+          "tables": "/api/v1/agent-tournaments/tables/{id} race, standings, ends_in_s",
+          "lobby": "/api/v1/agent-tournaments/lobby tables"
+        },
+        "provenance": {},
+        "evidence_ids": [],
+        "fingerprint": null,
+        "claim_id": "agent-tournaments-running-table-keeps-trading",
+        "role": "verdict",
+        "population": {
+          "mode": "paper",
+          "running": [
+            11,
+            5,
+            2
+          ],
+          "judged": [
+            {
+              "id": 2,
+              "tier": "pro",
+              "starts_at": "2026-10-11T16:46:53.343469+00:00",
+              "hours_in": 29.7,
+              "longest_still_hours": 15.72,
+              "volume_usdc": 5604.4,
+              "trades_by_seat": {
+                "24 house": 40,
+                "27 house": 40,
+                "25 house": 31,
+                "1": 0,
+                "2": 0,
+                "23 house": 40,
+                "20 house": 30,
+                "26 house": 40,
+                "21 house": 31,
+                "22 house": 40
+              }
+            }
+          ],
+          "too_young": [
+            11,
+            5
+          ],
+          "unread": []
+        }
+      },
+      "check_fingerprint": "805e27ae5c5026b83d24969b697881ddf16cb0a7d382a3a0f2ddd5b609d3f0e4",
+      "helpers_fingerprint": "a8bcd2a8e5339e580115600a367044a7d36aca31c9b65a49a87f07a2303ff4a2",
+      "helpers_formula": 2,
+      "reason": null,
+      "failure_repr": "tests\\rest\\test_agent_tournaments_running_table_keeps_trading.py:140: in test_agent_tournaments_running_table_keeps_trading\n    conclude(Measurement(\nqa\\measure.py:165: in conclude\n    raise AssertionError(explain(m))\nE   AssertionError: 1 of 1 running paper table(s) went at least 12 h with no seat trading, while /api/v1/agent-tournaments/rules says a table runs 7 days and names no limit on a seat's trades. table 2 (pro, 29.7 h in): within the last 48 h no seat's ROI moved for 15.72 h, volume_usdc 5604.4, trades by seat {'24 house': 40, '27 house': 40, '25 house': 31, '1': 0, '2': 0, '23 house': 40, '20 house': 30, '26 house': 40, '21 house': 31, '22 house': 40}\nE     left  = {'tables_with_a_12h_still_stretch': 1}\nE     right = {'tables_with_a_12h_still_stretch': 0}"
+    }
+  ],
+  "totals": {
+    "failed": 1
+  },
+  "ratelimit": {
+    "requests": 4,
+    "limit": 2000,
+    "remaining": 1989,
+    "fraction_used": 0.0055,
+    "exhausted": false
+  },
+  "record_integrity": {
+    "consistent": true,
+    "results_not_in_collected": [],
+    "collected_not_run": [],
+    "budget_truncated": false
+  },
+  "code_dirty_after": false,
+  "fingerprint_after": "sha256:ff03d5036e923d4effc401a6e51c96f426a42ef862e976fd80acc21e050d2665",
+  "exit_status": 1
+}
