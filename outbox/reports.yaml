@@ -6206,14 +6206,15 @@ reports:
       3 h, 8 a day, on every day of the window except Sep 23 (5 points, the last 14:16:52 UTC, index
       137.714), Sep 24 (none) and Sep 25 (3 points, the first 17:54:33 UTC, index 134.256). That is
       51.6 h between two consecutive points, while the index moved by 3.46. interval=all shows the
-      same hole (56.8 h). It is this card only: the crypto-only cards 30408a4b, 30015006 and 5d91bf43
-      hold 17, 17 and 18 points inside those same hours, widest gap 3.0 to 3.2 h. The only stretch
+      same hole (56.8 h). It is this card only: all 14 of the other open crypto cards that already
+      had history (among them 30408a4b, 30015006 and 5d91bf43, 17, 17 and 18 points) recorded points
+      inside those same hours, and no other open crypto card has a gap over 12 h. The only stretch
       every card shares is Sep 17 14:40 to 20:59 UTC (6.3 h). The card reads live and tradeable
       today (trading_closes_at null, trading_blocked_reason null).
     steps:
       - 'GET https://cymetica.com/api/v1/event-cards/a4a5b71e-de11-4805-b8a3-ed9c3f8f8161 -> status live, tradeable_now true, trading_closes_at null, basket BTC 0.9922'
       - 'GET https://cymetica.com/api/v1/event-cards/a4a5b71e-de11-4805-b8a3-ed9c3f8f8161/index-history?interval=30d -> points[].t: 2026-09-23T14:16:52Z, then 2026-09-25T17:54:33Z'
-      - 'GET /api/v1/event-cards/{id}/index-history?interval=30d for the ids starting 30408a4b, 30015006 and 5d91bf43 (ids from /api/v1/event-cards) -> 17, 17 and 18 points between those two times'
+      - 'GET /api/v1/event-cards/{id}/index-history?interval=30d for the ids starting 30408a4b, 30015006 and 5d91bf43 (ids from /api/v1/event-cards) -> 17, 17 and 18 points between those two times. The proxy is in /api/v1/event-cards only with include_user_submitted=true.'
     body: >
       Why this matters to a client: we use this card as the BTC benchmark, and 46 of our paper rooms
       had a window spanning the hole, so a return was set against a series that was not recording.

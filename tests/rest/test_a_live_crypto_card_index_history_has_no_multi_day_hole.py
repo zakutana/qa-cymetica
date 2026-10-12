@@ -20,7 +20,11 @@ all crypto-only and older, hold 17, 17 and 18 points inside those same hours wit
 Our own scripts read the proxy as the benchmark of 200 laboratory rooms, so a room whose window
 spans the hole was judged against a series that was not recording.
 
-**The rule.** For every card in the list that is live, tradeable, not past `trading_closes_at`
+**The list needs `include_user_submitted=true`.** The default list (641 cards) leaves out the proxy,
+which is a user-submitted card (`listed_in_default_feed` false, offset 600 of the 661 of the wider
+list); the first run of this check read only the default list, judged 12 cards and passed.
+
+**The rule.** For every card in that list that is live, tradeable, not past `trading_closes_at`
 and at least MIN_CRYPTO_WEIGHT crypto by basket weight, the widest gap between two consecutive
 points of its `interval=30d` history is at most MAX_GAP_HOURS. 12 h is four times the 3 h grid and
 about twice the platform-wide outage above. A card with no points in the window is named and not
@@ -107,7 +111,8 @@ def test_live_crypto_card_index_history_has_no_multi_day_hole(rest_anon):
     """Every open crypto card's 30-day index history against the 12 h it may go without a point."""
     cards, offset = [], 0
     for _ in range(MAX_PAGES):
-        page = rest_anon.get(LIST, params={"limit": PAGE, "offset": offset})
+        page = rest_anon.get(LIST, params={"limit": PAGE, "offset": offset,
+                                           "include_user_submitted": "true"})
         if page.status_code != 200:
             raise Inconclusive(f"{LIST} answered HTTP {page.status_code} at offset {offset}")
         rows = (page.json() or {}).get("cards") or []
@@ -146,14 +151,15 @@ def test_live_crypto_card_index_history_has_no_multi_day_hole(rest_anon):
     holes = [j for j in judged if j["widest_gap_hours"] > MAX_GAP_HOURS]
     for hole in holes:
         a, b = _when(hole["from"]), _when(hole["to"])
+        # Only a card that already had history when the hole began can be a control for it.
+        existed = [o for o in judged if o["id"] != hole["id"] and series[o["id"]][0] < a]
         hole["other_cards_with_a_point_inside"] = sum(
-            1 for other in judged if other["id"] != hole["id"]
-            and any(a < t < b for t in series[other["id"]]))
-        hole["other_cards_judged"] = len(judged) - 1
+            1 for o in existed if any(a < t < b for t in series[o["id"]]))
+        hole["other_cards_judged"] = len(existed)
     named = "; ".join(
         f"{h['id']} ({h['title']!r}): {h['widest_gap_hours']} h with no point, {h['from']} to {h['to']}; "
         f"{h['other_cards_with_a_point_inside']} of {h['other_cards_judged']} other open crypto cards "
-        f"recorded a point inside it" for h in holes)
+        f"that already had history recorded a point inside it" for h in holes)
     conclude(Measurement(
         verdict="failed" if holes else "passed",
         reason=(f"{len(holes)} of {len(judged)} open crypto card(s) have a hole of more than "
