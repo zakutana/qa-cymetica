@@ -1177,7 +1177,7 @@ def _the_free_table_readings():
     tiers = [{"tier": "micro"}, {"tier": "pro"}]
     seen = [{"id": 2, "tier": "pro", "mode": "paper", "status": "running", "seats_free": 0},
             {"id": 5, "tier": "pro", "mode": "paper", "status": "open", "seats_free": 0,
-             "seats_taken": 10, "seated": 9, "next_open_url": "/agent-tournaments/table/5",
+             "seats_taken": 10, "seated": 9,
              "seats": [{"status": "pending"}] + [{"status": "seated"}] * 9},
             {"id": 1, "tier": "micro", "mode": "paper", "status": "open", "seats_free": 10}]
     without, unread = tiers_without_a_free_table(tiers, seen, "paper")

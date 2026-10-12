@@ -63,8 +63,8 @@ def tiers_without_a_free_table(tiers: list, tables: list, mode: str) -> tuple[li
             {"id": t.get("id"), "status": t.get("status"), "seats_taken": t.get("seats_taken"),
              "seats_free": t.get("seats_free"), "seated": t.get("seated"),
              "pending": sum(1 for s in t.get("seats") or []
-                            if isinstance(s, dict) and s.get("status") == "pending"),
-             "next_open_url": t.get("next_open_url")} for t in mine]})
+                            if isinstance(s, dict) and s.get("status") == "pending")}
+            for t in mine]})
     return without, unread
 
 
@@ -103,7 +103,7 @@ def test_agent_tournaments_always_has_a_free_table(rest_anon):
     named = "; ".join(
         f"{w['tier']}: " + ", ".join(
             f"table {t['id']} {t['status']} seats_free {t['seats_free']} "
-            f"({t['seated']} seated, {t['pending']} pending, next_open_url {t['next_open_url']})"
+            f"({t['seated']} seated, {t['pending']} pending)"
             for t in w["tables"]) for w in without)
     conclude(Measurement(
         verdict="failed" if without else "passed",
