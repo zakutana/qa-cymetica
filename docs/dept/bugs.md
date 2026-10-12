@@ -14,6 +14,7 @@ that stops being true moves to the archive, never silently away. Write with
 - 2026-10-12 2026-10-12 A worker can write tests/repo but not scripts/, qa/ or tests/meta (T-0009): hand a code fix over as a strict-xfail test there that fails on the ASSERTION, not on a missing name, and say which lines the fix must add.
 - 2026-10-12 A fund 500 'Failed to fund bot' after 31 s (CLN-0464, T-0013) was a one-off: the same call on the orphan 50 min later answered 200 (CLN-0476, practice -500), so not filed. Whether it funded is already in the 'after' snapshot's clone list: current_balance_usdc 0.0 (the 'timeout' there is balance_check_status, their real-balance read, not the paper pocket).
 - 2026-10-12 2026-10-12 T-0016: a live start probe needs a way back. clone.py has no pause command (enabled=False is reachable only inside lab.py close), so a worker cannot test whether enable holds the 25-trading cap without leaving bots running; the 10-07 record (CLN-0333 HTTP 200 at 36 trading) predates their 10-12 enforcement and decides nothing today. llms.txt says 5 trading / 25 total while their 400 enforces 25 / 50: sent to the manager as a doc gap (T-0024).
+- 2026-10-12 T-0034: a pre-commit hook's git add inside git commit -- PATH lands in the TEMPORARY index (GIT_INDEX_FILE=next-index-N.lock), so keepset.track's add of the manifest rode into desk 3280994c (+971 lines). The fix is two edits in qa/keepset.py and scripts/commit.py, which a worker cannot write; the strict xfail is tests/repo/test_commit_manifest.py.
 
 ## How we work
 
