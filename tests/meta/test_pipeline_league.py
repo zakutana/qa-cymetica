@@ -341,6 +341,11 @@ def _bb_records(bb):
     with tempfile.TemporaryDirectory() as tmp, pytest.MonkeyPatch.context() as mp:
         state = Path(tmp)
         mp.setenv("QA_STATE_DIR", str(state))
+        # The operator's session, said: under a company worker's QA_CREW_DEPT this script brakes
+        # filings and refuses tickets the company did not file, and Bugs runs this test inside
+        # its own run -- it aborted every worker sweep on 2026-10-12 (T-0007).
+        mp.delenv("QA_CREW_DEPT", raising=False)
+        mp.delenv("QA_CREW_TICKET", raising=False)
         mp.setattr(bb, "INNER", httpx.MockTransport(handler))
         wish = state / "wish.txt"
         wish.write_text("Every table says when it is empty.\nThe lobby counts free seats.\n",

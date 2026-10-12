@@ -415,13 +415,6 @@ def ours(ticket_id: str, rows: list[dict]) -> bool:
 def cmd_act(kind: str, raw_ticket: str, body: dict | None, confirm: bool) -> int:
     """accept, change, verdict, withdraw: our own ticket, the token as X-BB-Token if held."""
     ticket_id = ticket(raw_ticket)
-    # The company's grant was to FILE (the laborator skill, 2026-10-11): a worker acts only on
-    # a ticket the company filed itself. A verdict on the operator's own ticket -- ET-30773 --
-    # is his (crew-before-c9, item 3). A session is the operator's and is not refused here.
-    if os.environ.get("QA_CREW_DEPT") and not ours(ticket_id, load()):
-        print(f"refused, nothing sent: {ticket_id} was not filed by the company; "
-              f"its {kind} is the operator's")
-        return 2
     url = f"{BASE}/{ticket_id}/{kind}"
     token = tokens().get(ticket_id)
     print(f"POST {url}\nbody: "
@@ -431,6 +424,14 @@ def cmd_act(kind: str, raw_ticket: str, body: dict | None, confirm: bool) -> int
     if not confirm:
         print(f"nothing sent: {kind} needs --confirm")
         return 0
+    # The company's grant was to FILE (the laborator skill, 2026-10-11): a worker acts only on
+    # a ticket the company filed itself; a verdict on the operator's own ticket -- ET-30773 --
+    # is the operator's (crew-before-c9, item 3). A dry run sends nothing and is not refused;
+    # a session is the operator's and is not refused here.
+    if os.environ.get("QA_CREW_DEPT") and not ours(ticket_id, load()):
+        print(f"refused, nothing sent: {ticket_id} was not filed by the company; "
+              f"its {kind} is the operator's")
+        return 2
     client = _client(write=True)
     try:
         outcome, spec = _send(client, kind, url, body, ticket_id=ticket_id, token=token)
