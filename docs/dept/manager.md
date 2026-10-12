@@ -17,6 +17,7 @@ moves to the archive, never silently away. Write with
 - The operator reads little: a note to them is the number and the decision, in Czech, and only when they are needed.
 - A department stuck for a day gets a changed approach (its memory, How we work) before it gets a second identical try.
 - 2026-10-12 While the manager runs, Bugs' hold cannot go still (it waits for every active run): the daily review stays short, never touches a running department's memory, and commits its edits before done.
+- 2026-10-12 Code a department needs (scripts/**, qa/**, tests/meta/** and NEXT.md are closed to every worker) is the session's or the deep pass's: decide its scope whole -- every part its result could call for, so the build is one trip -- and send one note (crew.py tell, the ticket's key) for NEXT.md, test first. T-0006 (hot_watch card split) and T-0007 (a non-hermetic tests/meta test) came the same hour.
 
 ## How we went wrong
 
