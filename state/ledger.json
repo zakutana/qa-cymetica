@@ -39533,15 +39533,16 @@
         "not_checked_in": "run-20261012T170213Z-a898f46d"
       },
       "filing": {
-        "state": "RAISED",
+        "state": "FIX_CLAIMED",
         "adjudicated_by": {
-          "event_id": "9405ef0f1f3c3551ea5df7ac2f247572598dd1eed773d7b5d1e782f5762d6ef1",
-          "at": "2026-10-12T14:40:37+00:00"
+          "event_id": "7fe0edf5e4b6d3c348215b8d46a714f2ff1c7fa41bda939f86539877a4cda621",
+          "at": "2026-10-12T17:24:05+00:00"
         },
         "reports": [
           {
             "report_id": 198,
-            "status": "pending"
+            "status": "fixed",
+            "status_at": "2026-10-12T17:24:05+00:00"
           }
         ],
         "refused": [],
@@ -39565,6 +39566,15 @@
             "event_id": "9405ef0f1f3c3551ea5df7ac2f247572598dd1eed773d7b5d1e782f5762d6ef1"
           },
           "at": "2026-10-12T14:40:37+00:00"
+        },
+        {
+          "axis": "filing",
+          "from": "RAISED",
+          "to": "FIX_CLAIMED",
+          "cause": {
+            "event_id": "7fe0edf5e4b6d3c348215b8d46a714f2ff1c7fa41bda939f86539877a4cda621"
+          },
+          "at": "2026-10-12T17:24:05+00:00"
         }
       ],
       "regressions": [],
@@ -39626,7 +39636,7 @@
         "measured_at": "2026-10-12T14:39:14+00:00"
       },
       "obligations": {
-        "reverify": false,
+        "reverify": true,
         "repair_check": false,
         "reopen": [],
         "retractions": [],
@@ -39800,18 +39810,19 @@
   "run_id": "run-20261012T170213Z-a898f46d",
   "run_level": "R",
   "updated_at": "2026-10-12T17:02:44+00:00",
+  "run_carried": true,
   "counts": {
     "WITHDRAWN": 13,
     "VERIFIED FIXED": 110,
-    "STILL REPRODUCIBLE": 22,
+    "STILL REPRODUCIBLE": 23,
     "CHECK CHANGED": 3,
     "OUR CHECK CANNOT TELL": 8,
     "PASSING, NEVER RAISED": 3,
     "NOT RAISED YET": 1,
-    "RAISED": 2
+    "RAISED": 1
   },
   "events_head": {
-    "seq": 3934,
-    "chain": "6522d1340497456d2f17cce35af04a6a075d6e318bbb27c0e586e0cb127c35c8"
+    "seq": 3936,
+    "chain": "2fd61d589fa1e9d56609fa7f1375db04a71f4fa888c8e62341e6fa7db715dd53"
   }
 }
