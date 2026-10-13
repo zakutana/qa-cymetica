@@ -42,8 +42,8 @@ Upgrade the owner's view of the live /company page itself, not a new page beside
 16. Tabs instead of sections: Office, Tasks, Approvals, Memory, Audit, and on the right Investable, Legal entity, Token, Settings. Investable and Legal entity are tabs only: nothing of them on the Office tab; their forms move into their tab unchanged.
 17. Tasks tab: one dense table (status, department, title, started, turns, units, result) with filters by department and status.
 18. Phone, 390 px: company bar and counter, tabs scrolling sideways, the office, departments, approvals, Manager, feed.
-Done when:
 19. Live, without a reload: everything on the page updates over the /ws/company socket the office already uses. The counter, both bars and the units climb as each turn is metered; room and department counts, tasks, approvals, the Manager's replies and the feed arrive as they happen. Today the chat fetches only on load and after a send, and the turn counts only on a reload.
+Done when:
 [ ] 1 At 1920 x 1080 and 1440 x 900 the counter, office, departments, approvals and chat are visible without scrolling.
 [ ] 2 The three turns-left numbers equal units left / the company's measured average units per turn, and change after a turn without reloading.
 [ ] 3 Session and week bars show used / cap and their resets; the at-zero line is right for extra usage on and off.
