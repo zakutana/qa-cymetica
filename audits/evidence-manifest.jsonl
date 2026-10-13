@@ -16851,6 +16851,7 @@
 {"archive": "evidence-2026-09", "bytes": 9099, "call": "POST https://cymetica.com/mcp/v1/? tools/call:get_fund_history", "id": "6cfcbd0c20846aa726552ec6c2dd7d53972ccbab7085395f7e03e06862cf78de", "why": "row"}
 {"archive": "evidence-2026-10", "bytes": 76573, "call": "GET https://cymetica.com/api/v1/event-cards/positions?", "id": "6cfcfe5f099095d883188909b6facc17c184f06aeddeef1f5abf59cfff17d7af", "why": "row"}
 {"archive": "evidence-2026-09", "bytes": 5654, "call": "POST https://cymetica.com/mcp/v1/? tools/call:get_fund", "id": "6cfd94a6868dd790828a0cd4631826a672eb7cdde25bf5aa3ee7bfb2e8718da2", "why": "row"}
+{"archive": "", "bytes": 6346, "call": "POST https://cymetica.com/api/v1/event-cards/4274529f-5d62-45e3-aca6-5777702bd7c4/buy?", "id": "6d018dcb87a1dceeda2e5018e6524ce1d73fba02a4090398ccf2b5bbd9215329", "why": "trade"}
 {"archive": "evidence-2026-10", "bytes": 9326, "call": "GET https://cymetica.com/api/v1/build-it-better/apps/stats?path", "id": "6d024b3f309552cc86a07654ec88b059be5309c49d7cc5bc8d3682aa028fa7be", "why": "row"}
 {"archive": "evidence-2026-09", "bytes": 6387, "call": "POST https://cymetica.com/mcp/v1/? tools/call:get_fund_history", "id": "6d02bd547ddab586be9903cda64da81ce32e082ca12318b38045d4c426b135fb", "why": "row"}
 {"archive": "evidence-2026-10", "bytes": 6230, "call": "GET https://cymetica.com/api/v1/vaults/cym42/share-info?", "id": "6d02d8757ac6b027ee7e4e3165d58bf10424697ef30a2f369025458080b86c53", "why": "row"}
