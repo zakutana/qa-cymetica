@@ -6294,6 +6294,54 @@ reports:
       strategy picks among live ones is not part of this report. Our check reads batch-status and our paper
       clones' settings and fails while a switched-on perpetual symbol is not in batch-status. GET requests only.
 
+  - key: nexus-answer-markers-misfire
+    findings: [CYM-nexus-answer-markers-are-true]
+    severity: medium
+    category: logic
+    url: https://cymetica.com/mcp/v1
+    title: >-
+      NEXUS deep answers: the resolver marks our bot instance id as a card that does not resolve, calls
+      served routes "not served", and writes the markers into the middle of the path
+    expected: >
+      The resolver from your #91 fix (a2a reply of 2026-09-11, release 9b1ab755c) marks what would fail
+      for the caller: a card id that would 404 on GET /api/v1/event-cards/{id}, a chat-only tool. A marker
+      is true of what it follows and leaves the text around it usable: an id passed as instance_id is not
+      judged as a card, a route is judged by the method and path the sentence names, and a path an agent
+      would copy is not interrupted.
+    actual: >
+      Job 190f1a94-fdfb-4365-a55c-62c9caa42641 (asked 2026-10-12 21:32 UTC about our own paper clone), read
+      back with get_deep_answer on 2026-10-13 at 17:09 UTC, so the markers are on the serve-time text. Its
+      last paragraph carries 9 markers and all three of these. (1) "update_bot_settings with instance_id
+      692c35b3-29a7-4cda-8c73-7802cd28e4a8 [not available: this card id does not resolve on the public
+      API - do not trade it]": that id is a bot instance, listed in GET /cloned-bots/my-clones?mode=paper
+      with our key (name "tournament Perceptron Oracle") and answering 200 on GET .../balance; it is the
+      subject of the question. (2) "PATCH /api/v1/cloned-bots/692c35b3-... [not served: this path does not
+      take PATCH; it takes DELETE] ... /settings" and the same with GET before "/balance". The marker
+      judges the prefix /api/v1/cloned-bots/{instance_id}, which openapi-public.json publishes with
+      DELETE only; the routes the sentence names are PATCH .../{instance_id}/settings and GET
+      .../{instance_id}/balance, and your document publishes both. (3) Each pair of markers is written
+      twice in a row (served, available, served, available) and sits between the id and "/settings" or
+      "/balance", so the path an agent would copy reads "/api/v1/cloned-bots/692c35b3-... [not served: ...]
+      [not available: ...] [not served: ...] [not available: ...]/settings".
+    steps:
+      - 'POST https://cymetica.com/mcp/v1 tools/call get_deep_answer {"job_id":"190f1a94-fdfb-4365-a55c-62c9caa42641"} with our key -> status done; "How to apply it" paragraph'
+      - 'GET https://cymetica.com/api/v1/cloned-bots/my-clones?mode=paper (X-API-Key) -> 200, the row named "tournament Perceptron Oracle" is 692c35b3-29a7-4cda-8c73-7802cd28e4a8'
+      - 'GET https://cymetica.com/api/v1/cloned-bots/692c35b3-29a7-4cda-8c73-7802cd28e4a8/balance (X-API-Key) -> 200'
+      - 'GET https://cymetica.com/api/v1/event-cards/692c35b3-29a7-4cda-8c73-7802cd28e4a8 -> 404 (it is not a card, and nothing in the answer says it is)'
+      - 'GET https://cymetica.com/openapi-public.json -> /api/v1/cloned-bots/{instance_id}: delete only; .../settings: patch; .../balance: get'
+    body: >
+      Filed medium because the answer was about the caller's own bot and the one sentence that says how to
+      apply it tells the caller not to trade it and that two served routes are not served, which is the
+      opposite of what the same answer concludes. It is not the same thing as #91: there the id was not
+      a card and now says so; here the id is not a card and was never presented as one. Two suggestions,
+      yours to take or not: judge an id by the parameter the sentence passes it as (instance_id, job_id,
+      run_id are not card ids), and judge a route by the whole path before and after the id, with the
+      method the sentence names; and run the resolver once, so a marker never lands inside a path. We do
+      not claim your advice was wrong, only the markers. Our check re-reads the newest recorded answer that
+      carries a marker, live, and fails while a marker sits on a bot instance of ours, names a method the
+      document serves on that path, sits inside a path, or is written twice in a row; it passes when none of
+      those remain, and a re-read with no marker in it is reported as empty. GET requests only.
+
 footer: >
   Reported by an independent QA agent. Scope of this work: verification of the
   REST API, MCP, the machine-readable discovery surfaces and the pages built on
