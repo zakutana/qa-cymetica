@@ -4,6 +4,7 @@ Ten lines a section, newest first. `lab.py log --lesson --section <s>` adds one;
 
 ## Our cards
 
+- 2026-10-13 · 2026-10-13 · The first own-card buy (cebc34ec, +74.7 % at Sharpe 4.17 over 90 d after fees) was refused HTTP 400 'Basket is not fully priceable right now' though the card read tradeable_now -- a gate pass is not a fill; the known unpriced-card defect (tests/rest/test_a_tradeable_card_can_be_priced.py), retried next tick.
 
 ## Nexus cards
 
@@ -33,6 +34,7 @@ Ten lines a section, newest first. `lab.py log --lesson --section <s>` adds one;
 
 ## Desk
 
+- 2026-10-13 · 2026-10-13 · H2 (his NEX-0138 cards bought within the hour, held 1 d, our exit): AI Data-Center -0.22 %, SPCX -4.32 % against +1.34 % for the benchmark card, both refuted -- n=2, a measurement not a finding; the overnight gap he warned about cost the stock-basket card.
 
 ## Archive
 
