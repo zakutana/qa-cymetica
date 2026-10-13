@@ -49,8 +49,9 @@ EXPERTS = ("qa_tester", "researcher", "trader", "developer", "lab_scientist", "a
 MAX_NAME, MIN_NAME = 120, 2
 MIN_MISSION, MAX_MISSION = 10, 2000
 MAX_CHARTER, MAX_DEPT_NAME, MAX_KEY, MAX_STYLE = 2000, 80, 40, 40
+MAX_MESSAGE = 4000
 MIN_DEPARTMENTS, MAX_DEPARTMENTS = 1, 8
-ID = re.compile(r"[A-Za-z0-9_-]{8,64}")
+ID = re.compile(r"[0-9]{1,9}|[A-Za-z0-9_-]{8,64}")   # theirs is an integer (13); a slug is tolerated
 
 KEEP = ("id", "name", "status", "departments", "key", "detail", "message", "code")
 
@@ -72,7 +73,7 @@ def _text(value) -> str:
 
 def company_id(raw) -> str:
     """A company id as their API writes it; anything else never reaches a URL."""
-    if not isinstance(raw, str) or not ID.fullmatch(raw) or raw.isdigit():
+    if not isinstance(raw, str) or not ID.fullmatch(raw):
         raise Refused(f"{raw!r} is not a company id")
     return raw
 
@@ -116,6 +117,14 @@ def create_body(*, name, mission, departments, report_style="brief") -> dict:
     if len(keys) != len(set(keys)):
         raise Refused(f"department keys must be unique: {keys}")
     return {"name": name, "mission": mission, "departments": depts, "report_style": style}
+
+
+def message_body(text) -> dict:
+    """A word to the Manager (their MessageIn: 1 to 4,000 characters); it becomes a task brief."""
+    said = _text(text)
+    if not 1 <= len(said) <= MAX_MESSAGE:
+        raise Refused(f"a message is 1 to {MAX_MESSAGE:,} characters; this one is {len(said):,}")
+    return {"text": said}
 
 
 def _read_json(path) -> dict:
@@ -285,6 +294,51 @@ def cmd_department(raw_company, body_file, confirm: bool) -> int:
     return 0 if outcome["outcome"] == "accepted" else 1
 
 
+def cmd_message(raw_company, text, confirm: bool) -> int:
+    cid = company_id(raw_company)
+    body = message_body(text)
+    url = f"{BASE}/{cid}/message"
+    print(f"POST {url}\n{json.dumps(body, ensure_ascii=False, indent=1)}")
+    if not confirm:
+        print("nothing sent: message needs --confirm")
+        return 0
+    if os.environ.get("QA_CREW_DEPT"):
+        print("refused, nothing sent: a company worker never writes to their Manager")
+        return 2
+    client = _client()
+    try:
+        outcome = _send(client, "message", url, body)
+    finally:
+        client.close()
+    _say(outcome)
+    return 0 if outcome["outcome"] == "accepted" else 1
+
+
+def cmd_read(raw_company) -> int:
+    """The Manager's words and the tasks, newest last (reads)."""
+    cid = company_id(raw_company)
+    load_dotenv()
+    install_client_guard()
+    client = build_client(identities()["trusted"], EndpointRegistry.load(), timeout=30.0, inner=INNER)
+    token = CURRENT_TIER.set(SafetyTier.SAFE)
+    try:
+        said = _json(client.get(f"{BASE}/{cid}/messages")) or {}
+        tasks = _json(client.get(f"{BASE}/{cid}/tasks")) or {}
+        mine = _json(client.get(f"{BASE}/mine")) or {}
+    finally:
+        CURRENT_TIER.reset(token)
+        client.close()
+    for m in said.get("messages", []):
+        print(f"{str(m.get('created_at'))[11:19]} {m.get('role'):8} {m.get('text')}")
+    rows = tasks.get("tasks") if isinstance(tasks, dict) else tasks
+    for t in rows or []:
+        print(f"task {t.get('id')} {t.get('status'):9} {t.get('title') or t.get('brief', '')[:80]}")
+    print(f"budget {mine.get('budget')}  approvals waiting: {len(mine.get('approvals') or [])}")
+    for dep in mine.get("departments", []):
+        print(f"{dep.get('key')}: {dep.get('status')} {dep.get('tasks')} cost_usd_7d {dep.get('cost_usd_7d')}")
+    return 0
+
+
 def cmd_mine() -> int:
     load_dotenv()
     install_client_guard()
@@ -313,6 +367,12 @@ def main(argv: list[str] | None = None) -> int:
     dept.add_argument("--company", required=True)
     dept.add_argument("--body-file", required=True)
     dept.add_argument("--confirm", action="store_true")
+    tell = sub.add_parser("message", help="a word to the Manager; it becomes a task brief")
+    tell.add_argument("--company", required=True)
+    tell.add_argument("--text", required=True)
+    tell.add_argument("--confirm", action="store_true")
+    look = sub.add_parser("read", help="the Manager's messages, the tasks and the budget (reads)")
+    look.add_argument("--company", required=True)
     sub.add_parser("mine", help="their record of our company (a read)")
     args = parser.parse_args(argv)
     try:
@@ -320,6 +380,10 @@ def main(argv: list[str] | None = None) -> int:
             return cmd_create(args.body_file, args.confirm)
         if args.command == "department":
             return cmd_department(args.company, args.body_file, args.confirm)
+        if args.command == "message":
+            return cmd_message(args.company, args.text, args.confirm)
+        if args.command == "read":
+            return cmd_read(args.company)
         return cmd_mine()
     except Refused as exc:
         print(f"refused, nothing sent: {exc}")

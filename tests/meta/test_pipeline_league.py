@@ -202,7 +202,8 @@ def test_the_league_answers_only_what_it_computes_exactly_and_only_once():
 
 CO_BASE = "https://cymetica.com/api/v1/company"
 CO_RULES = {"company.create": {"name", "mission", "departments", "report_style"},
-            "company.department": {"key", "name", "charter", "experts"}}
+            "company.department": {"key", "name", "charter", "experts"},
+            "company.message": {"text"}}
 
 
 def _company_script():
@@ -234,6 +235,10 @@ def _company_write():
                for r in registry.rules if r.id in CO_RULES)
     assert set(co.CREATE_KEYS) == CO_RULES["company.create"], co.CREATE_KEYS
     assert set(co.DEPT_KEYS) == CO_RULES["company.department"], co.DEPT_KEYS
+    assert co.message_body("  Start with the Chart Analyzer.\r\n") == {"text": "Start with the Chart Analyzer."}
+    for bad in ("", "  \n ", "x" * 4001):
+        with pytest.raises(co.Refused):
+            co.message_body(bad)
 
     # Their limits, refused before a body exists.
     testing = {"key": "testing", "charter": "Find real bugs.", "experts": ["qa_tester"]}
@@ -256,8 +261,8 @@ def _company_write():
     assert co.department_body(key="trading_desk", charter=None, experts=None) == {"key": "trading_desk"}
     with pytest.raises(co.Refused):
         co.department_body(key=None, name=None, charter="x", experts=["qa_tester"])
-    assert co.company_id("7f3a9c10-1b2c-4d5e-8f90-123456789abc")
-    for bad in ("../startups", "7", "abc/def", "a?b=1"):
+    assert co.company_id("7f3a9c10-1b2c-4d5e-8f90-123456789abc") and co.company_id("13") == "13"
+    for bad in ("../startups", "abc/def", "a?b=1", "", "13/approvals/1", None):
         with pytest.raises(co.Refused):
             co.company_id(bad)
 
@@ -271,11 +276,12 @@ def _company_write():
     registry.mutate_allowed_hosts = frozenset({"cymetica.com"})
     transport = SafetyTransport(Inner(), registry)
     cid = "7f3a9c10-1b2c-4d5e-8f90-123456789abc"
-    exact = ((f"{CO_BASE}/", made), (f"{CO_BASE}/{cid}/departments", co.department_body(**testing)))
+    exact = ((f"{CO_BASE}/", made), (f"{CO_BASE}/{cid}/departments", co.department_body(**testing)),
+             (f"{CO_BASE}/{cid}/message", co.message_body("Start with the Chart Analyzer.")))
     refused = ((f"{CO_BASE}/", dict(made, token_chain="solana")),
                (f"{CO_BASE}/{cid}/departments", dict(co.department_body(**testing), owner="x")),
                (f"{CO_BASE}/{cid}/approvals/1", {"decision": "approve"}),
-               (f"{CO_BASE}/{cid}/message", {"text": "hello"}),
+               (f"{CO_BASE}/{cid}/message", {"text": "hello", "role": "owner"}),
                (f"{CO_BASE}/{cid}/pause", None), (f"{CO_BASE}/{cid}/investable", {"enabled": True}),
                (f"{CO_BASE}/{cid}/entity/request", {}))
     token = CURRENT_TIER.set(SafetyTier.MUTATE)
@@ -308,6 +314,8 @@ def _company_write():
                                              "departments": [{"id": "d1", "key": "testing"}]})
         if request.url.path.endswith("/departments"):
             return httpx.Response(201, json={"id": "d2", "key": body.get("key"), "name": "Trading desk"})
+        if request.url.path.endswith("/message"):
+            return httpx.Response(200, json={"id": 70, "role": "owner", "text": body["text"]})
         return httpx.Response(404, json={"detail": "not here"})
 
     with tempfile.TemporaryDirectory() as tmp, pytest.MonkeyPatch.context() as mp:
@@ -331,6 +339,16 @@ def _company_write():
                         "--confirm"]) == 0
         assert sent[-1] == ("POST", f"/api/v1/company/{cid}/departments", {"key": "trading_desk"})
         assert co.load()[-1]["outcome"] == "accepted" and co.load()[-1]["kind"] == "department"
+
+        # A word to the Manager: the text is the whole body; a 200 naming its id is accepted.
+        before = len(sent)
+        assert co.main(["message", "--company", cid, "--text", "Start with the Chart Analyzer."]) == 0
+        assert len(sent) == before, "a dry run sent the message"
+        assert co.main(["message", "--company", cid, "--text", "Start with the Chart Analyzer.",
+                        "--confirm"]) == 0
+        assert sent[-1] == ("POST", f"/api/v1/company/{cid}/message",
+                            {"text": "Start with the Chart Analyzer."}), sent[-1]
+        assert co.load()[-1]["kind"] == "message" and co.load()[-1]["outcome"] == "accepted"
 
         mp.setenv("QA_CREW_DEPT", "bugs")
         count = len(sent)

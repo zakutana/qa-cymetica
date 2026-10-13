@@ -807,6 +807,15 @@ endpoints:
     executable_params: [key, name, charter, experts]
     closed_body: true
 
+  # The owner's word to the Manager (MessageIn {text}, 1 to 4,000 characters): "Messages to the
+  # Manager become task briefs" (their answer of 2026-10-13). The operator's words, not ours.
+  - id: company.message
+    path: /api/v1/company/{company_id}/message
+    methods: [POST]
+    component: rest.company
+    executable_params: [text]
+    closed_body: true
+
   - id: prop.signup
     path: /api/v1/prop/signup
     methods: [POST]
