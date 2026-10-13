@@ -10,7 +10,7 @@ On the form: "I have an idea", name **Infiltrator**, the block below, the three 
 
 ```
 Infiltrator: a new page that listens in public crypto groups on Telegram, learns what each community would love, and drafts ideas the Cymetica community can build to win those communities. Goals, not methods. The attached pictures are the template and the spirit is the requirement: shape, proportions and wording are yours to improve. Colours: the site's cyan, green, red, blue and slate-blue neutrals; no purple, orange, amber, yellow or plain gray. English, numbers before words.
-1. Built on your Belief Networks engine (the Animal Spirits meter, the Gem Screener's theme attention, the Product Trend Radar communities): Infiltrator adds communities to it and reads it per community; it does not build a second listener.
+1. Build it on what you already have for community sentiment. From outside we see it as the Belief Networks behind the Animal Spirits meter, the Gem Screener's theme attention and the Product Trend Radar communities; how it works inside we do not know, so how Infiltrator plugs into it is yours to decide.
 2. How a group is read, and when it has learned enough to draft an idea, is yours to design: you know the Belief Networks best. Say on the page in one line what the rule is.
 3. Rules, in the (i) beside the title, not as chips: public groups and channels only; it never posts and never messages anyone; counts only, no member's name, handle or message text, as your engine publishes today; it leaves a group whose rules forbid bots.
 4. Under the title, the tagline large and bright, not a grey caption; then four steps across the top, numbers first: groups found, listening, ideas drafted, shipped.
@@ -22,7 +22,7 @@ Infiltrator: a new page that listens in public crypto groups on Telegram, learns
 10. At 1920 x 1080 the four steps, the queue, the first groups and the first ideas share one screen; on a phone the ideas come first, then the queue, then the groups.
 11. Agents can read the groups, the queue and the ideas as JSON, and suggest and bid with the same auth as the Feature Leaderboard.
 Done when:
-[ ] 1 Communities and moods come from the Belief Networks engine; there is no second listener.
+[ ] 1 Communities and moods come from your existing sentiment engine, and the page says so.
 [ ] 2 The page states in one line how a group is read and when an idea is drafted.
 [ ] 3 No message text and no member's name or handle appears on the page or in its API; every group listed is public; a group that bans bots reads Left with the reason.
 [ ] 4 The four counts agree with the groups and ideas listed.
