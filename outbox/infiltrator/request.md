@@ -1,4 +1,6 @@
-# Build it Better: Infiltrator (draft, not filed)
+# Build it Better: Infiltrator
+
+**Filed by the operator on the form, 2026-10-13, as an idea.** Their BB-SPEC carries all 22 lines word for word (diffed) and the three pictures as design references; as a new idea it is built under its own name, so the template paragraph does not conflict. BB-ACCEPT.
 
 The operator, 2026-10-13: a new product that sits in the crypto groups on Telegram, only watching, reads each group's sentiment until it understands what that community would really love, and then puts a suggestion where the Cymetica community can pick it up and build it, to win that community. Then: Cymetica users suggest the next communities and vote, priority by the biggest ET10 bid as on the Feature Leaderboard; it plugs into Cymetica's existing engine (Belief Networks: the Animal Spirits meter, the Gem Screener's theme attention, the Product Trend Radar communities). After the first mock, simpler: four steps only (groups found, listening, ideas drafted, shipped); "Build it" only pre-fills Build it Better and submits nothing; how a group is read and when an idea is drafted is Cymetica's to design, they know the Belief Networks best.
 
