@@ -39,3 +39,7 @@ Done when:
 [ ] 5 The backtest sentence is no longer beside the Degen picks gate row; it and the verdict still stand once further down.
 [ ] 6 No pick card has the warning triangle; every warning it carried today is in that card's "Watch out:" line, each once.
 ```
+
+## For the next request: a parent app's logo is its first product's
+
+Found 2026-10-13 making the tier list. Securitize (SECZ) shows BlackRock's logo, Origin (OGN) the Ethereum diamond, Ethena (ENA) USDe's dollar, Uniswap (UNI) "V3", and more parent# rows a sub-product's mark (the snapshot's `logo_data` against DefiLlama's icon per slug; scan in the session's scratchpad, `logo_scan.py`). Not their bug: the original collector takes, for a parent group, the logo of the first child it meets in the fee feed (`collector.py`, `"logo": e.get("logo")` in the group's setdefault), and they ported it. Goal for the next request: a token's row shows the token's own logo (CoinGecko's image for its `gecko_id`), never a product's or another company's. Not filed with the request above: it went out before this was found, and a BB-CHANGE now would switch its spec to the rebuild template (#192).
