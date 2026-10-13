@@ -34,7 +34,9 @@ Ten lines a section, newest first. `lab.py log --lesson --section <s>` adds one;
 
 ## Desk
 
-- 2026-10-13 · 2026-10-13 · H2 (his NEX-0138 cards bought within the hour, held 1 d, our exit): AI Data-Center -0.22 %, SPCX -4.32 % against +1.34 % for the benchmark card, both refuted -- n=2, a measurement not a finding; the overnight gap he warned about cost the stock-basket card.
+- 2026-10-13 · 2026-10-13 · Desk H2, STR-0213 (NEX-0138's SPCX card, bought 17:28 UTC, sold at 24 h): -3.91 % (-22.35 on 570.95, TRD-0122); its verdict read -4.32 %. Overnight it never fell below -1.47 %; the drop sits in the sampler's 08:29-15:48 UTC hole (-0.60 % before, -4.32 % after), which spans the 13:30 UTC open his exit named, so his exit is unread. H2 after two sales: mean -2.22 %, both under the 0.4 % fee line, n=2 of 10, no verdict; all three H2 buys are US-hours stock baskets carrying the overnight gap he advised against.
+- 2026-10-13 · 2026-10-13 · Desk H2, STR-0212 (NEX-0138's AI Data-Center card, bought 17:27 UTC within his hour, sold at 24 h): -0.52 % (-2.95 on 570.95, TRD-0121). The sale is H2's number; the verdict's -0.22 % (card leg at its last interval=all point, T-0050) and +1.34 % benchmark (T-0039) are not, and the lab's 17:34 line quoted those (archived, manager T-0077). His own exit, modelled off the sampler's 20-min index points (no fill): +0.00 % at the 10-12 US close, his +2.0/-1.5 bracket never touched, against our -0.52 % over the night.
 
 ## Archive
 
+- 2026-10-13 · 2026-10-13 · H2 (his NEX-0138 cards bought within the hour, held 1 d, our exit): AI Data-Center -0.22 %, SPCX -4.32 % against +1.34 % for the benchmark card, both refuted -- n=2, a measurement not a finding; the overnight gap he warned about cost the stock-basket card. (desk; archived 2026-10-13 by manager T-0077: the lab's line, off the rooms' verdicts, which are written before the sale; H2 counts the sale, -0.52 / -3.91 %, and 2 of 10 decides nothing. The Desk section is the desk's alone.)
