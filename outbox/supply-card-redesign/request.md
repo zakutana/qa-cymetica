@@ -1,8 +1,11 @@
 # Build it Better: the Supply card and the Supply Analyzer page (draft, not filed)
 
-On the form: "It exists" with the app `https://cymetica.com/supply-analyzer` (the Gem Screener card is the same data, so one request covers both). Text: the block below, one item per line. Pictures (the form takes at most 6): `mockup.png` from this folder and `mockup-hype.png`, `mockup-arb.png`, `mockup-phar.png` from `outbox/supply-analyzer-page/`. Filing is the operator's step; the request token shows once.
+On the form (since 2026-10-13, REPLY-0161): "I have a link" with `https://cymetica.com/supply-analyzer` (the Gem Screener card is the same data, so one request covers both), and the block below pasted into "What should it do better?", one item per line. Pictures (the form takes at most 6): `mockup.png` from this folder and `mockup-hype.png`, `mockup-arb.png`, `mockup-phar.png` from `outbox/supply-analyzer-page/`. Filing is the operator's step; the request token shows once. No open ticket blocks it (ET-28934 shipped; read 2026-10-13).
+
+After filing, their BB-SPEC comes back in the template for rebuilding someone else's app ("a page on EventTrader that does the job you use ... for", "never ... logos, copy or trademarks"). The first line of the block below says it is an upgrade of the live page; if the spec still carries the template, send a BB-CHANGE saying so before BB-ACCEPT, as for ET-31263.
 
 ```
+Follow-up to ET-28934: upgrade the live Supply Analyzer page and the Gem Screener's Supply card themselves, not new pages beside them; they keep their names, logos and copy, and the template lines about rebuilding someone else's app do not apply.
 Supply card (Gem Screener coin detail) and the Supply Analyzer page: replace today's card with the tiles on top, as in the attached mockup (real HYPE, ARB and PHAR figures from your API, Oct 10). Goals, not methods: how you build it is your call.
 One source per number, never two side by side: circulating supply, price and market cap from CoinGecko only (on PHAR it matches the chain: total 534.09M minus 498.56M held by xPHAR = 35.53M, CoinGecko's figure); DeFiLlama only for the future unlock schedule.
 Tile 1, Circulating: "222.4M of 1.00B", a bar, "22.2% of max supply is out".
