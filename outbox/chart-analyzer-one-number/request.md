@@ -1,4 +1,6 @@
-# Build it Better: Chart Analyzer, a chartist for degens (draft, not filed)
+# Build it Better: Chart Analyzer, a chartist for degens
+
+**Filed by the operator on the form, 2026-10-13.** Their BB-SPEC carries all 33 lines word for word (diffed) and the four pictures as design references; its closing template paragraph is the #192 clause, which line 1 overrides. BB-ACCEPT without a BB-CHANGE.
 
 The operator, 2026-10-13, on the live page for Collector Crypt (CARDS, Solana, 1D): *"vypada strasne ... tolik smeti ke cteni ze to je ultra anti degen friendly"*; two numbers (44% / 53%, and 49 in the gauge) and no way to tell which counts; scrolling down to the setups hides the chart; *"co je what the verdict is made of? kdo to ma cist?"*; beside a Binance screenshot: *"na binance je mnohem vic obrazovky vyuzito ... ten filter panel je tak moc hnusny. vygeneruj novy top design pro degeny"*. After the first mock: *"ja chci nekde na prvni pohled hned videt jestli je chart proste bullish nebo bearish ... kde smeruje"* and *"podstata toho chart analyzeru je ze ho otevru a misto grafu za nim sedi expert top chartista ktery mi vse sdeli pro max degena easy info"*; *"muzes cokoliv, chci at je to perfektni produkt pro degeny"*. Goals are theirs; the design is ours, their veto open. It follows their redesign spec of 2026-10-01 (one screen, no jargon); the page was rebuilt since, with a verdict, and the clutter came back in a new form.
 
