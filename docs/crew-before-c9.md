@@ -132,10 +132,13 @@ Tests: `tests/meta/test_pipeline_crew.py`, `tests/repo/test_reminders.py`. Items
       `launch_bot` returns on their `ref_linked` (`:2518`), `lab.py launch NEX-0143` included.
       So: (1) b.'s release is one step before ANY clone of ours while the all-cap binds -- his
       (`launch_bot`), the grid's, h2h's. (2) A pick of his that meets a cap with nothing
-      releasable decides nothing, as a card not yet tradeable does: `later()` not `stop()`,
-      `capped`, the answer stays pending; and a bot room stopped on a capacity refusal
+      releasable decides nothing, as a card not yet tradeable does: `later()` not `stop()`, so
+      the answer stays pending -- and NOT `capped`, which breaks the answers loop (`:2725`) and
+      would hold back every later answer's cards; and a bot room stopped on a capacity refusal
       (`lab.capacity_refusal` of its clone's outcome, no other refusal) does not spend
-      `(origin, species)`. (3) While a pick of his waits on a cap, the grid starts no cell, so
+      `(origin, species)`. Such a room has no link to its clone (`rooms.add_link` runs only
+      after acceptance, `:2596`): match it by the CLN intent's `nexus.id` and `source_id`
+      (CLN-0528: NEX-0143, 29c2b1ee). (3) While a pick of his waits on a cap, the grid starts no cell, so
       the next freed slot is his. (4) Once it is in, `lab.py launch NEX-0143` starts his two, and
       any other pick of his stopped on a capacity 400 before the build the same way. Tests beside
       c.: 50 owned, one judged clone, one pick of his -> one release, his clone, no grid clone
