@@ -255,3 +255,48 @@ def test_the_hook_is_actually_wired_up():
             f"alternatives in the matcher ({sorted(covered)}), so the hook "
             f"never runs for it; a substring of another entry does not count"
         )
+    _every_hook_is_found_from_any_directory(settings)
+
+
+# Every hook is started through this: the script is looked up under the root the session
+# started in (CLAUDE_PROJECT_DIR, which Claude Code exports to every hook process), and
+# falls back to the working directory -- what a relative path did -- when it is not set.
+LAUNCH = ("import os,runpy,sys; p=os.path.join(os.environ.get('CLAUDE_PROJECT_DIR') or '.', "
+          "'.claude', 'hooks', sys.argv[1]); sys.argv=[p]; runpy.run_path(p, run_name='__main__')")
+
+
+def _every_hook_is_found_from_any_directory(settings: dict) -> None:
+    """2026-10-13, the fifth time: a `cd` into another repository moved the session's
+    directory, every hook was written as `.claude/hooks/x.py` relative to it, and all of
+    them failed closed -- Write, Edit, Bash and PowerShell refused until the turn ended.
+    A hook that finds its script under CLAUDE_PROJECT_DIR is found wherever the shell
+    stands. The documented `${CLAUDE_PROJECT_DIR}` placeholder in `args` would do it too,
+    but a placeholder that were not substituted would lock every tool out for good; the
+    launcher falls back to what the relative path did. Run here as Claude Code runs it,
+    from a directory that is not the repository."""
+    import os
+    import subprocess
+    import sys
+    import tempfile
+
+    hooks = [h for event in settings["hooks"].values() for block in event
+             for h in block.get("hooks") or []]
+    assert hooks, "no hooks at all, so this asserts nothing"
+    for hook in hooks:
+        args = hook.get("args") or []
+        assert hook.get("command") == "python" and args[:2] == ["-c", LAUNCH], (
+            f"{hook} is not started through the launcher, so a `cd` turns it "
+            f"off-and-closed again")
+        assert len(args) == 3 and (REPO / ".claude" / "hooks" / args[2]).is_file(), args
+    guard = next(h for h in hooks if h["args"][2] == "protect_state.py")
+    with tempfile.TemporaryDirectory() as elsewhere:
+        said = subprocess.run([sys.executable, *guard["args"]], cwd=elsewhere,
+                              env={**os.environ, "CLAUDE_PROJECT_DIR": str(REPO)},
+                              capture_output=True, text=True, timeout=20,
+                              input=json.dumps({"tool_name": "Write", "tool_input": {
+                                  "file_path": str(REPO / "state" / "ledger.json"),
+                                  "content": "x"}}))
+    assert "can't open file" not in said.stderr, said.stderr
+    assert said.returncode == 2 or "deny" in said.stdout, (
+        "run from another directory, the guard must still find itself and refuse a "
+        f"write under state/: rc={said.returncode} out={said.stdout!r} err={said.stderr!r}")
