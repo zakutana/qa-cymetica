@@ -13,11 +13,12 @@ Drawn by `make_mockup.py` (this folder), rendered and colour-scanned by `render.
 - `desktop-1920.png`: 1920 x 1080, the Office tab.
 - `desktop-1440.png`: a laptop, 1440 x 900.
 - `phone-390.png`: a phone, 390 px; the office opens zoomed on the Manager.
+- `department-1920.png`: a room clicked: Testing, with its real tasks, memory and charter from our company (id 13).
 - `mockup.html`: the same page, live at any width.
 
 ## Filing
 
-On the form, "I have a link" with `https://cymetica.com/company`, the block below, one item per line, and the three PNGs as pictures. After filing, check their BB-SPEC line by line against this block, then BB-ACCEPT without a BB-CHANGE (#192).
+On the form, "I have a link" with `https://cymetica.com/company`, the block below, one item per line, and the four PNGs as pictures. After filing, check their BB-SPEC line by line against this block, then BB-ACCEPT without a BB-CHANGE (#192).
 
 ```
 Upgrade the owner's view of the live /company page itself, not a new page beside it; it keeps its name, logo and copy, and the template lines about rebuilding someone else's app do not apply. Goals, not methods. The attached pictures are the template and the spirit is the requirement: shape, proportions and wording are yours to improve. Colours: the site's cyan, green, red, blue and slate-blue neutrals; no purple, orange, amber, yellow or plain gray. English, numbers before words; explanations in a tooltip, not a paragraph.
@@ -28,14 +29,15 @@ Upgrade the owner's view of the live /company page itself, not a new page beside
 5. The daily ceiling stays, labelled as a ceiling: a strip of 40 cells under the office, one per turn today, coloured by outcome (running cyan, done green, failed red), "TURNS TODAY 16 / 40".
 6. The office in the centre, filling its stage (at least 1,100 px wide at 1920), drawn sharp at the device pixel ratio: not a 480 px pixel-art canvas scaled up. Our picture is isometric; any dense, detailed 2D style is fine.
 7. Dense means, checkably: each department is a room with a plate (name, open, done, failed); a desk with a lit monitor per hired expert, the agent at it with its role; the room's current task on its wall screen; one note per task on a wall board, coloured by state; the Manager's room in the middle with the open count; the owner's desk with the approvals count; the weekly audit; an empty "+ Add department" lot.
-8. Alive: a working agent lights up (monitor and a ring); work travels between the Manager and the rooms as packets coloured by outcome; a room glows while it works. Clicking a room opens today's department editor; the charter lives there, not on the main screen.
-9. The 2D / 3D switch, zoom and fit stay as small controls on the stage. On a phone the office opens zoomed on the Manager and pans with a finger.
-10. Left rail: one compact row per department: status dot, name, units used in 7 days, open, done, failed, memory, experts. Units are the counter's unit (plan units), instead of or beside cost_usd_7d. Under the rows: tasks done and failed in 7 days, the company's units in 7 days, approvals approved in 7 days.
-11. Right column: Waiting for you first (department, kind, age, a one-line title, Approve, Reject, Read), then the Manager chat (newest at the bottom, the box always visible), then the live feed (latest five).
-12. Company bar: name, Active or Paused with Pause or Resume, the counter, "N waiting for you" in red when N > 0 (opens Approvals), and Upgrade to /usage.
-13. Tabs instead of sections: Office, Tasks, Approvals, Memory, Audit, and on the right Investable, Legal entity, Token, Settings. Investable and Legal entity are tabs only: nothing of them on the Office tab; their forms move into their tab unchanged.
-14. Tasks tab: one dense table (status, department, title, started, turns, units, result) with filters by department and status.
-15. Phone, 390 px: company bar and counter, tabs scrolling sideways, the office, departments, approvals, Manager, feed.
+8. Alive: a working agent lights up (monitor and a ring); work travels between the Manager and the rooms as packets coloured by outcome; a room glows while it works.
+9. Clicking a room or a department row opens that department beside the office, from what /tasks, /tasks/{id} and /memory already return: status and experts; open, done, failed, units in 7 days, memory; what runs now with its attempt and last error; its tasks with a one-line result each (a click shows the task in full); its latest memory by kind; its waiting approvals; and the charter, one line with Edit (today's editor). The charter is not on the main screen.
+10. The 2D / 3D switch, zoom and fit stay as small controls on the stage. On a phone the office opens zoomed on the Manager and pans with a finger.
+11. Left rail: one compact row per department: status dot, name, units used in 7 days, open, done, failed, memory, experts. Units are the counter's unit (plan units), instead of or beside cost_usd_7d. Under the rows: tasks done and failed in 7 days, the company's units in 7 days, approvals approved in 7 days.
+12. Right column: Waiting for you first (department, kind, age, a one-line title, Approve, Reject, Read), then the Manager chat (newest at the bottom, the box always visible), then the live feed (latest five).
+13. Company bar: name, Active or Paused with Pause or Resume, the counter, "N waiting for you" in red when N > 0 (opens Approvals), and Upgrade to /usage.
+14. Tabs instead of sections: Office, Tasks, Approvals, Memory, Audit, and on the right Investable, Legal entity, Token, Settings. Investable and Legal entity are tabs only: nothing of them on the Office tab; their forms move into their tab unchanged.
+15. Tasks tab: one dense table (status, department, title, started, turns, units, result) with filters by department and status.
+16. Phone, 390 px: company bar and counter, tabs scrolling sideways, the office, departments, approvals, Manager, feed.
 Done when:
 [ ] 1 At 1920 x 1080 and 1440 x 900 the counter, office, departments, approvals and chat are visible without scrolling.
 [ ] 2 The three turns-left numbers equal units left / the company's measured average units per turn, and change after a turn without reloading.
@@ -44,6 +46,7 @@ Done when:
 [ ] 6 The office is at least 1,100 px wide at 1920 and sharp on a 2x screen.
 [ ] 7 Every room shows its plate, a desk and agent per expert, its current task and its task notes; the Manager, owner, audit and add-department lots are there.
 [ ] 8 A turn that finishes moves a packet and changes the room's counts without a reload.
-[ ] 13 The Office tab shows nothing of Investable or Legal entity; both open as tabs.
-[ ] 15 At 390 px nothing scrolls sideways except the tabs and the office.
+[ ] 9 Clicking a room or its row opens the department with its numbers, current task, tasks with results, memory, approvals and charter.
+[ ] 14 The Office tab shows nothing of Investable or Legal entity; both open as tabs.
+[ ] 16 At 390 px nothing scrolls sideways except the tabs and the office.
 ```

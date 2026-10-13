@@ -216,6 +216,10 @@ def dept_room(r):
     if r["failed"]:
         line2.append((f"{r['failed']} failed", RED))
     OVERLAY.append(nameplate(cx, cy, r["name"], colour, line2))
+    if r["name"] == "TESTING":   # the selection ring the detail view (?dept) shows
+        ring = [P(x0 - 0.15, y0 - 0.15, 0.12), P(x0 + 7.15, y0 - 0.15, 0.12), P(x0 + 7.15, y0 + 7.15, 0.12),
+                P(x0 - 0.15, y0 + 7.15, 0.12)]
+        OVERLAY.append(poly(ring, "none", CYAN, 2.4, 1.0, ' class="sel" filter="url(#glow)"'))
     return "".join(out)
 
 
@@ -386,7 +390,7 @@ def dept_rows():
     out = []
     for name, st, op, dn, fl, u, mem, ex in DEPT_ROWS:
         out.append(f"""
-      <div class="dept {st}">
+      <div class="dept {st}{' pick' if name == 'Testing' else ''}">
         <div class="d1"><i class="dot"></i><b>{esc(name)}</b><span class="u">{u:.2f}<small>u</small></span></div>
         <div class="d2"><span class="c">{op}<small>open</small></span><span class="g">{dn}<small>done</small></span>
           <span class="{'r' if fl else 'z'}">{fl}<small>failed</small></span><span class="m">{mem}<small>mem</small></span></div>
@@ -507,6 +511,30 @@ body{display:flex;flex-direction:column;height:100vh}
 .feed li{font-size:11.5px;padding:5px 8px;border-left:3px solid var(--dim2);background:var(--navy2);border-radius:0 6px 6px 0;display:flex;gap:6px}
 .feed li b{color:var(--text)}.feed li em{margin-left:auto;font-style:normal;color:var(--dim2)}
 .feed li.g{border-color:var(--green)}.feed li.r{border-color:var(--red)}.feed li.c{border-color:var(--cyan)}.feed li.x{border-color:var(--red);color:var(--red)}
+body.dept .dept.pick{border-color:var(--cyan);background:rgba(0,207,255,.08)}
+.sel,.drawer{display:none}body.dept .sel{display:inline}body.dept .drawer{display:flex}
+.drawer{position:absolute;z-index:3;left:12px;top:48px;bottom:52px;width:min(560px,52%);flex-direction:column;gap:10px;
+ background:var(--navy);border:1px solid var(--cyan);border-radius:12px;padding:14px;box-shadow:0 0 40px rgba(0,207,255,.18);overflow:hidden}
+.dh{display:flex;align-items:center;gap:10px}.dh h2{font-family:'Archivo Black';font-weight:400;font-size:20px}
+.dh .x{margin-left:auto;display:flex;gap:6px}
+.chips{display:flex;gap:6px;flex-wrap:wrap}.chip{font-size:11px;padding:3px 9px;border-radius:99px;border:1px solid var(--line3);color:var(--dim)}
+.kp{display:grid;grid-template-columns:repeat(5,1fr);gap:6px}
+.kp div{background:var(--navy2);border:1px solid var(--line);border-radius:8px;padding:7px 9px}
+.kp b{display:block;font-family:'Archivo Black';font-weight:400;font-size:20px;line-height:1.1}.kp span{font-size:10px;color:var(--dim2)}
+.now{border:1px solid rgba(0,207,255,.45);border-radius:9px;padding:9px 11px;background:rgba(0,207,255,.06)}
+.now .t1{font-size:10px;letter-spacing:.1em;color:var(--cyan);font-weight:700}.now p{font-weight:700;margin:4px 0}
+.now .t2{font-size:11px;color:var(--dim2)}.now .t2 b{color:var(--red)}
+.sec{font-size:10.5px;letter-spacing:.12em;color:var(--dim2);font-weight:700;display:flex;justify-content:space-between}
+.sec a{color:var(--cyan);letter-spacing:0;font-weight:600}
+.trow{display:grid;grid-template-columns:62px 1fr 44px;gap:8px;align-items:start;padding:7px 9px;background:var(--navy2);border:1px solid var(--line);border-radius:8px}
+.trow .st{font-size:10px;font-weight:700;padding:2px 0;text-align:center;border-radius:5px;border:1px solid}
+.st.dn{color:var(--green);border-color:var(--green)}.st.rt{color:var(--red);border-color:var(--red)}
+.trow b{font-size:12px;display:block}.trow em{font-style:normal;font-size:11px;color:var(--dim2);display:block;margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.trow i{font-style:normal;font-size:10.5px;color:var(--dim2);text-align:right}
+.mem{display:grid;grid-template-columns:52px 1fr;gap:8px;font-size:11.5px;padding:5px 0;border-bottom:1px solid var(--line)}
+.mem span{font-size:9.5px;font-weight:700;color:var(--blue);border:1px solid var(--blue);border-radius:5px;text-align:center;height:17px;line-height:15px}
+.charter{display:flex;justify-content:space-between;align-items:center;gap:10px;font-size:11.5px;color:var(--dim);padding:8px 10px;background:var(--navy2);border:1px solid var(--line);border-radius:8px}
+.charter b{color:var(--text)}
 @media (max-width:1600px){.main{grid-template-columns:250px minmax(0,1fr) 320px}.bars{min-width:210px}.fuel{gap:12px}
  .cobar{grid-template-columns:auto auto minmax(0,1fr)}.who h1{font-size:18px}.site nav{display:none}.mini{display:none}
  .feed li:nth-child(n+4){display:none}.chat{min-height:190px}}
@@ -559,6 +587,24 @@ body{display:flex;flex-direction:column;height:100vh}
    <div class="seg"><a class="on">2D OFFICE</a><a>3D NETWORK</a></div>
    <div class="zoom"><a>+</a><a>−</a><a>⤢</a></div></div>
   __OFFICE__
+  <div class="drawer">
+   <div class="dh"><i class="dot" style="background:var(--cyan);box-shadow:0 0 8px var(--cyan)"></i><h2>Testing</h2><span class="pill on" style="color:var(--cyan);border-color:var(--cyan);background:rgba(0,207,255,.08)">WORKING</span>
+    <span class="x"><span class="btn">Edit</span><span class="btn">×</span></span></div>
+   <div class="chips"><span class="chip">QA tester</span><span class="chip">Auditor</span><span class="chip" style="color:var(--red);border-color:var(--red)">1 waiting for you</span></div>
+   <div class="kp"><div><b style="color:var(--cyan)">1</b><span>open</span></div><div><b style="color:var(--green)">2</b><span>done</span></div>
+    <div><b style="color:var(--red)">1</b><span>failed</span></div><div><b>0.66<small style="font-size:11px;color:var(--dim2)">u</small></b><span>7 days</span></div><div><b>6</b><span>memory</span></div></div>
+   <div class="now"><div class="t1">NOW · ATTEMPT 2</div><p>Find doc-vs-behavior mismatches on public pages</p>
+    <div class="t2">QA tester · started 19:25 · last try: <b>no answer</b></div></div>
+   <div class="sec">TASKS <a>All 3 →</a></div>
+   <div class="trow"><span class="st rt">RETRY</span><div><b>Find doc-vs-behavior mismatches</b><em>no answer · attempt 2 of 3</em></div><i>19:27</i></div>
+   <div class="trow"><span class="st dn">DONE</span><div><b>Inventory testable surface from llms.txt</b><em>Public no-auth GETs for read-only tests: /gem-screener/picks, /prop/config…</em></div><i>19:20</i></div>
+   <div class="trow"><span class="st dn">DONE</span><div><b>Read bug bounty scope and rules</b><em>In scope: contracts, web UI, REST API, data accuracy, mobile, docs…</em></div><i>19:18</i></div>
+   <div class="sec">MEMORY <a>All 6 →</a></div>
+   <div class="mem"><span>KNOWS</span><div>Bounty pays a flat 1,000 ET10 per verified, non-duplicate bug.</div></div>
+   <div class="mem"><span>KNOWS</span><div>In scope: contracts, web UI, REST API, data accuracy, mobile, docs.</div></div>
+   <div class="mem"><span>HOW</span><div>llms.txt is ~189k chars: read it in pages.</div></div>
+   <div class="charter"><span><b>Charter</b> · 1,449 / 2,000 · “Goal: real, reproducible defects…”</span><span class="btn cy">Edit</span></div>
+  </div>
   <div class="strip"><span class="lab">TURNS TODAY <b>16</b> / 40</span><div class="cells">__CELLS__</div>
    <span class="legend"><span><i style="background:var(--cyan)"></i>running</span><span><i style="background:var(--green)"></i>done</span><span><i style="background:var(--red)"></i>failed</span><span><i style="background:var(--blue)"></i>queued</span></span></div>
  </section>
@@ -581,6 +627,7 @@ body{display:flex;flex-direction:column;height:100vh}
   <section class="panel"><div class="h">LIVE FEED</div><ul class="feed">__FEED__</ul></section>
  </aside>
 </main>
+<script>if (location.search.indexOf('dept') >= 0) document.body.classList.add('dept');</script>
 </body></html>
 """
 

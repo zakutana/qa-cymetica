@@ -10,7 +10,7 @@ page = here / "mockup.html"
 
 ALLOWED = {"#0a0e17", "#06090f", "#0d1520", "#111a28", "#16233a", "#1a2a44", "#1e3050", "#0c1422", "#101b2d",
            "#e6edf7", "#a9b8cc", "#7f93ad", "#00cfff", "#00ff88", "#ff4444", "#3b82f6"}
-ALLOWED_RGB = {"0,207,255", "0,255,136", "255,68,68", "6,9,15"}
+ALLOWED_RGB = {"0,207,255", "0,255,136", "255,68,68", "6,9,15", "13,21,32"}
 src = page.read_text(encoding="utf-8")
 hexes = {h.lower() for h in re.findall(r"#[0-9a-fA-F]{6}\b", src)}
 rgbs = {re.sub(r"\s", "", m) for m in re.findall(r"rgba?\(([\d\s]+,[\d\s]+,[\d\s]+),", src)}
@@ -21,11 +21,13 @@ if bad:
 
 with sync_playwright() as p:
     browser = p.chromium.launch(channel="chrome", args=["--disable-lcd-text", "--font-render-hinting=none"])
-    for name, w, h, mobile in (("desktop-1920", 1920, 1080, False), ("desktop-1440", 1440, 900, False),
-                               ("phone-390", 390, 844, True)):
+    for name, w, h, mobile, query in (("desktop-1920", 1920, 1080, False, ""),
+                                      ("desktop-1440", 1440, 900, False, ""),
+                                      ("phone-390", 390, 844, True, ""),
+                                      ("department-1920", 1920, 1080, False, "?dept")):
         tab = browser.new_page(viewport={"width": w, "height": h}, device_scale_factor=2 if mobile else 1,
                                is_mobile=mobile, has_touch=mobile)
-        tab.goto(page.as_uri())
+        tab.goto(page.as_uri() + query)
         tab.wait_for_load_state("networkidle")
         tab.wait_for_timeout(600)
         over = tab.evaluate("document.documentElement.scrollWidth > window.innerWidth")
