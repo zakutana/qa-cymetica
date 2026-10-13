@@ -185,6 +185,165 @@ def test_the_league_answers_only_what_it_computes_exactly_and_only_once():
     _bb_refusals(bb)
     _bb_records(bb)
 
+    # 8. Build a Company, the operator's word of 2026-10-13 ("zaloz oddeleni pro testing"): two
+    #    declared writes, a company and one department at a time, and nothing else under it.
+    _company_write()
+
+
+# -- Build a Company: one company, grown one department at a time ------------------------------
+#
+# [operator 2026-10-13] "zkusime to zaloz oddeleni pro testing a rekni mu at loguje nalezene bugy
+# jako my at mame odmeny" and, earlier, "firmu budovat postupne, pak rekni pridej toto oddeleni".
+# Their /openapi-public.json (read the same day): POST /api/v1/company/ is CompanyIn {name,
+# mission, departments, report_style, token_chain}, POST /{id}/departments is DepartmentIn {key,
+# name, charter, experts}. Declared closed. Their approvals (`POST /{id}/approvals/{aid}`), their
+# DELETE, pause, the message to the Manager and the investable / entity routes are not ours to
+# send and stay default-denied: an approval is the owner's act.
+
+CO_BASE = "https://cymetica.com/api/v1/company"
+CO_RULES = {"company.create": {"name", "mission", "departments", "report_style"},
+            "company.department": {"key", "name", "charter", "experts"}}
+
+
+def _company_script():
+    import importlib.util
+    from pathlib import Path
+
+    spec = importlib.util.spec_from_file_location(
+        "company_script", Path(__file__).resolve().parents[2] / "scripts" / "company.py")
+    module = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(module)
+    return module
+
+
+def _company_write():
+    import json
+    import tempfile
+    from pathlib import Path
+
+    import httpx
+
+    from qa.safety import CURRENT_TIER, EndpointRegistry, SafetyTransport, SafetyViolation
+
+    co = _company_script()
+    registry = EndpointRegistry.load()
+    declared = {r.id: set(r.executable_params) for r in registry.rules
+                if r.component == "rest.company" and r.methods != {"GET"}}
+    assert declared == CO_RULES, declared
+    assert all(r.closed_body and not r.inert_params and r.methods == {"POST"}
+               for r in registry.rules if r.id in CO_RULES)
+    assert set(co.CREATE_KEYS) == CO_RULES["company.create"], co.CREATE_KEYS
+    assert set(co.DEPT_KEYS) == CO_RULES["company.department"], co.DEPT_KEYS
+
+    # Their limits, refused before a body exists.
+    testing = {"key": "testing", "charter": "Find real bugs.", "experts": ["qa_tester"]}
+    made = co.create_body(name="QA Lab", mission="Find real bugs for the owner.",
+                          departments=[testing])
+    assert made == {"name": "QA Lab", "mission": "Find real bugs for the owner.",
+                    "departments": [testing], "report_style": "brief"}, made
+    for kwargs in ({"name": "x"}, {"name": "x" * 121}, {"mission": "short"}, {"mission": "m" * 2001},
+                   {"departments": []}, {"departments": [testing] * 2},
+                   {"departments": [dict(testing, key=f"d{i}") for i in range(9)]},
+                   {"departments": [dict(testing, charter="c" * 2001)]},
+                   {"departments": [dict(testing, experts=["wizard"])]},
+                   {"departments": [dict(testing, key="manager")]},
+                   {"departments": [{"charter": "no key and no name"}]},
+                   {"departments": [{"name": "Own", "experts": ["qa_tester"]}]},   # custom needs a charter
+                   {"report_style": "x" * 41}):
+        with pytest.raises(co.Refused):
+            co.create_body(**{"name": "QA Lab", "mission": "Find real bugs for the owner.",
+                              "departments": [testing], **kwargs})
+    assert co.department_body(key="trading_desk", charter=None, experts=None) == {"key": "trading_desk"}
+    with pytest.raises(co.Refused):
+        co.department_body(key=None, name=None, charter="x", experts=["qa_tester"])
+    assert co.company_id("7f3a9c10-1b2c-4d5e-8f90-123456789abc")
+    for bad in ("../startups", "7", "abc/def", "a?b=1"):
+        with pytest.raises(co.Refused):
+            co.company_id(bad)
+
+    # The transport: the exact bodies reach the layer underneath, an extra key or an undeclared
+    # route does not.
+    class Inner(httpx.BaseTransport):
+        def handle_request(self, request):
+            raise AssertionError("the request reached the network")
+
+    registry.mutate_enabled = True
+    registry.mutate_allowed_hosts = frozenset({"cymetica.com"})
+    transport = SafetyTransport(Inner(), registry)
+    cid = "7f3a9c10-1b2c-4d5e-8f90-123456789abc"
+    exact = ((f"{CO_BASE}/", made), (f"{CO_BASE}/{cid}/departments", co.department_body(**testing)))
+    refused = ((f"{CO_BASE}/", dict(made, token_chain="solana")),
+               (f"{CO_BASE}/{cid}/departments", dict(co.department_body(**testing), owner="x")),
+               (f"{CO_BASE}/{cid}/approvals/1", {"decision": "approve"}),
+               (f"{CO_BASE}/{cid}/message", {"text": "hello"}),
+               (f"{CO_BASE}/{cid}/pause", None), (f"{CO_BASE}/{cid}/investable", {"enabled": True}),
+               (f"{CO_BASE}/{cid}/entity/request", {}))
+    token = CURRENT_TIER.set(SafetyTier.MUTATE)
+    try:
+        for url, body in exact:
+            with pytest.raises(AssertionError, match="reached the network"):
+                transport.handle_request(httpx.Request("POST", url, json=body))
+        for url, body in refused:
+            with pytest.raises(SafetyViolation):
+                transport.handle_request(httpx.Request("POST", url, json=body))
+        with pytest.raises(SafetyViolation):
+            transport.handle_request(httpx.Request("DELETE", f"{CO_BASE}/{cid}"))
+        registry.mutate_enabled = False
+        with pytest.raises(SafetyViolation):
+            transport.handle_request(httpx.Request("POST", f"{CO_BASE}/", json=made))
+    finally:
+        CURRENT_TIER.reset(token)
+
+    # The script over a mock transport: a dry run sends and records nothing; --confirm is an
+    # intent then an outcome; a company worker never creates one; a 409 is `rejected`.
+    sent = []
+
+    def handler(request):
+        body = json.loads(request.content) if request.content else None
+        sent.append((request.method, request.url.path, body))
+        if request.method == "POST" and request.url.path.rstrip("/") == "/api/v1/company":
+            if body["name"] == "Taken":
+                return httpx.Response(409, json={"detail": "You already have a company."})
+            return httpx.Response(201, json={"id": cid, "name": body["name"], "status": "active",
+                                             "departments": [{"id": "d1", "key": "testing"}]})
+        if request.url.path.endswith("/departments"):
+            return httpx.Response(201, json={"id": "d2", "key": body.get("key"), "name": "Trading desk"})
+        return httpx.Response(404, json={"detail": "not here"})
+
+    with tempfile.TemporaryDirectory() as tmp, pytest.MonkeyPatch.context() as mp:
+        state = Path(tmp)
+        mp.setenv("QA_STATE_DIR", str(state))
+        mp.delenv("QA_CREW_DEPT", raising=False)
+        mp.setattr(co, "INNER", httpx.MockTransport(handler))
+        body_file = state / "create.json"
+        body_file.write_text(json.dumps(made), encoding="utf-8")
+        dept_file = state / "dept.json"
+        dept_file.write_text(json.dumps({"key": "trading_desk"}), encoding="utf-8")
+
+        assert co.main(["create", "--body-file", str(body_file)]) == 0 and sent == []
+        assert not (state / "company.jsonl").exists()
+        assert co.main(["create", "--body-file", str(body_file), "--confirm"]) == 0
+        rows = co.load()
+        assert [r["type"] for r in rows] == ["intent", "outcome"], rows
+        assert rows[0]["id"] == rows[1]["id"] == "CO-0001" and rows[0]["body"] == made
+        assert rows[1]["outcome"] == "accepted" and rows[1]["company_id"] == cid, rows[1]
+        assert co.main(["department", "--company", cid, "--body-file", str(dept_file),
+                        "--confirm"]) == 0
+        assert sent[-1] == ("POST", f"/api/v1/company/{cid}/departments", {"key": "trading_desk"})
+        assert co.load()[-1]["outcome"] == "accepted" and co.load()[-1]["kind"] == "department"
+
+        mp.setenv("QA_CREW_DEPT", "bugs")
+        count = len(sent)
+        assert co.main(["create", "--body-file", str(body_file), "--confirm"]) == 2
+        assert len(sent) == count, "a company worker's create reached the transport"
+        mp.delenv("QA_CREW_DEPT")
+
+        body_file.write_text(json.dumps(dict(made, name="Taken")), encoding="utf-8")
+        assert co.main(["create", "--body-file", str(body_file), "--confirm"]) == 1
+        assert co.load()[-1]["outcome"] == "rejected" and co.load()[-1]["http_status"] == 409
+        # Their id is kept in the diary and the company is the one we hold.
+        assert co.held(co.load()) == cid
+
 
 # -- Build it Better: the desk files its own requests ------------------------------------------
 #

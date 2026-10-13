@@ -48,7 +48,8 @@
       "Bash(python scripts/outsider.py:*)",
       "Bash(python scripts/bb.py:*)",
       "Bash(python scripts/crew.py:*)",
-      "Bash(python scripts/commit.py:*)"
+      "Bash(python scripts/commit.py:*)",
+      "Bash(python scripts/company.py:*)"
     ]
   },
   "hooks": {
