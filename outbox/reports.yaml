@@ -6262,6 +6262,38 @@ reports:
       it passes when `arbitrage` is absent or neither leg is excluded, and we retire it if you
       publish that the overlap is intended. GET requests only.
 
+  - key: clone-perpetual-markets-name-markets-that-do-not-exist
+    findings: [CYM-a-clone-trades-only-live-epoch-markets]
+    severity: medium
+    category: logic
+    url: https://cymetica.com/api/v1/perpetual/markets/batch-status
+    title: >-
+      Cloned bots: the perpetual market list switches on ET10, ETLP, CYM42, TBIG and TBIGS, which have no
+      5-minute market, and the bot's summary says it trades them
+    expected: >
+      A clone's perpetual_markets, and the trades_summary built from it, name only 5-minute markets that
+      exist, so an owner knows what the bot can trade. llms.txt: "GET /api/v1/perpetual/markets/batch-status:
+      The live 5-minute markets (BTC, ETH, NVDA, AAPL, GOOG, VAIX, SBIO)".
+    actual: >
+      Read on 2026-10-13 between 06:55 and 07:05 UTC with our X-API-Key. All 12 of our paper clones read
+      perpetual_markets "BTC,ETH,VAIX,SBIO,ET10,ETLP,CYM42,TBIG,TBIGS" (the species' list; we never set it),
+      and their profiles say "This bot trades: BTC/ETH/VAIX/SBIO +5 5-min epochs (paper)". batch-status lists
+      BTC, ETH, NVDA, AAPL, GOOG, VAIX, SBIO. So five of the nine markets a clone is said to trade (ET10, ETLP,
+      CYM42, TBIG, TBIGS) have no 5-minute market and can never be traded, and the three live stock markets
+      (NVDA, AAPL, GOOG) are not in the list. Our Agent Tournaments clone 692c35b3 ("tournament Perceptron
+      Oracle", seat 29 at table 5) has made 47 trades since 2026-10-11, every one BTC or ETH.
+    steps:
+      - 'GET https://cymetica.com/api/v1/perpetual/markets/batch-status -> markets BTC, ETH, NVDA, AAPL, GOOG, VAIX, SBIO'
+      - 'GET https://cymetica.com/api/v1/cloned-bots/my-clones?mode=paper (X-API-Key) -> our paper clones'
+      - 'GET https://cymetica.com/api/v1/cloned-bots/692c35b3-29a7-4cda-8c73-7802cd28e4a8/profile -> settings.perpetual_markets "BTC,ETH,VAIX,SBIO,ET10,ETLP,CYM42,TBIG,TBIGS", trades_summary "This bot trades: BTC/ETH/VAIX/SBIO +5 5-min epochs (paper)"'
+      - 'GET https://cymetica.com/api/v1/cloned-bots/692c35b3-29a7-4cda-8c73-7802cd28e4a8/activity -> 47 items, symbol BTC or ETH only'
+    body: >
+      In a tournament this is what an owner reads to judge a seat: the bot looks like it spreads over nine
+      markets and trades two. How to fix it is yours: a default list of the live 5-minute markets, or 5-minute
+      markets for the five symbols, or a summary that names only what the bot can trade. Which markets the
+      strategy picks among live ones is not part of this report. Our check reads batch-status and our paper
+      clones' settings and fails while a switched-on perpetual symbol is not in batch-status. GET requests only.
+
 footer: >
   Reported by an independent QA agent. Scope of this work: verification of the
   REST API, MCP, the machine-readable discovery surfaces and the pages built on

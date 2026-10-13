@@ -62,7 +62,8 @@
             },
             "reason": "the platform states this caller is ALLIED; it is served 108 tools, 0 of them declared above allied"
           }
-        }
+        },
+        "not_checked_in": "run-20261013T070131Z-953de9dd"
       },
       "filing": {
         "state": "WITHDRAWN",
@@ -211,7 +212,8 @@
           "at": "2026-09-07T21:45:02+00:00",
           "by": "operator",
           "reason": "Deep-pass repair T10: a 429 or 5xx on the rate-limited filing-message endpoint now reads inconclusive instead of failed. The assertion is unchanged for a 404, which is the defect this row reports; only the transient stopped being filed as one."
-        }
+        },
+        "not_checked_in": "run-20261013T070131Z-953de9dd"
       },
       "filing": {
         "state": "FIX_CLAIMED",
@@ -439,7 +441,8 @@
           "at": "2026-09-06T21:58:48+00:00",
           "by": "operator",
           "reason": "The check definition moved on 2026-09-06 and the platform did not. It read the species catalogue as a bare list or under a 'species' key and let any other shape fall through to a live count of zero, which would have reported llms.txt's figures as disagreeing with an empty catalogue -- a false report"
-        }
+        },
+        "not_checked_in": "run-20261013T070131Z-953de9dd"
       },
       "filing": {
         "state": "FIX_CLAIMED",
@@ -878,7 +881,8 @@
             },
             "reason": "mcp_tool_names_documented_exist: Does every tool name llms.txt documents exist on the server? llms.txt says 8 (get_market, get_orderbook, get_platform_status, get_prices, get_trust_signal, list_clob_pairs, list_markets, search_markets), .well-known/mcp.json says 108 (ask_nexus_deep, backtest_event_card_idea, bb_accept_spec, bb_app_stats, bb_apply_startup, bb_file_request, bb_get_request, bb_post_verdict and 100 more), and that satisfies subset."
           }
-        }
+        },
+        "not_checked_in": "run-20261013T070131Z-953de9dd"
       },
       "filing": {
         "state": "WITHDRAWN",
@@ -1151,7 +1155,8 @@
           "at": "2026-09-05T19:56:34+00:00"
         },
         "pinned_fingerprint": "76f53745c4961b0f0a6076e33cd1d16173f41f802d404fbbb746923be506797e",
-        "evidence_only": "run-20261012T230922Z-26bab3d0"
+        "evidence_only": "run-20261012T230922Z-26bab3d0",
+        "not_checked_in": "run-20261013T070131Z-953de9dd"
       },
       "filing": {
         "state": "WITHDRAWN",
@@ -1385,7 +1390,8 @@
           "at": "2026-09-10T05:02:09+00:00",
           "by": "operator",
           "reason": "Identity moved, the comparison did not. 8ec5b45 added subset_of_pair to Pair.fingerprint; Pair.__init__ has read that key to order the operands since 1783070 (2026-09-05 20:18), so the hash was blind to a direction it was already obeying. Checked before pinning: hashing today's claim with the pre-8e"
-        }
+        },
+        "not_checked_in": "run-20261013T070131Z-953de9dd"
       },
       "filing": {
         "state": "FIX_CLAIMED",
@@ -1588,7 +1594,8 @@
           "at": "2026-09-07T17:41:34+00:00",
           "by": "operator",
           "reason": "A4: the section is scoped to lines carrying one of two string literals of theirs, and an empty section still concluded 'llms.txt states no fixed catalogue size' -- asserted about a section never read. This vendor removed the sentences behind #50 and #55 before. Inconclusive now when no line carries "
-        }
+        },
+        "not_checked_in": "run-20261013T070131Z-953de9dd"
       },
       "filing": {
         "state": "FIX_CLAIMED",
@@ -1741,7 +1748,8 @@
           "at": "2026-09-05T16:35:17+00:00",
           "by": "operator",
           "reason": "Report #46 recorded the failure with measured values: anonymous was served all 46 tools, 21 above their declared tier. The pre-contract runs never recorded a fingerprint, so the pin is missing for a bookkeeping reason, not because the check was never seen failing. Pinning today's definition as the o"
-        }
+        },
+        "not_checked_in": "run-20261013T070131Z-953de9dd"
       },
       "filing": {
         "state": "FIX_CLAIMED",
@@ -1933,7 +1941,8 @@
           "at": "2026-09-10T05:02:31+00:00",
           "by": "operator",
           "reason": "Identity moved, the comparison did not. 8ec5b45 added subset_of_pair to Pair.fingerprint; Pair.__init__ has read that key to order the operands since 1783070 (2026-09-05 20:18). Hashing today's claim with the pre-8ec5b45 formula reproduces the pinned sha256:ba019a19f7a7c39de5c5c19601580248 byte for "
-        }
+        },
+        "not_checked_in": "run-20261013T070131Z-953de9dd"
       },
       "filing": {
         "state": "FIX_CLAIMED",
@@ -2101,7 +2110,8 @@
           "at": "2026-09-05T18:08:36+00:00",
           "by": "operator",
           "reason": "Report #52 recorded the failure: llms.txt and the live species endpoint gave different agent counts. The claim was later narrowed to the two sources that count the same thing, so this pins the narrowed definition as the one that adjudicates the row from here."
-        }
+        },
+        "not_checked_in": "run-20261013T070131Z-953de9dd"
       },
       "filing": {
         "state": "FIX_CLAIMED",
@@ -2206,7 +2216,7 @@
         "state": "UNVERIFIABLE",
         "adjudicated_by": null,
         "pinned_fingerprint": null,
-        "not_checked_in": "run-20261012T223838Z-466a7d37",
+        "not_checked_in": "run-20261013T070131Z-953de9dd",
         "missing_checks": [
           "tests/reconciliation/test_reconcile.py::test_sources_agree[chain_count::live_chains-vs-mcp_json]"
         ],
@@ -2330,7 +2340,8 @@
         },
         "failed_under": [
           "7d407afa861e77a3cf508bd4322059dcb57278fd95b3e61c32246e840a94b4ee"
-        ]
+        ],
+        "not_checked_in": "run-20261013T070131Z-953de9dd"
       },
       "filing": {
         "state": "FIX_CLAIMED",
@@ -2514,7 +2525,8 @@
         "pinned_fingerprint": "sha256:f3d9b4a71fbf227f926c530f5d62476d",
         "failed_under": [
           "sha256:f3d9b4a71fbf227f926c530f5d62476d"
-        ]
+        ],
+        "not_checked_in": "run-20261013T070131Z-953de9dd"
       },
       "filing": {
         "state": "FIX_CLAIMED",
@@ -2825,7 +2837,8 @@
           "at": "2026-09-07T17:41:32+00:00",
           "by": "operator",
           "reason": "A2: CLOSED was {fixed,resolved,completed,closed} -- resolved is a ticket status this surface cannot return, completed and closed were invented, and paid was missing while 16 of the tracker rows now carry it. And an empty closed set concluded '0 of 0 carry no evidence' as a PASS where the empty-rows "
-        }
+        },
+        "not_checked_in": "run-20261013T070131Z-953de9dd"
       },
       "filing": {
         "state": "FIX_CLAIMED",
@@ -3139,7 +3152,8 @@
           "at": "2026-09-07T17:56:54+00:00",
           "by": "operator",
           "reason": "The row is three checks now, not 26, so its combined fingerprint moved. 23 pins were retired by event on 2026-09-08: those paths are no longer promised by llms.txt or agent-skills.json and still answer 404, so there is no documentation-versus-server mismatch left to measure -- which is what #49 and "
-        }
+        },
+        "not_checked_in": "run-20261013T070131Z-953de9dd"
       },
       "filing": {
         "state": "FIX_CLAIMED",
@@ -3337,7 +3351,7 @@
         "state": "UNVERIFIABLE",
         "adjudicated_by": null,
         "pinned_fingerprint": null,
-        "not_checked_in": "run-20261012T223838Z-466a7d37",
+        "not_checked_in": "run-20261013T070131Z-953de9dd",
         "missing_checks": [
           "tests/reconciliation/test_reconcile.py::test_sources_agree[mcp_tool_count::llms_txt-vs-mcp_anon]",
           "tests/reconciliation/test_reconcile.py::test_sources_agree[mcp_tool_count::llms_txt-vs-mcp_json]",
@@ -3742,7 +3756,8 @@
           "at": "2026-09-10T05:02:34+00:00",
           "by": "operator",
           "reason": "Identity moved, the comparison did not. 8ec5b45 added subset_of_pair to Pair.fingerprint; Pair.__init__ has read that key to order the operands since 1783070 (2026-09-05 20:18). Hashing today's claim with the pre-8ec5b45 formula reproduces the pinned sha256:13577e53eb81ed18ef1bcf733fe4ca57 byte for "
-        }
+        },
+        "not_checked_in": "run-20261013T070131Z-953de9dd"
       },
       "filing": {
         "state": "FIX_CLAIMED",
@@ -4014,7 +4029,8 @@
           "at": "2026-09-10T05:02:19+00:00",
           "by": "operator",
           "reason": "Same claim as CYM-skills_subset: this row was rebound onto it on 2026-09-05 17:05 when the two skills claims were merged. Identity moved, the comparison did not -- 8ec5b45 added subset_of_pair to Pair.fingerprint, a key Pair.__init__ has read since 1783070 (2026-09-05 20:18). Hashing today's claim w"
-        }
+        },
+        "not_checked_in": "run-20261013T070131Z-953de9dd"
       },
       "filing": {
         "state": "FIX_CLAIMED",
@@ -4291,7 +4307,8 @@
           "at": "2026-09-10T05:02:21+00:00",
           "by": "operator",
           "reason": "Same claim as CYM-skills_subset: this row was rebound onto it on 2026-09-05 17:05 when the two skills claims were merged. Identity moved, the comparison did not -- 8ec5b45 added subset_of_pair to Pair.fingerprint, a key Pair.__init__ has read since 1783070 (2026-09-05 20:18). Hashing today's claim w"
-        }
+        },
+        "not_checked_in": "run-20261013T070131Z-953de9dd"
       },
       "filing": {
         "state": "FIX_CLAIMED",
@@ -4560,7 +4577,8 @@
           "at": "2026-09-07T12:43:10+00:00",
           "by": "operator",
           "reason": "Repaired, not redefined. The check asked whether a report of ours appears on /leaderboard/bugs by looking for the first 45 characters of its title in the page text. The page embeds titles in JSON, so report #73 is published as 'The bounty programme\\u0027s own reward totals disagree' and the substrin"
-        }
+        },
+        "not_checked_in": "run-20261013T070131Z-953de9dd"
       },
       "filing": {
         "state": "FIX_CLAIMED",
@@ -4764,7 +4782,8 @@
             },
             "reason": "0 of the 5 fields we send come back empty on every one of our 73 reports: none"
           }
-        }
+        },
+        "not_checked_in": "run-20261013T070131Z-953de9dd"
       },
       "filing": {
         "state": "WITHDRAWN",
@@ -4880,7 +4899,8 @@
             },
             "reason": "hunter_name survives on 73 of 73 of our reports; we send 'expire76' on every one"
           }
-        }
+        },
+        "not_checked_in": "run-20261013T070131Z-953de9dd"
       },
       "filing": {
         "state": "WITHDRAWN",
@@ -4960,7 +4980,7 @@
           "at": "2026-09-07T17:40:13+00:00"
         },
         "pinned_fingerprint": "5e9d6943c1eaf398d598a59460e9acdf2a187f99ecb323ce600818b417cefeae",
-        "not_checked_in": "run-20261012T223838Z-466a7d37",
+        "not_checked_in": "run-20261013T070131Z-953de9dd",
         "missing_checks": [
           "tests/pinned/test_documented_404.py::test_documented_path_is_served[/api/v1/vaix/prices]"
         ],
@@ -5109,7 +5129,8 @@
           "at": "2026-09-07T21:45:15+00:00",
           "by": "operator",
           "reason": "Deep-pass repair T04: the failure sentence claimed the programme appears in none of the five discovery surfaces whenever at least one was readable. Four unreadable plus one non-match now reads inconclusive and names how many were actually read. Rule 8."
-        }
+        },
+        "not_checked_in": "run-20261013T070131Z-953de9dd"
       },
       "filing": {
         "state": "FIX_CLAIMED",
@@ -5294,7 +5315,8 @@
           "at": "2026-09-08T15:13:40+00:00",
           "by": "operator",
           "reason": "Reports #63 and #71 document the original failure: closed reports recording nothing about what they earned. Deep pass 2026-09-08, 3/3: one unbranched reason served both verdicts, so a PASS carried the defect sentence -- 'a report that was paid and one whose award was never recorded are indistinguish"
-        }
+        },
+        "not_checked_in": "run-20261013T070131Z-953de9dd"
       },
       "filing": {
         "state": "FIX_CLAIMED",
@@ -5598,7 +5620,8 @@
             },
             "reason": "/api/v1/account/me answers HTTP 200 to the credential the catalogue names"
           }
-        }
+        },
+        "not_checked_in": "run-20261013T070131Z-953de9dd"
       },
       "filing": {
         "state": "FIX_CLAIMED",
@@ -5750,7 +5773,8 @@
           "at": "2026-09-07T17:41:33+00:00",
           "by": "operator",
           "reason": "A13: an absent severity_rewards.critical produced verdict=failed with '(None-None)' in the reason we send, while the sibling operand's absence five lines above is inconclusive via required(). Rule 10: an empty measurement is not a defect, and they flattened this payload once already today. Now incon"
-        }
+        },
+        "not_checked_in": "run-20261013T070131Z-953de9dd"
       },
       "filing": {
         "state": "FIX_CLAIMED",
@@ -5976,7 +6000,8 @@
           "at": "2026-09-07T14:26:55+00:00",
           "by": "operator",
           "reason": "Third definition, and the second was ours being wrong about their contract rather than them breaking it. v2 required metadata.is_answer=false on every automated reply; their resolution on #67 states 'is_answer=true now set on every substantive answer (async first-pass, reviewer reply, cross-thread r"
-        }
+        },
+        "not_checked_in": "run-20261013T070131Z-953de9dd"
       },
       "filing": {
         "state": "FIX_CLAIMED",
@@ -6178,7 +6203,8 @@
           "at": "2026-09-07T07:54:53+00:00",
           "by": "operator",
           "reason": "The check definition moved on 2026-09-07 and the platform did not regress. It read the inbox and judged the newest first-pass reply, which meant it could only ever judge evidence someone else had produced -- and this morning the newest reply predated their fix, so re-running would never have cleared"
-        }
+        },
+        "not_checked_in": "run-20261013T070131Z-953de9dd"
       },
       "filing": {
         "state": "FIX_CLAIMED",
@@ -6379,7 +6405,8 @@
           "at": "2026-09-08T15:13:40+00:00",
           "by": "operator",
           "reason": "Reports #68 and #70 document the original failure: an award recorded in one currency beside an entitlement published in another, on the same row. Deep pass 2026-09-08, 3/3: 'awarded' was defined as reward_status != 'pending_award', a whitelist of one string that fails OPEN, so renaming their status "
-        }
+        },
+        "not_checked_in": "run-20261013T070131Z-953de9dd"
       },
       "filing": {
         "state": "FIX_CLAIMED",
@@ -6677,7 +6704,8 @@
           "at": "2026-09-08T15:13:40+00:00",
           "by": "operator",
           "reason": "Report #73 documents the original failure: stats and the leaderboard disagreeing on what hunters had earned. Deep pass 2026-09-08, 3/3: the pass sentence asserted both reconciliations unconditionally when either can be skipped unmeasured -- 'matches the None it is defined as' with no published defin"
-        }
+        },
+        "not_checked_in": "run-20261013T070131Z-953de9dd"
       },
       "filing": {
         "state": "FIX_CLAIMED",
@@ -6946,7 +6974,8 @@
           "at": "2026-09-08T15:13:40+00:00",
           "by": "operator",
           "reason": "Report #76 documents the original failure: the /build trade recipe sent an agent to /events/universe, which serves HTML. Deep pass 2026-09-08, 3/3: the reachability predicate accepted ANY status carrying a JSON content-type, and this platform 404s in application/json -- our own evidence store holds "
-        }
+        },
+        "not_checked_in": "run-20261013T070131Z-953de9dd"
       },
       "filing": {
         "state": "FIX_CLAIMED",
@@ -7168,7 +7197,8 @@
             },
             "reason": "POST /mcp/v1/register documents the field /build says to save: 'api_key'"
           }
-        }
+        },
+        "not_checked_in": "run-20261013T070131Z-953de9dd"
       },
       "filing": {
         "state": "FIX_CLAIMED",
@@ -7335,7 +7365,8 @@
           "at": "2026-09-07T21:45:16+00:00",
           "by": "operator",
           "reason": "Deep-pass: the anchors were widened after Cymetica answered #78 within the hour. /build and llms.txt now both name unknown/recognized/trusted/allied and point at mcp.json's trust_tiers keys; the old regexes matched neither new form, so their fix would have reached us as an inconclusive. _rungs also "
-        }
+        },
+        "not_checked_in": "run-20261013T070131Z-953de9dd"
       },
       "filing": {
         "state": "FIX_CLAIMED",
@@ -7503,7 +7534,8 @@
           "at": "2026-09-08T15:13:41+00:00",
           "by": "operator",
           "reason": "Report #79 documents the original failure: the recipe says to clone the best 30-day performer and the leaderboard rows carry six different headline_period values. Deep pass 2026-09-08, 3/3: 'does the period narrow it' was a COUNT comparison, so eight of sixteen rows still spanning four periods read "
-        }
+        },
+        "not_checked_in": "run-20261013T070131Z-953de9dd"
       },
       "filing": {
         "state": "FIX_CLAIMED",
@@ -7678,7 +7710,8 @@
           "at": "2026-09-08T13:25:04+00:00",
           "by": "operator",
           "reason": "Report #80 documents the original failure: four order surfaces named the paper/live control three different ways and one had no field at all. Cymetica put `paper` on all four on 2026-09-08 and documented the remaining default differences per field. The check demanded one field AND one default, which"
-        }
+        },
+        "not_checked_in": "run-20261013T070131Z-953de9dd"
       },
       "filing": {
         "state": "FIX_CLAIMED",
@@ -7840,7 +7873,8 @@
           "at": "2026-09-08T15:13:41+00:00",
           "by": "operator",
           "reason": "Report #80 documents the original failure: simulation_mode decided whether an order spent real USDC and no documented response published it. Deep pass 2026-09-08, 2/3: the walk read every properties dict in the document, request bodies included, under a sentence about responses -- so a settings endp"
-        }
+        },
+        "not_checked_in": "run-20261013T070131Z-953de9dd"
       },
       "filing": {
         "state": "FIX_CLAIMED",
@@ -8018,7 +8052,8 @@
           "at": "2026-09-08T15:13:41+00:00",
           "by": "operator",
           "reason": "Report #81 documents the original failure: GET /api/v1/trades answered 200 with zero trades and nothing said what it covered. Deep pass 2026-09-08, 3/3: the repaired check accepted any three of four scope fields, so a block dropping `identity` passed -- and identity is the field the open question in"
-        }
+        },
+        "not_checked_in": "run-20261013T070131Z-953de9dd"
       },
       "filing": {
         "state": "FIX_CLAIMED",
@@ -8204,7 +8239,8 @@
           "at": "2026-09-08T15:13:39+00:00",
           "by": "operator",
           "reason": "Report #82 documents the original failure: ShortRequest.paper says it is honoured only on the spot-bear fallback and perps are always real-ledger, so an explicit paper request can open a real position. Deep pass 2026-09-08 repaired the check, 3/3 in triage: a missing schema coalesced to an empty des"
-        }
+        },
+        "not_checked_in": "run-20261013T070131Z-953de9dd"
       },
       "filing": {
         "state": "FIX_CLAIMED",
@@ -8351,7 +8387,7 @@
           "at": "2026-09-10T04:56:30+00:00"
         },
         "pinned_fingerprint": "05d129030ccb0a67babee3e9b1383e236e0bc719fd5e42f532cb727b83375d1a",
-        "not_checked_in": "run-20261012T223838Z-466a7d37",
+        "not_checked_in": "run-20261013T070131Z-953de9dd",
         "missing_checks": [
           "tests/rest/test_portfolio_summary.py::test_the_summary_does_not_report_a_history_the_positions_contradict"
         ],
@@ -8487,7 +8523,8 @@
         "pinned_fingerprint": "84885322a72b7450579e6de4f695e915fe4f4d6a9eccac0e0f54fbaec3e20ee8",
         "failed_under": [
           "84885322a72b7450579e6de4f695e915fe4f4d6a9eccac0e0f54fbaec3e20ee8"
-        ]
+        ],
+        "not_checked_in": "run-20261013T070131Z-953de9dd"
       },
       "filing": {
         "state": "FIX_CLAIMED",
@@ -8854,7 +8891,8 @@
           "at": "2026-09-25T13:45:35+00:00",
           "by": "operator",
           "reason": "2cc5a16a widened the tool reader to single-word names after tools/list began serving fetch and search (the old guard stood the check down). Measured before committing: the new reader returns the same tool set as the old on all 58 recorded Nexus answers, so the verdict is the same measurement on the "
-        }
+        },
+        "not_checked_in": "run-20261013T070131Z-953de9dd"
       },
       "filing": {
         "state": "FIX_CLAIMED",
@@ -9175,7 +9213,8 @@
           "at": "2026-09-11T17:57:53+00:00",
           "by": "operator",
           "reason": "Definition changed by the deep pass of 2026-09-11 (T02, triage 3/3): a trade whose /account/me read failed is kept, marked unread 'balance', and the check says Inconclusive instead of handing the verdict to the trade before it. The original failure this row was opened on is documented in report #87."
-        }
+        },
+        "not_checked_in": "run-20261013T070131Z-953de9dd"
       },
       "filing": {
         "state": "FIX_CLAIMED",
@@ -9445,7 +9484,8 @@
           "at": "2026-09-21T20:35:20+00:00",
           "by": "operator",
           "reason": "A13: a method-only mismatch was reported as 'none of those paths is in openapi', which is false when the path is documented; the reason now names the method, and a 405 to OPTIONS reads the Allow list beside a documented GET. Found by the contract audit and voted real by the triage (3 readers) in the"
-        }
+        },
+        "not_checked_in": "run-20261013T070131Z-953de9dd"
       },
       "filing": {
         "state": "FIX_CLAIMED",
@@ -9667,7 +9707,8 @@
         "pinned_fingerprint": "4d7dd0f1952c6ea876b8f03aea300fb99f89e1be901dccb238f3d462aecef9cf",
         "failed_under": [
           "4d7dd0f1952c6ea876b8f03aea300fb99f89e1be901dccb238f3d462aecef9cf"
-        ]
+        ],
+        "not_checked_in": "run-20261013T070131Z-953de9dd"
       },
       "filing": {
         "state": "FIX_CLAIMED",
@@ -9954,7 +9995,8 @@
           "at": "2026-09-13T18:46:58+00:00",
           "by": "operator",
           "reason": "V07, deep pass 2026-09-13, triage 3/3. The only change is the reason TEXT: it asserted that Nexus tells an agent to trade the card, and neither card_ids_in nor known_non_cards reads trade-ness. The extraction, the fetch and the verdict rule are untouched, so the measurement is identical to the one t"
-        }
+        },
+        "not_checked_in": "run-20261013T070131Z-953de9dd"
       },
       "filing": {
         "state": "FIX_CLAIMED",
@@ -10272,7 +10314,8 @@
           "at": "2026-09-11T17:57:56+00:00",
           "by": "operator",
           "reason": "Definition changed by the deep pass of 2026-09-11 (T08 and V03, triage 3/3): a walk that stopped at its page cap, or on a short page while total says more, is Inconclusive, and a card counts as unreachable only if it is live and tradeable_now. The original failure this row was opened on is documente"
-        }
+        },
+        "not_checked_in": "run-20261013T070131Z-953de9dd"
       },
       "filing": {
         "state": "FIX_CLAIMED",
@@ -10506,7 +10549,8 @@
           "at": "2026-09-11T05:42:08+00:00",
           "by": "operator",
           "reason": "The check now judges the newest recorded deep answer instead of every answer ever recorded. The answers that cited source locations -- NEX-0011, NEX-0015, NEX-0017, all 2026-09-10 -- are stored in our own nexus.jsonl, and their fix of 2026-09-11 ~04:35 scrubs an answer as it is served, so it cannot "
-        }
+        },
+        "not_checked_in": "run-20261013T070131Z-953de9dd"
       },
       "filing": {
         "state": "FIX_CLAIMED",
@@ -10669,7 +10713,8 @@
         },
         "failed_under": [
           "b336927c694c0ad968b9678055feeec4e59093850ffbb71522eb3286c9165335"
-        ]
+        ],
+        "not_checked_in": "run-20261013T070131Z-953de9dd"
       },
       "filing": {
         "state": "FIX_CLAIMED",
@@ -10849,7 +10894,8 @@
           "at": "2026-09-11T17:57:53+00:00",
           "by": "operator",
           "reason": "Definition changed by the deep pass of 2026-09-11 (V13, triage 3/3): an open trade with no readable amount, an is_closed of None, or a closed trade with no readable result now leaves the bot unread or unreconciled instead of counting as zero. The original failure this row was opened on is documented"
-        }
+        },
+        "not_checked_in": "run-20261013T070131Z-953de9dd"
       },
       "filing": {
         "state": "FIX_CLAIMED",
@@ -11036,7 +11082,8 @@
           "at": "2026-09-11T17:57:54+00:00",
           "by": "operator",
           "reason": "Definition changed by the deep pass of 2026-09-11 (V02, triage 3/3): the include_user_submitted walk must reach the listing's end and carry at least one user submission before an absence can mean a private card. The original failure this row was opened on is documented in report #95; nothing changed"
-        }
+        },
+        "not_checked_in": "run-20261013T070131Z-953de9dd"
       },
       "filing": {
         "state": "FIX_CLAIMED",
@@ -11274,7 +11321,8 @@
           "at": "2026-09-12T20:53:51+00:00",
           "by": "operator",
           "reason": "The check was tightened tonight and the contract it measures is unchanged: it still asks whether a published Sharpe says what period it covers. What moved is how it reads the answer -- an anchored key name instead of a substring anywhere in the payload, the VALUE instead of the mere presence of a na"
-        }
+        },
+        "not_checked_in": "run-20261013T070131Z-953de9dd"
       },
       "filing": {
         "state": "FIX_CLAIMED",
@@ -11493,7 +11541,8 @@
           "at": "2026-09-13T18:46:45+00:00",
           "by": "operator",
           "reason": "V03, deep pass 2026-09-13, triage 3/3. The definition moved tonight because says_covered now checks the label against the points it came with: a value equal to the requested window was already refused (B04), and any OTHER number, and any date, passed while n_points sat unused. The change makes the c"
-        }
+        },
+        "not_checked_in": "run-20261013T070131Z-953de9dd"
       },
       "filing": {
         "state": "FIX_CLAIMED",
@@ -11764,7 +11813,8 @@
             },
             "reason": "the house row matches the live half of their own track record on 5 shared quantities, which is what a leaderboard beside live entrants should show"
           }
-        }
+        },
+        "not_checked_in": "run-20261013T070131Z-953de9dd"
       },
       "filing": {
         "state": "FIX_CLAIMED",
@@ -11986,7 +12036,8 @@
           "at": "2026-09-13T18:46:57+00:00",
           "by": "operator",
           "reason": "V05, deep pass 2026-09-13, triage 3/3. The definition moved tonight in three ways and every one narrows what counts as a pass: declares_a_deadline reads a value rather than is-not-None, so entries_closed false no longer clears it; entries_open false is believed rather than contradicted; and the reas"
-        }
+        },
+        "not_checked_in": "run-20261013T070131Z-953de9dd"
       },
       "filing": {
         "state": "FIX_CLAIMED",
@@ -12191,7 +12242,8 @@
           "at": "2026-09-21T20:35:18+00:00",
           "by": "operator",
           "reason": "B13: the evidence rows quoted a Solana pool at Robinhood's max-buy ratio while the verdict judged it at Solana's own; the rows now carry the ratio the verdict used. The assertion and its direction are unchanged. Found by the contract audit and voted real by the triage (3 readers) in the deep pass of"
-        }
+        },
+        "not_checked_in": "run-20261013T070131Z-953de9dd"
       },
       "filing": {
         "state": "FIX_CLAIMED",
@@ -12565,7 +12617,8 @@
         "pinned_fingerprint": "45c920e97e226ba1ef2e204fd3c5c0aa0b49481a98dde22cfaaa9ae1626baae6",
         "failed_under": [
           "45c920e97e226ba1ef2e204fd3c5c0aa0b49481a98dde22cfaaa9ae1626baae6"
-        ]
+        ],
+        "not_checked_in": "run-20261013T070131Z-953de9dd"
       },
       "filing": {
         "state": "FIX_CLAIMED",
@@ -12990,7 +13043,8 @@
           "at": "2026-09-21T20:35:20+00:00",
           "by": "operator",
           "reason": "A11: the docstring accepts either fix (the link moves, or the skill's line changes) and the skill was never read; it is read now, and an unreadable skill is inconclusive where it decides. Found by the contract audit and voted real by the triage (3 readers) in the deep pass of 2026-09-21; the new def"
-        }
+        },
+        "not_checked_in": "run-20261013T070131Z-953de9dd"
       },
       "filing": {
         "state": "FIX_CLAIMED",
@@ -13257,7 +13311,8 @@
           "at": "2026-09-21T20:35:21+00:00",
           "by": "operator",
           "reason": "A17: probes answering 429/5xx went to 'unreadable' and the verdict still passed; any unreadable deciding probe is now inconclusive. Found by the contract audit and voted real by the triage (3 readers) in the deep pass of 2026-09-21; the new definition passes under run-20260921T201015Z-b8579867."
-        }
+        },
+        "not_checked_in": "run-20261013T070131Z-953de9dd"
       },
       "filing": {
         "state": "FIX_CLAIMED",
@@ -13427,7 +13482,8 @@
           "at": "2026-09-21T20:35:19+00:00",
           "by": "operator",
           "reason": "A05: a 429 on the second look was counted as a missing coin; the second look now sorts statuses exactly as the first (404/5xx missing, anything else unmeasured). Found by the contract audit and voted real by the triage (3 readers) in the deep pass of 2026-09-21; the new definition passes under run-2"
-        }
+        },
+        "not_checked_in": "run-20261013T070131Z-953de9dd"
       },
       "filing": {
         "state": "FIX_CLAIMED",
@@ -13672,7 +13728,8 @@
             },
             "reason": "every read returned at most its limit (5->5, 50->50)"
           }
-        }
+        },
+        "not_checked_in": "run-20261013T070131Z-953de9dd"
       },
       "filing": {
         "state": "FIX_CLAIMED",
@@ -13829,7 +13886,8 @@
             },
             "reason": "on 1 request(s) the clock starts only once the gate is filled or waived, and never before it"
           }
-        }
+        },
+        "not_checked_in": "run-20261013T070131Z-953de9dd"
       },
       "filing": {
         "state": "WITHDRAWN",
@@ -13974,7 +14032,8 @@
           "at": "2026-09-21T20:35:19+00:00",
           "by": "operator",
           "reason": "A12: a document naming the channel by its path on the socket's own host, or with a trailing slash, read as not naming it -- a false fail. A longer path or another host still fails. Found by the contract audit and voted real by the triage (3 readers) in the deep pass of 2026-09-21; the new definition"
-        }
+        },
+        "not_checked_in": "run-20261013T070131Z-953de9dd"
       },
       "filing": {
         "state": "FIX_CLAIMED",
@@ -14207,7 +14266,8 @@
           "at": "2026-09-21T20:35:22+00:00",
           "by": "operator",
           "reason": "A18: a missing or renamed first_session passed as '(None) falls inside the window'; it is unmeasured now. Found by the contract audit and voted real by the triage (3 readers) in the deep pass of 2026-09-21; the new definition passes under run-20260921T201015Z-b8579867."
-        }
+        },
+        "not_checked_in": "run-20261013T070131Z-953de9dd"
       },
       "filing": {
         "state": "FIX_CLAIMED",
@@ -14408,7 +14468,8 @@
           "at": "2026-09-22T22:38:10+00:00",
           "by": "operator",
           "reason": "deep pass 2026-09-22 evening A03 (3/3): rows without a numeric rank or a created_at are unread (inconclusive) instead of being read as 0 and '' -- a renamed or dropped field could otherwise fail #111 'exactly newest-first' with nothing read. The assertion is otherwise unchanged; it passes live under"
-        }
+        },
+        "not_checked_in": "run-20261013T070131Z-953de9dd"
       },
       "filing": {
         "state": "FIX_CLAIMED",
@@ -14651,7 +14712,8 @@
         },
         "failed_under": [
           "d68dde5d632e02f6434da646359d6a3efa738a21eed738630bd3c1f06281b5d9"
-        ]
+        ],
+        "not_checked_in": "run-20261013T070131Z-953de9dd"
       },
       "filing": {
         "state": "FIX_CLAIMED",
@@ -15021,7 +15083,8 @@
         },
         "failed_under": [
           "db5b7b315735c496674e82bdc768e9ae1aad4993c50120b7fe4dfd12c3633e28"
-        ]
+        ],
+        "not_checked_in": "run-20261013T070131Z-953de9dd"
       },
       "filing": {
         "state": "WITHDRAWN",
@@ -15179,7 +15242,8 @@
           "at": "2026-09-25T23:28:35+00:00",
           "by": "operator",
           "reason": "Deep pass 2026-09-25 A11/B08 (3/3): only the first write to the tile was judged and name += was not followed; every write is judged now (e7f42902)."
-        }
+        },
+        "not_checked_in": "run-20261013T070131Z-953de9dd"
       },
       "filing": {
         "state": "FIX_CLAIMED",
@@ -15411,7 +15475,8 @@
           "at": "2026-10-13T00:35:25+00:00",
           "started_at": "2026-10-12T23:09:33+00:00"
         },
-        "pinned_fingerprint": "2e8b6858e71d177779a21f95ec0e35a6b92cb18ef65e71e7d8adbc6ddd20965b"
+        "pinned_fingerprint": "2e8b6858e71d177779a21f95ec0e35a6b92cb18ef65e71e7d8adbc6ddd20965b",
+        "not_checked_in": "run-20261013T070131Z-953de9dd"
       },
       "filing": {
         "state": "FIX_CLAIMED",
@@ -15690,7 +15755,8 @@
             },
             "reason": "each product is on one row in all 3 windows read"
           }
-        }
+        },
+        "not_checked_in": "run-20261013T070131Z-953de9dd"
       },
       "filing": {
         "state": "FIX_CLAIMED",
@@ -15879,7 +15945,8 @@
           "at": "2026-09-21T20:35:23+00:00",
           "by": "operator",
           "reason": "R09 and A03: the pass was any rewording of 'nothing backfilled', then any mention of pro-forma, including 'no pro-forma'. It now needs an affirmative disclosure or a return that follows from the record. Their methodology now says FTA Fund -- Cryptos is pro-forma since inception. Found by the contrac"
-        }
+        },
+        "not_checked_in": "run-20261013T070131Z-953de9dd"
       },
       "filing": {
         "state": "FIX_CLAIMED",
@@ -16024,7 +16091,8 @@
           "at": "2026-10-13T00:35:25+00:00",
           "started_at": "2026-10-12T23:09:33+00:00"
         },
-        "pinned_fingerprint": "e77176673b270cba67e599aab8b4011f8b1805aed59efc088f93522cef55ffe3"
+        "pinned_fingerprint": "e77176673b270cba67e599aab8b4011f8b1805aed59efc088f93522cef55ffe3",
+        "not_checked_in": "run-20261013T070131Z-953de9dd"
       },
       "filing": {
         "state": "FIX_CLAIMED",
@@ -16198,7 +16266,8 @@
           "at": "2026-09-22T16:00:40+00:00",
           "by": "operator",
           "reason": "deep pass 2026-09-22 A11: a route named in a denial or to steer away from it is not one he tells an agent to call. Passes at level V (PRE-0148)."
-        }
+        },
+        "not_checked_in": "run-20261013T070131Z-953de9dd"
       },
       "filing": {
         "state": "FIX_CLAIMED",
@@ -16723,7 +16792,8 @@
             },
             "reason": "32 app(s) of the 116 on the board were read one by one, and for 32 of them every figure on the board re-read between the app's two reads is the app's own; the daily series sums to last_30d for 32 app(s) that have moved at all (/weekly-signal, /tradingview, /token-info, /exchange-refugees, /bitmex, /thinkorswim, /benzinga-pro, /bullx, /etoro, /finviz, /mql5, /pickmytrade, /atas, /barchart, /coingecko, /coinglass, /coinigy, /iex-cloud, /interactive-brokers, /moomoo, /motivewave, /myforexfunds, /myfundedfutures, /prorealtime, /wallstreetbets, /sierra-chart, /stockanalysis, /stockcharts, /traderspost, /tradersync, /unusualwhales, /yfinance)"
           }
-        }
+        },
+        "not_checked_in": "run-20261013T070131Z-953de9dd"
       },
       "filing": {
         "state": "WITHDRAWN",
@@ -17844,7 +17914,8 @@
           "at": "2026-09-22T16:00:38+00:00",
           "by": "operator",
           "reason": "deep pass 2026-09-22 A08: a pass now needs both /fund and /go-live in their openapi; a missing step is Inconclusive. Stricter, same claim; passes under it at level V (PRE-0148)."
-        }
+        },
+        "not_checked_in": "run-20261013T070131Z-953de9dd"
       },
       "filing": {
         "state": "FIX_CLAIMED",
@@ -17997,7 +18068,8 @@
           "at": "2026-10-13T00:35:25+00:00",
           "started_at": "2026-10-12T23:09:33+00:00"
         },
-        "pinned_fingerprint": "f9147b657ba9d4d8852f04c3986c958f28c5d72e80c2035d46de64ac4c1e1de4"
+        "pinned_fingerprint": "f9147b657ba9d4d8852f04c3986c958f28c5d72e80c2035d46de64ac4c1e1de4",
+        "not_checked_in": "run-20261013T070131Z-953de9dd"
       },
       "filing": {
         "state": "FIX_CLAIMED",
@@ -18233,7 +18305,8 @@
           "at": "2026-09-22T22:39:24+00:00",
           "by": "operator",
           "reason": "deep pass 2026-09-22 evening A06/R06: the helper examples() that reads the curl examples was rewritten between the failure and this pass (it now also reads a quoted URL, --data, a double-quoted body and -X after the URL). The fingerprint hashes only the test function, so it did not move. The clone e"
-        }
+        },
+        "not_checked_in": "run-20261013T070131Z-953de9dd"
       },
       "filing": {
         "state": "FIX_CLAIMED",
@@ -18516,7 +18589,8 @@
           "at": "2026-09-25T23:28:33+00:00",
           "by": "operator",
           "reason": "Deep pass 2026-09-25 A03 (3/3): a pass needed only one card closed on both surfaces for any reason; now every sampled card must be read and, while US markets are shut, one must be closed for that reason (e7f42902)."
-        }
+        },
+        "not_checked_in": "run-20261013T070131Z-953de9dd"
       },
       "filing": {
         "state": "FIX_CLAIMED",
@@ -18814,7 +18888,8 @@
           "at": "2026-10-04T01:23:15+00:00",
           "by": "operator",
           "reason": "The check's window starts at their fix of #123 (fixed_at 2026-09-23T02:41:50, commit 1196cd3a); the earlier submission that was answered wrongly is history, named and not judged. Run PRE-0238 (level V): the newest 12 submissions since the fix were each answered 2xx with the id of the report they cre"
-        }
+        },
+        "not_checked_in": "run-20261013T070131Z-953de9dd"
       },
       "filing": {
         "state": "FIX_CLAIMED",
@@ -18977,7 +19052,8 @@
           "at": "2026-10-13T00:35:25+00:00",
           "started_at": "2026-10-12T23:09:33+00:00"
         },
-        "pinned_fingerprint": "6a0791437c8cc5aa4df286c0c372a8d5513e25d504d40418c4f8ce8a1f1c49a3"
+        "pinned_fingerprint": "6a0791437c8cc5aa4df286c0c372a8d5513e25d504d40418c4f8ce8a1f1c49a3",
+        "not_checked_in": "run-20261013T070131Z-953de9dd"
       },
       "filing": {
         "state": "FIX_CLAIMED",
@@ -19136,7 +19212,8 @@
           "at": "2026-10-13T00:35:25+00:00",
           "started_at": "2026-10-12T23:09:33+00:00"
         },
-        "pinned_fingerprint": "2e22cca70cda0f5984ce2f3230718d3230c72fa57acf17d00e4b221e9a9c7fb5"
+        "pinned_fingerprint": "2e22cca70cda0f5984ce2f3230718d3230c72fa57acf17d00e4b221e9a9c7fb5",
+        "not_checked_in": "run-20261013T070131Z-953de9dd"
       },
       "filing": {
         "state": "NOT_RAISED",
@@ -19336,7 +19413,8 @@
           "at": "2026-10-13T00:35:25+00:00",
           "started_at": "2026-10-12T23:09:33+00:00"
         },
-        "pinned_fingerprint": "af6eed9d5de9d1db1d71cb94464f51d41f92bc12524f90c04ac4a47c59cd3183"
+        "pinned_fingerprint": "af6eed9d5de9d1db1d71cb94464f51d41f92bc12524f90c04ac4a47c59cd3183",
+        "not_checked_in": "run-20261013T070131Z-953de9dd"
       },
       "filing": {
         "state": "FIX_CLAIMED",
@@ -19456,7 +19534,8 @@
           "at": "2026-10-13T00:35:25+00:00",
           "started_at": "2026-10-12T23:09:33+00:00"
         },
-        "pinned_fingerprint": "fe91d5882e53cfd1fce91a6cfe1a44599faaf5d029601ef7df6d3bde8e10c8b1"
+        "pinned_fingerprint": "fe91d5882e53cfd1fce91a6cfe1a44599faaf5d029601ef7df6d3bde8e10c8b1",
+        "not_checked_in": "run-20261013T070131Z-953de9dd"
       },
       "filing": {
         "state": "FIX_CLAIMED",
@@ -19581,7 +19660,8 @@
           "at": "2026-09-25T23:28:34+00:00",
           "by": "operator",
           "reason": "Deep pass 2026-09-25 A06 (3/3): a probe answering 401/403/429/5xx dropped out as an absent route; it is unread now and a pass needs every route answered (e7f42902)."
-        }
+        },
+        "not_checked_in": "run-20261013T070131Z-953de9dd"
       },
       "filing": {
         "state": "FIX_CLAIMED",
@@ -19748,7 +19828,8 @@
           "at": "2026-10-13T00:35:25+00:00",
           "started_at": "2026-10-12T23:09:33+00:00"
         },
-        "pinned_fingerprint": "c78808ef1137f82d89f8a7adab87fe7ecd973d11d4772a3238ac149a3884dff3"
+        "pinned_fingerprint": "c78808ef1137f82d89f8a7adab87fe7ecd973d11d4772a3238ac149a3884dff3",
+        "not_checked_in": "run-20261013T070131Z-953de9dd"
       },
       "filing": {
         "state": "FIX_CLAIMED",
@@ -19879,7 +19960,8 @@
           "at": "2026-09-25T23:28:32+00:00",
           "by": "operator",
           "reason": "Deep pass 2026-09-25 A04 (3/3): a history with no dated step in the window counted as judged; it is unread now, and a pass needs every held card read. Same claim, stricter reading (e7f42902)."
-        }
+        },
+        "not_checked_in": "run-20261013T070131Z-953de9dd"
       },
       "filing": {
         "state": "FIX_CLAIMED",
@@ -20062,7 +20144,8 @@
           "at": "2026-09-25T23:28:33+00:00",
           "by": "operator",
           "reason": "Deep pass 2026-09-25 A05 (3/3): 'the offer is gone' passed on one profile read of three sampled; while the launcher says paper-only every live profile is read. The launcher-corrected exit is unchanged (e7f42902)."
-        }
+        },
+        "not_checked_in": "run-20261013T070131Z-953de9dd"
       },
       "filing": {
         "state": "FIX_CLAIMED",
@@ -20204,7 +20287,8 @@
         "pinned_fingerprint": "cb4c52d8d8735e73ad3d07f1520b42a1566392713c69360b5d357fa976ebdce5",
         "failed_under": [
           "cb4c52d8d8735e73ad3d07f1520b42a1566392713c69360b5d357fa976ebdce5"
-        ]
+        ],
+        "not_checked_in": "run-20261013T070131Z-953de9dd"
       },
       "filing": {
         "state": "FIX_CLAIMED",
@@ -20397,7 +20481,8 @@
           "at": "2026-10-13T00:35:25+00:00",
           "started_at": "2026-10-12T23:09:33+00:00"
         },
-        "pinned_fingerprint": "ef2a36ffbdaaf14b6d435fa10fcfb0dc2d064ad8a8c9422a8aec5b6bc7f3f088"
+        "pinned_fingerprint": "ef2a36ffbdaaf14b6d435fa10fcfb0dc2d064ad8a8c9422a8aec5b6bc7f3f088",
+        "not_checked_in": "run-20261013T070131Z-953de9dd"
       },
       "filing": {
         "state": "NOT_RAISED",
@@ -20512,7 +20597,8 @@
           "at": "2026-10-04T01:23:16+00:00",
           "by": "operator",
           "reason": "The check was repaired to the contract its docstring names (commit 7c949468, R01/R03/A03/A04): it reads the declared codes of /api/v1/prices/{asset} from /openapi-public.json. Run PRE-0238 (level V): HTTP 404 is among the declared codes 200, 404, 422, 503."
-        }
+        },
+        "not_checked_in": "run-20261013T070131Z-953de9dd"
       },
       "filing": {
         "state": "FIX_CLAIMED",
@@ -20676,7 +20762,8 @@
         "pinned_fingerprint": "ef53a88ecee3b4fe16c8011662d82392fd1637d065175bd02e7b7a5dc269fa9b",
         "failed_under": [
           "ef53a88ecee3b4fe16c8011662d82392fd1637d065175bd02e7b7a5dc269fa9b"
-        ]
+        ],
+        "not_checked_in": "run-20261013T070131Z-953de9dd"
       },
       "filing": {
         "state": "FIX_CLAIMED",
@@ -20990,7 +21077,8 @@
           "at": "2026-10-13T00:35:25+00:00",
           "started_at": "2026-10-12T23:09:33+00:00"
         },
-        "pinned_fingerprint": "caa58ab86f9b80366e64eebc61963d1a5e58b6c6f2b7e79b32c4ef3d3bb4a6c6"
+        "pinned_fingerprint": "caa58ab86f9b80366e64eebc61963d1a5e58b6c6f2b7e79b32c4ef3d3bb4a6c6",
+        "not_checked_in": "run-20261013T070131Z-953de9dd"
       },
       "filing": {
         "state": "FIX_CLAIMED",
@@ -21212,7 +21300,8 @@
             "sources": {},
             "reason": "all 5 stop-paused paper bot(s) stayed within their stop"
           }
-        }
+        },
+        "not_checked_in": "run-20261013T070131Z-953de9dd"
       },
       "filing": {
         "state": "FIX_CLAIMED",
@@ -21381,7 +21470,8 @@
             "sources": {},
             "reason": "all 10 matchup(s) past their window end read finished"
           }
-        }
+        },
+        "not_checked_in": "run-20261013T070131Z-953de9dd"
       },
       "filing": {
         "state": "FIX_CLAIMED",
@@ -21502,7 +21592,8 @@
         "pinned_fingerprint": "a817099df0d150b132916dfcc89014cad3146293837d748373d87c2657449cfe",
         "failed_under": [
           "a817099df0d150b132916dfcc89014cad3146293837d748373d87c2657449cfe"
-        ]
+        ],
+        "not_checked_in": "run-20261013T070131Z-953de9dd"
       },
       "filing": {
         "state": "FIX_CLAIMED",
@@ -21940,7 +22031,8 @@
           "at": "2026-10-01T08:14:08+00:00",
           "by": "operator",
           "reason": "Their fix of #139 (1 Oct, ET-28527) stores bodies whole and says messages logged before it stay as they were; the check judged ET-27671's old cut message. It now judges only messages logged since 2026-10-01T07:07:13Z, their fix. Run PRE-0220: on the 1 request with such messages none is cut."
-        }
+        },
+        "not_checked_in": "run-20261013T070131Z-953de9dd"
       },
       "filing": {
         "state": "FIX_CLAIMED",
@@ -22102,7 +22194,8 @@
           "at": "2026-10-01T08:14:07+00:00",
           "by": "operator",
           "reason": "Their fix of #140 (1 Oct, ET-28573) links each pick by slug; the check opened the ticker, which still answers the other coin of a shared ticker, so it failed their fix. It now opens what the pick's own link names. Run PRE-0220: all 10 picks open the coin they name. Our report had said the check clea"
-        }
+        },
+        "not_checked_in": "run-20261013T070131Z-953de9dd"
       },
       "filing": {
         "state": "FIX_CLAIMED",
@@ -22254,7 +22347,8 @@
         "pinned_fingerprint": "989432e74dd13c111290120ec788bbfd5833926ea691cd7a5283a9451abb328f",
         "failed_under": [
           "989432e74dd13c111290120ec788bbfd5833926ea691cd7a5283a9451abb328f"
-        ]
+        ],
+        "not_checked_in": "run-20261013T070131Z-953de9dd"
       },
       "filing": {
         "state": "FIX_CLAIMED",
@@ -22435,7 +22529,8 @@
           "at": "2026-10-13T00:35:25+00:00",
           "started_at": "2026-10-12T23:09:33+00:00"
         },
-        "pinned_fingerprint": "9805004f1b66b7da2419f52dc19a821e6ebfaeddb2330aa32c5e9d59169758d8"
+        "pinned_fingerprint": "9805004f1b66b7da2419f52dc19a821e6ebfaeddb2330aa32c5e9d59169758d8",
+        "not_checked_in": "run-20261013T070131Z-953de9dd"
       },
       "filing": {
         "state": "FIX_CLAIMED",
@@ -22696,7 +22791,8 @@
           "at": "2026-10-13T00:35:25+00:00",
           "started_at": "2026-10-12T23:09:33+00:00"
         },
-        "pinned_fingerprint": "fe24b0842d4e87f0c1b8a90db93f76699ceafa800c410798d7e872357dd92cb3"
+        "pinned_fingerprint": "fe24b0842d4e87f0c1b8a90db93f76699ceafa800c410798d7e872357dd92cb3",
+        "not_checked_in": "run-20261013T070131Z-953de9dd"
       },
       "filing": {
         "state": "FIX_CLAIMED",
@@ -22869,7 +22965,8 @@
           "at": "2026-10-13T00:35:25+00:00",
           "started_at": "2026-10-12T23:09:33+00:00"
         },
-        "pinned_fingerprint": "8ba2de0de4ae253d16ed93fe5419064d6199a69549b87dcb4647ccb1cfb98480"
+        "pinned_fingerprint": "8ba2de0de4ae253d16ed93fe5419064d6199a69549b87dcb4647ccb1cfb98480",
+        "not_checked_in": "run-20261013T070131Z-953de9dd"
       },
       "filing": {
         "state": "FIX_CLAIMED",
@@ -23024,7 +23121,8 @@
           "at": "2026-10-13T00:35:25+00:00",
           "started_at": "2026-10-12T23:09:33+00:00"
         },
-        "pinned_fingerprint": "88adffcb096a9d42e2d886e193a04ed087f8ad755fbbc615ac34b863d64b3631"
+        "pinned_fingerprint": "88adffcb096a9d42e2d886e193a04ed087f8ad755fbbc615ac34b863d64b3631",
+        "not_checked_in": "run-20261013T070131Z-953de9dd"
       },
       "filing": {
         "state": "FIX_CLAIMED",
@@ -23179,7 +23277,8 @@
           "at": "2026-10-04T01:23:17+00:00",
           "by": "operator",
           "reason": "Deep pass 2026-10-03 (commit e95c2384, T03-T08) made the check read what its docstring claims: a week worded 'Only BTC runs' is judged by its breadth, and zero such weeks is not a pass. Run PRE-0238 (level V): all 124 such weeks have breadth under 60 %."
-        }
+        },
+        "not_checked_in": "run-20261013T070131Z-953de9dd"
       },
       "filing": {
         "state": "FIX_CLAIMED",
@@ -23329,7 +23428,8 @@
           "at": "2026-10-13T00:35:25+00:00",
           "started_at": "2026-10-12T23:09:33+00:00"
         },
-        "pinned_fingerprint": "c0dccc4780cf197b09296e62e8bc4d890da6d793dc59d91312d0c4717e626872"
+        "pinned_fingerprint": "c0dccc4780cf197b09296e62e8bc4d890da6d793dc59d91312d0c4717e626872",
+        "not_checked_in": "run-20261013T070131Z-953de9dd"
       },
       "filing": {
         "state": "FIX_CLAIMED",
@@ -23548,7 +23648,8 @@
             },
             "reason": "3 coins compared: none is both older than 60 min and more than 2% from its pool"
           }
-        }
+        },
+        "not_checked_in": "run-20261013T070131Z-953de9dd"
       },
       "filing": {
         "state": "FIX_CLAIMED",
@@ -23735,7 +23836,8 @@
           "at": "2026-10-13T00:35:25+00:00",
           "started_at": "2026-10-12T23:09:33+00:00"
         },
-        "pinned_fingerprint": "6473a198ffc5d356cfe696773d4cd4523cab5716305c100c2765673be1b57b90"
+        "pinned_fingerprint": "6473a198ffc5d356cfe696773d4cd4523cab5716305c100c2765673be1b57b90",
+        "not_checked_in": "run-20261013T070131Z-953de9dd"
       },
       "filing": {
         "state": "FIX_CLAIMED",
@@ -23955,7 +24057,8 @@
           "at": "2026-10-04T05:06:36+00:00",
           "by": "operator",
           "reason": "Check repaired 2026-10-04 (commits f8894598, test reads the API snapshot): it averaged the legacy altseason.history instead of the cycle's own series.breadth, and held altseason.index equal to breadth.value, which nothing published says. The earlier REPRODUCING (5 runs, never filed) was our fault. P"
-        }
+        },
+        "not_checked_in": "run-20261013T070131Z-953de9dd"
       },
       "filing": {
         "state": "NOT_RAISED",
@@ -24062,7 +24165,8 @@
           "at": "2026-10-04T01:23:03+00:00",
           "by": "operator",
           "reason": "Deep pass 2026-10-04 (G5): the check now judges the run's own theme and the value/type of each documented field, not only presence -- a stronger definition than the one that was pinned. Run PRE-0238 (level V): all 2 runs on a named theme are listed under it."
-        }
+        },
+        "not_checked_in": "run-20261013T070131Z-953de9dd"
       },
       "filing": {
         "state": "FIX_CLAIMED",
@@ -24223,7 +24327,8 @@
           "at": "2026-10-04T01:23:03+00:00",
           "by": "operator",
           "reason": "Deep pass 2026-10-04 (G5): the check now requires each documented field to be present, non-null and of a type its schema allows, not only present. Run PRE-0238 (level V): all 15 documented properties pass under the stronger definition."
-        }
+        },
+        "not_checked_in": "run-20261013T070131Z-953de9dd"
       },
       "filing": {
         "state": "FIX_CLAIMED",
@@ -24402,7 +24507,8 @@
           "at": "2026-10-13T00:35:25+00:00",
           "started_at": "2026-10-12T23:09:33+00:00"
         },
-        "pinned_fingerprint": "f14256e3390d635b87ea9fe52f8cb67b8668e6a46d4225f3912f274860ef6225"
+        "pinned_fingerprint": "f14256e3390d635b87ea9fe52f8cb67b8668e6a46d4225f3912f274860ef6225",
+        "not_checked_in": "run-20261013T070131Z-953de9dd"
       },
       "filing": {
         "state": "FIX_CLAIMED",
@@ -24535,7 +24641,8 @@
           "at": "2026-10-13T00:35:25+00:00",
           "started_at": "2026-10-12T23:09:33+00:00"
         },
-        "pinned_fingerprint": "9452c7ef104ee9f4d3e67ea25dcf97440ed5f8bd1e5dc57f14a16991d064ba73"
+        "pinned_fingerprint": "9452c7ef104ee9f4d3e67ea25dcf97440ed5f8bd1e5dc57f14a16991d064ba73",
+        "not_checked_in": "run-20261013T070131Z-953de9dd"
       },
       "filing": {
         "state": "FIX_CLAIMED",
@@ -24768,7 +24875,8 @@
             },
             "reason": "the first-click card is held to touch: \"Click a bubble for the sector.\""
           }
-        }
+        },
+        "not_checked_in": "run-20261013T070131Z-953de9dd"
       },
       "filing": {
         "state": "FIX_CLAIMED",
@@ -24989,7 +25097,8 @@
             },
             "reason": "all 15 open or scored calls were recorded after their candle closed"
           }
-        }
+        },
+        "not_checked_in": "run-20261013T070131Z-953de9dd"
       },
       "filing": {
         "state": "FIX_CLAIMED",
@@ -25282,7 +25391,8 @@
           "at": "2026-10-05T08:51:28+00:00",
           "by": "operator",
           "reason": "Deep pass 2026-10-05, commit 70c8ee05, found by the deep-pass review and confirmed by two of three reviewers: the pass condition is now the documented value (NO EDGE or an explicit null label), no longer 'not one of two literal labels'; a missing label field is inconclusive. Level-V run run-20261005"
-        }
+        },
+        "not_checked_in": "run-20261013T070131Z-953de9dd"
       },
       "filing": {
         "state": "FIX_CLAIMED",
@@ -25634,7 +25744,8 @@
           "at": "2026-10-05T08:51:29+00:00",
           "by": "operator",
           "reason": "Deep pass 2026-10-05, commit 70c8ee05, found by the deep-pass review and confirmed by two of three reviewers: a clean study with no live 5d answer read is now inconclusive instead of a pass; the claim (calibrated probability inside its range) is unchanged. Level-V run run-20261005T075423Z-72ea19f3 ("
-        }
+        },
+        "not_checked_in": "run-20261013T070131Z-953de9dd"
       },
       "filing": {
         "state": "FIX_CLAIMED",
@@ -26036,7 +26147,8 @@
             },
             "reason": "every top-level key of /analyze, /calls and /study/expert is listed in its 200 schema"
           }
-        }
+        },
+        "not_checked_in": "run-20261013T070131Z-953de9dd"
       },
       "filing": {
         "state": "FIX_CLAIMED",
@@ -26300,7 +26412,8 @@
           "at": "2026-10-13T00:35:25+00:00",
           "started_at": "2026-10-12T23:09:33+00:00"
         },
-        "pinned_fingerprint": "dcb9129f30cb0399cf33fbb03542b4568504b02b93fb08d57df634833945defb"
+        "pinned_fingerprint": "dcb9129f30cb0399cf33fbb03542b4568504b02b93fb08d57df634833945defb",
+        "not_checked_in": "run-20261013T070131Z-953de9dd"
       },
       "filing": {
         "state": "FIX_CLAIMED",
@@ -26434,7 +26547,8 @@
           "at": "2026-10-13T00:35:25+00:00",
           "started_at": "2026-10-12T23:09:33+00:00"
         },
-        "pinned_fingerprint": "e767f5cb7c9e7c0ee70462d9a73b5c8650b232a66e0fb168b726489956262860"
+        "pinned_fingerprint": "e767f5cb7c9e7c0ee70462d9a73b5c8650b232a66e0fb168b726489956262860",
+        "not_checked_in": "run-20261013T070131Z-953de9dd"
       },
       "filing": {
         "state": "FIX_CLAIMED",
@@ -26572,7 +26686,8 @@
           "at": "2026-10-13T00:35:25+00:00",
           "started_at": "2026-10-12T23:09:33+00:00"
         },
-        "pinned_fingerprint": "0a690b9985c7553ef83f8acf59a72991011c3e8056054d54c991f87b6168f0d7"
+        "pinned_fingerprint": "0a690b9985c7553ef83f8acf59a72991011c3e8056054d54c991f87b6168f0d7",
+        "not_checked_in": "run-20261013T070131Z-953de9dd"
       },
       "filing": {
         "state": "FIX_CLAIMED",
@@ -26857,7 +26972,8 @@
           "at": "2026-10-05T08:51:30+00:00",
           "by": "operator",
           "reason": "Deep pass 2026-10-05, commit 70c8ee05, found by the deep-pass review and confirmed by two of three reviewers: a record whose methodology sentence was classified neither way is no longer counted as judged, so an unread day cannot pass. Level-V run run-20261005T075423Z-72ea19f3 (PRE-0246) passes under"
-        }
+        },
+        "not_checked_in": "run-20261013T070131Z-953de9dd"
       },
       "filing": {
         "state": "FIX_CLAIMED",
@@ -27079,7 +27195,8 @@
           "at": "2026-10-05T08:51:31+00:00",
           "by": "operator",
           "reason": "Deep pass 2026-10-05, commit 70c8ee05, found by the deep-pass review and confirmed by two of three reviewers: 410 now counts as a dead url and an unreadable one (403, 5xx, timeout) is inconclusive instead of passing; claim unchanged. Level-V run run-20261005T075423Z-72ea19f3 (PRE-0246) passes under "
-        }
+        },
+        "not_checked_in": "run-20261013T070131Z-953de9dd"
       },
       "filing": {
         "state": "FIX_CLAIMED",
@@ -27303,7 +27420,8 @@
           "at": "2026-10-05T08:51:32+00:00",
           "by": "operator",
           "reason": "Deep pass 2026-10-05, commit 70c8ee05, found by the deep-pass review and confirmed by two of three reviewers: an identifier answering 400/422 now counts as not opening its coin and 429/5xx is inconclusive instead of dropped; claim unchanged. Level-V run run-20261005T075423Z-72ea19f3 (PRE-0246) passe"
-        }
+        },
+        "not_checked_in": "run-20261013T070131Z-953de9dd"
       },
       "filing": {
         "state": "FIX_CLAIMED",
@@ -27511,7 +27629,8 @@
           "at": "2026-10-05T08:51:33+00:00",
           "by": "operator",
           "reason": "Deep pass 2026-10-05, commit 70c8ee05, found by the deep-pass review and confirmed by two of three reviewers: failure-reason formatting only: unknown figures print as n/a instead of raising; the measurement is unchanged. Level-V run run-20261005T075423Z-72ea19f3 (PRE-0246) passes under the changed c"
-        }
+        },
+        "not_checked_in": "run-20261013T070131Z-953de9dd"
       },
       "filing": {
         "state": "FIX_CLAIMED",
@@ -27668,7 +27787,8 @@
         "pinned_fingerprint": "3fdfdf4e23a798ecb5047447f017c0642b9f188f923c6111ec11ffe2e8513379",
         "failed_under": [
           "3fdfdf4e23a798ecb5047447f017c0642b9f188f923c6111ec11ffe2e8513379"
-        ]
+        ],
+        "not_checked_in": "run-20261013T070131Z-953de9dd"
       },
       "filing": {
         "state": "FIX_CLAIMED",
@@ -27908,7 +28028,8 @@
         "pinned_fingerprint": "43cce9835f023c4579265e388044b84b69bbbdcd4afd99ac3deaec48bc895c4b",
         "failed_under": [
           "43cce9835f023c4579265e388044b84b69bbbdcd4afd99ac3deaec48bc895c4b"
-        ]
+        ],
+        "not_checked_in": "run-20261013T070131Z-953de9dd"
       },
       "filing": {
         "state": "FIX_CLAIMED",
@@ -28081,7 +28202,8 @@
             },
             "reason": "none of 172 records with an unknown schedule claims none is scheduled"
           }
-        }
+        },
+        "not_checked_in": "run-20261013T070131Z-953de9dd"
       },
       "filing": {
         "state": "FIX_CLAIMED",
@@ -28248,7 +28370,8 @@
           "at": "2026-10-05T08:51:33+00:00",
           "by": "operator",
           "reason": "Deep pass 2026-10-05, commit 70c8ee05, found by the deep-pass review and confirmed by two of three reviewers: failure-reason formatting only: unknown figures print as n/a instead of raising; the measurement is unchanged. Level-V run run-20261005T075423Z-72ea19f3 (PRE-0246) passes under the changed c"
-        }
+        },
+        "not_checked_in": "run-20261013T070131Z-953de9dd"
       },
       "filing": {
         "state": "FIX_CLAIMED",
@@ -28416,7 +28539,8 @@
         "pinned_fingerprint": "4efaf1605cc889fb424c25276c395226073f7c8674d1227252f0f9a4109c7ed2",
         "failed_under": [
           "4efaf1605cc889fb424c25276c395226073f7c8674d1227252f0f9a4109c7ed2"
-        ]
+        ],
+        "not_checked_in": "run-20261013T070131Z-953de9dd"
       },
       "filing": {
         "state": "FIX_CLAIMED",
@@ -28573,7 +28697,8 @@
         "pinned_fingerprint": "480d2daeca8090890485940c294cc4b8d630a2e07c8d5c895bddb5d9b2839ed0",
         "failed_under": [
           "480d2daeca8090890485940c294cc4b8d630a2e07c8d5c895bddb5d9b2839ed0"
-        ]
+        ],
+        "not_checked_in": "run-20261013T070131Z-953de9dd"
       },
       "filing": {
         "state": "FIX_CLAIMED",
@@ -28783,7 +28908,8 @@
         "pinned_fingerprint": "7236a654da5b139856ba7659a41d7b7a39c2f2fb55732111b8b04e93c4903ce9",
         "failed_under": [
           "7236a654da5b139856ba7659a41d7b7a39c2f2fb55732111b8b04e93c4903ce9"
-        ]
+        ],
+        "not_checked_in": "run-20261013T070131Z-953de9dd"
       },
       "filing": {
         "state": "FIX_CLAIMED",
@@ -28940,7 +29066,8 @@
         "pinned_fingerprint": "695b635cdd9ad10b2a67ab2205aae5301d388c54d216d7e4d283eab2e8dbb08f",
         "failed_under": [
           "695b635cdd9ad10b2a67ab2205aae5301d388c54d216d7e4d283eab2e8dbb08f"
-        ]
+        ],
+        "not_checked_in": "run-20261013T070131Z-953de9dd"
       },
       "filing": {
         "state": "FIX_CLAIMED",
@@ -29102,7 +29229,8 @@
           "at": "2026-10-10T19:33:29+00:00",
           "by": "agent",
           "reason": "Repaired by deep pass 2026-10-10 (75618ae6, triage A01 3/3): whether the input's day was still open is read off the snapshot's generated_at, not off DeFiLlama's newest point at run time, so a snapshot no longer passes before midnight UTC and fails after it. Readings in tests/meta."
-        }
+        },
+        "not_checked_in": "run-20261013T070131Z-953de9dd"
       },
       "filing": {
         "state": "FIX_CLAIMED",
@@ -29296,7 +29424,8 @@
           "a6e10a19bf45d2735840415483940b44b6ba43f4ac43b976013584259cf29e83",
           "7060973547dc4173a7b0aee1958e86ac0ded842dada403f374c78db3783176e3",
           "67f0756d1c3c66e2fd1636acfb5df2d3c5e173963fb6aed6f17c9fe81a571d60"
-        ]
+        ],
+        "not_checked_in": "run-20261013T070131Z-953de9dd"
       },
       "filing": {
         "state": "FIX_CLAIMED",
@@ -29463,7 +29592,8 @@
         "pinned_fingerprint": "49712c55b23907d19cdfcde1efd829e0b4dee7e5149511f7db21d5ffc35faefc",
         "failed_under": [
           "49712c55b23907d19cdfcde1efd829e0b4dee7e5149511f7db21d5ffc35faefc"
-        ]
+        ],
+        "not_checked_in": "run-20261013T070131Z-953de9dd"
       },
       "filing": {
         "state": "FIX_CLAIMED",
@@ -29676,7 +29806,8 @@
         "pinned_fingerprint": "2073aa83f29af8896f3cdd0c567cb334ff2a9b804d7b2908cf38a88daf96272d",
         "failed_under": [
           "2073aa83f29af8896f3cdd0c567cb334ff2a9b804d7b2908cf38a88daf96272d"
-        ]
+        ],
+        "not_checked_in": "run-20261013T070131Z-953de9dd"
       },
       "filing": {
         "state": "FIX_CLAIMED",
@@ -30155,7 +30286,8 @@
         "pinned_fingerprint": "dca79831edfe090de8a1b54fcd0b931ac35ee950d6a15adea95e9728bf005be1",
         "failed_under": [
           "dca79831edfe090de8a1b54fcd0b931ac35ee950d6a15adea95e9728bf005be1"
-        ]
+        ],
+        "not_checked_in": "run-20261013T070131Z-953de9dd"
       },
       "filing": {
         "state": "FIX_CLAIMED",
@@ -35383,7 +35515,8 @@
           "at": "2026-10-10T19:33:28+00:00",
           "by": "agent",
           "reason": "Repaired by deep pass 2026-10-10 (c164b580, NEXT 2026-10-08): their fix of #175 moved the synthetic label from each trade to the trade list's response (is_synthetic, data_kind) and left synthetic runs off the default board; synthetic_in reads it there, the per-trade flag included. Readings in tests/"
-        }
+        },
+        "not_checked_in": "run-20261013T070131Z-953de9dd"
       },
       "filing": {
         "state": "FIX_CLAIMED",
@@ -35587,7 +35720,8 @@
         "pinned_fingerprint": "eb8b38d7c28020031fdb70916ee8fa584e9542a6fafa85b51ccc90790851fe7e",
         "failed_under": [
           "eb8b38d7c28020031fdb70916ee8fa584e9542a6fafa85b51ccc90790851fe7e"
-        ]
+        ],
+        "not_checked_in": "run-20261013T070131Z-953de9dd"
       },
       "filing": {
         "state": "FIX_CLAIMED",
@@ -35720,7 +35854,8 @@
         "pinned_fingerprint": "e108538ab60938a34851424674a5896f4308ea748addfe888fc0e6e5678dbcf9",
         "failed_under": [
           "e108538ab60938a34851424674a5896f4308ea748addfe888fc0e6e5678dbcf9"
-        ]
+        ],
+        "not_checked_in": "run-20261013T070131Z-953de9dd"
       },
       "filing": {
         "state": "FIX_CLAIMED",
@@ -35867,7 +36002,8 @@
         "pinned_fingerprint": "83d911d6050bbd4736e7c4cf243f9d58e5b7d43fc1433d2229b6b29788976c99",
         "failed_under": [
           "83d911d6050bbd4736e7c4cf243f9d58e5b7d43fc1433d2229b6b29788976c99"
-        ]
+        ],
+        "not_checked_in": "run-20261013T070131Z-953de9dd"
       },
       "filing": {
         "state": "FIX_CLAIMED",
@@ -35995,7 +36131,8 @@
         "pinned_fingerprint": "8d8c0108aa215cd7e1c738efc2e243d2c545c464ae478724f72f055dfa12f0a0",
         "failed_under": [
           "8d8c0108aa215cd7e1c738efc2e243d2c545c464ae478724f72f055dfa12f0a0"
-        ]
+        ],
+        "not_checked_in": "run-20261013T070131Z-953de9dd"
       },
       "filing": {
         "state": "FIX_CLAIMED",
@@ -36134,7 +36271,8 @@
         "pinned_fingerprint": "c15d7e9e8a2c137a784a1487fdab78c9530f1dc6bd46187609ec126c22881d3f",
         "failed_under": [
           "c15d7e9e8a2c137a784a1487fdab78c9530f1dc6bd46187609ec126c22881d3f"
-        ]
+        ],
+        "not_checked_in": "run-20261013T070131Z-953de9dd"
       },
       "filing": {
         "state": "FIX_CLAIMED",
@@ -36272,7 +36410,8 @@
         "pinned_fingerprint": "1fb599a6e77a51ef1a7c104304eb0db1736e99e82b32d3e3cfc10aeefe087b96",
         "failed_under": [
           "1fb599a6e77a51ef1a7c104304eb0db1736e99e82b32d3e3cfc10aeefe087b96"
-        ]
+        ],
+        "not_checked_in": "run-20261013T070131Z-953de9dd"
       },
       "filing": {
         "state": "FIX_CLAIMED",
@@ -36434,7 +36573,8 @@
         "pinned_fingerprint": "3a4cd18b23da100aa08d66f89c7ecfd4ebec6b2694de4d7d7037f75e297864ce",
         "failed_under": [
           "3a4cd18b23da100aa08d66f89c7ecfd4ebec6b2694de4d7d7037f75e297864ce"
-        ]
+        ],
+        "not_checked_in": "run-20261013T070131Z-953de9dd"
       },
       "filing": {
         "state": "FIX_CLAIMED",
@@ -36561,7 +36701,8 @@
         "pinned_fingerprint": "48b46cf0fa32d320ed2bff9a414d4868ed4f9c810e3cecc649c5449fdbf3299a",
         "failed_under": [
           "48b46cf0fa32d320ed2bff9a414d4868ed4f9c810e3cecc649c5449fdbf3299a"
-        ]
+        ],
+        "not_checked_in": "run-20261013T070131Z-953de9dd"
       },
       "filing": {
         "state": "FIX_CLAIMED",
@@ -36702,7 +36843,8 @@
         "pinned_fingerprint": "baed35855a3010cb0647da4bda5fe59c1b83c7d4369560fb6a05a27ccb339e9f",
         "failed_under": [
           "baed35855a3010cb0647da4bda5fe59c1b83c7d4369560fb6a05a27ccb339e9f"
-        ]
+        ],
+        "not_checked_in": "run-20261013T070131Z-953de9dd"
       },
       "filing": {
         "state": "FIX_CLAIMED",
@@ -37093,7 +37235,8 @@
             },
             "reason": "the supply figures of all 130 dashboards read can be true together"
           }
-        }
+        },
+        "not_checked_in": "run-20261013T070131Z-953de9dd"
       },
       "filing": {
         "state": "FIX_CLAIMED",
@@ -37367,7 +37510,8 @@
         "pinned_fingerprint": "f9c6b80f3cb2099b45d4a9d7676641754230d28b10c5546015f06312401d3362",
         "failed_under": [
           "f9c6b80f3cb2099b45d4a9d7676641754230d28b10c5546015f06312401d3362"
-        ]
+        ],
+        "not_checked_in": "run-20261013T070131Z-953de9dd"
       },
       "filing": {
         "state": "FIX_CLAIMED",
@@ -37512,7 +37656,8 @@
         "pinned_fingerprint": "fb72b5b1acdbf41cd7615ea8702f9bd9c329cea645fdfb81b419a343ecb9cf1b",
         "failed_under": [
           "fb72b5b1acdbf41cd7615ea8702f9bd9c329cea645fdfb81b419a343ecb9cf1b"
-        ]
+        ],
+        "not_checked_in": "run-20261013T070131Z-953de9dd"
       },
       "filing": {
         "state": "FIX_CLAIMED",
@@ -37697,7 +37842,8 @@
             },
             "reason": "all 16 route(s) /llms.txt names under /api/v1/agent-tournaments are paths of /openapi-public.json"
           }
-        }
+        },
+        "not_checked_in": "run-20261013T070131Z-953de9dd"
       },
       "filing": {
         "state": "FIX_CLAIMED",
@@ -37847,7 +37993,8 @@
         "failed_under": [
           "87e65799ba5b9247573b93b391a7afcebf23ba77163ee71b46478afa81c052df",
           "1f898e57bd3c062322bb40ec86522654f9196604f9d5ba9f244a2c8e75c8e008"
-        ]
+        ],
+        "not_checked_in": "run-20261013T070131Z-953de9dd"
       },
       "filing": {
         "state": "FIX_CLAIMED",
@@ -38118,7 +38265,8 @@
         "pinned_fingerprint": "5b5b8c24e08c9f1a74eb5846f8bbac2161d73aa0b543f20b225ab51db372c6ba",
         "failed_under": [
           "5b5b8c24e08c9f1a74eb5846f8bbac2161d73aa0b543f20b225ab51db372c6ba"
-        ]
+        ],
+        "not_checked_in": "run-20261013T070131Z-953de9dd"
       },
       "filing": {
         "state": "FIX_CLAIMED",
@@ -38261,7 +38409,8 @@
         "failed_under": [
           "50e39cf990ff4bf2579188011198394678726ca300f896ae4e372104569ad332",
           "61bcbb3487b0c171b5055f80dba7306d8daa1bb954741541dc4f1cc12bb5433b"
-        ]
+        ],
+        "not_checked_in": "run-20261013T070131Z-953de9dd"
       },
       "filing": {
         "state": "FIX_CLAIMED",
@@ -38510,7 +38659,8 @@
             },
             "reason": "all 20 records judged (the 20 dated rows with the largest market cap) state what their next unlock's day releases"
           }
-        }
+        },
+        "not_checked_in": "run-20261013T070131Z-953de9dd"
       },
       "filing": {
         "state": "FIX_CLAIMED",
@@ -38711,7 +38861,8 @@
             },
             "reason": "/llms.txt ('`X-BB-Token` header = the request token; or the signed-in session of the account that filed it') and /openapi-public.json share a place for the request token on accept, change, verdict, withdraw"
           }
-        }
+        },
+        "not_checked_in": "run-20261013T070131Z-953de9dd"
       },
       "filing": {
         "state": "FIX_CLAIMED",
@@ -38906,7 +39057,8 @@
             },
             "reason": "all 16 route(s) /llms.txt names under /api/v1/build-it-better are described in /openapi-public.json"
           }
-        }
+        },
+        "not_checked_in": "run-20261013T070131Z-953de9dd"
       },
       "filing": {
         "state": "FIX_CLAIMED",
@@ -39081,7 +39233,8 @@
             },
             "reason": "all 50 bots /api/v1/agent-tournaments/my-bots offers exist (50 in our clone lists, the rest with a profile)"
           }
-        }
+        },
+        "not_checked_in": "run-20261013T070131Z-953de9dd"
       },
       "filing": {
         "state": "FIX_CLAIMED",
@@ -39214,7 +39367,8 @@
         "pinned_fingerprint": "4741b7e803538ce5501707192ed7af8a7bc8061d206cdc4e0c65f17b2d562169",
         "failed_under": [
           "4741b7e803538ce5501707192ed7af8a7bc8061d206cdc4e0c65f17b2d562169"
-        ]
+        ],
+        "not_checked_in": "run-20261013T070131Z-953de9dd"
       },
       "filing": {
         "state": "NOT_RAISED",
@@ -39328,7 +39482,8 @@
             },
             "reason": "each of the 2 buy-ins has an open paper table with a free seat (0 table(s) at 10 of 10 waiting to start)"
           }
-        }
+        },
+        "not_checked_in": "run-20261013T070131Z-953de9dd"
       },
       "filing": {
         "state": "FIX_CLAIMED",
@@ -39464,7 +39619,8 @@
         "pinned_fingerprint": "08ffee561001e02bd863524c18f4049c0b48cb3a4524464bcc131c4579095d61",
         "failed_under": [
           "08ffee561001e02bd863524c18f4049c0b48cb3a4524464bcc131c4579095d61"
-        ]
+        ],
+        "not_checked_in": "run-20261013T070131Z-953de9dd"
       },
       "filing": {
         "state": "FIX_CLAIMED",
@@ -39614,7 +39770,8 @@
         "pinned_fingerprint": "96bf814248b3c28ac6cc42070f2970ae89dd7bb28f9a4f226f5327a899758b29",
         "failed_under": [
           "96bf814248b3c28ac6cc42070f2970ae89dd7bb28f9a4f226f5327a899758b29"
-        ]
+        ],
+        "not_checked_in": "run-20261013T070131Z-953de9dd"
       },
       "filing": {
         "state": "RAISED",
@@ -39778,7 +39935,8 @@
         "failed_under": [
           "1ec212f826338e3026bb069129b20122de933f15b087b3013261cdad1b69eb8b",
           "805e27ae5c5026b83d24969b697881ddf16cb0a7d382a3a0f2ddd5b609d3f0e4"
-        ]
+        ],
+        "not_checked_in": "run-20261013T070131Z-953de9dd"
       },
       "filing": {
         "state": "RAISED",
@@ -39912,7 +40070,8 @@
         "pinned_fingerprint": "e4c5a1d386e67f9b5b799fb9083143b83ce9f6aaa5b5bc3c3d564e297ac9d84d",
         "failed_under": [
           "e4c5a1d386e67f9b5b799fb9083143b83ce9f6aaa5b5bc3c3d564e297ac9d84d"
-        ]
+        ],
+        "not_checked_in": "run-20261013T070131Z-953de9dd"
       },
       "filing": {
         "state": "RAISED",
@@ -40171,7 +40330,8 @@
         "pinned_fingerprint": "f8d524d107d846470254793f8ab9b9ab74183f3994f8f31cd45b2fa947709f0a",
         "failed_under": [
           "f8d524d107d846470254793f8ab9b9ab74183f3994f8f31cd45b2fa947709f0a"
-        ]
+        ],
+        "not_checked_in": "run-20261013T070131Z-953de9dd"
       },
       "filing": {
         "state": "RAISED",
@@ -40321,7 +40481,8 @@
         "pinned_fingerprint": "56dafe81abb9c4d8bdc86a8d0ad64f47c599bd83b10c21adb5187156859eab64",
         "failed_under": [
           "56dafe81abb9c4d8bdc86a8d0ad64f47c599bd83b10c21adb5187156859eab64"
-        ]
+        ],
+        "not_checked_in": "run-20261013T070131Z-953de9dd"
       },
       "filing": {
         "state": "NOT_RAISED",
@@ -40368,11 +40529,200 @@
         "correction_owed": [],
         "disputed": []
       }
+    },
+    "CYM-a-clone-trades-only-live-epoch-markets": {
+      "id": "CYM-a-clone-trades-only-live-epoch-markets",
+      "first_seen": {
+        "at": "2026-10-13T07:08:42+00:00",
+        "cause": {
+          "run_id": "run-20261013T070131Z-953de9dd"
+        }
+      },
+      "reproductions": 1,
+      "check": {
+        "state": "REPRODUCING",
+        "adjudicated_by": {
+          "run_id": "run-20261013T070131Z-953de9dd",
+          "at": "2026-10-13T07:08:42+00:00",
+          "started_at": "2026-10-13T07:01:48+00:00"
+        },
+        "pinned_fingerprint": "c86938d573792e47c8fd5da3c8846b45cd435656716c4b1d266e39a961ecb5a5",
+        "failed_under": [
+          "c86938d573792e47c8fd5da3c8846b45cd435656716c4b1d266e39a961ecb5a5"
+        ]
+      },
+      "filing": {
+        "state": "RAISED",
+        "adjudicated_by": {
+          "event_id": "38c62b6728a1702d9f773a4096e310773afd1cd32e715508de151653dadcecd4",
+          "at": "2026-10-13T07:09:37+00:00"
+        },
+        "reports": [
+          {
+            "report_id": 204,
+            "status": "pending"
+          }
+        ],
+        "refused": [],
+        "verifications": []
+      },
+      "transitions": [
+        {
+          "axis": "check",
+          "from": "UNVERIFIED",
+          "to": "REPRODUCING",
+          "cause": {
+            "run_id": "run-20261013T070131Z-953de9dd"
+          },
+          "at": "2026-10-13T07:08:42+00:00"
+        },
+        {
+          "axis": "filing",
+          "from": "NOT_RAISED",
+          "to": "RAISED",
+          "cause": {
+            "event_id": "38c62b6728a1702d9f773a4096e310773afd1cd32e715508de151653dadcecd4"
+          },
+          "at": "2026-10-13T07:09:37+00:00"
+        }
+      ],
+      "regressions": [],
+      "severity": "S3-CONTRACT",
+      "title": "12 of 12 paper clones switch on perpetual markets with no 5-minute market: CYM42, ET10, ETLP, TBIG, TBIGS; /api/v1/perpetual/markets/batch-status lists AAPL, BTC, ETH, GOOG, NVDA, SBIO, VAIX. E.g. 862f0418 perpetual_markets 'BTC,ETH,VAIX,SBIO,ET10,ETLP,CYM42,TBIG,TBIGS', trades_summary 'This bot trades: BTC/ETH/VAIX/SBIO +5 5-min epochs (paper)'",
+      "reproduced_in": [
+        "run-20261013T070131Z-953de9dd"
+      ],
+      "component": "rest.clones",
+      "section": "clones",
+      "tag": "DOCS",
+      "kind": "check_failure",
+      "detail": {
+        "left": {
+          "clones_with_dead_markets": 12
+        },
+        "right": {
+          "clones_with_dead_markets": 0
+        },
+        "sources": {
+          "live": "/api/v1/perpetual/markets/batch-status",
+          "settings": "/api/v1/cloned-bots/{id}/profile settings.perpetual_markets",
+          "contract": "llms.txt: batch-status lists the live 5-minute markets"
+        },
+        "population": {
+          "live": [
+            "AAPL",
+            "BTC",
+            "ETH",
+            "GOOG",
+            "NVDA",
+            "SBIO",
+            "VAIX"
+          ],
+          "judged": 12,
+          "wrong": [
+            {
+              "id": "862f0418",
+              "name": "lab Grid ATR Alpha",
+              "perpetual_markets": "BTC,ETH,VAIX,SBIO,ET10,ETLP,CYM42,TBIG,TBIGS",
+              "trades_summary": "This bot trades: BTC/ETH/VAIX/SBIO +5 5-min epochs (paper)",
+              "dead": [
+                "ET10",
+                "ETLP",
+                "CYM42",
+                "TBIG",
+                "TBIGS"
+              ]
+            },
+            {
+              "id": "7b5f05b8",
+              "name": "lab Grid Trend Titan",
+              "perpetual_markets": "BTC,ETH,VAIX,SBIO,ET10,ETLP,CYM42,TBIG,TBIGS",
+              "trades_summary": "This bot trades: BTC/ETH/VAIX/SBIO +5 5-min epochs · Arena headline assets (paper)",
+              "dead": [
+                "ET10",
+                "ETLP",
+                "CYM42",
+                "TBIG",
+                "TBIGS"
+              ]
+            },
+            {
+              "id": "b2d9f0c0",
+              "name": "lab Grid Bollinger Bandit",
+              "perpetual_markets": "BTC,ETH,VAIX,SBIO,ET10,ETLP,CYM42,TBIG,TBIGS",
+              "trades_summary": "This bot trades: BTC/ETH/VAIX/SBIO +5 5-min epochs · Arena headline assets (paper)",
+              "dead": [
+                "ET10",
+                "ETLP",
+                "CYM42",
+                "TBIG",
+                "TBIGS"
+              ]
+            },
+            {
+              "id": "4c1200a4",
+              "name": "lab Grid Delta Hunter",
+              "perpetual_markets": "BTC,ETH,VAIX,SBIO,ET10,ETLP,CYM42,TBIG,TBIGS",
+              "trades_summary": "This bot trades: BTC/ETH/VAIX/SBIO +5 5-min epochs · Arena headline assets (paper)",
+              "dead": [
+                "ET10",
+                "ETLP",
+                "CYM42",
+                "TBIG",
+                "TBIGS"
+              ]
+            },
+            {
+              "id": "ecc49335",
+              "name": "lab Grid Liquidation Hunter",
+              "perpetual_markets": "BTC,ETH,VAIX,SBIO,ET10,ETLP,CYM42,TBIG,TBIGS",
+              "trades_summary": "This bot trades: BTC/ETH/VAIX/SBIO +5 5-min epochs · Arena headline assets (paper)",
+              "dead": [
+                "ET10",
+                "ETLP",
+                "CYM42",
+                "TBIG",
+                "TBIGS"
+              ]
+            },
+            {
+              "id": "449ebf02",
+              "name": "lab Grid ATR Alpha",
+              "perpetual_markets": "BTC,ETH,VAIX,SBIO,ET10,ETLP,CYM42,TBIG,TBIGS",
+              "trades_summary": "This bot trades: BTC/ETH/VAIX/SBIO +5 5-min epochs · Arena headline assets (paper)",
+              "dead": [
+                "ET10",
+                "ETLP",
+                "CYM42",
+                "TBIG",
+                "TBIGS"
+              ]
+            }
+          ]
+        },
+        "reason": "12 of 12 paper clones switch on perpetual markets with no 5-minute market: CYM42, ET10, ETLP, TBIG, TBIGS; /api/v1/perpetual/markets/batch-status lists AAPL, BTC, ETH, GOOG, NVDA, SBIO, VAIX. E.g. 862f0418 perpetual_markets 'BTC,ETH,VAIX,SBIO,ET10,ETLP,CYM42,TBIG,TBIGS', trades_summary 'This bot trades: BTC/ETH/VAIX/SBIO +5 5-min epochs (paper)'"
+      },
+      "checks": [
+        "tests/rest/test_a_clone_trades_only_live_epoch_markets.py::test_a_clones_perpetual_markets_are_live_five_minute_markets"
+      ],
+      "provenance": {
+        "run_id": "run-20261013T070131Z-953de9dd",
+        "measured_at": "2026-10-13T07:08:42+00:00"
+      },
+      "obligations": {
+        "reverify": false,
+        "repair_check": false,
+        "reopen": [],
+        "retractions": [],
+        "verification_owed": [],
+        "correction_owed": [],
+        "disputed": []
+      }
     }
   },
-  "run_id": "run-20261012T230922Z-26bab3d0",
-  "run_level": "V",
-  "updated_at": "2026-10-13T00:35:25+00:00",
+  "run_id": "run-20261013T070131Z-953de9dd",
+  "run_level": "R",
+  "updated_at": "2026-10-13T07:08:42+00:00",
   "counts": {
     "WITHDRAWN": 13,
     "VERIFIED FIXED": 115,
@@ -40381,10 +40731,10 @@
     "OUR CHECK CANNOT TELL": 9,
     "PASSING, NEVER RAISED": 3,
     "NOT RAISED YET": 2,
-    "RAISED": 4
+    "RAISED": 5
   },
   "events_head": {
-    "seq": 3986,
-    "chain": "855f8733ab2d6420e64b68f74b545ecedbe09762f29c7843709de8d0f49a3947"
+    "seq": 3989,
+    "chain": "17f9e1ee0ddbca7246ce628eb8f731b8facaa016caf8f6569e65662ca8f5aace"
   }
 }
