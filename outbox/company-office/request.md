@@ -6,6 +6,8 @@ The operator, 2026-10-13, on the owner view of our company (id 13): *"sekce lega
 
 Why the counter matters: the page shows `turns_today / turns_cap` (4 / 40), which says nothing about the plan. Our first six minutes ran three turns metered 0.12, 0.21 and 0.32 units (`/api/v1/nexus/usage`, 19:16-19:20 UTC), 0.65 of a Pro session's 1.00, while `/api/v1/nexus/plans` lists `company_turn` at 0.05 ("the estimate reserved before a turn"). The owner could not see that until the session was two-thirds gone.
 
+Then the operator pasted a complaint and asked for its fix in this spec: *"agents have been showing 'Working' with queued tasks for quite some time, but the daily agent turn counter remains at 0/40. The Manager also hasn't responded to my latest status request ... I can't seem to find a way to inspect individual task statuses either."* Reproduced on our own company at 20:19 UTC (`GET /api/v1/company/mine`, `/tasks/32`): the company `paused` since ~19:22, Testing `status: working` with `running: 0, queued: 1`, task 32 `queued` after `last_error: "no answer"` with `next_attempt_at` 19:28 UTC, 51 minutes past. Nothing on the page says why nothing runs. Items 13 to 15 below. Not filed as a bug report: the operator routed it here, and the complaint's author has raised it already.
+
 ## The pictures
 
 Drawn by `make_mockup.py` (this folder), rendered and colour-scanned by `render.py`. Sample data in one coherent state on the Pro plan (counter, room plates and department rows agree); the Manager's first message and the two Testing tasks are ours, the rest is illustrative. Their current office was rendered from their own `company-office.js` with our data for comparison (scratchpad, not attached).
@@ -34,11 +36,14 @@ Upgrade the owner's view of the live /company page itself, not a new page beside
 10. The 2D / 3D switch, zoom and fit stay as small controls on the stage. On a phone the office opens zoomed on the Manager and pans with a finger.
 11. Left rail: one compact row per department: status dot, name, units used in 7 days, open, done, failed, memory, experts. Units are the counter's unit (plan units), instead of or beside cost_usd_7d. Under the rows: tasks done and failed in 7 days, the company's units in 7 days, approvals approved in 7 days.
 12. Right column: Waiting for you first (department, kind, age, a one-line title, Approve, Reject, Read), then the Manager chat (newest at the bottom, the box always visible), then the live feed (latest five).
-13. Company bar: name, Active or Paused with Pause or Resume, the counter, "N waiting for you" in red when N > 0 (opens Approvals), and Upgrade to /usage.
-14. Tabs instead of sections: Office, Tasks, Approvals, Memory, Audit, and on the right Investable, Legal entity, Token, Settings. Investable and Legal entity are tabs only: nothing of them on the Office tab; their forms move into their tab unchanged.
-15. Tasks tab: one dense table (status, department, title, started, turns, units, result) with filters by department and status.
-16. Phone, 390 px: company bar and counter, tabs scrolling sideways, the office, departments, approvals, Manager, feed.
+13. Company bar: name, Active or Paused with Pause or Resume, the counter, "N waiting for you" in red when N > 0 (opens Approvals), and Upgrade to /usage. Under the name, the runner's heartbeat: last turn at, next pass in.
+14. Honest status: a department reads Working only while one of its turns runs. Otherwise its open tasks read Queued with the reason in a few words: company paused, plan limit until a time, Free plan, next pass in N s, or retry at a time after "no answer". Today a paused company shows Working with nothing running (ours, 2026-10-13: Testing working, running 0, its retry due at 19:28 UTC still queued at 20:19).
+15. A message to the Manager that cannot be answered now says so at once under it, with when it will be: paused (on Resume), plan limit (after the reset), or the next pass.
+16. Tabs instead of sections: Office, Tasks, Approvals, Memory, Audit, and on the right Investable, Legal entity, Token, Settings. Investable and Legal entity are tabs only: nothing of them on the Office tab; their forms move into their tab unchanged.
+17. Tasks tab: one dense table (status, department, title, started, turns, units, result) with filters by department and status.
+18. Phone, 390 px: company bar and counter, tabs scrolling sideways, the office, departments, approvals, Manager, feed.
 Done when:
+19. Live, without a reload: everything on the page updates over the /ws/company socket the office already uses. The counter, both bars and the units climb as each turn is metered; room and department counts, tasks, approvals, the Manager's replies and the feed arrive as they happen. Today the chat fetches only on load and after a send, and the turn counts only on a reload.
 [ ] 1 At 1920 x 1080 and 1440 x 900 the counter, office, departments, approvals and chat are visible without scrolling.
 [ ] 2 The three turns-left numbers equal units left / the company's measured average units per turn, and change after a turn without reloading.
 [ ] 3 Session and week bars show used / cap and their resets; the at-zero line is right for extra usage on and off.
@@ -47,6 +52,9 @@ Done when:
 [ ] 7 Every room shows its plate, a desk and agent per expert, its current task and its task notes; the Manager, owner, audit and add-department lots are there.
 [ ] 8 A turn that finishes moves a packet and changes the room's counts without a reload.
 [ ] 9 Clicking a room or its row opens the department with its numbers, current task, tasks with results, memory, approvals and charter.
-[ ] 14 The Office tab shows nothing of Investable or Legal entity; both open as tabs.
-[ ] 16 At 390 px nothing scrolls sideways except the tabs and the office.
+[ ] 14 With the company paused, or the plan limit reached, no department reads Working and every queued task shows why it waits.
+[ ] 15 A message sent while paused says at once that the Manager answers on Resume.
+[ ] 16 The Office tab shows nothing of Investable or Legal entity; both open as tabs.
+[ ] 18 At 390 px nothing scrolls sideways except the tabs and the office.
+[ ] 19 With the page open and untouched, a finished turn moves the counter, the bars, the room's counts and the feed, and a Manager reply appears, all without a reload.
 ```
