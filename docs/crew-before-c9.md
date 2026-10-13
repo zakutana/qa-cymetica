@@ -122,6 +122,28 @@ Tests: `tests/meta/test_pipeline_crew.py`, `tests/repo/test_reminders.py`. Items
       `clone.release` builds a MUTATE client to cymetica.com. The code's commit deletes the
       file's `pytestmark` (a strict xfail that passes fails: a partial fix reads red, the whole
       one seven passed).
+   d. **His picks first** (2026-10-13, the manager, T-0074 from the lab's T-0072; built FIRST of
+      NEXT.md's code line, since it holds his whole bot lane and the grid; OP-0026). b. as written
+      frees a slot inside the grid's own loop and the grid refills it in that tick, so a pick of
+      his, read before the grid (promote `scripts/lab.py:4127`, the grid `:4151`), still meets
+      50/50 -- and a refused pick is spent: NEX-0143's Fibonacci Phoenix SL 3 / TP 6 and MACD
+      Hunter SL 4 / TP 8 (CLN-0528/0529, 16:10 UTC, the 50-including-paused wording) opened
+      STR-0215/0216, stopped them and marked the answer read (state/lab.jsonl, 16:10:23), so
+      `launch_bot` returns on their `ref_linked` (`:2518`), `lab.py launch NEX-0143` included.
+      So: (1) b.'s release is one step before ANY clone of ours while the all-cap binds -- his
+      (`launch_bot`), the grid's, h2h's. (2) A pick of his that meets a cap with nothing
+      releasable decides nothing, as a card not yet tradeable does: `later()` not `stop()`,
+      `capped`, the answer stays pending; and a bot room stopped on a capacity refusal
+      (`lab.capacity_refusal` of its clone's outcome, no other refusal) does not spend
+      `(origin, species)`. (3) While a pick of his waits on a cap, the grid starts no cell, so
+      the next freed slot is his. (4) Once it is in, `lab.py launch NEX-0143` starts his two, and
+      any other pick of his stopped on a capacity 400 before the build the same way. Tests beside
+      c.: 50 owned, one judged clone, one pick of his -> one release, his clone, no grid clone
+      that tick; nothing releasable -> no room, the answer not read, no grid clone; the tick
+      after a release -> his pick starts. No release by hand meanwhile: the grid reads 32 free
+      (MAX_TRADING 50 less 18 trading, `:3238-3241`) and sends GRID_PER_TICK 4 a tick, so a slot
+      freed today is the grid's (CLN-0530..0533 refused at 16:11), and nothing can start his two
+      again. 57 refusals of the 50 wording since 10-12 17:27.
 10. **The FOMO collector's daily volume** (conduct, high). 48,557 requests to cymetica.com on
     2026-10-09, 39,784 of them to `/api/v1/clones/memecoin-terminal/search`, a route absent from
     /api-docs, at a flat ~2,000 an hour (`serve.py --fomo 1`, QUOTES_PER_MINUTE 60). REPLY-0030
