@@ -1,4 +1,6 @@
-# Build it Better: Gem Screener -- the smiley, an "Established" stage, the growth warning, the funds (draft, not filed)
+# Build it Better: Gem Screener -- the smiley, an "Established" stage, the growth warning, the funds, two duplicates
+
+**Filed by the operator on the form, 2026-10-13.** Their BB-SPEC carries all 27 lines word for word (diffed); only our item numbers 1.-6. gave way to their line numbers. It keeps the rebuild template's closing paragraph ("our own names and branding", "real-time connection"), the clause #192 is about; line 1 says it does not apply, and a BB-CHANGE would not remove it (#192: 4 of 4), so BB-ACCEPT without one, as ET-29379 and ET-31267 were.
 
 Collected from the operator on 2026-10-13: *"smajlik ma byt kdekoliv kde projekt dava komunite cokoliv, kde je proste mechanismus na miste, nevadi ze je to malo"*; Collector Crypt reads "Slowing" and "Watch out: the business is no longer growing" while it makes millions a month (*"neco jako Established coz je velmi pozitivni znamka"*); the funds do not work, so *"tu sekci radeji zrusit"*. The goals are theirs; the thresholds below ($1M a month, 80 % of the high, 12 months) are ours, their veto open.
 
