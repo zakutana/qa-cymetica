@@ -444,6 +444,93 @@ def test_the_tables_and_the_basket_pay_a_switched_pair_no_gain_either():
     assert pump[2] <= 0.0 and pump[3] <= 0.0, pump
     assert drawn["0xpump"]["peak"] == pytest.approx(pump[1]), drawn["0xpump"]
     assert dict(drawn["0xok"]["points"])[3] == pytest.approx(50.0)
+    # The other price that is not the coin's: one its own pool could not have reached. Held
+    # here, not in a test of its own (tests/meta is held to a ceiling).
+    _check_a_price_the_pool_could_not_have_reached_pays_no_gain()
+
+
+def _onwards():
+    """Onwards, out of the live diary (signal 2026-10-11T20:56Z): fired at
+    0.00001917 in a pumpswap pool of 26 867.74 USD, read at 0.00003246 an hour
+    later -- and at 551.95 from 19 h on, on the SAME pair (its age kept time),
+    in a pool of 215 779.58 USD. A market cap of 552 billion on a fifth of a
+    million of liquidity. Next to it: a coin that rose with its pool, and one
+    whose pool drained under a last print."""
+    onwards, grower, drained = ("0xonwards:2026-09-13T12", "0xgrow:2026-09-13T12",
+                                "0xdrain:2026-09-13T12")
+    rows = [_signal(onwards, price=1.917e-05, liquidity_usd=26867.74,
+                    radar_max_buy_5pct_usd=574.44, age_seconds=177),
+            _signal(grower, price=1.0, liquidity_usd=100_000.0,
+                    radar_max_buy_5pct_usd=5000.0, age_seconds=1000),
+            _signal(drained, price=1.0, liquidity_usd=30_000.0,
+                    radar_max_buy_5pct_usd=5000.0, age_seconds=1000)]
+    for key, entry, age, points in (
+            (onwards, 1.917e-05, 177, ((1, 3.246e-05, 37116.86),
+                                        (19, 551.95, 215779.58),
+                                        (24, 551.95, 215779.58))),
+            (grower, 1.0, 1000, ((24, 1.96, 109_000.0),)),
+            (drained, 1.0, 1000, ((24, 6.0, 90.0),))):
+        for hours, price, liquidity in points:
+            rows.append({"type": "checkpoint", "key": key, "horizon": f"{hours}h",
+                         "at": (T0 + timedelta(hours=hours)).isoformat(),
+                         "price_usd": price, "liquidity_usd": liquidity,
+                         "age_seconds": age + hours * 3600,
+                         "return_pct": fomo.return_since_signal(entry, price)})
+    return onwards, grower, drained, rows
+
+
+def _check_a_price_the_pool_could_not_have_reached_pays_no_gain():
+    """2026-10-13: the console's memecoin headline read +364.6 % a trade and
+    "conviction >= 70 only" +6 003 %. Both were one row, Onwards, at
+    28.8 million times its entry. The sale cap (half the pool) took the
+    liquidity as real and the price with it -- and here the liquidity WAS
+    real, so the cap let $107 890 through on a $10 stake.
+
+    A pool that did not shrink cannot move its price further than its own
+    growth explains: in a constant-product pool the quote side grows with the
+    square root of the price, so a price x times the entry needs the pool
+    about sqrt(x) times deeper. Onwards' pool grew 8.0x, room for 64x; it
+    read 28.8 million. On the live diary the next largest excess over that
+    bound among pools that grew is 1.6x, so ten times the bound sits in the
+    gap. A reading past it is not a price the buyer's pool paid, and pays no
+    gain -- the rule a switched pair has followed since 2026-09-23 -- kept
+    as a trade, counted. A pool that SHRANK is not judged by it: a drained
+    pool's last print is capped by what is left in it, as before."""
+    onwards, grower, drained, rows = _onwards()
+    signals = {r["key"]: r for r in rows if r["type"] == "signal"}
+    at = {(r["key"], r["horizon"]): r for r in rows if r["type"] == "checkpoint"}
+    assert fomo.beyond_pool(signals[onwards], at[(onwards, "24h")])
+    assert fomo.beyond_pool(signals[onwards], at[(onwards, "19h")])
+    assert not fomo.beyond_pool(signals[onwards], at[(onwards, "1h")]), (
+        "+69 % in a pool 1.4x deeper is a move the pool can make")
+    assert not fomo.beyond_pool(signals[grower], at[(grower, "24h")])
+    assert not fomo.beyond_pool(signals[drained], at[(drained, "24h")]), (
+        "a pool that shrank is the sale cap's business, not this bound's")
+
+    said = fomo.ten_dollars(rows, now=DONE)
+    assert said["bought"] == 3 and said["beyond_pool"] == 1, said
+    head = said["by_fee"][0.0]
+    impact = {k: fomo.RADAR_IMPACT_PCT * 10.0 / d for k, d in
+              ((onwards, 574.44), (grower, 5000.0), (drained, 5000.0))}
+    want = [(10.0 / 10.0 * (1 - impact[onwards] / 100) ** 2 - 1) * 100,
+            (19.6 / 10.0 * (1 - impact[grower] / 100) ** 2 - 1) * 100,
+            (45.0 / 10.0 * (1 - impact[drained] / 100) ** 2 - 1) * 100]
+    assert head["mean_net_pct"] == pytest.approx(sum(want) / 3), head
+
+    stop = fomo.stop_study(rows, stop_pct=50.0, cost_pct=0.0, now=DONE)
+    by_key = {t["key"]: t for t in stop["trades"]}
+    assert by_key[onwards]["gross_pct"] <= 0.0, by_key[onwards]
+    assert by_key[grower]["gross_pct"] == pytest.approx(96.0)
+    assert stop["beyond_pool"] == 1, stop
+
+    b = fomo.basket(rows)
+    assert b["best"]["key"] == drained, b["best"]
+    assert {m["key"]: m for m in [b["best"], b["worst"]]}[onwards]["return_pct"] <= 0.0
+    tops = fomo.stats(rows)["horizons"]["24h"]["top"]
+    assert {c["key"]: c["return_pct"] for c in tops}[onwards] <= 0.0
+    drawn = dict({c["token"]: c for c in fomo.curves(rows)}["0xonwards"]["points"])
+    assert drawn[1] > 0.0, "the reading the pool could carry is the coin's own"
+    assert drawn[19] <= 0.0 and drawn[24] <= 0.0, drawn
 
 
 @qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
@@ -602,6 +689,10 @@ def test_the_report_opens_with_the_ten_dollar_answer(tmp_path, monkeypatch):
     assert "n=1" in first and "Could buy 100.0% of 1" in first, first
     # The operator, 2026-10-08: no swap fee in the headline; the price impact stays.
     assert "after the price impact, with no swap fee" in first, first
+    # A price the pool could not have reached is said, as a switch is (2026-10-13).
+    *_, rows = _onwards()
+    line = mod.say_reading(mod.reading(rows, now=DONE))[0]
+    assert "1 kept at a price their pool could not have reached" in line, line
 
 
 @qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")

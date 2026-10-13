@@ -392,11 +392,45 @@ def capped_return(ret, reading: dict, clip_usd: float = SALE_CLIP_USD):
     return min(ret, (liquidity / 2.0 / clip_usd - 1.0) * 100.0)
 
 
+# How far past its own growth a pool's price may read before it is not a price
+# the pool reached (`beyond_pool`). 2026-10-13, the live diary: among pools that
+# grew, the largest excess over the bound with a sale behind it was 1.6x; Onwards
+# read 446 000x. Ten sits in that gap with room for a pool that is not quite
+# constant-product.
+POOL_GROWTH_SLACK = 10.0
+
+
+def beyond_pool(signal: dict, reading: dict) -> bool:
+    """Is `reading`'s price further from the signal's than its pool could have
+    moved it? In a constant-product pool the quote side grows with the square
+    root of the price, so a price x times the entry needs a pool about sqrt(x)
+    deeper -- more, never less, once liquidity is added. Onwards (2026-10-11)
+    read 28.8 million times its entry in a pool that had grown 8x: a market
+    cap of 552 billion on 216 thousand of liquidity, and the half-the-pool
+    sale cap passed $107 890 for a $10 stake, because the pool was real.
+
+    Only a pool that did not shrink is judged: one that lost liquidity can
+    print anything at its last trade, and the sale cap already sells it for
+    what is left. A reading without liquidity on both ends cannot say."""
+    entry, price = (signal or {}).get("price_usd"), (reading or {}).get("price_usd")
+    before = (signal or {}).get("liquidity_usd")
+    after = (reading or {}).get("liquidity_usd")
+    numbers = (entry, price, before, after)
+    if not all(isinstance(v, (int, float)) and not isinstance(v, bool)
+               and v > 0 for v in numbers):
+        return False
+    if after < before:
+        return False
+    return price / entry > POOL_GROWTH_SLACK * (after / before) ** 2
+
+
 def _after_switch(rows: list[dict]) -> set[int]:
-    """The `id()` of every checkpoint read at or after the point its signal's
-    pair changed (`switch_at`): their prices are another pair's, not this
-    coin's, and pay no gain (`_no_pair_gain`). The readings before the switch
-    are the coin's own and stand."""
+    """The `id()` of every checkpoint whose price is not this coin's in the
+    pool it was bought in, and so pays no gain (`_no_pair_gain`): every one
+    read at or after the point its signal's pair changed (`switch_at`) --
+    another pair's price -- and every one the pool could not have reached
+    (`beyond_pool`). The readings before the switch are the coin's own and
+    stand."""
     signals = _signals(rows)
     per: dict[str, list[dict]] = {}
     for row in rows or []:
@@ -409,6 +443,7 @@ def _after_switch(rows: list[dict]) -> set[int]:
         cut = switch_at(ordered)
         if cut is not None:
             out.update(id(r) for r in ordered[cut:])
+        out.update(id(r) for r in checkpoints if beyond_pool(signals[key], r))
     return out
 
 
@@ -1180,14 +1215,17 @@ def stop_study(rows: list[dict], stop_pct: float, target_pct: float | None = Non
             cost, assumed = round_trip_cost(signal, clip_usd)
         gross = capped_return(
             (at_exit["price_usd"] / entry - 1.0) * 100.0, at_exit, clip_usd)
-        if switched:
+        # A price the pool could not have reached is not a sale (Onwards,
+        # 2026-10-13): kept as a trade, paying no gain, as a switch pays.
+        unreached = not switched and beyond_pool(signal, at_exit)
+        if switched or unreached:
             gross = min(gross, 0.0)
         depth = signal.get("radar_max_buy_5pct_usd")
         trades.append({
             "key": key, "symbol": signal.get("symbol"), "exit": why,
             "exit_hours": hours, "gross_pct": gross, "cost_pct": cost,
             "net_pct": gross - cost, "cost_assumed": assumed,
-            "switched": switched,
+            "switched": switched, "beyond_pool": unreached,
             "thin": isinstance(depth, (int, float)) and depth < clip_usd,
             # A stop can only fire at a point: a path with one inside the
             # first hour, at or before the exit, is where the minutes counted.
@@ -1214,6 +1252,7 @@ def stop_study(rows: list[dict], stop_pct: float, target_pct: float | None = Non
                  "assumed": sum(1 for t in trades if t["cost_assumed"]),
                  "thin": sum(1 for t in trades if t["thin"])},
         "switched": sum(1 for t in trades if t["switched"]),
+        "beyond_pool": sum(1 for t in trades if t["beyond_pool"]),
         "excluded": {**excluded,
                      "untradeable": filtered.get("n_untradeable", 0),
                      "late_readings": filtered.get("late_readings", 0)},
@@ -1277,7 +1316,7 @@ def ten_dollars(rows: list[dict], now=None, clip_usd: float = TEN_DOLLAR_CLIP,
     excluded = {"unpriced": 0, "depth_unknown": 0, "too_thin": 0,
                 "unread_at_24h": 0}
     window_open, asked, could_buy, trades, latency = 0, 0, 0, [], []
-    switched = 0
+    switched = unreached = 0
     for key, signal in signals.items():
         fired = _at(signal.get("at"))
         if fired is None or fired + timedelta(
@@ -1321,6 +1360,12 @@ def ten_dollars(rows: list[dict], now=None, clip_usd: float = TEN_DOLLAR_CLIP,
         if pair_changed(ordered):
             switched += 1
             proceeds = min(proceeds, clip_usd)
+        elif beyond_pool(signal, last):
+            # Onwards, 2026-10-13: 551.95 for a coin bought at 0.00001917, in
+            # a pool only 8x deeper -- the whole headline was this one row.
+            # Not a price the pool paid; kept, paying no gain, as a switch.
+            unreached += 1
+            proceeds = min(proceeds, clip_usd)
         trades.append({"key": key, "symbol": signal.get("symbol"),
                        "proceeds_usd": proceeds,
                        "impact_pct": RADAR_IMPACT_PCT * clip_usd / depth})
@@ -1341,4 +1386,5 @@ def ten_dollars(rows: list[dict], now=None, clip_usd: float = TEN_DOLLAR_CLIP,
             "could_buy": could_buy,
             "could_buy_share": could_buy / asked if asked else None,
             "first_buy_to_quote_min": median(latency) if latency else None,
-            "excluded": excluded, "switched": switched, "by_fee": by_fee}
+            "excluded": excluded, "switched": switched,
+            "beyond_pool": unreached, "by_fee": by_fee}

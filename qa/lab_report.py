@@ -180,7 +180,8 @@ def _memecoins(fomo_rows: list[dict], now) -> dict:
         "could_buy_share": said.get("could_buy_share"),
         "conviction_70": {"min": CONVICTION_MIN,
                           "n": int(high_head.get("n") or 0),
-                          "net_pct": high_head.get("mean_net_pct")},
+                          "net_pct": high_head.get("mean_net_pct"),
+                          "median_pct": high_head.get("median_net_pct")},
         "fees": [{"fee_pct": fee, "net_pct": row.get("mean_net_pct"),
                   "n": row.get("n")} for fee, row in sorted(by_fee.items())]}
 

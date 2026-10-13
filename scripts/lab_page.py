@@ -2071,7 +2071,9 @@ function memeRoom(lp) {
      could == null ? "" : `<div class="meter"><s style="width:${could}%"></s></div>`],
     [`Conviction ≥ ${num(hc.min || 70, 0)} only`,
      `<span class="${tone(hc.net_pct)}">${pctText(hc.net_pct, 1)}</span>`,
-     `${num(hc.n || 0, 0)} ${plural(hc.n || 0, "trade", "trades")}`, ""],
+     // 2026-10-13: +6 003 % alone was one coin; the median says so on sight.
+     `${num(hc.n || 0, 0)} ${plural(hc.n || 0, "trade", "trades")}` +
+       (hc.median_pct == null ? "" : ` · median ${pctText(hc.median_pct, 1)}`), ""],
     // [operator 2026-09-14] *"to me nezjaima bez top 5 nechapu proc by
     // to tam melo byt"*. So there is no "without the best five" figure; what
     // says whether the headline is the signal or one lucky coin is the

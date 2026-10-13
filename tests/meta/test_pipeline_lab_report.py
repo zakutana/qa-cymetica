@@ -280,7 +280,11 @@ def test_memecoins_carry_the_median_and_the_high_conviction_answer(monkeypatch):
             {"type": "checkpoint", "key": "b", "horizon": "24h"}]
     memes = _report(fomo_rows=rows)["products"]["memecoins"]
     assert memes["median_pct"] == -9.0
-    assert memes["conviction_70"] == {"min": 70.0, "n": 4, "net_pct": 6.0}
+    # The median beside the conviction mean too (2026-10-13): the tile read
+    # +6 003 % alone, one coin at 28.8 million times, while the trade in the
+    # middle of the 177 lost everything.
+    assert memes["conviction_70"] == {"min": 70.0, "n": 4, "net_pct": 6.0,
+                                      "median_pct": -3.0}
     assert [r.get("key") for r in calls[1]] == ["a", "a"], (
         "the high-conviction answer must see only those signals and their "
         "own checkpoints")

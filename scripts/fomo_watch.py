@@ -633,7 +633,9 @@ def say_ten_dollars(said: dict) -> list[str]:
           f"{left.get('unread_at_24h', 0)} with no reading at "
           f"{out['hold_hours']:g} h -- if those are rugs, the truth is worse; "
           f"{out.get('switched', 0)} kept where their terminal switched pair "
-          f"(a drained pool, paying no gain)"]
+          f"(a drained pool, paying no gain); "
+          f"{out.get('beyond_pool', 0)} kept at a price their pool could not "
+          f"have reached (paying no gain)"]
 
 
 # Stop -10 % alone, and with a +100 % target: the two NEXT.md of 2026-09-21

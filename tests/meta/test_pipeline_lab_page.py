@@ -110,7 +110,8 @@ def _report() -> dict:
                                    running=302, archived=None),
                           "median_pct": -40.0, "fee_pct": 1.0, "signals": 2705,
                           "could_buy_share": 0.52,
-                          "conviction_70": {"min": 70.0, "n": 45, "net_pct": -12.0},
+                          "conviction_70": {"min": 70.0, "n": 45, "net_pct": -12.0,
+                                            "median_pct": -55.0},
                           "fees": [{"fee_pct": 0.5, "net_pct": -19.0, "n": 673}],
                           "excluded": {"unpriced": 1200, "too_thin": 300}},
             "funds": sector(n=0, net_pct=None, usdc=None, stake_usdc=None, wins=0),
@@ -693,6 +694,10 @@ def test_the_memecoin_room_keeps_the_operators_own_decisions(tmp_path):
     assert "<b>52%</b>" in could and "width:52%" in could, could
     assert "of2705signals" in re.sub(r"[,\s  ]", "", could), could
     assert "Conviction ≥ 70" in room and "−12" in room
+    # 2026-10-13: the conviction tile read +6 003 % and nothing under it; its median (-100 %)
+    # would have said one coin made the figure. Its own median, not the room's (-40).
+    conviction = room[room.index("Conviction ≥ 70"):][:400]
+    assert "median" in conviction and "−55" in conviction, conviction
     # M03, deep pass of 2026-09-13: the figure under the word median must be
     # the median (-40) and not the mean (-19.8).
     typical = room[room.index("Typical trade"):][:300]
