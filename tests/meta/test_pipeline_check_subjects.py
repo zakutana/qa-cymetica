@@ -708,6 +708,16 @@ def test_a_card_that_is_closed_on_rest_and_open_on_mcp_fails():
     # And the Build a Company routes in the OpenAPI (2026-10-12), the same way.
     _the_company_route_readings()
 
+    # And a clone's perpetual markets against the live 5-minute markets (2026-10-13).
+    from tests.rest.test_a_clone_trades_only_live_epoch_markets import dead_markets, live_symbols
+    live = live_symbols({"markets": [{"symbol": s} for s in
+                                     ("BTC", "ETH", "NVDA", "AAPL", "GOOG", "VAIX", "SBIO")]})
+    nine = ["BTC", "ETH", "VAIX", "SBIO", "ET10", "ETLP", "CYM42", "TBIG", "TBIGS"]
+    assert dead_markets(nine, live) == ["ET10", "ETLP", "CYM42", "TBIG", "TBIGS"]
+    assert dead_markets(["BTC", "NVDA"], live) == []
+    assert live_symbols({"markets": []}) == [] and live_symbols(None) == [], "no list is unread"
+    assert live_symbols({"markets": [{"symbol": "btc"}, {"price": 1}]}) == ["BTC"]
+
     # And the account history pages forward (2026-10-10): with currency=USDC, and with no filter
     # past the first page, every offset answered the same 100 rows while has_more said true.
     from tests.rest.test_account_history_pages_forward import page_repeats
