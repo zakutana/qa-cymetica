@@ -20,7 +20,7 @@ html,body{background:var(--bg);color:var(--text);font:13px/1.35 var(--ui)}
 .pw{display:inline-block;margin-left:8px;font:600 11px var(--mono);color:var(--green);border:1px solid rgba(0,255,136,.35);border-radius:6px;padding:2px 7px}
 .rules{display:flex;gap:6px;flex-wrap:wrap;justify-content:flex-end}
 .rule{font:600 11px var(--mono);color:var(--cyan);border:1px solid rgba(0,207,255,.35);border-radius:6px;padding:4px 8px;white-space:nowrap}
-.funnel{display:grid;grid-template-columns:repeat(7,1fr);gap:6px;padding:0 16px 12px}
+.funnel{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;padding:0 16px 12px}
 .st{position:relative;background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:10px 14px 10px 14px;clip-path:polygon(0 0,calc(100% - 12px) 0,100% 50%,calc(100% - 12px) 100%,0 100%,10px 50%)}
 .st:first-child{clip-path:polygon(0 0,calc(100% - 12px) 0,100% 50%,calc(100% - 12px) 100%,0 100%)}
 .st b{display:block;font:700 22px var(--mono)} .st span{font-size:11.5px;color:var(--dim)}
@@ -105,7 +105,7 @@ html,body{background:var(--bg);color:var(--text);font:13px/1.35 var(--ui)}
  .acct span:first-child{display:none}
  .top{flex-direction:column;align-items:flex-start;padding:14px 12px 10px} .rules{justify-content:flex-start}
  .title h1{font-size:24px}
- .funnel{grid-template-columns:repeat(7,128px);overflow-x:auto;padding:0 12px 10px}
+ .funnel{grid-template-columns:repeat(4,1fr);padding:0 12px 10px}
  .grid{display:flex;flex-direction:column;height:auto;padding:0 6px 6px}
  .leftcol{display:contents} .board{order:1} .queue{order:2} .list{order:3}
  .qth,.qrow{grid-template-columns:18px minmax(0,1fr) 76px 46px} .qth span:nth-child(3),.qth span:nth-child(4),.qrow>*:nth-child(3),.qrow>*:nth-child(4){display:none}
@@ -131,11 +131,8 @@ html,body{background:var(--bg);color:var(--text);font:13px/1.35 var(--ui)}
 
 <section class="funnel">
  <div class="st"><b>214</b><span>groups found</span></div>
- <div class="st"><b>128</b><span>listening</span></div>
- <div class="st hot"><b>41</b><span>understood</span></div>
+ <div class="st hot"><b>128</b><span>listening</span></div>
  <div class="st"><b>17</b><span>ideas drafted</span></div>
- <div class="st"><b>9</b><span>on the board</span></div>
- <div class="st"><b>3</b><span>picked to build</span></div>
  <div class="st win"><b>1</b><span>shipped</span></div>
 </section>
 
@@ -154,77 +151,71 @@ html,body{background:var(--bg);color:var(--text);font:13px/1.35 var(--ui)}
  </section>
  <section class="card list">
   <div class="lhead"><span class="h6">Where we listen</span><span class="h6" style="letter-spacing:0;text-transform:none;color:var(--faint)">sample data</span></div>
-  <div class="chips"><span class="chip on">All<b>128</b></span><span class="chip">Understood<b>41</b></span><span class="chip">Learning<b>58</b></span><span class="chip">Listening<b>29</b></span><span class="chip">Left<b>6</b></span></div>
+  <div class="chips"><span class="chip on">All<b>128</b></span><span class="chip">Listening<b>122</b></span><span class="chip">Left<b>6</b></span></div>
   <div class="th"><span></span><span>Group</span><span>Members</span><span>Status</span><span>Mood ±100</span><span>Days</span></div>
   <ul class="rows">
-   <li class="row sel"><span class="av" style="background:#16d98c">ST</span><span class="nm"><b>SOL Trenches</b><em>EN · memecoins</em></span><span class="mem">48.2K</span><span class="stat und">Understood</span><span class="mood"><span class="bar"><i style="left:76%"></i></span><span class="g">+52 greed</span></span><span class="days">9</span></li>
-   <li class="row"><span class="av" style="background:#00cfff">PD</span><span class="nm"><b>Perp Degens</b><em>EN · perps</em></span><span class="mem">23.9K</span><span class="stat und">Understood</span><span class="mood"><span class="bar"><i style="left:58%"></i></span><span class="s">+16 calm</span></span><span class="days">12</span></li>
-   <li class="row"><span class="av" style="background:#3b82f6">AI</span><span class="nm"><b>AI Agents Alpha</b><em>EN · AI agents</em></span><span class="mem">15.6K</span><span class="stat und">Understood</span><span class="mood"><span class="bar"><i style="left:69%"></i></span><span class="g">+38 hope</span></span><span class="days">7</span></li>
-   <li class="row"><span class="av" style="background:#8ea3bd">BB</span><span class="nm"><b>Base Builders Chat</b><em>EN · Base, DeFi</em></span><span class="mem">12.4K</span><span class="stat lrn">Learning 64%<i class="lrnbar"><s style="width:64%"></s></i></span><span class="mood"><span class="bar"><i style="left:61%"></i></span><span class="s">+22 calm</span></span><span class="days">4</span></li>
-   <li class="row"><span class="av" style="background:#16d98c">CZ</span><span class="nm"><b>Krypto CZ/SK</b><em>CS · general</em></span><span class="mem">8.1K</span><span class="stat lrn">Learning 41%<i class="lrnbar"><s style="width:41%"></s></i></span><span class="mood"><span class="bar"><i style="left:38%"></i></span><span class="r">−24 fear</span></span><span class="days">3</span></li>
-   <li class="row"><span class="av" style="background:#00cfff">HW</span><span class="nm"><b>HL Perp Whales</b><em>EN · perps</em></span><span class="mem">6.3K</span><span class="stat lrn">Learning 78%<i class="lrnbar"><s style="width:78%"></s></i></span><span class="mood"><span class="bar"><i style="left:66%"></i></span><span class="g">+32 greed</span></span><span class="days">6</span></li>
-   <li class="row"><span class="av" style="background:#3b82f6">AF</span><span class="nm"><b>Airdrop Farmers</b><em>EN · airdrops</em></span><span class="mem">61.0K</span><span class="stat lst">Listening</span><span class="mood"><span class="bar"><i style="left:47%"></i></span><span class="s">−6 calm</span></span><span class="days">1</span></li>
-   <li class="row"><span class="av" style="background:#8ea3bd">TG</span><span class="nm"><b>TON Gamers</b><em>RU, EN · gaming</em></span><span class="mem">33.5K</span><span class="stat lst">Listening</span><span class="mood"><span class="bar"><i style="left:55%"></i></span><span class="s">+10 calm</span></span><span class="days">1</span></li>
-   <li class="row"><span class="av" style="background:#16d98c">ML</span><span class="nm"><b>Memecoin Lounge DE</b><em>DE · memecoins</em></span><span class="mem">9.7K</span><span class="stat lrn">Learning 25%<i class="lrnbar"><s style="width:25%"></s></i></span><span class="mood"><span class="bar"><i style="left:71%"></i></span><span class="g">+42 greed</span></span><span class="days">2</span></li>
+   <li class="row sel"><span class="av" style="background:#16d98c">ST</span><span class="nm"><b>SOL Trenches</b><em>EN · memecoins</em></span><span class="mem">48.2K</span><span class="stat lrn">Listening</span><span class="mood"><span class="bar"><i style="left:76%"></i></span><span class="g">+52 greed</span></span><span class="days">9</span></li>
+   <li class="row"><span class="av" style="background:#00cfff">PD</span><span class="nm"><b>Perp Degens</b><em>EN · perps</em></span><span class="mem">23.9K</span><span class="stat lrn">Listening</span><span class="mood"><span class="bar"><i style="left:58%"></i></span><span class="s">+16 calm</span></span><span class="days">12</span></li>
+   <li class="row"><span class="av" style="background:#3b82f6">AI</span><span class="nm"><b>AI Agents Alpha</b><em>EN · AI agents</em></span><span class="mem">15.6K</span><span class="stat lrn">Listening</span><span class="mood"><span class="bar"><i style="left:69%"></i></span><span class="g">+38 hope</span></span><span class="days">7</span></li>
+   <li class="row"><span class="av" style="background:#8ea3bd">BB</span><span class="nm"><b>Base Builders Chat</b><em>EN · Base, DeFi</em></span><span class="mem">12.4K</span><span class="stat lrn">Listening</span><span class="mood"><span class="bar"><i style="left:61%"></i></span><span class="s">+22 calm</span></span><span class="days">4</span></li>
+   <li class="row"><span class="av" style="background:#16d98c">CZ</span><span class="nm"><b>Krypto CZ/SK</b><em>CS · general</em></span><span class="mem">8.1K</span><span class="stat lrn">Listening</span><span class="mood"><span class="bar"><i style="left:38%"></i></span><span class="r">−24 fear</span></span><span class="days">3</span></li>
+   <li class="row"><span class="av" style="background:#00cfff">HW</span><span class="nm"><b>HL Perp Whales</b><em>EN · perps</em></span><span class="mem">6.3K</span><span class="stat lrn">Listening</span><span class="mood"><span class="bar"><i style="left:66%"></i></span><span class="g">+32 greed</span></span><span class="days">6</span></li>
+   <li class="row"><span class="av" style="background:#3b82f6">AF</span><span class="nm"><b>Airdrop Farmers</b><em>EN · airdrops</em></span><span class="mem">61.0K</span><span class="stat lrn">Listening</span><span class="mood"><span class="bar"><i style="left:47%"></i></span><span class="s">−6 calm</span></span><span class="days">1</span></li>
+   <li class="row"><span class="av" style="background:#8ea3bd">TG</span><span class="nm"><b>TON Gamers</b><em>RU, EN · gaming</em></span><span class="mem">33.5K</span><span class="stat lrn">Listening</span><span class="mood"><span class="bar"><i style="left:55%"></i></span><span class="s">+10 calm</span></span><span class="days">1</span></li>
+   <li class="row"><span class="av" style="background:#16d98c">ML</span><span class="nm"><b>Memecoin Lounge DE</b><em>DE · memecoins</em></span><span class="mem">9.7K</span><span class="stat lrn">Listening</span><span class="mood"><span class="bar"><i style="left:71%"></i></span><span class="g">+42 greed</span></span><span class="days">2</span></li>
    <li class="row"><span class="av" style="background:#5d7391">BM</span><span class="nm"><b>Bitcoin Maxi Bunker</b><em>EN · bitcoin</em></span><span class="mem">18.0K</span><span class="stat left">Left · no bots</span><span class="mood"><span class="bar" style="opacity:.3"></span><span class="s">—</span></span><span class="days">0</span></li>
-   <li class="row"><span class="av" style="background:#00cfff">DX</span><span class="nm"><b>DEX Sniper Club</b><em>EN · memecoins</em></span><span class="mem">27.3K</span><span class="stat lrn">Learning 52%<i class="lrnbar"><s style="width:52%"></s></i></span><span class="mood"><span class="bar"><i style="left:80%"></i></span><span class="g">+60 greed</span></span><span class="days">5</span></li>
+   <li class="row"><span class="av" style="background:#00cfff">DX</span><span class="nm"><b>DEX Sniper Club</b><em>EN · memecoins</em></span><span class="mem">27.3K</span><span class="stat lrn">Listening</span><span class="mood"><span class="bar"><i style="left:80%"></i></span><span class="g">+60 greed</span></span><span class="days">5</span></li>
   </ul>
  </section>
  </div>
 
  <section class="card board">
-  <div class="bhead"><span class="h6">Idea board · 9</span><div class="sort"><button class="on">Top fit</button><button>Most votes</button><button>Newest</button><button>Picked</button></div></div>
+  <div class="bhead"><span class="h6">Ideas · 17</span><div class="sort"><button class="on">Most votes</button><button>Newest</button><button>Shipped</button></div></div>
   <div class="ideas">
    <article class="idea picked">
-    <div class="ih"><span class="av" style="background:#16d98c">ST</span><span class="who"><b>SOL Trenches</b><em>48.2K members · mood +52</em></span><span class="stat und">Picked</span></div>
+    <div class="ih"><span class="av" style="background:#16d98c">ST</span><span class="who"><b>SOL Trenches</b><em>48.2K members · mood +52</em></span><span class="stat und">Shipped</span></div>
     <div class="it">Rug check in one tap</div>
     <div class="want"><span><b>22%</b>is it a rug?</span><span><b>14%</b>dev dumped</span><span><b>9%</b>bundled launch</span></div>
     <div class="why"><b>Why they'd love it:</b> one message in five asks whether a new coin is safe, and most go unanswered. Gem Screener guardians and Team Dump Radar on any contract, one tap.</div>
-    <div class="met"><div><span>Fit</span><span class="fit"><b class="g">92</b><i><s style="width:92%"></s></i></span></div><div><span>Evidence</span><b>61K</b> <em style="font-style:normal;color:var(--faint);font-size:11px">msgs · 9 d</em></div><div><span>Effort</span><b>S</b></div></div>
-    <div class="foot"><span class="vote"><i>▲</i>128</span><button class="build">Build it ›</button></div>
+    <div class="foot"><span class="vote"><i>▲</i>128</span><button class="build">Open ›</button></div>
    </article>
    <article class="idea">
-    <div class="ih"><span class="av" style="background:#00cfff">PD</span><span class="who"><b>Perp Degens</b><em>23.9K members · mood +16</em></span><span class="stat lrn">On the board</span></div>
+    <div class="ih"><span class="av" style="background:#00cfff">PD</span><span class="who"><b>Perp Degens</b><em>23.9K members · mood +16</em></span><span class="stat lrn">Drafted</span></div>
     <div class="it">Funding flip alerts</div>
     <div class="want"><span><b>18%</b>funding</span><span><b>12%</b>liquidated</span><span><b>7%</b>which pair next</span></div>
     <div class="why"><b>Why they'd love it:</b> they trade the moment funding turns and keep missing it. An alert when funding flips on a pair, with the pair one tap away.</div>
-    <div class="met"><div><span>Fit</span><span class="fit"><b class="g">84</b><i><s style="width:84%"></s></i></span></div><div><span>Evidence</span><b>88K</b> <em style="font-style:normal;color:var(--faint);font-size:11px">msgs · 12 d</em></div><div><span>Effort</span><b>M</b></div></div>
     <div class="foot"><span class="vote"><i>▲</i>77</span><button class="build ghost">Build it ›</button></div>
    </article>
    <article class="idea">
-    <div class="ih"><span class="av" style="background:#3b82f6">AI</span><span class="who"><b>AI Agents Alpha</b><em>15.6K members · mood +38</em></span><span class="stat lrn">On the board</span></div>
+    <div class="ih"><span class="av" style="background:#3b82f6">AI</span><span class="who"><b>AI Agents Alpha</b><em>15.6K members · mood +38</em></span><span class="stat lrn">Drafted</span></div>
     <div class="it">A weekly cup for their agents</div>
     <div class="want"><span><b>16%</b>show my agent</span><span><b>11%</b>benchmarks</span><span><b>8%</b>prizes</span></div>
     <div class="why"><b>Why they'd love it:</b> they keep posting agent results nobody can compare. Agent League puzzles as a weekly cup for the group, ET10 prizes, a public table.</div>
-    <div class="met"><div><span>Fit</span><span class="fit"><b class="g">79</b><i><s style="width:79%"></s></i></span></div><div><span>Evidence</span><b>34K</b> <em style="font-style:normal;color:var(--faint);font-size:11px">msgs · 7 d</em></div><div><span>Effort</span><b>S</b></div></div>
     <div class="foot"><span class="vote"><i>▲</i>54</span><button class="build ghost">Build it ›</button></div>
    </article>
    <article class="idea">
-    <div class="ih"><span class="av" style="background:#16d98c">CZ</span><span class="who"><b>Krypto CZ/SK</b><em>8.1K members · mood −24</em></span><span class="stat lst">Draft · learning 41%</span></div>
+    <div class="ih"><span class="av" style="background:#16d98c">CZ</span><span class="who"><b>Krypto CZ/SK</b><em>8.1K members · mood −24</em></span><span class="stat lrn">Drafted</span></div>
     <div class="it">Nexus in Czech</div>
     <div class="want"><span><b>40%</b>questions in Czech</span><span><b>15%</b>taxes</span><span><b>9%</b>scams</span></div>
     <div class="why"><b>Why they'd love it:</b> most questions go unanswered because the tools are English only. Nexus answering in Czech and Slovak, tax basics included.</div>
-    <div class="met"><div><span>Fit</span><span class="fit"><b class="g">71</b><i><s style="width:71%"></s></i></span></div><div><span>Evidence</span><b>9K</b> <em style="font-style:normal;color:var(--faint);font-size:11px">msgs · 3 d</em></div><div><span>Effort</span><b>M</b></div></div>
     <div class="foot"><span class="vote"><i>▲</i>19</span><button class="build ghost">Build it ›</button></div>
    </article>
    <article class="idea">
-    <div class="ih"><span class="av" style="background:#00cfff">DX</span><span class="who"><b>DEX Sniper Club</b><em>27.3K members · mood +60</em></span><span class="stat lst">Draft · learning 52%</span></div>
+    <div class="ih"><span class="av" style="background:#00cfff">DX</span><span class="who"><b>DEX Sniper Club</b><em>27.3K members · mood +60</em></span><span class="stat lrn">Drafted</span></div>
     <div class="it">Launch radar with a safety score</div>
     <div class="want"><span><b>35%</b>new launches</span><span><b>17%</b>snipers, bundles</span><span><b>10%</b>honeypots</span></div>
     <div class="why"><b>Why they'd love it:</b> they jump into coins minutes old and get burned by honeypots. FOMO Radar's hot launches with the rug check attached before they buy.</div>
-    <div class="met"><div><span>Fit</span><span class="fit"><b class="g">68</b><i><s style="width:68%"></s></i></span></div><div><span>Evidence</span><b>40K</b> <em style="font-style:normal;color:var(--faint);font-size:11px">msgs · 5 d</em></div><div><span>Effort</span><b>S</b></div></div>
     <div class="foot"><span class="vote"><i>▲</i>31</span><button class="build ghost">Build it ›</button></div>
    </article>
    <article class="idea">
-    <div class="ih"><span class="av" style="background:#00cfff">HW</span><span class="who"><b>HL Perp Whales</b><em>6.3K members · mood +32</em></span><span class="stat lst">Draft · learning 78%</span></div>
+    <div class="ih"><span class="av" style="background:#00cfff">HW</span><span class="who"><b>HL Perp Whales</b><em>6.3K members · mood +32</em></span><span class="stat lrn">Drafted</span></div>
     <div class="it">Live whale positions</div>
     <div class="want"><span><b>28%</b>big positions</span><span><b>13%</b>liquidation levels</span><span><b>6%</b>copy trades</span></div>
     <div class="why"><b>Why they'd love it:</b> they pass round screenshots of whale positions by hand. A live panel of the largest positions and their liquidation prices.</div>
-    <div class="met"><div><span>Fit</span><span class="fit"><b class="g">74</b><i><s style="width:74%"></s></i></span></div><div><span>Evidence</span><b>21K</b> <em style="font-style:normal;color:var(--faint);font-size:11px">msgs · 6 d</em></div><div><span>Effort</span><b>M</b></div></div>
     <div class="foot"><span class="vote"><i>▲</i>23</span><button class="build ghost">Build it ›</button></div>
    </article>
   </div>
  </section>
 </main>
-<div class="note">Sample data. An idea reaches the board only when its group is understood (enough days and messages read). "Build it" opens a Build it Better request pre-filled with the idea and its evidence.</div>
+<div class="note">Sample data. How a group is read and when an idea is drafted is for Cymetica to design on its Belief Networks. "Build it" opens Build it Better with the idea filled in; nothing is submitted until you send it.</div>
 </body></html>
