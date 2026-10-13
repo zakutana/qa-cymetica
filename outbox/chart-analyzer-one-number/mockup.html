@@ -29,7 +29,7 @@ button{font:inherit;color:inherit;background:none;border:0;cursor:pointer}
 .gs .tier{background:var(--green);color:#04140c;font:12px var(--head);border-radius:4px;padding:1px 6px}
 .btn{border:1px solid var(--line2);border-radius:8px;padding:7px 12px;font:600 12px var(--ui)}
 .btn.pri{border-color:var(--cyan);color:var(--cyan)}
-.grid{display:grid;grid-template-columns:var(--lw,292px) minmax(0,1fr) var(--rw,384px);gap:8px;padding:8px;height:calc(100vh - 110px);min-height:640px}
+.grid{display:grid;grid-template-columns:var(--lw,330px) minmax(0,1fr) var(--rw,384px);gap:8px;padding:8px;height:calc(100vh - 110px);min-height:640px}
 .fund{padding:14px 16px}
 .fund .lnk{font:600 12px var(--ui);color:var(--cyan)}
 .fgrid{display:grid;grid-template-columns:1fr 1fr;gap:12px 10px;margin-top:12px}
@@ -122,12 +122,40 @@ body.layers .pop{display:flex}
 .acc span{color:var(--dim);font-weight:400}
 .disc{color:var(--faint);font-size:11.5px;padding:2px 8px}
 .howto{margin-top:auto;display:grid;gap:6px}
+.chartist{padding:16px}
+.chartist .ai{font:600 10.5px var(--mono);color:var(--cyan);border:1px solid rgba(0,207,255,.4);border-radius:5px;padding:2px 6px;letter-spacing:.5px}
+.read{margin-top:10px}
+.leanrow{display:flex;align-items:center;gap:12px;margin-top:8px}
+.leantxt b{display:block;font:16px var(--head)} .leantxt b.g{color:var(--green)} .leantxt b.r{color:var(--red)} .leantxt b.s{color:var(--dim)}
+.leantxt span{display:block;font-size:11.5px;color:var(--dim);margin-top:3px;line-height:1.35}
+.big{font:31px var(--head);letter-spacing:.3px;line-height:1;white-space:nowrap} .big.up{color:var(--green)} .big.down{color:var(--red)} .big i{font-style:normal}
+.subread{font:600 12px var(--mono);color:var(--cyan);margin-top:7px}
+.gauge{width:146px;height:auto;flex:none}
+.mtf{display:flex;gap:6px;align-items:center;margin-top:10px;flex-wrap:wrap} .mtf .lab{font-size:11px;color:var(--dim);margin-right:2px}
+.tf{display:flex;gap:4px;align-items:center;font:600 12px var(--mono);padding:3px 7px;border-radius:6px;border:1px solid var(--line2)}
+.tf b{font-weight:600;color:var(--dim)} .tf.up{color:var(--green);border-color:rgba(0,255,136,.35)} .tf.down{color:var(--red);border-color:rgba(255,68,68,.35)} .tf.side{color:var(--dim)}
+.says{list-style:none;margin-top:12px;display:grid;gap:8px;font-size:13px;line-height:1.42}
+.says li{padding-left:12px;position:relative} .says li:before{content:"";position:absolute;left:0;top:7px;width:5px;height:5px;border-radius:50%;background:var(--cyan)}
+.says b{font-weight:600} .says em{font-style:normal;font-family:var(--mono);color:var(--cyan)} .says em.r{color:var(--red)} .says em.g{color:var(--green)}
+.edge{margin-top:12px;padding-top:10px;border-top:1px solid var(--line);font-size:12px;color:var(--dim);display:grid;grid-template-columns:auto auto 1fr;gap:3px 8px;align-items:baseline}
+.edge>span:first-child{font:600 10.5px var(--ui);letter-spacing:1.2px;text-transform:uppercase}
+.edge b{font:13px var(--head);color:var(--blue)} .edge em{grid-column:1/-1;font-style:normal;line-height:1.4}
+.ask{margin-top:12px;display:flex;justify-content:space-between;align-items:center;border:1px solid var(--line2);border-radius:8px;padding:8px 10px;color:var(--faint);font-size:12.5px} .ask b{color:var(--cyan)}
+.lv{grid-template-columns:1fr auto 60px 18px !important}
+.al svg.bell{width:14px;height:14px;stroke:var(--faint);fill:none;stroke-width:1.4;display:block} .al.on svg{stroke:var(--cyan);fill:rgba(0,207,255,.3)}
+.mini2{font-size:11px;color:var(--faint);display:flex;align-items:center;gap:4px} .mini2 svg{width:12px;height:12px;stroke:var(--faint);fill:none;stroke-width:1.4}
+.levels .vtop{margin-bottom:2px}
+.guards{display:flex;flex-wrap:wrap;gap:5px;margin-top:12px}
+.gd{font:600 11px var(--ui);padding:3px 7px;border-radius:5px;border:1px solid}
+.gd.good{color:var(--green);border-color:rgba(0,255,136,.35)} .gd.bad{color:var(--red);border-color:rgba(255,68,68,.35)}
+.gd.cau{color:var(--cyan);border-color:rgba(0,207,255,.35)} .gd.na{color:var(--faint);border-style:dashed;border-color:var(--faint)}
 .vword{white-space:nowrap} .tools{overflow:hidden} .left{overflow:hidden}
 /* a laptop (1440 x 900): the same three columns, tighter */
-@media (max-width:1600px){.grid{--lw:268px;--rw:340px} .coinbar{gap:18px}
+@media (max-width:1600px){.grid{--lw:296px;--rw:340px} .coinbar{gap:18px}
  .vword{font-size:26px;margin:10px 0 4px} .verdict{padding:14px} .sum{margin-top:12px;padding-top:10px;gap:8px}
  .lv{padding:5px 8px} .levels{padding:12px 14px} .fund{padding:12px 14px} .fgrid{gap:8px 10px;margin-top:8px} .meter{margin-top:10px;padding-top:10px}
- .acc{padding:10px 14px} .tools .fs,.tools .rp,.lv.bl,.lv.sl{display:none}
+ .acc{padding:10px 14px} .tools .fs,.tools .rp,.lv.bl,.lv.sl,.says .flow2,.howto .acc,.guards,.edge em{display:none}
+ .chartist{padding:13px 14px} .big{font-size:26px} .gauge{width:112px} .says{gap:6px;font-size:12.5px;margin-top:10px}
  .setup{grid-template-columns:16px 12px 1fr 84px} .base{grid-template-columns:1fr 84px}}
 .agent{font:600 12px var(--ui)}
 /* phone */
@@ -139,7 +167,7 @@ body.layers .pop{display:flex}
  .cbr{margin-left:0;width:100%;justify-content:space-between}
  .grid{display:flex;flex-direction:column;height:auto;padding:6px;gap:6px}
  .left,.right{display:contents}
- .verdict{order:1} .chartpane{order:2;height:380px} .right .card:first-child{order:3} .levels{order:4} .howto{order:9}
+ .chartist{order:1} .chartpane{order:2;height:380px} .right .card:first-child{order:3} .levels{order:4} .howto{order:9}
  .fund,.trades,.callout,.legend div:nth-child(2),.acc span{display:none}
  .legend{font-size:11px;left:8px;top:6px} .legend .ohlc{display:none}
  .verdict{padding:10px 12px;display:grid;grid-template-columns:auto 1fr;gap:4px 12px;align-items:center}
@@ -174,20 +202,23 @@ body.layers .pop{display:flex}
 </section>
 <main class="grid">
  <aside class="left">
-  <div class="card verdict">
-   <div class="vtop"><span class="h6">Verdict · 1D</span><span class="dot">LIVE · DEX POOL</span></div>
-   <div class="vword">NO VERDICT</div>
-   <div class="vwhy">The study measured <b>exchange candles</b>; this pool was not in it.<span class="ii" title="For a chart like this one on an exchange the study's table reads: rose 10% first 44%, fell 10% first 53% within 30 candles; every chart: 45% / 51%. Not this pool's own figures.">i</span></div>
-   <div class="sum">
-    <div class="sumrow"><span>Setups on the chart</span><b><span style="color:var(--green)">▲3</span> <span style="color:var(--red)">▼2</span></b></div>
-    <div class="flip">History on exchange charts: <b>none beats the average chart</b> (↑45% ↓51%).</div>
-   </div>
-  </div>
-  <div class="card levels"><span class="h6">Key levels · log</span><ul><li class="lv r"><span>30d high</span><b>0.3470</b><em>+23.2%</em></li><li class="lv p"><span>Price</span><b>0.2818</b><em></em></li><li class="lv bl"><span>EMA 20</span><b>0.2544</b><em>-9.7%</em></li><li class="lv c"><span>Trendline</span><b>0.2333</b><em>-17.2%</em></li><li class="lv sl"><span>SMA 50</span><b>0.1951</b><em>-30.8%</em></li><li class="lv g"><span>Support 1</span><b>0.1520</b><em>-46.1%</em></li><li class="lv g"><span>Support 2</span><b>0.1020</b><em>-63.8%</em></li></ul>
-   <div class="mini">% = distance from the price.</div></div>
-  <div class="card fund"><div class="vtop"><span class="h6">Fundamentals</span><a class="lnk">Gem Screener ›</a></div><div class="fgrid"><div><span>Tier</span><b class="g">S</b> <em class="sub">all 6 gates</em></div><div><span>Upside</span><b class="g">13.9x</b></div><div><span>Revenue 30d</span><b>$15.2M</b></div><div><span>Tokens out</span><b>46%</b></div></div><div class="meter"><span>Degen meter</span><span class="cells"><i class="mg"></i><i class="mg"></i><i class="mg"></i><i class="mb"></i><i class="mu"></i><i class="mu"></i><i class="mr"></i><i class="mr"></i><i class="mr"></i><i class="mr"></i></span><b>4<em>/10</em></b></div></div>
+  <div class="card chartist">
+ <div class="vtop"><span class="h6">Chart read · 1D</span><span class="ai">AI chartist</span></div>
+ <div class="read"><div class="big up">UPTREND <i>↗</i></div><div class="subread">short-term pullback</div></div>
+ <div class="leanrow"><svg viewBox="0 0 200 112" class="gauge"><path d="M22.2,90.6 A78,78 0 0 1 56.4,31.3" stroke="#ff4444" stroke-width="12" fill="none" stroke-linecap="round"/><path d="M65.8,25.9 A78,78 0 0 1 134.2,25.9" stroke="#2a3a52" stroke-width="12" fill="none" stroke-linecap="round"/><path d="M143.6,31.3 A78,78 0 0 1 177.8,90.6" stroke="#16d98c" stroke-width="12" fill="none" stroke-linecap="round"/><line x1="100" y1="96" x2="110.1" y2="38.9" stroke="#e8eef7" stroke-width="3" stroke-linecap="round"/><circle cx="100" cy="96" r="6" fill="#e8eef7"/><text x="16" y="110" fill="#ff4444" font-family="JetBrains Mono" font-size="10">BEAR</text><text x="184" y="110" fill="#16d98c" font-family="JetBrains Mono" font-size="10" text-anchor="end">BULL</text></svg><div class="leantxt"><b class="g">Leans bullish</b><span>5 bullish vs 4 bearish signals on the chart now</span></div></div>
+ <div class="mtf"><span class="lab">Trend</span><span class="tf down"><b>1H</b>↘</span><span class="tf down"><b>4H</b>↘</span><span class="tf up"><b>1D</b>↗</span><span class="tf up"><b>1W</b>↗</span></div>
+ <ul class="says">
+  <li><b>Up 120% in 30 days.</b> Above the rising trendline <em>0.233</em> and the 50-day average <em>0.195</em>.</li>
+  <li><b>Warning:</b> bearish engulfing yesterday under the 30-day high <em>0.347</em>; 1H and 4H already turned down.</li>
+  <li><b>Watch 0.233.</b> Holding it keeps the uptrend; a daily close below opens <em>0.195</em>, then <em>0.152</em>.</li>
+  <li class="flow2"><b>Flow:</b> last 15 min sold <em class="r">$33.7K</em>, bought <em class="g">$5.0K</em>.</li>
+ </ul>
+ <div class="edge"><span>Edge</span><b>NO VERDICT</b><span class="ii" title="For a chart like this on an exchange the study's table reads: rose 10% first 44%, fell 10% first 53% within 30 candles; every chart: 45% / 51%.">i</span><em>the study measured exchange candles, not this pool; its setups did no better than average there</em></div>
+ <div class="ask"><span>Ask the chartist: what breaks this uptrend?</span><b>↵</b></div>
+</div>
+  <div class="card fund"><div class="vtop"><span class="h6">Fundamentals</span><a class="lnk">Gem Screener ›</a></div><div class="fgrid"><div><span>Tier</span><b class="g">S</b> <em class="sub">all 6 gates</em></div><div><span>Upside</span><b class="g">13.9x</b></div><div><span>Revenue 30d</span><b>$15.2M</b></div><div><span>Tokens out</span><b>46%</b></div></div><div class="meter"><span>Degen meter</span><span class="cells"><i class="mg"></i><i class="mg"></i><i class="mg"></i><i class="mb"></i><i class="mu"></i><i class="mu"></i><i class="mr"></i><i class="mr"></i><i class="mr"></i><i class="mr"></i></span><b>4<em>/10</em></b></div><div class="guards"><span class="gd good">✓ Rug power</span><span class="gd bad">✗ Holders paid</span><span class="gd good">✓ Liquidity</span><span class="gd bad">✗ Price run</span><span class="gd bad">✗ Security</span><span class="gd na">? Team</span></div></div>
   <div class="howto"><div class="card acc">How it's measured</div>
-   <div class="disc">A probability from history, never a promise. Not financial advice; it places no orders.</div></div>
+   <div class="disc">A read of the chart, never a promise or a forecast. Not financial advice; it places no orders.</div></div>
  </aside>
  <section class="card chartpane">
   <div class="tools">
@@ -210,6 +241,7 @@ body.layers .pop{display:flex}
   <div class="wk">Weekly Signal · needs 42 weeks of candles</div>
   <div class="foot"><a>The study ›</a><a>Calls ledger ›</a><a>How it's measured ›</a></div>
  </div>
+ <div class="card levels"><div class="vtop"><span class="h6">Key levels · log</span><span class="mini2"><svg class="bell" viewBox="0 0 16 16"><path d="M8 2.2a3.9 3.9 0 0 0-3.9 3.9v2.6L2.6 11h10.8L11.9 8.7V6.1A3.9 3.9 0 0 0 8 2.2zM6.4 12.6a1.6 1.6 0 0 0 3.2 0"/></svg> alert me when crossed</span></div><ul><li class="lv r"><span>30d high</span><b>0.3470</b><em>+23.2%</em><i class="al"><svg class="bell" viewBox="0 0 16 16"><path d="M8 2.2a3.9 3.9 0 0 0-3.9 3.9v2.6L2.6 11h10.8L11.9 8.7V6.1A3.9 3.9 0 0 0 8 2.2zM6.4 12.6a1.6 1.6 0 0 0 3.2 0"/></svg></i></li><li class="lv p"><span>Price</span><b>0.2818</b><em></em><i class="al"></i></li><li class="lv bl"><span>EMA 20</span><b>0.2544</b><em>-9.7%</em><i class="al"><svg class="bell" viewBox="0 0 16 16"><path d="M8 2.2a3.9 3.9 0 0 0-3.9 3.9v2.6L2.6 11h10.8L11.9 8.7V6.1A3.9 3.9 0 0 0 8 2.2zM6.4 12.6a1.6 1.6 0 0 0 3.2 0"/></svg></i></li><li class="lv c"><span>Trendline</span><b>0.2333</b><em>-17.2%</em><i class="al on"><svg class="bell" viewBox="0 0 16 16"><path d="M8 2.2a3.9 3.9 0 0 0-3.9 3.9v2.6L2.6 11h10.8L11.9 8.7V6.1A3.9 3.9 0 0 0 8 2.2zM6.4 12.6a1.6 1.6 0 0 0 3.2 0"/></svg></i></li><li class="lv sl"><span>SMA 50</span><b>0.1951</b><em>-30.8%</em><i class="al"><svg class="bell" viewBox="0 0 16 16"><path d="M8 2.2a3.9 3.9 0 0 0-3.9 3.9v2.6L2.6 11h10.8L11.9 8.7V6.1A3.9 3.9 0 0 0 8 2.2zM6.4 12.6a1.6 1.6 0 0 0 3.2 0"/></svg></i></li><li class="lv g"><span>Support 1</span><b>0.1520</b><em>-46.1%</em><i class="al"><svg class="bell" viewBox="0 0 16 16"><path d="M8 2.2a3.9 3.9 0 0 0-3.9 3.9v2.6L2.6 11h10.8L11.9 8.7V6.1A3.9 3.9 0 0 0 8 2.2zM6.4 12.6a1.6 1.6 0 0 0 3.2 0"/></svg></i></li><li class="lv g"><span>Support 2</span><b>0.1020</b><em>-63.8%</em><i class="al"><svg class="bell" viewBox="0 0 16 16"><path d="M8 2.2a3.9 3.9 0 0 0-3.9 3.9v2.6L2.6 11h10.8L11.9 8.7V6.1A3.9 3.9 0 0 0 8 2.2zM6.4 12.6a1.6 1.6 0 0 0 3.2 0"/></svg></i></li></ul></div>
  <div class="card trades"><div class="vtop"><span class="h6">Live trades</span><span class="flow" title="Bought and sold in this pool over the last 15 minutes"><b class="g">▲ $5.0K</b> <b class="r">▼ $33.7K</b> <em>15 min</em></span></div><div class="th"><span>Price</span><span>Size</span><span>Time UTC</span></div><ul><li style="--w:2%" class="b"><b>0.2818</b><span>$10</span><em>10:57:53</em></li><li style="--w:2%" class="s"><b>0.2795</b><span>$15</span><em>10:57:53</em></li><li style="--w:2%" class="b"><b>0.2818</b><span>$142</span><em>10:57:52</em></li><li style="--w:2%" class="s"><b>0.2796</b><span>$15</span><em>10:57:51</em></li><li style="--w:2%" class="b"><b>0.2818</b><span>$142</span><em>10:57:51</em></li><li style="--w:2%" class="s"><b>0.2795</b><span>$15</span><em>10:57:51</em></li><li style="--w:2%" class="b"><b>0.2818</b><span>$142</span><em>10:57:50</em></li><li style="--w:2%" class="s"><b>0.2795</b><span>$15</span><em>10:57:50</em></li><li style="--w:2%" class="b"><b>0.2818</b><span>$146</span><em>10:57:50</em></li><li style="--w:2%" class="b"><b>0.2822</b><span>&lt;$1</span><em>10:57:05</em></li><li style="--w:10%" class="b"><b>0.2819</b><span>$696</span><em>10:56:42</em></li><li style="--w:2%" class="b"><b>0.2819</b><span>$94</span><em>10:56:42</em></li><li style="--w:100%" class="s"><b>0.2799</b><span>$6.8K</span><em>10:56:42</em></li><li style="--w:2%" class="s"><b>0.2800</b><span>$13</span><em>10:55:23</em></li><li style="--w:2%" class="b"><b>0.2822</b><span>$120</span><em>10:55:23</em></li><li style="--w:2%" class="s"><b>0.2800</b><span>$21</span><em>10:55:23</em></li><li style="--w:2%" class="b"><b>0.2819</b><span>$23</span><em>10:55:22</em></li><li style="--w:5%" class="b"><b>0.2819</b><span>$335</span><em>10:55:22</em></li></ul></div>
  </aside>
 </main>
