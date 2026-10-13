@@ -83,3 +83,4 @@ reports:
   202: "Event karty: BTC karta nemá v historii indexu 51,6 h, 14 ostatních krypto karet ve stejné době zapisovalo"
   203: "VAIX orderbook: arbitráž nakupuje na Base, kterou tatáž odpověď vyřadila pro odchylku ceny −83,75 %"
   204: "Klonovaní boti: seznam trhů zapíná 5 trhů bez 5min kola (ET10, CYM42 aj.); bot obchoduje jen BTC a ETH"
+  205: "Nexus: značky v odpovědi označí našeho bota jako kartu a funkční cesty jako nedostupné, uvnitř cesty"
