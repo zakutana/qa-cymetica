@@ -1,28 +1,52 @@
-# Build it Better: Chart Analyzer -- one number, the chart always in view (draft, not filed)
+# Build it Better: Chart Analyzer, a degen layout (draft, not filed)
 
-The operator, 2026-10-13, on the live page for Collector Crypt (CARDS, Solana, 1D): *"vypada strasne ... tolik smetimke cteni ze to je ultra anti degen friendly"*; two numbers (44% / 53%, and 49 in the gauge) with no way to tell which counts; scrolling down to tick the setups that glow on the chart hides the chart; and *"co je what the verdict is made of? kdo to ma cist?"*. Read live the same day. This follows their own redesign spec of 2026-10-01 (one screen, no jargon); the page was rebuilt since, with a verdict, and the clutter came back in a new form. Goals are theirs; the wording below is ours, their veto open.
+The operator, 2026-10-13, on the live page for Collector Crypt (CARDS, Solana, 1D): *"vypada strasne ... tolik smeti ke cteni ze to je ultra anti degen friendly"*; two numbers (44% / 53%, and 49 in the gauge) and no way to tell which counts; scrolling down to the setups hides the chart; *"co je what the verdict is made of? kdo to ma cist?"*; then, beside a Binance screenshot: *"na binance je mnohem vic obrazovky vyuzito ... ten filter panel je tak moc hnusny. vygeneruj novy top design pro degeny"*. Goals are theirs; the design is ours, their veto open. It follows their own redesign spec of 2026-10-01 (one screen, no jargon); the page was rebuilt since, with a verdict, and the clutter came back in a new form.
 
-Filing is the operator's step, on the form ("I have a link": `https://cymetica.com/chart-analyzer`), the block below in "What should it do better?". After filing, check the BB-SPEC line by line, then BB-ACCEPT without a BB-CHANGE (#192).
+## The pictures
+
+Drawn from real data by `make_mockup.py` (in this folder): the candles, the pool's price, 24h figures, liquidity, market cap, FDV and live trades are GeckoTerminal's for the CARDS/USDC Raydium pool (the pool the live page reads, "LIVE · DEX POOL"), one read at 10:58 UTC; the verdict, the five setups and their study figures, and the two support lines are the live Chart Analyzer page's for CARDS 1D; tier, upside, revenue, tokens out and the Degen meter are the Gem Screener's. The trendline is ours (from the Sep 10 low, the flattest line no later low breaks, log scale).
+
+- `desktop-1920.png`: 1920 x 1080, the main view.
+- `desktop-1440.png`: a laptop, 1440 x 900; the same three columns, tighter.
+- `layers-1920.png`: the Layers menu open, which replaces today's toggle panel.
+- `phone-390.png`: a phone, 390 px; the columns stack, the setups become a strip.
+- `mockup.html`: the same page, live in a browser at any width (`?layers` opens the menu).
+
+## Filing
+
+On the form, "I have a link" with `https://cymetica.com/chart-analyzer`, the block below in "What should it do better?", one item per line, and the four PNGs as pictures (the form takes six). After filing, check their BB-SPEC line by line against this block, then BB-ACCEPT without a BB-CHANGE (#192).
 
 ```
-Follow-up to the Chart Analyzer redesign: upgrade the live page itself, not a new page beside it; it keeps its name, logo and copy, and the template lines about rebuilding someone else's app do not apply. Goals, not methods. Figures are from the live page for Collector Crypt (CARDS, Solana, 1D) on 2026-10-13.
-1. One headline number, never two. Today a degen sees "44% / 53%" (the verdict) and, further down, "49" (the gauge, "older method") and cannot tell which counts. The page itself says neither applies here: the verdict is "NO EDGE by rule" because the study measured exchange candles, not this DEX pool, and the 1-100 score "did not sort charts" on history it had not seen. The headline says only what holds: for a chart the study did not measure, "No verdict: the study measured exchange candles, not DEX pools", one line; for a chart it did, the verdict and its one pair of figures.
-2. The study's figures for a chart type this asset is not, and the old 1-100 gauge, are not headline material: the gauge goes to the "How it is measured" section (item 5) with its own caveat, and the all-assets figures (45% / 51%) appear only labelled "all charts in the study, not this asset".
-3. The same sentence is not said twice. Today the verdict block says the study measured exchange candles and that this asset's candles were not in it, in two paragraphs one under the other.
-4. The chart stays in view while the setups are read: on a desktop the chart is fixed beside or above the setup cards while they scroll, so ticking a setup shows it on the chart at once; on a phone the cards sit under the chart in a strip, not a page below it.
-5. One section explains the method, closed by default: "How it is measured", holding the study link, the built-on and tested-on figures, the old score, the public ledger and what "rose first" means. Today the same explanation stands in four places: the line under "What the verdict is made of", "What the number is made of", the "How the number is made" panel and "The numbers", with "The study" linked twice.
-6. A setup card is one line of words and one pair of figures: its name, and "rose first 44%, fell first 50%" on the years it was tested on (the years it was built on, and the sample sizes such as 103,001, in its tooltip). A card never carries two paragraphs of statistics.
-7. A setup's colour says what was measured, and the card says so in words. Today "Bearish engulfing after a rise" is green with a rising bar and "Bullish engulfing after a drop" is red; the reason is in a tooltip only. The card carries "bearish pattern, but history says up" or "bullish pattern, but history says down" where the two disagree.
-8. A line that does not apply is not shown as a paragraph. The Weekly Signal explanation ("Needs at least 42 completed weeks of candles ... Not computable here", six lines) becomes one grey line, or nothing, when it cannot be computed for this chart.
+Follow-up to the Chart Analyzer redesign of 2026-10-01: upgrade the live page itself, not a new page beside it; it keeps its name, logo and copy, and the template lines about rebuilding someone else's app do not apply. Goals, not methods. Figures are from Collector Crypt (CARDS, Solana, 1D) on 2026-10-13. The four attached pictures are the template and the spirit is the requirement: shape, proportions and wording are yours to improve. Colours stay the site's: cyan, green, red, blue and the slate-blue neutrals; no purple, orange, amber, yellow or plain gray.
+1. The page uses the whole window, as an exchange does, not a 1,028 px column. At 1440 x 900 and at 1920 x 1080 the price, the chart, the verdict, the setups and the key levels are all on the first screen without scrolling, and the chart is the largest thing on it.
+2. A coin bar replaces today's header: logo, name, pair, DEX and chain; the live price with its 24h change; 24h high, 24h low, 24h volume, pool liquidity, market cap and FDV; on the right a Gem Screener chip (tier and upside, linking to the coin), Ask your AI, Share and + New. The "Give this to your AI agent" bar above the tool becomes the Ask your AI button.
+3. Three columns under it: verdict, key levels and fundamentals on the left; the chart in the middle; setups and live trades on the right. On a phone they stack: verdict, chart, setups as a swipeable strip, key levels.
+4. One headline, never two numbers. Today the page shows "44% / 53%" and, lower, a gauge "49" ("older method"), and says itself that neither applies to this pool. The verdict card shows one word (EDGE UP, EDGE DOWN, NO EDGE or NO VERDICT) and one line why; for a DEX pool: "The study measured exchange candles; this pool was not in it". The study's figures for charts like it go in the (i) tooltip, labelled as the study's.
+5. Under the word, one line read at a glance: the setups on the chart by the textbook (▲3 ▼2) and whether any beats the average chart in the study ("none beats the average chart, ↑45% ↓51%").
+6. The 1-100 gauge leaves the first screen; it lives in "How it's measured" with its own caveat.
+7. The chart toolbar is one row, as on an exchange: timeframes (1H 4H 1D 5D 1W 2W 1M), range (90 180 All Fit), Candles ▾ (Candles, Hollow, Heikin-Ashi, Line, Bars), Layers ▾ with the number switched on, Log, Replay, Full screen. Today's two rows of toggles, the candle style row, the ATR row, the volume profile row and the overlay row all go into those two menus.
+8. Layers ▾ opens one panel in three columns (Levels, Signals, Indicators), each line a checkbox with its line colour beside it; ATR's length, colour and thickness on its line; Volume profile Off / Total / Delta there. The legend under the chart goes: the colours are in the menu, and the chart's top left carries O H L C, EMA 20, SMA 50 and volume, as on an exchange.
+9. On the chart: support and resistance as lines with their price tagged on the axis (S1 0.152, S2 0.102), the trendline, the averages, volume at the bottom, the scored window shaded, pattern markers numbered on the candle they were confirmed on, and the live price tagged on the axis.
+10. The setups panel lists the setups on the chart now, one row each: a checkbox that shows or hides it on the chart, the textbook direction (▲ or ▼), name, kind and age ("Pattern · 1 candle ago"), and one bar with the two tested-on figures (rose 10% first, fell 10% first). The average chart's pair closes the list for comparison. Built-on figures and sample sizes are in the row's tooltip.
+11. Selecting a setup lights it on the chart, which stays in view: its marker glows and a small card beside it gives the name, when it was confirmed, the textbook direction and the two figures in plain words ("about the average chart").
+12. Where the textbook name and the measured figures disagree, words say so; a bearish pattern is never shown green without them.
+13. Key levels: price, 30-day high, trendline, supports and, on a wide screen, EMA 20 and SMA 50, each with its distance from the price in %.
+14. Fundamentals, for a coin the Gem Screener knows: tier, upside, revenue 30 days, tokens out, the Degen meter and a link to the coin.
+15. Live trades of the same pool: price (green buy, red sell), size in $, time UTC, newest first, a faint bar for size so a whale stands out, and the last 15 minutes bought against sold above it.
+16. Weekly Signal, where it cannot be computed, is one grey line ("needs 42 weeks of candles"), not a paragraph.
+17. The method is explained once: "How it's measured", closed by default (the study, built-on and tested-on years, the old score, the public ledger, what "rose first" means). Today it stands in four places, "The study" is linked twice, and the verdict says twice in a row that the study measured exchange candles.
+18. Every number shows only the digits it needs: the chart's title reads "LAST 197 DAYS", not "LAST 196.99767960241462 DAYS".
 Done when:
-[ ] 1 The first screen has one headline number or one sentence, not two numbers.
-[ ] 1 For a DEX-pool chart the headline says in one line that the study did not measure it, and shows no 44% / 53%.
-[ ] 2 The 1-100 gauge is not on the first screen; it and its caveat are in "How it is measured".
-[ ] 3 No sentence of the verdict block appears twice.
-[ ] 4 At 1440 x 900 the chart and the setup cards are visible together; scrolling the cards does not scroll the chart away.
-[ ] 4 At 390 px the chart is visible while a setup is selected.
-[ ] 5 The explanation of the method exists once, closed by default; "The study" is linked once.
-[ ] 6 A setup card is its name and one pair of tested-on figures; built-on figures and sample sizes are in its tooltip.
-[ ] 7 Where a pattern's name and its measured direction disagree, the card says so in words.
-[ ] 8 With Weekly Signal not computable, its text is one short grey line or absent.
+[ ] 1 At 1440 x 900 and 1920 x 1080 the coin bar, verdict, chart, setups and key levels are on screen without scrolling, and the page uses the full width.
+[ ] 2 The coin bar shows the live price, 24h change, high, low, volume, pool liquidity, market cap, FDV and the Gem Screener chip.
+[ ] 3 At 390 px the chart stays visible while a setup is selected, and only the setups strip scrolls sideways.
+[ ] 4 The first screen has one verdict word and one line; no "44% / 53%" and no gauge on it; a DEX pool reads no verdict, and why.
+[ ] 7 The toolbar is one row; every toggle of today's panel is in Candles ▾ or Layers ▾; no legend under the chart.
+[ ] 8 Layers ▾ shows each layer with its colour, in three groups.
+[ ] 10 A setup row is name, kind and age, and one bar with two figures; built-on figures are in its tooltip.
+[ ] 11 Selecting a setup highlights it on the chart while both are on screen.
+[ ] 13 Each key level shows its distance from the price.
+[ ] 15 The live trades list moves as the pool trades.
+[ ] 17 "How it's measured" exists once, closed by default; no sentence of the verdict appears twice.
+[ ] 18 No number on the page carries more digits than it needs.
 ```
