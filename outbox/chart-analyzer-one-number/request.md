@@ -4,7 +4,7 @@ The operator, 2026-10-13, on the live page for Collector Crypt (CARDS, Solana, 1
 
 ## The pictures
 
-Drawn from real data by `make_mockup.py` (in this folder): the candles (1H, 4H, 1D), the pool's price, 24h figures, liquidity, market cap, FDV and live trades are GeckoTerminal's for the CARDS/USDC Raydium pool (the pool the live page reads, "LIVE · DEX POOL"), read at 10:58 UTC; the verdict, the five setups and their study figures, and the two support lines are the live Chart Analyzer page's for CARDS 1D; tier, upside, revenue, tokens out, the Degen meter and the guardians are the Gem Screener's. Ours, as defaults the builder may improve: the trendline (from the Sep 10 low, the flattest line no later low breaks, log scale); a timeframe's trend (close above a rising 20-bar EMA = up, below a falling one = down, else sideways; today 1H down, 4H down, 1D up, 1W up); the lean (one point per textbook signal on the chart, setups and timeframes: 5 bullish, 4 bearish); and the chartist's sentences, written from those figures only.
+Drawn from real data by `make_mockup.py` (in this folder): the candles (1H, 4H, 1D), the pool's price, 24h figures, liquidity, market cap, FDV and live trades are GeckoTerminal's for the CARDS/USDC Raydium pool (the pool the live page reads, "LIVE · DEX POOL"), read at 10:58 UTC; the verdict, the five setups and their study figures, and the two support lines are the live Chart Analyzer page's for CARDS 1D; tier, upside, revenue, tokens out, the Degen meter and the guardians are the Gem Screener's. Ours, as defaults the builder may improve: the trendline (from the Sep 10 low, the flattest line no later low breaks, log scale); a timeframe's trend (close above a rising 20-bar EMA = up, below a falling one = down, else sideways; today 1H down, 4H down, 1D up, 1W up); the lean (one point per textbook signal on the chart, setups and timeframes: 5 bullish, 4 bearish); and the chartist's three lines (watch, risk, flow), written from those figures only.
 
 - `desktop-1920.png`: 1920 x 1080, the main view.
 - `desktop-1440.png`: a laptop, 1440 x 900; the same three columns, tighter.
@@ -25,8 +25,8 @@ The idea: opening the page is like sitting next to a top chartist. At first glan
 4. Chartist panel, top left: one big trend word with an arrow (UPTREND ↗, DOWNTREND ↘, SIDEWAYS →), and a short qualifier when the short timeframes disagree ("short-term pullback").
 5. Under it a lean gauge from bearish to bullish with one line, "Leans bullish: 5 bullish vs 4 bearish signals on the chart now", counting the textbook signals the page already finds (setups and timeframe trends), labelled as what the chart shows, not a forecast.
 6. A trend chip per timeframe, 1H 4H 1D 1W: up, down or sideways. A good default: close above a rising 20-bar EMA is up, below a falling one is down, else sideways.
-7. Three or four short sentences in a chartist's voice, from the page's own facts only: the trend and its levels, the latest pattern, the level to watch and what a close beyond it opens, the buy and sell flow. Plain words and numbers, no price targets, no promises; rewritten as candles close.
-8. The edge, last in the panel: the verdict word (EDGE UP, EDGE DOWN, NO EDGE or NO VERDICT) and one line why; for a DEX pool "the study measured exchange candles, not this pool"; the study's figures in its (i). Today "44% / 53%" and a gauge "49" head the page although, by the page's own words, the first does not apply to this pool and the second did not sort charts; neither stays on the first screen, and the 1-100 gauge moves to "How it's measured".
+7. Then three short lines, the number first and at most four words after it, from the page's own facts only: WATCH the level that keeps the trend (and where a close below leads), RISK the latest warning, FLOW the last 15 minutes sold against bought. No sentences, no price targets, no promises; updated as candles close.
+8. The edge, last in the panel: one word (EDGE UP, EDGE DOWN, NO EDGE or NO VERDICT); why, and the study's figures, in its (i). Today "44% / 53%" and a gauge "49" head the page although, by the page's own words, the first does not apply to this pool and the second did not sort charts; neither stays on the first screen, and the 1-100 gauge moves to "How it's measured".
 9. "Ask the chartist": a box under the panel that asks NEXUS about this chart, with the chart's facts as context.
 10. One-row chart toolbar: timeframes, range (90 180 All Fit), Candles ▾, Layers ▾ (with the number switched on), Log, Replay, Full screen. Every toggle of today's panel moves into the two menus; the legend under the chart goes, and the chart's top left carries O H L C, EMA 20, SMA 50 and volume.
 11. Layers ▾ is one panel in three groups (Levels, Signals, Indicators), each line a checkbox with its line colour; ATR settings and Volume profile Off / Total / Delta on their own lines.
@@ -43,7 +43,7 @@ Done when:
 [ ] 4 The panel opens with one trend word and an arrow, matching the 1D chip.
 [ ] 5 The lean gauge and its line count signals the page lists, and say they are not a forecast.
 [ ] 6 Four timeframe chips show up, down or sideways by one stated rule.
-[ ] 7 The chartist's sentences quote only figures the page shows, and change when a candle closes.
+[ ] 7 The panel holds no sentence: three lines of a number and a few words, quoting only figures the page shows.
 [ ] 8 No "44% / 53%" and no 1-100 gauge on the first screen; a DEX pool reads NO VERDICT and why.
 [ ] 9 A question in "Ask the chartist" is answered about this chart.
 [ ] 10 The toolbar is one row; every toggle of today's panel is in Candles ▾ or Layers ▾; no legend under the chart.

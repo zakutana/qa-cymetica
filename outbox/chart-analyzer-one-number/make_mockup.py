@@ -204,17 +204,16 @@ def gauge(v):
 
 CHARTIST = f"""<div class="card chartist">
  <div class="vtop"><span class="h6">Chart read · 1D</span><span class="ai">AI chartist</span></div>
- <div class="read"><div class="big up">UPTREND <i>↗</i></div><div class="subread">short-term pullback</div></div>
- <div class="leanrow">{gauge(lean)}<div class="leantxt"><b class="{lean_cls}">{lean_word}</b><span>{bull} bullish vs {bear} bearish signals on the chart now</span></div></div>
+ <div class="read"><div class="big up">UPTREND <i>↗</i></div><div class="subread">+{up30:.0f}% in 30 days · short-term pullback</div></div>
+ <div class="leanrow">{gauge(lean)}<div class="leantxt"><b class="{lean_cls}">{lean_word}</b><span>{bull} vs {bear} signals</span></div></div>
  <div class="mtf"><span class="lab">Trend</span>{mtf_html}</div>
- <ul class="says">
-  <li><b>Up {up30:.0f}% in 30 days.</b> Above the rising trendline <em>{trend_now:.3f}</em> and the 50-day average <em>{DATA['sma50'][-1]:.3f}</em>.</li>
-  <li><b>Warning:</b> bearish engulfing yesterday under the 30-day high <em>{high30:.3f}</em>; 1H and 4H already turned down.</li>
-  <li><b>Watch {trend_now:.3f}.</b> Holding it keeps the uptrend; a daily close below opens <em>{DATA['sma50'][-1]:.3f}</em>, then <em>0.152</em>.</li>
-  <li class="flow2"><b>Flow:</b> last 15 min sold <em class="r">{fmt_usd(sold)}</em>, bought <em class="g">{fmt_usd(bought)}</em>.</li>
+ <ul class="keys">
+  <li><span>Watch</span><b class="c">{trend_now:.3f}</b><em>below → 0.152</em></li>
+  <li><span>Risk</span><b class="r">{high30:.3f}</b><em>bearish engulfing</em></li>
+  <li class="flow2"><span>Flow 15m</span><b class="r">{fmt_usd(sold)}</b><em>sold vs <i class="g">{fmt_usd(bought)}</i> bought</em></li>
  </ul>
- <div class="edge"><span>Edge</span><b>NO VERDICT</b><span class="ii" title="For a chart like this on an exchange the study's table reads: rose 10% first 44%, fell 10% first 53% within 30 candles; every chart: 45% / 51%.">i</span><em>the study measured exchange candles, not this pool; its setups did no better than average there</em></div>
- <div class="ask"><span>Ask the chartist: what breaks this uptrend?</span><b>↵</b></div>
+ <div class="edge"><span>Edge</span><b>NO VERDICT</b><span class="ii" title="The study measured exchange candles, not this pool. For a chart like this on an exchange its table reads: rose 10% first 44%, fell 10% first 53% within 30 candles; every chart: 45% / 51%.">i</span></div>
+ <div class="ask"><span>Ask the chartist…</span><b>↵</b></div>
 </div>"""
 
 TRADES = (f'<div class="card trades"><div class="vtop"><span class="h6">Live trades</span>'
@@ -395,6 +394,11 @@ body.layers .pop{{display:flex}}
 .says{{list-style:none;margin-top:12px;display:grid;gap:8px;font-size:13px;line-height:1.42}}
 .says li{{padding-left:12px;position:relative}} .says li:before{{content:"";position:absolute;left:0;top:7px;width:5px;height:5px;border-radius:50%;background:var(--cyan)}}
 .says b{{font-weight:600}} .says em{{font-style:normal;font-family:var(--mono);color:var(--cyan)}} .says em.r{{color:var(--red)}} .says em.g{{color:var(--green)}}
+.keys{{list-style:none;margin-top:12px;display:grid;gap:6px}}
+.keys li{{display:grid;grid-template-columns:62px 58px 1fr;gap:8px;align-items:baseline;font-size:12.5px}}
+.keys span{{font:600 10.5px var(--ui);letter-spacing:1px;text-transform:uppercase;color:var(--dim)}}
+.keys b{{font:700 14px var(--mono)}} .keys b.c{{color:var(--cyan)}} .keys b.r{{color:var(--red)}}
+.keys em{{font-style:normal;color:var(--dim)}} .keys i.g{{font-style:normal;color:var(--green)}}
 .edge{{margin-top:12px;padding-top:10px;border-top:1px solid var(--line);font-size:12px;color:var(--dim);display:grid;grid-template-columns:auto auto 1fr;gap:3px 8px;align-items:baseline}}
 .edge>span:first-child{{font:600 10.5px var(--ui);letter-spacing:1.2px;text-transform:uppercase}}
 .edge b{{font:13px var(--head);color:var(--blue)}} .edge em{{grid-column:1/-1;font-style:normal;line-height:1.4}}
@@ -412,7 +416,7 @@ body.layers .pop{{display:flex}}
 @media (max-width:1600px){{.grid{{--lw:296px;--rw:340px}} .coinbar{{gap:18px}}
  .vword{{font-size:26px;margin:10px 0 4px}} .verdict{{padding:14px}} .sum{{margin-top:12px;padding-top:10px;gap:8px}}
  .lv{{padding:5px 8px}} .levels{{padding:12px 14px}} .fund{{padding:12px 14px}} .fgrid{{gap:8px 10px;margin-top:8px}} .meter{{margin-top:10px;padding-top:10px}}
- .acc{{padding:10px 14px}} .tools .fs,.tools .rp,.lv.bl,.lv.sl,.says .flow2,.howto .acc,.guards,.edge em{{display:none}}
+ .acc{{padding:10px 14px}} .tools .fs,.tools .rp,.lv.bl,.lv.sl,.keys .flow2,.howto .acc,.guards{{display:none}}
  .chartist{{padding:13px 14px}} .big{{font-size:26px}} .gauge{{width:112px}} .says{{gap:6px;font-size:12.5px;margin-top:10px}}
  .setup{{grid-template-columns:16px 12px 1fr 84px}} .base{{grid-template-columns:1fr 84px}}}}
 .agent{{font:600 12px var(--ui)}}
