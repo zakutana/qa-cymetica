@@ -314,6 +314,26 @@ def cmd_message(raw_company, text, confirm: bool) -> int:
     return 0 if outcome["outcome"] == "accepted" else 1
 
 
+def cmd_brake(kind: str, raw_company, confirm: bool) -> int:
+    """pause or resume: no body, only the company's id in the path."""
+    cid = company_id(raw_company)
+    url = f"{BASE}/{cid}/{kind}"
+    print(f"POST {url}")
+    if not confirm:
+        print(f"nothing sent: {kind} needs --confirm")
+        return 0
+    if os.environ.get("QA_CREW_DEPT"):
+        print(f"refused, nothing sent: a company worker never does a {kind}")
+        return 2
+    client = _client()
+    try:
+        outcome = _send(client, kind, url, None)
+    finally:
+        client.close()
+    _say(outcome)
+    return 0 if outcome["outcome"] == "accepted" else 1
+
+
 def cmd_read(raw_company) -> int:
     """The Manager's words and the tasks, newest last (reads)."""
     cid = company_id(raw_company)
@@ -371,6 +391,10 @@ def main(argv: list[str] | None = None) -> int:
     tell.add_argument("--company", required=True)
     tell.add_argument("--text", required=True)
     tell.add_argument("--confirm", action="store_true")
+    for brake in ("pause", "resume"):
+        stop = sub.add_parser(brake, help=f"{brake} the company (the brake on its plan units)")
+        stop.add_argument("--company", required=True)
+        stop.add_argument("--confirm", action="store_true")
     look = sub.add_parser("read", help="the Manager's messages, the tasks and the budget (reads)")
     look.add_argument("--company", required=True)
     sub.add_parser("mine", help="their record of our company (a read)")
@@ -382,6 +406,8 @@ def main(argv: list[str] | None = None) -> int:
             return cmd_department(args.company, args.body_file, args.confirm)
         if args.command == "message":
             return cmd_message(args.company, args.text, args.confirm)
+        if args.command in ("pause", "resume"):
+            return cmd_brake(args.command, args.company, args.confirm)
         if args.command == "read":
             return cmd_read(args.company)
         return cmd_mine()

@@ -816,6 +816,23 @@ endpoints:
     executable_params: [text]
     closed_body: true
 
+  # The brake: pause and resume carry no body. A running company spends the owner's plan units
+  # (measured 2026-10-13: 0.22 units a turn, not the 0.05 reserved), so stopping it is the one
+  # write that protects the owner's other work.
+  - id: company.pause
+    path: /api/v1/company/{company_id}/pause
+    methods: [POST]
+    component: rest.company
+    executable_params: []
+    closed_body: true
+
+  - id: company.resume
+    path: /api/v1/company/{company_id}/resume
+    methods: [POST]
+    component: rest.company
+    executable_params: []
+    closed_body: true
+
   - id: prop.signup
     path: /api/v1/prop/signup
     methods: [POST]

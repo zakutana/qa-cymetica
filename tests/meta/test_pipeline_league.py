@@ -203,7 +203,7 @@ def test_the_league_answers_only_what_it_computes_exactly_and_only_once():
 CO_BASE = "https://cymetica.com/api/v1/company"
 CO_RULES = {"company.create": {"name", "mission", "departments", "report_style"},
             "company.department": {"key", "name", "charter", "experts"},
-            "company.message": {"text"}}
+            "company.message": {"text"}, "company.pause": set(), "company.resume": set()}
 
 
 def _company_script():
@@ -277,12 +277,13 @@ def _company_write():
     transport = SafetyTransport(Inner(), registry)
     cid = "7f3a9c10-1b2c-4d5e-8f90-123456789abc"
     exact = ((f"{CO_BASE}/", made), (f"{CO_BASE}/{cid}/departments", co.department_body(**testing)),
-             (f"{CO_BASE}/{cid}/message", co.message_body("Start with the Chart Analyzer.")))
+             (f"{CO_BASE}/{cid}/message", co.message_body("Start with the Chart Analyzer.")),
+             (f"{CO_BASE}/{cid}/pause", None), (f"{CO_BASE}/{cid}/resume", None))
     refused = ((f"{CO_BASE}/", dict(made, token_chain="solana")),
                (f"{CO_BASE}/{cid}/departments", dict(co.department_body(**testing), owner="x")),
                (f"{CO_BASE}/{cid}/approvals/1", {"decision": "approve"}),
                (f"{CO_BASE}/{cid}/message", {"text": "hello", "role": "owner"}),
-               (f"{CO_BASE}/{cid}/pause", None), (f"{CO_BASE}/{cid}/investable", {"enabled": True}),
+               (f"{CO_BASE}/{cid}/pause", {"reason": "x"}), (f"{CO_BASE}/{cid}/investable", {"enabled": True}),
                (f"{CO_BASE}/{cid}/entity/request", {}))
     token = CURRENT_TIER.set(SafetyTier.MUTATE)
     try:
@@ -314,6 +315,8 @@ def _company_write():
                                              "departments": [{"id": "d1", "key": "testing"}]})
         if request.url.path.endswith("/departments"):
             return httpx.Response(201, json={"id": "d2", "key": body.get("key"), "name": "Trading desk"})
+        if request.url.path.endswith(("/pause", "/resume")):
+            return httpx.Response(200, json={"id": cid, "status": request.url.path.rsplit("/", 1)[1] + "d"})
         if request.url.path.endswith("/message"):
             return httpx.Response(200, json={"id": 70, "role": "owner", "text": body["text"]})
         return httpx.Response(404, json={"detail": "not here"})
@@ -349,6 +352,12 @@ def _company_write():
         assert sent[-1] == ("POST", f"/api/v1/company/{cid}/message",
                             {"text": "Start with the Chart Analyzer."}), sent[-1]
         assert co.load()[-1]["kind"] == "message" and co.load()[-1]["outcome"] == "accepted"
+
+        # The brake: a pause and a resume carry no body.
+        assert co.main(["pause", "--company", cid, "--confirm"]) == 0
+        assert sent[-1] == ("POST", f"/api/v1/company/{cid}/pause", None), sent[-1]
+        assert co.main(["resume", "--company", cid, "--confirm"]) == 0
+        assert sent[-1] == ("POST", f"/api/v1/company/{cid}/resume", None), sent[-1]
 
         mp.setenv("QA_CREW_DEPT", "bugs")
         count = len(sent)
