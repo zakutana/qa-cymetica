@@ -1,0 +1,132 @@
+{
+  "schema": 2,
+  "run_id": "run-20261013T171533Z-ad7ee907",
+  "started_at": "2026-10-13T17:15:43+00:00",
+  "finished_at": "2026-10-13T17:15:58+00:00",
+  "git_head": "ad7ee907c6501292e4b8792f83ade3514fb07d76",
+  "git_short": "ad7ee907",
+  "git_dirty": true,
+  "prereg_id": null,
+  "prereg_tag_sha": null,
+  "prereg_commit": null,
+  "platform_fingerprint": "sha256:7ba9d6f5ce7a2e6f5154fba6a649c989d4fd2d772ac9a6cb7124f5ad09aab9e3",
+  "fingerprint_parts": {
+    "/.well-known/mcp.json": "dc93c1dd8f6bb3e10eebe0168119550c8084166e76e135b7ab29db43d37957f4",
+    "/.well-known/agent-card.json": "7419274439d47fc23618eb4e234810e6478d6ec9cf80e6d90ae264830f7e0db0",
+    "/.well-known/agent-skills.json": "3b84f287322c79c7925e8a44688d5d537da9ca244192f8d4f4d889fd7a1e616d",
+    "/.well-known/ai-plugin.json": "ec5569dd7dc0a367cfcad58e8ca36c8e05447e379d40b69a86fb07aac71513c0",
+    "/.well-known/udc.json": "1ec34383ede550c71fb3e81b989b8b92b0da3ce7ccbdc497c9edf5a8fcbd6c14",
+    "/openapi.json": "01b820bba1d043d5f292b0175bff1a60a24b54fee0b238bfdc778efc2091f3fe",
+    "/openapi-public.json": "642feed0ebf540a6435c50ae13c7196a870177d4f4e140bc6b55354dfdc1e667",
+    "/llms.txt": "ad3b19c54aad794570a89eb384d2850334e72315481f5e6beaf4d6c228c575ad",
+    "mcp:tools/list:none": "f7c126c9c31f25eaefce1b814ac2e8c4aaa53928acfa53e23c73b1a9423ebbc4"
+  },
+  "fingerprint_errors": {},
+  "fingerprint_drifted": false,
+  "fingerprint_changed_parts": [],
+  "identities_present": {
+    "anon": true,
+    "trusted": true,
+    "recognized": false
+  },
+  "python_version": "3.13.13",
+  "pytest_version": "8.3.4",
+  "selector": "tests/rest/test_nexus_answer_markers_are_true.py -q --no-header --tb=no",
+  "selector_full": false,
+  "narrowing": [],
+  "paths": [
+    "tests/rest/test_nexus_answer_markers_are_true.py"
+  ],
+  "allow_mutate": false,
+  "collected": [
+    "tests/rest/test_nexus_answer_markers_are_true.py::test_nexus_answer_markers_are_true_and_leave_the_answer_usable"
+  ],
+  "results": [
+    {
+      "nodeid": "tests/rest/test_nexus_answer_markers_are_true.py::test_nexus_answer_markers_are_true_and_leave_the_answer_usable",
+      "component": "mcp.tools_call",
+      "tier": "SAFE",
+      "surface": "rest",
+      "claim_id": "nexus-answer-markers-are-true",
+      "ticket_id": null,
+      "volatile": false,
+      "outcome": "failed",
+      "phase": "call",
+      "role": "verdict",
+      "duration_ms": 5021,
+      "evidence_ids": [
+        "eab5428ed6a92d671bdb31fccae9a446e04faf0d455cb4de2cf9b4c95a19c37e",
+        "59208ed23d00a8b35beb0af3dffd607f801a1d31c7f8269f82dc77f93de844c3",
+        "c316bc7894970414247e9feddbc7268be500e939b0fa5165e3e408e572cb9c79"
+      ],
+      "measurement": {
+        "verdict": "failed",
+        "reason": "NEX-0142 (job 190f1a94-fdfb-4365-a55c-62c9caa42641), re-read live, carries 9 resolver marker(s) and 4 kind(s) of them are wrong: 1 bot instance id(s) marked as a card that does not resolve (692c35b3-29a7-4cda-8c73-7802cd28e4a8) | a served route marked not served: PATCH /api/v1/cloned-bots/692c35b3-29a7-4cda-8c73-7802cd28e4a8/settings; GET /api/v1/cloned-bots/692c35b3-29a7-4cda-8c73-7802cd28e4a8/balance | a marker written inside a path an agent would copy: /api/v1/cloned-bots/692c35b3-29a7-4cda-8c73-7802cd28e4a8/settings; /api/v1/cloned-bots/692c35b3-29a7-4cda-8c73-7802cd28e4a8/balance | the same marker written twice in a row: /api/v1/cloned-bots/692c35b3-29a7-4cda-8c73-7802cd28e4a8/settings; /api/v1/cloned-bots/692c35b3-29a7-4cda-8c73-7802cd28e4a8/balance",
+        "left": {
+          "answer": "NEX-0142",
+          "job_id": "190f1a94-fdfb-4365-a55c-62c9caa42641",
+          "marked_instances": [
+            "692c35b3-29a7-4cda-8c73-7802cd28e4a8"
+          ],
+          "served_but_marked": [
+            "PATCH /api/v1/cloned-bots/692c35b3-29a7-4cda-8c73-7802cd28e4a8/settings",
+            "GET /api/v1/cloned-bots/692c35b3-29a7-4cda-8c73-7802cd28e4a8/balance"
+          ],
+          "split_paths": [
+            "/api/v1/cloned-bots/692c35b3-29a7-4cda-8c73-7802cd28e4a8/settings",
+            "/api/v1/cloned-bots/692c35b3-29a7-4cda-8c73-7802cd28e4a8/balance"
+          ],
+          "repeated": [
+            "/api/v1/cloned-bots/692c35b3-29a7-4cda-8c73-7802cd28e4a8/settings",
+            "/api/v1/cloned-bots/692c35b3-29a7-4cda-8c73-7802cd28e4a8/balance"
+          ]
+        },
+        "right": {
+          "our_instances_read": 50,
+          "published_paths": 400,
+          "marked_ids_our_key_lists_as_its_bots": [
+            "692c35b3-29a7-4cda-8c73-7802cd28e4a8"
+          ]
+        },
+        "sources": {
+          "their answer": "get_deep_answer 190f1a94-fdfb-4365-a55c-62c9caa42641",
+          "their document": "/openapi-public.json",
+          "our clones": "/api/v1/cloned-bots/my-clones"
+        },
+        "provenance": {},
+        "evidence_ids": [],
+        "fingerprint": null,
+        "claim_id": null,
+        "role": "verdict",
+        "population": {
+          "markers": 9,
+          "recorded_answers_with_a_marker": 20
+        }
+      },
+      "check_fingerprint": "ff669c36afddbc2380482a71eb0be1f8a026d9dd4c42a76082d8f2919df2781b",
+      "helpers_fingerprint": "c488399b13f3ddc73f0523de550daca2b116420a0119fc5e65d7b8ba0c58c1e7",
+      "helpers_formula": 2,
+      "reason": null,
+      "failure_repr": "E   AssertionError: NEX-0142 (job 190f1a94-fdfb-4365-a55c-62c9caa42641), re-read live, carries 9 resolver marker(s) and 4 kind(s) of them are wrong: 1 bot instance id(s) marked as a card that does not resolve (692c35b3-29a7-4cda-8c73-7802cd28e4a8) | a served route marked not served: PATCH /api/v1/cloned-bots/692c35b3-29a7-4cda-8c73-7802cd28e4a8/settings; GET /api/v1/cloned-bots/692c35b3-29a7-4cda-8c73-7802cd28e4a8/balance | a marker written inside a path an agent would copy: /api/v1/cloned-bots/692c35b3-29a7-4cda-8c73-7802cd28e4a8/settings; /api/v1/cloned-bots/692c35b3-29a7-4cda-8c73-7802cd28e4a8/balance | the same marker written twice in a row: /api/v1/cloned-bots/692c35b3-29a7-4cda-8c73-7802cd28e4a8/settings; /api/v1/cloned-bots/692c35b3-29a7-4cda-8c73-7802cd28e4a8/balance\n      left  = {'answer': 'NEX-0142', 'job_id': '190f1a94-fdfb-4365-a55c-62c9caa42641', 'marked_instances': ['692c35b3-29a7-4cda-8c73-7802cd28e4a8'], 'served_but_marked': ['PATCH /api/v1/cloned-bots/692c35b3-29a7-4cda-8c73-7802cd28e4a8/settings', 'GET /api/v1/cloned-bots/692c35b3-29a7-4cda-8c73-7802cd28e4a8/balance'], 'split_paths': ['/api/v1/cloned-bots/692c35b3-29a7-4cda-8c73-7802cd28e4a8/settings', '/api/v1/cloned-bots/692c35b3-29a7-4cda-8c73-7802cd28e4a8/balance'], 'repeated': ['/api/v1/cloned-bots/692c35b3-29a7-4cda-8c73-7802cd28e4a8/settings', '/api/v1/cloned-bots/692c35b3-29a7-4cda-8c73-7802cd28e4a8/balance']}\n      right = {'our_instances_read': 50, 'published_paths': 400, 'marked_ids_our_key_lists_as_its_bots': ['692c35b3-29a7-4cda-8c73-7802cd28e4a8']}"
+    }
+  ],
+  "totals": {
+    "failed": 1
+  },
+  "ratelimit": {
+    "requests": 3,
+    "limit": 2000,
+    "remaining": 1995,
+    "fraction_used": 0.0025,
+    "exhausted": false
+  },
+  "record_integrity": {
+    "consistent": true,
+    "results_not_in_collected": [],
+    "collected_not_run": [],
+    "budget_truncated": false
+  },
+  "code_dirty_after": false,
+  "fingerprint_after": "sha256:7ba9d6f5ce7a2e6f5154fba6a649c989d4fd2d772ac9a6cb7124f5ad09aab9e3",
+  "exit_status": 1
+}
