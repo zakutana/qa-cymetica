@@ -16,7 +16,8 @@ html,body{background:var(--bg);color:var(--text);font:13px/1.35 var(--ui)}
 .title h1{font:30px var(--head);letter-spacing:.5px;display:flex;align-items:center;gap:12px}
 .title h1 .eye{width:34px;height:34px;border-radius:9px;background:rgba(0,207,255,.12);border:1px solid rgba(0,207,255,.45);display:grid;place-items:center}
 .title h1 .eye svg{width:20px;height:20px;stroke:var(--cyan);fill:none;stroke-width:1.8}
-.title p{color:var(--dim);margin-top:6px;font-size:13.5px}
+.title p{color:var(--text);margin-top:8px;font-size:17px;font-weight:500;line-height:1.4;max-width:1100px}
+.ii{display:inline-grid;place-items:center;width:18px;height:18px;border:1px solid var(--faint);border-radius:50%;font:12px var(--mono);color:var(--dim);margin-left:2px;align-self:center}
 .pw{display:inline-block;margin-left:8px;font:600 11px var(--mono);color:var(--green);border:1px solid rgba(0,255,136,.35);border-radius:6px;padding:2px 7px}
 .rules{display:flex;gap:6px;flex-wrap:wrap;justify-content:flex-end}
 .rule{font:600 11px var(--mono);color:var(--cyan);border:1px solid rgba(0,207,255,.35);border-radius:6px;padding:4px 8px;white-space:nowrap}
@@ -32,7 +33,9 @@ html,body{background:var(--bg);color:var(--text);font:13px/1.35 var(--ui)}
 .leftcol{display:flex;flex-direction:column;gap:8px;min-height:0}
 .list{display:flex;flex-direction:column;min-height:0;flex:1;padding:14px 14px 8px}
 .queue{padding:14px 14px 10px}
-.sugg{font:700 12px var(--ui);color:var(--cyan);background:none;border:1px solid var(--cyan);border-radius:8px;padding:5px 10px}
+.suggest{display:flex;gap:6px;align-items:center}
+.inp{font:12px var(--mono);color:var(--faint);border:1px solid var(--line2);border-radius:8px;padding:5px 10px;min-width:190px}
+.sugg{font:700 12px var(--ui);color:#04121a;background:var(--cyan);border:0;border-radius:8px;padding:6px 12px}
 .qth,.qrow{display:grid;grid-template-columns:20px minmax(0,1fr) 56px 46px 72px 48px;gap:8px;align-items:center}
 .qth{font:600 10px var(--ui);color:var(--faint);letter-spacing:1px;text-transform:uppercase;padding:10px 6px 6px;border-bottom:1px solid var(--line)}
 .qth span:nth-child(n+3),.qrow>*:nth-child(n+3){text-align:right}
@@ -121,11 +124,8 @@ html,body{background:var(--bg);color:var(--text);font:13px/1.35 var(--ui)}
 
 <section class="top">
  <div class="title">
-  <h1><span class="eye"><svg viewBox="0 0 24 24"><path d="M2 12s3.6-6.5 10-6.5S22 12 22 12s-3.6 6.5-10 6.5S2 12 2 12z"/><circle cx="12" cy="12" r="3"/></svg></span>INFILTRATOR</h1>
+  <h1><span class="eye"><svg viewBox="0 0 24 24"><path d="M2 12s3.6-6.5 10-6.5S22 12 22 12s-3.6 6.5-10 6.5S2 12 2 12z"/><circle cx="12" cy="12" r="3"/></svg></span>INFILTRATOR<span class="ii" title="It joins public groups and channels as a visible read-only member. It never posts, never messages a member, keeps no usernames, phone numbers or message text, only themes and counts, and leaves a group whose rules forbid bots.">i</span></h1>
   <p>Listens in public crypto groups on Telegram, learns what each one would love, and puts the best ideas on the board for the Cymetica community to build. <span class="pw">Runs on Cymetica's Belief Networks</span></p>
- </div>
- <div class="rules" title="It joins public groups and channels as a visible read-only member. It never posts, never messages a member, keeps no usernames, phone numbers or message text, only themes and counts, and leaves a group whose rules forbid bots.">
-  <span class="rule">Public groups only</span><span class="rule">Read-only, never posts</span><span class="rule">Counts only, no names</span><span class="rule">Leaves if bots are banned</span>
  </div>
 </section>
 
@@ -139,13 +139,13 @@ html,body{background:var(--bg);color:var(--text);font:13px/1.35 var(--ui)}
 <main class="grid">
  <div class="leftcol">
  <section class="card queue">
-  <div class="lhead"><span class="h6">Next in line · by ET10 bid</span><button class="sugg">+ Suggest a group</button></div>
+  <div class="lhead"><span class="h6">Next in line · by ET10 bid</span><span class="suggest"><span class="inp">@handle or t.me/… link</span><button class="sugg">Suggest</button></span></div>
   <div class="qth"><span>#</span><span>Group</span><span>Members</span><span>Votes</span><span>ET10 bid</span><span></span></div>
   <ul class="qrows">
-   <li class="qrow"><span class="rk">1</span><span class="nm"><b>Pump Fun Hunters</b><em>EN · memecoins · suggested by 6</em></span><span class="mem">71.4K</span><span class="vt">▲ 42</span><span class="bid">250,000</span><button class="bidb">Bid</button></li>
-   <li class="qrow"><span class="rk">2</span><span class="nm"><b>Cardano Stake Pool Ops</b><em>EN · staking · suggested by 2</em></span><span class="mem">14.8K</span><span class="vt">▲ 17</span><span class="bid">120,000</span><button class="bidb">Bid</button></li>
-   <li class="qrow"><span class="rk">3</span><span class="nm"><b>RWA Insiders</b><em>EN · RWA · suggested by 3</em></span><span class="mem">9.2K</span><span class="vt">▲ 31</span><span class="bid">100,000</span><button class="bidb">Bid</button></li>
-   <li class="qrow"><span class="rk">4</span><span class="nm"><b>Polska Kryptowaluty</b><em>PL · general · suggested by 1</em></span><span class="mem">22.6K</span><span class="vt">▲ 9</span><span class="bid nob">—</span><button class="bidb">Bid</button></li>
+   <li class="qrow"><span class="rk">1</span><span class="nm"><b>Pump Fun Hunters</b><em>@pumpfunhunters · EN · memecoins · by 6</em></span><span class="mem">71.4K</span><span class="vt">▲ 42</span><span class="bid">250,000</span><button class="bidb">Bid</button></li>
+   <li class="qrow"><span class="rk">2</span><span class="nm"><b>Cardano Stake Pool Ops</b><em>@cardanospo · EN · staking · by 2</em></span><span class="mem">14.8K</span><span class="vt">▲ 17</span><span class="bid">120,000</span><button class="bidb">Bid</button></li>
+   <li class="qrow"><span class="rk">3</span><span class="nm"><b>RWA Insiders</b><em>@rwainsiders · EN · RWA · by 3</em></span><span class="mem">9.2K</span><span class="vt">▲ 31</span><span class="bid">100,000</span><button class="bidb">Bid</button></li>
+   <li class="qrow"><span class="rk">4</span><span class="nm"><b>Polska Kryptowaluty</b><em>@kryptopolska · PL · general · by 1</em></span><span class="mem">22.6K</span><span class="vt">▲ 9</span><span class="bid nob">—</span><button class="bidb">Bid</button></li>
   </ul>
   <div class="qnote">Same rule as the Feature Leaderboard: the biggest ET10 bid joins first, votes break ties. A bid needs 100,000 ET10 held and is never collected.</div>
  </section>
