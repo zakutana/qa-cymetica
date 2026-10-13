@@ -4,7 +4,7 @@ The operator, 2026-10-13, on the live page for Collector Crypt (CARDS, Solana, 1
 
 ## The pictures
 
-Drawn from real data by `make_mockup.py` (in this folder): the candles (1H, 4H, 1D), the pool's price, 24h figures, liquidity, market cap, FDV and live trades are GeckoTerminal's for the CARDS/USDC Raydium pool (the pool the live page reads, "LIVE · DEX POOL"), read at 10:58 UTC; the verdict, the five setups and their study figures, and the two support lines are the live Chart Analyzer page's for CARDS 1D; tier, upside, revenue, tokens out, the Degen meter and the guardians are the Gem Screener's. Ours, as defaults the builder may improve: the trendline (from the Sep 10 low, the flattest line no later low breaks, log scale); a timeframe's trend (close above a rising 20-bar EMA = up, below a falling one = down, else sideways; today 1H down, 4H down, 1D up, 1W up); the lean (one point per textbook signal on the chart, setups and timeframes: 5 bullish, 4 bearish); and the chartist's three lines (watch, risk, flow), written from those figures only.
+Drawn from real data by `make_mockup.py` (in this folder): the candles (1H, 4H, 1D), the pool's price, 24h figures, liquidity, market cap, FDV and live trades are GeckoTerminal's for the CARDS/USDC Raydium pool (the pool the live page reads, "LIVE · DEX POOL"), read at 10:58 UTC; the verdict, the five setups and their study figures, and the two support lines are the live Chart Analyzer page's for CARDS 1D; tier, upside, revenue, tokens out, the Degen meter and the guardians are the Gem Screener's. Ours, as defaults the builder may improve: the trendline (from the Sep 10 low, the flattest line no later low breaks, log scale); a timeframe's trend (close above a rising 20-bar EMA = up, below a falling one = down, else sideways; today 1H down, 4H down, 1D up, 1W up); the gauge and its word (one point per textbook signal on the chart, setups and timeframes: 5 of 9 bullish); and the chartist's three lines (watch, risk, flow), written from those figures only.
 
 - `desktop-1920.png`: 1920 x 1080, the main view.
 - `desktop-1440.png`: a laptop, 1440 x 900; the same three columns, tighter.
@@ -22,34 +22,32 @@ The idea: opening the page is like sitting next to a top chartist. At first glan
 1. Full window, as an exchange does, not a centred column. At 1440 x 900 and 1920 x 1080 the chartist panel, the chart, the setups and the key levels are on the first screen without scrolling; the chart is the biggest thing on it.
 2. Coin bar: logo, name, pair, DEX, chain; live price and 24h change; 24h high, low, volume, pool liquidity, market cap, FDV; a Gem Screener chip (tier, upside, link), Ask your AI (it replaces the "Give this to your AI agent" bar), Share, + New.
 3. Three columns: chartist and fundamentals left; the chart in the middle; setups, key levels and live trades right. On a phone: chartist, chart, setups as a swipeable strip, key levels.
-4. Chartist panel, top left: one big trend word with an arrow (UPTREND ↗, DOWNTREND ↘, SIDEWAYS →), and a short qualifier when the short timeframes disagree ("short-term pullback").
-5. Under it a lean gauge from bearish to bullish with one line, "Leans bullish: 5 bullish vs 4 bearish signals on the chart now", counting the textbook signals the page already finds (setups and timeframe trends), labelled as what the chart shows, not a forecast.
-6. A trend chip per timeframe, 1H 4H 1D 1W: up, down or sideways. A good default: close above a rising 20-bar EMA is up, below a falling one is down, else sideways.
-7. Then three short lines, the number first and at most four words after it, from the page's own facts only: WATCH the level that keeps the trend (and where a close below leads), RISK the latest warning, FLOW the last 15 minutes sold against bought. No sentences, no price targets, no promises; updated as candles close.
-8. The edge, last in the panel: one word (EDGE UP, EDGE DOWN, NO EDGE or NO VERDICT); why, and the study's figures, in its (i). Today "44% / 53%" and a gauge "49" head the page although, by the page's own words, the first does not apply to this pool and the second did not sort charts; neither stays on the first screen, and the 1-100 gauge moves to "How it's measured".
-9. "Ask the chartist": a box under the panel that asks NEXUS about this chart, with the chart's facts as context.
-10. One-row chart toolbar: timeframes, range (90 180 All Fit), Candles ▾, Layers ▾ (with the number switched on), Log, Replay, Full screen. Every toggle of today's panel moves into the two menus; the legend under the chart goes, and the chart's top left carries O H L C, EMA 20, SMA 50 and volume.
-11. Layers ▾ is one panel in three groups (Levels, Signals, Indicators), each line a checkbox with its line colour; ATR settings and Volume profile Off / Total / Delta on their own lines.
-12. On the chart: support and resistance with prices tagged on the axis, the trendline, the averages, volume at the bottom, the scored window shaded, numbered pattern markers on their candles, the live price tagged.
-13. Setups, right: one row each with a show/hide checkbox, the textbook direction (▲ ▼), name, kind and age, and one bar with the tested-on pair (rose 10% first, fell 10% first); the average chart's pair closes the list; built-on figures and sample sizes in the tooltip. Where name and figures disagree, words say so.
-14. Selecting a setup lights it on the chart, which stays in view, with a small card: name, when, textbook direction, the two figures in plain words.
-15. Key levels: price, 30-day high, trendline, supports and, on wide screens, EMA 20 and SMA 50, each with its distance in % and a bell: alert me when the price crosses it.
-16. Fundamentals, for a coin the Gem Screener knows: tier, upside, revenue 30 days, tokens out, Degen meter, and the six guardians (Rug power, Holders paid, Liquidity, Price run, Security, Team) as chips.
-17. Live trades of the same pool: price (green buy, red sell), size, time UTC, newest first, a faint size bar so a whale stands out, and the last 15 minutes bought against sold.
-18. One "How it's measured", closed by default (today the method stands in four places, "The study" is linked twice and the verdict repeats itself). Weekly Signal, when not computable, is one grey line. Numbers carry only the digits they need ("LAST 197 DAYS", not "196.99767960241462").
+4. Chartist panel, top left, opens with ONE gauge from bearish to bullish and ONE word under it (BULLISH ↗, BEARISH ↘ or NEUTRAL →), with one small line ("5 of 9 signals · 1H, 4H pulling back"). The needle counts the textbook signals the page already finds (setups and timeframe trends); it is labelled as what the chart shows, not a forecast. Nothing else in the panel repeats the direction.
+5. A trend chip per timeframe, 1H 4H 1D 1W: up, down or sideways. A good default: close above a rising 20-bar EMA is up, below a falling one is down, else sideways.
+6. Then three short lines, the number first and at most four words after it, from the page's own facts only: WATCH the level that keeps the trend (and where a close below leads), RISK the latest warning, FLOW the last 15 minutes sold against bought. No sentences, no price targets, no promises; updated as candles close.
+7. The edge, last in the panel: one word (EDGE UP, EDGE DOWN, NO EDGE or NO VERDICT); why, and the study's figures, in its (i). Today "44% / 53%" and a gauge "49" head the page although, by the page's own words, the first does not apply to this pool and the second did not sort charts; neither stays on the first screen, and the 1-100 gauge moves to "How it's measured".
+8. "Ask the chartist": a box under the panel that asks NEXUS about this chart, with the chart's facts as context.
+9. One-row chart toolbar: timeframes, range (90 180 All Fit), Candles ▾, Layers ▾ (with the number switched on), Log, Replay, Full screen. Every toggle of today's panel moves into the two menus; the legend under the chart goes, and the chart's top left carries O H L C, EMA 20, SMA 50 and volume.
+10. Layers ▾ is one panel in three groups (Levels, Signals, Indicators), each line a checkbox with its line colour; ATR settings and Volume profile Off / Total / Delta on their own lines.
+11. On the chart: support and resistance with prices tagged on the axis, the trendline, the averages, volume at the bottom, the scored window shaded, numbered pattern markers on their candles, the live price tagged.
+12. Setups, right: one row each with a show/hide checkbox, the textbook direction (▲ ▼), name, kind and age, and one bar with the tested-on pair (rose 10% first, fell 10% first); the average chart's pair closes the list; built-on figures and sample sizes in the tooltip. Where name and figures disagree, words say so.
+13. Selecting a setup lights it on the chart, which stays in view, with a small card: name, when, textbook direction, the two figures in plain words.
+14. Key levels: price, 30-day high, trendline, supports and, on wide screens, EMA 20 and SMA 50, each with its distance in % and a bell: alert me when the price crosses it.
+15. Fundamentals, for a coin the Gem Screener knows: tier, upside, revenue 30 days, tokens out, Degen meter, and the six guardians (Rug power, Holders paid, Liquidity, Price run, Security, Team) as chips.
+16. Live trades of the same pool: price (green buy, red sell), size, time UTC, newest first, a faint size bar so a whale stands out, and the last 15 minutes bought against sold.
+17. One "How it's measured", closed by default (today the method stands in four places, "The study" is linked twice and the verdict repeats itself). Weekly Signal, when not computable, is one grey line. Numbers carry only the digits they need ("LAST 197 DAYS", not "196.99767960241462").
 Done when:
 [ ] 1 At 1440 x 900 and 1920 x 1080 the coin bar, chartist panel, chart, setups and key levels are on screen without scrolling, at full width.
 [ ] 3 At 390 px the chartist panel comes first, and the chart stays visible while a setup is selected.
-[ ] 4 The panel opens with one trend word and an arrow, matching the 1D chip.
-[ ] 5 The lean gauge and its line count signals the page lists, and say they are not a forecast.
-[ ] 6 Four timeframe chips show up, down or sideways by one stated rule.
-[ ] 7 The panel holds no sentence: three lines of a number and a few words, quoting only figures the page shows.
-[ ] 8 No "44% / 53%" and no 1-100 gauge on the first screen; a DEX pool reads NO VERDICT and why.
-[ ] 9 A question in "Ask the chartist" is answered about this chart.
-[ ] 10 The toolbar is one row; every toggle of today's panel is in Candles ▾ or Layers ▾; no legend under the chart.
-[ ] 13 A setup row is one line of words and one bar with two figures.
-[ ] 14 Selecting a setup highlights it on the chart while both are visible.
-[ ] 15 A bell on a key level sets an alert that fires when the price crosses it.
-[ ] 17 The live trades list moves as the pool trades.
-[ ] 18 "How it's measured" exists once; no verdict sentence appears twice; no number carries needless digits.
+[ ] 4 The panel opens with one gauge and one direction word; no other word in it repeats the direction; it says it is not a forecast.
+[ ] 5 Four timeframe chips show up, down or sideways by one stated rule.
+[ ] 6 The panel holds no sentence: three lines of a number and a few words, quoting only figures the page shows.
+[ ] 7 No "44% / 53%" and no 1-100 gauge on the first screen; a DEX pool reads NO VERDICT, the why in its (i).
+[ ] 8 A question in "Ask the chartist" is answered about this chart.
+[ ] 9 The toolbar is one row; every toggle of today's panel is in Candles ▾ or Layers ▾; no legend under the chart.
+[ ] 12 A setup row is one line of words and one bar with two figures.
+[ ] 13 Selecting a setup highlights it on the chart while both are visible.
+[ ] 14 A bell on a key level sets an alert that fires when the price crosses it.
+[ ] 16 The live trades list moves as the pool trades.
+[ ] 17 "How it's measured" exists once; no verdict sentence appears twice; no number carries needless digits.
 ```

@@ -181,8 +181,8 @@ up30 = (closes[-1] / closes[-31] - 1) * 100
 bull = sum(1 for s in SETUPS if s[3] == "up") + sum(1 for _, t in MTF if t == "up")
 bear = sum(1 for s in SETUPS if s[3] == "down") + sum(1 for _, t in MTF if t == "down")
 lean = 50 + 50 * (bull - bear) / (bull + bear)
-lean_word, lean_cls = (("Leans bullish", "g") if lean > 55 else ("Leans bearish", "r") if lean < 45
-                       else ("Balanced", "s"))
+lean_word, lean_cls = (("BULLISH ↗", "g") if lean > 55 else ("BEARISH ↘", "r") if lean < 45
+                       else ("NEUTRAL →", "s"))
 arrow = {"up": "↗", "down": "↘", "side": "→"}
 mtf_html = "".join(f'<span class="tf {t}"><b>{k}</b>{arrow[t]}</span>' for k, t in MTF)
 
@@ -204,8 +204,8 @@ def gauge(v):
 
 CHARTIST = f"""<div class="card chartist">
  <div class="vtop"><span class="h6">Chart read · 1D</span><span class="ai">AI chartist</span></div>
- <div class="read"><div class="big up">UPTREND <i>↗</i></div><div class="subread">+{up30:.0f}% in 30 days · short-term pullback</div></div>
- <div class="leanrow">{gauge(lean)}<div class="leantxt"><b class="{lean_cls}">{lean_word}</b><span>{bull} vs {bear} signals</span></div></div>
+ <div class="hero">{gauge(lean)}<div class="big {lean_cls}">{lean_word}</div>
+  <div class="subread">{bull} of {bull + bear} signals · {", ".join(k for k, t in MTF if t == "down")} pulling back</div></div>
  <div class="mtf"><span class="lab">Trend</span>{mtf_html}</div>
  <ul class="keys">
   <li><span>Watch</span><b class="c">{trend_now:.3f}</b><em>below → 0.152</em></li>
@@ -382,6 +382,9 @@ body.layers .pop{{display:flex}}
 .chartist{{padding:16px}}
 .chartist .ai{{font:600 10.5px var(--mono);color:var(--cyan);border:1px solid rgba(0,207,255,.4);border-radius:5px;padding:2px 6px;letter-spacing:.5px}}
 .read{{margin-top:10px}}
+.hero{{display:flex;flex-direction:column;align-items:center;margin-top:6px}}
+.hero .gauge{{width:210px}} .hero .big{{margin-top:2px}} .big.g{{color:var(--green)}} .big.r{{color:var(--red)}} .big.s{{color:var(--dim)}}
+.hero .subread{{margin-top:6px;text-align:center}}
 .leanrow{{display:flex;align-items:center;gap:12px;margin-top:8px}}
 .leantxt b{{display:block;font:16px var(--head)}} .leantxt b.g{{color:var(--green)}} .leantxt b.r{{color:var(--red)}} .leantxt b.s{{color:var(--dim)}}
 .leantxt span{{display:block;font-size:11.5px;color:var(--dim);margin-top:3px;line-height:1.35}}
@@ -417,7 +420,7 @@ body.layers .pop{{display:flex}}
  .vword{{font-size:26px;margin:10px 0 4px}} .verdict{{padding:14px}} .sum{{margin-top:12px;padding-top:10px;gap:8px}}
  .lv{{padding:5px 8px}} .levels{{padding:12px 14px}} .fund{{padding:12px 14px}} .fgrid{{gap:8px 10px;margin-top:8px}} .meter{{margin-top:10px;padding-top:10px}}
  .acc{{padding:10px 14px}} .tools .fs,.tools .rp,.lv.bl,.lv.sl,.keys .flow2,.howto .acc,.guards{{display:none}}
- .chartist{{padding:13px 14px}} .big{{font-size:26px}} .gauge{{width:112px}} .says{{gap:6px;font-size:12.5px;margin-top:10px}}
+ .chartist{{padding:13px 14px}} .big{{font-size:26px}} .hero .gauge{{width:170px}} .says{{gap:6px;font-size:12.5px;margin-top:10px}}
  .setup{{grid-template-columns:16px 12px 1fr 84px}} .base{{grid-template-columns:1fr 84px}}}}
 .agent{{font:600 12px var(--ui)}}
 /* phone */
