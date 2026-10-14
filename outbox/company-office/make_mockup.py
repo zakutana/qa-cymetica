@@ -508,6 +508,11 @@ body{display:flex;flex-direction:column;height:100vh}
 .msg em{display:block;font-style:normal;font-size:10px;color:var(--dim2);margin-bottom:3px}
 .compose{display:flex;gap:8px;margin-top:10px}.compose div{flex:1;border:1px solid var(--line3);border-radius:8px;padding:8px 10px;color:var(--dim2);background:var(--deep);font-size:12px}
 .feed{list-style:none;display:flex;flex-direction:column;gap:5px}
+.nx{display:flex;flex-direction:column;gap:5px}.nx .h{margin-bottom:4px}
+.nr{display:grid;grid-template-columns:18px minmax(0,1fr) auto;gap:8px;align-items:center;background:var(--navy2);border:1px solid var(--line);border-radius:8px;padding:6px 8px}
+.nr .n{color:var(--cyan);font-weight:700;text-align:center}.nr b{display:block;font-size:11.5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.nr em{display:block;font-style:normal;font-size:10px;color:var(--dim2)}.nr .ic{color:var(--dim);font-size:12px;letter-spacing:.1em}
+.feed li:nth-child(n+4){display:none}
 .feed li{font-size:11.5px;padding:5px 8px;border-left:3px solid var(--dim2);background:var(--navy2);border-radius:0 6px 6px 0;display:flex;gap:6px}
 .feed li b{color:var(--text)}.feed li em{margin-left:auto;font-style:normal;color:var(--dim2)}
 .feed li.g{border-color:var(--green)}.feed li.r{border-color:var(--red)}.feed li.c{border-color:var(--cyan)}.feed li.x{border-color:var(--red);color:var(--red)}
@@ -533,11 +538,14 @@ body.dept .dept.pick{border-color:var(--cyan);background:rgba(0,207,255,.08)}
 .trow i{font-style:normal;font-size:10.5px;color:var(--dim2);text-align:right}
 .mem{display:grid;grid-template-columns:52px 1fr;gap:8px;font-size:11.5px;padding:5px 0;border-bottom:1px solid var(--line)}
 .mem span{font-size:9.5px;font-weight:700;color:var(--blue);border:1px solid var(--blue);border-radius:5px;text-align:center;height:17px;line-height:15px}
+.cht{border:1px solid var(--cyan);border-radius:10px;padding:9px 10px;background:rgba(0,207,255,.05);display:flex;flex-direction:column;gap:7px}
+.cht .ta{font-size:11.5px;line-height:1.45;color:var(--text);background:var(--deep);border:1px solid var(--line3);border-radius:7px;padding:8px 9px;max-height:92px;overflow:hidden}
+.cht .cb{display:flex;align-items:center;gap:6px}.cht .cb .d{flex:1}.cht .cb .btn{padding:4px 10px;font-size:11px}
 .charter{display:flex;justify-content:space-between;align-items:center;gap:10px;font-size:11.5px;color:var(--dim);padding:8px 10px;background:var(--navy2);border:1px solid var(--line);border-radius:8px}
 .charter b{color:var(--text)}
 @media (max-width:1600px){.main{grid-template-columns:250px minmax(0,1fr) 320px}.bars{min-width:210px}.fuel{gap:12px}
  .cobar{grid-template-columns:auto auto minmax(0,1fr)}.who h1{font-size:18px}.site nav{display:none}.mini{display:none}
- .feed li:nth-child(n+4){display:none}.chat{min-height:190px}}
+ .feed li:nth-child(n+3){display:none}.chat{min-height:150px}.nr:nth-of-type(n+4){display:none}.ai p{margin:4px 0 6px}}
 @media (max-width:700px){
  .site nav,.site .sp+span{display:none}
  .cobar{grid-template-columns:1fr;gap:10px;padding:10px 12px}.right{justify-content:space-between}
@@ -591,6 +599,9 @@ body.dept .dept.pick{border-color:var(--cyan);background:rgba(0,207,255,.08)}
    <div class="dh"><i class="dot" style="background:var(--cyan);box-shadow:0 0 8px var(--cyan)"></i><h2>Testing</h2><span class="pill on" style="color:var(--cyan);border-color:var(--cyan);background:rgba(0,207,255,.08)">WORKING</span>
     <span class="x"><span class="btn">Edit</span><span class="btn">×</span></span></div>
    <div class="chips"><span class="chip">QA tester</span><span class="chip">Auditor</span><span class="chip" style="color:var(--red);border-color:var(--red)">1 waiting for you</span></div>
+   <div class="cht"><div class="sec">CHARTER · EVERY TASK STARTS HERE <a>1,449 / 2,000 · saved Tue 19:14</a></div>
+    <div class="ta">Goal: real, reproducible defects in what Cymetica's platform shows or documents TODAY, drafted as bug-bounty reports.<br>- Test only what is visible and documented now (llms.txt, /openapi-public.json, the live pages).<br>- A finding is one defect with the exact request or page, what their docs say, what happens instead, and the evidence…</div>
+    <div class="cb"><span class="d" style="font-size:10.5px">next task starts from the saved text</span><span class="btn">Discard</span><span class="btn gr">Save charter</span></div></div>
    <div class="kp"><div><b style="color:var(--cyan)">1</b><span>open</span></div><div><b style="color:var(--green)">2</b><span>done</span></div>
     <div><b style="color:var(--red)">1</b><span>failed</span></div><div><b>0.66<small style="font-size:11px;color:var(--dim2)">u</small></b><span>7 days</span></div><div><b>6</b><span>memory</span></div></div>
    <div class="now"><div class="t1">NOW · ATTEMPT 2</div><p>Find doc-vs-behavior mismatches on public pages</p>
@@ -602,8 +613,6 @@ body.dept .dept.pick{border-color:var(--cyan);background:rgba(0,207,255,.08)}
    <div class="sec">MEMORY <a>All 6 →</a></div>
    <div class="mem"><span>KNOWS</span><div>Bounty pays a flat 1,000 ET10 per verified, non-duplicate bug.</div></div>
    <div class="mem"><span>KNOWS</span><div>In scope: contracts, web UI, REST API, data accuracy, mobile, docs.</div></div>
-   <div class="mem"><span>HOW</span><div>llms.txt is ~189k chars: read it in pages.</div></div>
-   <div class="charter"><span><b>Charter</b> · 1,449 / 2,000 · “Goal: real, reproducible defects…”</span><span class="btn cy">Edit</span></div>
   </div>
   <div class="strip"><span class="lab">TURNS TODAY <b>16</b> / 40</span><div class="cells">__CELLS__</div>
    <span class="legend"><span><i style="background:var(--cyan)"></i>running</span><span><i style="background:var(--green)"></i>done</span><span><i style="background:var(--red)"></i>failed</span><span><i style="background:var(--blue)"></i>queued</span></span></div>
@@ -617,6 +626,10 @@ body.dept .dept.pick{border-color:var(--cyan);background:rgba(0,207,255,.08)}
    <div class="ai" style="margin-bottom:0"><div class="t"><span class="tag">Development</span><span class="tag k">BB request</span>5 min</div>
     <p>Gem Screener: parent-app logos</p>
     <div class="bt"><span class="btn gr">Approve</span><span class="btn rd">Reject</span><span class="btn">Read</span></div></div></section>
+  <section class="panel nx"><div class="h">NEXT UP · THE MANAGER'S PLAN <b style="color:var(--cyan)">3</b></div>
+   <div class="nr"><span class="n">1</span><div><b>Testing: Chart Analyzer score vs its study</b><em>you asked for it at 19:30 · ~2 turns</em></div><span class="ic">↑↓ ✕</span></div>
+   <div class="nr"><span class="n">2</span><div><b>Lab: FOMO ≥70, 24h exit, verdict</b><em>its window closed · ~1 turn</em></div><span class="ic">↑↓ ✕</span></div>
+   <div class="nr"><span class="n">3</span><div><b>Development: Gem Screener logos request</b><em>waits on your approval first · ~1 turn</em></div><span class="ic">↑↓ ✕</span></div></section>
   <section class="panel chat"><div class="h">MANAGER</div>
    <div class="msgs">
     <div class="msg"><em>Manager · 19:16</em>Starting with scope and surface mapping; nothing is submitted until you approve.</div>
