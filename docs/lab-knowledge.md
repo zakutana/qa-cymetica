@@ -12,6 +12,7 @@ Ten lines a section, newest first. `lab.py log --lesson --section <s>` adds one;
 
 ## Bots
 
+- 2026-10-14 · 2026-10-14 · 22 bot rooms closed in one tick: 16 returned +0.00 % (the paper bot held nothing -- a paused clone at balance 0, a bot that did not trade, not a refuted strategy), 5 ended on their 5 % stop-loss (Perceptron Oracle -3.15 %, Sent Surfer, Fade the Rally, Corr Catcher, Divergence Dragon -5.00 %), 2 survived with 0 % drawdown (a581e0e0 resumed, +47.06 % in 7 d; Vortex Drain SL 5 / TP 20, +14.80 % in 3 d). Two real winners in 22: a +0.00 % verdict is a bot that never traded and says nothing about its settings.
 - 2026-10-13 · 2026-10-13 · The grid is at 84/132 cells and four species' bands (Dread Gauge 5/20 and 10/20, MACD Hunter 10/30, RSI Sniper 10/30) stay untried: the platform refuses a clone past 50 Paper bots including paused ones (21/50 trading), so cells wait for deleted clones, not for ideas.
 - 2026-10-12 · 2026-10-12 · Grid ATR Alpha SL 5 / TP 20 measured nothing: its fund failed (HTTP 500), the room was stopped, the fund went through 49 min later outside it, and the verdict read 0 % coverage -- a cell is only a result once a room, a funded clone and an index window overlap.
 - 2026-10-11 · Nexus gives a band per species (NEX-0137): Perceptron Oracle 12/30, Fibonacci Phoenix 10/22, MACD Hunter 12/36, RSI Sniper 10/24 -- a closer target for mean-reversion, a wider one for momentum.
