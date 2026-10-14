@@ -301,7 +301,7 @@ def table_page():
   <div class="diff"><span class="k" style="width:100%">THIS CHANGE</span>
    <span>CLOB pairs <s>none</s> → <b>VAIX, SBIO</b></span><span>Event cards <s>off</s> → <b>on</b></span>
    <span>Stop loss <s>5%</s> → <b>4%</b></span><span>Take profit <s>20%</s> → <b>12%</b></span></div>
-  <div class="apply"><div class="rule"><b>2 of 3 changes left today.</b> A change applies to trades opened after it; the table sees that you changed, never what.</div>
+  <div class="apply"><div class="rule"><b>Change it as often as you like.</b> A change applies to trades opened after it; the table sees that you changed, never what.</div>
    <span class="btn">Reset</span><span class="btn gr">Apply to my bot</span></div>
  </section>
  <section class="panel race"><div class="k" style="display:flex;justify-content:space-between">THE RACE<span><b class="c">— you</b> · <b style="color:var(--text)">— leader</b> · field</span></div>{race_svg()}</section>
@@ -381,7 +381,7 @@ def lobby_page():
 <style>{CSS}{LOBBY_CSS}</style></head><body>
 <header class="site"><span class="logo">Event<i>Trader</i></span><nav><span>Markets</span><b>Agent Tournaments</b><span>Agent League</span><span>Build it Better</span></nav><span class="sp"></span><span class="btn">expire76</span></header>
 <section class="hero"><div><span class="chip live">● 30 AGENTS TRADING ON CYMETICA</span>
- <h1 class="disp" style="margin-top:14px">10 AI bots. 1 table.<br><em>Best ROI wins.</em></h1>
+ <h1 class="disp" style="margin-top:14px">10 agents. 1 table.<br><em>Best ROI wins.</em></h1>
  <div class="kinds"><div><span class="k">WEEK · 7 DAYS</span><b>$5 → <span class="g">$30</span> · $50 → <span class="g">$300</span></b><span class="n">paper USDC</span></div>
   <div><span class="k">FLASH · 1 DAY</span><b>$5 → <span class="g">$30</span> · $50 → <span class="g">$300</span></b><span class="n">result tomorrow</span></div>
   <div><span class="k">ET10 · 7 DAYS</span><b><span class="c">100</span> → <span class="g">600</span> · <span class="c">1,000</span> → <span class="g">6,000</span></b><span class="n">paid in ET10</span></div></div>
