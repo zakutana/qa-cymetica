@@ -149,6 +149,16 @@ body{display:flex;flex-direction:column;min-height:100vh}
 .oval .pot b{font-size:30px;color:var(--green)}.oval .pot span{display:block;font-size:10px;color:var(--dim2);letter-spacing:.12em}
 .seat{position:absolute;transform:translate(-50%,-50%);display:flex;flex-direction:column;align-items:center;gap:1px}
 .seat .sr{font-size:10px;font-weight:700}.seat.me .av{box-shadow:0 0 0 3px var(--cyan),0 0 14px var(--cyan)}
+.lanes{display:flex;flex-direction:column;gap:6px}
+.lane{display:grid;grid-template-columns:34px minmax(0,1fr) auto;gap:10px;align-items:center;background:var(--deep);border:1px solid var(--line);border-radius:10px;padding:8px 10px}
+.lane b{display:block;font-size:12.5px}.lane span{font-size:10.5px;color:var(--dim2)}.lane .lc{display:flex;gap:5px;flex-wrap:wrap;justify-content:flex-end}
+.lane .lc span{font-size:11px}.lane.on{border-color:rgba(0,255,136,.45)}
+.tg{width:32px;height:18px;border-radius:99px;background:var(--line3);position:relative}
+.tg:after{content:'';position:absolute;top:2px;left:2px;width:14px;height:14px;border-radius:50%;background:var(--dim2)}
+.lane.on .tg{background:var(--green)}.lane.on .tg:after{left:16px;background:var(--bg)}
+.fixed{display:flex;flex-wrap:wrap;gap:6px 14px;margin-top:12px;font-size:11.5px;color:var(--dim2);border-top:1px solid var(--line);padding-top:10px}
+.fixed b{color:var(--text)}.fixed em{font-style:normal;width:100%;font-size:10.5px}
+.race{flex:1;min-height:0;display:flex;flex-direction:column}.rc{width:100%;flex:1;min-height:160px;margin-top:6px}
 .hb{font-size:9px;font-weight:700;color:var(--dim2);border:1px solid var(--line3);border-radius:4px;text-align:center;line-height:14px}
 .st .you{margin-left:0;text-align:center}
 .diff{display:flex;flex-wrap:wrap;gap:6px 14px;font-size:11.5px;color:var(--dim);background:var(--deep);border:1px dashed var(--line3);border-radius:10px;padding:9px 11px}
@@ -223,6 +233,27 @@ body{display:flex;flex-direction:column;min-height:100vh}
 """
 
 
+def race_svg():
+    """Table 5's own race (GET /tables/5 `race`, its coordinates), the sample seat drawn in cyan."""
+    import json
+    r = json.loads((HERE / "race5.json").read_text(encoding="utf-8"))
+    out = [f'<svg class="rc" viewBox="0 0 {r["w"]} {r["h"] + 22}" preserveAspectRatio="none">']
+    out.append(f'<rect x="{r["now_x"]}" y="{r["y0"]}" width="{r["x1"] - r["now_x"]}" height="{r["y1"] - r["y0"]}" fill="#06090f" opacity="0.6"/>')
+    for g in r["grid"]:
+        out.append(f'<line x1="{r["x0"]}" x2="{r["x1"]}" y1="{g["y"]}" y2="{g["y"]}" stroke="#16233a" stroke-dasharray="{"4 4" if g["zero"] else "0"}"/>'
+                   f'<text x="{r["x0"] - 8}" y="{g["y"] + 4}" fill="#7f93ad" font-size="13" text-anchor="end" font-family="JetBrains Mono">{g["t"]}</text>')
+    for t in r["ticks"]:
+        out.append(f'<text x="{t["x"]}" y="{r["y1"] + 22}" fill="#7f93ad" font-size="13" text-anchor="middle" font-family="JetBrains Mono">{t["t"]}</text>')
+    for line in sorted(r["lines"], key=lambda l: (l["bot"] == "tournament Perceptron Oracle", l["role"] == "leader")):
+        mine = line["bot"] == "tournament Perceptron Oracle"
+        col, w, op = ("#00cfff", 3, 1) if mine else (("#E6EDF7", 2.2, 1) if line["role"] == "leader" else ("#7f93ad", 1.2, 0.45))
+        out.append(f'<polyline points="{line["points"]}" fill="none" stroke="{col}" stroke-width="{w}" opacity="{op}"/>')
+    out.append(f'<line x1="{r["now_x"]}" x2="{r["now_x"]}" y1="{r["y0"]}" y2="{r["y1"]}" stroke="#00cfff" opacity="0.6"/>'
+               f'<text x="{(r["now_x"] + r["x1"]) / 2}" y="{(r["y0"] + r["y1"]) / 2}" fill="#00cfff" font-size="26" text-anchor="middle" '
+               f'font-family="Archivo Black">{r["to_go"]}</text></svg>')
+    return "".join(out)
+
+
 def table_page():
     trades = [("08:05", "SOL ↑", "5m · won", "+$25.00", "g"), ("08:00", "ETH ↓", "5m · lost", "−$25.00", "r"),
               ("07:55", "TSLA ↑", "1h · open", "$25.00", "c"), ("07:50", "BTC ↑", "5m · won", "+$25.00", "g"),
@@ -230,8 +261,8 @@ def table_page():
     tl = "".join(f'<div><span>{t}</span><b>{m}</b><span class="d">{k}</span><b class="{c}" style="text-align:right">{v}</b></div>'
                  for t, m, k, v, c in trades)
     cells = '<i class="u"></i>' * 14 + "<i></i>" * 6
-    log = [("08:02", "tournament Perceptron Oracle changed markets and stake"),
-           ("06:40", "PaperX changed strategy"), ("Tue 21:15", "tournament Perceptron Oracle changed timeframe")]
+    log = [("08:02", "tournament Perceptron Oracle changed markets and stop loss"),
+           ("06:40", "PaperX changed markets"), ("Tue 21:15", "tournament Perceptron Oracle changed take profit")]
     logh = "".join(f"<div><em>{t}</em><span>{esc(s)}</span></div>" for t, s in log)
     picks = "".join(f'<div class="pk">{av(i)}<span>{esc(STANDINGS[i][0])}</span>{pct(STANDINGS[i][2])}'
                     f'<span class="d">{"1 pick · $50" if i == 1 else "—"}</span></div>' for i in range(4))
@@ -249,30 +280,32 @@ def table_page():
   <section class="panel" style="flex:1;min-height:0;overflow:hidden"><div class="k" style="display:flex;justify-content:space-between">LEADERBOARD<span>ROI · VOLUME / $750</span></div>
    <div style="display:flex;flex-direction:column;gap:2px;margin-top:8px">{standings_rows()}</div></section>
  </div>
+ <div class="col">
  <section class="panel cp">
   <div class="cp-h">{av(1)}<div><div class="k">YOUR BOT · SAMPLE SEAT</div><h2 class="disp">tournament Perceptron Oracle</h2></div><span class="sp"></span>
    <div class="stat"><span>rank <b>2</b></span><span>ROI <b class="g">+60.00%</b></span><span>qualified <b class="g">✓</b></span><span>prize now <b>$80 + 600 ET10</b></span></div></div>
   <div class="cp-grid">
-   <div class="box"><div class="k">STRATEGY<em>Hybrid · RSI 14 · MACD 12/26/9 · SMA 20 · ATR 14</em></div>
-    <div class="sp-chips">{species()}</div>
-    <div class="sls">{slider("RSI length", "14", 40, 5, 30)}{slider("Buy below", "30", 30, 10, 50)}{slider("Sell above", "70", 70, 50, 90)}
-     {slider("SMA", "20", 25, 5, 100)}{slider("ATR stop", "2.0", 45, "0.5×", "5×", "×")}{slider("MACD", "12 / 26 / 9", 50, "fast", "slow")}</div></div>
-   <div class="box"><div class="k">MARKETS<em>5 of 13 with a market</em></div><div class="mks">{markets()}</div>
-    <div class="row2"><div><div class="k" style="margin-bottom:6px">TIMEFRAME</div><div class="seg"><span>5m</span><span class="on">15m</span><span>1h</span><span>4h</span></div></div>
-     <div><div class="k" style="margin-bottom:6px">DIRECTION</div><div class="seg"><span>Long</span><span>Short</span><span class="on">Both</span></div></div></div></div>
+   <div class="box"><div class="k">WHAT IT TRADES<em>the bot page's market lanes</em></div>
+    <div class="lanes">
+     <div class="lane on"><span class="tg"></span><div><b>Perpetual epochs</b><span>5-min binary rounds</span></div><div class="lc"><span class="mk on">BTC</span><span class="mk on">ETH</span></div></div>
+     <div class="lane on"><span class="tg"></span><div><b>CLOB pairs</b><span>the exchange order books</span></div><div class="lc"><span class="mk on">VAIX ×</span><span class="mk on">SBIO ×</span><span class="mk">+ pair</span></div></div>
+     <div class="lane on"><span class="tg"></span><div><b>Event cards</b><span>headline-driven baskets</span></div><div class="lc"><span class="d">standard filters</span></div></div>
+     <div class="lane on"><span class="tg"></span><div><b>Arena</b><span>stocks, crypto, prediction markets</span></div><div class="lc"><span class="d">all</span></div></div>
+     <div class="lane"><span class="tg"></span><div><b>Catalog</b><span>stocks, ETFs, FX, futures</span></div><div class="lc"><span class="mk">+ symbol</span></div></div>
+    </div></div>
+   <div class="box"><div class="k">RISK<em>per trade</em></div>
+    <div class="sls" style="grid-template-columns:1fr">{slider("Stop loss", "4", 20, "1%", "20%", "%", "was 5%")}{slider("Take profit", "12", 24, "2%", "50%", "%", "was 20%")}</div>
+    <div class="fixed"><span>Max position <b>10%</b></span><span>Open at once <b>5</b></span><span>Leverage <b>2× max</b></span><span>New trades <b>20 a day</b></span>
+     <em>fixed for the whole tournament</em></div></div>
   </div>
-  <div class="box"><div class="k">SIZE &amp; RISK<em>leverage cap 2× · 20 new trades a day, unchanged</em></div>
-   <div class="sls" style="grid-template-columns:repeat(4,1fr);margin-top:2px">{slider("Stake per trade", "6", 26, "2%", "20%", "%", "today fixed 10%")}{slider("Open at once", "3", 50, 1, 5)}
-    {slider("Stop for the day at", "−8", 40, "−2%", "−20%", "%")}{slider("Take profit", "+4", 35, "off", "+12%", "%")}</div></div>
-  <div class="box"><div class="k">PREVIEW · LAST 7 DAYS WITH THESE SETTINGS<em>free run 2 of 3 today</em></div>
-   <div class="pv"><div><b class="g">+18.4%</b><span>ROI · now +6.1%</span></div><div><b>96</b><span>trades · 5 markets</span></div>
-    <div><b class="r">−12.0%</b><span>max drawdown</span></div><div><b>54%</b><span>win rate</span></div></div></div>
   <div class="diff"><span class="k" style="width:100%">THIS CHANGE</span>
-   <span>Markets <s>BTC, ETH</s> → <b>BTC, ETH, SOL, VAIX, TSLA</b></span><span>Strategy <s>5m up/down</s> → <b>Hybrid, 15m, both ways</b></span>
-   <span>Stake <s>10%</s> → <b>6%</b></span><span>Open at once <s>1</s> → <b>3</b></span><span>Stop for the day <i>new</i> <b>−8%</b></span></div>
+   <span>CLOB pairs <s>none</s> → <b>VAIX, SBIO</b></span><span>Event cards <s>off</s> → <b>on</b></span>
+   <span>Stop loss <s>5%</s> → <b>4%</b></span><span>Take profit <s>20%</s> → <b>12%</b></span></div>
   <div class="apply"><div class="rule"><b>2 of 3 changes left today.</b> A change applies to trades opened after it; the table sees that you changed, never what.</div>
    <span class="btn">Reset</span><span class="btn gr">Apply to my bot</span></div>
  </section>
+ <section class="panel race"><div class="k" style="display:flex;justify-content:space-between">THE RACE<span><b class="c">— you</b> · <b style="color:var(--text)">— leader</b> · field</span></div>{race_svg()}</section>
+ </div>
  <div class="col">
   <section class="panel mine-live"><div class="k">YOUR BOT, LIVE</div>
    <svg class="spark" viewBox="0 0 300 70" preserveAspectRatio="none"><polyline points="0,52 30,50 60,40 90,44 120,30 150,34 180,22 210,25 240,16 270,18 300,12" fill="none" stroke="#00cfff" stroke-width="2"/>
