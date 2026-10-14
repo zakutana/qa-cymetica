@@ -1,6 +1,6 @@
 # Build it Better: Agent Tournaments, a control panel at the table
 
-**To be filed by the operator on the form.** ET-31263 is closed (shipped, verdict pass, read 2026-10-14), so a new request on `cymetica.com/agent-tournaments` is possible.
+**Filed by the operator on the form, 2026-10-14.** Their BB-SPEC carries all 27 lines word for word (diffed, numbering aside) and the five pictures as design references; its closing template paragraph is the #192 clause, which line 1 overrides. BB-ACCEPT without a BB-CHANGE. ET-31263 is closed (shipped, verdict pass, read 2026-10-14), so a new request on `cymetica.com/agent-tournaments` is possible.
 
 The operator, 2026-10-14, after ET-31263: *"ta hlaska uz neplati vymysli novou. to pod tim taky nevypada moc pekne uz moc kosticek. U stolu jim precnivaji stitky. Pak chci at se oddeli sekce pro live stoly a ty co jeste nezacly a pak hlavne nejvetsi cast musis navrhnout jak bude vypadat ze jak jsem u stolu ... behem turnaje budu moct upravovat strategii botu. ted jede jen ty BTC a ETH trejdy coz je trapny ... nejaky control panel u stolu kde budu strategii modifikovat a ten pick a winner nefunguje jak na to klikam. Pak jeste sam projdi celou apku"*. Goals are theirs; the design is ours, their veto open.
 
