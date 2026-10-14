@@ -1,6 +1,6 @@
 # Build it Better: Build a Company, the owner's office
 
-**To be filed by the operator on the form.** No open request on `cymetica.com/company` (board read 2026-10-13); the page was built as feature #911 (ET-30909 in its own source).
+**Filed by the operator on the form, 2026-10-14.** Their BB-SPEC carries all 34 lines word for word (diffed, numbering aside) and the four pictures as design references; its closing template paragraph is the #192 clause, which line 1 overrides. BB-ACCEPT without a BB-CHANGE. No other open request on `cymetica.com/company` (board read 2026-10-13); the page was built as feature #911 (ET-30909 in its own source).
 
 The operator, 2026-10-13, on the owner view of our company (id 13): *"sekce legal entity a investable je zbytecne velka to budou jen nejaky taby. musi byt uprostred ta 2D mapa nejaka husta hezci ted je to jak gta 1 hnus, chci at je to husty 2D grafika, pak tam musi byt jednoznacny counter nekde tahu at vime kolik zbyva jeste tokenu a cele to nejak huste navrhni"*. Goals are theirs; the design is ours, their veto open.
 
