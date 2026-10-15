@@ -702,6 +702,9 @@ def test_a_card_that_is_closed_on_rest_and_open_on_mcp_fails():
     # And the bots Agent Tournaments offers for a seat (the evening of 2026-10-11), the same way.
     _the_tournament_bot_readings()
 
+    # And whether a table knows the seats our key owns (2026-10-15, ET-31459), the same way.
+    _the_tournament_own_seat_readings()
+
     # And a free Agent Tournaments table at each buy-in (2026-10-12), the same way.
     _the_free_table_readings()
 
@@ -1156,6 +1159,26 @@ def _the_tournament_route_readings():
                            f"{p}/tables/{{table_id}}/seat": {}, f"{p}/seats/{{seat_id}}/leave": {}}}
     assert missing_from(routes, described) == [], "any parameter name is the same route"
     assert tournament_routes(other) == [], "a line without a full tournament route lends none of its paths"
+
+
+def _the_tournament_own_seat_readings():
+    """The readings behind the own-seat check (2026-10-15): table 13 as read that day, seat 57 ours
+    (its bot-settings answered our key 200) and `mine` false with `my_seat` null, is unrecognised;
+    either field naming it is enough; an owned seat no table lists is unread, never a pass."""
+    from tests.rest.test_agent_tournaments_table_knows_its_owner import unrecognised
+
+    read = {"id": 13, "my_seat": None,
+            "seats": [{"seat_id": 57, "mine": False}, {"seat_id": 58, "mine": False}]}
+    missed, unread = unrecognised([read], {57})
+    assert [m["seat_id"] for m in missed] == [57] and unread == []
+    by_flag = {"id": 13, "my_seat": None, "seats": [{"seat_id": 57, "mine": True}]}
+    assert unrecognised([by_flag], {57}) == ([], []), "mine true alone recognises the seat"
+    by_seat = {"id": 13, "my_seat": {"seat_id": 57}, "seats": [{"seat_id": 57, "mine": False}]}
+    assert unrecognised([by_seat], {57}) == ([], []), "my_seat naming it alone recognises it"
+    wrong = {"id": 13, "my_seat": {"seat_id": 58}, "seats": [{"seat_id": 57, "mine": False}]}
+    assert [m["seat_id"] for m in unrecognised([wrong], {57})[0]] == [57], "another seat is not ours"
+    assert unrecognised([read], {99}) == ([], [99]), "an owned seat no table lists is unread"
+    assert unrecognised([read], set()) == ([], [])
 
 
 def _the_tournament_bot_readings():
