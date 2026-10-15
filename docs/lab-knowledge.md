@@ -8,10 +8,12 @@ Ten lines a section, newest first. `lab.py log --lesson --section <s>` adds one;
 
 ## Nexus cards
 
+- 2026-10-14 · 2026-10-14 · Nexus (NEX-0145) read the whole live listing and says no live card holds a BTC/ETH-only basket, so his 60/40 majors idea has no UUID and no room; the only road is build_custom_event_card (an outward write, off by default here). His 90 d index backtest, 60/40 at 5 % round trip: +25.79 %, Sharpe 3.21, max drawdown 6.97 %. Exit he gives: an ~18 h time-stop, derived from our own +1.4 % at 18 h. Single-sourced, not tested.
 - 2026-10-11 · His cards average -0.52 % after fees over 46 tests (13 worked, 32 didn't); sold after 18 h the same cards made +1.38 % on average, 70 % in profit (33 cards).
 
 ## Bots
 
+- 2026-10-14 · 2026-10-14 · Nexus (NEX-0145) on Vortex Drain, which won at SL 5 / TP 20: test SL 5 / TP 30 (let winners run), cross-check SL 8 / TP 20, and pair it with Fibonacci Phoenix (mean-reversion, 3,593 trades). Hypotheses, not results; each waits for a free slot under the 50-paper-bot cap.
 - 2026-10-14 · 2026-10-14 · 22 bot rooms closed in one tick: 16 returned +0.00 % (the paper bot held nothing -- a paused clone at balance 0, a bot that did not trade, not a refuted strategy), 5 ended on their 5 % stop-loss (Perceptron Oracle -3.15 %, Sent Surfer, Fade the Rally, Corr Catcher, Divergence Dragon -5.00 %), 2 survived with 0 % drawdown (a581e0e0 resumed, +47.06 % in 7 d; Vortex Drain SL 5 / TP 20, +14.80 % in 3 d). Two real winners in 22: a +0.00 % verdict is a bot that never traded and says nothing about its settings.
 - 2026-10-13 · 2026-10-13 · The grid is at 84/132 cells and four species' bands (Dread Gauge 5/20 and 10/20, MACD Hunter 10/30, RSI Sniper 10/30) stay untried: the platform refuses a clone past 50 Paper bots including paused ones (21/50 trading), so cells wait for deleted clones, not for ideas.
 - 2026-10-12 · 2026-10-12 · Grid ATR Alpha SL 5 / TP 20 measured nothing: its fund failed (HTTP 500), the room was stopped, the fund went through 49 min later outside it, and the verdict read 0 % coverage -- a cell is only a result once a room, a funded clone and an index window overlap.
