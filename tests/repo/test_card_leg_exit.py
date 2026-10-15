@@ -170,6 +170,9 @@ def _one_day_room_with_a_held_leg(scripts_lab, tmp_path, monkeypatch, dense_all)
     paper.close = sell
     monkeypatch.setattr(scripts_lab, "_sibling",
                         lambda name: paper if name == "paper" else real_sibling(name))
+    # The close waits while a deep pass runs, and pass_in_flight() reads the REAL notebook:
+    # unstubbed, the control went red during every deep pass (B01, deep pass 2026-10-15).
+    monkeypatch.setattr(scripts_lab, "pass_in_flight", lambda: False)
     return room["id"], now, theirs, sold
 
 

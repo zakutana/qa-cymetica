@@ -1,64 +1,593 @@
 {
-  "run": "deep-pass-2026-10-15",
-  "at": "2026-10-15T13:05:00+00:00",
-  "previous_at": "2026-10-11T19:31:00+00:00",
-  "at_finished": null,
-  "start_commit": "ee77a74f7840cd8151deadd9f41157d31d72ea5d",
-  "gaps": [
-    {"id": "R01", "nodeid": "tests/rest/test_a_tradeable_card_can_be_priced.py:116", "claim": "the priced-card check fails on a card's newest refusal however old, so after their fix (unpriceable reads not tradeable) it keeps failing on the 2026-10-13 refusal until a new buy of that card", "source": "review", "votes": null, "verdict": null, "fixed": false, "commit": null},
-    {"id": "R02", "nodeid": "scripts/company.py:352", "claim": "cmd_read crashes (TypeError) when a message's role or a task's status/brief is null", "source": "review", "votes": null, "verdict": null, "fixed": false, "commit": null},
-    {"id": "R03", "nodeid": "scripts/company.py:11", "claim": "docstring and the components.yaml comment say pause and the Manager message stay default-denied, while the module and components.yaml implement and declare them", "source": "review", "votes": null, "verdict": null, "fixed": false, "commit": null},
-    {"id": "R04", "nodeid": "scripts/crew.py:505", "claim": "watch()/tidy() delete .git/index.lock by mtime alone (10 min), with no check that a git process still holds it", "source": "review", "votes": null, "verdict": null, "fixed": false, "commit": null},
-    {"id": "R05", "nodeid": "scripts/crew.py:512", "claim": "watch() uses dirty_paths(base) or [], treating an unreadable tree as clean against dirty_paths' own 'unread, never clean'", "source": "review", "votes": null, "verdict": null, "fixed": false, "commit": null},
-    {"id": "R06", "nodeid": "scripts/crew.py:424", "claim": "run_tick counts a 'tick skipped' (another legitimate tick running) as a failure, so overlapping ticks page the manager with a false 'tick failed 3 times'", "source": "review", "votes": null, "verdict": null, "fixed": false, "commit": null},
-    {"id": "R07", "nodeid": "scripts/company.py:259", "claim": "create without a departments key raises TypeError instead of Refused", "source": "review", "votes": null, "verdict": null, "fixed": false, "commit": null},
-    {"id": "R08", "nodeid": "scripts/crew.py:890", "claim": "dirty_paths strips quotes but does not decode git's C-escaped paths, so non-ASCII or spaced paths are misnamed and never match housekeeping()", "source": "review", "votes": null, "verdict": null, "fixed": false, "commit": null},
-    {"id": "A01", "nodeid": "tests/rest/test_a_clone_trades_only_live_epoch_markets.py::test_a_clones_perpetual_markets_are_live_five_minute_markets", "claim": "reads only the first 12 existing clones' stored perpetual_markets; a fixed species default rewrites none of them, so the check cannot pass on the fix its docstring names; an unreadable profile is skipped uncounted", "source": "audit", "votes": null, "verdict": null, "fixed": false, "commit": null},
-    {"id": "A02", "nodeid": "tests/rest/test_a_tradeable_card_can_be_priced.py::test_a_card_that_reads_tradeable_now_can_be_priced", "claim": "same as R01: today's tradeable_now joined to the newest refusal with no age limit; cannot pass on their fix", "source": "audit", "votes": null, "verdict": null, "fixed": false, "commit": null, "same_as": "R01"},
-    {"id": "A03", "nodeid": "tests/rest/test_a_live_crypto_card_index_history_has_no_multi_day_hole.py::test_live_crypto_card_index_history_has_no_multi_day_hole", "claim": "declared() is applied to the widest gap only, so a card with a declared 51.6 h hole and an undeclared 20 h hole passes (opened by today's repair); unreadable cards drop out silently", "source": "audit", "votes": null, "verdict": null, "fixed": false, "commit": null},
-    {"id": "A04", "nodeid": "tests/rest/test_movers_page_ranks_every_card.py::test_the_movers_boards_rank_every_card_of_the_listing", "claim": "passes on an offset pattern in the script alone, before any card is read: a loop over two pages of 641 passes", "source": "audit", "votes": null, "verdict": null, "fixed": false, "commit": null},
-    {"id": "A05", "nodeid": "tests/rest/test_launchpad_discovery_tool_hides_what_rest_keeps_internal.py::test_the_discovery_tool_does_not_list_what_the_rest_list_keeps_internal", "claim": "a chain that cannot be measured falls out; the check passes with the defect chain unread", "source": "audit", "votes": null, "verdict": null, "fixed": false, "commit": null},
-    {"id": "A06", "nodeid": "tests/rest/test_vaix_orderbook_arbitrage_does_not_use_an_excluded_venue.py::test_the_vaix_orderbook_arbitrage_does_not_use_an_excluded_venue", "claim": "an absent excluded_venues reads as clean (passed) though the docstring says inconclusive when the book cannot be read", "source": "audit", "votes": null, "verdict": null, "fixed": false, "commit": null},
-    {"id": "A07", "nodeid": "tests/rest/test_a_coins_supply_figures_can_all_be_true.py::test_a_coins_supply_figures_can_all_be_true", "claim": "any non-empty flags skips the coin, though the docstring exempts only a circulating supply flagged as withheld", "source": "audit", "votes": null, "verdict": null, "fixed": false, "commit": null},
-    {"id": "A08", "nodeid": "tests/rest/test_nexus_answer_markers_are_true.py::test_nexus_answer_markers_are_true_and_leave_the_answer_usable", "claim": "a failed my-clones read leaves instances empty and the check passes instead of going inconclusive (rule 8)", "source": "audit", "votes": null, "verdict": null, "fixed": false, "commit": null},
-    {"id": "A09", "nodeid": "tests/rest/test_gem_screener_says_one_thing_per_name.py::test_the_altseason_panel_names_one_retail_figure", "claim": "diffs two API fields and gates on 'Retail' anywhere in the page; neither fix our report offers (rename, or one measure) can make it pass", "source": "audit", "votes": null, "verdict": null, "fixed": false, "commit": null},
-    {"id": "A10", "nodeid": "tests/rest/test_gem_screener_says_one_thing_per_name.py::test_a_degen_pick_is_not_red_on_the_dilution_its_own_row_shows", "claim": "fails on any pick at or over red although the filed report accepts 'or the page says why the two disagree'; unjoined picks skipped, 1 of 8 read can pass", "source": "audit", "votes": null, "verdict": null, "fixed": false, "commit": null},
-    {"id": "A11", "nodeid": "tests/rest/test_gem_screener_says_one_thing_per_name.py::test_a_next_cliff_lies_inside_the_window_its_own_unlock_record_counts", "claim": "a row counts as checked before next30/next90 are read; renamed keys make every row checked, no breach, a pass", "source": "audit", "votes": null, "verdict": null, "fixed": false, "commit": null},
-    {"id": "A12", "nodeid": "tests/rest/test_gem_screener_says_one_thing_per_name.py::test_an_unlock_countdown_counts_from_the_moment_it_is_served", "claim": "an honest whole-day floor countdown (28 for 28.66) is 0.66 off and fails; a fix on the page while the batch days stay keeps failing", "source": "audit", "votes": null, "verdict": null, "fixed": false, "commit": null},
-    {"id": "A13", "nodeid": "qa/gemaudit.py::runrate_factor_breaches", "claim": "expected multiplier 365 / their own cov30; a cov30 understated (30 days present, 6 at $0, cov30 24) inflates the run-rate 25 % and passes both run-rate checks", "source": "audit", "votes": null, "verdict": null, "fixed": false, "commit": null},
-    {"id": "A14", "nodeid": "tests/rest/test_company_routes_are_in_the_openapi.py::test_every_company_route_llms_txt_names_is_in_the_openapi", "claim": "/openapi.json, stated as context only, raises Inconclusive when it 404s although the asserted document still lacks every route (cosmetic)", "source": "audit", "votes": null, "verdict": null, "fixed": false, "commit": null},
-    {"id": "A15", "nodeid": "tests/rest/test_agent_tournaments_running_table_keeps_trading.py::test_agent_tournaments_running_table_keeps_trading", "claim": "'now' is the race's last plotted point, never compared with ends_in_s; a stalled runner that stops appending points passes (unverified how the race is written)", "source": "audit", "votes": null, "verdict": null, "fixed": false, "commit": null},
-    {"id": "B01", "nodeid": "tests/repo/test_card_leg_exit.py::test_control_the_same_room_on_a_dense_series_is_judged_at_its_end", "claim": "RED during every deep pass: the control never isolates pass_in_flight(), so scripts/lab.py reads the real audits/deep-pass-progress.json (finished false) and the close waits", "source": "audit", "votes": null, "verdict": null, "fixed": false, "commit": null},
-    {"id": "B02", "nodeid": "tests/repo/test_crew_day.py::test_a_simulated_day_ends_every_ticket_and_leaves_no_role_idle_without_a_reason", "claim": "asserts ': ' in rest or 'running' in rest, and status_lines writes 'not running' for every free lock, so it can never fail", "source": "audit", "votes": null, "verdict": null, "fixed": false, "commit": null},
-    {"id": "B03", "nodeid": "tests/repo/test_index_hole_declared.py", "claim": "same as A03: only the widest gap is asked whether it is declared", "source": "audit", "votes": null, "verdict": null, "fixed": false, "commit": null, "same_as": "A03"},
-    {"id": "B04", "nodeid": "tests/repo/test_desk_pause.py::test_the_clock_does_not_ticket_the_desk_while_a_desk_worker_is_still_running", "claim": "asserts only worker_running=True; the docstring's 'marker alone leaves milliseconds' case (marker gone, ticket closed 18 s ago) is not tested, so a marker-only fix XPASSes", "source": "audit", "votes": null, "verdict": null, "fixed": false, "commit": null},
-    {"id": "B05", "nodeid": "tests/repo/test_league_prize_window.py::test_summary_counts_credited_prizes_beyond_the_default_window", "claim": "the docstring's 'say unread if the answer is a full window of 200' is never exercised; a limit=200-only fix passes and reports a cut list as total", "source": "audit", "votes": null, "verdict": null, "fixed": false, "commit": null},
-    {"id": "B06", "nodeid": "tests/repo/test_grid_capacity.py::test_the_cap_is_read_from_the_newest_capacity_refusal", "claim": "fixture stamps relative to now now run opposite to append order, so a correct newest-by-at implementation returns 5 and stays red; today's xfail is an AttributeError, not the assertion its docstring names", "source": "audit", "votes": null, "verdict": null, "fixed": false, "commit": null},
-    {"id": "B07", "nodeid": "tests/repo/test_evidence_in_git.py::test_no_file_in_git_nears_the_size_github_refuses", "claim": "reads HEAD only; a push sends every commit since upstream, so a 120 MB blob shrunk in a later commit passes and the deep pass's push is refused", "source": "audit", "votes": null, "verdict": null, "fixed": false, "commit": null},
-    {"id": "B08", "nodeid": "tests/repo/test_vaix_arbitrage_legs.py::test_a_book_of_the_wrong_shape_is_unreadable_not_clean", "claim": "only non-dict shapes tested; a leg whose buy_chain key is renamed is skipped and the book reads clean (same root as A06)", "source": "audit", "votes": null, "verdict": null, "fixed": false, "commit": null},
-    {"id": "B09", "nodeid": "scripts/wave.py:48", "claim": "MAX_TRADING = 50 is stale since Cymetica raised the paper cap to 100 trading / 200 total (2026-10-15, llms.txt): the grid starves at 50", "source": "audit", "votes": null, "verdict": null, "fixed": false, "commit": null},
-    {"id": "C01", "nodeid": "tests/meta/test_pipeline_lab_manager.py (seat helper) / scripts/outsider.py:519 asked_before", "claim": "asked_before reads only table['standings']; open tables answer standings [] with the seat under seats (pending), so a second seat POST is allowed; the test's 'no standings' case is a shape no open table returns", "source": "audit", "votes": null, "verdict": null, "fixed": false, "commit": null},
-    {"id": "C02", "nodeid": "tests/meta/test_pipeline_crew.py::test_a_run_settles_its_ticket_by_how_it_ended", "claim": "a refused hand-over (crew.py ticket --to bugs) followed by a successful done ends the ticket done, the bug never handed over and no attempt spent; only a refused close is tested", "source": "audit", "votes": null, "verdict": null, "fixed": false, "commit": null},
-    {"id": "C03", "nodeid": "tests/meta/test_pipeline_crew.py::test_status_names_every_loop_and_what_each_waits_on", "claim": "start() == 1 does not tell an allowlist refusal from a missing CLI; with the check deleted on this machine the test would spawn real loops before failing", "source": "audit", "votes": null, "verdict": null, "fixed": false, "commit": null},
-    {"id": "C04", "nodeid": "tests/meta/test_pipeline_decisions.py::test_the_operators_words_quoted_in_code_are_still_their_words", "claim": "code_quotes hashes only the first quote after a tag; scripts/company.py holds two under one tag, and rewording the second ('to pak smazem stejne' -> 'to nikdy nesmazem') stays green", "source": "audit", "votes": null, "verdict": null, "fixed": false, "commit": null},
-    {"id": "C05", "nodeid": "qa/gemaudit.py::runrate_factor_breaches", "claim": "same as A13: the divisor is the row's claimed cov30, which coverage_breaches bounds only from above; also the rest check's pass text still says every row applies x 12.1667", "source": "audit", "votes": null, "verdict": null, "fixed": false, "commit": null, "same_as": "A13"},
-    {"id": "C06", "nodeid": "tests/meta/test_pipeline_league.py (_company_write comment) / scripts/company.py:11", "claim": "same as R03: the docstrings say message/pause stay denied while the rules declare them and the test sends them", "source": "audit", "votes": null, "verdict": null, "fixed": false, "commit": null, "same_as": "R03"}
-  ],
-  "review": {"done": true, "findings": 8},
-  "implemented": [
-    {"line": "2026-10-13 Po sweepu PRE-0274 opravit naše kontroly: #141 (denní průměr přes dny, které řádek má)", "commit": "bd46318e"},
-    {"line": "#202: díra vyznačená v gaps je jejich oprava (REPLY-0168), řečeno operátorovi 2026-10-15", "commit": "fa106799"}
-  ],
-  "left": [
-    {"line": "2026-10-13 Po sweepu PRE-0274: #112/#136, #192, #93, karta v pozici, FOMO kalibrace", "why": "each needs its run of 10-13 re-read against their live rule first; built the two with today's live evidence, the rest stays open with its date"},
-    {"line": "2026-10-12 Kód pro firmu (commit.py, league /prizes, desk H2, clock, BTC rozpětí, manifest, body 9 a 11)", "why": "seven pieces of the company's code while the company is stopped; too big for one pass beside a 220-commit review, none of it blocks a running part"},
-    {"line": "2026-10-11 FOMO sběr: denní strop", "why": "needs the day's request counts measured first (patrol has only per-minute peaks); left open with its date"},
-    {"line": "2026-10-11 Laborka v3 P3-P7", "why": "waits on laboratory ticks, not on code"},
-    {"line": "2026-10-08 Sledovat; 2026-10-13 Requesty; 2026-10-05 Spec; 2026-10-04 Supply spec; 2026-10-13 ET-31267; 2026-10-12 Tournaments", "why": "watching, deliveries, a branch pushed on their word, or a reminder: nothing to build"}
-  ],
-  "next": null,
-  "retrospective": {"last": "2026-10-11", "done": false},
-  "rule_changes": null,
-  "meta_tests": {"start": 839, "end": null, "reason": null},
-  "finished": false
+ "run": "deep-pass-2026-10-15",
+ "at": "2026-10-15T13:05:00+00:00",
+ "previous_at": "2026-10-11T19:31:00+00:00",
+ "at_finished": null,
+ "start_commit": "ee77a74f7840cd8151deadd9f41157d31d72ea5d",
+ "gaps": [
+  {
+   "id": "R01",
+   "nodeid": "tests/rest/test_a_tradeable_card_can_be_priced.py:116",
+   "claim": "the priced-card check fails on a card's newest refusal however old, so after their fix (unpriceable reads not tradeable) it keeps failing on the 2026-10-13 refusal until a new buy of that card",
+   "source": "review",
+   "votes": {
+    "t3": "real",
+    "t1": "false",
+    "t2": "real"
+   },
+   "verdict": "real",
+   "fixed": false,
+   "commit": null
+  },
+  {
+   "id": "R02",
+   "nodeid": "scripts/company.py:352",
+   "claim": "cmd_read crashes (TypeError) when a message's role or a task's status/brief is null",
+   "source": "review",
+   "votes": {
+    "t3": "real",
+    "t1": "real",
+    "t2": "false"
+   },
+   "verdict": "real",
+   "fixed": false,
+   "commit": null
+  },
+  {
+   "id": "R03",
+   "nodeid": "scripts/company.py:11",
+   "claim": "docstring and the components.yaml comment say pause and the Manager message stay default-denied, while the module and components.yaml implement and declare them",
+   "source": "review",
+   "votes": {
+    "t3": "false",
+    "t1": "real",
+    "t2": "real"
+   },
+   "verdict": "real",
+   "fixed": false,
+   "commit": null
+  },
+  {
+   "id": "R04",
+   "nodeid": "scripts/crew.py:505",
+   "claim": "watch()/tidy() delete .git/index.lock by mtime alone (10 min), with no check that a git process still holds it",
+   "source": "review",
+   "votes": {
+    "t3": "false",
+    "t1": "false",
+    "t2": "false"
+   },
+   "verdict": "dropped",
+   "fixed": false,
+   "commit": null
+  },
+  {
+   "id": "R05",
+   "nodeid": "scripts/crew.py:512",
+   "claim": "watch() uses dirty_paths(base) or [], treating an unreadable tree as clean against dirty_paths' own 'unread, never clean'",
+   "source": "review",
+   "votes": {
+    "t3": "real",
+    "t1": "real",
+    "t2": "real"
+   },
+   "verdict": "real",
+   "fixed": false,
+   "commit": null
+  },
+  {
+   "id": "R06",
+   "nodeid": "scripts/crew.py:424",
+   "claim": "run_tick counts a 'tick skipped' (another legitimate tick running) as a failure, so overlapping ticks page the manager with a false 'tick failed 3 times'",
+   "source": "review",
+   "votes": {
+    "t3": "false",
+    "t1": "false",
+    "t2": "false"
+   },
+   "verdict": "dropped",
+   "fixed": false,
+   "commit": null
+  },
+  {
+   "id": "R07",
+   "nodeid": "scripts/company.py:259",
+   "claim": "create without a departments key raises TypeError instead of Refused",
+   "source": "review",
+   "votes": {
+    "t3": "real",
+    "t1": "real",
+    "t2": "real"
+   },
+   "verdict": "real",
+   "fixed": false,
+   "commit": null
+  },
+  {
+   "id": "R08",
+   "nodeid": "scripts/crew.py:890",
+   "claim": "dirty_paths strips quotes but does not decode git's C-escaped paths, so non-ASCII or spaced paths are misnamed and never match housekeeping()",
+   "source": "review",
+   "votes": {
+    "t3": "false",
+    "t1": "false",
+    "t2": "false"
+   },
+   "verdict": "dropped",
+   "fixed": false,
+   "commit": null
+  },
+  {
+   "id": "A01",
+   "nodeid": "tests/rest/test_a_clone_trades_only_live_epoch_markets.py::test_a_clones_perpetual_markets_are_live_five_minute_markets",
+   "claim": "reads only the first 12 existing clones' stored perpetual_markets; a fixed species default rewrites none of them, so the check cannot pass on the fix its docstring names; an unreadable profile is skipped uncounted",
+   "source": "audit",
+   "votes": {
+    "t3": "real",
+    "t1": "real",
+    "t2": "false"
+   },
+   "verdict": "real",
+   "fixed": false,
+   "commit": null
+  },
+  {
+   "id": "A02",
+   "nodeid": "tests/rest/test_a_tradeable_card_can_be_priced.py::test_a_card_that_reads_tradeable_now_can_be_priced",
+   "claim": "same as R01: today's tradeable_now joined to the newest refusal with no age limit; cannot pass on their fix",
+   "source": "audit",
+   "votes": {
+    "t3": "real",
+    "t1": "false",
+    "t2": "real"
+   },
+   "verdict": "real",
+   "fixed": false,
+   "commit": null,
+   "same_as": "R01"
+  },
+  {
+   "id": "A03",
+   "nodeid": "tests/rest/test_a_live_crypto_card_index_history_has_no_multi_day_hole.py::test_live_crypto_card_index_history_has_no_multi_day_hole",
+   "claim": "declared() is applied to the widest gap only, so a card with a declared 51.6 h hole and an undeclared 20 h hole passes (opened by today's repair); unreadable cards drop out silently",
+   "source": "audit",
+   "votes": {
+    "t3": "real",
+    "t1": "real",
+    "t2": "real"
+   },
+   "verdict": "real",
+   "fixed": false,
+   "commit": null
+  },
+  {
+   "id": "A04",
+   "nodeid": "tests/rest/test_movers_page_ranks_every_card.py::test_the_movers_boards_rank_every_card_of_the_listing",
+   "claim": "passes on an offset pattern in the script alone, before any card is read: a loop over two pages of 641 passes",
+   "source": "audit",
+   "votes": {
+    "t3": "real",
+    "t1": "real",
+    "t2": "real"
+   },
+   "verdict": "real",
+   "fixed": false,
+   "commit": null
+  },
+  {
+   "id": "A05",
+   "nodeid": "tests/rest/test_launchpad_discovery_tool_hides_what_rest_keeps_internal.py::test_the_discovery_tool_does_not_list_what_the_rest_list_keeps_internal",
+   "claim": "a chain that cannot be measured falls out; the check passes with the defect chain unread",
+   "source": "audit",
+   "votes": {
+    "t3": "real",
+    "t1": "real",
+    "t2": "real"
+   },
+   "verdict": "real",
+   "fixed": false,
+   "commit": null
+  },
+  {
+   "id": "A06",
+   "nodeid": "tests/rest/test_vaix_orderbook_arbitrage_does_not_use_an_excluded_venue.py::test_the_vaix_orderbook_arbitrage_does_not_use_an_excluded_venue",
+   "claim": "an absent excluded_venues reads as clean (passed) though the docstring says inconclusive when the book cannot be read",
+   "source": "audit",
+   "votes": {
+    "t3": "false",
+    "t1": "false",
+    "t2": "false"
+   },
+   "verdict": "dropped",
+   "fixed": false,
+   "commit": null
+  },
+  {
+   "id": "A07",
+   "nodeid": "tests/rest/test_a_coins_supply_figures_can_all_be_true.py::test_a_coins_supply_figures_can_all_be_true",
+   "claim": "any non-empty flags skips the coin, though the docstring exempts only a circulating supply flagged as withheld",
+   "source": "audit",
+   "votes": {
+    "t3": "real",
+    "t1": "false",
+    "t2": "false"
+   },
+   "verdict": "minority",
+   "fixed": false,
+   "commit": null
+  },
+  {
+   "id": "A08",
+   "nodeid": "tests/rest/test_nexus_answer_markers_are_true.py::test_nexus_answer_markers_are_true_and_leave_the_answer_usable",
+   "claim": "a failed my-clones read leaves instances empty and the check passes instead of going inconclusive (rule 8)",
+   "source": "audit",
+   "votes": {
+    "t3": "real",
+    "t1": "real",
+    "t2": "real"
+   },
+   "verdict": "real",
+   "fixed": false,
+   "commit": null
+  },
+  {
+   "id": "A09",
+   "nodeid": "tests/rest/test_gem_screener_says_one_thing_per_name.py::test_the_altseason_panel_names_one_retail_figure",
+   "claim": "diffs two API fields and gates on 'Retail' anywhere in the page; neither fix our report offers (rename, or one measure) can make it pass",
+   "source": "audit",
+   "votes": {
+    "t3": "real",
+    "t1": "real",
+    "t2": "real"
+   },
+   "verdict": "real",
+   "fixed": false,
+   "commit": null
+  },
+  {
+   "id": "A10",
+   "nodeid": "tests/rest/test_gem_screener_says_one_thing_per_name.py::test_a_degen_pick_is_not_red_on_the_dilution_its_own_row_shows",
+   "claim": "fails on any pick at or over red although the filed report accepts 'or the page says why the two disagree'; unjoined picks skipped, 1 of 8 read can pass",
+   "source": "audit",
+   "votes": {
+    "t3": "real",
+    "t1": "real",
+    "t2": "real"
+   },
+   "verdict": "real",
+   "fixed": false,
+   "commit": null
+  },
+  {
+   "id": "A11",
+   "nodeid": "tests/rest/test_gem_screener_says_one_thing_per_name.py::test_a_next_cliff_lies_inside_the_window_its_own_unlock_record_counts",
+   "claim": "a row counts as checked before next30/next90 are read; renamed keys make every row checked, no breach, a pass",
+   "source": "audit",
+   "votes": {
+    "t3": "real",
+    "t1": "real",
+    "t2": "real"
+   },
+   "verdict": "real",
+   "fixed": false,
+   "commit": null
+  },
+  {
+   "id": "A12",
+   "nodeid": "tests/rest/test_gem_screener_says_one_thing_per_name.py::test_an_unlock_countdown_counts_from_the_moment_it_is_served",
+   "claim": "an honest whole-day floor countdown (28 for 28.66) is 0.66 off and fails; a fix on the page while the batch days stay keeps failing",
+   "source": "audit",
+   "votes": {
+    "t3": "real",
+    "t1": "real",
+    "t2": "false"
+   },
+   "verdict": "real",
+   "fixed": false,
+   "commit": null
+  },
+  {
+   "id": "A13",
+   "nodeid": "qa/gemaudit.py::runrate_factor_breaches",
+   "claim": "expected multiplier 365 / their own cov30; a cov30 understated (30 days present, 6 at $0, cov30 24) inflates the run-rate 25 % and passes both run-rate checks",
+   "source": "audit",
+   "votes": {
+    "t3": "false",
+    "t1": "real",
+    "t2": "real"
+   },
+   "verdict": "real",
+   "fixed": false,
+   "commit": null
+  },
+  {
+   "id": "A14",
+   "nodeid": "tests/rest/test_company_routes_are_in_the_openapi.py::test_every_company_route_llms_txt_names_is_in_the_openapi",
+   "claim": "/openapi.json, stated as context only, raises Inconclusive when it 404s although the asserted document still lacks every route (cosmetic)",
+   "source": "audit",
+   "votes": {
+    "t3": "real",
+    "t1": "real",
+    "t2": "real"
+   },
+   "verdict": "real",
+   "fixed": false,
+   "commit": null
+  },
+  {
+   "id": "A15",
+   "nodeid": "tests/rest/test_agent_tournaments_running_table_keeps_trading.py::test_agent_tournaments_running_table_keeps_trading",
+   "claim": "'now' is the race's last plotted point, never compared with ends_in_s; a stalled runner that stops appending points passes (unverified how the race is written)",
+   "source": "audit",
+   "votes": {
+    "t3": "false",
+    "t1": "real",
+    "t2": "false"
+   },
+   "verdict": "minority",
+   "fixed": false,
+   "commit": null
+  },
+  {
+   "id": "B01",
+   "nodeid": "tests/repo/test_card_leg_exit.py::test_control_the_same_room_on_a_dense_series_is_judged_at_its_end",
+   "claim": "RED during every deep pass: the control never isolates pass_in_flight(), so scripts/lab.py reads the real audits/deep-pass-progress.json (finished false) and the close waits",
+   "source": "audit",
+   "votes": {
+    "t3": "real",
+    "t1": "real",
+    "t2": "real"
+   },
+   "verdict": "real",
+   "fixed": false,
+   "commit": null
+  },
+  {
+   "id": "B02",
+   "nodeid": "tests/repo/test_crew_day.py::test_a_simulated_day_ends_every_ticket_and_leaves_no_role_idle_without_a_reason",
+   "claim": "asserts ': ' in rest or 'running' in rest, and status_lines writes 'not running' for every free lock, so it can never fail",
+   "source": "audit",
+   "votes": {
+    "t3": "real",
+    "t1": "real",
+    "t2": "real"
+   },
+   "verdict": "real",
+   "fixed": false,
+   "commit": null
+  },
+  {
+   "id": "B03",
+   "nodeid": "tests/repo/test_index_hole_declared.py",
+   "claim": "same as A03: only the widest gap is asked whether it is declared",
+   "source": "audit",
+   "votes": {
+    "t3": "real",
+    "t1": "real",
+    "t2": "real"
+   },
+   "verdict": "real",
+   "fixed": false,
+   "commit": null,
+   "same_as": "A03"
+  },
+  {
+   "id": "B04",
+   "nodeid": "tests/repo/test_desk_pause.py::test_the_clock_does_not_ticket_the_desk_while_a_desk_worker_is_still_running",
+   "claim": "asserts only worker_running=True; the docstring's 'marker alone leaves milliseconds' case (marker gone, ticket closed 18 s ago) is not tested, so a marker-only fix XPASSes",
+   "source": "audit",
+   "votes": {
+    "t3": "real",
+    "t1": "real",
+    "t2": "real"
+   },
+   "verdict": "real",
+   "fixed": false,
+   "commit": null
+  },
+  {
+   "id": "B05",
+   "nodeid": "tests/repo/test_league_prize_window.py::test_summary_counts_credited_prizes_beyond_the_default_window",
+   "claim": "the docstring's 'say unread if the answer is a full window of 200' is never exercised; a limit=200-only fix passes and reports a cut list as total",
+   "source": "audit",
+   "votes": {
+    "t3": "real",
+    "t1": "real",
+    "t2": "real"
+   },
+   "verdict": "real",
+   "fixed": false,
+   "commit": null
+  },
+  {
+   "id": "B06",
+   "nodeid": "tests/repo/test_grid_capacity.py::test_the_cap_is_read_from_the_newest_capacity_refusal",
+   "claim": "fixture stamps relative to now now run opposite to append order, so a correct newest-by-at implementation returns 5 and stays red; today's xfail is an AttributeError, not the assertion its docstring names",
+   "source": "audit",
+   "votes": {
+    "t3": "real",
+    "t1": "real",
+    "t2": "real"
+   },
+   "verdict": "real",
+   "fixed": false,
+   "commit": null
+  },
+  {
+   "id": "B07",
+   "nodeid": "tests/repo/test_evidence_in_git.py::test_no_file_in_git_nears_the_size_github_refuses",
+   "claim": "reads HEAD only; a push sends every commit since upstream, so a 120 MB blob shrunk in a later commit passes and the deep pass's push is refused",
+   "source": "audit",
+   "votes": {
+    "t3": "real",
+    "t1": "real",
+    "t2": "real"
+   },
+   "verdict": "real",
+   "fixed": false,
+   "commit": null
+  },
+  {
+   "id": "B08",
+   "nodeid": "tests/repo/test_vaix_arbitrage_legs.py::test_a_book_of_the_wrong_shape_is_unreadable_not_clean",
+   "claim": "only non-dict shapes tested; a leg whose buy_chain key is renamed is skipped and the book reads clean (same root as A06)",
+   "source": "audit",
+   "votes": {
+    "t3": "real",
+    "t1": "real",
+    "t2": "real"
+   },
+   "verdict": "real",
+   "fixed": false,
+   "commit": null
+  },
+  {
+   "id": "B09",
+   "nodeid": "scripts/wave.py:48",
+   "claim": "MAX_TRADING = 50 is stale since Cymetica raised the paper cap to 100 trading / 200 total (2026-10-15, llms.txt): the grid starves at 50",
+   "source": "audit",
+   "votes": {
+    "t3": "real",
+    "t1": "real",
+    "t2": "real"
+   },
+   "verdict": "real",
+   "fixed": false,
+   "commit": null
+  },
+  {
+   "id": "C01",
+   "nodeid": "tests/meta/test_pipeline_lab_manager.py (seat helper) / scripts/outsider.py:519 asked_before",
+   "claim": "asked_before reads only table['standings']; open tables answer standings [] with the seat under seats (pending), so a second seat POST is allowed; the test's 'no standings' case is a shape no open table returns",
+   "source": "audit",
+   "votes": {
+    "t3": "real",
+    "t1": "false",
+    "t2": "real"
+   },
+   "verdict": "real",
+   "fixed": false,
+   "commit": null
+  },
+  {
+   "id": "C02",
+   "nodeid": "tests/meta/test_pipeline_crew.py::test_a_run_settles_its_ticket_by_how_it_ended",
+   "claim": "a refused hand-over (crew.py ticket --to bugs) followed by a successful done ends the ticket done, the bug never handed over and no attempt spent; only a refused close is tested",
+   "source": "audit",
+   "votes": {
+    "t3": "real",
+    "t1": "real",
+    "t2": "false"
+   },
+   "verdict": "real",
+   "fixed": false,
+   "commit": null
+  },
+  {
+   "id": "C03",
+   "nodeid": "tests/meta/test_pipeline_crew.py::test_status_names_every_loop_and_what_each_waits_on",
+   "claim": "start() == 1 does not tell an allowlist refusal from a missing CLI; with the check deleted on this machine the test would spawn real loops before failing",
+   "source": "audit",
+   "votes": {
+    "t3": "real",
+    "t1": "real",
+    "t2": "real"
+   },
+   "verdict": "real",
+   "fixed": false,
+   "commit": null
+  },
+  {
+   "id": "C04",
+   "nodeid": "tests/meta/test_pipeline_decisions.py::test_the_operators_words_quoted_in_code_are_still_their_words",
+   "claim": "code_quotes hashes only the first quote after a tag; scripts/company.py holds two under one tag, and rewording the second ('to pak smazem stejne' -> 'to nikdy nesmazem') stays green",
+   "source": "audit",
+   "votes": {
+    "t3": "real",
+    "t1": "real",
+    "t2": "real"
+   },
+   "verdict": "real",
+   "fixed": false,
+   "commit": null
+  },
+  {
+   "id": "C05",
+   "nodeid": "qa/gemaudit.py::runrate_factor_breaches",
+   "claim": "same as A13: the divisor is the row's claimed cov30, which coverage_breaches bounds only from above; also the rest check's pass text still says every row applies x 12.1667",
+   "source": "audit",
+   "votes": {
+    "t3": "false",
+    "t1": "real",
+    "t2": "real"
+   },
+   "verdict": "real",
+   "fixed": false,
+   "commit": null,
+   "same_as": "A13"
+  },
+  {
+   "id": "C06",
+   "nodeid": "tests/meta/test_pipeline_league.py (_company_write comment) / scripts/company.py:11",
+   "claim": "same as R03: the docstrings say message/pause stay denied while the rules declare them and the test sends them",
+   "source": "audit",
+   "votes": {
+    "t3": "false",
+    "t1": "real",
+    "t2": "real"
+   },
+   "verdict": "real",
+   "fixed": false,
+   "commit": null,
+   "same_as": "R03"
+  }
+ ],
+ "review": {
+  "done": true,
+  "findings": 8
+ },
+ "implemented": [
+  {
+   "line": "2026-10-13 Po sweepu PRE-0274 opravit naše kontroly: #141 (denní průměr přes dny, které řádek má)",
+   "commit": "bd46318e"
+  },
+  {
+   "line": "#202: díra vyznačená v gaps je jejich oprava (REPLY-0168), řečeno operátorovi 2026-10-15",
+   "commit": "fa106799"
+  }
+ ],
+ "left": [
+  {
+   "line": "2026-10-13 Po sweepu PRE-0274: #112/#136, #192, #93, karta v pozici, FOMO kalibrace",
+   "why": "each needs its run of 10-13 re-read against their live rule first; built the two with today's live evidence, the rest stays open with its date"
+  },
+  {
+   "line": "2026-10-12 Kód pro firmu (commit.py, league /prizes, desk H2, clock, BTC rozpětí, manifest, body 9 a 11)",
+   "why": "seven pieces of the company's code while the company is stopped; too big for one pass beside a 220-commit review, none of it blocks a running part"
+  },
+  {
+   "line": "2026-10-11 FOMO sběr: denní strop",
+   "why": "needs the day's request counts measured first (patrol has only per-minute peaks); left open with its date"
+  },
+  {
+   "line": "2026-10-11 Laborka v3 P3-P7",
+   "why": "waits on laboratory ticks, not on code"
+  },
+  {
+   "line": "2026-10-08 Sledovat; 2026-10-13 Requesty; 2026-10-05 Spec; 2026-10-04 Supply spec; 2026-10-13 ET-31267; 2026-10-12 Tournaments",
+   "why": "watching, deliveries, a branch pushed on their word, or a reminder: nothing to build"
+  }
+ ],
+ "next": null,
+ "retrospective": {
+  "last": "2026-10-11",
+  "done": false
+ },
+ "rule_changes": null,
+ "meta_tests": {
+  "start": 839,
+  "end": null,
+  "reason": null
+ },
+ "finished": false
 }

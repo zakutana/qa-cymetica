@@ -23,6 +23,7 @@ be read is INCONCLUSIVE, never agreement. SAFE: GETs only, anonymous.
 
 from __future__ import annotations
 
+import math
 import re
 from datetime import datetime
 
@@ -36,6 +37,9 @@ SUPPLY_BATCH = "/api/v1/supply-analyzer/batch/gem-screener"
 RED_12M = re.compile(r"red at (\d+(?:\.\d+)?)\s*% or more", re.I)
 RETAIL_GAP_POINTS = 10.0     # two readings of one thing this far apart are two things
 COUNTDOWN_TOLERANCE_DAYS = 0.5
+# A whole-day countdown may be the floor or the ceiling of the true days; this much past either is off.
+# 2026-10-15 before their fix: SOLV 4.5 stated against 3.75 true, outside [3, 4] -- off.
+ROUNDING_SLACK_DAYS = 0.05
 
 
 def _at(value):
@@ -80,11 +84,16 @@ def test_a_degen_pick_is_not_red_on_the_dilution_its_own_row_shows(rest_anon):
     if not picks:
         raise Inconclusive("the snapshot names no Degen picks")
     sa = _by_identity(_batch_items(read_api(rest_anon, SUPPLY_BATCH)))
-    read, red_picks = 0, []
+    read, red_picks, unjoined = 0, [], []
     for app in picks:
         item = (sa.get(("slug", str(app.get("slug") or "").lower()))
                 or sa.get(("gecko_id", str(app.get("gecko_id") or "").lower())))
-        tile = ((item or {}).get("tiles") or {}).get("dilution_12m") or {}
+        if item is None:
+            # Not in the batch at all: unread, not clean (A10, deep pass 2026-10-15). A pick the
+            # batch holds with no 12-month figure ("—", no schedule published) cannot be red.
+            unjoined.append(f"{app.get('symbol')}({app.get('key')})")
+            continue
+        tile = (item.get("tiles") or {}).get("dilution_12m") or {}
         pct = _num(tile.get("pct"))
         if pct is None:
             continue
@@ -94,6 +103,9 @@ def test_a_degen_pick_is_not_red_on_the_dilution_its_own_row_shows(rest_anon):
                               "gate_week_pct": _num((app.get("dilution") or {}).get("week_pct"))})
     if not read:
         raise Inconclusive(f"none of the {len(picks)} picks has a 12-month dilution in the Supply Analyzer batch")
+    if unjoined and not red_picks:
+        raise Inconclusive(f"{len(unjoined)} of {len(picks)} picks are not in the Supply Analyzer batch "
+                           f"({', '.join(unjoined)}); no pick read red, but the unread ones cannot be called clean")
     conclude(Measurement(
         verdict="failed" if red_picks else "passed",
         reason=(f"{len(red_picks)} of {len(picks)} Degen picks pass the Dilution gate and read red on the same "
@@ -110,28 +122,36 @@ def test_a_degen_pick_is_not_red_on_the_dilution_its_own_row_shows(rest_anon):
 
 @qa(component="rest.gem_screener", tier=SafetyTier.SAFE, surface="rest")
 def test_the_altseason_panel_names_one_retail_figure(rest_anon):
-    """The Retail tile and the euphoria line's "retail by dollar volume" are both called retail on one
-    panel; they read two fields. Two readings more than RETAIL_GAP_POINTS apart are two figures under one name."""
-    _, text = read_page(rest_anon)
-    if "retail by dollar volume" not in (text or "") or "'Retail'" not in (text or ""):
-        raise Inconclusive("the panel no longer labels both a Retail tile and 'retail by dollar volume'")
+    """The Retail tile and the euphoria line's retail figure read two fields. Either fix our report (#207)
+    offers ends the defect: name them apart, or show one measure in both places. So the check passes
+    when the panel's own labels for the two (`label`, `euphoria_retail_label`, served since ET-31567)
+    differ and neither is the bare word "retail", or when the two readings agree within
+    RETAIL_GAP_POINTS. Repaired by the deep pass of 2026-10-15 (A09): it gated on the old literals,
+    which survive in JS fallback branches, and so failed the rename that shipped that day."""
     alt = read_api(rest_anon, g.ALTSEASON_API)
     retail = (((alt.get("altseason") or {}).get("components") or {}).get("retail")) or {}
     tile, euphoria = _num(retail.get("value")), _num(retail.get("euphoria_retail"))
     if tile is None or euphoria is None:
         raise Inconclusive("components.retail states no value or no euphoria_retail")
+    names = [" ".join(str(retail.get(k) or "").lower().split()) for k in ("label", "euphoria_retail_label")]
+    apart = all(names) and names[0] != names[1] and "retail" not in names
     gap = abs(tile - euphoria)
+    one_figure = apart or gap <= RETAIL_GAP_POINTS
     conclude(Measurement(
-        verdict="failed" if gap > RETAIL_GAP_POINTS else "passed",
-        reason=(f"the altseason panel shows Retail {tile:g}/100 ({retail.get('verdict')}, {retail.get('version')}) "
-                f"on its tile and 'retail by dollar volume {euphoria:g}/100' under euphoria, {gap:.1f} points apart; "
-                f"the index's euphoria uses the second"
-                if gap > RETAIL_GAP_POINTS else
-                f"the two retail readings agree within {RETAIL_GAP_POINTS:g} points ({tile:g} and {euphoria:g})"),
-        left={"tile": tile, "euphoria_retail": euphoria, "gap": round(gap, 1)},
-        right={"gap_at_most": RETAIL_GAP_POINTS},
-        population={"retail": {k: retail.get(k) for k in ("version", "value", "verdict", "euphoria_retail")}},
-        sources={"page": g.APP_PAGE, "api": g.ALTSEASON_API}))
+        verdict="passed" if one_figure else "failed",
+        reason=(f"the panel names its two retail figures apart: '{retail.get('label')}' {tile:g}/100 and "
+                f"'{retail.get('euphoria_retail_label')}' {euphoria:g}/100"
+                if apart else
+                f"the two retail readings agree within {RETAIL_GAP_POINTS:g} points ({tile:g} and {euphoria:g})"
+                if one_figure else
+                f"the altseason panel shows Retail {tile:g}/100 ({retail.get('verdict')}, {retail.get('version')}) "
+                f"on its tile and retail {euphoria:g}/100 under euphoria, {gap:.1f} points apart, under one name "
+                f"({retail.get('label')!r} / {retail.get('euphoria_retail_label')!r}); the index's euphoria uses the second"),
+        left={"tile": tile, "euphoria_retail": euphoria, "gap": round(gap, 1), "labels": names},
+        right={"gap_at_most": RETAIL_GAP_POINTS, "or": "two different labels"},
+        population={"retail": {k: retail.get(k) for k in ("version", "value", "verdict", "euphoria_retail",
+                                                          "label", "euphoria_retail_label")}},
+        sources={"api": g.ALTSEASON_API}))
 
 
 @qa(component="rest.gem_screener", tier=SafetyTier.SAFE, surface="rest")
@@ -146,10 +166,14 @@ def test_a_next_cliff_lies_inside_the_window_its_own_unlock_record_counts(rest_a
         ts, as_of = _num(cliff.get("ts")), _num(unlock.get("as_of"))
         if ts is None or as_of is None:
             continue
+        counts = {field: _num(unlock.get(field)) for field in ("next30_tokens", "next90_tokens")}
+        if any(value is None for value in counts.values()):
+            # A row whose counts cannot be read is not a row that agrees (A11, deep pass 2026-10-15).
+            continue
         checked += 1
         days = (ts - as_of) / 86400.0
         for window, field in ((30, "next30_tokens"), (90, "next90_tokens")):
-            counted = _num(unlock.get(field))
+            counted = counts[field]
             if 0 <= days <= window and counted == 0:
                 breaches.append({"row": f"{app.get('symbol')}({app.get('key')})", "cliff_tokens": cliff.get("tokens"),
                                  "cliff_days_after_as_of": round(days, 1), "window": field, "counted": counted})
@@ -172,7 +196,9 @@ def test_a_next_cliff_lies_inside_the_window_its_own_unlock_record_counts(rest_a
 @qa(component="rest.gem_screener", tier=SafetyTier.SAFE, surface="rest")
 def test_an_unlock_countdown_counts_from_the_moment_it_is_served(rest_anon):
     """The batch states `next_unlock.days` beside `next_unlock.ts` and its own `as_of`. The coin detail
-    shows the days as "in N days"; read at `as_of` they should be (ts - as_of) / 1 day."""
+    shows the days as "in N days"; read at `as_of` they should be (ts - as_of) / 1 day -- a fractional
+    figure, or a whole one rounded either way (28 or 29 for 28.66 is honest; A12, deep pass 2026-10-15).
+    Off is a figure outside [floor, ceil] of the true days by more than COUNTDOWN_TOLERANCE_DAYS."""
     batch = read_api(rest_anon, SUPPLY_BATCH)
     served = _at(batch.get("as_of"))
     if served is None:
@@ -185,7 +211,9 @@ def test_an_unlock_countdown_counts_from_the_moment_it_is_served(rest_anon):
             continue
         checked += 1
         true_days = (ts - served.timestamp()) / 86400.0
-        if true_days > 0 and abs(days - true_days) > COUNTDOWN_TOLERANCE_DAYS:
+        low, high = math.floor(true_days), math.ceil(true_days)
+        outside = days < low - ROUNDING_SLACK_DAYS or days > high + ROUNDING_SLACK_DAYS
+        if true_days > 0 and abs(days - true_days) > COUNTDOWN_TOLERANCE_DAYS and outside:
             token = item.get("token") or {}
             off.append({"row": f"{token.get('symbol')}({token.get('slug')})", "days_stated": days,
                         "days_at_as_of": round(true_days, 2), "refreshed_at": item.get("refreshed_at")})

@@ -119,6 +119,21 @@ def declared(hole_from, hole_to, gaps) -> bool:
     return False
 
 
+def undeclared_holes(points, gaps, max_hours: float) -> list[tuple[float, str, str]]:
+    """Every stretch between two consecutive points longer than `max_hours` that `gaps` does not
+    declare, as (hours, from, to), in time order. Every hole, not only the widest: a declared
+    51.6 h hole must not hide an undeclared 20 h one (A03, deep pass 2026-10-15). Points whose
+    time cannot be read are dropped by the caller's widest_gap() check first."""
+    times = sorted((when, point["t"]) for point in points or [] if isinstance(point, dict)
+                   for when in [_when(point.get("t"))] if when is not None)
+    out = []
+    for (a, a_raw), (b, b_raw) in zip(times, times[1:]):
+        hours = (b - a).total_seconds() / 3600.0
+        if hours > max_hours and not declared(a_raw, b_raw, gaps):
+            out.append((hours, a_raw, b_raw))
+    return out
+
+
 def _crypto_share(basket) -> float:
     legs = [leg for leg in basket or [] if isinstance(leg, dict)]
     total = sum(float(leg.get("weight") or 0) for leg in legs)
@@ -169,17 +184,27 @@ def test_live_crypto_card_index_history_has_no_multi_day_hole(rest_anon):
             unread.append(f"{str(cid)[:8]}: a point's time is unreadable")
             continue
         series[cid] = sorted(t for t in (_when(p.get("t")) for p in points) if t is not None)
+        open_holes = undeclared_holes(points, body.get("gaps"), MAX_GAP_HOURS)
+        worst = max(open_holes, key=lambda h: h[0]) if open_holes else None
         judged.append({"id": cid, "title": (card.get("title") or "")[:60], "points": len(points),
                        "widest_gap_hours": round(gap[0], 1) if gap else 0.0,
                        "from": gap[1] if gap else None, "to": gap[2] if gap else None,
-                       "declared": bool(gap) and declared(gap[1], gap[2], body.get("gaps"))})
+                       # every hole over the limit was declared (A03: not only the widest)
+                       "declared": not open_holes,
+                       "undeclared": [{"hours": round(h, 1), "from": a, "to": b} for h, a, b in open_holes],
+                       "undeclared_widest_hours": round(worst[0], 1) if worst else 0.0,
+                       "undeclared_from": worst[1] if worst else None,
+                       "undeclared_to": worst[2] if worst else None})
     if not judged:
         raise Inconclusive(f"no open crypto card had a readable 30d history ({len(subjects)} open, "
                            f"empty {empty}, unread {unread[:3]})")
 
     declared_holes = [j for j in judged if j["widest_gap_hours"] > MAX_GAP_HOURS and j["declared"]]
-    holes = [j for j in judged if j["widest_gap_hours"] > MAX_GAP_HOURS and not j["declared"]]
+    holes = [j for j in judged if not j["declared"]]
     for hole in holes:
+        # The card's widest UNDECLARED hole is the one named and controlled for.
+        hole["widest_gap_hours"] = hole["undeclared_widest_hours"]
+        hole["from"], hole["to"] = hole["undeclared_from"], hole["undeclared_to"]
         a, b = _when(hole["from"]), _when(hole["to"])
         # Only a card that already had history when the hole began can be a control for it.
         existed = [o for o in judged if o["id"] != hole["id"] and series[o["id"]][0] < a]
