@@ -6342,6 +6342,110 @@ reports:
       document serves on that path, sits inside a path, or is written twice in a row; it passes when none of
       those remain, and a re-read with no marker in it is reported as empty. GET requests only.
 
+  - key: gem-screener-pick-red-on-its-own-dilution
+    findings:
+      - CYM-a_degen_pick_is_not_red_on_the_dilution_its_own_row_shows
+    severity: medium
+    category: logic
+    url: https://cymetica.com/gem-screener/app?view=apps
+    title: >-
+      Gem Screener: a Degen pick passes the Dilution gate while its own row shows "Dilution, 12 months" red
+      (SOLV +32.1 %, red at 25 %)
+    expected: >
+      One page, one meaning of "Dilution": a coin that passes the Dilution gate of the Degen picks is not red
+      on the same page's Dilution figure, or the page says why the two disagree.
+    actual: >
+      Read on 2026-10-15. The Apps table's SUPPLY column is "Dilution, 12 months" (the Supply Analyzer's new
+      tokens of the next 12 months / circulating supply), "red at 25% or more, green under 5%" (ET-31267).
+      The Dilution gate of the Degen picks passes up to 1% of market cap a week, about 52% a year. Solv
+      Protocol (SOLV) is a Degen pick, passes the gate at 0.7114% a week, and reads +32.06% over 12 months on
+      its row, red. A degen sees the same coin red on Dilution and "passes all 6 gates" side by side.
+    steps:
+      - 'GET https://cymetica.com/api/v1/gem-screener -> degen.shortlist holds parent#solv-protocol; apps[solv-protocol].dilution.week_pct 0.7114'
+      - 'GET https://cymetica.com/api/v1/supply-analyzer/batch/gem-screener -> items[token.slug=solv-protocol].tiles.dilution_12m.pct 32.06'
+      - 'GET https://cymetica.com/gem-screener/app?view=apps -> the SUPPLY column tooltip: "new tokens in the next 12 months / circulating supply · red at 25% or more, green under 5%"'
+    body: >
+      Which threshold is right is yours: align the gate with the column (25% a year is about 0.48% a week),
+      or keep both and say on the pick which one it passed and that the 12-month figure is red. Filed as
+      the same class as the two "hot" readings on the Sectors tab, which you fixed. Our check reads the
+      shortlist, the batch and the page's stated red line anonymously and fails while a pick is at or over
+      that red line; it passes when none is.
+
+  - key: gem-screener-two-retail-figures
+    findings:
+      - CYM-the_altseason_panel_names_one_retail_figure
+    severity: medium
+    category: logic
+    url: https://cymetica.com/gem-screener/app
+    title: >-
+      Gem Screener altseason panel: "Retail" shows 20/100 on its tile and 48/100 under euphoria, two different
+      measures under one name; the index uses the second
+    expected: >
+      A figure called retail on the altseason panel is one figure, or the two are named apart so a reader
+      knows which one the index uses.
+    actual: >
+      Read on 2026-10-15. The Retail tile shows 20/100 "asleep" (components.retail.value 19.7, version
+      retail-v4). The "Is the market euphoric?" line shows "retail by dollar volume 48/100"
+      (components.retail.euphoria_retail 47.7), and the index's euphoria (48.3) is built on that one, not on
+      the tile. Your own retail-v4 backtest in the same object reads verdict fail (B1, B2).
+    steps:
+      - 'GET https://cymetica.com/api/v1/gem-screener/altseason -> altseason.components.retail: version retail-v4, value 19.7, verdict asleep, euphoria_retail 47.7, backtest.verdict fail'
+      - 'GET https://cymetica.com/gem-screener/app -> Expand the altseason panel: tile "RETAIL 20/100 asleep"; line "retail by dollar volume 48/100 · Bitcoin heat 49/100"'
+    body: >
+      Two fixes would do: name them apart (for example "Retail turnover (v4)" on the tile and "Retail $
+      volume, used by the index" on the line), or use one measure in both places. Our check reads both
+      fields and fails while both are labelled retail and differ by more than 10 points.
+
+  - key: gem-screener-next-cliff-contradicts-its-record
+    findings:
+      - CYM-a_next_cliff_lies_inside_the_window_its_own_unlock_record_counts
+    severity: medium
+    category: logic
+    url: https://cymetica.com/api/v1/gem-screener/coins/kinetiq
+    title: >-
+      Gem Screener: Kinetiq's next unlock cliff (12.9M KNTQ on 2026-10-27) falls inside a 30-day window its own
+      record counts as 0 tokens; the Supply Analyzer puts the same tranche on 2026-11-28
+    expected: >
+      A coin's next cliff and its own unlock counts agree: a cliff inside the next 30 days is counted in
+      next30_tokens, and the Gem Screener and the Supply Analyzer date the same tranche the same day.
+    actual: >
+      Read on 2026-10-15. /api/v1/gem-screener, apps[kinetiq].unlock: as_of 2026-10-08 06:41 UTC,
+      next30_tokens 0, next90_tokens 25,833,333, next_cliff 12,916,667 KNTQ at 2026-10-27 19:19 UTC (19.5
+      days after as_of). The Supply Analyzer batch the coin detail reads dates the same 12,916,666.67 KNTQ
+      (Core Contributors 9.79M, Investors 3.125M) on 2026-11-28 00:00 UTC. It is 1 of 17 rows with a cliff;
+      on 9 others the two sources sit up to 21 hours apart, which moves the date shown by one day (SOLV:
+      2026-10-18 04:10 in the coin API, Oct 19 on the page).
+    steps:
+      - 'GET https://cymetica.com/api/v1/gem-screener -> apps[key=parent#kinetiq].unlock: as_of 1791441697, next30_tokens 0, next_cliff.ts 1793128773, tokens 12916667'
+      - 'GET https://cymetica.com/api/v1/supply-analyzer/batch/gem-screener -> items[token.slug=kinetiq].next_unlock.ts 1795824000, tokens 12916666.67'
+    body: >
+      One of the two dates is wrong, and the record's own next30_tokens agrees with the Supply Analyzer's.
+      Our check reads the snapshot anonymously and fails while any row's next cliff lies inside a window its
+      own record counts as 0; it passes when none does.
+
+  - key: gem-screener-unlock-countdown-stale
+    findings:
+      - CYM-an_unlock_countdown_counts_from_the_moment_it_is_served
+    severity: low
+    category: logic
+    url: https://cymetica.com/gem-screener/app?coin=solv-protocol
+    title: >-
+      Gem Screener / Supply Analyzer: the "in N days" unlock countdown is counted from the last refresh, not
+      from when it is served (56 of 57 rows, about 0.8 days long; SOLV "Oct 19 · in 5 days" on Oct 15)
+    expected: >
+      "In N days" beside an unlock date is the time from the moment it is shown to that date.
+    actual: >
+      Read on 2026-10-15. /api/v1/supply-analyzer/batch/gem-screener states next_unlock.days beside
+      next_unlock.ts; at the batch's own as_of the two differ by about 0.84 days on 56 of 57 dated rows
+      (OSMO 29.5 stated against 28.66, DBR 3.5 against 2.66). On the coin detail SOLV reads "Oct 19 · in 5
+      days" on Oct 15 at 06:04 UTC; Oct 19 00:00 UTC was 3.75 days away.
+    steps:
+      - 'GET https://cymetica.com/api/v1/supply-analyzer/batch/gem-screener -> as_of; items[].next_unlock {ts, days}; compare days with (ts - as_of) / 86400'
+      - 'GET https://cymetica.com/gem-screener/app?coin=solv-protocol -> Supply card: "Next unlock Oct 19 · in 5 days"'
+    body: >
+      Counting from the moment the page renders (or from the batch's as_of) would fix it. Low, because the
+      date beside it is right. Our check fails while a countdown is more than half a day off its own date.
+
 footer: >
   Reported by an independent QA agent. Scope of this work: verification of the
   REST API, MCP, the machine-readable discovery surfaces and the pages built on
