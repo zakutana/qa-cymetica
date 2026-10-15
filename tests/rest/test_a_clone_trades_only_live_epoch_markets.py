@@ -62,10 +62,12 @@ def test_a_clones_perpetual_markets_are_live_five_minute_markets(rest_anon, rest
     if mine.status_code != 200 or not isinstance(mine.json(), list):
         raise Inconclusive(f"my-clones answered HTTP {mine.status_code}")
     clones = [c for c in mine.json() if isinstance(c, dict) and c.get("id")][:MAX_CLONES]
-    judged, wrong, dead_all = 0, [], set()
+    judged, wrong, dead_all, unread = 0, [], set(), []
     for clone in clones:
         profile = _profile(rest_trusted, clone["id"])
         if not profile or not isinstance(profile.get("settings"), dict):
+            # Counted, never dropped: a pass may not rest on the clones it could not read (A01).
+            unread.append(clone["id"][:8])
             continue
         perp = switched_on(profile["settings"])["perpetual"]
         if not perp:
@@ -79,6 +81,9 @@ def test_a_clones_perpetual_markets_are_live_five_minute_markets(rest_anon, rest
                           "trades_summary": profile.get("trades_summary"), "dead": dead})
     if not judged:
         raise Inconclusive("no clone of ours states a perpetual market list; nothing judged")
+    if unread and not wrong:
+        raise Inconclusive(f"{len(unread)} of {len(clones)} clone profiles could not be read ({', '.join(unread)}); "
+                           f"the {judged} read were clean, which does not make the rest clean")
     ex = wrong[0] if wrong else None
     conclude(Measurement(
         verdict="failed" if wrong else "passed",
@@ -89,7 +94,7 @@ def test_a_clones_perpetual_markets_are_live_five_minute_markets(rest_anon, rest
                 f"all {judged} paper clones switch on only live 5-minute markets ({', '.join(live)})"),
         left={"clones_with_dead_markets": len(wrong)},
         right={"clones_with_dead_markets": 0},
-        population={"live": live, "judged": judged, "wrong": wrong[:6]},
+        population={"live": live, "judged": judged, "wrong": wrong[:6], "unread": unread},
         sources={"live": LIVE, "settings": f"{PREFIX}/{{id}}/profile settings.perpetual_markets",
                  "contract": "llms.txt: batch-status lists the live 5-minute markets"},
         claim_id=CLAIM))

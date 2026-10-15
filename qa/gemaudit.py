@@ -1276,7 +1276,11 @@ def runrate_factor_breaches(snap: dict, stated: dict[int, float], *, tol: float 
         if rr.get("basis") != "30d" or not value or not revenue or revenue <= 0:
             continue
         checked += 1
-        cov = num(rr.get("cov30"))
+        # The days the row's own series holds in the window, where it carries one; its claimed
+        # cov30 otherwise. A cov30 below the days present would inflate the multiplier and pass
+        # (A13, deep pass 2026-10-15); coverage_breaches bounds cov30 only from above.
+        held = _present_days(a)
+        cov = held if held is not None else num(rr.get("cov30"))
         expected = 365.0 / cov if daily and cov and 0 < cov < 30 else want
         ratio = value / revenue
         if abs(ratio / expected - 1.0) > tol:
@@ -1305,6 +1309,18 @@ def dilution_band_breach(meta: dict | None) -> dict | None:
     levels = meta.get("levels") or {}
     return {"caution_line": caution, "red_line": red,
             "caution_n": levels.get("caution"), "red_n": levels.get("red")}
+
+
+def _present_days(app: dict, window: int = 30) -> int | None:
+    """How many of the last `window` days the row's own `rev_series` holds, counted back from the
+    series' last day (a day present at 0 has data); None when the row carries no series."""
+    day = 86400
+    days = {int(p[0]) for p in app.get("rev_series") or []
+            if isinstance(p, (list, tuple)) and len(p) == 2 and num(p[0])}
+    if not days:
+        return None
+    last = max(days)
+    return sum(1 for i in range(window) if last - i * day in days)
 
 
 def coverage_breaches(snap: dict, *, window: int = 30) -> dict:

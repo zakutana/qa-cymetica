@@ -30,6 +30,10 @@ def _check():
         REPO / "tests" / "rest" / "test_a_tradeable_card_can_be_priced.py")
     mod = importlib.util.module_from_spec(spec)
     spec.loader.exec_module(mod)
+    # The refusals below are stamped 2026-10-12; the check reads them as of that evening, so its
+    # 48 h age bound (R01, deep pass 2026-10-15) judges them as the day they happened.
+    from datetime import datetime, timezone
+    mod.NOW = lambda: datetime(2026, 10, 12, 20, 0, tzinfo=timezone.utc)
     return mod
 
 

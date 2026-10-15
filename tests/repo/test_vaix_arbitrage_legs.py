@@ -49,3 +49,7 @@ def test_a_book_of_the_wrong_shape_is_unreadable_not_clean():
     assert excluded_legs([]) is None
     assert excluded_legs({"arbitrage": "base", "excluded_venues": EXCLUDED}) is None
     assert excluded_legs({"arbitrage": ARB, "excluded_venues": ["base"]}) is None
+    # B08, deep pass 2026-10-15: an arbitrage block whose leg keys are renamed is a book we can no
+    # longer read, not a clean one.
+    renamed = {"buy_venue": "base", "sell_venue": "ethereum", "buy_price": 1.0, "sell_price": 2.0}
+    assert excluded_legs({"arbitrage": renamed, "excluded_venues": EXCLUDED}) is None

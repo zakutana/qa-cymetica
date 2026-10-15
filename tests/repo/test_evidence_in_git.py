@@ -161,8 +161,10 @@ def test_no_file_in_git_nears_the_size_github_refuses():
     growing up to 20 MB a day -- was 87 MB in HEAD on 2026-10-11, a day or two
     from a refused push at the end of a deep pass, the one step nothing runs
     after. Half the hard limit is the ceiling, so the day it is crossed is a
-    red test and not a push that fails at night. Read from HEAD: that is what
-    a push sends.
+    red test and not a push that fails at night. Read from HEAD -- and, since
+    a push sends every commit since upstream, not only the last one, every blob
+    of those commits against the hard limit (B07, deep pass 2026-10-15: a 120 MB
+    file committed and shrunk a commit later passed a HEAD-only read).
     """
     ceiling = 50 * 1024 * 1024
     out = subprocess.run(["git", "ls-tree", "-r", "-l", "HEAD"], cwd=REPO,
@@ -176,6 +178,20 @@ def test_no_file_in_git_nears_the_size_github_refuses():
             big.append(f"{path} {int(size) / 1e6:.1f} MB")
     assert not big, (f"{len(big)} file(s) in HEAD over 50 MB, half of what "
                      f"GitHub accepts: {big}")
+
+    hard = 100 * 1024 * 1024
+    objects = subprocess.run(["git", "rev-list", "--objects", "@{upstream}..HEAD"], cwd=REPO,
+                             capture_output=True, text=True, encoding="utf-8")
+    if objects.returncode != 0:
+        return                      # no upstream (a fresh clone): HEAD above is all a push sends
+    sized = subprocess.run(["git", "cat-file", "--batch-check=%(objecttype) %(objectsize) %(rest)"],
+                           cwd=REPO, input=objects.stdout, capture_output=True, text=True,
+                           check=True, encoding="utf-8").stdout
+    refused = [f"{rest} {int(size) / 1e6:.1f} MB" for kind, size, rest in
+               (line.split(" ", 2) + [""] * (3 - len(line.split(" ", 2))) for line in sized.splitlines())
+               if kind == "blob" and size.isdigit() and int(size) > hard]
+    assert not refused, (f"{len(refused)} blob(s) in commits not yet pushed are over 100 MB, which "
+                         f"GitHub refuses whatever HEAD holds now: {refused}")
 
 
 @qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")

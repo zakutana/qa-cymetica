@@ -163,6 +163,11 @@ def test_nexus_answer_markers_are_true_and_leave_the_answer_usable(rest_anon, re
                          for r in rows_ if isinstance(r, dict)}
         except ValueError:
             pass
+    if mine.status_code != 200 or not instances:
+        # A08, deep pass 2026-10-15 (rule 8): without our bot ids a marker on one of them cannot be
+        # seen, so a pass would rest on a read that failed.
+        raise Inconclusive(f"{MY_CLONES} answered HTTP {mine.status_code} with "
+                           f"{len(instances)} bot id(s); a marker on our own bot cannot be judged")
 
     found = misfires(live, spec, instances)
     bad = {k: v for k, v in found.items() if k != "markers" and v}

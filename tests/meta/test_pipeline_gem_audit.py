@@ -413,6 +413,13 @@ def _the_derived_figures_are_held_to_their_definitions():
         "a 24-day row annualised as if it had 30 passed")
     assert len(g.runrate_factor_breaches(_snapshot([sparse]), {30: 12.0})["breaches"]) == 1, (
         "coverage scaling applied under a stated 'x 12', which is a sum, not a day's average")
+    # A13, deep pass 2026-10-15: the divisor is the days the row's own series holds, not the cov30
+    # it claims -- 30 days present (6 at $0) under a claimed 24 inflates the run-rate by a quarter.
+    full = [[1_790_000_000 + i * 86400, 0.0 if i < 6 else 100.0 / 24] for i in range(30)]
+    understated = _app("a#5", "UND", 1.0, rev30d=100.0, rev_series=full,
+                       runrate={"value": 1520.83, "basis": "30d", "cov30": 24})
+    assert len(g.runrate_factor_breaches(_snapshot([understated]), {30: 365 / 30})["breaches"]) == 1, (
+        "a row whose series holds all 30 days was annualised over the 24 it claimed")
 
     # a figure shown as 100 % to holders while their holders revenue exceeds the total
     over = _app("a#2", "OVR", 1.0, holders30d=150.0, total30d=100.0, holders_share=1.0)

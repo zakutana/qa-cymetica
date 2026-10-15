@@ -37,6 +37,7 @@ the report only as the earlier wording of the same refusal.
 from __future__ import annotations
 
 import importlib.util
+from datetime import datetime, timedelta, timezone
 from pathlib import Path
 
 from qa.marks import Inconclusive, SafetyTier, qa
@@ -44,6 +45,20 @@ from qa.measure import Measurement, conclude
 
 REPO = Path(__file__).resolve().parent.parent.parent
 CARD = "/api/v1/event-cards/{card}"
+# How old a refusal may be and still say something about the card's tradeable_now today.
+MAX_REFUSAL_AGE = timedelta(hours=48)
+
+
+def NOW() -> datetime:  # noqa: N802 -- a hook a test replaces to read a dated diary as of its day
+    return datetime.now(timezone.utc)
+
+
+def _when(value):
+    try:
+        moment = datetime.fromisoformat(str(value).replace("Z", "+00:00"))
+    except ValueError:
+        return None
+    return moment if moment.tzinfo else moment.replace(tzinfo=timezone.utc)
 
 # Both wordings seen, and nothing broader: a refusal of another kind (a stale
 # card, a closed market, "not found") is the gate working or another defect.
@@ -121,6 +136,14 @@ def test_a_card_that_reads_tradeable_now_can_be_priced(rest_trusted):
             unmeasured.append(f"{card_id}: its newest buy {latest['id']} came back "
                               f"{latest['status']} {latest['response']}, "
                               f"not an unpriced refusal on a tradeable read")
+            continue
+        refused_at = _when(latest.get("at"))
+        if refused_at is None or NOW() - refused_at > MAX_REFUSAL_AGE:
+            # R01, deep pass 2026-10-15: today's tradeable_now joined to a refusal days old says
+            # nothing about now -- after their fix the card reads tradeable BECAUSE it prices. An
+            # old refusal is unmeasured until a fresh buy (the laboratory retries) says either way.
+            unmeasured.append(f"{card_id}: its newest buy {latest['id']} was refused at "
+                              f"{latest.get('at')}, more than {MAX_REFUSAL_AGE} ago; a fresh buy is owed")
             continue
         response = rest_trusted.get(CARD.format(card=card_id))
         if response.status_code != 200:

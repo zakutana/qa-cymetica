@@ -72,7 +72,12 @@ def test_every_company_route_llms_txt_names_is_in_the_openapi(rest_anon):
         raise Inconclusive(f"{LLMS} names no route under {PREFIX}; the entry moved or the app is gone")
     spec = _spec(rest_anon, OPENAPI)
     missing = missing_from(routes, spec)
-    small = _spec(rest_anon, OPENAPI_SMALL)
+    # /openapi.json is context only: a failed read of it must not turn a measured FAIL on
+    # /openapi-public.json into Inconclusive (A14, deep pass 2026-10-15).
+    try:
+        small = _spec(rest_anon, OPENAPI_SMALL)
+    except Inconclusive:
+        small = {"paths": {}}
     in_small = [r for r in routes if r not in missing_from(routes, small)]
     named = [_label(r) for r in routes]
     absent = [_label(r) for r in missing]

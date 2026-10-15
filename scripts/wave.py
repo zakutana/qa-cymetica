@@ -45,7 +45,10 @@ STOP_PCT = 10.0
 # all; on 2026-10-08 the sampler read 34 of ours trading at once, so 25 is not their
 # limit and held every resume at "no free slot" (deep pass, R01). 50 is the one number of
 # theirs our data does not contradict; past it the platform's own refusal stops a wave.
-MAX_TRADING = 50
+# 2026-10-15 (REPLY-0175, verified in llms.txt the same day): a paid NEXUS plan's paper caps are
+# now 100 TRADING and 200 in total including paused ones; at 50 the grid starved at half of it
+# (B09, deep pass 2026-10-15). The total cap is still the platform's refusal to read.
+MAX_TRADING = 100
 BTC_PROXY = "a4a5b71e-de11-4805-b8a3-ed9c3f8f8161"
 
 

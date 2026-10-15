@@ -149,6 +149,11 @@ def test_the_discovery_tool_does_not_list_what_the_rest_list_keeps_internal(rest
     if unsettled and not confirmed:
         raise Inconclusive(f"the first read saw internal launches in the feed on chain(s) {unsettled}, and "
                            f"the second look could not read them again; neither a leak nor its absence")
+    if unmeasured and not confirmed:
+        # A05, deep pass 2026-10-15: a chain the first read could not judge is unread, not clean --
+        # the chain that held the defect (4663) failing its read must not leave a pass behind.
+        raise Inconclusive(f"no leak on the {len(first)} chain(s) judged, but {len(unmeasured)} could not be "
+                           f"judged: {unmeasured[:3]}")
 
     def line(chain, v):
         return (f"chain_id={chain}: REST lists {v['rest_public']} (default) or {v['rest_with_internal']} "

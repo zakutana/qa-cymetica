@@ -137,6 +137,11 @@ def test_the_movers_boards_rank_every_card_of_the_listing(rest_anon):
     if pages is None:
         raise Inconclusive(f"{PAGE}'s board script builds its request ({urls}) in a way whose cards "
                            f"cannot be read from the text; re-point the check")
+    if pages and not re.search(r"\b(total|has_more|hasMore|next)\b|\.length\s*<", script):
+        # A04, deep pass 2026-10-15: `for (o of [0, 100]) fetch(...offset=' + o)` builds an offset
+        # and reads 200 of 641. Paging counts only when the loop stops on the listing's own end.
+        raise Inconclusive(f"{PAGE}'s board script builds an offset ({urls}) but nothing in it stops on "
+                           f"the listing's end (total, has_more, next, a short page); re-point the check")
     if pages:
         conclude(Measurement(
             verdict="passed",
