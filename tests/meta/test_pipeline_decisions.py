@@ -335,6 +335,10 @@ CODE_QUOTES = [
      "ef4d9d80bc06d1298e03afb93fa1103541d6fabb0ae4d807f6c4bf2f18867dcb"),
     ("qa/surface.py", "2026-09-12",
      "aaff8ea0c2f536368b68993b2c61e4d5867af49595e5b2eb45267c8707545a58"),
+    # The company's first department (2026-10-13). Their words as typed in that session
+    # (transcript ed06da44, 19:10 UTC), "malezene" included; pinned 2026-10-15 at their word.
+    ("scripts/company.py", "2026-10-13",
+     "413f4f0c09ecbeb79a40720f36a5686c2d1c58ebc5c55ee34dff049349fd8206"),
     ("scripts/fomo_watch.py", "2026-09-14",
      "a5df6c2930cd102f5127a4644d2dd16be5d4dbfb8cb26425c23bce0202b21018"),
     ("scripts/lab.py", "2026-09-11",

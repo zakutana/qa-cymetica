@@ -4,7 +4,7 @@
     python scripts/company.py department --company ID --body-file F [--confirm]
     python scripts/company.py mine           their record of our company (a read)
 
-[operator 2026-10-13] *"zkusime to zaloz oddeleni pro testing a rekni mu at loguje nalezene bugy
+[operator 2026-10-13] *"zkusime to zaloz oddeleni pro testing a rekni mu at loguje malezene bugy
 jako my at mame odmeny"*, then *"Ne ser na to proste to jen zaloz to je experiment to pak smazem
 stejne"*. So: one company, the Testing department first, the others added when they say so.
 
