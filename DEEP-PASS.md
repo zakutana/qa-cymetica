@@ -1,14 +1,16 @@
-# Deep pass — 2026-10-11 večer (Opus 5.5 xhigh)
+# Deep pass — 2026-10-15 (Opus 5.5 xhigh)
 ## Opraveno
-- **33 chyb opraveno ze 43 podezření (33 potvrdili aspoň 2 ze 3 posuzovatelů, 1 menšinové, 9 zamítnutých).** 17 kontrol už nehlásí „v pořádku“ na to, co nepřečetly; laborka počítá prodanou pozici za cenu prodeje, nekupuje znovu kartu, jejíž příkaz selhal, a zkouší znovu bota, kterého se nepodařilo spustit. Archiv FOMO signálů v gitu je po dnech, 87 MB → 5,8 MB.
-- **Ověřovací běh celé sady s předem zapsaným výběrem: 1 602 prošlo, 23 selhalo, 13 přeskočeno; 110 reportů je ověřeně opraveno.**
+- **31 chyb opraveno ze 38 podezření (32 potvrdili aspoň 2 ze 3 posuzovatelů, 2 menšinová, 4 zamítnutá, 1 nechávám tobě).** Kontroly už nehlásí „v pořádku“ na to, co nepřečetly; Gem Screener kontroly uznávají opravy, které jsme jim navrhli (#206–#209 teď procházejí); laborka počítá se stropem 100 botů; firma řekne manažerovi, když jí odmítnou předání. Z dohodnuté práce hotové 2 kontroly (#141, #202).
+- **Ověřovací běh celé sady s předem zapsaným výběrem: 1 658 prošlo, 23 selhalo, 19 přeskočeno; 112 reportů je ověřeně opraveno.** 10 upravených kontrol je připnutých a pohnou se při příštím běhu.
 ## Co odešlo Cymetice
-- **12 ověření: 7× opraveno (#112, #136, #178, #179, #182, #183, #184), 5× pořád selhává (#52, #62, #138, #159, #174), z toho 4 opravují naše dřívější „opraveno“.** Další 3 odejdou při příštím běhu (brzda 12 na běh).
+- **3 ověření: #103 opraveno, #152 a #122 pořád selhávají a obě opravují naše dřívější „opraveno“; dalších 8 zdržuju, dokud nevyloučím chybu na naší straně (#134, #132, #137, #46, #112, #136, #93, #192).**
 ## Změněná pravidla
-- **Archiv FOMO signálů se ukládá po dnech a žádný soubor v gitu nesmí přesáhnout 50 MB.** Jinak by zítřejší push spadl na limitu GitHubu (100 MB); 3 ze 3 čtenářů: nic neoslabuje.
-- **Žádné oddělení firmy nepíše Cymetice samo; desk ti připraví text a pošleš ho ty.** Tak to už říkalo CLAUDE.md i skill laborky, kód to dovoloval; 3 ze 3 čtenářů: nic neoslabuje.
+- **Strop vlny botů je 100 místo 50, jak teď píše Cymetica; vlna 101 botů se pořád odmítne dřív, než cokoli odejde.** 3 ze 3 čtenářů: nic neoslabuje.
+- **Šest hlídacích testů jsem zpřísnil, aby uměly selhat: odmítnuté předání ve firmě, nespustitelný pracovník, stropy botů, pauza desku, okno cen v lize.** 3 ze 3 čtenářů: nic neoslabuje. Úpravu tvého odstavce z 13. 10. v testu ligy jsem nepřijal (1 ze 3), zůstává doslova.
 ## Čeká na tebe
-- **Pošli Cymetice na Telegram opravu k reportu #156 (STG) a k „většina prošla“ ze 4. 10. (prošla polovina).** Text máš v chatu; kopii do a2a mi zablokovalo povolování, napiš „pošli a2a“, jestli ji chceš.
-- **Verdikt nového Gem Screeneru (ET-29379) až po 15. 10.**
-## Týden
-- **Firmu zatím nezapínej: čtenáři týdne našli 8 děr, které opravím před prvním startem (zápis „odesláno“ za tebe, cizí tikety, špinavý strom, zaseknutý tick); a náš sběr FOMO dat poslal 9. 10. Cymetice 48 557 dotazů, hlavně na nezdokumentovanou adresu, takže dostane denní strop.** Posuzovatelé pořád škrtají (9 ze 43), trojí kontrola se vyplácí; 1 454 testů hlídá nás, 165 měří Cymetiku.
+- **Pojistka na tvoje citáty v kódu hlídá u každého data jen první citát, druhý citát téhož dne jde přepsat bez povšimnutí.** Je to test, který drží tvoje rozhodnutí, a ten deep pass sám neupravuje; napiš „oprav pojistku“ a udělám to.
+- **Menšinový názor (1 ze 3): kontrola zásob přeskočí coin s jakýmkoli příznakem, i když měla jen ten s utajeným oběžným množstvím.** Dva čtenáři to nevidí, nechávám beze změny.
+- **Menšinový názor (1 ze 3): kontrola turnajového závodu nepozná, že běžec přestal přidávat body.** Dva čtenáři to nevidí, nechávám beze změny.
+- **Dvě navržené úpravy laborky čekají na tvoje kliknutí: počítat otevřené pozice event karet ve verdiktu bota, a přizpůsobit laborku automatickému obnovení botů a stropům 100/200.**
+- **Spec Gem Screeneru z 5. 10. (Launchpady, vyřazené appky, příjmy a buybacky, velké peněženky) je hotový a čeká na tvoje slovo k podání.** STONK, který tehdy chyběl, už v Gem Screeneru je.
+- **Připomínka z 4. 10.: další spec pro Supply Analyzer o stakingu a zámcích (dnes ho zná u 68 z 244 coinů).**

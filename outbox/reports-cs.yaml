@@ -9,6 +9,7 @@ reports:
   103: "Fondy: historie, jak ji čte jejich poradce, nezačíná při založení fondu (AIB-DATA-CENTERS o 3,3 %)"
   112: "Zakázka ET-26036 přesáhla termín a nic nedodali"
   121: "Nexus posílá agenta na adresu, kterou dokumentace nezná"
+  122: "Event karty: nástroj pro agenty a REST se neshodnou, jestli jde karta zrovna obchodovat"
   123: "Vytvoření hlášení vrátí chybu 500, přestože hlášení vznikne"
   130: "50 čtecích adres, které volají veřejné stránky, chybí ve veřejné dokumentaci rozhraní"
   131: "Ceny: neznámé aktivum vrátí stavový kód, který dokumentace nezná"

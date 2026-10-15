@@ -2,7 +2,7 @@
  "run": "deep-pass-2026-10-15",
  "at": "2026-10-15T13:05:00+00:00",
  "previous_at": "2026-10-11T19:31:00+00:00",
- "at_finished": null,
+ "at_finished": "2026-10-15T17:45:46+00:00",
  "start_commit": "ee77a74f7840cd8151deadd9f41157d31d72ea5d",
  "gaps": [
   {
@@ -584,7 +584,17 @@
    "why": "1c vote t1 yes, t2 yes, t3 no: it touches an operator paragraph, so it did not land; reverted, an untagged note after the paragraph says what CO_RULES holds"
   }
  ],
- "next": null,
+ "next": [
+  "Kód pro firmu (session/deep pass, testy napřed): commit.py a záznam běhu (OP-0009); league.py okno /prizes (OP-0012); desk H2 čtení (OP-0013); clock a krok desku (T-0040); BTC rozpětí verdiktu (T-0039); manifest v cizím commitu (T-0038); body 9 a 11 crew-before-c9.",
+  "Laborka v3 (docs/laborator-plan.md) postavená, P3, P4, P5, P6, P7 čekají na tahy: v prvním `python scripts/lab.py launch NEX-0137`; outsider až po přihlášení `claude` a `outsider.py probe`. Zbytek výzkumu botů: docs/bots-research-plan.md „Zbývá\".",
+  "FOMO sběr: 9. 10. 48 557 dotazů na cymetica.com, 39 784 na nezdokumentované /clones/memecoin-terminal/search; REPLY-0030 žádá žádnou zátěž. Denní strop ve fomo_watch a denní strop requestů v patrolu (dnes jen špička za minutu). docs/crew-before-c9.md bod 10; bod 9 grid.",
+  "Sledovat: #142, #136, #121, #51; FOMO #762 (path_coverage Robinhood 0 → 0,9 do ~13. 10., Solana 0,011). #171/#173/#174 selhávají i po opravě. Liga jen na slovo/`/loop`. ET-30676: SaaSHub čeká na review, 3 formuláře u nich; PR awesome-web3 #831 otevřený.",
+  "Requesty (operátor): ET-31278 Gem Screener 4-6 PASS, body 1-3 číst po snapshotu 14.10. 09:35 UTC (docs/et-31278-verification.md), pak loga; Company office 34/34 a Tournaments panel (outbox/tournaments-control, k podání) po dodání ověřit; ET-31300 1 FAIL live trades, verdikt jeho.",
+  "Než půjde FAIL (PRE-0279 je drží): #134 ztráta 100 % proti stopu 5 % -- není to reset papíru nebo auto-resume?; #132/#137 a2a inbox má plných 200 zpráv, číst dál; #46 anonym vidí 37 nástrojů nad úrovní -- zavolat je bez klíče (seznam není přístup).",
+  "Po sweepu PRE-0274 opravit naše kontroly, než půjde FAIL: #112/#136 (re-ship po fail verdiktu), #192 (čte log před opravou), #93 (přečíst jejich pravidlo), karta v pozici (jen otevřené pozice), FOMO kalibrace (OverflowError).",
+  "ET-31267 (Supply Analyzer + Supply karta a sloupec v Gem Screeneru, 17 řádků, 4 obrázky): spec zkontrolován, čeká na BB-ACCEPT; po dodání ověřit 17 řádků proti živým datům (HYPE, ARB, PHAR, coiny bez harmonogramu = „—“).",
+  "Agent Tournaments: ET-31263 (flash a ET10 stoly, Top agents, Pick the winner, vstup pro agenty) čeká na BB-ACCEPT, po dodání ověřit 6 řádků; ET-30773 Results ověřit po 18. 10. 16:47 UTC (stůl 2). Detail: docs/et-30773-verification.md."
+ ],
  "retrospective": {
   "last": "2026-10-11",
   "done": false
@@ -613,14 +623,14 @@
     "t3": "no"
    },
    "test": "tests/meta/test_pipeline_wave.py::test_what_stops_a_wave_and_what_only_stops_one_bot",
-   "commit": null,
+   "commit": "398ed5b9",
    "handover": true
   }
  ],
  "meta_tests": {
   "start": 839,
-  "end": null,
+  "end": 839,
   "reason": null
  },
- "finished": false
+ "finished": true
 }
