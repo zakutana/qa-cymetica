@@ -39,10 +39,16 @@ does: 30 days, so the stretch of 09-23..25 leaves `30d` around 10-23 to 10-25. A
 is the window healing, not a repair; a repair is a backfill, and it shows before then. The same
 follows for any future hole, which this check will read for 30 days.
 
+**Their fix (#202, REPLY-0168, 2026-10-15).** They do not fill in readings that were never taken;
+instead `index-history` lists every gap as `gaps: [{from, to, hours}]` beside a `gaps_note` ("A gap
+is a stretch with no recorded index reading for this card. No values are filled in for it"). Read
+live that day, a4a5b71e's 30d history declares exactly the hole above. So the check holds them to
+that: a hole over MAX_GAP_HOURS that the same response does NOT list is the defect; a declared one
+is the published behaviour (`declared`). Repaired by the deep pass of 2026-10-15, 0b.
+
 NOT asserted: why (a recorder that stopped, a data job that failed), that every card must have a
 point every 3 h, or anything about cards with a stock leg, whose index is allowed to be still while
-their market is shut. If Cymetica publishes that a card's history may have holes, this check is
-retired by an event.
+their market is shut.
 
 SAFE: GETs, anonymous.
 """
@@ -92,6 +98,27 @@ def widest_gap(points) -> tuple[float, str, str] | None:
     return ((best[1][0] - best[0][0]).total_seconds() / 3600.0, best[0][1], best[1][1])
 
 
+DECLARE_SLACK_HOURS = 1.0
+
+
+def declared(hole_from, hole_to, gaps) -> bool:
+    """A hole between two points is declared when one entry of the response's `gaps` list starts
+    and ends within DECLARE_SLACK_HOURS of it: the list names that stretch, not a part of it."""
+    a, b = _when(hole_from), _when(hole_to)
+    if a is None or b is None or not isinstance(gaps, list):
+        return False
+    for gap in gaps:
+        if not isinstance(gap, dict):
+            continue
+        ga, gb = _when(gap.get("from")), _when(gap.get("to"))
+        if ga is None or gb is None:
+            continue
+        if (abs((ga - a).total_seconds()) <= DECLARE_SLACK_HOURS * 3600
+                and abs((gb - b).total_seconds()) <= DECLARE_SLACK_HOURS * 3600):
+            return True
+    return False
+
+
 def _crypto_share(basket) -> float:
     legs = [leg for leg in basket or [] if isinstance(leg, dict)]
     total = sum(float(leg.get("weight") or 0) for leg in legs)
@@ -132,7 +159,8 @@ def test_live_crypto_card_index_history_has_no_multi_day_hole(rest_anon):
         if read.status_code != 200:
             unread.append(f"{str(cid)[:8]}: HTTP {read.status_code}")
             continue
-        points = (read.json() or {}).get("points")
+        body = read.json() or {}
+        points = body.get("points")
         if not points:
             empty.append(str(cid)[:8])
             continue
@@ -143,12 +171,14 @@ def test_live_crypto_card_index_history_has_no_multi_day_hole(rest_anon):
         series[cid] = sorted(t for t in (_when(p.get("t")) for p in points) if t is not None)
         judged.append({"id": cid, "title": (card.get("title") or "")[:60], "points": len(points),
                        "widest_gap_hours": round(gap[0], 1) if gap else 0.0,
-                       "from": gap[1] if gap else None, "to": gap[2] if gap else None})
+                       "from": gap[1] if gap else None, "to": gap[2] if gap else None,
+                       "declared": bool(gap) and declared(gap[1], gap[2], body.get("gaps"))})
     if not judged:
         raise Inconclusive(f"no open crypto card had a readable 30d history ({len(subjects)} open, "
                            f"empty {empty}, unread {unread[:3]})")
 
-    holes = [j for j in judged if j["widest_gap_hours"] > MAX_GAP_HOURS]
+    declared_holes = [j for j in judged if j["widest_gap_hours"] > MAX_GAP_HOURS and j["declared"]]
+    holes = [j for j in judged if j["widest_gap_hours"] > MAX_GAP_HOURS and not j["declared"]]
     for hole in holes:
         a, b = _when(hole["from"]), _when(hole["to"])
         # Only a card that already had history when the hole began can be a control for it.
@@ -163,13 +193,17 @@ def test_live_crypto_card_index_history_has_no_multi_day_hole(rest_anon):
     conclude(Measurement(
         verdict="failed" if holes else "passed",
         reason=(f"{len(holes)} of {len(judged)} open crypto card(s) have a hole of more than "
-                f"{MAX_GAP_HOURS:g} h in their 30-day index history while the card reads live and "
-                f"tradeable. {named}" if holes else
+                f"{MAX_GAP_HOURS:g} h in their 30-day index history that the history's own gaps list "
+                f"does not declare, while the card reads live and tradeable. {named}" if holes else
                 f"all {len(judged)} open crypto card(s) with a 30-day history kept a point within "
-                f"every {MAX_GAP_HOURS:g} h"),
-        left={"open_crypto_cards_with_a_hole": len(holes)},
-        right={"open_crypto_cards_with_a_hole": 0},
+                f"every {MAX_GAP_HOURS:g} h or declared the gap"
+                + (f" ({len(declared_holes)} declared: "
+                   + "; ".join(f"{h['id']} {h['widest_gap_hours']} h" for h in declared_holes) + ")"
+                   if declared_holes else "")),
+        left={"open_crypto_cards_with_an_undeclared_hole": len(holes)},
+        right={"open_crypto_cards_with_an_undeclared_hole": 0},
         population={"listed": len(cards), "open_crypto": len(subjects), "judged": judged,
+                    "declared_holes": [h["id"] for h in declared_holes],
                     "no_points_in_window": empty, "unread": unread},
         sources={"history": f"{HISTORY} interval=30d points[].t",
                  "list": f"{LIST} status, tradeable_now, trading_closes_at, basket[].asset_type and weight"},
