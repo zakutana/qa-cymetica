@@ -402,6 +402,17 @@ def _the_derived_figures_are_held_to_their_definitions():
     assert g.runrate_factor_breaches(_snapshot([row]), {30: 365 / 30})["breaches"] == [], (
         "the stated factor was assumed, not read")
     assert g.runrate_factor_breaches(_snapshot([row]), {})["checked"] == 0, "an unread tooltip was read as agreeing"
+    # 2026-10-15 (FUL): a day's average is taken over the days the row has, so 24 covered days
+    # annualise x 365 / 24 = 15.2083 under the same stated rule -- and a row that claims 24 days
+    # but applies 365 / 30 is still off.
+    sparse = _app("a#3", "FUL", 1.0, rev30d=100.0, runrate={"value": 1520.83, "basis": "30d", "cov30": 24})
+    assert g.runrate_factor_breaches(_snapshot([sparse]), {30: 365 / 30})["breaches"] == [], (
+        "a 24-day row annualised over its own days read as a breach of the daily-average rule")
+    wrong = _app("a#4", "BAD", 1.0, rev30d=100.0, runrate={"value": 1216.67, "basis": "30d", "cov30": 24})
+    assert len(g.runrate_factor_breaches(_snapshot([wrong]), {30: 365 / 30})["breaches"]) == 1, (
+        "a 24-day row annualised as if it had 30 passed")
+    assert len(g.runrate_factor_breaches(_snapshot([sparse]), {30: 12.0})["breaches"]) == 1, (
+        "coverage scaling applied under a stated 'x 12', which is a sum, not a day's average")
 
     # a figure shown as 100 % to holders while their holders revenue exceeds the total
     over = _app("a#2", "OVR", 1.0, holders30d=150.0, total30d=100.0, holders_share=1.0)

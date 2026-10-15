@@ -1263,6 +1263,12 @@ def runrate_factor_breaches(snap: dict, stated: dict[int, float], *, tol: float 
     want = stated.get(30)
     if want is None:
         return {"stated": None, "checked": 0, "breaches": []}
+    # Since #141's fix the page words it "a day's average over the last 30 days x 365", and since
+    # the coverage fix (a_runrate_states_only_the_days_its_revenue_has) a day's average is taken
+    # over the days the row has: on a row whose `runrate.cov30` is under 30 the multiplier on the
+    # 30-day sum is 365 / cov30, not 365 / 30. 2026-10-15: FUL, 24 days, x 15.2083 -- the stated
+    # rule, read by the check as a breach (deep pass 2026-10-15, 0b).
+    daily = abs(want - 365.0 / 30.0) < 1e-3
     checked, breaches = 0, []
     for a in snap["apps"]:
         rr = a.get("runrate") or {}
@@ -1270,9 +1276,11 @@ def runrate_factor_breaches(snap: dict, stated: dict[int, float], *, tol: float 
         if rr.get("basis") != "30d" or not value or not revenue or revenue <= 0:
             continue
         checked += 1
+        cov = num(rr.get("cov30"))
+        expected = 365.0 / cov if daily and cov and 0 < cov < 30 else want
         ratio = value / revenue
-        if abs(ratio / want - 1.0) > tol:
-            breaches.append({"row": label(a), "applied": round(ratio, 4), "stated": want})
+        if abs(ratio / expected - 1.0) > tol:
+            breaches.append({"row": label(a), "applied": round(ratio, 4), "stated": round(expected, 4)})
     return {"stated": want, "checked": checked, "breaches": breaches}
 
 
