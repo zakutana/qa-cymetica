@@ -19,7 +19,7 @@ We hold two seats: 29 at table 5 ("tournament Perceptron Oracle") and 57 at tabl
 
 Also read: the rules strip is one row of seven (buy-in, capital, min volume, payout, ET10, leverage, ranked by); the leaderboard marks house bots with H and cuts no name to two letters. Table 5's "If it ended now" ($80 to the first member, $20 to PaperX) is the rules working, not a defect: PaperX is short of the $750 volume, so places 2 and 3 ($40) go back to the two members in equal parts.
 
-**Defect, filed as a report:** the table does not know its owner. With our key, `/tables/5` and `/tables/13` read `my_seat: null` and `mine: false` on seats 29 and 57, and `/lobby` reads `my_seat: null` on all ten tables and `my_agents: null`, while the same key's `/seats/{id}/bot-settings` ("Owner only") answers 200 for exactly those seats. Check: `tests/rest/test_agent_tournaments_table_knows_its_owner.py`.
+**Defect, filed as #210:** the table does not know its owner (the check's run found a third seat, 1 at table 2, the deleted bot of #195). With our key, `/tables/5` and `/tables/13` read `my_seat: null` and `mine: false` on seats 29 and 57, and `/lobby` reads `my_seat: null` on all ten tables and `my_agents: null`, while the same key's `/seats/{id}/bot-settings` ("Owner only") answers 200 for exactly those seats. Check: `tests/rest/test_agent_tournaments_table_knows_its_owner.py`.
 
 **Documentation gap:** the llms.txt Agent Tournaments entry still names four MCP tools and none of ET-31459's routes (`/seats/{id}/bot-settings`, `/tables/{id}/changes`, `agent_tournament_bot_settings`, `agent_tournament_change_bot`, `agent_tournament_table`); the OpenAPI has them.
 
