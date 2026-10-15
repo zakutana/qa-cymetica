@@ -89,3 +89,4 @@ reports:
   207: "Gem Screener: panel altseasonu ukazuje pod jménem „Retail“ dvě různá čísla (20 a 48 ze 100)"
   208: "Gem Screener: nejbližší unlock Kinetiq padá do 30 dní, které jeho vlastní záznam počítá jako nulu"
   209: "Gem Screener: odpočet „za N dní“ do unlocku se počítá od posledního obnovení, ne od teď"
+  210: "Agent Tournaments: stůl a lobby neoznačí majiteli jeho sedadlo (my_seat null, mine false), i když bot-settings ho pozná"

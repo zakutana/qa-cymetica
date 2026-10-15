@@ -6446,6 +6446,38 @@ reports:
       Counting from the moment the page renders (or from the batch's as_of) would fix it. Low, because the
       date beside it is right. Our check fails while a countdown is more than half a day off its own date.
 
+  - key: agent-tournaments-table-knows-its-owner
+    findings: [CYM-agent-tournaments-table-knows-its-owner]
+    severity: low
+    category: logic
+    url: https://cymetica.com/api/v1/agent-tournaments/tables/13
+    title: >-
+      Agent Tournaments: /tables/{id} and /lobby answer the seat owner's API key with my_seat null and mine
+      false on the owner's own seats, while /seats/{id}/bot-settings ("Owner only") accepts the same key
+    expected: >
+      A table read with the X-API-Key that owns a seat marks that seat as the caller's: seats[].mine true or
+      my_seat naming it (both fields are in the OpenAPI schema of /tables/{table_id}), so an agent can find its
+      seat, and the seat_id the ET-31459 bot-settings routes and MCP tools take, from the table it sits at.
+    actual: >
+      Read on 2026-10-15 around 18:20 UTC with our X-API-Key. GET /api/v1/agent-tournaments/seats/57/bot-settings
+      and /seats/29/bot-settings answer 200 with our bots ("lab Wave 2 Fibonacci Phoenix" at table 13,
+      "tournament Perceptron Oracle" at table 5, both in our /my-bots), and /seats/33/bot-settings answers 403
+      not_your_seat, so the server knows which seats are ours. The same key's GET /tables/13 and /tables/5 read
+      my_seat: null and mine: false on every seat, seats 57 and 29 included. GET /lobby reads my_seat: null on
+      all ten tables and my_agents: null. Our check's run at 19:53 UTC found a third: seat 1 at table 2 ("lab
+      MACD Hunter", the deleted bot of #195) answers our key 200 in bot-settings and reads mine: false in
+      /tables/2. That also answers the question #195 left open: seat 1 is ours.
+    steps:
+      - 'GET https://cymetica.com/api/v1/agent-tournaments/seats/57/bot-settings (X-API-Key) -> 200 {"seat_id": 57, "table_id": 13, "bot": "lab Wave 2 Fibonacci Phoenix", "can_change": true, ...}'
+      - 'GET https://cymetica.com/api/v1/agent-tournaments/seats/33/bot-settings (same key) -> 403 {"code": "not_your_seat"}'
+      - 'GET https://cymetica.com/api/v1/agent-tournaments/tables/13 (same key) -> "my_seat": null; seats[] {"seat_id": 57, "bot": "lab Wave 2 Fibonacci Phoenix", "mine": false}'
+      - 'GET https://cymetica.com/api/v1/agent-tournaments/lobby (same key) -> "my_agents": null; my_seat null on every table'
+    body: >
+      An agent that did not keep the seat_id from the moment it asked for the seat cannot find it again: the
+      table and the lobby are the only lists of seats, and both say none is its own. Low, because the seat
+      routes work once the id is known. Our check asks bot-settings which member seats our key owns and fails
+      while a table marks any of them as not ours. GET requests only.
+
 footer: >
   Reported by an independent QA agent. Scope of this work: verification of the
   REST API, MCP, the machine-readable discovery surfaces and the pages built on

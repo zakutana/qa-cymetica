@@ -1,0 +1,758 @@
+{
+  "schema": 2,
+  "run_id": "run-20261015T195325Z-39067f94",
+  "started_at": "2026-10-15T19:53:36+00:00",
+  "finished_at": "2026-10-15T19:54:09+00:00",
+  "git_head": "39067f94749f0e201cb59e1893cb38a94ad76cbf",
+  "git_short": "39067f94",
+  "git_dirty": true,
+  "prereg_id": null,
+  "prereg_tag_sha": null,
+  "prereg_commit": null,
+  "platform_fingerprint": "sha256:ad94928ef5f22a36aa2697df899734afa82c885d810b4b1bb22818510dd641f1",
+  "fingerprint_parts": {
+    "/.well-known/mcp.json": "de5faa794c00ee4b1acd95029f7c8691e1b4c3f4ee939477f30e181946903300",
+    "/.well-known/agent-card.json": "a87cdcaa9ce5a846ac887dc77003d94df7007abc9c78a57bc211ae0616460800",
+    "/.well-known/agent-skills.json": "b0592b7e51942365f9c61fd46bd233118cabf591f7ff46d7387f9311b5a3a7c6",
+    "/.well-known/ai-plugin.json": "49ac70f92657106334c0845f5c1045a3ccbd06e53d54f9e7c99b6f1c6d7d370d",
+    "/.well-known/udc.json": "1ec34383ede550c71fb3e81b989b8b92b0da3ce7ccbdc497c9edf5a8fcbd6c14",
+    "/openapi.json": "01b820bba1d043d5f292b0175bff1a60a24b54fee0b238bfdc778efc2091f3fe",
+    "/openapi-public.json": "dadac42e0949b48125372bde347f80f25145745282a3b406399f52e7ea2c58d5",
+    "/llms.txt": "1a989c34089011735f1148901ecdaf258f89e1758267737e8981aa32b1be9fe7",
+    "mcp:tools/list:none": "a15676ed2541483c5738f0155663fbfc0144ce5aae84cb91b520fbd3b237a03b"
+  },
+  "fingerprint_errors": {},
+  "fingerprint_drifted": false,
+  "fingerprint_changed_parts": [],
+  "identities_present": {
+    "anon": true,
+    "trusted": true,
+    "recognized": false
+  },
+  "python_version": "3.13.13",
+  "pytest_version": "8.3.4",
+  "selector": "tests/meta/test_pipeline_check_subjects.py tests/rest/test_agent_tournaments_table_knows_its_owner.py -q --no-header --tb=short -p no:cacheprovider",
+  "selector_full": false,
+  "narrowing": [],
+  "paths": [
+    "tests/meta/test_pipeline_check_subjects.py",
+    "tests/rest/test_agent_tournaments_table_knows_its_owner.py"
+  ],
+  "allow_mutate": false,
+  "collected": [
+    "tests/meta/test_pipeline_check_subjects.py::test_a_card_that_failed_and_was_never_tried_again_still_fails_117",
+    "tests/meta/test_pipeline_check_subjects.py::test_the_buy_is_judged_by_what_the_card_said_when_it_was_placed_117",
+    "tests/meta/test_pipeline_check_subjects.py::test_a_denial_of_a_pro_forma_stretch_is_not_a_disclosure_of_one_116",
+    "tests/meta/test_pipeline_check_subjects.py::test_a_clone_refusal_that_asks_for_the_retry_it_refuses_fails",
+    "tests/meta/test_pipeline_check_subjects.py::test_a_clone_refusal_is_read_the_way_it_was_captured",
+    "tests/meta/test_pipeline_check_subjects.py::test_an_api_docs_example_missing_a_required_field_fails",
+    "tests/meta/test_pipeline_check_subjects.py::test_every_way_a_curl_can_be_written_is_read",
+    "tests/meta/test_pipeline_check_subjects.py::test_a_card_that_is_closed_on_rest_and_open_on_mcp_fails",
+    "tests/meta/test_pipeline_check_subjects.py::test_a_report_created_behind_a_500_fails_and_a_clean_run_of_twelve_passes",
+    "tests/meta/test_pipeline_check_subjects.py::test_a_paper_buy_refused_for_a_balance_it_is_not_spending_fails",
+    "tests/rest/test_agent_tournaments_table_knows_its_owner.py::test_agent_tournaments_table_knows_its_owner"
+  ],
+  "results": [
+    {
+      "nodeid": "tests/meta/test_pipeline_check_subjects.py::test_a_card_that_failed_and_was_never_tried_again_still_fails_117",
+      "component": "meta.pipeline",
+      "tier": "SAFE",
+      "surface": "meta",
+      "claim_id": null,
+      "ticket_id": null,
+      "volatile": false,
+      "outcome": "passed",
+      "phase": "call",
+      "role": "verdict",
+      "duration_ms": 4,
+      "evidence_ids": [],
+      "measurement": {
+        "verdict": "passed",
+        "reason": "every card whose paper buy answered 5xx has since taken one: a4a5b71e-de11-4805-b8a3-ed9c3f8f8161 (TRD-4), b0b0b0b0-0000-4000-8000-000000000001 (TRD-3)",
+        "left": [
+          200,
+          200
+        ],
+        "right": "2xx",
+        "sources": {
+          "log": "state/paper.jsonl"
+        },
+        "provenance": {},
+        "evidence_ids": [],
+        "fingerprint": null,
+        "claim_id": null,
+        "role": "verdict",
+        "population": {
+          "newest_on_struck_cards": [
+            {
+              "id": "TRD-4",
+              "at": "2026-09-21T17:20:00+00:00",
+              "card": "a4a5b71e-de11-4805-b8a3-ed9c3f8f8161",
+              "usdc": 1000.0,
+              "status": 200,
+              "outcome": "accepted",
+              "response": "",
+              "evidence_id": null,
+              "card_before": null
+            },
+            {
+              "id": "TRD-3",
+              "at": "2026-09-21T17:09:00+00:00",
+              "card": "b0b0b0b0-0000-4000-8000-000000000001",
+              "usdc": 1000.0,
+              "status": 200,
+              "outcome": "accepted",
+              "response": "",
+              "evidence_id": null,
+              "card_before": null
+            }
+          ]
+        }
+      },
+      "check_fingerprint": "0765ba9f3b1ccac18d5bf00ee33ed16536ac8e921f387243c16b8585e56adc4b",
+      "helpers_fingerprint": "08bf3da1c5ef94d0fbdf4b209570a851368ada4a76f08a9587d21408452f8774",
+      "helpers_formula": 2,
+      "reason": null,
+      "failure_repr": null
+    },
+    {
+      "nodeid": "tests/meta/test_pipeline_check_subjects.py::test_the_buy_is_judged_by_what_the_card_said_when_it_was_placed_117",
+      "component": "meta.pipeline",
+      "tier": "SAFE",
+      "surface": "meta",
+      "claim_id": null,
+      "ticket_id": null,
+      "volatile": false,
+      "outcome": "passed",
+      "phase": "call",
+      "role": "verdict",
+      "duration_ms": 1,
+      "evidence_ids": [],
+      "measurement": {
+        "verdict": "failed",
+        "reason": "card a4a5b71e-de11-4805-b8a3-ed9c3f8f8161 reads (read at the buy) status None, tradeable_now true, trading_blocked_reason None, and our paper buy of it answered HTTP 500 Buy failed (1 time(s): TRD-1 17:01:28)",
+        "left": 500,
+        "right": "2xx, or a 4xx naming its reason",
+        "sources": {
+          "contract": "GET /api/v1/event-cards/{id} tradeability.tradeable_now: 'the only trade gate'",
+          "log": "state/paper.jsonl (TRD intent / outcome, with evidence ids)"
+        },
+        "provenance": {},
+        "evidence_ids": [],
+        "fingerprint": null,
+        "claim_id": null,
+        "role": "verdict",
+        "population": {
+          "attempts_on_card": [
+            {
+              "id": "TRD-1",
+              "at": "2026-09-21T17:01:28+00:00",
+              "card": "a4a5b71e-de11-4805-b8a3-ed9c3f8f8161",
+              "usdc": 1000.0,
+              "status": 500,
+              "outcome": "unknown",
+              "response": "Buy failed",
+              "evidence_id": null,
+              "card_before": {
+                "tradeable_now": true,
+                "trading_blocked_reason": null
+              }
+            }
+          ],
+          "other_cards": [],
+          "card": {
+            "read": "at the buy",
+            "status": null,
+            "tradeable_now": true,
+            "trading_blocked_reason": null,
+            "pw_live": null,
+            "current_index": null,
+            "share_price_usd": null
+          },
+          "legs": []
+        }
+      },
+      "check_fingerprint": "1c23df560d96a71677727de5d1b3dbe0e7d6b23b8b0bd9e35cf1a7b1f4811f0e",
+      "helpers_fingerprint": "4ee45cedd08112101b6283f6371d24b3985e9c55d639eafd1755ecabb5a840cd",
+      "helpers_formula": 2,
+      "reason": null,
+      "failure_repr": null
+    },
+    {
+      "nodeid": "tests/meta/test_pipeline_check_subjects.py::test_a_denial_of_a_pro_forma_stretch_is_not_a_disclosure_of_one_116",
+      "component": "meta.pipeline",
+      "tier": "SAFE",
+      "surface": "meta",
+      "claim_id": null,
+      "ticket_id": null,
+      "volatile": false,
+      "outcome": "passed",
+      "phase": "call",
+      "role": "verdict",
+      "duration_ms": 7,
+      "evidence_ids": [],
+      "measurement": {
+        "verdict": "passed",
+        "reason": "published inception 2026-07-26, recorded 2026-08-09; the methodology discloses the pro-forma stretch",
+        "left": "2026-07-26",
+        "right": "2026-08-09",
+        "sources": {
+          "contract": "get_fund_methodology.returns: 'nothing backfilled, no backtest'",
+          "published": "get_fund {symbol: FTA-CRYPTOS}",
+          "record": "GET /api/v1/fta-fund/history"
+        },
+        "provenance": {},
+        "evidence_ids": [],
+        "fingerprint": null,
+        "claim_id": null,
+        "role": "verdict",
+        "population": {
+          "get_fund": {
+            "inception_date": "2026-07-26",
+            "return_since_inception_pct": -19.05,
+            "last_composition_change": "2026-08-17",
+            "status": null,
+            "index_price_usd": null
+          },
+          "history": {
+            "inception": "2026-08-09",
+            "first_point": {
+              "t": "2026-08-21",
+              "v": 100.0
+            },
+            "points": 2
+          },
+          "methodology_returns": "No backfill. Pro-forma: the stretch before the first position applies today's composition to past closes."
+        }
+      },
+      "check_fingerprint": "137c51e5e7e2c5cb4797d7c8c539b53eb8220855d278455cfce165f39ec8cb5e",
+      "helpers_fingerprint": "af9c8901b25e5474687a50d0b381be696e6a3d6a6eff54ca750f9a755d12adb4",
+      "helpers_formula": 2,
+      "reason": null,
+      "failure_repr": null
+    },
+    {
+      "nodeid": "tests/meta/test_pipeline_check_subjects.py::test_a_clone_refusal_that_asks_for_the_retry_it_refuses_fails",
+      "component": "meta.pipeline",
+      "tier": "SAFE",
+      "surface": "meta",
+      "claim_id": null,
+      "ticket_id": null,
+      "volatile": false,
+      "outcome": "passed",
+      "phase": "call",
+      "role": "verdict",
+      "duration_ms": 5,
+      "evidence_ids": [],
+      "measurement": {
+        "verdict": "passed",
+        "reason": "every source a paper clone of ours was refused on has since been cloned or refused for a stated reason: 23441934-8475-4aa0-bbff-75c03ecd3284 (CLN-0031 was refused HTTP 409 saying 'You already hold a paper clone of this species.')",
+        "left": [
+          "CLN-0031 was refused HTTP 409 saying 'You already hold a paper clone of this species.'"
+        ],
+        "right": "a clone, or a refusal a retry does not refute",
+        "sources": {
+          "log": "state/clones.jsonl"
+        },
+        "provenance": {},
+        "evidence_ids": [],
+        "fingerprint": null,
+        "claim_id": null,
+        "role": "verdict",
+        "population": {
+          "passes": [
+            [
+              "23441934-8475-4aa0-bbff-75c03ecd3284",
+              "CLN-0031 was refused HTTP 409 saying 'You already hold a paper clone of this species.'"
+            ]
+          ]
+        }
+      },
+      "check_fingerprint": "3d6d932df19d2e9e55f970a9365b30bfd1f695caa8e293998334603be58acb8f",
+      "helpers_fingerprint": "4a264a43c78f3eac3e5759ba9390c0a1f34de8ba947631d98bb1cf70338dee93",
+      "helpers_formula": 2,
+      "reason": null,
+      "failure_repr": null
+    },
+    {
+      "nodeid": "tests/meta/test_pipeline_check_subjects.py::test_a_clone_refusal_is_read_the_way_it_was_captured",
+      "component": "meta.pipeline",
+      "tier": "SAFE",
+      "surface": "meta",
+      "claim_id": null,
+      "ticket_id": null,
+      "volatile": false,
+      "outcome": "passed",
+      "phase": "call",
+      "role": "verdict",
+      "duration_ms": 5,
+      "evidence_ids": [],
+      "measurement": {
+        "verdict": "passed",
+        "reason": "every source a paper clone of ours was refused on has since been cloned or refused for a stated reason: 23441934-8475-4aa0-bbff-75c03ecd3284 (CLN-0020 was refused HTTP 400 saying 'You already hold a paper clone of this bot. Try again with a different bot.')",
+        "left": [
+          "CLN-0020 was refused HTTP 400 saying 'You already hold a paper clone of this bot. Try again with a different bot.'"
+        ],
+        "right": "a clone, or a refusal a retry does not refute",
+        "sources": {
+          "log": "state/clones.jsonl"
+        },
+        "provenance": {},
+        "evidence_ids": [],
+        "fingerprint": null,
+        "claim_id": null,
+        "role": "verdict",
+        "population": {
+          "passes": [
+            [
+              "23441934-8475-4aa0-bbff-75c03ecd3284",
+              "CLN-0020 was refused HTTP 400 saying 'You already hold a paper clone of this bot. Try again with a different bot.'"
+            ]
+          ]
+        }
+      },
+      "check_fingerprint": "1d8e22e0b230dc3a6d9cb76574e60153c0d2a5c3418e7b61f8bf77f947571ec7",
+      "helpers_fingerprint": "f9f1ddb287275e45fdb68641449f1e42ec8137e1c04a831798e2e15ad3c91efc",
+      "helpers_formula": 2,
+      "reason": null,
+      "failure_repr": null
+    },
+    {
+      "nodeid": "tests/meta/test_pipeline_check_subjects.py::test_an_api_docs_example_missing_a_required_field_fails",
+      "component": "meta.pipeline",
+      "tier": "SAFE",
+      "surface": "meta",
+      "claim_id": null,
+      "ticket_id": null,
+      "volatile": false,
+      "outcome": "passed",
+      "phase": "call",
+      "role": "verdict",
+      "duration_ms": 3,
+      "evidence_ids": [],
+      "measurement": {
+        "verdict": "failed",
+        "reason": "1 of 1 request example(s) on /api-docs leave out a field /openapi-public.json requires: POST /api/v1/cloned-bots/abc/fund sends ['x'] and its schema requires ['amount'] (['x'] are not in the schema at all)",
+        "left": [
+          "POST /api/v1/cloned-bots/abc/fund"
+        ],
+        "right": [],
+        "sources": {
+          "page": "/api-docs",
+          "schema": "/openapi-public.json",
+          "contract": "llms.txt names /openapi-public.json as the schema to import; /api-docs shows the curl to copy"
+        },
+        "provenance": {},
+        "evidence_ids": [],
+        "fingerprint": null,
+        "claim_id": null,
+        "role": "verdict",
+        "population": {
+          "examples": 1,
+          "breaches": [
+            {
+              "example": "POST /api/v1/cloned-bots/abc/fund",
+              "route": "/api/v1/cloned-bots/{instance_id}/fund",
+              "missing": [
+                "amount"
+              ],
+              "sends": [
+                "x"
+              ],
+              "not_in_schema": [
+                "x"
+              ]
+            }
+          ],
+          "held": [],
+          "unpublished": [],
+          "unparsed": []
+        }
+      },
+      "check_fingerprint": "73edf742c13f26a78bc9ee52fe88b9e12509b194438403bc50614de63cdf4118",
+      "helpers_fingerprint": "b30126366b64129ea26b56ac35798547c1187a7220e8c1de29623aefdecebb86",
+      "helpers_formula": 2,
+      "reason": null,
+      "failure_repr": null
+    },
+    {
+      "nodeid": "tests/meta/test_pipeline_check_subjects.py::test_every_way_a_curl_can_be_written_is_read",
+      "component": "meta.pipeline",
+      "tier": "SAFE",
+      "surface": "meta",
+      "claim_id": null,
+      "ticket_id": null,
+      "volatile": false,
+      "outcome": "passed",
+      "phase": "call",
+      "role": "verdict",
+      "duration_ms": 0,
+      "evidence_ids": [],
+      "measurement": null,
+      "check_fingerprint": "806e389c4ed67c79729bae46ed21ba046313895bb68d0044d5b2ccc6fa1d6309",
+      "helpers_fingerprint": "ff6d587cbc4c60d91d7d3c30b2f0f126df3a38dbaf952bcd9b7fb2528a5db38e",
+      "helpers_formula": 2,
+      "reason": null,
+      "failure_repr": null
+    },
+    {
+      "nodeid": "tests/meta/test_pipeline_check_subjects.py::test_a_card_that_is_closed_on_rest_and_open_on_mcp_fails",
+      "component": "meta.pipeline",
+      "tier": "SAFE",
+      "surface": "meta",
+      "claim_id": null,
+      "ticket_id": null,
+      "volatile": false,
+      "outcome": "passed",
+      "phase": "call",
+      "role": "verdict",
+      "duration_ms": 45,
+      "evidence_ids": [],
+      "measurement": {
+        "verdict": "passed",
+        "reason": "2 card(s) read closed on both /api/v1/event-cards/{id} and get_event_card_info, and none of the 2 read on both disagrees",
+        "left": 0,
+        "right": 0,
+        "sources": {
+          "contract": "GET /api/v1/event-cards/{id} tradeability.tradeable_now: 'the only trade gate'",
+          "rest": "/api/v1/event-cards/{id}",
+          "mcp": "tools/call get_event_card_info"
+        },
+        "provenance": {},
+        "evidence_ids": [],
+        "fingerprint": null,
+        "claim_id": null,
+        "role": "verdict",
+        "population": {
+          "sampled": 2,
+          "read_on_both": 2,
+          "disagree": 0,
+          "closed_on_both": 2,
+          "us_market_open": false,
+          "pairs": [
+            {
+              "card": "00000001-0000-4000-8000-000000000000",
+              "rest": false,
+              "tool": false,
+              "at": "2026-10-15T19:53:36+00:00",
+              "tool_at": "2026-10-15T19:53:36+00:00",
+              "reason": "US equity markets are closed -- this card holds stocks."
+            },
+            {
+              "card": "00000002-0000-4000-8000-000000000000",
+              "rest": false,
+              "tool": false,
+              "at": "2026-10-15T19:53:36+00:00",
+              "tool_at": "2026-10-15T19:53:36+00:00",
+              "reason": "US equity markets are closed -- this card holds stocks."
+            }
+          ],
+          "unread": []
+        }
+      },
+      "check_fingerprint": "66bf62e8e7e0be7091bdb38129b87ba957dfdf1708cad8bc19b058c6cf3e1572",
+      "helpers_fingerprint": "4ad95fc745305c17d8a22874062ece8a9598cfd602be5f1097f7f0fb0851c78f",
+      "helpers_formula": 2,
+      "reason": null,
+      "failure_repr": null
+    },
+    {
+      "nodeid": "tests/meta/test_pipeline_check_subjects.py::test_a_report_created_behind_a_500_fails_and_a_clean_run_of_twelve_passes",
+      "component": "meta.pipeline",
+      "tier": "SAFE",
+      "surface": "meta",
+      "claim_id": null,
+      "ticket_id": null,
+      "volatile": false,
+      "outcome": "passed",
+      "phase": "call",
+      "role": "verdict",
+      "duration_ms": 5,
+      "evidence_ids": [],
+      "measurement": {
+        "verdict": "failed",
+        "reason": "1 of our newest 12 submission(s) to POST /api/v1/bounty/reports answered HTTP 500 and the report was created anyway: #123 (k-new, 2026-09-24T10:50 UTC) -- a client told the filing failed retries it",
+        "left": [
+          [
+            123,
+            500
+          ]
+        ],
+        "right": "a created report answered 2xx with its id",
+        "sources": {
+          "contract": "llms.txt: POST /api/v1/bounty/reports 'File a bug report'",
+          "log": "state/journal/events.jsonl (filing_intent / filing_outcome, reconciled against my-reports)"
+        },
+        "provenance": {},
+        "evidence_ids": [],
+        "fingerprint": null,
+        "claim_id": null,
+        "role": "verdict",
+        "population": {
+          "window": [
+            {
+              "key": "k1",
+              "at": "2026-09-24T10:01:00+00:00",
+              "status": 200,
+              "report_id": 101
+            },
+            {
+              "key": "k2",
+              "at": "2026-09-24T10:02:00+00:00",
+              "status": 200,
+              "report_id": 102
+            },
+            {
+              "key": "k3",
+              "at": "2026-09-24T10:03:00+00:00",
+              "status": 200,
+              "report_id": 103
+            },
+            {
+              "key": "k4",
+              "at": "2026-09-24T10:04:00+00:00",
+              "status": 200,
+              "report_id": 104
+            },
+            {
+              "key": "k5",
+              "at": "2026-09-24T10:05:00+00:00",
+              "status": 200,
+              "report_id": 105
+            },
+            {
+              "key": "k6",
+              "at": "2026-09-24T10:06:00+00:00",
+              "status": 200,
+              "report_id": 106
+            },
+            {
+              "key": "k7",
+              "at": "2026-09-24T10:07:00+00:00",
+              "status": 200,
+              "report_id": 107
+            },
+            {
+              "key": "k8",
+              "at": "2026-09-24T10:08:00+00:00",
+              "status": 200,
+              "report_id": 108
+            },
+            {
+              "key": "k9",
+              "at": "2026-09-24T10:09:00+00:00",
+              "status": 200,
+              "report_id": 109
+            },
+            {
+              "key": "k10",
+              "at": "2026-09-24T10:10:00+00:00",
+              "status": 200,
+              "report_id": 110
+            },
+            {
+              "key": "k11",
+              "at": "2026-09-24T10:11:00+00:00",
+              "status": 200,
+              "report_id": 111
+            },
+            {
+              "key": "k-new",
+              "at": "2026-09-24T10:50:00+00:00",
+              "status": 500,
+              "report_id": 123
+            }
+          ]
+        }
+      },
+      "check_fingerprint": "ec3b39768bba8e0efb18588414da337b4e4fa1fd943af930a8c6cc6539f412fe",
+      "helpers_fingerprint": "e94ce96af66739500b0660611d36bbbff4f9550f70f459a0fd06f79a467b4e0f",
+      "helpers_formula": 2,
+      "reason": null,
+      "failure_repr": null
+    },
+    {
+      "nodeid": "tests/meta/test_pipeline_check_subjects.py::test_a_paper_buy_refused_for_a_balance_it_is_not_spending_fails",
+      "component": "meta.pipeline",
+      "tier": "SAFE",
+      "surface": "meta",
+      "claim_id": null,
+      "ticket_id": null,
+      "volatile": false,
+      "outcome": "passed",
+      "phase": "call",
+      "role": "verdict",
+      "duration_ms": 6,
+      "evidence_ids": [],
+      "measurement": {
+        "verdict": "passed",
+        "reason": "every card refused for balance on a paper buy has since taken one: 5d91bf43-a597-47b0-9abe-5c7f52618bbd (TRD-0050)",
+        "left": [
+          200
+        ],
+        "right": "2xx",
+        "sources": {
+          "log": "state/paper.jsonl"
+        },
+        "provenance": {},
+        "evidence_ids": [],
+        "fingerprint": null,
+        "claim_id": null,
+        "role": "verdict",
+        "population": {
+          "newest_on_struck_cards": [
+            {
+              "id": "TRD-0050",
+              "at": "2026-09-23T09:00:00+00:00",
+              "card": "5d91bf43-a597-47b0-9abe-5c7f52618bbd",
+              "usdc": 480.36,
+              "body": {
+                "amount_usdc": 480.36,
+                "paper": true
+              },
+              "before": {
+                "simulation_mode": true,
+                "sim_balance_usdc": "88598.91"
+              },
+              "card_before": {
+                "tradeable_now": true,
+                "trading_blocked_reason": null
+              },
+              "status": 200,
+              "outcome": "accepted",
+              "response": "",
+              "evidence_id": "trd-0050"
+            }
+          ]
+        }
+      },
+      "check_fingerprint": "5ae5daa83c57dc38fd5931649953986a9cafecd7e45ae098abbf348f447b89ff",
+      "helpers_fingerprint": "884943d35b609c3cacd7157185e97b6e75ec2612d4132d73a457e8801af831e8",
+      "helpers_formula": 2,
+      "reason": null,
+      "failure_repr": null
+    },
+    {
+      "nodeid": "tests/rest/test_agent_tournaments_table_knows_its_owner.py::test_agent_tournaments_table_knows_its_owner",
+      "component": "rest.agent_tournaments",
+      "tier": "SAFE",
+      "surface": "rest",
+      "claim_id": "agent-tournaments-table-knows-its-owner",
+      "ticket_id": null,
+      "volatile": false,
+      "outcome": "failed",
+      "phase": "call",
+      "role": "verdict",
+      "duration_ms": 22248,
+      "evidence_ids": [
+        "8ebfedf4825caeb9cc2388126c556b85770a3ca8c5b951a8de8b290e56eff748",
+        "df6577673b0d5143dc6c689b0921e881bec24ced453112d331a3910c2bbe8570",
+        "109e71817cd6e6051351e7061132d2d92aa6f3cec36aacbfd71d0c3d8b201227",
+        "226e70515dcd49b8193dd75ce01cf8c3fbe747f7ed9d0a7f6b35b5129243ad5f",
+        "b6c805ef17461c21af9f9c0e7714a8f8cca48d30c16ebf5310a21b3fe5e93796",
+        "6a20dc3bace9882e71e19abee2c4993d5d9026b3c46a91aeced3c8424951ed58",
+        "db42cf4718438792f9e82e16a7285fb4328a67e35d56ddedc0d7a96fcb50bf1e",
+        "353aaf13097a3d76f92b53521b46d167f698a1a99f6813f5d5249495f3295a4c",
+        "393771438ce2c48a4324afdea11b6b7b49b9d23d4840e56d230a0e14259ccf8b",
+        "3cd5c75b86a119ef9ddaf61b46d595a51887ecd590b69ac9ed4ab3e5e7eee045",
+        "b3e74ec04f7b3a2533dd5cb898b85a31e9d1100135c94ce030659470e3743aa4",
+        "472a95b5fb30f012a2e95c6b5e39ef5cff6f83bdca89e9beb8e02cbc9eb5e109",
+        "14c3774ae8ef418370b80acd59ee6a26cdbb48ef6a86f0022fd53624315034d3",
+        "2019bc06a52d4a6a1b98e03f4948db1b742d6f9a489c1d67c06b2423ef544396",
+        "98208172ac06eea26cf12044123502ee10c31fa9d125de6d446d6130739b1b2f",
+        "da1529b9f5d539319fcc9cb4d96d5be2cff37eda6690be90ffc9932fa8bf502d",
+        "f229b49c683b21e4888d4b3b99345e7b3951fa49120f70e19347095c8c92b4c5"
+      ],
+      "measurement": {
+        "verdict": "failed",
+        "reason": "3 of the 3 seats our key owns (their bot-settings answer it 200, 'Owner only') are not ours in their table's own answer to the same key: table 13 seat 57 ('lab Wave 2 Fibonacci Phoenix'): mine False, my_seat None; table 5 seat 29 ('tournament Perceptron Oracle'): mine False, my_seat None; table 2 seat 1 ('lab MACD Hunter'): mine False, my_seat None",
+        "left": {
+          "owned_seats_not_recognised": 3
+        },
+        "right": {
+          "owned_seats_not_recognised": 0
+        },
+        "sources": {
+          "tables": "/api/v1/agent-tournaments/lobby, /api/v1/agent-tournaments/tables/{id}",
+          "owner": "/api/v1/agent-tournaments/seats/{seat_id}/bot-settings (200 owner, 403 not_your_seat)",
+          "contract": "OpenAPI: /tables/{table_id} carries my_seat (object|null) and seats[].mine (boolean); llms.txt: agents authenticate with X-API-Key"
+        },
+        "provenance": {},
+        "evidence_ids": [],
+        "fingerprint": null,
+        "claim_id": "agent-tournaments-table-knows-its-owner",
+        "role": "verdict",
+        "population": {
+          "tables": [
+            13,
+            11,
+            5,
+            2,
+            17,
+            16,
+            15,
+            14,
+            12,
+            1
+          ],
+          "member_seats_asked": 6,
+          "owned": [
+            1,
+            29,
+            57
+          ],
+          "unread": [],
+          "unlisted": [],
+          "missed": [
+            {
+              "table_id": 13,
+              "seat_id": 57,
+              "bot": "lab Wave 2 Fibonacci Phoenix",
+              "mine": false,
+              "my_seat": null
+            },
+            {
+              "table_id": 5,
+              "seat_id": 29,
+              "bot": "tournament Perceptron Oracle",
+              "mine": false,
+              "my_seat": null
+            },
+            {
+              "table_id": 2,
+              "seat_id": 1,
+              "bot": "lab MACD Hunter",
+              "mine": false,
+              "my_seat": null
+            }
+          ]
+        }
+      },
+      "check_fingerprint": "52ae2a5aa548bf48496f720aa8325696cf67dd6918297d27952cf8d4f9ae52ec",
+      "helpers_fingerprint": "7cccefafafe95d92b113fd73cdd2f6f442fbf95c7456b3b3bec9ee5e9c9e8601",
+      "helpers_formula": 2,
+      "reason": null,
+      "failure_repr": "tests\\rest\\test_agent_tournaments_table_knows_its_owner.py:88: in test_agent_tournaments_table_knows_its_owner\n    conclude(Measurement(\nqa\\measure.py:165: in conclude\n    raise AssertionError(explain(m))\nE   AssertionError: 3 of the 3 seats our key owns (their bot-settings answer it 200, 'Owner only') are not ours in their table's own answer to the same key: table 13 seat 57 ('lab Wave 2 Fibonacci Phoenix'): mine False, my_seat None; table 5 seat 29 ('tournament Perceptron Oracle'): mine False, my_seat None; table 2 seat 1 ('lab MACD Hunter'): mine False, my_seat None\nE     left  = {'owned_seats_not_recognised': 3}\nE     right = {'owned_seats_not_recognised': 0}"
+    }
+  ],
+  "totals": {
+    "passed": 10,
+    "failed": 1
+  },
+  "ratelimit": {
+    "requests": 17,
+    "limit": 2000,
+    "remaining": 1975,
+    "fraction_used": 0.0125,
+    "exhausted": false
+  },
+  "record_integrity": {
+    "consistent": true,
+    "results_not_in_collected": [],
+    "collected_not_run": [],
+    "budget_truncated": false
+  },
+  "code_dirty_after": false,
+  "fingerprint_after": "sha256:ad94928ef5f22a36aa2697df899734afa82c885d810b4b1bb22818510dd641f1",
+  "exit_status": 1
+}
