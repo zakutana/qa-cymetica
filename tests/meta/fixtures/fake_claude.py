@@ -17,6 +17,7 @@ from it does "ok"):
     bug-ticket    hand a bug to the Bugs department, then close its own ticket
     fail-ticket   close its ticket as failed (`crew.py fail`) and exit 0
     refused       succeed without closing, its `crew.py done` among the refused calls
+    handover-refused  close its own ticket, its `crew.py ticket --to bugs` among the refused calls
 
 Every start is appended to `FAKE_CLAUDE_LOG` (when set) with its argv, so a test can
 read what the worker was allowed and denied.
@@ -90,6 +91,13 @@ def main(argv: list[str]) -> int:
         said = json.loads(_result(f"closed {ticket}"))
         said["permission_denials"] = [{"tool_name": "Bash", "tool_input": {
             "command": f"python scripts/crew.py done {ticket} --note done"}}]
+        print(json.dumps(said))
+        return 0
+    if mode == "handover-refused" and ticket:
+        _crew("done", ticket, "--note", "handed a bug to bugs")
+        said = json.loads(_result(f"handed the bug to Bugs and closed {ticket}"))
+        said["permission_denials"] = [{"tool_name": "Bash", "tool_input": {
+            "command": "python scripts/crew.py ticket --to bugs --kind bug --text found | tail -1"}}]
         print(json.dumps(said))
         return 0
     if mode == "bug-ticket" and ticket:

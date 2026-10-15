@@ -8,11 +8,12 @@
 jako my at mame odmeny"*, then *"Ne ser na to proste to jen zaloz to je experiment to pak smazem
 stejne"*. So: one company, the Testing department first, the others added when they say so.
 
-Two writes, both declared in components.yaml with a closed body (`company.create`,
-`company.department`); nothing else under /api/v1/company is ours to send: an approval is the
-owner's act, and DELETE, pause and the message to the Manager stay default-denied. Without
+Five writes, each declared in components.yaml with a closed body: `company.create`,
+`company.department`, `company.message` (the owner's word to the Manager), and the brake,
+`company.pause` / `company.resume` (no body). Nothing else under /api/v1/company is ours to send:
+an approval is the owner's act, and DELETE, investable and entity stay default-denied. Without
 --confirm a write prints the exact body and records nothing. A company worker (QA_CREW_DEPT) never
-creates one: its outward writes stay denied by default.
+makes any of them: its outward writes stay denied by default.
 
 Every write is two records in state/company.jsonl, ids CO-NNNN: the intent BEFORE the POST, the
 outcome after (rule 9). `accepted` is a 2xx naming an id; a 2xx without one is `unknown`.
@@ -101,7 +102,7 @@ def department_body(*, key=None, name=None, charter=None, experts=None) -> dict:
     return {k: body[k] for k in DEPT_KEYS if body[k] is not None}
 
 
-def create_body(*, name, mission, departments, report_style="brief") -> dict:
+def create_body(*, name=None, mission=None, departments=None, report_style="brief") -> dict:
     name, mission, style = _text(name), _text(mission), _text(report_style)
     if not MIN_NAME <= len(name) <= MAX_NAME:
         raise Refused(f"name is {MIN_NAME} to {MAX_NAME} characters; this one is {len(name)}")
@@ -110,6 +111,9 @@ def create_body(*, name, mission, departments, report_style="brief") -> dict:
                       f"{len(mission):,}")
     if not style or len(style) > MAX_STYLE:
         raise Refused(f"report_style is 1 to {MAX_STYLE} characters")
+    if departments is not None and not isinstance(departments, list) or any(
+            not isinstance(d, dict) for d in departments or []):
+        raise Refused("departments is a list of objects")
     depts = [department_body(**{k: d.get(k) for k in DEPT_KEYS}) for d in (departments or [])]
     if not MIN_DEPARTMENTS <= len(depts) <= MAX_DEPARTMENTS:
         raise Refused(f"{len(depts)} departments; they take {MIN_DEPARTMENTS} to {MAX_DEPARTMENTS}")
@@ -348,11 +352,12 @@ def cmd_read(raw_company) -> int:
     finally:
         CURRENT_TIER.reset(token)
         client.close()
+    # str() before a width: a null role or status is printed, not a TypeError (R02, deep pass 2026-10-15).
     for m in said.get("messages", []):
-        print(f"{str(m.get('created_at'))[11:19]} {m.get('role'):8} {m.get('text')}")
+        print(f"{str(m.get('created_at'))[11:19]} {str(m.get('role') or '-'):8} {m.get('text')}")
     rows = tasks.get("tasks") if isinstance(tasks, dict) else tasks
     for t in rows or []:
-        print(f"task {t.get('id')} {t.get('status'):9} {t.get('title') or t.get('brief', '')[:80]}")
+        print(f"task {t.get('id')} {str(t.get('status') or '-'):9} {t.get('title') or str(t.get('brief') or '')[:80]}")
     print(f"budget {mine.get('budget')}  approvals waiting: {len(mine.get('approvals') or [])}")
     for dep in mine.get("departments", []):
         print(f"{dep.get('key')}: {dep.get('status')} {dep.get('tasks')} cost_usd_7d {dep.get('cost_usd_7d')}")

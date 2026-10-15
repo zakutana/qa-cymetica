@@ -367,6 +367,16 @@ def work_once(dept: str) -> dict | None:
                        note=f"released {releases} times: {said['why']}")
         else:
             crew.close(ticket["id"], "fail", by="supervisor", note=said["why"])
+    elif after.get("status") == "done" and said.get("company_refused") and \
+            "crew.py ticket" in said["company_refused"]:
+        # It closed its own ticket, but the hand-over it reports was refused: the ticket is
+        # done and no attempt can be spent, so the lost hand-over goes to the manager by name
+        # (C02, deep pass 2026-10-15), never quietly lost.
+        crew.add_ticket("manager", "help",
+                        f"{ticket['id']} ({dept}) closed done, but its hand-over was refused: "
+                        f"{said['company_refused'][:200]} -- what it meant to hand over did not "
+                        f"arrive; read its close note and hand it on",
+                        key=f"handover:{ticket['id']}", by="watchdog")
     return crew.record({"type": "run", "dept": dept, "ticket": ticket["id"],
                         "kind": ticket["kind"], "pid": ran["pid"], "exit": ran["code"],
                         "timed_out": ran["timed_out"], "seconds": ran["seconds"],
@@ -511,7 +521,15 @@ def watch(now: datetime) -> list[str]:
         crew.record({"type": "index_lock_removed"}, now=now)
         said.append("removed a stale .git/index.lock")
     if not crew.active():
-        left = [path for path in dirty_paths(base) or []
+        seen = dirty_paths(base)
+        if seen is None and (base / ".git").exists():
+            # Unread is not clean (R05, deep pass 2026-10-15): git could not read the tree, so
+            # neither a half-edit nor its absence is known.
+            to_manager("help", f"unread-tree:{day}",
+                       "git status could not read the working tree (a lock, a broken index or "
+                       "a refused safe.directory): no half-edit can be seen and no level-V run "
+                       "will pass prereg until it reads again. Tell the operator (`crew.py tell`).")
+        left = [path for path in seen or []
                 if not housekeeping(path) and _untouched(base / path, now, HALF_EDIT_AGE)]
         if left:
             to_manager("help", f"dirty:{day}",
@@ -971,7 +989,12 @@ def tidy() -> int:
         if ours and _sibling("commit").commit("console poll", ours) != 0:
             print("[crew] the console poll commit failed")
             return 1
-    left = [path for path in (dirty_paths(base) or []) if not housekeeping(path)]
+    after = dirty_paths(base)
+    if after is None:
+        # Unread after the commit is not clean (R05): say so rather than "the tree is clean".
+        print("[crew] git could not read the tree after the commit")
+        return 1
+    left = [path for path in after if not housekeeping(path)]
     if left:
         print(f"[crew] not clean, {len(left)} path(s) nobody here wrote: "
               f"{', '.join(left[:8])}{' ...' if len(left) > 8 else ''}")

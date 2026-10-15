@@ -356,6 +356,18 @@ def test_a_run_settles_its_ticket_by_how_it_ended(company, monkeypatch):
     assert after["status"] == "open" and after["attempts"] == 1
     assert "refused" in after["why"] and row["outcome"] == "work"
 
+    # ... and one that closed its own ticket while its hand-over was refused: the ticket is
+    # done, so no attempt can be spent, but the lost hand-over reaches the manager by name
+    # (C02, deep pass 2026-10-15) instead of vanishing.
+    crew.close(lost_close["id"], "done", by="bugs", note="cleared", now=NOW)
+    monkeypatch.setenv("FAKE_CLAUDE_MODE", "handover-refused")
+    handed, _ = crew.add_ticket("lab", "lab", "a bug met in the lab", now=NOW)
+    sup.work_once("lab")
+    assert crew.tickets()[handed["id"]]["status"] == "done"
+    told = [t for t in crew.tickets().values()
+            if t.get("to") == "manager" and handed["id"] in str(t.get("text"))]
+    assert told and "crew.py ticket" in told[0]["text"], told
+
 
 @qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
 def test_a_run_past_its_timeout_is_killed_with_its_children(company, monkeypatch):
@@ -1094,7 +1106,7 @@ def test_a_detached_loop_outlives_its_parent_and_stop_kills_its_tree(company):
 
 
 @qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
-def test_status_names_every_loop_and_what_each_waits_on(company, monkeypatch):
+def test_status_names_every_loop_and_what_each_waits_on(company, monkeypatch, capsys):
     sup = _script("crew")
     crew.add_ticket("bugs", "bug", "open one", now=NOW)
     crew.beat("bugs", "idle", "no tickets")
@@ -1114,7 +1126,16 @@ def test_status_names_every_loop_and_what_each_waits_on(company, monkeypatch):
                         encoding="utf-8")
     monkeypatch.setattr(sup, "SETTINGS", settings)
     monkeypatch.delenv("QA_CREW_CLAUDE")
+
+    # Reaching the CLI at all means the allowlist was not checked first: fail here rather
+    # than run the real login check and spawn real loops (C03, deep pass 2026-10-15).
+    def reached(*args, **kwargs):
+        raise AssertionError("start() reached the CLI before refusing on the allowlist")
+
+    monkeypatch.setattr(crew, "claude_command", reached)
+    capsys.readouterr()
     assert sup.start() == 1 and not crew.running_since()
+    assert "does not allow" in capsys.readouterr().out, "refused, but not for the allowlist"
     assert sup.allowlist_missing() == ["Bash(python scripts/crew.py:*)",
                                        "Bash(python scripts/commit.py:*)"]
 

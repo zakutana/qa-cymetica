@@ -791,8 +791,8 @@ endpoints:
   # a company grown one department at a time. Their OpenAPI (read the same day): CompanyIn {name,
   # mission, departments, report_style, token_chain} and DepartmentIn {key, name, charter, experts}.
   # `token_chain` (where a company token would launch) is not declared and so is refused.
-  # Approvals (`POST /{id}/approvals/{aid}`) are the owner's act; DELETE, pause, the message to the
-  # Manager, investable and entity stay default-denied.
+  # Approvals (`POST /{id}/approvals/{aid}`) are the owner's act; DELETE, investable and entity stay
+  # default-denied. The message to the Manager and the pause / resume brake are declared below.
   - id: company.create
     path: /api/v1/company
     methods: [POST]

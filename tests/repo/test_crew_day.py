@@ -140,9 +140,12 @@ def test_a_simulated_day_ends_every_ticket_and_leaves_no_role_idle_without_a_rea
     assert [r for r in crew.load(crew.runs_path()) if r.get("type") == "metrics"]
     assert all(t["status"] == "done" for t in by_kind[("manager", "daily")])
     # No role idles without saying why.
+    # B02, deep pass 2026-10-15: every line says "not running" in a simulation, so the old
+    # `"running" in rest` could never fail; the reason is the part after "; ".
     for line in sup.status_lines(clock[0])[1:]:
         name, rest = line.split(None, 1)
-        assert ": " in rest or "running" in rest, line
+        doing = rest.split("; ", 1)[1].split(" | ")[0]
+        assert doing != "-" and (": " in doing or doing.startswith(("running", "asleep"))), line
 
 
 @qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
