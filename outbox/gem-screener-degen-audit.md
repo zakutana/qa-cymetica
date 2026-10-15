@@ -46,9 +46,43 @@
 
 Seven of the ten carry an exit flag; two are young (79 and 91 days of revenue).
 
-## 3. Defects, gaps, improvements
+## 3. The browser pass (2026-10-15, 05:55–06:10 UTC)
 
-**Defects: none new.**
+| Where | Read | Holds? |
+|---|---|---|
+| Top Picks | 10 cards: degen meters, growth lines (+518 / +17 / +27 / +23 % a month), "30x would be above…" notes, near misses (6) | yes, every one against the snapshot |
+| Top Picks | "Backtest of the old gates: inconclusive. A shortlist, not a signal." | shown without a click |
+| Altseason panel | index 32 = ⅔ × 24.2 + ⅓ × 48.3; breadth 56 %, 4-week mean 62 % (56, 68, 68, 56), 3 months ago 58 %; BTC.D "5 % of a 25-point drop" (60.21 → 58.93); tops 100 / 95 / 79 | yes |
+| Altseason panel | **two "retail" figures**: tile RETAIL 20/100 "asleep" (retail-v4, 19.7), and "retail by dollar volume 48/100" under euphoria (47.7, the v3 figure, which is what the index uses) | **no: same label, two numbers** |
+| Altseason panel | their own acceptance checks: index `fail` (10.2 % of weeks at the top zone against a 10 % limit); retail-v4 `fail` (B1, B2) | not shown on the page |
+| Apps tab | default view "Vetted only"; 237 apps, 34 chains | |
+| Apps tab, SUPPLY column | "Dilution, 12 months": new tokens of the next 12 months / circulating, **red at 25 % or more**. SOLV +32.1 % red, AERO +24.3 %, PUMP +17.8 %, MET +5.5 %, GMX +1.3 %, five picks "—" (no schedule) | the column is right; see the defect below |
+| Sectors | 12 stages against the 1M / 3M rule | yes, 12 of 12 |
+| Sectors | "Hot right now" names 3 (AI, RWA, L2); the table has 4 HOT (also DeFi lending, 1M +3 %) | a wording gap |
+| Sectors / Top Picks | SOLV's card says "Infrastructure theme already leads"; the Sectors table has Infrastructure FADING ("already leading" is how the hot panel names HOT) | a wording gap |
+| Chains | 24 vetted; TON shown as "GRAM" | yes: CoinGecko renamed it "Gram (prev. Toncoin)" |
+| Coin detail (SOLV) | guardians: Holders paid red, Security red (exploit 2026-03-06, $2.7M), Thin liquidity caution ("exchanges carry it"), Team not checked (HTTP 403) | yes, against `degen_level.checks` |
+| Coin detail (SOLV) | "Next unlock **Oct 19 · in 5 days**" read on Oct 15; the coin API says 2026-10-18 04:10 UTC | **no**, see below |
+| Loading | cold: 8.4 s to DOMContentLoaded, 577 kB transferred (2.9 MB HTML); warm: TTFB 0.86 s, 0.95 s; slowest call `/supply-analyzer/batch/gem-screener` 2.2 s; no console errors | |
+
+## 4. Defects, gaps, improvements
+
+**Defects** (each needs a check and a report; see the end of this section):
+1. **Two "Dilution" lines that disagree.**
+   - On the same page, the Dilution gate passes up to 1 % of market cap a week, about 52 % a year. The SUPPLY column, labelled "Dilution, 12 months", turns red at 25 % a year.
+   - SOLV is red at +32.1 % on the row and passes the Dilution gate in Degen picks.
+   - This is the page against itself, the same class as "hot" meaning two things (filed earlier, fixed).
+2. **"Retail" is two different numbers on the altseason panel.**
+   - The tile shows 20/100 "asleep" (retail-v4). The euphoria line shows 48/100 (the older measure), and that older measure is the one the index uses.
+3. **Kinetiq's next unlock contradicts its own record.**
+   - The coin API's `unlocks.next_cliff` puts 12.9M KNTQ on 2026-10-27, while the same record's `next30_tokens` (from 10-08) is 0.
+   - The Supply Analyzer, which the coin detail reads, puts the same 12.9M on 2026-11-28.
+   - It is 1 of 17 rows with a cliff. On 9 of the others the two sources sit up to 21 h apart, which moves the shown date by one day (SOLV: Oct 18 in the coin API, Oct 19 on the page).
+4. **The unlock countdown is a day stale.**
+   - "In N days" is counted from the Supply Analyzer's refresh (2026-10-14 11:07 UTC), not from the moment it is read: 0.8 days long on 17 of 17 rows.
+   - SOLV reads "Oct 19 · in 5 days" on Oct 15.
+
+**Our side:**
 - The run-rate check (#141) reads red on one row, FUL: 24 of its last 30 days have revenue, and it is annualised as a day's average × 365, which is the page's own wording since the coverage fix.
 - The error is in our check, which still averages over 30 calendar days. It needs correcting; nothing is owed by them.
 
@@ -61,13 +95,18 @@ Seven of the ten carry an exit flag; two are young (79 and 91 days of revenue).
 2. **Dilution:** "unknown" is shown as unknown on the gate, not as a pass.
 3. **Real revenue:** a coin whose emissions exceed its revenue says so in `risks` and in the pick's warnings.
 4. **Growing:** a pass on a fit with r² near 0 is not called growth, and the 30-day fall shows beside the pass.
+5. **Altseason:** the panel says, where it shows the index, that its own acceptance checks read `fail`, the way Top Picks shows its backtest.
+6. **Sectors:** "Hot right now" names every HOT sector, and "already leads" is kept for HOT.
 
-## 4. Not checked this time
+**Filing is held.**
+- The four defects above need a check each and an admissible run.
+- Every preregistered run aborts today on `tests/meta`: an operator quote in `scripts/company.py` (2026-10-13) is not pinned by hash.
+- Adding the pin is the operator's call (CLAUDE.md, `[operator DATE]`).
 
-- The browser pass: the page's default view, the backtest line, the altseason panel, cards and load time.
-- On-chain holder concentration, wash trading and what an audit actually covers, as before.
-- From the tick only: the altseason headline shows the 4-week mean breadth (62), while the latest week is 56.
+## 5. Not checked this time
 
-## 5. To repeat
+On-chain holder concentration, wash trading and what an audit actually covers, as before.
+
+## 6. To repeat
 
 `python scripts/gem_audit.py tick` redoes every number here in about a minute and says what moved. The core checks (`tests/rest/test_gem_screener_*`) ran today: 10 passed and 1 failed, the one in section 3. `/gem-audit` is the whole procedure.
