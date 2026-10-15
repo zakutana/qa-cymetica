@@ -196,9 +196,13 @@ def test_the_league_answers_only_what_it_computes_exactly_and_only_once():
 # jako my at mame odmeny" and, earlier, "firmu budovat postupne, pak rekni pridej toto oddeleni".
 # Their /openapi-public.json (read the same day): POST /api/v1/company/ is CompanyIn {name,
 # mission, departments, report_style, token_chain}, POST /{id}/departments is DepartmentIn {key,
-# name, charter, experts}. Declared closed, and so are the message to the Manager and the pause /
-# resume brake. Their approvals (`POST /{id}/approvals/{aid}`), their DELETE and the investable /
-# entity routes are not ours to send and stay default-denied: an approval is the owner's act.
+# name, charter, experts}. Declared closed. Their approvals (`POST /{id}/approvals/{aid}`), their
+# DELETE, pause, the message to the Manager and the investable / entity routes are not ours to
+# send and stay default-denied: an approval is the owner's act.
+
+# Later the same evening (a2912662, e5bf39b4) the message to the Manager and the pause / resume
+# brake were declared too, which CO_RULES below holds; the paragraph above is left as written
+# because it carries the operator's dated words (deep pass 2026-10-15, R03/C06).
 
 CO_BASE = "https://cymetica.com/api/v1/company"
 CO_RULES = {"company.create": {"name", "mission", "departments", "report_style"},

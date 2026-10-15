@@ -84,3 +84,7 @@ reports:
   203: "VAIX orderbook: arbitráž nakupuje na Base, kterou tatáž odpověď vyřadila pro odchylku ceny −83,75 %"
   204: "Klonovaní boti: seznam trhů zapíná 5 trhů bez 5min kola (ET10, CYM42 aj.); bot obchoduje jen BTC a ETH"
   205: "Nexus: značky v odpovědi označí našeho bota jako kartu a funkční cesty jako nedostupné, uvnitř cesty"
+  206: "Gem Screener: Degen pick projde filtrem ředění, i když jeho vlastní řádek ukazuje ředění červeně"
+  207: "Gem Screener: panel altseasonu ukazuje pod jménem „Retail“ dvě různá čísla (20 a 48 ze 100)"
+  208: "Gem Screener: nejbližší unlock Kinetiq padá do 30 dní, které jeho vlastní záznam počítá jako nulu"
+  209: "Gem Screener: odpočet „za N dní“ do unlocku se počítá od posledního obnovení, ne od teď"

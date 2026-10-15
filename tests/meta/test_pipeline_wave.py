@@ -223,9 +223,11 @@ def test_what_stops_a_wave_and_what_only_stops_one_bot(tmp_path, monkeypatch):
 
     wave, rooms, lab = _wave(tmp_path, monkeypatch, "cap")
     fake = FakeClone(rooms)
+    # Their cap is 100 trading paper bots (REPLY-0175, llms.txt read 2026-10-15; B09, deep pass
+    # 2026-10-15): a wave one past it is still refused before any call.
     many = [{"id": f"{i:08x}-0000-4000-8000-000000000000", "name": f"B{i}",
-             "source_type": "wta_species"} for i in range(1, 52)]
-    with pytest.raises(SystemExit, match="50"):
+             "source_type": "wta_species"} for i in range(1, 102)]
+    with pytest.raises(SystemExit, match="100"):
         _run(wave, rooms, lab, fake, many)
     assert fake.calls == []
 

@@ -76,8 +76,10 @@ def _card(tradeable=True):
                   "basket": [{"symbol": "ARB", "weight": 0.5}]})
 
 
-def _run(monkeypatch, rows, cards):
+def _run(monkeypatch, rows, cards, now=None):
     check = _check()
+    if now is not None:
+        check.NOW = lambda: now
     monkeypatch.setattr(check, "_paper", lambda: type("P", (), {
         "load": staticmethod(lambda: rows)})())
     rest = _Rest({f"/api/v1/event-cards/{c}": a for c, a in cards.items()})
@@ -92,6 +94,17 @@ STRUCK = (_buy("TRD-1", A, "16:25:40", 400, "unknown", UNPRICED)
 def test_a_card_refused_as_unpriceable_while_tradeable_fails(monkeypatch):
     with pytest.raises(AssertionError, match=A):
         _run(monkeypatch, STRUCK, {A: _card(True)})
+
+
+@qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
+def test_a_refusal_older_than_its_age_bound_is_unmeasured_not_a_failure(monkeypatch):
+    """R01, deep pass 2026-10-15: today's tradeable_now joined to a refusal days old says nothing
+    about now; the same refusal inside the bound still fails."""
+    from datetime import datetime, timezone
+    with pytest.raises(Inconclusive, match="fresh buy is owed"):
+        _run(monkeypatch, STRUCK, {A: _card(True)}, now=datetime(2026, 10, 15, 12, 0, tzinfo=timezone.utc))
+    with pytest.raises(AssertionError, match=A):
+        _run(monkeypatch, STRUCK, {A: _card(True)}, now=datetime(2026, 10, 13, 12, 0, tzinfo=timezone.utc))
 
 
 @qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")

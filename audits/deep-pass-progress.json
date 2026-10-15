@@ -16,8 +16,8 @@
     "t2": "real"
    },
    "verdict": "real",
-   "fixed": false,
-   "commit": null
+   "fixed": true,
+   "commit": "c30d6ce4"
   },
   {
    "id": "R02",
@@ -30,8 +30,8 @@
     "t2": "false"
    },
    "verdict": "real",
-   "fixed": false,
-   "commit": null
+   "fixed": true,
+   "commit": "31e75db6"
   },
   {
    "id": "R03",
@@ -44,8 +44,8 @@
     "t2": "real"
    },
    "verdict": "real",
-   "fixed": false,
-   "commit": null
+   "fixed": true,
+   "commit": "31e75db6"
   },
   {
    "id": "R04",
@@ -72,8 +72,8 @@
     "t2": "real"
    },
    "verdict": "real",
-   "fixed": false,
-   "commit": null
+   "fixed": true,
+   "commit": "31e75db6"
   },
   {
    "id": "R06",
@@ -100,8 +100,8 @@
     "t2": "real"
    },
    "verdict": "real",
-   "fixed": false,
-   "commit": null
+   "fixed": true,
+   "commit": "31e75db6"
   },
   {
    "id": "R08",
@@ -128,8 +128,8 @@
     "t2": "false"
    },
    "verdict": "real",
-   "fixed": false,
-   "commit": null
+   "fixed": true,
+   "commit": "c30d6ce4"
   },
   {
    "id": "A02",
@@ -142,8 +142,8 @@
     "t2": "real"
    },
    "verdict": "real",
-   "fixed": false,
-   "commit": null,
+   "fixed": true,
+   "commit": "c30d6ce4",
    "same_as": "R01"
   },
   {
@@ -157,8 +157,8 @@
     "t2": "real"
    },
    "verdict": "real",
-   "fixed": false,
-   "commit": null
+   "fixed": true,
+   "commit": "99b63bbe"
   },
   {
    "id": "A04",
@@ -171,8 +171,8 @@
     "t2": "real"
    },
    "verdict": "real",
-   "fixed": false,
-   "commit": null
+   "fixed": true,
+   "commit": "c30d6ce4"
   },
   {
    "id": "A05",
@@ -185,8 +185,8 @@
     "t2": "real"
    },
    "verdict": "real",
-   "fixed": false,
-   "commit": null
+   "fixed": true,
+   "commit": "c30d6ce4"
   },
   {
    "id": "A06",
@@ -227,8 +227,8 @@
     "t2": "real"
    },
    "verdict": "real",
-   "fixed": false,
-   "commit": null
+   "fixed": true,
+   "commit": "c30d6ce4"
   },
   {
    "id": "A09",
@@ -241,8 +241,8 @@
     "t2": "real"
    },
    "verdict": "real",
-   "fixed": false,
-   "commit": null
+   "fixed": true,
+   "commit": "99b63bbe"
   },
   {
    "id": "A10",
@@ -255,8 +255,8 @@
     "t2": "real"
    },
    "verdict": "real",
-   "fixed": false,
-   "commit": null
+   "fixed": true,
+   "commit": "99b63bbe"
   },
   {
    "id": "A11",
@@ -269,8 +269,8 @@
     "t2": "real"
    },
    "verdict": "real",
-   "fixed": false,
-   "commit": null
+   "fixed": true,
+   "commit": "99b63bbe"
   },
   {
    "id": "A12",
@@ -283,8 +283,8 @@
     "t2": "false"
    },
    "verdict": "real",
-   "fixed": false,
-   "commit": null
+   "fixed": true,
+   "commit": "99b63bbe"
   },
   {
    "id": "A13",
@@ -297,8 +297,8 @@
     "t2": "real"
    },
    "verdict": "real",
-   "fixed": false,
-   "commit": null
+   "fixed": true,
+   "commit": "c30d6ce4"
   },
   {
    "id": "A14",
@@ -311,8 +311,8 @@
     "t2": "real"
    },
    "verdict": "real",
-   "fixed": false,
-   "commit": null
+   "fixed": true,
+   "commit": "c30d6ce4"
   },
   {
    "id": "A15",
@@ -339,8 +339,8 @@
     "t2": "real"
    },
    "verdict": "real",
-   "fixed": false,
-   "commit": null
+   "fixed": true,
+   "commit": "99b63bbe"
   },
   {
    "id": "B02",
@@ -353,8 +353,8 @@
     "t2": "real"
    },
    "verdict": "real",
-   "fixed": false,
-   "commit": null
+   "fixed": true,
+   "commit": "31e75db6"
   },
   {
    "id": "B03",
@@ -367,8 +367,8 @@
     "t2": "real"
    },
    "verdict": "real",
-   "fixed": false,
-   "commit": null,
+   "fixed": true,
+   "commit": "99b63bbe",
    "same_as": "A03"
   },
   {
@@ -382,8 +382,8 @@
     "t2": "real"
    },
    "verdict": "real",
-   "fixed": false,
-   "commit": null
+   "fixed": true,
+   "commit": "dfc2410e"
   },
   {
    "id": "B05",
@@ -396,8 +396,8 @@
     "t2": "real"
    },
    "verdict": "real",
-   "fixed": false,
-   "commit": null
+   "fixed": true,
+   "commit": "dfc2410e"
   },
   {
    "id": "B06",
@@ -410,8 +410,8 @@
     "t2": "real"
    },
    "verdict": "real",
-   "fixed": false,
-   "commit": null
+   "fixed": true,
+   "commit": "dfc2410e"
   },
   {
    "id": "B07",
@@ -424,8 +424,8 @@
     "t2": "real"
    },
    "verdict": "real",
-   "fixed": false,
-   "commit": null
+   "fixed": true,
+   "commit": "c30d6ce4"
   },
   {
    "id": "B08",
@@ -438,8 +438,8 @@
     "t2": "real"
    },
    "verdict": "real",
-   "fixed": false,
-   "commit": null
+   "fixed": true,
+   "commit": "c30d6ce4"
   },
   {
    "id": "B09",
@@ -452,8 +452,8 @@
     "t2": "real"
    },
    "verdict": "real",
-   "fixed": false,
-   "commit": null
+   "fixed": true,
+   "commit": "c30d6ce4"
   },
   {
    "id": "C01",
@@ -466,8 +466,8 @@
     "t2": "real"
    },
    "verdict": "real",
-   "fixed": false,
-   "commit": null
+   "fixed": true,
+   "commit": "dfc2410e"
   },
   {
    "id": "C02",
@@ -480,8 +480,8 @@
     "t2": "false"
    },
    "verdict": "real",
-   "fixed": false,
-   "commit": null
+   "fixed": true,
+   "commit": "31e75db6"
   },
   {
    "id": "C03",
@@ -494,8 +494,8 @@
     "t2": "real"
    },
    "verdict": "real",
-   "fixed": false,
-   "commit": null
+   "fixed": true,
+   "commit": "31e75db6"
   },
   {
    "id": "C04",
@@ -509,7 +509,9 @@
    },
    "verdict": "real",
    "fixed": false,
-   "commit": null
+   "commit": null,
+   "deferred_to_operator": true,
+   "why": "the fix edits tests/meta/test_pipeline_decisions.py (hash every quote after a tag), which this pass may not touch"
   },
   {
    "id": "C05",
@@ -522,8 +524,8 @@
     "t2": "real"
    },
    "verdict": "real",
-   "fixed": false,
-   "commit": null,
+   "fixed": true,
+   "commit": "c30d6ce4",
    "same_as": "A13"
   },
   {
@@ -537,8 +539,8 @@
     "t2": "real"
    },
    "verdict": "real",
-   "fixed": false,
-   "commit": null,
+   "fixed": true,
+   "commit": "31e75db6",
    "same_as": "R03"
   }
  ],
@@ -576,6 +578,10 @@
   {
    "line": "2026-10-08 Sledovat; 2026-10-13 Requesty; 2026-10-05 Spec; 2026-10-04 Supply spec; 2026-10-13 ET-31267; 2026-10-12 Tournaments",
    "why": "watching, deliveries, a branch pushed on their word, or a reminder: nothing to build"
+  },
+  {
+   "line": "reword of the [operator 2026-10-13] paragraph in tests/meta/test_pipeline_league.py",
+   "why": "1c vote t1 yes, t2 yes, t3 no: it touches an operator paragraph, so it did not land; reverted, an untagged note after the paragraph says what CO_RULES holds"
   }
  ],
  "next": null,
@@ -583,7 +589,34 @@
   "last": "2026-10-11",
   "done": false
  },
- "rule_changes": null,
+ "rule_changes": [
+  {
+   "id": "RC1",
+   "what": "guard tests this pass changed (tests/repo, tests/meta): C02 a refused hand-over reaches the manager, C03 an unreadable claude command is said, B01/B02/B06 controls that could not fail now can, B04/B05 strict xfails hold the cases their docstrings name",
+   "why": "three finding-triage readers over guards.diff (416 lines): none weakens a guard or touches an [operator] paragraph",
+   "votes": {
+    "t1": "no",
+    "t2": "no",
+    "t3": "no"
+   },
+   "test": "tests/meta/test_pipeline_crew.py::test_a_run_settles_its_ticket_by_how_it_ended",
+   "commit": "99b63bbe 31e75db6 dfc2410e",
+   "handover": true
+  },
+  {
+   "id": "RC2",
+   "what": "wave cap guard 50 -> 100: a wave of 101 is refused before any call, 51-100 now pass (B09, their llms.txt and REPLY-0175: 100 trading paper bots on a paid plan)",
+   "why": "three readers: the guard follows the platform's cap, the boundary+1 shape is kept, no operator paragraph touched ([operator 2026-09-12] 'at least 50' is a floor)",
+   "votes": {
+    "t1": "no",
+    "t2": "no",
+    "t3": "no"
+   },
+   "test": "tests/meta/test_pipeline_wave.py::test_what_stops_a_wave_and_what_only_stops_one_bot",
+   "commit": null,
+   "handover": true
+  }
+ ],
  "meta_tests": {
   "start": 839,
   "end": null,
