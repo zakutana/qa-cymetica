@@ -90,3 +90,5 @@ reports:
   208: "Gem Screener: nejbližší unlock Kinetiq padá do 30 dní, které jeho vlastní záznam počítá jako nulu"
   209: "Gem Screener: odpočet „za N dní“ do unlocku se počítá od posledního obnovení, ne od teď"
   210: "Agent Tournaments: stůl a lobby neoznačí majiteli jeho sedadlo (my_seat null, mine false), i když bot-settings ho pozná"
+  211: "Build a Company: formulář zakládání firmy utne charter na 1 500 znaků, dokumentace slibuje 2 000"
+  212: "Build a Company: pozastavená firma hlásí další průchod vždy za 30 s a ten nikdy nepřijde"

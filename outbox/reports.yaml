@@ -6478,6 +6478,56 @@ reports:
       routes work once the id is known. Our check asks bot-settings which member seats our key owns and fails
       while a table marks any of them as not ours. GET requests only.
 
+  - key: company-charter-cap-agrees-with-its-docs
+    findings: [CYM-company-charter-cap-agrees-with-its-docs]
+    severity: low
+    category: logic
+    url: https://cymetica.com/static/js/build-company.js
+    title: >-
+      Build a Company: the company-creation form stops a department's charter at 1,500 characters
+      (maxlength="1500"), while llms.txt and the OpenAPI promise up to 2,000
+    expected: >
+      An owner creating a company on the page can write a charter as long as the docs allow: llms.txt,
+      "charter" (up to 2,000 characters ...), and DepartmentIn.charter maxLength 2000 in /openapi-public.json.
+    actual: >
+      Read on 2026-10-15 around 20:20 UTC. /static/js/build-company.js draws each department's charter on the
+      creation form as <textarea class="bc-d-charter" rows="3" maxlength="1500">, so the browser stops typing
+      at 1,500 characters. The department panel's charter editor in /static/js/company-office.js carries no
+      maxlength.
+    steps:
+      - 'GET https://cymetica.com/static/js/build-company.js -> <textarea class="bc-d-charter" rows="3" maxlength="1500">'
+      - 'GET https://cymetica.com/openapi-public.json -> components.schemas.DepartmentIn.properties.charter: anyOf [{type: string, maxLength: 2000}, null]'
+      - 'GET https://cymetica.com/llms.txt -> Build a Company: "charter" (up to 2,000 characters: your rules, notes and lessons ...)'
+    body: >
+      Low: the panel edits the full 2,000 once a company exists. Raising the form's maxlength to 2000 would
+      fix it. Our check compares every capped charter field in the page's scripts with the OpenAPI's maxLength.
+      GET requests only.
+
+  - key: company-heartbeat-keeps-its-promise
+    findings: [CYM-company-heartbeat-keeps-its-promise]
+    severity: low
+    category: logic
+    url: https://cymetica.com/api/v1/company/mine
+    title: >-
+      Build a Company: a paused company's heartbeat names a next pass 30 s after every read, and the pass
+      never comes (last_pass_at unchanged, pass_every_s 120)
+    expected: >
+      heartbeat.next_pass_at names a pass that happens: after that time, last_pass_at is at or past it. A
+      paused company, whose run_state says "Paused: nothing runs and nothing is charged until you resume.",
+      either names no next pass or names one that runs.
+    actual: >
+      Read on 2026-10-15 with our X-API-Key, company 13, paused. GET /api/v1/company/mine at 20:15:31 UTC gave
+      next_pass_at 20:16:01, at 20:16:12 gave 20:16:42, and in our check's run the promised 20:20:04 was
+      followed, 20 s later, by last_pass_at still 2026-10-15T19:41:17.902544Z and a new promise of 20:20:55;
+      pass_every_s 120 throughout. Every read promises a pass about 30 s ahead of itself.
+    steps:
+      - 'GET https://cymetica.com/api/v1/company/mine (X-API-Key) -> heartbeat {"last_pass_at": "2026-10-15T19:41:17.902544Z", "next_pass_at": "<read time + ~30 s>", "pass_every_s": 120}; run_state.state "paused"'
+      - 'Wait until 20 s after that next_pass_at and GET it again -> last_pass_at unchanged, next_pass_at moved ~30 s past the new read'
+    body: >
+      An owner or agent reading the heartbeat to see whether the runner is alive is told a pass is half a
+      minute away, forever. Low: the page hides it while paused. Naming no next pass while paused would fix it.
+      Our check reads the heartbeat twice around the promised time. GET requests only.
+
 footer: >
   Reported by an independent QA agent. Scope of this work: verification of the
   REST API, MCP, the machine-readable discovery surfaces and the pages built on
