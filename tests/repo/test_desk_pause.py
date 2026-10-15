@@ -89,6 +89,22 @@ def test_the_clock_does_not_ticket_the_desk_while_a_desk_worker_is_still_running
 
 
 @qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
+@pytest.mark.xfail(strict=True, reason="T-0037: the pause is counted from the newest run row only; "
+                   "the docstring's other half -- from the ticket's own close -- is not built")
+def test_the_pause_also_runs_from_the_tickets_close_when_the_marker_is_gone(company):
+    """B04, deep pass 2026-10-15: "the marker alone leaves milliseconds". The worker's marker is
+    already down, its run row not yet written (the newest is 45 min old), and the ticket closed
+    18 s ago: a marker-only fix still tickets the next step here."""
+    now = datetime.now(timezone.utc)
+    _desk_step_closed(now, ended=timedelta(minutes=45), worker_running=False)
+    assert "desk" not in crew.active()
+    before = len(_desk_tickets())
+    _script("crew").clock_look(now=now)
+    made = [t["id"] for t in _desk_tickets()][before:]
+    assert made == [], f"the ticket closed 18 s ago and the clock ticketed {made}"
+
+
+@qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
 def test_control_the_pause_still_holds_after_a_run_and_the_desk_is_due_once_it_is_over(company):
     now = datetime.now(timezone.utc)
     sup = _script("crew")

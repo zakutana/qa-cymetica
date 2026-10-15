@@ -574,7 +574,9 @@ def _a_seat_is_asked_only_at_a_paper_table_and_never_on_a_dry_run(tmp_path):
     # Our seat gone from their table -- the owner left it by hand (2026-10-11, table 5) --
     # ends the earlier ask: a new one may go. Still standing, or a table that lists no
     # standings at all, and the earlier ask still holds.
-    for standings, allowed in (([{"seat_id": 9, "bot": "x"}], False), (None, False),
+    # C01, deep pass 2026-10-15: an OPEN table answers `standings: []` (present, empty), so an
+    # empty list cannot say our seat is gone -- that would allow a second ask.
+    for standings, allowed in (([{"seat_id": 9, "bot": "x"}], False), (None, False), ([], False),
                                ([{"seat_id": 3, "bot": "theirs"}], True)):
         body = dict(table, standings=standings) if standings is not None else table
         client = build_mock_client(handler_for(body, posted), registry=registry)

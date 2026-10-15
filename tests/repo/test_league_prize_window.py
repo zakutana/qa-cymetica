@@ -79,3 +79,27 @@ def test_summary_counts_credited_prizes_beyond_the_default_window(monkeypatch):
     said = script.summary()
     assert said["prizes"] == 10, said
     assert said["et10_credited"] == 8000, said
+
+
+class _FullClient(_Client):
+    """The window full to the brim: 200 rows at limit=200, so more may lie past it."""
+
+    def get(self, url, params=None):
+        if url.endswith("/prizes"):
+            row = _prizes()[0]
+            return _Reply({"terms": {}, "month_committed_et10": 49500.0,
+                           "prizes": [dict(row, id=f"P-{i}") for i in range(200)]})
+        return super().get(url, params)
+
+
+@pytest.mark.xfail(strict=True, reason="T-0018: summary() has no notion of a full window; "
+                   "the docstring's 'say unread if the answer is a full window of 200' is not built")
+@qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
+def test_a_full_window_of_prizes_is_said_unread_not_counted_as_the_total(monkeypatch):
+    """B05, deep pass 2026-10-15: a limit=200-only fix reports a cut list as the whole."""
+    script = _script()
+    monkeypatch.setattr(script, "_client", lambda write=False: _FullClient())
+    monkeypatch.setattr(script, "_get", lambda client, url, **params: client.get(url, params))
+    monkeypatch.setattr(script, "load", lambda: [])
+    said = script.summary()
+    assert said.get("prizes") is None and "unread" in str(said).lower(), said

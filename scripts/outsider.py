@@ -516,9 +516,12 @@ def asked_before(table_id: str, rows: list[dict], table: dict | None = None) -> 
     table that lists its standings can say that; one that does not leaves the ask standing."""
     outcomes = {r.get("id"): r for r in rows if r.get("type") == "outcome"
                 and r.get("kind") == "seat"}
-    standings = (table or {}).get("standings")
-    seated = ({str(s.get("seat_id")) for s in standings if isinstance(s, dict)}
-              if isinstance(standings, list) else None)
+    # Every seat the table names, under `standings` or `seats`. An empty answer says nothing:
+    # an OPEN table serves `standings: []` while our seat waits for approval, and reading that as
+    # "gone" allowed a second ask (C01, deep pass 2026-10-15).
+    listed = [s for key in ("standings", "seats") for s in ((table or {}).get(key) or [])
+              if isinstance(s, dict) and s.get("seat_id") is not None]
+    seated = {str(s.get("seat_id")) for s in listed} if listed else None
     for intent in rows:
         if intent.get("type") != "intent" or intent.get("kind") != "seat" \
                 or str(intent.get("table_id")) != str(table_id):

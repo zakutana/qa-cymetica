@@ -124,17 +124,21 @@ def test_the_cap_is_read_from_the_newest_capacity_refusal(tmp_path, monkeypatch)
     assert scripts_lab._capacity_cap(clone.load()) is None
     _clone_rows(clone, 5, 0, refused_ago_h=50)
     assert scripts_lab._capacity_cap(clone.load())["cap"] == 5
-    _clone_rows_newer = {"id": "CLN-0900", "type": "outcome", "at": "2026-10-12T17:01:06+00:00",
+    # Stamped relative to now and after the 50 h refusal, so "newest" by time and by append order
+    # agree (B06, deep pass 2026-10-15: hard-coded 2026-10-12 stamps fell behind now-50h on 10-14).
+    now = datetime.now(timezone.utc)
+    at = lambda hours: (now - timedelta(hours=hours)).isoformat(timespec="seconds")  # noqa: E731
+    _clone_rows_newer = {"id": "CLN-0900", "type": "outcome", "at": at(2),
                          "outcome": "rejected", "http_status": 400,
                          "response": REFUSAL % 25}
-    clone._append({"id": "CLN-0900", "type": "intent", "at": "2026-10-12T17:01:02+00:00",
+    clone._append({"id": "CLN-0900", "type": "intent", "at": at(2.01),
                    "source_type": "wta_species", "source_id": "x", "paper": True})
     clone._append(_clone_rows_newer)
     assert scripts_lab._capacity_cap(clone.load())["cap"] == 25
     assert scripts_lab._capacity_cap(clone.load())["id"] == "CLN-0900"
-    clone._append({"id": "CLN-0901", "type": "intent", "at": "2026-10-12T18:00:00+00:00",
+    clone._append({"id": "CLN-0901", "type": "intent", "at": at(1),
                    "source_type": "wta_species", "source_id": "y", "paper": True})
-    clone._append({"id": "CLN-0901", "type": "outcome", "at": "2026-10-12T18:00:01+00:00",
+    clone._append({"id": "CLN-0901", "type": "outcome", "at": at(0.99),
                    "outcome": "accepted", "http_status": 200, "clone_instance_id": "inst-y"})
     assert scripts_lab._capacity_cap(clone.load()) is None, "an accepted clone after the refusal"
 
