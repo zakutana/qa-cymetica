@@ -705,6 +705,10 @@ def test_a_card_that_is_closed_on_rest_and_open_on_mcp_fails():
     # And whether a table knows the seats our key owns (2026-10-15, ET-31459), the same way.
     _the_tournament_own_seat_readings()
 
+    # And Build a Company's charter cap and heartbeat (2026-10-15, ET-31466), the same way.
+    _the_company_charter_cap_readings()
+    _the_company_heartbeat_readings()
+
     # And a free Agent Tournaments table at each buy-in (2026-10-12), the same way.
     _the_free_table_readings()
 
@@ -1159,6 +1163,37 @@ def _the_tournament_route_readings():
                            f"{p}/tables/{{table_id}}/seat": {}, f"{p}/seats/{{seat_id}}/leave": {}}}
     assert missing_from(routes, described) == [], "any parameter name is the same route"
     assert tournament_routes(other) == [], "a line without a full tournament route lends none of its paths"
+
+
+def _the_company_charter_cap_readings():
+    """The readings behind the charter-cap check (2026-10-15): the creation form's textarea as
+    served that day caps at 1,500; a name field's maxlength is not a charter's; the OpenAPI's cap
+    is read through its anyOf with null."""
+    from tests.rest.test_company_charter_cap_agrees_with_its_docs import charter_caps, documented_cap
+
+    served = ('<input class="bc-d-name" maxlength="60" required value="x">'
+              '<textarea class="bc-d-charter" rows="3" maxlength="1500">')
+    assert charter_caps(served) == [1500], "only the charter field's cap counts"
+    assert charter_caps('<textarea class="co-charter-edit">') == [], "an uncapped field holds no number"
+    spec = {"components": {"schemas": {"DepartmentIn": {"properties": {"charter": {
+        "anyOf": [{"type": "string", "maxLength": 2000}, {"type": "null"}]}}}}}}
+    assert documented_cap(spec) == 2000
+    assert documented_cap({}) is None
+
+
+def _the_company_heartbeat_readings():
+    """The readings behind the heartbeat check (2026-10-15): company 13 paused, a pass promised for
+    20:16:01 and at 20:16:42 the last pass still 19:41:17 is a broken promise; a pass at or after
+    the promised time, or a second read that promises nothing, keeps it; no promise is not judged."""
+    from tests.rest.test_company_heartbeat_keeps_its_promise import broken_promise
+
+    first = {"last_pass_at": "2026-10-15T19:41:17.902544Z", "next_pass_at": "2026-10-15T20:16:01.373188Z"}
+    second = {"last_pass_at": "2026-10-15T19:41:17.902544Z", "next_pass_at": "2026-10-15T20:16:42.429390Z"}
+    assert broken_promise(first, second) is True
+    ran = {"last_pass_at": "2026-10-15T20:16:02Z", "next_pass_at": "2026-10-15T20:18:02Z"}
+    assert broken_promise(first, ran) is False, "a pass after the promised time keeps it"
+    assert broken_promise(first, {"last_pass_at": "2026-10-15T19:41:17Z", "next_pass_at": None}) is False
+    assert broken_promise({"next_pass_at": None}, second) is None, "nothing promised, nothing judged"
 
 
 def _the_tournament_own_seat_readings():
