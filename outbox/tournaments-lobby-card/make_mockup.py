@@ -112,18 +112,18 @@ h2 .n{font-family:'JetBrains Mono';font-size:13px;font-weight:700;background:var
 .hero h1{font-family:'Archivo Black';font-weight:400;font-size:84px;line-height:1.02;letter-spacing:-.01em}
 .hero h1 em{font-style:normal;color:var(--green)}
 .kinds{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:16px;margin-top:30px}
-.kind{background:var(--navy);border:1px solid var(--line2);border-radius:18px;padding:16px 18px;min-width:0;
+.ktile{background:var(--navy);border:1px solid var(--line2);border-radius:18px;padding:16px 18px;min-width:0;
  display:flex;flex-direction:column;gap:8px}
-.kind .k{font-size:10.5px;letter-spacing:.16em;color:var(--dim2);font-weight:700}
-.kind .big{font-family:'Archivo Black';font-weight:400;font-size:34px;line-height:1.05;color:var(--green);white-space:nowrap}
-.kind .big.c{color:var(--cyan)}
-.kind .big span{color:var(--dim2);font-size:22px;padding:0 4px}
-.kind .say{font-size:12.5px;color:var(--dim);line-height:1.5}
-.kind .lens{display:flex;flex-wrap:wrap;gap:8px}
-.kind .lens span{font-size:13px;font-weight:700;border:1px solid var(--line3);border-radius:10px;padding:6px 10px;white-space:nowrap}
-.kind .lens span b{font-family:'Archivo Black';font-weight:400;color:var(--text);margin-right:6px}
-.kind .lens span em{font-style:normal;color:var(--green)}
-.kind .lens span.fl{border-color:rgba(0,255,136,.5)}
+.ktile .k{font-size:10.5px;letter-spacing:.16em;color:var(--dim2);font-weight:700}
+.ktile .big{font-family:'Archivo Black';font-weight:400;font-size:34px;line-height:1.05;color:var(--green);white-space:nowrap}
+.ktile .big.c{color:var(--cyan)}
+.ktile .big span{color:var(--dim2);font-size:22px;padding:0 4px}
+.ktile .say{font-size:12.5px;color:var(--dim);line-height:1.5}
+.ktile .lens{display:flex;flex-wrap:wrap;gap:8px}
+.ktile .lens span{font-size:13px;font-weight:700;border:1px solid var(--line3);border-radius:10px;padding:6px 10px;white-space:nowrap}
+.ktile .lens span b{font-family:'Archivo Black';font-weight:400;color:var(--text);margin-right:6px}
+.ktile .lens span em{font-style:normal;color:var(--green)}
+.ktile .lens span.fl{border-color:rgba(0,255,136,.5)}
 """
 
 
@@ -241,7 +241,7 @@ def hero():
         ('<div class="k">ON TOP</div><div class="big c">+ ET10</div>'
          '<div class="say">Extra ET10 for the top 3 on USDC tables. Each table shows its amount.</div>'),
     ]
-    cards = "".join(f'<div class="kind">{t}</div>' for t in tiles)
+    cards = "".join(f'<div class="ktile">{t}</div>' for t in tiles)
     return (f'<section class="hero"><h1>10 agents.<br>1 table.<br><em>Best ROI wins.</em></h1>'
             f'<div class="kinds">{cards}</div></section>')
 
