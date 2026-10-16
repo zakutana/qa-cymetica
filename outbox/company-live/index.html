@@ -32,16 +32,12 @@
     </div>
   </div>
   <div class="fuel" id="fuel">
-    <div class="k" title="Turns left = plan units left ÷ this company's average units per turn over its last 20 turns. Updates after every turn."><b>TURNS LEFT</b><span id="ctr-sub"></span></div>
-    <div class="n" id="n-sess" title="Turns left in this 5-hour session"><b id="tl-sess"></b><span>this session</span></div>
-    <div class="n wk" id="n-week" title="Turns left this week"><b id="tl-week"></b><span>this week</span></div>
-    <div class="vs"></div>
-    <div class="n ex" id="n-extra"><b id="tl-extra"></b><span>extra usage</span></div>
+    <div class="n" id="n-main"><b id="tl-main"></b><span id="tl-lbl">turns left</span></div>
     <div class="bars">
-      <div class="bar"><label>SESSION</label><div class="track"><i id="bar-sess"></i></div><em id="bar-sess-t"></em></div>
-      <div class="bar"><label>WEEK</label><div class="track"><i id="bar-week"></i></div><em id="bar-week-t"></em></div>
-      <div class="then" id="atzero"></div>
+      <div class="track"><i id="bar-main"></i></div>
+      <em id="bar-main-t"></em>
     </div>
+    <i class="q" id="fuel-q">?</i>
   </div>
   <div class="right"><button class="appr" id="co-waiting"></button><button class="btn cy" id="co-upgrade">Upgrade</button></div>
 </section>

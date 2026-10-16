@@ -66,7 +66,12 @@ a { color: var(--cyan); text-decoration: none; cursor: pointer; }
 .fuel .n.bump b { animation: bump .5s ease; }
 @keyframes bump { 30% { transform: scale(1.22); } }
 .fuel .vs { width: 1px; height: 38px; background: var(--line3); }
-.bars { display: grid; gap: 6px; min-width: 260px; }
+.bars { display: grid; gap: 6px; min-width: 190px; }
+.bars em { font-size: 10.5px; color: var(--dim); font-style: normal; white-space: nowrap; }
+.fuel .n { min-width: 0; flex-direction: row; align-items: baseline; gap: 10px; }
+.fuel .n b { font-size: 34px; } .fuel .n span { font-size: 11px; margin: 0; }
+.fuel .n.ex b { color: var(--blue); }
+.fuel .q { margin: 0; }
 .bar { display: grid; grid-template-columns: 58px 1fr auto; align-items: center; gap: 8px; font-size: 10.5px; color: var(--dim); }
 .bar label { color: var(--dim2); letter-spacing: .08em; }
 .track { height: 7px; border-radius: 4px; background: var(--line); overflow: hidden; }

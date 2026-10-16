@@ -69,20 +69,19 @@
     $('co-logo').textContent = initials(c.name);
     var st = $('co-status'); st.textContent = paused ? 'PAUSED' : 'ACTIVE'; st.className = 'pill ' + (paused ? 'off' : 'on');
     $('co-pause').textContent = paused ? 'Resume' : 'Pause';
-    $('ctr-sub').textContent = 'on ' + c.plan + ' · ' + (l.none ? 'no measured turn yet' : u2(CO.avg()) + ' u/turn');
-    setN('n-sess', 'tl-sess', l.none ? '—' : l.session, !l.none && l.session <= 2);
-    setN('n-week', 'tl-week', l.none ? '—' : l.week, !l.none && l.week <= 2);
-    var ex = $('n-extra');
-    ex.classList.toggle('off', l.extra == null);
-    setN('n-extra', 'tl-extra', l.extra == null ? 'off' : l.none ? '—' : '+' + l.extra, !l.none && l.extra != null && l.extra <= 2);
-    ex.title = b.extra.on ? b.extra.left.toFixed(2) + ' u left on extra usage, billed per use' : 'Extra usage is off (Settings)';
-    var sp = Math.min(100, b.session.used / b.session.cap * 100), wp = Math.min(100, b.week.used / b.week.cap * 100);
-    var bs = $('bar-sess'); bs.style.width = sp.toFixed(1) + '%'; bs.classList.toggle('hot', sp >= 85);
-    var bw = $('bar-week'); bw.style.width = wp.toFixed(1) + '%'; bw.classList.toggle('hot', wp >= 85); bw.classList.toggle('wk', wp < 85);
-    var g = CO.gate();
-    $('atzero').innerHTML = !b.extra.on ? 'At 0: <b class="stop">pauses until the reset</b>'
-      : b.extra.left > 0.004 ? 'At 0: keeps running on <b>extra usage (on)</b>'
-      : 'Extra usage spent: <b class="stop">waits until ' + hhmm(g.until || b.session.resets_at) + '</b>';
+    // One number: how many more turns the plan allows, from whichever limit (5-hour or weekly) is closer.
+    var win = !l.none && l.week < l.session ? b.week : b.session;
+    var onExtra = !l.none && (l.session === 0 || l.week === 0) && b.extra.on && b.extra.left > 0.004;
+    var main = l.none ? '—' : onExtra ? l.extra : Math.min(l.session, l.week);
+    setN('n-main', 'tl-main', main, !l.none && !onExtra && main <= 2);
+    $('n-main').classList.toggle('ex', !!onExtra);
+    $('tl-lbl').textContent = onExtra ? 'turns left · extra usage' : 'turns left';
+    var pct = Math.min(100, win.used / win.cap * 100), bm = $('bar-main');
+    bm.style.width = pct.toFixed(1) + '%'; bm.classList.toggle('hot', pct >= 85);
+    $('fuel').title = 'Turns left = what your plan has left ÷ what a turn costs on average (' + (l.none ? 'not measured yet' : u2(CO.avg()) + ' units') + ').\n' +
+      'This session (the current 5-hour window): ' + (l.none ? '—' : l.session) + ' turns, resets in ' + hm(b.session.resets_at - S.clock) + '.\n' +
+      'This week: ' + (l.none ? '—' : l.week) + ' turns, resets ' + dayTime(b.week.resets_at) + '.\n' +
+      (b.extra.on ? 'When the plan runs out the company keeps going on extra usage (' + (l.none ? '—' : l.extra) + ' more turns).' : 'When the plan runs out the company pauses until the reset.');
     var n = S.approvals.length, w = $('co-waiting');
     w.innerHTML = n ? '<b>' + n + '</b> waiting for you' : 'nothing waits for you';
     w.classList.toggle('none', !n);
@@ -392,8 +391,8 @@
       if (g.code === 'extra') parts.push('<span class="hot">on extra usage</span>');
     }
     $('co-heart').innerHTML = parts.join(' · ');
-    $('bar-sess-t').innerHTML = '<b>' + u2(b.session.used) + '</b>/' + u2(b.session.cap) + ' · ' + hm(b.session.resets_at - S.clock);
-    $('bar-week-t').innerHTML = '<b>' + u2(b.week.used) + '</b>/' + u2(b.week.cap) + ' · ' + dayTime(b.week.resets_at);
+    var lw = CO.left(), win = !lw.none && lw.week < lw.session ? b.week : b.session;
+    $('bar-main-t').innerHTML = '<b>' + Math.round(win.used / win.cap * 100) + '%</b> used · resets ' + (win === b.week ? dayTime(win.resets_at) : 'in ' + hm(win.resets_at - S.clock));
     var lv = $('live');
     if (S.company.status === 'paused') { lv.className = 'live paused'; lv.innerHTML = '<i></i>PAUSED'; }
     else if (!g.ok) { lv.className = 'live stop'; lv.innerHTML = '<i></i>' + esc(g.text.toUpperCase()); }
