@@ -42672,6 +42672,7 @@
   "run_id": "run-20261016T035402Z-d7bb5d7b",
   "run_level": "V",
   "updated_at": "2026-10-16T03:54:43+00:00",
+  "run_carried": true,
   "counts": {
     "WITHDRAWN": 13,
     "VERIFIED FIXED": 115,
@@ -42682,7 +42683,7 @@
     "CHECK CHANGED": 10
   },
   "events_head": {
-    "seq": 4117,
-    "chain": "b8f0fa443bef488f1f6d3882fef2496ef96710d0e63dd78be41f1245b2462d37"
+    "seq": 4120,
+    "chain": "eb6e8f55a67302ad4d0eca2ea54d0d889136ac2e192730e67b52cecdb82f0a2d"
   }
 }
