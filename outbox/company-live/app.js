@@ -531,21 +531,46 @@
       if (act === 'approve' || act === 'reject') { closeModal(); decide(a.id, act); }
     });
   }
+  function deptCard(t, on) {
+    var used = CO.S.departments.some(function (d) { return d.key === t.key && t.key !== 'custom'; });
+    return '<button class="tcard' + (on ? ' on' : '') + '" data-tpl="' + t.key + '"><div class="art">' + CO.deptArt(t.key) + '</div>' +
+      '<b>' + esc(t.name || 'Custom') + '</b><span>' + esc(CO.DEPT_INFO[t.key] || '') + '</span>' +
+      '<div class="minis">' + t.experts.map(function (k) { return '<i title="' + esc(CO.expertName(k)) + '">' + CO.expertArt(k, true) + '</i>'; }).join('') +
+      (used ? '<em>you have one</em>' : '') + '</div></button>';
+  }
+  function expertCard(e, on) {
+    var info = CO.EXPERT_INFO[e.key] || { line: '' };
+    return '<button class="xcard' + (on ? ' on' : '') + '" data-ex="' + e.key + '"><div class="fig">' + CO.expertArt(e.key) + '</div>' +
+      '<b>' + esc(e.name) + '</b><span>' + esc(info.line) + '</span><i class="ck">' + (on ? '✓ hired' : '+ hire') + '</i></button>';
+  }
+  function slider(id, html) {
+    return '<div class="slider"><button type="button" class="sl-arrow l" data-sl="' + id + '" data-d="-1" tabindex="-1">‹</button>' +
+      '<div class="sl-track" id="' + id + '">' + html + '</div><button type="button" class="sl-arrow r" data-sl="' + id + '" data-d="1" tabindex="-1">›</button></div>';
+  }
   function deptForm(o, edit) {
-    var tpls = edit ? '' : '<div class="tpls">' + CO.TEMPLATES.map(function (t) {
-      var used = CO.S.departments.some(function (d) { return d.key === t.key && t.key !== 'custom'; });
-      return '<button class="tpl' + (t.key === o.key ? ' on' : '') + (used ? ' used' : '') + '" data-tpl="' + t.key + '"><b>' + (t.name || 'Custom') + '</b><span>' +
-        (t.key === 'custom' ? 'your own name, charter and experts' : t.experts.map(CO.expertName).join(' · ')) + (used ? ' · you have one' : '') + '</span></button>';
-    }).join('') + '</div>';
-    return tpls + '<div class="form"><label class="field">Department name<input id="df-name" maxlength="60" value="' + esc(o.name) + '" placeholder="e.g. Growth"></label>' +
-      '<div class="field">Experts<div class="xchips" id="df-ex">' + CO.EXPERTS.map(function (e) { return '<span class="xchip' + (o.experts.indexOf(e.key) >= 0 ? ' on' : '') + '" data-ex="' + e.key + '">' + e.name + '</span>'; }).join('') + '</div></div>' +
-      '<label class="field full"><span>Charter · your rules, notes and lessons <span id="df-n" style="float:right">' + o.charter.length + ' / 2,000</span></span><textarea id="df-ch" maxlength="2000" rows="6">' + esc(o.charter) + '</textarea></label></div>';
+    var tpls = edit ? '' : '<div class="sec step">1 · PICK A DEPARTMENT</div>' + slider('tpl-track', CO.TEMPLATES.map(function (t) { return deptCard(t, t.key === o.key); }).join(''));
+    return tpls + '<div class="sec step">' + (edit ? '' : '2 · ') + 'HIRE ITS EXPERTS <span id="ex-n">' + o.experts.length + ' hired</span></div>' +
+      slider('ex-track', CO.EXPERTS.map(function (e) { return expertCard(e, o.experts.indexOf(e.key) >= 0); }).join('')) +
+      '<div class="sec step">' + (edit ? '' : '3 · ') + 'NAME AND CHARTER</div>' +
+      '<div class="form"><label class="field">Department name<input id="df-name" maxlength="60" value="' + esc(o.name) + '" placeholder="e.g. Growth"></label>' +
+      '<div class="field">Who works there<div class="hiredline" id="df-hired">' + hiredLine(o.experts) + '</div></div>' +
+      '<label class="field full"><span>Charter · your rules, notes and lessons <span id="df-n" style="float:right">' + o.charter.length + ' / 2,000</span></span><textarea id="df-ch" maxlength="2000" rows="5">' + esc(o.charter) + '</textarea></label></div>';
+  }
+  function hiredLine(keys) {
+    return keys.length ? keys.map(function (k) { return '<span class="hx"><i>' + CO.expertArt(k, true) + '</i>' + esc(CO.expertName(k)) + '</span>'; }).join('') : '<span class="hint">nobody yet: hire at least one</span>';
+  }
+  function hiredKeys() {
+    return Array.prototype.map.call(document.querySelectorAll('#ex-track .xcard.on'), function (x) { return x.getAttribute('data-ex'); });
   }
   function readDeptForm() {
-    return {
-      name: $('df-name').value.trim(), charter: $('df-ch').value.trim(),
-      experts: Array.prototype.map.call(document.querySelectorAll('#df-ex .xchip.on'), function (x) { return x.getAttribute('data-ex'); })
-    };
+    return { name: $('df-name').value.trim(), charter: $('df-ch').value.trim(), experts: hiredKeys() };
+  }
+  function toggleExpert(card, on) {
+    card.classList.toggle('on', on);
+    card.querySelector('.ck').textContent = on ? '✓ hired' : '+ hire';
+    var k = hiredKeys();
+    $('ex-n').textContent = k.length + ' hired';
+    $('df-hired').innerHTML = hiredLine(k);
   }
   function addDeptModal() {
     var o = { key: 'custom', name: '', experts: ['researcher'], charter: '' };
@@ -558,10 +583,16 @@
     function act(a, el) {
       if (a === 'tpl') {
         var t = CO.TEMPLATES.filter(function (x) { return x.key === el.getAttribute('data-tpl'); })[0];
-        o = { key: t.key, name: t.name, experts: t.experts.slice(), charter: t.charter }; draw();
+        o = { key: t.key, name: t.name, experts: t.experts.slice(), charter: t.charter };
+        Array.prototype.forEach.call(document.querySelectorAll('#tpl-track .tcard'), function (c) { c.classList.toggle('on', c === el); });
+        Array.prototype.forEach.call(document.querySelectorAll('#ex-track .xcard'), function (c) { toggleExpert(c, o.experts.indexOf(c.getAttribute('data-ex')) >= 0); });
+        $('df-name').value = t.name; $('df-ch').value = t.charter; $('df-n').textContent = t.charter.length + ' / 2,000';
+        el.scrollIntoView({ behavior: 'smooth', inline: 'center', block: 'nearest' });
+        if (!t.name) $('df-name').focus();
       } else if (a === 'create') {
         var f = readDeptForm();
         if (!f.name) { $('df-name').focus(); $('df-name').style.borderColor = 'var(--red)'; return; }
+        if (!f.experts.length) { toast('Hire at least one expert.'); return; }
         closeModal();
         var d = CO.act.addDept({ key: o.key, name: f.name, experts: f.experts, charter: f.charter });
         toast('New department: ' + d.name + '. Its room is being built.');
@@ -656,7 +687,9 @@
       var ma = t.closest('#modal-card [data-a]');
       if (ma) { var m = ma.getAttribute('data-a'); if (m === 'close') return closeModal(); if (modalAct) modalAct(m, ma); return; }
       var tp = t.closest('#modal-card [data-tpl]'); if (tp && modalAct) return modalAct('tpl', tp);
-      var xc = t.closest('#modal-card .xchip'); if (xc) { xc.classList.toggle('on'); return; }
+      var xc = t.closest('#modal-card .xcard'); if (xc) { toggleExpert(xc, !xc.classList.contains('on')); return; }
+      var sa = t.closest('#modal-card .sl-arrow');
+      if (sa) { var tr = $(sa.getAttribute('data-sl')); tr.scrollBy({ left: +sa.getAttribute('data-d') * tr.clientWidth * 0.8, behavior: 'smooth' }); return; }
       // sim bar
       var sb = t.closest('#simbar [data-speed]');
       if (sb) {
