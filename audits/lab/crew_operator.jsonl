@@ -38,3 +38,17 @@
 {"type": "note", "id": "OP-0025", "at": "2026-10-12T23:04:53+00:00", "from": "manager", "key": "T-0061-crew-text-cut", "text": "T-0063 (Bugs, T-0061), od tebe nic. crew.py tiše ořízne tiket a vzkaz na 2 000 znaků a poznámku done/fail na 600 (T-0027 a T-0060 přišly bez konce). Kód pro session do řádku „Kód pro firmu“ v NEXT.md (10/10, zkrátit), testy napřed:\n1) scripts/crew.py main: ticket a tell nad 2 000 vypíšou délku a limit, „shorten it, or split it, a key each“, exit 2, nic nezapíšou. done/fail ořez nechají, vypíšou „note cut: N characters, kept 600“, exit 0 (odmítnutý close by po běhu zavřel supervisor jako done s 300 znaky výsledku, i fail).\n2) Limity jednou v qa/crew.py (TICKET_TEXT_MAX, TELL_TEXT_MAX, CLOSE_NOTE_MAX); PREAMBLE je z nich jmenuje: jen tak se konec poznámky done neztratí.\n3) Totéž ořez-a-říct pro snooze a hold --why (300, qa/crew.py:640, :1202), nové testy.\n4) Knihovna (add_ticket, tell) dál ořezává tiše: volají ji clock, watchdog a outsider.\n5) Skill crew (ř. 26): operátorova slova nad 2 000 rozdělit do více tiketů, nikdy nezkrátit. Skill deep-pass (ř. 875): audit nad 2 000 druhý tiket, key audit:<datum>-2.\nHotovo: tests/repo/test_crew_text_cut.py 5 zelených bez xfail (docstring podle bodu 1) + snooze/hold, tests/meta zelené. Živě na sběrnici nezkoušet: rozbité odmítnutí by tiket zapsalo."}
 {"type": "note", "id": "OP-0026", "at": "2026-10-13T17:14:33+00:00", "from": "manager", "key": "nexus-bots-behind-50-cap", "text": "Nexusovy 2 boty z NEX-0143 (Fibonacci Phoenix, MACD Hunter) odmítl limit 50 paper botů, běží jen jeho karta. Ručně nic neuvolňuju: místo by hned sebral náš grid a jeho 2 tipy dnešní kód znovu nespustí. Rozhodl jsem: bod 9 z docs/crew-before-c9.md je v kódu první, Nexus má přednost před gridem a jeho 2 boty se po něm spustí. Postaví ho příští session nebo deep pass."}
 {"type": "note", "id": "OP-0027", "at": "2026-10-13T17:54:20+00:00", "from": "manager", "key": "desk-lesson-lane", "text": "Doplněk k OP-0014 (T-0077, desk), od tebe nic. Lekci k desk roomu píše jen desk, z prodeje (STR-0212/0213: −0,52 / −3,91 %), ne laborka z verdiktu (−0,22 / −4,32 %; verdikt se píše před prodejem). Laborce a desku to píšu do paměti, platí hned. Pro session, test napřed v tests/meta/test_pipeline_lab_loop.py: _tally_verdicts (scripts/lab.py:1595) ponese sekci každého souzeného roomu (qa.rooms.section_of) a decide() (qa/lab.py:1033-1041) z verdiktu sekce desk nepustí 'learn' ani novinku pro otázku; v laborator skillu u 'learn' (SKILL.md:37) doplnit: kromě desku."}
+{"type": "read", "id": "OP-0014", "at": "2026-10-16T07:34:54+00:00"}
+{"type": "read", "id": "OP-0015", "at": "2026-10-16T07:34:54+00:00"}
+{"type": "read", "id": "OP-0016", "at": "2026-10-16T07:34:54+00:00"}
+{"type": "read", "id": "OP-0017", "at": "2026-10-16T07:34:54+00:00"}
+{"type": "read", "id": "OP-0018", "at": "2026-10-16T07:34:54+00:00"}
+{"type": "read", "id": "OP-0019", "at": "2026-10-16T07:34:54+00:00"}
+{"type": "read", "id": "OP-0020", "at": "2026-10-16T07:34:54+00:00"}
+{"type": "read", "id": "OP-0021", "at": "2026-10-16T07:34:54+00:00"}
+{"type": "read", "id": "OP-0022", "at": "2026-10-16T07:34:54+00:00"}
+{"type": "read", "id": "OP-0023", "at": "2026-10-16T07:34:54+00:00"}
+{"type": "read", "id": "OP-0024", "at": "2026-10-16T07:34:54+00:00"}
+{"type": "read", "id": "OP-0025", "at": "2026-10-16T07:34:54+00:00"}
+{"type": "read", "id": "OP-0026", "at": "2026-10-16T07:34:54+00:00"}
+{"type": "read", "id": "OP-0027", "at": "2026-10-16T07:34:54+00:00"}
