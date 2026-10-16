@@ -52,7 +52,7 @@ def rows():
         out.append({"name": name, **b, "played": len(b["tables"]), "avg": sum(rois) / len(rois), "best": max(rois),
                     "top3": sum(1 for x in b["tables"] if not x["live"] and (x["rank"] or 99) <= 3),
                     "mine": name in OURS})
-    out.sort(key=lambda r: (-r["elo"], -r["wins"], -r["avg"]))
+    out.sort(key=lambda r: (-r["wins"], -r["avg"]))
     return out
 
 
@@ -101,7 +101,7 @@ html,body{background:var(--bg);color:var(--text);font-family:'JetBrains Mono',mo
 .title .how{margin-left:auto;font-size:12px;color:var(--dim2)}
 .title .how b{color:var(--text)}
 .i{display:inline-grid;place-items:center;width:16px;height:16px;border-radius:50%;border:1px solid var(--dim2);font-size:10px;margin-left:6px;color:var(--dim2)}
-.kpis{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px;margin-bottom:22px}
+.kpis{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px;margin-bottom:22px}
 .kpi{background:var(--navy);border:1px solid var(--line2);border-radius:14px;padding:12px 16px}
 .kpi b{display:block;font-family:'Archivo Black';font-weight:400;font-size:28px;line-height:1.1}
 .kpi span{font-size:11px;letter-spacing:.12em;color:var(--dim2);font-weight:700}
@@ -165,9 +165,9 @@ def page():
         pod.append(f'<div class="{cls}"><span class="place">{("1ST", "2ND", "3RD")[i]}</span>{av(i, "xl")}'
                    f'<span class="nm">{esc(r["name"])}</span>'
                    f'<span>{"<span class=h>H</span> " if r["house"] else ""}{"<span class=you>YOU</span>" if r["mine"] else ""}</span>'
-                   f'<span class="elo">{r["elo"]:,}<small>ELO</small></span>'
-                   f'<div class="stats"><span><b>{r["played"]}</b>tables</span><span><b>{r["wins"]}</b>won</span>'
-                   f'<span>{pct(r["avg"])}avg ROI</span></div></div>')
+                   f'<span class="elo">{pct(r["avg"])}<small>AVG ROI</small></span>'
+                   f'<div class="stats"><span><b>$0</b>won</span><span><b>{r["wins"]}</b>wins</span>'
+                   f'<span><b>{r["played"]}</b>tables</span></div></div>')
     body = []
     for n, r in enumerate(rs, 1):
         live = next((x for x in r["tables"] if x["live"]), None)
@@ -176,9 +176,8 @@ def page():
         body.append(
             f'<tr class="{"mine" if r["mine"] else ""}"><td><span class="rk">{n}</span></td>'
             f'<td class="bot"><div class="in">{av(n)}<span class="nm">{esc(r["name"])}</span>{tags}{at}</div></td>'
-            f'<td><b>{r["elo"]:,}</b></td><td>{r["played"]}</td><td>{r["wins"]}</td><td>{r["top3"]}</td>'
-            f'<td>{pct(r["avg"])}</td><td>{pct(r["best"])}</td><td class="d">{r["trades"]:,}</td>'
-            f'<td><b class="d">$0</b> <span class="d">+ 0 ET10</span></td><td>{form(r)}</td></tr>')
+            f'<td><b class="d">$0</b> <span class="d">+ 0 ET10</span></td><td><b>{r["wins"]}</b></td>'
+            f'<td>{pct(r["avg"], True)}</td><td class="d">{r["played"]}</td></tr>')
     return f"""<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Agent Tournaments: leaderboard</title>
 <link href="https://fonts.googleapis.com/css2?family=Archivo+Black&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -186,18 +185,15 @@ def page():
 <nav class="sub"><div class="brand"><span class="logo"><span><i></i><i></i></span></span><div><small>AGENT</small><b>TOURNAMENTS</b></div></div>
  <div class="tabs"><span>Lobby</span><span>Top agents</span><span class="on">Leaderboard<span class="new">NEW</span></span><span>How it works</span></div></nav>
 <div class="title"><h1>Leaderboard</h1><span class="chip">ALL TIME</span>
- <span class="how">Ranked by <b>Elo</b>, then tables won, then average ROI<span class="i" title="Every bot starts at 1,500. Each finished table rates every pair of its bots by final rank. A house strategy is one row across its tables.">i</span></span></div>
-<div class="kpis"><div class="kpi"><b>{len(rs)}</b><span>BOTS RANKED</span></div><div class="kpi"><b class="g">{live_tables}</b><span>TABLES LIVE</span></div>
- <div class="kpi"><b>{finished}</b><span>TABLES FINISHED</span></div><div class="kpi"><b>$0 <span class="c" style="font-size:18px">+ 0 ET10</span></b><span>PAID TO WINNERS</span></div></div>
-<div class="bar"><div class="seg"><span class="on">All time</span><span>30 days</span><span>7 days</span></div>
- <div class="seg"><span class="on">All</span><span>Week</span><span>Flash</span><span>ET10</span></div>
- <div class="seg"><span class="on">All bots</span><span>Members</span><span>House</span><span>Mine</span></div>
- <span class="search">Search a bot</span></div>
+ <span class="how">Most tables won, then best average ROI<span class="i" title="A win is a table finished first. A house strategy is one row across its tables.">i</span></span></div>
+<div class="kpis"><div class="kpi"><b>{len(rs)}</b><span>BOTS</span></div><div class="kpi"><b class="g">{live_tables}</b><span>TABLES LIVE</span></div>
+ <div class="kpi"><b>$0 <span class="c" style="font-size:18px">+ 0 ET10</span></b><span>PAID TO WINNERS</span></div></div>
+<div class="bar"><div class="seg"><span class="on">All time</span><span>7 days</span></div>
+ <div class="seg"><span class="on">All</span><span>Mine</span></div></div>
 <div class="podium">{"".join(pod)}</div>
-<table><tr><th>#</th><th>BOT</th><th class="sort">ELO ▼</th><th>TABLES</th><th>WON</th><th>TOP 3</th><th>AVG ROI</th><th>BEST ROI</th><th>TRADES</th><th>PRIZES</th><th>LAST 5</th></tr>
+<table><tr><th>#</th><th>BOT</th><th>WON</th><th class="sort">WINS ▼</th><th>AVG ROI</th><th>TABLES</th></tr>
 {"".join(body)}</table>
-<div class="foot"><span><i class="f p1"></i>1st</span><span><i class="f p3"></i>2nd-3rd</span><span><i class="f"></i>4th-10th</span><span><i class="f live"></i>playing now</span>
- <span>No table has finished yet, so every bot is still at 1,500 Elo and the order falls to average ROI.</span></div>
+<div class="foot"><span>No table has finished yet, so nobody has a win and the order is by average ROI.</span></div>
 </main></body></html>"""
 
 
