@@ -181,7 +181,8 @@
       } else if (t.kind) {
         t.status = 'waiting_approval'; t.finished_at = S.clock;
         t.outcome = 'Draft ready: waits for your approval';
-        var a = { id: 'A' + (S.next_appr++), task_id: t.id, dept_id: d.id, kind: t.kind, summary: t.title, created_at: S.clock, files_as: d.files_as };
+        var a = { id: 'A' + (S.next_appr++), task_id: t.id, dept_id: d.id, kind: t.kind, summary: t.title.replace(/^Verify: /, ''), created_at: S.clock,
+          files_as: d.files_as || (t.kind === 'bug report' ? 'expire76' : null) };
         a.body = CO.draft(t.kind, t.title, d.name);
         S.approvals.unshift(a);
         feed('ask', d.name, 'asks approval: ' + t.kind);
@@ -194,6 +195,8 @@
         feed('good', d.name, 'finished "' + t.title + '"');
         if (Math.random() < 0.45) learn(d);
         outcome = 'done';
+        if (Math.random() < 0.3) later(rand(1500, 4000), function () { noticeInPassing(d); });
+        if (d.key === 'testing_lab' && /^(Paper|Bot variant|FOMO)/.test(t.title) && Math.random() < 0.6) later(rand(2000, 4000), function () { fire('winner', d, t.title.replace(/^(Paper test|Paper): /, '')); });
       }
     }
     CO.emit('turn:end', { task: t, dept: d, outcome: outcome });
@@ -204,6 +207,59 @@
     var m = l[Math.floor(Math.random() * l.length)];
     if (S.memory.some(function (x) { return x.dept_id === d.id && x.text === m[1]; })) return;
     S.memory.push({ id: S.next_mem++, dept_id: d.id, kind: m[0], text: m[1], at: S.clock });
+  }
+
+  /* ---------- company rules: what anyone notices on the side goes where the rule says ---------- */
+  function ruleOn(trigger) {
+    var l = CO.S.rules || [];
+    for (var i = 0; i < l.length; i++) if (l[i].on && l[i].trigger === trigger) return l[i];
+    return null;
+  }
+  function ruleTarget(r) {
+    if (!r) return null;
+    if (/^id:/.test(r.target)) return dept(+r.target.slice(3));
+    return CO.S.departments.filter(function (x) { return x.key === r.target; })[0] || null;
+  }
+  CO.ruleTarget = ruleTarget;
+  var SIDE = {
+    idea: ['Gem Screener: a filter for coins with a team unlock this month', 'Chart Analyzer: show the score\'s history, not only today', 'Agent Tournaments: a replay of the last table'],
+    money: ['Memecoins that FOMO >= 70 flags twice within an hour', 'Event cards priced below the BTC basket\'s implied move', 'League puzzles of one family solved on the same snapshot'],
+    design: ['Supply Analyzer: unlock bars overlap on a phone', 'Gem Screener: Guardians tooltip covers the price', 'Company page: the plan list cuts long titles'],
+    custom: ['a vendor message that needs an answer', 'a page that changed overnight']
+  };
+  var KEYNAME = { testing: 'QA / Testing', development: 'Development', testing_lab: 'Testing lab', design: 'Design studio', trading_desk: 'Trading desk' };
+  var PREFIX = { bug: 'Verify: ', released: 'Test the new build: ', idea: 'BB request: ', money: 'Paper test: ', winner: 'Real trade: ', design: 'Review: ', custom: 'Handle: ' };
+  // An event happened. Every rule that is on and listens for it hands the work to its department.
+  function fire(kind, from, subject) {
+    var S = CO.S, hit = 0;
+    (S.rules || []).forEach(function (r) {
+      if (!r.on || r.trigger !== kind) return;
+      var to = ruleTarget(r);
+      if (!to || (from && to.id === from.id && kind !== 'released')) return;
+      var o = { turns_needed: 1, why: 'rule ' + r.id + ': ' + CO.TRIGGERS[kind].toLowerCase() + (from ? ' · from ' + from.name : '') };
+      if (kind === 'bug') { o.kind = 'bug report'; o.expert = 'qa_tester'; }
+      if (kind === 'idea') o.kind = 'BB request';
+      if (kind === 'winner') o.kind = 'real-money action';
+      if (kind === 'released') { o.turns_needed = 2; o.expert = 'qa_tester'; if (Math.random() < 0.5) o.kind = 'bug report'; }
+      var nt = newTask(to, PREFIX[kind] + subject, o);
+      nt.from_dept = from ? from.id : null; nt.rule = r.id; nt.event = kind;
+      if (kind === 'released' && !o.kind) nt.outcome_text = 'No bugs in the new build';
+      S.plan.unshift(nt.id);
+      r.fired++; hit++;
+      feed('info', from ? from.name : 'Cymetica', CO.TRIGGERS[kind].toLowerCase() + ': ' + subject + ' → ' + to.name + ' (' + r.id + ')');
+      say(CO.TRIGGERS[kind] + (from ? ' (' + from.name + ')' : '') + ': "' + subject + '". Rule ' + r.id + ' hands it to ' + to.name + ', which ' + r.text + '. First in line.', to.id);
+      CO.emit('handoff', { from: from, to: to, rule: r });
+    });
+    if (hit) changed();
+    return hit;
+  }
+  CO.fire = fire;
+  // a department finishing its own work notices something outside its job
+  function noticeInPassing(d) {
+    if (!dept(d.id)) return;
+    var kinds = ['bug', 'bug', 'idea', 'money', 'design'], kind = kinds[Math.floor(Math.random() * kinds.length)];
+    var subject = kind === 'bug' ? bugTitle(pick(['Gem Screener', 'Chart Analyzer', 'Supply Analyzer', 'Agent Tournaments']), d) : pick(SIDE[kind]);
+    fire(kind, d, subject);
   }
 
   /* ---------- scheduled runs: a department that hunts bugs on a clock ---------- */
@@ -346,6 +402,13 @@
           feed('good', d ? d.name : 'Manager', (a.kind === 'real-money action' ? 'placed' : 'submitted') + ' after your approval: ' + a.summary);
           CO.emit('submitted', { approval: a, dept: d });
         });
+        if (a.kind === 'BB request') {
+          later(rand(50000, 80000), function () {
+            var what = a.summary.replace(/^BB request: /, '');
+            feed('good', 'Cymetica', 'delivered "' + what + '": the new build is live');
+            if (!fire('released', d, what)) say('Cymetica delivered "' + what + '". No rule tests new builds yet; say "when a new build is released, QA tests it" and I will route it.', d && d.id);
+          });
+        }
         if (a.kind === 'bug report') {
           // Cymetica's verdict on the report, a while later
           later(rand(40000, 70000), function () {
@@ -457,6 +520,15 @@
       CO.emit('dept:removed', d);
       changed();
     },
+    rule: function (id, on) {
+      var r = (CO.S.rules || []).filter(function (x) { return x.id === id; })[0]; if (!r || r.locked) return;
+      r.on = on; feed('info', 'You', (on ? 'switched on rule ' : 'switched off rule ') + r.id + ': ' + CO.TRIGGERS[r.trigger]); changed();
+    },
+    addRule: function (o) {
+      var S = CO.S, r = { id: 'R' + (S.next_rule++), on: true, trigger: o.trigger, target: o.target, text: o.text, fired: 0 };
+      S.rules.push(r); feed('good', 'You', 'new company rule ' + r.id + ': ' + CO.TRIGGERS[r.trigger] + ' → ' + o.target); changed(); return r;
+    },
+    removeRule: function (id) { CO.S.rules = CO.S.rules.filter(function (x) { return x.id !== id || x.locked; }); changed(); },
     products: function (id, list) {
       var d = dept(id); if (!d) return;
       d.products = list; feed('info', 'You', 'set the products of ' + d.name + ': ' + list.join(', '));
@@ -564,6 +636,24 @@
         (nd.schedule ? ' It runs ' + nd.schedule.label + ' over ' + (nd.products.length ? nd.products.join(', ') : 'the public site') + ', first run now.' : '') +
         (nd.files_as ? ' Every bug becomes a report filed as ' + nd.files_as + '; it waits for your Approve, and each one Cymetica accepts pays 1,000 ET10 to ' + nd.files_as + '.' : '') +
         (nd.schedule && !nd.products.length ? ' Which products? Write e.g. "products: Gem Screener, Chart Analyzer".' : '') };
+    }
+    if (/(rule|pravidl|whenever|kdykoli|kdy[zž] (se|n[eě]kdo|n[aá]m|vyjde|vyd)|when (a|an|someone|anyone))/.test(t)) {
+      var trig = /(release|vyd[aá]|vyjde|new build|nov[yý] (produkt|build)|deliver|dodaj|dod[aá])/.test(t) ? 'released' : /(bug|chyb|problem)/.test(t) ? 'bug' :
+        /(win|vyhr|v[ií]t[eě]z|uspe|úsp[eě])/.test(t) ? 'winner' : /(idea|n[aá]pad|feature)/.test(t) ? 'idea' : /(money|vyd[eě]l|profit|zisk)/.test(t) ? 'money' : /(design|vzhled|look)/.test(t) ? 'design' : null;
+      var tk = /(\bqa\b|test)/.test(t) ? 'testing' : /(develop|v[yý]voj)/.test(t) ? 'development' : /(lab)/.test(t) ? 'testing_lab' : /(design)/.test(t) ? 'design' : /(trad|desk)/.test(t) ? 'trading_desk' : null;
+      if (trig && !tk) tk = { bug: 'testing', released: 'testing', idea: 'development', money: 'testing_lab', winner: 'trading_desk', design: 'design' }[trig];
+      var same = trig && S.rules.filter(function (x) { return x.trigger === trig && x.target === tk; })[0];
+      if (same) {
+        if (!same.on) CO.act.rule(same.id, true);
+        return 'That is already process ' + same.id + ': when ' + CO.TRIGGERS[trig].toLowerCase() + ' → ' + (ruleTarget(same) ? ruleTarget(same).name : KEYNAME[tk]) + ' ' + same.text + '. It is on.';
+      }
+      if (trig) {
+        var nr = CO.act.addRule({ trigger: trig, target: tk, text: { bug: 'verifies it and files the report as expire76', released: 'tests the new build and reports what is broken',
+          idea: 'writes it up as a Build it Better request', money: 'proves it on paper first', winner: 'prepares the real trade; nothing is spent without your Approve', design: 'reviews it against its brief' }[trig] });
+        var td = ruleTarget(nr);
+        return 'Rule ' + nr.id + ' added: when ' + CO.TRIGGERS[trig].toLowerCase() + ' → ' + (td ? td.name : KEYNAME[tk]) + ' ' + nr.text + '. Everyone follows it from now on.' +
+          (td ? '' : ' There is no such department yet; until you add one, I hold these for you.');
+      }
     }
     var pm = text.match(/(?:products?|produkty?)\s*:\s*(.+)$/i);
     if (pm) {

@@ -444,6 +444,31 @@ select:focus, .search:focus, .field input:focus, .field textarea:focus { border-
 .danger { border-color: rgba(255, 68, 68, .45); }
 .hint { font-size: 11px; color: var(--dim2); margin-top: 6px; }
 
+/* company rules */
+.rulesgrid { max-width: 980px; }
+.hb { width: 100%; min-height: 230px; resize: vertical; background: var(--deep); border: 1px solid var(--line3); border-radius: 8px; padding: 10px 12px; font-size: 12.5px; line-height: 1.7; color: var(--text); outline: none; }
+.hb:focus { border-color: var(--cyan); }
+.rule { display: grid; grid-template-columns: 40px minmax(0, 1fr) auto auto; gap: 12px; align-items: center; padding: 10px 12px; border: 1px solid var(--line); border-radius: 10px;
+  background: var(--navy2); margin-bottom: 8px; opacity: .55; transition: opacity .2s, border-color .2s; }
+.rule.on { opacity: 1; border-color: var(--line3); }
+.rule .ric svg { width: 36px; height: 36px; display: block; }
+.rhead { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; } .rhead b { font-size: 13px; } .rhead .rt { color: var(--cyan); }
+.rule .arrow, .addrule .arrow { color: var(--dim2); font-weight: 700; }
+.rule p { font-size: 12px; color: var(--dim); margin-top: 3px; line-height: 1.45; }
+.rid { font-size: 10px; font-weight: 700; color: var(--dim2); border: 1px solid var(--line3); border-radius: 5px; padding: 0 5px; }
+.then { margin-top: 5px; font-size: 11px; color: var(--cyan); display: flex; align-items: center; gap: 6px; }
+.then::before { content: '↳'; color: var(--dim2); }
+.addrule select { max-width: 240px; }
+.fired { font-size: 10.5px; font-weight: 700; color: var(--green); border: 1px solid rgba(0, 255, 136, .5); border-radius: 99px; padding: 0 7px; }
+.miss { font-size: 10.5px; color: var(--red); border: 1px solid rgba(255, 68, 68, .5); border-radius: 99px; padding: 0 7px; }
+.lock { font-size: 10.5px; color: var(--blue); border: 1px solid var(--blue); border-radius: 99px; padding: 2px 9px; }
+.switch.mini { padding: 0; border: 0; background: none; } .switch.mini .sw { width: 36px; height: 20px; } .switch.mini .sw::after { width: 14px; height: 14px; }
+.switch.mini.on .sw::after { left: 19px; }
+.rx { color: var(--dim2); font-size: 16px; width: 24px; height: 24px; border-radius: 6px; } .rx:hover { color: var(--red); background: var(--red-a); }
+.addrule { display: flex; gap: 8px; align-items: center; margin-top: 10px; padding-top: 12px; border-top: 1px solid var(--line); }
+.addrule input { flex: 1; min-width: 0; background: var(--deep); border: 1px solid var(--line3); border-radius: 7px; padding: 6px 9px; font-size: 12px; color: var(--text); outline: none; }
+@media (max-width: 1100px) { .rulesgrid { grid-template-columns: 1fr; } }
+
 /* modal, toast, sim bar */
 .modal { position: fixed; inset: 0; z-index: 50; display: grid; place-items: center; background: rgba(6, 9, 15, .72); backdrop-filter: blur(3px); animation: fadein .2s; }
 @keyframes fadein { from { opacity: 0; } }

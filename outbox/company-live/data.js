@@ -32,6 +32,23 @@
     { key: 'custom', name: '', experts: ['researcher'], charter: '' }
   ];
 
+  // Company rules: what anyone notices outside its own job goes where the rule says (the Manager routes it).
+  // The events a company process can start from: universal, so any department and any rule fit.
+  CO.TRIGGERS = {
+    bug: 'A bug is found', released: 'A new build is released', idea: 'A product idea comes up', money: 'A way to make money comes up',
+    winner: 'An experiment wins on paper', design: 'Something looks wrong', custom: 'Anything else'
+  };
+  // What a department's work usually raises next, so a rule can show what it leads to.
+  CO.EMITS = { development: 'released', testing_lab: 'winner', design: 'idea', trading_desk: null, testing: null, custom: null };
+  CO.RULES = [
+    { id: 'R1', on: true, trigger: 'bug', target: 'testing', text: 'verifies it and files the report as expire76' },
+    { id: 'R2', on: true, trigger: 'released', target: 'testing', text: 'tests the new build the same day and reports what is broken' },
+    { id: 'R3', on: true, trigger: 'idea', target: 'development', text: 'writes it up as a Build it Better request' },
+    { id: 'R4', on: true, trigger: 'money', target: 'testing_lab', text: 'proves it on paper first' },
+    { id: 'R5', on: true, trigger: 'winner', target: 'trading_desk', text: 'prepares the real trade; nothing is spent without your Approve' },
+    { id: 'R6', on: false, trigger: 'design', target: 'design', text: 'reviews it against its brief' }
+  ];
+
   // GET /api/v1/token-launch/chains, read 2026-10-16.
   CO.CHAINS = [{ key: '4663', name: 'Robinhood Chain', currency: 'ETH' }, { key: '5042', name: 'Arc', currency: 'USDC' },
     { key: 'sui', name: 'Sui', currency: 'SUI' }];
@@ -300,6 +317,7 @@
         ] }
       },
       legal: { domicile: 'Cayman Islands', name: 'Cymetica QA Ltd.', formed: false },
+      rules: CO.RULES.map(function (r) { var c = {}; for (var k in r) c[k] = r[k]; c.fired = 0; return c; }), next_rule: CO.RULES.length + 1,
       token: { chain: '5042', symbol: '', reserved: false, perp_listed: false },
       next_id: 40, next_msg: 4, next_appr: 3, next_mem: memory.length + 1, next_dept: 6
     };

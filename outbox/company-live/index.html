@@ -40,6 +40,7 @@
   <button data-tab="approvals">Approvals<sup class="r" id="tn-appr"></sup></button>
   <button data-tab="memory">Memory</button>
   <button data-tab="audit">Audit</button>
+  <button data-tab="rules">Processes<sup id="tn-rules"></sup></button>
   <span class="sp"></span>
   <button data-tab="investable">Investable</button>
   <button data-tab="legal">Legal entity</button>
@@ -138,6 +139,14 @@
 <main class="page pane" data-pane="audit" hidden>
   <div class="ph"><h2>Weekly audit</h2><span class="sub" title="A company-wide scheduled review by the built-in supervisor: wasted work, duplicates and stuck tasks. Separate from the hireable Auditor.">by the built-in supervisor <i class="q">?</i></span></div>
   <div id="audit"></div>
+</main>
+
+<main class="page pane" data-pane="rules" hidden>
+  <div class="ph"><h2>How the company works</h2><span class="sub">every process is one sentence: when something happens, a department does something; the Manager routes it</span></div>
+  <div class="rulesgrid">
+    <section class="card"><h3>Processes · when → who → what</h3><div id="rules"></div>
+      <div class="addrule"><select id="nr-trig"></select><span class="arrow">→</span><select id="nr-target"></select><input id="nr-text" placeholder="does what, in your words"><button class="btn cy" data-a="rule-add">Add rule</button></div></section>
+  </div>
 </main>
 
 <main class="page pane" data-pane="investable" hidden>

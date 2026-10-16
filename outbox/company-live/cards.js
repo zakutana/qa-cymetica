@@ -91,6 +91,23 @@
     auditor: '<path d="M0 -7 L6 -4 L6 1 Q6 6 0 8 Q-6 6 -6 1 L-6 -4 Z" fill="none" stroke="currentColor" stroke-width="1.7"/><path d="M-3 0 L-1 2 L3 -2" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/>',
     designer: '<path d="M-6 6 L-5 2 L4 -7 L7 -4 L-2 5 Z" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round"/>'
   };
+  var RULE_ICON = {
+    real: ['#3b82f6', '<rect x="-6" y="-1" width="12" height="9" rx="2" fill="none" stroke="currentColor" stroke-width="1.8"/><path d="M-3.5 -1 L-3.5 -4 Q0 -9 3.5 -4 L3.5 -1" fill="none" stroke="currentColor" stroke-width="1.8"/>'],
+    bug: ['#ff4444', '<ellipse rx="4.5" ry="6" fill="currentColor"/><circle cy="-7" r="2.6" fill="currentColor"/><path d="M-4 -2 L-8 -5 M4 -2 L8 -5 M-4 2 L-8 2 M4 2 L8 2 M-4 5 L-7 8 M4 5 L7 8" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>'],
+    idea: ['#00cfff', '<path d="M-4 3 Q-8 -1 -6 -5 Q-3 -9 0 -9 Q3 -9 6 -5 Q8 -1 4 3 L4 6 L-4 6 Z" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/><path d="M-3 9 L3 9" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>'],
+    money: ['#00ff88', '<path d="M-8 6 L-3 0 L1 3 L8 -5 M4 -5 L8 -5 L8 -1" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>'],
+    design: ['#00cfff', '<path d="M-7 7 L-6 3 L4 -7 L7 -4 L-3 6 Z" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/>'],
+    released: ['#00ff88', '<path d="M0 -8 L0 5 M-5 0 L0 5 L5 0" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" transform="rotate(180)"/><path d="M-7 8 L7 8" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>'],
+    winner: ['#00ff88', '<path d="M-6 -7 L6 -7 L6 -3 Q6 3 0 3 Q-6 3 -6 -3 Z M0 3 L0 7 M-4 8 L4 8" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/>'],
+    custom: ['#7f93ad', '<circle cx="-5" r="1.8" fill="currentColor"/><circle r="1.8" fill="currentColor"/><circle cx="5" r="1.8" fill="currentColor"/>'],
+    stuck: ['#ff4444', '<path d="M0 -8 L8 7 L-8 7 Z" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/><path d="M0 -2 L0 2" stroke="currentColor" stroke-width="2" stroke-linecap="round"/><circle cy="4.8" r="1.1" fill="currentColor"/>'],
+    lesson: ['#3b82f6', '<path d="M-8 -6 L0 -4 L8 -6 L8 6 L0 8 L-8 6 Z M0 -4 L0 8" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round"/>']
+  };
+  CO.ruleIcon = function (trigger) {
+    var r = RULE_ICON[trigger] || RULE_ICON.idea;
+    return '<svg viewBox="-14 -14 28 28" xmlns="http://www.w3.org/2000/svg" color="' + r[0] + '"><circle r="13" fill="#06090f" stroke="' + r[0] + '" stroke-width="1.6"/>' + r[1] + '</svg>';
+  };
+
   // a figure in the role's colour with its badge; small figures drop the badge
   CO.expertArt = function (key, small) {
     var info = CO.EXPERT_INFO[key] || { col: C.blue }, c = info.col, id = 'xg-' + key;

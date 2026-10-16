@@ -82,6 +82,7 @@
     S.departments.forEach(function (d) { open += CO.deptView(d).open; });
     $('tn-tasks').textContent = open || '';
     $('tn-appr').textContent = S.approvals.length || '';
+    $('tn-rules').textContent = S.rules ? S.rules.filter(function (r) { return r.on; }).length : '';
   }
 
   function renderRail() {
@@ -334,7 +335,38 @@
     if (name === 'office') requestAnimationFrame(function () { office.resize(); });
   }
   function renderPane() {
-    ({ tasks: renderTasks, approvals: renderApprovals, memory: renderMemory, audit: renderAudit, investable: renderInvest, legal: renderLegal, token: renderToken, settings: renderSettings }[ui.tab] || function () {})();
+    ({ tasks: renderTasks, approvals: renderApprovals, memory: renderMemory, audit: renderAudit, rules: renderRules, investable: renderInvest, legal: renderLegal, token: renderToken, settings: renderSettings }[ui.tab] || function () {})();
+  }
+  var KEYS = [['testing', 'Testing / QA'], ['development', 'Development'], ['testing_lab', 'Testing lab'], ['design', 'Design studio'], ['trading_desk', 'Trading desk']];
+  function targetName(r) {
+    var d = CO.ruleTarget(r); if (d) return d.name;
+    return (KEYS.filter(function (x) { return x[0] === r.target; })[0] || [0, 'a department'])[1];
+  }
+  // what a rule's department raises next, and the rule that picks it up
+  function nextOf(r) {
+    var d = CO.ruleTarget(r), key = d ? d.key : r.target;
+    var ev = r.trigger === 'released' && key === 'testing' ? 'bug' : r.trigger === 'bug' ? null : CO.EMITS[key];
+    if (!ev) return null;
+    var nx = CO.S.rules.filter(function (x) { return x.on && x.trigger === ev && x.id !== r.id; })[0];
+    return nx ? { ev: ev, rule: nx } : null;
+  }
+  function renderRules() {
+    var S = CO.S;
+    setHTML($('rules'), S.rules.map(function (r) {
+      var d = CO.ruleTarget(r), n = r.on ? nextOf(r) : null;
+      return '<div class="rule' + (r.on ? ' on' : '') + '" data-rule="' + r.id + '"><span class="ric">' + CO.ruleIcon(r.trigger) + '</span>' +
+        '<div class="rbody"><div class="rhead"><span class="rid">' + r.id + '</span><b>When ' + esc(CO.TRIGGERS[r.trigger].toLowerCase()) + '</b><span class="arrow">→</span><b class="rt">' + esc(targetName(r)) + '</b>' +
+        (r.fired ? '<span class="fired">' + r.fired + '× so far</span>' : '') + (!d ? '<span class="miss">no such department yet</span>' : '') + '</div>' +
+        '<p>' + esc(targetName(r)) + ' ' + esc(r.text) + '.</p>' +
+        (n ? '<div class="then">then: ' + esc(CO.TRIGGERS[n.ev].toLowerCase()) + ' → ' + esc(targetName(n.rule)) + ' <span class="rid">' + n.rule.id + '</span></div>' : '') + '</div>' +
+        '<span class="switch mini' + (r.on ? ' on' : '') + '" data-a="rule-toggle"><span class="sw"></span></span><button class="rx" data-a="rule-del" title="Remove">×</button></div>';
+    }).join(''));
+    var trig = $('nr-trig');
+    if (!trig.options.length) trig.innerHTML = Object.keys(CO.TRIGGERS).map(function (k) { return '<option value="' + k + '">When ' + CO.TRIGGERS[k].toLowerCase() + '</option>'; }).join('');
+    var tg = $('nr-target'), cur = tg.value;
+    var opts = S.departments.map(function (x) { return '<option value="id:' + x.id + '">' + esc(x.name) + '</option>'; }).join('') +
+      KEYS.filter(function (k) { return !S.departments.some(function (x) { return x.key === k[0]; }); }).map(function (k) { return '<option value="' + k[0] + '">' + k[1] + ' (not hired yet)</option>'; }).join('');
+    if (tg._h !== opts) { tg._h = opts; tg.innerHTML = opts; if (cur) tg.value = cur; }
   }
   function renderTasks() {
     var S = CO.S, sel = $('tf-dept');
@@ -680,6 +712,12 @@
       if (t.closest('#dr-mem-all')) { ui.memDept = ui.panel; setTab('memory'); var c = document.querySelector('[data-mem="' + ui.memDept + '"]'); if (c) c.scrollIntoView({ block: 'start' }); return; }
       if (t.closest('#dr-ch-discard')) { ui.dirty = false; $('dr-ch-text').value = CO.dept(ui.panel).charter; charterMeta(); return; }
       // the other tabs
+      var rr = t.closest('.rule [data-a]');
+      if (rr) {
+        var rid = rr.closest('.rule').getAttribute('data-rule'), ra = rr.getAttribute('data-a'), rl = CO.S.rules.filter(function (x) { return x.id === rid; })[0];
+        if (ra === 'rule-toggle' && rl) { CO.act.rule(rid, !rl.on); return toast('Rule ' + rid + (rl.on ? ' on.' : ' off.')); }
+        if (ra === 'rule-del') { CO.act.removeRule(rid); return toast('Rule ' + rid + ' removed.'); }
+      }
       var pa2 = t.closest('.page [data-a]');
       if (pa2) return pageAct(pa2.getAttribute('data-a'));
       // modal
@@ -723,6 +761,11 @@
   }
   function pageAct(a) {
     var S = CO.S;
+    if (a === 'rule-add') {
+      var tx = $('nr-text').value.trim(), tg = $('nr-trig').value, to = $('nr-target').value;
+      var r = CO.act.addRule({ trigger: tg, target: to, text: tx || 'takes care of it' });
+      $('nr-text').value = ''; toast('Process ' + r.id + ' added: everyone follows it from now on.');
+    }
     if (a === 'invest') { S.company.investable = !S.company.investable; CO.changed(); toast(S.company.investable ? 'Investable: the scoreboard is public.' : 'Private again.'); }
     if (a === 'form') openModal('<div class="mh"><h3>Start formation?</h3></div><p>' + esc(S.legal.domicile) + ' · ' + esc(($('lg-name') || {}).value || S.legal.name) + '. Filing waits for your approval like everything real.</p>' +
       '<div class="mf"><span class="sp"></span><button class="btn" data-a="close">Cancel</button><button class="btn gr" data-a="go">Start</button></div>', false, function (b) { if (b === 'go') { closeModal(); toast('Mockup: nothing is filed.'); } });
@@ -756,6 +799,7 @@
       if (e.decision === 'approve') { office.packet('you', 'hub', 'green'); office.packet('hub', 'd' + e.dept.id, 'green', 1100); }
       else { office.packet('you', 'hub', 'red'); }
     });
+    CO.on('handoff', function (e) { office.packet('d' + e.from.id, 'd' + e.to.id, 'red'); });
     CO.on('submitted', function (e) { if (e.dept) { office.packet('d' + e.dept.id, 'hub', 'green'); } });
     CO.on('message', function () { office.packet('hub', 'you', 'cyan'); });
     // after the office changes shape, the camera goes back to what is in focus
