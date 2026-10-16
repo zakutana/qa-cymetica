@@ -10,9 +10,13 @@ company bar ("heartbeat (last turn / next pass)").
 20:16:12 -> 20:16:42 -- while `last_pass_at` stayed 19:41:17 and `pass_every_s` said 120. The
 pass promised for 20:16:01 had not come by 20:16:12; the next read simply promised another.
 
-**The rule.** Read the heartbeat, wait until 20 s after the `next_pass_at` it names, read again: a
-pass ran (the second `last_pass_at` is at or after the promised time, 2 s of slack), or the second
-read no longer promises one. A heartbeat that names no next pass promised nothing and is not judged.
+**The rule.** A company that cannot run (`run_state` paused) and names no next pass passes: that is
+an honest heartbeat (their fix of 2026-10-16, REPLY-0179). Otherwise read the heartbeat, wait until
+20 s after the `next_pass_at` it names, read again: a pass ran (the second `last_pass_at` is at or
+after the promised time, 2 s of slack), or the second read no longer promises one. A company that
+can run and names no next pass promised nothing and is not judged. (Until 2026-10-16 a paused
+company with no promise was not judged either, so the very fix this docstring asked for could
+never have cleared it.)
 
 NOT asserted: whether a paused company should pass at all, the 120 s cadence, or anything the
 pass does. A fix that drops `next_pass_at` while paused and one that really passes both pass.
@@ -55,6 +59,16 @@ def broken_promise(first: dict, second: dict) -> bool | None:
     return True
 
 
+def unpromised(first: dict, run_state: dict) -> str | None:
+    """A heartbeat that names no next pass: "passed" when the company says it cannot run (paused),
+    so nothing should be promised; None (not judged) for a company that runs and promises nothing,
+    or when a pass is promised and must be judged by whether it comes."""
+    if (first or {}).get("next_pass_at") is not None:
+        return None
+    paused = (run_state or {}).get("can_run") is False or (run_state or {}).get("state") == "paused"
+    return "passed" if paused else None
+
+
 def _heartbeat(client) -> tuple[dict, dict]:
     r = client.get(MINE)
     if r.status_code != 200:
@@ -71,9 +85,22 @@ def _heartbeat(client) -> tuple[dict, dict]:
 def test_company_heartbeat_keeps_its_promise(rest_trusted):
     """Two reads of our company's heartbeat, the second after the pass the first promised."""
     first, state = _heartbeat(rest_trusted)
+    if unpromised(first, state) == "passed":
+        conclude(Measurement(
+            verdict="passed",
+            reason=(f"the company cannot run (run_state {state.get('state')!r}) and its heartbeat "
+                    f"promises no next pass (next_pass_at null; last pass {first.get('last_pass_at')})"),
+            left={"promised_pass_missed": False},
+            right={"promised_pass_missed": False},
+            population={"first": first, "run_state": state.get("state"),
+                        "run_state_message": state.get("message")},
+            sources={"heartbeat": f"{MINE} heartbeat {{last_pass_at, next_pass_at, pass_every_s}}",
+                     "contract": "ET-31466: the company bar's heartbeat, last turn and next pass"},
+            claim_id=CLAIM))
+        return
     promised = _at(first.get("next_pass_at"))
     if promised is None:
-        raise Inconclusive(f"the heartbeat names no next pass ({first}); nothing promised")
+        raise Inconclusive(f"a company that can run names no next pass ({first}); nothing promised")
     wait = promised.timestamp() + AFTER_S - datetime.now(timezone.utc).timestamp()
     if wait > MAX_WAIT_S:
         raise Inconclusive(f"the next pass is {wait:.0f} s away, past the {MAX_WAIT_S} s this waits")

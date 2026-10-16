@@ -1194,6 +1194,14 @@ def _the_company_heartbeat_readings():
     assert broken_promise(first, ran) is False, "a pass after the promised time keeps it"
     assert broken_promise(first, {"last_pass_at": "2026-10-15T19:41:17Z", "next_pass_at": None}) is False
     assert broken_promise({"next_pass_at": None}, second) is None, "nothing promised, nothing judged"
+    # 2026-10-16, REPLY-0179: their fix gives a paused company next_pass_at null. That is the honest
+    # heartbeat the docstring asked for, so it passes; a running company that promises nothing is
+    # still not judged (the first version sent both to inconclusive, so no fix could ever clear it).
+    from tests.rest.test_company_heartbeat_keeps_its_promise import unpromised
+
+    assert unpromised({"next_pass_at": None}, {"state": "paused", "can_run": False}) == "passed"
+    assert unpromised({"next_pass_at": None}, {"state": "running", "can_run": True}) is None
+    assert unpromised(first, {"state": "paused", "can_run": False}) is None, "a promise is judged by its pass"
 
 
 def _the_tournament_own_seat_readings():
