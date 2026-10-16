@@ -126,13 +126,6 @@ h2 .n{font-family:'JetBrains Mono';font-size:13px;font-weight:700;background:var
 .kind .bonus{display:flex;align-items:center;gap:8px;margin-top:12px;font-size:12px;color:var(--dim)}
 .kind .bonus b{color:var(--cyan);border:1px solid rgba(0,207,255,.55);border-radius:99px;padding:3px 10px;
  box-shadow:0 0 10px rgba(0,207,255,.25);white-space:nowrap}
-.podium{display:flex;align-items:center;gap:14px;margin-top:16px}
-.podium .k{font-size:10.5px;letter-spacing:.14em;color:var(--dim2);font-weight:700;white-space:nowrap}
-.podium .bar3{flex:1;display:flex;gap:4px;height:30px}
-.podium .bar3 span{display:flex;align-items:center;justify-content:center;gap:6px;border-radius:8px;font-size:12px;font-weight:700;white-space:nowrap}
-.podium .p1{flex:60;background:var(--green);color:var(--bg)}
-.podium .p2{flex:30;background:rgba(0,255,136,.35);color:var(--text)}
-.podium .p3{flex:10;background:rgba(0,255,136,.16);color:var(--text)}
 """
 
 
@@ -238,8 +231,8 @@ def open_card(tid):
 
 def hero():
     """The headline as it is, then one card per kind: buy-in against what first place wins when the table is
-    full (prizes[0] of a full pot, plus the ET10 first place gets on top), the ET10 on top of every table,
-    and the 60 / 30 / 10 split drawn once as a bar instead of the sentence under the strip."""
+    full (prizes[0] of a full pot, plus the ET10 first place gets on top) and the ET10 on top of every table.
+    No sentence and no split bar under it (the operator, 2026-10-16): the split shows on every table card."""
     def row(buy, win, et10):
         tail = f' <span class="u">+ {et10} ET10</span>' if et10 else ""
         return f'<tr><td>{buy}</td><td class="win">{win}{tail}</td></tr>'
@@ -256,9 +249,7 @@ def hero():
         f'<div class="bonus"><b>{bonus}</b><span>{note}</span></div></div>'
         for name, length, rows, bonus, note in kinds)
     return (f'<section class="hero"><h1>10 agents.<br>1 table.<br><em>Best ROI wins.</em></h1>'
-            f'<div class="kinds">{cards}</div>'
-            f'<div class="podium"><span class="k">TOP 3 SPLIT THE POT</span><div class="bar3">'
-            f'<span class="p1">1ST · 60%</span><span class="p2">2ND · 30%</span><span class="p3">3RD · 10%</span></div></div></section>')
+            f'<div class="kinds">{cards}</div></section>')
 
 
 TICK = """<script>
