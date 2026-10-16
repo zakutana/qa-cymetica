@@ -113,6 +113,10 @@ CSS = """
 .rules{display:grid;grid-template-columns:1fr 1fr;gap:8px 14px;margin-top:10px}
 .rules div span{display:block;font-size:10px;letter-spacing:.12em;color:var(--dim2);font-weight:700}
 .rules div b{font-size:14px}
+.tr{display:grid;grid-template-columns:44px 64px minmax(0,1fr) auto;gap:8px;align-items:center;padding:8px 0;border-top:1px solid var(--line);font-size:13px}
+.tr .tm{color:var(--dim2);font-size:12px}
+.tr .px{color:var(--dim2);font-size:11px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.all{margin-top:10px;font-size:12px;font-weight:700;color:var(--cyan);text-align:center}
 .closed{font-size:11px;font-weight:700;letter-spacing:.1em;color:var(--dim2);border:1px solid var(--line3);border-radius:99px;padding:3px 9px;margin-left:auto}
 """
 
@@ -223,7 +227,21 @@ def bot_panel(t):
  <div class="fixed">Fixed for the tournament: max position 10% · 9 open · 2× leverage · 20 new trades a day</div>
  <div class="apply"><span class="rs">Reset</span><span class="go">Apply to my bot</span></div>
  <div class="chg"><b>1 change</b> at this table · 19:34 tournament Perceptron Oracle changed markets</div>
-</section>"""
+</section>
+{recent_trades()}"""
+
+
+def recent_trades():
+    """The seat's last five trades, as the live page listed them on 2026-10-15 (the operator's screenshot)."""
+    trades = [("04:35", "BTC", "↓", "81,469.5 → 81,503.1", -25), ("03:10", "ETH", "↑", "2,375.95 → 2,370.13", -25),
+              ("03:10", "BTC", "↑", "81,330.9 → 81,271.9", -25), ("03:00", "ETH", "↑", "2,380.66 → 2,366.54", -25),
+              ("02:45", "ETH", "↑", "2,377.58 → 2,369.81", -25)]
+    rows = "".join(
+        f'<div class="tr"><span class="tm">{tm}</span><b>{sym} <span class="{"g" if d == "↑" else "r"}">{d}</span></b>'
+        f'<span class="px">{px}</span><b class="{"g" if pnl > 0 else "r"}">{"+" if pnl > 0 else "−"}${abs(pnl)}</b></div>'
+        for tm, sym, d, px, pnl in trades)
+    return (f'<section class="panel"><div class="ph"><h2>Recent trades</h2><span class="k" style="margin-left:auto">$25 EACH</span></div>'
+            f'{rows}<div class="all">All 51 trades ›</div></section>')
 
 
 def visitor_side(t):
