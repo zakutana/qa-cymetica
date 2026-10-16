@@ -155,10 +155,33 @@
         S.plan.unshift(t.id);
         feed('info', d.name, 'finished turn ' + t.turns + ' of ' + t.turns_needed + ' on "' + t.title + '"');
         outcome = 'continue';
+      } else if (t.run) {
+        // a scheduled bug-hunting run: each bug found is a report drafted under the owner's name
+        t.status = 'done'; t.finished_at = S.clock;
+        var prods = (d.products && d.products.length ? d.products : ['the public site']).slice();
+        var n = Math.random() < 0.2 ? 0 : Math.random() < 0.55 ? 1 : 2, found = [];
+        for (var k = 0; k < n; k++) {
+          var p = prods[Math.floor(Math.random() * prods.length)], title = bugTitle(p, d);
+          found.push(title);
+          var b = { id: 'A' + (S.next_appr++), task_id: t.id, dept_id: d.id, kind: 'bug report', summary: title, created_at: S.clock, files_as: d.files_as };
+          b.body = bugBody(p, title, d);
+          S.approvals.unshift(b);
+          CO.emit('approval:new', b);
+        }
+        d.runs = (d.runs || 0) + 1;
+        t.outcome = n ? 'Found ' + n + ' bug' + (n > 1 ? 's' : '') + ': ' + found.join('; ') : 'No new bugs on ' + prods.join(', ');
+        if (n) {
+          feed('ask', d.name, 'run found ' + n + ' bug' + (n > 1 ? 's' : '') + ', asks approval');
+          say(d.name + ' finished its run: ' + n + ' bug' + (n > 1 ? 's' : '') + ' drafted as reports under ' + (d.files_as || 'your name') + '. Approve them on the right to file; each accepted bug pays 1,000 ET10.');
+          outcome = 'ask';
+        } else {
+          feed('good', d.name, 'run finished, no new bugs');
+          outcome = 'done';
+        }
       } else if (t.kind) {
         t.status = 'waiting_approval'; t.finished_at = S.clock;
         t.outcome = 'Draft ready: waits for your approval';
-        var a = { id: 'A' + (S.next_appr++), task_id: t.id, dept_id: d.id, kind: t.kind, summary: t.title, created_at: S.clock };
+        var a = { id: 'A' + (S.next_appr++), task_id: t.id, dept_id: d.id, kind: t.kind, summary: t.title, created_at: S.clock, files_as: d.files_as };
         a.body = CO.draft(t.kind, t.title, d.name);
         S.approvals.unshift(a);
         feed('ask', d.name, 'asks approval: ' + t.kind);
@@ -183,6 +206,48 @@
     S.memory.push({ id: S.next_mem++, dept_id: d.id, kind: m[0], text: m[1], at: S.clock });
   }
 
+  /* ---------- scheduled runs: a department that hunts bugs on a clock ---------- */
+  var BUGS = {
+    'gem screener': ['holders count differs from the chain', 'Guardians ring shows green without data', 'sort by 24h volume drops 3 coins'],
+    'chart analyzer': ['score differs from its study on 2 coins', 'RSI panel shows candles an hour old'],
+    'supply analyzer': ['circulating supply above total supply', 'past unlock shown as upcoming'],
+    'agent tournaments': ['deleted bot still seated at table 2', 'leaderboard ROI ignores fees'],
+    'trading station': ['order book total off by one level', 'chart and ticker disagree on last price'],
+    'agent league': ['puzzle closes before its stated time', 'prize list omits a scored answer']
+  };
+  function bugTitle(p, d) {
+    var l = BUGS[p.toLowerCase()] || ['a value on the page that its API does not return', 'a link in the docs answers 404', 'a number differs between page and API'];
+    var used = CO.S.approvals.concat(CO.S.decided).map(function (a) { return a.summary; });
+    for (var i = 0; i < l.length * 2; i++) { var s = p + ': ' + l[Math.floor(Math.random() * l.length)]; if (used.indexOf(s) < 0) return s; }
+    return p + ': ' + l[0] + ' (again)';
+  }
+  function bugBody(p, title, d) {
+    return 'BUG REPORT · found by ' + d.name + ' on its run · filed as ' + (d.files_as || 'you') + '\n\nTitle\n' + title +
+      '\n\nWhere\n' + p + ' on cymetica.com, read during the run' +
+      '\n\nWhat happens\n' + title.split(': ').slice(1).join(': ') + '. Reproduced twice, a minute apart.' +
+      '\n\nEvidence\nThe request, the response and the page, captured at the time.' +
+      '\n\nReward\n1,000 ET10 to ' + (d.files_as || 'you') + ' if Cymetica accepts it.\n\nFiled only after your approval.';
+  }
+  function nextRun(d, t) {
+    var day = new Date(t); day.setHours(0, 0, 0, 0);
+    for (var k = 0; k < 2; k++) {
+      for (var i = 0; i < d.schedule.times.length; i++) {
+        var hm = d.schedule.times[i].split(':'), at = day.getTime() + k * 86400000 + (+hm[0]) * 3600000 + (+hm[1]) * 60000;
+        if (at > t) return at;
+      }
+    }
+    return t + 86400000;
+  }
+  function queueRun(d, why) {
+    var S = CO.S;
+    var open = S.tasks.some(function (t) { return t.dept_id === d.id && t.run && (t.status === 'queued' || t.status === 'running'); });
+    if (open) return null;
+    var t = newTask(d, 'Bug-hunting run: ' + (d.products.length ? d.products.join(', ') : 'the public site'), { turns_needed: 2, why: why, expert: 'qa_tester' });
+    t.run = true;
+    S.plan.unshift(t.id);
+    return t;
+  }
+
   // The Manager keeps three tasks in the plan; it plans for departments with nothing queued first.
   function topUp() {
     var S = CO.S;
@@ -191,8 +256,10 @@
     while (S.plan.length < 3 && guard++ < 6) {
       var busy = {};
       S.plan.forEach(function (id) { var t = task(id); if (t) busy[t.dept_id] = 1; });
-      var cands = S.departments.filter(function (d) { return !busy[d.id] && !deptRunning(d.id); });
-      if (!cands.length) cands = S.departments.slice();
+      // a department on a clock works only its scheduled runs; the Manager plans for the others
+      var free = S.departments.filter(function (d) { return !d.schedule; });
+      var cands = free.filter(function (d) { return !busy[d.id] && !deptRunning(d.id); });
+      if (!cands.length) cands = free.slice();
       if (!cands.length) return;
       var d = cands[Math.floor(Math.random() * cands.length)];
       var pool = CO.POOL[d.key] || CO.POOL.custom;
@@ -237,6 +304,11 @@
     for (var i = timers.length - 1; i >= 0; i--) {
       if (timers[i].at <= S.clock) { var f = timers[i].fn; timers.splice(i, 1); f(); changed(); }
     }
+    S.departments.forEach(function (d) {
+      if (!d.schedule || !d.next_run || S.clock < d.next_run) return;
+      d.next_run = nextRun(d, S.clock + 1000);
+      if (queueRun(d, 'scheduled · ' + d.schedule.label)) { feed('info', 'Manager', 'queued the scheduled run of ' + d.name); changed(); }
+    });
     if (S.company.status === 'active' && S.clock >= S.next_pass_at) pass();
     CO.emit('tick');
   }
@@ -274,6 +346,22 @@
           feed('good', d ? d.name : 'Manager', (a.kind === 'real-money action' ? 'placed' : 'submitted') + ' after your approval: ' + a.summary);
           CO.emit('submitted', { approval: a, dept: d });
         });
+        if (a.kind === 'bug report') {
+          // Cymetica's verdict on the report, a while later
+          later(rand(40000, 70000), function () {
+            var ok = Math.random() < 0.75;
+            a.verdict = ok ? 'accepted' : 'duplicate';
+            if (ok) {
+              S.et10 = (S.et10 || 0) + 1000;
+              if (d) { d.et10 = (d.et10 || 0) + 1000; d.accepted = (d.accepted || 0) + 1; }
+              feed('good', 'Cymetica', 'accepted "' + a.summary + '": +1,000 ET10 to ' + (a.files_as || 'you'));
+              say('Cymetica accepted "' + a.summary + '". 1,000 ET10 credited to ' + (a.files_as || 'you') + '.');
+              CO.emit('bounty', { approval: a, dept: d });
+            } else {
+              feed('bad', 'Cymetica', 'marked "' + a.summary + '" a duplicate: no reward');
+            }
+          });
+        }
         // a task waiting on this approval may now run
         S.tasks.forEach(function (x) { if (x.blocked_by === a.task_id) x.blocked_by = null; });
       } else {
@@ -329,16 +417,24 @@
       var used = S.departments.map(function (d) { return d.slot; });
       var slot = 0; while (used.indexOf(slot) >= 0) slot++;
       var d = { id: S.next_dept++, key: o.key || 'custom', slot: slot, name: o.name, experts: o.experts.length ? o.experts : ['researcher'],
-        units_7d: 0, failed_7d: 0, charter: o.charter, charter_updated_at: S.clock, pool_i: 0, born: S.clock };
+        units_7d: 0, failed_7d: 0, charter: o.charter, charter_updated_at: S.clock, pool_i: 0, born: S.clock,
+        schedule: o.schedule || null, products: o.products || [], files_as: o.files_as || null, et10: 0, accepted: 0, runs: 0 };
       S.departments.push(d);
       feed('good', 'Manager', 'new department: ' + d.name);
+      if (d.schedule) {
+        // first run now, then on its clock
+        var r = queueRun(d, 'first run, right after setup');
+        d.next_run = nextRun(d, S.clock);
+        if (!o.quiet) later(1500, function () { say(d.name + ' is set up. First run queued at the top: "' + r.title + '".'); });
+        CO.emit('dept:new', d); changed(); return d;
+      }
       var pool = CO.POOL[d.key] || CO.POOL.custom;
       var first = d.key === 'custom' ? pool[0] : pool[0];
       var t = newTask(d, d.key === 'custom' ? 'Read the charter and propose a first week' : first.title,
         { kind: d.key === 'custom' ? null : first.kind, turns_needed: first.turns || 1, outcome_text: first.outcome, why: 'new department', expert: first.expert });
       d.pool_i = d.key === 'custom' ? 1 : 1;
       S.plan.unshift(t.id);
-      later(1500, function () { say(d.name + ' is set up with ' + d.experts.map(CO.expertName).join(' and ') + '. First task queued at the top: "' + t.title + '".'); });
+      if (!o.quiet) later(1500, function () { say(d.name + ' is set up with ' + d.experts.map(CO.expertName).join(' and ') + '. First task queued at the top: "' + t.title + '".'); });
       CO.emit('dept:new', d);
       changed();
       return d;
@@ -360,6 +456,18 @@
       feed('bad', 'You', 'removed department ' + d.name);
       CO.emit('dept:removed', d);
       changed();
+    },
+    products: function (id, list) {
+      var d = dept(id); if (!d) return;
+      d.products = list; feed('info', 'You', 'set the products of ' + d.name + ': ' + list.join(', '));
+      changed();
+    },
+    runNow: function (id) {
+      var d = dept(id); if (!d) return;
+      var r = queueRun(d, 'you asked for it at ' + CO.hhmm(CO.S.clock));
+      if (r) { feed('info', 'You', 'asked ' + d.name + ' for a run now'); CO.S.next_pass_at = Math.min(CO.S.next_pass_at, CO.S.clock + 3000); }
+      changed();
+      return r;
     },
     extra: function (on) { CO.S.budget.extra.on = !!on; changed(); },
     settings: function (o) { for (var k in o) CO.S.company[k] = o[k]; changed(); }
@@ -396,6 +504,42 @@
     }
     return null;
   }
+  // "add a QA department that runs twice a day on X and Y, under my name" -> a department spec
+  var KNOWN = ['Gem Screener', 'Chart Analyzer', 'Supply Analyzer', 'Agent Tournaments', 'Trading Station', 'Agent League', 'Memecoin Terminal', 'Build it Better'];
+  function splitList(s) {
+    return s.split(/\s*(?:,|;|\/|\sa\s|\sand\s|\+)\s*/i).map(function (x) { return x.trim().replace(/[.!]+$/, ''); })
+      .filter(Boolean).map(function (x) {
+        var k = KNOWN.filter(function (n) { return n.toLowerCase() === x.toLowerCase(); })[0];
+        return k || x.charAt(0).toUpperCase() + x.slice(1);
+      });
+  }
+  function parseAddDept(text) {
+    var t = text.toLowerCase();
+    var verb = /(add|create|new|set up|start|p[rř][ií]d|zalo[zž]|vytvo[rř]|zř[ií]d|zrid)/.test(t);
+    var noun = /(department|odd[eě]len|team|t[yý]m)/.test(t);
+    if (!(verb && noun)) return null;
+    var qa = /(\bqa\b|test|bug|chyb)/.test(t);
+    var tpl = qa ? CO.TEMPLATES.filter(function (x) { return x.key === 'testing'; })[0] : null;
+    if (!tpl) for (var j = 0; j < ALIAS.length && !tpl; j++) if (ALIAS[j][1].test(t)) tpl = CO.TEMPLATES.filter(function (x) { return x.key === ALIAS[j][0]; })[0];
+    tpl = tpl || CO.TEMPLATES.filter(function (x) { return x.key === 'custom'; })[0];
+    var per = 0, m = t.match(/(\d+)\s*(?:[x×]|times|kr[aá]t)\s*(?:a |per |za |)?(?:day|den|dn|denn)/);
+    if (m) per = +m[1]; else if (/twice a day|dvakr[aá]t/.test(t)) per = 2; else if (/(daily|every day|denn[eě]|ka[zž]d[yý] den)/.test(t)) per = 1;
+    per = Math.min(per, 6);
+    var times = { 1: ['09:00'], 2: ['09:00', '21:00'], 3: ['08:00', '14:00', '20:00'], 4: ['00:00', '06:00', '12:00', '18:00'], 5: ['00:00', '05:00', '10:00', '15:00', '20:00'], 6: ['00:00', '04:00', '08:00', '12:00', '16:00', '20:00'] }[per];
+    var products = [];
+    var pm = text.match(/(?:products?|produkt[yůu]?|produktech)\s*:\s*(.+)$/i);
+    if (pm) products = splitList(pm[1]);
+    else KNOWN.forEach(function (k) { if (t.indexOf(k.toLowerCase()) >= 0) products.push(k); });
+    var mine = /(m[yý]m jm[eé]nem|my name|under me|my account|m[uů]j [uú][cč]et|na m[eě]|et10|odm[eě]n|reward|bounty)/.test(t);
+    var base = qa ? 'QA' : (tpl.name || 'New department'), name = base, n = 2;
+    while (CO.S.departments.some(function (x) { return x.name === name; })) name = base + ' ' + n++;
+    var files = qa || mine ? 'expire76' : null;
+    var charter = (tpl.charter ? tpl.charter + '\n' : '') +
+      (times ? '- Runs ' + per + '× a day (' + times.join(', ') + ') over: ' + (products.length ? products.join(', ') : 'the public site') + '.\n' : '') +
+      (files ? '- Every bug is drafted as a bug-bounty report filed as ' + files + ', so the ET10 reward goes to ' + files + '. Filing waits for my approval.\n' : '');
+    return { key: tpl.key, name: name, experts: qa ? ['qa_tester', 'auditor'] : tpl.experts.slice(), charter: charter.trim(),
+      schedule: times ? { times: times, label: per + '× a day (' + times.join(', ') + ')' } : null, products: products, files_as: files, quiet: true };
+  }
   function counts() {
     var S = CO.S, open = 0, working = 0;
     S.departments.forEach(function (d) {
@@ -411,6 +555,22 @@
   }
   function reply(text, at) {
     var S = CO.S, t = text.toLowerCase(), c = counts(), d = findDept(t), l = CO.left();
+    var spec = parseAddDept(text);
+    if (spec) {
+      var nd = CO.act.addDept(spec);
+      return 'Done: ' + nd.name + ' is set up with ' + nd.experts.map(CO.expertName).join(' and ') + '.' +
+        (nd.schedule ? ' It runs ' + nd.schedule.label + ' over ' + (nd.products.length ? nd.products.join(', ') : 'the public site') + ', first run now.' : '') +
+        (nd.files_as ? ' Every bug becomes a report filed as ' + nd.files_as + '; it waits for your Approve, and each one Cymetica accepts pays 1,000 ET10 to ' + nd.files_as + '.' : '') +
+        (nd.schedule && !nd.products.length ? ' Which products? Write e.g. "products: Gem Screener, Chart Analyzer".' : '');
+    }
+    var pm = text.match(/(?:products?|produkty?)\s*:\s*(.+)$/i);
+    if (pm) {
+      var sd = d && d.schedule ? d : S.departments.filter(function (x) { return x.schedule; }).slice(-1)[0];
+      if (sd) {
+        CO.act.products(sd.id, splitList(pm[1]));
+        return sd.name + ' now tests ' + sd.products.join(', ') + ' on every run (' + sd.schedule.label + ').';
+      }
+    }
     if (!S.departments.length) {
       return 'You have no departments yet. Add one (+ Add on the left, or the empty lot in the office) and I plan its first task at once.';
     }
@@ -475,6 +635,11 @@
     });
     if (v.running && !lit && v.experts.length) v.experts[0].state = 'working';
     v.units = d.units_7d;
+    // what this department eats: of the current 5-hour window and of the week
+    var b = S.budget, from = b.session.resets_at - b.session.every, su = 0;
+    S.strip.forEach(function (c) { if (c.dept_id === d.id && c.at >= from && !c.extra && c.units != null) su += c.units; });
+    v.sessPct = Math.min(100, Math.round(su / b.session.cap * 100));
+    v.weekPct = Math.round(d.units_7d / b.week.cap * 100);
     return v;
   };
   CO.counts = counts;

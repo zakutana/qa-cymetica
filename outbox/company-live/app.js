@@ -66,6 +66,8 @@
     $('co-logo').textContent = initials(c.name);
     var st = $('co-status'); st.textContent = paused ? 'PAUSED' : 'ACTIVE'; st.className = 'pill ' + (paused ? 'off' : 'on');
     $('co-pause').textContent = paused ? 'Resume' : 'Pause';
+    var et = $('co-et10'); et.hidden = !S.et10;
+    if (S.et10) et.innerHTML = '<b>+' + S.et10.toLocaleString('en-US') + '</b> ET10 earned';
     var n = S.approvals.length, w = $('co-waiting');
     w.innerHTML = n ? '<b>' + n + '</b> waiting for you' : 'nothing waits for you';
     w.classList.toggle('none', !n);
@@ -88,8 +90,10 @@
     setHTML($('depts'), S.departments.map(function (d) {
       var v = CO.deptView(d);
       return '<button class="dept ' + v.status + (ui.panel === d.id ? ' on' : '') + (d.born && S.clock - d.born < 4000 ? ' born' : '') + '" data-id="' + d.id + '" title="' + WORD[v.status] + '">' +
-        '<div class="d1"><i class="dot"></i><b>' + esc(d.name) + '</b><span class="u" title="Share of your weekly plan this department used in the last 7 days">' +
-        Math.round(v.units / S.budget.week.cap * 100) + '%<small>of week</small></span></div>' +
+        '<div class="d1"><i class="dot"></i><b>' + esc(d.name) + '</b>' + (d.et10 ? '<span class="et">+' + d.et10.toLocaleString('en-US') + ' ET10</span>' : '') + '</div>' +
+        '<div class="dus" title="What this department used of your plan: this 5-hour session and the last 7 days"><span>' + v.sessPct + '%<small>session</small></span><span>' + v.weekPct + '%<small>week</small></span>' +
+        '<span class="ubar"><i style="width:' + Math.min(100, v.weekPct) + '%"></i></span></div>' +
+        (d.schedule ? '<div class="dsch">⟳ ' + esc(d.schedule.label.replace(/ \(.*/, '')) + ' · next ' + hhmm(d.next_run) + (d.products.length ? ' · ' + esc(d.products.join(', ')) : '') + '</div>' : '') +
         '<div class="d2"><span class="c">' + v.open + '<small>open</small></span><span class="g">' + v.done + '<small>done</small></span>' +
         '<span class="' + (v.failed ? 'r' : 'z') + '">' + v.failed + '<small>failed</small></span><span class="m">' + v.memory + '<small>mem</small></span></div>' +
         (v.waits ? '<div class="dwait">Queued: <span data-wait="' + d.id + '">' + esc(v.waits) + '</span></div>' : '') +
@@ -225,7 +229,19 @@
     if (!ui.dirty && ta.value !== d.charter) ta.value = d.charter;
     charterMeta();
     setHTML($('dr-kp'), '<div><b class="cy">' + v.open + '</b><span>open</span></div><div><b class="gr">' + v.done + '</b><span>done</span></div>' +
-      '<div><b class="red">' + v.failed + '</b><span>failed</span></div><div title="Share of your weekly plan this department used in the last 7 days"><b>' + Math.round(v.units / S.budget.week.cap * 100) + '%</b><span>of week</span></div><div><b>' + v.memory + '</b><span>memory</span></div>');
+      '<div><b class="red">' + v.failed + '</b><span>failed</span></div>' +
+      '<div title="What it used of this 5-hour session"><b>' + v.sessPct + '%</b><span>of session</span></div>' +
+      '<div title="What it used of your weekly plan in the last 7 days"><b>' + v.weekPct + '%</b><span>of week</span></div>');
+    // a department on a clock: its runs, products, who the bugs are filed as, what they earned
+    var runsHtml = '';
+    if (d.schedule) {
+      runsHtml = '<div class="runs"><div class="sec">RUNS <span>' + esc(d.schedule.label) + '</span></div>' +
+        '<div class="rk"><div><b>' + hhmm(d.next_run) + '</b><span>next run</span></div><div><b>' + (d.runs || 0) + '</b><span>runs done</span></div>' +
+        '<div><b class="gr">' + (d.accepted || 0) + '</b><span>bugs accepted</span></div><div><b class="gr">+' + (d.et10 || 0).toLocaleString('en-US') + '</b><span>ET10 to ' + esc(d.files_as || 'you') + '</span></div></div>' +
+        '<div class="prods">' + (d.products.length ? d.products.map(function (p) { return '<span class="chip">' + esc(p) + '</span>'; }).join('') : '<span class="hint">no products yet: the public site</span>') + '</div>' +
+        '<div class="cb"><input id="dr-prods" placeholder="Products, comma separated" value="' + esc(d.products.join(', ')) + '"><button class="btn" data-a="prods">Save</button><button class="btn cy" data-a="runnow">Run now</button></div></div>';
+    }
+    if ($('dr-runs')._h !== runsHtml && !(document.activeElement && document.activeElement.id === 'dr-prods')) { $('dr-runs')._h = runsHtml; $('dr-runs').innerHTML = runsHtml; }
     var r = v.running;
     setHTML($('dr-now'), r ? '<div class="now"><div class="t1">NOW · ATTEMPT ' + r.attempt + ' OF ' + r.max_attempts + '</div><p>' + esc(r.title) + '</p>' +
       '<div class="t2">' + esc(CO.expertName(r.expert)) + ' · started ' + hhmm(r.turn_started || r.started_at) + (r.last_error ? ' · last try: <b>' + esc(r.last_error) + '</b>' : '') + '</div><span class="run"><i></i></span></div>'
@@ -554,6 +570,11 @@
         var x = dra.getAttribute('data-a');
         if (x === 'close') return closeDrawer();
         if (x === 'edit') return editDeptModal(ui.panel);
+        if (x === 'prods') {
+          var list = $('dr-prods').value.split(',').map(function (s) { return s.trim(); }).filter(Boolean);
+          CO.act.products(ui.panel, list); $('dr-prods').blur(); renderDrawer(); return toast('Products saved: every run tests ' + (list.join(', ') || 'the public site') + '.');
+        }
+        if (x === 'runnow') { var rr = CO.act.runNow(ui.panel); return toast(rr ? 'Run queued at the top: it starts on the next pass.' : 'A run is already queued or running.'); }
         if (x === 'appr') { var first = $('dr-appr').querySelector('.ai'); if (first) first.scrollIntoView({ behavior: 'smooth', block: 'center' }); return; }
       }
       var tr = t.closest('.trow[data-task], tr.row[data-task]');
