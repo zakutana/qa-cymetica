@@ -140,7 +140,7 @@
 
   function apprCard(a, full) {
     var d = CO.dept(a.dept_id), isNew = !ui.seen[a.id];
-    var kind = a.kind === 'real-money action' ? 'tag money' : 'tag k';
+    var kind = a.kind === 'real-money action' ? 'tag money' : a.kind === 'review' || a.kind === 'start?' ? 'tag rvk' : 'tag k';
     return '<div class="ai' + (isNew ? ' new' : '') + '" data-id="' + a.id + '"><div class="t"><span class="tag">' + esc(d ? d.name : '') + '</span><span class="' + kind + '">' + esc(a.kind) + '</span>' +
       esc(CO.ago(a.created_at)) + '</div><p>' + esc(a.summary) + '</p>' + (full ? '<div class="draft">' + fmtDraft(a.body) + '</div>' : '') +
       '<div class="bt"><button class="btn gr" data-d="approve">Approve</button><button class="btn rd" data-d="reject">Reject</button>' +
@@ -358,6 +358,9 @@
         '<div class="rbody"><div class="rhead"><span class="rid">' + r.id + '</span><b>When ' + esc(CO.TRIGGERS[r.trigger].toLowerCase()) + '</b><span class="arrow">→</span><b class="rt">' + esc(targetName(r)) + '</b>' +
         (r.fired ? '<span class="fired">' + r.fired + '× so far</span>' : '') + (!d ? '<span class="miss">no such department yet</span>' : '') + '</div>' +
         '<p>' + esc(targetName(r)) + ' ' + esc(r.text) + '.</p>' +
+        '<div class="rv"><span class="rvl">human review</span>' + [['', 'none'], ['start', 'before it starts'], ['result', 'its result']].map(function (m) {
+          return '<button data-a="rule-review" data-m="' + m[0] + '"' + ((r.review || '') === m[0] ? ' class="on"' : '') + '>' + m[1] + '</button>';
+        }).join('') + (r.review ? '<span class="who">by <input class="rvw" value="' + esc(r.reviewer || 'you') + '" title="who reviews: you, or a person by name"></span>' : '') + '</div>' +
         (n ? '<div class="then">then: ' + esc(CO.TRIGGERS[n.ev].toLowerCase()) + ' → ' + esc(targetName(n.rule)) + ' <span class="rid">' + n.rule.id + '</span></div>' : '') + '</div>' +
         '<span class="switch mini' + (r.on ? ' on' : '') + '" data-a="rule-toggle"><span class="sw"></span></span><button class="rx" data-a="rule-del" title="Remove">×</button></div>';
     }).join(''));
@@ -717,6 +720,11 @@
         var rid = rr.closest('.rule').getAttribute('data-rule'), ra = rr.getAttribute('data-a'), rl = CO.S.rules.filter(function (x) { return x.id === rid; })[0];
         if (ra === 'rule-toggle' && rl) { CO.act.rule(rid, !rl.on); return toast('Rule ' + rid + (rl.on ? ' on.' : ' off.')); }
         if (ra === 'rule-del') { CO.act.removeRule(rid); return toast('Rule ' + rid + ' removed.'); }
+        if (ra === 'rule-review') {
+          var mode = rr.getAttribute('data-m');
+          CO.act.review(rid, mode);
+          return toast(mode === 'start' ? rid + ': waits for a person before it starts.' : mode === 'result' ? rid + ': its result waits for a person before it goes on.' : rid + ': no human review.');
+        }
       }
       var pa2 = t.closest('.page [data-a]');
       if (pa2) return pageAct(pa2.getAttribute('data-a'));
@@ -750,6 +758,7 @@
     $('mem-q').addEventListener('input', function (e) { ui.memQ = e.target.value; renderMemory(); });
     document.addEventListener('input', function (e) { if (e.target.id === 'df-ch') { var n = $('df-n'); if (n) n.textContent = e.target.value.length + ' / 2,000'; } });
     document.addEventListener('change', function (e) {
+      if (e.target.classList.contains('rvw')) { var rid2 = e.target.closest('.rule').getAttribute('data-rule'); var rl2 = CO.S.rules.filter(function (x) { return x.id === rid2; })[0]; if (rl2) { CO.act.review(rid2, rl2.review, e.target.value.trim() || 'you'); toast(rid2 + ': reviewed by ' + (e.target.value.trim() || 'you') + '.'); } }
       if (e.target.id === 'tk-chain') CO.S.token.chain = e.target.value;
       if (e.target.id === 'lg-dom') { CO.S.legal.domicile = e.target.value; toast('Domicile: ' + e.target.value); }
     });
@@ -763,7 +772,7 @@
     var S = CO.S;
     if (a === 'rule-add') {
       var tx = $('nr-text').value.trim(), tg = $('nr-trig').value, to = $('nr-target').value;
-      var r = CO.act.addRule({ trigger: tg, target: to, text: tx || 'takes care of it' });
+      var r = CO.act.addRule({ trigger: tg, target: to, text: tx || 'takes care of it', review: $('nr-review').value || null });
       $('nr-text').value = ''; toast('Process ' + r.id + ' added: everyone follows it from now on.');
     }
     if (a === 'invest') { S.company.investable = !S.company.investable; CO.changed(); toast(S.company.investable ? 'Investable: the scoreboard is public.' : 'Private again.'); }

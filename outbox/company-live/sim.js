@@ -189,14 +189,24 @@
         say(d.name + ' drafted a ' + t.kind + ': "' + t.title + '". It waits for your approval.', d.id);
         CO.emit('approval:new', a);
         outcome = 'ask';
+      } else if (t.review) {
+        t.status = 'waiting_approval'; t.finished_at = S.clock;
+        t.outcome = (t.outcome_text || 'Done') + ' · waits for ' + t.review + ' to review';
+        var rv = { id: 'A' + (S.next_appr++), task_id: t.id, dept_id: d.id, kind: 'review', summary: t.title, created_at: S.clock, reviewer: t.review };
+        rv.body = 'PROCESS ' + t.rule + ' · REVIEW THE RESULT · reviewer: ' + t.review + '\n\nTask\n' + t.title + '\n\nResult\n' + (t.outcome_text || 'Done') +
+          '\n\nIf you approve\nIt goes on to the next step of the process.\n\nIf you reject\nIt stops here; ' + d.name + ' keeps the result in its memory.';
+        S.approvals.unshift(rv);
+        feed('ask', d.name, 'result waits for ' + t.review + ' to review');
+        say(d.name + ' finished "' + t.title + '": ' + (t.outcome_text || 'done') + '. Process ' + t.rule + ' wants ' + (t.review === 'you' ? 'your' : t.review + '\'s') + ' review before it goes on.', d.id);
+        CO.emit('approval:new', rv);
+        outcome = 'ask';
       } else {
         t.status = 'done'; t.finished_at = S.clock;
         t.outcome = t.outcome_text || t.outcome || 'Done';
         feed('good', d.name, 'finished "' + t.title + '"');
         if (Math.random() < 0.45) learn(d);
         outcome = 'done';
-        if (Math.random() < 0.3) later(rand(1500, 4000), function () { noticeInPassing(d); });
-        if (d.key === 'testing_lab' && /^(Paper|Bot variant|FOMO)/.test(t.title) && Math.random() < 0.6) later(rand(2000, 4000), function () { fire('winner', d, t.title.replace(/^(Paper test|Paper): /, '')); });
+        afterDone(t, d);
       }
     }
     CO.emit('turn:end', { task: t, dept: d, outcome: outcome });
@@ -236,6 +246,27 @@
       if (!r.on || r.trigger !== kind) return;
       var to = ruleTarget(r);
       if (!to || (from && to.id === from.id && kind !== 'released')) return;
+      if (r.review === 'start') {
+        var ap = { id: 'A' + (S.next_appr++), task_id: null, dept_id: to.id, kind: 'start?', summary: PREFIX[kind] + subject, created_at: S.clock,
+          reviewer: r.reviewer || 'you', pending: { rule: r.id, kind: kind, from: from ? from.id : null, subject: subject } };
+        ap.body = 'PROCESS ' + r.id + ' · REVIEW BEFORE IT STARTS · reviewer: ' + ap.reviewer + '\n\nWhat happened\n' + CO.TRIGGERS[kind] + (from ? ' (found by ' + from.name + ')' : '') + ': ' + subject +
+          '\n\nWhat the process does\n' + to.name + ' ' + r.text + '.\n\nIf you approve\n' + to.name + ' starts it on the next pass.\n\nIf you reject\nNothing starts; the event is dropped.';
+        S.approvals.unshift(ap);
+        r.fired++; hit++;
+        feed('ask', 'Manager', 'process ' + r.id + ' waits for ' + ap.reviewer + ' before ' + to.name + ' starts');
+        say(CO.TRIGGERS[kind] + ': "' + subject + '". Process ' + r.id + ' would hand it to ' + to.name + ', but it asks ' + (ap.reviewer === 'you' ? 'you' : ap.reviewer) + ' first: approve to start.', to.id);
+        CO.emit('approval:new', ap);
+        return;
+      }
+      queueFromRule(r, kind, from, subject, to); hit++;
+    });
+    if (hit) changed();
+    return hit;
+  }
+  function queueFromRule(r, kind, from, subject, to) {
+    var S = CO.S;
+    to = to || ruleTarget(r); if (!to) return null;
+    {
       var o = { turns_needed: 1, why: 'rule ' + r.id + ': ' + CO.TRIGGERS[kind].toLowerCase() + (from ? ' · from ' + from.name : '') };
       if (kind === 'bug') { o.kind = 'bug report'; o.expert = 'qa_tester'; }
       if (kind === 'idea') o.kind = 'BB request';
@@ -245,15 +276,22 @@
       nt.from_dept = from ? from.id : null; nt.rule = r.id; nt.event = kind;
       if (kind === 'released' && !o.kind) nt.outcome_text = 'No bugs in the new build';
       S.plan.unshift(nt.id);
-      r.fired++; hit++;
+      if (r.review === 'result') { nt.review = r.reviewer || 'you'; nt.why += ' · ' + nt.review + ' reviews the result'; }
+      if (!r.reviewed) r.fired++;
       feed('info', from ? from.name : 'Cymetica', CO.TRIGGERS[kind].toLowerCase() + ': ' + subject + ' → ' + to.name + ' (' + r.id + ')');
-      say(CO.TRIGGERS[kind] + (from ? ' (' + from.name + ')' : '') + ': "' + subject + '". Rule ' + r.id + ' hands it to ' + to.name + ', which ' + r.text + '. First in line.', to.id);
+      say(CO.TRIGGERS[kind] + (from ? ' (' + from.name + ')' : '') + ': "' + subject + '". Process ' + r.id + ' hands it to ' + to.name + ', which ' + r.text + '. First in line.' +
+        (nt.review ? ' Its result waits for ' + (nt.review === 'you' ? 'your' : nt.review + '\'s') + ' review before it goes on.' : ''), to.id);
       CO.emit('handoff', { from: from, to: to, rule: r });
-    });
-    if (hit) changed();
-    return hit;
+      changed();
+      return nt;
+    }
   }
   CO.fire = fire;
+  // what a finished piece of work raises next: something noticed on the side, a winning experiment
+  function afterDone(t, d) {
+    if (Math.random() < 0.3) later(rand(1500, 4000), function () { noticeInPassing(d); });
+    if (d.key === 'testing_lab' && /^(Paper|Bot variant|FOMO)/.test(t.title) && Math.random() < 0.6) later(rand(2000, 4000), function () { fire('winner', d, t.title.replace(/^(Paper test|Paper): /, '')); });
+  }
   // a department finishing its own work notices something outside its job
   function noticeInPassing(d) {
     if (!dept(d.id)) return;
@@ -394,6 +432,26 @@
       var t = task(a.task_id), d = dept(a.dept_id);
       a.decision = decision; a.decided_at = S.clock;
       S.decided.unshift(a);
+      if (a.kind === 'start?' || a.kind === 'review') {
+        if (decision === 'approve') {
+          S.approved_7d++;
+          if (a.kind === 'start?') {
+            var pr = (S.rules || []).filter(function (x) { return x.id === a.pending.rule; })[0];
+            if (pr) { pr.reviewed = true; queueFromRule(pr, a.pending.kind, dept(a.pending.from), a.pending.subject); pr.reviewed = false; }
+            feed('good', 'You', 'approved the start: ' + a.summary);
+          } else if (t) {
+            t.status = 'done'; t.outcome = (t.outcome_text || 'Done') + ' · reviewed by ' + a.reviewer; t.finished_at = S.clock;
+            feed('good', 'You', 'reviewed and passed: ' + a.summary);
+            if (d) afterDone(t, d);
+          }
+        } else {
+          if (t) { t.status = 'cancelled'; t.outcome = 'Stopped at ' + a.reviewer + '\'s review'; t.finished_at = S.clock; }
+          feed('bad', 'You', (a.kind === 'start?' ? 'did not start: ' : 'stopped at review: ') + a.summary);
+        }
+        CO.emit('approval:decided', { approval: a, dept: d, decision: decision });
+        changed();
+        return;
+      }
       if (decision === 'approve') {
         S.approved_7d++;
         if (t) { t.status = 'done'; t.outcome = (a.kind === 'real-money action' ? 'Placed after your approval' : 'Submitted after your approval'); t.finished_at = S.clock; }
@@ -525,8 +583,12 @@
       r.on = on; feed('info', 'You', (on ? 'switched on rule ' : 'switched off rule ') + r.id + ': ' + CO.TRIGGERS[r.trigger]); changed();
     },
     addRule: function (o) {
-      var S = CO.S, r = { id: 'R' + (S.next_rule++), on: true, trigger: o.trigger, target: o.target, text: o.text, fired: 0 };
+      var S = CO.S, r = { id: 'R' + (S.next_rule++), on: true, trigger: o.trigger, target: o.target, text: o.text, fired: 0, review: o.review || null, reviewer: o.reviewer || 'you' };
       S.rules.push(r); feed('good', 'You', 'new company rule ' + r.id + ': ' + CO.TRIGGERS[r.trigger] + ' → ' + o.target); changed(); return r;
+    },
+    review: function (id, mode, who) {
+      var r = (CO.S.rules || []).filter(function (x) { return x.id === id; })[0]; if (!r) return;
+      r.review = mode || null; if (who) r.reviewer = who; changed();
     },
     removeRule: function (id) { CO.S.rules = CO.S.rules.filter(function (x) { return x.id !== id || x.locked; }); changed(); },
     products: function (id, list) {
@@ -648,10 +710,12 @@
         return 'That is already process ' + same.id + ': when ' + CO.TRIGGERS[trig].toLowerCase() + ' → ' + (ruleTarget(same) ? ruleTarget(same).name : KEYNAME[tk]) + ' ' + same.text + '. It is on.';
       }
       if (trig) {
-        var nr = CO.act.addRule({ trigger: trig, target: tk, text: { bug: 'verifies it and files the report as expire76', released: 'tests the new build and reports what is broken',
+        var rvw = /(review|zkontrol|schv[aá]l|kouknu|projdu|human|[cč]lov[eě]k|j[aá] (to )?(vid|chci))/.test(t) ? (/(n[eě][zž] za[cč]|before|first|p[rř]edem|nejd[rř][ií]v|ne[zž] se pust)/.test(t) ? 'start' : 'result') : null;
+        var nr = CO.act.addRule({ review: rvw, trigger: trig, target: tk, text: { bug: 'verifies it and files the report as expire76', released: 'tests the new build and reports what is broken',
           idea: 'writes it up as a Build it Better request', money: 'proves it on paper first', winner: 'prepares the real trade; nothing is spent without your Approve', design: 'reviews it against its brief' }[trig] });
         var td = ruleTarget(nr);
-        return 'Rule ' + nr.id + ' added: when ' + CO.TRIGGERS[trig].toLowerCase() + ' → ' + (td ? td.name : KEYNAME[tk]) + ' ' + nr.text + '. Everyone follows it from now on.' +
+        return 'Rule ' + nr.id + ' added: when ' + CO.TRIGGERS[trig].toLowerCase() + ' → ' + (td ? td.name : KEYNAME[tk]) + ' ' + nr.text + '.' +
+          (rvw === 'start' ? ' It waits for your Approve before it starts.' : rvw === 'result' ? ' Its result waits for your review before it goes on.' : '') + ' Everyone follows it from now on.' +
           (td ? '' : ' There is no such department yet; until you add one, I hold these for you.');
       }
     }

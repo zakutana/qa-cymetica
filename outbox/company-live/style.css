@@ -456,6 +456,14 @@ select:focus, .search:focus, .field input:focus, .field textarea:focus { border-
 .rule .arrow, .addrule .arrow { color: var(--dim2); font-weight: 700; }
 .rule p { font-size: 12px; color: var(--dim); margin-top: 3px; line-height: 1.45; }
 .rid { font-size: 10px; font-weight: 700; color: var(--dim2); border: 1px solid var(--line3); border-radius: 5px; padding: 0 5px; }
+.rv { display: flex; align-items: center; gap: 4px; margin-top: 6px; flex-wrap: wrap; }
+.rvl { font-size: 10px; letter-spacing: .08em; color: var(--dim2); text-transform: uppercase; margin-right: 4px; }
+.rv button { font-size: 10.5px; padding: 2px 8px; border-radius: 99px; border: 1px solid var(--line3); color: var(--dim2); }
+.rv button:hover { color: var(--text); } .rv button.on { color: var(--bg); background: var(--blue); border-color: var(--blue); font-weight: 700; }
+.rv button.on[data-m=""] { background: var(--line3); color: var(--text); border-color: var(--line3); }
+.rv .who { font-size: 10.5px; color: var(--dim2); margin-left: 4px; }
+.rv .who input { width: 110px; background: var(--deep); border: 1px solid var(--line3); border-radius: 6px; padding: 1px 6px; font-size: 10.5px; color: var(--text); outline: none; }
+.tag.rvk { border-color: var(--blue); color: var(--text); background: var(--blue-a); }
 .then { margin-top: 5px; font-size: 11px; color: var(--cyan); display: flex; align-items: center; gap: 6px; }
 .then::before { content: '↳'; color: var(--dim2); }
 .addrule select { max-width: 240px; }

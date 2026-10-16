@@ -44,8 +44,8 @@
     { id: 'R1', on: true, trigger: 'bug', target: 'testing', text: 'verifies it and files the report as expire76' },
     { id: 'R2', on: true, trigger: 'released', target: 'testing', text: 'tests the new build the same day and reports what is broken' },
     { id: 'R3', on: true, trigger: 'idea', target: 'development', text: 'writes it up as a Build it Better request' },
-    { id: 'R4', on: true, trigger: 'money', target: 'testing_lab', text: 'proves it on paper first' },
-    { id: 'R5', on: true, trigger: 'winner', target: 'trading_desk', text: 'prepares the real trade; nothing is spent without your Approve' },
+    { id: 'R4', on: true, trigger: 'money', target: 'testing_lab', text: 'proves it on paper first', review: 'result', reviewer: 'you' },
+    { id: 'R5', on: true, trigger: 'winner', target: 'trading_desk', text: 'prepares the real trade; nothing is spent without your Approve', review: 'start', reviewer: 'you' },
     { id: 'R6', on: false, trigger: 'design', target: 'design', text: 'reviews it against its brief' }
   ];
 
