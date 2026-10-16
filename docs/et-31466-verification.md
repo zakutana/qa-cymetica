@@ -61,4 +61,15 @@ Evidence tiers: **API** (our key), **code** (their live JS and CSS), **harness**
 - llms.txt Build a Company entry: none of `GET /plan`, `POST /plan/{id}/move`, `DELETE /plan/{id}`, nor the new `/mine` fields (`budget`, `plan`, `turn_strip`, `heartbeat`, `run_state`, `totals_7d`, `message_notice`, `waits`, `units_7d`).
 - OpenAPI: task schema without `turns` and `units`; department items in `/mine` are untyped; the department `status` text says "idle, working or blocked" while the live value is `queued`; `message_notice` has no fields; the page reads `wait` from the message answer, the schema lists only `notice`.
 
+## Re-read 2026-10-16 ~04:00 UTC, after REPLY-0179
+
+| Item of MSG-0174 | Read |
+|---|---|
+| 1 Task units (Done-when 18) | FIXED: tasks 30 and 31 read units 0.210212 and 0.323559 in /tasks/{id} and /mine tasks_recent |
+| 2 Office size | IN THE CODE: company-office.js now lays the floor plan 6 wide on a wide stage; not rendered here (no signed-in pane) |
+| 3 1440 strip | FIXED in the CSS: the 1181-1600 px rules no longer hide experts or the queued reason |
+| 4 "top" | FIXED: Next up draws a `data-a="top"` button beside up, down and remove |
+| 5 #211, #212 | VERIFIED FIXED by PRE-0281 (run-20261016T035402Z-d7bb5d7b, level V); #212's check was corrected first (d21fb0e8: a paused company that promises no pass now passes, as its docstring said) and pinned; pass verifications sent on both reports |
+| 6 Docs | FIXED: llms.txt names /plan, /move, run_state, turn_strip, units_7d and a "floor plan", no "pixel-art"; the OpenAPI task route carries turns and units |
+
 Verdict: the operator's.

@@ -23,6 +23,6 @@ Also read: the rules strip is one row of seven (buy-in, capital, min volume, pay
 
 **Documentation gap:** the llms.txt Agent Tournaments entry still names four MCP tools and none of ET-31459's routes (`/seats/{id}/bot-settings`, `/tables/{id}/changes`, `agent_tournament_bot_settings`, `agent_tournament_change_bot`, `agent_tournament_table`); the OpenAPI has them.
 
-Re-read 2026-10-16 ~03:50 UTC, after REPLY-0176: llms.txt and llms-full.txt now name `/seats/{id}/bot-settings` (with `dry_run`), `/tables/{id}/changes` and the three new MCP tools. #210 still open (Nexus: fixing under the report).
+Re-read 2026-10-16 ~03:50 UTC, after REPLY-0176: llms.txt and llms-full.txt now name `/seats/{id}/bot-settings` (with `dry_run`), `/tables/{id}/changes` and the three new MCP tools. #210 still open (Nexus: fixing under the report). Then REPLY-0180: #210 VERIFIED FIXED by PRE-0281 (run-20261016T035402Z-d7bb5d7b, level V: seats 1, 29 and 57 read mine true), pass verification sent.
 
 Verdict: the operator's.
