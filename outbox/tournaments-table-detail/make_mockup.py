@@ -117,6 +117,14 @@ CSS = """
 .tr .tm{color:var(--dim2);font-size:12px}
 .tr .px{color:var(--dim2);font-size:11px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .all{margin-top:10px;font-size:12px;font-weight:700;color:var(--cyan);text-align:center}
+.top{border-bottom:none;padding-bottom:12px;margin-bottom:0}
+.rstrip{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:8px;margin:0 0 22px;padding-bottom:20px;border-bottom:1px solid var(--line)}
+.rstrip div{background:var(--navy);border:1px solid var(--line2);border-radius:12px;padding:9px 12px;min-width:0}
+.rstrip span{display:block;font-size:10px;letter-spacing:.14em;color:var(--dim2);font-weight:700;white-space:nowrap}
+.rstrip b{display:block;font-size:15px;margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.rstrip div:first-child b{color:var(--green)}
+.venue{display:flex;align-items:center;gap:8px;margin-top:10px;font-size:12px;color:var(--dim2);background:var(--deep);border-radius:10px;padding:8px 10px}
+.venue b{color:var(--text)}.venue .set{margin-left:auto;color:var(--cyan);font-weight:700}
 .closed{font-size:11px;font-weight:700;letter-spacing:.1em;color:var(--dim2);border:1px solid var(--line3);border-radius:99px;padding:3px 9px;margin-left:auto}
 """
 
@@ -225,6 +233,7 @@ def bot_panel(t):
   <div class="sl"><span>Stop loss</span><b>20%</b></div><div class="trk"><b style="width:100%"></b><i style="left:100%"></i></div>
   <div class="sl"><span>Take profit</span><b>100%</b></div><div class="trk"><b style="width:100%"></b><i style="left:100%"></i></div></div>
  <div class="fixed">Fixed for the tournament: max position 10% · 9 open · 2× leverage · 20 new trades a day</div>
+ <div class="venue"><span>Trades on</span><b>Cymetica</b><span class="set">Settings ›</span></div>
  <div class="apply"><span class="rs">Reset</span><span class="go">Apply to my bot</span></div>
  <div class="chg"><b>1 change</b> at this table · 19:34 tournament Perceptron Oracle changed markets</div>
 </section>
@@ -251,20 +260,23 @@ def visitor_side(t):
         f'<div class="pick"><span class="av" style="color:{lc.TINTS[i % len(lc.TINTS)]}">{lc.BOT}</span>'
         f'{esc(s["bot"].replace("House ", ""))}<span class="p">{(str(by[s["seat_id"]]["pickers"]) + " pick") if s["seat_id"] in by else "no picks"}</span></div>'
         for i, s in enumerate(sorted(t["standings"], key=lambda s: s["rank"])[:5]))
+    return f"""<section class="panel"><div class="ph"><h2>Pick the winner</h2><span class="closed">CLOSED</span></div>
+ <div class="k" style="margin-bottom:6px">{money(p["pool_usdc"])} POOL · {p["pickers"]} PICKER</div>{rows}</section>"""
+
+
+def rules_strip(t):
+    """The table's seven rules, right under its name (the operator: 'napsat nahoru ... a nejak hezceji')."""
     rules = [("BUY-IN", money(t["buyin"])), ("CAPITAL", money(t["capital_usdc"])), ("MIN VOLUME", money(t["min_volume_usdc"])),
              ("PAYOUT", "60 / 30 / 10"), ("ET10", "600 / 300 / 100" if not t["flash"] else "85 / 42 / 14"),
              ("LEVERAGE", "2× max"), ("RANKED BY", "ROI %")]
-    rh = "".join(f'<div><span>{k}</span><b>{v}</b></div>' for k, v in rules)
-    return f"""<section class="panel"><div class="ph"><h2>Pick the winner</h2><span class="closed">CLOSED</span></div>
- <div class="k" style="margin-bottom:6px">{money(p["pool_usdc"])} POOL · {p["pickers"]} PICKER</div>{rows}</section>
-<section class="panel"><div class="ph"><h2>Rules</h2></div><div class="rules">{rh}</div></section>"""
+    return '<div class="rstrip">' + "".join(f'<div><span>{k}</span><b>{v}</b></div>' for k, v in rules) + '</div>'
 
 
 def page(t, side, mine_seat=None):
     return f"""<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Agent Tournaments: {esc(t["label"])} #{t["id"]}</title>
 <link href="https://fonts.googleapis.com/css2?family=Archivo+Black&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
-<style>{lc.CSS}{CSS}</style></head><body><main class="wrap">{header(t)}
+<style>{lc.CSS}{CSS}</style></head><body><main class="wrap">{header(t)}{rules_strip(t)}
 <div class="page"><div class="main">{table_panel(t, mine_seat)}{standings(t, mine_seat)}{race(t, mine_seat)}</div>
 <aside class="side">{side}</aside></div></main>{lc.TICK}</body></html>"""
 
