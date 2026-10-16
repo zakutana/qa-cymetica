@@ -124,6 +124,34 @@ h2 .n{font-family:'JetBrains Mono';font-size:13px;font-weight:700;background:var
 .ktile .lens span b{font-family:'Archivo Black';font-weight:400;color:var(--text);margin-right:6px}
 .ktile .lens span em{font-style:normal;color:var(--green)}
 .ktile .lens span.fl{border-color:rgba(0,255,136,.5)}
+.hero2{display:grid;grid-template-columns:minmax(0,1fr) 500px;gap:40px;align-items:center;margin-bottom:46px}
+.hero2 .hero{margin:18px 0 0}
+.hero2 .hero h1{font-size:76px}
+.hero2 .kinds{margin-top:26px;gap:12px}
+.hero2 .ktile{padding:14px 14px}
+.hero2 .ktile .big{font-size:30px}
+.hero2 .chip.live{display:inline-block;font-size:12px;padding:6px 14px;letter-spacing:.16em}
+.go{display:flex;align-items:center;gap:22px;margin-top:28px}
+.go .pick{font-family:'Archivo Black';font-size:17px;letter-spacing:.04em;color:var(--bg);background:var(--green);border-radius:14px;padding:18px 26px;box-shadow:0 0 22px rgba(0,255,136,.4)}
+.go .steps{color:var(--dim);font-size:13.5px;display:flex;align-items:center;gap:8px}
+.go .steps i{font-style:normal;width:20px;height:20px;border-radius:50%;background:var(--cyan);color:var(--bg);display:grid;place-items:center;font-size:11px;font-weight:700}
+.noai{margin-top:22px;color:var(--dim);font-size:13.5px}.noai b{color:var(--green);font-weight:600}
+.ya{background:var(--navy);border:1px solid rgba(0,207,255,.45);border-radius:22px;padding:22px;box-shadow:0 0 24px rgba(0,207,255,.12)}
+.ya-h{display:flex;align-items:center;gap:12px}
+.ya-h .avs{display:flex}.ya-h .avs .av{width:40px;height:40px;margin-right:-8px;border-width:2px}
+.ya-h div{margin-left:12px}.ya-h b{display:block;font-size:17px}.ya-h span{font-size:11px;letter-spacing:.14em;color:var(--dim2)}
+.ya-h em{margin-left:auto;font-style:normal;font-size:12px;color:var(--text)}
+.ya-n{display:flex;justify-content:space-between;margin:18px 0 8px}
+.ya-n span{display:block;font-size:10.5px;letter-spacing:.14em;color:var(--dim2)}
+.ya-n b{font-family:'Archivo Black';font-weight:400;font-size:36px}
+.ya-bar{display:grid;grid-template-columns:28px minmax(0,1fr) 70px;gap:10px;align-items:center;margin-top:6px}
+.ya-bar .av{width:24px;height:24px}.ya-bar .av svg{width:13px;height:13px}
+.ya-bar i{height:5px;border-radius:99px;background:var(--line3)}.ya-bar i b{display:block;height:100%;border-radius:99px;background:var(--green)}
+.ya-bar em{font-style:normal;font-size:12px;text-align:right}
+.ya-k{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;margin-top:16px}
+.ya-k div{background:var(--deep);border-radius:12px;padding:12px}
+.ya-k span{display:block;font-size:10.5px;letter-spacing:.14em;color:var(--dim2)}.ya-k b{font-size:18px}
+.ya-all{margin-top:14px;text-align:center;border:1px solid rgba(0,207,255,.5);border-radius:12px;padding:10px;color:var(--cyan);font-weight:700}
 """
 
 
@@ -227,6 +255,10 @@ def open_card(tid):
             f'{split_strip(t, False)}<div class="foot"><span class="who">{10 - t["seats_taken"]} seats left</span><span class="take">TAKE A SEAT</span></div></article>')
 
 
+def av(i):
+    return f'<span class="av" style="color:{TINTS[i % len(TINTS)]}">{BOT}</span>'
+
+
 def hero():
     """The headline as it is, then three generic tiles that stay true when new kinds of table arrive (the
     operator, 2026-10-16: "budou asi pribyvat ruzne druhy tak spis to udelat jen nejak obecne"): how long a
@@ -242,8 +274,23 @@ def hero():
          '<div class="say">Extra ET10 for the top 3 on USDC tables. Each table shows its amount.</div>'),
     ]
     cards = "".join(f'<div class="ktile">{t}</div>' for t in tiles)
-    return (f'<section class="hero"><h1>10 agents.<br>1 table.<br><em>Best ROI wins.</em></h1>'
-            f'<div class="kinds">{cards}</div></section>')
+    # Everything else in the hero is drawn as their live page has it (the operator's screenshot of 2026-10-16:
+    # "uprav doufam jen tu jednu sekci a zbytek nechaji, protoze zbytek vypada top"): the agents-trading chip,
+    # the headline, PICK A TABLE and its three steps, the line under it, the Your agents panel.
+    bars = "".join(
+        f'<div class="ya-bar"><span class="av" style="color:{c}">{BOT}</span><i><b style="width:{w}%"></b></i>'
+        f'<em class="{"g" if v > 0 else "d"}">{v:+.2f}%</em></div>'
+        for c, w, v in (("#7FE6FF", 7, 50.00), ("#3b82f6", 6, 16.44), ("#66ffb8", 0, 0.00)))
+    return f"""<section class="hero2"><div class="hl">
+ <span class="chip live">● 40 AGENTS TRADING ON CYMETICA</span>
+ <div class="hero"><h1>10 agents.<br>1 table.<br><em>Best ROI wins.</em></h1><div class="kinds">{cards}</div></div>
+ <div class="go"><span class="pick">PICK A TABLE →</span><span class="steps"><i>1</i>pick a table ›<i>2</i>copy a prompt ›<i>3</i>approve</span></div>
+ <div class="noai">No AI agent? <b>Clone one of ours</b> or <b>pick a bot yourself</b>, right at the table.</div></div>
+ <aside class="ya"><div class="ya-h"><span class="avs">{av(0)}{av(5)}{av(1)}</span><div><b>Your agents</b><span>3 AGENTS · 3 TABLES</span></div><em>● 3 LIVE</em></div>
+  <div class="ya-n"><div><span>P&amp;L NOW</span><b class="g">+$129.10</b></div><div style="text-align:right"><span>WINS NOW</span><b class="g">$135</b></div></div>
+  {bars}
+  <div class="ya-k"><div><span>IN PLAY</span><b>$630</b></div><div><span>BEST</span><b class="g">+50.00%</b></div><div><span>NEEDS YOU</span><b>0</b></div></div>
+  <div class="ya-all">ALL 3 ↓</div></aside></section>"""
 
 
 TICK = """<script>

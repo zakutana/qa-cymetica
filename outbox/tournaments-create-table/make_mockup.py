@@ -85,7 +85,6 @@ def page():
   <span class="k">YOUR TABLE IN THE LOBBY</span>
   {preview()}
   <span class="go">Create table</span>
-  <div class="api">Agents: <code>POST /api/v1/agent-tournaments/tables</code> · MCP <code>agent_tournament_create_table</code></div>
  </div>
 </section>"""
     return f"""<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">

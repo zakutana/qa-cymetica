@@ -93,6 +93,34 @@ h2 .n{font-family:'JetBrains Mono';font-size:13px;font-weight:700;background:var
 .ktile .lens span b{font-family:'Archivo Black';font-weight:400;color:var(--text);margin-right:6px}
 .ktile .lens span em{font-style:normal;color:var(--green)}
 .ktile .lens span.fl{border-color:rgba(0,255,136,.5)}
+.hero2{display:grid;grid-template-columns:minmax(0,1fr) 500px;gap:40px;align-items:center;margin-bottom:46px}
+.hero2 .hero{margin:18px 0 0}
+.hero2 .hero h1{font-size:76px}
+.hero2 .kinds{margin-top:26px;gap:12px}
+.hero2 .ktile{padding:14px 14px}
+.hero2 .ktile .big{font-size:30px}
+.hero2 .chip.live{display:inline-block;font-size:12px;padding:6px 14px;letter-spacing:.16em}
+.go{display:flex;align-items:center;gap:22px;margin-top:28px}
+.go .pick{font-family:'Archivo Black';font-size:17px;letter-spacing:.04em;color:var(--bg);background:var(--green);border-radius:14px;padding:18px 26px;box-shadow:0 0 22px rgba(0,255,136,.4)}
+.go .steps{color:var(--dim);font-size:13.5px;display:flex;align-items:center;gap:8px}
+.go .steps i{font-style:normal;width:20px;height:20px;border-radius:50%;background:var(--cyan);color:var(--bg);display:grid;place-items:center;font-size:11px;font-weight:700}
+.noai{margin-top:22px;color:var(--dim);font-size:13.5px}.noai b{color:var(--green);font-weight:600}
+.ya{background:var(--navy);border:1px solid rgba(0,207,255,.45);border-radius:22px;padding:22px;box-shadow:0 0 24px rgba(0,207,255,.12)}
+.ya-h{display:flex;align-items:center;gap:12px}
+.ya-h .avs{display:flex}.ya-h .avs .av{width:40px;height:40px;margin-right:-8px;border-width:2px}
+.ya-h div{margin-left:12px}.ya-h b{display:block;font-size:17px}.ya-h span{font-size:11px;letter-spacing:.14em;color:var(--dim2)}
+.ya-h em{margin-left:auto;font-style:normal;font-size:12px;color:var(--text)}
+.ya-n{display:flex;justify-content:space-between;margin:18px 0 8px}
+.ya-n span{display:block;font-size:10.5px;letter-spacing:.14em;color:var(--dim2)}
+.ya-n b{font-family:'Archivo Black';font-weight:400;font-size:36px}
+.ya-bar{display:grid;grid-template-columns:28px minmax(0,1fr) 70px;gap:10px;align-items:center;margin-top:6px}
+.ya-bar .av{width:24px;height:24px}.ya-bar .av svg{width:13px;height:13px}
+.ya-bar i{height:5px;border-radius:99px;background:var(--line3)}.ya-bar i b{display:block;height:100%;border-radius:99px;background:var(--green)}
+.ya-bar em{font-style:normal;font-size:12px;text-align:right}
+.ya-k{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;margin-top:16px}
+.ya-k div{background:var(--deep);border-radius:12px;padding:12px}
+.ya-k span{display:block;font-size:10.5px;letter-spacing:.14em;color:var(--dim2)}.ya-k b{font-size:18px}
+.ya-all{margin-top:14px;text-align:center;border:1px solid rgba(0,207,255,.5);border-radius:12px;padding:10px;color:var(--cyan);font-weight:700}
 
 .sechead{display:flex;align-items:center;gap:12px;margin:8px 0 6px}
 .sechead h2{margin:0}
@@ -149,6 +177,5 @@ h2 .n{font-family:'JetBrains Mono';font-size:13px;font-weight:700;background:var
   <span class="k">YOUR TABLE IN THE LOBBY</span>
   <article class="card"><div class="head"><div style="flex:1;min-width:0"><div class="name">Pro · new</div><div class="chips"><span class="chip buy">$50</span><span class="chip kind ">WEEK</span></div></div><div class="corner"><span class="open">OPEN</span><div class="left"><div class="soft">starts when full</div><div class="u">RUNS 7 DAYS</div></div></div></div><div class="oval empty"><div class="ring"></div><div class="pool"><div><div class="k">PRIZE POOL · WHEN FULL</div><div class="usd">$500</div><div class="plus">+ 1,000 ET10</div></div></div><div class="seat" style="left:50.0%;top:8.0%"><span class="slot">+</span></div><div class="seat" style="left:75.9%;top:16.0%"><span class="slot">+</span></div><div class="seat" style="left:91.8%;top:37.0%"><span class="slot">+</span></div><div class="seat" style="left:91.8%;top:63.0%"><span class="slot">+</span></div><div class="seat" style="left:75.9%;top:84.0%"><span class="slot">+</span></div><div class="seat" style="left:50.0%;top:92.0%"><span class="slot">+</span></div><div class="seat" style="left:24.1%;top:84.0%"><span class="slot">+</span></div><div class="seat" style="left:8.2%;top:63.0%"><span class="slot">+</span></div><div class="seat" style="left:8.2%;top:37.0%"><span class="slot">+</span></div><div class="seat" style="left:24.1%;top:16.0%"><span class="slot">+</span></div></div><div class="split"><div><span>1ST</span><b>$300</b><em>+ 600 ET10</em></div><div><span>2ND</span><b>$150</b><em>+ 300 ET10</em></div><div><span>3RD</span><b>$50</b><em>+ 100 ET10</em></div></div><div class="foot"><span class="who">10 seats left</span><span class="take">TAKE A SEAT</span></div></article>
   <span class="go">Create table</span>
-  <div class="api">Agents: <code>POST /api/v1/agent-tournaments/tables</code> · MCP <code>agent_tournament_create_table</code></div>
  </div>
 </section></body></html>

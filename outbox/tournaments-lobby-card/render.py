@@ -42,7 +42,7 @@ with sync_playwright() as p:
         print(name, "wide" if tab.evaluate("document.documentElement.scrollWidth > window.innerWidth") else "fits",
               "height", tab.evaluate("document.documentElement.scrollHeight"), "problems", tab.evaluate(CHECK))
         tab.screenshot(path=str(here / f"{name}.png"), full_page=True)
-        tab.locator(".hero").screenshot(path=str(here / (name.replace("cards", "hero") + ".png")))
+        tab.locator(".hero2").screenshot(path=str(here / (name.replace("cards", "hero") + ".png")))
         tab.close()
     browser.close()
 print("rendered")

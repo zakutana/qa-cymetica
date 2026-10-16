@@ -6,7 +6,7 @@
 
 Each drawn by a `make_mockup.py` beside it from the live API on 2026-10-16, palette-scanned and checked for spills and overlaps at 1440 and 1920 by its `render.py`.
 
-1. `../tournaments-lobby-card/cards-1440.png`: the headline and the three tiles; Live now and Open cards.
+1. `../tournaments-lobby-card/cards-1440.png`: the top of the lobby as it is live, with only the strip under the headline swapped for the three tiles; Live now and Open cards.
 2. `../tournaments-create-table/create-1440.png`: Create a table, the button and the form.
 3. `../tournaments-leaderboard/leaderboard-1440.png`: the Leaderboard tab.
 4. `../tournaments-table-detail/player-1440.png`: the table page for a seat owner (table 5, our seat 29).
@@ -19,7 +19,7 @@ On the form, "I have a link" with `https://cymetica.com/agent-tournaments`, the 
 
 ```
 Follow-up to ET-31459: upgrade the live Agent Tournaments itself, not a new page beside it; it keeps its name, logo, copy, fonts and colours. The pictures show layout and content, not a new visual style. Goals, not methods; the template lines about rebuilding someone else's app do not apply. Colours: the site's cyan, green, red, blue and slate-blue neutrals only. English, numbers before words.
-1. Lobby, under the headline (kept as it is): three tiles instead of today's three price cards and the sentence under them. HOW LONG: one chip per kind (Week 7 days, Flash 1 day; a new kind is a new chip). THE POT: 60 / 30 / 10, the top 3 by ROI split every buy-in. ON TOP: + ET10 for the top 3 on USDC tables; each table shows its amount. No prices in the tiles.
+1. Lobby, top: only the strip under the headline changes; the agents-trading chip, the headline, PICK A TABLE with its three steps, the line under it and the Your agents panel stay exactly as they are. The strip: three tiles instead of today's three price cards and the sentence under them. HOW LONG: one chip per kind (Week 7 days, Flash 1 day; a new kind is a new chip). THE POT: 60 / 30 / 10, the top 3 by ROI split every buy-in. ON TOP: + ET10 for the top 3 on USDC tables; each table shows its amount. No prices in the tiles.
 2. Table cards: the status in the top-right corner (LIVE glowing, or OPEN) and under it the time left as a countdown (days, hours, minutes; seconds under a day) with DAY n/N and a progress bar. Open cards say "starts when full" there.
 3. Table cards: the oval's centre shows the whole pool that will be split, the pot plus the ET10 on top (live: now; open: when full); under the oval three cells, 1st / 2nd / 3rd, each with its USDC and ET10.
 4. Nothing overlaps anything: today the YOU tag sits over POT on a table card, and in Your agents a badge covers the rank "#3/10" on Flash Micro #13.
@@ -33,7 +33,7 @@ Follow-up to ET-31459: upgrade the live Agent Tournaments itself, not a new page
 12. Trading venue: linking an exchange or a wallet moves off the table page, to the bot's profile or the account settings, wherever fits best; the seat owner's panel shows one line, where the bot trades, with a link there.
 13. NEXUS tunes it: in the seat owner's column, a member who locks ET10 (e.g. 1,000) lets NEXUS tune their seated bot while the table runs, with one click; NEXUS changes its markets, stop loss and take profit from its own trades. The amount and the terms are yours.
 Done when:
-[ ] 1 The three tiles replace the price cards and the sentence; a new kind needs no new tile.
+[ ] 1 The three tiles replace the price cards and the sentence, and nothing else at the top of the lobby changes; a new kind needs no new tile.
 [ ] 2-3 Every table card shows its status and countdown in the corner, and the whole pool with its 1st / 2nd / 3rd split.
 [ ] 4 Nothing overlaps at 1440 and 1920 px.
 [ ] 5-6 Top agents is gone; the Leaderboard tab lists every bot that has played, ranked by wins, then average ROI.
