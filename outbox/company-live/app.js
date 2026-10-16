@@ -31,8 +31,8 @@
 
   /* ---------------- boot ---------------- */
   function boot() {
-    CO.S = CO.seed(Date.now());
-    office = new CO.Office($('office'), $('stage'), tipFor);
+    CO.S = CO.fresh(Date.now());
+    office =new CO.Office($('office'), $('stage'), tipFor);
     net = new CO.Net($('net'), $('stage'), tipFor);
     office.layout();
     net.build();
@@ -69,12 +69,12 @@
     $('co-logo').textContent = initials(c.name);
     var st = $('co-status'); st.textContent = paused ? 'PAUSED' : 'ACTIVE'; st.className = 'pill ' + (paused ? 'off' : 'on');
     $('co-pause').textContent = paused ? 'Resume' : 'Pause';
-    $('ctr-sub').textContent = 'on ' + c.plan + ' · ' + u2(CO.avg()) + ' u/turn';
-    setN('n-sess', 'tl-sess', l.session, l.session <= 2);
-    setN('n-week', 'tl-week', l.week, l.week <= 2);
+    $('ctr-sub').textContent = 'on ' + c.plan + ' · ' + (l.none ? 'no measured turn yet' : u2(CO.avg()) + ' u/turn');
+    setN('n-sess', 'tl-sess', l.none ? '—' : l.session, !l.none && l.session <= 2);
+    setN('n-week', 'tl-week', l.none ? '—' : l.week, !l.none && l.week <= 2);
     var ex = $('n-extra');
     ex.classList.toggle('off', l.extra == null);
-    setN('n-extra', 'tl-extra', l.extra == null ? 'off' : '+' + l.extra, l.extra != null && l.extra <= 2);
+    setN('n-extra', 'tl-extra', l.extra == null ? 'off' : l.none ? '—' : '+' + l.extra, !l.none && l.extra != null && l.extra <= 2);
     ex.title = b.extra.on ? b.extra.left.toFixed(2) + ' u left on extra usage, billed per use' : 'Extra usage is off (Settings)';
     var sp = Math.min(100, b.session.used / b.session.cap * 100), wp = Math.min(100, b.week.used / b.week.cap * 100);
     var bs = $('bar-sess'); bs.style.width = sp.toFixed(1) + '%'; bs.classList.toggle('hot', sp >= 85);
@@ -111,7 +111,7 @@
         (v.waits ? '<div class="dwait">Queued: <span data-wait="' + d.id + '">' + esc(v.waits) + '</span></div>' : '') +
         '<div class="d3">' + esc(v.experts.map(function (e) { return e.name; }).join(' · ')) + '</div>' +
         (v.status === 'working' ? '<span class="run"><i></i></span>' : '') + '</button>';
-    }).join(''));
+    }).join('') || '<p class="empty">No departments yet. <a id="rail-add">+ Add the first one</a>, or click the empty lot in the office.</p>');
     var done = 0, failed = 0, units = 0;
     S.departments.forEach(function (d) { var v = CO.deptView(d); done += v.done; failed += v.failed; units += v.units; });
     setHTML($('totals'), '<div title="Tasks done in the last 7 days"><b class="gr">' + done + '</b><span>tasks done · 7d</span></div>' +
@@ -180,7 +180,7 @@
     S.feed.forEach(function (f) { if (f.at > top) fresh++; });
     setHTML($('feed'), S.feed.slice(0, 12).map(function (f, i) {
       return '<li class="' + f.kind + (i < fresh ? ' new' : '') + '"><span><b>' + esc(f.dept) + '</b> ' + esc(f.text) + '</span><em>' + hhmm(f.at) + '</em></li>';
-    }).join(''));
+    }).join('') || '<p class="empty">Quiet so far. Give the Manager work and watch the office move.</p>');
     if (S.feed.length) ui.feedTop = S.feed[0].at;
   }
 
@@ -535,7 +535,7 @@
       if (t.closest('#co-pause')) { CO.act.pause(); toast(CO.S.company.status === 'paused' ? 'Paused: a running turn finishes, nothing new starts.' : 'Resumed: the next pass starts in a few seconds.'); return; }
       if (t.closest('#co-waiting')) return setTab('approvals');
       if (t.closest('#co-upgrade')) return upgradeModal();
-      if (t.closest('#add-dept')) return addDeptModal();
+      if (t.closest('#add-dept') || t.closest('#rail-add')) return addDeptModal();
       var row = t.closest('.dept'); if (row) return ui.panel === +row.getAttribute('data-id') ? closeDrawer() : openDrawer(+row.getAttribute('data-id'));
       var dd = t.closest('[data-d]');
       if (dd && dd.closest('.ai')) return decide(dd.closest('.ai').getAttribute('data-id'), dd.getAttribute('data-d'));

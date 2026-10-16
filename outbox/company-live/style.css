@@ -291,6 +291,7 @@ a { color: var(--cyan); text-decoration: none; cursor: pointer; }
 .nx { flex: 0 1 auto; min-height: 100px; display: flex; flex-direction: column; }
 .plan { list-style: none; display: flex; flex-direction: column; gap: 5px; max-height: 190px; overflow: auto; min-height: 0; }
 .plan li { display: grid; grid-template-columns: 18px minmax(0, 1fr) auto; gap: 8px; align-items: center; background: var(--navy2); border: 1px solid var(--line); border-radius: 8px; padding: 6px 8px; transition: border-color .2s; }
+.plan li.empty { display: block; background: none; border: 0; padding: 4px 2px; }
 .plan li.moved { animation: moved .6s ease; } @keyframes moved { 0% { border-color: var(--cyan); background: rgba(0, 207, 255, .1); } }
 .plan .n { color: var(--cyan); font-weight: 700; text-align: center; }
 .plan b { display: block; font-size: 11.5px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }

@@ -38,9 +38,11 @@
   CO.left = function () {
     var b = CO.S.budget, a = CO.avg();
     var sl = Math.max(0, b.session.cap - b.session.used), wl = Math.max(0, b.week.cap - b.week.used);
+    var none = !CO.S.meter.length;   // no measured turn yet: the counter has nothing to divide by
     return {
-      session: Math.floor(sl / a + 1e-9), week: Math.floor(wl / a + 1e-9),
-      extra: b.extra.on ? Math.floor(b.extra.left / a + 1e-9) : null,
+      none: none,
+      session: none ? null : Math.floor(sl / a + 1e-9), week: none ? null : Math.floor(wl / a + 1e-9),
+      extra: b.extra.on ? (none ? '' : Math.floor(b.extra.left / a + 1e-9)) : null,
       sessionUnits: sl, weekUnits: wl, onPlan: sl > 0.004 && wl > 0.004
     };
   };
@@ -408,13 +410,17 @@
   }
   function reply(text, at) {
     var S = CO.S, t = text.toLowerCase(), c = counts(), d = findDept(t), l = CO.left();
+    if (!S.departments.length) {
+      return 'You have no departments yet. Add one (+ Add on the left, or the empty lot in the office) and I plan its first task at once.';
+    }
     if (/^(hi|hello|hey|ahoj|cau|čau|nazdar|good (morning|evening))\b/.test(t)) {
       return 'Hello. ' + c.working + ' working, ' + c.open + ' open, ' + c.waiting + ' wait for you. Tell me what matters most and I plan around it.';
     }
     if (/(status|how are|update|progress|what.*(doing|now)|summary|report back)/.test(t) && !/bug report/.test(t)) {
       var run = S.tasks.filter(function (x) { return x.status === 'running'; }).map(function (x) { return dept(x.dept_id).name + ': "' + x.title + '"'; });
       return c.working + ' working' + (run.length ? ' (' + run.join('; ') + ')' : '') + '. ' + c.open + ' open, ' +
-        c.waiting + ' wait' + (c.waiting === 1 ? 's' : '') + ' for you. ' + l.session + ' turn' + (l.session === 1 ? '' : 's') + ' left this session, ' + l.week + ' this week.';
+        c.waiting + ' wait' + (c.waiting === 1 ? 's' : '') + ' for you. ' + (l.none ? 'No turn measured yet, so no turns-left figure.' :
+        l.session + ' turn' + (l.session === 1 ? '' : 's') + ' left this session, ' + l.week + ' this week.');
     }
     if (/(pause|stop everything|halt)/.test(t)) return 'Pausing is your switch (Pause, top left). Nothing new starts while paused; a running turn finishes first.';
     if (/(approv|waiting for me|what.*wait)/.test(t)) {
@@ -422,7 +428,8 @@
       return S.approvals.length + ' wait for you: ' + S.approvals.map(function (a) { return a.kind + ' "' + a.summary + '"'; }).join('; ') + '. Read and approve them on the right.';
     }
     if (/(budget|turns? left|usage|limit|cost|units|tokens?)/.test(t)) {
-      return l.session + ' turn' + (l.session === 1 ? '' : 's') + ' left this session, ' + l.week + ' this week' + (l.extra != null ? ', +' + l.extra + ' on extra usage' : '') +
+      if (l.none) return 'No turn measured yet. After the first one the counter shows turns left: units left divided by what a turn really costs.';
+      returnl.session + ' turn' + (l.session === 1 ? '' : 's') + ' left this session, ' + l.week + ' this week' + (l.extra != null ? ', +' + l.extra + ' on extra usage' : '') +
         '. A turn costs ' + CO.avg().toFixed(2) + ' u on average (last 20).';
     }
     if (d && /(first|priorit|top|urgent|asap|before|now)/.test(t)) {
@@ -473,7 +480,7 @@
 
   CO.reset = function () {
     timers = [];
-    CO.S = CO.seed(Date.now());
+    CO.S = CO.fresh(Date.now());
     CO.emit('reset');
     changed();
   };

@@ -305,6 +305,21 @@
     };
   };
 
+  // A company with nothing in it yet: no departments, no history, no measured turn. The
+  // default start; ?demo opens the busy company above.
+  CO.seedEmpty = function (t0) {
+    var s = CO.seed(t0);
+    s.departments = []; s.tasks = []; s.plan = []; s.approvals = []; s.decided = []; s.memory = [];
+    s.messages = []; s.feed = []; s.strip = []; s.meter = []; s.approved_7d = 0;
+    s.budget.session.used = 0; s.budget.week.used = 0;
+    s.audit = { next_at: t0 + 7 * 24 * H, last: null };
+    s.company.created_at = t0;
+    s.next_pass_at = t0 + 30000;
+    s.next_id = 1; s.next_msg = 1; s.next_appr = 1; s.next_mem = 1; s.next_dept = 1;
+    return s;
+  };
+  CO.fresh = function (t0) { return /demo/.test(location.search + location.hash) ? CO.seed(t0) : CO.seedEmpty(t0); };
+
   function hhmm(t) { var d = new Date(t); return pad(d.getHours()) + ':' + pad(d.getMinutes()); }
   function pad(n) { return (n < 10 ? '0' : '') + n; }
   CO.hhmm = hhmm;
