@@ -42296,15 +42296,16 @@
         ]
       },
       "filing": {
-        "state": "RAISED",
+        "state": "FIX_CLAIMED",
         "adjudicated_by": {
-          "event_id": "23c464abbf215a91cd957d156d5937a338194175b151472d4715c2ddfcb66d3b",
-          "at": "2026-10-15T19:58:33+00:00"
+          "event_id": "9029207be91af3d00884d91ca409002872c40e2d200152061cda9f5cc71eefc8",
+          "at": "2026-10-16T08:20:25+00:00"
         },
         "reports": [
           {
             "report_id": 210,
-            "status": "pending"
+            "status": "paid",
+            "status_at": "2026-10-16T08:20:25+00:00"
           }
         ],
         "refused": [],
@@ -42345,6 +42346,15 @@
             "run_id": "run-20261016T035402Z-d7bb5d7b"
           },
           "at": "2026-10-16T03:54:43+00:00"
+        },
+        {
+          "axis": "filing",
+          "from": "RAISED",
+          "to": "FIX_CLAIMED",
+          "cause": {
+            "event_id": "9029207be91af3d00884d91ca409002872c40e2d200152061cda9f5cc71eefc8"
+          },
+          "at": "2026-10-16T08:20:25+00:00"
         }
       ],
       "regressions": [],
@@ -42433,15 +42443,16 @@
         ]
       },
       "filing": {
-        "state": "RAISED",
+        "state": "FIX_CLAIMED",
         "adjudicated_by": {
-          "event_id": "686f59f48b09a3bf41a58dfe7bda05964d941efc28402dca5a750f290657c72f",
-          "at": "2026-10-15T20:23:14+00:00"
+          "event_id": "ff38c2cd1c6b80d9c7da3980a9cb73f742e0893bbcd753dcabe066fa901c60ea",
+          "at": "2026-10-16T08:20:25+00:00"
         },
         "reports": [
           {
             "report_id": 211,
-            "status": "pending"
+            "status": "paid",
+            "status_at": "2026-10-16T08:20:25+00:00"
           }
         ],
         "refused": [],
@@ -42482,6 +42493,15 @@
             "run_id": "run-20261016T035402Z-d7bb5d7b"
           },
           "at": "2026-10-16T03:54:43+00:00"
+        },
+        {
+          "axis": "filing",
+          "from": "RAISED",
+          "to": "FIX_CLAIMED",
+          "cause": {
+            "event_id": "ff38c2cd1c6b80d9c7da3980a9cb73f742e0893bbcd753dcabe066fa901c60ea"
+          },
+          "at": "2026-10-16T08:20:25+00:00"
         }
       ],
       "regressions": [],
@@ -42559,15 +42579,16 @@
         }
       },
       "filing": {
-        "state": "RAISED",
+        "state": "FIX_CLAIMED",
         "adjudicated_by": {
-          "event_id": "8bf4444dffb04fa02da65dc51caba59d1d530865fdbddfeac075aa74f41eee02",
-          "at": "2026-10-15T20:23:26+00:00"
+          "event_id": "c5a25df0e1a6f453f36ea1fba894c6aada89a56b7356925a27d72e0a44fed4a6",
+          "at": "2026-10-16T08:20:25+00:00"
         },
         "reports": [
           {
             "report_id": 212,
-            "status": "pending"
+            "status": "paid",
+            "status_at": "2026-10-16T08:20:25+00:00"
           }
         ],
         "refused": [],
@@ -42617,6 +42638,15 @@
             "run_id": "run-20261016T035402Z-d7bb5d7b"
           },
           "at": "2026-10-16T03:54:43+00:00"
+        },
+        {
+          "axis": "filing",
+          "from": "RAISED",
+          "to": "FIX_CLAIMED",
+          "cause": {
+            "event_id": "c5a25df0e1a6f453f36ea1fba894c6aada89a56b7356925a27d72e0a44fed4a6"
+          },
+          "at": "2026-10-16T08:20:25+00:00"
         }
       ],
       "regressions": [],
@@ -42683,7 +42713,7 @@
     "CHECK CHANGED": 10
   },
   "events_head": {
-    "seq": 4120,
-    "chain": "eb6e8f55a67302ad4d0eca2ea54d0d889136ac2e192730e67b52cecdb82f0a2d"
+    "seq": 4135,
+    "chain": "fec5c89e3b795e02cb3ccd5b51c08677797d60cc3864364c055da9959fb44b1d"
   }
 }
