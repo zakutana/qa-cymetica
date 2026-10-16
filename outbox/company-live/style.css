@@ -279,9 +279,18 @@ body.focus .rail { display: none; }
 @keyframes slidein-r { from { opacity: 0; transform: translateX(20px); } }
 body.focus .rightcol > .panel { animation: slidein-r .45s cubic-bezier(.2, .8, .2, 1) both; }
 body.focus .rightcol > .panel:nth-child(2) { animation-delay: .05s; } body.focus .rightcol > .panel:nth-child(3) { animation-delay: .1s; }
-body.focus .chat { border-color: rgba(0, 207, 255, .45); }
-body.focus .msg { font-size: 13px; max-width: 92%; }
-body.focus .feedp { display: none; }
+/* the Manager: its own focus, a big chat */
+.mgr .chatbox { flex: 1; min-height: 0; display: flex; flex-direction: column; gap: 8px; border: 1px solid rgba(0, 207, 255, .4); border-radius: 10px; padding: 10px; background: rgba(0, 207, 255, .03); }
+.mgr .msgs { flex: 1; }
+.mgr .msg, .dchat .msg { font-size: 13px; max-width: 90%; }
+.dchat { flex: none; display: flex; flex-direction: column; gap: 8px; border: 1px solid rgba(0, 207, 255, .4); border-radius: 10px; padding: 10px; background: rgba(0, 207, 255, .03); }
+.dchat .msgs { height: 220px; flex: none; }
+.dchat .compose, .mgr .compose { margin-top: 0; }
+.msgs .hint { color: var(--dim2); font-size: 12px; line-height: 1.5; padding: 6px 2px; }
+.dept.mgrrow { border-color: rgba(0, 207, 255, .5); border-left-color: var(--cyan); background: linear-gradient(90deg, rgba(0, 207, 255, .1), var(--navy2)); }
+.dept.mgrrow b { font-family: 'Archivo Black'; font-weight: 400; letter-spacing: .02em; }
+.dept .et.red { color: var(--red); }
+.feedp { flex: 1 1 150px; height: auto; min-height: 120px; }
 .dswitch { display: flex; gap: 6px; flex-wrap: wrap; padding-bottom: 10px; border-bottom: 1px solid var(--line); }
 .dswitch button { font-size: 11px; font-weight: 600; padding: 4px 10px; border-radius: 99px; border: 1px solid var(--line3); color: var(--dim2); background: var(--navy2); display: flex; align-items: center; gap: 6px; }
 .dswitch button:hover { color: var(--text); border-color: var(--dim2); }

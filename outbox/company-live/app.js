@@ -87,7 +87,12 @@
   function renderRail() {
     var S = CO.S;
     $('rail-n').textContent = S.departments.length;
-    setHTML($('depts'), S.departments.map(function (d) {
+    var cc = CO.counts();
+    var mrow = '<button class="dept mgrrow working" title="Open the Manager: the whole conversation, the plan"><div class="d1"><i class="dot"></i><b>Manager</b>' +
+      (S.approvals.length ? '<span class="et red">' + S.approvals.length + ' for you</span>' : '') + '</div>' +
+      '<div class="d2"><span class="c">' + cc.open + '<small>open</small></span><span class="m">' + S.plan.length + '<small>planned</small></span><span class="m">' + S.messages.length + '<small>messages</small></span></div>' +
+      '<div class="d3">routes every department · click to chat</div></button>';
+    setHTML($('depts'), mrow + S.departments.map(function (d) {
       var v = CO.deptView(d);
       return '<button class="dept ' + v.status + (ui.panel === d.id ? ' on' : '') + (d.born && S.clock - d.born < 4000 ? ' born' : '') + '" data-id="' + d.id + '" title="' + WORD[v.status] + '">' +
         '<div class="d1"><i class="dot"></i><b>' + esc(d.name) + '</b>' + (d.et10 ? '<span class="et">+' + d.et10.toLocaleString('en-US') + ' ET10</span>' : '') + '</div>' +
@@ -99,7 +104,7 @@
         (v.waits ? '<div class="dwait">Queued: <span data-wait="' + d.id + '">' + esc(v.waits) + '</span></div>' : '') +
         '<div class="d3">' + esc(v.experts.map(function (e) { return e.name; }).join(' · ')) + '</div>' +
         (v.status === 'working' ? '<span class="run"><i></i></span>' : '') + '</button>';
-    }).join('') || '<p class="empty">No departments yet. <a id="rail-add">+ Add the first one</a>, or click the empty lot in the office.</p>');
+    }).join('') + (S.departments.length ? '' : '<p class="empty">No departments yet. <a id="rail-add">+ Add the first one</a>, click the empty lot, or tell the Manager.</p>'));
   }
 
   // The bottom panel, the way Claude shows usage: Session limit (built from this window's turns,
@@ -151,8 +156,6 @@
     var apprs = fd ? S.approvals.filter(function (a) { return a.dept_id === fd.id; }) : S.approvals, n = apprs.length;
     $('ap-t').textContent = fd ? 'WAITING FOR YOU · ' + fd.name.toUpperCase() : 'WAITING FOR YOU';
     $('nx-t').textContent = fd ? 'NEXT UP · ' + fd.name.toUpperCase() : "NEXT UP · THE MANAGER'S PLAN";
-    $('chat-t').textContent = fd ? 'MANAGER · ABOUT ' + fd.name.toUpperCase() : 'MANAGER';
-    $('msg').placeholder = fd ? 'Ask the Manager about ' + fd.name + '…' : 'Message the Manager…';
     $('ap-n').textContent = n || '';
     $('p-appr').classList.toggle('none', !n);
     setHTML($('appr'), n ? apprs.map(function (a) { return apprCard(a, false); }).join('') : '<p class="empty ok">Nothing is waiting for you' + (fd ? ' from ' + esc(fd.name) : '') + '.</p>');
@@ -170,26 +173,51 @@
         '<button data-a="down" title="Move down"' + (i < S.plan.length - 1 ? '' : ' disabled') + '>↓</button><button data-a="remove" title="Remove from the plan">×</button></span></li>';
     }).join('') : '<li class="empty">Nothing queued' + (fd ? ' for ' + esc(fd.name) : '') + '. Give the Manager work below.</li>');
     ui.moved = null;
-    // the Manager
-    var msgs = fd ? S.messages.filter(function (m) { return m.dept_id === fd.id; }) : S.messages, last = msgs[msgs.length - 1];
-    var mh = msgs.map(function (m) {
-      var md = !fd && m.dept_id ? CO.dept(m.dept_id) : null;
-      return '<div class="msg' + (m.role === 'owner' ? ' me' : '') + '"><em>' + (m.role === 'owner' ? 'You' : 'Manager') + ' · ' + hhmm(m.at) +
-        (md ? '<span class="tagd">' + esc(md.name) + '</span>' : '') + '</em>' + esc(m.text) + '</div>';
-    }).join('');
-    if (fd && !msgs.length) mh = '<p class="hint">Ask the Manager anything about ' + esc(fd.name) + ': what it found, what runs next, what it costs, or give it work (“check the leaderboard first”).</p>';
-    if (S.notice && last && last.role === 'owner' && !last.answered) mh += '<div class="msgwait">' + esc(S.notice.text) + '</div>';
-    if (setHTML($('msgs'), mh || '<p class="empty">No messages yet. Say hello to your Manager.</p>')) {
-      var box = $('msgs'); box.scrollTop = 1e6; requestAnimationFrame(function () { box.scrollTop = 1e6; });
-    }
-    $('typing').hidden = !S.typing;
     // the feed, newest first
     var top = ui.feedTop, fresh = 0;
-    S.feed.forEach(function (f) { if (f.at > top) fresh++; });
-    setHTML($('feed'), S.feed.slice(0, 12).map(function (f, i) {
+    var fe = fd ? S.feed.filter(function (f) { return f.dept === fd.name; }) : S.feed;
+    fe.forEach(function (f) { if (f.at > top) fresh++; });
+    setHTML($('feed'), fe.slice(0, 14).map(function (f, i) {
       return '<li class="' + f.kind + (i < fresh ? ' new' : '') + '"><span><b>' + esc(f.dept) + '</b> ' + esc(f.text) + '</span><em>' + hhmm(f.at) + '</em></li>';
     }).join('') || '<p class="empty">Quiet so far. Give the Manager work and watch the office move.</p>');
     if (S.feed.length) ui.feedTop = S.feed[0].at;
+    renderChats();
+  }
+
+  // the conversation with the Manager: all of it in the Manager's focus, one department's in its detail
+  function chatHTML(msgs, tagged) {
+    var S = CO.S, last = msgs[msgs.length - 1];
+    var mh = msgs.map(function (m) {
+      var md = tagged && m.dept_id ? CO.dept(m.dept_id) : null;
+      return '<div class="msg' + (m.role === 'owner' ? ' me' : '') + '"><em>' + (m.role === 'owner' ? 'You' : 'Manager') + ' · ' + hhmm(m.at) +
+        (md ? '<span class="tagd">' + esc(md.name) + '</span>' : '') + '</em>' + esc(m.text) + '</div>';
+    }).join('');
+    if (S.notice && last && last.role === 'owner' && !last.answered) mh += '<div class="msgwait">' + esc(S.notice.text) + '</div>';
+    return mh;
+  }
+  function fillChat(el, html) {
+    if (setHTML(el, html)) { el.scrollTop = 1e6; requestAnimationFrame(function () { el.scrollTop = 1e6; }); }
+  }
+  function renderChats() {
+    var S = CO.S;
+    if (ui.mgr) {
+      setHTML($('mg-switch'), switcher('hub'));
+      fillChat($('msgs'), chatHTML(S.messages, true) || '<p class="hint">No messages yet. Say hello to your Manager: ask how it goes, give it work, or tell it to add a department.</p>');
+      $('typing').hidden = !S.typing;
+      var c = CO.counts(), g = CO.gate();
+      $('mg-pill').textContent = S.company.status === 'paused' ? 'PAUSED' : !g.ok ? g.text.toUpperCase() : c.working ? c.working + ' WORKING' : 'ROUTING';
+      setHTML($('mg-kp'), '<div><b class="cy">' + c.open + '</b><span>open</span></div><div><b class="red">' + c.waiting + '</b><span>wait for you</span></div>' +
+        '<div><b>' + S.plan.length + '</b><span>planned</span></div><div><b class="gr">' + S.departments.length + '</b><span>departments</span></div>' +
+        '<div><b>' + (S.et10 ? '+' + S.et10.toLocaleString('en-US') : '0') + '</b><span>ET10 earned</span></div>');
+    }
+    if (ui.panel != null) {
+      var fd = CO.dept(ui.panel); if (!fd) return;
+      $('dc-t').textContent = fd.name.toUpperCase();
+      $('dmsg').placeholder = 'Ask the Manager about ' + fd.name + '…';
+      fillChat($('dmsgs'), chatHTML(S.messages.filter(function (m) { return m.dept_id === fd.id; }), false) ||
+        '<p class="hint">Ask about ' + esc(fd.name) + ': how it goes, what it found, what runs next, or give it work.</p>');
+      $('dtyping').hidden = !S.typing;
+    }
   }
 
   /* ---------------- the department drawer ---------------- */
@@ -197,24 +225,34 @@
     var d = CO.dept(id); if (!d) return;
     if (ui.tab !== 'office') setTab('office');
     if (ui.panel !== id) { ui.dirty = false; $('dr-ch-text').value = d.charter; ui.open = {}; }
-    var was = ui.panel != null;
-    ui.panel = id;
+    var was = ui.panel != null || ui.mgr;
+    ui.panel = id; ui.mgr = false; $('mgr').hidden = true; $('dmsgs')._h = null;
     var dr = $('drawer'); dr.hidden = false; dr.scrollTop = 0;
     document.body.classList.add('focus');
     $('back').hidden = false; $('where').hidden = false; $('where').textContent = d.name;
-    $('msgs')._h = null;
     office.select('d' + id);
     render();
     // let the columns open first, then fly the camera in
     clearTimeout(ui.flyT);
     ui.flyT = setTimeout(function () { office.focus('d' + id, 0, true); }, was ? 0 : 520);
   }
+  function openManager() {
+    if (ui.tab !== 'office') setTab('office');
+    var was = ui.panel != null || ui.mgr;
+    ui.panel = null; ui.mgr = true; $('drawer').hidden = true; $('mgr').hidden = false; $('msgs')._h = null;
+    document.body.classList.add('focus');
+    $('back').hidden = false; $('where').hidden = false; $('where').textContent = 'Manager';
+    office.select('hub');
+    render();
+    setTimeout(function () { $('msg').focus(); }, 60);
+    clearTimeout(ui.flyT);
+    ui.flyT = setTimeout(function () { office.focus('hub', 0, true); }, was ? 0 : 520);
+  }
   function closeDrawer() {
-    if (ui.panel == null) return;
-    ui.panel = null; $('drawer').hidden = true;
+    if (ui.panel == null && !ui.mgr) return;
+    ui.panel = null; ui.mgr = false; $('drawer').hidden = true; $('mgr').hidden = true;
     document.body.classList.remove('focus');
     $('back').hidden = true; $('where').hidden = true;
-    $('msgs')._h = null;
     office.select(null);
     render();
     clearTimeout(ui.flyT);
@@ -241,9 +279,7 @@
     var S = CO.S, d = CO.dept(ui.panel);
     if (!d) return closeDrawer();
     var v = CO.deptView(d), appr = S.approvals.filter(function (a) { return a.dept_id === d.id; });
-    setHTML($('dr-switch'), S.departments.map(function (x) {
-      return '<button data-sw="' + x.id + '"' + (x.id === d.id ? ' class="on"' : '') + '><i class="dot ' + CO.deptView(x).status + '"></i>' + esc(x.name) + '</button>';
-    }).join(''));
+    setHTML($('dr-switch'), switcher(d.id));
     setHTML($('dr-head'), '<i class="dot ' + v.status + '"></i><h2>' + esc(d.name) + '</h2><span class="pill st-' + v.status + '">' + WORD[v.status].toUpperCase() + '</span>' +
       '<span class="x"><button class="btn" data-a="edit">Edit</button></span>');
     setHTML($('dr-chips'), v.experts.map(function (e) { return '<span class="chip">' + esc(e.name) + '</span>'; }).join('') +
@@ -275,6 +311,11 @@
     var mem = S.memory.filter(function (m) { return m.dept_id === d.id; }).sort(function (a, b) { return b.id - a.id; });
     $('dr-mem-all').textContent = 'All ' + mem.length + ' →';
     setHTML($('dr-mem'), mem.length ? mem.slice(0, 5).map(function (m) { return '<div class="mem"><span class="' + m.kind + '">' + esc(m.kind) + '</span><div>' + esc(m.text) + '</div></div>'; }).join('') : '<p class="empty">Nothing remembered yet.</p>');
+  }
+  function switcher(on) {
+    return '<button data-sw="hub"' + (on === 'hub' ? ' class="on"' : '') + '><i class="dot working"></i>Manager</button>' + CO.S.departments.map(function (x) {
+      return '<button data-sw="' + x.id + '"' + (x.id === on ? ' class="on"' : '') + '><i class="dot ' + CO.deptView(x).status + '"></i>' + esc(x.name) + '</button>';
+    }).join('');
   }
   function charterMeta() {
     var d = CO.dept(ui.panel), ta = $('dr-ch-text'), n = ta.value.length.toLocaleString('en-US');
@@ -452,7 +493,7 @@
       var v = CO.deptView(d), e = v.experts[i]; if (!e) return '';
       return '<b>' + esc(e.name) + '</b> · ' + esc(d.name) + '<br>' + (e.state === 'working' && v.running ? '<span class="c">working</span> on “' + esc(v.running.title) + '” · attempt ' + v.running.attempt + ' of 3' : 'idle');
     }
-    if (key === 'hub') return '<b>Manager</b> · <span class="c">' + c.open + ' open</span> · ' + (S.approvals.length ? '<span class="r">' + S.approvals.length + ' wait for you</span>' : 'nothing waits') + '<br>click to message it';
+    if (key === 'hub') return '<b>Manager</b> · <span class="c">' + c.open + ' open</span> · ' + (S.approvals.length ? '<span class="r">' + S.approvals.length + ' wait for you</span>' : 'nothing waits') + '<br>click to open the Manager';
     if (key === 'you') return '<b>Your desk</b> · ' + (S.approvals.length ? '<span class="r">' + S.approvals.length + ' approvals waiting</span>' : 'all clear') + '<br>click to open Approvals';
     if (key === 'audit') {
       var A = S.audit;
@@ -556,9 +597,9 @@
     Array.prototype.forEach.call(els, function (el) { el.classList.add('leaving'); });
     setTimeout(function () { CO.act.decide(id, how); toast(how === 'approve' ? 'Approved: it goes out now.' : 'Rejected: nothing is sent.'); }, els.length ? 230 : 0);
   }
-  function sendMessage(text) {
+  function sendMessage(text, deptId) {
     if (!text) return;
-    CO.act.message(text, ui.panel);
+    CO.act.message(text, deptId);
     office.packet('you', 'hub', 'blue');
   }
 
@@ -572,7 +613,8 @@
       if (t.closest('#co-waiting')) return setTab('approvals');
       if (t.closest('#co-upgrade')) return upgradeModal();
       if (t.closest('#back')) return closeDrawer();
-      var sw = t.closest('#dr-switch [data-sw]'); if (sw) return openDrawer(+sw.getAttribute('data-sw'));
+      var sw = t.closest('.dswitch [data-sw]'); if (sw) return sw.getAttribute('data-sw') === 'hub' ? openManager() : openDrawer(+sw.getAttribute('data-sw'));
+      if (t.closest('.dept.mgrrow')) return openManager();
       if (t.closest('#add-dept') || t.closest('#rail-add')) return addDeptModal();
       var row = t.closest('.dept'); if (row) return openDrawer(+row.getAttribute('data-id'));
       var dd = t.closest('[data-d]');
@@ -625,7 +667,8 @@
       }
       if (t.closest('#sim-reset')) { CO.reset(); return toast('Simulation started over.'); }
     });
-    $('compose').addEventListener('submit', function (e) { e.preventDefault(); var i = $('msg'); sendMessage(i.value.trim()); i.value = ''; });
+    $('compose').addEventListener('submit', function (e) { e.preventDefault(); var i = $('msg'); sendMessage(i.value.trim(), null); i.value = ''; });
+    $('dcompose').addEventListener('submit', function (e) { e.preventDefault(); var i = $('dmsg'); sendMessage(i.value.trim(), ui.panel); i.value = ''; });
     $('dr-charter').addEventListener('submit', function (e) {
       e.preventDefault(); var d = CO.dept(ui.panel); if (!d) return;
       CO.act.charter(d.id, $('dr-ch-text').value.trim()); ui.dirty = false; charterMeta(); toast('Charter saved: the next task of ' + d.name + ' starts from it.');
@@ -642,7 +685,7 @@
     document.addEventListener('keydown', function (e) {
       if (e.key !== 'Escape') return;
       if (!$('modal').hidden) return closeModal();
-      if (ui.panel != null) closeDrawer();
+      if (ui.panel != null || ui.mgr) closeDrawer();
     });
   }
   function pageAct(a) {
@@ -682,17 +725,19 @@
     });
     CO.on('submitted', function (e) { if (e.dept) { office.packet('d' + e.dept.id, 'hub', 'green'); } });
     CO.on('message', function () { office.packet('hub', 'you', 'cyan'); });
-    CO.on('dept:new', function (d) { office.layout({ born: d.id }); setTimeout(function () { office.fit(true); }, 60); });
+    // after the office changes shape, the camera goes back to what is in focus
+    function reframe() { if (ui.mgr) office.focus('hub', 0, true); else if (ui.panel != null) office.focus('d' + ui.panel, 0, true); else office.fit(true); }
+    CO.on('dept:new', function (d) { office.layout({ born: d.id }); if (ui.panel != null || ui.mgr) office.select(ui.mgr ? 'hub' : 'd' + ui.panel); setTimeout(reframe, 60); });
     CO.on('dept:edit', function () { office.layout(); });
-    CO.on('dept:removed', function () { office.layout(); setTimeout(function () { office.fit(true); }, 60); });
+    CO.on('dept:removed', function () { office.layout(); setTimeout(reframe, 60); });
     CO.on('reset', function () {
       closeModal(); ui.panel = null; $('drawer').hidden = true; office.sel = null; ui.open = {}; ui.prev = {};
       office.layout(); office.fit(true); markSeen();
-      ['depts', 'appr', 'plan', 'msgs', 'feed', 'legal', 'settings'].forEach(function (id) { $(id)._h = null; });
+      ['depts', 'appr', 'plan', 'msgs', 'dmsgs', 'mg-kp', 'feed', 'legal', 'settings'].forEach(function (id) { $(id)._h = null; });
     });
     CO.on('office:click', function (key) {
       if (key.charAt(0) === 'd') return openDrawer(+key.slice(1));
-      if (key === 'hub') { var m = $('msg'); m.focus(); m.parentNode.classList.remove('bump'); return; }
+      if (key === 'hub') return openManager();
       if (key === 'you') return setTab('approvals');
       if (key === 'audit') return setTab('audit');
       if (key === 'lot') return addDeptModal();
