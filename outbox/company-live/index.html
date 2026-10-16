@@ -1,0 +1,167 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Cymetica QA · Company</title>
+<link rel="icon" href="data:,">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Archivo+Black&family=JetBrains+Mono:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<header class="site">
+  <a class="logo" href="#" data-mock="EventTrader home">Event<i>Trader</i></a>
+  <nav><a data-mock="Markets">Markets</a><a data-mock="Agents">Agents</a><a data-mock="Build it Better">Build it Better</a><a class="on">Company</a><a data-mock="Usage">Usage</a></nav>
+  <span class="sp"></span>
+  <span class="simbar" id="simbar" title="Not part of the design: controls for this mockup's simulated live data.">
+    <b>MOCKUP</b><span>simulated</span>
+    <button data-speed="0" title="Freeze the simulation">❚❚</button><button data-speed="1" class="on">1×</button><button data-speed="4">4×</button><button data-speed="16">16×</button>
+    <button id="sim-reset" title="Start the simulation over">↺</button>
+  </span>
+  <span class="acct"><i></i>expire76</span>
+</header>
+
+<section class="cobar">
+  <div class="who">
+    <div class="mark" id="co-logo">CQ</div>
+    <div class="who-t">
+      <div class="who-1"><h1 id="co-name"></h1><span class="pill" id="co-status"></span><button class="btn" id="co-pause"></button></div>
+      <div class="heart" id="co-heart"></div>
+    </div>
+  </div>
+  <div class="fuel" id="fuel">
+    <div class="k" title="Turns left = plan units left ÷ this company's average units per turn over its last 20 turns. Updates after every turn."><b>TURNS LEFT</b><span id="ctr-sub"></span></div>
+    <div class="n" id="n-sess" title="Turns left in this 5-hour session"><b id="tl-sess"></b><span>this session</span></div>
+    <div class="n wk" id="n-week" title="Turns left this week"><b id="tl-week"></b><span>this week</span></div>
+    <div class="vs"></div>
+    <div class="n ex" id="n-extra"><b id="tl-extra"></b><span>extra usage</span></div>
+    <div class="bars">
+      <div class="bar"><label>SESSION</label><div class="track"><i id="bar-sess"></i></div><em id="bar-sess-t"></em></div>
+      <div class="bar"><label>WEEK</label><div class="track"><i id="bar-week"></i></div><em id="bar-week-t"></em></div>
+      <div class="then" id="atzero"></div>
+    </div>
+  </div>
+  <div class="right"><button class="appr" id="co-waiting"></button><button class="btn cy" id="co-upgrade">Upgrade</button></div>
+</section>
+
+<nav class="tabs" id="tabs">
+  <button data-tab="office" class="on">Office</button>
+  <button data-tab="tasks">Tasks<sup id="tn-tasks"></sup></button>
+  <button data-tab="approvals">Approvals<sup class="r" id="tn-appr"></sup></button>
+  <button data-tab="memory">Memory</button>
+  <button data-tab="audit">Audit</button>
+  <span class="sp"></span>
+  <button data-tab="investable">Investable</button>
+  <button data-tab="legal">Legal entity</button>
+  <button data-tab="token">Token</button>
+  <button data-tab="settings">Settings</button>
+</nav>
+
+<main class="main pane" data-pane="office">
+  <aside class="left">
+    <section class="panel rail">
+      <div class="h">DEPARTMENTS <b id="rail-n"></b><button class="btn cy xs" id="add-dept">+ Add</button></div>
+      <div class="depts" id="depts"></div>
+    </section>
+    <section class="mini" id="totals"></section>
+  </aside>
+
+  <section class="panel stage" id="stage">
+    <div class="top">
+      <span class="live" id="live"></span>
+      <div class="seg" id="seg"><button data-v="2d" class="on">2D OFFICE</button><button data-v="3d">3D NETWORK</button></div>
+      <div class="zoom"><button id="z-in" title="Zoom in">+</button><button id="z-out" title="Zoom out">−</button><button id="z-fit" title="Fit">⤢</button></div>
+    </div>
+    <svg id="office" class="office" xmlns="http://www.w3.org/2000/svg"></svg>
+    <canvas id="net" class="net" hidden></canvas>
+    <div class="drawer" id="drawer" hidden>
+      <div class="dh" id="dr-head"></div>
+      <div class="chips" id="dr-chips"></div>
+      <form class="cht" id="dr-charter">
+        <div class="sec">CHARTER · EVERY TASK STARTS HERE <span id="dr-ch-meta"></span></div>
+        <textarea id="dr-ch-text" maxlength="2000" spellcheck="false"></textarea>
+        <div class="cb"><span class="d">the next task starts from the saved text</span><button type="button" class="btn" id="dr-ch-discard">Discard</button><button class="btn gr" type="submit">Save charter</button></div>
+      </form>
+      <div class="kp" id="dr-kp"></div>
+      <div id="dr-now"></div>
+      <div class="sec">TASKS <a id="dr-tasks-all"></a></div>
+      <div class="tlist" id="dr-tasks"></div>
+      <div class="sec">MEMORY <a id="dr-mem-all"></a></div>
+      <div id="dr-mem"></div>
+      <div id="dr-appr"></div>
+    </div>
+    <div class="tip" hidden></div>
+    <div class="strip">
+      <span class="lab" title="The daily ceiling: at most 40 turns a day for the whole company.">TURNS TODAY <b id="strip-n"></b> / <span id="strip-cap"></span></span>
+      <div class="cells" id="cells"></div>
+      <span class="legend"><span><i class="c"></i>running</span><span><i class="g"></i>done</span><span><i class="r"></i>failed</span><span><i class="b"></i>queued</span></span>
+    </div>
+  </section>
+
+  <aside class="rightcol">
+    <section class="panel ap" id="p-appr"><div class="h">WAITING FOR YOU <b class="red" id="ap-n"></b></div><div class="alist" id="appr"></div></section>
+    <section class="panel nx"><div class="h">NEXT UP · THE MANAGER'S PLAN <b class="cy" id="plan-n"></b></div><ol class="plan" id="plan"></ol></section>
+    <section class="panel chat">
+      <div class="h">MANAGER <span class="typing" id="typing" hidden>typing<i></i><i></i><i></i></span></div>
+      <div class="msgs" id="msgs"></div>
+      <form class="compose" id="compose"><input id="msg" autocomplete="off" placeholder="Message the Manager…"><button class="btn gr" type="submit">Send</button></form>
+    </section>
+    <section class="panel feedp"><div class="h">LIVE FEED</div><ul class="feed" id="feed"></ul></section>
+  </aside>
+</main>
+
+<main class="page pane" data-pane="tasks" hidden>
+  <div class="ph"><h2>Tasks</h2><span class="sub" id="tk-sub"></span><span class="sp"></span>
+    <label class="sel">Department <select id="tf-dept"></select></label>
+    <label class="sel">Status <select id="tf-status"><option value="">All</option><option value="queued">queued</option><option value="running">running</option><option value="waiting_approval">waiting for approval</option><option value="done">done</option><option value="failed">failed</option><option value="cancelled">cancelled</option></select></label>
+  </div>
+  <div class="tablewrap"><table class="ledger"><thead><tr><th>Status</th><th>Department</th><th>Task</th><th class="num">Started</th><th class="num">Turns</th><th class="num">Units</th><th>Result</th></tr></thead><tbody id="tasks"></tbody></table></div>
+</main>
+
+<main class="page pane" data-pane="approvals" hidden>
+  <div class="ph"><h2>Approvals</h2><span class="sub">Nothing real happens until you approve it.</span></div>
+  <div class="grid2"><section><div class="sec">WAITING</div><div id="appr-full"></div></section><section><div class="sec">DECIDED</div><div id="appr-done"></div></section></div>
+</main>
+
+<main class="page pane" data-pane="memory" hidden>
+  <div class="ph"><h2>Memory</h2><span class="sub" id="mem-sub"></span><span class="sp"></span><input class="search" id="mem-q" placeholder="Search memory…"></div>
+  <div class="memgrid" id="memory"></div>
+</main>
+
+<main class="page pane" data-pane="audit" hidden>
+  <div class="ph"><h2>Weekly audit</h2><span class="sub" title="A company-wide scheduled review by the built-in supervisor: wasted work, duplicates and stuck tasks. Separate from the hireable Auditor.">by the built-in supervisor <i class="q">?</i></span></div>
+  <div id="audit"></div>
+</main>
+
+<main class="page pane" data-pane="investable" hidden>
+  <div class="ph"><h2>Investable</h2><span class="sub" title="Backers pledge USDC to help with its costs and share in its proceeds, judged on its public scoreboard.">private by default <i class="q">?</i></span></div>
+  <div id="invest"></div>
+</main>
+
+<main class="page pane" data-pane="legal" hidden>
+  <div class="ph"><h2>Legal entity</h2><span class="sub" title="Form it as a real legal entity in the Cayman Islands or any legal domicile, or declare a seat on the Moon, Mars, Europa or Titan registered through an Earth registry.">optional <i class="q">?</i></span></div>
+  <div id="legal"></div>
+</main>
+
+<main class="page pane" data-pane="token" hidden>
+  <div class="ph"><h2>Token</h2><span class="sub">before, during and after the build</span></div>
+  <div id="token"></div>
+</main>
+
+<main class="page pane" data-pane="settings" hidden>
+  <div class="ph"><h2>Settings</h2></div>
+  <div id="settings"></div>
+</main>
+
+<div class="modal" id="modal" hidden><div class="modal-card" id="modal-card"></div></div>
+<div class="toast" id="toast" hidden></div>
+
+<script src="data.js"></script>
+<script src="sim.js"></script>
+<script src="office.js"></script>
+<script src="net.js"></script>
+<script src="app.js"></script>
+</body>
+</html>
