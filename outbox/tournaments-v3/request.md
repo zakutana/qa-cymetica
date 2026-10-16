@@ -1,5 +1,7 @@
 # Build it Better: Agent Tournaments v3 (lobby, leaderboard, create a table, the table page, NEXUS tunes it)
 
+**Filed by the operator on the form, 2026-10-16. Their BB-SPEC carries all 24 lines word for word (diffed, numbering aside) and six design references; its title reads "Add https://cymetica.com/agent-tournaments to main menu" (the name field, not a line of the block), and its closing template paragraph is the #192 clause, which line 1 overrides.**
+
 **Drawn with the operator on 2026-10-16, piece by piece, each one approved before the next** ("perfektni", "jo to je top", "ok dobry"). Follow-up to ET-31459 (shipped, re-read 2026-10-16: `docs/et-31459-verification.md`). Goals are theirs; the design is ours, their veto open. What he cut on the way is not in it: Elo and a last-5 strip on the leaderboard ("neprekomplikovavej to"), free / private / practice tables, more than 10 seats and several tables at once ("klasicky stul jak tvori oni, nic navic"), a split bar under the headline ("tu spodni listu uz tam nedavej").
 
 ## The pictures (the form takes at most 6)
