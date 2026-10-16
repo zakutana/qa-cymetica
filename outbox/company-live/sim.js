@@ -122,11 +122,12 @@
   function finish(t) {
     var S = CO.S, d = dept(t.dept_id);
     if (!d) { t.status = 'cancelled'; return; }
-    var u = r2(rand(0.12, 0.32));
+    var u = r2(rand(0.12, 0.32)), onPlan = CO.left().onPlan;
     charge(u);
     t.turns++; t.units = r2(t.units + u); d.units_7d = r2(d.units_7d + u);
     var cell = null;
     for (var i = S.strip.length - 1; i >= 0; i--) if (S.strip[i].task_id === t.id && S.strip[i].state === 'running') { cell = S.strip[i]; break; }
+    if (cell) { cell.units = u; cell.extra = !onPlan; }
     var fail = t.fail_next === true || (t.fail_next !== false && Math.random() < FAIL_P);
     t.fail_next = undefined;
     var outcome;

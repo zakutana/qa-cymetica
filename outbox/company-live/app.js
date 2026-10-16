@@ -69,19 +69,6 @@
     $('co-logo').textContent = initials(c.name);
     var st = $('co-status'); st.textContent = paused ? 'PAUSED' : 'ACTIVE'; st.className = 'pill ' + (paused ? 'off' : 'on');
     $('co-pause').textContent = paused ? 'Resume' : 'Pause';
-    // One number: how many more turns the plan allows, from whichever limit (5-hour or weekly) is closer.
-    var win = !l.none && l.week < l.session ? b.week : b.session;
-    var onExtra = !l.none && (l.session === 0 || l.week === 0) && b.extra.on && b.extra.left > 0.004;
-    var main = l.none ? '—' : onExtra ? l.extra : Math.min(l.session, l.week);
-    setN('n-main', 'tl-main', main, !l.none && !onExtra && main <= 2);
-    $('n-main').classList.toggle('ex', !!onExtra);
-    $('tl-lbl').textContent = onExtra ? 'turns left · extra usage' : 'turns left';
-    var pct = Math.min(100, win.used / win.cap * 100), bm = $('bar-main');
-    bm.style.width = pct.toFixed(1) + '%'; bm.classList.toggle('hot', pct >= 85);
-    $('fuel').title = 'Turns left = what your plan has left ÷ what a turn costs on average (' + (l.none ? 'not measured yet' : u2(CO.avg()) + ' units') + ').\n' +
-      'This session (the current 5-hour window): ' + (l.none ? '—' : l.session) + ' turns, resets in ' + hm(b.session.resets_at - S.clock) + '.\n' +
-      'This week: ' + (l.none ? '—' : l.week) + ' turns, resets ' + dayTime(b.week.resets_at) + '.\n' +
-      (b.extra.on ? 'When the plan runs out the company keeps going on extra usage (' + (l.none ? '—' : l.extra) + ' more turns).' : 'When the plan runs out the company pauses until the reset.');
     var n = S.approvals.length, w = $('co-waiting');
     w.innerHTML = n ? '<b>' + n + '</b> waiting for you' : 'nothing waits for you';
     w.classList.toggle('none', !n);
@@ -119,17 +106,34 @@
       '<div title="Approvals you approved in 7 days"><b class="cy">' + S.approved_7d + '</b><span>approved · 7d</span></div>');
   }
 
+  // The bottom panel, the way Claude shows usage: Session limit (built from this window's turns,
+  // each as wide as what it cost, then the Manager's plan in blue), Weekly, and Today's ceiling.
   function renderStrip() {
-    var S = CO.S, cap = S.budget.cap, planned = 0;
-    S.plan.forEach(function (id) { var t = CO.task(id); if (t) planned += Math.max(1, t.turns_needed - t.turns); });
-    var h = '';
-    for (var i = 0; i < cap; i++) {
-      var c = S.strip[i];
-      h += c ? '<i class="' + c.state + '" title="' + esc((CO.dept(c.dept_id) || { name: '' }).name + ' · ' + c.state + ' · ' + hhmm(c.at)) + '"></i>'
-        : i < S.strip.length + planned ? '<i class="plan" title="planned"></i>' : '<i></i>';
-    }
-    setHTML($('cells'), h);
-    $('strip-n').textContent = S.strip.length; $('strip-cap').textContent = cap;
+    var S = CO.S, b = S.budget, cap = b.session.cap, avg = S.meter.length ? CO.avg() : 0.22;
+    var start = b.session.resets_at - b.session.every, cells = S.strip.filter(function (c) { return c.at >= start; });
+    var onPlan = cells.filter(function (c) { return !c.extra; }), onExtra = cells.length - onPlan.length, known = 0;
+    onPlan.forEach(function (c) { if (c.units != null) known += c.units; });
+    var used = Math.min(b.session.used, cap), before = Math.max(0, used - known), total = 0;
+    function seg(cls, u, tip) { u = Math.max(0, Math.min(u, cap - total)); if (u <= 0) return ''; total += u; return '<i class="' + cls + '" style="width:' + (u / cap * 100).toFixed(2) + '%" title="' + esc(tip) + '"></i>'; }
+    var h = before > 0.004 ? seg('before', before, 'Earlier in this window: ' + u2(before) + ' u') : '';
+    onPlan.forEach(function (c) {
+      var d = CO.dept(c.dept_id), u = c.units != null ? c.units : avg;
+      h += seg(c.state, u, (d ? d.name : 'Removed department') + ' · ' + c.state + ' · ' + hhmm(c.at) + ' · ' + (c.units != null ? u2(c.units) + ' u' : 'running'));
+    });
+    S.plan.forEach(function (id) {
+      var t = CO.task(id); if (!t) return;
+      var d = CO.dept(t.dept_id), k = Math.max(1, t.turns_needed - t.turns);
+      for (var i = 0; i < k; i++) h += seg('plan', avg, 'Planned: ' + (d ? d.name + ': ' : '') + t.title + ' · ~' + u2(avg) + ' u');
+    });
+    setHTML($('segs'), h);
+    var sp = Math.round(used / cap * 100), usp = $('us-p');
+    usp.textContent = sp + '% used' + (onExtra ? ' · ' + onExtra + ' on extra usage' : '');
+    usp.classList.toggle('hot', sp >= 85);
+    var wp = Math.min(100, b.week.used / b.week.cap * 100);
+    $('uw-p').textContent = Math.round(wp) + '% used';
+    var wb = $('uw-bar'); wb.style.width = wp.toFixed(1) + '%'; wb.classList.toggle('hot', wp >= 85);
+    $('strip-n').textContent = S.strip.length; $('strip-cap').textContent = b.cap;
+    $('day-bar').style.width = Math.min(100, S.strip.length / b.cap * 100).toFixed(1) + '%';
   }
 
   function apprCard(a, full) {
@@ -391,8 +395,11 @@
       if (g.code === 'extra') parts.push('<span class="hot">on extra usage</span>');
     }
     $('co-heart').innerHTML = parts.join(' · ');
-    var lw = CO.left(), win = !lw.none && lw.week < lw.session ? b.week : b.session;
-    $('bar-main-t').innerHTML = '<b>' + Math.round(win.used / win.cap * 100) + '%</b> used · resets ' + (win === b.week ? dayTime(win.resets_at) : 'in ' + hm(win.resets_at - S.clock));
+    var ur = $('us-r');
+    ur.textContent = g.code === 'extra' ? 'on extra usage · resets in ' + hm(b.session.resets_at - S.clock) : 'Resets in ' + hm(b.session.resets_at - S.clock);
+    ur.classList.toggle('ex', g.code === 'extra');
+    $('uw-r').textContent = 'Resets ' + dayTime(b.week.resets_at);
+    $('day-r').textContent = 'Resets 00:00';
     var lv = $('live');
     if (S.company.status === 'paused') { lv.className = 'live paused'; lv.innerHTML = '<i></i>PAUSED'; }
     else if (!g.ok) { lv.className = 'live stop'; lv.innerHTML = '<i></i>' + esc(g.text.toUpperCase()); }

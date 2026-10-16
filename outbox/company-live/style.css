@@ -31,7 +31,7 @@ a { color: var(--cyan); text-decoration: none; cursor: pointer; }
 .acct i { width: 8px; height: 8px; border-radius: 50%; background: var(--green); box-shadow: 0 0 8px var(--green); }
 
 /* ---------- company bar ---------- */
-.cobar { flex: none; display: grid; grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr); align-items: center; gap: 20px; padding: 10px 20px;
+.cobar { flex: none; display: grid; grid-template-columns: minmax(0, 1fr) auto; align-items: center; gap: 20px; padding: 10px 20px;
   border-bottom: 1px solid var(--line); background: linear-gradient(180deg, rgba(13, 21, 32, .9), rgba(10, 14, 23, .9)); }
 .who { display: flex; align-items: center; gap: 12px; min-width: 0; }
 .mark { width: 42px; height: 42px; border-radius: 10px; flex: none; display: grid; place-items: center; font-family: 'Archivo Black'; color: var(--cyan); font-size: 15px;
@@ -71,7 +71,27 @@ a { color: var(--cyan); text-decoration: none; cursor: pointer; }
 .fuel .n { min-width: 0; flex-direction: row; align-items: baseline; gap: 10px; }
 .fuel .n b { font-size: 34px; } .fuel .n span { font-size: 11px; margin: 0; }
 .fuel .n.ex b { color: var(--blue); }
-.fuel .q { margin: 0; }
+/* usage, the way Claude shows it: one row per limit, % used, a bar, when it resets */
+.use { width: 210px; flex: none; display: grid; gap: 4px; cursor: help; }
+.use .u1 { display: flex; justify-content: space-between; align-items: baseline; font-size: 11.5px; }
+.use .u1 b { color: var(--text); } .use .u1 > * { white-space: nowrap; } .use .u1 span { color: var(--dim2); font-size: 11px; }
+.use .u1 span.hot { color: var(--red); }
+.use .track { height: 6px; } .use .track i { background-color: var(--blue); }
+.use .track i.hot { background-color: var(--red); }
+.use em { font-style: normal; font-size: 10.5px; color: var(--dim2); white-space: nowrap; }
+.use em.ex { color: var(--cyan); }
+.use.wide { flex: 1; width: auto; min-width: 0; }
+.use.wide .u1 { gap: 10px; } .use.wide .u1 .sp { flex: 1; }
+.use.sm { width: 150px; } .use.sm .track i { background-color: var(--dim2); }
+.use .legend { font-size: 10px; gap: 8px; }
+.segs { position: relative; display: flex; height: 14px; border-radius: 4px; background: var(--line); overflow: hidden; gap: 1px; }
+.segs i { display: block; height: 100%; flex: none; transition: width .6s; }
+.segs i.done { background: var(--green); } .segs i.failed { background: var(--red); }
+.segs i.running { background: var(--cyan); animation: cellp 1s ease-in-out infinite; box-shadow: 0 0 8px var(--cyan); }
+.segs i.before { background: var(--line3); }
+.segs i.plan { background: rgba(59, 130, 246, .3); box-shadow: inset 0 0 0 1px rgba(59, 130, 246, .7); }
+.segs i.extra { background: repeating-linear-gradient(135deg, rgba(0, 207, 255, .5) 0 4px, rgba(0, 207, 255, .2) 4px 8px); }
+.strip .vs { width: 1px; height: 40px; background: var(--line3); flex: none; }
 .bar { display: grid; grid-template-columns: 58px 1fr auto; align-items: center; gap: 8px; font-size: 10.5px; color: var(--dim); }
 .bar label { color: var(--dim2); letter-spacing: .08em; }
 .track { height: 7px; border-radius: 4px; background: var(--line); overflow: hidden; }
@@ -143,9 +163,9 @@ a { color: var(--cyan); text-decoration: none; cursor: pointer; }
 .zoom { display: flex; gap: 6px; }
 .zoom button { width: 28px; height: 28px; display: grid; place-items: center; border: 1px solid var(--line3); border-radius: 7px; background: var(--deep); color: var(--dim); }
 .zoom button:hover { color: var(--cyan); border-color: var(--cyan); }
-.office, .net { position: absolute; left: 0; top: 0; right: 0; bottom: 44px; width: 100%; height: calc(100% - 44px); display: block; cursor: grab; user-select: none; touch-action: none; }
+.office, .net { position: absolute; left: 0; top: 0; right: 0; bottom: 72px; width: 100%; height: calc(100% - 72px); display: block; cursor: grab; user-select: none; touch-action: none; }
 .office.grabbing { cursor: grabbing; }
-.strip { position: absolute; left: 0; right: 0; bottom: 0; height: 44px; display: flex; align-items: center; gap: 14px; padding: 0 12px; border-top: 1px solid var(--line); background: rgba(6, 9, 15, .75); z-index: 3; }
+.strip { position: absolute; left: 0; right: 0; bottom: 0; height: 72px; display: flex; align-items: center; gap: 14px; padding: 0 12px; border-top: 1px solid var(--line); background: rgba(6, 9, 15, .75); z-index: 3; }
 .strip .lab { font-size: 10.5px; letter-spacing: .1em; color: var(--dim2); font-weight: 700; white-space: nowrap; cursor: help; } .strip .lab b { color: var(--text); font-size: 13px; }
 .cells { display: grid; grid-template-columns: repeat(40, 1fr); gap: 2px; flex: 1; }
 .cells i { height: 12px; border-radius: 2px; background: var(--line); transition: background .4s; }
@@ -233,7 +253,7 @@ a { color: var(--cyan); text-decoration: none; cursor: pointer; }
 .office .plate:hover rect:first-child { stroke-width: 1.6; }
 
 /* the department drawer */
-.drawer { position: absolute; z-index: 5; left: 12px; top: 48px; bottom: 56px; width: min(540px, 52%); display: flex; flex-direction: column; gap: 10px;
+.drawer { position: absolute; z-index: 5; left: 12px; top: 48px; bottom: 84px; width: min(540px, 52%); display: flex; flex-direction: column; gap: 10px;
   background: rgba(13, 21, 32, .97); border: 1px solid var(--cyan); border-radius: 12px; padding: 14px; box-shadow: 0 0 40px rgba(0, 207, 255, .18), 0 20px 60px rgba(0, 0, 0, .5);
   overflow: auto; animation: slidein .28s cubic-bezier(.2, .8, .2, 1); }
 @keyframes slidein { from { opacity: 0; transform: translateX(-16px); } }
@@ -408,7 +428,7 @@ select:focus, .search:focus, .field input:focus, .field textarea:focus { border-
 @media (max-width: 1600px) {
   .main { grid-template-columns: 250px minmax(0, 1fr) 330px; }
   .bars { min-width: 220px; } .fuel { gap: 12px; } .fuel .n b { font-size: 26px; }
-  .cobar { grid-template-columns: auto auto minmax(0, 1fr); } .who h1 { font-size: 18px; }
+  .who h1 { font-size: 18px; } .legend { display: none; }
   .mini { display: none; } .feedp { height: 112px; } .alist { max-height: 200px; } .plan { max-height: 150px; }
   .site nav { gap: 14px; } .simbar span { display: none; }
 }
@@ -423,7 +443,7 @@ select:focus, .search:focus, .field input:focus, .field textarea:focus { border-
   .main { grid-template-columns: minmax(0, 1fr) 300px; grid-template-rows: auto 640px; flex: none; }
   .left { grid-column: 1 / -1; } .rail .depts { flex-direction: row; overflow-x: auto; } .dept { min-width: 210px; }
   .stage { grid-row: 2; } .rightcol { grid-row: 2; }
-  .cobar { grid-template-columns: 1fr auto; } .cobar .fuel { grid-column: 1 / -1; grid-row: 2; justify-content: space-between; }
+  .use { width: 170px; }
   .page { overflow: visible; }
 }
 @media (max-width: 1000px) {

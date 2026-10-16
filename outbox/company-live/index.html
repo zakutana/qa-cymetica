@@ -31,14 +31,6 @@
       <div class="heart" id="co-heart"></div>
     </div>
   </div>
-  <div class="fuel" id="fuel">
-    <div class="n" id="n-main"><b id="tl-main"></b><span id="tl-lbl">turns left</span></div>
-    <div class="bars">
-      <div class="track"><i id="bar-main"></i></div>
-      <em id="bar-main-t"></em>
-    </div>
-    <i class="q" id="fuel-q">?</i>
-  </div>
   <div class="right"><button class="appr" id="co-waiting"></button><button class="btn cy" id="co-upgrade">Upgrade</button></div>
 </section>
 
@@ -90,9 +82,18 @@
     </div>
     <div class="tip" hidden></div>
     <div class="strip">
-      <span class="lab" title="The daily ceiling: at most 40 turns a day for the whole company.">TURNS TODAY <b id="strip-n"></b> / <span id="strip-cap"></span></span>
-      <div class="cells" id="cells"></div>
-      <span class="legend"><span><i class="c"></i>running</span><span><i class="g"></i>done</span><span><i class="r"></i>failed</span><span><i class="b"></i>queued</span></span>
+      <div class="use wide" title="Your plan's current 5-hour window. Each block is one turn of one agent, as wide as what it cost, coloured by how it ended; blue blocks are the Manager's plan.">
+        <div class="u1"><b>Session limit</b><span id="us-p"></span><span class="sp"></span><span class="legend"><span><i class="c"></i>running</span><span><i class="g"></i>done</span><span><i class="r"></i>failed</span><span><i class="b"></i>planned</span></span><em id="us-r"></em></div>
+        <div class="segs" id="segs"></div>
+      </div>
+      <span class="vs"></span>
+      <div class="use" title="Your plan's weekly allowance.">
+        <div class="u1"><b>Weekly</b><span id="uw-p"></span></div><div class="track"><i id="uw-bar"></i></div><em id="uw-r"></em>
+      </div>
+      <span class="vs"></span>
+      <div class="use sm" title="The daily ceiling: at most 40 turns a day for the whole company.">
+        <div class="u1"><b>Today</b><span><b id="strip-n"></b> / <span id="strip-cap"></span> turns</span></div><div class="track"><i id="day-bar"></i></div><em id="day-r"></em>
+      </div>
     </div>
   </section>
 
