@@ -88,19 +88,14 @@
     setHTML($('depts'), S.departments.map(function (d) {
       var v = CO.deptView(d);
       return '<button class="dept ' + v.status + (ui.panel === d.id ? ' on' : '') + (d.born && S.clock - d.born < 4000 ? ' born' : '') + '" data-id="' + d.id + '" title="' + WORD[v.status] + '">' +
-        '<div class="d1"><i class="dot"></i><b>' + esc(d.name) + '</b><span class="u">' + u2(v.units) + '<small>u</small></span></div>' +
+        '<div class="d1"><i class="dot"></i><b>' + esc(d.name) + '</b><span class="u" title="Share of your weekly plan this department used in the last 7 days">' +
+        Math.round(v.units / S.budget.week.cap * 100) + '%<small>of week</small></span></div>' +
         '<div class="d2"><span class="c">' + v.open + '<small>open</small></span><span class="g">' + v.done + '<small>done</small></span>' +
         '<span class="' + (v.failed ? 'r' : 'z') + '">' + v.failed + '<small>failed</small></span><span class="m">' + v.memory + '<small>mem</small></span></div>' +
         (v.waits ? '<div class="dwait">Queued: <span data-wait="' + d.id + '">' + esc(v.waits) + '</span></div>' : '') +
         '<div class="d3">' + esc(v.experts.map(function (e) { return e.name; }).join(' · ')) + '</div>' +
         (v.status === 'working' ? '<span class="run"><i></i></span>' : '') + '</button>';
     }).join('') || '<p class="empty">No departments yet. <a id="rail-add">+ Add the first one</a>, or click the empty lot in the office.</p>');
-    var done = 0, failed = 0, units = 0;
-    S.departments.forEach(function (d) { var v = CO.deptView(d); done += v.done; failed += v.failed; units += v.units; });
-    setHTML($('totals'), '<div title="Tasks done in the last 7 days"><b class="gr">' + done + '</b><span>tasks done · 7d</span></div>' +
-      '<div title="Failed turns in the last 7 days"><b class="red">' + failed + '</b><span>failed · 7d</span></div>' +
-      '<div title="Plan units the company used in 7 days"><b>' + u2(units) + '<small>u</small></b><span>company units · 7d</span></div>' +
-      '<div title="Approvals you approved in 7 days"><b class="cy">' + S.approved_7d + '</b><span>approved · 7d</span></div>');
   }
 
   // The bottom panel, the way Claude shows usage: Session limit (built from this window's turns,
@@ -230,7 +225,7 @@
     if (!ui.dirty && ta.value !== d.charter) ta.value = d.charter;
     charterMeta();
     setHTML($('dr-kp'), '<div><b class="cy">' + v.open + '</b><span>open</span></div><div><b class="gr">' + v.done + '</b><span>done</span></div>' +
-      '<div><b class="red">' + v.failed + '</b><span>failed</span></div><div><b>' + u2(v.units) + '<small>u</small></b><span>units · 7d</span></div><div><b>' + v.memory + '</b><span>memory</span></div>');
+      '<div><b class="red">' + v.failed + '</b><span>failed</span></div><div title="Share of your weekly plan this department used in the last 7 days"><b>' + Math.round(v.units / S.budget.week.cap * 100) + '%</b><span>of week</span></div><div><b>' + v.memory + '</b><span>memory</span></div>');
     var r = v.running;
     setHTML($('dr-now'), r ? '<div class="now"><div class="t1">NOW · ATTEMPT ' + r.attempt + ' OF ' + r.max_attempts + '</div><p>' + esc(r.title) + '</p>' +
       '<div class="t2">' + esc(CO.expertName(r.expert)) + ' · started ' + hhmm(r.turn_started || r.started_at) + (r.last_error ? ' · last try: <b>' + esc(r.last_error) + '</b>' : '') + '</div><span class="run"><i></i></span></div>'
@@ -648,7 +643,7 @@
     CO.on('reset', function () {
       closeModal(); ui.panel = null; $('drawer').hidden = true; office.sel = null; ui.open = {}; ui.prev = {};
       office.layout(); office.fit(true); markSeen();
-      ['depts', 'totals', 'cells', 'appr', 'plan', 'msgs', 'feed', 'legal', 'settings'].forEach(function (id) { $(id)._h = null; });
+      ['depts', 'appr', 'plan', 'msgs', 'feed', 'legal', 'settings'].forEach(function (id) { $(id)._h = null; });
     });
     CO.on('office:click', function (key) {
       if (key.charAt(0) === 'd') return openDrawer(+key.slice(1));
