@@ -714,8 +714,15 @@
     if (cx == null) this.tween(to, 260); else { this.tw = 0; this.vb = to; this.apply(); }
   };
   // bring a room to the middle of what the drawer leaves visible
-  Office.prototype.focus = function (key, leftPx) {
+  Office.prototype.focus = function (key, leftPx, tight) {
     var c = this.cells[key]; if (!c) return;
+    if (tight) {
+      // the room, its walls and its plate fill the stage below the top bar
+      var cz = this.client(), m = P(c[0] + 3.5, c[1] + 3.6, 0.45), top = 50, bottom = 8;
+      var k = Math.min(cz.w / 400, (cz.h - top - bottom) / 300), ww = cz.w / k, hh = cz.h / k;
+      this.tween({ x: m[0] - ww / 2, y: m[1] - (top + (cz.h - top - bottom) / 2) / k, w: ww, h: hh }, 700);
+      return;
+    }
     var cl = this.client(), mid = P(c[0] + 3.5, c[1] + 3.5, 0.6);
     var visW = cl.w - (leftPx || 0), w = Math.min(this.vb.w, Math.max(420, RS * SC * 2.6 * cl.w / Math.max(200, visW)));
     var h = w * cl.h / cl.w, fx = ((leftPx || 0) + visW / 2) / cl.w;

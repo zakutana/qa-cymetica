@@ -147,28 +147,37 @@
     }).join('');
   }
   function renderRight() {
-    var S = CO.S, n = S.approvals.length;
+    var S = CO.S, fd = ui.panel != null ? CO.dept(ui.panel) : null;
+    var apprs = fd ? S.approvals.filter(function (a) { return a.dept_id === fd.id; }) : S.approvals, n = apprs.length;
+    $('ap-t').textContent = fd ? 'WAITING FOR YOU · ' + fd.name.toUpperCase() : 'WAITING FOR YOU';
+    $('nx-t').textContent = fd ? 'NEXT UP · ' + fd.name.toUpperCase() : "NEXT UP · THE MANAGER'S PLAN";
+    $('chat-t').textContent = fd ? 'MANAGER · ABOUT ' + fd.name.toUpperCase() : 'MANAGER';
+    $('msg').placeholder = fd ? 'Ask the Manager about ' + fd.name + '…' : 'Message the Manager…';
     $('ap-n').textContent = n || '';
     $('p-appr').classList.toggle('none', !n);
-    setHTML($('appr'), n ? S.approvals.map(function (a) { return apprCard(a, false); }).join('') : '<p class="empty ok">Nothing is waiting for you.</p>');
+    setHTML($('appr'), n ? apprs.map(function (a) { return apprCard(a, false); }).join('') : '<p class="empty ok">Nothing is waiting for you' + (fd ? ' from ' + esc(fd.name) : '') + '.</p>');
     S.approvals.forEach(function (a) { ui.seen[a.id] = 1; });
     // the plan
-    $('plan-n').textContent = S.plan.length || '';
-    setHTML($('plan'), S.plan.length ? S.plan.map(function (id, i) {
-      var t = CO.task(id); if (!t) return '';
+    var pl = S.plan.filter(function (id) { var t = CO.task(id); return t && (!fd || t.dept_id === fd.id); });
+    $('plan-n').textContent = pl.length || '';
+    setHTML($('plan'), pl.length ? pl.map(function (id) {
+      var i = S.plan.indexOf(id), t = CO.task(id); if (!t) return '';
       var d = CO.dept(t.dept_id), w = CO.waitText(t), waits = w.indexOf('next pass') !== 0;
       var left = Math.max(1, t.turns_needed - t.turns);
       return '<li data-id="' + id + '"' + (ui.moved === id ? ' class="moved"' : '') + '><span class="n">' + (i + 1) + '</span><div><b title="' + esc(t.title) + '">' + esc(d ? d.name : '') + ': ' + esc(t.title) + '</b>' +
         '<em class="' + (waits ? 'wait' : '') + '">' + esc(waits ? w : t.why) + ' · ~' + left + ' turn' + (left > 1 ? 's' : '') + '</em></div>' +
         '<span class="pa"><button data-a="top" title="Move to the top"' + (i ? '' : ' disabled') + '>⤒</button><button data-a="up" title="Move up"' + (i ? '' : ' disabled') + '>↑</button>' +
         '<button data-a="down" title="Move down"' + (i < S.plan.length - 1 ? '' : ' disabled') + '>↓</button><button data-a="remove" title="Remove from the plan">×</button></span></li>';
-    }).join('') : '<li class="empty">Nothing queued. Give the Manager work below.</li>');
+    }).join('') : '<li class="empty">Nothing queued' + (fd ? ' for ' + esc(fd.name) : '') + '. Give the Manager work below.</li>');
     ui.moved = null;
     // the Manager
-    var last = S.messages[S.messages.length - 1];
-    var mh = S.messages.map(function (m) {
-      return '<div class="msg' + (m.role === 'owner' ? ' me' : '') + '"><em>' + (m.role === 'owner' ? 'You' : 'Manager') + ' · ' + hhmm(m.at) + '</em>' + esc(m.text) + '</div>';
+    var msgs = fd ? S.messages.filter(function (m) { return m.dept_id === fd.id; }) : S.messages, last = msgs[msgs.length - 1];
+    var mh = msgs.map(function (m) {
+      var md = !fd && m.dept_id ? CO.dept(m.dept_id) : null;
+      return '<div class="msg' + (m.role === 'owner' ? ' me' : '') + '"><em>' + (m.role === 'owner' ? 'You' : 'Manager') + ' · ' + hhmm(m.at) +
+        (md ? '<span class="tagd">' + esc(md.name) + '</span>' : '') + '</em>' + esc(m.text) + '</div>';
     }).join('');
+    if (fd && !msgs.length) mh = '<p class="hint">Ask the Manager anything about ' + esc(fd.name) + ': what it found, what runs next, what it costs, or give it work (“check the leaderboard first”).</p>';
     if (S.notice && last && last.role === 'owner' && !last.answered) mh += '<div class="msgwait">' + esc(S.notice.text) + '</div>';
     if (setHTML($('msgs'), mh || '<p class="empty">No messages yet. Say hello to your Manager.</p>')) {
       var box = $('msgs'); box.scrollTop = 1e6; requestAnimationFrame(function () { box.scrollTop = 1e6; });
@@ -188,17 +197,28 @@
     var d = CO.dept(id); if (!d) return;
     if (ui.tab !== 'office') setTab('office');
     if (ui.panel !== id) { ui.dirty = false; $('dr-ch-text').value = d.charter; ui.open = {}; }
+    var was = ui.panel != null;
     ui.panel = id;
     var dr = $('drawer'); dr.hidden = false; dr.scrollTop = 0;
-    renderDrawer(); renderRail();
+    document.body.classList.add('focus');
+    $('back').hidden = false; $('where').hidden = false; $('where').textContent = d.name;
+    $('msgs')._h = null;
     office.select('d' + id);
-    office.focus('d' + id, dr.offsetWidth + 24);
+    render();
+    // let the columns open first, then fly the camera in
+    clearTimeout(ui.flyT);
+    ui.flyT = setTimeout(function () { office.focus('d' + id, 0, true); }, was ? 0 : 520);
   }
   function closeDrawer() {
     if (ui.panel == null) return;
     ui.panel = null; $('drawer').hidden = true;
-    office.select(null); renderRail();
-    office.fit(true);
+    document.body.classList.remove('focus');
+    $('back').hidden = true; $('where').hidden = true;
+    $('msgs')._h = null;
+    office.select(null);
+    render();
+    clearTimeout(ui.flyT);
+    ui.flyT = setTimeout(function () { office.fit(true); }, 520);
   }
   function taskRow(t, opened) {
     var one = t.status === 'running' ? 'running · attempt ' + t.attempt + ' of 3' : t.last_error && t.status !== 'done' ? 'last try: ' + t.last_error : t.outcome || (t.status === 'queued' ? CO.waitText(t) : '');
@@ -221,8 +241,11 @@
     var S = CO.S, d = CO.dept(ui.panel);
     if (!d) return closeDrawer();
     var v = CO.deptView(d), appr = S.approvals.filter(function (a) { return a.dept_id === d.id; });
+    setHTML($('dr-switch'), S.departments.map(function (x) {
+      return '<button data-sw="' + x.id + '"' + (x.id === d.id ? ' class="on"' : '') + '><i class="dot ' + CO.deptView(x).status + '"></i>' + esc(x.name) + '</button>';
+    }).join(''));
     setHTML($('dr-head'), '<i class="dot ' + v.status + '"></i><h2>' + esc(d.name) + '</h2><span class="pill st-' + v.status + '">' + WORD[v.status].toUpperCase() + '</span>' +
-      '<span class="x"><button class="btn" data-a="edit">Edit</button><button class="btn" data-a="close" title="Close">×</button></span>');
+      '<span class="x"><button class="btn" data-a="edit">Edit</button></span>');
     setHTML($('dr-chips'), v.experts.map(function (e) { return '<span class="chip">' + esc(e.name) + '</span>'; }).join('') +
       (appr.length ? '<span class="chip red" data-a="appr">' + appr.length + ' waiting for you</span>' : ''));
     var ta = $('dr-ch-text');
@@ -248,11 +271,10 @@
       : '<div class="now idle"><div class="t1">NOW</div><p>' + (v.waits ? 'Queued: <span data-wait="' + d.id + '">' + esc(v.waits) + '</span>' : v.waiting ? 'Waits for your approval.' : 'Nothing runs now.') + '</p></div>');
     var ts = sortTasks(CO.deptTasks(d.id));
     $('dr-tasks-all').textContent = 'All ' + ts.length + ' →';
-    setHTML($('dr-tasks'), ts.length ? ts.slice(0, 7).map(function (t) { return taskRow(t, ui.open[t.id]); }).join('') : '<p class="empty">No tasks yet.</p>');
+    setHTML($('dr-tasks'), ts.length ? ts.slice(0, 10).map(function (t) { return taskRow(t, ui.open[t.id]); }).join('') : '<p class="empty">No tasks yet.</p>');
     var mem = S.memory.filter(function (m) { return m.dept_id === d.id; }).sort(function (a, b) { return b.id - a.id; });
     $('dr-mem-all').textContent = 'All ' + mem.length + ' →';
     setHTML($('dr-mem'), mem.length ? mem.slice(0, 5).map(function (m) { return '<div class="mem"><span class="' + m.kind + '">' + esc(m.kind) + '</span><div>' + esc(m.text) + '</div></div>'; }).join('') : '<p class="empty">Nothing remembered yet.</p>');
-    setHTML($('dr-appr'), appr.length ? '<div class="sec" style="margin:4px 0 8px">WAITING FOR YOU</div>' + appr.map(function (a) { return apprCard(a, false); }).join('') : '');
   }
   function charterMeta() {
     var d = CO.dept(ui.panel), ta = $('dr-ch-text'), n = ta.value.length.toLocaleString('en-US');
@@ -536,7 +558,7 @@
   }
   function sendMessage(text) {
     if (!text) return;
-    CO.act.message(text);
+    CO.act.message(text, ui.panel);
     office.packet('you', 'hub', 'blue');
   }
 
@@ -549,8 +571,10 @@
       if (t.closest('#co-pause')) { CO.act.pause(); toast(CO.S.company.status === 'paused' ? 'Paused: a running turn finishes, nothing new starts.' : 'Resumed: the next pass starts in a few seconds.'); return; }
       if (t.closest('#co-waiting')) return setTab('approvals');
       if (t.closest('#co-upgrade')) return upgradeModal();
+      if (t.closest('#back')) return closeDrawer();
+      var sw = t.closest('#dr-switch [data-sw]'); if (sw) return openDrawer(+sw.getAttribute('data-sw'));
       if (t.closest('#add-dept') || t.closest('#rail-add')) return addDeptModal();
-      var row = t.closest('.dept'); if (row) return ui.panel === +row.getAttribute('data-id') ? closeDrawer() : openDrawer(+row.getAttribute('data-id'));
+      var row = t.closest('.dept'); if (row) return openDrawer(+row.getAttribute('data-id'));
       var dd = t.closest('[data-d]');
       if (dd && dd.closest('.ai')) return decide(dd.closest('.ai').getAttribute('data-id'), dd.getAttribute('data-d'));
       var rd = t.closest('[data-r]'); if (rd) return readModal(rd.closest('.ai').getAttribute('data-id'));
@@ -575,7 +599,7 @@
           CO.act.products(ui.panel, list); $('dr-prods').blur(); renderDrawer(); return toast('Products saved: every run tests ' + (list.join(', ') || 'the public site') + '.');
         }
         if (x === 'runnow') { var rr = CO.act.runNow(ui.panel); return toast(rr ? 'Run queued at the top: it starts on the next pass.' : 'A run is already queued or running.'); }
-        if (x === 'appr') { var first = $('dr-appr').querySelector('.ai'); if (first) first.scrollIntoView({ behavior: 'smooth', block: 'center' }); return; }
+        if (x === 'appr') { var first = $('appr').querySelector('.ai'); if (first) first.scrollIntoView({ behavior: 'smooth', block: 'center' }); return; }
       }
       var tr = t.closest('.trow[data-task], tr.row[data-task]');
       if (tr) { var tid = +tr.getAttribute('data-task'); ui.open[tid] = !ui.open[tid]; return render(); }

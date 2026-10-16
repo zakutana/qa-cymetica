@@ -53,31 +53,31 @@
       <div class="h">DEPARTMENTS <b id="rail-n"></b><button class="btn cy xs" id="add-dept">+ Add</button></div>
       <div class="depts" id="depts"></div>
     </section>
+      <section class="panel drawer" id="drawer" hidden>
+    <div class="dswitch" id="dr-switch"></div>
+    <div class="dh" id="dr-head"></div>
+    <div class="chips" id="dr-chips"></div>
+    <form class="cht" id="dr-charter">
+      <div class="sec">CHARTER · EVERY TASK STARTS HERE <span id="dr-ch-meta"></span></div>
+      <textarea id="dr-ch-text" maxlength="2000" spellcheck="false"></textarea>
+      <div class="cb"><span class="d">the next task starts from the saved text</span><button type="button" class="btn" id="dr-ch-discard">Discard</button><button class="btn gr" type="submit">Save charter</button></div>
+    </form>
+    <div class="kp" id="dr-kp"></div>
+    <div id="dr-runs"></div>
+    <div id="dr-now"></div>
+    <div class="sec">TASKS <a id="dr-tasks-all"></a></div>
+    <div class="tlist" id="dr-tasks"></div>
+    <div class="sec">MEMORY <a id="dr-mem-all"></a></div>
+    <div id="dr-mem"></div>
+  </section>
   </aside>
 
   <section class="panel stage" id="stage">
     <div class="top">
-      <span class="live" id="live"></span>
+      <div class="crumb"><button class="back" id="back" hidden>← Office</button><b class="where" id="where" hidden></b><span class="live" id="live"></span></div>
       <div class="zoom"><button id="z-in" title="Zoom in">+</button><button id="z-out" title="Zoom out">−</button><button id="z-fit" title="Fit">⤢</button></div>
     </div>
     <svg id="office" class="office" xmlns="http://www.w3.org/2000/svg"></svg>
-    <div class="drawer" id="drawer" hidden>
-      <div class="dh" id="dr-head"></div>
-      <div class="chips" id="dr-chips"></div>
-      <form class="cht" id="dr-charter">
-        <div class="sec">CHARTER · EVERY TASK STARTS HERE <span id="dr-ch-meta"></span></div>
-        <textarea id="dr-ch-text" maxlength="2000" spellcheck="false"></textarea>
-        <div class="cb"><span class="d">the next task starts from the saved text</span><button type="button" class="btn" id="dr-ch-discard">Discard</button><button class="btn gr" type="submit">Save charter</button></div>
-      </form>
-      <div class="kp" id="dr-kp"></div>
-      <div id="dr-runs"></div>
-      <div id="dr-now"></div>
-      <div class="sec">TASKS <a id="dr-tasks-all"></a></div>
-      <div class="tlist" id="dr-tasks"></div>
-      <div class="sec">MEMORY <a id="dr-mem-all"></a></div>
-      <div id="dr-mem"></div>
-      <div id="dr-appr"></div>
-    </div>
     <div class="tip" hidden></div>
     <div class="strip">
       <div class="use wide" title="Your plan's current 5-hour window. Each block is one turn of one agent, as wide as what it cost, coloured by how it ended; blue blocks are the Manager's plan.">
@@ -96,10 +96,10 @@
   </section>
 
   <aside class="rightcol">
-    <section class="panel ap" id="p-appr"><div class="h">WAITING FOR YOU <b class="red" id="ap-n"></b></div><div class="alist" id="appr"></div></section>
-    <section class="panel nx"><div class="h">NEXT UP · THE MANAGER'S PLAN <b class="cy" id="plan-n"></b></div><ol class="plan" id="plan"></ol></section>
+    <section class="panel ap" id="p-appr"><div class="h"><span id="ap-t">WAITING FOR YOU</span> <b class="red" id="ap-n"></b></div><div class="alist" id="appr"></div></section>
+    <section class="panel nx"><div class="h"><span id="nx-t">NEXT UP · THE MANAGER'S PLAN</span> <b class="cy" id="plan-n"></b></div><ol class="plan" id="plan"></ol></section>
     <section class="panel chat">
-      <div class="h">MANAGER <span class="typing" id="typing" hidden>typing<i></i><i></i><i></i></span></div>
+      <div class="h"><span id="chat-t">MANAGER</span> <span class="typing" id="typing" hidden>typing<i></i><i></i><i></i></span></div>
       <div class="msgs" id="msgs"></div>
       <form class="compose" id="compose"><input id="msg" autocomplete="off" placeholder="Message the Manager…"><button class="btn gr" type="submit">Send</button></form>
     </section>

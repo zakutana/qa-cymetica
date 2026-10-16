@@ -80,9 +80,9 @@
     CO.emit('feed', CO.S.feed[0]);
   }
   CO.feed = feed;
-  function say(text) {
+  function say(text, deptId) {
     var S = CO.S;
-    S.messages.push({ id: S.next_msg++, role: 'manager', text: text, at: S.clock, answered: true });
+    S.messages.push({ id: S.next_msg++, role: 'manager', text: text, at: S.clock, answered: true, dept_id: deptId || null });
     CO.emit('message');
   }
 
@@ -172,7 +172,7 @@
         t.outcome = n ? 'Found ' + n + ' bug' + (n > 1 ? 's' : '') + ': ' + found.join('; ') : 'No new bugs on ' + prods.join(', ');
         if (n) {
           feed('ask', d.name, 'run found ' + n + ' bug' + (n > 1 ? 's' : '') + ', asks approval');
-          say(d.name + ' finished its run: ' + n + ' bug' + (n > 1 ? 's' : '') + ' drafted as reports under ' + (d.files_as || 'your name') + '. Approve them on the right to file; each accepted bug pays 1,000 ET10.');
+          say(d.name + ' finished its run: ' + n + ' bug' + (n > 1 ? 's' : '') + ' drafted as reports under ' + (d.files_as || 'your name') + '. Approve them on the right to file; each accepted bug pays 1,000 ET10.', d.id);
           outcome = 'ask';
         } else {
           feed('good', d.name, 'run finished, no new bugs');
@@ -185,7 +185,7 @@
         a.body = CO.draft(t.kind, t.title, d.name);
         S.approvals.unshift(a);
         feed('ask', d.name, 'asks approval: ' + t.kind);
-        say(d.name + ' drafted a ' + t.kind + ': "' + t.title + '". It waits for your approval.');
+        say(d.name + ' drafted a ' + t.kind + ': "' + t.title + '". It waits for your approval.', d.id);
         CO.emit('approval:new', a);
         outcome = 'ask';
       } else {
@@ -355,7 +355,7 @@
               S.et10 = (S.et10 || 0) + 1000;
               if (d) { d.et10 = (d.et10 || 0) + 1000; d.accepted = (d.accepted || 0) + 1; }
               feed('good', 'Cymetica', 'accepted "' + a.summary + '": +1,000 ET10 to ' + (a.files_as || 'you'));
-              say('Cymetica accepted "' + a.summary + '". 1,000 ET10 credited to ' + (a.files_as || 'you') + '.');
+              say('Cymetica accepted "' + a.summary + '". 1,000 ET10 credited to ' + (a.files_as || 'you') + '.', d && d.id);
               CO.emit('bounty', { approval: a, dept: d });
             } else {
               feed('bad', 'Cymetica', 'marked "' + a.summary + '" a duplicate: no reward');
@@ -390,9 +390,9 @@
       if (t) { t.status = 'cancelled'; t.outcome = 'Removed from the plan by you'; t.finished_at = S.clock; feed('info', 'You', 'removed from the plan: ' + t.title); }
       changed();
     },
-    message: function (text) {
+    message: function (text, deptId) {
       var S = CO.S;
-      var m = { id: S.next_msg++, role: 'owner', text: text, at: S.clock, answered: false };
+      var m = { id: S.next_msg++, role: 'owner', text: text, at: S.clock, answered: false, dept_id: deptId || null };
       S.messages.push(m);
       feed('info', 'You', 'wrote to the Manager');
       var g = CO.gate();
@@ -425,7 +425,7 @@
         // first run now, then on its clock
         var r = queueRun(d, 'first run, right after setup');
         d.next_run = nextRun(d, S.clock);
-        if (!o.quiet) later(1500, function () { say(d.name + ' is set up. First run queued at the top: "' + r.title + '".'); });
+        if (!o.quiet) later(1500, function () { say(d.name + ' is set up. First run queued at the top: "' + r.title + '".', d.id); });
         CO.emit('dept:new', d); changed(); return d;
       }
       var pool = CO.POOL[d.key] || CO.POOL.custom;
@@ -434,7 +434,7 @@
         { kind: d.key === 'custom' ? null : first.kind, turns_needed: first.turns || 1, outcome_text: first.outcome, why: 'new department', expert: first.expert });
       d.pool_i = d.key === 'custom' ? 1 : 1;
       S.plan.unshift(t.id);
-      if (!o.quiet) later(1500, function () { say(d.name + ' is set up with ' + d.experts.map(CO.expertName).join(' and ') + '. First task queued at the top: "' + t.title + '".'); });
+      if (!o.quiet) later(1500, function () { say(d.name + ' is set up with ' + d.experts.map(CO.expertName).join(' and ') + '. First task queued at the top: "' + t.title + '".', d.id); });
       CO.emit('dept:new', d);
       changed();
       return d;
@@ -480,7 +480,8 @@
     later(rand(1400, 2800), function () {
       S.typing = false;
       m.answered = true;
-      say(reply(m.text, m.at));
+      var out = reply(m.text, m.at, m.dept_id);
+      say(out.text || out, out.dept_id || m.dept_id);
       feed('info', 'Manager', 'replied');
     });
   }
@@ -491,11 +492,12 @@
     ['development', /\b(develop|build|spec|feature|request|bb\b|build it better)/],
     ['testing', /\b(test|bug|check|verify|docs?|api|report|broken|fix)/]
   ];
-  function findDept(t) {
+  function findDept(t, prefer) {
     var S = CO.S;
     for (var i = 0; i < S.departments.length; i++) {
       if (t.indexOf(S.departments[i].name.toLowerCase()) >= 0) return S.departments[i];
     }
+    if (prefer && dept(prefer)) return dept(prefer);
     for (var j = 0; j < ALIAS.length; j++) {
       if (ALIAS[j][1].test(t)) {
         var d = S.departments.filter(function (x) { return x.key === ALIAS[j][0]; })[0];
@@ -553,15 +555,15 @@
     s = s.charAt(0).toUpperCase() + s.slice(1);
     return s.length > 64 ? s.slice(0, 61) + '...' : s;
   }
-  function reply(text, at) {
-    var S = CO.S, t = text.toLowerCase(), c = counts(), d = findDept(t), l = CO.left();
+  function reply(text, at, focus) {
+    var S = CO.S, t = text.toLowerCase(), c = counts(), d = findDept(t, focus), l = CO.left();
     var spec = parseAddDept(text);
     if (spec) {
       var nd = CO.act.addDept(spec);
-      return 'Done: ' + nd.name + ' is set up with ' + nd.experts.map(CO.expertName).join(' and ') + '.' +
+      return { dept_id: nd.id, text: 'Done: ' + nd.name + ' is set up with ' + nd.experts.map(CO.expertName).join(' and ') + '.' +
         (nd.schedule ? ' It runs ' + nd.schedule.label + ' over ' + (nd.products.length ? nd.products.join(', ') : 'the public site') + ', first run now.' : '') +
         (nd.files_as ? ' Every bug becomes a report filed as ' + nd.files_as + '; it waits for your Approve, and each one Cymetica accepts pays 1,000 ET10 to ' + nd.files_as + '.' : '') +
-        (nd.schedule && !nd.products.length ? ' Which products? Write e.g. "products: Gem Screener, Chart Analyzer".' : '');
+        (nd.schedule && !nd.products.length ? ' Which products? Write e.g. "products: Gem Screener, Chart Analyzer".' : '') };
     }
     var pm = text.match(/(?:products?|produkty?)\s*:\s*(.+)$/i);
     if (pm) {
@@ -570,6 +572,12 @@
         CO.act.products(sd.id, splitList(pm[1]));
         return sd.name + ' now tests ' + sd.products.join(', ') + ' on every run (' + sd.schedule.label + ').';
       }
+    }
+    if (focus && dept(focus) && /(status|how|update|progress|doing|what.*(now|next)|co d[eě]l|jak|stav)/.test(t)) {
+      var fd = dept(focus), v = CO.deptView(fd);
+      return fd.name + ': ' + (v.running ? 'working on "' + v.running.title + '"' : v.queued.length ? 'next is "' + v.queued[0].title + '" (' + v.waits + ')' : 'nothing running') +
+        '. ' + v.open + ' open, ' + v.done + ' done, ' + v.failed + ' failed. It used ' + v.sessPct + '% of this session and ' + v.weekPct + '% of the week.' +
+        (fd.schedule ? ' Next run ' + CO.hhmm(fd.next_run) + '.' : '') + (fd.et10 ? ' Earned ' + fd.et10.toLocaleString('en-US') + ' ET10.' : '');
     }
     if (!S.departments.length) {
       return 'You have no departments yet. Add one (+ Add on the left, or the empty lot in the office) and I plan its first task at once.';
