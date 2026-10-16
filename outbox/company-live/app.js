@@ -27,15 +27,13 @@
   var TSTAT = { queued: 'queued', running: 'running', waiting_approval: 'waits for you', done: 'done', failed: 'failed', cancelled: 'cancelled' };
 
   var ui = { tab: 'office', view: '2d', panel: null, open: {}, seen: {}, feedTop: 0, dirty: false, prev: {}, tfDept: '', tfStatus: '', memQ: '', memDept: null };
-  var office, net;
+  var office;
 
   /* ---------------- boot ---------------- */
   function boot() {
     CO.S = CO.fresh(Date.now());
     office =new CO.Office($('office'), $('stage'), tipFor);
-    net = new CO.Net($('net'), $('stage'), tipFor);
     office.layout();
-    net.build();
     markSeen();
     bind();
     wire();
@@ -59,7 +57,6 @@
     else renderPane();
     if (ui.panel != null) renderDrawer();
     office.update();
-    net.update();
     clock(true);
   }
 
@@ -196,13 +193,13 @@
     var dr = $('drawer'); dr.hidden = false; dr.scrollTop = 0;
     renderDrawer(); renderRail();
     office.select('d' + id);
-    if (ui.view === '2d') office.focus('d' + id, dr.offsetWidth + 24);
+    office.focus('d' + id, dr.offsetWidth + 24);
   }
   function closeDrawer() {
     if (ui.panel == null) return;
     ui.panel = null; $('drawer').hidden = true;
     office.select(null); renderRail();
-    if (ui.view === '2d') office.fit(true);
+    office.fit(true);
   }
   function taskRow(t, opened) {
     var one = t.status === 'running' ? 'running · attempt ' + t.attempt + ' of 3' : t.last_error && t.status !== 'done' ? 'last try: ' + t.last_error : t.outcome || (t.status === 'queued' ? CO.waitText(t) : '');
@@ -260,7 +257,7 @@
     Array.prototype.forEach.call(document.querySelectorAll('.pane'), function (p) { p.hidden = p.getAttribute('data-pane') !== name; });
     if (name !== 'office') { $('drawer').hidden = true; } else if (ui.panel != null) { $('drawer').hidden = false; }
     render();
-    if (name === 'office' && ui.view === '2d') requestAnimationFrame(function () { office.resize(); });
+    if (name === 'office') requestAnimationFrame(function () { office.resize(); });
   }
   function renderPane() {
     ({ tasks: renderTasks, approvals: renderApprovals, memory: renderMemory, audit: renderAudit, investable: renderInvest, legal: renderLegal, token: renderToken, settings: renderSettings }[ui.tab] || function () {})();
@@ -529,7 +526,7 @@
   function sendMessage(text) {
     if (!text) return;
     CO.act.message(text);
-    office.packet('you', 'hub', 'blue'); net.flow(['you', 'hub'], 'blue');
+    office.packet('you', 'hub', 'blue');
   }
 
   function bind() {
@@ -553,10 +550,9 @@
         else { ui.moved = id; CO.act.move(id, a); }
         return;
       }
-      var seg = t.closest('#seg button'); if (seg) return setView(seg.getAttribute('data-v'));
-      if (t.closest('#z-in')) return ui.view === '2d' ? office.zoom(0.78) : net.zoom(0.8);
-      if (t.closest('#z-out')) return ui.view === '2d' ? office.zoom(1.28) : net.zoom(1.25);
-      if (t.closest('#z-fit')) return ui.view === '2d' ? office.fit(true) : net.fit();
+      if (t.closest('#z-in')) return office.zoom(0.78);
+      if (t.closest('#z-out')) return office.zoom(1.28);
+      if (t.closest('#z-fit')) return office.fit(true);
       // the drawer
       var dra = t.closest('#drawer [data-a]');
       if (dra) {
@@ -625,40 +621,33 @@
     if (a === 'delete') openModal('<div class="mh"><h3 class="red">Delete ' + esc(S.company.name) + '?</h3></div><p>Every open task is cancelled and its memory is removed. In this mockup it starts the simulation over.</p>' +
       '<div class="mf"><span class="sp"></span><button class="btn" data-a="close">Cancel</button><button class="btn rd" data-a="del">Delete</button></div>', false, function (b) { if (b === 'del') { closeModal(); CO.reset(); toast('Mockup: started over.'); } });
   }
-  function setView(v) {
-    ui.view = v;
-    Array.prototype.forEach.call(document.querySelectorAll('#seg button'), function (b) { b.classList.toggle('on', b.getAttribute('data-v') === v); });
-    $('office').style.display = v === '2d' ? '' : 'none';
-    $('net').hidden = v !== '3d';
-    if (v === '3d') net.start(); else { net.stop(); office.resize(); }
-  }
 
   /* ---------------- the live events: packets in the office and the network ---------------- */
   function expertIdx(t, d) { var i = d.experts.indexOf(t.expert); return i < 0 ? 0 : Math.min(i, 2); }
   function wire() {
     CO.on('turn:start', function (e) {
       office.packet('hub', 'd' + e.dept.id, 'cyan');
-      net.flow(['hub', 'd' + e.dept.id, 'x' + e.dept.id + ':' + expertIdx(e.task, e.dept)], 'cyan');
+     
     });
     CO.on('turn:end', function (e) {
       var col = { done: 'green', failed: 'red', ask: 'red', 'continue': 'cyan' }[e.outcome] || 'cyan';
       office.packet('d' + e.dept.id, 'hub', col);
-      net.flow(['x' + e.dept.id + ':' + expertIdx(e.task, e.dept), 'd' + e.dept.id, 'hub'], col);
-      if (e.outcome === 'ask') { office.packet('hub', 'you', 'red', 1400); net.flow(['hub', 'you'], 'red', 1500); }
+     
+      if (e.outcome === 'ask') { office.packet('hub', 'you', 'red', 1400); }
     });
     CO.on('approval:decided', function (e) {
       if (!e.dept) return;
-      if (e.decision === 'approve') { office.packet('you', 'hub', 'green'); office.packet('hub', 'd' + e.dept.id, 'green', 1100); net.flow(['you', 'hub', 'd' + e.dept.id], 'green'); }
-      else { office.packet('you', 'hub', 'red'); net.flow(['you', 'hub'], 'red'); }
+      if (e.decision === 'approve') { office.packet('you', 'hub', 'green'); office.packet('hub', 'd' + e.dept.id, 'green', 1100); }
+      else { office.packet('you', 'hub', 'red'); }
     });
-    CO.on('submitted', function (e) { if (e.dept) { office.packet('d' + e.dept.id, 'hub', 'green'); net.flow(['d' + e.dept.id, 'hub'], 'green'); } });
-    CO.on('message', function () { office.packet('hub', 'you', 'cyan'); net.flow(['hub', 'you'], 'cyan'); });
-    CO.on('dept:new', function (d) { office.layout({ born: d.id }); net.build(); setTimeout(function () { office.fit(true); }, 60); });
-    CO.on('dept:edit', function () { office.layout(); net.build(); });
-    CO.on('dept:removed', function () { office.layout(); net.build(); setTimeout(function () { office.fit(true); }, 60); });
+    CO.on('submitted', function (e) { if (e.dept) { office.packet('d' + e.dept.id, 'hub', 'green'); } });
+    CO.on('message', function () { office.packet('hub', 'you', 'cyan'); });
+    CO.on('dept:new', function (d) { office.layout({ born: d.id }); setTimeout(function () { office.fit(true); }, 60); });
+    CO.on('dept:edit', function () { office.layout(); });
+    CO.on('dept:removed', function () { office.layout(); setTimeout(function () { office.fit(true); }, 60); });
     CO.on('reset', function () {
       closeModal(); ui.panel = null; $('drawer').hidden = true; office.sel = null; ui.open = {}; ui.prev = {};
-      office.layout(); office.fit(true); net.build(); markSeen();
+      office.layout(); office.fit(true); markSeen();
       ['depts', 'totals', 'cells', 'appr', 'plan', 'msgs', 'feed', 'legal', 'settings'].forEach(function (id) { $(id)._h = null; });
     });
     CO.on('office:click', function (key) {
