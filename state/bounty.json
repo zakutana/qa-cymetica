@@ -1,8 +1,9 @@
 {
-  "fetched_at": "2026-10-15T17:34:19+00:00",
-  "total": 175,
+  "fetched_at": "2026-10-16T19:29:35+00:00",
+  "total": 179,
   "statuses": {
-    "paid": 20
+    "paid": 19,
+    "fixed": 1
   },
   "filing_probe": {
     "endpoint": "POST /api/v1/bounty/reports",
@@ -24,8 +25,8 @@
   "our_reports": {
     "endpoint": "GET /api/v1/bounty/my-reports?wallet_address=<addr>",
     "klass": "ok",
-    "read_at": "2026-10-16T08:20:25+00:00",
-    "evidence_id": "0a775df184475789ce90359f8e0d7968d453a7f2f9b230787abeb03ca3dee42e",
+    "read_at": "2026-10-16T19:29:21+00:00",
+    "evidence_id": "2a8f1237f00e246e94430ef62e3528aeee029234ff189938b0da1a0e1a593f9a",
     "rows_returned": 166,
     "server_total": 166,
     "total": 166,
@@ -3028,23 +3029,23 @@
   },
   "qa_tracker": {
     "source": "https://cymetica.com/leaderboard/bugs (embedded allBugs)",
-    "total": 249,
+    "total": 253,
     "statuses": {
       "qa_testing": 2,
       "implementing": 2,
-      "completed": 193,
-      "resolved": 26,
+      "completed": 196,
+      "resolved": 27,
       "rejected": 2,
       "pending": 12,
       "wont_fix": 12
     },
     "source_channels": {
       "web": 74,
-      "bounty": 175
+      "bounty": 179
     },
     "usernames": {
       "Maxorelaxo": 2,
-      "expire76": 193,
+      "expire76": 196,
       "Crypto42day": 2,
       "tonybugs0439": 5,
       "joebloggs": 12,
@@ -3056,8 +3057,8 @@
       "bugrep8372": 7,
       "D10061999M": 1,
       "Tulip": 1,
+      "null": 8,
       "hunter_0x000000_0099": 4,
-      "null": 7,
       "hunter_0x00000000": 1
     },
     "id_range": [
@@ -3141,6 +3142,9 @@
       "cloned bot profile does not display trading activity correctly",
       "неправильный баланс токенов в портфеле пользователя max",
       "swap pages fail to display user token balances",
+      "build a company: a paused company's heartbeat names a next pass 30 s after every read, and the pass never comes (last_pass_at unchanged, pass_every_s 120)",
+      "build a company: the company-creation form stops a department's charter at 1,500 characters (maxlength=\"1500\"), while llms.txt and the openapi promise up to 2,000",
+      "agent tournaments: /tables/{id} and /lobby answer the seat owner's api key with my_seat null and mine false on the owner's own seats, while /seats/{id}/bot-settings (\"owner only\") accepts the same key",
       "gem screener / supply analyzer: the \"in n days\" unlock countdown is counted from the last refresh, not from when it is served (56 of 57 rows, about 0.8 days long; solv \"oct 19 · in 5 days\" on oct 15)",
       "gem screener: kinetiq's next unlock cliff (12.9m kntq on 2026-10-27) falls inside a 30-day window its own record counts as 0 tokens; the supply analyzer puts the same tranche on 2026-11-28",
       "gem screener altseason panel: \"retail\" shows 20/100 on its tile and 48/100 under euphoria, two different measures under one name; the index uses the second",
@@ -3151,6 +3155,7 @@
       "event cards: the live btc-basket card a4a5b71e has no index-history point for 51.6 h (sep 23 14:16 to sep 25 17:54 utc) while 14 other crypto cards kept recording",
       "agent tournaments: on a running table every house bot stops trading for most of the day, five of them at exactly 40 trades; the rules promise 7 days of trading and name no limit",
       "a card reading tradeable_now true, with no blocked reason, is refused a paper buy: 400 \"basket is not fully priceable right now\"",
+      "task #9 (verify & organize findings) has no research & discovery input attached",
       "documentation: none of the nine /api/v1/company routes llms.txt names for build a company is in /openapi-public.json or /openapi.json",
       "agent tournaments: no pro table has a free seat while table 5 waits at 10 of 10 on one pending approval; the rules say \"there is always a free table at each buy-in\"",
       "agent tournaments: /api/v1/agent-tournaments/my-bots offers 12 bots that no longer exist for a seat (profile 404 \"bot not found.\"), and one of them holds seat 1 at table 2 with 0 trades",
@@ -3315,16 +3320,16 @@
       "critical: my positions p&l shows -$3.15 for a $0.10 position",
       "shares preview rounds to 1 decimal place instead of 2"
     ],
-    "has_linear_links": 131
+    "has_linear_links": 135
   },
   "a2a_inbox": {
     "klass": "ok",
     "rows_returned": 200,
     "new": [],
-    "at": "2026-10-15T17:34:11+00:00",
+    "at": "2026-10-16T19:29:26+00:00",
     "full": true
   },
-  "closed": 0,
+  "closed": 1,
   "closed_without_recorded_evidence": 0,
   "evidence_fields_checked": [
     "validated_at",
@@ -3335,6 +3340,60 @@
     "status_notes"
   ],
   "reports": [
+    {
+      "id": 212,
+      "title": "Build a Company: a paused company's heartbeat names a next pass 30 s after every read, and the pass never comes (last_pass_at unchanged, pass_every_s 120)",
+      "status": "paid",
+      "hunter_name": "expire76",
+      "severity_reported": "low",
+      "severity_confirmed": "low",
+      "created_at": "2026-10-15T20:23:26.457597",
+      "fixed_at": "2026-10-16T03:39:23.572101",
+      "validated_at": "2026-10-16T03:39:23.572101",
+      "triaged_at": "2026-10-16T03:39:23.572101",
+      "status_notes": "[2026-10-16T03:39:23+00:00] Resolved via ticket ET-31641: Fixed @8d34169f9 (paused case also in 2d193a064c): heartbeat.next_pass_at is null while the company is paused or the runner has stopped passing it (stale), instead of a time 30 s ahead on every read that never came. OpenAPI documents the null. Pinned in tests/test_bug_bounty_sweep_1016.py. Live on release b2a34f77f.\n[reporter-verification PASS 2026-10-16 03:58 UTC by expire76 test_run=run-20261016T035402Z-d7bb5d7b]",
+      "ticket_url": "https://cymetica.com/admin/centcom/issues/31641",
+      "fix_pr_url": null,
+      "reward_amount": 1000.0,
+      "paid_at": "2026-10-16T05:10:09.126064",
+      "is_duplicate": false
+    },
+    {
+      "id": 211,
+      "title": "Build a Company: the company-creation form stops a department's charter at 1,500 characters (maxlength=\"1500\"), while llms.txt and the OpenAPI promise up to 2,000",
+      "status": "paid",
+      "hunter_name": "expire76",
+      "severity_reported": "low",
+      "severity_confirmed": "low",
+      "created_at": "2026-10-15T20:23:12.147552",
+      "fixed_at": "2026-10-16T03:39:22.985148",
+      "validated_at": "2026-10-16T03:39:22.985148",
+      "triaged_at": "2026-10-16T03:39:22.985148",
+      "status_notes": "[2026-10-16T03:39:22+00:00] Resolved via ticket ET-31640: Fixed: the company-creation form's department charter textarea now allows 2,000 characters, matching DepartmentIn.charter maxLength 2000 and llms.txt (also landed by 2d193a064c; cache-bust bumped to build-company.js?v=20261016-1 @8d34169f9 so browsers fetch it). Verified live: /static/js/build-company.js has maxlength=\"2000\" on bc-d-charter; pinned by tests/test_bug_bounty_sweep_1016.py.\n[reporter-verification PASS 2026-10-16 03:58 UTC by expire76 test_run=run-20261016T035402Z-d7bb5d7b]",
+      "ticket_url": "https://cymetica.com/admin/centcom/issues/31640",
+      "fix_pr_url": null,
+      "reward_amount": 1000.0,
+      "paid_at": "2026-10-16T05:10:09.126064",
+      "is_duplicate": false
+    },
+    {
+      "id": 210,
+      "title": "Agent Tournaments: /tables/{id} and /lobby answer the seat owner's API key with my_seat null and mine false on the owner's own seats, while /seats/{id}/bot-settings (\"Owner only\") accepts the same key",
+      "status": "paid",
+      "hunter_name": "expire76",
+      "severity_reported": "low",
+      "severity_confirmed": "low",
+      "created_at": "2026-10-15T19:58:32.615220",
+      "fixed_at": "2026-10-16T03:39:22.102552",
+      "validated_at": "2026-10-16T03:39:22.102552",
+      "triaged_at": "2026-10-16T03:39:22.102552",
+      "status_notes": "[2026-10-16T03:39:22+00:00] Resolved via ticket ET-31635: Fixed @8d34169f9: GET /api/v1/agent-tournaments/lobby and /tables/{table_id} took a JWT-only optional auth, so an X-API-Key caller was read as anonymous (mine false, my_seat null) while owner-only /seats/{id}/bot-settings accepted the key. Both now use get_current_user_or_api_key_optional (JWT, cookie or X-API-Key; an invalid key still reads the public view). Pinned in tests/test_bug_bounty_sweep_1016.py. Live on b2a34f77f; anonymous and bad-key reads still 200.\n[reporter-verification PASS 2026-10-16 03:58 UTC by expire76 test_run=run-20261016T035402Z-d7bb5d7b]",
+      "ticket_url": "https://cymetica.com/admin/centcom/issues/31635",
+      "fix_pr_url": null,
+      "reward_amount": 1000.0,
+      "paid_at": "2026-10-16T05:10:09.126064",
+      "is_duplicate": false
+    },
     {
       "id": 209,
       "title": "Gem Screener / Supply Analyzer: the \"in N days\" unlock countdown is counted from the last refresh, not from when it is served (56 of 57 rows, about 0.8 days long; SOLV \"Oct 19 · in 5 days\" on Oct 15)",
@@ -3516,6 +3575,24 @@
       "is_duplicate": false
     },
     {
+      "id": 199,
+      "title": "Task #9 (Verify & organize findings) has no Research & Discovery input attached",
+      "status": "fixed",
+      "hunter_name": null,
+      "severity_reported": "high",
+      "severity_confirmed": "high",
+      "created_at": "2026-10-12T15:27:46.728434",
+      "fixed_at": "2026-10-16T03:39:24.210456",
+      "validated_at": "2026-10-16T03:39:24.210456",
+      "triaged_at": "2026-10-16T03:39:24.210456",
+      "status_notes": "[2026-10-16T03:39:24+00:00] Resolved via ticket ET-31140: Fixed @8d34169f9: a department's task prompt carried only its own memory, so Task #9 never saw Task #8's findings. The prompt now hands over the finished tasks it names (#N in title/brief) plus the other departments' latest finished work (outcome + stored deliverable, same company only, size-bounded). Departments are told files are not kept and to put the deliverable itself in the answer (task #8's notes sat in a temp file). Pinned in tests/test_bug_bounty_sweep_1016.py; live on b2a34f77f.",
+      "ticket_url": "https://cymetica.com/admin/centcom/issues/31140",
+      "fix_pr_url": null,
+      "reward_amount": 1000.0,
+      "paid_at": null,
+      "is_duplicate": false
+    },
+    {
       "id": 198,
       "title": "Documentation: none of the nine /api/v1/company routes llms.txt names for Build a Company is in /openapi-public.json or /openapi.json",
       "status": "paid",
@@ -3622,78 +3699,6 @@
       "reward_amount": 1000.0,
       "paid_at": "2026-10-12T05:10:07.898907",
       "is_duplicate": false
-    },
-    {
-      "id": 191,
-      "title": "Documentation: none of the seven /api/v1/agent-tournaments routes llms.txt names (rules, lobby, tables/{id}, prompt, my-bots, seat, leave) is in /openapi-public.json or /openapi.json",
-      "status": "paid",
-      "hunter_name": "expire76",
-      "severity_reported": "low",
-      "severity_confirmed": "low",
-      "created_at": "2026-10-11T12:21:26.697708",
-      "fixed_at": "2026-10-11T22:55:31.923006",
-      "validated_at": "2026-10-11T22:55:31.923006",
-      "triaged_at": "2026-10-11T22:55:31.923006",
-      "status_notes": "[2026-10-11T22:55:31+00:00] Resolved via ticket ET-30862: Fixed in b55fb03a48 (live, release 20261011T223808Z): all seven routes llms.txt names under /api/v1/agent-tournaments (rules, lobby, tables/{id}, tables/{id}/prompt, my-bots, tables/{id}/seat, seats/{id}/leave) plus manual-seat, approve, results and the live feed are in /openapi-public.json with typed 200s and documented errors (18 tournament paths; none with an untyped 200). Signed-in-only routes are marked as such. Verified live: GET /openapi-public.json lists 18 /api/v1/agent-tournaments path\n[reporter-verification PASS 2026-10-13 00:37 UTC by expire76 test_run=run-20261012T230922Z-26bab3d0]",
-      "ticket_url": "https://cymetica.com/admin/centcom/issues/30862",
-      "fix_pr_url": null,
-      "reward_amount": 1000.0,
-      "paid_at": "2026-10-11T23:16:49.905796",
-      "is_duplicate": false
-    },
-    {
-      "id": 190,
-      "title": "Clone summary line (ET-28100 item 1): 30 of our 41 paper clones trade nine 5-min-epoch markets and read \"BTC/ETH/VAIX/SBIO 5-min epochs\" with no \"+5\"; a clone with both lists off reads \"CLOB NONE\"",
-      "status": "paid",
-      "hunter_name": "expire76",
-      "severity_reported": "low",
-      "severity_confirmed": "low",
-      "created_at": "2026-10-11T12:21:15.606248",
-      "fixed_at": "2026-10-12T00:26:10.689380",
-      "validated_at": "2026-10-12T00:26:10.689380",
-      "triaged_at": "2026-10-12T00:26:10.689380",
-      "status_notes": "[2026-10-12T00:26:10+00:00] Resolved via ticket ET-30861: Fixed 04d5b5ece3 (live): clone_trades_summary sliced the epoch list to four names with no overflow count and treated only the exact string NONE on perpetual_markets as off. Now BTC/ETH/VAIX/SBIO +5 5-min epochs, and NONE (any case) is off for both perpetual_markets and custom_markets, so no list reads as a market called NONE. Tests appended to tests/test_clone_trades_summary_30740.py. Profiles rebuild the line from live settings on read.\n[reporter-verification PASS 2026-10-13 00:37 UTC by expire76 test_run=run-20261012T230922Z-26bab3d0]",
-      "ticket_url": "https://cymetica.com/admin/centcom/issues/30861",
-      "fix_pr_url": null,
-      "reward_amount": 1000.0,
-      "paid_at": "2026-10-12T05:10:07.898907",
-      "is_duplicate": false
-    },
-    {
-      "id": 189,
-      "title": "/movers ranks only the first 100 of 641 event cards: its biggest loser is TTD -19.17% while Corteva is at -83.92%; none of the true ten biggest losers is among the cards it reads",
-      "status": "paid",
-      "hunter_name": "expire76",
-      "severity_reported": "medium",
-      "severity_confirmed": "medium",
-      "created_at": "2026-10-11T12:20:57.303378",
-      "fixed_at": "2026-10-12T00:26:09.484514",
-      "validated_at": "2026-10-12T00:26:09.484514",
-      "triaged_at": "2026-10-12T00:26:09.484514",
-      "status_notes": "[2026-10-12T00:26:09+00:00] Resolved via ticket ET-30860: Fixed 04d5b5ece3 (live in release 20261012T002115Z): /movers read one page (limit=100) of a listing capped at 200 and never paged. New GET /api/v1/event-cards/movers?limit=N ranks every card the default listing serves by current_index/index_base-1 and by open notional (total 641, ranked 616 live); the page reads it once. Live anonymous check 2026-10-12 00:25 UTC: losers[0] = SAIB: CTVA — Corteva (index 16.08, -83.92%), the card the report named; page HTML fetches event-cards/movers?limit=10, no",
-      "ticket_url": "https://cymetica.com/admin/centcom/issues/30860",
-      "fix_pr_url": null,
-      "reward_amount": 1000.0,
-      "paid_at": "2026-10-12T05:10:07.898907",
-      "is_duplicate": false
-    },
-    {
-      "id": 188,
-      "title": "Supply Analyzer: next_unlock carries one recipient's tranche of its day: ARB 56.1M (Team) on Oct 16 while the record's own tranches release 92.6M that day; 12 of the 20 largest dated coins",
-      "status": "paid",
-      "hunter_name": "expire76",
-      "severity_reported": "low",
-      "severity_confirmed": "low",
-      "created_at": "2026-10-11T12:20:45.323363",
-      "fixed_at": "2026-10-11T22:55:31.235450",
-      "validated_at": "2026-10-11T22:55:31.235450",
-      "triaged_at": "2026-10-11T22:55:31.235450",
-      "status_notes": "[2026-10-11T22:55:31+00:00] Resolved via ticket ET-30859: Fixed: next_unlock is the whole day. Every tranche within 24 h of the earliest future one is summed, who names each recipient once, tranches lists each part {ts, tokens, who}; defined in GET /api/v1/supply-analyzer/definitions and typed in /openapi-public.json (4361ae2702, live 22:40 UTC). Stored records recompute on read when the assembly version changed (82d2802aab) so every token shows the whole-day figure before its daily rebuild; ARB reads 92.6M (Team, Contributors & Advisors, Investors) on\n[reporter-verification PASS 2026-10-13 00:37 UTC by expire76 test_run=run-20261012T230922Z-26bab3d0]",
-      "ticket_url": "https://cymetica.com/admin/centcom/issues/30859",
-      "fix_pr_url": null,
-      "reward_amount": 1000.0,
-      "paid_at": "2026-10-11T23:16:49.905796",
-      "is_duplicate": false
     }
   ],
   "leaderboard": [
@@ -3703,11 +3708,11 @@
       "avatar_url": null,
       "tier": "elite",
       "total_score": 2125,
-      "valid_reports": 161,
+      "valid_reports": 164,
       "total_likes": 0,
-      "total_earned": 157000.0,
-      "total_awarded": 157000.0,
-      "total_paid": 157000.0,
+      "total_earned": 160000.0,
+      "total_awarded": 160000.0,
+      "total_paid": 160000.0,
       "reward_currency": "ET10"
     },
     {
@@ -3752,7 +3757,7 @@
   ],
   "creator_rewards": {
     "klass": "ok",
-    "read_at": "2026-10-16T08:20:53+00:00",
+    "read_at": "2026-10-16T19:29:37+00:00",
     "stale_from": null,
     "summary": {
       "paid": 11,
@@ -3762,6 +3767,5 @@
       "et10": 11000,
       "etlp": 11000
     }
-  },
-  "our_reports_refreshed_at": "2026-10-16T08:20:25+00:00"
+  }
 }
