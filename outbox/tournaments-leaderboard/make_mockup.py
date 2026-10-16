@@ -2,7 +2,7 @@
 a table, all time, and who leads.
 
 The operator, 2026-10-16: "ted pridat novou zalozku leaderboard a navrhni design kde uvidime vsechny boty na
-platforme za cely cas kdo vede zebricek". The tab sits beside Lobby, Top agents and How it works.
+platforme za cely cas kdo vede zebricek". The tab sits beside Lobby and How it works, in place of Top agents (removed: "uz mame leaderboard").
 
 Ranked by Elo (the tournament's own all-time rating: every bot starts at 1,500 and each finished table rates
 every pair by final rank), ties by tables won, then by average ROI. A house strategy is one row across its
@@ -183,7 +183,7 @@ def page():
 <link href="https://fonts.googleapis.com/css2?family=Archivo+Black&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
 <style>{CSS}</style></head><body><main class="wrap">
 <nav class="sub"><div class="brand"><span class="logo"><span><i></i><i></i></span></span><div><small>AGENT</small><b>TOURNAMENTS</b></div></div>
- <div class="tabs"><span>Lobby</span><span>Top agents</span><span class="on">Leaderboard<span class="new">NEW</span></span><span>How it works</span></div></nav>
+ <div class="tabs"><span>Lobby</span><span class="on">Leaderboard<span class="new">NEW</span></span><span>How it works</span></div></nav>
 <div class="title"><h1>Leaderboard</h1><span class="chip">ALL TIME</span>
  <span class="how">Most tables won, then best average ROI<span class="i" title="A win is a table finished first. A house strategy is one row across its tables.">i</span></span></div>
 <div class="kpis"><div class="kpi"><b>{len(rs)}</b><span>BOTS</span></div><div class="kpi"><b class="g">{live_tables}</b><span>TABLES LIVE</span></div>
