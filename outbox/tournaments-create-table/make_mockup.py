@@ -2,12 +2,10 @@
 
 The operator, 2026-10-16: "ted tady pridat nejaky button na vytvoreni stolu, at uzivatele nebo boti muzou svoje
 stoly taky tvorit, treba jak budem chtit testovat 50 botu najednou". Then: "kazdy stul ma vzdy jen 10 slotu to
-nepujde menit". So a member or an agent creates tables of its own, always 10 seats each: how long, how many
-tables at once, the buy-in (free practice or a pot), who may sit (anyone, only my bots, or by link), and seats its
-own bots in one step -- the case the operator named, 50 of our paper bots at once, is 5 tables of 10. Today's rule
-of one seat per owner holds on the house tables; a table you create can take as many of your own bots as it has
-seats. The right side is the lobby card of the tables being made, drawn the way the redesigned lobby draws it
-(outbox/tournaments-lobby-card).
+nepujde menit". And then: "ma se proste vytvorit klasicky stul jak tvori oni, nic navic. a jen jeden a zadne
+free, nevymyslej si nic navic". So the form makes one ordinary table, the same as theirs: a kind (Week or Flash)
+and a buy-in from the ones they offer; 10 seats, starts when full, 60 / 30 / 10. The right side is the lobby card
+of the table being made, drawn the way the redesigned lobby draws it (outbox/tournaments-lobby-card).
 
 Behind it, the lobby's real Open cards (lobby.json there, read 2026-10-16), dimmed. Sample: the form's values.
 Palette: the site's navy, cyan, green, red and blue, plus the avatar tints they use.
@@ -32,7 +30,7 @@ CSS = """
 .sub2{color:var(--dim2);font-size:13px;margin-bottom:18px}
 .dim{opacity:.28;filter:saturate(.6)}
 .veil{position:fixed;inset:0;background:rgba(6,9,15,.72)}
-.modal{position:absolute;left:50%;top:150px;transform:translateX(-50%);width:1000px;max-width:calc(100% - 32px);
+.modal{position:absolute;left:50%;top:150px;transform:translateX(-50%);width:880px;max-width:calc(100% - 32px);
  background:var(--navy);border:1px solid var(--line3);border-radius:22px;padding:24px 26px;display:grid;
  grid-template-columns:minmax(0,1fr) 360px;gap:26px;box-shadow:0 30px 80px rgba(6,9,15,.9)}
 .modal h3{font-family:'Archivo Black';font-weight:400;font-size:26px;grid-column:1/-1;display:flex;align-items:center;gap:12px}
@@ -66,17 +64,10 @@ CSS = """
 
 
 def preview():
-    """The tables being made, as the lobby will show them: one card of 10 seats, all ours, marked x5."""
-    return (
-        '<article class="card mine"><span class="times">× 5 TABLES</span><div class="head"><div style="flex:1;min-width:0">'
-        '<div class="name">50-bot test</div><div class="chips"><span class="chip buy">FREE</span>'
-        '<span class="chip kind">PRACTICE</span></div></div>'
-        '<div class="corner"><span class="open">PRIVATE</span><div class="left"><div class="soft">starts now</div>'
-        '<div class="u">RUNS 7 DAYS</div></div></div></div>'
-        '<div class="oval"><div class="ring"></div><div class="pool"><div><div class="k">PRIZE POOL</div>'
-        '<div class="usd" style="font-size:30px">none</div><div class="plus">practice</div></div></div>'
-        + lc.seats(True, None, None) + '</div>'
-        '<div class="foot"><span class="who"><span class="tag">YOU</span>10 of 10 seats · your bots</span></div></article>')
+    """The table being made, as the lobby will show it: a Pro week table at $50 drawn by the lobby's own card
+    (Pro #12's real figures), only its number not yet given."""
+    card = lc.open_card(12)
+    return card.replace('<div class="name">Pro #12</div>', '<div class="name">Pro · new</div>')
 
 
 def page():
@@ -86,20 +77,13 @@ def page():
 <section class="modal">
  <h3>Create a table <span class="x">✕</span></h3>
  <div class="f">
-  <label class="fl"><span>NAME</span><div class="inp">50-bot test</div></label>
-  <div class="row2">
-   <div class="fl"><span>HOW LONG</span><div class="opts"><span>1 day</span><span class="on">7 days</span><span>Custom</span></div></div>
-   <div class="fl"><span>STARTS</span><div class="opts"><span>When full</span><span class="on">Now</span></div></div>
-  </div>
-  <div class="fl"><span>HOW MANY TABLES <small style="letter-spacing:0;font-weight:400">· 10 seats each</small></span><div class="opts"><span>1</span><span>2</span><span class="on">5</span><span>Custom</span></div></div>
-  <div class="fl"><span>BUY-IN</span><div class="opts"><span class="on">Free<small>practice, no pot</small></span><span>$5</span><span>$50</span><span>100 ET10</span></div></div>
-  <div class="fl"><span>WHO CAN SIT</span><div class="opts"><span>Anyone</span><span class="on">Only my bots</span><span>By link</span></div></div>
-  <div class="seatmine"><span class="tg"></span><div><b>Seat my bots now</b><small>all at once, no approval per seat</small></div><span class="pick">50 bots selected · 10 a table ›</span></div>
+  <div class="fl"><span>KIND</span><div class="opts"><span class="on">Week<small>7 days</small></span><span>Flash<small>1 day</small></span></div></div>
+  <div class="fl"><span>BUY-IN</span><div class="opts"><span>$5</span><span class="on">$50</span><span>100 ET10</span><span>1,000 ET10</span></div></div>
+  <div class="sum">The same table as every other in the lobby: 10 seats, starts when full, the top 3 split the pot 60 / 30 / 10.</div>
  </div>
  <div class="side">
   <span class="k">YOUR TABLE IN THE LOBBY</span>
   {preview()}
-  <div class="sum"><b>5 tables · 10 seats each · 7 days · free · only your bots · starts now.</b> Practice tables rank your bots against each other; no pot, no ET10 bonus.</div>
   <span class="go">Create table</span>
   <div class="api">Agents: <code>POST /api/v1/agent-tournaments/tables</code> · MCP <code>agent_tournament_create_table</code></div>
  </div>
