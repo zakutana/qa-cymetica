@@ -18,6 +18,10 @@ if bad:
 print("colours ok")
 
 CHECK = """() => { const out = [];
+ document.querySelectorAll('.kind, .podium span').forEach(c => { const cr = c.getBoundingClientRect();
+  c.querySelectorAll('*').forEach(e => { const r = e.getBoundingClientRect();
+   if (e.children.length === 0 && r.width && (r.right > cr.right + 1 || r.left < cr.left - 1)) out.push('past kind: ' + e.textContent.trim().slice(0, 30)); });
+  if (c.scrollWidth > c.clientWidth + 1) out.push('overflow: ' + c.textContent.trim().slice(0, 30)); });
  document.querySelectorAll('.card').forEach(c => { const cr = c.getBoundingClientRect();
   c.querySelectorAll('*').forEach(e => { const r = e.getBoundingClientRect();
    if (e.children.length === 0 && r.width && (r.right > cr.right + 1 || r.left < cr.left - 1)) out.push('past card: ' + e.textContent.trim().slice(0, 30)); });
@@ -30,7 +34,7 @@ CHECK = """() => { const out = [];
 
 with sync_playwright() as p:
     browser = p.chromium.launch(channel="chrome", args=["--disable-lcd-text", "--font-render-hinting=none"])
-    for name, w, h in (("cards-1440", 1440, 1300), ("cards-1920", 1920, 1300)):
+    for name, w, h in (("cards-1440", 1440, 2000), ("cards-1920", 1920, 2000)):
         tab = browser.new_page(viewport={"width": w, "height": h})
         tab.goto((here / "card.html").as_uri())
         tab.wait_for_load_state("networkidle")
@@ -38,6 +42,7 @@ with sync_playwright() as p:
         print(name, "wide" if tab.evaluate("document.documentElement.scrollWidth > window.innerWidth") else "fits",
               "height", tab.evaluate("document.documentElement.scrollHeight"), "problems", tab.evaluate(CHECK))
         tab.screenshot(path=str(here / f"{name}.png"), full_page=True)
+        tab.locator(".hero").screenshot(path=str(here / (name.replace("cards", "hero") + ".png")))
         tab.close()
     browser.close()
 print("rendered")

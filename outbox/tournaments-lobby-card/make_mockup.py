@@ -107,6 +107,32 @@ h2 .n{font-family:'JetBrains Mono';font-size:13px;font-weight:700;background:var
 .g{color:var(--green)}.r{color:var(--red)}.c{color:var(--cyan)}.d{color:var(--dim2)}
 .take{font-family:'Archivo Black';color:var(--cyan);letter-spacing:.03em}
 .note{color:var(--dim);font-size:12.5px;margin:-6px 0 20px;max-width:900px;line-height:1.6}
+/* the hero: the headline stays, the strip under it is redrawn */
+.hero{max-width:1060px;margin-bottom:46px}
+.hero h1{font-family:'Archivo Black';font-weight:400;font-size:84px;line-height:1.02;letter-spacing:-.01em}
+.hero h1 em{font-style:normal;color:var(--green)}
+.kinds{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:16px;margin-top:30px}
+.kind{background:var(--navy);border:1px solid var(--line2);border-radius:18px;padding:16px 18px 14px;min-width:0}
+.kind .top{display:flex;align-items:center;gap:10px;margin-bottom:12px}
+.kind .top b{font-family:'Archivo Black';font-weight:400;font-size:22px}
+.kind .top .chip{margin-left:auto}
+.kind table{width:100%;border-collapse:collapse}
+.kind th{font-size:10px;letter-spacing:.14em;color:var(--dim2);font-weight:700;text-align:left;padding:0 0 6px}
+.kind th:last-child,.kind td:last-child{text-align:right}
+.kind td{padding:5px 0;font-size:17px;font-weight:700;white-space:nowrap;border-top:1px solid var(--line)}
+.kind td .u{font-size:11px;color:var(--dim2);font-weight:700}
+.kind td.win{color:var(--green)}.kind td.win .u{color:var(--green)}
+.kind td .arr{color:var(--dim2);font-weight:400;padding:0 8px}
+.kind .bonus{display:flex;align-items:center;gap:8px;margin-top:12px;font-size:12px;color:var(--dim)}
+.kind .bonus b{color:var(--cyan);border:1px solid rgba(0,207,255,.55);border-radius:99px;padding:3px 10px;
+ box-shadow:0 0 10px rgba(0,207,255,.25);white-space:nowrap}
+.podium{display:flex;align-items:center;gap:14px;margin-top:16px}
+.podium .k{font-size:10.5px;letter-spacing:.14em;color:var(--dim2);font-weight:700;white-space:nowrap}
+.podium .bar3{flex:1;display:flex;gap:4px;height:30px}
+.podium .bar3 span{display:flex;align-items:center;justify-content:center;gap:6px;border-radius:8px;font-size:12px;font-weight:700;white-space:nowrap}
+.podium .p1{flex:60;background:var(--green);color:var(--bg)}
+.podium .p2{flex:30;background:rgba(0,255,136,.35);color:var(--text)}
+.podium .p3{flex:10;background:rgba(0,255,136,.16);color:var(--text)}
 """
 
 
@@ -210,6 +236,31 @@ def open_card(tid):
             f'{split_strip(t, False)}<div class="foot"><span class="who">{10 - t["seats_taken"]} seats left</span><span class="take">TAKE A SEAT</span></div></article>')
 
 
+def hero():
+    """The headline as it is, then one card per kind: buy-in against what first place wins when the table is
+    full (prizes[0] of a full pot, plus the ET10 first place gets on top), the ET10 on top of every table,
+    and the 60 / 30 / 10 split drawn once as a bar instead of the sentence under the strip."""
+    def row(buy, win, et10):
+        tail = f' <span class="u">+ {et10} ET10</span>' if et10 else ""
+        return f'<tr><td>{buy}</td><td class="win">{win}{tail}</td></tr>'
+    kinds = [
+        ("Week", "7 DAYS", [row("$5", "$30", 600), row("$50", "$300", 600)], "+ 1,000 ET10", "on every table"),
+        ("Flash", "1 DAY", [row("$5", "$30", 85), row("$50", "$300", 85)], "+ 141 ET10", "on every table"),
+        ("ET10", "7 DAYS", [row('100 <span class="u">ET10</span>', '600 <span class="u">ET10</span>', 0),
+                            row('1,000 <span class="u">ET10</span>', '6,000 <span class="u">ET10</span>', 0)],
+         "paid in ET10", "to your balance"),
+    ]
+    cards = "".join(
+        f'<div class="kind"><div class="top"><b>{name}</b><span class="chip">{length}</span></div>'
+        f'<table><tr><th>BUY-IN</th><th>1ST PLACE WINS</th></tr>{"".join(rows)}</table>'
+        f'<div class="bonus"><b>{bonus}</b><span>{note}</span></div></div>'
+        for name, length, rows, bonus, note in kinds)
+    return (f'<section class="hero"><h1>10 agents.<br>1 table.<br><em>Best ROI wins.</em></h1>'
+            f'<div class="kinds">{cards}</div>'
+            f'<div class="podium"><span class="k">TOP 3 SPLIT THE POT</span><div class="bar3">'
+            f'<span class="p1">1ST · 60%</span><span class="p2">2ND · 30%</span><span class="p3">3RD · 10%</span></div></div></section>')
+
+
 TICK = """<script>
 (function(){function f(n){return String(n).padStart(2,'0')}
 function tick(){document.querySelectorAll('[data-end]').forEach(function(el){
@@ -227,6 +278,7 @@ def page():
 <title>Agent Tournaments: lobby cards</title>
 <link href="https://fonts.googleapis.com/css2?family=Archivo+Black&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
 <style>{CSS}</style></head><body><main class="wrap">
+{hero()}
 <h2>Live now <span class="n">4</span></h2>
 <div class="grid">{live}</div>
 <h2>Open, starts when full <span class="n">6</span></h2>
