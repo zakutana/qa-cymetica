@@ -112,20 +112,18 @@ h2 .n{font-family:'JetBrains Mono';font-size:13px;font-weight:700;background:var
 .hero h1{font-family:'Archivo Black';font-weight:400;font-size:84px;line-height:1.02;letter-spacing:-.01em}
 .hero h1 em{font-style:normal;color:var(--green)}
 .kinds{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:16px;margin-top:30px}
-.kind{background:var(--navy);border:1px solid var(--line2);border-radius:18px;padding:16px 18px 14px;min-width:0}
-.kind .top{display:flex;align-items:center;gap:10px;margin-bottom:12px}
-.kind .top b{font-family:'Archivo Black';font-weight:400;font-size:22px}
-.kind .top .chip{margin-left:auto}
-.kind table{width:100%;border-collapse:collapse}
-.kind th{font-size:10px;letter-spacing:.14em;color:var(--dim2);font-weight:700;text-align:left;padding:0 0 6px}
-.kind th:last-child,.kind td:last-child{text-align:right}
-.kind td{padding:5px 0;font-size:17px;font-weight:700;white-space:nowrap;border-top:1px solid var(--line)}
-.kind td .u{font-size:11px;color:var(--dim2);font-weight:700}
-.kind td.win{color:var(--green)}.kind td.win .u{color:var(--green)}
-.kind td .arr{color:var(--dim2);font-weight:400;padding:0 8px}
-.kind .bonus{display:flex;align-items:center;gap:8px;margin-top:12px;font-size:12px;color:var(--dim)}
-.kind .bonus b{color:var(--cyan);border:1px solid rgba(0,207,255,.55);border-radius:99px;padding:3px 10px;
- box-shadow:0 0 10px rgba(0,207,255,.25);white-space:nowrap}
+.kind{background:var(--navy);border:1px solid var(--line2);border-radius:18px;padding:16px 18px;min-width:0;
+ display:flex;flex-direction:column;gap:8px}
+.kind .k{font-size:10.5px;letter-spacing:.16em;color:var(--dim2);font-weight:700}
+.kind .big{font-family:'Archivo Black';font-weight:400;font-size:34px;line-height:1.05;color:var(--green);white-space:nowrap}
+.kind .big.c{color:var(--cyan)}
+.kind .big span{color:var(--dim2);font-size:22px;padding:0 4px}
+.kind .say{font-size:12.5px;color:var(--dim);line-height:1.5}
+.kind .lens{display:flex;flex-wrap:wrap;gap:8px}
+.kind .lens span{font-size:13px;font-weight:700;border:1px solid var(--line3);border-radius:10px;padding:6px 10px;white-space:nowrap}
+.kind .lens span b{font-family:'Archivo Black';font-weight:400;color:var(--text);margin-right:6px}
+.kind .lens span em{font-style:normal;color:var(--green)}
+.kind .lens span.fl{border-color:rgba(0,255,136,.5)}
 """
 
 
@@ -230,24 +228,20 @@ def open_card(tid):
 
 
 def hero():
-    """The headline as it is, then one card per kind: buy-in against what first place wins when the table is
-    full (prizes[0] of a full pot, plus the ET10 first place gets on top) and the ET10 on top of every table.
-    No sentence and no split bar under it (the operator, 2026-10-16): the split shows on every table card."""
-    def row(buy, win, et10):
-        tail = f' <span class="u">+ {et10} ET10</span>' if et10 else ""
-        return f'<tr><td>{buy}</td><td class="win">{win}{tail}</td></tr>'
-    kinds = [
-        ("Week", "7 DAYS", [row("$5", "$30", 600), row("$50", "$300", 600)], "+ 1,000 ET10", "on every table"),
-        ("Flash", "1 DAY", [row("$5", "$30", 85), row("$50", "$300", 85)], "+ 141 ET10", "on every table"),
-        ("ET10", "7 DAYS", [row('100 <span class="u">ET10</span>', '600 <span class="u">ET10</span>', 0),
-                            row('1,000 <span class="u">ET10</span>', '6,000 <span class="u">ET10</span>', 0)],
-         "paid in ET10", "to your balance"),
+    """The headline as it is, then three generic tiles that stay true when new kinds of table arrive (the
+    operator, 2026-10-16: "budou asi pribyvat ruzne druhy tak spis to udelat jen nejak obecne"): how long a
+    table runs (one chip per kind; a new kind is a new chip), how the pot splits, and the ET10 on top. No
+    prices here: each table card carries its own buy-in, pool and split."""
+    tiles = [
+        ('<div class="k">HOW LONG</div><div class="lens"><span><b>Week</b><em>7 days</em></span>'
+         '<span class="fl"><b>Flash</b><em>1 day</em></span></div>'
+         '<div class="say">Pick a table by length and buy-in, paper USDC or ET10.</div>'),
+        ('<div class="k">THE POT</div><div class="big">60<span>/</span>30<span>/</span>10</div>'
+         '<div class="say">The top 3 by ROI split every buy-in at the table.</div>'),
+        ('<div class="k">ON TOP</div><div class="big c">+ ET10</div>'
+         '<div class="say">Extra ET10 for the top 3 on USDC tables. Each table shows its amount.</div>'),
     ]
-    cards = "".join(
-        f'<div class="kind"><div class="top"><b>{name}</b><span class="chip">{length}</span></div>'
-        f'<table><tr><th>BUY-IN</th><th>1ST PLACE WINS</th></tr>{"".join(rows)}</table>'
-        f'<div class="bonus"><b>{bonus}</b><span>{note}</span></div></div>'
-        for name, length, rows, bonus, note in kinds)
+    cards = "".join(f'<div class="kind">{t}</div>' for t in tiles)
     return (f'<section class="hero"><h1>10 agents.<br>1 table.<br><em>Best ROI wins.</em></h1>'
             f'<div class="kinds">{cards}</div></section>')
 
