@@ -337,39 +337,32 @@
   function renderPane() {
     ({ tasks: renderTasks, approvals: renderApprovals, memory: renderMemory, audit: renderAudit, rules: renderRules, investable: renderInvest, legal: renderLegal, token: renderToken, settings: renderSettings }[ui.tab] || function () {})();
   }
-  var KEYS = [['testing', 'Testing / QA'], ['development', 'Development'], ['testing_lab', 'Testing lab'], ['design', 'Design studio'], ['trading_desk', 'Trading desk']];
-  function targetName(r) {
-    var d = CO.ruleTarget(r); if (d) return d.name;
-    return (KEYS.filter(function (x) { return x[0] === r.target; })[0] || [0, 'a department'])[1];
-  }
-  // what a rule's department raises next, and the rule that picks it up
+  // what a process's department raises next, and the process that picks it up
   function nextOf(r) {
-    var d = CO.ruleTarget(r), key = d ? d.key : r.target;
-    var ev = r.trigger === 'released' && key === 'testing' ? 'bug' : r.trigger === 'bug' ? null : CO.EMITS[key];
+    var d = CO.ruleTarget(r); if (!d) return null;
+    var k = CO.kindOf(r.when), ev = k === 'released' && d.key === 'testing' ? 'bug' : k === 'bug' ? null : CO.EMITS[d.key];
     if (!ev) return null;
-    var nx = CO.S.rules.filter(function (x) { return x.on && x.trigger === ev && x.id !== r.id; })[0];
-    return nx ? { ev: ev, rule: nx } : null;
+    return CO.S.rules.filter(function (x) { return x.on && x.id !== r.id && CO.kindOf(x.when) === ev; })[0] || null;
   }
   function renderRules() {
     var S = CO.S;
-    setHTML($('rules'), S.rules.map(function (r) {
-      var d = CO.ruleTarget(r), n = r.on ? nextOf(r) : null;
-      return '<div class="rule' + (r.on ? ' on' : '') + '" data-rule="' + r.id + '"><span class="ric">' + CO.ruleIcon(r.trigger) + '</span>' +
-        '<div class="rbody"><div class="rhead"><span class="rid">' + r.id + '</span><b>When ' + esc(CO.TRIGGERS[r.trigger].toLowerCase()) + '</b><span class="arrow">→</span><b class="rt">' + esc(targetName(r)) + '</b>' +
-        (r.fired ? '<span class="fired">' + r.fired + '× so far</span>' : '') + (!d ? '<span class="miss">no such department yet</span>' : '') + '</div>' +
-        '<p>' + esc(targetName(r)) + ' ' + esc(r.text) + '.</p>' +
+    setHTML($('rules'), S.rules.length ? S.rules.map(function (r) {
+      var d = CO.ruleTarget(r), n = r.on ? nextOf(r) : null, nd = n && CO.ruleTarget(n);
+      return '<div class="rule' + (r.on ? ' on' : '') + '" data-rule="' + r.id + '"><span class="ric">' + CO.ruleIcon(CO.kindOf(r.when)) + '</span>' +
+        '<div class="rbody"><div class="rhead"><span class="rid">' + r.id + '</span><b>When ' + esc(r.when) + '</b><span class="arrow">→</span><b class="rt">' + esc(d ? d.name : 'department removed') + '</b>' +
+        (r.fired ? '<span class="fired">' + r.fired + '× so far</span>' : '') + (!d ? '<span class="miss">pick another department</span>' : '') + '</div>' +
+        '<p>' + esc(d ? d.name : 'It') + ' ' + esc(r.does) + '.</p>' +
         '<div class="rv"><span class="rvl">human review</span>' + [['', 'none'], ['start', 'before it starts'], ['result', 'its result']].map(function (m) {
           return '<button data-a="rule-review" data-m="' + m[0] + '"' + ((r.review || '') === m[0] ? ' class="on"' : '') + '>' + m[1] + '</button>';
         }).join('') + (r.review ? '<span class="who">by <input class="rvw" value="' + esc(r.reviewer || 'you') + '" title="who reviews: you, or a person by name"></span>' : '') + '</div>' +
-        (n ? '<div class="then">then: ' + esc(CO.TRIGGERS[n.ev].toLowerCase()) + ' → ' + esc(targetName(n.rule)) + ' <span class="rid">' + n.rule.id + '</span></div>' : '') + '</div>' +
+        (n ? '<div class="then">then: when ' + esc(n.when) + ' → ' + esc(nd ? nd.name : '') + ' <span class="rid">' + n.id + '</span></div>' : '') + '</div>' +
         '<span class="switch mini' + (r.on ? ' on' : '') + '" data-a="rule-toggle"><span class="sw"></span></span><button class="rx" data-a="rule-del" title="Remove">×</button></div>';
-    }).join(''));
-    var trig = $('nr-trig');
-    if (!trig.options.length) trig.innerHTML = Object.keys(CO.TRIGGERS).map(function (k) { return '<option value="' + k + '">When ' + CO.TRIGGERS[k].toLowerCase() + '</option>'; }).join('');
-    var tg = $('nr-target'), cur = tg.value;
-    var opts = S.departments.map(function (x) { return '<option value="id:' + x.id + '">' + esc(x.name) + '</option>'; }).join('') +
-      KEYS.filter(function (k) { return !S.departments.some(function (x) { return x.key === k[0]; }); }).map(function (k) { return '<option value="' + k[0] + '">' + k[1] + ' (not hired yet)</option>'; }).join('');
+    }).join('') : '<p class="empty">No processes yet. Write one below, or tell the Manager (“when a bug is found, QA verifies it”).</p>');
+    var tg = $('nr-dept'), cur = tg.value;
+    var opts = S.departments.length ? S.departments.map(function (x) { return '<option value="' + x.id + '">' + esc(x.name) + '</option>'; }).join('') : '<option value="">add a department first</option>';
     if (tg._h !== opts) { tg._h = opts; tg.innerHTML = opts; if (cur) tg.value = cur; }
+    tg.disabled = !S.departments.length;
+    setHTML($('nr-ex'), '<span class="hint">examples:</span>' + CO.RULE_EXAMPLES.map(function (e, i) { return '<button class="exr" data-ex="' + i + '">when ' + esc(e[0]) + '</button>'; }).join(''));
   }
   function renderTasks() {
     var S = CO.S, sel = $('tf-dept');
@@ -715,6 +708,12 @@
       if (t.closest('#dr-mem-all')) { ui.memDept = ui.panel; setTab('memory'); var c = document.querySelector('[data-mem="' + ui.memDept + '"]'); if (c) c.scrollIntoView({ block: 'start' }); return; }
       if (t.closest('#dr-ch-discard')) { ui.dirty = false; $('dr-ch-text').value = CO.dept(ui.panel).charter; charterMeta(); return; }
       // the other tabs
+      var exb = t.closest('#nr-ex [data-ex]');
+      if (exb) {
+        var ex = CO.RULE_EXAMPLES[+exb.getAttribute('data-ex')], match = CO.S.departments.filter(function (x) { return x.key === ex[1]; })[0];
+        $('nr-when').value = ex[0]; $('nr-text').value = ex[2]; if (match) $('nr-dept').value = String(match.id);
+        return;
+      }
       var rr = t.closest('.rule [data-a]');
       if (rr) {
         var rid = rr.closest('.rule').getAttribute('data-rule'), ra = rr.getAttribute('data-a'), rl = CO.S.rules.filter(function (x) { return x.id === rid; })[0];
@@ -771,9 +770,11 @@
   function pageAct(a) {
     var S = CO.S;
     if (a === 'rule-add') {
-      var tx = $('nr-text').value.trim(), tg = $('nr-trig').value, to = $('nr-target').value;
-      var r = CO.act.addRule({ trigger: tg, target: to, text: tx || 'takes care of it', review: $('nr-review').value || null });
-      $('nr-text').value = ''; toast('Process ' + r.id + ' added: everyone follows it from now on.');
+      var wn = $('nr-when').value.trim(), dd = +$('nr-dept').value;
+      if (!wn) { $('nr-when').focus(); return toast('Write when it happens.'); }
+      if (!dd) return toast('Add a department first.');
+      var r = CO.act.addRule({ when: wn.replace(/^when\s+/i, ''), dept_id: dd, does: $('nr-text').value.trim().replace(/[.!]+$/, '') || 'takes care of it', review: $('nr-review').value || null });
+      $('nr-when').value = ''; $('nr-text').value = ''; toast('Process ' + r.id + ' added: everyone follows it from now on.');
     }
     if (a === 'invest') { S.company.investable = !S.company.investable; CO.changed(); toast(S.company.investable ? 'Investable: the scoreboard is public.' : 'Private again.'); }
     if (a === 'form') openModal('<div class="mh"><h3>Start formation?</h3></div><p>' + esc(S.legal.domicile) + ' · ' + esc(($('lg-name') || {}).value || S.legal.name) + '. Filing waits for your approval like everything real.</p>' +

@@ -33,20 +33,27 @@
   ];
 
   // Company rules: what anyone notices outside its own job goes where the rule says (the Manager routes it).
-  // The events a company process can start from: universal, so any department and any rule fit.
-  CO.TRIGGERS = {
-    bug: 'A bug is found', released: 'A new build is released', idea: 'A product idea comes up', money: 'A way to make money comes up',
-    winner: 'An experiment wins on paper', design: 'Something looks wrong', custom: 'Anything else'
+  // A company process is the owner's own words: when <something happens> -> a department -> does <what>.
+  // The Manager reads which kind of situation the words describe; the owner never picks a type.
+  CO.kindOf = function (text) {
+    var t = String(text || '').toLowerCase();
+    if (/(release|vyd[aá]|vyjde|new (build|product|version)|nov[yý] (produkt|build|verz)|deliver|dodaj|dod[aá])/.test(t)) return 'released';
+    if (/(bug|chyb|broken|rozbit|error|problem)/.test(t)) return 'bug';
+    if (/(win|vyhr|v[ií]t[eě]z|succeed|passes|usp[eě]|úsp[eě])/.test(t)) return 'winner';
+    if (/(idea|n[aá]pad|feature|improve|vylep)/.test(t)) return 'idea';
+    if (/(money|vyd[eě]l|profit|zisk|earn)/.test(t)) return 'money';
+    if (/(look|design|vzhled|ugly|layout|ui\b)/.test(t)) return 'design';
+    return 'custom';
   };
-  // What a department's work usually raises next, so a rule can show what it leads to.
+  // what a department's work usually raises next, so a process can show what it leads to
   CO.EMITS = { development: 'released', testing_lab: 'winner', design: 'idea', trading_desk: null, testing: null, custom: null };
-  CO.RULES = [
-    { id: 'R1', on: true, trigger: 'bug', target: 'testing', text: 'verifies it and files the report as expire76' },
-    { id: 'R2', on: true, trigger: 'released', target: 'testing', text: 'tests the new build the same day and reports what is broken' },
-    { id: 'R3', on: true, trigger: 'idea', target: 'development', text: 'writes it up as a Build it Better request' },
-    { id: 'R4', on: true, trigger: 'money', target: 'testing_lab', text: 'proves it on paper first', review: 'result', reviewer: 'you' },
-    { id: 'R5', on: true, trigger: 'winner', target: 'trading_desk', text: 'prepares the real trade; nothing is spent without your Approve', review: 'start', reviewer: 'you' },
-    { id: 'R6', on: false, trigger: 'design', target: 'design', text: 'reviews it against its brief' }
+  // starting points the owner can click into the form; never added on their own
+  CO.RULE_EXAMPLES = [
+    ['a bug is found anywhere', 'testing', 'verifies it and files the report as expire76'],
+    ['a new build is released', 'testing', 'tests it the same day and reports what is broken'],
+    ['someone has a product idea', 'development', 'writes it up as a Build it Better request'],
+    ['someone finds a way to make money', 'testing_lab', 'proves it on paper first'],
+    ['an experiment wins on paper', 'trading_desk', 'prepares the real trade']
   ];
 
   // GET /api/v1/token-launch/chains, read 2026-10-16.
@@ -317,7 +324,13 @@
         ] }
       },
       legal: { domicile: 'Cayman Islands', name: 'Cymetica QA Ltd.', formed: false },
-      rules: CO.RULES.map(function (r) { var c = {}; for (var k in r) c[k] = r[k]; c.fired = 0; return c; }), next_rule: CO.RULES.length + 1,
+      rules: [
+        { id: 'R1', on: true, when: 'a bug is found anywhere', dept_id: 3, does: 'verifies it and files the report as expire76', fired: 0 },
+        { id: 'R2', on: true, when: 'a new build is released', dept_id: 3, does: 'tests it the same day and reports what is broken', fired: 0 },
+        { id: 'R3', on: true, when: 'someone has a product idea', dept_id: 1, does: 'writes it up as a Build it Better request', fired: 0 },
+        { id: 'R4', on: true, when: 'someone finds a way to make money', dept_id: 4, does: 'proves it on paper first', fired: 0, review: 'result', reviewer: 'you' },
+        { id: 'R5', on: true, when: 'an experiment wins on paper', dept_id: 5, does: 'prepares the real trade', fired: 0, review: 'start', reviewer: 'you' }
+      ], next_rule: 6,
       token: { chain: '5042', symbol: '', reserved: false, perp_listed: false },
       next_id: 40, next_msg: 4, next_appr: 3, next_mem: memory.length + 1, next_dept: 6
     };
@@ -334,6 +347,7 @@
     s.company.created_at = t0;
     s.next_pass_at = t0 + 30000;
     s.next_id = 1; s.next_msg = 1; s.next_appr = 1; s.next_mem = 1; s.next_dept = 1;
+    s.rules = []; s.next_rule = 1;
     return s;
   };
   CO.fresh = function (t0) { return /demo/.test(location.search + location.hash) ? CO.seed(t0) : CO.seedEmpty(t0); };

@@ -142,10 +142,11 @@
 </main>
 
 <main class="page pane" data-pane="rules" hidden>
-  <div class="ph"><h2>How the company works</h2><span class="sub">every process is one sentence: when something happens, a department does something; the Manager routes it</span></div>
+  <div class="ph"><h2>How the company works</h2><span class="sub">when something happens → one of your departments → does something, in your words; the Manager routes it</span></div>
   <div class="rulesgrid">
     <section class="card"><h3>Processes · when → who → what</h3><div id="rules"></div>
-      <div class="addrule"><select id="nr-trig"></select><span class="arrow">→</span><select id="nr-target"></select><input id="nr-text" placeholder="does what, in your words"><select id="nr-review"><option value="">no review</option><option value="start">review before it starts</option><option value="result">review its result</option></select><button class="btn cy" data-a="rule-add">Add rule</button></div></section>
+      <div class="addrule"><span class="wl">When</span><input id="nr-when" placeholder="something happens, in your words"><span class="arrow">→</span><select id="nr-dept"></select><input id="nr-text" placeholder="does what, in your words"><select id="nr-review"><option value="">no review</option><option value="start">review before it starts</option><option value="result">review its result</option></select><button class="btn cy" data-a="rule-add">Add</button></div>
+      <div class="exrow" id="nr-ex"></div></section>
   </div>
 </main>
 

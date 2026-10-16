@@ -225,11 +225,7 @@
     for (var i = 0; i < l.length; i++) if (l[i].on && l[i].trigger === trigger) return l[i];
     return null;
   }
-  function ruleTarget(r) {
-    if (!r) return null;
-    if (/^id:/.test(r.target)) return dept(+r.target.slice(3));
-    return CO.S.departments.filter(function (x) { return x.key === r.target; })[0] || null;
-  }
+  function ruleTarget(r) { return r ? dept(r.dept_id) : null; }
   CO.ruleTarget = ruleTarget;
   var SIDE = {
     idea: ['Gem Screener: a filter for coins with a team unlock this month', 'Chart Analyzer: show the score\'s history, not only today', 'Agent Tournaments: a replay of the last table'],
@@ -237,24 +233,23 @@
     design: ['Supply Analyzer: unlock bars overlap on a phone', 'Gem Screener: Guardians tooltip covers the price', 'Company page: the plan list cuts long titles'],
     custom: ['a vendor message that needs an answer', 'a page that changed overnight']
   };
-  var KEYNAME = { testing: 'QA / Testing', development: 'Development', testing_lab: 'Testing lab', design: 'Design studio', trading_desk: 'Trading desk' };
-  var PREFIX = { bug: 'Verify: ', released: 'Test the new build: ', idea: 'BB request: ', money: 'Paper test: ', winner: 'Real trade: ', design: 'Review: ', custom: 'Handle: ' };
+    var PREFIX = { bug: 'Verify: ', released: 'Test the new build: ', idea: 'BB request: ', money: 'Paper test: ', winner: 'Real trade: ', design: 'Review: ', custom: 'Handle: ' };
   // An event happened. Every rule that is on and listens for it hands the work to its department.
   function fire(kind, from, subject) {
     var S = CO.S, hit = 0;
     (S.rules || []).forEach(function (r) {
-      if (!r.on || r.trigger !== kind) return;
+      if (!r.on || CO.kindOf(r.when) !== kind) return;
       var to = ruleTarget(r);
       if (!to || (from && to.id === from.id && kind !== 'released')) return;
       if (r.review === 'start') {
         var ap = { id: 'A' + (S.next_appr++), task_id: null, dept_id: to.id, kind: 'start?', summary: PREFIX[kind] + subject, created_at: S.clock,
           reviewer: r.reviewer || 'you', pending: { rule: r.id, kind: kind, from: from ? from.id : null, subject: subject } };
-        ap.body = 'PROCESS ' + r.id + ' · REVIEW BEFORE IT STARTS · reviewer: ' + ap.reviewer + '\n\nWhat happened\n' + CO.TRIGGERS[kind] + (from ? ' (found by ' + from.name + ')' : '') + ': ' + subject +
-          '\n\nWhat the process does\n' + to.name + ' ' + r.text + '.\n\nIf you approve\n' + to.name + ' starts it on the next pass.\n\nIf you reject\nNothing starts; the event is dropped.';
+        ap.body = 'PROCESS ' + r.id + ' · REVIEW BEFORE IT STARTS · reviewer: ' + ap.reviewer + '\n\nWhat happened\n' + 'When ' + r.when + (from ? ' (found by ' + from.name + ')' : '') + ': ' + subject +
+          '\n\nWhat the process does\n' + to.name + ' ' + r.does + '.\n\nIf you approve\n' + to.name + ' starts it on the next pass.\n\nIf you reject\nNothing starts; the event is dropped.';
         S.approvals.unshift(ap);
         r.fired++; hit++;
         feed('ask', 'Manager', 'process ' + r.id + ' waits for ' + ap.reviewer + ' before ' + to.name + ' starts');
-        say(CO.TRIGGERS[kind] + ': "' + subject + '". Process ' + r.id + ' would hand it to ' + to.name + ', but it asks ' + (ap.reviewer === 'you' ? 'you' : ap.reviewer) + ' first: approve to start.', to.id);
+        say('When ' + r.when + ': "' + subject + '". Process ' + r.id + ' would hand it to ' + to.name + ', but it asks ' + (ap.reviewer === 'you' ? 'you' : ap.reviewer) + ' first: approve to start.', to.id);
         CO.emit('approval:new', ap);
         return;
       }
@@ -267,7 +262,7 @@
     var S = CO.S;
     to = to || ruleTarget(r); if (!to) return null;
     {
-      var o = { turns_needed: 1, why: 'rule ' + r.id + ': ' + CO.TRIGGERS[kind].toLowerCase() + (from ? ' · from ' + from.name : '') };
+      var o = { turns_needed: 1, why: 'rule ' + r.id + ': ' + r.when + (from ? ' · from ' + from.name : '') };
       if (kind === 'bug') { o.kind = 'bug report'; o.expert = 'qa_tester'; }
       if (kind === 'idea') o.kind = 'BB request';
       if (kind === 'winner') o.kind = 'real-money action';
@@ -278,8 +273,8 @@
       S.plan.unshift(nt.id);
       if (r.review === 'result') { nt.review = r.reviewer || 'you'; nt.why += ' · ' + nt.review + ' reviews the result'; }
       if (!r.reviewed) r.fired++;
-      feed('info', from ? from.name : 'Cymetica', CO.TRIGGERS[kind].toLowerCase() + ': ' + subject + ' → ' + to.name + ' (' + r.id + ')');
-      say(CO.TRIGGERS[kind] + (from ? ' (' + from.name + ')' : '') + ': "' + subject + '". Process ' + r.id + ' hands it to ' + to.name + ', which ' + r.text + '. First in line.' +
+      feed('info', from ? from.name : 'Cymetica', r.when + ': ' + subject + ' → ' + to.name + ' (' + r.id + ')');
+      say('When ' + r.when + (from ? ' (' + from.name + ')' : '') + ': "' + subject + '". Process ' + r.id + ' hands it to ' + to.name + ', which ' + r.does + '. First in line.' +
         (nt.review ? ' Its result waits for ' + (nt.review === 'you' ? 'your' : nt.review + '\'s') + ' review before it goes on.' : ''), to.id);
       CO.emit('handoff', { from: from, to: to, rule: r });
       changed();
@@ -290,6 +285,7 @@
   // what a finished piece of work raises next: something noticed on the side, a winning experiment
   function afterDone(t, d) {
     if (Math.random() < 0.3) later(rand(1500, 4000), function () { noticeInPassing(d); });
+    if (Math.random() < 0.12) later(rand(2000, 5000), function () { fire('custom', d, pick(SIDE.custom)); });
     if (d.key === 'testing_lab' && /^(Paper|Bot variant|FOMO)/.test(t.title) && Math.random() < 0.6) later(rand(2000, 4000), function () { fire('winner', d, t.title.replace(/^(Paper test|Paper): /, '')); });
   }
   // a department finishing its own work notices something outside its job
@@ -579,12 +575,13 @@
       changed();
     },
     rule: function (id, on) {
-      var r = (CO.S.rules || []).filter(function (x) { return x.id === id; })[0]; if (!r || r.locked) return;
-      r.on = on; feed('info', 'You', (on ? 'switched on rule ' : 'switched off rule ') + r.id + ': ' + CO.TRIGGERS[r.trigger]); changed();
+      var r = (CO.S.rules || []).filter(function (x) { return x.id === id; })[0]; if (!r) return;
+      r.on = on; feed('info', 'You', (on ? 'switched on process ' : 'switched off process ') + r.id + ': when ' + r.when); changed();
     },
     addRule: function (o) {
-      var S = CO.S, r = { id: 'R' + (S.next_rule++), on: true, trigger: o.trigger, target: o.target, text: o.text, fired: 0, review: o.review || null, reviewer: o.reviewer || 'you' };
-      S.rules.push(r); feed('good', 'You', 'new company rule ' + r.id + ': ' + CO.TRIGGERS[r.trigger] + ' → ' + o.target); changed(); return r;
+      var S = CO.S, r = { id: 'R' + (S.next_rule++), on: true, when: o.when, dept_id: o.dept_id, does: o.does || 'takes care of it', fired: 0, review: o.review || null, reviewer: o.reviewer || 'you' };
+      var d = dept(r.dept_id);
+      S.rules.push(r); feed('good', 'You', 'new process ' + r.id + ': when ' + r.when + ' → ' + (d ? d.name : '?')); changed(); return r;
     },
     review: function (id, mode, who) {
       var r = (CO.S.rules || []).filter(function (x) { return x.id === id; })[0]; if (!r) return;
@@ -699,25 +696,27 @@
         (nd.files_as ? ' Every bug becomes a report filed as ' + nd.files_as + '; it waits for your Approve, and each one Cymetica accepts pays 1,000 ET10 to ' + nd.files_as + '.' : '') +
         (nd.schedule && !nd.products.length ? ' Which products? Write e.g. "products: Gem Screener, Chart Analyzer".' : '') };
     }
-    if (/(rule|pravidl|whenever|kdykoli|kdy[zž] (se|n[eě]kdo|n[aá]m|vyjde|vyd)|when (a|an|someone|anyone))/.test(t)) {
-      var trig = /(release|vyd[aá]|vyjde|new build|nov[yý] (produkt|build)|deliver|dodaj|dod[aá])/.test(t) ? 'released' : /(bug|chyb|problem)/.test(t) ? 'bug' :
-        /(win|vyhr|v[ií]t[eě]z|uspe|úsp[eě])/.test(t) ? 'winner' : /(idea|n[aá]pad|feature)/.test(t) ? 'idea' : /(money|vyd[eě]l|profit|zisk)/.test(t) ? 'money' : /(design|vzhled|look)/.test(t) ? 'design' : null;
-      var tk = /(\bqa\b|test)/.test(t) ? 'testing' : /(develop|v[yý]voj)/.test(t) ? 'development' : /(lab)/.test(t) ? 'testing_lab' : /(design)/.test(t) ? 'design' : /(trad|desk)/.test(t) ? 'trading_desk' : null;
-      if (trig && !tk) tk = { bug: 'testing', released: 'testing', idea: 'development', money: 'testing_lab', winner: 'trading_desk', design: 'design' }[trig];
-      var same = trig && S.rules.filter(function (x) { return x.trigger === trig && x.target === tk; })[0];
-      if (same) {
-        if (!same.on) CO.act.rule(same.id, true);
-        return 'That is already process ' + same.id + ': when ' + CO.TRIGGERS[trig].toLowerCase() + ' → ' + (ruleTarget(same) ? ruleTarget(same).name : KEYNAME[tk]) + ' ' + same.text + '. It is on.';
+    if (/(rule|pravidl|process|whenever|kdykoli|kdy[zž] |when )/.test(t) && S.departments.length) {
+      // "when <words>, <department> <does words>": the department must be one the company has
+      var wm = text.match(/(?:when|whenever|kdy[zž]|kdykoli)\s+(.+?)(?:,|\s+(?:then|tak|a[tť]|pak)\s)/i);
+      var to = findDept(t, focus);
+      if (wm && to) {
+        var when = wm[1].trim().replace(/^(se |n[eě]kdo )/i, function (x) { return x; });
+        var rest = text.slice(text.indexOf(wm[0]) + wm[0].length).replace(new RegExp(to.name, 'i'), '').replace(/^\s*(ho|to|ji|je|at|ať|then|tak|pak)\s+/i, '').trim();
+        var kind = CO.kindOf(when);
+        var same = S.rules.filter(function (x) { return x.dept_id === to.id && CO.kindOf(x.when) === kind && kind !== 'custom'; })[0];
+        if (same) {
+          if (!same.on) CO.act.rule(same.id, true);
+          return 'That is already process ' + same.id + ': when ' + same.when + ' → ' + to.name + ' ' + same.does + '. It is on.';
+        }
+        var rvw = /(review|zkontrol|schv[aá]l|kouknu|projdu|human|[cč]lov[eě]k|j[aá] (to )?(vid|chci)|chci (to )?vid|i want to see)/.test(t) ? (/(n[eě][zž] za[cč]|before|first|p[rř]edem|nejd[rř][ií]v|ne[zž] se pust)/.test(t) ? 'start' : 'result') : null;
+        // the review clause is about the process, not the work: keep it out of "does"
+        rest = rest.replace(/\s*(,|\s)\s*(a |and )?(v[yý]sledek|the result|i want|j[aá] chci|chci|ale|but)\b.*$/i, '').trim();
+        var nr = CO.act.addRule({ when: when, dept_id: to.id, does: rest.length > 3 ? rest.replace(/[.!]+$/, '') : 'takes care of it', review: rvw });
+        return 'Process ' + nr.id + ' added: when ' + nr.when + ' → ' + to.name + ' ' + nr.does + '.' +
+          (rvw === 'start' ? ' It waits for your Approve before it starts.' : rvw === 'result' ? ' Its result waits for your review before it goes on.' : '') + ' Everyone follows it from now on.';
       }
-      if (trig) {
-        var rvw = /(review|zkontrol|schv[aá]l|kouknu|projdu|human|[cč]lov[eě]k|j[aá] (to )?(vid|chci))/.test(t) ? (/(n[eě][zž] za[cč]|before|first|p[rř]edem|nejd[rř][ií]v|ne[zž] se pust)/.test(t) ? 'start' : 'result') : null;
-        var nr = CO.act.addRule({ review: rvw, trigger: trig, target: tk, text: { bug: 'verifies it and files the report as expire76', released: 'tests the new build and reports what is broken',
-          idea: 'writes it up as a Build it Better request', money: 'proves it on paper first', winner: 'prepares the real trade; nothing is spent without your Approve', design: 'reviews it against its brief' }[trig] });
-        var td = ruleTarget(nr);
-        return 'Rule ' + nr.id + ' added: when ' + CO.TRIGGERS[trig].toLowerCase() + ' → ' + (td ? td.name : KEYNAME[tk]) + ' ' + nr.text + '.' +
-          (rvw === 'start' ? ' It waits for your Approve before it starts.' : rvw === 'result' ? ' Its result waits for your review before it goes on.' : '') + ' Everyone follows it from now on.' +
-          (td ? '' : ' There is no such department yet; until you add one, I hold these for you.');
-      }
+      if (wm && !to) return 'Which department should do it? Name one of yours (' + S.departments.map(function (x) { return x.name; }).join(', ') + ') and I add the process.';
     }
     var pm = text.match(/(?:products?|produkty?)\s*:\s*(.+)$/i);
     if (pm) {
