@@ -18,7 +18,7 @@ for name in ("player.html", "visitor.html"):
 print("colours ok")
 
 CHECK = """() => { const out = [];
- document.querySelectorAll('.panel, .st, .top, .tr, .rstrip div, .venue').forEach(c => { const cr = c.getBoundingClientRect();
+ document.querySelectorAll('.panel, .st, .top, .tr, .rstrip div, .venue, .pickbar').forEach(c => { const cr = c.getBoundingClientRect();
   c.querySelectorAll('*').forEach(e => { const r = e.getBoundingClientRect();
    if (e.children.length === 0 && r.width && (r.right > cr.right + 1 || r.left < cr.left - 1)) out.push('past: ' + e.textContent.trim().slice(0, 30)); }); });
  const pool = document.querySelector('.big .pool > div'); const pr = pool.getBoundingClientRect();

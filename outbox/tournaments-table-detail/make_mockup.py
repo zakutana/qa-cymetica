@@ -125,6 +125,22 @@ CSS = """
 .rstrip div:first-child b{color:var(--green)}
 .venue{display:flex;align-items:center;gap:8px;margin-top:10px;font-size:12px;color:var(--dim2);background:var(--deep);border-radius:10px;padding:8px 10px}
 .venue b{color:var(--text)}.venue .set{margin-left:auto;color:var(--cyan);font-weight:700}
+.st{grid-template-columns:30px minmax(0,1fr) 92px 150px 104px 92px}
+.solo .st{grid-template-columns:34px minmax(0,1fr) 120px 220px 160px 120px}
+.pc{text-align:right}
+.pk{display:inline-block;font-size:12px;font-weight:700;color:var(--cyan);border:1px solid rgba(0,207,255,.6);border-radius:8px;padding:5px 14px}
+.pkn{font-size:11.5px;color:var(--text);white-space:nowrap}
+.pickbar{display:flex;align-items:center;gap:12px;background:rgba(0,207,255,.06);border:1px solid rgba(0,207,255,.3);border-radius:12px;padding:9px 12px;margin-bottom:10px;font-size:12.5px}
+.pickbar b{font-family:'Archivo Black';font-weight:400;font-size:14px}
+.pickbar span{color:var(--dim)}
+.pickbar .stake{margin-left:auto;display:flex;gap:6px}
+.pickbar .stake span{border:1px solid var(--line3);border-radius:8px;padding:4px 10px;color:var(--dim);font-weight:700}
+.pickbar .stake span.on{border-color:var(--cyan);color:var(--cyan)}
+.page.solo{grid-template-columns:minmax(0,1fr)}
+.solo .big .oval{max-width:940px;margin:8px auto 60px}
+.tune{border:1px solid rgba(0,207,255,.45);background:rgba(0,207,255,.06)}
+.tune .say{font-size:12.5px;color:var(--dim);line-height:1.55;margin:4px 0 12px}
+.tune .btn{display:block;text-align:center;border-radius:10px;padding:10px;font-weight:700;color:var(--bg);background:var(--cyan);box-shadow:0 0 14px rgba(0,207,255,.35)}
 .closed{font-size:11px;font-weight:700;letter-spacing:.1em;color:var(--dim2);border:1px solid var(--line3);border-radius:99px;padding:3px 9px;margin-left:auto}
 """
 
@@ -157,9 +173,32 @@ def table_panel(t, mine_seat=None):
             f'{lc.split_strip(t, True)}</section>')
 
 
+def pick_bar(t):
+    """Pick the winner, folded into the standings (the operator: 'uz tam jednou mame seznam botu takze to by melo jit
+    nejak v tom hned picknout winnera'): one line over the rows, a Pick button or the pick count on each row."""
+    p = t["picks"]
+    if p["open"]:
+        s = max(0, int((lc.datetime.fromisoformat(p["closes_at"]) - lc.NOW).total_seconds()))
+        left = f'{s // 3600}H {s % 3600 // 60:02d}M' if s < 86400 else f'{s // 86400}D {s % 86400 // 3600:02d}H'
+        return (f'<div class="pickbar"><b>Pick the winner</b><span>{money(p["pool_usdc"])} pool · closes in {left}</span>'
+                f'<div class="stake"><span>$10</span><span class="on">$50</span><span>$100</span></div></div>')
+    closed = lc.datetime.fromisoformat(p["closes_at"]).strftime("%d %b %H:%M UTC")
+    return (f'<div class="pickbar"><b>Pick the winner</b><span>{money(p["pool_usdc"])} pool · {p["pickers"]} pick'
+            f'{"" if p["pickers"] == 1 else "s"} · closed {closed}</span></div>')
+
+
+def pick_cell(t, s):
+    p = t["picks"]
+    if p["open"]:
+        return '<span class="pk">Pick</span>'
+    by = {x["seat_id"]: x for x in p.get("by_seat") or []}
+    x = by.get(s["seat_id"])
+    return f'<span class="pkn">{x["pickers"]} pick · {money(x["staked_usdc"])}</span>' if x else '<span class="pkn d">—</span>'
+
+
 def standings(t, mine_seat=None):
     rows = ['<div class="st hd"><span>#</span><span>BOT</span><span style="text-align:right">ROI</span><span>VOLUME · MIN '
-            f'{money(t["min_volume_usdc"])}</span><span style="text-align:right">PRIZE NOW</span></div>']
+            f'{money(t["min_volume_usdc"])}</span><span style="text-align:right">PRIZE NOW</span><span style="text-align:right">PICK</span></div>']
     mins = t["min_volume_usdc"]
     for i, s in enumerate(sorted(t["standings"], key=lambda s: s["rank"])):
         r = s["rank"]
@@ -167,7 +206,7 @@ def standings(t, mine_seat=None):
         tags = ('<span class="h">H</span>' if s["house"] else "") + ('<span class="youtag">YOU</span>' if s["seat_id"] == mine_seat else "")
         vol = s["volume_usdc"] or 0.0
         w = min(100, vol / mins * 100)
-        prize = ("no prize · house" if s["house"] else
+        prize = ('<span class="d">—</span>' if s["house"] else
                  (f'<b>{money(s["wins_now_usdc"])}</b>' + (f'<em>+ {s["et10_now"]} ET10</em>' if s.get("et10_now") else "")
                   if s["wins_now_usdc"] else "—"))
         roi = s["roi_pct"] or 0.0
@@ -177,9 +216,9 @@ def standings(t, mine_seat=None):
             f'<b class="roi {"g" if roi > 0 else ("r" if roi < 0 else "d")}">{roi:+.2f}%</b>'
             f'<div class="vol">{"✓ " if s["qualified"] else ""}{money(round(vol, 2))}{"" if s["qualified"] else " / " + money(mins)}'
             f'<i><b class="{"" if s["qualified"] else "part"}" style="width:{w:.0f}%"></b></i></div>'
-            f'<div class="pz">{prize}</div></div>')
+            f'<div class="pz">{prize}</div><div class="pc">{pick_cell(t, s)}</div></div>')
     return (f'<section class="panel"><div class="ph"><h2>Standings</h2><div class="seg"><span class="on">All</span>'
-            f'<span>Qualified</span></div></div>{"".join(rows)}</section>')
+            f'<span>Qualified</span></div></div>{pick_bar(t)}{"".join(rows)}</section>')
 
 
 def race(t, mine_seat=None):
@@ -237,7 +276,16 @@ def bot_panel(t):
  <div class="apply"><span class="rs">Reset</span><span class="go">Apply to my bot</span></div>
  <div class="chg"><b>1 change</b> at this table · 19:34 tournament Perceptron Oracle changed markets</div>
 </section>
+{nexus_tune()}
 {recent_trades()}"""
+
+
+def nexus_tune():
+    """The operator, 2026-10-16: NEXUS Profit Agent says it tunes a member's bots; a member who locks ET10 (e.g. 1,000)
+    lets NEXUS tune their seated bot during the tournament with one click. The terms are Cymetica's to set."""
+    return ('<section class="panel tune"><div class="k">NEXUS TUNES IT FOR YOU</div>'
+            '<div class="say">NEXUS reads this bot\'s trades and changes its markets, stop loss and take profit while the table runs.</div>'
+            '<span class="btn">Lock 1,000 ET10 · let NEXUS tune</span></section>')
 
 
 def recent_trades():
@@ -277,13 +325,13 @@ def page(t, side, mine_seat=None):
 <title>Agent Tournaments: {esc(t["label"])} #{t["id"]}</title>
 <link href="https://fonts.googleapis.com/css2?family=Archivo+Black&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
 <style>{lc.CSS}{CSS}</style></head><body><main class="wrap">{header(t)}{rules_strip(t)}
-<div class="page"><div class="main">{table_panel(t, mine_seat)}{standings(t, mine_seat)}{race(t, mine_seat)}</div>
-<aside class="side">{side}</aside></div></main>{lc.TICK}</body></html>"""
+<div class="page{"" if side else " solo"}"><div class="main">{table_panel(t, mine_seat)}{standings(t, mine_seat)}{race(t, mine_seat)}</div>
+{f'<aside class="side">{side}</aside>' if side else ""}</div></main>{lc.TICK}</body></html>"""
 
 
 def main():
     (HERE / "player.html").write_text(page(TABLES[5], bot_panel(TABLES[5]), MINE_SEAT), encoding="utf-8")
-    (HERE / "visitor.html").write_text(page(TABLES[11], visitor_side(TABLES[11])), encoding="utf-8")
+    (HERE / "visitor.html").write_text(page(TABLES[13], ""), encoding="utf-8")
     print("player.html, visitor.html written")
 
 
