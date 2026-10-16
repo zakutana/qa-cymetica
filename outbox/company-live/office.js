@@ -14,7 +14,7 @@
     cyan: '#00cfff', green: '#00ff88', red: '#ff4444', blue: '#3b82f6' };
   var ST = { working: C.cyan, queued: C.blue, waiting: C.red, idle: C.dim2 };
   var HUB = [8, 8], YOU = [8, 16], AUDIT = [0, 16];
-  var SLOTS = [[0, 0], [8, 0], [16, 0], [0, 8], [16, 8], [16, 16], [24, 0], [24, 8], [24, 16], [24, 24], [16, 24], [8, 24], [0, 24]];
+  var SLOTS = [[0, 0], [8, 0], [16, 0], [0, 8], [16, 8], [8, 16], [16, 16], [24, 0], [24, 8], [24, 16], [24, 24], [16, 24], [8, 24], [0, 24]];
   var NS = 'http://www.w3.org/2000/svg';
 
   function P(x, y, z) { return [(x - y) * SC * C30, (x + y) * SC * S30 - (z || 0) * SC]; }
@@ -370,7 +370,7 @@
   Office.prototype.layout = function (opts) {
     var S = CO.S, self = this, born = opts && opts.born;
     this.shapeKey = this.shape();
-    var cells = { hub: HUB, you: YOU, audit: AUDIT };
+    var cells = { hub: HUB, audit: AUDIT };   // no room for the owner: approvals live in the right column
     var used = {};
     S.departments.forEach(function (d) { cells['d' + d.id] = SLOTS[d.slot]; used[d.slot] = 1; });
     var lot = 0; while (used[lot]) lot++;
