@@ -60,4 +60,15 @@ Page at 1440 and 1920 (content column 1,150 px at both): same build as `mockup-h
 
 MCP `tools/call` (`supply_analyzer_token`, `supply_analyzer_batch`) and `POST /batch`, `POST /analyze`: the repo's guard refuses them at SAFE tier; not bypassed. Phone width and fonts: out of scope.
 
+## Re-read 2026-10-16 ~03:50 UTC, after REPLY-0177 (ET-31644, ET-31643)
+
+| Item of MSG-0176 | Read |
+|---|---|
+| 1 Websocket | FIXED: the HYPE, ARB and NXM analysis messages carry none of pressure, pressure_range, band, typical_inflow_pct, disagreements (the word survives only in the test's own description); `next_unlock_counted_from` is the send time, HYPE 20.8 days on both socket and REST |
+| 2 Staked red with no exit rule | FIXED: 3 red tiles of 269 rows, all with a published exit (7 days, 7 days, at once, 1.04-13.53x); RSUP, DUST and RAM no longer red |
+| 3 Assumed zero | FIXED: NXM and DODO `schedule_published: false`, `yearly_pct` and `yearly_range` null, `out_by_month` empty, sentence "the change in supply is unknown, and nothing is assumed in its place" |
+| 4 Two market caps | FIXED: HYPE $18,176,522,314 on /analyze and on /gem-screener/coins/HYPE, both as of 02:01:58 UTC (`market_as_of`) |
+| 5 Docs | FIXED: the OpenAPI analyze schema lists 59 keys, all 59 served; llms.txt's paragraph now opens "a token's supply in five tiles"; /definitions has no pie slices (it still names the sellable pile further down) |
+| Weekly test | AS ASKED: `ranked_by` dilution_12m_pct, `count_from_week` 2026-W42, `by_week` W42 5 lines, 0 ranked, 5 left out for no schedule; W40-W42 kept as `closed_record` ranked by "pressure (the removed 1-10 score)" |
+
 Verdict: the operator's.

@@ -18614,6 +18614,7 @@
 {"archive": "evidence-2026-10", "bytes": 136081, "call": "GET https://cymetica.com/api/v1/chart-analyzer/analyze?chain,contract,include_candles,timeframe", "id": "70a9d4edf5efedbb17972c794fc2896727cbc4350b0c0821c885fbc67861642b", "why": "row"}
 {"archive": "evidence-2026-10", "bytes": 39943, "call": "GET https://cymetica.com/api/v1/build-it-better/apps/leaderboard?days,sort", "id": "70aa24ad38cd5b376defd33f8eaea54518761c004da3d04afda103a3d139782b", "why": "row"}
 {"archive": "evidence-2026-10", "bytes": 18274, "call": "GET https://cymetica.com/api/v1/crypto/cake?", "id": "70aad3de86a32d9370ed08db600e03bde2a42c7a48df6ca8897727b85a6017dd", "why": "row"}
+{"archive": "", "bytes": 7798, "call": "POST https://cymetica.com/api/v1/bounty/a2a/send?", "id": "70b0863e813cbff34b4e16df77b5b25cbbad93e86664abd02be36ef326453f51", "why": "their-words"}
 {"archive": "evidence-2026-09", "bytes": 5369, "call": "POST https://cymetica.com/mcp/v1/? tools/call:get_fund", "id": "70b192f2c66bad553c520f72ae038dc4400651369dae45aafe01aac62d7ba3c3", "why": "row"}
 {"archive": "evidence-2026-10", "bytes": 53825, "call": "GET https://cymetica.com/api/v1/backtest/bots/bot-logistic-signal/trades?limit,offset", "id": "70b1fca3c98321e2ed6421eb68330f7e780c3f6cfe0ede6f53c1771b85b83db3", "why": "row"}
 {"archive": "evidence-2026-10", "bytes": 231458, "call": "GET https://cymetica.com/exchange/vaix-pro?", "id": "70b2dd1ee09c4d969bebfb82791e77110f4453cdba1e18540bbc0b09bb4c6625", "why": "row"}
