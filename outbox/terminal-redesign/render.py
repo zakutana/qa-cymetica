@@ -1,4 +1,4 @@
-"""Scan index.html for off-palette colours, then capture every view of the terminal mockup at 1920 and 1440.
+"""Scan index.html for off-palette colours, check every icon draws, then capture each view of the mockup at 1920 and 1440.
 
 The site rule: cyan, green, red and blue (navy tints of them included); no purple, fuchsia, indigo, violet,
 magenta, amber, orange, yellow or plain gray. A colour is judged by hue, so a navy shade passes and a gray fails.
@@ -39,11 +39,25 @@ if bad:
 print("colours ok")
 
 SPILL = """() => { const out = [];
- document.querySelectorAll('.panel, .tile, .hero > div, .knob, .chip, .lrow').forEach(c => { const cr = c.getBoundingClientRect();
-  if (!cr.width) return;
+ document.querySelectorAll('.panel, .tile, .hero > div, .knob, .lrow').forEach(c => { const cr = c.getBoundingClientRect();
+  if (!cr.width || getComputedStyle(c).visibility === 'hidden') return;
   c.querySelectorAll('*').forEach(e => { const r = e.getBoundingClientRect();
-   if (e.children.length === 0 && r.width && (r.right > cr.right + 1 || r.left < cr.left - 1)) out.push('past: ' + e.textContent.trim().slice(0, 30)); }); });
+   if (e.children.length === 0 && r.width && (r.right > cr.right + 1 || r.left < cr.left - 1)) out.push('past: ' + (e.textContent.trim() || e.className).slice(0, 30)); }); });
  return [...new Set(out)].slice(0, 12); }"""
+
+# every icon name the page can draw, drawn once, and the ones whose glyph is empty
+ICONS = """() => { const names = new Set(); CAT.bots.concat(CAT.algos, CAT.skills).forEach(x => names.add(x.icon));
+ document.querySelectorAll('i.fa-solid').forEach(i => i.classList.forEach(c => c.startsWith('fa-') && c !== 'fa-solid' && names.add(c.slice(3))));
+ const box = document.createElement('div'); document.body.appendChild(box); const missing = [];
+ names.forEach(n => { const i = document.createElement('i'); i.className = 'fa-solid fa-' + n; box.appendChild(i);
+  const c = getComputedStyle(i, '::before').content; if (!c || c === 'none' || c === 'normal' || c === '""') missing.push(n); });
+ box.remove(); return [names.size, missing]; }"""
+
+
+def shot(tab, name, w):
+    tab.screenshot(path=str(here / f"{name}-{w}.png"), full_page=True)
+    print(w, name, tab.evaluate(SPILL))
+
 
 with sync_playwright() as p:
     browser = p.chromium.launch(channel="chrome", args=["--disable-lcd-text", "--font-render-hinting=none"])
@@ -52,32 +66,41 @@ with sync_playwright() as p:
         tab.goto((here / "index.html").as_uri())
         tab.wait_for_load_state("networkidle")
         tab.wait_for_timeout(900)
-        tab.screenshot(path=str(here / f"leaderboard-{w}.png"), full_page=True)
-        print(w, "leaderboard", tab.evaluate(SPILL))
+        if w == 1920:
+            print("icons", tab.evaluate(ICONS))
+        shot(tab, "leaderboard", w)
         before = tab.inner_text("#total")
         tab.click(".lrow:nth-child(15) .del")                 # the worst bot
         tab.wait_for_timeout(900)
         print(w, "delete", before, "->", tab.inner_text("#total"), "|", tab.inner_text("#toastMsg"))
-        tab.screenshot(path=str(here / f"deleted-{w}.png"))
         tab.click("#toastBtn")                                 # undo
         tab.wait_for_timeout(800)
+        tab.click(".lrow:nth-child(2) .who")                   # the best bot's properties
+        tab.wait_for_timeout(500)
+        shot(tab, "leaderboard-props", w)
         tab.click("#tabs [data-tab=build]")
-        tab.click("#items .item:nth-child(13)")          # Vortex Drain
+        tab.click("#items .item[data-key='Vortex Drain'] [data-add]")
         tab.click("#ltabs [data-lib=algo]")
-        tab.click("#items .item:nth-child(1)")
-        tab.click("#items .item:nth-child(6)")
+        tab.click("#items .item[data-key='MACD Crossover'] [data-add]")
+        tab.click("#items .item[data-key='Mean Reversion'] [data-add]")
         tab.click("#ltabs [data-lib=skill]")
-        tab.click("#items .item:nth-child(1)")
-        tab.click("#items .item:nth-child(4)")
-        tab.click("#items .item:nth-child(20)")
+        tab.click("#items .item[data-key='Stop Loss'] [data-add]")
+        tab.click("#items .item[data-key='Headline Sentiment'] [data-add]")
         tab.click("#run")
         tab.wait_for_timeout(1900)
-        tab.screenshot(path=str(here / f"build-{w}.png"), full_page=True)
-        print(w, "build", tab.evaluate(SPILL))
+        tab.click("#algoZone .chip[data-key='MACD Crossover']")  # its properties, with parameters to tune
+        tab.wait_for_timeout(500)
+        shot(tab, "build", w)
+        tab.click("#items .item[data-key='Headline Sentiment']")
+        tab.wait_for_timeout(400)
+        shot(tab, "build-skill", w)
+        tab.click("#ix")
         tab.click("#tabs [data-tab=slot]")
         tab.click("#spin")
         tab.wait_for_timeout(2900)
-        tab.screenshot(path=str(here / f"slot-{w}.png"), full_page=True)
-        print(w, "slot", tab.evaluate(SPILL))
+        shot(tab, "slot", w)
+        tab.click("#out .recipe .chip.algo")
+        tab.wait_for_timeout(500)
+        shot(tab, "slot-props", w)
         tab.close()
     browser.close()
