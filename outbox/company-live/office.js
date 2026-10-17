@@ -127,15 +127,11 @@
     out += text(sc[0], sc[1] + 6, '↗', 17, C.green, 700, 'middle', null, ' class="pcarrow" filter="url(#glow)"');
     return out + '</g>';
   }
-  // what the department has earned, lit: Cymetica QA's ET10
-  function earned(lx, cy, n, fresh) {
-    var s = (n ? '+' : '') + n.toLocaleString('en-US') + ' ET10', w = s.length * 6.9 + 30;
-    var out = '<g class="earned' + (n ? ' lit' : '') + (fresh ? ' pop' : '') + '" transform="translate(' + f1(lx + w / 2) + ' ' + f1(cy) + ')">';
-    out += '<rect x="' + f1(-w / 2) + '" y="-11" width="' + f1(w) + '" height="22" rx="11" fill="' + C.bg + '" stroke="' + (n ? C.green : C.dim2) + '" stroke-width="1.1"' + (n ? ' filter="url(#glow)"' : '') + '/>';
-    out += '<rect x="' + f1(-w / 2) + '" y="-11" width="' + f1(w) + '" height="22" rx="11" fill="' + C.bg + '" opacity=".92"/>';
-    out += '<circle cx="' + f1(-w / 2 + 12) + '" cy="0" r="4.2" fill="' + (n ? C.green : C.dim2) + '"' + (n ? ' filter="url(#glow)"' : '') + '/>';
-    out += text(-w / 2 + 22, 3.8, s, 11, n ? C.green : C.dim2, 700, 'start', null, n ? ' filter="url(#glow)"' : '');
-    return out + '</g>';
+  // what the department has earned, lit, on its plate's title row: Cymetica QA's ET10
+  function earnedLabel(n) { return (n ? '+' : '') + n.toLocaleString('en-US') + ' ET10'; }
+  function earned(rx, cy, n, fresh) {
+    return '<g class="earned' + (n ? ' lit' : '') + (fresh ? ' pop' : '') + '">' +
+      text(rx, cy - 2.2, earnedLabel(n), 10.6, n ? C.green : C.dim2, 700, 'end', null, n ? ' filter="url(#glow)"' : '') + '</g>';
   }
   function plant(x, y) {
     var out = box(x, y, 0, 0.42, 0.42, 0.34, C.line3, C.line2, C.navy2, C.line);
@@ -558,11 +554,12 @@
       var c = P(x0 + 4.6, y0 + 5.55, 0.1);
       var l2 = [[v.open + ' open', C.cyan], [v.done + ' done', C.green]];
       if (v.failed) l2.push([v.failed + ' failed', C.red]);
-      var pw = Math.max(150, d.name.length * 10.5 + 34);
+      var n = d.et10 || 0, ew = d.files_as ? earnedLabel(n).length * 6.6 + 14 : 0;
+      var pw = Math.max(150, d.name.length * 10.5 + 34 + ew);
       over += plate(c[0], c[1], d.name.toUpperCase(), col, l2, pw, 'd' + d.id, v.status === 'working');
       if (d.files_as) {
-        var n = d.et10 || 0, last = (self.lastEt || (self.lastEt = {}))[d.id];
-        over += earned(c[0] + pw / 2 + 6, c[1], n, last != null && n > last);
+        var last = (self.lastEt || (self.lastEt = {}))[d.id];
+        over += earned(c[0] + pw / 2 - 9, c[1], n, last != null && n > last);
         self.lastEt[d.id] = n;
       }
     });

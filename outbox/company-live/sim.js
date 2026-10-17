@@ -279,9 +279,10 @@
       var o = { turns_needed: 1, why: 'rule ' + r.id + ': ' + r.when + (from ? ' · from ' + from.name : '') };
       if (kind === 'bug') { o.kind = 'bug report'; o.expert = 'qa_tester'; }
       if (kind === 'idea') o.kind = 'BB request';
-      if (kind === 'winner') o.kind = 'real-money action';
+      var seat = kind === 'winner' && to.key === 'trading_desk';
+      if (kind === 'winner') { o.kind = seat ? 'seat request' : 'real-money action'; if (seat) o.expert = 'trader'; }
       if (kind === 'released') { o.turns_needed = 2; o.expert = 'qa_tester'; if (Math.random() < 0.5) o.kind = 'bug report'; }
-      var nt = newTask(to, PREFIX[kind] + subject, o);
+      var nt = newTask(to, seat ? 'Seat: ' + subject + ' at a FLASH $5 table' : PREFIX[kind] + subject, o);
       nt.from_dept = from ? from.id : null; nt.rule = r.id; nt.event = kind;
       if (kind === 'released' && !o.kind) nt.outcome_text = 'No bugs in the new build';
       S.plan.unshift(nt.id);
@@ -344,6 +345,26 @@
       changed();
     });
   }
+  // an approved seat: the table runs, then closes with a rank and an ROI (paper; the top three share the ET10 prize)
+  function seatLater(a, d, t) {
+    var S = CO.S, flash = /FLASH/i.test(a.summary), agent = a.summary.replace(/^Seat: /, '').split(' at ')[0];
+    var table = 10 + Math.floor(Math.random() * 20);
+    later(rand(50000, 90000), function () {
+      var rank = 1 + Math.floor(Math.random() * 10), roi = 7 - (rank - 1) * 1.15 + (Math.random() - 0.5);
+      var prize = rank <= 3 ? (flash ? [85, 42, 14] : [600, 300, 100])[rank - 1] : 0;
+      var r = (roi >= 0 ? '+' : '') + roi.toFixed(1) + '%';
+      if (prize) {
+        S.et10 = (S.et10 || 0) + prize;
+        if (d) d.et10 = (d.et10 || 0) + prize;
+      }
+      var verdict = rank <= 3 ? 'keep it: next a 7-day table' : 'archived: ' + (roi < 0 ? 'lost money after fees' : 'not in the top three');
+      if (t) t.outcome = 'Table ' + table + ' closed: ' + agent + ' ' + ordinal(rank) + ' of 10, ' + r + ' ROI · ' + verdict;
+      feed(rank <= 3 ? 'good' : 'info', 'Agent Tournaments', 'table ' + table + ' closed: ' + agent + ' ' + ordinal(rank) + ' of 10, ' + r + ' ROI' + (prize ? ', +' + prize + ' ET10' : ''));
+      say('Table ' + table + ' closed: ' + agent + ' finished ' + ordinal(rank) + ' of 10 at ' + r + ' ROI' + (prize ? ' and won ' + prize + ' ET10' : '') + '. ' + verdict.charAt(0).toUpperCase() + verdict.slice(1) + '.', d && d.id);
+      changed();
+    });
+  }
+  function ordinal(n) { return n + (n === 1 ? 'st' : n === 2 ? 'nd' : n === 3 ? 'rd' : 'th'); }
   // Cymetica QA files a bug straight into their tracker under the owner's hunter name, as we do: no approval
   function fileNow(b, d) {
     var S = CO.S;
@@ -398,7 +419,13 @@
       if (!cands.length) return;
       var d = cands[Math.floor(Math.random() * cands.length)];
       var pool = CO.POOL[d.key] || CO.POOL.custom;
-      var p = pool[d.pool_i % pool.length]; d.pool_i++;
+      // one draft waiting for the owner is enough: the next one waits until it is decided
+      var asking = S.approvals.some(function (a) { return a.dept_id === d.id; }) ||
+        S.tasks.some(function (x) { return x.dept_id === d.id && x.kind && (x.status === 'queued' || x.status === 'running'); });
+      var p = pool[d.pool_i % pool.length];
+      for (var k = 0; asking && p.kind && k < pool.length; k++) { d.pool_i++; p = pool[d.pool_i % pool.length]; }
+      if (asking && p.kind) return;
+      d.pool_i++;
       var t = newTask(d, p.title, { kind: p.kind || null, turns_needed: p.turns || 1, outcome_text: p.outcome, why: p.why, expert: p.expert });
       S.plan.push(t.id);
       feed('info', 'Manager', 'queued "' + t.title + '" for ' + d.name);
@@ -495,10 +522,11 @@
       }
       if (decision === 'approve') {
         S.approved_7d++;
-        if (t) { t.status = 'done'; t.outcome = (a.kind === 'real-money action' ? 'Placed after your approval' : 'Submitted after your approval'); t.finished_at = S.clock; }
+        var verb = a.kind === 'real-money action' ? 'placed' : a.kind === 'seat request' ? 'seated' : 'submitted';
+        if (t) { t.status = 'done'; t.outcome = verb.charAt(0).toUpperCase() + verb.slice(1) + ' after your approval'; t.finished_at = S.clock; }
         feed('good', 'You', 'approved: ' + a.summary);
         later(2600, function () {
-          feed('good', d ? d.name : 'Manager', (a.kind === 'real-money action' ? 'placed' : 'submitted') + ' after your approval: ' + a.summary);
+          feed('good', d ? d.name : 'Manager', verb + ' after your approval: ' + a.summary.replace(/^Seat: /, ''));
           CO.emit('submitted', { approval: a, dept: d });
         });
         if (a.kind === 'BB request') {
@@ -509,6 +537,7 @@
           });
         }
         if (a.kind === 'bug report') verdictLater(a, d);
+        if (a.kind === 'seat request') seatLater(a, d, t);
         // a task waiting on this approval may now run
         S.tasks.forEach(function (x) { if (x.blocked_by === a.task_id) x.blocked_by = null; });
       } else {
@@ -649,7 +678,7 @@
   }
   var ALIAS = [
     ['testing_lab', /\b(lab|laborat|experiment|paper|strateg|nexus|backtest|room)/],
-    ['trading_desk', /\b(trad|desk|money|profit|basket|buy|sell|position|pnl)/],
+    ['trading_desk', /\b(trad|desk|money|profit|basket|buy|sell|position|pnl|agent|tournament|turnaj|ziskov|vydel)/],
     ['design', /\b(design|brief|mock|look|layout|ui|page|colou?r|picture)/],
     ['development', /\b(develop|build|spec|feature|request|bb\b|build it better)/],
     ['testing', /\b(test|bug|check|verify|docs?|api|report|broken|fix)/]
@@ -682,8 +711,12 @@
     var verb = /(add|create|new|set up|start|p[rř][ií]d|zalo[zž]|vytvo[rř]|zř[ií]d|zrid)/.test(t);
     var noun = /(department|odd[eě]len|team|t[yý]m)/.test(t);
     if (!(verb && noun)) return null;
-    var qa = /(\bqa\b|test|bug|chyb)/.test(t);
-    var tpl = qa ? CO.TEMPLATES.filter(function (x) { return x.key === 'testing'; })[0] : null;
+    // a department named in the words wins ("a trading desk that sends agents to be tested" is a trading desk)
+    var named = CO.TEMPLATES.filter(function (x) {
+      return x.name && (t.indexOf(x.name.toLowerCase()) >= 0 || (x.key === 'trading_desk' && /\btrading\b/.test(t)));
+    })[0] || null;
+    var qa = named ? named.key === 'testing' : /(\bqa\b|test|bug|chyb)/.test(t);
+    var tpl = named || (qa ? CO.TEMPLATES.filter(function (x) { return x.key === 'testing'; })[0] : null);
     if (!tpl) for (var j = 0; j < ALIAS.length && !tpl; j++) if (ALIAS[j][1].test(t)) tpl = CO.TEMPLATES.filter(function (x) { return x.key === ALIAS[j][0]; })[0];
     tpl = tpl || CO.TEMPLATES.filter(function (x) { return x.key === 'custom'; })[0];
     var per = 0, m = t.match(/(\d+)\s*(?:[x×]|times|kr[aá]t)\s*(?:a |per |za |)?(?:day|den|dn|denn)/);

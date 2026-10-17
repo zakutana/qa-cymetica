@@ -35,7 +35,12 @@
     { key: 'testing_lab', name: 'Testing lab', experts: ['lab_scientist', 'researcher'],
       charter: 'Paper experiments on event cards, bot settings, memecoin signals and head-to-head. Asks NEXUS for strategies; sets the success rule before each experiment starts; judges it when the window closes; keeps winners and archives losers. Runs a daily newcomer check of the public site.' },
     { key: 'trading_desk', name: 'Trading desk', experts: ['trader', 'researcher'],
-      charter: 'Finds and proves ways to make money on Cymetica. Paper first; any real-money action waits for my approval.' },
+      charter: "Find agents that make money on Cymetica and prove them in Agent Tournaments.\n" +
+        "- Look for candidates every day: the agents on cymetica.com/agents, bots built in the Bot Assembly Terminal (cymetica.com/terminal), and what NEXUS recommends.\n" +
+        "- A candidate needs a paper record first: positive ROI after fees over 30 days, at least 40 trades, drawdown under 10%.\n" +
+        "- Send each candidate to a paper table at cymetica.com/agent-tournaments: a FLASH table (1 day) for a quick read, a 7-day table for the verdict. Every seat waits for my approval.\n" +
+        "- Follow each seat's rank, ROI and volume. Top three at a 7-day table: keep it and enter the next table. Otherwise archive it with the reason.\n" +
+        "- Paper only. ET10 tables and anything with real money wait for my approval." },
     { key: 'custom', name: '', experts: ['researcher'], charter: '' }
   ];
 
@@ -60,7 +65,7 @@
     development: { url: 'https://cymetica.com/leaderboard/features', label: 'Build it Better board' },
     design: { url: 'https://cymetica.com/leaderboard/features', label: 'Build it Better board' },
     testing_lab: { url: 'https://cymetica.com/my-agents', label: 'My Agents' },
-    trading_desk: { url: 'https://cymetica.com/account', label: 'My Balances' },
+    trading_desk: { url: 'https://cymetica.com/terminal', label: 'Bot Assembly Terminal' },
     custom: { url: 'https://cymetica.com/company', label: 'Company' }
   };
   // what a department's work usually raises next, so a process can show what it leads to
@@ -71,7 +76,7 @@
     ['a new build is released', 'testing', 'tests it the same day and reports what is broken'],
     ['someone has a product idea', 'development', 'writes it up as a Build it Better request'],
     ['someone finds a way to make money', 'testing_lab', 'proves it on paper first'],
-    ['an experiment wins on paper', 'trading_desk', 'prepares the real trade']
+    ['an agent wins on paper', 'trading_desk', 'seats it at an Agent Tournaments table']
   ];
 
   // GET /api/v1/token-launch/chains, read 2026-10-16.
@@ -122,11 +127,14 @@
         why: 'parent bot won 3 windows' }
     ],
     trading_desk: [
-      { title: 'Memecoin checkpoint: 6h', turns: 1, expert: 'trader', outcome: '2 of 7 above entry', why: 'every 6 hours' },
-      { title: 'Real money: basket H2 with 50 USDC', kind: 'real-money action', turns: 1, expert: 'trader',
-        outcome: 'Waits for you', why: 'paper won 3 windows in a row' },
-      { title: 'Cost of a card round trip, 40 cards', turns: 1, expert: 'researcher', outcome: '1.38% median',
-        why: 'H2 needs the real cost' }
+      { title: 'Scan: agents by 30-day paper ROI', turns: 1, expert: 'researcher', outcome: '3 candidates: +4% or more after fees, 40+ trades',
+        why: 'the daily scan' },
+      { title: 'Seat: Fibonacci Phoenix at a FLASH $5 table', kind: 'seat request', turns: 1, expert: 'trader',
+        outcome: 'Waits for you', why: 'best candidate of the scan' },
+      { title: 'Terminal: Momentum Hawk with a 4% stop', turns: 2, expert: 'trader', outcome: 'Backtest +6.2% in 30 days, 52 trades',
+        why: 'its parent placed 2nd at table 13' },
+      { title: 'Follow the seats: 2 tables running', turns: 1, expert: 'researcher', outcome: 'Phoenix 3rd at table 13, +2.4% ROI, day 4 of 7',
+        why: 'every 6 hours while a table runs' }
     ],
     custom: [
       { title: 'Read the charter and propose a first week', turns: 1, expert: null, outcome: '5 tasks proposed',
@@ -146,8 +154,9 @@
       ['lesson', 'File with the exact request and the capture, never a paraphrase.']],
     testing_lab: [['lesson', 'A correct number can be untradeable: read the pool depth first.'],
       ['rule', 'The success rule is set before the window opens, never after.']],
-    trading_desk: [['knows', 'A card round trip costs about 1.4%.'],
-      ['lesson', 'A +3.9% basket can hide a -0.04% card; read the card it would buy.']],
+    trading_desk: [['rule', 'A seat only for a paper record: ROI after fees over 30 days, 40+ trades.'],
+      ['lesson', 'A FLASH day is a quick read; only a 7-day table is a verdict.'],
+      ['knows', 'A table ranks by ROI on closed trades; under 3x capital in volume it does not place.']],
     custom: [['knows', 'Every task starts from the saved charter.']]
   };
 
@@ -159,6 +168,14 @@
         '\n\nWhat happens instead\nNone of the 12 appear in the OpenAPI document; an agent that builds from it cannot find the Company API.' +
         '\n\nEvidence\nCapture 0a775df1 (request, response, time).' +
         '\n\nReward\n1,000 ET10 if verified and not a duplicate.\n\nSubmitted only after your approval.';
+    }
+    if (kind === 'seat request') {
+      var who = title.replace(/^Seat: /, '').split(' at ')[0], where = title.split(' at ').slice(1).join(' at ') || 'a paper table';
+      return 'SEAT REQUEST · drafted by ' + dept + '\n\nAgent\n' + who +
+        '\n\nTable\n' + where + ' at cymetica.com/agent-tournaments · 10 seats · paper buy-in · best ROI takes the pot' +
+        '\n\nWhy this agent\n30-day paper ROI +6.2% after fees, 48 trades, worst drawdown -3.1%.' +
+        '\n\nWhat counts\nTop three at the close: keep it and enter the next 7-day table. Otherwise it is archived with the reason.' +
+        '\n\nIf you approve\nThe seat is requested and approved in your name. Paper only: nothing real is spent.';
     }
     if (kind === 'real-money action') {
       return 'REAL-MONEY ACTION · drafted by ' + dept + '\n\nWhat\n' + title +
@@ -231,7 +248,7 @@
       T(36, 3, 'Chart Analyzer score vs its study', 'queued', { outcome_text: 'Score off by 0.4 on 2 of 20 coins', turns_needed: 2, why: 'you asked for it at ' + hhmm(at(-17)), expert: 'qa_tester', created_at: at(-16) }),
       T(37, 4, 'FOMO >=70, 24h exit: verdict', 'queued', { outcome_text: 'Kept: +2.4% after costs on 11 cards', why: 'its window closed', expert: 'lab_scientist', created_at: at(-16) }),
       T(38, 1, 'Gem Screener logos: submit after approval', 'queued', { blocked_by: 33, outcome_text: 'Submitted as ET-31502', why: 'waits on your approval first', expert: 'developer', created_at: at(-5) }),
-      T(39, 5, 'Basket H2 on paper', 'queued', { outcome_text: '+1.1% vs BTC in 6h', turns_needed: 2, why: "NEXUS's pick, paper first", expert: 'trader', created_at: at(-40) })
+      T(39, 5, 'Scan: agents by 30-day paper ROI', 'queued', { outcome_text: '3 candidates: +4% or more after fees, 40+ trades', turns_needed: 2, why: 'the daily scan', expert: 'researcher', created_at: at(-40) })
     ];
     // the two running turns end soon after the page opens, so it moves at once
     tasks.forEach(function (t) {
@@ -341,7 +358,7 @@
         { id: 'R2', on: true, when: 'a new build is released', dept_id: 3, does: 'tests it the same day and reports what is broken', fired: 0 },
         { id: 'R3', on: true, when: 'someone has a product idea', dept_id: 1, does: 'writes it up as a Build it Better request', fired: 0 },
         { id: 'R4', on: true, when: 'someone finds a way to make money', dept_id: 4, does: 'proves it on paper first', fired: 0, review: 'result', reviewer: 'you' },
-        { id: 'R5', on: true, when: 'an experiment wins on paper', dept_id: 5, does: 'prepares the real trade', fired: 0, review: 'start', reviewer: 'you' }
+        { id: 'R5', on: true, when: 'an agent wins on paper', dept_id: 5, does: 'seats it at an Agent Tournaments table', fired: 0, review: 'start', reviewer: 'you' }
       ], next_rule: 6,
       token: { chain: '5042', symbol: '', reserved: false, perp_listed: false },
       next_id: 40, next_msg: 4, next_appr: 3, next_mem: memory.length + 1, next_dept: 6,
