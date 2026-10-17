@@ -6,44 +6,413 @@
   "start_commit": "ff3f09f5ffbd8aa29f2eb0a19526477909fd095d",
   "size": "full",
   "gaps": [
-    {"id": "R01", "nodeid": "outbox/company-live/u3d.js:1357", "claim": "3D office: a department's computer can never be clicked or hovered; the room's full-volume hit box always wins the raycast", "source": "review", "votes": null, "verdict": null, "fixed": false, "commit": null},
-    {"id": "R02", "nodeid": "outbox/company-live/u3d.js:354", "claim": "Opening a public company: a drag or wheel during the fly-in cancels the tween, its done (the navigation) never fires, and the fade stays opaque (2D map too)", "source": "review", "votes": null, "verdict": null, "fixed": false, "commit": null},
-    {"id": "R03", "nodeid": "outbox/company-live/u3d.js:1209", "claim": "Office3D.drawSel rebuilds the ring with a new material on every update(); materials pile up undisposed", "source": "review", "votes": null, "verdict": null, "fixed": false, "commit": null},
-    {"id": "R04", "nodeid": "outbox/company-live/app.js:420", "claim": "#uvfade is never hidden again, so a back/forward-cache restore shows an opaque overlay", "source": "review", "votes": null, "verdict": null, "fixed": false, "commit": null},
-    {"id": "R05", "nodeid": "scripts/league.py:318", "claim": "cut is len >= 200 only; a /prizes that ignores limit (default 50) would be read as the whole list", "source": "review", "votes": null, "verdict": null, "fixed": false, "commit": null},
-    {"id": "R06", "nodeid": "outbox/company-live/u3d.js:860", "claim": "Office3D.layout rebuilds textures/materials/lights and never disposes them (every add/remove, toggle, reset)", "source": "review", "votes": null, "verdict": null, "fixed": false, "commit": null},
-    {"id": "R07", "nodeid": "outbox/company-live/u3d.js:560", "claim": "Universe3D.overlay restyles all banners every frame even when static", "source": "review", "votes": null, "verdict": null, "fixed": false, "commit": null},
-    {"id": "R08", "nodeid": "outbox/company-live/u3d.js:745", "claim": "3D map duplicates universe.js logic (floorsOf, fpOf, rng, layout slots, pulse, stats, tipHTML)", "source": "review", "votes": null, "verdict": null, "fixed": false, "commit": null},
-    {"id": "R09", "nodeid": "outbox/company-live/app.js:395", "claim": "setTab's replaceState drops the #demo / #empty hash modes, so a reload boots another company", "source": "review", "votes": null, "verdict": null, "fixed": false, "commit": null},
-    {"id": "R10", "nodeid": "outbox/company-live/data.js:445", "claim": "a refused private ?visit= stays in the URL and re-toasts on every reload", "source": "review", "votes": null, "verdict": null, "fixed": false, "commit": null},
-    {"id": "B01", "nodeid": "tests/repo/test_exit_levels_pick_scope.py::test_a_cards_own_levels_are_still_read_and_stop_at_the_next_pick", "claim": "the docstring names ASCII '**Pick 2 -- Bot clone**' and 'PICK 3 --' as scope-ending lines, but lab._PICKED misses both and the tests use only the em-dash header, so a fix on _PICKED as it stands passes while the ASCII spelling still leaks the bot's SL/TP into the card", "source": "audit", "votes": null, "verdict": null, "fixed": false, "commit": null},
-    {"id": "B02", "nodeid": "tests/repo/test_grid_capacity.py::test_the_cap_is_read_from_the_newest_capacity_refusal", "claim": "refusals only rise (5 then 25), so 'max cap since the last accepted clone' passes too; a lowered cap (25 then a newer 20) would be read as 25", "source": "audit", "votes": null, "verdict": null, "fixed": false, "commit": null},
-    {"id": "B03", "nodeid": "tests/repo/test_league_prize_window.py::test_a_full_window_of_prizes_is_said_unread_not_counted_as_the_total", "claim": "asserts prizes None and 'unread' anywhere in str(summary), never et10_credited; a regression counting et10 from the cut list passes (fixture rows are all capped, so it reads 0.0)", "source": "audit", "votes": null, "verdict": null, "fixed": false, "commit": null},
-    {"id": "B04", "nodeid": "tests/repo/test_outsider_probe_retry.py::test_the_clock_tickets_the_outsider_again_after_a_probe_that_did_not_run", "claim": "only the positive case is asserted; a clock that tickets an unproven outsider hourly even after a probe that ran and leaked (a verdict) passes", "source": "audit", "votes": null, "verdict": null, "fixed": false, "commit": null},
-    {"id": "B05", "nodeid": "tests/repo/test_vaix_arbitrage_legs.py::test_a_book_of_the_wrong_shape_is_unreadable_not_clean", "claim": "excluded_legs returns None only when neither leg is a string; renaming one leg (buy_venue: base, sell_chain: ethereum) reads as clean while buying on an excluded venue", "source": "audit", "votes": null, "verdict": null, "fixed": false, "commit": null},
-    {"id": "B06", "nodeid": "tests/repo/test_state_guard.py::test_the_hook_is_actually_wired_up", "claim": "checks the hook entry but never disableAllHooks; 'disableAllHooks': true in settings would stop protect_state.py and the test stays green", "source": "audit", "votes": null, "verdict": null, "fixed": false, "commit": null},
-    {"id": "C01", "nodeid": "tests/rest/test_account_claim_deposit_reachable.py::test_the_claim_form_opens_when_nothing_is_pending", "claim": "'hides' is found only through one exact text pattern of a hashed build, and _calls counts any openClaimDepositForm( that is not its definition (a dispatcher entry, a method, a string in the hidden card), so a reformat or a rebuild gives a false PASS", "source": "audit", "votes": null, "verdict": null, "fixed": false, "commit": null},
-    {"id": "C02", "nodeid": "tests/rest/test_agent_league_prize_log.py::test_the_prize_log_reaches_every_prize_it_recorded", "claim": "passes whenever len(window) < 200; a server that ignores limit (default 50) or caps at 100 reads as 'nothing behind it' while older ids cannot be read", "source": "audit", "votes": null, "verdict": null, "fixed": false, "commit": null},
-    {"id": "C03", "nodeid": "tests/rest/test_launchpad_discovery_tool_hides_what_rest_keeps_internal.py::test_the_discovery_tool_does_not_list_what_the_rest_list_keeps_internal", "claim": "a leak seen on the first read and not on the second look settles to PASS, and the pass reason prints '0 leaked' for a chain whose first read leaked five; that case should be inconclusive", "source": "audit", "votes": null, "verdict": null, "fixed": false, "commit": null},
-    {"id": "C04", "nodeid": "tests/rest/test_launchpad_discovery_tool_hides_what_rest_keeps_internal.py::test_the_discovery_tool_does_not_list_what_the_rest_list_keeps_internal", "claim": "the chains judged come only from the screener, which lists only chains with a public launch; a chain whose launches are all internal drops out and is never judged while the tool keeps leaking them", "source": "audit", "votes": null, "verdict": null, "fixed": false, "commit": null},
-    {"id": "C05", "nodeid": "tests/rest/test_movers_page_ranks_every_card.py::test_the_movers_boards_rank_every_card_of_the_listing", "claim": "paging is credited when the board script merely contains total/has_more/next/.length <, then PASS without reading a card; a two-page fixed loop beside an unrelated 'next' passes", "source": "audit", "votes": null, "verdict": null, "fixed": false, "commit": null},
-    {"id": "C06", "nodeid": "tests/rest/test_a_clone_trades_only_live_epoch_markets.py::test_a_clones_perpetual_markets_are_live_five_minute_markets", "claim": "the clone list is cut to the first 12 by API order and the rest are not counted as unread, so 'all 12' passes while 41 paper clones exist and older ones may still carry dead markets", "source": "audit", "votes": null, "verdict": null, "fixed": false, "commit": null},
-    {"id": "C07", "nodeid": "tests/rest/test_a_live_crypto_card_index_history_has_no_multi_day_hole.py::test_live_crypto_card_index_history_has_no_multi_day_hole", "claim": "only gaps between consecutive points are measured; a live tradeable card whose last point is 3 days old (stopped recording now) passes", "source": "audit", "votes": null, "verdict": null, "fixed": false, "commit": null},
-    {"id": "C08", "nodeid": "tests/rest/test_agent_tournaments_table_knows_its_owner.py::test_agent_tournaments_table_knows_its_owner", "claim": "'owned' is only bot-settings answering 200 and /my-bots is never read; if spectators get that GET, every member seat becomes 'ours' and the check sends a false FAIL", "source": "audit", "votes": null, "verdict": null, "fixed": false, "commit": null},
-    {"id": "C09", "nodeid": "tests/rest/test_company_charter_cap_agrees_with_its_docs.py::test_company_charter_cap_agrees_with_its_docs", "claim": "only a literal maxlength=\"N\" is read; a cap set through a template constant or el.maxLength is 'not judged', so the 1,500 cap can stay while the check passes", "source": "audit", "votes": null, "verdict": null, "fixed": false, "commit": null},
-    {"id": "C10", "nodeid": "tests/rest/test_nexus_answer_markers_are_true.py::test_nexus_answer_markers_are_true_and_leave_the_answer_usable", "claim": "the contract is no 'not available' marker on one of OUR bot instances, but lines 98-100 also fail on any id the text calls a bot, ours or not", "source": "audit", "votes": null, "verdict": null, "fixed": false, "commit": null}],
-  "review": {"done": true, "findings": 10},
+    {
+      "id": "R01",
+      "nodeid": "outbox/company-live/u3d.js:1357",
+      "claim": "3D office: a department's computer can never be clicked or hovered; the room's full-volume hit box always wins the raycast",
+      "source": "review",
+      "votes": {
+        "t3": "real"
+      },
+      "verdict": null,
+      "fixed": false,
+      "commit": null
+    },
+    {
+      "id": "R02",
+      "nodeid": "outbox/company-live/u3d.js:354",
+      "claim": "Opening a public company: a drag or wheel during the fly-in cancels the tween, its done (the navigation) never fires, and the fade stays opaque (2D map too)",
+      "source": "review",
+      "votes": {
+        "t3": "real"
+      },
+      "verdict": null,
+      "fixed": false,
+      "commit": null
+    },
+    {
+      "id": "R03",
+      "nodeid": "outbox/company-live/u3d.js:1209",
+      "claim": "Office3D.drawSel rebuilds the ring with a new material on every update(); materials pile up undisposed",
+      "source": "review",
+      "votes": {
+        "t3": "not real"
+      },
+      "verdict": null,
+      "fixed": false,
+      "commit": null
+    },
+    {
+      "id": "R04",
+      "nodeid": "outbox/company-live/app.js:420",
+      "claim": "#uvfade is never hidden again, so a back/forward-cache restore shows an opaque overlay",
+      "source": "review",
+      "votes": {
+        "t3": "real"
+      },
+      "verdict": null,
+      "fixed": false,
+      "commit": null
+    },
+    {
+      "id": "R05",
+      "nodeid": "scripts/league.py:318",
+      "claim": "cut is len >= 200 only; a /prizes that ignores limit (default 50) would be read as the whole list",
+      "source": "review",
+      "votes": {
+        "t3": "real"
+      },
+      "verdict": null,
+      "fixed": false,
+      "commit": null
+    },
+    {
+      "id": "R06",
+      "nodeid": "outbox/company-live/u3d.js:860",
+      "claim": "Office3D.layout rebuilds textures/materials/lights and never disposes them (every add/remove, toggle, reset)",
+      "source": "review",
+      "votes": {
+        "t3": "not real"
+      },
+      "verdict": null,
+      "fixed": false,
+      "commit": null
+    },
+    {
+      "id": "R07",
+      "nodeid": "outbox/company-live/u3d.js:560",
+      "claim": "Universe3D.overlay restyles all banners every frame even when static",
+      "source": "review",
+      "votes": {
+        "t3": "real"
+      },
+      "verdict": null,
+      "fixed": false,
+      "commit": null
+    },
+    {
+      "id": "R08",
+      "nodeid": "outbox/company-live/u3d.js:745",
+      "claim": "3D map duplicates universe.js logic (floorsOf, fpOf, rng, layout slots, pulse, stats, tipHTML)",
+      "source": "review",
+      "votes": {
+        "t3": "real"
+      },
+      "verdict": null,
+      "fixed": false,
+      "commit": null
+    },
+    {
+      "id": "R09",
+      "nodeid": "outbox/company-live/app.js:395",
+      "claim": "setTab's replaceState drops the #demo / #empty hash modes, so a reload boots another company",
+      "source": "review",
+      "votes": {
+        "t3": "real"
+      },
+      "verdict": null,
+      "fixed": false,
+      "commit": null
+    },
+    {
+      "id": "R10",
+      "nodeid": "outbox/company-live/data.js:445",
+      "claim": "a refused private ?visit= stays in the URL and re-toasts on every reload",
+      "source": "review",
+      "votes": {
+        "t3": "real"
+      },
+      "verdict": null,
+      "fixed": false,
+      "commit": null
+    },
+    {
+      "id": "B01",
+      "nodeid": "tests/repo/test_exit_levels_pick_scope.py::test_a_cards_own_levels_are_still_read_and_stop_at_the_next_pick",
+      "claim": "the docstring names ASCII '**Pick 2 -- Bot clone**' and 'PICK 3 --' as scope-ending lines, but lab._PICKED misses both and the tests use only the em-dash header, so a fix on _PICKED as it stands passes while the ASCII spelling still leaks the bot's SL/TP into the card",
+      "source": "audit",
+      "votes": {
+        "t3": "real"
+      },
+      "verdict": null,
+      "fixed": false,
+      "commit": null
+    },
+    {
+      "id": "B02",
+      "nodeid": "tests/repo/test_grid_capacity.py::test_the_cap_is_read_from_the_newest_capacity_refusal",
+      "claim": "refusals only rise (5 then 25), so 'max cap since the last accepted clone' passes too; a lowered cap (25 then a newer 20) would be read as 25",
+      "source": "audit",
+      "votes": {
+        "t3": "real"
+      },
+      "verdict": null,
+      "fixed": false,
+      "commit": null
+    },
+    {
+      "id": "B03",
+      "nodeid": "tests/repo/test_league_prize_window.py::test_a_full_window_of_prizes_is_said_unread_not_counted_as_the_total",
+      "claim": "asserts prizes None and 'unread' anywhere in str(summary), never et10_credited; a regression counting et10 from the cut list passes (fixture rows are all capped, so it reads 0.0)",
+      "source": "audit",
+      "votes": {
+        "t3": "real"
+      },
+      "verdict": null,
+      "fixed": false,
+      "commit": null
+    },
+    {
+      "id": "B04",
+      "nodeid": "tests/repo/test_outsider_probe_retry.py::test_the_clock_tickets_the_outsider_again_after_a_probe_that_did_not_run",
+      "claim": "only the positive case is asserted; a clock that tickets an unproven outsider hourly even after a probe that ran and leaked (a verdict) passes",
+      "source": "audit",
+      "votes": {
+        "t3": "real"
+      },
+      "verdict": null,
+      "fixed": false,
+      "commit": null
+    },
+    {
+      "id": "B05",
+      "nodeid": "tests/repo/test_vaix_arbitrage_legs.py::test_a_book_of_the_wrong_shape_is_unreadable_not_clean",
+      "claim": "excluded_legs returns None only when neither leg is a string; renaming one leg (buy_venue: base, sell_chain: ethereum) reads as clean while buying on an excluded venue",
+      "source": "audit",
+      "votes": {
+        "t3": "real"
+      },
+      "verdict": null,
+      "fixed": false,
+      "commit": null
+    },
+    {
+      "id": "B06",
+      "nodeid": "tests/repo/test_state_guard.py::test_the_hook_is_actually_wired_up",
+      "claim": "checks the hook entry but never disableAllHooks; 'disableAllHooks': true in settings would stop protect_state.py and the test stays green",
+      "source": "audit",
+      "votes": {
+        "t3": "real"
+      },
+      "verdict": null,
+      "fixed": false,
+      "commit": null
+    },
+    {
+      "id": "C01",
+      "nodeid": "tests/rest/test_account_claim_deposit_reachable.py::test_the_claim_form_opens_when_nothing_is_pending",
+      "claim": "'hides' is found only through one exact text pattern of a hashed build, and _calls counts any openClaimDepositForm( that is not its definition (a dispatcher entry, a method, a string in the hidden card), so a reformat or a rebuild gives a false PASS",
+      "source": "audit",
+      "votes": {
+        "t3": "real"
+      },
+      "verdict": null,
+      "fixed": false,
+      "commit": null
+    },
+    {
+      "id": "C02",
+      "nodeid": "tests/rest/test_agent_league_prize_log.py::test_the_prize_log_reaches_every_prize_it_recorded",
+      "claim": "passes whenever len(window) < 200; a server that ignores limit (default 50) or caps at 100 reads as 'nothing behind it' while older ids cannot be read",
+      "source": "audit",
+      "votes": {
+        "t3": "real"
+      },
+      "verdict": null,
+      "fixed": false,
+      "commit": null
+    },
+    {
+      "id": "C03",
+      "nodeid": "tests/rest/test_launchpad_discovery_tool_hides_what_rest_keeps_internal.py::test_the_discovery_tool_does_not_list_what_the_rest_list_keeps_internal",
+      "claim": "a leak seen on the first read and not on the second look settles to PASS, and the pass reason prints '0 leaked' for a chain whose first read leaked five; that case should be inconclusive",
+      "source": "audit",
+      "votes": {
+        "t3": "real"
+      },
+      "verdict": null,
+      "fixed": false,
+      "commit": null
+    },
+    {
+      "id": "C04",
+      "nodeid": "tests/rest/test_launchpad_discovery_tool_hides_what_rest_keeps_internal.py::test_the_discovery_tool_does_not_list_what_the_rest_list_keeps_internal",
+      "claim": "the chains judged come only from the screener, which lists only chains with a public launch; a chain whose launches are all internal drops out and is never judged while the tool keeps leaking them",
+      "source": "audit",
+      "votes": {
+        "t3": "real"
+      },
+      "verdict": null,
+      "fixed": false,
+      "commit": null
+    },
+    {
+      "id": "C05",
+      "nodeid": "tests/rest/test_movers_page_ranks_every_card.py::test_the_movers_boards_rank_every_card_of_the_listing",
+      "claim": "paging is credited when the board script merely contains total/has_more/next/.length <, then PASS without reading a card; a two-page fixed loop beside an unrelated 'next' passes",
+      "source": "audit",
+      "votes": {
+        "t3": "real"
+      },
+      "verdict": null,
+      "fixed": false,
+      "commit": null
+    },
+    {
+      "id": "C06",
+      "nodeid": "tests/rest/test_a_clone_trades_only_live_epoch_markets.py::test_a_clones_perpetual_markets_are_live_five_minute_markets",
+      "claim": "the clone list is cut to the first 12 by API order and the rest are not counted as unread, so 'all 12' passes while 41 paper clones exist and older ones may still carry dead markets",
+      "source": "audit",
+      "votes": {
+        "t3": "real"
+      },
+      "verdict": null,
+      "fixed": false,
+      "commit": null
+    },
+    {
+      "id": "C07",
+      "nodeid": "tests/rest/test_a_live_crypto_card_index_history_has_no_multi_day_hole.py::test_live_crypto_card_index_history_has_no_multi_day_hole",
+      "claim": "only gaps between consecutive points are measured; a live tradeable card whose last point is 3 days old (stopped recording now) passes",
+      "source": "audit",
+      "votes": {
+        "t3": "real"
+      },
+      "verdict": null,
+      "fixed": false,
+      "commit": null
+    },
+    {
+      "id": "C08",
+      "nodeid": "tests/rest/test_agent_tournaments_table_knows_its_owner.py::test_agent_tournaments_table_knows_its_owner",
+      "claim": "'owned' is only bot-settings answering 200 and /my-bots is never read; if spectators get that GET, every member seat becomes 'ours' and the check sends a false FAIL",
+      "source": "audit",
+      "votes": {
+        "t3": "real"
+      },
+      "verdict": null,
+      "fixed": false,
+      "commit": null
+    },
+    {
+      "id": "C09",
+      "nodeid": "tests/rest/test_company_charter_cap_agrees_with_its_docs.py::test_company_charter_cap_agrees_with_its_docs",
+      "claim": "only a literal maxlength=\"N\" is read; a cap set through a template constant or el.maxLength is 'not judged', so the 1,500 cap can stay while the check passes",
+      "source": "audit",
+      "votes": {
+        "t3": "real"
+      },
+      "verdict": null,
+      "fixed": false,
+      "commit": null
+    },
+    {
+      "id": "C10",
+      "nodeid": "tests/rest/test_nexus_answer_markers_are_true.py::test_nexus_answer_markers_are_true_and_leave_the_answer_usable",
+      "claim": "the contract is no 'not available' marker on one of OUR bot instances, but lines 98-100 also fail on any id the text calls a bot, ours or not",
+      "source": "audit",
+      "votes": {
+        "t3": "real"
+      },
+      "verdict": null,
+      "fixed": false,
+      "commit": null
+    },
+    {
+      "id": "A01",
+      "nodeid": "tests/repo/test_desk_pause.py::test_the_clock_does_not_ticket_the_desk_while_a_desk_worker_is_still_running",
+      "claim": "the fixture closes the ticket 18 s before now, so tonight's close-time pause decides alone; forcing running=False keeps it green and no test passes running=True: the marker branch has no guard",
+      "source": "audit",
+      "votes": {
+        "t3": "real",
+        "t1": "real"
+      },
+      "verdict": null,
+      "fixed": false,
+      "commit": null
+    },
+    {
+      "id": "A02",
+      "nodeid": "tests/meta/test_pipeline_decisions.py::test_the_operators_words_quoted_in_code_are_still_their_words",
+      "claim": "code_quotes() hashes only the first quote within 40 chars after each tag; scripts/company.py:8's second quote and qa/fomo.py:619's quote (111 chars after its tag) are unpinned and can be reworded with the test green",
+      "source": "audit",
+      "votes": {
+        "t3": "real",
+        "t1": "real"
+      },
+      "verdict": null,
+      "fixed": false,
+      "commit": null
+    },
+    {
+      "id": "A03",
+      "nodeid": "tests/meta/test_pipeline_crew.py::test_status_names_every_loop_and_what_each_waits_on",
+      "claim": "asserts every loop has a line and the bugs line's counts, never the reason each waits on, which the name promises",
+      "source": "audit",
+      "votes": {
+        "t3": "not real",
+        "t1": "not real"
+      },
+      "verdict": null,
+      "fixed": false,
+      "commit": null
+    },
+    {
+      "id": "A04",
+      "nodeid": "tests/meta/test_pipeline_wave.py::test_what_stops_a_wave_and_what_only_stops_one_bot",
+      "claim": "the docstring still says the cap held is 50 while code and assertion hold 100 (REPLY-0175); the sentence is stale",
+      "source": "audit",
+      "votes": {
+        "t3": "real",
+        "t1": "not real"
+      },
+      "verdict": null,
+      "fixed": false,
+      "commit": null
+    }
+  ],
+  "review": {
+    "done": true,
+    "findings": 10
+  },
   "implemented": [
-    {"line": "2026-10-12 Kód pro firmu: clock a krok desku (T-0040) -- no next desk step while its worker runs; pause from the ticket's close too", "commit": "7227f251"}],
+    {
+      "line": "2026-10-12 Kód pro firmu: clock a krok desku (T-0040) -- no next desk step while its worker runs; pause from the ticket's close too",
+      "commit": "7227f251"
+    }
+  ],
   "left": [
-    {"line": "2026-10-12 Kód pro firmu: commit.py a záznam běhu (OP-0009), desk H2 (OP-0013), BTC rozpětí (T-0039), manifest (T-0038), body 9 a 11", "why": "the company is stopped and none of it blocks a running part; OP-0013 and T-0039 each need a reading against live data first, T-0038/OP-0009 are a change to how commits carry the manifest and the page that does not fit beside a 128-commit review"},
-    {"line": "2026-10-11 FOMO sběr: denní strop", "why": "needs the day's request counts measured first (the patrol keeps only per-minute peaks)"},
-    {"line": "2026-10-11 Laborka v3 P3-P7", "why": "waits on laboratory ticks, not on code"},
-    {"line": "2026-10-15 Než půjde FAIL (#134, #132/#137, #46); 2026-10-13 Po sweepu PRE-0274 (#112/#136, #192, #93, karta v pozici, FOMO kalibrace)", "why": "each starts with a live read of their platform (calling tools without a key, re-reading a run against their current rule): a sweep's measurement, which a deep pass does not make"},
-    {"line": "2026-10-08 Sledovat; 2026-10-13 Requesty; 2026-10-16 /company kopie; 2026-10-15 NEXUS Profit Agent; 2026-10-12 Tournaments", "why": "watching, deliveries and dates still to come, iterating with the operator, paid Nexus interactions, or seats that wait for open tables"}],
+    {
+      "line": "2026-10-12 Kód pro firmu: commit.py a záznam běhu (OP-0009), desk H2 (OP-0013), BTC rozpětí (T-0039), manifest (T-0038), body 9 a 11",
+      "why": "the company is stopped and none of it blocks a running part; OP-0013 and T-0039 each need a reading against live data first, T-0038/OP-0009 are a change to how commits carry the manifest and the page that does not fit beside a 128-commit review"
+    },
+    {
+      "line": "2026-10-11 FOMO sběr: denní strop",
+      "why": "needs the day's request counts measured first (the patrol keeps only per-minute peaks)"
+    },
+    {
+      "line": "2026-10-11 Laborka v3 P3-P7",
+      "why": "waits on laboratory ticks, not on code"
+    },
+    {
+      "line": "2026-10-15 Než půjde FAIL (#134, #132/#137, #46); 2026-10-13 Po sweepu PRE-0274 (#112/#136, #192, #93, karta v pozici, FOMO kalibrace)",
+      "why": "each starts with a live read of their platform (calling tools without a key, re-reading a run against their current rule): a sweep's measurement, which a deep pass does not make"
+    },
+    {
+      "line": "2026-10-08 Sledovat; 2026-10-13 Requesty; 2026-10-16 /company kopie; 2026-10-15 NEXUS Profit Agent; 2026-10-12 Tournaments",
+      "why": "watching, deliveries and dates still to come, iterating with the operator, paid Nexus interactions, or seats that wait for open tables"
+    }
+  ],
   "next": [],
-  "retrospective": {"last": "2026-10-11", "done": false},
+  "retrospective": {
+    "last": "2026-10-11",
+    "done": false
+  },
   "rule_changes": [],
-  "meta_tests": {"start": 839, "end": null, "reason": null},
+  "meta_tests": {
+    "start": 839,
+    "end": null,
+    "reason": null
+  },
   "finished": false
 }

@@ -59,16 +59,18 @@ def _desk_tickets() -> list[dict]:
     return [t for t in crew.tickets().values() if t["to"] == "desk"]
 
 
-def _desk_step_closed(now: datetime, ended: timedelta, worker_running: bool) -> None:
-    """A desk step that closed its ticket; its run row `ended` before `now` is the newest
-    desk row that exists -- the one a worker still running has not yet written."""
+def _desk_step_closed(now: datetime, ended: timedelta, worker_running: bool,
+                      closed: timedelta = timedelta(seconds=18)) -> None:
+    """A desk step that closed its ticket `closed` before `now`; its run row `ended` before
+    `now` is the newest desk row that exists -- the one a worker still running has not yet
+    written."""
     crew.record({"type": "run", "dept": "desk", "ticket": "T-0000", "kind": "step",
                  "exit": 0, "outcome": "ok"}, now=now - ended)
     ticket, _ = crew.add_ticket("desk", "step", "a step", key="desk:the-step",
-                                by="clock", now=now - timedelta(seconds=20))
+                                by="clock", now=now - closed - timedelta(seconds=2))
     crew.claim("desk")
     crew.close(ticket["id"], "done", by="desk", note="closed, still committing",
-               now=now - timedelta(seconds=18))
+               now=now - closed)
     if worker_running:
         crew.set_active("desk", ticket, pid=os.getpid(), now=now - timedelta(minutes=10))
 
@@ -83,6 +85,22 @@ def test_the_clock_does_not_ticket_the_desk_while_a_desk_worker_is_still_running
     made = [t["id"] for t in _desk_tickets()][before:]
     assert made == [], (f"a desk worker was running and the clock still ticketed {made}: "
                         f"the pause never started")
+
+
+@qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
+def test_the_marker_alone_holds_the_desk_when_its_ticket_closed_long_ago(company):
+    """A01, deep pass 2026-10-18: the test above closes its ticket 18 s back, so the close-time
+    pause decides it alone and the marker branch went unguarded. Here the ticket closed and the
+    newest run row ended past the pause, and the worker is still running (still committing):
+    only the marker can stop the clock."""
+    now = datetime.now(timezone.utc)
+    _desk_step_closed(now, ended=crew.DESK_PAUSE + timedelta(minutes=15), worker_running=True,
+                      closed=crew.DESK_PAUSE + timedelta(minutes=5))
+    assert "desk" in crew.active()
+    before = len(_desk_tickets())
+    _script("crew").clock_look(now=now)
+    made = [t["id"] for t in _desk_tickets()][before:]
+    assert made == [], f"a desk worker is still running and the clock ticketed {made}"
 
 
 @qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")

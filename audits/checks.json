@@ -1867,11 +1867,10 @@
     },
     "tests/repo/test_state_guard.py::test_the_hook_is_actually_wired_up": {
       "fingerprints": [
-        "9508cc45c68c1ea0456f4bc0f199f3a3464a94f5e76c5d1d0e5eb8209ad56552",
-        "5a47a5020a086f807bec002780bebcc854a3b12d26eba33403c7907eb5398db4"
+        "4778eb783c2116a5bf49d72d36a2bb54be7e3b4aa187547d4e56be2b7a2448fb"
       ],
-      "at": "2026-09-08T15:18:57+00:00",
-      "run_id": "run-20260908T150954Z-95f0a70",
+      "at": "2026-10-17T23:40:00+00:00",
+      "run_id": "run-20261015T162101Z-f6e649aa",
       "gap_claimed": true
     },
     "tests/repo/test_state_guard.py::test_unrelated_tools_are_not_touched": {
@@ -4988,24 +4987,24 @@
       "fingerprints": [
         "25024653ae3ed0ca220b6cfea2bfbef7df46d326167f00c41e8c45e5df1283d1"
       ],
-      "at": "2026-10-15T16:00:00+00:00",
-      "run_id": "run-20261015T080833Z-f44ad73b",
+      "at": "2026-10-17T23:40:00+00:00",
+      "run_id": "run-20261017T152034Z-cfef3bd7",
       "gap_claimed": false
     },
     "tests/meta/test_pipeline_decisions.py::test_no_decision_was_added_or_reworded_without_the_operator": {
       "fingerprints": [
         "f0edd88534bf51ad49641ad59c9d5f0c5447cc0a501219371f77e601179ab181"
       ],
-      "at": "2026-10-15T16:00:00+00:00",
-      "run_id": "run-20261015T080833Z-f44ad73b",
+      "at": "2026-10-17T23:40:00+00:00",
+      "run_id": "run-20261017T152034Z-cfef3bd7",
       "gap_claimed": false
     },
     "tests/meta/test_pipeline_decisions.py::test_nothing_quotes_the_operator_outside_a_tagged_decision": {
       "fingerprints": [
         "635693572497640cc015daa56cd4ce04f6a7413e5eeb8b303264d1d71db4bab9"
       ],
-      "at": "2026-10-15T16:00:00+00:00",
-      "run_id": "run-20261015T080833Z-f44ad73b",
+      "at": "2026-10-17T23:40:00+00:00",
+      "run_id": "run-20261017T152034Z-cfef3bd7",
       "gap_claimed": false
     },
     "tests/meta/test_pipeline_nexus.py::test_elapsed_is_measured_from_the_question_not_from_this_poll_loop": {
@@ -10635,16 +10634,10 @@
     },
     "tests/meta/test_pipeline_check_subjects.py::test_a_card_that_is_closed_on_rest_and_open_on_mcp_fails": {
       "fingerprints": [
-        "d163a9459e1b3a52b47278888269be2f4eee077d30906311dd3a2ce56c0197d8",
-        "7c5a1794ea8cb50548833ccb92d4f57e9e5944ea79baa934865c34597c0f0b4d",
-        "202350a86a46ad3e551d487356d027ebde12ab719cbbd30851326a441e921f64",
-        "fa0037a2e3ce0294766bb580272547a93d715cc4646ea1b76d04f36d5ac80842",
-        "ae5c921746a98727a14fe54aca38aa6eb3ea3def5dc2cfdef1a3085fa6a229a0",
-        "19d8b0c592802659fd9c0ff00085017bba0abf1a409ae7a8d1838f4e3eb59b7d",
-        "8da09ee5649b2d5cf79a6f4319d6d4483d57b9f8d20aa62385472e2a1a9792b5"
+        "37333daa39a57aba6634676b9589410ed9ddeef357d4733c95c7a7ba1b18b28d"
       ],
-      "at": "2026-10-15T16:00:00+00:00",
-      "run_id": "run-20261015T080833Z-f44ad73b",
+      "at": "2026-10-17T23:40:00+00:00",
+      "run_id": "run-20261017T152034Z-cfef3bd7",
       "gap_claimed": false
     },
     "tests/meta/test_pipeline_check_subjects.py::test_a_report_created_behind_a_500_fails_and_a_clean_run_of_twelve_passes": {
@@ -14058,12 +14051,11 @@
     },
     "tests/meta/test_pipeline_wave.py::test_what_stops_a_wave_and_what_only_stops_one_bot": {
       "fingerprints": [
-        "16b55a5ece27a537c2a4ddfb3e088a4718d3dac9bc1b75ed711ac684510cf8ff",
-        "191dbfc0d62acdd5797d3e45bea4e326aee64d5b818748182af3cbdd1e6ef639"
+        "a58161661225565096091de67e16a1b0fd7a46d414f491103f5da33b79ac77fb"
       ],
-      "at": "2026-10-10T18:27:04+00:00",
-      "run_id": "run-20261010T163657Z-a15a9c6d",
-      "gap_claimed": false
+      "at": "2026-10-17T23:40:00+00:00",
+      "run_id": "run-20261017T152034Z-cfef3bd7",
+      "gap_claimed": true
     },
     "tests/rest/test_gem_screener_degen_meter_has_levels.py::test_the_degen_meter_has_a_level_for_the_coins_it_lists": {
       "fingerprints": [
@@ -14230,11 +14222,10 @@
     },
     "tests/rest/test_movers_page_ranks_every_card.py::test_the_movers_boards_rank_every_card_of_the_listing": {
       "fingerprints": [
-        "50e39cf990ff4bf2579188011198394678726ca300f896ae4e372104569ad332",
-        "61bcbb3487b0c171b5055f80dba7306d8daa1bb954741541dc4f1cc12bb5433b"
+        "2d47f18c986cb7ddb85db9901cc96a7c7a7f7d6e20a91fff9d76c860437cfc76"
       ],
-      "at": "2026-10-15T16:00:00+00:00",
-      "run_id": "run-20261012T230922Z-26bab3d0",
+      "at": "2026-10-17T23:40:00+00:00",
+      "run_id": "run-20261016T184953Z-83aa03c7",
       "gap_claimed": true
     },
     "tests/rest/test_a_clone_summary_names_what_it_trades.py::test_a_clone_summary_names_every_market_it_trades_and_no_other": {
@@ -14273,11 +14264,10 @@
     },
     "tests/rest/test_launchpad_discovery_tool_hides_what_rest_keeps_internal.py::test_the_discovery_tool_does_not_list_what_the_rest_list_keeps_internal": {
       "fingerprints": [
-        "f9c6b80f3cb2099b45d4a9d7676641754230d28b10c5546015f06312401d3362",
-        "51445fc781b1358878822a31827f7a34229ccbdf719f59795b78858a4ce9eefa"
+        "d1dad0037074d3cced7333d6b40dd139f6e43cd194d5b519e4c74531a8e30318"
       ],
-      "at": "2026-10-15T16:00:00+00:00",
-      "run_id": "run-20261012T230922Z-26bab3d0",
+      "at": "2026-10-17T23:40:00+00:00",
+      "run_id": "run-20261016T184953Z-83aa03c7",
       "gap_claimed": true
     },
     "tests/rest/test_launchpad_tokens_list_without_a_chain_is_not_empty.py::test_the_token_list_without_a_chain_is_not_empty_while_a_chain_lists_launches": {
@@ -14330,11 +14320,11 @@
     },
     "tests/meta/test_pipeline_crew.py::test_a_run_settles_its_ticket_by_how_it_ended": {
       "fingerprints": [
-        "bc9a83e86274834a12af1d77b6d8c6328e4a3974ec7247a38bbffffed4324242"
+        "da61387bd1afc03a1c9f05aa7632af9dff8dbe9b739f9e35bdfdf520270afce5"
       ],
-      "at": "2026-10-15T16:00:00+00:00",
-      "run_id": "run-20261015T080833Z-f44ad73b",
-      "gap_claimed": true
+      "at": "2026-10-17T23:40:00+00:00",
+      "run_id": "run-20261017T152034Z-cfef3bd7",
+      "gap_claimed": false
     },
     "tests/meta/test_pipeline_crew.py::test_a_ticket_has_one_owner_is_made_once_claimed_once_and_ends_once": {
       "fingerprints": [
@@ -14354,10 +14344,10 @@
     },
     "tests/meta/test_pipeline_crew.py::test_status_names_every_loop_and_what_each_waits_on": {
       "fingerprints": [
-        "b075d411405ad866588c0c6a107a125eb19c9f0ed346cbeb8369d8b117741f75"
+        "fa956d983b7863b127fff385ac729899439f76577a38afca68f47de46fc9eb4c"
       ],
-      "at": "2026-10-15T16:00:00+00:00",
-      "run_id": "run-20261015T080833Z-f44ad73b",
+      "at": "2026-10-17T23:40:00+00:00",
+      "run_id": "run-20261017T152034Z-cfef3bd7",
       "gap_claimed": true
     },
     "tests/meta/test_pipeline_crew.py::test_the_auditor_counts_what_each_department_cost_and_produced": {
@@ -14428,8 +14418,8 @@
       "fingerprints": [
         "9d418f0b88cee6760fee0af5c57421a838d2430854b8b4ed3fb0eb08ebee06e9"
       ],
-      "at": "2026-10-15T16:00:00+00:00",
-      "run_id": "run-20261015T080833Z-f44ad73b",
+      "at": "2026-10-17T23:40:00+00:00",
+      "run_id": "run-20261017T152034Z-cfef3bd7",
       "gap_claimed": false
     },
     "tests/repo/test_benchmark_span.py::test_control_a_proxy_with_points_on_both_ends_is_the_plain_ratio": {
@@ -14490,11 +14480,11 @@
     },
     "tests/repo/test_crew_day.py::test_a_simulated_day_ends_every_ticket_and_leaves_no_role_idle_without_a_reason": {
       "fingerprints": [
-        "6cc4851b8b2a166401899bdbdad7fd7395527a142d92170a722b67af0df6ea14"
+        "4d62778065d92f431a029e63b9d9fa42825cfb5f7250c781b582e5daffc21f13"
       ],
-      "at": "2026-10-15T16:00:00+00:00",
-      "run_id": "run-20261012T230922Z-26bab3d0",
-      "gap_claimed": true
+      "at": "2026-10-17T23:40:00+00:00",
+      "run_id": "run-20261015T162101Z-f6e649aa",
+      "gap_claimed": false
     },
     "tests/repo/test_crew_day.py::test_the_company_starts_detached_works_and_stops_with_nothing_left_claimed": {
       "fingerprints": [
@@ -14562,11 +14552,11 @@
     },
     "tests/repo/test_evidence_in_git.py::test_no_file_in_git_nears_the_size_github_refuses": {
       "fingerprints": [
-        "50e35ad0a02c98379c4b2e7045afcf1fe801260ca3070992ae1228e696c9f28f"
+        "38d985e2543e0e9a24ba5b13f0c7933339c2cb834014c0220c01160d4f515550"
       ],
-      "at": "2026-10-15T16:00:00+00:00",
-      "run_id": "run-20261012T230922Z-26bab3d0",
-      "gap_claimed": true
+      "at": "2026-10-17T23:40:00+00:00",
+      "run_id": "run-20261015T162101Z-f6e649aa",
+      "gap_claimed": false
     },
     "tests/repo/test_grid_capacity.py::test_a_cap_on_all_clones_counts_the_paused_ones_too": {
       "fingerprints": [
@@ -14618,10 +14608,10 @@
     },
     "tests/repo/test_grid_capacity.py::test_the_cap_is_read_from_the_newest_capacity_refusal": {
       "fingerprints": [
-        "b7b6e65ccda12dedd8bed8b5f94f29779a384e1024c66a10bf9e2025536f2ddd"
+        "bd4e028585c1a0d8a5fc6d2524eb1cac160a8546c778f1c1d9b4bb3b723c40d5"
       ],
-      "at": "2026-10-15T16:00:00+00:00",
-      "run_id": "run-20261012T230922Z-26bab3d0",
+      "at": "2026-10-17T23:40:00+00:00",
+      "run_id": "run-20261015T162101Z-f6e649aa",
       "gap_claimed": true
     },
     "tests/repo/test_index_gap.py::test_a_z_suffixed_time_reads_like_an_offset_one": {
@@ -14684,8 +14674,8 @@
       "fingerprints": [
         "41d9c056e69eb9bc75ab69cfa367beeebfb66d3f05702d3cb266980a91e9a069"
       ],
-      "at": "2026-10-15T16:00:00+00:00",
-      "run_id": "run-20261012T230922Z-26bab3d0",
+      "at": "2026-10-17T23:40:00+00:00",
+      "run_id": "run-20261015T162101Z-f6e649aa",
       "gap_claimed": false
     },
     "tests/repo/test_nexus_chat_pointer.py::test_an_answer_that_is_an_answer_is_still_written_as_one": {
@@ -14700,8 +14690,8 @@
       "fingerprints": [
         "eef5ae8848d4dc15070fc005f712b50e67fb958598b91d98c458d9e379054e0e"
       ],
-      "at": "2026-10-15T16:00:00+00:00",
-      "run_id": "run-20261012T230922Z-26bab3d0",
+      "at": "2026-10-17T23:40:00+00:00",
+      "run_id": "run-20261015T162101Z-f6e649aa",
       "gap_claimed": false
     },
     "tests/repo/test_priced_card_check_subjects.py::test_a_buy_that_lands_since_is_the_fix": {
@@ -14842,10 +14832,10 @@
     },
     "tests/repo/test_vaix_arbitrage_legs.py::test_a_book_of_the_wrong_shape_is_unreadable_not_clean": {
       "fingerprints": [
-        "e0ff332f99c9deba1ef2b25ea3f1e5f5a5c4aebc52bfbaa21c91d1008fa22ef5"
+        "735940745e5a11d9241eb6da206a3b36ccede4fc78c5fdb39096578350b564f5"
       ],
-      "at": "2026-10-15T16:00:00+00:00",
-      "run_id": "run-20261012T230922Z-26bab3d0",
+      "at": "2026-10-17T23:40:00+00:00",
+      "run_id": "run-20261015T162101Z-f6e649aa",
       "gap_claimed": true
     },
     "tests/repo/test_vaix_arbitrage_legs.py::test_a_book_without_an_arbitrage_or_without_exclusions_is_clean_not_unreadable": {
@@ -14882,27 +14872,27 @@
     },
     "tests/rest/test_a_clone_trades_only_live_epoch_markets.py::test_a_clones_perpetual_markets_are_live_five_minute_markets": {
       "fingerprints": [
-        "c86938d573792e47c8fd5da3c8846b45cd435656716c4b1d266e39a961ecb5a5"
+        "85b09b53c93424da668e0ae0540dfea027201013320e5fd4501d545994a2e714"
       ],
-      "at": "2026-10-15T16:00:00+00:00",
-      "run_id": "run-20261013T070131Z-953de9dd",
+      "at": "2026-10-17T23:40:00+00:00",
+      "run_id": "run-20261016T184953Z-83aa03c7",
       "gap_claimed": true
     },
     "tests/rest/test_a_live_crypto_card_index_history_has_no_multi_day_hole.py::test_live_crypto_card_index_history_has_no_multi_day_hole": {
       "fingerprints": [
-        "ccde25d733524b188ff3e475e51a634609cd42bb85641f364cfe768954945449"
+        "4a22439157b5dc15a56538155cb41aab9fb012edcdadc42e364574da26ff9d47"
       ],
-      "at": "2026-10-15T16:00:00+00:00",
-      "run_id": "run-20261015T144506Z-ee77a74f",
+      "at": "2026-10-17T23:40:00+00:00",
+      "run_id": "run-20261016T184953Z-83aa03c7",
       "gap_claimed": true
     },
     "tests/rest/test_a_tradeable_card_can_be_priced.py::test_a_card_that_reads_tradeable_now_can_be_priced": {
       "fingerprints": [
-        "96bf814248b3c28ac6cc42070f2970ae89dd7bb28f9a4f226f5327a899758b29"
+        "922c1e1ec932125df0cc789f059f0a019b49587595c5cdbe0e8532d480ca494f"
       ],
-      "at": "2026-10-15T16:00:00+00:00",
-      "run_id": "run-20261015T053908Z-b4c62c96",
-      "gap_claimed": true
+      "at": "2026-10-17T23:40:00+00:00",
+      "run_id": "run-20261016T184953Z-83aa03c7",
+      "gap_claimed": false
     },
     "tests/rest/test_agent_tournaments_always_has_a_free_table.py::test_agent_tournaments_always_has_a_free_table": {
       "fingerprints": [
@@ -14922,50 +14912,50 @@
     },
     "tests/rest/test_company_routes_are_in_the_openapi.py::test_every_company_route_llms_txt_names_is_in_the_openapi": {
       "fingerprints": [
-        "08ffee561001e02bd863524c18f4049c0b48cb3a4524464bcc131c4579095d61"
+        "68069e318ac740cdfd43335da36146c069a2113d7554a23e287b8e071cb66854"
       ],
-      "at": "2026-10-15T16:00:00+00:00",
-      "run_id": "run-20261012T230922Z-26bab3d0",
-      "gap_claimed": true
+      "at": "2026-10-17T23:40:00+00:00",
+      "run_id": "run-20261016T184953Z-83aa03c7",
+      "gap_claimed": false
     },
     "tests/rest/test_gem_screener_says_one_thing_per_name.py::test_a_degen_pick_is_not_red_on_the_dilution_its_own_row_shows": {
       "fingerprints": [
-        "4a2aa8fbfa5e8e157a7c7178a1a5b29018828bddfcd0e7d719020bcd86898e7d"
+        "8a7b73814379fbbb19e9b692f20e7d543229340b0f94d8fb1a5fba24db69bc91"
       ],
-      "at": "2026-10-15T16:00:00+00:00",
-      "run_id": "run-20261015T080833Z-f44ad73b",
-      "gap_claimed": true
+      "at": "2026-10-17T23:40:00+00:00",
+      "run_id": "run-20261016T184953Z-83aa03c7",
+      "gap_claimed": false
     },
     "tests/rest/test_gem_screener_says_one_thing_per_name.py::test_a_next_cliff_lies_inside_the_window_its_own_unlock_record_counts": {
       "fingerprints": [
-        "43a978b888fb61f8dbfd38d7699d74bf4da7d67d59328b37d51470ed4c4478f9"
+        "5218b2d04cee23380e2f959173f20ec320df99503215f2e3b0d9885a9295caea"
       ],
-      "at": "2026-10-15T16:00:00+00:00",
-      "run_id": "run-20261015T080833Z-f44ad73b",
-      "gap_claimed": true
+      "at": "2026-10-17T23:40:00+00:00",
+      "run_id": "run-20261016T184953Z-83aa03c7",
+      "gap_claimed": false
     },
     "tests/rest/test_gem_screener_says_one_thing_per_name.py::test_an_unlock_countdown_counts_from_the_moment_it_is_served": {
       "fingerprints": [
-        "62665d0e56a8b72309c7d954bfc200e31997765d5dfdc7c99dc20b9a4b34de44"
+        "362141ad84100933d213457ac5d310c746c8c6ab67f83fe98db059abf867bfb6"
       ],
-      "at": "2026-10-15T16:00:00+00:00",
-      "run_id": "run-20261015T080833Z-f44ad73b",
-      "gap_claimed": true
+      "at": "2026-10-17T23:40:00+00:00",
+      "run_id": "run-20261016T184953Z-83aa03c7",
+      "gap_claimed": false
     },
     "tests/rest/test_gem_screener_says_one_thing_per_name.py::test_the_altseason_panel_names_one_retail_figure": {
       "fingerprints": [
-        "0e8dc137e3fc44c3f7638928b65fdc78770ec6acc395c26c9af9c4da7eac12e4"
+        "d1ef7f0d83037aaba51c36dc4d879855aa34e966b154e8c1cc966f12f958ad48"
       ],
-      "at": "2026-10-15T16:00:00+00:00",
-      "run_id": "run-20261015T080833Z-f44ad73b",
-      "gap_claimed": true
+      "at": "2026-10-17T23:40:00+00:00",
+      "run_id": "run-20261016T184953Z-83aa03c7",
+      "gap_claimed": false
     },
     "tests/rest/test_nexus_answer_markers_are_true.py::test_nexus_answer_markers_are_true_and_leave_the_answer_usable": {
       "fingerprints": [
-        "ff669c36afddbc2380482a71eb0be1f8a026d9dd4c42a76082d8f2919df2781b"
+        "274d826a31b8ad4ad18a9e0d2b283870f224e8afd96c72d335ef1f3d952d0385"
       ],
-      "at": "2026-10-15T16:00:00+00:00",
-      "run_id": "run-20261013T171533Z-ad7ee907",
+      "at": "2026-10-17T23:40:00+00:00",
+      "run_id": "run-20261016T184953Z-83aa03c7",
       "gap_claimed": true
     },
     "tests/rest/test_vaix_orderbook_arbitrage_does_not_use_an_excluded_venue.py::test_the_vaix_orderbook_arbitrage_does_not_use_an_excluded_venue": {
@@ -14975,6 +14965,246 @@
       "at": "2026-10-15T16:00:00+00:00",
       "run_id": "run-20261013T164606Z-581dd2fb",
       "gap_claimed": true
+    },
+    "tests/repo/test_company_cli.py::test_a_body_without_departments_is_refused_not_a_traceback": {
+      "fingerprints": [
+        "bc178f2160813c96b301ee091dbaf42c48763564e713e943e5eff100985d66e0"
+      ],
+      "at": "2026-10-17T23:40:00+00:00",
+      "run_id": "run-20261015T162101Z-f6e649aa",
+      "gap_claimed": false
+    },
+    "tests/repo/test_company_cli.py::test_read_prints_a_message_without_a_role_and_a_task_without_a_status": {
+      "fingerprints": [
+        "df98c494a684ea590c7e8417e241d7db7c10acf056a49f6ee91b14c6e9f742a4"
+      ],
+      "at": "2026-10-17T23:40:00+00:00",
+      "run_id": "run-20261015T162101Z-f6e649aa",
+      "gap_claimed": false
+    },
+    "tests/repo/test_crew_duplicates.py::test_a_clock_ticket_opened_after_its_twin_closed_is_not_a_duplicate": {
+      "fingerprints": [
+        "3e48c0ba0a259416c1198aac2b12c77992076d7f48d1e825547175ec80d61178"
+      ],
+      "at": "2026-10-17T23:40:00+00:00",
+      "run_id": "run-20261015T162101Z-f6e649aa",
+      "gap_claimed": false
+    },
+    "tests/repo/test_crew_duplicates.py::test_a_clock_ticket_opened_while_its_twin_is_still_live_is_a_duplicate": {
+      "fingerprints": [
+        "2125164e7d42558b2ae52315a9d5d342c84584a393abbc8f7ee3d7ee16be3469"
+      ],
+      "at": "2026-10-17T23:40:00+00:00",
+      "run_id": "run-20261015T162101Z-f6e649aa",
+      "gap_claimed": false
+    },
+    "tests/repo/test_crew_duplicates.py::test_a_group_names_only_the_overlapping_clock_tickets": {
+      "fingerprints": [
+        "de951f67880f66e6ad39c93f9cd9eb58e7e020b1eb08382ee469f21810367ad5"
+      ],
+      "at": "2026-10-17T23:40:00+00:00",
+      "run_id": "run-20261015T162101Z-f6e649aa",
+      "gap_claimed": false
+    },
+    "tests/repo/test_crew_duplicates.py::test_sequential_clock_tickets_with_one_text_are_not_a_duplicate": {
+      "fingerprints": [
+        "1c955bd5af6e809e20203e9bdf125cc150871f4ab5378c14dfa1ac8190ca5f5a"
+      ],
+      "at": "2026-10-17T23:40:00+00:00",
+      "run_id": "run-20261015T162101Z-f6e649aa",
+      "gap_claimed": false
+    },
+    "tests/repo/test_crew_duplicates.py::test_the_same_text_from_anyone_but_the_clock_is_a_duplicate_even_when_sequential": {
+      "fingerprints": [
+        "3b260c520845657c93f3cb973593af0dfae725831c7acee5e85c92918d04b0b3"
+      ],
+      "at": "2026-10-17T23:40:00+00:00",
+      "run_id": "run-20261015T162101Z-f6e649aa",
+      "gap_claimed": false
+    },
+    "tests/repo/test_desk_pause.py::test_the_pause_also_runs_from_the_tickets_close_when_the_marker_is_gone": {
+      "fingerprints": [
+        "6563a61e99845adf3a0f29fb368ed2c8b8e446fa2318996e97bce35b5278ccfb"
+      ],
+      "at": "2026-10-17T23:40:00+00:00",
+      "run_id": "run-20261015T162101Z-f6e649aa",
+      "gap_claimed": false
+    },
+    "tests/repo/test_exit_levels_pick_scope.py::test_a_bot_picks_band_is_not_the_card_picks_exits": {
+      "fingerprints": [
+        "e2b0e87f5c983d4197c0a1672fefd5773851290d2030878bc17e79790cb265de"
+      ],
+      "at": "2026-10-17T23:40:00+00:00",
+      "run_id": "run-20261015T162101Z-f6e649aa",
+      "gap_claimed": true
+    },
+    "tests/repo/test_exit_levels_pick_scope.py::test_a_cards_own_levels_are_still_read_and_stop_at_the_next_pick": {
+      "fingerprints": [
+        "7983445d0dc8c5c98662e24670758fb71e031d3ca81d2db64c1ba16e6a7f78cd"
+      ],
+      "at": "2026-10-17T23:40:00+00:00",
+      "run_id": "run-20261015T162101Z-f6e649aa",
+      "gap_claimed": true
+    },
+    "tests/repo/test_index_hole_declared.py::test_a_declared_gap_that_covers_only_part_of_the_hole_does_not_declare_it": {
+      "fingerprints": [
+        "3ea08821daf28f630fe0a28172396103c0ff8997ee684b942b03d99777c5dc2a"
+      ],
+      "at": "2026-10-17T23:40:00+00:00",
+      "run_id": "run-20261015T162101Z-f6e649aa",
+      "gap_claimed": false
+    },
+    "tests/repo/test_index_hole_declared.py::test_a_hole_the_history_does_not_list_is_not_declared": {
+      "fingerprints": [
+        "6bc5ebe26d9b629573f044bcf7040ab3195a4d3881ba9def5fb4a7928d0eb76d"
+      ],
+      "at": "2026-10-17T23:40:00+00:00",
+      "run_id": "run-20261015T162101Z-f6e649aa",
+      "gap_claimed": false
+    },
+    "tests/repo/test_index_hole_declared.py::test_a_hole_the_history_lists_is_declared": {
+      "fingerprints": [
+        "2e41c15085fac4ea15f0ba39d53d85620c46737484f4b4401beaa6316858adec"
+      ],
+      "at": "2026-10-17T23:40:00+00:00",
+      "run_id": "run-20261015T162101Z-f6e649aa",
+      "gap_claimed": false
+    },
+    "tests/repo/test_index_hole_declared.py::test_every_hole_is_asked_not_only_the_widest": {
+      "fingerprints": [
+        "4a95b9955da2e1e6fe6ed049a9f78885df42cd11233b7beea00acf0626e469fa"
+      ],
+      "at": "2026-10-17T23:40:00+00:00",
+      "run_id": "run-20261015T162101Z-f6e649aa",
+      "gap_claimed": false
+    },
+    "tests/repo/test_league_prize_window.py::test_a_full_window_of_prizes_is_said_unread_not_counted_as_the_total": {
+      "fingerprints": [
+        "42e066b1648d0e29dba7c08143c81c37719aa2245c7611d4da61d969a53b7580"
+      ],
+      "at": "2026-10-17T23:40:00+00:00",
+      "run_id": "run-20261015T162101Z-f6e649aa",
+      "gap_claimed": true
+    },
+    "tests/repo/test_nexus_marker_reader.py::test_a_card_id_the_platform_does_not_resolve_is_left_alone": {
+      "fingerprints": [
+        "ef127e22a09a7a75e7db14cbdbf260eea0757cadecd28b68d6780ab2589c70b3"
+      ],
+      "at": "2026-10-17T23:40:00+00:00",
+      "run_id": "run-20261015T162101Z-f6e649aa",
+      "gap_claimed": false
+    },
+    "tests/repo/test_nexus_marker_reader.py::test_a_clean_answer_has_nothing_to_judge": {
+      "fingerprints": [
+        "cea1e68272e633bf8b4d5631c39b377c0692a3d314343c2bc47b4820cf0d58cc"
+      ],
+      "at": "2026-10-17T23:40:00+00:00",
+      "run_id": "run-20261015T162101Z-f6e649aa",
+      "gap_claimed": false
+    },
+    "tests/repo/test_nexus_marker_reader.py::test_a_true_marker_on_a_real_dead_end_is_not_a_misfire": {
+      "fingerprints": [
+        "99a57f5921d9510093a3e9b829dfe6930912f39440522e00cd02c18f568d1164"
+      ],
+      "at": "2026-10-17T23:40:00+00:00",
+      "run_id": "run-20261015T162101Z-f6e649aa",
+      "gap_claimed": false
+    },
+    "tests/repo/test_nexus_marker_reader.py::test_an_instance_the_answer_itself_calls_one_is_seen_without_our_list": {
+      "fingerprints": [
+        "d8383be6fd120a7e762a7b06523bc77aaeeb533ccef6032a1f6f075545756964"
+      ],
+      "at": "2026-10-17T23:40:00+00:00",
+      "run_id": "run-20261015T162101Z-f6e649aa",
+      "gap_claimed": false
+    },
+    "tests/repo/test_nexus_marker_reader.py::test_the_three_misfires_of_nex_0142_are_seen": {
+      "fingerprints": [
+        "a87f86d9f223c9e37b26a1882b71b2b32f0f38ac8c3bf0a646835ab399e60eee"
+      ],
+      "at": "2026-10-17T23:40:00+00:00",
+      "run_id": "run-20261015T162101Z-f6e649aa",
+      "gap_claimed": false
+    },
+    "tests/repo/test_outsider_probe_retry.py::test_a_probe_that_did_not_run_does_not_unprove_a_proven_outsider": {
+      "fingerprints": [
+        "6f61b4ca7e373af6b24f3115e0ceae6938987dfd5600124cbffd3458aaa05d48"
+      ],
+      "at": "2026-10-17T23:40:00+00:00",
+      "run_id": "run-20261015T162101Z-f6e649aa",
+      "gap_claimed": false
+    },
+    "tests/repo/test_outsider_probe_retry.py::test_a_probe_that_ran_and_quoted_our_context_still_unproves_the_outsider": {
+      "fingerprints": [
+        "68a133614dd6dc8c640d7a79f047efd7d0a6cf01b492f7a5b3339369b4b1aa00"
+      ],
+      "at": "2026-10-17T23:40:00+00:00",
+      "run_id": "run-20261015T162101Z-f6e649aa",
+      "gap_claimed": false
+    },
+    "tests/repo/test_outsider_probe_retry.py::test_a_stranger_that_denies_having_seen_memory_md_is_a_stranger": {
+      "fingerprints": [
+        "b5efe605a755d9d57c19f9972f7aea13a5f15ad6acccd3ef843272f4f4aebaa0"
+      ],
+      "at": "2026-10-17T23:40:00+00:00",
+      "run_id": "run-20261015T162101Z-f6e649aa",
+      "gap_claimed": false
+    },
+    "tests/repo/test_outsider_probe_retry.py::test_the_clock_tickets_the_outsider_again_after_a_probe_that_did_not_run": {
+      "fingerprints": [
+        "9cd836a3ae59e68cdb99ef8ed36cf09d9a2e30e1883efb54494f1418a82349d9"
+      ],
+      "at": "2026-10-17T23:40:00+00:00",
+      "run_id": "run-20261015T162101Z-f6e649aa",
+      "gap_claimed": true
+    },
+    "tests/repo/test_priced_card_check_subjects.py::test_a_refusal_older_than_its_age_bound_is_unmeasured_not_a_failure": {
+      "fingerprints": [
+        "e3cbead2bd43b74dd901606e55cfd7aba08f4ee6e42193c634ee003483af9e25"
+      ],
+      "at": "2026-10-17T23:40:00+00:00",
+      "run_id": "run-20261015T162101Z-f6e649aa",
+      "gap_claimed": false
+    },
+    "tests/rest/test_account_claim_deposit_reachable.py::test_the_claim_form_opens_when_nothing_is_pending": {
+      "fingerprints": [
+        "e0efb0f9774de8f039e38a3f5a7c76f3111650add1136f86a241335095345f60"
+      ],
+      "at": "2026-10-17T23:40:00+00:00",
+      "run_id": "run-20261017T170219Z-592f67c2",
+      "gap_claimed": true
+    },
+    "tests/rest/test_agent_league_prize_log.py::test_the_prize_log_reaches_every_prize_it_recorded": {
+      "fingerprints": [
+        "1e3c79be55d2232d8ac4fbc38f58735b92e045f6e23c65d722c6dca8fa705d32"
+      ],
+      "at": "2026-10-17T23:40:00+00:00",
+      "run_id": "run-20261017T070930Z-146a42aa",
+      "gap_claimed": true
+    },
+    "tests/rest/test_agent_tournaments_table_knows_its_owner.py::test_agent_tournaments_table_knows_its_owner": {
+      "fingerprints": [
+        "52ae2a5aa548bf48496f720aa8325696cf67dd6918297d27952cf8d4f9ae52ec"
+      ],
+      "at": "2026-10-17T23:40:00+00:00",
+      "run_id": "run-20261016T035402Z-d7bb5d7b",
+      "gap_claimed": true
+    },
+    "tests/rest/test_company_charter_cap_agrees_with_its_docs.py::test_company_charter_cap_agrees_with_its_docs": {
+      "fingerprints": [
+        "17dde8a79b023f817c0bdf1101dd269e64a73523c304b2a93caec241b8c0d156"
+      ],
+      "at": "2026-10-17T23:40:00+00:00",
+      "run_id": "run-20261016T035402Z-d7bb5d7b",
+      "gap_claimed": true
+    },
+    "tests/rest/test_company_heartbeat_keeps_its_promise.py::test_company_heartbeat_keeps_its_promise": {
+      "fingerprints": [
+        "75a19e087cc0d708c461a859803f954f7e1223c1447147a51a87340bb69a5e7c"
+      ],
+      "at": "2026-10-17T23:40:00+00:00",
+      "run_id": "run-20261016T035402Z-d7bb5d7b",
+      "gap_claimed": false
     }
   }
 }
