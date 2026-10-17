@@ -18,6 +18,12 @@
       "runtimeExecutable": "python",
       "runtimeArgs": ["-m", "http.server", "8794", "--bind", "127.0.0.1", "--directory", "outbox/my-agents-redesign"],
       "port": 8794
+    },
+    {
+      "name": "account-mock",
+      "runtimeExecutable": "python",
+      "runtimeArgs": ["-m", "http.server", "8795", "--bind", "127.0.0.1", "--directory", "outbox/account-redesign"],
+      "port": 8795
     }
   ]
 }
