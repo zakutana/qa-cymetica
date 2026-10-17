@@ -99,7 +99,7 @@
         '<div class="d1"><i class="dot"></i><b>' + esc(d.name) + '</b>' +
         (d.et10 ? '<span class="et' + (d.files_as ? ' lit' : '') + '" title="ET10 Cymetica paid for accepted bugs, to ' + esc(d.files_as || 'you') + '">+' + d.et10.toLocaleString('en-US') + ' ET10</span>'
           : d.files_as ? '<span class="et zero" title="ET10 Cymetica paid for accepted bugs, to ' + esc(d.files_as) + '">0 ET10</span>' : '') + '</div>' +
-        '<div class="dus" title="Tokens this department used today and in the last 7 days' + (v.cap ? ', against its daily cap' : '') + '">' +
+        '<div class="dus" title="What this department spent of your plan today and in the last 7 days' + (v.cap ? ', against its daily cap' : '') + '">' +
         '<span' + (v.capped ? ' class="hot"' : '') + '>' + CO.fmtTok(v.tokToday) + (v.cap ? '<small>/ ' + CO.fmtTok(v.cap) + ' today</small>' : '<small>today</small>') + '</span>' +
         '<span>' + CO.fmtTok(v.tok7d) + '<small>7 days</small></span>' +
         (v.cap ? '<span class="ubar"><i class="' + (v.capped ? 'hot' : '') + '" style="width:' + Math.min(100, v.tokToday / v.cap * 100).toFixed(0) + '%"></i></span>' : '') + '</div>' +
@@ -119,7 +119,7 @@
     var start = b.session.resets_at - b.session.every;
     var onExtra = S.strip.filter(function (c) { return c.at >= start && c.extra; }).length;
     var used = Math.min(b.session.used, cap), sp = Math.round(used / cap * 100), usp = $('us-p');
-    usp.textContent = sp + '% used · ' + CO.fmtTok(used * CO.TOK) + ' tokens' + (onExtra ? ' · ' + onExtra + ' turns on extra usage' : '');
+    usp.textContent = sp + '% used · ' + CO.fmtTok(used * CO.TOK) + (onExtra ? ' · ' + onExtra + ' turns on extra usage' : '');
     usp.classList.toggle('hot', sp >= 85);
     var sb = $('us-bar'); sb.style.width = sp + '%'; sb.classList.toggle('hot', sp >= 85);
     var wp = Math.min(100, b.week.used / b.week.cap * 100);
@@ -273,10 +273,10 @@
     charterMeta();
     setHTML($('dr-kp'), '<div><b class="cy">' + v.open + '</b><span>open</span></div><div><b class="gr">' + v.done + '</b><span>done</span></div>' +
       '<div><b class="red">' + v.failed + '</b><span>failed</span></div>');
-    // tokens: what it burns, and the owner's two brakes (a daily cap; runs a day for a department on a clock)
+    // what it spends, and the owner's two brakes (a daily cap; runs a day for a department on a clock)
     var ci = CO.CAP_STEPS.indexOf(v.cap); if (ci < 0) ci = CO.CAP_STEPS.length - 1;
     var runsNow = d.schedule ? d.schedule.times.length : 0;
-    var tokHtml = '<div class="tok"><div class="sec">TOKENS</div>' +
+    var tokHtml = '<div class="tok"><div class="sec">SPEND <span>of your plan, in dollars</span></div>' +
       '<div class="tk3"><div><b class="' + (v.capped ? 'red' : 'cy') + '">' + CO.fmtTok(v.tokToday) + '</b><span>today</span></div>' +
       '<div><b>' + CO.fmtTok(v.tok7d) + '</b><span>last 7 days</span></div>' +
       '<div title="What one turn of this department costs on average"><b>' + CO.fmtTok(v.perTurn) + '</b><span>a turn</span></div></div>' +
@@ -311,7 +311,7 @@
     setHTML($('dr-mem'), mem.length ? mem.slice(0, 5).map(function (m) { return '<div class="mem"><span class="' + m.kind + '">' + esc(m.kind) + '</span><div>' + esc(m.text) + '</div></div>'; }).join('') : '<p class="empty">Nothing remembered yet.</p>');
   }
   function capLabel(cap, perTurn) {
-    return cap ? CO.fmtTok(cap) + ' a day · ~' + Math.max(1, Math.floor(cap / (perTurn || 220000))) + ' turns' : 'no cap';
+    return cap ? CO.fmtTok(cap) + ' a day · ~' + Math.max(1, Math.floor(cap / (perTurn || 0.19))) + ' turns' : 'no cap';
   }
   function switcher(on) {
     return '<button data-sw="hub"' + (on === 'hub' ? ' class="on"' : '') + '><i class="dot working"></i>Manager</button>' + CO.S.departments.map(function (x) {
@@ -765,7 +765,7 @@
       if (e.target.id !== 'dr-cap') return;
       var cap = CO.CAP_STEPS[+e.target.value], d = CO.dept(ui.panel);
       CO.act.cap(ui.panel, cap); e.target.blur();
-      toast(cap ? d.name + ' spends at most ' + CO.fmtTok(cap) + ' tokens a day; work over it waits for midnight.' : d.name + ' has no daily cap.');
+      toast(cap ? d.name + ' spends at most ' + CO.fmtTok(cap) + ' a day; work over it waits for midnight.' : d.name + ' has no daily cap.');
     });
     $('dr-tok').addEventListener('click', function (e) {
       var b = e.target.closest('[data-rpd]'); if (!b) return;

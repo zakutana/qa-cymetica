@@ -108,7 +108,7 @@
     }
     changed();
   }
-  // what a department burns, in tokens: counted per day, held under the owner's daily cap
+  // what a department spends, in dollars of plan: counted per day, held under the owner's daily cap
   function dayRoll(d) {
     var k = new Date(CO.S.clock).toDateString();
     if (d.tok_day !== k) { d.tok_day = k; d.tok_today = 0; d.turns_today = 0; }
@@ -137,7 +137,7 @@
     var u = r2(rand(0.12, 0.32)), onPlan = CO.left().onPlan;
     charge(u);
     t.turns++; t.units = r2(t.units + u); d.units_7d = r2(d.units_7d + u);
-    dayRoll(d); d.tok_today += Math.round(u * CO.TOK); d.turns_today++;
+    dayRoll(d); d.tok_today = r2(d.tok_today + u * CO.TOK); d.turns_today++;
     var cell = null;
     for (var i = S.strip.length - 1; i >= 0; i--) if (S.strip[i].task_id === t.id && S.strip[i].state === 'running') { cell = S.strip[i]; break; }
     if (cell) { cell.units = u; cell.extra = !onPlan; }
@@ -673,11 +673,11 @@
       d.products = list; feed('info', 'You', 'set the products of ' + d.name + ': ' + list.join(', '));
       changed();
     },
-    // the owner's brake: at most this many tokens a day (null: no cap); work over it waits for midnight
+    // the owner's brake: at most this many dollars a day (null: no cap); work over it waits for midnight
     cap: function (id, tokens) {
       var d = dept(id); if (!d) return;
       d.cap_day = tokens || null;
-      feed('info', 'You', d.name + ': ' + (tokens ? 'daily cap ' + CO.fmtTok(tokens) + ' tokens' : 'no daily cap'));
+      feed('info', 'You', d.name + ': ' + (tokens ? 'daily cap ' + CO.fmtTok(tokens) : 'no daily cap'));
       changed();
     },
     // a department on a clock: how many runs a day
@@ -953,12 +953,12 @@
     S.strip.forEach(function (c) { if (c.dept_id === d.id && c.at >= from && !c.extra && c.units != null) su += c.units; });
     v.sessPct = Math.min(100, Math.round(su / b.session.cap * 100));
     v.weekPct = Math.round(d.units_7d / b.week.cap * 100);
-    // tokens: today, the last 7 days, what one turn of this department costs, and its cap
+    // dollars: today, the last 7 days, what one turn of this department costs, and its cap
     dayRoll(d);
     var tu = 0, tt = 0;
     ts.forEach(function (x) { if (x.turns) { tu += x.units; tt += x.turns; } });
-    v.tokToday = d.tok_today; v.tok7d = Math.round(d.units_7d * CO.TOK);
-    v.perTurn = Math.round((tt ? tu / tt : CO.S.meter.length ? CO.avg() : 0.22) * CO.TOK);
+    v.tokToday = d.tok_today; v.tok7d = d.units_7d * CO.TOK;
+    v.perTurn = (tt ? tu / tt : CO.S.meter.length ? CO.avg() : 0.19) * CO.TOK;
     v.cap = d.cap_day || null; v.capped = capped(d);
     v.fits = v.cap ? Math.max(0, Math.floor(v.cap / v.perTurn)) : null;
     return v;

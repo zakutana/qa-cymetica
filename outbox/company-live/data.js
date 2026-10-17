@@ -57,16 +57,13 @@
     if (/(look|design|vzhled|ugly|layout|ui\b)/.test(t)) return 'design';
     return 'custom';
   };
-  // tokens: one plan unit is a million tokens (a turn costs 0.12-0.32 units, so 120k-320k tokens)
-  CO.TOK = 1000000;
-  CO.fmtTok = function (n) {
-    n = n || 0;
-    if (n >= 1e6) return (n / 1e6).toFixed(n >= 1e7 ? 1 : 2).replace(/\.?0+$/, '') + 'M';
-    if (n >= 1e3) return Math.round(n / 1e3) + 'k';
-    return String(Math.round(n));
-  };
-  // the daily caps the owner can pick, last one none
-  CO.CAP_STEPS = [250000, 500000, 1000000, 1500000, 2000000, 3000000, 5000000, 8000000, null];
+  // What /company meters is units, and it prices them 1:1 in dollars: a department's cost_usd_7d equals its
+  // units_7d (GET /api/v1/company/mine, 2026-10-17: 0.5338 and 0.533771; 0.186 a turn on our company).
+  // It shows no tokens, so neither does the mockup: a department's spend is in dollars.
+  CO.TOK = 1;
+  CO.fmtTok = function (n) { return '$' + (+n || 0).toFixed(2); };
+  // the daily caps the owner can pick, in dollars of plan, last one none
+  CO.CAP_STEPS = [0.25, 0.5, 1, 1.5, 2, 3, 5, null];
   // a clock's run times, by runs a day
   CO.RUN_TIMES = { 1: ['09:00'], 2: ['09:00', '21:00'], 3: ['08:00', '14:00', '20:00'], 4: ['00:00', '06:00', '12:00', '18:00'],
     5: ['00:00', '05:00', '10:00', '15:00', '20:00'], 6: ['00:00', '04:00', '08:00', '12:00', '16:00', '20:00'] };
@@ -226,12 +223,12 @@
       { id: 5, key: 'trading_desk', slot: 4, name: 'Trading desk', experts: ['trader', 'researcher'],
         units_7d: 0.22, failed_7d: 0, charter_updated_at: at(-26 * 60) }
     ];
-    var today = [620000, 210000, 480000, 350000, 120000];
+    var today = [0.62, 0.21, 0.48, 0.35, 0.12];
     depts.forEach(function (d, i) {
       var tpl = CO.TEMPLATES.filter(function (t) { return t.key === d.key; })[0];
       d.charter = tpl.charter;
       d.pool_i = 0;
-      d.tok_day = new Date(t0).toDateString(); d.tok_today = today[i]; d.turns_today = Math.round(today[i] / 210000); d.cap_day = null;
+      d.tok_day = new Date(t0).toDateString(); d.tok_today = today[i]; d.turns_today = Math.round(today[i] / 0.19); d.cap_day = null;
     });
 
     function T(id, dept, title, status, o) {
