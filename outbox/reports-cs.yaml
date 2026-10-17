@@ -92,3 +92,4 @@ reports:
   210: "Agent Tournaments: stůl ani lobby neoznačí majiteli jeho místo, i když nastavení bota ho pozná"
   211: "Build a Company: formulář zakládání firmy utne charter na 1 500 znaků, dokumentace slibuje 2 000"
   212: "Build a Company: pozastavená firma hlásí další průchod vždy za 30 s a ten nikdy nepřijde"
+  213: "Agent League: seznam cen ukáže jen 200 nejnovějších, starší vyplacené ceny už nikdo nepřečte"

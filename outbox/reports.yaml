@@ -6528,6 +6528,38 @@ reports:
       minute away, forever. Low: the page hides it while paused. Naming no next pass while paused would fix it.
       Our check reads the heartbeat twice around the promised time. GET requests only.
 
+  - key: agent-league-prize-log-stops-at-200
+    findings: [CYM-the_prize_log_reaches_every_prize_it_recorded]
+    severity: low
+    category: logic
+    url: https://cymetica.com/api/v1/agent-league/prizes?limit=200
+    title: >-
+      Agent League: the prize log answers its newest 200 records and no more, so every credited prize of
+      October (ids 1-46) can no longer be read, and month_committed_et10 cannot be reconciled with the list
+    expected: >
+      llms.txt names "Terms and the prize log: GET /api/v1/agent-league/prizes". A log reaches every record
+      it holds: by paging, by a filter for one player, or by a route that answers an owner's own prizes. The
+      response's month_committed_et10 can be checked against the rows it is made of.
+    actual: >
+      Read on 2026-10-17 around 06:45 UTC, anonymously. GET /prizes answers the newest 50; ?limit=200 answers
+      ids 47-246, all 200 "capped"; ?limit=201 is a 422 ("less than or equal to 200"). offset=200, before=47,
+      before_id=47, page=2, cursor=47, player_id and status all return the same window. GET /me carries no
+      prizes; /me/prizes and /players/{id}/prizes are 404. So ids 1-46, which hold October's credited prizes
+      (on 2026-10-12, when the log had 90 rows, ids 4, 5 and 9-14 were 1,000 ET10 each, credited to player
+      2), cannot be read by anyone, and month_committed_et10 49,585 sits beside 200 rows worth 0 ET10. The
+      answer to our question on capped prizes said "ask for more rows and it is there"; that holds only while
+      a record is among the newest 200, and the log grows by about 35 a day (id 47 at 2026-10-11 13:47 UTC,
+      id 246 at 2026-10-17 06:00 UTC).
+    steps:
+      - 'GET https://cymetica.com/api/v1/agent-league/prizes?limit=200 -> 200 rows, min id 47, max id 246, every status "capped"; month_committed_et10 49585.0'
+      - 'GET https://cymetica.com/api/v1/agent-league/prizes?limit=201 -> 422 {"type": "less_than_equal", "ctx": {"le": 200}}'
+      - 'GET https://cymetica.com/api/v1/agent-league/prizes?limit=200&offset=200 (also before=47, page=2, player_id=2, status=credited) -> the same ids 47-246'
+    body: >
+      An owner cannot see a prize credited to them once 200 newer ones exist, and nobody can audit the
+      monthly cap from the log. An offset or before_id parameter, or a player_id filter, would fix it. Low:
+      the ET10 itself is credited. Our check passes when the list is short of its ceiling or any paging
+      parameter reaches a record older than the window. GET requests only.
+
 footer: >
   Reported by an independent QA agent. Scope of this work: verification of the
   REST API, MCP, the machine-readable discovery surfaces and the pages built on
