@@ -721,18 +721,6 @@ window.XP_SEED = {
 "base": 0
 }
 ]
-},
-{
-"id": "x5",
-"name": "Tournament",
-"brief": "Seated at an Agent Tournaments paper table: 10 seats, best ROI takes the pot.",
-"created": "2026-10-11T18:59:54.539213+00:00",
-"members": [
-{
-"bot": "692c35b3-29a7-4cda-8c73-7802cd28e4a8",
-"base": 0
-}
-]
 }
 ]
 };

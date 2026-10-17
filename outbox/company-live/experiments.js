@@ -4,7 +4,7 @@
  * kept in this browser only (localStorage), and ↺ goes back to the real snapshot. */
 (function () {
   'use strict';
-  var SEED = window.XP_SEED, STAKE = SEED.stake, KEY = 'co.xp.v1';
+  var SEED = window.XP_SEED, STAKE = SEED.stake, KEY = 'co.xp.v2';
   // no stop or take-profit of our own: a bot stops when its owner or its platform settings stop it
   var S, speed = 1, ui = { open: null, pick: null, q: '', dirty: false };
 

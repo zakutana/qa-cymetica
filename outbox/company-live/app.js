@@ -271,7 +271,7 @@
     var ln = CO.deptLine(d, v);
     setHTML($('dr-head'), '<i class="dot ' + v.status + (ln.tone === 'red' ? ' needs' : '') + '"></i><h2>' + esc(d.name) + '</h2>' +
       (d.files_as ? '<span class="et ' + (d.et10 ? 'lit' : 'zero') + '" title="ET10 Cymetica paid for accepted bugs, to ' + esc(d.files_as) + '">' + (d.et10 ? '+' : '') + (d.et10 || 0).toLocaleString('en-US') + ' ET10</span>' : '') +
-      '<span class="x"><button class="btn" data-a="edit">Edit</button></span>');
+      '<span class="x"><button class="btn" data-a="edit">Edit</button><button class="btn rd" data-a="delete" title="Delete this department">Delete</button></span>');
     // what it is doing right now, in one line: the first thing anyone wants to know
     setHTML($('dr-now'), '<div class="now t-' + ln.tone + '"><p>' + esc(ln.text) + '</p>' +
       (appr.length ? '<button class="btn rd" type="button" data-a="appr">Open</button>' : '') + (v.running ? '<span class="run"><i></i></span>' : '') + '</div>');
@@ -664,14 +664,17 @@
   function editDeptModal(id) {
     var d = CO.dept(id); if (!d) return;
     openModal('<div class="mh"><h3>Edit department</h3><button class="btn" data-a="close">×</button></div>' + deptForm({ key: d.key, name: d.name, experts: d.experts.slice(), charter: d.charter }, true) +
-      '<div class="mf"><button class="btn rd" data-a="remove">Remove department</button><span class="sp"></span><button class="btn" data-a="close">Cancel</button><button class="btn gr" data-a="save">Save</button></div>', true, function (a) {
+      '<div class="mf"><button class="btn rd" data-a="remove">Delete department</button><span class="sp"></span><button class="btn" data-a="close">Cancel</button><button class="btn gr" data-a="save">Save</button></div>', true, function (a) {
       if (a === 'save') { var f = readDeptForm(); if (!f.name) return; closeModal(); CO.act.editDept(id, f); ui.dirty = false; $('dr-ch-text').value = CO.dept(id).charter; renderDrawer(); }
-      if (a === 'remove') {
-        openModal('<div class="mh"><h3>Remove ' + esc(d.name) + '?</h3></div><p>Its open tasks are cancelled and its room is cleared. Its memory stays readable in the Memory tab.</p>' +
-          '<div class="mf"><span class="sp"></span><button class="btn" data-a="close">Cancel</button><button class="btn rd" data-a="really">Remove</button></div>', false, function (b) {
-          if (b === 'really') { closeModal(); closeDrawer(); CO.act.removeDept(id); toast(d.name + ' removed.'); }
-        });
-      }
+      if (a === 'remove') deleteDeptModal(id);
+    });
+  }
+  // deleting a department asks once: its work stops, its room goes, what it learned stays readable
+  function deleteDeptModal(id) {
+    var d = CO.dept(id); if (!d) return;
+    openModal('<div class="mh"><h3>Delete ' + esc(d.name) + '?</h3></div><p>Its open tasks are cancelled and its room is cleared. What it learned stays readable in the Memory tab.</p>' +
+      '<div class="mf"><span class="sp"></span><button class="btn" data-a="close">Cancel</button><button class="btn rd" data-a="really">Delete</button></div>', false, function (b) {
+      if (b === 'really') { closeModal(); closeDrawer(); CO.act.removeDept(id); toast(d.name + ' deleted.'); }
     });
   }
   function upgradeModal() {
@@ -730,6 +733,7 @@
         var x = dra.getAttribute('data-a');
         if (x === 'close') return closeDrawer();
         if (x === 'edit') return editDeptModal(ui.panel);
+        if (x === 'delete') return deleteDeptModal(ui.panel);
         if (x === 'prods') {
           var list = $('dr-prods').value.split(',').map(function (s) { return s.trim(); }).filter(Boolean);
           CO.act.products(ui.panel, list); $('dr-prods').blur(); renderDrawer(); return toast('Products saved: every run tests ' + (list.join(', ') || 'the public site') + '.');
