@@ -463,7 +463,7 @@
     var ex = d.experts.slice(0, 3), xs = ex.length === 1 ? [2.55] : ex.length === 2 ? [1.0, 3.75] : [0.55, 2.6, 4.65];
     var key = 'd' + d.id;
     ex.forEach(function (e, i) { out += desk(x0 + xs[i], y0 + 1.75, i); });
-    var link = CO.DEPT_LINK[k] || CO.DEPT_LINK.custom;
+    var link = d.link || CO.DEPT_LINK[k] || CO.DEPT_LINK.custom;
     if (link) out += terminal(x0 + 0.35, y0 + 4.0, link);
     ex.forEach(function (e, i) { out += agentAt(x0 + xs[i] + 0.95, y0 + 3.05, key, i, CO.expertName(e)); });
     out += plant(x0 + 0.3, y0 + 6.2);

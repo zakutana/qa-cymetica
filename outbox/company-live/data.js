@@ -65,8 +65,9 @@
   // the daily caps the owner can pick, in dollars of plan, last one none
   CO.CAP_STEPS = [0.25, 0.5, 1, 1.5, 2, 3, 5, null];
   // a clock's run times, by runs a day
-  CO.RUN_TIMES = { 1: ['09:00'], 2: ['09:00', '21:00'], 3: ['08:00', '14:00', '20:00'], 4: ['00:00', '06:00', '12:00', '18:00'],
-    5: ['00:00', '05:00', '10:00', '15:00', '20:00'], 6: ['00:00', '04:00', '08:00', '12:00', '16:00', '20:00'] };
+  CO.RUN_TIMES = { 1: ['10:00'], 2: ['09:00', '21:00'], 3: ['08:00', '14:00', '20:00'], 4: ['00:00', '06:00', '12:00', '18:00'],
+    5: ['00:00', '05:00', '10:00', '15:00', '20:00'], 6: ['00:00', '04:00', '08:00', '12:00', '16:00', '20:00'],
+    12: ['00:00', '02:00', '04:00', '06:00', '08:00', '10:00', '12:00', '14:00', '16:00', '18:00', '20:00', '22:00'] };
   // the owner's bug-bounty hunter name: what Cymetica QA files as, and where its ET10 goes
   CO.HUNTER = 'expire76';
   // each department's computer opens its page on cymetica.com
@@ -393,7 +394,52 @@
     s.et10 = 0; s.next_report = 214;
     return s;
   };
-  CO.fresh = function (t0) { return /demo/.test(location.search + location.hash) ? CO.seed(t0) : CO.seedEmpty(t0); };
+  // Our own company, the one that runs locally today, set up the new way: the departments, their charters,
+  // clocks and products, and the processes between them. No history: it starts now and the simulation runs it.
+  CO.OURS = {
+    mission: 'Find what is broken on Cymetica and get paid in ET10 for it, prove on paper what makes money there, and send the agents that win to Agent Tournaments.',
+    departments: [
+      { key: 'testing', name: 'Cymetica QA', experts: ['qa_tester', 'auditor'], runs: 2,
+        products: ['Build it Better', 'Fund Launcher', 'Gem Screener', 'Agent Tournaments', 'Supply Analyzer', 'Chart Analyzer'] },
+      { key: 'testing_lab', name: 'Laboratory', experts: ['lab_scientist', 'researcher'],
+        charter: "Prove on paper what makes money on Cymetica.\n" +
+          "- Ask NEXUS first: their AI gives the guidance on what to trade; our own ideas are tried and measured, never trusted ahead of it.\n" +
+          "- Rooms on paper: event cards, cloned bots, grid, head-to-head, memecoins.\n" +
+          "- Set the success rule before a room opens; judge it when its window closes.\n" +
+          "- Keep the winners, archive the losers with the reason.\n" +
+          "- Paper only. Anything with real money waits for my approval." },
+      { key: 'trading_desk', name: 'Trading desk', experts: ['trader', 'researcher'] },
+      { key: 'custom', name: 'Outsider', experts: ['researcher'], runs: 1, run_kind: 'stranger', products: ['cymetica.com'],
+        link: { url: 'https://cymetica.com', label: 'cymetica.com, as a stranger sees it' },
+        charter: "Once a day, meet Cymetica as a stranger who has never seen it.\n" +
+          "- Open the home page, follow what it promises, and try one thing an agent or a degen would do.\n" +
+          "- Every place that confuses, misleads or breaks is one line with its page.\n" +
+          "- Hand each problem to Cymetica QA; never file it yourself.\n" +
+          "- Never read our own notes first: a stranger knows only what the site says." },
+      { key: 'custom', name: 'Agent League', experts: ['researcher'], runs: 12, run_kind: 'league',
+        link: { url: 'https://cymetica.com/agent-league', label: 'Agent League' },
+        charter: "Play the Agent League as our player.\n" +
+          "- Every two hours, answer the open puzzles that are exact arithmetic on their snapshot: sequence similarity and CEX-DEX arbitrage.\n" +
+          "- The reasoning is the computation itself: the data used, the real figures, what was rejected and why.\n" +
+          "- Nothing is sent whose answer falls outside the puzzle's stated range.\n" +
+          "- Forecasts are left alone until our answers show we score.\n" +
+          "- Prizes are ET10 to me; this month's are capped." }
+    ],
+    rules: [
+      ['a bug is found anywhere', 'Cymetica QA', 'verifies it and files it as expire76'],
+      ['a new build is released', 'Cymetica QA', 'tests it the same day and reports what is broken'],
+      ['someone finds a way to make money', 'Laboratory', 'proves it on paper first'],
+      ['an agent wins on paper', 'Trading desk', 'seats it at an Agent Tournaments table']
+    ]
+  };
+  // ?demo: the busy example company; ?empty: nothing; otherwise ours, set up on the first pass
+  CO.fresh = function (t0) {
+    var q = location.search + location.hash;
+    if (/demo/.test(q)) return CO.seed(t0);
+    var s = CO.seedEmpty(t0);
+    if (!/empty/.test(q)) { s.setup = 'ours'; s.company.mission = CO.OURS.mission; }
+    return s;
+  };
 
   function hhmm(t) { var d = new Date(t); return pad(d.getHours()) + ':' + pad(d.getMinutes()); }
   function pad(n) { return (n < 10 ? '0' : '') + n; }

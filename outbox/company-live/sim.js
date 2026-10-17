@@ -168,6 +168,24 @@
         S.plan.unshift(t.id);
         feed('info', d.name, 'finished turn ' + t.turns + ' of ' + t.turns_needed + ' on "' + t.title + '"');
         outcome = 'continue';
+      } else if (t.run && d.run_kind === 'league') {
+        // a league round: the puzzles we can compute exactly, answered with the computation as the reasoning
+        t.status = 'done'; t.finished_at = S.clock; d.runs = (d.runs || 0) + 1;
+        var fams = ['cex_dex_arb', 'sequence_similarity'], na = Math.random() < 0.15 ? 0 : Math.random() < 0.4 ? 1 : 2;
+        d.answers = (d.answers || 0) + na;
+        t.outcome = na ? 'Answered ' + na + ' puzzle' + (na > 1 ? 's' : '') + ' (' + fams.slice(0, na).join(', ') + '): accepted and explained' : 'No open puzzle we can compute';
+        feed(na ? 'good' : 'info', d.name, t.outcome.toLowerCase());
+        outcome = 'done';
+      } else if (t.run && d.run_kind === 'stranger') {
+        // a stranger's pass: what confused or broke goes to whoever the processes name (Cymetica QA)
+        t.status = 'done'; t.finished_at = S.clock; d.runs = (d.runs || 0) + 1;
+        var ns = Math.random() < 0.35 ? 0 : Math.random() < 0.7 ? 1 : 2, seen = [];
+        for (var q = 0; q < ns; q++) seen.push(bugTitle(pick(['Gem Screener', 'Agent Tournaments', 'Build it Better', 'Fund Launcher', 'cymetica.com']), d));
+        d.handed = (d.handed || 0) + ns;
+        t.outcome = ns ? 'Found ' + ns + ': ' + seen.join('; ') : 'Nothing confused a newcomer today';
+        feed(ns ? 'ask' : 'good', d.name, ns ? 'stranger pass found ' + ns + ', handed on' : 'stranger pass: nothing confusing');
+        seen.forEach(function (s, k) { later(1500 + k * 1200, function () { if (!fire('bug', d, s)) say(d.name + ' found "' + s + '", and no process takes bugs yet.', d.id); }); });
+        outcome = 'done';
       } else if (t.run) {
         // a scheduled bug-hunting run: each bug found is a report drafted under the owner's name
         t.status = 'done'; t.finished_at = S.clock;
@@ -287,7 +305,7 @@
         CO.emit('approval:new', ap);
         return;
       }
-      queueFromRule(r, kind, from, subject, to); hit++;
+      if (queueFromRule(r, kind, from, subject, to)) hit++;
     });
     if (hit) changed();
     return hit;
@@ -302,7 +320,10 @@
       var seat = kind === 'winner' && to.key === 'trading_desk';
       if (kind === 'winner') { o.kind = seat ? 'seat request' : 'real-money action'; if (seat) o.expert = 'trader'; }
       if (kind === 'released') { o.turns_needed = 2; o.expert = 'qa_tester'; if (Math.random() < 0.5) o.kind = 'bug report'; }
-      var nt = newTask(to, seat ? 'Seat: ' + subject + ' at a FLASH $5 table' : PREFIX[kind] + subject, o);
+      var title = seat ? 'Seat: ' + subject + ' at a FLASH $5 table' : PREFIX[kind] + subject;
+      // the same thing already on its way there is not handed over twice
+      if (S.tasks.some(function (x) { return x.dept_id === to.id && x.title === title && /queued|running|waiting_approval/.test(x.status); })) return null;
+      var nt = newTask(to, title, o);
       nt.from_dept = from ? from.id : null; nt.rule = r.id; nt.event = kind;
       if (kind === 'released' && !o.kind) nt.outcome_text = 'No bugs in the new build';
       S.plan.unshift(nt.id);
@@ -321,7 +342,8 @@
   function afterDone(t, d) {
     if (Math.random() < 0.3) later(rand(1500, 4000), function () { noticeInPassing(d); });
     if (Math.random() < 0.12) later(rand(2000, 5000), function () { fire('custom', d, pick(SIDE.custom)); });
-    if (d.key === 'testing_lab' && /^(Paper|Bot variant|FOMO)/.test(t.title) && Math.random() < 0.6) later(rand(2000, 4000), function () { fire('winner', d, t.title.replace(/^(Paper test|Paper): /, '')); });
+    // only a bot can win a seat: a winning basket or signal is not an agent
+    if (d.key === 'testing_lab' && /^Bot variant/.test(t.title) && Math.random() < 0.6) later(rand(2000, 4000), function () { fire('winner', d, t.title.replace(/^Bot variant: /, '')); });
   }
   // a department finishing its own work notices something outside its job
   function noticeInPassing(d) {
@@ -338,7 +360,10 @@
     'supply analyzer': ['circulating supply above total supply', 'past unlock shown as upcoming'],
     'agent tournaments': ['deleted bot still seated at table 2', 'leaderboard ROI ignores fees'],
     'trading station': ['order book total off by one level', 'chart and ticker disagree on last price'],
-    'agent league': ['puzzle closes before its stated time', 'prize list omits a scored answer']
+    'agent league': ['puzzle closes before its stated time', 'prize list omits a scored answer'],
+    'build it better': ['a request shows one status on the board and another in the API', 'the spec field cuts text the docs allow'],
+    'fund launcher': ['a fund page figure differs from its API', 'a fund history starts after its launch date'],
+    'cymetica.com': ['a link on the home page answers 404', 'a page promises a feature its docs do not list']
   };
   function bugTitle(p, d) {
     var l = BUGS[p.toLowerCase()] || ['a value on the page that its API does not return', 'a link in the docs answers 404', 'a number differs between page and API'];
@@ -418,7 +443,10 @@
     var S = CO.S;
     var open = S.tasks.some(function (t) { return t.dept_id === d.id && t.run && (t.status === 'queued' || t.status === 'running'); });
     if (open) return null;
-    var t = newTask(d, 'Bug-hunting run: ' + (d.products.length ? d.products.join(', ') : 'the public site'), { turns_needed: 2, why: why, expert: 'qa_tester' });
+    var title = d.run_kind === 'league' ? 'League round: the open puzzles we can compute'
+      : d.run_kind === 'stranger' ? 'Stranger pass: cymetica.com as a newcomer'
+      : 'Bug-hunting run: ' + (d.products.length ? d.products.join(', ') : 'the public site');
+    var t = newTask(d, title, { turns_needed: d.run_kind ? 1 : 2, why: why, expert: d.run_kind ? d.experts[0] : 'qa_tester' });
     t.run = true;
     S.plan.unshift(t.id);
     return t;
@@ -442,9 +470,12 @@
       // one draft waiting for the owner is enough: the next one waits until it is decided
       var asking = S.approvals.some(function (a) { return a.dept_id === d.id; }) ||
         S.tasks.some(function (x) { return x.dept_id === d.id && x.kind && (x.status === 'queued' || x.status === 'running'); });
+      // a company with an Outsider leaves the newcomer's look to it
+      var stranger = S.departments.some(function (x) { return x.run_kind === 'stranger'; });
+      var skip = function (q) { return (asking && q.kind) || (stranger && /^Newcomer/.test(q.title)); };
       var p = pool[d.pool_i % pool.length];
-      for (var k = 0; asking && p.kind && k < pool.length; k++) { d.pool_i++; p = pool[d.pool_i % pool.length]; }
-      if (asking && p.kind) return;
+      for (var k = 0; skip(p) && k < pool.length; k++) { d.pool_i++; p = pool[d.pool_i % pool.length]; }
+      if (skip(p)) return;
       d.pool_i++;
       var t = newTask(d, p.title, { kind: p.kind || null, turns_needed: p.turns || 1, outcome_text: p.outcome, why: p.why, expert: p.expert });
       S.plan.push(t.id);
@@ -615,7 +646,8 @@
       var d = { id: S.next_dept++, key: o.key || 'custom', slot: slot, name: o.name, experts: o.experts.length ? o.experts : ['researcher'],
         units_7d: 0, failed_7d: 0, charter: o.charter, charter_updated_at: S.clock, pool_i: 0, born: S.clock,
         schedule: o.schedule || null, products: o.products || [],
-        files_as: o.files_as || (o.key === 'testing' ? CO.HUNTER : null), et10: 0, accepted: 0, runs: 0 };
+        files_as: o.files_as || (o.key === 'testing' ? CO.HUNTER : null), et10: 0, accepted: 0, runs: 0,
+        run_kind: o.run_kind || null, link: o.link || null };
       S.departments.push(d);
       feed('good', 'Manager', 'new department: ' + d.name);
       if (d.schedule) {
@@ -684,7 +716,7 @@
     runsPerDay: function (id, n) {
       var d = dept(id); if (!d || !d.schedule) return;
       var times = CO.RUN_TIMES[n]; if (!times) return;
-      d.schedule = { times: times, label: n + '× a day (' + times.join(', ') + ')' };
+      d.schedule = { times: times, label: n + '× a day (' + (n > 4 ? 'every ' + (24 / n) + ' h' : times.join(', ')) + ')' };
       d.next_run = nextRun(d, CO.S.clock);
       feed('info', 'You', d.name + ' runs ' + d.schedule.label);
       changed();
@@ -801,7 +833,7 @@
         pr.review === 'result' ? ' Its result waits for ' + (nr.reviewer === 'you' ? 'your' : nr.reviewer + '\'s') + ' review.' : '') + ' Everyone follows it from now on.';
   };
   // "add a QA department that runs twice a day on X and Y, under my name" -> a department spec
-  var KNOWN = ['Gem Screener', 'Chart Analyzer', 'Supply Analyzer', 'Agent Tournaments', 'Trading Station', 'Agent League', 'Memecoin Terminal', 'Build it Better'];
+  var KNOWN = ['Gem Screener', 'Chart Analyzer', 'Supply Analyzer', 'Agent Tournaments', 'Trading Station', 'Agent League', 'Memecoin Terminal', 'Build it Better', 'Fund Launcher'];
   function splitList(s) {
     return s.split(/\s*(?:,|;|\/|\sa\s|\sand\s|\+)\s*/i).map(function (x) { return x.trim().replace(/[.!]+$/, ''); })
       .filter(Boolean).map(function (x) {
@@ -965,9 +997,33 @@
   };
   CO.counts = counts;
 
+  // our own company (CO.OURS): its departments and processes, added the way the owner would add them
+  CO.applySetup = function () {
+    var S = CO.S;
+    if (S.setup !== 'ours') return;
+    delete S.setup;
+    CO.OURS.departments.forEach(function (o) {
+      var tpl = CO.TEMPLATES.filter(function (x) { return x.key === o.key; })[0] || {};
+      var times = o.runs ? CO.RUN_TIMES[o.runs] : null;
+      var files = o.key === 'testing' ? CO.HUNTER : null;
+      var charter = (o.charter || tpl.charter || '') +
+        (times && o.key === 'testing' ? '\n- Runs ' + o.runs + '× a day (' + times.join(', ') + ') over: ' + o.products.join(', ') + '.' : '') +
+        (files ? '\n- Hunter name: ' + files + '. Every report is filed as ' + files + ' and its ET10 goes to ' + files + '\'s wallet.' : '');
+      CO.act.addDept({ key: o.key, name: o.name, experts: o.experts.slice(), charter: charter, quiet: true,
+        schedule: times ? { times: times, label: o.runs + '× a day (' + (o.runs > 4 ? 'every ' + (24 / o.runs) + ' h' : times.join(', ')) + ')' } : null,
+        products: (o.products || []).slice(), files_as: files, run_kind: o.run_kind || null, link: o.link || null });
+    });
+    CO.OURS.rules.forEach(function (r) {
+      var d = S.departments.filter(function (x) { return x.name === r[1]; })[0];
+      if (d) CO.act.addRule({ when: r[0], dept_id: d.id, does: r[2] });
+    });
+    say('Your company is set up: ' + S.departments.length + ' departments and ' + S.rules.length + ' processes. ' +
+      'Cymetica QA, the Outsider and the Agent League run on their clocks; I plan the Laboratory and the Trading desk.');
+  };
   CO.reset = function () {
     timers = [];
     CO.S = CO.fresh(Date.now());
+    CO.applySetup();
     CO.emit('reset');
     changed();
   };

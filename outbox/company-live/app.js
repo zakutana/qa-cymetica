@@ -32,6 +32,7 @@
   /* ---------------- boot ---------------- */
   function boot() {
     CO.S = CO.fresh(Date.now());
+    CO.applySetup();
     office =new CO.Office($('office'), $('stage'), tipFor);
     office.layout();
     markSeen();
@@ -284,14 +285,21 @@
         '<div class="tkcap' + (v.capped ? ' hot' : '') + '">' + (v.capped ? 'Cap reached: it waits until 00:00' : CO.fmtTok(Math.max(0, v.cap - v.tokToday)) + ' left today') + '</div>' : '') +
       '<label class="capr"><span class="l">Daily cap</span><input type="range" id="dr-cap" min="0" max="' + (CO.CAP_STEPS.length - 1) + '" step="1" value="' + ci + '">' +
       '<b id="dr-cap-v">' + capLabel(CO.CAP_STEPS[ci], v.perTurn) + '</b></label>' +
-      (d.schedule ? '<div class="rpd"><span class="l">Runs a day</span>' + [1, 2, 3, 4, 6].map(function (n) {
+      (d.schedule ? '<div class="rpd"><span class="l">Runs a day</span>' + [1, 2, 3, 4, 6, 12].map(function (n) {
         return '<button type="button" data-rpd="' + n + '"' + (n === runsNow ? ' class="on"' : '') + '>' + n + '×</button>';
       }).join('') + '</div>' : '') + '</div>';
     var tk = $('dr-tok');
     if (tk._h !== tokHtml && document.activeElement !== $('dr-cap')) { tk._h = tokHtml; tk.innerHTML = tokHtml; }
     // a department on a clock: its runs, products, who the bugs are filed as, what they earned
     var runsHtml = '';
-    if (d.schedule) {
+    if (d.schedule && d.run_kind) {
+      // the league answers puzzles and the outsider hands problems on: no products, no bug count of their own
+      var third = d.run_kind === 'league' ? [(d.answers || 0), 'answers sent'] : [(d.handed || 0), 'handed to Cymetica QA'];
+      runsHtml = '<div class="runs"><div class="sec">RUNS <span>' + esc(d.schedule.label) + '</span></div>' +
+        '<div class="rk" style="grid-template-columns:repeat(3,1fr)"><div><b>' + hhmm(d.next_run) + '</b><span>next run</span></div><div><b>' + (d.runs || 0) + '</b><span>runs done</span></div>' +
+        '<div><b class="gr">' + third[0] + '</b><span>' + third[1] + '</span></div></div>' +
+        '<div class="cb"><span class="sp" style="flex:1"></span><button class="btn cy" data-a="runnow">Run now</button></div></div>';
+    } else if (d.schedule) {
       runsHtml = '<div class="runs"><div class="sec">RUNS <span>' + esc(d.schedule.label) + '</span></div>' +
         '<div class="rk"><div><b>' + hhmm(d.next_run) + '</b><span>next run</span></div><div><b>' + (d.runs || 0) + '</b><span>runs done</span></div>' +
         '<div><b class="gr">' + (d.accepted || 0) + '</b><span>bugs accepted</span></div><div><b class="gr">+' + (d.et10 || 0).toLocaleString('en-US') + '</b><span>ET10 to ' + esc(d.files_as || 'you') + '</span></div></div>' +
@@ -367,7 +375,11 @@
         (n ? '<div class="then">then: when ' + esc(n.when) + ' → ' + esc(nd ? nd.name : '') + ' <span class="rid">' + n.id + '</span></div>' : '') + '</div>' +
         '<span class="switch mini' + (r.on ? ' on' : '') + '" data-a="rule-toggle"><span class="sw"></span></span><button class="rx" data-a="rule-del" title="Remove">×</button></div>';
     }).join('') : '');
-    setHTML($('nr-ex'), '<span class="hint">e.g.</span>' + CO.RULE_EXAMPLES.map(function (e, i) { return '<button class="exr" type="button" data-ex="' + i + '">' + esc(exampleSentence(e)) + '</button>'; }).join(''));
+    // only the examples the company does not already follow
+    var ex = CO.RULE_EXAMPLES.map(function (e, i) { return [e, i]; }).filter(function (p) {
+      return !S.rules.some(function (r) { var d = CO.ruleTarget(r); return d && d.key === p[0][1] && CO.kindOf(r.when) === CO.kindOf(p[0][0]); });
+    });
+    setHTML($('nr-ex'), ex.length ? '<span class="hint">e.g.</span>' + ex.map(function (p) { return '<button class="exr" type="button" data-ex="' + p[1] + '">' + esc(exampleSentence(p[0])) + '</button>'; }).join('') : '');
   }
   // an example as the sentence the owner would write, naming their own department when they have one
   function exampleSentence(e) {
