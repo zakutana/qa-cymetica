@@ -8,357 +8,283 @@
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
 <link rel="stylesheet" href="style.css">
 <style>
-/* Mockup of a redesigned cymetica.com/account (My Balances): the live page's parts (parity.md), laid out again.
-   Numbers are our account's, read 2026-10-17 (data.js). The PREVIEW switch in the top bar is mockup chrome:
-   it shows the parts our account does not show today (paper mode, sections that appear only with data). */
+/* v3. The live /account page as it is laid out today (one page, same section order, label-left / green-number-right
+   boxes, room between cards), drawn in Cymetica's look. Numbers are our account's, read 2026-10-17 (data.js).
+   PREVIEW in the top bar is mockup chrome: it shows the parts our account does not show today. v2 (tabs) is v2.html. */
 .pv{display:flex;align-items:center;gap:8px;border:1px dashed var(--line3);border-radius:12px;padding:4px 4px 4px 10px}
-.pv .lbl{font-size:9.5px}
-.pv .seg{border:0;background:none;padding:0}
-.pv .seg button{height:28px;font-size:10.5px;padding:0 10px}
+.pv .lbl{font-size:9.5px}.pv .seg{border:0;background:none;padding:0}.pv .seg button{height:28px;font-size:10.5px;padding:0 10px}
+.wrap.pg{max-width:1440px}
+.title{display:flex;align-items:flex-end;gap:14px;margin:30px 0 8px;flex-wrap:wrap}
+.title h1{font-family:'Archivo Black';font-weight:400;font-size:38px;line-height:1}
+.title .sp{flex:1}
+.title .tot{text-align:right}
+.title .tot b{display:block;font-family:'JetBrains Mono';font-weight:800;font-size:34px;color:var(--green);text-shadow:0 0 24px rgba(0,255,136,.35);line-height:1}
+.title .tot span{font-size:10.5px;letter-spacing:.18em;color:var(--dim2)}
+.chips{display:flex;gap:8px;align-items:center;margin-bottom:14px;flex-wrap:wrap}
+.jump{position:sticky;top:68px;z-index:15;display:flex;gap:4px;flex-wrap:wrap;padding:8px 10px;margin:0 0 22px;border-radius:14px;
+ background:rgba(8,12,20,.9);backdrop-filter:blur(8px);border:1px solid var(--line2)}
+.jump a{font-size:11px;font-weight:700;letter-spacing:.08em;color:var(--dim2);padding:6px 10px;border-radius:9px;white-space:nowrap}
+.jump a:hover{color:var(--text);background:var(--panel2)}
+.jump a i{color:var(--cyan);margin-right:6px}
 
-.head{display:flex;align-items:center;gap:12px;margin:24px 0 16px;flex-wrap:wrap}
-.head h1{font-family:'Archivo Black';font-weight:400;font-size:34px;margin-right:6px}
-.head .sp{flex:1}
-.acts{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
-.acts .sep{width:1px;height:28px;background:var(--line2);margin:0 2px}
-.acts .btn.ln i.fa-arrow-up-right-from-square{font-size:9px;opacity:.6;margin-left:-2px}
+.card{position:relative;background:linear-gradient(180deg,rgba(17,26,40,.88),rgba(10,14,23,.92));border:1px solid var(--line2);border-radius:20px;padding:22px 24px 24px;margin-bottom:22px;scroll-margin-top:140px}
+.card:hover{border-color:var(--line3)}
+.ch{display:flex;align-items:center;gap:12px;margin-bottom:14px;flex-wrap:wrap}
+.ch h2{display:flex;align-items:center;gap:10px;font-family:'Archivo Black';font-weight:400;font-size:19px}
+.ch h2 i{color:var(--cyan);font-size:16px}
+.ch .sp{flex:1}
+.ch .meta{font-size:12px;color:var(--dim2)}
+.ch .meta a,.lnk{color:var(--cyan);font-weight:700}
+.ch .meta a:hover,.lnk:hover{text-decoration:underline}
+.sub{font-size:12.5px;color:var(--dim2);margin:-6px 0 14px}
+.grp{font-size:11px;font-weight:800;letter-spacing:.16em;color:var(--dim2);margin:18px 0 10px}
+.grp:first-of-type{margin-top:4px}
 
-.paper{display:flex;align-items:center;gap:16px;margin-bottom:16px;padding:14px 18px;border-radius:18px;border:1px solid rgba(0,207,255,.5);
- background:linear-gradient(90deg,rgba(0,207,255,.12),rgba(0,207,255,.03));flex-wrap:wrap}
-.paper b.t{font-family:'Archivo Black';font-weight:400;font-size:16px;letter-spacing:.04em;color:var(--cyan)}
-.paper .s{font-size:12px;color:var(--dim)}
-.paper .st{display:flex;gap:18px;margin-left:12px}
-.paper .st div{display:flex;flex-direction:column}
-.paper .st b{font-family:'Archivo Black';font-weight:400;font-size:18px}
-.paper .st span{font-size:10px;letter-spacing:.14em;color:var(--dim2)}
-.paper .sp{flex:1}
+/* the live page's box: label left, number right, green */
+.kvs{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px}
+.kv{display:flex;align-items:center;justify-content:space-between;gap:12px;min-height:56px;padding:0 18px;border-radius:14px;border:1px solid var(--line2);background:rgba(6,9,15,.55);transition:.15s}
+.kv:hover{border-color:rgba(0,255,136,.35);background:rgba(0,255,136,.03)}
+.kv .l{font-size:12px;font-weight:800;letter-spacing:.08em;color:var(--dim);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.kv .l small{font-size:9.5px;color:var(--dim2);letter-spacing:.06em;margin-left:6px}
+.kv .l a{color:var(--dim2);font-size:10px;margin-left:6px}.kv .l a:hover{color:var(--cyan)}
+.kv .v{font-family:'JetBrains Mono';font-weight:800;font-size:18px;color:var(--green);white-space:nowrap;font-variant-numeric:tabular-nums}
+.kv .v.z{color:var(--dim2)}
+.kv.big{min-height:70px}.kv.big .v{font-size:24px}
+.note{grid-column:1/-1;display:flex;flex-wrap:wrap;gap:8px;align-items:center;font-size:12px;color:var(--dim);padding:10px 14px;border-radius:12px;border:1px dashed var(--line2)}
+.note b{color:var(--green);font-family:'JetBrains Mono'}
 
-.hero{display:grid;grid-template-columns:minmax(320px,400px) 1fr minmax(420px,500px);border:1px solid var(--line2);border-radius:24px;overflow:hidden;
- background:linear-gradient(180deg,rgba(17,26,40,.92),rgba(10,14,23,.92));box-shadow:0 0 0 1px rgba(0,207,255,.05),0 30px 80px -40px rgba(0,207,255,.3)}
-.hero>div{padding:24px 28px;min-width:0}
-.tot{display:flex;flex-direction:column;justify-content:center}
-.tot .big{font-family:'Archivo Black';font-size:58px;line-height:1.05;margin:12px 0 12px;letter-spacing:-.02em;white-space:nowrap;text-shadow:0 0 34px rgba(0,207,255,.35)}
-.tot .pills{display:flex;gap:8px;flex-wrap:wrap}
-.alloc{display:flex;align-items:center;gap:26px;border-left:1px solid var(--line);border-right:1px solid var(--line)}
-.alloc svg{flex:none;width:168px;height:168px}
-.alloc .leg{flex:1;min-width:0;display:grid;gap:10px}
-.alloc .li{display:grid;grid-template-columns:12px 58px 1fr auto;gap:10px;align-items:center;font-size:12.5px}
-.alloc .li i{width:10px;height:10px;border-radius:3px}
-.alloc .li .b{height:6px;border-radius:99px;background:var(--line2);overflow:hidden}.alloc .li .b s{display:block;height:100%}
-.alloc .li b{font-variant-numeric:tabular-nums}
-.tiles{display:grid;grid-template-columns:1fr 1fr;gap:12px;align-content:center;padding:20px 24px!important}
-.tiles .tile{cursor:pointer;transition:.15s}
-.tiles .tile:hover{border-color:rgba(0,207,255,.5);background:rgba(0,207,255,.05)}
-.tiles .tile .k i{color:var(--cyan);margin-right:6px}
-
-.tabs{position:sticky;top:68px;z-index:15;display:flex;align-items:center;gap:4px;margin:20px 0 16px;padding:6px;border-radius:16px;
- background:rgba(8,12,20,.92);backdrop-filter:blur(8px);border:1px solid var(--line2);width:max-content;max-width:100%;overflow:auto}
-.tabs button{display:flex;align-items:center;gap:9px;height:42px;padding:0 18px;border-radius:12px;font-weight:700;font-size:12.5px;letter-spacing:.1em;color:var(--dim2);white-space:nowrap}
-.tabs button:hover{color:var(--text)}
-.tabs button.on{background:linear-gradient(180deg,rgba(0,207,255,.18),rgba(0,207,255,.06));color:var(--text);box-shadow:inset 0 0 0 1px rgba(0,207,255,.45)}
-.tabs button .c{font-size:10.5px;background:var(--line2);color:var(--dim);border-radius:99px;padding:2px 7px}
-.tabs button.on .c{background:var(--cyan);color:var(--bg)}
-.pane{display:none}.pane.on{display:block;animation:fade .25s ease}
-@keyframes fade{from{opacity:0;transform:translateY(6px)}}
-.cols{display:grid;grid-template-columns:minmax(0,1fr) 390px;gap:18px;align-items:start}
-.g2{display:grid;grid-template-columns:1fr 1fr;gap:16px;align-items:start}
-.g4{display:grid;grid-template-columns:repeat(4,1fr);gap:12px}
-.stack>*+*{margin-top:16px}
-.new{display:inline-flex;align-items:center;font-size:9px;font-weight:800;letter-spacing:.12em;color:var(--cyan);border:1px dashed rgba(0,207,255,.6);border-radius:5px;padding:1px 5px;margin-left:6px;vertical-align:2px;cursor:help}
-
-/* holdings */
-.ph .tools{display:flex;align-items:center;gap:12px}
-.ex{display:flex;align-items:center;gap:8px;font-size:11px;letter-spacing:.12em;color:var(--dim2);cursor:pointer;user-select:none}
-.explain{display:none;padding:16px 20px;border-bottom:1px solid var(--line);background:rgba(0,207,255,.04)}
+.explain{display:none;margin:0 0 16px;padding:16px;border-radius:14px;background:rgba(0,207,255,.05);border:1px solid rgba(0,207,255,.25)}
 .explain.on{display:block}
 .q3{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}
-.q3 .q{padding:12px 14px;border-radius:12px;border:1px solid var(--line2);background:rgba(6,9,15,.5)}
-.q3 .q b{display:flex;align-items:center;gap:8px;font-size:12px;letter-spacing:.1em}
-.q3 .q b i{color:var(--cyan)}
-.q3 .q span{display:block;font-size:12px;color:var(--dim);margin-top:6px;line-height:1.5}
-.explain .notes{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:12px;font-size:11.5px;color:var(--dim2);line-height:1.55}
-.explain .notes b{color:var(--dim)}
-.hold{padding:4px 10px 12px}
-.hr{display:grid;grid-template-columns:minmax(230px,1.7fr) 1.1fr .8fr 1fr 1fr;gap:16px;align-items:center;padding:0 12px;min-height:58px;border-radius:12px}
-.hr:not(.hd):not(.gh):hover{background:rgba(17,26,40,.9)}
-.hr.hd{min-height:40px;font-size:11px;letter-spacing:.14em;color:var(--dim2)}
-.hr.gh{min-height:38px;border-top:1px solid var(--line);border-radius:0;margin-top:4px;font-size:10.5px;letter-spacing:.2em;color:var(--cyan)}
-.hr.gh .r{color:var(--dim);letter-spacing:.06em;font-size:12px;font-weight:700}
-.hr .r{text-align:right}
-.hr.sub{min-height:0;padding-bottom:12px;margin-top:-6px}
-.hr.sub .mini{grid-column:1/-1;display:flex;gap:10px;flex-wrap:wrap;padding-left:52px}
-.mini .m{display:flex;align-items:center;gap:8px;font-size:11.5px;padding:6px 10px;border-radius:9px;border:1px solid var(--line2);background:rgba(6,9,15,.55)}
-.mini .m span{color:var(--dim2);letter-spacing:.1em;font-size:10.5px}
-.mini .m b{font-variant-numeric:tabular-nums}
-.tk{display:flex;align-items:center;gap:12px;min-width:0}
-.tk .sym{flex:none;width:40px;height:40px;border-radius:12px;display:grid;place-items:center;font-weight:800;font-size:10px;letter-spacing:.02em;
- color:var(--cyan);background:var(--cyanT);border:1px solid rgba(0,207,255,.4)}
-.tk .sym.cash{color:var(--green);background:var(--greenT);border-color:rgba(0,255,136,.4)}
-.tk .sym.z{color:var(--dim2);background:rgba(30,48,80,.35);border-color:var(--line3)}
-.tk .sym.p{font-size:8.5px}
-.tk b{display:flex;align-items:center;gap:6px;font-size:14px;white-space:nowrap}
-.tk b a{color:var(--dim2);font-size:11px}.tk b a:hover{color:var(--cyan)}
-.tk span{display:block;font-size:11.5px;color:var(--dim2);margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.val{font-weight:800;font-size:15px}
-.bar{height:5px;border-radius:99px;background:var(--line2);overflow:hidden}.bar i{display:block;height:100%;background:var(--cyan);border-radius:99px}
-.share{display:flex;align-items:center;gap:10px}.share .bar{flex:1}.share b{font-size:12px;width:46px;text-align:right}
-.empty{padding:24px 10px;text-align:center;color:var(--dim2);font-size:12.5px}
-.empty>i{display:block;font-size:22px;color:var(--line3);margin-bottom:10px}
-.btn.go .new{color:#03140b;border-color:rgba(3,20,11,.55)}
+.q3 div b{display:flex;align-items:center;gap:8px;font-size:12px;letter-spacing:.1em;color:var(--text)}
+.q3 div b i{color:var(--cyan)}
+.q3 div span{display:block;font-size:12.5px;color:var(--dim);margin-top:6px;line-height:1.5}
+.explain .more{margin-top:12px;font-size:12px;color:var(--dim2);line-height:1.6}
+.ex{display:flex;align-items:center;gap:10px;font-size:12px;font-weight:700;color:var(--cyan);cursor:pointer;user-select:none;padding:6px 10px;border-radius:10px;border:1px solid rgba(0,207,255,.3)}
+.sync{font-size:11.5px;color:var(--dim2);margin:-4px 0 12px}
 
-/* buying power */
-.card{padding:18px 20px}
-.card .ct{display:flex;align-items:center;gap:10px;margin-bottom:12px}
-.card .ct h4{font-family:'Archivo Black';font-weight:400;font-size:15px}
-.card .ct .sp{flex:1}
-.bp .big{font-family:'Archivo Black';font-size:36px;line-height:1}
-.ch{display:grid;grid-template-columns:96px 1fr 76px;gap:10px;align-items:center;padding:10px 0;border-bottom:1px dashed var(--line2);font-size:12.5px}
-.ch .bar{height:8px}.ch .bar i{background:linear-gradient(90deg,var(--cyan),var(--green))}
-.ch .r{text-align:right;font-weight:800}
-.ch .sub{grid-column:2/-1;font-size:11px;color:var(--dim2);margin-top:-4px}
+/* valuation rows: each a box like live, numbers green */
+.vh,.vr{display:grid;grid-template-columns:minmax(200px,1.6fr) 1.1fr .9fr 1.1fr 150px;gap:14px;align-items:center;padding:0 18px}
+.vh{font-size:10.5px;font-weight:800;letter-spacing:.14em;color:var(--dim2);margin:16px 0 8px}
+.vr{min-height:56px;border-radius:14px;border:1px solid var(--line2);background:rgba(6,9,15,.55);margin-bottom:8px;transition:.15s}
+.vr:hover{border-color:rgba(0,255,136,.35)}
+.vr .n{font-size:13px;font-weight:800;letter-spacing:.06em;color:var(--dim);min-width:0}
+.vr .n small{display:block;font-size:11px;font-weight:500;letter-spacing:0;color:var(--dim2);margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.vr .g,.vh .r{text-align:right}
+.vr .g{font-family:'JetBrains Mono';font-weight:800;font-size:16px;color:var(--green);font-variant-numeric:tabular-nums}
+.vr .g.z{color:var(--dim2)}
+.vr .p{display:flex;align-items:center;gap:10px;justify-content:flex-end}
+.vr .p .bar{width:60px;height:5px;border-radius:99px;background:var(--line2);overflow:hidden}.vr .p .bar i{display:block;height:100%;background:var(--green)}
+.vr .p b{font-family:'JetBrains Mono';font-weight:800;font-size:14px;color:var(--green);width:58px;text-align:right}
 
 /* tables */
-.tbl{padding:4px 10px 12px}
-.tr{display:grid;gap:14px;align-items:center;padding:0 12px;min-height:52px;border-radius:12px}
-.tr:not(.hd):not(.gr):hover{background:rgba(17,26,40,.9)}
-.tr.hd{min-height:40px;font-size:11px;letter-spacing:.14em;color:var(--dim2)}
-.tr.gr{min-height:34px;font-size:10.5px;letter-spacing:.2em;color:var(--cyan);border-top:1px solid var(--line);border-radius:0}
-.tr.closed{opacity:.6}
-.tr .r{text-align:right}
-.tr .t{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.tr .t a:hover{color:var(--cyan)}
-.pos .tr{grid-template-columns:minmax(260px,2.4fr) 112px 92px 92px 110px 80px 110px}
-.ord .tr{grid-template-columns:1.2fr .7fr .9fr .9fr .8fr .9fr 1fr}
-.keys .tr{grid-template-columns:1.2fr 1.2fr .6fr .9fr 90px}
-.ags .tr{grid-template-columns:1.2fr .7fr .8fr 1.6fr}
-.side{font-size:10.5px;font-weight:800;letter-spacing:.12em;border-radius:6px;padding:3px 7px;white-space:nowrap}
-.side.bull{color:var(--green);background:var(--greenT)}.side.bear{color:var(--red);background:var(--redT)}
-.stt{font-size:10.5px;font-weight:800;letter-spacing:.12em}
-.stt.open{color:var(--cyan)}.stt.closed{color:var(--dim2)}
-.strip{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:14px}
-.foot{display:flex;align-items:center;gap:10px;justify-content:center;padding:12px;flex-wrap:wrap;font-size:12px;color:var(--dim2)}
+.tb{width:100%;border-collapse:separate;border-spacing:0 6px}
+.tb th{font-size:10.5px;font-weight:800;letter-spacing:.14em;color:var(--dim2);text-align:left;padding:4px 14px}
+.tb td{padding:12px 14px;background:rgba(6,9,15,.5);border-top:1px solid var(--line);border-bottom:1px solid var(--line);font-size:13px}
+.tb td:first-child{border-left:1px solid var(--line);border-radius:12px 0 0 12px}
+.tb td:last-child{border-right:1px solid var(--line);border-radius:0 12px 12px 0}
+.tb tr:hover td{background:rgba(17,26,40,.9)}
+.tb .r{text-align:right}
+.tb .t{max-width:520px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.tb .t a:hover{color:var(--cyan)}
+.tb .g{font-family:'JetBrains Mono';font-weight:700;font-variant-numeric:tabular-nums}
+.tb tr.closed td{opacity:.62}
+.tb .grow td{background:none;border:0;padding:8px 14px 2px;font-size:10.5px;font-weight:800;letter-spacing:.16em;color:var(--cyan)}
+.side{font-size:11px;font-weight:800;letter-spacing:.1em;white-space:nowrap}
+.side.bull{color:var(--green)}.side.bear{color:var(--red)}
+.stt{font-size:11px;font-weight:800;letter-spacing:.1em}.stt.open{color:var(--cyan)}.stt.closed{color:var(--dim2)}
+.foot{display:flex;align-items:center;gap:10px;justify-content:center;padding:10px;flex-wrap:wrap;font-size:12px;color:var(--dim2)}
+.empty{padding:22px;text-align:center;color:var(--dim2);font-size:12.5px}
 .skel{height:10px;border-radius:6px;background:linear-gradient(90deg,var(--line),var(--line2),var(--line));background-size:200% 100%;animation:sk 1.6s infinite}
 @keyframes sk{0%{background-position:200% 0}100%{background-position:-200% 0}}
 
-/* earnings */
-.live{display:inline-flex;align-items:center;gap:6px;font-size:10px;font-weight:800;letter-spacing:.14em;color:var(--green)}
-.live i{width:7px;height:7px;border-radius:50%;background:var(--green);box-shadow:0 0 8px var(--green);animation:pulse 1.6s infinite}
-.e10 .big{font-family:'Archivo Black';font-size:40px;line-height:1;text-shadow:0 0 28px rgba(0,255,136,.3)}
-.mfe{display:block;padding:12px 14px;border-radius:12px;border:1px solid var(--line2);background:rgba(6,9,15,.45);transition:.15s}
-.mfe:hover{border-color:rgba(0,207,255,.5)}
-.mfe .r1{display:flex;align-items:center;gap:10px}
-.mfe .r1 .id{font-size:11px;color:var(--dim2)}
-.mfe .r1 b{flex:1;font-size:13.5px}
+/* actions */
+.acts{display:grid;grid-template-columns:repeat(6,1fr);gap:12px}
+.acts .btn{height:54px;font-size:13px;border-radius:14px}
+.acts .btn.wd{border-color:rgba(255,68,68,.5);color:var(--red);background:rgba(255,68,68,.06)}
+.acts .btn.wd:hover{background:var(--redT)}
+.claimlink{display:block;text-align:center;margin:-8px 0 22px;font-size:12.5px;color:var(--cyan);text-decoration:underline;cursor:pointer}
+
+.paper{display:none;align-items:center;gap:16px;margin-bottom:18px;padding:14px 18px;border-radius:18px;border:1px solid rgba(0,207,255,.5);background:linear-gradient(90deg,rgba(0,207,255,.12),rgba(0,207,255,.03));flex-wrap:wrap}
+.paper.on{display:flex}
+.paper b.t{font-family:'Archivo Black';font-weight:400;font-size:16px;color:var(--cyan)}
+.paper .s{font-size:12px;color:var(--dim)}
+.paper .st{display:flex;gap:18px;margin-left:12px}
+.paper .st div{display:flex;flex-direction:column}
+.paper .st b{font-family:'JetBrains Mono';font-weight:800;font-size:18px;color:var(--green)}
+.paper .st span{font-size:10px;letter-spacing:.14em;color:var(--dim2)}
+.paper .sp{flex:1}
+.cond{display:none}.cond.on,.show-all .cond{display:block}
+.only{font-size:9.5px;letter-spacing:.12em;color:var(--dim2);border:1px solid var(--line2);border-radius:5px;padding:2px 6px}
+.new{display:inline-flex;align-items:center;font-size:9px;font-weight:800;letter-spacing:.12em;color:var(--cyan);border:1px dashed rgba(0,207,255,.6);border-radius:5px;padding:1px 5px;margin-left:6px;vertical-align:2px;cursor:help;text-decoration:none}
+.btn.go .new{color:#03140b;border-color:rgba(3,20,11,.55)}
+
+.mfe{display:block;padding:14px 18px;border-radius:14px;border:1px solid var(--line2);background:rgba(6,9,15,.55);margin-top:12px}
+.mfe:hover{border-color:rgba(0,207,255,.45)}
+.mfe .r1{display:flex;align-items:center;gap:10px}.mfe .r1 .id{font-size:11px;color:var(--dim2)}.mfe .r1 b{flex:1;font-size:14px}
 .mfe .r2{display:flex;justify-content:space-between;gap:10px;font-size:12px;color:var(--dim);margin-top:8px}
-.mfe .bar{margin-top:8px}.mfe .bar i{background:linear-gradient(90deg,var(--cyan),var(--green))}
-.form{display:grid;gap:10px}
-.form .row{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.mfe .r2 b{font-family:'JetBrains Mono';color:var(--green)}
+.mfe .bar{margin-top:8px;height:4px;border-radius:99px;background:var(--line2);overflow:hidden}.mfe .bar i{display:block;height:100%;background:linear-gradient(90deg,var(--cyan),var(--green))}
+.row{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
 .chk{display:flex;align-items:center;gap:10px;font-size:12.5px;color:var(--dim);cursor:pointer;padding:5px 0}
 .chk input{accent-color:var(--cyan);width:16px;height:16px}
-.steps{display:grid;gap:8px;margin-top:6px}
+.steps{display:grid;gap:8px;margin-top:12px}
 .step{display:flex;gap:10px;align-items:center;font-size:12.5px;color:var(--dim)}
 .step b{width:24px;height:24px;border-radius:50%;display:grid;place-items:center;background:var(--cyanT);color:var(--cyan);font-size:11px;flex:none}
-.cond{display:none}.show-all .cond,.cond.on{display:block}
-.show-all .paper.cond,.paper.cond.on{display:flex}
-.only{font-size:9.5px;letter-spacing:.12em;color:var(--dim2);border:1px solid var(--line2);border-radius:5px;padding:2px 6px}
-.claim{display:none;margin-top:12px}.claim.on{display:grid}
 .keyout{display:none;margin-top:10px;padding:12px;border-radius:10px;border:1px solid rgba(0,255,136,.45);background:var(--greenT);font-size:12px;line-height:1.6}
+.claim{display:none}.claim.on{display:block}
+.e10 b{font-family:'JetBrains Mono';font-weight:800;font-size:34px;color:var(--green);text-shadow:0 0 22px rgba(0,255,136,.3)}
+.live{display:inline-flex;align-items:center;gap:6px;font-size:10px;font-weight:800;letter-spacing:.14em;color:var(--green)}
+.live i{width:7px;height:7px;border-radius:50%;background:var(--green);box-shadow:0 0 8px var(--green);animation:pulse 1.6s infinite}
 
-/* dialogs */
+/* dialogs (as v2) */
 .dlg{width:min(560px,94vw);max-height:90vh;overflow:auto;padding:0}
 .dh{display:flex;align-items:center;gap:12px;padding:18px 22px;border-bottom:1px solid var(--line)}
 .dh h3{font-family:'Archivo Black';font-weight:400;font-size:20px;flex:1}
 .db{padding:18px 22px;display:grid;gap:14px}
-.chips{display:flex;flex-wrap:wrap;gap:8px}
+.chipz{display:flex;flex-wrap:wrap;gap:8px}
 .cp{height:36px;padding:0 12px;border-radius:10px;border:1px solid var(--line3);font-weight:700;font-size:12px;color:var(--dim);display:inline-flex;align-items:center;gap:6px}
-.cp:hover{border-color:var(--cyan);color:var(--text)}
-.cp.on{border-color:rgba(0,207,255,.7);background:var(--cyanT);color:var(--cyan)}
+.cp:hover{border-color:var(--cyan);color:var(--text)}.cp.on{border-color:rgba(0,207,255,.7);background:var(--cyanT);color:var(--cyan)}
 .cp small{font-size:9.5px;color:var(--green);letter-spacing:.08em}
-.addr{display:flex;align-items:center;gap:10px;padding:12px 14px;border-radius:12px;border:1px solid var(--line2);background:var(--deep);font-size:13px}
-.addr b{flex:1;letter-spacing:.04em}
-.warn{display:flex;gap:10px;font-size:12px;color:var(--dim);padding:10px 12px;border-radius:10px;border:1px solid rgba(255,68,68,.3);background:rgba(255,68,68,.06);line-height:1.5}
-.warn i{color:var(--red);margin-top:2px}
+.addr{display:flex;align-items:center;gap:10px;padding:12px 14px;border-radius:12px;border:1px solid var(--line2);background:var(--deep);font-size:13px}.addr b{flex:1}
+.warn{display:flex;gap:10px;font-size:12px;color:var(--dim);padding:10px 12px;border-radius:10px;border:1px solid rgba(255,68,68,.3);background:rgba(255,68,68,.06);line-height:1.5}.warn i{color:var(--red);margin-top:2px}
 .fee{display:grid;gap:6px;padding:12px 14px;border-radius:12px;border:1px solid var(--line2);background:rgba(6,9,15,.5);font-size:12.5px}
-.fee div{display:flex;justify-content:space-between}.fee span{color:var(--dim2)}
-.fee .t{border-top:1px dashed var(--line3);padding-top:8px;margin-top:2px;font-weight:800}
-.big2{font-family:'Archivo Black';font-weight:400;font-size:26px}
-.flow{display:flex;align-items:center;gap:10px;font-size:11px;letter-spacing:.12em;color:var(--dim2)}
-.flow b{color:var(--cyan)}
+.fee div{display:flex;justify-content:space-between}.fee span{color:var(--dim2)}.fee .t{border-top:1px dashed var(--line3);padding-top:8px;margin-top:2px;font-weight:800}
+.flow{display:flex;align-items:center;gap:10px;font-size:11px;letter-spacing:.12em;color:var(--dim2)}.flow b{color:var(--cyan)}
+.g2{display:grid;grid-template-columns:1fr 1fr;gap:12px}
 
-@media (max-width:1380px){.hero{grid-template-columns:1fr 1fr}.hero .tiles{grid-column:1/-1;grid-template-columns:repeat(4,1fr);border-top:1px solid var(--line)}.alloc{border-right:0}.cols{grid-template-columns:1fr}}
-@media (max-width:1000px){.wrap{padding:0 16px 60px}.hero{grid-template-columns:1fr}.alloc{border:0;border-top:1px solid var(--line)}.hero .tiles{grid-template-columns:1fr 1fr}
- .g2,.q3,.explain .notes{grid-template-columns:1fr}.g4,.strip{grid-template-columns:1fr 1fr}.hold,.tbl{overflow-x:auto}.hr,.tr{min-width:760px}}
+@media (max-width:1100px){.kvs{grid-template-columns:repeat(2,minmax(0,1fr))}.acts{grid-template-columns:repeat(3,1fr)}.vh,.vr{grid-template-columns:minmax(150px,1.4fr) 1fr .8fr 1fr 110px}}
+@media (max-width:700px){.wrap{padding:0 16px 60px}.kvs{grid-template-columns:1fr}.acts{grid-template-columns:1fr 1fr}.q3{grid-template-columns:1fr}.jump{position:static}}
 </style>
 </head>
 <body>
 
-<header class="top"><div class="wrap">
+<header class="top"><div class="wrap pg">
  <div class="logo"><svg width="30" height="30" viewBox="0 0 30 30"><circle cx="15" cy="15" r="13" fill="none" stroke="#00cfff" stroke-width="1.5" opacity=".5"/><circle cx="15" cy="15" r="8" fill="none" stroke="#00cfff" stroke-width="1.5"/><circle cx="15" cy="15" r="3" fill="#00ff88"/></svg>EventTrader</div>
  <div class="crumb"><b>MY BALANCES</b></div>
  <div class="sp"></div>
  <div class="pv" data-tip="Mockup only: shows the parts our account does not show today."><span class="lbl">PREVIEW</span><div class="seg" id="pv"><button data-v="ours" class="on">OUR ACCOUNT</button><button data-v="paper">PAPER MODE</button><button data-v="all">EVERY SECTION</button></div></div>
- <span class="mock">MOCKUP · 17 OCT</span>
+ <span class="mock">MOCKUP v3 · 17 OCT</span>
 </div></header>
 
-<main class="wrap" id="page">
- <div class="head">
-  <h1>My Balances</h1>
-  <span class="tag g" id="mode">LIVE</span>
-  <span class="tag" id="sync" data-tip="Syncing with the blockchain: these figures can briefly lag your latest daily rewards. Value comes from your live ledger."></span>
-  <span class="sp"></span>
+<main class="wrap pg" id="page">
+ <div class="title"><h1>My Balances</h1><span class="sp"></span>
+  <div class="tot"><b class="num" id="total"></b><span>TOTAL VALUE<span class="new" data-tip="Proposed: the Valuation total, also here at the top.">PROPOSED</span></span></div></div>
+ <div class="chips"><span class="tag g" id="mode">LIVE</span><span class="tag" id="sync"></span></div>
+
+ <section class="paper" id="paperBanner">
+  <div><b class="t">PAPER TRADING</b><div class="s">Simulated USDC · no real money at risk</div></div>
+  <div class="st" id="simSt"></div><span class="sp"></span>
+  <button class="btn red sm" data-mock="Reset simulation balance to $1,000? This erases your sim P&amp;L."><i class="fa-solid fa-rotate-left"></i>RESET BALANCE</button>
+  <button class="btn go sm" data-mock="Enable real trading"><i class="fa-solid fa-bolt"></i>ENABLE REAL TRADING</button>
+ </section>
+
+ <nav class="jump"><span class="new" data-tip="Proposed: jump links for a long page; nothing is hidden.">PROPOSED</span>
+  <a href="#s-bp"><i class="fa-solid fa-bolt"></i>Buying power</a><a href="#s-pos"><i class="fa-solid fa-wallet"></i>Positions</a><a href="#s-cards"><i class="fa-solid fa-newspaper"></i>Event cards</a>
+  <a href="#s-act"><i class="fa-solid fa-hand-pointer"></i>Actions</a><a href="#s-val"><i class="fa-solid fa-scale-balanced"></i>Valuation</a><a href="#s-earn"><i class="fa-solid fa-sack-dollar"></i>Earnings</a>
+  <a href="#s-tg"><i class="fa-brands fa-telegram"></i>Telegram</a><a href="#s-ord"><i class="fa-solid fa-receipt"></i>Orders</a><a href="#s-keys"><i class="fa-solid fa-key"></i>API keys</a><a href="#s-ag"><i class="fa-solid fa-robot"></i>Agents</a></nav>
+
+ <!-- 1 live buying power -->
+ <section class="card" id="s-bp"><div class="ch"><h2><i class="fa-solid fa-bolt"></i>Live Buying Power</h2><span class="tag" data-tip="What a live event-card buy can spend right now from your own wallets, per chain. Spending capacity, not a holding: your ETH and tokens are under Positions. Deposit USDC, USDT or the chain's native coin to raise it. Ledger USDC is usable for exchange orders and is a ceiling here, not a funding source.">WHAT IS THIS ⓘ</span><span class="sp"></span><span class="meta" id="ledgerUsdc"></span></div>
+  <div class="kvs" id="bp"></div></section>
+
+ <!-- 2 positions -->
+ <section class="card" id="s-pos"><div class="ch"><h2><i class="fa-solid fa-wallet"></i>Positions</h2><span class="sp"></span><label class="ex"><span class="sw" id="exSw"></span>Explain these numbers</label></div>
+  <div class="explain" id="explain"><div class="q3">
+   <div><b><i class="fa-solid fa-box-archive"></i>POSITION</b><span>The big number in each box. How much of that token is credited to you. This is what you own.</span></div>
+   <div><b><i class="fa-solid fa-chart-line"></i>TRADING BALANCE</b><span>What you can place orders with right now. Usually your position, minus anything locked in open orders.</span></div>
+   <div><b><i class="fa-solid fa-arrow-up-from-bracket"></i>WITHDRAWABLE NOW</b><span>How much can leave the platform to your wallet at this moment.</span></div></div>
+   <div class="more">This page reads your on-chain wallets; the exchange shows your tradeable ledger balance, and right after a deposit is swept into custody the two can briefly differ: nothing is missing. A withdrawal is paid only from your own wallets; trading profits stay tradeable but are not withdrawable right now; USDC moved to your trading balance is withdrawable again after you move it back. A smaller withdrawable figure never means money was taken.</div></div>
+  <div class="sync" data-tip="These figures can briefly lag your latest daily rewards. Valuation below is your live ledger.">⏳ Synced with the blockchain · checked <span id="syncT"></span> UTC</div>
+  <div id="pos"></div></section>
+
+ <!-- 3 event card positions -->
+ <section class="card" id="s-cards"><div class="ch"><h2><i class="fa-solid fa-newspaper"></i>Event Card Positions</h2><span class="sp"></span><span class="meta" id="cMeta"></span></div>
+  <div id="cards"></div></section>
+
+ <!-- 4 actions -->
+ <section class="card" id="s-act"><div class="ch"><h2><i class="fa-solid fa-hand-pointer"></i>Actions</h2></div>
   <div class="acts">
    <button class="btn go" data-dlg="dep"><i class="fa-solid fa-arrow-down"></i>DEPOSIT</button>
-   <button class="btn" data-dlg="wd"><i class="fa-solid fa-arrow-up"></i>WITHDRAW</button>
-   <span class="sep"></span>
-   <a class="btn ln" href="#" data-go="/swap"><i class="fa-solid fa-right-left"></i>SWAP<i class="fa-solid fa-arrow-up-right-from-square"></i></a>
-   <a class="btn ln cy" href="#" data-go="/exchange-crypto"><i class="fa-solid fa-coins"></i>BUY ET10<i class="fa-solid fa-arrow-up-right-from-square"></i></a>
-   <a class="btn ln cy" href="#" data-go="/exchange-crypto-etlp"><i class="fa-solid fa-coins"></i>BUY ETLP<i class="fa-solid fa-arrow-up-right-from-square"></i></a>
-   <span class="sep"></span>
-   <a class="btn ln" href="#" data-go="/agent-tournaments"><i class="fa-solid fa-trophy"></i>AGENT TOURNAMENTS<i class="fa-solid fa-arrow-up-right-from-square"></i></a>
-  </div>
- </div>
+   <button class="btn wd" data-dlg="wd"><i class="fa-solid fa-arrow-up"></i>WITHDRAW</button>
+   <a class="btn cy" href="#" data-go="/exchange-crypto"><i class="fa-solid fa-circle-plus"></i>BUY ET10</a>
+   <a class="btn cy" href="#" data-go="/exchange-crypto-etlp"><i class="fa-solid fa-dollar-sign"></i>BUY ETLP</a>
+   <a class="btn cy" href="#" data-go="/swap"><i class="fa-solid fa-right-left"></i>SWAP</a>
+   <a class="btn cy" href="#" data-go="/agent-tournaments"><i class="fa-solid fa-trophy"></i>AGENT TOURNAMENTS</a>
+  </div></section>
+ <a class="claimlink" id="claimBtn">Deposit not showing? Submit tx hash</a>
 
- <!-- paper mode only -->
- <section class="paper cond" id="paperBanner">
-  <div><b class="t">PAPER TRADING</b><div class="s">Simulated USDC · no real money at risk</div></div>
-  <div class="st" id="simSt"></div>
-  <span class="sp"></span>
-  <button class="btn red sm" id="resetSim"><i class="fa-solid fa-rotate-left"></i>RESET BALANCE</button>
-  <button class="btn go sm" id="enableReal"><i class="fa-solid fa-bolt"></i>ENABLE REAL TRADING</button>
- </section>
+ <!-- owed to you / pending deposits: only with data -->
+ <section class="card cond" id="owCard"><div class="ch"><h2><i class="fa-solid fa-hand-holding-dollar"></i>Owed to You</h2><span class="only">SHOWN ONLY WHEN SOMETHING IS OWED</span></div><div class="sub" id="owT"></div></section>
+ <section class="card cond" id="pdCard"><div class="ch"><h2><i class="fa-solid fa-hourglass-half"></i>Pending Deposits</h2><span class="only">SHOWN ONLY WHILE SOMETHING IS ON ITS WAY</span></div><div id="pdL"></div></section>
+ <section class="card claim" id="claim"><div class="ch"><h2><i class="fa-solid fa-magnifying-glass-dollar"></i>Claim Missing Deposit</h2><span class="sp"></span><button class="ibtn" id="claimX">✕</button></div>
+  <div class="sub">If your deposit was not detected automatically, paste the transaction hash.</div>
+  <div class="row"><select class="field" style="width:150px"><option>Ethereum</option><option>Base</option><option>Arbitrum</option><option>Polygon</option><option>Optimism</option><option>BNB Chain</option><option>Avalanche</option></select><input class="field" id="txh" style="flex:1;min-width:260px" placeholder="0x… transaction hash (64 hex)"><button class="btn cy" id="claimGo"><i class="fa-solid fa-check"></i>VERIFY &amp; CLAIM</button></div>
+  <div class="sub" style="margin:10px 0 0" id="claimOut"></div></section>
 
- <section class="hero">
-  <div class="tot">
-   <div class="lbl">TOTAL VALUE · LIVE LEDGER</div>
-   <div class="big num" id="total"></div>
-   <div class="pills" id="pills"></div>
-  </div>
-  <div class="alloc"><div id="donut"></div><div class="leg" id="legend"></div></div>
-  <div class="tiles" id="tiles"></div>
- </section>
+ <!-- valuation -->
+ <section class="card" id="s-val"><div class="ch"><h2><i class="fa-solid fa-scale-balanced"></i>Valuation</h2>
+   <div class="seg" id="vsb"><button data-f="all" class="on">ALL TOKENS</button><button data-f="vsb" data-tip="Only VAIX, SBIO, VCUB, DSCI, DESCI, TBIG, TBIGS, with cash and positions.">VSB ONLY</button></div>
+   <span class="sp"></span><span class="meta">TOTAL</span><b class="num" style="font-family:'JetBrains Mono';font-size:24px;color:var(--green)" id="vTotal"></b></div>
+  <div id="val"></div></section>
 
- <nav class="tabs" id="tabs">
-  <button data-p="bal" class="on"><i class="fa-solid fa-wallet"></i>BALANCES <span class="c" id="cB"></span></button>
-  <button data-p="cards"><i class="fa-solid fa-newspaper"></i>CARD POSITIONS <span class="c" id="cC"></span></button>
-  <button data-p="earn"><i class="fa-solid fa-sack-dollar"></i>EARNINGS</button>
-  <button data-p="act"><i class="fa-solid fa-clock-rotate-left"></i>ACTIVITY</button>
-  <button data-p="set"><i class="fa-solid fa-user-gear"></i>SETTINGS</button>
- </nav>
+ <!-- earnings -->
+ <div id="s-earn"></div>
+ <section class="card cond" id="mfCard"><div class="ch"><h2><i class="fa-solid fa-hand-holding-dollar"></i>AI Agent Microfunds</h2><span class="sp"></span><span class="meta"><a href="#" data-go="/microfunds">Browse all →</a></span></div>
+  <div class="kvs" id="mfT"></div><div id="mfL"></div></section>
+ <section class="card cond" id="ytCard"><div class="ch"><h2><i class="fa-solid fa-seedling"></i>Yield Term</h2><span class="tag c">PILOT</span><span class="only">PILOT USERS ONLY</span><span class="sp"></span><span class="tag" data-tip="Capital at risk. Returns are real trading P&amp;L and may be negative.">TARGET, NOT A GUARANTEE ⓘ</span></div>
+  <div class="kvs" style="grid-template-columns:repeat(2,minmax(0,1fr))"><div class="kv"><span class="l">TARGET · 4 WEEKS</span><span class="v">1.0%</span></div><div class="kv"><span class="l">AMOUNT</span><span class="v">$50 – $1,000</span></div></div>
+  <div class="row" style="margin-top:12px"><input class="field num" placeholder="Amount (USDC)" style="width:200px"><label class="chk"><input type="checkbox">I understand and accept the risk terms</label><button class="btn go" data-mock="Subscribe">SUBSCRIBE</button></div></section>
+ <section class="card" id="e10Card"><div class="ch"><h2><i class="fa-solid fa-coins"></i>ET10 Revenue</h2><span class="live"><i></i>LIVE</span><span class="sp"></span><span class="tag" data-tip="Your ET10RWD balance: an internal, USD-valued earnings record (1 ET10RWD = $1 of ET10 revenue share earned); not ET10, not transferable, not withdrawable on its own. Each accrual is your deposit-weighted share of the platform revenue of one fee window (about a minute). Accrued, not yet paid; USDC revenue sharing is not active. What pays today is the daily reward-token delivery (/earn).">WHAT IS THIS ⓘ</span></div>
+  <div class="row"><div class="e10"><b class="num" id="e10"></b><div class="sub" style="margin:6px 0 0">EARNED SO FAR · ACCRUED, NOT PAID</div></div><span style="flex:1"></span><a class="btn sm" href="#" data-go="/transactions">EVERY ACCRUAL · TRANSACTIONS</a><a class="btn sm" href="#" data-go="/earn">DAILY DELIVERY · /EARN</a></div></section>
+ <section class="card cond" id="rsCard"><div class="ch"><h2><i class="fa-solid fa-gift"></i>Revenue Share</h2><span class="only">SHOWN ONCE THERE IS ANY</span><span class="sp"></span><span class="meta"><a href="#" data-go="/rewards">View Dashboard →</a></span></div>
+  <div class="kvs" style="grid-template-columns:repeat(3,minmax(0,1fr))" id="rsT"></div><button class="btn go" style="margin-top:12px;display:none" id="rsClaim">CLAIM REWARDS</button></section>
+ <section class="card cond" id="trCard"><div class="ch"><h2><i class="fa-solid fa-sack-dollar"></i>Token Revenue</h2><span class="only">SHOWN ONCE THERE IS ANY</span><span class="sp"></span><span class="meta">USDC revenue from holding ET10, SBIO and VAIX</span></div>
+  <div class="kvs" id="trT"></div><div class="empty">No payouts yet. Revenue will be distributed automatically.</div></section>
+ <section class="card" id="rdCard"><div class="ch"><h2><i class="fa-solid fa-truck-fast"></i>Reward Delivery</h2><span class="tag" id="cadTip">GAS ⓘ</span></div>
+  <div class="sub">How often your ET10 holder rewards go on-chain. They accrue every day either way.</div>
+  <div class="row"><div class="seg" id="cad"></div><button class="btn cy sm" id="cadSave">SAVE</button><span class="meta" id="cadNext" style="font-size:12px;color:var(--dim2)"></span></div></section>
 
- <!-- BALANCES -->
- <section class="pane on" id="p-bal"><div class="cols">
-  <div class="panel">
-   <div class="ph"><h3>Holdings</h3><span class="sp"></span>
-    <div class="tools">
-     <label class="ex"><span class="sw" id="exSw"></span>EXPLAIN THESE NUMBERS</label>
-     <div class="seg" id="vsb"><button data-f="all" class="on">ALL TOKENS</button><button data-f="vsb" data-tip="Only the small-cap tokens VAIX, SBIO, VCUB, DSCI, DESCI, TBIG, TBIGS, with cash and positions.">VSB ONLY</button></div>
-    </div></div>
-   <div class="explain" id="explain">
-    <div class="q3">
-     <div class="q"><b><i class="fa-solid fa-box-archive"></i>POSITION</b><span>How much of the token is credited to you. This is what you own.</span></div>
-     <div class="q"><b><i class="fa-solid fa-chart-line"></i>TRADING BALANCE</b><span>What you can place orders with right now. Usually your position, minus anything locked in open orders.</span></div>
-     <div class="q"><b><i class="fa-solid fa-arrow-up-from-bracket"></i>WITHDRAWABLE NOW</b><span>How much can leave the platform to your wallet at this moment.</span></div>
-    </div>
-    <div class="notes">
-     <div><b>Different from the number on the exchange?</b> This page reads your on-chain wallets; the exchange shows your tradeable ledger balance. Right after a deposit is swept into custody the two can briefly differ: nothing is missing.</div>
-     <div><b>Why withdrawable can be smaller.</b> A withdrawal is paid only from your own wallets. Trading profits stay tradeable but are not withdrawable right now; USDC moved to your trading balance is withdrawable again after you move it back. A smaller figure never means money was taken.</div>
-    </div>
-   </div>
-   <div class="hold" id="hold"></div>
-  </div>
-  <div class="panel card bp" id="bp"></div>
- </div></section>
+ <!-- telegram -->
+ <section class="card" id="s-tg"><div class="ch"><h2><i class="fa-brands fa-telegram"></i>Telegram notifications</h2><span class="tag" id="tgS">NOT CONNECTED</span><span class="sp"></span><button class="btn go sm" id="tgC"><i class="fa-brands fa-telegram"></i>CONNECT TELEGRAM</button></div>
+  <div class="sub">A private message for your bot trades, resolutions, deposits, withdrawals and price alerts. Opt-in.</div>
+  <div class="steps" id="tgSteps" style="display:none"><div class="step"><b>1</b>Open the bot and press Start</div><div class="step"><b>2</b>Send it the code shown here (valid 15 minutes)<button class="btn sm" data-mock="Copy code">COPY CODE</button></div><div class="step"><b>3</b><button class="btn cy sm" id="tgV">VERIFY</button></div></div>
+  <div id="tgOn" style="display:none"><label class="chk"><input type="checkbox" checked>Bot trades (placed, resolved, stop-loss / take-profit)</label><label class="chk"><input type="checkbox" checked>Market and event card resolutions</label><label class="chk"><input type="checkbox" checked>Deposit credited</label><label class="chk"><input type="checkbox" checked>Withdrawal completed</label><label class="chk"><input type="checkbox">Price alerts</label>
+   <div class="row" style="margin-top:8px"><button class="btn sm" data-mock="Send test">SEND TEST</button><button class="btn red sm" id="tgOff">DISCONNECT</button></div></div></section>
 
- <!-- CARD POSITIONS -->
- <section class="pane" id="p-cards">
-  <div class="strip" id="cStrip"></div>
-  <div class="panel">
-   <div class="ph"><h3>Event card positions</h3><span class="tag c" id="cOpen"></span><span class="sp"></span>
-    <a class="btn sm ln" href="#" data-go="/positions"><i class="fa-solid fa-list"></i>ALL POSITIONS<i class="fa-solid fa-arrow-up-right-from-square"></i></a>
-    <a class="btn sm ln" href="#" data-go="/event-cards"><i class="fa-solid fa-newspaper"></i>EVENT CARDS<i class="fa-solid fa-arrow-up-right-from-square"></i></a></div>
-   <div class="tbl pos" id="pos"></div>
-  </div>
- </section>
+ <!-- recent orders -->
+ <section class="card" id="s-ord"><div class="ch"><h2><i class="fa-solid fa-receipt"></i>Recent Orders</h2><span class="sp"></span><span class="meta" id="ordN"></span></div><div id="ord"></div></section>
 
- <!-- EARNINGS -->
- <section class="pane" id="p-earn"><div class="stack">
-  <div class="g2">
-   <div class="panel card e10"><div class="ct"><h4>ET10 Revenue</h4><span class="live"><i></i>LIVE</span><span class="sp"></span>
-     <span class="tag" data-tip="Your ET10RWD balance: an internal, USD-valued earnings record (1 ET10RWD = $1 of ET10 revenue share earned); not ET10, not transferable, not withdrawable on its own. Each accrual is your deposit-weighted share of the platform revenue of one fee window (about a minute). Accrued, not yet paid; USDC revenue sharing is not active. What pays today is the daily reward-token delivery.">WHAT IS THIS ⓘ</span></div>
-    <div class="big num" id="e10"></div><div class="lbl" style="margin-top:8px">EARNED SO FAR · ET10RWD · ACCRUED, NOT PAID</div>
-    <div class="form" style="margin-top:14px"><div class="row"><a class="btn sm ln" href="#" data-go="/transactions"><i class="fa-solid fa-list"></i>EVERY ACCRUAL · TRANSACTIONS<i class="fa-solid fa-arrow-up-right-from-square"></i></a><a class="btn sm ln" href="#" data-go="/earn"><i class="fa-solid fa-gift"></i>DAILY DELIVERY · /EARN<i class="fa-solid fa-arrow-up-right-from-square"></i></a></div></div></div>
-   <div class="panel card"><div class="ct"><h4>Reward delivery</h4><span class="sp"></span><span class="tag" id="cadTip">GAS ⓘ</span></div>
-    <div class="mute" style="font-size:12.5px">How often your ET10 holder rewards go on-chain.</div>
-    <div class="seg" id="cad" style="margin-top:14px"></div>
-    <div class="row" style="display:flex;align-items:center;gap:12px;margin-top:14px"><button class="btn cy sm" id="cadSave">SAVE</button><span class="lbl" id="cadNext"></span></div></div>
-  </div>
-  <div class="panel cond" id="mfCard"><div class="ph"><h3>AI agent microfunds</h3><span class="sp"></span><a class="btn sm ln" href="#" data-go="/microfunds">BROWSE ALL<i class="fa-solid fa-arrow-up-right-from-square"></i></a></div>
-   <div class="card"><div class="g4" id="mfT"></div><div class="stack" style="margin-top:14px" id="mfL"></div></div></div>
-  <div class="g2">
-   <div class="panel card cond" id="rsCard"><div class="ct"><h4>Revenue share</h4><span class="only">SHOWN ONCE THERE IS ANY</span><span class="sp"></span><a class="btn sm ln" href="#" data-go="/rewards">VIEW DASHBOARD<i class="fa-solid fa-arrow-up-right-from-square"></i></a></div>
-    <div class="g4" style="grid-template-columns:repeat(3,1fr)" id="rsT"></div>
-    <button class="btn go" style="margin-top:12px;display:none" id="rsClaim">CLAIM REWARDS</button></div>
-   <div class="panel card cond" id="trCard"><div class="ct"><h4>Token revenue</h4><span class="only">SHOWN ONCE THERE IS ANY</span><span class="sp"></span><span class="tag">ET10 · SBIO · VAIX</span></div>
-    <div class="g4" id="trT"></div>
-    <div class="empty" style="padding:14px">No payouts yet. Revenue will be distributed automatically.</div></div>
-  </div>
-  <div class="panel card cond" id="ytCard"><div class="ct"><h4>Yield term</h4><span class="tag c">PILOT</span><span class="only">PILOT USERS ONLY</span><span class="sp"></span><span class="tag" data-tip="Capital at risk. Returns are real trading P&amp;L and may be negative.">TARGET, NOT A GUARANTEE ⓘ</span></div>
-   <div class="g2" style="grid-template-columns:1fr 1fr 2fr;gap:12px"><div class="tile"><div class="v num">1.0%</div><div class="k">TARGET · 4 WEEKS</div></div><div class="tile"><div class="v num">$50–1,000</div><div class="k">AMOUNT</div></div>
-    <div class="form"><div class="row"><input class="field num" placeholder="Amount (USDC)" style="flex:1"><button class="btn go" data-mock="Subscribe">SUBSCRIBE</button></div><label class="chk"><input type="checkbox">I understand and accept the risk terms</label></div></div></div>
- </div></section>
+ <!-- api keys -->
+ <section class="card" id="s-keys"><div class="ch"><h2><i class="fa-solid fa-key"></i>API Keys</h2><span class="tag" data-tip="Sent as the X-API-Key header. Registered agent keys can read, trade and withdraw; user-issued keys never withdraw.">X-API-KEY ⓘ</span><span class="sp"></span><span class="meta"><a href="#" data-go="/build">Bring Your Own Agent</a> · <a href="#" data-go="/api-docs">API docs</a></span></div>
+  <div id="keys"></div>
+  <div class="row" style="margin-top:10px"><input class="field" id="kName" style="flex:1;min-width:240px" placeholder="Key name (e.g. my-claude-agent)"><label class="chk"><input type="checkbox">allow trading</label><button class="btn cy" id="kCreate"><i class="fa-solid fa-key"></i>CREATE KEY</button></div>
+  <div class="keyout" id="kOut"></div></section>
 
- <!-- ACTIVITY -->
- <section class="pane" id="p-act"><div class="stack">
-  <div class="g2">
-   <div class="panel card"><div class="ct"><h4>Pending deposits</h4><span class="tag" id="pdN"></span><span class="sp"></span></div>
-    <div id="pdL"></div>
-    <button class="btn sm" id="claimBtn" style="margin-top:12px"><i class="fa-solid fa-magnifying-glass-dollar"></i>DEPOSIT NOT SHOWING? SUBMIT TX HASH<span class="new" data-tip="Proposed: today this link sits inside the pending block, which is hidden when nothing is pending, so a deposit that was never detected cannot reach the claim form.">PROPOSED</span></button>
-    <div class="claim form" id="claim"><span class="lbl">CLAIM MISSING DEPOSIT · IF IT WAS NOT DETECTED AUTOMATICALLY</span>
-     <div class="row"><select class="field" style="width:140px"><option>Ethereum</option><option>Base</option><option>Arbitrum</option><option>Polygon</option><option>Optimism</option><option>BNB Chain</option><option>Avalanche</option></select><input class="field" id="txh" style="flex:1" placeholder="0x… transaction hash (64 hex)"></div>
-     <div class="row"><button class="btn cy" id="claimGo"><i class="fa-solid fa-check"></i>VERIFY &amp; CLAIM</button><button class="btn sm" id="claimX">CANCEL</button><span class="mute" style="font-size:12px" id="claimOut"></span></div></div></div>
-   <div class="panel card cond" id="owCard"><div class="ct"><h4>Owed to you</h4><span class="only">SHOWN ONLY WHEN SOMETHING IS OWED</span></div>
-    <div class="mute" style="font-size:12.5px" id="owT"></div></div>
-  </div>
-  <div class="panel"><div class="ph"><h3>Recent orders</h3><span class="tag" id="ordN"></span><span class="sp"></span><span class="lbl">LAST 20</span></div><div class="tbl ord" id="ord"></div></div>
- </div></section>
-
- <!-- SETTINGS -->
- <section class="pane" id="p-set"><div class="stack">
-  <div class="g2">
-   <div class="panel card"><div class="ct"><h4>Telegram notifications</h4><span class="tag" id="tgS">NOT CONNECTED</span><span class="sp"></span><button class="btn go sm" id="tgC"><i class="fa-brands fa-telegram"></i>CONNECT</button></div>
-    <div class="mute" style="font-size:12.5px">A private message for each kind you pick. Opt-in only.</div>
-    <div class="steps" id="tgSteps" style="display:none;margin-top:12px"><div class="step"><b>1</b>Open the bot and press Start</div><div class="step"><b>2</b>Send it the code shown here (valid 15 minutes)<button class="btn sm" data-mock="Copy code">COPY CODE</button></div><div class="step"><b>3</b><button class="btn cy sm" id="tgV">VERIFY</button></div></div>
-    <div style="margin-top:10px"><label class="chk"><input type="checkbox" checked>Bot trades (placed, resolved, stop-loss / take-profit)</label><label class="chk"><input type="checkbox" checked>Market and event card resolutions</label><label class="chk"><input type="checkbox" checked>Deposit credited</label><label class="chk"><input type="checkbox" checked>Withdrawal completed</label><label class="chk"><input type="checkbox">Price alerts</label></div>
-    <div class="row" id="tgOn" style="display:none;gap:8px;margin-top:8px"><button class="btn sm" data-mock="Send test">SEND TEST</button><button class="btn red sm" id="tgOff">DISCONNECT</button></div></div>
-   <div class="panel card"><div class="ct"><h4>My AI agents</h4><span class="sp"></span><span class="tag" data-tip="Each agent trades from its own spend account. Moving USDC is an internal ledger move: nothing goes on-chain, no fee.">ONE CLICK · NO FEE ⓘ</span></div>
-    <div class="tile" style="margin-bottom:12px"><div class="v num" id="agAv"></div><div class="k">YOUR AVAILABLE USDC</div></div>
-    <div class="tbl ags" style="padding:0" id="ags"></div></div>
-  </div>
-  <div class="panel"><div class="ph"><h3>API keys</h3><span class="sp"></span><a class="btn sm ln" href="#" data-go="/build">BRING YOUR OWN AGENT<i class="fa-solid fa-arrow-up-right-from-square"></i></a><a class="btn sm ln" href="#" data-go="/api-docs">API DOCS<i class="fa-solid fa-arrow-up-right-from-square"></i></a></div>
-   <div class="card" style="padding-bottom:6px"><div class="form"><div class="row"><input class="field" id="kName" style="flex:1" placeholder="Key name"><label class="chk" style="padding:0" data-tip="Sent as the X-API-Key header. Registered agent keys can read, trade and withdraw; user-issued keys never withdraw."><input type="checkbox" id="kTrade">Allow trading ⓘ</label><button class="btn cy" id="kCreate"><i class="fa-solid fa-key"></i>CREATE KEY</button></div>
-    <div class="keyout" id="kOut"></div></div></div>
-   <div class="tbl keys" id="keys"></div></div>
- </div></section>
+ <!-- my ai agents -->
+ <section class="card" id="s-ag"><div class="ch"><h2><i class="fa-solid fa-robot"></i>My AI agents</h2><span class="tag" data-tip="Each agent trades from its own spend account. Moving USDC is an internal ledger move: nothing goes on-chain, no fee.">ONE CLICK · NO FEE ⓘ</span><span class="sp"></span></div>
+  <div class="kvs" style="grid-template-columns:repeat(4,minmax(0,1fr));margin-bottom:12px"><div class="kv"><span class="l">YOUR AVAILABLE USDC</span><span class="v" id="agAv"></span></div></div>
+  <div id="ags"></div></section>
 </main>
 
 <!-- DEPOSIT -->
 <div class="ov" id="dep"><div class="panel dlg">
  <div class="dh"><h3>Deposit funds</h3><div class="seg" id="depMode"><button data-m="send" class="on">SEND CRYPTO</button><button data-m="card">BUY WITH CARD</button></div><button class="ibtn" data-close>✕</button></div>
  <div class="db" id="depSend">
-  <div><span class="lbl">NETWORK</span><div class="chips" id="nets" style="margin-top:8px"></div></div>
-  <div class="mute" style="font-size:12px" data-tip="USDC, USDT, ETH, Monero (XMR), Zcash (ZEC) or any of the top 100 cryptos we support (plus VAIX, ET10, SBIO, ETLP); every one counts as money when you invest or trade. Tokens outside that list are not detected and may be lost.">Accepted: USDC, USDT, ETH and the top 100 cryptos ⓘ · <b id="netEta"></b></div>
-  <div><span class="lbl">YOUR DEPOSIT ADDRESS</span><div class="addr" style="margin-top:8px"><i class="fa-solid fa-wallet" style="color:var(--cyan)"></i><b class="num" id="addr">0x••••••••••••…••••</b><button class="btn sm" data-mock="Copied">COPY</button><button class="btn sm" data-mock="QR code">QR</button></div></div>
+  <div><span class="lbl">NETWORK</span><div class="chipz" id="nets" style="margin-top:8px"></div></div>
+  <div class="mute" style="font-size:12px" data-tip="USDC, USDT, ETH, Monero (XMR), Zcash (ZEC) or any of the top 100 cryptos we support (plus VAIX, ET10, SBIO, ETLP). Tokens outside that list are not detected and may be lost.">Accepted: USDC, USDT, ETH and the top 100 cryptos ⓘ · <b id="netEta"></b></div>
+  <div><span class="lbl">YOUR DEPOSIT ADDRESS</span><div class="addr" style="margin-top:8px"><i class="fa-solid fa-wallet" style="color:var(--cyan)"></i><b class="num">0x••••••••••••…••••</b><button class="btn sm" data-mock="Copied">COPY</button><button class="btn sm" data-mock="QR code">QR</button></div></div>
   <div class="warn"><i class="fa-solid fa-triangle-exclamation"></i><span id="netWarn"></span></div>
   <div class="fee"><div><span>Service fee</span><b>No fee</b></div><div><span>Bridge fee (cross-chain)</span><b>~$0.15 flat</b></div><div><span>Base deposits</span><b>No fees</b></div><div class="t"><span>Estimated total</span><b>$0 on Base</b></div></div>
   <div><span class="lbl">OR SEND FROM YOUR WALLET</span>
-   <div class="row" style="display:flex;gap:8px;margin-top:8px;flex-wrap:wrap"><div class="seg" id="depTok"><button class="on">USDT</button><button>USDC</button></div><input class="field num" placeholder="Amount" style="width:120px"><button class="cp">$10</button><button class="cp">$25</button><button class="cp">$50</button><button class="cp">$100</button></div>
-   <div class="row" style="display:flex;gap:8px;margin-top:10px;flex-wrap:wrap"><button class="btn go" data-mock="Fund trading wallet">FUND TRADING WALLET</button><button class="btn sm" data-mock="MetaMask">METAMASK</button><button class="btn sm" data-mock="Coinbase">COINBASE</button><button class="btn sm" data-mock="WalletConnect">WALLETCONNECT</button></div></div>
-  <div class="mute" style="font-size:12px" data-tip="USDT deposits are credited as USDT and held in your account. USDC is the settlement currency; USDT sent on Base auto-converts to USDC. On other chains USDT stays USDT, withdrawable as USDT, never converted without an on-chain swap.">USDT stays USDT, except on Base ⓘ</div>
+   <div class="row" style="margin-top:8px"><div class="seg" id="depTok"><button class="on">USDT</button><button>USDC</button></div><input class="field num" placeholder="Amount" style="width:120px"><button class="cp">$10</button><button class="cp">$25</button><button class="cp">$50</button><button class="cp">$100</button></div>
+   <div class="row" style="margin-top:10px"><button class="btn go" data-mock="Fund trading wallet">FUND TRADING WALLET</button><button class="btn sm" data-mock="MetaMask">METAMASK</button><button class="btn sm" data-mock="Coinbase">COINBASE</button><button class="btn sm" data-mock="WalletConnect">WALLETCONNECT</button></div></div>
+  <div class="mute" style="font-size:12px" data-tip="USDT deposits are credited as USDT. USDC is the settlement currency; USDT sent on Base auto-converts to USDC. On other chains USDT stays USDT, withdrawable as USDT.">USDT stays USDT, except on Base ⓘ</div>
   <button class="btn sm" data-mock="Scanning every deposit network…"><i class="fa-solid fa-magnifying-glass"></i>SENT A DEPOSIT BUT DON'T SEE IT? SCAN ALL NETWORKS</button>
  </div>
  <div class="db" id="depCard" style="display:none">
-  <div><span class="lbl">PROVIDER</span><div class="chips" style="margin-top:8px"><button class="cp on">TRANSAK <small>GLOBAL</small></button><button class="cp">COINBASE <small>US</small></button></div></div>
-  <div><span class="lbl">AMOUNT (USD)</span><div class="chips" style="margin-top:8px"><button class="cp">$25</button><button class="cp on">$50</button><button class="cp">$100</button><button class="cp">$250</button></div></div>
+  <div><span class="lbl">PROVIDER</span><div class="chipz" style="margin-top:8px"><button class="cp on">TRANSAK <small>GLOBAL</small></button><button class="cp">COINBASE <small>US</small></button></div></div>
+  <div><span class="lbl">AMOUNT (USD)</span><div class="chipz" style="margin-top:8px"><button class="cp">$25</button><button class="cp on">$50</button><button class="cp">$100</button><button class="cp">$250</button></div></div>
   <div class="fee"><div><span>Estimated fee</span><b>~$1.75</b></div><div class="t"><span>You receive</span><b>~$48.25 USDC</b></div></div>
   <button class="btn go" data-mock="Buy USDC with card">BUY USDC WITH CARD</button>
   <div class="mute" style="font-size:12px">KYC by the provider. USDC lands in your Base deposit wallet.</div>
@@ -369,13 +295,13 @@
 <div class="ov" id="wd"><div class="panel dlg">
  <div class="dh"><h3>Withdraw funds</h3><button class="ibtn" data-close>✕</button></div>
  <div class="db">
-  <div><span class="lbl">ASSET</span><div class="chips" id="wdA" style="margin-top:8px"></div></div>
-  <div class="g2" style="gap:10px"><div class="tile"><div class="v num" id="wdAv"></div><div class="k">AVAILABLE</div></div><div class="tile"><div class="v num">$1.00</div><div class="k">MINIMUM</div></div></div>
-  <div><span class="lbl">AMOUNT</span><div class="row" style="display:flex;gap:8px;margin-top:8px"><input class="field num" id="wdAmt" placeholder="0.00" style="flex:1"><button class="btn sm" id="wdMax">MAX</button></div></div>
+  <div><span class="lbl">ASSET</span><div class="chipz" id="wdA" style="margin-top:8px"></div></div>
+  <div class="g2"><div class="kv"><span class="l">AVAILABLE</span><span class="v" id="wdAv"></span></div><div class="kv"><span class="l">MINIMUM</span><span class="v">$1.00</span></div></div>
+  <div><span class="lbl">AMOUNT</span><div class="row" style="margin-top:8px"><input class="field num" id="wdAmt" placeholder="0.00" style="flex:1"><button class="btn sm" id="wdMax">MAX</button></div></div>
   <div><span class="lbl">DESTINATION</span><input class="field num" id="wdTo" placeholder="0x followed by 40 hex characters" style="width:100%;margin-top:8px"></div>
-  <div><span class="lbl">NETWORK</span><div class="chips" id="wdN" style="margin-top:8px"></div></div>
+  <div><span class="lbl">NETWORK</span><div class="chipz" id="wdN" style="margin-top:8px"></div></div>
   <div class="fee"><div><span>Withdrawal amount</span><b class="num" id="wf1">$0.00</b></div><div><span>Network fee</span><b>auto-handled</b></div><div><span>Service fee</span><b class="num">−$0.00</b></div><div class="t"><span>You receive</span><b class="num" id="wf2">$0.00</b></div></div>
-  <div class="flow"><span>EST. ~30 S</span><span class="sp"></span><b>QUEUED</b>→<span>BRIDGING</span>→<span>DONE</span></div>
+  <div class="flow"><span>EST. ~30 S</span><span style="flex:1"></span><b>QUEUED</b>→<span>BRIDGING</span>→<span>DONE</span></div>
   <button class="btn go" id="wdGo"><i class="fa-solid fa-arrow-up"></i>WITHDRAW</button>
   <div class="mute" style="font-size:12px">We email you a 6-digit code to confirm. Cross-chain transfers use Across Protocol.</div>
  </div>
@@ -388,147 +314,119 @@
 const $=s=>document.querySelector(s),$$=s=>[...document.querySelectorAll(s)];
 const money=(v,d=2)=>'$'+(+v).toLocaleString('en-US',{minimumFractionDigits:d,maximumFractionDigits:d});
 const sgn=(v,d=2)=>(Math.abs(v)<.005?'':v>0?'+':'−')+'$'+Math.abs(v).toLocaleString('en-US',{minimumFractionDigits:d,maximumFractionDigits:d});
-const cls=v=>Math.abs(v)<.005?'mute':v>0?'up':'dn';
 const qty=(v,d)=>{v=+v;if(!v)return '0';if(d!=null)return v.toLocaleString('en-US',{minimumFractionDigits:d,maximumFractionDigits:d});if(v>=1000)return v.toLocaleString('en-US',{maximumFractionDigits:2});if(v>=1)return v.toLocaleString('en-US',{maximumFractionDigits:4});return v.toPrecision(3)};
 const esc=s=>String(s??'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/"/g,'&quot;');
-const fa=n=>`<i class="fa-solid fa-${n}"></i>`;
 let tt;function toast(msg,bad){const t=$('#toast');$('#toastMsg').innerHTML=msg;$('#toastBtn').style.display='none';t.classList.toggle('bad',!!bad);t.classList.add('on');clearTimeout(tt);tt=setTimeout(()=>t.classList.remove('on'),3200)}
 document.addEventListener('click',e=>{const g=e.target.closest('[data-go]');if(g){e.preventDefault();toast(`Opens <b>${esc(g.dataset.go)}</b> (mockup)`);return}
- const m=e.target.closest('[data-mock]');if(m){toast(`<b>${esc(m.dataset.mock)}</b> (mockup)`);return}
- const d=e.target.closest('[data-dlg]');if(d){openDlg(d.dataset.dlg,d.dataset.sym);return}
+ const m=e.target.closest('[data-mock]');if(m){toast(`<b>${m.dataset.mock}</b> (mockup)`);return}
+ const d=e.target.closest('[data-dlg]');if(d){openDlg(d.dataset.dlg);return}
  if(e.target.closest('[data-close]')||e.target.classList.contains('ov'))$$('.ov.on').forEach(o=>o.classList.remove('on'))});
 document.addEventListener('keydown',e=>{if(e.key==='Escape')$$('.ov.on').forEach(o=>o.classList.remove('on'))});
-const A=ACCT,COL=['#00cfff','#00ff88','#3b82f6','#7fe6ff','#2a4166'];
-let view='ours';
+const A=ACCT;let view='ours';
 const paperMode=()=>view==='paper'?true:view==='all'?false:!!A.simMode;
 const VSB=['VAIX','WVAIX','SBIO','VCUB','LNX10','SNX10','DESCI','DSCI','TBIG','TBIGS'];
+const row=s=>A.rows.find(r=>r.sym===s)||{};
 
-/* the live page's show rules (parity.md rows 4-7, 12) */
-function visible(r){
- if(r.paperOnly&&!paperMode())return false;
- if(r.group==='POSITIONS'){if(r.paper&&!paperMode())return false;return r.ledger>0}
- if(r.sym==='USDC'||r.sym==='ETH'||r.sym==='ET10'||r.sym==='CYM42')return true;
- if(r.sym==='THF')return r.pos>0||view==='all';
- return (r.pos||0)>0}
-
-/* head, hero */
+/* head */
 function renderHead(){const pm=paperMode();$('#mode').textContent=pm?'PAPER':'LIVE';$('#mode').className='tag '+(pm?'c':'g');
- $('#sync').textContent='ON-CHAIN · CHECKED '+(A.lastCheck||'').slice(11,16)+' UTC';
- $('#paperBanner').classList.toggle('on',pm);
- $('#simSt').innerHTML=`<div><b class="num">${money(A.sim.usdc)}</b><span>SIM USDC</span></div><div><b class="num">${A.sim.total_trades}</b><span>SIM TRADES</span></div><div><b class="num ${cls(+A.sim.total_pnl)}">${sgn(+A.sim.total_pnl)}</b><span>SIM P&amp;L</span></div>`}
-$('#resetSim').onclick=()=>toast('Reset simulation balance to $1,000? This erases your sim P&amp;L. (mockup)',1);
-$('#enableReal').onclick=()=>toast('<b>Enable real trading</b> (mockup)');
-function renderHero(){const rows=A.rows.filter(visible),priced=rows.filter(r=>r.value>0).sort((a,b)=>b.value-a.value),tv=A.valuationTotal;
- $('#total').textContent=money(tv);
- const cash=rows.filter(r=>r.group==='CASH').reduce((s,r)=>s+(r.value||0),0),np=rows.filter(r=>r.group!=='POSITIONS'&&unpriced(r)).length;
- $('#pills').innerHTML=`<span class="pill up num">CASH ${money(cash)}</span><span class="pill n num" data-tip="Held, but no market price yet, so not in the total.">${np} WITHOUT A PRICE</span>`;
- const lead=priced.slice(0,3),rest=priced.slice(3).reduce((s,r)=>s+r.value,0);if(rest>0)lead.push({sym:'OTHER',value:rest});
- let ang=-Math.PI/2;const R=68,C=84;
- $('#donut').innerHTML=`<svg viewBox="0 0 168 168">`+lead.map((a,i)=>{const f=a.value/tv,a2=ang+f*2*Math.PI,lg=f>.5?1:0;const p=`M${C+R*Math.cos(ang)} ${C+R*Math.sin(ang)} A${R} ${R} 0 ${lg} 1 ${C+R*Math.cos(a2-1e-4)} ${C+R*Math.sin(a2-1e-4)}`;ang=a2;return `<path d="${p}" fill="none" stroke="${COL[i%5]}" stroke-width="20"/>`}).join('')+
-  `<text x="84" y="78" text-anchor="middle" fill="#6f84a0" font-size="9.5" font-family="JetBrains Mono" letter-spacing="2">PRICED</text><text x="84" y="101" text-anchor="middle" fill="#E6EDF7" font-size="22" font-family="Archivo Black">${priced.length}</text></svg>`;
- $('#legend').innerHTML=lead.map((a,i)=>`<div class="li"><i style="background:${COL[i%5]}"></i><b>${esc(a.sym)}</b><div class="b"><s style="width:${a.value/tv*100}%;background:${COL[i%5]}"></s></div><b>${(a.value/tv*100).toFixed(1)}% · ${money(a.value,0)}</b></div>`).join('');
- const open=A.positions.filter(p=>p.status==='open'),best=A.buying.chains.filter(c=>c.cap>0).sort((a,b)=>b.cap-a.cap)[0];
- const mfShow=A.microfunds.entries.length>0||view==='all';
- $('#tiles').innerHTML=`<div class="tile" data-to="bal" data-tip="Best chain: ${esc(A.buying.best||'')}"><div class="v num">${money(A.buying.bestCap)}</div><div class="k">${fa('bolt')}BUYING POWER</div></div>
-  <div class="tile" data-to="cards"><div class="v num">${open.length}</div><div class="k">${fa('newspaper')}OPEN CARDS</div></div>
-  <div class="tile" data-to="earn"><div class="v num up">$${(+A.et10Accrued).toFixed(6)}</div><div class="k">${fa('seedling')}ET10 REVENUE</div></div>
-  <div class="tile" data-to="earn"><div class="v num">${mfShow?money(A.microfunds.backed):'—'}</div><div class="k">${fa('hand-holding-dollar')}MICROFUNDS</div></div>`;
- $$('#tiles [data-to]').forEach(t=>t.onclick=()=>tab(t.dataset.to))}
+ const t=(A.lastCheck||'').slice(11,16);$('#sync').textContent='ON-CHAIN · CHECKED '+t+' UTC';$('#syncT').textContent=t;
+ $('#total').textContent=money(A.valuationTotal);$('#paperBanner').classList.toggle('on',pm||view==='all');
+ $('#simSt').innerHTML=`<div><b class="num">${money(A.sim.usdc)}</b><span>SIM USDC</span></div><div><b class="num">${A.sim.total_trades}</b><span>SIM TRADES</span></div><div><b class="num">${sgn(+A.sim.total_pnl)||'$0.00'}</b><span>SIM P&amp;L</span></div>`}
 
-/* holdings: Positions (on-chain) and Valuation (ledger) in one table */
-let vsbOnly=false;
-const unpriced=r=>r.value==null&&((r.pos||0)>0||(r.ledger||0)>0);
-const GROUPS=['CASH','TOKENS','FUND SHARES','VAULT SHARES','POSITIONS','CLONE BOTS','EXCHANGE HOLDINGS'];
-function renderHold(){const tv=A.valuationTotal;let rows=A.rows.filter(visible);
- if(vsbOnly)rows=rows.filter(r=>r.group==='CASH'||r.group==='POSITIONS'||r.group==='CLONE BOTS'||VSB.includes(r.sym));
- let h=`<div class="hr hd"><div>ASSET</div><div class="r" data-tip="On-chain: how much of the token is credited to you.">POSITION ⓘ</div><div class="r">PRICE</div><div class="r" data-tip="From your live ledger (the Valuation figures).">VALUE ⓘ</div><div>SHARE</div></div>`;
- GROUPS.forEach(g=>{const rs=rows.filter(r=>r.group===g).sort((a,b)=>(b.value||0)-(a.value||0));
-  if(!rs.length&&!(view==='all'&&(g==='CLONE BOTS'||g==='EXCHANGE HOLDINGS')))return;
-  const sub=rs.reduce((s,r)=>s+(r.value||0),0),noP=rs.filter(unpriced).length;
-  h+=`<div class="hr gh"><div>${g}</div><div></div><div></div><div class="r num">${noP?`<span class="tag" style="font-size:9px;padding:1px 5px;margin-right:6px" data-tip="${noP} held without a price, not in the total.">+${noP}</span>`:''}${money(sub)}</div><div></div></div>`;
-  if(!rs.length){h+=`<div class="empty" style="padding:12px">${g==='CLONE BOTS'?'No clone bot balances.':'No other exchange holdings.'}</div>`;return}
-  rs.forEach(r=>{const z=!(r.pos>0||r.ledger>0),sh=r.value&&tv?r.value/tv*100:0,isPos=g==='POSITIONS';
-   const symTxt=isPos?r.sym.replace('EVCDX-','').slice(0,5):r.sym.slice(0,5);
-   const note=r.sym==='ETLP'?`<span class="tag" style="font-size:9px;padding:1px 5px" data-tip="Valued at the $1.00 fixed issuance price, not a market or redemption price.">@ $1.00 ISSUANCE</span>`:r.paperOnly?'<span class="tag c" style="font-size:9px;padding:1px 5px">TESTNET</span>':isPos&&r.paper?'<span class="tag" style="font-size:9px;padding:1px 5px">PAPER</span>':'';
-   const link=r.link?`<a href="#" data-go="${r.link}" data-tip="Fund page">${fa('arrow-up-right-from-square')}</a>`:'';
-   h+=`<div class="hr"><div class="tk"><span class="sym${g==='CASH'?' cash':''}${z?' z':''}${isPos?' p':''}">${esc(symTxt)}</span><div style="min-width:0"><b>${esc(isPos?r.sym:r.sym)} ${note}${link}</b><span title="${esc(r.name)}">${esc(isPos?r.name:r.name)}</span></div></div>
-    <div class="r num">${r.pos!=null?qty(r.pos,r.sym==='ET10'||g==='CASH'?2:null):`<span class="mute">${qty(r.ledger)}</span>`}</div>
-    <div class="r num mute">${r.price!=null?(r.price>=1?money(r.price):'$'+(+r.price).toPrecision(3)):'—'}</div>
-    <div class="r val num">${r.value!=null?money(r.value):unpriced(r)?`<span class="tag" data-tip="No market price yet, so it is not in the total.">NO PRICE</span>`:'<span class="mute">$0.00</span>'}</div>
-    <div class="share">${r.value?`<div class="bar"><i style="width:${Math.max(sh,.6)}%"></i></div><b class="num">${sh.toFixed(1)}%</b>`:''}</div></div>`;
-   if(r.sym==='USDC'){const c=A.cash.USDC;const mv=c.move;
-    h+=`<div class="hr sub"><div class="mini"><div class="m" data-tip="What you can place orders with right now."><span>TRADING</span><b>${money(c.trading)}</b></div>
-     <div class="m" data-tip="Stated when it differs from your position; nothing differs now."><span>WITHDRAWABLE NOW</span><b>${c.payable!=null?money(c.payable):'—'}</b></div>
-     ${c.pendingLiquidity>0?`<div class="m"><span>PENDING BUYER LIQUIDITY</span><b>${money(c.pendingLiquidity)}</b></div>`:''}
-     ${mv.enabled&&mv.available>0?`<button class="btn cy sm" data-mock="Move to trading balance">MOVE ${money(mv.available)} TO TRADING</button>`:''}</div></div>`}});});
- $('#hold').innerHTML=h;$('#cB').textContent=A.rows.filter(visible).length}
-$('#vsb').addEventListener('click',e=>{const b=e.target.closest('[data-f]');if(!b)return;vsbOnly=b.dataset.f==='vsb';$$('#vsb button').forEach(x=>x.classList.toggle('on',x===b));renderHold()});
+/* 1 live buying power: up to 4 chains with capacity */
+function renderBP(){const ch=A.buying.chains.filter(c=>c.cap>0).sort((a,b)=>b.cap-a.cap).slice(0,4);
+ $('#bp').innerHTML=ch.map(c=>{const parts=[c.usdc>0?c.usdc.toFixed(2)+' USDC':'',c.usdt>0?c.usdt.toFixed(2)+' USDT':'',c.native>0?(+c.native).toFixed(5)+' '+c.nsym:''].filter(Boolean).join(' + ');
+  const tip=(parts?parts+' in your own wallet':'No own funds on this chain')+(c.capped?` · limited to your spendable account USDC (${money(c.wallet)} sits in the wallet)`:'');
+  return `<div class="kv" data-tip="${esc(tip)}"><span class="l">${esc(c.chain.toUpperCase())} BUYING POWER</span><span class="v">${money(c.cap)}</span></div>`}).join('');
+ $('#ledgerUsdc').textContent='Ledger USDC: '+money(A.buying.ledger)}
+
+/* 2 positions: the live boxes and their show rules (parity.md 4-7) */
+function box(label,val,opt={}){return `<div class="kv${opt.big?' big':''}"${opt.tip?` data-tip="${esc(opt.tip)}"`:''}><span class="l">${label}</span><span class="v${+val===0&&!opt.keep?' z':''}">${opt.fmt?opt.fmt(val):qty(val)}</span></div>`}
+function renderPos(){const pm=paperMode();let h='';
+ const usdc=row('USDC'),usdt=row('USDT'),c=A.cash.USDC;
+ h+='<div class="grp">CASH</div><div class="kvs">'+box('USDC',usdc.pos,{fmt:v=>qty(v,2),big:1});
+ if(usdt.pos>0)h+=box('USDT',usdt.pos,{fmt:v=>qty(v,2),big:1});
+ if(c.payable!=null||c.pendingLiquidity>0||(c.move.enabled&&c.move.available>0))h+=`<div class="note">Trading balance <b>${money(c.trading)}</b>${c.payable!=null?` · withdrawable now <b>${money(c.payable)}</b>`:''}${c.pendingLiquidity>0?` · pending buyer liquidity <b>${money(c.pendingLiquidity)}</b>`:''}${c.move.available>0?`<button class="btn cy sm" data-mock="Move to trading balance">MOVE ${money(c.move.available)} TO TRADING BALANCE</button>`:''}</div>`;
+ h+='</div><div class="grp">TOKENS</div><div class="kvs">';
+ ['ETH','VAIX','SBIO','ET10','ETLP','TBIG','TBIGS','DSCI','DESCI','ORBI'].forEach(s=>{const r=row(s);if(!(s==='ETH'||s==='ET10'||r.pos>0))return;
+  h+=box(s+(s==='ETLP'?'<small data-tip="Valued at the $1.00 fixed issuance price, not a market or redemption price.">@ $1.00 ISSUANCE</small>':''),r.pos,{fmt:v=>s==='ETH'?(+v).toFixed(8):s==='ET10'||s==='ETLP'?qty(v,2):qty(v),keep:s==='ETH'||s==='ET10'})});
+ const tu=A.rows.find(r=>r.paperOnly);if(pm&&tu)h+=box('tUSDC<small>ROBINHOOD TESTNET</small>',tu.pos,{fmt:v=>qty(v,2)});
+ h+='</div>';
+ const thf=row('THF');if(thf.pos>0||view==='all')h+=`<div class="grp">FUND SHARES</div><div class="kvs">${box('THF<a href="#" data-go="/fund-performance">↗</a><small>TUATARA HEDGE FUND</small>',thf.pos||0,{fmt:v=>qty(v,4)})}</div>`;
+ if(view==='all')h+='<div class="grp">AIB FUNDS</div><div class="empty" style="padding:8px">No AIB fund holdings.</div>';
+ h+=`<div class="grp">VAULT SHARES</div><div class="kvs">${box('CYM42<a href="#" data-go="/fund/cymetica-42">↗</a><small>CYMETICA-42</small>',row('CYM42').pos||0,{fmt:v=>qty(v,4)})}</div>`;
+ if(view==='all')h+='<div class="grp">EXCHANGE HOLDINGS</div><div class="empty" style="padding:8px">No other exchange holdings.</div>';
+ $('#pos').innerHTML=h}
 $('#exSw').parentNode.onclick=()=>{const on=!$('#exSw').classList.contains('on');$('#exSw').classList.toggle('on',on);$('#explain').classList.toggle('on',on)};
 
-function renderBP(){const ch=A.buying.chains.filter(c=>c.cap>0).sort((a,b)=>b.cap-a.cap).slice(0,4),mx=Math.max(...ch.map(c=>c.cap),1);
- $('#bp').innerHTML=`<div class="ct"><h4>Live buying power</h4><span class="sp"></span><span class="tag" data-tip="What a live event-card buy can spend right now from your own wallets, per chain: spending capacity, not a holding. Deposit USDC, USDT or the chain's native coin to raise it. Ledger USDC is usable for exchange orders and is a ceiling here, not a funding source.">PER CHAIN ⓘ</span></div>
- <div class="big num">${money(A.buying.bestCap)}</div><div class="lbl" style="margin:6px 0 8px">BEST · ${esc((A.buying.best||'').toUpperCase())}</div>`+
- ch.map(c=>{const parts=[c.usdc>0?c.usdc.toFixed(2)+' USDC':'',c.usdt>0?c.usdt.toFixed(2)+' USDT':'',c.native>0?(+c.native).toFixed(5)+' '+c.nsym:''].filter(Boolean).join(' + ');
-  return `<div class="ch"><b>${esc(c.chain)}</b><div class="bar"><i style="width:${c.cap/mx*100}%"></i></div><div class="r num">${money(c.cap)}</div>
-  <div class="sub num">${parts?esc(parts)+' in your own wallet':'No own funds on this chain'}${c.capped?` · <span data-tip="Limited to your spendable account USDC; ${money(c.wallet)} sits in the wallet.">capped by ledger ⓘ</span>`:''}</div></div>`}).join('')+
- `<button class="btn go sm" data-dlg="dep" style="width:100%;margin-top:14px"><i class="fa-solid fa-arrow-down"></i>RAISE IT · DEPOSIT<span class="new" data-tip="Proposed: the live note says deposit to raise it; this button opens Deposit right there.">PROPOSED</span></button>`}
-
-/* card positions: the live table, 20 open shown then more, closed behind a toggle */
+/* 3 event card positions: 20 open, then more; the 10 latest closed behind a toggle */
 let openShown=20,showClosed=false;
-function renderCards(){const open=A.positions.filter(p=>p.status==='open').sort((a,b)=>(b.opened||'').localeCompare(a.opened||'')),closed=A.positions.filter(p=>p.status!=='open').sort((a,b)=>(b.opened||'').localeCompare(a.opened||''));
- const stake=open.reduce((s,p)=>s+(+p.stake||0),0),val=open.reduce((s,p)=>s+(+p.value||0),0),pnl=open.reduce((s,p)=>s+(+p.pnl||0),0);
- $('#cStrip').innerHTML=`<div class="tile"><div class="v num">${open.length}</div><div class="k">OPEN</div></div><div class="tile"><div class="v num">${money(stake)}</div><div class="k">STAKED</div></div><div class="tile"><div class="v num">${money(val)}</div><div class="k">VALUE NOW</div></div><div class="tile"><div class="v num ${cls(pnl)}">${sgn(pnl)}</div><div class="k">UNREALIZED P&amp;L</div></div>`;
- $('#cOpen').textContent=open.length+' OPEN';$('#cC').textContent=open.length;
- const row=p=>{const isO=p.status==='open',v=+p.pnl;return `<div class="tr${isO?'':' closed'}"><div class="t"><a href="#" data-go="/events/${esc(p.id)}…" title="${esc(p.title)}">${esc(p.title)}</a></div>
-  <div><span class="side ${p.side==='bull'||p.side==='long'?'bull':'bear'}">${esc(p.side.toUpperCase())}${p.paper?' · PAPER':''}</span></div>
-  <div class="r num">${money(p.stake)}</div><div class="r num">${money(p.value)}</div><div class="r num ${p.pnl==null?'mute':cls(v)}">${p.pnl==null?'—':sgn(v,3)}</div>
-  <div><span class="stt ${isO?'open':'closed'}">${esc(p.status.toUpperCase())}</span></div><div class="r num mute">${esc((p.opened||'').slice(5,16).replace('T',' '))}</div></div>`};
- let h=`<div class="tr hd"><div>CARD</div><div>SIDE</div><div class="r">STAKE</div><div class="r">VALUE</div><div class="r">UNREALIZED P&amp;L</div><div>STATUS</div><div class="r">OPENED</div></div>`;
- if(!A.positions.length)h+='<div class="empty">No event card positions yet. Buy an Event Card and it shows up here.</div>';
- if(open.length){h+='<div class="tr gr"><div>OPEN</div></div>'+open.slice(0,openShown).map(row).join('');
-  h+=`<div class="foot">Showing ${Math.min(openShown,open.length)} of ${open.length}${open.length>openShown?`<button class="btn sm cy" id="more">SHOW ${Math.min(50,open.length-openShown)} MORE</button>`:''}${openShown>20?'<button class="btn sm" id="fewer">SHOW FEWER</button>':''}<a class="btn sm ln" href="#" data-go="/positions">ALL POSITIONS<i class="fa-solid fa-arrow-up-right-from-square"></i></a></div>`}
- else h+='<div class="foot">No open positions.</div>';
- if(closed.length){h+=`<div class="foot" style="border-top:1px solid var(--line)"><button class="btn sm" id="tglC">${showClosed?'HIDE':'SHOW'} ${closed.length} CLOSED</button></div>`;if(showClosed)h+='<div class="tr gr"><div>CLOSED</div></div>'+closed.map(row).join('')}
- $('#pos').innerHTML=h;
+function renderCards(){const by=(a,b)=>(b.opened||'').localeCompare(a.opened||'');const open=A.positions.filter(p=>p.status==='open').sort(by),closed=A.positions.filter(p=>p.status!=='open').sort(by).slice(0,10);
+ $('#cMeta').innerHTML=`${open.length} open${closed.length?' · '+closed.length+' closed':''} · <a href="#" data-go="/positions">All positions →</a> · <a href="#" data-go="/event-cards">Event Cards →</a>`;
+ const tr=p=>{const o=p.status==='open',v=+p.pnl;return `<tr class="${o?'':'closed'}"><td class="t"><a href="#" data-go="/events/${esc(p.id)}…" title="${esc(p.title)}">${esc(p.title)}</a></td>
+  <td><span class="side ${p.side==='bull'||p.side==='long'?'bull':'bear'}">${esc(p.side.toUpperCase())}${p.paper?' · PAPER':''}</span></td>
+  <td class="r g">${money(p.stake)}</td><td class="r g">${money(p.value)}</td><td class="r g ${p.pnl==null?'mute':v>0?'up':v<0?'dn':'mute'}">${p.pnl==null?'—':sgn(v)}</td>
+  <td><span class="stt ${o?'open':'closed'}">${esc(p.status)}</span></td><td class="r mute">${esc((p.opened||'').slice(0,16).replace('T',' '))}</td></tr>`};
+ let h=`<table class="tb"><tr><th>CARD</th><th>SIDE</th><th class="r">STAKE</th><th class="r">VALUE</th><th class="r">UNREALIZED P&amp;L</th><th>STATUS</th><th class="r">OPENED</th></tr>`;
+ if(!A.positions.length)h+='<tr><td colspan="7" class="empty">No event card positions yet. Buy an Event Card and it shows up here.</td></tr>';
+ if(open.length)h+='<tr class="grow"><td colspan="7">OPEN</td></tr>'+open.slice(0,openShown).map(tr).join('');
+ if(showClosed&&closed.length)h+='<tr class="grow"><td colspan="7">CLOSED</td></tr>'+closed.map(tr).join('');
+ h+='</table>';
+ h+=`<div class="foot">${open.length?`Showing ${Math.min(openShown,open.length)} of ${open.length} open`:'No open positions.'}${open.length>openShown?` <button class="btn sm cy" id="more">SHOW ${Math.min(50,open.length-openShown)} MORE</button>`:''}${openShown>20?' <button class="btn sm" id="fewer">SHOW FEWER</button>':''} <a class="lnk" href="#" data-go="/positions">All positions →</a>${closed.length?` <button class="btn sm" id="tglC">${showClosed?'HIDE':'SHOW'} ${closed.length} CLOSED</button>`:''}</div>`;
+ $('#cards').innerHTML=h;
  const m=$('#more');if(m)m.onclick=()=>{openShown+=50;renderCards()};const f=$('#fewer');if(f)f.onclick=()=>{openShown=20;renderCards()};const t=$('#tglC');if(t)t.onclick=()=>{showClosed=!showClosed;renderCards()}}
 
+/* valuation: the ledger, grouped, zero rows hidden */
+let vsbOnly=false;
+function renderVal(){const pm=paperMode(),tv=A.valuationTotal;
+ let rs=A.rows.filter(r=>{if(r.paperOnly&&!pm)return false;if(r.group==='POSITIONS'){if(r.paper&&!pm)return false;return r.ledger>0}return (r.ledger||0)>0});
+ if(vsbOnly)rs=rs.filter(r=>r.group==='CASH'||r.group==='POSITIONS'||VSB.includes(r.sym));
+ let firstNop=0;
+ const G=[['CASH','CASH'],['TOKENS','TOKENS'],['FUND SHARES','FUND SHARES'],['VAULT SHARES','VAULT SHARES'],['POSITIONS','TRADING POSITIONS'],['CLONE BOTS','CLONE BOTS']];
+ let h='';
+ G.forEach(([g,label])=>{const rows=rs.filter(r=>r.group===g).sort((a,b)=>(b.value||0)-(a.value||0));if(!rows.length)return;
+  h+=`<div class="vh"><div>${label}</div><div class="r">QUANTITY</div><div class="r">PRICE</div><div class="r">VALUE</div><div class="r">PCT</div></div>`;
+  rows.forEach(r=>{const pos=g==='POSITIONS',sh=r.value&&tv?r.value/tv*100:0,nop=r.value==null;
+   h+=`<div class="vr"><div class="n">${esc(r.sym)}${pos?`<small title="${esc(r.name)}">${esc(r.name)}</small>`:r.paperOnly?'<small>Robinhood Testnet</small>':''}</div>
+    <div class="g">${qty(r.ledger,r.sym==='ET10'||g==='CASH'?2:null)}</div>
+    <div class="g ${r.price==null?'z':''}">${r.price!=null?(r.price>=1?money(r.price):'$'+(+r.price).toPrecision(3)):'—'}</div>
+    <div class="g ${nop||!r.value?'z':''}">${nop?'<span class="tag" data-tip="No market price yet, so it is not in the total. Today this row reads $0.00 (0.0%).">NO PRICE</span>'+(firstNop++?'':'<span class="new" data-tip="Proposed: say there is no price instead of $0.00 (0.0%).">PROPOSED</span>'):money(r.value)}</div>
+    <div class="p">${nop?'':`<div class="bar"><i style="width:${Math.max(sh,.6)}%"></i></div><b>${sh.toFixed(1)}%</b>`}</div></div>`})});
+ $('#val').innerHTML=h||'<div class="empty">No assets found. <a class="lnk" href="#" data-go="/exchange">Start trading</a></div>';$('#vTotal').textContent=money(tv)}
+$('#vsb').addEventListener('click',e=>{const b=e.target.closest('[data-f]');if(!b)return;vsbOnly=b.dataset.f==='vsb';$$('#vsb button').forEach(x=>x.classList.toggle('on',x===b));renderVal()});
+
 /* earnings */
-function renderEarn(){$('#e10').textContent='$'+(+A.et10Accrued).toFixed(6);
- const L={daily:'EVERY DAY',weekly:'ONCE A WEEK',biweekly:'EVERY 2 WEEKS',monthly:'EVERY 30 DAYS'};
- $('#cad').innerHTML=A.cadence.choices.map(c=>`<button data-c="${c}" class="${c===A.cadence.value?'on':''}">${L[c]||c}</button>`).join('');
- $('#cadNext').textContent='NEXT DELIVERY · '+A.cadence.next;$('#cadTip').dataset.tip=A.cadence.note;
- const m=A.microfunds,on=m.entries.length>0;$('#mfCard').classList.toggle('on',on);
- $('#mfT').innerHTML=`<div class="tile"><div class="v num">${money(m.backed)}</div><div class="k">RECORDED BACKING</div></div><div class="tile"><div class="v num ${m.verified>0?'':'mute'}">${money(m.verified)}</div><div class="k">VERIFIED IN FUND CUSTODY</div></div><div class="tile"><div class="v num">${money(m.received)}</div><div class="k">REVENUE RECEIVED</div></div><div class="tile"><div class="v num">${m.entries.length}</div><div class="k">ACTIVE POSITIONS</div></div>`;
+function renderEarn(){const m=A.microfunds;$('#mfCard').classList.toggle('on',m.entries.length>0);
+ $('#mfT').innerHTML=`<div class="kv"><span class="l">RECORDED BACKING</span><span class="v">${money(m.backed)}</span></div><div class="kv" data-tip="Verified in fund custody."><span class="l">VERIFIED IN CUSTODY</span><span class="v ${m.verified>0?'':'z'}">${money(m.verified)}</span></div><div class="kv"><span class="l">REVENUE RECEIVED</span><span class="v ${m.received>0?'':'z'}">${money(m.received)}</span></div><div class="kv"><span class="l">ACTIVE POSITIONS</span><span class="v">${m.entries.length}</span></div>`;
  $('#mfL').innerHTML=m.entries.map(e=>{const pct=e.cap>0?Math.min(100,e.received/e.cap*100):0;return `<a class="mfe" href="#" data-go="${e.app?'/ai-app/':'/feature/'}${e.id}"><div class="r1"><span class="id num">${e.app?'APP-':'#'}${e.id}</span><b>${esc(e.title)}</b><span class="stt open">${esc(e.status.replace('_',' ').toUpperCase())}</span></div>
-  <div class="r2"><span>Backed <b class="num">${money(e.backed)}</b> ${e.custodied?'<span class="up">verified</span>':'<span class="mute">not yet verified in custody</span>'}</span><span>Received <b class="num up">${money(e.received)}</b> ${e.cap>0?'/ '+money(e.cap):'<span class="mute">· no cap</span><span class="new" data-tip="Proposed: today it reads &quot;/ $0.00&quot; when a fund has no cap.">PROPOSED</span>'}</span></div>
-  ${e.cap>0?`<div class="bar"><i style="width:${pct}%"></i></div>`:''}</a>`}).join('');
- const rs=A.rewardsSummary,rsOn=(rs.total_earned_usd||0)+(rs.pending_rewards_usd||0)>0;$('#rsCard').classList.toggle('on',rsOn);
- $('#rsT').innerHTML=`<div class="tile"><div class="v num">${money(rs.pending_rewards_usd||0)}</div><div class="k">CLAIMABLE</div></div><div class="tile"><div class="v num">${money(rs.total_earned_usd||0)}</div><div class="k">TOTAL EARNED</div></div><div class="tile"><div class="v num">0</div><div class="k">FEATURES</div></div>`;
+  <div class="r2"><span>Backed <b>${money(e.backed)}</b> ${e.custodied?'<span class="up">verified</span>':'<span class="mute">not yet verified in custody</span>'}</span><span>Received <b>${money(e.received)}</b> ${e.cap>0?'/ '+money(e.cap):'<span class="mute">· no cap</span><span class="new" data-tip="Proposed: today it reads &quot;/ $0.00&quot; when a fund has no cap.">PROPOSED</span>'}</span></div>${e.cap>0?`<div class="bar"><i style="width:${pct}%"></i></div>`:''}</a>`}).join('');
+ $('#e10').textContent='$'+(+A.et10Accrued).toFixed(6);
+ const rs=A.rewardsSummary;$('#rsCard').classList.toggle('on',(rs.total_earned_usd||0)+(rs.pending_rewards_usd||0)>0);
+ $('#rsT').innerHTML=`<div class="kv"><span class="l">CLAIMABLE</span><span class="v z">${money(rs.pending_rewards_usd||0)}</span></div><div class="kv"><span class="l">TOTAL EARNED</span><span class="v z">${money(rs.total_earned_usd||0)}</span></div><div class="kv"><span class="l">FEATURES</span><span class="v z">0</span></div>`;
  $('#rsClaim').style.display=(rs.pending_rewards_usd||0)>0?'':'none';
- const tr=A.tokenRevenue,p=tr.pending||{};const trOn=+tr.total_received_usdc>0||(tr.payouts||[]).length||['ET10','SBIO','VAIX'].some(k=>+p[k]>0);$('#trCard').classList.toggle('on',!!trOn);
- $('#trT').innerHTML=`<div class="tile"><div class="v num">${money(tr.total_received_usdc)}</div><div class="k">RECEIVED</div></div>`+['ET10','SBIO','VAIX'].map(k=>`<div class="tile"><div class="v num">${p[k]==='error'||p[k]==null?'—':'$'+(+p[k]).toFixed(4)}</div><div class="k">${k} PENDING</div></div>`).join('')}
+ const tr=A.tokenRevenue,p=tr.pending||{};$('#trCard').classList.toggle('on',+tr.total_received_usdc>0||(tr.payouts||[]).length>0||['ET10','SBIO','VAIX'].some(k=>+p[k]>0));
+ $('#trT').innerHTML=`<div class="kv"><span class="l">TOTAL RECEIVED</span><span class="v z">${money(tr.total_received_usdc)}</span></div>`+['ET10','SBIO','VAIX'].map(k=>`<div class="kv"><span class="l">${k} PENDING</span><span class="v z">${p[k]==='error'||p[k]==null?'—':'$'+(+p[k]).toFixed(4)}</span></div>`).join('');
+ const L={daily:'EVERY DAY',weekly:'ONCE A WEEK',biweekly:'EVERY TWO WEEKS',monthly:'EVERY 30 DAYS'};
+ $('#cad').innerHTML=A.cadence.choices.map(c=>`<button data-c="${c}" class="${c===A.cadence.value?'on':''}">${L[c]||c}</button>`).join('');
+ $('#cadNext').textContent='Next delivery: '+A.cadence.next;$('#cadTip').dataset.tip=A.cadence.note}
 $('#cad').addEventListener('click',e=>{const b=e.target.closest('[data-c]');if(b)$$('#cad button').forEach(x=>x.classList.toggle('on',x===b))});
 $('#cadSave').onclick=()=>toast('Saved · next delivery '+A.cadence.next+' (mockup)');
 
-/* activity */
-function renderAct(){const pd=A.pendingDeposits;$('#pdN').textContent=pd.length;
- $('#pdL').innerHTML=pd.length?pd.map(d=>`<div class="mini"><div class="m"><span>${esc(d.chain_name)}</span><b>${esc(d.amount)} ${esc(d.currency)}</b></div></div>`).join(''):'<div class="empty" style="padding:12px"><i class="fa-solid fa-hourglass-half"></i>Nothing pending.</div>';
- const ob=A.obligations;$('#owCard').classList.toggle('on',ob.count>0);$('#owT').textContent=ob.note;
- const o=A.order;$('#ordN').textContent=(o?1:0)+' ORDER'+(o?'':'S');
- $('#ord').innerHTML=`<div class="tr hd"><div>PAIR</div><div>SIDE</div><div>TYPE</div><div class="r">PRICE</div><div class="r">QTY</div><div>STATUS</div><div class="r">TIME</div></div>`+(o?`<div class="tr"><div><b>${esc(o.pair)}</b></div><div><span class="side bull">${o.side.toUpperCase()}</span></div><div class="mute">${esc(o.type)}</div><div class="r num">$${o.price.toFixed(4)}</div><div class="r num">${qty(o.qty,2)}</div><div><span class="stt open">${o.status.toUpperCase()}</span></div><div class="r num mute">${o.at.slice(5,16).replace('T',' ')}</div></div>`:'<div class="empty">No orders yet.</div>')}
-$('#claimBtn').onclick=()=>$('#claim').classList.add('on');$('#claimX').onclick=()=>$('#claim').classList.remove('on');
-$('#claimGo').onclick=()=>{const v=$('#txh').value.trim();$('#claimOut').textContent=/^0x[0-9a-fA-F]{64}$/.test(v)?'Verifying deposit… (mockup)':'Must be 0x followed by 64 hex characters.';$('#claimOut').style.color=/^0x[0-9a-fA-F]{64}$/.test(v)?'var(--cyan)':'var(--red)'};
-
-/* settings */
-function renderSet(){$('#agAv').textContent=money(A.agents.available);
- $('#ags').innerHTML=`<div class="tr hd"><div>AGENT</div><div>TRUST</div><div class="r">AGENT USDC</div><div>MOVE</div></div>`+(A.agents.list.length?'':`<div class="empty" style="padding:14px">No agents claimed yet. Register one while signed in, or claim an existing one.<br><a href="#" data-go="/build" style="color:var(--cyan)">Bring Your Own Agent ${fa('arrow-up-right-from-square')}</a></div>`);
- $('#keys').innerHTML=`<div class="tr hd"><div>NAME</div><div>KEY</div><div>TRADE</div><div>CREATED</div><div></div></div>`+[1,2].map(()=>`<div class="tr"><div><div class="skel" style="width:70%"></div></div><div><div class="skel" style="width:60%"></div></div><div><div class="skel" style="width:40%"></div></div><div><div class="skel" style="width:55%"></div></div><div></div></div>`).join('')+'<div class="foot">Your keys list here, with REVOKE on each.</div>'}
+/* activity, settings */
+function renderRest(){const ob=A.obligations;$('#owCard').classList.toggle('on',ob.count>0);$('#owT').textContent=ob.note;
+ const pd=A.pendingDeposits;$('#pdCard').classList.toggle('on',pd.length>0);$('#pdL').innerHTML=pd.length?pd.map(d=>`<div class="kv"><span class="l">${esc(d.chain_name)}</span><span class="v">${esc(d.amount)} ${esc(d.currency)}</span></div>`).join(''):'<div class="empty">Nothing on its way.</div>';
+ const o=A.order;$('#ordN').textContent=(o?1:0)+' order'+(o?'':'s');
+ $('#ord').innerHTML=`<table class="tb"><tr><th>PAIR</th><th>SIDE</th><th>TYPE</th><th class="r">PRICE</th><th class="r">QTY</th><th>STATUS</th><th class="r">TIME</th></tr>`+(o?`<tr><td><b>${esc(o.pair)}</b></td><td><span class="side bull">${o.side.toUpperCase()}</span></td><td class="mute">${esc(o.type)}</td><td class="r g">$${o.price.toFixed(4)}</td><td class="r g">${qty(o.qty,2)}</td><td><span class="stt open">${o.status.toUpperCase()}</span></td><td class="r mute">${o.at.slice(0,16).replace('T',' ')}</td></tr>`:'<tr><td colspan="7" class="empty">No orders yet. Start trading on the exchange.</td></tr>')+'</table>';
+ $('#keys').innerHTML=`<table class="tb"><tr><th>NAME</th><th>KEY</th><th>TRADE</th><th>CREATED</th><th></th></tr>`+[1,2].map(()=>`<tr><td><div class="skel" style="width:70%"></div></td><td><div class="skel" style="width:60%"></div></td><td><div class="skel" style="width:40%"></div></td><td><div class="skel" style="width:55%"></div></td><td class="r"><span class="mute" style="font-size:11px">REVOKE</span></td></tr>`).join('')+'</table>';
+ $('#agAv').textContent=money(A.agents.available);
+ $('#ags').innerHTML=`<table class="tb"><tr><th>AGENT</th><th>TRUST</th><th class="r">AGENT USDC</th><th>MOVE</th></tr>`+(A.agents.list.length?'':`<tr><td colspan="4" class="empty">No agents claimed yet. Register one while signed in, or claim an existing one. <a class="lnk" href="#" data-go="/build">Bring Your Own Agent</a></td></tr>`)+'</table>'}
+$('#claimBtn').onclick=()=>{$('#claim').classList.add('on');$('#claim').scrollIntoView({behavior:'smooth',block:'center'})};$('#claimX').onclick=()=>$('#claim').classList.remove('on');
+$('#claimGo').onclick=()=>{const v=$('#txh').value.trim(),ok=/^0x[0-9a-fA-F]{64}$/.test(v);$('#claimOut').textContent=ok?'Verifying deposit… (mockup)':'Must be 0x followed by 64 hex characters.';$('#claimOut').style.color=ok?'var(--cyan)':'var(--red)'};
 $('#tgC').onclick=()=>{$('#tgSteps').style.display='grid'};
-$('#tgV').onclick=()=>{$('#tgS').textContent='CONNECTED';$('#tgS').className='tag g';$('#tgSteps').style.display='none';$('#tgC').style.display='none';$('#tgOn').style.display='flex'};
+$('#tgV').onclick=()=>{$('#tgS').textContent='CONNECTED';$('#tgS').className='tag g';$('#tgSteps').style.display='none';$('#tgC').style.display='none';$('#tgOn').style.display='block'};
 $('#tgOff').onclick=()=>{$('#tgS').textContent='NOT CONNECTED';$('#tgS').className='tag';$('#tgC').style.display='';$('#tgOn').style.display='none'};
-$('#kCreate').onclick=()=>{const n=$('#kName').value.trim(),o=$('#kOut');o.style.display='block';
- if(!n){o.style.borderColor='rgba(255,68,68,.5)';o.style.background='var(--redT)';o.textContent='Give the key a name first.';return}
- o.style.borderColor='';o.style.background='';o.innerHTML=`<b>Key created: copy it now, it is shown ONCE.</b><br><span class="num">et_••••••••••••••••</span> · send it as the X-API-Key header.`};
+$('#kCreate').onclick=()=>{const n=$('#kName').value.trim(),o=$('#kOut');o.style.display='block';if(!n){o.style.borderColor='rgba(255,68,68,.5)';o.style.background='var(--redT)';o.textContent='Give the key a name first.';return}
+ o.style.borderColor='';o.style.background='';o.innerHTML='<b>Key created: copy it now, it is shown ONCE.</b><br><span class="num">et_••••••••••••••••</span> · send it as the X-API-Key header.'};
 
 /* dialogs */
 const NETS=[['Ethereum','~3 min'],['Base','~30 s',1],['Solana','~30 s'],['Arbitrum'],['Polygon'],['Optimism'],['BNB Chain'],['Avalanche'],['Robinhood'],['Monero (XMR)'],['Zcash (ZEC)']];
@@ -538,24 +436,17 @@ $('#nets').addEventListener('click',e=>{const b=e.target.closest('[data-n]');if(
 $('#depMode').addEventListener('click',e=>{const b=e.target.closest('[data-m]');if(!b)return;$$('#depMode button').forEach(x=>x.classList.toggle('on',x===b));$('#depSend').style.display=b.dataset.m==='send'?'':'none';$('#depCard').style.display=b.dataset.m==='card'?'':'none'});
 $('#depTok').addEventListener('click',e=>{const b=e.target.closest('button');if(b)$$('#depTok button').forEach(x=>x.classList.toggle('on',x===b))});
 const WDA=['USDC','ETH','USDT','VAIX','SBIO','ET10','ETLP','TBIG','TBIGS','VCUB','DSCI','DESCI','ORBI'],WDN=['Ethereum','Base','Arbitrum','Polygon','BNB Chain','Solana'];
-let wdSym='USDC';
-function avail(s){const r=A.rows.find(x=>x.sym===s);return r&&r.pos?r.pos:0}
-function renderWd(){$('#wdA').innerHTML=WDA.map(s=>`<button class="cp${s===wdSym?' on':''}" data-a="${s}">${s}</button>`).join('');
- $('#wdAv').textContent=qty(avail(wdSym))+' '+wdSym;
- $('#wdN').innerHTML=WDN.map((n,i)=>`<button class="cp${i===0?' on':''}${wdSym==='VAIX'&&n!=='Ethereum'?'" disabled style="opacity:.35':''}" data-wn="${n}">${n}</button>`).join('')+(wdSym==='VAIX'?'<span class="mute" style="font-size:11.5px;align-self:center">VAIX withdraws on Ethereum mainnet only</span>':'')}
+let wdSym='USDC';const avail=s=>row(s).pos||0;
+function renderWd(){$('#wdA').innerHTML=WDA.map(s=>`<button class="cp${s===wdSym?' on':''}" data-a="${s}">${s}</button>`).join('');$('#wdAv').textContent=qty(avail(wdSym))+' '+wdSym;
+ $('#wdN').innerHTML=WDN.map((n,i)=>`<button class="cp${i===0?' on':''}" data-wn="${n}" ${wdSym==='VAIX'&&n!=='Ethereum'?'disabled style="opacity:.35"':''}>${n}</button>`).join('')+(wdSym==='VAIX'?'<span class="mute" style="font-size:11.5px;align-self:center">VAIX withdraws on Ethereum mainnet only</span>':'')}
 $('#wdA').addEventListener('click',e=>{const b=e.target.closest('[data-a]');if(b){wdSym=b.dataset.a;renderWd()}});
 $('#wdN').addEventListener('click',e=>{const b=e.target.closest('[data-wn]');if(b&&!b.disabled)$$('#wdN .cp').forEach(x=>x.classList.toggle('on',x===b))});
-$('#wdMax').onclick=()=>{$('#wdAmt').value=avail(wdSym);upd()};
-function upd(){const v=+$('#wdAmt').value||0;$('#wf1').textContent=money(v);$('#wf2').textContent=money(v)}
-$('#wdAmt').addEventListener('input',upd);
+$('#wdMax').onclick=()=>{$('#wdAmt').value=avail(wdSym);upd()};function upd(){const v=+$('#wdAmt').value||0;$('#wf1').textContent=money(v);$('#wf2').textContent=money(v)}$('#wdAmt').addEventListener('input',upd);
 $('#wdGo').onclick=()=>{const v=+$('#wdAmt').value||0,to=$('#wdTo').value.trim();if(v<1){toast('Minimum: $1.00',1);return}if(!/^0x[0-9a-fA-F]{40}$/.test(to)){toast('Enter a valid address: 0x followed by 40 hex characters',1);return}toast('Code sent to your email · then Queued → Bridging → Done (mockup)')};
-function openDlg(id,sym){if(id==='wd'){wdSym=sym||'USDC';renderWd()}if(id==='dep')pickNet('Base');$('#'+id).classList.add('on')}
+function openDlg(id){if(id==='wd')renderWd();if(id==='dep')pickNet('Base');$('#'+id).classList.add('on')}
 
-/* tabs, preview */
-function tab(t){$$('#tabs button').forEach(b=>b.classList.toggle('on',b.dataset.p===t));$$('.pane').forEach(p=>p.classList.toggle('on',p.id==='p-'+t))}
-$('#tabs').addEventListener('click',e=>{const b=e.target.closest('button');if(b)tab(b.dataset.p)});
 $('#pv').addEventListener('click',e=>{const b=e.target.closest('[data-v]');if(!b)return;view=b.dataset.v;$$('#pv button').forEach(x=>x.classList.toggle('on',x===b));render()});
-function render(){$('#page').classList.toggle('show-all',view==='all');renderHead();renderHero();renderHold();renderBP();renderCards();renderEarn();renderAct();renderSet();renderWd()}
+function render(){$('#page').classList.toggle('show-all',view==='all');renderHead();renderBP();renderPos();renderCards();renderVal();renderEarn();renderRest();renderWd()}
 render();
 </script>
 </body>

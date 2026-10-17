@@ -35,7 +35,15 @@ Not on the live page, so not in the redesign: a transactions list (the page only
 
 `render.py` checks every row above in three preview states (our account, paper mode, every section) and exits non-zero when one goes missing.
 
-## Proposed changes (marked PROPOSED on the page, or the layout itself)
+## v3 (2026-10-17 evening): the live layout, redrawn
+
+The operator on v2: *"v orientaci a prehlednosti je nynejsi design 8/10 ale je hnusny tak na 4/10. Tvuj je celkem hezky na 7/10 ale prehlednost a orientace je tak 3/10"*, and why: the numbers they care about are green, and nothing is crammed together. v2 hid parts behind tabs and packed them into one dense table. v3 keeps the live page's order and shapes (one page; label left, big green number right; Valuation as rows of boxes; room between cards) and changes only the look; v2 stays as `v2.html`. The live page was pictured with our data (its own HTML and scripts, every API answer served from our saved reads, nothing sent) before v3 was drawn.
+
+Since the report: the live page now has its own standalone "Deposit not showing? Submit tx hash" under Actions (#214, fixed the same afternoon), so row 11's link is no longer a proposal. Closed card positions: live shows the 10 latest.
+
+v3's proposals, each marked PROPOSED: the Valuation total also at the top; a row of jump links for the long page (nothing hidden); "NO PRICE" instead of "$0.00 (0.0%)" for a token without a price; "no cap" for a microfund without one.
+
+## v2's proposed changes (superseded by v3)
 
 The operator, 2026-10-17: *"pochopitelne muzes navrhnout i upravy pokud uvidis v necem nynejsim nesmysl nebo bug nebo neco co by byl jasny upgrade k lepsimu"*.
 
