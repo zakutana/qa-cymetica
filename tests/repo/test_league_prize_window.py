@@ -10,14 +10,16 @@ The fix is in scripts/league.py (workers cannot write there): ask `/prizes` with
 `summary()` -- and say "unread" if the answer is a full window of 200, since then the list may
 still be cut. This test fails on the ASSERTION until then; strict, so it turns red the day it is
 fixed and the marker must go.
+
+2026-10-17: built (REPLY-0182), both markers gone. The list holds 246 rows and 200 is its ceiling
+(`limit=201` is a 422; offset, page, player_id and status are ignored), so the full window is the
+live case: our eight credited prizes (ids 4-14) can no longer be read by anyone.
 """
 
 from __future__ import annotations
 
 import importlib.util
 from pathlib import Path
-
-import pytest
 
 from qa.marks import SafetyTier, qa
 
@@ -68,8 +70,6 @@ class _Client:
         pass
 
 
-@pytest.mark.xfail(strict=True, reason="league.summary() reads the default window of 50 prize "
-                   "records; 8,000 ET10 of ours sit beyond it (T-0018)")
 @qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
 def test_summary_counts_credited_prizes_beyond_the_default_window(monkeypatch):
     script = _script()
@@ -92,8 +92,6 @@ class _FullClient(_Client):
         return super().get(url, params)
 
 
-@pytest.mark.xfail(strict=True, reason="T-0018: summary() has no notion of a full window; "
-                   "the docstring's 'say unread if the answer is a full window of 200' is not built")
 @qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
 def test_a_full_window_of_prizes_is_said_unread_not_counted_as_the_total(monkeypatch):
     """B05, deep pass 2026-10-15: a limit=200-only fix reports a cut list as the whole."""

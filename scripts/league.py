@@ -40,6 +40,7 @@ from qa.safety import CURRENT_TIER, EndpointRegistry, SafetyTier  # noqa: E402
 from qa.state import file_lock, state_dir  # noqa: E402
 
 BASE = "/api/v1/agent-league"
+PRIZE_LIMIT = 200   # rows asked of /prizes; its default is the newest 50
 PLAYER_NAME = "qa-cymetica"
 PLAYER_KIND = "api"
 
@@ -311,27 +312,34 @@ def summary() -> dict:
         response = _get(client, f"{BASE}/players/{pid}")
         body = _json(response) if response.status_code == 200 else None
         theirs = body if isinstance(body, dict) else None
-        response = _get(client, f"{BASE}/prizes")
+        # The list answers the newest 50 records unless asked for more (T-0018; REPLY-0182 names
+        # `?limit=200`). 200 is its ceiling (422 above) and offset/page/player_id are ignored, so
+        # a full window may be cut: our totals then read as unread, never as all of it.
+        response = _get(client, f"{BASE}/prizes", limit=PRIZE_LIMIT)
         body = _json(response) if response.status_code == 200 else None
         prizes = body.get("prizes") if isinstance(body, dict) else None
     finally:
         client.close()
-    mine = ([p for p in prizes if isinstance(p, dict) and p.get("player_id") == pid]
+    seen = ([p for p in prizes if isinstance(p, dict) and p.get("player_id") == pid]
             if isinstance(prizes, list) else None)
+    cut = isinstance(prizes, list) and len(prizes) >= PRIZE_LIMIT
+    mine = None if cut else seen
     rows = load()
     sent = sum(1 for r in rows if r.get("type") == "outcome" and r.get("kind") == "answer"
                and r.get("outcome") == "accepted")
     et10 = (sum(float(p.get("amount_et10") or 0) for p in mine if p.get("status") == "credited")
             if mine is not None else None)
-    return {"player": pid, "lines": summary_lines(sent, theirs, mine),
+    return {"player": pid, "lines": summary_lines(sent, theirs, mine, seen if cut else None),
             "answers": (theirs or {}).get("answers", sent),
             "mean_score": (theirs or {}).get("mean_score"), "et10_credited": et10,
             "prizes": len(mine) if mine is not None else None}
 
 
-def summary_lines(sent: int, theirs: dict | None, mine: list | None) -> list[str]:
+def summary_lines(sent: int, theirs: dict | None, mine: list | None,
+                  cut: list | None = None) -> list[str]:
     """The three /lab lines. `theirs` None: their player record did not answer; `mine` None: the
-    prize list did not answer. Rule 8: an unread figure is said, never printed as 0 (R03)."""
+    prize list did not answer. Rule 8: an unread figure is said, never printed as 0 (R03).
+    `cut`: the list came back full to its 200-row ceiling, so these are only ours among it."""
     # Theirs counts SCORED answers; an answer is scored when its puzzle resolves.
     if theirs is None:
         first = f"{sent} answers sent, scored: unread (their player record did not answer)"
@@ -339,11 +347,18 @@ def summary_lines(sent: int, theirs: dict | None, mine: list | None) -> list[str
     else:
         first = f"{sent} answers sent, {theirs.get('answers', 0)} scored, mean score {theirs.get('mean_score')}"
         second = f"{theirs.get('division_name')}, {theirs.get('points')} points"
-    if mine is None:
+    if mine is None and cut is not None:
+        capped = sum(1 for p in cut if p.get("status") == "capped")
+        third = (f"ET10 credited: unread (the prize list stops at its newest {PRIZE_LIMIT} rows; "
+                 f"older prizes cannot be read)"
+                 + (f", {capped} capped among them (the monthly cap: not paid)" if capped else ""))
+    elif mine is None:
         third = "ET10 credited: unread (the prize list did not answer)"
     else:
         et10 = sum(float(p.get("amount_et10") or 0) for p in mine if p.get("status") == "credited")
-        third = f"{et10:g} ET10 credited" + (f", {len(mine)} prize(s)" if mine else "")
+        capped = sum(1 for p in mine if p.get("status") == "capped")
+        third = (f"{et10:g} ET10 credited" + (f", {len(mine)} prize(s)" if mine else "")
+                 + (f", {capped} capped (the monthly cap: not paid)" if capped else ""))
     return [first, second, third]
 
 
