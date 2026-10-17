@@ -12,6 +12,12 @@
       "runtimeExecutable": "python",
       "runtimeArgs": ["-m", "http.server", "8793", "--bind", "127.0.0.1", "--directory", "outbox/company-live"],
       "port": 8793
+    },
+    {
+      "name": "terminal-mock",
+      "runtimeExecutable": "python",
+      "runtimeArgs": ["-m", "http.server", "8794", "--bind", "127.0.0.1", "--directory", "outbox/terminal-redesign"],
+      "port": 8794
     }
   ]
 }
