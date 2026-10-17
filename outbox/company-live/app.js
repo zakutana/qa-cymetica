@@ -67,8 +67,10 @@
     $('co-logo').textContent = initials(c.name);
     var st = $('co-status'); st.textContent = paused ? 'PAUSED' : 'RUNNING'; st.className = 'pill ' + (paused ? 'off' : 'on');
     $('co-pause').textContent = paused ? 'Resume' : 'Pause';
-    var et = $('co-et10'); et.hidden = !S.et10;
-    if (S.et10) et.innerHTML = '<b>+' + S.et10.toLocaleString('en-US') + '</b> ET10 earned';
+    // always there, so it can always be clicked for where the ET10 came from
+    var et = $('co-et10');
+    et.innerHTML = '<b>' + (S.et10 ? '+' : '') + (S.et10 || 0).toLocaleString('en-US') + '</b> ET10 earned';
+    et.classList.toggle('zero', !S.et10);
     var n = S.approvals.length, w = $('co-waiting');
     w.innerHTML = n ? '<b>' + n + '</b> need' + (n === 1 ? 's' : '') + ' you' : '✓ all clear';
     w.classList.toggle('none', !n);
@@ -114,7 +116,7 @@
     var start = b.session.resets_at - b.session.every;
     var onExtra = S.strip.filter(function (c) { return c.at >= start && c.extra; }).length;
     var used = Math.min(b.session.used, cap), sp = Math.round(used / cap * 100), usp = $('us-p');
-    usp.textContent = sp + '% used' + (onExtra ? ' · on extra usage' : '');
+    usp.textContent = sp + '% used';
     usp.classList.toggle('hot', sp >= 85);
     var sb = $('us-bar'); sb.style.width = sp + '%'; sb.classList.toggle('hot', sp >= 85);
     var wp = Math.min(100, b.week.used / b.week.cap * 100);
@@ -145,35 +147,39 @@
     var S = CO.S, fd = ui.panel != null ? CO.dept(ui.panel) : null;
     var apprs = fd ? S.approvals.filter(function (a) { return a.dept_id === fd.id; }) : S.approvals, n = apprs.length;
     $('ap-t').textContent = fd ? 'NEEDS YOU · ' + fd.name.toUpperCase() : 'NEEDS YOU';
-    $('nx-t').textContent = fd ? 'UP NEXT · ' + fd.name.toUpperCase() : 'UP NEXT';
     $('ap-n').textContent = n || '';
     $('p-appr').classList.toggle('none', !n);
     setHTML($('appr'), n ? apprs.map(function (a) { return apprCard(a, false); }).join('') : '<p class="empty ok">All clear: nothing needs you' + (fd ? ' from ' + esc(fd.name) : '') + '.</p>');
     S.approvals.forEach(function (a) { ui.seen[a.id] = 1; });
-    // the plan
-    var pl = S.plan.filter(function (id) { var t = CO.task(id); return t && (!fd || t.dept_id === fd.id); });
-    $('plan-n').textContent = pl.length || '';
-    setHTML($('plan'), pl.length ? pl.map(function (id) {
-      var i = S.plan.indexOf(id), t = CO.task(id); if (!t) return '';
-      var d = CO.dept(t.dept_id), blocked = t.blocked_by || CO.capped(d);
-      return '<li data-id="' + id + '"' + (ui.moved === id ? ' class="moved"' : '') + '><span class="n">' + (i + 1) + '</span><div><b title="' + esc(t.title) + '">' + esc(plainTitle(t.title)) + '</b>' +
-        '<em class="' + (blocked ? 'wait' : '') + '">' + esc(d ? d.name : '') + (blocked ? ' · ' + esc(CO.waitText(t)) : '') + '</em></div>' +
-        '<span class="pa"><button data-a="top" title="Move to the top"' + (i ? '' : ' disabled') + '>⤒</button><button data-a="up" title="Move up"' + (i ? '' : ' disabled') + '>↑</button>' +
-        '<button data-a="down" title="Move down"' + (i < S.plan.length - 1 ? '' : ' disabled') + '>↓</button><button data-a="remove" title="Remove from the plan">×</button></span></li>';
-    }).join('') : '<li class="empty">Nothing queued' + (fd ? ' for ' + esc(fd.name) : '') + '. Give the Manager work below.</li>');
-    ui.moved = null;
-    // the feed, newest first
-    var top = ui.feedTop, fresh = 0;
-    // only what happened, not the machinery: starts, turns, queueing and retries stay out
-    var fe = (fd ? S.feed.filter(function (f) { return f.dept === fd.name; }) : S.feed).filter(function (f) {
-      return !/^(started |finished turn |queued "|replied|new department|new process)|retrying$/.test(f.text);
-    });
-    fe.forEach(function (f) { if (f.at > top) fresh++; });
-    setHTML($('feed'), fe.slice(0, 14).map(function (f, i) {
-      return '<li class="' + f.kind + (i < fresh ? ' new' : '') + '"><span><b>' + esc(f.dept) + '</b> ' + esc(f.text.replace(/ \(R\d+\)$/, '').replace(/BB request/g, 'Build it Better request')) + '</span><em>' + hhmm(f.at) + '</em></li>';
-    }).join('') || '<p class="empty">Quiet so far. Things show up here as they happen.</p>');
-    if (S.feed.length) ui.feedTop = S.feed[0].at;
+    renderEarned(fd);
     renderChats();
+  }
+  // the header's ET10 chip opens the breakdown: the office, its right column, a flash on the panel
+  function showEarned() {
+    if (ui.tab !== 'office') setTab('office');
+    var p = $('p-earn');
+    p.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
+    p.classList.remove('flash'); void p.offsetWidth; p.classList.add('flash');
+  }
+  // where the ET10 came from: each department that earns, what for, and its share of the total
+  function renderEarned(fd) {
+    var S = CO.S, total = S.et10 || 0;
+    var rows = S.departments.filter(function (d) { return d.et10 || d.files_as; }).map(function (d) {
+      var why = d.files_as ? (d.accepted || 0) + ' bug' + (d.accepted === 1 ? '' : 's') + ' accepted' :
+        d.prizes ? d.prizes + ' tournament prize' + (d.prizes === 1 ? '' : 's') : 'prizes';
+      return { d: d, n: d.et10 || 0, why: why };
+    }).sort(function (a, b) { return b.n - a.n; });
+    var gone = total - rows.reduce(function (s, r) { return s + r.n; }, 0);
+    $('earn-n').textContent = total ? '+' + total.toLocaleString('en-US') : '';
+    setHTML($('earn'), (rows.length ? rows.map(function (r) {
+      var pct = total ? Math.round(r.n / total * 100) : 0;
+      return '<button class="er' + (fd && fd.id === r.d.id ? ' on' : '') + (r.n ? '' : ' zero') + '" data-id="' + r.d.id + '">' +
+        '<div class="e1"><b>' + esc(r.d.name) + '</b><span class="v">' + (r.n ? '+' : '') + r.n.toLocaleString('en-US') + ' ET10</span></div>' +
+        '<div class="e2"><span>' + esc(r.why) + '</span><span>' + (total ? pct + '%' : '') + '</span></div>' +
+        '<span class="ebar"><i style="width:' + pct + '%"></i></span></button>';
+    }).join('') : '') +
+      (gone > 0 ? '<div class="er zero"><div class="e1"><b>Removed departments</b><span class="v">+' + gone.toLocaleString('en-US') + ' ET10</span></div></div>' : '') +
+      (!total ? '<p class="empty">Nothing earned yet. Each bug Cymetica accepts pays ET10 here.</p>' : ''));
   }
 
   // the conversation with the Manager: all of it in the Manager's focus, one department's in its detail
@@ -246,7 +252,7 @@
     var more = opened ? '<div class="more"><b>Brief:</b> ' + esc(t.brief) + '<br><b>Result:</b> ' + esc(t.outcome || 'No output yet.') +
       (t.last_error ? '<br><b class="red">Last error:</b> ' + esc(t.last_error) : '') + '<br>' + esc(TSTAT[t.status]) + ' · ' + t.turns + ' turn' + (t.turns === 1 ? '' : 's') +
       (t.units ? ' · ' + u2(t.units) + ' u' : '') + ' · ' + CO.expertName(t.expert || '') + '</div>' : '';
-    return '<div class="trow" data-task="' + t.id + '"><span><span class="st ' + t.status + '">' + esc(TSTAT[t.status]) + '</span></span><div><b>' + esc(t.title) + '</b><em>' + esc(one) + '</em></div><i>' + hhmm(when) + '</i>' + more + '</div>';
+    return '<div class="trow" data-task="' + t.id + '"><span><span class="st ' + t.status + '">' + esc(TSTAT[t.status]) + '</span></span><div><b>' + esc(plainTitle(t.title)) + '</b><em>' + esc(one) + '</em></div><i>' + hhmm(when) + '</i>' + more + '</div>';
   }
   function sortTasks(list) {
     var S = CO.S, rank = { running: 0, queued: 1, waiting_approval: 2 };
@@ -278,8 +284,9 @@
     var tokHtml = '<div class="tok"><div class="sec">SPEND</div>' +
       '<div class="tk2"><div><b class="' + (v.capped ? 'red' : 'cy') + '">' + CO.fmtTok(v.tokToday) + '</b><span>today</span></div>' +
       '<div><b>' + CO.fmtTok(v.tok7d) + '</b><span>last 7 days</span></div></div>' +
-      (v.cap ? '<div class="track tkbar"><i class="' + (v.capped ? 'hot' : '') + '" style="width:' + Math.min(100, v.tokToday / v.cap * 100).toFixed(1) + '%"></i></div>' +
-        '<div class="tkcap' + (v.capped ? ' hot' : '') + '">' + (v.capped ? 'Cap reached: it waits until 00:00' : CO.fmtTok(Math.max(0, v.cap - v.tokToday)) + ' left today') + '</div>' : '') +
+      // the bar is always there: against the cap when there is one, empty and saying so when not
+      '<div class="track tkbar' + (v.cap ? '' : ' nocap') + '"><i class="' + (v.capped ? 'hot' : '') + '" style="width:' + (v.cap ? Math.min(100, v.tokToday / v.cap * 100).toFixed(1) : 0) + '%"></i></div>' +
+      '<div class="tkcap' + (v.capped ? ' hot' : '') + '">' + (!v.cap ? 'No daily cap: set one below to hold it back' : v.capped ? 'Cap reached: it waits until 00:00' : CO.fmtTok(Math.max(0, v.cap - v.tokToday)) + ' left today of ' + CO.fmtTok(v.cap)) + '</div>' +
       '<label class="capr"><span class="l">Daily cap</span><input type="range" id="dr-cap" min="0" max="' + (CO.CAP_STEPS.length - 1) + '" step="1" value="' + ci + '">' +
       '<b id="dr-cap-v">' + capLabel(CO.CAP_STEPS[ci], v.perTurn) + '</b></label>' +
       (d.schedule ? '<div class="rpd"><span class="l">Runs a day</span>' + [1, 2, 3, 4, 6, 12].map(function (n) {
@@ -696,6 +703,8 @@
       var tab = t.closest('#tabs button'); if (tab) return setTab(tab.getAttribute('data-tab'));
       if (t.closest('#co-pause')) { CO.act.pause(); toast(CO.S.company.status === 'paused' ? 'Paused: a running turn finishes, nothing new starts.' : 'Resumed: the next pass starts in a few seconds.'); return; }
       if (t.closest('#co-waiting')) return setTab('approvals');
+      if (t.closest('#co-et10')) return showEarned();
+      var er = t.closest('#earn .er[data-id]'); if (er) return openDrawer(+er.getAttribute('data-id'));
       if (t.closest('#co-upgrade')) return upgradeModal();
       if (t.closest('#back')) return closeDrawer();
       var sw = t.closest('.dswitch [data-sw]'); if (sw) return sw.getAttribute('data-sw') === 'hub' ? openManager() : openDrawer(+sw.getAttribute('data-sw'));
@@ -854,7 +863,7 @@
     CO.on('reset', function () {
       closeModal(); ui.panel = null; $('drawer').hidden = true; office.sel = null; ui.open = {}; ui.prev = {};
       office.layout(); office.fit(true); markSeen();
-      ['depts', 'appr', 'plan', 'msgs', 'feed', 'legal', 'settings'].forEach(function (id) { $(id)._h = null; });
+      ['depts', 'appr', 'earn', 'msgs', 'legal', 'settings'].forEach(function (id) { $(id)._h = null; });
     });
     CO.on('office:click', function (key) {
       if (key.charAt(0) === 'd') return openDrawer(+key.slice(1));

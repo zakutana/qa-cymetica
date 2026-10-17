@@ -171,6 +171,7 @@ a { color: var(--cyan); text-decoration: none; cursor: pointer; }
 .tk3 b { display: block; font-family: 'Archivo Black'; font-weight: 400; font-size: 20px; } .tk3 span { font-size: 10.5px; color: var(--dim2); }
 .tk3 b.cy { color: var(--cyan); } .tk3 b.red { color: var(--red); }
 .tkbar { height: 8px; } .tkbar i { background-color: var(--cyan); }
+.tkbar.nocap { background: repeating-linear-gradient(135deg, var(--line) 0 6px, var(--navy2) 6px 12px); }
 .tkcap { font-size: 11px; color: var(--dim); margin-top: -4px; } .tkcap.hot { color: var(--red); font-weight: 700; }
 .capr { display: flex; align-items: center; gap: 10px; font-size: 12px; }
 .capr .l, .rpd .l { width: 82px; flex: none; font-size: 11px; color: var(--dim2); letter-spacing: .04em; }
@@ -190,6 +191,20 @@ a { color: var(--cyan); text-decoration: none; cursor: pointer; }
 .runs .cb .btn { padding: 4px 10px; font-size: 11px; }
 .etchip { padding: 7px 12px; border-radius: 8px; border: 1px solid var(--green); color: var(--green); background: var(--green-a); font-size: 12px; font-weight: 700; box-shadow: 0 0 14px rgba(0, 255, 136, .18); }
 .etchip b { font-family: 'Archivo Black'; font-weight: 400; }
+.etchip { cursor: pointer; transition: box-shadow .2s, transform .15s; } .etchip:hover { box-shadow: 0 0 22px rgba(0, 255, 136, .35); transform: translateY(-1px); }
+.etchip.zero { border-color: var(--line3); color: var(--dim2); background: none; box-shadow: none; }
+/* the ET10 breakdown: one row per earning department, its share as a bar */
+.earn { display: flex; flex-direction: column; gap: 8px; }
+.elist { display: flex; flex-direction: column; gap: 7px; }
+.er { display: block; width: 100%; text-align: left; border: 1px solid var(--line); border-radius: 9px; padding: 9px 11px; background: var(--navy2); cursor: pointer; transition: border-color .15s, background .15s; }
+.er:hover { border-color: rgba(0, 255, 136, .5); } .er.on { border-color: var(--green); background: rgba(0, 255, 136, .06); }
+.er .e1 { display: flex; align-items: baseline; justify-content: space-between; gap: 8px; } .er .e1 b { font-size: 13px; }
+.er .e1 .v { color: var(--green); font-weight: 800; font-size: 14px; text-shadow: 0 0 8px rgba(0, 255, 136, .45); white-space: nowrap; }
+.er .e2 { display: flex; justify-content: space-between; margin-top: 3px; font-size: 11px; color: var(--dim2); }
+.er .ebar { display: block; height: 4px; border-radius: 2px; background: var(--line); margin-top: 7px; overflow: hidden; }
+.er .ebar i { display: block; height: 100%; background: var(--green); border-radius: 2px; box-shadow: 0 0 8px rgba(0, 255, 136, .6); transition: width .6s; }
+.er.zero .e1 .v { color: var(--dim2); text-shadow: none; }
+.panel.flash { animation: eflash 1.4s ease; } @keyframes eflash { 0%, 40% { box-shadow: 0 0 0 2px var(--green), 0 0 26px rgba(0, 255, 136, .45); } }
 .mini { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; flex: none; }
 .mini div { background: var(--navy2); border: 1px solid var(--line); border-radius: 9px; padding: 8px 10px; }
 .mini b { display: block; font-family: 'Archivo Black'; font-size: 18px; font-weight: 400; } .mini b small { font-size: 11px; color: var(--dim2); font-family: 'JetBrains Mono'; }
@@ -285,6 +300,8 @@ a { color: var(--cyan); text-decoration: none; cursor: pointer; }
 .office .agent.working .body { fill: url(#gb-cyan); }
 .office .agent.working .bob { animation: bob .9s ease-in-out infinite; }
 .office .agent.walking .bob { animation: walk .45s ease-in-out infinite; }
+/* a name tag rides only on someone at their desk: a walker's tag would cross a colleague's */
+.office .agent .lbl { transition: opacity .25s; } .office .agent.walking .lbl { opacity: 0; }
 @keyframes bob { 50% { transform: translateY(-1.2px); } }
 @keyframes walk { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-2px); } }
 .office .agent .lbl rect { fill: var(--bg); stroke: var(--blue); stroke-width: .7; opacity: .92; }

@@ -610,11 +610,15 @@
       var ap = P(0 + 4.6, 16 + 5.55, 0.1);
       over += plate(ap[0], ap[1], 'WEEKLY AUDIT', C.dim2, [['next in ' + days + (days === 1 ? ' day' : ' days'), C.dim]], 150, 'audit', false);
     }
-    // the selection ring
-    if (this.sel && cells[this.sel]) {
-      var s = cells[this.sel];
-      over += poly([P(s[0] - 0.15, s[1] - 0.15, 0.12), P(s[0] + 7.15, s[1] - 0.15, 0.12), P(s[0] + 7.15, s[1] + 7.15, 0.12), P(s[0] - 0.15, s[1] + 7.15, 0.12)],
+    // the selection ring lies on the floor, just under the selected room: walls, people and plates stay above it
+    var oldRing = this.gRooms.querySelector('.selring');
+    if (oldRing) oldRing.parentNode.removeChild(oldRing);
+    var selRoom = this.sel && cells[this.sel] ? ex(this.sel) : null;
+    if (selRoom) {
+      var s = cells[this.sel], tmp = document.createElementNS(NS, 'g');
+      tmp.innerHTML = poly([P(s[0] - 0.15, s[1] - 0.15, 0.12), P(s[0] + 7.15, s[1] - 0.15, 0.12), P(s[0] + 7.15, s[1] + 7.15, 0.12), P(s[0] - 0.15, s[1] + 7.15, 0.12)],
         'none', C.cyan, 2.4, 1, ' class="selring" filter="url(#glow)"');
+      if (tmp.firstChild) selRoom.parentNode.insertBefore(tmp.firstChild, selRoom);
     }
     this.gOver.innerHTML = over;
     // conduits run fast to working rooms
@@ -698,7 +702,8 @@
     if (!idle.length || Object.keys(this.walkers).length >= 3 || Math.random() < 0.35) return;
     var el = idle[Math.floor(Math.random() * idle.length)], id = el.getAttribute('data-agent');
     var key = id.split(':')[0], c = this.cells[key]; if (!c) return;
-    var spots = key === 'hub' ? [[10.2, 13.6], [13.4, 13.0], [9.6, 11.0]] : [[c[0] + 0.9, c[1] + 4.0], [c[0] + 2.9, c[1] + 4.7], [c[0] + 1.6, c[1] + 3.6], [c[0] + 5.2, c[1] + 3.5]];
+    // open floor only: not on a colleague's spot, not inside the computer's desk
+    var spots = key === 'hub' ? [[10.2, 13.6], [13.4, 13.0], [9.6, 11.0]] : [[c[0] + 2.2, c[1] + 4.6], [c[0] + 3.4, c[1] + 5.0], [c[0] + 2.9, c[1] + 4.3]];
     var tgt = spots[Math.floor(Math.random() * spots.length)], sp = P(tgt[0], tgt[1], 0.1);
     var home = [+el.getAttribute('data-hx'), +el.getAttribute('data-hy')];
     el.classList.add('walking');

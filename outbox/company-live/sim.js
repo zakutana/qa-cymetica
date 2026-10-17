@@ -400,7 +400,7 @@
       var r = (roi >= 0 ? '+' : '') + roi.toFixed(1) + '%';
       if (prize) {
         S.et10 = (S.et10 || 0) + prize;
-        if (d) d.et10 = (d.et10 || 0) + prize;
+        if (d) { d.et10 = (d.et10 || 0) + prize; d.prizes = (d.prizes || 0) + 1; }
       }
       var verdict = rank <= 3 ? 'keep it: next a 7-day table' : 'archived: ' + (roi < 0 ? 'lost money after fees' : 'not in the top three');
       if (t) t.outcome = 'Table ' + table + ' closed: ' + agent + ' ' + ordinal(rank) + ' of 10, ' + r + ' ROI · ' + verdict;
