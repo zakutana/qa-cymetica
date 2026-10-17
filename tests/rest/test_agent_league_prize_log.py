@@ -11,7 +11,8 @@ it shows are all `capped`, 0 ET10). Nexus's REPLY-0182 said "ask for more rows a
 holds only while a record is among the newest 200.
 
 Passes when the list comes back short of its ceiling (it is the whole log), when its oldest id is 1, or
-when any paging parameter we try returns a record older than the window. NOT asserted: which way they
+when any paging parameter or filter we try (offset, before, page, cursor, status=credited, player_id of
+the window's players: every fix #213 names) returns a record older than the window. NOT asserted: which way they
 page, or that ids start at 1 -- only that a full window whose oldest id is above 1 has nothing behind it
 we can reach. SAFE: GETs only, anonymous.
 """
@@ -66,10 +67,18 @@ def test_the_prize_log_reaches_every_prize_it_recorded(rest_anon):
             population={"window": len(window), "oldest_id": oldest, "newest_id": newest},
             sources={"prizes": PRIZES}))
         return
-    tried = {"offset": CEILING, "before": oldest, "before_id": oldest, "page": 2, "cursor": oldest}
+    # Every fix #213 names counts as a reading: paging, a status filter (the window holds no credited
+    # row, so a credited filter reaches older ones), a filter for one of the window's players.
+    tried = {"offset": CEILING, "before": oldest, "before_id": oldest, "page": 2, "cursor": oldest,
+             "status": "credited"}
+    players = sorted({r["player_id"] for r in window if isinstance(r.get("player_id"), int)})[:5]
+    attempts = [(name, {name: value}) for name, value in tried.items()]
+    attempts += [("player_id", {"player_id": pid}) for pid in players]
+    if players:
+        tried["player_id"] = players
     reached = {}
-    for name, value in tried.items():
-        rows = _rows(rest_anon, limit=CEILING, **{name: value})
+    for name, params in attempts:
+        rows = _rows(rest_anon, limit=CEILING, **params)
         if rows is not None:
             older = [i for i in _ids(rows) if i < oldest]
             if older:
