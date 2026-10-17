@@ -6560,6 +6560,38 @@ reports:
       the ET10 itself is credited. Our check passes when the list is short of its ceiling or any paging
       parameter reaches a record older than the window. GET requests only.
 
+  - key: account-claim-deposit-hidden-when-nothing-pending
+    findings: [CYM-the_claim_form_opens_when_nothing_is_pending]
+    severity: low
+    category: logic
+    url: https://cymetica.com/account
+    title: >-
+      My Balances: "Deposit not showing? Submit tx hash" sits inside the Pending Deposits card, which is hidden
+      when nothing is pending, so a deposit that was never detected cannot reach the Claim Missing Deposit form
+    expected: >
+      The Claim Missing Deposit form on /account says: "If your deposit wasn't detected automatically, paste
+      the transaction hash below." A deposit that was not detected is exactly the case with nothing pending,
+      so the control that opens the form is there when the pending list is empty.
+    actual: >
+      Read on 2026-10-17 from the public /account page and the scripts it loads. The only control that opens
+      the form, the button data-click="openClaimDepositForm" ("Deposit not showing? Submit tx hash"), is inside
+      the card #accountPendingDeposits. The page script's loadAccountPendingDeposits runs
+      "if (pending.length === 0) { container.style.display = 'none'; return; }" on that card. No other element
+      and no script on the page calls openClaimDepositForm. So with an empty pending list the button is hidden,
+      and an undetected deposit leaves the list empty. The Deposit dialog's "Sent a deposit but don't see it?
+      Scan all networks" is a different, automatic scan (POST /api/v1/funding/deposit/full-scan), not the
+      tx-hash form.
+    steps:
+      - 'GET https://cymetica.com/account -> the button data-click="openClaimDepositForm" is a descendant of <div id="accountPendingDeposits">; the form <div id="claimDepositForm"> follows it'
+      - 'GET https://cymetica.com/account/page-script.e2561648e3d33fa3.js -> loadAccountPendingDeposits: var container = document.getElementById(''accountPendingDeposits''); ... if (pending.length === 0) { container.style.display = ''none''; return; }'
+      - 'The 22 scripts /account loads and its inline scripts contain no other call of openClaimDepositForm'
+    body: >
+      A user whose deposit was not detected, the case the form exists for, sees no way to submit the
+      transaction hash on /account. Moving the button out of the Pending Deposits card, or keeping the card
+      (with its button) visible when nothing is pending, would fix it. Low: the Deposit dialog's network scan
+      may still find the deposit. Our check passes when a control outside the card or a script call opens the
+      form, or when the card is no longer hidden on an empty list. GET requests only.
+
 footer: >
   Reported by an independent QA agent. Scope of this work: verification of the
   REST API, MCP, the machine-readable discovery surfaces and the pages built on
