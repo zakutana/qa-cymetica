@@ -166,7 +166,7 @@
     var top = ui.feedTop, fresh = 0;
     // only what happened, not the machinery: starts, turns, queueing and retries stay out
     var fe = (fd ? S.feed.filter(function (f) { return f.dept === fd.name; }) : S.feed).filter(function (f) {
-      return !/^(started |finished turn |queued "|replied|new department)|retrying$/.test(f.text);
+      return !/^(started |finished turn |queued "|replied|new department|new process)|retrying$/.test(f.text);
     });
     fe.forEach(function (f) { if (f.at > top) fresh++; });
     setHTML($('feed'), fe.slice(0, 14).map(function (f, i) {
@@ -546,9 +546,9 @@
       if (rk === 'audit') return '<b>Supervisor</b> · runs the weekly audit';
       var d = CO.dept(+rk.slice(1)); if (!d) return '';
       var v = CO.deptView(d), e = v.experts[i]; if (!e) return '';
-      return '<b>' + esc(e.name) + '</b> · ' + esc(d.name) + '<br>' + (e.state === 'working' && v.running ? '<span class="c">working</span> on “' + esc(v.running.title) + '” · attempt ' + v.running.attempt + ' of 3' : 'idle');
+      return '<b>' + esc(e.name) + '</b> · ' + esc(d.name) + '<br>' + (e.state === 'working' && v.running ? '<span class="c">working on</span> “' + esc(v.running.title) + '”' : 'idle');
     }
-    if (key === 'hub') return '<b>Manager</b> · <span class="c">' + c.open + ' open</span> · ' + (S.approvals.length ? '<span class="r">' + S.approvals.length + ' wait for you</span>' : 'nothing waits') + '<br>click to open the Manager';
+    if (key === 'hub') return '<b>Manager</b> · your chat' + (S.approvals.length ? ' · <span class="r">' + S.approvals.length + ' need' + (S.approvals.length === 1 ? 's' : '') + ' you</span>' : '') + '<br>click to open';
     if (key === 'you') return '<b>Your desk</b> · ' + (S.approvals.length ? '<span class="r">' + S.approvals.length + ' approvals waiting</span>' : 'all clear') + '<br>click to open Approvals';
     if (key === 'audit') {
       var A = S.audit;
@@ -556,9 +556,8 @@
     }
     if (key === 'lot') return '<b>Add a department</b><br>click to staff a new room';
     var dd = CO.dept(+String(key).slice(1)); if (!dd) return '';
-    var vv = CO.deptView(dd), col = { working: 'c', queued: 'bl', waiting: 'r', idle: '' }[vv.status];
-    return '<b>' + esc(dd.name) + '</b> · <span class="' + col + '">' + WORD[vv.status] + '</span> · ' + vv.open + ' open · ' + vv.done + ' done' + (vv.failed ? ' · <span class="r">' + vv.failed + ' failed</span>' : '') +
-      '<br>' + (vv.running ? 'Now: “' + esc(vv.running.title) + '”' : vv.waits ? 'Queued: ' + esc(vv.waits) : vv.waiting ? '<span class="r">waits for your approval</span>' : 'nothing queued') + '<br><span style="color:var(--dim2)">click to open</span>';
+    var ln = CO.deptLine(dd), col = { cyan: 'c', blue: 'bl', red: 'r', dim: '' }[ln.tone];
+    return '<b>' + esc(dd.name) + '</b><br><span class="' + col + '">' + esc(ln.text) + '</span><br><span style="color:var(--dim2)">click to open</span>';
   }
 
   /* ---------------- modals and toasts ---------------- */

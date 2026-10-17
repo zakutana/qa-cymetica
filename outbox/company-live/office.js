@@ -539,10 +539,11 @@
       if (v.status === 'working') anyWork = true;
       g.setAttribute('class', 'room st-' + v.status + (self.sel === 'd' + d.id ? ' sel' : '') + (g.classList.contains('born') ? ' born' : '') + (g.classList.contains('hover') ? ' hover' : ''));
       var col = ST[v.status], title, sub, mode;
-      if (v.running) { title = v.running.title; sub = 'attempt ' + v.running.attempt + ' of 3 · ' + CO.expertName(v.running.expert); mode = 'run'; }
-      else if (v.queued.length) { title = 'Next: ' + v.queued[0].title; sub = 'Queued: ' + v.waits; mode = ''; }
-      else if (v.waiting) { title = v.waiting + ' wait' + (v.waiting > 1 ? '' : 's') + ' for you'; sub = 'approve or reject on the right'; mode = 'full'; col = C.red; }
-      else { title = 'Idle'; sub = v.done + ' done · nothing queued'; mode = ''; }
+      // the wall screen says what the plate says, a little longer: never passes or attempts
+      if (v.running) { title = v.running.title; sub = CO.expertName(v.running.expert) + ' is on it'; mode = 'run'; }
+      else if (v.waiting) { title = 'Needs you'; sub = 'approve or reject on the right'; mode = 'full'; col = C.red; }
+      else if (v.queued.length) { title = 'Up next: ' + v.queued[0].title; sub = ''; mode = ''; }
+      else { title = d.schedule && d.next_run ? 'Next run at ' + CO.hhmm(d.next_run) : 'Idle'; sub = ''; mode = ''; }
       var scr = g.querySelector('.scr');
       scr.innerHTML = wallScreen(x0, y0, 1.1, +scr.getAttribute('data-u1'), title, sub, col, mode);
       var kc = { queued: v.queued.length, running: v.running ? 1 : 0, done: v.done, failed: v.failed };

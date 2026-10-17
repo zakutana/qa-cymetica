@@ -911,8 +911,7 @@
     }
     if (focus && dept(focus) && /(status|how|update|progress|doing|what.*(now|next)|co d[eě]l|jak|stav)/.test(t)) {
       var fd = dept(focus), v = CO.deptView(fd);
-      return fd.name + ': ' + (v.running ? 'working on "' + v.running.title + '"' : v.queued.length ? 'next is "' + v.queued[0].title + '" (' + v.waits + ')' : 'nothing running') +
-        '. ' + v.open + ' open, ' + v.done + ' done, ' + v.failed + ' failed. It used ' + v.sessPct + '% of this session and ' + v.weekPct + '% of the week.' +
+      return fd.name + ': ' + CO.deptLine(fd, v).text + '. ' + v.done + ' done so far; it spent ' + CO.fmtTok(v.tokToday) + ' today.' +
         (fd.schedule ? ' Next run ' + CO.hhmm(fd.next_run) + '.' : '') + (fd.et10 ? ' Earned ' + fd.et10.toLocaleString('en-US') + ' ET10.' : '');
     }
     if (!S.departments.length) {
