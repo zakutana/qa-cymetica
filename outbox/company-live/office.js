@@ -834,5 +834,7 @@
 
   // the same projection and palette for the Universe map and the building pictures
   CO.iso = { SC: SC, C30: C30, S30: S30, C: C, P: P, f1: f1, pts: pts, esc: esc, poly: poly, box: box, text: text,
-    onBack: onBack, onSide: onSide, cut: cut, plant: plant };
+    onBack: onBack, onSide: onSide, cut: cut, plant: plant,
+    // the office's floor plan for the 3D office: the same rooms in the same places, the same corridors
+    route: route, SLOTS: SLOTS, HUB: HUB, AUDIT: AUDIT, RS: RS };
 })();

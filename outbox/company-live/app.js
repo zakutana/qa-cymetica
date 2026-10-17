@@ -27,9 +27,35 @@
   var TSTAT = { queued: 'next', running: 'working', waiting_approval: 'needs you', done: 'done', failed: 'failed', cancelled: 'cancelled' };
 
   var ui = { tab: 'office', view: '2d', panel: null, open: {}, seen: {}, feedTop: 0, dirty: false, prev: {}, tfDept: '', tfStatus: '', memQ: '', memDept: null };
-  var office;
+  var office, office2d = null, office3d = null;
   // RO: someone else's public company, looked at from the Universe; everything shows, nothing changes
   var RO = false;
+
+  /* ---------------- the office: flat or in 3D, the same API either way ---------------- */
+  function viewPref() { try { return localStorage.getItem('co.view') || '3d'; } catch (e) { return '3d'; } }
+  function setView(v, save) {
+    if (v === '3d' && !(CO.U3 && CO.U3.ok && CO.U3.office)) v = '2d';
+    if (save) { try { localStorage.setItem('co.view', v); } catch (e) { /* fine */ } }
+    ui.view = v;
+    var st = $('stage');
+    st.classList.toggle('is3d', v === '3d');
+    Array.prototype.forEach.call(document.querySelectorAll('#vt button'), function (b) { b.classList.toggle('on', b.getAttribute('data-v') === v); });
+    if (v === '3d') {
+      if (!office3d) { office3d = CO.U3.office($('office3d'), st, tipFor); office3d.onFail = function () { office3d = null; setView('2d'); }; }
+      office = office3d;
+    } else office = office2d;
+    office.sel = ui.mgr ? 'hub' : ui.panel != null ? 'd' + ui.panel : null;
+    office.layout();
+    requestAnimationFrame(function () {
+      office.resize();
+      if (ui.mgr) office.focus('hub', 0, true); else if (ui.panel != null) office.focus('d' + ui.panel, 0, true); else office.fit(false);
+    });
+  }
+  // the 3D engine loads on its own: switch when it is there, if 3D is the choice
+  function whenEngine(cb) {
+    var t0 = Date.now();
+    (function wait() { if (CO.U3 && (CO.U3.ok || CO.U3.failed)) return cb(!!CO.U3.ok); if (Date.now() - t0 > 8000) return cb(false); setTimeout(wait, 80); })();
+  }
 
   /* ---------------- boot ---------------- */
   function boot() {
@@ -37,8 +63,10 @@
     RO = !!CO.RO;
     CO.applySetup();
     if (RO) roSetup();
-    office =new CO.Office($('office'), $('stage'), tipFor);
+    office = office2d = new CO.Office($('office'), $('stage'), tipFor);
     office.layout();
+    Array.prototype.forEach.call(document.querySelectorAll('#vt button'), function (b) { b.classList.toggle('on', b.getAttribute('data-v') === '2d'); });
+    whenEngine(function (ok) { if (ok && viewPref() === '3d') setView('3d'); });
     markSeen();
     bind();
     wire();
@@ -880,7 +908,7 @@
 
   // what a visitor may still press: moving around and reading. Everything else that writes says so instead.
   var RO_OK = '#tabs button, #back, .dswitch [data-sw], .dept, #earn .er, #co-et10, #co-waiting, #z-in, #z-out, #z-fit, .trow, tr.row, #dr-tasks-all, #dr-mem-t, ' +
-    '[data-r], [data-a="close"], [data-a="appr"], #simbar [data-speed], #sim-reset, #ro-back, [data-mock], #modal';
+    '[data-r], [data-a="close"], [data-a="appr"], #simbar [data-speed], #sim-reset, #ro-back, [data-mock], #modal, #vt button, .p3, .p3need';
   function roBlocked(t) { return !t.closest(RO_OK) && !!t.closest('button, [data-a], [data-d], .switch, [data-rpd]'); }
   function bind() {
     document.addEventListener('click', function (e) {
@@ -917,6 +945,7 @@
         else { ui.moved = id; CO.act.move(id, a); }
         return;
       }
+      var vb = t.closest('#vt [data-v]'); if (vb) return setView(vb.getAttribute('data-v'), true);
       if (t.closest('#z-in')) return office.zoom(0.78);
       if (t.closest('#z-out')) return office.zoom(1.28);
       if (t.closest('#z-fit')) return office.fit(true);

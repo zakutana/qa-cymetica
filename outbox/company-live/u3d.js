@@ -779,11 +779,571 @@ function preview(el, o) {
   return p;
 }
 
+/* ---------------- the office in 3D: the same floor plan, rooms you can walk the camera into ---------------- */
+const STC = { working: 0x00cfff, queued: 0x3b82f6, waiting: 0xff4444, idle: 0x7f93ad };
+const TONEC = { cyan: '#00cfff', red: '#ff4444', blue: '#7fb0ff', dim: '#a9b8cc' };
+const OM = {};
+function omats() {
+  if (OM.tile) return;
+  const c = document.createElement('canvas'); c.width = c.height = 512; const g = c.getContext('2d');
+  g.fillStyle = '#1a2c48'; g.fillRect(0, 0, 512, 512);
+  g.strokeStyle = 'rgba(52,82,128,.95)'; g.lineWidth = 2;
+  for (let i = 0; i <= 7; i++) { const p = i * 512 / 7; g.beginPath(); g.moveTo(p, 0); g.lineTo(p, 512); g.stroke(); g.beginPath(); g.moveTo(0, p); g.lineTo(512, p); g.stroke(); }
+  const t = new THREE.CanvasTexture(c); t.colorSpace = THREE.SRGBColorSpace; t.anisotropy = 8;
+  OM.tile = new THREE.MeshStandardMaterial({ map: t, roughness: 0.5, metalness: 0.35 });
+  OM.glass = new THREE.MeshStandardMaterial({ color: 0x2e5285, transparent: true, opacity: 0.42, roughness: 0.08, metalness: 0.35, depthWrite: false });
+  OM.frame = new THREE.MeshStandardMaterial({ color: 0x1e3050, roughness: 0.5, metalness: 0.5 });
+  OM.desk = new THREE.MeshStandardMaterial({ color: 0x253b60, roughness: 0.55, metalness: 0.3 });
+  OM.deskTop = new THREE.MeshStandardMaterial({ color: 0x2f4a75, roughness: 0.45, metalness: 0.3 });
+  OM.dark = new THREE.MeshStandardMaterial({ color: 0x0b1220, roughness: 0.5, metalness: 0.4 });
+  OM.head = new THREE.MeshStandardMaterial({ color: 0xa9b8cc, roughness: 0.6 });
+  OM.plinth = new THREE.MeshStandardMaterial({ color: 0x111a28, roughness: 0.5, metalness: 0.5 });
+  OM.capsule = new THREE.CapsuleGeometry(0.17, 0.34, 4, 14);
+  OM.green = amat('#00ff88'); OM.cyan = amat('#00cfff'); OM.blue = amat('#3b82f6'); OM.red = amat('#ff4444');
+}
+function emis(hex, k) { return new THREE.MeshStandardMaterial({ color: 0x000000, emissive: new THREE.Color(hex), emissiveIntensity: k == null ? 1.4 : k, roughness: 1 }); }
+// a screen on a wall: a canvas the room writes on, redrawn only when what it says changes
+function screen(w, h) {
+  const c = document.createElement('canvas'); c.width = Math.round(w * 160); c.height = Math.round(h * 160);
+  const tex = new THREE.CanvasTexture(c); tex.colorSpace = THREE.SRGBColorSpace; tex.anisotropy = 8;
+  return { c, g: c.getContext('2d'), tex, key: '' };
+}
+function drawWall(s, title, sub, col, mode) {
+  const key = [title, sub, col, mode].join('|'); if (s.key === key) return; s.key = key;
+  const { c, g } = s, W = c.width, H = c.height;
+  g.fillStyle = '#081322'; g.fillRect(0, 0, W, H);
+  g.strokeStyle = col; g.lineWidth = 6; g.strokeRect(3, 3, W - 6, H - 6);
+  g.fillStyle = col; g.font = '700 ' + Math.round(H * 0.2) + 'px JetBrains Mono, monospace'; g.textBaseline = 'top';
+  const fit = (t, size) => { let s2 = String(t || ''); while (s2.length > 3 && g.measureText(s2).width > W - 40) s2 = s2.slice(0, -2); return s2 !== t ? s2.replace(/.$/, '…') : s2; };
+  g.fillText(fit(title), 20, H * 0.14);
+  g.fillStyle = '#7f93ad'; g.font = '500 ' + Math.round(H * 0.14) + 'px JetBrains Mono, monospace';
+  g.fillText(fit(sub), 20, H * 0.44);
+  g.fillStyle = '#1e3050'; g.fillRect(20, H * 0.76, W - 40, H * 0.08);
+  if (mode === 'run') { g.fillStyle = col; g.fillRect(20, H * 0.76, (W - 40) * (0.25 + 0.5 * Math.random()), H * 0.08); }
+  if (mode === 'full') { g.fillStyle = col; g.globalAlpha = 0.75; g.fillRect(20, H * 0.76, W - 40, H * 0.08); g.globalAlpha = 1; }
+  s.tex.needsUpdate = true;
+}
+function drawBars(s, title, bars) {
+  const key = title + JSON.stringify(bars); if (s.key === key) return; s.key = key;
+  const { c, g } = s, W = c.width, H = c.height;
+  g.fillStyle = '#081322'; g.fillRect(0, 0, W, H); g.strokeStyle = '#00cfff'; g.lineWidth = 6; g.strokeRect(3, 3, W - 6, H - 6);
+  g.fillStyle = '#00cfff'; g.font = '700 ' + Math.round(H * 0.15) + 'px JetBrains Mono, monospace'; g.textBaseline = 'top'; g.fillText(title, 20, H * 0.1);
+  const top = Math.max(1, ...bars.map((b) => b[1])), bw = (W - 40) / Math.max(1, bars.length);
+  bars.forEach((b, i) => { const h = (H * 0.55) * b[1] / top; g.fillStyle = b[0]; g.fillRect(20 + i * bw, H * 0.88 - h, bw - 10, Math.max(3, h)); });
+  s.tex.needsUpdate = true;
+}
+function drawKanban(s, counts) {
+  const key = JSON.stringify(counts); if (s.key === key) return; s.key = key;
+  const { c, g } = s, W = c.width, H = c.height, cols = [['queued', '#3b82f6'], ['running', '#00cfff'], ['done', '#00ff88'], ['failed', '#ff4444']];
+  g.fillStyle = '#060b14'; g.fillRect(0, 0, W, H); g.strokeStyle = '#1e3050'; g.lineWidth = 6; g.strokeRect(3, 3, W - 6, H - 6);
+  const cw = (W - 30) / 4;
+  cols.forEach(([k, col], i) => {
+    const x = 15 + i * cw; g.fillStyle = col; g.fillRect(x + 6, 14, cw - 12, 10);
+    for (let n = 0; n < Math.min(counts[k] || 0, 4); n++) { g.globalAlpha = 0.85; g.fillRect(x + 10, 40 + n * (H - 60) / 4.4, cw - 20, (H - 60) / 5.5); g.globalAlpha = 1; }
+  });
+  s.tex.needsUpdate = true;
+}
+function candleTex() {
+  const c = document.createElement('canvas'); c.width = 512; c.height = 256; const g = c.getContext('2d');
+  g.fillStyle = '#071526'; g.fillRect(0, 0, 512, 256); g.strokeStyle = '#00ff88'; g.lineWidth = 5; g.strokeRect(3, 3, 506, 250);
+  let v = 140; for (let i = 0; i < 16; i++) { const up = [1, 1, 0, 1, 0, 1, 1, 0, 1, 1, 1, 0, 1, 1, 0, 1][i], o = v; v = Math.max(60, Math.min(210, v + (up ? -16 : 13))); g.fillStyle = up ? '#00ff88' : '#ff4444'; g.fillRect(24 + i * 29, Math.min(o, v), 17, Math.max(6, Math.abs(o - v))); g.fillRect(31 + i * 29, Math.min(o, v) - 10, 3, Math.abs(o - v) + 20); }
+  g.fillStyle = '#00ff88'; g.font = '700 22px JetBrains Mono, monospace'; g.fillText('BASKET H2 · +1.1%', 22, 34);
+  const t = new THREE.CanvasTexture(c); t.colorSpace = THREE.SRGBColorSpace; return t;
+}
+function moodTex() {
+  const c = document.createElement('canvas'); c.width = 512; c.height = 256; const g = c.getContext('2d');
+  g.fillStyle = '#111a28'; g.fillRect(0, 0, 512, 256); g.strokeStyle = '#1e3050'; g.lineWidth = 5; g.strokeRect(3, 3, 506, 250);
+  ['#00cfff', '#00ff88', '#3b82f6', '#ff4444'].forEach((col, i) => { g.fillStyle = col; g.fillRect(24 + i * 58, 28, 46, 46); });
+  g.strokeStyle = '#7f93ad'; g.lineWidth = 3; g.strokeRect(24, 96, 220, 70); g.fillStyle = '#7f93ad'; g.fillRect(36, 110, 90, 10); g.fillStyle = '#1e3050'; g.fillRect(36, 132, 160, 8);
+  g.strokeStyle = '#00cfff'; g.setLineDash([10, 8]); g.strokeRect(270, 28, 214, 200);
+  const t = new THREE.CanvasTexture(c); t.colorSpace = THREE.SRGBColorSpace; return t;
+}
+
+class Office3D {
+  constructor(el, stage, tipFor) {
+    geo(); omats();
+    this.el = el; this.stage = stage; this.tipFor = tipFor;
+    this.tip = stage.querySelector('.tip'); this.layer = stage.querySelector('.o3layer');
+    this.sel = null; this.cells = {}; this.paths = {}; this.packets = []; this.rooms = {}; this.fitted = false; this.hover = null;
+    this.mouse = new THREE.Vector2(); this.ray = new THREE.Raycaster();
+    this.scene = new THREE.Scene(); this.scene.background = new THREE.Color(0x070b14); this.scene.fog = new THREE.Fog(0x070b14, 80, 170);
+    this.camera = new THREE.PerspectiveCamera(30, 2, 0.3, 500);
+    this.renderer = new THREE.WebGPURenderer({ antialias: false });
+    this.renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
+    this.renderer.toneMapping = THREE.ACESFilmicToneMapping; this.renderer.toneMappingExposure = 1.4;
+    this.renderer.shadowMap.enabled = true; this.renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+    el.appendChild(this.renderer.domElement);
+    this.controls = new OrbitControls(this.camera, this.renderer.domElement);
+    Object.assign(this.controls, { enableDamping: true, dampingFactor: 0.08, minDistance: 6, maxDistance: 110, maxPolarAngle: Math.PI * 0.43, minPolarAngle: 0.2,
+      screenSpacePanning: false, zoomSpeed: 0.9, rotateSpeed: 0.55 });
+    this.controls.addEventListener('start', () => { this.tw = null; });
+    const S = this.scene;
+    S.add(new THREE.HemisphereLight(0x5a88d0, 0x0a1220, 1.7), new THREE.AmbientLight(0x22355a, 0.9));
+    this.sun = new THREE.DirectionalLight(0xc4dcff, 2.0); this.sun.castShadow = true; this.sun.shadow.mapSize.set(2048, 2048);
+    this.sun.shadow.normalBias = 0.02; this.sun.shadow.bias = -0.0005; S.add(this.sun); S.add(this.sun.target);
+    const rim = new THREE.DirectionalLight(0x00cfff, 0.4); rim.position.set(30, 14, -30); S.add(rim);
+    this.world = new THREE.Group(); S.add(this.world);
+    this.pk = new THREE.Group(); S.add(this.pk);
+    this.clock = new THREE.Clock();
+    this.bind();
+    this.renderer.init().then(() => {
+      try { this.post = new Post(this.renderer, this.scene, this.camera, 0.55, 0.4, 0.82); } catch (e) { this.post = null; }
+      this.renderer.setAnimationLoop(() => this.frame());
+    }).catch((e) => { console.error('3D office could not start:', e); if (this.onFail) this.onFail(e); });
+    if (window.ResizeObserver) new ResizeObserver(() => this.resize()).observe(el);
+    setInterval(() => this.wander(), 2600);
+  }
+  shape() { return CO.S.departments.map((d) => d.id + ':' + d.slot + ':' + d.key + ':' + d.experts.join(',')).join('|') + (CO.RO ? 'ro' : ''); }
+  V(x, y, z = 0) { return new THREE.Vector3(x - this.cx, z, y - this.cy); }
+  part(g, geom, mat, sx, sy, sz, x, y, z, shadow = true) {
+    const m = new THREE.Mesh(geom, mat); m.scale.set(sx, sy, sz); m.position.copy(this.V(x, z, y)); if (shadow) { m.castShadow = true; m.receiveShadow = true; } g.add(m); return m;
+  }
+  // a box from the 2D plan's corner and sizes: x0,y0 the plan's corner, w,d its sizes, z0 and h up
+  box(g, x0, y0, z0, w, d, h, mat, shadow) { return this.part(g, G.box, mat, w, h, d, x0 + w / 2, z0 + h / 2, y0 + d / 2, shadow); }
+
+  layout(opts) {
+    const S = CO.S, L = CO.iso, born = opts && opts.born;
+    this.shapeKey = this.shape();
+    const cells = { hub: L.HUB, audit: L.AUDIT }, used = {};
+    S.departments.forEach((d) => { cells['d' + d.id] = L.SLOTS[d.slot]; used[d.slot] = 1; });
+    let lot = 0; while (used[lot]) lot++;
+    if (lot < L.SLOTS.length && !CO.RO) cells.lot = L.SLOTS[lot];
+    this.cells = cells;
+    const all = Object.keys(cells).map((k) => cells[k]);
+    let maxX = 0, maxY = 0; all.forEach((c) => { maxX = Math.max(maxX, c[0] + L.RS); maxY = Math.max(maxY, c[1] + L.RS); });
+    this.cx = maxX / 2; this.cy = maxY / 2; this.size = Math.max(maxX, maxY);
+    // clear the old floor, rooms and labels
+    this.world.clear(); this.layer.innerHTML = ''; this.rooms = {}; this.hits = []; this.pcs = [];
+    const RS = L.RS, W = this.world;
+    // the floor plate, its grid and a lit edge
+    const plate = new THREE.Mesh(G.box, [OM.plinth, OM.plinth, new THREE.MeshStandardMaterial({ color: 0x0f1a2c, roughness: 0.6, metalness: 0.35 }), OM.plinth, OM.plinth, OM.plinth]);
+    plate.scale.set(maxX + 1.2, 0.45, maxY + 1.2); plate.position.set(0, -0.225, 0); plate.receiveShadow = true; W.add(plate);
+    const edgeM = emis('#00cfff', 1.3);
+    [[0, maxY / 2 + 0.6, maxX + 1.25, 0.05], [0, -maxY / 2 - 0.6, maxX + 1.25, 0.05]].forEach(([x, z, w, t]) => { const m = new THREE.Mesh(G.box, edgeM); m.scale.set(w, t, t); m.position.set(x, 0, z); W.add(m); });
+    [[maxX / 2 + 0.6, 0, maxY + 1.25], [-maxX / 2 - 0.6, 0, maxY + 1.25]].forEach(([x, z, d]) => { const m = new THREE.Mesh(G.box, edgeM); m.scale.set(0.05, 0.05, d); m.position.set(x, 0, z); W.add(m); });
+    // corridors: from every room's door to the Manager's, the 2D office's own routes
+    this.paths = {}; this.conduits = {};
+    Object.keys(cells).forEach((k) => {
+      if (k === 'hub' || k === 'lot') return;
+      const p = L.route(all, cells[k], L.HUB); if (!p) return;
+      this.paths[k] = p;
+      const mat = emis('#3b82f6', 0.5), segs = [];
+      for (let i = 1; i < p.length; i++) {
+        const a = p[i - 1], b = p[i], len = Math.hypot(b[0] - a[0], b[1] - a[1]); if (len < 0.01) continue;
+        const base = new THREE.Mesh(G.box, OM.dark); base.scale.set(len + 0.24, 0.03, 0.24);
+        const line = new THREE.Mesh(G.box, mat); line.scale.set(len + 0.06, 0.035, 0.06);
+        [base, line].forEach((m) => { m.position.copy(this.V((a[0] + b[0]) / 2, (a[1] + b[1]) / 2, m === base ? 0.015 : 0.03)); m.rotation.y = -Math.atan2(b[1] - a[1], b[0] - a[0]); W.add(m); });
+        segs.push(line);
+      }
+      this.conduits[k] = { mat, segs };
+    });
+    const sz = this.size;
+    this.sun.position.copy(new THREE.Vector3(-sz * 0.9, sz * 1.5, sz * 0.7)); this.sun.target.position.set(0, 0, 0);
+    Object.assign(this.sun.shadow.camera, { left: -sz * 0.8, right: sz * 0.8, top: sz * 0.8, bottom: -sz * 0.8, near: 1, far: sz * 4 }); this.sun.shadow.camera.updateProjectionMatrix();
+    // rooms
+    Object.keys(cells).forEach((k) => {
+      const c = cells[k], g = new THREE.Group(); W.add(g);
+      const room = { key: k, g, x0: c[0], y0: c[1], agents: [], screens: [], mons: [], born: born && k === 'd' + born };
+      this.rooms[k] = room;
+      if (k === 'lot') return this.lotRoom(room);
+      this.shell(room);
+      if (k === 'hub') this.hubRoom(room); else if (k === 'audit') this.auditRoom(room); else this.deptRoom(room, CO.dept(+k.slice(1)));
+      const hit = new THREE.Mesh(G.box, M.hit); hit.scale.set(RS, 1.6, RS); hit.position.copy(this.V(c[0] + RS / 2, c[1] + RS / 2, 0.8)); hit.userData.key = k; g.add(hit); this.hits.push(hit);
+      if (room.born) { g.scale.set(1, 0.01, 1); room.grow = performance.now(); }
+    });
+    this.selRing = new THREE.Group(); W.add(this.selRing);
+    this.update();
+    if (!this.fitted) { this.fit(false); }
+  }
+  shell(r) {
+    const { g, x0, y0 } = r, RS = CO.iso.RS;
+    this.box(g, x0, y0, 0, RS, RS, 0.1, OM.tile);
+    r.glow = new THREE.Mesh(G.plane, new THREE.MeshBasicMaterial({ map: radialTex('255,255,255', 0.9), transparent: true, opacity: 0, blending: THREE.AdditiveBlending, depthWrite: false, color: 0x00cfff }));
+    r.glow.scale.set(RS * 1.15, RS * 1.15, 1); r.glow.rotation.x = -Math.PI / 2; r.glow.position.copy(this.V(x0 + RS / 2, y0 + RS / 2, 0.11)); g.add(r.glow);
+    // glass back walls, mullions and a lit top edge in the room's colour
+    this.box(g, x0, y0, 0.1, RS, 0.08, 1.15, OM.glass, false);
+    this.box(g, x0, y0, 0.1, 0.08, RS, 1.15, OM.glass, false);
+    for (let m = 1; m < 4; m++) { this.box(g, x0 + m * RS / 4 - 0.03, y0, 0.1, 0.06, 0.1, 1.15, OM.frame); this.box(g, x0, y0 + m * RS / 4 - 0.03, 0.1, 0.1, 0.06, 1.15, OM.frame); }
+    // a lamp over the room in the colour of what it is doing: it lights the desks, the people and the floor
+    r.lamp = new THREE.PointLight(0x3b82f6, 3, 9, 1.4); r.lamp.position.copy(this.V(x0 + RS / 2, y0 + RS / 2, 2.6)); g.add(r.lamp);
+    r.edgeM = emis('#3b82f6', 1.2); r.sillM = emis('#3b82f6', 0.5);
+    this.box(g, x0, y0, 1.25, RS, 0.07, 0.05, r.edgeM, false); this.box(g, x0, y0, 1.25, 0.07, RS, 0.05, r.edgeM, false);
+    this.box(g, x0 + RS - 0.04, y0, 0.1, 0.04, RS, 0.04, r.sillM, false); this.box(g, x0, y0 + RS - 0.04, 0.1, RS, 0.04, 0.04, r.sillM, false);
+  }
+  // a wall screen on the back wall: what runs now, or why it waits
+  wallScreen(r, u0, u1) {
+    const s = screen(u1 - u0, 0.74), mat = new THREE.MeshBasicMaterial({ map: s.tex, toneMapped: false });
+    const m = new THREE.Mesh(G.plane, mat); m.scale.set(u1 - u0, 0.74, 1); m.position.copy(this.V(r.x0 + (u0 + u1) / 2, r.y0 + 0.13, 0.73)); r.g.add(m);
+    r.wall = s; return s;
+  }
+  kanban(r) {
+    const s = screen(4.9, 0.72), mat = new THREE.MeshBasicMaterial({ map: s.tex, toneMapped: false });
+    const m = new THREE.Mesh(G.plane, mat); m.scale.set(4.9, 0.72, 1); m.rotation.y = Math.PI / 2; m.position.copy(this.V(r.x0 + 0.13, r.y0 + 3.45, 0.72)); r.g.add(m);
+    r.kb = s;
+  }
+  desk(r, x, y, i) {
+    const g = r.g;
+    this.box(g, x, y, 0, 1.9, 0.9, 0.42, OM.desk); this.box(g, x - 0.02, y - 0.02, 0.42, 1.94, 0.94, 0.03, OM.deskTop, false);
+    this.box(g, x + 0.6, y + 0.48, 0.45, 0.7, 0.22, 0.02, OM.dark, false);
+    this.box(g, x + 0.88, y + 0.17, 0.45, 0.14, 0.06, 0.12, OM.frame, false);
+    this.box(g, x + 0.5, y + 0.12, 0.55, 0.9, 0.06, 0.52, OM.dark);
+    const scr = new THREE.MeshBasicMaterial({ color: new THREE.Color(0x183a63) });
+    const face = new THREE.Mesh(G.plane, scr); face.scale.set(0.84, 0.46, 1); face.position.copy(this.V(x + 0.95, y + 0.185, 0.81)); g.add(face);
+    r.mons[i] = scr;
+    this.box(g, x + 0.7, y + 1.08, 0, 0.5, 0.45, 0.22, OM.plinth);
+  }
+  agent(r, x, y, i, label, head) {
+    const g = new THREE.Group(); g.position.copy(this.V(x, y, 0.1)); r.g.add(g);
+    const body = new THREE.MeshStandardMaterial({ color: 0x3b82f6, emissive: 0x0a1a3a, emissiveIntensity: 0.6, roughness: 0.5, metalness: 0.2 });
+    const b = new THREE.Mesh(OM.capsule, body); b.position.y = 0.42; b.castShadow = true; g.add(b);
+    const h = new THREE.Mesh(G.sphere, head ? new THREE.MeshStandardMaterial({ color: head, roughness: 0.6 }) : OM.head); h.scale.setScalar(0.15); h.position.y = 0.86; h.castShadow = true; g.add(h);
+    const ringM = emis('#00cfff', 0); const ring = new THREE.Mesh(G.ring, ringM); ring.rotation.x = Math.PI / 2; ring.scale.setScalar(0.34); ring.position.y = 0.02; g.add(ring);
+    const el = document.createElement('div'); el.className = 'a3'; el.textContent = label; this.layer.appendChild(el);
+    const a = { g, body, b, h, ring, ringM, el, home: g.position.clone(), phase: (i + r.x0 * 0.37) % 6.28, key: r.key + ':' + i, room: r, label };
+    r.agents.push(a); return a;
+  }
+  plate(r, cls) {
+    const el = document.createElement('div'); el.className = 'p3' + (cls ? ' ' + cls : ''); el.setAttribute('data-key', r.key); this.layer.appendChild(el);
+    el.addEventListener('click', () => CO.emit('office:click', r.key));
+    el.addEventListener('pointerenter', () => this.setHover(r.key)); el.addEventListener('pointerleave', () => this.setHover(null));
+    r.plate = el; r.plateAt = this.V(r.x0 + 4.4, r.y0 + 5.75, 1.35); return el;
+  }
+  deptRoom(r, d) {
+    const k = d.key; let u1 = 6.2;
+    if (k === 'trading_desk') { u1 = 4.2; this.boardTex(r, 4.4, 6.75, candleTex()); }
+    else if (k === 'design') { u1 = 4.6; this.boardTex(r, 4.8, 6.75, moodTex()); }
+    else if (k === 'development' || k === 'testing' || k === 'testing_lab') u1 = 5.4;
+    this.wallScreen(r, 1.1, u1); this.kanban(r);
+    const g = r.g, x0 = r.x0, y0 = r.y0;
+    if (k === 'development') this.racks(r, x0 + 5.7, y0 + 0.25, 2);
+    else if (k === 'testing') this.devices(r, x0 + 5.65, y0 + 0.28);
+    else if (k === 'testing_lab') this.flasks(r, x0 + 5.5, y0 + 0.3);
+    else if (k === 'custom') this.box(g, x0 + 5.6, y0 + 0.2, 0.1, 1.05, 0.12, 1.15, OM.frame);
+    const ex = d.experts.slice(0, 3), xs = ex.length === 1 ? [2.55] : ex.length === 2 ? [1.0, 3.75] : [0.55, 2.6, 4.65];
+    ex.forEach((e, i) => this.desk(r, x0 + xs[i], y0 + 1.75, i));
+    ex.forEach((e, i) => this.agent(r, x0 + xs[i] + 0.95, y0 + 3.05, i, CO.expertName(e)));
+    this.terminal(r, x0 + 0.35, y0 + 4.0, d.link || CO.DEPT_LINK[k] || CO.DEPT_LINK.custom);
+    this.plant(r, x0 + 0.3, y0 + 6.2);
+    this.plate(r);
+  }
+  boardTex(r, u0, u1, tex) {
+    const m = new THREE.Mesh(G.plane, new THREE.MeshBasicMaterial({ map: tex, toneMapped: false })); m.scale.set(u1 - u0, 0.74, 1); m.position.copy(this.V(r.x0 + (u0 + u1) / 2, r.y0 + 0.13, 0.73)); r.g.add(m);
+  }
+  terminal(r, x, y, link) {
+    const g = r.g;
+    this.box(g, x, y, 0, 1.2, 0.8, 0.42, OM.desk);
+    this.box(g, x + 0.5, y + 0.2, 0.42, 0.2, 0.1, 0.12, OM.frame, false);
+    this.box(g, x + 0.08, y + 0.12, 0.54, 1.04, 0.08, 0.74, OM.dark);
+    const scr = new THREE.MeshBasicMaterial({ map: this.pcTex(), toneMapped: false });
+    const face = new THREE.Mesh(G.plane, scr); face.scale.set(0.98, 0.68, 1); face.position.copy(this.V(x + 0.6, y + 0.205, 0.91)); g.add(face);
+    const hit = new THREE.Mesh(G.box, M.hit); hit.scale.set(1.3, 1.3, 1.0); hit.position.copy(this.V(x + 0.6, y + 0.4, 0.65)); hit.userData.pc = link; g.add(hit);
+    this.pcs.push(hit); r.pcFace = scr;
+  }
+  pcTex() {
+    if (this._pc) return this._pc;
+    const c = document.createElement('canvas'); c.width = 256; c.height = 176; const g = c.getContext('2d');
+    g.fillStyle = '#06261f'; g.fillRect(0, 0, 256, 176); g.strokeStyle = '#00ff88'; g.lineWidth = 8; g.strokeRect(4, 4, 248, 168);
+    g.fillStyle = '#00ff88'; g.font = '700 96px JetBrains Mono, monospace'; g.textAlign = 'center'; g.textBaseline = 'middle'; g.fillText('↗', 128, 92);
+    const t = new THREE.CanvasTexture(c); t.colorSpace = THREE.SRGBColorSpace; this._pc = t; return t;
+  }
+  plant(r, x, y) {
+    this.box(r.g, x, y, 0, 0.42, 0.42, 0.34, OM.frame);
+    const p = this.V(x + 0.21, y + 0.21, 0.34);
+    [[-0.08, 0.25, 0.2], [0.08, 0.32, 0.18], [0, 0.42, 0.15]].forEach(([dx, dy, s]) => { const m = new THREE.Mesh(G.sphere, M.leaf); m.scale.set(s, s * 1.2, s); m.position.set(p.x + dx, p.y + dy, p.z); m.castShadow = true; r.g.add(m); });
+  }
+  racks(r, x, y, n) {
+    for (let i = 0; i < n; i++) {
+      const rx = x + i * 0.55; this.box(r.g, rx, y, 0.1, 0.5, 0.55, 1.45, OM.dark);
+      for (let k = 0; k < 8; k++) { const col = ['#00ff88', '#00cfff', '#3b82f6', '#00ff88'][(i + k) % 4]; const m = new THREE.Mesh(G.box, amat(col).glow); m.scale.set(0.07, 0.035, 0.01); m.position.copy(this.V(rx + 0.12 + (k % 2) * 0.22, y + 0.56, 0.35 + Math.floor(k / 2) * 0.3)); m.userData.blink = (i * 7 + k * 3) % 11; r.g.add(m); (r.leds = r.leds || []).push(m); }
+    }
+  }
+  devices(r, x, y) {
+    this.box(r.g, x, y, 0.1, 1.1, 0.45, 1.25, OM.dark);
+    for (let s = 0; s < 3; s++) for (let k = 0; k < 3; k++) { const col = ['#00cfff', '#00ff88', '#3b82f6'][(s + k) % 3]; const m = new THREE.Mesh(G.plane, amat(col).glow); m.scale.set(0.2, 0.26, 1); m.position.copy(this.V(x + 0.18 + k * 0.36, y + 0.46, 0.4 + s * 0.38)); r.g.add(m); }
+  }
+  flasks(r, x, y) {
+    this.box(r.g, x, y, 0, 1.3, 0.6, 0.45, OM.desk);
+    [[0.25, '#00cfff', 0.5], [0.65, '#00ff88', 0.36], [1.02, '#00cfff', 0.42]].forEach(([u, col, h]) => {
+      const glass = new THREE.Mesh(G.cyl, OM.glass); glass.scale.set(0.12, h, 0.12); glass.position.copy(this.V(x + u, y + 0.3, 0.45 + h / 2)); r.g.add(glass);
+      const liq = new THREE.Mesh(G.cyl, amat(col).soft); liq.scale.set(0.1, h * 0.6, 0.1); liq.position.copy(this.V(x + u, y + 0.3, 0.45 + h * 0.3)); r.g.add(liq);
+    });
+  }
+  hubRoom(r) {
+    const g = r.g;
+    this.racks(r, r.x0 + 0.45, r.y0 + 0.3, 3);
+    const s = screen(3.4, 0.74), m = new THREE.Mesh(G.plane, new THREE.MeshBasicMaterial({ map: s.tex, toneMapped: false })); m.scale.set(3.4, 0.74, 1); m.position.copy(this.V(r.x0 + 4.7, r.y0 + 0.13, 0.73)); g.add(m); r.bars = s;
+    this.kanban(r);
+    const c = this.V(11.6, 11.4, 0), cy = OM.cyan;
+    const ped = new THREE.Mesh(G.cyl, OM.plinth); ped.scale.set(1.55, 0.45, 1.55); ped.position.set(c.x, 0.32, c.z); ped.castShadow = true; ped.receiveShadow = true; g.add(ped);
+    const lip = new THREE.Mesh(G.ringT, cy.rim); lip.scale.setScalar(1.55); lip.rotation.x = Math.PI / 2; lip.position.set(c.x, 0.55, c.z); g.add(lip);
+    const core = new THREE.Mesh(G.sphere, cy.glow); core.scale.setScalar(0.32); core.position.set(c.x, 1.2, c.z); g.add(core);
+    const beam = new THREE.Mesh(G.beam, cy.beam); beam.scale.set(2.2, 3.4, 2.2); beam.position.set(c.x, 2.25, c.z); g.add(beam);
+    r.holo = [1.35, 1.95, 2.55].map((y, i) => { const h = new THREE.Mesh(G.ringT, cy.rim); h.scale.setScalar(1.1 - i * 0.22); h.rotation.x = Math.PI / 2; h.position.set(c.x, y, c.z); g.add(h); return h; });
+    r.core = core; r.coreAt = new THREE.Vector3(c.x, 3.2, c.z);
+    const light = new THREE.PointLight(0x00cfff, 14, 12, 1.6); light.position.set(c.x, 1.8, c.z); g.add(light);
+    this.agent(r, 11.7, 13.9, 0, 'Manager', 0xe6edf7);
+    this.plant(r, r.x0 + 6.3, r.y0 + 0.4);
+    this.plate(r, 'hubp'); r.plateAt = this.V(12.9 + 1.2, 14.25 + 0.5, 1.35);
+    r.need = document.createElement('div'); r.need.className = 'p3need'; r.need.addEventListener('click', () => CO.emit('office:click', 'hub')); this.layer.appendChild(r.need);
+  }
+  auditRoom(r) {
+    this.wallScreen(r, 1.1, 5.0);
+    this.desk(r, r.x0 + 2.2, r.y0 + 1.8, 0);
+    this.agent(r, r.x0 + 3.15, r.y0 + 3.1, 0, 'Supervisor');
+    const c = this.V(r.x0 + 5.8, r.y0 + 1.4, 0.12);
+    const ring = new THREE.Mesh(G.ring, OM.blue.soft); ring.scale.setScalar(0.62); ring.rotation.x = Math.PI / 2; ring.position.copy(c); r.g.add(ring);
+    r.scan = new THREE.Mesh(G.ringT, OM.cyan.rim); r.scan.scale.setScalar(0.62); r.scan.rotation.x = Math.PI / 2; r.scan.position.copy(c); r.g.add(r.scan);
+    this.plant(r, r.x0 + 0.3, r.y0 + 6.2);
+    this.plate(r, 'auditp');
+  }
+  lotRoom(r) {
+    const RS = CO.iso.RS, g = r.g, c = this.V(r.x0 + RS / 2, r.y0 + RS / 2, 0.05);
+    const dash = emis('#3b82f6', 0.7);
+    for (let a = 0; a < RS; a += 0.7) {
+      [[r.x0 + a, r.y0], [r.x0 + a, r.y0 + RS]].forEach(([x, y]) => this.box(g, x, y - 0.03, 0.04, 0.4, 0.06, 0.03, dash, false));
+      [[r.x0, r.y0 + a], [r.x0 + RS, r.y0 + a]].forEach(([x, y]) => this.box(g, x - 0.03, y, 0.04, 0.06, 0.4, 0.03, dash, false));
+    }
+    r.plus = new THREE.Mesh(G.ringT, OM.cyan.rim); r.plus.scale.setScalar(0.9); r.plus.position.set(c.x, 1.2, c.z); g.add(r.plus);
+    const hit = new THREE.Mesh(G.box, M.hit); hit.scale.set(RS, 1.6, RS); hit.position.set(c.x, 0.8, c.z); hit.userData.key = 'lot'; g.add(hit); this.hits.push(hit);
+    const el = document.createElement('div'); el.className = 'p3lot'; el.innerHTML = '<b>+</b>ADD DEPARTMENT'; el.addEventListener('click', () => CO.emit('office:click', 'lot')); this.layer.appendChild(el);
+    r.plate = el; r.plateAt = new THREE.Vector3(c.x, 1.25, c.z);
+  }
+
+  /* ---------------- what changes: colours, screens, people, plates ---------------- */
+  update() {
+    if (!this.cells || this.shape() !== this.shapeKey) { if (this.cells && this.shapeKey) return this.layout(); }
+    const S = CO.S, turnsBy = {};
+    S.strip.forEach((c) => { turnsBy[c.dept_id] = (turnsBy[c.dept_id] || 0) + 1; });
+    let anyWork = false;
+    S.departments.forEach((d) => {
+      const r = this.rooms['d' + d.id]; if (!r) return;
+      const v = CO.deptView(d), ln = CO.deptLine(d, v), st = ln.tone === 'red' ? 'waiting' : v.status;
+      if (v.status === 'working') anyWork = true;
+      this.tint(r, st);
+      let title, sub, mode, col = '#' + new THREE.Color(STC[st]).getHexString();
+      if (v.running) { title = v.running.title; sub = CO.expertName(v.running.expert) + ' is on it'; mode = 'run'; }
+      else if (v.waiting) { title = 'Needs you'; sub = 'approve or reject on the right'; mode = 'full'; col = '#ff4444'; }
+      else if (v.queued.length) { title = 'Up next: ' + v.queued[0].title; sub = ''; mode = ''; }
+      else { title = d.schedule && d.next_run ? 'Next run at ' + CO.hhmm(d.next_run) : 'Idle'; sub = ''; mode = ''; }
+      if (r.wall) drawWall(r.wall, title, sub, col, mode);
+      if (r.kb) drawKanban(r.kb, { queued: v.queued.length, running: v.running ? 1 : 0, done: v.done, failed: v.failed });
+      v.experts.slice(0, 3).forEach((e, i) => { const a = r.agents[i]; if (a) a.working = e.state === 'working'; if (r.mons[i]) r.mons[i].color.set(e.state === 'working' ? new THREE.Color(0x00cfff).multiplyScalar(2.2) : new THREE.Color(0x183a63)); });
+      const n = d.et10 || 0, et = d.files_as ? '<span class="et' + (n ? ' lit' : '') + '">' + (n ? '+' : '') + n.toLocaleString('en-US') + ' ET10</span>' : '';
+      const html = '<div class="p3h"><i style="background:' + (ln.tone === 'red' ? '#ff4444' : col) + '"></i><b>' + esc(d.name.toUpperCase()) + '</b>' + et + '</div><div class="p3l" style="color:' + (TONEC[ln.tone] || '#a9b8cc') + '">' + esc(ln.short) + '</div>';
+      if (r.plate && r.plate._h !== html) { r.plate._h = html; r.plate.innerHTML = html; }
+      if (r.plate) { r.plate.classList.toggle('work', v.status === 'working'); r.plate.style.setProperty('--c', ln.tone === 'red' ? '#ff4444' : col); }
+      if (this.conduits['d' + d.id]) { const cm = this.conduits['d' + d.id].mat; cm.emissive.set(v.status === 'working' ? 0x00cfff : 0x3b82f6); cm.emissiveIntensity = v.status === 'working' ? 1.6 : 0.45; }
+    });
+    const hub = this.rooms.hub;
+    if (hub) {
+      const paused = S.company.status === 'paused';
+      this.tint(hub, paused ? 'idle' : 'working');
+      if (hub.bars) drawBars(hub.bars, 'TURNS BY DEPT TODAY', S.departments.map((d) => { const v = CO.deptView(d); return ['#' + new THREE.Color(v.status === 'idle' ? STC.queued : STC[v.status]).getHexString(), turnsBy[d.id] || 0]; }));
+      if (hub.kb) drawKanban(hub.kb, { queued: S.plan.length, running: S.tasks.filter((t) => t.status === 'running').length, done: S.strip.filter((c) => c.state === 'done').length, failed: S.strip.filter((c) => c.state === 'failed').length });
+      if (hub.agents[0]) hub.agents[0].working = !paused;
+      const html = '<div class="p3h"><i style="background:' + (paused ? '#7f93ad' : '#00cfff') + '"></i><b>MANAGER</b></div><div class="p3l" style="color:' + (paused ? '#a9b8cc' : '#00cfff') + '">' + (paused ? 'Paused' : (CO.RO ? 'Its chat' : 'Your chat') + ' · runs it all') + '</div>';
+      if (hub.plate._h !== html) { hub.plate._h = html; hub.plate.innerHTML = html; }
+      hub.plate.classList.toggle('work', !paused && anyWork); hub.plate.style.setProperty('--c', paused ? '#7f93ad' : '#00cfff');
+      const na = S.approvals.length;
+      hub.need.hidden = !na; hub.need.textContent = na + (CO.RO ? ' WAIT FOR ITS OWNER' : na === 1 ? ' NEEDS YOU' : ' NEED YOU');
+    }
+    const au = this.rooms.audit;
+    if (au) {
+      const A = S.audit, days = Math.max(0, Math.ceil((A.next_at - S.clock) / 86400000)), nf = A.last ? A.last.findings.length : 0;
+      this.tint(au, 'idle');
+      drawWall(au.wall, 'Weekly audit: next in ' + days + 'd', nf + ' findings last week', '#7f93ad', '');
+      const html = '<div class="p3h"><i style="background:#7f93ad"></i><b>WEEKLY AUDIT</b></div><div class="p3l" style="color:#a9b8cc">next in ' + days + (days === 1 ? ' day' : ' days') + '</div>';
+      if (au.plate._h !== html) { au.plate._h = html; au.plate.innerHTML = html; }
+      au.plate.style.setProperty('--c', '#7f93ad');
+    }
+    this.paused = S.company.status === 'paused';
+    this.drawSel();
+  }
+  tint(r, st) {
+    if (r.st === st) return; r.st = st;
+    const c = new THREE.Color(STC[st]);
+    if (r.edgeM) { r.edgeM.emissive.copy(c); r.edgeM.emissiveIntensity = st === 'idle' ? 0.5 : 1.5; }
+    if (r.sillM) { r.sillM.emissive.copy(c); r.sillM.emissiveIntensity = st === 'idle' ? 0.2 : 0.6; }
+    if (r.glow) { r.glow.material.color.copy(c); r.glowBase = st === 'working' ? 0.32 : st === 'waiting' ? 0.28 : st === 'queued' ? 0.16 : 0; }
+    if (r.lamp) { r.lamp.color.copy(st === 'idle' ? new THREE.Color(0x9fb8e0) : c); r.lamp.intensity = st === 'working' ? 9 : st === 'waiting' ? 7 : st === 'queued' ? 5 : 3.5; }
+  }
+  drawSel() {
+    this.selRing.clear();
+    const c = this.sel && this.cells[this.sel]; if (!c) return;
+    const RS = CO.iso.RS, m = emis('#00cfff', 1.2), x0 = c[0] - 0.15, y0 = c[1] - 0.15, s = RS + 0.3;
+    [[x0, y0, s, 0.08], [x0, y0 + s - 0.08, s, 0.08]].forEach(([x, y, w, d]) => this.box(this.selRing, x, y, 0.12, w, d, 0.04, m, false));
+    [[x0, y0, 0.08, s], [x0 + s - 0.08, y0, 0.08, s]].forEach(([x, y, w, d]) => this.box(this.selRing, x, y, 0.12, w, d, 0.04, m, false));
+  }
+  select(key) { this.sel = key; this.update(); }
+
+  /* ---------------- packets along the corridors ---------------- */
+  packet(from, to, colour, delay) {
+    let p;
+    if (from === 'hub' && this.paths[to]) p = this.paths[to].slice().reverse();
+    else if (to === 'hub' && this.paths[from]) p = this.paths[from].slice();
+    else if (this.paths[from] && this.paths[to]) p = this.paths[from].concat(this.paths[to].slice().reverse().slice(1));
+    if (!p) return;
+    const hex = { cyan: '#00cfff', green: '#00ff88', red: '#ff4444', blue: '#3b82f6' }[colour] || '#00cfff', A = amat(hex);
+    const g = new THREE.Group(), core = new THREE.Mesh(G.sphere, A.glow); core.scale.setScalar(0.12); g.add(core);
+    const halo = new THREE.Mesh(G.sphere, A.atmo); halo.scale.setScalar(0.32); g.add(halo);
+    const trail = [0.09, 0.07, 0.05, 0.035].map((s) => { const t = new THREE.Mesh(G.sphere, A.glow); t.scale.setScalar(s); this.pk.add(t); return t; });
+    g.visible = false; this.pk.add(g);
+    let len = 0; for (let i = 1; i < p.length; i++) len += Math.abs(p[i][0] - p[i - 1][0]) + Math.abs(p[i][1] - p[i - 1][1]);
+    this.packets.push({ g, trail, p, len, t0: performance.now() + (delay || 0), dur: Math.max(900, len * 150), to });
+  }
+  along(p, f, len) {
+    let d = f * len;
+    for (let i = 1; i < p.length; i++) { const s = Math.abs(p[i][0] - p[i - 1][0]) + Math.abs(p[i][1] - p[i - 1][1]); if (d <= s || i === p.length - 1) { const k = s ? Math.min(1, d / s) : 0; return [p[i - 1][0] + (p[i][0] - p[i - 1][0]) * k, p[i - 1][1] + (p[i][1] - p[i - 1][1]) * k]; } d -= s; }
+    return p[p.length - 1];
+  }
+  // now and then an idle agent gets up and walks a few steps, then goes back
+  wander() {
+    if (document.hidden || !this.rooms) return;
+    const idle = []; Object.values(this.rooms).forEach((r) => r.agents.forEach((a) => { if (!a.working && !a.walk) idle.push(a); }));
+    if (!idle.length || Math.random() < 0.4) return;
+    const a = idle[Math.floor(Math.random() * idle.length)], r = a.room, to = this.V(r.x0 + 2.2 + Math.random() * 1.8, r.y0 + 4.4 + Math.random() * 0.8, 0.1);
+    a.walk = { from: a.home.clone(), to, t0: performance.now(), dur: 2200, stay: 1600 + Math.random() * 1600 };
+  }
+
+  /* ---------------- camera ---------------- */
+  home() {
+    const s = this.size || 30, a = this.camera.aspect || 1.6, d = s * (a < 1.2 ? 2.5 : a < 1.6 ? 1.95 : 1.68);
+    const tgt = new THREE.Vector3(s * 0.04, 0, s * 0.04 + 0.5);
+    return { pos: new THREE.Vector3().setFromSpherical(new THREE.Spherical(d, 0.84, Math.PI / 4)).add(tgt), tgt };
+  }
+  fit(anim) { const h = this.home(); this.fitted = true; this.tween(h.pos, h.tgt, anim === false ? 0 : 750); }
+  zoom(f) {
+    const t = this.controls.target, off = this.camera.position.clone().sub(t);
+    const len = Math.max(this.controls.minDistance, Math.min(this.controls.maxDistance, off.length() * f));
+    this.tween(t.clone().add(off.setLength(len)), t.clone(), 300);
+  }
+  focus(key, leftPx, tight) {
+    const c = this.cells[key]; if (!c) return;
+    const RS = CO.iso.RS, tgt = this.V(c[0] + RS / 2, c[1] + RS / 2 + 0.4, 0.5);
+    const dir = new THREE.Vector3().setFromSpherical(new THREE.Spherical(1, 0.88, Math.PI / 4));
+    this.tween(tgt.clone().add(dir.multiplyScalar(tight ? 20 : 24)), tgt, 750);
+  }
+  tween(pos, tgt, ms, done) {
+    if (!ms) { this.camera.position.copy(pos); this.controls.target.copy(tgt); this.controls.update(); this.tw = null; if (done) done(); return; }
+    this.tw = { p0: this.camera.position.clone(), t0: this.controls.target.clone(), p1: pos.clone(), t1: tgt.clone(), s: performance.now(), ms, done };
+  }
+  resize() {
+    const w = this.el.clientWidth, h = this.el.clientHeight; if (!w || !h) return;
+    this.camera.aspect = w / h; this.camera.updateProjectionMatrix(); this.renderer.setSize(w, h, false);
+  }
+
+  /* ---------------- the frame ---------------- */
+  frame() {
+    const w = this.el.clientWidth, h = this.el.clientHeight; if (!w || !h) return;
+    const t = this.clock.getElapsedTime(), now = performance.now();
+    if (this.tw) {
+      const k = Math.min(1, (now - this.tw.s) / this.tw.ms), e = k < 0.5 ? 4 * k * k * k : 1 - Math.pow(-2 * k + 2, 3) / 2;
+      this.camera.position.lerpVectors(this.tw.p0, this.tw.p1, e); this.controls.target.lerpVectors(this.tw.t0, this.tw.t1, e);
+      if (k >= 1) { const d = this.tw.done; this.tw = null; if (d) d(); }
+    }
+    this.controls.update();
+    Object.values(this.rooms).forEach((r) => {
+      if (r.grow) { const k = Math.min(1, (now - r.grow) / 1200), e = 1 - Math.pow(1 - k, 3); r.g.scale.set(1, Math.max(0.01, e), 1); if (k >= 1) r.grow = 0; }
+      if (r.glow) r.glow.material.opacity = (r.glowBase || 0) * (r.st === 'working' ? 0.75 + 0.25 * Math.sin(t * 2.4 + r.x0) : 1);
+      if (r.leds) r.leds.forEach((m, i) => { m.visible = ((Math.floor(t * 3 + m.userData.blink)) % 3) !== 0; });
+      if (r.holo) { r.holo.forEach((hh, i) => { hh.rotation.z = t * (0.6 + i * 0.35) * (i % 2 ? -1 : 1); hh.position.y = 1.35 + i * 0.6 + Math.sin(t * 1.3 + i) * 0.05; }); r.core.position.y = 1.2 + Math.sin(t * 1.7) * 0.06; }
+      if (r.scan) { const s = 0.3 + ((t * 0.5) % 1) * 0.5; r.scan.scale.setScalar(s); }
+      if (r.plus) { r.plus.rotation.y = t * 0.8; r.plus.position.y = 1.2 + Math.sin(t * 1.6) * 0.08; }
+      r.agents.forEach((a) => {
+        if (a.walk) {
+          const W2 = a.walk, f = (now - W2.t0) / W2.dur;
+          if (a.working) { a.walk = null; a.g.position.copy(a.home); }
+          else if (f < 1) a.g.position.lerpVectors(W2.from, W2.to, f < 0.5 ? 2 * f * f : 1 - Math.pow(-2 * f + 2, 2) / 2);
+          else if (now < W2.t0 + W2.dur + W2.stay) a.g.position.copy(W2.to);
+          else if (!W2.back) { W2.back = true; W2.from = W2.to.clone(); W2.to = a.home.clone(); W2.t0 = now; W2.stay = 0; }
+          else { a.walk = null; a.g.position.copy(a.home); }
+        }
+        a.b.position.y = 0.42 + (a.working ? Math.abs(Math.sin(t * 7 + a.phase)) * 0.035 : 0);
+        a.body.color.set(a.working ? 0x00cfff : 0x3b82f6); a.body.emissiveIntensity = a.working ? 1.1 : 0.5; a.body.emissive.set(a.working ? 0x00506a : 0x0a1a3a);
+        a.ringM.emissiveIntensity = a.working ? 1.8 * (1 - ((t * 0.9 + a.phase) % 1)) : 0;
+        a.ring.scale.setScalar(a.working ? 0.3 + ((t * 0.9 + a.phase) % 1) * 0.35 : 0.3);
+      });
+    });
+    // packets
+    this.packets = this.packets.filter((k) => {
+      const f = (now - k.t0) / k.dur;
+      if (f < 0) return true;
+      if (f >= 1) { this.pk.remove(k.g); k.trail.forEach((m) => this.pk.remove(m)); return false; }
+      const e = f < 0.5 ? 2 * f * f : 1 - Math.pow(-2 * f + 2, 2) / 2, q = this.along(k.p, e, k.len);
+      k.g.visible = true; k.g.position.copy(this.V(q[0], q[1], 0.22));
+      k.trail.forEach((m, i) => { const tq = this.along(k.p, Math.max(0, e - (i + 1) * 0.02), k.len); m.position.copy(this.V(tq[0], tq[1], 0.22)); });
+      return true;
+    });
+    if (this.mouseMoved) { this.mouseMoved = false; this.pick(); }
+    if (this.post) this.post.render(); else this.renderer.render(this.scene, this.camera);
+    this.labels(w, h);
+  }
+  // plates over their rooms; agents' names only in the room that is open or under the mouse
+  labels(w, h) {
+    const v = new THREE.Vector3(), show = (el, p, dy) => {
+      v.copy(p).project(this.camera);
+      const y = (1 - v.y) / 2 * h + (dy || 0);
+      // off screen, behind the camera, or up under the stage's own bar (where the crumb and the zoom live)
+      const off = v.z > 1 || v.x < -1.3 || v.x > 1.3 || y < 58 || y > h + 40;
+      el.style.display = off ? 'none' : '';
+      if (!off) el.style.transform = 'translate(' + ((v.x + 1) / 2 * w).toFixed(1) + 'px,' + y.toFixed(1) + 'px) translate(-50%,-50%)';
+    };
+    Object.values(this.rooms).forEach((r) => {
+      if (r.plate && r.plateAt) { show(r.plate, r.plateAt); r.plate.classList.toggle('sel', this.sel === r.key); r.plate.classList.toggle('hov', this.hover === r.key); }
+      if (r.need && !r.need.hidden) show(r.need, r.coreAt, -10);
+      const named = this.sel === r.key || this.hover === r.key;
+      r.agents.forEach((a) => { a.el.classList.toggle('on', named); if (named) show(a.el, a.g.position.clone().add(new THREE.Vector3(0, 1.22, 0))); });
+    });
+  }
+
+  /* ---------------- input ---------------- */
+  bind() {
+    const cv = this.renderer.domElement; let down = null;
+    cv.addEventListener('pointerdown', (e) => { down = { x: e.clientX, y: e.clientY }; });
+    cv.addEventListener('pointermove', (e) => { this.setMouse(e); this.mouseMoved = true; this.lastEv = e; });
+    cv.addEventListener('pointerleave', () => { this.setHover(null); this.hideTip(); });
+    cv.addEventListener('pointerup', (e) => {
+      if (!down) return; const moved = Math.abs(e.clientX - down.x) + Math.abs(e.clientY - down.y) > 5; down = null; if (moved) return;
+      this.setMouse(e); const hit = this.pickHit(); if (!hit) return;
+      if (hit.userData.pc) { window.open(hit.userData.pc.url, '_blank', 'noopener'); return; }
+      if (hit.userData.key) CO.emit('office:click', hit.userData.key);
+    });
+    cv.addEventListener('wheel', () => { this.tw = null; }, { passive: true });
+  }
+  setMouse(e) { const r = this.renderer.domElement.getBoundingClientRect(); this.mouse.set((e.clientX - r.left) / r.width * 2 - 1, -(e.clientY - r.top) / r.height * 2 + 1); }
+  pickHit() {
+    this.ray.setFromCamera(this.mouse, this.camera);
+    const hits = this.ray.intersectObjects((this.pcs || []).concat(this.hits || []), false);
+    return hits.length ? hits[0].object : null;
+  }
+  pick() {
+    const hit = this.pickHit();
+    const key = hit ? (hit.userData.key || null) : null;
+    this.setHover(hit && hit.userData.pc ? this.roomOf(hit) : key);
+    this.renderer.domElement.style.cursor = hit ? 'pointer' : '';
+    if (!hit || !this.lastEv) return this.hideTip();
+    let html = '';
+    if (hit.userData.pc) html = '<b>' + esc(hit.userData.pc.label) + ' ↗</b><br><span style="color:#7f93ad">' + esc(String(hit.userData.pc.url).replace(/^https:\/\//, '')) + '</span>';
+    else if (key) html = this.tipFor('room', key);
+    if (!html) return this.hideTip();
+    const r = this.stage.getBoundingClientRect(), e = this.lastEv;
+    this.tip.innerHTML = html; this.tip.hidden = false;
+    let x = e.clientX - r.left + 14, y = e.clientY - r.top + 14;
+    if (x + this.tip.offsetWidth > r.width - 8) x = e.clientX - r.left - this.tip.offsetWidth - 14;
+    if (y + this.tip.offsetHeight > r.height - 8) y = e.clientY - r.top - this.tip.offsetHeight - 14;
+    this.tip.style.left = x + 'px'; this.tip.style.top = y + 'px';
+  }
+  roomOf(obj) { for (const k in this.rooms) { let o = obj; while (o) { if (o === this.rooms[k].g) return k; o = o.parent; } } return null; }
+  setHover(key) { this.hover = key; }
+  hideTip() { if (this.tip) this.tip.hidden = true; }
+  dispose() { try { this.renderer.setAnimationLoop(null); this.renderer.dispose(); } catch (e) { /* gone */ } this.layer.innerHTML = ''; this.el.innerHTML = ''; }
+}
+
 // can this browser draw it at all? WebGPU, or WebGL2 underneath it
 (function () {
   let gl2 = false;
   try { gl2 = !!document.createElement('canvas').getContext('webgl2'); } catch (e) { gl2 = false; }
-  CO.U3 = (gl2 || navigator.gpu) ? { ok: true, gpu: !!navigator.gpu, universe: (el, stage, h) => new Universe3D(el, stage, h), preview, THREE, geo, makePlot, SKIN, amat }
+  CO.U3 = (gl2 || navigator.gpu) ? { ok: true, gpu: !!navigator.gpu, universe: (el, stage, h) => new Universe3D(el, stage, h), office: (el, stage, tipFor) => new Office3D(el, stage, tipFor), preview, THREE, geo, makePlot, SKIN, amat }
     : { failed: true, why: 'no WebGPU and no WebGL2' };
   window.dispatchEvent(new Event('co3d'));
 })();

@@ -102,9 +102,11 @@
   <section class="panel stage" id="stage">
     <div class="top">
       <div class="crumb"><button class="back" id="back" hidden>← Office</button><b class="where" id="where" hidden></b><span class="live" id="live"></span></div>
-      <div class="zoom"><button id="z-in" title="Zoom in">+</button><button id="z-out" title="Zoom out">−</button><button id="z-fit" title="Fit">⤢</button></div>
+      <div class="zoom"><span class="vt" id="vt" title="The office drawn flat or in 3D"><button data-v="2d">2D</button><button data-v="3d">3D</button></span><button id="z-in" title="Zoom in">+</button><button id="z-out" title="Zoom out">−</button><button id="z-fit" title="Fit">⤢</button></div>
     </div>
     <svg id="office" class="office" xmlns="http://www.w3.org/2000/svg"></svg>
+    <div class="office3d" id="office3d"></div>
+    <div class="o3layer" id="o3layer"></div>
     <div class="tip" hidden></div>
     <div class="strip">
       <div class="use wide" title="Your plan's current 5-hour window: how much of it the company has used.">
