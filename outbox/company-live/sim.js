@@ -102,11 +102,23 @@
       if (t.next_attempt_at && t.next_attempt_at > S.clock) continue;
       if (t.blocked_by && task(t.blocked_by) && task(t.blocked_by).status === 'waiting_approval') continue;
       if (deptRunning(t.dept_id)) continue;
+      if (capped(dept(t.dept_id))) continue;
       if (!CO.gate().ok) break;
       start(t); started++; i--;
     }
     changed();
   }
+  // what a department burns, in tokens: counted per day, held under the owner's daily cap
+  function dayRoll(d) {
+    var k = new Date(CO.S.clock).toDateString();
+    if (d.tok_day !== k) { d.tok_day = k; d.tok_today = 0; d.turns_today = 0; }
+  }
+  function capped(d) {
+    if (!d || !d.cap_day) return false;
+    dayRoll(d);
+    return d.tok_today >= d.cap_day;
+  }
+  CO.capped = capped;
   function start(t) {
     var S = CO.S, d = dept(t.dept_id);
     S.plan = S.plan.filter(function (id) { return id !== t.id; });
@@ -125,6 +137,7 @@
     var u = r2(rand(0.12, 0.32)), onPlan = CO.left().onPlan;
     charge(u);
     t.turns++; t.units = r2(t.units + u); d.units_7d = r2(d.units_7d + u);
+    dayRoll(d); d.tok_today += Math.round(u * CO.TOK); d.turns_today++;
     var cell = null;
     for (var i = S.strip.length - 1; i >= 0; i--) if (S.strip[i].task_id === t.id && S.strip[i].state === 'running') { cell = S.strip[i]; break; }
     if (cell) { cell.units = u; cell.extra = !onPlan; }
@@ -248,11 +261,18 @@
     custom: ['a vendor message that needs an answer', 'a page that changed overnight']
   };
     var PREFIX = { bug: 'Verify: ', released: 'Test the new build: ', idea: 'BB request: ', money: 'Paper test: ', winner: 'Real trade: ', design: 'Review: ', custom: 'Handle: ' };
+  function related(a, b) {
+    var w = String(a).toLowerCase().match(/[a-zá-ž]{5,}/g) || [];
+    b = String(b).toLowerCase();
+    return w.some(function (x) { return b.indexOf(x) >= 0; });
+  }
   // An event happened. Every rule that is on and listens for it hands the work to its department.
   function fire(kind, from, subject) {
     var S = CO.S, hit = 0;
     (S.rules || []).forEach(function (r) {
       if (!r.on || CO.kindOf(r.when) !== kind) return;
+      // a process in the owner's own words fires only on an event that shares a word with it
+      if (kind === 'custom' && !related(r.when, subject)) return;
       var to = ruleTarget(r);
       if (!to || (from && to.id === from.id && kind !== 'released')) return;
       if (r.review === 'start') {
@@ -653,6 +673,22 @@
       d.products = list; feed('info', 'You', 'set the products of ' + d.name + ': ' + list.join(', '));
       changed();
     },
+    // the owner's brake: at most this many tokens a day (null: no cap); work over it waits for midnight
+    cap: function (id, tokens) {
+      var d = dept(id); if (!d) return;
+      d.cap_day = tokens || null;
+      feed('info', 'You', d.name + ': ' + (tokens ? 'daily cap ' + CO.fmtTok(tokens) + ' tokens' : 'no daily cap'));
+      changed();
+    },
+    // a department on a clock: how many runs a day
+    runsPerDay: function (id, n) {
+      var d = dept(id); if (!d || !d.schedule) return;
+      var times = CO.RUN_TIMES[n]; if (!times) return;
+      d.schedule = { times: times, label: n + '× a day (' + times.join(', ') + ')' };
+      d.next_run = nextRun(d, CO.S.clock);
+      feed('info', 'You', d.name + ' runs ' + d.schedule.label);
+      changed();
+    },
     runNow: function (id) {
       var d = dept(id); if (!d) return;
       var r = queueRun(d, 'you asked for it at ' + CO.hhmm(CO.S.clock));
@@ -697,6 +733,73 @@
     }
     return null;
   }
+  // the department a stretch of words names: its full name, else a word of its name ("QA", "desk"), else what it
+  // is about; the earliest one in the words wins ("when a build ships, QA does the testing" is QA, not Testing lab)
+  function deptIn(s) {
+    var S = CO.S, t = ' ' + s.toLowerCase() + ' ', best = null, at = 1e9;
+    S.departments.forEach(function (d) {
+      var n = d.name.toLowerCase(), i = t.indexOf(n);
+      if (i >= 0 && i < at) { best = d; at = i; }
+    });
+    if (best) return best;
+    S.departments.forEach(function (d) {
+      d.name.toLowerCase().split(/\s+/).forEach(function (w) {
+        if (w.length < 2 || /^(cymetica|the|department|team)$/.test(w)) return;
+        var m = new RegExp('[^a-z0-9á-ž]' + w.replace(/[^a-z0-9]/g, '') + '[^a-z0-9á-ž]').exec(t);
+        if (m && m.index < at) { best = d; at = m.index; }
+      });
+    });
+    if (best) return best;
+    for (var j = 0; j < ALIAS.length; j++) {
+      if (ALIAS[j][1].test(t)) {
+        var d = S.departments.filter(function (x) { return x.key === ALIAS[j][0]; })[0];
+        if (d) return d;
+      }
+    }
+    return null;
+  }
+  // A process written as one sentence: "when <something happens>, <department> <does what>", in English or Czech,
+  // with an optional "I want to see the result" / "ask me before it starts". Returns the rule, or what is missing.
+  CO.parseRule = function (text) {
+    var S = CO.S, raw = String(text || '').trim().replace(/[.!]+$/, ''), t = raw.toLowerCase();
+    if (!raw) return { missing: 'text' };
+    var WHEN = /(?:^|\s)(?:when(?:ever)?|kdy[zž]|kdykoliv?|jakmile|as soon as|once|if|pokud|po tom,? co|after)\s+(.+?)(?:,|\s+(?:then|tak|a[tť]|pak)\s)/i;
+    var wm = raw.match(WHEN), when, rest;
+    if (wm) { when = wm[1].trim(); rest = raw.slice(raw.indexOf(wm[0]) + wm[0].length); }
+    else {
+      var ci = raw.indexOf(',');
+      if (ci < 0) return { missing: 'when' };
+      when = raw.slice(0, ci).trim(); rest = raw.slice(ci + 1);
+    }
+    var to = deptIn(rest) || deptIn(when);
+    if (!to) return { missing: 'dept', when: when };
+    var review = /(review|zkontrol|schv[aá]l|kouknu|projdu|human|[cč]lov[eě]k|j[aá] (to )?(vid|chci)|chci (to )?vid|i want to see|ask me|zeptej|show me|uk[aá][zž] mi)/.test(t) ?
+      (/(n[eě][zž] za[cč]|before|first|p[rř]edem|nejd[rř][ií]v|ne[zž] se pust|ask me|zeptej)/.test(t) ? 'start' : 'result') : null;
+    var by = raw.match(/(?:review(?:ed)? by|approved by|schv[aá]l[ií]|zkontroluje|kontroluje)\s+([A-ZÁČĎÉĚÍŇÓŘŠŤÚŮÝŽ][\wáčďéěíňóřšťúůýž]+)/);
+    // "does": the rest, without the department's words, the filler and the review clause
+    var does = rest;
+    [to.name].concat(to.name.split(/\s+/)).forEach(function (w) {
+      if (w.length > 1 && !/^cymetica$/i.test(w)) does = does.replace(new RegExp('(^|\\s)' + w.replace(/[.*+?^${}()|[\]\\]/g, '\\$&') + '(?=\\s|,|$)', 'i'), ' ');
+    });
+    does = does.replace(/^\s*(,|ho|to|ji|je|at|ať|then|tak|pak|it|the|department|odd[eě]len[ií])\s+/i, ' ')
+      .replace(/^\s*(ho|to|ji|je|at|ať)\s+/i, ' ')
+      .replace(/\s*(,|\s)\s*(a |and )?(v[yý]sledek|the result|i want|j[aá] chci|chci|ale|but|ask me|zeptej|before it|ne[zž] se|reviewed by|review(ed)? by)\b.*$/i, '')
+      .replace(/\s+/g, ' ').trim();
+    var same = S.rules.filter(function (x) { return x.dept_id === to.id && CO.kindOf(x.when) === CO.kindOf(when) && CO.kindOf(when) !== 'custom'; })[0];
+    return { when: when.replace(/^(when|kdy[zž])\s+/i, ''), dept_id: to.id, dept: to, does: does.length > 2 ? does : 'takes care of it',
+      review: review, reviewer: by ? by[1] : 'you', same: same || null };
+  };
+  // add what parseRule read (or switch on the process that already says it); one line back, for the chat or the page
+  CO.addRuleFromWords = function (pr) {
+    if (pr.same) {
+      if (!pr.same.on) CO.act.rule(pr.same.id, true);
+      return 'That is already process ' + pr.same.id + ': when ' + pr.same.when + ' → ' + pr.dept.name + ' ' + pr.same.does + '. It is on.';
+    }
+    var nr = CO.act.addRule({ when: pr.when, dept_id: pr.dept_id, does: pr.does, review: pr.review, reviewer: pr.reviewer });
+    return 'Process ' + nr.id + ' added: when ' + nr.when + ' → ' + pr.dept.name + ' ' + nr.does + '.' +
+      (pr.review === 'start' ? ' It waits for ' + (nr.reviewer === 'you' ? 'your' : nr.reviewer + '\'s') + ' Approve before it starts.' :
+        pr.review === 'result' ? ' Its result waits for ' + (nr.reviewer === 'you' ? 'your' : nr.reviewer + '\'s') + ' review.' : '') + ' Everyone follows it from now on.';
+  };
   // "add a QA department that runs twice a day on X and Y, under my name" -> a department spec
   var KNOWN = ['Gem Screener', 'Chart Analyzer', 'Supply Analyzer', 'Agent Tournaments', 'Trading Station', 'Agent League', 'Memecoin Terminal', 'Build it Better'];
   function splitList(s) {
@@ -722,7 +825,7 @@
     var per = 0, m = t.match(/(\d+)\s*(?:[x×]|times|kr[aá]t)\s*(?:a |per |za |)?(?:day|den|dn|denn)/);
     if (m) per = +m[1]; else if (/twice a day|dvakr[aá]t/.test(t)) per = 2; else if (/(daily|every day|denn[eě]|ka[zž]d[yý] den)/.test(t)) per = 1;
     per = Math.min(per, 6);
-    var times = { 1: ['09:00'], 2: ['09:00', '21:00'], 3: ['08:00', '14:00', '20:00'], 4: ['00:00', '06:00', '12:00', '18:00'], 5: ['00:00', '05:00', '10:00', '15:00', '20:00'], 6: ['00:00', '04:00', '08:00', '12:00', '16:00', '20:00'] }[per];
+    var times = CO.RUN_TIMES[per];
     var products = [];
     var pm = text.match(/(?:products?|produkt[yůu]?|produktech)\s*:\s*(.+)$/i);
     if (pm) products = splitList(pm[1]);
@@ -762,25 +865,9 @@
     }
     if (/(rule|pravidl|process|whenever|kdykoli|kdy[zž] |when )/.test(t) && S.departments.length) {
       // "when <words>, <department> <does words>": the department must be one the company has
-      var wm = text.match(/(?:when|whenever|kdy[zž]|kdykoli)\s+(.+?)(?:,|\s+(?:then|tak|a[tť]|pak)\s)/i);
-      var to = findDept(t, focus);
-      if (wm && to) {
-        var when = wm[1].trim().replace(/^(se |n[eě]kdo )/i, function (x) { return x; });
-        var rest = text.slice(text.indexOf(wm[0]) + wm[0].length).replace(new RegExp(to.name, 'i'), '').replace(/^\s*(ho|to|ji|je|at|ať|then|tak|pak)\s+/i, '').trim();
-        var kind = CO.kindOf(when);
-        var same = S.rules.filter(function (x) { return x.dept_id === to.id && CO.kindOf(x.when) === kind && kind !== 'custom'; })[0];
-        if (same) {
-          if (!same.on) CO.act.rule(same.id, true);
-          return 'That is already process ' + same.id + ': when ' + same.when + ' → ' + to.name + ' ' + same.does + '. It is on.';
-        }
-        var rvw = /(review|zkontrol|schv[aá]l|kouknu|projdu|human|[cč]lov[eě]k|j[aá] (to )?(vid|chci)|chci (to )?vid|i want to see)/.test(t) ? (/(n[eě][zž] za[cč]|before|first|p[rř]edem|nejd[rř][ií]v|ne[zž] se pust)/.test(t) ? 'start' : 'result') : null;
-        // the review clause is about the process, not the work: keep it out of "does"
-        rest = rest.replace(/\s*(,|\s)\s*(a |and )?(v[yý]sledek|the result|i want|j[aá] chci|chci|ale|but)\b.*$/i, '').trim();
-        var nr = CO.act.addRule({ when: when, dept_id: to.id, does: rest.length > 3 ? rest.replace(/[.!]+$/, '') : 'takes care of it', review: rvw });
-        return 'Process ' + nr.id + ' added: when ' + nr.when + ' → ' + to.name + ' ' + nr.does + '.' +
-          (rvw === 'start' ? ' It waits for your Approve before it starts.' : rvw === 'result' ? ' Its result waits for your review before it goes on.' : '') + ' Everyone follows it from now on.';
-      }
-      if (wm && !to) return 'Which department should do it? Name one of yours (' + S.departments.map(function (x) { return x.name; }).join(', ') + ') and I add the process.';
+      var pr = CO.parseRule(text);
+      if (!pr.missing) return CO.addRuleFromWords(pr);
+      if (pr.missing === 'dept') return 'Which department should do it? Name one of yours (' + S.departments.map(function (x) { return x.name; }).join(', ') + ') and I add the process.';
     }
     var pm = text.match(/(?:products?|produkty?)\s*:\s*(.+)$/i);
     if (pm) {
@@ -835,6 +922,7 @@
     var S = CO.S, g = CO.gate();
     if (S.company.status === 'paused') return 'company paused';
     if (!g.ok) return g.text + (g.until ? ' until ' + CO.hhmm(g.until) : '');
+    if (t && capped(dept(t.dept_id))) return 'daily token cap reached · back at 00:00';
     if (t && t.blocked_by && task(t.blocked_by) && task(t.blocked_by).status === 'waiting_approval') return 'waits on your approval';
     if (t && t.next_attempt_at && t.next_attempt_at > S.clock) return 'retry at ' + CO.hhmm(t.next_attempt_at) + ' after ' + (t.last_error || 'an error');
     return 'next pass in ' + Math.max(0, Math.ceil((S.next_pass_at - S.clock) / 1000)) + 's';
@@ -865,6 +953,14 @@
     S.strip.forEach(function (c) { if (c.dept_id === d.id && c.at >= from && !c.extra && c.units != null) su += c.units; });
     v.sessPct = Math.min(100, Math.round(su / b.session.cap * 100));
     v.weekPct = Math.round(d.units_7d / b.week.cap * 100);
+    // tokens: today, the last 7 days, what one turn of this department costs, and its cap
+    dayRoll(d);
+    var tu = 0, tt = 0;
+    ts.forEach(function (x) { if (x.turns) { tu += x.units; tt += x.turns; } });
+    v.tokToday = d.tok_today; v.tok7d = Math.round(d.units_7d * CO.TOK);
+    v.perTurn = Math.round((tt ? tu / tt : CO.S.meter.length ? CO.avg() : 0.22) * CO.TOK);
+    v.cap = d.cap_day || null; v.capped = capped(d);
+    v.fits = v.cap ? Math.max(0, Math.floor(v.cap / v.perTurn)) : null;
     return v;
   };
   CO.counts = counts;

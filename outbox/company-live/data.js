@@ -51,12 +51,25 @@
     var t = String(text || '').toLowerCase();
     if (/(release|vyd[aá]|vyjde|new (build|product|version)|nov[yý] (produkt|build|verz)|deliver|dodaj|dod[aá])/.test(t)) return 'released';
     if (/(bug|chyb|broken|rozbit|error|problem)/.test(t)) return 'bug';
-    if (/(win|vyhr|v[ií]t[eě]z|succeed|passes|usp[eě]|úsp[eě])/.test(t)) return 'winner';
+    if (/(win|vyhr|v[ií]t[eě]z|succeed|passes|usp[eě]|úsp[eě]|top (three|3)|first place|prvn[ií] m[ií]st)/.test(t)) return 'winner';
     if (/(idea|n[aá]pad|feature|improve|vylep)/.test(t)) return 'idea';
     if (/(money|vyd[eě]l|profit|zisk|earn)/.test(t)) return 'money';
     if (/(look|design|vzhled|ugly|layout|ui\b)/.test(t)) return 'design';
     return 'custom';
   };
+  // tokens: one plan unit is a million tokens (a turn costs 0.12-0.32 units, so 120k-320k tokens)
+  CO.TOK = 1000000;
+  CO.fmtTok = function (n) {
+    n = n || 0;
+    if (n >= 1e6) return (n / 1e6).toFixed(n >= 1e7 ? 1 : 2).replace(/\.?0+$/, '') + 'M';
+    if (n >= 1e3) return Math.round(n / 1e3) + 'k';
+    return String(Math.round(n));
+  };
+  // the daily caps the owner can pick, last one none
+  CO.CAP_STEPS = [250000, 500000, 1000000, 1500000, 2000000, 3000000, 5000000, 8000000, null];
+  // a clock's run times, by runs a day
+  CO.RUN_TIMES = { 1: ['09:00'], 2: ['09:00', '21:00'], 3: ['08:00', '14:00', '20:00'], 4: ['00:00', '06:00', '12:00', '18:00'],
+    5: ['00:00', '05:00', '10:00', '15:00', '20:00'], 6: ['00:00', '04:00', '08:00', '12:00', '16:00', '20:00'] };
   // the owner's bug-bounty hunter name: what Cymetica QA files as, and where its ET10 goes
   CO.HUNTER = 'expire76';
   // each department's computer opens its page on cymetica.com
@@ -213,10 +226,12 @@
       { id: 5, key: 'trading_desk', slot: 4, name: 'Trading desk', experts: ['trader', 'researcher'],
         units_7d: 0.22, failed_7d: 0, charter_updated_at: at(-26 * 60) }
     ];
-    depts.forEach(function (d) {
+    var today = [620000, 210000, 480000, 350000, 120000];
+    depts.forEach(function (d, i) {
       var tpl = CO.TEMPLATES.filter(function (t) { return t.key === d.key; })[0];
       d.charter = tpl.charter;
       d.pool_i = 0;
+      d.tok_day = new Date(t0).toDateString(); d.tok_today = today[i]; d.turns_today = Math.round(today[i] / 210000); d.cap_day = null;
     });
 
     function T(id, dept, title, status, o) {

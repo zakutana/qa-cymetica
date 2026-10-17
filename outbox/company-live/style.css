@@ -152,6 +152,23 @@ a { color: var(--cyan); text-decoration: none; cursor: pointer; }
 .dus small { color: var(--dim2); font-weight: 500; margin-left: 3px; font-size: 10px; }
 .ubar { flex: 1; height: 4px; border-radius: 2px; background: var(--line); overflow: hidden; }
 .ubar i { display: block; height: 100%; background: var(--blue); border-radius: 2px; transition: width .6s; }
+.ubar i.hot { background: var(--red); } .dus span.hot { color: var(--red); }
+/* a department's tokens and its brakes */
+.tok { border: 1px solid var(--line3); border-radius: 10px; padding: 10px; background: var(--navy2); display: flex; flex-direction: column; gap: 9px; flex: none; }
+.tk3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; }
+.tk3 div { background: var(--deep); border: 1px solid var(--line); border-radius: 8px; padding: 7px 9px; }
+.tk3 b { display: block; font-family: 'Archivo Black'; font-weight: 400; font-size: 20px; } .tk3 span { font-size: 10.5px; color: var(--dim2); }
+.tk3 b.cy { color: var(--cyan); } .tk3 b.red { color: var(--red); }
+.tkbar { height: 8px; } .tkbar i { background-color: var(--cyan); }
+.tkcap { font-size: 11px; color: var(--dim); margin-top: -4px; } .tkcap.hot { color: var(--red); font-weight: 700; }
+.capr { display: flex; align-items: center; gap: 10px; font-size: 12px; }
+.capr .l, .rpd .l { width: 82px; flex: none; font-size: 11px; color: var(--dim2); letter-spacing: .04em; }
+.capr input { flex: 1; accent-color: var(--cyan); cursor: pointer; }
+.capr b { width: 150px; flex: none; text-align: right; color: var(--text); font-size: 12px; }
+.rpd { display: flex; align-items: center; gap: 6px; }
+.rpd button { font-size: 11.5px; padding: 3px 10px; border-radius: 99px; border: 1px solid var(--line3); color: var(--dim); }
+.rpd button:hover { color: var(--text); } .rpd button.on { color: var(--bg); background: var(--cyan); border-color: var(--cyan); font-weight: 700; }
+.track.sess { height: 10px; }
 .dsch { font-size: 10.5px; color: var(--cyan); margin-top: 4px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .runs { border: 1px solid var(--line3); border-radius: 10px; padding: 9px 10px; background: var(--navy2); display: flex; flex-direction: column; gap: 8px; }
 .rk { display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; }
@@ -336,6 +353,7 @@ body.focus .strip > .vs, body.focus .strip > .use:not(.wide), body.focus .use .l
 .sec { font-size: 10.5px; letter-spacing: .12em; color: var(--dim2); font-weight: 700; display: flex; justify-content: space-between; gap: 8px; flex: none; }
 .sec a, .sec span { letter-spacing: 0; font-weight: 600; } .sec span.unsaved { color: var(--red); }
 .kp { display: grid; grid-template-columns: repeat(5, 1fr); gap: 6px; flex: none; }
+.drawer:not(.mgr) .kp { grid-template-columns: repeat(3, 1fr); }
 .kp div { background: var(--navy2); border: 1px solid var(--line); border-radius: 8px; padding: 7px 9px; }
 .kp b { display: block; font-family: 'Archivo Black'; font-weight: 400; font-size: 20px; line-height: 1.1; } .kp b small { font-size: 11px; color: var(--dim2); font-family: 'JetBrains Mono'; }
 .kp span { font-size: 10px; color: var(--dim2); }
@@ -496,6 +514,10 @@ select:focus, .search:focus, .field input:focus, .field textarea:focus { border-
 .rx { color: var(--dim2); font-size: 16px; width: 24px; height: 24px; border-radius: 6px; } .rx:hover { color: var(--red); background: var(--red-a); }
 .addrule { display: flex; gap: 8px; align-items: center; margin-top: 10px; padding-top: 12px; border-top: 1px solid var(--line); }
 .addrule input { flex: 1; min-width: 0; background: var(--deep); border: 1px solid var(--line3); border-radius: 7px; padding: 6px 9px; font-size: 12px; color: var(--text); outline: none; }
+#nr-text { padding: 10px 12px; font-size: 13px; } #nr-text:focus { border-color: var(--cyan); }
+.nrmsg { font-size: 12px; margin-top: 8px; } .nrmsg.ok { color: var(--green); } .nrmsg.bad { color: var(--red); }
+.rule .rvt { color: var(--blue); font-weight: 700; white-space: nowrap; }
+.rules-empty { display: none; }
 @media (max-width: 1100px) { .rulesgrid { grid-template-columns: 1fr; } }
 
 /* modal, toast, sim bar */

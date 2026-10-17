@@ -99,8 +99,10 @@
         '<div class="d1"><i class="dot"></i><b>' + esc(d.name) + '</b>' +
         (d.et10 ? '<span class="et' + (d.files_as ? ' lit' : '') + '" title="ET10 Cymetica paid for accepted bugs, to ' + esc(d.files_as || 'you') + '">+' + d.et10.toLocaleString('en-US') + ' ET10</span>'
           : d.files_as ? '<span class="et zero" title="ET10 Cymetica paid for accepted bugs, to ' + esc(d.files_as) + '">0 ET10</span>' : '') + '</div>' +
-        '<div class="dus" title="What this department used of your plan: this 5-hour session and the last 7 days"><span>' + v.sessPct + '%<small>session</small></span><span>' + v.weekPct + '%<small>week</small></span>' +
-        '<span class="ubar"><i style="width:' + Math.min(100, v.weekPct) + '%"></i></span></div>' +
+        '<div class="dus" title="Tokens this department used today and in the last 7 days' + (v.cap ? ', against its daily cap' : '') + '">' +
+        '<span' + (v.capped ? ' class="hot"' : '') + '>' + CO.fmtTok(v.tokToday) + (v.cap ? '<small>/ ' + CO.fmtTok(v.cap) + ' today</small>' : '<small>today</small>') + '</span>' +
+        '<span>' + CO.fmtTok(v.tok7d) + '<small>7 days</small></span>' +
+        (v.cap ? '<span class="ubar"><i class="' + (v.capped ? 'hot' : '') + '" style="width:' + Math.min(100, v.tokToday / v.cap * 100).toFixed(0) + '%"></i></span>' : '') + '</div>' +
         (d.schedule ? '<div class="dsch">⟳ ' + esc(d.schedule.label.replace(/ \(.*/, '')) + ' · next ' + hhmm(d.next_run) + (d.products.length ? ' · ' + esc(d.products.join(', ')) : '') + '</div>' : '') +
         '<div class="d2"><span class="c">' + v.open + '<small>open</small></span><span class="g">' + v.done + '<small>done</small></span>' +
         '<span class="' + (v.failed ? 'r' : 'z') + '">' + v.failed + '<small>failed</small></span><span class="m">' + v.memory + '<small>mem</small></span></div>' +
@@ -110,29 +112,16 @@
     }).join(''));
   }
 
-  // The bottom panel, the way Claude shows usage: Session limit (built from this window's turns,
-  // each as wide as what it cost, then the Manager's plan in blue), Weekly, and Today's ceiling.
+  // The bottom panel, the way Claude shows usage: one bar each for the 5-hour session, the week and
+  // today's turns. A bar fills in one colour and turns red only near its limit.
   function renderStrip() {
-    var S = CO.S, b = S.budget, cap = b.session.cap, avg = S.meter.length ? CO.avg() : 0.22;
-    var start = b.session.resets_at - b.session.every, cells = S.strip.filter(function (c) { return c.at >= start; });
-    var onPlan = cells.filter(function (c) { return !c.extra; }), onExtra = cells.length - onPlan.length, known = 0;
-    onPlan.forEach(function (c) { if (c.units != null) known += c.units; });
-    var used = Math.min(b.session.used, cap), before = Math.max(0, used - known), total = 0;
-    function seg(cls, u, tip) { u = Math.max(0, Math.min(u, cap - total)); if (u <= 0) return ''; total += u; return '<i class="' + cls + '" style="width:' + (u / cap * 100).toFixed(2) + '%" title="' + esc(tip) + '"></i>'; }
-    var h = before > 0.004 ? seg('before', before, 'Earlier in this window: ' + u2(before) + ' u') : '';
-    onPlan.forEach(function (c) {
-      var d = CO.dept(c.dept_id), u = c.units != null ? c.units : avg;
-      h += seg(c.state, u, (d ? d.name : 'Removed department') + ' · ' + c.state + ' · ' + hhmm(c.at) + ' · ' + (c.units != null ? u2(c.units) + ' u' : 'running'));
-    });
-    S.plan.forEach(function (id) {
-      var t = CO.task(id); if (!t) return;
-      var d = CO.dept(t.dept_id), k = Math.max(1, t.turns_needed - t.turns);
-      for (var i = 0; i < k; i++) h += seg('plan', avg, 'Planned: ' + (d ? d.name + ': ' : '') + t.title + ' · ~' + u2(avg) + ' u');
-    });
-    setHTML($('segs'), h);
-    var sp = Math.round(used / cap * 100), usp = $('us-p');
-    usp.textContent = sp + '% used' + (onExtra ? ' · ' + onExtra + ' on extra usage' : '');
+    var S = CO.S, b = S.budget, cap = b.session.cap;
+    var start = b.session.resets_at - b.session.every;
+    var onExtra = S.strip.filter(function (c) { return c.at >= start && c.extra; }).length;
+    var used = Math.min(b.session.used, cap), sp = Math.round(used / cap * 100), usp = $('us-p');
+    usp.textContent = sp + '% used · ' + CO.fmtTok(used * CO.TOK) + ' tokens' + (onExtra ? ' · ' + onExtra + ' turns on extra usage' : '');
     usp.classList.toggle('hot', sp >= 85);
+    var sb = $('us-bar'); sb.style.width = sp + '%'; sb.classList.toggle('hot', sp >= 85);
     var wp = Math.min(100, b.week.used / b.week.cap * 100);
     $('uw-p').textContent = Math.round(wp) + '% used';
     var wb = $('uw-bar'); wb.style.width = wp.toFixed(1) + '%'; wb.classList.toggle('hot', wp >= 85);
@@ -213,14 +202,6 @@
         '<div><b>' + S.plan.length + '</b><span>planned</span></div><div><b class="gr">' + S.departments.length + '</b><span>departments</span></div>' +
         '<div><b>' + (S.et10 ? '+' + S.et10.toLocaleString('en-US') : '0') + '</b><span>ET10 earned</span></div>');
     }
-    if (ui.panel != null) {
-      var fd = CO.dept(ui.panel); if (!fd) return;
-      $('dc-t').textContent = fd.name.toUpperCase();
-      $('dmsg').placeholder = 'Ask the Manager about ' + fd.name + '…';
-      fillChat($('dmsgs'), chatHTML(S.messages.filter(function (m) { return m.dept_id === fd.id; }), false) ||
-        '<p class="hint">Ask about ' + esc(fd.name) + ': how it goes, what it found, what runs next, or give it work.</p>');
-      $('dtyping').hidden = !S.typing;
-    }
   }
 
   /* ---------------- the department drawer ---------------- */
@@ -229,7 +210,7 @@
     if (ui.tab !== 'office') setTab('office');
     if (ui.panel !== id) { ui.dirty = false; $('dr-ch-text').value = d.charter; ui.open = {}; }
     var was = ui.panel != null || ui.mgr;
-    ui.panel = id; ui.mgr = false; $('mgr').hidden = true; $('dmsgs')._h = null;
+    ui.panel = id; ui.mgr = false; $('mgr').hidden = true;
     var dr = $('drawer'); dr.hidden = false; dr.scrollTop = 0;
     document.body.classList.add('focus');
     $('back').hidden = false; $('where').hidden = false; $('where').textContent = d.name;
@@ -291,9 +272,23 @@
     if (!ui.dirty && ta.value !== d.charter) ta.value = d.charter;
     charterMeta();
     setHTML($('dr-kp'), '<div><b class="cy">' + v.open + '</b><span>open</span></div><div><b class="gr">' + v.done + '</b><span>done</span></div>' +
-      '<div><b class="red">' + v.failed + '</b><span>failed</span></div>' +
-      '<div title="What it used of this 5-hour session"><b>' + v.sessPct + '%</b><span>of session</span></div>' +
-      '<div title="What it used of your weekly plan in the last 7 days"><b>' + v.weekPct + '%</b><span>of week</span></div>');
+      '<div><b class="red">' + v.failed + '</b><span>failed</span></div>');
+    // tokens: what it burns, and the owner's two brakes (a daily cap; runs a day for a department on a clock)
+    var ci = CO.CAP_STEPS.indexOf(v.cap); if (ci < 0) ci = CO.CAP_STEPS.length - 1;
+    var runsNow = d.schedule ? d.schedule.times.length : 0;
+    var tokHtml = '<div class="tok"><div class="sec">TOKENS</div>' +
+      '<div class="tk3"><div><b class="' + (v.capped ? 'red' : 'cy') + '">' + CO.fmtTok(v.tokToday) + '</b><span>today</span></div>' +
+      '<div><b>' + CO.fmtTok(v.tok7d) + '</b><span>last 7 days</span></div>' +
+      '<div title="What one turn of this department costs on average"><b>' + CO.fmtTok(v.perTurn) + '</b><span>a turn</span></div></div>' +
+      (v.cap ? '<div class="track tkbar"><i class="' + (v.capped ? 'hot' : '') + '" style="width:' + Math.min(100, v.tokToday / v.cap * 100).toFixed(1) + '%"></i></div>' +
+        '<div class="tkcap' + (v.capped ? ' hot' : '') + '">' + (v.capped ? 'Cap reached: it waits until 00:00' : CO.fmtTok(Math.max(0, v.cap - v.tokToday)) + ' left today') + '</div>' : '') +
+      '<label class="capr"><span class="l">Daily cap</span><input type="range" id="dr-cap" min="0" max="' + (CO.CAP_STEPS.length - 1) + '" step="1" value="' + ci + '">' +
+      '<b id="dr-cap-v">' + capLabel(CO.CAP_STEPS[ci], v.perTurn) + '</b></label>' +
+      (d.schedule ? '<div class="rpd"><span class="l">Runs a day</span>' + [1, 2, 3, 4, 6].map(function (n) {
+        return '<button type="button" data-rpd="' + n + '"' + (n === runsNow ? ' class="on"' : '') + '>' + n + '×</button>';
+      }).join('') + '</div>' : '') + '</div>';
+    var tk = $('dr-tok');
+    if (tk._h !== tokHtml && document.activeElement !== $('dr-cap')) { tk._h = tokHtml; tk.innerHTML = tokHtml; }
     // a department on a clock: its runs, products, who the bugs are filed as, what they earned
     var runsHtml = '';
     if (d.schedule) {
@@ -314,6 +309,9 @@
     var mem = S.memory.filter(function (m) { return m.dept_id === d.id; }).sort(function (a, b) { return b.id - a.id; });
     $('dr-mem-all').textContent = 'All ' + mem.length + ' →';
     setHTML($('dr-mem'), mem.length ? mem.slice(0, 5).map(function (m) { return '<div class="mem"><span class="' + m.kind + '">' + esc(m.kind) + '</span><div>' + esc(m.text) + '</div></div>'; }).join('') : '<p class="empty">Nothing remembered yet.</p>');
+  }
+  function capLabel(cap, perTurn) {
+    return cap ? CO.fmtTok(cap) + ' a day · ~' + Math.max(1, Math.floor(cap / (perTurn || 220000))) + ' turns' : 'no cap';
   }
   function switcher(on) {
     return '<button data-sw="hub"' + (on === 'hub' ? ' class="on"' : '') + '><i class="dot working"></i>Manager</button>' + CO.S.departments.map(function (x) {
@@ -353,18 +351,27 @@
       return '<div class="rule' + (r.on ? ' on' : '') + '" data-rule="' + r.id + '"><span class="ric">' + CO.ruleIcon(CO.kindOf(r.when)) + '</span>' +
         '<div class="rbody"><div class="rhead"><span class="rid">' + r.id + '</span><b>When ' + esc(r.when) + '</b><span class="arrow">→</span><b class="rt">' + esc(d ? d.name : 'department removed') + '</b>' +
         (r.fired ? '<span class="fired">' + r.fired + '× so far</span>' : '') + (!d ? '<span class="miss">pick another department</span>' : '') + '</div>' +
-        '<p>' + esc(d ? d.name : 'It') + ' ' + esc(r.does) + '.</p>' +
-        '<div class="rv"><span class="rvl">human review</span>' + [['', 'none'], ['start', 'before it starts'], ['result', 'its result']].map(function (m) {
-          return '<button data-a="rule-review" data-m="' + m[0] + '"' + ((r.review || '') === m[0] ? ' class="on"' : '') + '>' + m[1] + '</button>';
-        }).join('') + (r.review ? '<span class="who">by <input class="rvw" value="' + esc(r.reviewer || 'you') + '" title="who reviews: you, or a person by name"></span>' : '') + '</div>' +
+        '<p>' + esc(d ? d.name : 'It') + ' ' + esc(r.does) + '.' +
+        (r.review ? ' <span class="rvt">' + esc(r.reviewer && r.reviewer !== 'you' ? r.reviewer : 'You') + (r.review === 'start' ? ' approve it before it starts' : ' review the result') + '</span>' : '') + '</p>' +
         (n ? '<div class="then">then: when ' + esc(n.when) + ' → ' + esc(nd ? nd.name : '') + ' <span class="rid">' + n.id + '</span></div>' : '') + '</div>' +
         '<span class="switch mini' + (r.on ? ' on' : '') + '" data-a="rule-toggle"><span class="sw"></span></span><button class="rx" data-a="rule-del" title="Remove">×</button></div>';
-    }).join('') : '<p class="empty">No processes yet. Write one below, or tell the Manager (“when a bug is found, QA verifies it”).</p>');
-    var tg = $('nr-dept'), cur = tg.value;
-    var opts = S.departments.length ? S.departments.map(function (x) { return '<option value="' + x.id + '">' + esc(x.name) + '</option>'; }).join('') : '<option value="">add a department first</option>';
-    if (tg._h !== opts) { tg._h = opts; tg.innerHTML = opts; if (cur) tg.value = cur; }
-    tg.disabled = !S.departments.length;
-    setHTML($('nr-ex'), '<span class="hint">examples:</span>' + CO.RULE_EXAMPLES.map(function (e, i) { return '<button class="exr" data-ex="' + i + '">when ' + esc(e[0]) + '</button>'; }).join(''));
+    }).join('') : '');
+    setHTML($('nr-ex'), '<span class="hint">e.g.</span>' + CO.RULE_EXAMPLES.map(function (e, i) { return '<button class="exr" type="button" data-ex="' + i + '">' + esc(exampleSentence(e)) + '</button>'; }).join(''));
+  }
+  // an example as the sentence the owner would write, naming their own department when they have one
+  function exampleSentence(e) {
+    var d = CO.S.departments.filter(function (x) { return x.key === e[1]; })[0];
+    var tpl = CO.TEMPLATES.filter(function (x) { return x.key === e[1]; })[0];
+    return 'When ' + e[0] + ', ' + (d ? d.name : tpl ? tpl.name : 'a department') + ' ' + e[2];
+  }
+  function addRuleFromPage() {
+    var box = $('nr-text'), msg = $('nr-msg'), text = box.value.trim();
+    if (!text) { box.focus(); return; }
+    var pr = CO.parseRule(text), out, ok = false;
+    if (pr.missing === 'when') out = 'Start with when it happens: "When …, <department> …".';
+    else if (pr.missing === 'dept') out = CO.S.departments.length ? 'Which department does it? Yours: ' + CO.S.departments.map(function (x) { return x.name; }).join(', ') + '.' : 'Add a department first, then write the process.';
+    else { out = CO.addRuleFromWords(pr); ok = true; box.value = ''; }
+    msg.hidden = false; msg.textContent = out; msg.className = 'nrmsg' + (ok ? ' ok' : ' bad');
   }
   function renderTasks() {
     var S = CO.S, sel = $('tf-dept');
@@ -713,8 +720,7 @@
       // the other tabs
       var exb = t.closest('#nr-ex [data-ex]');
       if (exb) {
-        var ex = CO.RULE_EXAMPLES[+exb.getAttribute('data-ex')], match = CO.S.departments.filter(function (x) { return x.key === ex[1]; })[0];
-        $('nr-when').value = ex[0]; $('nr-text').value = ex[2]; if (match) $('nr-dept').value = String(match.id);
+        $('nr-text').value = exampleSentence(CO.RULE_EXAMPLES[+exb.getAttribute('data-ex')]); $('nr-text').focus();
         return;
       }
       var rr = t.closest('.rule [data-a]');
@@ -749,7 +755,23 @@
       if (t.closest('#sim-reset')) { CO.reset(); return toast('Simulation started over.'); }
     });
     $('compose').addEventListener('submit', function (e) { e.preventDefault(); var i = $('msg'); sendMessage(i.value.trim(), null); i.value = ''; });
-    $('dcompose').addEventListener('submit', function (e) { e.preventDefault(); var i = $('dmsg'); sendMessage(i.value.trim(), ui.panel); i.value = ''; });
+    $('nr-form').addEventListener('submit', function (e) { e.preventDefault(); addRuleFromPage(); });
+    // a department's daily token cap: the label follows the slider, the cap is set where it is let go
+    $('dr-tok').addEventListener('input', function (e) {
+      if (e.target.id !== 'dr-cap') return;
+      $('dr-cap-v').textContent = capLabel(CO.CAP_STEPS[+e.target.value], CO.deptView(CO.dept(ui.panel)).perTurn);
+    });
+    $('dr-tok').addEventListener('change', function (e) {
+      if (e.target.id !== 'dr-cap') return;
+      var cap = CO.CAP_STEPS[+e.target.value], d = CO.dept(ui.panel);
+      CO.act.cap(ui.panel, cap); e.target.blur();
+      toast(cap ? d.name + ' spends at most ' + CO.fmtTok(cap) + ' tokens a day; work over it waits for midnight.' : d.name + ' has no daily cap.');
+    });
+    $('dr-tok').addEventListener('click', function (e) {
+      var b = e.target.closest('[data-rpd]'); if (!b) return;
+      var n = +b.getAttribute('data-rpd'); CO.act.runsPerDay(ui.panel, n);
+      toast(CO.dept(ui.panel).name + ' runs ' + n + '× a day.');
+    });
     $('dr-charter').addEventListener('submit', function (e) {
       e.preventDefault(); var d = CO.dept(ui.panel); if (!d) return;
       CO.act.charter(d.id, $('dr-ch-text').value.trim()); ui.dirty = false; charterMeta(); toast('Charter saved: the next task of ' + d.name + ' starts from it.');
@@ -772,13 +794,6 @@
   }
   function pageAct(a) {
     var S = CO.S;
-    if (a === 'rule-add') {
-      var wn = $('nr-when').value.trim(), dd = +$('nr-dept').value;
-      if (!wn) { $('nr-when').focus(); return toast('Write when it happens.'); }
-      if (!dd) return toast('Add a department first.');
-      var r = CO.act.addRule({ when: wn.replace(/^when\s+/i, ''), dept_id: dd, does: $('nr-text').value.trim().replace(/[.!]+$/, '') || 'takes care of it', review: $('nr-review').value || null });
-      $('nr-when').value = ''; $('nr-text').value = ''; toast('Process ' + r.id + ' added: everyone follows it from now on.');
-    }
     if (a === 'invest') { S.company.investable = !S.company.investable; CO.changed(); toast(S.company.investable ? 'Investable: the scoreboard is public.' : 'Private again.'); }
     if (a === 'form') openModal('<div class="mh"><h3>Start formation?</h3></div><p>' + esc(S.legal.domicile) + ' · ' + esc(($('lg-name') || {}).value || S.legal.name) + '. Filing waits for your approval like everything real.</p>' +
       '<div class="mf"><span class="sp"></span><button class="btn" data-a="close">Cancel</button><button class="btn gr" data-a="go">Start</button></div>', false, function (b) { if (b === 'go') { closeModal(); toast('Mockup: nothing is filed.'); } });
@@ -823,7 +838,7 @@
     CO.on('reset', function () {
       closeModal(); ui.panel = null; $('drawer').hidden = true; office.sel = null; ui.open = {}; ui.prev = {};
       office.layout(); office.fit(true); markSeen();
-      ['depts', 'appr', 'plan', 'msgs', 'dmsgs', 'mg-kp', 'feed', 'legal', 'settings'].forEach(function (id) { $(id)._h = null; });
+      ['depts', 'appr', 'plan', 'msgs', 'mg-kp', 'feed', 'legal', 'settings'].forEach(function (id) { $(id)._h = null; });
     });
     CO.on('office:click', function (key) {
       if (key.charAt(0) === 'd') return openDrawer(+key.slice(1));

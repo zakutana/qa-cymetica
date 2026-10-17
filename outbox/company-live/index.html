@@ -8,7 +8,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Archivo+Black&family=JetBrains+Mono:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="style.css">
+<link rel="stylesheet" href="style.css?v=20261017c">
 </head>
 <body>
 <header class="site">
@@ -58,16 +58,12 @@
     <div class="dswitch" id="dr-switch"></div>
     <div class="dh" id="dr-head"></div>
     <div class="chips" id="dr-chips"></div>
-    <div class="dchat">
-      <div class="sec"><span>MANAGER · ABOUT <b id="dc-t"></b></span><span class="typing" id="dtyping" hidden>typing<i></i><i></i><i></i></span></div>
-      <div class="msgs" id="dmsgs"></div>
-      <form class="compose" id="dcompose"><input id="dmsg" autocomplete="off" placeholder="Ask the Manager about this department…"><button class="btn gr" type="submit">Send</button></form>
-    </div>
     <form class="cht" id="dr-charter">
       <div class="sec">CHARTER · EVERY TASK STARTS HERE <span id="dr-ch-meta"></span></div>
       <textarea id="dr-ch-text" maxlength="2000" spellcheck="false"></textarea>
       <div class="cb"><span class="d">the next task starts from the saved text</span><button type="button" class="btn" id="dr-ch-discard">Discard</button><button class="btn gr" type="submit">Save charter</button></div>
     </form>
+    <div id="dr-tok"></div>
     <div class="kp" id="dr-kp"></div>
     <div id="dr-runs"></div>
     <div id="dr-now"></div>
@@ -96,9 +92,9 @@
     <svg id="office" class="office" xmlns="http://www.w3.org/2000/svg"></svg>
     <div class="tip" hidden></div>
     <div class="strip">
-      <div class="use wide" title="Your plan's current 5-hour window. Each block is one turn of one agent, as wide as what it cost, coloured by how it ended; blue blocks are the Manager's plan.">
-        <div class="u1"><b>Session limit</b><span id="us-p"></span><span class="sp"></span><span class="legend"><span><i class="c"></i>running</span><span><i class="g"></i>done</span><span><i class="r"></i>failed</span><span><i class="b"></i>planned</span></span><em id="us-r"></em></div>
-        <div class="segs" id="segs"></div>
+      <div class="use wide" title="Your plan's current 5-hour window: how much of it the company has used.">
+        <div class="u1"><b>Session limit</b><span id="us-p"></span><span class="sp"></span><em id="us-r"></em></div>
+        <div class="track sess"><i id="us-bar"></i></div>
       </div>
       <span class="vs"></span>
       <div class="use" title="Your plan's weekly allowance.">
@@ -142,10 +138,11 @@
 </main>
 
 <main class="page pane" data-pane="rules" hidden>
-  <div class="ph"><h2>How the company works</h2><span class="sub">when something happens → one of your departments → does something, in your words; the Manager routes it</span></div>
+  <div class="ph"><h2>How the company works</h2><span class="sub">write it as one sentence; it becomes a process everyone follows</span></div>
   <div class="rulesgrid">
-    <section class="card"><h3>Processes · when → who → what</h3><div id="rules"></div>
-      <div class="addrule"><span class="wl">When</span><input id="nr-when" placeholder="something happens, in your words"><span class="arrow">→</span><select id="nr-dept"></select><input id="nr-text" placeholder="does what, in your words"><select id="nr-review"><option value="">no review</option><option value="start">review before it starts</option><option value="result">review its result</option></select><button class="btn cy" data-a="rule-add">Add</button></div>
+    <section class="card"><h3>Processes</h3><div id="rules"></div>
+      <form class="addrule" id="nr-form"><input id="nr-text" autocomplete="off" placeholder="When a bug is found anywhere, Cymetica QA verifies it and files it"><button class="btn cy" type="submit">Add</button></form>
+      <p class="nrmsg" id="nr-msg" hidden></p>
       <div class="exrow" id="nr-ex"></div></section>
   </div>
 </main>
@@ -173,10 +170,11 @@
 <div class="modal" id="modal" hidden><div class="modal-card" id="modal-card"></div></div>
 <div class="toast" id="toast" hidden></div>
 
-<script src="data.js"></script>
-<script src="sim.js"></script>
-<script src="office.js"></script>
-<script src="cards.js"></script>
-<script src="app.js"></script>
+<!-- ?v= changes with every edit, so a plain reload never runs yesterday's file from the cache -->
+<script src="data.js?v=20261017c"></script>
+<script src="sim.js?v=20261017c"></script>
+<script src="office.js?v=20261017c"></script>
+<script src="cards.js?v=20261017c"></script>
+<script src="app.js?v=20261017c"></script>
 </body>
 </html>
