@@ -440,6 +440,7 @@
         else if ((CO.U3 && CO.U3.failed) || Date.now() - t0 > 6000) { uv = new CO.Universe($('uvmap'), $('uvstage'), uvHooks()); $('uvstage').classList.add('is2d'); }
         else return setTimeout(wait, 60);
         $('uvstage').classList.remove('loading');
+        CO.uv = uv;   // a handle for looking at the map from the console
         uv.layout();
         finishShow(true);
       })();

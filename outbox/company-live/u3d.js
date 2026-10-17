@@ -519,11 +519,31 @@ class Universe3D {
       const it = pool[Math.floor(Math.random() * pool.length)], n = floorsOf(it.c), on = [];
       const w = Math.random() < 0.3 ? 0 : (n > 1 && Math.random() < 0.3 ? 2 : 1);
       while (on.length < w) { const f = Math.floor(Math.random() * n); if (!on.includes(f)) on.push(f); }
+      const was = (this.live[it.c.id] || []).length;
       this.live[it.c.id] = on; this.paint(it);
+      // a floor that starts work sends it to Cymetica: an arc of light to the beam in the middle
+      if (on.length && !was) this.arc(it, false);
       const qa = (it.c.departments || []).some((d) => d.key === 'testing');
-      if (qa && on.length && Math.random() < 0.1) { it.c.bugs = (it.c.bugs || 0) + 1; this.pop(it, '+1,000 ET10'); }
+      if (qa && on.length && Math.random() < 0.1) { it.c.bugs = (it.c.bugs || 0) + 1; this.arc(it, true); setTimeout(() => this.pop(it, '+1,000 ET10'), 1300); }
     }
     this.stats();
+  }
+  // work goes in to Cymetica in the company's colour; ET10 comes back out in green
+  arc(it, back) {
+    if (!it.plot || (this.arcs && this.arcs.length > 10)) return;
+    const core = new THREE.Vector3(CORE[0] * CELL + PS / 2 - OFF, 4.1, CORE[1] * CELL + PS / 2 - OFF);
+    const top = new THREE.Vector3(it.plot.root.position.x, it.plot.top - 0.3, it.plot.root.position.z);
+    const a = back ? core : top, b = back ? top : core, mid = a.clone().lerp(b, 0.5);
+    mid.y = Math.max(a.y, b.y) + 3 + a.distanceTo(b) * 0.22;
+    const A = back ? amat('#00ff88') : amat(CO.accentHex(it.c.accent)), curve = new THREE.QuadraticBezierCurve3(a, mid, b);
+    const head = new THREE.Mesh(G.sphere, A.glow); head.scale.setScalar(0.26);
+    const halo = new THREE.Mesh(G.sphere, A.atmo); halo.scale.setScalar(2.4); head.add(halo);
+    // the streak: a thin tube along the arc, drawn as the light travels and let go behind it
+    const tube = new THREE.TubeGeometry(curve, 64, 0.07, 6, false);
+    const mat = new THREE.MeshBasicMaterial({ color: A.c.clone().multiplyScalar(2.6), transparent: true, opacity: 0.85, blending: THREE.AdditiveBlending, depthWrite: false });
+    const streak = new THREE.Mesh(tube, mat); tube.setDrawRange(0, 0);
+    this.scene.add(head, streak);
+    (this.arcs = this.arcs || []).push({ curve, head, streak, tube, mat, trail: [], t0: performance.now(), dur: 1500 + a.distanceTo(b) * 30 });
   }
   pop(it, label) {
     const el = document.createElement('div'); el.className = 'b3pop'; el.textContent = label; this.bans.appendChild(el);
@@ -598,6 +618,18 @@ class Universe3D {
     this.coreRings.forEach((r, i) => { r.rotation.z = t * (0.5 + i * 0.3) * (i % 2 ? -1 : 1); r.rotation.x = Math.PI / 2 + Math.sin(t * 0.7 + i) * 0.25; });
     this.coreOrb.position.y = 4.1 + Math.sin(t * 1.4) * 0.18;
     this.moveCars(t);
+    if (this.arcs && this.arcs.length) {
+      this.arcs = this.arcs.filter((a) => {
+        const f = (now - a.t0) / a.dur;
+        if (f >= 1.25) { this.scene.remove(a.head, a.streak); a.tube.dispose(); a.mat.dispose(); return false; }
+        const e = Math.min(1, f < 0.5 ? 2 * f * f : 1 - Math.pow(-2 * Math.min(f, 1) + 2, 2) / 2);
+        a.head.position.copy(a.curve.getPoint(e)); a.head.visible = f < 1;
+        const n = a.tube.index.count, seg = n / 64, from = Math.max(0, Math.min(f, 1.25) - 0.4) / 0.85, to = e;
+        a.tube.setDrawRange(Math.floor(from * 64) * seg, Math.max(0, Math.floor((to - from) * 64)) * seg);
+        a.mat.opacity = 0.85 * (f > 1 ? 1 - (f - 1) / 0.25 : 1);
+        return true;
+      });
+    }
     this.nebulae.forEach((n) => n.lookAt(this.camera.position));
     this.starField.rotation.y = t * 0.004;
     if (this.mouseMoved) { this.mouseMoved = false; this.pick(); }
@@ -1207,7 +1239,7 @@ class Office3D {
 
   /* ---------------- camera ---------------- */
   home() {
-    const s = this.size || 30, a = this.camera.aspect || 1.6, d = s * (a < 1.2 ? 2.5 : a < 1.6 ? 1.95 : 1.68);
+    const s = this.size || 30, a = this.camera.aspect || 1.6, d = s * (a < 1.2 ? 2.15 : a < 1.6 ? 1.85 : 1.68);
     const tgt = new THREE.Vector3(s * 0.04, 0, s * 0.04 + 0.5);
     return { pos: new THREE.Vector3().setFromSpherical(new THREE.Spherical(d, 0.84, Math.PI / 4)).add(tgt), tgt };
   }
