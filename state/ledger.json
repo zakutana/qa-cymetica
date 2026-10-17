@@ -43051,15 +43051,16 @@
         "not_checked_in": "run-20261017T152034Z-cfef3bd7"
       },
       "filing": {
-        "state": "RAISED",
+        "state": "FIX_CLAIMED",
         "adjudicated_by": {
-          "event_id": "e927f4c01421f0cc6d328f2fba9bdbd319b70cc6ae16afc99a2f1f22bf66e79b",
-          "at": "2026-10-17T06:55:39+00:00"
+          "event_id": "445dd5233bccd7aca313001b66fde55dd6aa4171c59fb9577b3978533ff8d77e",
+          "at": "2026-10-17T17:03:19+00:00"
         },
         "reports": [
           {
             "report_id": 213,
-            "status": "pending"
+            "status": "fixed",
+            "status_at": "2026-10-17T17:03:19+00:00"
           }
         ],
         "refused": [],
@@ -43083,6 +43084,15 @@
             "event_id": "e927f4c01421f0cc6d328f2fba9bdbd319b70cc6ae16afc99a2f1f22bf66e79b"
           },
           "at": "2026-10-17T06:55:39+00:00"
+        },
+        {
+          "axis": "filing",
+          "from": "RAISED",
+          "to": "FIX_CLAIMED",
+          "cause": {
+            "event_id": "445dd5233bccd7aca313001b66fde55dd6aa4171c59fb9577b3978533ff8d77e"
+          },
+          "at": "2026-10-17T17:03:19+00:00"
         }
       ],
       "regressions": [],
@@ -43134,7 +43144,7 @@
         "measured_at": "2026-10-17T07:16:29+00:00"
       },
       "obligations": {
-        "reverify": false,
+        "reverify": true,
         "repair_check": false,
         "reopen": [],
         "retractions": [],
@@ -43165,15 +43175,16 @@
         ]
       },
       "filing": {
-        "state": "RAISED",
+        "state": "FIX_CLAIMED",
         "adjudicated_by": {
-          "event_id": "084cade712fe45f2df28c7091c7f53148066eb4b508f395e232e0d26a923a223",
-          "at": "2026-10-17T15:28:13+00:00"
+          "event_id": "8a574d8f10a43a95c3f182061caa0b91b4b96ee706da16e9956662d562b849f1",
+          "at": "2026-10-17T17:03:19+00:00"
         },
         "reports": [
           {
             "report_id": 214,
-            "status": "pending"
+            "status": "fixed",
+            "status_at": "2026-10-17T17:03:19+00:00"
           }
         ],
         "refused": [],
@@ -43197,6 +43208,15 @@
             "event_id": "084cade712fe45f2df28c7091c7f53148066eb4b508f395e232e0d26a923a223"
           },
           "at": "2026-10-17T15:28:13+00:00"
+        },
+        {
+          "axis": "filing",
+          "from": "RAISED",
+          "to": "FIX_CLAIMED",
+          "cause": {
+            "event_id": "8a574d8f10a43a95c3f182061caa0b91b4b96ee706da16e9956662d562b849f1"
+          },
+          "at": "2026-10-17T17:03:19+00:00"
         }
       ],
       "regressions": [],
@@ -43262,7 +43282,7 @@
         "measured_at": "2026-10-17T15:27:09+00:00"
       },
       "obligations": {
-        "reverify": false,
+        "reverify": true,
         "repair_check": false,
         "reopen": [],
         "retractions": [],
@@ -43278,14 +43298,13 @@
   "counts": {
     "WITHDRAWN": 13,
     "VERIFIED FIXED": 130,
-    "STILL REPRODUCIBLE": 14,
+    "STILL REPRODUCIBLE": 16,
     "OUR CHECK CANNOT TELL": 13,
     "NOT RAISED YET": 3,
-    "PASSING, NEVER RAISED": 3,
-    "RAISED": 2
+    "PASSING, NEVER RAISED": 3
   },
   "events_head": {
-    "seq": 4179,
-    "chain": "e4e2212709d9d7ac67452c77b79cb974000024f42109415cdcec0aff21e876bd"
+    "seq": 4181,
+    "chain": "9d5d19b07cd7204e50e18b0f4ad4c6286707485e0f5760e4f5706d27c2511e79"
   }
 }
