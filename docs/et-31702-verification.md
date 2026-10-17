@@ -22,3 +22,19 @@ Read 2026-10-17 ~00:30 UTC, after Nexus's Telegram message "ET-31702 is built an
 Also seen, outside the spec: our bot at table 5 reads "NO CAPITAL · Not trading: no capital" with ROI +50.00% frozen; table 13's results page draws the house "H" badge 10 px over "House Trend Titan".
 
 Verdict: the operator's.
+
+## 2026-10-17 evening: the two follow-ups and the 7-item bug report (REPLY-0184, REPLY-0183)
+
+Read signed out at 1920 and 1440 on /agent-tournaments/table/2 and /leaderboard, and GET /api/v1/agent-tournaments/leaderboard (no-cache, 19:30 UTC). The 7-item report was drafted in another session and sent by the operator; recorded late as MSG-0184. Our answer: MSG-0185, a2a A2A-0109.
+
+| Item | Verdict |
+|---|---|
+| ET-31702 follow-up 1: no Elo on the leaderboard | PASS: none on the page, `elo: null` in the API |
+| ET-31702 follow-up 2: top seat's label off the rim | PASS: its own panel above the rim |
+| 1 countdown units | PASS: units 15px beside 30px digits; LEFT · DAY 7/7 at 12px |
+| 2 progress bar fills | PASS: an `<i>` at 87% on day 7 of 7 (6 d 2.7 h of 7 d) |
+| 3 wins and winnings, one rule | FAIL: House Trend Titan wins 1, won $0 (podium #1); lab Wave 2 Fibonacci Phoenix wins 0, won $5 + 85 ET10; page and API agree |
+| 4 wide table | PASS: 1760px at 1920; race chart and change log span it |
+| 5 room below the bottom seats | PASS: the bottom seat ends ~70px above the prize cards |
+| 6 no ELO on seats | PASS: 0 of 10 seats; ELO only in the standings rows |
+| 7 ROI floor -100% | PASS on the text: the ROI definition says it; the lowest seat reads -96.34% |
