@@ -372,7 +372,7 @@ class Universe3D {
     this.controls = new OrbitControls(this.camera, this.renderer.domElement);
     Object.assign(this.controls, { enableDamping: true, dampingFactor: 0.07, minDistance: 9, maxDistance: 150, maxPolarAngle: Math.PI * 0.44, minPolarAngle: 0.18,
       autoRotate: true, autoRotateSpeed: 0.28, screenSpacePanning: false, zoomSpeed: 0.9, rotateSpeed: 0.6 });
-    this.controls.addEventListener('start', () => { this.tw = null; this.lastUse = performance.now(); this.controls.autoRotate = false; });
+    this.controls.addEventListener('start', () => { this.tw = null; this.used = true; this.lastUse = performance.now(); this.controls.autoRotate = false; });
     this.world();
     this.bind();
     this.resize();
@@ -604,6 +604,11 @@ class Universe3D {
   /* ---------------- the frame ---------------- */
   frame() {
     if (!this.visible()) return;
+    // a page opened in a hidden tab learns its size late, and not always through ResizeObserver
+    if (this.el.clientWidth !== this._cw || this.el.clientHeight !== this._ch) {
+      this._cw = this.el.clientWidth; this._ch = this.el.clientHeight; this.resize();
+      if (this.fitted && !this.tw && !this.used) this.fit(false);
+    }
     const t = this.clock.getElapsedTime(), now = performance.now();
     if (this.tw) {
       const k = Math.min(1, (now - this.tw.s) / this.tw.ms), e = k < 0.5 ? 4 * k * k * k : 1 - Math.pow(-2 * k + 2, 3) / 2;
@@ -633,7 +638,9 @@ class Universe3D {
     this.nebulae.forEach((n) => n.lookAt(this.camera.position));
     this.starField.rotation.y = t * 0.004;
     if (this.mouseMoved) { this.mouseMoved = false; this.pick(); }
-    if (this.post) this.post.render(); else this.renderer.render(this.scene, this.camera);
+    // a GPU that cannot run a shader says so on the first frames: stop, and let the flat map take over
+    try { if (this.post) this.post.render(); else this.renderer.render(this.scene, this.camera); this.frames = (this.frames || 0) + 1; }
+    catch (e) { console.error('3D map stopped:', e); this.renderer.setAnimationLoop(null); if (this.h.onFail && !(this.frames > 30)) this.h.onFail(e); return; }
     this.overlay();
   }
   moveCars(t) {
@@ -1267,6 +1274,7 @@ class Office3D {
   /* ---------------- the frame ---------------- */
   frame() {
     const w = this.el.clientWidth, h = this.el.clientHeight; if (!w || !h) return;
+    if (w !== this._cw || h !== this._ch) { this._cw = w; this._ch = h; this.resize(); }
     const t = this.clock.getElapsedTime(), now = performance.now();
     if (this.tw) {
       const k = Math.min(1, (now - this.tw.s) / this.tw.ms), e = k < 0.5 ? 4 * k * k * k : 1 - Math.pow(-2 * k + 2, 3) / 2;
@@ -1307,7 +1315,8 @@ class Office3D {
       return true;
     });
     if (this.mouseMoved) { this.mouseMoved = false; this.pick(); }
-    if (this.post) this.post.render(); else this.renderer.render(this.scene, this.camera);
+    try { if (this.post) this.post.render(); else this.renderer.render(this.scene, this.camera); this.frames = (this.frames || 0) + 1; }
+    catch (e) { console.error('3D office stopped:', e); this.renderer.setAnimationLoop(null); if (this.onFail && !(this.frames > 30)) this.onFail(e); return; }
     this.labels(w, h);
   }
   // plates over their rooms; agents' names only in the room that is open or under the mouse
