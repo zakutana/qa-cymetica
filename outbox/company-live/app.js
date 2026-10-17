@@ -218,7 +218,7 @@
     render();
     // let the columns open first, then fly the camera in
     clearTimeout(ui.flyT);
-    ui.flyT = setTimeout(function () { office.focus('d' + id, 0, true); }, was ? 0 : 520);
+    ui.flyT = setTimeout(function () { office.focus('d' + id, 0, true); fitCharter(); }, was ? 0 : 520);
   }
   function openManager() {
     if (ui.tab !== 'office') setTab('office');
@@ -318,7 +318,18 @@
       return '<button data-sw="' + x.id + '"' + (x.id === on ? ' class="on"' : '') + '><i class="dot ' + CO.deptView(x).status + '"></i>' + esc(x.name) + '</button>';
     }).join('');
   }
+  // the charter opens as tall as its text (up to 70% of the window) and grows as it is written
+  function fitCharter() {
+    var ta = $('dr-ch-text'); if (!ta || ta.offsetParent === null) return;
+    // only when the text or the width changed: a refit on every render would jump the drawer's scroll
+    var key = ta.value + '|' + ta.clientWidth + '|' + window.innerHeight;
+    if (ta._fit === key) return;
+    ta._fit = key;
+    ta.style.height = 'auto';
+    ta.style.height = Math.min(ta.scrollHeight + 2, Math.round(window.innerHeight * 0.7)) + 'px';
+  }
   function charterMeta() {
+    fitCharter();
     var d = CO.dept(ui.panel), ta = $('dr-ch-text'), n = ta.value.length.toLocaleString('en-US');
     var m = $('dr-ch-meta');
     m.className = ui.dirty ? 'unsaved' : '';

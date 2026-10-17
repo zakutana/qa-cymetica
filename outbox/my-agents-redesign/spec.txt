@@ -1,0 +1,34 @@
+Design only: a new layout and look for the live My Agents page and the Manage page it opens (/clone/{id}), the same pages, not new ones. Nothing they do today may break or go: every function, setting, figure and endpoint, and how the bots trade, stay exactly as they are; only how it is shown changes. If a line would need the platform to work differently, leave that line out. The pictures are the target: layout, parts and look as drawn (the top band, the bar chart, the table, the side panel, switches, tabs, tiles), in the site's own fonts. The template lines about rebuilding someone else's app do not apply. Colours: the site's cyan, green, red, blue and slate-blue neutrals only. English, numbers before words; explanations in tooltips, not paragraphs.
+1. My Agents, top: one band replaces the five-stat bar. Left: total P&L of all bots, large, green or red, with "n / N in profit" and the average win rate of the bots that have traded. Middle: P&L by bot, one bar per bot from best to worst, green above zero, red below; hover shows name and P&L, a click opens that bot. Right: trading now n / N, total balance, best bot, worst bot.
+2. Bots as one ranked table instead of cards: rank, bot (avatar, name, species, practice or real market), P&L, win rate (N/A with no trades, as today), trades, balance, status, actions. Sorted by P&L; a click on a number column's header sorts by it.
+3. Balance in red when it is below the $1.00 minimum stake, the reason in a tooltip.
+4. Status: the trading switch, TRADING or PAUSED, and why in words: stop-loss hit, take-profit hit, paused by you.
+5. Switching on a bot that cannot trade says why in one line (its readiness reason, e.g. balance below $1.00) and offers Fund.
+6. Row actions: Manage, a ⋯ menu (Fund, Withdraw, Rename) and Delete. Delete takes one click and leaves Undo for a few seconds.
+7. Toolbar: today's five filters (All, Real money, Practice, Trading, Paused), each with its count, and a search by bot name or species.
+8. A click on a row opens a side panel: P&L, win rate, trades, balance; why it is paused and at what P&L %; the can't-trade reason; what it decides on (its live decision rule); indicators, species, style, created, last trade; Manage, Fund, Delete. Esc closes it.
+9. Fund: the balance now and the $1.00 minimum stake, an amount with quick picks $10 / $50 / $100 / $500; on a practice bot it says the funds are simulated.
+10. The Practice badge, Head-to-head, Tokenize Agent, Messenger agents, Edit and the Withdraw balance split stay.
+11. Manage, header: avatar, name with rename, "<species> clone · REF", chips (ticker, practice or real market, team, risk); then the trading switch with its state and why, Fund, Withdraw, Delete. The wallet address and the custodial note stay, smaller.
+12. Under the header, while the bot cannot trade: one red bar with the readiness reason (today's "Balance $0.00 is below the $1.00 minimum stake") and a Fund button.
+13. One strip: P&L, win rate, trades, balance, and the markets it trades on as chips (replaces "This bot trades: ...").
+14. The settings move from one long scroll into five tabs: Markets, Risk, Strategy, Advanced, Trades. Markets shows how many are on (e.g. 1/5), Trades the count.
+15. Markets: each market a tile with an on/off switch (5-min epochs, Exchange pairs, Event cards, Arena, Catalog); its options open only while it is on.
+16. 5-min epochs: one chip per symbol, the ones with no 5-min market for clones greyed out with that reason. Exchange pairs: the pairs as chips. Event cards: min |sentiment|, min impact, per card ($) and take profit as sliders with their values, plus Strong-Card Hunter and Back to standard. Catalog: a search that adds symbols as chips.
+17. Risk: a bracket picture (stop loss in red, entry, take profit in green) that moves with three large sliders: stop loss 1-20 %, take profit 5-100 %, per trade 1-50 % of balance.
+18. Risk, exits as switches: breakeven stop; trailing profit floor (a slider while on); restart after a stop (auto_resume_after_stop: the API has it, the page does not); min AI confidence (a slider while on).
+19. Risk, limits: max open positions as one row (Unlimited, 1, 2, 3, 5, 10, 25), min 24h volume, and sector caps (across all bots) added as rows.
+20. Strategy: the three choices as cards (the species rule, inherited; HELIX; CORR), the chosen one's rule in full under them; equipped algorithms & models and skills & tools with their counts and Add.
+21. Advanced: the Glassnode on-chain gate as a tile with a switch, its conditions as rows (category, metric, asset, 24h / 1h / 10m, operator, threshold) added with a button; Ownership required; Adaptive learning with its state, regime, mode and adaptations.
+22. Trades: per-asset analytics and the trade history; with no trades, one line on what to do.
+23. A right column that stays in view: ready to trade (balance against the minimum, markets on, trading on; each ticked or crossed), risk per trade (stop / target, stake in % and $, flagged under $1, open at once) and the rule it decides on.
+24. Save in that column with the count of unsaved changes, and Discard; leaving with unsaved changes asks first.
+25. A visitor who does not own the bot sees the same Manage page read-only, without switches, Fund or Save.
+Done when:
+[ ] 1 The band shows total P&L, P&L by bot, trading now, balance, best and worst.
+[ ] 2-7 Bots are one sortable table with status, its reason and the row actions; Delete has Undo; filters show counts; search works.
+[ ] 8-9 A row opens the side panel; Fund shows the balance, the minimum and quick amounts.
+[ ] 11-14 Manage has the header, the can't-trade bar, the strip and five tabs.
+[ ] 15-22 Every setting of today's page is in a tab; a market's options show only while it is on.
+[ ] 23-25 At a glance stays in view, Save counts the changes, a visitor sees it read-only.
+[ ] Both pages look like the pictures at 1440 and 1920 px; nothing overlaps; everything today's pages do still works the same way.

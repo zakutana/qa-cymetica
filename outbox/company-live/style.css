@@ -347,7 +347,7 @@ body.focus .strip > .vs, body.focus .strip > .use:not(.wide), body.focus .use .l
 .chip { font-size: 11px; padding: 3px 9px; border-radius: 99px; border: 1px solid var(--line3); color: var(--dim); background: var(--navy2); }
 .chip.red { color: var(--red); border-color: var(--red); background: var(--red-a); cursor: pointer; }
 .cht { border: 1px solid var(--cyan); border-radius: 10px; padding: 9px 10px; background: rgba(0, 207, 255, .05); display: flex; flex-direction: column; gap: 7px; flex: none; }
-.cht textarea { width: 100%; min-height: 96px; resize: vertical; font-size: 11.5px; line-height: 1.5; color: var(--text); background: var(--deep); border: 1px solid var(--line3); border-radius: 7px; padding: 8px 9px; outline: none; }
+.cht textarea { width: 100%; min-height: 120px; resize: vertical; font-size: 12px; line-height: 1.5; color: var(--text); background: var(--deep); border: 1px solid var(--line3); border-radius: 7px; padding: 8px 9px; outline: none; }
 .cht textarea:focus { border-color: var(--cyan); box-shadow: 0 0 0 2px rgba(0, 207, 255, .15); }
 .cht .cb { display: flex; align-items: center; gap: 6px; } .cht .cb .d { flex: 1; font-size: 10.5px; color: var(--dim2); } .cht .cb .btn { padding: 4px 10px; font-size: 11px; }
 .sec { font-size: 10.5px; letter-spacing: .12em; color: var(--dim2); font-weight: 700; display: flex; justify-content: space-between; gap: 8px; flex: none; }
