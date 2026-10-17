@@ -50,7 +50,7 @@
 .lh .t b{display:block;font-size:14px}
 .lh .t span{display:block;font-size:11.5px;color:var(--dim2);margin-top:3px}
 .lb{display:none;padding:0 18px 18px}
-.lane.on .lb{display:block}
+.lane.on .lb{display:block}.lane.on .lb:empty{display:none}
 .picks{display:flex;flex-wrap:wrap;gap:8px}
 .pk{height:36px;padding:0 13px;border-radius:10px;border:1px solid var(--line3);font-weight:700;font-size:12px;color:var(--dim);display:inline-flex;align-items:center;gap:8px}
 .pk:hover{border-color:var(--cyan);color:var(--text)}
@@ -293,7 +293,7 @@ $('#tradeSw').onclick=()=>{if(!bot.trading&&bot.bal<1){toast(`Can't start: balan
  bot.trading=!bot.trading;renderHead();renderGlance();toast(bot.trading?'Trading':'Paused')};
 function fund10(){bot.bal+=10;renderHead();renderGlance();toast('$10.00 added (practice funds)',bot.trading?null:'START',()=>$('#tradeSw').click())}
 $('#alertFix').onclick=fund10;$('#fundBtn').onclick=fund10;
-$('#delBtn').onclick=()=>toast(`Delete <b>${esc(bot.name)}</b>? Its trade history goes with it.`,'DELETE',()=>{location.href='index.html'},1);
+$('#delBtn').onclick=()=>toast(`Delete <b>${esc(bot.name)}</b>?`,'DELETE',()=>{location.href='index.html'},1);
 
 /* markets */
 const CLOB=['BTC','ETH','CYM42/USDC','ET10/USDC','ETLP/USDC','SBIO/USDC','TBIG','TBIGS','VAIX/USDC'];
@@ -309,7 +309,7 @@ function laneBody(k){
  if(k==='cards'){const e=S.ec;const one=(key,l,min,max,st,fmt)=>`<div class="sl"><div class="top2"><span class="lbl">${l}</span><span class="v num" id="ev-${key}">${fmt(e[key])}</span></div><input type="range" min="${min}" max="${max}" step="${st}" value="${e[key]}" data-ec="${key}"></div>`;
   return `<div class="g2">${one('min_abs_sentiment','MIN |SENTIMENT|',0,1,.05,v=>(+v).toFixed(2))}${one('min_impact_score','MIN IMPACT',0,10,.5,v=>(+v).toFixed(1))}${one('max_position_usdc','PER CARD',1,50,1,v=>'$'+v)}${one('take_profit_pct','TAKE PROFIT',1,50,1,v=>v+'%')}</div>
    <div class="presets"><button class="btn sm" data-pre="std">STANDARD</button><button class="btn sm cy" data-pre="strong" data-tip="0.8 sentiment / 8 impact. Stricter than most live cards: it may open nothing.">STRONG-CARD HUNTER ⓘ</button></div>`}
- if(k==='arena')return `<div class="mute" style="font-size:12px">Uses this bot's risk settings.</div>`;
+ if(k==='arena')return '';
  if(k==='catalog')return `<div class="search" style="max-width:420px"><i class="fa-solid fa-magnifying-glass"></i><input class="field" id="catQ" placeholder="Add a symbol: AAPL, SPY, EURUSD…"></div><div class="picks" style="margin-top:10px">${S.catalog.map(s=>`<button class="pk on" data-cat="${s}">${s} ${fa('xmark')}</button>`).join('')||'<span class="mute" style="font-size:12px">Nothing yet.</span>'}</div>`}
 function renderLanes(){$('#lanes').innerHTML=LANES.map(l=>`<div class="lane${l.on()?' on':''}${l.wide?' wide':''}"><div class="lh"><span class="ic">${fa(l.ic)}</span><div class="t"><b>${l.n}</b><span>${l.s}</span></div><span class="sw${l.on()?' on':''}" data-lt="${l.k}"></span></div><div class="lb">${laneBody(l.k)}</div></div>`).join('');
  $('#cMk').textContent=`${LANES.filter(l=>l.on()).length}/${LANES.length}`;renderOn()}
@@ -341,8 +341,8 @@ function renderRisk(){$('#iSl').value=S.stop_loss_pct;$('#iTp').value=S.take_pro
  if(S.min_ai_confidence!=null){$('#iAi').value=S.min_ai_confidence;$('#vAi').textContent=(+S.min_ai_confidence).toFixed(2)}
  $('#mop').innerHTML=[[0,'∞'],[1],[2],[3],[5],[10],[25]].map(([v,l])=>`<button data-mop="${v}" class="${(S.max_open_positions||0)===v?'on':''}">${l||v}</button>`).join('');
  $('#iVol').value=S.min_volume_24h_usd;
- $('#caps').innerHTML=S.caps.map((c,i)=>`<span class="tag c" style="height:32px;padding:0 10px">${esc(c.s)} ≤ ${c.v}% <button data-rmcap="${i}">${fa('xmark')}</button></span>`).join('')+'<button class="btn sm" id="addCap"><i class="fa-solid fa-plus"></i>ADD CAP</button>';
- $('#addCap').onclick=()=>{S.caps.push({s:['AI','DEFI','MEME','L1'][S.caps.length%4],v:25});mark('caps');renderRisk()}}
+ $('#caps').innerHTML=S.caps.map((c,i)=>`<span style="display:flex;gap:6px;align-items:center"><input class="field" placeholder="Sector" style="width:140px;height:34px"><input class="field num" placeholder="Max %" style="width:90px;height:34px"><button class="ibtn del" data-rmcap="${i}">${fa('xmark')}</button></span>`).join('')+'<button class="btn sm" id="addCap"><i class="fa-solid fa-plus"></i>ADD CAP</button>';
+ $('#addCap').onclick=()=>{S.caps.push({});mark('caps');renderRisk()}}
 ['#iSl','#iTp','#iMp'].forEach(s=>$(s).addEventListener('input',e=>{S[e.target.dataset.set]=+e.target.value;mark(e.target.dataset.set);renderRisk()}));
 $('#iTf').addEventListener('input',e=>{S.trailing_floor_pct=+e.target.value;$('#vTf').textContent=e.target.value+'%';mark('trailing')});
 $('#iAi').addEventListener('input',e=>{S.min_ai_confidence=+e.target.value;$('#vAi').textContent=(+e.target.value).toFixed(2);mark('ai')});
@@ -361,8 +361,9 @@ function renderRules(){$('#rules').innerHTML=RULES.map(r=>`<button class="rule${
 $('#rules').addEventListener('click',e=>{const r=e.target.closest('[data-rule]');if(r){S.strategy=r.dataset.rule;mark('strategy');renderRules()}});
 
 /* advanced */
-function condRow(i){return `<div class="cond"><select class="field"><option>Market indicators</option><option>Addresses</option><option>Supply</option><option>Derivatives</option></select><select class="field"><option>MVRV Z-score</option><option>NUPL</option><option>Exchange net flow</option><option>Funding rate</option></select><select class="field"><option>BTC</option><option>ETH</option></select>
- <div class="seg"><button class="on">24h</button><button>1h</button><button>10m</button></div><div class="seg"><button>&lt;</button><button>≤</button><button class="on">&gt;</button><button>≥</button></div><input class="field num" value="${i?'0':'1.5'}"><button class="ibtn del" data-rmcond="${i}">${fa('xmark')}</button></div>`}
+/* the live page's own fields; their option lists are not public, so they stay empty here */
+function condRow(i){return `<div class="cond"><select class="field"><option>Metric category</option></select><select class="field"><option>Metric name</option></select><select class="field"><option>Asset</option></select>
+ <div class="seg"><button class="on">24h</button><button>1h</button><button>10m</button></div><div class="seg"><button>&lt;</button><button>≤</button><button class="on">&gt;</button><button>≥</button></div><input class="field num" placeholder="Threshold"><button class="ibtn del" data-rmcond="${i}">${fa('xmark')}</button></div>`}
 function renderAdv(){$('#gn').classList.toggle('on',!!S.glassnode_trading_enabled);$('#gn .sw').classList.toggle('on',!!S.glassnode_trading_enabled);$('#conds').innerHTML=S.conds.map((c,i)=>condRow(i)).join('')}
 $('#gn .sw').onclick=()=>{S.glassnode_trading_enabled=!S.glassnode_trading_enabled;if(S.glassnode_trading_enabled&&!S.conds.length)S.conds.push({});mark('gn');renderAdv()};
 $('#addCond').onclick=()=>{S.conds.push({});mark('gn');renderAdv()};
@@ -370,7 +371,7 @@ $('#conds').addEventListener('click',e=>{const r=e.target.closest('[data-rmcond]
 $('#p-advanced .opt .sw').onclick=e=>{S.adaptive_learning=!S.adaptive_learning;e.target.classList.toggle('on',S.adaptive_learning);mark('al')};
 
 /* trades */
-function renderTrades(){$('#perAsset').innerHTML=S.perpetual_markets.map(m=>`<div class="tile"><div class="v num">${bot.trades?Math.round(bot.trades/S.perpetual_markets.length):0}</div><div class="k">${m} · TRADES</div></div>`).join('')||'<div class="tile"><div class="v">—</div><div class="k">NO MARKET</div></div>';
+function renderTrades(){$('#perAsset').innerHTML=S.perpetual_markets.map(m=>`<div class="tile"><div class="v num mute">—</div><div class="k">${m} · P&amp;L</div></div>`).join('')||'<div class="tile"><div class="v">—</div><div class="k">NO MARKET</div></div>';
  $('#tEmpty').innerHTML=bot.trades?`${fa('clock-rotate-left')}${bot.trades} trades on the platform.<br><span style="font-size:12px">The live page lists them here, newest first.</span>`:`${fa('chart-line')}No trades yet.<br><span style="font-size:12px">Fund the bot and switch trading on.</span>`}
 
 /* at a glance */
