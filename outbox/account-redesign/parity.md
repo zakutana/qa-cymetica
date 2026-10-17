@@ -29,6 +29,18 @@ Read 2026-10-17 from the live page's own code (`/account` HTML and `page-script.
 | 23 | All Users (Admin), admins only | hidden | unchanged, admins only |
 | 24 | Deposit dialog: Send Crypto / Buy with Card; 11 networks; accepted assets; address + copy + chain warning; scan all networks; fees; token, amount picks, wallet balance; MetaMask / Coinbase / WalletConnect; QR; card: Transak / Coinbase, amount picks, fee, you receive | n/a | dialog |
 | 25 | Withdraw dialog: 13 assets, available, wVAIX note, amount + MAX, minimum $1.00, destination check, 6 networks (VAIX Ethereum only), fees and you receive, ETA, emailed code, Queued → Bridging → Done | n/a | dialog |
-| 26 | Swap dialog (window.openSwapModal, from a token): network, pay / receive, 1:1 internal USDT ↔ USDC, rate, fee, gas, minimum received, slippage | n/a | dialog from a token's Swap |
+| 26 | Swap dialog: in the page markup (`window.openSwapModal`), but nothing on /account calls it (none of the 22 scripts the page loads does); Actions → Swap is a link to /swap | n/a | Swap stays the link to /swap |
 
 Not on the live page, so not in the redesign: a transactions list (the page only links to Transactions).
+
+`render.py` checks every row above in three preview states (our account, paper mode, every section) and exits non-zero when one goes missing.
+
+## Proposed changes (marked PROPOSED on the page, or the layout itself)
+
+The operator, 2026-10-17: *"pochopitelne muzes navrhnout i upravy pokud uvidis v necem nynejsim nesmysl nebo bug nebo neco co by byl jasny upgrade k lepsimu"*.
+
+1. **One holdings table.** Positions (on-chain boxes, quantity only) and Valuation (ledger table, value and share) list the same assets twice, far apart. Here one table: position from the chain, price, value from the ledger, share; groups with subtotals; the explain switch keeps its three definitions. Valuation's "All Tokens / VSB Only" filter stays.
+2. **The tx-hash claim is reachable when it is needed.** Live: "Deposit not showing? Submit tx hash" sits inside the Pending Deposits block, which is hidden when nothing is pending; a deposit that was never detected leaves nothing pending, so the claim form cannot be opened from /account in exactly that case (the Deposit dialog's "Scan all networks" is a different, automatic scan). Here the pending block and its link are always in Activity.
+3. **A microfund with no cap** reads "no cap", not "Received $0.00 / $0.00".
+4. **Live buying power** gets a Deposit button: its own note says deposit to raise it.
+5. **Tabs and a top band** instead of one long page: total value and its split, buying power, open cards, ET10 revenue, microfunds, each a click to its tab. The long explanations move into tooltips; the parts that show only with data keep their rules.

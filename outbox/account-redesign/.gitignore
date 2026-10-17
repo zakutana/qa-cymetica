@@ -1,0 +1,3 @@
+# render.py draws these again in a minute; git keeps only the spec pictures (spec/), when there are some.
+*.png
+!spec/*.png

@@ -1,54 +1,85 @@
 """data.js for the /account (My Balances) mockup: our account's reads of 2026-10-17 with our API key.
-No email, username, wallet or deposit address goes in."""
+
+Each block is what one part of the live page renders, from the endpoint that part reads (see parity.md).
+No email, username, wallet, deposit address or key goes in.
+Usage: python make_data.py <dir with the acct_*.json reads> <out data.js>
+"""
 import json
+import re
 import sys
 from pathlib import Path
 
 src, dst = Path(sys.argv[1]), Path(sys.argv[2])
 J = lambda n: json.loads((src / f"acct_{n}.json").read_text(encoding="utf-8"))
-port, bal, buy, dash, cards, tx, summ = J("portfolio"), J("balances"), J("buying"), J("dashboard"), J("cards"), J("tx"), J("summary")
+port, bal, buy, dash, cards, tx = J("portfolio"), J("balances"), J("buying"), J("dashboard"), J("cards"), J("tx")
+cad, agents, mq = J("cadence"), J("agents"), J("movequote")
 me = dash["me"]
+T = bal["totals"]
 
+# Positions (on-chain, /account/me/balances totals): the boxes the live page draws, with its show rules.
+onchain = {"USDC": T["usdc"], "USDT": T["usdt"], "ETH": T["eth"], "VAIX": T["vaix"] + T["wvaix"], "SBIO": T["sbio"],
+           "ET10": T["et10"], "ETLP": T["etlp"], "TBIG": T["tbig"], "TBIGS": T["tbigs"], "DSCI": T["dsci"],
+           "DESCI": T["desci"], "ORBI": T["orbi"], "THF": T["thf"], "CYM42": T["cym42"]}
+# Valuation (ledger, /account/me/portfolio assets).
+ledger = {}
+for a in port["assets"]:
+    paper = bool(a.get("is_paper"))
+    ledger[a["symbol"]] = {"cat": a["category"], "bal": a["balance"], "price": a["price_usd"],
+                           "value": a.get("paper_value_usd") if paper else a["value_usd"],
+                           "pct": a["allocation_pct"], "paper": paper, "detail": a.get("detail") or ""}
 NAMES = {"USDC": "USD Coin", "USDT": "Tether", "ETH": "Ether", "VAIX": "VAIX", "SBIO": "SBIO", "ET10": "EventTrader 10",
          "ETLP": "ETLP", "TBIG": "TBIG", "TBIGS": "TBIGS", "DSCI": "DSCI", "DESCI": "DESCI", "ORBI": "ORBI",
-         "tUSDC": "Robinhood testnet USDC", "THF": "Tuatara Hedge Fund", "CYM42": "CyMetica-42", "ET10RWD": "ET10 revenue record"}
-GROUP = {"cash": "CASH", "token": "TOKENS", "testnet": "TESTNET"}
-assets = []
-seen = set()
-for a in port["assets"]:
-    if a["category"] not in GROUP:
+         "THF": "Tuatara Hedge Fund", "CYM42": "CyMetica-42", "tUSDC": "Robinhood Testnet"}
+rows = []
+for sym, q in onchain.items():
+    lv = ledger.get(sym, {})
+    group = "CASH" if sym in ("USDC", "USDT") else "FUND SHARES" if sym == "THF" else "VAULT SHARES" if sym == "CYM42" else "TOKENS"
+    rows.append({"sym": sym, "name": NAMES[sym], "group": group, "pos": q, "ledger": lv.get("bal"), "price": lv.get("price"),
+                 "value": lv.get("value"), "link": {"THF": "/fund-performance", "CYM42": "/fund/cymetica-42"}.get(sym)})
+for sym, lv in ledger.items():  # ledger rows the boxes do not have: positions, testnet
+    if sym in onchain or lv["cat"] == "cash":
         continue
-    seen.add(a["symbol"])
-    assets.append({"sym": a["symbol"], "name": NAMES.get(a["symbol"], a["symbol"]), "group": GROUP[a["category"]],
-                   "bal": a["balance"], "price": a["price_usd"], "value": a["value_usd"], "pct": a["allocation_pct"]})
-# what the page lists at zero is listed at zero here too
-for sym in ["USDT", "VAIX", "SBIO"]:
-    if sym not in seen:
-        price = bal.get(f"{sym.lower()}_price_usd")
-        assets.append({"sym": sym, "name": NAMES[sym], "group": "CASH" if sym == "USDT" else "TOKENS",
-                       "bal": 0.0, "price": price, "value": 0.0, "pct": 0.0})
-assets.append({"sym": "THF", "name": NAMES["THF"], "group": "FUNDS & VAULTS", "bal": bal["totals"]["thf"], "price": None, "value": 0.0, "pct": 0.0})
-assets.append({"sym": "CYM42", "name": NAMES["CYM42"], "group": "FUNDS & VAULTS", "bal": bal["totals"]["cym42"], "price": None, "value": 0.0, "pct": 0.0})
-for h in bal["holdings"]:
-    assets.append({"sym": h["symbol"], "name": NAMES.get(h["symbol"], h["symbol"]), "group": "EXCHANGE",
-                   "bal": h["quantity"], "price": h["price_usd"], "value": h["value_usd"], "pct": None})
-
-chains = [{"chain": c["chain"], "usdc": c["usdc"], "usdt": c["usdt"], "native": c["native"], "nsym": c["native_symbol"],
-           "cap": c["capacity_usdc"], "capped": c["capped_by_ledger"], "ok": c["readable"]} for c in buy["chains"]]
-pos = [{"title": p["card_title"], "side": p["side"], "status": p["status"], "stake": p["notional_usdc"],
-        "value": p["current_value_usdc"], "pnl": p["unrealized_pnl_usdc"], "rpnl": p["realized_pnl_usdc"],
-        "opened": p["opened_at"], "paper": p["is_paper"]} for p in cards["positions"]]
-txs = [{"type": t["type"], "cur": t["currency"], "amt": t["amount"], "status": t["status"], "at": t["created_at"],
-        "desc": t["description"]} for t in tx["transactions"]]
-mf = [{"title": e["title"], "status": e["mf_status"], "backed": e["amount_backed_usdc"], "verified": e["verified_backed_usdc"],
-       "revenue": e["revenue_received_usdc"], "refunded": e["refunded"]} for e in dash["microfunds_portfolio"]["entries"]]
-out = {"total": port["total_value_usd"], "assets": assets, "prices": {k: bal[k] for k in bal if k.endswith("_price_usd")},
-       "buying": {"ledger": buy["ledger_usdc"], "best": buy["best_chain"], "bestCap": buy["best_capacity_usdc"], "chains": chains},
-       "positions": pos, "summaryCards": summ["event_cards"], "tx": txs, "txTotal": tx["total_count"],
-       "sim": me["sim_balance"], "simMode": me["simulation_mode"], "created": me["created_at"],
-       "rewards": dash["rewards_summary"], "revenue": {k: v for k, v in dash["revenue_report"].items() if k != "wallet"},
-       "obligations": dash["obligations"], "pendingDeposits": dash["pending_deposits"], "microfunds": mf,
-       "lastCheck": me.get("last_balance_check")}
-dst.write_text("/* Our account's balance reads of 2026-10-17 (make_account_data.py); no email, username or address. */\n"
+    if lv["cat"] == "testnet":
+        rows.append({"sym": sym, "name": NAMES.get(sym, sym), "group": "TOKENS", "pos": lv["bal"], "ledger": lv["bal"],
+                     "price": lv["price"], "value": lv["value"], "paperOnly": True})
+    elif lv["cat"] == "positions":
+        m = re.match(r"(BULL|BEAR)", lv["detail"])
+        rows.append({"sym": sym, "name": lv["detail"], "group": "POSITIONS", "pos": None, "ledger": lv["bal"], "price": lv["price"],
+                     "value": lv["value"], "paper": lv["paper"]})
+cash_trading = sum(a["balance"] for a in port["assets"] if a["category"] == "cash" and a["symbol"] == "USDC")
+pos = [{"id": p["card_id"][:8], "title": p["card_title"], "side": p["side"], "status": p["status"], "stake": p["notional_usdc"],
+        "value": p["current_value_usdc"], "pnl": p["unrealized_pnl_usdc"], "opened": p["opened_at"], "paper": p["is_paper"]}
+       for p in cards["positions"]]
+mfp = dash["microfunds_portfolio"]
+mf = [{"id": e["feature_request_id"] or e["ai_app_id"], "app": not e["feature_request_id"], "title": e["title"], "status": e["mf_status"],
+       "backed": float(e["amount_backed_usdc"]), "received": float(e["revenue_received_usdc"]), "cap": float(e["cap_usdc"]),
+       "custodied": e["custodied"]} for e in mfp["entries"] if not e["refunded"]]
+order = next(({"pair": "BRRR/USDC", "side": "buy", "type": "immediate", "price": 0.0101, "qty": 1.0, "status": "filled", "at": t["created_at"]}
+              for t in tx["transactions"] if t["description"].startswith("CLOB buy 1.00 BRRR")), None)
+rwd = next((h for h in bal["holdings"] if h["symbol"] == "ET10RWD"), {"quantity": 0})
+out = {
+    "simMode": me["simulation_mode"], "sim": me["sim_balance"], "lastCheck": me.get("last_balance_check"),
+    "valuationTotal": port["total_value_usd"], "rows": rows,
+    "cash": {"USDC": {"trading": cash_trading, "payable": (port.get("payable_now") or {}).get("USDC"),
+                      "pendingLiquidity": (port.get("pending_buyer_liquidity") or {}).get("usdc"),
+                      "move": {"enabled": mq["enabled"], "available": float(mq["available"]), "moved": float(mq["already_moved"]),
+                               "minimum": float(mq["minimum"])}}},
+    "buying": {"best": buy["best_chain"], "bestCap": buy["best_capacity_usdc"], "ledger": buy["ledger_usdc"],
+               "chains": [{"chain": c["chain"], "cap": c["capacity_usdc"], "usdc": c["usdc"], "usdt": c["usdt"], "native": c["native"],
+                           "nsym": c["native_symbol"], "capped": c["capped_by_ledger"], "wallet": c["wallet_capacity_usdc"]}
+                          for c in buy["chains"] if c["readable"]]},
+    "positions": pos,
+    "microfunds": {"backed": float(mfp["total_backed_usdc"]), "verified": float(mfp["total_verified_backed_usdc"]),
+                   "received": float(mfp["total_received_usdc"]), "entries": mf},
+    "et10Accrued": rwd["quantity"],
+    "rewardsSummary": dash["rewards_summary"],
+    "tokenRevenue": {k: v for k, v in dash["revenue_report"].items() if k != "wallet"},
+    "cadence": {"value": cad["cadence"], "next": cad["next_delivery_date"], "note": cad["note"], "choices": cad["choices"]},
+    "obligations": dash["obligations"], "pendingDeposits": dash["pending_deposits"]["pending"],
+    "agents": {"available": float(agents["owner_usdc_available"]), "list": agents["agents"]},
+    "order": order,
+}
+dst.write_text("/* Our account's reads of 2026-10-17 (make_data.py, parity.md): one block per part of the live page.\n"
+               "   The recent order is the CLOB fill from our ledger; the orders list itself is not readable with an API key. */\n"
                "const ACCT=" + json.dumps(out, ensure_ascii=False) + ";\n", encoding="utf-8")
-print(len(assets), "assets,", len(pos), "positions,", len(txs), "tx,", len(mf), "microfunds;", dst.stat().st_size, "bytes")
+print(len(rows), "rows,", len(pos), "positions,", len(mf), "microfund entries;", dst.stat().st_size, "bytes")
