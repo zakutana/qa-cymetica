@@ -93,3 +93,4 @@ reports:
   211: "Build a Company: formulář zakládání firmy utne charter na 1 500 znaků, dokumentace slibuje 2 000"
   212: "Build a Company: pozastavená firma hlásí další průchod vždy za 30 s a ten nikdy nepřijde"
   213: "Agent League: seznam cen ukáže jen 200 nejnovějších, starší vyplacené ceny už nikdo nepřečte"
+  214: "My Balances: tlačítko pro tx hash nezachyceného vkladu se skryje, když nic nečeká, tedy když je potřeba"

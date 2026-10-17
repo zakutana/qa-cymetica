@@ -6566,8 +6566,8 @@ reports:
     category: logic
     url: https://cymetica.com/account
     title: >-
-      My Balances: "Deposit not showing? Submit tx hash" sits inside the Pending Deposits card, which is hidden
-      when nothing is pending, so a deposit that was never detected cannot reach the Claim Missing Deposit form
+      My Balances: the only "Submit tx hash" control sits in the Pending Deposits card, which is hidden when
+      nothing is pending, so an undetected deposit cannot reach the claim form
     expected: >
       The Claim Missing Deposit form on /account says: "If your deposit wasn't detected automatically, paste
       the transaction hash below." A deposit that was not detected is exactly the case with nothing pending,
@@ -6584,7 +6584,7 @@ reports:
     steps:
       - 'GET https://cymetica.com/account -> the button data-click="openClaimDepositForm" is a descendant of <div id="accountPendingDeposits">; the form <div id="claimDepositForm"> follows it'
       - 'GET https://cymetica.com/account/page-script.e2561648e3d33fa3.js -> loadAccountPendingDeposits: var container = document.getElementById(''accountPendingDeposits''); ... if (pending.length === 0) { container.style.display = ''none''; return; }'
-      - 'The 22 scripts /account loads and its inline scripts contain no other call of openClaimDepositForm'
+      - 'The 23 scripts /account loads (its page script among them) and its inline scripts contain no other call of openClaimDepositForm'
     body: >
       A user whose deposit was not detected, the case the form exists for, sees no way to submit the
       transaction hash on /account. Moving the button out of the Pending Deposits card, or keeping the card
