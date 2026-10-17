@@ -1,0 +1,179 @@
+/* The /company mockup: the Universe tab, the visitor's read-only frame, the building picker and
+   "Create your company". The site's palette only: navy, cyan, green, red, blue and slate-blue. */
+
+/* ---------- the tab ---------- */
+.tabs .uvtab { color: var(--cyan); display: inline-flex; align-items: center; gap: 7px; }
+.tabs .uvtab i { width: 12px; height: 12px; border-radius: 50%; border: 1.5px solid var(--cyan); position: relative; box-shadow: 0 0 8px rgba(0, 207, 255, .45); }
+.tabs .uvtab i::after { content: ''; position: absolute; left: -5px; right: -5px; top: 3px; height: 3px; border: 1.2px solid var(--cyan); border-radius: 50%; transform: rotate(-18deg); opacity: .8; }
+.tabs .uvtab.on { color: var(--text); }
+
+/* ---------- the map ---------- */
+.uvpane { flex: 1; min-height: 0; display: flex; padding: 14px 20px; }
+.uvstage { flex: 1; min-height: 0; overflow: hidden;
+  background: radial-gradient(900px 520px at 22% 18%, rgba(0, 207, 255, .07), transparent 70%),
+    radial-gradient(1000px 600px at 82% 88%, rgba(59, 130, 246, .09), transparent 70%),
+    radial-gradient(ellipse at 50% 55%, #0c1626, #05080f 78%); }
+.uvstage .stars { position: absolute; left: 0; top: 0; width: 1px; height: 1px; pointer-events: none; will-change: transform; }
+.uvstage .stars i { position: absolute; left: 0; top: 0; width: 1px; height: 1px; border-radius: 50%; }
+.uvstage .stars i.near { animation: twinkle 3.6s ease-in-out infinite; }
+@keyframes twinkle { 50% { opacity: .35; } }
+.uvstage.is3d .stars { display: none; }
+.uvmap, .uv3d { position: absolute; inset: 0; width: 100%; height: 100%; display: block; cursor: grab; user-select: none; touch-action: none; }
+.uvmap.grabbing, .uv3d.grabbing { cursor: grabbing; }
+.uvstage.is3d .uvmap, .uvstage.is2d .uv3d, .uvstage.loading .uvmap { display: none; }
+.uvstage.loading::after { content: 'Loading the map…'; position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%); color: var(--dim2); font-size: 12px; letter-spacing: .12em; }
+.uv3d canvas { display: block; width: 100% !important; height: 100% !important; }
+.uvsum { font-size: 11.5px; color: var(--dim2); margin-left: 14px; letter-spacing: .02em; }
+.uvsum b { color: var(--text); } .uvsum b.cy { color: var(--cyan); }
+.uvstage .crumb { display: flex; align-items: center; padding: 6px 12px; border-radius: 9px; background: rgba(6, 9, 15, .72); border: 1px solid var(--line2); backdrop-filter: blur(4px); }
+.uvstage .zoom .me { width: auto; padding: 0 10px; font-size: 11px; font-weight: 700; color: var(--green); border-color: rgba(0, 255, 136, .45); }
+.uvstage .zoom .me:hover { color: var(--bg); background: var(--green); border-color: var(--green); }
+.uvlegend { position: absolute; left: 12px; bottom: 10px; z-index: 4; display: flex; gap: 16px; font-size: 10.5px; color: var(--dim2); padding: 6px 12px; border-radius: 9px;
+  background: rgba(6, 9, 15, .72); border: 1px solid var(--line2); pointer-events: none; }
+.uvlegend b { color: var(--text); }
+.uvlegend i { display: inline-block; vertical-align: -2px; margin-right: 5px; }
+i.lk { width: 9px; height: 8px; border-radius: 2px; background: currentColor; position: relative; margin-top: 3px; }
+i.lk::before { content: ''; position: absolute; left: 1.5px; top: -5px; width: 6px; height: 6px; border: 1.5px solid currentColor; border-bottom: 0; border-radius: 4px 4px 0 0; box-sizing: border-box; }
+.uvlegend i.lk { color: var(--dim); }
+.uvlegend i.pb { width: 9px; height: 9px; border-radius: 50%; background: var(--cyan); box-shadow: 0 0 8px var(--cyan); }
+.uvfade { position: absolute; inset: 0; z-index: 8; background: var(--bg); opacity: 0; animation: uvfade .55s .3s ease-in forwards; pointer-events: none; }
+@keyframes uvfade { to { opacity: 1; } }
+.uvstage .tip { max-width: 320px; }
+.tip .uvt { display: flex; align-items: baseline; gap: 8px; margin-bottom: 3px; }
+.tip .uvt b { font-family: 'Archivo Black'; font-weight: 400; font-size: 14px; letter-spacing: .02em; }
+.tip .uvt span { color: var(--dim2); font-size: 11px; }
+
+/* the flat map's pieces */
+.uvmap .street { stroke: #1a2a44; stroke-width: 1.2; stroke-dasharray: 7 8; }
+.uvmap .edgeglow { stroke: var(--cyan); stroke-width: 1.2; opacity: .4; filter: drop-shadow(0 0 4px rgba(0, 207, 255, .8)); }
+.uvmap .car { filter: drop-shadow(0 0 3px currentColor); opacity: .9; }
+.uvmap .plot { cursor: pointer; }
+.uvmap .plot .rim { opacity: .55; transition: opacity .2s; }
+.uvmap .plot .rim.fence { stroke-dasharray: 5 4; opacity: .4; }
+.uvmap .plot.hov .rim, .uvmap .plot.mine .rim { opacity: 1; filter: drop-shadow(0 0 4px currentColor); }
+.uvmap .w, .skinsvg .w { opacity: .14; transition: opacity .35s; }
+.uvmap .w.on, .skinsvg .w.on { opacity: .82; }
+.uvmap .w.on.fl { animation: wfl 4.5s steps(1) infinite; }
+@keyframes wfl { 0%, 70% { opacity: .82; } 71%, 100% { opacity: .2; } }
+.uvmap .fl.on .w { opacity: 1; filter: drop-shadow(0 0 2.5px currentColor); }
+.uvmap .plot.paused .w, .uvmap .plot.paused .w.on { opacity: .1; animation: none; }
+.uvmap .plot.priv .w.on { opacity: .45; }
+.uvmap .beacon, .skinsvg .beacon { animation: beacon 1.8s ease-in-out infinite; }
+@keyframes beacon { 50% { opacity: .25; } }
+.uvmap .beam, .skinsvg .beam { opacity: .16; }
+.uvmap .busy .beam { opacity: .3; animation: beamp 2.2s ease-in-out infinite; }
+@keyframes beamp { 50% { opacity: .14; } }
+.uvmap .flame, .skinsvg .flame { opacity: .22; }
+.uvmap .busy .flame { opacity: .5; animation: flame .6s ease-in-out infinite alternate; transform-box: fill-box; transform-origin: center; }
+@keyframes flame { to { transform: scale(1.12, 1.25); opacity: .32; } }
+.uvmap .orb { animation: orbbob 4s ease-in-out infinite; }
+@keyframes orbbob { 50% { transform: translateY(-3px); } }
+.uvmap .led, .skinsvg .led { animation: blink 1.3s steps(2) infinite; }
+.uvmap .mering { stroke-width: 1.6; stroke-dasharray: 6 5; animation: mering 2.4s linear infinite; filter: drop-shadow(0 0 4px var(--green)); }
+@keyframes mering { to { stroke-dashoffset: -22; } }
+.uvmap .cring { stroke-width: 1.2; opacity: .45; }
+.uvmap .cring.spin { stroke-dasharray: 18 10; animation: mering 3s linear infinite; opacity: .7; }
+.uvmap .cbeam { opacity: .12; animation: beamp 3s ease-in-out infinite; }
+.uvmap .holo { stroke-width: 1.4; opacity: .55; animation: holo 2.4s ease-in-out infinite; filter: drop-shadow(0 0 3px var(--cyan)); }
+@keyframes holo { 50% { opacity: .2; } }
+.uvmap .corb { filter: drop-shadow(0 0 10px var(--cyan)); animation: beacon 2.4s ease-in-out infinite; }
+.uvmap .ban { cursor: pointer; }
+.uvmap .ban .rib { transition: stroke-width .15s; }
+.uvmap .ban.hov .rib { stroke-width: 2.2; filter: drop-shadow(0 0 6px rgba(0, 207, 255, .5)); }
+.uvmap .ban.priv text { fill: var(--dim); }
+.uvmap .ban.paused text { fill: var(--dim2); }
+.uvmap .etpop { pointer-events: none; animation: etpop2 2.6s ease-out forwards; filter: drop-shadow(0 0 6px rgba(0, 255, 136, .8)); }
+@keyframes etpop2 { 0% { opacity: 0; transform: translateY(8px); } 15% { opacity: 1; } 70% { opacity: 1; } 100% { opacity: 0; transform: translateY(-26px); } }
+
+/* ---------- the 3D map's banners: DOM over the canvas ---------- */
+.uvbans { position: absolute; inset: 0; pointer-events: none; z-index: 3; overflow: hidden; }
+.uvstage.is2d .uvbans { display: none; }
+.b3 { position: absolute; left: 0; top: 0; transform: translate(-50%, -100%); pointer-events: auto; cursor: pointer; display: flex; flex-direction: column; align-items: center;
+  will-change: transform; transition: opacity .25s; }
+.b3 .rib { display: flex; align-items: center; gap: 6px; padding: 4px 16px; font: 400 12px 'Archivo Black', sans-serif; letter-spacing: .04em; color: var(--text); white-space: nowrap;
+  background: rgba(8, 12, 20, .9); border: 1.3px solid var(--acc); box-shadow: 0 0 14px color-mix(in srgb, var(--acc) 40%, transparent), inset 0 0 10px color-mix(in srgb, var(--acc) 18%, transparent);
+  clip-path: polygon(0 0, 100% 0, calc(100% - 7px) 50%, 100% 100%, 0 100%, 7px 50%); border-radius: 2px; }
+.b3 .rib i.lk { color: var(--dim); }
+.b3 .teth { width: 1.5px; height: 18px; background: linear-gradient(var(--acc), transparent); opacity: .7; }
+.b3 .you { font: 800 9px 'JetBrains Mono'; color: var(--bg); background: var(--green); padding: 1px 7px; border-radius: 9px; margin-bottom: 3px; box-shadow: 0 0 10px rgba(0, 255, 136, .6); }
+.b3.priv .rib { color: var(--dim); }
+.b3.paused .rib { color: var(--dim2); }
+.b3.hov .rib, .b3:hover .rib { background: rgba(10, 16, 28, .98); box-shadow: 0 0 22px color-mix(in srgb, var(--acc) 70%, transparent), inset 0 0 12px color-mix(in srgb, var(--acc) 30%, transparent); }
+.b3.far { opacity: .55; }
+.b3.hidden { opacity: 0; pointer-events: none; }
+.b3pop { position: absolute; left: 0; top: 0; pointer-events: none; font: 800 13px 'JetBrains Mono'; color: var(--green); text-shadow: 0 0 10px rgba(0, 255, 136, .9);
+  animation: b3pop 2.6s ease-out forwards; white-space: nowrap; }
+@keyframes b3pop { 0% { opacity: 0; margin-top: 10px; } 15% { opacity: 1; } 70% { opacity: 1; } 100% { opacity: 0; margin-top: -34px; } }
+
+/* ---------- the visitor's frame ---------- */
+.robar { flex: none; display: flex; align-items: center; gap: 12px; padding: 7px 20px; border-bottom: 1px solid rgba(0, 207, 255, .35);
+  background: linear-gradient(90deg, rgba(0, 207, 255, .12), rgba(0, 207, 255, .03) 60%, transparent); font-size: 12px; color: var(--dim); }
+.robar .ro-pill { font-size: 10px; font-weight: 800; letter-spacing: .12em; color: var(--bg); background: var(--cyan); padding: 3px 9px; border-radius: 99px; box-shadow: 0 0 12px rgba(0, 207, 255, .5); }
+.robar b { color: var(--text); } .robar em { font-style: normal; color: var(--dim2); margin-left: 6px; }
+.robar .sp { flex: 1; }
+.ronote { display: none; }
+body.ro .ronote { display: block; padding: 10px 12px; font-size: 11.5px; color: var(--dim2); border-top: 1px solid var(--line); text-align: center; }
+body.ro #compose, body.ro #co-pause, body.ro #co-upgrade, body.ro #add-dept, body.ro #sim-new, body.ro #dr-charter .cb,
+body.ro #nr-form, body.ro #nr-ex, body.ro #nr-msg, body.ro .rule .switch, body.ro .rule .rx, body.ro #legal .mf .btn, body.ro #token .mf .btn,
+body.ro .danger { display: none !important; }
+body.ro #dr-ch-text { cursor: default; }
+.wo { font-size: 10.5px; color: var(--dim2); align-self: center; margin-right: auto; letter-spacing: .02em; }
+.capr.ro { display: flex; align-items: center; gap: 10px; margin-top: 8px; font-size: 11.5px; }
+.capr.ro .l { color: var(--dim2); min-width: 86px; }
+.rodl { display: grid; grid-template-columns: 110px minmax(0, 1fr); gap: 8px 14px; font-size: 12px; }
+.rodl dt { color: var(--dim2); font-size: 11px; letter-spacing: .04em; }
+.rodl dd { color: var(--text); line-height: 1.45; } .rodl dd.cy { color: var(--cyan); } .rodl dd.gr { color: var(--green); }
+
+/* ---------- Settings: on the Universe map ---------- */
+.uvcard h3 .hint { font-family: 'JetBrains Mono'; font-size: 11px; margin: 0 0 0 8px; }
+.uvset { display: grid; grid-template-columns: 300px minmax(0, 1fr); gap: 18px; align-items: start; }
+.uvset.ro { grid-template-columns: 220px minmax(0, 1fr); align-items: center; }
+.uvprev { border-radius: 12px; border: 1px solid var(--line2); padding: 8px 10px 4px;
+  background: radial-gradient(260px 160px at 50% 40%, rgba(0, 207, 255, .08), transparent 70%), radial-gradient(ellipse at 50% 60%, #0c1626, #06090f 80%); }
+.uvprev .skinsvg { display: block; width: 100%; height: 250px; }
+.uvprev.big .skinsvg { height: 330px; }
+.uvopts { display: grid; gap: 12px; min-width: 0; }
+.uvopts .sec, .cc .sec { margin-top: 2px; }
+.skins { display: grid; grid-template-columns: repeat(6, minmax(0, 1fr)); gap: 8px; }
+.skin { display: flex; flex-direction: column; align-items: center; gap: 2px; padding: 6px 4px 7px; border-radius: 10px; border: 1px solid var(--line2); background: var(--navy2);
+  transition: border-color .15s, box-shadow .15s, transform .12s; }
+.skin:hover { border-color: var(--dim2); transform: translateY(-1px); }
+.skin.on { border-color: var(--cyan); box-shadow: 0 0 0 1px var(--cyan), 0 0 16px rgba(0, 207, 255, .25); background: linear-gradient(180deg, rgba(0, 207, 255, .1), var(--navy2)); }
+.skin .skinsvg { width: 100%; height: 74px; display: block; }
+.skin b { font-size: 10.5px; font-weight: 700; color: var(--dim); white-space: nowrap; }
+.skin.on b { color: var(--text); }
+.accents { display: flex; gap: 10px; }
+.acc { width: 30px; height: 30px; border-radius: 50%; background: var(--c); border: 3px solid var(--navy); box-shadow: 0 0 0 1px var(--line3); transition: box-shadow .15s, transform .12s; }
+.acc:hover { transform: scale(1.08); }
+.acc.on { box-shadow: 0 0 0 2px var(--c), 0 0 16px var(--c); }
+
+/* ---------- Create your company ---------- */
+.cc { display: grid; grid-template-columns: minmax(0, 1fr) 360px; gap: 18px; margin-top: 6px; }
+.ccl { display: grid; gap: 12px; align-content: start; min-width: 0; }
+.cc .skins { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+.cc .skin .skinsvg { height: 84px; }
+.ccr .hint { text-align: center; }
+
+/* ---------- a private company's card ---------- */
+.pcard { display: grid; grid-template-columns: 300px minmax(0, 1fr); gap: 20px; align-items: start; }
+.pc-art .skinsvg { height: 300px; }
+.pc-h { display: flex; align-items: center; gap: 10px; }
+.pc-h h3 { font-family: 'Archivo Black'; font-weight: 400; font-size: 22px; }
+.pc-h .sp { flex: 1; }
+.lockp { display: inline-flex; align-items: center; gap: 6px; font-size: 10px; font-weight: 800; letter-spacing: .12em; color: var(--dim); padding: 3px 9px; border-radius: 99px; border: 1px solid var(--line3); }
+.pc-o { font-size: 12px; color: var(--dim2); margin: 4px 0 14px; } .pc-o b { color: var(--dim); }
+.pc-d { font-size: 13.5px; line-height: 1.55; color: var(--text); margin: 6px 0 14px; max-width: 520px; }
+.pcard .kpis { margin-bottom: 10px; }
+.pcard .hint i.lk { color: var(--dim2); margin-right: 6px; vertical-align: -1px; }
+
+@media (max-width: 1280px) {
+  .uvpane { flex: none; height: 680px; }
+  .uvset { grid-template-columns: 1fr; }
+  .skins { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+  .cc, .pcard { grid-template-columns: 1fr; }
+}
+@media (max-width: 760px) {
+  .uvpane { height: 520px; padding: 12px; }
+  .uvlegend { display: none; }
+  .uvsum { display: none; }
+}

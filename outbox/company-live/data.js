@@ -432,12 +432,39 @@
       ['an agent wins on paper', 'Trading desk', 'seats it at an Agent Tournaments table']
     ]
   };
-  // ?demo: the busy example company; ?empty: nothing; otherwise ours, set up on the first pass
+  // Which company this page shows. Ours by default; ?demo the busy example; ?empty a blank one; ?new the
+  // "Create your company" step first; ?visit=<id> someone else's public company, read only. Parsed as
+  // parameters, never as a substring: a company name in the address must not switch the mode.
+  var Q = new URLSearchParams(location.search), HASH = location.hash.slice(1);
+  CO.ME = 'expire76';
+  CO.MODE = Q.has('visit') ? 'visit' : Q.has('demo') || HASH === 'demo' ? 'demo' : Q.has('empty') || HASH === 'empty' ? 'empty' : Q.has('new') ? 'new' : 'ours';
+  CO.Q = Q;
+  // a visit opens only a public company; anything else falls back to our own, saying why
+  function resolveVisit() {
+    if (CO.MODE !== 'visit' || CO.VISIT !== undefined) return;
+    var c = CO.uvCompany ? CO.uvCompany(+Q.get('visit')) : null;
+    CO.VISIT = c && c.public ? c : null;
+    if (CO.VISIT) { CO.RO = true; CO.HUNTER = c.owner; }
+    else { CO.MODE = 'ours'; CO.denied = c ? c.name + ' is private: only its owner can look inside.' : 'No such company.'; }
+  }
+  var PLAN_UNITS = { 'Pro': [1, 6], 'Max 5x': [5, 30], 'Max 20x': [20, 120] };
   CO.fresh = function (t0) {
-    var q = location.search + location.hash;
-    if (/demo/.test(q)) return CO.seed(t0);
-    var s = CO.seedEmpty(t0);
-    if (!/empty/.test(q)) { s.setup = 'ours'; s.company.mission = CO.OURS.mission; }
+    resolveVisit();
+    if (CO.MODE === 'visit') {
+      var V = CO.VISIT, v = CO.seedEmpty(t0), u = PLAN_UNITS[V.plan] || PLAN_UNITS.Pro;
+      v.company = { id: V.id, name: V.name, mission: V.mission, report_style: 'Short, numbers first', status: V.status, plan: V.plan,
+        investable: false, created_at: t0 - (V.days || 0) * 24 * H - 3 * H, owner: V.owner, public: true, skin: V.skin, accent: V.accent };
+      v.budget.session.cap = u[0]; v.budget.week.cap = u[1];
+      v.legal.name = V.name + ' Ltd.';
+      v.setup = 'visit';
+      return v;
+    }
+    var me = CO.profile ? CO.profile() : { name: 'My Company', mission: '' };
+    var s = CO.MODE === 'demo' ? CO.seed(t0) : CO.seedEmpty(t0);
+    s.company.name = me.name; s.company.owner = CO.ME;
+    if (CO.MODE === 'ours') { s.setup = 'ours'; s.company.mission = CO.OURS.mission; }
+    if (me.mission) s.company.mission = me.mission;
+    s.legal.name = me.name + ' Ltd.';
     return s;
   };
 

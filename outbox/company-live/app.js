@@ -28,11 +28,15 @@
 
   var ui = { tab: 'office', view: '2d', panel: null, open: {}, seen: {}, feedTop: 0, dirty: false, prev: {}, tfDept: '', tfStatus: '', memQ: '', memDept: null };
   var office;
+  // RO: someone else's public company, looked at from the Universe; everything shows, nothing changes
+  var RO = false;
 
   /* ---------------- boot ---------------- */
   function boot() {
     CO.S = CO.fresh(Date.now());
+    RO = !!CO.RO;
     CO.applySetup();
+    if (RO) roSetup();
     office =new CO.Office($('office'), $('stage'), tipFor);
     office.layout();
     markSeen();
@@ -43,6 +47,22 @@
     render();
     if (document.fonts && document.fonts.ready) document.fonts.ready.then(function () { office.fit(false); $('msgs').scrollTop = 1e6; });
     window.addEventListener('resize', function () { $('msgs').scrollTop = 1e6; });
+    if (CO.denied) setTimeout(function () { toast(CO.denied); }, 500);
+    if (CO.MODE === 'new') setTimeout(createCompanyModal, 300);
+    if (CO.Q.has('created')) setTimeout(function () { toast('Created: ' + CO.S.company.name + '. Add its first department.'); addDeptModal(); }, 600);
+    if (location.hash === '#universe') setTab('universe');
+  }
+  // the visitor's frame: a bar saying whose company this is and that it is read only
+  function roSetup() {
+    var c = CO.S.company;
+    document.body.classList.add('ro');
+    $('robar').hidden = false;
+    $('ro-t').innerHTML = 'Inside <b>' + esc(c.name) + '</b> by <b>@' + esc(c.owner) + '</b><em>· you can look at everything; only its owner can change it</em>';
+    document.title = c.name + ' · Universe';
+    var ap = document.querySelector('#tabs [data-tab="approvals"]'); if (ap) ap.firstChild.textContent = 'Waits for owner';
+    var rs = document.querySelector('[data-pane="rules"] .sub'); if (rs) rs.textContent = 'the processes its owner wrote';
+    var as = document.querySelector('[data-pane="approvals"] .sub'); if (as) as.textContent = 'What its departments asked the owner, and what the owner decided.';
+    $('dr-ch-text').readOnly = true;
   }
   function markSeen() {
     ui.seen = {};
@@ -72,7 +92,7 @@
     et.innerHTML = '<b>' + (S.et10 ? '+' : '') + (S.et10 || 0).toLocaleString('en-US') + '</b> ET10 earned';
     et.classList.toggle('zero', !S.et10);
     var n = S.approvals.length, w = $('co-waiting');
-    w.innerHTML = n ? '<b>' + n + '</b> need' + (n === 1 ? 's' : '') + ' you' : '✓ all clear';
+    w.innerHTML = n ? '<b>' + n + '</b> ' + (RO ? 'wait' + (n === 1 ? 's' : '') + ' for its owner' : 'need' + (n === 1 ? 's' : '') + ' you') : '✓ all clear';
     w.classList.toggle('none', !n);
   }
   function setN(box, id, v, low) {
@@ -94,8 +114,8 @@
     var cc = CO.counts();
     // Each card says three things: who, what it is doing now, and one number. The rest is one click away.
     var na = S.approvals.length;
-    var mrow = '<button class="dept mgrrow working" title="Open your chat with the Manager"><div class="d1"><i class="dot"></i><b>Manager</b>' +
-      (na ? '<span class="et red">' + na + ' need' + (na === 1 ? 's' : '') + ' you</span>' : '') + '</div>' +
+    var mrow = '<button class="dept mgrrow working" title="' + (RO ? 'Read its chat with the Manager' : 'Open your chat with the Manager') + '"><div class="d1"><i class="dot"></i><b>Manager</b>' +
+      (na ? '<span class="et red">' + na + (RO ? ' wait for owner' : ' need' + (na === 1 ? 's' : '') + ' you') + '</span>' : '') + '</div>' +
       '<div class="dl"><span class="tx cyan">Chat · runs every department</span></div></button>';
     setHTML($('depts'), mrow + S.departments.map(function (d) {
       var v = CO.deptView(d), ln = CO.deptLine(d, v);
@@ -134,7 +154,7 @@
     var kind = a.kind === 'real-money action' ? 'tag money' : a.kind === 'review' || a.kind === 'start?' ? 'tag rvk' : 'tag k';
     return '<div class="ai' + (isNew ? ' new' : '') + '" data-id="' + a.id + '"><div class="t"><span class="' + kind + '">' + esc(kindWord(a.kind)) + '</span>' +
       '<span class="from">' + esc(d ? d.name : '') + ' · ' + esc(CO.ago(a.created_at)) + '</span></div><p>' + esc(plainTitle(a.summary)) + '</p>' + (full ? '<div class="draft">' + fmtDraft(a.body) + '</div>' : '') +
-      '<div class="bt"><button class="btn gr" data-d="approve">Approve</button><button class="btn rd" data-d="reject">Reject</button>' +
+      '<div class="bt">' + (RO ? '<span class="wo">waits for its owner</span>' : '<button class="btn gr" data-d="approve">Approve</button><button class="btn rd" data-d="reject">Reject</button>') +
       (full ? '' : '<button class="btn" data-r="1">Read</button>') + '</div></div>';
   }
   function fmtDraft(body) {
@@ -146,10 +166,11 @@
   function renderRight() {
     var S = CO.S, fd = ui.panel != null ? CO.dept(ui.panel) : null;
     var apprs = fd ? S.approvals.filter(function (a) { return a.dept_id === fd.id; }) : S.approvals, n = apprs.length;
-    $('ap-t').textContent = fd ? 'NEEDS YOU · ' + fd.name.toUpperCase() : 'NEEDS YOU';
+    var head = RO ? 'WAITING FOR ITS OWNER' : 'NEEDS YOU';
+    $('ap-t').textContent = fd ? head + ' · ' + fd.name.toUpperCase() : head;
     $('ap-n').textContent = n || '';
     $('p-appr').classList.toggle('none', !n);
-    setHTML($('appr'), n ? apprs.map(function (a) { return apprCard(a, false); }).join('') : '<p class="empty ok">All clear: nothing needs you' + (fd ? ' from ' + esc(fd.name) : '') + '.</p>');
+    setHTML($('appr'), n ? apprs.map(function (a) { return apprCard(a, false); }).join('') : '<p class="empty ok">' + (RO ? 'Nothing waits for its owner' : 'All clear: nothing needs you') + (fd ? ' from ' + esc(fd.name) : '') + '.</p>');
     S.approvals.forEach(function (a) { ui.seen[a.id] = 1; });
     renderEarned(fd);
     renderChats();
@@ -200,7 +221,7 @@
     var S = CO.S;
     if (ui.mgr) {
       setHTML($('mg-switch'), switcher('hub'));
-      fillChat($('msgs'), chatHTML(S.messages, true) || '<p class="hint">No messages yet. Say hello to your Manager: ask how it goes, give it work, or tell it to add a department.</p>');
+      fillChat($('msgs'), chatHTML(S.messages, true) || '<p class="hint">' + (RO ? 'No messages yet.' : 'No messages yet. Say hello to your Manager: ask how it goes, give it work, or tell it to add a department.') + '</p>');
       $('typing').hidden = !S.typing;
       var c = CO.counts();
       $('mg-pill').textContent = S.company.status === 'paused' ? 'PAUSED' : c.working ? c.working + ' WORKING' : 'RUNNING';
@@ -271,7 +292,7 @@
     var ln = CO.deptLine(d, v);
     setHTML($('dr-head'), '<i class="dot ' + v.status + (ln.tone === 'red' ? ' needs' : '') + '"></i><h2>' + esc(d.name) + '</h2>' +
       (d.files_as ? '<span class="et ' + (d.et10 ? 'lit' : 'zero') + '" title="ET10 Cymetica paid for accepted bugs, to ' + esc(d.files_as) + '">' + (d.et10 ? '+' : '') + (d.et10 || 0).toLocaleString('en-US') + ' ET10</span>' : '') +
-      '<span class="x"><button class="btn" data-a="edit">Edit</button><button class="btn rd" data-a="delete" title="Delete this department">Delete</button></span>');
+      (RO ? '' : '<span class="x"><button class="btn" data-a="edit">Edit</button><button class="btn rd" data-a="delete" title="Delete this department">Delete</button></span>'));
     // what it is doing right now, in one line: the first thing anyone wants to know
     setHTML($('dr-now'), '<div class="now t-' + ln.tone + '"><p>' + esc(ln.text) + '</p>' +
       (appr.length ? '<button class="btn rd" type="button" data-a="appr">Open</button>' : '') + (v.running ? '<span class="run"><i></i></span>' : '') + '</div>');
@@ -286,12 +307,13 @@
       '<div><b>' + CO.fmtTok(v.tok7d) + '</b><span>last 7 days</span></div></div>' +
       // the bar is always there: against the cap when there is one, empty and saying so when not
       '<div class="track tkbar' + (v.cap ? '' : ' nocap') + '"><i class="' + (v.capped ? 'hot' : '') + '" style="width:' + (v.cap ? Math.min(100, v.tokToday / v.cap * 100).toFixed(1) : 0) + '%"></i></div>' +
-      '<div class="tkcap' + (v.capped ? ' hot' : '') + '">' + (!v.cap ? 'No daily cap: set one below to hold it back' : v.capped ? 'Cap reached: it waits until 00:00' : CO.fmtTok(Math.max(0, v.cap - v.tokToday)) + ' left today of ' + CO.fmtTok(v.cap)) + '</div>' +
+      '<div class="tkcap' + (v.capped ? ' hot' : '') + '">' + (!v.cap ? (RO ? 'No daily cap' : 'No daily cap: set one below to hold it back') : v.capped ? 'Cap reached: it waits until 00:00' : CO.fmtTok(Math.max(0, v.cap - v.tokToday)) + ' left today of ' + CO.fmtTok(v.cap)) + '</div>' +
+      (RO ? (d.schedule ? '<div class="capr ro"><span class="l">Runs a day</span><b>' + runsNow + '×</b></div>' : '') :
       '<label class="capr"><span class="l">Daily cap</span><input type="range" id="dr-cap" min="0" max="' + (CO.CAP_STEPS.length - 1) + '" step="1" value="' + ci + '">' +
       '<b id="dr-cap-v">' + capLabel(CO.CAP_STEPS[ci], v.perTurn) + '</b></label>' +
       (d.schedule ? '<div class="rpd"><span class="l">Runs a day</span>' + [1, 2, 3, 4, 6, 12].map(function (n) {
         return '<button type="button" data-rpd="' + n + '"' + (n === runsNow ? ' class="on"' : '') + '>' + n + '×</button>';
-      }).join('') + '</div>' : '') + '</div>';
+      }).join('') + '</div>' : '')) + '</div>';
     var tk = $('dr-tok');
     if (tk._h !== tokHtml && document.activeElement !== $('dr-cap')) { tk._h = tokHtml; tk.innerHTML = tokHtml; }
     // a department on a clock: its runs, products, who the bugs are filed as, what they earned
@@ -302,13 +324,13 @@
       runsHtml = '<div class="runs"><div class="sec">RUNS <span>' + esc(d.schedule.label) + '</span></div>' +
         '<div class="rk" style="grid-template-columns:repeat(2,1fr)"><div><b>' + hhmm(d.next_run) + '</b><span>next run</span></div>' +
         '<div><b class="gr">' + third[0] + '</b><span>' + third[1] + '</span></div></div>' +
-        '<div class="cb"><span class="sp" style="flex:1"></span><button class="btn cy" data-a="runnow">Run now</button></div></div>';
+        (RO ? '' : '<div class="cb"><span class="sp" style="flex:1"></span><button class="btn cy" data-a="runnow">Run now</button></div>') + '</div>';
     } else if (d.schedule) {
       runsHtml = '<div class="runs"><div class="sec">RUNS <span>' + esc(d.schedule.label) + '</span></div>' +
         '<div class="rk" style="grid-template-columns:repeat(2,1fr)"><div><b>' + hhmm(d.next_run) + '</b><span>next run</span></div>' +
         '<div><b class="gr">' + (d.accepted || 0) + '</b><span>bugs accepted</span></div></div>' +
         '<div class="prods">' + (d.products.length ? d.products.map(function (p) { return '<span class="chip">' + esc(p) + '</span>'; }).join('') : '<span class="hint">no products yet: the public site</span>') + '</div>' +
-        '<div class="cb"><input id="dr-prods" placeholder="Products, comma separated" value="' + esc(d.products.join(', ')) + '"><button class="btn" data-a="prods">Save</button><button class="btn cy" data-a="runnow">Run now</button></div></div>';
+        (RO ? '' : '<div class="cb"><input id="dr-prods" placeholder="Products, comma separated" value="' + esc(d.products.join(', ')) + '"><button class="btn" data-a="prods">Save</button><button class="btn cy" data-a="runnow">Run now</button></div>') + '</div>';
     }
     if ($('dr-runs')._h !== runsHtml && !(document.activeElement && document.activeElement.id === 'dr-prods')) { $('dr-runs')._h = runsHtml; $('dr-runs').innerHTML = runsHtml; }
     // the latest results: what it finished, plainly; the full list is one click away
@@ -349,15 +371,131 @@
 
   /* ---------------- the other tabs ---------------- */
   function setTab(name) {
+    // a visitor's Universe is the visitor's own page: the map, with their own company on it
+    if (name === 'universe' && RO) { location.href = 'index.html#universe'; return; }
     ui.tab = name;
     Array.prototype.forEach.call(document.querySelectorAll('#tabs button'), function (b) { b.classList.toggle('on', b.getAttribute('data-tab') === name); });
     Array.prototype.forEach.call(document.querySelectorAll('.pane'), function (p) { p.hidden = p.getAttribute('data-pane') !== name; });
     if (name !== 'office') { $('drawer').hidden = true; } else if (ui.panel != null) { $('drawer').hidden = false; }
     render();
     if (name === 'office') requestAnimationFrame(function () { office.resize(); });
+    if (name === 'universe') showUniverse();
+    try { history.replaceState(null, '', location.pathname + location.search + (name === 'universe' ? '#universe' : '')); } catch (e) { /* fine */ }
   }
   function renderPane() {
-    ({ tasks: renderTasks, approvals: renderApprovals, memory: renderMemory, audit: renderAudit, rules: renderRules, investable: renderInvest, legal: renderLegal, token: renderToken, settings: renderSettings }[ui.tab] || function () {})();
+    ({ tasks: renderTasks, approvals: renderApprovals, memory: renderMemory, audit: renderAudit, rules: renderRules, investable: renderInvest, legal: renderLegal, token: renderToken, settings: renderSettings, universe: renderUniverse }[ui.tab] || function () {})();
+  }
+
+  /* ---------------- the Universe: every company on one map ---------------- */
+  var uv = null;
+  // our own company as the map draws it: its name, building and colour from Settings, a floor per department
+  function mineForMap() {
+    var S = CO.S, p = CO.profile(), work = [];
+    S.departments.forEach(function (d, i) { if (CO.deptView(d).running) work.push(i); });
+    return { id: 0, name: S.company.name, owner: CO.ME, public: !!p.public, status: S.company.status, skin: p.skin, accent: p.accent,
+      departments: S.departments.slice(), mission: S.company.mission, et10: S.et10 || 0, working: work, plan: S.company.plan, days: 0 };
+  }
+  function uvHooks() { return { mine: mineForMap, onOpen: openFromMap, onStats: uvStats }; }
+  // the 3D map when the browser can draw it (WebGPU, or WebGL2), the flat one otherwise
+  function showUniverse() {
+    if (!uv) {
+      var t0 = Date.now();
+      $('uvstage').classList.add('loading');
+      (function wait() {
+        if (uv) return;
+        if (CO.U3 && CO.U3.ok) { uv = CO.U3.universe($('uv3d'), $('uvstage'), uvHooks()); $('uvstage').classList.add('is3d'); }
+        else if ((CO.U3 && CO.U3.failed) || Date.now() - t0 > 6000) { uv = new CO.Universe($('uvmap'), $('uvstage'), uvHooks()); $('uvstage').classList.add('is2d'); }
+        else return setTimeout(wait, 60);
+        $('uvstage').classList.remove('loading');
+        uv.layout();
+        finishShow(true);
+      })();
+      return;
+    }
+    finishShow(false);
+  }
+  function finishShow(first) {
+    requestAnimationFrame(function () {
+      uv.resize();
+      if (!uv.fitted) uv.fit(false);
+      uv.setMine(mineForMap());
+      if (first) {
+        // back from a visit: start at the company just left, then pull back to the whole map
+        var from = null; try { from = sessionStorage.getItem('uv.from'); sessionStorage.removeItem('uv.from'); } catch (e) { /* fine */ }
+        if (from) { uv.flyTo(+from, null, 0); setTimeout(function () { uv.fit(true); }, 350); }
+      }
+    });
+  }
+  function renderUniverse() { if (uv) uv.setMine(mineForMap()); }
+  function uvStats(s) {
+    setHTML($('uv-sum'), '<b>' + s.companies + '</b> companies · <b>' + s.public + '</b> public · <b class="cy">' + s.working + '</b> working now');
+  }
+  function openFromMap(it) {
+    var c = it.c;
+    if (it.mine) return setTab('office');
+    if (!c.public) return privateCard(c);
+    try { sessionStorage.setItem('uv.from', String(c.id)); } catch (e) { /* fine */ }
+    $('uvfade').hidden = false;
+    uv.flyTo(c.id, function () { location.href = 'index.html?visit=' + c.id; });
+  }
+  // a private company: what it shows the world, and nothing from inside
+  function privateCard(c) {
+    var n = CO.floorsOf(c);
+    openModal('<div class="pcard"><div class="pc-art uvprev">' + CO.skinSVG({ skin: c.skin, accent: c.accent, floors: n, seed: c.id, banner: c.name, priv: true }) + '</div>' +
+      '<div class="pc-b"><div class="pc-h"><h3>' + esc(c.name) + '</h3><span class="lockp"><i class="lk"></i>PRIVATE</span><span class="sp"></span><button class="btn" data-a="close">×</button></div>' +
+      '<div class="pc-o">by <b>@' + esc(c.owner) + '</b> · ' + (c.days ? 'on Cymetica for ' + c.days + ' day' + (c.days === 1 ? '' : 's') : 'new today') + '</div>' +
+      '<div class="sec">ABOUT</div><p class="pc-d">' + esc(c.mission || 'Its owner has not written a description yet.') + '</p>' +
+      '<div class="kpis two"><div><b>' + n + '</b><span>department' + (n === 1 ? '' : 's') + ' · one per floor</span></div><div><b>' + (c.status === 'paused' ? 'Paused' : 'Active') + '</b><span>status</span></div></div>' +
+      '<p class="hint"><i class="lk"></i>Private: only its owner can look inside.</p></div></div>', true);
+  }
+  // the building pictures: six shapes in the company's colour
+  function skinButtons(sel, acc) {
+    return CO.SKINS.map(function (s) {
+      return '<button type="button" class="skin' + (s.key === sel ? ' on' : '') + '" data-a="uv-skin" data-k="' + s.key + '">' + CO.skinSVG({ skin: s.key, accent: acc, floors: 3, seed: 11 }) + '<b>' + s.name + '</b></button>';
+    }).join('');
+  }
+  function accentButtons(sel) {
+    return CO.ACCENTS.map(function (a) { return '<button type="button" class="acc' + (a.key === sel ? ' on' : '') + '" data-a="uv-accent" data-k="' + a.key + '" style="--c:' + a.hex + '" title="' + a.key + '"></button>'; }).join('');
+  }
+  function mark(sel, el) { Array.prototype.forEach.call(document.querySelectorAll(sel), function (x) { x.classList.toggle('on', x === el); }); }
+  function uvCard() {
+    var S = CO.S, p = CO.profile(), n = Math.max(1, S.departments.length);
+    return '<div class="card uvcard"><h3>On the Universe map <span class="hint">where every company on Cymetica stands</span></h3><div class="uvset">' +
+      '<div class="uvprev" id="st-prev">' + CO.skinSVG({ skin: p.skin, accent: p.accent, floors: n, seed: 7, banner: S.company.name, you: true, priv: !p.public }) + '</div>' +
+      '<div class="uvopts"><div class="switch' + (p.public ? ' on' : '') + '" data-a="uv-public"><span class="sw"></span><div><b>' + (p.public ? 'Public' : 'Private') + '</b><span>' +
+      (p.public ? 'Anyone can open it from the map and look at everything inside: office, departments, charters, processes, tasks, settings. Only you change anything.' :
+        'It stands on the map with a lock. Others see its name, its building and its mission; nothing inside.') + '</span></div></div>' +
+      '<div class="sec">BUILDING <span>one floor per department · ' + n + ' now</span></div><div class="skins">' + skinButtons(p.skin, p.accent) + '</div>' +
+      '<div class="sec">COLOUR</div><div class="accents">' + accentButtons(p.accent) + '</div></div></div></div>';
+  }
+  // "Create your company": a name, a mission, the building on the map and who may look inside
+  function createCompanyModal() {
+    var o = { name: '', mission: '', skin: 'tower', accent: 'green', public: false };
+    function prev() { return CO.skinSVG({ skin: o.skin, accent: o.accent, floors: 3, seed: 7, banner: o.name || 'Your company', you: true, priv: !o.public }); }
+    function pub() {
+      return '<span class="sw"></span><div><b>' + (o.public ? 'Public' : 'Private') + '</b><span>' + (o.public ? 'Anyone can look inside, read only.' : 'Others see its name, its building and its mission.') + '</span></div>';
+    }
+    openModal('<div class="mh"><h3>Create your company</h3><button class="btn" data-a="close">×</button></div>' +
+      '<div class="cc"><div class="ccl"><div class="form"><label class="field full">Name<input id="cc-name" maxlength="40" placeholder="e.g. Moonshot Labs" autocomplete="off"></label>' +
+      '<label class="field full">Mission · what everyone reads on the map<input id="cc-mission" maxlength="200" placeholder="What it is for, in one line" autocomplete="off"></label></div>' +
+      '<div class="sec step">YOUR BUILDING ON THE UNIVERSE MAP <span>it grows a floor with every department</span></div>' +
+      '<div class="skins" id="cc-skins">' + skinButtons(o.skin, o.accent) + '</div><div class="accents" id="cc-acc">' + accentButtons(o.accent) + '</div>' +
+      '<div class="switch" id="cc-pub" data-a="cc-public">' + pub() + '</div></div>' +
+      '<div class="ccr"><div class="uvprev big" id="cc-prev">' + prev() + '</div><p class="hint">Shown with 3 departments, as it will stand on the map.</p></div></div>' +
+      '<div class="mf"><span class="hint">One company per account.</span><span class="sp"></span><button class="btn" data-a="close">Cancel</button><button class="btn gr" data-a="create">Create company</button></div>', true, function (a, el) {
+        if (a === 'uv-skin') { o.skin = el.getAttribute('data-k'); mark('#cc-skins .skin', el); }
+        if (a === 'uv-accent') { o.accent = el.getAttribute('data-k'); mark('#cc-acc .acc', el); $('cc-skins').innerHTML = skinButtons(o.skin, o.accent); }
+        if (a === 'cc-public') { o.public = !o.public; var sw = $('cc-pub'); sw.classList.toggle('on', o.public); sw.innerHTML = pub(); }
+        if (a === 'create') {
+          var nm = $('cc-name').value.trim();
+          if (!nm) { $('cc-name').focus(); $('cc-name').style.borderColor = 'var(--red)'; return; }
+          CO.saveProfile({ name: nm, mission: $('cc-mission').value.trim(), skin: o.skin, accent: o.accent, public: o.public });
+          location.href = 'index.html?empty&created=1';
+          return;
+        }
+        $('cc-prev').innerHTML = prev();
+      });
+    ui.ccPrev = function () { o.name = $('cc-name').value.trim(); $('cc-prev').innerHTML = prev(); };
   }
   // what a process's department raises next, and the process that picks it up
   function nextOf(r) {
@@ -459,8 +597,10 @@
   function renderInvest() {
     var S = CO.S, on = S.company.investable, done = 0, failed = 0, units = 0;
     S.departments.forEach(function (d) { var v = CO.deptView(d); done += v.done; failed += v.failed; units += v.units; });
-    var html = '<div class="switch' + (on ? ' on' : '') + '" data-a="invest"><span class="sw"></span><div><b>' + (on ? 'Investable' : 'Private') + '</b><span>' +
-      (on ? 'Backers can pledge USDC; the scoreboard below is public.' : 'Nobody else sees this company. Flip to make it investable.') + '</span></div></div>';
+    // investable is about backers; who may look inside is the Universe switch in Settings
+    var html = RO ? '<p class="hint" style="margin:0 0 12px">' + (on ? 'Investable: backers can pledge USDC.' : 'Not investable: its owner has not opened it to backers.') + '</p>' :
+      '<div class="switch' + (on ? ' on' : '') + '" data-a="invest"><span class="sw"></span><div><b>' + (on ? 'Investable' : 'Not investable') + '</b><span>' +
+      (on ? 'Backers can pledge USDC; the scoreboard below is public.' : 'Nobody can back it yet. Flip to let backers pledge USDC.') + '</span></div></div>';
     if (on) {
       html += '<div class="sec" style="margin:16px 0 8px">PUBLIC SCOREBOARD · cymetica.com/company/' + S.company.id + '</div>' +
         '<div class="kpis"><div><b class="gr">' + done + '</b><span>tasks done · 7d</span></div><div><b class="red">' + failed + '</b><span>failed · 7d</span></div>' +
@@ -477,14 +617,16 @@
     setHTML($('legal'), '<div class="cols2"><div class="card"><h3>Entity</h3><div class="form">' +
       '<label class="field">Domicile<select id="lg-dom">' + DOMS.map(function (x) { return '<option' + (x === L.domicile ? ' selected' : '') + '>' + x + '</option>'; }).join('') + '</select></label>' +
       '<label class="field">Name<input id="lg-name" value="' + esc(L.name) + '"></label>' +
-      '<label class="field">Share classes<input value="Ordinary, Preferred"></label><label class="field">Founders<input value="expire76 · 100%"></label>' +
-      '<label class="field">Option pool<input value="10%"></label><label class="field">Directors<input value="expire76"></label>' +
+      '<label class="field">Share classes<input value="Ordinary, Preferred"></label><label class="field">Founders<input value="' + esc(S.company.owner || CO.ME) + ' · 100%"></label>' +
+      '<label class="field">Option pool<input value="10%"></label><label class="field">Directors<input value="' + esc(S.company.owner || CO.ME) + '"></label>' +
       '<label class="field full">Governance<select><option>The owner decides</option><option>Board of directors</option><option>Token holders vote</option></select></label></div>' +
       '<div class="mf"><span class="hint" title="Cymetica publishes the stake it takes in companies formed here.">Cymetica\'s published stake: 1–10%</span><span class="sp"></span><button class="btn gr" data-a="form">Start formation</button></div></div>' +
       '<div class="card"><h3>Step by step</h3>' + [['Name and domicile', 'done'], ['Founders, shares and option pool', 'done'], ['Directors and governance', 'running'], ['Documents to sign', 'queued'], ['Registry filing', 'queued']].map(function (s, i) {
         return '<div class="trow" style="cursor:default"><span><span class="st ' + s[1] + '">' + (s[1] === 'running' ? 'now' : s[1] === 'queued' ? 'next' : 'done') + '</span></span><div><b>' + (i + 1) + '. ' + s[0] + '</b></div><i></i></div>';
       }).join('<div style="height:6px"></div>') + '<p class="hint">Formation is paper until you approve the filing.</p></div></div>');
+    if (RO) lockFields('legal');
   }
+  function lockFields(id) { Array.prototype.forEach.call($(id).querySelectorAll('input, select, textarea'), function (el) { el.disabled = true; }); }
   function renderToken() {
     var S = CO.S, T = S.token, ch = CO.CHAINS.filter(function (c) { return c.key === T.chain; })[0] || CO.CHAINS[0];
     setHTML($('token'), '<div class="cols2"><div class="card"><h3>Company token</h3>' +
@@ -496,12 +638,22 @@
       '<div class="card"><h3>Pre-IPO equity perp</h3><p class="hint" style="margin-bottom:10px">A perpetual on this company\'s equity, priced off its reference valuation.</p>' +
       (T.perp_listed ? '<div class="kpis" style="grid-template-columns:1fr 1fr"><div><b class="gr">CQA-PERP</b><span>listed</span></div><div><b>$250,000</b><span>reference valuation</span></div></div>' : '') +
       '<div class="mf"><span class="sp"></span>' + (T.perp_listed ? '<button class="btn cy" data-mock="Trade CQA-PERP">Open it</button>' : '<button class="btn cy" data-a="perp">List it</button>') + '</div></div></div>');
+    if (RO) lockFields('token');
   }
   function renderSettings() {
     var S = CO.S, c = S.company, paused = c.status === 'paused';
     var keep = document.activeElement && $('settings').contains(document.activeElement);
     if (keep) return;
-    setHTML($('settings'), '<div class="cols2"><div class="card"><h3>Company</h3><div class="form">' +
+    if (RO) {
+      var n = Math.max(1, S.departments.length);
+      setHTML($('settings'), '<div class="cols2"><div class="card"><h3>Company</h3><dl class="rodl"><dt>Name</dt><dd>' + esc(c.name) + '</dd><dt>Owner</dt><dd>@' + esc(c.owner) + '</dd>' +
+        '<dt>Mission</dt><dd>' + esc(c.mission) + '</dd><dt>Report style</dt><dd>' + esc(c.report_style) + '</dd><dt>Plan</dt><dd>' + esc(c.plan) + '</dd>' +
+        '<dt>Status</dt><dd class="' + (paused ? '' : 'gr') + '">' + (paused ? 'Paused' : 'Active') + '</dd></dl></div>' +
+        '<div class="card uvcard"><h3>On the Universe map</h3><div class="uvset ro"><div class="uvprev">' + CO.skinSVG({ skin: c.skin, accent: c.accent, floors: n, seed: c.id, banner: c.name }) + '</div>' +
+        '<dl class="rodl"><dt>Visibility</dt><dd class="cy">Public: anyone can look inside</dd><dt>Building</dt><dd>' + esc(CO.skinName(c.skin)) + ' · ' + n + ' floor' + (n === 1 ? '' : 's') + '</dd></dl></div></div></div>');
+      return;
+    }
+    setHTML($('settings'), uvCard() + '<div class="cols2"><div class="card"><h3>Company</h3><div class="form">' +
       '<label class="field">Name<input id="st-name" maxlength="60" value="' + esc(c.name) + '"></label>' +
       '<label class="field">Report style<select id="st-report">' + ['Short, numbers first', 'Daily digest', 'Every result'].map(function (x) { return '<option' + (x === c.report_style ? ' selected' : '') + '>' + x + '</option>'; }).join('') + '</select></label>' +
       '<label class="field full">Mission<textarea id="st-mission" maxlength="500">' + esc(c.mission) + '</textarea></label></div>' +
@@ -548,14 +700,14 @@
     var S = CO.S, c = CO.counts();
     if (kind === 'agent') {
       var p = key.split(':'), rk = p[0], i = +p[1];
-      if (rk === 'hub') return '<b>Manager</b> · routes ' + c.open + ' open<br>' + (S.company.status === 'paused' ? 'paused' : 'plans the next pass · click to message it');
+      if (rk === 'hub') return '<b>Manager</b> · routes ' + c.open + ' open<br>' + (S.company.status === 'paused' ? 'paused' : RO ? 'plans the next pass · click to read its chat' : 'plans the next pass · click to message it');
       if (rk === 'you') return '<b>You</b> · ' + (S.approvals.length ? '<span class="r">' + S.approvals.length + ' to approve</span>' : 'nothing waits for you');
       if (rk === 'audit') return '<b>Supervisor</b> · runs the weekly audit';
       var d = CO.dept(+rk.slice(1)); if (!d) return '';
       var v = CO.deptView(d), e = v.experts[i]; if (!e) return '';
       return '<b>' + esc(e.name) + '</b> · ' + esc(d.name) + '<br>' + (e.state === 'working' && v.running ? '<span class="c">working on</span> “' + esc(v.running.title) + '”' : 'idle');
     }
-    if (key === 'hub') return '<b>Manager</b> · your chat' + (S.approvals.length ? ' · <span class="r">' + S.approvals.length + ' need' + (S.approvals.length === 1 ? 's' : '') + ' you</span>' : '') + '<br>click to open';
+    if (key === 'hub') return '<b>Manager</b> · ' + (RO ? 'its chat' : 'your chat') + (S.approvals.length ? ' · <span class="r">' + S.approvals.length + (RO ? ' wait for its owner' : ' need' + (S.approvals.length === 1 ? 's' : '') + ' you') + '</span>' : '') + '<br>click to open';
     if (key === 'you') return '<b>Your desk</b> · ' + (S.approvals.length ? '<span class="r">' + S.approvals.length + ' approvals waiting</span>' : 'all clear') + '<br>click to open Approvals';
     if (key === 'audit') {
       var A = S.audit;
@@ -587,8 +739,9 @@
     var d = CO.dept(a.dept_id);
     openModal('<div class="mh"><span class="tag">' + esc(d ? d.name : '') + '</span><span class="' + (a.kind === 'real-money action' ? 'tag money' : 'tag k') + '">' + esc(a.kind) + '</span><h3>' + esc(a.summary) + '</h3></div>' +
       '<div class="draft" style="max-height:52vh">' + fmtDraft(a.body) + '</div>' +
-      '<div class="mf"><span class="hint">asked ' + CO.ago(a.created_at) + ' ago</span><span class="sp"></span><button class="btn" data-a="close">Close</button>' +
-      '<button class="btn rd" data-a="reject">Reject</button><button class="btn gr" data-a="approve">Approve</button></div>', true, function (act) {
+      '<div class="mf"><span class="hint">asked ' + CO.ago(a.created_at) + ' ago' + (RO ? ' · waits for its owner' : '') + '</span><span class="sp"></span><button class="btn" data-a="close">Close</button>' +
+      (RO ? '' : '<button class="btn rd" data-a="reject">Reject</button><button class="btn gr" data-a="approve">Approve</button>') + '</div>', true, function (act) {
+      if (RO) return;
       if (act === 'approve' || act === 'reject') { closeModal(); decide(a.id, act); }
     });
   }
@@ -698,9 +851,22 @@
     office.packet('you', 'hub', 'blue');
   }
 
+  // what a visitor may still press: moving around and reading. Everything else that writes says so instead.
+  var RO_OK = '#tabs button, #back, .dswitch [data-sw], .dept, #earn .er, #co-et10, #co-waiting, #z-in, #z-out, #z-fit, .trow, tr.row, #dr-tasks-all, #dr-mem-t, ' +
+    '[data-r], [data-a="close"], [data-a="appr"], #simbar [data-speed], #sim-reset, #ro-back, [data-mock], #modal';
+  function roBlocked(t) { return !t.closest(RO_OK) && !!t.closest('button, [data-a], [data-d], .switch, [data-rpd]'); }
   function bind() {
     document.addEventListener('click', function (e) {
       var t = e.target;
+      if (RO && roBlocked(t)) { e.preventDefault(); toast('Read only: only @' + CO.S.company.owner + ' can change this.'); return; }
+      if (t.closest('#ro-back')) { location.href = 'index.html#universe'; return; }
+      if (t.closest('#sim-new')) return createCompanyModal();
+      if (uv) {
+        if (t.closest('#uv-in')) return uv.zoom(0.78);
+        if (t.closest('#uv-out')) return uv.zoom(1.28);
+        if (t.closest('#uv-fit')) return uv.fit(true);
+        if (t.closest('#uv-me')) return uv.flyTo(0);
+      }
       var mock = t.closest('[data-mock]');
       if (mock) { e.preventDefault(); toast('Mockup: ' + mock.getAttribute('data-mock') + ' is another page.'); return; }
       var tab = t.closest('#tabs button'); if (tab) return setTab(tab.getAttribute('data-tab'));
@@ -764,7 +930,7 @@
         }
       }
       var pa2 = t.closest('.page [data-a]');
-      if (pa2) return pageAct(pa2.getAttribute('data-a'));
+      if (pa2) return pageAct(pa2.getAttribute('data-a'), pa2);
       // modal
       if (t.id === 'modal') return closeModal();
       var ma = t.closest('#modal-card [data-a]');
@@ -809,7 +975,10 @@
     $('tf-dept').addEventListener('change', function (e) { ui.tfDept = e.target.value; renderTasks(); });
     $('tf-status').addEventListener('change', function (e) { ui.tfStatus = e.target.value; renderTasks(); });
     $('mem-q').addEventListener('input', function (e) { ui.memQ = e.target.value; renderMemory(); });
-    document.addEventListener('input', function (e) { if (e.target.id === 'df-ch') { var n = $('df-n'); if (n) n.textContent = e.target.value.length + ' / 2,000'; } });
+    document.addEventListener('input', function (e) {
+      if (e.target.id === 'df-ch') { var n = $('df-n'); if (n) n.textContent = e.target.value.length + ' / 2,000'; }
+      if (e.target.id === 'cc-name' && ui.ccPrev) ui.ccPrev();
+    });
     document.addEventListener('change', function (e) {
       if (e.target.classList.contains('rvw')) { var rid2 = e.target.closest('.rule').getAttribute('data-rule'); var rl2 = CO.S.rules.filter(function (x) { return x.id === rid2; })[0]; if (rl2) { CO.act.review(rid2, rl2.review, e.target.value.trim() || 'you'); toast(rid2 + ': reviewed by ' + (e.target.value.trim() || 'you') + '.'); } }
       if (e.target.id === 'tk-chain') CO.S.token.chain = e.target.value;
@@ -821,16 +990,32 @@
       if (ui.panel != null || ui.mgr) closeDrawer();
     });
   }
-  function pageAct(a) {
+  function pageAct(a, el) {
     var S = CO.S;
-    if (a === 'invest') { S.company.investable = !S.company.investable; CO.changed(); toast(S.company.investable ? 'Investable: the scoreboard is public.' : 'Private again.'); }
+    // the Universe card: who may look inside, the building and its colour; saved at once, the map follows
+    if (a === 'uv-public' || a === 'uv-skin' || a === 'uv-accent') {
+      var p = CO.profile();
+      if (a === 'uv-public') p = CO.saveProfile({ public: !p.public });
+      if (a === 'uv-skin') p = CO.saveProfile({ skin: el.getAttribute('data-k') });
+      if (a === 'uv-accent') p = CO.saveProfile({ accent: el.getAttribute('data-k') });
+      if (document.activeElement) document.activeElement.blur();
+      renderSettings();
+      if (uv) uv.setMine(mineForMap());
+      return toast(a === 'uv-public' ? (p.public ? 'Public: anyone can look inside, read only.' : 'Private: others see its name, building and mission only.') :
+        'Your building on the map: ' + CO.skinName(p.skin) + ', ' + p.accent + '.');
+    }
+    if (a === 'invest') { S.company.investable = !S.company.investable; CO.changed(); toast(S.company.investable ? 'Investable: backers can pledge.' : 'Not investable any more.'); }
     if (a === 'form') openModal('<div class="mh"><h3>Start formation?</h3></div><p>' + esc(S.legal.domicile) + ' · ' + esc(($('lg-name') || {}).value || S.legal.name) + '. Filing waits for your approval like everything real.</p>' +
       '<div class="mf"><span class="sp"></span><button class="btn" data-a="close">Cancel</button><button class="btn gr" data-a="go">Start</button></div>', false, function (b) { if (b === 'go') { closeModal(); toast('Mockup: nothing is filed.'); } });
     if (a === 'tk-reserve') { S.token.symbol = ($('tk-sym').value || 'CQA').toUpperCase().replace(/[^A-Z0-9]/g, '').slice(0, 6); S.token.chain = $('tk-chain').value; S.token.reserved = true; CO.changed(); toast(S.token.symbol + ' reserved.'); }
     if (a === 'tk-undo') { S.token.reserved = false; CO.changed(); }
     if (a === 'tk-launch') toast('Mockup: the launch page is another page.');
     if (a === 'perp') { S.token.perp_listed = true; CO.changed(); toast('Listed: CQA-PERP.'); }
-    if (a === 'st-save') { CO.act.settings({ name: $('st-name').value.trim() || S.company.name, mission: $('st-mission').value.trim(), report_style: $('st-report').value }); document.activeElement.blur(); renderSettings(); toast('Settings saved.'); }
+    if (a === 'st-save') {
+      CO.act.settings({ name: $('st-name').value.trim() || S.company.name, mission: $('st-mission').value.trim(), report_style: $('st-report').value });
+      CO.saveProfile({ name: S.company.name, mission: S.company.mission });
+      document.activeElement.blur(); renderSettings(); toast('Settings saved.');
+    }
     if (a === 'extra') { CO.act.extra(!S.budget.extra.on); toast('Extra usage ' + (S.budget.extra.on ? 'on' : 'off') + '.'); }
     if (a === 'pause') CO.act.pause();
     if (a === 'upgrade') upgradeModal();
@@ -868,6 +1053,7 @@
       closeModal(); ui.panel = null; $('drawer').hidden = true; office.sel = null; ui.open = {}; ui.prev = {};
       office.layout(); office.fit(true); markSeen();
       ['depts', 'appr', 'earn', 'msgs', 'legal', 'settings'].forEach(function (id) { $(id)._h = null; });
+      if (uv) uv.setMine(mineForMap());
     });
     CO.on('office:click', function (key) {
       if (key.charAt(0) === 'd') return openDrawer(+key.slice(1));

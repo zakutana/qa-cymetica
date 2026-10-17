@@ -397,7 +397,8 @@
     var used = {};
     S.departments.forEach(function (d) { cells['d' + d.id] = SLOTS[d.slot]; used[d.slot] = 1; });
     var lot = 0; while (used[lot]) lot++;
-    if (lot < SLOTS.length) cells.lot = SLOTS[lot];
+    // a visitor sees the company as it is: no empty lot inviting a department they cannot add
+    if (lot < SLOTS.length && !CO.RO) cells.lot = SLOTS[lot];
     this.cells = cells;
     var all = Object.keys(cells).map(function (k) { return cells[k]; });
     var maxX = 0, maxY = 0;
@@ -586,7 +587,7 @@
       }
       var mp = P(12.9, 14.25, 0.1);
       over += plate(mp[0] + 30, mp[1] + 8, 'MANAGER', S.company.status === 'active' ? C.cyan : C.dim2,
-        [[S.company.status === 'paused' ? 'Paused' : 'Your chat · runs it all', S.company.status === 'paused' ? C.dim : C.cyan]], 170, 'hub', S.company.status === 'active' && anyWork);
+        [[S.company.status === 'paused' ? 'Paused' : (CO.RO ? 'Its chat' : 'Your chat') + ' · runs it all', S.company.status === 'paused' ? C.dim : C.cyan]], 170, 'hub', S.company.status === 'active' && anyWork);
     }
     // the owner's desk
     var you = ex('you');
@@ -830,4 +831,8 @@
     this.tip.style.left = x + 'px'; this.tip.style.top = y + 'px';
   };
   Office.prototype.hideTip = function () { if (this.tip) this.tip.hidden = true; };
+
+  // the same projection and palette for the Universe map and the building pictures
+  CO.iso = { SC: SC, C30: C30, S30: S30, C: C, P: P, f1: f1, pts: pts, esc: esc, poly: poly, box: box, text: text,
+    onBack: onBack, onSide: onSide, cut: cut, plant: plant };
 })();

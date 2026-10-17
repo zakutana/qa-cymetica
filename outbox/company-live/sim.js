@@ -227,7 +227,7 @@
         t.status = 'waiting_approval'; t.finished_at = S.clock;
         t.outcome = 'Draft ready: waits for your approval';
         var a = { id: 'A' + (S.next_appr++), task_id: t.id, dept_id: d.id, kind: t.kind, summary: t.title.replace(/^Verify: /, ''), created_at: S.clock,
-          files_as: d.files_as || (t.kind === 'bug report' ? 'expire76' : null) };
+          files_as: d.files_as || (t.kind === 'bug report' ? CO.HUNTER : null) };
         a.body = CO.draft(t.kind, t.title, d.name);
         S.approvals.unshift(a);
         feed('ask', d.name, 'asks approval: ' + t.kind);
@@ -516,6 +516,13 @@
     });
     for (var i = timers.length - 1; i >= 0; i--) {
       if (timers[i].at <= S.clock) { var f = timers[i].fn; timers.splice(i, 1); f(); changed(); }
+    }
+    // a visited company's owner answers its approvals in their own time; the visitor only watches
+    if (CO.RO && S.approvals.length) {
+      S.approvals.slice().forEach(function (a) {
+        if (!a.owner_at) a.owner_at = a.created_at + rand(25000, 70000);
+        if (S.clock >= a.owner_at) CO.act.decide(a.id, Math.random() < 0.85 ? 'approve' : 'reject');
+      });
     }
     S.departments.forEach(function (d) {
       if (!d.schedule || !d.next_run || S.clock < d.next_run) return;
@@ -1009,29 +1016,70 @@
     return { tone: 'dim', short: 'Idle', text: 'Idle: nothing to do' };
   };
 
+  // one department of a setup, added the way its owner would add it: template, clock, products, hunter name
+  function setupDept(o) {
+    var tpl = CO.TEMPLATES.filter(function (x) { return x.key === o.key; })[0] || {};
+    var times = o.runs ? CO.RUN_TIMES[o.runs] : null;
+    var files = o.key === 'testing' ? CO.HUNTER : null;
+    var charter = (o.charter || tpl.charter || '') +
+      (times && o.key === 'testing' ? '\n- Runs ' + o.runs + '× a day (' + times.join(', ') + ') over: ' + (o.products || []).join(', ') + '.' : '') +
+      (files ? '\n- Hunter name: ' + files + '. Every report is filed as ' + files + ' and its ET10 goes to ' + files + '\'s wallet.' : '');
+    return CO.act.addDept({ key: o.key, name: o.name || tpl.name || 'Department', experts: (o.experts || tpl.experts || ['researcher']).slice(), charter: charter, quiet: true,
+      schedule: times ? { times: times, label: o.runs + '× a day (' + (o.runs > 4 ? 'every ' + (24 / o.runs) + ' h' : times.join(', ')) + ')' } : null,
+      products: (o.products || []).slice(), files_as: files, run_kind: o.run_kind || null, link: o.link || null });
+  }
+  function setupRules(rules) {
+    rules.forEach(function (r) {
+      var d = CO.S.departments.filter(function (x) { return x.name === r[1]; })[0];
+      if (d) CO.act.addRule({ when: r[0], dept_id: d.id, does: r[2] });
+    });
+  }
   // our own company (CO.OURS): its departments and processes, added the way the owner would add them
   CO.applySetup = function () {
     var S = CO.S;
+    if (S.setup === 'visit') { delete S.setup; return applyVisit(CO.VISIT); }
     if (S.setup !== 'ours') return;
     delete S.setup;
-    CO.OURS.departments.forEach(function (o) {
-      var tpl = CO.TEMPLATES.filter(function (x) { return x.key === o.key; })[0] || {};
-      var times = o.runs ? CO.RUN_TIMES[o.runs] : null;
-      var files = o.key === 'testing' ? CO.HUNTER : null;
-      var charter = (o.charter || tpl.charter || '') +
-        (times && o.key === 'testing' ? '\n- Runs ' + o.runs + '× a day (' + times.join(', ') + ') over: ' + o.products.join(', ') + '.' : '') +
-        (files ? '\n- Hunter name: ' + files + '. Every report is filed as ' + files + ' and its ET10 goes to ' + files + '\'s wallet.' : '');
-      CO.act.addDept({ key: o.key, name: o.name, experts: o.experts.slice(), charter: charter, quiet: true,
-        schedule: times ? { times: times, label: o.runs + '× a day (' + (o.runs > 4 ? 'every ' + (24 / o.runs) + ' h' : times.join(', ')) + ')' } : null,
-        products: (o.products || []).slice(), files_as: files, run_kind: o.run_kind || null, link: o.link || null });
-    });
-    CO.OURS.rules.forEach(function (r) {
-      var d = S.departments.filter(function (x) { return x.name === r[1]; })[0];
-      if (d) CO.act.addRule({ when: r[0], dept_id: d.id, does: r[2] });
-    });
+    CO.OURS.departments.forEach(setupDept);
+    setupRules(CO.OURS.rules);
     say('Your company is set up: ' + S.departments.length + ' departments and ' + S.rules.length + ' processes. ' +
       'Cymetica QA, the Outsider and the Agent League run on their clocks; I plan the Laboratory and the Trading desk.');
   };
+  // someone else's public company, as a visitor finds it: its departments and processes, what each has
+  // finished lately and learned, the ET10 it has earned, and the runner already passing
+  var OWNER_DONE = { 'BB request': 'Submitted after the owner\'s approval', 'real-money action': 'Placed after the owner\'s approval',
+    'seat request': 'Seated after the owner\'s approval', 'bug report': 'Filed after the owner\'s approval' };
+  function applyVisit(V) {
+    var S = CO.S, now = S.clock;
+    V.departments.forEach(setupDept);
+    setupRules(V.rules || []);
+    S.departments.forEach(function (d, i) {
+      var pool = CO.POOL[d.key] || CO.POOL.custom;
+      for (var k = 0; k < 3; k++) {
+        var p = pool[(i + k + 1) % pool.length];
+        var t = newTask(d, p.title, { turns_needed: p.turns || 1, outcome_text: p.outcome, why: p.why, expert: p.expert, kind: p.kind });
+        var end = now - (k * 53 + i * 17 + 11) * 60000;
+        t.status = 'done'; t.turns = t.turns_needed; t.units = r2(0.19 * t.turns);
+        t.created_at = end - 25 * 60000; t.started_at = end - 7 * 60000; t.finished_at = end;
+        t.outcome = p.kind ? OWNER_DONE[p.kind] || 'Done' : p.outcome || 'Done';
+      }
+      learn(d); learn(d); if (i % 2) learn(d);
+      d.units_7d = r2(0.35 + ((d.id * 37) % 100) / 80);
+      d.tok_day = new Date(now).toDateString(); d.tok_today = r2(d.units_7d / 5); d.turns_today = Math.round(d.tok_today / 0.19);
+    });
+    var by = function (f) { return S.departments.filter(f)[0]; };
+    var qa = by(function (d) { return d.key === 'testing'; }), desk = by(function (d) { return d.key === 'trading_desk'; }), lg = by(function (d) { return d.run_kind === 'league'; });
+    if (qa) { qa.et10 = V.bugs * 1000; qa.accepted = V.bugs; }
+    if (desk && V.prize) { desk.et10 = V.prize; desk.prizes = Math.max(1, Math.round(V.prize / 85)); }
+    if (lg && V.league) { lg.et10 = V.league; lg.answers = Math.round(V.league / 500); }
+    S.et10 = CO.uvEt10(V);
+    S.meter = [0.21, 0.18, 0.24, 0.2, 0.22, 0.19];
+    S.budget.session.used = r2(S.budget.session.cap * (0.18 + (V.id % 5) * 0.09));
+    S.budget.week.used = r2(S.budget.week.cap * (0.3 + (V.id % 4) * 0.1));
+    S.next_report = 300 + V.id;
+    say('The company is set up: ' + S.departments.length + ' department' + (S.departments.length === 1 ? '' : 's') + ' and ' + S.rules.length + ' process' + (S.rules.length === 1 ? '' : 'es') + '.');
+    S.next_pass_at = now + 2500;
+  }
   CO.reset = function () {
     timers = [];
     CO.S = CO.fresh(Date.now());

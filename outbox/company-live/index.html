@@ -8,7 +8,15 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Archivo+Black&family=JetBrains+Mono:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="style.css?v=20261017u">
+<link rel="stylesheet" href="style.css?v=20261018a">
+<link rel="stylesheet" href="uv.css?v=20261018a">
+<!-- the 3D engine for the Universe and the office: three.js with its WebGPU renderer (WebGL2 where WebGPU is missing) -->
+<script type="importmap">{ "imports": {
+  "three": "https://cdn.jsdelivr.net/npm/three@0.172.0/build/three.webgpu.js",
+  "three/webgpu": "https://cdn.jsdelivr.net/npm/three@0.172.0/build/three.webgpu.js",
+  "three/tsl": "https://cdn.jsdelivr.net/npm/three@0.172.0/build/three.tsl.js",
+  "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.172.0/examples/jsm/"
+} }</script>
 </head>
 <body>
 <header class="site">
@@ -19,9 +27,17 @@
     <b>MOCKUP</b><span>simulated</span>
     <button data-speed="0" title="Freeze the simulation">❚❚</button><button data-speed="1" class="on">1×</button><button data-speed="4">4×</button><button data-speed="16">16×</button>
     <button id="sim-reset" title="Start the simulation over">↺</button>
+    <button id="sim-new" title="Mockup only: go through creating a company">+ new</button>
   </span>
   <span class="acct"><i></i>expire76</span>
 </header>
+
+<div class="robar" id="robar" hidden>
+  <span class="ro-pill">READ ONLY</span>
+  <span class="ro-t" id="ro-t"></span>
+  <span class="sp"></span>
+  <button class="btn cy" id="ro-back">← Universe</button>
+</div>
 
 <section class="cobar">
   <div class="who">
@@ -42,6 +58,7 @@
   <button data-tab="audit">Audit</button>
   <button data-tab="rules">Processes<sup id="tn-rules"></sup></button>
   <span class="sp"></span>
+  <button data-tab="universe" class="uvtab"><i></i>Universe</button>
   <button data-tab="investable">Investable</button>
   <button data-tab="legal">Legal entity</button>
   <button data-tab="token">Token</button>
@@ -77,6 +94,7 @@
         <div class="sec"><span id="chat-t">CHAT</span><span class="typing" id="typing" hidden>typing<i></i><i></i><i></i></span></div>
         <div class="msgs" id="msgs"></div>
         <form class="compose" id="compose"><input id="msg" autocomplete="off" placeholder="Message the Manager…"><button class="btn gr" type="submit">Send</button></form>
+        <p class="ronote">Only its owner talks to the Manager.</p>
       </div>
     </section>
   </aside>
@@ -104,6 +122,22 @@
     <section class="panel ap" id="p-appr"><div class="h"><span id="ap-t">WAITING FOR YOU</span> <b class="red" id="ap-n"></b></div><div class="alist" id="appr"></div></section>
     <section class="panel earn" id="p-earn"><div class="h"><span>ET10 EARNED</span> <b class="gr" id="earn-n"></b></div><div class="elist" id="earn"></div></section>
   </aside>
+</main>
+
+<main class="uvpane pane" data-pane="universe" hidden>
+  <section class="panel stage uvstage" id="uvstage">
+    <div class="stars" id="uv-stars"></div>
+    <div class="uv3d" id="uv3d"></div>
+    <svg id="uvmap" class="uvmap" xmlns="http://www.w3.org/2000/svg"></svg>
+    <div class="uvbans" id="uvbans"></div>
+    <div class="top">
+      <div class="crumb"><span class="live"><i></i>LIVE</span><span class="uvsum" id="uv-sum"></span></div>
+      <div class="zoom"><button class="me" id="uv-me" title="Find my company">◎ Mine</button><button id="uv-in" title="Zoom in">+</button><button id="uv-out" title="Zoom out">−</button><button id="uv-fit" title="See everything">⤢</button></div>
+    </div>
+    <div class="uvlegend"><span><b>1 floor</b> = 1 department</span><span><i class="lk"></i>private: name, building and mission only</span><span><i class="pb"></i>public: click to look inside</span></div>
+    <div class="tip" hidden></div>
+    <div class="uvfade" id="uvfade" hidden></div>
+  </section>
 </main>
 
 <main class="page pane" data-pane="tasks" hidden>
@@ -163,10 +197,13 @@
 <div class="toast" id="toast" hidden></div>
 
 <!-- ?v= changes with every edit, so a plain reload never runs yesterday's file from the cache -->
-<script src="data.js?v=20261017u"></script>
-<script src="sim.js?v=20261017u"></script>
-<script src="office.js?v=20261017u"></script>
-<script src="cards.js?v=20261017u"></script>
-<script src="app.js?v=20261017u"></script>
+<script src="data.js?v=20261018a"></script>
+<script src="uv-data.js?v=20261018a"></script>
+<script src="sim.js?v=20261018a"></script>
+<script src="office.js?v=20261018a"></script>
+<script src="universe.js?v=20261018a"></script>
+<script src="cards.js?v=20261018a"></script>
+<script src="app.js?v=20261018a"></script>
+<script type="module" src="u3d.js?v=20261018a"></script>
 </body>
 </html>
