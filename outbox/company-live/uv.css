@@ -23,6 +23,9 @@
 .uvstage.is3d .uvmap, .uvstage.is2d .uv3d, .uvstage.loading .uvmap { display: none; }
 .uvstage.loading::after { content: 'Loading the map…'; position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%); color: var(--dim2); font-size: 12px; letter-spacing: .12em; }
 .uv3d canvas { display: block; width: 100% !important; height: 100% !important; }
+/* a cinematic edge: the corners fall into space */
+.uvstage.is3d::before { content: ''; position: absolute; inset: 0; z-index: 2; pointer-events: none;
+  background: radial-gradient(ellipse 75% 70% at 50% 52%, transparent 60%, rgba(3, 6, 12, .55) 100%); }
 .uvsum { font-size: 11.5px; color: var(--dim2); margin-left: 14px; letter-spacing: .02em; }
 .uvsum b { color: var(--text); } .uvsum b.cy { color: var(--cyan); }
 .uvstage .crumb { display: flex; align-items: center; padding: 6px 12px; border-radius: 9px; background: rgba(6, 9, 15, .72); border: 1px solid var(--line2); backdrop-filter: blur(4px); }
@@ -32,7 +35,7 @@
   background: rgba(6, 9, 15, .72); border: 1px solid var(--line2); pointer-events: none; }
 .uvlegend b { color: var(--text); }
 .uvlegend i { display: inline-block; vertical-align: -2px; margin-right: 5px; }
-i.lk { width: 9px; height: 8px; border-radius: 2px; background: currentColor; position: relative; margin-top: 3px; }
+i.lk { display: inline-block; width: 9px; height: 8px; border-radius: 2px; background: currentColor; position: relative; margin-top: 3px; flex: none; }
 i.lk::before { content: ''; position: absolute; left: 1.5px; top: -5px; width: 6px; height: 6px; border: 1.5px solid currentColor; border-bottom: 0; border-radius: 4px 4px 0 0; box-sizing: border-box; }
 .uvlegend i.lk { color: var(--dim); }
 .uvlegend i.pb { width: 9px; height: 9px; border-radius: 50%; background: var(--cyan); box-shadow: 0 0 8px var(--cyan); }
@@ -130,8 +133,18 @@ body.ro #dr-ch-text { cursor: default; }
 .uvset.ro { grid-template-columns: 220px minmax(0, 1fr); align-items: center; }
 .uvprev { border-radius: 12px; border: 1px solid var(--line2); padding: 8px 10px 4px;
   background: radial-gradient(260px 160px at 50% 40%, rgba(0, 207, 255, .08), transparent 70%), radial-gradient(ellipse at 50% 60%, #0c1626, #06090f 80%); }
+.uvprev { position: relative; overflow: hidden; }
 .uvprev .skinsvg { display: block; width: 100%; height: 250px; }
 .uvprev.big .skinsvg { height: 330px; }
+/* the 3D building, when the browser can draw it, in the same place as the flat one */
+.uvprev .pv3 { display: none; position: relative; width: 100%; height: 250px; }
+.uvprev.big .pv3 { height: 330px; }
+.pc-art.uvprev .pv3 { height: 300px; }
+.uvprev.has3d { padding: 0; }
+.uvprev.has3d .skinsvg { display: none; }
+.uvprev.has3d .pv3 { display: block; }
+.uvprev .pv3 canvas { display: block; width: 100% !important; height: 100% !important; border-radius: 12px; }
+.uvprev .pvb { pointer-events: none; }
 .uvopts { display: grid; gap: 12px; min-width: 0; }
 .uvopts .sec, .cc .sec { margin-top: 2px; }
 .skins { display: grid; grid-template-columns: repeat(6, minmax(0, 1fr)); gap: 8px; }

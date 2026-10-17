@@ -395,7 +395,12 @@
     return { id: 0, name: S.company.name, owner: CO.ME, public: !!p.public, status: S.company.status, skin: p.skin, accent: p.accent,
       departments: S.departments.slice(), mission: S.company.mission, et10: S.et10 || 0, working: work, plan: S.company.plan, days: 0 };
   }
-  function uvHooks() { return { mine: mineForMap, onOpen: openFromMap, onStats: uvStats }; }
+  function uvHooks() { return { mine: mineForMap, onOpen: openFromMap, onStats: uvStats, onFail: uvTo2D }; }
+  // the 3D renderer could not start here: the flat map takes its place
+  function uvTo2D() {
+    var st = $('uvstage'); st.classList.remove('is3d'); st.classList.add('is2d'); $('uvbans').innerHTML = '';
+    uv = new CO.Universe($('uvmap'), st, uvHooks()); uv.layout(); finishShow(true);
+  }
   // the 3D map when the browser can draw it (WebGPU, or WebGL2), the flat one otherwise
   function showUniverse() {
     if (!uv) {
@@ -447,6 +452,7 @@
       '<div class="sec">ABOUT</div><p class="pc-d">' + esc(c.mission || 'Its owner has not written a description yet.') + '</p>' +
       '<div class="kpis two"><div><b>' + n + '</b><span>department' + (n === 1 ? '' : 's') + ' · one per floor</span></div><div><b>' + (c.status === 'paused' ? 'Paused' : 'Active') + '</b><span>status</span></div></div>' +
       '<p class="hint"><i class="lk"></i>Private: only its owner can look inside.</p></div></div>', true);
+    pv3(document.querySelector('#modal-card .pc-art'), { skin: c.skin, accent: c.accent, floors: n, seed: c.id, name: c.name, public: false });
   }
   // the building pictures: six shapes in the company's colour
   function skinButtons(sel, acc) {
@@ -458,6 +464,12 @@
     return CO.ACCENTS.map(function (a) { return '<button type="button" class="acc' + (a.key === sel ? ' on' : '') + '" data-a="uv-accent" data-k="' + a.key + '" style="--c:' + a.hex + '" title="' + a.key + '"></button>'; }).join('');
   }
   function mark(sel, el) { Array.prototype.forEach.call(document.querySelectorAll(sel), function (x) { x.classList.toggle('on', x === el); }); }
+  // the building turning in 3D where the browser can draw it; the flat picture stays underneath until then
+  function pv3(el, o) { if (el && CO.U3 && CO.U3.ok && CO.U3.preview) CO.U3.preview(el, o); }
+  function myPv() {
+    var S = CO.S, p = CO.profile();
+    return { skin: p.skin, accent: p.accent, floors: Math.max(1, S.departments.length), seed: 7, name: S.company.name, you: true, public: !!p.public };
+  }
   function uvCard() {
     var S = CO.S, p = CO.profile(), n = Math.max(1, S.departments.length);
     return '<div class="card uvcard"><h3>On the Universe map <span class="hint">where every company on Cymetica stands</span></h3><div class="uvset">' +
@@ -472,6 +484,11 @@
   function createCompanyModal() {
     var o = { name: '', mission: '', skin: 'tower', accent: 'green', public: false };
     function prev() { return CO.skinSVG({ skin: o.skin, accent: o.accent, floors: 3, seed: 7, banner: o.name || 'Your company', you: true, priv: !o.public }); }
+    function show() {
+      var el = $('cc-prev'); if (!el) return;
+      if (!el.__pv) el.innerHTML = prev();
+      pv3(el, { skin: o.skin, accent: o.accent, floors: 3, seed: 7, name: o.name || 'Your company', you: true, public: o.public });
+    }
     function pub() {
       return '<span class="sw"></span><div><b>' + (o.public ? 'Public' : 'Private') + '</b><span>' + (o.public ? 'Anyone can look inside, read only.' : 'Others see its name, its building and its mission.') + '</span></div>';
     }
@@ -493,9 +510,10 @@
           location.href = 'index.html?empty&created=1';
           return;
         }
-        $('cc-prev').innerHTML = prev();
+        show();
       });
-    ui.ccPrev = function () { o.name = $('cc-name').value.trim(); $('cc-prev').innerHTML = prev(); };
+    ui.ccPrev = function () { o.name = $('cc-name').value.trim(); show(); };
+    show();
   }
   // what a process's department raises next, and the process that picks it up
   function nextOf(r) {
@@ -651,8 +669,17 @@
         '<dt>Status</dt><dd class="' + (paused ? '' : 'gr') + '">' + (paused ? 'Paused' : 'Active') + '</dd></dl></div>' +
         '<div class="card uvcard"><h3>On the Universe map</h3><div class="uvset ro"><div class="uvprev">' + CO.skinSVG({ skin: c.skin, accent: c.accent, floors: n, seed: c.id, banner: c.name }) + '</div>' +
         '<dl class="rodl"><dt>Visibility</dt><dd class="cy">Public: anyone can look inside</dd><dt>Building</dt><dd>' + esc(CO.skinName(c.skin)) + ' · ' + n + ' floor' + (n === 1 ? '' : 's') + '</dd></dl></div></div></div>');
+      pv3(document.querySelector('#settings .uvprev'), { skin: c.skin, accent: c.accent, floors: n, seed: c.id, name: c.name, public: true });
       return;
     }
+    // the turning building survives a re-render: it moves into the new card instead of starting again
+    var oldPv = $('st-prev'), keepPv = oldPv && oldPv.__pv;
+    settingsHTML(S, c, paused);
+    var nuPv = $('st-prev');
+    if (keepPv && nuPv && nuPv !== oldPv && !keepPv.dead) { nuPv.appendChild(keepPv.wrap); nuPv.__pv = keepPv; keepPv.el = nuPv; nuPv.classList.add('has3d'); }
+    pv3(nuPv, myPv());
+  }
+  function settingsHTML(S, c, paused) {
     setHTML($('settings'), uvCard() + '<div class="cols2"><div class="card"><h3>Company</h3><div class="form">' +
       '<label class="field">Name<input id="st-name" maxlength="60" value="' + esc(c.name) + '"></label>' +
       '<label class="field">Report style<select id="st-report">' + ['Short, numbers first', 'Daily digest', 'Every result'].map(function (x) { return '<option' + (x === c.report_style ? ' selected' : '') + '>' + x + '</option>'; }).join('') + '</select></label>' +
