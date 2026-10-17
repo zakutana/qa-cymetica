@@ -74,9 +74,6 @@ def _desk_step_closed(now: datetime, ended: timedelta, worker_running: bool) -> 
 
 
 @qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
-@pytest.mark.xfail(strict=True, reason="T-0037: desk_due never reads a running desk worker; "
-                   "the clock tickets the next step in the seconds between a worker's done "
-                   "and its run row")
 def test_the_clock_does_not_ticket_the_desk_while_a_desk_worker_is_still_running(company):
     now = datetime.now(timezone.utc)
     _desk_step_closed(now, ended=timedelta(minutes=45), worker_running=True)
@@ -89,8 +86,6 @@ def test_the_clock_does_not_ticket_the_desk_while_a_desk_worker_is_still_running
 
 
 @qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
-@pytest.mark.xfail(strict=True, reason="T-0037: the pause is counted from the newest run row only; "
-                   "the docstring's other half -- from the ticket's own close -- is not built")
 def test_the_pause_also_runs_from_the_tickets_close_when_the_marker_is_gone(company):
     """B04, deep pass 2026-10-15: "the marker alone leaves milliseconds". The worker's marker is
     already down, its run row not yet written (the newest is 45 min old), and the ticket closed

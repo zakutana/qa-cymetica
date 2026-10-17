@@ -614,15 +614,24 @@ A2A_PER_HOUR = 3
 
 
 def desk_due(state: dict[str, dict], last_end: datetime | None, snooze: dict | None,
-             now: datetime) -> bool:
-    """Whether the clock gives the desk its next step. Pure."""
+             now: datetime, running: bool = False) -> bool:
+    """Whether the clock gives the desk its next step. Pure.
+
+    Not while a desk worker still runs (`running`: its marker in `active()`), and the pause
+    counts from the later of the newest desk run row and the newest desk ticket's own close.
+    A worker closes its ticket before it exits and its run row is written after, so either
+    alone leaves a window the clock tickets the next step in (T-0037, B04)."""
+    if running:
+        return False
     if any(t.get("to") == "desk" and t.get("status") in ("open", "claimed")
            for t in state.values()):
         return False
     until = moment((snooze or {}).get("until"))
     if until is not None and until > now:
         return False
-    return last_end is None or now - last_end >= DESK_PAUSE
+    ends = [last_end] + [moment(t.get("closed_at")) for t in state.values() if t.get("to") == "desk"]
+    ends = [e for e in ends if e is not None]
+    return not ends or now - max(ends) >= DESK_PAUSE
 
 
 def _snooze_path(dept: str) -> Path:

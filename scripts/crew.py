@@ -619,7 +619,8 @@ def clock_look(now: datetime | None = None) -> tuple[str, str]:
                                 "flags": crew.metric_flags(numbers)}, by="clock", now=now)
         if new:
             said.append(f"daily review: {ticket['id']}")
-    if crew.desk_due(crew.tickets(), crew.last_run_end("desk"), crew.snoozed("desk", now), now):
+    if crew.desk_due(crew.tickets(), crew.last_run_end("desk"), crew.snoozed("desk", now), now,
+                     running="desk" in crew.active()):
         ticket, new = crew.add_ticket(
             "desk", "step", "one step towards proving that money can be made on Cymetica",
             key=f"desk:{crew.stamp(now)}", by="clock", now=now)
