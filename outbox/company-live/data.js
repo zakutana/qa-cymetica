@@ -76,7 +76,7 @@
     development: { url: 'https://cymetica.com/leaderboard/features', label: 'Build it Better board' },
     design: { url: 'https://cymetica.com/leaderboard/features', label: 'Build it Better board' },
     testing_lab: { url: 'https://cymetica.com/my-agents', label: 'My Agents' },
-    trading_desk: { url: 'https://cymetica.com/terminal', label: 'Bot Assembly Terminal' },
+    trading_desk: { url: 'experiments.html', label: 'Experiments: what we try and how it goes' },
     custom: { url: 'https://cymetica.com/company', label: 'Company' }
   };
   // what a department's work usually raises next, so a process can show what it leads to
