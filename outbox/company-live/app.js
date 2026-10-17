@@ -24,7 +24,7 @@
   function setHTML(el, html) { if (el && el._h !== html) { el._h = html; el.innerHTML = html; return true; } return false; }
   function initials(n) { return String(n || '?').split(/\s+/).map(function (w) { return w.charAt(0); }).join('').slice(0, 2).toUpperCase(); }
   var WORD = { working: 'Working', queued: 'Queued', waiting: 'Waiting for you', idle: 'Idle' };
-  var TSTAT = { queued: 'queued', running: 'running', waiting_approval: 'waits for you', done: 'done', failed: 'failed', cancelled: 'cancelled' };
+  var TSTAT = { queued: 'next', running: 'working', waiting_approval: 'needs you', done: 'done', failed: 'failed', cancelled: 'cancelled' };
 
   var ui = { tab: 'office', view: '2d', panel: null, open: {}, seen: {}, feedTop: 0, dirty: false, prev: {}, tfDept: '', tfStatus: '', memQ: '', memDept: null };
   var office;
@@ -65,12 +65,12 @@
     var S = CO.S, c = S.company, b = S.budget, l = CO.left(), paused = c.status === 'paused';
     $('co-name').textContent = c.name;
     $('co-logo').textContent = initials(c.name);
-    var st = $('co-status'); st.textContent = paused ? 'PAUSED' : 'ACTIVE'; st.className = 'pill ' + (paused ? 'off' : 'on');
+    var st = $('co-status'); st.textContent = paused ? 'PAUSED' : 'RUNNING'; st.className = 'pill ' + (paused ? 'off' : 'on');
     $('co-pause').textContent = paused ? 'Resume' : 'Pause';
     var et = $('co-et10'); et.hidden = !S.et10;
     if (S.et10) et.innerHTML = '<b>+' + S.et10.toLocaleString('en-US') + '</b> ET10 earned';
     var n = S.approvals.length, w = $('co-waiting');
-    w.innerHTML = n ? '<b>' + n + '</b> waiting for you' : 'nothing waits for you';
+    w.innerHTML = n ? '<b>' + n + '</b> need' + (n === 1 ? 's' : '') + ' you' : '✓ all clear';
     w.classList.toggle('none', !n);
   }
   function setN(box, id, v, low) {
@@ -90,25 +90,19 @@
     var S = CO.S;
     $('rail-n').textContent = S.departments.length;
     var cc = CO.counts();
-    var mrow = '<button class="dept mgrrow working" title="Open the Manager: the whole conversation, the plan"><div class="d1"><i class="dot"></i><b>Manager</b>' +
-      (S.approvals.length ? '<span class="et red">' + S.approvals.length + ' for you</span>' : '') + '</div>' +
-      '<div class="d2"><span class="c">' + cc.open + '<small>open</small></span><span class="m">' + S.plan.length + '<small>planned</small></span><span class="m">' + S.messages.length + '<small>messages</small></span></div>' +
-      '<div class="d3">routes every department · click to chat</div></button>';
+    // Each card says three things: who, what it is doing now, and one number. The rest is one click away.
+    var na = S.approvals.length;
+    var mrow = '<button class="dept mgrrow working" title="Open your chat with the Manager"><div class="d1"><i class="dot"></i><b>Manager</b>' +
+      (na ? '<span class="et red">' + na + ' need' + (na === 1 ? 's' : '') + ' you</span>' : '') + '</div>' +
+      '<div class="dl"><span class="tx cyan">Chat · runs every department</span></div></button>';
     setHTML($('depts'), mrow + S.departments.map(function (d) {
-      var v = CO.deptView(d);
-      return '<button class="dept ' + v.status + (ui.panel === d.id ? ' on' : '') + (d.born && S.clock - d.born < 4000 ? ' born' : '') + '" data-id="' + d.id + '" title="' + WORD[v.status] + '">' +
+      var v = CO.deptView(d), ln = CO.deptLine(d, v);
+      return '<button class="dept ' + v.status + (ln.tone === 'red' ? ' needs' : '') + (ui.panel === d.id ? ' on' : '') + (d.born && S.clock - d.born < 4000 ? ' born' : '') + '" data-id="' + d.id + '">' +
         '<div class="d1"><i class="dot"></i><b>' + esc(d.name) + '</b>' +
-        (d.et10 ? '<span class="et' + (d.files_as ? ' lit' : '') + '" title="ET10 Cymetica paid for accepted bugs, to ' + esc(d.files_as || 'you') + '">+' + d.et10.toLocaleString('en-US') + ' ET10</span>'
-          : d.files_as ? '<span class="et zero" title="ET10 Cymetica paid for accepted bugs, to ' + esc(d.files_as) + '">0 ET10</span>' : '') + '</div>' +
-        '<div class="dus" title="What this department spent of your plan today and in the last 7 days' + (v.cap ? ', against its daily cap' : '') + '">' +
-        '<span' + (v.capped ? ' class="hot"' : '') + '>' + CO.fmtTok(v.tokToday) + (v.cap ? '<small>/ ' + CO.fmtTok(v.cap) + ' today</small>' : '<small>today</small>') + '</span>' +
-        '<span>' + CO.fmtTok(v.tok7d) + '<small>7 days</small></span>' +
-        (v.cap ? '<span class="ubar"><i class="' + (v.capped ? 'hot' : '') + '" style="width:' + Math.min(100, v.tokToday / v.cap * 100).toFixed(0) + '%"></i></span>' : '') + '</div>' +
-        (d.schedule ? '<div class="dsch">⟳ ' + esc(d.schedule.label.replace(/ \(.*/, '')) + ' · next ' + hhmm(d.next_run) + (d.products.length ? ' · ' + esc(d.products.join(', ')) : '') + '</div>' : '') +
-        '<div class="d2"><span class="c">' + v.open + '<small>open</small></span><span class="g">' + v.done + '<small>done</small></span>' +
-        '<span class="' + (v.failed ? 'r' : 'z') + '">' + v.failed + '<small>failed</small></span><span class="m">' + v.memory + '<small>mem</small></span></div>' +
-        (v.waits ? '<div class="dwait">Queued: <span data-wait="' + d.id + '">' + esc(v.waits) + '</span></div>' : '') +
-        '<div class="d3">' + esc(v.experts.map(function (e) { return e.name; }).join(' · ')) + '</div>' +
+        (d.files_as ? '<span class="et ' + (d.et10 ? 'lit' : 'zero') + '" title="ET10 Cymetica paid for accepted bugs, to ' + esc(d.files_as) + '">' + (d.et10 ? '+' : '') + (d.et10 || 0).toLocaleString('en-US') + ' ET10</span>' : '') + '</div>' +
+        '<div class="dl"><span class="tx ' + ln.tone + '" title="' + esc(ln.text) + '">' + esc(ln.text) + '</span>' +
+        '<span class="sp' + (v.capped ? ' hot' : '') + '" title="Spent of your plan today' + (v.cap ? ', of its ' + CO.fmtTok(v.cap) + ' daily cap' : '') + '">' + CO.fmtTok(v.tokToday) + '<small>today</small></span></div>' +
+        (v.cap ? '<span class="ubar capb"><i class="' + (v.capped ? 'hot' : '') + '" style="width:' + Math.min(100, v.tokToday / v.cap * 100).toFixed(0) + '%"></i></span>' : '') +
         (v.status === 'working' ? '<span class="run"><i></i></span>' : '') + '</button>';
     }).join(''));
   }
@@ -120,21 +114,24 @@
     var start = b.session.resets_at - b.session.every;
     var onExtra = S.strip.filter(function (c) { return c.at >= start && c.extra; }).length;
     var used = Math.min(b.session.used, cap), sp = Math.round(used / cap * 100), usp = $('us-p');
-    usp.textContent = sp + '% used · ' + CO.fmtTok(used * CO.TOK) + (onExtra ? ' · ' + onExtra + ' turns on extra usage' : '');
+    usp.textContent = sp + '% used' + (onExtra ? ' · on extra usage' : '');
     usp.classList.toggle('hot', sp >= 85);
     var sb = $('us-bar'); sb.style.width = sp + '%'; sb.classList.toggle('hot', sp >= 85);
     var wp = Math.min(100, b.week.used / b.week.cap * 100);
     $('uw-p').textContent = Math.round(wp) + '% used';
     var wb = $('uw-bar'); wb.style.width = wp.toFixed(1) + '%'; wb.classList.toggle('hot', wp >= 85);
-    $('strip-n').textContent = S.strip.length; $('strip-cap').textContent = b.cap;
-    $('day-bar').style.width = Math.min(100, S.strip.length / b.cap * 100).toFixed(1) + '%';
   }
 
+  // what an approval is, in words a person uses
+  var KIND_WORD = { 'BB request': 'Build it Better request', 'bug report': 'Bug report', 'real-money action': 'Real money',
+    'seat request': 'Tournament seat', 'start?': 'Start it?', 'review': 'Check the result' };
+  function kindWord(k) { return KIND_WORD[k] || k; }
+  function plainTitle(s) { return String(s || '').replace(/^(BB request|Seat|Real trade|Handle): /, ''); }
   function apprCard(a, full) {
     var d = CO.dept(a.dept_id), isNew = !ui.seen[a.id];
     var kind = a.kind === 'real-money action' ? 'tag money' : a.kind === 'review' || a.kind === 'start?' ? 'tag rvk' : 'tag k';
-    return '<div class="ai' + (isNew ? ' new' : '') + '" data-id="' + a.id + '"><div class="t"><span class="tag">' + esc(d ? d.name : '') + '</span><span class="' + kind + '">' + esc(a.kind) + '</span>' +
-      esc(CO.ago(a.created_at)) + '</div><p>' + esc(a.summary) + '</p>' + (full ? '<div class="draft">' + fmtDraft(a.body) + '</div>' : '') +
+    return '<div class="ai' + (isNew ? ' new' : '') + '" data-id="' + a.id + '"><div class="t"><span class="' + kind + '">' + esc(kindWord(a.kind)) + '</span>' +
+      '<span class="from">' + esc(d ? d.name : '') + ' · ' + esc(CO.ago(a.created_at)) + '</span></div><p>' + esc(plainTitle(a.summary)) + '</p>' + (full ? '<div class="draft">' + fmtDraft(a.body) + '</div>' : '') +
       '<div class="bt"><button class="btn gr" data-d="approve">Approve</button><button class="btn rd" data-d="reject">Reject</button>' +
       (full ? '' : '<button class="btn" data-r="1">Read</button>') + '</div></div>';
   }
@@ -147,32 +144,34 @@
   function renderRight() {
     var S = CO.S, fd = ui.panel != null ? CO.dept(ui.panel) : null;
     var apprs = fd ? S.approvals.filter(function (a) { return a.dept_id === fd.id; }) : S.approvals, n = apprs.length;
-    $('ap-t').textContent = fd ? 'WAITING FOR YOU · ' + fd.name.toUpperCase() : 'WAITING FOR YOU';
-    $('nx-t').textContent = fd ? 'NEXT UP · ' + fd.name.toUpperCase() : "NEXT UP · THE MANAGER'S PLAN";
+    $('ap-t').textContent = fd ? 'NEEDS YOU · ' + fd.name.toUpperCase() : 'NEEDS YOU';
+    $('nx-t').textContent = fd ? 'UP NEXT · ' + fd.name.toUpperCase() : 'UP NEXT';
     $('ap-n').textContent = n || '';
     $('p-appr').classList.toggle('none', !n);
-    setHTML($('appr'), n ? apprs.map(function (a) { return apprCard(a, false); }).join('') : '<p class="empty ok">Nothing is waiting for you' + (fd ? ' from ' + esc(fd.name) : '') + '.</p>');
+    setHTML($('appr'), n ? apprs.map(function (a) { return apprCard(a, false); }).join('') : '<p class="empty ok">All clear: nothing needs you' + (fd ? ' from ' + esc(fd.name) : '') + '.</p>');
     S.approvals.forEach(function (a) { ui.seen[a.id] = 1; });
     // the plan
     var pl = S.plan.filter(function (id) { var t = CO.task(id); return t && (!fd || t.dept_id === fd.id); });
     $('plan-n').textContent = pl.length || '';
     setHTML($('plan'), pl.length ? pl.map(function (id) {
       var i = S.plan.indexOf(id), t = CO.task(id); if (!t) return '';
-      var d = CO.dept(t.dept_id), w = CO.waitText(t), waits = w.indexOf('next pass') !== 0;
-      var left = Math.max(1, t.turns_needed - t.turns);
-      return '<li data-id="' + id + '"' + (ui.moved === id ? ' class="moved"' : '') + '><span class="n">' + (i + 1) + '</span><div><b title="' + esc(t.title) + '">' + esc(d ? d.name : '') + ': ' + esc(t.title) + '</b>' +
-        '<em class="' + (waits ? 'wait' : '') + '">' + esc(waits ? w : t.why) + ' · ~' + left + ' turn' + (left > 1 ? 's' : '') + '</em></div>' +
+      var d = CO.dept(t.dept_id), blocked = t.blocked_by || CO.capped(d);
+      return '<li data-id="' + id + '"' + (ui.moved === id ? ' class="moved"' : '') + '><span class="n">' + (i + 1) + '</span><div><b title="' + esc(t.title) + '">' + esc(plainTitle(t.title)) + '</b>' +
+        '<em class="' + (blocked ? 'wait' : '') + '">' + esc(d ? d.name : '') + (blocked ? ' · ' + esc(CO.waitText(t)) : '') + '</em></div>' +
         '<span class="pa"><button data-a="top" title="Move to the top"' + (i ? '' : ' disabled') + '>⤒</button><button data-a="up" title="Move up"' + (i ? '' : ' disabled') + '>↑</button>' +
         '<button data-a="down" title="Move down"' + (i < S.plan.length - 1 ? '' : ' disabled') + '>↓</button><button data-a="remove" title="Remove from the plan">×</button></span></li>';
     }).join('') : '<li class="empty">Nothing queued' + (fd ? ' for ' + esc(fd.name) : '') + '. Give the Manager work below.</li>');
     ui.moved = null;
     // the feed, newest first
     var top = ui.feedTop, fresh = 0;
-    var fe = fd ? S.feed.filter(function (f) { return f.dept === fd.name; }) : S.feed;
+    // only what happened, not the machinery: starts, turns, queueing and retries stay out
+    var fe = (fd ? S.feed.filter(function (f) { return f.dept === fd.name; }) : S.feed).filter(function (f) {
+      return !/^(started |finished turn |queued "|replied|new department)|retrying$/.test(f.text);
+    });
     fe.forEach(function (f) { if (f.at > top) fresh++; });
     setHTML($('feed'), fe.slice(0, 14).map(function (f, i) {
-      return '<li class="' + f.kind + (i < fresh ? ' new' : '') + '"><span><b>' + esc(f.dept) + '</b> ' + esc(f.text) + '</span><em>' + hhmm(f.at) + '</em></li>';
-    }).join('') || '<p class="empty">Quiet so far. Give the Manager work and watch the office move.</p>');
+      return '<li class="' + f.kind + (i < fresh ? ' new' : '') + '"><span><b>' + esc(f.dept) + '</b> ' + esc(f.text.replace(/ \(R\d+\)$/, '').replace(/BB request/g, 'Build it Better request')) + '</span><em>' + hhmm(f.at) + '</em></li>';
+    }).join('') || '<p class="empty">Quiet so far. Things show up here as they happen.</p>');
     if (S.feed.length) ui.feedTop = S.feed[0].at;
     renderChats();
   }
@@ -197,11 +196,8 @@
       setHTML($('mg-switch'), switcher('hub'));
       fillChat($('msgs'), chatHTML(S.messages, true) || '<p class="hint">No messages yet. Say hello to your Manager: ask how it goes, give it work, or tell it to add a department.</p>');
       $('typing').hidden = !S.typing;
-      var c = CO.counts(), g = CO.gate();
-      $('mg-pill').textContent = S.company.status === 'paused' ? 'PAUSED' : !g.ok ? g.text.toUpperCase() : c.working ? c.working + ' WORKING' : 'ROUTING';
-      setHTML($('mg-kp'), '<div><b class="cy">' + c.open + '</b><span>open</span></div><div><b class="red">' + c.waiting + '</b><span>wait for you</span></div>' +
-        '<div><b>' + S.plan.length + '</b><span>planned</span></div><div><b class="gr">' + S.departments.length + '</b><span>departments</span></div>' +
-        '<div><b>' + (S.et10 ? '+' + S.et10.toLocaleString('en-US') : '0') + '</b><span>ET10 earned</span></div>');
+      var c = CO.counts();
+      $('mg-pill').textContent = S.company.status === 'paused' ? 'PAUSED' : c.working ? c.working + ' WORKING' : 'RUNNING';
     }
   }
 
@@ -244,7 +240,8 @@
     ui.flyT = setTimeout(function () { office.fit(true); }, 520);
   }
   function taskRow(t, opened) {
-    var one = t.status === 'running' ? 'running · attempt ' + t.attempt + ' of 3' : t.last_error && t.status !== 'done' ? 'last try: ' + t.last_error : t.outcome || (t.status === 'queued' ? CO.waitText(t) : '');
+    // one plain line: the result when there is one; nothing about attempts or passes
+    var one = t.status === 'done' || t.status === 'failed' || t.status === 'waiting_approval' ? (t.outcome || '') : '';
     var when = t.finished_at || t.started_at || t.created_at;
     var more = opened ? '<div class="more"><b>Brief:</b> ' + esc(t.brief) + '<br><b>Result:</b> ' + esc(t.outcome || 'No output yet.') +
       (t.last_error ? '<br><b class="red">Last error:</b> ' + esc(t.last_error) : '') + '<br>' + esc(TSTAT[t.status]) + ' · ' + t.turns + ' turn' + (t.turns === 1 ? '' : 's') +
@@ -265,22 +262,22 @@
     if (!d) return closeDrawer();
     var v = CO.deptView(d), appr = S.approvals.filter(function (a) { return a.dept_id === d.id; });
     setHTML($('dr-switch'), switcher(d.id));
-    setHTML($('dr-head'), '<i class="dot ' + v.status + '"></i><h2>' + esc(d.name) + '</h2><span class="pill st-' + v.status + '">' + WORD[v.status].toUpperCase() + '</span>' +
+    var ln = CO.deptLine(d, v);
+    setHTML($('dr-head'), '<i class="dot ' + v.status + (ln.tone === 'red' ? ' needs' : '') + '"></i><h2>' + esc(d.name) + '</h2>' +
+      (d.files_as ? '<span class="et ' + (d.et10 ? 'lit' : 'zero') + '" title="ET10 Cymetica paid for accepted bugs, to ' + esc(d.files_as) + '">' + (d.et10 ? '+' : '') + (d.et10 || 0).toLocaleString('en-US') + ' ET10</span>' : '') +
       '<span class="x"><button class="btn" data-a="edit">Edit</button></span>');
-    setHTML($('dr-chips'), v.experts.map(function (e) { return '<span class="chip">' + esc(e.name) + '</span>'; }).join('') +
-      (appr.length ? '<span class="chip red" data-a="appr">' + appr.length + ' waiting for you</span>' : ''));
+    // what it is doing right now, in one line: the first thing anyone wants to know
+    setHTML($('dr-now'), '<div class="now t-' + ln.tone + '"><p>' + esc(ln.text) + '</p>' +
+      (appr.length ? '<button class="btn rd" type="button" data-a="appr">Open</button>' : '') + (v.running ? '<span class="run"><i></i></span>' : '') + '</div>');
     var ta = $('dr-ch-text');
     if (!ui.dirty && ta.value !== d.charter) ta.value = d.charter;
     charterMeta();
-    setHTML($('dr-kp'), '<div><b class="cy">' + v.open + '</b><span>open</span></div><div><b class="gr">' + v.done + '</b><span>done</span></div>' +
-      '<div><b class="red">' + v.failed + '</b><span>failed</span></div>');
     // what it spends, and the owner's two brakes (a daily cap; runs a day for a department on a clock)
     var ci = CO.CAP_STEPS.indexOf(v.cap); if (ci < 0) ci = CO.CAP_STEPS.length - 1;
     var runsNow = d.schedule ? d.schedule.times.length : 0;
-    var tokHtml = '<div class="tok"><div class="sec">SPEND <span>of your plan, in dollars</span></div>' +
-      '<div class="tk3"><div><b class="' + (v.capped ? 'red' : 'cy') + '">' + CO.fmtTok(v.tokToday) + '</b><span>today</span></div>' +
-      '<div><b>' + CO.fmtTok(v.tok7d) + '</b><span>last 7 days</span></div>' +
-      '<div title="What one turn of this department costs on average"><b>' + CO.fmtTok(v.perTurn) + '</b><span>a turn</span></div></div>' +
+    var tokHtml = '<div class="tok"><div class="sec">SPEND</div>' +
+      '<div class="tk2"><div><b class="' + (v.capped ? 'red' : 'cy') + '">' + CO.fmtTok(v.tokToday) + '</b><span>today</span></div>' +
+      '<div><b>' + CO.fmtTok(v.tok7d) + '</b><span>last 7 days</span></div></div>' +
       (v.cap ? '<div class="track tkbar"><i class="' + (v.capped ? 'hot' : '') + '" style="width:' + Math.min(100, v.tokToday / v.cap * 100).toFixed(1) + '%"></i></div>' +
         '<div class="tkcap' + (v.capped ? ' hot' : '') + '">' + (v.capped ? 'Cap reached: it waits until 00:00' : CO.fmtTok(Math.max(0, v.cap - v.tokToday)) + ' left today') + '</div>' : '') +
       '<label class="capr"><span class="l">Daily cap</span><input type="range" id="dr-cap" min="0" max="' + (CO.CAP_STEPS.length - 1) + '" step="1" value="' + ci + '">' +
@@ -294,29 +291,28 @@
     var runsHtml = '';
     if (d.schedule && d.run_kind) {
       // the league answers puzzles and the outsider hands problems on: no products, no bug count of their own
-      var third = d.run_kind === 'league' ? [(d.answers || 0), 'answers sent'] : [(d.handed || 0), 'handed to Cymetica QA'];
+      var third = d.run_kind === 'league' ? [(d.answers || 0), 'answers sent'] : [(d.handed || 0), 'handed to QA'];
       runsHtml = '<div class="runs"><div class="sec">RUNS <span>' + esc(d.schedule.label) + '</span></div>' +
-        '<div class="rk" style="grid-template-columns:repeat(3,1fr)"><div><b>' + hhmm(d.next_run) + '</b><span>next run</span></div><div><b>' + (d.runs || 0) + '</b><span>runs done</span></div>' +
+        '<div class="rk" style="grid-template-columns:repeat(2,1fr)"><div><b>' + hhmm(d.next_run) + '</b><span>next run</span></div>' +
         '<div><b class="gr">' + third[0] + '</b><span>' + third[1] + '</span></div></div>' +
         '<div class="cb"><span class="sp" style="flex:1"></span><button class="btn cy" data-a="runnow">Run now</button></div></div>';
     } else if (d.schedule) {
       runsHtml = '<div class="runs"><div class="sec">RUNS <span>' + esc(d.schedule.label) + '</span></div>' +
-        '<div class="rk"><div><b>' + hhmm(d.next_run) + '</b><span>next run</span></div><div><b>' + (d.runs || 0) + '</b><span>runs done</span></div>' +
-        '<div><b class="gr">' + (d.accepted || 0) + '</b><span>bugs accepted</span></div><div><b class="gr">+' + (d.et10 || 0).toLocaleString('en-US') + '</b><span>ET10 to ' + esc(d.files_as || 'you') + '</span></div></div>' +
+        '<div class="rk" style="grid-template-columns:repeat(2,1fr)"><div><b>' + hhmm(d.next_run) + '</b><span>next run</span></div>' +
+        '<div><b class="gr">' + (d.accepted || 0) + '</b><span>bugs accepted</span></div></div>' +
         '<div class="prods">' + (d.products.length ? d.products.map(function (p) { return '<span class="chip">' + esc(p) + '</span>'; }).join('') : '<span class="hint">no products yet: the public site</span>') + '</div>' +
         '<div class="cb"><input id="dr-prods" placeholder="Products, comma separated" value="' + esc(d.products.join(', ')) + '"><button class="btn" data-a="prods">Save</button><button class="btn cy" data-a="runnow">Run now</button></div></div>';
     }
     if ($('dr-runs')._h !== runsHtml && !(document.activeElement && document.activeElement.id === 'dr-prods')) { $('dr-runs')._h = runsHtml; $('dr-runs').innerHTML = runsHtml; }
-    var r = v.running;
-    setHTML($('dr-now'), r ? '<div class="now"><div class="t1">NOW · ATTEMPT ' + r.attempt + ' OF ' + r.max_attempts + '</div><p>' + esc(r.title) + '</p>' +
-      '<div class="t2">' + esc(CO.expertName(r.expert)) + ' · started ' + hhmm(r.turn_started || r.started_at) + (r.last_error ? ' · last try: <b>' + esc(r.last_error) + '</b>' : '') + '</div><span class="run"><i></i></span></div>'
-      : '<div class="now idle"><div class="t1">NOW</div><p>' + (v.waits ? 'Queued: <span data-wait="' + d.id + '">' + esc(v.waits) + '</span>' : v.waiting ? 'Waits for your approval.' : 'Nothing runs now.') + '</p></div>');
-    var ts = sortTasks(CO.deptTasks(d.id));
+    // the latest results: what it finished, plainly; the full list is one click away
+    var ts = sortTasks(CO.deptTasks(d.id)).filter(function (t) { return t.status !== 'cancelled'; });
     $('dr-tasks-all').textContent = 'All ' + ts.length + ' →';
-    setHTML($('dr-tasks'), ts.length ? ts.slice(0, 10).map(function (t) { return taskRow(t, ui.open[t.id]); }).join('') : '<p class="empty">No tasks yet.</p>');
+    setHTML($('dr-tasks'), ts.length ? ts.slice(0, 5).map(function (t) { return taskRow(t, ui.open[t.id]); }).join('') : '<p class="empty">Nothing yet.</p>');
+    // memory: what it learned, folded away until asked for
     var mem = S.memory.filter(function (m) { return m.dept_id === d.id; }).sort(function (a, b) { return b.id - a.id; });
-    $('dr-mem-all').textContent = 'All ' + mem.length + ' →';
-    setHTML($('dr-mem'), mem.length ? mem.slice(0, 5).map(function (m) { return '<div class="mem"><span class="' + m.kind + '">' + esc(m.kind) + '</span><div>' + esc(m.text) + '</div></div>'; }).join('') : '<p class="empty">Nothing remembered yet.</p>');
+    $('dr-mem-t').innerHTML = 'MEMORY · ' + mem.length + ' <span>' + (ui.memOpen ? '▾' : '▸') + '</span>';
+    $('dr-mem').hidden = !ui.memOpen;
+    setHTML($('dr-mem'), mem.length ? mem.map(function (m) { return '<div class="mem"><span class="k-' + m.kind + '">' + esc(m.kind) + '</span><div>' + esc(m.text) + '</div></div>'; }).join('') : '<p class="empty">Nothing learned yet.</p>');
   }
   function capLabel(cap, perTurn) {
     return cap ? CO.fmtTok(cap) + ' a day · ~' + Math.max(1, Math.floor(cap / (perTurn || 0.19))) + ' turns' : 'no cap';
@@ -408,10 +404,12 @@
     $('tk-sub').textContent = S.tasks.length + ' tasks · ' + open + ' open · ' + done + ' done · ' + failed + ' failed';
     setHTML($('tasks'), rows.length ? rows.map(function (t) {
       var d = CO.dept(t.dept_id);
-      var res = t.status === 'running' ? 'running · attempt ' + t.attempt + ' of 3' : t.last_error && t.status !== 'done' ? '<span class="err">Last error: ' + esc(t.last_error) + '</span>' + (t.status === 'queued' ? ' · ' + esc(CO.waitText(t)) : '') : esc(t.outcome || (t.status === 'queued' ? CO.waitText(t) : ''));
+      // the result, or why it waits when that is something the owner can act on; never the machinery
+      var blocked = t.status === 'queued' && (t.blocked_by || CO.capped(CO.dept(t.dept_id)));
+      var res = t.status === 'running' ? 'working on it now' : t.status === 'queued' ? (blocked ? esc(CO.waitText(t)) : '') :
+        t.status === 'failed' ? '<span class="err">Could not finish: ' + esc(t.last_error || 'unknown') + '</span>' : esc(t.outcome || '');
       var tr = '<tr class="row" data-task="' + t.id + '"><td><span class="st ' + t.status + '">' + esc(TSTAT[t.status]) + '</span></td><td>' + esc(d ? d.name : 'removed') + '</td>' +
-        '<td><span class="id">#' + t.id + '</span><b>' + esc(t.title) + '</b></td><td class="num">' + (t.started_at ? dayTime(t.started_at) : '—') + '</td><td class="num">' + t.turns + '</td>' +
-        '<td class="num">' + (t.units ? u2(t.units) : '—') + '</td><td class="res">' + res + '</td></tr>';
+        '<td><span class="id">#' + t.id + '</span><b>' + esc(t.title) + '</b></td><td class="num">' + (t.started_at ? dayTime(t.started_at) : '—') + '</td><td class="res">' + res + '</td></tr>';
       if (ui.open[t.id]) {
         tr += '<tr class="det"><td></td><td colspan="6"><b>Brief:</b> ' + esc(t.brief) + '<br><b>Result:</b> ' + esc(t.outcome || 'No output yet.') +
           (t.last_error ? '<br><b class="red">Last error:</b> ' + esc(t.last_error) : '') + '<br><b>Expert:</b> ' + esc(CO.expertName(t.expert || '')) +
@@ -422,7 +420,7 @@
   }
   function renderApprovals() {
     var S = CO.S;
-    setHTML($('appr-full'), S.approvals.length ? S.approvals.map(function (a) { return apprCard(a, true); }).join('') : '<p class="empty ok">Nothing is waiting for you.</p>');
+    setHTML($('appr-full'), S.approvals.length ? S.approvals.map(function (a) { return apprCard(a, false); }).join('') : '<p class="empty ok">All clear: nothing needs you.</p>');
     S.approvals.forEach(function (a) { ui.seen[a.id] = 1; });
     setHTML($('appr-done'), S.decided.length ? S.decided.map(function (a) {
       var d = CO.dept(a.dept_id), filed = a.decision === 'filed', ok = filed || a.decision === 'approve';
@@ -438,14 +436,14 @@
       var items = S.memory.filter(function (m) { return m.dept_id === d.id && (!q || m.text.toLowerCase().indexOf(q) >= 0 || m.kind.indexOf(q) >= 0); }).sort(function (a, b) { return b.id - a.id; });
       if (!items.length && q) return '';
       return '<div class="card" data-mem="' + d.id + '"' + (ui.memDept === d.id ? ' style="border-color:var(--cyan)"' : '') + '><h3><i class="dot ' + CO.deptView(d).status + '"></i>' + esc(d.name) + ' <small>' + items.length + '</small></h3>' +
-        (items.length ? items.map(function (m) { return '<div class="mem"><span class="' + m.kind + '">' + esc(m.kind) + '</span><div>' + esc(m.text) + '<i>' + CO.ago(m.at) + '</i></div></div>'; }).join('') : '<p class="empty">Nothing remembered yet.</p>') + '</div>';
+        (items.length ? items.map(function (m) { return '<div class="mem"><span class="k-' + m.kind + '">' + esc(m.kind) + '</span><div>' + esc(m.text) + '<i>' + CO.ago(m.at) + '</i></div></div>'; }).join('') : '<p class="empty">Nothing remembered yet.</p>') + '</div>';
     }).join('') || '<p class="empty">Nothing matches.</p>');
   }
   function renderAudit() {
     var S = CO.S, A = S.audit, days = Math.max(0, Math.ceil((A.next_at - S.clock) / 86400000));
     var stuck = S.tasks.filter(function (t) { return t.status === 'queued' && S.clock - t.created_at > 45 * 60000; }).length;
-    var html = '<div class="kpis"><div><b class="cy">' + days + 'd</b><span>next audit · ' + dayTime(A.next_at) + '</span></div><div><b>' + (A.last ? A.last.findings.length : 0) + '</b><span>findings last week</span></div>' +
-      '<div><b class="' + (stuck ? 'red' : 'gr') + '">' + stuck + '</b><span>queued over 45 min now</span></div><div><b>' + S.departments.length + '</b><span>departments it reads</span></div></div>';
+    var html = '<div class="kpis two"><div><b class="cy">' + days + 'd</b><span>next audit · ' + dayTime(A.next_at) + '</span></div><div><b>' + (A.last ? A.last.findings.length : 0) + '</b><span>tips last week</span></div>' +
+      '</div>';
     html += A.last ? '<div class="card"><h3>Last audit · ' + dayTime(A.last.at) + '</h3>' + A.last.findings.map(function (f) {
       return '<div class="finding"><span><span class="tag k">' + esc(f.kind) + '</span></span><div>' + esc(f.detail) + (f.fix ? '<div class="fix">→ ' + esc(f.fix) + '</div>' : '') + '</div></div>';
     }).join('') + '</div>' : '<p class="empty">No audit yet: the first one runs a week after setup.</p>';
@@ -503,7 +501,7 @@
       '<div class="mf"><span class="sp"></span><button class="btn gr" data-a="st-save">Save</button></div></div>' +
       '<div><div class="card"><h3>Plan and running</h3>' +
       '<div class="switch' + (S.budget.extra.on ? ' on' : '') + '" data-a="extra"><span class="sw"></span><div><b>Extra usage ' + (S.budget.extra.on ? 'on' : 'off') + '</b><span>At 0 the company ' + (S.budget.extra.on ? 'keeps running on extra usage' : 'pauses until the reset') + '.</span></div></div>' +
-      '<div style="height:10px"></div><div class="switch' + (paused ? '' : ' on') + '" data-a="pause"><span class="sw"></span><div><b>' + (paused ? 'Paused' : 'Active') + '</b><span>' + (paused ? 'Nothing new starts.' : 'The runner passes every two minutes.') + '</span></div></div>' +
+      '<div style="height:10px"></div><div class="switch' + (paused ? '' : ' on') + '" data-a="pause"><span class="sw"></span><div><b>' + (paused ? 'Paused' : 'Active') + '</b><span>' + (paused ? 'Nothing new starts.' : 'Your departments work on their own.') + '</span></div></div>' +
       '<div class="mf"><span class="hint">Plan: <b>' + esc(c.plan) + '</b></span><span class="sp"></span><button class="btn cy" data-a="upgrade">Upgrade</button></div></div>' +
       '<div class="card danger"><h3 class="red">Danger zone</h3><p class="hint">Deleting the company cancels every open task and removes its memory. One company per account.</p>' +
       '<div class="mf"><span class="sp"></span><button class="btn rd" data-a="delete">Delete company</button></div></div></div></div>');
@@ -518,24 +516,20 @@
     var S = CO.S, b = S.budget, g = CO.gate(), last = null, i;
     for (i = S.strip.length - 1; i >= 0; i--) if (S.strip[i].state !== 'running') { last = S.strip[i].at; break; }
     var working = S.tasks.filter(function (t) { return t.status === 'running'; }).length;
-    var parts = [last ? 'last turn <b>' + hhmm(last) + '</b>' : 'no turn yet'];
-    if (S.company.status === 'paused') parts.push('<span class="stop">paused</span>');
-    else if (!g.ok) parts.push('<span class="stop">' + esc(g.text + (g.until ? ' until ' + hhmm(g.until) : '')) + '</span>');
-    else {
-      if (working) parts.push('<span class="hot">' + working + ' working</span>');
-      parts.push('next pass in <b>' + Math.max(0, Math.ceil((S.next_pass_at - S.clock) / 1000)) + 's</b>');
-      if (g.code === 'extra') parts.push('<span class="hot">on extra usage</span>');
-    }
-    $('co-heart').innerHTML = parts.join(' · ');
+    // one line in plain words: is anyone working, and if not, why not
+    var heart;
+    if (S.company.status === 'paused') heart = '<span class="stop">Paused: nothing runs until you resume</span>';
+    else if (!g.ok) heart = '<span class="stop">' + (g.code === 'cap' ? 'Daily limit reached' : 'Plan used up') + (g.until ? ': back at ' + hhmm(g.until) : '') + '</span>';
+    else heart = (working ? '<span class="hot">' + working + ' working now</span>' : 'Waiting for the next job') + (g.code === 'extra' ? ' · <span class="hot">on extra usage</span>' : '');
+    $('co-heart').innerHTML = heart;
     var ur = $('us-r');
     ur.textContent = g.code === 'extra' ? 'on extra usage · resets in ' + hm(b.session.resets_at - S.clock) : 'Resets in ' + hm(b.session.resets_at - S.clock);
     ur.classList.toggle('ex', g.code === 'extra');
     $('uw-r').textContent = 'Resets ' + dayTime(b.week.resets_at);
-    $('day-r').textContent = 'Resets 00:00';
     var lv = $('live');
     if (S.company.status === 'paused') { lv.className = 'live paused'; lv.innerHTML = '<i></i>PAUSED'; }
-    else if (!g.ok) { lv.className = 'live stop'; lv.innerHTML = '<i></i>' + esc(g.text.toUpperCase()); }
-    else { lv.className = 'live'; lv.innerHTML = '<i></i>LIVE · ' + (working ? working + ' WORKING' : 'WAITING FOR THE NEXT PASS'); }
+    else if (!g.ok) { lv.className = 'live stop'; lv.innerHTML = '<i></i>' + (g.code === 'cap' ? 'DAILY LIMIT REACHED' : 'PLAN USED UP'); }
+    else { lv.className = 'live'; lv.innerHTML = '<i></i>LIVE' + (working ? ' · ' + working + ' WORKING' : ''); }
     Array.prototype.forEach.call(document.querySelectorAll('[data-wait]'), function (el) {
       var d = CO.dept(+el.getAttribute('data-wait')); if (!d) return;
       var v = CO.deptView(d); if (v.waits) el.textContent = v.waits;
@@ -738,7 +732,7 @@
       var tr = t.closest('.trow[data-task], tr.row[data-task]');
       if (tr) { var tid = +tr.getAttribute('data-task'); ui.open[tid] = !ui.open[tid]; return render(); }
       if (t.closest('#dr-tasks-all')) { ui.tfDept = String(ui.panel); ui.tfStatus = ''; return setTab('tasks'); }
-      if (t.closest('#dr-mem-all')) { ui.memDept = ui.panel; setTab('memory'); var c = document.querySelector('[data-mem="' + ui.memDept + '"]'); if (c) c.scrollIntoView({ block: 'start' }); return; }
+      if (t.closest('#dr-mem-t')) { ui.memOpen = !ui.memOpen; return renderDrawer(); }
       if (t.closest('#dr-ch-discard')) { ui.dirty = false; $('dr-ch-text').value = CO.dept(ui.panel).charter; charterMeta(); return; }
       // the other tabs
       var exb = t.closest('#nr-ex [data-ex]');
@@ -861,7 +855,7 @@
     CO.on('reset', function () {
       closeModal(); ui.panel = null; $('drawer').hidden = true; office.sel = null; ui.open = {}; ui.prev = {};
       office.layout(); office.fit(true); markSeen();
-      ['depts', 'appr', 'plan', 'msgs', 'mg-kp', 'feed', 'legal', 'settings'].forEach(function (id) { $(id)._h = null; });
+      ['depts', 'appr', 'plan', 'msgs', 'feed', 'legal', 'settings'].forEach(function (id) { $(id)._h = null; });
     });
     CO.on('office:click', function (key) {
       if (key.charAt(0) === 'd') return openDrawer(+key.slice(1));

@@ -13,6 +13,7 @@
     line3: '#1e3050', plate: '#0c1422', tile: '#101b2d', text: '#e6edf7', dim: '#a9b8cc', dim2: '#7f93ad',
     cyan: '#00cfff', green: '#00ff88', red: '#ff4444', blue: '#3b82f6' };
   var ST = { working: C.cyan, queued: C.blue, waiting: C.red, idle: C.dim2 };
+  var TONE = { cyan: C.cyan, red: C.red, blue: '#7fb0ff', dim: C.dim };
   var HUB = [8, 8], YOU = [8, 16], AUDIT = [0, 16];
   var SLOTS = [[0, 0], [8, 0], [16, 0], [0, 8], [16, 8], [8, 16], [16, 16], [24, 0], [24, 8], [24, 16], [24, 24], [16, 24], [8, 24], [0, 24]];
   var NS = 'http://www.w3.org/2000/svg';
@@ -551,12 +552,12 @@
         var ag = g.querySelector('.agent[data-agent="d' + d.id + ':' + i + '"]');
         if (ag) { ag.classList.toggle('working', e.state === 'working'); ag.classList.toggle('idle', e.state !== 'working'); }
       });
-      var c = P(x0 + 4.6, y0 + 5.55, 0.1);
-      var l2 = [[v.open + ' open', C.cyan], [v.done + ' done', C.green]];
-      if (v.failed) l2.push([v.failed + ' failed', C.red]);
+      // the plate says who and what it is doing, in one word or two; the counts live one click away
+      var c = P(x0 + 4.6, y0 + 5.55, 0.1), ln = CO.deptLine(d, v), tone = TONE[ln.tone] || C.dim;
+      var l2 = [[ln.short, tone]];
       var n = d.et10 || 0, ew = d.files_as ? earnedLabel(n).length * 6.6 + 14 : 0;
       var pw = Math.max(150, d.name.length * 10.5 + 34 + ew);
-      over += plate(c[0], c[1], d.name.toUpperCase(), col, l2, pw, 'd' + d.id, v.status === 'working');
+      over += plate(c[0], c[1], d.name.toUpperCase(), ln.tone === 'red' ? C.red : col, l2, pw, 'd' + d.id, v.status === 'working');
       if (d.files_as) {
         var last = (self.lastEt || (self.lastEt = {}))[d.id];
         over += earned(c[0] + pw / 2 - 9, c[1], n, last != null && n > last);
@@ -575,15 +576,16 @@
       hub.querySelector('.kb').innerHTML = kanban(8, 8, pc);
       var mg = hub.querySelector('.agent');
       if (mg) { mg.classList.toggle('working', S.company.status === 'active'); mg.classList.toggle('idle', S.company.status !== 'active'); }
-      var ht = this.hubTop;
-      if (ht) {
-        over += '<g class="plate" data-key="hub"><rect x="' + f1(ht[0] - 56) + '" y="' + f1(ht[1] - 108) + '" width="112" height="32" rx="7" fill="' + C.bg + '" stroke="' + C.cyan + '" stroke-width=".9" opacity=".95"/>' +
-          text(ht[0], ht[1] - 88.5, cnt.open + ' OPEN', 13, C.cyan, 400, 'middle', 'display') +
-          text(ht[0], ht[1] - 80, S.approvals.length ? S.approvals.length + ' wait for you' : 'nothing waits for you', 7.6, S.approvals.length ? C.red : C.dim2, 600, 'middle') + '</g>';
+      // above the hologram only what needs the owner, and only when something does
+      var ht = this.hubTop, na = S.approvals.length;
+      if (ht && na) {
+        over += '<g class="plate needs" data-key="hub"><rect x="' + f1(ht[0] - 62) + '" y="' + f1(ht[1] - 106) + '" width="124" height="28" rx="14" fill="' + C.bg + '" stroke="' + C.red + '" stroke-width="1.2" filter="url(#glow)"/>' +
+          '<rect x="' + f1(ht[0] - 62) + '" y="' + f1(ht[1] - 106) + '" width="124" height="28" rx="14" fill="' + C.bg + '" opacity=".9"/>' +
+          text(ht[0], ht[1] - 87, na + ' NEED' + (na === 1 ? 'S' : '') + ' YOU', 12, C.red, 400, 'middle', 'display') + '</g>';
       }
       var mp = P(12.9, 14.25, 0.1);
       over += plate(mp[0] + 30, mp[1] + 8, 'MANAGER', S.company.status === 'active' ? C.cyan : C.dim2,
-        [['routes ' + cnt.open, C.cyan], [S.approvals.length + ' for you', S.approvals.length ? C.red : C.dim2]], 150, 'hub', S.company.status === 'active' && anyWork);
+        [[S.company.status === 'paused' ? 'Paused' : 'Your chat · runs it all', S.company.status === 'paused' ? C.dim : C.cyan]], 170, 'hub', S.company.status === 'active' && anyWork);
     }
     // the owner's desk
     var you = ex('you');
@@ -605,7 +607,7 @@
       au.setAttribute('class', 'room st-idle' + (self.sel === 'audit' ? ' sel' : ''));
       au.querySelector('.scr').innerHTML = wallScreen(0, 16, 1.1, 5.0, 'Weekly audit: next in ' + days + 'd', nf + ' findings last week', C.dim2, '');
       var ap = P(0 + 4.6, 16 + 5.55, 0.1);
-      over += plate(ap[0], ap[1], 'WEEKLY AUDIT', C.dim2, [['next ' + days + 'd', C.dim], [nf + ' findings', nf ? C.cyan : C.green]], 150, 'audit', false);
+      over += plate(ap[0], ap[1], 'WEEKLY AUDIT', C.dim2, [['next in ' + days + (days === 1 ? ' day' : ' days'), C.dim]], 150, 'audit', false);
     }
     // the selection ring
     if (this.sel && cells[this.sel]) {

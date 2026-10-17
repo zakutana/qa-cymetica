@@ -8,7 +8,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Archivo+Black&family=JetBrains+Mono:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="style.css?v=20261017i">
+<link rel="stylesheet" href="style.css?v=20261017m">
 </head>
 <body>
 <header class="site">
@@ -37,7 +37,7 @@
 <nav class="tabs" id="tabs">
   <button data-tab="office" class="on">Office</button>
   <button data-tab="tasks">Tasks<sup id="tn-tasks"></sup></button>
-  <button data-tab="approvals">Approvals<sup class="r" id="tn-appr"></sup></button>
+  <button data-tab="approvals">Needs you<sup class="r" id="tn-appr"></sup></button>
   <button data-tab="memory">Memory</button>
   <button data-tab="audit">Audit</button>
   <button data-tab="rules">Processes<sup id="tn-rules"></sup></button>
@@ -57,27 +57,24 @@
       <section class="panel drawer" id="drawer" hidden>
     <div class="dswitch" id="dr-switch"></div>
     <div class="dh" id="dr-head"></div>
-    <div class="chips" id="dr-chips"></div>
+    <div id="dr-now"></div>
     <form class="cht" id="dr-charter">
-      <div class="sec">CHARTER · EVERY TASK STARTS HERE <span id="dr-ch-meta"></span></div>
+      <div class="sec">CHARTER · WHAT IT DOES <span id="dr-ch-meta"></span></div>
       <textarea id="dr-ch-text" maxlength="2000" spellcheck="false"></textarea>
-      <div class="cb"><span class="d">the next task starts from the saved text</span><button type="button" class="btn" id="dr-ch-discard">Discard</button><button class="btn gr" type="submit">Save charter</button></div>
+      <div class="cb"><span class="d"></span><button type="button" class="btn" id="dr-ch-discard">Discard</button><button class="btn gr" type="submit">Save charter</button></div>
     </form>
     <div id="dr-tok"></div>
-    <div class="kp" id="dr-kp"></div>
     <div id="dr-runs"></div>
-    <div id="dr-now"></div>
-    <div class="sec">TASKS <a id="dr-tasks-all"></a></div>
+    <div class="sec">LATEST <a id="dr-tasks-all"></a></div>
     <div class="tlist" id="dr-tasks"></div>
-    <div class="sec">MEMORY <a id="dr-mem-all"></a></div>
-    <div id="dr-mem"></div>
+    <button type="button" class="sec memt" id="dr-mem-t"></button>
+    <div id="dr-mem" hidden></div>
   </section>
     <section class="panel drawer mgr" id="mgr" hidden>
       <div class="dswitch" id="mg-switch"></div>
-      <div class="dh"><i class="dot working"></i><h2>Manager</h2><span class="pill st-working" id="mg-pill">ROUTING</span></div>
-      <div class="kp" id="mg-kp"></div>
+      <div class="dh"><i class="dot working"></i><h2>Manager</h2><span class="pill st-working" id="mg-pill">RUNNING</span></div>
       <div class="chatbox">
-        <div class="sec"><span id="chat-t">CHAT · EVERY DEPARTMENT</span><span class="typing" id="typing" hidden>typing<i></i><i></i><i></i></span></div>
+        <div class="sec"><span id="chat-t">CHAT</span><span class="typing" id="typing" hidden>typing<i></i><i></i><i></i></span></div>
         <div class="msgs" id="msgs"></div>
         <form class="compose" id="compose"><input id="msg" autocomplete="off" placeholder="Message the Manager…"><button class="btn gr" type="submit">Send</button></form>
       </div>
@@ -93,16 +90,12 @@
     <div class="tip" hidden></div>
     <div class="strip">
       <div class="use wide" title="Your plan's current 5-hour window: how much of it the company has used.">
-        <div class="u1"><b>Session limit</b><span id="us-p"></span><span class="sp"></span><em id="us-r"></em></div>
+        <div class="u1"><b>This session</b><span id="us-p"></span><span class="sp"></span><em id="us-r"></em></div>
         <div class="track sess"><i id="us-bar"></i></div>
       </div>
       <span class="vs"></span>
       <div class="use" title="Your plan's weekly allowance.">
-        <div class="u1"><b>Weekly</b><span id="uw-p"></span></div><div class="track"><i id="uw-bar"></i></div><em id="uw-r"></em>
-      </div>
-      <span class="vs"></span>
-      <div class="use sm" title="The daily ceiling: at most 40 turns a day for the whole company.">
-        <div class="u1"><b>Today</b><span><b id="strip-n"></b> / <span id="strip-cap"></span> turns</span></div><div class="track"><i id="day-bar"></i></div><em id="day-r"></em>
+        <div class="u1"><b>This week</b><span id="uw-p"></span></div><div class="track"><i id="uw-bar"></i></div><em id="uw-r"></em>
       </div>
     </div>
   </section>
@@ -119,11 +112,11 @@
     <label class="sel">Department <select id="tf-dept"></select></label>
     <label class="sel">Status <select id="tf-status"><option value="">All</option><option value="queued">queued</option><option value="running">running</option><option value="waiting_approval">waiting for approval</option><option value="done">done</option><option value="failed">failed</option><option value="cancelled">cancelled</option></select></label>
   </div>
-  <div class="tablewrap"><table class="ledger"><thead><tr><th>Status</th><th>Department</th><th>Task</th><th class="num">Started</th><th class="num">Turns</th><th class="num">Units</th><th>Result</th></tr></thead><tbody id="tasks"></tbody></table></div>
+  <div class="tablewrap"><table class="ledger"><thead><tr><th>Status</th><th>Department</th><th>Task</th><th class="num">When</th><th>Result</th></tr></thead><tbody id="tasks"></tbody></table></div>
 </main>
 
 <main class="page pane" data-pane="approvals" hidden>
-  <div class="ph"><h2>Approvals</h2><span class="sub">Nothing real happens until you approve it.</span></div>
+  <div class="ph"><h2>Needs you</h2><span class="sub">Nothing real happens until you say yes.</span></div>
   <div class="grid2"><section><div class="sec">WAITING</div><div id="appr-full"></div></section><section><div class="sec">DECIDED</div><div id="appr-done"></div></section></div>
 </main>
 
@@ -171,10 +164,10 @@
 <div class="toast" id="toast" hidden></div>
 
 <!-- ?v= changes with every edit, so a plain reload never runs yesterday's file from the cache -->
-<script src="data.js?v=20261017i"></script>
-<script src="sim.js?v=20261017i"></script>
-<script src="office.js?v=20261017i"></script>
-<script src="cards.js?v=20261017i"></script>
-<script src="app.js?v=20261017i"></script>
+<script src="data.js?v=20261017m"></script>
+<script src="sim.js?v=20261017m"></script>
+<script src="office.js?v=20261017m"></script>
+<script src="cards.js?v=20261017m"></script>
+<script src="app.js?v=20261017m"></script>
 </body>
 </html>

@@ -445,7 +445,7 @@
     if (open) return null;
     var title = d.run_kind === 'league' ? 'League round: the open puzzles we can compute'
       : d.run_kind === 'stranger' ? 'Stranger pass: cymetica.com as a newcomer'
-      : 'Bug-hunting run: ' + (d.products.length ? d.products.join(', ') : 'the public site');
+      : 'Bug hunt: ' + (d.products.length ? d.products.length + ' product' + (d.products.length > 1 ? 's' : '') : 'the public site');
     var t = newTask(d, title, { turns_needed: d.run_kind ? 1 : 2, why: why, expert: d.run_kind ? d.experts[0] : 'qa_tester' });
     t.run = true;
     S.plan.unshift(t.id);
@@ -693,7 +693,7 @@
     addRule: function (o) {
       var S = CO.S, r = { id: 'R' + (S.next_rule++), on: true, when: o.when, dept_id: o.dept_id, does: o.does || 'takes care of it', fired: 0, review: o.review || null, reviewer: o.reviewer || 'you' };
       var d = dept(r.dept_id);
-      S.rules.push(r); feed('good', 'You', 'new process ' + r.id + ': when ' + r.when + ' → ' + (d ? d.name : '?')); changed(); return r;
+      S.rules.push(r); feed('good', 'You', 'new process: when ' + r.when + ' → ' + (d ? d.name : '?')); changed(); return r;
     },
     review: function (id, mode, who) {
       var r = (CO.S.rules || []).filter(function (x) { return x.id === id; })[0]; if (!r) return;
@@ -996,6 +996,19 @@
     return v;
   };
   CO.counts = counts;
+  // One line a person reads at a glance: what this department is doing, in plain words, and its colour.
+  // `short` fits an office plate; `text` fits a card.
+  CO.deptLine = function (d, v) {
+    var S = CO.S; v = v || CO.deptView(d);
+    var asks = S.approvals.filter(function (a) { return a.dept_id === d.id; }).length;
+    if (v.capped) return { tone: 'red', short: 'Daily cap reached', text: 'Paused: daily cap reached' };
+    if (asks) return { tone: 'red', short: 'Needs you', text: 'Needs you · approve ' + asks };
+    if (v.running) return { tone: 'cyan', short: 'Working', text: 'Working: ' + v.running.title };
+    if (S.company.status === 'paused') return { tone: 'dim', short: 'Paused', text: 'Paused' };
+    if (v.queued.length) return { tone: 'blue', short: 'Up next', text: 'Up next: ' + v.queued[0].title };
+    if (d.schedule && d.next_run) return { tone: 'dim', short: 'Next run ' + CO.hhmm(d.next_run), text: 'Next run at ' + CO.hhmm(d.next_run) };
+    return { tone: 'dim', short: 'Idle', text: 'Idle: nothing to do' };
+  };
 
   // our own company (CO.OURS): its departments and processes, added the way the owner would add them
   CO.applySetup = function () {
