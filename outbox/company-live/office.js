@@ -111,6 +111,32 @@
     out += box(x + 0.7, y + 1.08, 0, 0.5, 0.45, 0.22, C.navy2, C.line, C.navy);                   // stool
     return out;
   }
+  // the department's computer: a lit terminal that opens the department's page on cymetica.com
+  function terminal(x, y, link) {
+    var out = '<g class="pc" data-link="' + esc(link.url) + '" data-label="' + esc(link.label) + '">';
+    var fl = P(x + 0.6, y + 0.45, 0.02);
+    out += '<ellipse class="pcglow" cx="' + f1(fl[0]) + '" cy="' + f1(fl[1]) + '" rx="34" ry="14" fill="url(#g-spill)"/>';
+    out += box(x, y, 0, 1.2, 0.8, 0.42, C.line3, C.line, C.navy2, C.line2);                         // desk
+    out += box(x + 0.5, y + 0.2, 0.42, 0.2, 0.1, 0.12, C.navy2, C.line, C.navy);                    // stand
+    var mx = x + 0.08, my = y + 0.16, mz = 0.54, mw = 1.04, md = 0.08, mh = 0.74;
+    out += poly([P(mx + mw, my, mz), P(mx + mw, my + md, mz), P(mx + mw, my + md, mz + mh), P(mx + mw, my, mz + mh)], C.navy);
+    out += poly([P(mx, my, mz + mh), P(mx + mw, my, mz + mh), P(mx + mw, my + md, mz + mh), P(mx, my + md, mz + mh)], C.navy2);
+    out += poly([P(mx, my + md, mz), P(mx + mw, my + md, mz), P(mx + mw, my + md, mz + mh), P(mx, my + md, mz + mh)],
+      '#06261f', C.green, 1.1, 1, ' class="pcscr"');
+    var sc = P(mx + mw / 2, my + md, mz + mh / 2);
+    out += text(sc[0], sc[1] + 6, '↗', 17, C.green, 700, 'middle', null, ' class="pcarrow" filter="url(#glow)"');
+    return out + '</g>';
+  }
+  // what the department has earned, lit: Cymetica QA's ET10
+  function earned(lx, cy, n, fresh) {
+    var s = (n ? '+' : '') + n.toLocaleString('en-US') + ' ET10', w = s.length * 6.9 + 30;
+    var out = '<g class="earned' + (n ? ' lit' : '') + (fresh ? ' pop' : '') + '" transform="translate(' + f1(lx + w / 2) + ' ' + f1(cy) + ')">';
+    out += '<rect x="' + f1(-w / 2) + '" y="-11" width="' + f1(w) + '" height="22" rx="11" fill="' + C.bg + '" stroke="' + (n ? C.green : C.dim2) + '" stroke-width="1.1"' + (n ? ' filter="url(#glow)"' : '') + '/>';
+    out += '<rect x="' + f1(-w / 2) + '" y="-11" width="' + f1(w) + '" height="22" rx="11" fill="' + C.bg + '" opacity=".92"/>';
+    out += '<circle cx="' + f1(-w / 2 + 12) + '" cy="0" r="4.2" fill="' + (n ? C.green : C.dim2) + '"' + (n ? ' filter="url(#glow)"' : '') + '/>';
+    out += text(-w / 2 + 22, 3.8, s, 11, n ? C.green : C.dim2, 700, 'start', null, n ? ' filter="url(#glow)"' : '');
+    return out + '</g>';
+  }
   function plant(x, y) {
     var out = box(x, y, 0, 0.42, 0.42, 0.34, C.line3, C.line2, C.navy2, C.line);
     var c = P(x + 0.21, y + 0.21, 0.34);
@@ -441,6 +467,8 @@
     var ex = d.experts.slice(0, 3), xs = ex.length === 1 ? [2.55] : ex.length === 2 ? [1.0, 3.75] : [0.55, 2.6, 4.65];
     var key = 'd' + d.id;
     ex.forEach(function (e, i) { out += desk(x0 + xs[i], y0 + 1.75, i); });
+    var link = CO.DEPT_LINK[k] || CO.DEPT_LINK.custom;
+    if (link) out += terminal(x0 + 0.35, y0 + 4.0, link);
     ex.forEach(function (e, i) { out += agentAt(x0 + xs[i] + 0.95, y0 + 3.05, key, i, CO.expertName(e)); });
     out += plant(x0 + 0.3, y0 + 6.2);
     return out;
@@ -530,7 +558,13 @@
       var c = P(x0 + 4.6, y0 + 5.55, 0.1);
       var l2 = [[v.open + ' open', C.cyan], [v.done + ' done', C.green]];
       if (v.failed) l2.push([v.failed + ' failed', C.red]);
-      over += plate(c[0], c[1], d.name.toUpperCase(), col, l2, Math.max(150, d.name.length * 10.5 + 34), 'd' + d.id, v.status === 'working');
+      var pw = Math.max(150, d.name.length * 10.5 + 34);
+      over += plate(c[0], c[1], d.name.toUpperCase(), col, l2, pw, 'd' + d.id, v.status === 'working');
+      if (d.files_as) {
+        var n = d.et10 || 0, last = (self.lastEt || (self.lastEt = {}))[d.id];
+        over += earned(c[0] + pw / 2 + 6, c[1], n, last != null && n > last);
+        self.lastEt[d.id] = n;
+      }
     });
     // the Manager's room
     var hub = ex('hub');
@@ -760,6 +794,8 @@
       if (!drag) return;
       var was = drag; drag = null; svg.classList.remove('grabbing');
       if (was.moved) return;
+      var pc = e.target.closest ? e.target.closest('.pc') : null;
+      if (pc && svg.contains(pc)) { window.open(pc.getAttribute('data-link'), '_blank', 'noopener'); return; }
       var t = e.target.closest ? e.target.closest('[data-key]') : null;
       if (t && svg.contains(t)) CO.emit('office:click', t.getAttribute('data-key'));
     });
@@ -775,9 +811,11 @@
     if (g) g.classList.add('hover');
   };
   Office.prototype.hoverAt = function (e) {
-    var ag = e.target.closest('.agent'), rm = e.target.closest('[data-key]');
+    var ag = e.target.closest('.agent'), rm = e.target.closest('[data-key]'), pc = e.target.closest('.pc');
     this.setHover(rm ? rm.getAttribute('data-key') : null);
-    var html = ag ? this.tipFor('agent', ag.getAttribute('data-agent')) : rm ? this.tipFor('room', rm.getAttribute('data-key')) : '';
+    var html = pc ? '<b>' + esc(pc.getAttribute('data-label')) + ' ↗</b><br><span style="color:#7f93ad">' +
+        esc(pc.getAttribute('data-link').replace(/^https:\/\//, '')) + '</span>'
+      : ag ? this.tipFor('agent', ag.getAttribute('data-agent')) : rm ? this.tipFor('room', rm.getAttribute('data-key')) : '';
     if (!html) return this.hideTip();
     var r = this.stage.getBoundingClientRect();
     this.tip.innerHTML = html; this.tip.hidden = false;

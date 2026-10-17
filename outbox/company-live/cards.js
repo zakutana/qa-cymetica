@@ -10,7 +10,7 @@
   CO.DEPT_INFO = {
     development: 'Idea → spec → design → build → test → release → monitor',
     design: 'Screen-by-screen briefs, and reviews of live pages against them',
-    testing: 'Tests Cymetica products and drafts bug-bounty reports',
+    testing: "Cymetica's bug bounty: tests their products, files bugs as you, earns ET10",
     testing_lab: 'Paper experiments, success rule set first; keeps the winners',
     trading_desk: 'Finds and proves ways to make money on Cymetica, paper first',
     custom: 'Your own name, charter and experts'

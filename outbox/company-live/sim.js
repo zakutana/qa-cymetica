@@ -164,13 +164,17 @@
           var p = prods[Math.floor(Math.random() * prods.length)], title = bugTitle(p, d);
           found.push(title);
           var b = { id: 'A' + (S.next_appr++), task_id: t.id, dept_id: d.id, kind: 'bug report', summary: title, created_at: S.clock, files_as: d.files_as };
+          if (d.files_as) { fileNow(b, d); b.body = bugBody(p, title, d); continue; }
           b.body = bugBody(p, title, d);
           S.approvals.unshift(b);
           CO.emit('approval:new', b);
         }
         d.runs = (d.runs || 0) + 1;
-        t.outcome = n ? 'Found ' + n + ' bug' + (n > 1 ? 's' : '') + ': ' + found.join('; ') : 'No new bugs on ' + prods.join(', ');
-        if (n) {
+        t.outcome = n ? (d.files_as ? 'Filed ' : 'Found ') + n + ' bug' + (n > 1 ? 's' : '') + ': ' + found.join('; ') : 'No new bugs on ' + prods.join(', ');
+        if (n && d.files_as) {
+          say(d.name + ' finished its run: ' + n + ' bug' + (n > 1 ? 's' : '') + ' filed into Cymetica\'s bug tracker as ' + d.files_as + '. Each one they accept pays 1,000 ET10.', d.id);
+          outcome = 'done';
+        } else if (n) {
           feed('ask', d.name, 'run found ' + n + ' bug' + (n > 1 ? 's' : '') + ', asks approval');
           say(d.name + ' finished its run: ' + n + ' bug' + (n > 1 ? 's' : '') + ' drafted as reports under ' + (d.files_as || 'your name') + '. Approve them on the right to file; each accepted bug pays 1,000 ET10.', d.id);
           outcome = 'ask';
@@ -178,6 +182,16 @@
           feed('good', d.name, 'run finished, no new bugs');
           outcome = 'done';
         }
+      } else if (t.kind === 'bug report' && d.files_as) {
+        // Cymetica QA files it itself, as we do
+        t.status = 'done'; t.finished_at = S.clock;
+        var fb = { id: 'A' + (S.next_appr++), task_id: t.id, dept_id: d.id, kind: 'bug report', summary: t.title.replace(/^Verify: /, ''),
+          created_at: S.clock, files_as: d.files_as };
+        fb.body = CO.draft('bug report', t.title, d.name);
+        fileNow(fb, d);
+        t.outcome = 'Filed #' + fb.report_no + ' as ' + d.files_as;
+        say(d.name + ' filed #' + fb.report_no + ' "' + fb.summary + '" as ' + d.files_as + '. If Cymetica accepts it, 1,000 ET10 goes to ' + d.files_as + '.', d.id);
+        outcome = 'done';
       } else if (t.kind) {
         t.status = 'waiting_approval'; t.finished_at = S.clock;
         t.outcome = 'Draft ready: waits for your approval';
@@ -311,12 +325,43 @@
     for (var i = 0; i < l.length * 2; i++) { var s = p + ': ' + l[Math.floor(Math.random() * l.length)]; if (used.indexOf(s) < 0) return s; }
     return p + ': ' + l[0] + ' (again)';
   }
+  // Cymetica's verdict on a filed report, a while later
+  function verdictLater(a, d) {
+    var S = CO.S;
+    later(rand(40000, 70000), function () {
+      var ok = Math.random() < 0.75;
+      a.verdict = ok ? 'accepted' : 'duplicate';
+      var no = a.report_no ? '#' + a.report_no + ' ' : '';
+      if (ok) {
+        S.et10 = (S.et10 || 0) + 1000;
+        if (d) { d.et10 = (d.et10 || 0) + 1000; d.accepted = (d.accepted || 0) + 1; }
+        feed('good', 'Cymetica', 'accepted ' + no + '"' + a.summary + '": +1,000 ET10 to ' + (a.files_as || 'you'));
+        say('Cymetica accepted ' + no + '"' + a.summary + '". 1,000 ET10 credited to ' + (a.files_as || 'you') + '.', d && d.id);
+        CO.emit('bounty', { approval: a, dept: d });
+      } else {
+        feed('bad', 'Cymetica', 'marked ' + no + '"' + a.summary + '" a duplicate: no reward');
+      }
+      changed();
+    });
+  }
+  // Cymetica QA files a bug straight into their tracker under the owner's hunter name, as we do: no approval
+  function fileNow(b, d) {
+    var S = CO.S;
+    b.report_no = S.next_report = (S.next_report || 214);
+    S.next_report++;
+    b.decision = 'filed'; b.decided_at = S.clock;
+    S.decided.unshift(b);
+    feed('good', d.name, 'filed #' + b.report_no + ' as ' + (b.files_as || CO.HUNTER) + ': ' + b.summary);
+    CO.emit('submitted', { approval: b, dept: d });
+    verdictLater(b, d);
+  }
   function bugBody(p, title, d) {
     return 'BUG REPORT · found by ' + d.name + ' on its run · filed as ' + (d.files_as || 'you') + '\n\nTitle\n' + title +
       '\n\nWhere\n' + p + ' on cymetica.com, read during the run' +
       '\n\nWhat happens\n' + title.split(': ').slice(1).join(': ') + '. Reproduced twice, a minute apart.' +
       '\n\nEvidence\nThe request, the response and the page, captured at the time.' +
-      '\n\nReward\n1,000 ET10 to ' + (d.files_as || 'you') + ' if Cymetica accepts it.\n\nFiled only after your approval.';
+      '\n\nReward\n1,000 ET10 to ' + (d.files_as || 'you') + ' if Cymetica accepts it.' +
+      (d.files_as ? '\n\nFiled straight into cymetica.com/leaderboard/bugs as ' + d.files_as + '.' : '\n\nFiled only after your approval.');
   }
   function nextRun(d, t) {
     var day = new Date(t); day.setHours(0, 0, 0, 0);
@@ -463,22 +508,7 @@
             if (!fire('released', d, what)) say('Cymetica delivered "' + what + '". No rule tests new builds yet; say "when a new build is released, QA tests it" and I will route it.', d && d.id);
           });
         }
-        if (a.kind === 'bug report') {
-          // Cymetica's verdict on the report, a while later
-          later(rand(40000, 70000), function () {
-            var ok = Math.random() < 0.75;
-            a.verdict = ok ? 'accepted' : 'duplicate';
-            if (ok) {
-              S.et10 = (S.et10 || 0) + 1000;
-              if (d) { d.et10 = (d.et10 || 0) + 1000; d.accepted = (d.accepted || 0) + 1; }
-              feed('good', 'Cymetica', 'accepted "' + a.summary + '": +1,000 ET10 to ' + (a.files_as || 'you'));
-              say('Cymetica accepted "' + a.summary + '". 1,000 ET10 credited to ' + (a.files_as || 'you') + '.', d && d.id);
-              CO.emit('bounty', { approval: a, dept: d });
-            } else {
-              feed('bad', 'Cymetica', 'marked "' + a.summary + '" a duplicate: no reward');
-            }
-          });
-        }
+        if (a.kind === 'bug report') verdictLater(a, d);
         // a task waiting on this approval may now run
         S.tasks.forEach(function (x) { if (x.blocked_by === a.task_id) x.blocked_by = null; });
       } else {
@@ -535,7 +565,8 @@
       var slot = 0; while (used.indexOf(slot) >= 0) slot++;
       var d = { id: S.next_dept++, key: o.key || 'custom', slot: slot, name: o.name, experts: o.experts.length ? o.experts : ['researcher'],
         units_7d: 0, failed_7d: 0, charter: o.charter, charter_updated_at: S.clock, pool_i: 0, born: S.clock,
-        schedule: o.schedule || null, products: o.products || [], files_as: o.files_as || null, et10: 0, accepted: 0, runs: 0 };
+        schedule: o.schedule || null, products: o.products || [],
+        files_as: o.files_as || (o.key === 'testing' ? CO.HUNTER : null), et10: 0, accepted: 0, runs: 0 };
       S.departments.push(d);
       feed('good', 'Manager', 'new department: ' + d.name);
       if (d.schedule) {
@@ -664,12 +695,12 @@
     if (pm) products = splitList(pm[1]);
     else KNOWN.forEach(function (k) { if (t.indexOf(k.toLowerCase()) >= 0) products.push(k); });
     var mine = /(m[yý]m jm[eé]nem|my name|under me|my account|m[uů]j [uú][cč]et|na m[eě]|et10|odm[eě]n|reward|bounty)/.test(t);
-    var base = qa ? 'QA' : (tpl.name || 'New department'), name = base, n = 2;
+    var base = tpl.name || 'New department', name = base, n = 2;
     while (CO.S.departments.some(function (x) { return x.name === name; })) name = base + ' ' + n++;
-    var files = qa || mine ? 'expire76' : null;
+    var files = qa || mine ? CO.HUNTER : null;
     var charter = (tpl.charter ? tpl.charter + '\n' : '') +
       (times ? '- Runs ' + per + '× a day (' + times.join(', ') + ') over: ' + (products.length ? products.join(', ') : 'the public site') + '.\n' : '') +
-      (files ? '- Every bug is drafted as a bug-bounty report filed as ' + files + ', so the ET10 reward goes to ' + files + '. Filing waits for my approval.\n' : '');
+      (files ? '- Hunter name: ' + files + '. Every report is filed as ' + files + ' and its ET10 goes to ' + files + '\'s wallet.\n' : '');
     return { key: tpl.key, name: name, experts: qa ? ['qa_tester', 'auditor'] : tpl.experts.slice(), charter: charter.trim(),
       schedule: times ? { times: times, label: per + '× a day (' + times.join(', ') + ')' } : null, products: products, files_as: files, quiet: true };
   }
@@ -693,7 +724,7 @@
       var nd = CO.act.addDept(spec);
       return { dept_id: nd.id, text: 'Done: ' + nd.name + ' is set up with ' + nd.experts.map(CO.expertName).join(' and ') + '.' +
         (nd.schedule ? ' It runs ' + nd.schedule.label + ' over ' + (nd.products.length ? nd.products.join(', ') : 'the public site') + ', first run now.' : '') +
-        (nd.files_as ? ' Every bug becomes a report filed as ' + nd.files_as + '; it waits for your Approve, and each one Cymetica accepts pays 1,000 ET10 to ' + nd.files_as + '.' : '') +
+        (nd.files_as ? ' Every bug it finds goes straight into Cymetica\'s bug tracker as ' + nd.files_as + ', and each one they accept pays 1,000 ET10 to ' + nd.files_as + '.' : '') +
         (nd.schedule && !nd.products.length ? ' Which products? Write e.g. "products: Gem Screener, Chart Analyzer".' : '') };
     }
     if (/(rule|pravidl|process|whenever|kdykoli|kdy[zž] |when )/.test(t) && S.departments.length) {

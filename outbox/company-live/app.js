@@ -96,7 +96,9 @@
     setHTML($('depts'), mrow + S.departments.map(function (d) {
       var v = CO.deptView(d);
       return '<button class="dept ' + v.status + (ui.panel === d.id ? ' on' : '') + (d.born && S.clock - d.born < 4000 ? ' born' : '') + '" data-id="' + d.id + '" title="' + WORD[v.status] + '">' +
-        '<div class="d1"><i class="dot"></i><b>' + esc(d.name) + '</b>' + (d.et10 ? '<span class="et">+' + d.et10.toLocaleString('en-US') + ' ET10</span>' : '') + '</div>' +
+        '<div class="d1"><i class="dot"></i><b>' + esc(d.name) + '</b>' +
+        (d.et10 ? '<span class="et' + (d.files_as ? ' lit' : '') + '" title="ET10 Cymetica paid for accepted bugs, to ' + esc(d.files_as || 'you') + '">+' + d.et10.toLocaleString('en-US') + ' ET10</span>'
+          : d.files_as ? '<span class="et zero" title="ET10 Cymetica paid for accepted bugs, to ' + esc(d.files_as) + '">0 ET10</span>' : '') + '</div>' +
         '<div class="dus" title="What this department used of your plan: this 5-hour session and the last 7 days"><span>' + v.sessPct + '%<small>session</small></span><span>' + v.weekPct + '%<small>week</small></span>' +
         '<span class="ubar"><i style="width:' + Math.min(100, v.weekPct) + '%"></i></span></div>' +
         (d.schedule ? '<div class="dsch">⟳ ' + esc(d.schedule.label.replace(/ \(.*/, '')) + ' · next ' + hhmm(d.next_run) + (d.products.length ? ' · ' + esc(d.products.join(', ')) : '') + '</div>' : '') +
@@ -105,7 +107,7 @@
         (v.waits ? '<div class="dwait">Queued: <span data-wait="' + d.id + '">' + esc(v.waits) + '</span></div>' : '') +
         '<div class="d3">' + esc(v.experts.map(function (e) { return e.name; }).join(' · ')) + '</div>' +
         (v.status === 'working' ? '<span class="run"><i></i></span>' : '') + '</button>';
-    }).join('') + (S.departments.length ? '' : '<p class="empty">No departments yet. <a id="rail-add">+ Add the first one</a>, click the empty lot, or tell the Manager.</p>'));
+    }).join(''));
   }
 
   // The bottom panel, the way Claude shows usage: Session limit (built from this window's turns,
@@ -393,8 +395,9 @@
     setHTML($('appr-full'), S.approvals.length ? S.approvals.map(function (a) { return apprCard(a, true); }).join('') : '<p class="empty ok">Nothing is waiting for you.</p>');
     S.approvals.forEach(function (a) { ui.seen[a.id] = 1; });
     setHTML($('appr-done'), S.decided.length ? S.decided.map(function (a) {
-      var d = CO.dept(a.dept_id), ok = a.decision === 'approve';
-      return '<div class="card"><div class="t" style="display:flex;gap:6px;align-items:center;font-size:10.5px;color:var(--dim2)"><span class="st ' + (ok ? 'done' : 'failed') + '">' + (ok ? 'approved' : 'rejected') + '</span>' +
+      var d = CO.dept(a.dept_id), filed = a.decision === 'filed', ok = filed || a.decision === 'approve';
+      var word = filed ? 'filed #' + a.report_no + (a.verdict ? ' · ' + a.verdict : '') : ok ? 'approved' : 'rejected';
+      return '<div class="card"><div class="t" style="display:flex;gap:6px;align-items:center;font-size:10.5px;color:var(--dim2)"><span class="st ' + (ok ? 'done' : 'failed') + '">' + word + '</span>' +
         '<span class="tag">' + esc(d ? d.name : '') + '</span><span class="tag k">' + esc(a.kind) + '</span>' + hhmm(a.decided_at) + '</div><p style="margin-top:6px;font-weight:600">' + esc(a.summary) + '</p></div>';
     }).join('') : '<p class="empty">Nothing decided yet in this session.</p>');
   }

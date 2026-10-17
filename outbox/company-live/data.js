@@ -17,14 +17,21 @@
     return k;
   };
 
-  // The wizard's layout on the live page (build-company.js, LAYOUT), word for word.
+  // The wizard's layout on the live page (build-company.js, LAYOUT), word for word -- except Testing, which the
+  // spec renames "Cymetica QA": Cymetica's bug bounty as a department, filing as the owner (SPEC-NOTES.md).
   CO.TEMPLATES = [
     { key: 'development', name: 'Development', experts: ['developer', 'researcher'],
       charter: 'Build it Better as a department, from before to after the build: idea, spec, design, build, test, release, monitoring and iteration. Drafts Build it Better requests; submitting one waits for my approval.' },
     { key: 'design', name: 'Design studio', experts: ['designer', 'researcher'],
       charter: 'Design before and after the build: screen-by-screen briefs for new pages, and reviews of live pages against their brief. Briefs go out as Build it Better requests; submitting one waits for my approval.' },
-    { key: 'testing', name: 'Testing', experts: ['qa_tester', 'auditor'],
-      charter: "Tests Cymetica's products from the public surface, verifies bugs and drafts reports for the bug bounty (ET10 per accepted bug). Submitting a report waits for my approval." },
+    { key: 'testing', name: 'Cymetica QA', experts: ['qa_tester', 'auditor'],
+      charter: "Cymetica's bug bounty, as my department. Test Cymetica's live products the way a stranger meets them: the page, its API and its docs.\n" +
+        "- Reproduce every defect twice before calling it one; a failed read is not an empty read.\n" +
+        "- File each bug straight into Cymetica's bug tracker (cymetica.com/leaderboard/bugs) under my hunter name and wallet, so every bug Cymetica accepts pays ET10 to me. Filing does not wait for my approval.\n" +
+        "- Check the tracker first: a bug already reported is reopened on its ticket, never filed twice.\n" +
+        "- Each report carries the exact page or request, what the docs promise, what happens instead, and the evidence.\n" +
+        "- When Cymetica says a bug is fixed, test it again and post the verdict on the same ticket.\n" +
+        "- Never file guesses, style nits or what could not be reproduced." },
     { key: 'testing_lab', name: 'Testing lab', experts: ['lab_scientist', 'researcher'],
       charter: 'Paper experiments on event cards, bot settings, memecoin signals and head-to-head. Asks NEXUS for strategies; sets the success rule before each experiment starts; judges it when the window closes; keeps winners and archives losers. Runs a daily newcomer check of the public site.' },
     { key: 'trading_desk', name: 'Trading desk', experts: ['trader', 'researcher'],
@@ -44,6 +51,17 @@
     if (/(money|vyd[eě]l|profit|zisk|earn)/.test(t)) return 'money';
     if (/(look|design|vzhled|ugly|layout|ui\b)/.test(t)) return 'design';
     return 'custom';
+  };
+  // the owner's bug-bounty hunter name: what Cymetica QA files as, and where its ET10 goes
+  CO.HUNTER = 'expire76';
+  // each department's computer opens its page on cymetica.com
+  CO.DEPT_LINK = {
+    testing: { url: 'https://cymetica.com/leaderboard/bugs?filter=mine', label: 'Bug board · My Bugs' },
+    development: { url: 'https://cymetica.com/leaderboard/features', label: 'Build it Better board' },
+    design: { url: 'https://cymetica.com/leaderboard/features', label: 'Build it Better board' },
+    testing_lab: { url: 'https://cymetica.com/my-agents', label: 'My Agents' },
+    trading_desk: { url: 'https://cymetica.com/account', label: 'My Balances' },
+    custom: { url: 'https://cymetica.com/company', label: 'Company' }
   };
   // what a department's work usually raises next, so a process can show what it leads to
   CO.EMITS = { development: 'released', testing_lab: 'winner', design: 'idea', trading_desk: null, testing: null, custom: null };
@@ -171,8 +189,8 @@
         units_7d: 1.10, failed_7d: 0, charter_updated_at: at(-26 * 60) },
       { id: 2, key: 'design', slot: 1, name: 'Design studio', experts: ['designer', 'researcher'],
         units_7d: 0.44, failed_7d: 0, charter_updated_at: at(-26 * 60) },
-      { id: 3, key: 'testing', slot: 2, name: 'Testing', experts: ['qa_tester', 'auditor'],
-        units_7d: 0.66, failed_7d: 1, charter_updated_at: at(-21 * 60) },
+      { id: 3, key: 'testing', slot: 2, name: 'Cymetica QA', experts: ['qa_tester', 'auditor'], files_as: 'expire76',
+        et10: 3000, accepted: 3, units_7d: 0.66, failed_7d: 1, charter_updated_at: at(-21 * 60) },
       { id: 4, key: 'testing_lab', slot: 3, name: 'Testing lab', experts: ['lab_scientist', 'researcher'],
         units_7d: 0.66, failed_7d: 1, charter_updated_at: at(-26 * 60) },
       { id: 5, key: 'trading_desk', slot: 4, name: 'Trading desk', experts: ['trader', 'researcher'],
@@ -183,11 +201,6 @@
       d.charter = tpl.charter;
       d.pool_i = 0;
     });
-    depts[2].charter = 'Goal: real, reproducible defects in what Cymetica shows or documents TODAY, drafted as bug-bounty reports.\n' +
-      '- Test only what is visible and documented now (llms.txt, /openapi-public.json, the live pages).\n' +
-      '- A finding is one defect with the exact request or page, what their docs say, what happens instead, and the evidence.\n' +
-      '- A failed read is not an empty read: retry before calling anything missing.\n' +
-      '- Never submit: draft, and wait for my approval.';
 
     function T(id, dept, title, status, o) {
       var t = { id: id, dept_id: dept, title: title, status: status, attempt: 1, max_attempts: 3, turns: 0,
@@ -214,7 +227,7 @@
       T(32, 4, 'Paper: ETH event card, 6h exit', 'done', { turns: 1, units: 0.17, started_at: at(-60), finished_at: at(-56), outcome: 'Archived: -2.1% after costs (rule was > 0)', expert: 'lab_scientist' }),
       T(33, 1, 'Gem Screener: parent-app logos', 'waiting_approval', { turns: 1, units: 0.24, kind: 'BB request', started_at: at(-9), finished_at: at(-5), expert: 'developer', outcome: 'Draft ready: 3 lines, 2 checks' }),
       T(34, 4, 'Paper: FOMO >=70, 24h exit', 'running', { outcome_text: 'Window open: 11 cards, rule > 0 after costs', turns: 0, units: 0, started_at: at(-1), expert: 'lab_scientist', why: "NEXUS's pick" }),
-      T(35, 3, '/api/v1/company routes missing from /openapi-public.json', 'waiting_approval', { turns: 1, units: 0.23, kind: 'bug report', started_at: at(-6), finished_at: at(-2), expert: 'auditor', outcome: 'Draft ready: 12 routes missing' }),
+      T(35, 3, '/api/v1/company routes missing from /openapi-public.json', 'done', { turns: 1, units: 0.23, kind: 'bug report', started_at: at(-6), finished_at: at(-2), expert: 'auditor', outcome: 'Filed #214 as expire76: 12 routes missing' }),
       T(36, 3, 'Chart Analyzer score vs its study', 'queued', { outcome_text: 'Score off by 0.4 on 2 of 20 coins', turns_needed: 2, why: 'you asked for it at ' + hhmm(at(-17)), expert: 'qa_tester', created_at: at(-16) }),
       T(37, 4, 'FOMO >=70, 24h exit: verdict', 'queued', { outcome_text: 'Kept: +2.4% after costs on 11 cards', why: 'its window closed', expert: 'lab_scientist', created_at: at(-16) }),
       T(38, 1, 'Gem Screener logos: submit after approval', 'queued', { blocked_by: 33, outcome_text: 'Submitted as ET-31502', why: 'waits on your approval first', expert: 'developer', created_at: at(-5) }),
@@ -227,7 +240,6 @@
     tasks[11].fail_next = false;
 
     var approvals = [
-      { id: 'A1', task_id: 35, dept_id: 3, kind: 'bug report', summary: '/api/v1/company routes missing from /openapi-public.json', created_at: at(-2) },
       { id: 'A2', task_id: 33, dept_id: 1, kind: 'BB request', summary: 'Gem Screener: parent-app logos', created_at: at(-5) }
     ];
     approvals.forEach(function (a) {
@@ -283,7 +295,7 @@
 
     return {
       clock: t0,
-      company: { id: 13, name: 'Cymetica QA', mission: 'Find what is broken on Cymetica, prove what makes money there, and get paid in ET10 for both.',
+      company: { id: 13, name: 'My Company', mission: 'Find what is broken on Cymetica, prove what makes money there, and get paid in ET10 for both.',
         report_style: 'Short, numbers first', status: 'active', plan: 'Pro', investable: false, created_at: at(-3 * 24 * 60) },
       budget: {
         session: { used: 0.34, cap: 1.00, resets_at: t0 + 4 * H + 28 * MIN, every: 5 * H },
@@ -303,27 +315,27 @@
       messages: [
         { id: 1, role: 'manager', text: 'Starting with scope and surface mapping; nothing is submitted until you approve.', at: at(-34), answered: true },
         { id: 2, role: 'owner', text: 'Chart Analyzer and Gem Screener first.', at: at(-17), answered: true },
-        { id: 3, role: 'manager', text: 'Queued 2 tasks for Testing, 1 for the Lab.', at: at(-16), answered: true }
+        { id: 3, role: 'manager', text: 'Queued 2 tasks for Cymetica QA, 1 for the Lab.', at: at(-16), answered: true }
       ],
       notice: null,
       typing: false,
       feed: [
-        { kind: 'ask', dept: 'Testing', text: 'asks approval: bug report', at: at(-2) },
+        { kind: 'good', dept: 'Cymetica QA', text: 'filed #214 as expire76: /api/v1/company routes missing from /openapi-public.json', at: at(-2) },
         { kind: 'ask', dept: 'Development', text: 'asks approval: BB request', at: at(-5) },
         { kind: 'info', dept: 'Testing lab', text: 'opened paper: FOMO >=70, 24h exit', at: at(-12) },
-        { kind: 'bad', dept: 'Testing', text: '"Doc vs behaviour" failed (no answer), retrying', at: at(-16) },
-        { kind: 'good', dept: 'Testing', text: 'finished "Inventory testable surface"', at: at(-27) }
+        { kind: 'bad', dept: 'Cymetica QA', text: '"Doc vs behaviour" failed (no answer), retrying', at: at(-16) },
+        { kind: 'good', dept: 'Cymetica QA', text: 'finished "Inventory testable surface"', at: at(-27) }
       ],
       memory: memory,
       audit: {
         next_at: at(6 * 24 * 60 - 30),
         last: { at: at(-24 * 60), findings: [
-          { kind: 'duplicate', detail: 'Testing and Development both read /llms.txt the same hour (2 turns).', fix: 'Testing owns the surface map; Development reads its result.' },
+          { kind: 'duplicate', detail: 'Cymetica QA and Development both read /llms.txt the same hour (2 turns).', fix: 'Cymetica QA owns the surface map; Development reads its result.' },
           { kind: 'stuck', detail: 'Task #31 waited 51 min past its retry time while the company was paused.', fix: 'Resume, or remove it from the plan.' },
           { kind: 'wasted', detail: 'A 2-turn spec was redone after a charter change mid-task.', fix: 'Save the charter between tasks, not during one.' }
         ] }
       },
-      legal: { domicile: 'Cayman Islands', name: 'Cymetica QA Ltd.', formed: false },
+      legal: { domicile: 'Cayman Islands', name: 'My Company Ltd.', formed: false },
       rules: [
         { id: 'R1', on: true, when: 'a bug is found anywhere', dept_id: 3, does: 'verifies it and files the report as expire76', fired: 0 },
         { id: 'R2', on: true, when: 'a new build is released', dept_id: 3, does: 'tests it the same day and reports what is broken', fired: 0 },
@@ -332,7 +344,8 @@
         { id: 'R5', on: true, when: 'an experiment wins on paper', dept_id: 5, does: 'prepares the real trade', fired: 0, review: 'start', reviewer: 'you' }
       ], next_rule: 6,
       token: { chain: '5042', symbol: '', reserved: false, perp_listed: false },
-      next_id: 40, next_msg: 4, next_appr: 3, next_mem: memory.length + 1, next_dept: 6
+      next_id: 40, next_msg: 4, next_appr: 3, next_mem: memory.length + 1, next_dept: 6,
+      et10: 3000, next_report: 215
     };
   };
 
@@ -348,6 +361,7 @@
     s.next_pass_at = t0 + 30000;
     s.next_id = 1; s.next_msg = 1; s.next_appr = 1; s.next_mem = 1; s.next_dept = 1;
     s.rules = []; s.next_rule = 1;
+    s.et10 = 0; s.next_report = 214;
     return s;
   };
   CO.fresh = function (t0) { return /demo/.test(location.search + location.hash) ? CO.seed(t0) : CO.seedEmpty(t0); };
