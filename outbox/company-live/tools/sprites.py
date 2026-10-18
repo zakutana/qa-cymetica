@@ -14,7 +14,7 @@ import json
 import pathlib
 
 import numpy as np
-from PIL import Image
+from PIL import Image, ImageFilter
 
 HERE = pathlib.Path(__file__).resolve().parent.parent
 SRC, OUT = HERE / "assets" / "gen" / "src", HERE / "assets" / "gen"
@@ -49,32 +49,67 @@ def rings(k):
     return {"core": [round(1312 * k, 1), round(450 * k, 1)], "rings": out}
 
 
-def tiles3x3(k):
-    """The floor plates of the operator's O-platform-3x3 (2576 x 1438): a 3 x 3 grid seen in perspective, its front
-    plate missing. A homography from the platform's outline (its top, right and left corners, the notch where the
-    front plate would start, the front corners of the two plates either side of it; measured 2026-10-18) maps the
-    plane [0,1]^2 onto the picture; each plate is a third of it, inset 0.02 for the grooves. Each plate's corners
-    are listed back, right, front, left, under its row (towards the left corner) and column (towards the right)."""
+def plat_h():
+    """The plane of the operator's O-platform-3x3 (2576 x 1438), a 3 x 3 grid of floor plates seen in perspective,
+    its front plate missing: the homography taking [0,1]^2 (u towards the right corner, v towards the left) onto the
+    picture, fitted to the platform's outline (its top, right and left corners, the notch where the front plate
+    would start, the front corners of the two plates either side of it; measured 2026-10-18)."""
     pts = [((0, 0), (1300, 87)), ((1, 0), (2455, 595)), ((0, 1), (205, 645)), ((2 / 3, 2 / 3), (1360, 880)),
            ((2 / 3, 1), (890, 1240)), ((1, 2 / 3), (1855, 1170))]
     A = []
     for (u, v), (x, y) in pts:
         A.append([u, v, 1, 0, 0, 0, -x * u, -x * v, -x])
         A.append([0, 0, 0, u, v, 1, -y * u, -y * v, -y])
-    H = np.linalg.svd(np.array(A, float))[2][-1].reshape(3, 3)
+    return np.linalg.svd(np.array(A, float))[2][-1].reshape(3, 3)
 
-    def P(u, v):
-        x, y, w = H @ np.array([u, v, 1.0])
-        return [round(x / w * k, 1), round(y / w * k, 1)]
+
+def grid3x3(P):
+    """Each plate's corners (back, right, front, left) under its row and column, inset 0.02 for the grooves (where
+    its glow, click and plate go), and its whole cell, grooves included (where its room stands, wall to wall)."""
     m, out, cells = 0.02, {}, {}
     for r in range(3):
         for c in range(3):
             if (r, c) != (2, 2):
                 u0, u1, v0, v1 = c / 3 + m, (c + 1) / 3 - m, r / 3 + m, (r + 1) / 3 - m
                 out["%d%d" % (r, c)] = [P(u0, v0), P(u1, v0), P(u1, v1), P(u0, v1)]
-                # the whole cell, grooves included: a room stands on all of it, wall to wall with its neighbours
                 cells["%d%d" % (r, c)] = [P(c / 3, r / 3), P((c + 1) / 3, r / 3), P((c + 1) / 3, (r + 1) / 3), P(c / 3, (r + 1) / 3)]
     return {"tiles": out, "cells": cells}
+
+
+def tiles3x3(k):
+    H = plat_h()
+
+    def P(u, v):
+        x, y, w = H @ np.array([u, v, 1.0])
+        return [round(x / w * k, 1), round(y / w * k, 1)]
+    return grid3x3(P)
+
+
+# The platform straightened ("nektere mistnosti jsou naklopene", 2026-10-18): it is shot with a wide lens and the
+# rooms near orthographically, so no map of a room fits every plate and keeps its walls upright. Warping the
+# platform's plane onto a flat diamond grid takes the lens out; then every room stands on its cell by a scale alone.
+# A cell is RATIO as high as it is wide (the rooms' own floors are 0.65: squashed to fit, their walls come lower).
+ORTHO_WC, ORTHO_RATIO = 760.0, 0.55
+
+
+def ortho3x3(im):
+    wc, hc = ORTHO_WC, ORTHO_WC * ORTHO_RATIO
+    W, H = 2700, int(3 * hc + 900)
+    Hd = np.array([[1.5 * wc, -1.5 * wc, W / 2], [1.5 * hc, 1.5 * hc, 420.0], [0, 0, 1]])   # plane -> new picture
+    M = plat_h() @ np.linalg.inv(Hd)
+    M = M / M[2, 2]
+    out = im.convert("RGBA").transform((W, H), Image.PERSPECTIVE, tuple(M.flatten()[:8]), Image.BICUBIC)
+    # where the old picture ends, the warped one fades out instead of stopping at an edge
+    a = np.asarray(out.getchannel("A"), float)
+    soft = np.asarray(Image.fromarray(a.astype(np.uint8)).filter(ImageFilter.GaussianBlur(90)), float)
+    out.putalpha(Image.fromarray(np.minimum(a, np.clip(soft * 2 - 255, 0, 255)).astype(np.uint8)))
+
+    def P(u, v):
+        x, y, _ = Hd @ np.array([u, v, 1.0])
+        return [round(x, 1), round(y, 1)]
+    calib = grid3x3(P)
+    calib["ortho"] = True
+    return out, calib
 
 
 def main():
@@ -95,6 +130,9 @@ def main():
                 meta[name]["calib"] = rings(k)
             if name == "O-platform-3x3":
                 meta[name]["calib"] = tiles3x3(k)
+                flat, calib = ortho3x3(Image.open(f).convert("RGB"))
+                flat.save(OUT / (name + "-ortho.webp"), quality=86, method=6)
+                meta[name + "-ortho"] = {"kind": "backdrop", "w": flat.width, "h": flat.height, "calib": calib}
             continue
         sp = Image.fromarray(matte(np.asarray(im)), "RGBA")
         box = sp.getchannel("A").point(lambda v: 255 if v > 10 else 0).getbbox()

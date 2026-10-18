@@ -31,6 +31,8 @@
     var done = function (ok) { state = ok ? 'ok' : 'no'; var w = waits; waits = []; w.forEach(function (f) { f(ok); }); };
     if (!window.fetch) return done(false);
     fetch(BASE + 'sprites.json', { cache: 'no-cache' }).then(function (r) { return r.ok ? r.json() : null; }).then(function (m) {
+      // the platform straightened when sprites.py has made it (rooms then stand upright on it by a scale alone)
+      if (m && m[PLAT + '-ortho']) PLAT = PLAT + '-ortho';
       var ok = !!(m && m[PLAT] && m[PLAT].calib && m[PLAT].calib.tiles && m['O-room-manager'] && m['O-room-audit'] && m['O-room-vault']);
       if (!ok) return done(false);
       M = m;
@@ -122,7 +124,8 @@
       } else {
         var m = M[a.img], back = [m.left[0] + m.right[0] - m.bottom[0], m.left[1] + m.right[1] - m.bottom[1]], cq = C[t];
         var fl = [m.left, m.right, m.bottom, back], to = [cq[3], cq[1], cq[2], cq[0]];
-        h += '<img class="oroom' + (a.key === 'vault' && CO.RO ? ' shut' : '') + '" src="' + BASE + a.img + '.webp" alt="" draggable="false" style="width:' + m.w + 'px;height:' + m.h + 'px;transform:' + homog(fl, to) + '">';
+        var tf = P.calib.ortho ? mat(affine(fl.slice(0, 3), to.slice(0, 3))) : homog(fl, to);
+        h += '<img class="oroom' + (a.key === 'vault' && CO.RO ? ' shut' : '') + '" src="' + BASE + a.img + '.webp" alt="" draggable="false" style="width:' + m.w + 'px;height:' + m.h + 'px;transform:' + tf + '">';
         var rx = (q[1][0] - q[3][0]) / 2, ry = (q[2][1] - q[0][1]) / 2;
         over += '<div class="opglow" data-r="' + a.key + '" style="left:' + f1(c[0] - rx) + 'px;top:' + f1(c[1] - ry) + 'px;width:' + f1(2 * rx) + 'px;height:' + f1(2 * ry) + 'px"></div>';
         if (a.key === 'vault') over += '<div class="opvault mini" id="opvault" data-key="vault" style="left:' + f1(plate[0]) + 'px;top:' + f1(plate[1]) + 'px"></div>';
