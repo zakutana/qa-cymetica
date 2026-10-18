@@ -11,6 +11,8 @@ import { ao } from 'three/addons/tsl/display/GTAONode.js';
 import { RoundedBoxGeometry } from 'three/addons/geometries/RoundedBoxGeometry.js';
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 import { mergeGeometries, mergeVertices } from 'three/addons/utils/BufferGeometryUtils.js';
+import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
+import { RGBELoader } from 'three/addons/loaders/RGBELoader.js';
 
 const CO = window.CO;
 const FH = 0.82;
@@ -1321,7 +1323,8 @@ function rockNodeMat(freq) {
   const crack = T.smoothstep(0.55, 0.9, T.mx_worley_noise_float(q.mul(0.32)));
   const big = T.mx_fractal_noise_float(q.mul(0.22), 3, 2.0, 0.5);
   const h = grain.mul(0.4).add(big.mul(0.6)).sub(crack.mul(0.5));
-  m.colorNode = T.vertexColor().xyz.mul(h.mul(0.8).add(1.0).clamp(0.5, 1.6)).mul(T.float(1).sub(crack.mul(0.5)));
+  m.userData.shade = h.mul(0.8).add(1.0).clamp(0.5, 1.6).mul(T.float(1).sub(crack.mul(0.5)));
+  m.colorNode = T.vertexColor().xyz.mul(m.userData.shade);
   const pv = T.positionView, n = T.normalView, dx = T.dFdx(pv), dy = T.dFdy(pv);
   const r1 = T.cross(dy, n), r2 = T.cross(n, dx), det = T.dot(dx, r1);
   m.normalNode = T.normalize(T.abs(det).mul(n).sub(T.sign(det).mul(r1.mul(T.dFdx(h)).add(r2.mul(T.dFdy(h)))).mul(0.32)));
@@ -1337,6 +1340,66 @@ function nozzleTex() {
     for (let k = 0; k < 6; k++) { const a = k / 6 * Math.PI; g.beginPath(); g.moveTo(128 + Math.cos(a) * 118, 128 + Math.sin(a) * 118); g.lineTo(128 - Math.cos(a) * 118, 128 - Math.sin(a) * 118); g.stroke(); }
     g.fillStyle = 'rgba(8,20,28,.7)'; g.beginPath(); g.arc(128, 128, 22, 0, Math.PI * 2); g.fill();
   }));
+}
+/* ---------------- textures from assets/ (CC0; outbox/company-live/assets.json names each file) ---------------- */
+// Photographed and scanned surfaces for the office, each loaded once and set on its materials when it arrives. A
+// page opened without the assets folder keeps the surfaces drawn in code.
+const TL = new THREE.TextureLoader(), ATX = {};
+function assetTex(path, srgb) {
+  return ATX[path] || (ATX[path] = new Promise((ok) => TL.load('assets/' + path, (t) => {
+    t.wrapS = t.wrapT = THREE.RepeatWrapping; t.anisotropy = 8; if (srgb) t.colorSpace = THREE.SRGBColorSpace; ok(t);
+  }, undefined, () => ok(null))));
+}
+function useTex(mat, slot, path, o = {}) {
+  assetTex(path, !!o.srgb).then((t0) => {
+    if (!t0) return;
+    const t = o.rx || o.ry ? t0.clone() : t0;
+    if (o.rx || o.ry) { t.repeat.set(o.rx || 1, o.ry || 1); t.needsUpdate = true; }
+    mat[slot] = t;
+    if (slot === 'normalMap' && o.ns != null) mat.normalScale.set(o.ns, o.ns);
+    if (o.color != null) mat.color.set(o.color);
+    if (o.emissive === 0) mat.emissiveIntensity = 0;
+    mat.needsUpdate = true;
+  });
+}
+// the rock's colour from a photographed rock, wrapped on it from three sides (it has no UVs), darkened in its
+// hollows and cracks as before
+function rockTexture(m, tex, sc) {
+  const T = TSL, tri = T.triplanarTexture(T.texture(tex), null, null, T.float(sc), T.positionLocal, T.normalLocal);
+  m.colorNode = tri.xyz.mul(T.vertexColor().xyz.mul(16).clamp(0.3, 1.5)).mul(m.userData.shade);
+  m.needsUpdate = true;
+}
+let MOON = null;
+// a scanned moon rock (Poly Haven moon_rock_01), centred and made one unit round, tinted to the picture's charcoal
+function moonRock() {
+  return MOON || (MOON = new Promise((ok) => new GLTFLoader().load('assets/moon_rock_01/moon_rock_01_1k.gltf', (gl) => {
+    let mesh = null; gl.scene.traverse((o) => { if (o.isMesh && !mesh) mesh = o; });
+    if (!mesh) return ok(null);
+    const geo = mesh.geometry.clone(); geo.computeBoundingSphere();
+    const c = geo.boundingSphere.center, r = geo.boundingSphere.radius; geo.translate(-c.x, -c.y, -c.z); geo.scale(1 / r, 1 / r, 1 / r);
+    const mat = mesh.material.clone(); mat.color.setRGB(0.3, 0.3, 0.32); OM.moon = mat;
+    ok({ geo, mat });
+  }, undefined, () => ok(null))));
+}
+function dressOffice() {
+  if (OM.dressed) return; OM.dressed = true;
+  const MP = 'MetalPlates006/MetalPlates006_1K-JPG_', SP = 'SolarPanel003/SolarPanel003_1K-JPG_';
+  // the hull: riveted plates' relief and wear under its drawn panels and lights
+  useTex(OM.hull, 'normalMap', MP + 'NormalGL.jpg', { rx: 4, ry: 0.8, ns: 0.9 });
+  useTex(OM.hull, 'roughnessMap', MP + 'Roughness.jpg', { rx: 4, ry: 0.8 });
+  // the rim, the keel, the engines, the racks and the frames: the same metal
+  [[OM.rim, 6, 0.4], [OM.rimDark, 4, 4], [OM.hullLow, 4, 4], [OM.engine, 2, 2], [OM.engineL, 3, 1], [OM.rack, 1, 2], [OM.frame, 1, 1]].forEach(([m, rx, ry]) => {
+    useTex(m, 'normalMap', MP + 'NormalGL.jpg', { rx, ry, ns: 0.7 }); useTex(m, 'roughnessMap', MP + 'Roughness.jpg', { rx, ry });
+  });
+  // the deck: a faint relief only; its drawn plates keep their colour
+  useTex(OM.deck, 'normalMap', MP + 'NormalGL.jpg', { rx: 2, ry: 2, ns: 0.3 });
+  // the solar wings, the office's and the stations': a photographed panel
+  [OM.solar, M.solar].forEach((m) => {
+    useTex(m, 'map', SP + 'Color.jpg', { srgb: true, color: 0x9fbcff, emissive: 0 }); useTex(m, 'normalMap', SP + 'NormalGL.jpg');
+    useTex(m, 'roughnessMap', SP + 'Roughness.jpg'); m.metalness = 0.15;   // glass over cells, not a mirror
+  });
+  // the asteroid: a photographed rock on the big one and on the drifting ones until the scans arrive
+  assetTex('Rock035/Rock035_1K-JPG_Color.jpg', true).then((t) => { if (t) { rockTexture(OM.rock, t, 0.16); rockTexture(OM.rockS, t, 0.8); } });
 }
 function monTex() {
   return TX.mon || (TX.mon = ctex(256, 144, (g, W) => {
@@ -1437,6 +1500,7 @@ function omats() {
   OM.green = amat('#00ff88'); OM.cyan = amat('#00cfff'); OM.blue = amat('#3b82f6'); OM.red = amat('#ff4444');
   G.bigRock = asteroidGeo(11, 64); G.smallRock = asteroidGeo(27, 14, false);
   G.plume = new THREE.CylinderGeometry(0.42, 0.05, 1, 24, 1, true);
+  dressOffice();   // last: every material it dresses exists by now
 }
 // what a layout, a selection or a station built for itself goes back to the GPU when it is cleared; the shared
 // geometries (G, OM.torso and the limbs, the rounded boxes), materials (M, AM, OM) and textures (TX) stay, since the next one draws with them
@@ -1553,6 +1617,7 @@ class Office3D {
     this.controls.addEventListener('start', () => { this.tw = null; this.moved = true; });
     const S = this.scene;
     S.environment = envTex();
+    new RGBELoader().load('assets/studio_small_09_1k.hdr', (t) => { t.mapping = THREE.EquirectangularReflectionMapping; S.environment = t; S.environmentIntensity = 0.28; }, undefined, () => {});
     // white light from the camera's side, so the faces you see are lit; a cool one from below for the hull and the
     // rock; a cyan rim from behind
     S.add(new THREE.HemisphereLight(0xdfe8f1, 0x0a0d12, 0.95), new THREE.AmbientLight(0x1b222b, 0.5));
@@ -1723,6 +1788,7 @@ class Office3D {
       m.scale.set(s, s * 0.8, s * 0.9); m.position.copy(this.V(cxp + Math.cos(a) * d, cyp + Math.sin(a) * d, -9 + R() * 12)); m.rotation.set(R() * 3, R() * 3, R() * 3);
       W.add(m); this.drift.push({ m, sp: 0.06 + R() * 0.18 });
     }
+    const drift = this.drift; moonRock().then((mr) => { if (mr) drift.forEach((d) => { d.m.geometry = mr.geo; d.m.material = mr.mat; }); });
   }
   // a room: a glossy floor, glass on all four sides with neon on every edge, a dark panel along the two back walls
   shell(r) {

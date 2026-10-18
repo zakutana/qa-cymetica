@@ -172,3 +172,7 @@ evidence/
 # The monthly evidence bundles (docs/data-plan.md D2). The MANIFEST is in git
 # and proves what each one holds; the bodies themselves are what left.
 archive/
+
+# The /company mockup's downloaded textures and models (CC0, ambientCG and Poly Haven): the bodies stay out
+# of git, outbox/company-live/assets.json (in git) names each file with its source, licence, bytes and sha256.
+outbox/company-live/assets/

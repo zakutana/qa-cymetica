@@ -1,0 +1,221 @@
+{
+ "note": "Textures and a model the /company mockup loads from assets/ (not in git). All CC0: no credit owed, redistribution allowed.",
+ "files": [
+  {
+   "file": "MetalPlates006/MetalPlates006_1K-JPG_Color.jpg",
+   "source": "https://ambientcg.com/get?file=MetalPlates006_1K-JPG.zip",
+   "licence": "CC0 1.0",
+   "author": "ambientCG (Lennart Demes)",
+   "bytes": 587858,
+   "sha256": "08478c9e8ae9fe42c9f1378fd5259f4839cd31788a4716a523853324ef40e714"
+  },
+  {
+   "file": "MetalPlates006/MetalPlates006_1K-JPG_Displacement.jpg",
+   "source": "https://ambientcg.com/get?file=MetalPlates006_1K-JPG.zip",
+   "licence": "CC0 1.0",
+   "author": "ambientCG (Lennart Demes)",
+   "bytes": 332772,
+   "sha256": "a4c2aed93bbc83d8038b7faad8c346b8311140302d1c3f5e3b84b8672e03f4ef"
+  },
+  {
+   "file": "MetalPlates006/MetalPlates006_1K-JPG_Metalness.jpg",
+   "source": "https://ambientcg.com/get?file=MetalPlates006_1K-JPG.zip",
+   "licence": "CC0 1.0",
+   "author": "ambientCG (Lennart Demes)",
+   "bytes": 81609,
+   "sha256": "92d00726832fb1dae5a88921dfe5febd2f4a1d35171dec72c496ef65fb6e654d"
+  },
+  {
+   "file": "MetalPlates006/MetalPlates006_1K-JPG_NormalDX.jpg",
+   "source": "https://ambientcg.com/get?file=MetalPlates006_1K-JPG.zip",
+   "licence": "CC0 1.0",
+   "author": "ambientCG (Lennart Demes)",
+   "bytes": 1200276,
+   "sha256": "3862d84dc3f684ef002ab135ac38d77b6a6b49df42f86980773565333b02aa65"
+  },
+  {
+   "file": "MetalPlates006/MetalPlates006_1K-JPG_NormalGL.jpg",
+   "source": "https://ambientcg.com/get?file=MetalPlates006_1K-JPG.zip",
+   "licence": "CC0 1.0",
+   "author": "ambientCG (Lennart Demes)",
+   "bytes": 1215357,
+   "sha256": "1e1f2e483b70e0f54f0816b47bcc1a1e137d73abf9a82e0aeabad996acb9cf5c"
+  },
+  {
+   "file": "MetalPlates006/MetalPlates006_1K-JPG_Roughness.jpg",
+   "source": "https://ambientcg.com/get?file=MetalPlates006_1K-JPG.zip",
+   "licence": "CC0 1.0",
+   "author": "ambientCG (Lennart Demes)",
+   "bytes": 484105,
+   "sha256": "032a9011dd812b2b2bf653b9b2d173d7474c7ffe021a2e127c2e14d204b56abb"
+  },
+  {
+   "file": "MetalPlates006/MetalPlates006.png",
+   "source": "https://ambientcg.com/get?file=MetalPlates006_1K-JPG.zip",
+   "licence": "CC0 1.0",
+   "author": "ambientCG (Lennart Demes)",
+   "bytes": 226584,
+   "sha256": "4890fd509654bae33961c85c066470839ffd1ca473868a9412ddeebaeb7408f4"
+  },
+  {
+   "file": "SolarPanel003/SolarPanel003_1K-JPG_Color.jpg",
+   "source": "https://ambientcg.com/get?file=SolarPanel003_1K-JPG.zip",
+   "licence": "CC0 1.0",
+   "author": "ambientCG (Lennart Demes)",
+   "bytes": 1300978,
+   "sha256": "392e39f6083d4fa6a7ff849e86658009609038b8ed28122426356c89db02ccbd"
+  },
+  {
+   "file": "SolarPanel003/SolarPanel003_1K-JPG_Displacement.jpg",
+   "source": "https://ambientcg.com/get?file=SolarPanel003_1K-JPG.zip",
+   "licence": "CC0 1.0",
+   "author": "ambientCG (Lennart Demes)",
+   "bytes": 423304,
+   "sha256": "b39fb0f2e561cb3b8fb8046a62be3ad9926a53d7a2f0c039ecdec097670f2d95"
+  },
+  {
+   "file": "SolarPanel003/SolarPanel003_1K-JPG_Metalness.jpg",
+   "source": "https://ambientcg.com/get?file=SolarPanel003_1K-JPG.zip",
+   "licence": "CC0 1.0",
+   "author": "ambientCG (Lennart Demes)",
+   "bytes": 74810,
+   "sha256": "eeb3f129aaba055acc78b65802f9238f7363743949f23fb301b62e95f234db78"
+  },
+  {
+   "file": "SolarPanel003/SolarPanel003_1K-JPG_NormalDX.jpg",
+   "source": "https://ambientcg.com/get?file=SolarPanel003_1K-JPG.zip",
+   "licence": "CC0 1.0",
+   "author": "ambientCG (Lennart Demes)",
+   "bytes": 614811,
+   "sha256": "9f931043d5f821783d3a28a181672752893347d2a97ec93997eb75c9f60ca803"
+  },
+  {
+   "file": "SolarPanel003/SolarPanel003_1K-JPG_NormalGL.jpg",
+   "source": "https://ambientcg.com/get?file=SolarPanel003_1K-JPG.zip",
+   "licence": "CC0 1.0",
+   "author": "ambientCG (Lennart Demes)",
+   "bytes": 619089,
+   "sha256": "93decef4413e698694c44ee26944a85a4de383cd906569e8cb0035eb2fdf8ad1"
+  },
+  {
+   "file": "SolarPanel003/SolarPanel003_1K-JPG_Roughness.jpg",
+   "source": "https://ambientcg.com/get?file=SolarPanel003_1K-JPG.zip",
+   "licence": "CC0 1.0",
+   "author": "ambientCG (Lennart Demes)",
+   "bytes": 441501,
+   "sha256": "bdf8f53be974458e267564d6c919918ca5be0cf2eb8a1134804dab74e7565433"
+  },
+  {
+   "file": "SolarPanel003/SolarPanel003.png",
+   "source": "https://ambientcg.com/get?file=SolarPanel003_1K-JPG.zip",
+   "licence": "CC0 1.0",
+   "author": "ambientCG (Lennart Demes)",
+   "bytes": 322595,
+   "sha256": "65eb3bf77f0b8bdc6120e9fbcffcca884cd2df36618e826ab32b8e0675a3d377"
+  },
+  {
+   "file": "Rock035/Rock035_1K-JPG_AmbientOcclusion.jpg",
+   "source": "https://ambientcg.com/get?file=Rock035_1K-JPG.zip",
+   "licence": "CC0 1.0",
+   "author": "ambientCG (Lennart Demes)",
+   "bytes": 565898,
+   "sha256": "f38f0c6fa6ce82e190ed94aed05923b8a053e21d5b3ff5e61d8fdf884611a32b"
+  },
+  {
+   "file": "Rock035/Rock035_1K-JPG_Color.jpg",
+   "source": "https://ambientcg.com/get?file=Rock035_1K-JPG.zip",
+   "licence": "CC0 1.0",
+   "author": "ambientCG (Lennart Demes)",
+   "bytes": 1453569,
+   "sha256": "7d387e01cad601ce49c35d9d9161f7f8f097de0e32e60f8f2108ae1787854ccf"
+  },
+  {
+   "file": "Rock035/Rock035_1K-JPG_Displacement.jpg",
+   "source": "https://ambientcg.com/get?file=Rock035_1K-JPG.zip",
+   "licence": "CC0 1.0",
+   "author": "ambientCG (Lennart Demes)",
+   "bytes": 332547,
+   "sha256": "3380fad124cfebbfbc5d85a036bf17e49b6768617804978b4a970c3aa0009449"
+  },
+  {
+   "file": "Rock035/Rock035_1K-JPG_NormalDX.jpg",
+   "source": "https://ambientcg.com/get?file=Rock035_1K-JPG.zip",
+   "licence": "CC0 1.0",
+   "author": "ambientCG (Lennart Demes)",
+   "bytes": 2517059,
+   "sha256": "bd50d0f84208bfb532521a91835da12558dea9c00e2cacc338d4fc39d32d85b6"
+  },
+  {
+   "file": "Rock035/Rock035_1K-JPG_NormalGL.jpg",
+   "source": "https://ambientcg.com/get?file=Rock035_1K-JPG.zip",
+   "licence": "CC0 1.0",
+   "author": "ambientCG (Lennart Demes)",
+   "bytes": 2522360,
+   "sha256": "003dcaa856ce97d2673379a26a444cc0637f0cdd46d7f5de5c3dd263dfbf3f76"
+  },
+  {
+   "file": "Rock035/Rock035_1K-JPG_Roughness.jpg",
+   "source": "https://ambientcg.com/get?file=Rock035_1K-JPG.zip",
+   "licence": "CC0 1.0",
+   "author": "ambientCG (Lennart Demes)",
+   "bytes": 668189,
+   "sha256": "1b3834e6d15be99c06653688ed6c43b492163f6eaacfa56bd7397cf59165e8d6"
+  },
+  {
+   "file": "Rock035/Rock035.png",
+   "source": "https://ambientcg.com/get?file=Rock035_1K-JPG.zip",
+   "licence": "CC0 1.0",
+   "author": "ambientCG (Lennart Demes)",
+   "bytes": 370193,
+   "sha256": "314b42ab1699635356714cd74f40debf66a0b311bc0785ed3bbfa660f97b0c78"
+  },
+  {
+   "file": "studio_small_09_1k.hdr",
+   "source": "https://dl.polyhaven.org/file/ph-assets/HDRIs/hdr/1k/studio_small_09_1k.hdr",
+   "licence": "CC0 1.0",
+   "author": "Poly Haven",
+   "bytes": 1615248,
+   "sha256": "e7cfda5f4e98e623db12b8bfd0184e048488e4855d9c83e2751fb44a32e80c45"
+  },
+  {
+   "file": "moon_rock_01/moon_rock_01.bin",
+   "source": "https://polyhaven.com/a/moon_rock_01 (glTF 1k)",
+   "licence": "CC0 1.0",
+   "author": "Poly Haven",
+   "bytes": 448168,
+   "sha256": "c6671327046efd27ab1a97c4c716412f209a063184e65f0376e3be6583e8f52a"
+  },
+  {
+   "file": "moon_rock_01/moon_rock_01_1k.gltf",
+   "source": "https://polyhaven.com/a/moon_rock_01 (glTF 1k)",
+   "licence": "CC0 1.0",
+   "author": "Poly Haven",
+   "bytes": 7088,
+   "sha256": "004cc353fa0c29572a9ba40535f3716c297466fdf2c650d36deaf9e27eed5ce7"
+  },
+  {
+   "file": "moon_rock_01/textures/moon_rock_01_arm_1k.jpg",
+   "source": "https://polyhaven.com/a/moon_rock_01 (glTF 1k)",
+   "licence": "CC0 1.0",
+   "author": "Poly Haven",
+   "bytes": 330395,
+   "sha256": "168cbef24f61a6602068d634f858a297bfa7b3675a43be6230e0daf2e8953cf9"
+  },
+  {
+   "file": "moon_rock_01/textures/moon_rock_01_diff_1k.jpg",
+   "source": "https://polyhaven.com/a/moon_rock_01 (glTF 1k)",
+   "licence": "CC0 1.0",
+   "author": "Poly Haven",
+   "bytes": 276354,
+   "sha256": "1cdcb7dea183431326751abc03d30f89f1c51e99ce5b851401d51bd38f606c0b"
+  },
+  {
+   "file": "moon_rock_01/textures/moon_rock_01_nor_gl_1k.jpg",
+   "source": "https://polyhaven.com/a/moon_rock_01 (glTF 1k)",
+   "licence": "CC0 1.0",
+   "author": "Poly Haven",
+   "bytes": 645714,
+   "sha256": "0b58d5009e7b317698eaff224bcf01c912c11ffc52203a728940e5e46a7494e9"
+  }
+ ]
+}
