@@ -692,6 +692,9 @@ class Universe3D {
     }).catch((e) => { console.error('3D map could not start:', e); if (this.h.onFail) this.h.onFail(e); });
     setInterval(() => { if (this.visible()) this.pulse(); }, 1700);
     if (window.ResizeObserver) new ResizeObserver(() => this.resize()).observe(el);
+    // the plates' font arrives after their first measure: measure them again when it has, for the overlap test
+    const remeasure = () => { this.items.forEach((it) => { if (it.el) it.el._bw = 0; }); if (this.coreEl) this.coreEl._bw = 0; this.ovKey = ''; };
+    if (document.fonts && document.fonts.addEventListener) document.fonts.addEventListener('loadingdone', remeasure);
   }
   visible() { return this.el.clientWidth > 0 && this.el.clientHeight > 0; }
 
