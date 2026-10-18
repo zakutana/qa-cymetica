@@ -5,6 +5,7 @@
  * renderer cannot start, the page keeps the flat map. The office in 3D is the second half of this file. */
 import * as THREE from 'three/webgpu';
 import { pass, renderOutput, vec4, vec3, mrt, output, normalView, dot, mix } from 'three/tsl';
+import * as TSL from 'three/tsl';
 import { bloom } from 'three/addons/tsl/display/BloomNode.js';
 import { ao } from 'three/addons/tsl/display/GTAONode.js';
 import { RoundedBoxGeometry } from 'three/addons/geometries/RoundedBoxGeometry.js';
@@ -1310,6 +1311,33 @@ function asteroidGeo(seed, detail = 64, flatTop = true) {
   g.computeVertexNormals();
   return g;
 }
+// A rock's surface, per pixel, to the operator's picture: grain, plates with cracks between them, darker in the
+// cracks -- and the light bending on all of it (a bump from the same height through screen-space derivatives), so
+// the detail is in the shading at any distance and not only in the mesh. freq: how fine, in the geometry's units.
+function rockNodeMat(freq) {
+  const T = TSL, m = new THREE.MeshStandardNodeMaterial({ roughness: 0.94, metalness: 0.03 });
+  const q = T.positionLocal.mul(freq);
+  const grain = T.mx_fractal_noise_float(q.mul(0.8), 3, 2.0, 0.5);
+  const crack = T.smoothstep(0.55, 0.9, T.mx_worley_noise_float(q.mul(0.32)));
+  const big = T.mx_fractal_noise_float(q.mul(0.22), 3, 2.0, 0.5);
+  const h = grain.mul(0.4).add(big.mul(0.6)).sub(crack.mul(0.5));
+  m.colorNode = T.vertexColor().xyz.mul(h.mul(0.8).add(1.0).clamp(0.5, 1.6)).mul(T.float(1).sub(crack.mul(0.5)));
+  const pv = T.positionView, n = T.normalView, dx = T.dFdx(pv), dy = T.dFdy(pv);
+  const r1 = T.cross(dy, n), r2 = T.cross(n, dx), det = T.dot(dx, r1);
+  m.normalNode = T.normalize(T.abs(det).mul(n).sub(T.sign(det).mul(r1.mul(T.dFdx(h)).add(r2.mul(T.dFdy(h)))).mul(0.32)));
+  return m;
+}
+// an engine's mouth seen from outside: white-hot in the middle, cyan to its rim, vanes across it
+function nozzleTex() {
+  return TX.nozzle || (TX.nozzle = ctex(256, 256, (g) => {
+    const gr = g.createRadialGradient(128, 128, 0, 128, 128, 128);
+    gr.addColorStop(0, 'rgba(235,252,255,1)'); gr.addColorStop(0.35, 'rgba(120,230,255,1)'); gr.addColorStop(0.7, 'rgba(0,170,220,.95)'); gr.addColorStop(0.9, 'rgba(10,40,60,1)'); gr.addColorStop(1, 'rgba(8,14,20,1)');
+    g.fillStyle = gr; g.beginPath(); g.arc(128, 128, 128, 0, Math.PI * 2); g.fill();
+    g.strokeStyle = 'rgba(8,20,28,.55)'; g.lineWidth = 6;
+    for (let k = 0; k < 6; k++) { const a = k / 6 * Math.PI; g.beginPath(); g.moveTo(128 + Math.cos(a) * 118, 128 + Math.sin(a) * 118); g.lineTo(128 - Math.cos(a) * 118, 128 - Math.sin(a) * 118); g.stroke(); }
+    g.fillStyle = 'rgba(8,20,28,.7)'; g.beginPath(); g.arc(128, 128, 22, 0, Math.PI * 2); g.fill();
+  }));
+}
 function monTex() {
   return TX.mon || (TX.mon = ctex(256, 144, (g, W) => {
     g.fillStyle = '#04140e'; g.fillRect(0, 0, W, 144);
@@ -1386,7 +1414,12 @@ function omats() {
   OM.solar = std({ map: solarTex(), roughness: 0.22, metalness: 0.5, emissive: 0x3b82f6, emissiveIntensity: 0.08 });
   OM.engine = std({ color: 0x4a5462, roughness: 0.32, metalness: 0.6 });
   OM.engineDark = std({ color: 0x1a2028, roughness: 0.4, metalness: 0.5, side: THREE.DoubleSide });
-  OM.rock = std({ vertexColors: true, roughness: 0.93, metalness: 0.04 });
+  OM.rock = rockNodeMat(1.0); OM.rockS = rockNodeMat(5.0);
+  OM.engineL = std({ color: 0x4a5462, roughness: 0.3, metalness: 0.65, side: THREE.DoubleSide });
+  G.circle = new THREE.CircleGeometry(1, 48);
+  // an engine's housing, turned: its back, grooves, the lip at its mouth, the inner wall down to the nozzle
+  G.engHousing = new THREE.LatheGeometry([[0.32, -0.72], [0.5, -0.66], [0.58, -0.5], [0.6, -0.22], [0.55, -0.17], [0.55, -0.1], [0.64, -0.06], [0.66, 0.66], [0.6, 0.72], [0.6, 0.78],
+    [0.68, 0.84], [0.74, 0.92], [0.74, 1.1], [0.66, 1.14], [0.56, 1.06], [0.52, 0.98]].map(([r, z]) => new THREE.Vector2(r, z)), 48);
   OM.pot = std({ color: 0x232a33, roughness: 0.5, metalness: 0.3 });
   OM.bush = std({ color: 0x1f6b45, roughness: 0.85, emissive: 0x00ff88, emissiveIntensity: 0.04 });
   OM.holo = new THREE.MeshBasicMaterial({ map: holoTex(), transparent: true, blending: THREE.AdditiveBlending, depthWrite: false, side: THREE.DoubleSide });
@@ -1636,7 +1669,7 @@ class Office3D {
     // the rim: a lighter lip round the outside of the deck, a little proud of it
     outer.forEach((e) => {
       const len = Math.hypot(e.bx - e.ax, e.by - e.ay) + 0.44, mx = (e.ax + e.bx) / 2 + e.nx * 0.11, my = (e.ay + e.by) / 2 + e.ny * 0.11, along = e.ax === e.bx;
-      this.box(ext, mx - (along ? 0.11 : len / 2), my - (along ? len / 2 : 0.11), -T - 0.14, along ? 0.22 : len, along ? len : 0.22, T + 0.16, OM.rim, false);
+      this.rb(ext, mx - (along ? 0.11 : len / 2), my - (along ? len / 2 : 0.11), -T - 0.14, along ? 0.22 : len, along ? len : 0.22, T + 0.16, OM.rim, 0.1, false);
     });
     let mnx = 1e9, mxx = -1e9, mny = 1e9, mxy = -1e9;
     all.forEach((c) => { mnx = Math.min(mnx, c[0]); mxx = Math.max(mxx, c[0] + RS); mny = Math.min(mny, c[1]); mxy = Math.max(mxy, c[1] + RS); });
@@ -1644,21 +1677,26 @@ class Office3D {
     // the rock: wider than the deck where it shows, hanging well below it
     const rock = new THREE.Mesh(G.bigRock, OM.rock); rock.scale.set(span * 0.5, span * 0.3, span * 0.45); rock.position.copy(this.V(cxp - span * 0.04, cyp + span * 0.02, keel - span * 0.02)); rock.rotation.set(0.05, 0.6, 0.04); ext.add(rock);
     const rock2 = new THREE.Mesh(G.bigRock, OM.rock); rock2.scale.set(span * 0.26, span * 0.2, span * 0.24); rock2.position.copy(this.V(cxp + span * 0.2, cyp + span * 0.16, keel - span * 0.12)); rock2.rotation.set(0.5, 2.1, 0.3); ext.add(rock2);
-    // engines on up to six of the outside walls, exhaust that breathes
+    // Engines as in the picture: a gunmetal housing turned on a lathe (grooves, a lip at its mouth), a nozzle
+    // recessed in it that glows cyan from inside, brackets and two actuators holding it to the hull. No flame: the
+    // glow is the engine, and it breathes.
     this.flames = [];
     const pick = outer.length <= 6 ? outer : [0, 1, 2, 3, 4, 5].map((i) => outer[Math.floor((i + 0.5) * outer.length / 6)]);
     pick.forEach((e, i) => {
       const f = i % 2 ? 0.3 : 0.7, g = new THREE.Group();
-      g.position.copy(this.V(e.ax + (e.bx - e.ax) * f + e.nx * 0.2, e.ay + (e.by - e.ay) * f + e.ny * 0.2, -T - 0.12 - HD * 0.5)); g.rotation.y = Math.atan2(e.nx, e.ny); ext.add(g);
-      const housing = new THREE.Mesh(G.cyl, OM.engine); housing.scale.set(0.62, 1.3, 0.62); housing.rotation.x = Math.PI / 2; housing.position.z = 0.5; g.add(housing);
-      const cap = new THREE.Mesh(G.cyl, OM.engineDark); cap.scale.set(0.5, 0.5, 0.5); cap.rotation.x = Math.PI / 2; cap.position.z = -0.25; g.add(cap);
-      [0.0, 0.62, 1.12].forEach((z) => { const ring = new THREE.Mesh(G.wheel, OM.rim); ring.scale.setScalar(0.64); ring.position.z = z; g.add(ring); });
-      [[0.5, 0], [-0.5, 0], [0, 0.5], [0, -0.5]].forEach(([x, y]) => { const s = new THREE.Mesh(G.box, OM.frame); s.scale.set(0.1, 0.1, 0.7); s.position.set(x, y, -0.25); g.add(s); });
-      const bell = new THREE.Mesh(G.bell, OM.engineDark); bell.scale.set(0.56, 0.5, 0.56); bell.rotation.x = -Math.PI / 2; bell.position.z = 1.38; g.add(bell);
-      const disc = new THREE.Mesh(G.cyl, OM.cyan.glow); disc.scale.set(0.44, 0.04, 0.44); disc.rotation.x = Math.PI / 2; disc.position.z = 1.22; disc.userData.dyn = true; g.add(disc);
-      const fl = new THREE.Mesh(G.plume, OM.plume); fl.scale.set(0.85, 2.2, 0.85); fl.rotation.x = -Math.PI / 2; fl.position.z = 1.3 + 1.1; fl.userData.dyn = true; g.add(fl);
-      const halo = glowSprite(0x00cfff, 0.55, 2.4); halo.position.z = 1.4; halo.userData.dyn = true; g.add(halo);
-      this.flames.push({ fl, ph: R() * 6 });
+      g.position.copy(this.V(e.ax + (e.bx - e.ax) * f + e.nx * 0.55, e.ay + (e.by - e.ay) * f + e.ny * 0.55, -T - 0.12 - HD * 0.5)); g.rotation.y = Math.atan2(e.nx, e.ny); ext.add(g);
+      const housing = new THREE.Mesh(G.engHousing, OM.engineL); housing.rotation.x = Math.PI / 2; g.add(housing);
+      const back = new THREE.Mesh(G.cyl, OM.engineDark); back.scale.set(0.34, 0.3, 0.34); back.rotation.x = Math.PI / 2; back.position.z = -0.82; g.add(back);
+      [[0.62, 0.2], [-0.62, 0.2]].forEach(([x, y]) => {
+        const arm = new THREE.Mesh(rboxGeo(0.12, 0.12, 0.95, 0.03), OM.frame); arm.position.set(x * 0.9, y, -0.55); arm.rotation.y = x > 0 ? -0.35 : 0.35; g.add(arm);
+        const act = new THREE.Mesh(G.cyl, OM.engine); act.scale.set(0.06, 0.7, 0.06); act.rotation.x = Math.PI / 2; act.position.set(x * 0.75, -0.42, -0.4); g.add(act);
+      });
+      const bracket = new THREE.Mesh(rboxGeo(1.1, 0.16, 0.5, 0.04), OM.frame); bracket.position.set(0, -0.62, -0.55); g.add(bracket);
+      const nozzle = new THREE.Mesh(G.circle, new THREE.MeshBasicMaterial({ map: nozzleTex(), color: new THREE.Color(0xffffff).multiplyScalar(1.6), transparent: true, toneMapped: false }));
+      nozzle.scale.setScalar(0.56); nozzle.position.z = 1.0; nozzle.userData.dyn = true; g.add(nozzle);
+      const lip = new THREE.Mesh(G.ringT, OM.cyan.rim); lip.scale.setScalar(0.6); lip.position.z = 1.12; g.add(lip);
+      const halo = glowSprite(0x00cfff, 0.32, 2.2); halo.position.z = 1.3; halo.userData.dyn = true; g.add(halo);
+      this.flames.push({ glow: halo, ph: R() * 6 });
     });
     // two solar wings: off the far right side and the near right side, as in the picture
     [[0, -1], [1, 0]].forEach(([nx, ny]) => {
@@ -1677,11 +1715,11 @@ class Office3D {
     ext.traverse((o) => { if (o.isMesh && o.material === OM.rock) { o.castShadow = true; o.receiveShadow = true; } });
     // asteroids drifting round it, never between it and the camera; one large and lit up to the right
     this.drift = [];
-    const big = new THREE.Mesh(G.smallRock, OM.rock); big.scale.set(2.2, 1.9, 2.0);
+    const big = new THREE.Mesh(G.smallRock, OM.rockS); big.scale.set(2.2, 1.9, 2.0);
     big.position.copy(this.V(cxp, cyp, 0)).add(skyDir(32, 0).multiplyScalar(span * 0.9)).add(new THREE.Vector3(0, span * 0.32, 0)); W.add(big); this.drift.push({ m: big, sp: 0.05 });
     for (let i = 0; i < 12; i++) {
       const a = R() * Math.PI * 2; if ((Math.cos(a) + Math.sin(a)) / Math.SQRT2 > 0.2) { i--; continue; }
-      const d = span * (0.85 + R() * 0.7), s = 0.3 + R() * R() * 1.4, m = new THREE.Mesh(G.smallRock, OM.rock);
+      const d = span * (0.85 + R() * 0.7), s = 0.3 + R() * R() * 1.4, m = new THREE.Mesh(G.smallRock, OM.rockS);
       m.scale.set(s, s * 0.8, s * 0.9); m.position.copy(this.V(cxp + Math.cos(a) * d, cyp + Math.sin(a) * d, -9 + R() * 12)); m.rotation.set(R() * 3, R() * 3, R() * 3);
       W.add(m); this.drift.push({ m, sp: 0.06 + R() * 0.18 });
     }
@@ -2152,7 +2190,7 @@ class Office3D {
     this.controls.update();
     this.sky.position.copy(this.camera.position);
     if (this.drift) this.drift.forEach((d, i) => { d.m.rotation.y = t * d.sp + i; d.m.rotation.x = t * d.sp * 0.6 + i * 2; });
-    if (this.flames) this.flames.forEach((f) => { const k = 0.85 + 0.15 * Math.sin(t * 13 + f.ph) + 0.05 * Math.sin(t * 31 + f.ph); f.fl.scale.set(0.85 * k, 2.2 * (0.9 + 0.1 * k), 0.85 * k); });
+    if (this.flames) this.flames.forEach((f) => { f.glow.material.opacity = 0.26 + 0.08 * Math.sin(t * 3 + f.ph) + 0.03 * Math.sin(t * 11 + f.ph); });
     if (this.vaultPiles) this.vaultPiles.forEach((p, i) => { p.position.y = p.userData.y + Math.sin(t * 1.2 + i) * 0.03; });
     Object.values(this.rooms).forEach((r) => {
       if (r.grow) { const k = Math.min(1, (now - r.grow) / 1200), e = 1 - Math.pow(1 - k, 3); r.g.scale.set(1, Math.max(0.01, e), 1); if (k >= 1) r.grow = 0; }
