@@ -1,0 +1,49 @@
+/* Gem Screener (/gem-screener/app): one patch over the live page, 2026-10-18. The operator: "at vyhodi ty hot sectors
+   z hlavni strany ... at na hlavni stranu taky pridaji smajliky co jsou v hlavnim tablu a supply sloupec at upravi ...
+   vymysli nejaky top pozadi do topu jak jsi to udelal v agent tournaments ... zkus i novy top design tech ctvercu
+   ... to pusobi tak ze tam je moc textu". Palette: the site's cyan, green, red and blue only. */
+
+/* 1. Top Picks: the Hot sectors panel goes. */
+#startHot { display: none !important; }
+
+/* 2. The page top: a faint gem-facet lattice (the logo's diamond, repeated) behind the header and the Altseason Index,
+   gone before "Degen picks". --gs-top is where it ends, set by patch.js from the heading's position. */
+.shell { position: relative; isolation: isolate; }
+.shell::before {
+  content: ''; position: absolute; left: 0; right: 0; top: 0; height: var(--gs-top, 560px); z-index: -1; pointer-events: none;
+  opacity: .085;
+  background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='40' height='69.28'><path d='M0 0 L40 69.28 M40 0 L0 69.28 M0 34.64 H40' fill='none' stroke='%2300cfff' stroke-width='1'/></svg>");
+  -webkit-mask-image: linear-gradient(to bottom, rgba(6,9,15,1) 0, rgba(6,9,15,1) 55%, rgba(6,9,15,0) 100%);
+          mask-image: linear-gradient(to bottom, rgba(6,9,15,1) 0, rgba(6,9,15,1) 55%, rgba(6,9,15,0) 100%);
+}
+.shell::after {
+  content: ''; position: absolute; left: 0; right: 0; top: 0; height: var(--gs-top, 560px); z-index: -1; pointer-events: none;
+  background: radial-gradient(ellipse 38% 70% at 6% 0%, rgba(0,207,255,.10), rgba(0,207,255,0) 70%),
+              radial-gradient(ellipse 40% 60% at 95% 10%, rgba(0,255,136,.05), rgba(0,255,136,0) 70%);
+}
+
+/* 3. The Degen pick cards, shorter: numbers first, words in tooltips (patch.js rebuilds the middle of each card from
+   the card's own text and the table's own icons; nothing new is computed). */
+#startCards .dcard { display: flex; flex-direction: column; gap: 10px; }
+#startCards .dc-size-note, #startCards .dc-fdv, #startCards .dc-why, #startCards .dc-exit { display: none !important; }
+#startCards .dc-name b { display: inline-flex; align-items: center; gap: 6px; }
+#startCards .dc-name .nmicon { color: var(--good, #00ff88); }
+#startCards .dc-big { font-size: 46px; line-height: 1; text-shadow: 0 0 22px rgba(0,255,136,.35); }
+.gs-stats { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 6px; }
+.gs-stats div { background: rgba(6,9,15,.55); border: 1px solid rgba(0,207,255,.14); border-radius: 9px; padding: 7px 8px; min-width: 0; }
+.gs-stats b { display: block; font-size: 16px; line-height: 1.15; color: #e6edf7; white-space: nowrap; }
+.gs-stats b.g { color: #00ff88; } .gs-stats b.na { color: #7f93ad; }
+.gs-stats span { display: block; font-size: 9.5px; letter-spacing: .12em; text-transform: uppercase; color: #7f93ad; margin-top: 2px; white-space: nowrap; }
+.gs-tags { display: flex; flex-wrap: wrap; gap: 5px; min-height: 22px; }
+.gs-tags i { font-style: normal; font-size: 11px; padding: 2px 8px; border-radius: 99px; white-space: nowrap;
+  color: #00cfff; background: rgba(0,207,255,.08); border: 1px solid rgba(0,207,255,.22); }
+.gs-tags i.w { color: #ff4444; background: rgba(255,68,68,.07); border-color: rgba(255,68,68,.30); }
+.gs-tags i.n { color: #a9b8cc; background: none; border-color: #1e3050; }
+#startCards .dc-risk { margin-top: auto; }
+#startCards .dm-ends { display: none !important; }
+
+/* 4. Supply (Apps and Chains): the number under the pie instead of beside it, so the column is narrow. */
+.supcell { display: inline-flex !important; flex-direction: column; align-items: center; gap: 2px; }
+.supcell .spn { font-size: 13px !important; line-height: 1; margin: 0 !important; }
+.supcell.v-na .spn { color: #7f93ad; font-size: 10.5px !important; letter-spacing: .06em; }
+td.supcol { padding-left: 6px !important; padding-right: 6px !important; }
