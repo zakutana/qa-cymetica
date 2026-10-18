@@ -11,7 +11,7 @@
   // a station's shape and its colour: the colour is one of the site's four, the variety is in the shape. The keys
   // are the buildings' old ones, so a company saved before the Universe went to space keeps its pick.
   CO.SKINS = [
-    { key: 'tower', name: 'Spire' }, { key: 'dome', name: 'Biodome' }, { key: 'pyramid', name: 'Ziggurat' },
+    { key: 'tower', name: 'Spire' }, { key: 'dome', name: 'Biodome' }, { key: 'pyramid', name: 'Fortress' },
     { key: 'orbital', name: 'Ring station' }, { key: 'rocket', name: 'Starship' }, { key: 'vault', name: 'Vault' }
   ];
   CO.ACCENTS = [
