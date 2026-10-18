@@ -1172,15 +1172,18 @@ function filamentTex(seed) {
   for (let j = 0; j < N; j++) for (let i = 0; i < N; i++) {
     const x = i / N * 2 - 1, y = j / N * 2 - 1, rr = Math.sqrt(x * x + y * y); if (rr > 1.02) continue;
     const edge = sstep(1.0, 0.25, rr + 0.45 * (f(x * 1.4 + 2, y * 1.4 + 5, 3) - 0.5)); if (edge <= 0) continue;
-    const q = f(x * 2.4 + 1.3, y * 2.4 + 7.7, 4), n = f(x * 3.1 + q * 2.6, y * 3.1 + q * 2.6 + 1.9, 5);
+    const q = f(x * 2.4 + 1.3, y * 2.4 + 7.7, 4), n = f(x * 4.6 + q * 3.0, y * 4.6 + q * 3.0 + 1.9, 5);
     const ridge = 1 - Math.abs(n - 0.5) * 2;                      // the filaments: where the field crosses its middle
-    const patch = sstep(0.45, 0.7, f2(x * 1.6 + 4, y * 1.6 + 1, 3));   // and only in some patches of it
-    let den = edge * Math.pow(Math.max(0, ridge), 10) * patch;
-    const knot = edge * sstep(0.66, 0.82, f2(x * 3.5 + 9, y * 3.5 + 3, 4)) * 0.5;
+    const patch = sstep(0.42, 0.68, f2(x * 1.6 + 4, y * 1.6 + 1, 3));   // and only in some patches of it
+    let den = edge * Math.pow(Math.max(0, ridge), 7) * patch * 0.9;
+    const knot = edge * patch * (0.1 + 0.3 * sstep(0.6, 0.85, f2(x * 4 + 9, y * 4 + 3, 4)));   // the haze they sit in
     den = Math.min(1, den + knot);
-    const k = (j * N + i) * 4; d[k] = 40; d[k + 1] = 150; d[k + 2] = 160; d[k + 3] = den * 255;
+    const k = (j * N + i) * 4; d[k] = 40 + 60 * den; d[k + 1] = 150 + 60 * den; d[k + 2] = 160 + 50 * den; d[k + 3] = den * 255;
   }
-  g.putImageData(img, 0, 0);
+  // soft, as gas is: the filaments over a blurred copy of themselves
+  const sharp = document.createElement('canvas'); sharp.width = sharp.height = N; sharp.getContext('2d').putImageData(img, 0, 0);
+  g.clearRect(0, 0, N, N); g.filter = 'blur(5px)'; g.drawImage(sharp, 0, 0); g.drawImage(sharp, 0, 0); g.filter = 'blur(1px)'; g.globalAlpha = 0.7; g.drawImage(sharp, 0, 0);
+  g.filter = 'none'; g.globalAlpha = 1;
   const t = new THREE.CanvasTexture(c); t.colorSpace = THREE.SRGBColorSpace; TX[key] = t; return t;
 }
 // The sky: nebulae and stars round the camera. The Universe keeps its rich clouds; the office (office = true) has
@@ -1196,7 +1199,7 @@ function spaceSky(office) {
   // The office's home view looks 37 degrees down, so the sky it shows is the band from about -51 to -21 degrees;
   // his picture's teal nebula sits at its top left (about -20 azimuth, -28 elevation), knots and wisps round it, a
   // faint one top right, a fainter one low on the left. The last ones are for a camera turned elsewhere.
-  const OFFICE_NEB = [[-21, -27, 16, 8, 0.42], [-13, -31, 10, 19, 0.26], [-28, -22, 11, 3, 0.28], [-24, -35, 9, 23, 0.18],
+  const OFFICE_NEB = [[-21, -27, 13, 8, 0.3], [-13, -31, 8, 19, 0.18], [-28, -22, 9, 3, 0.2], [-24, -35, 7, 23, 0.12],
     [16, -23, 12, 13, 0.1], [-32, -46, 12, 37, 0.08], [-32, 8, 60, 41, 0.5], [150, -15, 70, 17, 0.4], [95, 5, 50, 29, 0.3], [-130, -30, 60, 31, 0.4]];
   const UV_NEB = [[-32, 8, 72, 8, 0.72, 'teal'], [-54, -8, 62, 3, 0.62, 'cyan'], [-12, 14, 56, 19, 0.38, 'teal'],
     [32, -22, 64, 13, 0.45, 'cyan'], [52, -32, 56, 37, 0.35, 'teal'], [150, -15, 80, 17, 0.55, 'teal'], [95, -35, 60, 23, 0.35, 'green'], [-130, -30, 70, 29, 0.45, 'blue']];
@@ -1850,14 +1853,14 @@ class Office3D {
       const nozzle = new THREE.Mesh(G.circle, new THREE.MeshBasicMaterial({ map: nozzleTex(), color: new THREE.Color(0xffffff).multiplyScalar(2.2), transparent: true, toneMapped: false }));
       nozzle.scale.setScalar(0.62); nozzle.position.z = 1.1; nozzle.userData.dyn = true; g.add(nozzle);
       const lip = new THREE.Mesh(G.ringT, OM.engineL); lip.scale.set(0.68, 0.68, 2.5); lip.position.z = 1.12; g.add(lip);
-      const halo = glowSprite(0x8ff8ff, plume ? 0.75 : 0.32, plume ? 2.6 : 1.6); halo.position.z = 1.3; halo.userData.dyn = true; g.add(halo);
+      const halo = glowSprite(0x8ff8ff, plume ? 0.45 : 0.32, plume ? 1.8 : 1.6); halo.position.z = 1.3; halo.userData.dyn = true; g.add(halo);
       if (plume) {
         // a flame as wide as the nozzle where it leaves it, thinning and fading away from it
-        [[0.62, 3.4, 0x4a7cff, 0.26], [0.36, 2.2, 0x9cc4ff, 0.32]].forEach(([w, len, col, op]) => {
+        [[0.55, 2.4, 0x4a7cff, 0.22], [0.3, 1.6, 0x9cc4ff, 0.3]].forEach(([w, len, col, op]) => {
           const pm = new THREE.Mesh(G.plumeCone, new THREE.MeshBasicMaterial({ map: plumeTex(), color: new THREE.Color(col).multiplyScalar(1.5), transparent: true, opacity: op, blending: THREE.AdditiveBlending, depthWrite: false, side: THREE.DoubleSide }));
           pm.scale.set(w, len, w); pm.rotation.x = -Math.PI / 2; pm.position.z = 1.1 + len / 2; pm.userData.dyn = true; g.add(pm);
         });
-        const ph = glowSprite(0x6a9cff, 0.45, 3.0); ph.position.z = 1.9; ph.userData.dyn = true; g.add(ph);
+        const ph = glowSprite(0x6a9cff, 0.25, 2.0); ph.position.z = 1.9; ph.userData.dyn = true; g.add(ph);
       }
       this.flames.push({ glow: halo, ph: R() * 6 + x, base: plume ? 0.3 : 0.16 });
       return g;
@@ -1866,7 +1869,7 @@ class Office3D {
     if (back) {
       const nac = new THREE.Mesh(rboxGeo(1.3, 1.1, 7.2, 0.4), OM.engineL); nac.position.copy(this.V(-1.05, 11.9, -0.25)); ext.add(nac);
       this.rb(ext, -1.75, 8.5, -0.5, 0.25, 6.8, 0.5, OM.frame, 0.08, false);
-      engine(-1.5, 9.6, 0.15, -1, -0.22, 0.8, true); engine(-1.5, 14.2, 0.15, -1, -0.22, 0.8, true);
+      engine(-1.5, 9.6, 0.15, -1, -0.22, 0.62, true); engine(-1.5, 14.2, 0.15, -1, -0.22, 0.62, true);
     }
     const lotEdge = outer.find((o) => o.ny === 1 && o.c0 === 8 && o.c1 === 16);
     if (lotEdge) {
