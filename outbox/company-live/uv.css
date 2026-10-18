@@ -29,9 +29,9 @@
 .uvstage.is3d .uvmap, .uvstage.is2d .uv3d, .uvstage.loading .uvmap { display: none; }
 .uvstage.loading::after { content: 'Loading the map…'; position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%); color: var(--dim2); font-size: 12px; letter-spacing: .12em; }
 .uv3d canvas { display: block; width: 100% !important; height: 100% !important; }
-/* a cinematic edge: the corners fall into space */
+/* a cinematic edge, as faint as his picture's: the far corners a shade darker */
 .uvstage.is3d::before { content: ''; position: absolute; inset: 0; z-index: 2; pointer-events: none;
-  background: radial-gradient(ellipse 75% 70% at 50% 52%, transparent 60%, rgba(3, 6, 12, .55) 100%); }
+  background: radial-gradient(ellipse 80% 80% at 50% 50%, transparent 70%, rgba(1, 4, 7, .28) 100%); }
 .uvsum { font-size: 11.5px; color: var(--dim2); margin-left: 14px; letter-spacing: .02em; }
 .uvsum b { color: var(--text); } .uvsum b.cy { color: var(--cyan); }
 .uvstage .crumb { display: flex; align-items: center; padding: 6px 12px; border-radius: 9px; background: rgba(6, 9, 15, .72); border: 1px solid var(--line2); backdrop-filter: blur(4px); }
@@ -93,22 +93,33 @@ i.lk::before { content: ''; position: absolute; left: 1.5px; top: -5px; width: 6
 
 /* ---------- the 3D map's banners: DOM over the canvas ---------- */
 .uvbans { position: absolute; inset: 0; pointer-events: none; z-index: 3; overflow: hidden; }
+/* His picture's name plates: a dark slate plate, a thin frame in a muted shade of the station's colour with a
+   rivet in each corner, squared caps in light grey, a small dot of the station's colour, a little point under it.
+   Measured on his 1533-wide frame (28 px tall, caps 11 px); the map scales them with the stage (--bs). */
 .b3 { position: absolute; left: 0; top: 0; transform: translate(-50%, -100%); transform-origin: 50% 100%; pointer-events: auto; cursor: pointer; display: flex; flex-direction: column; align-items: center;
-  will-change: transform; transition: opacity .25s; }
-/* Cymetica's own name over the star in the middle */
-.b3.core { cursor: default; }
-.b3.core .rib { font-size: 16px; letter-spacing: .14em; padding: 7px 20px; color: #fff; border-color: rgba(223, 230, 238, .5); text-shadow: 0 0 12px rgba(0, 207, 255, .9); }
-.b3.core .rib::before { display: none; }
-.b3.core .teth { height: 14px; }
-.b3 .rib { display: flex; align-items: center; gap: 7px; padding: 5px 12px; font: 400 12px 'Archivo Black', sans-serif; letter-spacing: .05em; color: #eef4fa; white-space: nowrap;
-  background: rgba(8, 13, 20, .84); border: 1px solid rgba(223, 230, 238, .34); border-radius: 4px; box-shadow: 0 4px 14px rgba(0, 0, 0, .45); }
-.b3 .rib::before { content: ''; width: 6px; height: 6px; border-radius: 50%; background: var(--acc); box-shadow: 0 0 6px var(--acc); flex: none; }
+  will-change: transform; transition: opacity .25s; --fr: color-mix(in srgb, var(--acc) 22%, #464b54); }
+.b3 .rib { position: relative; display: flex; align-items: center; gap: 6px; padding: 4px 11px 3px; font: 700 15px/1.2 'Rajdhani', 'Archivo Black', sans-serif; letter-spacing: .045em; color: #c4cacf; white-space: nowrap;
+  background:
+    radial-gradient(circle at 4px 4px, var(--fr) 0 1px, transparent 1.7px), radial-gradient(circle at calc(100% - 4px) 4px, var(--fr) 0 1px, transparent 1.7px),
+    radial-gradient(circle at 4px calc(100% - 4px), var(--fr) 0 1px, transparent 1.7px), radial-gradient(circle at calc(100% - 4px) calc(100% - 4px), var(--fr) 0 1px, transparent 1.7px),
+    linear-gradient(rgba(29, 37, 46, .9), rgba(17, 24, 31, .9));
+  border: 1px solid var(--fr); border-radius: 4px; box-shadow: 0 0 0 1px rgba(0, 0, 0, .3), 0 3px 10px rgba(0, 0, 0, .4); text-shadow: 0 1px 2px rgba(0, 0, 0, .7); }
+.b3 .rib::before { content: ''; width: 5px; height: 5px; border-radius: 50%; background: var(--acc); box-shadow: 0 0 5px var(--acc); opacity: .85; flex: none; }
 .b3 .rib i.lk { color: var(--dim); }
-.b3 .teth { width: 1px; height: 10px; background: linear-gradient(rgba(223, 230, 238, .5), transparent); }
+.b3 .teth { width: 0; height: 0; border: 4px solid transparent; border-top-color: var(--fr); border-bottom: 0; margin-top: -1px; }
+/* Cymetica's own: larger, teal, a bright cyan frame and a line out of either side */
+.b3.core { cursor: default; --fr: #62bdcb; }
+.b3.core .rib { font-size: 19px; letter-spacing: .07em; padding: 4px 20px 3px; color: #e2f6f9; border-color: #62bdcb;
+  background: linear-gradient(rgba(31, 74, 87, .9), rgba(16, 45, 55, .9)); box-shadow: 0 0 14px rgba(0, 207, 255, .3), 0 3px 10px rgba(0, 0, 0, .4); text-shadow: 0 0 8px rgba(120, 230, 255, .6); }
+.b3.core .rib::before { display: none; }
+.b3.core .rib::after { content: ''; position: absolute; left: -22px; right: -22px; top: 50%; height: 1px; z-index: -1;
+  background: linear-gradient(90deg, transparent, rgba(98, 189, 203, .8) 18px, transparent 26px, transparent calc(100% - 26px), rgba(98, 189, 203, .8) calc(100% - 18px), transparent); }
+.b3.core .teth { border-width: 5px; border-bottom: 0; }
 .b3 .you { font: 800 9px 'JetBrains Mono'; color: var(--bg); background: var(--green); padding: 1px 7px; border-radius: 9px; margin-bottom: 3px; box-shadow: 0 0 10px rgba(0, 255, 136, .6); }
 .b3.priv .rib { color: var(--dim); }
 .b3.paused .rib { color: var(--dim2); }
-.b3.hov .rib, .b3:hover .rib { background: rgba(10, 16, 28, .98); border-color: var(--acc); box-shadow: 0 0 18px color-mix(in srgb, var(--acc) 60%, transparent); }
+.b3.hov, .b3:hover { --fr: var(--acc); }
+.b3.hov .rib, .b3:hover .rib { color: #eef4fa; box-shadow: 0 0 16px color-mix(in srgb, var(--acc) 55%, transparent); }
 .b3.far { opacity: .55; }
 .b3.hidden { opacity: 0; pointer-events: none; }
 .b3pop { position: absolute; left: 0; top: 0; pointer-events: none; font: 800 13px 'JetBrains Mono'; color: var(--green); text-shadow: 0 0 10px rgba(0, 255, 136, .9);

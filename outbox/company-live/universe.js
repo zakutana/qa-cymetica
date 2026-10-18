@@ -26,8 +26,9 @@
   // orbits round it, the biggest on the inner ones, ours on the second, in front of it where the camera first
   // looks. An orbit turns at its own pace, the inner ones faster as orbits do (omega ~ r^-1.5): slowly, so the
   // picture is alive and a name can still be read. One copy of the model, so the two pictures cannot drift apart;
-  // the flat map draws it at its first moment. Units are the stations' own (a deck is 0.8 high).
-  var ORBITS = [68, 90, 112, 134, 156, 180, 204], AZ = 1.08, SPIN = 2.2, R1 = ORBITS[ORBITS.length - 1];
+  // the flat map draws it at its first moment. Units are the stations' own (a deck is 0.8 high). The radii are his
+  // picture's lines, measured on it (u3d.js, UVLINES): nothing inside 90, where Cymetica's own rings end at about 60.
+  var ORBITS = [90, 105, 120, 136, 154, 178, 203], AZ = 1.08, SPIN = 2.2, R1 = ORBITS[ORBITS.length - 1];
   CO.uvRng = rng; CO.fpOf = fpOf;
   CO.uvGalaxy = { ORBITS: ORBITS, AZ: AZ, R1: R1, outer: R1, omega: function (r) { return SPIN / Math.pow(r, 1.5); } };
   CO.uvPlan = function (mine) {
