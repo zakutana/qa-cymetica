@@ -1,0 +1,27 @@
+/* Agent Tournaments lobby (/agent-tournaments): the honeycomb weave from the table page's felt, laid in two places.
+   The operator, 2026-10-18: "nemyslis ze by to chtelo i na hlavni strance dat nejake pozadi jemne? treba se mi
+   libi to pozadi cos dal na platno stolu".
+   Nothing else on the page changes; this is the whole patch. Palette: the site's own green (#00ff88). */
+
+/* 1. Behind the whole page: the weave, strongest under the hero, fading out as the page goes down. */
+main.content-main { position: relative; isolation: isolate; }
+main.content-main::before {
+  content: ''; position: absolute; inset: 0; z-index: -1; pointer-events: none; opacity: .07;
+  background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='42' height='24.25'><path d='M0 12.12 L7 0 H21 L28 12.12 L21 24.25 H7 Z M28 12.12 H42' fill='none' stroke='%2300ff88' stroke-width='1'/></svg>");
+  -webkit-mask-image: linear-gradient(to bottom, rgba(6,9,15,1) 0, rgba(6,9,15,1) 760px, rgba(6,9,15,.4) 1700px, rgba(6,9,15,.18) 100%);
+          mask-image: linear-gradient(to bottom, rgba(6,9,15,1) 0, rgba(6,9,15,1) 760px, rgba(6,9,15,.4) 1700px, rgba(6,9,15,.18) 100%);
+}
+
+/* 2. On every table's felt (the cards and the hero's "Next to fill"): the same weave, clear in the middle where the
+   pot is, and the thin printed line round the pot the big table has. */
+/* .at-felt is already position:absolute and its .at-pot already sits at z-index 1, so nothing else moves. */
+.at-felt::before {
+  content: ''; position: absolute; inset: 0; z-index: 0; border-radius: inherit; pointer-events: none; opacity: .14;
+  background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='28' height='16.17'><path d='M0 8.08 L4.67 0 H14 L18.67 8.08 L14 16.17 H4.67 Z M18.67 8.08 H28' fill='none' stroke='%2300ff88' stroke-width='1'/></svg>");
+  -webkit-mask-image: radial-gradient(ellipse 50% 50% at 50% 50%, rgba(6,9,15,.1) 35%, rgba(6,9,15,1) 80%);
+          mask-image: radial-gradient(ellipse 50% 50% at 50% 50%, rgba(6,9,15,.1) 35%, rgba(6,9,15,1) 80%);
+}
+.at-felt::after {
+  content: ''; position: absolute; inset: 9% 7%; border-radius: 999px; pointer-events: none;
+  border: 1px solid rgba(0,255,136,.16);
+}
