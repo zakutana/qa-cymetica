@@ -217,6 +217,13 @@ def test_unrelated_tools_are_not_touched(capsys):
 def test_the_hook_is_actually_wired_up():
     """A guard nobody invokes is a comment. Check settings.json still calls it."""
     settings = json.loads((REPO / ".claude" / "settings.json").read_text("utf-8"))
+    # B06, deep pass 2026-10-18: one key switches every hook off, protect_state.py with them, and
+    # the entry below would still be found. Either project settings file can carry it.
+    for name in ("settings.json", "settings.local.json"):
+        path = REPO / ".claude" / name
+        if path.exists():
+            assert json.loads(path.read_text("utf-8")).get("disableAllHooks") is not True, (
+                f".claude/{name} sets disableAllHooks: protect_state.py never runs")
     entries = settings["hooks"]["PreToolUse"]
     wired = [
         h
