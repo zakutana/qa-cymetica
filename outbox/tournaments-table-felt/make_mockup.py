@@ -6,12 +6,14 @@ nebo vice detailu u stolu? nejake chips nebo nevim. zkus vymyslet neco aby to by
 So the oval keeps its ten seats in the live page's order and gains only pictures of numbers the page already has
 (GET /api/v1/agent-tournaments/tables/2, saved as table2.json):
 
-* a chip stack in front of every seat: the bot's money now, $250 x (1 + ROI), in $50 chips -- cyan up to the $250
-  it started with, green above it, and the chips it lost drawn as dashed red rings;
+* a chip pile in front of every seat: the bot's money now, $250 x (1 + ROI), paid out in casino chips
+  ($100 green, $25 cyan, $5 blue, $1 white), and the amount on a tag under it (the operator, the same day, on the
+  first try: "to se mi moc nelibi ty chipy jak jsi udelal" -- one tall $50 column with dashed red rings for losses);
 * a ring round every avatar: today's trades out of the 20 a day (trades_today / daily_allowance);
 * the pot in the middle as a chip pile and ET10 coins, and the 1st / 2nd / 3rd prizes printed on the felt like
   betting spots instead of cards under the table (where the bottom seat's ROI ran into "2ND");
-* felt, a padded rail, an overhead light and a floor under the table; no ELO line on the seats.
+* felt, a padded rail, an overhead light and a floor under the table; no ELO line on the seats;
+* the race under the table across the page's whole width ("a ten race nevidim nikde").
 
 Palette: the site's navy, cyan, green, red and blue, and the avatar tints the API itself serves.
 """
@@ -27,7 +29,7 @@ HERE = Path(__file__).resolve().parent
 T = json.loads((HERE / "table2.json").read_text(encoding="utf-8"))
 NOW = datetime.now(timezone.utc)
 MINE = 1  # seat 1, "lab MACD Hunter", is the operator's bot (the live page tags it YOU when they are signed in)
-CHIP = 50.0  # dollars per chip
+DENOMS = ((100, "#00ff88", "#e6edf7"), (25, "#00cfff", "#e6edf7"), (5, "#3b82f6", "#e6edf7"), (1, "#e6edf7", "#3b82f6"))
 
 # The oval box, in px: seat centres sit on the rail, clockwise from top centre (the live page's order).
 W, H = 1340, 700
@@ -56,31 +58,41 @@ def money(v):
     return f"${v:,.0f}" if abs(v - round(v)) < 0.005 else f"${v:,.2f}"
 
 
-def chip(x, y, fill, ghost=False):
-    """One chip seen from slightly above: an edge, a face, and the six spots round its rim."""
-    if ghost:
-        return (f'<ellipse cx="{x}" cy="{y}" rx="17" ry="6.2" fill="none" stroke="#ff4444" stroke-opacity=".55" '
-                f'stroke-width="1.2" stroke-dasharray="3 3"/>')
-    return (f'<ellipse cx="{x}" cy="{y + 2}" rx="17" ry="6.2" fill="{fill}" fill-opacity=".55"/>'
-            f'<rect x="{x - 17}" y="{y}" width="34" height="2" fill="{fill}" fill-opacity=".55"/>'
-            f'<ellipse cx="{x}" cy="{y}" rx="17" ry="6.2" fill="{fill}"/>'
-            f'<ellipse cx="{x}" cy="{y}" rx="14.2" ry="5" fill="none" stroke="#e6edf7" stroke-width="1.6" '
-            f'stroke-dasharray="3.2 4.2" stroke-opacity=".9"/>'
-            f'<ellipse cx="{x}" cy="{y}" rx="8" ry="2.8" fill="none" stroke="#06090f" stroke-opacity=".35"/>')
+def chip(x, y, face, stripe, k=1.0):
+    """One casino chip seen from slightly above: a shaded edge with stripes, a face with six rim spots and an inlay."""
+    rx, ry, t = 19 * k, 7 * k, 5 * k
+    body = (f'M{x - rx:.1f},{y:.1f} L{x - rx:.1f},{y + t:.1f} A{rx:.1f} {ry:.1f} 0 0 0 {x + rx:.1f},{y + t:.1f} '
+            f'L{x + rx:.1f},{y:.1f} A{rx:.1f} {ry:.1f} 0 0 1 {x - rx:.1f},{y:.1f} Z')
+    side = f'<path d="{body}" fill="{face}"/><path d="{body}" fill="#06090f" fill-opacity=".38"/>'
+    stripes = "".join(
+        f'<rect x="{x + f * rx - 1.6 * k:.1f}" y="{y + ry * math.sqrt(1 - f * f):.1f}" width="{3.2 * k:.1f}" height="{t:.1f}" '
+        f'fill="{stripe}" fill-opacity=".9"/>' for f in (-0.78, -0.26, 0.26, 0.78))
+    a, b = rx * .82, ry * .82
+    c = math.pi * (3 * (a + b) - math.sqrt((3 * a + b) * (a + 3 * b)))
+    top = (f'<ellipse cx="{x}" cy="{y:.1f}" rx="{rx:.1f}" ry="{ry:.1f}" fill="{face}"/>'
+           f'<ellipse cx="{x}" cy="{y:.1f}" rx="{a:.1f}" ry="{b:.1f}" fill="none" stroke="{stripe}" stroke-width="{2.6 * k:.1f}" '
+           f'stroke-dasharray="{c / 12:.2f} {c / 12:.2f}"/>'
+           f'<ellipse cx="{x}" cy="{y:.1f}" rx="{rx * .52:.1f}" ry="{ry * .52:.1f}" fill="{face}" stroke="#06090f" '
+           f'stroke-opacity=".35" stroke-width="{1 * k:.1f}"/>')
+    return side + stripes + top
 
 
-def stack(x, base, equity, capital):
-    """$50 chips, bottom up: cyan to the starting capital, green above it; lost chips as dashed red rings."""
-    n = max(0, round(equity / CHIP))
-    start = round(capital / CHIP)
-    parts = []
-    for k in range(max(n, start)):
-        y = base - k * 6
-        if k < n:
-            parts.append(chip(x, y, "#00cfff" if k < start else "#00ff88"))
-        else:
-            parts.append(chip(x, y, "", ghost=True))
-    return "".join(parts)
+def pile(x, base, amount, k=1.0, cap=6):
+    """The amount paid out greedily in $100 / $25 / $5 / $1 chips: one column per denomination, side by side."""
+    cols, left = [], round(amount)
+    for d, face, stripe in DENOMS:
+        n, left = divmod(left, d)
+        if n:
+            cols.append((min(n, cap), face, stripe))
+    if not cols:
+        return ""
+    gap = 40 * k
+    x0 = x - gap * (len(cols) - 1) / 2
+    out = []
+    for i, (n, face, stripe) in enumerate(cols):
+        cx = x0 + i * gap
+        out.extend(chip(cx, base - j * 5.2 * k, face, stripe, k) for j in range(n))
+    return "".join(out)
 
 
 def allowance_ring(used, of):
@@ -118,30 +130,28 @@ def seats():
                        f'{allowance_ring(s["trades_today"], s["daily_allowance"])}'
                        f'<span class="av" style="color:{col}"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" '
                        f'stroke-width="1.6" stroke-linecap="round">{icon}</svg></span>{badge}{plate}</div>')
-        # the stack sits on the felt between the seat and the pot
+        # the pile sits on the felt between the seat and the pot, its amount on a tag under it
         if top:
-            sx, base = x, y + 112
+            sx, base = x, y + 92
         elif bottom:
-            sx, base = x, y - 52
+            sx, base = x, y - 98
         else:
-            sx, base = x + (124 if x < cx else -124), y + 22
-        chips.append(stack(sx, base, eq, cap))
-        lx = sx + 26
-        labels.append(f'<span class="eq {roi_cls}" style="left:{lx}px;top:{base - 8}px">{money(eq)}</span>')
+            sx, base = x + (134 if x < cx else -134), y + 4
+        chips.append(pile(sx, base, eq))
+        labels.append(f'<span class="eq {roi_cls}" style="left:{sx}px;top:{base + 14}px">{money(eq)}</span>')
     return "".join(avatars), "".join(chips), "".join(labels)
 
 
 def pot():
-    pile = "".join(chip(x, b - k * 5, "#00ff88") for x, b, n in ((-34, 30, 3), (0, 34, 4), (34, 30, 2)) for k in range(n))
-    coins = "".join(
-        f'<circle cx="{x}" cy="{y}" r="11" fill="#06090f" stroke="#00cfff" stroke-width="2"/>'
-        f'<text x="{x}" y="{y + 3.5}" text-anchor="middle" font-family="JetBrains Mono" font-weight="700" font-size="9" fill="#00cfff">ET</text>'
-        for x, y in ((-14, 22), (10, 26), (-2, 6)))
+    """The $100 as four $25 chips, and the ET10 beside it as a stack of coins."""
     usd = T["pot_usdc"]
     et10 = sum(T["et10_prizes"])
+    chips = "".join(chip(0, 40 - j * 6.5, "#00cfff", "#e6edf7", 1.25) for j in range(min(8, round(usd / 25))))
+    coins = "".join(
+        f'<ellipse cx="0" cy="{40 - j * 6}" rx="17" ry="6.5" fill="#06090f" stroke="#00cfff" stroke-width="2"/>' for j in range(4))
     return (f'<div class="pot"><span class="k">PRIZE POOL</span>'
-            f'<div class="row"><svg viewBox="-56 -6 112 48" class="pile">{pile}</svg>'
-            f'<b>{money(usd)}</b><svg viewBox="-30 -8 60 48" class="coins">{coins}</svg></div>'
+            f'<div class="row"><svg viewBox="-30 -4 60 56" class="pile">{chips}</svg>'
+            f'<b>{money(usd)}</b><svg viewBox="-22 -4 44 56" class="coins">{coins}</svg></div>'
             f'<span class="et">+ {et10:,} ET10</span></div>')
 
 
@@ -219,13 +229,13 @@ html,body{background:var(--bg);color:var(--text);font-family:'JetBrains Mono',mo
  color:rgba(0,255,136,.28)}
 
 /* the pot and the prize spots */
-.pot{position:absolute;left:50%;top:330px;transform:translate(-50%,-50%);text-align:center}
+.pot{position:absolute;left:50%;top:306px;transform:translate(-50%,-50%);text-align:center}
 .pot .k{display:block;font-size:11px;letter-spacing:.3em;color:var(--dim2);font-weight:700}
 .pot .row{display:flex;align-items:center;gap:6px;margin-top:2px}
 .pot .row b{font-family:'Archivo Black';font-weight:400;font-size:72px;line-height:1.05;color:var(--green);text-shadow:0 0 26px rgba(0,255,136,.45)}
-.pot .pile{width:112px;height:48px}.pot .coins{width:60px;height:48px}
+.pot .pile{width:64px;height:60px}.pot .coins{width:46px;height:60px}
 .pot .et{font-size:15px;font-weight:700;color:var(--cyan)}
-.spots{position:absolute;left:50%;top:440px;transform:translateX(-50%);display:flex;gap:18px}
+.spots{position:absolute;left:50%;top:384px;transform:translateX(-50%);display:flex;gap:18px}
 .spot{width:130px;height:62px;border-radius:999px;text-align:center;padding-top:6px;background:rgba(6,9,15,.35);
  border:1.5px solid rgba(0,255,136,.45)}
 .spot span{display:block;font-size:9.5px;letter-spacing:.24em;color:var(--dim2);font-weight:700}
@@ -236,8 +246,9 @@ html,body{background:var(--bg);color:var(--text);font-family:'JetBrains Mono',mo
 
 /* chips and the money now */
 .chips{position:absolute;inset:0;width:1340px;height:700px;pointer-events:none;overflow:visible}
-.eq{position:absolute;font-size:12px;font-weight:700;white-space:nowrap;text-shadow:0 1px 2px #06090f}
-.eq.d{color:var(--dim)}
+.eq{position:absolute;transform:translateX(-50%);font-size:12px;font-weight:700;white-space:nowrap;background:rgba(6,9,15,.85);
+ border:1px solid var(--line3);border-radius:99px;padding:2px 9px;color:var(--text)}
+.eq.g{border-color:rgba(0,255,136,.5)}.eq.r{border-color:rgba(255,68,68,.45)}
 
 /* the seats */
 .seat{position:absolute;width:84px;height:84px;transform:translate(-50%,-50%);display:grid;place-items:center}
@@ -265,18 +276,85 @@ html,body{background:var(--bg);color:var(--text);font-family:'JetBrains Mono',mo
 /* the key */
 .key{display:flex;justify-content:center;gap:26px;padding:0 0 18px;font-size:11px;color:var(--dim2);position:relative}
 .key span{display:flex;align-items:center;gap:7px}
-.key svg{width:34px;height:16px}
+.key svg{width:30px;height:16px}
+.key span:nth-child(4){margin-right:10px}
+
+/* the race, across the whole width */
+.race{margin-top:22px;background:var(--navy);border:1px solid var(--line2);border-radius:22px;padding:18px 16px 10px}
+.rh{display:flex;align-items:center;gap:22px;padding:0 8px 6px}
+.rh h2{font-family:'Archivo Black';font-weight:400;font-size:24px}
+.lg{display:flex;gap:16px;font-size:11px;letter-spacing:.12em;color:var(--dim2);font-weight:700}
+.lg span{display:flex;align-items:center;gap:7px}.lg i{width:16px;height:3px;border-radius:2px;display:block}
+.lg i.me{background:var(--cyan)}.lg i.ld{background:var(--text)}.lg i.fd{background:var(--dim2)}
+.togo{margin-left:auto;font-size:12px;color:var(--dim2)}.togo b{color:var(--cyan);font-size:14px}
+.race svg{width:100%;height:auto;display:block}
+.race .ax{font-family:'JetBrains Mono';font-size:11px;fill:#7f93ad}
+.race .glow{filter:drop-shadow(0 0 5px rgba(0,207,255,.8))}
+.tagme rect{fill:#00cfff}.tagme text{fill:#06090f;font-family:'JetBrains Mono';font-weight:700;font-size:13px}
+.taglead rect{fill:#06090f;stroke:#7f93ad}.taglead text{fill:#e6edf7;font-family:'JetBrains Mono';font-weight:700;font-size:13px}
 """
 
 
 def key():
-    return ('<div class="key">'
-            f'<span><svg viewBox="-17 -8 34 16">{chip(0, 0, "#00cfff")}</svg>$50 · started with $250</span>'
-            f'<span><svg viewBox="-17 -8 34 16">{chip(0, 0, "#00ff88")}</svg>won above it</span>'
-            f'<span><svg viewBox="-17 -8 34 16">{chip(0, 0, "", ghost=True)}</svg>lost</span>'
+    sw = "".join(f'<span><svg viewBox="-21 -9 42 22">{chip(0, 0, face, stripe)}</svg>${d}</span>' for d, face, stripe in DENOMS)
+    return ('<div class="key">' + sw + '<span>pile = the bot\'s money now · it sat down with $250</span>'
             '<span><svg viewBox="0 0 16 16"><circle cx="8" cy="8" r="6" fill="none" stroke="#1e3050" stroke-width="2"/>'
             '<circle cx="8" cy="8" r="6" fill="none" stroke="#00cfff" stroke-width="2" stroke-dasharray="22 38" transform="rotate(-90 8 8)"/></svg>'
             "today's trades of 20</span></div>")
+
+
+def race():
+    """The live page's race lines (GET .../tables/2 "race"), stretched to the page's width: field grey, leader white,
+    our seat cyan, the time left hatched."""
+    r = T["race"]
+    RW, RH, X0, X1, Y0, Y1 = 1336, 330, 64, 1320, 22, 292
+
+    def X(v):
+        return X0 + (v - r["x0"]) * (X1 - X0) / (r["x1"] - r["x0"])
+
+    def Y(v):
+        return Y0 + (v - r["y0"]) * (Y1 - Y0) / (r["y1"] - r["y0"])
+
+    def pts(p):
+        return " ".join(f"{X(float(a)):.1f},{Y(float(b)):.1f}" for a, b in (q.split(",") for q in p.split()))
+
+    nx = X(r["now_x"])
+    out = ['<defs><pattern id="hatch" width="8" height="8" patternUnits="userSpaceOnUse" patternTransform="rotate(45)">'
+           '<line x1="0" y1="0" x2="0" y2="8" stroke="#1e3050" stroke-width="2"/></pattern></defs>',
+           f'<rect x="{nx:.1f}" y="{Y0}" width="{X1 - nx:.1f}" height="{Y1 - Y0}" fill="url(#hatch)" opacity=".8"/>']
+    for g in r["grid"]:
+        y = Y(g["y"])
+        dash = ' stroke-dasharray="5 5"' if g["zero"] else ""
+        out.append(f'<line x1="{X0}" x2="{X1}" y1="{y:.1f}" y2="{y:.1f}" stroke="{"#1e3050" if g["zero"] else "#16233a"}"{dash}/>'
+                   f'<text x="{X0 - 12}" y="{y + 4:.1f}" text-anchor="end" class="ax">{esc(g["t"])}</text>')
+    for tk in r["ticks"]:
+        out.append(f'<text x="{X(tk["x"]):.1f}" y="{RH - 8}" text-anchor="middle" class="ax">{tk["t"]}</text>')
+    out.append(f'<line x1="{nx:.1f}" x2="{nx:.1f}" y1="{Y0 - 6}" y2="{Y1}" stroke="#00cfff" stroke-opacity=".6"/>')
+    lines = sorted(r["lines"], key=lambda ln: (ln["seat_id"] == MINE, ln["role"] == "leader"))
+    for ln in lines:
+        me, lead = ln["seat_id"] == MINE, ln["role"] == "leader"
+        col, wid, op = ("#00cfff", 3, 1) if me else (("#e6edf7", 2.4, 1) if lead else ("#7f93ad", 1.3, .5))
+        glow = ' class="glow"' if me else ""
+        out.append(f'<polyline points="{pts(ln["points"])}" fill="none" stroke="{col}" stroke-width="{wid}" opacity="{op}"'
+                   f' stroke-linejoin="round"{glow}/>')
+        ey = Y(ln["end_y"])
+        dot = "#00cfff" if me else ("#e6edf7" if lead else ("#ff4444" if ln["roi"] < 0 else "#7f93ad"))
+        out.append(f'<circle cx="{nx:.1f}" cy="{ey:.1f}" r="{5 if me or lead else 3}" fill="{dot}"/>')
+        if me or lead:
+            name = ln["bot"].replace("House ", "")
+            txt = f'YOU #{ln["rank"]} {ln["roi"]:+.2f}%' if me else f'#1 {name} {ln["roi"]:+.1f}%'
+            w = 8.2 * len(txt) + 22
+            cls = "tagme" if me else "taglead"
+            out.append(f'<g class="{cls}"><rect x="{nx - w - 12:.1f}" y="{ey - 14:.1f}" width="{w:.1f}" height="28" rx="14"/>'
+                       f'<text x="{nx - w / 2 - 12:.1f}" y="{ey + 4.5:.1f}" text-anchor="middle">{esc(txt)}</text></g>')
+    s_left = max(0, int((datetime.fromisoformat(T["ends_at"]) - NOW).total_seconds()))
+    togo = (f'{s_left // 86400}D {s_left % 86400 // 3600:02d}H' if s_left >= 86400
+            else f'{s_left // 3600}H {s_left % 3600 // 60:02d}M')
+    legend = ('<div class="lg"><span><i class="me"></i>YOU</span><span><i class="ld"></i>LEADER</span>'
+              '<span><i class="fd"></i>FIELD</span></div>')
+    return (f'<section class="race"><div class="rh"><h2>The race</h2>{legend}'
+            f'<div class="togo"><b>{togo}</b> to go · {esc(r["ends"])}</div></div>'
+            f'<svg viewBox="0 0 {RW} {RH}">{"".join(out)}</svg></section>')
 
 
 def page():
@@ -293,6 +371,7 @@ def page():
 <div class="rail"><div class="felt"></div></div>
 {pot()}{spots()}
 <svg class="chips" viewBox="0 0 {W} {H}">{chips}</svg>{labels}{avatars}</div>{key()}</section>
+{race()}
 </main></body></html>"""
 
 
