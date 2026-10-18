@@ -253,8 +253,8 @@ a { color: var(--cyan); text-decoration: none; cursor: pointer; }
 .office .flow.hot { stroke: var(--cyan); opacity: .95; animation-duration: .7s; filter: drop-shadow(0 0 2.5px rgba(0, 207, 255, .9)); }
 .office.paused .flow { animation-play-state: paused; opacity: .2; }
 @keyframes flow { to { stroke-dashoffset: -9; } }
-.office .pedge { opacity: .9; filter: drop-shadow(0 0 3px rgba(0, 255, 136, .8)); }
-.office .pedge2 { opacity: .22; filter: url(#glow2); }
+.office .pedge { opacity: .55; filter: drop-shadow(0 0 2px rgba(0, 255, 136, .45)); }
+.office .pedge2 { opacity: .07; filter: url(#glow2); }
 .office .lamp { mix-blend-mode: screen; }
 .office .fglow { fill: url(#g-fglow); opacity: 0; transition: opacity .8s; mix-blend-mode: screen; }
 .office .st-working .fglow { opacity: 1; animation: glowp 2.6s ease-in-out infinite; }

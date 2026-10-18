@@ -432,7 +432,7 @@
         if (!s[4]) return;
         var a = P(s[0], s[1], 0), b = P(s[2], s[3], 0);
         edges += '<line class="pedge2" x1="' + f1(a[0]) + '" y1="' + f1(a[1]) + '" x2="' + f1(b[0]) + '" y2="' + f1(b[1]) + '" stroke="' + C.green + '" stroke-width="5"/>' +
-          '<line class="pedge" x1="' + f1(a[0]) + '" y1="' + f1(a[1]) + '" x2="' + f1(b[0]) + '" y2="' + f1(b[1]) + '" stroke="' + C.green + '" stroke-width="1.5"/>';
+          '<line class="pedge" x1="' + f1(a[0]) + '" y1="' + f1(a[1]) + '" x2="' + f1(b[0]) + '" y2="' + f1(b[1]) + '" stroke="' + C.green + '" stroke-width="1.1"/>';
         // the near sides show their foot as a dimmer line
         if (s[5]) { var a2 = P(s[0], s[1], -T), b2 = P(s[2], s[3], -T); edges += '<line x1="' + f1(a2[0]) + '" y1="' + f1(a2[1]) + '" x2="' + f1(b2[0]) + '" y2="' + f1(b2[1]) + '" stroke="' + C.green + '" stroke-width="1" opacity=".3"/>'; }
       });

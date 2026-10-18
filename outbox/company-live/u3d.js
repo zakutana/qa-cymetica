@@ -1208,7 +1208,8 @@ class Office3D {
     // under it. The fit frames these slabs, not the plan's whole square.
     const pad = 0.5, T = 0.75, have = {}, kc = (x, y) => x + ',' + y;
     all.forEach((c) => { have[kc(c[0], c[1])] = 1; });
-    const top = new THREE.MeshStandardMaterial({ color: 0x090c11, roughness: 0.5, metalness: 0.45 }), edgeM = emis('#00ff88', 1.25), edgeLow = emis('#00ff88', 0.35);
+    // a calm line, below the bloom: the operator found a glowing one too aggressive in the foreground
+    const top = new THREE.MeshStandardMaterial({ color: 0x090c11, roughness: 0.5, metalness: 0.45 }), edgeM = emis('#00ff88', 0.42), edgeLow = emis('#00ff88', 0.12);
     this.corners = [];
     all.forEach((c) => {
       const s = new THREE.Mesh(G.box, [OM.plinth, OM.plinth, top, OM.plinth, OM.plinth, OM.plinth]);
@@ -1220,7 +1221,7 @@ class Office3D {
       [[x0, y0, x1, y0, !have[kc(c[0], c[1] - 8)]], [x0, y1, x1, y1, !have[kc(c[0], c[1] + 8)]], [x0, y0, x0, y1, !have[kc(c[0] - 8, c[1])]], [x1, y0, x1, y1, !have[kc(c[0] + 8, c[1])]]].forEach(([ax, ay, bx, by, out]) => {
         if (!out) return;
         const len = Math.hypot(bx - ax, by - ay) + 0.06, along = ax === bx;
-        [[0, 0.07, edgeM], [-T, 0.05, edgeLow]].forEach(([z, t, m]) => { const e = new THREE.Mesh(G.box, m); e.scale.set(along ? t : len, t, along ? len : t); e.position.copy(this.V((ax + bx) / 2, (ay + by) / 2, z)); W.add(e); });
+        [[0, 0.045, edgeM], [-T, 0.035, edgeLow]].forEach(([z, t, m]) => { const e = new THREE.Mesh(G.box, m); e.scale.set(along ? t : len, t, along ? len : t); e.position.copy(this.V((ax + bx) / 2, (ay + by) / 2, z)); W.add(e); });
       });
       [[x0, y0], [x1, y0], [x0, y1], [x1, y1]].forEach(([x, y]) => { this.corners.push(this.V(x, y, -T), this.V(x, y, 1.35)); });
     });
