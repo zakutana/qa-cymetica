@@ -56,6 +56,24 @@
     var U = row(d[0][0], d[1][0], d[2][0]), V = row(d[0][1], d[1][1], d[2][1]);
     return [U[0], V[0], U[1], V[1], U[2], V[2]];
   }
+  // a room onto its plate with its walls kept upright ("uplne krive", 2026-10-18: an affine through three corners
+  // sheared them to the plate's perspective): x' = a x + e, y' = b x + d y + f, fitted to the floor's four corners
+  // by least squares (the back one is left + right - front, the room's own camera being near orthographic)
+  function upright(s, d) {
+    var n = s.length, mx = 0, my = 0, mu = 0, sxx = 0, sxu = 0, i;
+    for (i = 0; i < n; i++) { mx += s[i][0] / n; mu += d[i][0] / n; }
+    for (i = 0; i < n; i++) { sxx += (s[i][0] - mx) * (s[i][0] - mx); sxu += (s[i][0] - mx) * (d[i][0] - mu); }
+    var a = sxu / sxx, e = mu - a * mx;
+    // y' on x and y: the normal equations of a three-term least squares, solved by Cramer
+    var A = [[0, 0, 0], [0, 0, 0], [0, 0, 0]], B = [0, 0, 0];
+    for (i = 0; i < n; i++) {
+      var r = [s[i][0], s[i][1], 1];
+      for (var j = 0; j < 3; j++) { B[j] += r[j] * d[i][1]; for (var k = 0; k < 3; k++) A[j][k] += r[j] * r[k]; }
+    }
+    var det3 = function (M) { return M[0][0] * (M[1][1] * M[2][2] - M[1][2] * M[2][1]) - M[0][1] * (M[1][0] * M[2][2] - M[1][2] * M[2][0]) + M[0][2] * (M[1][0] * M[2][1] - M[1][1] * M[2][0]); };
+    var D = det3(A), col = function (c) { return A.map(function (row, j) { return row.map(function (v, k) { return k === c ? B[j] : v; }); }); };
+    return [a, det3(col(0)) / D, 0, det3(col(1)) / D, e, det3(col(2)) / D];
+  }
   function mat(m) { return 'matrix(' + m.map(function (v) { return v.toFixed(5); }).join(',') + ')'; }
   function f1(v) { return v.toFixed(1); }
 
@@ -94,7 +112,8 @@
         h += '<div class="olot" style="transform:' + mat(affine([[0, 0], [100, 0], [0, 100]], [q[0], q[1], q[3]])) + '"><i></i><i></i><i></i></div>';
         over += '<div class="p3lot" data-key="lot" style="left:' + f1(c[0]) + 'px;top:' + f1(c[1]) + 'px;transform:translate(-50%,-50%)"><b>+</b>ADD DEPARTMENT</div>';
       } else {
-        var m = M[a.img], fl = [m.left, m.right, m.bottom], tf = affine(fl, [q[3], q[1], q[2]]);
+        var m = M[a.img], back = [m.left[0] + m.right[0] - m.bottom[0], m.left[1] + m.right[1] - m.bottom[1]];
+        var tf = upright([m.left, m.right, m.bottom, back], [q[3], q[1], q[2], q[0]]);
         h += '<img class="oroom' + (a.key === 'vault' && CO.RO ? ' shut' : '') + '" src="' + BASE + a.img + '.webp" alt="" draggable="false" style="width:' + m.w + 'px;height:' + m.h + 'px;transform:' + mat(tf) + '">';
         var rx = (q[1][0] - q[3][0]) / 2, ry = (q[2][1] - q[0][1]) / 2;
         over += '<div class="opglow" data-r="' + a.key + '" style="left:' + f1(c[0] - rx) + 'px;top:' + f1(c[1] - ry) + 'px;width:' + f1(2 * rx) + 'px;height:' + f1(2 * ry) + 'px"></div>';

@@ -6,7 +6,7 @@
 
 **Znovu, s nízkými stěnami:** všech 8 místností. Mají stěny vysoké jako třetina místnosti, takže přední místnosti na plošině zakrývají zadní; v tvém obrázku kanceláře jsou stěny nízké a je vidět do všech. Zadání v oddílu 2 to už říká (LOW glass walls). Ke každé přilož `look-office.webp`.
 
-**Jak posílat:** každý obrázek zvlášť sem do chatu a do zprávy napiš jeho jméno. K zadání přilož vzor: ke kanceláři `look-office.webp`, k vesmíru `look-universe.webp`, k astronautům `O-room-qa`. Když Gemini přidá text, štítky nebo jiný úhel kamery, vygeneruj ho znovu.
+**Jak posílat:** každý obrázek zvlášť sem do chatu a do zprávy napiš jeho jméno. K zadání přilož vzor: ke kanceláři `look-office.webp`, k vesmíru `look-universe.webp`, k astronautům tu úplně první QA místnost, ve které astronauti sedí (nové místnosti jsou prázdné). Když Gemini přidá text, štítky nebo jiný úhel kamery, vygeneruj ho znovu.
 
 ---
 
