@@ -1241,26 +1241,27 @@ function envTex() {
 }
 
 /* ---------------- the office's surfaces ---------------- */
+// the deck between the rooms, as his: smooth dark slate, large panels with hairline joints
 function deckTex() {
   return TX.deck || (TX.deck = ctex(512, 512, (g, W) => {
-    const R = rng(23), s = W / 8;
-    g.fillStyle = '#0a131f'; g.fillRect(0, 0, W, W);
-    for (let i = 0; i < 8; i++) for (let j = 0; j < 8; j++) {
-      const v = 22 + Math.floor(R() * 7);
-      g.fillStyle = 'rgb(' + v + ',' + (v + 12) + ',' + (v + 24) + ')';
-      g.fillRect(i * s + 1.5, j * s + 1.5, s - 3, s - 3);
+    const R = rng(23), s = W / 2;
+    g.fillStyle = '#121b25'; g.fillRect(0, 0, W, W);
+    for (let i = 0; i < 2; i++) for (let j = 0; j < 2; j++) {
+      const v = Math.floor(R() * 3);
+      g.fillStyle = 'rgb(' + (27 + v) + ',' + (37 + v) + ',' + (48 + v) + ')';
+      g.fillRect(i * s + 1, j * s + 1, s - 2, s - 2);
     }
-    g.fillStyle = 'rgba(110,210,245,.07)'; for (let i = 0; i < 8; i++) for (let j = 0; j < 8; j++) g.fillRect(i * s + 2, j * s + 2, s - 4, 2);
   }));
 }
 // a room's floor: large slate-blue tiles (his picture's floors read #304a55 lit), hairline seams
 function tileTex() {
   return TX.tile || (TX.tile = ctex(512, 512, (g, W) => {
     const R = rng(29), s = W / 4;
-    g.fillStyle = '#22323b'; g.fillRect(0, 0, W, W);
+    // lit, it reads as his floors do (#334754 to #293a4a, measured on bare floor in both pictures)
+    g.fillStyle = '#1c2a36'; g.fillRect(0, 0, W, W);
     for (let i = 0; i < 4; i++) for (let j = 0; j < 4; j++) {
-      const v = Math.floor(R() * 5);
-      g.fillStyle = 'rgb(' + (40 + v) + ',' + (62 + v) + ',' + (73 + v) + ')';
+      const v = Math.floor(R() * 4);
+      g.fillStyle = 'rgb(' + (36 + v) + ',' + (52 + v) + ',' + (65 + v) + ')';
       g.fillRect(i * s + 1.5, j * s + 1.5, s - 3, s - 3);
     }
   }));
@@ -1424,7 +1425,7 @@ function useTex(mat, slot, path, o = {}) {
 function rockTexture(m, tex, sc) {
   const T = TSL, tri = T.triplanarTexture(T.texture(tex), null, null, T.float(sc), T.positionLocal, T.normalLocal);
   // his rock is a lit mid grey: the scan's green taken out, brighter where the shape is high
-  m.colorNode = tri.xyz.mul(T.vec3(0.92, 0.94, 1.08)).mul(T.vertexColor().xyz.mul(9).clamp(0.4, 2.3)).mul(m.userData.shade);
+  m.colorNode = tri.xyz.mul(T.vec3(0.8, 0.84, 1.12)).mul(T.vertexColor().xyz.mul(7).clamp(0.35, 1.9)).mul(m.userData.shade);
   m.needsUpdate = true;
 }
 let MOON = null;
@@ -1505,11 +1506,15 @@ function qaGridTex() {
 function seamTex() {
   return TX.seam || (TX.seam = ctex(512, 512, (g, W) => {
     const n = 10, s = W / n; g.fillStyle = '#000000'; g.fillRect(0, 0, W, W);
-    for (let i = 0; i < n; i++) for (let j = 0; j < n; j++) {
-      const gr = g.createRadialGradient(i * s + s / 2, j * s + s / 2, 0, i * s + s / 2, j * s + s / 2, s * 0.75);
-      gr.addColorStop(0, 'rgba(255,255,255,.16)'); gr.addColorStop(1, 'rgba(255,255,255,.04)'); g.fillStyle = gr; g.fillRect(i * s, j * s, s, s);
-    }
-    g.fillStyle = 'rgba(255,255,255,.75)'; for (let i = 0; i <= n; i++) { g.fillRect(i * s - 1.2, 0, 2.4, W); g.fillRect(0, i * s - 1.2, W, 2.4); }
+    g.fillStyle = 'rgba(255,255,255,.1)'; g.fillRect(0, 0, W, W);
+    g.fillStyle = 'rgba(255,255,255,.55)'; for (let i = 0; i <= n; i++) { g.fillRect(i * s - 1, 0, 2, W); g.fillRect(0, i * s - 1, W, 2); }
+    // the pool: brightest in the middle of the room, gone at its walls -- multiplied in, as the map is read
+    // without its alpha
+    const pool = g.createRadialGradient(W / 2, W / 2, 0, W / 2, W / 2, W * 0.62);
+    pool.addColorStop(0, '#ffffff'); pool.addColorStop(1, '#000000');
+    g.globalCompositeOperation = 'multiply'; g.fillStyle = pool; g.fillRect(0, 0, W, W);
+    const p2 = g.createRadialGradient(W / 2, W / 2, 0, W / 2, W / 2, W * 0.5); p2.addColorStop(0, 'rgba(255,255,255,.5)'); p2.addColorStop(1, 'rgba(255,255,255,0)');
+    g.globalCompositeOperation = 'lighter'; g.fillStyle = p2; g.fillRect(0, 0, W, W); g.globalCompositeOperation = 'source-over';
   }));
 }
 // a hologram's face: a vibrant aqua-cyan field, a border, a trace and bars
@@ -1560,12 +1565,12 @@ function rboxGeo(w, h, d, r) {
 function omats() {
   if (OM.tile) return;
   OM.deck = std({ map: deckTex(), roughness: 0.46, metalness: 0.32 });
-  OM.tile = std({ map: tileTex(), roughness: 0.38, metalness: 0.25 });
-  OM.hubTile = std({ map: tileTex(), color: 0xc6e2ec, roughness: 0.28, metalness: 0.22 });
+  OM.tile = std({ map: tileTex(), roughness: 0.58, metalness: 0.2 });
+  OM.hubTile = std({ map: tileTex(), color: 0xb4c8dc, roughness: 0.5, metalness: 0.22 });
   OM.rim = std({ color: 0x2c3a4a, roughness: 0.4, metalness: 0.45 });
   OM.rimDark = std({ color: 0x18222e, roughness: 0.48, metalness: 0.4 });
-  OM.hull = std({ map: hullTex(), emissiveMap: TX.hullGlow, emissive: 0xffffff, emissiveIntensity: 1.0, roughness: 0.46, metalness: 0.42 });
-  OM.hullLow = std({ color: 0x141e2a, roughness: 0.5, metalness: 0.4 });
+  OM.hull = std({ map: hullTex(), color: 0x9aa4b4, emissiveMap: TX.hullGlow, emissive: 0xffffff, emissiveIntensity: 1.0, roughness: 0.46, metalness: 0.42 });
+  OM.hullLow = std({ color: 0x0f1620, roughness: 0.5, metalness: 0.4 });
   // the glass: a pale frosted pane that catches the light (his picture lifts the deck behind it by about a tenth),
   // its own edges a thin pale line; the colour is the neon's, not the glass's
   OM.glass = std({ color: 0xa9bfca, envMapIntensity: 0.7, transparent: true, opacity: 0.075, roughness: 0.1, metalness: 0.0, depthWrite: false, side: THREE.DoubleSide });
@@ -1607,7 +1612,8 @@ function omats() {
   OM.frameLime = emis('#c8ea6a', 1.5);
   OM.paneLime = new THREE.MeshBasicMaterial({ color: 0x6a8a3a, transparent: true, opacity: 0.22, blending: THREE.AdditiveBlending, depthWrite: false, side: THREE.DoubleSide });
   OM.daisRim = std({ color: 0xaebfcc, roughness: 0.3, metalness: 0.5 });
-  OM.tileOrange = std({ map: tileTex(), color: 0xffd2b8, emissiveMap: seamTex(), emissive: 0xff7a30, emissiveIntensity: 0.55, roughness: 0.25, metalness: 0.2 });
+  // his trading floor: the blue floor under an orange-red pool of light, the tile seams a faint glow in it
+  OM.tileOrange = std({ map: tileTex(), color: 0xf0d4cc, emissiveMap: seamTex(), emissive: 0xff6a30, emissiveIntensity: 0.3, roughness: 0.5, metalness: 0.2 });
   OM.coinG = std({ color: 0x18b87a, emissive: 0x38f5b8, emissiveIntensity: 0.28, metalness: 0.8, roughness: 0.22 });
   OM.coinB = std({ color: 0x2f6fd8, emissive: 0x3b82f6, emissiveIntensity: 0.32, metalness: 0.8, roughness: 0.22 });
   G.coin = new THREE.CylinderGeometry(1, 1, 1, 28);
@@ -1692,9 +1698,9 @@ function padTex() {
   if (TX.pad) return TX.pad;
   const c = document.createElement('canvas'); c.width = c.height = 512; const g = c.getContext('2d');
   g.save(); g.beginPath(); g.arc(256, 256, 250, 0, Math.PI * 2); g.clip();
-  const gr = g.createRadialGradient(256, 256, 0, 256, 256, 250); gr.addColorStop(0, 'rgba(20,145,125,.08)'); gr.addColorStop(0.7, 'rgba(14,140,130,.12)'); gr.addColorStop(1, 'rgba(32,205,172,.22)');
+  const gr = g.createRadialGradient(256, 256, 0, 256, 256, 250); gr.addColorStop(0, 'rgba(20,145,125,.03)'); gr.addColorStop(0.7, 'rgba(14,140,130,.05)'); gr.addColorStop(1, 'rgba(32,205,172,.12)');
   g.fillStyle = gr; g.fillRect(0, 0, 512, 512);
-  g.strokeStyle = 'rgba(48,215,182,.26)'; g.lineWidth = 1.5;
+  g.strokeStyle = 'rgba(48,215,182,.16)'; g.lineWidth = 1.2;
   for (let p = 16; p < 512; p += 20) { g.beginPath(); g.moveTo(p, 0); g.lineTo(p, 512); g.stroke(); g.beginPath(); g.moveTo(0, p); g.lineTo(512, p); g.stroke(); }
   g.restore();
   g.strokeStyle = 'rgba(56,232,196,.72)'; g.lineWidth = 7; g.beginPath(); g.arc(256, 256, 245, 0, Math.PI * 2); g.stroke();
@@ -1713,6 +1719,7 @@ function moodTex() {
 class Office3D {
   constructor(el, stage, tipFor) {
     geo(); omats();
+    CO.o3 = this;   // a handle for looking at the office from the console, as CO.uv is for the map
     this.el = el; this.stage = stage; this.tipFor = tipFor;
     this.tip = stage.querySelector('.tip'); this.layer = stage.querySelector('.o3layer');
     this.sel = null; this.cells = {}; this.paths = {}; this.packets = []; this.rooms = {}; this.fitted = false; this.hover = null;
@@ -1744,7 +1751,8 @@ class Office3D {
     this.clock = new THREE.Clock();
     this.bind();
     this.renderer.init().then(() => {
-      try { this.post = new Post(this.renderer, this.scene, this.camera, 0.5, 0.22, 0.8, { sat: 0.94 }); }
+      // bloom tight round what glows: a wide one flooded every floor mint from the neon (measured 2026-10-18)
+      try { this.post = new Post(this.renderer, this.scene, this.camera, 0.32, 0.0, 0.86, { sat: 0.96 }); }
       catch (e) { this.post = null; }
       this.renderer.setAnimationLoop(() => this.frame());
     }).catch((e) => { console.error('3D office could not start:', e); if (this.onFail) this.onFail(e); });
@@ -1974,8 +1982,8 @@ class Office3D {
     [[x0, y0 + RS - f, z0 + H - f, RS, f, f], [x0 + RS - f, y0, z0 + H - f, f, RS, f],
       [x0, y0, z0, f, f, H], [x0 + RS - f, y0, z0, f, f, H], [x0, y0 + RS - f, z0, f, f, H], [x0 + RS - f, y0 + RS - f, z0, f, f, H]].forEach(([x, y, z, w, d, h]) => this.box(g, x, y, z, w, d, h, OM.glassEdge, false));
     // the room's own light: white over the floor, warm in the trading desk
-    r.lamp = new THREE.PointLight(isOrange ? 0xff8a3a : 0xeef6ff, isOrange ? 16 : 5, 12, 1.2);
-    r.lamp.position.copy(this.V(x0 + RS / 2, y0 + RS / 2, 3.2)); g.add(r.lamp);
+    r.lamp = new THREE.PointLight(isOrange ? 0xff6a34 : 0xeef6ff, isOrange ? 16 : 6, 13, 1.0);
+    r.lamp.position.copy(this.V(x0 + RS / 2, y0 + RS / 2, 4.4)); g.add(r.lamp);
   }
   // a wall screen on the back wall: what runs now, or why it waits
   wallScreen(r, u0, u1) {
@@ -2049,7 +2057,9 @@ class Office3D {
     const el = document.createElement('div'); el.className = 'p3' + (cls ? ' ' + cls : ''); el.setAttribute('data-key', r.key); this.layer.appendChild(el);
     el.addEventListener('click', () => CO.emit('office:click', r.key));
     el.addEventListener('pointerenter', () => this.setHover(r.key)); el.addEventListener('pointerleave', () => this.setHover(null));
-    r.plate = el; r.plateAt = this.V(r.x0 + 4.1, r.y0 + 5.4, 1.38); return el;
+    // where his picture has every room's plate: the same spot in each room, found by sending its plates' centres
+    // back through the fitted camera (4.4 across, 5.6 down, at 1.3 high)
+    r.plate = el; r.plateAt = this.V(r.x0 + 4.4, r.y0 + 5.6, 1.3); return el;
   }
   // A department's room tailored to match look-office.webp:
   // - testing (Cymetica QA): 4x3 glowing cyan window grid on the back-right wall facing the camera + dark server racks + desks
@@ -2123,8 +2133,6 @@ class Office3D {
     this.cabinet(r, x0 + 6.45, y0 + 3.0, 0.45, 2.3, 0.72);
     this.plant(r, x0 + 0.42, y0 + 6.5); this.plant(r, x0 + 6.55, y0 + 6.55, 0.8);
     this.plate(r);
-    if (k === 'testing') r.plateAt = this.V(x0 + 2.6, y0 + 5.7, 1.25);
-    if (k === 'testing_lab') r.plateAt = this.V(x0 + 2.6, y0 + 5.5, 1.25);
   }
   boardTex(r, u0, u1, tex) {
     const m = new THREE.Mesh(G.plane, new THREE.MeshBasicMaterial({ map: tex, toneMapped: false })); m.scale.set(u1 - u0, 0.76, 1); m.position.copy(this.V(r.x0 + (u0 + u1) / 2, r.y0 + 0.11, 1.14)); r.g.add(m);
@@ -2241,7 +2249,7 @@ class Office3D {
     const s = screen(3.4, 0.62), m = new THREE.Mesh(G.plane, new THREE.MeshBasicMaterial({ map: s.tex, toneMapped: false })); m.scale.set(3.4, 0.62, 1); m.position.copy(this.V(x0 + 2.3, y0 + 0.11, 1.14)); g.add(m); r.bars = s;
     this.box(g, x0 + 0.55, y0 + 0.05, 0.78, 3.5, 0.04, 0.72, OM.dark, false);
     this.kanban(r, 1.4, 5.4);
-    const floor = new THREE.Mesh(G.plane, new THREE.MeshBasicMaterial({ map: hubFloorTex(), color: new THREE.Color(0x46d8f0).multiplyScalar(0.7), transparent: true, blending: THREE.AdditiveBlending, depthWrite: false }));
+    const floor = new THREE.Mesh(G.plane, new THREE.MeshBasicMaterial({ map: hubFloorTex(), color: new THREE.Color(0x46c8f0).multiplyScalar(0.5), transparent: true, blending: THREE.AdditiveBlending, depthWrite: false }));
     floor.scale.set(6.4, 6.4, 1); floor.rotation.x = -Math.PI / 2; floor.position.set(c.x, 0.1, c.z); g.add(floor); r.floor = floor;
     // his dais: a wide dark disc with a pale metal rim, a raised drum on it with a cyan lip, a white-hot core, a
     // column of light and three rings of light over it, smaller as they rise
@@ -2256,11 +2264,11 @@ class Office3D {
     r.holo = [[1.45, 0.98], [1.85, 0.86], [2.25, 0.74]].map(([y, s]) => {
       const h = new THREE.Mesh(G.ringT, cy.rim); h.scale.set(s, s, 1.6); h.rotation.x = Math.PI / 2; h.position.set(c.x, y, c.z); h.userData.y = y; g.add(h); return h;
     });
-    r.core = core; r.coreAt = new THREE.Vector3(c.x, 2.75, c.z);
+    r.core = core; r.coreAt = this.V(x0 + 3.0, y0 + 2.8, 2.75);   // his "need you" badge: over the rings, a little behind the core
     const light = new THREE.PointLight(0x00e5ff, 4.2, 11, 1.6); light.position.set(c.x, 1.8, c.z); g.add(light);
     this.agent(r, x0 + 3.8, y0 + 5.85, 0, 'Manager', { stand: true });
     this.plant(r, x0 + 6.4, y0 + 0.5);
-    this.plate(r, 'hubp'); r.plateAt = this.V(x0 + 5.8, y0 + 6.3, 1.15);
+    this.plate(r, 'hubp'); r.plateAt = this.V(x0 + 6.1, y0 + 6.75, 1.3);
     r.need = document.createElement('div'); r.need.className = 'p3need'; r.need.addEventListener('click', () => CO.emit('office:click', 'hub')); this.layer.appendChild(r.need);
   }
   // the weekly audit: two consoles with green screens, a desk, a printer for the report
@@ -2365,7 +2373,8 @@ class Office3D {
       const html = '<div class="p3h"><i style="background:' + (ln.tone === 'red' || isOrange ? '#ff8824' : dot) + '"></i><b>' + esc(d.name.toUpperCase()) + '</b>' + et + '</div><div class="p3l" style="color:' + subCol + '">' + esc(ln.short) + '</div>';
       if (r.plate && r.plate._h !== html) { r.plate._h = html; r.plate.innerHTML = html; }
       if (r.plate) { r.plate.classList.toggle('work', v.status === 'working'); r.plate.style.setProperty('--c', ln.tone === 'red' || isOrange ? '#ff8824' : col); }
-      if (this.conduits['d' + d.id]) { const cm = this.conduits['d' + d.id].mat; cm.emissive.set(v.status === 'working' ? 0x00e5ff : isOrange ? 0xff8824 : 0x38f2b8); cm.emissiveIntensity = v.status === 'working' ? 1.5 : isOrange ? 0.65 : 0.32; }
+      // the deck's lanes are his dim white dashes; one lights cyan while work runs along it
+      if (this.conduits['d' + d.id]) { const cm = this.conduits['d' + d.id].mat; cm.emissive.set(v.status === 'working' ? 0x46d8f0 : 0xb4c4d0); cm.emissiveIntensity = v.status === 'working' ? 0.75 : 0.3; }
     });
     const hub = this.rooms.hub;
     if (hub) {
@@ -2412,7 +2421,7 @@ class Office3D {
     const c = new THREE.Color(isOrange ? LOOK.orange : LOOK.neon);
     if (r.edgeM) { r.edgeM.emissive.copy(c); r.edgeM.emissiveIntensity = isOrange ? 2.6 : st === 'working' ? 2.6 : 2.0; }
     if (r.glow) { r.glow.material.color.copy(c); r.glowBase = isOrange ? 0.68 : st === 'working' ? 0.05 : 0; }
-    if (r.lamp) { r.lamp.color.set(isOrange ? 0xff8a3a : 0xeef6ff); r.lamp.intensity = isOrange ? 16 : 5; }
+    if (r.lamp) { r.lamp.color.set(isOrange ? 0xff6a34 : 0xeef6ff); r.lamp.intensity = isOrange ? 16 : 6; }
   }
   drawSel() {
     release(this.selRing); this.selRing.clear();
@@ -2624,7 +2633,7 @@ class Office3D {
 (function () {
   let gl2 = false;
   try { gl2 = !!document.createElement('canvas').getContext('webgl2'); } catch (e) { gl2 = false; }
-  CO.U3 = (gl2 || navigator.gpu) ? { ok: true, gpu: !!navigator.gpu, universe: (el, stage, h) => new Universe3D(el, stage, h), office: (el, stage, tipFor) => new Office3D(el, stage, tipFor), preview, thumbs, THREE, geo, makeStation, SKIN, amat, nebTex, TX }
+  CO.U3 = (gl2 || navigator.gpu) ? { ok: true, gpu: !!navigator.gpu, universe: (el, stage, h) => new Universe3D(el, stage, h), office: (el, stage, tipFor) => new Office3D(el, stage, tipFor), preview, thumbs, THREE, geo, makeStation, SKIN, amat, nebTex, TX, OM }
     : { failed: true, why: 'no WebGPU and no WebGL2' };
   window.dispatchEvent(new Event('co3d'));
 })();
