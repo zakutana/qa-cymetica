@@ -53,9 +53,6 @@ def excluded_legs(orderbook) -> dict | None:
         return None
     if not arb or not excluded:
         return {}
-    if not any(isinstance(arb.get(leg), str) for leg in ("buy_chain", "sell_chain")):
-        # An arbitrage with neither leg where this check reads it is unread, not clean (B08).
-        return None
     found = {}
     for leg in ("buy_chain", "sell_chain"):
         chain = arb.get(leg)
@@ -64,6 +61,10 @@ def excluded_legs(orderbook) -> dict | None:
             found[leg] = {"chain": chain, "price": arb.get(leg.replace("_chain", "_price")),
                           "excluded_mid": venue.get("mid"), "divergence_pct": venue.get("divergence_pct"),
                           "reason": venue.get("reason")}
+    if not found and not all(isinstance(arb.get(leg), str) for leg in ("buy_chain", "sell_chain")):
+        # A leg not where this check reads it is unread, so the book is not clean (B08; one leg
+        # renamed, B05 2026-10-18). An excluded leg the other one shows is still named.
+        return None
     return found
 
 

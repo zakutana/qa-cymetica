@@ -53,3 +53,14 @@ def test_a_book_of_the_wrong_shape_is_unreadable_not_clean():
     # longer read, not a clean one.
     renamed = {"buy_venue": "base", "sell_venue": "ethereum", "buy_price": 1.0, "sell_price": 2.0}
     assert excluded_legs({"arbitrage": renamed, "excluded_venues": EXCLUDED}) is None
+    # B05, deep pass 2026-10-18: ONE leg renamed. The guard asked whether ANY leg was readable, so
+    # buying on excluded base under a new key read as clean on the strength of the sell leg alone.
+    half = {"buy_venue": "base", "sell_chain": "ethereum", "buy_price": 1.0, "sell_price": 2.0}
+    assert excluded_legs({"arbitrage": half, "excluded_venues": EXCLUDED}) is None
+
+
+@qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
+def test_an_excluded_leg_is_named_even_when_the_other_leg_is_unread():
+    """The other side of B05: an unread leg withholds "clean", not a defect the read leg shows."""
+    half = {"buy_chain": "base", "sell_venue": "ethereum", "buy_price": "0.00031077"}
+    assert list(excluded_legs({"arbitrage": half, "excluded_venues": EXCLUDED})) == ["buy_chain"]
