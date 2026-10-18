@@ -12,11 +12,13 @@
       "claim": "3D office: a department's computer can never be clicked or hovered; the room's full-volume hit box always wins the raycast",
       "source": "review",
       "votes": {
-        "t3": "real"
+        "t3": "real",
+        "t2": "real",
+        "t1": "real"
       },
-      "verdict": null,
-      "fixed": false,
-      "commit": null
+      "verdict": "real",
+      "fixed": true,
+      "commit": "92ae64f0"
     },
     {
       "id": "R02",
@@ -24,11 +26,13 @@
       "claim": "Opening a public company: a drag or wheel during the fly-in cancels the tween, its done (the navigation) never fires, and the fade stays opaque (2D map too)",
       "source": "review",
       "votes": {
-        "t3": "real"
+        "t3": "real",
+        "t2": "real",
+        "t1": "real"
       },
-      "verdict": null,
-      "fixed": false,
-      "commit": null
+      "verdict": "real",
+      "fixed": true,
+      "commit": "92ae64f0"
     },
     {
       "id": "R03",
@@ -36,11 +40,13 @@
       "claim": "Office3D.drawSel rebuilds the ring with a new material on every update(); materials pile up undisposed",
       "source": "review",
       "votes": {
-        "t3": "not real"
+        "t3": "not real",
+        "t2": "real",
+        "t1": "real"
       },
-      "verdict": null,
-      "fixed": false,
-      "commit": null
+      "verdict": "real",
+      "fixed": true,
+      "commit": "92ae64f0"
     },
     {
       "id": "R04",
@@ -48,11 +54,13 @@
       "claim": "#uvfade is never hidden again, so a back/forward-cache restore shows an opaque overlay",
       "source": "review",
       "votes": {
-        "t3": "real"
+        "t3": "real",
+        "t2": "real",
+        "t1": "real"
       },
-      "verdict": null,
-      "fixed": false,
-      "commit": null
+      "verdict": "real",
+      "fixed": true,
+      "commit": "92ae64f0"
     },
     {
       "id": "R05",
@@ -60,11 +68,13 @@
       "claim": "cut is len >= 200 only; a /prizes that ignores limit (default 50) would be read as the whole list",
       "source": "review",
       "votes": {
-        "t3": "real"
+        "t3": "real",
+        "t2": "real",
+        "t1": "not real"
       },
-      "verdict": null,
-      "fixed": false,
-      "commit": null
+      "verdict": "real",
+      "fixed": true,
+      "commit": "60436923"
     },
     {
       "id": "R06",
@@ -72,11 +82,13 @@
       "claim": "Office3D.layout rebuilds textures/materials/lights and never disposes them (every add/remove, toggle, reset)",
       "source": "review",
       "votes": {
-        "t3": "not real"
+        "t3": "not real",
+        "t2": "real",
+        "t1": "real"
       },
-      "verdict": null,
-      "fixed": false,
-      "commit": null
+      "verdict": "real",
+      "fixed": true,
+      "commit": "92ae64f0"
     },
     {
       "id": "R07",
@@ -84,11 +96,13 @@
       "claim": "Universe3D.overlay restyles all banners every frame even when static",
       "source": "review",
       "votes": {
-        "t3": "real"
+        "t3": "real",
+        "t2": "real",
+        "t1": "real"
       },
-      "verdict": null,
-      "fixed": false,
-      "commit": null
+      "verdict": "real",
+      "fixed": true,
+      "commit": "92ae64f0"
     },
     {
       "id": "R08",
@@ -96,11 +110,13 @@
       "claim": "3D map duplicates universe.js logic (floorsOf, fpOf, rng, layout slots, pulse, stats, tipHTML)",
       "source": "review",
       "votes": {
-        "t3": "real"
+        "t3": "real",
+        "t2": "real",
+        "t1": "real"
       },
-      "verdict": null,
-      "fixed": false,
-      "commit": null
+      "verdict": "real",
+      "fixed": true,
+      "commit": "92ae64f0"
     },
     {
       "id": "R09",
@@ -108,11 +124,13 @@
       "claim": "setTab's replaceState drops the #demo / #empty hash modes, so a reload boots another company",
       "source": "review",
       "votes": {
-        "t3": "real"
+        "t3": "real",
+        "t2": "real",
+        "t1": "real"
       },
-      "verdict": null,
-      "fixed": false,
-      "commit": null
+      "verdict": "real",
+      "fixed": true,
+      "commit": "92ae64f0"
     },
     {
       "id": "R10",
@@ -120,11 +138,13 @@
       "claim": "a refused private ?visit= stays in the URL and re-toasts on every reload",
       "source": "review",
       "votes": {
-        "t3": "real"
+        "t3": "real",
+        "t2": "real",
+        "t1": "real"
       },
-      "verdict": null,
-      "fixed": false,
-      "commit": null
+      "verdict": "real",
+      "fixed": true,
+      "commit": "92ae64f0"
     },
     {
       "id": "B01",
@@ -132,11 +152,13 @@
       "claim": "the docstring names ASCII '**Pick 2 -- Bot clone**' and 'PICK 3 --' as scope-ending lines, but lab._PICKED misses both and the tests use only the em-dash header, so a fix on _PICKED as it stands passes while the ASCII spelling still leaks the bot's SL/TP into the card",
       "source": "audit",
       "votes": {
-        "t3": "real"
+        "t3": "real",
+        "t2": "real",
+        "t1": "real"
       },
-      "verdict": null,
-      "fixed": false,
-      "commit": null
+      "verdict": "real",
+      "fixed": true,
+      "commit": "147ee5b6"
     },
     {
       "id": "B02",
@@ -144,11 +166,13 @@
       "claim": "refusals only rise (5 then 25), so 'max cap since the last accepted clone' passes too; a lowered cap (25 then a newer 20) would be read as 25",
       "source": "audit",
       "votes": {
-        "t3": "real"
+        "t3": "real",
+        "t2": "real",
+        "t1": "real"
       },
-      "verdict": null,
-      "fixed": false,
-      "commit": null
+      "verdict": "real",
+      "fixed": true,
+      "commit": "6dfbd44c"
     },
     {
       "id": "B03",
@@ -156,11 +180,13 @@
       "claim": "asserts prizes None and 'unread' anywhere in str(summary), never et10_credited; a regression counting et10 from the cut list passes (fixture rows are all capped, so it reads 0.0)",
       "source": "audit",
       "votes": {
-        "t3": "real"
+        "t3": "real",
+        "t2": "not real",
+        "t1": "real"
       },
-      "verdict": null,
-      "fixed": false,
-      "commit": null
+      "verdict": "real",
+      "fixed": true,
+      "commit": "60436923"
     },
     {
       "id": "B04",
@@ -168,11 +194,13 @@
       "claim": "only the positive case is asserted; a clock that tickets an unproven outsider hourly even after a probe that ran and leaked (a verdict) passes",
       "source": "audit",
       "votes": {
-        "t3": "real"
+        "t3": "real",
+        "t2": "real",
+        "t1": "real"
       },
-      "verdict": null,
-      "fixed": false,
-      "commit": null
+      "verdict": "real",
+      "fixed": true,
+      "commit": "d3dfc246"
     },
     {
       "id": "B05",
@@ -180,11 +208,13 @@
       "claim": "excluded_legs returns None only when neither leg is a string; renaming one leg (buy_venue: base, sell_chain: ethereum) reads as clean while buying on an excluded venue",
       "source": "audit",
       "votes": {
-        "t3": "real"
+        "t3": "real",
+        "t2": "real",
+        "t1": "real"
       },
-      "verdict": null,
-      "fixed": false,
-      "commit": null
+      "verdict": "real",
+      "fixed": true,
+      "commit": "3b9f163e"
     },
     {
       "id": "B06",
@@ -192,11 +222,13 @@
       "claim": "checks the hook entry but never disableAllHooks; 'disableAllHooks': true in settings would stop protect_state.py and the test stays green",
       "source": "audit",
       "votes": {
-        "t3": "real"
+        "t3": "real",
+        "t2": "real",
+        "t1": "real"
       },
-      "verdict": null,
-      "fixed": false,
-      "commit": null
+      "verdict": "real",
+      "fixed": true,
+      "commit": "86ca79c0"
     },
     {
       "id": "C01",
@@ -204,11 +236,13 @@
       "claim": "'hides' is found only through one exact text pattern of a hashed build, and _calls counts any openClaimDepositForm( that is not its definition (a dispatcher entry, a method, a string in the hidden card), so a reformat or a rebuild gives a false PASS",
       "source": "audit",
       "votes": {
-        "t3": "real"
+        "t3": "real",
+        "t2": "real",
+        "t1": "real"
       },
-      "verdict": null,
-      "fixed": false,
-      "commit": null
+      "verdict": "real",
+      "fixed": true,
+      "commit": "d4383385"
     },
     {
       "id": "C02",
@@ -216,11 +250,13 @@
       "claim": "passes whenever len(window) < 200; a server that ignores limit (default 50) or caps at 100 reads as 'nothing behind it' while older ids cannot be read",
       "source": "audit",
       "votes": {
-        "t3": "real"
+        "t3": "real",
+        "t2": "real",
+        "t1": "not real"
       },
-      "verdict": null,
-      "fixed": false,
-      "commit": null
+      "verdict": "real",
+      "fixed": true,
+      "commit": "d4383385"
     },
     {
       "id": "C03",
@@ -228,11 +264,13 @@
       "claim": "a leak seen on the first read and not on the second look settles to PASS, and the pass reason prints '0 leaked' for a chain whose first read leaked five; that case should be inconclusive",
       "source": "audit",
       "votes": {
-        "t3": "real"
+        "t3": "real",
+        "t2": "real",
+        "t1": "real"
       },
-      "verdict": null,
-      "fixed": false,
-      "commit": null
+      "verdict": "real",
+      "fixed": true,
+      "commit": "d4383385"
     },
     {
       "id": "C04",
@@ -240,11 +278,13 @@
       "claim": "the chains judged come only from the screener, which lists only chains with a public launch; a chain whose launches are all internal drops out and is never judged while the tool keeps leaking them",
       "source": "audit",
       "votes": {
-        "t3": "real"
+        "t3": "real",
+        "t2": "real",
+        "t1": "real"
       },
-      "verdict": null,
-      "fixed": false,
-      "commit": null
+      "verdict": "real",
+      "fixed": true,
+      "commit": "d4383385"
     },
     {
       "id": "C05",
@@ -252,11 +292,13 @@
       "claim": "paging is credited when the board script merely contains total/has_more/next/.length <, then PASS without reading a card; a two-page fixed loop beside an unrelated 'next' passes",
       "source": "audit",
       "votes": {
-        "t3": "real"
+        "t3": "real",
+        "t2": "real",
+        "t1": "real"
       },
-      "verdict": null,
-      "fixed": false,
-      "commit": null
+      "verdict": "real",
+      "fixed": true,
+      "commit": "d4383385"
     },
     {
       "id": "C06",
@@ -264,11 +306,13 @@
       "claim": "the clone list is cut to the first 12 by API order and the rest are not counted as unread, so 'all 12' passes while 41 paper clones exist and older ones may still carry dead markets",
       "source": "audit",
       "votes": {
-        "t3": "real"
+        "t3": "real",
+        "t2": "real",
+        "t1": "real"
       },
-      "verdict": null,
-      "fixed": false,
-      "commit": null
+      "verdict": "real",
+      "fixed": true,
+      "commit": "d4383385"
     },
     {
       "id": "C07",
@@ -276,11 +320,13 @@
       "claim": "only gaps between consecutive points are measured; a live tradeable card whose last point is 3 days old (stopped recording now) passes",
       "source": "audit",
       "votes": {
-        "t3": "real"
+        "t3": "real",
+        "t2": "real",
+        "t1": "real"
       },
-      "verdict": null,
-      "fixed": false,
-      "commit": null
+      "verdict": "real",
+      "fixed": true,
+      "commit": "d4383385"
     },
     {
       "id": "C08",
@@ -288,9 +334,11 @@
       "claim": "'owned' is only bot-settings answering 200 and /my-bots is never read; if spectators get that GET, every member seat becomes 'ours' and the check sends a false FAIL",
       "source": "audit",
       "votes": {
-        "t3": "real"
+        "t3": "real",
+        "t2": "not real",
+        "t1": "not real"
       },
-      "verdict": null,
+      "verdict": "minority",
       "fixed": false,
       "commit": null
     },
@@ -300,11 +348,13 @@
       "claim": "only a literal maxlength=\"N\" is read; a cap set through a template constant or el.maxLength is 'not judged', so the 1,500 cap can stay while the check passes",
       "source": "audit",
       "votes": {
-        "t3": "real"
+        "t3": "real",
+        "t2": "not real",
+        "t1": "real"
       },
-      "verdict": null,
-      "fixed": false,
-      "commit": null
+      "verdict": "real",
+      "fixed": true,
+      "commit": "d4383385"
     },
     {
       "id": "C10",
@@ -312,11 +362,13 @@
       "claim": "the contract is no 'not available' marker on one of OUR bot instances, but lines 98-100 also fail on any id the text calls a bot, ours or not",
       "source": "audit",
       "votes": {
-        "t3": "real"
+        "t3": "real",
+        "t2": "not real",
+        "t1": "real"
       },
-      "verdict": null,
-      "fixed": false,
-      "commit": null
+      "verdict": "real",
+      "fixed": true,
+      "commit": "d4383385"
     },
     {
       "id": "A01",
@@ -325,11 +377,12 @@
       "source": "audit",
       "votes": {
         "t3": "real",
-        "t1": "real"
+        "t1": "real",
+        "t2": "real"
       },
-      "verdict": null,
-      "fixed": false,
-      "commit": null
+      "verdict": "real",
+      "fixed": true,
+      "commit": "c172b86f"
     },
     {
       "id": "A02",
@@ -338,11 +391,13 @@
       "source": "audit",
       "votes": {
         "t3": "real",
-        "t1": "real"
+        "t1": "real",
+        "t2": "real"
       },
-      "verdict": null,
+      "verdict": "real",
       "fixed": false,
-      "commit": null
+      "commit": null,
+      "deferred_to_operator": true
     },
     {
       "id": "A03",
@@ -351,9 +406,10 @@
       "source": "audit",
       "votes": {
         "t3": "not real",
-        "t1": "not real"
+        "t1": "not real",
+        "t2": "not real"
       },
-      "verdict": null,
+      "verdict": "dropped",
       "fixed": false,
       "commit": null
     },
@@ -364,9 +420,10 @@
       "source": "audit",
       "votes": {
         "t3": "real",
-        "t1": "not real"
+        "t1": "not real",
+        "t2": "not real"
       },
-      "verdict": null,
+      "verdict": "minority",
       "fixed": false,
       "commit": null
     }
