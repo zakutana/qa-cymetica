@@ -27,14 +27,16 @@
   var TSTAT = { queued: 'next', running: 'working', waiting_approval: 'needs you', done: 'done', failed: 'failed', cancelled: 'cancelled' };
 
   var ui = { tab: 'office', view: '2d', panel: null, open: {}, seen: {}, feedTop: 0, dirty: false, prev: {}, tfDept: '', tfStatus: '', memQ: '', memDept: null };
-  var office, office2d = null, office3d = null, officePic = null;
+  var office, office2d = null, office3d = null, officePic = null, officeLive = null;
   // RO: someone else's public company, looked at from the Universe; everything shows, nothing changes
   var RO = false;
 
   /* ---------------- the office: flat or in 3D, the same API either way ---------------- */
   function viewPref() { try { return localStorage.getItem('co.view') || 'pic'; } catch (e) { return 'pic'; } }
-  // the operator's picture of the office stands only while the company is the one it shows (opic.js)
-  function picFits() { return !!(CO.OfficePic && CO.OfficePic.fits(CO.S)); }
+  // the office composed from his pieces (olive.js) holds any company of up to five departments; where the pieces
+  // are not, his painted picture (opic.js) stands only while the company is the one it shows
+  function liveFits() { return !!(CO.OfficeLive && CO.OfficeLive.fits(CO.S)); }
+  function picFits() { return liveFits() || !!(CO.OfficePic && CO.OfficePic.fits(CO.S)); }
   function liveView() { return CO.U3 && CO.U3.ok && CO.U3.office ? '3d' : '2d'; }
   function setView(v, save) {
     if (v === 'pic' && !picFits()) v = liveView();
@@ -47,6 +49,9 @@
     if (v === '3d') {
       if (!office3d) { office3d = CO.U3.office($('office3d'), st, tipFor); office3d.onFail = function () { office3d = null; setView('2d'); }; }
       office = office3d;
+    } else if (v === 'pic' && liveFits()) {
+      if (!officeLive) { officeLive = new CO.OfficeLive($('opic'), st, tipFor); officeLive.onUnfit = function () { setView(liveView()); }; }
+      office = officeLive;
     } else if (v === 'pic') {
       if (!officePic) { officePic = new CO.OfficePic($('opic'), st, tipFor); officePic.onUnfit = function () { setView(liveView()); }; }
       office = officePic;
@@ -76,6 +81,8 @@
     Array.prototype.forEach.call(document.querySelectorAll('#vt button'), function (b) { b.classList.toggle('on', b.getAttribute('data-v') === '2d'); });
     if (viewPref() === 'pic' && picFits()) setView('pic');
     whenEngine(function (ok) { if (ok && (viewPref() === '3d' || (viewPref() === 'pic' && !picFits()))) setView('3d'); });
+    // his pieces, once loaded, take the picture's place (and a visit's, which the picture could never show)
+    if (CO.OfficeLive) CO.OfficeLive.load(function (ok) { if (ok && viewPref() === 'pic' && liveFits()) setView('pic'); });
     markSeen();
     bind();
     wire();

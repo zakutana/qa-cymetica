@@ -49,6 +49,32 @@ def rings(k):
     return {"core": [round(1312 * k, 1), round(450 * k, 1)], "rings": out}
 
 
+def tiles3x3(k):
+    """The floor plates of the operator's O-platform-3x3 (2576 x 1438): a 3 x 3 grid seen in perspective, its front
+    plate missing. A homography from the platform's outline (its top, right and left corners, the notch where the
+    front plate would start, the front corners of the two plates either side of it; measured 2026-10-18) maps the
+    plane [0,1]^2 onto the picture; each plate is a third of it, inset 0.02 for the grooves. Each plate's corners
+    are listed back, right, front, left, under its row (towards the left corner) and column (towards the right)."""
+    pts = [((0, 0), (1300, 87)), ((1, 0), (2455, 595)), ((0, 1), (205, 645)), ((2 / 3, 2 / 3), (1360, 880)),
+           ((2 / 3, 1), (890, 1240)), ((1, 2 / 3), (1855, 1170))]
+    A = []
+    for (u, v), (x, y) in pts:
+        A.append([u, v, 1, 0, 0, 0, -x * u, -x * v, -x])
+        A.append([0, 0, 0, u, v, 1, -y * u, -y * v, -y])
+    H = np.linalg.svd(np.array(A, float))[2][-1].reshape(3, 3)
+
+    def P(u, v):
+        x, y, w = H @ np.array([u, v, 1.0])
+        return [round(x / w * k, 1), round(y / w * k, 1)]
+    m, out = 0.02, {}
+    for r in range(3):
+        for c in range(3):
+            if (r, c) != (2, 2):
+                u0, u1, v0, v1 = c / 3 + m, (c + 1) / 3 - m, r / 3 + m, (r + 1) / 3 - m
+                out["%d%d" % (r, c)] = [P(u0, v0), P(u1, v0), P(u1, v1), P(u0, v1)]
+    return {"tiles": out}
+
+
 def main():
     OUT.mkdir(parents=True, exist_ok=True)
     meta = {}
@@ -65,6 +91,8 @@ def main():
             meta[name] = {"kind": "backdrop", "w": im.width, "h": im.height}
             if name == "U-background":
                 meta[name]["calib"] = rings(k)
+            if name == "O-platform-3x3":
+                meta[name]["calib"] = tiles3x3(k)
             continue
         sp = Image.fromarray(matte(np.asarray(im)), "RGBA")
         box = sp.getchannel("A").point(lambda v: 255 if v > 10 else 0).getbbox()

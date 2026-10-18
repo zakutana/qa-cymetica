@@ -1,8 +1,10 @@
 # Zadání pro Gemini: všechno, co potřebuju, aby se kancelář i vesmír skládaly živě
 
-**Hotovo a sedí:** `U-background`, `U-station-spire-green`, `O-platform-3x3` (8 plošin bez přední je v pořádku), místnosti `qa`, `manager`, `audit`, `vault`, `lab`, `trading`, `league`, `outsider`.
+**Hotovo a sedí:** `U-background`, `U-station-spire-green`, `O-platform-3x3` (8 plošin bez přední je v pořádku). Místnosti `qa`, `manager`, `audit`, `vault`, `lab`, `trading`, `league`, `outsider` už stojí na plošině, jen se mají přegenerovat s nízkými stěnami (níž).
 
 **Ještě chybí:** 23 stanic (oddíl 4), 4 astronauti (oddíl 3), místnosti `design`, `generic`, `lot-add`, plošina `O-platform-4x4` (poslaná vyšla zase 3x3, zadání je zpřesněné).
+
+**Znovu, s nízkými stěnami:** všech 8 místností. Mají stěny vysoké jako třetina místnosti, takže přední místnosti na plošině zakrývají zadní; v tvém obrázku kanceláře jsou stěny nízké a je vidět do všech. Zadání v oddílu 2 to už říká (LOW glass walls). Ke každé přilož `look-office.webp`.
 
 **Jak posílat:** každý obrázek zvlášť sem do chatu a do zprávy napiš jeho jméno. K zadání přilož vzor: ke kanceláři `look-office.webp`, k vesmíru `look-universe.webp`, k astronautům `O-room-qa`. Když Gemini přidá text, štítky nebo jiný úhel kamery, vygeneruj ho znovu.
 
@@ -21,7 +23,7 @@ O-platform-4x4: The same as the attached platform image (same camera, style, lig
 Astronauty do místností přidám sám, tolik, kolik má oddělení lidí, a nechám je chodit. Proto místnosti bez lidí.
 
 ```
-Same style, camera angle, lighting and colours as the attached image: isometric 3D render, dark navy materials, glass walls with soft mint-green neon edges, soft pastel cyan light. ONE single room only, its square floor seen as a diamond whose left and right corners touch the left and right edges of the image, centred, on a flat pure magenta (#FF00FF) background with no shadow on it. NO people, NO astronauts: desks face the back walls and their chairs are empty. No text, no labels, no UI. Square, 2048x2048. The room:
+Same style, camera angle, lighting and colours as the attached image: isometric 3D render, dark navy materials, LOW glass walls only waist high (about one sixth of the room's width, as low as in the attached office picture) with soft mint-green neon edges on top, so the whole inside of the room is seen from above, soft pastel cyan light. ONE single room only, its square floor seen as a diamond whose left and right corners touch the left and right edges of the image, centred, on a flat pure magenta (#FF00FF) background with no shadow on it. NO people, NO astronauts: desks face the back walls and their chairs are empty. No text, no labels, no UI. Square, 2048x2048. The room:
 ```
 
 ```

@@ -44,6 +44,7 @@
     this.tip = stage.querySelector('.tip');
   }
   OfficePic.fits = fits;
+  OfficePic.prototype.fits = fits;
   OfficePic.prototype.layout = function () {
     // behind the picture, the same picture blurred to cover the stage: space all round, no bars
     var S = CO.S, self = this, h = '<img class="opic-bg" src="look-office.webp" alt="" draggable="false"><div class="opic-in" id="opic-in"><img src="look-office.webp" alt="" draggable="false">';
@@ -80,7 +81,7 @@
   function $(id) { return document.getElementById(id); }
   OfficePic.prototype.update = function () {
     var S = CO.S, self = this;
-    if (!fits(S)) { if (this.onUnfit) this.onUnfit(); return; }
+    if (!this.fits(S)) { if (this.onUnfit) this.onUnfit(); return; }
     var set = function (key, html, st) {
       var p = self.el.querySelector('.pp[data-key="' + key + '"]'); if (p && p._h !== html) { p._h = html; p.innerHTML = html; }
       var r = null; Object.keys(self.keys).forEach(function (k) { if (self.keys[k] === key) r = k; });
