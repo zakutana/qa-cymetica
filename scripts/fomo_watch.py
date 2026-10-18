@@ -332,6 +332,37 @@ def capture(client, now=None) -> dict:
 QUOTES_PER_MINUTE = 60
 
 
+# The requests one collector may make in a UTC day, every call counted (the signal list, each
+# search and each quote). docs/crew-before-c9.md point 10: on 2026-10-09 it made 48,557 requests
+# to cymetica.com, 39,784 of them to the undocumented /clones/memecoin-terminal/search, at a flat
+# ~2,000 an hour, while REPLY-0030 asks for no load or volume testing; QUOTES_PER_MINUTE above only
+# spreads a burst. About a fifth of that day. A round that reaches it finishes, so a day can pass it
+# by at most one round; then no round runs until 00:00 UTC. The count lives in the running process:
+# a restarted console starts a fresh day's count (deep pass 2026-10-18).
+DAILY_REQUESTS = 10_000
+
+
+class _Counted:
+    """The collector's client, counting the requests it makes in the current UTC day. Every request
+    the collector makes is a `get`; anything else is the real client's own."""
+
+    def __init__(self, client):
+        self._client, self.day, self.made = client, None, 0
+
+    def get(self, *args, **kwargs):
+        today = _now().date()
+        if today != self.day:
+            self.day, self.made = today, 0
+        self.made += 1
+        return self._client.get(*args, **kwargs)
+
+    def spent(self) -> bool:
+        return self.day == _now().date() and self.made >= DAILY_REQUESTS
+
+    def __getattr__(self, name):
+        return getattr(self._client, name)
+
+
 class _Deferred(Exception):
     """This round's quotes are spent; the reading waits for the next round."""
 
@@ -531,12 +562,21 @@ def run(stop, every: float, client=None) -> int:
     import time
 
     stop = stop or threading.Event()
-    rounds = 0
+    rounds, counted, held = 0, None, False
     while True:
         try:
             if client is None:
                 client = _client()
-            tick(client, cap=quote_cap(every))
+            if counted is None:
+                counted = _Counted(client)
+            if counted.spent():
+                if not held:
+                    print(f"[fomo] {counted.made} requests today, the daily ceiling of "
+                          f"{DAILY_REQUESTS}: no round until 00:00 UTC", file=sys.stderr)
+                held = True
+            else:
+                held = False
+                tick(counted, cap=quote_cap(every))
         except Exception as exc:  # noqa: BLE001 -- the loop outlives any one round
             print(f"[fomo] round failed: {type(exc).__name__}: {exc}",
                  file=sys.stderr)
