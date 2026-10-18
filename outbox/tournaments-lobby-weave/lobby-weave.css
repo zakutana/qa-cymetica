@@ -3,13 +3,15 @@
    libi to pozadi cos dal na platno stolu".
    Nothing else on the page changes; this is the whole patch. Palette: the site's own green (#00ff88). */
 
-/* 1. Behind the whole page: the weave, strongest under the hero, fading out as the page goes down. */
+/* 1. Behind the hero only: the weave, gone by the "Live now" header (823 px down main at 1440 px), so the card grid
+   where the numbers are read stays on a calm background. The weave is the table's cloth: it belongs on the tables
+   (part 2); behind the whole page it was wallpaper competing with every card's edge (first try, 2026-10-18). */
 main.content-main { position: relative; isolation: isolate; }
 main.content-main::before {
-  content: ''; position: absolute; inset: 0; z-index: -1; pointer-events: none; opacity: .07;
+  content: ''; position: absolute; inset: 0 0 auto 0; height: 820px; z-index: -1; pointer-events: none; opacity: .07;
   background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='42' height='24.25'><path d='M0 12.12 L7 0 H21 L28 12.12 L21 24.25 H7 Z M28 12.12 H42' fill='none' stroke='%2300ff88' stroke-width='1'/></svg>");
-  -webkit-mask-image: linear-gradient(to bottom, rgba(6,9,15,1) 0, rgba(6,9,15,1) 760px, rgba(6,9,15,.4) 1700px, rgba(6,9,15,.18) 100%);
-          mask-image: linear-gradient(to bottom, rgba(6,9,15,1) 0, rgba(6,9,15,1) 760px, rgba(6,9,15,.4) 1700px, rgba(6,9,15,.18) 100%);
+  -webkit-mask-image: linear-gradient(to bottom, rgba(6,9,15,1) 0, rgba(6,9,15,1) 480px, rgba(6,9,15,0) 820px);
+          mask-image: linear-gradient(to bottom, rgba(6,9,15,1) 0, rgba(6,9,15,1) 480px, rgba(6,9,15,0) 820px);
 }
 
 /* 2. On every table's felt (the cards and the hero's "Next to fill"): the same weave, clear in the middle where the
