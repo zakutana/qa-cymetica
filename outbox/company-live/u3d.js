@@ -9,7 +9,7 @@ import { bloom } from 'three/addons/tsl/display/BloomNode.js';
 import { ao } from 'three/addons/tsl/display/GTAONode.js';
 import { RoundedBoxGeometry } from 'three/addons/geometries/RoundedBoxGeometry.js';
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
-import { mergeGeometries } from 'three/addons/utils/BufferGeometryUtils.js';
+import { mergeGeometries, mergeVertices } from 'three/addons/utils/BufferGeometryUtils.js';
 
 const CO = window.CO;
 const FH = 0.82;
@@ -1261,28 +1261,54 @@ function solarTex() {
     }
   }));
 }
-function rockTex() {
-  return TX.rock || (TX.rock = ctex(512, 256, (g, W, H) => {
-    const f = vnoise(5), img = g.createImageData(W, H), d = img.data;
-    for (let y = 0; y < H; y++) for (let x = 0; x < W; x++) { const v = 26 + f(x / 38, y / 38, 5) * 50 + f(x / 8 + 50, y / 8, 3) * 18, i = (y * W + x) * 4; d[i] = v; d[i + 1] = v + 2; d[i + 2] = v + 6; d[i + 3] = 255; }
-    g.putImageData(img, 0, 0);
-  }));
+// 3D gradient noise (Perlin's improved noise), seeded: the asteroids' shape, craters and colour come from it
+function perlin3(seed) {
+  const R = rng(seed), perm = Array.from({ length: 256 }, (_, i) => i), p = new Uint8Array(512);
+  for (let i = 255; i > 0; i--) { const j = Math.floor(R() * (i + 1)), t = perm[i]; perm[i] = perm[j]; perm[j] = t; }
+  for (let i = 0; i < 512; i++) p[i] = perm[i & 255];
+  const fade = (t) => t * t * t * (t * (t * 6 - 15) + 10), lerp = (a, b, t) => a + t * (b - a);
+  const grad = (h, x, y, z) => { h &= 15; const u = h < 8 ? x : y, v = h < 4 ? y : (h === 12 || h === 14 ? x : z); return ((h & 1) ? -u : u) + ((h & 2) ? -v : v); };
+  return (x, y, z) => {
+    const fx = Math.floor(x), fy = Math.floor(y), fz = Math.floor(z), X = fx & 255, Y = fy & 255, Z = fz & 255;
+    x -= fx; y -= fy; z -= fz;
+    const u = fade(x), v = fade(y), w = fade(z);
+    const A = p[X] + Y, AA = p[A] + Z, AB = p[A + 1] + Z, B = p[X + 1] + Y, BA = p[B] + Z, BB = p[B + 1] + Z;
+    return lerp(lerp(lerp(grad(p[AA], x, y, z), grad(p[BA], x - 1, y, z), u), lerp(grad(p[AB], x, y - 1, z), grad(p[BB], x - 1, y - 1, z), u), v),
+      lerp(lerp(grad(p[AA + 1], x, y, z - 1), grad(p[BA + 1], x - 1, y, z - 1), u), lerp(grad(p[AB + 1], x, y - 1, z - 1), grad(p[BB + 1], x - 1, y - 1, z - 1), u), v), w);
+  };
 }
-// the rock the office is built on: a dense icosphere pushed out by noise, flat on top where the hull sits, hanging
-// low underneath, faceted
-function bigRockGeo(seed, detail = 8) {
-  const g = new THREE.IcosahedronGeometry(1, detail), p = g.attributes.position, v = new THREE.Vector3(), f = vnoise(seed);
-  const n3 = (x, y, z, o) => (f(x, y, o) + f(y + 5.2, z + 1.3, o) + f(z + 9.1, x + 3.7, o)) / 3;
-  for (let i = 0; i < p.count; i++) {
-    v.fromBufferAttribute(p, i);
-    // lumps, not spikes: a broad swell, smaller knuckles, a little grit, and craters pressed in
-    let k = 1 + 1.3 * (n3(v.x * 1.3 + 3, v.y * 1.3, v.z * 1.3, 4) - 0.5) + 0.7 * (n3(v.x * 3.6 + 7, v.y * 3.6, v.z * 3.6, 3) - 0.5) + 0.25 * (n3(v.x * 9 + 2, v.y * 9, v.z * 9, 2) - 0.5);
-    k -= 0.12 * sstep(0.62, 0.8, n3(v.x * 2.4 + 11, v.y * 2.4, v.z * 2.4, 2));
-    v.multiplyScalar(k);
-    if (v.y > 0.2) v.y = 0.2 + (v.y - 0.2) * 0.2; else v.y *= 1.15;
-    p.setXYZ(i, v.x, v.y, v.z);
+// An asteroid, to the operator's picture: a lumpy body, crags on it, craters with raised rims pressed in, fine grit
+// over all of it; smooth-shaded (the sphere's vertices welded, so the light runs over it instead of breaking on
+// facets) and coloured per vertex -- dark charcoal, a little lighter on the crests, darkest in the hollows.
+function asteroidGeo(seed, detail = 64, flatTop = true) {
+  let g = new THREE.IcosahedronGeometry(1, detail);
+  g.deleteAttribute('normal'); g.deleteAttribute('uv'); g = mergeVertices(g);
+  const P = perlin3(seed), pos = g.attributes.position, v = new THREE.Vector3(), n = pos.count, col = new Float32Array(n * 3), R = rng(seed + 7);
+  const fbm = (x, y, z, o) => { let s = 0, a = 0.5, f = 1; for (let i = 0; i < o; i++) { s += a * P(x * f, y * f, z * f); a *= 0.5; f *= 2.03; } return s; };
+  const ridge = (x, y, z, o) => { let s = 0, a = 0.5, f = 1; for (let i = 0; i < o; i++) { const r = 1 - Math.abs(P(x * f + 31.7, y * f + 7.1, z * f)); s += a * r * r; a *= 0.5; f *= 2.1; } return s; };
+  const craters = [];
+  for (let i = 0; i < 30; i++) craters.push({ c: new THREE.Vector3(R() * 2 - 1, R() * 2 - 1, R() * 2 - 1).normalize(), r: 0.05 + Math.pow(R(), 2.2) * 0.3, d: 0.35 + R() * 0.45 });
+  const dark = [0.008, 0.008, 0.009], mid = [0.034, 0.032, 0.031], light = [0.1, 0.094, 0.088];
+  for (let i = 0; i < n; i++) {
+    v.fromBufferAttribute(pos, i);
+    let h = 0.34 * fbm(v.x * 1.15, v.y * 1.15, v.z * 1.15, 4) + 0.17 * (ridge(v.x * 2.4, v.y * 2.4, v.z * 2.4, 5) - 0.45) + 0.05 * (ridge(v.x * 7, v.y * 7, v.z * 7, 3) - 0.45) + 0.03 * fbm(v.x * 16, v.y * 16, v.z * 16, 2);
+    let pit = 0;
+    for (const k of craters) {
+      const x = Math.acos(Math.max(-1, Math.min(1, v.dot(k.c)))) / k.r;
+      if (x < 1) { const d = -k.r * k.d * (1 - x * x); h += d; pit = Math.max(pit, 1 - x); }
+      else if (x < 1.6) h += k.r * k.d * 0.28 * Math.pow(1 - (x - 1) / 0.6, 2);
+    }
+    v.multiplyScalar(1 + h);
+    if (flatTop && v.y > 0.22) v.y = 0.22 + (v.y - 0.22) * 0.25; else if (flatTop) v.y *= 1.12;
+    pos.setXYZ(i, v.x, v.y, v.z);
+    // colour: crests a little lighter, hollows and crater floors darker, a speckle of lighter grit
+    const t = Math.max(0, Math.min(1, 0.5 + h * 1.4 + 0.35 * fbm(v.x * 6 + 11, v.y * 6, v.z * 6, 3) - pit * 0.35));
+    const s = R() < 0.04 ? 0.35 : 0, a = t < 0.5 ? t * 2 : (t - 0.5) * 2, lo = t < 0.5 ? dark : mid, hi = t < 0.5 ? mid : light;
+    for (let ch = 0; ch < 3; ch++) col[i * 3 + ch] = lo[ch] + (hi[ch] - lo[ch]) * a + s * light[ch];
   }
-  g.computeVertexNormals(); return g;
+  g.setAttribute('color', new THREE.BufferAttribute(col, 3));
+  g.computeVertexNormals();
+  return g;
 }
 function monTex() {
   return TX.mon || (TX.mon = ctex(256, 144, (g, W) => {
@@ -1360,7 +1386,7 @@ function omats() {
   OM.solar = std({ map: solarTex(), roughness: 0.22, metalness: 0.5, emissive: 0x3b82f6, emissiveIntensity: 0.08 });
   OM.engine = std({ color: 0x4a5462, roughness: 0.32, metalness: 0.6 });
   OM.engineDark = std({ color: 0x1a2028, roughness: 0.4, metalness: 0.5, side: THREE.DoubleSide });
-  OM.rock = std({ map: rockTex(), bumpMap: TX.rock, bumpScale: 5, roughness: 0.95, metalness: 0.02 });
+  OM.rock = std({ vertexColors: true, roughness: 0.93, metalness: 0.04 });
   OM.pot = std({ color: 0x232a33, roughness: 0.5, metalness: 0.3 });
   OM.bush = std({ color: 0x1f6b45, roughness: 0.85, emissive: 0x00ff88, emissiveIntensity: 0.04 });
   OM.holo = new THREE.MeshBasicMaterial({ map: holoTex(), transparent: true, blending: THREE.AdditiveBlending, depthWrite: false, side: THREE.DoubleSide });
@@ -1376,7 +1402,7 @@ function omats() {
   OM.torso = new THREE.CapsuleGeometry(0.16, 0.26, 4, 14); OM.limb = new THREE.CapsuleGeometry(0.055, 0.2, 3, 10); OM.leg = new THREE.CapsuleGeometry(0.07, 0.36, 3, 10);
   OM.chair = std({ color: 0x1d242c, roughness: 0.5, metalness: 0.25 });
   OM.green = amat('#00ff88'); OM.cyan = amat('#00cfff'); OM.blue = amat('#3b82f6'); OM.red = amat('#ff4444');
-  G.bigRock = bigRockGeo(11, 16); G.smallRock = bigRockGeo(27, 3);
+  G.bigRock = asteroidGeo(11, 64); G.smallRock = asteroidGeo(27, 14, false);
   G.plume = new THREE.CylinderGeometry(0.42, 0.05, 1, 24, 1, true);
 }
 // what a layout, a selection or a station built for itself goes back to the GPU when it is cleared; the shared
@@ -1500,7 +1526,7 @@ class Office3D {
     this.sun = new THREE.DirectionalLight(0xf4f8fc, 2.4); this.sun.castShadow = true; this.sun.shadow.mapSize.set(2048, 2048);
     this.sun.shadow.normalBias = 0.02; this.sun.shadow.bias = -0.0005; S.add(this.sun); S.add(this.sun.target);
     const rim = new THREE.DirectionalLight(0x00cfff, 0.5); rim.position.set(-30, 12, -40); S.add(rim);
-    const under = new THREE.DirectionalLight(0xcfe6f5, 0.95); under.position.set(20, -22, 42); S.add(under);
+    const under = new THREE.DirectionalLight(0xcfe6f5, 0.55); under.position.set(20, -22, 42); S.add(under);
     this.sky = spaceSky(); S.add(this.sky);
     this.world = new THREE.Group(); S.add(this.world);
     this.pk = new THREE.Group(); S.add(this.pk);
@@ -1648,6 +1674,7 @@ class Office3D {
       });
     });
     bakeGroup(ext);
+    ext.traverse((o) => { if (o.isMesh && o.material === OM.rock) { o.castShadow = true; o.receiveShadow = true; } });
     // asteroids drifting round it, never between it and the camera; one large and lit up to the right
     this.drift = [];
     const big = new THREE.Mesh(G.smallRock, OM.rock); big.scale.set(2.2, 1.9, 2.0);
