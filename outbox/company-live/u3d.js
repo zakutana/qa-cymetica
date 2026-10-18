@@ -579,9 +579,32 @@ function flareTex() {
     streak(1, 0.035, 0.9); streak(0.035, 0.55, 0.6); g.rotate(0); streak(0.6, 0.02, 0.35);
   }));
 }
-// a jet's light: white at its root, gone at its tip (the colour comes from its material)
+// a jet's light: white at its root, gone at its tip (the colour comes from its material). The canvas's top row is
+// the cylinder's top, the jet's tip.
 function jetTex() {
-  return TX.jet || (TX.jet = ctex(32, 256, (g, W, H) => { const gr = g.createLinearGradient(0, 0, 0, H); gr.addColorStop(0, 'rgba(255,255,255,1)'); gr.addColorStop(0.3, 'rgba(255,255,255,.55)'); gr.addColorStop(1, 'rgba(255,255,255,0)'); g.fillStyle = gr; g.fillRect(0, 0, W, H); }));
+  // (rising over its first few percent: eight jets share one root, and at full strength there they add up to a blot)
+  return TX.jet || (TX.jet = ctex(32, 256, (g, W, H) => { const gr = g.createLinearGradient(0, H, 0, 0); gr.addColorStop(0, 'rgba(255,255,255,0)'); gr.addColorStop(0.12, 'rgba(255,255,255,.25)'); gr.addColorStop(0.24, 'rgba(255,255,255,1)'); gr.addColorStop(0.5, 'rgba(255,255,255,.55)'); gr.addColorStop(0.85, 'rgba(255,255,255,.1)'); gr.addColorStop(1, 'rgba(255,255,255,0)'); g.fillStyle = gr; g.fillRect(0, 0, W, H); }));
+}
+// What the detector's silver sees: a grey hall, light above, dark below, and the collider's gold all round its
+// middle -- so silver panels show silver with warm gold in them, as in his photograph. Its own, not the scene's:
+// the stations keep their light.
+function chamberEnv() {
+  if (TX.chamber) return TX.chamber;
+  // the panels face up and in and the map looks down on them, so what they mirror is this sky's upper half: the
+  // gold is there, in patches between pale silver, with a few white lamps and a little blue
+  const R = rng(5), t = ctex(512, 256, (g, W, H) => {
+    const gr = g.createLinearGradient(0, 0, 0, H);
+    // a dark hall, so the silver shows as metal: bright where it catches a lamp or the gold, dark between
+    gr.addColorStop(0, '#9aa2ab'); gr.addColorStop(0.18, '#4b525b'); gr.addColorStop(0.45, '#23272d'); gr.addColorStop(0.6, '#15130f'); gr.addColorStop(1, '#07080a');
+    g.fillStyle = gr; g.fillRect(0, 0, W, H);
+    g.filter = 'blur(6px)';
+    for (let i = 0; i < 10; i++) { g.fillStyle = 'rgba(235,240,245,.9)'; g.fillRect(R() * W, H * (0.02 + R() * 0.3), 30 + R() * 70, 5 + R() * 9); }
+    for (let i = 0; i < 18; i++) { const x = R() * W, y = H * (0.08 + R() * 0.38), w = 24 + R() * 80; g.fillStyle = 'rgba(255,' + Math.round(140 + R() * 80) + ',' + Math.round(30 + R() * 50) + ',' + (0.45 + R() * 0.5) + ')'; g.fillRect(x - w / 2, y - 8, w, 12 + R() * 26); }
+    for (let i = 0; i < 6; i++) { g.fillStyle = 'rgba(255,255,255,.85)'; g.fillRect(R() * W, H * (0.03 + R() * 0.12), 40 + R() * 60, 8); }
+    for (let i = 0; i < 4; i++) { g.fillStyle = 'rgba(110,180,255,.5)'; g.fillRect(R() * W, H * (0.2 + R() * 0.2), 20 + R() * 40, 10); }
+    g.filter = 'none';
+  });
+  t.mapping = THREE.EquirectangularReflectionMapping; TX.chamber = t; return t;
 }
 // The sky of his picture: near-black navy, a teal haze over the top left of the first look fading to the bottom
 // right, and many small sharp white stars, a few brighter. Drawn round the camera as far as a sky is.
@@ -663,7 +686,7 @@ class Universe3D {
     this.clock = new THREE.Clock();
     this.renderer.init().then(() => {
       // his picture keeps its teal and green: less of the pastel pull than the office's
-      try { this.post = new Post(this.renderer, this.scene, this.camera, 0.6, 0.5, 0.74, { sat: 0.9 }); } catch (e) { console.warn('bloom off:', e); this.post = null; }
+      try { this.post = new Post(this.renderer, this.scene, this.camera, 0.5, 0.3, 0.8, { sat: 0.9 }); } catch (e) { console.warn('bloom off:', e); this.post = null; }
       this.renderer.setAnimationLoop(() => this.frame());
       this.ready = true;
     }).catch((e) => { console.error('3D map could not start:', e); if (this.h.onFail) this.h.onFail(e); });
@@ -717,74 +740,119 @@ class Universe3D {
       return { L, a, head, size, ph: R() * 6 };
     });
   }
-  // Cymetica, a collider: a white-hot heart inside a sphere of light filaments that turn and flicker, beams shot
-  // out of it, sparks flying off, a ring of machinery round it turning slowly with a gyroscope across it, a cone
-  // of rings over it and rings of light on the orbits' plane. White, cyan, blue and a little green; nothing warm.
+  // Cymetica, as the operator's collider photograph: a ball of hundreds of tangled filaments of light, mostly
+  // golden-orange and warm yellow threads through electric-blue and white-blue ones, a white-hot heart with a
+  // little red-magenta deep inside, thick jets shot out of it in several directions (gold and blue-white,
+  // narrowing, sparkling), a spray of golden sparks, and round it all the detector: concentric rings of silver
+  // panels catching the heart's gold. On the orbits' plane round it, his orrery's cyan rings of light and silver
+  // arcs. Units are the plane's: his rings reach 60, the ball about 16.
   core() {
-    const g = new THREE.Group(), R = rng(77), cy = amat('#00cfff');
-    G.plume = G.plume || new THREE.CylinderGeometry(0.42, 0.05, 1, 24, 1, true);
-    const star = new THREE.Mesh(G.sphere, new THREE.MeshBasicMaterial({ color: new THREE.Color(0xffffff).multiplyScalar(2.6) })); star.scale.setScalar(1.3); g.add(star);
-    this.corona = [[5, 0.75, 0xeafcff], [12, 0.22, 0x9feeff], [30, 0.07, 0x00cfff], [70, 0.03, 0x3b82f6]].map(([s, o, c]) => { const sp = glowSprite(c, o, s); g.add(sp); return sp; });
-    // the filaments: arcs round the heart, each set in its own colour, turning its own way
-    this.fil = [[0xffffff, 1.8, 90, 2.4, 7.0], [0x9feeff, 1.8, 110, 2.8, 8.0], [0x3b82f6, 2.2, 70, 3.4, 8.6], [0x00ff88, 1.6, 24, 3.8, 7.6]].map(([col, k, n, r0, r1]) => {
-      const pos = [];
-      for (let i = 0; i < n; i++) {
-        const ax = new THREE.Vector3(R() * 2 - 1, R() * 2 - 1, R() * 2 - 1).normalize();
-        const u = new THREE.Vector3(0.3, 1, 0.2).cross(ax).normalize(), v = ax.clone().cross(u).normalize();
-        const rr = r0 + R() * (r1 - r0), a0 = R() * Math.PI * 2, len = 0.8 + R() * 2.8, wob = R() * 0.7, f = 2 + Math.floor(R() * 4), seg = 30;
-        let prev = null;
-        for (let s = 0; s <= seg; s++) {
-          const a = a0 + len * s / seg, rad = rr * (1 + wob * 0.22 * Math.sin(a * f));
-          const p = u.clone().multiplyScalar(Math.cos(a) * rad).addScaledVector(v, Math.sin(a) * rad).addScaledVector(ax, wob * Math.sin(a * f * 0.7) * 1.3);
-          if (prev) pos.push(prev.x, prev.y, prev.z, p.x, p.y, p.z);
+    const g = new THREE.Group(), R = rng(77), up = new THREE.Vector3(0, 1, 0), Y = 5;
+    // the heart: white-hot, a warm and a magenta glow round it, a wide soft gold one, a cool one wider still
+    const heart = new THREE.Group(); heart.position.y = Y; g.add(heart); this.heart = heart;
+    heart.add(new THREE.Mesh(G.sphere, new THREE.MeshBasicMaterial({ color: new THREE.Color(1, 0.97, 0.9).multiplyScalar(2.6) })));
+    heart.children[0].scale.setScalar(0.9);
+    this.corona = [[6.5, 0.75, 0xff2d8a], [3.4, 0.9, 0xfff6e0], [13, 0.18, 0xffb84a], [30, 0.06, 0xff9d3c], [60, 0.03, 0x3b9dff]].map(([s, o, c]) => { const sp = glowSprite(c, o, s); heart.add(sp); return sp; });
+    // the filaments: particle tracks, each leaving the heart on a helix round its own axis, curling, some looping
+    // back through the ball, and tangled loops round it; four sets, gold most, that turn each their own way and
+    // flicker. Bright enough to glow, not so bright the bloom washes their colour out.
+    const sets = [{ n: 260, cols: [0xff8c1a, 0xffa22e, 0xff7410], k: 0.5, loops: 0.35 }, { n: 170, cols: [0xffc23d, 0xffd56a], k: 0.42, loops: 0.3 },
+      { n: 170, cols: [0x1e7bff, 0x2f8cff, 0x1660f0], k: 0.7, loops: 0.25 }, { n: 110, cols: [0x9fd0ff, 0x7fbcff], k: 0.4, loops: 0.2 }];
+    this.fil = sets.map((S) => {
+      const pos = [], col = [], cc = new THREE.Color();
+      for (let i = 0; i < S.n; i++) {
+        const dir = new THREE.Vector3(R() * 2 - 1, R() * 2 - 1, R() * 2 - 1).normalize(), axis = new THREE.Vector3(R() * 2 - 1, R() * 2 - 1, R() * 2 - 1).normalize();
+        const loop = R() < S.loops, curl = loop ? 0.16 + R() * 0.1 : (R() < 0.3 ? 0.12 : 0.03) + R() * 0.08, len = loop ? 14 + R() * 26 : 7 + R() * 12, seg = 56, step = len / seg;
+        const start = loop ? 3 + R() * 9 : R() * 1.2;
+        cc.set(S.cols[Math.floor(R() * S.cols.length)]).multiplyScalar(S.k * (0.45 + R() * 0.75));
+        let p = dir.clone().multiplyScalar(start), d = loop ? new THREE.Vector3().crossVectors(dir, axis).normalize() : dir.clone(), prev = p.clone();
+        for (let s = 1; s <= seg; s++) {
+          d.applyAxisAngle(axis, curl * (loop ? 1 : 1 + s / seg)).normalize(); p = p.clone().addScaledVector(d, step);
+          if (p.length() > 16.5) break;
+          // a track lights up as it leaves the heart (hundreds start there; at full strength they would add up to
+          // a white blot) and fades toward its end
+          const fade = loop ? 0.75 + 0.25 * Math.sin(s * 0.3) : Math.min(1, p.length() / 6) ** 1.5 * (1 - s / seg * 0.7);
+          pos.push(prev.x, prev.y, prev.z, p.x, p.y, p.z); col.push(cc.r * fade, cc.g * fade, cc.b * fade, cc.r * fade, cc.g * fade, cc.b * fade);
           prev = p;
         }
       }
-      const geo = new THREE.BufferGeometry(); geo.setAttribute('position', new THREE.Float32BufferAttribute(pos, 3));
-      const ls = new THREE.LineSegments(geo, new THREE.LineBasicMaterial({ color: new THREE.Color(col).multiplyScalar(k), transparent: true, opacity: 0.8, blending: THREE.AdditiveBlending, depthWrite: false }));
-      g.add(ls); return ls;
+      const geo = new THREE.BufferGeometry(); geo.setAttribute('position', new THREE.Float32BufferAttribute(pos, 3)); geo.setAttribute('color', new THREE.Float32BufferAttribute(col, 3));
+      const ls = new THREE.LineSegments(geo, new THREE.LineBasicMaterial({ vertexColors: true, transparent: true, opacity: 0.9, blending: THREE.AdditiveBlending, depthWrite: false }));
+      ls.position.y = Y; ls.frustumCulled = false; g.add(ls); return ls;
     });
-    // beams shot out of the heart, narrowing as they go
+    // the jets: a wide soft cone and a hot narrow one inside it, white at the root, gone at the tip
+    G.jet = G.jet || new THREE.CylinderGeometry(0.06, 1, 1, 24, 1, true).translate(0, 0.5, 0);
+    // they fan out across the first look's view (an angle on its screen, a little toward or away from it), so each
+    // reads at its length instead of as a blot pointing at the camera
+    const cam = new THREE.Vector3().setFromSpherical(new THREE.Spherical(1, UVCAM.polar, CO.uvGalaxy.AZ)), right = new THREE.Vector3().crossVectors(cam, up).normalize(), vup = new THREE.Vector3().crossVectors(right, cam).normalize();
     this.beams = [];
-    for (let i = 0; i < 10; i++) {
-      const dir = new THREE.Vector3(R() * 2 - 1, (R() - 0.5) * 1.1, R() * 2 - 1).normalize(), len = 14 + R() * 26;
-      const m = new THREE.Mesh(G.plume, new THREE.MeshBasicMaterial({ map: plumeTex(), color: new THREE.Color(R() < 0.6 ? 0xffffff : 0x9feeff).multiplyScalar(1.4), transparent: true, opacity: 0.4, blending: THREE.AdditiveBlending, depthWrite: false, side: THREE.DoubleSide }));
-      m.scale.set(0.45 + R() * 0.5, len, 0.45 + R() * 0.5); m.quaternion.setFromUnitVectors(new THREE.Vector3(0, -1, 0), dir); m.position.copy(dir.clone().multiplyScalar(len / 2));
-      g.add(m); this.beams.push({ m, ph: R() * 6 });
-    }
-    // sparks flying off the heart
-    const NS = 420, sp = new Float32Array(NS * 3), spCol = new Float32Array(NS * 3), cc = new THREE.Color();
-    this.sparks = { N: NS, dir: [], speed: [], ph: [] };
+    [[92, -0.25, 40, 0xffc060], [32, 0.2, 32, 0xbfe4ff], [148, -0.3, 34, 0xffb040], [8, -0.35, 26, 0xffd27a], [176, 0.25, 28, 0x9fd0ff], [206, -0.2, 22, 0xffa63a], [334, 0.3, 20, 0xbfe4ff], [62, 0.45, 18, 0xffcf6e]].forEach(([deg, depth, len, hex]) => {
+      const t = deg * Math.PI / 180, dir = right.clone().multiplyScalar(Math.cos(t)).addScaledVector(vup, Math.sin(t)).addScaledVector(cam, depth).normalize();
+      const q = new THREE.Quaternion().setFromUnitVectors(up, dir), j = new THREE.Group();
+      j.quaternion.copy(q); j.position.y = Y; g.add(j);
+      const outer = new THREE.Mesh(G.jet, new THREE.MeshBasicMaterial({ map: jetTex(), color: new THREE.Color(hex).multiplyScalar(0.3), transparent: true, opacity: 0.5, blending: THREE.AdditiveBlending, depthWrite: false }));
+      outer.scale.set(1.9, len, 1.9); j.add(outer);
+      const inner = new THREE.Mesh(G.jet, new THREE.MeshBasicMaterial({ map: jetTex(), color: new THREE.Color(hex).lerp(new THREE.Color(0xffffff), 0.1).multiplyScalar(0.72), transparent: true, opacity: 0.85, blending: THREE.AdditiveBlending, depthWrite: false }));
+      inner.scale.set(0.6, len * 0.92, 0.6); j.add(inner);
+      this.beams.push({ j, outer, inner, dir, len, ph: R() * 6, hex });
+    });
+    // the sparks: golden mostly, some white-blue; most stream out along the jets, the rest everywhere; each lives
+    // a moment on the GPU (TSL: where it is is time, its own speed and its own phase), twinkling as it goes
+    const NS = 1400, A = new Float32Array(NS * 4), B = new Float32Array(NS * 4), C = new Float32Array(NS * 3), cc = new THREE.Color();
     for (let i = 0; i < NS; i++) {
-      this.sparks.dir.push(new THREE.Vector3(R() * 2 - 1, (R() - 0.5) * 0.8, R() * 2 - 1).normalize()); this.sparks.speed.push(0.25 + R() * 0.6); this.sparks.ph.push(R());
-      cc.set(R() < 0.7 ? 0xeafcff : 0x00cfff).multiplyScalar(1.6); spCol.set([cc.r, cc.g, cc.b], i * 3);
+      const jet = R() < 0.55 ? this.beams[Math.floor(R() * this.beams.length)] : null;
+      const d = jet ? jet.dir.clone().add(new THREE.Vector3(R() - 0.5, R() - 0.5, R() - 0.5).multiplyScalar(0.3)).normalize() : new THREE.Vector3(R() * 2 - 1, R() * 2 - 1, R() * 2 - 1).normalize();
+      A.set([d.x, d.y, d.z, 0.1 + R() * 0.3], i * 4);
+      B.set([R(), 0.45 + R() * R() * 1.1, jet ? jet.len * (0.7 + R() * 0.6) : 16 + R() * 34, 0], i * 4);
+      cc.set(R() < 0.78 ? (R() < 0.5 ? 0xffb94a : 0xffdf8a) : 0xcfe9ff).multiplyScalar(1.8); C.set([cc.r, cc.g, cc.b], i * 3);
     }
-    const sg = new THREE.BufferGeometry(); sg.setAttribute('position', new THREE.BufferAttribute(sp, 3)); sg.setAttribute('color', new THREE.BufferAttribute(spCol, 3));
-    this.sparkPts = new THREE.Points(sg, new THREE.PointsMaterial({ vertexColors: true, size: 1, sizeAttenuation: false, transparent: true, blending: THREE.AdditiveBlending, depthWrite: false }));
-    this.sparkPts.frustumCulled = false; g.add(this.sparkPts);
-    // the machine round it: plates with lit seams between them, a coil every fourth, tilted, turning slowly
-    this.machine = new THREE.Group(); this.machine.rotation.set(0.38, 0, 0.16); g.add(this.machine);
-    const RR = 11.5, NSEG = 28;
-    for (let i = 0; i < NSEG; i++) {
-      const a = i / NSEG * Math.PI * 2, coil = i % 4 === 0, p = new THREE.Mesh(G.box, coil ? M.metal : M.hull2);
-      p.scale.set(coil ? 1.5 : 2.2, coil ? 2.1 : 1.3, coil ? 1.9 : 1.1); p.position.set(Math.sin(a) * RR, 0, Math.cos(a) * RR); p.rotation.y = a + Math.PI / 2; this.machine.add(p);
-      const b = a + Math.PI / NSEG, lamp = new THREE.Mesh(G.box, cy.glow); lamp.scale.set(0.12, 0.95, 1.2); lamp.position.set(Math.sin(b) * RR, 0, Math.cos(b) * RR); lamp.rotation.y = b + Math.PI / 2; this.machine.add(lamp);
-    }
-    const inner = new THREE.Mesh(G.wheel, M.metal); inner.scale.setScalar(RR - 0.95); inner.rotation.x = Math.PI / 2; this.machine.add(inner);
-    this.gyro = new THREE.Group(); g.add(this.gyro);
-    const gy = new THREE.Mesh(G.wheel, M.trim); gy.scale.set(9, 9, 5); this.gyro.add(gy);
-    const gyl = new THREE.Mesh(G.ringT, cy.rim); gyl.scale.setScalar(9.6); this.gyro.add(gyl);
-    // rings of light on the orbits' plane, and a cone of rings over the heart as over the Manager's dais
-    this.coreRings = [[15, G.ringT, cy.rim], [17.5, G.holoDash, cy.soft], [20.5, G.holo, cy.rim], [24, G.holo, cy.soft]].map(([r, geo, mat]) => {
-      const m = new THREE.Mesh(geo, mat); m.scale.setScalar(r); m.rotation.x = Math.PI / 2; g.add(m); return m;
+    const a = TSL.instancedBufferAttribute(new THREE.InstancedBufferAttribute(A, 4)), b = TSL.instancedBufferAttribute(new THREE.InstancedBufferAttribute(B, 4)), c = TSL.instancedBufferAttribute(new THREE.InstancedBufferAttribute(C, 3));
+    const life = TSL.fract(TSL.time.mul(a.w).add(b.x)), fade = life.oneMinus().pow(0.8);
+    const sm = new THREE.SpriteNodeMaterial({ transparent: true, depthWrite: false, blending: THREE.AdditiveBlending });
+    sm.positionNode = a.xyz.mul(life.mul(b.z).add(3.5)).add(vec3(0, Y, 0));
+    sm.scaleNode = b.y.mul(fade.mul(0.7).add(0.3)).mul(TSL.sin(TSL.time.mul(19).add(b.x.mul(61))).mul(0.3).add(0.7));
+    const tx = TSL.texture(glowTex(), TSL.uv());
+    sm.colorNode = vec4(c.mul(fade), tx.a.mul(fade));
+    this.sparkPts = new THREE.Mesh(G.plane, sm); this.sparkPts.count = NS; this.sparkPts.frustumCulled = false; g.add(this.sparkPts);
+    // the detector, as his photograph's chamber seen from above it: concentric rings of panels round the ball in a
+    // shallow bowl, each face turned up and in to the heart so it catches its gold -- a fine inner ring, the
+    // bright calorimeter, the big plates of the muon chambers, the dark yoke -- a smaller plate on each for relief,
+    // a lit seam between every two; the rings turn slowly, every other one the other way
+    const env = chamberEnv();
+    const silver = new THREE.MeshStandardMaterial({ color: 0xdfe4e9, metalness: 0.93, roughness: 0.24, envMap: env, envMapIntensity: 1.25 });
+    const steel = new THREE.MeshStandardMaterial({ color: 0xa4acb5, metalness: 0.92, roughness: 0.32, envMap: env, envMapIntensity: 1.1 });
+    const dark = new THREE.MeshStandardMaterial({ color: 0x2c3138, metalness: 0.75, roughness: 0.45, envMap: env, envMapIntensity: 0.55 });
+    const seam = new THREE.MeshBasicMaterial({ color: new THREE.Color(0xffb347).multiplyScalar(1.6) });
+    const o = new THREE.Object3D();
+    // inner and outer radius, panels, tilt, the inner edge's height, the face, the relief plate, seams lit
+    this.machine = [[9.5, 12.5, 40, 0.62, -2.6, steel, dark, false], [13.5, 18.8, 36, 0.48, -2.4, silver, steel, true], [19.8, 25.6, 24, 0.34, -1.6, steel, silver, false], [26.6, 30.6, 16, 0.2, -0.4, dark, steel, true]].map(([r0, r1, n, tilt, y0, face, plate, lit], k) => {
+      const ring = new THREE.Group(); g.add(ring);
+      const dr = r1 - r0, rm = (r0 + r1) / 2, pan = new THREE.InstancedMesh(G.box, face, n), rel = new THREE.InstancedMesh(G.box, plate, n), sm2 = lit ? new THREE.InstancedMesh(G.box, seam, n) : null;
+      for (let i = 0; i < n; i++) {
+        const t = i / n * Math.PI * 2, place = (r, ang) => { o.position.set(Math.sin(ang) * r, y0 + (r - r0) * Math.sin(tilt), Math.cos(ang) * r); o.rotation.set(0, ang, 0); o.rotateX(-tilt); };
+        place(rm, t); o.scale.set(2 * Math.PI * rm / n * 0.9, 0.55, dr); o.updateMatrix(); pan.setMatrixAt(i, o.matrix);
+        place(rm + dr * 0.06, t); o.translateY(0.35); o.scale.set(2 * Math.PI * rm / n * 0.5, 0.3, dr * 0.55); o.updateMatrix(); rel.setMatrixAt(i, o.matrix);
+        if (sm2) { place(rm, t + Math.PI / n); o.translateY(0.1); o.scale.set(0.18, 0.5, dr * 0.92); o.updateMatrix(); sm2.setMatrixAt(i, o.matrix); }
+      }
+      ring.add(pan, rel); if (sm2) ring.add(sm2); return ring;
     });
-    this.coneRings = [[4.5, 7.2], [7.5, 5.8], [10.5, 4.4], [13.5, 3.0]].map(([y, s], i) => {
-      const m = new THREE.Mesh(i % 2 ? G.holoDash : G.holo, cy.rim); m.scale.setScalar(s); m.rotation.x = Math.PI / 2; m.position.y = y; g.add(m); return m;
+    // the orrery's own rings on the plane, as his: thin cyan circles at 36, 42 (dashed), 53 and a bright one at 60,
+    // a pale silver arc in pieces at 33 and 57
+    const ringAt = (r, w, hex, U = 1, k = 1) => { const m = new THREE.Mesh(uvBand(r, w, U, () => look(hex, k)), new THREE.MeshBasicMaterial({ map: uvLineTex(U > 1), vertexColors: true, transparent: true, blending: THREE.AdditiveBlending, depthWrite: false, side: THREE.DoubleSide })); m.renderOrder = -4; g.add(m); return m; };
+    this.coreRings = [ringAt(60, 0.9, '#a5d8e6'), ringAt(57.5, 0.7, '#4f8a9c'), ringAt(53, 0.7, '#77c2d0'), ringAt(42, 0.8, '#4e8d9f', 90), ringAt(36.5, 0.8, '#81cbdb')];
+    const arcGeo = (r, w, a0, a1) => { const sh = new THREE.Shape(); sh.absarc(0, 0, r + w, a0, a1, false); sh.absarc(0, 0, r - w, a1, a0, true); return new THREE.ShapeGeometry(sh, 48).rotateX(-Math.PI / 2); };
+    const arcMat = new THREE.MeshBasicMaterial({ color: look('#b8c8d2', 0.8), transparent: true, opacity: 0.55, depthWrite: false, side: THREE.DoubleSide });
+    this.coneRings = [[33.5, 0.55, [[0.2, 1.5], [2.2, 3.3], [4.1, 5.6]]], [56.5, 0.5, [[0.9, 2.6], [3.4, 4.4], [5.0, 6.0]]]].map(([r, w, arcs]) => {
+      const grp = new THREE.Group(); arcs.forEach(([a0, a1]) => grp.add(new THREE.Mesh(arcGeo(r, w, a0, a1), arcMat))); grp.position.y = 0.05; g.add(grp); return grp;
     });
-    g.add(new THREE.PointLight(0xa8ecff, 2600, 0, 2));
-    const hit = new THREE.Mesh(G.sphere, M.hit); hit.scale.setScalar(13); hit.userData.id = 'core'; g.add(hit); this.coreHit = hit;
-    g.scale.setScalar(2.4); this.coreAt = new THREE.Vector3(0, 19, 0);
-    this.scene.add(g);
+    // a star of light on the outer ring, where his is
+    const fl = new THREE.Sprite(new THREE.SpriteMaterial({ map: flareTex(), color: new THREE.Color(0xd8f6ff).multiplyScalar(1.4), transparent: true, blending: THREE.AdditiveBlending, depthWrite: false }));
+    fl.scale.setScalar(16); g.add(fl); this.coreFlare = fl;
+    // its light: warm, and only as far as the detector, so the stations keep their own
+    const pl = new THREE.PointLight(0xffb45a, 380, 70, 1.6); pl.position.y = Y; g.add(pl); this.coreLight = pl;
+    const hit = new THREE.Mesh(G.sphere, M.hit); hit.scale.setScalar(34); hit.position.y = Y; hit.userData.id = 'core'; g.add(hit); this.coreHit = hit;
+    this.coreAt = new THREE.Vector3(0, 21, 0);
+    this.scene.add(g); this.coreG = g;
   }
   // every company on its orbit; ours on the second, in front of Cymetica where the camera first looks
   layout() {
@@ -963,16 +1031,18 @@ class Universe3D {
       if (this.followAt && !this.tw) { const d = p.clone().sub(this.followAt); this.camera.position.add(d); this.controls.target.add(d); }
       this.followAt = (this.followAt || new THREE.Vector3()).copy(p);
     }
-    // Cymetica: the filaments turn each their own way and flicker, the beams breathe, the sparks fly, the machine turns
-    this.fil.forEach((f, i) => { f.rotation.set(t * (0.13 + i * 0.07) * (i % 2 ? -1 : 1), t * (0.21 + i * 0.05), t * 0.05 * i); f.material.opacity = 0.6 + 0.3 * Math.sin(t * (5 + i * 2.3) + i) * Math.sin(t * 1.7 + i); });
-    this.beams.forEach((b) => { b.m.material.opacity = 0.15 + 0.3 * Math.max(0, Math.sin(t * 2.2 + b.ph)); });
-    const sp = this.sparkPts.geometry.attributes.position, S2 = this.sparks;
-    for (let i = 0; i < S2.N; i++) { const f = (t * S2.speed[i] * 0.35 + S2.ph[i]) % 1, r = 2.5 + f * 30, d = S2.dir[i]; sp.setXYZ(i, d.x * r, d.y * r, d.z * r); }
-    sp.needsUpdate = true;
-    this.machine.rotation.y = t * 0.06; this.gyro.rotation.set(1.15 + Math.sin(t * 0.2) * 0.1, t * 0.18, 0.3);
-    this.coreRings.forEach((r, i) => { r.rotation.z = t * (0.05 + i * 0.03) * (i % 2 ? -1 : 1); });
-    this.coneRings.forEach((r, i) => { r.rotation.z = t * (0.4 + i * 0.2) * (i % 2 ? -1 : 1); r.position.y = 4.5 + i * 3 + Math.sin(t * 1.3 + i) * 0.3; });
-    this.corona[0].material.opacity = 0.65 + 0.12 * Math.sin(t * 2.1);
+    // Cymetica: the filaments turn each their own way and flicker, the jets breathe, the heart pulses, the detector's
+    // rings and the silver arcs turn slowly, a star of light runs round the outer ring (the sparks fly on the GPU)
+    this.fil.forEach((f, i) => { f.rotation.set(t * (0.11 + i * 0.05) * (i % 2 ? -1 : 1), t * (0.17 + i * 0.04), t * 0.04 * (i - 1.5)); f.material.opacity = 0.7 + 0.3 * Math.sin(t * (6 + i * 2.3) + i) * Math.sin(t * 2.3 + i * 1.7); });
+    this.beams.forEach((b) => {
+      const k = 0.5 + 0.5 * Math.sin(t * 1.9 + b.ph), fl = 0.85 + 0.15 * Math.sin(t * 23 + b.ph * 7);
+      b.j.scale.set(0.85 + 0.3 * k, 0.8 + 0.3 * k, 0.85 + 0.3 * k); b.outer.material.opacity = (0.3 + 0.3 * k) * fl; b.inner.material.opacity = (0.55 + 0.4 * k) * fl;
+    });
+    this.machine.forEach((m, i) => { m.rotation.y = t * (0.04 + i * 0.015) * (i % 2 ? -1 : 1); });
+    this.coneRings.forEach((r, i) => { r.rotation.y = t * 0.03 * (i % 2 ? 1 : -1); });
+    this.corona[0].material.opacity = 0.62 + 0.15 * Math.sin(t * 3.3 + 1); this.corona[1].material.opacity = 0.82 + 0.12 * Math.sin(t * 2.1);
+    this.heart.children[0].scale.setScalar(0.9 * (1 + 0.08 * Math.sin(t * 4.2)));
+    const fa = 0.53 + t * 0.05; this.coreFlare.position.set(Math.sin(fa) * 60, 0.3, Math.cos(fa) * 60);
     this.moveShips(t);
     if (this.arcs.length) {
       this.arcs = this.arcs.filter((a) => {
