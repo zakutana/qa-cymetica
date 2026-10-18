@@ -136,6 +136,14 @@ def test_the_cap_is_read_from_the_newest_capacity_refusal(tmp_path, monkeypatch)
     clone._append(_clone_rows_newer)
     assert scripts_lab._capacity_cap(clone.load())["cap"] == 25
     assert scripts_lab._capacity_cap(clone.load())["id"] == "CLN-0900"
+    # B02, deep pass 2026-10-18: the caps above only rise, so "the largest since the last accepted
+    # clone" passed as well. A newer refusal naming a LOWER cap is the cap now.
+    clone._append({"id": "CLN-0902", "type": "intent", "at": at(1.51),
+                   "source_type": "wta_species", "source_id": "z", "paper": True})
+    clone._append({"id": "CLN-0902", "type": "outcome", "at": at(1.5),
+                   "outcome": "rejected", "http_status": 400, "response": REFUSAL % 20})
+    assert scripts_lab._capacity_cap(clone.load())["cap"] == 20
+    assert scripts_lab._capacity_cap(clone.load())["id"] == "CLN-0902"
     clone._append({"id": "CLN-0901", "type": "intent", "at": at(1),
                    "source_type": "wta_species", "source_id": "y", "paper": True})
     clone._append({"id": "CLN-0901", "type": "outcome", "at": at(0.99),
