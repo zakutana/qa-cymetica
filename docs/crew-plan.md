@@ -95,7 +95,7 @@ Building since 2026-10-11 ("stav firmu podle docs/crew-plan.md"). The status col
 | C6 | watchdog: leases, three failures, a stuck department, a dead loop restarted | hotovo 5506421d |
 | C7 | process auditor: the day's numbers on the clock and in the patrol (b5def5f3), the week in deep pass step 11 | hotovo ba2108d7 |
 | C8 | reviews and the dry run: a reader, three triage agents (8 of 11 stood), fixes, a second reader (5 more, 4 from the fixes), fixes; the dry run green three times; tests/meta + tests/repo 1452 passed | hotovo 627f4a3e |
-| C9 | first live start on "zapni laborku" | open |
+| C9 | first live start on "zapni laborku" | hotovo 9acfae86 (started 2026-10-12 16:15 UTC, state/crew.jsonl line 1; that commit is the company's first, its manager's; points 9-11 of docs/crew-before-c9.md stay in NEXT.md) |
 
 ### Implementation decisions (2026-10-11, while building)
 - **Files ride the department shape** (`qa/departments.py`): `state/crew.jsonl` (runs, loop events, the day's numbers), `state/crew_tickets.jsonl` (the bus), `state/crew_operator.jsonl` (to the operator), `state/crew/report.json` (the /lab report). The patrol counts them as `crew.py`'s records and `keep.py snapshot` copies the diaries; `state/crew/tickets.jsonl` would have been missed by both. All gitignored: tracked, a loop's write would cost a sweep its level V.

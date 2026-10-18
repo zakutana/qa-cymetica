@@ -326,6 +326,13 @@ scripts/render.py  state/*.json into the operator dashboard.
 scripts/verify.py  tells them a check passes under the fingerprint it failed.
 scripts/review.py  the look back over a window the caller chooses.
 scripts/deep_pass_process.py  what each deep pass cost and caught.
+qa/crew.py         the company (docs/crew-plan.md): the ticket bus, the departments,
+                   each worker's argv and brakes, what a worker may not write.
+scripts/crew.py    its loops, start/stop/hold, status, the clock, audit. Runs only
+                   on "zapni laborku"; first started 2026-10-12.
+scripts/commit.py  the company's only way into git: named paths, one writer at a time.
+scripts/company.py our company on their Build a Company (cymetica.com/company):
+                   create, departments, a read; each write declared, closed body.
 .claude/hooks/no_heredoc_writes.py  a heredoc may not write a file here.
 .claude/hooks/no_backtick_commit.py a commit message may not run a backtick.
 .claude/skills/    deep-pass, laborator, pokracuj, qa-sweep, channels, ohlednuti.

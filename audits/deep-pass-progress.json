@@ -2,7 +2,7 @@
   "run": "deep-pass-2026-10-18",
   "at": "2026-10-17T23:05:00+00:00",
   "previous_at": "2026-10-15T13:05:00+00:00",
-  "at_finished": null,
+  "at_finished": "2026-10-18T02:44:40+00:00",
   "start_commit": "ff3f09f5ffbd8aa29f2eb0a19526477909fd095d",
   "size": "full",
   "gaps": [
@@ -436,16 +436,16 @@
     {
       "line": "2026-10-12 Kód pro firmu: clock a krok desku (T-0040) -- no next desk step while its worker runs; pause from the ticket's close too",
       "commit": "7227f251"
+    },
+    {
+      "line": "2026-10-11 FOMO sběr: denní strop ve fomo_watch (10 000 dotazů za den UTC)",
+      "commit": "1b636163"
     }
   ],
   "left": [
     {
       "line": "2026-10-12 Kód pro firmu: commit.py a záznam běhu (OP-0009), desk H2 (OP-0013), BTC rozpětí (T-0039), manifest (T-0038), body 9 a 11",
       "why": "the company is stopped and none of it blocks a running part; OP-0013 and T-0039 each need a reading against live data first, T-0038/OP-0009 are a change to how commits carry the manifest and the page that does not fit beside a 128-commit review"
-    },
-    {
-      "line": "2026-10-11 FOMO sběr: denní strop",
-      "why": "needs the day's request counts measured first (the patrol keeps only per-minute peaks)"
     },
     {
       "line": "2026-10-11 Laborka v3 P3-P7",
@@ -458,18 +458,26 @@
     {
       "line": "2026-10-08 Sledovat; 2026-10-13 Requesty; 2026-10-16 /company kopie; 2026-10-15 NEXUS Profit Agent; 2026-10-12 Tournaments",
       "why": "watching, deliveries and dates still to come, iterating with the operator, paid Nexus interactions, or seats that wait for open tables"
+    },
+    {
+      "line": "2026-10-11 FOMO sběr: denní strop requestů v patrolu",
+      "why": "the patrol keeps only per-minute peaks; a daily count over every loop is a reading of timings.jsonl the patrol does not make yet"
     }
   ],
-  "next": [],
+  "next": [
+    "Z ohlédnutí: strop requestů v patrolu (od 11. 10.); firma nesmí psát kořenové *.py a conftest; outsider bez holého MEMORY.md + state/outsider/ do .gitignore; zámek manifestu; FAIL ověření řekne proč; a2a k MSG-0156 a komentář #156; potvrdit REPLY-0169/0170 a opravit studii.",
+    "Drží i #201 (FAIL) a #122 (PASS jen při otevřeném US trhu).",
+    "Po sweepu PRE-0274 opravit naše kontroly, než půjde FAIL: #112/#136 (re-ship po fail verdiktu), #192 (čte log před opravou), #93 (přečíst jejich pravidlo), karta v pozici (jen otevřené pozice), FOMO kalibrace (OverflowError); /movers přepojit na /event-cards/movers."
+  ],
   "retrospective": {
-    "last": "2026-10-11",
-    "done": false
+    "last": "2026-10-18",
+    "done": true
   },
   "rule_changes": [],
   "meta_tests": {
     "start": 839,
-    "end": null,
+    "end": 839,
     "reason": null
   },
-  "finished": false
+  "finished": true
 }
