@@ -401,7 +401,7 @@ SKIN.pyramid = (b, n) => {
   const reach = Math.max(vfJet(b, s * 0.2, -0.25, hs + 0.1, -Math.PI / 2, s * 0.085), vfJet(b, s * 0.2, -0.25, -hs - 0.1, Math.PI / 2, s * 0.085));
   const wing = vfWing(b, hs + 0.15, -0.3, -s * 0.1, 1, 0, 0.35, s * 0.3, s * 0.55, 0.32);
   vfWing(b, -hs - 0.15, -0.3, s * 0.1, -1, 0, 0.35, s * 0.3, s * 0.55, 0.32);
-  b.top = Hw + 0.16 + (n > 3 ? 0.6 : 0) + 0.6; b.bot = -1.0; b.foot = Math.max(hs + wing, hs + reach);
+  b.top = Math.max(Hw + 0.16 + (n > 3 ? 0.6 : 0), n > 6 ? fy + 0.05 + kh * 1.62 + 0.18 : 0) + 0.6; b.bot = -1.0; b.foot = Math.max(hs + wing, hs + reach);
 };
 // Ring station: a spindle of disc decks, a great wheel round it on four spokes, turning slowly, an engine below
 SKIN.orbital = (b, n) => {
