@@ -454,10 +454,79 @@
   // office has to be interactive" (2026-10-18). Each station in it opens the sample company of that name; the
   // live 3D orrery stays one click away, and is where our own station is found. Positions are the picture's
   // pixels: the name's centre, its top, and the bottom of the station under it.
-  var UVPIC = { w: 1533, h: 820, core: [790, 268],
+  var UVPIC = { w: 1533, h: 820, core: [790, 282],
     st: [['Sigma Collective', 553, 98, 238], ['Night Owl Trading', 1058, 126, 272], ['Ion Analytics', 1362, 127, 250], ['Giga Fund', 245, 225, 345],
       ['League Lab', 583, 375, 500], ['Vector Trading', 963, 333, 500], ['Ion Analytics', 1361, 348, 455], ['Bull Club', 293, 516, 630],
       ['Bull Club', 499, 599, 750], ['Quasar Fund', 958, 552, 690], ['Laser Station', 1258, 510, 650]] };
+  // Cymetica's core in the picture, made the collider of the operator's other picture: a white-hot heart, a ball of
+  // light filaments turning round it, beams shot out of it, sparks flying off -- in white, cyan and blue (the site's
+  // palette; the collider picture's gold is not allowed). Drawn on a canvas over the painted core, added onto it
+  // (screen), at about 30 frames a second and only while the picture is on screen.
+  var CORE = { size: 600, fil: null, sparks: null, beams: null, raf: 0, last: 0 };
+  function coreSeed() {
+    var s = 7, R = function () { s = (s * 16807) % 2147483647; return (s - 1) / 2147483646; };
+    var unit = function () { var u = R() * 2 - 1, th = R() * Math.PI * 2, q = Math.sqrt(1 - u * u); return [Math.cos(th) * q, u, Math.sin(th) * q]; };
+    var cols = [[235, 252, 255], [160, 236, 255], [0, 207, 255], [127, 184, 255], [59, 130, 246], [140, 255, 205]];
+    CORE.fil = [];
+    for (var i = 0; i < 78; i++) {
+      var ax = unit(), t = [0.31, 0.93, 0.19], u = [ax[1] * t[2] - ax[2] * t[1], ax[2] * t[0] - ax[0] * t[2], ax[0] * t[1] - ax[1] * t[0]], ul = Math.hypot(u[0], u[1], u[2]);
+      u = [u[0] / ul, u[1] / ul, u[2] / ul];
+      var v = [ax[1] * u[2] - ax[2] * u[1], ax[2] * u[0] - ax[0] * u[2], ax[0] * u[1] - ax[1] * u[0]], m = R();
+      CORE.fil.push({ ax: ax, u: u, v: v, r: 0.08 + R() * 0.2, a0: R() * 6.28, len: 0.9 + R() * 2.6, wob: R() * 0.35, f: 2 + Math.floor(R() * 4), sp: (R() - 0.5) * 0.9,
+        c: cols[m < 0.3 ? 0 : m < 0.55 ? 1 : m < 0.75 ? 2 : m < 0.88 ? 3 : m < 0.96 ? 4 : 5], a: 0.45 + R() * 0.5 });
+    }
+    CORE.beams = [];
+    for (var b = 0; b < 8; b++) CORE.beams.push({ th: R() * 6.28, len: 0.55 + R() * 0.43, w: 0.018 + R() * 0.03, ph: R() * 6.28, sp: (R() - 0.5) * 0.12, white: R() < 0.6 });
+    CORE.sparks = [];
+    for (var k = 0; k < 160; k++) CORE.sparks.push({ d: unit(), sp: 0.12 + R() * 0.35, ph: R(), s: 0.6 + R() * 1.4 });
+  }
+  function coreFrame(now) {
+    CORE.raf = requestAnimationFrame(coreFrame);
+    var cv = $('uvcore'); if (!cv || document.hidden || !$('uvstage').classList.contains('pic') || !cv.offsetParent) return;
+    if (now - CORE.last < 33) return; CORE.last = now;
+    var g = cv.getContext('2d'), W = cv.width, R = W / 2, t = now / 1000, cx = R, cy = R;
+    g.clearRect(0, 0, W, W); g.globalCompositeOperation = 'lighter';
+    var flick = 0.85 + 0.15 * Math.sin(t * 7.3) * Math.sin(t * 2.1);
+    // haze round it
+    var h = g.createRadialGradient(cx, cy, 0, cx, cy, R * 0.6);
+    h.addColorStop(0, 'rgba(0,207,255,' + (0.22 * flick).toFixed(3) + ')'); h.addColorStop(1, 'rgba(0,207,255,0)');
+    g.fillStyle = h; g.fillRect(0, 0, W, W);
+    // beams: tapering streaks out of the heart, turning slowly, breathing
+    CORE.beams.forEach(function (b) {
+      var a = b.th + t * b.sp, L = R * b.len * (0.85 + 0.15 * Math.sin(t * 1.7 + b.ph)), w = R * b.w, al = 0.5 + 0.4 * Math.max(0, Math.sin(t * 2.3 + b.ph));
+      var ex = cx + Math.cos(a) * L, ey = cy + Math.sin(a) * L * 0.62, nx = -Math.sin(a) * w, ny = Math.cos(a) * w * 0.62;
+      var lg = g.createLinearGradient(cx, cy, ex, ey), c = b.white ? '235,252,255' : '127,214,255';
+      lg.addColorStop(0, 'rgba(' + c + ',' + al.toFixed(3) + ')'); lg.addColorStop(0.5, 'rgba(0,207,255,' + (al * 0.35).toFixed(3) + ')'); lg.addColorStop(1, 'rgba(0,207,255,0)');
+      g.fillStyle = lg; g.beginPath(); g.moveTo(cx + nx, cy + ny); g.lineTo(ex, ey); g.lineTo(cx - nx, cy - ny); g.closePath(); g.fill();
+    });
+    // the filaments: arcs on a ball round the heart, the ball turning, each arc drawn as a glow and a thread
+    var ry = t * 0.35, rx = 0.42, cyr = Math.cos(ry), syr = Math.sin(ry), cxr = Math.cos(rx), sxr = Math.sin(rx);
+    CORE.fil.forEach(function (f, i) {
+      var pts = [], n = 22, off = t * f.sp;
+      for (var s2 = 0; s2 <= n; s2++) {
+        var an = f.a0 + off + f.len * s2 / n, rad = f.r * (1 + f.wob * Math.sin(an * f.f + t * 1.3));
+        var x = (f.u[0] * Math.cos(an) + f.v[0] * Math.sin(an)) * rad, y = (f.u[1] * Math.cos(an) + f.v[1] * Math.sin(an)) * rad, z = (f.u[2] * Math.cos(an) + f.v[2] * Math.sin(an)) * rad;
+        var x2 = x * cyr + z * syr, z2 = -x * syr + z * cyr, y2 = y * cxr - z2 * sxr;
+        pts.push([cx + x2 * R, cy + y2 * R * 0.92]);
+      }
+      var a = f.a * flick * (0.75 + 0.25 * Math.sin(t * (3 + i % 5) + i));
+      [[3.2, 0.12], [1.1, 1]].forEach(function (pass) {
+        g.lineWidth = pass[0] * W / 600; g.strokeStyle = 'rgba(' + f.c.join(',') + ',' + (a * pass[1]).toFixed(3) + ')';
+        g.beginPath(); pts.forEach(function (p, k) { if (k) g.lineTo(p[0], p[1]); else g.moveTo(p[0], p[1]); }); g.stroke();
+      });
+    });
+    // sparks flying off
+    CORE.sparks.forEach(function (sp) {
+      var k = (t * sp.sp + sp.ph) % 1, r = R * (0.05 + k * 0.85), al = (1 - k) * 0.8;
+      g.fillStyle = 'rgba(220,248,255,' + al.toFixed(3) + ')'; g.fillRect(cx + sp.d[0] * r, cy + sp.d[1] * r * 0.62 + sp.d[2] * r * 0.2, sp.s * W / 600, sp.s * W / 600);
+    });
+    // the white-hot heart
+    var c0 = g.createRadialGradient(cx, cy, 0, cx, cy, R * 0.22);
+    c0.addColorStop(0, 'rgba(255,255,255,' + (0.95 * flick).toFixed(3) + ')'); c0.addColorStop(0.25, 'rgba(235,252,255,0.8)'); c0.addColorStop(0.6, 'rgba(0,207,255,0.25)'); c0.addColorStop(1, 'rgba(0,207,255,0)');
+    g.fillStyle = c0; g.fillRect(cx - R * 0.22, cy - R * 0.22, R * 0.44, R * 0.44);
+    g.globalCompositeOperation = 'source-over';
+  }
+  function startCore() { if (!CORE.fil) coreSeed(); if (!CORE.raf) CORE.raf = requestAnimationFrame(coreFrame); }
   function uvView() { try { return localStorage.getItem('co.uvview') || 'pic'; } catch (e) { return 'pic'; } }
   function setUvView(v) { try { localStorage.setItem('co.uvview', v); } catch (e) { /* fine */ } showUniverse(); }
   function byName(n) { for (var i = 0; i < CO.UNIVERSE.length; i++) if (CO.UNIVERSE[i].name === n) return CO.UNIVERSE[i]; return null; }
@@ -469,7 +538,7 @@
       var w = 210, x = s[1] - w / 2, y = s[2] - 12, h = s[3] - y;
       html += '<button class="uvhs" data-name="' + esc(s[0]) + '" style="left:' + pc(x, UVPIC.w) + ';top:' + pc(y, UVPIC.h) + ';width:' + pc(w, UVPIC.w) + ';height:' + pc(h, UVPIC.h) + '"></button>';
     });
-    html += '<div class="uvpic-core" style="left:' + pc(UVPIC.core[0], UVPIC.w) + ';top:' + pc(UVPIC.core[1], UVPIC.h) + '"></div>';
+    html += '<canvas class="uvcore" id="uvcore" style="left:' + pc(UVPIC.core[0] - CORE.size / 2, UVPIC.w) + ';top:' + pc(UVPIC.core[1] - CORE.size / 2, UVPIC.h) + ';width:' + pc(CORE.size, UVPIC.w) + ';height:' + pc(CORE.size, UVPIC.h) + '"></canvas>';
     // the picture's own corner panel is painted; ours, with our company, covers it
     html += '</div><button class="uvpic-card" id="uvpic-card"></button>';
     host.innerHTML = html;
@@ -479,6 +548,7 @@
       b.addEventListener('mouseleave', function () { $('uvstage').querySelector('.tip').hidden = true; });
     });
     if (window.ResizeObserver) new ResizeObserver(fitPic).observe($('uvstage'));
+    startCore();
   }
   function picTip(b, e) {
     var c = byName(b.getAttribute('data-name')), tip = $('uvstage').querySelector('.tip'); if (!c) return;
@@ -495,6 +565,7 @@
     inn.style.width = (UVPIC.w * s) + 'px'; inn.style.height = (UVPIC.h * s) + 'px';
     var ox = (W - UVPIC.w * s) / 2, oy = (H - UVPIC.h * s) / 2;
     inn.style.left = ox + 'px'; inn.style.top = oy + 'px';
+    var cv = $('uvcore'), px = Math.round(CORE.size * s * Math.min(window.devicePixelRatio || 1, 2)); if (cv && cv.width !== px) { cv.width = px; cv.height = px; }
     // our card sits over the picture's painted corner panel, a little larger (the picture drifts), kept on the stage
     var card = $('uvpic-card'), cw = 236 * s, bottom = Math.min(oy + 818 * s, H), top = Math.min(oy + 690 * s, bottom - 104);
     card.style.width = cw + 'px'; card.style.left = Math.min(ox + 1292 * s, W - cw) + 'px';

@@ -255,3 +255,4 @@ body.ro #dr-ch-text { cursor: default; }
 .uvpic-card span { font: 600 10px 'JetBrains Mono'; color: var(--dim); } .uvpic-card em { color: var(--cyan); font-style: normal; }
 .uvpic-card .go { color: var(--green); }
 .uvpic-card:hover { border-color: rgba(0, 255, 136, .6); }
+.uvcore { position: absolute; pointer-events: none; mix-blend-mode: screen; }
