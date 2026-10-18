@@ -539,9 +539,46 @@
   function uvView() { try { return localStorage.getItem('co.uvview') || 'pic'; } catch (e) { return 'pic'; } }
   function setUvView(v) { try { localStorage.setItem('co.uvview', v); } catch (e) { /* fine */ } showUniverse(); }
   function byName(n) { for (var i = 0; i < CO.UNIVERSE.length; i++) if (CO.UNIVERSE[i].name === n) return CO.UNIVERSE[i]; return null; }
+  // The Universe composed live (uvlive.js) out of the pieces he generates: his background with every company's
+  // station on its orbits, as many as there are. It takes the picture's place wherever the pieces are (they are kept
+  // out of git); the painted picture stays where they are not. PIC is whichever of the two is up.
+  var PIC = UVPIC, uvl = null;
   function buildPic() {
     var host = $('uvpic'); if (host.getAttribute('data-built')) return;
     host.setAttribute('data-built', '1');
+    CO.uvLive.load(function (ok) { if (ok) buildLive(host); else buildStatic(host); fitPic(); picCard(); });
+  }
+  function buildLive(host) {
+    var bg = CO.uvLive.man['U-background'], pc = function (v, of) { return (v / of * 100).toFixed(3) + '%'; };
+    PIC = { w: bg.w, h: bg.h, core: bg.calib.core, coreSize: CORE.size * bg.w / UVPIC.w, live: true };
+    host.innerHTML = '<div class="uvpic-in live" id="uvpic-in"><img src="assets/gen/U-background.webp" alt="" draggable="false">' +
+      '<canvas class="uvl" id="uvl-back"></canvas>' +
+      '<canvas class="uvcore" id="uvcore" style="left:' + pc(PIC.core[0] - PIC.coreSize / 2, PIC.w) + ';top:' + pc(PIC.core[1] - PIC.coreSize / 2, PIC.h) + ';width:' + pc(PIC.coreSize, PIC.w) + ';height:' + pc(PIC.coreSize, PIC.h) + '"></canvas>' +
+      '<canvas class="uvl" id="uvl-front"></canvas><div class="uvl-top" id="uvl-top"></div></div><button class="uvpic-card" id="uvpic-card"></button>';
+    uvl = new CO.UvLive({ back: $('uvl-back'), front: $('uvl-front'), top: $('uvl-top') }, {});
+    uvl.set(mineForMap());
+    var top = $('uvl-top');
+    top.addEventListener('mousemove', function (e) { var b = e.target.closest('[data-id]'); if (b) liveTip(+b.getAttribute('data-id'), e); else $('uvstage').querySelector('.tip').hidden = true; });
+    top.addEventListener('mouseleave', function () { $('uvstage').querySelector('.tip').hidden = true; });
+    if (window.ResizeObserver) new ResizeObserver(fitPic).observe($('uvstage'));
+    uvl.start();
+    startCore();
+  }
+  function liveTip(id, e) {
+    var tip = $('uvstage').querySelector('.tip'), html = uvl.tip(id); if (!html) return;
+    tip.innerHTML = html; tip.hidden = false;
+    var r = $('uvstage').getBoundingClientRect(), x = e.clientX - r.left + 16, y = e.clientY - r.top + 16;
+    if (x + tip.offsetWidth > r.width - 8) x = e.clientX - r.left - tip.offsetWidth - 16;
+    if (y + tip.offsetHeight > r.height - 8) y = e.clientY - r.top - tip.offsetHeight - 16;
+    tip.style.left = x + 'px'; tip.style.top = y + 'px';
+  }
+  // a station on the live map: ours opens the office, a public one its visit, a private one its card
+  function openFromLive(id) {
+    if (id === 0) return setTab('office');
+    var c = null; CO.UNIVERSE.forEach(function (x) { if (x.id === id) c = x; });
+    if (c) openFromPic(c.name, c);
+  }
+  function buildStatic(host) {
     var pc = function (v, of) { return (v / of * 100).toFixed(3) + '%'; }, html = '<div class="uvpic-in" id="uvpic-in"><img src="look-universe.webp" alt="" draggable="false">';
     UVPIC.st.forEach(function (s) {
       var w = 210, x = s[1] - w / 2, y = s[2] - 12, h = s[3] - y;
@@ -570,24 +607,33 @@
   // the picture covers the stage, centred, as a photo would
   function fitPic() {
     var st = $('uvstage'), inn = $('uvpic-in'); if (!inn) return;
-    var W = st.clientWidth, H = st.clientHeight, s = Math.max(W / UVPIC.w, H / UVPIC.h);
-    inn.style.width = (UVPIC.w * s) + 'px'; inn.style.height = (UVPIC.h * s) + 'px';
-    var ox = (W - UVPIC.w * s) / 2, oy = (H - UVPIC.h * s) / 2;
+    var W = st.clientWidth, H = st.clientHeight, s = Math.max(W / PIC.w, H / PIC.h);
+    inn.style.width = (PIC.w * s) + 'px'; inn.style.height = (PIC.h * s) + 'px';
+    var ox = (W - PIC.w * s) / 2, oy = (H - PIC.h * s) / 2;
     inn.style.left = ox + 'px'; inn.style.top = oy + 'px';
-    var cv = $('uvcore'), px = Math.round(CORE.size * s * Math.min(window.devicePixelRatio || 1, 2)); if (cv && cv.width !== px) { cv.width = px; cv.height = px; }
+    var cv = $('uvcore'), px = Math.round((PIC.coreSize || CORE.size) * s * Math.min(window.devicePixelRatio || 1, 2)); if (cv && cv.width !== px) { cv.width = px; cv.height = px; }
+    var card = $('uvpic-card');
+    // live: the background has no painted panel, so the card stands in the stage's corner
+    if (PIC.live) {
+      uvl.fit(s, ox, oy, W, H);
+      card.style.width = '236px'; card.style.height = '96px'; card.style.left = (W - 236 - 16) + 'px'; card.style.top = (H - 96 - 16) + 'px';
+      return;
+    }
     // our card sits over the picture's painted corner panel, a little larger (the picture drifts), kept on the stage
-    var card = $('uvpic-card'), cw = 236 * s, bottom = Math.min(oy + 818 * s, H), top = Math.min(oy + 690 * s, bottom - 104);
+    var cw = 236 * s, bottom = Math.min(oy + 818 * s, H), top = Math.min(oy + 690 * s, bottom - 104);
     card.style.width = cw + 'px'; card.style.left = Math.min(ox + 1292 * s, W - cw) + 'px';
     card.style.top = top + 'px'; card.style.height = (bottom - top) + 'px';
   }
   function picCard() {
+    if (!$('uvpic-card')) return;
+    if (uvl) uvl.setMine(mineForMap());
     var S = CO.S, n = S.departments.length, w = S.departments.filter(function (d) { return CO.deptView(d).status === 'working'; }).length;
     setHTML($('uvpic-card'), '<span class="k">YOUR COMPANY</span><b>' + esc(S.company.name) + '</b><span>' + n + ' departments · <em>' + w + ' working</em></span><span class="go">Open the office →</span>');
     var pub = CO.UNIVERSE.filter(function (c) { return c.public; }).length + (CO.profile().public ? 1 : 0);
     uvStats({ companies: CO.UNIVERSE.length + 1, public: pub, working: w });
   }
-  function openFromPic(name) {
-    var c = byName(name); if (!c) return;
+  function openFromPic(name, c) {
+    c = c || byName(name); if (!c) return;
     if (!c.public) return privateCard(c);
     try { sessionStorage.setItem('uv.from', String(c.id)); } catch (e) { /* fine */ }
     $('uvfade').hidden = false; setTimeout(function () { location.href = 'index.html?visit=' + c.id; }, 350);
@@ -1134,9 +1180,11 @@
       if (t.closest('#ro-back')) { location.href = 'index.html#universe'; return; }
       if (t.closest('#sim-new')) return createCompanyModal();
       var uvb = t.closest('#uvvt [data-uvv]'); if (uvb) return setUvView(uvb.getAttribute('data-uvv'));
+      var lv = t.closest('#uvl-top [data-id]'); if (lv) return openFromLive(+lv.getAttribute('data-id'));
       var hs = t.closest('.uvhs'); if (hs) return openFromPic(hs.getAttribute('data-name'));
       if (t.closest('#uvpic-card')) return setTab('office');
       // our own station is on the live map only: Mine opens it there
+      if (t.closest('#uv-me') && uvView() === 'pic' && uvl) return uvl.ping();
       if (t.closest('#uv-me') && uvView() === 'pic') { setUvView('3d'); setTimeout(function () { if (uv) uv.flyTo(0); }, 3600); return; }
       if (uv) {
         if (t.closest('#uv-in')) return uv.zoom(0.78);

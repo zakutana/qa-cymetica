@@ -256,6 +256,20 @@ body.ro #dr-ch-text { cursor: default; }
 .uvpic-card .go { color: var(--green); }
 .uvpic-card:hover { border-color: rgba(0, 255, 136, .6); }
 .uvcore { position: absolute; pointer-events: none; mix-blend-mode: screen; }
+/* the Universe composed live (uvlive.js): stations on two canvases round the core's, plates and hit areas over them */
+.uvpic-in.live { animation-duration: 70s; }
+.uvl { position: absolute; left: 0; top: 0; width: 100%; height: 100%; pointer-events: none; }
+.uvl-top { position: absolute; inset: 0; pointer-events: none; }
+.uvl-top .uvhs { pointer-events: auto; border: 0; border-radius: 0; background: transparent; box-shadow: none; }
+.uvl-top .uvhs:hover { background: transparent; box-shadow: none; }
+.p3.uvp { transform-origin: 50% 100%; padding: 4px 10px 5px; }
+.p3.uvp .p3h b { font-size: 11px; }
+.p3.uvp em { font: 700 9px 'JetBrains Mono'; letter-spacing: .12em; color: var(--bg); background: var(--green); padding: 1px 6px; border-radius: 99px; font-style: normal; }
+.p3.uvp.me { border-color: rgba(0, 255, 136, .6); }
+.p3.uvp.priv .p3h b, .p3.uvp.paused .p3h b { color: var(--dim); }
+.p3.uvp.priv .p3h i, .p3.uvp.paused .p3h i { color: var(--dim2) !important; box-shadow: none; }
+.p3.uvp.ping { animation: uvping 0.5s ease-in-out 4 alternate; }
+@keyframes uvping { to { box-shadow: 0 0 0 2px var(--green), 0 0 30px rgba(0, 255, 136, .8); } }
 
 /* ---------- the office as the operator's picture (opic.js) ---------- */
 .opic { position: absolute; left: 0; top: 0; right: 0; bottom: 72px; overflow: hidden; display: none; z-index: 2; }

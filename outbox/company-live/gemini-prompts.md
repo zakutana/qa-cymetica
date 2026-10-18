@@ -1,86 +1,96 @@
-# Zadání pro Gemini: kousky, ze kterých se kancelář i vesmír poskládají živě
+# Zadání pro Gemini: všechno, co potřebuju, aby se kancelář i vesmír skládaly živě
 
-Proč po kouskách: z celého obrázku se nedá přidat 50 firem ani nové oddělení. Z jednotlivých kousků to stránka složí sama, pro jakýkoli počet firem a oddělení, a na kousky dá živé štítky, barvy stavu a klikání.
+**Hotovo a sedí:** `U-background`, `U-station-spire-green`, `O-platform-3x3` (8 plošin bez přední je v pořádku), místnosti `qa`, `manager`, `audit`, `vault`, `lab`, `trading`, `league`, `outsider`.
 
-**Jak posílat:** každý obrázek zvlášť sem do chatu a do zprávy napiš jeho jméno (např. `U-station-spire-green`). K zadáním pro kancelář přilož jako vzor `look-office.webp`, k zadáním pro vesmír `look-universe.webp`. Když Gemini přidá text, štítky nebo změní úhel kamery, vygeneruj ho znovu. Magentové pozadí odstraním.
+**Ještě chybí:** 23 stanic (oddíl 4), 4 astronauti (oddíl 3), místnosti `design`, `generic`, `lot-add`, plošina `O-platform-4x4` (poslaná vyšla zase 3x3, zadání je zpřesněné).
 
-**Pořadí:** začni zkouškou, tj. `O-platform-3x3`, `O-room-qa`, `U-background` a `U-station-spire-green`. Až uvidíme, že sedí, dodělej zbytek.
+**Jak posílat:** každý obrázek zvlášť sem do chatu a do zprávy napiš jeho jméno. K zadání přilož vzor: ke kanceláři `look-office.webp`, k vesmíru `look-universe.webp`, k astronautům `O-room-qa`. Když Gemini přidá text, štítky nebo jiný úhel kamery, vygeneruj ho znovu.
 
 ---
 
 ## Kancelář
 
-### Plošiny (pozadí kanceláře): 2 obrázky
+### 1. Velká plošina: 1 obrázek
 
 ```
-O-platform-3x3: Same scene, style, camera angle and lighting as the attached image, but with every room removed: the space platform with nine empty dark floor plates in a 3x3 grid (all nine, the front corner plate too, every plate the same size), the hull with its small lights under the plates, the engines, the solar panels, the asteroid underneath, the teal nebula with stars. No rooms, no walls, no people, no text, no labels, no UI panels. 16:9, 2560x1440, the platform centred and filling about 70% of the width.
-```
-```
-O-platform-4x4: The same as O-platform-3x3 but with sixteen empty floor plates in a 4x4 grid, each plate the same size as in O-platform-3x3. 16:9, 2560x1440, the platform centred and filling about 80% of the width.
+O-platform-4x4: The same as the attached platform image (same camera, style, lighting, hull, engines, solar panels, asteroid, nebula) but BIGGER: a 4 by 4 grid of empty floor plates, four rows of four, SIXTEEN plates in total (the attached image has only 3 by 3 -- do not copy that count). Each plate the same shape as in the attached image; the platform fills more of the frame. No rooms, no people, no text, no UI. 16:9, 2560x1440.
 ```
 
-### Místnosti: jedna na obrázek, stejný úvod
+### 2. Místnosti BEZ lidí: 12 obrázků, stejný úvod
 
-Na začátek každého zadání dej tenhle úvod a za něj řádek místnosti:
+Astronauty do místností přidám sám, tolik, kolik má oddělení lidí, a nechám je chodit. Proto místnosti bez lidí.
 
 ```
-Same style, camera angle, lighting and colours as the attached image: isometric 3D render, camera at the front-left corner looking down about 35 degrees, dark navy materials, glass walls with soft mint-green neon edges, soft pastel cyan light. ONE single room only: its square floor plate seen as a diamond whose left and right corners touch the left and right edges of the image, centred, on a flat pure magenta (#FF00FF) background with no shadow on it. No text, no labels, no UI. Square, 1536x1536, PNG. The room:
+Same style, camera angle, lighting and colours as the attached image: isometric 3D render, dark navy materials, glass walls with soft mint-green neon edges, soft pastel cyan light. ONE single room only, its square floor seen as a diamond whose left and right corners touch the left and right edges of the image, centred, on a flat pure magenta (#FF00FF) background with no shadow on it. NO people, NO astronauts: desks face the back walls and their chairs are empty. No text, no labels, no UI. Square, 2048x2048. The room:
 ```
 
 ```
-O-room-manager: a round holographic dais with stacked cyan rings and a glowing white-cyan sphere, concentric light rings on the floor, one astronaut standing.
+O-room-qa: rows of dark server racks with small blinking lights, two desks with monitors showing code.
 ```
 ```
-O-room-audit: two retro white consoles with green screens, a desk with a monitor and a seated astronaut, a white printer, a plant.
+O-room-manager: a round holographic dais with stacked cyan rings and a glowing white-cyan sphere, concentric light rings on the floor.
+```
+```
+O-room-audit: two retro white consoles with green screens, one desk with a monitor, a white printer, a plant.
 ```
 ```
 O-room-vault: a round armoured vault door in the back wall, glass cases with stacks of green coins and stacks of blue coins, soft green light.
 ```
 ```
-O-room-qa: rows of dark server racks with small blinking lights, two desks with monitors, two astronauts working.
+O-room-lab: white lab machines with floating green holographic screens, small canisters, two desks.
 ```
 ```
-O-room-lab: white lab machines with floating green holographic screens, small canisters, two astronauts in white suits.
+O-room-trading: two desks with several monitors showing green and red candlestick charts, a long chart screen on the back wall.
 ```
 ```
-O-room-trading: two desks with several monitors showing green and red candlestick charts, a long chart screen on the back wall, two astronauts.
+O-room-league: two desks with monitors and a round table with a cyan hologram of a tournament bracket.
 ```
 ```
-O-room-league: desks with monitors and a round table with a cyan hologram of a tournament bracket, two astronauts.
+O-room-outsider: a small lounge with a sofa, a big wall screen showing a website, one desk.
 ```
 ```
-O-room-outsider: a small lounge with a sofa, a big wall screen showing a website, one astronaut.
+O-room-development: three desks with monitors, two server racks.
 ```
 ```
-O-room-development: desks with monitors, two server racks, two astronauts coding.
+O-room-design: desks with large drawing tablets, a mood board wall with colour swatches.
 ```
 ```
-O-room-design: desks with large drawing tablets, a mood board wall with colour swatches, two astronauts.
-```
-```
-O-room-generic: an empty office: two desks with monitors, a plant, a wall screen, one astronaut.
+O-room-generic: an office with two desks with monitors, a plant and a wall screen.
 ```
 ```
 O-lot-add: no room and no walls: an empty floor plate with a cyan holographic ring pad with a grid inside, dashed white lines round it.
+```
+
+### 3. Astronauti (pracovníci): 4 obrázky, stejný úvod
+
+```
+The same astronaut as in the attached room image (white space suit, white helmet with a dark visor, small backpack), same camera angle and lighting, ONE figure only, centred, filling about 70% of the image height, on a flat pure magenta (#FF00FF) background with no shadow on it. No text. Square, 1024x1024. The pose:
+```
+
+```
+A-sit: sitting on an office chair at a desk, seen from behind and a little from the left, typing; draw only the astronaut and the chair, no desk.
+```
+```
+A-stand: standing, facing the camera's left, arms down.
+```
+```
+A-walk: a walk cycle: four frames side by side in one wide image (4096x1024), the astronaut walking towards the camera's left, each frame the same size and on the same ground line.
+```
+```
+A-wave: standing, facing the camera, waving one hand.
 ```
 
 ---
 
 ## Vesmír
 
-### Pozadí: 1 obrázek
+### 4. Stanice: 23 zbývajících, stejný úvod
 
 ```
-U-background: Same scene, style, camera angle and lighting as the attached image, but with every station and every label removed: only Cymetica's glowing core in the middle with its rings, the seven concentric orbit lines, the teal nebula and the stars. No stations, no text, no labels, no UI panels. 16:9, 2560x1440, the orbits centred and filling about 90% of the width.
+Same style, camera angle, lighting and colours as the attached station image: a single space station on a square base platform with solar panels on its sides and small glowing thrusters under it, centred, filling about 80% of the image, on a flat pure magenta (#FF00FF) background with no shadow on it. No text, no labels, no orbit lines. Square, 2048x2048. The station:
 ```
 
-### Stanice: 6 tvarů × 4 barvy = 24 obrázků, stejný úvod
-
-```
-Same style, camera angle, lighting and colours as the stations in the attached image: a single space station on a square base platform with solar panels on its sides and small glowing thrusters under it, seen from the same angle as the image, centred, filling about 80% of the image, on a flat pure magenta (#FF00FF) background with no shadow on it. No text, no labels, no orbit lines. Square, 1024x1024, PNG. The station:
-```
-
-Tvary (za úvod dej tvar a barvu, např. „spire, its hull painted green“):
+Tvary:
 
 ```
 spire: a tower of stacked glass decks with lit windows and an antenna on top
@@ -101,4 +111,4 @@ starship: a horizontal ship hull with a nose, a bridge and three engines
 vault: an armoured block with a round door and a satellite dish
 ```
 
-Barvy (trup natřený touto barvou): `green`, `cyan`, `blue`, `red`. Jména: `U-station-<tvar>-<barva>`, např. `U-station-ziggurat-red`.
+Za tvar napiš barvu trupu („its hull painted red“). Barvy: `green`, `cyan`, `blue`, `red`. Jméno: `U-station-<tvar>-<barva>`. Spire green už máme, zbývá 23.
