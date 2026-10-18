@@ -2099,7 +2099,8 @@ _PICKED = re.compile(
     r"^[\s#>*_`-]*(?:\d+[.)]\s*)?[*_`\s]*"
     r"(?:(?:the|my|one|top)\s+)*"
     r"(?:picks?|choice|answer|recommendation|one to clone)"
-    r"\b[^:\n—–]{0,12}[:—–]"
+    # his separator: a colon, a dash, or the ASCII " -- " he types as often ("**Pick 2 -- Bot clone:**", B01)
+    r"\b[^:\n—–]{0,12}?(?:[:—–]|\s--?\s)"
     r"|\bI(?:'d| would)\s+(?:pick|choose|clone|go with)\b",
     re.I)
 # A markdown heading about his pick: "# ONE PICK THAT CLEARS THE BAR".
@@ -2133,7 +2134,10 @@ def exit_levels(text: str, picks: list[str]) -> dict[str, dict]:
         named = [key for key in wanted if key in lower]
         if len(named) == 1:
             current = wanted[named[0]]
-        elif named:
+        elif named or _PICKED.search(line):
+            # A line naming two, or one opening a new pick that names none of ours, ends the scope:
+            # NEX-0143's "Pick 2 -- Bot clone" handed the bot's SL 3% / TP 6% to the card before it
+            # (T-0073). The next line naming ours opens it again, so a header without the id is unharmed.
             current = None
         if current is None:
             continue

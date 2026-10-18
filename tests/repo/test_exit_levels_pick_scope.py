@@ -14,8 +14,10 @@ current pick's scope (`current = None`), exactly as a line naming another wanted
 names a wanted card opens its scope again, so a header that carries no UUID ("**Pick 1 -- Event card**" over a line
 holding it) is unharmed. Whether STR-0214's leg is corrected is the manager's.
 
-Strict xfail: fails on an ASSERTION today, turns red the day the fix lands, and the marker must go then. The controls
-pass now and must keep passing: a card's own levels are still read, and a card pick after a bot pick still gets its own.
+Fixed in the deep pass of 2026-10-18, with `_PICKED` taught his ASCII " -- " (B01): replayed over all 87 answers on
+disk, NEX-0143's card is the one pick whose levels changed (tp 6 / sl -3 -> None / None), and no line of any answer
+reads differently as a pick. The controls keep passing: a card's own levels are still read, and a card pick after a
+bot pick still gets its own.
 """
 
 from __future__ import annotations
@@ -52,11 +54,16 @@ Species **MACD Hunter** (MACD) — 1,791 trades. SL/TP: **SL 4% / TP 8%** (2:1).
 """
 
 
+ASCII = NEX_0143.replace("**Pick 2 —", "**Pick 2 --").replace("**Pick 3 —", "PICK 3 --")
+
+
+# B01, deep pass 2026-10-18: the docstring names the ASCII "**Pick 2 -- Bot clone**" and "PICK 3 --" as
+# scope-ending lines, but this test held only the em-dash, and `_PICKED` read only the em-dash: a fix on
+# `_PICKED` as it stood passed here while his ASCII spelling still handed the bot's band to the card.
 @qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
-@pytest.mark.xfail(strict=True, reason="T-0073: exit_levels keeps the card's scope open through the bot picks that "
-                   "follow it (qa/lab.py:2119), so Pick 2's SL 3% / TP 6% read as the card's")
-def test_a_bot_picks_band_is_not_the_card_picks_exits():
-    said = lab.exit_levels(NEX_0143, [CARD])
+@pytest.mark.parametrize("answer", [NEX_0143, ASCII], ids=["em-dash", "ascii"])
+def test_a_bot_picks_band_is_not_the_card_picks_exits(answer):
+    said = lab.exit_levels(answer, [CARD])
     assert said[CARD] == {"tp": None, "sl": None}, (
         f"NEX-0143 gave the card no take-profit and no stop in %; read {said[CARD]} -- the bot Fibonacci "
         f"Phoenix's 'SL 3% / TP 6%' (Pick 2) and MACD Hunter's 'SL 4% / TP 8%' (Pick 3) are not his")
