@@ -1,0 +1,115 @@
+{
+  "schema": 2,
+  "run_id": "run-20261018T115553Z-3e9380f7",
+  "started_at": "2026-10-18T11:56:02+00:00",
+  "finished_at": "2026-10-18T11:56:15+00:00",
+  "git_head": "3e9380f7e800996cf5fb18c8956c0863dbcaa2bd",
+  "git_short": "3e9380f7",
+  "git_dirty": true,
+  "prereg_id": null,
+  "prereg_tag_sha": null,
+  "prereg_commit": null,
+  "platform_fingerprint": "sha256:f366ae61c1404efed065b69f38419670a4742682766b27adeac23050026f0d7b",
+  "fingerprint_parts": {
+    "/.well-known/mcp.json": "5c035236d6430f402fbaf05198b99bcce517723633b031f8b073f2927bbaa35a",
+    "/.well-known/agent-card.json": "140c9170c511fdfb0020ed64a17d94aa930b5a5324b694ee225ecced7f762e88",
+    "/.well-known/agent-skills.json": "b0592b7e51942365f9c61fd46bd233118cabf591f7ff46d7387f9311b5a3a7c6",
+    "/.well-known/ai-plugin.json": "49ac70f92657106334c0845f5c1045a3ccbd06e53d54f9e7c99b6f1c6d7d370d",
+    "/.well-known/udc.json": "1ec34383ede550c71fb3e81b989b8b92b0da3ce7ccbdc497c9edf5a8fcbd6c14",
+    "/openapi.json": "0a9665aff4a0ed460a7dd49f3322fee2cd41d38c812c97f2286aec8e41e61c05",
+    "/openapi-public.json": "cafef39193f2c4dffcc4c53a9cdba5c04980b8a62f7c02210587b79fffd0d8b8",
+    "/llms.txt": "4687714373e36e1a5bc0add488a1e19695c5b03f1c5ed7ef82f7e45e283de293",
+    "mcp:tools/list:none": "1067e3d4bca4e2848dc2675778a10b89150eb3331f315325dd6db72a5c2d1cc9"
+  },
+  "fingerprint_errors": {},
+  "fingerprint_drifted": false,
+  "fingerprint_changed_parts": [],
+  "identities_present": {
+    "anon": true,
+    "trusted": true,
+    "recognized": false
+  },
+  "python_version": "3.13.13",
+  "pytest_version": "8.3.4",
+  "selector": "tests/rest/test_traffic_mine_accepts_the_key_its_page_names.py -q --no-header --tb=no",
+  "selector_full": false,
+  "narrowing": [],
+  "paths": [
+    "tests/rest/test_traffic_mine_accepts_the_key_its_page_names.py"
+  ],
+  "allow_mutate": false,
+  "collected": [
+    "tests/rest/test_traffic_mine_accepts_the_key_its_page_names.py::test_traffic_mine_accepts_the_key_its_page_names"
+  ],
+  "results": [
+    {
+      "nodeid": "tests/rest/test_traffic_mine_accepts_the_key_its_page_names.py::test_traffic_mine_accepts_the_key_its_page_names",
+      "component": "rest.traffic",
+      "tier": "SAFE",
+      "surface": "rest",
+      "claim_id": "traffic-mine-accepts-the-key-its-page-names",
+      "ticket_id": null,
+      "volatile": false,
+      "outcome": "failed",
+      "phase": "call",
+      "role": "verdict",
+      "duration_ms": 2894,
+      "evidence_ids": [
+        "adee7cc2e7a333543ab0575a67d1183dc975e71e738cf5de44b703e8b74ac02c",
+        "38753f2b5e4b0108ee2141fb0a81351565beb3abc9b8fa86c85deebb1cf8d8ba",
+        "b8fc5351bf24023b3fa1783f9965135e6be0c9e6d00ed38f0550499a6b481513"
+      ],
+      "measurement": {
+        "verdict": "failed",
+        "reason": "/traffic/mine tells agents: \"Traffic for every public page you created (features, Build it Better apps, companies, event cards, creator perps, Agent League pages): GET https://cymetica.com/api/v1/traffic/mine?days=14 with your api_key as X-API-Key.\" but GET /api/v1/traffic/mine?days=14 with that X-API-Key answers HTTP 401 'Sign in to see traffic for what you created.', while the same key in the same header answers HTTP 200 on /api/v1/company/mine. The endpoint accepts only a signed-in browser session although its own page sends agents to it with the key",
+        "left": {
+          "traffic_mine_status": 401
+        },
+        "right": {
+          "traffic_mine_status": 200
+        },
+        "sources": {
+          "page": "/traffic/mine (id=agentPasteBar, data-agent-prompt)",
+          "endpoint": "/api/v1/traffic/mine?days=14",
+          "control": "/api/v1/company/mine (200)",
+          "credential": "X-API-Key, trusted tier (value never recorded)"
+        },
+        "provenance": {},
+        "evidence_ids": [],
+        "fingerprint": null,
+        "claim_id": "traffic-mine-accepts-the-key-its-page-names",
+        "role": "verdict",
+        "population": {
+          "prompt_sentence": "Traffic for every public page you created (features, Build it Better apps, companies, event cards, creator perps, Agent League pages): GET https://cymetica.com/api/v1/traffic/mine?days=14 with your api_key as X-API-Key.",
+          "control": "/api/v1/company/mine",
+          "control_status": 200,
+          "detail": "Sign in to see traffic for what you created."
+        }
+      },
+      "check_fingerprint": "d5951c184b29f50a5d327b440f16c9599c76b660c203731c9fcfc5702e456301",
+      "helpers_fingerprint": "8c6af562f03cbd684633ae3e61c7ddda699fc57f81e05faf54cc5998c804b205",
+      "helpers_formula": 2,
+      "reason": null,
+      "failure_repr": "E   AssertionError: /traffic/mine tells agents: \"Traffic for every public page you created (features, Build it Better apps, companies, event cards, creator perps, Agent League pages): GET https://cymetica.com/api/v1/traffic/mine?days=14 with your api_key as X-API-Key.\" but GET /api/v1/traffic/mine?days=14 with that X-API-Key answers HTTP 401 'Sign in to see traffic for what you created.', while the same key in the same header answers HTTP 200 on /api/v1/company/mine. The endpoint accepts only a signed-in browser session although its own page sends agents to it with the key\n      left  = {'traffic_mine_status': 401}\n      right = {'traffic_mine_status': 200}"
+    }
+  ],
+  "totals": {
+    "failed": 1
+  },
+  "ratelimit": {
+    "requests": 3,
+    "limit": 2000,
+    "remaining": 1994,
+    "fraction_used": 0.003,
+    "exhausted": false
+  },
+  "record_integrity": {
+    "consistent": true,
+    "results_not_in_collected": [],
+    "collected_not_run": [],
+    "budget_truncated": false
+  },
+  "code_dirty_after": false,
+  "fingerprint_after": "sha256:f366ae61c1404efed065b69f38419670a4742682766b27adeac23050026f0d7b",
+  "exit_status": 1
+}

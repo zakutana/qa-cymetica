@@ -449,8 +449,79 @@
     var st = $('uvstage'); st.classList.remove('is3d'); st.classList.add('is2d'); $('uvbans').innerHTML = '';
     uv = new CO.Universe($('uvmap'), st, uvHooks()); uv.layout(); finishShow(true);
   }
-  // the 3D map when the browser can draw it (WebGPU, or WebGL2), the flat one otherwise
+  /* ---------------- the Universe as the operator's picture ---------------- */
+  // His orrery (look-universe.webp, 1533 x 820) is the Universe's first look: "they can be pictures, only the
+  // office has to be interactive" (2026-10-18). Each station in it opens the sample company of that name; the
+  // live 3D orrery stays one click away, and is where our own station is found. Positions are the picture's
+  // pixels: the name's centre, its top, and the bottom of the station under it.
+  var UVPIC = { w: 1533, h: 820, core: [790, 268],
+    st: [['Sigma Collective', 553, 98, 238], ['Night Owl Trading', 1058, 126, 272], ['Ion Analytics', 1362, 127, 250], ['Giga Fund', 245, 225, 345],
+      ['League Lab', 583, 375, 500], ['Vector Trading', 963, 333, 500], ['Ion Analytics', 1361, 348, 455], ['Bull Club', 293, 516, 630],
+      ['Bull Club', 499, 599, 750], ['Quasar Fund', 958, 552, 690], ['Laser Station', 1258, 510, 650]] };
+  function uvView() { try { return localStorage.getItem('co.uvview') || 'pic'; } catch (e) { return 'pic'; } }
+  function setUvView(v) { try { localStorage.setItem('co.uvview', v); } catch (e) { /* fine */ } showUniverse(); }
+  function byName(n) { for (var i = 0; i < CO.UNIVERSE.length; i++) if (CO.UNIVERSE[i].name === n) return CO.UNIVERSE[i]; return null; }
+  function buildPic() {
+    var host = $('uvpic'); if (host.getAttribute('data-built')) return;
+    host.setAttribute('data-built', '1');
+    var pc = function (v, of) { return (v / of * 100).toFixed(3) + '%'; }, html = '<div class="uvpic-in" id="uvpic-in"><img src="look-universe.webp" alt="" draggable="false">';
+    UVPIC.st.forEach(function (s) {
+      var w = 210, x = s[1] - w / 2, y = s[2] - 12, h = s[3] - y;
+      html += '<button class="uvhs" data-name="' + esc(s[0]) + '" style="left:' + pc(x, UVPIC.w) + ';top:' + pc(y, UVPIC.h) + ';width:' + pc(w, UVPIC.w) + ';height:' + pc(h, UVPIC.h) + '"></button>';
+    });
+    html += '<div class="uvpic-core" style="left:' + pc(UVPIC.core[0], UVPIC.w) + ';top:' + pc(UVPIC.core[1], UVPIC.h) + '"></div>';
+    // the picture's own corner panel is painted; ours, with our company, covers it
+    html += '</div><button class="uvpic-card" id="uvpic-card"></button>';
+    host.innerHTML = html;
+    Array.prototype.forEach.call(host.querySelectorAll('.uvhs'), function (b) {
+      b.addEventListener('mouseenter', function (e) { picTip(b, e); });
+      b.addEventListener('mousemove', function (e) { picTip(b, e); });
+      b.addEventListener('mouseleave', function () { $('uvstage').querySelector('.tip').hidden = true; });
+    });
+    if (window.ResizeObserver) new ResizeObserver(fitPic).observe($('uvstage'));
+  }
+  function picTip(b, e) {
+    var c = byName(b.getAttribute('data-name')), tip = $('uvstage').querySelector('.tip'); if (!c) return;
+    tip.innerHTML = CO.uvTip(c.id, { c: c }, {}); tip.hidden = false;
+    var r = $('uvstage').getBoundingClientRect(), x = e.clientX - r.left + 16, y = e.clientY - r.top + 16;
+    if (x + tip.offsetWidth > r.width - 8) x = e.clientX - r.left - tip.offsetWidth - 16;
+    if (y + tip.offsetHeight > r.height - 8) y = e.clientY - r.top - tip.offsetHeight - 16;
+    tip.style.left = x + 'px'; tip.style.top = y + 'px';
+  }
+  // the picture covers the stage, centred, as a photo would
+  function fitPic() {
+    var st = $('uvstage'), inn = $('uvpic-in'); if (!inn) return;
+    var W = st.clientWidth, H = st.clientHeight, s = Math.max(W / UVPIC.w, H / UVPIC.h);
+    inn.style.width = (UVPIC.w * s) + 'px'; inn.style.height = (UVPIC.h * s) + 'px';
+    var ox = (W - UVPIC.w * s) / 2, oy = (H - UVPIC.h * s) / 2;
+    inn.style.left = ox + 'px'; inn.style.top = oy + 'px';
+    // our card sits over the picture's painted corner panel, a little larger (the picture drifts), kept on the stage
+    var card = $('uvpic-card'), cw = 236 * s, bottom = Math.min(oy + 818 * s, H), top = Math.min(oy + 690 * s, bottom - 104);
+    card.style.width = cw + 'px'; card.style.left = Math.min(ox + 1292 * s, W - cw) + 'px';
+    card.style.top = top + 'px'; card.style.height = (bottom - top) + 'px';
+  }
+  function picCard() {
+    var S = CO.S, n = S.departments.length, w = S.departments.filter(function (d) { return CO.deptView(d).status === 'working'; }).length;
+    setHTML($('uvpic-card'), '<span class="k">YOUR COMPANY</span><b>' + esc(S.company.name) + '</b><span>' + n + ' departments · <em>' + w + ' working</em></span><span class="go">Open the office →</span>');
+    var pub = CO.UNIVERSE.filter(function (c) { return c.public; }).length + (CO.profile().public ? 1 : 0);
+    uvStats({ companies: CO.UNIVERSE.length + 1, public: pub, working: w });
+  }
+  function openFromPic(name) {
+    var c = byName(name); if (!c) return;
+    if (!c.public) return privateCard(c);
+    try { sessionStorage.setItem('uv.from', String(c.id)); } catch (e) { /* fine */ }
+    $('uvfade').hidden = false; setTimeout(function () { location.href = 'index.html?visit=' + c.id; }, 350);
+  }
+  // the picture first; the live map when asked for
   function showUniverse() {
+    var pic = uvView() === 'pic';
+    $('uvstage').classList.toggle('pic', pic);
+    Array.prototype.forEach.call(document.querySelectorAll('#uvvt [data-uvv]'), function (b) { b.classList.toggle('on', b.getAttribute('data-uvv') === (pic ? 'pic' : '3d')); });
+    if (pic) { buildPic(); fitPic(); picCard(); return; }
+    show3D();
+  }
+  // the 3D map when the browser can draw it (WebGPU, or WebGL2), the flat one otherwise
+  function show3D() {
     if (!uv) {
       var t0 = Date.now();
       $('uvstage').classList.add('loading');
@@ -480,7 +551,7 @@
       }
     });
   }
-  function renderUniverse() { if (uv) uv.setMine(mineForMap()); }
+  function renderUniverse() { if (uvView() === 'pic' && $('uvpic-card')) picCard(); if (uv) uv.setMine(mineForMap()); }
   // Portfolio: build products, bring in users, earn. The flow first, as numbers; then one card per app.
   function renderPortfolio() {
     var apps = CO.apps(), Rd = CO.PORTFOLIO_READ, R = CO.RATE;
@@ -982,6 +1053,11 @@
       if (RO && roBlocked(t)) { e.preventDefault(); toast('Read only: only @' + CO.S.company.owner + ' can change this.'); return; }
       if (t.closest('#ro-back')) { location.href = 'index.html#universe'; return; }
       if (t.closest('#sim-new')) return createCompanyModal();
+      var uvb = t.closest('#uvvt [data-uvv]'); if (uvb) return setUvView(uvb.getAttribute('data-uvv'));
+      var hs = t.closest('.uvhs'); if (hs) return openFromPic(hs.getAttribute('data-name'));
+      if (t.closest('#uvpic-card')) return setTab('office');
+      // our own station is on the live map only: Mine opens it there
+      if (t.closest('#uv-me') && uvView() === 'pic') { setUvView('3d'); setTimeout(function () { if (uv) uv.flyTo(0); }, 3600); return; }
       if (uv) {
         if (t.closest('#uv-in')) return uv.zoom(0.78);
         if (t.closest('#uv-out')) return uv.zoom(1.28);

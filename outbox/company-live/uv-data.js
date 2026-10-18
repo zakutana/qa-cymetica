@@ -211,6 +211,15 @@
         rules: pub ? keys.map(function (k) { return ROLE[k].rule; }) : [] });
     }
   })();
+  // The operator's picture of the Universe names its stations; the samples carry the same names, colours and
+  // shapes, so a click on one there opens that company here (2026-10-18). A generated sample that happened to
+  // draw one of these names keeps its own with " Labs" after it.
+  [['Sigma Collective', 'blue', 'tower'], ['Ion Analytics', 'green', 'orbital'], ['Giga Fund', 'red', 'vault'], ['Vector Trading', 'cyan', 'tower'],
+    ['Bull Club', 'red', 'pyramid'], ['Quasar Fund', 'green', 'dome'], ['Laser Station', 'red', 'rocket']].forEach(function (p, i) {
+    var c = CO.UNIVERSE.filter(function (x) { return x.id === 124 + i; })[0]; if (!c) return;
+    CO.UNIVERSE.forEach(function (o) { if (o !== c && o.name === p[0]) o.name = p[0] + ' Labs'; });
+    c.name = p[0]; c.accent = p[1]; c.skin = p[2]; c.public = true;
+  });
   CO.uvCompany = function (id) {
     for (var i = 0; i < CO.UNIVERSE.length; i++) if (CO.UNIVERSE[i].id === id) return CO.UNIVERSE[i];
     return null;

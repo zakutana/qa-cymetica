@@ -234,3 +234,24 @@ body.ro #dr-ch-text { cursor: default; }
   .uvlegend { display: none; }
   .uvsum { display: none; }
 }
+
+/* ---------- the Universe as the operator's picture ---------- */
+.uvpic { position: absolute; inset: 0; overflow: hidden; display: none; background: #03070a; z-index: 1; }
+.uvstage.pic .uvpic { display: block; }
+.uvstage.pic .uv3d, .uvstage.pic .uvmap, .uvstage.pic .uvbans, .uvstage.pic .stars, .uvstage.pic .uvlegend,
+.uvstage.pic #uv-in, .uvstage.pic #uv-out, .uvstage.pic #uv-fit { display: none; }
+.uvpic-in { position: absolute; transform-origin: 52% 40%; animation: uvdrift 46s ease-in-out infinite alternate; }
+.uvpic-in img { width: 100%; height: 100%; display: block; user-select: none; }
+@keyframes uvdrift { from { transform: scale(1); } to { transform: scale(1.04) translate(-.5%, .3%); } }
+.uvhs { position: absolute; background: transparent; border: 1px solid transparent; border-radius: 10px; cursor: pointer; transition: box-shadow .2s, border-color .2s, background .2s; }
+.uvhs:hover { border-color: rgba(127, 211, 234, .55); background: rgba(127, 211, 234, .05); box-shadow: 0 0 26px rgba(0, 207, 255, .28); }
+.uvpic-core { position: absolute; width: 9%; aspect-ratio: 1; transform: translate(-50%, -50%); border-radius: 50%; pointer-events: none;
+  background: radial-gradient(circle, rgba(220, 250, 255, .35), rgba(0, 207, 255, .12) 45%, transparent 70%); animation: uvcore 3.2s ease-in-out infinite; mix-blend-mode: screen; }
+@keyframes uvcore { 50% { opacity: .45; transform: translate(-50%, -50%) scale(1.12); } }
+.uvpic-card { position: absolute; display: flex; flex-direction: column; justify-content: center; gap: 3px; padding: 10px 14px; text-align: left; cursor: pointer;
+  background: #080d14; border: 1px solid rgba(127, 211, 234, .4); border-radius: 10px; box-shadow: 0 6px 20px rgba(0, 0, 0, .5); }
+.uvpic-card .k { font: 700 9px 'JetBrains Mono'; letter-spacing: .14em; color: var(--dim2); }
+.uvpic-card b { font: 400 13px 'Archivo Black', sans-serif; color: var(--text); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.uvpic-card span { font: 600 10px 'JetBrains Mono'; color: var(--dim); } .uvpic-card em { color: var(--cyan); font-style: normal; }
+.uvpic-card .go { color: var(--green); }
+.uvpic-card:hover { border-color: rgba(0, 255, 136, .6); }
