@@ -1044,41 +1044,268 @@ function preview(el, o) {
 // the furniture and the light itself are the site's navy-black under white light, the structure Cymetica green.
 const STC = { working: 0x00cfff, queued: 0x3b82f6, waiting: 0xff4444, idle: 0x7f93ad };
 const TONEC = { cyan: '#00cfff', red: '#ff4444', blue: '#dfe6ee', dim: '#a9b8cc' };   // "Up next" white on a plate; its dot stays blue
-const OFFICE = { bg: 0x05070a, lamp: 0xeef3f8, agent: 0x4d5d72, agentE: 0x0b0f14, mon: 0x10202a };
+const OFFICE = { bg: 0x020409, lamp: 0xf2f6fa, mon: 0x6f8f80 };
+const WH = 1.9;   // a room's glass walls
 const OM = {};
+
+/* ---------------- space: the sky the office floats in ---------------- */
+function ctex(w, h, draw) {
+  const c = document.createElement('canvas'); c.width = w; c.height = h; draw(c.getContext('2d'), w, h);
+  const t = new THREE.CanvasTexture(c); t.colorSpace = THREE.SRGBColorSpace; t.anisotropy = 8; return t;
+}
+const sstep = (a, b, x) => { const t = Math.min(1, Math.max(0, (x - a) / (b - a))); return t * t * (3 - 2 * t); };
+// value noise in octaves, seeded: what nebulae, rock and dust are drawn from
+function vnoise(seed) {
+  const h = (x, y) => { let n = Math.imul(x, 374761393) ^ Math.imul(y, 668265263) ^ Math.imul(seed + 1, 982451653); n = Math.imul(n ^ (n >>> 13), 1274126177); return ((n ^ (n >>> 16)) >>> 0) / 4294967296; };
+  const n2 = (x, y) => {
+    const xi = Math.floor(x), yi = Math.floor(y), xf = x - xi, yf = y - yi, u = xf * xf * (3 - 2 * xf), v = yf * yf * (3 - 2 * yf);
+    const a = h(xi, yi), b = h(xi + 1, yi), c = h(xi, yi + 1), d = h(xi + 1, yi + 1);
+    return a + (b - a) * u + (c - a) * v + (a - b - c + d) * u * v;
+  };
+  return (x, y, oct = 5) => { let s = 0, a = 0.5, f = 1, n = 0; for (let i = 0; i < oct; i++) { s += a * n2(x * f, y * f); n += a; a *= 0.5; f *= 2.03; } return s / n; };
+}
+// a direction in the sky, measured from the office's home view: azimuth (+ right) and elevation, in degrees
+function skyDir(az, el) {
+  const a = az * Math.PI / 180, e = el * Math.PI / 180, f = new THREE.Vector3(-1, 0, -1).normalize(), r = new THREE.Vector3(1, 0, -1).normalize();
+  return f.multiplyScalar(Math.cos(a)).addScaledVector(r, Math.sin(a)).multiplyScalar(Math.cos(e)).add(new THREE.Vector3(0, Math.sin(e), 0)).normalize();
+}
+// a nebula: warped noise inside a ragged edge, deep colour where it is thin, bright filaments where it is dense,
+// dark dust lanes across it. Alpha carries the density, so it adds onto the black.
+function nebTex(seed, deep, mid, hi) {
+  const key = 'neb' + seed; if (TX[key]) return TX[key];
+  const N = 384, f = vnoise(seed), f2 = vnoise(seed + 11), c = document.createElement('canvas'); c.width = c.height = N;
+  const g = c.getContext('2d'), img = g.createImageData(N, N), d = img.data;
+  for (let j = 0; j < N; j++) for (let i = 0; i < N; i++) {
+    const x = i / N * 2 - 1, y = j / N * 2 - 1, rr = Math.sqrt(x * x + y * y); if (rr > 1.05) continue;
+    const edge = sstep(1.0, 0.15, rr + 0.5 * (f(x * 1.6 + 3, y * 1.6 + 1, 3) - 0.5)); if (edge <= 0) continue;
+    const q = f(x * 2.1 + 1.7, y * 2.1 + 9.2, 4), n = f(x * 2.7 + q * 2.2, y * 2.7 + q * 2.2 + 3.1, 5);
+    let den = edge * sstep(0.3, 0.66, n);
+    den *= 1 - 0.6 * sstep(0.5, 0.72, f2(x * 4.5 + 2, y * 4.5 + 7, 4));
+    const hh = sstep(0.56, 0.8, n) * edge, k = (j * N + i) * 4;
+    for (let ch = 0; ch < 3; ch++) d[k + ch] = Math.min(255, deep[ch] + (mid[ch] - deep[ch]) * den + hi[ch] * hh);
+    d[k + 3] = Math.min(255, (den * 1.1 + hh * 0.7) * 255);
+  }
+  g.putImageData(img, 0, 0);
+  const t = new THREE.CanvasTexture(c); t.colorSpace = THREE.SRGBColorSpace; TX[key] = t; return t;
+}
+function starTex() {
+  return TX.star || (TX.star = ctex(64, 64, (g) => {
+    const gr = g.createRadialGradient(32, 32, 0, 32, 32, 32);
+    gr.addColorStop(0, 'rgba(255,255,255,1)'); gr.addColorStop(0.1, 'rgba(255,255,255,.95)'); gr.addColorStop(0.28, 'rgba(200,235,255,.2)'); gr.addColorStop(1, 'rgba(200,235,255,0)');
+    g.fillStyle = gr; g.fillRect(0, 0, 64, 64);
+  }));
+}
+// The sky: a group that rides with the camera (frame() moves it), so all of it is at infinity. Teal nebulae up
+// and to the left of the home view as in the operator's picture, fainter blue and green ones round the rest; faint
+// stars are points (one pixel), the bright ones small quads, since WebGPU draws every point one pixel wide.
+function spaceSky() {
+  const g = new THREE.Group(), R = rng(31), D = 380;
+  const PAL = { teal: [[0, 40, 55], [0, 112, 122], [80, 190, 185]], blue: [[6, 26, 80], [30, 95, 200], [140, 190, 255]], green: [[0, 60, 45], [0, 150, 110], [120, 250, 190]] };
+  [[-36, -12, 66, 8, 0.4, 'teal'], [-62, -32, 56, 3, 0.55, 'teal'], [-6, -8, 44, 37, 0.35, 'blue'], [34, -52, 60, 13, 0.4, 'blue'],
+    [150, -15, 80, 17, 0.55, 'teal'], [95, -35, 60, 23, 0.35, 'green'], [-130, -30, 70, 29, 0.45, 'blue']].forEach(([az, el, size, seed, op, tone]) => {
+    const m = new THREE.Mesh(G.plane, new THREE.MeshBasicMaterial({ map: nebTex(seed, ...PAL[tone]), transparent: true, opacity: op, blending: THREE.AdditiveBlending, depthWrite: false, fog: false }));
+    const s = 2 * D * Math.tan(size * Math.PI / 360);
+    m.scale.set(s, s, 1); m.position.copy(skyDir(az, el).multiplyScalar(D)); m.lookAt(0, 0, 0); m.rotateZ(R() * 6.28); m.renderOrder = -10; m.frustumCulled = false; g.add(m);
+  });
+  const rnd = () => { const u = R() * 2 - 1, th = R() * Math.PI * 2, s = Math.sqrt(1 - u * u); return new THREE.Vector3(Math.cos(th) * s, u, Math.sin(th) * s); };
+  const N = 3200, pos = new Float32Array(N * 3), col = new Float32Array(N * 3), cc = new THREE.Color();
+  for (let i = 0; i < N; i++) {
+    pos.set(rnd().multiplyScalar(360).toArray(), i * 3);
+    cc.set(R() < 0.1 ? 0x9fe8ff : 0xeef4fa).multiplyScalar(0.25 + R() * R() * 1.1); col.set([cc.r, cc.g, cc.b], i * 3);
+  }
+  const pg = new THREE.BufferGeometry(); pg.setAttribute('position', new THREE.BufferAttribute(pos, 3)); pg.setAttribute('color', new THREE.BufferAttribute(col, 3));
+  const pts = new THREE.Points(pg, new THREE.PointsMaterial({ vertexColors: true, size: 1, sizeAttenuation: false, fog: false, depthWrite: false })); pts.frustumCulled = false; g.add(pts);
+  const B = 240, im = new THREE.InstancedMesh(G.plane, new THREE.MeshBasicMaterial({ map: starTex(), transparent: true, blending: THREE.AdditiveBlending, depthWrite: false, fog: false }), B), o = new THREE.Object3D();
+  for (let i = 0; i < B; i++) {
+    o.position.copy(rnd().multiplyScalar(350)); o.lookAt(0, 0, 0); o.scale.setScalar(0.9 + R() * R() * 2.8); o.updateMatrix(); im.setMatrixAt(i, o.matrix);
+    im.setColorAt(i, cc.set(R() < 0.14 ? 0x9fe8ff : 0xffffff).multiplyScalar(0.55 + R() * 0.75));
+  }
+  im.frustumCulled = false; g.add(im);
+  return g;
+}
+// what shiny surfaces see: a dark room with soft panels of light overhead and a cyan one low on a side
+function envTex() {
+  if (TX.env) return TX.env;
+  const t = ctex(512, 256, (g, W, H) => {
+    const gr = g.createLinearGradient(0, 0, 0, H); gr.addColorStop(0, '#46525f'); gr.addColorStop(0.42, '#121820'); gr.addColorStop(1, '#040609'); g.fillStyle = gr; g.fillRect(0, 0, W, H);
+    [[0.18, 0.16, 0.18, 0.08, 'rgba(255,255,255,.95)'], [0.55, 0.1, 0.22, 0.07, 'rgba(255,255,255,.8)'], [0.82, 0.22, 0.1, 0.1, 'rgba(255,255,255,.6)'], [0.36, 0.4, 0.12, 0.1, 'rgba(0,207,255,.45)']].forEach(([x, y, w, h, c]) => {
+      g.fillStyle = c; g.filter = 'blur(6px)'; g.fillRect(x * W, y * H, w * W, h * H); g.filter = 'none';
+    });
+  });
+  t.mapping = THREE.EquirectangularReflectionMapping; TX.env = t; return t;
+}
+
+/* ---------------- the office's surfaces ---------------- */
+function deckTex() {
+  return TX.deck || (TX.deck = ctex(512, 512, (g, W) => {
+    const R = rng(23), s = W / 8;
+    g.fillStyle = '#16191e'; g.fillRect(0, 0, W, W);
+    for (let i = 0; i < 8; i++) for (let j = 0; j < 8; j++) { const v = 46 + Math.floor(R() * 9); g.fillStyle = 'rgb(' + v + ',' + (v + 4) + ',' + (v + 9) + ')'; g.fillRect(i * s + 1.5, j * s + 1.5, s - 3, s - 3); }
+    g.fillStyle = 'rgba(255,255,255,.05)'; for (let i = 0; i < 8; i++) for (let j = 0; j < 8; j++) g.fillRect(i * s + 2, j * s + 2, s - 4, 2);
+  }));
+}
+function tileTex() {
+  return TX.tile || (TX.tile = ctex(512, 512, (g, W) => {
+    const R = rng(29), s = W / 7;
+    g.fillStyle = '#121519'; g.fillRect(0, 0, W, W);
+    for (let i = 0; i < 7; i++) for (let j = 0; j < 7; j++) { const v = 36 + Math.floor(R() * 6); g.fillStyle = 'rgb(' + v + ',' + (v + 4) + ',' + (v + 9) + ')'; g.fillRect(i * s + 1, j * s + 1, s - 2, s - 2); }
+    g.strokeStyle = 'rgba(255,255,255,.04)'; g.lineWidth = 1; for (let i = 0; i < 7; i++) for (let j = 0; j < 7; j++) { g.strokeRect(i * s + 8, j * s + 8, s - 16, s - 16); }
+  }));
+}
+// the hull's plates: four to a side, each with its recess, its seams and vents; some carry a lit blue window and
+// every one a row of small lights (the glow map holds only what shines)
+function hullTex() {
+  if (TX.hull) return TX.hull;
+  const W = 1024, H = 200, R = rng(41), lit = [0, 1, 2, 3].map(() => R() < 0.5);
+  const draw = (glow) => (g) => {
+    g.fillStyle = glow ? '#000000' : '#18202b'; g.fillRect(0, 0, W, H);
+    for (let p = 0; p < 4; p++) {
+      const x = p * 256;
+      if (!glow) {
+        g.fillStyle = '#222c39'; g.fillRect(x + 8, 10, 240, H - 20);
+        g.fillStyle = '#151c26'; g.fillRect(x + 26, 30, 204, H - 82);
+        g.fillStyle = 'rgba(255,255,255,.12)'; g.fillRect(x + 8, 10, 240, 3);
+        g.fillStyle = '#0b0f15'; g.fillRect(x, 0, 6, H);
+        for (let k = 0; k < 6; k++) g.fillRect(x + 40 + k * 30, H - 40, 18, 4);
+      }
+      if (lit[p]) { g.fillStyle = glow ? '#3b82f6' : '#1d3a6a'; g.fillRect(x + 36, 42, 184, 24); g.fillStyle = glow ? '#173a75' : '#1a2f55'; g.fillRect(x + 36, 72, 184, 14); }
+      for (let k = 0; k < 4; k++) { g.fillStyle = k % 3 ? (glow ? '#00cfff' : '#0b4c63') : (glow ? '#e6f4ff' : '#5b6876'); g.fillRect(x + 36 + k * 56, H - 24, 9, 6); }
+    }
+  };
+  TX.hull = ctex(W, H, draw(false)); TX.hullGlow = ctex(W, H, draw(true)); return TX.hull;
+}
+function rackTex() {
+  if (TX.rack) return TX.rack;
+  const draw = (glow) => (g, W, H) => {
+    g.fillStyle = glow ? '#000000' : '#13171c'; g.fillRect(0, 0, W, H);
+    const n = 12, step = (H - 20) / n;
+    for (let i = 0; i < n; i++) {
+      const y = 10 + i * step, h = step - 4, k = (i * 37) % 5;
+      if (!glow) { g.fillStyle = '#1e242b'; g.fillRect(8, y, W - 16, h); g.fillStyle = '#0c0f13'; for (let x = 14; x < W - 44; x += 6) g.fillRect(x, y + 3, 3, h - 6); }
+      g.fillStyle = k < 2 ? '#00ff88' : k < 4 ? '#00cfff' : '#3b82f6';
+      g.fillRect(W - 32, y + h / 2 - 2, 6, 4); if (k % 2) g.fillRect(W - 21, y + h / 2 - 2, 6, 4);
+    }
+    if (!glow) { g.strokeStyle = '#2b333c'; g.lineWidth = 5; g.strokeRect(2, 2, W - 4, H - 4); }
+  };
+  TX.rack = ctex(128, 320, draw(false)); TX.rackGlow = ctex(128, 320, draw(true)); return TX.rack;
+}
+function solarTex() {
+  return TX.solar || (TX.solar = ctex(256, 256, (g, W) => {
+    g.fillStyle = '#7f93ad'; g.fillRect(0, 0, W, W);
+    const n = 4, s = (W - 12) / n;
+    for (let i = 0; i < n; i++) for (let j = 0; j < n; j++) {
+      const x = 6 + i * s, y = 6 + j * s, gr = g.createLinearGradient(x, y, x + s, y + s);
+      gr.addColorStop(0, '#1d55bb'); gr.addColorStop(1, '#12387f'); g.fillStyle = gr; g.fillRect(x + 2, y + 2, s - 4, s - 4);
+      g.strokeStyle = 'rgba(120,170,255,.3)'; g.lineWidth = 1;
+      for (let k = 1; k < 4; k++) { const o = 2 + k * (s - 4) / 4; g.beginPath(); g.moveTo(x + o, y + 2); g.lineTo(x + o, y + s - 2); g.moveTo(x + 2, y + o); g.lineTo(x + s - 2, y + o); g.stroke(); }
+    }
+  }));
+}
+function rockTex() {
+  return TX.rock || (TX.rock = ctex(512, 256, (g, W, H) => {
+    const f = vnoise(5), img = g.createImageData(W, H), d = img.data;
+    for (let y = 0; y < H; y++) for (let x = 0; x < W; x++) { const v = 26 + f(x / 38, y / 38, 5) * 50 + f(x / 8 + 50, y / 8, 3) * 18, i = (y * W + x) * 4; d[i] = v; d[i + 1] = v + 2; d[i + 2] = v + 6; d[i + 3] = 255; }
+    g.putImageData(img, 0, 0);
+  }));
+}
+// the rock the office is built on: a dense icosphere pushed out by noise, flat on top where the hull sits, hanging
+// low underneath, faceted
+function bigRockGeo(seed, detail = 8) {
+  const g = new THREE.IcosahedronGeometry(1, detail), p = g.attributes.position, v = new THREE.Vector3(), f = vnoise(seed);
+  const n3 = (x, y, z, o) => (f(x, y, o) + f(y + 5.2, z + 1.3, o) + f(z + 9.1, x + 3.7, o)) / 3;
+  for (let i = 0; i < p.count; i++) {
+    v.fromBufferAttribute(p, i);
+    v.multiplyScalar(1 + 1.5 * (n3(v.x * 1.3 + 3, v.y * 1.3, v.z * 1.3, 4) - 0.5) + 1.4 * (n3(v.x * 4.2 + 7, v.y * 4.2, v.z * 4.2, 3) - 0.5) + 0.9 * (n3(v.x * 9 + 2, v.y * 9, v.z * 9, 2) - 0.5));
+    if (v.y > 0.2) v.y = 0.2 + (v.y - 0.2) * 0.2; else v.y *= 1.3;
+    p.setXYZ(i, v.x, v.y, v.z);
+  }
+  g.computeVertexNormals(); return g;
+}
+function monTex() {
+  return TX.mon || (TX.mon = ctex(256, 144, (g, W) => {
+    g.fillStyle = '#04140e'; g.fillRect(0, 0, W, 144);
+    g.strokeStyle = '#00ff88'; g.lineWidth = 3; g.beginPath();
+    let y = 96; for (let x = 12; x < W - 10; x += 12) { y = Math.max(40, Math.min(112, y + Math.sin(x * 0.13) * 13 + (x % 36 ? -5 : 9))); if (x === 12) g.moveTo(x, y); else g.lineTo(x, y); } g.stroke();
+    g.fillStyle = 'rgba(0,255,136,.35)'; for (let i = 0; i < 8; i++) g.fillRect(14 + i * 29, 120, 18, 14 - (i % 3) * 4);
+    g.fillStyle = '#00ff88'; g.fillRect(14, 12, 64, 8); g.fillStyle = 'rgba(0,255,136,.5)'; g.fillRect(14, 26, 104, 5);
+  }));
+}
+// a hologram's face: a faint cyan field, a border, a trace and bars
+function holoTex() {
+  return TX.holo || (TX.holo = ctex(256, 176, (g, W, H) => {
+    g.fillStyle = 'rgba(0,207,255,.12)'; g.fillRect(0, 0, W, H); g.strokeStyle = 'rgba(0,207,255,.95)'; g.lineWidth = 4; g.strokeRect(3, 3, W - 6, H - 6);
+    g.strokeStyle = 'rgba(0,255,136,.95)'; g.lineWidth = 3; g.beginPath(); for (let x = 14; x < W - 14; x += 6) { const y = H * 0.42 + Math.sin(x * 0.09) * 18 * Math.sin(x * 0.021); if (x === 14) g.moveTo(x, y); else g.lineTo(x, y); } g.stroke();
+    g.fillStyle = 'rgba(0,207,255,.8)'; for (let i = 0; i < 9; i++) g.fillRect(16 + i * 25, H - 20 - (i * 13 % 34), 14, 8 + (i * 13 % 34));
+  }));
+}
+// a grid of light that wraps round a cylinder: the Add department pad's wall
+function gridTex() {
+  if (TX.grid) return TX.grid;
+  const t = ctex(256, 64, (g, W, H) => {
+    g.fillStyle = 'rgba(0,207,255,.10)'; g.fillRect(0, 0, W, H);
+    g.strokeStyle = 'rgba(0,207,255,.75)'; g.lineWidth = 1.5;
+    for (let x = 0; x <= W; x += 8) { g.beginPath(); g.moveTo(x, 0); g.lineTo(x, H); g.stroke(); }
+    for (let y = 0; y <= H; y += 8) { g.beginPath(); g.moveTo(0, y); g.lineTo(W, y); g.stroke(); }
+    g.fillStyle = 'rgba(0,207,255,1)'; g.fillRect(0, 0, W, 4); g.fillRect(0, H - 4, W, 4);
+  });
+  t.wrapS = THREE.RepeatWrapping; t.repeat.set(8, 1); TX.grid = t; return t;
+}
+// the Manager's floor: rings and arcs of light round the dais, with ticks
+function hubFloorTex() {
+  return TX.hubf || (TX.hubf = ctex(512, 512, (g, W) => {
+    const c = W / 2; g.fillStyle = '#000000'; g.fillRect(0, 0, W, W); g.lineCap = 'round';
+    [[0.95, 3, 0.5, 0, 360], [0.84, 3, 0.75, 15, 150], [0.84, 3, 0.75, 195, 330], [0.72, 7, 0.28, 0, 360], [0.61, 2, 0.7, 100, 260], [0.61, 2, 0.7, 280, 420], [0.5, 12, 0.2, 0, 360]].forEach(([rr, lw, a, s0, s1]) => {
+      g.strokeStyle = 'rgba(0,207,255,' + a + ')'; g.lineWidth = lw; g.beginPath(); g.arc(c, c, rr * c, s0 * Math.PI / 180, s1 * Math.PI / 180); g.stroke();
+    });
+    g.strokeStyle = 'rgba(0,207,255,.55)'; g.lineWidth = 2;
+    for (let i = 0; i < 96; i++) { const a = i / 96 * Math.PI * 2, r0 = c * (i % 4 ? 0.9 : 0.87); g.beginPath(); g.moveTo(c + Math.cos(a) * r0, c + Math.sin(a) * r0); g.lineTo(c + Math.cos(a) * c * 0.93, c + Math.sin(a) * c * 0.93); g.stroke(); }
+  }));
+}
+// an engine's exhaust: bright at the nozzle, gone at the tail
+function plumeTex() {
+  return TX.plume || (TX.plume = ctex(32, 256, (g, W, H) => { const gr = g.createLinearGradient(0, 0, 0, H); gr.addColorStop(0, 'rgba(255,255,255,1)'); gr.addColorStop(0.35, 'rgba(255,255,255,.45)'); gr.addColorStop(1, 'rgba(255,255,255,0)'); g.fillStyle = gr; g.fillRect(0, 0, W, H); }));
+}
+function std(o) { return new THREE.MeshStandardMaterial(o); }
 function omats() {
   if (OM.tile) return;
-  const c = document.createElement('canvas'); c.width = c.height = 512; const g = c.getContext('2d');
-  // near-black tiles on a faint Cymetica-green grid
-  g.fillStyle = '#0c1015'; g.fillRect(0, 0, 512, 512);
-  g.strokeStyle = 'rgba(0,255,136,.14)'; g.lineWidth = 2;
-  for (let i = 0; i <= 7; i++) { const p = i * 512 / 7; g.beginPath(); g.moveTo(p, 0); g.lineTo(p, 512); g.stroke(); g.beginPath(); g.moveTo(0, p); g.lineTo(512, p); g.stroke(); }
-  const t = new THREE.CanvasTexture(c); t.colorSpace = THREE.SRGBColorSpace; t.anisotropy = 8;
-  OM.tile = new THREE.MeshStandardMaterial({ map: t, roughness: 0.38, metalness: 0.45 });
-  OM.glass = new THREE.MeshStandardMaterial({ color: 0x33424f, transparent: true, opacity: 0.34, roughness: 0.06, metalness: 0.4, depthWrite: false });
-  OM.frame = new THREE.MeshStandardMaterial({ color: 0x222c37, roughness: 0.45, metalness: 0.55 });
-  OM.desk = new THREE.MeshStandardMaterial({ color: 0x1b232d, roughness: 0.5, metalness: 0.35 });
-  OM.deskTop = new THREE.MeshStandardMaterial({ color: 0x2b3643, roughness: 0.35, metalness: 0.35 });
-  OM.dark = new THREE.MeshStandardMaterial({ color: 0x07090d, roughness: 0.45, metalness: 0.45 });
-  OM.head = new THREE.MeshStandardMaterial({ color: 0xa9b8cc, roughness: 0.6 });
-  OM.plinth = new THREE.MeshStandardMaterial({ color: 0x0c1016, roughness: 0.45, metalness: 0.55 });
-  // the hull under the floor: dark plates, their seams, a lighter lip along the top of each plate
-  const hc = document.createElement('canvas'); hc.width = 512; hc.height = 128; const hg = hc.getContext('2d');
-  hg.fillStyle = '#2a3442'; hg.fillRect(0, 0, 512, 128); hg.fillStyle = 'rgba(255,255,255,.08)';
-  for (let x = 0; x < 512; x += 64) hg.fillRect(x + 4, 6, 56, 4);
-  hg.strokeStyle = 'rgba(0,0,0,.65)'; hg.lineWidth = 3;
-  for (let x = 0; x <= 512; x += 64) { hg.beginPath(); hg.moveTo(x, 0); hg.lineTo(x, 128); hg.stroke(); }
-  hg.beginPath(); hg.moveTo(0, 70); hg.lineTo(512, 70); hg.stroke();
-  const ht = new THREE.CanvasTexture(hc); ht.colorSpace = THREE.SRGBColorSpace; ht.anisotropy = 4;
-  OM.hull = new THREE.MeshStandardMaterial({ map: ht, roughness: 0.5, metalness: 0.5 });
+  // matte where it is painted, a little gloss on the floors: the office is lit, it does not have to mirror anything
+  OM.deck = std({ map: deckTex(), roughness: 0.6, metalness: 0.2 });
+  OM.tile = std({ map: tileTex(), roughness: 0.5, metalness: 0.25 });
+  OM.hubTile = std({ map: tileTex(), color: 0x8fd6ea, roughness: 0.2, metalness: 0.3, emissive: 0x00cfff, emissiveIntensity: 0.04 });
+  OM.rim = std({ color: 0x3b4450, roughness: 0.42, metalness: 0.4 });
+  OM.rimDark = std({ color: 0x1b222b, roughness: 0.5, metalness: 0.35 });
+  OM.hull = std({ map: hullTex(), emissiveMap: TX.hullGlow, emissive: 0xffffff, emissiveIntensity: 1.1, roughness: 0.5, metalness: 0.35 });
+  OM.hullLow = std({ color: 0x141b25, roughness: 0.55, metalness: 0.35 });
+  OM.glass = std({ color: 0x9fc4d6, envMapIntensity: 0.25, transparent: true, opacity: 0.035, roughness: 0.04, metalness: 0.2, depthWrite: false, side: THREE.DoubleSide });
+  OM.wallDark = std({ color: 0x161b21, roughness: 0.5, metalness: 0.3 });
+  OM.frame = std({ color: 0x2e3641, roughness: 0.42, metalness: 0.45 });
+  OM.desk = std({ color: 0x1b2026, roughness: 0.45, metalness: 0.3 });
+  OM.deskTop = std({ color: 0x2a3038, roughness: 0.28, metalness: 0.3 });
+  OM.dark = std({ color: 0x0b0e12, roughness: 0.35, metalness: 0.45 });
+  OM.plinth = std({ color: 0x1a2028, roughness: 0.45, metalness: 0.4 });
+  OM.white = std({ color: 0xd6dce3, roughness: 0.42, metalness: 0.12 });
+  OM.white2 = std({ color: 0x9aa7b6, roughness: 0.48, metalness: 0.2 });
+  OM.rack = std({ color: 0x14181d, roughness: 0.4, metalness: 0.45 });
+  OM.rackFace = std({ map: rackTex(), emissiveMap: TX.rackGlow, emissive: 0xffffff, emissiveIntensity: 1.3, roughness: 0.35, metalness: 0.4 });
+  OM.solar = std({ map: solarTex(), roughness: 0.22, metalness: 0.5, emissive: 0x3b82f6, emissiveIntensity: 0.08 });
+  OM.engine = std({ color: 0x4a5462, roughness: 0.32, metalness: 0.6 });
+  OM.engineDark = std({ color: 0x1a2028, roughness: 0.4, metalness: 0.5, side: THREE.DoubleSide });
+  OM.rock = std({ map: rockTex(), roughness: 0.95, metalness: 0.02, flatShading: true });
+  OM.pot = std({ color: 0x232a33, roughness: 0.5, metalness: 0.3 });
+  OM.bush = std({ color: 0x1f6b45, roughness: 0.85, emissive: 0x00ff88, emissiveIntensity: 0.04 });
+  OM.holo = new THREE.MeshBasicMaterial({ map: holoTex(), transparent: true, blending: THREE.AdditiveBlending, depthWrite: false, side: THREE.DoubleSide });
+  OM.plume = new THREE.MeshBasicMaterial({ map: plumeTex(), color: new THREE.Color(0x00cfff).multiplyScalar(0.9), opacity: 0.8, transparent: true, blending: THREE.AdditiveBlending, depthWrite: false, side: THREE.DoubleSide });
+  OM.dash = emis('#dfe6ee', 0.55);
   // the vault's coins: ET10 green, USDC blue, both metal with their own light
-  OM.coinG = new THREE.MeshStandardMaterial({ color: 0x0f5a3a, emissive: 0x00ff88, emissiveIntensity: 0.35, metalness: 0.7, roughness: 0.3 });
-  OM.coinB = new THREE.MeshStandardMaterial({ color: 0x1b3a6b, emissive: 0x3b82f6, emissiveIntensity: 0.5, metalness: 0.7, roughness: 0.3 });
+  OM.coinG = std({ color: 0x0f5a3a, emissive: 0x00ff88, emissiveIntensity: 0.35, metalness: 0.7, roughness: 0.3 });
+  OM.coinB = std({ color: 0x1b3a6b, emissive: 0x3b82f6, emissiveIntensity: 0.5, metalness: 0.7, roughness: 0.3 });
   // astronauts: a white suit, a helmet, a pack
-  OM.suit = new THREE.MeshStandardMaterial({ color: 0xdfe6ee, roughness: 0.55, metalness: 0.1 });
-  OM.pack = new THREE.MeshStandardMaterial({ color: 0x8a99ab, roughness: 0.5, metalness: 0.3 });
-  OM.capsule = new THREE.CapsuleGeometry(0.17, 0.34, 4, 14);
+  OM.suit = std({ color: 0xe6ebf0, roughness: 0.5, metalness: 0.08 });
+  OM.pack = std({ color: 0x8a99ab, roughness: 0.5, metalness: 0.25 });
+  OM.capsule = new THREE.CapsuleGeometry(0.2, 0.4, 4, 14);
   OM.green = amat('#00ff88'); OM.cyan = amat('#00cfff'); OM.blue = amat('#3b82f6'); OM.red = amat('#ff4444');
+  G.bigRock = bigRockGeo(11, 16); G.smallRock = bigRockGeo(27, 3);
+  G.plume = new THREE.CylinderGeometry(0.42, 0.05, 1, 24, 1, true);
 }
 // what a layout, a selection or a station built for itself goes back to the GPU when it is cleared; the shared
 // geometries (G, OM.capsule), materials (M, AM, OM) and textures (TX) stay, since the next one draws with them
@@ -1111,7 +1338,7 @@ function drawWall(s, title, sub, col, mode) {
   g.fillStyle = '#070a0f'; g.fillRect(0, 0, W, H);
   g.strokeStyle = col; g.lineWidth = 6; g.strokeRect(3, 3, W - 6, H - 6);
   g.fillStyle = col; g.font = '700 ' + Math.round(H * 0.2) + 'px JetBrains Mono, monospace'; g.textBaseline = 'top';
-  const fit = (t, size) => { let s2 = String(t || ''); while (s2.length > 3 && g.measureText(s2).width > W - 40) s2 = s2.slice(0, -2); return s2 !== t ? s2.replace(/.$/, '…') : s2; };
+  const fit = (t) => { let s2 = String(t || ''); while (s2.length > 3 && g.measureText(s2).width > W - 40) s2 = s2.slice(0, -2); return s2 !== t ? s2.replace(/.$/, '…') : s2; };
   g.fillText(fit(title), 20, H * 0.14);
   g.fillStyle = '#7f93ad'; g.font = '500 ' + Math.round(H * 0.14) + 'px JetBrains Mono, monospace';
   g.fillText(fit(sub), 20, H * 0.44);
@@ -1153,12 +1380,12 @@ function padTex() {
   if (TX.pad) return TX.pad;
   const c = document.createElement('canvas'); c.width = c.height = 512; const g = c.getContext('2d');
   g.save(); g.beginPath(); g.arc(256, 256, 250, 0, Math.PI * 2); g.clip();
-  const gr = g.createRadialGradient(256, 256, 0, 256, 256, 250); gr.addColorStop(0, 'rgba(0,207,255,.16)'); gr.addColorStop(1, 'rgba(0,207,255,.04)');
+  const gr = g.createRadialGradient(256, 256, 0, 256, 256, 250); gr.addColorStop(0, 'rgba(0,207,255,.14)'); gr.addColorStop(1, 'rgba(0,207,255,.3)');
   g.fillStyle = gr; g.fillRect(0, 0, 512, 512);
-  g.strokeStyle = 'rgba(0,207,255,.45)'; g.lineWidth = 2;
-  for (let p = 16; p < 512; p += 32) { g.beginPath(); g.moveTo(p, 0); g.lineTo(p, 512); g.stroke(); g.beginPath(); g.moveTo(0, p); g.lineTo(512, p); g.stroke(); }
+  g.strokeStyle = 'rgba(0,207,255,.5)'; g.lineWidth = 2;
+  for (let p = 16; p < 512; p += 24) { g.beginPath(); g.moveTo(p, 0); g.lineTo(p, 512); g.stroke(); g.beginPath(); g.moveTo(0, p); g.lineTo(512, p); g.stroke(); }
   g.restore();
-  g.strokeStyle = 'rgba(0,207,255,.9)'; g.lineWidth = 6; g.beginPath(); g.arc(256, 256, 247, 0, Math.PI * 2); g.stroke();
+  g.strokeStyle = 'rgba(0,207,255,.95)'; g.lineWidth = 8; g.beginPath(); g.arc(256, 256, 246, 0, Math.PI * 2); g.stroke();
   const t = new THREE.CanvasTexture(c); t.colorSpace = THREE.SRGBColorSpace; t.anisotropy = 4; TX.pad = t; return t;
 }
 function moodTex() {
@@ -1170,6 +1397,11 @@ function moodTex() {
   const t = new THREE.CanvasTexture(c); t.colorSpace = THREE.SRGBColorSpace; return t;
 }
 
+/* The office in 3D, drawn to the operator's picture of it (2026-10-18): a platform on a rock in space, its hull
+ * plated and lit, engines and solar wings off its sides, asteroids drifting past a teal nebula; on it, rooms of
+ * glass with neon edges (green at rest, cyan at work, red when they wait for the owner), server racks, lab
+ * machines, desks with astronauts at them; the Manager's dais of rings in the middle; Add department a
+ * holographic pad on the open deck; the vault at the front. */
 class Office3D {
   constructor(el, stage, tipFor) {
     geo(); omats();
@@ -1177,37 +1409,33 @@ class Office3D {
     this.tip = stage.querySelector('.tip'); this.layer = stage.querySelector('.o3layer');
     this.sel = null; this.cells = {}; this.paths = {}; this.packets = []; this.rooms = {}; this.fitted = false; this.hover = null;
     this.mouse = new THREE.Vector2(); this.ray = new THREE.Raycaster();
-    this.scene = new THREE.Scene(); this.scene.background = new THREE.Color(OFFICE.bg); this.scene.fog = new THREE.Fog(OFFICE.bg, 110, 280);
-    this.camera = new THREE.PerspectiveCamera(30, 2, 0.3, 500);
+    this.scene = new THREE.Scene(); this.scene.background = new THREE.Color(OFFICE.bg); this.scene.fog = new THREE.Fog(OFFICE.bg, 140, 360);
+    this.camera = new THREE.PerspectiveCamera(34, 2, 0.3, 700);
     this.renderer = new THREE.WebGPURenderer({ antialias: false });
     this.renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
-    this.renderer.toneMapping = THREE.ACESFilmicToneMapping; this.renderer.toneMappingExposure = 1.2;
+    this.renderer.toneMapping = THREE.ACESFilmicToneMapping; this.renderer.toneMappingExposure = 1.15;
     this.renderer.shadowMap.enabled = true; this.renderer.shadowMap.type = THREE.PCFSoftShadowMap;
     el.appendChild(this.renderer.domElement);
     this.controls = new OrbitControls(this.camera, this.renderer.domElement);
-    Object.assign(this.controls, { enableDamping: true, dampingFactor: 0.08, minDistance: 6, maxDistance: 110, maxPolarAngle: Math.PI * 0.43, minPolarAngle: 0.2,
+    Object.assign(this.controls, { enableDamping: true, dampingFactor: 0.08, minDistance: 6, maxDistance: 140, maxPolarAngle: Math.PI * 0.47, minPolarAngle: 0.2,
       screenSpacePanning: false, zoomSpeed: 0.9, rotateSpeed: 0.55 });
-    this.controls.addEventListener('start', () => { this.tw = null; });
+    this.controls.addEventListener('start', () => { this.tw = null; this.moved = true; });
     const S = this.scene;
-    // white light, not blue: the colour in the room is what the room is doing
-    S.add(new THREE.HemisphereLight(0xe2eaf2, 0x07090d, 1.4), new THREE.AmbientLight(0x1b222b, 0.8));
-    this.sun = new THREE.DirectionalLight(0xf4f8fc, 2.3); this.sun.castShadow = true; this.sun.shadow.mapSize.set(2048, 2048);
+    S.environment = envTex();
+    // white light from the camera's side, so the faces you see are lit; a cool one from below for the hull and the
+    // rock; a cyan rim from behind
+    S.add(new THREE.HemisphereLight(0xdfe8f1, 0x0a0d12, 0.75), new THREE.AmbientLight(0x1b222b, 0.4));
+    this.sun = new THREE.DirectionalLight(0xf4f8fc, 2.4); this.sun.castShadow = true; this.sun.shadow.mapSize.set(2048, 2048);
     this.sun.shadow.normalBias = 0.02; this.sun.shadow.bias = -0.0005; S.add(this.sun); S.add(this.sun.target);
-    const rim = new THREE.DirectionalLight(0x00cfff, 0.3); rim.position.set(30, 14, -30); S.add(rim);
-    // light from below and in front, so the hull's side and the rock under it read against the dark
-    const under = new THREE.DirectionalLight(0xbfe9ff, 1.1); under.position.set(40, -30, 45); S.add(under);
-    S.add(starField(1800, 230, 80, 0.85));
-    // the nebula the office floats in, far behind it: teal at the top left, blue and a breath of green lower down
-    [[0x00cfff, 0.16, [-245, -25, -70], 300], [0x00ff88, 0.07, [-210, 10, -20], 200], [0x3b82f6, 0.1, [-170, -70, -190], 260],
-      [0x00cfff, 0.06, [-60, -110, -230], 220], [0x00ff88, 0.05, [40, -120, -200], 180]].forEach(([c, o, p, s]) => {
-      const sp = glowSprite(c, o, s); sp.material.fog = false; sp.position.set(p[0], p[1], p[2]); S.add(sp);
-    });
+    const rim = new THREE.DirectionalLight(0x00cfff, 0.5); rim.position.set(-30, 12, -40); S.add(rim);
+    const under = new THREE.DirectionalLight(0xcfe6f5, 0.95); under.position.set(20, -22, 42); S.add(under);
+    this.sky = spaceSky(); S.add(this.sky);
     this.world = new THREE.Group(); S.add(this.world);
     this.pk = new THREE.Group(); S.add(this.pk);
     this.clock = new THREE.Clock();
     this.bind();
     this.renderer.init().then(() => {
-      try { this.post = new Post(this.renderer, this.scene, this.camera, 0.55, 0.4, 0.82); } catch (e) { this.post = null; }
+      try { this.post = new Post(this.renderer, this.scene, this.camera, 0.6, 0.45, 0.8); } catch (e) { this.post = null; }
       this.renderer.setAnimationLoop(() => this.frame());
     }).catch((e) => { console.error('3D office could not start:', e); if (this.onFail) this.onFail(e); });
     if (window.ResizeObserver) new ResizeObserver(() => this.resize()).observe(el);
@@ -1220,6 +1448,8 @@ class Office3D {
   }
   // a box from the 2D plan's corner and sizes: x0,y0 the plan's corner, w,d its sizes, z0 and h up
   box(g, x0, y0, z0, w, d, h, mat, shadow) { return this.part(g, G.box, mat, w, h, d, x0 + w / 2, z0 + h / 2, y0 + d / 2, shadow); }
+  // a cylinder standing on the plan: centre x,y, radius, from z0 up h
+  cyl(g, x, y, z0, rad, h, mat, geom) { return this.part(g, geom || G.cyl, mat, rad, h, rad, x, z0 + h / 2, y); }
 
   layout(opts) {
     const S = CO.S, L = CO.iso, born = opts && opts.born;
@@ -1235,49 +1465,43 @@ class Office3D {
     // clear the old floor, rooms and labels
     release(this.world); this.world.clear(); this.layer.innerHTML = ''; this.rooms = {}; this.hits = []; this.pcs = [];
     const RS = L.RS, W = this.world;
-    // The floor: a slab under every room (the Manager's, the audit and the free lot included), so a corner of the plan
-    // with no room is open space, and the office floats. Cymetica green runs round its outside only, a green glow
-    // under it. The fit frames these slabs, not the plan's whole square.
-    const pad = 0.5, T = 0.75, have = {}, kc = (x, y) => x + ',' + y;
+    // The deck: a plated slab under every room (the Manager's, the audit, the vault and the free lot included), one
+    // platform where cells meet. The fit frames the deck and what hangs under it.
+    const pad = 0.5, T = 0.35, have = {}, kc = (x, y) => x + ',' + y;
     all.forEach((c) => { have[kc(c[0], c[1])] = 1; });
-    // a calm line, below the bloom: the operator found a glowing one too aggressive in the foreground
-    const top = new THREE.MeshStandardMaterial({ color: 0x090c11, roughness: 0.5, metalness: 0.45 }), edgeM = emis('#00ff88', 0.42), edgeLow = emis('#00ff88', 0.12);
     this.corners = []; const outer = [];
     all.forEach((c) => {
-      const s = new THREE.Mesh(G.box, [OM.plinth, OM.plinth, top, OM.plinth, OM.plinth, OM.plinth]);
-      s.scale.set(RS + 2 * pad + 0.02, T, RS + 2 * pad + 0.02); s.position.copy(this.V(c[0] + RS / 2, c[1] + RS / 2, -T / 2)); s.receiveShadow = true; W.add(s);
-      const glow = new THREE.Mesh(G.plane, new THREE.MeshBasicMaterial({ map: glowTex(), color: 0x00ff88, transparent: true, opacity: 0.06, blending: THREE.AdditiveBlending, depthWrite: false, fog: false }));
-      glow.scale.set(RS * 1.9, RS * 1.9, 1); glow.rotation.x = -Math.PI / 2; glow.position.copy(this.V(c[0] + RS / 2, c[1] + RS / 2, -T - 0.6)); W.add(glow);
+      const s = new THREE.Mesh(G.box, [OM.rimDark, OM.rimDark, OM.deck, OM.rimDark, OM.rimDark, OM.rimDark]);
+      s.scale.set(RS + 2 * pad, T, RS + 2 * pad); s.position.copy(this.V(c[0] + RS / 2, c[1] + RS / 2, -T / 2)); s.receiveShadow = true; W.add(s);
       const x0 = c[0] - pad, y0 = c[1] - pad, x1 = c[0] + RS + pad, y1 = c[1] + RS + pad;
       // a side is the outside when no room's slab meets it there
       [[x0, y0, x1, y0, !have[kc(c[0], c[1] - 8)], 0, -1], [x0, y1, x1, y1, !have[kc(c[0], c[1] + 8)], 0, 1], [x0, y0, x0, y1, !have[kc(c[0] - 8, c[1])], -1, 0], [x1, y0, x1, y1, !have[kc(c[0] + 8, c[1])], 1, 0]].forEach(([ax, ay, bx, by, out, nx, ny]) => {
-        if (!out) return;
-        outer.push({ ax, ay, bx, by, nx, ny });
-        const len = Math.hypot(bx - ax, by - ay) + 0.06, along = ax === bx;
-        [[0, 0.045, edgeM], [-T, 0.035, edgeLow]].forEach(([z, t, m]) => { const e = new THREE.Mesh(G.box, m); e.scale.set(along ? t : len, t, along ? len : t); e.position.copy(this.V((ax + bx) / 2, (ay + by) / 2, z)); W.add(e); });
+        if (out) outer.push({ ax, ay, bx, by, nx, ny });
       });
-      [[x0, y0], [x1, y0], [x0, y1], [x1, y1]].forEach(([x, y]) => { this.corners.push(this.V(x, y, -T), this.V(x, y, 1.35)); });
+      [[x0, y0], [x1, y0], [x0, y1], [x1, y1]].forEach(([x, y]) => { this.corners.push(this.V(x, y, -T - 2.4), this.V(x, y, WH + 0.1)); });
     });
-    this.exterior(all, outer, pad, T);
-    // corridors: from every room's door to the Manager's, the 2D office's own routes
+    this.exterior(all, outer, have, pad, T);
+    // corridors: from every room's door to the Manager's, the 2D office's own routes, painted as a dashed lane that
+    // lights cyan while work runs along it
     this.paths = {}; this.conduits = {};
     Object.keys(cells).forEach((k) => {
       if (k === 'hub' || k === 'lot') return;
       const p = L.route(all, cells[k], L.HUB); if (!p) return;
       this.paths[k] = p;
-      const mat = emis('#00ff88', 0.22), segs = [];
+      const mat = emis('#dfe6ee', 0.3), segs = [];
       for (let i = 1; i < p.length; i++) {
         const a = p[i - 1], b = p[i], len = Math.hypot(b[0] - a[0], b[1] - a[1]); if (len < 0.01) continue;
-        const base = new THREE.Mesh(G.box, OM.dark); base.scale.set(len + 0.24, 0.03, 0.24);
-        const line = new THREE.Mesh(G.box, mat); line.scale.set(len + 0.06, 0.035, 0.06);
-        [base, line].forEach((m) => { m.position.copy(this.V((a[0] + b[0]) / 2, (a[1] + b[1]) / 2, m === base ? 0.015 : 0.03)); m.rotation.y = -Math.atan2(b[1] - a[1], b[0] - a[0]); W.add(m); });
-        segs.push(line);
+        const n = Math.max(1, Math.round(len / 0.7)), ang = -Math.atan2(b[1] - a[1], b[0] - a[0]);
+        for (let j = 0; j < n; j++) {
+          const f = (j + 0.5) / n, m = new THREE.Mesh(G.box, mat); m.scale.set(Math.min(0.4, len / n * 0.6), 0.02, 0.07);
+          m.position.copy(this.V(a[0] + (b[0] - a[0]) * f, a[1] + (b[1] - a[1]) * f, 0.012)); m.rotation.y = ang; W.add(m); segs.push(m);
+        }
       }
       this.conduits[k] = { mat, segs };
     });
     const sz = this.size;
-    this.sun.position.copy(new THREE.Vector3(-sz * 0.9, sz * 1.5, sz * 0.7)); this.sun.target.position.set(0, 0, 0);
-    Object.assign(this.sun.shadow.camera, { left: -sz * 0.8, right: sz * 0.8, top: sz * 0.8, bottom: -sz * 0.8, near: 1, far: sz * 4 }); this.sun.shadow.camera.updateProjectionMatrix();
+    this.sun.position.copy(new THREE.Vector3(-sz * 0.35, sz * 1.5, sz * 1.05)); this.sun.target.position.set(0, 0, 0);
+    Object.assign(this.sun.shadow.camera, { left: -sz * 0.85, right: sz * 0.85, top: sz * 0.85, bottom: -sz * 0.85, near: 1, far: sz * 4 }); this.sun.shadow.camera.updateProjectionMatrix();
     // rooms
     Object.keys(cells).forEach((k) => {
       const c = cells[k], g = new THREE.Group(); W.add(g);
@@ -1286,152 +1510,170 @@ class Office3D {
       if (k === 'lot') return this.lotRoom(room);
       this.shell(room);
       if (k === 'hub') this.hubRoom(room); else if (k === 'audit') this.auditRoom(room); else if (k === 'vault') this.vaultRoom(room); else this.deptRoom(room, CO.dept(+k.slice(1)));
-      const hit = new THREE.Mesh(G.box, M.hit); hit.scale.set(RS, 1.6, RS); hit.position.copy(this.V(c[0] + RS / 2, c[1] + RS / 2, 0.8)); hit.userData.key = k; g.add(hit); this.hits.push(hit);
+      const hit = new THREE.Mesh(G.box, M.hit); hit.scale.set(RS, WH, RS); hit.position.copy(this.V(c[0] + RS / 2, c[1] + RS / 2, WH / 2)); hit.userData.key = k; g.add(hit); this.hits.push(hit);
       if (room.born) { g.scale.set(1, 0.01, 1); room.grow = performance.now(); }
     });
     this.selRing = new THREE.Group(); W.add(this.selRing);
     this.update();
     if (!this.fitted) { this.fit(false); }
   }
-  // Under and round the floor, what makes it a station in space: a hull with seams and a row of lights, the rock it
-  // is built on, thrusters, two solar arrays, and small asteroids drifting past. Static parts merged per material.
-  exterior(all, outer, pad, T) {
-    const W = this.world, RS = CO.iso.RS, ext = new THREE.Group(), HD = 1.0, R = rng(17); W.add(ext);
+  // Under and round the deck, what makes it a station in space: a rim, a plated hull with its lights, a stepped
+  // keel, the rock it is built on, engines, two solar wings, asteroids drifting past. Static parts merged per
+  // material.
+  exterior(all, outer, have, pad, T) {
+    const W = this.world, RS = CO.iso.RS, ext = new THREE.Group(), HD = 1.6, R = rng(17), kc = (x, y) => x + ',' + y; W.add(ext);
     all.forEach((c) => {
-      const h = new THREE.Mesh(G.box, OM.hull); h.scale.set(RS + 2 * pad - 0.5, HD, RS + 2 * pad - 0.5); h.position.copy(this.V(c[0] + RS / 2, c[1] + RS / 2, -T - HD / 2)); ext.add(h);
+      const Lf = !have[kc(c[0] - 8, c[1])], Rt = !have[kc(c[0] + 8, c[1])], Bk = !have[kc(c[0], c[1] - 8)], Fr = !have[kc(c[0], c[1] + 8)];
+      const x0 = c[0] - pad, y0 = c[1] - pad, x1 = c[0] + RS + pad, y1 = c[1] + RS + pad;
+      const tier = (ins, z0, h, mat) => this.box(ext, x0 + (Lf ? ins : 0), y0 + (Bk ? ins : 0), z0, x1 - x0 - (Lf ? ins : 0) - (Rt ? ins : 0), y1 - y0 - (Bk ? ins : 0) - (Fr ? ins : 0), h, mat, false);
+      tier(0.12, -T - 0.12 - HD, HD, OM.hull);
+      tier(0.75, -T - 0.12 - HD - 0.45, 0.45, OM.hullLow);
+      tier(1.5, -T - 0.12 - HD - 0.75, 0.3, OM.hullLow);
     });
-    const lamp = amat('#00cfff').glow;
+    // the rim: a lighter lip round the outside of the deck, a little proud of it
     outer.forEach((e) => {
-      const n = Math.floor(Math.hypot(e.bx - e.ax, e.by - e.ay) / 1.3);
-      for (let i = 1; i < n; i++) { const t = i / n, m = new THREE.Mesh(G.box, lamp); m.scale.set(0.09, 0.05, 0.09); m.position.copy(this.V(e.ax + (e.bx - e.ax) * t - e.nx * 0.24, e.ay + (e.by - e.ay) * t - e.ny * 0.24, -T - 0.42)); ext.add(m); }
+      const len = Math.hypot(e.bx - e.ax, e.by - e.ay) + 0.44, mx = (e.ax + e.bx) / 2 + e.nx * 0.11, my = (e.ay + e.by) / 2 + e.ny * 0.11, along = e.ax === e.bx;
+      this.box(ext, mx - (along ? 0.11 : len / 2), my - (along ? len / 2 : 0.11), -T - 0.14, along ? 0.22 : len, along ? len : 0.22, T + 0.16, OM.rim, false);
     });
     let mnx = 1e9, mxx = -1e9, mny = 1e9, mxy = -1e9;
     all.forEach((c) => { mnx = Math.min(mnx, c[0]); mxx = Math.max(mxx, c[0] + RS); mny = Math.min(mny, c[1]); mxy = Math.max(mxy, c[1] + RS); });
-    const cxp = (mnx + mxx) / 2, cyp = (mny + mxy) / 2, span = Math.max(mxx - mnx, mxy - mny);
-    const rock = new THREE.Mesh(G.rock, M.rock); rock.scale.set(span * 0.4, span * 0.22, span * 0.36); rock.position.copy(this.V(cxp, cyp, -T - HD - span * 0.13)); rock.rotation.set(0.15, 0.7, 0.08); ext.add(rock);
-    // the camera's fit takes the rock in too: the station is its floor and what it stands on
-    [[-0.25, 0], [0.25, 0], [0, -0.25], [0, 0.25]].forEach(([dx, dy]) => this.corners.push(this.V(cxp + dx * span, cyp + dy * span, -T - HD - span * 0.3)));
-    const rock2 = new THREE.Mesh(G.rock, M.rock); rock2.scale.set(span * 0.2, span * 0.13, span * 0.18); rock2.position.copy(this.V(cxp - span * 0.18, cyp - span * 0.1, -T - HD - span * 0.3)); rock2.rotation.set(0.6, 1.9, 0.3); ext.add(rock2);
-    // thrusters on up to six of the outside walls, flames that breathe
+    const cxp = (mnx + mxx) / 2, cyp = (mny + mxy) / 2, span = Math.max(mxx - mnx, mxy - mny), keel = -T - HD - 0.9;
+    // the rock: wider than the deck where it shows, hanging well below it
+    const rock = new THREE.Mesh(G.bigRock, OM.rock); rock.scale.set(span * 0.5, span * 0.3, span * 0.45); rock.position.copy(this.V(cxp - span * 0.04, cyp + span * 0.02, keel - span * 0.02)); rock.rotation.set(0.05, 0.6, 0.04); ext.add(rock);
+    const rock2 = new THREE.Mesh(G.bigRock, OM.rock); rock2.scale.set(span * 0.26, span * 0.2, span * 0.24); rock2.position.copy(this.V(cxp + span * 0.2, cyp + span * 0.16, keel - span * 0.12)); rock2.rotation.set(0.5, 2.1, 0.3); ext.add(rock2);
+    // engines on up to six of the outside walls, exhaust that breathes
     this.flames = [];
     const pick = outer.length <= 6 ? outer : [0, 1, 2, 3, 4, 5].map((i) => outer[Math.floor((i + 0.5) * outer.length / 6)]);
-    pick.forEach((e) => {
-      const g = new THREE.Group(); g.position.copy(this.V((e.ax + e.bx) / 2 + e.nx * 0.2, (e.ay + e.by) / 2 + e.ny * 0.2, -T - HD * 0.55)); g.rotation.y = Math.atan2(e.nx, e.ny); ext.add(g);
-      const nac = new THREE.Mesh(G.cyl, OM.frame); nac.scale.set(0.36, 1.2, 0.36); nac.rotation.x = Math.PI / 2; nac.position.z = 0.3; g.add(nac);
-      const bell = new THREE.Mesh(G.bell, OM.dark); bell.scale.set(0.42, 0.5, 0.42); bell.rotation.x = -Math.PI / 2; bell.position.z = 1.1; g.add(bell);
-      const ring = new THREE.Mesh(G.ringT, amat('#00cfff').rim); ring.scale.setScalar(0.38); ring.position.z = 0.75; g.add(ring);
-      const disc = new THREE.Mesh(G.sphere, amat('#00cfff').glow); disc.scale.set(0.3, 0.3, 0.05); disc.position.z = 1.32; disc.userData.dyn = true; g.add(disc);
-      const fl = new THREE.Mesh(G.beam, amat('#00cfff').beam); fl.scale.set(0.8, 1.3, 0.8); fl.rotation.x = Math.PI / 2; fl.position.z = 1.95; fl.userData.dyn = true; g.add(fl);
+    pick.forEach((e, i) => {
+      const f = i % 2 ? 0.3 : 0.7, g = new THREE.Group();
+      g.position.copy(this.V(e.ax + (e.bx - e.ax) * f + e.nx * 0.2, e.ay + (e.by - e.ay) * f + e.ny * 0.2, -T - 0.12 - HD * 0.5)); g.rotation.y = Math.atan2(e.nx, e.ny); ext.add(g);
+      const housing = new THREE.Mesh(G.cyl, OM.engine); housing.scale.set(0.62, 1.3, 0.62); housing.rotation.x = Math.PI / 2; housing.position.z = 0.5; g.add(housing);
+      const cap = new THREE.Mesh(G.cyl, OM.engineDark); cap.scale.set(0.5, 0.5, 0.5); cap.rotation.x = Math.PI / 2; cap.position.z = -0.25; g.add(cap);
+      [0.0, 0.62, 1.12].forEach((z) => { const ring = new THREE.Mesh(G.wheel, OM.rim); ring.scale.setScalar(0.64); ring.position.z = z; g.add(ring); });
+      [[0.5, 0], [-0.5, 0], [0, 0.5], [0, -0.5]].forEach(([x, y]) => { const s = new THREE.Mesh(G.box, OM.frame); s.scale.set(0.1, 0.1, 0.7); s.position.set(x, y, -0.25); g.add(s); });
+      const bell = new THREE.Mesh(G.bell, OM.engineDark); bell.scale.set(0.56, 0.5, 0.56); bell.rotation.x = -Math.PI / 2; bell.position.z = 1.38; g.add(bell);
+      const disc = new THREE.Mesh(G.cyl, OM.cyan.glow); disc.scale.set(0.44, 0.04, 0.44); disc.rotation.x = Math.PI / 2; disc.position.z = 1.22; disc.userData.dyn = true; g.add(disc);
+      const fl = new THREE.Mesh(G.plume, OM.plume); fl.scale.set(0.85, 2.2, 0.85); fl.rotation.x = -Math.PI / 2; fl.position.z = 1.3 + 1.1; fl.userData.dyn = true; g.add(fl);
+      const halo = glowSprite(0x00cfff, 0.55, 2.4); halo.position.z = 1.4; halo.userData.dyn = true; g.add(halo);
       this.flames.push({ fl, ph: R() * 6 });
     });
-    // two solar arrays off the far sides
-    [[0, -1], [-1, 0]].forEach(([nx, ny]) => {
-      const e = outer.filter((o) => o.nx === nx && o.ny === ny)[0]; if (!e) return;
-      const mx = (e.ax + e.bx) / 2, my = (e.ay + e.by) / 2, z = -T - 0.35, along = nx !== 0;
-      const truss = new THREE.Mesh(G.box, OM.frame); truss.scale.set(along ? 7.6 : 0.12, 0.12, along ? 0.12 : 7.6); truss.position.copy(this.V(mx + nx * 3.9, my + ny * 3.9, z)); ext.add(truss);
-      for (let i = 0; i < 3; i++) {
-        const p = new THREE.Mesh(G.box, amat('#00cfff').panel); p.scale.set(along ? 2.2 : 3.2, 0.05, along ? 3.2 : 2.2);
-        p.position.copy(this.V(mx + nx * (1.6 + i * 2.35), my + ny * (1.6 + i * 2.35), z + 0.05)); p.rotation[along ? 'x' : 'z'] = 0.18; ext.add(p);
-      }
+    // two solar wings: off the far right side and the near right side, as in the picture
+    [[0, -1], [1, 0]].forEach(([nx, ny]) => {
+      const es = outer.filter((o) => o.nx === nx && o.ny === ny); if (!es.length) return;
+      const e = es[nx ? es.length - 1 : es.length - 1], mx = (e.ax + e.bx) / 2, my = (e.ay + e.by) / 2, g = new THREE.Group();
+      g.position.copy(this.V(mx, my, -T - 0.7)); g.rotation.y = Math.atan2(nx, ny); ext.add(g);
+      const boom = new THREE.Mesh(G.box, OM.engine); boom.scale.set(0.16, 0.16, 10.2); boom.position.z = 5.2; g.add(boom);
+      const joint = new THREE.Mesh(G.cyl, OM.engineDark); joint.scale.set(0.34, 0.5, 0.34); joint.position.z = 0.3; g.add(joint);
+      for (let i = 0; i < 4; i++) [-1, 1].forEach((side) => {
+        const p = new THREE.Mesh(G.box, [OM.engine, OM.engine, OM.solar, OM.engineDark, OM.engine, OM.engine]);
+        p.scale.set(2.3, 0.05, 2.0); p.position.set(side * 1.32, 0, 1.6 + i * 2.15); p.rotation.z = side * 0.28; g.add(p);
+        const strut = new THREE.Mesh(G.box, OM.frame); strut.scale.set(0.5, 0.06, 0.06); strut.position.set(side * 0.3, 0, 1.6 + i * 2.15); g.add(strut);
+      });
     });
     bakeGroup(ext);
-    // small asteroids drifting round it, never between it and the camera
+    // asteroids drifting round it, never between it and the camera; one large and lit up to the right
     this.drift = [];
-    for (let i = 0; i < 10; i++) {
-      const a = R() * Math.PI * 2; if ((Math.cos(a) + Math.sin(a)) / Math.SQRT2 > 0.25) { i--; continue; }
-      const d = span * (0.8 + R() * 0.6), s = 0.35 + R() * R() * 1.7, m = new THREE.Mesh(G.rock, M.rock);
-      m.scale.set(s, s * 0.8, s * 0.9); m.position.copy(this.V(cxp + Math.cos(a) * d, cyp + Math.sin(a) * d, -7 + R() * 10)); m.rotation.set(R() * 3, R() * 3, R() * 3);
-      W.add(m); this.drift.push({ m, sp: 0.08 + R() * 0.2 });
+    const big = new THREE.Mesh(G.smallRock, OM.rock); big.scale.set(2.2, 1.9, 2.0);
+    big.position.copy(this.V(cxp, cyp, 0)).add(skyDir(32, 0).multiplyScalar(span * 0.9)).add(new THREE.Vector3(0, span * 0.32, 0)); W.add(big); this.drift.push({ m: big, sp: 0.05 });
+    for (let i = 0; i < 12; i++) {
+      const a = R() * Math.PI * 2; if ((Math.cos(a) + Math.sin(a)) / Math.SQRT2 > 0.2) { i--; continue; }
+      const d = span * (0.85 + R() * 0.7), s = 0.3 + R() * R() * 1.4, m = new THREE.Mesh(G.smallRock, OM.rock);
+      m.scale.set(s, s * 0.8, s * 0.9); m.position.copy(this.V(cxp + Math.cos(a) * d, cyp + Math.sin(a) * d, -9 + R() * 12)); m.rotation.set(R() * 3, R() * 3, R() * 3);
+      W.add(m); this.drift.push({ m, sp: 0.06 + R() * 0.18 });
     }
   }
+  // a room: a glossy floor, glass on all four sides with neon on every edge, a dark panel along the two back walls
   shell(r) {
-    const { g, x0, y0 } = r, RS = CO.iso.RS;
-    this.box(g, x0, y0, 0, RS, RS, 0.1, OM.tile);
+    const { g, x0, y0 } = r, RS = CO.iso.RS, H = WH, t = 0.04, z0 = 0.08;
+    this.box(g, x0, y0, 0, RS, RS, z0, r.key === 'hub' ? OM.hubTile : OM.tile);
     r.glow = new THREE.Mesh(G.plane, new THREE.MeshBasicMaterial({ map: radialTex('255,255,255', 0.9), transparent: true, opacity: 0, blending: THREE.AdditiveBlending, depthWrite: false, color: 0x00cfff }));
-    r.glow.scale.set(RS * 1.15, RS * 1.15, 1); r.glow.rotation.x = -Math.PI / 2; r.glow.position.copy(this.V(x0 + RS / 2, y0 + RS / 2, 0.11)); g.add(r.glow);
-    // tall glass back walls, mullions and a lit top edge in the room's colour
-    this.box(g, x0, y0, 0.1, RS, 0.08, 1.45, OM.glass, false);
-    this.box(g, x0, y0, 0.1, 0.08, RS, 1.45, OM.glass, false);
-    for (let m = 1; m < 4; m++) { this.box(g, x0 + m * RS / 4 - 0.03, y0, 0.1, 0.06, 0.1, 1.45, OM.frame); this.box(g, x0, y0 + m * RS / 4 - 0.03, 0.1, 0.1, 0.06, 1.45, OM.frame); }
+    r.glow.scale.set(RS * 1.15, RS * 1.15, 1); r.glow.rotation.x = -Math.PI / 2; r.glow.position.copy(this.V(x0 + RS / 2, y0 + RS / 2, z0 + 0.01)); g.add(r.glow);
+    [[x0, y0, RS, t], [x0, y0 + RS - t, RS, t], [x0, y0, t, RS], [x0 + RS - t, y0, t, RS]].forEach(([x, y, w, d]) => this.box(g, x, y, z0, w, d, H, OM.glass, false));
+    if (r.key !== 'hub') { this.box(g, x0 + t, y0 + t, z0, RS - 2 * t, 0.1, 0.62, OM.wallDark); this.box(g, x0 + t, y0 + t, z0, 0.1, RS - 2 * t, 0.62, OM.wallDark); }
+    r.edgeM = emis('#00ff88', 0.75);
+    const e = 0.05, z1 = z0 + H - e;
+    [[x0, y0, RS, e], [x0, y0 + RS - e, RS, e], [x0, y0, e, RS], [x0 + RS - e, y0, e, RS]].forEach(([x, y, w, d]) => { this.box(g, x, y, z1, w, d, e, r.edgeM, false); this.box(g, x, y, z0, w, d, e, r.edgeM, false); });
+    [[x0, y0], [x0 + RS - e, y0], [x0, y0 + RS - e], [x0 + RS - e, y0 + RS - e]].forEach(([x, y]) => this.box(g, x, y, z0, e, e, H, r.edgeM, false));
     // a lamp over the room in the colour of what it is doing: it lights the desks, the people and the floor
-    r.lamp = new THREE.PointLight(OFFICE.lamp, 3, 9, 1.4); r.lamp.position.copy(this.V(x0 + RS / 2, y0 + RS / 2, 2.6)); g.add(r.lamp);
-    r.edgeM = emis('#7f93ad', 0.4); r.sillM = emis('#7f93ad', 0.15);
-    this.box(g, x0, y0, 1.55, RS, 0.07, 0.05, r.edgeM, false); this.box(g, x0, y0, 1.55, 0.07, RS, 0.05, r.edgeM, false);
-    this.box(g, x0 + RS - 0.04, y0, 0.1, 0.04, RS, 0.04, r.sillM, false); this.box(g, x0, y0 + RS - 0.04, 0.1, RS, 0.04, 0.04, r.sillM, false);
+    r.lamp = new THREE.PointLight(OFFICE.lamp, 6, 11, 1.3); r.lamp.position.copy(this.V(x0 + RS / 2, y0 + RS / 2, 2.5)); g.add(r.lamp);
   }
   // a wall screen on the back wall: what runs now, or why it waits
   wallScreen(r, u0, u1) {
-    const s = screen(u1 - u0, 0.74), mat = new THREE.MeshBasicMaterial({ map: s.tex, toneMapped: false });
-    const m = new THREE.Mesh(G.plane, mat); m.scale.set(u1 - u0, 0.74, 1); m.position.copy(this.V(r.x0 + (u0 + u1) / 2, r.y0 + 0.13, 0.73)); r.g.add(m);
+    const s = screen(u1 - u0, 0.62), mat = new THREE.MeshBasicMaterial({ map: s.tex, toneMapped: false });
+    const m = new THREE.Mesh(G.plane, mat); m.scale.set(u1 - u0, 0.62, 1); m.position.copy(this.V(r.x0 + (u0 + u1) / 2, r.y0 + 0.1, 1.3)); r.g.add(m);
+    this.box(r.g, r.x0 + u0 - 0.05, r.y0 + 0.05, 0.94, u1 - u0 + 0.1, 0.04, 0.72, OM.dark, false);
     r.wall = s; return s;
   }
-  kanban(r) {
-    const s = screen(4.9, 0.72), mat = new THREE.MeshBasicMaterial({ map: s.tex, toneMapped: false });
-    const m = new THREE.Mesh(G.plane, mat); m.scale.set(4.9, 0.72, 1); m.rotation.y = Math.PI / 2; m.position.copy(this.V(r.x0 + 0.13, r.y0 + 3.45, 0.72)); r.g.add(m);
+  kanban(r, v0 = 1.5, v1 = 5.8) {
+    const s = screen(v1 - v0, 0.62), mat = new THREE.MeshBasicMaterial({ map: s.tex, toneMapped: false });
+    const m = new THREE.Mesh(G.plane, mat); m.scale.set(v1 - v0, 0.62, 1); m.rotation.y = Math.PI / 2; m.position.copy(this.V(r.x0 + 0.1, r.y0 + (v0 + v1) / 2, 1.3)); r.g.add(m);
+    this.box(r.g, r.x0 + 0.05, r.y0 + v0 - 0.05, 0.94, 0.04, v1 - v0 + 0.1, 0.72, OM.dark, false);
     r.kb = s;
   }
+  // a desk facing the room: two screens on it (green charts; cyan while its astronaut works), a keyboard
   desk(r, x, y, i) {
     const g = r.g;
-    this.box(g, x, y, 0, 1.9, 0.9, 0.42, OM.desk); this.box(g, x - 0.02, y - 0.02, 0.42, 1.94, 0.94, 0.03, OM.deskTop, false);
-    this.box(g, x + 0.6, y + 0.48, 0.45, 0.7, 0.22, 0.02, OM.dark, false);
-    this.box(g, x + 0.88, y + 0.17, 0.45, 0.14, 0.06, 0.12, OM.frame, false);
-    this.box(g, x + 0.5, y + 0.12, 0.55, 0.9, 0.06, 0.52, OM.dark);
-    const scr = new THREE.MeshBasicMaterial({ color: new THREE.Color(OFFICE.mon) });
-    const face = new THREE.Mesh(G.plane, scr); face.scale.set(0.84, 0.46, 1); face.position.copy(this.V(x + 0.95, y + 0.185, 0.81)); g.add(face);
+    this.box(g, x, y, 0.08, 1.9, 0.85, 0.42, OM.desk); this.box(g, x - 0.03, y - 0.03, 0.5, 1.96, 0.91, 0.04, OM.deskTop, false);
+    const scr = new THREE.MeshBasicMaterial({ map: monTex(), color: new THREE.Color(OFFICE.mon), toneMapped: false });
+    [x + 0.14, x + 0.98].forEach((mx) => {
+      this.box(g, mx + 0.35, y + 0.2, 0.54, 0.08, 0.06, 0.14, OM.frame, false);
+      this.box(g, mx, y + 0.12, 0.66, 0.78, 0.05, 0.46, OM.dark);
+      const face = new THREE.Mesh(G.plane, scr); face.scale.set(0.72, 0.4, 1); face.position.copy(this.V(mx + 0.39, y + 0.175, 0.89)); g.add(face);
+    });
+    this.box(g, x + 0.66, y + 0.5, 0.54, 0.6, 0.18, 0.02, OM.frame, false);
     r.mons[i] = scr;
-    this.box(g, x + 0.7, y + 1.08, 0, 0.5, 0.45, 0.22, OM.plinth);
   }
-  agent(r, x, y, i, label, head) {
+  agent(r, x, y, i, label) {
     // an astronaut: white suit, white helmet with a dark visor turned to the desk, a pack, a light on its chest
-    const g = new THREE.Group(); g.position.copy(this.V(x, y, 0.1)); r.g.add(g);
-    const b = new THREE.Mesh(OM.capsule, OM.suit); b.position.y = 0.42; b.castShadow = true; g.add(b);
-    const h = new THREE.Mesh(G.sphere, OM.suit); h.scale.setScalar(0.18); h.position.y = 0.9; h.castShadow = true; g.add(h);
-    const visorM = new THREE.MeshStandardMaterial({ color: 0x05080c, emissive: 0x00cfff, emissiveIntensity: 0.06, roughness: 0.12, metalness: 0.8 });
-    const vz = new THREE.Mesh(G.sphere, visorM); vz.scale.set(0.135, 0.1, 0.09); vz.position.set(0, 0.9, -0.11); g.add(vz);
-    const pack = new THREE.Mesh(G.box, OM.pack); pack.scale.set(0.26, 0.32, 0.12); pack.position.set(0, 0.52, 0.19); g.add(pack);
-    const chest = new THREE.Mesh(G.box, OM.pack); chest.scale.set(0.08, 0.05, 0.02); chest.position.set(0, 0.6, -0.17); g.add(chest);
-    const ringM = emis('#00cfff', 0); const ring = new THREE.Mesh(G.ring, ringM); ring.rotation.x = Math.PI / 2; ring.scale.setScalar(0.34); ring.position.y = 0.02; g.add(ring);
+    const g = new THREE.Group(); g.position.copy(this.V(x, y, 0.08)); g.scale.setScalar(1.3); r.g.add(g);
+    const b = new THREE.Mesh(OM.capsule, OM.suit); b.position.y = 0.5; b.castShadow = true; g.add(b);
+    const h = new THREE.Mesh(G.sphere, OM.suit); h.scale.setScalar(0.22); h.position.y = 1.08; h.castShadow = true; g.add(h);
+    const visorM = std({ color: 0x05080c, emissive: 0x00cfff, emissiveIntensity: 0.06, roughness: 0.1, metalness: 0.8 });
+    const vz = new THREE.Mesh(G.sphere, visorM); vz.scale.set(0.165, 0.12, 0.11); vz.position.set(0, 1.08, -0.13); g.add(vz);
+    const pack = new THREE.Mesh(G.box, OM.pack); pack.scale.set(0.32, 0.4, 0.15); pack.position.set(0, 0.62, 0.23); g.add(pack);
+    const chest = new THREE.Mesh(G.box, OM.pack); chest.scale.set(0.1, 0.06, 0.02); chest.position.set(0, 0.72, -0.2); g.add(chest);
+    const ringM = emis('#00cfff', 0); const ring = new THREE.Mesh(G.ring, ringM); ring.rotation.x = Math.PI / 2; ring.scale.setScalar(0.4); ring.position.y = 0.02; g.add(ring);
     const el = document.createElement('div'); el.className = 'a3'; el.textContent = label; this.layer.appendChild(el);
-    const a = { g, b, h, visorM, chest, ring, ringM, el, home: g.position.clone(), phase: (i + r.x0 * 0.37) % 6.28, key: r.key + ':' + i, room: r, label };
+    const a = { g, b, by: 0.5, h, visorM, chest, ring, ringM, el, home: g.position.clone(), phase: (i + r.x0 * 0.37) % 6.28, key: r.key + ':' + i, room: r, label };
     r.agents.push(a); return a;
   }
   plate(r, cls) {
     const el = document.createElement('div'); el.className = 'p3' + (cls ? ' ' + cls : ''); el.setAttribute('data-key', r.key); this.layer.appendChild(el);
     el.addEventListener('click', () => CO.emit('office:click', r.key));
     el.addEventListener('pointerenter', () => this.setHover(r.key)); el.addEventListener('pointerleave', () => this.setHover(null));
-    r.plate = el; r.plateAt = this.V(r.x0 + 4.4, r.y0 + 5.75, 1.35); return el;
+    r.plate = el; r.plateAt = this.V(r.x0 + 4.4, r.y0 + 5.75, 1.45); return el;
   }
+  // A department's room: its computer in the back corner, its screens on the back walls, what it works with in
+  // the back right (racks, lab machines, a league table), a row of desks with an astronaut at each.
   deptRoom(r, d) {
-    const k = d.key; let u1 = 6.2;
-    if (k === 'trading_desk') { u1 = 4.2; this.boardTex(r, 4.4, 6.75, candleTex()); }
-    else if (k === 'design') { u1 = 4.6; this.boardTex(r, 4.8, 6.75, moodTex()); }
-    else if (k === 'development' || k === 'testing') u1 = 4.8;
-    else if (k === 'testing_lab') u1 = 4.1;
-    this.wallScreen(r, 1.1, u1); this.kanban(r);
-    const g = r.g, x0 = r.x0, y0 = r.y0;
-    // what each kind of department works with: server racks, test devices, a lab, trading screens
-    if (k === 'development') this.racks(r, x0 + 5.0, y0 + 0.25, 3);
-    else if (k === 'testing') { this.racks(r, x0 + 5.0, y0 + 0.25, 1); this.devices(r, x0 + 5.65, y0 + 0.28); }
-    else if (k === 'testing_lab') { this.labMachine(r, x0 + 4.25, y0 + 0.3); this.flasks(r, x0 + 5.5, y0 + 0.3); }
-    else if (k === 'custom') this.box(g, x0 + 5.6, y0 + 0.2, 0.1, 1.05, 0.12, 1.15, OM.frame);
-    const ex = d.experts.slice(0, 3), xs = ex.length === 1 ? [2.55] : ex.length === 2 ? [1.0, 3.75] : [0.55, 2.6, 4.65];
-    ex.forEach((e, i) => { this.desk(r, x0 + xs[i], y0 + 1.75, i); if (k === 'trading_desk') this.sideScreens(r, x0 + xs[i], y0 + 1.75); });
-    ex.forEach((e, i) => this.agent(r, x0 + xs[i] + 0.95, y0 + 3.05, i, CO.expertName(e)));
-    this.terminal(r, x0 + 0.35, y0 + 4.0, d.link || CO.DEPT_LINK[k] || CO.DEPT_LINK.custom);
-    this.plant(r, x0 + 0.3, y0 + 6.2);
+    const k = d.key, x0 = r.x0, y0 = r.y0, g = r.g; let u1 = 6.6;
+    if (k === 'development' || k === 'testing') { u1 = 4.3; this.racks(r, x0 + 4.55, y0 + 0.3, 3); this.racks(r, x0 + 4.55, y0 + 1.4, 3); }
+    else if (k === 'testing_lab') { u1 = 4.0; this.labMachine(r, x0 + 4.15, y0 + 0.3); this.labMachine(r, x0 + 5.55, y0 + 0.3); this.canisters(r, x0 + 6.45, y0 + 1.6); }
+    else if (k === 'trading_desk') { u1 = 4.1; this.boardTex(r, 4.3, 6.75, candleTex()); }
+    else if (k === 'design') { u1 = 4.5; this.boardTex(r, 4.7, 6.75, moodTex()); }
+    else if (d.run_kind === 'league') { u1 = 4.1; this.leagueTable(r, x0 + 5.3, y0 + 1.25); }
+    else if (d.run_kind === 'stranger') { u1 = 4.1; this.lounge(r, x0 + 4.4, y0 + 0.3); }
+    else { u1 = 4.6; this.racks(r, x0 + 5.2, y0 + 0.3, 2); }
+    this.wallScreen(r, 1.75, u1); this.kanban(r);
+    const ex = d.experts.slice(0, 3), xs = ex.length === 1 ? [2.4] : ex.length === 2 ? [1.0, 3.7] : [0.35, 2.55, 4.75];
+    ex.forEach((e, i) => { this.desk(r, x0 + xs[i], y0 + 2.75, i); if (k === 'trading_desk') this.sideScreens(r, x0 + xs[i], y0 + 2.75); });
+    ex.forEach((e, i) => this.agent(r, x0 + xs[i] + 0.95, y0 + 4.05, i, CO.expertName(e)));
+    this.terminal(r, x0 + 0.3, y0 + 0.32, d.link || CO.DEPT_LINK[k] || CO.DEPT_LINK.custom);
+    this.plant(r, x0 + 0.42, y0 + 6.5);
     this.plate(r);
   }
   boardTex(r, u0, u1, tex) {
-    const m = new THREE.Mesh(G.plane, new THREE.MeshBasicMaterial({ map: tex, toneMapped: false })); m.scale.set(u1 - u0, 0.74, 1); m.position.copy(this.V(r.x0 + (u0 + u1) / 2, r.y0 + 0.13, 0.73)); r.g.add(m);
+    const m = new THREE.Mesh(G.plane, new THREE.MeshBasicMaterial({ map: tex, toneMapped: false })); m.scale.set(u1 - u0, 0.7, 1); m.position.copy(this.V(r.x0 + (u0 + u1) / 2, r.y0 + 0.1, 1.3)); r.g.add(m);
+    this.box(r.g, r.x0 + u0 - 0.05, r.y0 + 0.05, 0.9, u1 - u0 + 0.1, 0.04, 0.8, OM.dark, false);
   }
+  // the department's computer: a console whose screen opens its page on cymetica.com
   terminal(r, x, y, link) {
     const g = r.g;
-    this.box(g, x, y, 0, 1.2, 0.8, 0.42, OM.desk);
-    this.box(g, x + 0.5, y + 0.2, 0.42, 0.2, 0.1, 0.12, OM.frame, false);
-    this.box(g, x + 0.08, y + 0.12, 0.54, 1.04, 0.08, 0.74, OM.dark);
+    this.box(g, x, y, 0.08, 1.25, 0.8, 0.5, OM.desk);
+    this.box(g, x + 0.08, y + 0.1, 0.58, 1.09, 0.08, 0.76, OM.dark);
     const scr = new THREE.MeshBasicMaterial({ map: this.pcTex(), toneMapped: false });
-    const face = new THREE.Mesh(G.plane, scr); face.scale.set(0.98, 0.68, 1); face.position.copy(this.V(x + 0.6, y + 0.205, 0.91)); g.add(face);
-    const hit = new THREE.Mesh(G.box, M.hit); hit.scale.set(1.3, 1.3, 1.0); hit.position.copy(this.V(x + 0.6, y + 0.4, 0.65)); hit.userData.pc = link; g.add(hit);
+    const face = new THREE.Mesh(G.plane, scr); face.scale.set(1.0, 0.68, 1); face.position.copy(this.V(x + 0.625, y + 0.185, 0.96)); g.add(face);
+    const hit = new THREE.Mesh(G.box, M.hit); hit.scale.set(1.35, 1.4, 1.0); hit.position.copy(this.V(x + 0.62, y + 0.4, 0.75)); hit.userData.pc = link; g.add(hit);
     this.pcs.push(hit); r.pcFace = scr;
   }
   pcTex() {
@@ -1442,83 +1684,117 @@ class Office3D {
     const t = new THREE.CanvasTexture(c); t.colorSpace = THREE.SRGBColorSpace; this._pc = t; return t;
   }
   plant(r, x, y) {
-    this.box(r.g, x, y, 0, 0.42, 0.42, 0.34, OM.frame);
-    const p = this.V(x + 0.21, y + 0.21, 0.34);
-    [[-0.08, 0.25, 0.2], [0.08, 0.32, 0.18], [0, 0.42, 0.15]].forEach(([dx, dy, s]) => { const m = new THREE.Mesh(G.sphere, M.leaf); m.scale.set(s, s * 1.2, s); m.position.set(p.x + dx, p.y + dy, p.z); m.castShadow = true; r.g.add(m); });
+    this.cyl(r.g, x, y, 0.08, 0.24, 0.36, OM.pot);
+    [[0, 0, 0.62, 0.26], [-0.12, 0.08, 0.74, 0.2], [0.13, -0.05, 0.78, 0.19], [0.02, 0.1, 0.92, 0.16]].forEach(([dx, dy, z, s]) => {
+      const m = new THREE.Mesh(G.sphere, OM.bush); m.scale.set(s, s * 1.1, s); m.position.copy(this.V(x + dx, y + dy, z)); m.castShadow = true; r.g.add(m);
+    });
   }
+  // server racks in a row, fronts to the room: slots, vents, lights; a few lights blink on their own
   racks(r, x, y, n) {
     for (let i = 0; i < n; i++) {
-      const rx = x + i * 0.55; this.box(r.g, rx, y, 0.1, 0.5, 0.55, 1.45, OM.dark);
-      for (let k = 0; k < 8; k++) { const col = ['#00ff88', '#00cfff', '#3b82f6', '#00ff88'][(i + k) % 4]; const m = new THREE.Mesh(G.box, amat(col).glow); m.scale.set(0.07, 0.035, 0.01); m.position.copy(this.V(rx + 0.12 + (k % 2) * 0.22, y + 0.56, 0.35 + Math.floor(k / 2) * 0.3)); m.userData.blink = (i * 7 + k * 3) % 11; r.g.add(m); (r.leds = r.leds || []).push(m); }
+      const rx = x + i * 0.72, m = new THREE.Mesh(G.box, [OM.rack, OM.rack, OM.frame, OM.rack, OM.rackFace, OM.rack]);
+      m.scale.set(0.64, 1.6, 0.74); m.position.copy(this.V(rx + 0.32, y + 0.37, 0.88)); m.castShadow = true; m.receiveShadow = true; r.g.add(m);
+      for (let k = 0; k < 3; k++) { const col = ['#00ff88', '#00cfff', '#3b82f6'][(i + k) % 3]; const l = new THREE.Mesh(G.box, amat(col).glow); l.scale.set(0.05, 0.03, 0.01); l.position.copy(this.V(rx + 0.12 + k * 0.08, y + 0.745, 1.5 - k * 0.38)); l.userData.blink = (i * 7 + k * 3) % 11; r.g.add(l); (r.leds = r.leds || []).push(l); }
     }
   }
-  devices(r, x, y) {
-    this.box(r.g, x, y, 0.1, 1.1, 0.45, 1.25, OM.dark);
-    for (let s = 0; s < 3; s++) for (let k = 0; k < 3; k++) { const col = ['#00cfff', '#00ff88', '#3b82f6'][(s + k) % 3]; const m = new THREE.Mesh(G.plane, amat(col).glow); m.scale.set(0.2, 0.26, 1); m.position.copy(this.V(x + 0.18 + k * 0.36, y + 0.46, 0.4 + s * 0.38)); r.g.add(m); }
-  }
-  // a lab machine: a cabinet with a lit chamber and a row of lights
+  // a white lab machine: a cabinet, a dark window onto a lit chamber, a hologram floating over it
   labMachine(r, x, y) {
-    this.box(r.g, x, y, 0.1, 1.0, 0.7, 1.15, OM.frame);
-    const w = new THREE.Mesh(G.plane, OM.cyan.glow); w.scale.set(0.6, 0.45, 1); w.position.copy(this.V(x + 0.5, y + 0.71, 0.85)); w.rotation.y = 0; r.g.add(w);
-    const glass = new THREE.Mesh(G.plane, OM.glass); glass.scale.set(0.66, 0.5, 1); glass.position.copy(this.V(x + 0.5, y + 0.72, 0.85)); r.g.add(glass);
-    for (let k = 0; k < 4; k++) { const m = new THREE.Mesh(G.box, (k % 2 ? OM.green : OM.cyan).glow); m.scale.set(0.08, 0.04, 0.01); m.position.copy(this.V(x + 0.2 + k * 0.2, y + 0.71, 0.4)); m.userData.blink = k * 3; r.g.add(m); (r.leds = r.leds || []).push(m); }
+    const g = r.g;
+    this.box(g, x, y, 0.08, 1.15, 0.8, 0.62, OM.white);
+    this.box(g, x + 0.05, y + 0.05, 0.7, 1.05, 0.62, 0.42, OM.white);
+    this.box(g, x + 0.12, y + 0.66, 0.74, 0.91, 0.04, 0.32, OM.dark, false);
+    const ch = new THREE.Mesh(G.plane, OM.cyan.soft); ch.scale.set(0.8, 0.24, 1); ch.position.copy(this.V(x + 0.575, y + 0.69, 0.9)); g.add(ch);
+    this.box(g, x + 0.1, y + 0.1, 1.12, 0.95, 0.5, 0.06, OM.white2, false);
+    const holo = new THREE.Mesh(G.plane, OM.holo); holo.scale.set(0.9, 0.6, 1); holo.position.copy(this.V(x + 0.575, y + 0.4, 1.62)); holo.rotation.x = -0.25; g.add(holo);
+    for (let k = 0; k < 3; k++) { const m = new THREE.Mesh(G.box, (k % 2 ? OM.green : OM.cyan).glow); m.scale.set(0.08, 0.035, 0.01); m.position.copy(this.V(x + 0.3 + k * 0.2, y + 0.81, 0.35)); m.userData.blink = k * 3; g.add(m); (r.leds = r.leds || []).push(m); }
+  }
+  canisters(r, x, y) {
+    [[0, 0, 0.5], [0.0, 0.55, 0.42], [0.0, 1.1, 0.5], [-0.45, 0.3, 0.36]].forEach(([dx, dy, h]) => {
+      this.cyl(r.g, x + dx, y + dy, 0.08, 0.2, h, OM.white);
+      this.cyl(r.g, x + dx, y + dy, 0.08 + h, 0.12, 0.06, OM.cyan.soft);
+    });
+  }
+  // a round table with a hologram turning over it: where the league's round is watched
+  leagueTable(r, x, y) {
+    const g = r.g;
+    this.cyl(g, x, y, 0.08, 0.95, 0.42, OM.desk); this.cyl(g, x, y, 0.5, 1.0, 0.05, OM.deskTop);
+    const top = new THREE.Mesh(G.cyl, OM.cyan.soft); top.scale.set(0.8, 0.02, 0.8); top.position.copy(this.V(x, y, 0.56)); g.add(top);
+    r.spin = new THREE.Group(); r.spin.position.copy(this.V(x, y, 1.15)); g.add(r.spin);
+    [0.55, 0.38].forEach((s, i) => { const ring = new THREE.Mesh(G.ringT, OM.cyan.rim); ring.scale.setScalar(s); ring.rotation.x = i ? 0.9 : Math.PI / 2; r.spin.add(ring); });
+    const core = new THREE.Mesh(G.sphere, OM.green.glow); core.scale.setScalar(0.12); r.spin.add(core);
+  }
+  // somewhere to sit and look at the site as a stranger would
+  lounge(r, x, y) {
+    const g = r.g;
+    this.box(g, x, y, 0.08, 2.2, 0.75, 0.32, OM.frame); this.box(g, x, y, 0.4, 2.2, 0.2, 0.42, OM.frame);
+    this.box(g, x + 0.5, y + 1.15, 0.08, 1.2, 0.6, 0.3, OM.deskTop);
   }
   // two more screens on a trading desk, turned in a little: charts, green and red
   sideScreens(r, x, y) {
-    [[x + 0.05, 0.35], [x + 1.45, -0.35]].forEach(([sx, rot]) => {
-      this.box(r.g, sx, y + 0.14, 0.55, 0.42, 0.05, 0.36, OM.dark);
-      const f = new THREE.Mesh(G.plane, new THREE.MeshBasicMaterial({ map: candleTex(), toneMapped: false })); f.scale.set(0.38, 0.3, 1);
-      f.position.copy(this.V(sx + 0.21, y + 0.17, 0.73)); f.rotation.y = rot * 0; r.g.add(f);
+    [[x - 0.35, 0.5], [x + 1.83, -0.5]].forEach(([sx, rot]) => {
+      this.box(r.g, sx, y + 0.12, 0.58, 0.48, 0.05, 0.36, OM.dark);
+      const f = new THREE.Mesh(G.plane, new THREE.MeshBasicMaterial({ map: candleTex(), toneMapped: false })); f.scale.set(0.44, 0.32, 1);
+      f.position.copy(this.V(sx + 0.24, y + 0.15, 0.76)); r.g.add(f);
     });
   }
-  flasks(r, x, y) {
-    this.box(r.g, x, y, 0, 1.3, 0.6, 0.45, OM.desk);
-    [[0.25, '#00cfff', 0.5], [0.65, '#00ff88', 0.36], [1.02, '#00cfff', 0.42]].forEach(([u, col, h]) => {
-      const glass = new THREE.Mesh(G.cyl, OM.glass); glass.scale.set(0.12, h, 0.12); glass.position.copy(this.V(x + u, y + 0.3, 0.45 + h / 2)); r.g.add(glass);
-      const liq = new THREE.Mesh(G.cyl, amat(col).soft); liq.scale.set(0.1, h * 0.6, 0.1); liq.position.copy(this.V(x + u, y + 0.3, 0.45 + h * 0.3)); r.g.add(liq);
-    });
-  }
+  // The Manager's room: a dais of light in the middle, rings rising over it round a white-hot core, arcs of light
+  // on the floor; the turns-by-department board on a console at the back.
   hubRoom(r) {
-    const g = r.g;
-    this.racks(r, r.x0 + 0.45, r.y0 + 0.3, 3);
-    const s = screen(3.4, 0.74), m = new THREE.Mesh(G.plane, new THREE.MeshBasicMaterial({ map: s.tex, toneMapped: false })); m.scale.set(3.4, 0.74, 1); m.position.copy(this.V(r.x0 + 4.7, r.y0 + 0.13, 0.73)); g.add(m); r.bars = s;
-    this.kanban(r);
-    const c = this.V(11.6, 11.4, 0), cy = OM.cyan;
-    const ped = new THREE.Mesh(G.cyl, OM.plinth); ped.scale.set(1.55, 0.45, 1.55); ped.position.set(c.x, 0.32, c.z); ped.castShadow = true; ped.receiveShadow = true; g.add(ped);
-    const lip = new THREE.Mesh(G.ringT, cy.rim); lip.scale.setScalar(1.55); lip.rotation.x = Math.PI / 2; lip.position.set(c.x, 0.55, c.z); g.add(lip);
-    // rings of light on the floor round it
-    [2.2, 2.75].forEach((s, i) => { const fr = new THREE.Mesh(i ? G.holoDash : G.ring, cy.soft); fr.scale.setScalar(s); fr.rotation.x = Math.PI / 2; fr.position.set(c.x, 0.12, c.z); g.add(fr); });
-    const core = new THREE.Mesh(G.sphere, cy.glow); core.scale.setScalar(0.32); core.position.set(c.x, 1.2, c.z); g.add(core);
-    const beam = new THREE.Mesh(G.beam, cy.beam); beam.scale.set(2.2, 3.4, 2.2); beam.position.set(c.x, 2.25, c.z); g.add(beam);
-    r.holo = [1.35, 1.95, 2.55].map((y, i) => { const h = new THREE.Mesh(G.ringT, cy.rim); h.scale.setScalar(1.1 - i * 0.22); h.rotation.x = Math.PI / 2; h.position.set(c.x, y, c.z); g.add(h); return h; });
-    r.core = core; r.coreAt = new THREE.Vector3(c.x, 3.2, c.z);
-    const light = new THREE.PointLight(0x00cfff, 14, 12, 1.6); light.position.set(c.x, 1.8, c.z); g.add(light);
-    this.agent(r, 11.7, 13.9, 0, 'Manager', 0xe6edf7);
-    this.plant(r, r.x0 + 6.3, r.y0 + 0.4);
-    this.plate(r, 'hubp'); r.plateAt = this.V(12.9 + 1.2, 14.25 + 0.5, 1.35);
+    const g = r.g, x0 = r.x0, y0 = r.y0, cy = OM.cyan, c = this.V(x0 + 3.6, y0 + 3.4, 0);
+    this.box(g, x0 + 0.5, y0 + 0.25, 0.08, 3.6, 0.7, 0.55, OM.desk);
+    const s = screen(3.4, 0.62), m = new THREE.Mesh(G.plane, new THREE.MeshBasicMaterial({ map: s.tex, toneMapped: false })); m.scale.set(3.4, 0.62, 1); m.position.copy(this.V(x0 + 2.3, y0 + 0.1, 1.3)); g.add(m); r.bars = s;
+    this.box(g, x0 + 0.55, y0 + 0.05, 0.94, 3.5, 0.04, 0.72, OM.dark, false);
+    this.kanban(r, 1.4, 5.4);
+    const floor = new THREE.Mesh(G.plane, new THREE.MeshBasicMaterial({ map: hubFloorTex(), color: new THREE.Color(0x00cfff).multiplyScalar(1.2), transparent: true, blending: THREE.AdditiveBlending, depthWrite: false }));
+    floor.scale.set(6.4, 6.4, 1); floor.rotation.x = -Math.PI / 2; floor.position.set(c.x, 0.1, c.z); g.add(floor); r.floor = floor;
+    [[1.75, 0.2, 0.08], [1.4, 0.34, 0.28]].forEach(([rad, h, z0]) => {
+      const d = new THREE.Mesh(G.cyl, OM.plinth); d.scale.set(rad, h, rad); d.position.set(c.x, z0 + h / 2, c.z); d.castShadow = true; d.receiveShadow = true; g.add(d);
+      const lip = new THREE.Mesh(G.ringT, cy.rim); lip.scale.setScalar(rad); lip.rotation.x = Math.PI / 2; lip.position.set(c.x, z0 + h, c.z); g.add(lip);
+    });
+    const core = new THREE.Mesh(G.sphere, cy.glow); core.scale.setScalar(0.34); core.position.set(c.x, 1.25, c.z); g.add(core);
+    const halo = glowSprite(0x00cfff, 0.7, 3.2); halo.position.set(c.x, 1.25, c.z); g.add(halo);
+    const beam = new THREE.Mesh(G.beam, cy.beam); beam.scale.set(0.9, 3.2, 0.9); beam.position.set(c.x, 2.4, c.z); g.add(beam);
+    r.holo = [[0.85, 1.45], [1.25, 1.22], [1.65, 1.0], [2.05, 0.8], [2.45, 0.62], [2.85, 0.46]].map(([y, s], i) => {
+      const h = new THREE.Mesh(i % 2 ? G.holoDash : G.ringT, cy.rim); h.scale.setScalar(s); h.rotation.x = Math.PI / 2; h.position.set(c.x, y, c.z); h.userData.y = y; g.add(h); return h;
+    });
+    r.core = core; r.coreAt = new THREE.Vector3(c.x, 3.4, c.z);
+    const light = new THREE.PointLight(0x00cfff, 16, 13, 1.6); light.position.set(c.x, 1.8, c.z); g.add(light);
+    this.agent(r, x0 + 3.7, y0 + 5.9, 0, 'Manager');
+    this.plant(r, x0 + 6.4, y0 + 0.5);
+    this.plate(r, 'hubp'); r.plateAt = this.V(x0 + 6.1, y0 + 6.75, 1.45);
     r.need = document.createElement('div'); r.need.className = 'p3need'; r.need.addEventListener('click', () => CO.emit('office:click', 'hub')); this.layer.appendChild(r.need);
   }
+  // the weekly audit: two consoles with green screens, a desk, a printer for the report
   auditRoom(r) {
-    this.wallScreen(r, 1.1, 5.0);
-    this.desk(r, r.x0 + 2.2, r.y0 + 1.8, 0);
-    this.agent(r, r.x0 + 3.15, r.y0 + 3.1, 0, 'Supervisor');
-    this.plant(r, r.x0 + 0.3, r.y0 + 6.2);
+    const g = r.g, x0 = r.x0, y0 = r.y0;
+    [x0 + 0.3, x0 + 1.75].forEach((x) => {
+      this.box(g, x, y0 + 0.3, 0.08, 1.25, 0.75, 0.62, OM.white);
+      const top = new THREE.Mesh(G.box, OM.white); top.scale.set(1.25, 0.08, 0.6); top.position.copy(this.V(x + 0.625, y0 + 0.55, 0.85)); top.rotation.x = -0.5; g.add(top);
+      this.box(g, x + 0.08, y0 + 0.32, 0.72, 1.09, 0.08, 0.62, OM.white);
+      const scr = new THREE.Mesh(G.plane, new THREE.MeshBasicMaterial({ map: monTex(), toneMapped: false })); scr.scale.set(0.95, 0.5, 1); scr.position.copy(this.V(x + 0.625, y0 + 0.41, 1.03)); g.add(scr);
+    });
+    this.wallScreen(r, 3.4, 6.6);
+    this.desk(r, x0 + 3.0, y0 + 2.75, 0);
+    this.agent(r, x0 + 3.95, y0 + 4.05, 0, 'Supervisor');
+    this.box(g, x0 + 0.35, y0 + 4.4, 0.08, 1.0, 0.8, 0.6, OM.white); this.box(g, x0 + 0.45, y0 + 4.5, 0.68, 0.8, 0.6, 0.06, OM.white2);
+    this.plant(r, x0 + 6.5, y0 + 6.5);
     this.plate(r, 'auditp');
   }
   // The vault: its round door in the back wall, a lit plinth where ET10 (green) and USDC (blue) pile up in stacks of
   // coins under glass. A visitor finds the door shut and the plinth bare: it is always private.
   vaultRoom(r) {
-    const g = r.g, x0 = r.x0, y0 = r.y0, A = OM.green, dc = this.V(x0 + 3.5, y0 + 0.17, 0.8);
-    const door = new THREE.Mesh(G.cyl, OM.frame); door.scale.set(0.68, 0.09, 0.68); door.rotation.x = Math.PI / 2; door.position.copy(dc); g.add(door);
-    const rim = new THREE.Mesh(G.ringT, A.rim); rim.scale.setScalar(0.72); rim.position.copy(dc).add(new THREE.Vector3(0, 0, 0.05)); g.add(rim);
-    r.wheel = new THREE.Group(); r.wheel.position.copy(dc).add(new THREE.Vector3(0, 0, 0.07)); g.add(r.wheel);
-    for (let k = 0; k < 3; k++) { const s = new THREE.Mesh(G.box, M.metal); s.scale.set(0.82, 0.05, 0.04); s.rotation.z = k * Math.PI / 3; r.wheel.add(s); }
-    const hubc = new THREE.Mesh(G.sphere, A.glow); hubc.scale.set(0.07, 0.07, 0.03); r.wheel.add(hubc);
-    this.box(g, x0 + 1.4, y0 + 2.2, 0, 4.2, 2.6, 0.24, OM.plinth);
+    const g = r.g, x0 = r.x0, y0 = r.y0, A = OM.green, dc = this.V(x0 + 3.5, y0 + 0.17, 1.0);
+    const door = new THREE.Mesh(G.cyl, OM.engine); door.scale.set(0.8, 0.1, 0.8); door.rotation.x = Math.PI / 2; door.position.copy(dc); g.add(door);
+    const rim = new THREE.Mesh(G.ringT, A.rim); rim.scale.setScalar(0.84); rim.position.copy(dc).add(new THREE.Vector3(0, 0, 0.06)); g.add(rim);
+    r.wheel = new THREE.Group(); r.wheel.position.copy(dc).add(new THREE.Vector3(0, 0, 0.08)); g.add(r.wheel);
+    for (let k = 0; k < 3; k++) { const s = new THREE.Mesh(G.box, M.metal); s.scale.set(0.95, 0.06, 0.05); s.rotation.z = k * Math.PI / 3; r.wheel.add(s); }
+    const hubc = new THREE.Mesh(G.sphere, A.glow); hubc.scale.set(0.08, 0.08, 0.03); r.wheel.add(hubc);
+    this.box(g, x0 + 1.4, y0 + 2.2, 0.08, 4.2, 2.6, 0.24, OM.plinth);
     const lip = emis('#00ff88', 0.7);
-    [[x0 + 1.4, y0 + 4.8 - 0.03, 4.2, 0.05], [x0 + 1.4, y0 + 2.2 - 0.02, 4.2, 0.05]].forEach(([x, y, w, d]) => this.box(g, x, y, 0.24, w, d, 0.03, lip, false));
+    [[x0 + 1.4, y0 + 4.8 - 0.03, 4.2, 0.05], [x0 + 1.4, y0 + 2.2 - 0.02, 4.2, 0.05]].forEach(([x, y, w, d]) => this.box(g, x, y, 0.32, w, d, 0.03, lip, false));
     r.pileG = new THREE.Group(); g.add(r.pileG);
-    this.plate(r, 'vaultp'); r.plateAt = this.V(x0 + 4.4, y0 + 5.75, 1.35);
+    this.plant(r, x0 + 0.42, y0 + 6.5);
+    this.plate(r, 'vaultp'); r.plateAt = this.V(x0 + 4.4, y0 + 5.75, 1.45);
     if (r.glow) { r.glow.material.color.set(0x00ff88); r.glowBase = CO.RO ? 0 : 0.14; }
   }
   // the piles, rebuilt only when what they hold changes: five stacks each, taller with every order of magnitude
@@ -1531,28 +1807,33 @@ class Office3D {
       [[0, 0, 1], [0.55, 0.15, 0.8], [-0.1, 0.6, 0.7], [0.5, 0.68, 0.55], [0.22, 0.34, 0.9]].forEach(([dx, dy, k], i) => {
         if (lvl <= 0 && i) return;
         const h = Math.max(0.05, lvl * 0.2 * k), m = new THREE.Mesh(G.cyl, mat);
-        m.scale.set(0.22, h, 0.22); m.position.copy(this.V(px + dx, y0 + 3.0 + dy, 0.24 + h / 2)); m.castShadow = true; r.pileG.add(m);
+        m.scale.set(0.22, h, 0.22); m.position.copy(this.V(px + dx, y0 + 3.0 + dy, 0.32 + h / 2)); m.castShadow = true; r.pileG.add(m);
       });
-      const case_ = new THREE.Mesh(G.box, OM.glass); case_.scale.set(1.25, Math.max(0.5, lvl * 0.2 + 0.25), 1.25); case_.position.copy(this.V(px + 0.25, y0 + 3.35, 0.24 + case_.scale.y / 2)); r.pileG.add(case_);
-      const halo = glowSprite(col, 0.09, 2.0); halo.position.copy(this.V(px + 0.25, y0 + 3.35, 0.5 + lvl * 0.2)); halo.userData.y = halo.position.y; r.pileG.add(halo); this.vaultPiles.push(halo);
+      const case_ = new THREE.Mesh(G.box, OM.glass); case_.scale.set(1.25, Math.max(0.5, lvl * 0.2 + 0.25), 1.25); case_.position.copy(this.V(px + 0.25, y0 + 3.35, 0.32 + case_.scale.y / 2)); r.pileG.add(case_);
+      const halo = glowSprite(col, 0.09, 2.0); halo.position.copy(this.V(px + 0.25, y0 + 3.35, 0.6 + lvl * 0.2)); halo.userData.y = halo.position.y; r.pileG.add(halo); this.vaultPiles.push(halo);
     });
   }
+  // the free lot: open deck marked out with white dashes, a holographic pad on it (a grid of light inside a short
+  // wall of light, a dashed ring turning inside, two still ones round it); the label lies inside the ring
   lotRoom(r) {
-    const RS = CO.iso.RS, g = r.g, c = this.V(r.x0 + RS / 2, r.y0 + RS / 2, 0.05);
-    const dash = emis('#00cfff', 0.55);
-    for (let a = 0; a < RS; a += 0.7) {
-      [[r.x0 + a, r.y0], [r.x0 + a, r.y0 + RS]].forEach(([x, y]) => this.box(g, x, y - 0.03, 0.04, 0.4, 0.06, 0.03, dash, false));
-      [[r.x0, r.y0 + a], [r.x0 + RS, r.y0 + a]].forEach(([x, y]) => this.box(g, x - 0.03, y, 0.04, 0.06, 0.4, 0.03, dash, false));
+    const RS = CO.iso.RS, g = r.g, c = this.V(r.x0 + RS / 2, r.y0 + RS / 2, 0.05), ins = 0.35;
+    for (let a = ins; a < RS - ins - 0.2; a += 0.75) {
+      const w = Math.min(0.42, RS - ins - a);
+      [[r.x0 + a, r.y0 + ins], [r.x0 + a, r.y0 + RS - ins]].forEach(([x, y]) => this.box(g, x, y - 0.035, 0.0, w, 0.07, 0.025, OM.dash, false));
+      [[r.x0 + ins, r.y0 + a], [r.x0 + RS - ins, r.y0 + a]].forEach(([x, y]) => this.box(g, x - 0.035, y, 0.0, 0.07, w, 0.025, OM.dash, false));
     }
-    // a holographic pad on the free floor: a grid in a ring, a dashed ring round it that turns; the label lies inside
     const pad = new THREE.Mesh(G.plane, new THREE.MeshBasicMaterial({ map: padTex(), transparent: true, blending: THREE.AdditiveBlending, depthWrite: false }));
-    pad.scale.set(4.2, 4.2, 1); pad.rotation.x = -Math.PI / 2; pad.position.set(c.x, 0.1, c.z); g.add(pad);
-    r.plus = new THREE.Mesh(G.holoDash, OM.cyan.rim); r.plus.scale.setScalar(2.55); r.plus.rotation.x = Math.PI / 2; r.plus.position.set(c.x, 0.11, c.z); g.add(r.plus);
+    pad.scale.set(4.5, 4.5, 1); pad.rotation.x = -Math.PI / 2; pad.position.set(c.x, 0.03, c.z); g.add(pad);
+    const wall = new THREE.Mesh(G.pole, new THREE.MeshBasicMaterial({ map: gridTex(), color: new THREE.Color(0x00cfff).multiplyScalar(1.3), transparent: true, blending: THREE.AdditiveBlending, depthWrite: false, side: THREE.DoubleSide }));
+    wall.scale.set(2.25, 0.5, 2.25); wall.position.set(c.x, 0.27, c.z); g.add(wall);
+    [0.03, 0.52].forEach((y) => { const ring = new THREE.Mesh(G.ringT, OM.cyan.rim); ring.scale.setScalar(2.25); ring.rotation.x = Math.PI / 2; ring.position.set(c.x, y, c.z); g.add(ring); });
+    r.plus = new THREE.Mesh(G.holoDash, OM.dash); r.plus.scale.setScalar(1.9); r.plus.rotation.x = Math.PI / 2; r.plus.position.set(c.x, 0.05, c.z); g.add(r.plus);
+    [2.75, 3.15].forEach((s) => { const ring = new THREE.Mesh(G.holoDash, OM.dash); ring.scale.setScalar(s); ring.rotation.x = Math.PI / 2; ring.position.set(c.x, 0.02, c.z); g.add(ring); });
+    const halo = glowSprite(0x00cfff, 0.12, 6); halo.position.set(c.x, 0.4, c.z); g.add(halo);
     const hit = new THREE.Mesh(G.box, M.hit); hit.scale.set(RS, 1.6, RS); hit.position.set(c.x, 0.8, c.z); hit.userData.key = 'lot'; g.add(hit); this.hits.push(hit);
     const el = document.createElement('div'); el.className = 'p3lot'; el.innerHTML = '<b>+</b>ADD DEPARTMENT'; el.addEventListener('click', () => CO.emit('office:click', 'lot')); this.layer.appendChild(el);
     r.plate = el; r.plateAt = new THREE.Vector3(c.x, 0.15, c.z);   // the label lies inside its ring
   }
-
   /* ---------------- what changes: colours, screens, people, plates ---------------- */
   update() {
     if (!this.cells || this.shape() !== this.shapeKey) { if (this.cells && this.shapeKey) return this.layout(); }
@@ -1578,7 +1859,7 @@ class Office3D {
       const html = '<div class="p3h"><i style="background:' + (ln.tone === 'red' ? '#ff4444' : dot) + '"></i><b>' + esc(d.name.toUpperCase()) + '</b>' + et + '</div><div class="p3l" style="color:' + (TONEC[ln.tone] || '#a9b8cc') + '">' + esc(ln.short) + '</div>';
       if (r.plate && r.plate._h !== html) { r.plate._h = html; r.plate.innerHTML = html; }
       if (r.plate) { r.plate.classList.toggle('work', v.status === 'working'); r.plate.style.setProperty('--c', ln.tone === 'red' ? '#ff4444' : col); }
-      if (this.conduits['d' + d.id]) { const cm = this.conduits['d' + d.id].mat; cm.emissive.set(v.status === 'working' ? 0x00cfff : 0x00ff88); cm.emissiveIntensity = v.status === 'working' ? 1.6 : 0.22; }
+      if (this.conduits['d' + d.id]) { const cm = this.conduits['d' + d.id].mat; cm.emissive.set(v.status === 'working' ? 0x00cfff : 0xdfe6ee); cm.emissiveIntensity = v.status === 'working' ? 1.6 : 0.3; }
     });
     const hub = this.rooms.hub;
     if (hub) {
@@ -1622,10 +1903,10 @@ class Office3D {
     if (r.st === st) return; r.st = st;
     // a room at rest keeps a dim green edge: green is the office's structure, cyan and red what its rooms do
     const lit = st === 'working' || st === 'waiting', c = new THREE.Color(lit ? STC[st] : 0x00ff88);
-    if (r.edgeM) { r.edgeM.emissive.copy(c); r.edgeM.emissiveIntensity = lit ? 1.5 : st === 'queued' ? 0.4 : 0.26; }
+    if (r.edgeM) { r.edgeM.emissive.copy(c); r.edgeM.emissiveIntensity = lit ? 1.6 : st === 'queued' ? 0.85 : 0.7; }
     if (r.sillM) { r.sillM.emissive.copy(c); r.sillM.emissiveIntensity = lit ? 0.6 : 0.1; }
-    if (r.glow) { r.glow.material.color.copy(c); r.glowBase = st === 'working' ? 0.3 : st === 'waiting' ? 0.26 : 0; }
-    if (r.lamp) { r.lamp.color.copy(lit ? c : new THREE.Color(OFFICE.lamp)); r.lamp.intensity = st === 'working' ? 9 : st === 'waiting' ? 7 : 3.2; }
+    if (r.glow) { r.glow.material.color.copy(lit ? c : new THREE.Color(0xdfe6ee)); r.glowBase = st === 'working' ? 0.3 : st === 'waiting' ? 0.5 : 0.06; }
+    if (r.lamp) { r.lamp.color.copy(lit ? c : new THREE.Color(OFFICE.lamp)); r.lamp.intensity = st === 'working' ? 12 : st === 'waiting' ? 14 : 6; }
   }
   drawSel() {
     release(this.selRing); this.selRing.clear();
@@ -1669,9 +1950,9 @@ class Office3D {
   // The whole office, as large as the stage allows: the camera's angle is fixed, its distance is the nearest at which
   // every slab's corners fit (a margin at the top for the stage's own bar), and it aims at the middle of what it sees.
   home() {
-    const dir = new THREE.Vector3().setFromSpherical(new THREE.Spherical(1, 0.97, Math.PI / 4)), cam = this.camera.clone(), pts = this.corners || [];
+    const dir = new THREE.Vector3().setFromSpherical(new THREE.Spherical(1, 0.95, Math.PI / 4)), cam = this.camera.clone(), pts = this.corners || [];
     const tgt = new THREE.Vector3(); pts.forEach((p) => tgt.add(p)); if (pts.length) tgt.divideScalar(pts.length); tgt.y = 0;
-    const fits = (d, t) => { cam.position.copy(t).addScaledVector(dir, d); cam.lookAt(t); cam.updateMatrixWorld(); return pts.every((p) => { const v = p.clone().project(cam); return Math.abs(v.x) < 0.93 && v.y < 0.82 && v.y > -0.95; }); };
+    const fits = (d, t) => { cam.position.copy(t).addScaledVector(dir, d); cam.lookAt(t); cam.updateMatrixWorld(); return pts.every((p) => { const v = p.clone().project(cam); return Math.abs(v.x) < 0.96 && v.y < 0.84 && v.y > -0.97; }); };
     let d = 30;
     for (let k = 0; k < 2; k++) {
       let lo = 8, hi = 300;
@@ -1696,7 +1977,7 @@ class Office3D {
     const c = this.cells[key]; if (!c) return;
     const RS = CO.iso.RS, tgt = this.V(c[0] + RS / 2, c[1] + RS / 2 + 0.4, 0.5);
     const dir = new THREE.Vector3().setFromSpherical(new THREE.Spherical(1, 0.88, Math.PI / 4));
-    this.tween(tgt.clone().add(dir.multiplyScalar(tight ? 20 : 24)), tgt, 750);
+    this.tween(tgt.clone().add(dir.multiplyScalar(tight ? 23 : 27)), tgt, 750);
   }
   tween(pos, tgt, ms, done) {
     if (!ms) { this.camera.position.copy(pos); this.controls.target.copy(tgt); this.controls.update(); this.tw = null; if (done) done(); return; }
@@ -1705,6 +1986,7 @@ class Office3D {
   resize() {
     const w = this.el.clientWidth, h = this.el.clientHeight; if (!w || !h) return;
     this.camera.aspect = w / h; this.camera.updateProjectionMatrix(); this.renderer.setSize(w, h, false);
+    if (this.fitted && !this.moved && !this.sel && !this.tw) this.fit(false);
   }
 
   /* ---------------- the frame ---------------- */
@@ -1718,14 +2000,17 @@ class Office3D {
       if (k >= 1) { const d = this.tw.done; this.tw = null; if (d) d(); }
     }
     this.controls.update();
+    this.sky.position.copy(this.camera.position);
     if (this.drift) this.drift.forEach((d, i) => { d.m.rotation.y = t * d.sp + i; d.m.rotation.x = t * d.sp * 0.6 + i * 2; });
-    if (this.flames) this.flames.forEach((f) => { const k = 0.85 + 0.15 * Math.sin(t * 13 + f.ph) + 0.05 * Math.sin(t * 31 + f.ph); f.fl.scale.set(0.8 * k, 1.3 * k, 0.8 * k); });
+    if (this.flames) this.flames.forEach((f) => { const k = 0.85 + 0.15 * Math.sin(t * 13 + f.ph) + 0.05 * Math.sin(t * 31 + f.ph); f.fl.scale.set(0.85 * k, 2.2 * (0.9 + 0.1 * k), 0.85 * k); });
     if (this.vaultPiles) this.vaultPiles.forEach((p, i) => { p.position.y = p.userData.y + Math.sin(t * 1.2 + i) * 0.03; });
     Object.values(this.rooms).forEach((r) => {
       if (r.grow) { const k = Math.min(1, (now - r.grow) / 1200), e = 1 - Math.pow(1 - k, 3); r.g.scale.set(1, Math.max(0.01, e), 1); if (k >= 1) r.grow = 0; }
       if (r.glow) r.glow.material.opacity = (r.glowBase || 0) * (r.st === 'working' ? 0.75 + 0.25 * Math.sin(t * 2.4 + r.x0) : 1);
       if (r.leds) r.leds.forEach((m, i) => { m.visible = ((Math.floor(t * 3 + m.userData.blink)) % 3) !== 0; });
-      if (r.holo) { r.holo.forEach((hh, i) => { hh.rotation.z = t * (0.6 + i * 0.35) * (i % 2 ? -1 : 1); hh.position.y = 1.35 + i * 0.6 + Math.sin(t * 1.3 + i) * 0.05; }); r.core.position.y = 1.2 + Math.sin(t * 1.7) * 0.06; }
+      if (r.holo) { r.holo.forEach((hh, i) => { hh.rotation.z = t * (0.6 + i * 0.35) * (i % 2 ? -1 : 1); hh.position.y = hh.userData.y + Math.sin(t * 1.3 + i) * 0.05; }); r.core.position.y = 1.25 + Math.sin(t * 1.7) * 0.06; }
+      if (r.spin) r.spin.rotation.y = t * 0.6;
+      if (r.floor) r.floor.rotation.z = t * 0.05;
       if (r.plus) r.plus.rotation.z = t * 0.25;
       if (r.wheel) r.wheel.rotation.z = t * 0.12;
       r.agents.forEach((a) => {
@@ -1737,7 +2022,7 @@ class Office3D {
           else if (!W2.back) { W2.back = true; W2.from = W2.to.clone(); W2.to = a.home.clone(); W2.t0 = now; W2.stay = 0; }
           else { a.walk = null; a.g.position.copy(a.home); }
         }
-        a.b.position.y = 0.42 + (a.working ? Math.abs(Math.sin(t * 7 + a.phase)) * 0.035 : 0);
+        a.b.position.y = a.by + (a.working ? Math.abs(Math.sin(t * 7 + a.phase)) * 0.035 : 0);
         // an astronaut at work: its visor and its chest light go cyan
         a.visorM.emissiveIntensity = a.working ? 1.3 : 0.06; a.chest.material = a.working ? OM.cyan.glow : OM.pack;
         a.ringM.emissiveIntensity = a.working ? 1.8 * (1 - ((t * 0.9 + a.phase) % 1)) : 0;
@@ -1773,7 +2058,7 @@ class Office3D {
       if (r.plate && r.plateAt) { show(r.plate, r.plateAt); r.plate.classList.toggle('sel', this.sel === r.key); r.plate.classList.toggle('hov', this.hover === r.key); }
       if (r.need && !r.need.hidden) show(r.need, r.coreAt, -10);
       const named = this.sel === r.key || this.hover === r.key;
-      r.agents.forEach((a) => { a.el.classList.toggle('on', named); if (named) show(a.el, a.g.position.clone().add(new THREE.Vector3(0, 1.22, 0))); });
+      r.agents.forEach((a) => { a.el.classList.toggle('on', named); if (named) show(a.el, a.g.position.clone().add(new THREE.Vector3(0, 1.7, 0))); });
     });
   }
 
@@ -1827,7 +2112,7 @@ class Office3D {
 (function () {
   let gl2 = false;
   try { gl2 = !!document.createElement('canvas').getContext('webgl2'); } catch (e) { gl2 = false; }
-  CO.U3 = (gl2 || navigator.gpu) ? { ok: true, gpu: !!navigator.gpu, universe: (el, stage, h) => new Universe3D(el, stage, h), office: (el, stage, tipFor) => new Office3D(el, stage, tipFor), preview, thumbs, THREE, geo, makeStation, SKIN, amat }
+  CO.U3 = (gl2 || navigator.gpu) ? { ok: true, gpu: !!navigator.gpu, universe: (el, stage, h) => new Universe3D(el, stage, h), office: (el, stage, tipFor) => new Office3D(el, stage, tipFor), preview, thumbs, THREE, geo, makeStation, SKIN, amat, nebTex, TX }
     : { failed: true, why: 'no WebGPU and no WebGL2' };
   window.dispatchEvent(new Event('co3d'));
 })();
