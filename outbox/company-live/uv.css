@@ -1,4 +1,4 @@
-/* The /company mockup: the Universe tab, the visitor's read-only frame, the building picker and
+/* The /company mockup: the Universe tab, the visitor's read-only frame, the station picker and
    "Create your company". The site's palette only: navy, cyan, green, red, blue and slate-blue. */
 
 /* ---------- the tab ---------- */
@@ -14,10 +14,11 @@
 
 /* ---------- the map ---------- */
 .uvpane { flex: 1; min-height: 0; display: flex; padding: 14px 20px; }
+/* deep space behind the flat map (the 3D one paints its own sky) */
 .uvstage { flex: 1; min-height: 0; overflow: hidden;
-  background: radial-gradient(900px 520px at 22% 18%, rgba(0, 207, 255, .07), transparent 70%),
-    radial-gradient(1000px 600px at 82% 88%, rgba(59, 130, 246, .09), transparent 70%),
-    radial-gradient(ellipse at 50% 55%, #0c1626, #05080f 78%); }
+  background: radial-gradient(800px 460px at 18% 22%, rgba(0, 207, 255, .06), transparent 70%),
+    radial-gradient(900px 520px at 84% 80%, rgba(0, 255, 136, .045), transparent 70%),
+    radial-gradient(ellipse at 50% 50%, #050a10, #010204 72%); }
 .uvstage .stars { position: absolute; left: 0; top: 0; width: 1px; height: 1px; pointer-events: none; will-change: transform; }
 .uvstage .stars i { position: absolute; left: 0; top: 0; width: 1px; height: 1px; border-radius: 50%; }
 .uvstage .stars i.near { animation: twinkle 3.6s ease-in-out infinite; }
@@ -52,10 +53,10 @@ i.lk::before { content: ''; position: absolute; left: 1.5px; top: -5px; width: 6
 .tip .uvt span { color: var(--dim2); font-size: 11px; }
 
 /* the flat map's pieces */
-.uvmap .street { stroke: #1a2a44; stroke-width: 1.2; stroke-dasharray: 7 8; }
-.uvmap .edgeglow { stroke: var(--cyan); stroke-width: 1.2; opacity: .4; filter: drop-shadow(0 0 4px rgba(0, 207, 255, .8)); }
-.uvmap .car { filter: drop-shadow(0 0 3px currentColor); opacity: .9; }
+.uvmap .lane { fill: none; stroke-width: 5; opacity: .16; }
+.uvmap .ship { opacity: .9; }
 .uvmap .plot { cursor: pointer; }
+.uvmap .plot .wheel { filter: drop-shadow(0 0 3px currentColor); }
 .uvmap .plot .rim { opacity: .55; transition: opacity .2s; }
 .uvmap .plot .rim.fence { stroke-dasharray: 5 4; opacity: .4; }
 .uvmap .plot.hov .rim, .uvmap .plot.mine .rim { opacity: 1; filter: drop-shadow(0 0 4px currentColor); }
@@ -81,9 +82,6 @@ i.lk::before { content: ''; position: absolute; left: 1.5px; top: -5px; width: 6
 @keyframes mering { to { stroke-dashoffset: -22; } }
 .uvmap .cring { stroke-width: 1.2; opacity: .45; }
 .uvmap .cring.spin { stroke-dasharray: 18 10; animation: mering 3s linear infinite; opacity: .7; }
-.uvmap .cbeam { opacity: .12; animation: beamp 3s ease-in-out infinite; }
-.uvmap .holo { stroke-width: 1.4; opacity: .55; animation: holo 2.4s ease-in-out infinite; filter: drop-shadow(0 0 3px var(--cyan)); }
-@keyframes holo { 50% { opacity: .2; } }
 .uvmap .corb { filter: drop-shadow(0 0 10px var(--cyan)); animation: beacon 2.4s ease-in-out infinite; }
 .uvmap .ban { cursor: pointer; }
 .uvmap .ban .rib { transition: stroke-width .15s; }
@@ -95,9 +93,12 @@ i.lk::before { content: ''; position: absolute; left: 1.5px; top: -5px; width: 6
 
 /* ---------- the 3D map's banners: DOM over the canvas ---------- */
 .uvbans { position: absolute; inset: 0; pointer-events: none; z-index: 3; overflow: hidden; }
-.uvstage.is2d .uvbans { display: none; }
-.b3 { position: absolute; left: 0; top: 0; transform: translate(-50%, -100%); pointer-events: auto; cursor: pointer; display: flex; flex-direction: column; align-items: center;
+.b3 { position: absolute; left: 0; top: 0; transform: translate(-50%, -100%); transform-origin: 50% 100%; pointer-events: auto; cursor: pointer; display: flex; flex-direction: column; align-items: center;
   will-change: transform; transition: opacity .25s; }
+/* Cymetica's own name over the star in the middle */
+.b3.core { cursor: default; }
+.b3.core .rib { font-size: 14px; letter-spacing: .32em; padding: 5px 20px 5px 26px; color: #dff8ff; text-shadow: 0 0 12px rgba(0, 207, 255, .9); }
+.b3.core .teth { height: 26px; }
 .b3 .rib { display: flex; align-items: center; gap: 6px; padding: 4px 16px; font: 400 12px 'Archivo Black', sans-serif; letter-spacing: .04em; color: var(--text); white-space: nowrap;
   background: rgba(8, 12, 20, .9); border: 1.3px solid var(--acc); box-shadow: 0 0 14px color-mix(in srgb, var(--acc) 40%, transparent), inset 0 0 10px color-mix(in srgb, var(--acc) 18%, transparent);
   clip-path: polygon(0 0, 100% 0, calc(100% - 7px) 50%, 100% 100%, 0 100%, 7px 50%); border-radius: 2px; }
@@ -186,11 +187,14 @@ body.ro #dr-ch-text { cursor: default; }
 .uvopts { display: grid; gap: 12px; min-width: 0; }
 .uvopts .sec, .cc .sec { margin-top: 2px; }
 .skins { display: grid; grid-template-columns: repeat(6, minmax(0, 1fr)); gap: 8px; }
-.skin { display: flex; flex-direction: column; align-items: center; gap: 2px; padding: 6px 4px 7px; border-radius: 10px; border: 1px solid var(--line2); background: var(--navy2);
-  transition: border-color .15s, box-shadow .15s, transform .12s; }
+/* a station tile: a small window into space, the station drawn in 3D once it is ready (img.th3), flat until then */
+.skin { display: flex; flex-direction: column; align-items: center; gap: 4px; padding: 5px 5px 7px; border-radius: 10px; border: 1px solid var(--line2);
+  background: radial-gradient(ellipse at 50% 38%, #08131c, #03060b 75%); transition: border-color .15s, box-shadow .15s, transform .12s; }
 .skin:hover { border-color: var(--dim2); transform: translateY(-1px); }
-.skin.on { border-color: var(--cyan); box-shadow: 0 0 0 1px var(--cyan), 0 0 16px rgba(0, 207, 255, .25); background: linear-gradient(180deg, rgba(0, 207, 255, .1), var(--navy2)); }
-.skin .skinsvg { width: 100%; height: 74px; display: block; }
+.skin.on { border-color: var(--cyan); box-shadow: 0 0 0 1px var(--cyan), 0 0 18px rgba(0, 207, 255, .3); }
+.skin .skinsvg { width: 100%; height: 92px; display: block; }
+.skin .th3 { display: block; width: 100%; aspect-ratio: 16 / 10; object-fit: cover; border-radius: 7px; }
+.skin.has3d .skinsvg { display: none; }
 .skin b { font-size: 10.5px; font-weight: 700; color: var(--dim); white-space: nowrap; }
 .skin.on b { color: var(--text); }
 .accents { display: flex; gap: 10px; }
@@ -202,7 +206,7 @@ body.ro #dr-ch-text { cursor: default; }
 .cc { display: grid; grid-template-columns: minmax(0, 1fr) 360px; gap: 18px; margin-top: 6px; }
 .ccl { display: grid; gap: 12px; align-content: start; min-width: 0; }
 .cc .skins { grid-template-columns: repeat(3, minmax(0, 1fr)); }
-.cc .skin .skinsvg { height: 84px; }
+.cc .skin .skinsvg { height: 100px; }
 .ccr .hint { text-align: center; }
 
 /* ---------- a private company's card ---------- */

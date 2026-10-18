@@ -421,7 +421,7 @@
 
   /* ---------------- the Universe: every company on one map ---------------- */
   var uv = null;
-  // our own company as the map draws it: its name, building and colour from Settings, a floor per department
+  // our own company as the map draws it: its name, station and colour from Settings, a deck per department
   function mineForMap() {
     var S = CO.S, p = CO.profile(), work = [];
     S.departments.forEach(function (d, i) { if (CO.deptView(d).running) work.push(i); });
@@ -487,11 +487,11 @@
       '<div class="pc-b"><div class="pc-h"><h3>' + esc(c.name) + '</h3><span class="lockp"><i class="lk"></i>PRIVATE</span><span class="sp"></span><button class="btn" data-a="close">×</button></div>' +
       '<div class="pc-o">by <b>@' + esc(c.owner) + '</b> · ' + (c.days ? 'on Cymetica for ' + c.days + ' day' + (c.days === 1 ? '' : 's') : 'new today') + '</div>' +
       '<div class="sec">ABOUT</div><p class="pc-d">' + esc(c.mission || 'Its owner has not written a description yet.') + '</p>' +
-      '<div class="kpis two"><div><b>' + n + '</b><span>department' + (n === 1 ? '' : 's') + ' · one per floor</span></div><div><b>' + (c.status === 'paused' ? 'Paused' : 'Active') + '</b><span>status</span></div></div>' +
+      '<div class="kpis two"><div><b>' + n + '</b><span>department' + (n === 1 ? '' : 's') + ' · one deck each</span></div><div><b>' + (c.status === 'paused' ? 'Paused' : 'Active') + '</b><span>status</span></div></div>' +
       '<p class="hint"><i class="lk"></i>Private: only its owner can look inside.</p></div></div>', true);
     pv3(document.querySelector('#modal-card .pc-art'), { skin: c.skin, accent: c.accent, floors: n, seed: c.id, name: c.name, public: false });
   }
-  // the building pictures: six shapes in the company's colour
+  // the station pictures: six shapes in the company's colour
   function skinButtons(sel, acc) {
     return CO.SKINS.map(function (s) {
       return '<button type="button" class="skin' + (s.key === sel ? ' on' : '') + '" data-a="uv-skin" data-k="' + s.key + '">' + CO.skinSVG({ skin: s.key, accent: acc, floors: 3, seed: 11 }) + '<b>' + s.name + '</b></button>';
@@ -501,23 +501,33 @@
     return CO.ACCENTS.map(function (a) { return '<button type="button" class="acc' + (a.key === sel ? ' on' : '') + '" data-a="uv-accent" data-k="' + a.key + '" style="--c:' + a.hex + '" title="' + a.key + '"></button>'; }).join('');
   }
   function mark(sel, el) { Array.prototype.forEach.call(document.querySelectorAll(sel), function (x) { x.classList.toggle('on', x === el); }); }
-  // the building turning in 3D where the browser can draw it; the flat picture stays underneath until then
+  // the station turning in 3D where the browser can draw it; the flat picture stays underneath until then
   function pv3(el, o) { if (el && CO.U3 && CO.U3.ok && CO.U3.preview) CO.U3.preview(el, o); }
+  // the six station tiles as 3D pictures once they are drawn; the flat ones until then
+  function thumbs3(root, accent) {
+    if (!root || !(CO.U3 && CO.U3.ok && CO.U3.thumbs)) return;
+    CO.U3.thumbs(CO.accentHex(accent), function (urls) {
+      Array.prototype.forEach.call(root.querySelectorAll('.skin[data-k]'), function (b) {
+        var u = urls[b.getAttribute('data-k')]; if (!u || b.querySelector('img.th3')) return;
+        var img = document.createElement('img'); img.className = 'th3'; img.alt = ''; img.src = u; b.insertBefore(img, b.firstChild); b.classList.add('has3d');
+      });
+    });
+  }
   function myPv() {
     var S = CO.S, p = CO.profile();
     return { skin: p.skin, accent: p.accent, floors: Math.max(1, S.departments.length), seed: 7, name: S.company.name, you: true, public: !!p.public };
   }
   function uvCard() {
     var S = CO.S, p = CO.profile(), n = Math.max(1, S.departments.length);
-    return '<div class="card uvcard"><h3>On the Universe map <span class="hint">where every company on Cymetica stands</span></h3><div class="uvset">' +
+    return '<div class="card uvcard"><h3>In the Universe <span class="hint">where every company on Cymetica floats</span></h3><div class="uvset">' +
       '<div class="uvprev" id="st-prev">' + CO.skinSVG({ skin: p.skin, accent: p.accent, floors: n, seed: 7, banner: S.company.name, you: true, priv: !p.public }) + '</div>' +
       '<div class="uvopts"><div class="switch' + (p.public ? ' on' : '') + '" data-a="uv-public"><span class="sw"></span><div><b>' + (p.public ? 'Public' : 'Private') + '</b><span>' +
       (p.public ? 'Anyone can open it from the map and look at everything inside: office, departments, charters, processes, tasks, settings. Only you change anything.' :
-        'It stands on the map with a lock. Others see its name, its building and its mission; nothing inside.') + '</span></div></div>' +
-      '<div class="sec">BUILDING <span>one floor per department · ' + n + ' now</span></div><div class="skins">' + skinButtons(p.skin, p.accent) + '</div>' +
+        'It floats in the Universe with a lock. Others see its name, its station and its mission; nothing inside.') + '</span></div></div>' +
+      '<div class="sec">STATION <span>one deck per department · ' + n + ' now</span></div><div class="skins">' + skinButtons(p.skin, p.accent) + '</div>' +
       '<div class="sec">COLOUR</div><div class="accents">' + accentButtons(p.accent) + '</div></div></div></div>';
   }
-  // "Create your company": a name, a mission, the building on the map and who may look inside
+  // "Create your company": a name, a mission, the station in the Universe and who may look inside
   function createCompanyModal() {
     var o = { name: '', mission: '', skin: 'tower', accent: 'green', public: false };
     function prev() { return CO.skinSVG({ skin: o.skin, accent: o.accent, floors: 3, seed: 7, banner: o.name || 'Your company', you: true, priv: !o.public }); }
@@ -527,18 +537,18 @@
       pv3(el, { skin: o.skin, accent: o.accent, floors: 3, seed: 7, name: o.name || 'Your company', you: true, public: o.public });
     }
     function pub() {
-      return '<span class="sw"></span><div><b>' + (o.public ? 'Public' : 'Private') + '</b><span>' + (o.public ? 'Anyone can look inside, read only.' : 'Others see its name, its building and its mission.') + '</span></div>';
+      return '<span class="sw"></span><div><b>' + (o.public ? 'Public' : 'Private') + '</b><span>' + (o.public ? 'Anyone can look inside, read only.' : 'Others see its name, its station and its mission.') + '</span></div>';
     }
     openModal('<div class="mh"><h3>Create your company</h3><button class="btn" data-a="close">×</button></div>' +
       '<div class="cc"><div class="ccl"><div class="form"><label class="field full">Name<input id="cc-name" maxlength="40" placeholder="e.g. Moonshot Labs" autocomplete="off"></label>' +
-      '<label class="field full">Mission · what everyone reads on the map<input id="cc-mission" maxlength="200" placeholder="What it is for, in one line" autocomplete="off"></label></div>' +
-      '<div class="sec step">YOUR BUILDING ON THE UNIVERSE MAP <span>it grows a floor with every department</span></div>' +
+      '<label class="field full">Mission · what everyone reads in the Universe<input id="cc-mission" maxlength="200" placeholder="What it is for, in one line" autocomplete="off"></label></div>' +
+      '<div class="sec step">YOUR STATION IN THE UNIVERSE <span>it grows a deck with every department</span></div>' +
       '<div class="skins" id="cc-skins">' + skinButtons(o.skin, o.accent) + '</div><div class="accents" id="cc-acc">' + accentButtons(o.accent) + '</div>' +
       '<div class="switch" id="cc-pub" data-a="cc-public">' + pub() + '</div></div>' +
-      '<div class="ccr"><div class="uvprev big" id="cc-prev">' + prev() + '</div><p class="hint">Shown with 3 departments, as it will stand on the map.</p></div></div>' +
+      '<div class="ccr"><div class="uvprev big" id="cc-prev">' + prev() + '</div><p class="hint">Shown with 3 departments, as it will float in the Universe.</p></div></div>' +
       '<div class="mf"><span class="hint">One company per account.</span><span class="sp"></span><button class="btn" data-a="close">Cancel</button><button class="btn gr" data-a="create">Create company</button></div>', true, function (a, el) {
         if (a === 'uv-skin') { o.skin = el.getAttribute('data-k'); mark('#cc-skins .skin', el); }
-        if (a === 'uv-accent') { o.accent = el.getAttribute('data-k'); mark('#cc-acc .acc', el); $('cc-skins').innerHTML = skinButtons(o.skin, o.accent); }
+        if (a === 'uv-accent') { o.accent = el.getAttribute('data-k'); mark('#cc-acc .acc', el); $('cc-skins').innerHTML = skinButtons(o.skin, o.accent); thumbs3($('cc-skins'), o.accent); }
         if (a === 'cc-public') { o.public = !o.public; var sw = $('cc-pub'); sw.classList.toggle('on', o.public); sw.innerHTML = pub(); }
         if (a === 'create') {
           var nm = $('cc-name').value.trim();
@@ -551,6 +561,7 @@
       });
     ui.ccPrev = function () { o.name = $('cc-name').value.trim(); show(); };
     show();
+    thumbs3($('cc-skins'), o.accent);
   }
   // what a process's department raises next, and the process that picks it up
   function nextOf(r) {
@@ -704,17 +715,18 @@
       setHTML($('settings'), '<div class="cols2"><div class="card"><h3>Company</h3><dl class="rodl"><dt>Name</dt><dd>' + esc(c.name) + '</dd><dt>Owner</dt><dd>@' + esc(c.owner) + '</dd>' +
         '<dt>Mission</dt><dd>' + esc(c.mission) + '</dd><dt>Report style</dt><dd>' + esc(c.report_style) + '</dd><dt>Plan</dt><dd>' + esc(c.plan) + '</dd>' +
         '<dt>Status</dt><dd class="' + (paused ? '' : 'gr') + '">' + (paused ? 'Paused' : 'Active') + '</dd></dl></div>' +
-        '<div class="card uvcard"><h3>On the Universe map</h3><div class="uvset ro"><div class="uvprev">' + CO.skinSVG({ skin: c.skin, accent: c.accent, floors: n, seed: c.id, banner: c.name }) + '</div>' +
-        '<dl class="rodl"><dt>Visibility</dt><dd class="cy">Public: anyone can look inside</dd><dt>Building</dt><dd>' + esc(CO.skinName(c.skin)) + ' · ' + n + ' floor' + (n === 1 ? '' : 's') + '</dd></dl></div></div></div>');
+        '<div class="card uvcard"><h3>In the Universe</h3><div class="uvset ro"><div class="uvprev">' + CO.skinSVG({ skin: c.skin, accent: c.accent, floors: n, seed: c.id, banner: c.name }) + '</div>' +
+        '<dl class="rodl"><dt>Visibility</dt><dd class="cy">Public: anyone can look inside</dd><dt>Station</dt><dd>' + esc(CO.skinName(c.skin)) + ' · ' + n + ' deck' + (n === 1 ? '' : 's') + '</dd></dl></div></div></div>');
       pv3(document.querySelector('#settings .uvprev'), { skin: c.skin, accent: c.accent, floors: n, seed: c.id, name: c.name, public: true });
       return;
     }
-    // the turning building survives a re-render: it moves into the new card instead of starting again
+    // the turning station survives a re-render: it moves into the new card instead of starting again
     var oldPv = $('st-prev'), keepPv = oldPv && oldPv.__pv;
     settingsHTML(S, c, paused);
     var nuPv = $('st-prev');
     if (keepPv && nuPv && nuPv !== oldPv && !keepPv.dead) { nuPv.appendChild(keepPv.wrap); nuPv.__pv = keepPv; keepPv.el = nuPv; nuPv.classList.add('has3d'); }
     pv3(nuPv, myPv());
+    thumbs3($('settings'), CO.profile().accent);
   }
   function settingsHTML(S, c, paused) {
     setHTML($('settings'), uvCard() + '<div class="cols2"><div class="card"><h3>Company</h3><div class="form">' +
@@ -1057,7 +1069,7 @@
   }
   function pageAct(a, el) {
     var S = CO.S;
-    // the Universe card: who may look inside, the building and its colour; saved at once, the map follows
+    // the Universe card: who may look inside, the station and its colour; saved at once, the map follows
     if (a === 'uv-public' || a === 'uv-skin' || a === 'uv-accent') {
       var p = CO.profile();
       if (a === 'uv-public') p = CO.saveProfile({ public: !p.public });
@@ -1066,8 +1078,8 @@
       if (document.activeElement) document.activeElement.blur();
       renderSettings();
       if (uv) uv.setMine(mineForMap());
-      return toast(a === 'uv-public' ? (p.public ? 'Public: anyone can look inside, read only.' : 'Private: others see its name, building and mission only.') :
-        'Your building on the map: ' + CO.skinName(p.skin) + ', ' + p.accent + '.');
+      return toast(a === 'uv-public' ? (p.public ? 'Public: anyone can look inside, read only.' : 'Private: others see its name, station and mission only.') :
+        'Your station in the Universe: ' + CO.skinName(p.skin) + ', ' + p.accent + '.');
     }
     if (a === 'invest') { S.company.investable = !S.company.investable; CO.changed(); toast(S.company.investable ? 'Investable: backers can pledge.' : 'Not investable any more.'); }
     if (a === 'form') openModal('<div class="mh"><h3>Start formation?</h3></div><p>' + esc(S.legal.domicile) + ' · ' + esc(($('lg-name') || {}).value || S.legal.name) + '. Filing waits for your approval like everything real.</p>' +

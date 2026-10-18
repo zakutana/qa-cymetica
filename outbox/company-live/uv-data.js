@@ -2,15 +2,17 @@
  * opened and looked through, read only. The companies here are SAMPLES: the live list of public companies
  * (GET /api/v1/companies, read 2026-10-17) is empty, so these show the shape, built only from what the live
  * platform has: its five department templates, its seven experts, its plans and what pays ET10 (an accepted
- * bug 1,000; Agent Tournaments prizes; Agent League puzzles). Names and owners are invented. */
+ * bug 1,000; Agent Tournaments prizes; Agent League puzzles). Names and owners are invented: 23 written by hand,
+ * 56 more generated below so the Universe has a galaxy to zoom out over. */
 (function () {
   'use strict';
   var CO = window.CO = window.CO || {};
 
-  // a building's shape and its colour: the colour is one of the site's four, the variety is in the shape
+  // a station's shape and its colour: the colour is one of the site's four, the variety is in the shape. The keys
+  // are the buildings' old ones, so a company saved before the Universe went to space keeps its pick.
   CO.SKINS = [
-    { key: 'tower', name: 'Glass tower' }, { key: 'dome', name: 'Biodome' }, { key: 'pyramid', name: 'Ziggurat' },
-    { key: 'orbital', name: 'Orbital' }, { key: 'rocket', name: 'Launchpad' }, { key: 'vault', name: 'Vault' }
+    { key: 'tower', name: 'Spire' }, { key: 'dome', name: 'Biodome' }, { key: 'pyramid', name: 'Ziggurat' },
+    { key: 'orbital', name: 'Ring station' }, { key: 'rocket', name: 'Starship' }, { key: 'vault', name: 'Vault' }
   ];
   CO.ACCENTS = [
     { key: 'green', hex: '#00ff88' }, { key: 'cyan', hex: '#00cfff' }, { key: 'blue', hex: '#3b82f6' }, { key: 'red', hex: '#ff4444' }
@@ -169,6 +171,46 @@
       mission: 'Day one. Learning how Cymetica works.',
       departments: [d('testing_lab')], rules: [] }
   ];
+  // A universe needs more than 23. The rest are SAMPLES too, generated the same way every time: a name, an owner,
+  // two to five of the platform's own department templates (no charters of their own), the processes the platform's
+  // templates suggest for them, and ET10 only from what pays it (accepted bugs, tournament prizes).
+  (function more() {
+    var s = 20261018, R = function () { s = (s * 16807) % 2147483647; return (s - 1) / 2147483646; };
+    var pick = function (a) { return a[Math.floor(R() * a.length)]; };
+    var shuffle = function (a) { a = a.slice(); for (var i = a.length - 1; i > 0; i--) { var j = Math.floor(R() * (i + 1)), t = a[i]; a[i] = a[j]; a[j] = t; } return a; };
+    var A = ['Lunar', 'Nova', 'Orbit', 'Quantum', 'Pulsar', 'Comet', 'Nebula', 'Vector', 'Sigma', 'Apex', 'Helix', 'Photon', 'Quasar',
+      'Rekt', 'Stellar', 'Titan', 'Vega', 'Zenith', 'Based', 'Bull', 'Degen', 'Gas', 'Giga', 'Hodl', 'Moon', 'Pump', 'Wagmi', 'Whale',
+      'Yield', 'Omega', 'Laser', 'Sats', 'Gamma', 'Ion', 'Meteor', 'Signal', 'Echo', 'Delta', 'Orion', 'Cosmo'];
+    var B = ['Labs', 'Capital', 'Works', 'Desk', 'Collective', 'Syndicate', 'Ventures', 'Research', 'Systems', 'Guild', 'Station', 'Fund',
+      'Foundry', 'Club', 'Crew', 'Holdings', 'Trading', 'Analytics', 'Signals', 'Outpost', 'Ops', 'Dynamics', 'Partners', 'Base'];
+    var H1 = ['degen', 'moon', 'sats', 'ape', 'anon', 'gm', 'wen', 'ser', 'fren', 'based', 'pump', 'alpha', 'nova', 'orbit', 'luna', 'whale', '0x'];
+    var H2 = ['dev', 'max', 'kid', 'lord', 'cat', 'fox', 'bot', 'pilot', 'chef', 'pete', 'kate', 'vic', 'mila', 'sam', 'jo', 'rex'];
+    var ROLE = {
+      testing: { rule: ['a bug is found anywhere', 'Cymetica QA', 'verifies it and files it'], mission: ['File every bug Cymetica would pay for, each one reproduced twice.', 'Test each new Cymetica build the day it ships.'] },
+      testing_lab: { rule: ['someone finds a way to make money', 'Testing lab', 'proves it on paper first'], mission: ['Prove every idea on paper before anything else.', 'Paper-test what NEXUS suggests, a week at a time.'] },
+      trading_desk: { rule: ['an agent wins on paper', 'Trading desk', 'seats it at an Agent Tournaments table'], mission: ['Seat the best paper agents at Agent Tournaments tables.', 'Paper trades only, scored after fees.'] },
+      development: { rule: ['someone has a product idea', 'Development', 'writes it up as a Build it Better request'], mission: ['Turn every good idea into a Build it Better request.'] },
+      design: { rule: ['a page looks wrong', 'Design studio', 'reviews it against its brief'], mission: ['Review Cymetica\'s pages against their briefs.'] }
+    };
+    var KEYS = ['testing', 'testing_lab', 'trading_desk', 'development', 'design'], SK = ['tower', 'dome', 'pyramid', 'orbital', 'rocket', 'vault'];
+    var taken = {}; CO.UNIVERSE.forEach(function (c) { taken[c.name] = 1; });
+    for (var id = 124; id < 180; id++) {
+      var name; do { name = pick(A) + ' ' + pick(B); } while (taken[name]); taken[name] = 1;
+      var keys = shuffle(KEYS).slice(0, 2 + Math.floor(R() * R() * 4));
+      var first = keys[0], qa = keys.indexOf('testing') >= 0, desk = keys.indexOf('trading_desk') >= 0;
+      var deps = keys.map(function (k) {
+        if (k !== 'testing') return d(k);
+        return d(k, { runs: pick([1, 2, 2, 3, 4]), products: shuffle(QA_ALL).slice(0, 1 + Math.floor(R() * 4)) });
+      });
+      var pub = R() < 0.66, days = Math.floor(R() * 40);
+      CO.UNIVERSE.push({ id: id, name: name, owner: pick(H1) + (R() < 0.4 ? '_' : '') + pick(H2) + (R() < 0.3 ? Math.floor(R() * 99) : ''),
+        public: pub, status: R() < 0.08 ? 'paused' : 'active', plan: R() < 0.7 ? 'Pro' : R() < 0.85 ? 'Max 5x' : 'Max 20x', days: days,
+        skin: pick(SK), accent: pick(['green', 'cyan', 'blue', 'red']),
+        bugs: qa ? Math.floor(R() * R() * 10) : 0, prize: desk && R() < 0.4 ? 85 * (1 + Math.floor(R() * 6)) : 0, league: 0,
+        mission: pick(ROLE[first].mission), departments: deps,
+        rules: pub ? keys.map(function (k) { return ROLE[k].rule; }) : [] });
+    }
+  })();
   CO.uvCompany = function (id) {
     for (var i = 0; i < CO.UNIVERSE.length; i++) if (CO.UNIVERSE[i].id === id) return CO.UNIVERSE[i];
     return null;
