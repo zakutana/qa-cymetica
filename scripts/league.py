@@ -41,6 +41,10 @@ from qa.state import file_lock, state_dir  # noqa: E402
 
 BASE = "/api/v1/agent-league"
 PRIZE_LIMIT = 200   # rows asked of /prizes; its default is the newest 50
+# Every row count /prizes has been seen to stop at: its ceiling, and the default it falls back to
+# when `limit` is not honoured. A list exactly that long cannot tell "all of them" from "the
+# newest N", so it is read as cut (R05, deep pass 2026-10-18).
+PRIZE_WINDOWS = (50, PRIZE_LIMIT)
 PLAYER_NAME = "qa-cymetica"
 PLAYER_KIND = "api"
 
@@ -322,7 +326,7 @@ def summary() -> dict:
         client.close()
     seen = ([p for p in prizes if isinstance(p, dict) and p.get("player_id") == pid]
             if isinstance(prizes, list) else None)
-    cut = isinstance(prizes, list) and len(prizes) >= PRIZE_LIMIT
+    cut = isinstance(prizes, list) and (len(prizes) >= PRIZE_LIMIT or len(prizes) in PRIZE_WINDOWS)
     mine = None if cut else seen
     rows = load()
     sent = sum(1 for r in rows if r.get("type") == "outcome" and r.get("kind") == "answer"
@@ -339,7 +343,7 @@ def summary_lines(sent: int, theirs: dict | None, mine: list | None,
                   cut: list | None = None) -> list[str]:
     """The three /lab lines. `theirs` None: their player record did not answer; `mine` None: the
     prize list did not answer. Rule 8: an unread figure is said, never printed as 0 (R03).
-    `cut`: the list came back full to its 200-row ceiling, so these are only ours among it."""
+    `cut`: the list came back as long as a window it stops at, so these are only ours among it."""
     # Theirs counts SCORED answers; an answer is scored when its puzzle resolves.
     if theirs is None:
         first = f"{sent} answers sent, scored: unread (their player record did not answer)"
@@ -349,7 +353,7 @@ def summary_lines(sent: int, theirs: dict | None, mine: list | None,
         second = f"{theirs.get('division_name')}, {theirs.get('points')} points"
     if mine is None and cut is not None:
         capped = sum(1 for p in cut if p.get("status") == "capped")
-        third = (f"ET10 credited: unread (the prize list stops at its newest {PRIZE_LIMIT} rows; "
+        third = ("ET10 credited: unread (the prize list answered only a window of its newest rows; "
                  f"older prizes cannot be read)"
                  + (f", {capped} capped among them (the monthly cap: not paid)" if capped else ""))
     elif mine is None:

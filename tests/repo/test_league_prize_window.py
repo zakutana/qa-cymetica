@@ -101,3 +101,50 @@ def test_a_full_window_of_prizes_is_said_unread_not_counted_as_the_total(monkeyp
     monkeypatch.setattr(script, "load", lambda: [])
     said = script.summary()
     assert said.get("prizes") is None and "unread" in str(said).lower(), said
+    # B03, deep pass 2026-10-18: the total itself, not only the count -- a sum over the cut list
+    # (every fixture row capped, so 0) is the T-0018 undercount said as a figure
+    assert said["et10_credited"] is None, said
+    assert any("ET10 credited: unread" in line for line in said["lines"]), said
+
+
+class _DefaultWindowClient(_Client):
+    """A server that drops `limit` and answers its default newest fifty again (before REPLY-0182)."""
+
+    def get(self, url, params=None):
+        return super().get(url, {k: v for k, v in (params or {}).items() if k != "limit"})
+
+
+@qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
+def test_a_list_cut_at_its_default_fifty_is_said_unread_not_counted_as_the_total(monkeypatch):
+    """R05, deep pass 2026-10-18: `cut` was only ever 200 rows, so a /prizes that ignores `limit`
+    answers 50, and the 2 capped prizes of ours among them were printed as the whole (0 ET10)
+    while 8 credited ones lay older. A count equal to a window the server cuts at cannot tell
+    "all of them" from "the newest N"."""
+    script = _script()
+    monkeypatch.setattr(script, "_client", lambda write=False: _DefaultWindowClient())
+    monkeypatch.setattr(script, "_get", lambda client, url, **params: client.get(url, params))
+    monkeypatch.setattr(script, "load", lambda: [])
+    said = script.summary()
+    assert said.get("prizes") is None and said["et10_credited"] is None, said
+    assert any("ET10 credited: unread" in line for line in said["lines"]), said
+
+
+class _ShortClient(_Client):
+    """Fewer rows than any window: the list is all there is, and is counted."""
+
+    def get(self, url, params=None):
+        if url.endswith("/prizes"):
+            rows = [r for r in _prizes() if r["id"] <= 30]
+            return _Reply({"terms": {}, "month_committed_et10": 0.0, "prizes": rows})
+        return super().get(url, params)
+
+
+@qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
+def test_a_list_shorter_than_every_window_is_the_whole_and_is_counted(monkeypatch):
+    """The other side of R05: an unread verdict on every answer would also pass the test above."""
+    script = _script()
+    monkeypatch.setattr(script, "_client", lambda write=False: _ShortClient())
+    monkeypatch.setattr(script, "_get", lambda client, url, **params: client.get(url, params))
+    monkeypatch.setattr(script, "load", lambda: [])
+    said = script.summary()
+    assert said["prizes"] == 8 and said["et10_credited"] == 8000, said
