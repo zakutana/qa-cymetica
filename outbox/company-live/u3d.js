@@ -403,34 +403,189 @@ SKIN.orbital = (b, n) => {
   b.beacon(0, spineH + 0.68, 0, 0.1);
   b.top = spineH + 1.1; b.bot = -2.6; b.foot = RR + 0.5;
 };
-// Starship: a hull section per deck, lying along x; a nose and a bridge, three engines whose flames grow while it works
-SKIN.rocket = (b, n) => {
-  const A = b.A, rr = 0.5 + Math.min(n, 8) * 0.05, L = 1.0, len = n * L, x0 = -len / 2, cy = rr + 0.3;
-  for (let f = 0; f < n; f++) {
-    const x = x0 + f * L + L / 2;
-    b.part(G.cyl, f % 2 ? A.hull2 : A.hull, rr, L - 0.05, rr, x, cy, 0).rotation.z = Math.PI / 2;
-    b.part(G.cyl, A.rim, rr * 1.035, 0.05, rr * 1.035, x + L / 2 - 0.025, cy, 0).rotation.z = Math.PI / 2;
-    for (const s of [1, -1]) for (const dx of [-0.22, 0.2]) b.win(x + dx, cy + 0.06, s * (rr + 0.014), s > 0 ? 0 : Math.PI, 0.17, 0.19, f, b.R() < 0.55);
-  }
-  b.part(G.cone, A.hull, rr, rr * 2.3, rr, len / 2 + rr * 1.15, cy, 0).rotation.z = -Math.PI / 2;
-  b.part(G.hemi, A.glass, rr * 0.5, rr * 0.42, rr * 0.75, len / 2 - 0.4, cy + rr * 0.88, 0);
-  // a strip of light down its back, seen from above, and its running lights along the keel
-  b.box(len - 0.3, 0.05, 0.08, 0, cy + rr + 0.01, 0, A.rim);
-  for (let k = 0; k < n; k++) b.part(G.sphere, A.glow, 0.05, 0.05, 0.05, x0 + k * L + L / 2, cy - rr - 0.02, 0);
-  b.part(G.cyl, M.trim, rr * 1.12, 0.5, rr * 1.12, x0 - 0.25, cy, 0).rotation.z = Math.PI / 2;
-  const fl = [];
-  [[0.36, 0], [-0.22, 0.34], [-0.22, -0.34]].forEach(([dy, dz], i) => {
-    const yy = cy + dy * rr, zz = dz * rr;
-    b.part(G.bell, M.metal, rr * 0.34, 0.5, rr * 0.34, x0 - 0.75, yy, zz).rotation.z = -Math.PI / 2;
-    b.part(G.sphere, A.glow, 0.05, rr * 0.3, rr * 0.3, x0 - 0.99, yy, zz, true);
-    const p = b.part(G.beam, A.beam, rr * 0.9, 1.6, rr * 0.9, x0 - 1.8, yy, zz, true); p.rotation.z = Math.PI / 2; fl.push(p);
+// Laser station (key 'rocket', so a company saved with the old Starship keeps its pick), as the operator's picture
+// draws it: an armoured block in the company's colour under a round lid, a laser cannon out of one side firing a
+// beam of its colour, pale solar wings on the other three (his has three, the cannon takes the fourth arm); under
+// the block a dark drum, one ribbed ring per deck, its windows lit while the deck's department works.
+// The materials both of these stations add, one set per colour, kept in AM beside amat's own so that release()
+// keeps them for the next station as it keeps those.
+function lsMats(A) {
+  const k = 'ls' + A.hex; if (AM[k]) return AM[k];
+  const c = A.c, grey = new THREE.Color(0xc8ccd4);
+  return (AM[k] = {
+    body: std({ color: c.clone().lerp(grey, 0.15), roughness: 0.42, metalness: 0.12, emissive: c, emissiveIntensity: 0.07 }),
+    plate: std({ color: c.clone().lerp(grey, 0.12).multiplyScalar(0.34), roughness: 0.55, metalness: 0.25 }),
+    drum: std({ color: 0x25272d, roughness: 0.5, metalness: 0.55 }),
+    rib: std({ color: 0x3b3e46, roughness: 0.42, metalness: 0.6 }),
+    wing: std({ color: new THREE.Color(0xe6e4ee).lerp(c, 0.08), map: lsCellTex(), roughness: 0.42, metalness: 0.3 })
   });
-  b.anim.push((t) => fl.forEach((p, i) => { const k = (b.busy ? 1.35 : 0.8) + 0.14 * Math.sin(t * 19 + i * 2 + b.phase); p.scale.set(rr * 0.9 * k, 1.6 * k, rr * 0.9 * k); p.position.x = x0 - 1.0 - 0.8 * k; }));
-  b.box(0.95, 0.75, 0.05, x0 + 0.35, cy + rr + 0.3, 0, A.fin);
-  for (const s of [1, -1]) b.box(0.95, 0.05, 0.75, x0 + 0.35, cy - rr * 0.35, s * (rr + 0.3), A.fin).rotation.x = s * 0.35;
-  b.beacon(len / 2 + rr * 2.3, cy, 0, 0.06);
-  b.beacon(x0 + 0.35, cy + rr + 0.7, 0, 0.07);
-  b.top = cy + rr + 0.9; b.bot = cy - rr - 0.2; b.foot = len / 2 + rr * 2;
+}
+// his wings' cells: pale lavender-grey squares in a slightly darker grid, a light frame round the panel
+function lsCellTex() {
+  return TX.lsCells || (TX.lsCells = ctex(512, 192, (g, W, H) => {
+    g.fillStyle = '#a3a0b4'; g.fillRect(0, 0, W, H);
+    const nx = 14, ny = 4, p = 6, cw = (W - 2 * p) / nx, ch = (H - 2 * p) / ny;
+    for (let i = 0; i < nx; i++) for (let j = 0; j < ny; j++) {
+      const x = p + i * cw, y = p + j * ch, gr = g.createLinearGradient(x, y, x + cw, y + ch);
+      gr.addColorStop(0, '#e2dfea'); gr.addColorStop(1, '#c6c3d3'); g.fillStyle = gr; g.fillRect(x + 1, y + 1, cw - 2, ch - 2);
+    }
+    g.strokeStyle = '#f4f2fa'; g.lineWidth = 4; g.strokeRect(2, 2, W - 4, H - 4);
+  }));
+}
+// a part turned to point along an arm: a yaw about the station's axis after its own tilt (rx) and roll (rz)
+function lsArm(m, a, d, rx, rz) {
+  const p = rotXZ(d, 0, a); m.position.x = p[0]; m.position.z = p[1];
+  m.rotation.order = 'YXZ'; m.rotation.set(rx || 0, a, rz || 0); return m;
+}
+SKIN.rocket = (b, n) => {
+  const A = b.A, L = lsMats(A), w = 1.6 + Math.min(n, 8) * 0.06, hc = w * 0.95, half = w / 2;
+  // the armoured block: rounded, a dark plate framed on each side, a round lid on a seat
+  b.part(G.lsCube || (G.lsCube = new RoundedBoxGeometry(1, 1, 1, 3, 0.12)), L.body, w, hc, w, 0, hc / 2, 0);
+  for (let k = 0; k < 4; k++) {
+    const a = k * Math.PI / 2, on = (m, x, y, out) => { const p = rotXZ(x, half + out, a); m.position.set(p[0], y, p[1]); m.rotation.y = a; return m; };
+    on(b.box(w * 0.62, hc * 0.58, 0.02, 0, 0, 0, L.plate), 0, hc / 2, 0.006);
+    for (const s of [1, -1]) {
+      on(b.box(w * 0.72, 0.08, 0.06, 0, 0, 0, L.body), 0, hc / 2 + s * hc * 0.32, 0.025);
+      on(b.box(0.08, hc * 0.64, 0.06, 0, 0, 0, L.body), s * w * 0.34, hc / 2, 0.025);
+    }
+  }
+  b.cyl(w * 0.37, 0.08, 0, hc + 0.04, 0, L.rib);
+  b.cyl(w * 0.42, w * 0.24, 0, hc + 0.08 + w * 0.12, 0, L.body);
+  // the drum of decks under it
+  const rd = w * 0.4, dh = 0.4;
+  b.cyl(rd + 0.1, 0.08, 0, -0.04, 0, L.rib);
+  let y = -0.08;
+  for (let f = 0; f < n; f++) {
+    b.cyl(rd, dh - 0.07, 0, y - (dh - 0.07) / 2, 0, L.drum);
+    b.ringWins(f, rd, y - (dh - 0.07) / 2, 0.1, 0.34, 0.35, 0.09);
+    b.cyl(rd + 0.05, 0.07, 0, y - dh + 0.035, 0, L.rib);
+    y -= dh;
+  }
+  b.part(G.cone, L.drum, rd * 0.72, 0.32, rd * 0.72, 0, y - 0.16, 0).rotation.x = Math.PI;
+  b.beacon(0, y - 0.4, 0, 0.06);
+  // the cannon, out of the +z side: a dark ribbed housing, a collar in the station's colour, a barrel, and the beam
+  // with a light at either end; a bolt runs down it, and it burns brighter while a deck works
+  const ly = hc * 0.36, z0 = half, fire = (geom, mat, r, len, z, dyn) => { const m = b.part(geom, mat, r, len, r, 0, ly, z, dyn); m.rotation.x = Math.PI / 2; return m; };
+  fire(G.cyl, L.drum, w * 0.22, w * 0.6, z0 + w * 0.3);
+  for (let k = 0; k < 4; k++) fire(G.cyl, L.rib, w * 0.235, 0.05, z0 + w * (0.08 + k * 0.13));
+  fire(G.cyl, L.body, w * 0.17, w * 0.14, z0 + w * 0.67);
+  fire(G.cyl, L.body, w * 0.055, w * 0.22, z0 + w * 0.85);
+  const zb = z0 + w * 0.96, bl = w * 1.6, sheathMat = A.beam.clone();
+  b.part(G.ringT, A.rim, w * 0.07, w * 0.07, w * 0.07, 0, ly, zb);
+  const core = fire(G.cyl, A.glow, 0.03, bl, zb + bl / 2, true), sheath = fire(G.cyl, sheathMat, 0.075, bl, zb + bl / 2, true);
+  const bolt = b.part(G.sphere, A.glow, 0.07, 0.07, 0.3, 0, ly, zb, true);
+  const tip = glowSprite(A.c, 0.9, 0.7);
+  tip.position.set(0, ly, zb + bl); b.g.add(tip);
+  b.anim.push((t) => {
+    const k = (b.busy ? 1.35 : 1) * (1 + 0.14 * Math.sin(t * 7.3 + b.phase));
+    core.scale.set(0.03 * k, bl, 0.03 * k); sheath.scale.set(0.075 * k, bl, 0.075 * k);
+    sheathMat.opacity = (b.busy ? 0.5 : 0.32) + 0.08 * Math.sin(t * 5.1 + b.phase);
+    bolt.position.z = zb + ((t * (b.busy ? 1.6 : 0.9) + b.phase) % 1) * bl;
+    tip.material.opacity = 0.7 + 0.3 * Math.sin(t * 11 + b.phase);
+  });
+  // the wings on the other three arms, on struts from the block's middle, each turned a little towards the front
+  const wy = hc * 0.52, pl = w * 2.0, pw = w * 0.8, w0 = half + 0.3;
+  for (const [a, tilt] of [[0, 0.35], [Math.PI / 2, 0.35], [Math.PI, -0.35]]) {
+    lsArm(b.box(0.36, 0.08, 0.08, 0, wy, 0, M.metal), a, half + 0.15);
+    lsArm(b.box(0.14, 0.14, 0.18, 0, wy, 0, L.rib), a, w0 - 0.04);
+    lsArm(b.box(pl, 0.05, pw, 0, wy, 0, L.wing), a, w0 + pl / 2, tilt);
+    lsArm(b.box(pl + 0.04, 0.07, 0.05, 0, wy, 0, M.metal), a, w0 + pl / 2, tilt);
+  }
+  b.top = hc + w * 0.32 + 0.3; b.bot = y - 0.5; b.foot = Math.max(w0 + pl, zb + bl);
+};
+// Data stack: the operator's picture's "Night Owl Trading" -- dark server blocks of different heights, a block per
+// department, each a pile of plates with a strip of light along every plate that the department's work lights; on a
+// rounded base ringed in the company's colour, two engines glowing blue at its stern, a dark solar wing either side.
+function stMats(A) {
+  const k = 'st' + A.hex; if (AM[k]) return AM[k];
+  const c = A.c;
+  return (AM[k] = {
+    side: std({ color: 0x364357, roughness: 0.5, metalness: 0.25 }),
+    top: std({ color: 0x45536a, roughness: 0.45, metalness: 0.25 }),
+    dark: std({ color: 0x0b0f15, roughness: 0.6, metalness: 0.4 }),
+    base: std({ color: new THREE.Color(0x262f3c).lerp(c, 0.05), roughness: 0.5, metalness: 0.25 }),
+    wing: std({ color: 0xffffff, map: stPanelTex(), roughness: 0.38, metalness: 0.35 }),
+    plume: new THREE.MeshBasicMaterial({ color: new THREE.Color(0.06, 0.28, 1).multiplyScalar(1.3), transparent: true, opacity: 0.1, blending: THREE.AdditiveBlending, depthWrite: false }),
+    nozzle: new THREE.MeshBasicMaterial({ color: new THREE.Color(0.25, 0.5, 1).multiplyScalar(1.5) })
+  });
+}
+// his dark wings: slate cells in a lighter frame
+function stPanelTex() {
+  return TX.stPanel || (TX.stPanel = ctex(256, 192, (g, W, H) => {
+    g.fillStyle = '#4b5567'; g.fillRect(0, 0, W, H);
+    const nx = 4, ny = 3, p = 5, cw = (W - 2 * p) / nx, ch = (H - 2 * p) / ny;
+    for (let i = 0; i < nx; i++) for (let j = 0; j < ny; j++) {
+      const x = p + i * cw, y = p + j * ch, gr = g.createLinearGradient(x, y, x + cw, y + ch);
+      gr.addColorStop(0, '#323d50'); gr.addColorStop(1, '#1d2532'); g.fillStyle = gr; g.fillRect(x + 2, y + 2, cw - 4, ch - 4);
+      g.strokeStyle = 'rgba(140,160,190,.22)'; g.lineWidth = 1;
+      for (let q = 1; q < 3; q++) { g.beginPath(); g.moveTo(x + 2 + q * (cw - 4) / 3, y + 2); g.lineTo(x + 2 + q * (cw - 4) / 3, y + ch - 2); g.stroke(); }
+    }
+  }));
+}
+// a rounded slab of a given size (its corners keep their radius at any size), and the line of light round its top
+function stSlab(w, h, d) {
+  const k = 'stSlab' + [w, h, d].map((v) => v.toFixed(2)).join('x');
+  return G[k] || (G[k] = new RoundedBoxGeometry(w, h, d, 3, Math.min(0.15, h * 0.45)));
+}
+function stRim(w, d) {
+  const k = 'stRim' + w.toFixed(2) + 'x' + d.toFixed(2); if (G[k]) return G[k];
+  const r = 0.15, hw = w / 2 + 0.01, hd = d / 2 + 0.01, pts = [];
+  const corner = (cx, cz, a0) => { for (let i = 0; i <= 8; i++) { const a = a0 + i / 8 * Math.PI / 2; pts.push(new THREE.Vector3(cx + Math.cos(a) * r, 0, cz + Math.sin(a) * r)); } };
+  corner(hw - r, hd - r, 0); corner(-hw + r, hd - r, Math.PI / 2); corner(-hw + r, -hd + r, Math.PI); corner(hw - r, -hd + r, Math.PI * 1.5);
+  return (G[k] = new THREE.TubeGeometry(new THREE.CatmullRomCurve3(pts, true, 'centripetal'), 200, 0.035, 6, true));
+}
+SKIN.stack = (b, n) => {
+  const A = b.A, S = stMats(A), R = b.R, m = Math.max(1, Math.min(n, 8));
+  const cols = m === 1 ? 1 : m <= 4 ? 2 : m <= 6 ? 3 : 4, rows = m <= 2 ? 1 : 2, cell = 1.08, s = 0.98;
+  const bw = cols * cell + 0.72, bd = rows * cell + 0.72, bh = 0.46;
+  // the base: a rounded slab with its line of light, a skirt and a keel under it
+  b.part(stSlab(bw, bh, bd), S.base, 1, 1, 1, 0, -bh / 2, 0);
+  b.part(stRim(bw, bd), A.soft, 1, 1, 1, 0, -0.12, 0);
+  b.part(stSlab(bw - 0.34, 0.3, bd - 0.34), S.dark, 1, 1, 1, 0, -bh - 0.13, 0);
+  b.box(bw * 0.46, 0.22, bd * 0.46, 0, -bh - 0.38, 0, S.dark);
+  // the blocks, row by row; a cell no department fills holds a low cooling unit
+  let hmax = 0.4;
+  for (let j = 0, f = 0; j < rows; j++) for (let i = 0; i < cols; i++, f++) {
+    const x = (i - (cols - 1) / 2) * cell, z = (j - (rows - 1) / 2) * cell;
+    if (f >= m) { b.box(0.62, 0.34, 0.62, x, 0.17, z, S.side); b.cyl(0.2, 0.05, x, 0.365, z, M.metal); b.cyl(0.16, 0.03, x, 0.395, z, S.dark); continue; }
+    const hb = 0.8 + R() * 0.38, np = Math.max(4, Math.round(hb / 0.18)), ph = hb / np;
+    hmax = Math.max(hmax, hb);
+    b.box(s - 0.1, hb, s - 0.1, x, hb / 2, z, S.dark);
+    for (let k = 0; k < np; k++) {
+      const y = k * ph + ph / 2;
+      b.part(G.stPlate || (G.stPlate = new RoundedBoxGeometry(1, 1, 1, 2, 0.06)), S.side, s, ph - 0.035, s, x, y, z);
+      for (const [dx, dz, ry] of [[0, 1, 0], [0, -1, Math.PI], [1, 0, Math.PI / 2], [-1, 0, -Math.PI / 2]]) b.win(x + dx * (s / 2 + 0.006), y, z + dz * (s / 2 + 0.006), ry, s * 0.56, 0.026, f, R() < 0.2);
+    }
+    b.box(s * 0.56, 0.05, s * 0.42, x - s * 0.1, hb + 0.025, z + s * 0.1, S.top);
+    b.part(G.sphere, A.glow, 0.025, 0.025, 0.025, x + s * 0.38, hb + 0.03, z - s * 0.38);
+  }
+  // two engines at the stern (+x), silver, their plumes blue whatever the station's colour; longer while it works
+  const ey = -bh * 0.5, ex = bw / 2, fl = [];
+  for (const ez of [-0.42, 0.42]) {
+    const aft = (geom, mat, r, len, x, rz, dyn) => { const p = b.part(geom, mat, r, len, r, x, ey, ez, dyn); p.rotation.z = rz; return p; };
+    aft(G.cyl, S.dark, 0.22, 0.06, ex + 0.03, Math.PI / 2);
+    aft(G.cyl, M.metal, 0.19, 0.3, ex + 0.2, Math.PI / 2);
+    aft(G.bell, M.trim, 0.21, 0.22, ex + 0.45, Math.PI / 2);
+    b.part(G.sphere, S.nozzle, 0.03, 0.15, 0.15, ex + 0.55, ey, ez, true);
+    // the plume: a faint cone for its shape, a haze of blue lights fading out along it for its glow
+    const haze = [[0.22, 0.7, 0.5], [0.5, 0.6, 0.3], [0.82, 0.45, 0.16]].map(([d, sz, op]) => { const h = glowSprite(S.plume.color, op, sz); h.position.set(ex + 0.55 + d, ey, ez); h.userData.d = d; h.userData.op = op; b.g.add(h); return h; });
+    fl.push([aft(G.beam, S.plume, 0.5, 0.75, ex + 0.9, -Math.PI / 2, true), haze]);
+  }
+  b.anim.push((t) => fl.forEach(([p, haze], i) => {
+    const k = (b.busy ? 1.35 : 0.9) + 0.1 * Math.sin(t * 17 + i * 2 + b.phase);
+    p.scale.set(0.5, 0.75 * k, 0.5); p.position.x = ex + 0.56 + 0.375 * k;
+    haze.forEach((h) => { h.position.x = ex + 0.55 + h.userData.d * k; h.material.opacity = h.userData.op * (0.85 + 0.15 * k); });
+  }));
+  // the wings: two dark panels on a strut out of either side, drooping a little
+  const wy = -bh * 0.45;
+  for (const sz of [1, -1]) {
+    b.box(0.09, 0.09, 0.3, 0, wy, sz * (bd / 2 + 0.15), M.metal);
+    for (let k = 0; k < 2; k++) b.box(0.85, 0.04, 0.62, 0, wy - k * 0.065, sz * (bd / 2 + 0.62 + k * 0.67), S.wing).rotation.x = sz * 0.2;
+  }
+  // drawn in a server block's own units, then made as large as the other stations, as his are on the map
+  const K = 1.3;
+  b.g.scale.setScalar(K);
+  b.top = (hmax + 0.3) * K; b.bot = (-bh - 0.7) * K; b.foot = Math.max(ex + 1.2, bd / 2 + 1.6, bw / 2 + 0.3) * K;
 };
 // Vault: an armoured block of decks with its round door, two solar wings, a dish, an engine pod underneath
 SKIN.vault = (b, n) => {
