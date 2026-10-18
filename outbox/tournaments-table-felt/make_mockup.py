@@ -15,6 +15,9 @@ So the oval keeps its ten seats in the live page's order and gains only pictures
 * the pot in the middle as a chip pile and ET10 coins, and the 1st / 2nd / 3rd prizes printed on the felt like
   betting spots instead of cards under the table (where the bottom seat's ROI ran into "2ND");
 * felt, a padded rail, an overhead light and a floor under the table; no ELO line on the seats;
+* the felt printed like a casino's (the operator: "neni to platno stolu moc debilni takove prazdne?"): a faint
+  honeycomb weave, and a track round the pot with "AGENT TOURNAMENTS" and "BEST ROI WINS" (the page's own title)
+  printed in its breaks;
 * the race under the table across the page's whole width ("a ten race nevidim nikde").
 
 Palette: the site's navy, cyan, green, red and blue, and the avatar tints the API itself serves.
@@ -227,17 +230,25 @@ html,body{background:var(--bg);color:var(--text);font-family:'JetBrains Mono',mo
 .felt:before{content:'';position:absolute;inset:0;opacity:.22;mix-blend-mode:overlay;
  background-image:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='160' height='160'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='2' stitchTiles='stitch'/><feColorMatrix values='0 0 0 0 1  0 0 0 0 1  0 0 0 0 1  0 0 0 .6 0'/></filter><rect width='160' height='160' filter='url(%23n)'/></svg>")}
 .felt:after{content:'';position:absolute;inset:58px 70px;border-radius:999px;border:1.5px dashed rgba(0,255,136,.22)}
+.weave{position:absolute;inset:0;opacity:.09;
+ background-image:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='42' height='24.25'><path d='M0 12.12 L7 0 H21 L28 12.12 L21 24.25 H7 Z M28 12.12 H42' fill='none' stroke='%2300ff88' stroke-width='1'/></svg>");
+ -webkit-mask-image:radial-gradient(ellipse 50% 50% at 50% 50%,rgba(6,9,15,.15) 30%,rgba(6,9,15,1) 70%,rgba(6,9,15,.3) 100%);
+ mask-image:radial-gradient(ellipse 50% 50% at 50% 50%,rgba(6,9,15,.15) 30%,rgba(6,9,15,1) 70%,rgba(6,9,15,.3) 100%)}
+.printed{position:absolute;inset:0;width:1340px;height:700px;pointer-events:none}
+.printed .ln line,.printed .ln path{fill:none;stroke:rgba(0,255,136,.32);stroke-width:1.5}
+.printed .dia{fill:rgba(0,255,136,.32)}
+.printed text{font-family:'Archivo Black';font-size:12px;letter-spacing:.38em;fill:rgba(0,255,136,.42)}
 .print{position:absolute;left:0;right:0;top:150px;text-align:center;font-family:'Archivo Black';font-size:12px;letter-spacing:.42em;
  color:rgba(0,255,136,.28)}
 
 /* the pot and the prize spots */
-.pot{position:absolute;left:50%;top:306px;transform:translate(-50%,-50%);text-align:center}
+.pot{position:absolute;left:50%;top:318px;transform:translate(-50%,-50%);text-align:center}
 .pot .k{display:block;font-size:11px;letter-spacing:.3em;color:var(--dim2);font-weight:700}
 .pot .row{display:flex;align-items:center;gap:6px;margin-top:2px}
 .pot .row b{font-family:'Archivo Black';font-weight:400;font-size:72px;line-height:1.05;color:var(--green);text-shadow:0 0 26px rgba(0,255,136,.45)}
 .pot .pile{width:64px;height:60px}.pot .coins{width:46px;height:60px}
 .pot .et{font-size:15px;font-weight:700;color:var(--cyan)}
-.spots{position:absolute;left:50%;top:384px;transform:translateX(-50%);display:flex;gap:18px}
+.spots{position:absolute;left:50%;top:394px;transform:translateX(-50%);display:flex;gap:18px}
 .spot{width:130px;height:62px;border-radius:999px;text-align:center;padding-top:6px;background:rgba(6,9,15,.35);
  border:1.5px solid rgba(0,255,136,.45)}
 .spot span{display:block;font-size:9.5px;letter-spacing:.24em;color:var(--dim2);font-weight:700}
@@ -359,6 +370,24 @@ def race():
             f'<svg viewBox="0 0 {RW} {RH}">{"".join(out)}</svg></section>')
 
 
+def printed():
+    """The track printed round the pot: one thin line, broken where its two words are printed, a diamond at each end."""
+    L, R, TOP, BOT = 477, 863, 240, 472  # straight ends, and the top and bottom lines (box px)
+    r = (BOT - TOP) / 2
+    mid, cy = (L + R) / 2, (TOP + BOT) / 2
+
+    def gap_line(y, half):
+        return f'<line x1="{L}" x2="{mid - half:.0f}" y1="{y}" y2="{y}"/><line x1="{mid + half:.0f}" x2="{R}" y1="{y}" y2="{y}"/>'
+
+    arcs = (f'<path d="M{L},{TOP} A{r:.0f} {r:.0f} 0 0 0 {L},{BOT}"/>'
+            f'<path d="M{R},{TOP} A{r:.0f} {r:.0f} 0 0 1 {R},{BOT}"/>')
+    dia = "".join(f'<path d="M{x},{cy - 6} L{x + 6},{cy} L{x},{cy + 6} L{x - 6},{cy} Z" class="dia"/>'
+                  for x in (L - r, R + r))
+    return (f'<svg class="printed" viewBox="0 0 {W} {H}"><g class="ln">{gap_line(TOP, 118)}{gap_line(BOT, 82)}{arcs}</g>{dia}'
+            f'<text x="{mid}" y="{TOP + 4}" text-anchor="middle">AGENT TOURNAMENTS</text>'
+            f'<text x="{mid}" y="{BOT + 4}" text-anchor="middle">BEST ROI WINS</text></svg>')
+
+
 def page():
     avatars, chips, labels = seats()
     return f"""<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
@@ -370,8 +399,8 @@ def page():
 <span class="facts"><b>{T["seats_taken"]}/10</b> seats · <b>{money(T["volume_usdc"])}</b> traded</span>{countdown()}</div>
 <section class="room"><div class="beam"></div><div class="floor"></div>
 <div class="box"><div class="shadow"></div>
-<div class="rail"><div class="felt"></div></div>
-{pot()}{spots()}
+<div class="rail"><div class="felt"><div class="weave"></div></div></div>
+{printed()}{pot()}{spots()}
 <svg class="chips" viewBox="0 0 {W} {H}">{chips}</svg>{labels}{avatars}</div>{key()}</section>
 {race()}
 </main></body></html>"""
