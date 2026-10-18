@@ -32,7 +32,7 @@
   var RO = false;
 
   /* ---------------- the office: flat or in 3D, the same API either way ---------------- */
-  function viewPref() { try { return localStorage.getItem('co.view') || 'pic'; } catch (e) { return 'pic'; } }
+  function viewPref() { try { return (CO.Q && CO.Q.get('view')) || localStorage.getItem('co.view') || 'pic'; } catch (e) { return 'pic'; } }
   // the office composed from his pieces (olive.js) holds any company of up to five departments; where the pieces
   // are not, his painted picture (opic.js) stands only while the company is the one it shows
   function liveFits() { return !!(CO.OfficeLive && CO.OfficeLive.fits(CO.S)); }
@@ -49,12 +49,12 @@
     if (v === '3d') {
       if (!office3d) { office3d = CO.U3.office($('office3d'), st, tipFor); office3d.onFail = function () { office3d = null; setView('2d'); }; }
       office = office3d;
+    } else if (v === 'pic' && CO.OfficePic && CO.OfficePic.fits(CO.S)) {
+      if (!officePic) { officePic = new CO.OfficePic($('opic'), st, tipFor); officePic.onUnfit = function () { setView('pic'); }; }
+      office = officePic;
     } else if (v === 'pic' && liveFits()) {
       if (!officeLive) { officeLive = new CO.OfficeLive($('opic'), st, tipFor); officeLive.onUnfit = function () { setView(liveView()); }; }
       office = officeLive;
-    } else if (v === 'pic') {
-      if (!officePic) { officePic = new CO.OfficePic($('opic'), st, tipFor); officePic.onUnfit = function () { setView(liveView()); }; }
-      office = officePic;
     } else office = office2d;
     var pb = document.querySelector('#vt [data-v="pic"]'); if (pb) { pb.disabled = !picFits(); pb.title = picFits() ? 'The office as its picture' : 'The picture shows the five departments it was drawn with'; }
     office.sel = ui.mgr ? 'hub' : ui.panel != null ? 'd' + ui.panel : null;

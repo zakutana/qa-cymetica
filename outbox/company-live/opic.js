@@ -52,7 +52,6 @@
     S.departments.forEach(function (d) { var r = roomOf(d); if (r) self.keys[r] = 'd' + d.id; });
     Object.keys(ROOMS).forEach(function (r) {
       var R = ROOMS[r], key = self.keys[r]; if (!key) return;
-      if (r === 'trading_desk') h += '<div class="opfix" data-r="' + r + '" style="' + ell(R.c, R.r, 1.3) + '"></div>';
       h += '<div class="opglow" data-r="' + r + '" style="' + ell(R.c, R.r, 1.0) + '"></div>';
       h += '<div class="ophit" data-key="' + key + '" style="' + ell(R.c, R.r, 0.82) + '"></div>';
       if (R.plate) h += '<div class="p3 pp" data-key="' + key + '" style="' + px(R.plate) + '"></div>';
@@ -89,19 +88,22 @@
       if (g) { g.classList.toggle('work', st === 'working'); g.classList.toggle('wait', st === 'waiting'); }
       var fx = r === 'trading_desk' && self.el.querySelector('.opfix'); if (fx) fx.classList.toggle('red', st === 'waiting');
     };
-    var TONE = { cyan: '#00cfff', red: '#ff4444', blue: '#dfe6ee', dim: '#a9b8cc' }, DOT = { working: '#00cfff', waiting: '#ff4444', queued: '#3b82f6', idle: '#7f93ad' };
+    var TONE = { cyan: '#24e8ff', red: '#ff9438', blue: '#dfe6ee', dim: '#a9b8cc' }, DOT = { working: '#24e8ff', waiting: '#ff8824', queued: '#3b82f6', idle: '#38f2b8' };
     S.departments.forEach(function (d) {
       var v = CO.deptView(d), ln = CO.deptLine(d, v), st = ln.tone === 'red' ? 'waiting' : v.status, n = d.et10 || 0;
       var et = d.files_as ? '<span class="et' + (n ? ' lit' : '') + '">' + (n ? '+' : '') + n.toLocaleString('en-US') + ' ET10</span>' : '';
-      set('d' + d.id, '<div class="p3h"><i style="background:' + (DOT[st] || DOT.idle) + '"></i><b>' + esc(d.name.toUpperCase()) + '</b>' + et + '</div>' +
-        '<div class="p3l" style="color:' + (TONE[ln.tone] || TONE.dim) + '">' + esc(ln.short) + '</div>', st);
+      var isTd = d.key === 'trading_desk' && st !== 'working';
+      var dotCol = isTd ? '#ff8824' : (DOT[st] || DOT.idle);
+      var lineCol = isTd && ln.tone !== 'cyan' ? '#ff9438' : (TONE[ln.tone] || TONE.dim);
+      set('d' + d.id, '<div class="p3h"><i style="background:' + dotCol + ';color:' + dotCol + '"></i><b>' + esc(d.name.toUpperCase()) + '</b>' + et + '</div>' +
+        '<div class="p3l" style="color:' + lineCol + '">' + esc(ln.short) + '</div>', st);
     });
     var paused = S.company.status === 'paused';
-    set('hub', '<div class="p3h"><i style="background:' + (paused ? '#7f93ad' : '#00cfff') + '"></i><b>MANAGER</b></div><div class="p3l" style="color:' + (paused ? '#a9b8cc' : '#00cfff') + '">' + (paused ? 'Paused' : 'Your chat · runs it all') + '</div>', paused ? 'idle' : 'working');
+    set('hub', '<div class="p3h"><i style="background:' + (paused ? '#7f93ad' : '#24e8ff') + ';color:' + (paused ? '#7f93ad' : '#24e8ff') + '"></i><b>MANAGER</b></div><div class="p3l" style="color:' + (paused ? '#a9b8cc' : '#24e8ff') + '">' + (paused ? 'Paused' : 'Your chat · runs it all') + '</div>', paused ? 'idle' : 'working');
     var A = S.audit, days = Math.max(0, Math.ceil((A.next_at - S.clock) / 86400000));
-    set('audit', '<div class="p3h"><i style="background:#7f93ad"></i><b>WEEKLY AUDIT</b></div><div class="p3l" style="color:#a9b8cc">next in ' + days + (days === 1 ? ' day' : ' days') + '</div>', 'idle');
+    set('audit', '<div class="p3h"><i style="background:#38f2b8;color:#38f2b8"></i><b>WEEKLY AUDIT</b></div><div class="p3l" style="color:#a9b8cc">next in ' + days + (days === 1 ? ' day' : ' days') + '</div>', 'idle');
     var na = S.approvals.length, need = $('opneed');
-    need.className = 'opneed' + (na ? ' on' : ''); need.textContent = na ? na + (na === 1 ? ' NEEDS YOU' : ' NEED YOU') : 'ALL CLEAR';
+    need.className = 'opneed' + (na ? ' on' : ''); need.textContent = na ? na + (na === 1 ? ' NEEDS YOU' : ' NEED ATTENTION') : 'ALL CLEAR';
     var V = CO.vaultTotals(), vh = '<span class="k">VAULT</span><div class="vv"><b class="g">' + CO.fmtEt(V.et10) + '</b><span>ET10</span></div><div class="vv"><b class="u">' + CO.fmtUsd(V.usdc) + '</b><span>USDC</span></div><span class="go">Open the vault →</span>';
     var vc = $('opvault'); if (vc._h !== vh) { vc._h = vh; vc.innerHTML = vh; }
     this.paintSel();

@@ -128,26 +128,29 @@ i.lk::before { content: ''; position: absolute; left: 1.5px; top: -5px; width: 6
 .stage.is3d .o3layer { display: block; }
 .stage.is3d::after { content: ''; position: absolute; left: 0; right: 0; top: 0; bottom: 72px; pointer-events: none; z-index: 2;
   background: radial-gradient(ellipse 80% 75% at 50% 50%, transparent 62%, rgba(4, 7, 13, .5) 100%); }
-.p3 { position: absolute; left: 0; top: 0; pointer-events: auto; cursor: pointer; padding: 6px 12px 7px; border-radius: 7px; border: 1px solid rgba(223, 230, 238, .26);
-  background: rgba(8, 12, 20, .86); box-shadow: 0 4px 14px rgba(0, 0, 0, .45); white-space: nowrap; will-change: transform; transition: box-shadow .2s, border-width .2s; }
+.p3 { position: absolute; left: 0; top: 0; pointer-events: auto; cursor: pointer; padding: 6px 13px 7px; border-radius: 8px; border: 1px solid rgba(90, 215, 200, .34);
+  background: rgba(8, 17, 26, .88); backdrop-filter: blur(6px); box-shadow: 0 6px 18px rgba(0, 0, 0, .55), inset 0 1px 0 rgba(255, 255, 255, .06); white-space: nowrap; will-change: transform; transition: box-shadow .2s, border-color .2s; }
 .p3 .p3h { display: flex; align-items: center; gap: 7px; }
 .p3 .p3h i { width: 7px; height: 7px; border-radius: 50%; box-shadow: 0 0 8px currentColor; flex: none; }
 .p3.work .p3h i { animation: dotp 1.2s infinite; }
 .p3 .p3h b { font: 400 11.5px 'Archivo Black', sans-serif; letter-spacing: .04em; color: var(--text); }
 .p3 .et { font: 700 10.5px 'JetBrains Mono'; color: var(--dim2); margin-left: 6px; }
-.p3 .et.lit { color: var(--green); text-shadow: 0 0 8px rgba(0, 255, 136, .6); }
+.p3 .et.lit { color: #38f5b8; text-shadow: 0 0 8px rgba(56, 245, 184, .65); }
 .p3 .p3l { font: 600 10.5px 'JetBrains Mono'; margin-top: 2px; }
-.p3 .p3l .g { color: var(--green); text-shadow: 0 0 8px rgba(0, 255, 136, .5); } .p3 .p3l .u { color: #8fbaff; }
-.p3.hov, .p3.sel { box-shadow: 0 0 0 1px var(--c), 0 0 22px color-mix(in srgb, var(--c, #00cfff) 55%, transparent); }
+.p3 .p3l .g { color: #38f5b8; text-shadow: 0 0 8px rgba(56, 245, 184, .5); } .p3 .p3l .u { color: #8fbaff; }
+.p3.hov, .p3.sel { border-color: var(--c, #24e8ff); box-shadow: 0 0 0 1px var(--c), 0 0 22px color-mix(in srgb, var(--c, #24e8ff) 55%, transparent); }
 .a3 { position: absolute; left: 0; top: 0; display: none; font: 600 9.5px 'JetBrains Mono'; color: var(--text); padding: 2px 8px; border-radius: 9px;
-  background: rgba(10, 14, 23, .92); border: 1px solid var(--blue); white-space: nowrap; pointer-events: none; }
+  background: rgba(10, 18, 28, .92); border: 1px solid #24e8ff; white-space: nowrap; pointer-events: none; }
 .a3.on { display: block; }
-.p3need { position: absolute; left: 0; top: 0; pointer-events: auto; cursor: pointer; font: 400 12px 'Archivo Black', sans-serif; letter-spacing: .04em; color: var(--red);
-  padding: 6px 16px; border-radius: 99px; border: 1.2px solid var(--red); background: rgba(10, 14, 23, .94); box-shadow: 0 0 18px rgba(255, 68, 68, .5); animation: needp 1.6s ease-in-out infinite; }
-@keyframes needp { 50% { box-shadow: 0 0 6px rgba(255, 68, 68, .3); } }
+.p3need { position: absolute; left: 0; top: 0; pointer-events: auto; cursor: pointer; font: 400 11px 'Archivo Black', sans-serif; letter-spacing: .05em; color: #ffba68;
+  padding: 5px 15px; border-radius: 6px; border: 1.3px solid #ff9438; background: rgba(24, 16, 10, .92); box-shadow: 0 0 20px rgba(255, 136, 36, .55); animation: needp 1.8s ease-in-out infinite; white-space: nowrap; }
+.p3need.clear { color: var(--dim); border: 1px solid rgba(90, 215, 200, .34); background: rgba(8, 17, 26, .9); box-shadow: 0 4px 14px rgba(0, 0, 0, .45); animation: none; }
+@keyframes needp { 50% { box-shadow: 0 0 8px rgba(255, 136, 36, .3); } }
 .p3lot { position: absolute; left: 0; top: 0; pointer-events: auto; cursor: pointer; display: flex; flex-direction: column; align-items: center; gap: 2px;
-  font: 700 10px 'JetBrains Mono'; letter-spacing: .1em; color: #dfe6ee; text-shadow: 0 0 10px rgba(0, 207, 255, .9); }
-.p3lot b { font: 400 26px 'Archivo Black'; line-height: 1; }
+  font: 700 10px 'JetBrains Mono'; letter-spacing: .1em; color: #e6faf6; text-shadow: 0 0 12px rgba(46, 245, 196, .95); }
+.p3lot b { font: 400 24px 'Archivo Black'; line-height: 1; color: #46f8c8; }
+.o3layer .opvault { right: 16px; bottom: 16px; width: 224px; padding: 13px 18px; gap: 5px; pointer-events: auto; border-color: rgba(56, 245, 184, .42); background: rgba(8, 15, 24, .92); backdrop-filter: blur(8px); }
+.o3layer .opvault .vv b { font-size: 25px; }
 
 /* ---------- the visitor's frame ---------- */
 .robar { flex: none; display: flex; align-items: center; gap: 12px; padding: 7px 20px; border-bottom: 1px solid rgba(0, 207, 255, .35);
@@ -282,16 +285,13 @@ body.ro #dr-ch-text { cursor: default; }
 .ophit.sel { box-shadow: 0 0 0 1.5px rgba(127, 211, 234, .6), 0 0 34px rgba(0, 207, 255, .28); }
 .opglow { position: absolute; border-radius: 50%; pointer-events: none; mix-blend-mode: screen; opacity: 0; transition: opacity .4s; }
 .opglow.work { background: radial-gradient(closest-side, rgba(0, 207, 255, .5), rgba(0, 207, 255, 0)); opacity: 1; animation: opw 2.4s ease-in-out infinite; }
-.opglow.wait { background: radial-gradient(closest-side, rgba(255, 68, 68, .45), rgba(255, 68, 68, 0)); opacity: 1; }
+.opglow.wait { background: radial-gradient(closest-side, rgba(255, 136, 36, .5), rgba(255, 136, 36, 0)); opacity: 1; }
 @keyframes opw { 50% { opacity: .55; } }
-/* a blend operator, not a colour on the page: grey with saturation takes the painted orange out of the trading desk
-   while it does not wait; red with hue turns it red when it does */
-.opfix { position: absolute; border-radius: 50%; pointer-events: none; mix-blend-mode: saturation; background: radial-gradient(closest-side, #7f7f7f 58%, rgba(127, 127, 127, 0) 100%); }
-.opfix.red { mix-blend-mode: hue; background: radial-gradient(closest-side, #ff4444 58%, rgba(255, 68, 68, 0) 100%); }
-.p3.pp { background: #080d14; display: flex; flex-direction: column; justify-content: center; box-sizing: border-box; cursor: pointer; }
+.opfix { display: none; }
+.p3.pp { background: rgba(8, 17, 26, .88); border-color: rgba(90, 215, 200, .34); display: flex; flex-direction: column; justify-content: center; box-sizing: border-box; cursor: pointer; }
 .opneed { position: absolute; display: flex; align-items: center; justify-content: center; box-sizing: border-box; cursor: pointer; border-radius: 6px;
-  font: 400 12px 'Archivo Black', sans-serif; letter-spacing: .05em; color: var(--dim); background: #080d14; border: 1px solid rgba(223, 230, 238, .26); }
-.opneed.on { color: var(--red); border-color: var(--red); box-shadow: 0 0 18px rgba(255, 68, 68, .45); animation: needp 1.6s ease-in-out infinite; }
+  font: 400 11.5px 'Archivo Black', sans-serif; letter-spacing: .05em; color: var(--dim); background: rgba(8, 17, 26, .9); border: 1px solid rgba(90, 215, 200, .34); }
+.opneed.on { color: #ffba68; border-color: #ff9438; background: rgba(24, 16, 10, .92); box-shadow: 0 0 18px rgba(255, 136, 36, .55); animation: needp 1.6s ease-in-out infinite; }
 .opvault { position: absolute; box-sizing: border-box; display: flex; flex-direction: column; justify-content: center; gap: 8px; padding: 16px 20px; cursor: pointer;
   background: #080d14; border: 1px solid rgba(0, 255, 136, .4); border-radius: 12px; box-shadow: 0 8px 24px rgba(0, 0, 0, .5); }
 .opvault .k { font: 700 11px 'JetBrains Mono'; letter-spacing: .16em; color: var(--dim2); }

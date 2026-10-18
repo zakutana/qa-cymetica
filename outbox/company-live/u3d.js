@@ -1104,10 +1104,10 @@ function preview(el, o) {
 /* ---------------- the office in 3D: the same floor plan, rooms you can walk the camera into ---------------- */
 // What a room is doing, in light. Blue is only "up next", and only on the room's edge line: the floor, the walls,
 // the furniture and the light itself are the site's navy-black under white light, the structure Cymetica green.
-const STC = { working: 0x00cfff, queued: 0x3b82f6, waiting: 0xff4444, idle: 0x7f93ad };
-const TONEC = { cyan: '#00cfff', red: '#ff4444', blue: '#dfe6ee', dim: '#a9b8cc' };   // "Up next" white on a plate; its dot stays blue
-const OFFICE = { bg: 0x020409, lamp: 0xf2f6fa, mon: 0x6f8f80 };
-const WH = 2.3;   // a room's glass walls: a third of its width, as in the picture
+const STC = { working: 0x24e8ff, queued: 0x3b82f6, waiting: 0xff8824, idle: 0x38f2b8 };
+const TONEC = { cyan: '#24e8ff', red: '#ff9438', blue: '#dfe6ee', dim: '#a9b8cc' };
+const OFFICE = { bg: 0x040b14, lamp: 0xa8e8f8, mon: 0x58ffc0 };
+const WH = 1.65;   // low waist-high glass walls as in look-office.webp
 const OM = {};
 
 /* ---------------- space: the sky the office floats in ---------------- */
@@ -1141,11 +1141,11 @@ function nebTex(seed, deep, mid, hi) {
     const x = i / N * 2 - 1, y = j / N * 2 - 1, rr = Math.sqrt(x * x + y * y); if (rr > 1.05) continue;
     const edge = sstep(1.0, 0.15, rr + 0.5 * (f(x * 1.6 + 3, y * 1.6 + 1, 3) - 0.5)); if (edge <= 0) continue;
     const q = f(x * 2.1 + 1.7, y * 2.1 + 9.2, 4), n = f(x * 2.7 + q * 2.2, y * 2.7 + q * 2.2 + 3.1, 5);
-    let den = edge * sstep(0.3, 0.66, n);
-    den *= 1 - 0.6 * sstep(0.5, 0.72, f2(x * 4.5 + 2, y * 4.5 + 7, 4));
-    const hh = sstep(0.56, 0.8, n) * edge, k = (j * N + i) * 4;
+    let den = edge * sstep(0.28, 0.65, n);
+    den *= 1 - 0.55 * sstep(0.5, 0.72, f2(x * 4.5 + 2, y * 4.5 + 7, 4));
+    const hh = sstep(0.54, 0.78, n) * edge, k = (j * N + i) * 4;
     for (let ch = 0; ch < 3; ch++) d[k + ch] = Math.min(255, deep[ch] + (mid[ch] - deep[ch]) * den + hi[ch] * hh);
-    d[k + 3] = Math.min(255, (den * 1.1 + hh * 0.7) * 255);
+    d[k + 3] = Math.min(255, (den * 1.15 + hh * 0.75) * 255);
   }
   g.putImageData(img, 0, 0);
   const t = new THREE.CanvasTexture(c); t.colorSpace = THREE.SRGBColorSpace; TX[key] = t; return t;
@@ -1153,35 +1153,39 @@ function nebTex(seed, deep, mid, hi) {
 function starTex() {
   return TX.star || (TX.star = ctex(64, 64, (g) => {
     const gr = g.createRadialGradient(32, 32, 0, 32, 32, 32);
-    gr.addColorStop(0, 'rgba(255,255,255,1)'); gr.addColorStop(0.1, 'rgba(255,255,255,.95)'); gr.addColorStop(0.28, 'rgba(200,235,255,.2)'); gr.addColorStop(1, 'rgba(200,235,255,0)');
+    gr.addColorStop(0, 'rgba(255,255,255,1)'); gr.addColorStop(0.12, 'rgba(235,252,255,.95)'); gr.addColorStop(0.32, 'rgba(130,225,255,.28)'); gr.addColorStop(1, 'rgba(130,225,255,0)');
     g.fillStyle = gr; g.fillRect(0, 0, 64, 64);
   }));
 }
-// The sky: a group that rides with the camera (frame() moves it), so all of it is at infinity. Teal nebulae up
-// and to the left of the home view as in the operator's picture, fainter blue and green ones round the rest; faint
-// stars are points (one pixel), the bright ones small quads, since WebGPU draws every point one pixel wide.
+// The sky: rich cyan-turquoise nebulae sweeping from top-left to bottom-right as in look-office.webp, plus crisp stars.
 function spaceSky() {
   const g = new THREE.Group(), R = rng(31), D = 380;
-  const PAL = { teal: [[0, 40, 55], [0, 112, 122], [80, 190, 185]], blue: [[6, 26, 80], [30, 95, 200], [140, 190, 255]], green: [[0, 60, 45], [0, 150, 110], [120, 250, 190]] };
-  [[-36, -12, 66, 8, 0.4, 'teal'], [-62, -32, 56, 3, 0.55, 'teal'], [-6, -8, 44, 37, 0.12, 'blue'], [34, -52, 60, 13, 0.1, 'blue'],
+  const PAL = {
+    teal: [[2, 44, 68], [12, 134, 166], [110, 242, 252]],
+    cyan: [[4, 34, 60], [16, 112, 156], [90, 222, 248]],
+    blue: [[6, 26, 72], [24, 88, 178], [120, 195, 255]],
+    green: [[2, 48, 58], [14, 138, 136], [95, 240, 215]]
+  };
+  [[-32, 8, 72, 8, 0.72, 'teal'], [-54, -8, 62, 3, 0.62, 'cyan'], [-12, 14, 56, 19, 0.38, 'teal'],
+    [32, -22, 64, 13, 0.45, 'cyan'], [52, -32, 56, 37, 0.35, 'teal'],
     [150, -15, 80, 17, 0.55, 'teal'], [95, -35, 60, 23, 0.35, 'green'], [-130, -30, 70, 29, 0.45, 'blue']].forEach(([az, el, size, seed, op, tone]) => {
     const m = new THREE.Mesh(G.plane, new THREE.MeshBasicMaterial({ map: nebTex(seed, ...PAL[tone]), transparent: true, opacity: op, blending: THREE.AdditiveBlending, depthWrite: false, fog: false }));
     const s = 2 * D * Math.tan(size * Math.PI / 360);
     m.scale.set(s, s, 1); m.position.copy(skyDir(az, el).multiplyScalar(D)); m.lookAt(0, 0, 0); m.rotateZ(R() * 6.28); m.renderOrder = -10; m.frustumCulled = false; g.add(m);
   });
   const rnd = () => { const u = R() * 2 - 1, th = R() * Math.PI * 2, s = Math.sqrt(1 - u * u); return new THREE.Vector3(Math.cos(th) * s, u, Math.sin(th) * s); };
-  const N = 3200, pos = new Float32Array(N * 3), col = new Float32Array(N * 3), cc = new THREE.Color();
+  const N = 4600, pos = new Float32Array(N * 3), col = new Float32Array(N * 3), cc = new THREE.Color();
   for (let i = 0; i < N; i++) {
     pos.set(rnd().multiplyScalar(360).toArray(), i * 3);
-    cc.set(R() < 0.1 ? 0x9fe8ff : 0xeef4fa).multiplyScalar(0.25 + R() * R() * 1.1); col.set([cc.r, cc.g, cc.b], i * 3);
+    cc.set(R() < 0.22 ? 0x88ecff : R() < 0.32 ? 0x78ffd6 : 0xf0f7ff).multiplyScalar(0.35 + R() * R() * 1.35); col.set([cc.r, cc.g, cc.b], i * 3);
   }
   const pg = new THREE.BufferGeometry(); pg.setAttribute('position', new THREE.BufferAttribute(pos, 3)); pg.setAttribute('color', new THREE.BufferAttribute(col, 3));
   pg.setAttribute('normal', new THREE.BufferAttribute(new Float32Array(N * 3).map((v, i) => (i % 3 === 1 ? 1 : 0)), 3));
   const pts = new THREE.Points(pg, new THREE.PointsMaterial({ vertexColors: true, size: 1, sizeAttenuation: false, fog: false, depthWrite: false })); pts.frustumCulled = false; g.add(pts);
-  const B = 240, im = new THREE.InstancedMesh(G.plane, new THREE.MeshBasicMaterial({ map: starTex(), transparent: true, blending: THREE.AdditiveBlending, depthWrite: false, fog: false }), B), o = new THREE.Object3D();
+  const B = 360, im = new THREE.InstancedMesh(G.plane, new THREE.MeshBasicMaterial({ map: starTex(), transparent: true, blending: THREE.AdditiveBlending, depthWrite: false, fog: false }), B), o = new THREE.Object3D();
   for (let i = 0; i < B; i++) {
-    o.position.copy(rnd().multiplyScalar(350)); o.lookAt(0, 0, 0); o.scale.setScalar(0.9 + R() * R() * 2.8); o.updateMatrix(); im.setMatrixAt(i, o.matrix);
-    im.setColorAt(i, cc.set(R() < 0.14 ? 0x9fe8ff : 0xffffff).multiplyScalar(0.55 + R() * 0.75));
+    o.position.copy(rnd().multiplyScalar(350)); o.lookAt(0, 0, 0); o.scale.setScalar(1.0 + R() * R() * 3.1); o.updateMatrix(); im.setMatrixAt(i, o.matrix);
+    im.setColorAt(i, cc.set(R() < 0.25 ? 0x8ef0ff : 0xffffff).multiplyScalar(0.65 + R() * 0.85));
   }
   im.frustumCulled = false; g.add(im);
   return g;
@@ -1190,8 +1194,8 @@ function spaceSky() {
 function envTex() {
   if (TX.env) return TX.env;
   const t = ctex(512, 256, (g, W, H) => {
-    const gr = g.createLinearGradient(0, 0, 0, H); gr.addColorStop(0, '#46525f'); gr.addColorStop(0.42, '#121820'); gr.addColorStop(1, '#040609'); g.fillStyle = gr; g.fillRect(0, 0, W, H);
-    [[0.18, 0.16, 0.18, 0.08, 'rgba(255,255,255,.95)'], [0.55, 0.1, 0.22, 0.07, 'rgba(255,255,255,.8)'], [0.82, 0.22, 0.1, 0.1, 'rgba(255,255,255,.6)'], [0.36, 0.4, 0.12, 0.1, 'rgba(0,207,255,.45)']].forEach(([x, y, w, h, c]) => {
+    const gr = g.createLinearGradient(0, 0, 0, H); gr.addColorStop(0, '#36586e'); gr.addColorStop(0.42, '#0f2232'); gr.addColorStop(1, '#040a12'); g.fillStyle = gr; g.fillRect(0, 0, W, H);
+    [[0.18, 0.16, 0.18, 0.08, 'rgba(210,245,255,.9)'], [0.55, 0.1, 0.22, 0.07, 'rgba(180,240,255,.75)'], [0.82, 0.22, 0.1, 0.1, 'rgba(120,245,215,.6)'], [0.36, 0.4, 0.12, 0.1, 'rgba(0,215,255,.55)']].forEach(([x, y, w, h, c]) => {
       g.fillStyle = c; g.filter = 'blur(6px)'; g.fillRect(x * W, y * H, w * W, h * H); g.filter = 'none';
     });
   });
@@ -1202,37 +1206,48 @@ function envTex() {
 function deckTex() {
   return TX.deck || (TX.deck = ctex(512, 512, (g, W) => {
     const R = rng(23), s = W / 8;
-    g.fillStyle = '#16191e'; g.fillRect(0, 0, W, W);
-    for (let i = 0; i < 8; i++) for (let j = 0; j < 8; j++) { const v = 46 + Math.floor(R() * 9); g.fillStyle = 'rgb(' + v + ',' + (v + 4) + ',' + (v + 9) + ')'; g.fillRect(i * s + 1.5, j * s + 1.5, s - 3, s - 3); }
-    g.fillStyle = 'rgba(255,255,255,.05)'; for (let i = 0; i < 8; i++) for (let j = 0; j < 8; j++) g.fillRect(i * s + 2, j * s + 2, s - 4, 2);
+    g.fillStyle = '#0a131f'; g.fillRect(0, 0, W, W);
+    for (let i = 0; i < 8; i++) for (let j = 0; j < 8; j++) {
+      const v = 22 + Math.floor(R() * 7);
+      g.fillStyle = 'rgb(' + v + ',' + (v + 12) + ',' + (v + 24) + ')';
+      g.fillRect(i * s + 1.5, j * s + 1.5, s - 3, s - 3);
+    }
+    g.fillStyle = 'rgba(110,210,245,.07)'; for (let i = 0; i < 8; i++) for (let j = 0; j < 8; j++) g.fillRect(i * s + 2, j * s + 2, s - 4, 2);
   }));
 }
 function tileTex() {
   return TX.tile || (TX.tile = ctex(512, 512, (g, W) => {
     const R = rng(29), s = W / 7;
-    g.fillStyle = '#121519'; g.fillRect(0, 0, W, W);
-    for (let i = 0; i < 7; i++) for (let j = 0; j < 7; j++) { const v = 36 + Math.floor(R() * 6); g.fillStyle = 'rgb(' + v + ',' + (v + 4) + ',' + (v + 9) + ')'; g.fillRect(i * s + 1, j * s + 1, s - 2, s - 2); }
-    g.strokeStyle = 'rgba(255,255,255,.04)'; g.lineWidth = 1; for (let i = 0; i < 7; i++) for (let j = 0; j < 7; j++) { g.strokeRect(i * s + 8, j * s + 8, s - 16, s - 16); }
+    g.fillStyle = '#09131e'; g.fillRect(0, 0, W, W);
+    for (let i = 0; i < 7; i++) for (let j = 0; j < 7; j++) {
+      const v = 18 + Math.floor(R() * 6);
+      g.fillStyle = 'rgb(' + v + ',' + (v + 13) + ',' + (v + 25) + ')';
+      g.fillRect(i * s + 1, j * s + 1, s - 2, s - 2);
+    }
+    g.strokeStyle = 'rgba(80,210,225,.065)'; g.lineWidth = 1; for (let i = 0; i < 7; i++) for (let j = 0; j < 7; j++) { g.strokeRect(i * s + 8, j * s + 8, s - 16, s - 16); }
   }));
 }
-// the hull's plates: four to a side, each with its recess, its seams and vents; some carry a lit blue window and
-// every one a row of small lights (the glow map holds only what shines)
+// the hull's plates: deep space-navy armor with cyan and warm amber-orange perimeter lights as in look-office.webp
 function hullTex() {
   if (TX.hull) return TX.hull;
-  const W = 1024, H = 200, R = rng(41), lit = [0, 1, 2, 3].map(() => R() < 0.5);
+  const W = 1024, H = 200, R = rng(41), lit = [0, 1, 2, 3].map(() => R() < 0.6);
   const draw = (glow) => (g) => {
-    g.fillStyle = glow ? '#000000' : '#18202b'; g.fillRect(0, 0, W, H);
+    g.fillStyle = glow ? '#000000' : '#101b29'; g.fillRect(0, 0, W, H);
     for (let p = 0; p < 4; p++) {
       const x = p * 256;
       if (!glow) {
-        g.fillStyle = '#222c39'; g.fillRect(x + 8, 10, 240, H - 20);
-        g.fillStyle = '#151c26'; g.fillRect(x + 26, 30, 204, H - 82);
-        g.fillStyle = 'rgba(255,255,255,.12)'; g.fillRect(x + 8, 10, 240, 3);
-        g.fillStyle = '#0b0f15'; g.fillRect(x, 0, 6, H);
+        g.fillStyle = '#18283c'; g.fillRect(x + 8, 10, 240, H - 20);
+        g.fillStyle = '#0f1a28'; g.fillRect(x + 26, 30, 204, H - 82);
+        g.fillStyle = 'rgba(130,215,255,.16)'; g.fillRect(x + 8, 10, 240, 3);
+        g.fillStyle = '#070c14'; g.fillRect(x, 0, 6, H);
         for (let k = 0; k < 6; k++) g.fillRect(x + 40 + k * 30, H - 40, 18, 4);
       }
-      if (lit[p]) { g.fillStyle = glow ? '#3b82f6' : '#1d3a6a'; g.fillRect(x + 36, 42, 184, 24); g.fillStyle = glow ? '#173a75' : '#1a2f55'; g.fillRect(x + 36, 72, 184, 14); }
-      for (let k = 0; k < 4; k++) { g.fillStyle = k % 3 ? (glow ? '#00cfff' : '#0b4c63') : (glow ? '#e6f4ff' : '#5b6876'); g.fillRect(x + 36 + k * 56, H - 24, 9, 6); }
+      if (lit[p]) { g.fillStyle = glow ? '#24c8ff' : '#184568'; g.fillRect(x + 36, 42, 184, 22); g.fillStyle = glow ? '#156595' : '#133252'; g.fillRect(x + 36, 70, 184, 12); }
+      for (let k = 0; k < 4; k++) {
+        const warm = (p + k) % 3 === 0;
+        g.fillStyle = warm ? (glow ? '#ff9438' : '#6e3c14') : (glow ? '#24e8ff' : '#0f5670');
+        g.fillRect(x + 34 + k * 56, H - 24, 12, 6);
+      }
     }
   };
   TX.hull = ctex(W, H, draw(false)); TX.hullGlow = ctex(W, H, draw(true)); return TX.hull;
@@ -1240,26 +1255,26 @@ function hullTex() {
 function rackTex() {
   if (TX.rack) return TX.rack;
   const draw = (glow) => (g, W, H) => {
-    g.fillStyle = glow ? '#000000' : '#13171c'; g.fillRect(0, 0, W, H);
+    g.fillStyle = glow ? '#000000' : '#0d1520'; g.fillRect(0, 0, W, H);
     const n = 12, step = (H - 20) / n;
     for (let i = 0; i < n; i++) {
       const y = 10 + i * step, h = step - 4, k = (i * 37) % 5;
-      if (!glow) { g.fillStyle = '#1e242b'; g.fillRect(8, y, W - 16, h); g.fillStyle = '#0c0f13'; for (let x = 14; x < W - 44; x += 6) g.fillRect(x, y + 3, 3, h - 6); }
-      g.fillStyle = k < 2 ? '#00ff88' : k < 4 ? '#00cfff' : '#3b82f6';
-      g.fillRect(W - 32, y + h / 2 - 2, 6, 4); if (k % 2) g.fillRect(W - 21, y + h / 2 - 2, 6, 4);
+      if (!glow) { g.fillStyle = '#162434'; g.fillRect(8, y, W - 16, h); g.fillStyle = '#091018'; for (let x = 14; x < W - 44; x += 6) g.fillRect(x, y + 3, 3, h - 6); }
+      g.fillStyle = k < 2 ? '#38f5b8' : k < 4 ? '#24e8ff' : '#3b82f6';
+      g.fillRect(W - 34, y + h / 2 - 2, 7, 4); if (k % 2) g.fillRect(W - 22, y + h / 2 - 2, 7, 4);
     }
-    if (!glow) { g.strokeStyle = '#2b333c'; g.lineWidth = 5; g.strokeRect(2, 2, W - 4, H - 4); }
+    if (!glow) { g.strokeStyle = '#24384e'; g.lineWidth = 5; g.strokeRect(2, 2, W - 4, H - 4); }
   };
   TX.rack = ctex(128, 320, draw(false)); TX.rackGlow = ctex(128, 320, draw(true)); return TX.rack;
 }
 function solarTex() {
   return TX.solar || (TX.solar = ctex(256, 256, (g, W) => {
-    g.fillStyle = '#7f93ad'; g.fillRect(0, 0, W, W);
+    g.fillStyle = '#5c82a8'; g.fillRect(0, 0, W, W);
     const n = 4, s = (W - 12) / n;
     for (let i = 0; i < n; i++) for (let j = 0; j < n; j++) {
       const x = 6 + i * s, y = 6 + j * s, gr = g.createLinearGradient(x, y, x + s, y + s);
-      gr.addColorStop(0, '#1d55bb'); gr.addColorStop(1, '#12387f'); g.fillStyle = gr; g.fillRect(x + 2, y + 2, s - 4, s - 4);
-      g.strokeStyle = 'rgba(120,170,255,.3)'; g.lineWidth = 1;
+      gr.addColorStop(0, '#1e5cc4'); gr.addColorStop(1, '#103478'); g.fillStyle = gr; g.fillRect(x + 2, y + 2, s - 4, s - 4);
+      g.strokeStyle = 'rgba(130,210,255,.52)'; g.lineWidth = 1.2;
       for (let k = 1; k < 4; k++) { const o = 2 + k * (s - 4) / 4; g.beginPath(); g.moveTo(x + o, y + 2); g.lineTo(x + o, y + s - 2); g.moveTo(x + 2, y + o); g.lineTo(x + s - 2, y + o); g.stroke(); }
     }
   }));
@@ -1280,9 +1295,6 @@ function perlin3(seed) {
       lerp(lerp(grad(p[AA + 1], x, y, z - 1), grad(p[BA + 1], x - 1, y, z - 1), u), lerp(grad(p[AB + 1], x, y - 1, z - 1), grad(p[BB + 1], x - 1, y - 1, z - 1), u), v), w);
   };
 }
-// An asteroid, to the operator's picture: a lumpy body, crags on it, craters with raised rims pressed in, fine grit
-// over all of it; smooth-shaded (the sphere's vertices welded, so the light runs over it instead of breaking on
-// facets) and coloured per vertex -- dark charcoal, a little lighter on the crests, darkest in the hollows.
 function asteroidGeo(seed, detail = 64, flatTop = true) {
   let g = new THREE.IcosahedronGeometry(1, detail);
   g.deleteAttribute('normal'); g.deleteAttribute('uv'); g = mergeVertices(g);
@@ -1291,7 +1303,7 @@ function asteroidGeo(seed, detail = 64, flatTop = true) {
   const ridge = (x, y, z, o) => { let s = 0, a = 0.5, f = 1; for (let i = 0; i < o; i++) { const r = 1 - Math.abs(P(x * f + 31.7, y * f + 7.1, z * f)); s += a * r * r; a *= 0.5; f *= 2.1; } return s; };
   const craters = [];
   for (let i = 0; i < 30; i++) craters.push({ c: new THREE.Vector3(R() * 2 - 1, R() * 2 - 1, R() * 2 - 1).normalize(), r: 0.05 + Math.pow(R(), 2.2) * 0.3, d: 0.35 + R() * 0.45 });
-  const dark = [0.008, 0.008, 0.009], mid = [0.034, 0.032, 0.031], light = [0.1, 0.094, 0.088];
+  const dark = [0.012, 0.018, 0.026], mid = [0.042, 0.055, 0.072], light = [0.11, 0.135, 0.165];
   for (let i = 0; i < n; i++) {
     v.fromBufferAttribute(pos, i);
     let h = 0.34 * fbm(v.x * 1.15, v.y * 1.15, v.z * 1.15, 4) + 0.17 * (ridge(v.x * 2.4, v.y * 2.4, v.z * 2.4, 5) - 0.45) + 0.05 * (ridge(v.x * 7, v.y * 7, v.z * 7, 3) - 0.45) + 0.03 * fbm(v.x * 16, v.y * 16, v.z * 16, 2);
@@ -1304,7 +1316,6 @@ function asteroidGeo(seed, detail = 64, flatTop = true) {
     v.multiplyScalar(1 + h);
     if (flatTop && v.y > 0.22) v.y = 0.22 + (v.y - 0.22) * 0.25; else if (flatTop) v.y *= 1.12;
     pos.setXYZ(i, v.x, v.y, v.z);
-    // colour: crests a little lighter, hollows and crater floors darker, a speckle of lighter grit
     const t = Math.max(0, Math.min(1, 0.5 + h * 1.4 + 0.35 * fbm(v.x * 6 + 11, v.y * 6, v.z * 6, 3) - pit * 0.35));
     const s = R() < 0.04 ? 0.35 : 0, a = t < 0.5 ? t * 2 : (t - 0.5) * 2, lo = t < 0.5 ? dark : mid, hi = t < 0.5 ? mid : light;
     for (let ch = 0; ch < 3; ch++) col[i * 3 + ch] = lo[ch] + (hi[ch] - lo[ch]) * a + s * light[ch];
@@ -1313,11 +1324,8 @@ function asteroidGeo(seed, detail = 64, flatTop = true) {
   g.computeVertexNormals();
   return g;
 }
-// A rock's surface, per pixel, to the operator's picture: grain, plates with cracks between them, darker in the
-// cracks -- and the light bending on all of it (a bump from the same height through screen-space derivatives), so
-// the detail is in the shading at any distance and not only in the mesh. freq: how fine, in the geometry's units.
 function rockNodeMat(freq) {
-  const T = TSL, m = new THREE.MeshStandardNodeMaterial({ roughness: 0.94, metalness: 0.03 });
+  const T = TSL, m = new THREE.MeshStandardNodeMaterial({ roughness: 0.9, metalness: 0.05 });
   const q = T.positionLocal.mul(freq);
   const grain = T.mx_fractal_noise_float(q.mul(0.8), 3, 2.0, 0.5);
   const crack = T.smoothstep(0.55, 0.9, T.mx_worley_noise_float(q.mul(0.32)));
@@ -1330,20 +1338,17 @@ function rockNodeMat(freq) {
   m.normalNode = T.normalize(T.abs(det).mul(n).sub(T.sign(det).mul(r1.mul(T.dFdx(h)).add(r2.mul(T.dFdy(h)))).mul(0.32)));
   return m;
 }
-// an engine's mouth seen from outside: white-hot in the middle, cyan to its rim, vanes across it
 function nozzleTex() {
   return TX.nozzle || (TX.nozzle = ctex(256, 256, (g) => {
     const gr = g.createRadialGradient(128, 128, 0, 128, 128, 128);
-    gr.addColorStop(0, 'rgba(235,252,255,1)'); gr.addColorStop(0.35, 'rgba(120,230,255,1)'); gr.addColorStop(0.7, 'rgba(0,170,220,.95)'); gr.addColorStop(0.9, 'rgba(10,40,60,1)'); gr.addColorStop(1, 'rgba(8,14,20,1)');
+    gr.addColorStop(0, 'rgba(235,254,255,1)'); gr.addColorStop(0.38, 'rgba(90,235,255,1)'); gr.addColorStop(0.72, 'rgba(0,185,235,.95)'); gr.addColorStop(0.9, 'rgba(10,45,68,1)'); gr.addColorStop(1, 'rgba(8,16,24,1)');
     g.fillStyle = gr; g.beginPath(); g.arc(128, 128, 128, 0, Math.PI * 2); g.fill();
-    g.strokeStyle = 'rgba(8,20,28,.55)'; g.lineWidth = 6;
+    g.strokeStyle = 'rgba(8,22,34,.55)'; g.lineWidth = 6;
     for (let k = 0; k < 6; k++) { const a = k / 6 * Math.PI; g.beginPath(); g.moveTo(128 + Math.cos(a) * 118, 128 + Math.sin(a) * 118); g.lineTo(128 - Math.cos(a) * 118, 128 - Math.sin(a) * 118); g.stroke(); }
-    g.fillStyle = 'rgba(8,20,28,.7)'; g.beginPath(); g.arc(128, 128, 22, 0, Math.PI * 2); g.fill();
+    g.fillStyle = 'rgba(8,22,34,.7)'; g.beginPath(); g.arc(128, 128, 22, 0, Math.PI * 2); g.fill();
   }));
 }
 /* ---------------- textures from assets/ (CC0; outbox/company-live/assets.json names each file) ---------------- */
-// Photographed and scanned surfaces for the office, each loaded once and set on its materials when it arrives. A
-// page opened without the assets folder keeps the surfaces drawn in code.
 const TL = new THREE.TextureLoader(), ATX = {};
 function assetTex(path, srgb) {
   return ATX[path] || (ATX[path] = new Promise((ok) => TL.load('assets/' + path, (t) => {
@@ -1362,71 +1367,101 @@ function useTex(mat, slot, path, o = {}) {
     mat.needsUpdate = true;
   });
 }
-// the rock's colour from a photographed rock, wrapped on it from three sides (it has no UVs), darkened in its
-// hollows and cracks as before
 function rockTexture(m, tex, sc) {
   const T = TSL, tri = T.triplanarTexture(T.texture(tex), null, null, T.float(sc), T.positionLocal, T.normalLocal);
   m.colorNode = tri.xyz.mul(T.vertexColor().xyz.mul(16).clamp(0.3, 1.5)).mul(m.userData.shade);
   m.needsUpdate = true;
 }
 let MOON = null;
-// a scanned moon rock (Poly Haven moon_rock_01), centred and made one unit round, tinted to the picture's charcoal
 function moonRock() {
   return MOON || (MOON = new Promise((ok) => new GLTFLoader().load('assets/moon_rock_01/moon_rock_01_1k.gltf', (gl) => {
     let mesh = null; gl.scene.traverse((o) => { if (o.isMesh && !mesh) mesh = o; });
     if (!mesh) return ok(null);
     const geo = mesh.geometry.clone(); geo.computeBoundingSphere();
     const c = geo.boundingSphere.center, r = geo.boundingSphere.radius; geo.translate(-c.x, -c.y, -c.z); geo.scale(1 / r, 1 / r, 1 / r);
-    const mat = mesh.material.clone(); mat.color.setRGB(0.3, 0.3, 0.32); OM.moon = mat;
+    const mat = mesh.material.clone(); mat.color.setRGB(0.32, 0.36, 0.42); OM.moon = mat;
     ok({ geo, mat });
   }, undefined, () => ok(null))));
 }
 function dressOffice() {
   if (OM.dressed) return; OM.dressed = true;
   const MP = 'MetalPlates006/MetalPlates006_1K-JPG_', SP = 'SolarPanel003/SolarPanel003_1K-JPG_';
-  // the hull: riveted plates' relief and wear under its drawn panels and lights
-  useTex(OM.hull, 'normalMap', MP + 'NormalGL.jpg', { rx: 4, ry: 0.8, ns: 0.9 });
+  useTex(OM.hull, 'normalMap', MP + 'NormalGL.jpg', { rx: 4, ry: 0.8, ns: 0.8 });
   useTex(OM.hull, 'roughnessMap', MP + 'Roughness.jpg', { rx: 4, ry: 0.8 });
-  // the rim, the keel, the engines, the racks and the frames: the same metal
   [[OM.rim, 6, 0.4], [OM.rimDark, 4, 4], [OM.hullLow, 4, 4], [OM.engine, 2, 2], [OM.engineL, 3, 1], [OM.rack, 1, 2], [OM.frame, 1, 1]].forEach(([m, rx, ry]) => {
-    useTex(m, 'normalMap', MP + 'NormalGL.jpg', { rx, ry, ns: 0.7 }); useTex(m, 'roughnessMap', MP + 'Roughness.jpg', { rx, ry });
+    useTex(m, 'normalMap', MP + 'NormalGL.jpg', { rx, ry, ns: 0.6 }); useTex(m, 'roughnessMap', MP + 'Roughness.jpg', { rx, ry });
   });
-  // the deck: a faint relief only; its drawn plates keep their colour
-  useTex(OM.deck, 'normalMap', MP + 'NormalGL.jpg', { rx: 2, ry: 2, ns: 0.3 });
-  // the solar wings, the office's and the stations': a photographed panel
+  useTex(OM.deck, 'normalMap', MP + 'NormalGL.jpg', { rx: 2, ry: 2, ns: 0.25 });
+  // keep our vibrant sapphire-blue & cyan-grid solarTex() colour map; only add normal/roughness relief
   [OM.solar, M.solar].forEach((m) => {
-    useTex(m, 'map', SP + 'Color.jpg', { srgb: true, color: 0x9fbcff, emissive: 0 }); useTex(m, 'normalMap', SP + 'NormalGL.jpg');
-    useTex(m, 'roughnessMap', SP + 'Roughness.jpg'); m.metalness = 0.15;   // glass over cells, not a mirror
+    useTex(m, 'normalMap', SP + 'NormalGL.jpg'); useTex(m, 'roughnessMap', SP + 'Roughness.jpg');
   });
-  // the asteroid: a photographed rock on the big one and on the drifting ones until the scans arrive
   assetTex('Rock035/Rock035_1K-JPG_Color.jpg', true).then((t) => { if (t) { rockTexture(OM.rock, t, 0.16); rockTexture(OM.rockS, t, 0.8); } });
 }
 function monTex() {
   return TX.mon || (TX.mon = ctex(256, 144, (g, W) => {
-    g.fillStyle = '#04140e'; g.fillRect(0, 0, W, 144);
-    g.strokeStyle = '#00ff88'; g.lineWidth = 3; g.beginPath();
-    let y = 96; for (let x = 12; x < W - 10; x += 12) { y = Math.max(40, Math.min(112, y + Math.sin(x * 0.13) * 13 + (x % 36 ? -5 : 9))); if (x === 12) g.moveTo(x, y); else g.lineTo(x, y); } g.stroke();
-    g.fillStyle = 'rgba(0,255,136,.35)'; for (let i = 0; i < 8; i++) g.fillRect(14 + i * 29, 120, 18, 14 - (i % 3) * 4);
-    g.fillStyle = '#00ff88'; g.fillRect(14, 12, 64, 8); g.fillStyle = 'rgba(0,255,136,.5)'; g.fillRect(14, 26, 104, 5);
+    g.fillStyle = '#031c16'; g.fillRect(0, 0, W, 144);
+    g.strokeStyle = '#38f5b8'; g.lineWidth = 3.5; g.beginPath();
+    let y = 96; for (let x = 12; x < W - 10; x += 12) { y = Math.max(36, Math.min(112, y + Math.sin(x * 0.13) * 14 + (x % 36 ? -5 : 9))); if (x === 12) g.moveTo(x, y); else g.lineTo(x, y); } g.stroke();
+    g.fillStyle = 'rgba(56,245,184,.45)'; for (let i = 0; i < 8; i++) g.fillRect(14 + i * 29, 118, 18, 16 - (i % 3) * 4);
+    g.fillStyle = '#38f5b8'; g.fillRect(14, 12, 68, 8); g.fillStyle = 'rgba(36,232,255,.65)'; g.fillRect(14, 26, 110, 5);
   }));
 }
-// a hologram's face: a faint cyan field, a border, a trace and bars
+function orangeMonTex() {
+  return TX.omon || (TX.omon = ctex(256, 144, (g, W) => {
+    g.fillStyle = '#1c0e04'; g.fillRect(0, 0, W, 144);
+    g.strokeStyle = '#ff9438'; g.lineWidth = 3.5; g.beginPath();
+    let y = 92; for (let x = 12; x < W - 10; x += 12) { y = Math.max(34, Math.min(114, y + Math.cos(x * 0.15) * 15 + (x % 24 ? -4 : 8))); if (x === 12) g.moveTo(x, y); else g.lineTo(x, y); } g.stroke();
+    g.fillStyle = 'rgba(255,148,56,.45)'; for (let i = 0; i < 8; i++) g.fillRect(14 + i * 29, 118, 18, 16 - (i % 3) * 4);
+    g.fillStyle = '#ff9438'; g.fillRect(14, 12, 72, 8); g.fillStyle = 'rgba(255,180,90,.6)'; g.fillRect(14, 26, 108, 5);
+  }));
+}
+function orangeWallTex() {
+  return TX.owall || (TX.owall = ctex(512, 160, (g, W, H) => {
+    g.fillStyle = '#160b04'; g.fillRect(0, 0, W, H);
+    g.strokeStyle = '#ff9438'; g.lineWidth = 5; g.strokeRect(3, 3, W - 6, H - 6);
+    g.fillStyle = '#ffaa52'; g.font = '700 20px JetBrains Mono, monospace'; g.fillText('ALPHA FLOW · +6.2% ROI', 20, 30);
+    g.strokeStyle = 'rgba(255,148,56,.22)'; g.lineWidth = 1;
+    for (let y = 48; y < H - 18; y += 22) { g.beginPath(); g.moveTo(16, y); g.lineTo(W - 16, y); g.stroke(); }
+    g.strokeStyle = '#ff9438'; g.lineWidth = 3.5; g.beginPath();
+    for (let x = 18; x < W - 18; x += 8) {
+      const y = H * 0.62 + Math.sin(x * 0.045) * 22 + Math.cos(x * 0.11) * 10;
+      if (x === 18) g.moveTo(x, y); else g.lineTo(x, y);
+    }
+    g.stroke();
+    g.fillStyle = 'rgba(255,140,40,.4)';
+    for (let i = 0; i < 22; i++) { const h = 10 + ((i * 19) % 28); g.fillRect(20 + i * 21, H - 14 - h, 13, h); }
+  }));
+}
+function qaGridTex() {
+  return TX.qagrid || (TX.qagrid = ctex(256, 192, (g, W, H) => {
+    g.fillStyle = '#051418'; g.fillRect(0, 0, W, H);
+    const cols = 4, rows = 3, pad = 10, cw = (W - pad * (cols + 1)) / cols, ch = (H - pad * (rows + 1)) / rows;
+    for (let r = 0; r < rows; r++) for (let c = 0; c < cols; c++) {
+      const x = pad + c * (cw + pad), y = pad + r * (ch + pad);
+      const gr = g.createLinearGradient(x, y, x, y + ch);
+      gr.addColorStop(0, '#dcfff8'); gr.addColorStop(1, '#58f2dc');
+      g.fillStyle = gr; g.fillRect(x, y, cw, ch);
+    }
+  }));
+}
+// a hologram's face: a vibrant aqua-cyan field, a border, a trace and bars
 function holoTex() {
   return TX.holo || (TX.holo = ctex(256, 176, (g, W, H) => {
-    g.fillStyle = 'rgba(0,207,255,.12)'; g.fillRect(0, 0, W, H); g.strokeStyle = 'rgba(0,207,255,.95)'; g.lineWidth = 4; g.strokeRect(3, 3, W - 6, H - 6);
-    g.strokeStyle = 'rgba(0,255,136,.95)'; g.lineWidth = 3; g.beginPath(); for (let x = 14; x < W - 14; x += 6) { const y = H * 0.42 + Math.sin(x * 0.09) * 18 * Math.sin(x * 0.021); if (x === 14) g.moveTo(x, y); else g.lineTo(x, y); } g.stroke();
-    g.fillStyle = 'rgba(0,207,255,.8)'; for (let i = 0; i < 9; i++) g.fillRect(16 + i * 25, H - 20 - (i * 13 % 34), 14, 8 + (i * 13 % 34));
+    g.fillStyle = 'rgba(32,235,255,.22)'; g.fillRect(0, 0, W, H); g.strokeStyle = 'rgba(56,245,210,.98)'; g.lineWidth = 4; g.strokeRect(3, 3, W - 6, H - 6);
+    g.strokeStyle = 'rgba(56,255,180,.98)'; g.lineWidth = 3.5; g.beginPath(); for (let x = 14; x < W - 14; x += 6) { const y = H * 0.42 + Math.sin(x * 0.09) * 18 * Math.sin(x * 0.021); if (x === 14) g.moveTo(x, y); else g.lineTo(x, y); } g.stroke();
+    g.fillStyle = 'rgba(36,232,255,.88)'; for (let i = 0; i < 9; i++) g.fillRect(16 + i * 25, H - 20 - (i * 13 % 34), 14, 8 + (i * 13 % 34));
   }));
 }
-// a grid of light that wraps round a cylinder: the Add department pad's wall
+// a grid of light that wraps round a cylinder: the Add department pad's wall in turquoise-aquamarine
 function gridTex() {
   if (TX.grid) return TX.grid;
   const t = ctex(256, 64, (g, W, H) => {
-    g.fillStyle = 'rgba(0,207,255,.10)'; g.fillRect(0, 0, W, H);
-    g.strokeStyle = 'rgba(0,207,255,.75)'; g.lineWidth = 1.5;
+    g.fillStyle = 'rgba(24,185,155,.08)'; g.fillRect(0, 0, W, H);
+    g.strokeStyle = 'rgba(48,220,188,.52)'; g.lineWidth = 1.4;
     for (let x = 0; x <= W; x += 8) { g.beginPath(); g.moveTo(x, 0); g.lineTo(x, H); g.stroke(); }
     for (let y = 0; y <= H; y += 8) { g.beginPath(); g.moveTo(0, y); g.lineTo(W, y); g.stroke(); }
-    g.fillStyle = 'rgba(0,207,255,1)'; g.fillRect(0, 0, W, 4); g.fillRect(0, H - 4, W, 4);
+    g.fillStyle = 'rgba(56,238,200,.82)'; g.fillRect(0, 0, W, 3); g.fillRect(0, H - 3, W, 3);
   });
   t.wrapS = THREE.RepeatWrapping; t.repeat.set(8, 1); TX.grid = t; return t;
 }
@@ -1434,19 +1469,21 @@ function gridTex() {
 function hubFloorTex() {
   return TX.hubf || (TX.hubf = ctex(512, 512, (g, W) => {
     const c = W / 2; g.fillStyle = '#000000'; g.fillRect(0, 0, W, W); g.lineCap = 'round';
-    [[0.95, 3, 0.5, 0, 360], [0.84, 3, 0.75, 15, 150], [0.84, 3, 0.75, 195, 330], [0.72, 7, 0.28, 0, 360], [0.61, 2, 0.7, 100, 260], [0.61, 2, 0.7, 280, 420], [0.5, 12, 0.2, 0, 360]].forEach(([rr, lw, a, s0, s1]) => {
-      g.strokeStyle = 'rgba(0,207,255,' + a + ')'; g.lineWidth = lw; g.beginPath(); g.arc(c, c, rr * c, s0 * Math.PI / 180, s1 * Math.PI / 180); g.stroke();
+    const rg = g.createRadialGradient(c, c, c * 0.1, c, c, c * 0.95);
+    rg.addColorStop(0, 'rgba(0,225,255,.22)'); rg.addColorStop(0.55, 'rgba(0,195,235,.08)'); rg.addColorStop(1, 'rgba(0,195,235,0)');
+    g.fillStyle = rg; g.fillRect(0, 0, W, W);
+    [[0.95, 3.5, 0.65, 0, 360], [0.84, 3.5, 0.85, 15, 150], [0.84, 3.5, 0.85, 195, 330], [0.72, 8, 0.36, 0, 360], [0.61, 2.5, 0.8, 100, 260], [0.61, 2.5, 0.8, 280, 420], [0.5, 14, 0.3, 0, 360]].forEach(([rr, lw, a, s0, s1]) => {
+      g.strokeStyle = 'rgba(36,232,255,' + a + ')'; g.lineWidth = lw; g.beginPath(); g.arc(c, c, rr * c, s0 * Math.PI / 180, s1 * Math.PI / 180); g.stroke();
     });
-    g.strokeStyle = 'rgba(0,207,255,.55)'; g.lineWidth = 2;
+    g.strokeStyle = 'rgba(56,245,215,.65)'; g.lineWidth = 2;
     for (let i = 0; i < 96; i++) { const a = i / 96 * Math.PI * 2, r0 = c * (i % 4 ? 0.9 : 0.87); g.beginPath(); g.moveTo(c + Math.cos(a) * r0, c + Math.sin(a) * r0); g.lineTo(c + Math.cos(a) * c * 0.93, c + Math.sin(a) * c * 0.93); g.stroke(); }
   }));
 }
 // an engine's exhaust: bright at the nozzle, gone at the tail
 function plumeTex() {
-  return TX.plume || (TX.plume = ctex(32, 256, (g, W, H) => { const gr = g.createLinearGradient(0, 0, 0, H); gr.addColorStop(0, 'rgba(255,255,255,1)'); gr.addColorStop(0.35, 'rgba(255,255,255,.45)'); gr.addColorStop(1, 'rgba(255,255,255,0)'); g.fillStyle = gr; g.fillRect(0, 0, W, H); }));
+  return TX.plume || (TX.plume = ctex(32, 256, (g, W, H) => { const gr = g.createLinearGradient(0, 0, 0, H); gr.addColorStop(0, 'rgba(220,252,255,1)'); gr.addColorStop(0.35, 'rgba(40,220,255,.55)'); gr.addColorStop(1, 'rgba(0,180,255,0)'); g.fillStyle = gr; g.fillRect(0, 0, W, H); }));
 }
 function std(o) { return new THREE.MeshStandardMaterial(o); }
-// a rounded box, one geometry per size: shared, so a layout's release never frees it
 const RB = new Map();
 function rboxGeo(w, h, d, r) {
   const k = [w, h, d, r].map((v) => v.toFixed(3)).join(',');
@@ -1455,56 +1492,55 @@ function rboxGeo(w, h, d, r) {
 }
 function omats() {
   if (OM.tile) return;
-  // matte where it is painted, a little gloss on the floors: the office is lit, it does not have to mirror anything
-  OM.deck = std({ map: deckTex(), roughness: 0.6, metalness: 0.2 });
-  OM.tile = std({ map: tileTex(), roughness: 0.5, metalness: 0.25 });
-  OM.hubTile = std({ map: tileTex(), color: 0x8fd6ea, roughness: 0.2, metalness: 0.3, emissive: 0x00cfff, emissiveIntensity: 0.04 });
-  OM.rim = std({ color: 0x3b4450, roughness: 0.42, metalness: 0.4 });
-  OM.rimDark = std({ color: 0x1b222b, roughness: 0.5, metalness: 0.35 });
-  OM.hull = std({ map: hullTex(), emissiveMap: TX.hullGlow, emissive: 0xffffff, emissiveIntensity: 1.1, roughness: 0.5, metalness: 0.35 });
-  OM.hullLow = std({ color: 0x141b25, roughness: 0.55, metalness: 0.35 });
-  OM.glass = std({ color: 0xa9b8c6, envMapIntensity: 0.55, transparent: true, opacity: 0.055, roughness: 0.04, metalness: 0.2, depthWrite: false, side: THREE.DoubleSide });
-  OM.wallDark = std({ color: 0x161b21, roughness: 0.5, metalness: 0.3 });
-  OM.frame = std({ color: 0x2e3641, roughness: 0.42, metalness: 0.45 });
-  OM.desk = std({ color: 0x1b2026, roughness: 0.45, metalness: 0.3 });
-  OM.deskTop = std({ color: 0x2a3038, roughness: 0.28, metalness: 0.3 });
-  OM.dark = std({ color: 0x0b0e12, roughness: 0.35, metalness: 0.45 });
-  OM.plinth = std({ color: 0x1a2028, roughness: 0.45, metalness: 0.4 });
-  OM.white = std({ color: 0xd6dce3, roughness: 0.42, metalness: 0.12 });
-  OM.white2 = std({ color: 0x9aa7b6, roughness: 0.48, metalness: 0.2 });
-  OM.rack = std({ color: 0x14181d, roughness: 0.4, metalness: 0.45 });
-  OM.rackFace = std({ map: rackTex(), emissiveMap: TX.rackGlow, emissive: 0xffffff, emissiveIntensity: 1.3, roughness: 0.35, metalness: 0.4 });
-  OM.solar = std({ map: solarTex(), roughness: 0.22, metalness: 0.5, emissive: 0x3b82f6, emissiveIntensity: 0.08 });
-  OM.engine = std({ color: 0x4a5462, roughness: 0.32, metalness: 0.6 });
-  OM.engineDark = std({ color: 0x1a2028, roughness: 0.4, metalness: 0.5, side: THREE.DoubleSide });
+  OM.deck = std({ map: deckTex(), roughness: 0.46, metalness: 0.32 });
+  OM.tile = std({ map: tileTex(), roughness: 0.42, metalness: 0.28 });
+  OM.hubTile = std({ map: tileTex(), color: 0x5ab8d8, roughness: 0.34, metalness: 0.32, emissive: 0x0088b8, emissiveIntensity: 0.04 });
+  OM.rim = std({ color: 0x26384c, roughness: 0.4, metalness: 0.48 });
+  OM.rimDark = std({ color: 0x101b28, roughness: 0.48, metalness: 0.4 });
+  OM.hull = std({ map: hullTex(), emissiveMap: TX.hullGlow, emissive: 0xffffff, emissiveIntensity: 1.15, roughness: 0.46, metalness: 0.42 });
+  OM.hullLow = std({ color: 0x0d1724, roughness: 0.5, metalness: 0.4 });
+  OM.glass = std({ color: 0x28d8a8, emissive: 0x0a5240, emissiveIntensity: 0.04, envMapIntensity: 0.45, transparent: true, opacity: 0.038, roughness: 0.08, metalness: 0.12, depthWrite: false, side: THREE.DoubleSide });
+  OM.glassCyan = std({ color: 0x20d8ff, emissive: 0x084868, emissiveIntensity: 0.05, envMapIntensity: 0.45, transparent: true, opacity: 0.045, roughness: 0.08, metalness: 0.12, depthWrite: false, side: THREE.DoubleSide });
+  OM.glassOrange = std({ color: 0xff8824, emissive: 0x883204, emissiveIntensity: 0.08, envMapIntensity: 0.45, transparent: true, opacity: 0.065, roughness: 0.08, metalness: 0.12, depthWrite: false, side: THREE.DoubleSide });
+  OM.podGlass = std({ color: 0x42f8e8, emissive: 0x18d8d0, emissiveIntensity: 0.52, transparent: true, opacity: 0.48, roughness: 0.08, metalness: 0.1, depthWrite: false, side: THREE.DoubleSide });
+  OM.wallDark = std({ color: 0x0d1722, roughness: 0.48, metalness: 0.35 });
+  OM.frame = std({ color: 0x203042, roughness: 0.4, metalness: 0.5 });
+  OM.brass = std({ color: 0xb88c42, roughness: 0.34, metalness: 0.72 });
+  OM.desk = std({ color: 0x101a26, roughness: 0.46, metalness: 0.35 });
+  OM.deskTop = std({ color: 0x18283a, roughness: 0.32, metalness: 0.32 });
+  OM.dark = std({ color: 0x070d14, roughness: 0.36, metalness: 0.45 });
+  OM.plinth = std({ color: 0x122030, roughness: 0.4, metalness: 0.45 });
+  OM.white = std({ color: 0x566c82, roughness: 0.44, metalness: 0.25 });
+  OM.white2 = std({ color: 0x3e5266, roughness: 0.48, metalness: 0.28 });
+  OM.rack = std({ color: 0x0b121a, roughness: 0.42, metalness: 0.48 });
+  OM.rackFace = std({ map: rackTex(), emissiveMap: TX.rackGlow, emissive: 0xffffff, emissiveIntensity: 1.35, roughness: 0.36, metalness: 0.42 });
+  OM.solar = std({ map: solarTex(), roughness: 0.24, metalness: 0.45, emissive: 0x1856b8, emissiveIntensity: 0.14 });
+  OM.engine = std({ color: 0x34465a, roughness: 0.32, metalness: 0.65 });
+  OM.engineDark = std({ color: 0x121b26, roughness: 0.4, metalness: 0.55, side: THREE.DoubleSide });
   OM.rock = rockNodeMat(1.0); OM.rockS = rockNodeMat(5.0);
-  OM.engineL = std({ color: 0x4a5462, roughness: 0.3, metalness: 0.65, side: THREE.DoubleSide });
+  OM.engineL = std({ color: 0x3c5066, roughness: 0.3, metalness: 0.68, side: THREE.DoubleSide });
   G.circle = new THREE.CircleGeometry(1, 48);
-  // an engine's housing, turned: its back, grooves, the lip at its mouth, the inner wall down to the nozzle
   G.engHousing = new THREE.LatheGeometry([[0.32, -0.72], [0.5, -0.66], [0.58, -0.5], [0.6, -0.22], [0.55, -0.17], [0.55, -0.1], [0.64, -0.06], [0.66, 0.66], [0.6, 0.72], [0.6, 0.78],
     [0.68, 0.84], [0.74, 0.92], [0.74, 1.1], [0.66, 1.14], [0.56, 1.06], [0.52, 0.98]].map(([r, z]) => new THREE.Vector2(r, z)), 48);
-  OM.pot = std({ color: 0x232a33, roughness: 0.5, metalness: 0.3 });
-  OM.bush = std({ color: 0x1f6b45, roughness: 0.85, emissive: 0x00ff88, emissiveIntensity: 0.04 });
+  OM.pot = std({ color: 0x182634, roughness: 0.5, metalness: 0.32 });
+  OM.bush = std({ color: 0x1a6e50, roughness: 0.8, emissive: 0x20d898, emissiveIntensity: 0.06 });
   OM.holo = new THREE.MeshBasicMaterial({ map: holoTex(), transparent: true, blending: THREE.AdditiveBlending, depthWrite: false, side: THREE.DoubleSide });
-  OM.plume = new THREE.MeshBasicMaterial({ map: plumeTex(), color: new THREE.Color(0x00cfff).multiplyScalar(0.9), opacity: 0.8, transparent: true, blending: THREE.AdditiveBlending, depthWrite: false, side: THREE.DoubleSide });
-  OM.dash = emis('#dfe6ee', 0.55);
-  // the vault's coins: ET10 green, USDC blue, both metal with their own light
-  OM.coinG = std({ color: 0x16a36a, emissive: 0x00ff88, emissiveIntensity: 0.22, metalness: 0.8, roughness: 0.25 });
-  OM.coinB = std({ color: 0x2f6fd8, emissive: 0x3b82f6, emissiveIntensity: 0.3, metalness: 0.8, roughness: 0.25 });
+  OM.plume = new THREE.MeshBasicMaterial({ map: plumeTex(), color: new THREE.Color(0x28e4ff).multiplyScalar(1.2), opacity: 0.88, transparent: true, blending: THREE.AdditiveBlending, depthWrite: false, side: THREE.DoubleSide });
+  OM.dash = emis('#98dce8', 0.48);
+  OM.lotRim = emis('#2ad8b0', 0.78);
+  OM.coinG = std({ color: 0x18b87a, emissive: 0x38f5b8, emissiveIntensity: 0.28, metalness: 0.8, roughness: 0.22 });
+  OM.coinB = std({ color: 0x2f6fd8, emissive: 0x3b82f6, emissiveIntensity: 0.32, metalness: 0.8, roughness: 0.22 });
   G.coin = new THREE.CylinderGeometry(1, 1, 1, 28);
-  // astronauts: a white suit, a helmet, a pack
-  OM.suit = std({ color: 0xe6ebf0, roughness: 0.5, metalness: 0.08 });
-  OM.pack = std({ color: 0x8a99ab, roughness: 0.5, metalness: 0.25 });
+  // astronauts: shaded cool blue-grey spacesuit with dark slate pack & joints
+  OM.suit = std({ color: 0x7c94ac, roughness: 0.46, metalness: 0.16 });
+  OM.pack = std({ color: 0x465a70, roughness: 0.48, metalness: 0.28 });
   OM.torso = new THREE.CapsuleGeometry(0.16, 0.26, 4, 14); OM.limb = new THREE.CapsuleGeometry(0.055, 0.2, 3, 10); OM.leg = new THREE.CapsuleGeometry(0.07, 0.36, 3, 10);
-  OM.chair = std({ color: 0x1d242c, roughness: 0.5, metalness: 0.25 });
-  OM.green = amat('#00ff88'); OM.cyan = amat('#00cfff'); OM.blue = amat('#3b82f6'); OM.red = amat('#ff4444');
+  OM.chair = std({ color: 0x121d2a, roughness: 0.48, metalness: 0.3 });
+  OM.green = amat('#38f5b8'); OM.cyan = amat('#24e8ff'); OM.blue = amat('#3b82f6'); OM.red = amat('#ff8824'); OM.amber = amat('#ff8824');
   G.bigRock = asteroidGeo(11, 64); G.smallRock = asteroidGeo(27, 14, false);
   G.plume = new THREE.CylinderGeometry(0.42, 0.05, 1, 24, 1, true);
-  dressOffice();   // last: every material it dresses exists by now
+  dressOffice();
 }
-// what a layout, a selection or a station built for itself goes back to the GPU when it is cleared; the shared
-// geometries (G, OM.torso and the limbs, the rounded boxes), materials (M, AM, OM) and textures (TX) stay, since the next one draws with them
-// again. A station's merged parts (userData.own) are its own geometry.
 function release(root) {
   const shared = new Set(Object.values(TX));
   [M, OM].concat(Object.values(AM)).forEach((bag) => Object.values(bag).forEach((v) => {
@@ -1521,7 +1557,6 @@ function release(root) {
   });
 }
 function emis(hex, k) { return new THREE.MeshStandardMaterial({ color: 0x000000, emissive: new THREE.Color(hex), emissiveIntensity: k == null ? 1.4 : k, roughness: 1 }); }
-// a screen on a wall: a canvas the room writes on, redrawn only when what it says changes
 function screen(w, h) {
   const c = document.createElement('canvas'); c.width = Math.round(w * 160); c.height = Math.round(h * 160);
   const tex = new THREE.CanvasTexture(c); tex.colorSpace = THREE.SRGBColorSpace; tex.anisotropy = 8;
@@ -1530,31 +1565,31 @@ function screen(w, h) {
 function drawWall(s, title, sub, col, mode) {
   const key = [title, sub, col, mode].join('|'); if (s.key === key) return; s.key = key;
   const { c, g } = s, W = c.width, H = c.height;
-  g.fillStyle = '#070a0f'; g.fillRect(0, 0, W, H);
+  g.fillStyle = '#06101a'; g.fillRect(0, 0, W, H);
   g.strokeStyle = col; g.lineWidth = 6; g.strokeRect(3, 3, W - 6, H - 6);
   g.fillStyle = col; g.font = '700 ' + Math.round(H * 0.2) + 'px JetBrains Mono, monospace'; g.textBaseline = 'top';
   const fit = (t) => { let s2 = String(t || ''); while (s2.length > 3 && g.measureText(s2).width > W - 40) s2 = s2.slice(0, -2); return s2 !== t ? s2.replace(/.$/, '…') : s2; };
   g.fillText(fit(title), 20, H * 0.14);
-  g.fillStyle = '#7f93ad'; g.font = '500 ' + Math.round(H * 0.14) + 'px JetBrains Mono, monospace';
+  g.fillStyle = '#8fa8c2'; g.font = '500 ' + Math.round(H * 0.14) + 'px JetBrains Mono, monospace';
   g.fillText(fit(sub), 20, H * 0.44);
-  g.fillStyle = '#18212b'; g.fillRect(20, H * 0.76, W - 40, H * 0.08);
+  g.fillStyle = '#142436'; g.fillRect(20, H * 0.76, W - 40, H * 0.08);
   if (mode === 'run') { g.fillStyle = col; g.fillRect(20, H * 0.76, (W - 40) * (0.25 + 0.5 * Math.random()), H * 0.08); }
-  if (mode === 'full') { g.fillStyle = col; g.globalAlpha = 0.75; g.fillRect(20, H * 0.76, W - 40, H * 0.08); g.globalAlpha = 1; }
+  if (mode === 'full') { g.fillStyle = col; g.globalAlpha = 0.8; g.fillRect(20, H * 0.76, W - 40, H * 0.08); g.globalAlpha = 1; }
   s.tex.needsUpdate = true;
 }
 function drawBars(s, title, bars) {
   const key = title + JSON.stringify(bars); if (s.key === key) return; s.key = key;
   const { c, g } = s, W = c.width, H = c.height;
-  g.fillStyle = '#070a0f'; g.fillRect(0, 0, W, H); g.strokeStyle = '#00cfff'; g.lineWidth = 6; g.strokeRect(3, 3, W - 6, H - 6);
-  g.fillStyle = '#00cfff'; g.font = '700 ' + Math.round(H * 0.15) + 'px JetBrains Mono, monospace'; g.textBaseline = 'top'; g.fillText(title, 20, H * 0.1);
+  g.fillStyle = '#06101a'; g.fillRect(0, 0, W, H); g.strokeStyle = '#24e8ff'; g.lineWidth = 6; g.strokeRect(3, 3, W - 6, H - 6);
+  g.fillStyle = '#24e8ff'; g.font = '700 ' + Math.round(H * 0.15) + 'px JetBrains Mono, monospace'; g.textBaseline = 'top'; g.fillText(title, 20, H * 0.1);
   const top = Math.max(1, ...bars.map((b) => b[1])), bw = (W - 40) / Math.max(1, bars.length);
   bars.forEach((b, i) => { const h = (H * 0.55) * b[1] / top; g.fillStyle = b[0]; g.fillRect(20 + i * bw, H * 0.88 - h, bw - 10, Math.max(3, h)); });
   s.tex.needsUpdate = true;
 }
 function drawKanban(s, counts) {
   const key = JSON.stringify(counts); if (s.key === key) return; s.key = key;
-  const { c, g } = s, W = c.width, H = c.height, cols = [['queued', '#3b82f6'], ['running', '#00cfff'], ['done', '#00ff88'], ['failed', '#ff4444']];
-  g.fillStyle = '#06080c'; g.fillRect(0, 0, W, H); g.strokeStyle = '#18212b'; g.lineWidth = 6; g.strokeRect(3, 3, W - 6, H - 6);
+  const { c, g } = s, W = c.width, H = c.height, cols = [['queued', '#3b82f6'], ['running', '#24e8ff'], ['done', '#38f5b8'], ['failed', '#ff8824']];
+  g.fillStyle = '#06101a'; g.fillRect(0, 0, W, H); g.strokeStyle = '#1c3248'; g.lineWidth = 6; g.strokeRect(3, 3, W - 6, H - 6);
   const cw = (W - 30) / 4;
   cols.forEach(([k, col], i) => {
     const x = 15 + i * cw; g.fillStyle = col; g.fillRect(x + 6, 14, cw - 12, 10);
@@ -1565,38 +1600,34 @@ function drawKanban(s, counts) {
 function candleTex() {
   if (TX.candle) return TX.candle;
   const c = document.createElement('canvas'); c.width = 512; c.height = 256; const g = c.getContext('2d');
-  g.fillStyle = '#06100c'; g.fillRect(0, 0, 512, 256); g.strokeStyle = '#00ff88'; g.lineWidth = 5; g.strokeRect(3, 3, 506, 250);
-  let v = 140; for (let i = 0; i < 16; i++) { const up = [1, 1, 0, 1, 0, 1, 1, 0, 1, 1, 1, 0, 1, 1, 0, 1][i], o = v; v = Math.max(60, Math.min(210, v + (up ? -16 : 13))); g.fillStyle = up ? '#00ff88' : '#ff4444'; g.fillRect(24 + i * 29, Math.min(o, v), 17, Math.max(6, Math.abs(o - v))); g.fillRect(31 + i * 29, Math.min(o, v) - 10, 3, Math.abs(o - v) + 20); }
-  g.fillStyle = '#00ff88'; g.font = '700 22px JetBrains Mono, monospace'; g.fillText('BASKET H2 · +1.1%', 22, 34);
+  g.fillStyle = '#140b04'; g.fillRect(0, 0, 512, 256); g.strokeStyle = '#ff9438'; g.lineWidth = 5; g.strokeRect(3, 3, 506, 250);
+  let v = 140; for (let i = 0; i < 16; i++) { const up = [1, 1, 0, 1, 0, 1, 1, 0, 1, 1, 1, 0, 1, 1, 0, 1][i], o = v; v = Math.max(60, Math.min(210, v + (up ? -16 : 13))); g.fillStyle = up ? '#38f5b8' : '#ff8824'; g.fillRect(24 + i * 29, Math.min(o, v), 17, Math.max(6, Math.abs(o - v))); g.fillRect(31 + i * 29, Math.min(o, v) - 10, 3, Math.abs(o - v) + 20); }
+  g.fillStyle = '#ffaa52'; g.font = '700 22px JetBrains Mono, monospace'; g.fillText('BASKET H2 · +1.1%', 22, 34);
   const t = new THREE.CanvasTexture(c); t.colorSpace = THREE.SRGBColorSpace; TX.candle = t; return t;
 }
-// a holographic pad: a grid inside a circle, fading to its rim
+// a holographic pad: a rich turquoise-aquamarine grid inside a double glowing circle
 function padTex() {
   if (TX.pad) return TX.pad;
   const c = document.createElement('canvas'); c.width = c.height = 512; const g = c.getContext('2d');
   g.save(); g.beginPath(); g.arc(256, 256, 250, 0, Math.PI * 2); g.clip();
-  const gr = g.createRadialGradient(256, 256, 0, 256, 256, 250); gr.addColorStop(0, 'rgba(0,207,255,.14)'); gr.addColorStop(1, 'rgba(0,207,255,.3)');
+  const gr = g.createRadialGradient(256, 256, 0, 256, 256, 250); gr.addColorStop(0, 'rgba(20,145,125,.08)'); gr.addColorStop(0.7, 'rgba(14,140,130,.12)'); gr.addColorStop(1, 'rgba(32,205,172,.22)');
   g.fillStyle = gr; g.fillRect(0, 0, 512, 512);
-  g.strokeStyle = 'rgba(0,207,255,.5)'; g.lineWidth = 2;
-  for (let p = 16; p < 512; p += 24) { g.beginPath(); g.moveTo(p, 0); g.lineTo(p, 512); g.stroke(); g.beginPath(); g.moveTo(0, p); g.lineTo(512, p); g.stroke(); }
+  g.strokeStyle = 'rgba(48,215,182,.26)'; g.lineWidth = 1.5;
+  for (let p = 16; p < 512; p += 20) { g.beginPath(); g.moveTo(p, 0); g.lineTo(p, 512); g.stroke(); g.beginPath(); g.moveTo(0, p); g.lineTo(512, p); g.stroke(); }
   g.restore();
-  g.strokeStyle = 'rgba(0,207,255,.95)'; g.lineWidth = 8; g.beginPath(); g.arc(256, 256, 246, 0, Math.PI * 2); g.stroke();
+  g.strokeStyle = 'rgba(56,232,196,.72)'; g.lineWidth = 7; g.beginPath(); g.arc(256, 256, 245, 0, Math.PI * 2); g.stroke();
+  g.strokeStyle = 'rgba(36,208,225,.48)'; g.lineWidth = 3; g.beginPath(); g.arc(256, 256, 224, 0, Math.PI * 2); g.stroke();
   const t = new THREE.CanvasTexture(c); t.colorSpace = THREE.SRGBColorSpace; t.anisotropy = 4; TX.pad = t; return t;
 }
 function moodTex() {
   const c = document.createElement('canvas'); c.width = 512; c.height = 256; const g = c.getContext('2d');
-  g.fillStyle = '#0b1016'; g.fillRect(0, 0, 512, 256); g.strokeStyle = '#18212b'; g.lineWidth = 5; g.strokeRect(3, 3, 506, 250);
-  ['#00cfff', '#00ff88', '#3b82f6', '#ff4444'].forEach((col, i) => { g.fillStyle = col; g.fillRect(24 + i * 58, 28, 46, 46); });
-  g.strokeStyle = '#7f93ad'; g.lineWidth = 3; g.strokeRect(24, 96, 220, 70); g.fillStyle = '#7f93ad'; g.fillRect(36, 110, 90, 10); g.fillStyle = '#18212b'; g.fillRect(36, 132, 160, 8);
-  g.strokeStyle = '#00cfff'; g.setLineDash([10, 8]); g.strokeRect(270, 28, 214, 200);
+  g.fillStyle = '#08121c'; g.fillRect(0, 0, 512, 256); g.strokeStyle = '#1c3248'; g.lineWidth = 5; g.strokeRect(3, 3, 506, 250);
+  ['#24e8ff', '#38f5b8', '#3b82f6', '#ff8824'].forEach((col, i) => { g.fillStyle = col; g.fillRect(24 + i * 58, 28, 46, 46); });
+  g.strokeStyle = '#7f93ad'; g.lineWidth = 3; g.strokeRect(24, 96, 220, 70); g.fillStyle = '#7f93ad'; g.fillRect(36, 110, 90, 10); g.fillStyle = '#182838'; g.fillRect(36, 132, 160, 8);
+  g.strokeStyle = '#24e8ff'; g.setLineDash([10, 8]); g.strokeRect(270, 28, 214, 200);
   const t = new THREE.CanvasTexture(c); t.colorSpace = THREE.SRGBColorSpace; return t;
 }
 
-/* The office in 3D, drawn to the operator's picture of it (2026-10-18): a platform on a rock in space, its hull
- * plated and lit, engines and solar wings off its sides, asteroids drifting past a teal nebula; on it, rooms of
- * glass with neon edges (green at rest, cyan at work, red when they wait for the owner), server racks, lab
- * machines, desks with astronauts at them; the Manager's dais of rings in the middle; Add department a
- * holographic pad on the open deck; the vault at the front. */
 class Office3D {
   constructor(el, stage, tipFor) {
     geo(); omats();
@@ -1604,35 +1635,34 @@ class Office3D {
     this.tip = stage.querySelector('.tip'); this.layer = stage.querySelector('.o3layer');
     this.sel = null; this.cells = {}; this.paths = {}; this.packets = []; this.rooms = {}; this.fitted = false; this.hover = null;
     this.mouse = new THREE.Vector2(); this.ray = new THREE.Raycaster();
-    this.scene = new THREE.Scene(); this.scene.background = new THREE.Color(OFFICE.bg); this.scene.fog = new THREE.Fog(OFFICE.bg, 140, 360);
-    this.camera = new THREE.PerspectiveCamera(36, 2, 0.3, 700);
+    this.scene = new THREE.Scene(); this.scene.background = new THREE.Color(OFFICE.bg); this.scene.fog = new THREE.Fog(OFFICE.bg, 180, 460);
+    // Telephoto FOV (22 deg) gives the crisp isometric proportions of look-office.webp
+    this.camera = new THREE.PerspectiveCamera(22, 2, 0.5, 900);
     this.renderer = new THREE.WebGPURenderer({ antialias: false });
     this.renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
-    this.renderer.toneMapping = THREE.ACESFilmicToneMapping; this.renderer.toneMappingExposure = 1.35;
+    this.renderer.toneMapping = THREE.ACESFilmicToneMapping; this.renderer.toneMappingExposure = 1.02;
     this.renderer.shadowMap.enabled = true; this.renderer.shadowMap.type = THREE.PCFSoftShadowMap;
     el.appendChild(this.renderer.domElement);
     this.controls = new OrbitControls(this.camera, this.renderer.domElement);
-    Object.assign(this.controls, { enableDamping: true, dampingFactor: 0.08, minDistance: 6, maxDistance: 140, maxPolarAngle: Math.PI * 0.47, minPolarAngle: 0.2,
+    Object.assign(this.controls, { enableDamping: true, dampingFactor: 0.08, minDistance: 10, maxDistance: 220, maxPolarAngle: Math.PI * 0.47, minPolarAngle: 0.2,
       screenSpacePanning: false, zoomSpeed: 0.9, rotateSpeed: 0.55 });
     this.controls.addEventListener('start', () => { this.tw = null; this.moved = true; });
     const S = this.scene;
     S.environment = envTex();
-    new RGBELoader().load('assets/studio_small_09_1k.hdr', (t) => { t.mapping = THREE.EquirectangularReflectionMapping; S.environment = t; S.environmentIntensity = 0.28; }, undefined, () => {});
-    // white light from the camera's side, so the faces you see are lit; a cool one from below for the hull and the
-    // rock; a cyan rim from behind
-    S.add(new THREE.HemisphereLight(0xdfe8f1, 0x0a0d12, 0.95), new THREE.AmbientLight(0x1b222b, 0.5));
-    this.sun = new THREE.DirectionalLight(0xf4f8fc, 2.4); this.sun.castShadow = true; this.sun.shadow.mapSize.set(2048, 2048);
+    new RGBELoader().load('assets/studio_small_09_1k.hdr', (t) => { t.mapping = THREE.EquirectangularReflectionMapping; S.environment = t; S.environmentIntensity = 0.18; }, undefined, () => {});
+    S.add(new THREE.HemisphereLight(0x88c8e8, 0x050b14, 0.52), new THREE.AmbientLight(0x102030, 0.38));
+    this.sun = new THREE.DirectionalLight(0xd8eeff, 1.12); this.sun.castShadow = true; this.sun.shadow.mapSize.set(2048, 2048);
     this.sun.shadow.normalBias = 0.02; this.sun.shadow.bias = -0.0005; S.add(this.sun); S.add(this.sun.target);
-    const rim = new THREE.DirectionalLight(0x00cfff, 0.5); rim.position.set(-30, 12, -40); S.add(rim);
-    const under = new THREE.DirectionalLight(0xcfe6f5, 0.55); under.position.set(20, -22, 42); S.add(under);
+    const rim = new THREE.DirectionalLight(0x28e8ff, 0.65); rim.position.set(-34, 14, -42); S.add(rim);
+    const under = new THREE.DirectionalLight(0x2498c8, 0.5); under.position.set(22, -24, 44); S.add(under);
     this.sky = spaceSky(); S.add(this.sky);
     this.world = new THREE.Group(); S.add(this.world);
     this.pk = new THREE.Group(); S.add(this.pk);
     this.clock = new THREE.Clock();
     this.bind();
     this.renderer.init().then(() => {
-      try { this.post = new Post(this.renderer, this.scene, this.camera, 0.45, 0.45, 0.84, { ao: { radius: 0.8, scale: 1.6 } }); }
-      catch (e) { console.warn('office: no ambient occlusion', e); try { this.post = new Post(this.renderer, this.scene, this.camera, 0.45, 0.45, 0.84); } catch (e2) { this.post = null; } }
+      try { this.post = new Post(this.renderer, this.scene, this.camera, 0.48, 0.42, 0.72, { sat: 1.06 }); }
+      catch (e) { this.post = null; }
       this.renderer.setAnimationLoop(() => this.frame());
     }).catch((e) => { console.error('3D office could not start:', e); if (this.onFail) this.onFail(e); });
     if (window.ResizeObserver) new ResizeObserver(() => this.resize()).observe(el);
@@ -1655,7 +1685,8 @@ class Office3D {
   layout(opts) {
     const S = CO.S, L = CO.iso, born = opts && opts.born;
     this.shapeKey = this.shape();
-    const cells = { hub: L.HUB, audit: L.AUDIT, vault: L.VAULT }, used = {};
+    // 8-cell station silhouette matching look-office.webp (with the Vault as the sleek bottom-right HUD card)
+    const cells = { hub: L.HUB, audit: L.AUDIT }, used = {};
     S.departments.forEach((d) => { cells['d' + d.id] = L.SLOTS[d.slot]; used[d.slot] = 1; });
     let lot = 0; while (used[lot]) lot++;
     if (lot < L.SLOTS.length && !CO.RO) cells.lot = L.SLOTS[lot];
@@ -1666,8 +1697,6 @@ class Office3D {
     // clear the old floor, rooms and labels
     release(this.world); this.world.clear(); this.layer.innerHTML = ''; this.rooms = {}; this.hits = []; this.pcs = [];
     const RS = L.RS, W = this.world;
-    // The deck: a plated slab under every room (the Manager's, the audit, the vault and the free lot included), one
-    // platform where cells meet. The fit frames the deck and what hangs under it.
     const pad = 0.5, T = 0.35, have = {}, kc = (x, y) => x + ',' + y;
     all.forEach((c) => { have[kc(c[0], c[1])] = 1; });
     this.corners = []; const outer = [];
@@ -1677,7 +1706,7 @@ class Office3D {
       const x0 = c[0] - pad, y0 = c[1] - pad, x1 = c[0] + RS + pad, y1 = c[1] + RS + pad;
       // a side is the outside when no room's slab meets it there
       [[x0, y0, x1, y0, !have[kc(c[0], c[1] - 8)], 0, -1], [x0, y1, x1, y1, !have[kc(c[0], c[1] + 8)], 0, 1], [x0, y0, x0, y1, !have[kc(c[0] - 8, c[1])], -1, 0], [x1, y0, x1, y1, !have[kc(c[0] + 8, c[1])], 1, 0]].forEach(([ax, ay, bx, by, out, nx, ny]) => {
-        if (out) outer.push({ ax, ay, bx, by, nx, ny });
+        if (out) outer.push({ ax, ay, bx, by, nx, ny, c0: c[0], c1: c[1] });
       });
       [[x0, y0], [x1, y0], [x0, y1], [x1, y1]].forEach(([x, y]) => { this.corners.push(this.V(x, y, -T - 2.4), this.V(x, y, WH + 0.1)); });
     });
@@ -1689,7 +1718,7 @@ class Office3D {
       if (k === 'hub' || k === 'lot') return;
       const p = L.route(all, cells[k], L.HUB); if (!p) return;
       this.paths[k] = p;
-      const mat = emis('#dfe6ee', 0.3), segs = [];
+      const mat = emis('#8cb8d0', 0.25), segs = [];
       for (let i = 1; i < p.length; i++) {
         const a = p[i - 1], b = p[i], len = Math.hypot(b[0] - a[0], b[1] - a[1]); if (len < 0.01) continue;
         const n = Math.max(1, Math.round(len / 0.7)), ang = -Math.atan2(b[1] - a[1], b[0] - a[0]);
@@ -1706,160 +1735,205 @@ class Office3D {
     // rooms
     Object.keys(cells).forEach((k) => {
       const c = cells[k], g = new THREE.Group(); W.add(g);
-      const room = { key: k, g, x0: c[0], y0: c[1], agents: [], screens: [], mons: [], born: born && k === 'd' + born };
+      const dept = (k !== 'hub' && k !== 'audit' && k !== 'vault' && k !== 'lot') ? CO.dept(+k.slice(1)) : null;
+      const room = { key: k, dept, g, x0: c[0], y0: c[1], agents: [], screens: [], mons: [], born: born && k === 'd' + born };
       this.rooms[k] = room;
       if (k === 'lot') return this.lotRoom(room);
       this.shell(room);
-      if (k === 'hub') this.hubRoom(room); else if (k === 'audit') this.auditRoom(room); else if (k === 'vault') this.vaultRoom(room); else this.deptRoom(room, CO.dept(+k.slice(1)));
+      if (k === 'hub') this.hubRoom(room); else if (k === 'audit') this.auditRoom(room); else if (k === 'vault') this.vaultRoom(room); else this.deptRoom(room, dept);
       const hit = new THREE.Mesh(G.box, M.hit); hit.scale.set(RS, WH, RS); hit.position.copy(this.V(c[0] + RS / 2, c[1] + RS / 2, WH / 2)); hit.userData.key = k; g.add(hit); this.hits.push(hit);
       if (room.born) { g.scale.set(1, 0.01, 1); room.grow = performance.now(); }
     });
+    // Bottom-right VAULT HUD card matching look-office.webp
+    const vc = document.createElement('div');
+    vc.className = 'opvault';
+    vc.setAttribute('data-key', 'vault');
+    vc.addEventListener('click', () => CO.emit('office:click', 'vault'));
+    this.layer.appendChild(vc);
+    this.vaultCard = vc;
     this.selRing = new THREE.Group(); W.add(this.selRing);
     this.update();
     if (!this.fitted) { this.fit(false); }
   }
   // Under and round the deck, what makes it a station in space: a rim, a plated hull with its lights, a stepped
-  // keel, the rock it is built on, engines, two solar wings, asteroids drifting past. Static parts merged per
+  // keel, the rock it is built on, engines, solar wings, asteroids drifting past. Static parts merged per
   // material.
   exterior(all, outer, have, pad, T) {
-    const W = this.world, RS = CO.iso.RS, ext = new THREE.Group(), HD = 1.6, R = rng(17), kc = (x, y) => x + ',' + y; W.add(ext);
+    const W = this.world, RS = CO.iso.RS, ext = new THREE.Group(), HD = 1.65, R = rng(17), kc = (x, y) => x + ',' + y; W.add(ext);
     all.forEach((c) => {
       const Lf = !have[kc(c[0] - 8, c[1])], Rt = !have[kc(c[0] + 8, c[1])], Bk = !have[kc(c[0], c[1] - 8)], Fr = !have[kc(c[0], c[1] + 8)];
       const x0 = c[0] - pad, y0 = c[1] - pad, x1 = c[0] + RS + pad, y1 = c[1] + RS + pad;
       const tier = (ins, z0, h, mat) => this.box(ext, x0 + (Lf ? ins : 0), y0 + (Bk ? ins : 0), z0, x1 - x0 - (Lf ? ins : 0) - (Rt ? ins : 0), y1 - y0 - (Bk ? ins : 0) - (Fr ? ins : 0), h, mat, false);
       tier(0.12, -T - 0.12 - HD, HD, OM.hull);
-      tier(0.75, -T - 0.12 - HD - 0.45, 0.45, OM.hullLow);
-      tier(1.5, -T - 0.12 - HD - 0.75, 0.3, OM.hullLow);
+      tier(0.7, -T - 0.12 - HD - 0.48, 0.48, OM.hullLow);
+      tier(1.4, -T - 0.12 - HD - 0.82, 0.34, OM.hullLow);
     });
-    // the rim: a lighter lip round the outside of the deck, a little proud of it
-    outer.forEach((e) => {
+    // the rim: a lighter lip round the outside of the deck, with small cyan beacon strips along the bevel
+    outer.forEach((e, idx) => {
       const len = Math.hypot(e.bx - e.ax, e.by - e.ay) + 0.44, mx = (e.ax + e.bx) / 2 + e.nx * 0.11, my = (e.ay + e.by) / 2 + e.ny * 0.11, along = e.ax === e.bx;
-      this.rb(ext, mx - (along ? 0.11 : len / 2), my - (along ? len / 2 : 0.11), -T - 0.14, along ? 0.22 : len, along ? len : 0.22, T + 0.16, OM.rim, 0.1, false);
+      this.rb(ext, mx - (along ? 0.12 : len / 2), my - (along ? len / 2 : 0.12), -T - 0.14, along ? 0.24 : len, along ? len : 0.24, T + 0.16, OM.rim, 0.1, false);
+      if (idx % 2 === 0) {
+        const bx = (e.ax + e.bx) / 2 + e.nx * 0.24, by = (e.ay + e.by) / 2 + e.ny * 0.24;
+        this.box(ext, bx - (along ? 0.03 : 0.42), by - (along ? 0.42 : 0.03), -T * 0.55, along ? 0.05 : 0.84, along ? 0.84 : 0.05, 0.05, OM.cyan.rim, false);
+      }
     });
     let mnx = 1e9, mxx = -1e9, mny = 1e9, mxy = -1e9;
     all.forEach((c) => { mnx = Math.min(mnx, c[0]); mxx = Math.max(mxx, c[0] + RS); mny = Math.min(mny, c[1]); mxy = Math.max(mxy, c[1] + RS); });
-    const cxp = (mnx + mxx) / 2, cyp = (mny + mxy) / 2, span = Math.max(mxx - mnx, mxy - mny), keel = -T - HD - 0.9;
-    // the rock: wider than the deck where it shows, hanging well below it
-    const rock = new THREE.Mesh(G.bigRock, OM.rock); rock.scale.set(span * 0.5, span * 0.3, span * 0.45); rock.position.copy(this.V(cxp - span * 0.04, cyp + span * 0.02, keel - span * 0.02)); rock.rotation.set(0.05, 0.6, 0.04); ext.add(rock);
-    const rock2 = new THREE.Mesh(G.bigRock, OM.rock); rock2.scale.set(span * 0.26, span * 0.2, span * 0.24); rock2.position.copy(this.V(cxp + span * 0.2, cyp + span * 0.16, keel - span * 0.12)); rock2.rotation.set(0.5, 2.1, 0.3); ext.add(rock2);
-    // Engines as in the picture: a gunmetal housing turned on a lathe (grooves, a lip at its mouth), a nozzle
-    // recessed in it that glows cyan from inside, brackets and two actuators holding it to the hull. No flame: the
-    // glow is the engine, and it breathes.
+    const cxp = (mnx + mxx) / 2, cyp = (mny + mxy) / 2, span = Math.max(mxx - mnx, mxy - mny), keel = -T - HD - 0.95;
+    // the rock: dark jagged asteroid mass nested beneath the station hull
+    const rock = new THREE.Mesh(G.bigRock, OM.rock); rock.scale.set(span * 0.48, span * 0.28, span * 0.44); rock.position.copy(this.V(cxp - span * 0.05, cyp + span * 0.01, keel - span * 0.02)); rock.rotation.set(0.05, 0.6, 0.04); ext.add(rock);
+    const rock2 = new THREE.Mesh(G.bigRock, OM.rock); rock2.scale.set(span * 0.26, span * 0.2, span * 0.24); rock2.position.copy(this.V(cxp + span * 0.16, cyp + span * 0.1, keel - span * 0.1)); rock2.rotation.set(0.5, 2.1, 0.3); ext.add(rock2);
+    const rock3 = new THREE.Mesh(G.bigRock, OM.rock); rock3.scale.set(span * 0.24, span * 0.17, span * 0.22); rock3.position.copy(this.V(cxp - span * 0.2, cyp + span * 0.2, keel - span * 0.06)); rock3.rotation.set(-0.3, 1.2, -0.2); ext.add(rock3);
+    // Back-left engines with blue exhaust plumes as in look-office.webp
     this.flames = [];
-    const pick = outer.length <= 6 ? outer : [0, 1, 2, 3, 4, 5].map((i) => outer[Math.floor((i + 0.5) * outer.length / 6)]);
-    pick.forEach((e, i) => {
-      const f = i % 2 ? 0.3 : 0.7, g = new THREE.Group();
-      g.position.copy(this.V(e.ax + (e.bx - e.ax) * f + e.nx * 0.55, e.ay + (e.by - e.ay) * f + e.ny * 0.55, -T - 0.12 - HD * 0.5)); g.rotation.y = Math.atan2(e.nx, e.ny); ext.add(g);
+    const leftEdges = outer.filter((o) => o.nx === -1);
+    leftEdges.forEach((e, i) => {
+      const f = 0.5, g = new THREE.Group();
+      g.position.copy(this.V(e.ax + (e.bx - e.ax) * f + e.nx * 0.55, e.ay + (e.by - e.ay) * f + e.ny * 0.55, -T - 0.12 - HD * 0.48)); g.rotation.y = Math.atan2(e.nx, e.ny); ext.add(g);
       const housing = new THREE.Mesh(G.engHousing, OM.engineL); housing.rotation.x = Math.PI / 2; g.add(housing);
       const back = new THREE.Mesh(G.cyl, OM.engineDark); back.scale.set(0.34, 0.3, 0.34); back.rotation.x = Math.PI / 2; back.position.z = -0.82; g.add(back);
       [[0.62, 0.2], [-0.62, 0.2]].forEach(([x, y]) => {
-        const arm = new THREE.Mesh(rboxGeo(0.12, 0.12, 0.95, 0.03), OM.frame); arm.position.set(x * 0.9, y, -0.55); arm.rotation.y = x > 0 ? -0.35 : 0.35; g.add(arm);
-        const act = new THREE.Mesh(G.cyl, OM.engine); act.scale.set(0.06, 0.7, 0.06); act.rotation.x = Math.PI / 2; act.position.set(x * 0.75, -0.42, -0.4); g.add(act);
+        const arm = new THREE.Mesh(rboxGeo(0.12, 0.12, 0.95, 0.03), OM.brass); arm.position.set(x * 0.9, y, -0.55); arm.rotation.y = x > 0 ? -0.35 : 0.35; g.add(arm);
       });
-      const bracket = new THREE.Mesh(rboxGeo(1.1, 0.16, 0.5, 0.04), OM.frame); bracket.position.set(0, -0.62, -0.55); g.add(bracket);
-      const nozzle = new THREE.Mesh(G.circle, new THREE.MeshBasicMaterial({ map: nozzleTex(), color: new THREE.Color(0xffffff).multiplyScalar(1.6), transparent: true, toneMapped: false }));
-      nozzle.scale.setScalar(0.56); nozzle.position.z = 1.0; nozzle.userData.dyn = true; g.add(nozzle);
-      const lip = new THREE.Mesh(G.ringT, OM.cyan.rim); lip.scale.setScalar(0.6); lip.position.z = 1.12; g.add(lip);
-      const halo = glowSprite(0x00cfff, 0.32, 2.2); halo.position.z = 1.3; halo.userData.dyn = true; g.add(halo);
-      this.flames.push({ glow: halo, ph: R() * 6 });
+      const nozzle = new THREE.Mesh(G.circle, new THREE.MeshBasicMaterial({ map: nozzleTex(), color: new THREE.Color(0xffffff).multiplyScalar(1.8), transparent: true, toneMapped: false }));
+      nozzle.scale.setScalar(0.58); nozzle.position.z = 1.0; nozzle.userData.dyn = true; g.add(nozzle);
+      const lip = new THREE.Mesh(G.ringT, OM.cyan.rim); lip.scale.setScalar(0.62); lip.position.z = 1.12; g.add(lip);
+      const halo = glowSprite(0x00e5ff, 0.45, 2.8); halo.position.z = 1.35; halo.userData.dyn = true; g.add(halo);
+      const plume = new THREE.Mesh(G.beam, OM.cyan.beam); plume.scale.set(0.52, 2.6, 0.52); plume.rotation.x = -Math.PI / 2; plume.position.z = 2.1; g.add(plume);
+      this.flames.push({ glow: halo, ph: R() * 6 + i });
     });
-    // two solar wings: off the far right side and the near right side, as in the picture
-    [[0, -1], [1, 0]].forEach(([nx, ny]) => {
-      const es = outer.filter((o) => o.nx === nx && o.ny === ny); if (!es.length) return;
-      const e = es[nx ? es.length - 1 : es.length - 1], mx = (e.ax + e.bx) / 2, my = (e.ay + e.by) / 2, g = new THREE.Group();
-      g.position.copy(this.V(mx, my, -T - 0.7)); g.rotation.y = Math.atan2(nx, ny); ext.add(g);
-      const boom = new THREE.Mesh(G.box, OM.engine); boom.scale.set(0.16, 0.16, 10.2); boom.position.z = 5.2; g.add(boom);
-      const joint = new THREE.Mesh(G.cyl, OM.engineDark); joint.scale.set(0.34, 0.5, 0.34); joint.position.z = 0.3; g.add(joint);
-      for (let i = 0; i < 4; i++) [-1, 1].forEach((side) => {
-        const p = new THREE.Mesh(G.box, [OM.engine, OM.engine, OM.solar, OM.engineDark, OM.engine, OM.engine]);
-        p.scale.set(2.3, 0.05, 2.0); p.position.set(side * 1.32, 0, 1.6 + i * 2.15); p.rotation.z = side * 0.28; g.add(p);
-        const strut = new THREE.Mesh(G.box, OM.frame); strut.scale.set(0.5, 0.06, 0.06); strut.position.set(side * 0.3, 0, 1.6 + i * 2.15); g.add(strut);
+    // Hero front-left cylindrical hull module under + ADD DEPARTMENT ([8, 16], ny = 1) as in look-office.webp
+    const heroEdge = outer.find((o) => o.ny === 1 && o.c0 === 8 && o.c1 === 16) || outer.find((o) => o.ny === 1);
+    if (heroEdge) {
+      const hg = new THREE.Group();
+      hg.position.copy(this.V(heroEdge.ax + 2.4, heroEdge.ay + 0.45, -T - HD * 0.52));
+      hg.rotation.y = Math.atan2(0, 1);
+      ext.add(hg);
+      const hBody = new THREE.Mesh(G.engHousing, OM.engineL); hBody.scale.set(1.18, 1.28, 1.18); hBody.rotation.x = Math.PI / 2; hg.add(hBody);
+      const hRing = new THREE.Mesh(G.ringT, OM.brass); hRing.scale.setScalar(0.76); hRing.position.z = 0.2; hg.add(hRing);
+      [[-0.75, 0.2], [0.75, 0.2], [-0.65, -0.35], [0.65, -0.35]].forEach(([sx, sy]) => {
+        const strut = new THREE.Mesh(rboxGeo(0.13, 0.13, 1.1, 0.03), OM.brass); strut.position.set(sx, sy, -0.45); strut.rotation.y = sx > 0 ? -0.28 : 0.28; hg.add(strut);
       });
-    });
+      const hBore = new THREE.Mesh(G.circle, OM.engineDark); hBore.scale.setScalar(0.68); hBore.position.z = 1.28; hg.add(hBore);
+      const hInner = new THREE.Mesh(G.ringT, OM.engine); hInner.scale.setScalar(0.52); hInner.position.z = 1.32; hg.add(hInner);
+      const hLip = new THREE.Mesh(G.ringT, OM.rim); hLip.scale.setScalar(0.76); hLip.position.z = 1.38; hg.add(hLip);
+    }
+    // Sapphire-blue solar wings placed at the exact 4 positions of look-office.webp:
+    // 1) Back-right behind Laboratory ([8,0], ny = -1)
+    // 2) Far-right beside Trading Desk ([16,0], nx = 1)
+    // 3) Front-bottom-right beside + Add Department ([8,16], nx = 1, extending into the [16,16] corner)
+    // 4) Back-left behind Cymetica QA ([0,0], ny = -1)
+    const addWing = (mx, my, nx, ny, nSeg = 4) => {
+      const g = new THREE.Group();
+      g.position.copy(this.V(mx, my, -T - 0.62)); g.rotation.y = Math.atan2(nx, ny); ext.add(g);
+      const boom = new THREE.Mesh(G.box, OM.engine); boom.scale.set(0.15, 0.15, 2.15 * nSeg + 1.2); boom.position.z = (2.15 * nSeg + 1.2) / 2; g.add(boom);
+      const joint = new THREE.Mesh(G.cyl, OM.brass); joint.scale.set(0.34, 0.48, 0.34); joint.position.z = 0.28; g.add(joint);
+      for (let i = 0; i < nSeg; i++) [-1, 1].forEach((side) => {
+        const p = new THREE.Mesh(G.box, [OM.frame, OM.frame, OM.solar, OM.engineDark, OM.frame, OM.frame]);
+        p.scale.set(2.25, 0.05, 1.96); p.position.set(side * 1.32, 0, 1.55 + i * 2.12); p.rotation.z = side * 0.22; g.add(p);
+        const strut = new THREE.Mesh(G.box, OM.brass); strut.scale.set(0.48, 0.055, 0.055); strut.position.set(side * 0.28, 0, 1.55 + i * 2.12); g.add(strut);
+      });
+    };
+    const wLab = outer.find((o) => o.ny === -1 && o.c0 === 8 && o.c1 === 0);
+    if (wLab) addWing((wLab.ax + wLab.bx) / 2, (wLab.ay + wLab.by) / 2, 0, -1, 4);
+    const wQa = outer.find((o) => o.ny === -1 && o.c0 === 0 && o.c1 === 0);
+    if (wQa) addWing((wQa.ax + wQa.bx) / 2, (wQa.ay + wQa.by) / 2, 0, -1, 3);
+    const wTd = outer.find((o) => o.nx === 1 && o.c0 === 16 && o.c1 === 0);
+    if (wTd) addWing((wTd.ax + wTd.bx) / 2, (wTd.ay + wTd.by) / 2, 1, 0, 4);
+    const wFront = outer.find((o) => o.nx === 1 && o.c0 === 8 && o.c1 === 16) || outer.find((o) => o.ny === 1 && o.c0 === 16 && o.c1 === 8);
+    if (wFront) addWing((wFront.ax + wFront.bx) / 2, (wFront.ay + wFront.by) / 2, wFront.nx, wFront.ny, 4);
+
     bakeGroup(ext);
     ext.traverse((o) => { if (o.isMesh && o.material === OM.rock) { o.castShadow = true; o.receiveShadow = true; } });
-    // asteroids drifting round it, never between it and the camera; one large and lit up to the right
+    // Cratered moonlet in the top-right sky and small asteroids drifting round the station
     this.drift = [];
-    const big = new THREE.Mesh(G.smallRock, OM.rockS); big.scale.set(2.2, 1.9, 2.0);
-    big.position.copy(this.V(cxp, cyp, 0)).add(skyDir(32, 0).multiplyScalar(span * 0.9)).add(new THREE.Vector3(0, span * 0.32, 0)); W.add(big); this.drift.push({ m: big, sp: 0.05 });
+    const big = new THREE.Mesh(G.smallRock, OM.rockS); big.scale.set(2.35, 2.05, 2.2);
+    big.position.copy(this.V(cxp, cyp, 0)).add(skyDir(28, 10).multiplyScalar(span * 0.88)).add(new THREE.Vector3(0, span * 0.26, 0)); W.add(big); this.drift.push({ m: big, sp: 0.04 });
     for (let i = 0; i < 12; i++) {
       const a = R() * Math.PI * 2; if ((Math.cos(a) + Math.sin(a)) / Math.SQRT2 > 0.2) { i--; continue; }
-      const d = span * (0.85 + R() * 0.7), s = 0.3 + R() * R() * 1.4, m = new THREE.Mesh(G.smallRock, OM.rockS);
+      const d = span * (0.85 + R() * 0.7), s = 0.3 + R() * R() * 1.35, m = new THREE.Mesh(G.smallRock, OM.rockS);
       m.scale.set(s, s * 0.8, s * 0.9); m.position.copy(this.V(cxp + Math.cos(a) * d, cyp + Math.sin(a) * d, -9 + R() * 12)); m.rotation.set(R() * 3, R() * 3, R() * 3);
       W.add(m); this.drift.push({ m, sp: 0.06 + R() * 0.18 });
     }
     const drift = this.drift; moonRock().then((mr) => { if (mr) drift.forEach((d) => { d.m.geometry = mr.geo; d.m.material = mr.mat; }); });
   }
-  // a room: a glossy floor, glass on all four sides with neon on every edge, a dark panel along the two back walls
+  // a room: a dark petrol-navy floor, crystal-clear tinted glass walls with razor-sharp glowing top neon rims
   shell(r) {
     const { g, x0, y0 } = r, RS = CO.iso.RS, H = WH, t = 0.04, z0 = 0.08;
+    const dk = r.dept && r.dept.key;
+    const isOrange = dk === 'trading_desk';
+    const isCyan = r.key === 'hub' || dk === 'testing_lab';
     this.box(g, x0, y0, 0, RS, RS, z0, r.key === 'hub' ? OM.hubTile : OM.tile);
-    r.glow = new THREE.Mesh(G.plane, new THREE.MeshBasicMaterial({ map: radialTex('255,255,255', 0.9), transparent: true, opacity: 0, blending: THREE.AdditiveBlending, depthWrite: false, color: 0x00cfff }));
-    r.glow.scale.set(RS * 1.15, RS * 1.15, 1); r.glow.rotation.x = -Math.PI / 2; r.glow.position.copy(this.V(x0 + RS / 2, y0 + RS / 2, z0 + 0.01)); g.add(r.glow);
-    [[x0, y0, RS, t], [x0, y0 + RS - t, RS, t], [x0, y0, t, RS], [x0 + RS - t, y0, t, RS]].forEach(([x, y, w, d]) => this.box(g, x, y, z0, w, d, H, OM.glass, false));
-    if (r.key !== 'hub') { this.box(g, x0 + t, y0 + t, z0, RS - 2 * t, 0.1, 0.62, OM.wallDark); this.box(g, x0 + t, y0 + t, z0, 0.1, RS - 2 * t, 0.62, OM.wallDark); }
-    r.edgeM = emis('#00ff88', 0.75);
-    const e = 0.05, z1 = z0 + H - e;
-    [[x0, y0, RS, e], [x0, y0 + RS - e, RS, e], [x0, y0, e, RS], [x0 + RS - e, y0, e, RS]].forEach(([x, y, w, d]) => { this.box(g, x, y, z1, w, d, e, r.edgeM, false); this.box(g, x, y, z0, w, d, e, r.edgeM, false); });
+    r.glow = new THREE.Mesh(G.plane, new THREE.MeshBasicMaterial({ map: radialTex('255,255,255', 0.85), transparent: true, opacity: 0.04, blending: THREE.AdditiveBlending, depthWrite: false, color: isOrange ? 0xff8824 : isCyan ? 0x00e5ff : 0x38f2b8 }));
+    r.glow.scale.set(RS * 0.92, RS * 0.92, 1); r.glow.rotation.x = -Math.PI / 2; r.glow.position.copy(this.V(x0 + RS / 2, y0 + RS / 2, z0 + 0.01)); g.add(r.glow);
+    const glassMat = isOrange ? OM.glassOrange : isCyan ? OM.glassCyan : OM.glass;
+    [[x0, y0, RS, t], [x0, y0 + RS - t, RS, t], [x0, y0, t, RS], [x0 + RS - t, y0, t, RS]].forEach(([x, y, w, d]) => this.box(g, x, y, z0, w, d, H, glassMat, false));
+    if (r.key !== 'hub') { this.box(g, x0 + t, y0 + t, z0, RS - 2 * t, 0.1, 0.52, OM.wallDark); this.box(g, x0 + t, y0 + t, z0, 0.1, RS - 2 * t, 0.52, OM.wallDark); }
+    r.edgeM = emis(isOrange ? '#ff8824' : isCyan ? '#00e5ff' : '#38f2b8', 1.35);
+    const e = 0.048, z1 = z0 + H - e;
+    // Crisp single top neon rail + 4 vertical corner neon strips (no bottom floor neon bar, matching look-office.webp)
+    [[x0, y0, RS, e], [x0, y0 + RS - e, RS, e], [x0, y0, e, RS], [x0 + RS - e, y0, e, RS]].forEach(([x, y, w, d]) => { this.box(g, x, y, z1, w, d, e, r.edgeM, false); });
     [[x0, y0], [x0 + RS - e, y0], [x0, y0 + RS - e], [x0 + RS - e, y0 + RS - e]].forEach(([x, y]) => this.box(g, x, y, z0, e, e, H, r.edgeM, false));
-    // a lamp over the room in the colour of what it is doing: it lights the desks, the people and the floor
-    r.lamp = new THREE.PointLight(OFFICE.lamp, 9, 11, 1.6); r.lamp.position.copy(this.V(x0 + RS / 2, y0 + RS / 2, 2.5)); g.add(r.lamp);
+    // Gentle interior point light so floors stay dark and high-contrast
+    r.lamp = new THREE.PointLight(isOrange ? 0xff8824 : isCyan ? 0x00e5ff : OFFICE.lamp, isOrange ? 10 : 3.5, 11, 1.6);
+    r.lamp.position.copy(this.V(x0 + RS / 2, y0 + RS / 2, 2.2)); g.add(r.lamp);
   }
   // a wall screen on the back wall: what runs now, or why it waits
   wallScreen(r, u0, u1) {
-    const s = screen(u1 - u0, 0.62), mat = new THREE.MeshBasicMaterial({ map: s.tex, toneMapped: false });
-    const m = new THREE.Mesh(G.plane, mat); m.scale.set(u1 - u0, 0.62, 1); m.position.copy(this.V(r.x0 + (u0 + u1) / 2, r.y0 + 0.1, 1.45)); r.g.add(m);
-    this.box(r.g, r.x0 + u0 - 0.05, r.y0 + 0.05, 1.09, u1 - u0 + 0.1, 0.04, 0.72, OM.dark, false);
+    const s = screen(u1 - u0, 0.64), mat = new THREE.MeshBasicMaterial({ map: s.tex, toneMapped: false });
+    const m = new THREE.Mesh(G.plane, mat); m.scale.set(u1 - u0, 0.64, 1); m.position.copy(this.V(r.x0 + (u0 + u1) / 2, r.y0 + 0.11, 1.14)); r.g.add(m);
+    this.box(r.g, r.x0 + u0 - 0.05, r.y0 + 0.05, 0.78, u1 - u0 + 0.1, 0.04, 0.72, OM.dark, false);
     r.wall = s; return s;
   }
   kanban(r, v0 = 1.5, v1 = 5.8) {
-    const s = screen(v1 - v0, 0.62), mat = new THREE.MeshBasicMaterial({ map: s.tex, toneMapped: false });
-    const m = new THREE.Mesh(G.plane, mat); m.scale.set(v1 - v0, 0.62, 1); m.rotation.y = Math.PI / 2; m.position.copy(this.V(r.x0 + 0.1, r.y0 + (v0 + v1) / 2, 1.45)); r.g.add(m);
-    this.box(r.g, r.x0 + 0.05, r.y0 + v0 - 0.05, 1.09, 0.04, v1 - v0 + 0.1, 0.72, OM.dark, false);
+    const s = screen(v1 - v0, 0.64), mat = new THREE.MeshBasicMaterial({ map: s.tex, toneMapped: false });
+    const m = new THREE.Mesh(G.plane, mat); m.scale.set(v1 - v0, 0.64, 1); m.rotation.y = Math.PI / 2; m.position.copy(this.V(r.x0 + 0.11, r.y0 + (v0 + v1) / 2, 1.14)); r.g.add(m);
+    this.box(r.g, r.x0 + 0.05, r.y0 + v0 - 0.05, 0.78, 0.04, v1 - v0 + 0.1, 0.72, OM.dark, false);
     r.kb = s;
   }
-  // a desk facing the room: a top on two side panels and a drawer unit, two screens on stands (green charts; cyan
-  // while its astronaut works), a keyboard, a mug
-  desk(r, x, y, i) {
+  // a desk facing the room: a top on two side panels and a drawer unit, two screens on stands, a keyboard, a mug
+  desk(r, x, y, i, isOrange) {
     const g = r.g;
     this.rb(g, x + 0.02, y + 0.06, 0.08, 0.12, 0.72, 0.42, OM.desk, 0.03);
     this.rb(g, x + 1.76, y + 0.06, 0.08, 0.12, 0.72, 0.42, OM.desk, 0.03);
     this.rb(g, x + 1.12, y + 0.08, 0.08, 0.6, 0.68, 0.4, OM.desk, 0.03);
     for (let k = 0; k < 3; k++) this.box(g, x + 1.18, y + 0.76, 0.15 + k * 0.12, 0.48, 0.012, 0.09, OM.frame, false);
     this.rb(g, x - 0.03, y - 0.03, 0.5, 1.96, 0.91, 0.06, OM.deskTop, 0.025);
-    const scr = new THREE.MeshBasicMaterial({ map: monTex(), color: new THREE.Color(OFFICE.mon), toneMapped: false });
-    [x + 0.12, x + 0.98].forEach((mx) => {
+    const scr = new THREE.MeshBasicMaterial({ map: isOrange ? orangeMonTex() : monTex(), color: new THREE.Color(isOrange ? 0xffae52 : OFFICE.mon), toneMapped: false });
+    [x + 0.12, x + 0.98].forEach((mx, mi) => {
       this.cyl(g, mx + 0.39, y + 0.26, 0.56, 0.13, 0.02, OM.frame);
       this.box(g, mx + 0.36, y + 0.2, 0.58, 0.06, 0.05, 0.14, OM.frame, false);
       this.rb(g, mx, y + 0.12, 0.68, 0.8, 0.06, 0.46, OM.dark, 0.025);
-      const face = new THREE.Mesh(G.plane, scr); face.scale.set(0.72, 0.38, 1); face.position.copy(this.V(mx + 0.4, y + 0.185, 0.91)); g.add(face);
+      const faceMat = (isOrange && mi === 1) ? new THREE.MeshBasicMaterial({ map: candleTex(), toneMapped: false }) : scr;
+      const face = new THREE.Mesh(G.plane, faceMat); face.scale.set(0.72, 0.38, 1); face.position.copy(this.V(mx + 0.4, y + 0.185, 0.91)); g.add(face);
     });
     this.rb(g, x + 0.66, y + 0.48, 0.56, 0.6, 0.2, 0.03, OM.frame, 0.01);
     this.cyl(g, x + 1.62, y + 0.6, 0.56, 0.05, 0.1, OM.white);
     r.mons[i] = scr;
   }
-  // An astronaut: a white suit, a helmet with a dark visor, a pack, arms to the keyboard. At a desk it sits on its
-  // chair; it stands up to walk (wander) and the Manager stands at its dais. Visor and chest light go cyan at work.
+  // An astronaut: a shaded blue-grey space suit, a rounded helmet with a wide dark-blue glossy visor, a life-support
+  // pack, collar ring, and arms to the keyboard.
   agent(r, x, y, i, label, opts) {
-    const at = this.V(x, y, 0.08), S = 1.25, standing = !!(opts && opts.stand);
+    const at = this.V(x, y, 0.08), S = 1.28, standing = !!(opts && opts.stand);
     const cm = (geom, mat, px, py, pz, rx) => { const m = new THREE.Mesh(geom, mat); m.position.set(px, py, pz); if (rx) m.rotation.x = rx; m.castShadow = true; m.receiveShadow = true; return m; };
     if (!standing) {
       const chair = new THREE.Group(); chair.position.copy(at); chair.scale.setScalar(S); r.g.add(chair);
       const pole = cm(G.cyl, OM.frame, 0, 0.21, 0.06), base = cm(G.cyl, OM.dark, 0, 0.03, 0.06);
       pole.scale.set(0.035, 0.36, 0.035); base.scale.set(0.26, 0.03, 0.26);
-      chair.add(cm(rboxGeo(0.5, 0.08, 0.48, 0.03), OM.chair, 0, 0.42, 0.06), cm(rboxGeo(0.48, 0.5, 0.07, 0.03), OM.chair, 0, 0.74, 0.3, -0.12), pole, base);
+      chair.add(cm(rboxGeo(0.5, 0.08, 0.48, 0.03), OM.chair, 0, 0.42, 0.06), cm(rboxGeo(0.48, 0.52, 0.07, 0.03), OM.chair, 0, 0.74, 0.3, -0.12), pole, base);
     }
     const g = new THREE.Group(); g.position.copy(at); g.scale.setScalar(S); r.g.add(g);
     const up = new THREE.Group(); g.add(up);
     up.add(cm(OM.torso, OM.suit, 0, 0.75, 0.04));
-    const helmet = cm(G.sphere, OM.suit, 0, 1.13, 0.02); helmet.scale.setScalar(0.19); up.add(helmet);
-    const visorM = std({ color: 0x05080c, emissive: 0x00cfff, emissiveIntensity: 0.06, roughness: 0.08, metalness: 0.85 });
-    const vz = cm(G.sphere, visorM, 0, 1.13, -0.1); vz.scale.set(0.15, 0.11, 0.1); up.add(vz);
-    up.add(cm(rboxGeo(0.3, 0.38, 0.14, 0.04), OM.pack, 0, 0.8, 0.21));
-    const chest = cm(G.box, OM.pack, 0, 0.84, -0.13); chest.scale.set(0.1, 0.06, 0.02); up.add(chest);
+    const collar = cm(G.cyl, OM.pack, 0, 0.96, 0.03); collar.scale.set(0.15, 0.04, 0.15); up.add(collar);
+    const helmet = cm(G.sphere, OM.suit, 0, 1.15, 0.02); helmet.scale.set(0.22, 0.21, 0.22); up.add(helmet);
+    const visorM = std({ color: 0x050d18, emissive: 0x00d8ff, emissiveIntensity: 0.12, roughness: 0.08, metalness: 0.9 });
+    const vz = cm(G.sphere, visorM, 0, 1.15, -0.11); vz.scale.set(0.175, 0.125, 0.11); up.add(vz);
+    up.add(cm(rboxGeo(0.32, 0.4, 0.16, 0.04), OM.pack, 0, 0.8, 0.22));
+    const chest = cm(G.box, OM.pack, 0, 0.84, -0.13); chest.scale.set(0.11, 0.065, 0.025); up.add(chest);
     [-1, 1].forEach((s) => {
       up.add(cm(OM.limb, OM.suit, s * 0.21, 0.82, -0.04, 0.45), cm(OM.limb, OM.suit, s * 0.19, 0.67, -0.22, 1.45));
-      const hand = cm(G.sphere, OM.pack, s * 0.17, 0.66, -0.36); hand.scale.setScalar(0.055); up.add(hand);
+      const hand = cm(G.sphere, OM.pack, s * 0.17, 0.66, -0.36); hand.scale.setScalar(0.058); up.add(hand);
     });
     const sit = new THREE.Group(), stand = new THREE.Group(); g.add(sit, stand);
     [-1, 1].forEach((s) => {
@@ -1867,7 +1941,7 @@ class Office3D {
       stand.add(cm(OM.leg, OM.suit, s * 0.09, 0.3, 0.04), cm(rboxGeo(0.12, 0.08, 0.18, 0.03), OM.pack, s * 0.09, 0.04, 0));
     });
     sit.visible = !standing; stand.visible = standing;
-    const ringM = emis('#00cfff', 0); const ring = new THREE.Mesh(G.ring, ringM); ring.rotation.x = Math.PI / 2; ring.scale.setScalar(0.4); ring.position.y = 0.02; g.add(ring);
+    const ringM = emis('#00e5ff', 0); const ring = new THREE.Mesh(G.ring, ringM); ring.rotation.x = Math.PI / 2; ring.scale.setScalar(0.4); ring.position.y = 0.02; g.add(ring);
     const el = document.createElement('div'); el.className = 'a3'; el.textContent = label; this.layer.appendChild(el);
     const a = { g, b: up, by: standing ? 0.1 : 0, standing, sit, stand, visorM, chest, ring, ringM, el, home: g.position.clone(), phase: (i + r.x0 * 0.37) % 6.28, key: r.key + ':' + i, room: r, label };
     r.agents.push(a); return a;
@@ -1876,47 +1950,94 @@ class Office3D {
     const el = document.createElement('div'); el.className = 'p3' + (cls ? ' ' + cls : ''); el.setAttribute('data-key', r.key); this.layer.appendChild(el);
     el.addEventListener('click', () => CO.emit('office:click', r.key));
     el.addEventListener('pointerenter', () => this.setHover(r.key)); el.addEventListener('pointerleave', () => this.setHover(null));
-    r.plate = el; r.plateAt = this.V(r.x0 + 4.4, r.y0 + 5.75, 1.7); return el;
+    r.plate = el; r.plateAt = this.V(r.x0 + 4.1, r.y0 + 5.4, 1.38); return el;
   }
-  // A department's room: its computer in the back corner, its screens on the back walls, what it works with in
-  // the back right (racks, lab machines, a league table), a row of desks with an astronaut at each.
+  // A department's room tailored to match look-office.webp:
+  // - testing (Cymetica QA): 4x3 glowing cyan window grid on the back-right wall facing the camera + dark server racks + desks
+  // - stranger (Outsider): twin-aisle Server Room with 2 rows of 4 tall dark server racks + workstation desk
+  // - testing_lab (Laboratory): 3 glowing aqua-cyan specimen pods + floating crystals + canisters
+  // - trading_desk (Trading Desk): panoramic warm amber-orange chart walls + dual-screen orange trading desks
+  // - league (Agent League): holographic league table + green/cyan monitors
   deptRoom(r, d) {
     const k = d.key, x0 = r.x0, y0 = r.y0, g = r.g; let u1 = 6.6;
-    if (k === 'development' || k === 'testing') { u1 = 4.3; this.racks(r, x0 + 4.55, y0 + 0.3, 3); this.racks(r, x0 + 4.55, y0 + 1.4, 3); }
-    else if (k === 'testing_lab') { u1 = 4.0; this.labMachine(r, x0 + 4.15, y0 + 0.3); this.labMachine(r, x0 + 5.55, y0 + 0.3); this.canisters(r, x0 + 6.45, y0 + 1.6); }
-    else if (k === 'trading_desk') { u1 = 4.1; this.boardTex(r, 4.3, 6.75, candleTex()); }
-    else if (k === 'design') { u1 = 4.5; this.boardTex(r, 4.7, 6.75, moodTex()); }
-    else if (d.run_kind === 'league') { u1 = 4.1; this.leagueTable(r, x0 + 5.3, y0 + 1.25); }
-    else if (d.run_kind === 'stranger') { u1 = 4.1; this.lounge(r, x0 + 4.4, y0 + 0.3); }
-    else { u1 = 4.6; this.racks(r, x0 + 5.2, y0 + 0.3, 2); }
-    this.wallScreen(r, 1.75, u1); this.kanban(r);
+    const isOrange = k === 'trading_desk';
+    if (d.run_kind === 'stranger') {
+      // Twin-aisle Server Room in [0,8] as seen in look-office.webp
+      this.racks(r, x0 + 0.55, y0 + 1.15, 4);
+      this.racks(r, x0 + 0.55, y0 + 2.95, 4);
+      this.wallScreen(r, 1.75, 4.4);
+      this.kanban(r, 1.2, 4.8);
+      this.desk(r, x0 + 4.55, y0 + 2.85, 0, false);
+      const ex = d.experts.slice(0, 2);
+      if (ex[0]) this.agent(r, x0 + 5.5, y0 + 4.15, 0, CO.expertName(ex[0]));
+      if (ex[1]) this.agent(r, x0 + 3.9, y0 + 5.1, 1, CO.expertName(ex[1]), { stand: true });
+      this.terminal(r, x0 + 0.3, y0 + 0.28, d.link || CO.DEPT_LINK[k] || CO.DEPT_LINK.custom);
+      this.plant(r, x0 + 0.45, y0 + 6.5);
+      this.plate(r);
+      return;
+    }
+    if (k === 'development' || k === 'testing') {
+      u1 = 3.3;
+      this.racks(r, x0 + 0.55, y0 + 1.35, 3);
+      // Iconic 4x3 glowing cyan-mint window grid on the back-right wall of Cymetica QA ([0,0]), facing the camera
+      const qw = new THREE.Mesh(G.plane, new THREE.MeshBasicMaterial({ map: qaGridTex(), color: new THREE.Color(0xffffff).multiplyScalar(1.25), toneMapped: false }));
+      qw.scale.set(3.2, 1.22, 1); qw.position.copy(this.V(x0 + 5.2, y0 + 0.14, 1.08)); g.add(qw);
+      this.box(g, x0 + 3.52, y0 + 0.05, 0.42, 3.36, 0.06, 1.32, OM.dark, false);
+    } else if (k === 'testing_lab') {
+      u1 = 3.4;
+      this.labMachine(r, x0 + 3.65, y0 + 0.28);
+      this.labMachine(r, x0 + 4.95, y0 + 0.28);
+      this.labMachine(r, x0 + 6.25, y0 + 0.28);
+      this.canisters(r, x0 + 6.45, y0 + 1.85);
+    } else if (k === 'trading_desk') {
+      // Panoramic warm amber-orange chart walls across both back walls of Trading Desk
+      this.boardTex(r, 1.75, 6.85, orangeWallTex());
+      const ow = new THREE.Mesh(G.plane, new THREE.MeshBasicMaterial({ map: orangeWallTex(), toneMapped: false }));
+      ow.scale.set(4.6, 0.78, 1); ow.rotation.y = Math.PI / 2; ow.position.copy(this.V(x0 + 0.12, y0 + 3.7, 1.14)); g.add(ow);
+      this.box(g, x0 + 0.05, y0 + 1.35, 0.73, 0.04, 4.7, 0.84, OM.dark, false);
+    } else if (k === 'design') {
+      u1 = 4.5; this.boardTex(r, 4.7, 6.75, moodTex());
+    } else if (d.run_kind === 'league') {
+      u1 = 4.1; this.leagueTable(r, x0 + 5.45, y0 + 1.35);
+    } else {
+      u1 = 4.6; this.racks(r, x0 + 5.2, y0 + 0.3, 2);
+    }
+    if (k !== 'trading_desk') {
+      this.wallScreen(r, 1.75, u1);
+      this.kanban(r);
+    }
     const ex = d.experts.slice(0, 3), xs = ex.length === 1 ? [2.4] : ex.length === 2 ? [1.0, 3.7] : [0.35, 2.55, 4.75];
-    ex.forEach((e, i) => { this.desk(r, x0 + xs[i], y0 + 2.75, i); if (k === 'trading_desk') this.sideScreens(r, x0 + xs[i], y0 + 2.75); });
+    ex.forEach((e, i) => { this.desk(r, x0 + xs[i], y0 + 2.75, i, isOrange); if (isOrange) this.sideScreens(r, x0 + xs[i], y0 + 2.75); });
     ex.forEach((e, i) => this.agent(r, x0 + xs[i] + 0.95, y0 + 4.05, i, CO.expertName(e)));
+    if (d.run_kind === 'league' && ex.length < 3) {
+      this.agent(r, x0 + 5.45, y0 + 3.1, ex.length, 'Referee', { stand: true });
+    }
     this.terminal(r, x0 + 0.3, y0 + 0.32, d.link || CO.DEPT_LINK[k] || CO.DEPT_LINK.custom);
     this.cabinet(r, x0 + 6.45, y0 + 3.0, 0.45, 2.3, 0.72);
     this.plant(r, x0 + 0.42, y0 + 6.5); this.plant(r, x0 + 6.55, y0 + 6.55, 0.8);
     this.plate(r);
+    if (k === 'testing') r.plateAt = this.V(x0 + 2.6, y0 + 5.7, 1.25);
+    if (k === 'testing_lab') r.plateAt = this.V(x0 + 2.6, y0 + 5.5, 1.25);
   }
   boardTex(r, u0, u1, tex) {
-    const m = new THREE.Mesh(G.plane, new THREE.MeshBasicMaterial({ map: tex, toneMapped: false })); m.scale.set(u1 - u0, 0.7, 1); m.position.copy(this.V(r.x0 + (u0 + u1) / 2, r.y0 + 0.1, 1.45)); r.g.add(m);
-    this.box(r.g, r.x0 + u0 - 0.05, r.y0 + 0.05, 1.05, u1 - u0 + 0.1, 0.04, 0.8, OM.dark, false);
+    const m = new THREE.Mesh(G.plane, new THREE.MeshBasicMaterial({ map: tex, toneMapped: false })); m.scale.set(u1 - u0, 0.76, 1); m.position.copy(this.V(r.x0 + (u0 + u1) / 2, r.y0 + 0.11, 1.14)); r.g.add(m);
+    this.box(r.g, r.x0 + u0 - 0.05, r.y0 + 0.05, 0.74, u1 - u0 + 0.1, 0.04, 0.84, OM.dark, false);
   }
   // the department's computer: a console whose screen opens its page on cymetica.com
   terminal(r, x, y, link) {
     const g = r.g;
     this.rb(g, x, y, 0.08, 1.25, 0.8, 0.5, OM.desk, 0.04);
-    this.rb(g, x + 0.08, y + 0.1, 0.58, 1.09, 0.08, 0.76, OM.dark, 0.03);
+    this.rb(g, x + 0.08, y + 0.1, 0.58, 1.09, 0.08, 0.72, OM.dark, 0.03);
     const scr = new THREE.MeshBasicMaterial({ map: this.pcTex(), toneMapped: false });
-    const face = new THREE.Mesh(G.plane, scr); face.scale.set(1.0, 0.68, 1); face.position.copy(this.V(x + 0.625, y + 0.185, 0.96)); g.add(face);
+    const face = new THREE.Mesh(G.plane, scr); face.scale.set(1.0, 0.64, 1); face.position.copy(this.V(x + 0.625, y + 0.185, 0.94)); g.add(face);
     const hit = new THREE.Mesh(G.box, M.hit); hit.scale.set(1.35, 1.4, 1.0); hit.position.copy(this.V(x + 0.62, y + 0.4, 0.75)); hit.userData.pc = link; g.add(hit);
     this.pcs.push(hit); r.pcFace = scr;
   }
   pcTex() {
     if (this._pc) return this._pc;
     const c = document.createElement('canvas'); c.width = 256; c.height = 176; const g = c.getContext('2d');
-    g.fillStyle = '#06261f'; g.fillRect(0, 0, 256, 176); g.strokeStyle = '#00ff88'; g.lineWidth = 8; g.strokeRect(4, 4, 248, 168);
-    g.fillStyle = '#00ff88'; g.font = '700 96px JetBrains Mono, monospace'; g.textAlign = 'center'; g.textBaseline = 'middle'; g.fillText('↗', 128, 92);
+    g.fillStyle = '#06261f'; g.fillRect(0, 0, 256, 176); g.strokeStyle = '#38f2b8'; g.lineWidth = 8; g.strokeRect(4, 4, 248, 168);
+    g.fillStyle = '#38f2b8'; g.font = '700 96px JetBrains Mono, monospace'; g.textAlign = 'center'; g.textBaseline = 'middle'; g.fillText('↗', 128, 92);
     const t = new THREE.CanvasTexture(c); t.colorSpace = THREE.SRGBColorSpace; this._pc = t; return t;
   }
   plant(r, x, y, k = 1) {
@@ -1931,40 +2052,42 @@ class Office3D {
     this.rb(r.g, x, y, 0.08, w, d, h, OM.desk, 0.04);
     this.rb(r.g, x - 0.02, y - 0.02, 0.08 + h, w + 0.04, d + 0.04, 0.04, OM.deskTop, 0.015);
     const along = d > w, n = Math.max(1, Math.round((along ? d : w) / 0.6));
-    for (let k = 1; k < n; k++) this.box(r.g, along ? x - 0.01 : x + k * w / n, along ? y + k * d / n : y - 0.01, 0.14, along ? 0.012 : 0.012, along ? 0.012 : 0.012, h - 0.12, OM.frame, false);
+    for (let k = 1; k < n; k++) this.box(r.g, along ? x - 0.01 : x + k * w / n, along ? y + k * d / n : y - 0.01, 0.14, 0.012, 0.012, h - 0.12, OM.frame, false);
   }
-  // server racks in a row, fronts to the room: slots, vents, lights; a few lights blink on their own
+  // server racks in a row, fronts to the room: dark charcoal towers with glowing LEDs
   racks(r, x, y, n) {
     for (let i = 0; i < n; i++) {
-      const rx = x + i * 0.72, m = new THREE.Mesh(rboxGeo(0.64, 1.62, 0.74, 0.035), [OM.rack, OM.rack, OM.frame, OM.rack, OM.rackFace, OM.rack]);
-      m.position.copy(this.V(rx + 0.32, y + 0.37, 0.89)); m.castShadow = true; m.receiveShadow = true; r.g.add(m);
-      for (let k = 0; k < 3; k++) { const col = ['#00ff88', '#00cfff', '#3b82f6'][(i + k) % 3]; const l = new THREE.Mesh(G.box, amat(col).glow); l.scale.set(0.05, 0.03, 0.01); l.position.copy(this.V(rx + 0.12 + k * 0.08, y + 0.745, 1.5 - k * 0.38)); l.userData.blink = (i * 7 + k * 3) % 11; r.g.add(l); (r.leds = r.leds || []).push(l); }
+      const rx = x + i * 0.78, m = new THREE.Mesh(rboxGeo(0.68, 1.44, 0.76, 0.035), [OM.rack, OM.rack, OM.dark, OM.rack, OM.rackFace, OM.rack]);
+      m.position.copy(this.V(rx + 0.34, y + 0.38, 0.8)); m.castShadow = true; m.receiveShadow = true; r.g.add(m);
+      this.box(r.g, rx + 0.04, y + 0.74, 1.51, 0.6, 0.02, 0.02, OM.green.rim, false);
+      for (let k = 0; k < 3; k++) { const col = ['#38f2b8', '#00e5ff', '#3b82f6'][(i + k) % 3]; const l = new THREE.Mesh(G.box, amat(col).glow); l.scale.set(0.055, 0.035, 0.012); l.position.copy(this.V(rx + 0.12 + k * 0.09, y + 0.765, 1.34 - k * 0.34)); l.userData.blink = (i * 7 + k * 3) % 11; r.g.add(l); (r.leds = r.leds || []).push(l); }
     }
   }
-  // a white lab machine: a rounded cabinet, a dark window onto a lit chamber, a hologram floating over it
+  // a laboratory containment pod: dark steel base, glowing aqua specimen chamber with floating crystal core, and hologram above
   labMachine(r, x, y) {
     const g = r.g;
-    this.rb(g, x, y, 0.08, 1.15, 0.8, 0.66, OM.white, 0.08);
-    this.rb(g, x + 0.06, y + 0.05, 0.74, 1.03, 0.62, 0.44, OM.white, 0.08);
-    this.rb(g, x + 0.13, y + 0.62, 0.79, 0.89, 0.07, 0.3, OM.dark, 0.03);
-    const ch = new THREE.Mesh(G.plane, OM.cyan.soft); ch.scale.set(0.8, 0.22, 1); ch.position.copy(this.V(x + 0.575, y + 0.695, 0.94)); g.add(ch);
-    this.rb(g, x + 0.1, y + 0.1, 1.18, 0.95, 0.5, 0.07, OM.white2, 0.03);
-    const holo = new THREE.Mesh(G.plane, OM.holo); holo.scale.set(0.9, 0.6, 1); holo.position.copy(this.V(x + 0.575, y + 0.4, 1.66)); holo.rotation.x = -0.25; g.add(holo);
-    for (let k = 0; k < 3; k++) { const m = new THREE.Mesh(G.box, (k % 2 ? OM.green : OM.cyan).glow); m.scale.set(0.08, 0.035, 0.01); m.position.copy(this.V(x + 0.3 + k * 0.2, y + 0.81, 0.36)); m.userData.blink = k * 3; g.add(m); (r.leds = r.leds || []).push(m); }
+    this.rb(g, x, y, 0.08, 1.1, 0.78, 0.44, OM.desk, 0.05);
+    // Glowing aqua-cyan containment chamber using OM.podGlass so it stands out brightly
+    this.box(g, x + 0.1, y + 0.1, 0.52, 0.9, 0.58, 0.82, OM.podGlass, false);
+    const core = new THREE.Mesh(G.box, OM.cyan.rim); core.scale.set(0.28, 0.42, 0.28); core.rotation.set(0.5, 0.6, 0.2); core.position.copy(this.V(x + 0.55, y + 0.39, 0.93)); g.add(core);
+    const ch = new THREE.Mesh(G.plane, OM.cyan.soft); ch.scale.set(0.82, 0.72, 1); ch.position.copy(this.V(x + 0.55, y + 0.69, 0.93)); g.add(ch);
+    this.rb(g, x + 0.06, y + 0.06, 1.34, 0.98, 0.66, 0.08, OM.white, 0.03);
+    const holo = new THREE.Mesh(G.plane, OM.holo); holo.scale.set(0.86, 0.5, 1); holo.position.copy(this.V(x + 0.55, y + 0.4, 1.68)); holo.rotation.x = -0.25; g.add(holo);
+    for (let k = 0; k < 3; k++) { const m = new THREE.Mesh(G.box, (k % 2 ? OM.green : OM.cyan).glow); m.scale.set(0.07, 0.03, 0.01); m.position.copy(this.V(x + 0.28 + k * 0.2, y + 0.79, 0.34)); m.userData.blink = k * 3; g.add(m); (r.leds = r.leds || []).push(m); }
   }
-  // a white console with a green screen: what the weekly audit reads its logs on
+  // a console with a green screen: what the weekly audit reads its logs on
   console3(r, x, y) {
     const g = r.g;
-    this.rb(g, x, y, 0.08, 1.2, 0.75, 0.6, OM.white, 0.06);
-    const top = new THREE.Mesh(rboxGeo(1.2, 0.08, 0.55, 0.03), OM.white); top.position.copy(this.V(x + 0.6, y + 0.5, 0.8)); top.rotation.x = 0.4; top.castShadow = true; g.add(top);
-    this.rb(g, x + 0.08, y + 0.05, 0.7, 1.04, 0.22, 0.66, OM.white, 0.06);
-    const scr = new THREE.Mesh(G.plane, new THREE.MeshBasicMaterial({ map: monTex(), toneMapped: false })); scr.scale.set(0.86, 0.48, 1); scr.position.copy(this.V(x + 0.6, y + 0.275, 1.04)); g.add(scr);
-    const key = new THREE.Mesh(G.plane, OM.green.soft); key.scale.set(0.7, 0.16, 1); key.rotation.x = -Math.PI / 2 + 0.4; key.position.copy(this.V(x + 0.6, y + 0.52, 0.85)); g.add(key);
+    this.rb(g, x, y, 0.08, 1.2, 0.75, 0.56, OM.white2, 0.06);
+    const top = new THREE.Mesh(rboxGeo(1.2, 0.08, 0.55, 0.03), OM.white); top.position.copy(this.V(x + 0.6, y + 0.5, 0.76)); top.rotation.x = 0.4; top.castShadow = true; g.add(top);
+    this.rb(g, x + 0.08, y + 0.05, 0.66, 1.04, 0.22, 0.62, OM.white2, 0.06);
+    const scr = new THREE.Mesh(G.plane, new THREE.MeshBasicMaterial({ map: monTex(), toneMapped: false })); scr.scale.set(0.86, 0.46, 1); scr.position.copy(this.V(x + 0.6, y + 0.275, 0.98)); g.add(scr);
+    const key = new THREE.Mesh(G.plane, OM.green.soft); key.scale.set(0.7, 0.16, 1); key.rotation.x = -Math.PI / 2 + 0.4; key.position.copy(this.V(x + 0.6, y + 0.52, 0.81)); g.add(key);
   }
   canisters(r, x, y) {
-    [[0, 0, 0.5], [0.0, 0.55, 0.42], [0.0, 1.1, 0.5], [-0.45, 0.3, 0.36]].forEach(([dx, dy, h]) => {
+    [[0, 0, 0.52], [0.0, 0.55, 0.44], [0.0, 1.1, 0.52], [-0.45, 0.3, 0.38]].forEach(([dx, dy, h]) => {
       this.cyl(r.g, x + dx, y + dy, 0.08, 0.2, h, OM.white);
-      this.cyl(r.g, x + dx, y + dy, 0.08 + h, 0.12, 0.06, OM.cyan.soft);
+      this.cyl(r.g, x + dx, y + dy, 0.08 + h, 0.14, 0.06, OM.cyan.soft);
     });
   }
   // a round table with a hologram turning over it: where the league's round is watched
@@ -1972,7 +2095,7 @@ class Office3D {
     const g = r.g;
     this.cyl(g, x, y, 0.08, 0.95, 0.42, OM.desk); this.cyl(g, x, y, 0.5, 1.0, 0.05, OM.deskTop);
     const top = new THREE.Mesh(G.cyl, OM.cyan.soft); top.scale.set(0.8, 0.02, 0.8); top.position.copy(this.V(x, y, 0.56)); g.add(top);
-    r.spin = new THREE.Group(); r.spin.position.copy(this.V(x, y, 1.15)); g.add(r.spin);
+    r.spin = new THREE.Group(); r.spin.position.copy(this.V(x, y, 1.12)); g.add(r.spin);
     [0.55, 0.38].forEach((s, i) => { const ring = new THREE.Mesh(G.ringT, OM.cyan.rim); ring.scale.setScalar(s); ring.rotation.x = i ? 0.9 : Math.PI / 2; r.spin.add(ring); });
     const core = new THREE.Mesh(G.sphere, OM.green.glow); core.scale.setScalar(0.12); r.spin.add(core);
   }
@@ -1982,39 +2105,40 @@ class Office3D {
     this.box(g, x, y, 0.08, 2.2, 0.75, 0.32, OM.frame); this.box(g, x, y, 0.4, 2.2, 0.2, 0.42, OM.frame);
     this.box(g, x + 0.5, y + 1.15, 0.08, 1.2, 0.6, 0.3, OM.deskTop);
   }
-  // two more screens on a trading desk, turned in a little: charts, green and red
+  // two more screens on a trading desk, turned in a little: warm orange and candlestick charts
   sideScreens(r, x, y) {
-    [[x - 0.35, 0.5], [x + 1.83, -0.5]].forEach(([sx, rot]) => {
+    [[x - 0.35, 0.5], [x + 1.83, -0.5]].forEach(([sx, rot], idx) => {
       this.box(r.g, sx, y + 0.12, 0.58, 0.48, 0.05, 0.36, OM.dark);
-      const f = new THREE.Mesh(G.plane, new THREE.MeshBasicMaterial({ map: candleTex(), toneMapped: false })); f.scale.set(0.44, 0.32, 1);
+      const f = new THREE.Mesh(G.plane, new THREE.MeshBasicMaterial({ map: idx ? candleTex() : orangeMonTex(), toneMapped: false })); f.scale.set(0.44, 0.32, 1);
       f.position.copy(this.V(sx + 0.24, y + 0.15, 0.76)); r.g.add(f);
     });
   }
-  // The Manager's room: a dais of light in the middle, rings rising over it round a white-hot core, arcs of light
-  // on the floor; the turns-by-department board on a console at the back.
+  // The Manager's room: a stepped circular dais in the middle, conical 5-ring cyan hologram rising over a glowing
+  // core, concentric cyan floor rings, and consoles on both back walls.
   hubRoom(r) {
-    const g = r.g, x0 = r.x0, y0 = r.y0, cy = OM.cyan, c = this.V(x0 + 3.6, y0 + 3.4, 0);
-    this.box(g, x0 + 0.5, y0 + 0.25, 0.08, 3.6, 0.7, 0.55, OM.desk);
-    const s = screen(3.4, 0.62), m = new THREE.Mesh(G.plane, new THREE.MeshBasicMaterial({ map: s.tex, toneMapped: false })); m.scale.set(3.4, 0.62, 1); m.position.copy(this.V(x0 + 2.3, y0 + 0.1, 1.3)); g.add(m); r.bars = s;
-    this.box(g, x0 + 0.55, y0 + 0.05, 0.94, 3.5, 0.04, 0.72, OM.dark, false);
+    const g = r.g, x0 = r.x0, y0 = r.y0, cy = OM.cyan, c = this.V(x0 + 3.8, y0 + 3.55, 0);
+    this.box(g, x0 + 0.5, y0 + 0.25, 0.08, 3.6, 0.7, 0.52, OM.desk);
+    this.box(g, x0 + 0.25, y0 + 1.5, 0.08, 0.7, 3.6, 0.52, OM.desk);
+    const s = screen(3.4, 0.62), m = new THREE.Mesh(G.plane, new THREE.MeshBasicMaterial({ map: s.tex, toneMapped: false })); m.scale.set(3.4, 0.62, 1); m.position.copy(this.V(x0 + 2.3, y0 + 0.11, 1.14)); g.add(m); r.bars = s;
+    this.box(g, x0 + 0.55, y0 + 0.05, 0.78, 3.5, 0.04, 0.72, OM.dark, false);
     this.kanban(r, 1.4, 5.4);
-    const floor = new THREE.Mesh(G.plane, new THREE.MeshBasicMaterial({ map: hubFloorTex(), color: new THREE.Color(0x00cfff).multiplyScalar(1.2), transparent: true, blending: THREE.AdditiveBlending, depthWrite: false }));
+    const floor = new THREE.Mesh(G.plane, new THREE.MeshBasicMaterial({ map: hubFloorTex(), color: new THREE.Color(0x00e5ff).multiplyScalar(0.75), transparent: true, blending: THREE.AdditiveBlending, depthWrite: false }));
     floor.scale.set(6.4, 6.4, 1); floor.rotation.x = -Math.PI / 2; floor.position.set(c.x, 0.1, c.z); g.add(floor); r.floor = floor;
-    [[1.75, 0.2, 0.08], [1.4, 0.34, 0.28]].forEach(([rad, h, z0]) => {
+    [[1.85, 0.18, 0.08], [1.48, 0.28, 0.26], [1.12, 0.18, 0.54]].forEach(([rad, h, z0]) => {
       const d = new THREE.Mesh(G.cyl, OM.plinth); d.scale.set(rad, h, rad); d.position.set(c.x, z0 + h / 2, c.z); d.castShadow = true; d.receiveShadow = true; g.add(d);
       const lip = new THREE.Mesh(G.ringT, cy.rim); lip.scale.setScalar(rad); lip.rotation.x = Math.PI / 2; lip.position.set(c.x, z0 + h, c.z); g.add(lip);
     });
-    const core = new THREE.Mesh(G.sphere, cy.glow); core.scale.setScalar(0.34); core.position.set(c.x, 1.25, c.z); g.add(core);
-    const halo = glowSprite(0x00cfff, 0.7, 3.2); halo.position.set(c.x, 1.25, c.z); g.add(halo);
-    const beam = new THREE.Mesh(G.beam, cy.beam); beam.scale.set(0.9, 3.2, 0.9); beam.position.set(c.x, 2.4, c.z); g.add(beam);
-    r.holo = [[0.85, 1.45], [1.25, 1.22], [1.65, 1.0], [2.05, 0.8], [2.45, 0.62], [2.85, 0.46]].map(([y, s], i) => {
+    const core = new THREE.Mesh(G.sphere, cy.glow); core.scale.setScalar(0.26); core.position.set(c.x, 1.05, c.z); g.add(core);
+    const halo = glowSprite(0x00e5ff, 0.3, 2.8); halo.position.set(c.x, 1.15, c.z); g.add(halo);
+    const beam = new THREE.Mesh(G.beam, cy.beam); beam.scale.set(1.1, 2.25, 1.1); beam.position.set(c.x, 1.8, c.z); g.add(beam);
+    r.holo = [[0.86, 1.48], [1.2, 1.22], [1.54, 0.98], [1.88, 0.75], [2.22, 0.52]].map(([y, s], i) => {
       const h = new THREE.Mesh(i % 2 ? G.holoDash : G.ringT, cy.rim); h.scale.setScalar(s); h.rotation.x = Math.PI / 2; h.position.set(c.x, y, c.z); h.userData.y = y; g.add(h); return h;
     });
-    r.core = core; r.coreAt = new THREE.Vector3(c.x, 3.4, c.z);
-    const light = new THREE.PointLight(0x00cfff, 16, 13, 1.6); light.position.set(c.x, 1.8, c.z); g.add(light);
-    this.agent(r, x0 + 3.7, y0 + 5.9, 0, 'Manager', { stand: true });
+    r.core = core; r.coreAt = new THREE.Vector3(c.x, 2.55, c.z);
+    const light = new THREE.PointLight(0x00e5ff, 4.2, 11, 1.6); light.position.set(c.x, 1.8, c.z); g.add(light);
+    this.agent(r, x0 + 3.8, y0 + 5.85, 0, 'Manager', { stand: true });
     this.plant(r, x0 + 6.4, y0 + 0.5);
-    this.plate(r, 'hubp'); r.plateAt = this.V(x0 + 6.1, y0 + 6.75, 1.45);
+    this.plate(r, 'hubp'); r.plateAt = this.V(x0 + 5.8, y0 + 6.3, 1.15);
     r.need = document.createElement('div'); r.need.className = 'p3need'; r.need.addEventListener('click', () => CO.emit('office:click', 'hub')); this.layer.appendChild(r.need);
   }
   // the weekly audit: two consoles with green screens, a desk, a printer for the report
@@ -2022,9 +2146,9 @@ class Office3D {
     const g = r.g, x0 = r.x0, y0 = r.y0;
     this.console3(r, x0 + 0.3, y0 + 0.3); this.console3(r, x0 + 1.7, y0 + 0.3);
     this.wallScreen(r, 3.4, 6.6);
-    this.desk(r, x0 + 3.0, y0 + 2.75, 0);
+    this.desk(r, x0 + 3.0, y0 + 2.75, 0, false);
     this.agent(r, x0 + 3.95, y0 + 4.05, 0, 'Supervisor');
-    this.rb(g, x0 + 0.35, y0 + 4.4, 0.08, 1.0, 0.8, 0.6, OM.white, 0.06); this.rb(g, x0 + 0.45, y0 + 4.5, 0.68, 0.8, 0.6, 0.07, OM.white2, 0.03);
+    this.rb(g, x0 + 0.35, y0 + 4.4, 0.08, 1.0, 0.8, 0.6, OM.white2, 0.06); this.rb(g, x0 + 0.45, y0 + 4.5, 0.68, 0.8, 0.6, 0.07, OM.white, 0.03);
     this.cabinet(r, x0 + 6.45, y0 + 2.6, 0.45, 2.2, 0.72);
     this.plant(r, x0 + 6.5, y0 + 6.5);
     this.plate(r, 'auditp');
@@ -2032,61 +2156,65 @@ class Office3D {
   // The vault: its round door in the back wall, a lit plinth where ET10 (green) and USDC (blue) pile up in stacks of
   // coins under glass. A visitor finds the door shut and the plinth bare: it is always private.
   vaultRoom(r) {
-    const g = r.g, x0 = r.x0, y0 = r.y0, A = OM.green, dc = this.V(x0 + 3.5, y0 + 0.17, 1.0);
-    const door = new THREE.Mesh(G.cyl, OM.engine); door.scale.set(0.8, 0.1, 0.8); door.rotation.x = Math.PI / 2; door.position.copy(dc); g.add(door);
-    const rim = new THREE.Mesh(G.ringT, A.rim); rim.scale.setScalar(0.84); rim.position.copy(dc).add(new THREE.Vector3(0, 0, 0.06)); g.add(rim);
+    const g = r.g, x0 = r.x0, y0 = r.y0, A = OM.green, dc = this.V(x0 + 3.5, y0 + 0.17, 0.92);
+    const door = new THREE.Mesh(G.cyl, OM.engine); door.scale.set(0.76, 0.1, 0.76); door.rotation.x = Math.PI / 2; door.position.copy(dc); g.add(door);
+    const rim = new THREE.Mesh(G.ringT, A.rim); rim.scale.setScalar(0.8); rim.position.copy(dc).add(new THREE.Vector3(0, 0, 0.06)); g.add(rim);
     r.wheel = new THREE.Group(); r.wheel.position.copy(dc).add(new THREE.Vector3(0, 0, 0.08)); g.add(r.wheel);
-    for (let k = 0; k < 3; k++) { const s = new THREE.Mesh(G.box, M.metal); s.scale.set(0.95, 0.06, 0.05); s.rotation.z = k * Math.PI / 3; r.wheel.add(s); }
+    for (let k = 0; k < 3; k++) { const s = new THREE.Mesh(G.box, M.metal); s.scale.set(0.9, 0.06, 0.05); s.rotation.z = k * Math.PI / 3; r.wheel.add(s); }
     const hubc = new THREE.Mesh(G.sphere, A.glow); hubc.scale.set(0.08, 0.08, 0.03); r.wheel.add(hubc);
     this.box(g, x0 + 1.4, y0 + 2.2, 0.08, 4.2, 2.6, 0.24, OM.plinth);
-    const lip = emis('#00ff88', 0.7);
+    const lip = emis('#38f2b8', 0.95);
     [[x0 + 1.4, y0 + 4.8 - 0.03, 4.2, 0.05], [x0 + 1.4, y0 + 2.2 - 0.02, 4.2, 0.05]].forEach(([x, y, w, d]) => this.box(g, x, y, 0.32, w, d, 0.03, lip, false));
     r.pileG = new THREE.Group(); g.add(r.pileG);
     this.plant(r, x0 + 0.42, y0 + 6.5);
-    this.plate(r, 'vaultp'); r.plateAt = this.V(x0 + 4.4, y0 + 5.75, 1.45);
-    if (r.glow) { r.glow.material.color.set(0x00ff88); r.glowBase = CO.RO ? 0 : 0.14; }
+    this.plate(r, 'vaultp'); r.plateAt = this.V(x0 + 4.4, y0 + 5.65, 1.35);
+    if (r.glow) { r.glow.material.color.set(0x38f2b8); r.glowBase = CO.RO ? 0.04 : 0.12; }
   }
   // the piles, rebuilt only when what they hold changes: five stacks each, taller with every order of magnitude
   piles(r, V, priv) {
     release(r.pileG); r.pileG.clear(); this.vaultPiles = [];
     if (priv) return;
     const x0 = r.x0, y0 = r.y0, o = new THREE.Object3D(), R = rng(5);
-    [[V.et10, OM.coinG, x0 + 2.3, 0x00ff88], [V.usdc * 100, OM.coinB, x0 + 4.3, 0x3b82f6]].forEach(([amt, mat, px, col]) => {
+    [[V.et10, OM.coinG, x0 + 2.3, 0x38f2b8], [V.usdc * 100, OM.coinB, x0 + 4.3, 0x3b82f6]].forEach(([amt, mat, px, col]) => {
       const lvl = Math.max(0, Math.log10(1 + amt / 50)), coins = [];
       [[0, 0, 1], [0.48, 0.12, 0.8], [-0.08, 0.52, 0.7], [0.46, 0.6, 0.55], [0.2, 0.3, 0.9]].forEach(([dx, dy, k], i) => {
         if (lvl <= 0 && i) return;
         const n = Math.max(1, Math.round(lvl * 0.2 * k / 0.04));
         for (let c = 0; c < n; c++) coins.push([px + dx + (R() - 0.5) * 0.035, y0 + 3.0 + dy + (R() - 0.5) * 0.035, 0.34 + c * 0.04, 0]);
       });
-      // and a few lying loose on the plinth
       for (let c = 0; c < (lvl > 1 ? 4 : 0); c++) coins.push([px - 0.25 + R() * 1.1, y0 + 2.55 + R() * 1.5, 0.34, 0.25 + R() * 0.3]);
       const im = new THREE.InstancedMesh(G.coin, mat, coins.length);
       coins.forEach(([x, y, z, tilt], i) => { o.position.copy(this.V(x, y, z)); o.rotation.set(tilt, R() * 6, 0); o.scale.set(0.19, 0.034, 0.19); o.updateMatrix(); im.setMatrixAt(i, o.matrix); });
       im.castShadow = true; im.receiveShadow = true; r.pileG.add(im);
       const case_ = new THREE.Mesh(G.box, OM.glass); case_.scale.set(1.25, Math.max(0.5, lvl * 0.2 + 0.25), 1.25); case_.position.copy(this.V(px + 0.25, y0 + 3.35, 0.32 + case_.scale.y / 2)); r.pileG.add(case_);
-      const halo = glowSprite(col, 0.09, 2.0); halo.position.copy(this.V(px + 0.25, y0 + 3.35, 0.6 + lvl * 0.2)); halo.userData.y = halo.position.y; r.pileG.add(halo); this.vaultPiles.push(halo);
+      const halo = glowSprite(col, 0.12, 2.2); halo.position.copy(this.V(px + 0.25, y0 + 3.35, 0.6 + lvl * 0.2)); halo.userData.y = halo.position.y; r.pileG.add(halo); this.vaultPiles.push(halo);
     });
   }
-  // the free lot: open deck marked out with white dashes, a holographic pad on it (a grid of light inside a short
-  // wall of light, a dashed ring turning inside, two still ones round it); the label lies inside the ring
+  // the free lot: open dark-teal deck marked out with glowing cyan-mint dashes, a crisp turquoise-aquamarine holographic pad
+  // with a vertical grid cylinder and perimeter nodes; the label lies inside the ring
   lotRoom(r) {
     const RS = CO.iso.RS, g = r.g, c = this.V(r.x0 + RS / 2, r.y0 + RS / 2, 0.05), ins = 0.35;
-    for (let a = ins; a < RS - ins - 0.2; a += 0.75) {
+    this.box(g, r.x0, r.y0, 0, RS, RS, 0.05, OM.tile);
+    for (let a = ins; a < RS - ins - 0.2; a += 0.72) {
       const w = Math.min(0.42, RS - ins - a);
-      [[r.x0 + a, r.y0 + ins], [r.x0 + a, r.y0 + RS - ins]].forEach(([x, y]) => this.box(g, x, y - 0.035, 0.0, w, 0.07, 0.025, OM.dash, false));
-      [[r.x0 + ins, r.y0 + a], [r.x0 + RS - ins, r.y0 + a]].forEach(([x, y]) => this.box(g, x - 0.035, y, 0.0, 0.07, w, 0.025, OM.dash, false));
+      [[r.x0 + a, r.y0 + ins], [r.x0 + a, r.y0 + RS - ins]].forEach(([x, y]) => this.box(g, x, y - 0.035, 0.05, w, 0.07, 0.025, OM.dash, false));
+      [[r.x0 + ins, r.y0 + a], [r.x0 + RS - ins, r.y0 + a]].forEach(([x, y]) => this.box(g, x - 0.035, y, 0.05, 0.07, w, 0.025, OM.dash, false));
     }
     const pad = new THREE.Mesh(G.plane, new THREE.MeshBasicMaterial({ map: padTex(), transparent: true, blending: THREE.AdditiveBlending, depthWrite: false }));
-    pad.scale.set(4.5, 4.5, 1); pad.rotation.x = -Math.PI / 2; pad.position.set(c.x, 0.03, c.z); g.add(pad);
-    const wall = new THREE.Mesh(G.pole, new THREE.MeshBasicMaterial({ map: gridTex(), color: new THREE.Color(0x00cfff).multiplyScalar(1.3), transparent: true, blending: THREE.AdditiveBlending, depthWrite: false, side: THREE.DoubleSide }));
-    wall.scale.set(2.25, 0.5, 2.25); wall.position.set(c.x, 0.27, c.z); g.add(wall);
-    [0.03, 0.52].forEach((y) => { const ring = new THREE.Mesh(G.ringT, OM.cyan.rim); ring.scale.setScalar(2.25); ring.rotation.x = Math.PI / 2; ring.position.set(c.x, y, c.z); g.add(ring); });
-    r.plus = new THREE.Mesh(G.holoDash, OM.dash); r.plus.scale.setScalar(1.9); r.plus.rotation.x = Math.PI / 2; r.plus.position.set(c.x, 0.05, c.z); g.add(r.plus);
-    [2.75, 3.15].forEach((s) => { const ring = new THREE.Mesh(G.holoDash, OM.dash); ring.scale.setScalar(s); ring.rotation.x = Math.PI / 2; ring.position.set(c.x, 0.02, c.z); g.add(ring); });
-    const halo = glowSprite(0x00cfff, 0.12, 6); halo.position.set(c.x, 0.4, c.z); g.add(halo);
+    pad.scale.set(5.0, 5.0, 1); pad.rotation.x = -Math.PI / 2; pad.position.set(c.x, 0.07, c.z); g.add(pad);
+    const wall = new THREE.Mesh(G.pole, new THREE.MeshBasicMaterial({ map: gridTex(), color: new THREE.Color(0x28e0b8).multiplyScalar(0.82), transparent: true, blending: THREE.AdditiveBlending, depthWrite: false, side: THREE.DoubleSide }));
+    wall.scale.set(2.38, 0.48, 2.38); wall.position.set(c.x, 0.3, c.z); g.add(wall);
+    [0.07, 0.54].forEach((y) => { const ring = new THREE.Mesh(G.ringT, OM.lotRim); ring.scale.setScalar(2.38); ring.rotation.x = Math.PI / 2; ring.position.set(c.x, y, c.z); g.add(ring); });
+    for (let i = 0; i < 12; i++) {
+      const ang = (i / 12) * Math.PI * 2;
+      const dot = new THREE.Mesh(G.sphere, OM.lotRim); dot.scale.setScalar(0.045);
+      dot.position.set(c.x + Math.cos(ang) * 2.38, 0.54, c.z + Math.sin(ang) * 2.38); g.add(dot);
+    }
+    r.plus = new THREE.Mesh(G.holoDash, OM.dash); r.plus.scale.setScalar(2.0); r.plus.rotation.x = Math.PI / 2; r.plus.position.set(c.x, 0.08, c.z); g.add(r.plus);
+    [2.85, 3.25].forEach((s) => { const ring = new THREE.Mesh(G.holoDash, OM.dash); ring.scale.setScalar(s); ring.rotation.x = Math.PI / 2; ring.position.set(c.x, 0.06, c.z); g.add(ring); });
     const hit = new THREE.Mesh(G.box, M.hit); hit.scale.set(RS, 1.6, RS); hit.position.set(c.x, 0.8, c.z); hit.userData.key = 'lot'; g.add(hit); this.hits.push(hit);
     const el = document.createElement('div'); el.className = 'p3lot'; el.innerHTML = '<b>+</b>ADD DEPARTMENT'; el.addEventListener('click', () => CO.emit('office:click', 'lot')); this.layer.appendChild(el);
-    r.plate = el; r.plateAt = new THREE.Vector3(c.x, 0.15, c.z);   // the label lies inside its ring
+    r.plate = el; r.plateAt = new THREE.Vector3(c.x, 0.18, c.z);   // the label lies inside its ring
   }
   /* ---------------- what changes: colours, screens, people, plates ---------------- */
   update() {
@@ -2097,23 +2225,27 @@ class Office3D {
     S.departments.forEach((d) => {
       const r = this.rooms['d' + d.id]; if (!r) return;
       const v = CO.deptView(d), ln = CO.deptLine(d, v), st = ln.tone === 'red' ? 'waiting' : v.status;
+      const isOrange = d.key === 'trading_desk';
       if (v.status === 'working') anyWork = true;
       this.tint(r, st);
-      // up next is a blue dot on the plate, nothing more: its screen and its plate's frame stay slate
-      const dot = '#' + new THREE.Color(STC[st]).getHexString();
-      let title, sub, mode, col = st === 'queued' ? '#a9b8cc' : dot;
+      const dot = isOrange && st !== 'working' ? '#ff8824' : '#' + new THREE.Color(STC[st]).getHexString();
+      let title, sub, mode, col = isOrange && st !== 'working' ? '#ff9438' : st === 'queued' ? '#a9b8cc' : dot;
       if (v.running) { title = v.running.title; sub = CO.expertName(v.running.expert) + ' is on it'; mode = 'run'; }
-      else if (v.waiting) { title = 'Needs you'; sub = 'approve or reject on the right'; mode = 'full'; col = '#ff4444'; }
-      else if (v.queued.length) { title = 'Up next: ' + v.queued[0].title; sub = ''; mode = ''; }
-      else { title = d.schedule && d.next_run ? 'Next run at ' + CO.hhmm(d.next_run) : 'Idle'; sub = ''; mode = ''; }
+      else if (v.waiting) { title = 'Needs you'; sub = 'approve or reject on the right'; mode = 'full'; col = '#ff8824'; }
+      else if (v.queued.length) { title = 'Up next: ' + v.queued[0].title; sub = ''; mode = isOrange ? 'full' : ''; }
+      else { title = d.schedule && d.next_run ? 'Next run at ' + CO.hhmm(d.next_run) : 'Idle'; sub = ''; mode = isOrange ? 'full' : ''; }
       if (r.wall) drawWall(r.wall, title, sub, col, mode);
       if (r.kb) drawKanban(r.kb, { queued: v.queued.length, running: v.running ? 1 : 0, done: v.done, failed: v.failed });
-      v.experts.slice(0, 3).forEach((e, i) => { const a = r.agents[i]; if (a) a.working = e.state === 'working'; if (r.mons[i]) r.mons[i].color.set(e.state === 'working' ? new THREE.Color(0x00cfff).multiplyScalar(2.2) : new THREE.Color(OFFICE.mon)); });
+      v.experts.slice(0, 3).forEach((e, i) => {
+        const a = r.agents[i]; if (a) a.working = e.state === 'working';
+        if (r.mons[i]) r.mons[i].color.set(isOrange ? new THREE.Color(0xffae52).multiplyScalar(1.25) : e.state === 'working' ? new THREE.Color(0x00e5ff).multiplyScalar(1.8) : new THREE.Color(OFFICE.mon));
+      });
       const n = d.et10 || 0, et = d.files_as ? '<span class="et' + (n ? ' lit' : '') + '">' + (n ? '+' : '') + n.toLocaleString('en-US') + ' ET10</span>' : '';
-      const html = '<div class="p3h"><i style="background:' + (ln.tone === 'red' ? '#ff4444' : dot) + '"></i><b>' + esc(d.name.toUpperCase()) + '</b>' + et + '</div><div class="p3l" style="color:' + (TONEC[ln.tone] || '#a9b8cc') + '">' + esc(ln.short) + '</div>';
+      const subCol = isOrange && ln.tone !== 'cyan' ? '#ff9438' : (TONEC[ln.tone] || '#a9b8cc');
+      const html = '<div class="p3h"><i style="background:' + (ln.tone === 'red' || isOrange ? '#ff8824' : dot) + '"></i><b>' + esc(d.name.toUpperCase()) + '</b>' + et + '</div><div class="p3l" style="color:' + subCol + '">' + esc(ln.short) + '</div>';
       if (r.plate && r.plate._h !== html) { r.plate._h = html; r.plate.innerHTML = html; }
-      if (r.plate) { r.plate.classList.toggle('work', v.status === 'working'); r.plate.style.setProperty('--c', ln.tone === 'red' ? '#ff4444' : col); }
-      if (this.conduits['d' + d.id]) { const cm = this.conduits['d' + d.id].mat; cm.emissive.set(v.status === 'working' ? 0x00cfff : 0xdfe6ee); cm.emissiveIntensity = v.status === 'working' ? 1.6 : 0.3; }
+      if (r.plate) { r.plate.classList.toggle('work', v.status === 'working'); r.plate.style.setProperty('--c', ln.tone === 'red' || isOrange ? '#ff8824' : col); }
+      if (this.conduits['d' + d.id]) { const cm = this.conduits['d' + d.id].mat; cm.emissive.set(v.status === 'working' ? 0x00e5ff : isOrange ? 0xff8824 : 0x38f2b8); cm.emissiveIntensity = v.status === 'working' ? 1.5 : isOrange ? 0.65 : 0.32; }
     });
     const hub = this.rooms.hub;
     if (hub) {
@@ -2122,50 +2254,53 @@ class Office3D {
       if (hub.bars) drawBars(hub.bars, 'TURNS BY DEPT TODAY', S.departments.map((d) => { const v = CO.deptView(d); return ['#' + new THREE.Color(v.status === 'idle' ? STC.queued : STC[v.status]).getHexString(), turnsBy[d.id] || 0]; }));
       if (hub.kb) drawKanban(hub.kb, { queued: S.plan.length, running: S.tasks.filter((t) => t.status === 'running').length, done: S.strip.filter((c) => c.state === 'done').length, failed: S.strip.filter((c) => c.state === 'failed').length });
       if (hub.agents[0]) hub.agents[0].working = !paused;
-      const html = '<div class="p3h"><i style="background:' + (paused ? '#7f93ad' : '#00cfff') + '"></i><b>MANAGER</b></div><div class="p3l" style="color:' + (paused ? '#a9b8cc' : '#00cfff') + '">' + (paused ? 'Paused' : (CO.RO ? 'Its chat' : 'Your chat') + ' · runs it all') + '</div>';
+      const html = '<div class="p3h"><i style="background:' + (paused ? '#7f93ad' : '#00e5ff') + '"></i><b>MANAGER</b></div><div class="p3l" style="color:' + (paused ? '#a9b8cc' : '#00e5ff') + '">' + (paused ? 'Paused' : (CO.RO ? 'Its chat' : 'Your chat') + ' · runs it all') + '</div>';
       if (hub.plate._h !== html) { hub.plate._h = html; hub.plate.innerHTML = html; }
-      hub.plate.classList.toggle('work', !paused && anyWork); hub.plate.style.setProperty('--c', paused ? '#7f93ad' : '#00cfff');
+      hub.plate.classList.toggle('work', !paused && anyWork); hub.plate.style.setProperty('--c', paused ? '#7f93ad' : '#00e5ff');
       const na = S.approvals.length;
-      hub.need.hidden = !na; hub.need.textContent = na + (CO.RO ? ' WAIT FOR ITS OWNER' : na === 1 ? ' NEEDS YOU' : ' NEED YOU');
+      hub.need.hidden = false;
+      hub.need.className = 'p3need' + (na ? '' : ' clear');
+      hub.need.textContent = na ? na + (CO.RO ? ' WAIT FOR ITS OWNER' : na === 1 ? ' NEEDS YOU' : ' NEED ATTENTION') : 'ALL CLEAR';
     }
     const au = this.rooms.audit;
     if (au) {
       const A = S.audit, days = Math.max(0, Math.ceil((A.next_at - S.clock) / 86400000)), nf = A.last ? A.last.findings.length : 0;
       this.tint(au, 'idle');
-      drawWall(au.wall, 'Weekly audit: next in ' + days + 'd', nf + ' findings last week', '#7f93ad', '');
-      const html = '<div class="p3h"><i style="background:#7f93ad"></i><b>WEEKLY AUDIT</b></div><div class="p3l" style="color:#a9b8cc">next in ' + days + (days === 1 ? ' day' : ' days') + '</div>';
+      drawWall(au.wall, 'Weekly audit: next in ' + days + 'd', nf + ' findings last week', '#38f2b8', '');
+      const html = '<div class="p3h"><i style="background:#38f2b8"></i><b>WEEKLY AUDIT</b></div><div class="p3l" style="color:#a9b8cc">next in ' + days + (days === 1 ? ' day' : ' days') + '</div>';
       if (au.plate._h !== html) { au.plate._h = html; au.plate.innerHTML = html; }
-      au.plate.style.setProperty('--c', '#7f93ad');
+      au.plate.style.setProperty('--c', '#38f2b8');
     }
-    // the vault: two numbers on its plate, the piles behind it; a visitor reads only that it is private
-    const vr = this.rooms.vault;
-    if (vr) {
-      const VT = CO.vaultTotals(), priv = !!CO.RO, key = priv ? 'priv' : Math.round(VT.et10) + '|' + VT.usdc.toFixed(2);
-      if (vr.pkey !== key) { vr.pkey = key; this.piles(vr, VT, priv); }
-      this.tint(vr, 'idle'); if (vr.edgeM) { vr.edgeM.emissive.set(0x00ff88); vr.edgeM.emissiveIntensity = 0.7; }
-      const html = '<div class="p3h"><i style="background:#00ff88"></i><b>VAULT</b></div>' +
-        (priv ? '<div class="p3l" style="color:#a9b8cc">Private</div>' : '<div class="p3l"><span class="g">' + CO.fmtEt(VT.et10) + ' ET10</span> · <span class="u">' + CO.fmtUsd(VT.usdc) + ' USDC</span></div>');
-      if (vr.plate._h !== html) { vr.plate._h = html; vr.plate.innerHTML = html; }
-      vr.plate.style.setProperty('--c', '#00ff88');
+    if (this.vaultCard) {
+      const VT = CO.vaultTotals(), priv = !!CO.RO;
+      const vh = priv
+        ? '<span class="k">VAULT</span><div class="vv"><b class="g">Private</b></div><span class="go">Owner only</span>'
+        : '<span class="k">VAULT</span><div class="vv"><b class="g">' + CO.fmtEt(VT.et10) + '</b><span>ET10</span></div><div class="vv"><b class="u">' + CO.fmtUsd(VT.usdc) + '</b><span>USDC</span></div><span class="go">Open the vault →</span>';
+      if (this.vaultCard._h !== vh) { this.vaultCard._h = vh; this.vaultCard.innerHTML = vh; }
     }
     this.paused = S.company.status === 'paused';
     this.drawSel();
   }
-  // a room in the colour of what it does: working cyan and waiting red light the room; up next and idle keep a
-  // slate edge under plain white light (up next says itself on the plate and the wall screen)
+  // a room in the colour of what it does: working cyan, waiting/trading warm amber-orange, laboratory aqua-cyan, and
+  // mint-aquamarine structure rims for resting rooms
   tint(r, st) {
-    if (r.st === st) return; r.st = st;
-    // a room at rest keeps a dim green edge: green is the office's structure, cyan and red what its rooms do
-    const lit = st === 'working' || st === 'waiting', c = new THREE.Color(lit ? STC[st] : 0x00ff88);
-    if (r.edgeM) { r.edgeM.emissive.copy(c); r.edgeM.emissiveIntensity = lit ? 1.6 : st === 'queued' ? 0.85 : 0.7; }
-    if (r.sillM) { r.sillM.emissive.copy(c); r.sillM.emissiveIntensity = lit ? 0.6 : 0.1; }
-    if (r.glow) { r.glow.material.color.copy(lit ? c : new THREE.Color(0xdfe6ee)); r.glowBase = st === 'working' ? 0.3 : st === 'waiting' ? 0.5 : 0.06; }
-    if (r.lamp) { r.lamp.color.copy(lit ? c : new THREE.Color(OFFICE.lamp)); r.lamp.intensity = st === 'working' ? 16 : st === 'waiting' ? 18 : 9; }
+    const dk = r.dept && r.dept.key;
+    const isOrange = dk === 'trading_desk' || st === 'waiting';
+    const isLab = dk === 'testing_lab';
+    if (r.st === st && !isOrange && !isLab) return;
+    r.st = st;
+    const lit = st === 'working' || isOrange || isLab;
+    const hex = isOrange ? 0xff8824 : (st === 'working' || isLab) ? 0x00e5ff : 0x38f2b8;
+    const c = new THREE.Color(hex);
+    if (r.edgeM) { r.edgeM.emissive.copy(c); r.edgeM.emissiveIntensity = isOrange ? 1.55 : st === 'working' ? 1.5 : isLab ? 1.35 : 1.15; }
+    if (r.sillM) { r.sillM.emissive.copy(c); r.sillM.emissiveIntensity = lit ? 0.5 : 0.2; }
+    if (r.glow) { r.glow.material.color.copy(c); r.glowBase = isOrange ? 0.26 : st === 'working' ? 0.16 : isLab ? 0.14 : 0.03; }
+    if (r.lamp) { r.lamp.color.copy(lit ? c : new THREE.Color(OFFICE.lamp)); r.lamp.intensity = isOrange ? 10 : st === 'working' ? 7 : isLab ? 6.5 : 3.2; }
   }
   drawSel() {
     release(this.selRing); this.selRing.clear();
     const c = this.sel && this.cells[this.sel]; if (!c) return;
-    const RS = CO.iso.RS, m = emis('#00cfff', 1.2), x0 = c[0] - 0.15, y0 = c[1] - 0.15, s = RS + 0.3;
+    const RS = CO.iso.RS, m = emis('#00e5ff', 1.4), x0 = c[0] - 0.15, y0 = c[1] - 0.15, s = RS + 0.3;
     [[x0, y0, s, 0.08], [x0, y0 + s - 0.08, s, 0.08]].forEach(([x, y, w, d]) => this.box(this.selRing, x, y, 0.12, w, d, 0.04, m, false));
     [[x0, y0, 0.08, s], [x0 + s - 0.08, y0, 0.08, s]].forEach(([x, y, w, d]) => this.box(this.selRing, x, y, 0.12, w, d, 0.04, m, false));
   }
@@ -2178,7 +2313,7 @@ class Office3D {
     else if (to === 'hub' && this.paths[from]) p = this.paths[from].slice();
     else if (this.paths[from] && this.paths[to]) p = this.paths[from].concat(this.paths[to].slice().reverse().slice(1));
     if (!p) return;
-    const hex = { cyan: '#00cfff', green: '#00ff88', red: '#ff4444', blue: '#3b82f6' }[colour] || '#00cfff', A = amat(hex);
+    const hex = { cyan: '#00e5ff', green: '#38f2b8', red: '#ff8824', blue: '#3b82f6' }[colour] || '#00e5ff', A = amat(hex);
     const g = new THREE.Group(), core = new THREE.Mesh(G.sphere, A.glow); core.scale.setScalar(0.12); g.add(core);
     const halo = new THREE.Mesh(G.sphere, A.atmo); halo.scale.setScalar(0.32); g.add(halo);
     const trail = [0.09, 0.07, 0.05, 0.035].map((s) => { const t = new THREE.Mesh(G.sphere, A.glow); t.scale.setScalar(s); this.pk.add(t); return t; });
@@ -2201,23 +2336,22 @@ class Office3D {
   }
 
   /* ---------------- camera ---------------- */
-  // The whole office, as large as the stage allows: the camera's angle is fixed, its distance is the nearest at which
-  // every slab's corners fit (a margin at the top for the stage's own bar), and it aims at the middle of what it sees.
+  // Telephoto isometric framing matching look-office.webp: polar angle 1.02, azimuth PI/4, tight fit
   home() {
-    const dir = new THREE.Vector3().setFromSpherical(new THREE.Spherical(1, 1.0, Math.PI / 4)), cam = this.camera.clone(), pts = this.corners || [];
+    const dir = new THREE.Vector3().setFromSpherical(new THREE.Spherical(1, 1.02, Math.PI / 4)), cam = this.camera.clone(), pts = this.corners || [];
     const tgt = new THREE.Vector3(); pts.forEach((p) => tgt.add(p)); if (pts.length) tgt.divideScalar(pts.length); tgt.y = 0;
-    const fits = (d, t) => { cam.position.copy(t).addScaledVector(dir, d); cam.lookAt(t); cam.updateMatrixWorld(); return pts.every((p) => { const v = p.clone().project(cam); return Math.abs(v.x) < 1.02 && v.y < 0.86 && v.y > -0.97; }); };
-    let d = 30;
+    const fits = (d, t) => { cam.position.copy(t).addScaledVector(dir, d); cam.lookAt(t); cam.updateMatrixWorld(); return pts.every((p) => { const v = p.clone().project(cam); return Math.abs(v.x) < 1.02 && v.y < 0.88 && v.y > -0.96; }); };
+    let d = 45;
     for (let k = 0; k < 2; k++) {
-      let lo = 8, hi = 300;
+      let lo = 12, hi = 420;
       for (let i = 0; i < 22; i++) { const mid = (lo + hi) / 2; if (fits(mid, tgt)) hi = mid; else lo = mid; }
-      d = hi;
+      d = hi * 0.96;
       // aim at the middle of the picture, not of the plan: shift the target by the bounds' offset on screen
       cam.position.copy(tgt).addScaledVector(dir, d); cam.lookAt(tgt); cam.updateMatrixWorld();
       let x0 = 1, x1 = -1, y0 = 1, y1 = -1; pts.forEach((p) => { const v = p.clone().project(cam); x0 = Math.min(x0, v.x); x1 = Math.max(x1, v.x); y0 = Math.min(y0, v.y); y1 = Math.max(y1, v.y); });
       const right = new THREE.Vector3().setFromMatrixColumn(cam.matrixWorld, 0), up = new THREE.Vector3().setFromMatrixColumn(cam.matrixWorld, 1);
       const h = 2 * d * Math.tan(THREE.MathUtils.degToRad(cam.fov) / 2), w = h * cam.aspect;
-      tgt.addScaledVector(right, (x0 + x1) / 2 * w / 2).addScaledVector(up, ((y0 + y1) / 2 + 0.06) * h / 2);
+      tgt.addScaledVector(right, (x0 + x1) / 2 * w / 2).addScaledVector(up, ((y0 + y1) / 2 + 0.05) * h / 2);
     }
     return { pos: tgt.clone().addScaledVector(dir, d), tgt };
   }
