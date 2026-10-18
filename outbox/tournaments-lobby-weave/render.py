@@ -1,6 +1,7 @@
-"""Load the live lobby (cymetica.com/agent-tournaments, GET), add lobby-weave.css, and save lobby-1440.png beside
-this file -- the page exactly as they serve it, plus the patch. The fixed Nexus prompt bar is hidden for the full-page
-capture only (it would otherwise be painted once mid-page)."""
+"""Load the live Agent Tournaments pages (cymetica.com, GET), add lobby-weave.css, and save <page>-1440.png and
+<page>-1440-top.png beside this file -- each page exactly as they serve it, plus the patch. The fixed Nexus prompt
+bar is hidden for the full-page capture only (it would otherwise be painted once mid-page). Also prints, per page,
+how far down main the weave reaches and where the page's content starts, so a fade that runs into content shows."""
 import re
 from pathlib import Path
 
@@ -17,21 +18,30 @@ if bad:
     raise SystemExit(f"off-palette colours {bad}")
 print("colours ok:", sorted(hexes))
 
+PAGES = (("lobby", "", ".at-sec"), ("leaderboard", "/leaderboard", ".at-lbtable"), ("how", "/how", ".at-stakes"))
 HIDE_FIXED = """() => { for (const e of document.querySelectorAll('body *')) {
   const cs = getComputedStyle(e); const r = e.getBoundingClientRect();
   if (cs.position === 'fixed' && r.top > 300) e.style.display = 'none'; } }"""
+REACH = """(content) => { const m = document.querySelector('main.content-main'); const mr = m.getBoundingClientRect();
+  const w = getComputedStyle(m, '::before'); const c = document.querySelector(content);
+  return {weave: w.content === 'none' ? 'none' : w.height, contentTop: c ? Math.round(c.getBoundingClientRect().top - mr.top) : null,
+          mainTop: Math.round(mr.top + scrollY)}; }"""
 
 with sync_playwright() as p:
     b = p.chromium.launch(channel="chrome", args=["--disable-lcd-text", "--font-render-hinting=none"])
-    for name, patched in (("lobby-before-1440", False), ("lobby-1440", True)):
+    for name, path, content in PAGES:
         t = b.new_page(viewport={"width": 1440, "height": 900})
-        t.goto("https://cymetica.com/agent-tournaments", wait_until="networkidle")
+        t.goto("https://cymetica.com/agent-tournaments" + path, wait_until="networkidle")
         t.wait_for_timeout(1200)
-        if patched:
-            t.add_style_tag(content=css)
+        t.add_style_tag(content=css)
         t.evaluate(HIDE_FIXED)
         t.wait_for_timeout(400)
-        t.screenshot(path=str(here / f"{name}.png"), full_page=True)
+        reach = t.evaluate(REACH, content)
+        print(name, reach)
+        t.screenshot(path=str(here / f"{name}-1440.png"), full_page=True)
+        top = reach["mainTop"]
+        t.screenshot(path=str(here / f"{name}-1440-top.png"), full_page=True,
+                     clip={"x": 0, "y": top, "width": 1440, "height": 1000 if name != "lobby" else 1400})
         t.close()
     b.close()
 print("rendered")

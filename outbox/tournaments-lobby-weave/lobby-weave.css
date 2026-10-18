@@ -1,22 +1,30 @@
-/* Agent Tournaments lobby (/agent-tournaments): the honeycomb weave from the table page's felt, laid in two places.
+/* Agent Tournaments (/agent-tournaments, /leaderboard, /how): the honeycomb weave from the table page's felt.
    The operator, 2026-10-18: "nemyslis ze by to chtelo i na hlavni strance dat nejake pozadi jemne? treba se mi
-   libi to pozadi cos dal na platno stolu".
-   Nothing else on the page changes; this is the whole patch. Palette: the site's own green (#00ff88). */
+   libi to pozadi cos dal na platno stolu", then "at to aplikuji i na stranky ... leaderboard a ... how pak stejne".
+   Nothing else on the pages changes; this is the whole patch. Palette: the site's own green (#00ff88). */
 
-/* 1. Behind the hero only: the weave, gone by the "Live now" header (823 px down main at 1440 px), so the card grid
-   where the numbers are read stays on a calm background. The weave is the table's cloth: it belongs on the tables
-   (part 2); behind the whole page it was wallpaper competing with every card's edge (first try, 2026-10-18). */
-main.content-main { position: relative; isolation: isolate; }
-main.content-main::before {
-  content: ''; position: absolute; inset: 0 0 auto 0; height: 820px; z-index: -1; pointer-events: none; opacity: .07;
+/* 1. Behind each page's top only, gone before the part where numbers and text are read. The weave is the table's
+   cloth: it belongs on the tables (part 2); behind a whole page it was wallpaper competing with every card's edge
+   (first try, 2026-10-18). Scoped to pages whose main holds the tournaments root (.at), so no other page gets it. */
+main.content-main:has(> .at) { position: relative; isolation: isolate; --at-weave-h: 820px; }
+main.content-main:has(> .at)::before {
+  content: ''; position: absolute; inset: 0 0 auto 0; height: var(--at-weave-h); z-index: -1; pointer-events: none;
+  opacity: .07;
   background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='42' height='24.25'><path d='M0 12.12 L7 0 H21 L28 12.12 L21 24.25 H7 Z M28 12.12 H42' fill='none' stroke='%2300ff88' stroke-width='1'/></svg>");
-  -webkit-mask-image: linear-gradient(to bottom, rgba(6,9,15,1) 0, rgba(6,9,15,1) 480px, rgba(6,9,15,0) 820px);
-          mask-image: linear-gradient(to bottom, rgba(6,9,15,1) 0, rgba(6,9,15,1) 480px, rgba(6,9,15,0) 820px);
+  -webkit-mask-image: linear-gradient(to bottom, rgba(6,9,15,1) 0, rgba(6,9,15,1) 58%, rgba(6,9,15,0) 100%);
+          mask-image: linear-gradient(to bottom, rgba(6,9,15,1) 0, rgba(6,9,15,1) 58%, rgba(6,9,15,0) 100%);
 }
+/* How far down each page's top reaches, measured from main's top at 1440 px on 2026-10-18:
+   lobby       -- the hero ends at 781, "Live now" starts at 823;
+   leaderboard -- the podium and the counts end at 610, the table starts at 626;
+   how         -- the hero, the four steps and the button end at 671, "Stakes" starts at 713. */
+main.content-main:has(.at-hero)   { --at-weave-h: 820px; }
+main.content-main:has(.at-podium) { --at-weave-h: 620px; }
+main.content-main:has(.at-shero)  { --at-weave-h: 700px; }
 
-/* 2. On every table's felt (the cards and the hero's "Next to fill"): the same weave, clear in the middle where the
-   pot is, and the thin printed line round the pot the big table has. */
-/* .at-felt is already position:absolute and its .at-pot already sits at z-index 1, so nothing else moves. */
+/* 2. On every table's felt (the lobby's cards and its "Next to fill"): the same weave, clear in the middle where the
+   pot is, and the thin printed line round the pot the big table has.
+   .at-felt is already position:absolute and its .at-pot already sits at z-index 1, so nothing else moves. */
 .at-felt::before {
   content: ''; position: absolute; inset: 0; z-index: 0; border-radius: inherit; pointer-events: none; opacity: .14;
   background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='28' height='16.17'><path d='M0 8.08 L4.67 0 H14 L18.67 8.08 L14 16.17 H4.67 Z M18.67 8.08 H28' fill='none' stroke='%2300ff88' stroke-width='1'/></svg>");
