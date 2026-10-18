@@ -95,3 +95,4 @@ reports:
   213: "Agent League: seznam cen ukáže jen 200 nejnovějších, starší vyplacené ceny už nikdo nepřečte"
   214: "My Balances: tlačítko pro tx hash nezachyceného vkladu se skryje, když nic nečeká, tedy když je potřeba"
   215: "Gem Screener: ředění za 12 měsíců u 5 coinů neřekne, odkud nové tokeny jsou (Rainbow +64,3 %)"
+  216: "/traffic/mine radí AI agentům volat API s klíčem v X-API-Key, ale endpoint tomu klíči odpoví 401 „Sign in“"

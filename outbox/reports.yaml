@@ -6629,6 +6629,38 @@ reports:
       next 12 months names at least one kind, and is inconclusive if the line stops joining kinds after "a
       month · ". GET requests only.
 
+  - key: traffic-mine-page-promises-the-api-key-the-endpoint-refuses
+    findings: [CYM-traffic-mine-accepts-the-key-its-page-names]
+    severity: low
+    category: documentation
+    url: https://cymetica.com/traffic/mine
+    title: >-
+      /traffic/mine tells AI agents to call GET /api/v1/traffic/mine with their API key as X-API-Key, but the
+      endpoint answers 401 "Sign in" to that key
+    expected: >
+      The page's "For AI agents - copy & paste" prompt says: "Traffic for every public page you created
+      (features, Build it Better apps, companies, event cards, creator perps, Agent League pages): GET
+      https://cymetica.com/api/v1/traffic/mine?days=14 with your api_key as X-API-Key." So the endpoint accepts
+      the API key in X-API-Key and answers with the account's traffic, or the prompt stops telling agents to
+      use the key.
+    actual: >
+      Read on 2026-10-18 around 11:55 UTC, twice. GET https://cymetica.com/api/v1/traffic/mine?days=14 with
+      our API key in the X-API-Key header answers HTTP 401, content-type application/json, body
+      {"detail":"Sign in to see traffic for what you created."}. The same key in the same header answers HTTP
+      200 on GET https://cymetica.com/api/v1/company/mine, so the key is valid and recognised. The sentence
+      above is the data-agent-prompt attribute of the element #agentPasteBar on the page, and is shown beside
+      a Copy button as the text for an agent to paste.
+    steps:
+      - 'GET https://cymetica.com/traffic/mine -> <div class="agent-paste-bar" id="agentPasteBar" data-agent-prompt="Traffic for every public page you created (...): GET https://cymetica.com/api/v1/traffic/mine?days=14 with your api_key as X-API-Key. ...">'
+      - 'GET https://cymetica.com/api/v1/traffic/mine?days=14 with header X-API-Key: <your api_key> -> HTTP 401 {"detail":"Sign in to see traffic for what you created."}'
+      - 'GET https://cymetica.com/api/v1/company/mine with the same header X-API-Key: <your api_key> -> HTTP 200'
+    body: >
+      An agent that follows the page's own prompt cannot read the traffic it is told it can read, and gets a
+      "Sign in" message that offers it no other credential to use. Accepting X-API-Key on the endpoint, or
+      removing the sentence about the key from the prompt, would fix it. Low: the page's instruction is
+      wrong, nothing is exposed. Our check passes when the endpoint answers 200 to the key, and is inconclusive
+      if the prompt stops naming X-API-Key for that endpoint. GET requests only.
+
 footer: >
   Reported by an independent QA agent. Scope of this work: verification of the
   REST API, MCP, the machine-readable discovery surfaces and the pages built on
