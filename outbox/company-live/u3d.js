@@ -634,7 +634,7 @@ function uvSky(AZ) {
     }
     c.putImageData(img, 0, 0);
   });
-  const sph = new THREE.Mesh(new THREE.SphereGeometry(D, 64, 32), new THREE.MeshBasicMaterial({ map: tex, side: THREE.BackSide, depthWrite: false, fog: false, toneMapped: false }));
+  const sph = new THREE.Mesh(new THREE.SphereGeometry(D, 64, 32), new THREE.MeshBasicMaterial({ map: tex, side: THREE.BackSide, depthWrite: false, fog: false }));
   sph.renderOrder = -20; sph.frustumCulled = false; g.add(sph);
   // a faint teal wisp or two inside the haze, his nebula's filaments
   [[-0.62, 0.62, 0.55, 7, 0.07], [-0.25, 0.85, 0.4, 13, 0.05], [-0.85, 0.2, 0.35, 29, 0.04]].forEach(([x, y, s, seed, op]) => {
@@ -789,13 +789,13 @@ class Universe3D {
     // reads at its length instead of as a blot pointing at the camera
     const cam = new THREE.Vector3().setFromSpherical(new THREE.Spherical(1, UVCAM.polar, CO.uvGalaxy.AZ)), right = new THREE.Vector3().crossVectors(cam, up).normalize(), vup = new THREE.Vector3().crossVectors(right, cam).normalize();
     this.beams = [];
-    [[92, -0.25, 40, 0xffc060], [32, 0.2, 32, 0xbfe4ff], [148, -0.3, 34, 0xffb040], [8, -0.35, 26, 0xffd27a], [176, 0.25, 28, 0x9fd0ff], [206, -0.2, 22, 0xffa63a], [334, 0.3, 20, 0xbfe4ff], [62, 0.45, 18, 0xffcf6e]].forEach(([deg, depth, len, hex]) => {
+    [[92, -0.25, 40, 0xff9a22], [32, 0.2, 32, 0x4f9dff], [148, -0.3, 34, 0xff8c1a], [8, -0.35, 26, 0xffa22e], [176, 0.25, 28, 0x2f8cff], [206, -0.2, 22, 0xff8c1a], [334, 0.3, 20, 0x5fa8ff], [62, 0.45, 18, 0xffa22e]].forEach(([deg, depth, len, hex]) => {
       const t = deg * Math.PI / 180, dir = right.clone().multiplyScalar(Math.cos(t)).addScaledVector(vup, Math.sin(t)).addScaledVector(cam, depth).normalize();
       const q = new THREE.Quaternion().setFromUnitVectors(up, dir), j = new THREE.Group();
       j.quaternion.copy(q); j.position.y = Y; g.add(j);
-      const outer = new THREE.Mesh(G.jet, new THREE.MeshBasicMaterial({ map: jetTex(), color: new THREE.Color(hex).multiplyScalar(0.3), transparent: true, opacity: 0.5, blending: THREE.AdditiveBlending, depthWrite: false }));
+      const outer = new THREE.Mesh(G.jet, new THREE.MeshBasicMaterial({ map: jetTex(), color: new THREE.Color(hex).multiplyScalar(0.45), transparent: true, opacity: 0.5, blending: THREE.AdditiveBlending, depthWrite: false }));
       outer.scale.set(1.9, len, 1.9); j.add(outer);
-      const inner = new THREE.Mesh(G.jet, new THREE.MeshBasicMaterial({ map: jetTex(), color: new THREE.Color(hex).lerp(new THREE.Color(0xffffff), 0.1).multiplyScalar(0.72), transparent: true, opacity: 0.85, blending: THREE.AdditiveBlending, depthWrite: false }));
+      const inner = new THREE.Mesh(G.jet, new THREE.MeshBasicMaterial({ map: jetTex(), color: new THREE.Color(hex).multiplyScalar(1.05), transparent: true, opacity: 0.85, blending: THREE.AdditiveBlending, depthWrite: false }));
       inner.scale.set(0.6, len * 0.92, 0.6); j.add(inner);
       this.beams.push({ j, outer, inner, dir, len, ph: R() * 6, hex });
     });
@@ -933,7 +933,7 @@ class Universe3D {
   // work goes in to Cymetica in the company's colour; ET10 comes back out in green
   arc(it, back) {
     if (!it.plot || this.arcs.length > 12) return;
-    const core = new THREE.Vector3(0, 0, 0), top = it.plot.root.position.clone().add(new THREE.Vector3(0, it.plot.top * 0.6 * UVSS, 0));
+    const core = new THREE.Vector3(0, 5, 0), top = it.plot.root.position.clone().add(new THREE.Vector3(0, it.plot.top * 0.6 * UVSS, 0));
     const a = back ? core : top, b = back ? top : core, mid = a.clone().lerp(b, 0.5);
     mid.y += 8 + a.distanceTo(b) * 0.16;
     const A = back ? amat('#00ff88') : amat(CO.accentHex(it.c.accent)), curve = new THREE.QuadraticBezierCurve3(a, mid, b);
