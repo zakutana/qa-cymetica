@@ -21894,6 +21894,7 @@
 {"archive": "evidence-2026-10", "bytes": 3258, "call": "GET https://data-api.binance.vision/api/v3/klines?interval,limit,startTime,symbol", "id": "78d9b9dfe2dda4df35258a8456d6f84078e806c9449ae20847332ebe1ca9b3d1", "why": "row"}
 {"archive": "evidence-2026-09", "bytes": 232149, "call": "GET https://cymetica.com/perpetual/agents?", "id": "78dd0c0040d633719b742efea03ae4335c75943c3ddd2d82337411fa9acd7679", "why": "row"}
 {"archive": "evidence-2026-10", "bytes": 41223, "call": "GET https://cymetica.com/api/v1/event-cards/ce0c9e32-84fa-44a2-93de-2da6651498a2/index-history?", "id": "78dd600bb2cb23405ea6e094cbee2c5f268a67c33f8c51354cb09b28f5af3025", "why": "row"}
+{"archive": "", "bytes": 8098, "call": "POST https://cymetica.com/api/v1/bounty/a2a/send?", "id": "78dd6c97d8d61d47e269f11a8d614b2605f8820b9d77ab7fd0e0fe12b0ef7932", "why": "their-words"}
 {"archive": "", "bytes": 164100, "call": "GET https://cymetica.com/api/v1/cloned-bots/3b1512cb-7d41-4a3d-a6f9-e1bf2649ed0c/activity?page,page_size", "id": "78debb45d1c398aba954a9552ef79c80ec5599578d2ca7a2b0454023d3750509", "why": "row"}
 {"archive": "evidence-2026-09", "bytes": 45793, "call": "GET https://cymetica.com/api/v1/clones/fomo-radar/signals?chain,filter,limit", "id": "78dec083487dbe01c0e30970abbdbd363710c363f8b7cbc5a215981c568a2b39", "why": "row"}
 {"archive": "evidence-2026-10", "bytes": 3912, "call": "GET https://data-api.binance.vision/api/v3/klines?interval,limit,startTime,symbol", "id": "78e2da401ba6d73b931311e87cdd35c1cb00ed28999d650c8a55b940f9a6c6b7", "why": "row"}
