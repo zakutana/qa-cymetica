@@ -528,6 +528,8 @@ def test_the_audit_sees_a_wrong_upside_a_wrong_identity_a_wrong_altseason_and_a_
     _a_forming_candle_that_is_old_and_far_from_its_pool_is_seen()
     # 2026-10-04: tests/rest/test_gem_screener_sectors_chart_does_what_its_caption_says.py
     _a_chart_click_is_held_to_its_caption()
+    # 2026-10-18: tests/rest/test_gem_screener_says_one_thing_per_name.py, the Supply line's source
+    _a_twelve_month_dilution_names_its_source()
     # 2026-10-04: tests/rest/test_gem_screener_chains_say_what_their_sources_say.py
     _the_chains_tab_is_held_to_its_sources_and_its_own_words()
 
@@ -905,6 +907,75 @@ def _a_chart_click_is_held_to_its_caption():
     assert g.sector_click_promise(page().replace("openThemePanel(th.key)", "noop()"))["verdict"] == "unread"
     assert g.sector_click_promise("")["verdict"] == "unread"
     assert g.sector_click_promise(None)["verdict"] == "unread"
+
+
+def _a_twelve_month_dilution_names_its_source():
+    """2026-10-18, Supply column: Rainbow reads "Dilution, 12 months +64.3%" and under it
+    "0 new RNBW a month · " with nothing after the dot. The 64.3% is right (115.8M new tokens:
+    69.5M of vesting on 2027-02-05, then 5.79M a month), and so is the 0 (the first month's
+    inflow; the line counts that month, as our ET-31267 mockup drew it). What is missing is the source:
+    `kinds` is [] while `new_tokens_12m` is 115.8M, so the line names neither the schedule nor
+    the emissions the figure is made of. Held only where the page still joins `kinds` after
+    "a month · " with no fallback; a line it cannot read is unread, never ok."""
+    line = ("function saDilLine(sp, sym){\n  var d = saDil(sp);\n"
+            "  if (!d) return 'No schedule published: nothing is assumed in its place.';\n"
+            "  return saTok(d.month_tokens) + ' new ' + (sym || 'tokens') + ' a month · ' + "
+            "(d.kinds || []).join(' + ') +\n    (typeof d.net_of_buybacks_pct === 'number' ? '' : '');\n}\n")
+
+    def page(code=line):
+        return "<html><script>" + code + "</script></html>"
+
+    def row(sym, new, month, kinds, pct=10.0, slug=None):
+        return {"token": {"symbol": sym, "slug": slug or sym.lower(), "gecko_id": (slug or sym.lower()) + "-id"},
+                "next_unlock": {"ts": 1801785600, "tokens": 69500000.0, "who": "Investors, Team"},
+                "tiles": {"dilution_12m": {"pct": pct, "new_tokens_12m": new, "month_tokens": month,
+                                           "kinds": kinds, "schedule_known": True}}}
+
+    rnbw = row("RNBW", 115833333.36, 0.0, [], pct=64.35, slug="rainbow")
+    fine = [row(s, 1.0e8, 9.0e6, ["vesting"]) for s in ("SOLV", "ARB", "HYPE", "ENA", "SUI")]
+    zero = row("COMP", 0.0, 0.0, [], pct=0.0)               # "0 new COMP a month · " beside 0.0%: nothing to name
+    blank = {"token": {"symbol": "NXM", "slug": "nxm"}, "tiles": {"dilution_12m": None}}   # "—": no line drawn
+    batch = {"as_of": "2026-10-18T08:19:15+00:00", "items": [rnbw, *fine, zero, blank]}
+
+    today = g.dilution_source_breaches(batch, page())
+    assert today["verdict"] == "failed", today
+    assert [b["row"] for b in today["breaches"]] == ["RNBW(rainbow)"], today
+    assert today["judged"] == 6, "a row with no new tokens, or with no figure, was judged"
+    assert today["breaches"][0]["new_tokens_12m"] == 115833333.36 and today["breaches"][0]["month_tokens"] == 0.0
+    assert today["breaches"][0]["next_unlock_who"] == "Investors, Team", today
+    # The same row served twice (an app and its chain) is one row, not two.
+    assert g.dilution_source_breaches(dict(batch, items=[rnbw, rnbw, *fine]), page())["judged"] == 6
+
+    # The fix, however it is reached: the source named from the 12 months clears it, with the
+    # 0 for this month kept or with the month changed.
+    named = dict(batch, items=[row("RNBW", 115833333.36, 0.0, ["vesting"], pct=64.35, slug="rainbow"),
+                               *fine, zero, blank])
+    assert g.dilution_source_breaches(named, page())["verdict"] == "ok"
+    averaged = dict(batch, items=[row("RNBW", 115833333.36, 9652777.78, [], pct=64.35, slug="rainbow"), *fine])
+    assert g.dilution_source_breaches(averaged, page())["verdict"] == "failed", (
+        "a monthly figure changed with the source still blank was called fixed")
+
+    # A page whose line no longer joins kinds after "a month · " -- reworded, or with a fallback
+    # for an empty list -- is a rewrite this cannot read: unread, never ok and never failed.
+    for code in (line.replace("(d.kinds || []).join(' + ')", "(d.kinds.length ? d.kinds.join(' + ') : 'schedule')"),
+                 line.replace("' a month · '", "' this month · '"),
+                 line.replace("(d.kinds || [])", "(d.kinds_12m || [])"),
+                 "function saDilLine(){ return ''; }"):
+        assert g.dilution_source_breaches(batch, page(code))["verdict"] == "unread", code
+    assert g.dilution_source_breaches(batch, "")["verdict"] == "unread"
+    assert g.dilution_source_breaches(batch, None)["verdict"] == "unread"
+
+    # A reading that is not there is not agreement.
+    unread_kinds = dict(batch, items=[row("RNBW", 115833333.36, 0.0, None, pct=64.35, slug="rainbow"), *fine])
+    said = g.dilution_source_breaches(unread_kinds, page())
+    assert said["verdict"] == "unread" and said["unread"] == ["RNBW(rainbow)"], said
+    assert g.dilution_source_breaches(dict(batch, items=fine[:3]), page())["verdict"] == "unread", (
+        "three rows were enough to call the column clean")
+    assert g.dilution_source_breaches({}, page())["verdict"] == "unread"
+    assert g.dilution_source_breaches(None, page())["verdict"] == "unread"
+    # The batch's items may come keyed by symbol.
+    keyed = dict(batch, items={r["token"]["symbol"]: r for r in [rnbw, *fine]})
+    assert [b["row"] for b in g.dilution_source_breaches(keyed, page())["breaches"]] == ["RNBW(rainbow)"]
 
 
 def _the_chains_tab_is_held_to_its_sources_and_its_own_words():

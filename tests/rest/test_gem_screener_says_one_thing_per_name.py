@@ -16,6 +16,11 @@ Found by the degen audit's browser pass of 2026-10-15 (outbox/gem-screener-degen
 4. **An unlock countdown counts from the moment it is served.** The Supply Analyzer batch the coin
    detail reads states `next_unlock.days` beside `next_unlock.ts`; read at the batch's own `as_of`, the
    two differ by 0.8 days on 17 of 17 rows (SOLV: "Oct 19 · in 5 days" on Oct 15, 3.75 days away).
+5. **A 12-month dilution names where its new tokens come from** (2026-10-18). The Supply column's
+   tooltip and the drawer card print "N new X a month · " + `tiles.dilution_12m.kinds`. Rainbow
+   reads +64.3 % (115.8M new tokens, all vesting: 69.5M on 2027-02-05, then 5.79M a month) over
+   "0 new RNBW a month · " with nothing after the dot: `kinds`, like `month_tokens`, counts only the
+   first of the 12 months, and it has none. Five rows so.
 
 NOT asserted: which dilution threshold is right, or which retail measure is better. A field that cannot
 be read is INCONCLUSIVE, never agreement. SAFE: GETs only, anonymous.
@@ -230,3 +235,28 @@ def test_an_unlock_countdown_counts_from_the_moment_it_is_served(rest_anon):
         right={"rows_off": 0},
         population={"off": off[:10], "as_of": batch.get("as_of")},
         sources={"batch": SUPPLY_BATCH}))
+
+
+@qa(component="rest.gem_screener", tier=SafetyTier.SAFE, surface="rest")
+def test_a_twelve_month_dilution_names_where_its_new_tokens_come_from(rest_anon):
+    """Under "Dilution, 12 months" the page prints "N new X a month · " and the tile's `kinds`. A
+    row with new tokens in its next 12 months names at least one kind (vesting, emissions, ...).
+    The monthly 0 is not judged: it is this month's inflow, as ET-31267 drew it. Passes when every
+    such row names its source; a page that no longer joins `kinds` there is INCONCLUSIVE."""
+    _, page = read_page(rest_anon)
+    said = g.dilution_source_breaches(read_api(rest_anon, SUPPLY_BATCH), page)
+    if said["verdict"] == "unread":
+        raise Inconclusive(said["why"])
+    blank = said["breaches"]
+    conclude(Measurement(
+        verdict="failed" if blank else "passed",
+        reason=(f"{len(blank)} of {said['judged']} rows with new tokens in their next 12 months read "
+                f"'N new X a month · ' with no source after the dot (kinds []), batch as_of {said['as_of']}: "
+                + "; ".join(f"{b['row']} +{b['pct']:g}% from {b['new_tokens_12m'] / 1e6:,.1f}M new tokens, "
+                            f"next {b['next_unlock_tokens'] / 1e6 if b['next_unlock_tokens'] else 0:,.1f}M "
+                            f"to {b['next_unlock_who']}" for b in blank[:5])
+                if blank else said["why"]),
+        left={"rows_without_source": len(blank), "judged": said["judged"]},
+        right={"rows_without_source": 0},
+        population={"breaches": blank[:10], "as_of": said["as_of"], "line": said["line"]},
+        sources={"page": g.APP_PAGE, "batch": SUPPLY_BATCH}))

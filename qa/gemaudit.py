@@ -764,6 +764,88 @@ def sector_click_promise(page_html: str | None) -> dict:
     return out
 
 
+# --- the Supply line under "Dilution, 12 months" names its source (2026-10-18) ------------------
+
+DILUTION_LINE = re.compile(
+    r"month_tokens\)\s*\+\s*' new '.{0,80}?' a month\s*·\s*'\s*\+\s*"
+    r"\(\s*[\w$]+\.kinds\s*\|\|\s*\[\]\s*\)\.join\(", re.S)
+"""The served line under the 12-month figure, "N new X a month · " + kinds joined, with no
+fallback for an empty list: the Supply column's tooltip (saDilLine) and the drawer card's tile."""
+MIN_DILUTION_ROWS = 5
+
+
+def _is_number(value) -> bool:
+    return isinstance(value, (int, float)) and not isinstance(value, bool)
+
+
+def dilution_source_breaches(batch: dict | None, page_html: str | None) -> dict:
+    """Does every 12-month dilution the Supply column shows name where its new tokens come from?
+
+    2026-10-18: Rainbow reads "Dilution, 12 months +64.3%" and under it "0 new RNBW a month · "
+    with nothing after the dot. `tiles.dilution_12m` holds `new_tokens_12m` 115.8M (69.5M of
+    vesting for Investors and Team on 2027-02-05, then 5.79M a month) and `kinds` [], because
+    `kinds`, like `month_tokens`, counts only the first of the 12 months, which has nothing.
+
+      failed  the page joins `kinds` after "a month · " and a row with new tokens in its next 12
+              months has `kinds` empty
+      ok      every such row names at least one kind
+      unread  the line is not on the page in that form (reworded, a fallback for an empty list):
+              what a visitor reads is then a question for a browser; or the batch could not be
+              read, a row's `kinds` is missing, or fewer than MIN_DILUTION_ROWS rows were judged
+
+    NOT judged: the monthly figure (the 0 is October's inflow, as our ET-31267 mockup drew it),
+    whether the 12-month figure is right, a row with no new tokens ("0 new COMP a month · " beside
+    0.0% has nothing to name), or a row with no figure ("—").
+    """
+    out = {"verdict": "unread", "why": "", "judged": 0, "breaches": [], "unread": [],
+           "as_of": (batch or {}).get("as_of") if isinstance(batch, dict) else None, "line": None}
+    found = DILUTION_LINE.search(page_html or "")
+    if not found:
+        out["why"] = ("the page no longer joins the 12-month tile's kinds after 'a month · ' "
+                      "with no fallback; what the line says is a question for a browser")
+        return out
+    out["line"] = found.group(0)
+    items = (batch or {}).get("items") if isinstance(batch, dict) else None
+    items = list(items.values()) if isinstance(items, dict) else list(items or [])
+    seen = set()
+    for item in items:
+        token = item.get("token") or {}
+        ident = (str(token.get("slug") or "").lower(), str(token.get("gecko_id") or "").lower())
+        if ident in seen:
+            continue
+        seen.add(ident)
+        tile = (item.get("tiles") or {}).get("dilution_12m")
+        if not isinstance(tile, dict) or not _is_number(tile.get("pct")):
+            continue                                    # "—": no figure, no line under it
+        label = f"{token.get('symbol')}({token.get('slug')})"
+        new, kinds = tile.get("new_tokens_12m"), tile.get("kinds")
+        if not _is_number(new) or not isinstance(kinds, list):
+            out["unread"].append(label)
+            continue
+        if new <= 0:
+            continue
+        out["judged"] += 1
+        if not kinds:
+            nxt = item.get("next_unlock") or {}
+            out["breaches"].append({
+                "row": label, "pct": tile.get("pct"), "new_tokens_12m": new,
+                "month_tokens": tile.get("month_tokens"), "schedule_known": tile.get("schedule_known"),
+                "emissions_known": tile.get("emissions_known"), "next_unlock_ts": nxt.get("ts"),
+                "next_unlock_tokens": nxt.get("tokens"), "next_unlock_who": nxt.get("who")})
+    if out["breaches"]:
+        out["verdict"] = "failed"
+        out["why"] = (f"{len(out['breaches'])} of {out['judged']} rows with new tokens in their next 12 "
+                      f"months name no source after 'a month · '")
+    elif out["unread"]:
+        out["why"] = f"{len(out['unread'])} rows with a 12-month figure carry no readable kinds: {out['unread'][:5]}"
+    elif out["judged"] < MIN_DILUTION_ROWS:
+        out["why"] = f"only {out['judged']} rows have new tokens in their next 12 months"
+    else:
+        out["verdict"] = "ok"
+        out["why"] = f"all {out['judged']} rows with new tokens in their next 12 months name their source"
+    return out
+
+
 # --- the Chains tab against its sources and its own words (2026-10-04) --------------------------
 #
 # Verified over all 33 chains of the 08:47 UTC snapshot: daily users, DEX volume, TVL, market cap
