@@ -1272,23 +1272,25 @@ function hullTex() {
   if (TX.hull) return TX.hull;
   const W = 1024, H = 200, R = rng(41), lit = [0, 1, 2, 3].map(() => R() < 0.7);
   const draw = (glow) => (g) => {
-    g.fillStyle = glow ? '#000000' : '#2b3644'; g.fillRect(0, 0, W, H);
+    g.fillStyle = glow ? '#000000' : '#36424f'; g.fillRect(0, 0, W, H);
     if (!glow) {
-      g.fillStyle = '#3e4a58'; g.fillRect(0, 0, W, 14);
-      g.fillStyle = '#161d26'; g.fillRect(0, H - 26, W, 26);
-      g.fillStyle = '#18202a'; for (let x = 0; x < W; x += 128) g.fillRect(x, 14, 3, H - 40);
+      g.fillStyle = '#4c5866'; g.fillRect(0, 0, W, 14);
+      g.fillStyle = '#1a222c'; g.fillRect(0, H - 26, W, 26);
+      g.fillStyle = '#202a35'; for (let x = 0; x < W; x += 128) g.fillRect(x, 14, 3, H - 40);
     }
+    // the modules: a silver plate, a dark window in it with a lit strip, a grille, a status light
     for (let p = 0; p < 4; p++) {
       const x = p * 256 + (p % 2 ? 40 : 18), w = p % 2 ? 150 : 200;
       if (!glow) {
-        g.fillStyle = '#8e9aa8'; g.fillRect(x, 34, w, 112);
-        g.fillStyle = '#5c6876'; g.fillRect(x, 140, w, 6);
-        g.fillStyle = '#1b2638'; g.fillRect(x + 8, 42, w - 16, 94);
-        g.fillStyle = '#26344c'; g.fillRect(x + 14, 48, w - 28, 30);
+        g.fillStyle = '#a6b2c0'; g.fillRect(x, 30, w, 118);
+        g.fillStyle = '#c4ced8'; g.fillRect(x, 30, w, 4);
+        g.fillStyle = '#6c7886'; g.fillRect(x, 142, w, 6);
+        g.fillStyle = '#1b2638'; g.fillRect(x + 12, 40, w - 24, 52);
+        g.fillStyle = '#26344c'; g.fillRect(x + 16, 44, w - 32, 20);
+        g.fillStyle = '#56626e'; for (let k = 0; k < 6; k++) g.fillRect(x + 14 + k * 12, 104, 7, 28);
       }
-      if (lit[p]) { g.fillStyle = glow ? '#5a90e0' : '#34507e'; g.fillRect(x + 14, 86, w - 28, 10); }
-      g.fillStyle = glow ? (p % 2 ? '#7cf2c4' : '#9fe8ff') : '#3a5a70'; g.fillRect(x + w - 26, 116, 10, 8);
-      if (!glow) { g.fillStyle = '#0f151d'; for (let k = 0; k < 5; k++) g.fillRect(x + 16 + k * 14, 112, 8, 16); }
+      if (lit[p]) { g.fillStyle = glow ? '#5a90e0' : '#34507e'; g.fillRect(x + 16, 72, w - 32, 10); }
+      g.fillStyle = glow ? (p % 2 ? '#7cf2c4' : '#9fe8ff') : '#3a5a70'; g.fillRect(x + w - 30, 112, 12, 9);
     }
   };
   TX.hull = ctex(W, H, draw(false)); TX.hullGlow = ctex(W, H, draw(true)); return TX.hull;
@@ -1549,8 +1551,8 @@ function omats() {
   OM.rock = rockNodeMat(1.0); OM.rockS = rockNodeMat(5.0);
   // his asteroid top right is a light grey, cratered and lit from the left
   OM.asteroid = rockNodeMat(3.0); OM.asteroid.colorNode = TSL.vec3(0.34, 0.35, 0.38).mul(OM.asteroid.userData.shade);
-  // his engines are brushed silver with dark bands, not navy
-  OM.engineL = std({ color: 0x9aa4b0, roughness: 0.42, metalness: 0.55, side: THREE.DoubleSide });
+  // his engines are brushed silver with dark bands, not navy -- matte enough not to read as glass
+  OM.engineL = std({ color: 0x8c96a4, roughness: 0.55, metalness: 0.35, side: THREE.DoubleSide });
   OM.engineBand = std({ color: 0x1c242e, roughness: 0.45, metalness: 0.5 });
   G.plumeCone = new THREE.CylinderGeometry(1, 0.05, 1, 24, 1, true);   // wide end (and the texture's bright top) at the nozzle
   G.circle = new THREE.CircleGeometry(1, 48);
@@ -1565,7 +1567,8 @@ function omats() {
   OM.lotCyan = emis('#36c8e8', 0.9);
   OM.frameLime = emis('#c8ea6a', 1.5);
   OM.paneLime = new THREE.MeshBasicMaterial({ color: 0x6a8a3a, transparent: true, opacity: 0.22, blending: THREE.AdditiveBlending, depthWrite: false, side: THREE.DoubleSide });
-  OM.daisRim = std({ color: 0xaebfcc, roughness: 0.3, metalness: 0.5 });
+  OM.daisRim = std({ color: 0x4a5866, roughness: 0.35, metalness: 0.45 });
+  OM.daisArc = emis('#c8d4de', 0.55);
   // his trading floor: the blue floor under an orange-red pool of light, the tile seams a faint glow in it
   OM.tileOrange = std({ map: tileTex(), color: 0xf0d4cc, emissiveMap: seamTex(), emissive: 0xff6a30, emissiveIntensity: 2.4, roughness: 0.5, metalness: 0.2 });
   OM.coinG = std({ color: 0x18b87a, emissive: 0x38f5b8, emissiveIntensity: 0.28, metalness: 0.8, roughness: 0.22 });
@@ -1867,8 +1870,8 @@ class Office3D {
     }
     const lotEdge = outer.find((o) => o.ny === 1 && o.c0 === 8 && o.c1 === 16);
     if (lotEdge) {
-      // turned a little towards the camera, as his is: its nozzle is seen nearly face on
-      const hg = engine(11.4, 24.0, -T - HD * 0.55, 0.55, 1, 1.0, false);
+      // pointing out to the front-left, as his is: its nozzle seen at an angle, the housing alongside
+      const hg = engine(11.4, 24.0, -T - HD * 0.55, -0.35, 1, 1.0, false);
       [[-0.75, 0.2], [0.75, 0.2], [-0.65, -0.35], [0.65, -0.35]].forEach(([sx, sy]) => {
         const strut = new THREE.Mesh(rboxGeo(0.13, 0.13, 1.1, 0.03), OM.brass); strut.position.set(sx, sy, -0.45); strut.rotation.y = sx > 0 ? -0.28 : 0.28; hg.add(strut);
       });
@@ -1959,7 +1962,7 @@ class Office3D {
     this.rb(g, x + 1.12, y + 0.08, 0.08, 0.6, 0.68, 0.4, OM.desk, 0.03);
     for (let k = 0; k < 3; k++) this.box(g, x + 1.18, y + 0.76, 0.15 + k * 0.12, 0.48, 0.012, 0.09, OM.frame, false);
     this.rb(g, x - 0.03, y - 0.03, 0.5, 1.96, 0.91, 0.06, OM.deskTop, 0.025);
-    const scr = new THREE.MeshBasicMaterial({ map: isOrange ? orangeMonTex() : monTex(), color: new THREE.Color(isOrange ? 0xffae52 : OFFICE.mon), toneMapped: false });
+    const scr = new THREE.MeshBasicMaterial({ map: isOrange ? orangeMonTex() : monTex(), color: new THREE.Color(isOrange ? 0xffae52 : 0x0a1016), toneMapped: false });
     [x + 0.12, x + 0.98].forEach((mx, mi) => {
       this.cyl(g, mx + 0.39, y + 0.26, 0.56, 0.13, 0.02, OM.frame);
       this.box(g, mx + 0.36, y + 0.2, 0.58, 0.06, 0.05, 0.14, OM.frame, false);
@@ -2206,9 +2209,14 @@ class Office3D {
     floor.scale.set(6.4, 6.4, 1); floor.rotation.x = -Math.PI / 2; floor.position.set(c.x, 0.1, c.z); g.add(floor); r.floor = floor;
     // his dais: a wide dark disc with a pale metal rim, a raised drum on it with a cyan lip, a white-hot core, a
     // column of light and three rings of light over it, smaller as they rise
-    [[2.05, 0.16, 0.08, OM.plinth, OM.daisRim], [1.25, 0.24, 0.24, OM.dark, cy.rim]].forEach(([rad, h, z0, mat, rim]) => {
+    [[1.72, 0.18, 0.08, OM.plinth, OM.daisRim], [1.05, 0.22, 0.26, OM.dark, cy.rim]].forEach(([rad, h, z0, mat, rim]) => {
       const d = new THREE.Mesh(G.cyl, mat); d.scale.set(rad, h, rad); d.position.set(c.x, z0 + h / 2, c.z); d.castShadow = true; d.receiveShadow = true; g.add(d);
-      const lip = new THREE.Mesh(G.ringT, rim); lip.scale.set(rad, rad, rad * 2.2); lip.rotation.x = Math.PI / 2; lip.position.set(c.x, z0 + h, c.z); g.add(lip);
+      const lip = new THREE.Mesh(G.ringT, rim); lip.scale.set(rad, rad, rad * 1.2); lip.rotation.x = Math.PI / 2; lip.position.set(c.x, z0 + h, c.z); g.add(lip);
+    });
+    // round it on the floor, two thick pale arcs, as his
+    [[0.35, 1.9], [3.55, 1.5]].forEach(([a0, len]) => {
+      const arc = new THREE.Mesh(new THREE.TorusGeometry(1, 0.03, 6, 60, len), OM.daisArc); arc.userData.own = true;
+      arc.scale.set(2.3, 2.3, 0.4); arc.rotation.x = Math.PI / 2; arc.rotation.z = a0; arc.position.set(c.x, 0.1, c.z); g.add(arc);
     });
     const core = new THREE.Mesh(G.sphere, new THREE.MeshBasicMaterial({ color: new THREE.Color(0xffffff).multiplyScalar(3.2) })); core.scale.setScalar(0.3); core.position.set(c.x, 1.0, c.z); g.add(core);
     const halo = glowSprite(0xbff6ff, 0.55, 3.0); halo.position.set(c.x, 1.0, c.z); g.add(halo);
@@ -2323,7 +2331,8 @@ class Office3D {
       if (r.kb) drawKanban(r.kb, { queued: v.queued.length, running: v.running ? 1 : 0, done: v.done, failed: v.failed });
       v.experts.slice(0, 3).forEach((e, i) => {
         const a = r.agents[i]; if (a) a.working = e.state === 'working';
-        if (r.mons[i]) r.mons[i].color.set(isOrange ? new THREE.Color(0xffae52).multiplyScalar(1.25) : e.state === 'working' ? new THREE.Color(0x00e5ff).multiplyScalar(1.8) : new THREE.Color(OFFICE.mon));
+        // his desks' monitors are dark glass; a screen lights while its expert works (the trading desk's charts always)
+        if (r.mons[i]) r.mons[i].color.set(isOrange ? new THREE.Color(0xffae52).multiplyScalar(1.25) : e.state === 'working' ? new THREE.Color(0x7cf2c4).multiplyScalar(1.3) : new THREE.Color(0x0a1016));
       });
       const n = d.et10 || 0, et = d.files_as ? '<span class="et' + (n ? ' lit' : '') + '">' + (n ? '+' : '') + n.toLocaleString('en-US') + ' ET10</span>' : '';
       const subCol = isOrange && ln.tone !== 'cyan' ? '#ff9438' : (TONEC[ln.tone] || '#a9b8cc');
