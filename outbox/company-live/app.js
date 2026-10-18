@@ -27,36 +27,26 @@
   var TSTAT = { queued: 'next', running: 'working', waiting_approval: 'needs you', done: 'done', failed: 'failed', cancelled: 'cancelled' };
 
   var ui = { tab: 'office', view: '2d', panel: null, open: {}, seen: {}, feedTop: 0, dirty: false, prev: {}, tfDept: '', tfStatus: '', memQ: '', memDept: null };
-  var office, office2d = null, office3d = null, officePic = null, officeLive = null;
+  var office, office2d = null, office3d = null;
   // RO: someone else's public company, looked at from the Universe; everything shows, nothing changes
   var RO = false;
 
-  /* ---------------- the office: flat or in 3D, the same API either way ---------------- */
-  function viewPref() { try { return (CO.Q && CO.Q.get('view')) || localStorage.getItem('co.view') || 'pic'; } catch (e) { return 'pic'; } }
-  // the office composed from his pieces (olive.js) holds any company of up to five departments; where the pieces
-  // are not, his painted picture (opic.js) stands only while the company is the one it shows
-  function liveFits() { return !!(CO.OfficeLive && CO.OfficeLive.fits(CO.S)); }
-  function picFits() { return liveFits() || !!(CO.OfficePic && CO.OfficePic.fits(CO.S)); }
-  function liveView() { return CO.U3 && CO.U3.ok && CO.U3.office ? '3d' : '2d'; }
+  /* ---------------- the office: in 3D, or flat where 3D cannot start -- the same API either way ---------------- */
+  // 3D first: the operator's pictures were the look to build to, and the live WebGPU scene is what he wants to see
+  // ("ty textury a picture mody sou uplne nahovno", 2026-10-18); the flat office is the fallback and a choice
+  function viewPref() { try { return (CO.Q && CO.Q.get('view')) || localStorage.getItem('co.view') || '3d'; } catch (e) { return '3d'; } }
   function setView(v, save) {
-    if (v === 'pic' && !picFits()) v = liveView();
+    if (v !== '2d' && v !== '3d') v = '3d';
     if (v === '3d' && !(CO.U3 && CO.U3.ok && CO.U3.office)) v = '2d';
     if (save) { try { localStorage.setItem('co.view', v); } catch (e) { /* fine */ } }
     ui.view = v;
     var st = $('stage');
-    st.classList.toggle('is3d', v === '3d'); st.classList.toggle('ispic', v === 'pic');
+    st.classList.toggle('is3d', v === '3d');
     Array.prototype.forEach.call(document.querySelectorAll('#vt button'), function (b) { b.classList.toggle('on', b.getAttribute('data-v') === v); });
     if (v === '3d') {
       if (!office3d) { office3d = CO.U3.office($('office3d'), st, tipFor); office3d.onFail = function () { office3d = null; setView('2d'); }; }
       office = office3d;
-    } else if (v === 'pic' && CO.OfficePic && CO.OfficePic.fits(CO.S)) {
-      if (!officePic) { officePic = new CO.OfficePic($('opic'), st, tipFor); officePic.onUnfit = function () { setView('pic'); }; }
-      office = officePic;
-    } else if (v === 'pic' && liveFits()) {
-      if (!officeLive) { officeLive = new CO.OfficeLive($('opic'), st, tipFor); officeLive.onUnfit = function () { setView(liveView()); }; }
-      office = officeLive;
     } else office = office2d;
-    var pb = document.querySelector('#vt [data-v="pic"]'); if (pb) { pb.disabled = !picFits(); pb.title = picFits() ? 'The office as its picture' : 'The picture shows the five departments it was drawn with'; }
     office.sel = ui.mgr ? 'hub' : ui.panel != null ? 'd' + ui.panel : null;
     office.layout();
     requestAnimationFrame(function () {
@@ -79,10 +69,7 @@
     office = office2d = new CO.Office($('office'), $('stage'), tipFor);
     office.layout();
     Array.prototype.forEach.call(document.querySelectorAll('#vt button'), function (b) { b.classList.toggle('on', b.getAttribute('data-v') === '2d'); });
-    if (viewPref() === 'pic' && picFits()) setView('pic');
-    whenEngine(function (ok) { if (ok && (viewPref() === '3d' || (viewPref() === 'pic' && !picFits()))) setView('3d'); });
-    // his pieces, once loaded, take the picture's place (and a visit's, which the picture could never show)
-    if (CO.OfficeLive) CO.OfficeLive.load(function (ok) { if (ok && viewPref() === 'pic' && liveFits()) setView('pic'); });
+    whenEngine(function (ok) { if (ok && viewPref() !== '2d') setView('3d'); });
     markSeen();
     bind();
     wire();
@@ -465,194 +452,9 @@
     var st = $('uvstage'); st.classList.remove('is3d'); st.classList.add('is2d'); $('uvbans').innerHTML = '';
     uv = new CO.Universe($('uvmap'), st, uvHooks()); uv.layout(); finishShow(true);
   }
-  /* ---------------- the Universe as the operator's picture ---------------- */
-  // His orrery (look-universe.webp, 1533 x 820) is the Universe's first look: "they can be pictures, only the
-  // office has to be interactive" (2026-10-18). Each station in it opens the sample company of that name; the
-  // live 3D orrery stays one click away, and is where our own station is found. Positions are the picture's
-  // pixels: the name's centre, its top, and the bottom of the station under it.
-  var UVPIC = { w: 1533, h: 820, core: [790, 282],
-    st: [['Sigma Collective', 553, 98, 238], ['Night Owl Trading', 1058, 126, 272], ['Ion Analytics', 1362, 127, 250], ['Giga Fund', 245, 225, 345],
-      ['League Lab', 583, 375, 500], ['Vector Trading', 963, 333, 500], ['Ion Analytics', 1361, 348, 455], ['Bull Club', 293, 516, 630],
-      ['Bull Club', 499, 599, 750], ['Quasar Fund', 958, 552, 690], ['Laser Station', 1258, 510, 650]] };
-  // Cymetica's core in the picture, made the collider of the operator's other picture: a white-hot heart, a ball of
-  // light filaments turning round it, beams shot out of it, sparks flying off -- in white, cyan and blue (the site's
-  // palette; the collider picture's gold is not allowed). Drawn on a canvas over the painted core, added onto it
-  // (screen), at about 30 frames a second and only while the picture is on screen.
-  var CORE = { size: 600, fil: null, sparks: null, beams: null, raf: 0, last: 0 };
-  function coreSeed() {
-    var s = 7, R = function () { s = (s * 16807) % 2147483647; return (s - 1) / 2147483646; };
-    var unit = function () { var u = R() * 2 - 1, th = R() * Math.PI * 2, q = Math.sqrt(1 - u * u); return [Math.cos(th) * q, u, Math.sin(th) * q]; };
-    var cols = [[235, 252, 255], [160, 236, 255], [0, 207, 255], [127, 184, 255], [59, 130, 246], [140, 255, 205]];
-    CORE.fil = [];
-    for (var i = 0; i < 78; i++) {
-      var ax = unit(), t = [0.31, 0.93, 0.19], u = [ax[1] * t[2] - ax[2] * t[1], ax[2] * t[0] - ax[0] * t[2], ax[0] * t[1] - ax[1] * t[0]], ul = Math.hypot(u[0], u[1], u[2]);
-      u = [u[0] / ul, u[1] / ul, u[2] / ul];
-      var v = [ax[1] * u[2] - ax[2] * u[1], ax[2] * u[0] - ax[0] * u[2], ax[0] * u[1] - ax[1] * u[0]], m = R();
-      CORE.fil.push({ ax: ax, u: u, v: v, r: 0.08 + R() * 0.2, a0: R() * 6.28, len: 0.9 + R() * 2.6, wob: R() * 0.35, f: 2 + Math.floor(R() * 4), sp: (R() - 0.5) * 0.9,
-        c: cols[m < 0.3 ? 0 : m < 0.55 ? 1 : m < 0.75 ? 2 : m < 0.88 ? 3 : m < 0.96 ? 4 : 5], a: 0.45 + R() * 0.5 });
-    }
-    CORE.beams = [];
-    for (var b = 0; b < 8; b++) CORE.beams.push({ th: R() * 6.28, len: 0.55 + R() * 0.43, w: 0.018 + R() * 0.03, ph: R() * 6.28, sp: (R() - 0.5) * 0.12, white: R() < 0.6 });
-    CORE.sparks = [];
-    for (var k = 0; k < 160; k++) CORE.sparks.push({ d: unit(), sp: 0.12 + R() * 0.35, ph: R(), s: 0.6 + R() * 1.4 });
-  }
-  function coreFrame(now) {
-    CORE.raf = requestAnimationFrame(coreFrame);
-    var cv = $('uvcore'); if (!cv || document.hidden || !$('uvstage').classList.contains('pic') || !cv.offsetParent) return;
-    if (now - CORE.last < 33) return; CORE.last = now;
-    var g = cv.getContext('2d'), W = cv.width, R = W / 2, t = now / 1000, cx = R, cy = R;
-    g.clearRect(0, 0, W, W); g.globalCompositeOperation = 'lighter';
-    var flick = 0.85 + 0.15 * Math.sin(t * 7.3) * Math.sin(t * 2.1);
-    // haze round it
-    var h = g.createRadialGradient(cx, cy, 0, cx, cy, R * 0.6);
-    h.addColorStop(0, 'rgba(0,207,255,' + (0.22 * flick).toFixed(3) + ')'); h.addColorStop(1, 'rgba(0,207,255,0)');
-    g.fillStyle = h; g.fillRect(0, 0, W, W);
-    // beams: tapering streaks out of the heart, turning slowly, breathing
-    CORE.beams.forEach(function (b) {
-      var a = b.th + t * b.sp, L = R * b.len * (0.85 + 0.15 * Math.sin(t * 1.7 + b.ph)), w = R * b.w, al = 0.5 + 0.4 * Math.max(0, Math.sin(t * 2.3 + b.ph));
-      var ex = cx + Math.cos(a) * L, ey = cy + Math.sin(a) * L * 0.62, nx = -Math.sin(a) * w, ny = Math.cos(a) * w * 0.62;
-      var lg = g.createLinearGradient(cx, cy, ex, ey), c = b.white ? '235,252,255' : '127,214,255';
-      lg.addColorStop(0, 'rgba(' + c + ',' + al.toFixed(3) + ')'); lg.addColorStop(0.5, 'rgba(0,207,255,' + (al * 0.35).toFixed(3) + ')'); lg.addColorStop(1, 'rgba(0,207,255,0)');
-      g.fillStyle = lg; g.beginPath(); g.moveTo(cx + nx, cy + ny); g.lineTo(ex, ey); g.lineTo(cx - nx, cy - ny); g.closePath(); g.fill();
-    });
-    // the filaments: arcs on a ball round the heart, the ball turning, each arc drawn as a glow and a thread
-    var ry = t * 0.35, rx = 0.42, cyr = Math.cos(ry), syr = Math.sin(ry), cxr = Math.cos(rx), sxr = Math.sin(rx);
-    CORE.fil.forEach(function (f, i) {
-      var pts = [], n = 22, off = t * f.sp;
-      for (var s2 = 0; s2 <= n; s2++) {
-        var an = f.a0 + off + f.len * s2 / n, rad = f.r * (1 + f.wob * Math.sin(an * f.f + t * 1.3));
-        var x = (f.u[0] * Math.cos(an) + f.v[0] * Math.sin(an)) * rad, y = (f.u[1] * Math.cos(an) + f.v[1] * Math.sin(an)) * rad, z = (f.u[2] * Math.cos(an) + f.v[2] * Math.sin(an)) * rad;
-        var x2 = x * cyr + z * syr, z2 = -x * syr + z * cyr, y2 = y * cxr - z2 * sxr;
-        pts.push([cx + x2 * R, cy + y2 * R * 0.92]);
-      }
-      var a = f.a * flick * (0.75 + 0.25 * Math.sin(t * (3 + i % 5) + i));
-      [[3.2, 0.12], [1.1, 1]].forEach(function (pass) {
-        g.lineWidth = pass[0] * W / 600; g.strokeStyle = 'rgba(' + f.c.join(',') + ',' + (a * pass[1]).toFixed(3) + ')';
-        g.beginPath(); pts.forEach(function (p, k) { if (k) g.lineTo(p[0], p[1]); else g.moveTo(p[0], p[1]); }); g.stroke();
-      });
-    });
-    // sparks flying off
-    CORE.sparks.forEach(function (sp) {
-      var k = (t * sp.sp + sp.ph) % 1, r = R * (0.05 + k * 0.85), al = (1 - k) * 0.8;
-      g.fillStyle = 'rgba(220,248,255,' + al.toFixed(3) + ')'; g.fillRect(cx + sp.d[0] * r, cy + sp.d[1] * r * 0.62 + sp.d[2] * r * 0.2, sp.s * W / 600, sp.s * W / 600);
-    });
-    // the white-hot heart
-    var c0 = g.createRadialGradient(cx, cy, 0, cx, cy, R * 0.22);
-    c0.addColorStop(0, 'rgba(255,255,255,' + (0.95 * flick).toFixed(3) + ')'); c0.addColorStop(0.25, 'rgba(235,252,255,0.8)'); c0.addColorStop(0.6, 'rgba(0,207,255,0.25)'); c0.addColorStop(1, 'rgba(0,207,255,0)');
-    g.fillStyle = c0; g.fillRect(cx - R * 0.22, cy - R * 0.22, R * 0.44, R * 0.44);
-    g.globalCompositeOperation = 'source-over';
-  }
-  function startCore() { if (!CORE.fil) coreSeed(); if (!CORE.raf) CORE.raf = requestAnimationFrame(coreFrame); }
-  function uvView() { try { return localStorage.getItem('co.uvview') || 'pic'; } catch (e) { return 'pic'; } }
-  function setUvView(v) { try { localStorage.setItem('co.uvview', v); } catch (e) { /* fine */ } showUniverse(); }
-  function byName(n) { for (var i = 0; i < CO.UNIVERSE.length; i++) if (CO.UNIVERSE[i].name === n) return CO.UNIVERSE[i]; return null; }
-  // The Universe composed live (uvlive.js) out of the pieces he generates: his background with every company's
-  // station on its orbits, as many as there are. It takes the picture's place wherever the pieces are (they are kept
-  // out of git); the painted picture stays where they are not. PIC is whichever of the two is up.
-  var PIC = UVPIC, uvl = null;
-  function buildPic() {
-    var host = $('uvpic'); if (host.getAttribute('data-built')) return;
-    host.setAttribute('data-built', '1');
-    CO.uvLive.load(function (ok) { if (ok) buildLive(host); else buildStatic(host); fitPic(); picCard(); });
-  }
-  function buildLive(host) {
-    var bg = CO.uvLive.man['U-background'], pc = function (v, of) { return (v / of * 100).toFixed(3) + '%'; };
-    PIC = { w: bg.w, h: bg.h, core: bg.calib.core, coreSize: CORE.size * bg.w / UVPIC.w, live: true };
-    host.innerHTML = '<div class="uvpic-in live" id="uvpic-in"><img src="assets/gen/U-background.webp" alt="" draggable="false">' +
-      '<canvas class="uvl" id="uvl-back"></canvas>' +
-      '<canvas class="uvcore" id="uvcore" style="left:' + pc(PIC.core[0] - PIC.coreSize / 2, PIC.w) + ';top:' + pc(PIC.core[1] - PIC.coreSize / 2, PIC.h) + ';width:' + pc(PIC.coreSize, PIC.w) + ';height:' + pc(PIC.coreSize, PIC.h) + '"></canvas>' +
-      '<canvas class="uvl" id="uvl-front"></canvas><div class="uvl-top" id="uvl-top"></div></div><button class="uvpic-card" id="uvpic-card"></button>';
-    uvl = new CO.UvLive({ back: $('uvl-back'), front: $('uvl-front'), top: $('uvl-top') }, {});
-    uvl.set(mineForMap());
-    var top = $('uvl-top');
-    top.addEventListener('mousemove', function (e) { var b = e.target.closest('[data-id]'); if (b) liveTip(+b.getAttribute('data-id'), e); else $('uvstage').querySelector('.tip').hidden = true; });
-    top.addEventListener('mouseleave', function () { $('uvstage').querySelector('.tip').hidden = true; });
-    if (window.ResizeObserver) new ResizeObserver(fitPic).observe($('uvstage'));
-    uvl.start();
-    startCore();
-  }
-  function liveTip(id, e) {
-    var tip = $('uvstage').querySelector('.tip'), html = uvl.tip(id); if (!html) return;
-    tip.innerHTML = html; tip.hidden = false;
-    var r = $('uvstage').getBoundingClientRect(), x = e.clientX - r.left + 16, y = e.clientY - r.top + 16;
-    if (x + tip.offsetWidth > r.width - 8) x = e.clientX - r.left - tip.offsetWidth - 16;
-    if (y + tip.offsetHeight > r.height - 8) y = e.clientY - r.top - tip.offsetHeight - 16;
-    tip.style.left = x + 'px'; tip.style.top = y + 'px';
-  }
-  // a station on the live map: ours opens the office, a public one its visit, a private one its card
-  function openFromLive(id) {
-    if (id === 0) return setTab('office');
-    var c = null; CO.UNIVERSE.forEach(function (x) { if (x.id === id) c = x; });
-    if (c) openFromPic(c.name, c);
-  }
-  function buildStatic(host) {
-    var pc = function (v, of) { return (v / of * 100).toFixed(3) + '%'; }, html = '<div class="uvpic-in" id="uvpic-in"><img src="look-universe.webp" alt="" draggable="false">';
-    UVPIC.st.forEach(function (s) {
-      var w = 210, x = s[1] - w / 2, y = s[2] - 12, h = s[3] - y;
-      html += '<button class="uvhs" data-name="' + esc(s[0]) + '" style="left:' + pc(x, UVPIC.w) + ';top:' + pc(y, UVPIC.h) + ';width:' + pc(w, UVPIC.w) + ';height:' + pc(h, UVPIC.h) + '"></button>';
-    });
-    html += '<canvas class="uvcore" id="uvcore" style="left:' + pc(UVPIC.core[0] - CORE.size / 2, UVPIC.w) + ';top:' + pc(UVPIC.core[1] - CORE.size / 2, UVPIC.h) + ';width:' + pc(CORE.size, UVPIC.w) + ';height:' + pc(CORE.size, UVPIC.h) + '"></canvas>';
-    // the picture's own corner panel is painted; ours, with our company, covers it
-    html += '</div><button class="uvpic-card" id="uvpic-card"></button>';
-    host.innerHTML = html;
-    Array.prototype.forEach.call(host.querySelectorAll('.uvhs'), function (b) {
-      b.addEventListener('mouseenter', function (e) { picTip(b, e); });
-      b.addEventListener('mousemove', function (e) { picTip(b, e); });
-      b.addEventListener('mouseleave', function () { $('uvstage').querySelector('.tip').hidden = true; });
-    });
-    if (window.ResizeObserver) new ResizeObserver(fitPic).observe($('uvstage'));
-    startCore();
-  }
-  function picTip(b, e) {
-    var c = byName(b.getAttribute('data-name')), tip = $('uvstage').querySelector('.tip'); if (!c) return;
-    tip.innerHTML = CO.uvTip(c.id, { c: c }, {}); tip.hidden = false;
-    var r = $('uvstage').getBoundingClientRect(), x = e.clientX - r.left + 16, y = e.clientY - r.top + 16;
-    if (x + tip.offsetWidth > r.width - 8) x = e.clientX - r.left - tip.offsetWidth - 16;
-    if (y + tip.offsetHeight > r.height - 8) y = e.clientY - r.top - tip.offsetHeight - 16;
-    tip.style.left = x + 'px'; tip.style.top = y + 'px';
-  }
-  // the picture covers the stage, centred, as a photo would
-  function fitPic() {
-    var st = $('uvstage'), inn = $('uvpic-in'); if (!inn) return;
-    var W = st.clientWidth, H = st.clientHeight, s = Math.max(W / PIC.w, H / PIC.h);
-    inn.style.width = (PIC.w * s) + 'px'; inn.style.height = (PIC.h * s) + 'px';
-    var ox = (W - PIC.w * s) / 2, oy = (H - PIC.h * s) / 2;
-    inn.style.left = ox + 'px'; inn.style.top = oy + 'px';
-    var cv = $('uvcore'), px = Math.round((PIC.coreSize || CORE.size) * s * Math.min(window.devicePixelRatio || 1, 2)); if (cv && cv.width !== px) { cv.width = px; cv.height = px; }
-    var card = $('uvpic-card');
-    // live: the background has no painted panel, so the card stands in the stage's corner
-    if (PIC.live) {
-      uvl.fit(s, ox, oy, W, H);
-      card.style.width = '236px'; card.style.height = '96px'; card.style.left = (W - 236 - 16) + 'px'; card.style.top = (H - 96 - 16) + 'px';
-      return;
-    }
-    // our card sits over the picture's painted corner panel, a little larger (the picture drifts), kept on the stage
-    var cw = 236 * s, bottom = Math.min(oy + 818 * s, H), top = Math.min(oy + 690 * s, bottom - 104);
-    card.style.width = cw + 'px'; card.style.left = Math.min(ox + 1292 * s, W - cw) + 'px';
-    card.style.top = top + 'px'; card.style.height = (bottom - top) + 'px';
-  }
-  function picCard() {
-    if (!$('uvpic-card')) return;
-    if (uvl) uvl.setMine(mineForMap());
-    var S = CO.S, n = S.departments.length, w = S.departments.filter(function (d) { return CO.deptView(d).status === 'working'; }).length;
-    setHTML($('uvpic-card'), '<span class="k">YOUR COMPANY</span><b>' + esc(S.company.name) + '</b><span>' + n + ' departments · <em>' + w + ' working</em></span><span class="go">Open the office →</span>');
-    var pub = CO.UNIVERSE.filter(function (c) { return c.public; }).length + (CO.profile().public ? 1 : 0);
-    uvStats({ companies: CO.UNIVERSE.length + 1, public: pub, working: w });
-  }
-  function openFromPic(name, c) {
-    c = c || byName(name); if (!c) return;
-    if (!c.public) return privateCard(c);
-    try { sessionStorage.setItem('uv.from', String(c.id)); } catch (e) { /* fine */ }
-    $('uvfade').hidden = false; setTimeout(function () { location.href = 'index.html?visit=' + c.id; }, 350);
-  }
-  // the picture first; the live map when asked for
-  function showUniverse() {
-    var pic = uvView() === 'pic';
-    $('uvstage').classList.toggle('pic', pic);
-    Array.prototype.forEach.call(document.querySelectorAll('#uvvt [data-uvv]'), function (b) { b.classList.toggle('on', b.getAttribute('data-uvv') === (pic ? 'pic' : '3d')); });
-    if (pic) { buildPic(); fitPic(); picCard(); return; }
-    show3D();
-  }
+  // The Universe is the live 3D map, the flat one where 3D cannot start. The painted picture and the map composed
+  // from his generated pieces are gone ("ty textury a picture mody sou uplne nahovno", 2026-10-18).
+  function showUniverse() { show3D(); }
   // the 3D map when the browser can draw it (WebGPU, or WebGL2), the flat one otherwise
   function show3D() {
     if (!uv) {
@@ -684,7 +486,7 @@
       }
     });
   }
-  function renderUniverse() { if (uvView() === 'pic' && $('uvpic-card')) picCard(); if (uv) uv.setMine(mineForMap()); }
+  function renderUniverse() { if (uv) uv.setMine(mineForMap()); }
   // Portfolio: build products, bring in users, earn. The flow first, as numbers; then one card per app.
   function renderPortfolio() {
     var apps = CO.apps(), Rd = CO.PORTFOLIO_READ, R = CO.RATE;
@@ -1186,13 +988,6 @@
       if (RO && roBlocked(t)) { e.preventDefault(); toast('Read only: only @' + CO.S.company.owner + ' can change this.'); return; }
       if (t.closest('#ro-back')) { location.href = 'index.html#universe'; return; }
       if (t.closest('#sim-new')) return createCompanyModal();
-      var uvb = t.closest('#uvvt [data-uvv]'); if (uvb) return setUvView(uvb.getAttribute('data-uvv'));
-      var lv = t.closest('#uvl-top [data-id]'); if (lv) return openFromLive(+lv.getAttribute('data-id'));
-      var hs = t.closest('.uvhs'); if (hs) return openFromPic(hs.getAttribute('data-name'));
-      if (t.closest('#uvpic-card')) return setTab('office');
-      // our own station is on the live map only: Mine opens it there
-      if (t.closest('#uv-me') && uvView() === 'pic' && uvl) return uvl.ping();
-      if (t.closest('#uv-me') && uvView() === 'pic') { setUvView('3d'); setTimeout(function () { if (uv) uv.flyTo(0); }, 3600); return; }
       if (uv) {
         if (t.closest('#uv-in')) return uv.zoom(0.78);
         if (t.closest('#uv-out')) return uv.zoom(1.28);
