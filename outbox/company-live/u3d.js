@@ -122,9 +122,9 @@ function rockGeo(seed) {
   return g;
 }
 // a ring of dashes in one geometry: what a private station floats over
-function dashedRing(n, fill) {
+function dashedRing(n, fill, tube = 0.02) {
   const parts = [];
-  for (let i = 0; i < n; i++) { const t = new THREE.TorusGeometry(1, 0.02, 6, 8, Math.PI * 2 / n * fill); t.rotateZ(i * Math.PI * 2 / n); parts.push(t); }
+  for (let i = 0; i < n; i++) { const t = new THREE.TorusGeometry(1, tube, 6, 8, Math.PI * 2 / n * fill); t.rotateZ(i * Math.PI * 2 / n); parts.push(t); }
   const g = mergeGeometries(parts, false); parts.forEach((x) => x.dispose()); return g;
 }
 // solar cells: a dark grid whose lines carry the station's colour
@@ -1107,8 +1107,16 @@ function preview(el, o) {
 const STC = { working: 0x24e8ff, queued: 0x3b82f6, waiting: 0xff8824, idle: 0x38f2b8 };
 const TONEC = { cyan: '#24e8ff', red: '#ff9438', blue: '#dfe6ee', dim: '#a9b8cc' };
 const OFFICE = { bg: 0x040b14, lamp: 0xa8e8f8, mon: 0x58ffc0 };
-const WH = 1.65;   // low waist-high glass walls as in look-office.webp
+const WH = 1.4;   // the glass walls' height: his picture's corners put their top rail at 1.4 over the floor
 const OM = {};
+// The camera of the operator's reference picture (his full-size render, 2026-10-18), recovered from six of its
+// landmarks -- three room corners at the top rail, two at the floor, the Manager's core -- by fitting a perspective
+// camera to them (rms 4.2 px over 2000 x 1116): polar and azimuth of the view, its field of view, and where the
+// platform's bounds sit in the frame (NDC: as wide and tall as BOX, its centre at MID). home() keeps those at any
+// stage size.
+const CAM = { polar: 0.9304, az: 0.7422, fov: 30.94, box: [1.78, 1.79], mid: [0.021, -0.045] };
+// His picture's colours, read off it (sRGB): the mint of a neon line's core and its halo, the sky between the stars.
+const LOOK = { neon: '#7cf2c4', orange: '#ff8a3a', sky: 0x16232f };
 
 /* ---------------- space: the sky the office floats in ---------------- */
 function ctex(w, h, draw) {
@@ -1157,8 +1165,29 @@ function starTex() {
     g.fillStyle = gr; g.fillRect(0, 0, 64, 64);
   }));
 }
-// The sky: rich cyan-turquoise nebulae sweeping from top-left to bottom-right as in look-office.webp, plus crisp stars.
-function spaceSky() {
+// a nebula as the office's picture has it: thin teal filaments and a few denser knots, most of it dark between --
+// nebTex's soft clouds, kept for the Universe, read as a haze over the whole office sky
+function filamentTex(seed) {
+  const key = 'fil' + seed; if (TX[key]) return TX[key];
+  const N = 384, f = vnoise(seed), f2 = vnoise(seed + 5), c = document.createElement('canvas'); c.width = c.height = N;
+  const g = c.getContext('2d'), img = g.createImageData(N, N), d = img.data;
+  for (let j = 0; j < N; j++) for (let i = 0; i < N; i++) {
+    const x = i / N * 2 - 1, y = j / N * 2 - 1, rr = Math.sqrt(x * x + y * y); if (rr > 1.02) continue;
+    const edge = sstep(1.0, 0.25, rr + 0.45 * (f(x * 1.4 + 2, y * 1.4 + 5, 3) - 0.5)); if (edge <= 0) continue;
+    const q = f(x * 2.4 + 1.3, y * 2.4 + 7.7, 4), n = f(x * 3.1 + q * 2.6, y * 3.1 + q * 2.6 + 1.9, 5);
+    const ridge = 1 - Math.abs(n - 0.5) * 2;                      // the filaments: where the field crosses its middle
+    const patch = sstep(0.45, 0.7, f2(x * 1.6 + 4, y * 1.6 + 1, 3));   // and only in some patches of it
+    let den = edge * Math.pow(Math.max(0, ridge), 10) * patch;
+    const knot = edge * sstep(0.66, 0.82, f2(x * 3.5 + 9, y * 3.5 + 3, 4)) * 0.5;
+    den = Math.min(1, den + knot);
+    const k = (j * N + i) * 4; d[k] = 40; d[k + 1] = 150; d[k + 2] = 160; d[k + 3] = den * 255;
+  }
+  g.putImageData(img, 0, 0);
+  const t = new THREE.CanvasTexture(c); t.colorSpace = THREE.SRGBColorSpace; TX[key] = t; return t;
+}
+// The sky: nebulae and stars round the camera. The Universe keeps its rich clouds; the office (office = true) has
+// his picture's: a teal nebula of filaments where the home view's sky shows it, stars thick and white.
+function spaceSky(office) {
   const g = new THREE.Group(), R = rng(31), D = 380;
   const PAL = {
     teal: [[2, 44, 68], [12, 134, 166], [110, 242, 252]],
@@ -1166,26 +1195,35 @@ function spaceSky() {
     blue: [[6, 26, 72], [24, 88, 178], [120, 195, 255]],
     green: [[2, 48, 58], [14, 138, 136], [95, 240, 215]]
   };
-  [[-32, 8, 72, 8, 0.72, 'teal'], [-54, -8, 62, 3, 0.62, 'cyan'], [-12, 14, 56, 19, 0.38, 'teal'],
-    [32, -22, 64, 13, 0.45, 'cyan'], [52, -32, 56, 37, 0.35, 'teal'],
-    [150, -15, 80, 17, 0.55, 'teal'], [95, -35, 60, 23, 0.35, 'green'], [-130, -30, 70, 29, 0.45, 'blue']].forEach(([az, el, size, seed, op, tone]) => {
-    const m = new THREE.Mesh(G.plane, new THREE.MeshBasicMaterial({ map: nebTex(seed, ...PAL[tone]), transparent: true, opacity: op, blending: THREE.AdditiveBlending, depthWrite: false, fog: false }));
+  // The office's home view looks 37 degrees down, so the sky it shows is the band from about -51 to -21 degrees;
+  // his picture's teal nebula sits at its top left (about -20 azimuth, -28 elevation), knots and wisps round it, a
+  // faint one top right, a fainter one low on the left. The last ones are for a camera turned elsewhere.
+  const OFFICE_NEB = [[-21, -27, 16, 8, 0.42], [-13, -31, 10, 19, 0.26], [-28, -22, 11, 3, 0.28], [-24, -35, 9, 23, 0.18],
+    [16, -23, 12, 13, 0.1], [-32, -46, 12, 37, 0.08], [-32, 8, 60, 41, 0.5], [150, -15, 70, 17, 0.4], [95, 5, 50, 29, 0.3], [-130, -30, 60, 31, 0.4]];
+  const UV_NEB = [[-32, 8, 72, 8, 0.72, 'teal'], [-54, -8, 62, 3, 0.62, 'cyan'], [-12, 14, 56, 19, 0.38, 'teal'],
+    [32, -22, 64, 13, 0.45, 'cyan'], [52, -32, 56, 37, 0.35, 'teal'], [150, -15, 80, 17, 0.55, 'teal'], [95, -35, 60, 23, 0.35, 'green'], [-130, -30, 70, 29, 0.45, 'blue']];
+  (office ? OFFICE_NEB : UV_NEB).forEach(([az, el, size, seed, op, tone]) => {
+    const m = new THREE.Mesh(G.plane, new THREE.MeshBasicMaterial({ map: office ? filamentTex(seed) : nebTex(seed, ...PAL[tone]), transparent: true, opacity: op, blending: THREE.AdditiveBlending, depthWrite: false, fog: false }));
     const s = 2 * D * Math.tan(size * Math.PI / 360);
     m.scale.set(s, s, 1); m.position.copy(skyDir(az, el).multiplyScalar(D)); m.lookAt(0, 0, 0); m.rotateZ(R() * 6.28); m.renderOrder = -10; m.frustumCulled = false; g.add(m);
   });
   const rnd = () => { const u = R() * 2 - 1, th = R() * Math.PI * 2, s = Math.sqrt(1 - u * u); return new THREE.Vector3(Math.cos(th) * s, u, Math.sin(th) * s); };
-  const N = 4600, pos = new Float32Array(N * 3), col = new Float32Array(N * 3), cc = new THREE.Color();
+  // his sky is full of small white stars (about one per 2,400 pixels of sky), a few of them bright
+  const N = office ? 22000 : 4600, pos = new Float32Array(N * 3), col = new Float32Array(N * 3), cc = new THREE.Color();
   for (let i = 0; i < N; i++) {
     pos.set(rnd().multiplyScalar(360).toArray(), i * 3);
-    cc.set(R() < 0.22 ? 0x88ecff : R() < 0.32 ? 0x78ffd6 : 0xf0f7ff).multiplyScalar(0.35 + R() * R() * 1.35); col.set([cc.r, cc.g, cc.b], i * 3);
+    if (office) cc.set(R() < 0.18 ? 0xb8e8ff : 0xf2f8ff).multiplyScalar(0.8 + R() * R() * 2.2);
+    else cc.set(R() < 0.22 ? 0x88ecff : R() < 0.32 ? 0x78ffd6 : 0xf0f7ff).multiplyScalar(0.35 + R() * R() * 1.35);
+    col.set([cc.r, cc.g, cc.b], i * 3);
   }
   const pg = new THREE.BufferGeometry(); pg.setAttribute('position', new THREE.BufferAttribute(pos, 3)); pg.setAttribute('color', new THREE.BufferAttribute(col, 3));
   pg.setAttribute('normal', new THREE.BufferAttribute(new Float32Array(N * 3).map((v, i) => (i % 3 === 1 ? 1 : 0)), 3));
   const pts = new THREE.Points(pg, new THREE.PointsMaterial({ vertexColors: true, size: 1, sizeAttenuation: false, fog: false, depthWrite: false })); pts.frustumCulled = false; g.add(pts);
-  const B = 360, im = new THREE.InstancedMesh(G.plane, new THREE.MeshBasicMaterial({ map: starTex(), transparent: true, blending: THREE.AdditiveBlending, depthWrite: false, fog: false }), B), o = new THREE.Object3D();
+  const B = office ? 2600 : 360, im = new THREE.InstancedMesh(G.plane, new THREE.MeshBasicMaterial({ map: starTex(), transparent: true, blending: THREE.AdditiveBlending, depthWrite: false, fog: false }), B), o = new THREE.Object3D();
   for (let i = 0; i < B; i++) {
-    o.position.copy(rnd().multiplyScalar(350)); o.lookAt(0, 0, 0); o.scale.setScalar(1.0 + R() * R() * 3.1); o.updateMatrix(); im.setMatrixAt(i, o.matrix);
-    im.setColorAt(i, cc.set(R() < 0.25 ? 0x8ef0ff : 0xffffff).multiplyScalar(0.65 + R() * 0.85));
+    // at the office's home distance a sky unit is about 0.7 px: his stars are 1 to 3 px points with a soft halo
+    o.position.copy(rnd().multiplyScalar(350)); o.lookAt(0, 0, 0); o.scale.setScalar(office ? 0.7 + R() * R() * 1.1 : 1.0 + R() * R() * 3.1); o.updateMatrix(); im.setMatrixAt(i, o.matrix);
+    im.setColorAt(i, office ? cc.set(R() < 0.2 ? 0xc8eeff : 0xffffff).multiplyScalar(1.0 + R() * 1.3) : cc.set(R() < 0.25 ? 0x8ef0ff : 0xffffff).multiplyScalar(0.65 + R() * 0.85));
   }
   im.frustumCulled = false; g.add(im);
   return g;
@@ -1215,37 +1253,36 @@ function deckTex() {
     g.fillStyle = 'rgba(110,210,245,.07)'; for (let i = 0; i < 8; i++) for (let j = 0; j < 8; j++) g.fillRect(i * s + 2, j * s + 2, s - 4, 2);
   }));
 }
+// a room's floor: large slate-blue tiles (his picture's floors read #304a55 lit), hairline seams
 function tileTex() {
   return TX.tile || (TX.tile = ctex(512, 512, (g, W) => {
-    const R = rng(29), s = W / 7;
-    g.fillStyle = '#09131e'; g.fillRect(0, 0, W, W);
-    for (let i = 0; i < 7; i++) for (let j = 0; j < 7; j++) {
-      const v = 18 + Math.floor(R() * 6);
-      g.fillStyle = 'rgb(' + v + ',' + (v + 13) + ',' + (v + 25) + ')';
-      g.fillRect(i * s + 1, j * s + 1, s - 2, s - 2);
+    const R = rng(29), s = W / 4;
+    g.fillStyle = '#22323b'; g.fillRect(0, 0, W, W);
+    for (let i = 0; i < 4; i++) for (let j = 0; j < 4; j++) {
+      const v = Math.floor(R() * 5);
+      g.fillStyle = 'rgb(' + (40 + v) + ',' + (62 + v) + ',' + (73 + v) + ')';
+      g.fillRect(i * s + 1.5, j * s + 1.5, s - 3, s - 3);
     }
-    g.strokeStyle = 'rgba(80,210,225,.065)'; g.lineWidth = 1; for (let i = 0; i < 7; i++) for (let j = 0; j < 7; j++) { g.strokeRect(i * s + 8, j * s + 8, s - 16, s - 16); }
   }));
 }
-// the hull's plates: deep space-navy armor with cyan and warm amber-orange perimeter lights as in look-office.webp
+// the hull's plates as in his picture: slate-navy armour, recessed panels, a few lit a soft blue, small cool lights
 function hullTex() {
   if (TX.hull) return TX.hull;
-  const W = 1024, H = 200, R = rng(41), lit = [0, 1, 2, 3].map(() => R() < 0.6);
+  const W = 1024, H = 200, R = rng(41), lit = [0, 1, 2, 3].map(() => R() < 0.5);
   const draw = (glow) => (g) => {
-    g.fillStyle = glow ? '#000000' : '#101b29'; g.fillRect(0, 0, W, H);
+    g.fillStyle = glow ? '#000000' : '#1a2431'; g.fillRect(0, 0, W, H);
     for (let p = 0; p < 4; p++) {
       const x = p * 256;
       if (!glow) {
-        g.fillStyle = '#18283c'; g.fillRect(x + 8, 10, 240, H - 20);
-        g.fillStyle = '#0f1a28'; g.fillRect(x + 26, 30, 204, H - 82);
-        g.fillStyle = 'rgba(130,215,255,.16)'; g.fillRect(x + 8, 10, 240, 3);
-        g.fillStyle = '#070c14'; g.fillRect(x, 0, 6, H);
+        g.fillStyle = '#2a3646'; g.fillRect(x + 8, 10, 240, H - 20);
+        g.fillStyle = '#1e2936'; g.fillRect(x + 26, 30, 204, H - 82);
+        g.fillStyle = 'rgba(190,215,235,.2)'; g.fillRect(x + 8, 10, 240, 3);
+        g.fillStyle = '#0d131b'; g.fillRect(x, 0, 6, H);
         for (let k = 0; k < 6; k++) g.fillRect(x + 40 + k * 30, H - 40, 18, 4);
       }
-      if (lit[p]) { g.fillStyle = glow ? '#24c8ff' : '#184568'; g.fillRect(x + 36, 42, 184, 22); g.fillStyle = glow ? '#156595' : '#133252'; g.fillRect(x + 36, 70, 184, 12); }
+      if (lit[p]) { g.fillStyle = glow ? '#4f86d8' : '#2a4a78'; g.fillRect(x + 36, 42, 184, 22); g.fillStyle = glow ? '#2a5aa0' : '#22385a'; g.fillRect(x + 36, 70, 184, 12); }
       for (let k = 0; k < 4; k++) {
-        const warm = (p + k) % 3 === 0;
-        g.fillStyle = warm ? (glow ? '#ff9438' : '#6e3c14') : (glow ? '#24e8ff' : '#0f5670');
+        g.fillStyle = (p + k) % 3 === 0 ? (glow ? '#9fe8ff' : '#3a5a70') : (glow ? '#3aa8ff' : '#1d4a68');
         g.fillRect(x + 34 + k * 56, H - 24, 12, 6);
       }
     }
@@ -1259,13 +1296,29 @@ function rackTex() {
     const n = 12, step = (H - 20) / n;
     for (let i = 0; i < n; i++) {
       const y = 10 + i * step, h = step - 4, k = (i * 37) % 5;
-      if (!glow) { g.fillStyle = '#162434'; g.fillRect(8, y, W - 16, h); g.fillStyle = '#091018'; for (let x = 14; x < W - 44; x += 6) g.fillRect(x, y + 3, 3, h - 6); }
+      if (!glow) { g.fillStyle = '#1a2a3a'; g.fillRect(8, y, W - 16, h); g.fillStyle = '#0b131c'; for (let x = 14; x < W - 44; x += 6) g.fillRect(x, y + 3, 3, h - 6); }
+      // his racks' fronts: a pale blue strip of light across each unit, a few coloured status lights at its end
+      g.fillStyle = glow ? (k === 3 ? 'rgba(160,215,255,.55)' : 'rgba(150,205,255,.9)') : '#5a7a9a'; g.fillRect(14, y + h / 2 - 1.5, W * 0.56 - (k * 6), 3);
       g.fillStyle = k < 2 ? '#38f5b8' : k < 4 ? '#24e8ff' : '#3b82f6';
       g.fillRect(W - 34, y + h / 2 - 2, 7, 4); if (k % 2) g.fillRect(W - 22, y + h / 2 - 2, 7, 4);
     }
     if (!glow) { g.strokeStyle = '#24384e'; g.lineWidth = 5; g.strokeRect(2, 2, W - 4, H - 4); }
   };
   TX.rack = ctex(128, 320, draw(false)); TX.rackGlow = ctex(128, 320, draw(true)); return TX.rack;
+}
+// the office's solar panels as in his picture: deep navy cells with pale grid lines in a light frame (#233561 lit,
+// #6c7ea4 at the lines); the Universe's stations keep their brighter ones (solarTex)
+function officeSolarTex() {
+  return TX.osolar || (TX.osolar = ctex(256, 320, (g, W, H) => {
+    g.fillStyle = '#9aaac0'; g.fillRect(0, 0, W, H);
+    const nx = 4, ny = 5, sx = (W - 12) / nx, sy = (H - 12) / ny;
+    for (let i = 0; i < nx; i++) for (let j = 0; j < ny; j++) {
+      const x = 6 + i * sx, y = 6 + j * sy, gr = g.createLinearGradient(x, y, x + sx, y + sy);
+      gr.addColorStop(0, '#26427e'); gr.addColorStop(1, '#172a5a'); g.fillStyle = gr; g.fillRect(x + 1.5, y + 1.5, sx - 3, sy - 3);
+      g.strokeStyle = 'rgba(170,195,235,.35)'; g.lineWidth = 1;
+      g.beginPath(); g.moveTo(x + sx / 2, y + 2); g.lineTo(x + sx / 2, y + sy - 2); g.moveTo(x + 2, y + sy / 2); g.lineTo(x + sx - 2, y + sy / 2); g.stroke();
+    }
+  }));
 }
 function solarTex() {
   return TX.solar || (TX.solar = ctex(256, 256, (g, W) => {
@@ -1303,7 +1356,8 @@ function asteroidGeo(seed, detail = 64, flatTop = true) {
   const ridge = (x, y, z, o) => { let s = 0, a = 0.5, f = 1; for (let i = 0; i < o; i++) { const r = 1 - Math.abs(P(x * f + 31.7, y * f + 7.1, z * f)); s += a * r * r; a *= 0.5; f *= 2.1; } return s; };
   const craters = [];
   for (let i = 0; i < 30; i++) craters.push({ c: new THREE.Vector3(R() * 2 - 1, R() * 2 - 1, R() * 2 - 1).normalize(), r: 0.05 + Math.pow(R(), 2.2) * 0.3, d: 0.35 + R() * 0.45 });
-  const dark = [0.012, 0.018, 0.026], mid = [0.042, 0.055, 0.072], light = [0.11, 0.135, 0.165];
+  // his rock is a lit mid grey (#232b37 to #474d5b), not a black mass
+  const dark = [0.03, 0.04, 0.055], mid = [0.1, 0.12, 0.15], light = [0.24, 0.27, 0.31];
   for (let i = 0; i < n; i++) {
     v.fromBufferAttribute(pos, i);
     let h = 0.34 * fbm(v.x * 1.15, v.y * 1.15, v.z * 1.15, 4) + 0.17 * (ridge(v.x * 2.4, v.y * 2.4, v.z * 2.4, 5) - 0.45) + 0.05 * (ridge(v.x * 7, v.y * 7, v.z * 7, 3) - 0.45) + 0.03 * fbm(v.x * 16, v.y * 16, v.z * 16, 2);
@@ -1369,7 +1423,8 @@ function useTex(mat, slot, path, o = {}) {
 }
 function rockTexture(m, tex, sc) {
   const T = TSL, tri = T.triplanarTexture(T.texture(tex), null, null, T.float(sc), T.positionLocal, T.normalLocal);
-  m.colorNode = tri.xyz.mul(T.vertexColor().xyz.mul(16).clamp(0.3, 1.5)).mul(m.userData.shade);
+  // his rock is a lit mid grey: the scan's green taken out, brighter where the shape is high
+  m.colorNode = tri.xyz.mul(T.vec3(0.92, 0.94, 1.08)).mul(T.vertexColor().xyz.mul(9).clamp(0.4, 2.3)).mul(m.userData.shade);
   m.needsUpdate = true;
 }
 let MOON = null;
@@ -1445,6 +1500,18 @@ function qaGridTex() {
     }
   }));
 }
+// the trading desk's floor in his picture glows along its tile seams: the seams as an emissive map, a soft wash in
+// each tile so the floor reads lit, not only lined
+function seamTex() {
+  return TX.seam || (TX.seam = ctex(512, 512, (g, W) => {
+    const n = 10, s = W / n; g.fillStyle = '#000000'; g.fillRect(0, 0, W, W);
+    for (let i = 0; i < n; i++) for (let j = 0; j < n; j++) {
+      const gr = g.createRadialGradient(i * s + s / 2, j * s + s / 2, 0, i * s + s / 2, j * s + s / 2, s * 0.75);
+      gr.addColorStop(0, 'rgba(255,255,255,.16)'); gr.addColorStop(1, 'rgba(255,255,255,.04)'); g.fillStyle = gr; g.fillRect(i * s, j * s, s, s);
+    }
+    g.fillStyle = 'rgba(255,255,255,.75)'; for (let i = 0; i <= n; i++) { g.fillRect(i * s - 1.2, 0, 2.4, W); g.fillRect(0, i * s - 1.2, W, 2.4); }
+  }));
+}
 // a hologram's face: a vibrant aqua-cyan field, a border, a trace and bars
 function holoTex() {
   return TX.holo || (TX.holo = ctex(256, 176, (g, W, H) => {
@@ -1493,49 +1560,64 @@ function rboxGeo(w, h, d, r) {
 function omats() {
   if (OM.tile) return;
   OM.deck = std({ map: deckTex(), roughness: 0.46, metalness: 0.32 });
-  OM.tile = std({ map: tileTex(), roughness: 0.42, metalness: 0.28 });
-  OM.hubTile = std({ map: tileTex(), color: 0x5ab8d8, roughness: 0.34, metalness: 0.32, emissive: 0x0088b8, emissiveIntensity: 0.04 });
-  OM.rim = std({ color: 0x26384c, roughness: 0.4, metalness: 0.48 });
-  OM.rimDark = std({ color: 0x101b28, roughness: 0.48, metalness: 0.4 });
-  OM.hull = std({ map: hullTex(), emissiveMap: TX.hullGlow, emissive: 0xffffff, emissiveIntensity: 1.15, roughness: 0.46, metalness: 0.42 });
-  OM.hullLow = std({ color: 0x0d1724, roughness: 0.5, metalness: 0.4 });
-  OM.glass = std({ color: 0x28d8a8, emissive: 0x0a5240, emissiveIntensity: 0.04, envMapIntensity: 0.45, transparent: true, opacity: 0.038, roughness: 0.08, metalness: 0.12, depthWrite: false, side: THREE.DoubleSide });
-  OM.glassCyan = std({ color: 0x20d8ff, emissive: 0x084868, emissiveIntensity: 0.05, envMapIntensity: 0.45, transparent: true, opacity: 0.045, roughness: 0.08, metalness: 0.12, depthWrite: false, side: THREE.DoubleSide });
-  OM.glassOrange = std({ color: 0xff8824, emissive: 0x883204, emissiveIntensity: 0.08, envMapIntensity: 0.45, transparent: true, opacity: 0.065, roughness: 0.08, metalness: 0.12, depthWrite: false, side: THREE.DoubleSide });
-  OM.podGlass = std({ color: 0x42f8e8, emissive: 0x18d8d0, emissiveIntensity: 0.52, transparent: true, opacity: 0.48, roughness: 0.08, metalness: 0.1, depthWrite: false, side: THREE.DoubleSide });
-  OM.wallDark = std({ color: 0x0d1722, roughness: 0.48, metalness: 0.35 });
-  OM.frame = std({ color: 0x203042, roughness: 0.4, metalness: 0.5 });
+  OM.tile = std({ map: tileTex(), roughness: 0.38, metalness: 0.25 });
+  OM.hubTile = std({ map: tileTex(), color: 0xc6e2ec, roughness: 0.28, metalness: 0.22 });
+  OM.rim = std({ color: 0x2c3a4a, roughness: 0.4, metalness: 0.45 });
+  OM.rimDark = std({ color: 0x18222e, roughness: 0.48, metalness: 0.4 });
+  OM.hull = std({ map: hullTex(), emissiveMap: TX.hullGlow, emissive: 0xffffff, emissiveIntensity: 1.0, roughness: 0.46, metalness: 0.42 });
+  OM.hullLow = std({ color: 0x141e2a, roughness: 0.5, metalness: 0.4 });
+  // the glass: a pale frosted pane that catches the light (his picture lifts the deck behind it by about a tenth),
+  // its own edges a thin pale line; the colour is the neon's, not the glass's
+  OM.glass = std({ color: 0xa9bfca, envMapIntensity: 0.7, transparent: true, opacity: 0.075, roughness: 0.1, metalness: 0.0, depthWrite: false, side: THREE.DoubleSide });
+  OM.glassCyan = OM.glass;
+  OM.glassOrange = std({ color: 0xffb084, emissive: 0x5a2008, emissiveIntensity: 0.25, envMapIntensity: 0.7, transparent: true, opacity: 0.1, roughness: 0.1, metalness: 0.0, depthWrite: false, side: THREE.DoubleSide });
+  OM.glassEdge = emis('#a9c4cc', 0.2);
+  OM.wallDark = std({ color: 0x0f161e, roughness: 0.45, metalness: 0.3 });
+  OM.frame = std({ color: 0x2a3644, roughness: 0.4, metalness: 0.5 });
   OM.brass = std({ color: 0xb88c42, roughness: 0.34, metalness: 0.72 });
-  OM.desk = std({ color: 0x101a26, roughness: 0.46, metalness: 0.35 });
-  OM.deskTop = std({ color: 0x18283a, roughness: 0.32, metalness: 0.32 });
-  OM.dark = std({ color: 0x070d14, roughness: 0.36, metalness: 0.45 });
-  OM.plinth = std({ color: 0x122030, roughness: 0.4, metalness: 0.45 });
-  OM.white = std({ color: 0x566c82, roughness: 0.44, metalness: 0.25 });
-  OM.white2 = std({ color: 0x3e5266, roughness: 0.48, metalness: 0.28 });
-  OM.rack = std({ color: 0x0b121a, roughness: 0.42, metalness: 0.48 });
+  // furniture in his picture: charcoal desks with a lighter top, white retro consoles and lab machines
+  OM.desk = std({ color: 0x1e262f, roughness: 0.5, metalness: 0.3 });
+  OM.deskTop = std({ color: 0x2c3742, roughness: 0.32, metalness: 0.3 });
+  OM.dark = std({ color: 0x0b1118, roughness: 0.36, metalness: 0.45 });
+  OM.plinth = std({ color: 0x1c2833, roughness: 0.4, metalness: 0.45 });
+  OM.white = std({ color: 0xb9c3cb, roughness: 0.42, metalness: 0.12 });
+  OM.white2 = std({ color: 0x8d99a3, roughness: 0.46, metalness: 0.15 });
+  OM.rack = std({ color: 0x18222b, roughness: 0.42, metalness: 0.45 });
   OM.rackFace = std({ map: rackTex(), emissiveMap: TX.rackGlow, emissive: 0xffffff, emissiveIntensity: 1.35, roughness: 0.36, metalness: 0.42 });
-  OM.solar = std({ map: solarTex(), roughness: 0.24, metalness: 0.45, emissive: 0x1856b8, emissiveIntensity: 0.14 });
-  OM.engine = std({ color: 0x34465a, roughness: 0.32, metalness: 0.65 });
+  OM.solar = std({ map: officeSolarTex(), roughness: 0.22, metalness: 0.5, emissive: 0x1a3a80, emissiveIntensity: 0.05 });
+  OM.engine = std({ color: 0x6a7686, roughness: 0.32, metalness: 0.65 });
   OM.engineDark = std({ color: 0x121b26, roughness: 0.4, metalness: 0.55, side: THREE.DoubleSide });
   OM.rock = rockNodeMat(1.0); OM.rockS = rockNodeMat(5.0);
-  OM.engineL = std({ color: 0x3c5066, roughness: 0.3, metalness: 0.68, side: THREE.DoubleSide });
+  // his asteroid top right is a light grey, cratered and lit from the left
+  OM.asteroid = rockNodeMat(3.0); OM.asteroid.colorNode = TSL.vec3(0.34, 0.35, 0.38).mul(OM.asteroid.userData.shade);
+  // his engines are brushed silver with dark bands, not navy
+  OM.engineL = std({ color: 0xa3adba, roughness: 0.34, metalness: 0.72, side: THREE.DoubleSide });
+  OM.engineBand = std({ color: 0x1c242e, roughness: 0.45, metalness: 0.5 });
+  G.plumeCone = new THREE.CylinderGeometry(1, 0.05, 1, 24, 1, true);   // wide end (and the texture's bright top) at the nozzle
   G.circle = new THREE.CircleGeometry(1, 48);
   G.engHousing = new THREE.LatheGeometry([[0.32, -0.72], [0.5, -0.66], [0.58, -0.5], [0.6, -0.22], [0.55, -0.17], [0.55, -0.1], [0.64, -0.06], [0.66, 0.66], [0.6, 0.72], [0.6, 0.78],
     [0.68, 0.84], [0.74, 0.92], [0.74, 1.1], [0.66, 1.14], [0.56, 1.06], [0.52, 0.98]].map(([r, z]) => new THREE.Vector2(r, z)), 48);
-  OM.pot = std({ color: 0x182634, roughness: 0.5, metalness: 0.32 });
-  OM.bush = std({ color: 0x1a6e50, roughness: 0.8, emissive: 0x20d898, emissiveIntensity: 0.06 });
+  OM.pot = std({ color: 0x232c36, roughness: 0.5, metalness: 0.3 });
+  OM.bush = std({ color: 0x1f5a40, roughness: 0.85 });
   OM.holo = new THREE.MeshBasicMaterial({ map: holoTex(), transparent: true, blending: THREE.AdditiveBlending, depthWrite: false, side: THREE.DoubleSide });
   OM.plume = new THREE.MeshBasicMaterial({ map: plumeTex(), color: new THREE.Color(0x28e4ff).multiplyScalar(1.2), opacity: 0.88, transparent: true, blending: THREE.AdditiveBlending, depthWrite: false, side: THREE.DoubleSide });
-  OM.dash = emis('#98dce8', 0.48);
-  OM.lotRim = emis('#2ad8b0', 0.78);
+  OM.dash = emis('#dfeaf0', 0.62);
+  OM.lotRim = emis('#3ee0d0', 1.6);
+  OM.lotCyan = emis('#36c8e8', 0.9);
+  OM.frameLime = emis('#c8ea6a', 1.5);
+  OM.paneLime = new THREE.MeshBasicMaterial({ color: 0x6a8a3a, transparent: true, opacity: 0.22, blending: THREE.AdditiveBlending, depthWrite: false, side: THREE.DoubleSide });
+  OM.daisRim = std({ color: 0xaebfcc, roughness: 0.3, metalness: 0.5 });
+  OM.tileOrange = std({ map: tileTex(), color: 0xffd2b8, emissiveMap: seamTex(), emissive: 0xff7a30, emissiveIntensity: 0.55, roughness: 0.25, metalness: 0.2 });
   OM.coinG = std({ color: 0x18b87a, emissive: 0x38f5b8, emissiveIntensity: 0.28, metalness: 0.8, roughness: 0.22 });
   OM.coinB = std({ color: 0x2f6fd8, emissive: 0x3b82f6, emissiveIntensity: 0.32, metalness: 0.8, roughness: 0.22 });
   G.coin = new THREE.CylinderGeometry(1, 1, 1, 28);
-  // astronauts: shaded cool blue-grey spacesuit with dark slate pack & joints
-  OM.suit = std({ color: 0x7c94ac, roughness: 0.46, metalness: 0.16 });
-  OM.pack = std({ color: 0x465a70, roughness: 0.48, metalness: 0.28 });
+  // astronauts as in his picture: white suits, light grey packs and joints, a dark blue visor
+  OM.suit = std({ color: 0xc2cdd8, roughness: 0.5, metalness: 0.08 });
+  OM.pack = std({ color: 0x9aa7b4, roughness: 0.5, metalness: 0.15 });
+  OM.visor = std({ color: 0x0e2c56, roughness: 0.14, metalness: 0.6, emissive: 0x0a2e5e, emissiveIntensity: 0.25 });
+  OM.helmet = std({ color: 0x7f9cbe, roughness: 0.3, metalness: 0.25 });
   OM.torso = new THREE.CapsuleGeometry(0.16, 0.26, 4, 14); OM.limb = new THREE.CapsuleGeometry(0.055, 0.2, 3, 10); OM.leg = new THREE.CapsuleGeometry(0.07, 0.36, 3, 10);
-  OM.chair = std({ color: 0x121d2a, roughness: 0.48, metalness: 0.3 });
+  OM.chair = std({ color: 0x232d38, roughness: 0.48, metalness: 0.3 });
   OM.green = amat('#38f5b8'); OM.cyan = amat('#24e8ff'); OM.blue = amat('#3b82f6'); OM.red = amat('#ff8824'); OM.amber = amat('#ff8824');
   G.bigRock = asteroidGeo(11, 64); G.smallRock = asteroidGeo(27, 14, false);
   G.plume = new THREE.CylinderGeometry(0.42, 0.05, 1, 24, 1, true);
@@ -1635,12 +1717,11 @@ class Office3D {
     this.tip = stage.querySelector('.tip'); this.layer = stage.querySelector('.o3layer');
     this.sel = null; this.cells = {}; this.paths = {}; this.packets = []; this.rooms = {}; this.fitted = false; this.hover = null;
     this.mouse = new THREE.Vector2(); this.ray = new THREE.Raycaster();
-    this.scene = new THREE.Scene(); this.scene.background = new THREE.Color(OFFICE.bg); this.scene.fog = new THREE.Fog(OFFICE.bg, 180, 460);
-    // Telephoto FOV (22 deg) gives the crisp isometric proportions of look-office.webp
-    this.camera = new THREE.PerspectiveCamera(22, 2, 0.5, 900);
+    this.scene = new THREE.Scene(); this.scene.background = new THREE.Color(LOOK.sky); this.scene.fog = new THREE.Fog(LOOK.sky, 180, 460);
+    this.camera = new THREE.PerspectiveCamera(CAM.fov, 2, 0.5, 900);
     this.renderer = new THREE.WebGPURenderer({ antialias: false });
     this.renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
-    this.renderer.toneMapping = THREE.ACESFilmicToneMapping; this.renderer.toneMappingExposure = 1.02;
+    this.renderer.toneMapping = THREE.ACESFilmicToneMapping; this.renderer.toneMappingExposure = 1.0;
     this.renderer.shadowMap.enabled = true; this.renderer.shadowMap.type = THREE.PCFSoftShadowMap;
     el.appendChild(this.renderer.domElement);
     this.controls = new OrbitControls(this.camera, this.renderer.domElement);
@@ -1649,19 +1730,21 @@ class Office3D {
     this.controls.addEventListener('start', () => { this.tw = null; this.moved = true; });
     const S = this.scene;
     S.environment = envTex();
-    new RGBELoader().load('assets/studio_small_09_1k.hdr', (t) => { t.mapping = THREE.EquirectangularReflectionMapping; S.environment = t; S.environmentIntensity = 0.18; }, undefined, () => {});
-    S.add(new THREE.HemisphereLight(0x88c8e8, 0x050b14, 0.52), new THREE.AmbientLight(0x102030, 0.38));
-    this.sun = new THREE.DirectionalLight(0xd8eeff, 1.12); this.sun.castShadow = true; this.sun.shadow.mapSize.set(2048, 2048);
+    new RGBELoader().load('assets/studio_small_09_1k.hdr', (t) => { t.mapping = THREE.EquirectangularReflectionMapping; S.environment = t; S.environmentIntensity = 0.45; }, undefined, () => {});
+    // his picture is lit like a studio: soft white light from above and the camera's side, everything readable, the
+    // colour only where something glows. No coloured fill: it tinted every surface teal.
+    S.add(new THREE.HemisphereLight(0xe2ecf6, 0x10161e, 0.85), new THREE.AmbientLight(0x2a3644, 0.4));
+    this.sun = new THREE.DirectionalLight(0xffffff, 1.7); this.sun.castShadow = true; this.sun.shadow.mapSize.set(2048, 2048);
     this.sun.shadow.normalBias = 0.02; this.sun.shadow.bias = -0.0005; S.add(this.sun); S.add(this.sun.target);
-    const rim = new THREE.DirectionalLight(0x28e8ff, 0.65); rim.position.set(-34, 14, -42); S.add(rim);
-    const under = new THREE.DirectionalLight(0x2498c8, 0.5); under.position.set(22, -24, 44); S.add(under);
-    this.sky = spaceSky(); S.add(this.sky);
+    const rim = new THREE.DirectionalLight(0xb8dcf4, 0.45); rim.position.set(-34, 14, -42); S.add(rim);
+    const under = new THREE.DirectionalLight(0x8aa4c0, 0.55); under.position.set(22, -24, 44); S.add(under);
+    this.sky = spaceSky(true); S.add(this.sky);
     this.world = new THREE.Group(); S.add(this.world);
     this.pk = new THREE.Group(); S.add(this.pk);
     this.clock = new THREE.Clock();
     this.bind();
     this.renderer.init().then(() => {
-      try { this.post = new Post(this.renderer, this.scene, this.camera, 0.48, 0.42, 0.72, { sat: 1.06 }); }
+      try { this.post = new Post(this.renderer, this.scene, this.camera, 0.5, 0.22, 0.8, { sat: 0.94 }); }
       catch (e) { this.post = null; }
       this.renderer.setAnimationLoop(() => this.frame());
     }).catch((e) => { console.error('3D office could not start:', e); if (this.onFail) this.onFail(e); });
@@ -1783,100 +1866,116 @@ class Office3D {
     // the rock: dark jagged asteroid mass nested beneath the station hull
     const rock = new THREE.Mesh(G.bigRock, OM.rock); rock.scale.set(span * 0.48, span * 0.28, span * 0.44); rock.position.copy(this.V(cxp - span * 0.05, cyp + span * 0.01, keel - span * 0.02)); rock.rotation.set(0.05, 0.6, 0.04); ext.add(rock);
     const rock2 = new THREE.Mesh(G.bigRock, OM.rock); rock2.scale.set(span * 0.26, span * 0.2, span * 0.24); rock2.position.copy(this.V(cxp + span * 0.16, cyp + span * 0.1, keel - span * 0.1)); rock2.rotation.set(0.5, 2.1, 0.3); ext.add(rock2);
-    const rock3 = new THREE.Mesh(G.bigRock, OM.rock); rock3.scale.set(span * 0.24, span * 0.17, span * 0.22); rock3.position.copy(this.V(cxp - span * 0.2, cyp + span * 0.2, keel - span * 0.06)); rock3.rotation.set(-0.3, 1.2, -0.2); ext.add(rock3);
-    // Back-left engines with blue exhaust plumes as in look-office.webp
+    // his rock shows most under the front-left: a big shoulder of it pokes out below the audit room and the lot
+    const rock3 = new THREE.Mesh(G.bigRock, OM.rock); rock3.scale.set(span * 0.3, span * 0.19, span * 0.26); rock3.position.copy(this.V(7.5, 19.5, keel - 0.6)); rock3.rotation.set(-0.3, 1.2, -0.2); ext.add(rock3);
+    const rock4 = new THREE.Mesh(G.bigRock, OM.rock); rock4.scale.set(span * 0.2, span * 0.15, span * 0.18); rock4.position.copy(this.V(13.5, 20.5, keel - 1.0)); rock4.rotation.set(0.4, 2.6, 0.1); ext.add(rock4);
+    // Engines where his picture has them (found by sending its pixels back through the fitted camera): a long
+    // grey nacelle along the outside of the room at the platform's back-left, two engines on it at deck height
+    // throwing blue plumes outward; one big engine under the front of the Add-department lot, its nozzle a cyan
+    // glow; and small thrusters glowing cyan along the front faces.
     this.flames = [];
-    const leftEdges = outer.filter((o) => o.nx === -1);
-    leftEdges.forEach((e, i) => {
-      const f = 0.5, g = new THREE.Group();
-      g.position.copy(this.V(e.ax + (e.bx - e.ax) * f + e.nx * 0.55, e.ay + (e.by - e.ay) * f + e.ny * 0.55, -T - 0.12 - HD * 0.48)); g.rotation.y = Math.atan2(e.nx, e.ny); ext.add(g);
+    const engine = (x, y, z, nx, ny, s, plume) => {
+      const g = new THREE.Group(); g.position.copy(this.V(x, y, z)); g.rotation.y = Math.atan2(nx, ny); g.scale.setScalar(s); ext.add(g);
       const housing = new THREE.Mesh(G.engHousing, OM.engineL); housing.rotation.x = Math.PI / 2; g.add(housing);
       const back = new THREE.Mesh(G.cyl, OM.engineDark); back.scale.set(0.34, 0.3, 0.34); back.rotation.x = Math.PI / 2; back.position.z = -0.82; g.add(back);
-      [[0.62, 0.2], [-0.62, 0.2]].forEach(([x, y]) => {
-        const arm = new THREE.Mesh(rboxGeo(0.12, 0.12, 0.95, 0.03), OM.brass); arm.position.set(x * 0.9, y, -0.55); arm.rotation.y = x > 0 ? -0.35 : 0.35; g.add(arm);
-      });
-      const nozzle = new THREE.Mesh(G.circle, new THREE.MeshBasicMaterial({ map: nozzleTex(), color: new THREE.Color(0xffffff).multiplyScalar(1.8), transparent: true, toneMapped: false }));
-      nozzle.scale.setScalar(0.58); nozzle.position.z = 1.0; nozzle.userData.dyn = true; g.add(nozzle);
-      const lip = new THREE.Mesh(G.ringT, OM.cyan.rim); lip.scale.setScalar(0.62); lip.position.z = 1.12; g.add(lip);
-      const halo = glowSprite(0x00e5ff, 0.45, 2.8); halo.position.z = 1.35; halo.userData.dyn = true; g.add(halo);
-      const plume = new THREE.Mesh(G.beam, OM.cyan.beam); plume.scale.set(0.52, 2.6, 0.52); plume.rotation.x = -Math.PI / 2; plume.position.z = 2.1; g.add(plume);
-      this.flames.push({ glow: halo, ph: R() * 6 + i });
-    });
-    // Hero front-left cylindrical hull module under + ADD DEPARTMENT ([8, 16], ny = 1) as in look-office.webp
-    const heroEdge = outer.find((o) => o.ny === 1 && o.c0 === 8 && o.c1 === 16) || outer.find((o) => o.ny === 1);
-    if (heroEdge) {
-      const hg = new THREE.Group();
-      hg.position.copy(this.V(heroEdge.ax + 2.4, heroEdge.ay + 0.45, -T - HD * 0.52));
-      hg.rotation.y = Math.atan2(0, 1);
-      ext.add(hg);
-      const hBody = new THREE.Mesh(G.engHousing, OM.engineL); hBody.scale.set(1.18, 1.28, 1.18); hBody.rotation.x = Math.PI / 2; hg.add(hBody);
-      const hRing = new THREE.Mesh(G.ringT, OM.brass); hRing.scale.setScalar(0.76); hRing.position.z = 0.2; hg.add(hRing);
+      [0.05, 0.42].forEach((bz) => { const band = new THREE.Mesh(G.ringT, OM.engineBand); band.scale.set(0.67, 0.67, 3.2); band.position.z = bz; g.add(band); });
+      const brass = new THREE.Mesh(G.ringT, OM.brass); brass.scale.set(0.69, 0.69, 1.2); brass.position.z = 0.7; g.add(brass);
+      // his nozzles are a disc of cyan light seen face on, white at the heart
+      const nozzle = new THREE.Mesh(G.circle, new THREE.MeshBasicMaterial({ map: nozzleTex(), color: new THREE.Color(0xffffff).multiplyScalar(2.2), transparent: true, toneMapped: false }));
+      nozzle.scale.setScalar(0.62); nozzle.position.z = 1.1; nozzle.userData.dyn = true; g.add(nozzle);
+      const lip = new THREE.Mesh(G.ringT, OM.engineL); lip.scale.set(0.68, 0.68, 2.5); lip.position.z = 1.12; g.add(lip);
+      const halo = glowSprite(0x8ff8ff, 0.75, 2.6); halo.position.z = 1.35; halo.userData.dyn = true; g.add(halo);
+      if (plume) {
+        // a flame as wide as the nozzle where it leaves it, thinning and fading away from it
+        [[0.62, 3.4, 0x4a7cff, 0.26], [0.36, 2.2, 0x9cc4ff, 0.32]].forEach(([w, len, col, op]) => {
+          const pm = new THREE.Mesh(G.plumeCone, new THREE.MeshBasicMaterial({ map: plumeTex(), color: new THREE.Color(col).multiplyScalar(1.5), transparent: true, opacity: op, blending: THREE.AdditiveBlending, depthWrite: false, side: THREE.DoubleSide }));
+          pm.scale.set(w, len, w); pm.rotation.x = -Math.PI / 2; pm.position.z = 1.1 + len / 2; pm.userData.dyn = true; g.add(pm);
+        });
+        const ph = glowSprite(0x6a9cff, 0.45, 3.0); ph.position.z = 1.9; ph.userData.dyn = true; g.add(ph);
+      }
+      this.flames.push({ glow: halo, ph: R() * 6 + x });
+      return g;
+    };
+    const back = outer.find((o) => o.nx === -1 && o.c0 === 0 && o.c1 === 8);
+    if (back) {
+      const nac = new THREE.Mesh(rboxGeo(1.3, 1.1, 7.2, 0.4), OM.engineL); nac.position.copy(this.V(-1.05, 11.9, -0.25)); ext.add(nac);
+      this.rb(ext, -1.75, 8.5, -0.5, 0.25, 6.8, 0.5, OM.frame, 0.08, false);
+      engine(-1.5, 9.6, 0.15, -1, -0.22, 0.8, true); engine(-1.5, 14.2, 0.15, -1, -0.22, 0.8, true);
+    }
+    const lotEdge = outer.find((o) => o.ny === 1 && o.c0 === 8 && o.c1 === 16);
+    if (lotEdge) {
+      // turned a little towards the camera, as his is: its nozzle is seen nearly face on
+      const hg = engine(11.4, 24.0, -T - HD * 0.55, 0.55, 1, 1.0, false);
       [[-0.75, 0.2], [0.75, 0.2], [-0.65, -0.35], [0.65, -0.35]].forEach(([sx, sy]) => {
         const strut = new THREE.Mesh(rboxGeo(0.13, 0.13, 1.1, 0.03), OM.brass); strut.position.set(sx, sy, -0.45); strut.rotation.y = sx > 0 ? -0.28 : 0.28; hg.add(strut);
       });
-      const hBore = new THREE.Mesh(G.circle, OM.engineDark); hBore.scale.setScalar(0.68); hBore.position.z = 1.28; hg.add(hBore);
-      const hInner = new THREE.Mesh(G.ringT, OM.engine); hInner.scale.setScalar(0.52); hInner.position.z = 1.32; hg.add(hInner);
-      const hLip = new THREE.Mesh(G.ringT, OM.rim); hLip.scale.setScalar(0.76); hLip.position.z = 1.38; hg.add(hLip);
     }
-    // Sapphire-blue solar wings placed at the exact 4 positions of look-office.webp:
-    // 1) Back-right behind Laboratory ([8,0], ny = -1)
-    // 2) Far-right beside Trading Desk ([16,0], nx = 1)
-    // 3) Front-bottom-right beside + Add Department ([8,16], nx = 1, extending into the [16,16] corner)
-    // 4) Back-left behind Cymetica QA ([0,0], ny = -1)
-    const addWing = (mx, my, nx, ny, nSeg = 4) => {
-      const g = new THREE.Group();
-      g.position.copy(this.V(mx, my, -T - 0.62)); g.rotation.y = Math.atan2(nx, ny); ext.add(g);
-      const boom = new THREE.Mesh(G.box, OM.engine); boom.scale.set(0.15, 0.15, 2.15 * nSeg + 1.2); boom.position.z = (2.15 * nSeg + 1.2) / 2; g.add(boom);
-      const joint = new THREE.Mesh(G.cyl, OM.brass); joint.scale.set(0.34, 0.48, 0.34); joint.position.z = 0.28; g.add(joint);
-      for (let i = 0; i < nSeg; i++) [-1, 1].forEach((side) => {
+    [[3.7, 23.85, 0, 1], [15.95, 17.7, 1, 0], [23.95, 13.3, 1, 0]].forEach(([x, y, nx, ny]) => {
+      if (outer.some((o) => (ny && o.ny === 1 && Math.abs(o.ay - (y - 0.35)) < 1 && x > Math.min(o.ax, o.bx) && x < Math.max(o.ax, o.bx)) || (nx && o.nx === 1 && Math.abs(o.ax - (x - 0.45)) < 1 && y > Math.min(o.ay, o.by) && y < Math.max(o.ay, o.by)))) engine(x, y, -T - 0.95, nx || 0.45, ny || 0.45, 0.45, false);
+    });
+    // His solar panels: small dark-blue panels in rows hung off an outer edge just under the deck, tilted out --
+    // five along the front of the room in front of the notch, four down the right side, and two pairs standing on
+    // the back edge behind the laboratory. A row runs along its edge from (ax, ay); n panels; z its height.
+    const solarRow = (e, n, z, tilt, from = 0.6) => {
+      let dx = Math.sign(e.bx - e.ax), dy = Math.sign(e.by - e.ay), x = e.ax, y = e.ay;
+      if (-dy * e.nx + dx * e.ny < 0) { dx = -dx; dy = -dy; x = e.bx; y = e.by; }
+      const grp = new THREE.Group(); grp.position.copy(this.V(x + dx * from + e.nx * 0.15, y + dy * from + e.ny * 0.15, z)); grp.rotation.y = -Math.atan2(dy, dx); ext.add(grp);
+      const rail = new THREE.Mesh(G.box, OM.engine); rail.scale.set(n * 1.16 + 0.2, 0.07, 0.07); rail.position.set((n * 1.16) / 2, 0, 0.05); grp.add(rail);
+      for (let i = 0; i < n; i++) {
         const p = new THREE.Mesh(G.box, [OM.frame, OM.frame, OM.solar, OM.engineDark, OM.frame, OM.frame]);
-        p.scale.set(2.25, 0.05, 1.96); p.position.set(side * 1.32, 0, 1.55 + i * 2.12); p.rotation.z = side * 0.22; g.add(p);
-        const strut = new THREE.Mesh(G.box, OM.brass); strut.scale.set(0.48, 0.055, 0.055); strut.position.set(side * 0.28, 0, 1.55 + i * 2.12); g.add(strut);
-      });
+        p.scale.set(1.06, 0.045, 1.28); p.position.set(0.6 + i * 1.16, -Math.sin(tilt) * 0.66, 0.1 + Math.cos(tilt) * 0.66); p.rotation.x = tilt; grp.add(p);
+      }
     };
-    const wLab = outer.find((o) => o.ny === -1 && o.c0 === 8 && o.c1 === 0);
-    if (wLab) addWing((wLab.ax + wLab.bx) / 2, (wLab.ay + wLab.by) / 2, 0, -1, 4);
-    const wQa = outer.find((o) => o.ny === -1 && o.c0 === 0 && o.c1 === 0);
-    if (wQa) addWing((wQa.ax + wQa.bx) / 2, (wQa.ay + wQa.by) / 2, 0, -1, 3);
-    const wTd = outer.find((o) => o.nx === 1 && o.c0 === 16 && o.c1 === 0);
-    if (wTd) addWing((wTd.ax + wTd.bx) / 2, (wTd.ay + wTd.by) / 2, 1, 0, 4);
-    const wFront = outer.find((o) => o.nx === 1 && o.c0 === 8 && o.c1 === 16) || outer.find((o) => o.ny === 1 && o.c0 === 16 && o.c1 === 8);
-    if (wFront) addWing((wFront.ax + wFront.bx) / 2, (wFront.ay + wFront.by) / 2, wFront.nx, wFront.ny, 4);
+    const eFront = outer.find((o) => o.ny === 1 && o.c0 === 16 && o.c1 === 8);
+    if (eFront) solarRow(eFront, 5, -T - 0.9, 0.62, 0.9);
+    const eRight = outer.find((o) => o.nx === 1 && o.c0 === 16 && o.c1 === 8);
+    if (eRight) solarRow(eRight, 4, -T - 0.7, 0.55, 1.2);
+    const eBack = outer.find((o) => o.ny === -1 && o.c0 === 8 && o.c1 === 0);
+    if (eBack) { solarRow(eBack, 2, 0.55, -0.75, 0.9); solarRow(eBack, 2, 0.55, -0.75, 4.4); }
 
     bakeGroup(ext);
     ext.traverse((o) => { if (o.isMesh && o.material === OM.rock) { o.castShadow = true; o.receiveShadow = true; } });
     // Cratered moonlet in the top-right sky and small asteroids drifting round the station
     this.drift = [];
-    const big = new THREE.Mesh(G.smallRock, OM.rockS); big.scale.set(2.35, 2.05, 2.2);
-    big.position.copy(this.V(cxp, cyp, 0)).add(skyDir(28, 10).multiplyScalar(span * 0.88)).add(new THREE.Vector3(0, span * 0.26, 0)); W.add(big); this.drift.push({ m: big, sp: 0.04 });
+    // his asteroid hangs top right, behind the trading desk (plan 19, -7 at the height his pixels give)
+    const big = new THREE.Mesh(G.smallRock, OM.asteroid); big.scale.set(1.05, 0.98, 1.0);
+    big.position.copy(this.V(19, -7, 2.5)); W.add(big); this.drift.push({ m: big, sp: 0.04 });
     for (let i = 0; i < 12; i++) {
       const a = R() * Math.PI * 2; if ((Math.cos(a) + Math.sin(a)) / Math.SQRT2 > 0.2) { i--; continue; }
       const d = span * (0.85 + R() * 0.7), s = 0.3 + R() * R() * 1.35, m = new THREE.Mesh(G.smallRock, OM.rockS);
       m.scale.set(s, s * 0.8, s * 0.9); m.position.copy(this.V(cxp + Math.cos(a) * d, cyp + Math.sin(a) * d, -9 + R() * 12)); m.rotation.set(R() * 3, R() * 3, R() * 3);
       W.add(m); this.drift.push({ m, sp: 0.06 + R() * 0.18 });
     }
-    const drift = this.drift; moonRock().then((mr) => { if (mr) drift.forEach((d) => { d.m.geometry = mr.geo; d.m.material = mr.mat; }); });
+    // the scanned moon rock is a flat stone: it suits the small drifting ones; his big asteroid is round and lumpy
+    const drift = this.drift; moonRock().then((mr) => { if (mr) drift.forEach((d, i) => { if (i) { d.m.geometry = mr.geo; d.m.material = mr.mat; } }); });
   }
-  // a room: a dark petrol-navy floor, crystal-clear tinted glass walls with razor-sharp glowing top neon rims
+  // A room as in his picture: a slate-blue tiled floor, low panes of pale frosted glass, and ONE neon line that
+  // traces the room's outline as the camera sees it -- along the top of the two back walls and along the foot of
+  // the two front walls ("vpredu sviti spodni listy a v zadnich stenach ty vrchni"). The glass's own edges, the
+  // front walls' tops and the corners, are a thin pale line. Mint, the trading desk orange.
   shell(r) {
     const { g, x0, y0 } = r, RS = CO.iso.RS, H = WH, t = 0.04, z0 = 0.08;
     const dk = r.dept && r.dept.key;
     const isOrange = dk === 'trading_desk';
-    const isCyan = r.key === 'hub' || dk === 'testing_lab';
-    this.box(g, x0, y0, 0, RS, RS, z0, r.key === 'hub' ? OM.hubTile : OM.tile);
-    r.glow = new THREE.Mesh(G.plane, new THREE.MeshBasicMaterial({ map: radialTex('255,255,255', 0.85), transparent: true, opacity: 0.04, blending: THREE.AdditiveBlending, depthWrite: false, color: isOrange ? 0xff8824 : isCyan ? 0x00e5ff : 0x38f2b8 }));
+    this.box(g, x0, y0, 0, RS, RS, z0, r.key === 'hub' ? OM.hubTile : isOrange ? OM.tileOrange : OM.tile);
+    r.glow = new THREE.Mesh(G.plane, new THREE.MeshBasicMaterial({ map: radialTex('255,255,255', 0.85), transparent: true, opacity: 0.04, blending: THREE.AdditiveBlending, depthWrite: false, color: isOrange ? 0xff8824 : 0x7cf2c4 }));
     r.glow.scale.set(RS * 0.92, RS * 0.92, 1); r.glow.rotation.x = -Math.PI / 2; r.glow.position.copy(this.V(x0 + RS / 2, y0 + RS / 2, z0 + 0.01)); g.add(r.glow);
-    const glassMat = isOrange ? OM.glassOrange : isCyan ? OM.glassCyan : OM.glass;
-    [[x0, y0, RS, t], [x0, y0 + RS - t, RS, t], [x0, y0, t, RS], [x0 + RS - t, y0, t, RS]].forEach(([x, y, w, d]) => this.box(g, x, y, z0, w, d, H, glassMat, false));
+    const glassMat = isOrange ? OM.glassOrange : OM.glass;
+    // one pane per wall: a box's six faces stacked their opacity into a milky slab
+    [[x0 + RS / 2, y0, 0], [x0 + RS / 2, y0 + RS, 0], [x0, y0 + RS / 2, Math.PI / 2], [x0 + RS, y0 + RS / 2, Math.PI / 2]].forEach(([x, y, rot]) => {
+      const p = new THREE.Mesh(G.plane, glassMat); p.scale.set(RS, H, 1); p.rotation.y = rot; p.position.copy(this.V(x, y, z0 + H / 2)); p.renderOrder = 2; g.add(p);
+    });
     if (r.key !== 'hub') { this.box(g, x0 + t, y0 + t, z0, RS - 2 * t, 0.1, 0.52, OM.wallDark); this.box(g, x0 + t, y0 + t, z0, 0.1, RS - 2 * t, 0.52, OM.wallDark); }
-    r.edgeM = emis(isOrange ? '#ff8824' : isCyan ? '#00e5ff' : '#38f2b8', 1.35);
-    const e = 0.048, z1 = z0 + H - e;
-    // Crisp single top neon rail + 4 vertical corner neon strips (no bottom floor neon bar, matching look-office.webp)
-    [[x0, y0, RS, e], [x0, y0 + RS - e, RS, e], [x0, y0, e, RS], [x0 + RS - e, y0, e, RS]].forEach(([x, y, w, d]) => { this.box(g, x, y, z1, w, d, e, r.edgeM, false); });
-    [[x0, y0], [x0 + RS - e, y0], [x0, y0 + RS - e], [x0 + RS - e, y0 + RS - e]].forEach(([x, y]) => this.box(g, x, y, z0, e, e, H, r.edgeM, false));
-    // Gentle interior point light so floors stay dark and high-contrast
-    r.lamp = new THREE.PointLight(isOrange ? 0xff8824 : isCyan ? 0x00e5ff : OFFICE.lamp, isOrange ? 10 : 3.5, 11, 1.6);
-    r.lamp.position.copy(this.V(x0 + RS / 2, y0 + RS / 2, 2.2)); g.add(r.lamp);
+    r.edgeM = emis(isOrange ? LOOK.orange : LOOK.neon, 2.2);
+    const e = 0.042, zt = z0 + H - e, f = 0.022;
+    // the neon: back walls' tops (y = y0 along x, x = x0 along y), front walls' feet
+    [[x0, y0, zt, RS, e], [x0, y0, zt, e, RS], [x0, y0 + RS - e, z0, RS, e], [x0 + RS - e, y0, z0, e, RS]].forEach(([x, y, z, w, d]) => this.box(g, x, y, z, w, d, e, r.edgeM, false));
+    // the glass's edges: the front walls' tops and the four corners
+    [[x0, y0 + RS - f, z0 + H - f, RS, f, f], [x0 + RS - f, y0, z0 + H - f, f, RS, f],
+      [x0, y0, z0, f, f, H], [x0 + RS - f, y0, z0, f, f, H], [x0, y0 + RS - f, z0, f, f, H], [x0 + RS - f, y0 + RS - f, z0, f, f, H]].forEach(([x, y, z, w, d, h]) => this.box(g, x, y, z, w, d, h, OM.glassEdge, false));
+    // the room's own light: white over the floor, warm in the trading desk
+    r.lamp = new THREE.PointLight(isOrange ? 0xff8a3a : 0xeef6ff, isOrange ? 16 : 5, 12, 1.2);
+    r.lamp.position.copy(this.V(x0 + RS / 2, y0 + RS / 2, 3.2)); g.add(r.lamp);
   }
   // a wall screen on the back wall: what runs now, or why it waits
   wallScreen(r, u0, u1) {
@@ -1926,8 +2025,8 @@ class Office3D {
     const up = new THREE.Group(); g.add(up);
     up.add(cm(OM.torso, OM.suit, 0, 0.75, 0.04));
     const collar = cm(G.cyl, OM.pack, 0, 0.96, 0.03); collar.scale.set(0.15, 0.04, 0.15); up.add(collar);
-    const helmet = cm(G.sphere, OM.suit, 0, 1.15, 0.02); helmet.scale.set(0.22, 0.21, 0.22); up.add(helmet);
-    const visorM = std({ color: 0x050d18, emissive: 0x00d8ff, emissiveIntensity: 0.12, roughness: 0.08, metalness: 0.9 });
+    const helmet = cm(G.sphere, OM.helmet, 0, 1.15, 0.02); helmet.scale.set(0.22, 0.21, 0.22); up.add(helmet);
+    const visorM = OM.visor.clone();
     const vz = cm(G.sphere, visorM, 0, 1.15, -0.11); vz.scale.set(0.175, 0.125, 0.11); up.add(vz);
     up.add(cm(rboxGeo(0.32, 0.4, 0.16, 0.04), OM.pack, 0, 0.8, 0.22));
     const chest = cm(G.box, OM.pack, 0, 0.84, -0.13); chest.scale.set(0.11, 0.065, 0.025); up.add(chest);
@@ -1962,32 +2061,38 @@ class Office3D {
     const k = d.key, x0 = r.x0, y0 = r.y0, g = r.g; let u1 = 6.6;
     const isOrange = k === 'trading_desk';
     if (d.run_kind === 'stranger') {
-      // Twin-aisle Server Room in [0,8] as seen in look-office.webp
-      this.racks(r, x0 + 0.55, y0 + 1.15, 4);
-      this.racks(r, x0 + 0.55, y0 + 2.95, 4);
-      this.wallScreen(r, 1.75, 4.4);
-      this.kanban(r, 1.2, 4.8);
-      this.desk(r, x0 + 4.55, y0 + 2.85, 0, false);
+      // his server room, rack for rack (their places read off his picture through the fitted camera): three along
+      // the back-right wall, a pair by the back corner, three in a row towards the front, one desk among them
+      this.racks(r, x0 + 2.55, y0 + 0.3, 3, 1.12);
+      this.racks(r, x0 + 0.25, y0 + 1.3, 2, 1.1);
+      this.racks(r, x0 + 2.75, y0 + 5.35, 3, 1.2);
+      this.kanban(r, 2.6, 5.6);
+      this.desk(r, x0 + 3.4, y0 + 2.6, 0, false);
+      this.holoFrame(r, x0 + 0.72, y0 + 3.98);
       const ex = d.experts.slice(0, 2);
-      if (ex[0]) this.agent(r, x0 + 5.5, y0 + 4.15, 0, CO.expertName(ex[0]));
-      if (ex[1]) this.agent(r, x0 + 3.9, y0 + 5.1, 1, CO.expertName(ex[1]), { stand: true });
+      if (ex[0]) this.agent(r, x0 + 4.35, y0 + 3.9, 0, CO.expertName(ex[0]));
+      if (ex[1]) this.agent(r, x0 + 1.6, y0 + 4.9, 1, CO.expertName(ex[1]), { stand: true });
       this.terminal(r, x0 + 0.3, y0 + 0.28, d.link || CO.DEPT_LINK[k] || CO.DEPT_LINK.custom);
       this.plant(r, x0 + 0.45, y0 + 6.5);
       this.plate(r);
       return;
     }
-    if (k === 'development' || k === 'testing') {
+    if (k === 'development') {
       u1 = 3.3;
       this.racks(r, x0 + 0.55, y0 + 1.35, 3);
-      // Iconic 4x3 glowing cyan-mint window grid on the back-right wall of Cymetica QA ([0,0]), facing the camera
-      const qw = new THREE.Mesh(G.plane, new THREE.MeshBasicMaterial({ map: qaGridTex(), color: new THREE.Color(0xffffff).multiplyScalar(1.25), toneMapped: false }));
-      qw.scale.set(3.2, 1.22, 1); qw.position.copy(this.V(x0 + 5.2, y0 + 0.14, 1.08)); g.add(qw);
-      this.box(g, x0 + 3.52, y0 + 0.05, 0.42, 3.36, 0.06, 1.32, OM.dark, false);
+    } else if (k === 'testing') {
+      // his Cymetica QA: a small 3 x 3 window of light at the right end of the back-right wall, rising over it
+      u1 = 4.6;
+      const qw = new THREE.Mesh(G.plane, new THREE.MeshBasicMaterial({ map: qaGridTex(), color: new THREE.Color(0xffffff).multiplyScalar(1.15), toneMapped: false }));
+      qw.scale.set(1.05, 1.05, 1); qw.position.copy(this.V(x0 + 6.05, y0 + 0.13, 1.22)); g.add(qw);
+      this.box(g, x0 + 5.45, y0 + 0.05, 0.62, 1.2, 0.06, 1.22, OM.dark, false);
+      const qh = glowSprite(0x9ff5ec, 0.22, 2.4); qh.position.copy(this.V(x0 + 6.05, y0 + 0.3, 1.22)); g.add(qh);
     } else if (k === 'testing_lab') {
+      // his laboratory: white instruments along the back-right wall, a holographic crystal on a white base, canisters
       u1 = 3.4;
-      this.labMachine(r, x0 + 3.65, y0 + 0.28);
-      this.labMachine(r, x0 + 4.95, y0 + 0.28);
-      this.labMachine(r, x0 + 6.25, y0 + 0.28);
+      this.labMachine(r, x0 + 3.75, y0 + 0.3);
+      this.labMachine(r, x0 + 5.15, y0 + 0.3);
+      this.labHolo(r, x0 + 0.6, y0 + 5.0);
       this.canisters(r, x0 + 6.45, y0 + 1.85);
     } else if (k === 'trading_desk') {
       // Panoramic warm amber-orange chart walls across both back walls of Trading Desk
@@ -1998,7 +2103,7 @@ class Office3D {
     } else if (k === 'design') {
       u1 = 4.5; this.boardTex(r, 4.7, 6.75, moodTex());
     } else if (d.run_kind === 'league') {
-      u1 = 4.1; this.leagueTable(r, x0 + 5.45, y0 + 1.35);
+      u1 = 4.1;
     } else {
       u1 = 4.6; this.racks(r, x0 + 5.2, y0 + 0.3, 2);
     }
@@ -2008,6 +2113,8 @@ class Office3D {
     }
     const ex = d.experts.slice(0, 3), xs = ex.length === 1 ? [2.4] : ex.length === 2 ? [1.0, 3.7] : [0.35, 2.55, 4.75];
     ex.forEach((e, i) => { this.desk(r, x0 + xs[i], y0 + 2.75, i, isOrange); if (isOrange) this.sideScreens(r, x0 + xs[i], y0 + 2.75); });
+    // his rooms each have a see-through screen in a yellow-green frame on a stand, by the left wall
+    this.holoFrame(r, x0 + 0.75, y0 + 2.2);
     ex.forEach((e, i) => this.agent(r, x0 + xs[i] + 0.95, y0 + 4.05, i, CO.expertName(e)));
     if (d.run_kind === 'league' && ex.length < 3) {
       this.agent(r, x0 + 5.45, y0 + 3.1, ex.length, 'Referee', { stand: true });
@@ -2055,25 +2162,46 @@ class Office3D {
     for (let k = 1; k < n; k++) this.box(r.g, along ? x - 0.01 : x + k * w / n, along ? y + k * d / n : y - 0.01, 0.14, 0.012, 0.012, h - 0.12, OM.frame, false);
   }
   // server racks in a row, fronts to the room: dark charcoal towers with glowing LEDs
-  racks(r, x, y, n) {
+  racks(r, x, y, n, step = 0.78) {
     for (let i = 0; i < n; i++) {
-      const rx = x + i * 0.78, m = new THREE.Mesh(rboxGeo(0.68, 1.44, 0.76, 0.035), [OM.rack, OM.rack, OM.dark, OM.rack, OM.rackFace, OM.rack]);
+      const rx = x + i * step, m = new THREE.Mesh(rboxGeo(0.68, 1.44, 0.76, 0.035), [OM.rack, OM.rack, OM.dark, OM.rack, OM.rackFace, OM.rack]);
       m.position.copy(this.V(rx + 0.34, y + 0.38, 0.8)); m.castShadow = true; m.receiveShadow = true; r.g.add(m);
       this.box(r.g, rx + 0.04, y + 0.74, 1.51, 0.6, 0.02, 0.02, OM.green.rim, false);
       for (let k = 0; k < 3; k++) { const col = ['#38f2b8', '#00e5ff', '#3b82f6'][(i + k) % 3]; const l = new THREE.Mesh(G.box, amat(col).glow); l.scale.set(0.055, 0.035, 0.012); l.position.copy(this.V(rx + 0.12 + k * 0.09, y + 0.765, 1.34 - k * 0.34)); l.userData.blink = (i * 7 + k * 3) % 11; r.g.add(l); (r.leds = r.leds || []).push(l); }
     }
   }
-  // a laboratory containment pod: dark steel base, glowing aqua specimen chamber with floating crystal core, and hologram above
+  // a laboratory instrument as in his picture: a white rounded cabinet, on it a white terminal leaning back, its
+  // screen a cyan-green hologram of data
   labMachine(r, x, y) {
     const g = r.g;
-    this.rb(g, x, y, 0.08, 1.1, 0.78, 0.44, OM.desk, 0.05);
-    // Glowing aqua-cyan containment chamber using OM.podGlass so it stands out brightly
-    this.box(g, x + 0.1, y + 0.1, 0.52, 0.9, 0.58, 0.82, OM.podGlass, false);
-    const core = new THREE.Mesh(G.box, OM.cyan.rim); core.scale.set(0.28, 0.42, 0.28); core.rotation.set(0.5, 0.6, 0.2); core.position.copy(this.V(x + 0.55, y + 0.39, 0.93)); g.add(core);
-    const ch = new THREE.Mesh(G.plane, OM.cyan.soft); ch.scale.set(0.82, 0.72, 1); ch.position.copy(this.V(x + 0.55, y + 0.69, 0.93)); g.add(ch);
-    this.rb(g, x + 0.06, y + 0.06, 1.34, 0.98, 0.66, 0.08, OM.white, 0.03);
-    const holo = new THREE.Mesh(G.plane, OM.holo); holo.scale.set(0.86, 0.5, 1); holo.position.copy(this.V(x + 0.55, y + 0.4, 1.68)); holo.rotation.x = -0.25; g.add(holo);
-    for (let k = 0; k < 3; k++) { const m = new THREE.Mesh(G.box, (k % 2 ? OM.green : OM.cyan).glow); m.scale.set(0.07, 0.03, 0.01); m.position.copy(this.V(x + 0.28 + k * 0.2, y + 0.79, 0.34)); m.userData.blink = k * 3; g.add(m); (r.leds = r.leds || []).push(m); }
+    this.rb(g, x, y, 0.08, 1.15, 0.8, 0.62, OM.white, 0.09);
+    this.rb(g, x + 0.05, y + 0.72, 0.2, 1.05, 0.06, 0.38, OM.white2, 0.02);
+    const head = new THREE.Group(); head.position.copy(this.V(x + 0.57, y + 0.36, 0.7)); head.rotation.x = -0.32; g.add(head);
+    const shell = new THREE.Mesh(rboxGeo(0.98, 0.72, 0.5, 0.08), OM.white); shell.position.set(0, 0.36, 0); shell.castShadow = true; head.add(shell);
+    const face = new THREE.Mesh(G.plane, new THREE.MeshBasicMaterial({ map: holoTex(), color: new THREE.Color(0x9ff2e2), toneMapped: false }));
+    face.scale.set(0.8, 0.55, 1); face.position.set(0, 0.37, 0.252); head.add(face);
+    for (let k = 0; k < 3; k++) { const m = new THREE.Mesh(G.box, (k % 2 ? OM.green : OM.cyan).glow); m.scale.set(0.07, 0.03, 0.01); m.position.copy(this.V(x + 0.3 + k * 0.2, y + 0.81, 0.3)); m.userData.blink = k * 3; g.add(m); (r.leds = r.leds || []).push(m); }
+  }
+  // a white base with a holographic crystal of data turning over it
+  labHolo(r, x, y) {
+    const g = r.g;
+    this.rb(g, x, y, 0.08, 1.2, 0.85, 0.48, OM.white, 0.08);
+    this.rb(g, x + 0.12, y + 0.1, 0.56, 0.96, 0.65, 0.06, OM.white2, 0.03);
+    const m = new THREE.Mesh(new THREE.OctahedronGeometry(1, 0), new THREE.MeshBasicMaterial({ color: new THREE.Color(0x6ff5d0).multiplyScalar(0.9), transparent: true, opacity: 0.55, blending: THREE.AdditiveBlending, depthWrite: false, wireframe: false }));
+    m.userData.own = true; m.scale.set(0.32, 0.46, 0.32); m.position.copy(this.V(x + 0.6, y + 0.42, 1.08)); g.add(m);
+    const w = new THREE.Mesh(m.geometry, new THREE.MeshBasicMaterial({ color: 0xbffff0, wireframe: true, transparent: true, opacity: 0.8 })); w.scale.copy(m.scale).multiplyScalar(1.02); w.position.copy(m.position); g.add(w);
+    const h = glowSprite(0x5ff0c8, 0.3, 1.8); h.position.copy(m.position); g.add(h);
+    r.crystal = [m, w];
+  }
+  // a see-through screen in a yellow-green frame on a slim stand, a small ring of light in it
+  holoFrame(r, x, y) {
+    const g = r.g, fr = OM.frameLime, s = new THREE.Group(); s.position.copy(this.V(x, y, 0.08)); s.rotation.y = 0.55; g.add(s);
+    const pole = new THREE.Mesh(G.cyl, OM.frame); pole.scale.set(0.03, 0.62, 0.03); pole.position.y = 0.31; s.add(pole);
+    const pane = new THREE.Mesh(G.plane, OM.paneLime); pane.scale.set(0.95, 0.62, 1); pane.position.y = 0.98; pane.rotation.x = -0.12; s.add(pane);
+    [[0, 0.31, 0.95, 0.025], [0, -0.31, 0.95, 0.025], [-0.475, 0, 0.025, 0.62], [0.475, 0, 0.025, 0.62]].forEach(([px, py, w, h]) => {
+      const b = new THREE.Mesh(G.box, fr); b.scale.set(w, h, 0.02); b.position.set(px, 0.98 + py, 0); b.rotation.x = -0.12; s.add(b);
+    });
+    const ring = new THREE.Mesh(G.ringT, fr); ring.scale.setScalar(0.07); ring.position.set(0, 0.98, 0.01); s.add(ring);
   }
   // a console with a green screen: what the weekly audit reads its logs on
   console3(r, x, y) {
@@ -2089,15 +2217,6 @@ class Office3D {
       this.cyl(r.g, x + dx, y + dy, 0.08, 0.2, h, OM.white);
       this.cyl(r.g, x + dx, y + dy, 0.08 + h, 0.14, 0.06, OM.cyan.soft);
     });
-  }
-  // a round table with a hologram turning over it: where the league's round is watched
-  leagueTable(r, x, y) {
-    const g = r.g;
-    this.cyl(g, x, y, 0.08, 0.95, 0.42, OM.desk); this.cyl(g, x, y, 0.5, 1.0, 0.05, OM.deskTop);
-    const top = new THREE.Mesh(G.cyl, OM.cyan.soft); top.scale.set(0.8, 0.02, 0.8); top.position.copy(this.V(x, y, 0.56)); g.add(top);
-    r.spin = new THREE.Group(); r.spin.position.copy(this.V(x, y, 1.12)); g.add(r.spin);
-    [0.55, 0.38].forEach((s, i) => { const ring = new THREE.Mesh(G.ringT, OM.cyan.rim); ring.scale.setScalar(s); ring.rotation.x = i ? 0.9 : Math.PI / 2; r.spin.add(ring); });
-    const core = new THREE.Mesh(G.sphere, OM.green.glow); core.scale.setScalar(0.12); r.spin.add(core);
   }
   // somewhere to sit and look at the site as a stranger would
   lounge(r, x, y) {
@@ -2122,19 +2241,22 @@ class Office3D {
     const s = screen(3.4, 0.62), m = new THREE.Mesh(G.plane, new THREE.MeshBasicMaterial({ map: s.tex, toneMapped: false })); m.scale.set(3.4, 0.62, 1); m.position.copy(this.V(x0 + 2.3, y0 + 0.11, 1.14)); g.add(m); r.bars = s;
     this.box(g, x0 + 0.55, y0 + 0.05, 0.78, 3.5, 0.04, 0.72, OM.dark, false);
     this.kanban(r, 1.4, 5.4);
-    const floor = new THREE.Mesh(G.plane, new THREE.MeshBasicMaterial({ map: hubFloorTex(), color: new THREE.Color(0x00e5ff).multiplyScalar(0.75), transparent: true, blending: THREE.AdditiveBlending, depthWrite: false }));
+    const floor = new THREE.Mesh(G.plane, new THREE.MeshBasicMaterial({ map: hubFloorTex(), color: new THREE.Color(0x46d8f0).multiplyScalar(0.7), transparent: true, blending: THREE.AdditiveBlending, depthWrite: false }));
     floor.scale.set(6.4, 6.4, 1); floor.rotation.x = -Math.PI / 2; floor.position.set(c.x, 0.1, c.z); g.add(floor); r.floor = floor;
-    [[1.85, 0.18, 0.08], [1.48, 0.28, 0.26], [1.12, 0.18, 0.54]].forEach(([rad, h, z0]) => {
-      const d = new THREE.Mesh(G.cyl, OM.plinth); d.scale.set(rad, h, rad); d.position.set(c.x, z0 + h / 2, c.z); d.castShadow = true; d.receiveShadow = true; g.add(d);
-      const lip = new THREE.Mesh(G.ringT, cy.rim); lip.scale.setScalar(rad); lip.rotation.x = Math.PI / 2; lip.position.set(c.x, z0 + h, c.z); g.add(lip);
+    // his dais: a wide dark disc with a pale metal rim, a raised drum on it with a cyan lip, a white-hot core, a
+    // column of light and three rings of light over it, smaller as they rise
+    [[2.05, 0.16, 0.08, OM.plinth, OM.daisRim], [1.25, 0.24, 0.24, OM.dark, cy.rim]].forEach(([rad, h, z0, mat, rim]) => {
+      const d = new THREE.Mesh(G.cyl, mat); d.scale.set(rad, h, rad); d.position.set(c.x, z0 + h / 2, c.z); d.castShadow = true; d.receiveShadow = true; g.add(d);
+      const lip = new THREE.Mesh(G.ringT, rim); lip.scale.set(rad, rad, rad * 2.2); lip.rotation.x = Math.PI / 2; lip.position.set(c.x, z0 + h, c.z); g.add(lip);
     });
-    const core = new THREE.Mesh(G.sphere, cy.glow); core.scale.setScalar(0.26); core.position.set(c.x, 1.05, c.z); g.add(core);
-    const halo = glowSprite(0x00e5ff, 0.3, 2.8); halo.position.set(c.x, 1.15, c.z); g.add(halo);
-    const beam = new THREE.Mesh(G.beam, cy.beam); beam.scale.set(1.1, 2.25, 1.1); beam.position.set(c.x, 1.8, c.z); g.add(beam);
-    r.holo = [[0.86, 1.48], [1.2, 1.22], [1.54, 0.98], [1.88, 0.75], [2.22, 0.52]].map(([y, s], i) => {
-      const h = new THREE.Mesh(i % 2 ? G.holoDash : G.ringT, cy.rim); h.scale.setScalar(s); h.rotation.x = Math.PI / 2; h.position.set(c.x, y, c.z); h.userData.y = y; g.add(h); return h;
+    const core = new THREE.Mesh(G.sphere, new THREE.MeshBasicMaterial({ color: new THREE.Color(0xffffff).multiplyScalar(3.2) })); core.scale.setScalar(0.3); core.position.set(c.x, 1.0, c.z); g.add(core);
+    const halo = glowSprite(0xbff6ff, 0.55, 3.0); halo.position.set(c.x, 1.0, c.z); g.add(halo);
+    const beam = new THREE.Mesh(G.beam, new THREE.MeshBasicMaterial({ color: new THREE.Color(0x7fe8f8).multiplyScalar(0.9), transparent: true, opacity: 0.16, blending: THREE.AdditiveBlending, depthWrite: false, side: THREE.DoubleSide }));
+    beam.scale.set(1.5, 2.5, 1.5); beam.position.set(c.x, 2.0, c.z); g.add(beam);
+    r.holo = [[1.45, 0.98], [1.85, 0.86], [2.25, 0.74]].map(([y, s]) => {
+      const h = new THREE.Mesh(G.ringT, cy.rim); h.scale.set(s, s, 1.6); h.rotation.x = Math.PI / 2; h.position.set(c.x, y, c.z); h.userData.y = y; g.add(h); return h;
     });
-    r.core = core; r.coreAt = new THREE.Vector3(c.x, 2.55, c.z);
+    r.core = core; r.coreAt = new THREE.Vector3(c.x, 2.75, c.z);
     const light = new THREE.PointLight(0x00e5ff, 4.2, 11, 1.6); light.position.set(c.x, 1.8, c.z); g.add(light);
     this.agent(r, x0 + 3.8, y0 + 5.85, 0, 'Manager', { stand: true });
     this.plant(r, x0 + 6.4, y0 + 0.5);
@@ -2194,7 +2316,8 @@ class Office3D {
   // with a vertical grid cylinder and perimeter nodes; the label lies inside the ring
   lotRoom(r) {
     const RS = CO.iso.RS, g = r.g, c = this.V(r.x0 + RS / 2, r.y0 + RS / 2, 0.05), ins = 0.35;
-    this.box(g, r.x0, r.y0, 0, RS, RS, 0.05, OM.tile);
+    if (!G.lotDash) { G.lotDash = dashedRing(46, 0.5, 0.016); G.lotDashFine = dashedRing(64, 0.45, 0.008); }
+    this.box(g, r.x0, r.y0, 0, RS, RS, 0.05, OM.deck);
     for (let a = ins; a < RS - ins - 0.2; a += 0.72) {
       const w = Math.min(0.42, RS - ins - a);
       [[r.x0 + a, r.y0 + ins], [r.x0 + a, r.y0 + RS - ins]].forEach(([x, y]) => this.box(g, x, y - 0.035, 0.05, w, 0.07, 0.025, OM.dash, false));
@@ -2202,16 +2325,13 @@ class Office3D {
     }
     const pad = new THREE.Mesh(G.plane, new THREE.MeshBasicMaterial({ map: padTex(), transparent: true, blending: THREE.AdditiveBlending, depthWrite: false }));
     pad.scale.set(5.0, 5.0, 1); pad.rotation.x = -Math.PI / 2; pad.position.set(c.x, 0.07, c.z); g.add(pad);
-    const wall = new THREE.Mesh(G.pole, new THREE.MeshBasicMaterial({ map: gridTex(), color: new THREE.Color(0x28e0b8).multiplyScalar(0.82), transparent: true, blending: THREE.AdditiveBlending, depthWrite: false, side: THREE.DoubleSide }));
+    // his pad: a low wall of teal light speckled with a fine grid, a bright teal line at its foot, white dashes
+    // along its top; round it a dashed white circle and a dashed cyan one further out
+    const wall = new THREE.Mesh(G.pole, new THREE.MeshBasicMaterial({ map: gridTex(), color: new THREE.Color(0x2ec4b4).multiplyScalar(0.62), transparent: true, blending: THREE.AdditiveBlending, depthWrite: false, side: THREE.DoubleSide }));
     wall.scale.set(2.38, 0.48, 2.38); wall.position.set(c.x, 0.3, c.z); g.add(wall);
-    [0.07, 0.54].forEach((y) => { const ring = new THREE.Mesh(G.ringT, OM.lotRim); ring.scale.setScalar(2.38); ring.rotation.x = Math.PI / 2; ring.position.set(c.x, y, c.z); g.add(ring); });
-    for (let i = 0; i < 12; i++) {
-      const ang = (i / 12) * Math.PI * 2;
-      const dot = new THREE.Mesh(G.sphere, OM.lotRim); dot.scale.setScalar(0.045);
-      dot.position.set(c.x + Math.cos(ang) * 2.38, 0.54, c.z + Math.sin(ang) * 2.38); g.add(dot);
-    }
-    r.plus = new THREE.Mesh(G.holoDash, OM.dash); r.plus.scale.setScalar(2.0); r.plus.rotation.x = Math.PI / 2; r.plus.position.set(c.x, 0.08, c.z); g.add(r.plus);
-    [2.85, 3.25].forEach((s) => { const ring = new THREE.Mesh(G.holoDash, OM.dash); ring.scale.setScalar(s); ring.rotation.x = Math.PI / 2; ring.position.set(c.x, 0.06, c.z); g.add(ring); });
+    const foot = new THREE.Mesh(G.ringT, OM.lotRim); foot.scale.setScalar(2.38); foot.rotation.x = Math.PI / 2; foot.position.set(c.x, 0.07, c.z); g.add(foot);
+    r.plus = new THREE.Mesh(G.lotDash, OM.dash); r.plus.scale.setScalar(2.38); r.plus.rotation.x = Math.PI / 2; r.plus.position.set(c.x, 0.54, c.z); g.add(r.plus);
+    [[2.85, OM.dash, G.lotDash], [3.3, OM.lotCyan, G.lotDashFine]].forEach(([s, m, geo]) => { const ring = new THREE.Mesh(geo, m); ring.scale.setScalar(s); ring.rotation.x = Math.PI / 2; ring.position.set(c.x, 0.06, c.z); g.add(ring); });
     const hit = new THREE.Mesh(G.box, M.hit); hit.scale.set(RS, 1.6, RS); hit.position.set(c.x, 0.8, c.z); hit.userData.key = 'lot'; g.add(hit); this.hits.push(hit);
     const el = document.createElement('div'); el.className = 'p3lot'; el.innerHTML = '<b>+</b>ADD DEPARTMENT'; el.addEventListener('click', () => CO.emit('office:click', 'lot')); this.layer.appendChild(el);
     r.plate = el; r.plateAt = new THREE.Vector3(c.x, 0.18, c.z);   // the label lies inside its ring
@@ -2281,21 +2401,18 @@ class Office3D {
     this.paused = S.company.status === 'paused';
     this.drawSel();
   }
-  // a room in the colour of what it does: working cyan, waiting/trading warm amber-orange, laboratory aqua-cyan, and
-  // mint-aquamarine structure rims for resting rooms
+  // A room's neon in the colour of what it needs, as in his picture: mint for every room, orange for the one that
+  // waits on you (and the trading desk, orange in his picture). Working shows as a brighter line and a faint mint
+  // wash on the floor, not as another colour.
   tint(r, st) {
     const dk = r.dept && r.dept.key;
     const isOrange = dk === 'trading_desk' || st === 'waiting';
-    const isLab = dk === 'testing_lab';
-    if (r.st === st && !isOrange && !isLab) return;
-    r.st = st;
-    const lit = st === 'working' || isOrange || isLab;
-    const hex = isOrange ? 0xff8824 : (st === 'working' || isLab) ? 0x00e5ff : 0x38f2b8;
-    const c = new THREE.Color(hex);
-    if (r.edgeM) { r.edgeM.emissive.copy(c); r.edgeM.emissiveIntensity = isOrange ? 1.55 : st === 'working' ? 1.5 : isLab ? 1.35 : 1.15; }
-    if (r.sillM) { r.sillM.emissive.copy(c); r.sillM.emissiveIntensity = lit ? 0.5 : 0.2; }
-    if (r.glow) { r.glow.material.color.copy(c); r.glowBase = isOrange ? 0.26 : st === 'working' ? 0.16 : isLab ? 0.14 : 0.03; }
-    if (r.lamp) { r.lamp.color.copy(lit ? c : new THREE.Color(OFFICE.lamp)); r.lamp.intensity = isOrange ? 10 : st === 'working' ? 7 : isLab ? 6.5 : 3.2; }
+    if (r.st === st && r.orange === isOrange) return;
+    r.st = st; r.orange = isOrange;
+    const c = new THREE.Color(isOrange ? LOOK.orange : LOOK.neon);
+    if (r.edgeM) { r.edgeM.emissive.copy(c); r.edgeM.emissiveIntensity = isOrange ? 2.6 : st === 'working' ? 2.6 : 2.0; }
+    if (r.glow) { r.glow.material.color.copy(c); r.glowBase = isOrange ? 0.68 : st === 'working' ? 0.05 : 0; }
+    if (r.lamp) { r.lamp.color.set(isOrange ? 0xff8a3a : 0xeef6ff); r.lamp.intensity = isOrange ? 16 : 5; }
   }
   drawSel() {
     release(this.selRing); this.selRing.clear();
@@ -2336,22 +2453,25 @@ class Office3D {
   }
 
   /* ---------------- camera ---------------- */
-  // Telephoto isometric framing matching look-office.webp: polar angle 1.02, azimuth PI/4, tight fit
+  // The reference's framing (CAM): its view direction and lens, the distance at which the platform's bounds are as
+  // wide and as tall as there (whichever binds at this stage's size), and the target moved so they sit where they do
   home() {
-    const dir = new THREE.Vector3().setFromSpherical(new THREE.Spherical(1, 1.02, Math.PI / 4)), cam = this.camera.clone(), pts = this.corners || [];
+    const dir = new THREE.Vector3().setFromSpherical(new THREE.Spherical(1, CAM.polar, CAM.az)), cam = this.camera.clone(), pts = this.corners || [];
     const tgt = new THREE.Vector3(); pts.forEach((p) => tgt.add(p)); if (pts.length) tgt.divideScalar(pts.length); tgt.y = 0;
-    const fits = (d, t) => { cam.position.copy(t).addScaledVector(dir, d); cam.lookAt(t); cam.updateMatrixWorld(); return pts.every((p) => { const v = p.clone().project(cam); return Math.abs(v.x) < 1.02 && v.y < 0.88 && v.y > -0.96; }); };
-    let d = 45;
-    for (let k = 0; k < 2; k++) {
-      let lo = 12, hi = 420;
-      for (let i = 0; i < 22; i++) { const mid = (lo + hi) / 2; if (fits(mid, tgt)) hi = mid; else lo = mid; }
-      d = hi * 0.96;
-      // aim at the middle of the picture, not of the plan: shift the target by the bounds' offset on screen
+    const bounds = (d) => {
       cam.position.copy(tgt).addScaledVector(dir, d); cam.lookAt(tgt); cam.updateMatrixWorld();
-      let x0 = 1, x1 = -1, y0 = 1, y1 = -1; pts.forEach((p) => { const v = p.clone().project(cam); x0 = Math.min(x0, v.x); x1 = Math.max(x1, v.x); y0 = Math.min(y0, v.y); y1 = Math.max(y1, v.y); });
-      const right = new THREE.Vector3().setFromMatrixColumn(cam.matrixWorld, 0), up = new THREE.Vector3().setFromMatrixColumn(cam.matrixWorld, 1);
+      let x0 = 9, x1 = -9, y0 = 9, y1 = -9;
+      pts.forEach((p) => { const v = p.clone().project(cam); x0 = Math.min(x0, v.x); x1 = Math.max(x1, v.x); y0 = Math.min(y0, v.y); y1 = Math.max(y1, v.y); });
+      return [x0, x1, y0, y1];
+    };
+    let d = 45;
+    for (let k = 0; k < 3; k++) {
+      let lo = 8, hi = 420;
+      for (let i = 0; i < 24; i++) { const mid = (lo + hi) / 2, b = bounds(mid); if (b[1] - b[0] <= CAM.box[0] && b[3] - b[2] <= CAM.box[1]) hi = mid; else lo = mid; }
+      d = hi;
+      const b = bounds(d), right = new THREE.Vector3().setFromMatrixColumn(cam.matrixWorld, 0), up = new THREE.Vector3().setFromMatrixColumn(cam.matrixWorld, 1);
       const h = 2 * d * Math.tan(THREE.MathUtils.degToRad(cam.fov) / 2), w = h * cam.aspect;
-      tgt.addScaledVector(right, (x0 + x1) / 2 * w / 2).addScaledVector(up, ((y0 + y1) / 2 + 0.05) * h / 2);
+      tgt.addScaledVector(right, ((b[0] + b[1]) / 2 - CAM.mid[0]) * w / 2).addScaledVector(up, ((b[2] + b[3]) / 2 - CAM.mid[1]) * h / 2);
     }
     return { pos: tgt.clone().addScaledVector(dir, d), tgt };
   }
@@ -2364,8 +2484,8 @@ class Office3D {
   focus(key, leftPx, tight) {
     const c = this.cells[key]; if (!c) return;
     const RS = CO.iso.RS, tgt = this.V(c[0] + RS / 2, c[1] + RS / 2 + 0.4, 0.5);
-    const dir = new THREE.Vector3().setFromSpherical(new THREE.Spherical(1, 0.88, Math.PI / 4));
-    this.tween(tgt.clone().add(dir.multiplyScalar(tight ? 23 : 27)), tgt, 750);
+    const dir = new THREE.Vector3().setFromSpherical(new THREE.Spherical(1, CAM.polar - 0.06, CAM.az));
+    this.tween(tgt.clone().add(dir.multiplyScalar(tight ? 16.5 : 19.5)), tgt, 750);
   }
   tween(pos, tgt, ms, done) {
     if (!ms) { this.camera.position.copy(pos); this.controls.target.copy(tgt); this.controls.update(); this.tw = null; if (done) done(); return; }
@@ -2396,7 +2516,8 @@ class Office3D {
       if (r.grow) { const k = Math.min(1, (now - r.grow) / 1200), e = 1 - Math.pow(1 - k, 3); r.g.scale.set(1, Math.max(0.01, e), 1); if (k >= 1) r.grow = 0; }
       if (r.glow) r.glow.material.opacity = (r.glowBase || 0) * (r.st === 'working' ? 0.75 + 0.25 * Math.sin(t * 2.4 + r.x0) : 1);
       if (r.leds) r.leds.forEach((m, i) => { m.visible = ((Math.floor(t * 3 + m.userData.blink)) % 3) !== 0; });
-      if (r.holo) { r.holo.forEach((hh, i) => { hh.rotation.z = t * (0.6 + i * 0.35) * (i % 2 ? -1 : 1); hh.position.y = hh.userData.y + Math.sin(t * 1.3 + i) * 0.05; }); r.core.position.y = 1.25 + Math.sin(t * 1.7) * 0.06; }
+      if (r.holo) { r.holo.forEach((hh, i) => { hh.rotation.z = t * (0.6 + i * 0.35) * (i % 2 ? -1 : 1); hh.position.y = hh.userData.y + Math.sin(t * 1.3 + i) * 0.05; }); r.core.position.y = 1.0 + Math.sin(t * 1.7) * 0.05; }
+      if (r.crystal) r.crystal.forEach((m) => { m.rotation.y = t * 0.7; });
       if (r.spin) r.spin.rotation.y = t * 0.6;
       if (r.floor) r.floor.rotation.z = t * 0.05;
       if (r.plus) r.plus.rotation.z = t * 0.25;
@@ -2415,7 +2536,7 @@ class Office3D {
         if (a.walk) { const W3 = a.walk, dx = W3.to.x - W3.from.x, dz = W3.to.z - W3.from.z; a.g.rotation.y = (now - W3.t0) < W3.dur && Math.hypot(dx, dz) > 0.01 ? Math.atan2(-dx, -dz) : a.g.rotation.y; } else a.g.rotation.y = 0;
         a.b.position.y = a.by + (walking ? 0.1 : 0) + (a.working ? Math.abs(Math.sin(t * 7 + a.phase)) * 0.02 : 0);
         // an astronaut at work: its visor and its chest light go cyan
-        a.visorM.emissiveIntensity = a.working ? 1.3 : 0.06; a.chest.material = a.working ? OM.cyan.glow : OM.pack;
+        a.visorM.emissiveIntensity = a.working ? 0.9 : 0.25; a.chest.material = a.working ? OM.cyan.glow : OM.pack;
         a.ringM.emissiveIntensity = a.working ? 1.8 * (1 - ((t * 0.9 + a.phase) % 1)) : 0;
         a.ring.scale.setScalar(a.working ? 0.3 + ((t * 0.9 + a.phase) % 1) * 0.35 : 0.3);
       });
