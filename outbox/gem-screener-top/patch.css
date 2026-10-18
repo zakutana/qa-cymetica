@@ -6,13 +6,22 @@
 /* 1. Top Picks: the Hot sectors panel goes. */
 #startHot { display: none !important; }
 
-/* 2. The page top: a faint gem-facet lattice (the logo's diamond, repeated) behind the header and the Altseason Index,
-   gone before "Degen picks". --gs-top is where it ends, set by patch.js from the heading's position. */
+/* 2. The page top: the Agent Tournaments honeycomb, in this app's cyan. In the header itself (an opaque band, so a
+   layer behind it never shows: the first try, a facet lattice behind the shell, was invisible -- "kde mas to top
+   pozadi?"), with a glow behind the logo; and faintly behind the panels under it, gone before the content.
+   --gs-top is where that ends, set by patch.js. */
+header.top {
+  background-color: #0d1520 !important;
+  background-image:
+    radial-gradient(ellipse 34% 140% at 3% 0%, rgba(0,207,255,.18), rgba(0,207,255,0) 70%),
+    radial-gradient(ellipse 30% 120% at 100% 0%, rgba(0,255,136,.07), rgba(0,255,136,0) 70%),
+    url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='42' height='24.25'><path d='M0 12.12 L7 0 H21 L28 12.12 L21 24.25 H7 Z M28 12.12 H42' fill='none' stroke='%2300cfff' stroke-opacity='.13' stroke-width='1'/></svg>") !important;
+}
 .shell { position: relative; isolation: isolate; }
 .shell::before {
   content: ''; position: absolute; left: 0; right: 0; top: 0; height: var(--gs-top, 560px); z-index: -1; pointer-events: none;
-  opacity: .085;
-  background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='40' height='69.28'><path d='M0 0 L40 69.28 M40 0 L0 69.28 M0 34.64 H40' fill='none' stroke='%2300cfff' stroke-width='1'/></svg>");
+  opacity: .08;
+  background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='42' height='24.25'><path d='M0 12.12 L7 0 H21 L28 12.12 L21 24.25 H7 Z M28 12.12 H42' fill='none' stroke='%2300cfff' stroke-width='1'/></svg>");
   -webkit-mask-image: linear-gradient(to bottom, rgba(6,9,15,1) 0, rgba(6,9,15,1) 55%, rgba(6,9,15,0) 100%);
           mask-image: linear-gradient(to bottom, rgba(6,9,15,1) 0, rgba(6,9,15,1) 55%, rgba(6,9,15,0) 100%);
 }
