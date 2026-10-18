@@ -25,7 +25,8 @@ re-read of its job:
 
 WHAT IT ASSERTS. On the newest recorded answer that carries a marker, re-read from their
 server by its job id (the markers are applied at serve time, so a re-read is what a fix
-changes): no `not available` marker sits on an id that is one of our bot instances; no `not
+changes): no `not available` marker sits on an id that is one of our bot instances (what
+my-clones lists, and every clone our own record says was accepted: C10, 2026-10-18); no `not
 served` marker names a method that the document serves on the path the sentence names; no
 marker sits inside a path, and none is written twice in a row.
 
@@ -72,6 +73,14 @@ def _nexus():
     return mod
 
 
+def _clone_record() -> list[dict]:
+    """Our own clone record (scripts/clone.py), read-only."""
+    spec = importlib.util.spec_from_file_location("clone_markers", REPO / "scripts" / "clone.py")
+    mod = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(mod)
+    return mod.load()
+
+
 def has_marker(text: str) -> bool:
     return bool(MARK.search(text or ""))
 
@@ -87,17 +96,25 @@ def served_methods(document: dict, path: str) -> set[str]:
     return out
 
 
+def our_instances(live_rows, recorded_rows) -> set[str]:
+    """Every bot instance id that is ours, lower-cased: what my-clones lists now, and every clone our
+    own record says the platform accepted -- a clone released since is still the one his answer named
+    (NEX-0142's 692c35b3). C10, deep pass 2026-10-18: this replaces judging any id the answer's words
+    called a bot, which went past the contract (a marker on one of OUR instances)."""
+    ids = {str(r.get("instance_id") or r.get("id")).lower()
+           for r in live_rows or [] if isinstance(r, dict) and (r.get("instance_id") or r.get("id"))}
+    ids |= {str(r["clone_instance_id"]).lower() for r in recorded_rows or []
+            if isinstance(r, dict) and r.get("type") == "outcome" and r.get("outcome") == "accepted"
+            and r.get("clone_instance_id")}
+    return ids
+
+
 def misfires(text: str, document: dict, instances: set[str]) -> dict:
     """What is wrong with the markers in `text`, judged against what the platform says."""
-    from tests.rest.test_nexus_cards_exist import _labelled_as_not_a_card
-
     out = {"marked_instances": [], "served_but_marked": [], "split_paths": [],
            "repeated": [], "markers": len(MARK.findall(text or ""))}
     for hit in ID_RUN.finditer(text or ""):
-        before = text[max(0, hit.start() - 48):hit.start()].rsplit("\n", 1)[-1]
-        known = hit["id"].lower() in instances
-        said = _labelled_as_not_a_card(before) or before.rstrip().endswith("/cloned-bots/")
-        if (known or said) and hit["id"] not in out["marked_instances"]:
+        if hit["id"].lower() in instances and hit["id"] not in out["marked_instances"]:
             out["marked_instances"].append(hit["id"])
     for hit in PATH_RUN.finditer(text or ""):
         full = hit["head"] + hit["tail"]
@@ -153,17 +170,16 @@ def test_nexus_answer_markers_are_true_and_leave_the_answer_usable(rest_anon, re
     if not spec.get("paths"):
         raise Inconclusive(f"{OPENAPI} publishes no paths")
 
-    instances: set[str] = set()
+    live_rows: list = []
     mine = rest_trusted.get(MY_CLONES, params={"mode": "paper"})
     if mine.status_code == 200:
         try:
             body = mine.json()
-            rows_ = body if isinstance(body, list) else (body.get("clones") or body.get("items") or [])
-            instances = {str(r.get("instance_id") or r.get("id")).lower()
-                         for r in rows_ if isinstance(r, dict)}
+            live_rows = body if isinstance(body, list) else (body.get("clones") or body.get("items") or [])
         except ValueError:
             pass
-    if mine.status_code != 200 or not instances:
+    instances = our_instances(live_rows, _clone_record())
+    if mine.status_code != 200 or not live_rows:
         # A08, deep pass 2026-10-15 (rule 8): without our bot ids a marker on one of them cannot be
         # seen, so a pass would rest on a read that failed.
         raise Inconclusive(f"{MY_CLONES} answered HTTP {mine.status_code} with "

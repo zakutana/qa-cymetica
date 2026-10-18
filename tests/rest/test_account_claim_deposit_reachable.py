@@ -13,7 +13,9 @@ Failed when every control that opens the form is inside that card AND a script t
 card on an empty pending list. Passes when a control outside the card, or a script call, opens the form, or
 when no loaded script hides the card on an empty list any more. NOT asserted: which of these they choose,
 or anything about a logged-in view (the page and its scripts are the same for everyone). Inconclusive when
-the page, the form, its control or the card can no longer be found. SAFE: anonymous GETs of the page and
+the page, the form, its control or the card can no longer be found, when a verdict would rest on a script
+that could not be read, or when a script hides the card but not provably on an empty list (C01, deep pass
+2026-10-18: one exact text pattern was the only reading, and an unread script passed). SAFE: anonymous GETs of the page and
 its own scripts; nothing they serve is called.
 """
 
@@ -82,17 +84,77 @@ def _text(client, path: str) -> str | None:
     return r.text if r.status_code == 200 else None
 
 
-def _hides_when_empty(js: str) -> bool:
-    """The card's variable is set to display none under a `.length === 0` test of the pending list."""
-    for var in set(re.findall(r"(\w+)\s*=\s*document\.getElementById\(\s*['\"]" + CARD + r"['\"]\s*\)", js)):
-        if re.search(r"\.length\s*===?\s*0\s*\)\s*\{\s*" + re.escape(var) + r"\.style\.display\s*=\s*['\"]none['\"]", js):
-            return True
-    return False
+_LOOKUP = r"document\.(?:getElementById\(\s*['\"]" + CARD + r"['\"]\s*\)|querySelector\(\s*['\"]#" + CARD + r"['\"]\s*\))"
+_HIDE = (r"\s*(?:\.style\.display\s*=\s*['\"]none['\"]|\.hidden\s*=\s*(?:true|!0)"
+         r"|\.classList\.add\(\s*['\"](?:hidden|d-none|is-hidden)['\"]|\.setAttribute\(\s*['\"]hidden['\"])")
+# A test that the list is empty, written out or minified: `.length === 0`, `.length < 1`, `!rows.length`.
+_EMPTY = re.compile(r"\.length\s*(?:===?\s*0|<\s*1|<=\s*0)\b|!\s*[\w$.]+\.length\b")
+_EMPTY_REACH = 160     # how far before the hide its condition may stand
+
+
+def _hides_when_empty(js: str) -> bool | None:
+    """True: a script hides the card under a test that the pending list is empty. False: nothing
+    hides the card at all. None: something hides it, but not provably on an empty list -- neither a
+    pass nor a defect.
+
+    C01, deep pass 2026-10-18: one exact pattern of the hashed build (`.length === 0) {
+    container.style.display = 'none'`) was the only reading, so a minified rebuild or `.hidden = true`
+    read as "never hidden" and passed."""
+    js = js or ""
+    names = set(re.findall(r"([\w$]+)\s*=\s*" + _LOOKUP, js))
+    targets = [re.escape(n) for n in names] + [_LOOKUP]
+    hides = [m for t in targets for m in re.finditer(r"(?<![\w$.])" + t + _HIDE, js)]
+    if not hides:
+        return False
+    if any(_EMPTY.search(js[max(0, m.start() - _EMPTY_REACH):m.start()]) for m in hides):
+        return True
+    return None
+
+
+def _code(js: str) -> str:
+    """The script without its comments: block comments, and a `//` line comment that is not a URL's."""
+    js = re.sub(r"/\*.*?\*/", " ", js or "", flags=re.S)
+    return re.sub(r"(?<![:'\"\\])//[^\n]*", " ", js)
 
 
 def _calls(js: str) -> int:
-    """Calls of the opener that are not its own definition."""
-    return len(re.findall(r"(?<!function )\b" + OPENER + r"\s*\(", js))
+    """Calls of the opener: not its definition (`function f(`, a method `f() {`, `f = function`,
+    `f: function`), not a mention inside a string (the card's own markup), not a comment (C01)."""
+    n = 0
+    code = _code(js)
+    for m in re.finditer(r"(?<![\w$])" + OPENER + r"\s*\(", code):
+        before = code[max(0, m.start() - 12):m.start()]
+        after = code[m.end():m.end() + 80]
+        if re.search(r"function\s*$", before) or re.search(r"[\"'`]\s*$", before):
+            continue
+        if re.match(r"[^()]*\)\s*\{", after):      # `openClaimDepositForm() {` declares a method
+            continue
+        line = code[code.rfind("\n", 0, m.start()) + 1:m.start()]
+        if line.count("'") % 2 or line.count('"') % 2 or line.count("`") % 2:
+            continue                                # inside a string literal on this line
+        n += 1
+    return n
+
+
+def judge(outside: int, calls: int, hides: bool | None, unread: list[str]) -> tuple[str | None, str]:
+    """(verdict, why): "passed", "failed", or None for inconclusive.
+
+    A control outside the card is in the page itself and needs no script. Every other verdict rests
+    on what the scripts do not contain -- no call, no hide -- so it needs every script read: one that
+    could not be read may hold either (C01, deep pass 2026-10-18)."""
+    if outside:
+        return "passed", "a control outside the pending card opens the form"
+    if calls:
+        return "passed", f"a script calls {OPENER}"
+    if unread:
+        return None, (f"{len(unread)} script(s) the page loads could not be read ({unread[:3]}); a call of "
+                      f"{OPENER} or the card's hiding may be in them")
+    if hides is None:
+        return None, (f"a script hides #{CARD}, but not provably when the pending list is empty; read the "
+                      f"script before calling it either way")
+    if hides:
+        return "failed", "hidden"
+    return "passed", "no loaded script hides the pending card when nothing is pending"
 
 
 @qa(component="rest.account", tier=SafetyTier.SAFE, surface="rest")
@@ -116,16 +178,17 @@ def test_the_claim_form_opens_when_nothing_is_pending(rest_anon):
     outside = page.openers.count(False)
     script_calls = _calls(js)
     hides = _hides_when_empty(js)
+    unread = sorted(set(scripts) - set(read))
     population = {"controls": len(page.openers), "controls_outside_card": outside,
                   "script_calls": script_calls, "card_hidden_when_empty": hides,
-                  "scripts_read": len(read), "scripts_unread": sorted(set(scripts) - set(read))}
-    reachable = outside > 0 or script_calls > 0 or not hides
+                  "scripts_read": len(read), "scripts_unread": unread}
+    verdict, why = judge(outside, script_calls, hides, unread)
+    if verdict is None:
+        raise Inconclusive(why)
+    reachable = verdict == "passed"
     conclude(Measurement(
-        verdict="passed" if reachable else "failed",
-        reason=(("a control outside the pending card opens the form" if outside else
-                 f"a script calls {OPENER}" if script_calls else
-                 "no loaded script hides the pending card when nothing is pending")
-                if reachable else
+        verdict=verdict,
+        reason=(why if reachable else
                 f"all {len(page.openers)} control(s) that open Claim Missing Deposit sit inside #{CARD}, "
                 f"which the page script hides when the pending list is empty: an undetected deposit "
                 f"leaves nothing pending, so the form cannot be opened"),

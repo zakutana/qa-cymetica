@@ -10,7 +10,8 @@ response's own `month_committed_et10` (49,585) cannot be reconciled against its 
 it shows are all `capped`, 0 ET10). Nexus's REPLY-0182 said "ask for more rows and it is there", which
 holds only while a record is among the newest 200.
 
-Passes when the list comes back short of its ceiling (it is the whole log), when its oldest id is 1, or
+Passes when the list comes back shorter than every window the server stops at (50 when `limit` is
+dropped, 200 at the ceiling: then it is the whole log; C02, 2026-10-18), when its oldest id is 1, or
 when any paging parameter or filter we try (offset, before, page, cursor, status=credited, player_id of
 the window's players: every fix #213 names) returns a record older than the window. NOT asserted: which way they
 page, or that ids start at 1 -- only that a full window whose oldest id is above 1 has nothing behind it
@@ -27,6 +28,18 @@ from tests.rest.test_gem_screener_numbers_match_their_sources import get_patient
 
 PRIZES = "/api/v1/agent-league/prizes"
 CEILING = 200      # the largest `limit` their server takes (201 is a 422)
+# Every row count the list has been seen to stop at: the ceiling, and the default 50 it answers when
+# `limit` is not honoured. A window exactly that long is not known to be the whole log (C02).
+WINDOWS = (50, CEILING)
+
+
+def whole(count: int, oldest: int | None) -> bool:
+    """Whether a window of `count` rows whose oldest id is `oldest` is the whole log: shorter than
+    every window the server stops at, or reaching id 1. C02, deep pass 2026-10-18: "shorter than 200"
+    alone read a server's default 50 -- `limit` dropped -- as everything there is."""
+    if oldest is None or oldest <= 1:
+        return True
+    return count < CEILING and count not in WINDOWS
 
 
 def _rows(client, **params) -> list[dict] | None:
@@ -59,7 +72,7 @@ def test_the_prize_log_reaches_every_prize_it_recorded(rest_anon):
     if len(ids) < len(window) or not ids:
         raise Inconclusive("the prize rows carry no integer ids to order them by")
     oldest, newest = min(ids), max(ids)
-    if len(window) < CEILING or oldest <= 1:
+    if whole(len(window), oldest):
         conclude(Measurement(
             verdict="passed",
             reason=f"the log answers {len(window)} records, ids {oldest}-{newest}: nothing lies behind it",
@@ -87,7 +100,8 @@ def test_the_prize_log_reaches_every_prize_it_recorded(rest_anon):
         verdict="passed" if reached else "failed",
         reason=(f"records older than the window are reachable by {', '.join(sorted(reached))}"
                 if reached else
-                f"the log answers its newest {CEILING} records (ids {oldest}-{newest}) and no more: "
+                f"the log answers its newest {len(window)} records (ids {oldest}-{newest}; asked for "
+                f"{CEILING}) and no more: "
                 f"{oldest - 1} older records cannot be read, and none of "
                 f"{', '.join(sorted(tried))} reaches one"),
         left={"records_out_of_reach": 0 if reached else oldest - 1},

@@ -33,7 +33,15 @@ from tests.rest.test_a_clone_summary_names_what_it_trades import _profile, switc
 PREFIX = "/api/v1/cloned-bots"
 LIVE = "/api/v1/perpetual/markets/batch-status"
 CLAIM = "a-clone-trades-only-live-epoch-markets"
-MAX_CLONES = 12
+MAX_CLONES = 250      # a ceiling, not a sample: what lies past it is counted unread (C06)
+
+
+def to_read(clones) -> tuple[list[dict], list[str]]:
+    """(the clones to judge, the ids past the ceiling). Every clone of ours, as the clone-summary
+    check reads every clone: the first 12 in API order were judged and the rest dropped silently, so
+    "all 12" passed while 41 existed (C06, deep pass 2026-10-18)."""
+    rows = [c for c in clones or [] if isinstance(c, dict) and c.get("id")]
+    return rows[:MAX_CLONES], [str(c["id"])[:8] for c in rows[MAX_CLONES:]]
 
 
 def live_symbols(body) -> list[str]:
@@ -61,8 +69,8 @@ def test_a_clones_perpetual_markets_are_live_five_minute_markets(rest_anon, rest
     mine = rest_trusted.get(f"{PREFIX}/my-clones", params={"mode": "paper"})
     if mine.status_code != 200 or not isinstance(mine.json(), list):
         raise Inconclusive(f"my-clones answered HTTP {mine.status_code}")
-    clones = [c for c in mine.json() if isinstance(c, dict) and c.get("id")][:MAX_CLONES]
-    judged, wrong, dead_all, unread = 0, [], set(), []
+    clones, beyond = to_read(mine.json())
+    judged, wrong, dead_all, unread = 0, [], set(), list(beyond)
     for clone in clones:
         profile = _profile(rest_trusted, clone["id"])
         if not profile or not isinstance(profile.get("settings"), dict):
@@ -82,8 +90,8 @@ def test_a_clones_perpetual_markets_are_live_five_minute_markets(rest_anon, rest
     if not judged:
         raise Inconclusive("no clone of ours states a perpetual market list; nothing judged")
     if unread and not wrong:
-        raise Inconclusive(f"{len(unread)} of {len(clones)} clone profiles could not be read ({', '.join(unread)}); "
-                           f"the {judged} read were clean, which does not make the rest clean")
+        raise Inconclusive(f"{len(unread)} of {len(clones) + len(beyond)} clone profiles were not read "
+                           f"({', '.join(unread[:12])}); the {judged} read were clean, which does not make the rest clean")
     ex = wrong[0] if wrong else None
     conclude(Measurement(
         verdict="failed" if wrong else "passed",
@@ -91,7 +99,8 @@ def test_a_clones_perpetual_markets_are_live_five_minute_markets(rest_anon, rest
                 f"market: {', '.join(sorted(dead_all))}; {LIVE} lists {', '.join(live)}. E.g. {ex['id']} "
                 f"perpetual_markets {ex['perpetual_markets']!r}, trades_summary {ex['trades_summary']!r}"
                 if wrong else
-                f"all {judged} paper clones switch on only live 5-minute markets ({', '.join(live)})"),
+                f"all {judged} paper clones that switch on a perpetual market ({len(clones)} read, every "
+                f"clone of ours) switch on only live 5-minute markets ({', '.join(live)})"),
         left={"clones_with_dead_markets": len(wrong)},
         right={"clones_with_dead_markets": 0},
         population={"live": live, "judged": judged, "wrong": wrong[:6], "unread": unread},

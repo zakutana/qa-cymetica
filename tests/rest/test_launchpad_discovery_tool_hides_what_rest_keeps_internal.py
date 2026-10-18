@@ -35,6 +35,7 @@ from qa.measure import Measurement, conclude
 
 TOKENS = "/api/v1/launchpad/onchain/tokens"
 SCREENER = "/api/v1/launchpad/onchain/screener"
+CONFIG = "/api/v1/launchpad/onchain/config"
 PAGE = 200
 MCP_WINDOW = 100
 PAUSE_S = 1.2
@@ -92,6 +93,38 @@ def settle(first: dict, second: dict) -> tuple[dict, list]:
     return confirmed, unsettled
 
 
+def chains_to_judge(screener_reads, config) -> list[int]:
+    """Every chain any source names: the screener with and without external launches, and /config's
+    `chains` and `paused_chain_ids`. C04, deep pass 2026-10-18: the public screener alone names a
+    chain only while it has a public launch, so a chain whose launches are all internal was never
+    asked -- and on 2026-10-18 it named none at all, while /config named 4663, 5042 and 5042002."""
+    found = set()
+    for rows in screener_reads or []:
+        for row in rows if isinstance(rows, list) else []:
+            if isinstance(row, dict) and isinstance(row.get("chain_id"), int):
+                found.add(row["chain_id"])
+    config = config if isinstance(config, dict) else {}
+    for key in ("chains", "paused_chain_ids"):
+        for item in config.get(key) or []:
+            if isinstance(item, int) and not isinstance(item, bool):
+                found.add(item)
+            elif isinstance(item, dict):
+                cid = item.get("chain_id", item.get("id"))
+                if isinstance(cid, int) and not isinstance(cid, bool):
+                    found.add(cid)
+    return sorted(found)
+
+
+def clean_line(first: dict) -> str:
+    """The pass's per-chain line. A leak the second look did not see again is said as such -- the
+    pass settles it as a moment, but "0 leaked" for a chain whose first read leaked five was false (C03)."""
+    return "; ".join(
+        f"chain_id={c}: {v['internal_by_rest']} internal, "
+        + (f"{len(v['leaked'])} listed on the first read and gone on the second look {SECOND_LOOK_S:g} s later"
+           if v.get("leaked") else "0 leaked")
+        for c, v in first.items())
+
+
 def _one_read(rest, mcp, chains):
     judged, unmeasured = {}, []
     for chain in chains:
@@ -124,14 +157,21 @@ def _one_read(rest, mcp, chains):
     claim="launchpad-discovery-feed-lists-no-internal-launch")
 def test_the_discovery_tool_does_not_list_what_the_rest_list_keeps_internal(rest_anon, mcp_anon):
     """launchpad_list_tokens shows no launch that GET /tokens hides as admin/debug."""
+    reads, statuses = [], []
+    for external in ("false", "true"):
+        time.sleep(PAUSE_S)
+        sc = rest_anon.get(SCREENER, params={"limit": 500, "include_external": external})
+        statuses.append(sc.status_code)
+        reads.append(sc.json() if sc.status_code == 200 else None)
     time.sleep(PAUSE_S)
-    sc = rest_anon.get(SCREENER, params={"limit": 500, "include_external": "false"})
-    rows = sc.json() if sc.status_code == 200 else None
-    if not isinstance(rows, list):
-        raise Inconclusive(f"the screener (the chain list) answered HTTP {sc.status_code}")
-    chains = sorted({r.get("chain_id") for r in rows if isinstance(r, dict) and isinstance(r.get("chain_id"), int)})
+    cf = rest_anon.get(CONFIG)
+    config = cf.json() if cf.status_code == 200 else None
+    if not isinstance(config, dict) and not any(isinstance(r, list) for r in reads):
+        raise Inconclusive(f"neither the screener (HTTP {statuses}) nor {CONFIG} (HTTP {cf.status_code}) "
+                           f"answered a chain list")
+    chains = chains_to_judge(reads, config)
     if not chains:
-        raise Inconclusive("no chain is named by the unfiltered screener")
+        raise Inconclusive("no chain is named by the screener or by /config")
 
     first, unmeasured = _one_read(rest_anon, mcp_anon, chains)
     if not first:
@@ -166,8 +206,7 @@ def test_the_discovery_tool_does_not_list_what_the_rest_list_keeps_internal(rest
                 f"20 seconds apart: " + "; ".join(line(c, v) for c, v in confirmed.items())
                 if confirmed else
                 "the discovery tool lists none of the launches the REST list keeps internal "
-                "(" + "; ".join(f"chain_id={c}: {v['internal_by_rest']} internal, 0 leaked"
-                                for c, v in first.items()) + ")"),
+                "(" + clean_line(first) + ")"),
         left={"internal_launches_in_the_discovery_feed": {c: v["leaked_symbols"] for c, v in confirmed.items()}},
         right={"internal_launches_in_the_discovery_feed": {}},
         population={"chains": chains, "first_read": first, "confirmed": confirmed, "unmeasured": unmeasured},

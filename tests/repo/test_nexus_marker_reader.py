@@ -45,8 +45,23 @@ def test_the_three_misfires_of_nex_0142_are_seen():
 
 
 @SELF
-def test_an_instance_the_answer_itself_calls_one_is_seen_without_our_list():
-    assert misfires(SERVED_TEXT, DOCUMENT, set())["marked_instances"] == [CLONE]
+def test_only_our_own_bot_ids_are_judged_and_our_records_count_as_ours():
+    """C10, deep pass 2026-10-18 (2 of 3): the contract is a marker on one of OUR bot instances, but an id
+    the preceding words merely called a bot failed too -- an invented id the resolver rightly calls
+    unresolvable among them. What that arm was for (seeing our clone without the live list, once
+    released) is kept by counting every instance our own clone record holds."""
+    from tests.rest.test_nexus_answer_markers_are_true import our_instances
+
+    stranger = "5bd86126-90eb-4ad8-8e55-909397dab402"
+    text = f"Clone bot {stranger} {GONE} and set it to paper."
+    assert misfires(text, DOCUMENT, {CLONE})["marked_instances"] == [], "a bot id that is not ours"
+    assert misfires(SERVED_TEXT, DOCUMENT, set())["marked_instances"] == []
+    released = [{"type": "outcome", "outcome": "accepted", "clone_instance_id": CLONE.upper()},
+                {"type": "outcome", "outcome": "rejected", "clone_instance_id": stranger}]
+    ours = our_instances([], released)
+    assert ours == {CLONE}, "an accepted clone of ours, released since, is still ours; a rejected one never was"
+    assert misfires(SERVED_TEXT, DOCUMENT, ours)["marked_instances"] == [CLONE]
+    assert our_instances([{"instance_id": "ABC"}, {"id": "def"}, "junk"], []) == {"abc", "def"}
 
 
 @SELF

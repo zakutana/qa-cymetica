@@ -26,7 +26,9 @@ list); the first run of this check read only the default list, judged 12 cards a
 
 **The rule.** For every card in that list that is live, tradeable, not past `trading_closes_at`
 and at least MIN_CRYPTO_WEIGHT crypto by basket weight, the widest gap between two consecutive
-points of its `interval=30d` history is at most MAX_GAP_HOURS. 12 h is four times the 3 h grid and
+points of its `interval=30d` history is at most MAX_GAP_HOURS -- and so is the stretch from its newest
+point to the server's own clock (the response's Date header), or a recorder that stopped and stayed
+stopped would pass (C07, deep pass 2026-10-18). 12 h is four times the 3 h grid and
 about twice the platform-wide outage above. A card with no points in the window is named and not
 judged (it records nothing at all, which is a different question); one point is no gap.
 
@@ -56,6 +58,7 @@ SAFE: GETs, anonymous.
 from __future__ import annotations
 
 from datetime import datetime, timezone
+from email.utils import parsedate_to_datetime
 
 from qa.marks import Inconclusive, SafetyTier, qa
 from qa.measure import Measurement, conclude
@@ -134,6 +137,49 @@ def undeclared_holes(points, gaps, max_hours: float) -> list[tuple[float, str, s
     return out
 
 
+def server_now(date_header) -> datetime | None:
+    """The server's own clock from a response's Date header, or None: the tail of a history is
+    measured against their now, never ours (a first look from our clock is a claim about us)."""
+    if not isinstance(date_header, str):
+        return None
+    try:
+        when = parsedate_to_datetime(date_header)
+    except (TypeError, ValueError, IndexError):
+        return None
+    if when is None:
+        return None
+    return when if when.tzinfo else when.replace(tzinfo=timezone.utc)
+
+
+def tail_hole(points, gaps, now: datetime | None, max_hours: float) -> tuple[float, str, str] | None:
+    """The stretch from the newest point to `now` (the server's clock), as (hours, from, to), when it
+    is longer than `max_hours` and no entry of `gaps` declares it open from that point (`to` empty or
+    reaching now). None otherwise.
+
+    C07, deep pass 2026-10-18: only stretches between two points were measured, so a live card whose
+    recorder stopped three days ago -- the incident's own shape, still running -- passed."""
+    if now is None:
+        return None
+    times = sorted(when for point in points or [] if isinstance(point, dict)
+                   for when in [_when(point.get("t"))] if when is not None)
+    if not times:
+        return None
+    last = times[-1]
+    hours = (now - last).total_seconds() / 3600.0
+    if hours <= max_hours:
+        return None
+    slack = DECLARE_SLACK_HOURS * 3600
+    for gap in gaps if isinstance(gaps, list) else []:
+        if not isinstance(gap, dict):
+            continue
+        start, end = _when(gap.get("from")), _when(gap.get("to"))
+        if start is not None and abs((start - last).total_seconds()) <= slack and (
+                end is None or (now - end).total_seconds() <= slack):
+            return None
+    raw = next(p["t"] for p in points if isinstance(p, dict) and _when(p.get("t")) == last)
+    return (hours, raw, now.isoformat(timespec="seconds"))
+
+
 def _crypto_share(basket) -> float:
     legs = [leg for leg in basket or [] if isinstance(leg, dict)]
     total = sum(float(leg.get("weight") or 0) for leg in legs)
@@ -183,8 +229,16 @@ def test_live_crypto_card_index_history_has_no_multi_day_hole(rest_anon):
         if gap is None and len(points) >= 2:
             unread.append(f"{str(cid)[:8]}: a point's time is unreadable")
             continue
+        theirs = server_now(read.headers.get("date"))
+        if theirs is None:
+            unread.append(f"{str(cid)[:8]}: no Date header to measure its newest point against")
+            continue
         series[cid] = sorted(t for t in (_when(p.get("t")) for p in points) if t is not None)
         open_holes = undeclared_holes(points, body.get("gaps"), MAX_GAP_HOURS)
+        # C07: and from the newest point to their now -- a recorder that stopped and stays stopped
+        tail = tail_hole(points, body.get("gaps"), theirs, MAX_GAP_HOURS)
+        if tail:
+            open_holes.append(tail)
         worst = max(open_holes, key=lambda h: h[0]) if open_holes else None
         judged.append({"id": cid, "title": (card.get("title") or "")[:60], "points": len(points),
                        "widest_gap_hours": round(gap[0], 1) if gap else 0.0,
@@ -221,7 +275,7 @@ def test_live_crypto_card_index_history_has_no_multi_day_hole(rest_anon):
                 f"{MAX_GAP_HOURS:g} h in their 30-day index history that the history's own gaps list "
                 f"does not declare, while the card reads live and tradeable. {named}" if holes else
                 f"all {len(judged)} open crypto card(s) with a 30-day history kept a point within "
-                f"every {MAX_GAP_HOURS:g} h or declared the gap"
+                f"every {MAX_GAP_HOURS:g} h, up to the server's own now, or declared the gap"
                 + (f" ({len(declared_holes)} declared: "
                    + "; ".join(f"{h['id']} {h['widest_gap_hours']} h" for h in declared_holes) + ")"
                    if declared_holes else "")),

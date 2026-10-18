@@ -16,10 +16,11 @@ the biggest of all, and none of the ten biggest losers and three of the ten bigg
 over all 641 cards were among the cards the page reads.
 
 **The rule.** Every card that is among the ten biggest gainers or the ten biggest losers over
-the whole default listing is among the cards the page's script reads. Any fix passes: a page
-that reads every page of the listing, a server-side order by move, a dedicated endpoint the
-script calls instead (then the check is re-pointed: a page that stops reading the listing
-is Inconclusive, never passed).
+the whole default listing is among the cards the page's script reads. Any fix is accepted, but
+only a literal request is read from the text: a script that pages through the listing, or calls
+a dedicated endpoint instead, is Inconclusive until the check is re-pointed at what the page
+really reads -- never passed on the text (C05, 2026-10-18). Since ET-30860 the page calls
+`/api/v1/event-cards/movers?limit=10`, which this check does not read yet.
 
 NOT asserted: the "Event cards leading the deck" board (it falls back to the size of the move
 when no card has activity, by its own sort), the token rows, or whether "since listing" is
@@ -74,6 +75,26 @@ def card_requests(script: str | None) -> tuple[list[str], bool | None]:
         elif built and pages is not True:
             pages = None
     return urls, pages
+
+
+def unread_from_text(urls: list[str], pages: bool | None) -> str | None:
+    """Why the cards the page reads cannot be told from its script, or None for a literal request
+    (one page, read and ranked below).
+
+    A built offset is unread, never passed (C05, deep pass 2026-10-18). A04 had credited one as
+    paging when the script held `total`, `has_more`, `next` or `.length <` anywhere, and passed
+    without a card read: `for (const o of [0, 100])` beside an unrelated `total` read 200 of 641.
+    Which offsets a loop reaches is not in its text and this check does not run the page's script,
+    so a page that pages through the listing is the "re-point the check" case of the docstring."""
+    if not urls:
+        return f"{PAGE}'s board script no longer fetches {LISTING}; re-point the check"
+    if pages is None:
+        return (f"{PAGE}'s board script builds its request ({urls}) in a way whose cards cannot be read "
+                f"from the text; re-point the check")
+    if pages:
+        return (f"{PAGE}'s board script builds an offset ({urls}): which pages of the listing it reaches "
+                f"cannot be read from the text, and this check does not run the script; re-point the check")
+    return None
 
 
 def adds_nothing(seen: set, cards: list[dict]) -> bool:
@@ -132,23 +153,9 @@ def test_the_movers_boards_rank_every_card_of_the_listing(rest_anon):
     if script is None:
         raise Inconclusive(f"{PAGE} carries no script writing #{BOARD_ANCHOR}; the boards moved")
     urls, pages = card_requests(script)
-    if not urls:
-        raise Inconclusive(f"{PAGE}'s board script no longer fetches {LISTING}; re-point the check")
-    if pages is None:
-        raise Inconclusive(f"{PAGE}'s board script builds its request ({urls}) in a way whose cards "
-                           f"cannot be read from the text; re-point the check")
-    if pages and not re.search(r"\b(total|has_more|hasMore|next)\b|\.length\s*<", script):
-        # A04, deep pass 2026-10-15: `for (o of [0, 100]) fetch(...offset=' + o)` builds an offset
-        # and reads 200 of 641. Paging counts only when the loop stops on the listing's own end.
-        raise Inconclusive(f"{PAGE}'s board script builds an offset ({urls}) but nothing in it stops on "
-                           f"the listing's end (total, has_more, next, a short page); re-point the check")
-    if pages:
-        conclude(Measurement(
-            verdict="passed",
-            reason=f"{PAGE}'s board script pages through the listing ({urls})",
-            left={"pages_through_listing": True}, right={"pages_through_listing": True},
-            population={"requests": urls}, sources={"page": PAGE, "listing": LISTING}, claim_id=CLAIM))
-        return
+    why = unread_from_text(urls, pages)
+    if why:
+        raise Inconclusive(why)
 
     page_cards, totals = {}, []
     for url in urls:

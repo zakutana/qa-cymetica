@@ -1069,8 +1069,8 @@ def _the_launchpad_list_readings():
 
 def _the_movers_page_readings():
     """The readings behind the /movers check (2026-10-11): the script's one request for 100 cards
-    is read as one page, a request built to page through the listing passes, and a card of the
-    true top ten that the page never reads is named on its board."""
+    is read as one page, a request built to page through the listing is unread (C05, 2026-10-18),
+    and a card of the true top ten that the page never reads is named on its board."""
     from tests.rest.test_movers_page_ranks_every_card import board_script, card_requests, outside_the_page
 
     script = ("var el = document.getElementById('pm-gainers'); function load() { var cards = "
@@ -1088,6 +1088,20 @@ def _the_movers_page_readings():
         "a literal offset 0 is still one page")
     assert card_requests("fetch('/api/v1/event-cards/?limit=' + n)")[1] is None, (
         "a URL built some other way: which cards it reads cannot be read from the text")
+    # C05, deep pass 2026-10-18: a built offset passed when the script held `total`, `next` or
+    # `.length <` anywhere -- a fixed two-page loop beside an unrelated `total` passed having read 200
+    # of 641 cards, and no card at all. Which offsets a loop reaches is not in its text: unread.
+    from tests.rest.test_movers_page_ranks_every_card import unread_from_text
+
+    two = ("for (const o of [0, 100]) fetch('/api/v1/event-cards/?limit=100&offset=' + o); "
+           "const total = rows.length; el.id = 'pm-gainers';")
+    urls, pages = card_requests(two)
+    assert pages is True and unread_from_text(urls, pages), "a built offset is never credited from text"
+    full = ("let o = 0; while (o < total) { fetch('/api/v1/event-cards/?limit=100&offset=' + o); o += 100; }")
+    assert unread_from_text(*card_requests(full)), "nor a loop that looks right: the check does not run it"
+    assert unread_from_text(*card_requests(script)) is None, "a literal request is one page, read below"
+    assert unread_from_text([], False), "a script that fetches no listing"
+    assert unread_from_text(*card_requests("fetch('/api/v1/event-cards/?limit=' + n)"))
     from tests.rest.test_movers_page_ranks_every_card import adds_nothing
 
     assert adds_nothing({"c1", "c2"}, [{"id": "c1"}, {"id": "c2"}]) is True, (
@@ -1175,6 +1189,20 @@ def _the_company_charter_cap_readings():
               '<textarea class="bc-d-charter" rows="3" maxlength="1500">')
     assert charter_caps(served) == [1500], "only the charter field's cap counts"
     assert charter_caps('<textarea class="co-charter-edit">') == [], "an uncapped field holds no number"
+    # C09, deep pass 2026-10-18: only a literal maxlength="N" was read, so a cap kept at 1,500 through a
+    # constant or el.maxLength was "not judged" and the check passed on the other script.
+    from tests.rest.test_company_charter_cap_agrees_with_its_docs import unresolved_caps
+
+    templated = 'const CHARTER_MAX = 1500;\nrow.innerHTML = `<textarea class="bc-d-charter" maxlength="${CHARTER_MAX}">`;'
+    assert charter_caps(templated) == [1500], "a template constant the same script defines"
+    assert charter_caps("const ta = row.querySelector('.bc-d-charter'); ta.maxLength = 1500;") == [1500], (
+        "the property set on the charter's element")
+    assert charter_caps("charterBox.setAttribute('maxlength', '1500');") == [1500]
+    assert charter_caps("nameInput.maxLength = 60;") == [], "a field that is not a charter"
+    unknown = '<textarea class="bc-d-charter" maxlength="${window.LIMITS.charter}">'
+    assert charter_caps(unknown) == [] and unresolved_caps(unknown) == ["${window.LIMITS.charter}"], (
+        "a cap whose number is not in the script is unread, never absent")
+    assert unresolved_caps(served) == [] and unresolved_caps(templated) == []
     spec = {"components": {"schemas": {"DepartmentIn": {"properties": {"charter": {
         "anyOf": [{"type": "string", "maxLength": 2000}, {"type": "null"}]}}}}}}
     assert documented_cap(spec) == 2000
