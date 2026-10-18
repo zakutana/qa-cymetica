@@ -41,8 +41,15 @@ with sync_playwright() as p:
         t.screenshot(path=str(here / f"{view}-before.png"), full_page=True)
         t.add_style_tag(content=css)
         t.wait_for_timeout(300)
-        t.evaluate(js)
-        t.wait_for_timeout(800)
+        # the page re-renders its tables on live updates, which can wipe the patch's text changes: apply it, and
+        # again until the active view's Supply cells carry them (a "—" left over means the table was redrawn)
+        for _ in range(5):
+            t.evaluate(js)
+            t.wait_for_timeout(800)
+            left = t.evaluate("() => [...document.querySelectorAll('.view.active .supcell .spn')]"
+                              ".filter(e => e.textContent.trim() === '—').length")
+            if view == "start" or left == 0:
+                break
         n = t.evaluate("""() => ({cards: document.querySelectorAll('#startCards .gs-stats').length,
           smileys: document.querySelectorAll('#startCards .dc-name .nmicon').length,
           na: [...document.querySelectorAll('.supcell .spn')].filter(e => e.textContent === 'n/a').length,
