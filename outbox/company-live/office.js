@@ -9,10 +9,13 @@
   'use strict';
   var CO = window.CO;
   var SC = 22, C30 = Math.cos(Math.PI / 6), S30 = 0.5, RS = 7;
-  var C = { bg: '#0a0e17', deep: '#06090f', navy: '#0d1520', navy2: '#111a28', line: '#16233a', line2: '#1a2a44',
-    line3: '#1e3050', plate: '#0c1422', tile: '#101b2d', text: '#e6edf7', dim: '#a9b8cc', dim2: '#7f93ad',
+  // the site's navy-black, darker and less blue than its panels: what reads as colour in the office is what a
+  // room is doing (cyan working, red waiting), the frame and the corridors Cymetica green
+  var C = { bg: '#0a0e17', deep: '#05070a', navy: '#0b0f15', navy2: '#10151c', line: '#161d26', line2: '#1d2631',
+    line3: '#27313e', plate: '#0a0d12', tile: '#11161d', text: '#e6edf7', dim: '#a9b8cc', dim2: '#7f93ad',
     cyan: '#00cfff', green: '#00ff88', red: '#ff4444', blue: '#3b82f6' };
-  var ST = { working: C.cyan, queued: C.blue, waiting: C.red, idle: C.dim2 };
+  // up next is a blue dot on its plate (DOT); its frame, edge and screen stay slate like an idle room's
+  var ST = { working: C.cyan, queued: C.dim2, waiting: C.red, idle: C.dim2 }, DOT = { queued: C.blue };
   var TONE = { cyan: C.cyan, red: C.red, blue: '#7fb0ff', dim: C.dim };
   var HUB = [8, 8], YOU = [8, 16], AUDIT = [0, 16];
   var SLOTS = [[0, 0], [8, 0], [16, 0], [0, 8], [16, 8], [8, 16], [16, 16], [24, 0], [24, 8], [24, 16], [24, 24], [16, 24], [8, 24], [0, 24]];
@@ -57,11 +60,17 @@
     halo('g-halo-c', C.cyan) + halo('g-halo-g', C.green) + halo('g-halo-r', C.red) + halo('g-halo-b', C.blue) +
     '<linearGradient id="g-beam" x1="0" y1="1" x2="0" y2="0"><stop offset="0" stop-color="' + C.cyan + '" stop-opacity=".55"/>' +
     '<stop offset="1" stop-color="' + C.cyan + '" stop-opacity="0"/></linearGradient>' +
-    '<linearGradient id="g-glass" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="' + C.line3 + '" stop-opacity=".95"/>' +
-    '<stop offset="1" stop-color="' + C.navy2 + '" stop-opacity=".55"/></linearGradient>' +
-    '<linearGradient id="g-tile" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#13213a"/><stop offset="1" stop-color="' + C.tile + '"/></linearGradient>' +
-    '<linearGradient id="g-scr" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#0c1a2c"/><stop offset="1" stop-color="' + C.deep + '"/></linearGradient>' +
-    '<linearGradient id="g-plate" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="' + C.plate + '"/><stop offset="1" stop-color="#0a1120"/></linearGradient>' +
+    // glass: lit from above, a sheen across it, dark at its foot
+    '<linearGradient id="g-glass" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#3a4757" stop-opacity=".75"/>' +
+    '<stop offset=".35" stop-color="' + C.line3 + '" stop-opacity=".55"/><stop offset=".42" stop-color="#4a5a6e" stop-opacity=".5"/>' +
+    '<stop offset=".5" stop-color="' + C.line2 + '" stop-opacity=".45"/><stop offset="1" stop-color="' + C.navy + '" stop-opacity=".4"/></linearGradient>' +
+    '<linearGradient id="g-tile" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#1a212b"/><stop offset="1" stop-color="' + C.tile + '"/></linearGradient>' +
+    '<linearGradient id="g-scr" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#0d141c"/><stop offset="1" stop-color="' + C.deep + '"/></linearGradient>' +
+    '<linearGradient id="g-plate" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#0e1218"/><stop offset="1" stop-color="' + C.deep + '"/></linearGradient>' +
+    // a room's ceiling lamp on its floor: plain white light
+    '<radialGradient id="g-lamp"><stop offset="0" stop-color="#eef3f8" stop-opacity=".2"/><stop offset=".55" stop-color="#eef3f8" stop-opacity=".05"/><stop offset="1" stop-color="#eef3f8" stop-opacity="0"/></radialGradient>' +
+    // a wall's own light: brighter at the top, where the lamp is
+    '<linearGradient id="g-wallL" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#1c2531"/><stop offset="1" stop-color="' + C.navy + '"/></linearGradient>' +
     body('gb-cyan', C.cyan) + body('gb-blue', C.blue) + body('gb-green', C.green) + body('gb-red', C.red) + body('gb-slate', C.dim2) +
     '<radialGradient id="g-shadow"><stop offset="0" stop-color="' + C.deep + '" stop-opacity=".9"/><stop offset="1" stop-color="' + C.deep + '" stop-opacity="0"/></radialGradient>' +
     '</defs>';
@@ -228,6 +237,7 @@
       out += '<line x1="' + f1(c[0]) + '" y1="' + f1(c[1]) + '" x2="' + f1(d[0]) + '" y2="' + f1(d[1]) + '" stroke="' + C.line + '" stroke-width=".6"/>';
     }
     var cc = P(x0 + RS / 2, y0 + RS / 2, 0.1);
+    out += '<ellipse class="lamp" cx="' + f1(cc[0]) + '" cy="' + f1(cc[1]) + '" rx="' + f1(RS * SC * 0.8) + '" ry="' + f1(RS * SC * 0.46) + '" fill="url(#g-lamp)"/>';
     out += '<ellipse class="fglow" cx="' + f1(cc[0]) + '" cy="' + f1(cc[1]) + '" rx="' + f1(RS * SC * 0.95) + '" ry="' + f1(RS * SC * 0.55) + '"/>';
     out += '<ellipse class="fping" cx="' + f1(cc[0]) + '" cy="' + f1(cc[1]) + '" rx="' + f1(RS * SC * 0.8) + '" ry="' + f1(RS * SC * 0.46) + '" fill="url(#g-ping)"/>';
     // glass back walls with mullions and a lit top edge
@@ -293,11 +303,11 @@
     });
     return out;
   }
-  function plate(cx, cy, title, colour, line2, w, key, pulse) {
+  function plate(cx, cy, title, colour, line2, w, key, pulse, dot) {
     var out = '<g class="plate" data-key="' + key + '">';
     out += '<rect x="' + f1(cx - w / 2) + '" y="' + f1(cy - 17) + '" width="' + w + '" height="34" rx="6" fill="' + C.bg + '" stroke="' + colour + '" stroke-width=".9" opacity=".95"/>';
     out += '<rect x="' + f1(cx - w / 2 + 1) + '" y="' + f1(cy - 16) + '" width="' + (w - 2) + '" height="10" rx="5" fill="' + colour + '" opacity=".07"/>';
-    out += '<circle' + (pulse ? ' class="pdot"' : '') + ' cx="' + f1(cx - w / 2 + 11) + '" cy="' + f1(cy - 6) + '" r="3.4" fill="' + colour + '" filter="url(#glow)"/>';
+    out += '<circle' + (pulse ? ' class="pdot"' : '') + ' cx="' + f1(cx - w / 2 + 11) + '" cy="' + f1(cy - 6) + '" r="3.4" fill="' + (dot || colour) + '" filter="url(#glow)"/>';
     out += text(cx - w / 2 + 20, cy - 2.4, title, 10.2, C.text, 400, 'start', 'display');
     var x = cx - w / 2 + 9;
     line2.forEach(function (s) { out += text(x, cy + 11.5, s[0], 8.6, s[1], 600); x += 6.0 * s[0].length + 7; });
@@ -417,8 +427,10 @@
       x: Math.min.apply(null, corners.map(function (q) { return q[0]; })), y: Math.min.apply(null, corners.map(function (q) { return q[1]; })),
       x2: Math.max.apply(null, corners.map(function (q) { return q[0]; })), y2: Math.max.apply(null, corners.map(function (q) { return q[1]; }))
     };
-    var e1 = P(-0.6, maxY + 0.6), e2 = P(maxX + 0.6, maxY + 0.6), e3 = P(maxX + 0.6, -0.6);
-    f += '<polyline points="' + pts([e1, e2, e3]) + '" fill="none" stroke="' + C.cyan + '" stroke-width="1" opacity=".35"/>';
+    // the office's frame: a line of Cymetica green round its front edges, and its glow
+    var e0 = P(-0.6, -0.6), e1 = P(-0.6, maxY + 0.6), e2 = P(maxX + 0.6, maxY + 0.6), e3 = P(maxX + 0.6, -0.6);
+    f += '<polyline class="pedge2" points="' + pts([e0, e1, e2, e3]) + '" fill="none" stroke="' + C.green + '" stroke-width="5"/>';
+    f += '<polyline class="pedge" points="' + pts([e0, e1, e2, e3]) + '" fill="none" stroke="' + C.green + '" stroke-width="1.4"/>';
     this.paths = {};
     Object.keys(cells).forEach(function (k) {
       if (k === 'hub' || k === 'lot') return;
@@ -559,7 +571,7 @@
       var l2 = [[ln.short, tone]];
       var n = d.et10 || 0, ew = d.files_as ? earnedLabel(n).length * 6.6 + 14 : 0;
       var pw = Math.max(150, d.name.length * 10.5 + 34 + ew);
-      over += plate(c[0], c[1], d.name.toUpperCase(), ln.tone === 'red' ? C.red : col, l2, pw, 'd' + d.id, v.status === 'working');
+      over += plate(c[0], c[1], d.name.toUpperCase(), ln.tone === 'red' ? C.red : col, l2, pw, 'd' + d.id, v.status === 'working', ln.tone === 'red' ? null : DOT[v.status]);
       if (d.files_as) {
         var last = (self.lastEt || (self.lastEt = {}))[d.id];
         over += earned(c[0] + pw / 2 - 9, c[1], n, last != null && n > last);

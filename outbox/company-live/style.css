@@ -210,7 +210,14 @@ a { color: var(--cyan); text-decoration: none; cursor: pointer; }
 .mini b { display: block; font-family: 'Archivo Black'; font-size: 18px; font-weight: 400; } .mini b small { font-size: 11px; color: var(--dim2); font-family: 'JetBrains Mono'; }
 .mini span { font-size: 10px; color: var(--dim2); }
 
-.stage { position: relative; padding: 0; overflow: hidden; background: radial-gradient(ellipse at 50% 45%, #101b2d, #0a0e17 72%); }
+/* the office floats in the dark the Universe is made of: a few faint stars, no blue */
+.stage { position: relative; padding: 0; overflow: hidden;
+  background: radial-gradient(1px 1px at 8% 14%, rgba(230, 237, 247, .55), transparent), radial-gradient(1px 1px at 23% 71%, rgba(230, 237, 247, .4), transparent),
+    radial-gradient(1.5px 1.5px at 37% 9%, rgba(0, 207, 255, .5), transparent), radial-gradient(1px 1px at 52% 88%, rgba(230, 237, 247, .45), transparent),
+    radial-gradient(1px 1px at 66% 21%, rgba(230, 237, 247, .5), transparent), radial-gradient(1.5px 1.5px at 79% 63%, rgba(0, 255, 136, .45), transparent),
+    radial-gradient(1px 1px at 91% 12%, rgba(230, 237, 247, .4), transparent), radial-gradient(1px 1px at 95% 82%, rgba(230, 237, 247, .45), transparent),
+    radial-gradient(1px 1px at 14% 92%, rgba(0, 207, 255, .4), transparent), radial-gradient(1px 1px at 45% 40%, rgba(230, 237, 247, .25), transparent),
+    radial-gradient(ellipse at 50% 45%, #0b1017, #05070a 74%); }
 .stage .top { position: absolute; top: 10px; left: 12px; right: 12px; display: flex; justify-content: space-between; align-items: center; z-index: 4; pointer-events: none; }
 .stage .top > * { pointer-events: auto; }
 .live { font-size: 11px; font-weight: 700; color: var(--green); display: flex; align-items: center; gap: 6px; letter-spacing: .1em; }
@@ -240,29 +247,32 @@ a { color: var(--cyan); text-decoration: none; cursor: pointer; }
   background: rgba(6, 9, 15, .95); border: 1px solid var(--line3); box-shadow: 0 8px 24px rgba(0, 0, 0, .45); color: var(--dim); }
 .tip b { color: var(--text); } .tip .c { color: var(--cyan); } .tip .g { color: var(--green); } .tip .r { color: var(--red); } .tip .bl { color: var(--blue); }
 
-/* the SVG office */
-.office .flow { stroke-dasharray: 3 6; opacity: .45; animation: flow 1.6s linear infinite; }
-.office .flow.hot { opacity: .95; animation-duration: .7s; filter: drop-shadow(0 0 2px rgba(0, 207, 255, .8)); }
-.office.paused .flow { animation-play-state: paused; opacity: .25; }
+/* the SVG office: the 3D office's light, drawn flat -- a white lamp over every room, the room's own colour on its
+   floor while it works or waits, Cymetica green round the edge and along the idle corridors */
+.office .flow { stroke: var(--green); stroke-dasharray: 3 6; opacity: .28; animation: flow 1.6s linear infinite; }
+.office .flow.hot { stroke: var(--cyan); opacity: .95; animation-duration: .7s; filter: drop-shadow(0 0 2.5px rgba(0, 207, 255, .9)); }
+.office.paused .flow { animation-play-state: paused; opacity: .2; }
 @keyframes flow { to { stroke-dashoffset: -9; } }
-.office .fglow { fill: url(#g-fglow); opacity: 0; transition: opacity .8s; }
+.office .pedge { opacity: .9; filter: drop-shadow(0 0 3px rgba(0, 255, 136, .8)); }
+.office .pedge2 { opacity: .22; filter: url(#glow2); }
+.office .lamp { mix-blend-mode: screen; }
+.office .fglow { fill: url(#g-fglow); opacity: 0; transition: opacity .8s; mix-blend-mode: screen; }
 .office .st-working .fglow { opacity: 1; animation: glowp 2.6s ease-in-out infinite; }
 .office .st-waiting .fglow { fill: url(#g-fglow-r); opacity: .9; }
-.office .st-queued .fglow { fill: url(#g-fglow-b); opacity: .9; }
 @keyframes glowp { 50% { opacity: .55; } }
 .office .fping { opacity: 0; }
 .office .ping .fping { animation: ping .9s ease-out; }
 .office .ping-g .fping { fill: url(#g-halo-g); } .office .ping-r .fping { fill: url(#g-halo-r); }
 @keyframes ping { 0% { opacity: .9; } 100% { opacity: 0; } }
-.office .edge { stroke: var(--blue); opacity: .5; transition: stroke .4s, opacity .4s; }
+.office .edge { stroke: var(--dim2); opacity: .45; transition: stroke .4s, opacity .4s; }
 .office .edge2 { stroke: var(--cyan); opacity: 0; filter: url(#glow2); }
 .office .st-working .edge { stroke: var(--cyan); opacity: .95; }
 .office .st-working .edge2 { opacity: .35; animation: glowp 2.6s ease-in-out infinite; }
 .office .st-waiting .edge { stroke: var(--red); opacity: .8; }
-.office .sill { stroke: var(--blue); opacity: .3; }
+.office .sill { stroke: var(--dim2); opacity: .22; }
 .office .st-working .sill { stroke: var(--cyan); opacity: .7; }
 .office .room { transition: opacity .3s; }
-.office .room.hover .slab polygon:last-child { fill: #172741; }
+.office .room.hover .slab polygon:last-child { fill: #1c2531; }
 .office .room.hover .edge { opacity: 1; }
 .office .room.hover .hit, .office .plate, .office .room { cursor: pointer; }
 .office .room.lot.hover .lotf { opacity: .95; stroke: var(--cyan); }
@@ -296,7 +306,7 @@ a { color: var(--cyan); text-decoration: none; cursor: pointer; }
 .office .agent.working .ring { animation: ring 1.7s ease-out infinite; }
 .office .agent.working .ring2 { opacity: .35; }
 @keyframes ring { 0% { opacity: .9; transform: scale(.7); } 100% { opacity: 0; transform: scale(1.5); } }
-.office .agent .body { fill: url(#gb-blue); transition: fill .3s; }
+.office .agent .body { fill: url(#gb-slate); transition: fill .3s; }
 .office .agent.working .body { fill: url(#gb-cyan); }
 .office .agent.working .bob { animation: bob .9s ease-in-out infinite; }
 .office .agent.walking .bob { animation: walk .45s ease-in-out infinite; }
@@ -304,7 +314,7 @@ a { color: var(--cyan); text-decoration: none; cursor: pointer; }
 .office .agent .lbl { transition: opacity .25s; } .office .agent.walking .lbl { opacity: 0; }
 @keyframes bob { 50% { transform: translateY(-1.2px); } }
 @keyframes walk { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-2px); } }
-.office .agent .lbl rect { fill: var(--bg); stroke: var(--blue); stroke-width: .7; opacity: .92; }
+.office .agent .lbl rect { fill: var(--bg); stroke: var(--dim2); stroke-width: .7; opacity: .92; }
 .office .agent.working .lbl rect { stroke: var(--cyan); }
 .office .led { animation: blink 1.3s steps(2) infinite; }
 @keyframes blink { 50% { opacity: .25; } }
