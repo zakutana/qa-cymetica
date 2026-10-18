@@ -953,8 +953,8 @@ class Preview {
     this.plot.halo.material.opacity = 0.1;   // up close: an aura, not a fog
     this.turn.add(this.plot.root);
     // framed with room above it for the name
-    const top = this.plot.top, bot = this.plot.bot, size = Math.max(top - bot, this.plot.b.foot * 1.5), dist = size * 2.15 + 5;
-    this.target = new THREE.Vector3(0, (top + bot) / 2 + size * 0.1, 0);
+    const top = this.plot.top, bot = this.plot.bot, size = Math.max(top - bot, this.plot.b.foot * 1.5), dist = size * 2.4 + 5;
+    this.target = new THREE.Vector3(0, (top + bot) / 2 + size * 0.13, 0);
     this.camera.position.copy(new THREE.Vector3().setFromSpherical(new THREE.Spherical(dist, 1.16, Math.PI / 4)).add(this.target));
     this.camera.lookAt(this.target);
     this.anchor = new THREE.Vector3(0, top + 0.3, 0);
@@ -1008,7 +1008,7 @@ function thumbs(hex, done) {
       p.b.paint([1], ''); p.halo.material.opacity = 0.08; p.b.tick(1.2);
       p.root.rotation.y = s.key === 'rocket' ? -0.5 : 0.25; scene.add(p.root);
       const size = Math.max(p.top - p.bot, p.b.foot * 1.55), tgt = new THREE.Vector3(0, (p.top + p.bot) / 2, 0);
-      camera.position.copy(new THREE.Vector3().setFromSpherical(new THREE.Spherical(size * 1.95 + 3, 1.12, Math.PI / 4)).add(tgt)); camera.lookAt(tgt);
+      camera.position.copy(new THREE.Vector3().setFromSpherical(new THREE.Spherical(size * 1.5 + 2.5, 1.12, Math.PI / 4)).add(tgt)); camera.lookAt(tgt);
       // the bloom pass draws the scene once a frame: two frames between pictures, or on a fast GPU all six are the first
       await new Promise((r) => requestAnimationFrame(() => requestAnimationFrame(r)));
       renderer.setRenderTarget(rt);
@@ -1043,14 +1043,15 @@ function preview(el, o) {
 // What a room is doing, in light. Blue is only "up next", and only on the room's edge line: the floor, the walls,
 // the furniture and the light itself are the site's navy-black under white light, the structure Cymetica green.
 const STC = { working: 0x00cfff, queued: 0x3b82f6, waiting: 0xff4444, idle: 0x7f93ad };
-const TONEC = { cyan: '#00cfff', red: '#ff4444', blue: '#7fb0ff', dim: '#a9b8cc' };
+const TONEC = { cyan: '#00cfff', red: '#ff4444', blue: '#dfe6ee', dim: '#a9b8cc' };   // "Up next" white on a plate; its dot stays blue
 const OFFICE = { bg: 0x05070a, lamp: 0xeef3f8, agent: 0x4d5d72, agentE: 0x0b0f14, mon: 0x10202a };
 const OM = {};
 function omats() {
   if (OM.tile) return;
   const c = document.createElement('canvas'); c.width = c.height = 512; const g = c.getContext('2d');
-  g.fillStyle = '#141a22'; g.fillRect(0, 0, 512, 512);
-  g.strokeStyle = 'rgba(38,50,64,.95)'; g.lineWidth = 2;
+  // near-black tiles on a faint Cymetica-green grid
+  g.fillStyle = '#0c1015'; g.fillRect(0, 0, 512, 512);
+  g.strokeStyle = 'rgba(0,255,136,.14)'; g.lineWidth = 2;
   for (let i = 0; i <= 7; i++) { const p = i * 512 / 7; g.beginPath(); g.moveTo(p, 0); g.lineTo(p, 512); g.stroke(); g.beginPath(); g.moveTo(0, p); g.lineTo(512, p); g.stroke(); }
   const t = new THREE.CanvasTexture(c); t.colorSpace = THREE.SRGBColorSpace; t.anisotropy = 8;
   OM.tile = new THREE.MeshStandardMaterial({ map: t, roughness: 0.38, metalness: 0.45 });
@@ -1165,6 +1166,10 @@ class Office3D {
     this.sun.shadow.normalBias = 0.02; this.sun.shadow.bias = -0.0005; S.add(this.sun); S.add(this.sun.target);
     const rim = new THREE.DirectionalLight(0x00cfff, 0.3); rim.position.set(30, 14, -30); S.add(rim);
     S.add(starField(1400, 230, 60, 0.75));
+    // far behind the floor, the faint green of the Universe it floats in
+    [[0x00ff88, 0.045, [-115, -75, -95], 150], [0x00cfff, 0.03, [-55, -95, -150], 120], [0x00ff88, 0.025, [55, -105, -125], 100]].forEach(([c, o, p, s]) => {
+      const sp = glowSprite(c, o, s); sp.material.fog = false; sp.position.set(p[0], p[1], p[2]); S.add(sp);
+    });
     this.world = new THREE.Group(); S.add(this.world);
     this.pk = new THREE.Group(); S.add(this.pk);
     this.clock = new THREE.Clock();
@@ -1198,13 +1203,27 @@ class Office3D {
     // clear the old floor, rooms and labels
     release(this.world); this.world.clear(); this.layer.innerHTML = ''; this.rooms = {}; this.hits = []; this.pcs = [];
     const RS = L.RS, W = this.world;
-    // the floor plate, its grid and a lit edge
-    const plate = new THREE.Mesh(G.box, [OM.plinth, OM.plinth, new THREE.MeshStandardMaterial({ color: 0x0a0e13, roughness: 0.5, metalness: 0.45 }), OM.plinth, OM.plinth, OM.plinth]);
-    plate.scale.set(maxX + 1.2, 0.45, maxY + 1.2); plate.position.set(0, -0.225, 0); plate.receiveShadow = true; W.add(plate);
-    // the frame of the whole office is Cymetica green
-    const edgeM = emis('#00ff88', 1.15);
-    [[0, maxY / 2 + 0.6, maxX + 1.25, 0.05], [0, -maxY / 2 - 0.6, maxX + 1.25, 0.05]].forEach(([x, z, w, t]) => { const m = new THREE.Mesh(G.box, edgeM); m.scale.set(w, t, t); m.position.set(x, 0, z); W.add(m); });
-    [[maxX / 2 + 0.6, 0, maxY + 1.25], [-maxX / 2 - 0.6, 0, maxY + 1.25]].forEach(([x, z, d]) => { const m = new THREE.Mesh(G.box, edgeM); m.scale.set(0.05, 0.05, d); m.position.set(x, 0, z); W.add(m); });
+    // The floor: a slab under every room (the Manager's, the audit and the free lot included), so a corner of the plan
+    // with no room is open space, and the office floats. Cymetica green runs round its outside only, a green glow
+    // under it. The fit frames these slabs, not the plan's whole square.
+    const pad = 0.5, T = 0.75, have = {}, kc = (x, y) => x + ',' + y;
+    all.forEach((c) => { have[kc(c[0], c[1])] = 1; });
+    const top = new THREE.MeshStandardMaterial({ color: 0x090c11, roughness: 0.5, metalness: 0.45 }), edgeM = emis('#00ff88', 1.25), edgeLow = emis('#00ff88', 0.35);
+    this.corners = [];
+    all.forEach((c) => {
+      const s = new THREE.Mesh(G.box, [OM.plinth, OM.plinth, top, OM.plinth, OM.plinth, OM.plinth]);
+      s.scale.set(RS + 2 * pad + 0.02, T, RS + 2 * pad + 0.02); s.position.copy(this.V(c[0] + RS / 2, c[1] + RS / 2, -T / 2)); s.receiveShadow = true; W.add(s);
+      const glow = new THREE.Mesh(G.plane, new THREE.MeshBasicMaterial({ map: glowTex(), color: 0x00ff88, transparent: true, opacity: 0.06, blending: THREE.AdditiveBlending, depthWrite: false, fog: false }));
+      glow.scale.set(RS * 1.9, RS * 1.9, 1); glow.rotation.x = -Math.PI / 2; glow.position.copy(this.V(c[0] + RS / 2, c[1] + RS / 2, -T - 0.6)); W.add(glow);
+      const x0 = c[0] - pad, y0 = c[1] - pad, x1 = c[0] + RS + pad, y1 = c[1] + RS + pad;
+      // a side is the outside when no room's slab meets it there
+      [[x0, y0, x1, y0, !have[kc(c[0], c[1] - 8)]], [x0, y1, x1, y1, !have[kc(c[0], c[1] + 8)]], [x0, y0, x0, y1, !have[kc(c[0] - 8, c[1])]], [x1, y0, x1, y1, !have[kc(c[0] + 8, c[1])]]].forEach(([ax, ay, bx, by, out]) => {
+        if (!out) return;
+        const len = Math.hypot(bx - ax, by - ay) + 0.06, along = ax === bx;
+        [[0, 0.07, edgeM], [-T, 0.05, edgeLow]].forEach(([z, t, m]) => { const e = new THREE.Mesh(G.box, m); e.scale.set(along ? t : len, t, along ? len : t); e.position.copy(this.V((ax + bx) / 2, (ay + by) / 2, z)); W.add(e); });
+      });
+      [[x0, y0], [x1, y0], [x0, y1], [x1, y1]].forEach(([x, y]) => { this.corners.push(this.V(x, y, -T), this.V(x, y, 1.35)); });
+    });
     // corridors: from every room's door to the Manager's, the 2D office's own routes
     this.paths = {}; this.conduits = {};
     Object.keys(cells).forEach((k) => {
@@ -1374,9 +1393,6 @@ class Office3D {
     this.wallScreen(r, 1.1, 5.0);
     this.desk(r, r.x0 + 2.2, r.y0 + 1.8, 0);
     this.agent(r, r.x0 + 3.15, r.y0 + 3.1, 0, 'Supervisor');
-    const c = this.V(r.x0 + 5.8, r.y0 + 1.4, 0.12);
-    const ring = new THREE.Mesh(G.ring, OM.blue.soft); ring.scale.setScalar(0.62); ring.rotation.x = Math.PI / 2; ring.position.copy(c); r.g.add(ring);
-    r.scan = new THREE.Mesh(G.ringT, OM.cyan.rim); r.scan.scale.setScalar(0.62); r.scan.rotation.x = Math.PI / 2; r.scan.position.copy(c); r.g.add(r.scan);
     this.plant(r, r.x0 + 0.3, r.y0 + 6.2);
     this.plate(r, 'auditp');
   }
@@ -1387,10 +1403,11 @@ class Office3D {
       [[r.x0 + a, r.y0], [r.x0 + a, r.y0 + RS]].forEach(([x, y]) => this.box(g, x, y - 0.03, 0.04, 0.4, 0.06, 0.03, dash, false));
       [[r.x0, r.y0 + a], [r.x0 + RS, r.y0 + a]].forEach(([x, y]) => this.box(g, x - 0.03, y, 0.04, 0.06, 0.4, 0.03, dash, false));
     }
-    r.plus = new THREE.Mesh(G.ringT, OM.cyan.rim); r.plus.scale.setScalar(0.9); r.plus.position.set(c.x, 1.2, c.z); g.add(r.plus);
+    // a ring of light lying on the free floor, breathing; the label above it says what it is for
+    r.plus = new THREE.Mesh(G.ringT, OM.cyan.rim); r.plus.scale.setScalar(2.1); r.plus.rotation.x = Math.PI / 2; r.plus.position.set(c.x, 0.12, c.z); g.add(r.plus);
     const hit = new THREE.Mesh(G.box, M.hit); hit.scale.set(RS, 1.6, RS); hit.position.set(c.x, 0.8, c.z); hit.userData.key = 'lot'; g.add(hit); this.hits.push(hit);
     const el = document.createElement('div'); el.className = 'p3lot'; el.innerHTML = '<b>+</b>ADD DEPARTMENT'; el.addEventListener('click', () => CO.emit('office:click', 'lot')); this.layer.appendChild(el);
-    r.plate = el; r.plateAt = new THREE.Vector3(c.x, 1.25, c.z);
+    r.plate = el; r.plateAt = new THREE.Vector3(c.x, 0.15, c.z);   // the label lies inside its ring
   }
 
   /* ---------------- what changes: colours, screens, people, plates ---------------- */
@@ -1449,8 +1466,9 @@ class Office3D {
   // slate edge under plain white light (up next says itself on the plate and the wall screen)
   tint(r, st) {
     if (r.st === st) return; r.st = st;
-    const lit = st === 'working' || st === 'waiting', c = new THREE.Color(lit ? STC[st] : STC.idle);
-    if (r.edgeM) { r.edgeM.emissive.copy(c); r.edgeM.emissiveIntensity = lit ? 1.5 : st === 'queued' ? 0.5 : 0.3; }
+    // a room at rest keeps a dim green edge: green is the office's structure, cyan and red what its rooms do
+    const lit = st === 'working' || st === 'waiting', c = new THREE.Color(lit ? STC[st] : 0x00ff88);
+    if (r.edgeM) { r.edgeM.emissive.copy(c); r.edgeM.emissiveIntensity = lit ? 1.5 : st === 'queued' ? 0.4 : 0.26; }
     if (r.sillM) { r.sillM.emissive.copy(c); r.sillM.emissiveIntensity = lit ? 0.6 : 0.1; }
     if (r.glow) { r.glow.material.color.copy(c); r.glowBase = st === 'working' ? 0.3 : st === 'waiting' ? 0.26 : 0; }
     if (r.lamp) { r.lamp.color.copy(lit ? c : new THREE.Color(OFFICE.lamp)); r.lamp.intensity = st === 'working' ? 9 : st === 'waiting' ? 7 : 3.2; }
@@ -1494,10 +1512,25 @@ class Office3D {
   }
 
   /* ---------------- camera ---------------- */
+  // The whole office, as large as the stage allows: the camera's angle is fixed, its distance is the nearest at which
+  // every slab's corners fit (a margin at the top for the stage's own bar), and it aims at the middle of what it sees.
   home() {
-    const s = this.size || 30, a = this.camera.aspect || 1.6, d = s * (a < 1.2 ? 2.15 : a < 1.6 ? 1.85 : 1.68);
-    const tgt = new THREE.Vector3(s * 0.04, 0, s * 0.04 + 0.5);
-    return { pos: new THREE.Vector3().setFromSpherical(new THREE.Spherical(d, 0.84, Math.PI / 4)).add(tgt), tgt };
+    const dir = new THREE.Vector3().setFromSpherical(new THREE.Spherical(1, 0.86, Math.PI / 4)), cam = this.camera.clone(), pts = this.corners || [];
+    const tgt = new THREE.Vector3(); pts.forEach((p) => tgt.add(p)); if (pts.length) tgt.divideScalar(pts.length); tgt.y = 0;
+    const fits = (d, t) => { cam.position.copy(t).addScaledVector(dir, d); cam.lookAt(t); cam.updateMatrixWorld(); return pts.every((p) => { const v = p.clone().project(cam); return Math.abs(v.x) < 0.93 && v.y < 0.82 && v.y > -0.95; }); };
+    let d = 30;
+    for (let k = 0; k < 2; k++) {
+      let lo = 8, hi = 300;
+      for (let i = 0; i < 22; i++) { const mid = (lo + hi) / 2; if (fits(mid, tgt)) hi = mid; else lo = mid; }
+      d = hi;
+      // aim at the middle of the picture, not of the plan: shift the target by the bounds' offset on screen
+      cam.position.copy(tgt).addScaledVector(dir, d); cam.lookAt(tgt); cam.updateMatrixWorld();
+      let x0 = 1, x1 = -1, y0 = 1, y1 = -1; pts.forEach((p) => { const v = p.clone().project(cam); x0 = Math.min(x0, v.x); x1 = Math.max(x1, v.x); y0 = Math.min(y0, v.y); y1 = Math.max(y1, v.y); });
+      const right = new THREE.Vector3().setFromMatrixColumn(cam.matrixWorld, 0), up = new THREE.Vector3().setFromMatrixColumn(cam.matrixWorld, 1);
+      const h = 2 * d * Math.tan(THREE.MathUtils.degToRad(cam.fov) / 2), w = h * cam.aspect;
+      tgt.addScaledVector(right, (x0 + x1) / 2 * w / 2).addScaledVector(up, ((y0 + y1) / 2 + 0.06) * h / 2);
+    }
+    return { pos: tgt.clone().addScaledVector(dir, d), tgt };
   }
   fit(anim) { const h = this.home(); this.fitted = true; this.tween(h.pos, h.tgt, anim === false ? 0 : 750); }
   zoom(f) {
@@ -1536,8 +1569,7 @@ class Office3D {
       if (r.glow) r.glow.material.opacity = (r.glowBase || 0) * (r.st === 'working' ? 0.75 + 0.25 * Math.sin(t * 2.4 + r.x0) : 1);
       if (r.leds) r.leds.forEach((m, i) => { m.visible = ((Math.floor(t * 3 + m.userData.blink)) % 3) !== 0; });
       if (r.holo) { r.holo.forEach((hh, i) => { hh.rotation.z = t * (0.6 + i * 0.35) * (i % 2 ? -1 : 1); hh.position.y = 1.35 + i * 0.6 + Math.sin(t * 1.3 + i) * 0.05; }); r.core.position.y = 1.2 + Math.sin(t * 1.7) * 0.06; }
-      if (r.scan) { const s = 0.3 + ((t * 0.5) % 1) * 0.5; r.scan.scale.setScalar(s); }
-      if (r.plus) { r.plus.rotation.y = t * 0.8; r.plus.position.y = 1.2 + Math.sin(t * 1.6) * 0.08; }
+      if (r.plus) r.plus.scale.setScalar(2.1 + Math.sin(t * 1.6) * 0.1);
       r.agents.forEach((a) => {
         if (a.walk) {
           const W2 = a.walk, f = (now - W2.t0) / W2.dur;

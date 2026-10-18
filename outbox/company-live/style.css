@@ -264,12 +264,12 @@ a { color: var(--cyan); text-decoration: none; cursor: pointer; }
 .office .ping .fping { animation: ping .9s ease-out; }
 .office .ping-g .fping { fill: url(#g-halo-g); } .office .ping-r .fping { fill: url(#g-halo-r); }
 @keyframes ping { 0% { opacity: .9; } 100% { opacity: 0; } }
-.office .edge { stroke: var(--dim2); opacity: .45; transition: stroke .4s, opacity .4s; }
+.office .edge { stroke: var(--green); opacity: .32; transition: stroke .4s, opacity .4s; }
 .office .edge2 { stroke: var(--cyan); opacity: 0; filter: url(#glow2); }
 .office .st-working .edge { stroke: var(--cyan); opacity: .95; }
 .office .st-working .edge2 { opacity: .35; animation: glowp 2.6s ease-in-out infinite; }
 .office .st-waiting .edge { stroke: var(--red); opacity: .8; }
-.office .sill { stroke: var(--dim2); opacity: .22; }
+.office .sill { stroke: var(--green); opacity: .14; }
 .office .st-working .sill { stroke: var(--cyan); opacity: .7; }
 .office .room { transition: opacity .3s; }
 .office .room.hover .slab polygon:last-child { fill: #1c2531; }

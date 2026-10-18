@@ -16,7 +16,8 @@
     cyan: '#00cfff', green: '#00ff88', red: '#ff4444', blue: '#3b82f6' };
   // up next is a blue dot on its plate (DOT); its frame, edge and screen stay slate like an idle room's
   var ST = { working: C.cyan, queued: C.dim2, waiting: C.red, idle: C.dim2 }, DOT = { queued: C.blue };
-  var TONE = { cyan: C.cyan, red: C.red, blue: '#7fb0ff', dim: C.dim };
+  var TONE = { cyan: C.cyan, red: C.red, blue: '#dfe6ee', dim: C.dim };   // "Up next" white on a plate; its dot stays blue
+  var GRID = 'rgba(0, 255, 136, .1)';   // the floor tiles' joints: a faint Cymetica green
   var HUB = [8, 8], YOU = [8, 16], AUDIT = [0, 16];
   var SLOTS = [[0, 0], [8, 0], [16, 0], [0, 8], [16, 8], [8, 16], [16, 16], [24, 0], [24, 8], [24, 16], [24, 24], [16, 24], [8, 24], [0, 24]];
   var NS = 'http://www.w3.org/2000/svg';
@@ -64,11 +65,13 @@
     '<linearGradient id="g-glass" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#3a4757" stop-opacity=".75"/>' +
     '<stop offset=".35" stop-color="' + C.line3 + '" stop-opacity=".55"/><stop offset=".42" stop-color="#4a5a6e" stop-opacity=".5"/>' +
     '<stop offset=".5" stop-color="' + C.line2 + '" stop-opacity=".45"/><stop offset="1" stop-color="' + C.navy + '" stop-opacity=".4"/></linearGradient>' +
-    '<linearGradient id="g-tile" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#1a212b"/><stop offset="1" stop-color="' + C.tile + '"/></linearGradient>' +
+    '<linearGradient id="g-tile" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#11161d"/><stop offset="1" stop-color="#0a0e13"/></linearGradient>' +
     '<linearGradient id="g-scr" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#0d141c"/><stop offset="1" stop-color="' + C.deep + '"/></linearGradient>' +
     '<linearGradient id="g-plate" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#0e1218"/><stop offset="1" stop-color="' + C.deep + '"/></linearGradient>' +
     // a room's ceiling lamp on its floor: plain white light
-    '<radialGradient id="g-lamp"><stop offset="0" stop-color="#eef3f8" stop-opacity=".2"/><stop offset=".55" stop-color="#eef3f8" stop-opacity=".05"/><stop offset="1" stop-color="#eef3f8" stop-opacity="0"/></radialGradient>' +
+    '<radialGradient id="g-lamp"><stop offset="0" stop-color="#eef3f8" stop-opacity=".12"/><stop offset=".55" stop-color="#eef3f8" stop-opacity=".03"/><stop offset="1" stop-color="#eef3f8" stop-opacity="0"/></radialGradient>' +
+    // the green the office floats on
+    '<radialGradient id="g-under"><stop offset="0" stop-color="' + C.green + '" stop-opacity=".14"/><stop offset=".6" stop-color="' + C.green + '" stop-opacity=".04"/><stop offset="1" stop-color="' + C.green + '" stop-opacity="0"/></radialGradient>' +
     // a wall's own light: brighter at the top, where the lamp is
     '<linearGradient id="g-wallL" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#1c2531"/><stop offset="1" stop-color="' + C.navy + '"/></linearGradient>' +
     body('gb-cyan', C.cyan) + body('gb-blue', C.blue) + body('gb-green', C.green) + body('gb-red', C.red) + body('gb-slate', C.dim2) +
@@ -233,8 +236,8 @@
     out += box(x0, y0, 0, RS, RS, 0.1, 'url(#g-tile)', C.navy2, C.navy, C.line, null, ' class="slab"');
     for (var i = 1; i < RS; i++) {
       var a = P(x0 + i, y0, 0.1), b = P(x0 + i, y0 + RS, 0.1), c = P(x0, y0 + i, 0.1), d = P(x0 + RS, y0 + i, 0.1);
-      out += '<line x1="' + f1(a[0]) + '" y1="' + f1(a[1]) + '" x2="' + f1(b[0]) + '" y2="' + f1(b[1]) + '" stroke="' + C.line + '" stroke-width=".6"/>';
-      out += '<line x1="' + f1(c[0]) + '" y1="' + f1(c[1]) + '" x2="' + f1(d[0]) + '" y2="' + f1(d[1]) + '" stroke="' + C.line + '" stroke-width=".6"/>';
+      out += '<line x1="' + f1(a[0]) + '" y1="' + f1(a[1]) + '" x2="' + f1(b[0]) + '" y2="' + f1(b[1]) + '" stroke="' + GRID + '" stroke-width=".7"/>';
+      out += '<line x1="' + f1(c[0]) + '" y1="' + f1(c[1]) + '" x2="' + f1(d[0]) + '" y2="' + f1(d[1]) + '" stroke="' + GRID + '" stroke-width=".7"/>';
     }
     var cc = P(x0 + RS / 2, y0 + RS / 2, 0.1);
     out += '<ellipse class="lamp" cx="' + f1(cc[0]) + '" cy="' + f1(cc[1]) + '" rx="' + f1(RS * SC * 0.8) + '" ry="' + f1(RS * SC * 0.46) + '" fill="url(#g-lamp)"/>';
@@ -415,22 +418,31 @@
     all.forEach(function (c) { maxX = Math.max(maxX, c[0] + RS); maxY = Math.max(maxY, c[1] + RS); });
     this.world = [maxX, maxY];
 
-    // floor plate, its grid and the conduits
-    var f = '<ellipse cx="' + f1(P(maxX / 2, maxY / 2)[0]) + '" cy="' + f1(P(maxX / 2, maxY / 2, -0.8)[1]) + '" rx="' + f1((maxX + maxY) * SC * 0.62) +
-      '" ry="' + f1((maxX + maxY) * SC * 0.3) + '" fill="url(#g-shadow)" opacity=".8"/>';
-    f += box(-0.6, -0.6, -0.45, maxX + 1.2, maxY + 1.2, 0.45, 'url(#g-plate)', C.navy2, C.deep, C.line);
-    var a, b;
-    for (var i = 0; i <= maxX; i++) { a = P(i, -0.6); b = P(i, maxY + 0.6); f += '<line x1="' + f1(a[0]) + '" y1="' + f1(a[1]) + '" x2="' + f1(b[0]) + '" y2="' + f1(b[1]) + '" stroke="' + C.navy2 + '" stroke-width=".6"/>'; }
-    for (var j = 0; j <= maxY; j++) { a = P(-0.6, j); b = P(maxX + 0.6, j); f += '<line x1="' + f1(a[0]) + '" y1="' + f1(a[1]) + '" x2="' + f1(b[0]) + '" y2="' + f1(b[1]) + '" stroke="' + C.navy2 + '" stroke-width=".6"/>'; }
-    var corners = [P(-0.6, -0.6, 0), P(maxX + 0.6, -0.6, 0), P(maxX + 0.6, maxY + 0.6, -0.45), P(-0.6, maxY + 0.6, -0.45)];
+    // The floor: a slab under every room (the free lot included), so a corner of the plan with no room is open space
+    // and the office floats; Cymetica green round its outside only, a green glow under it. As in the 3D office.
+    var pad = 0.5, T = 0.75, have = {}, f = '', edges = '', corners = [];
+    all.forEach(function (c) { have[c[0] + ',' + c[1]] = 1; });
+    var mid = P(maxX / 2, maxY / 2, -T - 0.4);
+    f += '<ellipse cx="' + f1(mid[0]) + '" cy="' + f1(mid[1]) + '" rx="' + f1((maxX + maxY) * SC * 0.62) + '" ry="' + f1((maxX + maxY) * SC * 0.31) + '" fill="url(#g-under)"/>';
+    all.slice().sort(function (p, q) { return (p[0] + p[1]) - (q[0] + q[1]); }).forEach(function (c) {
+      var x0 = c[0] - pad, y0 = c[1] - pad, x1 = c[0] + RS + pad, y1 = c[1] + RS + pad;
+      f += box(x0, y0, -T, x1 - x0, y1 - y0, T, 'url(#g-plate)', C.navy2, C.deep, C.line);
+      [[x0, y0, x1, y0, !have[c[0] + ',' + (c[1] - 8)], false], [x0, y1, x1, y1, !have[c[0] + ',' + (c[1] + 8)], true],
+        [x0, y0, x0, y1, !have[(c[0] - 8) + ',' + c[1]], false], [x1, y0, x1, y1, !have[(c[0] + 8) + ',' + c[1]], true]].forEach(function (s) {
+        if (!s[4]) return;
+        var a = P(s[0], s[1], 0), b = P(s[2], s[3], 0);
+        edges += '<line class="pedge2" x1="' + f1(a[0]) + '" y1="' + f1(a[1]) + '" x2="' + f1(b[0]) + '" y2="' + f1(b[1]) + '" stroke="' + C.green + '" stroke-width="5"/>' +
+          '<line class="pedge" x1="' + f1(a[0]) + '" y1="' + f1(a[1]) + '" x2="' + f1(b[0]) + '" y2="' + f1(b[1]) + '" stroke="' + C.green + '" stroke-width="1.5"/>';
+        // the near sides show their foot as a dimmer line
+        if (s[5]) { var a2 = P(s[0], s[1], -T), b2 = P(s[2], s[3], -T); edges += '<line x1="' + f1(a2[0]) + '" y1="' + f1(a2[1]) + '" x2="' + f1(b2[0]) + '" y2="' + f1(b2[1]) + '" stroke="' + C.green + '" stroke-width="1" opacity=".3"/>'; }
+      });
+      corners.push(P(x0, y0, 0), P(x1, y0, 0), P(x1, y1, -T), P(x0, y1, -T), P(x0, y0, 1.3));
+    });
+    f += edges;
     this.plateRect = {
       x: Math.min.apply(null, corners.map(function (q) { return q[0]; })), y: Math.min.apply(null, corners.map(function (q) { return q[1]; })),
       x2: Math.max.apply(null, corners.map(function (q) { return q[0]; })), y2: Math.max.apply(null, corners.map(function (q) { return q[1]; }))
     };
-    // the office's frame: a line of Cymetica green round its front edges, and its glow
-    var e0 = P(-0.6, -0.6), e1 = P(-0.6, maxY + 0.6), e2 = P(maxX + 0.6, maxY + 0.6), e3 = P(maxX + 0.6, -0.6);
-    f += '<polyline class="pedge2" points="' + pts([e0, e1, e2, e3]) + '" fill="none" stroke="' + C.green + '" stroke-width="5"/>';
-    f += '<polyline class="pedge" points="' + pts([e0, e1, e2, e3]) + '" fill="none" stroke="' + C.green + '" stroke-width="1.4"/>';
     this.paths = {};
     Object.keys(cells).forEach(function (k) {
       if (k === 'hub' || k === 'lot') return;
@@ -523,9 +535,6 @@
     out += '<g class="scr"></g>';
     out += desk(x0 + 2.2, y0 + 1.8, 0, C.line2);
     out += agentAt(x0 + 3.15, y0 + 3.1, 'audit', 0, 'Supervisor');
-    var c = P(x0 + 5.8, y0 + 1.4, 0.1);
-    out += '<ellipse cx="' + f1(c[0]) + '" cy="' + f1(c[1]) + '" rx="16" ry="7" fill="none" stroke="' + C.blue + '" stroke-width="1" opacity=".6"/>';
-    out += '<ellipse class="scan" cx="' + f1(c[0]) + '" cy="' + f1(c[1]) + '" rx="16" ry="7" fill="none" stroke="' + C.cyan + '" stroke-width="1.2"/>';
     out += plant(x0 + 0.3, y0 + 6.2);
     return out;
   };
