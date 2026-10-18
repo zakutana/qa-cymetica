@@ -66,13 +66,15 @@ def tiles3x3(k):
     def P(u, v):
         x, y, w = H @ np.array([u, v, 1.0])
         return [round(x / w * k, 1), round(y / w * k, 1)]
-    m, out = 0.02, {}
+    m, out, cells = 0.02, {}, {}
     for r in range(3):
         for c in range(3):
             if (r, c) != (2, 2):
                 u0, u1, v0, v1 = c / 3 + m, (c + 1) / 3 - m, r / 3 + m, (r + 1) / 3 - m
                 out["%d%d" % (r, c)] = [P(u0, v0), P(u1, v0), P(u1, v1), P(u0, v1)]
-    return {"tiles": out}
+                # the whole cell, grooves included: a room stands on all of it, wall to wall with its neighbours
+                cells["%d%d" % (r, c)] = [P(c / 3, r / 3), P((c + 1) / 3, r / 3), P((c + 1) / 3, (r + 1) / 3), P(c / 3, (r + 1) / 3)]
+    return {"tiles": out, "cells": cells}
 
 
 def main():

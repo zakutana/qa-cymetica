@@ -56,23 +56,28 @@
     var U = row(d[0][0], d[1][0], d[2][0]), V = row(d[0][1], d[1][1], d[2][1]);
     return [U[0], V[0], U[1], V[1], U[2], V[2]];
   }
-  // a room onto its plate with its walls kept upright ("uplne krive", 2026-10-18: an affine through three corners
-  // sheared them to the plate's perspective): x' = a x + e, y' = b x + d y + f, fitted to the floor's four corners
-  // by least squares (the back one is left + right - front, the room's own camera being near orthographic)
-  function upright(s, d) {
-    var n = s.length, mx = 0, my = 0, mu = 0, sxx = 0, sxu = 0, i;
-    for (i = 0; i < n; i++) { mx += s[i][0] / n; mu += d[i][0] / n; }
-    for (i = 0; i < n; i++) { sxx += (s[i][0] - mx) * (s[i][0] - mx); sxu += (s[i][0] - mx) * (d[i][0] - mu); }
-    var a = sxu / sxx, e = mu - a * mx;
-    // y' on x and y: the normal equations of a three-term least squares, solved by Cramer
-    var A = [[0, 0, 0], [0, 0, 0], [0, 0, 0]], B = [0, 0, 0];
-    for (i = 0; i < n; i++) {
-      var r = [s[i][0], s[i][1], 1];
-      for (var j = 0; j < 3; j++) { B[j] += r[j] * d[i][1]; for (var k = 0; k < 3; k++) A[j][k] += r[j] * r[k]; }
+  // A room onto its cell: the projective map that takes the room's four floor corners onto the cell's four, as the
+  // CSS matrix3d of a 2D homography. The platform is shot with a wide lens and the rooms near orthographic, so
+  // nothing simpler fits (2026-10-18): an affine through three corners sheared the rooms ("uplne krive"); one that
+  // kept the walls upright could not follow the plate and left them turned, with gaps between ("mezery ... nakrivo
+  // otocene"). This one takes the platform's own perspective, wall to wall; walls lean outwards at the sides as
+  // that lens makes them, and look lower, nearer his picture.
+  function homog(s, d) {
+    var A = [], b = [], i, j, k;
+    for (i = 0; i < 4; i++) {
+      var x = s[i][0], y = s[i][1], u = d[i][0], v = d[i][1];
+      A.push([x, y, 1, 0, 0, 0, -u * x, -u * y]); b.push(u);
+      A.push([0, 0, 0, x, y, 1, -v * x, -v * y]); b.push(v);
     }
-    var det3 = function (M) { return M[0][0] * (M[1][1] * M[2][2] - M[1][2] * M[2][1]) - M[0][1] * (M[1][0] * M[2][2] - M[1][2] * M[2][0]) + M[0][2] * (M[1][0] * M[2][1] - M[1][1] * M[2][0]); };
-    var D = det3(A), col = function (c) { return A.map(function (row, j) { return row.map(function (v, k) { return k === c ? B[j] : v; }); }); };
-    return [a, det3(col(0)) / D, 0, det3(col(1)) / D, e, det3(col(2)) / D];
+    for (i = 0; i < 8; i++) {   // Gaussian elimination with partial pivoting
+      var p = i;
+      for (j = i + 1; j < 8; j++) if (Math.abs(A[j][i]) > Math.abs(A[p][i])) p = j;
+      var t = A[i]; A[i] = A[p]; A[p] = t; t = b[i]; b[i] = b[p]; b[p] = t;
+      for (j = i + 1; j < 8; j++) { var f = A[j][i] / A[i][i]; for (k = i; k < 8; k++) A[j][k] -= f * A[i][k]; b[j] -= f * b[i]; }
+    }
+    var h = [];
+    for (i = 7; i >= 0; i--) { var sum = b[i]; for (k = i + 1; k < 8; k++) sum -= A[i][k] * h[k]; h[i] = sum / A[i][i]; }
+    return 'matrix3d(' + [h[0], h[3], 0, h[6], h[1], h[4], 0, h[7], 0, 0, 1, 0, h[2], h[5], 0, 1].map(function (v) { return +v.toPrecision(9); }).join(',') + ')';
   }
   function mat(m) { return 'matrix(' + m.map(function (v) { return v.toFixed(5); }).join(',') + ')'; }
   function f1(v) { return v.toFixed(1); }
@@ -86,8 +91,11 @@
 
   OfficeLive.prototype.layout = function () {
     var S = CO.S, self = this, P = M[PLAT], pw = P.w * K, ph = P.h * K, src = BASE + PLAT + '.webp';
-    var T = {};
-    Object.keys(P.calib.tiles).forEach(function (t) { T[t] = P.calib.tiles[t].map(function (p) { return [p[0] * K, p[1] * K]; }); });   // back, right, front, left
+    var T = {}, C = {}, cells = P.calib.cells || P.calib.tiles;
+    Object.keys(P.calib.tiles).forEach(function (t) {
+      T[t] = P.calib.tiles[t].map(function (p) { return [p[0] * K, p[1] * K]; });   // back, right, front, left
+      C[t] = cells[t].map(function (p) { return [p[0] * K, p[1] * K]; });
+    });
     var at = {}, used = {};
     at[HUB] = { key: 'hub', img: 'O-room-manager' }; at[AUDIT] = { key: 'audit', img: 'O-room-audit' }; at[VAULT] = { key: 'vault', img: 'O-room-vault' };
     S.departments.forEach(function (d) { at[SLOT[d.slot]] = { key: 'd' + d.id, img: roomFor(d) }; used[d.slot] = 1; });
@@ -112,9 +120,9 @@
         h += '<div class="olot" style="transform:' + mat(affine([[0, 0], [100, 0], [0, 100]], [q[0], q[1], q[3]])) + '"><i></i><i></i><i></i></div>';
         over += '<div class="p3lot" data-key="lot" style="left:' + f1(c[0]) + 'px;top:' + f1(c[1]) + 'px;transform:translate(-50%,-50%)"><b>+</b>ADD DEPARTMENT</div>';
       } else {
-        var m = M[a.img], back = [m.left[0] + m.right[0] - m.bottom[0], m.left[1] + m.right[1] - m.bottom[1]];
-        var tf = upright([m.left, m.right, m.bottom, back], [q[3], q[1], q[2], q[0]]);
-        h += '<img class="oroom' + (a.key === 'vault' && CO.RO ? ' shut' : '') + '" src="' + BASE + a.img + '.webp" alt="" draggable="false" style="width:' + m.w + 'px;height:' + m.h + 'px;transform:' + mat(tf) + '">';
+        var m = M[a.img], back = [m.left[0] + m.right[0] - m.bottom[0], m.left[1] + m.right[1] - m.bottom[1]], cq = C[t];
+        var fl = [m.left, m.right, m.bottom, back], to = [cq[3], cq[1], cq[2], cq[0]];
+        h += '<img class="oroom' + (a.key === 'vault' && CO.RO ? ' shut' : '') + '" src="' + BASE + a.img + '.webp" alt="" draggable="false" style="width:' + m.w + 'px;height:' + m.h + 'px;transform:' + homog(fl, to) + '">';
         var rx = (q[1][0] - q[3][0]) / 2, ry = (q[2][1] - q[0][1]) / 2;
         over += '<div class="opglow" data-r="' + a.key + '" style="left:' + f1(c[0] - rx) + 'px;top:' + f1(c[1] - ry) + 'px;width:' + f1(2 * rx) + 'px;height:' + f1(2 * ry) + 'px"></div>';
         if (a.key === 'vault') over += '<div class="opvault mini" id="opvault" data-key="vault" style="left:' + f1(plate[0]) + 'px;top:' + f1(plate[1]) + 'px"></div>';
