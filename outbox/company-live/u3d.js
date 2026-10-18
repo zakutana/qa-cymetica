@@ -1363,7 +1363,7 @@ function asteroidGeo(seed, detail = 64, flatTop = true) {
   const craters = [];
   for (let i = 0; i < 30; i++) craters.push({ c: new THREE.Vector3(R() * 2 - 1, R() * 2 - 1, R() * 2 - 1).normalize(), r: 0.05 + Math.pow(R(), 2.2) * 0.3, d: 0.35 + R() * 0.45 });
   // his rock is a dark slate grey, lit on its faces (#232b37 to #474d5b), not a black mass and not a pale one
-  const dark = [0.018, 0.024, 0.034], mid = [0.05, 0.062, 0.08], light = [0.12, 0.135, 0.16];
+  const dark = [0.012, 0.016, 0.024], mid = [0.032, 0.04, 0.054], light = [0.075, 0.085, 0.105];
   for (let i = 0; i < n; i++) {
     v.fromBufferAttribute(pos, i);
     let h = 0.34 * fbm(v.x * 1.15, v.y * 1.15, v.z * 1.15, 4) + 0.17 * (ridge(v.x * 2.4, v.y * 2.4, v.z * 2.4, 5) - 0.45) + 0.05 * (ridge(v.x * 7, v.y * 7, v.z * 7, 3) - 0.45) + 0.03 * fbm(v.x * 16, v.y * 16, v.z * 16, 2);
@@ -1392,7 +1392,7 @@ function rockNodeMat(freq) {
   const big = T.mx_fractal_noise_float(q.mul(0.22), 3, 2.0, 0.5);
   const h = grain.mul(0.4).add(big.mul(0.6)).sub(crack.mul(0.5));
   m.userData.shade = h.mul(0.8).add(1.0).clamp(0.5, 1.6).mul(T.float(1).sub(crack.mul(0.5)));
-  m.colorNode = T.vertexColor().xyz.mul(m.userData.shade);
+  m.colorNode = T.vertexColor().xyz.mul(m.userData.shade).mul(0.6);
   const pv = T.positionView, n = T.normalView, dx = T.dFdx(pv), dy = T.dFdy(pv);
   const r1 = T.cross(dy, n), r2 = T.cross(n, dx), det = T.dot(dx, r1);
   m.normalNode = T.normalize(T.abs(det).mul(n).sub(T.sign(det).mul(r1.mul(T.dFdx(h)).add(r2.mul(T.dFdy(h)))).mul(0.32)));
@@ -1552,7 +1552,7 @@ function omats() {
   // his asteroid top right is a light grey, cratered and lit from the left
   OM.asteroid = rockNodeMat(3.0); OM.asteroid.colorNode = TSL.vec3(0.34, 0.35, 0.38).mul(OM.asteroid.userData.shade);
   // his engines are brushed silver with dark bands, not navy -- matte enough not to read as glass
-  OM.engineL = std({ color: 0x8c96a4, roughness: 0.55, metalness: 0.35, side: THREE.DoubleSide });
+  OM.engineL = std({ color: 0x6e7886, roughness: 0.5, metalness: 0.45, side: THREE.DoubleSide });
   OM.engineBand = std({ color: 0x1c242e, roughness: 0.45, metalness: 0.5 });
   G.plumeCone = new THREE.CylinderGeometry(1, 0.05, 1, 24, 1, true);   // wide end (and the texture's bright top) at the nozzle
   G.circle = new THREE.CircleGeometry(1, 48);
@@ -1574,11 +1574,11 @@ function omats() {
   OM.coinG = std({ color: 0x18b87a, emissive: 0x38f5b8, emissiveIntensity: 0.28, metalness: 0.8, roughness: 0.22 });
   OM.coinB = std({ color: 0x2f6fd8, emissive: 0x3b82f6, emissiveIntensity: 0.32, metalness: 0.8, roughness: 0.22 });
   G.coin = new THREE.CylinderGeometry(1, 1, 1, 28);
-  // astronauts as in his picture: white suits, light grey packs and joints, a dark blue visor
-  OM.suit = std({ color: 0xc2cdd8, roughness: 0.5, metalness: 0.08 });
-  OM.pack = std({ color: 0x9aa7b4, roughness: 0.5, metalness: 0.15 });
+  // astronauts as in his picture, zoomed: steel-blue suits, darker packs and joints, a glossy blue helmet, a dark visor
+  OM.suit = std({ color: 0x7088a4, roughness: 0.5, metalness: 0.1 });
+  OM.pack = std({ color: 0x4a5c70, roughness: 0.5, metalness: 0.15 });
   OM.visor = std({ color: 0x0e2c56, roughness: 0.14, metalness: 0.6, emissive: 0x0a2e5e, emissiveIntensity: 0.25 });
-  OM.helmet = std({ color: 0x7f9cbe, roughness: 0.3, metalness: 0.25 });
+  OM.helmet = std({ color: 0x4e6c90, roughness: 0.22, metalness: 0.35 });
   OM.torso = new THREE.CapsuleGeometry(0.16, 0.26, 4, 14); OM.limb = new THREE.CapsuleGeometry(0.055, 0.2, 3, 10); OM.leg = new THREE.CapsuleGeometry(0.07, 0.36, 3, 10);
   OM.chair = std({ color: 0x232d38, roughness: 0.48, metalness: 0.3 });
   OM.green = amat('#38f5b8'); OM.cyan = amat('#24e8ff'); OM.blue = amat('#3b82f6'); OM.red = amat('#ff8824'); OM.amber = amat('#ff8824');
@@ -1850,7 +1850,7 @@ class Office3D {
       const nozzle = new THREE.Mesh(G.circle, new THREE.MeshBasicMaterial({ map: nozzleTex(), color: new THREE.Color(0xffffff).multiplyScalar(2.2), transparent: true, toneMapped: false }));
       nozzle.scale.setScalar(0.62); nozzle.position.z = 1.1; nozzle.userData.dyn = true; g.add(nozzle);
       const lip = new THREE.Mesh(G.ringT, OM.engineL); lip.scale.set(0.68, 0.68, 2.5); lip.position.z = 1.12; g.add(lip);
-      const halo = glowSprite(0x8ff8ff, 0.75, 2.6); halo.position.z = 1.35; halo.userData.dyn = true; g.add(halo);
+      const halo = glowSprite(0x8ff8ff, plume ? 0.75 : 0.32, plume ? 2.6 : 1.6); halo.position.z = 1.3; halo.userData.dyn = true; g.add(halo);
       if (plume) {
         // a flame as wide as the nozzle where it leaves it, thinning and fading away from it
         [[0.62, 3.4, 0x4a7cff, 0.26], [0.36, 2.2, 0x9cc4ff, 0.32]].forEach(([w, len, col, op]) => {
@@ -1859,7 +1859,7 @@ class Office3D {
         });
         const ph = glowSprite(0x6a9cff, 0.45, 3.0); ph.position.z = 1.9; ph.userData.dyn = true; g.add(ph);
       }
-      this.flames.push({ glow: halo, ph: R() * 6 + x });
+      this.flames.push({ glow: halo, ph: R() * 6 + x, base: plume ? 0.3 : 0.16 });
       return g;
     };
     const back = outer.find((o) => o.nx === -1 && o.c0 === 0 && o.c1 === 8);
@@ -1931,15 +1931,16 @@ class Office3D {
     });
     if (r.key !== 'hub') { this.box(g, x0 + t, y0 + t, z0, RS - 2 * t, 0.1, 0.52, OM.wallDark); this.box(g, x0 + t, y0 + t, z0, 0.1, RS - 2 * t, 0.52, OM.wallDark); }
     r.edgeM = emis(isOrange ? LOOK.orange : LOOK.neon, 2.2);
-    const e = 0.042, zt = z0 + H - e, f = 0.022;
+    const e = 0.058, zt = z0 + H - e, f = 0.022;   // his neon is a thicker soft line than a hairline
     // the neon: back walls' tops (y = y0 along x, x = x0 along y), front walls' feet
     [[x0, y0, zt, RS, e], [x0, y0, zt, e, RS], [x0, y0 + RS - e, z0, RS, e], [x0 + RS - e, y0, z0, e, RS]].forEach(([x, y, z, w, d]) => this.box(g, x, y, z, w, d, e, r.edgeM, false));
     // the glass's edges: the front walls' tops and the four corners
     [[x0, y0 + RS - f, z0 + H - f, RS, f, f], [x0 + RS - f, y0, z0 + H - f, f, RS, f],
       [x0, y0, z0, f, f, H], [x0 + RS - f, y0, z0, f, f, H], [x0, y0 + RS - f, z0, f, f, H], [x0 + RS - f, y0 + RS - f, z0, f, f, H]].forEach(([x, y, z, w, d, h]) => this.box(g, x, y, z, w, d, h, OM.glassEdge, false));
     // the room's own light: white over the floor, warm in the trading desk
-    r.lamp = new THREE.PointLight(isOrange ? 0xff6a34 : 0xeef6ff, isOrange ? 16 : 6, 13, 1.0);
-    r.lamp.position.copy(this.V(x0 + RS / 2, y0 + RS / 2, 4.4)); g.add(r.lamp);
+    // the light stays in its room: an orange one reaching the neighbours tinted their floors
+    r.lamp = new THREE.PointLight(isOrange ? 0xff6a34 : 0xeef6ff, isOrange ? 22 : 6, isOrange ? 6.5 : 9, 1.0);
+    r.lamp.position.copy(this.V(x0 + RS / 2, y0 + RS / 2, isOrange ? 2.4 : 4.4)); g.add(r.lamp);
   }
   // a wall screen on the back wall: what runs now, or why it waits
   wallScreen(r, u0, u1) {
@@ -1977,7 +1978,7 @@ class Office3D {
   // An astronaut: a shaded blue-grey space suit, a rounded helmet with a wide dark-blue glossy visor, a life-support
   // pack, collar ring, and arms to the keyboard.
   agent(r, x, y, i, label, opts) {
-    const at = this.V(x, y, 0.08), S = 1.28, standing = !!(opts && opts.stand);
+    const at = this.V(x, y, 0.08), S = 1.12, standing = !!(opts && opts.stand);
     const cm = (geom, mat, px, py, pz, rx) => { const m = new THREE.Mesh(geom, mat); m.position.set(px, py, pz); if (rx) m.rotation.x = rx; m.castShadow = true; m.receiveShadow = true; return m; };
     if (!standing) {
       const chair = new THREE.Group(); chair.position.copy(at); chair.scale.setScalar(S); r.g.add(chair);
@@ -1989,7 +1990,7 @@ class Office3D {
     const up = new THREE.Group(); g.add(up);
     up.add(cm(OM.torso, OM.suit, 0, 0.75, 0.04));
     const collar = cm(G.cyl, OM.pack, 0, 0.96, 0.03); collar.scale.set(0.15, 0.04, 0.15); up.add(collar);
-    const helmet = cm(G.sphere, OM.helmet, 0, 1.15, 0.02); helmet.scale.set(0.22, 0.21, 0.22); up.add(helmet);
+    const helmet = cm(G.sphere, OM.helmet, 0, 1.13, 0.02); helmet.scale.set(0.19, 0.18, 0.19); up.add(helmet);
     const visorM = OM.visor.clone();
     const vz = cm(G.sphere, visorM, 0, 1.15, -0.11); vz.scale.set(0.175, 0.125, 0.11); up.add(vz);
     up.add(cm(rboxGeo(0.32, 0.4, 0.16, 0.04), OM.pack, 0, 0.8, 0.22));
@@ -2385,9 +2386,9 @@ class Office3D {
     if (r.st === st && r.orange === isOrange) return;
     r.st = st; r.orange = isOrange;
     const c = new THREE.Color(isOrange ? LOOK.orange : LOOK.neon);
-    if (r.edgeM) { r.edgeM.emissive.copy(c); r.edgeM.emissiveIntensity = isOrange ? 2.6 : st === 'working' ? 2.6 : 2.0; }
-    if (r.glow) { r.glow.material.color.copy(c); r.glowBase = isOrange ? 1.0 : st === 'working' ? 0.05 : 0; }
-    if (r.lamp) { r.lamp.color.set(isOrange ? 0xff6a34 : 0xeef6ff); r.lamp.intensity = isOrange ? 24 : 6; }
+    if (r.edgeM) { r.edgeM.emissive.copy(c); r.edgeM.emissiveIntensity = isOrange ? 2.2 : st === 'working' ? 2.0 : 1.5; }
+    if (r.glow) { r.glow.material.color.copy(c).multiplyScalar(isOrange ? 1.9 : 1); r.glowBase = isOrange ? 1.0 : st === 'working' ? 0.05 : 0; }
+    if (r.lamp) { r.lamp.color.set(isOrange ? 0xff6a34 : 0xeef6ff); r.lamp.intensity = isOrange ? 22 : 6; r.lamp.distance = isOrange ? 6.5 : 9; }
   }
   drawSel() {
     release(this.selRing); this.selRing.clear();
@@ -2486,7 +2487,7 @@ class Office3D {
     this.sky.position.copy(this.camera.position);
     if (this.fill) { this.fill.position.copy(this.camera.position).add(new THREE.Vector3(-4, 8, 0)); this.fill.target.position.copy(this.controls.target); }
     if (this.drift) this.drift.forEach((d, i) => { d.m.rotation.y = t * d.sp + i; d.m.rotation.x = t * d.sp * 0.6 + i * 2; });
-    if (this.flames) this.flames.forEach((f) => { f.glow.material.opacity = 0.26 + 0.08 * Math.sin(t * 3 + f.ph) + 0.03 * Math.sin(t * 11 + f.ph); });
+    if (this.flames) this.flames.forEach((f) => { f.glow.material.opacity = (f.base || 0.26) + 0.08 * Math.sin(t * 3 + f.ph) + 0.03 * Math.sin(t * 11 + f.ph); });
     if (this.vaultPiles) this.vaultPiles.forEach((p, i) => { p.position.y = p.userData.y + Math.sin(t * 1.2 + i) * 0.03; });
     Object.values(this.rooms).forEach((r) => {
       if (r.grow) { const k = Math.min(1, (now - r.grow) / 1200), e = 1 - Math.pow(1 - k, 3); r.g.scale.set(1, Math.max(0.01, e), 1); if (k >= 1) r.grow = 0; }
