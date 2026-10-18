@@ -445,7 +445,11 @@
     var c = CO.uvCompany ? CO.uvCompany(+Q.get('visit')) : null;
     CO.VISIT = c && c.public ? c : null;
     if (CO.VISIT) { CO.RO = true; CO.HUNTER = c.owner; }
-    else { CO.MODE = 'ours'; CO.denied = c ? c.name + ' is private: only its owner can look inside.' : 'No such company.'; }
+    else {
+      CO.MODE = 'ours'; CO.denied = c ? c.name + ' is private: only its owner can look inside.' : 'No such company.';
+      // said once: the refused visit leaves the address, so a reload is simply our own company
+      try { history.replaceState(null, '', location.pathname + location.hash); } catch (e) { /* fine */ }
+    }
   }
   var PLAN_UNITS = { 'Pro': [1, 6], 'Max 5x': [5, 30], 'Max 20x': [20, 120] };
   CO.fresh = function (t0) {

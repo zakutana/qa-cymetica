@@ -79,6 +79,8 @@
     if (CO.MODE === 'new') setTimeout(createCompanyModal, 300);
     if (CO.Q.has('created')) setTimeout(function () { toast('Created: ' + CO.S.company.name + '. Add its first department.'); addDeptModal(); }, 600);
     if (location.hash === '#universe') setTab('universe');
+    // back from a visit through the browser's cache: the page comes back as it was left, fade and all
+    window.addEventListener('pageshow', function (e) { if (e.persisted) $('uvfade').hidden = true; });
   }
   // the visitor's frame: a bar saying whose company this is and that it is read only
   function roSetup() {
@@ -408,7 +410,10 @@
     render();
     if (name === 'office') requestAnimationFrame(function () { office.resize(); });
     if (name === 'universe') showUniverse();
-    try { history.replaceState(null, '', location.pathname + location.search + (name === 'universe' ? '#universe' : '')); } catch (e) { /* fine */ }
+    // the address remembers the Universe tab, but never at the cost of a mode carried in the hash (#demo, #empty)
+    if (!/^#(demo|empty)$/.test(location.hash)) {
+      try { history.replaceState(null, '', location.pathname + location.search + (name === 'universe' ? '#universe' : '')); } catch (e) { /* fine */ }
+    }
   }
   function renderPane() {
     ({ tasks: renderTasks, approvals: renderApprovals, memory: renderMemory, audit: renderAudit, rules: renderRules, investable: renderInvest, legal: renderLegal, token: renderToken, settings: renderSettings, universe: renderUniverse }[ui.tab] || function () {})();
@@ -470,7 +475,10 @@
     if (!c.public) return privateCard(c);
     try { sessionStorage.setItem('uv.from', String(c.id)); } catch (e) { /* fine */ }
     $('uvfade').hidden = false;
-    uv.flyTo(c.id, function () { location.href = 'index.html?visit=' + c.id; });
+    // the flight is only the way in: a drag or a wheel that cuts it short must not cut the visit too
+    var gone = false, go = function () { if (!gone) { gone = true; location.href = 'index.html?visit=' + c.id; } };
+    uv.flyTo(c.id, go);
+    setTimeout(go, 1300);
   }
   // a private company: what it shows the world, and nothing from inside
   function privateCard(c) {

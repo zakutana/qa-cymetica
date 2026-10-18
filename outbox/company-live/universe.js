@@ -19,6 +19,65 @@
   function fpOf(n) { return n <= 2 ? 2.3 : n <= 5 ? 2.9 : 3.5; }
   CO.floorsOf = floorsOf;
 
+  /* ---------------- the map's model, drawn twice: here in SVG and in u3d.js in 3D ---------------- */
+  // one copy, so the two pictures cannot drift apart
+  CO.uvRng = rng; CO.fpOf = fpOf; CO.uvGrid = { GRID: GRID, CORE: CORE, MINE: MINE };
+  // where each company stands: the biggest at the back, so a small one in front is never hidden
+  CO.uvPlan = function (mine) {
+    var slots = [], i, j;
+    for (i = 0; i < GRID; i++) for (j = 0; j < GRID; j++) {
+      if ((i === CORE[0] && j === CORE[1]) || (i === MINE[0] && j === MINE[1])) continue;
+      slots.push([i, j]);
+    }
+    slots.sort(function (a, b) { return (a[0] + a[1]) - (b[0] + b[1]) || Math.abs(a[0] - a[1]) - Math.abs(b[0] - b[1]) || a[0] - b[0]; });
+    var list = CO.UNIVERSE.slice().sort(function (a, b) { return floorsOf(b) - floorsOf(a) || a.id - b.id; });
+    var items = list.map(function (c, k) { return { c: c, at: slots[k] }; }).filter(function (it) { return it.at; });
+    items.push({ c: mine, at: MINE, mine: true });
+    return items;
+  };
+  // a lively first look: some floors already at work
+  CO.uvSeed = function (items, live) {
+    items.forEach(function (it) {
+      if (it.mine || it.c.status === 'paused') return;
+      var n = floorsOf(it.c), R = rng(it.c.id * 3);
+      live[it.c.id] = R() < 0.55 ? [Math.floor(R() * n)] : [];
+    });
+  };
+  // one beat of the sample companies: up to three change which floors work; the picture answers what changed
+  CO.uvStep = function (items, live) {
+    var pool = items.filter(function (it) { return !it.mine && it.c.status !== 'paused'; }), out = [];
+    for (var k = 0; k < 3 && pool.length; k++) {
+      var it = pool[Math.floor(Math.random() * pool.length)], n = floorsOf(it.c), on = [];
+      var w = Math.random() < 0.3 ? 0 : (n > 1 && Math.random() < 0.3 ? 2 : 1);
+      while (on.length < w) { var f = Math.floor(Math.random() * n); if (on.indexOf(f) < 0) on.push(f); }
+      var was = (live[it.c.id] || []).length;
+      live[it.c.id] = on;
+      var qa = (it.c.departments || []).some(function (d) { return d.key === 'testing'; });
+      var bug = !!(qa && on.length && Math.random() < 0.1);
+      if (bug) it.c.bugs = (it.c.bugs || 0) + 1;
+      out.push({ it: it, on: on, was: was, bug: bug });
+    }
+    return out;
+  };
+  CO.uvStats = function (items, live) {
+    var pub = 0, work = 0;
+    items.forEach(function (it) {
+      if (it.c.public) pub++;
+      work += (it.mine ? (it.c.working || []) : (live[it.c.id] || [])).length;
+    });
+    return { companies: items.length, public: pub, working: work };
+  };
+  CO.uvTip = function (id, it, live) {
+    if (id === 'core') return '<b class="c">Cymetica</b><br>Every company here works on it.';
+    if (!it) return '';
+    var c = it.c, n = floorsOf(c), work = (it.mine ? (c.working || []) : (live[c.id] || [])).length;
+    var et = it.mine ? (c.et10 || 0) : CO.uvEt10(c), acc = CO.accentHex(c.accent);
+    var nums = '<b>' + n + '</b> department' + (n === 1 ? '' : 's') + (c.public || it.mine ? ' · <b>' + work + '</b> working now' + (et ? ' · <b class="g">+' + et.toLocaleString('en-US') + '</b> ET10' : '') : '');
+    var act = it.mine ? '<span class="g">Your company · click to open your office</span>' + (c.public ? '' : '<br><span>Private: others see its name, building and mission</span>')
+      : c.public ? (c.status === 'paused' ? '<span>Paused · click to look inside</span>' : '<span class="c">Click to look inside →</span>') : '<span>Private · click for its description</span>';
+    return '<div class="uvt"><b style="color:' + acc + '">' + esc(c.name) + '</b><span>@' + esc(c.owner) + '</span></div><div>' + nums + '</div><div>' + act + '</div>';
+  };
+
   /* ---------------- the pieces of a building ---------------- */
   // one row of windows on a wall, in the wall's own pixels (tf maps them onto it)
   function wins(tf, wPx, hPx, acc, R, lit, step) {
@@ -254,24 +313,9 @@
   CO.Universe = Universe;
   Universe.prototype.visible = function () { return this.svg.getBoundingClientRect().width > 0; };
 
-  // where each company stands: the biggest at the back, so a small one in front is never hidden
   Universe.prototype.layout = function () {
-    var slots = [], i, j;
-    for (i = 0; i < GRID; i++) for (j = 0; j < GRID; j++) {
-      if ((i === CORE[0] && j === CORE[1]) || (i === MINE[0] && j === MINE[1])) continue;
-      slots.push([i, j]);
-    }
-    slots.sort(function (a, b) { return (a[0] + a[1]) - (b[0] + b[1]) || Math.abs(a[0] - a[1]) - Math.abs(b[0] - b[1]) || a[0] - b[0]; });
-    var list = CO.UNIVERSE.slice().sort(function (a, b) { return floorsOf(b) - floorsOf(a) || a.id - b.id; });
-    var self = this;
-    this.items = list.map(function (c, k) { return { c: c, at: slots[k] }; }).filter(function (it) { return it.at; });
-    this.items.push({ c: this.h.mine(), at: MINE, mine: true });
-    // a lively first look: some floors already at work
-    this.items.forEach(function (it) {
-      if (it.mine || it.c.status === 'paused') return;
-      var n = floorsOf(it.c), R = rng(it.c.id * 3);
-      self.live[it.c.id] = R() < 0.55 ? [Math.floor(R() * n)] : [];
-    });
+    this.items = CO.uvPlan(this.h.mine());
+    CO.uvSeed(this.items, this.live);
     this.drawGround();
     this.draw();
   };
@@ -359,15 +403,11 @@
   // the others' days go on: a floor starts, a floor stops, now and then Cymetica pays a bug
   Universe.prototype.pulse = function () {
     if (!this.items) return;
-    var self = this, pool = this.items.filter(function (it) { return !it.mine && it.c.status !== 'paused'; });
-    for (var k = 0; k < 3 && pool.length; k++) {
-      var it = pool[Math.floor(Math.random() * pool.length)], n = floorsOf(it.c), on = [];
-      var w = Math.random() < 0.3 ? 0 : (n > 1 && Math.random() < 0.3 ? 2 : 1);
-      while (on.length < w) { var f = Math.floor(Math.random() * n); if (on.indexOf(f) < 0) on.push(f); }
-      this.live[it.c.id] = on; this.paintFloors(it);
-      var qa = (it.c.departments || []).some(function (d) { return d.key === 'testing'; });
-      if (qa && on.length && Math.random() < 0.1) { it.c.bugs = (it.c.bugs || 0) + 1; self.pop(it, '+1,000 ET10'); }
-    }
+    var self = this;
+    CO.uvStep(this.items, this.live).forEach(function (s) {
+      self.paintFloors(s.it);
+      if (s.bug) self.pop(s.it, '+1,000 ET10');
+    });
     this.stats();
   };
   Universe.prototype.pop = function (it, label) {
@@ -396,25 +436,11 @@
     this.stats();
   };
   Universe.prototype.stats = function () {
-    var self = this, all = this.items || [], pub = 0, work = 0;
-    all.forEach(function (it) {
-      if (it.c.public) pub++;
-      work += (it.mine ? (it.c.working || []) : (self.live[it.c.id] || [])).length;
-    });
-    if (this.h.onStats) this.h.onStats({ companies: all.length, public: pub, working: work });
+    if (this.h.onStats) this.h.onStats(CO.uvStats(this.items || [], this.live));
   };
 
   /* ---------------- the tooltip ---------------- */
-  Universe.prototype.tipHTML = function (id) {
-    if (id === 'core') return '<b class="c">Cymetica</b><br>Every company here works on it.';
-    var it = this.find(id); if (!it) return '';
-    var c = it.c, n = floorsOf(c), work = (it.mine ? (c.working || []) : (this.live[c.id] || [])).length;
-    var et = it.mine ? (c.et10 || 0) : CO.uvEt10(c), acc = CO.accentHex(c.accent);
-    var nums = '<b>' + n + '</b> department' + (n === 1 ? '' : 's') + (c.public || it.mine ? ' · <b>' + work + '</b> working now' + (et ? ' · <b class="g">+' + et.toLocaleString('en-US') + '</b> ET10' : '') : '');
-    var act = it.mine ? '<span class="g">Your company · click to open your office</span>' + (c.public ? '' : '<br><span>Private: others see its name, building and mission</span>')
-      : c.public ? (c.status === 'paused' ? '<span>Paused · click to look inside</span>' : '<span class="c">Click to look inside →</span>') : '<span>Private · click for its description</span>';
-    return '<div class="uvt"><b style="color:' + acc + '">' + esc(c.name) + '</b><span>@' + esc(c.owner) + '</span></div><div>' + nums + '</div><div>' + act + '</div>';
-  };
+  Universe.prototype.tipHTML = function (id) { return CO.uvTip(id, id === 'core' ? null : this.find(id), this.live); };
   Universe.prototype.find = function (id) {
     for (var i = 0; i < (this.items || []).length; i++) if (String(this.items[i].c.id) === String(id)) return this.items[i];
     return null;

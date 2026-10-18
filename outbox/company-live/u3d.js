@@ -76,12 +76,8 @@ class Post {
     r.toneMapping = tm; r.outputColorSpace = cs;
   }
 }
-function rng(seed) {
-  let s = Math.abs(Math.floor(seed * 9301 + 49297)) % 233280 || 1;
-  return () => { s = (s * 9301 + 49297) % 233280; return s / 233280; };
-}
-const floorsOf = (c) => Math.max(1, Math.min(8, (c.departments || []).length || 1));
-const fpOf = (n) => n <= 2 ? 2.3 : n <= 5 ? 2.9 : 3.5;
+// the map's model lives in universe.js, which the SVG map draws too: one copy, so the two pictures cannot drift
+const rng = CO.uvRng, floorsOf = CO.floorsOf, fpOf = CO.fpOf;
 
 /* ---------------- a building: its parts, its windows, its floors ---------------- */
 class Building {
@@ -460,22 +456,13 @@ class Universe3D {
 
   // where each company stands: the biggest at the back, so a small one in front is never hidden
   layout() {
-    const slots = [];
-    for (let i = 0; i < GRID; i++) for (let j = 0; j < GRID; j++) {
-      if ((i === CORE[0] && j === CORE[1]) || (i === MINE[0] && j === MINE[1])) continue;
-      slots.push([i, j]);
-    }
-    slots.sort((a, b) => (a[0] + a[1]) - (b[0] + b[1]) || Math.abs(a[0] - a[1]) - Math.abs(b[0] - b[1]) || a[0] - b[0]);
-    const list = CO.UNIVERSE.slice().sort((a, b) => floorsOf(b) - floorsOf(a) || a.id - b.id);
-    this.items = list.map((c, k) => ({ c, at: slots[k] })).filter((it) => it.at);
-    this.items.push({ c: this.h.mine(), at: MINE, mine: true });
-    this.items.forEach((it) => {
-      if (!it.mine && it.c.status !== 'paused') { const R = rng(it.c.id * 3), n = floorsOf(it.c); this.live[it.c.id] = R() < 0.55 ? [Math.floor(R() * n)] : []; }
-      this.place(it);
-    });
+    this.items = CO.uvPlan(this.h.mine());
+    CO.uvSeed(this.items, this.live);
+    this.items.forEach((it) => this.place(it));
     this.stats();
   }
   place(it) {
+    this.built = (this.built || 0) + 1;
     if (it.plot) { this.scene.remove(it.plot.root); }
     const c = it.c, p = makePlot(c, it.mine ? 7 : c.id, { mine: it.mine });
     p.root.position.set(it.at[0] * CELL + PS / 2 - OFF, 0, it.at[1] * CELL + PS / 2 - OFF);
@@ -514,18 +501,12 @@ class Universe3D {
     this.stats();
   }
   pulse() {
-    const pool = this.items.filter((it) => !it.mine && it.c.status !== 'paused');
-    for (let k = 0; k < 3 && pool.length; k++) {
-      const it = pool[Math.floor(Math.random() * pool.length)], n = floorsOf(it.c), on = [];
-      const w = Math.random() < 0.3 ? 0 : (n > 1 && Math.random() < 0.3 ? 2 : 1);
-      while (on.length < w) { const f = Math.floor(Math.random() * n); if (!on.includes(f)) on.push(f); }
-      const was = (this.live[it.c.id] || []).length;
-      this.live[it.c.id] = on; this.paint(it);
+    CO.uvStep(this.items, this.live).forEach(({ it, on, was, bug }) => {
+      this.paint(it);
       // a floor that starts work sends it to Cymetica: an arc of light to the beam in the middle
       if (on.length && !was) this.arc(it, false);
-      const qa = (it.c.departments || []).some((d) => d.key === 'testing');
-      if (qa && on.length && Math.random() < 0.1) { it.c.bugs = (it.c.bugs || 0) + 1; this.arc(it, true); setTimeout(() => this.pop(it, '+1,000 ET10'), 1300); }
-    }
+      if (bug) { this.arc(it, true); setTimeout(() => this.pop(it, '+1,000 ET10'), 1300); }
+    });
     this.stats();
   }
   // work goes in to Cymetica in the company's colour; ET10 comes back out in green
@@ -550,11 +531,7 @@ class Universe3D {
     const p = { el, it, t0: performance.now() }; this.pops.push(p);
     setTimeout(() => { el.remove(); this.pops = this.pops.filter((x) => x !== p); }, 2600);
   }
-  stats() {
-    let pub = 0, work = 0;
-    this.items.forEach((it) => { if (it.c.public) pub++; work += (it.mine ? (it.c.working || []) : (this.live[it.c.id] || [])).length; });
-    if (this.h.onStats) this.h.onStats({ companies: this.items.length, public: pub, working: work });
-  }
+  stats() { if (this.h.onStats) this.h.onStats(CO.uvStats(this.items, this.live)); }
   find(id) { return this.items.find((it) => String(it.c.id) === String(id)) || null; }
   open(id) { const it = this.find(id); if (it && this.h.onOpen) { this.hideTip(); this.h.onOpen(it); } }
 
@@ -655,6 +632,10 @@ class Universe3D {
   // the banners and the ET10 pops follow their buildings; a banner hidden behind a nearer one steps back
   overlay() {
     const w = this.el.clientWidth, h = this.el.clientHeight, v = new THREE.Vector3(), placed = [];
+    // a still camera moves no banner: restyle them only when the view, the size, the hover or a building changed
+    const key = this.camera.matrixWorld.elements.join(',') + '|' + w + 'x' + h + '|' + this.hover + '|' + this.items.length + '|' + this.built;
+    if (key === this.ovKey && !this.pops.length) return;
+    this.ovKey = key;
     const list = this.items.map((it) => {
       v.copy(it.anchor).project(this.camera);
       return { it, x: (v.x + 1) / 2 * w, y: (1 - v.y) / 2 * h, z: v.z, d: this.camera.position.distanceTo(it.anchor) };
@@ -717,16 +698,7 @@ class Universe3D {
     this.renderer.domElement.style.cursor = id != null && id !== 'core' ? 'pointer' : '';
     if (fromBanner) { if (id != null && this.lastEvBanner !== id) { this.lastEvBanner = id; } if (id == null) this.hideTip(); else { const html = this.tipHTML(id), r = it && it.el && it.el.getBoundingClientRect(); if (html && r) this.showTip(html, { clientX: r.left + r.width / 2, clientY: r.bottom + 6 }); } }
   }
-  tipHTML(id) {
-    if (id === 'core') return '<b class="c">Cymetica</b><br>Every company here works on it.';
-    const it = this.find(id); if (!it) return '';
-    const c = it.c, n = floorsOf(c), work = (it.mine ? (c.working || []) : (this.live[c.id] || [])).length;
-    const et = it.mine ? (c.et10 || 0) : CO.uvEt10(c), acc = CO.accentHex(c.accent);
-    const nums = '<b>' + n + '</b> department' + (n === 1 ? '' : 's') + (c.public || it.mine ? ' · <b>' + work + '</b> working now' + (et ? ' · <b class="g">+' + et.toLocaleString('en-US') + '</b> ET10' : '') : '');
-    const act = it.mine ? '<span class="g">Your company · click to open your office</span>' + (c.public ? '' : '<br><span>Private: others see its name, building and mission</span>')
-      : c.public ? (c.status === 'paused' ? '<span>Paused · click to look inside</span>' : '<span class="c">Click to look inside →</span>') : '<span>Private · click for its description</span>';
-    return '<div class="uvt"><b style="color:' + acc + '">' + esc(c.name) + '</b><span>@' + esc(c.owner) + '</span></div><div>' + nums + '</div><div>' + act + '</div>';
-  }
+  tipHTML(id) { return CO.uvTip(id, id === 'core' ? null : this.find(id), this.live); }
   showTip(html, e) {
     const r = this.stage.getBoundingClientRect();
     this.tip.innerHTML = html; this.tip.hidden = false;
@@ -840,6 +812,22 @@ function omats() {
   OM.capsule = new THREE.CapsuleGeometry(0.17, 0.34, 4, 14);
   OM.green = amat('#00ff88'); OM.cyan = amat('#00cfff'); OM.blue = amat('#3b82f6'); OM.red = amat('#ff4444');
 }
+// what a layout or a selection built for itself goes back to the GPU when it is cleared; the shared geometries
+// (G, OM.capsule) and the shared materials (M, AM, OM) stay, since the next layout draws with them again
+function release(root) {
+  const shared = new Set();
+  [M, OM].concat(Object.values(AM)).forEach((bag) => Object.values(bag).forEach((v) => {
+    if (v && v.isMaterial) { shared.add(v); if (v.map) shared.add(v.map); } else if (v && typeof v === 'object') Object.values(v).forEach((m) => { if (m && m.isMaterial) shared.add(m); });
+  }));
+  root.traverse((o) => {
+    if (o.isLight && o.dispose) o.dispose();
+    (o.material ? [].concat(o.material) : []).forEach((m) => {
+      if (shared.has(m)) return;
+      ['map', 'emissiveMap', 'alphaMap'].forEach((k) => { if (m[k] && !shared.has(m[k])) m[k].dispose(); });
+      m.dispose();
+    });
+  });
+}
 function emis(hex, k) { return new THREE.MeshStandardMaterial({ color: 0x000000, emissive: new THREE.Color(hex), emissiveIntensity: k == null ? 1.4 : k, roughness: 1 }); }
 // a screen on a wall: a canvas the room writes on, redrawn only when what it says changes
 function screen(w, h) {
@@ -952,7 +940,7 @@ class Office3D {
     let maxX = 0, maxY = 0; all.forEach((c) => { maxX = Math.max(maxX, c[0] + L.RS); maxY = Math.max(maxY, c[1] + L.RS); });
     this.cx = maxX / 2; this.cy = maxY / 2; this.size = Math.max(maxX, maxY);
     // clear the old floor, rooms and labels
-    this.world.clear(); this.layer.innerHTML = ''; this.rooms = {}; this.hits = []; this.pcs = [];
+    release(this.world); this.world.clear(); this.layer.innerHTML = ''; this.rooms = {}; this.hits = []; this.pcs = [];
     const RS = L.RS, W = this.world;
     // the floor plate, its grid and a lit edge
     const plate = new THREE.Mesh(G.box, [OM.plinth, OM.plinth, new THREE.MeshStandardMaterial({ color: 0x0f1a2c, roughness: 0.6, metalness: 0.35 }), OM.plinth, OM.plinth, OM.plinth]);
@@ -1207,7 +1195,7 @@ class Office3D {
     if (r.lamp) { r.lamp.color.copy(st === 'idle' ? new THREE.Color(0x9fb8e0) : c); r.lamp.intensity = st === 'working' ? 9 : st === 'waiting' ? 7 : st === 'queued' ? 5 : 3.5; }
   }
   drawSel() {
-    this.selRing.clear();
+    release(this.selRing); this.selRing.clear();
     const c = this.sel && this.cells[this.sel]; if (!c) return;
     const RS = CO.iso.RS, m = emis('#00cfff', 1.2), x0 = c[0] - 0.15, y0 = c[1] - 0.15, s = RS + 0.3;
     [[x0, y0, s, 0.08], [x0, y0 + s - 0.08, s, 0.08]].forEach(([x, y, w, d]) => this.box(this.selRing, x, y, 0.12, w, d, 0.04, m, false));
@@ -1354,7 +1342,10 @@ class Office3D {
   setMouse(e) { const r = this.renderer.domElement.getBoundingClientRect(); this.mouse.set((e.clientX - r.left) / r.width * 2 - 1, -(e.clientY - r.top) / r.height * 2 + 1); }
   pickHit() {
     this.ray.setFromCamera(this.mouse, this.camera);
-    const hits = this.ray.intersectObjects((this.pcs || []).concat(this.hits || []), false);
+    // a computer stands inside its room's hit box, which the ray always enters first: ask the computers first
+    const pc = this.ray.intersectObjects(this.pcs || [], false);
+    if (pc.length) return pc[0].object;
+    const hits = this.ray.intersectObjects(this.hits || [], false);
     return hits.length ? hits[0].object : null;
   }
   pick() {
