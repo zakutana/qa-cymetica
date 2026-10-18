@@ -73,6 +73,10 @@
     // a room's ceiling lamp on its floor: plain white light
     '<radialGradient id="g-lamp"><stop offset="0" stop-color="#eef3f8" stop-opacity=".12"/><stop offset=".55" stop-color="#eef3f8" stop-opacity=".03"/><stop offset="1" stop-color="#eef3f8" stop-opacity="0"/></radialGradient>' +
     // the green the office floats on
+    '<linearGradient id="g-hullL" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#202b3a"/><stop offset="1" stop-color="#121923"/></linearGradient>' +
+    '<linearGradient id="g-hullR" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#161e29"/><stop offset="1" stop-color="#0c1118"/></linearGradient>' +
+    '<radialGradient id="g-rock" cx=".45" cy=".25" r=".85"><stop offset="0" stop-color="#3a4049"/><stop offset=".55" stop-color="#22262d"/><stop offset="1" stop-color="#0e1013"/></radialGradient>' +
+    '<linearGradient id="g-solar" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#1d55bb"/><stop offset="1" stop-color="#12387f"/></linearGradient>' +
     '<radialGradient id="g-under"><stop offset="0" stop-color="' + C.green + '" stop-opacity=".14"/><stop offset=".6" stop-color="' + C.green + '" stop-opacity=".04"/><stop offset="1" stop-color="' + C.green + '" stop-opacity="0"/></radialGradient>' +
     // a wall's own light: brighter at the top, where the lamp is
     '<linearGradient id="g-wallL" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#1c2531"/><stop offset="1" stop-color="' + C.navy + '"/></linearGradient>' +
@@ -405,6 +409,73 @@
     return S.departments.map(function (d) { return d.id + ':' + d.slot + ':' + d.key + ':' + d.experts.join(','); }).join('|');
   };
 
+  // The station under the flat office: drawn back to front -- the rock, the hull tiers, then what sticks out of
+  // the near sides. Seeded, so the same office always stands on the same rock.
+  Office.prototype.exterior = function (all, have, pad, T, maxX, maxY) {
+    var s = 20261018, R = function () { s = (s * 16807) % 2147483647; return (s - 1) / 2147483646; };
+    var HD = 1.6, span = Math.max(maxX, maxY), out = '', outs = [];
+    // the rock: a dark silhouette hanging under the middle, faceted, a few craters on its face
+    var c = P(maxX / 2, maxY / 2, -T - HD - span * 0.16), rx = span * SC * 0.62, ry = span * SC * 0.3, sil = [];
+    for (var i = 0; i < 40; i++) {
+      var a = i / 40 * Math.PI * 2, k = 1 + (R() - 0.5) * 0.22 + 0.08 * Math.sin(a * 5 + 1.3);
+      sil.push([c[0] + Math.cos(a) * rx * k, c[1] + Math.sin(a) * ry * k * (Math.sin(a) > 0 ? 1.9 : 0.5)]);
+    }
+    out += poly(sil, 'url(#g-rock)', '#0b0d10', 1);
+    var ROCK = ['#15181d', '#1b1f25', '#22272e', '#2a2f37', '#101317'];
+    for (var j = 0; j < 70; j++) {
+      var t = R() * Math.PI, u = Math.sqrt(R()) * 0.92, px = c[0] + Math.cos(t) * rx * u * (R() < 0.5 ? -1 : 1), py = c[1] + Math.sin(t) * ry * 1.4 * u, r0 = 6 + R() * 16, tri = [];
+      for (var q = 0; q < 3 + Math.floor(R() * 2); q++) { var b = q / 3.5 * Math.PI * 2 + R(); tri.push([px + Math.cos(b) * r0 * (0.6 + R() * 0.6), py + Math.sin(b) * r0 * 0.6 * (0.6 + R() * 0.6)]); }
+      out += poly(tri, ROCK[Math.floor(R() * ROCK.length)], null, 0, 0.85);
+    }
+    for (var m = 0; m < 6; m++) {
+      var cx = c[0] + (R() - 0.5) * rx * 1.2, cy = c[1] + R() * ry * 0.9, cr = 5 + R() * 12;
+      out += '<ellipse cx="' + f1(cx) + '" cy="' + f1(cy) + '" rx="' + f1(cr) + '" ry="' + f1(cr * 0.5) + '" fill="#0c0e11" stroke="#2f343c" stroke-width="1" opacity=".9"/>';
+    }
+    // the hull: a tier under every slab, inset where it is the outside; seams and small lights on the near sides
+    all.slice().sort(function (p, q2) { return (p[0] + p[1]) - (q2[0] + q2[1]); }).forEach(function (cc) {
+      var L = !have[(cc[0] - 8) + ',' + cc[1]], Rt = !have[(cc[0] + 8) + ',' + cc[1]], B = !have[cc[0] + ',' + (cc[1] - 8)], F = !have[cc[0] + ',' + (cc[1] + 8)];
+      var x0 = cc[0] - pad + (L ? 0.15 : 0), y0 = cc[1] - pad + (B ? 0.15 : 0), x1 = cc[0] + RS + pad - (Rt ? 0.15 : 0), y1 = cc[1] + RS + pad - (F ? 0.15 : 0);
+      out += box(x0, y0, -T - HD, x1 - x0, y1 - y0, HD, C.navy, 'url(#g-hullL)', 'url(#g-hullR)', C.line);
+      out += box(x0 + 0.7, y0 + 0.7, -T - HD - 0.5, x1 - x0 - 1.4, y1 - y0 - 1.4, 0.5, C.navy, '#0f141b', '#0b0f14', C.line);
+      if (F) {
+        for (var u2 = x0 + 2; u2 < x1 - 0.4; u2 += 2) { var s1 = P(u2, y1, -T), s2 = P(u2, y1, -T - HD); out += '<line x1="' + f1(s1[0]) + '" y1="' + f1(s1[1]) + '" x2="' + f1(s2[0]) + '" y2="' + f1(s2[1]) + '" stroke="#0a0d12" stroke-width="1.4"/>'; }
+        for (var w2 = x0 + 0.6; w2 < x1 - 0.3; w2 += 1.3) { var l1 = P(w2, y1, -T - HD + 0.35); out += '<rect x="' + f1(l1[0] - 1.6) + '" y="' + f1(l1[1] - 1) + '" width="3.2" height="2" fill="' + (R() < 0.3 ? '#e6f4ff' : C.cyan) + '" opacity=".85"/>'; }
+        outs.push({ ax: x0, ay: y1, bx: x1, by: y1, nx: 0, ny: 1 });
+      }
+      if (Rt) {
+        for (var v2 = y0 + 2; v2 < y1 - 0.4; v2 += 2) { var t1 = P(x1, v2, -T), t2 = P(x1, v2, -T - HD); out += '<line x1="' + f1(t1[0]) + '" y1="' + f1(t1[1]) + '" x2="' + f1(t2[0]) + '" y2="' + f1(t2[1]) + '" stroke="#080b0f" stroke-width="1.4"/>'; }
+        for (var z2 = y0 + 0.6; z2 < y1 - 0.3; z2 += 1.3) { var l2 = P(x1, z2, -T - HD + 0.35); out += '<rect x="' + f1(l2[0] - 1.6) + '" y="' + f1(l2[1] - 1) + '" width="3.2" height="2" fill="' + (R() < 0.3 ? '#e6f4ff' : C.cyan) + '" opacity=".85"/>'; }
+        outs.push({ ax: x1, ay: y0, bx: x1, by: y1, nx: 1, ny: 0 });
+      }
+    });
+    // engines on three of the near sides: a housing, a ring, a glowing nozzle and its exhaust
+    var pick = outs.length <= 3 ? outs : [outs[0], outs[Math.floor(outs.length / 2)], outs[outs.length - 1]];
+    pick.forEach(function (e, n) {
+      var fr = n % 2 ? 0.3 : 0.7, ex = e.ax + (e.bx - e.ax) * fr, ey = e.ay + (e.by - e.ay) * fr, ez = -T - HD * 0.5;
+      var a2 = P(ex, ey, ez), b2 = P(ex + e.nx * 1.3, ey + e.ny * 1.3, ez), tip = P(ex + e.nx * 3.6, ey + e.ny * 3.6, ez);
+      var dx = tip[0] - b2[0], dy = tip[1] - b2[1], dl = Math.hypot(dx, dy) || 1, nx2 = -dy / dl * 9, ny2 = dx / dl * 9;
+      out += '<polygon points="' + pts([[b2[0] + nx2, b2[1] + ny2], [b2[0] - nx2, b2[1] - ny2], tip]) + '" fill="' + C.cyan + '" opacity=".3" filter="url(#glow2)"/>';
+      out += '<line x1="' + f1(a2[0]) + '" y1="' + f1(a2[1]) + '" x2="' + f1(b2[0]) + '" y2="' + f1(b2[1]) + '" stroke="#2c343f" stroke-width="22" stroke-linecap="round"/>';
+      out += '<line x1="' + f1(a2[0]) + '" y1="' + f1(a2[1] - 4) + '" x2="' + f1(b2[0]) + '" y2="' + f1(b2[1] - 4) + '" stroke="#4a5462" stroke-width="7" stroke-linecap="round" opacity=".8"/>';
+      out += '<circle cx="' + f1(b2[0]) + '" cy="' + f1(b2[1]) + '" r="10" fill="#0b1016" stroke="#5a6676" stroke-width="2"/>';
+      out += '<circle cx="' + f1(b2[0]) + '" cy="' + f1(b2[1]) + '" r="7" fill="' + C.cyan + '" filter="url(#glow)" opacity=".9"/>';
+    });
+    // a solar wing off the right: a boom, two rows of blue panels lying flat
+    var rs = outs.filter(function (o) { return o.nx === 1; });
+    if (rs.length) {
+      var e3 = rs[Math.floor(rs.length / 2)], ym = (e3.ay + e3.by) / 2, zz = -T - 0.6, xb = e3.ax;
+      var p1 = P(xb, ym, zz), p2 = P(xb + 9.6, ym, zz);
+      out += '<line x1="' + f1(p1[0]) + '" y1="' + f1(p1[1]) + '" x2="' + f1(p2[0]) + '" y2="' + f1(p2[1]) + '" stroke="#4a5462" stroke-width="3"/>';
+      for (var k2 = 0; k2 < 4; k2++) [-1, 1].forEach(function (side) {
+        var xa = xb + 1.2 + k2 * 2.15, xc = xa + 1.95, ya = side < 0 ? ym - 2.5 : ym + 0.35, yc = side < 0 ? ym - 0.35 : ym + 2.5;
+        out += poly([P(xa, ya, zz), P(xc, ya, zz), P(xc, yc, zz), P(xa, yc, zz)], 'url(#g-solar)', C.dim2, 0.7);
+        var mA = P(xa + 0.975, ya, zz), mB = P(xa + 0.975, yc, zz), mC = P(xa, (ya + yc) / 2, zz), mD = P(xc, (ya + yc) / 2, zz);
+        out += '<line x1="' + f1(mA[0]) + '" y1="' + f1(mA[1]) + '" x2="' + f1(mB[0]) + '" y2="' + f1(mB[1]) + '" stroke="#7fa6e8" stroke-width=".6" opacity=".6"/>';
+        out += '<line x1="' + f1(mC[0]) + '" y1="' + f1(mC[1]) + '" x2="' + f1(mD[0]) + '" y2="' + f1(mD[1]) + '" stroke="#7fa6e8" stroke-width=".6" opacity=".6"/>';
+      });
+    }
+    return out;
+  };
   Office.prototype.layout = function (opts) {
     var S = CO.S, self = this, born = opts && opts.born;
     this.shapeKey = this.shape();
@@ -426,6 +497,9 @@
     all.forEach(function (c) { have[c[0] + ',' + c[1]] = 1; });
     var mid = P(maxX / 2, maxY / 2, -T - 0.4);
     f += '<ellipse cx="' + f1(mid[0]) + '" cy="' + f1(mid[1]) + '" rx="' + f1((maxX + maxY) * SC * 0.62) + '" ry="' + f1((maxX + maxY) * SC * 0.31) + '" fill="url(#g-under)"/>';
+    // Under the floor and round it, as in the 3D office: the rock it is built on, a plated hull with seams and a
+    // row of lights on the sides you see, engines with their glow, a solar wing off the right
+    f += this.exterior(all, have, pad, T, maxX, maxY);
     all.slice().sort(function (p, q) { return (p[0] + p[1]) - (q[0] + q[1]); }).forEach(function (c) {
       var x0 = c[0] - pad, y0 = c[1] - pad, x1 = c[0] + RS + pad, y1 = c[1] + RS + pad;
       f += box(x0, y0, -T, x1 - x0, y1 - y0, T, 'url(#g-plate)', C.navy2, C.deep, C.line);
@@ -438,7 +512,7 @@
         // the near sides show their foot as a dimmer line
         if (s[5]) { var a2 = P(s[0], s[1], -T), b2 = P(s[2], s[3], -T); edges += '<line x1="' + f1(a2[0]) + '" y1="' + f1(a2[1]) + '" x2="' + f1(b2[0]) + '" y2="' + f1(b2[1]) + '" stroke="' + C.green + '" stroke-width="1" opacity=".3"/>'; }
       });
-      corners.push(P(x0, y0, 0), P(x1, y0, 0), P(x1, y1, -T), P(x0, y1, -T), P(x0, y0, 1.3));
+      corners.push(P(x0, y0, 0), P(x1, y0, 0), P(x1, y1, -T - 2.1), P(x0, y1, -T - 2.1), P(x0, y0, 1.3));
     });
     f += edges;
     this.plateRect = {

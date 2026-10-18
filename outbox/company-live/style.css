@@ -252,6 +252,7 @@ b.g, span.g { color: var(--green); text-shadow: 0 0 10px rgba(0, 255, 136, .45);
     radial-gradient(1px 1px at 66% 21%, rgba(230, 237, 247, .5), transparent), radial-gradient(1.5px 1.5px at 79% 63%, rgba(0, 255, 136, .45), transparent),
     radial-gradient(1px 1px at 91% 12%, rgba(230, 237, 247, .4), transparent), radial-gradient(1px 1px at 95% 82%, rgba(230, 237, 247, .45), transparent),
     radial-gradient(1px 1px at 14% 92%, rgba(0, 207, 255, .4), transparent), radial-gradient(1px 1px at 45% 40%, rgba(230, 237, 247, .25), transparent),
+    radial-gradient(ellipse 42% 38% at 16% 20%, rgba(0, 150, 160, .14), transparent 70%), radial-gradient(ellipse 26% 22% at 30% 10%, rgba(0, 120, 140, .1), transparent 70%),
     radial-gradient(ellipse at 50% 45%, #0b1017, #05070a 74%); }
 .stage .top { position: absolute; top: 10px; left: 12px; right: 12px; display: flex; justify-content: space-between; align-items: center; z-index: 4; pointer-events: none; }
 .stage .top > * { pointer-events: auto; }
