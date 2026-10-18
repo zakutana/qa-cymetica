@@ -150,6 +150,22 @@ def test_the_clock_tickets_the_outsider_again_after_a_probe_that_did_not_run(com
 
 
 @qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
+def test_the_clock_does_not_ticket_an_outsider_whose_newest_probe_ran_and_leaked(company):
+    """B04, deep pass 2026-10-18 -- control, passes today and must keep passing: the retry above is
+    for a probe that did NOT run. A clock that re-tickets any unproven outsider every hour also
+    passed it, and would re-run a stranger that already answered like one of us."""
+    now = datetime.now(timezone.utc)
+    _write_probes([_did_not_run(now - timedelta(hours=5)),
+                   _probe(now - timedelta(hours=2), False,
+                          "it quoted context of ours: Operating rules for qa-cymetica")])
+    for minutes in (0, 70, 140):
+        _script("crew").clock_look(now=now + timedelta(minutes=minutes))
+    assert not _outsider_tickets(), (
+        f"the newest probe ran and leaked (a verdict), yet the clock made "
+        f"{len(_outsider_tickets())} outsider ticket(s)")
+
+
+@qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
 @pytest.mark.xfail(strict=True, reason="T-0069: LEAKS holds 'MEMORY.md', which a stranger's "
                    "denial repeats from Claude Code's own memory prompt; the 17:02Z probe ran "
                    "clean and was recorded NOT a stranger")
