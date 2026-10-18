@@ -4,7 +4,7 @@
  * zooms to the cursor. Banners and the tooltip are HTML over the canvas, so they stay sharp and clickable. If the
  * renderer cannot start, the page keeps the flat map. The office in 3D is the second half of this file. */
 import * as THREE from 'three/webgpu';
-import { pass, renderOutput, vec4, mrt, output, normalView } from 'three/tsl';
+import { pass, renderOutput, vec4, vec3, mrt, output, normalView, dot, mix } from 'three/tsl';
 import { bloom } from 'three/addons/tsl/display/BloomNode.js';
 import { ao } from 'three/addons/tsl/display/GTAONode.js';
 import { RoundedBoxGeometry } from 'three/addons/geometries/RoundedBoxGeometry.js';
@@ -47,6 +47,7 @@ function geo() {
   M.leaf = new THREE.MeshStandardMaterial({ color: 0x0f7a4c, roughness: 0.85, emissive: 0x00ff88, emissiveIntensity: 0.06 });
   M.win = new THREE.MeshBasicMaterial({ color: 0xffffff });
   M.hit = new THREE.MeshBasicMaterial({ visible: false });
+  M.solar = new THREE.MeshStandardMaterial({ map: solarTex(), roughness: 0.3, metalness: 0.45, emissive: 0x3b82f6, emissiveIntensity: 0.08 });
 }
 // one set per colour: what glows in it, from a window to a beam of light
 function amat(hex) {
@@ -58,18 +59,21 @@ function amat(hex) {
     soft: new THREE.MeshStandardMaterial({ color: 0x000000, emissive: c, emissiveIntensity: 0.7, roughness: 1 }),
     glow: new THREE.MeshBasicMaterial({ color: c.clone().multiplyScalar(4) }),
     glass: new THREE.MeshStandardMaterial({ color: c.clone().multiplyScalar(0.55), transparent: true, opacity: 0.12, roughness: 0.05, metalness: 0.2, emissive: c, emissiveIntensity: 0.05, depthWrite: false }),
-    wire: new THREE.MeshBasicMaterial({ color: c.clone().multiplyScalar(0.85), wireframe: true, transparent: true, opacity: 0.45 }),
+    wire: new THREE.MeshBasicMaterial({ color: c.clone().multiplyScalar(0.85), wireframe: true, transparent: true, opacity: 0.16 }),
     beam: new THREE.MeshBasicMaterial({ color: c.clone().multiplyScalar(1.3), transparent: true, opacity: 0.14, blending: THREE.AdditiveBlending, depthWrite: false, side: THREE.DoubleSide }),
     atmo: new THREE.MeshBasicMaterial({ color: c.clone().multiplyScalar(0.9), transparent: true, opacity: 0.12, blending: THREE.AdditiveBlending, depthWrite: false, side: THREE.BackSide }),
     fin: new THREE.MeshStandardMaterial({ color: 0x0a111d, emissive: c, emissiveIntensity: 0.55, roughness: 0.6 }),
+    hull: new THREE.MeshStandardMaterial({ color: new THREE.Color(0x2b3646).lerp(c, 0.3), roughness: 0.55, metalness: 0.3 }),
+    hull2: new THREE.MeshStandardMaterial({ color: new THREE.Color(0x344152).lerp(c, 0.22), roughness: 0.58, metalness: 0.28 }),
     panel: new THREE.MeshStandardMaterial({ color: 0x9fb2c8, map: cells, emissive: c, emissiveMap: cells, emissiveIntensity: 0.5, roughness: 0.25, metalness: 0.55 }),
-    lit: c.clone().multiplyScalar(1.2), hot: c.clone().multiplyScalar(3.2), dim: new THREE.Color(0.012, 0.02, 0.035)
+    lit: c.clone().multiplyScalar(0.8), hot: c.clone().multiplyScalar(2.2), dim: new THREE.Color(0.012, 0.02, 0.035)
   };
   return AM[hex];
 }
 // The scene, its bloom, then tone mapping, drawn through a quad of its own. three.js's PostProcessing (r172)
 // keeps ONE material for every instance on the page, so with the map and a preview both running, whichever
 // updated last would draw into both canvases. This one owns its material.
+const PASTEL = 0.66;   // how much colour the 3D keeps: 1 is the site's neon, the pictures sit about two thirds
 class Post {
   constructor(renderer, scene, camera, strength, radius, threshold, opts) {
     this.renderer = renderer;
@@ -84,7 +88,12 @@ class Post {
       col = vec4(col.rgb.mul(a.getTextureNode().r), col.a); this.ao = a;
     }
     this.material = new THREE.NodeMaterial();
-    this.material.fragmentNode = renderOutput(col.add(bloom(col, strength, radius, threshold)), renderer.toneMapping, renderer.outputColorSpace);
+    let out = col.add(bloom(col, strength, radius, threshold));
+    // Pastel, as in the operator's pictures ('mene razici pastelove'): every colour pulled part of the way to its
+    // own grey after the bloom, so the site's green, cyan, blue and red read soft instead of neon.
+    const sat = opts && opts.sat != null ? opts.sat : PASTEL;
+    if (sat !== 1) out = vec4(mix(vec3(dot(out.rgb, vec3(0.2126, 0.7152, 0.0722))), out.rgb, sat), out.a);
+    this.material.fragmentNode = renderOutput(out, renderer.toneMapping, renderer.outputColorSpace);
     this.quad = new THREE.QuadMesh(this.material);
   }
   render() {
@@ -152,86 +161,25 @@ function starField(n, r, spread, k, seed) {
   const g = new THREE.BufferGeometry(); g.setAttribute('position', new THREE.BufferAttribute(pos, 3)); g.setAttribute('color', new THREE.BufferAttribute(col, 3));
   return new THREE.Points(g, new THREE.PointsMaterial({ vertexColors: true, size: 1, sizeAttenuation: false, fog: false }));
 }
-// The sky, painted once: near-black, the Milky Way as a band of light with dust down its middle, nebulae in the
-// site's colours (cyan, green, blue, a breath of red), and stars -- thick in the band, thin elsewhere.
-function skyTex() {
-  if (TX.sky) return TX.sky;
-  const W = 4096, H = 2048, c = document.createElement('canvas'); c.width = W; c.height = H;
-  const g = c.getContext('2d'), R = rng(5), gauss = () => R() + R() + R() + R() - 2;
-  const band = (x) => H * 0.5 + Math.sin(x / W * Math.PI * 2 + 0.6) * H * 0.2;
-  const blob = (x, y, r, rgb, a) => {
-    [x, x - W, x + W].forEach((xx) => {
-      if (xx + r < 0 || xx - r > W) return;
-      const gr = g.createRadialGradient(xx, y, 0, xx, y, r);
-      gr.addColorStop(0, 'rgba(' + rgb + ',' + a + ')'); gr.addColorStop(0.45, 'rgba(' + rgb + ',' + (a * 0.35) + ')'); gr.addColorStop(1, 'rgba(' + rgb + ',0)');
-      g.fillStyle = gr; g.fillRect(xx - r, y - r, r * 2, r * 2);
-    });
-  };
-  g.fillStyle = '#010204'; g.fillRect(0, 0, W, H);
-  g.globalCompositeOperation = 'lighter';
-  for (let i = 0; i < 420; i++) { const x = R() * W, m = R(); blob(x, band(x) + gauss() * H * 0.05, 50 + R() * 170, m < 0.45 ? '120,200,230' : m < 0.8 ? '0,207,255' : '0,255,136', 0.012 + R() * 0.022); }
-  [['0,207,255', 0.3, 0.18, 0.36, 520], ['0,255,136', 0.16, 0.62, 0.6, 460], ['59,130,246', 0.22, 0.4, 0.74, 500], ['0,207,255', 0.18, 0.86, 0.32, 380],
-    ['0,255,136', 0.1, 0.05, 0.7, 340], ['255,68,68', 0.05, 0.3, 0.2, 300]].forEach(([rgb, a, fx, fy, r]) => {
-    for (let k = 0; k < 18; k++) blob(fx * W + gauss() * r * 0.5, fy * H + gauss() * r * 0.3, r * (0.25 + R() * 0.6), rgb, a * (0.25 + R() * 0.45));
-  });
-  g.globalCompositeOperation = 'source-over';
-  for (let i = 0; i < 160; i++) { const x = R() * W; blob(x, band(x) + gauss() * H * 0.012, 30 + R() * 90, '0,0,0', 0.25 + R() * 0.25); }
-  for (let i = 0; i < 30000; i++) {
-    const inBand = R() < 0.55, x = R() * W, y = inBand ? band(x) + gauss() * H * 0.06 : H * (0.04 + R() * 0.92);
-    const m = R(), a = (0.2 + m * m * 0.8).toFixed(2), s = m > 0.993 ? 2.4 : m > 0.95 ? 1.6 : 1, hue = R();
-    g.fillStyle = hue < 0.1 ? 'rgba(0,207,255,' + a + ')' : hue < 0.14 ? 'rgba(0,255,136,' + a + ')' : 'rgba(235,242,250,' + a + ')';
-    g.fillRect(x, y, s, s);
+// a flat band round the centre, r wide by w either side, its texture's v running across it: an orbit's glow
+function bandGeo(r, w, n = 360) {
+  const pos = [], uv = [], idx = [];
+  for (let k = 0; k <= n; k++) {
+    const a = k / n * Math.PI * 2, s = Math.sin(a), c = Math.cos(a);
+    pos.push(s * (r - w), 0, c * (r - w), s * (r + w), 0, c * (r + w)); uv.push(k / n, 0, k / n, 1);
+    if (k < n) { const i = k * 2; idx.push(i, i + 1, i + 2, i + 1, i + 3, i + 2); }
   }
-  for (let i = 0; i < 30; i++) {
-    const x = R() * W, y = H * (0.08 + R() * 0.84), s = 3 + R() * 7;
-    g.globalCompositeOperation = 'lighter'; blob(x, y, s * 1.5, '200,240,255', 0.45);
-    g.fillStyle = 'rgba(220,245,255,.32)'; g.fillRect(x - s * 1.6, y - 0.5, s * 3.2, 1); g.fillRect(x - 0.5, y - s * 1.6, 1, s * 3.2);
-    g.globalCompositeOperation = 'source-over';
-  }
-  const t = new THREE.CanvasTexture(c); t.colorSpace = THREE.SRGBColorSpace; t.anisotropy = 4; TX.sky = t; return t;
-}
-// the galaxy's own stars and dust along its arms, and the bulge round the core: what the stations live in
-function galaxyDust() {
-  const Gx = CO.uvGalaxy, R = rng(9), g = new THREE.Group(), N = 32000, outer = Gx.R1 * 1.12, gauss = () => R() + R() + R() + R() - 2;
-  const pos = new Float32Array(N * 3), col = new Float32Array(N * 3), c = new THREE.Color();
-  const core = new THREE.Color(0xe8fbff), cy = new THREE.Color(0x00cfff), gr = new THREE.Color(0x00ff88), bl = new THREE.Color(0x3b82f6);
-  for (let i = 0; i < N; i++) {
-    let x, y, z;
-    if (i < N * 0.16) {
-      const r = Math.pow(R(), 2.2) * 28, th = R() * Math.PI * 2, ph = Math.acos(R() * 2 - 1), k = 1 - r / 28;
-      x = Math.sin(ph) * Math.cos(th) * r; y = Math.cos(ph) * r * 0.42; z = Math.sin(ph) * Math.sin(th) * r;
-      c.copy(core).lerp(cy, 1 - k).multiplyScalar(0.45 + k * 1.3);
-    } else {
-      const r = 14 + Math.pow(R(), 0.9) * outer, th = Gx.angle(i % Gx.ARMS, r) + gauss() * (0.14 + r / outer * 0.16), k = r / outer, m = R();
-      x = Math.cos(th) * r; z = Math.sin(th) * r; y = gauss() * (1 + r * 0.03);
-      c.copy(k < 0.3 || m < 0.45 ? cy : m < 0.75 ? gr : bl).lerp(core, Math.max(0, 0.45 - k)).multiplyScalar(0.25 + R() * R() * 0.95);
-    }
-    pos.set([x, y, z], i * 3); col.set([c.r, c.g, c.b], i * 3);
-  }
-  const geom = new THREE.BufferGeometry(); geom.setAttribute('position', new THREE.BufferAttribute(pos, 3)); geom.setAttribute('color', new THREE.BufferAttribute(col, 3));
-  g.add(new THREE.Points(geom, new THREE.PointsMaterial({ vertexColors: true, size: 1, sizeAttenuation: false, transparent: true, blending: THREE.AdditiveBlending, depthWrite: false })));
-  // soft clouds along the arms, so the arms glow and do not only sparkle; they fade as the camera comes into
-  // them, or a close look would be a look through fog (fadeNear, every frame)
-  g.userData.fade = [];
-  for (let i = 0; i < 96; i++) {
-    const r = 18 + Math.pow(R(), 0.8) * outer * 0.95, th = Gx.angle(i % Gx.ARMS, r) + gauss() * 0.1, m = R();
-    const s = glowSprite(m < 0.5 ? 0x00cfff : m < 0.8 ? 0x00ff88 : 0x3b82f6, 0.045 + R() * 0.055, 24 + R() * 44 * (1 - r / outer * 0.4));
-    s.position.set(Math.cos(th) * r, gauss() * 2, Math.sin(th) * r); g.add(s);
-    g.userData.fade.push({ s, base: s.material.opacity, near: 50, far: 150 });
-  }
+  const g = new THREE.BufferGeometry(); g.setAttribute('position', new THREE.Float32BufferAttribute(pos, 3)); g.setAttribute('uv', new THREE.Float32BufferAttribute(uv, 2)); g.setIndex(idx);
   return g;
 }
-// the disc of light Cymetica spins round itself
-function discPoints() {
-  const N = 4500, pos = new Float32Array(N * 3), col = new Float32Array(N * 3), R = rng(4), c = new THREE.Color();
-  for (let i = 0; i < N; i++) {
-    const r = 3.4 + Math.pow(R(), 1.5) * 15, th = R() * Math.PI * 2, m = R();
-    pos.set([Math.cos(th) * r, (R() - 0.5) * 0.35, Math.sin(th) * r], i * 3);
-    c.set(m < 0.65 ? 0x00cfff : m < 0.85 ? 0x00ff88 : 0xe8fbff).multiplyScalar(0.45 + (1 - (r - 3.4) / 15) * 1.7);
-    col.set([c.r, c.g, c.b], i * 3);
-  }
-  const geom = new THREE.BufferGeometry(); geom.setAttribute('position', new THREE.BufferAttribute(pos, 3)); geom.setAttribute('color', new THREE.BufferAttribute(col, 3));
-  return new THREE.Points(geom, new THREE.PointsMaterial({ vertexColors: true, size: 1, sizeAttenuation: false, transparent: true, blending: THREE.AdditiveBlending, depthWrite: false }));
+// bright in the middle of the band, gone at its edges
+function bandTex() {
+  return TX.band || (TX.band = (() => {
+    const c = document.createElement('canvas'); c.width = 4; c.height = 64; const g = c.getContext('2d'), gr = g.createLinearGradient(0, 0, 0, 64);
+    gr.addColorStop(0, 'rgba(255,255,255,0)'); gr.addColorStop(0.5, 'rgba(255,255,255,1)'); gr.addColorStop(1, 'rgba(255,255,255,0)');
+    g.fillStyle = gr; g.fillRect(0, 0, 4, 64);
+    const t = new THREE.CanvasTexture(c); t.colorSpace = THREE.SRGBColorSpace; return t;
+  })());
 }
 // Static parts merged by material: a station is a handful of draw calls instead of a hundred. A part marked
 // userData.dyn (it moves) and everything under it stays as it is; so do the instanced windows.
@@ -312,6 +260,29 @@ class Building {
     this.wins = mesh; this.g.add(mesh);
   }
   bake() { bakeGroup(this.g); }
+  // The base every station stands on, as in the operator's orrery: a square deck in its hull colour with corner
+  // blocks and a line of its colour round its foot, a keel under it with engines that glow, solar wings out to
+  // two or four sides.
+  chassis(s, wings) {
+    const A = this.A, h = 0.55, y0 = -0.05;
+    this.box(s, h, s, 0, y0 - h / 2, 0, A.hull2);
+    this.box(s + 0.12, 0.08, s + 0.12, 0, y0, 0, M.trim);
+    this.rimSquare(s + 0.14, y0 - h + 0.06, A.rim);
+    for (const [sx, sz] of [[1, 1], [1, -1], [-1, 1], [-1, -1]]) this.box(0.46, h + 0.18, 0.46, sx * (s / 2 - 0.1), y0 - h / 2 + 0.06, sz * (s / 2 - 0.1), M.trim);
+    this.box(s * 0.6, 0.36, s * 0.6, 0, y0 - h - 0.18, 0, A.hull);
+    (wings > 2 ? [[1, 1], [-1, -1], [1, -1], [-1, 1]] : [[1, 0], [-1, 0]]).forEach(([ex, ez]) => flame(this, y0 - h - 0.38, 0.5, 1.0, ex * s * 0.18, ez * s * 0.18));
+    const axes = wings > 2 ? [[1, 0], [-1, 0], [0, 1], [0, -1]] : [[1, 0], [-1, 0]], pw = Math.max(1.1, s * 0.36), pd = Math.max(0.95, s * 0.32), y = y0 - h * 0.45;
+    axes.forEach(([ax, az]) => {
+      const out = s / 2;
+      this.box(ax ? 0.8 : 0.09, 0.09, ax ? 0.09 : 0.8, ax * (out + 0.4), y, az * (out + 0.4), M.metal);
+      for (let k = 0; k < 2; k++) {
+        const d = out + 0.8 + pw / 2 + k * (pw + 0.1), pn = this.box(ax ? pw : pd, 0.05, ax ? pd : pw, ax * d, y, az * d, M.solar);
+        pn.rotation[ax ? 'x' : 'z'] = 0.32 * (ax || az);
+      }
+    });
+    this.bot = Math.min(this.bot, y0 - h - 1.3);
+    this.foot = Math.max(this.foot, s / 2 + 0.8 + 2 * pw + 0.2);
+  }
   paint(on, mode) {
     if (!this.wins) return;
     const A = this.A, set = new Set(on || []), priv = mode === 'priv', paused = mode === 'paused';
@@ -340,15 +311,13 @@ const SKIN = {};
 // Spire: glass decks on a slight twist, a docking ring round the first, a keel and its thruster, a mast
 SKIN.tower = (b, n) => {
   const A = b.A, fp = fpOf(n) * 0.9, half = fp / 2, tw = 0.13;
-  const keel = b.part(G.cone, M.hull2, half * 0.95, 1.6, half * 0.95, 0, -0.8, 0); keel.rotation.x = Math.PI;
-  b.part(G.cyl, M.trim, half * 1.02, 0.16, half * 1.02, 0, -0.08, 0);
-  flame(b, -1.62, 0.7, 1.4);
+  b.chassis(fp + 1.0, 4);
   const dock = b.part(G.ringT, A.rim, half * 1.6, half * 1.6, half * 1.6, 0, 0.32, 0); dock.rotation.x = Math.PI / 2;
   for (let k = 0; k < 4; k++) { const a = k * Math.PI / 2 + Math.PI / 4; b.box(half * 0.62, 0.05, 0.05, Math.cos(a) * half * 1.28, 0.32, Math.sin(a) * half * 1.28, M.metal).rotation.y = -a; }
   let y = 0;
   for (let f = 0; f < n; f++) {
     const h = FH - 0.08, rot = f * tw;
-    b.box(fp, h, fp, 0, y + h / 2, 0, f % 2 ? M.hull2 : M.hull).rotation.y = rot;
+    b.box(fp, h, fp, 0, y + h / 2, 0, f % 2 ? A.hull2 : A.hull).rotation.y = rot;
     b.box(fp + 0.16, 0.06, fp + 0.16, 0, y + h + 0.03, 0, M.trim).rotation.y = rot;
     b.faceWins(f, fp, fp, y + h / 2, h, 0.36, 0.45, rot);
     for (const [sx, sz] of [[1, 1], [1, -1], [-1, 1], [-1, -1]]) { const p = rotXZ(sx * (half + 0.035), sz * (half + 0.035), rot); b.box(0.07, h, 0.07, p[0], y + h / 2, p[1], A.rim).rotation.y = rot; }
@@ -361,21 +330,17 @@ SKIN.tower = (b, n) => {
   b.cyl(0.035, 1.5, 0, y + 1.11, 0, M.metal);
   b.beacon(0, y + 1.91, 0, 0.11);
   const dish = b.part(G.hemi, M.trim, 0.34, 0.14, 0.34, half * 0.32, y + 0.52, -half * 0.2); dish.rotation.z = 0.9;
-  b.top = y + 2.1; b.bot = -3.0; b.foot = Math.max(half * 1.7, 2.2);
+  b.top = y + 2.1; b.foot = Math.max(b.foot, half * 1.7, 2.2);
 };
 // Biodome: a drum of decks on a small planetoid, a glass dome with a garden and a light in it, a moonlet
 SKIN.dome = (b, n) => {
   const A = b.A, r = fpOf(n) / 2 + 0.5, rr = r * 1.45, cy = -rr * 0.62;
-  const rock = b.part(G.rock, M.rock, rr, rr * 0.8, rr, 0, cy, 0); rock.rotation.y = b.R() * 6;
-  for (let k = 0; k < 6; k++) {
-    const a = k / 6 * Math.PI * 2 + b.R() * 0.6, e = -0.15 - b.R() * 0.55;
-    b.part(G.sphere, A.glow, 0.055, 0.055, 0.055, Math.cos(a) * Math.cos(e) * rr * 1.1, cy + Math.sin(e) * rr * 0.9, Math.sin(a) * Math.cos(e) * rr * 1.1);
-  }
+  b.chassis(2 * r + 0.9, 4);
   b.cyl(r + 0.3, 0.16, 0, 0, 0, M.trim);
   let y = 0.08;
   for (let f = 0; f < n; f++) {
     const h = FH - 0.06;
-    b.cyl(r, h, 0, y + h / 2, 0, f % 2 ? M.hull2 : M.hull);
+    b.cyl(r, h, 0, y + h / 2, 0, f % 2 ? A.hull2 : A.hull);
     b.cyl(r + 0.05, 0.05, 0, y + h + 0.025, 0, M.trim);
     b.ringWins(f, r, y + h / 2, h * 0.52, 0.42, 0.45);
     y += FH;
@@ -386,28 +351,21 @@ SKIN.dome = (b, n) => {
   b.part(G.hemi, A.glass, r, r * 0.95, r, 0, y, 0);
   const wire = b.part(G.hemiWire, A.wire, r * 1.006, r * 0.956, r * 1.006, 0, y, 0, true);
   const core = b.part(G.sphere, A.soft, r * 0.22, r * 0.22, r * 0.22, 0, y + r * 0.42, 0, true);
-  const moon = b.part(G.rock, M.rock, 0.42, 0.36, 0.42, 0, 0, 0, true);
   b.anim.push((t) => {
     core.position.y = y + r * 0.42 + Math.sin(t * 1.3 + b.phase) * 0.05; wire.rotation.y = t * 0.08;
-    const a = t * 0.3 + b.phase; moon.position.set(Math.cos(a) * rr * 1.55, cy * 0.4 + Math.sin(a * 0.7) * 0.5, Math.sin(a) * rr * 1.55); moon.rotation.y = t * 0.4;
   });
   b.beacon(0, y + r * 0.95 + 0.06, 0, 0.08);
-  b.top = y + r * 0.95 + 0.6; b.bot = cy - rr * 0.82; b.foot = rr * 1.3;
+  b.top = y + r * 0.95 + 0.6; b.foot = Math.max(b.foot, r * 1.3);
 };
 // Ziggurat: a tier per deck on a floating island of rock, stones drifting under it, a beam from its temple
 SKIN.pyramid = (b, n) => {
   const A = b.A, b0 = fpOf(n) + 1.0, inset = Math.min(0.3, (b0 - 1.1) / (2 * n)), kh = b0 * 1.05;
-  b.part(G.cone4, M.rock, b0 * 0.72, kh, b0 * 0.72, 0, -kh / 2, 0).rotation.set(Math.PI, Math.PI / 4, 0);
-  for (let k = 0; k < 3; k++) {
-    const a = k / 3 * Math.PI * 2 + b.R(), s = 0.22 + b.R() * 0.22, x = Math.cos(a) * b0 * 0.42, z = Math.sin(a) * b0 * 0.42, y0 = -kh * (0.55 + b.R() * 0.3);
-    const st = b.part(G.rock, M.rock, s, s * 0.85, s, x, y0, z, true);
-    b.anim.push((t) => { st.position.y = y0 + Math.sin(t * 0.8 + k * 2 + b.phase) * 0.18; st.rotation.y = t * 0.3 + k; });
-  }
+  b.chassis(b0 + 0.7, 2);
   b.rimSquare(b0 + 0.04, 0.0, A.soft);
   let y = 0;
   for (let f = 0; f < n; f++) {
     const s = b0 - 2 * inset * f, h = FH - 0.05;
-    b.box(s, h, s, 0, y + h / 2, 0, f % 2 ? M.hull2 : M.hull);
+    b.box(s, h, s, 0, y + h / 2, 0, f % 2 ? A.hull2 : A.hull);
     b.rimSquare(s, y + h, A.rim);
     b.faceWins(f, s, s, y + h / 2, h, 0.62, 0.3);
     y += FH;
@@ -416,7 +374,7 @@ SKIN.pyramid = (b, n) => {
   const beam = b.part(G.beam, A.beam.clone(), 1, 6, 1, 0, y + 3.5, 0, true);
   b.anim.push((t) => { beam.material.opacity = (b.busy ? 0.3 : 0.16) + 0.05 * Math.sin(t * 2 + b.phase); });
   b.beacon(0, y + 0.62, 0, 0.13);
-  b.top = y + 1.5; b.bot = -kh - 0.2; b.foot = b0 * 0.85 + 0.4;
+  b.top = y + 1.5; b.foot = Math.max(b.foot, b0 * 0.85 + 0.4);
 };
 // Ring station: a spindle of disc decks, a great wheel round it on four spokes, turning slowly, an engine below
 SKIN.orbital = (b, n) => {
@@ -426,13 +384,13 @@ SKIN.orbital = (b, n) => {
   flame(b, -1.55, 0.75, 1.3);
   let y = 0.2;
   for (let f = 0; f < n; f++) {
-    b.cyl(rd, 0.3, 0, y + 0.15, 0, f % 2 ? M.hull2 : M.hull);
+    b.cyl(rd, 0.3, 0, y + 0.15, 0, f % 2 ? A.hull2 : A.hull);
     b.part(G.ringT, A.rim, rd + 0.01, rd + 0.01, rd + 0.01, 0, y + 0.3, 0).rotation.x = Math.PI / 2;
     b.ringWins(f, rd, y + 0.15, 0.14, 0.38, 0.5, 0.15);
     y += FH;
   }
   const wheel = new THREE.Group(); wheel.position.y = 0.2 + n * FH / 2 - 0.25; wheel.userData.dyn = true; b.g.add(wheel);
-  const tor = new THREE.Mesh(G.wheel, M.hull2); tor.scale.setScalar(RR); tor.rotation.x = Math.PI / 2; wheel.add(tor);
+  const tor = new THREE.Mesh(G.wheel, A.hull2); tor.scale.setScalar(RR); tor.rotation.x = Math.PI / 2; wheel.add(tor);
   const off = 0.085 * RR * 0.7;
   for (const dy of [off, -off]) { const l = new THREE.Mesh(G.ring, A.rim); l.scale.setScalar(RR + off); l.rotation.x = Math.PI / 2; l.position.y = dy; wheel.add(l); }
   for (let k = 0; k < 4; k++) {
@@ -449,11 +407,11 @@ SKIN.rocket = (b, n) => {
   const A = b.A, rr = 0.5 + Math.min(n, 8) * 0.05, L = 1.0, len = n * L, x0 = -len / 2, cy = rr + 0.3;
   for (let f = 0; f < n; f++) {
     const x = x0 + f * L + L / 2;
-    b.part(G.cyl, f % 2 ? M.hull2 : M.hull, rr, L - 0.05, rr, x, cy, 0).rotation.z = Math.PI / 2;
+    b.part(G.cyl, f % 2 ? A.hull2 : A.hull, rr, L - 0.05, rr, x, cy, 0).rotation.z = Math.PI / 2;
     b.part(G.cyl, A.rim, rr * 1.035, 0.05, rr * 1.035, x + L / 2 - 0.025, cy, 0).rotation.z = Math.PI / 2;
     for (const s of [1, -1]) for (const dx of [-0.22, 0.2]) b.win(x + dx, cy + 0.06, s * (rr + 0.014), s > 0 ? 0 : Math.PI, 0.17, 0.19, f, b.R() < 0.55);
   }
-  b.part(G.cone, M.hull, rr, rr * 2.3, rr, len / 2 + rr * 1.15, cy, 0).rotation.z = -Math.PI / 2;
+  b.part(G.cone, A.hull, rr, rr * 2.3, rr, len / 2 + rr * 1.15, cy, 0).rotation.z = -Math.PI / 2;
   b.part(G.hemi, A.glass, rr * 0.5, rr * 0.42, rr * 0.75, len / 2 - 0.4, cy + rr * 0.88, 0);
   // a strip of light down its back, seen from above, and its running lights along the keel
   b.box(len - 0.3, 0.05, 0.08, 0, cy + rr + 0.01, 0, A.rim);
@@ -481,7 +439,7 @@ SKIN.vault = (b, n) => {
   let y = 0;
   for (let f = 0; f < n; f++) {
     const h = (f === 0 ? FH * 1.35 : FH) - 0.05;
-    b.box(w, h, d, 0, y + h / 2, 0, f % 2 ? M.hull2 : M.hull);
+    b.box(w, h, d, 0, y + h / 2, 0, f % 2 ? A.hull2 : A.hull);
     b.box(w + 0.1, 0.06, d + 0.1, 0, y + h + 0.03, 0, M.trim);
     for (const [sx, sz] of [[1, 1], [1, -1], [-1, 1], [-1, -1]]) b.box(0.13, h, 0.13, sx * w / 2, y + h / 2, sz * d / 2, M.trim);
     if (f === 0) {
@@ -518,7 +476,7 @@ SKIN.vault = (b, n) => {
 
 // A whole station: the body (it bobs and turns), the holo-ring it floats over -- solid when public, dashed when
 // private, our own in green -- a pool of its light, and its hit box. RING: how brightly the ring burns.
-const RING = { pub: 0.7, priv: 0.45, hover: 2.6 };
+const RING = { pub: 0.7, priv: 0.45, hover: 2.6 }, SS = 2.7;   // SS: how much larger a station is drawn on the map
 function makeStation(c, seed, opts) {
   geo();
   const n = floorsOf(c), A = amat(CO.accentHex(c.accent)), root = new THREE.Group(), body = new THREE.Group();
@@ -536,7 +494,7 @@ function makeStation(c, seed, opts) {
   // light gives way to the station itself (Universe3D fades it with distance)
   const halo = glowSprite(RA.c, own ? 0.5 : pub ? 0.32 : 0.18, 7 + b.foot); halo.position.y = (b.top + b.bot) / 2; body.add(halo);
   const hw = Math.max(3, b.foot * 1.5), hit = new THREE.Mesh(G.box, M.hit); hit.scale.set(hw, b.top - ringY + 0.6, hw); hit.position.y = (b.top + ringY) / 2; root.add(hit);
-  return { root, body, b, rimMat, ring, ringR, hit, halo, haloBase: halo.material.opacity, top: b.top, bot: ringY, n, pub, spin: (seed % 13) / 13 * Math.PI * 2 };
+  return { root, body, b, rimMat, ring, pool, ringR, hit, halo, haloBase: halo.material.opacity, top: b.top, bot: ringY, n, pub, spin: (seed % 13) / 13 * Math.PI * 2 };
 }
 
 /* ---------------- the map: a galaxy ---------------- */
@@ -549,7 +507,7 @@ class Universe3D {
     geo();
     this.scene = new THREE.Scene();
     this.scene.background = new THREE.Color(0x010204);
-    this.camera = new THREE.PerspectiveCamera(36, 2, 0.5, 6000);
+    this.camera = new THREE.PerspectiveCamera(36, 2, 0.5, 9000);
     // no antialias on the renderer itself: three.js resolves it through ONE quad shared by every renderer on the
     // page, so a second renderer (a preview) would take this canvas over. The pass multisamples instead.
     this.renderer = new THREE.WebGPURenderer({ antialias: false });
@@ -560,16 +518,16 @@ class Universe3D {
     this.controls = new OrbitControls(this.camera, this.renderer.domElement);
     // a map first: the left button moves it over the galaxy's disc, the right one turns it, the wheel zooms where it points
     Object.assign(this.controls, { enableDamping: true, dampingFactor: 0.06, minDistance: 7, maxDistance: 900, minPolarAngle: 0.06, maxPolarAngle: Math.PI - 0.06,
-      autoRotate: true, autoRotateSpeed: 0.16, screenSpacePanning: false, zoomToCursor: true, zoomSpeed: 1.1, rotateSpeed: 0.55, panSpeed: 1.1,
+      autoRotate: false, screenSpacePanning: false, zoomToCursor: true, zoomSpeed: 1.1, rotateSpeed: 0.55, panSpeed: 1.1,
       mouseButtons: { LEFT: THREE.MOUSE.PAN, MIDDLE: THREE.MOUSE.DOLLY, RIGHT: THREE.MOUSE.ROTATE },
       touches: { ONE: THREE.TOUCH.PAN, TWO: THREE.TOUCH.DOLLY_ROTATE } });
-    this.controls.addEventListener('start', () => { this.tw = null; this.used = true; this.lastUse = performance.now(); this.controls.autoRotate = false; });
+    this.controls.addEventListener('start', () => { this.tw = null; this.used = true; this.follow = null; this.lastUse = performance.now(); });
     this.world();
     this.bind();
     this.resize();
     this.clock = new THREE.Clock();
     this.renderer.init().then(() => {
-      try { this.post = new Post(this.renderer, this.scene, this.camera, 0.9, 0.55, 0.68); } catch (e) { console.warn('bloom off:', e); this.post = null; }
+      try { this.post = new Post(this.renderer, this.scene, this.camera, 0.6, 0.5, 0.74); } catch (e) { console.warn('bloom off:', e); this.post = null; }
       this.renderer.setAnimationLoop(() => this.frame());
       this.ready = true;
     }).catch((e) => { console.error('3D map could not start:', e); if (this.h.onFail) this.h.onFail(e); });
@@ -578,80 +536,151 @@ class Universe3D {
   }
   visible() { return this.el.clientWidth > 0 && this.el.clientHeight > 0; }
 
-  // light, the sky, the galaxy's dust, the lanes its traffic flies, and Cymetica in the middle
+  // light, the sky, the orbits and what runs along them, and Cymetica in the middle
   world() {
     const S = this.scene;
     S.add(new THREE.AmbientLight(0x1a2230, 0.7));
-    S.add(new THREE.HemisphereLight(0xdfe8f2, 0x05070a, 0.6));
-    const sun = new THREE.DirectionalLight(0xf4f8fc, 1.9); sun.position.set(-300, 240, 160); S.add(sun);
+    S.add(new THREE.HemisphereLight(0xdfe8f2, 0x05070a, 0.75));
+    const sun = new THREE.DirectionalLight(0xf4f8fc, 2.1); sun.position.set(-300, 280, 220); S.add(sun);
     const rim = new THREE.DirectionalLight(0x00cfff, 0.5); rim.position.set(240, -60, -260); S.add(rim);
-    this.sky = new THREE.Mesh(new THREE.SphereGeometry(2600, 64, 32), new THREE.MeshBasicMaterial({ map: skyTex(), side: THREE.BackSide, depthWrite: false }));
-    this.sky.rotation.set(0.42, 0.3, 0.18); this.sky.renderOrder = -1; S.add(this.sky);
-    this.starLayers = [starField(5000, 1400, 700, 1.0, 11), starField(1800, 700, 300, 0.9, 12)];
-    this.starLayers.forEach((s) => S.add(s));
-    const dust = galaxyDust(); S.add(dust); this.fades = dust.userData.fade.slice();
+    // the office's sky, as far again as this map is big, turned so its teal nebula sits up and to the left of this
+    // map's first look as well
+    this.sky = spaceSky(); this.sky.scale.setScalar(12); this.sky.rotation.y = CO.uvGalaxy.AZ - Math.PI / 4; S.add(this.sky);
+    this.sky.traverse((o) => { if (o.isMesh && !o.isInstancedMesh && o.material.map) o.material.opacity *= 0.55; });
+    this.fades = [];
     this.lanes();
     this.core();
   }
-  // five orbits round the core, faint, and the shuttles flying them
+  // The orbits, as in the operator's picture: a crisp line of light each in green, cyan or blue, a soft glow round
+  // it, a faint second line and a dashed one beside some; lights that run along them faster than the stations.
   lanes() {
-    const R = rng(3);
-    this.laneDefs = [[22, 0x00cfff], [56, 0x00ff88], [96, 0x00cfff], [140, 0x3b82f6], [184, 0x00ff88]].map(([r, col], i) => {
-      const m = new THREE.Matrix4().makeRotationFromEuler(new THREE.Euler((R() - 0.5) * 0.22, R() * Math.PI * 2, (R() - 0.5) * 0.22)), pts = [];
-      for (let k = 0; k <= 256; k++) { const a = k / 256 * Math.PI * 2; pts.push(new THREE.Vector3(Math.cos(a) * r, 0, Math.sin(a) * r).applyMatrix4(m)); }
-      // a Line through 257 points that end where they begin (the WebGPU renderer draws no LineLoop)
-      this.scene.add(new THREE.Line(new THREE.BufferGeometry().setFromPoints(pts), new THREE.LineBasicMaterial({ color: col, transparent: true, opacity: 0.11, blending: THREE.AdditiveBlending, depthWrite: false })));
-      return { r, m, col, speed: (i % 2 ? -1 : 1) * 14 / Math.pow(r, 1.5) };
+    const Gx = CO.uvGalaxy, R = rng(3), cols = [0x00ff88, 0x00cfff, 0x00ff88, 0x00cfff, 0x3b82f6, 0x00cfff, 0x3b82f6];
+    const line = (r, col, op, dash) => {
+      const n = 720, pts = [];
+      for (let k = 0; k <= n; k++) { const a = k / n * Math.PI * 2; pts.push(new THREE.Vector3(Math.sin(a) * r, 0, Math.cos(a) * r)); }
+      const mat = new THREE.LineBasicMaterial({ color: new THREE.Color(col).multiplyScalar(1.6), transparent: true, opacity: op, blending: THREE.AdditiveBlending, depthWrite: false });
+      if (!dash) return new THREE.Line(new THREE.BufferGeometry().setFromPoints(pts), mat);
+      const seg = []; for (let k = 0; k < n; k += 3) if ((k / 3) % 3 !== 2) seg.push(pts[k], pts[k + 1]);
+      return new THREE.LineSegments(new THREE.BufferGeometry().setFromPoints(seg), mat);
+    };
+    this.laneDefs = Gx.ORBITS.map((r, i) => {
+      const col = cols[i % cols.length];
+      this.scene.add(line(r, col, 0.85));
+      const band = new THREE.Mesh(bandGeo(r, 0.9), new THREE.MeshBasicMaterial({ map: bandTex(), color: new THREE.Color(col).multiplyScalar(1.2), transparent: true, opacity: 0.38, blending: THREE.AdditiveBlending, depthWrite: false, side: THREE.DoubleSide }));
+      this.scene.add(band);
+      if (i % 3 === 1) { this.scene.add(line(r + 3, col, 0.28)); this.scene.add(line(r - 3, col, 0.4, true)); }
+      if (i === Gx.ORBITS.length - 1) this.scene.add(line(r + 5, 0x00cfff, 0.18));
+      return { r, col, speed: Gx.omega(r) * 7 };
     });
+    // the lights that run along the orbits: a bright head and a short trail
     this.ships = [];
-    this.laneDefs.forEach((L, i) => { const n = 4 + i * 2; for (let k = 0; k < n; k++) this.ships.push({ L, a: k / n * Math.PI * 2 + R() * 0.5 }); });
-    const n = this.ships.length;
-    this.shipMesh = new THREE.InstancedMesh(G.box, new THREE.MeshBasicMaterial({ color: 0xffffff }), n);
-    this.trailMesh = new THREE.InstancedMesh(G.box, new THREE.MeshBasicMaterial({ color: 0xffffff, transparent: true, opacity: 0.4, blending: THREE.AdditiveBlending, depthWrite: false }), n);
-    this.ships.forEach((s, i) => { const c = new THREE.Color(s.L.col); this.shipMesh.setColorAt(i, c.clone().multiplyScalar(2.6)); this.trailMesh.setColorAt(i, c.clone().multiplyScalar(0.8)); });
-    this.shipMesh.instanceColor.needsUpdate = true; this.trailMesh.instanceColor.needsUpdate = true;
-    this.shipMesh.frustumCulled = false; this.trailMesh.frustumCulled = false;
-    this.scene.add(this.shipMesh, this.trailMesh);
+    this.laneDefs.forEach((L, i) => { const n = 1 + (i % 3); for (let k = 0; k < n; k++) this.ships.push({ L, a: k / n * Math.PI * 2 + R() * 2, head: null }); });
+    this.ships.forEach((s) => { s.head = glowSprite(new THREE.Color(s.L.col).lerp(new THREE.Color(0xffffff), 0.5), 0.9, 4); this.scene.add(s.head); });
+    this.trailMesh = new THREE.InstancedMesh(G.box, new THREE.MeshBasicMaterial({ color: 0xffffff, transparent: true, opacity: 0.45, blending: THREE.AdditiveBlending, depthWrite: false }), this.ships.length);
+    this.ships.forEach((s, i) => this.trailMesh.setColorAt(i, new THREE.Color(s.L.col).multiplyScalar(1.4)));
+    this.trailMesh.instanceColor.needsUpdate = true; this.trailMesh.frustumCulled = false; this.scene.add(this.trailMesh);
   }
-  // Cymetica: a star, its corona, a gyroscope of rings, a beam through its poles and a spinning disc of light
+  // Cymetica, a collider: a white-hot heart inside a sphere of light filaments that turn and flicker, beams shot
+  // out of it, sparks flying off, a ring of machinery round it turning slowly with a gyroscope across it, a cone
+  // of rings over it and rings of light on the orbits' plane. White, cyan, blue and a little green; nothing warm.
   core() {
-    const g = new THREE.Group(), cy = amat('#00cfff'), gr = amat('#00ff88');
-    const star = new THREE.Mesh(G.sphere, new THREE.MeshBasicMaterial({ color: new THREE.Color(0xd8f7ff).multiplyScalar(3.2) })); star.scale.setScalar(2.4); g.add(star);
-    this.corona = [[12, 0.95, 0xd8f7ff], [26, 0.42, 0x00cfff], [52, 0.13, 0x00cfff], [96, 0.035, 0x00ff88]].map(([s, o, c]) => { const sp = glowSprite(c, o, s); g.add(sp); return sp; });
-    this.coreRings = [[6, cy.rim], [8.2, gr.rim], [10.6, cy.soft]].map(([r, m]) => { const ring = new THREE.Mesh(G.ringT, m); ring.scale.setScalar(r); g.add(ring); return ring; });
-    // its jet: thin and faint, narrowing up from the north pole
-    const jet = new THREE.Mesh(G.beam, new THREE.MeshBasicMaterial({ color: new THREE.Color(0x00cfff).multiplyScalar(1.2), transparent: true, opacity: 0.06, blending: THREE.AdditiveBlending, depthWrite: false, side: THREE.DoubleSide }));
-    jet.scale.set(0.8, 70, 0.8); jet.position.y = 37; g.add(jet);
-    this.disc = discPoints(); g.add(this.disc);
-    g.add(new THREE.PointLight(0xa8ecff, 2200, 0, 2));
-    const hit = new THREE.Mesh(G.sphere, M.hit); hit.scale.setScalar(8); hit.userData.id = 'core'; g.add(hit); this.coreHit = hit;
-    this.coreAt = new THREE.Vector3(0, 12.5, 0);
+    const g = new THREE.Group(), R = rng(77), cy = amat('#00cfff');
+    G.plume = G.plume || new THREE.CylinderGeometry(0.42, 0.05, 1, 24, 1, true);
+    const star = new THREE.Mesh(G.sphere, new THREE.MeshBasicMaterial({ color: new THREE.Color(0xffffff).multiplyScalar(2.6) })); star.scale.setScalar(1.3); g.add(star);
+    this.corona = [[5, 0.75, 0xeafcff], [12, 0.22, 0x9feeff], [30, 0.07, 0x00cfff], [70, 0.03, 0x3b82f6]].map(([s, o, c]) => { const sp = glowSprite(c, o, s); g.add(sp); return sp; });
+    // the filaments: arcs round the heart, each set in its own colour, turning its own way
+    this.fil = [[0xffffff, 1.8, 90, 2.4, 7.0], [0x9feeff, 1.8, 110, 2.8, 8.0], [0x3b82f6, 2.2, 70, 3.4, 8.6], [0x00ff88, 1.6, 24, 3.8, 7.6]].map(([col, k, n, r0, r1]) => {
+      const pos = [];
+      for (let i = 0; i < n; i++) {
+        const ax = new THREE.Vector3(R() * 2 - 1, R() * 2 - 1, R() * 2 - 1).normalize();
+        const u = new THREE.Vector3(0.3, 1, 0.2).cross(ax).normalize(), v = ax.clone().cross(u).normalize();
+        const rr = r0 + R() * (r1 - r0), a0 = R() * Math.PI * 2, len = 0.8 + R() * 2.8, wob = R() * 0.7, f = 2 + Math.floor(R() * 4), seg = 30;
+        let prev = null;
+        for (let s = 0; s <= seg; s++) {
+          const a = a0 + len * s / seg, rad = rr * (1 + wob * 0.22 * Math.sin(a * f));
+          const p = u.clone().multiplyScalar(Math.cos(a) * rad).addScaledVector(v, Math.sin(a) * rad).addScaledVector(ax, wob * Math.sin(a * f * 0.7) * 1.3);
+          if (prev) pos.push(prev.x, prev.y, prev.z, p.x, p.y, p.z);
+          prev = p;
+        }
+      }
+      const geo = new THREE.BufferGeometry(); geo.setAttribute('position', new THREE.Float32BufferAttribute(pos, 3));
+      const ls = new THREE.LineSegments(geo, new THREE.LineBasicMaterial({ color: new THREE.Color(col).multiplyScalar(k), transparent: true, opacity: 0.8, blending: THREE.AdditiveBlending, depthWrite: false }));
+      g.add(ls); return ls;
+    });
+    // beams shot out of the heart, narrowing as they go
+    this.beams = [];
+    for (let i = 0; i < 10; i++) {
+      const dir = new THREE.Vector3(R() * 2 - 1, (R() - 0.5) * 1.1, R() * 2 - 1).normalize(), len = 14 + R() * 26;
+      const m = new THREE.Mesh(G.plume, new THREE.MeshBasicMaterial({ map: plumeTex(), color: new THREE.Color(R() < 0.6 ? 0xffffff : 0x9feeff).multiplyScalar(1.4), transparent: true, opacity: 0.4, blending: THREE.AdditiveBlending, depthWrite: false, side: THREE.DoubleSide }));
+      m.scale.set(0.45 + R() * 0.5, len, 0.45 + R() * 0.5); m.quaternion.setFromUnitVectors(new THREE.Vector3(0, -1, 0), dir); m.position.copy(dir.clone().multiplyScalar(len / 2));
+      g.add(m); this.beams.push({ m, ph: R() * 6 });
+    }
+    // sparks flying off the heart
+    const NS = 420, sp = new Float32Array(NS * 3), spCol = new Float32Array(NS * 3), cc = new THREE.Color();
+    this.sparks = { N: NS, dir: [], speed: [], ph: [] };
+    for (let i = 0; i < NS; i++) {
+      this.sparks.dir.push(new THREE.Vector3(R() * 2 - 1, (R() - 0.5) * 0.8, R() * 2 - 1).normalize()); this.sparks.speed.push(0.25 + R() * 0.6); this.sparks.ph.push(R());
+      cc.set(R() < 0.7 ? 0xeafcff : 0x00cfff).multiplyScalar(1.6); spCol.set([cc.r, cc.g, cc.b], i * 3);
+    }
+    const sg = new THREE.BufferGeometry(); sg.setAttribute('position', new THREE.BufferAttribute(sp, 3)); sg.setAttribute('color', new THREE.BufferAttribute(spCol, 3));
+    this.sparkPts = new THREE.Points(sg, new THREE.PointsMaterial({ vertexColors: true, size: 1, sizeAttenuation: false, transparent: true, blending: THREE.AdditiveBlending, depthWrite: false }));
+    this.sparkPts.frustumCulled = false; g.add(this.sparkPts);
+    // the machine round it: plates with lit seams between them, a coil every fourth, tilted, turning slowly
+    this.machine = new THREE.Group(); this.machine.rotation.set(0.38, 0, 0.16); g.add(this.machine);
+    const RR = 11.5, NSEG = 28;
+    for (let i = 0; i < NSEG; i++) {
+      const a = i / NSEG * Math.PI * 2, coil = i % 4 === 0, p = new THREE.Mesh(G.box, coil ? M.metal : M.hull2);
+      p.scale.set(coil ? 1.5 : 2.2, coil ? 2.1 : 1.3, coil ? 1.9 : 1.1); p.position.set(Math.sin(a) * RR, 0, Math.cos(a) * RR); p.rotation.y = a + Math.PI / 2; this.machine.add(p);
+      const b = a + Math.PI / NSEG, lamp = new THREE.Mesh(G.box, cy.glow); lamp.scale.set(0.12, 0.95, 1.2); lamp.position.set(Math.sin(b) * RR, 0, Math.cos(b) * RR); lamp.rotation.y = b + Math.PI / 2; this.machine.add(lamp);
+    }
+    const inner = new THREE.Mesh(G.wheel, M.metal); inner.scale.setScalar(RR - 0.95); inner.rotation.x = Math.PI / 2; this.machine.add(inner);
+    this.gyro = new THREE.Group(); g.add(this.gyro);
+    const gy = new THREE.Mesh(G.wheel, M.trim); gy.scale.set(9, 9, 5); this.gyro.add(gy);
+    const gyl = new THREE.Mesh(G.ringT, cy.rim); gyl.scale.setScalar(9.6); this.gyro.add(gyl);
+    // rings of light on the orbits' plane, and a cone of rings over the heart as over the Manager's dais
+    this.coreRings = [[15, G.ringT, cy.rim], [17.5, G.holoDash, cy.soft], [20.5, G.holo, cy.rim], [24, G.holo, cy.soft]].map(([r, geo, mat]) => {
+      const m = new THREE.Mesh(geo, mat); m.scale.setScalar(r); m.rotation.x = Math.PI / 2; g.add(m); return m;
+    });
+    this.coneRings = [[4.5, 7.2], [7.5, 5.8], [10.5, 4.4], [13.5, 3.0]].map(([y, s], i) => {
+      const m = new THREE.Mesh(i % 2 ? G.holoDash : G.holo, cy.rim); m.scale.setScalar(s); m.rotation.x = Math.PI / 2; m.position.y = y; g.add(m); return m;
+    });
+    g.add(new THREE.PointLight(0xa8ecff, 2600, 0, 2));
+    const hit = new THREE.Mesh(G.sphere, M.hit); hit.scale.setScalar(13); hit.userData.id = 'core'; g.add(hit); this.coreHit = hit;
+    g.scale.setScalar(2.4); this.coreAt = new THREE.Vector3(0, 40, 0);
     this.scene.add(g);
   }
-
-  // every company in its place on the arms; ours where the camera first looks
+  // every company on its orbit; ours on the second, in front of Cymetica where the camera first looks
   layout() {
     this.items = CO.uvPlan(this.h.mine());
     CO.uvSeed(this.items, this.live);
     this.items.forEach((it) => this.place(it));
     this.coreBanner();
     this.stats();
-    // zoomed all the way out, the galaxy still fills most of the view: not a speck in the dark
-    this.controls.maxDistance = this.home().pos.distanceTo(this.home().tgt) * 1.6;
+    // zoomed all the way out, the orrery still fills most of the view: not a speck in the dark
+    const h = this.home(); this.controls.maxDistance = h.pos.distanceTo(h.tgt) * 1.6;
   }
   place(it) {
     this.built = (this.built || 0) + 1;
     if (it.plot) { this.scene.remove(it.plot.root); release(it.plot.root); }
     const c = it.c, p = makeStation(c, it.mine ? 7 : c.id, { mine: it.mine });
-    p.root.position.set(it.pos[0], it.pos[1], it.pos[2]);
+    // larger than a deck's height makes it: in the picture a station reads at a glance, orbit by orbit
+    p.root.scale.setScalar(SS);
+    // only ours keeps its ring of light; the others ride their orbits, as in the picture
+    if (!it.mine) { p.ring.visible = false; p.pool.visible = false; }
     p.hit.userData.id = c.id;
     if (it.mine) p.meRing = p.ring;
     this.scene.add(p.root);
     it.plot = p;
-    it.anchor = new THREE.Vector3(it.pos[0], it.pos[1] + p.top + 0.5, it.pos[2]);
-    it.size = p.top - p.bot;
+    it.anchor = new THREE.Vector3(); this.orbit(it, this.clock ? this.clock.getElapsedTime() : 0);
+    it.size = (p.top - p.bot) * SS;
     this.paint(it);
     this.banner(it);
+  }
+  // where a station is on its orbit at a moment, and where its banner hangs
+  orbit(it, t) {
+    const o = it.orbit, p = it.plot; if (!o || !p) return;
+    const a = o.a + o.w * t; p.root.position.set(Math.sin(a) * o.r, 0, Math.cos(a) * o.r);
+    it.anchor.set(p.root.position.x, (p.top + 0.5) * SS, p.root.position.z);
   }
   paint(it) {
     const on = it.mine ? (it.c.working || []) : (this.live[it.c.id] || []);
@@ -696,7 +725,7 @@ class Universe3D {
   // work goes in to Cymetica in the company's colour; ET10 comes back out in green
   arc(it, back) {
     if (!it.plot || this.arcs.length > 12) return;
-    const core = new THREE.Vector3(0, 0, 0), top = it.plot.root.position.clone().add(new THREE.Vector3(0, it.plot.top * 0.6, 0));
+    const core = new THREE.Vector3(0, 0, 0), top = it.plot.root.position.clone().add(new THREE.Vector3(0, it.plot.top * 0.6 * SS, 0));
     const a = back ? core : top, b = back ? top : core, mid = a.clone().lerp(b, 0.5);
     mid.y += 8 + a.distanceTo(b) * 0.16;
     const A = back ? amat('#00ff88') : amat(CO.accentHex(it.c.accent)), curve = new THREE.QuadraticBezierCurve3(a, mid, b);
@@ -720,21 +749,32 @@ class Universe3D {
   open(id) { const it = this.find(id); if (it && this.h.onOpen) { this.hideTip(); this.h.onOpen(it); } }
 
   /* ---------------- camera ---------------- */
-  // the whole galaxy, seen from above its disc on our side of the core
+  // the whole orrery, from above its plane on our side of Cymetica, as near as the outer orbit allows (a margin at
+  // the top for the stage's own bar)
   home() {
-    const Gx = CO.uvGalaxy, R = (Gx.outer || Gx.R1) + 12, a = this.camera.aspect || 2;
-    const d = R * (a < 1.2 ? 3.4 : a < 1.6 ? 2.7 : 2.3);
-    // aimed a little to our side of the core: the near half of a disc seen from above looks the bigger one
-    const tgt = new THREE.Vector3(Math.sin(Gx.AZ) * R * 0.1, -6, Math.cos(Gx.AZ) * R * 0.1);
-    return { pos: new THREE.Vector3().setFromSpherical(new THREE.Spherical(d, 0.9, Gx.AZ)).add(tgt), tgt };
+    const Gx = CO.uvGalaxy, R = Gx.R1 + 16, dir = new THREE.Vector3().setFromSpherical(new THREE.Spherical(1, 1.06, Gx.AZ)), cam = this.camera.clone(), tgt = new THREE.Vector3(0, -4, 0), pts = [];
+    if (this.el.clientWidth && this.el.clientHeight) { cam.aspect = this.el.clientWidth / this.el.clientHeight; cam.updateProjectionMatrix(); }
+    for (let k = 0; k < 64; k++) { const a = k / 64 * Math.PI * 2; pts.push(new THREE.Vector3(Math.sin(a) * R, 0, Math.cos(a) * R), new THREE.Vector3(Math.sin(a) * R, 16, Math.cos(a) * R)); }
+    pts.push(new THREE.Vector3(0, 48, 0));
+    const fits = (d) => { cam.position.copy(tgt).addScaledVector(dir, d); cam.lookAt(tgt); cam.updateMatrixWorld(); return pts.every((p) => { const v = p.clone().project(cam); return Math.abs(v.x) < 0.98 && v.y < 0.82 && v.y > -0.96; }); };
+    let d = 400;
+    for (let pass = 0; pass < 2; pass++) {
+      let lo = 40, hi = 6000; for (let i = 0; i < 26; i++) { const mid = (lo + hi) / 2; if (fits(mid)) hi = mid; else lo = mid; }
+      d = hi; cam.position.copy(tgt).addScaledVector(dir, d); cam.lookAt(tgt); cam.updateMatrixWorld();
+      // aim at the middle of the picture, not of the plane: the near half of an orbit seen from above is the bigger one
+      let y0 = 1, y1 = -1; pts.forEach((p) => { const v = p.clone().project(cam); y0 = Math.min(y0, v.y); y1 = Math.max(y1, v.y); });
+      const up = new THREE.Vector3().setFromMatrixColumn(cam.matrixWorld, 1), hh = 2 * d * Math.tan(THREE.MathUtils.degToRad(cam.fov) / 2);
+      tgt.addScaledVector(up, ((y0 + y1) / 2 + 0.05) * hh / 2);
+    }
+    return { pos: tgt.clone().addScaledVector(dir, d), tgt };
   }
   fit(anim) {
-    const h = this.home();
+    const h = this.home(); this.follow = null; this.followAt = null;
     if (!this.fitted && anim === false) {
-      // the first look: from far outside the galaxy, flying in
+      // the first look: from far outside, flying in
       this.fitted = true;
       this.camera.position.copy(h.pos.clone().multiplyScalar(2.3).add(new THREE.Vector3(0, 380, 0))); this.controls.target.copy(h.tgt);
-      this.tween(h.pos, h.tgt, 3400);
+      this.tween(h.pos, h.tgt, 3400); this.tw.home = true;
       return;
     }
     this.fitted = true;
@@ -747,11 +787,12 @@ class Universe3D {
   }
   flyTo(id, done, ms) {
     const it = this.find(id); if (!it || !it.plot) { if (done) done(); return; }
-    const p = it.plot.root.position, tgt = new THREE.Vector3(p.x, p.y + (it.plot.top + it.plot.bot) * 0.5, p.z);
+    const p = it.plot.root.position, tgt = new THREE.Vector3(p.x, p.y + (it.plot.top + it.plot.bot) * 0.5 * SS, p.z);
     const dir = this.camera.position.clone().sub(this.controls.target); if (dir.lengthSq() < 1e-6) dir.set(1, 0.6, 1);
     dir.y = Math.max(dir.y, dir.length() * 0.35); dir.normalize();
-    const dist = 9 + (it.plot.top - it.plot.bot) * 1.3 + it.plot.b.foot * 0.7;
-    this.tween(tgt.clone().add(dir.multiplyScalar(dist)), tgt, ms == null ? 1300 : ms, done);
+    const dist = (16 + (it.plot.top - it.plot.bot) * 1.4 + it.plot.b.foot * 0.9) * SS;
+    this.follow = null; this.followAt = null;
+    this.tween(tgt.clone().add(dir.multiplyScalar(dist)), tgt, ms == null ? 1300 : ms, () => { this.follow = it; this.followAt = null; if (done) done(); });
   }
   tween(pos, tgt, ms, done) {
     this.controls.autoRotate = false; this.lastUse = performance.now();
@@ -770,7 +811,7 @@ class Universe3D {
     // a page opened in a hidden tab learns its size late, and not always through ResizeObserver
     if (this.el.clientWidth !== this._cw || this.el.clientHeight !== this._ch) {
       this._cw = this.el.clientWidth; this._ch = this.el.clientHeight; this.resize();
-      if (this.fitted && !this.tw && !this.used) this.fit(false);
+      if (this.fitted && !this.used) { if (!this.tw) this.fit(false); else if (this.tw.home) { const h2 = this.home(); this.tw.p1 = h2.pos; this.tw.t1 = h2.tgt; } }
     }
     const t = this.clock.getElapsedTime(), now = performance.now();
     if (this.tw) {
@@ -778,23 +819,33 @@ class Universe3D {
       this.camera.position.lerpVectors(this.tw.p0, this.tw.p1, e); this.controls.target.lerpVectors(this.tw.t0, this.tw.t1, e);
       if (k >= 1) { const d = this.tw.done; this.tw = null; if (d) d(); }
     }
-    // turn slowly while nobody is using the map
-    if (!this.tw && !this.mouseIn && now - this.lastUse > 7000) this.controls.autoRotate = true;
-    if (this.mouseIn) this.controls.autoRotate = false;
     this.controls.update();
-    // every station floats: it bobs, turns slowly, and our own ring breathes. What glows from afar -- a station's
-    // halo, the arms' clouds -- gives way as the camera comes close
+    // every station on its orbit: it moves on, bobs, turns slowly, and our own ring breathes; a station's halo,
+    // what makes it a point of light from far off, gives way as the camera comes close
     const cam = this.camera.position, ss = THREE.MathUtils.smoothstep;
     this.items.forEach((it) => {
       const p = it.plot; if (!p) return;
+      this.orbit(it, t);
       p.b.tick(t); p.body.position.y = Math.sin(t * 0.45 + p.b.phase) * 0.22; p.body.rotation.y = p.spin + t * 0.035;
       if (p.meRing) p.meRing.scale.setScalar(p.ringR * (1 + Math.sin(t * 2.4) * 0.05));
-      p.halo.material.opacity = p.haloBase * ss(cam.distanceTo(p.root.position), 18, 80);
+      p.halo.material.opacity = p.haloBase * 0.15 * ss(cam.distanceTo(p.root.position), 40, 160);
     });
-    this.fades.forEach((f) => { f.s.material.opacity = f.base * ss(cam.distanceTo(f.s.position), f.near, f.far); });
-    this.coreRings.forEach((r, i) => r.rotation.set(t * (0.31 + i * 0.17) * (i % 2 ? -1 : 1), t * (0.22 + i * 0.11), 0.4 * i));
-    this.disc.rotation.y = t * 0.35;
-    this.corona[0].material.opacity = 0.85 + 0.1 * Math.sin(t * 2.1);
+    // a station the camera flew to: the camera goes along with it on its orbit
+    if (this.follow && this.follow.plot) {
+      const p = this.follow.plot.root.position;
+      if (this.followAt && !this.tw) { const d = p.clone().sub(this.followAt); this.camera.position.add(d); this.controls.target.add(d); }
+      this.followAt = (this.followAt || new THREE.Vector3()).copy(p);
+    }
+    // Cymetica: the filaments turn each their own way and flicker, the beams breathe, the sparks fly, the machine turns
+    this.fil.forEach((f, i) => { f.rotation.set(t * (0.13 + i * 0.07) * (i % 2 ? -1 : 1), t * (0.21 + i * 0.05), t * 0.05 * i); f.material.opacity = 0.6 + 0.3 * Math.sin(t * (5 + i * 2.3) + i) * Math.sin(t * 1.7 + i); });
+    this.beams.forEach((b) => { b.m.material.opacity = 0.15 + 0.3 * Math.max(0, Math.sin(t * 2.2 + b.ph)); });
+    const sp = this.sparkPts.geometry.attributes.position, S2 = this.sparks;
+    for (let i = 0; i < S2.N; i++) { const f = (t * S2.speed[i] * 0.35 + S2.ph[i]) % 1, r = 2.5 + f * 30, d = S2.dir[i]; sp.setXYZ(i, d.x * r, d.y * r, d.z * r); }
+    sp.needsUpdate = true;
+    this.machine.rotation.y = t * 0.06; this.gyro.rotation.set(1.15 + Math.sin(t * 0.2) * 0.1, t * 0.18, 0.3);
+    this.coreRings.forEach((r, i) => { r.rotation.z = t * (0.05 + i * 0.03) * (i % 2 ? -1 : 1); });
+    this.coneRings.forEach((r, i) => { r.rotation.z = t * (0.4 + i * 0.2) * (i % 2 ? -1 : 1); r.position.y = 4.5 + i * 3 + Math.sin(t * 1.3 + i) * 0.3; });
+    this.corona[0].material.opacity = 0.65 + 0.12 * Math.sin(t * 2.1);
     this.moveShips(t);
     if (this.arcs.length) {
       this.arcs = this.arcs.filter((a) => {
@@ -808,34 +859,31 @@ class Universe3D {
         return true;
       });
     }
-    // the sky and the far stars go where the camera goes: they are as far as a sky is
+    // the sky goes where the camera goes: it is as far as a sky is
     this.sky.position.copy(this.camera.position);
-    this.starLayers.forEach((s) => s.position.copy(this.camera.position));
     if (this.mouseMoved) { this.mouseMoved = false; this.pick(); }
     // a GPU that cannot run a shader says so on the first frames: stop, and let the flat map take over
     try { if (this.post) this.post.render(); else this.renderer.render(this.scene, this.camera); this.frames = (this.frames || 0) + 1; }
     catch (e) { console.error('3D map stopped:', e); this.renderer.setAnimationLoop(null); if (this.h.onFail && !(this.frames > 30)) this.h.onFail(e); return; }
     this.overlay();
   }
+  // the lights along the orbits: a head that glows and a short trail behind it
   moveShips(t) {
-    const m4 = new THREE.Matrix4(), q = new THREE.Quaternion(), p = new THREE.Vector3(), dir = new THREE.Vector3(), fwd = new THREE.Vector3(0, 0, 1);
-    const s1 = new THREE.Vector3(0.24, 0.13, 0.75), s2 = new THREE.Vector3(0.07, 0.05, 3.4);
+    const m4 = new THREE.Matrix4(), q = new THREE.Quaternion(), p = new THREE.Vector3(), dir = new THREE.Vector3(), fwd = new THREE.Vector3(0, 0, 1), s2 = new THREE.Vector3(0.2, 0.14, 7);
     this.ships.forEach((s, i) => {
       const L = s.L, a = s.a + t * L.speed;
-      p.set(Math.cos(a) * L.r, 0, Math.sin(a) * L.r).applyMatrix4(L.m);
-      dir.set(-Math.sin(a), 0, Math.cos(a)).transformDirection(L.m).multiplyScalar(Math.sign(L.speed));
-      q.setFromUnitVectors(fwd, dir);
-      m4.compose(p, q, s1); this.shipMesh.setMatrixAt(i, m4);
-      p.addScaledVector(dir, -2.1); m4.compose(p, q, s2); this.trailMesh.setMatrixAt(i, m4);
+      p.set(Math.sin(a) * L.r, 0, Math.cos(a) * L.r); s.head.position.copy(p);
+      dir.set(Math.cos(a), 0, -Math.sin(a));
+      q.setFromUnitVectors(fwd, dir); p.addScaledVector(dir, -3.6); m4.compose(p, q, s2); this.trailMesh.setMatrixAt(i, m4);
     });
-    this.shipMesh.instanceMatrix.needsUpdate = true; this.trailMesh.instanceMatrix.needsUpdate = true;
+    this.trailMesh.instanceMatrix.needsUpdate = true;
   }
   // The banners follow their stations. Ours, the hovered one and Cymetica's always show; the rest nearest first,
   // each only where no nearer one stands and only while its station is big enough on screen to be worth a name.
   overlay() {
     const w = this.el.clientWidth, h = this.el.clientHeight, v = new THREE.Vector3(), placed = [];
     // a still camera moves no banner: restyle them only when the view, the size, the hover or a station changed
-    const key = this.camera.matrixWorld.elements.join(',') + '|' + w + 'x' + h + '|' + this.hover + '|' + this.items.length + '|' + this.built;
+    const key = this.camera.matrixWorld.elements.join(',') + '|' + w + 'x' + h + '|' + this.hover + '|' + this.items.length + '|' + this.built + '|' + Math.floor(performance.now() / 66);
     if (key === this.ovKey && !this.pops.length) return;
     this.ovKey = key;
     const f = h / (2 * Math.tan(THREE.MathUtils.degToRad(this.camera.fov) / 2)), cam = this.camera.position;
@@ -850,7 +898,7 @@ class Universe3D {
     list.forEach((o) => {
       const el = o.el; if (!el) return;
       if (!el._bw) el._bw = el.offsetWidth || 160;
-      const s = o.core ? 1 : Math.max(0.66, Math.min(1, 0.5 + o.px / 120));
+      const s = o.core ? 1 : Math.max(0.86, Math.min(1, 0.6 + o.px / 120));
       const off = o.z > 1 || o.x < -80 || o.x > w + 80 || o.y < -40 || o.y > h + 60;
       const bw = el._bw * s, bh = (o.mine ? 48 : o.core ? 42 : 30) * s, r = { l: o.x - bw / 2, r: o.x + bw / 2, t: o.y - bh, b: o.y };
       const clash = placed.some((p) => r.l < p.r + 6 && r.r > p.l - 6 && r.t < p.b + 4 && r.b > p.t - 4);
@@ -1459,8 +1507,8 @@ class Office3D {
     this.clock = new THREE.Clock();
     this.bind();
     this.renderer.init().then(() => {
-      try { this.post = new Post(this.renderer, this.scene, this.camera, 0.6, 0.45, 0.8, { ao: { radius: 0.8, scale: 1.6 } }); }
-      catch (e) { console.warn('office: no ambient occlusion', e); try { this.post = new Post(this.renderer, this.scene, this.camera, 0.6, 0.45, 0.8); } catch (e2) { this.post = null; } }
+      try { this.post = new Post(this.renderer, this.scene, this.camera, 0.45, 0.45, 0.84, { ao: { radius: 0.8, scale: 1.6 } }); }
+      catch (e) { console.warn('office: no ambient occlusion', e); try { this.post = new Post(this.renderer, this.scene, this.camera, 0.45, 0.45, 0.84); } catch (e2) { this.post = null; } }
       this.renderer.setAnimationLoop(() => this.frame());
     }).catch((e) => { console.error('3D office could not start:', e); if (this.onFail) this.onFail(e); });
     if (window.ResizeObserver) new ResizeObserver(() => this.resize()).observe(el);

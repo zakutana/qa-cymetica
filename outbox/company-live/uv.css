@@ -97,17 +97,18 @@ i.lk::before { content: ''; position: absolute; left: 1.5px; top: -5px; width: 6
   will-change: transform; transition: opacity .25s; }
 /* Cymetica's own name over the star in the middle */
 .b3.core { cursor: default; }
-.b3.core .rib { font-size: 14px; letter-spacing: .32em; padding: 5px 20px 5px 26px; color: #dff8ff; text-shadow: 0 0 12px rgba(0, 207, 255, .9); }
-.b3.core .teth { height: 26px; }
-.b3 .rib { display: flex; align-items: center; gap: 6px; padding: 4px 16px; font: 400 12px 'Archivo Black', sans-serif; letter-spacing: .04em; color: var(--text); white-space: nowrap;
-  background: rgba(8, 12, 20, .9); border: 1.3px solid var(--acc); box-shadow: 0 0 14px color-mix(in srgb, var(--acc) 40%, transparent), inset 0 0 10px color-mix(in srgb, var(--acc) 18%, transparent);
-  clip-path: polygon(0 0, 100% 0, calc(100% - 7px) 50%, 100% 100%, 0 100%, 7px 50%); border-radius: 2px; }
+.b3.core .rib { font-size: 16px; letter-spacing: .14em; padding: 7px 20px; color: #fff; border-color: rgba(223, 230, 238, .5); text-shadow: 0 0 12px rgba(0, 207, 255, .9); }
+.b3.core .rib::before { display: none; }
+.b3.core .teth { height: 14px; }
+.b3 .rib { display: flex; align-items: center; gap: 7px; padding: 5px 12px; font: 400 12px 'Archivo Black', sans-serif; letter-spacing: .05em; color: #eef4fa; white-space: nowrap;
+  background: rgba(8, 13, 20, .84); border: 1px solid rgba(223, 230, 238, .34); border-radius: 4px; box-shadow: 0 4px 14px rgba(0, 0, 0, .45); }
+.b3 .rib::before { content: ''; width: 6px; height: 6px; border-radius: 50%; background: var(--acc); box-shadow: 0 0 6px var(--acc); flex: none; }
 .b3 .rib i.lk { color: var(--dim); }
-.b3 .teth { width: 1.5px; height: 18px; background: linear-gradient(var(--acc), transparent); opacity: .7; }
+.b3 .teth { width: 1px; height: 10px; background: linear-gradient(rgba(223, 230, 238, .5), transparent); }
 .b3 .you { font: 800 9px 'JetBrains Mono'; color: var(--bg); background: var(--green); padding: 1px 7px; border-radius: 9px; margin-bottom: 3px; box-shadow: 0 0 10px rgba(0, 255, 136, .6); }
 .b3.priv .rib { color: var(--dim); }
 .b3.paused .rib { color: var(--dim2); }
-.b3.hov .rib, .b3:hover .rib { background: rgba(10, 16, 28, .98); box-shadow: 0 0 22px color-mix(in srgb, var(--acc) 70%, transparent), inset 0 0 12px color-mix(in srgb, var(--acc) 30%, transparent); }
+.b3.hov .rib, .b3:hover .rib { background: rgba(10, 16, 28, .98); border-color: var(--acc); box-shadow: 0 0 18px color-mix(in srgb, var(--acc) 60%, transparent); }
 .b3.far { opacity: .55; }
 .b3.hidden { opacity: 0; pointer-events: none; }
 .b3pop { position: absolute; left: 0; top: 0; pointer-events: none; font: 800 13px 'JetBrains Mono'; color: var(--green); text-shadow: 0 0 10px rgba(0, 255, 136, .9);

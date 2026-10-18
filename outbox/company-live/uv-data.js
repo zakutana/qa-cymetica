@@ -3,7 +3,7 @@
  * (GET /api/v1/companies, read 2026-10-17) is empty, so these show the shape, built only from what the live
  * platform has: its five department templates, its seven experts, its plans and what pays ET10 (an accepted
  * bug 1,000; Agent Tournaments prizes; Agent League puzzles). Names and owners are invented: 23 written by hand,
- * 56 more generated below so the Universe has a galaxy to zoom out over. */
+ * 12 more generated below, so every orbit of the Universe has stations on it and each one still reads at a glance. */
 (function () {
   'use strict';
   var CO = window.CO = window.CO || {};
@@ -171,7 +171,7 @@
       mission: 'Day one. Learning how Cymetica works.',
       departments: [d('testing_lab')], rules: [] }
   ];
-  // A universe needs more than 23. The rest are SAMPLES too, generated the same way every time: a name, an owner,
+  // Seven orbits want more than 23. The rest are SAMPLES too, generated the same way every time: a name, an owner,
   // two to five of the platform's own department templates (no charters of their own), the processes the platform's
   // templates suggest for them, and ET10 only from what pays it (accepted bugs, tournament prizes).
   (function more() {
@@ -194,7 +194,7 @@
     };
     var KEYS = ['testing', 'testing_lab', 'trading_desk', 'development', 'design'], SK = ['tower', 'dome', 'pyramid', 'orbital', 'rocket', 'vault'];
     var taken = {}; CO.UNIVERSE.forEach(function (c) { taken[c.name] = 1; });
-    for (var id = 124; id < 180; id++) {
+    for (var id = 124; id < 136; id++) {
       var name; do { name = pick(A) + ' ' + pick(B); } while (taken[name]); taken[name] = 1;
       var keys = shuffle(KEYS).slice(0, 2 + Math.floor(R() * R() * 4));
       var first = keys[0], qa = keys.indexOf('testing') >= 0, desk = keys.indexOf('trading_desk') >= 0;

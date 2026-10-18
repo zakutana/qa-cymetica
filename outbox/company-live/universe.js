@@ -22,38 +22,29 @@
   CO.floorsOf = floorsOf;
 
   /* ---------------- the galaxy: the map's model, drawn twice -- here flat, in u3d.js in 3D ---------------- */
-  // Cymetica is the star at the centre. Every company is a station on one of three spiral arms, the biggest
-  // nearest the core, ours in front of it where the camera first looks, no two closer than GAP. One copy of
-  // the model, so the two pictures cannot drift apart. Units are the stations' own (a deck is 0.8 high).
-  var ARMS = 3, R0 = 30, R1 = 190, TWIST = 0.028, GAP = 15, AZ = 1.08;
-  function armAngle(arm, r) { return arm * Math.PI * 2 / ARMS + r * TWIST; }
+  // The orrery, to the operator's picture: Cymetica in the middle, every company a station on one of seven
+  // orbits round it, the biggest on the inner ones, ours on the second, in front of it where the camera first
+  // looks. An orbit turns at its own pace, the inner ones faster as orbits do (omega ~ r^-1.5): slowly, so the
+  // picture is alive and a name can still be read. One copy of the model, so the two pictures cannot drift apart;
+  // the flat map draws it at its first moment. Units are the stations' own (a deck is 0.8 high).
+  var ORBITS = [68, 90, 112, 134, 156, 180, 204], AZ = 1.08, SPIN = 2.2, R1 = ORBITS[ORBITS.length - 1];
   CO.uvRng = rng; CO.fpOf = fpOf;
-  CO.uvGalaxy = { ARMS: ARMS, R0: R0, R1: R1, AZ: AZ, angle: armAngle, outer: R1 };
+  CO.uvGalaxy = { ORBITS: ORBITS, AZ: AZ, R1: R1, outer: R1, omega: function (r) { return SPIN / Math.pow(r, 1.5); } };
   CO.uvPlan = function (mine) {
     var list = CO.UNIVERSE.slice().sort(function (a, b) { return floorsOf(b) - floorsOf(a) || a.id - b.id; });
-    var R = rng(2026), gauss = function () { return R() + R() + R() + R() - 2; }, placed = [], items = [];
-    var free = function (p) {
-      for (var i = 0; i < placed.length; i++) {
-        var q = placed[i], dx = p[0] - q[0], dy = p[1] - q[1], dz = p[2] - q[2];
-        if (dx * dx + dy * dy * 0.5 + dz * dz < GAP * GAP) return false;
+    var R = rng(2026), items = [], n = list.length + 1, tot = 0, k = 0;
+    ORBITS.forEach(function (r) { tot += r; });
+    // stations per orbit in proportion to its length, so they stand about as far apart on every one
+    var counts = ORBITS.map(function (r) { return Math.max(1, Math.round(r / tot * n)); }), d = n - counts.reduce(function (a, b) { return a + b; }, 0);
+    for (var i = counts.length - 1; d !== 0; i = (i + counts.length - 1) % counts.length) { if (d > 0) { counts[i]++; d--; } else if (counts[i] > 1) { counts[i]--; d++; } }
+    ORBITS.forEach(function (r, o) {
+      var m = counts[o], a0 = o === 1 ? AZ + 0.55 : R() * Math.PI * 2;
+      for (var j = 0; j < m; j++) {
+        var me = o === 1 && j === 0, c = me ? mine : list[k++]; if (!c) return;
+        var a = a0 + (j + (me ? 0 : (R() - 0.5) * 0.4)) / m * Math.PI * 2;
+        items.push({ c: c, mine: me, orbit: { r: r, a: a, w: CO.uvGalaxy.omega(r) }, pos: [Math.sin(a) * r, 0, Math.cos(a) * r] });
       }
-      return true;
-    };
-    // ours: on the camera's side of the core, out of its glare, a little above the disc
-    var me = [Math.sin(AZ) * 50, 4, Math.cos(AZ) * 50], outer = R0;
-    placed.push(me); items.push({ c: mine, mine: true, pos: me });
-    list.forEach(function (c, k) {
-      var want = R0 + Math.pow((k + 0.5) / list.length, 0.85) * (R1 - R0), p = null;
-      for (var tries = 0; tries < 400 && !p; tries++) {
-        var r = want + gauss() * 9 + Math.floor(tries / 80) * 8, th = armAngle(Math.floor(R() * ARMS), r) + gauss() * 0.24;
-        var q = [Math.cos(th) * r, gauss() * (2 + r * 0.05), Math.sin(th) * r];
-        if (free(q)) p = q;
-      }
-      if (!p) p = [Math.cos(k) * (R1 + 24), 0, Math.sin(k) * (R1 + 24)];   // not with today's numbers: a last ring outside
-      placed.push(p); items.push({ c: c, pos: p });
-      outer = Math.max(outer, Math.hypot(p[0], p[2]));
     });
-    CO.uvGalaxy.outer = outer;
     return items;
   };
   // a lively first look: some decks already at work
@@ -388,24 +379,15 @@
     this.drawSpace();
     this.draw();
   };
-  // the arms' clouds and stars, the lanes and their shuttles, and Cymetica in the middle
+  // the orbits and the lights that run along them, a glow round the middle, and Cymetica in it
   Universe.prototype.drawSpace = function () {
-    var Gx = CO.uvGalaxy, R = rng(9), gauss = function () { return R() + R() + R() + R() - 2; }, out = '', i, r, th, p, m;
-    for (i = 0; i < 46; i++) {
-      r = 18 + Math.pow(R(), 0.8) * Gx.R1; th = Gx.angle(i % ARMS, r) + gauss() * 0.12; p = gp(Math.cos(th) * r, 0, Math.sin(th) * r); m = R();
-      var s = (22 + R() * 34) * SC;
-      out += '<ellipse cx="' + f1(p[0]) + '" cy="' + f1(p[1]) + '" rx="' + f1(s * 1.2) + '" ry="' + f1(s * 0.6) + '" fill="url(#uv-' + (m < 0.5 ? 'cc' : m < 0.8 ? 'cg' : 'cb') + ')"/>';
-    }
-    var cols = ['#00cfff', '#00ff88', '#3b82f6', '#d8f7ff'];
-    for (i = 0; i < 2200; i++) {
-      r = 12 + Math.pow(R(), 0.9) * Gx.R1 * 1.1; th = Gx.angle(i % ARMS, r) + gauss() * (0.12 + r / Gx.R1 * 0.12); p = gp(Math.cos(th) * r, 0, Math.sin(th) * r); m = R();
-      out += '<circle cx="' + f1(p[0]) + '" cy="' + f1(p[1]) + '" r="' + (m > 0.93 ? 9 : 4.5) + '" fill="' + cols[m < 0.45 ? 0 : m < 0.72 ? 1 : m < 0.86 ? 2 : 3] + '" opacity="' + (0.25 + R() * 0.55).toFixed(2) + '"/>';
-    }
-    var c = gp(0, 0, 0);
-    [[22, C.cyan], [56, C.green], [96, C.cyan], [140, C.blue], [184, C.green]].forEach(function (L, k) {
-      var rx = L[0] * RX, ry = L[0] * RY, path = 'M' + f1(c[0] - rx) + ',' + f1(c[1]) + ' a' + f1(rx) + ',' + f1(ry) + ' 0 1 0 ' + f1(rx * 2) + ',0 a' + f1(rx) + ',' + f1(ry) + ' 0 1 0 ' + f1(-rx * 2) + ',0';
-      out += '<path class="lane" d="' + path + '" stroke="' + L[1] + '"/>';
-      for (var j = 0; j < 3; j++) out += '<circle class="ship" r="16" fill="' + L[1] + '"><animateMotion dur="' + (40 + L[0] * 0.9).toFixed(0) + 's" begin="-' + (j * (40 + L[0] * 0.9) / 3).toFixed(1) + 's" repeatCount="indefinite"' + (k % 2 ? ' keyPoints="1;0" keyTimes="0;1"' : '') + ' path="' + path + '"/></circle>';
+    var Gx = CO.uvGalaxy, out = '', c = gp(0, 0, 0), cols = [C.green, C.cyan, C.green, C.cyan, C.blue, C.cyan, C.blue];
+    out += '<ellipse cx="' + f1(c[0]) + '" cy="' + f1(c[1]) + '" rx="' + f1(120 * RX) + '" ry="' + f1(120 * RY) + '" fill="url(#uv-cc)" opacity=".5"/>';
+    Gx.ORBITS.forEach(function (r, k) {
+      var rx = r * RX, ry = r * RY, path = 'M' + f1(c[0] - rx) + ',' + f1(c[1]) + ' a' + f1(rx) + ',' + f1(ry) + ' 0 1 0 ' + f1(rx * 2) + ',0 a' + f1(rx) + ',' + f1(ry) + ' 0 1 0 ' + f1(-rx * 2) + ',0';
+      out += '<path class="lane" d="' + path + '" stroke="' + cols[k] + '"/>';
+      if (k % 3 === 1) out += '<ellipse class="lane2" cx="' + f1(c[0]) + '" cy="' + f1(c[1]) + '" rx="' + f1((r + 2.4) * RX) + '" ry="' + f1((r + 2.4) * RY) + '" stroke="' + cols[k] + '"/>';
+      for (var j = 0; j < 2; j++) out += '<circle class="ship" r="14" fill="' + cols[k] + '"><animateMotion dur="' + (40 + r * 0.9).toFixed(0) + 's" begin="-' + (j * (40 + r * 0.9) / 2).toFixed(1) + 's" repeatCount="indefinite" path="' + path + '"/></circle>';
     });
     out += this.core();
     this.gSpace.innerHTML = out;
