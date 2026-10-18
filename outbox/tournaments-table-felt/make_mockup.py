@@ -20,7 +20,8 @@ So the oval keeps its ten seats in the live page's order and gains only pictures
   printed in its breaks;
 * the race under the table across the page's whole width ("a ten race nevidim nikde"), dressed like the table
   ("ted jeste tu race taky podobne top upravit"): day bands, plus and minus sides tinted, the leader's and our
-  area lit, a chequered finish, and a finish board naming every bot by rank at the end of its line.
+  area lit, a chequered finish; the leader and us named in pills (a board naming all ten was cut, and the
+  tints taken a fifth lighter: "ten zebricek seznam botu tam nedavej a je to o 20% barevnejsi nez bych chtel").
 
 Palette: the site's navy, cyan, green, red and blue, and the avatar tints the API itself serves.
 """
@@ -296,8 +297,8 @@ html,body{background:var(--bg);color:var(--text);font-family:'JetBrains Mono',mo
 
 /* the race, across the whole width: the same room as the table */
 .race{position:relative;margin-top:22px;border:1px solid var(--line2);border-radius:26px;padding:20px 18px 12px;overflow:hidden;
- background:radial-gradient(ellipse 60% 70% at 30% -20%,rgba(0,207,255,.10),rgba(0,207,255,0) 70%),
-  radial-gradient(ellipse 50% 60% at 85% 120%,rgba(0,255,136,.07),rgba(0,255,136,0) 70%),var(--deep)}
+ background:radial-gradient(ellipse 60% 70% at 30% -20%,rgba(0,207,255,.08),rgba(0,207,255,0) 70%),
+  radial-gradient(ellipse 50% 60% at 85% 120%,rgba(0,255,136,.056),rgba(0,255,136,0) 70%),var(--deep)}
 .rh{display:flex;align-items:center;gap:22px;padding:0 8px 8px}
 .rh h2{font-family:'Archivo Black';font-weight:400;font-size:24px}
 .lg{display:flex;gap:16px;font-size:11px;letter-spacing:.12em;color:var(--dim2);font-weight:700}
@@ -307,12 +308,10 @@ html,body{background:var(--bg);color:var(--text);font-family:'JetBrains Mono',mo
 .race svg{width:100%;height:auto;display:block}
 .race .ax{font-family:'JetBrains Mono';font-size:11px;fill:#7f93ad}
 .race .ax.day{letter-spacing:.14em;font-weight:700}
-.race .glow{filter:drop-shadow(0 0 6px rgba(0,207,255,.9))}
-.race .glow2{filter:drop-shadow(0 0 5px rgba(230,237,247,.6))}
-.race .nm{font-family:'JetBrains Mono';font-size:12px;fill:#a9b8cc}
-.race .nm.me{fill:#00cfff;font-weight:700}.race .nm.ld{fill:#e6edf7;font-weight:700}
-.race .pc{font-family:'JetBrains Mono';font-size:12px;font-weight:700}
-.race .rkn{font-family:'JetBrains Mono';font-size:10px;font-weight:700}
+.race .glow{filter:drop-shadow(0 0 5px rgba(0,207,255,.7))}
+.race .glow2{filter:drop-shadow(0 0 4px rgba(230,237,247,.45))}
+.tagme rect{fill:#00cfff;fill-opacity:.85}.tagme text{fill:#06090f;font-family:'JetBrains Mono';font-weight:700;font-size:13px}
+.taglead rect{fill:#06090f;stroke:#7f93ad}.taglead text{fill:#e6edf7;font-family:'JetBrains Mono';font-weight:700;font-size:13px}
 .race .fin{font-family:'Archivo Black';font-size:10px;letter-spacing:.3em;fill:#e6edf7}
 .race .now{font-family:'JetBrains Mono';font-size:10px;font-weight:700;letter-spacing:.14em;fill:#00cfff}
 """
@@ -329,12 +328,12 @@ def key():
 def race():
     """The live page's race lines (GET .../tables/2 "race") across the whole width, dressed like the table: the
     week as day bands, the plus side tinted green and the minus side red, the leader's and our area lit, the time
-    left hatched up to a chequered finish line, and every bot named at the finish (rank, avatar, ROI) instead of
-    two floating pills."""
+    left hatched up to a chequered finish line, the leader and us named in a pill at the line's end. A finish board
+    naming all ten was tried and cut ("ten zebricek seznam botu tam nedavej"), and every tint here is a fifth
+    lighter than that try ("je to o 20% barevnejsi nez bych chtel")."""
     r = T["race"]
-    RW, RH = 1336, 400
-    X0, XF, Y0, Y1 = 64, 1052, 30, 340  # chart left, the finish line, top and bottom of the plot
-    LX = 1104  # where the finish board's rows start
+    RW, RH = 1336, 390
+    X0, XF, Y0, Y1 = 64, 1306, 30, 340  # chart left, the finish line, top and bottom of the plot
 
     def X(v):
         return X0 + (v - r["x0"]) * (XF - X0) / (r["x1"] - r["x0"])
@@ -347,24 +346,23 @@ def race():
 
     zero = Y(next(g["y"] for g in r["grid"] if g["zero"]))
     nx = X(r["now_x"])
-    seats = {x["seat_id"]: x for x in T["seats"]}
     out = ['<defs>'
            '<pattern id="hatch" width="8" height="8" patternUnits="userSpaceOnUse" patternTransform="rotate(45)">'
            '<line x1="0" y1="0" x2="0" y2="8" stroke="#1e3050" stroke-width="2"/></pattern>'
            '<pattern id="chq" width="12" height="12" patternUnits="userSpaceOnUse">'
            '<rect width="6" height="6" fill="#e6edf7"/><rect x="6" y="6" width="6" height="6" fill="#e6edf7"/></pattern>'
-           '<linearGradient id="gLead" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#e6edf7" stop-opacity=".16"/>'
+           '<linearGradient id="gLead" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#e6edf7" stop-opacity=".13"/>'
            '<stop offset="1" stop-color="#e6edf7" stop-opacity="0"/></linearGradient>'
-           '<linearGradient id="gMe" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#00cfff" stop-opacity=".22"/>'
+           '<linearGradient id="gMe" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#00cfff" stop-opacity=".18"/>'
            '<stop offset="1" stop-color="#00cfff" stop-opacity="0"/></linearGradient></defs>']
     # the plus side and the minus side
-    out.append(f'<rect x="{X0}" y="{Y0}" width="{XF - X0}" height="{zero - Y0:.1f}" fill="#00ff88" fill-opacity=".035"/>'
-               f'<rect x="{X0}" y="{zero:.1f}" width="{XF - X0}" height="{Y1 - zero:.1f}" fill="#ff4444" fill-opacity=".035"/>')
+    out.append(f'<rect x="{X0}" y="{Y0}" width="{XF - X0}" height="{zero - Y0:.1f}" fill="#00ff88" fill-opacity=".028"/>'
+               f'<rect x="{X0}" y="{zero:.1f}" width="{XF - X0}" height="{Y1 - zero:.1f}" fill="#ff4444" fill-opacity=".028"/>')
     # every other day a band
     ticks = r["ticks"]
     for i in range(0, len(ticks) - 1, 2):
         xa, xb = X(ticks[i]["x"]), X(ticks[i + 1]["x"])
-        out.append(f'<rect x="{xa:.1f}" y="{Y0}" width="{xb - xa:.1f}" height="{Y1 - Y0}" fill="#e6edf7" fill-opacity=".022"/>')
+        out.append(f'<rect x="{xa:.1f}" y="{Y0}" width="{xb - xa:.1f}" height="{Y1 - Y0}" fill="#e6edf7" fill-opacity=".018"/>')
     for g in r["grid"]:
         y = Y(g["y"])
         dash = ' stroke-dasharray="5 5"' if g["zero"] else ""
@@ -375,9 +373,9 @@ def race():
         out.append(f'<text x="{(xa + xb) / 2:.1f}" y="{RH - 14}" text-anchor="middle" class="ax day">{tk["t"]}</text>')
     # the time left, and the finish
     out.append(f'<rect x="{nx:.1f}" y="{Y0}" width="{XF - nx:.1f}" height="{Y1 - Y0}" fill="url(#hatch)" opacity=".9"/>')
-    out.append(f'<rect x="{XF}" y="{Y0}" width="12" height="{Y1 - Y0}" fill="url(#chq)" opacity=".55"/>'
-               f'<text x="{XF + 6}" y="{Y0 - 12}" text-anchor="middle" class="fin">FINISH</text>')
-    out.append(f'<line x1="{nx:.1f}" x2="{nx:.1f}" y1="{Y0 - 4}" y2="{Y1}" stroke="#00cfff" stroke-opacity=".7"/>'
+    out.append(f'<rect x="{XF}" y="{Y0}" width="12" height="{Y1 - Y0}" fill="url(#chq)" opacity=".45"/>'
+               f'<text x="{XF + 12}" y="{Y0 - 12}" text-anchor="end" class="fin">FINISH</text>')
+    out.append(f'<line x1="{nx:.1f}" x2="{nx:.1f}" y1="{Y0 - 4}" y2="{Y1}" stroke="#00cfff" stroke-opacity=".55"/>'
                f'<text x="{nx:.1f}" y="{Y0 - 12}" text-anchor="middle" class="now">NOW</text>')
 
     lines = sorted(r["lines"], key=lambda ln: (ln["seat_id"] == MINE, ln["role"] == "leader"))
@@ -385,54 +383,26 @@ def race():
     for ln in lines:
         me, lead = ln["seat_id"] == MINE, ln["role"] == "leader"
         if me or lead:
-            p = xy(ln["points"])
-            poly = " ".join(f"{x:.1f},{y:.1f}" for x, y in p)
-            out.append(f'<polygon points="{X0},{zero:.1f} {poly} {p[-1][0]:.1f},{zero:.1f}" fill="url(#{"gMe" if me else "gLead"})"/>')
+            pts = xy(ln["points"])
+            poly = " ".join(f"{x:.1f},{y:.1f}" for x, y in pts)
+            out.append(f'<polygon points="{X0},{zero:.1f} {poly} {pts[-1][0]:.1f},{zero:.1f}" fill="url(#{"gMe" if me else "gLead"})"/>')
     for ln in lines:
         me, lead = ln["seat_id"] == MINE, ln["role"] == "leader"
-        col, wid, op = ("#00cfff", 3, 1) if me else (("#e6edf7", 2.4, 1) if lead else ("#7f93ad", 1.3, .45))
+        col, wid, op = ("#00cfff", 3, 1) if me else (("#e6edf7", 2.4, 1) if lead else ("#7f93ad", 1.3, .4))
         cls = ' class="glow"' if me else (' class="glow2"' if lead else "")
         poly = " ".join(f"{x:.1f},{y:.1f}" for x, y in xy(ln["points"]))
         out.append(f'<polyline points="{poly}" fill="none" stroke="{col}" stroke-width="{wid}" opacity="{op}" stroke-linejoin="round"{cls}/>')
-
-    # the finish board: one row per bot, as near its line's end as the rows allow
-    rows = sorted(r["lines"], key=lambda ln: ln["end_y"])
-    want = [Y(ln["end_y"]) for ln in rows]
-    gap, lo, hi = 30, Y0 + 2, RH - 34
-    ys = list(want)
-    ys[-1] = min(ys[-1], hi)
-    for i in range(len(ys) - 2, -1, -1):  # bottom up: no row below the board, none closer than a gap
-        ys[i] = min(ys[i], ys[i + 1] - gap)
-    ys[0] = max(ys[0], lo)
-    for i in range(1, len(ys)):  # top down: none above the board
-        ys[i] = max(ys[i], ys[i - 1] + gap)
-    rk_fill = {1: "#00ff88", 2: "#00cfff", 3: "#3b82f6"}
-    for ln, ly in zip(rows, ys):
-        me, lead = ln["seat_id"] == MINE, ln["role"] == "leader"
         ey = Y(ln["end_y"])
-        col = "#00cfff" if me else ("#e6edf7" if lead else "#7f93ad")
-        op = 1 if me or lead else .45
-        out.append(f'<path d="M{nx:.1f},{ey:.1f} H{XF + 16} C{XF + 34},{ey:.1f} {XF + 30},{ly:.1f} {LX - 8},{ly:.1f}" fill="none" '
-                   f'stroke="{col}" stroke-opacity="{op}" stroke-width="{1.4 if me or lead else 1}"/>')
         dot = "#00cfff" if me else ("#e6edf7" if lead else ("#ff4444" if ln["roi"] < 0 else "#7f93ad"))
-        out.append(f'<circle cx="{nx:.1f}" cy="{ey:.1f}" r="{4.5 if me or lead else 3}" fill="{dot}"/>')
-        if me:
-            out.append(f'<rect x="{LX - 4}" y="{ly - 13}" width="{RW - LX + 2}" height="26" rx="13" fill="#00cfff" fill-opacity=".13" '
-                       f'stroke="#00cfff" stroke-opacity=".6"/>')
-        rk = ln["rank"]
-        fill = rk_fill.get(rk)
-        out.append(f'<circle cx="{LX + 9}" cy="{ly:.1f}" r="9" fill="{fill or "#111a28"}" stroke="{"none" if fill else "#1e3050"}"/>'
-                   f'<text x="{LX + 9}" y="{ly + 3.5:.1f}" text-anchor="middle" class="rkn" fill="{"#06090f" if fill else "#a9b8cc"}">{rk}</text>')
-        seat = seats.get(ln["seat_id"]) or {}
-        av = seat.get("avatar") or {"shape": "b", "color": "#7f93ad"}
-        out.append(f'<circle cx="{LX + 33}" cy="{ly:.1f}" r="10" fill="#06090f" stroke="{av["color"]}" stroke-width="1.4"/>'
-                   f'<svg x="{LX + 26}" y="{ly - 7:.1f}" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="{av["color"]}" '
-                   f'stroke-width="2" stroke-linecap="round">{BOTS.get(av["shape"], BOTS["b"])}</svg>')
-        name = ln["bot"].replace("House ", "")
-        name = name if len(name) <= 15 else name[:14] + "…"
-        out.append(f'<text x="{LX + 50}" y="{ly + 4:.1f}" class="nm{" me" if me else (" ld" if lead else "")}">{esc(name)}</text>')
-        roi_col = "#00ff88" if ln["roi"] > 0 else ("#ff4444" if ln["roi"] < 0 else "#a9b8cc")
-        out.append(f'<text x="{RW - 8}" y="{ly + 4:.1f}" text-anchor="end" class="pc" fill="{roi_col}">{ln["roi"]:+.2f}%</text>')
+        out.append(f'<circle cx="{nx:.1f}" cy="{ey:.1f}" r="{4.5 if me or lead else 3}" fill="{dot}" '
+                   f'fill-opacity="{1 if me or lead else .8}"/>')
+        if me or lead:
+            name = ln["bot"].replace("House ", "")
+            txt = f'YOU #{ln["rank"]} {ln["roi"]:+.2f}%' if me else f'#1 {name} {ln["roi"]:+.1f}%'
+            w = 8.2 * len(txt) + 22
+            cls = "tagme" if me else "taglead"
+            out.append(f'<g class="{cls}"><rect x="{nx - w - 14:.1f}" y="{ey - 14:.1f}" width="{w:.1f}" height="28" rx="14"/>'
+                       f'<text x="{nx - w / 2 - 14:.1f}" y="{ey + 4.5:.1f}" text-anchor="middle">{esc(txt)}</text></g>')
 
     s_left = max(0, int((datetime.fromisoformat(T["ends_at"]) - NOW).total_seconds()))
     togo = (f'{s_left // 86400}D {s_left % 86400 // 3600:02d}H' if s_left >= 86400
