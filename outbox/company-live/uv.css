@@ -127,8 +127,8 @@ i.lk::before { content: ''; position: absolute; left: 1.5px; top: -5px; width: 6
 .stage.is3d .o3layer { display: block; }
 .stage.is3d::after { content: ''; position: absolute; left: 0; right: 0; top: 0; bottom: 72px; pointer-events: none; z-index: 2;
   background: radial-gradient(ellipse 80% 75% at 50% 50%, transparent 62%, rgba(4, 7, 13, .5) 100%); }
-.p3 { position: absolute; left: 0; top: 0; pointer-events: auto; cursor: pointer; padding: 6px 12px 7px; border-radius: 8px; border: 1px solid var(--c, var(--blue));
-  background: rgba(8, 12, 20, .9); box-shadow: 0 0 16px color-mix(in srgb, var(--c, #3b82f6) 25%, transparent); white-space: nowrap; will-change: transform; transition: box-shadow .2s, border-width .2s; }
+.p3 { position: absolute; left: 0; top: 0; pointer-events: auto; cursor: pointer; padding: 6px 12px 7px; border-radius: 7px; border: 1px solid rgba(223, 230, 238, .26);
+  background: rgba(8, 12, 20, .86); box-shadow: 0 4px 14px rgba(0, 0, 0, .45); white-space: nowrap; will-change: transform; transition: box-shadow .2s, border-width .2s; }
 .p3 .p3h { display: flex; align-items: center; gap: 7px; }
 .p3 .p3h i { width: 7px; height: 7px; border-radius: 50%; box-shadow: 0 0 8px currentColor; flex: none; }
 .p3.work .p3h i { animation: dotp 1.2s infinite; }
@@ -145,7 +145,7 @@ i.lk::before { content: ''; position: absolute; left: 1.5px; top: -5px; width: 6
   padding: 6px 16px; border-radius: 99px; border: 1.2px solid var(--red); background: rgba(10, 14, 23, .94); box-shadow: 0 0 18px rgba(255, 68, 68, .5); animation: needp 1.6s ease-in-out infinite; }
 @keyframes needp { 50% { box-shadow: 0 0 6px rgba(255, 68, 68, .3); } }
 .p3lot { position: absolute; left: 0; top: 0; pointer-events: auto; cursor: pointer; display: flex; flex-direction: column; align-items: center; gap: 2px;
-  font: 700 10px 'JetBrains Mono'; letter-spacing: .1em; color: var(--cyan); text-shadow: 0 0 8px rgba(0, 207, 255, .6); }
+  font: 700 10px 'JetBrains Mono'; letter-spacing: .1em; color: #dfe6ee; text-shadow: 0 0 10px rgba(0, 207, 255, .9); }
 .p3lot b { font: 400 26px 'Archivo Black'; line-height: 1; }
 
 /* ---------- the visitor's frame ---------- */

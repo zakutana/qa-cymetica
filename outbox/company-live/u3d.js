@@ -4,8 +4,10 @@
  * zooms to the cursor. Banners and the tooltip are HTML over the canvas, so they stay sharp and clickable. If the
  * renderer cannot start, the page keeps the flat map. The office in 3D is the second half of this file. */
 import * as THREE from 'three/webgpu';
-import { pass, renderOutput } from 'three/tsl';
+import { pass, renderOutput, vec4, mrt, output, normalView } from 'three/tsl';
 import { bloom } from 'three/addons/tsl/display/BloomNode.js';
+import { ao } from 'three/addons/tsl/display/GTAONode.js';
+import { RoundedBoxGeometry } from 'three/addons/geometries/RoundedBoxGeometry.js';
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 import { mergeGeometries } from 'three/addons/utils/BufferGeometryUtils.js';
 
@@ -69,9 +71,18 @@ function amat(hex) {
 // keeps ONE material for every instance on the page, so with the map and a preview both running, whichever
 // updated last would draw into both canvases. This one owns its material.
 class Post {
-  constructor(renderer, scene, camera, strength, radius, threshold) {
+  constructor(renderer, scene, camera, strength, radius, threshold, opts) {
     this.renderer = renderer;
-    const sp = pass(scene, camera, { samples: 4 }), col = sp.getTextureNode('output');
+    const sp = pass(scene, camera, { samples: 4 });
+    let col = sp.getTextureNode('output');
+    // ambient occlusion (the office): where things meet -- a desk on the floor, a wall in a corner -- the light is
+    // softer, as in a render. The scene writes its normals beside its colour in the same pass.
+    if (opts && opts.ao) {
+      sp.setMRT(mrt({ output, normal: normalView }));
+      const a = ao(sp.getTextureNode('depth'), sp.getTextureNode('normal'), camera);
+      a.resolutionScale = 0.5; a.radius.value = opts.ao.radius; a.scale.value = opts.ao.scale; a.thickness.value = opts.ao.thickness || 1;
+      col = vec4(col.rgb.mul(a.getTextureNode().r), col.a); this.ao = a;
+    }
     this.material = new THREE.NodeMaterial();
     this.material.fragmentNode = renderOutput(col.add(bloom(col, strength, radius, threshold)), renderer.toneMapping, renderer.outputColorSpace);
     this.quad = new THREE.QuadMesh(this.material);
@@ -1045,7 +1056,7 @@ function preview(el, o) {
 const STC = { working: 0x00cfff, queued: 0x3b82f6, waiting: 0xff4444, idle: 0x7f93ad };
 const TONEC = { cyan: '#00cfff', red: '#ff4444', blue: '#dfe6ee', dim: '#a9b8cc' };   // "Up next" white on a plate; its dot stays blue
 const OFFICE = { bg: 0x020409, lamp: 0xf2f6fa, mon: 0x6f8f80 };
-const WH = 1.9;   // a room's glass walls
+const WH = 2.3;   // a room's glass walls: a third of its width, as in the picture
 const OM = {};
 
 /* ---------------- space: the sky the office floats in ---------------- */
@@ -1101,7 +1112,7 @@ function starTex() {
 function spaceSky() {
   const g = new THREE.Group(), R = rng(31), D = 380;
   const PAL = { teal: [[0, 40, 55], [0, 112, 122], [80, 190, 185]], blue: [[6, 26, 80], [30, 95, 200], [140, 190, 255]], green: [[0, 60, 45], [0, 150, 110], [120, 250, 190]] };
-  [[-36, -12, 66, 8, 0.4, 'teal'], [-62, -32, 56, 3, 0.55, 'teal'], [-6, -8, 44, 37, 0.35, 'blue'], [34, -52, 60, 13, 0.4, 'blue'],
+  [[-36, -12, 66, 8, 0.4, 'teal'], [-62, -32, 56, 3, 0.55, 'teal'], [-6, -8, 44, 37, 0.12, 'blue'], [34, -52, 60, 13, 0.1, 'blue'],
     [150, -15, 80, 17, 0.55, 'teal'], [95, -35, 60, 23, 0.35, 'green'], [-130, -30, 70, 29, 0.45, 'blue']].forEach(([az, el, size, seed, op, tone]) => {
     const m = new THREE.Mesh(G.plane, new THREE.MeshBasicMaterial({ map: nebTex(seed, ...PAL[tone]), transparent: true, opacity: op, blending: THREE.AdditiveBlending, depthWrite: false, fog: false }));
     const s = 2 * D * Math.tan(size * Math.PI / 360);
@@ -1114,6 +1125,7 @@ function spaceSky() {
     cc.set(R() < 0.1 ? 0x9fe8ff : 0xeef4fa).multiplyScalar(0.25 + R() * R() * 1.1); col.set([cc.r, cc.g, cc.b], i * 3);
   }
   const pg = new THREE.BufferGeometry(); pg.setAttribute('position', new THREE.BufferAttribute(pos, 3)); pg.setAttribute('color', new THREE.BufferAttribute(col, 3));
+  pg.setAttribute('normal', new THREE.BufferAttribute(new Float32Array(N * 3).map((v, i) => (i % 3 === 1 ? 1 : 0)), 3));
   const pts = new THREE.Points(pg, new THREE.PointsMaterial({ vertexColors: true, size: 1, sizeAttenuation: false, fog: false, depthWrite: false })); pts.frustumCulled = false; g.add(pts);
   const B = 240, im = new THREE.InstancedMesh(G.plane, new THREE.MeshBasicMaterial({ map: starTex(), transparent: true, blending: THREE.AdditiveBlending, depthWrite: false, fog: false }), B), o = new THREE.Object3D();
   for (let i = 0; i < B; i++) {
@@ -1215,8 +1227,11 @@ function bigRockGeo(seed, detail = 8) {
   const n3 = (x, y, z, o) => (f(x, y, o) + f(y + 5.2, z + 1.3, o) + f(z + 9.1, x + 3.7, o)) / 3;
   for (let i = 0; i < p.count; i++) {
     v.fromBufferAttribute(p, i);
-    v.multiplyScalar(1 + 1.5 * (n3(v.x * 1.3 + 3, v.y * 1.3, v.z * 1.3, 4) - 0.5) + 1.4 * (n3(v.x * 4.2 + 7, v.y * 4.2, v.z * 4.2, 3) - 0.5) + 0.9 * (n3(v.x * 9 + 2, v.y * 9, v.z * 9, 2) - 0.5));
-    if (v.y > 0.2) v.y = 0.2 + (v.y - 0.2) * 0.2; else v.y *= 1.3;
+    // lumps, not spikes: a broad swell, smaller knuckles, a little grit, and craters pressed in
+    let k = 1 + 1.3 * (n3(v.x * 1.3 + 3, v.y * 1.3, v.z * 1.3, 4) - 0.5) + 0.7 * (n3(v.x * 3.6 + 7, v.y * 3.6, v.z * 3.6, 3) - 0.5) + 0.25 * (n3(v.x * 9 + 2, v.y * 9, v.z * 9, 2) - 0.5);
+    k -= 0.12 * sstep(0.62, 0.8, n3(v.x * 2.4 + 11, v.y * 2.4, v.z * 2.4, 2));
+    v.multiplyScalar(k);
+    if (v.y > 0.2) v.y = 0.2 + (v.y - 0.2) * 0.2; else v.y *= 1.15;
     p.setXYZ(i, v.x, v.y, v.z);
   }
   g.computeVertexNormals(); return g;
@@ -1266,6 +1281,13 @@ function plumeTex() {
   return TX.plume || (TX.plume = ctex(32, 256, (g, W, H) => { const gr = g.createLinearGradient(0, 0, 0, H); gr.addColorStop(0, 'rgba(255,255,255,1)'); gr.addColorStop(0.35, 'rgba(255,255,255,.45)'); gr.addColorStop(1, 'rgba(255,255,255,0)'); g.fillStyle = gr; g.fillRect(0, 0, W, H); }));
 }
 function std(o) { return new THREE.MeshStandardMaterial(o); }
+// a rounded box, one geometry per size: shared, so a layout's release never frees it
+const RB = new Map();
+function rboxGeo(w, h, d, r) {
+  const k = [w, h, d, r].map((v) => v.toFixed(3)).join(',');
+  let g = RB.get(k); if (!g) { g = new RoundedBoxGeometry(w, h, d, 2, Math.max(0.001, Math.min(r, w / 2 - 0.001, h / 2 - 0.001, d / 2 - 0.001))); RB.set(k, g); }
+  return g;
+}
 function omats() {
   if (OM.tile) return;
   // matte where it is painted, a little gloss on the floors: the office is lit, it does not have to mirror anything
@@ -1276,7 +1298,7 @@ function omats() {
   OM.rimDark = std({ color: 0x1b222b, roughness: 0.5, metalness: 0.35 });
   OM.hull = std({ map: hullTex(), emissiveMap: TX.hullGlow, emissive: 0xffffff, emissiveIntensity: 1.1, roughness: 0.5, metalness: 0.35 });
   OM.hullLow = std({ color: 0x141b25, roughness: 0.55, metalness: 0.35 });
-  OM.glass = std({ color: 0x9fc4d6, envMapIntensity: 0.25, transparent: true, opacity: 0.035, roughness: 0.04, metalness: 0.2, depthWrite: false, side: THREE.DoubleSide });
+  OM.glass = std({ color: 0xa9b8c6, envMapIntensity: 0.55, transparent: true, opacity: 0.055, roughness: 0.04, metalness: 0.2, depthWrite: false, side: THREE.DoubleSide });
   OM.wallDark = std({ color: 0x161b21, roughness: 0.5, metalness: 0.3 });
   OM.frame = std({ color: 0x2e3641, roughness: 0.42, metalness: 0.45 });
   OM.desk = std({ color: 0x1b2026, roughness: 0.45, metalness: 0.3 });
@@ -1290,25 +1312,27 @@ function omats() {
   OM.solar = std({ map: solarTex(), roughness: 0.22, metalness: 0.5, emissive: 0x3b82f6, emissiveIntensity: 0.08 });
   OM.engine = std({ color: 0x4a5462, roughness: 0.32, metalness: 0.6 });
   OM.engineDark = std({ color: 0x1a2028, roughness: 0.4, metalness: 0.5, side: THREE.DoubleSide });
-  OM.rock = std({ map: rockTex(), roughness: 0.95, metalness: 0.02, flatShading: true });
+  OM.rock = std({ map: rockTex(), bumpMap: TX.rock, bumpScale: 5, roughness: 0.95, metalness: 0.02 });
   OM.pot = std({ color: 0x232a33, roughness: 0.5, metalness: 0.3 });
   OM.bush = std({ color: 0x1f6b45, roughness: 0.85, emissive: 0x00ff88, emissiveIntensity: 0.04 });
   OM.holo = new THREE.MeshBasicMaterial({ map: holoTex(), transparent: true, blending: THREE.AdditiveBlending, depthWrite: false, side: THREE.DoubleSide });
   OM.plume = new THREE.MeshBasicMaterial({ map: plumeTex(), color: new THREE.Color(0x00cfff).multiplyScalar(0.9), opacity: 0.8, transparent: true, blending: THREE.AdditiveBlending, depthWrite: false, side: THREE.DoubleSide });
   OM.dash = emis('#dfe6ee', 0.55);
   // the vault's coins: ET10 green, USDC blue, both metal with their own light
-  OM.coinG = std({ color: 0x0f5a3a, emissive: 0x00ff88, emissiveIntensity: 0.35, metalness: 0.7, roughness: 0.3 });
-  OM.coinB = std({ color: 0x1b3a6b, emissive: 0x3b82f6, emissiveIntensity: 0.5, metalness: 0.7, roughness: 0.3 });
+  OM.coinG = std({ color: 0x16a36a, emissive: 0x00ff88, emissiveIntensity: 0.22, metalness: 0.8, roughness: 0.25 });
+  OM.coinB = std({ color: 0x2f6fd8, emissive: 0x3b82f6, emissiveIntensity: 0.3, metalness: 0.8, roughness: 0.25 });
+  G.coin = new THREE.CylinderGeometry(1, 1, 1, 28);
   // astronauts: a white suit, a helmet, a pack
   OM.suit = std({ color: 0xe6ebf0, roughness: 0.5, metalness: 0.08 });
   OM.pack = std({ color: 0x8a99ab, roughness: 0.5, metalness: 0.25 });
-  OM.capsule = new THREE.CapsuleGeometry(0.2, 0.4, 4, 14);
+  OM.torso = new THREE.CapsuleGeometry(0.16, 0.26, 4, 14); OM.limb = new THREE.CapsuleGeometry(0.055, 0.2, 3, 10); OM.leg = new THREE.CapsuleGeometry(0.07, 0.36, 3, 10);
+  OM.chair = std({ color: 0x1d242c, roughness: 0.5, metalness: 0.25 });
   OM.green = amat('#00ff88'); OM.cyan = amat('#00cfff'); OM.blue = amat('#3b82f6'); OM.red = amat('#ff4444');
   G.bigRock = bigRockGeo(11, 16); G.smallRock = bigRockGeo(27, 3);
   G.plume = new THREE.CylinderGeometry(0.42, 0.05, 1, 24, 1, true);
 }
 // what a layout, a selection or a station built for itself goes back to the GPU when it is cleared; the shared
-// geometries (G, OM.capsule), materials (M, AM, OM) and textures (TX) stay, since the next one draws with them
+// geometries (G, OM.torso and the limbs, the rounded boxes), materials (M, AM, OM) and textures (TX) stay, since the next one draws with them
 // again. A station's merged parts (userData.own) are its own geometry.
 function release(root) {
   const shared = new Set(Object.values(TX));
@@ -1316,7 +1340,7 @@ function release(root) {
     if (v && v.isMaterial) { shared.add(v); if (v.map) shared.add(v.map); } else if (v && typeof v === 'object') Object.values(v).forEach((m) => { if (m && m.isMaterial) shared.add(m); });
   }));
   root.traverse((o) => {
-    if (o.isLight && o.dispose) o.dispose();
+    if ((o.isLight || o.isInstancedMesh) && o.dispose) o.dispose();
     if (o.userData.own && o.geometry) o.geometry.dispose();
     (o.material ? [].concat(o.material) : []).forEach((m) => {
       if (shared.has(m)) return;
@@ -1410,10 +1434,10 @@ class Office3D {
     this.sel = null; this.cells = {}; this.paths = {}; this.packets = []; this.rooms = {}; this.fitted = false; this.hover = null;
     this.mouse = new THREE.Vector2(); this.ray = new THREE.Raycaster();
     this.scene = new THREE.Scene(); this.scene.background = new THREE.Color(OFFICE.bg); this.scene.fog = new THREE.Fog(OFFICE.bg, 140, 360);
-    this.camera = new THREE.PerspectiveCamera(34, 2, 0.3, 700);
+    this.camera = new THREE.PerspectiveCamera(36, 2, 0.3, 700);
     this.renderer = new THREE.WebGPURenderer({ antialias: false });
     this.renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
-    this.renderer.toneMapping = THREE.ACESFilmicToneMapping; this.renderer.toneMappingExposure = 1.15;
+    this.renderer.toneMapping = THREE.ACESFilmicToneMapping; this.renderer.toneMappingExposure = 1.35;
     this.renderer.shadowMap.enabled = true; this.renderer.shadowMap.type = THREE.PCFSoftShadowMap;
     el.appendChild(this.renderer.domElement);
     this.controls = new OrbitControls(this.camera, this.renderer.domElement);
@@ -1424,7 +1448,7 @@ class Office3D {
     S.environment = envTex();
     // white light from the camera's side, so the faces you see are lit; a cool one from below for the hull and the
     // rock; a cyan rim from behind
-    S.add(new THREE.HemisphereLight(0xdfe8f1, 0x0a0d12, 0.75), new THREE.AmbientLight(0x1b222b, 0.4));
+    S.add(new THREE.HemisphereLight(0xdfe8f1, 0x0a0d12, 0.95), new THREE.AmbientLight(0x1b222b, 0.5));
     this.sun = new THREE.DirectionalLight(0xf4f8fc, 2.4); this.sun.castShadow = true; this.sun.shadow.mapSize.set(2048, 2048);
     this.sun.shadow.normalBias = 0.02; this.sun.shadow.bias = -0.0005; S.add(this.sun); S.add(this.sun.target);
     const rim = new THREE.DirectionalLight(0x00cfff, 0.5); rim.position.set(-30, 12, -40); S.add(rim);
@@ -1435,7 +1459,8 @@ class Office3D {
     this.clock = new THREE.Clock();
     this.bind();
     this.renderer.init().then(() => {
-      try { this.post = new Post(this.renderer, this.scene, this.camera, 0.6, 0.45, 0.8); } catch (e) { this.post = null; }
+      try { this.post = new Post(this.renderer, this.scene, this.camera, 0.6, 0.45, 0.8, { ao: { radius: 0.8, scale: 1.6 } }); }
+      catch (e) { console.warn('office: no ambient occlusion', e); try { this.post = new Post(this.renderer, this.scene, this.camera, 0.6, 0.45, 0.8); } catch (e2) { this.post = null; } }
       this.renderer.setAnimationLoop(() => this.frame());
     }).catch((e) => { console.error('3D office could not start:', e); if (this.onFail) this.onFail(e); });
     if (window.ResizeObserver) new ResizeObserver(() => this.resize()).observe(el);
@@ -1450,6 +1475,10 @@ class Office3D {
   box(g, x0, y0, z0, w, d, h, mat, shadow) { return this.part(g, G.box, mat, w, h, d, x0 + w / 2, z0 + h / 2, y0 + d / 2, shadow); }
   // a cylinder standing on the plan: centre x,y, radius, from z0 up h
   cyl(g, x, y, z0, rad, h, mat, geom) { return this.part(g, geom || G.cyl, mat, rad, h, rad, x, z0 + h / 2, y); }
+  // a box with soft edges, at its real size: furniture whose edges catch the light
+  rb(g, x0, y0, z0, w, d, h, mat, r = 0.05, shadow = true) {
+    const m = new THREE.Mesh(rboxGeo(w, h, d, r), mat); m.position.copy(this.V(x0 + w / 2, y0 + d / 2, z0 + h / 2)); if (shadow) { m.castShadow = true; m.receiveShadow = true; } g.add(m); return m;
+  }
 
   layout(opts) {
     const S = CO.S, L = CO.iso, born = opts && opts.born;
@@ -1595,53 +1624,80 @@ class Office3D {
     [[x0, y0, RS, e], [x0, y0 + RS - e, RS, e], [x0, y0, e, RS], [x0 + RS - e, y0, e, RS]].forEach(([x, y, w, d]) => { this.box(g, x, y, z1, w, d, e, r.edgeM, false); this.box(g, x, y, z0, w, d, e, r.edgeM, false); });
     [[x0, y0], [x0 + RS - e, y0], [x0, y0 + RS - e], [x0 + RS - e, y0 + RS - e]].forEach(([x, y]) => this.box(g, x, y, z0, e, e, H, r.edgeM, false));
     // a lamp over the room in the colour of what it is doing: it lights the desks, the people and the floor
-    r.lamp = new THREE.PointLight(OFFICE.lamp, 6, 11, 1.3); r.lamp.position.copy(this.V(x0 + RS / 2, y0 + RS / 2, 2.5)); g.add(r.lamp);
+    r.lamp = new THREE.PointLight(OFFICE.lamp, 9, 11, 1.6); r.lamp.position.copy(this.V(x0 + RS / 2, y0 + RS / 2, 2.5)); g.add(r.lamp);
   }
   // a wall screen on the back wall: what runs now, or why it waits
   wallScreen(r, u0, u1) {
     const s = screen(u1 - u0, 0.62), mat = new THREE.MeshBasicMaterial({ map: s.tex, toneMapped: false });
-    const m = new THREE.Mesh(G.plane, mat); m.scale.set(u1 - u0, 0.62, 1); m.position.copy(this.V(r.x0 + (u0 + u1) / 2, r.y0 + 0.1, 1.3)); r.g.add(m);
-    this.box(r.g, r.x0 + u0 - 0.05, r.y0 + 0.05, 0.94, u1 - u0 + 0.1, 0.04, 0.72, OM.dark, false);
+    const m = new THREE.Mesh(G.plane, mat); m.scale.set(u1 - u0, 0.62, 1); m.position.copy(this.V(r.x0 + (u0 + u1) / 2, r.y0 + 0.1, 1.45)); r.g.add(m);
+    this.box(r.g, r.x0 + u0 - 0.05, r.y0 + 0.05, 1.09, u1 - u0 + 0.1, 0.04, 0.72, OM.dark, false);
     r.wall = s; return s;
   }
   kanban(r, v0 = 1.5, v1 = 5.8) {
     const s = screen(v1 - v0, 0.62), mat = new THREE.MeshBasicMaterial({ map: s.tex, toneMapped: false });
-    const m = new THREE.Mesh(G.plane, mat); m.scale.set(v1 - v0, 0.62, 1); m.rotation.y = Math.PI / 2; m.position.copy(this.V(r.x0 + 0.1, r.y0 + (v0 + v1) / 2, 1.3)); r.g.add(m);
-    this.box(r.g, r.x0 + 0.05, r.y0 + v0 - 0.05, 0.94, 0.04, v1 - v0 + 0.1, 0.72, OM.dark, false);
+    const m = new THREE.Mesh(G.plane, mat); m.scale.set(v1 - v0, 0.62, 1); m.rotation.y = Math.PI / 2; m.position.copy(this.V(r.x0 + 0.1, r.y0 + (v0 + v1) / 2, 1.45)); r.g.add(m);
+    this.box(r.g, r.x0 + 0.05, r.y0 + v0 - 0.05, 1.09, 0.04, v1 - v0 + 0.1, 0.72, OM.dark, false);
     r.kb = s;
   }
-  // a desk facing the room: two screens on it (green charts; cyan while its astronaut works), a keyboard
+  // a desk facing the room: a top on two side panels and a drawer unit, two screens on stands (green charts; cyan
+  // while its astronaut works), a keyboard, a mug
   desk(r, x, y, i) {
     const g = r.g;
-    this.box(g, x, y, 0.08, 1.9, 0.85, 0.42, OM.desk); this.box(g, x - 0.03, y - 0.03, 0.5, 1.96, 0.91, 0.04, OM.deskTop, false);
+    this.rb(g, x + 0.02, y + 0.06, 0.08, 0.12, 0.72, 0.42, OM.desk, 0.03);
+    this.rb(g, x + 1.76, y + 0.06, 0.08, 0.12, 0.72, 0.42, OM.desk, 0.03);
+    this.rb(g, x + 1.12, y + 0.08, 0.08, 0.6, 0.68, 0.4, OM.desk, 0.03);
+    for (let k = 0; k < 3; k++) this.box(g, x + 1.18, y + 0.76, 0.15 + k * 0.12, 0.48, 0.012, 0.09, OM.frame, false);
+    this.rb(g, x - 0.03, y - 0.03, 0.5, 1.96, 0.91, 0.06, OM.deskTop, 0.025);
     const scr = new THREE.MeshBasicMaterial({ map: monTex(), color: new THREE.Color(OFFICE.mon), toneMapped: false });
-    [x + 0.14, x + 0.98].forEach((mx) => {
-      this.box(g, mx + 0.35, y + 0.2, 0.54, 0.08, 0.06, 0.14, OM.frame, false);
-      this.box(g, mx, y + 0.12, 0.66, 0.78, 0.05, 0.46, OM.dark);
-      const face = new THREE.Mesh(G.plane, scr); face.scale.set(0.72, 0.4, 1); face.position.copy(this.V(mx + 0.39, y + 0.175, 0.89)); g.add(face);
+    [x + 0.12, x + 0.98].forEach((mx) => {
+      this.cyl(g, mx + 0.39, y + 0.26, 0.56, 0.13, 0.02, OM.frame);
+      this.box(g, mx + 0.36, y + 0.2, 0.58, 0.06, 0.05, 0.14, OM.frame, false);
+      this.rb(g, mx, y + 0.12, 0.68, 0.8, 0.06, 0.46, OM.dark, 0.025);
+      const face = new THREE.Mesh(G.plane, scr); face.scale.set(0.72, 0.38, 1); face.position.copy(this.V(mx + 0.4, y + 0.185, 0.91)); g.add(face);
     });
-    this.box(g, x + 0.66, y + 0.5, 0.54, 0.6, 0.18, 0.02, OM.frame, false);
+    this.rb(g, x + 0.66, y + 0.48, 0.56, 0.6, 0.2, 0.03, OM.frame, 0.01);
+    this.cyl(g, x + 1.62, y + 0.6, 0.56, 0.05, 0.1, OM.white);
     r.mons[i] = scr;
   }
-  agent(r, x, y, i, label) {
-    // an astronaut: white suit, white helmet with a dark visor turned to the desk, a pack, a light on its chest
-    const g = new THREE.Group(); g.position.copy(this.V(x, y, 0.08)); g.scale.setScalar(1.3); r.g.add(g);
-    const b = new THREE.Mesh(OM.capsule, OM.suit); b.position.y = 0.5; b.castShadow = true; g.add(b);
-    const h = new THREE.Mesh(G.sphere, OM.suit); h.scale.setScalar(0.22); h.position.y = 1.08; h.castShadow = true; g.add(h);
-    const visorM = std({ color: 0x05080c, emissive: 0x00cfff, emissiveIntensity: 0.06, roughness: 0.1, metalness: 0.8 });
-    const vz = new THREE.Mesh(G.sphere, visorM); vz.scale.set(0.165, 0.12, 0.11); vz.position.set(0, 1.08, -0.13); g.add(vz);
-    const pack = new THREE.Mesh(G.box, OM.pack); pack.scale.set(0.32, 0.4, 0.15); pack.position.set(0, 0.62, 0.23); g.add(pack);
-    const chest = new THREE.Mesh(G.box, OM.pack); chest.scale.set(0.1, 0.06, 0.02); chest.position.set(0, 0.72, -0.2); g.add(chest);
+  // An astronaut: a white suit, a helmet with a dark visor, a pack, arms to the keyboard. At a desk it sits on its
+  // chair; it stands up to walk (wander) and the Manager stands at its dais. Visor and chest light go cyan at work.
+  agent(r, x, y, i, label, opts) {
+    const at = this.V(x, y, 0.08), S = 1.25, standing = !!(opts && opts.stand);
+    const cm = (geom, mat, px, py, pz, rx) => { const m = new THREE.Mesh(geom, mat); m.position.set(px, py, pz); if (rx) m.rotation.x = rx; m.castShadow = true; m.receiveShadow = true; return m; };
+    if (!standing) {
+      const chair = new THREE.Group(); chair.position.copy(at); chair.scale.setScalar(S); r.g.add(chair);
+      const pole = cm(G.cyl, OM.frame, 0, 0.21, 0.06), base = cm(G.cyl, OM.dark, 0, 0.03, 0.06);
+      pole.scale.set(0.035, 0.36, 0.035); base.scale.set(0.26, 0.03, 0.26);
+      chair.add(cm(rboxGeo(0.5, 0.08, 0.48, 0.03), OM.chair, 0, 0.42, 0.06), cm(rboxGeo(0.48, 0.5, 0.07, 0.03), OM.chair, 0, 0.74, 0.3, -0.12), pole, base);
+    }
+    const g = new THREE.Group(); g.position.copy(at); g.scale.setScalar(S); r.g.add(g);
+    const up = new THREE.Group(); g.add(up);
+    up.add(cm(OM.torso, OM.suit, 0, 0.75, 0.04));
+    const helmet = cm(G.sphere, OM.suit, 0, 1.13, 0.02); helmet.scale.setScalar(0.19); up.add(helmet);
+    const visorM = std({ color: 0x05080c, emissive: 0x00cfff, emissiveIntensity: 0.06, roughness: 0.08, metalness: 0.85 });
+    const vz = cm(G.sphere, visorM, 0, 1.13, -0.1); vz.scale.set(0.15, 0.11, 0.1); up.add(vz);
+    up.add(cm(rboxGeo(0.3, 0.38, 0.14, 0.04), OM.pack, 0, 0.8, 0.21));
+    const chest = cm(G.box, OM.pack, 0, 0.84, -0.13); chest.scale.set(0.1, 0.06, 0.02); up.add(chest);
+    [-1, 1].forEach((s) => {
+      up.add(cm(OM.limb, OM.suit, s * 0.21, 0.82, -0.04, 0.45), cm(OM.limb, OM.suit, s * 0.19, 0.67, -0.22, 1.45));
+      const hand = cm(G.sphere, OM.pack, s * 0.17, 0.66, -0.36); hand.scale.setScalar(0.055); up.add(hand);
+    });
+    const sit = new THREE.Group(), stand = new THREE.Group(); g.add(sit, stand);
+    [-1, 1].forEach((s) => {
+      sit.add(cm(OM.limb, OM.suit, s * 0.09, 0.5, -0.12, Math.PI / 2), cm(OM.limb, OM.suit, s * 0.09, 0.27, -0.27), cm(rboxGeo(0.12, 0.08, 0.18, 0.03), OM.pack, s * 0.09, 0.04, -0.31));
+      stand.add(cm(OM.leg, OM.suit, s * 0.09, 0.3, 0.04), cm(rboxGeo(0.12, 0.08, 0.18, 0.03), OM.pack, s * 0.09, 0.04, 0));
+    });
+    sit.visible = !standing; stand.visible = standing;
     const ringM = emis('#00cfff', 0); const ring = new THREE.Mesh(G.ring, ringM); ring.rotation.x = Math.PI / 2; ring.scale.setScalar(0.4); ring.position.y = 0.02; g.add(ring);
     const el = document.createElement('div'); el.className = 'a3'; el.textContent = label; this.layer.appendChild(el);
-    const a = { g, b, by: 0.5, h, visorM, chest, ring, ringM, el, home: g.position.clone(), phase: (i + r.x0 * 0.37) % 6.28, key: r.key + ':' + i, room: r, label };
+    const a = { g, b: up, by: standing ? 0.1 : 0, standing, sit, stand, visorM, chest, ring, ringM, el, home: g.position.clone(), phase: (i + r.x0 * 0.37) % 6.28, key: r.key + ':' + i, room: r, label };
     r.agents.push(a); return a;
   }
   plate(r, cls) {
     const el = document.createElement('div'); el.className = 'p3' + (cls ? ' ' + cls : ''); el.setAttribute('data-key', r.key); this.layer.appendChild(el);
     el.addEventListener('click', () => CO.emit('office:click', r.key));
     el.addEventListener('pointerenter', () => this.setHover(r.key)); el.addEventListener('pointerleave', () => this.setHover(null));
-    r.plate = el; r.plateAt = this.V(r.x0 + 4.4, r.y0 + 5.75, 1.45); return el;
+    r.plate = el; r.plateAt = this.V(r.x0 + 4.4, r.y0 + 5.75, 1.7); return el;
   }
   // A department's room: its computer in the back corner, its screens on the back walls, what it works with in
   // the back right (racks, lab machines, a league table), a row of desks with an astronaut at each.
@@ -1659,18 +1715,19 @@ class Office3D {
     ex.forEach((e, i) => { this.desk(r, x0 + xs[i], y0 + 2.75, i); if (k === 'trading_desk') this.sideScreens(r, x0 + xs[i], y0 + 2.75); });
     ex.forEach((e, i) => this.agent(r, x0 + xs[i] + 0.95, y0 + 4.05, i, CO.expertName(e)));
     this.terminal(r, x0 + 0.3, y0 + 0.32, d.link || CO.DEPT_LINK[k] || CO.DEPT_LINK.custom);
-    this.plant(r, x0 + 0.42, y0 + 6.5);
+    this.cabinet(r, x0 + 6.45, y0 + 3.0, 0.45, 2.3, 0.72);
+    this.plant(r, x0 + 0.42, y0 + 6.5); this.plant(r, x0 + 6.55, y0 + 6.55, 0.8);
     this.plate(r);
   }
   boardTex(r, u0, u1, tex) {
-    const m = new THREE.Mesh(G.plane, new THREE.MeshBasicMaterial({ map: tex, toneMapped: false })); m.scale.set(u1 - u0, 0.7, 1); m.position.copy(this.V(r.x0 + (u0 + u1) / 2, r.y0 + 0.1, 1.3)); r.g.add(m);
-    this.box(r.g, r.x0 + u0 - 0.05, r.y0 + 0.05, 0.9, u1 - u0 + 0.1, 0.04, 0.8, OM.dark, false);
+    const m = new THREE.Mesh(G.plane, new THREE.MeshBasicMaterial({ map: tex, toneMapped: false })); m.scale.set(u1 - u0, 0.7, 1); m.position.copy(this.V(r.x0 + (u0 + u1) / 2, r.y0 + 0.1, 1.45)); r.g.add(m);
+    this.box(r.g, r.x0 + u0 - 0.05, r.y0 + 0.05, 1.05, u1 - u0 + 0.1, 0.04, 0.8, OM.dark, false);
   }
   // the department's computer: a console whose screen opens its page on cymetica.com
   terminal(r, x, y, link) {
     const g = r.g;
-    this.box(g, x, y, 0.08, 1.25, 0.8, 0.5, OM.desk);
-    this.box(g, x + 0.08, y + 0.1, 0.58, 1.09, 0.08, 0.76, OM.dark);
+    this.rb(g, x, y, 0.08, 1.25, 0.8, 0.5, OM.desk, 0.04);
+    this.rb(g, x + 0.08, y + 0.1, 0.58, 1.09, 0.08, 0.76, OM.dark, 0.03);
     const scr = new THREE.MeshBasicMaterial({ map: this.pcTex(), toneMapped: false });
     const face = new THREE.Mesh(G.plane, scr); face.scale.set(1.0, 0.68, 1); face.position.copy(this.V(x + 0.625, y + 0.185, 0.96)); g.add(face);
     const hit = new THREE.Mesh(G.box, M.hit); hit.scale.set(1.35, 1.4, 1.0); hit.position.copy(this.V(x + 0.62, y + 0.4, 0.75)); hit.userData.pc = link; g.add(hit);
@@ -1683,30 +1740,47 @@ class Office3D {
     g.fillStyle = '#00ff88'; g.font = '700 96px JetBrains Mono, monospace'; g.textAlign = 'center'; g.textBaseline = 'middle'; g.fillText('↗', 128, 92);
     const t = new THREE.CanvasTexture(c); t.colorSpace = THREE.SRGBColorSpace; this._pc = t; return t;
   }
-  plant(r, x, y) {
-    this.cyl(r.g, x, y, 0.08, 0.24, 0.36, OM.pot);
-    [[0, 0, 0.62, 0.26], [-0.12, 0.08, 0.74, 0.2], [0.13, -0.05, 0.78, 0.19], [0.02, 0.1, 0.92, 0.16]].forEach(([dx, dy, z, s]) => {
-      const m = new THREE.Mesh(G.sphere, OM.bush); m.scale.set(s, s * 1.1, s); m.position.copy(this.V(x + dx, y + dy, z)); m.castShadow = true; r.g.add(m);
+  plant(r, x, y, k = 1) {
+    this.cyl(r.g, x, y, 0.08, 0.25 * k, 0.4 * k, OM.pot);
+    this.cyl(r.g, x, y, 0.08 + 0.4 * k, 0.27 * k, 0.04, OM.frame);
+    [[0, 0, 0.72, 0.27], [-0.13, 0.09, 0.84, 0.21], [0.14, -0.06, 0.88, 0.2], [0.03, 0.12, 1.02, 0.17], [-0.05, -0.1, 0.98, 0.16]].forEach(([dx, dy, z, s]) => {
+      const m = new THREE.Mesh(G.sphere, OM.bush); m.scale.set(s * k, s * 1.1 * k, s * k); m.position.copy(this.V(x + dx * k, y + dy * k, 0.08 + (z - 0.08) * k)); m.castShadow = true; r.g.add(m);
     });
+  }
+  // a low cabinet against a wall, its doors marked, a lit strip along its top
+  cabinet(r, x, y, w, d, h) {
+    this.rb(r.g, x, y, 0.08, w, d, h, OM.desk, 0.04);
+    this.rb(r.g, x - 0.02, y - 0.02, 0.08 + h, w + 0.04, d + 0.04, 0.04, OM.deskTop, 0.015);
+    const along = d > w, n = Math.max(1, Math.round((along ? d : w) / 0.6));
+    for (let k = 1; k < n; k++) this.box(r.g, along ? x - 0.01 : x + k * w / n, along ? y + k * d / n : y - 0.01, 0.14, along ? 0.012 : 0.012, along ? 0.012 : 0.012, h - 0.12, OM.frame, false);
   }
   // server racks in a row, fronts to the room: slots, vents, lights; a few lights blink on their own
   racks(r, x, y, n) {
     for (let i = 0; i < n; i++) {
-      const rx = x + i * 0.72, m = new THREE.Mesh(G.box, [OM.rack, OM.rack, OM.frame, OM.rack, OM.rackFace, OM.rack]);
-      m.scale.set(0.64, 1.6, 0.74); m.position.copy(this.V(rx + 0.32, y + 0.37, 0.88)); m.castShadow = true; m.receiveShadow = true; r.g.add(m);
+      const rx = x + i * 0.72, m = new THREE.Mesh(rboxGeo(0.64, 1.62, 0.74, 0.035), [OM.rack, OM.rack, OM.frame, OM.rack, OM.rackFace, OM.rack]);
+      m.position.copy(this.V(rx + 0.32, y + 0.37, 0.89)); m.castShadow = true; m.receiveShadow = true; r.g.add(m);
       for (let k = 0; k < 3; k++) { const col = ['#00ff88', '#00cfff', '#3b82f6'][(i + k) % 3]; const l = new THREE.Mesh(G.box, amat(col).glow); l.scale.set(0.05, 0.03, 0.01); l.position.copy(this.V(rx + 0.12 + k * 0.08, y + 0.745, 1.5 - k * 0.38)); l.userData.blink = (i * 7 + k * 3) % 11; r.g.add(l); (r.leds = r.leds || []).push(l); }
     }
   }
-  // a white lab machine: a cabinet, a dark window onto a lit chamber, a hologram floating over it
+  // a white lab machine: a rounded cabinet, a dark window onto a lit chamber, a hologram floating over it
   labMachine(r, x, y) {
     const g = r.g;
-    this.box(g, x, y, 0.08, 1.15, 0.8, 0.62, OM.white);
-    this.box(g, x + 0.05, y + 0.05, 0.7, 1.05, 0.62, 0.42, OM.white);
-    this.box(g, x + 0.12, y + 0.66, 0.74, 0.91, 0.04, 0.32, OM.dark, false);
-    const ch = new THREE.Mesh(G.plane, OM.cyan.soft); ch.scale.set(0.8, 0.24, 1); ch.position.copy(this.V(x + 0.575, y + 0.69, 0.9)); g.add(ch);
-    this.box(g, x + 0.1, y + 0.1, 1.12, 0.95, 0.5, 0.06, OM.white2, false);
-    const holo = new THREE.Mesh(G.plane, OM.holo); holo.scale.set(0.9, 0.6, 1); holo.position.copy(this.V(x + 0.575, y + 0.4, 1.62)); holo.rotation.x = -0.25; g.add(holo);
-    for (let k = 0; k < 3; k++) { const m = new THREE.Mesh(G.box, (k % 2 ? OM.green : OM.cyan).glow); m.scale.set(0.08, 0.035, 0.01); m.position.copy(this.V(x + 0.3 + k * 0.2, y + 0.81, 0.35)); m.userData.blink = k * 3; g.add(m); (r.leds = r.leds || []).push(m); }
+    this.rb(g, x, y, 0.08, 1.15, 0.8, 0.66, OM.white, 0.08);
+    this.rb(g, x + 0.06, y + 0.05, 0.74, 1.03, 0.62, 0.44, OM.white, 0.08);
+    this.rb(g, x + 0.13, y + 0.62, 0.79, 0.89, 0.07, 0.3, OM.dark, 0.03);
+    const ch = new THREE.Mesh(G.plane, OM.cyan.soft); ch.scale.set(0.8, 0.22, 1); ch.position.copy(this.V(x + 0.575, y + 0.695, 0.94)); g.add(ch);
+    this.rb(g, x + 0.1, y + 0.1, 1.18, 0.95, 0.5, 0.07, OM.white2, 0.03);
+    const holo = new THREE.Mesh(G.plane, OM.holo); holo.scale.set(0.9, 0.6, 1); holo.position.copy(this.V(x + 0.575, y + 0.4, 1.66)); holo.rotation.x = -0.25; g.add(holo);
+    for (let k = 0; k < 3; k++) { const m = new THREE.Mesh(G.box, (k % 2 ? OM.green : OM.cyan).glow); m.scale.set(0.08, 0.035, 0.01); m.position.copy(this.V(x + 0.3 + k * 0.2, y + 0.81, 0.36)); m.userData.blink = k * 3; g.add(m); (r.leds = r.leds || []).push(m); }
+  }
+  // a white console with a green screen: what the weekly audit reads its logs on
+  console3(r, x, y) {
+    const g = r.g;
+    this.rb(g, x, y, 0.08, 1.2, 0.75, 0.6, OM.white, 0.06);
+    const top = new THREE.Mesh(rboxGeo(1.2, 0.08, 0.55, 0.03), OM.white); top.position.copy(this.V(x + 0.6, y + 0.5, 0.8)); top.rotation.x = 0.4; top.castShadow = true; g.add(top);
+    this.rb(g, x + 0.08, y + 0.05, 0.7, 1.04, 0.22, 0.66, OM.white, 0.06);
+    const scr = new THREE.Mesh(G.plane, new THREE.MeshBasicMaterial({ map: monTex(), toneMapped: false })); scr.scale.set(0.86, 0.48, 1); scr.position.copy(this.V(x + 0.6, y + 0.275, 1.04)); g.add(scr);
+    const key = new THREE.Mesh(G.plane, OM.green.soft); key.scale.set(0.7, 0.16, 1); key.rotation.x = -Math.PI / 2 + 0.4; key.position.copy(this.V(x + 0.6, y + 0.52, 0.85)); g.add(key);
   }
   canisters(r, x, y) {
     [[0, 0, 0.5], [0.0, 0.55, 0.42], [0.0, 1.1, 0.5], [-0.45, 0.3, 0.36]].forEach(([dx, dy, h]) => {
@@ -1759,7 +1833,7 @@ class Office3D {
     });
     r.core = core; r.coreAt = new THREE.Vector3(c.x, 3.4, c.z);
     const light = new THREE.PointLight(0x00cfff, 16, 13, 1.6); light.position.set(c.x, 1.8, c.z); g.add(light);
-    this.agent(r, x0 + 3.7, y0 + 5.9, 0, 'Manager');
+    this.agent(r, x0 + 3.7, y0 + 5.9, 0, 'Manager', { stand: true });
     this.plant(r, x0 + 6.4, y0 + 0.5);
     this.plate(r, 'hubp'); r.plateAt = this.V(x0 + 6.1, y0 + 6.75, 1.45);
     r.need = document.createElement('div'); r.need.className = 'p3need'; r.need.addEventListener('click', () => CO.emit('office:click', 'hub')); this.layer.appendChild(r.need);
@@ -1767,16 +1841,12 @@ class Office3D {
   // the weekly audit: two consoles with green screens, a desk, a printer for the report
   auditRoom(r) {
     const g = r.g, x0 = r.x0, y0 = r.y0;
-    [x0 + 0.3, x0 + 1.75].forEach((x) => {
-      this.box(g, x, y0 + 0.3, 0.08, 1.25, 0.75, 0.62, OM.white);
-      const top = new THREE.Mesh(G.box, OM.white); top.scale.set(1.25, 0.08, 0.6); top.position.copy(this.V(x + 0.625, y0 + 0.55, 0.85)); top.rotation.x = -0.5; g.add(top);
-      this.box(g, x + 0.08, y0 + 0.32, 0.72, 1.09, 0.08, 0.62, OM.white);
-      const scr = new THREE.Mesh(G.plane, new THREE.MeshBasicMaterial({ map: monTex(), toneMapped: false })); scr.scale.set(0.95, 0.5, 1); scr.position.copy(this.V(x + 0.625, y0 + 0.41, 1.03)); g.add(scr);
-    });
+    this.console3(r, x0 + 0.3, y0 + 0.3); this.console3(r, x0 + 1.7, y0 + 0.3);
     this.wallScreen(r, 3.4, 6.6);
     this.desk(r, x0 + 3.0, y0 + 2.75, 0);
     this.agent(r, x0 + 3.95, y0 + 4.05, 0, 'Supervisor');
-    this.box(g, x0 + 0.35, y0 + 4.4, 0.08, 1.0, 0.8, 0.6, OM.white); this.box(g, x0 + 0.45, y0 + 4.5, 0.68, 0.8, 0.6, 0.06, OM.white2);
+    this.rb(g, x0 + 0.35, y0 + 4.4, 0.08, 1.0, 0.8, 0.6, OM.white, 0.06); this.rb(g, x0 + 0.45, y0 + 4.5, 0.68, 0.8, 0.6, 0.07, OM.white2, 0.03);
+    this.cabinet(r, x0 + 6.45, y0 + 2.6, 0.45, 2.2, 0.72);
     this.plant(r, x0 + 6.5, y0 + 6.5);
     this.plate(r, 'auditp');
   }
@@ -1801,14 +1871,19 @@ class Office3D {
   piles(r, V, priv) {
     release(r.pileG); r.pileG.clear(); this.vaultPiles = [];
     if (priv) return;
-    const x0 = r.x0, y0 = r.y0;
+    const x0 = r.x0, y0 = r.y0, o = new THREE.Object3D(), R = rng(5);
     [[V.et10, OM.coinG, x0 + 2.3, 0x00ff88], [V.usdc * 100, OM.coinB, x0 + 4.3, 0x3b82f6]].forEach(([amt, mat, px, col]) => {
-      const lvl = Math.max(0, Math.log10(1 + amt / 50));
-      [[0, 0, 1], [0.55, 0.15, 0.8], [-0.1, 0.6, 0.7], [0.5, 0.68, 0.55], [0.22, 0.34, 0.9]].forEach(([dx, dy, k], i) => {
+      const lvl = Math.max(0, Math.log10(1 + amt / 50)), coins = [];
+      [[0, 0, 1], [0.48, 0.12, 0.8], [-0.08, 0.52, 0.7], [0.46, 0.6, 0.55], [0.2, 0.3, 0.9]].forEach(([dx, dy, k], i) => {
         if (lvl <= 0 && i) return;
-        const h = Math.max(0.05, lvl * 0.2 * k), m = new THREE.Mesh(G.cyl, mat);
-        m.scale.set(0.22, h, 0.22); m.position.copy(this.V(px + dx, y0 + 3.0 + dy, 0.32 + h / 2)); m.castShadow = true; r.pileG.add(m);
+        const n = Math.max(1, Math.round(lvl * 0.2 * k / 0.04));
+        for (let c = 0; c < n; c++) coins.push([px + dx + (R() - 0.5) * 0.035, y0 + 3.0 + dy + (R() - 0.5) * 0.035, 0.34 + c * 0.04, 0]);
       });
+      // and a few lying loose on the plinth
+      for (let c = 0; c < (lvl > 1 ? 4 : 0); c++) coins.push([px - 0.25 + R() * 1.1, y0 + 2.55 + R() * 1.5, 0.34, 0.25 + R() * 0.3]);
+      const im = new THREE.InstancedMesh(G.coin, mat, coins.length);
+      coins.forEach(([x, y, z, tilt], i) => { o.position.copy(this.V(x, y, z)); o.rotation.set(tilt, R() * 6, 0); o.scale.set(0.19, 0.034, 0.19); o.updateMatrix(); im.setMatrixAt(i, o.matrix); });
+      im.castShadow = true; im.receiveShadow = true; r.pileG.add(im);
       const case_ = new THREE.Mesh(G.box, OM.glass); case_.scale.set(1.25, Math.max(0.5, lvl * 0.2 + 0.25), 1.25); case_.position.copy(this.V(px + 0.25, y0 + 3.35, 0.32 + case_.scale.y / 2)); r.pileG.add(case_);
       const halo = glowSprite(col, 0.09, 2.0); halo.position.copy(this.V(px + 0.25, y0 + 3.35, 0.6 + lvl * 0.2)); halo.userData.y = halo.position.y; r.pileG.add(halo); this.vaultPiles.push(halo);
     });
@@ -1906,7 +1981,7 @@ class Office3D {
     if (r.edgeM) { r.edgeM.emissive.copy(c); r.edgeM.emissiveIntensity = lit ? 1.6 : st === 'queued' ? 0.85 : 0.7; }
     if (r.sillM) { r.sillM.emissive.copy(c); r.sillM.emissiveIntensity = lit ? 0.6 : 0.1; }
     if (r.glow) { r.glow.material.color.copy(lit ? c : new THREE.Color(0xdfe6ee)); r.glowBase = st === 'working' ? 0.3 : st === 'waiting' ? 0.5 : 0.06; }
-    if (r.lamp) { r.lamp.color.copy(lit ? c : new THREE.Color(OFFICE.lamp)); r.lamp.intensity = st === 'working' ? 12 : st === 'waiting' ? 14 : 6; }
+    if (r.lamp) { r.lamp.color.copy(lit ? c : new THREE.Color(OFFICE.lamp)); r.lamp.intensity = st === 'working' ? 16 : st === 'waiting' ? 18 : 9; }
   }
   drawSel() {
     release(this.selRing); this.selRing.clear();
@@ -1950,9 +2025,9 @@ class Office3D {
   // The whole office, as large as the stage allows: the camera's angle is fixed, its distance is the nearest at which
   // every slab's corners fit (a margin at the top for the stage's own bar), and it aims at the middle of what it sees.
   home() {
-    const dir = new THREE.Vector3().setFromSpherical(new THREE.Spherical(1, 0.95, Math.PI / 4)), cam = this.camera.clone(), pts = this.corners || [];
+    const dir = new THREE.Vector3().setFromSpherical(new THREE.Spherical(1, 1.0, Math.PI / 4)), cam = this.camera.clone(), pts = this.corners || [];
     const tgt = new THREE.Vector3(); pts.forEach((p) => tgt.add(p)); if (pts.length) tgt.divideScalar(pts.length); tgt.y = 0;
-    const fits = (d, t) => { cam.position.copy(t).addScaledVector(dir, d); cam.lookAt(t); cam.updateMatrixWorld(); return pts.every((p) => { const v = p.clone().project(cam); return Math.abs(v.x) < 0.96 && v.y < 0.84 && v.y > -0.97; }); };
+    const fits = (d, t) => { cam.position.copy(t).addScaledVector(dir, d); cam.lookAt(t); cam.updateMatrixWorld(); return pts.every((p) => { const v = p.clone().project(cam); return Math.abs(v.x) < 1.02 && v.y < 0.86 && v.y > -0.97; }); };
     let d = 30;
     for (let k = 0; k < 2; k++) {
       let lo = 8, hi = 300;
@@ -2022,7 +2097,10 @@ class Office3D {
           else if (!W2.back) { W2.back = true; W2.from = W2.to.clone(); W2.to = a.home.clone(); W2.t0 = now; W2.stay = 0; }
           else { a.walk = null; a.g.position.copy(a.home); }
         }
-        a.b.position.y = a.by + (a.working ? Math.abs(Math.sin(t * 7 + a.phase)) * 0.035 : 0);
+        const walking = !!a.walk && !a.standing;
+        if (a.sit && !a.standing) { a.sit.visible = !walking; a.stand.visible = walking; }
+        if (a.walk) { const W3 = a.walk, dx = W3.to.x - W3.from.x, dz = W3.to.z - W3.from.z; a.g.rotation.y = (now - W3.t0) < W3.dur && Math.hypot(dx, dz) > 0.01 ? Math.atan2(-dx, -dz) : a.g.rotation.y; } else a.g.rotation.y = 0;
+        a.b.position.y = a.by + (walking ? 0.1 : 0) + (a.working ? Math.abs(Math.sin(t * 7 + a.phase)) * 0.02 : 0);
         // an astronaut at work: its visor and its chest light go cyan
         a.visorM.emissiveIntensity = a.working ? 1.3 : 0.06; a.chest.material = a.working ? OM.cyan.glow : OM.pack;
         a.ringM.emissiveIntensity = a.working ? 1.8 * (1 - ((t * 0.9 + a.phase) % 1)) : 0;
@@ -2058,7 +2136,7 @@ class Office3D {
       if (r.plate && r.plateAt) { show(r.plate, r.plateAt); r.plate.classList.toggle('sel', this.sel === r.key); r.plate.classList.toggle('hov', this.hover === r.key); }
       if (r.need && !r.need.hidden) show(r.need, r.coreAt, -10);
       const named = this.sel === r.key || this.hover === r.key;
-      r.agents.forEach((a) => { a.el.classList.toggle('on', named); if (named) show(a.el, a.g.position.clone().add(new THREE.Vector3(0, 1.7, 0))); });
+      r.agents.forEach((a) => { a.el.classList.toggle('on', named); if (named) show(a.el, a.g.position.clone().add(new THREE.Vector3(0, 1.85, 0))); });
     });
   }
 
