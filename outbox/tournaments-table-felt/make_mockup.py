@@ -6,11 +6,12 @@ nebo vice detailu u stolu? nejake chips nebo nevim. zkus vymyslet neco aby to by
 So the oval keeps its ten seats in the live page's order and gains only pictures of numbers the page already has
 (GET /api/v1/agent-tournaments/tables/2, saved as table2.json):
 
-* one chip column in front of every seat, one chip per $50 of the bot's money now ($250 x (1 + ROI), at least
-  one, at most ten), green when it is up and cyan otherwise -- no tags, no legend. Two earlier tries were turned
-  down the same day: a tall $50 column with dashed red rings for losses ("to se mi moc nelibi ty chipy jak jsi
-  udelal"), then casino piles in four denominations with a money tag, rank badges on all ten and a today's-trades
-  ring round every avatar ("to je moc uz preplacane");
+* a chip pile in front of every seat: the bot's money now, $250 x (1 + ROI), paid out in casino chips
+  ($100 green, $25 cyan, $5 blue, $1 white), and the amount on a tag under it (the operator, the same day, on the
+  first try: "to se mi moc nelibi ty chipy jak jsi udelal" -- one tall $50 column with dashed red rings for losses);
+  the chips drawn at two thirds of their first size (a stripped version without tags and rings was "moc uz
+  preplacane" the other way round; the operator: "udelej asi ten predchozi navrh jen ty chipy udelej mensi");
+* a ring round every avatar: today's trades out of the 20 a day (trades_today / daily_allowance);
 * the pot in the middle as a chip pile and ET10 coins, and the 1st / 2nd / 3rd prizes printed on the felt like
   betting spots instead of cards under the table (where the bottom seat's ROI ran into "2ND");
 * felt, a padded rail, an overhead light and a floor under the table; no ELO line on the seats;
@@ -121,13 +122,14 @@ def seats():
         top = y < cy - 150
         bottom = y > cy + 150
         cls = "seat" + (" me" if mine else "") + (" lead" if lead else "")
-        badge = f'<span class="rk r{s["rank"]}">{s["rank"]}</span>' if s["rank"] <= 3 else ""
+        badge = f'<span class="rk r{s["rank"]}">{s["rank"]}</span>'
         tag = '<i class="you">YOU</i>' if mine else ""
         house = '<span class="h">H</span>' if s["house"] else ""
         roi_cls = "g" if roi > 0 else ("r" if roi < 0 else "d")
         plate = (f'<div class="plate {"up" if top else "down"}"><b>{tag}{esc(name)}{house}</b>'
                  f'<span class="{roi_cls}">{roi:+.2f}%</span></div>')
         avatars.append(f'<div class="{cls}" style="left:{x}px;top:{y}px">{CROWN if lead else ""}'
+                       f'{allowance_ring(s["trades_today"], s["daily_allowance"])}'
                        f'<span class="av" style="color:{col}"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" '
                        f'stroke-width="1.6" stroke-linecap="round">{icon}</svg></span>{badge}{plate}</div>')
         # the pile sits on the felt between the seat and the pot, its amount on a tag under it
@@ -137,9 +139,8 @@ def seats():
             sx, base = x, y - 98
         else:
             sx, base = x + (134 if x < cx else -134), y + 4
-        n = max(1, min(10, round(eq / 50)))
-        face = "#00ff88" if roi > 0 else "#00cfff"
-        chips.append("".join(chip(sx, base + 6 - j * 5.2, face, "#e6edf7") for j in range(n)))
+        chips.append(pile(sx, base, eq, k=0.66))
+        labels.append(f'<span class="eq {roi_cls}" style="left:{sx}px;top:{base + 10}px">{money(eq)}</span>')
     return "".join(avatars), "".join(chips), "".join(labels)
 
 
@@ -147,12 +148,12 @@ def pot():
     """The $100 as four $25 chips, and the ET10 beside it as a stack of coins."""
     usd = T["pot_usdc"]
     et10 = sum(T["et10_prizes"])
-    chips = "".join(chip(0, 40 - j * 6.5, "#00cfff", "#e6edf7", 1.25) for j in range(min(8, round(usd / 25))))
+    chips = "".join(chip(0, 40 - j * 4.5, "#00cfff", "#e6edf7", 0.85) for j in range(min(8, round(usd / 25))))
     coins = "".join(
         f'<ellipse cx="0" cy="{40 - j * 6}" rx="17" ry="6.5" fill="#06090f" stroke="#00cfff" stroke-width="2"/>' for j in range(4))
     return (f'<div class="pot"><span class="k">PRIZE POOL</span>'
             f'<div class="row"><svg viewBox="-30 -4 60 56" class="pile">{chips}</svg>'
-            f'<b>{money(usd)}</b></div>'
+            f'<b>{money(usd)}</b><svg viewBox="-22 -4 44 56" class="coins">{coins}</svg></div>'
             f'<span class="et">+ {et10:,} ET10</span></div>')
 
 
@@ -213,7 +214,7 @@ html,body{background:var(--bg);color:var(--text);font-family:'JetBrains Mono',mo
  background-size:56px 56px;-webkit-mask-image:linear-gradient(to top,rgba(6,9,15,1),rgba(6,9,15,0));mask-image:linear-gradient(to top,rgba(6,9,15,1),rgba(6,9,15,0))}
 .beam{position:absolute;left:50%;top:0;width:900px;height:100%;transform:translateX(-50%);
  background:conic-gradient(from 180deg at 50% -10%,rgba(0,207,255,0) 160deg,rgba(0,207,255,.06) 172deg,rgba(0,207,255,.06) 188deg,rgba(0,207,255,0) 200deg)}
-.box{position:relative;width:1340px;height:700px;margin:0 auto 10px}
+.box{position:relative;width:1340px;height:700px;margin:0 auto}
 
 /* the table: shadow, padded rail, neon edge, felt, printed line */
 .shadow{position:absolute;left:150px;right:150px;top:150px;bottom:40px;border-radius:999px;background:rgba(6,9,15,.9);filter:blur(28px)}
@@ -225,6 +226,7 @@ html,body{background:var(--bg);color:var(--text);font-family:'JetBrains Mono',mo
  box-shadow:0 0 0 2px var(--green),0 0 22px rgba(0,255,136,.35),inset 0 0 50px rgba(6,9,15,.9)}
 .felt:before{content:'';position:absolute;inset:0;opacity:.22;mix-blend-mode:overlay;
  background-image:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='160' height='160'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='2' stitchTiles='stitch'/><feColorMatrix values='0 0 0 0 1  0 0 0 0 1  0 0 0 0 1  0 0 0 .6 0'/></filter><rect width='160' height='160' filter='url(%23n)'/></svg>")}
+.felt:after{content:'';position:absolute;inset:58px 70px;border-radius:999px;border:1.5px dashed rgba(0,255,136,.22)}
 .print{position:absolute;left:0;right:0;top:150px;text-align:center;font-family:'Archivo Black';font-size:12px;letter-spacing:.42em;
  color:rgba(0,255,136,.28)}
 
@@ -370,7 +372,7 @@ def page():
 <div class="box"><div class="shadow"></div>
 <div class="rail"><div class="felt"></div></div>
 {pot()}{spots()}
-<svg class="chips" viewBox="0 0 {W} {H}">{chips}</svg>{labels}{avatars}</div></section>
+<svg class="chips" viewBox="0 0 {W} {H}">{chips}</svg>{labels}{avatars}</div>{key()}</section>
 {race()}
 </main></body></html>"""
 
