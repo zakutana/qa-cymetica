@@ -73,6 +73,8 @@ COMPONENT_TO_SECTION = {
     "rest.agent_league": "clones",
     # Build a Company (feature #911): a Manager agent and its departments, an agent surface too.
     "rest.company": "clones",
+    # Traffic for what an account created (/traffic/mine): the rebuilt apps' own traffic figures.
+    "rest.traffic": "build_it_better",
     # Backtest Rally has no tile of its own yet; its checks are shown on that one.
     "rest.research_backtest": "build_it_better",
     "rest.creator": "creator", "rest.head_to_head": "head_to_head",

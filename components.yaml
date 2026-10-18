@@ -260,6 +260,13 @@ components:
     surface: rest
     criticality: medium
     staleness_hours: 24
+  rest.traffic:
+    # Traffic for what the account created (cymetica.com/traffic/mine, GET /api/v1/traffic/mine).
+    # First check 2026-10-18: the page's agent prompt names X-API-Key, the endpoint answers 401.
+    title: Traffic for what you created (page and API)
+    surface: rest
+    criticality: medium
+    staleness_hours: 24
   rest.research_backtest:
     # Backtest Rally (cymetica.com/backtest-rally): theme-basket backtests on the
     # headline corpus and the Rally Card launched from a run. First check 2026-10-03:
