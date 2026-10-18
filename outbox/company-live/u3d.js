@@ -547,8 +547,11 @@ class Universe3D {
     this.renderer.toneMappingExposure = 1.15;
     el.appendChild(this.renderer.domElement);
     this.controls = new OrbitControls(this.camera, this.renderer.domElement);
-    Object.assign(this.controls, { enableDamping: true, dampingFactor: 0.06, minDistance: 7, maxDistance: 1100, minPolarAngle: 0.06, maxPolarAngle: Math.PI - 0.06,
-      autoRotate: true, autoRotateSpeed: 0.16, screenSpacePanning: true, zoomToCursor: true, zoomSpeed: 1.1, rotateSpeed: 0.55, panSpeed: 0.9 });
+    // a map first: the left button moves it over the galaxy's disc, the right one turns it, the wheel zooms where it points
+    Object.assign(this.controls, { enableDamping: true, dampingFactor: 0.06, minDistance: 7, maxDistance: 900, minPolarAngle: 0.06, maxPolarAngle: Math.PI - 0.06,
+      autoRotate: true, autoRotateSpeed: 0.16, screenSpacePanning: false, zoomToCursor: true, zoomSpeed: 1.1, rotateSpeed: 0.55, panSpeed: 1.1,
+      mouseButtons: { LEFT: THREE.MOUSE.PAN, MIDDLE: THREE.MOUSE.DOLLY, RIGHT: THREE.MOUSE.ROTATE },
+      touches: { ONE: THREE.TOUCH.PAN, TWO: THREE.TOUCH.DOLLY_ROTATE } });
     this.controls.addEventListener('start', () => { this.tw = null; this.used = true; this.lastUse = performance.now(); this.controls.autoRotate = false; });
     this.world();
     this.bind();
@@ -622,6 +625,8 @@ class Universe3D {
     this.items.forEach((it) => this.place(it));
     this.coreBanner();
     this.stats();
+    // zoomed all the way out, the galaxy still fills most of the view: not a speck in the dark
+    this.controls.maxDistance = this.home().pos.distanceTo(this.home().tgt) * 1.6;
   }
   place(it) {
     this.built = (this.built || 0) + 1;
