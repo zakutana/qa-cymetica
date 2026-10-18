@@ -689,7 +689,8 @@ class Universe3D {
     // the streak: a thin tube along the arc, drawn as the light travels and let go behind it
     const tube = new THREE.TubeGeometry(curve, 64, 0.12, 6, false);
     const mat = new THREE.MeshBasicMaterial({ color: A.c.clone().multiplyScalar(2.6), transparent: true, opacity: 0.85, blending: THREE.AdditiveBlending, depthWrite: false });
-    const streak = new THREE.Mesh(tube, mat); tube.setDrawRange(0, 0);
+    // hidden while there is nothing of it to draw: a draw of zero indices is a warning on WebGPU
+    const streak = new THREE.Mesh(tube, mat); tube.setDrawRange(0, 0); streak.visible = false;
     this.scene.add(head, streak);
     this.arcs.push({ curve, head, streak, tube, mat, t0: performance.now(), dur: 1600 + a.distanceTo(b) * 12 });
   }
@@ -785,8 +786,8 @@ class Universe3D {
         if (f >= 1.25) { this.scene.remove(a.head, a.streak); a.tube.dispose(); a.mat.dispose(); return false; }
         const e = Math.min(1, f < 0.5 ? 2 * f * f : 1 - Math.pow(-2 * Math.min(f, 1) + 2, 2) / 2);
         a.head.position.copy(a.curve.getPoint(e)); a.head.visible = f < 1;
-        const n = a.tube.index.count, seg = n / 64, from = Math.max(0, Math.min(f, 1.25) - 0.4) / 0.85, to = e;
-        a.tube.setDrawRange(Math.floor(from * 64) * seg, Math.max(0, Math.floor((to - from) * 64)) * seg);
+        const n = a.tube.index.count, seg = n / 64, from = Math.max(0, Math.min(f, 1.25) - 0.4) / 0.85, to = e, cnt = Math.max(0, Math.floor((to - from) * 64)) * seg;
+        a.tube.setDrawRange(Math.floor(from * 64) * seg, cnt); a.streak.visible = cnt > 0;
         a.mat.opacity = 0.85 * (f > 1 ? 1 - (f - 1) / 0.25 : 1);
         return true;
       });
@@ -1003,6 +1004,8 @@ function thumbs(hex, done) {
       p.root.rotation.y = s.key === 'rocket' ? -0.5 : 0.25; scene.add(p.root);
       const size = Math.max(p.top - p.bot, p.b.foot * 1.55), tgt = new THREE.Vector3(0, (p.top + p.bot) / 2, 0);
       camera.position.copy(new THREE.Vector3().setFromSpherical(new THREE.Spherical(size * 1.95 + 3, 1.12, Math.PI / 4)).add(tgt)); camera.lookAt(tgt);
+      // the bloom pass draws the scene once a frame: two frames between pictures, or on a fast GPU all six are the first
+      await new Promise((r) => requestAnimationFrame(() => requestAnimationFrame(r)));
       renderer.setRenderTarget(rt);
       if (post) post.render(); else renderer.render(scene, camera);
       renderer.setRenderTarget(null);
