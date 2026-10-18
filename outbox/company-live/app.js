@@ -117,10 +117,7 @@
     $('co-logo').textContent = initials(c.name);
     var st = $('co-status'); st.textContent = paused ? 'PAUSED' : 'RUNNING'; st.className = 'pill ' + (paused ? 'off' : 'on');
     $('co-pause').textContent = paused ? 'Resume' : 'Pause';
-    // always there, so it can always be clicked for where the ET10 came from
-    var et = $('co-et10');
-    et.innerHTML = '<b>' + (S.et10 ? '+' : '') + (S.et10 || 0).toLocaleString('en-US') + '</b> ET10 earned';
-    et.classList.toggle('zero', !S.et10);
+    // what the company earned lives in its vault (the office and the right column), not in this bar
     var n = S.approvals.length, w = $('co-waiting');
     w.innerHTML = n ? '<b>' + n + '</b> ' + (RO ? 'wait' + (n === 1 ? 's' : '') + ' for its owner' : 'need' + (n === 1 ? 's' : '') + ' you') : '✓ all clear';
     w.classList.toggle('none', !n);
@@ -205,32 +202,50 @@
     renderEarned(fd);
     renderChats();
   }
-  // the header's ET10 chip opens the breakdown: the office, its right column, a flash on the panel
-  function showEarned() {
-    if (ui.tab !== 'office') setTab('office');
-    var p = $('p-earn');
-    p.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
-    p.classList.remove('flash'); void p.offsetWidth; p.classList.add('flash');
-  }
-  // where the ET10 came from: each department that earns, what for, and its share of the total
-  function renderEarned(fd) {
-    var S = CO.S, total = S.et10 || 0;
-    var rows = S.departments.filter(function (d) { return d.et10 || d.files_as; }).map(function (d) {
+  // What the company earned, by where it came from: each department that earns (ET10: bugs, prizes, the League) and
+  // each app it built (the proposed ET10 for the visitors it brings, and USDC from its revenue share).
+  function vaultRows() {
+    var S = CO.S, out = [];
+    S.departments.filter(function (d) { return d.et10 || d.files_as; }).forEach(function (d) {
       var why = d.files_as ? (d.accepted || 0) + ' bug' + (d.accepted === 1 ? '' : 's') + ' accepted' :
-        d.prizes ? d.prizes + ' tournament prize' + (d.prizes === 1 ? '' : 's') : 'prizes';
-      return { d: d, n: d.et10 || 0, why: why };
-    }).sort(function (a, b) { return b.n - a.n; });
-    var gone = total - rows.reduce(function (s, r) { return s + r.n; }, 0);
-    $('earn-n').textContent = total ? '+' + total.toLocaleString('en-US') : '';
-    setHTML($('earn'), (rows.length ? rows.map(function (r) {
-      var pct = total ? Math.round(r.n / total * 100) : 0;
-      return '<button class="er' + (fd && fd.id === r.d.id ? ' on' : '') + (r.n ? '' : ' zero') + '" data-id="' + r.d.id + '">' +
-        '<div class="e1"><b>' + esc(r.d.name) + '</b><span class="v">' + (r.n ? '+' : '') + r.n.toLocaleString('en-US') + ' ET10</span></div>' +
-        '<div class="e2"><span>' + esc(r.why) + '</span><span>' + (total ? pct + '%' : '') + '</span></div>' +
-        '<span class="ebar"><i style="width:' + pct + '%"></i></span></button>';
-    }).join('') : '') +
-      (gone > 0 ? '<div class="er zero"><div class="e1"><b>Removed departments</b><span class="v">+' + gone.toLocaleString('en-US') + ' ET10</span></div></div>' : '') +
-      (!total ? '<p class="empty">Nothing earned yet. Each bug Cymetica accepts pays ET10 here.</p>' : ''));
+        d.prizes ? d.prizes + ' tournament prize' + (d.prizes === 1 ? '' : 's') : d.answers ? d.answers + ' League answers' : 'prizes';
+      out.push({ kind: 'dept', id: d.id, name: d.name, why: why, et10: d.et10 || 0, usdc: 0 });
+    });
+    CO.apps().forEach(function (a) {
+      var e = CO.appEarn(a);
+      out.push({ kind: 'app', name: a.name, why: (a.visitors + a.todayVisitors).toLocaleString('en-US') + ' visitors · ' + (a.uses + a.todayUses).toLocaleString('en-US') + ' uses', et10: e.et10, usdc: e.usdc });
+    });
+    return out.sort(function (a, b) { return (b.et10 + b.usdc * 100) - (a.et10 + a.usdc * 100); });
+  }
+  // the right column's vault: its two totals, then where they came from; a visitor sees only that it is private
+  function renderEarned(fd) {
+    var V = CO.vaultTotals();
+    if (RO) { $('earn-n').textContent = ''; setHTML($('earn'), '<p class="empty"><i class="lk"></i> Private: only its owner sees inside the vault.</p>'); return; }
+    $('earn-n').textContent = '';
+    var rows = vaultRows(), top = Math.max(1, V.et10);
+    setHTML($('earn'), '<button class="vtot" data-a="vault"><div><b class="g">' + CO.fmtEt(V.et10) + '</b><span>ET10</span></div><div><b class="u">' + CO.fmtUsd(V.usdc) + '</b><span>USDC</span></div></button>' +
+      rows.slice(0, 5).map(function (r) {
+        var pct = Math.round(r.et10 / top * 100);
+        return '<button class="er' + (fd && r.kind === 'dept' && fd.id === r.id ? ' on' : '') + ((r.et10 || r.usdc) ? '' : ' zero') + '"' + (r.kind === 'dept' ? ' data-id="' + r.id + '"' : ' data-a="vault"') + '>' +
+          '<div class="e1"><b>' + esc(r.name) + '</b><span class="v">' + (r.et10 ? '+' + CO.fmtEt(r.et10) + ' ET10' : '') + (r.usdc ? ' <em>+' + CO.fmtUsd(r.usdc) + ' USDC</em>' : '') + (!r.et10 && !r.usdc ? '0 ET10' : '') + '</span></div>' +
+          '<div class="e2"><span>' + (r.kind === 'app' ? 'app · ' : '') + esc(r.why) + '</span><span>' + pct + '%</span></div>' +
+          '<span class="ebar"><i style="width:' + pct + '%"></i></span></button>';
+      }).join('') + (CO.apps().length ? '<p class="hint vnote" title="Build it Better apps earn nothing today; Cymetica was asked on 2026-10-18 to pay ET10 for the users they bring. The rates here are placeholders.">App earnings: proposed, placeholder rates</p>' : ''));
+  }
+  // the vault opened: both totals, every department and every app that put something in it
+  function openVault() {
+    if (RO) return toast('The vault is private: only its owner sees inside.');
+    var V = CO.vaultTotals(), rows = vaultRows(), R = CO.RATE;
+    var list = function (kind) {
+      var rs = rows.filter(function (r) { return r.kind === kind; });
+      if (!rs.length) return '<p class="empty">' + (kind === 'app' ? 'No apps yet: build one with Build it Better and it earns here.' : 'No department has earned yet.') + '</p>';
+      return rs.map(function (r) {
+        return '<div class="vrow"><b>' + esc(r.name) + '</b><span class="w">' + esc(r.why) + '</span><span class="g">' + (r.et10 ? '+' + CO.fmtEt(r.et10) : '0') + ' ET10</span><span class="u">' + (r.usdc ? '+' + CO.fmtUsd(r.usdc) + ' USDC' : '') + '</span></div>';
+      }).join('');
+    };
+    openModal('<div class="mh"><h3>Vault</h3><span class="lockp"><i class="lk"></i>PRIVATE</span><span class="sp"></span><button class="btn" data-a="close">×</button></div>' +
+      '<div class="vbig"><div><b class="g">' + CO.fmtEt(V.et10) + '</b><span>ET10</span></div><div><b class="u">' + CO.fmtUsd(V.usdc) + '</b><span>USDC</span></div></div>' +
+      '<div class="sec">BY DEPARTMENT</div>' + list('dept') + '<div class="sec">BY APP <span>proposed: ' + R.et10PerVisitor + ' ET10 a visitor, ' + R.usdcPerUse + ' USDC a use (placeholder rates)</span></div>' + list('app'), true);
   }
 
   // the conversation with the Manager: all of it in the Manager's focus, one department's in its detail
@@ -416,7 +431,7 @@
     }
   }
   function renderPane() {
-    ({ tasks: renderTasks, approvals: renderApprovals, memory: renderMemory, audit: renderAudit, rules: renderRules, investable: renderInvest, legal: renderLegal, token: renderToken, settings: renderSettings, universe: renderUniverse }[ui.tab] || function () {})();
+    ({ portfolio: renderPortfolio, tasks: renderTasks, approvals: renderApprovals, memory: renderMemory, audit: renderAudit, rules: renderRules, investable: renderInvest, legal: renderLegal, token: renderToken, settings: renderSettings, universe: renderUniverse }[ui.tab] || function () {})();
   }
 
   /* ---------------- the Universe: every company on one map ---------------- */
@@ -466,6 +481,31 @@
     });
   }
   function renderUniverse() { if (uv) uv.setMine(mineForMap()); }
+  // Portfolio: build products, bring in users, earn. The flow first, as numbers; then one card per app.
+  function renderPortfolio() {
+    var apps = CO.apps(), Rd = CO.PORTFOLIO_READ, R = CO.RATE;
+    if (!apps.length) return setHTML($('portfolio'), '<div class="pfempty"><b>No apps yet</b><span>Build one with Build it Better: its visitors, its uses and what it earns show here.</span></div>');
+    var sum = { visitors: 0, uses: 0, likes: 0, et10: 0, usdc: 0, today: 0 };
+    apps.forEach(function (a) { var e = CO.appEarn(a); sum.visitors += a.visitors + a.todayVisitors; sum.uses += a.uses + a.todayUses; sum.likes += a.likes; sum.et10 += e.et10; sum.usdc += e.usdc; sum.today += a.todayVisitors; });
+    var step = function (n, l, cls, tip) { return '<div class="pk' + (cls ? ' ' + cls : '') + '"' + (tip ? ' title="' + esc(tip) + '"' : '') + '><b>' + n + '</b><span>' + l + '</span></div>'; };
+    var top = Math.max.apply(null, apps.map(function (a) { return a.visitors + a.todayVisitors; }));
+    setHTML($('portfolio'),
+      '<div class="pkpis">' + step(apps.length, 'apps built') + '<i class="arr">→</i>' +
+      step(sum.visitors.toLocaleString('en-US'), 'visitors · 30 d' + (sum.today ? ' <em>+' + sum.today + ' now</em>' : ''), '', 'Distinct daily visitors, summed over the days: Cymetica\'s own count') + '<i class="arr">→</i>' +
+      step(sum.uses.toLocaleString('en-US'), 'uses · 30 d', '', 'Page loads where the visitor clicked, typed or filled a form') + '<i class="arr">→</i>' +
+      step('+' + CO.fmtEt(sum.et10), 'ET10 · proposed', 'g', R.et10PerVisitor + ' ET10 for each visitor an app brings: a placeholder rate. Asked of Cymetica on 2026-10-18') +
+      step('+' + CO.fmtUsd(sum.usdc), 'USDC · proposed', 'u', R.usdcPerUse + ' USDC for each use, a revenue share: a placeholder rate') + '</div>' +
+      '<div class="pfgrid">' + apps.slice().sort(function (a, b) { return (b.visitors + b.todayVisitors) - (a.visitors + a.todayVisitors); }).map(function (a) {
+        var e = CO.appEarn(a), v = a.visitors + a.todayVisitors, pct = Math.round(v / top * 100);
+        return '<div class="pf"><div class="pf1"><b>' + esc(a.name) + '</b><a href="' + esc(a.url) + '" target="_blank" rel="noopener">' + esc(a.path) + ' ↗</a></div>' +
+          '<div class="pfn"><div><b>' + v.toLocaleString('en-US') + '</b><span>visitors</span></div><div><b>' + (a.uses + a.todayUses).toLocaleString('en-US') + '</b><span>uses</span></div>' +
+          '<div><b>' + a.views.toLocaleString('en-US') + '</b><span>views</span></div><div><b>' + a.likes + '</b><span>likes</span></div></div>' +
+          '<span class="pfbar"><i style="width:' + pct + '%"></i></span>' +
+          '<div class="pfe"><span class="g">+' + CO.fmtEt(e.et10) + ' ET10</span><span class="u">+' + CO.fmtUsd(e.usdc) + ' USDC</span><em>proposed</em>' +
+          (a.todayVisitors ? '<i>+' + a.todayVisitors + ' now</i>' : '') + '</div></div>';
+      }).join('') + '</div>' +
+      '<p class="pfsrc">Visitors, uses, views, likes: Cymetica (' + esc(Rd.src) + '), last ' + Rd.days + ' days, read ' + Rd.at + '. Earnings: proposed, placeholder rates.</p>');
+  }
   function uvStats(s) {
     setHTML($('uv-sum'), '<b>' + s.companies + '</b> companies · <b>' + s.public + '</b> public · <b class="cy">' + s.working + '</b> working now');
   }
@@ -790,6 +830,11 @@
       return '<b>Weekly audit</b> · next in ' + Math.max(0, Math.ceil((A.next_at - S.clock) / 86400000)) + 'd · ' + (A.last ? A.last.findings.length : 0) + ' findings last week<br>click to open Audit';
     }
     if (key === 'lot') return '<b>Add a department</b><br>click to staff a new room';
+    if (key === 'vault') {
+      if (RO) return '<b>Vault</b> · private<br>only its owner sees inside';
+      var VT = CO.vaultTotals();
+      return '<b>Vault</b> · <span class="g">' + CO.fmtEt(VT.et10) + ' ET10</span> · <span class="bl">' + CO.fmtUsd(VT.usdc) + ' USDC</span><br>click for where it came from';
+    }
     var dd = CO.dept(+String(key).slice(1)); if (!dd) return '';
     var ln = CO.deptLine(dd), col = { cyan: 'c', blue: 'bl', red: 'r', dim: '' }[ln.tone];
     return '<b>' + esc(dd.name) + '</b><br><span class="' + col + '">' + esc(ln.text) + '</span><br><span style="color:var(--dim2)">click to open</span>';
@@ -928,7 +973,7 @@
   }
 
   // what a visitor may still press: moving around and reading. Everything else that writes says so instead.
-  var RO_OK = '#tabs button, #back, .dswitch [data-sw], .dept, #earn .er, #co-et10, #co-waiting, #z-in, #z-out, #z-fit, .trow, tr.row, #dr-tasks-all, #dr-mem-t, ' +
+  var RO_OK = '#tabs button, #back, .dswitch [data-sw], .dept, #earn .er, [data-a="vault"], #co-waiting, #z-in, #z-out, #z-fit, .trow, tr.row, #dr-tasks-all, #dr-mem-t, ' +
     '[data-r], [data-a="close"], [data-a="appr"], #simbar [data-speed], #sim-reset, #ro-back, [data-mock], #modal, #vt button, .p3, .p3need';
   function roBlocked(t) { return !t.closest(RO_OK) && !!t.closest('button, [data-a], [data-d], .switch, [data-rpd]'); }
   function bind() {
@@ -948,7 +993,7 @@
       var tab = t.closest('#tabs button'); if (tab) return setTab(tab.getAttribute('data-tab'));
       if (t.closest('#co-pause')) { CO.act.pause(); toast(CO.S.company.status === 'paused' ? 'Paused: a running turn finishes, nothing new starts.' : 'Resumed: the next pass starts in a few seconds.'); return; }
       if (t.closest('#co-waiting')) return setTab('approvals');
-      if (t.closest('#co-et10')) return showEarned();
+      if (t.closest('[data-a="vault"]')) return openVault();
       var er = t.closest('#earn .er[data-id]'); if (er) return openDrawer(+er.getAttribute('data-id'));
       if (t.closest('#co-upgrade')) return upgradeModal();
       if (t.closest('#back')) return closeDrawer();
@@ -1137,7 +1182,14 @@
       if (key === 'hub') return openManager();
       if (key === 'you') return setTab('approvals');
       if (key === 'audit') return setTab('audit');
+      if (key === 'vault') return openVault();
       if (key === 'lot') return addDeptModal();
+    });
+    // people keep arriving at the apps: the vault, its plate and the Portfolio follow
+    CO.on('vault', function () {
+      if (office && office.update) office.update();
+      if (ui.tab === 'office') renderEarned(ui.panel != null ? CO.dept(ui.panel) : null);
+      if (ui.tab === 'portfolio') renderPortfolio();
     });
   }
 

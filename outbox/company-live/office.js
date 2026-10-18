@@ -18,8 +18,10 @@
   var ST = { working: C.cyan, queued: C.dim2, waiting: C.red, idle: C.dim2 }, DOT = { queued: C.blue };
   var TONE = { cyan: C.cyan, red: C.red, blue: '#dfe6ee', dim: C.dim };   // "Up next" white on a plate; its dot stays blue
   var GRID = 'rgba(0, 255, 136, .1)';   // the floor tiles' joints: a faint Cymetica green
-  var HUB = [8, 8], YOU = [8, 16], AUDIT = [0, 16];
-  var SLOTS = [[0, 0], [8, 0], [16, 0], [0, 8], [16, 8], [8, 16], [16, 16], [24, 0], [24, 8], [24, 16], [24, 24], [16, 24], [8, 24], [0, 24]];
+  // The plan: the Manager in the middle, the weekly audit and the vault in two fixed corners, departments in the
+  // slots in this order. The vault takes the front corner, where what the company earns is seen first.
+  var HUB = [8, 8], YOU = [8, 16], AUDIT = [0, 16], VAULT = [16, 16];
+  var SLOTS = [[0, 0], [8, 0], [16, 0], [0, 8], [16, 8], [8, 16], [24, 0], [24, 8], [24, 16], [24, 24], [16, 24], [8, 24], [0, 24]];
   var NS = 'http://www.w3.org/2000/svg';
 
   function P(x, y, z) { return [(x - y) * SC * C30, (x + y) * SC * S30 - (z || 0) * SC]; }
@@ -406,7 +408,7 @@
   Office.prototype.layout = function (opts) {
     var S = CO.S, self = this, born = opts && opts.born;
     this.shapeKey = this.shape();
-    var cells = { hub: HUB, audit: AUDIT };   // no room for the owner: approvals live in the right column
+    var cells = { hub: HUB, audit: AUDIT, vault: VAULT };   // no room for the owner: approvals live in the right column
     var used = {};
     S.departments.forEach(function (d) { cells['d' + d.id] = SLOTS[d.slot]; used[d.slot] = 1; });
     var lot = 0; while (used[lot]) lot++;
@@ -465,6 +467,7 @@
       if (k === 'hub') inner = self.hubRoom(x0, y0);
       else if (k === 'you') inner = self.ownerRoom(x0, y0);
       else if (k === 'audit') inner = self.auditRoom(x0, y0);
+      else if (k === 'vault') inner = self.vaultRoom(x0, y0);
       else if (k === 'lot') inner = self.lotRoom(x0, y0);
       else inner = self.deptRoom(CO.dept(+k.slice(1)), x0, y0);
       var cls = 'room' + (k === 'lot' ? ' lot' : '') + (born && k === 'd' + born ? ' born' : '');
@@ -538,6 +541,41 @@
     out += plant(x0 + 0.3, y0 + 6.2);
     return out;
   };
+  // The vault: an armoured room with a round door in its back wall and a plinth where the earnings pile up
+  Office.prototype.vaultRoom = function (x0, y0) {
+    var out = shell(x0, y0, 'vault');
+    out += '<g transform="' + onBack(x0, 3.0, y0 + 0.14, 1.22) + '">' +
+      '<circle cx="18" cy="13" r="11.5" fill="' + C.navy2 + '" stroke="' + C.green + '" stroke-width="1.3"/>' +
+      '<circle cx="18" cy="13" r="7" fill="none" stroke="' + C.dim2 + '" stroke-width="1"/>' +
+      '<path d="M18 6v14 M11 13h14 M13 8l10 10 M23 8 13 18" stroke="' + C.dim2 + '" stroke-width=".8"/>' +
+      '<circle cx="18" cy="13" r="2" fill="' + C.green + '"/></g>';
+    out += box(x0 + 1.6, y0 + 2.3, 0, 3.8, 2.4, 0.22, C.line3, C.navy2, C.navy, C.line2);
+    out += '<g class="piles"></g>';
+    return out;
+  };
+  // a cylinder standing on the floor plan, seen from the office's angle: its front band and its top
+  var RXc = SC * C30 * Math.SQRT2, RYc = SC * S30 * Math.SQRT2;
+  function cyl(cx, cy, z0, z1, r, top, side, stroke) {
+    var a = P(cx, cy, z0), b = P(cx, cy, z1), rx = r * RXc, ry = r * RYc;
+    return '<path d="M' + f1(a[0] - rx) + ',' + f1(b[1]) + ' A' + f1(rx) + ',' + f1(ry) + ' 0 0 0 ' + f1(a[0] + rx) + ',' + f1(b[1]) +
+      ' L' + f1(a[0] + rx) + ',' + f1(a[1]) + ' A' + f1(rx) + ',' + f1(ry) + ' 0 0 1 ' + f1(a[0] - rx) + ',' + f1(a[1]) + ' Z" fill="' + side + '" stroke="' + stroke + '" stroke-width=".5"/>' +
+      '<ellipse cx="' + f1(b[0]) + '" cy="' + f1(b[1]) + '" rx="' + f1(rx) + '" ry="' + f1(ry) + '" fill="' + top + '" stroke="' + stroke + '" stroke-width=".5"/>';
+  }
+  // two piles on the plinth, ET10 green and USDC blue: a few stacks of coins each, taller as the sum grows
+  function vaultPiles(x0, y0, V) {
+    var out = '';
+    [[V.et10, C.green, '#0d3b2a', x0 + 2.35], [V.usdc * 100, C.blue, '#132a4d', x0 + 4.15]].forEach(function (p) {
+      var lvl = Math.max(0, Math.log10(1 + p[0] / 50)), stacks = [[0, 0, 1], [0.5, 0.15, 0.8], [-0.1, 0.55, 0.7], [0.45, 0.62, 0.55], [0.2, 0.32, 0.9]];
+      stacks.forEach(function (s, i) {
+        var h = Math.max(0.06, lvl * 0.16 * s[2]); if (lvl <= 0 && i) return;
+        out += cyl(p[3] + s[0], y0 + 3.0 + s[1], 0.22, 0.22 + h, 0.2, p[1], p[2], p[1]);
+        for (var k = 0.1; k < h; k += 0.1) { var a = P(p[3] + s[0], y0 + 3.0 + s[1], 0.22 + k); out += '<path d="M' + f1(a[0] - 0.2 * RXc) + ',' + f1(a[1]) + ' a' + f1(0.2 * RXc) + ',' + f1(0.2 * RYc) + ' 0 0 0 ' + f1(0.4 * RXc) + ',0" fill="none" stroke="' + C.deep + '" stroke-width=".6" opacity=".6"/>'; }
+      });
+      var c = P(p[3] + 0.2, y0 + 3.3, 0.3 + lvl * 0.16);
+      out += '<ellipse cx="' + f1(c[0]) + '" cy="' + f1(c[1]) + '" rx="34" ry="22" fill="url(#' + (p[1] === C.green ? 'g-halo-g' : 'g-halo-b') + ')" opacity=".35"/>';
+    });
+    return out;
+  }
   Office.prototype.lotRoom = function (x0, y0) {
     var out = shell(x0, y0, 'lot');
     var c = P(x0 + 3.5, y0 + 3.5, 0.1);
@@ -631,6 +669,16 @@
       au.querySelector('.scr').innerHTML = wallScreen(0, 16, 1.1, 5.0, 'Weekly audit: next in ' + days + 'd', nf + ' findings last week', C.dim2, '');
       var ap = P(0 + 4.6, 16 + 5.55, 0.1);
       over += plate(ap[0], ap[1], 'WEEKLY AUDIT', C.dim2, [['next in ' + days + (days === 1 ? ' day' : ' days'), C.dim]], 150, 'audit', false);
+    }
+    // the vault: what the company has earned, in two piles; a visitor sees a closed door
+    var vr = ex('vault');
+    if (vr) {
+      var VT = CO.vaultTotals(), priv = !!CO.RO, vkey = priv ? 'priv' : Math.round(VT.et10) + '|' + VT.usdc.toFixed(2);
+      vr.setAttribute('class', 'room st-vault' + (priv ? ' closed' : '') + (self.sel === 'vault' ? ' sel' : ''));
+      var pg = vr.querySelector('.piles');
+      if (pg._k !== vkey) { pg._k = vkey; pg.innerHTML = priv ? '' : vaultPiles(VAULT[0], VAULT[1], VT); }
+      var vp = P(VAULT[0] + 4.6, VAULT[1] + 5.55, 0.1);
+      over += plate(vp[0], vp[1], 'VAULT', C.green, priv ? [['Private', C.dim]] : [[CO.fmtEt(VT.et10) + ' ET10', C.green], [CO.fmtUsd(VT.usdc) + ' USDC', '#8fbaff']], 230, 'vault', false);
     }
     // the selection ring lies on the floor, just under the selected room: walls, people and plates stay above it
     var oldRing = this.gRooms.querySelector('.selring');
@@ -857,5 +905,5 @@
   CO.iso = { SC: SC, C30: C30, S30: S30, C: C, P: P, f1: f1, pts: pts, esc: esc, poly: poly, box: box, text: text,
     onBack: onBack, onSide: onSide, cut: cut, plant: plant,
     // the office's floor plan for the 3D office: the same rooms in the same places, the same corridors
-    route: route, SLOTS: SLOTS, HUB: HUB, AUDIT: AUDIT, RS: RS };
+    route: route, SLOTS: SLOTS, HUB: HUB, AUDIT: AUDIT, VAULT: VAULT, RS: RS };
 })();

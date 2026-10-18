@@ -8,8 +8,8 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Archivo+Black&family=JetBrains+Mono:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="style.css?v=20261018h">
-<link rel="stylesheet" href="uv.css?v=20261018h">
+<link rel="stylesheet" href="style.css?v=20261018i">
+<link rel="stylesheet" href="uv.css?v=20261018i">
 <!-- the 3D engine for the Universe and the office: three.js with its WebGPU renderer (WebGL2 where WebGPU is missing) -->
 <script type="importmap">{ "imports": {
   "three": "https://cdn.jsdelivr.net/npm/three@0.172.0/build/three.webgpu.js",
@@ -47,12 +47,13 @@
       <div class="heart" id="co-heart"></div>
     </div>
   </div>
-  <div class="right"><button class="etchip" id="co-et10" title="Where it came from, by department"></button><button class="appr" id="co-waiting"></button><button class="btn cy" id="co-upgrade">Upgrade</button></div>
+  <div class="right"><button class="appr" id="co-waiting"></button><button class="btn cy" id="co-upgrade">Upgrade</button></div>
 </section>
 
 <nav class="tabs" id="tabs">
   <!-- every tab carries a small line icon in the Universe tab's style; the label sits in .tl so a visit can rename it -->
   <button data-tab="office" class="on"><svg class="ti" viewBox="0 0 16 16"><path d="M8 1.8 14 5v6l-6 3.2L2 11V5Z M2 5l6 3.2L14 5 M8 8.2v6"/></svg><span class="tl">Office</span></button>
+  <button data-tab="portfolio"><svg class="ti" viewBox="0 0 16 16"><rect x="2" y="2" width="5" height="5" rx="1"/><rect x="9" y="2" width="5" height="5" rx="1"/><rect x="2" y="9" width="5" height="5" rx="1"/><path d="M9.5 13.5 14 9 M11 9h3v3"/></svg><span class="tl">Portfolio</span></button>
   <button data-tab="tasks"><svg class="ti" viewBox="0 0 16 16"><path d="M2 4.3l1.3 1.3L5.8 3 M2 9.3l1.3 1.3L5.8 8 M8 4.4h6 M8 9.4h6 M2.6 13.6h1.8 M8 13.6h6"/></svg><span class="tl">Tasks</span><sup id="tn-tasks"></sup></button>
   <button data-tab="approvals"><svg class="ti" viewBox="0 0 16 16"><path d="M4 11.3V7.6a4 4 0 0 1 8 0v3.7l1.3 1.3H2.7Z M6.5 14.4a1.7 1.7 0 0 0 3 0"/></svg><span class="tl">Needs you</span><sup class="r" id="tn-appr"></sup></button>
   <button data-tab="memory"><svg class="ti" viewBox="0 0 16 16"><rect x="3.6" y="3.6" width="8.8" height="8.8" rx="1.6"/><rect x="6.3" y="6.3" width="3.4" height="3.4" rx=".6"/><path d="M6 1.4v2.2 M10 1.4v2.2 M6 12.4v2.2 M10 12.4v2.2 M1.4 6h2.2 M1.4 10h2.2 M12.4 6h2.2 M12.4 10h2.2"/></svg><span class="tl">Memory</span></button>
@@ -123,7 +124,7 @@
 
   <aside class="rightcol">
     <section class="panel ap" id="p-appr"><div class="h"><span id="ap-t">WAITING FOR YOU</span> <b class="red" id="ap-n"></b></div><div class="alist" id="appr"></div></section>
-    <section class="panel earn" id="p-earn"><div class="h"><span>ET10 EARNED</span> <b class="gr" id="earn-n"></b></div><div class="elist" id="earn"></div></section>
+    <section class="panel earn" id="p-earn"><div class="h"><span>VAULT</span> <b class="gr" id="earn-n"></b></div><div class="elist" id="earn"></div></section>
   </aside>
 </main>
 
@@ -166,6 +167,11 @@
   <div id="audit"></div>
 </main>
 
+<main class="page pane" data-pane="portfolio" hidden>
+  <div class="ph"><h2>Portfolio</h2><span class="sub" title="Every app the company, or the account it runs on, built through Build it Better: its visitors, its uses, and what it earns.">built, brought in, earned</span></div>
+  <div id="portfolio"></div>
+</main>
+
 <main class="page pane" data-pane="rules" hidden>
   <div class="ph"><h2>How the company works</h2><span class="sub">write it as one sentence; it becomes a process everyone follows</span></div>
   <div class="rulesgrid">
@@ -200,13 +206,14 @@
 <div class="toast" id="toast" hidden></div>
 
 <!-- ?v= changes with every edit, so a plain reload never runs yesterday's file from the cache -->
-<script src="data.js?v=20261018h"></script>
-<script src="uv-data.js?v=20261018h"></script>
-<script src="sim.js?v=20261018h"></script>
-<script src="office.js?v=20261018h"></script>
-<script src="universe.js?v=20261018h"></script>
-<script src="cards.js?v=20261018h"></script>
-<script src="app.js?v=20261018h"></script>
-<script type="module" src="u3d.js?v=20261018h"></script>
+<script src="data.js?v=20261018i"></script>
+<script src="uv-data.js?v=20261018i"></script>
+<script src="portfolio.js?v=20261018i"></script>
+<script src="sim.js?v=20261018i"></script>
+<script src="office.js?v=20261018i"></script>
+<script src="universe.js?v=20261018i"></script>
+<script src="cards.js?v=20261018i"></script>
+<script src="app.js?v=20261018i"></script>
+<script type="module" src="u3d.js?v=20261018i"></script>
 </body>
 </html>

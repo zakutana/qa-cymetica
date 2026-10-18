@@ -1062,6 +1062,21 @@ function omats() {
   OM.dark = new THREE.MeshStandardMaterial({ color: 0x07090d, roughness: 0.45, metalness: 0.45 });
   OM.head = new THREE.MeshStandardMaterial({ color: 0xa9b8cc, roughness: 0.6 });
   OM.plinth = new THREE.MeshStandardMaterial({ color: 0x0c1016, roughness: 0.45, metalness: 0.55 });
+  // the hull under the floor: dark plates, their seams, a lighter lip along the top of each plate
+  const hc = document.createElement('canvas'); hc.width = 512; hc.height = 128; const hg = hc.getContext('2d');
+  hg.fillStyle = '#2a3442'; hg.fillRect(0, 0, 512, 128); hg.fillStyle = 'rgba(255,255,255,.08)';
+  for (let x = 0; x < 512; x += 64) hg.fillRect(x + 4, 6, 56, 4);
+  hg.strokeStyle = 'rgba(0,0,0,.65)'; hg.lineWidth = 3;
+  for (let x = 0; x <= 512; x += 64) { hg.beginPath(); hg.moveTo(x, 0); hg.lineTo(x, 128); hg.stroke(); }
+  hg.beginPath(); hg.moveTo(0, 70); hg.lineTo(512, 70); hg.stroke();
+  const ht = new THREE.CanvasTexture(hc); ht.colorSpace = THREE.SRGBColorSpace; ht.anisotropy = 4;
+  OM.hull = new THREE.MeshStandardMaterial({ map: ht, roughness: 0.5, metalness: 0.5 });
+  // the vault's coins: ET10 green, USDC blue, both metal with their own light
+  OM.coinG = new THREE.MeshStandardMaterial({ color: 0x0f5a3a, emissive: 0x00ff88, emissiveIntensity: 0.35, metalness: 0.7, roughness: 0.3 });
+  OM.coinB = new THREE.MeshStandardMaterial({ color: 0x1b3a6b, emissive: 0x3b82f6, emissiveIntensity: 0.5, metalness: 0.7, roughness: 0.3 });
+  // astronauts: a white suit, a helmet, a pack
+  OM.suit = new THREE.MeshStandardMaterial({ color: 0xdfe6ee, roughness: 0.55, metalness: 0.1 });
+  OM.pack = new THREE.MeshStandardMaterial({ color: 0x8a99ab, roughness: 0.5, metalness: 0.3 });
   OM.capsule = new THREE.CapsuleGeometry(0.17, 0.34, 4, 14);
   OM.green = amat('#00ff88'); OM.cyan = amat('#00cfff'); OM.blue = amat('#3b82f6'); OM.red = amat('#ff4444');
 }
@@ -1126,11 +1141,25 @@ function drawKanban(s, counts) {
   s.tex.needsUpdate = true;
 }
 function candleTex() {
+  if (TX.candle) return TX.candle;
   const c = document.createElement('canvas'); c.width = 512; c.height = 256; const g = c.getContext('2d');
   g.fillStyle = '#06100c'; g.fillRect(0, 0, 512, 256); g.strokeStyle = '#00ff88'; g.lineWidth = 5; g.strokeRect(3, 3, 506, 250);
   let v = 140; for (let i = 0; i < 16; i++) { const up = [1, 1, 0, 1, 0, 1, 1, 0, 1, 1, 1, 0, 1, 1, 0, 1][i], o = v; v = Math.max(60, Math.min(210, v + (up ? -16 : 13))); g.fillStyle = up ? '#00ff88' : '#ff4444'; g.fillRect(24 + i * 29, Math.min(o, v), 17, Math.max(6, Math.abs(o - v))); g.fillRect(31 + i * 29, Math.min(o, v) - 10, 3, Math.abs(o - v) + 20); }
   g.fillStyle = '#00ff88'; g.font = '700 22px JetBrains Mono, monospace'; g.fillText('BASKET H2 · +1.1%', 22, 34);
-  const t = new THREE.CanvasTexture(c); t.colorSpace = THREE.SRGBColorSpace; return t;
+  const t = new THREE.CanvasTexture(c); t.colorSpace = THREE.SRGBColorSpace; TX.candle = t; return t;
+}
+// a holographic pad: a grid inside a circle, fading to its rim
+function padTex() {
+  if (TX.pad) return TX.pad;
+  const c = document.createElement('canvas'); c.width = c.height = 512; const g = c.getContext('2d');
+  g.save(); g.beginPath(); g.arc(256, 256, 250, 0, Math.PI * 2); g.clip();
+  const gr = g.createRadialGradient(256, 256, 0, 256, 256, 250); gr.addColorStop(0, 'rgba(0,207,255,.16)'); gr.addColorStop(1, 'rgba(0,207,255,.04)');
+  g.fillStyle = gr; g.fillRect(0, 0, 512, 512);
+  g.strokeStyle = 'rgba(0,207,255,.45)'; g.lineWidth = 2;
+  for (let p = 16; p < 512; p += 32) { g.beginPath(); g.moveTo(p, 0); g.lineTo(p, 512); g.stroke(); g.beginPath(); g.moveTo(0, p); g.lineTo(512, p); g.stroke(); }
+  g.restore();
+  g.strokeStyle = 'rgba(0,207,255,.9)'; g.lineWidth = 6; g.beginPath(); g.arc(256, 256, 247, 0, Math.PI * 2); g.stroke();
+  const t = new THREE.CanvasTexture(c); t.colorSpace = THREE.SRGBColorSpace; t.anisotropy = 4; TX.pad = t; return t;
 }
 function moodTex() {
   const c = document.createElement('canvas'); c.width = 512; c.height = 256; const g = c.getContext('2d');
@@ -1148,7 +1177,7 @@ class Office3D {
     this.tip = stage.querySelector('.tip'); this.layer = stage.querySelector('.o3layer');
     this.sel = null; this.cells = {}; this.paths = {}; this.packets = []; this.rooms = {}; this.fitted = false; this.hover = null;
     this.mouse = new THREE.Vector2(); this.ray = new THREE.Raycaster();
-    this.scene = new THREE.Scene(); this.scene.background = new THREE.Color(OFFICE.bg); this.scene.fog = new THREE.Fog(OFFICE.bg, 80, 170);
+    this.scene = new THREE.Scene(); this.scene.background = new THREE.Color(OFFICE.bg); this.scene.fog = new THREE.Fog(OFFICE.bg, 110, 280);
     this.camera = new THREE.PerspectiveCamera(30, 2, 0.3, 500);
     this.renderer = new THREE.WebGPURenderer({ antialias: false });
     this.renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
@@ -1165,9 +1194,12 @@ class Office3D {
     this.sun = new THREE.DirectionalLight(0xf4f8fc, 2.3); this.sun.castShadow = true; this.sun.shadow.mapSize.set(2048, 2048);
     this.sun.shadow.normalBias = 0.02; this.sun.shadow.bias = -0.0005; S.add(this.sun); S.add(this.sun.target);
     const rim = new THREE.DirectionalLight(0x00cfff, 0.3); rim.position.set(30, 14, -30); S.add(rim);
-    S.add(starField(1400, 230, 60, 0.75));
-    // far behind the floor, the faint green of the Universe it floats in
-    [[0x00ff88, 0.045, [-115, -75, -95], 150], [0x00cfff, 0.03, [-55, -95, -150], 120], [0x00ff88, 0.025, [55, -105, -125], 100]].forEach(([c, o, p, s]) => {
+    // light from below and in front, so the hull's side and the rock under it read against the dark
+    const under = new THREE.DirectionalLight(0xbfe9ff, 1.1); under.position.set(40, -30, 45); S.add(under);
+    S.add(starField(1800, 230, 80, 0.85));
+    // the nebula the office floats in, far behind it: teal at the top left, blue and a breath of green lower down
+    [[0x00cfff, 0.16, [-245, -25, -70], 300], [0x00ff88, 0.07, [-210, 10, -20], 200], [0x3b82f6, 0.1, [-170, -70, -190], 260],
+      [0x00cfff, 0.06, [-60, -110, -230], 220], [0x00ff88, 0.05, [40, -120, -200], 180]].forEach(([c, o, p, s]) => {
       const sp = glowSprite(c, o, s); sp.material.fog = false; sp.position.set(p[0], p[1], p[2]); S.add(sp);
     });
     this.world = new THREE.Group(); S.add(this.world);
@@ -1192,7 +1224,7 @@ class Office3D {
   layout(opts) {
     const S = CO.S, L = CO.iso, born = opts && opts.born;
     this.shapeKey = this.shape();
-    const cells = { hub: L.HUB, audit: L.AUDIT }, used = {};
+    const cells = { hub: L.HUB, audit: L.AUDIT, vault: L.VAULT }, used = {};
     S.departments.forEach((d) => { cells['d' + d.id] = L.SLOTS[d.slot]; used[d.slot] = 1; });
     let lot = 0; while (used[lot]) lot++;
     if (lot < L.SLOTS.length && !CO.RO) cells.lot = L.SLOTS[lot];
@@ -1210,7 +1242,7 @@ class Office3D {
     all.forEach((c) => { have[kc(c[0], c[1])] = 1; });
     // a calm line, below the bloom: the operator found a glowing one too aggressive in the foreground
     const top = new THREE.MeshStandardMaterial({ color: 0x090c11, roughness: 0.5, metalness: 0.45 }), edgeM = emis('#00ff88', 0.42), edgeLow = emis('#00ff88', 0.12);
-    this.corners = [];
+    this.corners = []; const outer = [];
     all.forEach((c) => {
       const s = new THREE.Mesh(G.box, [OM.plinth, OM.plinth, top, OM.plinth, OM.plinth, OM.plinth]);
       s.scale.set(RS + 2 * pad + 0.02, T, RS + 2 * pad + 0.02); s.position.copy(this.V(c[0] + RS / 2, c[1] + RS / 2, -T / 2)); s.receiveShadow = true; W.add(s);
@@ -1218,13 +1250,15 @@ class Office3D {
       glow.scale.set(RS * 1.9, RS * 1.9, 1); glow.rotation.x = -Math.PI / 2; glow.position.copy(this.V(c[0] + RS / 2, c[1] + RS / 2, -T - 0.6)); W.add(glow);
       const x0 = c[0] - pad, y0 = c[1] - pad, x1 = c[0] + RS + pad, y1 = c[1] + RS + pad;
       // a side is the outside when no room's slab meets it there
-      [[x0, y0, x1, y0, !have[kc(c[0], c[1] - 8)]], [x0, y1, x1, y1, !have[kc(c[0], c[1] + 8)]], [x0, y0, x0, y1, !have[kc(c[0] - 8, c[1])]], [x1, y0, x1, y1, !have[kc(c[0] + 8, c[1])]]].forEach(([ax, ay, bx, by, out]) => {
+      [[x0, y0, x1, y0, !have[kc(c[0], c[1] - 8)], 0, -1], [x0, y1, x1, y1, !have[kc(c[0], c[1] + 8)], 0, 1], [x0, y0, x0, y1, !have[kc(c[0] - 8, c[1])], -1, 0], [x1, y0, x1, y1, !have[kc(c[0] + 8, c[1])], 1, 0]].forEach(([ax, ay, bx, by, out, nx, ny]) => {
         if (!out) return;
+        outer.push({ ax, ay, bx, by, nx, ny });
         const len = Math.hypot(bx - ax, by - ay) + 0.06, along = ax === bx;
         [[0, 0.045, edgeM], [-T, 0.035, edgeLow]].forEach(([z, t, m]) => { const e = new THREE.Mesh(G.box, m); e.scale.set(along ? t : len, t, along ? len : t); e.position.copy(this.V((ax + bx) / 2, (ay + by) / 2, z)); W.add(e); });
       });
       [[x0, y0], [x1, y0], [x0, y1], [x1, y1]].forEach(([x, y]) => { this.corners.push(this.V(x, y, -T), this.V(x, y, 1.35)); });
     });
+    this.exterior(all, outer, pad, T);
     // corridors: from every room's door to the Manager's, the 2D office's own routes
     this.paths = {}; this.conduits = {};
     Object.keys(cells).forEach((k) => {
@@ -1251,7 +1285,7 @@ class Office3D {
       this.rooms[k] = room;
       if (k === 'lot') return this.lotRoom(room);
       this.shell(room);
-      if (k === 'hub') this.hubRoom(room); else if (k === 'audit') this.auditRoom(room); else this.deptRoom(room, CO.dept(+k.slice(1)));
+      if (k === 'hub') this.hubRoom(room); else if (k === 'audit') this.auditRoom(room); else if (k === 'vault') this.vaultRoom(room); else this.deptRoom(room, CO.dept(+k.slice(1)));
       const hit = new THREE.Mesh(G.box, M.hit); hit.scale.set(RS, 1.6, RS); hit.position.copy(this.V(c[0] + RS / 2, c[1] + RS / 2, 0.8)); hit.userData.key = k; g.add(hit); this.hits.push(hit);
       if (room.born) { g.scale.set(1, 0.01, 1); room.grow = performance.now(); }
     });
@@ -1259,19 +1293,70 @@ class Office3D {
     this.update();
     if (!this.fitted) { this.fit(false); }
   }
+  // Under and round the floor, what makes it a station in space: a hull with seams and a row of lights, the rock it
+  // is built on, thrusters, two solar arrays, and small asteroids drifting past. Static parts merged per material.
+  exterior(all, outer, pad, T) {
+    const W = this.world, RS = CO.iso.RS, ext = new THREE.Group(), HD = 1.0, R = rng(17); W.add(ext);
+    all.forEach((c) => {
+      const h = new THREE.Mesh(G.box, OM.hull); h.scale.set(RS + 2 * pad - 0.5, HD, RS + 2 * pad - 0.5); h.position.copy(this.V(c[0] + RS / 2, c[1] + RS / 2, -T - HD / 2)); ext.add(h);
+    });
+    const lamp = amat('#00cfff').glow;
+    outer.forEach((e) => {
+      const n = Math.floor(Math.hypot(e.bx - e.ax, e.by - e.ay) / 1.3);
+      for (let i = 1; i < n; i++) { const t = i / n, m = new THREE.Mesh(G.box, lamp); m.scale.set(0.09, 0.05, 0.09); m.position.copy(this.V(e.ax + (e.bx - e.ax) * t - e.nx * 0.24, e.ay + (e.by - e.ay) * t - e.ny * 0.24, -T - 0.42)); ext.add(m); }
+    });
+    let mnx = 1e9, mxx = -1e9, mny = 1e9, mxy = -1e9;
+    all.forEach((c) => { mnx = Math.min(mnx, c[0]); mxx = Math.max(mxx, c[0] + RS); mny = Math.min(mny, c[1]); mxy = Math.max(mxy, c[1] + RS); });
+    const cxp = (mnx + mxx) / 2, cyp = (mny + mxy) / 2, span = Math.max(mxx - mnx, mxy - mny);
+    const rock = new THREE.Mesh(G.rock, M.rock); rock.scale.set(span * 0.4, span * 0.22, span * 0.36); rock.position.copy(this.V(cxp, cyp, -T - HD - span * 0.13)); rock.rotation.set(0.15, 0.7, 0.08); ext.add(rock);
+    // the camera's fit takes the rock in too: the station is its floor and what it stands on
+    [[-0.25, 0], [0.25, 0], [0, -0.25], [0, 0.25]].forEach(([dx, dy]) => this.corners.push(this.V(cxp + dx * span, cyp + dy * span, -T - HD - span * 0.3)));
+    const rock2 = new THREE.Mesh(G.rock, M.rock); rock2.scale.set(span * 0.2, span * 0.13, span * 0.18); rock2.position.copy(this.V(cxp - span * 0.18, cyp - span * 0.1, -T - HD - span * 0.3)); rock2.rotation.set(0.6, 1.9, 0.3); ext.add(rock2);
+    // thrusters on up to six of the outside walls, flames that breathe
+    this.flames = [];
+    const pick = outer.length <= 6 ? outer : [0, 1, 2, 3, 4, 5].map((i) => outer[Math.floor((i + 0.5) * outer.length / 6)]);
+    pick.forEach((e) => {
+      const g = new THREE.Group(); g.position.copy(this.V((e.ax + e.bx) / 2 + e.nx * 0.2, (e.ay + e.by) / 2 + e.ny * 0.2, -T - HD * 0.55)); g.rotation.y = Math.atan2(e.nx, e.ny); ext.add(g);
+      const nac = new THREE.Mesh(G.cyl, OM.frame); nac.scale.set(0.36, 1.2, 0.36); nac.rotation.x = Math.PI / 2; nac.position.z = 0.3; g.add(nac);
+      const bell = new THREE.Mesh(G.bell, OM.dark); bell.scale.set(0.42, 0.5, 0.42); bell.rotation.x = -Math.PI / 2; bell.position.z = 1.1; g.add(bell);
+      const ring = new THREE.Mesh(G.ringT, amat('#00cfff').rim); ring.scale.setScalar(0.38); ring.position.z = 0.75; g.add(ring);
+      const disc = new THREE.Mesh(G.sphere, amat('#00cfff').glow); disc.scale.set(0.3, 0.3, 0.05); disc.position.z = 1.32; disc.userData.dyn = true; g.add(disc);
+      const fl = new THREE.Mesh(G.beam, amat('#00cfff').beam); fl.scale.set(0.8, 1.3, 0.8); fl.rotation.x = Math.PI / 2; fl.position.z = 1.95; fl.userData.dyn = true; g.add(fl);
+      this.flames.push({ fl, ph: R() * 6 });
+    });
+    // two solar arrays off the far sides
+    [[0, -1], [-1, 0]].forEach(([nx, ny]) => {
+      const e = outer.filter((o) => o.nx === nx && o.ny === ny)[0]; if (!e) return;
+      const mx = (e.ax + e.bx) / 2, my = (e.ay + e.by) / 2, z = -T - 0.35, along = nx !== 0;
+      const truss = new THREE.Mesh(G.box, OM.frame); truss.scale.set(along ? 7.6 : 0.12, 0.12, along ? 0.12 : 7.6); truss.position.copy(this.V(mx + nx * 3.9, my + ny * 3.9, z)); ext.add(truss);
+      for (let i = 0; i < 3; i++) {
+        const p = new THREE.Mesh(G.box, amat('#00cfff').panel); p.scale.set(along ? 2.2 : 3.2, 0.05, along ? 3.2 : 2.2);
+        p.position.copy(this.V(mx + nx * (1.6 + i * 2.35), my + ny * (1.6 + i * 2.35), z + 0.05)); p.rotation[along ? 'x' : 'z'] = 0.18; ext.add(p);
+      }
+    });
+    bakeGroup(ext);
+    // small asteroids drifting round it, never between it and the camera
+    this.drift = [];
+    for (let i = 0; i < 10; i++) {
+      const a = R() * Math.PI * 2; if ((Math.cos(a) + Math.sin(a)) / Math.SQRT2 > 0.25) { i--; continue; }
+      const d = span * (0.8 + R() * 0.6), s = 0.35 + R() * R() * 1.7, m = new THREE.Mesh(G.rock, M.rock);
+      m.scale.set(s, s * 0.8, s * 0.9); m.position.copy(this.V(cxp + Math.cos(a) * d, cyp + Math.sin(a) * d, -7 + R() * 10)); m.rotation.set(R() * 3, R() * 3, R() * 3);
+      W.add(m); this.drift.push({ m, sp: 0.08 + R() * 0.2 });
+    }
+  }
   shell(r) {
     const { g, x0, y0 } = r, RS = CO.iso.RS;
     this.box(g, x0, y0, 0, RS, RS, 0.1, OM.tile);
     r.glow = new THREE.Mesh(G.plane, new THREE.MeshBasicMaterial({ map: radialTex('255,255,255', 0.9), transparent: true, opacity: 0, blending: THREE.AdditiveBlending, depthWrite: false, color: 0x00cfff }));
     r.glow.scale.set(RS * 1.15, RS * 1.15, 1); r.glow.rotation.x = -Math.PI / 2; r.glow.position.copy(this.V(x0 + RS / 2, y0 + RS / 2, 0.11)); g.add(r.glow);
-    // glass back walls, mullions and a lit top edge in the room's colour
-    this.box(g, x0, y0, 0.1, RS, 0.08, 1.15, OM.glass, false);
-    this.box(g, x0, y0, 0.1, 0.08, RS, 1.15, OM.glass, false);
-    for (let m = 1; m < 4; m++) { this.box(g, x0 + m * RS / 4 - 0.03, y0, 0.1, 0.06, 0.1, 1.15, OM.frame); this.box(g, x0, y0 + m * RS / 4 - 0.03, 0.1, 0.1, 0.06, 1.15, OM.frame); }
+    // tall glass back walls, mullions and a lit top edge in the room's colour
+    this.box(g, x0, y0, 0.1, RS, 0.08, 1.45, OM.glass, false);
+    this.box(g, x0, y0, 0.1, 0.08, RS, 1.45, OM.glass, false);
+    for (let m = 1; m < 4; m++) { this.box(g, x0 + m * RS / 4 - 0.03, y0, 0.1, 0.06, 0.1, 1.45, OM.frame); this.box(g, x0, y0 + m * RS / 4 - 0.03, 0.1, 0.1, 0.06, 1.45, OM.frame); }
     // a lamp over the room in the colour of what it is doing: it lights the desks, the people and the floor
     r.lamp = new THREE.PointLight(OFFICE.lamp, 3, 9, 1.4); r.lamp.position.copy(this.V(x0 + RS / 2, y0 + RS / 2, 2.6)); g.add(r.lamp);
     r.edgeM = emis('#7f93ad', 0.4); r.sillM = emis('#7f93ad', 0.15);
-    this.box(g, x0, y0, 1.25, RS, 0.07, 0.05, r.edgeM, false); this.box(g, x0, y0, 1.25, 0.07, RS, 0.05, r.edgeM, false);
+    this.box(g, x0, y0, 1.55, RS, 0.07, 0.05, r.edgeM, false); this.box(g, x0, y0, 1.55, 0.07, RS, 0.05, r.edgeM, false);
     this.box(g, x0 + RS - 0.04, y0, 0.1, 0.04, RS, 0.04, r.sillM, false); this.box(g, x0, y0 + RS - 0.04, 0.1, RS, 0.04, 0.04, r.sillM, false);
   }
   // a wall screen on the back wall: what runs now, or why it waits
@@ -1297,13 +1382,17 @@ class Office3D {
     this.box(g, x + 0.7, y + 1.08, 0, 0.5, 0.45, 0.22, OM.plinth);
   }
   agent(r, x, y, i, label, head) {
+    // an astronaut: white suit, white helmet with a dark visor turned to the desk, a pack, a light on its chest
     const g = new THREE.Group(); g.position.copy(this.V(x, y, 0.1)); r.g.add(g);
-    const body = new THREE.MeshStandardMaterial({ color: OFFICE.agent, emissive: OFFICE.agentE, emissiveIntensity: 0.6, roughness: 0.5, metalness: 0.2 });
-    const b = new THREE.Mesh(OM.capsule, body); b.position.y = 0.42; b.castShadow = true; g.add(b);
-    const h = new THREE.Mesh(G.sphere, head ? new THREE.MeshStandardMaterial({ color: head, roughness: 0.6 }) : OM.head); h.scale.setScalar(0.15); h.position.y = 0.86; h.castShadow = true; g.add(h);
+    const b = new THREE.Mesh(OM.capsule, OM.suit); b.position.y = 0.42; b.castShadow = true; g.add(b);
+    const h = new THREE.Mesh(G.sphere, OM.suit); h.scale.setScalar(0.18); h.position.y = 0.9; h.castShadow = true; g.add(h);
+    const visorM = new THREE.MeshStandardMaterial({ color: 0x05080c, emissive: 0x00cfff, emissiveIntensity: 0.06, roughness: 0.12, metalness: 0.8 });
+    const vz = new THREE.Mesh(G.sphere, visorM); vz.scale.set(0.135, 0.1, 0.09); vz.position.set(0, 0.9, -0.11); g.add(vz);
+    const pack = new THREE.Mesh(G.box, OM.pack); pack.scale.set(0.26, 0.32, 0.12); pack.position.set(0, 0.52, 0.19); g.add(pack);
+    const chest = new THREE.Mesh(G.box, OM.pack); chest.scale.set(0.08, 0.05, 0.02); chest.position.set(0, 0.6, -0.17); g.add(chest);
     const ringM = emis('#00cfff', 0); const ring = new THREE.Mesh(G.ring, ringM); ring.rotation.x = Math.PI / 2; ring.scale.setScalar(0.34); ring.position.y = 0.02; g.add(ring);
     const el = document.createElement('div'); el.className = 'a3'; el.textContent = label; this.layer.appendChild(el);
-    const a = { g, body, b, h, ring, ringM, el, home: g.position.clone(), phase: (i + r.x0 * 0.37) % 6.28, key: r.key + ':' + i, room: r, label };
+    const a = { g, b, h, visorM, chest, ring, ringM, el, home: g.position.clone(), phase: (i + r.x0 * 0.37) % 6.28, key: r.key + ':' + i, room: r, label };
     r.agents.push(a); return a;
   }
   plate(r, cls) {
@@ -1316,15 +1405,17 @@ class Office3D {
     const k = d.key; let u1 = 6.2;
     if (k === 'trading_desk') { u1 = 4.2; this.boardTex(r, 4.4, 6.75, candleTex()); }
     else if (k === 'design') { u1 = 4.6; this.boardTex(r, 4.8, 6.75, moodTex()); }
-    else if (k === 'development' || k === 'testing' || k === 'testing_lab') u1 = 5.4;
+    else if (k === 'development' || k === 'testing') u1 = 4.8;
+    else if (k === 'testing_lab') u1 = 4.1;
     this.wallScreen(r, 1.1, u1); this.kanban(r);
     const g = r.g, x0 = r.x0, y0 = r.y0;
-    if (k === 'development') this.racks(r, x0 + 5.7, y0 + 0.25, 2);
-    else if (k === 'testing') this.devices(r, x0 + 5.65, y0 + 0.28);
-    else if (k === 'testing_lab') this.flasks(r, x0 + 5.5, y0 + 0.3);
+    // what each kind of department works with: server racks, test devices, a lab, trading screens
+    if (k === 'development') this.racks(r, x0 + 5.0, y0 + 0.25, 3);
+    else if (k === 'testing') { this.racks(r, x0 + 5.0, y0 + 0.25, 1); this.devices(r, x0 + 5.65, y0 + 0.28); }
+    else if (k === 'testing_lab') { this.labMachine(r, x0 + 4.25, y0 + 0.3); this.flasks(r, x0 + 5.5, y0 + 0.3); }
     else if (k === 'custom') this.box(g, x0 + 5.6, y0 + 0.2, 0.1, 1.05, 0.12, 1.15, OM.frame);
     const ex = d.experts.slice(0, 3), xs = ex.length === 1 ? [2.55] : ex.length === 2 ? [1.0, 3.75] : [0.55, 2.6, 4.65];
-    ex.forEach((e, i) => this.desk(r, x0 + xs[i], y0 + 1.75, i));
+    ex.forEach((e, i) => { this.desk(r, x0 + xs[i], y0 + 1.75, i); if (k === 'trading_desk') this.sideScreens(r, x0 + xs[i], y0 + 1.75); });
     ex.forEach((e, i) => this.agent(r, x0 + xs[i] + 0.95, y0 + 3.05, i, CO.expertName(e)));
     this.terminal(r, x0 + 0.35, y0 + 4.0, d.link || CO.DEPT_LINK[k] || CO.DEPT_LINK.custom);
     this.plant(r, x0 + 0.3, y0 + 6.2);
@@ -1365,6 +1456,21 @@ class Office3D {
     this.box(r.g, x, y, 0.1, 1.1, 0.45, 1.25, OM.dark);
     for (let s = 0; s < 3; s++) for (let k = 0; k < 3; k++) { const col = ['#00cfff', '#00ff88', '#3b82f6'][(s + k) % 3]; const m = new THREE.Mesh(G.plane, amat(col).glow); m.scale.set(0.2, 0.26, 1); m.position.copy(this.V(x + 0.18 + k * 0.36, y + 0.46, 0.4 + s * 0.38)); r.g.add(m); }
   }
+  // a lab machine: a cabinet with a lit chamber and a row of lights
+  labMachine(r, x, y) {
+    this.box(r.g, x, y, 0.1, 1.0, 0.7, 1.15, OM.frame);
+    const w = new THREE.Mesh(G.plane, OM.cyan.glow); w.scale.set(0.6, 0.45, 1); w.position.copy(this.V(x + 0.5, y + 0.71, 0.85)); w.rotation.y = 0; r.g.add(w);
+    const glass = new THREE.Mesh(G.plane, OM.glass); glass.scale.set(0.66, 0.5, 1); glass.position.copy(this.V(x + 0.5, y + 0.72, 0.85)); r.g.add(glass);
+    for (let k = 0; k < 4; k++) { const m = new THREE.Mesh(G.box, (k % 2 ? OM.green : OM.cyan).glow); m.scale.set(0.08, 0.04, 0.01); m.position.copy(this.V(x + 0.2 + k * 0.2, y + 0.71, 0.4)); m.userData.blink = k * 3; r.g.add(m); (r.leds = r.leds || []).push(m); }
+  }
+  // two more screens on a trading desk, turned in a little: charts, green and red
+  sideScreens(r, x, y) {
+    [[x + 0.05, 0.35], [x + 1.45, -0.35]].forEach(([sx, rot]) => {
+      this.box(r.g, sx, y + 0.14, 0.55, 0.42, 0.05, 0.36, OM.dark);
+      const f = new THREE.Mesh(G.plane, new THREE.MeshBasicMaterial({ map: candleTex(), toneMapped: false })); f.scale.set(0.38, 0.3, 1);
+      f.position.copy(this.V(sx + 0.21, y + 0.17, 0.73)); f.rotation.y = rot * 0; r.g.add(f);
+    });
+  }
   flasks(r, x, y) {
     this.box(r.g, x, y, 0, 1.3, 0.6, 0.45, OM.desk);
     [[0.25, '#00cfff', 0.5], [0.65, '#00ff88', 0.36], [1.02, '#00cfff', 0.42]].forEach(([u, col, h]) => {
@@ -1380,6 +1486,8 @@ class Office3D {
     const c = this.V(11.6, 11.4, 0), cy = OM.cyan;
     const ped = new THREE.Mesh(G.cyl, OM.plinth); ped.scale.set(1.55, 0.45, 1.55); ped.position.set(c.x, 0.32, c.z); ped.castShadow = true; ped.receiveShadow = true; g.add(ped);
     const lip = new THREE.Mesh(G.ringT, cy.rim); lip.scale.setScalar(1.55); lip.rotation.x = Math.PI / 2; lip.position.set(c.x, 0.55, c.z); g.add(lip);
+    // rings of light on the floor round it
+    [2.2, 2.75].forEach((s, i) => { const fr = new THREE.Mesh(i ? G.holoDash : G.ring, cy.soft); fr.scale.setScalar(s); fr.rotation.x = Math.PI / 2; fr.position.set(c.x, 0.12, c.z); g.add(fr); });
     const core = new THREE.Mesh(G.sphere, cy.glow); core.scale.setScalar(0.32); core.position.set(c.x, 1.2, c.z); g.add(core);
     const beam = new THREE.Mesh(G.beam, cy.beam); beam.scale.set(2.2, 3.4, 2.2); beam.position.set(c.x, 2.25, c.z); g.add(beam);
     r.holo = [1.35, 1.95, 2.55].map((y, i) => { const h = new THREE.Mesh(G.ringT, cy.rim); h.scale.setScalar(1.1 - i * 0.22); h.rotation.x = Math.PI / 2; h.position.set(c.x, y, c.z); g.add(h); return h; });
@@ -1397,6 +1505,38 @@ class Office3D {
     this.plant(r, r.x0 + 0.3, r.y0 + 6.2);
     this.plate(r, 'auditp');
   }
+  // The vault: its round door in the back wall, a lit plinth where ET10 (green) and USDC (blue) pile up in stacks of
+  // coins under glass. A visitor finds the door shut and the plinth bare: it is always private.
+  vaultRoom(r) {
+    const g = r.g, x0 = r.x0, y0 = r.y0, A = OM.green, dc = this.V(x0 + 3.5, y0 + 0.17, 0.8);
+    const door = new THREE.Mesh(G.cyl, OM.frame); door.scale.set(0.68, 0.09, 0.68); door.rotation.x = Math.PI / 2; door.position.copy(dc); g.add(door);
+    const rim = new THREE.Mesh(G.ringT, A.rim); rim.scale.setScalar(0.72); rim.position.copy(dc).add(new THREE.Vector3(0, 0, 0.05)); g.add(rim);
+    r.wheel = new THREE.Group(); r.wheel.position.copy(dc).add(new THREE.Vector3(0, 0, 0.07)); g.add(r.wheel);
+    for (let k = 0; k < 3; k++) { const s = new THREE.Mesh(G.box, M.metal); s.scale.set(0.82, 0.05, 0.04); s.rotation.z = k * Math.PI / 3; r.wheel.add(s); }
+    const hubc = new THREE.Mesh(G.sphere, A.glow); hubc.scale.set(0.07, 0.07, 0.03); r.wheel.add(hubc);
+    this.box(g, x0 + 1.4, y0 + 2.2, 0, 4.2, 2.6, 0.24, OM.plinth);
+    const lip = emis('#00ff88', 0.7);
+    [[x0 + 1.4, y0 + 4.8 - 0.03, 4.2, 0.05], [x0 + 1.4, y0 + 2.2 - 0.02, 4.2, 0.05]].forEach(([x, y, w, d]) => this.box(g, x, y, 0.24, w, d, 0.03, lip, false));
+    r.pileG = new THREE.Group(); g.add(r.pileG);
+    this.plate(r, 'vaultp'); r.plateAt = this.V(x0 + 4.4, y0 + 5.75, 1.35);
+    if (r.glow) { r.glow.material.color.set(0x00ff88); r.glowBase = CO.RO ? 0 : 0.14; }
+  }
+  // the piles, rebuilt only when what they hold changes: five stacks each, taller with every order of magnitude
+  piles(r, V, priv) {
+    release(r.pileG); r.pileG.clear(); this.vaultPiles = [];
+    if (priv) return;
+    const x0 = r.x0, y0 = r.y0;
+    [[V.et10, OM.coinG, x0 + 2.3, 0x00ff88], [V.usdc * 100, OM.coinB, x0 + 4.3, 0x3b82f6]].forEach(([amt, mat, px, col]) => {
+      const lvl = Math.max(0, Math.log10(1 + amt / 50));
+      [[0, 0, 1], [0.55, 0.15, 0.8], [-0.1, 0.6, 0.7], [0.5, 0.68, 0.55], [0.22, 0.34, 0.9]].forEach(([dx, dy, k], i) => {
+        if (lvl <= 0 && i) return;
+        const h = Math.max(0.05, lvl * 0.2 * k), m = new THREE.Mesh(G.cyl, mat);
+        m.scale.set(0.22, h, 0.22); m.position.copy(this.V(px + dx, y0 + 3.0 + dy, 0.24 + h / 2)); m.castShadow = true; r.pileG.add(m);
+      });
+      const case_ = new THREE.Mesh(G.box, OM.glass); case_.scale.set(1.25, Math.max(0.5, lvl * 0.2 + 0.25), 1.25); case_.position.copy(this.V(px + 0.25, y0 + 3.35, 0.24 + case_.scale.y / 2)); r.pileG.add(case_);
+      const halo = glowSprite(col, 0.09, 2.0); halo.position.copy(this.V(px + 0.25, y0 + 3.35, 0.5 + lvl * 0.2)); halo.userData.y = halo.position.y; r.pileG.add(halo); this.vaultPiles.push(halo);
+    });
+  }
   lotRoom(r) {
     const RS = CO.iso.RS, g = r.g, c = this.V(r.x0 + RS / 2, r.y0 + RS / 2, 0.05);
     const dash = emis('#00cfff', 0.55);
@@ -1404,8 +1544,10 @@ class Office3D {
       [[r.x0 + a, r.y0], [r.x0 + a, r.y0 + RS]].forEach(([x, y]) => this.box(g, x, y - 0.03, 0.04, 0.4, 0.06, 0.03, dash, false));
       [[r.x0, r.y0 + a], [r.x0 + RS, r.y0 + a]].forEach(([x, y]) => this.box(g, x - 0.03, y, 0.04, 0.06, 0.4, 0.03, dash, false));
     }
-    // a ring of light lying on the free floor, breathing; the label above it says what it is for
-    r.plus = new THREE.Mesh(G.ringT, OM.cyan.rim); r.plus.scale.setScalar(2.1); r.plus.rotation.x = Math.PI / 2; r.plus.position.set(c.x, 0.12, c.z); g.add(r.plus);
+    // a holographic pad on the free floor: a grid in a ring, a dashed ring round it that turns; the label lies inside
+    const pad = new THREE.Mesh(G.plane, new THREE.MeshBasicMaterial({ map: padTex(), transparent: true, blending: THREE.AdditiveBlending, depthWrite: false }));
+    pad.scale.set(4.2, 4.2, 1); pad.rotation.x = -Math.PI / 2; pad.position.set(c.x, 0.1, c.z); g.add(pad);
+    r.plus = new THREE.Mesh(G.holoDash, OM.cyan.rim); r.plus.scale.setScalar(2.55); r.plus.rotation.x = Math.PI / 2; r.plus.position.set(c.x, 0.11, c.z); g.add(r.plus);
     const hit = new THREE.Mesh(G.box, M.hit); hit.scale.set(RS, 1.6, RS); hit.position.set(c.x, 0.8, c.z); hit.userData.key = 'lot'; g.add(hit); this.hits.push(hit);
     const el = document.createElement('div'); el.className = 'p3lot'; el.innerHTML = '<b>+</b>ADD DEPARTMENT'; el.addEventListener('click', () => CO.emit('office:click', 'lot')); this.layer.appendChild(el);
     r.plate = el; r.plateAt = new THREE.Vector3(c.x, 0.15, c.z);   // the label lies inside its ring
@@ -1459,6 +1601,17 @@ class Office3D {
       const html = '<div class="p3h"><i style="background:#7f93ad"></i><b>WEEKLY AUDIT</b></div><div class="p3l" style="color:#a9b8cc">next in ' + days + (days === 1 ? ' day' : ' days') + '</div>';
       if (au.plate._h !== html) { au.plate._h = html; au.plate.innerHTML = html; }
       au.plate.style.setProperty('--c', '#7f93ad');
+    }
+    // the vault: two numbers on its plate, the piles behind it; a visitor reads only that it is private
+    const vr = this.rooms.vault;
+    if (vr) {
+      const VT = CO.vaultTotals(), priv = !!CO.RO, key = priv ? 'priv' : Math.round(VT.et10) + '|' + VT.usdc.toFixed(2);
+      if (vr.pkey !== key) { vr.pkey = key; this.piles(vr, VT, priv); }
+      this.tint(vr, 'idle'); if (vr.edgeM) { vr.edgeM.emissive.set(0x00ff88); vr.edgeM.emissiveIntensity = 0.7; }
+      const html = '<div class="p3h"><i style="background:#00ff88"></i><b>VAULT</b></div>' +
+        (priv ? '<div class="p3l" style="color:#a9b8cc">Private</div>' : '<div class="p3l"><span class="g">' + CO.fmtEt(VT.et10) + ' ET10</span> · <span class="u">' + CO.fmtUsd(VT.usdc) + ' USDC</span></div>');
+      if (vr.plate._h !== html) { vr.plate._h = html; vr.plate.innerHTML = html; }
+      vr.plate.style.setProperty('--c', '#00ff88');
     }
     this.paused = S.company.status === 'paused';
     this.drawSel();
@@ -1516,7 +1669,7 @@ class Office3D {
   // The whole office, as large as the stage allows: the camera's angle is fixed, its distance is the nearest at which
   // every slab's corners fit (a margin at the top for the stage's own bar), and it aims at the middle of what it sees.
   home() {
-    const dir = new THREE.Vector3().setFromSpherical(new THREE.Spherical(1, 0.86, Math.PI / 4)), cam = this.camera.clone(), pts = this.corners || [];
+    const dir = new THREE.Vector3().setFromSpherical(new THREE.Spherical(1, 0.97, Math.PI / 4)), cam = this.camera.clone(), pts = this.corners || [];
     const tgt = new THREE.Vector3(); pts.forEach((p) => tgt.add(p)); if (pts.length) tgt.divideScalar(pts.length); tgt.y = 0;
     const fits = (d, t) => { cam.position.copy(t).addScaledVector(dir, d); cam.lookAt(t); cam.updateMatrixWorld(); return pts.every((p) => { const v = p.clone().project(cam); return Math.abs(v.x) < 0.93 && v.y < 0.82 && v.y > -0.95; }); };
     let d = 30;
@@ -1565,12 +1718,16 @@ class Office3D {
       if (k >= 1) { const d = this.tw.done; this.tw = null; if (d) d(); }
     }
     this.controls.update();
+    if (this.drift) this.drift.forEach((d, i) => { d.m.rotation.y = t * d.sp + i; d.m.rotation.x = t * d.sp * 0.6 + i * 2; });
+    if (this.flames) this.flames.forEach((f) => { const k = 0.85 + 0.15 * Math.sin(t * 13 + f.ph) + 0.05 * Math.sin(t * 31 + f.ph); f.fl.scale.set(0.8 * k, 1.3 * k, 0.8 * k); });
+    if (this.vaultPiles) this.vaultPiles.forEach((p, i) => { p.position.y = p.userData.y + Math.sin(t * 1.2 + i) * 0.03; });
     Object.values(this.rooms).forEach((r) => {
       if (r.grow) { const k = Math.min(1, (now - r.grow) / 1200), e = 1 - Math.pow(1 - k, 3); r.g.scale.set(1, Math.max(0.01, e), 1); if (k >= 1) r.grow = 0; }
       if (r.glow) r.glow.material.opacity = (r.glowBase || 0) * (r.st === 'working' ? 0.75 + 0.25 * Math.sin(t * 2.4 + r.x0) : 1);
       if (r.leds) r.leds.forEach((m, i) => { m.visible = ((Math.floor(t * 3 + m.userData.blink)) % 3) !== 0; });
       if (r.holo) { r.holo.forEach((hh, i) => { hh.rotation.z = t * (0.6 + i * 0.35) * (i % 2 ? -1 : 1); hh.position.y = 1.35 + i * 0.6 + Math.sin(t * 1.3 + i) * 0.05; }); r.core.position.y = 1.2 + Math.sin(t * 1.7) * 0.06; }
-      if (r.plus) r.plus.scale.setScalar(2.1 + Math.sin(t * 1.6) * 0.1);
+      if (r.plus) r.plus.rotation.z = t * 0.25;
+      if (r.wheel) r.wheel.rotation.z = t * 0.12;
       r.agents.forEach((a) => {
         if (a.walk) {
           const W2 = a.walk, f = (now - W2.t0) / W2.dur;
@@ -1581,7 +1738,8 @@ class Office3D {
           else { a.walk = null; a.g.position.copy(a.home); }
         }
         a.b.position.y = 0.42 + (a.working ? Math.abs(Math.sin(t * 7 + a.phase)) * 0.035 : 0);
-        a.body.color.set(a.working ? 0x00cfff : OFFICE.agent); a.body.emissiveIntensity = a.working ? 1.1 : 0.5; a.body.emissive.set(a.working ? 0x00506a : OFFICE.agentE);
+        // an astronaut at work: its visor and its chest light go cyan
+        a.visorM.emissiveIntensity = a.working ? 1.3 : 0.06; a.chest.material = a.working ? OM.cyan.glow : OM.pack;
         a.ringM.emissiveIntensity = a.working ? 1.8 * (1 - ((t * 0.9 + a.phase) % 1)) : 0;
         a.ring.scale.setScalar(a.working ? 0.3 + ((t * 0.9 + a.phase) % 1) * 0.35 : 0.3);
       });

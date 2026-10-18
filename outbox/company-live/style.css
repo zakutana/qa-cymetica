@@ -189,10 +189,6 @@ a { color: var(--cyan); text-decoration: none; cursor: pointer; }
 .prods { display: flex; flex-wrap: wrap; gap: 6px; }
 .runs .cb { display: flex; gap: 6px; } .runs .cb input { flex: 1; min-width: 0; background: var(--deep); border: 1px solid var(--line3); border-radius: 7px; padding: 5px 8px; font-size: 11.5px; outline: none; }
 .runs .cb .btn { padding: 4px 10px; font-size: 11px; }
-.etchip { padding: 7px 12px; border-radius: 8px; border: 1px solid var(--green); color: var(--green); background: var(--green-a); font-size: 12px; font-weight: 700; box-shadow: 0 0 14px rgba(0, 255, 136, .18); }
-.etchip b { font-family: 'Archivo Black'; font-weight: 400; }
-.etchip { cursor: pointer; transition: box-shadow .2s, transform .15s; } .etchip:hover { box-shadow: 0 0 22px rgba(0, 255, 136, .35); transform: translateY(-1px); }
-.etchip.zero { border-color: var(--line3); color: var(--dim2); background: none; box-shadow: none; }
 /* the ET10 breakdown: one row per earning department, its share as a bar */
 .earn { display: flex; flex-direction: column; gap: 8px; }
 .elist { display: flex; flex-direction: column; gap: 7px; }
@@ -204,6 +200,45 @@ a { color: var(--cyan); text-decoration: none; cursor: pointer; }
 .er .ebar { display: block; height: 4px; border-radius: 2px; background: var(--line); margin-top: 7px; overflow: hidden; }
 .er .ebar i { display: block; height: 100%; background: var(--green); border-radius: 2px; box-shadow: 0 0 8px rgba(0, 255, 136, .6); transition: width .6s; }
 .er.zero .e1 .v { color: var(--dim2); text-shadow: none; }
+.er .e1 .v em { font-style: normal; color: #8fbaff; text-shadow: none; font-size: 12px; margin-left: 4px; }
+/* the vault: its two totals, big; ET10 green, USDC blue */
+.vtot { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; width: 100%; padding: 12px; border-radius: 10px; border: 1px solid rgba(0, 255, 136, .35);
+  background: radial-gradient(ellipse at 30% 0%, rgba(0, 255, 136, .1), transparent 70%), var(--navy2); cursor: pointer; text-align: left; }
+.vtot:hover { border-color: var(--green); }
+.vtot b, .vbig b { display: block; font: 400 24px 'Archivo Black', sans-serif; letter-spacing: .01em; }
+.vtot span, .vbig span { font-size: 10.5px; font-weight: 700; letter-spacing: .12em; color: var(--dim2); }
+b.g, span.g { color: var(--green); text-shadow: 0 0 10px rgba(0, 255, 136, .45); } b.u, span.u { color: #8fbaff; text-shadow: 0 0 10px rgba(59, 130, 246, .45); }
+.vnote { font-size: 10px; margin: 2px 2px 0; }
+.vbig { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin: 10px 0 14px; padding: 16px 18px; border-radius: 12px; border: 1px solid rgba(0, 255, 136, .3);
+  background: radial-gradient(ellipse at 20% 0%, rgba(0, 255, 136, .12), transparent 70%), radial-gradient(ellipse at 90% 100%, rgba(59, 130, 246, .12), transparent 70%), var(--deep); }
+.vbig b { font-size: 34px; }
+.vrow { display: grid; grid-template-columns: minmax(0, 1.1fr) minmax(0, 1.4fr) 120px 110px; gap: 10px; align-items: baseline; padding: 8px 2px; border-bottom: 1px solid var(--line); font-size: 12px; }
+.vrow b { font-size: 13px; } .vrow .w { color: var(--dim2); font-size: 11px; } .vrow .g, .vrow .u { text-align: right; font-weight: 800; white-space: nowrap; }
+
+/* Portfolio: build, bring in, earn -- the flow as numbers, then one card per app */
+.pkpis { display: flex; align-items: stretch; gap: 10px; margin: 6px 0 16px; flex-wrap: wrap; }
+.pk { flex: 1; min-width: 150px; padding: 14px 16px; border-radius: 12px; border: 1px solid var(--line2); background: var(--navy2); }
+.pk b { display: block; font: 400 28px 'Archivo Black', sans-serif; color: var(--text); }
+.pk span { font-size: 10.5px; font-weight: 700; letter-spacing: .1em; color: var(--dim2); text-transform: uppercase; }
+.pk span em { font-style: normal; color: var(--green); letter-spacing: 0; margin-left: 4px; }
+.pk.g { border-color: rgba(0, 255, 136, .4); background: radial-gradient(ellipse at 20% 0%, rgba(0, 255, 136, .12), transparent 70%), var(--navy2); } .pk.g b { color: var(--green); text-shadow: 0 0 12px rgba(0, 255, 136, .45); }
+.pk.u { border-color: rgba(59, 130, 246, .45); background: radial-gradient(ellipse at 20% 0%, rgba(59, 130, 246, .14), transparent 70%), var(--navy2); } .pk.u b { color: #8fbaff; }
+.pkpis .arr { align-self: center; font-style: normal; color: var(--dim2); font-size: 18px; }
+.pfgrid { display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 12px; }
+.pf { padding: 14px 16px; border-radius: 12px; border: 1px solid var(--line2); background: var(--navy2); }
+.pf:hover { border-color: rgba(0, 207, 255, .45); }
+.pf1 { display: flex; align-items: baseline; justify-content: space-between; gap: 10px; }
+.pf1 b { font: 400 15px 'Archivo Black', sans-serif; } .pf1 a { font-size: 11px; color: var(--cyan); }
+.pfn { display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; margin: 12px 0 8px; }
+.pfn b { display: block; font-size: 20px; font-weight: 800; } .pfn span { font-size: 10px; color: var(--dim2); letter-spacing: .08em; text-transform: uppercase; }
+.pfbar { display: block; height: 4px; border-radius: 2px; background: var(--line); overflow: hidden; }
+.pfbar i { display: block; height: 100%; background: linear-gradient(90deg, var(--cyan), var(--green)); box-shadow: 0 0 8px rgba(0, 255, 136, .5); }
+.pfe { display: flex; align-items: baseline; gap: 12px; margin-top: 10px; font-size: 13px; font-weight: 800; }
+.pfe em { font-style: normal; font-size: 9.5px; font-weight: 700; letter-spacing: .1em; color: var(--dim2); border: 1px solid var(--line3); border-radius: 9px; padding: 1px 7px; text-transform: uppercase; }
+.pfe i { font-style: normal; font-size: 11px; color: var(--green); margin-left: auto; }
+.pfsrc { margin-top: 14px; font-size: 10.5px; color: var(--dim2); }
+.pfempty { padding: 40px; text-align: center; border: 1px dashed var(--line3); border-radius: 12px; }
+.pfempty b { display: block; font: 400 18px 'Archivo Black', sans-serif; margin-bottom: 6px; } .pfempty span { color: var(--dim2); font-size: 12px; }
 .panel.flash { animation: eflash 1.4s ease; } @keyframes eflash { 0%, 40% { box-shadow: 0 0 0 2px var(--green), 0 0 26px rgba(0, 255, 136, .45); } }
 .mini { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; flex: none; }
 .mini div { background: var(--navy2); border: 1px solid var(--line); border-radius: 9px; padding: 8px 10px; }
