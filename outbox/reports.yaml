@@ -6592,6 +6592,43 @@ reports:
       may still find the deposit. Our check passes when a control outside the card or a script call opens the
       form, or when the card is no longer hidden on an empty list. GET requests only.
 
+  - key: gem-screener-dilution-line-names-no-source
+    findings: [CYM-a_twelve_month_dilution_names_where_its_new_tokens_come_from]
+    severity: low
+    category: logic
+    url: https://cymetica.com/gem-screener/app?view=apps
+    title: >-
+      Gem Screener Supply column: a 12-month dilution whose new tokens start after the first month names no
+      source (Rainbow +64.3% over "0 new RNBW a month · " with nothing after the dot; 5 of 115 rows)
+    expected: >
+      The line under "Dilution, 12 months" is "N new X a month · " followed by where the new tokens come from
+      (ET-31267: "9.9M new HYPE a month · vesting"). The figure is "new tokens in the next 12 months (published
+      schedule + measured emissions) / circulating" (OpenAPI, dilution_12m_pct), so a row with new tokens in
+      those 12 months names their source, as 110 of the 115 such rows do (vesting, emissions, locks ending).
+    actual: >
+      Read on 2026-10-18 around 08:19 UTC. Rainbow (RNBW): tiles.dilution_12m pct 64.35, new_tokens_12m
+      115,833,333 against 180M circulating, month_tokens 0, kinds [], schedule_known true. GET /analyze for
+      RNBW shows where the 115.8M come from: months[0] to months[2] take in 0, months[3] takes in 69.5M of
+      vesting (next_unlock: 2027-02-05, Investors and Team), months[4] to months[11] 5.79M of vesting each. So
+      the 64.3% is right and all of it is vesting, but the Supply column's tooltip, the coin drawer's Supply
+      tile and the Supply Analyzer page's tile all read "0 new RNBW a month · " and stop. kinds, like
+      month_tokens, describes only the first of the 12 months, so it is empty whenever that month brings
+      nothing. Four more rows read the same: Kinetiq (KNTQ) +45.1%, 142.1M new, next 12.9M on 2026-11-28 to
+      Core Contributors and Investors; HumidiFi (WET) +167.4%, 385.0M new, next 192.5M on 2026-12-04 to
+      Ecosystem, Foundation and Labs; Lighter (LIT) +53.3%, 133.2M new, next 8.2M on 2027-01-16 to Investors
+      and Team; edgeX (EDGE) +4.2%, 14.6M new, next 2.1M on 2027-03-31 to Ecosystem & Community.
+    steps:
+      - 'GET https://cymetica.com/api/v1/supply-analyzer/batch/gem-screener -> items[token.slug=rainbow].tiles.dilution_12m: pct 64.35, new_tokens_12m 115833333.36, month_tokens 0.0, kinds []; next_unlock: ts 1801785600, tokens 69500000, who "Investors, Team"'
+      - 'GET https://cymetica.com/api/v1/supply-analyzer/analyze?symbol=RNBW -> months[0..2].in.total 0; months[3].in.vesting 69500000; months[4..11].in.vesting 5791666.67 each; together 115833333'
+      - 'GET https://cymetica.com/gem-screener/app?view=apps -> saDilLine (Supply column tooltip) and the drawer tile: saTok(d.month_tokens) + '' new '' + sym + '' a month · '' + (d.kinds || []).join('' + '')'
+      - 'GET https://cymetica.com/static/js/supply-analyzer.js -> tile 3: tok(g.month_tokens) + '' new '' + sym + '' a month · '' + (g.kinds || []).join('' + '')'
+    body: >
+      A red +64.3% stands over a line that names no source, on the three surfaces that show it. Naming the
+      kinds of the whole 12 months (here "vesting") would fix it; the monthly figure can stay the first
+      month's. Low: the percentage itself is right. Our check passes when every row with new tokens in its
+      next 12 months names at least one kind, and is inconclusive if the line stops joining kinds after "a
+      month · ". GET requests only.
+
 footer: >
   Reported by an independent QA agent. Scope of this work: verification of the
   REST API, MCP, the machine-readable discovery surfaces and the pages built on
