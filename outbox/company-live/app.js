@@ -27,23 +27,31 @@
   var TSTAT = { queued: 'next', running: 'working', waiting_approval: 'needs you', done: 'done', failed: 'failed', cancelled: 'cancelled' };
 
   var ui = { tab: 'office', view: '2d', panel: null, open: {}, seen: {}, feedTop: 0, dirty: false, prev: {}, tfDept: '', tfStatus: '', memQ: '', memDept: null };
-  var office, office2d = null, office3d = null;
+  var office, office2d = null, office3d = null, officePic = null;
   // RO: someone else's public company, looked at from the Universe; everything shows, nothing changes
   var RO = false;
 
   /* ---------------- the office: flat or in 3D, the same API either way ---------------- */
-  function viewPref() { try { return localStorage.getItem('co.view') || '3d'; } catch (e) { return '3d'; } }
+  function viewPref() { try { return localStorage.getItem('co.view') || 'pic'; } catch (e) { return 'pic'; } }
+  // the operator's picture of the office stands only while the company is the one it shows (opic.js)
+  function picFits() { return !!(CO.OfficePic && CO.OfficePic.fits(CO.S)); }
+  function liveView() { return CO.U3 && CO.U3.ok && CO.U3.office ? '3d' : '2d'; }
   function setView(v, save) {
+    if (v === 'pic' && !picFits()) v = liveView();
     if (v === '3d' && !(CO.U3 && CO.U3.ok && CO.U3.office)) v = '2d';
     if (save) { try { localStorage.setItem('co.view', v); } catch (e) { /* fine */ } }
     ui.view = v;
     var st = $('stage');
-    st.classList.toggle('is3d', v === '3d');
+    st.classList.toggle('is3d', v === '3d'); st.classList.toggle('ispic', v === 'pic');
     Array.prototype.forEach.call(document.querySelectorAll('#vt button'), function (b) { b.classList.toggle('on', b.getAttribute('data-v') === v); });
     if (v === '3d') {
       if (!office3d) { office3d = CO.U3.office($('office3d'), st, tipFor); office3d.onFail = function () { office3d = null; setView('2d'); }; }
       office = office3d;
+    } else if (v === 'pic') {
+      if (!officePic) { officePic = new CO.OfficePic($('opic'), st, tipFor); officePic.onUnfit = function () { setView(liveView()); }; }
+      office = officePic;
     } else office = office2d;
+    var pb = document.querySelector('#vt [data-v="pic"]'); if (pb) { pb.disabled = !picFits(); pb.title = picFits() ? 'The office as its picture' : 'The picture shows the five departments it was drawn with'; }
     office.sel = ui.mgr ? 'hub' : ui.panel != null ? 'd' + ui.panel : null;
     office.layout();
     requestAnimationFrame(function () {
@@ -66,7 +74,8 @@
     office = office2d = new CO.Office($('office'), $('stage'), tipFor);
     office.layout();
     Array.prototype.forEach.call(document.querySelectorAll('#vt button'), function (b) { b.classList.toggle('on', b.getAttribute('data-v') === '2d'); });
-    whenEngine(function (ok) { if (ok && viewPref() === '3d') setView('3d'); });
+    if (viewPref() === 'pic' && picFits()) setView('pic');
+    whenEngine(function (ok) { if (ok && (viewPref() === '3d' || (viewPref() === 'pic' && !picFits()))) setView('3d'); });
     markSeen();
     bind();
     wire();

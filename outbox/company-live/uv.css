@@ -256,3 +256,32 @@ body.ro #dr-ch-text { cursor: default; }
 .uvpic-card .go { color: var(--green); }
 .uvpic-card:hover { border-color: rgba(0, 255, 136, .6); }
 .uvcore { position: absolute; pointer-events: none; mix-blend-mode: screen; }
+
+/* ---------- the office as the operator's picture (opic.js) ---------- */
+.opic { position: absolute; left: 0; top: 0; right: 0; bottom: 72px; overflow: hidden; display: none; z-index: 2; }
+.stage.ispic .opic { display: block; }
+.stage.ispic .office, .stage.ispic .office3d, .stage.ispic .o3layer, .stage.ispic #z-in, .stage.ispic #z-out, .stage.ispic #z-fit { display: none; }
+.opic-bg { position: absolute; inset: -40px; width: calc(100% + 80px); height: calc(100% + 80px); object-fit: cover; filter: blur(22px) brightness(.5); }
+.opic-in { position: absolute; left: 0; top: 0; width: 1528px; height: 724px; transform-origin: 0 0; overflow: hidden; isolation: isolate; }
+.opic-in img { position: absolute; left: 0; top: 0; width: 1528px; height: 810px; display: block; user-select: none; }
+.ophit { position: absolute; border-radius: 50%; cursor: pointer; transition: box-shadow .2s; }
+.ophit.sel { box-shadow: 0 0 0 1.5px rgba(127, 211, 234, .6), 0 0 34px rgba(0, 207, 255, .28); }
+.opglow { position: absolute; border-radius: 50%; pointer-events: none; mix-blend-mode: screen; opacity: 0; transition: opacity .4s; }
+.opglow.work { background: radial-gradient(closest-side, rgba(0, 207, 255, .5), rgba(0, 207, 255, 0)); opacity: 1; animation: opw 2.4s ease-in-out infinite; }
+.opglow.wait { background: radial-gradient(closest-side, rgba(255, 68, 68, .45), rgba(255, 68, 68, 0)); opacity: 1; }
+@keyframes opw { 50% { opacity: .55; } }
+/* a blend operator, not a colour on the page: grey with saturation takes the painted orange out of the trading desk
+   while it does not wait; red with hue turns it red when it does */
+.opfix { position: absolute; border-radius: 50%; pointer-events: none; mix-blend-mode: saturation; background: radial-gradient(closest-side, #7f7f7f 58%, rgba(127, 127, 127, 0) 100%); }
+.opfix.red { mix-blend-mode: hue; background: radial-gradient(closest-side, #ff4444 58%, rgba(255, 68, 68, 0) 100%); }
+.p3.pp { background: #080d14; display: flex; flex-direction: column; justify-content: center; box-sizing: border-box; cursor: pointer; }
+.opneed { position: absolute; display: flex; align-items: center; justify-content: center; box-sizing: border-box; cursor: pointer; border-radius: 6px;
+  font: 400 12px 'Archivo Black', sans-serif; letter-spacing: .05em; color: var(--dim); background: #080d14; border: 1px solid rgba(223, 230, 238, .26); }
+.opneed.on { color: var(--red); border-color: var(--red); box-shadow: 0 0 18px rgba(255, 68, 68, .45); animation: needp 1.6s ease-in-out infinite; }
+.opvault { position: absolute; box-sizing: border-box; display: flex; flex-direction: column; justify-content: center; gap: 8px; padding: 16px 20px; cursor: pointer;
+  background: #080d14; border: 1px solid rgba(0, 255, 136, .4); border-radius: 12px; box-shadow: 0 8px 24px rgba(0, 0, 0, .5); }
+.opvault .k { font: 700 11px 'JetBrains Mono'; letter-spacing: .16em; color: var(--dim2); }
+.opvault .vv { display: flex; align-items: baseline; gap: 8px; } .opvault .vv b { font: 400 30px 'Archivo Black', sans-serif; } .opvault .vv span { font: 700 11px 'JetBrains Mono'; color: var(--dim2); }
+.opvault b.g { color: var(--green); text-shadow: 0 0 14px rgba(0, 255, 136, .4); } .opvault b.u { color: #8fbaff; }
+.opvault .go { font: 700 11px 'JetBrains Mono'; color: var(--green); }
+.opvault:hover { border-color: rgba(0, 255, 136, .7); }
