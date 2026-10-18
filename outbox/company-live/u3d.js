@@ -343,6 +343,19 @@ function radialTex(rgb, a) {
   g.fillStyle = gr; g.fillRect(0, 0, 256, 256);
   const t = new THREE.CanvasTexture(c); t.colorSpace = THREE.SRGBColorSpace; return t;
 }
+// stars on a shell round a scene: points that never fog, mostly white, a few in the site's cyan and green
+function starField(n, r, spread, k, seed) {
+  const pos = new Float32Array(n * 3), col = new Float32Array(n * 3), R = rng(seed || 42), cc = new THREE.Color();
+  for (let i = 0; i < n; i++) {
+    const u = R() * 2 - 1, th = R() * Math.PI * 2, s = Math.sqrt(1 - u * u), rad = r + R() * spread;
+    pos.set([Math.cos(th) * s * rad, u * rad, Math.sin(th) * s * rad], i * 3);
+    const hue = R();
+    cc.set(hue < 0.12 ? 0x00cfff : hue < 0.17 ? 0x00ff88 : 0xe6edf7).multiplyScalar((0.22 + R() * R() * 1.5) * k);
+    col.set([cc.r, cc.g, cc.b], i * 3);
+  }
+  const g = new THREE.BufferGeometry(); g.setAttribute('position', new THREE.BufferAttribute(pos, 3)); g.setAttribute('color', new THREE.BufferAttribute(col, 3));
+  return new THREE.Points(g, new THREE.PointsMaterial({ vertexColors: true, size: 1, sizeAttenuation: false, fog: false }));
+}
 
 /* ---------------- the map ---------------- */
 class Universe3D {
@@ -791,24 +804,27 @@ function preview(el, o) {
 }
 
 /* ---------------- the office in 3D: the same floor plan, rooms you can walk the camera into ---------------- */
+// What a room is doing, in light. Blue is only "up next", and only on the room's edge line: the floor, the walls,
+// the furniture and the light itself are the site's navy-black under white light, the structure Cymetica green.
 const STC = { working: 0x00cfff, queued: 0x3b82f6, waiting: 0xff4444, idle: 0x7f93ad };
 const TONEC = { cyan: '#00cfff', red: '#ff4444', blue: '#7fb0ff', dim: '#a9b8cc' };
+const OFFICE = { bg: 0x05070a, lamp: 0xeef3f8, agent: 0x4d5d72, agentE: 0x0b0f14, mon: 0x10202a };
 const OM = {};
 function omats() {
   if (OM.tile) return;
   const c = document.createElement('canvas'); c.width = c.height = 512; const g = c.getContext('2d');
-  g.fillStyle = '#1a2c48'; g.fillRect(0, 0, 512, 512);
-  g.strokeStyle = 'rgba(52,82,128,.95)'; g.lineWidth = 2;
+  g.fillStyle = '#141a22'; g.fillRect(0, 0, 512, 512);
+  g.strokeStyle = 'rgba(38,50,64,.95)'; g.lineWidth = 2;
   for (let i = 0; i <= 7; i++) { const p = i * 512 / 7; g.beginPath(); g.moveTo(p, 0); g.lineTo(p, 512); g.stroke(); g.beginPath(); g.moveTo(0, p); g.lineTo(512, p); g.stroke(); }
   const t = new THREE.CanvasTexture(c); t.colorSpace = THREE.SRGBColorSpace; t.anisotropy = 8;
-  OM.tile = new THREE.MeshStandardMaterial({ map: t, roughness: 0.5, metalness: 0.35 });
-  OM.glass = new THREE.MeshStandardMaterial({ color: 0x2e5285, transparent: true, opacity: 0.42, roughness: 0.08, metalness: 0.35, depthWrite: false });
-  OM.frame = new THREE.MeshStandardMaterial({ color: 0x1e3050, roughness: 0.5, metalness: 0.5 });
-  OM.desk = new THREE.MeshStandardMaterial({ color: 0x253b60, roughness: 0.55, metalness: 0.3 });
-  OM.deskTop = new THREE.MeshStandardMaterial({ color: 0x2f4a75, roughness: 0.45, metalness: 0.3 });
-  OM.dark = new THREE.MeshStandardMaterial({ color: 0x0b1220, roughness: 0.5, metalness: 0.4 });
+  OM.tile = new THREE.MeshStandardMaterial({ map: t, roughness: 0.38, metalness: 0.45 });
+  OM.glass = new THREE.MeshStandardMaterial({ color: 0x33424f, transparent: true, opacity: 0.34, roughness: 0.06, metalness: 0.4, depthWrite: false });
+  OM.frame = new THREE.MeshStandardMaterial({ color: 0x222c37, roughness: 0.45, metalness: 0.55 });
+  OM.desk = new THREE.MeshStandardMaterial({ color: 0x1b232d, roughness: 0.5, metalness: 0.35 });
+  OM.deskTop = new THREE.MeshStandardMaterial({ color: 0x2b3643, roughness: 0.35, metalness: 0.35 });
+  OM.dark = new THREE.MeshStandardMaterial({ color: 0x07090d, roughness: 0.45, metalness: 0.45 });
   OM.head = new THREE.MeshStandardMaterial({ color: 0xa9b8cc, roughness: 0.6 });
-  OM.plinth = new THREE.MeshStandardMaterial({ color: 0x111a28, roughness: 0.5, metalness: 0.5 });
+  OM.plinth = new THREE.MeshStandardMaterial({ color: 0x0c1016, roughness: 0.45, metalness: 0.55 });
   OM.capsule = new THREE.CapsuleGeometry(0.17, 0.34, 4, 14);
   OM.green = amat('#00ff88'); OM.cyan = amat('#00cfff'); OM.blue = amat('#3b82f6'); OM.red = amat('#ff4444');
 }
@@ -838,14 +854,14 @@ function screen(w, h) {
 function drawWall(s, title, sub, col, mode) {
   const key = [title, sub, col, mode].join('|'); if (s.key === key) return; s.key = key;
   const { c, g } = s, W = c.width, H = c.height;
-  g.fillStyle = '#081322'; g.fillRect(0, 0, W, H);
+  g.fillStyle = '#070a0f'; g.fillRect(0, 0, W, H);
   g.strokeStyle = col; g.lineWidth = 6; g.strokeRect(3, 3, W - 6, H - 6);
   g.fillStyle = col; g.font = '700 ' + Math.round(H * 0.2) + 'px JetBrains Mono, monospace'; g.textBaseline = 'top';
   const fit = (t, size) => { let s2 = String(t || ''); while (s2.length > 3 && g.measureText(s2).width > W - 40) s2 = s2.slice(0, -2); return s2 !== t ? s2.replace(/.$/, '…') : s2; };
   g.fillText(fit(title), 20, H * 0.14);
   g.fillStyle = '#7f93ad'; g.font = '500 ' + Math.round(H * 0.14) + 'px JetBrains Mono, monospace';
   g.fillText(fit(sub), 20, H * 0.44);
-  g.fillStyle = '#1e3050'; g.fillRect(20, H * 0.76, W - 40, H * 0.08);
+  g.fillStyle = '#18212b'; g.fillRect(20, H * 0.76, W - 40, H * 0.08);
   if (mode === 'run') { g.fillStyle = col; g.fillRect(20, H * 0.76, (W - 40) * (0.25 + 0.5 * Math.random()), H * 0.08); }
   if (mode === 'full') { g.fillStyle = col; g.globalAlpha = 0.75; g.fillRect(20, H * 0.76, W - 40, H * 0.08); g.globalAlpha = 1; }
   s.tex.needsUpdate = true;
@@ -853,7 +869,7 @@ function drawWall(s, title, sub, col, mode) {
 function drawBars(s, title, bars) {
   const key = title + JSON.stringify(bars); if (s.key === key) return; s.key = key;
   const { c, g } = s, W = c.width, H = c.height;
-  g.fillStyle = '#081322'; g.fillRect(0, 0, W, H); g.strokeStyle = '#00cfff'; g.lineWidth = 6; g.strokeRect(3, 3, W - 6, H - 6);
+  g.fillStyle = '#070a0f'; g.fillRect(0, 0, W, H); g.strokeStyle = '#00cfff'; g.lineWidth = 6; g.strokeRect(3, 3, W - 6, H - 6);
   g.fillStyle = '#00cfff'; g.font = '700 ' + Math.round(H * 0.15) + 'px JetBrains Mono, monospace'; g.textBaseline = 'top'; g.fillText(title, 20, H * 0.1);
   const top = Math.max(1, ...bars.map((b) => b[1])), bw = (W - 40) / Math.max(1, bars.length);
   bars.forEach((b, i) => { const h = (H * 0.55) * b[1] / top; g.fillStyle = b[0]; g.fillRect(20 + i * bw, H * 0.88 - h, bw - 10, Math.max(3, h)); });
@@ -862,7 +878,7 @@ function drawBars(s, title, bars) {
 function drawKanban(s, counts) {
   const key = JSON.stringify(counts); if (s.key === key) return; s.key = key;
   const { c, g } = s, W = c.width, H = c.height, cols = [['queued', '#3b82f6'], ['running', '#00cfff'], ['done', '#00ff88'], ['failed', '#ff4444']];
-  g.fillStyle = '#060b14'; g.fillRect(0, 0, W, H); g.strokeStyle = '#1e3050'; g.lineWidth = 6; g.strokeRect(3, 3, W - 6, H - 6);
+  g.fillStyle = '#06080c'; g.fillRect(0, 0, W, H); g.strokeStyle = '#18212b'; g.lineWidth = 6; g.strokeRect(3, 3, W - 6, H - 6);
   const cw = (W - 30) / 4;
   cols.forEach(([k, col], i) => {
     const x = 15 + i * cw; g.fillStyle = col; g.fillRect(x + 6, 14, cw - 12, 10);
@@ -872,16 +888,16 @@ function drawKanban(s, counts) {
 }
 function candleTex() {
   const c = document.createElement('canvas'); c.width = 512; c.height = 256; const g = c.getContext('2d');
-  g.fillStyle = '#071526'; g.fillRect(0, 0, 512, 256); g.strokeStyle = '#00ff88'; g.lineWidth = 5; g.strokeRect(3, 3, 506, 250);
+  g.fillStyle = '#06100c'; g.fillRect(0, 0, 512, 256); g.strokeStyle = '#00ff88'; g.lineWidth = 5; g.strokeRect(3, 3, 506, 250);
   let v = 140; for (let i = 0; i < 16; i++) { const up = [1, 1, 0, 1, 0, 1, 1, 0, 1, 1, 1, 0, 1, 1, 0, 1][i], o = v; v = Math.max(60, Math.min(210, v + (up ? -16 : 13))); g.fillStyle = up ? '#00ff88' : '#ff4444'; g.fillRect(24 + i * 29, Math.min(o, v), 17, Math.max(6, Math.abs(o - v))); g.fillRect(31 + i * 29, Math.min(o, v) - 10, 3, Math.abs(o - v) + 20); }
   g.fillStyle = '#00ff88'; g.font = '700 22px JetBrains Mono, monospace'; g.fillText('BASKET H2 · +1.1%', 22, 34);
   const t = new THREE.CanvasTexture(c); t.colorSpace = THREE.SRGBColorSpace; return t;
 }
 function moodTex() {
   const c = document.createElement('canvas'); c.width = 512; c.height = 256; const g = c.getContext('2d');
-  g.fillStyle = '#111a28'; g.fillRect(0, 0, 512, 256); g.strokeStyle = '#1e3050'; g.lineWidth = 5; g.strokeRect(3, 3, 506, 250);
+  g.fillStyle = '#0b1016'; g.fillRect(0, 0, 512, 256); g.strokeStyle = '#18212b'; g.lineWidth = 5; g.strokeRect(3, 3, 506, 250);
   ['#00cfff', '#00ff88', '#3b82f6', '#ff4444'].forEach((col, i) => { g.fillStyle = col; g.fillRect(24 + i * 58, 28, 46, 46); });
-  g.strokeStyle = '#7f93ad'; g.lineWidth = 3; g.strokeRect(24, 96, 220, 70); g.fillStyle = '#7f93ad'; g.fillRect(36, 110, 90, 10); g.fillStyle = '#1e3050'; g.fillRect(36, 132, 160, 8);
+  g.strokeStyle = '#7f93ad'; g.lineWidth = 3; g.strokeRect(24, 96, 220, 70); g.fillStyle = '#7f93ad'; g.fillRect(36, 110, 90, 10); g.fillStyle = '#18212b'; g.fillRect(36, 132, 160, 8);
   g.strokeStyle = '#00cfff'; g.setLineDash([10, 8]); g.strokeRect(270, 28, 214, 200);
   const t = new THREE.CanvasTexture(c); t.colorSpace = THREE.SRGBColorSpace; return t;
 }
@@ -893,11 +909,11 @@ class Office3D {
     this.tip = stage.querySelector('.tip'); this.layer = stage.querySelector('.o3layer');
     this.sel = null; this.cells = {}; this.paths = {}; this.packets = []; this.rooms = {}; this.fitted = false; this.hover = null;
     this.mouse = new THREE.Vector2(); this.ray = new THREE.Raycaster();
-    this.scene = new THREE.Scene(); this.scene.background = new THREE.Color(0x070b14); this.scene.fog = new THREE.Fog(0x070b14, 80, 170);
+    this.scene = new THREE.Scene(); this.scene.background = new THREE.Color(OFFICE.bg); this.scene.fog = new THREE.Fog(OFFICE.bg, 80, 170);
     this.camera = new THREE.PerspectiveCamera(30, 2, 0.3, 500);
     this.renderer = new THREE.WebGPURenderer({ antialias: false });
     this.renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
-    this.renderer.toneMapping = THREE.ACESFilmicToneMapping; this.renderer.toneMappingExposure = 1.4;
+    this.renderer.toneMapping = THREE.ACESFilmicToneMapping; this.renderer.toneMappingExposure = 1.2;
     this.renderer.shadowMap.enabled = true; this.renderer.shadowMap.type = THREE.PCFSoftShadowMap;
     el.appendChild(this.renderer.domElement);
     this.controls = new OrbitControls(this.camera, this.renderer.domElement);
@@ -905,10 +921,12 @@ class Office3D {
       screenSpacePanning: false, zoomSpeed: 0.9, rotateSpeed: 0.55 });
     this.controls.addEventListener('start', () => { this.tw = null; });
     const S = this.scene;
-    S.add(new THREE.HemisphereLight(0x5a88d0, 0x0a1220, 1.7), new THREE.AmbientLight(0x22355a, 0.9));
-    this.sun = new THREE.DirectionalLight(0xc4dcff, 2.0); this.sun.castShadow = true; this.sun.shadow.mapSize.set(2048, 2048);
+    // white light, not blue: the colour in the room is what the room is doing
+    S.add(new THREE.HemisphereLight(0xe2eaf2, 0x07090d, 1.4), new THREE.AmbientLight(0x1b222b, 0.8));
+    this.sun = new THREE.DirectionalLight(0xf4f8fc, 2.3); this.sun.castShadow = true; this.sun.shadow.mapSize.set(2048, 2048);
     this.sun.shadow.normalBias = 0.02; this.sun.shadow.bias = -0.0005; S.add(this.sun); S.add(this.sun.target);
-    const rim = new THREE.DirectionalLight(0x00cfff, 0.4); rim.position.set(30, 14, -30); S.add(rim);
+    const rim = new THREE.DirectionalLight(0x00cfff, 0.3); rim.position.set(30, 14, -30); S.add(rim);
+    S.add(starField(1400, 230, 60, 0.75));
     this.world = new THREE.Group(); S.add(this.world);
     this.pk = new THREE.Group(); S.add(this.pk);
     this.clock = new THREE.Clock();
@@ -943,9 +961,10 @@ class Office3D {
     release(this.world); this.world.clear(); this.layer.innerHTML = ''; this.rooms = {}; this.hits = []; this.pcs = [];
     const RS = L.RS, W = this.world;
     // the floor plate, its grid and a lit edge
-    const plate = new THREE.Mesh(G.box, [OM.plinth, OM.plinth, new THREE.MeshStandardMaterial({ color: 0x0f1a2c, roughness: 0.6, metalness: 0.35 }), OM.plinth, OM.plinth, OM.plinth]);
+    const plate = new THREE.Mesh(G.box, [OM.plinth, OM.plinth, new THREE.MeshStandardMaterial({ color: 0x0a0e13, roughness: 0.5, metalness: 0.45 }), OM.plinth, OM.plinth, OM.plinth]);
     plate.scale.set(maxX + 1.2, 0.45, maxY + 1.2); plate.position.set(0, -0.225, 0); plate.receiveShadow = true; W.add(plate);
-    const edgeM = emis('#00cfff', 1.3);
+    // the frame of the whole office is Cymetica green
+    const edgeM = emis('#00ff88', 1.15);
     [[0, maxY / 2 + 0.6, maxX + 1.25, 0.05], [0, -maxY / 2 - 0.6, maxX + 1.25, 0.05]].forEach(([x, z, w, t]) => { const m = new THREE.Mesh(G.box, edgeM); m.scale.set(w, t, t); m.position.set(x, 0, z); W.add(m); });
     [[maxX / 2 + 0.6, 0, maxY + 1.25], [-maxX / 2 - 0.6, 0, maxY + 1.25]].forEach(([x, z, d]) => { const m = new THREE.Mesh(G.box, edgeM); m.scale.set(0.05, 0.05, d); m.position.set(x, 0, z); W.add(m); });
     // corridors: from every room's door to the Manager's, the 2D office's own routes
@@ -954,7 +973,7 @@ class Office3D {
       if (k === 'hub' || k === 'lot') return;
       const p = L.route(all, cells[k], L.HUB); if (!p) return;
       this.paths[k] = p;
-      const mat = emis('#3b82f6', 0.5), segs = [];
+      const mat = emis('#00ff88', 0.22), segs = [];
       for (let i = 1; i < p.length; i++) {
         const a = p[i - 1], b = p[i], len = Math.hypot(b[0] - a[0], b[1] - a[1]); if (len < 0.01) continue;
         const base = new THREE.Mesh(G.box, OM.dark); base.scale.set(len + 0.24, 0.03, 0.24);
@@ -992,8 +1011,8 @@ class Office3D {
     this.box(g, x0, y0, 0.1, 0.08, RS, 1.15, OM.glass, false);
     for (let m = 1; m < 4; m++) { this.box(g, x0 + m * RS / 4 - 0.03, y0, 0.1, 0.06, 0.1, 1.15, OM.frame); this.box(g, x0, y0 + m * RS / 4 - 0.03, 0.1, 0.1, 0.06, 1.15, OM.frame); }
     // a lamp over the room in the colour of what it is doing: it lights the desks, the people and the floor
-    r.lamp = new THREE.PointLight(0x3b82f6, 3, 9, 1.4); r.lamp.position.copy(this.V(x0 + RS / 2, y0 + RS / 2, 2.6)); g.add(r.lamp);
-    r.edgeM = emis('#3b82f6', 1.2); r.sillM = emis('#3b82f6', 0.5);
+    r.lamp = new THREE.PointLight(OFFICE.lamp, 3, 9, 1.4); r.lamp.position.copy(this.V(x0 + RS / 2, y0 + RS / 2, 2.6)); g.add(r.lamp);
+    r.edgeM = emis('#7f93ad', 0.4); r.sillM = emis('#7f93ad', 0.15);
     this.box(g, x0, y0, 1.25, RS, 0.07, 0.05, r.edgeM, false); this.box(g, x0, y0, 1.25, 0.07, RS, 0.05, r.edgeM, false);
     this.box(g, x0 + RS - 0.04, y0, 0.1, 0.04, RS, 0.04, r.sillM, false); this.box(g, x0, y0 + RS - 0.04, 0.1, RS, 0.04, 0.04, r.sillM, false);
   }
@@ -1014,14 +1033,14 @@ class Office3D {
     this.box(g, x + 0.6, y + 0.48, 0.45, 0.7, 0.22, 0.02, OM.dark, false);
     this.box(g, x + 0.88, y + 0.17, 0.45, 0.14, 0.06, 0.12, OM.frame, false);
     this.box(g, x + 0.5, y + 0.12, 0.55, 0.9, 0.06, 0.52, OM.dark);
-    const scr = new THREE.MeshBasicMaterial({ color: new THREE.Color(0x183a63) });
+    const scr = new THREE.MeshBasicMaterial({ color: new THREE.Color(OFFICE.mon) });
     const face = new THREE.Mesh(G.plane, scr); face.scale.set(0.84, 0.46, 1); face.position.copy(this.V(x + 0.95, y + 0.185, 0.81)); g.add(face);
     r.mons[i] = scr;
     this.box(g, x + 0.7, y + 1.08, 0, 0.5, 0.45, 0.22, OM.plinth);
   }
   agent(r, x, y, i, label, head) {
     const g = new THREE.Group(); g.position.copy(this.V(x, y, 0.1)); r.g.add(g);
-    const body = new THREE.MeshStandardMaterial({ color: 0x3b82f6, emissive: 0x0a1a3a, emissiveIntensity: 0.6, roughness: 0.5, metalness: 0.2 });
+    const body = new THREE.MeshStandardMaterial({ color: OFFICE.agent, emissive: OFFICE.agentE, emissiveIntensity: 0.6, roughness: 0.5, metalness: 0.2 });
     const b = new THREE.Mesh(OM.capsule, body); b.position.y = 0.42; b.castShadow = true; g.add(b);
     const h = new THREE.Mesh(G.sphere, head ? new THREE.MeshStandardMaterial({ color: head, roughness: 0.6 }) : OM.head); h.scale.setScalar(0.15); h.position.y = 0.86; h.castShadow = true; g.add(h);
     const ringM = emis('#00cfff', 0); const ring = new THREE.Mesh(G.ring, ringM); ring.rotation.x = Math.PI / 2; ring.scale.setScalar(0.34); ring.position.y = 0.02; g.add(ring);
@@ -1125,7 +1144,7 @@ class Office3D {
   }
   lotRoom(r) {
     const RS = CO.iso.RS, g = r.g, c = this.V(r.x0 + RS / 2, r.y0 + RS / 2, 0.05);
-    const dash = emis('#3b82f6', 0.7);
+    const dash = emis('#00cfff', 0.55);
     for (let a = 0; a < RS; a += 0.7) {
       [[r.x0 + a, r.y0], [r.x0 + a, r.y0 + RS]].forEach(([x, y]) => this.box(g, x, y - 0.03, 0.04, 0.4, 0.06, 0.03, dash, false));
       [[r.x0, r.y0 + a], [r.x0 + RS, r.y0 + a]].forEach(([x, y]) => this.box(g, x - 0.03, y, 0.04, 0.06, 0.4, 0.03, dash, false));
@@ -1147,19 +1166,21 @@ class Office3D {
       const v = CO.deptView(d), ln = CO.deptLine(d, v), st = ln.tone === 'red' ? 'waiting' : v.status;
       if (v.status === 'working') anyWork = true;
       this.tint(r, st);
-      let title, sub, mode, col = '#' + new THREE.Color(STC[st]).getHexString();
+      // up next is a blue dot on the plate, nothing more: its screen and its plate's frame stay slate
+      const dot = '#' + new THREE.Color(STC[st]).getHexString();
+      let title, sub, mode, col = st === 'queued' ? '#a9b8cc' : dot;
       if (v.running) { title = v.running.title; sub = CO.expertName(v.running.expert) + ' is on it'; mode = 'run'; }
       else if (v.waiting) { title = 'Needs you'; sub = 'approve or reject on the right'; mode = 'full'; col = '#ff4444'; }
       else if (v.queued.length) { title = 'Up next: ' + v.queued[0].title; sub = ''; mode = ''; }
       else { title = d.schedule && d.next_run ? 'Next run at ' + CO.hhmm(d.next_run) : 'Idle'; sub = ''; mode = ''; }
       if (r.wall) drawWall(r.wall, title, sub, col, mode);
       if (r.kb) drawKanban(r.kb, { queued: v.queued.length, running: v.running ? 1 : 0, done: v.done, failed: v.failed });
-      v.experts.slice(0, 3).forEach((e, i) => { const a = r.agents[i]; if (a) a.working = e.state === 'working'; if (r.mons[i]) r.mons[i].color.set(e.state === 'working' ? new THREE.Color(0x00cfff).multiplyScalar(2.2) : new THREE.Color(0x183a63)); });
+      v.experts.slice(0, 3).forEach((e, i) => { const a = r.agents[i]; if (a) a.working = e.state === 'working'; if (r.mons[i]) r.mons[i].color.set(e.state === 'working' ? new THREE.Color(0x00cfff).multiplyScalar(2.2) : new THREE.Color(OFFICE.mon)); });
       const n = d.et10 || 0, et = d.files_as ? '<span class="et' + (n ? ' lit' : '') + '">' + (n ? '+' : '') + n.toLocaleString('en-US') + ' ET10</span>' : '';
-      const html = '<div class="p3h"><i style="background:' + (ln.tone === 'red' ? '#ff4444' : col) + '"></i><b>' + esc(d.name.toUpperCase()) + '</b>' + et + '</div><div class="p3l" style="color:' + (TONEC[ln.tone] || '#a9b8cc') + '">' + esc(ln.short) + '</div>';
+      const html = '<div class="p3h"><i style="background:' + (ln.tone === 'red' ? '#ff4444' : dot) + '"></i><b>' + esc(d.name.toUpperCase()) + '</b>' + et + '</div><div class="p3l" style="color:' + (TONEC[ln.tone] || '#a9b8cc') + '">' + esc(ln.short) + '</div>';
       if (r.plate && r.plate._h !== html) { r.plate._h = html; r.plate.innerHTML = html; }
       if (r.plate) { r.plate.classList.toggle('work', v.status === 'working'); r.plate.style.setProperty('--c', ln.tone === 'red' ? '#ff4444' : col); }
-      if (this.conduits['d' + d.id]) { const cm = this.conduits['d' + d.id].mat; cm.emissive.set(v.status === 'working' ? 0x00cfff : 0x3b82f6); cm.emissiveIntensity = v.status === 'working' ? 1.6 : 0.45; }
+      if (this.conduits['d' + d.id]) { const cm = this.conduits['d' + d.id].mat; cm.emissive.set(v.status === 'working' ? 0x00cfff : 0x00ff88); cm.emissiveIntensity = v.status === 'working' ? 1.6 : 0.22; }
     });
     const hub = this.rooms.hub;
     if (hub) {
@@ -1186,13 +1207,15 @@ class Office3D {
     this.paused = S.company.status === 'paused';
     this.drawSel();
   }
+  // a room in the colour of what it does: working cyan and waiting red light the room; up next and idle keep a
+  // slate edge under plain white light (up next says itself on the plate and the wall screen)
   tint(r, st) {
     if (r.st === st) return; r.st = st;
-    const c = new THREE.Color(STC[st]);
-    if (r.edgeM) { r.edgeM.emissive.copy(c); r.edgeM.emissiveIntensity = st === 'idle' ? 0.5 : 1.5; }
-    if (r.sillM) { r.sillM.emissive.copy(c); r.sillM.emissiveIntensity = st === 'idle' ? 0.2 : 0.6; }
-    if (r.glow) { r.glow.material.color.copy(c); r.glowBase = st === 'working' ? 0.32 : st === 'waiting' ? 0.28 : st === 'queued' ? 0.16 : 0; }
-    if (r.lamp) { r.lamp.color.copy(st === 'idle' ? new THREE.Color(0x9fb8e0) : c); r.lamp.intensity = st === 'working' ? 9 : st === 'waiting' ? 7 : st === 'queued' ? 5 : 3.5; }
+    const lit = st === 'working' || st === 'waiting', c = new THREE.Color(lit ? STC[st] : STC.idle);
+    if (r.edgeM) { r.edgeM.emissive.copy(c); r.edgeM.emissiveIntensity = lit ? 1.5 : st === 'queued' ? 0.5 : 0.3; }
+    if (r.sillM) { r.sillM.emissive.copy(c); r.sillM.emissiveIntensity = lit ? 0.6 : 0.1; }
+    if (r.glow) { r.glow.material.color.copy(c); r.glowBase = st === 'working' ? 0.3 : st === 'waiting' ? 0.26 : 0; }
+    if (r.lamp) { r.lamp.color.copy(lit ? c : new THREE.Color(OFFICE.lamp)); r.lamp.intensity = st === 'working' ? 9 : st === 'waiting' ? 7 : 3.2; }
   }
   drawSel() {
     release(this.selRing); this.selRing.clear();
@@ -1287,7 +1310,7 @@ class Office3D {
           else { a.walk = null; a.g.position.copy(a.home); }
         }
         a.b.position.y = 0.42 + (a.working ? Math.abs(Math.sin(t * 7 + a.phase)) * 0.035 : 0);
-        a.body.color.set(a.working ? 0x00cfff : 0x3b82f6); a.body.emissiveIntensity = a.working ? 1.1 : 0.5; a.body.emissive.set(a.working ? 0x00506a : 0x0a1a3a);
+        a.body.color.set(a.working ? 0x00cfff : OFFICE.agent); a.body.emissiveIntensity = a.working ? 1.1 : 0.5; a.body.emissive.set(a.working ? 0x00506a : OFFICE.agentE);
         a.ringM.emissiveIntensity = a.working ? 1.8 * (1 - ((t * 0.9 + a.phase) % 1)) : 0;
         a.ring.scale.setScalar(a.working ? 0.3 + ((t * 0.9 + a.phase) % 1) * 0.35 : 0.3);
       });

@@ -89,7 +89,7 @@
     $('robar').hidden = false;
     $('ro-t').innerHTML = 'Inside <b>' + esc(c.name) + '</b> by <b>@' + esc(c.owner) + '</b><em>· you can look at everything; only its owner can change it</em>';
     document.title = c.name + ' · Universe';
-    var ap = document.querySelector('#tabs [data-tab="approvals"]'); if (ap) ap.firstChild.textContent = 'Waits for owner';
+    var ap = document.querySelector('#tabs [data-tab="approvals"] .tl'); if (ap) ap.textContent = 'Waits for owner';
     var rs = document.querySelector('[data-pane="rules"] .sub'); if (rs) rs.textContent = 'the processes its owner wrote';
     var as = document.querySelector('[data-pane="approvals"] .sub'); if (as) as.textContent = 'What its departments asked the owner, and what the owner decided.';
     $('dr-ch-text').readOnly = true;
