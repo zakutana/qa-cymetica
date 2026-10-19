@@ -276,9 +276,9 @@
     out += vcyl(3, 3, 0, 0.03 * s, r0 + 0.04 * s, G.steel2, 10);
     for (f = 0; f < n; f++) {
       var r = n > 1 ? r0 + (r1 - r0) * f / (n - 1) : r0, th = dh * 0.66;
-      out += vcyl(3, 3, y, y + th, r, G.steel, 10) + hoop(3, 3, y + 0.012, r + 0.01, V.soft, 0.8, 'near');
+      out += vcyl(3, 3, y, y + th, r, G.steel, 10) + hoop(3, 3, y + 0.012, r + 0.01, acc, 0.6, 'near', true);
       out += '<g class="fl" data-f="' + f + '">' + sdRingWins(3, 3, r, y + th * 0.5, th * 0.34, 0.3, 0.11, V, R, 0.5) + '</g>';
-      out += hoop(3, 3, y + th - 0.01, r + 0.01, V.rim, 1, 'far') + vcyl(3, 3, y + th, y + dh, r * 0.86, G.steel2, 10) + hoop(3, 3, y + th - 0.01, r + 0.01, V.rim, 1.2, 'near');
+      out += hoop(3, 3, y + th - 0.01, r + 0.01, V.rim, 0.8, 'far', true) + vcyl(3, 3, y + th, y + dh, r * 0.86, G.steel2, 10) + hoop(3, 3, y + th - 0.01, r + 0.01, V.rim, 1, 'near', true);
       y += dh;
     }
     // the neck, the saucer with its line of light, the dome's seat and the dome; the dish on it and a light beside
@@ -338,7 +338,7 @@
     parts.forEach(function (p) { out += tube(at(p[0]), at(p[1]), 0, 1, p[2], p[3], p[3].top); });
     var zb = w * 0.96, bl = w * 1.6, b0 = Q.apply(null, at(zb)), b1 = Q.apply(null, at(zb + bl));
     out += '<polygon points="' + pts(sdRingAt(at(zb), 0, 1, w * 0.07)) + '" fill="none" stroke="' + V.band + '" stroke-width="1.4"/>';
-    out += line(b0, b1, acc, 6, 0.3) + line(b0, b1, V.neon, 2.6) + line(b0, b1, '#ffffff', 1, 0.8);
+    out += line(b0, b1, acc, 10, 0.2) + line(b0, b1, acc, 5.5, 0.35) + line(b0, b1, V.neon, 2.8) + line(b0, b1, '#ffffff', 1.1, 0.85);
     out += '<circle cx="' + f1(b1[0]) + '" cy="' + f1(b1[1]) + '" r="' + f1(0.45 * RX) + '" fill="' + acc + '" opacity=".28"/>' + beacon(b1, V.neon, 2.4);
     VB[0] = Math.min(VB[0], b1[0] - 0.45 * RX); VB[3] = Math.max(VB[3], b1[1] + 0.45 * RX);
     return vfDone(out, hc + w * 0.32 + 0.3, yb - 0.5);
@@ -684,7 +684,7 @@
     return VFC[k] || (VFC[k] = {
       plate: { top: t('#a9abb4'), l: t('#878890'), r: t('#5e6a7a') },
       steel: { top: t('#81868e'), l: t('#91979f'), r: t('#61676f') },
-      steel2: { top: t('#6c6f78'), l: t('#5e616a'), r: t('#45484f') }
+      steel2: { top: t('#606369'), l: t('#4f525a'), r: t('#383b41') }
     });
   }
   // the Laser station's body and lid in the company's colour (lit on the right, as the preview's light falls), its plates
@@ -728,12 +728,13 @@
       '<' + tag + ' points="' + p + '" fill="none" stroke="' + col + '" stroke-width="' + w + '"' + (op != null ? ' opacity="' + op + '"' : '') + ' stroke-linejoin="round" stroke-linecap="round"/>';
   }
   // a ring of light round an upright axis at height z (a torus seen from the map): all of it, its far half or its near
-  // half; its glow kept tight, as rings stacked a deck apart would otherwise run into one
-  function hoop(x, y, z, r, col, w, part) {
+  // half; its glow kept tight, as rings stacked a deck apart would otherwise run into one, and none at all (bare)
+  // where they are a deck's fine line on steel
+  function hoop(x, y, z, r, col, w, part, bare) {
     var a0 = part === 'near' ? -45 : part === 'far' ? 135 : 0, a1 = part === 'near' ? 135 : part === 'far' ? 315 : 360, l = [];
     for (var a = a0; a <= a1 + 0.01; a += 7.5) l.push(Q(x + r * Math.cos(a * Math.PI / 180), y + r * Math.sin(a * Math.PI / 180), z));
     var p = pts(l);
-    return '<polyline points="' + p + '" fill="none" stroke="' + col + '" stroke-width="' + f1(w * 2) + '" opacity=".14"/>' +
+    return (bare ? '' : '<polyline points="' + p + '" fill="none" stroke="' + col + '" stroke-width="' + f1(w * 2) + '" opacity=".14"/>') +
       '<polyline points="' + p + '" fill="none" stroke="' + col + '" stroke-width="' + w + '" stroke-linecap="round"/>';
   }
   // an upright cylinder (u3d.js's G.cyl), round (x, y) from z0 to z1: its side shaded as it turns, then its top
