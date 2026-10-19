@@ -1010,17 +1010,18 @@
       $('d3-about').innerHTML = (CO.DEPT_ABOUT[o.key] || CO.DEPT_ABOUT.custom).map(function (s) { return '<li>' + esc(s) + '</li>'; }).join('');
       $('d3-ti').textContent = (ti + 1) + ' / ' + CO.TEMPLATES.length;
     }
-    // the cards' 3D pictures, each drawn once and kept: they replace the flat ones as they come
+    // the cards' 3D pictures, each drawn once and kept: they replace the flat ones as they come, the astronauts first
+    // (quick to draw, and the chips of who works there wait for them)
     function shots() {
-      Array.prototype.forEach.call(document.querySelectorAll('#tpl-track .tcard'), function (c) {
-        var k = c.getAttribute('data-tpl'); if (k === 'custom') return customShot();
-        CO.U3.roomThumb(k, null, function (u) { put(c.querySelector('.art'), u); });
-      });
       Array.prototype.forEach.call(document.querySelectorAll('#ex-track .xcard'), function (c) {
         CO.U3.astroThumb(c.getAttribute('data-ex'), function (u) {
           put(c.querySelector('.fig'), u);
           var h = $('df-hired'); if (u && dlg3 && h) h.innerHTML = hiredLine(hiredKeys());
         });
+      });
+      Array.prototype.forEach.call(document.querySelectorAll('#tpl-track .tcard'), function (c) {
+        var k = c.getAttribute('data-tpl'); if (k === 'custom') return customShot();
+        CO.U3.roomThumb(k, null, function (u) { put(c.querySelector('.art'), u); });
       });
     }
     function customShot() {
