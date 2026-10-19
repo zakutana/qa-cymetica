@@ -1052,7 +1052,7 @@ const UVTURN = { min: 0.12, max: 1.25 };
 // Cymetica's sun: its parts are written at the size the detector once framed (a ball of 16.5); the sun is drawn
 // k times that, so it fills the inner rings as the light fills his (white-hot to ~20 of the plane, glow to ~40,
 // his ring at 60), and floats y above the plane. "Make the sun itself bigger" (2026-10-19).
-const UVSUN = { k: 1.7, y: 6, ball: 16.5, disc: 10.5 };
+const UVSUN = { k: 1.7, y: 6, ball: 16.5, disc: 15 };
 // how much larger than its own decks a station is drawn on the map: his stations are 100 to 150 px across on his
 // 1533-wide frame, about 30 to 40 units of the plane; ours, 36 of them where he drew 13, a little smaller
 const UVSS = 3.8;
@@ -1127,19 +1127,76 @@ function flareTex() {
     streak(1, 0.035, 0.9); streak(0.035, 0.55, 0.6); g.rotate(0); streak(0.6, 0.02, 0.35);
   }));
 }
-// the sun's rays: streamers of light out of the middle, many thin and a few broad, each brightest a little out from
-// where the disc covers it and gone at its tip; one per seed, so the layers do not line up
-function sunRaysTex(seed) {
-  const key = 'rays' + seed; if (TX[key]) return TX[key];
-  const R = rng(seed * 13 + 5);
-  return (TX[key] = ctex(512, 512, (g, W) => {
-    const c = W / 2; g.translate(c, c); g.globalCompositeOperation = 'lighter';
-    for (let i = 0; i < 150; i++) {
-      const a = R() * Math.PI * 2, len = c * (0.42 + R() * R() * 0.58), w = R() < 0.12 ? 5 + R() * 7 : 1 + R() * 3, al = R() < 0.12 ? 0.18 : 0.22 + R() * 0.3;
-      g.save(); g.rotate(a);
-      const gr = g.createLinearGradient(0, 0, len, 0);
-      gr.addColorStop(0, 'rgba(255,244,214,0)'); gr.addColorStop(0.3, 'rgba(255,236,190,' + al + ')'); gr.addColorStop(0.55, 'rgba(255,206,130,' + (al * 0.6) + ')'); gr.addColorStop(1, 'rgba(255,160,70,0)');
-      g.fillStyle = gr; g.beginPath(); g.moveTo(0, -w); g.quadraticCurveTo(len * 0.5, -w * 0.6, len, 0); g.quadraticCurveTo(len * 0.5, w * 0.6, 0, w); g.closePath(); g.fill(); g.restore();
+// Cymetica's ball, painted once as the operator's picture of a collision has it (images/12, 2026-10-19: "ma vypadat
+// takto presne"): arcs of plasma lying round a sphere -- gold most, orange, blue and white between, brighter on the
+// near side -- over a white-hot heart that runs pink and then blue inside, knots of light where the weave is dense,
+// sparks and short streaks flying out of the middle. On a face turned to the camera it reads as the same ball from
+// every side. Arcs are drawn in four pieces, each as bright as its depth, then a soft wide pass under a crisp one.
+function colliderTex(seed) {
+  const key = 'col' + seed; if (TX[key]) return TX[key];
+  const R = rng(seed * 7 + 3);
+  return (TX[key] = ctex(1024, 1024, (g, W) => {
+    // the ball takes the middle 0.6 of the picture; the burst round it reaches the edges
+    const c = W / 2, rad = W * 0.3; g.globalCompositeOperation = 'lighter';
+    const heart = g.createRadialGradient(c, c, 0, c, c, rad * 1.1);
+    [[0, 'rgba(255,255,255,1)'], [0.015, 'rgba(255,230,246,.9)'], [0.06, 'rgba(255,74,176,.75)'], [0.12, 'rgba(176,70,240,.5)'], [0.2, 'rgba(60,96,255,.45)'], [0.38, 'rgba(255,140,40,.12)'], [0.75, 'rgba(255,130,40,.05)'], [1, 'rgba(255,130,40,0)']].forEach(([o, s]) => heart.addColorStop(o, s));
+    g.fillStyle = heart; g.fillRect(0, 0, W, W);
+    const V = () => { const u = R() * 2 - 1, th = R() * Math.PI * 2, s = Math.sqrt(1 - u * u); return [Math.cos(th) * s, u, Math.sin(th) * s]; };
+    const cross = (a, b) => [a[1] * b[2] - a[2] * b[1], a[2] * b[0] - a[0] * b[2], a[0] * b[1] - a[1] * b[0]], nrm = (a) => { const l = Math.hypot(a[0], a[1], a[2]); return a.map((x) => x / l); };
+    // an arc of a circle round o in a random plane, drawn in four pieces each as bright as its depth: a wide soft
+    // pass under a crisp one, thick and saturated as his are
+    const arc = (o, rr, len, wa, cols, w, dim) => {
+      const n = V(), u = nrm(cross(n, Math.abs(n[1]) < 0.9 ? [0, 1, 0] : [1, 0, 0])), v = cross(n, u), t0 = R() * Math.PI * 2, wf = 3 + R() * 6, ph = R() * 6, col = cols[Math.floor(R() * cols.length)], pts = [];
+      for (let s = 0; s <= 48; s++) {
+        const t = t0 + len * s / 48, k = rr * (1 + wa * Math.sin(t * wf + ph)), p = [0, 1, 2].map((i) => o[i] + (Math.cos(t) * u[i] + Math.sin(t) * v[i]) * k);
+        pts.push([c + p[0], c - p[1], Math.max(-1, Math.min(1, p[2] / rad))]);
+      }
+      for (let q = 0; q < 4; q++) {
+        const a0 = q * 12, a1 = a0 + 12, b = (0.3 + 0.7 * ((pts[a0][2] + pts[a1][2]) / 2 + 1) / 2) * dim;
+        [[w * 3.2, 0.06 * b], [w, 0.92 * b]].forEach(([lw, al]) => {
+          g.strokeStyle = 'rgba(' + col.join(',') + ',' + al.toFixed(3) + ')'; g.lineWidth = lw; g.lineCap = 'round';
+          g.beginPath(); g.moveTo(pts[a0][0], pts[a0][1]); for (let s = a0 + 1; s <= a1; s++) g.lineTo(pts[s][0], pts[s][1]); g.stroke();
+        });
+      }
+    };
+    const GOLD = [[255, 150, 36], [255, 150, 36], [255, 178, 70], [255, 112, 18], [255, 196, 96]], BLUE = [[36, 104, 255], [60, 130, 255], [96, 160, 255], [150, 200, 255]];
+    const DEEP = [[255, 84, 180], [150, 84, 255], [60, 110, 255], [40, 90, 255], [40, 90, 255], [255, 100, 60]];
+    // a gold glow along the ball's edge, where his weave is densest and brightest
+    const rim = g.createRadialGradient(c, c, rad * 0.72, c, c, rad * 1.16);
+    rim.addColorStop(0, 'rgba(255,170,70,0)'); rim.addColorStop(0.55, 'rgba(255,170,70,.26)'); rim.addColorStop(1, 'rgba(255,150,50,0)'); g.fillStyle = rim; g.fillRect(0, 0, W, W);
+    // inside: pink, violet and blue swirls round the heart; through the ball: gold and blue loops; on its shell: the
+    // arcs that draw its round edge
+    for (let i = 0; i < 80; i++) arc(V().map((x) => x * rad * R() * 0.3), rad * (0.12 + R() * 0.32), 2 + R() * 3.5, 0.1 * R(), DEEP, 2.2 + R() * 2.8, 0.85);
+    for (let i = 0; i < 56; i++) arc(V().map((x) => x * rad * R() * 0.5), rad * (0.25 + R() * 0.35), 1.6 + R() * 3.2, 0.08 * R(), R() < 0.5 ? GOLD : BLUE, 2.4 + R() * 2.8, 0.9);
+    for (let i = 0; i < 110; i++) arc([0, 0, 0], rad * (0.86 + R() * 0.16), 0.6 + R() * 1.9, 0.04 * R(), R() < 0.6 ? GOLD : BLUE, 2.4 + R() * 2.8, 1);
+    // and a few big loops bulging out past the edge, as his do
+    for (let i = 0; i < 18; i++) arc(V().map((x) => x * rad * (0.4 + R() * 0.25)), rad * (0.5 + R() * 0.3), 1.4 + R() * 2.2, 0.05 * R(), R() < 0.6 ? GOLD : BLUE, 2.5 + R() * 2.2, 0.95);
+    // his beams: two broad blue-white ones on one diagonal through the heart, two gold ones across it, tapering out
+    // past the ball, each a wide soft pass under a hot narrow one
+    [[-0.62 + R() * 0.1, '170,206,255', 26], [2.52 + R() * 0.1, '170,206,255', 22], [3.0 + R() * 0.2, '255,186,90', 20], [0.12 + R() * 0.2, '255,176,80', 16]].forEach(([a, rgb, wd]) => {
+      g.save(); g.translate(c, c); g.rotate(a);
+      [[wd * 2.6, 0.28], [wd, 0.75], [wd * 0.3, 1]].forEach(([ww, al]) => {
+        const gr = g.createLinearGradient(rad * 0.1, 0, W * 0.5, 0); gr.addColorStop(0, 'rgba(' + rgb + ',' + al + ')'); gr.addColorStop(0.6, 'rgba(' + rgb + ',' + (al * 0.55).toFixed(2) + ')'); gr.addColorStop(1, 'rgba(' + rgb + ',0)');
+        g.fillStyle = gr; g.beginPath(); g.moveTo(rad * 0.1, -ww / 2); g.lineTo(W * 0.5, 0); g.lineTo(rad * 0.1, ww / 2); g.closePath(); g.fill();
+      });
+      g.restore();
+    });
+    // the burst: spikes of light out of the ball's edge, gold and blue-white, sparks along them; fine streaks
+    // flying out of the middle; sparks everywhere; knots of light in the weave
+    for (let i = 0; i < 64; i++) {
+      const a = R() * Math.PI * 2, r0 = rad * (0.55 + R() * 0.35), r1 = rad * (1.15 + R() * R() * 0.55), wd = 3 + R() * 9, rgb = R() < 0.6 ? '255,178,74' : R() < 0.6 ? '150,196,255' : '255,240,220';
+      g.save(); g.translate(c, c); g.rotate(a);
+      const gr = g.createLinearGradient(r0, 0, r1, 0); gr.addColorStop(0, 'rgba(' + rgb + ',0)'); gr.addColorStop(0.25, 'rgba(' + rgb + ',' + (0.35 + R() * 0.4).toFixed(2) + ')'); gr.addColorStop(1, 'rgba(' + rgb + ',0)');
+      g.fillStyle = gr; g.beginPath(); g.moveTo(r0, -wd); g.lineTo(r1, 0); g.lineTo(r0, wd); g.closePath(); g.fill(); g.restore();
+    }
+    const dot = (x, y, r, rgb, a) => { const gr = g.createRadialGradient(x, y, 0, x, y, r); gr.addColorStop(0, 'rgba(' + rgb + ',' + a + ')'); gr.addColorStop(1, 'rgba(' + rgb + ',0)'); g.fillStyle = gr; g.fillRect(x - r, y - r, r * 2, r * 2); };
+    for (let i = 0; i < 60; i++) { const a = R() * Math.PI * 2, r = rad * (0.35 + R() * 0.65); dot(c + Math.cos(a) * r, c + Math.sin(a) * r, 6 + R() * 14, R() < 0.7 ? '255,228,170' : '200,224,255', 0.45 + R() * 0.4); }
+    for (let i = 0; i < 1500; i++) { const a = R() * Math.PI * 2, r = rad * (0.45 + R() * 1.15), s = 0.6 + R() * 1.8; g.fillStyle = (R() < 0.78 ? 'rgba(255,196,100,' : 'rgba(190,220,255,') + (0.3 + R() * 0.65).toFixed(2) + ')'; g.fillRect(c + Math.cos(a) * r - s / 2, c + Math.sin(a) * r - s / 2, s, s); }
+    for (let i = 0; i < 320; i++) {
+      const a = R() * Math.PI * 2, r0 = rad * (0.2 + R() * 1.2), l = 10 + R() * R() * 120, rgb = R() < 0.62 ? '255,190,96' : R() < 0.5 ? '255,248,236' : '130,180,255';
+      const x0 = c + Math.cos(a) * r0, y0 = c + Math.sin(a) * r0, x1 = c + Math.cos(a) * (r0 + l), y1 = c + Math.sin(a) * (r0 + l), gr = g.createLinearGradient(x0, y0, x1, y1);
+      gr.addColorStop(0, 'rgba(' + rgb + ',0)'); gr.addColorStop(0.5, 'rgba(' + rgb + ',' + (0.3 + R() * 0.5).toFixed(2) + ')'); gr.addColorStop(1, 'rgba(' + rgb + ',0)');
+      g.strokeStyle = gr; g.lineWidth = 0.9 + R() * 1.6; g.beginPath(); g.moveTo(x0, y0); g.lineTo(x1, y1); g.stroke();
     }
   }));
 }
@@ -1314,33 +1371,27 @@ class Universe3D {
     // a sun and not a tangle, a wide soft gold one, a cool one wider still
     const heart = new THREE.Group(); sun.add(heart); this.heart = heart;
     heart.add(new THREE.Mesh(G.sphere, new THREE.MeshBasicMaterial({ color: new THREE.Color(1, 0.97, 0.9).multiplyScalar(2.6) })));
-    heart.children[0].scale.setScalar(this.heartR = 1.8);
-    // the corona round the disc: sprites wider than it, so their middles sit behind the ball and their rims glow
-    // round it -- white-gold close, gold, orange, a faint blue at the edge of Cymetica's light
-    this.corona = [[28, 0.6, 0xfff0c8], [36, 0.42, 0xffd27a], [50, 0.2, 0xffa640], [70, 0.08, 0xff8a30], [96, 0.035, 0x3b9dff]].map(([s, o, c]) => { const sp = glowSprite(c, o, s); sun.add(sp); return sp; });
-    // The sun itself (the operator, 2026-10-19: "to nemaji byt letajici krouzky, to ma vse jakoby zevnitr vychazet,
-    // nad sluncem taky nepoletuji letajici krouzky"): no tracks looping round it any more. A ball of light whose
-    // surface boils -- noise moving over it on the GPU, white-gold where it is hottest, deep orange in the cells
-    // between -- brightest where it faces the camera, as a sun's disc is; out of it stream rays, the sparks and the
-    // jets, all leaving from inside.
-    const disc = new THREE.MeshBasicNodeMaterial(), sp = TSL.positionLocal.mul(2.6), tt = TSL.time;
-    const n1 = TSL.mx_fractal_noise_float(sp.add(vec3(tt.mul(0.05), tt.mul(0.08), 0)), 4, 2.1, 0.55);
-    const n2 = TSL.mx_noise_float(sp.mul(4.6).add(vec3(0, tt.mul(-0.3), tt.mul(0.18))));
-    const heat = n1.mul(0.7).add(n2.mul(0.3)).mul(0.9).add(0.5).clamp(0, 1), face = dot(normalView, vec3(0, 0, 1)).clamp(0, 1);
-    // deep red-orange in the cells, orange-gold over them, white-gold on the hottest; darker toward the rim (a sun's
-    // limb), a white-hot middle where it faces the camera
-    const col = mix(mix(vec3(0.85, 0.2, 0.02), vec3(1.0, 0.52, 0.08), TSL.smoothstep(0.15, 0.6, heat)), vec3(1.0, 0.86, 0.46), TSL.smoothstep(0.62, 0.95, heat));
-    disc.colorNode = col.mul(face.pow(0.6).mul(0.75).add(0.3)).add(vec3(1.0, 0.9, 0.7).mul(face.pow(10).mul(0.45))).mul(1.15);
-    G.sunBall = G.sunBall || new THREE.SphereGeometry(1, 96, 48);
-    const ball = new THREE.Mesh(G.sunBall, disc); ball.scale.setScalar(UVSUN.disc); sun.add(ball); this.sunBall = ball;
-    this.fil = [];
-    // the rays: streamers of light drawn out from the disc, on faces that always turn to the camera so they stand
-    // round the sun from every angle; three layers that each swell outward and fade as the next one rises, slowly
-    // turning, so the light seems to pour out of it
-    this.rays = [[1, 66, 0.55, 0.012], [2, 72, 0.5, -0.009], [3, 60, 0.45, 0.006]].map(([seed, size, op, spin], i) => {
-      const s = new THREE.Sprite(new THREE.SpriteMaterial({ map: sunRaysTex(seed), color: new THREE.Color(1, 0.86, 0.6).multiplyScalar(1.25), transparent: true, opacity: op, blending: THREE.AdditiveBlending, depthWrite: false }));
-      s.scale.setScalar(size); sun.add(s); return { s, size, op, spin, ph: i / 3, rot: R() * 6.28 };
-    });
+    heart.children[0].scale.setScalar(this.heartR = 0.9);
+    // Cymetica as the operator's picture of a collision (2026-10-19, images/12: "ma vypadat takto presne"; before it,
+    // of the sun: "to nemaji byt letajici krouzky, to ma vse jakoby zevnitr vychazet"): a ball woven of plasma arcs
+    // round a white-hot heart that runs pink and blue inside, beams of blue-white and gold shooting out through it,
+    // sparks and streaks flying out of it -- nothing flies round it. The ball is painted (colliderTex) on faces that
+    // always turn to the camera, so it is the same ball from every side; two of them from different seeds turn slowly
+    // against each other and flicker, so the weave shimmers. Round it a glow: white, pink, blue, gold, a faint blue.
+    this.corona = [[44, 0.07, 0xffb04a], [70, 0.035, 0xff9a3c], [100, 0.025, 0x3b9dff]].map(([s, o, c]) => { const sp = glowSprite(c, o, s); sun.add(sp); return sp; });
+    heart.children[0].visible = false;   // the painting has its own heart
+    this.fil = []; this.rays = []; this.weave = [];
+    // The ball itself is the painting (colliderTex), laid over the map as it is -- two of them from different seeds,
+    // turning slowly against each other -- not drawn through the map's pastel pipeline: through its bloom, its
+    // saturation and its tone mapping his gold and blue came out a white blot (2026-10-19: the texture alone was his
+    // picture, the scene was not). overlay() puts it where the heart is on the screen, as wide as the ball there; the
+    // beams and the sparks stay in the scene, so they still pass in front of and behind it.
+    const ce = document.createElement('div'); ce.className = 'uvcol';
+    // under the painting a blurred copy of it, turning with it: the glow his arcs have (a bloom of its own)
+    const p1 = colliderTex(1).image, glow = document.createElement('canvas'); glow.width = p1.width; glow.height = p1.height; glow.getContext('2d').drawImage(p1, 0, 0); glow.className = 'g1';
+    ce.appendChild(glow);
+    [1, 2].forEach((seed) => { const cv = colliderTex(seed).image; cv.className = 'l' + seed; ce.appendChild(cv); });
+    this.bans.insertBefore(ce, this.bans.firstChild); this.colEl = ce;
     // the jets: a wide soft cone and a hot narrow one inside it, white at the root, gone at the tip
     G.jet = G.jet || new THREE.CylinderGeometry(0.06, 1, 1, 24, 1, true).translate(0, 0.5, 0);
     // they fan out across the first look's view (an angle on its screen, a little toward or away from it), so each
@@ -1348,14 +1399,16 @@ class Universe3D {
     // times k, so the longest ends inside his ring at 60
     const cam = new THREE.Vector3().setFromSpherical(new THREE.Spherical(1, UVCAM.polar, CO.uvGalaxy.AZ)), right = new THREE.Vector3().crossVectors(cam, up).normalize(), vup = new THREE.Vector3().crossVectors(right, cam).normalize();
     this.beams = [];
-    [[92, -0.25, 32, 0xff9a22], [32, 0.2, 26, 0x4f9dff], [148, -0.3, 28, 0xff8c1a], [8, -0.35, 21, 0xffa22e], [176, 0.25, 23, 0x2f8cff], [206, -0.2, 18, 0xff8c1a], [334, 0.3, 16, 0x5fa8ff], [62, 0.45, 15, 0xffa22e]].forEach(([deg, depth, len, hex]) => {
+    // his beams: two long blue-white ones through the middle on one diagonal, gold ones across, shorter ones between
+    [[36, 0.1, 34, 0x9fd0ff], [216, -0.1, 33, 0x8fc4ff], [166, 0.2, 29, 0xffb347], [348, -0.25, 27, 0xffa22e], [300, 0.3, 21, 0x6fb0ff], [118, -0.3, 20, 0xffc266], [78, 0.4, 16, 0xffd28a], [258, 0.35, 18, 0xff9a22]].forEach(([deg, depth, len, hex]) => {
       const t = deg * Math.PI / 180, dir = right.clone().multiplyScalar(Math.cos(t)).addScaledVector(vup, Math.sin(t)).addScaledVector(cam, depth).normalize();
       const q = new THREE.Quaternion().setFromUnitVectors(up, dir), j = new THREE.Group();
       j.quaternion.copy(q); sun.add(j);
       const outer = new THREE.Mesh(G.jet, new THREE.MeshBasicMaterial({ map: jetTex(), color: new THREE.Color(hex).multiplyScalar(0.45), transparent: true, opacity: 0.5, blending: THREE.AdditiveBlending, depthWrite: false }));
-      outer.scale.set(1.9, len, 1.9); j.add(outer);
-      const inner = new THREE.Mesh(G.jet, new THREE.MeshBasicMaterial({ map: jetTex(), color: new THREE.Color(hex).multiplyScalar(1.05), transparent: true, opacity: 0.85, blending: THREE.AdditiveBlending, depthWrite: false }));
-      inner.scale.set(0.6, len * 0.92, 0.6); j.add(inner);
+      const wk = len > 30 ? 1.8 : 1;   // his two long blue-white beams are the broad ones
+      outer.scale.set(1.3 * wk, len, 1.3 * wk); j.add(outer);
+      const inner = new THREE.Mesh(G.jet, new THREE.MeshBasicMaterial({ map: jetTex(), color: new THREE.Color(hex).multiplyScalar(1.0), transparent: true, opacity: 0.85, blending: THREE.AdditiveBlending, depthWrite: false }));
+      inner.scale.set(0.3 * wk, len * 0.96, 0.3 * wk); j.add(inner);
       this.beams.push({ j, outer, inner, dir, len, ph: R() * 6, hex });
     });
     // the sparks: golden mostly, some white-blue; most stream out along the jets, the rest everywhere; each lives
@@ -1366,17 +1419,17 @@ class Universe3D {
       const d = jet ? jet.dir.clone().add(new THREE.Vector3(R() - 0.5, R() - 0.5, R() - 0.5).multiplyScalar(0.3)).normalize() : new THREE.Vector3(R() * 2 - 1, R() * 2 - 1, R() * 2 - 1).normalize();
       A.set([d.x, d.y, d.z, 0.1 + R() * 0.3], i * 4);
       // (the free ones fly as far as the jets do: the spray stays round the sun, not out among the stations)
-      B.set([R(), 0.45 + R() * R() * 1.1, jet ? jet.len * (0.4 + R() * 0.45) : 6 + R() * 14, 0], i * 4);
+      B.set([R(), 0.45 + R() * R() * 1.1, jet ? jet.len * (0.55 + R() * 0.45) : 10 + R() * 18, 0], i * 4);
       cc.set(R() < 0.78 ? (R() < 0.5 ? 0xffb94a : 0xffdf8a) : 0xcfe9ff).multiplyScalar(1.8); C.set([cc.r, cc.g, cc.b], i * 3);
     }
     const a = TSL.instancedBufferAttribute(new THREE.InstancedBufferAttribute(A, 4)), b = TSL.instancedBufferAttribute(new THREE.InstancedBufferAttribute(B, 4)), c = TSL.instancedBufferAttribute(new THREE.InstancedBufferAttribute(C, 3));
     const life = TSL.fract(TSL.time.mul(a.w).add(b.x)), fade = life.oneMinus().pow(0.8);
     const sm = new THREE.SpriteNodeMaterial({ transparent: true, depthWrite: false, blending: THREE.AdditiveBlending });
-    sm.positionNode = a.xyz.mul(life.mul(b.z).add(UVSUN.disc * 0.94));
+    sm.positionNode = a.xyz.mul(life.mul(b.z).add(2));
     sm.scaleNode = b.y.mul(fade.mul(0.7).add(0.3)).mul(TSL.sin(TSL.time.mul(19).add(b.x.mul(61))).mul(0.3).add(0.7));
     const tx = TSL.texture(glowTex(), TSL.uv());
     // a spark flying straight at the camera would sit on the disc all its life, a speck of dust on the sun: those fade
-    const toward = TSL.cameraViewMatrix.mul(TSL.modelWorldMatrix.mul(vec4(a.xyz, 0))).xyz.normalize().z, side = TSL.smoothstep(0.55, 0.85, toward).oneMinus();
+    const toward = TSL.cameraViewMatrix.mul(TSL.modelWorldMatrix.mul(vec4(a.xyz, 0))).xyz.normalize().z, side = TSL.smoothstep(0.8, 0.97, toward).oneMinus();
     sm.colorNode = vec4(c.mul(fade), tx.a.mul(fade).mul(side));
     this.sparkPts = new THREE.Mesh(G.plane, sm); this.sparkPts.count = NS; this.sparkPts.frustumCulled = false; sun.add(this.sparkPts);
     // the orrery's own rings on the plane, as his: thin cyan circles at 36, 42 (dashed), 53 and a bright one at 60,
@@ -1585,8 +1638,7 @@ class Universe3D {
       const k = 0.5 + 0.5 * Math.sin(t * 1.9 + b.ph), fl = 0.85 + 0.15 * Math.sin(t * 23 + b.ph * 7);
       b.j.scale.set(0.85 + 0.3 * k, 0.8 + 0.3 * k, 0.85 + 0.3 * k); b.outer.material.opacity = (0.3 + 0.3 * k) * fl; b.inner.material.opacity = (0.55 + 0.4 * k) * fl;
     });
-    this.corona[0].material.opacity = 0.55 + 0.08 * Math.sin(t * 3.3 + 1); this.corona[1].material.opacity = 0.4 + 0.06 * Math.sin(t * 2.1);
-    this.rays.forEach((r) => { const f = (t * 0.11 + r.ph) % 1; r.s.scale.setScalar(r.size * (0.8 + 0.42 * f)); r.s.material.opacity = r.op * Math.sin(Math.PI * f); r.s.material.rotation = r.rot + t * r.spin; });
+    this.corona[0].material.opacity = 0.07 + 0.015 * Math.sin(t * 3.3 + 1); this.corona[1].material.opacity = 0.035 + 0.01 * Math.sin(t * 2.1);
     this.heart.children[0].scale.setScalar(this.heartR * (1 + 0.08 * Math.sin(t * 4.2)));
     const fa = 0.53 + t * 0.05; this.coreFlare.position.set(Math.sin(fa) * 60, 0.3, Math.cos(fa) * 60);
     this.moveShips(t);
@@ -1645,6 +1697,17 @@ class Universe3D {
     // deck's edge (a little over half the station's reach: the solar wings beyond it are thin, a plate may cross them).
     const up = (this._up || (this._up = new THREE.Vector3())).setFromMatrixColumn(this.camera.matrixWorld, 1).normalize();
     const c = new THREE.Vector3(), dir = new THREE.Vector3(), cH = Math.cos(UVCAM.polar);
+    // Cymetica's painted ball over its heart, as wide as the ball there: the heart and a point a ball's radius to
+    // its side on the screen; the painting is 600 px with the ball 360 across in its middle (colliderTex)
+    if (this.colEl) {
+      const right = (this._rt || (this._rt = new THREE.Vector3())).setFromMatrixColumn(this.camera.matrixWorld, 0).normalize();
+      v.copy(this.heartAt).project(this.camera);
+      const off = v.z > 1, x = (v.x + 1) / 2 * w, y = (1 - v.y) / 2 * h;
+      c.copy(this.heartAt).addScaledVector(right, UVSUN.disc * UVSUN.k).project(this.camera);
+      const s = Math.abs(c.x - v.x) * w / 360;
+      if (this.colEl._off !== off) { this.colEl._off = off; this.colEl.style.display = off ? 'none' : ''; }
+      if (!off) this.colEl.style.transform = 'translate(' + (x - 300).toFixed(1) + 'px,' + (y - 300).toFixed(1) + 'px) scale(' + s.toFixed(4) + ')';
+    }
     const list = this.items.filter((it) => it.plot).map((it) => {
       const p = it.plot, hh = (p.top - p.bot) / 2 * UVSS;
       c.copy(p.root.position); c.y += (p.top + p.bot) / 2 * UVSS;
