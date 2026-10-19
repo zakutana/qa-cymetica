@@ -222,10 +222,11 @@
       return o;
     }
     // a tower at corner (sx, sy), risen when its own deck comes: slits in the outer faces we see (the back one's are
-    // turned away, so its deck's slits go in the two faces it shows over the walls), a parapet with two merlons a
-    // side round a sunken roof
+    // turned away, so its deck's slits go in the two faces it shows, high enough to clear the blocks in front), a
+    // parapet with two merlons a side round a sunken roof
     function tower(sx, sy, f, up) {
-      var own = f < n, H = Hw + 0.16 + (own ? up : 0), x = 3 + sx * tc, y = 3 + sy * tc, wy = own ? Hw + 0.14 : H - 0.5, g = '', e = tw / 2 - 0.05, back = sx < 0 && sy < 0;
+      var own = f < n, back = sx < 0 && sy < 0, H = Hw + 0.16 + (own ? up : 0), x = 3 + sx * tc, y = 3 + sy * tc, g = '', e = tw / 2 - 0.05;
+      var wy = own ? (back ? H - 0.3 : Hw + 0.14) : H - 0.5;
       var o = cc(x, y, 0, tw, tw, H, V.body);
       [-0.2, 0.2].forEach(function (u) {
         if (sx > 0 || back) g += vfWin(onX(x + tw / 2 + 0.012, y + u * tw - 0.035, y + u * tw + 0.035, wy - 0.14, wy + 0.14), V, R() < 0.3);
