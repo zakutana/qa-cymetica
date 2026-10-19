@@ -48,16 +48,24 @@
       office = office3d;
     } else office = office2d;
     office.sel = ui.mgr ? 'hub' : ui.panel != null ? 'd' + ui.panel : null;
-    office.layout();
+    // Back to a 3D office that is already built: brought up to date, not built again. A rebuild throws every room
+    // away and compiles their shaders anew, a 2.2 s freeze on every 2D -> 3D switch (11 s at a quarter of the CPU,
+    // measured 2026-10-19); update() still rebuilds it when a department was added, edited or removed meanwhile.
+    if (office === office3d && office3d.cells && office3d.shapeKey === office3d.shape()) office.update();
+    else office.layout();
     requestAnimationFrame(function () {
       office.resize();
       if (ui.mgr) office.focus('hub', 0, true); else if (ui.panel != null) office.focus('d' + ui.panel, 0, true); else office.fit(false);
     });
   }
-  // the 3D engine loads on its own: switch when it is there, if 3D is the choice
+  // the 3D engine loads on its own: switch when it is there, if 3D is the choice. It says so itself (the co3d event
+  // at the end of u3d.js), so nothing waits on a timer's next round; 8 s without it is a page without 3D.
   function whenEngine(cb) {
-    var t0 = Date.now();
-    (function wait() { if (CO.U3 && (CO.U3.ok || CO.U3.failed)) return cb(!!CO.U3.ok); if (Date.now() - t0 > 8000) return cb(false); setTimeout(wait, 80); })();
+    var done = false, fin = function (ok) { if (done) return; done = true; window.removeEventListener('co3d', on); clearTimeout(late); cb(ok); };
+    var on = function () { if (CO.U3 && (CO.U3.ok || CO.U3.failed)) fin(!!CO.U3.ok); };
+    var late = setTimeout(function () { fin(!!(CO.U3 && CO.U3.ok)); }, 8000);
+    window.addEventListener('co3d', on);
+    on();
   }
 
   /* ---------------- boot ---------------- */
@@ -69,7 +77,7 @@
     office = office2d = new CO.Office($('office'), $('stage'), tipFor);
     office.layout();
     Array.prototype.forEach.call(document.querySelectorAll('#vt button'), function (b) { b.classList.toggle('on', b.getAttribute('data-v') === '2d'); });
-    whenEngine(function (ok) { if (ok && viewPref() !== '2d') setView('3d'); });
+    whenEngine(function (ok) { if (ok && viewPref() !== '2d') setView('3d'); if (ok) afterOffice(prebuildUniverse); });
     markSeen();
     bind();
     wire();
@@ -462,15 +470,18 @@
       departments: S.departments.slice(), mission: S.company.mission, et10: S.et10 || 0, working: work, plan: S.company.plan, days: 0 };
   }
   function uvHooks() { return { mine: mineForMap, onOpen: openFromMap, onStats: uvStats, onFail: uvTo2D }; }
-  // the 3D renderer could not start here: the flat map takes its place
+  // the 3D renderer could not start here: the flat map takes its place (shown when its tab is, if it failed while it
+  // was being built ahead)
   function uvTo2D() {
     var st = $('uvstage'); st.classList.remove('is3d'); st.classList.add('is2d'); $('uvbans').innerHTML = '';
-    uv = new CO.Universe($('uvmap'), st, uvHooks()); uv.layout(); finishShow(true);
+    uv = new CO.Universe($('uvmap'), st, uvHooks()); CO.uv = uv; uv.layout(); uvLaid = true;
+    if (ui.tab === 'universe') finishShow(true); else uvShown = false;
   }
   // The Universe is the live 3D map, the flat one where 3D cannot start. The painted picture and the map composed
   // from his generated pieces are gone ("ty textury a picture mody sou uplne nahovno", 2026-10-18).
   function showUniverse() { show3D(); }
   // the 3D map when the browser can draw it (WebGPU, or WebGL2), the flat one otherwise
+  var uvLaid = false, uvShown = false;
   function show3D() {
     if (!uv) {
       var t0 = Date.now();
@@ -482,14 +493,53 @@
         else return setTimeout(wait, 60);
         $('uvstage').classList.remove('loading');
         CO.uv = uv;   // a handle for looking at the map from the console
-        uv.layout();
+        uv.layout(); uvLaid = true;
         finishShow(true);
       })();
       return;
     }
-    finishShow(false);
+    // built ahead (prebuildUniverse): whatever step it had not reached yet is done now
+    if (!uvLaid) { if (uvLay) { uvLay.forEach(function (f) { f(); }); uvLay = null; } else uv.layout(); uvLaid = true; }
+    finishShow(!uvShown);
+  }
+  // The Universe built ahead (2026-10-19, "load things in the background"): once the office has drawn and the page
+  // has been left alone for a moment, the map is built a step at a time in the browser's idle time -- its renderer,
+  // its stations, then everything its first frame would compile (warm()) -- so its tab opens at once. Measured before:
+  // the first open held the page 616 ms (309 ms building, then a first frame of 65 shaders and 67 pipelines), 2.9 s
+  // on a computer a quarter as fast. A hand on the page comes first: a step waits until it has been still 1.2 s.
+  var lastHand = 0, uvLay = null;
+  ['pointerdown', 'wheel', 'keydown', 'touchstart'].forEach(function (k) { document.addEventListener(k, function () { lastHand = performance.now(); }, { capture: true, passive: true }); });
+  function prebuildUniverse() {
+    if (RO || uv || !(CO.U3 && CO.U3.ok)) return;
+    // the renderer and its world; the plan; a station a step (uvLay, which show3D finishes if the tab opens first);
+    // then its shaders and pipelines (warm(), a piece at a time of its own)
+    var steps = [
+      function () { if (uv) return false; uv = CO.U3.universe($('uv3d'), $('uvstage'), uvHooks()); $('uvstage').classList.add('is3d'); CO.uv = uv; },
+      function () { if (!uv || uvLaid || !uv.layoutSteps) return false; uvLay = uv.layoutSteps(); },
+      function () { if (!uvLay) return false; uvLay.shift()(); if (uvLay.length) return true; uvLay = null; uvLaid = true; },
+      function () { if (uv && uv.warm && uvLaid) uv.warm(); }
+    ], i = 0;
+    var idle = window.requestIdleCallback ? function (f) { window.requestIdleCallback(f, { timeout: 5000 }); } : function (f) { setTimeout(f, 300); };
+    (function next() {
+      if (i >= steps.length || uvShown) return;   // its tab opened first: show3D did the rest
+      idle(function (dl) {
+        if (uvShown) return;
+        if (performance.now() - lastHand < 1200) return setTimeout(next, 700);
+        // a step returning true has more to do: it runs again while this idle moment lasts, then at the next
+        var again;
+        do { again = steps[i]() === true; } while (again && dl && dl.timeRemaining && dl.timeRemaining() > 8);
+        if (!again) i++;
+        setTimeout(next, again ? 0 : 120);
+      });
+    })();
+  }
+  // after the office's first frames (the 3D office's, or the flat one's when 3D is off), not before: the office first
+  function afterOffice(cb) {
+    var t0 = performance.now();
+    (function wait() { if (!office3d || office3d.frames > 40 || performance.now() - t0 > 20000) return cb(); setTimeout(wait, 250); })();
   }
   function finishShow(first) {
+    uvShown = true;
     requestAnimationFrame(function () {
       uv.resize();
       if (!uv.fitted) uv.fit(false);

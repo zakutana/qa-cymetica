@@ -78,7 +78,7 @@ const PASTEL = 0.66;   // how much colour the 3D keeps: 1 is the site's neon, th
 class Post {
   constructor(renderer, scene, camera, strength, radius, threshold, opts) {
     this.renderer = renderer;
-    const sp = pass(scene, camera, { samples: 4 });
+    const sp = pass(scene, camera, { samples: 4 }); this.pass = sp;   // (its render target: what warm() compiles for)
     let col = sp.getTextureNode('output');
     // ambient occlusion (the office): where things meet -- a desk on the floor, a wall in a corner -- the light is
     // softer, as in a render. The scene writes its normals beside its colour in the same pass.
@@ -1220,7 +1220,8 @@ function uvSky(AZ) {
   // his sky, measured: #01080d over most of it, #051d28 at the top left, #01060a at the bottom right
   const rgb = (hex) => { const h = look(hex).getHex(THREE.SRGBColorSpace); return [h >> 16 & 255, h >> 8 & 255, h & 255]; };
   const B0 = rgb('#01090e'), B1 = rgb('#062030'), B2 = rgb('#01050a');
-  const tex = ctex(1024, 512, (c, W, H) => {
+  // (63 ms of noise: drawn in idle time, before the map's first frame or its warm())
+  const tex = ctexIdle(1024, 512, (c, W, H) => {
     const img = c.createImageData(W, H), d = img.data, v = new THREE.Vector3();
     for (let j = 0; j < H; j++) for (let i = 0; i < W; i++) {
       const lon = (i + 0.5) / W * Math.PI * 2, lat = Math.PI / 2 - (j + 0.5) / H * Math.PI;
@@ -1295,7 +1296,7 @@ class Universe3D {
     this.bind();
     this.resize();
     this.clock = new THREE.Clock();
-    this.renderer.init().then(() => {
+    this.started = this.renderer.init().then(() => {
       // his picture keeps its teal and green: less of the pastel pull than the office's
       try { this.post = new Post(this.renderer, this.scene, this.camera, 0.5, 0.3, 0.8, { sat: 0.9 }); } catch (e) { console.warn('bloom off:', e); this.post = null; }
       this.renderer.setAnimationLoop(() => this.frame());
@@ -1308,6 +1309,22 @@ class Universe3D {
     if (document.fonts && document.fonts.addEventListener) document.fonts.addEventListener('loadingdone', remeasure);
   }
   visible() { return this.el.clientWidth > 0 && this.el.clientHeight > 0; }
+  // Made ready before it is shown (app.js builds the map ahead in idle time and calls this last): every material's
+  // shader and every pipeline its first frame would make, made now for the render target the frame draws into, the
+  // pipelines compiled on the GPU's own threads (compileAsync), nothing drawn. Nothing is culled meanwhile, so what
+  // the first look's camera will see is ready wherever this one points. Measured 2026-10-19: the first open's first
+  // frame was 65 shaders and 67 pipelines made there and then; after this, the post chain's few.
+  warm() {
+    if (this.warming) return this.warming;
+    const go = async () => {
+      await this.started;
+      if (!this.post || !this.post.pass) return;
+      idleFlush();
+      await compileInPieces(this.renderer, this.scene, this.camera, this.post.pass.renderTarget, { all: true, mrt: this.post.pass.getMRT() });
+    };
+    this.warming = go().catch((e) => console.warn('the map could not be made ready ahead:', e)).then(() => { this.warmed = true; });
+    return this.warming;
+  }
 
   // light, the sky, the orbits and what runs along them, and Cymetica in the middle
   world() {
@@ -1451,14 +1468,18 @@ class Universe3D {
     this.scene.add(g); this.coreG = g;
   }
   // every company on its orbit; ours on the second, in front of Cymetica where the camera first looks
-  layout() {
+  layout() { this.layoutSteps().forEach((f) => f()); }
+  // the same, as steps: the plan, then one station a step (8 ms each), then the rest -- app.js builds the map ahead
+  // a step per idle moment (layout() as one task was 160-180 ms of the office's time, measured 2026-10-19)
+  layoutSteps() {
     this.items = CO.uvPlan(this.h.mine());
     CO.uvSeed(this.items, this.live);
-    this.items.forEach((it) => this.place(it));
-    this.coreBanner();
-    this.stats();
-    // zoomed all the way out, the orrery still fills most of the view: not a speck in the dark
-    const h = this.home(); this.controls.maxDistance = h.pos.distanceTo(h.tgt) * 1.6;
+    return this.items.map((it) => () => this.place(it)).concat([() => {
+      this.coreBanner();
+      this.stats();
+      // zoomed all the way out, the orrery still fills most of the view: not a speck in the dark
+      const h = this.home(); this.controls.maxDistance = h.pos.distanceTo(h.tgt) * 1.6;
+    }]);
   }
   place(it) {
     this.built = (this.built || 0) + 1;
@@ -1602,6 +1623,8 @@ class Universe3D {
   /* ---------------- the frame ---------------- */
   frame() {
     if (!this.visible()) return;
+    // shown while warm() is still at it: its first frame waits for it rather than drawing what is not ready
+    if (this.warming && !this.warmed) return;
     // a page opened in a hidden tab learns its size late, and not always through ResizeObserver
     if (this.el.clientWidth !== this._cw || this.el.clientHeight !== this._ch) {
       this._cw = this.el.clientWidth; this._ch = this.el.clientHeight; this.resize();
@@ -1629,7 +1652,7 @@ class Universe3D {
     // a station the camera flew to: the camera goes along with it on its orbit
     if (this.follow && this.follow.plot) {
       const p = this.follow.plot.root.position;
-      if (this.followAt && !this.tw) { const d = p.clone().sub(this.followAt); this.camera.position.add(d); this.controls.target.add(d); }
+      if (this.followAt && !this.tw) { const d = (this._fd || (this._fd = new THREE.Vector3())).copy(p).sub(this.followAt); this.camera.position.add(d); this.controls.target.add(d); }
       this.followAt = (this.followAt || new THREE.Vector3()).copy(p);
     }
     // Cymetica: the filaments turn each their own way and flicker, the jets breathe, the heart pulses, a star of
@@ -1659,8 +1682,10 @@ class Universe3D {
     this.sky.position.copy(this.camera.position);
     if (this.mouseMoved) { this.mouseMoved = false; this.pick(); }
     // a GPU that cannot run a shader says so on the first frames: stop, and let the flat map take over
+    if (IDLE.q.length) idleFlush();
     try { if (this.post) this.post.render(); else this.renderer.render(this.scene, this.camera); this.frames = (this.frames || 0) + 1; }
     catch (e) { console.error('3D map stopped:', e); this.renderer.setAnimationLoop(null); if (this.h.onFail && !(this.frames > 30)) this.h.onFail(e); return; }
+    keepCompiled(this.renderer, this);
     this.overlay();
   }
   // the stars of light along the orbits: each rides its line and glints
@@ -1677,11 +1702,16 @@ class Universe3D {
   // mast from the side, past the edge of the deck from straight above, so it names the station from any angle
   // without covering it. Cymetica's stands on its sun the same way.
   overlay() {
-    const w = this.el.clientWidth, h = this.el.clientHeight, v = new THREE.Vector3(), placed = [], now = performance.now();
-    // a still camera moves no banner: restyle them only when the view, the size, the hover or a station changed
-    const key = this.camera.matrixWorld.elements.join(',') + '|' + w + 'x' + h + '|' + this.hover + '|' + this.items.length + '|' + this.built + '|' + Math.floor(now / 66);
-    if (key === this.ovKey && !this.pops.length) return;
-    this.ovKey = key;
+    const w = this.el.clientWidth, h = this.el.clientHeight, v = this._ov1 || (this._ov1 = new THREE.Vector3()), placed = [], now = performance.now();
+    // a still camera moves no banner: restyle them only when the view, the size, the hover or a station changed (or
+    // every 66 ms, for what moves on its own). Compared number by number: the key used to be the camera's matrix
+    // joined into a string, 16 numbers printed every frame. ovKey '' (remeasure) still forces a pass.
+    const e = this.camera.matrixWorld.elements, o = this._ovk || (this._ovk = { m: new Float64Array(16), w: -1, h: -1, hv: {}, n: -1, b: -1, t: -1 }), tick = Math.floor(now / 66);
+    let moved = this.ovKey !== 'v' || o.w !== w || o.h !== h || o.hv !== this.hover || o.n !== this.items.length || o.b !== this.built || o.t !== tick;
+    for (let i = 0; i < 16; i++) if (o.m[i] !== e[i]) { o.m[i] = e[i]; moved = true; }
+    o.w = w; o.h = h; o.hv = this.hover; o.n = this.items.length; o.b = this.built; o.t = tick;
+    if (!moved && !this.pops.length) return;
+    this.ovKey = 'v';
     // the stage's own bars (the count, the zoom buttons, the legend) are drawn over the plates: a plate under one is
     // a plate cut in half. Where they are, read again once a second (they move only with the stage and the font).
     if (!this.bars || now - this.barsAt > 1000) {
@@ -1697,7 +1727,7 @@ class Universe3D {
     // the camera sees it); looking further down, its deck shows round the mast, so the plate moves out to the
     // deck's edge (a little over half the station's reach: the solar wings beyond it are thin, a plate may cross them).
     const up = (this._up || (this._up = new THREE.Vector3())).setFromMatrixColumn(this.camera.matrixWorld, 1).normalize();
-    const c = new THREE.Vector3(), dir = new THREE.Vector3(), cH = Math.cos(UVCAM.polar);
+    const c = this._ov2 || (this._ov2 = new THREE.Vector3()), dir = this._ov3 || (this._ov3 = new THREE.Vector3()), cH = Math.cos(UVCAM.polar);
     // Cymetica's painted ball over its heart, as wide as the ball there: the heart and a point a ball's radius to
     // its side on the screen; the painting is 600 px with the ball 360 across in its middle (colliderTex)
     if (this.colEl) {
@@ -2245,6 +2275,7 @@ const OM = {};
 // (NDC); with the vault filling the corner his screenshot left empty, a little further out than his so the whole
 // platform stays in the frame. home() keeps those at any stage size.
 const CAM = { polar: 0.8198, az: 0.7854, fov: 30.94, box: [1.3, 1.74], mid: [0.02, -0.02] };
+const FILL_OFF = new THREE.Vector3(-4, 8, 0);   // the camera-side fill light: this far up and to the left of the camera
 // His picture's colours, read off it (sRGB): the mint of a neon line's core and its halo, the sky between the stars.
 const LOOK = { neon: '#7cf2c4', orange: '#ff8a3a', sky: 0x16232f };
 
@@ -2252,6 +2283,28 @@ const LOOK = { neon: '#7cf2c4', orange: '#ff8a3a', sky: 0x16232f };
 function ctex(w, h, draw) {
   const c = document.createElement('canvas'); c.width = w; c.height = h; draw(c.getContext('2d'), w, h);
   const t = new THREE.CanvasTexture(c); t.colorSpace = THREE.SRGBColorSpace; t.anisotropy = 8; return t;
+}
+// Work a first frame needs but the moment of building does not, done in the browser's idle time a job at a time, so
+// the page answers meanwhile: the office's sky alone was 203 ms of noise inside the page's first task (ten nebulae of
+// filamentTex, measured 2026-10-19), and the main thread then sat idle 450 ms waiting for the GPU to start. A frame
+// that needs a job still waiting does it there and then (idleFlush, before every render that could show it), so no
+// frame is ever drawn without it; a texture made so is the same canvas drawn by the same code, only sooner or later.
+const IDLE = { q: [], on: false };
+function idleJob(fn) { IDLE.q.push(fn); if (!IDLE.on) { IDLE.on = true; idleTick(); } }
+function idleTick() {
+  const ric = window.requestIdleCallback || ((f) => setTimeout(() => f({ timeRemaining: () => 10, didTimeout: false }), 20));
+  ric((dl) => {
+    while (IDLE.q.length && (dl.didTimeout || dl.timeRemaining() > 3)) IDLE.q.shift()();
+    if (IDLE.q.length) idleTick(); else IDLE.on = false;
+  }, { timeout: 1500 });
+}
+function idleFlush() { while (IDLE.q.length) IDLE.q.shift()(); }
+// ctex, drawn in idle time: the texture at once, its picture before any frame shows it
+function ctexIdle(w, h, draw) {
+  const c = document.createElement('canvas'); c.width = w; c.height = h;
+  const t = new THREE.CanvasTexture(c); t.colorSpace = THREE.SRGBColorSpace; t.anisotropy = 8;
+  idleJob(() => { draw(c.getContext('2d'), w, h); t.needsUpdate = true; });
+  return t;
 }
 const sstep = (a, b, x) => { const t = Math.min(1, Math.max(0, (x - a) / (b - a))); return t * t * (3 - 2 * t); };
 // value noise in octaves, seeded: what nebulae, rock and dust are drawn from
@@ -2299,7 +2352,14 @@ function starTex() {
 // nebTex's soft clouds, kept for the Universe, read as a haze over the whole office sky
 function filamentTex(seed) {
   const key = 'fil' + seed; if (TX[key]) return TX[key];
-  const N = 384, f = vnoise(seed), f2 = vnoise(seed + 5), c = document.createElement('canvas'); c.width = c.height = N;
+  // the texture now, its 20 ms of noise in idle time (idleJob): ten of them make the office's sky
+  const N = 384, c = document.createElement('canvas'); c.width = c.height = N;
+  const t = new THREE.CanvasTexture(c); t.colorSpace = THREE.SRGBColorSpace; TX[key] = t;
+  idleJob(() => { filamentDraw(c, seed); t.needsUpdate = true; });
+  return t;
+}
+function filamentDraw(c, seed) {
+  const N = c.width, f = vnoise(seed), f2 = vnoise(seed + 5);
   const g = c.getContext('2d'), img = g.createImageData(N, N), d = img.data;
   for (let j = 0; j < N; j++) for (let i = 0; i < N; i++) {
     const x = i / N * 2 - 1, y = j / N * 2 - 1, rr = Math.sqrt(x * x + y * y); if (rr > 1.02) continue;
@@ -2316,7 +2376,6 @@ function filamentTex(seed) {
   const sharp = document.createElement('canvas'); sharp.width = sharp.height = N; sharp.getContext('2d').putImageData(img, 0, 0);
   g.clearRect(0, 0, N, N); g.filter = 'blur(5px)'; g.drawImage(sharp, 0, 0); g.drawImage(sharp, 0, 0); g.filter = 'blur(1px)'; g.globalAlpha = 0.7; g.drawImage(sharp, 0, 0);
   g.filter = 'none'; g.globalAlpha = 1;
-  const t = new THREE.CanvasTexture(c); t.colorSpace = THREE.SRGBColorSpace; TX[key] = t; return t;
 }
 // The sky: nebulae and stars round the camera. The Universe keeps its rich clouds; the office (office = true) has
 // his picture's: a teal nebula of filaments where the home view's sky shows it, stars thick and white.
@@ -3102,6 +3161,82 @@ function omats() {
   G.smallRock = asteroidGeo(27, 9, false);   // twelve of them drift unmerged: 2,000 triangles each, the grain is the material's
   G.plume = new THREE.CylinderGeometry(0.42, 0.05, 1, 24, 1, true);
 }
+// A pipeline once compiled stays compiled. three.js lets a pipeline and its two shader programs go the moment the
+// last object drawn with them is disposed, and layout() disposes every room before it builds the next ones: a
+// rebuild then compiled again on the GPU's thread what it had just let go (35 of the office's 105 pipelines on a
+// plain rebuild, 14 when the vault's piles were rebuilt, measured 2026-10-19), and no frame is shown while the GPU
+// compiles. Kept here: every render pipeline whose shaders are the same for any object that uses them. Not the
+// instanced meshes' with their matrices in a uniform buffer: three.js names each mesh's buffer in its shader
+// (NodeBuffer_<id>), so those are new with every new mesh, and kept they would only pile up. Checked when the
+// pipeline cache has changed size, which is only after something new was drawn.
+function keepCompiled(R, st) {
+  const P = R._pipelines; if (!P || !P.caches || P.caches.size === st._kept) return;
+  st._kept = P.caches.size;
+  P.caches.forEach((p) => {
+    if (p.__kept || !p.vertexProgram || !p.fragmentProgram) return;
+    p.__kept = true;
+    if (p.vertexProgram.code.indexOf('NodeBuffer_') >= 0 || p.fragmentProgram.code.indexOf('NodeBuffer_') >= 0) return;
+    p.usedTimes++; p.vertexProgram.usedTimes++; p.fragmentProgram.usedTimes++;
+  });
+}
+// A scene's shaders made a few at a time, before its first frame, the page answering between the pieces. three.js
+// makes a material's shader on the main thread the first time it is drawn (~12 ms each), so the office's first
+// frame was one 1.6 s task (125 shaders; 10 s at a quarter of the CPU, measured 2026-10-19) and the map's first
+// 0.6 s. compileAsync prepares what a frame would draw without drawing it, its pipelines compiled on the GPU's own
+// threads; here it is given the scene a piece at a time -- everything else hidden for that call, the lights never
+// (every shader's key holds the lights) -- a piece growing while it takes under 25 ms, shrinking over 90. The order
+// cannot change a picture: no shader key here serves two of the passes (main, the floors' mirror, the shadow),
+// measured over 225 keys; the frames after it are the frames before it, pixel for pixel (frozen-clock diffs).
+// What it bought, measured: the office on the screen 1.2-1.5 s sooner (4.7-5.0 s -> 3.5-3.9 s: the pipelines no
+// longer compile one after another before the first frame can show) and no task over 230 ms instead of one of
+// 1.6 s; at a quarter of the CPU no task over 1.6 s instead of one of 10.3 s, the office 0.9 s later (16.8 s).
+// target: the render target the frame really draws the scene into (its Post's pass), so the pipelines are those.
+// all: nothing culled (the map, made ready while its camera points nowhere in particular).
+// The first of each kind goes first: two things with the same material, the same attributes and the same flags get
+// the same shaders, so after the first the rest cost only their buffers and go in big pieces.
+// Each piece is a render of its own to the nodes that run once a render (the floors' mirror, the shadow), and so is
+// the first real frame after them: compileAsync hands its render id back when it is done, and with one id for every
+// piece and the first frame that frame drew no shadow and no mirror, and the rebuild after it wrote broken shaders
+// (WGSL that does not parse, 6 page loads of 6). One floor kept in every piece did the same (3 of 6), so the mirror
+// prepares only what shares a piece with a floor, and its first frame the rest. Measured, the way it is now: 0 of 11,
+// the page as it was 1 of 9.
+const yieldTask = () => new Promise((r) => { const ch = new MessageChannel(); ch.port1.onmessage = () => r(); ch.port2.postMessage(0); });
+function compileKind(o) {
+  const g = o.geometry, mats = [].concat(o.material || []);
+  return [o.type, mats.map((m) => m.uuid).join(','), g ? Object.keys(g.attributes).sort().join(',') + (g.index ? '+i' : '') + (Object.keys(g.morphAttributes || {}).length ? '+m' : '') : '',
+    o.receiveShadow, o.castShadow, o.layers.mask, o.count > 1 ? o.uuid : '', o.isInstancedMesh && o.instanceColor ? 'ic' : '', o.isSkinnedMesh ? 's' : ''].join('|');
+}
+async function compileInPieces(R, scene, camera, target, opts = {}) {
+  const all = [], culled = [], waits = [], seen = new Set(), first = [], rest = [];
+  scene.traverse((o) => { if ((o.isMesh || o.isPoints || o.isLine || o.isSprite) && o.visible) all.push(o); });
+  all.forEach((o) => { const k = compileKind(o); if (seen.has(k)) rest.push(o); else { seen.add(k); first.push(o); } });
+  // At least a twentieth of the first of each kind a piece: one at a time, a weak computer spent 4.5 s more on the
+  // pieces' own passes than one frame had (13.3 s against 10.3 s at a quarter of the CPU, 141 pieces, measured).
+  const items = first.concat(rest), frame = R._nodes && R._nodes.nodeFrame, nMin = Math.max(1, Math.ceil(first.length / 20));
+  let i = 0, n = nMin;
+  while (i < items.length) {
+    const t0 = performance.now(), prevT = R.getRenderTarget(), prevM = R.getMRT(), piece = items.slice(i, i + n);
+    // (as each thing is now: the page may have changed one between two pieces)
+    const vis = items.map((o) => o.visible);
+    if (opts.all) items.forEach((o) => { if (o.frustumCulled) { o.frustumCulled = false; culled.push(o); } });
+    items.forEach((o) => { o.visible = false; });
+    piece.forEach((o, k) => { o.visible = vis[i + k]; });
+    if (frame) frame.renderId++;
+    try { R.setRenderTarget(target); R.setMRT(opts.mrt || null); waits.push(R.compileAsync(scene, camera)); }
+    finally {
+      R.setRenderTarget(prevT); R.setMRT(prevM);
+      items.forEach((o, k) => { o.visible = vis[k]; }); culled.forEach((o) => { o.frustumCulled = true; }); culled.length = 0;
+    }
+    const wasFirst = i < first.length; i += n;
+    const dt = performance.now() - t0;
+    // the next piece: from the time this one took; past the first of each kind they grow at once
+    n = dt < 25 ? Math.min(n * 2, 1024) : dt > 90 ? Math.max(nMin, n >> 1) : n;
+    if (wasFirst && i >= first.length) n = Math.max(n, 64);
+    await yieldTask();
+  }
+  if (frame) frame.renderId++;
+  await Promise.all(waits);
+}
 function release(root) {
   const shared = new Set(Object.values(TX));
   [M, OM].concat(Object.values(AM)).forEach((bag) => Object.values(bag).forEach((v) => {
@@ -3402,14 +3537,29 @@ class Office3D {
     this.pk = new THREE.Group(); S.add(this.pk);
     this.clock = new THREE.Clock();
     this.bind();
-    this.renderer.init().then(() => {
+    this.renderer.init().then(async () => {
       // bloom tight round what glows: a wide one flooded every floor mint from the neon (measured 2026-10-18)
       try { this.post = new Post(this.renderer, this.scene, this.camera, 0.32, 0.0, 0.86, { sat: 0.96 }); }
       catch (e) { this.post = null; }
+      await this.prepare();
       this.renderer.setAnimationLoop(() => this.frame());
     }).catch((e) => { console.error('3D office could not start:', e); if (this.onFail) this.onFail(e); });
     if (window.ResizeObserver) new ResizeObserver(() => this.resize()).observe(el);
     setInterval(() => this.wander(), 2600);
+  }
+  // The first frame's shaders made ahead, a piece at a time (compileInPieces), from the camera the first frame will
+  // have: until they are, the stage shows what it showed while the office was starting, and the page answers.
+  async prepare() {
+    if (!this.post || !this.post.pass) return;
+    try {
+      idleFlush(); this.resize();
+      await compileInPieces(this.renderer, this.scene, this.camera, this.post.pass.renderTarget, { mrt: this.post.pass.getMRT() });
+    } catch (e) { console.warn('the office could not be made ready ahead:', e); }
+    // The studio's reflections (scene.environment) are turned into their blurred form (a PMREM) by draws of their
+    // own the first time a shader asks for them -- and inside compileAsync nothing is drawn, so that came out black
+    // and was kept: every lit surface lost its reflections (17.7 % of the frame off by more than 8 levels, measured).
+    // Marked out of date, the first real frame makes it again, as it always made it.
+    if (this.scene.environment) this.scene.environment.needsPMREMUpdate = true;
   }
   // what the office is built from: a change in any of it (a department's look among them) rebuilds the rooms
   shape() { return CO.S.departments.map((d) => d.id + ':' + d.slot + ':' + d.key + ':' + (d.look || '') + ':' + d.experts.join(',')).join('|') + (CO.RO ? 'ro' : ''); }
@@ -6731,11 +6881,13 @@ class Office3D {
     }
     this.controls.update();
     this.sky.position.copy(this.camera.position);
-    if (this.fill) { this.fill.position.copy(this.camera.position).add(new THREE.Vector3(-4, 8, 0)); this.fill.target.position.copy(this.controls.target); }
+    if (this.fill) { this.fill.position.copy(this.camera.position).add(FILL_OFF); this.fill.target.position.copy(this.controls.target); }
     if (this.drift) this.drift.forEach((d, i) => { d.m.rotation.y = t * d.sp + i; d.m.rotation.x = t * d.sp * 0.6 + i * 2; });
     if (this.flames) this.flames.forEach((f) => { f.glow.material.opacity = (f.base || 0.26) + 0.08 * Math.sin(t * 3 + f.ph) + 0.03 * Math.sin(t * 11 + f.ph); });
     if (this.vaultPiles) this.vaultPiles.forEach((p, i) => { p.position.y = p.userData.y + Math.sin(t * 1.2 + i) * 0.03; });
-    Object.values(this.rooms).forEach((r) => {
+    // the rooms as a list, made again only when layout() has made a new set (not a new array every frame)
+    if (this._rl !== this.rooms) { this._rl = this.rooms; this._rooms = Object.values(this.rooms); }
+    this._rooms.forEach((r) => {
       if (r.grow) { const k = Math.min(1, (now - r.grow) / 1200), e = 1 - Math.pow(1 - k, 3); r.g.scale.set(1, Math.max(0.01, e), 1); if (k >= 1) r.grow = 0; }
       if (r.glow) r.glow.material.opacity = (r.glowBase || 0) * (r.st === 'working' ? 0.75 + 0.25 * Math.sin(t * 2.4 + r.x0) : 1);
       if (r.leds) r.leds.forEach((m, i) => { m.visible = ((Math.floor(t * 3 + m.userData.blink)) % 3) !== 0; });
@@ -6764,19 +6916,21 @@ class Office3D {
         a.ring.scale.setScalar(a.working ? 0.3 + ((t * 0.9 + a.phase) % 1) * 0.35 : 0.3);
       });
     });
-    // packets
-    this.packets = this.packets.filter((k) => {
+    // packets (placed where V() would put them, without a new vector for each every frame)
+    if (this.packets.length) this.packets = this.packets.filter((k) => {
       const f = (now - k.t0) / k.dur;
       if (f < 0) return true;
       if (f >= 1) { this.pk.remove(k.g); k.trail.forEach((m) => this.pk.remove(m)); return false; }
       const e = f < 0.5 ? 2 * f * f : 1 - Math.pow(-2 * f + 2, 2) / 2, q = this.along(k.p, e, k.len);
-      k.g.visible = true; k.g.position.copy(this.V(q[0], q[1], 0.22));
-      k.trail.forEach((m, i) => { const tq = this.along(k.p, Math.max(0, e - (i + 1) * 0.02), k.len); m.position.copy(this.V(tq[0], tq[1], 0.22)); });
+      k.g.visible = true; k.g.position.set(q[0] - this.cx, 0.22, q[1] - this.cy);
+      k.trail.forEach((m, i) => { const tq = this.along(k.p, Math.max(0, e - (i + 1) * 0.02), k.len); m.position.set(tq[0] - this.cx, 0.22, tq[1] - this.cy); });
       return true;
     });
     if (this.mouseMoved) { this.mouseMoved = false; this.pick(); }
+    if (IDLE.q.length) idleFlush();
     try { if (this.post) this.post.render(); else this.renderer.render(this.scene, this.camera); this.frames = (this.frames || 0) + 1; }
     catch (e) { console.error('3D office stopped:', e); this.renderer.setAnimationLoop(null); if (this.onFail && !(this.frames > 30)) this.onFail(e); return; }
+    keepCompiled(this.renderer, this);
     this.labels(w, h);
   }
   // the plates round the platform (callouts), the lot's label in its ring, the Manager's pill; agents' names only
