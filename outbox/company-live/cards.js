@@ -15,6 +15,15 @@
     trading_desk: 'Finds profitable agents and proves them at Agent Tournaments tables',
     custom: 'Your own name, charter and experts'
   };
+  // what a department does, in three short lines off its charter: the 3D dialog's panel beside its room
+  CO.DEPT_ABOUT = {
+    development: ['Turns ideas into Build it Better requests.', 'Idea, spec, design, build, test, release, monitor.', 'Submitting a request waits for you.'],
+    design: ['Screen-by-screen briefs for new pages.', 'Reviews live pages against their brief.', 'Briefs go out as Build it Better requests.'],
+    testing: ["Cymetica's bug bounty, as your department.", 'Tests their pages, API and docs; files bugs as you.', 'Every bug they accept pays you ET10.'],
+    testing_lab: ['Paper experiments: cards, bots, memecoins.', 'Sets the success rule before each one starts.', 'Keeps the winners, archives the rest.'],
+    trading_desk: ['Finds agents that make money on Cymetica.', 'Proves them at Agent Tournaments tables.', 'Paper only: every seat waits for you.'],
+    custom: ['Your own department: name it, staff it.', 'Pick its room with the arrows.', 'First task: read the charter, propose a week.']
+  };
   CO.EXPERT_INFO = {
     qa_tester: { col: C.red, line: 'Finds bugs on the live site and drafts bounty reports' },
     researcher: { col: C.blue, line: 'Reads docs, data and the web; brings facts with sources' },

@@ -1934,6 +1934,301 @@ function preview(el, o) {
   return p;
 }
 
+/* ---------------- Add a department, in 3D: its room floating in the dialog, and pictures of rooms and astronauts ---------------- */
+// The room is the office's own: Office3D's builders run on an object holding only what they read -- where the plan's
+// origin is, a layer for the name tags (never shown here), the lists they push hit boxes into -- so the dialog shows
+// the room the office will build, its look and its astronauts included. The floors' mirror is the office's one
+// (shRefl): its plane stays in the office's scene, where shell() looks for it, and each scene here gets the mirror's
+// own light (layer 1). The operator, translated: "when creating a department I want the office to float in the middle,
+// in 3D, about this big".
+const PVS = { slab: 0.35, pad: 0.5, hull: 0.7, keel: 0.3, bg: 0x16232f };
+const PVHOLD = { scene: null };
+function pvBuilder(camera, cx, cy) {
+  geo(); omats();
+  const home = (CO.o3 && CO.o3.scene) || PVHOLD.scene || (PVHOLD.scene = new THREE.Scene());
+  return Object.assign(Object.create(Office3D.prototype), { cx, cy, camera, scene: home, layer: document.createElement('div'), pcs: [], hits: [], rooms: {}, conduits: {}, cells: {} });
+}
+// the office's light, for one room: soft white from above and the camera's side, a cool rim, a light from under the
+// hull; the sun's shadow sized to a room, not the platform
+function pvLights(scene) {
+  scene.environment = envTex(); scene.environmentIntensity = 0.9;
+  scene.add(new THREE.HemisphereLight(0xe2ecf6, 0x10161e, 0.6), new THREE.AmbientLight(0x2a3644, 0.4));
+  const sun = new THREE.DirectionalLight(0xffffff, 1.5); sun.position.set(-2.1, 9, 6.3); sun.castShadow = true; sun.shadow.mapSize.set(2048, 2048);
+  sun.shadow.normalBias = 0.02; sun.shadow.bias = -0.0005;
+  Object.assign(sun.shadow.camera, { left: -7, right: 7, top: 7, bottom: -7, near: 1, far: 30 }); sun.shadow.camera.updateProjectionMatrix();
+  scene.add(sun, sun.target);
+  const rim = new THREE.DirectionalLight(0xb8dcf4, 0.45); rim.position.set(-34, 14, -42); scene.add(rim);
+  const under = new THREE.DirectionalLight(0x8aa4c0, 0.55); under.position.set(22, -24, 44); scene.add(under);
+  const fill = new THREE.DirectionalLight(0xdfe8f2, 1.7); scene.add(fill, fill.target);
+  const ml = new THREE.HemisphereLight(0xe2ecf6, 0x2a3644, 1.8); ml.position.set(0, -1, 0); ml.layers.set(1); scene.add(ml);
+  return { sun, fill };
+}
+function pvFill(L, camera, tgt) { L.fill.position.copy(camera.position).add(new THREE.Vector3(-4, 8, 0)); L.fill.target.position.copy(tgt); }
+// the office's sky, small: its colour, stars, the site's colours glowing far off behind the room
+function pvSpace(scene) {
+  scene.background = new THREE.Color(PVS.bg);
+  scene.add(starField(1400, 140, 90, 1.0, 21));
+  [[0x00cfff, 0.14, [-30, 4, -34], 48], [0x00ff88, 0.07, [24, -10, -38], 40], [0x3b82f6, 0.07, [-38, -12, 12], 36]].forEach(([c, o, p, s]) => {
+    const sp = glowSprite(c, o, s); sp.position.set(p[0], p[1], p[2]); scene.add(sp);
+  });
+}
+// what it floats on: a soft mint glow under the hull, and (ring) a fine dashed ring of light round its foot, turning
+function pvBase(ring) {
+  const g = new THREE.Group(), y = -PVS.slab - 0.12 - PVS.hull - PVS.keel - 0.35;
+  const glow = new THREE.Mesh(G.plane, new THREE.MeshBasicMaterial({ map: glowTex(), color: new THREE.Color(0x38f2b8), transparent: true, opacity: 0.2, blending: THREE.AdditiveBlending, depthWrite: false }));
+  glow.rotation.x = -Math.PI / 2; glow.scale.set(13, 13, 1); glow.position.y = y - 0.3; g.add(glow);
+  if (ring) {
+    G.pvDash = G.pvDash || dashedRing(72, 0.55, 0.0045);
+    const m = new THREE.Mesh(G.pvDash, new THREE.MeshBasicMaterial({ color: new THREE.Color(0x24e8ff).multiplyScalar(1.4), transparent: true, opacity: 0.5, blending: THREE.AdditiveBlending, depthWrite: false }));
+    m.rotation.x = Math.PI / 2; m.scale.set(5.5, 5.5, 3); m.position.y = y; g.add(m);
+    g.userData.ring = m;
+  }
+  return g;
+}
+// One room at the origin, as layout() builds it: its shell and its department's furniture and people, baked; the
+// deck's slab round it with its lighter lip, and a slice of the station's hull under that, so it floats as a piece of
+// the station and not as a floor in the void. d is a department as sim.js makes one (key, experts, look ...).
+function pvRoom(b, d) {
+  const RS = CO.iso.RS, root = new THREE.Group(), r = { key: 'pv', dept: d, g: new THREE.Group(), x0: 0, y0: 0, agents: [], screens: [], mons: [] };
+  root.add(r.g);
+  b.shell(r);
+  const rf = shRefl(); if (rf.target.parent === PVHOLD.scene) rf.target.updateMatrixWorld(true);   // no office to keep it placed
+  b.deptRoom(r, d);
+  const { slab: T, pad, hull: HD, keel: K } = PVS, L = RS + 2 * pad + 0.44;
+  const s = new THREE.Mesh(G.box, [OM.rimDark, OM.rimDark, OM.deck, OM.rimDark, OM.rimDark, OM.rimDark]);
+  s.scale.set(RS + 2 * pad, T, RS + 2 * pad); s.position.copy(b.V(RS / 2, RS / 2, -T / 2)); s.receiveShadow = true; root.add(s);
+  [[-pad - 0.22, -pad - 0.23, L, 0.24], [-pad - 0.22, RS + pad - 0.01, L, 0.24], [-pad - 0.23, -pad - 0.22, 0.24, L], [RS + pad - 0.01, -pad - 0.22, 0.24, L]]
+    .forEach(([x, y, w, dd]) => b.rb(root, x, y, -T - 0.14, w, dd, T + 0.16, OM.rim, 0.1, false));
+  b.box(root, -pad + 0.12, -pad + 0.12, -T - 0.12 - HD, RS + 2 * pad - 0.24, RS + 2 * pad - 0.24, HD, OM.hull, false).geometry = exHullBox(3);
+  b.box(root, -pad + 0.7, -pad + 0.7, -T - 0.12 - HD - K, RS + 2 * pad - 1.4, RS + 2 * pad - 1.4, K, OM.hullLow, false);
+  bakeRoom(r);
+  return { root, r };
+}
+// the room as the office shows it at work: its neon and its floor's wash, the wall screen naming it, the first task on
+// its board, the desks' screens lit, every astronaut at work
+function pvDress(b, r, name, n) {
+  b.tint(r, 'working');
+  const orange = r.dept.key === 'trading_desk';
+  pvWall(r, name, n);
+  if (r.kb) drawKanban(r.kb, { queued: 1, running: 0, done: 0, failed: 0 });
+  r.mons.forEach((m) => { if (m) m.color.set(orange ? new THREE.Color(0xffae52).multiplyScalar(1.25) : new THREE.Color(0x7cf2c4).multiplyScalar(1.3)); });
+  r.agents.forEach((a) => { a.working = true; a.g.rotation.y = a.ry || 0; });
+}
+function pvWall(r, name, n) {
+  if (!r.wall) return;
+  const orange = r.dept.key === 'trading_desk';
+  drawWall(r.wall, String(name || '').trim() || 'New department', n + (n === 1 ? ' expert' : ' experts') + ' · first task queued', orange ? '#ff9438' : '#7cf2c4', 'full');
+}
+// what moves in a room, as the office's frame moves it (holograms, crystals, blinking lights), and its people at work
+function pvTick(r, t) {
+  if (r.glow) r.glow.material.opacity = (r.glowBase || 0) * (0.75 + 0.25 * Math.sin(t * 2.4));
+  if (r.leds) r.leds.forEach((m) => { m.visible = ((Math.floor(t * 3 + m.userData.blink)) % 3) !== 0; });
+  if (r.holo) { r.holo.forEach((hh, i) => { hh.rotation.z = t * (0.6 + i * 0.35) * (i % 2 ? -1 : 1); hh.position.y = hh.userData.y + Math.sin(t * 1.3 + i) * 0.05; }); if (r.core) r.core.position.y = 1.0 + Math.sin(t * 1.7) * 0.05; }
+  if (r.crystal) r.crystal.forEach((m) => { m.rotation.y = t * 0.7; });
+  if (r.spin) r.spin.rotation.y = t * 0.6;
+  if (r.floor) r.floor.rotation.z = t * 0.05;
+  if (r.wheel) r.wheel.rotation.z = t * 0.12;
+  r.agents.forEach((a) => {
+    const f = (t * 0.9 + a.phase) % 1;
+    a.g.rotation.y = a.ry || 0;
+    a.b.position.y = a.by + Math.abs(Math.sin(t * 7 + a.phase)) * 0.02;
+    a.visorM.emissiveIntensity = 0.9; a.chest.material = OM.cyan.glow;
+    a.ringM.emissiveIntensity = 1.8 * (1 - f); a.ring.scale.setScalar(0.3 + f * 0.35);
+  });
+}
+// where a room's bounds are, corner by corner: the glass's top rail, the deck's lip, the hull's foot and the keel's
+// (tight: the first two, the hull left to run out of a card's picture)
+function pvCorners(b, tight) {
+  const RS = CO.iso.RS, { slab: T, pad, hull: HD, keel: K } = PVS, pts = [];
+  const sq = (a, z) => [-a, RS + a].forEach((x) => [-a, RS + a].forEach((y) => pts.push(b.V(x, y, z))));
+  sq(0, WH + SH_FLOOR_Y + 0.02); sq(pad + 0.23, 0.02);
+  if (!tight) { sq(pad - 0.12, -T - 0.12 - HD); sq(pad - 0.7, -T - 0.12 - HD - K); }
+  return pts;
+}
+// The office's angle (CAM), at the distance where pts fill w by h of the view (NDC: 2 is all of it), the target moved
+// so they sit at mid: home()'s fit, for one room
+function pvFit(camera, pts, w, h, mid) {
+  const dir = new THREE.Vector3().setFromSpherical(new THREE.Spherical(1, CAM.polar, CAM.az)), tgt = new THREE.Vector3();
+  pts.forEach((p) => tgt.add(p)); tgt.divideScalar(pts.length);
+  const bounds = (d) => {
+    camera.position.copy(tgt).addScaledVector(dir, d); camera.lookAt(tgt); camera.updateMatrixWorld();
+    let x0 = 9, x1 = -9, y0 = 9, y1 = -9;
+    pts.forEach((p) => { const v = p.clone().project(camera); x0 = Math.min(x0, v.x); x1 = Math.max(x1, v.x); y0 = Math.min(y0, v.y); y1 = Math.max(y1, v.y); });
+    return [x0, x1, y0, y1];
+  };
+  let d = 20;
+  for (let k = 0; k < 3; k++) {
+    let lo = 2, hi = 300;
+    for (let i = 0; i < 26; i++) { const m = (lo + hi) / 2, bb = bounds(m); if (bb[1] - bb[0] <= w && bb[3] - bb[2] <= h) hi = m; else lo = m; }
+    d = hi;
+    const bb = bounds(d), right = new THREE.Vector3().setFromMatrixColumn(camera.matrixWorld, 0), up = new THREE.Vector3().setFromMatrixColumn(camera.matrixWorld, 1);
+    const vh = 2 * d * Math.tan(THREE.MathUtils.degToRad(camera.fov) / 2), vw = vh * camera.aspect;
+    tgt.addScaledVector(right, ((bb[0] + bb[1]) / 2 - mid[0]) * vw / 2).addScaledVector(up, ((bb[2] + bb[3]) / 2 - mid[1]) * vh / 2);
+  }
+  camera.position.copy(tgt).addScaledVector(dir, d); camera.lookAt(tgt); camera.updateMatrixWorld();
+  return tgt;
+}
+// The dialog's room: one live renderer, the room turning slowly to and fro on its own, a drag turns it any way;
+// set() rebuilds it when its department, its experts or its look change (the room grows up out of its deck, as a new
+// room does in the office), and only redraws its wall screen when the name does. dispose() lets everything go.
+class RoomPreview {
+  constructor(el) {
+    geo(); omats();
+    this.el = el; this.wrap = document.createElement('div'); this.wrap.className = 'd3cv'; el.insertBefore(this.wrap, el.firstChild);
+    this.scene = new THREE.Scene(); pvSpace(this.scene);
+    this.camera = new THREE.PerspectiveCamera(CAM.fov, 2, 0.5, 600);
+    this.renderer = new THREE.WebGPURenderer({ antialias: false });   // the pass multisamples
+    this.renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
+    this.renderer.toneMapping = THREE.ACESFilmicToneMapping; this.renderer.toneMappingExposure = 1.0;
+    this.renderer.shadowMap.enabled = true; this.renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+    this.wrap.appendChild(this.renderer.domElement);
+    this.L = pvLights(this.scene);
+    this.turn = new THREE.Group(); this.scene.add(this.turn);
+    this.base = pvBase(true); this.scene.add(this.base);
+    this.b = pvBuilder(this.camera, CO.iso.RS / 2, CO.iso.RS / 2); this.pts = pvCorners(this.b);
+    this.key = ''; this.yaw = 0; this.ph = 0; this.last = 0; this.clock = new THREE.Clock();
+    this.pace = pacer(() => !!this.drag || !!this.grow || performance.now() - (this.input || 0) < 1500);
+    this.bind();
+    PREVIEWS.push(this);
+    this.renderer.init().then(() => {
+      if (this.dead) return this.free();
+      try { this.post = new Post(this.renderer, this.scene, this.camera, 0.32, 0.0, 0.86, { sat: 0.96 }); } catch (e) { this.post = null; }
+      this.ready = true;
+      this.renderer.setAnimationLoop(() => this.frame());
+    }).catch((e) => { console.error('the room preview could not start:', e); this.dispose(); if (this.onFail) this.onFail(e); });
+  }
+  set(o) {
+    const d = { id: 0, key: o.key || 'custom', name: o.name || '', experts: (o.experts || []).slice(), look: o.look || null, run_kind: null, link: null, charter: '', schedule: null };
+    const key = [d.key, d.experts.join(','), d.look || ''].join('|');
+    this.input = performance.now();
+    if (key === this.key || this.dead) return this.name(o.name);
+    this.key = key;
+    if (this.room) { this.turn.remove(this.room.root); release(this.room.root); }
+    this.room = pvRoom(this.b, d); this.turn.add(this.room.root);
+    pvDress(this.b, this.room.r, d.name, d.experts.length);
+    this.room.r.g.scale.set(1, 0.02, 1); this.grow = performance.now();
+  }
+  name(n) { if (this.room) pvWall(this.room.r, n, this.room.r.dept.experts.length); }
+  // as big as his close-up of a room ("about this big"): near all of the view's height, a margin left for the turn
+  fit() { pvFill(this.L, this.camera, pvFit(this.camera, this.pts, 1.64, 1.76, [0, 0.08])); }
+  frame() {
+    const w = this.wrap.clientWidth, h = this.wrap.clientHeight;
+    if (!w || !h || !document.body.contains(this.el)) return;
+    const now = performance.now();
+    if (w !== this.w || h !== this.h) { this.w = w; this.h = h; this.camera.aspect = w / h; this.camera.updateProjectionMatrix(); this.renderer.setSize(w, h, false); this.fit(); this.input = now; }
+    if (!this.pace(now)) return;
+    const t = this.clock.getElapsedTime(), dt = Math.min(0.1, t - this.last); this.last = t;
+    // to and fro by 23 degrees round where the hand left it, about once in 20 seconds; still while it is held
+    if (!this.drag) this.ph += dt * 0.3;
+    this.turn.rotation.y = this.yaw + Math.sin(this.ph) * 0.4;
+    this.turn.position.y = Math.sin(t * 0.8) * 0.06;
+    this.base.userData.ring.rotation.z = t * 0.12;
+    if (this.room) {
+      const r = this.room.r;
+      if (this.grow) { const k = Math.min(1, (now - this.grow) / 700), e = 1 - Math.pow(1 - k, 3); r.g.scale.set(1, Math.max(0.02, e), 1); if (k >= 1) this.grow = 0; }
+      pvTick(r, t);
+    }
+    try { if (this.post) this.post.render(); else this.renderer.render(this.scene, this.camera); this.frames = (this.frames || 0) + 1; }
+    catch (e) { console.error('the room preview stopped:', e); this.renderer.setAnimationLoop(null); }
+  }
+  bind() {
+    const cv = this.renderer.domElement;
+    cv.addEventListener('pointerdown', (e) => { this.drag = { x: e.clientX }; this.input = performance.now(); cv.classList.add('drag'); try { cv.setPointerCapture(e.pointerId); } catch (x) { /* fine */ } });
+    cv.addEventListener('pointermove', (e) => { if (!this.drag) return; this.yaw += (e.clientX - this.drag.x) * 0.009; this.drag.x = e.clientX; this.input = performance.now(); });
+    const up = () => { this.drag = null; cv.classList.remove('drag'); };
+    cv.addEventListener('pointerup', up); cv.addEventListener('pointercancel', up);
+  }
+  free() {
+    if (this.freed) return; this.freed = true;
+    try { this.renderer.setAnimationLoop(null); } catch (e) { /* gone */ }
+    release(this.scene); this.scene.clear(); this.room = null;
+    try { this.renderer.dispose(); } catch (e) { /* gone */ }
+  }
+  // let go at once when the renderer is up; one still starting lets go as it comes up (init's then above)
+  dispose() { this.dead = true; if (this.ready || this.freed) this.free(); this.wrap.remove(); }
+}
+// The cards' pictures: every room and every astronaut drawn once, by one renderer of their own that is let go when the
+// last is done, read back from a render target and kept as images by key (thumbs() draws the stations this way).
+// Widths 320 and 256 keep every row of the read-back on WebGPU's 256-byte boundary. Until one is ready, or where it
+// cannot be drawn, its card keeps its flat picture.
+const SHOTS = {}, SHOT_WAIT = {}, SHOT_Q = [];
+let SHOT = null;
+function shoot(key, w, h, make, done) {
+  if (SHOTS[key]) return done(SHOTS[key]);
+  if (SHOT_WAIT[key]) return SHOT_WAIT[key].push(done);
+  SHOT_WAIT[key] = [done]; SHOT_Q.push({ key, w, h, make });
+  if (!SHOT) shotRun();
+}
+function shotRun() {
+  geo(); omats();
+  const renderer = new THREE.WebGPURenderer({ antialias: false }), scene = new THREE.Scene(), camera = new THREE.PerspectiveCamera(CAM.fov, 1.6, 0.1, 600);
+  renderer.setPixelRatio(1); renderer.toneMapping = THREE.ACESFilmicToneMapping; renderer.toneMappingExposure = 1.0;
+  renderer.shadowMap.enabled = true; renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+  pvSpace(scene);
+  const S = SHOT = { renderer, scene, camera, L: pvLights(scene) };
+  const out = (job, url) => { if (url) SHOTS[job.key] = url; const q = SHOT_WAIT[job.key] || []; delete SHOT_WAIT[job.key]; q.forEach((f) => f(url || null)); };
+  renderer.init().then(async () => {
+    let post = null; try { post = new Post(renderer, scene, camera, 0.32, 0.0, 0.86, { sat: 0.96 }); } catch (e) { post = null; }
+    const rts = {};
+    while (SHOT_Q.length) {
+      const job = SHOT_Q.shift(), W = job.w, H = job.h; let url = null, held = null;
+      try {
+        renderer.setSize(W, H, false); camera.aspect = W / H; camera.updateProjectionMatrix();
+        held = job.make(S); scene.add(held);
+        // the bloom pass and the floors' mirror draw once a frame: two frames before each picture
+        await new Promise((r) => requestAnimationFrame(() => requestAnimationFrame(r)));
+        const rt = rts[W + 'x' + H] || (rts[W + 'x' + H] = new THREE.RenderTarget(W, H));
+        renderer.setRenderTarget(rt);
+        if (post) post.render(); else renderer.render(scene, camera);
+        renderer.setRenderTarget(null);
+        const px = await renderer.readRenderTargetPixelsAsync(rt, 0, 0, W, H), flip = !(renderer.backend && renderer.backend.isWebGPUBackend);
+        const c = document.createElement('canvas'); c.width = W; c.height = H; const g = c.getContext('2d'), img = g.createImageData(W, H);
+        for (let y = 0; y < H; y++) { const sy = flip ? H - 1 - y : y; img.data.set(px.subarray(sy * W * 4, (sy + 1) * W * 4), y * W * 4); }
+        for (let i = 3; i < img.data.length; i += 4) img.data[i] = 255;
+        g.putImageData(img, 0, 0); url = c.toDataURL('image/png');
+      } catch (e) { console.warn('a card picture could not be drawn:', job.key, e); url = null; }
+      if (held) { scene.remove(held); release(held); }
+      out(job, url);
+    }
+    Object.values(rts).forEach((rt) => rt.dispose());
+    release(scene); scene.clear();
+    try { renderer.dispose(); } catch (e) { /* gone */ }
+    SHOT = null;
+  }).catch(() => { SHOT = null; while (SHOT_Q.length) out(SHOT_Q.shift(), null); });
+}
+// a department's room with its template's experts in it, framed tight at the office's angle; a room of your own in the
+// look asked for
+function roomThumb(key, look, done) {
+  const tpl = (CO.TEMPLATES || []).find((t) => t.key === key) || { key, name: '', experts: ['researcher'] };
+  shoot('room:' + key + ':' + (look || ''), 320, 200, (S) => {
+    const b = pvBuilder(S.camera, CO.iso.RS / 2, CO.iso.RS / 2), root = new THREE.Group();
+    const d = { id: 0, key, name: tpl.name || '', experts: tpl.experts.slice(), look: look || null, run_kind: null, link: null, charter: '', schedule: null };
+    const room = pvRoom(b, d); root.add(room.root, pvBase(false));
+    pvDress(b, room.r, tpl.name || 'Your department', d.experts.length); pvTick(room.r, 1.3);
+    pvFill(S.L, S.camera, pvFit(S.camera, pvCorners(b, true), 1.9, 1.86, [0, -0.02]));
+    return root;
+  }, done);
+}
+// an expert as an astronaut of its role (agent()'s opts.role), standing on a disc of deck ringed in its colour, seen
+// from the office's side and a little lower, turned a touch so its pack shows
+function astroThumb(role, done) {
+  shoot('astro:' + role, 256, 192, (S) => {
+    const b = pvBuilder(S.camera, 0, 0), root = new THREE.Group(), r = { key: 'ax:' + role, g: root, x0: 0, y0: 0, agents: [], mons: [] };
+    const col = (CO.EXPERT_INFO && CO.EXPERT_INFO[role] && CO.EXPERT_INFO[role].col) || '#00cfff';
+    const a = b.agent(r, 0, 0, 0, CO.expertName(role), { role, stand: true, face: -Math.PI * 0.75 + 0.42 });
+    a.g.rotation.y = a.ry || 0; a.b.position.y = a.by; a.visorM.emissiveIntensity = 0.6; a.chest.material = OM.cyan.glow;
+    a.ringM.emissive.set(col); a.ringM.emissiveIntensity = 1.6; a.ring.scale.setScalar(0.46);
+    b.cyl(root, 0, 0, -0.12, 0.62, 0.2, OM.deck);
+    const rim = new THREE.Mesh(G.ringT, emis(col, 1.5)); rim.rotation.x = Math.PI / 2; rim.scale.set(0.63, 0.63, 0.5); rim.position.y = 0.06; root.add(rim);
+    const gl = new THREE.Mesh(G.plane, new THREE.MeshBasicMaterial({ map: glowTex(), color: new THREE.Color(col), transparent: true, opacity: 0.25, blending: THREE.AdditiveBlending, depthWrite: false }));
+    gl.rotation.x = -Math.PI / 2; gl.scale.set(2.6, 2.6, 1); gl.position.y = -0.14; root.add(gl);
+    const tgt = new THREE.Vector3(0, 0.66, 0);
+    S.camera.position.copy(new THREE.Vector3().setFromSpherical(new THREE.Spherical(3.25, 1.2, CAM.az)).add(tgt)); S.camera.lookAt(tgt); S.camera.updateMatrixWorld();
+    pvFill(S.L, S.camera, tgt);
+    return root;
+  }, done);
+}
+
 /* ---------------- the office in 3D: the same floor plan, rooms you can walk the camera into ---------------- */
 // What a room is doing, in light. Blue is only "up next", and only on the room's edge line: the floor, the walls,
 // the furniture and the light itself are the site's navy-black under white light, the structure Cymetica green.
@@ -5502,7 +5797,8 @@ class Office3D {
 (function () {
   let gl2 = false;
   try { gl2 = !!document.createElement('canvas').getContext('webgl2'); } catch (e) { gl2 = false; }
-  CO.U3 = (gl2 || navigator.gpu) ? { ok: true, gpu: !!navigator.gpu, universe: (el, stage, h) => new Universe3D(el, stage, h), office: (el, stage, tipFor) => new Office3D(el, stage, tipFor), preview, thumbs, THREE, geo, makeStation, SKIN, amat, nebTex, TX, OM }
+  CO.U3 = (gl2 || navigator.gpu) ? { ok: true, gpu: !!navigator.gpu, universe: (el, stage, h) => new Universe3D(el, stage, h), office: (el, stage, tipFor) => new Office3D(el, stage, tipFor), preview, thumbs,
+    roomPreview: (el) => new RoomPreview(el), roomThumb, astroThumb, shotOf: (key) => SHOTS[key] || null, THREE, geo, makeStation, SKIN, amat, nebTex, TX, OM }
     : { failed: true, why: 'no WebGPU and no WebGL2' };
   window.dispatchEvent(new Event('co3d'));
 })();

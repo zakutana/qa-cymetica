@@ -654,7 +654,7 @@
         units_7d: 0, failed_7d: 0, charter: o.charter, charter_updated_at: S.clock, pool_i: 0, born: S.clock,
         schedule: o.schedule || null, products: o.products || [],
         files_as: o.files_as || (o.key === 'testing' ? CO.HUNTER : null), et10: 0, accepted: 0, runs: 0,
-        run_kind: o.run_kind || null, link: o.link || null };
+        run_kind: o.run_kind || null, link: o.link || null, look: o.look || null };
       S.departments.push(d);
       feed('good', 'Manager', 'new department: ' + d.name);
       if (d.schedule) {
@@ -678,6 +678,7 @@
     editDept: function (id, o) {
       var d = dept(id); if (!d) return;
       d.name = o.name || d.name; d.experts = o.experts.length ? o.experts : d.experts;
+      if (o.look !== undefined) d.look = o.look || null;
       if (o.charter !== d.charter) { d.charter = o.charter; d.charter_updated_at = CO.S.clock; }
       feed('info', 'You', 'updated department ' + d.name);
       CO.emit('dept:edit', d);
