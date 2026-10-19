@@ -3606,7 +3606,7 @@ class Office3D {
     const t = new THREE.CanvasTexture(c); t.colorSpace = THREE.SRGBColorSpace; t.anisotropy = 8;
     // drawn over whatever stands in front of the pane (a neighbour's back wall hid the Laboratory's from the home
     // view): a name is the one thing the office must always show
-    const m = new THREE.MeshBasicMaterial({ map: t, transparent: true, depthWrite: false, depthTest: false, toneMapped: false, color: new THREE.Color(SIGN_BLUE).multiplyScalar(2.1) });
+    const m = new THREE.MeshBasicMaterial({ map: t, transparent: true, depthWrite: false, depthTest: false, toneMapped: false, color: new THREE.Color(SIGN_BLUE).multiplyScalar(1.9) });   // 10 % under the first bold pass ("ubral o 10% ten jas")
     const tW = c.width * K, tH = H * K, txt = new THREE.Mesh(G.plane, m); txt.scale.set(tW, tH, 1);
     // the icon: the panel's tile, drawn once from its SVG (CO.deptIconSvg, app.js)
     const S = 128, ic = document.createElement('canvas'); ic.width = ic.height = S; const gi = ic.getContext('2d');
@@ -6704,7 +6704,7 @@ class Office3D {
       else if (v.queued.length) { title = 'Up next: ' + v.queued[0].title; sub = ''; mode = isOrange ? 'full' : ''; }
       else { title = d.schedule && d.next_run ? 'Next run at ' + CO.hhmm(d.next_run) : 'Idle'; sub = ''; mode = isOrange ? 'full' : ''; }
       if (r.wall) drawWall(r.wall, title, sub, col, mode);
-      if (r.sign) r.sign.material.color.set(st === 'waiting' ? LOOK.orange : SIGN_BLUE).multiplyScalar(st === 'working' ? 2.4 : 2.1);
+      if (r.sign) r.sign.material.color.set(st === 'waiting' ? LOOK.orange : SIGN_BLUE).multiplyScalar(st === 'working' ? 2.15 : 1.9);
       if (r.kb) drawKanban(r.kb, { queued: v.queued.length, running: v.running ? 1 : 0, done: v.done, failed: v.failed });
       v.experts.slice(0, 3).forEach((e, i) => {
         const a = r.agents[i]; if (a) a.working = e.state === 'working';
