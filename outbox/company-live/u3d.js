@@ -3472,13 +3472,17 @@ class Office3D {
     const a = { g, b: up, by: standing ? 0.1 : 0, ry: standing ? (opts.face != null ? opts.face : -Math.PI * 0.75) : 0, standing, sit, stand, visorM, chest, ring, ringM, el, home: g.position.clone(), phase: (i + r.x0 * 0.37) % 6.28, key: r.key + ':' + i, room: r, label };
     r.agents.push(a); return a;
   }
+  // A room's plate: what update() says about the room -- its name, its dot, its status, its ET10. In 3D it is no
+  // longer hung over the room ("je skoda ze ty horni napisy ... prekryvaji ty pekne kancelare"): the element stays
+  // as update()'s record, off the page, and the room's floor carries what it says (flFree, flMake, flDraw). Its
+  // floor is measured here, the last thing every room builder does and before bakeRooms() merges the parts.
   plate(r, cls) {
-    const el = document.createElement('div'); el.className = 'p3' + (cls ? ' ' + cls : ''); el.setAttribute('data-key', r.key); this.layer.appendChild(el);
+    const el = document.createElement('div'); el.className = 'p3' + (cls ? ' ' + cls : ''); el.setAttribute('data-key', r.key);
     el.addEventListener('click', () => CO.emit('office:click', r.key));
     el.addEventListener('pointerenter', () => this.setHover(r.key)); el.addEventListener('pointerleave', () => this.setHover(null));
-    // where his picture has every room's plate: the same spot in each room, found by sending its plates' centres
-    // back through the fitted camera (4.4 across, 5.6 down, at 1.3 high)
-    r.plate = el; r.plateAt = this.V(r.x0 + 4.4, r.y0 + 5.6, 1.3); return el;
+    r.plate = el; r.plateAt = this.V(r.x0 + 4.4, r.y0 + 5.6, 1.3);
+    r.flFree = this.flFree(r);
+    return el;
   }
   // A department's room tailored to match look-office.webp:
   // - testing (Cymetica QA): a 3x3 window of light at the right end of the back-right wall + desks
@@ -4316,8 +4320,8 @@ class Office3D {
     const light = new THREE.PointLight(0x00e5ff, 4.2, 11, 1.6); light.position.set(c.x, 1.8, c.z); g.add(light);
     this.agent(r, x0 + 3.8, y0 + 5.85, 0, 'Manager', { stand: true });
     this.plant(r, x0 + 6.4, y0 + 0.5);
-    this.plate(r, 'hubp'); r.plateAt = this.V(x0 + 6.1, y0 + 6.75, 1.3);
-    r.need = document.createElement('div'); r.need.className = 'p3need'; r.need.addEventListener('click', () => CO.emit('office:click', 'hub')); this.layer.appendChild(r.need);
+    this.plate(r, 'hubp');
+    r.need =document.createElement('div'); r.need.className = 'p3need'; r.need.addEventListener('click', () => CO.emit('office:click', 'hub')); this.layer.appendChild(r.need);
   }
   // The weekly audit as in his picture: two retro consoles side by side along the back-left wall facing the room,
   // the week's screen on the back-right wall, the supervisor at a desk between them, a teleprinter for the report
@@ -4477,7 +4481,7 @@ class Office3D {
     this.vtSorter(r, 5.45, 4.75);
     r.pileG = new THREE.Group(); g.add(r.pileG);
     this.plant(r, x0 + 0.38, y0 + 6.62, 0.8);
-    this.plate(r, 'vaultp'); r.plateAt = this.V(x0 + 4.4, y0 + 5.65, 1.35);
+    this.plate(r, 'vaultp');
   }
   // The money, rebuilt only when what it holds changes. ET10 is green bars, eighteen to a layer in crossed layers,
   // ten layers to a pallet, on the pallets left of the walk from the door; USDC is blue coins in sixteen stacks of
@@ -5067,7 +5071,8 @@ class Office3D {
     catch (e) { console.error('3D office stopped:', e); this.renderer.setAnimationLoop(null); if (this.onFail && !(this.frames > 30)) this.onFail(e); return; }
     this.labels(w, h);
   }
-  // plates over their rooms; agents' names only in the room that is open or under the mouse
+  // the rooms' names on their floors, the lot's label in its ring, the Manager's pill; agents' names only in the
+  // room that is open or under the mouse
   labels(w, h) {
     const v = new THREE.Vector3(), show = (el, p, dy) => {
       v.copy(p).project(this.camera);
@@ -5080,11 +5085,266 @@ class Office3D {
       if (!off && el._tf !== tf) { el._tf = tf; el.style.transform = tf; }
     };
     Object.values(this.rooms).forEach((r) => {
-      if (r.plate && r.plateAt) { show(r.plate, r.plateAt); r.plate.classList.toggle('sel', this.sel === r.key); r.plate.classList.toggle('hov', this.hover === r.key); }
-      if (r.need && !r.need.hidden) show(r.need, r.coreAt, -10);
+      if (r.flFree) this.flTick(r);
+      else if (r.plate && r.plateAt) { show(r.plate, r.plateAt); r.plate.classList.toggle('sel', this.sel === r.key); r.plate.classList.toggle('hov', this.hover === r.key); }
+      if (r.need && !r.need.hidden) this.flNeed(r, w, h);
       const named = this.sel === r.key || this.hover === r.key;
       r.agents.forEach((a) => { a.el.classList.toggle('on', named); if (named) show(a.el, a.g.position.clone().add(new THREE.Vector3(0, 1.85, 0))); });
     });
+  }
+
+  /* ---------------- the rooms' names on their floors ---------------- */
+  // His plates hung over his offices and hid them ("je skoda ze ty horni napisy ... prekryvaji ty pekne
+  // kancelare"); he asked for the names on the offices' floors instead ("kdyby misto tech ceduli ty napisy byly na
+  // zemi kancelari"), and saw that the open floor is not the same in every room ("to by asi vsude neslo"). So each
+  // room's name and status are lettered as a lit marking on its floor, in the strip just inside one of its two
+  // front walls -- the glass the camera looks over, which furniture keeps off -- the way a game paints a lane's
+  // name along a wall. Which wall, and which stretch of it, is measured rather than chosen: flFree() reads the box of
+  // every part the room stands up and keeps, step by step along each front wall, how deep the floor is free from
+  // the glass and in sight of the home view; flMake() takes the stretch where the name comes out largest; flDraw()
+  // letters it again whenever update() changes what the plate says. Clicking it is clicking the room (its hit box
+  // holds the floor).
+  //   s     how far in from the glass the marking starts: clear of the bloom of the glass's lit foot
+  //   clr   how far it keeps from anything standing; end: the corners' posts at each end of a wall
+  //   z     its height: over the Manager's floor rings (0.11), under anything that stands
+  //   cap   the largest cap height of a name, so the rooms read alike; K: the stack (name, line, status) in caps
+  //   maxL  the longest stretch; ppu: the canvas's pixels a unit; lit: brightness plain, under the mouse, open
+  static FL = { s: 0.26, clr: 0.08, end: 0.15, z: 0.12, cap: 0.62, K: 2.42, maxL: 6.4, ppu: 256, lit: [1.35, 1.8, 2.1] };
+  static flFont(w, px) { return w + ' ' + px.toFixed(1) + "px Bahnschrift, 'Segoe UI', 'Inter', system-ui, sans-serif"; }
+  // a scratch canvas to measure with, the font's cap height as a share of its size, and a text's length at a cap
+  // height of 1
+  static flG() {
+    if (!Office3D._flG) {
+      const g = Office3D._flG = document.createElement('canvas').getContext('2d');
+      g.font = Office3D.flFont(700, 100); g.fontStretch = 'semi-condensed';
+      Office3D._flCap = g.measureText('H').actualBoundingBoxAscent / 100 || 0.72;
+    }
+    return Office3D._flG;
+  }
+  static flLen(w, s, sp) {
+    const g = Office3D.flG(); g.font = Office3D.flFont(w, 100); g.fontStretch = 'semi-condensed'; g.letterSpacing = (sp * 100) + 'px';
+    return g.measureText(s).width / (Office3D._flCap * 100);
+  }
+  // a colour as written in the plate ('#38f2b8' or 'rgb(56, 242, 184)'), and the same mixed towards white or faded
+  static flRgb(c) {
+    const s = String(c || '');
+    if (s[0] === '#') { const n = parseInt(s.slice(1), 16); return [n >> 16 & 255, n >> 8 & 255, n & 255]; }
+    const m = s.match(/\d+(\.\d+)?/g); return m && m.length >= 3 ? m.slice(0, 3).map(Number) : [169, 184, 204];
+  }
+  static flMix(c, k, a) { const v = Office3D.flRgb(c).map((x) => Math.round(x + (255 - x) * k)); return 'rgba(' + v.join(',') + ',' + (a == null ? 1 : a) + ')'; }
+  // two convex outlines on screen overlap (separating axes), and the outline round a set of points
+  static flSat(A, B) {
+    for (const P of [A, B]) for (let i = 0; i < P.length; i++) {
+      const a = P[i], b = P[(i + 1) % P.length], nx = b[1] - a[1], ny = a[0] - b[0];
+      let a0 = Infinity, a1 = -Infinity, b0 = Infinity, b1 = -Infinity;
+      A.forEach((p) => { const d = p[0] * nx + p[1] * ny; a0 = Math.min(a0, d); a1 = Math.max(a1, d); });
+      B.forEach((p) => { const d = p[0] * nx + p[1] * ny; b0 = Math.min(b0, d); b1 = Math.max(b1, d); });
+      if (a1 < b0 || b1 < a0) return false;
+    }
+    return true;
+  }
+  static flHull(pts) {
+    pts = pts.slice().sort((a, b) => a[0] - b[0] || a[1] - b[1]);
+    const cr = (o, a, b) => (a[0] - o[0]) * (b[1] - o[1]) - (a[1] - o[1]) * (b[0] - o[0]), lo = [], up = [];
+    pts.forEach((p) => { while (lo.length >= 2 && cr(lo[lo.length - 2], lo[lo.length - 1], p) <= 0) lo.pop(); lo.push(p); });
+    pts.slice().reverse().forEach((p) => { while (up.length >= 2 && cr(up[up.length - 2], up[up.length - 1], p) <= 0) up.pop(); up.push(p); });
+    return lo.slice(0, -1).concat(up.slice(0, -1));
+  }
+  // How far back, along the plan's two axes, a part hides the floor for each unit of its height, from where the
+  // home view's camera stands: worked out at the room's middle for a narrow, a usual and a wide stage, the most of
+  // them kept (the camera is nearest at the widest) and a tenth over. A back room's figure is about half again a
+  // front one's: one figure for all, from the camera's angle alone, left the plant in the Cymetica QA room's front
+  // corner over the end of its name.
+  flReach(r) {
+    const cam = this.camera;
+    if (!this._flHomes || this._flHomes.corners !== this.corners) {
+      const a0 = cam.aspect, homes = [];
+      [0.9, 1.5, 2.2].forEach((a) => { cam.aspect = a; cam.updateProjectionMatrix(); homes.push(this.home().pos); });
+      cam.aspect = a0; cam.updateProjectionMatrix();
+      this._flHomes = { corners: this.corners, homes };
+    }
+    const RS = CO.iso.RS, c = this.V(r.x0 + RS / 2, r.y0 + RS / 2, 0);
+    let ru = 0, rv = 0;
+    this._flHomes.homes.forEach((p) => { ru = Math.max(ru, (p.x - c.x) / (p.y - c.y)); rv = Math.max(rv, (p.z - c.z) / (p.y - c.y)); });
+    return [ru * 1.1, rv * 1.1];
+  }
+  // How deep the floor is free from each front wall, in steps of 0.05 along it: fl from the wall at y0 + RS (on the
+  // home view it runs from the room's left corner down to its front corner, its foot lit), fr from the one at
+  // x0 + RS. Every mesh the room stands up counts by its box, people and plants included, and so does the floor it
+  // hides from the home view (flReach): the first try's audit name ran on behind the teleprinter at its end, and the
+  // vault's behind a safe. What lies flat on the floor (tiles, rings, lane paint) does not count, nor the room's own
+  // shell (floor, walls, glass, neon), nor the sparks drifting round the Manager's dais: they are light, not
+  // furniture. The vault's pallets count from the start, as high as a full one stands: piles() fills them later, on
+  // every change of what the vault holds.
+  flFree(r) {
+    const F = Office3D.FL, RS = CO.iso.RS, st = 0.05, n = Math.round(RS / st), fl = new Array(n).fill(RS), fr = new Array(n).fill(RS), b = new THREE.Box3();
+    const [ru, rv] = this.flReach(r), skip = new Set(), parts = [];
+    if (r.spin) r.spin.traverse((o) => skip.add(o));
+    r.g.updateMatrixWorld(true);
+    r.g.traverse((m) => {
+      if (!m.isMesh || m.userData.key || m.material === M.hit || skip.has(m)) return;
+      if (m.isInstancedMesh) { if (!m.boundingBox) m.computeBoundingBox(); b.copy(m.boundingBox); }
+      else { if (!m.geometry.boundingBox) m.geometry.computeBoundingBox(); b.copy(m.geometry.boundingBox); }
+      b.applyMatrix4(m.matrixWorld);
+      if (b.max.y < F.z + 0.005) return;
+      const u0 = b.min.x + this.cx - r.x0, u1 = b.max.x + this.cx - r.x0, v0 = b.min.z + this.cy - r.y0, v1 = b.max.z + this.cy - r.y0;
+      if (u1 - u0 > RS - 1.5 || v1 - v0 > RS - 1.5) return;
+      if (Math.min(u1 - u0, v1 - v0) < 0.1 && (u1 < 0.1 || v1 < 0.1 || u0 > RS - 0.1 || v0 > RS - 0.1)) return;
+      parts.push([u0, u1, v0, v1, b.max.y]);
+    });
+    if (r.vt) { const D = r.vt; [[D.ue, D.re], [D.uu, D.ru]].forEach(([us, vs]) => us.forEach((u) => vs.forEach((v) => parts.push([u, u + D.P, v, v + D.P, 1.25])))); }
+    parts.forEach(([u0, u1, v0, v1, top]) => {
+      const h = Math.max(0, top - 0.08), hu = u0 - h * ru, hv = v0 - h * rv;
+      for (let i = 0; i < n; i++) {
+        const a0 = i * st - F.clr, a1 = (i + 1) * st + F.clr;
+        if (hu < a1 && u1 > a0) fl[i] = Math.min(fl[i], RS - v1 - F.clr);
+        if (hv < a1 && v1 > a0) fr[i] = Math.min(fr[i], RS - u1 - F.clr);
+      }
+    });
+    return { fl, fr, st };
+  }
+  // what the plate says, read back from the element update() writes
+  flText(r) {
+    const p = r.plate, q = (s) => p.querySelector(s), b = q('.p3h b'), i = q('.p3h i'), l = q('.p3l'), et = q('.et');
+    return { name: b ? b.textContent : '', dot: i ? i.style.background : '', status: l ? l.textContent : '', sCol: l ? l.style.color : '',
+      et: et ? et.textContent : '', etLit: !!(et && et.classList.contains('lit')) };
+  }
+  // the room's own light: mint, orange in the trading desk and in a room that waits on you, the vault's green, the
+  // Manager's cyan of his rings (dim while the company is paused)
+  flAccent(r) {
+    if (r.key === 'hub') return this.paused ? '#8ea2ba' : '#4feeff';
+    if (r.key === 'vault') return '#38f2b8';
+    return r.orange ? LOOK.orange : LOOK.neon;
+  }
+  // The marking itself, once the plate has its name: along each front wall, at every depth the name could need,
+  // the longest stretch the floor is free that deep; of all of them the one where the name comes out largest (the
+  // left-hand wall when the two are near equal). Only the name sizes it; the status line under it shrinks to fit.
+  // The plane is as long as what it says needs -- the name, or the longest status a room shows ("Daily cap
+  // reached" and its ET10), and the line's fading end -- from the stretch's start: a whole stretch's plane, mostly
+  // empty, reached under the Manager's pill. A canvas on that plane, lying just over the floor, drawn by flDraw().
+  flMake(r) {
+    const F = Office3D.FL, X = Office3D, RS = CO.iso.RS, fr = r.flFree, st = fr.st, t = this.flText(r);
+    const pn = X.flLen(700, t.name, 0.05) + 0.12;
+    const say = r.dept ? [t.status, 'Daily cap reached', 'Next run 00:00'] : [t.status];
+    const ps = 0.5 * (0.62 + 0.5 + Math.max(...say.map((s) => X.flLen(500, s, 0.03))) + (t.et ? 1.1 + X.flLen(700, '+00,000 ET10', 0.03) : 0)) + 0.12;
+    let best = null;
+    ['fl', 'fr'].forEach((wall) => {
+      const free = fr[wall], pref = wall === 'fl' ? 1.03 : 1;
+      for (let D = 0.5; D <= F.cap * F.K + 1e-6; D += 0.05) {
+        let i0 = -1;
+        for (let i = 0; i <= free.length; i++) {
+          const a = i * st, ok = i < free.length && a >= F.end - 1e-6 && a + st <= RS - F.end + 1e-6 && free[i] >= D + F.s;
+          if (ok && i0 < 0) i0 = i;
+          if (!ok && i0 >= 0) {
+            const L = Math.min(F.maxL, (i - i0) * st), hN = Math.min(F.cap, D / F.K, L / pn);
+            if (!best || hN * pref > best.score) best = { wall, a0: i0 * st, L, hN, score: hN * pref };
+            i0 = -1;
+          }
+        }
+      }
+    });
+    const b = best || { wall: 'fl', a0: 1, L: 4, hN: 0.25 }, D = b.hN * F.K, P = F.ppu;
+    const L = Math.min(b.L, (Math.max(pn, ps) + 1.0) * b.hN);
+    const c = document.createElement('canvas'); c.width = Math.round(L * P); c.height = Math.round(D * P);
+    const tex = new THREE.CanvasTexture(c); tex.colorSpace = THREE.SRGBColorSpace; tex.anisotropy = 16;
+    const mat = new THREE.MeshBasicMaterial({ map: tex, transparent: true, depthWrite: false, toneMapped: false });
+    const m = new THREE.Mesh(G.plane, mat); m.scale.set(L, D, 1); m.renderOrder = 1; m.userData.dyn = true;
+    // lying on the floor, its text's foot to the glass: along the left-hand wall it reads down to the front corner,
+    // along the right-hand one up from the front corner, from where its stretch begins
+    const inn = RS - F.s - D / 2;
+    if (b.wall === 'fl') { m.rotation.x = -Math.PI / 2; m.position.copy(this.V(r.x0 + b.a0 + L / 2, r.y0 + inn, F.z)); }
+    else { m.rotation.set(-Math.PI / 2, Math.PI / 2, 0, 'YXZ'); m.position.copy(this.V(r.x0 + inn, r.y0 + b.a0 + b.L - L / 2, F.z)); }
+    r.g.add(m); m.updateMatrixWorld(true);
+    const q = [[-0.5, -0.5], [0.5, -0.5], [0.5, 0.5], [-0.5, 0.5]].map(([x, y]) => new THREE.Vector3(x, y, 0).applyMatrix4(m.matrixWorld));
+    r.fl = { m, mat, tex, c, g: c.getContext('2d'), wall: b.wall, a0: b.a0, run: b.L, L, D, hN: b.hN, q, key: '', lit: 0 };
+    r.plateAt = m.position.clone();
+  }
+  // Lettered as his neon is lit: the name in the room's light, a soft glow round it and a paler core, faint scan
+  // lines across it, a soft shade under it so a lit floor does not drown it; a thin line of the same light under
+  // the name, a brighter tick where it starts, fading along the wall; under that the plate's square dot, the status
+  // in the plate's colour for it, the ET10 after it. The name as large as its stretch allows; the status smaller
+  // first, then cut short, so nothing runs past the stretch.
+  flDraw(r, acc) {
+    const F = r.fl, g = F.g, W = F.c.width, cap = Office3D._flCap, t = this.flText(r), X = Office3D;
+    const font = (w, cp, sp) => { const px = cp / cap; g.font = X.flFont(w, px); g.fontStretch = 'semi-condensed'; g.letterSpacing = (px * sp).toFixed(1) + 'px'; };
+    g.clearRect(0, 0, W, F.c.height); g.textBaseline = 'alphabetic'; g.textAlign = 'left'; g.globalCompositeOperation = 'source-over';
+    let hN = F.hN * X.FL.ppu;
+    font(700, hN, 0.05);
+    hN = Math.min(hN, (W - 6) / (0.08 + g.measureText(t.name).width / hN));
+    font(700, hN, 0.05);
+    const x0 = hN * 0.06, yN = hN * 1.16, nw = g.measureText(t.name).width;
+    g.shadowColor = 'rgba(0,0,0,0.8)'; g.shadowBlur = hN * 0.28; g.fillStyle = 'rgba(0,0,0,0.6)'; g.fillText(t.name, x0, yN);
+    g.shadowColor = X.flMix(acc, 0, 0.85); g.shadowBlur = hN * 0.2; g.fillStyle = acc; g.fillText(t.name, x0, yN);
+    g.shadowBlur = 0; g.fillStyle = X.flMix(acc, 0.55); g.fillText(t.name, x0, yN);
+    // the scan lines: thin bands taken out of the letters, close enough to read as a texture of the light
+    g.globalCompositeOperation = 'destination-out'; g.fillStyle = 'rgba(0,0,0,0.3)';
+    for (let y = yN - hN * 1.04; y < yN + hN * 0.06; y += Math.max(4, hN * 0.12)) g.fillRect(x0 - 2, y, nw + 4, Math.max(1.5, hN * 0.045));
+    g.globalCompositeOperation = 'source-over';
+    // the status line: the dot, the status, the ET10 -- fitted to the plane, smaller first, cut short last
+    let sc = hN * 0.5, st = t.status;
+    const room = W - x0 - 6, lead = () => sc * 1.12, gap = () => (t.et ? sc * 1.1 : 0);
+    const widths = () => { font(500, sc, 0.03); const sw = g.measureText(st).width; let ew = 0; if (t.et) { font(700, sc, 0.03); ew = g.measureText(t.et).width; } return [sw, ew]; };
+    let [sw, ew] = widths();
+    if (lead() + sw + gap() + ew > room) { sc = Math.max(hN * 0.36, sc * room / (lead() + sw + gap() + ew)); [sw, ew] = widths(); }
+    while (st.length > 2 && lead() + sw + gap() + ew > room) { st = st.slice(0, -2) + '…'; [sw, ew] = widths(); }
+    const yR = hN * 1.38, yS = yR + hN * 0.27 + sc, xs = x0 + lead(), sCol = t.sCol || '#a9b8cc', dc = t.dot || acc, ds = sc * 0.62;
+    font(500, sc, 0.03); g.shadowColor = 'rgba(0,0,0,0.8)'; g.shadowBlur = hN * 0.2; g.fillStyle = 'rgba(0,0,0,0.6)'; g.fillText(st, xs, yS);
+    if (t.et) { font(700, sc, 0.03); g.fillText(t.et, xs + sw + gap(), yS); }
+    g.shadowColor = X.flMix(dc, 0, 0.9); g.shadowBlur = hN * 0.18; g.fillStyle = X.flMix(dc, 0.25); g.fillRect(x0 + sc * 0.06, yS - sc / 2 - ds / 2, ds, ds);
+    font(500, sc, 0.03); g.shadowColor = X.flMix(sCol, 0, 0.6); g.shadowBlur = hN * 0.12; g.fillStyle = X.flMix(sCol, 0.15); g.fillText(st, xs, yS);
+    if (t.et) { font(700, sc, 0.03); g.shadowColor = t.etLit ? 'rgba(56,245,184,.7)' : 'rgba(0,0,0,0)'; g.fillStyle = t.etLit ? '#7dffd4' : 'rgba(150,170,190,.8)'; g.fillText(t.et, xs + sw + gap(), yS); }
+    g.shadowBlur = 0;
+    // the line under the name: a brighter tick where it starts, then fading out past the longer of the two lines
+    const xe = Math.min(W - 2, Math.max(x0 + nw, xs + sw + gap() + ew) + hN * 0.9), lw = Math.max(2, hN * 0.05);
+    const gr = g.createLinearGradient(x0, 0, xe, 0); gr.addColorStop(0, X.flMix(acc, 0.2, 0.95)); gr.addColorStop(0.7, X.flMix(acc, 0, 0.55)); gr.addColorStop(1, X.flMix(acc, 0, 0));
+    g.shadowColor = X.flMix(acc, 0, 0.8); g.shadowBlur = hN * 0.1; g.fillStyle = gr; g.fillRect(x0, yR - lw / 2, xe - x0, lw);
+    g.fillStyle = X.flMix(acc, 0.45); g.fillRect(x0, yR - lw * 1.2, hN * 0.6, lw * 2.4); g.shadowBlur = 0;
+    F.tex.needsUpdate = true;
+  }
+  // every frame: the marking made once the plate has a name, lettered again only when the plate's words or the
+  // room's light change, brighter under the mouse and while open (one colour write when that changes)
+  flTick(r) {
+    if (!r.fl) { if (!r.plate || !r.plate._h) return; this.flMake(r); }
+    const F = r.fl, acc = this.flAccent(r), key = r.plate._h + '|' + acc + '|' + (document.fonts ? document.fonts.status : '');
+    if (F.key !== key) { F.key = key; this.flDraw(r, acc); }
+    const L = Office3D.FL.lit, lit = this.sel === r.key ? L[2] : this.hover === r.key ? L[1] : L[0];
+    if (F.lit !== lit) { F.lit = lit; F.mat.color.setScalar(lit); }
+  }
+  // The Manager's pill -- what needs you, or that nothing does -- stays where his picture has it, over the column
+  // of light by his back corner, but never over a room's floor marking or his own boards on the back walls (it hid
+  // the Laboratory's plate before): of the spots round there that are clear of all of them, the nearest. Looked
+  // for again only when the camera, the stage or the pill's words change; written only when its place changes.
+  flNeed(r, w, h) {
+    const el = r.need, cam = this.camera, e = cam.matrixWorld.elements, pe = cam.projectionMatrix.elements, pw = el.offsetWidth, ph = el.offsetHeight;
+    const C = r.needC || (r.needC = { m: new Float64Array(32), t: null });
+    const t = el.className + '|' + el.textContent + '|' + w + 'x' + h + '|' + pw + 'x' + ph;
+    let same = C.t === t;
+    for (let i = 0; i < 16 && same; i++) same = C.m[i] === e[i] && C.m[16 + i] === pe[i];
+    if (same) return;
+    C.t = t; for (let i = 0; i < 16; i++) { C.m[i] = e[i]; C.m[16 + i] = pe[i]; }
+    const v = new THREE.Vector3(), u = new THREE.Vector3(), at = (p) => { u.copy(p).project(cam); return [(u.x + 1) / 2 * w, (1 - u.y) / 2 * h]; };
+    v.copy(r.coreAt).project(cam);
+    const bz = v.z, bx = (v.x + 1) / 2 * w, by = (1 - v.y) / 2 * h - 10, X = Office3D;
+    if (!r.flBoards) {
+      // his two boards on the back walls (the turns of the day, the plan's kanban), by the canvases they show
+      const tex = [r.bars, r.kb].filter(Boolean).map((s) => s.tex); r.flBoards = [];
+      r.g.traverse((m) => { if (m.isMesh && m.material && tex.includes(m.material.map)) { const bb = new THREE.Box3().setFromObject(m), p = [];
+        for (const x of [bb.min.x, bb.max.x]) for (const y of [bb.min.y, bb.max.y]) for (const z of [bb.min.z, bb.max.z]) p.push(new THREE.Vector3(x, y, z)); r.flBoards.push(p); } });
+    }
+    const keep = Object.values(this.rooms).filter((q) => q.fl).map((q) => q.fl.q.map(at)).concat(r.flBoards.map((p) => X.flHull(p.map(at))));
+    let x = bx, y = by, best = Infinity;
+    if (pw && ph) {
+      for (let dy = -96; dy <= 48; dy += 6) for (let dx = -96; dx <= 96; dx += 8) {
+        const cost = Math.abs(dx) + Math.abs(dy) * 1.3; if (cost >= best) continue;
+        const cx = bx + dx, cy = by + dy, R = [[cx - pw / 2 - 4, cy - ph / 2 - 4], [cx + pw / 2 + 4, cy - ph / 2 - 4], [cx + pw / 2 + 4, cy + ph / 2 + 4], [cx - pw / 2 - 4, cy + ph / 2 + 4]];
+        if (cy - ph / 2 < 58 || keep.some((k) => X.flSat(R, k))) continue;
+        best = cost; x = cx; y = cy;
+      }
+    }
+    const off = bz > 1 || v.x < -1.3 || v.x > 1.3 || y < 58 || y > h + 40;
+    if (el._off !== off) { el._off = off; el.style.display = off ? 'none' : ''; }
+    const tf = off ? '' : 'translate(' + x.toFixed(1) + 'px,' + y.toFixed(1) + 'px) translate(-50%,-50%)';
+    if (!off && el._tf !== tf) { el._tf = tf; el.style.transform = tf; }
   }
 
   /* ---------------- input ---------------- */
