@@ -1,28 +1,49 @@
-/* The /company mockup: the live office. An isometric SVG drawn from world coordinates
- * (1 unit = one floor tile), so every room, desk, monitor, wall screen and task note sits
- * where the data puts it. Rooms are rebuilt only when the company's shape changes (a
- * department added, edited or removed); everything else updates in place: status classes,
- * wall screens, task boards, plates. Packets ride the floor conduits between the rooms
- * and the Manager; idle agents get up and walk now and then. Zoom, pan, fit and focus
- * move the viewBox, so it stays sharp at any size. */
+/* The /company mockup: the flat office. The 3D office (u3d.js) drawn as an isometric SVG, in its colours: a navy
+ * sky, a slate deck on a plated hull, slate-blue tiled floors in pale frosted glass, ONE mint neon line round every
+ * room (the back walls' tops, the front walls' feet), the trading desk in orange. World coordinates are floor tiles
+ * (1 unit = one tile of the plan, the plan the 3D office reads from CO.iso), so every room, desk, monitor, wall
+ * screen and task note sits where the data puts it. It is also the fallback where 3D cannot start, so it stays
+ * plain SVG and CSS: flat fills, a few gradients, a handful of blurs.
+ * Rooms are rebuilt only when the company's shape changes (a department added, edited or removed); everything else
+ * updates in place: status classes, wall screens, task boards, plates. Packets ride the deck's lanes between the
+ * rooms and the Manager; idle people get up and walk now and then. Zoom, pan, fit and focus move the viewBox, so it
+ * stays sharp at any size. */
 (function () {
   'use strict';
   var CO = window.CO;
   var SC = 22, C30 = Math.cos(Math.PI / 6), S30 = 0.5, RS = 7;
-  // the site's navy-black, darker and less blue than its panels: what reads as colour in the office is what a
-  // room is doing (cyan working, red waiting), the frame and the corridors Cymetica green
+  // the site's palette: the Universe's flat picture draws with it (CO.iso.C), so it stays as it is
   var C = { bg: '#0a0e17', deep: '#05070a', navy: '#0b0f15', navy2: '#10151c', line: '#161d26', line2: '#1d2631',
     line3: '#27313e', plate: '#0a0d12', tile: '#11161d', text: '#e6edf7', dim: '#a9b8cc', dim2: '#7f93ad',
     cyan: '#00cfff', green: '#00ff88', red: '#ff4444', blue: '#3b82f6' };
-  // up next is a blue dot on its plate (DOT); its frame, edge and screen stay slate like an idle room's
-  var ST = { working: C.cyan, queued: C.dim2, waiting: C.red, idle: C.dim2 }, DOT = { queued: C.blue };
-  var TONE = { cyan: C.cyan, red: C.red, blue: '#dfe6ee', dim: C.dim };   // "Up next" white on a plate; its dot stays blue
-  var GRID = 'rgba(0, 255, 136, .1)';   // the floor tiles' joints: a faint Cymetica green
+  // The office's own colours: the 3D office's, read off u3d.js and screenshots of it (sRGB). A flat picture has no
+  // light of its own, so a thing's lit side is drawn lighter: its top lightest, the face to the camera's left mid,
+  // the face to its right darkest.
+  var L = {
+    deck: '#1b2632', deckSeam: '#111a23', rimL: '#2b3949', rimR: '#212d3b', rimHi: '#4c5e72',
+    hullTop: '#3a4757', keelL: '#152029', keelR: '#0f171f', keelB: '#0a1017',
+    floor: '#2f4353', seam: '#1a2732', slabL: '#1d2a36', slabR: '#16212c',
+    band: '#0f161e', bandTop: '#1b2531',
+    desk: '#1e262f', desk2: '#1a2129', deskR: '#151c24', deskTop: '#2e3a46', dark: '#0b1118', frame: '#2a3644',
+    white: '#c6cfd7', white2: '#8d99a3', white3: '#6c7782',
+    suit2: '#b3c1cf', pack: '#4a5c70', visor: '#0e2c56',
+    neon: '#7cf2c4', amber: '#ff8824', hub: '#00e5ff', mint: '#38f2b8', lime: '#c8ea6a',
+    text: '#eef4f8', dim: '#a9b8cc', dim2: '#7f93ad'
+  };
+  // What a room is doing, said as the 3D office says it: on its plate's dot and on its wall screen. The room's own
+  // light stays mint, brighter while it works, orange in the trading desk and while it waits on you.
+  var STC = { working: '#24e8ff', queued: '#3b82f6', waiting: '#ff8824', idle: '#38f2b8' };
+  var TONEC = { cyan: '#24e8ff', red: '#ff9438', blue: '#dfe6ee', dim: '#a9b8cc' };
   // The plan: the Manager in the middle, the weekly audit and the vault in two fixed corners, departments in the
   // slots in this order. The vault takes the front corner, where what the company earns is seen first.
-  var HUB = [8, 8], YOU = [8, 16], AUDIT = [0, 16], VAULT = [16, 16];
+  var HUB = [8, 8], AUDIT = [0, 16], VAULT = [16, 16];
   var SLOTS = [[0, 0], [8, 0], [16, 0], [0, 8], [16, 8], [8, 16], [24, 0], [24, 8], [24, 16], [24, 24], [16, 24], [8, 24], [0, 24]];
   var NS = 'http://www.w3.org/2000/svg';
+  var WZ = 1.3;               // the glass walls' top: the 3D's 1.4, a little lower for this flatter angle
+  var WS0 = 0.56, WS1 = 1.2;  // a wall screen's foot and top, over the dark band along the back walls
+  var T = 0.35, HD = 1.5;     // the deck's thickness and the hull's under it (the 3D's 0.35 and 1.65)
+  var EDGE = 'rgba(4, 8, 12, .45)';
+  var SANS = "'Segoe UI','Inter',system-ui,sans-serif";
 
   function P(x, y, z) { return [(x - y) * SC * C30, (x + y) * SC * S30 - (z || 0) * SC]; }
   function f1(v) { return Math.round(v * 10) / 10; }
@@ -38,11 +59,19 @@
       poly([P(x + w, y, z), P(x + w, y + d, z), P(x + w, y + d, z + h), P(x + w, y, z + h)], right, stroke, 0.6, op) +
       poly([P(x, y, z + h), P(x + w, y, z + h), P(x + w, y + d, z + h), P(x, y + d, z + h)], top, stroke, 0.6, op) + '</g>';
   }
+  // a piece of furniture: a box with a hairline of shadow round its faces, so the shapes stay clean
+  function fb(x, y, z, w, d, h, top, left, right) { return box(x, y, z, w, d, h, top, left, right, EDGE); }
   function text(x, y, s, size, fill, weight, anchor, fam, extra) {
-    var f = fam === 'display' ? "'Archivo Black',sans-serif" : "'JetBrains Mono',monospace";
+    var f = fam === 'display' ? "'Archivo Black',sans-serif" : fam === 'sans' ? SANS : "'JetBrains Mono',monospace";
     return '<text x="' + f1(x) + '" y="' + f1(y) + '" font-family="' + f + '" font-size="' + size + '" fill="' + fill +
       '" font-weight="' + (weight || 400) + '" text-anchor="' + (anchor || 'start') + '"' + (extra || '') + '>' + esc(s) + '</text>';
   }
+  function line(a, b, stroke, w, extra) {
+    return '<line x1="' + f1(a[0]) + '" y1="' + f1(a[1]) + '" x2="' + f1(b[0]) + '" y2="' + f1(b[1]) + '"' +
+      (stroke ? ' stroke="' + stroke + '" stroke-width="' + w + '"' : '') + (extra || '') + '/>';
+  }
+  function pline(l, cls, extra) { return '<polyline' + (cls ? ' class="' + cls + '"' : '') + ' points="' + pts(l) + '" fill="none"' + (extra || '') + '/>'; }
+  // a flat drawing on a back wall: x along the wall in pixels from x0 + u, y down from zTop
   function onBack(x0, u, yPlane, zTop) {
     var o = P(x0 + u, yPlane, zTop);
     return 'matrix(' + C30.toFixed(4) + ' ' + S30 + ' 0 1 ' + f1(o[0]) + ' ' + f1(o[1]) + ')';
@@ -51,37 +80,103 @@
     var o = P(xPlane, y0 + v, zTop);
     return 'matrix(' + (-C30).toFixed(4) + ' ' + S30 + ' 0 1 ' + f1(o[0]) + ' ' + f1(o[1]) + ')';
   }
+  // the same on the left back wall, read from the camera: x runs from its near end (y0 + v) towards its far one
+  function onLeft(xPlane, y0, v, zTop) {
+    var o = P(xPlane, y0 + v, zTop);
+    return 'matrix(' + C30.toFixed(4) + ' ' + (-S30) + ' 0 1 ' + f1(o[0]) + ' ' + f1(o[1]) + ')';
+  }
   function cut(s, n) { s = String(s || ''); return s.length > n ? s.slice(0, n - 1) + '…' : s; }
+  function rng(s) { s = Math.floor(s) % 2147483647 || 1; return function () { s = (s * 16807) % 2147483647; return (s - 1) / 2147483646; }; }
+  // a colour a shade lighter (k > 0) or darker (k < 0)
+  function shade(hex, k) {
+    var n = parseInt(hex.slice(1), 16), f = function (c) { return Math.max(0, Math.min(255, Math.round(k < 0 ? c * (1 + k) : c + (255 - c) * k))); };
+    return '#' + ((1 << 24) | (f(n >> 16) << 16) | (f(n >> 8 & 255) << 8) | f(n & 255)).toString(16).slice(1);
+  }
+  // A circle lying flat at height z, seen from the office's angle, is an ellipse this much wider than tall
+  var RXc = SC * C30 * Math.SQRT2, RYc = SC * S30 * Math.SQRT2;
+  function disc(cx, cy, z, r, fill, stroke, sw, extra) {
+    var c = P(cx, cy, z);
+    return '<ellipse cx="' + f1(c[0]) + '" cy="' + f1(c[1]) + '" rx="' + f1(r * RXc) + '" ry="' + f1(r * RYc) + '" fill="' + fill + '"' +
+      (stroke ? ' stroke="' + stroke + '" stroke-width="' + sw + '"' : '') + (extra || '') + '/>';
+  }
+  // an arc of that circle, from a0 to a1 radians round its centre on the plan
+  function arc(cx, cy, z, r, a0, a1) {
+    var l = [], n = Math.max(6, Math.ceil(Math.abs(a1 - a0) * 9));
+    for (var i = 0; i <= n; i++) { var a = a0 + (a1 - a0) * i / n; l.push(P(cx + Math.cos(a) * r, cy + Math.sin(a) * r, z)); }
+    return l;
+  }
+  // a cylinder standing on the floor plan: its front band and its top
+  function cyl(cx, cy, z0, z1, r, top, side, stroke) {
+    var a = P(cx, cy, z0), b = P(cx, cy, z1), rx = r * RXc, ry = r * RYc;
+    return '<path d="M' + f1(a[0] - rx) + ',' + f1(b[1]) + ' A' + f1(rx) + ',' + f1(ry) + ' 0 0 0 ' + f1(a[0] + rx) + ',' + f1(b[1]) +
+      ' L' + f1(a[0] + rx) + ',' + f1(a[1]) + ' A' + f1(rx) + ',' + f1(ry) + ' 0 0 1 ' + f1(a[0] - rx) + ',' + f1(a[1]) + ' Z" fill="' + side + '" stroke="' + stroke + '" stroke-width=".5"/>' +
+      '<ellipse cx="' + f1(b[0]) + '" cy="' + f1(b[1]) + '" rx="' + f1(rx) + '" ry="' + f1(ry) + '" fill="' + top + '" stroke="' + stroke + '" stroke-width=".5"/>';
+  }
+  // a band of a cylinder's wall between two heights: the half towards the camera (front) or away from it
+  function band(cx, cy, z0, z1, r, front, fill, extra) {
+    var a = P(cx, cy, z0), b = P(cx, cy, z1), rx = f1(r * RXc), ry = f1(r * RYc), s0 = front ? 0 : 1, s1 = front ? 1 : 0;
+    return '<path d="M' + f1(a[0] - rx) + ',' + f1(a[1]) + ' A' + rx + ',' + ry + ' 0 0 ' + s0 + ' ' + f1(a[0] + rx) + ',' + f1(a[1]) +
+      ' L' + f1(b[0] + rx) + ',' + f1(b[1]) + ' A' + rx + ',' + ry + ' 0 0 ' + s1 + ' ' + f1(b[0] - rx) + ',' + f1(b[1]) + ' Z" fill="' + fill + '"' + (extra || '') + '/>';
+  }
+  // what stands in a room, drawn back to front by where it stands on the plan
+  function sortJoin(items) {
+    return items.map(function (it, i) { return [it[0], i, it[1]]; }).sort(function (a, b) { return a[0] - b[0] || a[1] - b[1]; })
+      .map(function (it) { return it[2]; }).join('');
+  }
+  // text widths for the plates, from a canvas with the plates' own fonts (a width read before the web fonts are in is
+  // the fallback's, so it is kept only once they are)
+  var MCX = null, MW = {};
+  function measure(s, font, ls) {
+    var k = font + '|' + s;
+    if (MW[k] != null) return MW[k];
+    if (MCX === null) { try { MCX = document.createElement('canvas').getContext('2d'); } catch (e) { MCX = false; } }
+    var w;
+    if (MCX) { MCX.font = font; w = MCX.measureText(s).width; } else w = s.length * parseFloat(font.split(' ')[1]) * 0.62;
+    w += (ls || 0) * s.length;
+    if (!document.fonts || document.fonts.status === 'loaded') MW[k] = w;
+    return w;
+  }
 
   /* ---------------- pieces ---------------- */
   var DEFS = '<defs>' +
     '<filter id="glow" x="-80%" y="-80%" width="260%" height="260%"><feGaussianBlur stdDeviation="2.2" result="b"/>' +
     '<feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter>' +
-    '<filter id="glow2" x="-50%" y="-50%" width="200%" height="200%"><feGaussianBlur stdDeviation="4"/></filter>' +
-    grad('g-fglow', C.cyan, 0.2) + grad('g-fglow-r', C.red, 0.16) + grad('g-fglow-b', C.blue, 0.12) +
-    grad('g-spill', C.cyan, 0.35) + grad('g-ping', C.cyan, 0.5) +
-    halo('g-halo-c', C.cyan) + halo('g-halo-g', C.green) + halo('g-halo-r', C.red) + halo('g-halo-b', C.blue) +
-    '<linearGradient id="g-beam" x1="0" y1="1" x2="0" y2="0"><stop offset="0" stop-color="' + C.cyan + '" stop-opacity=".55"/>' +
-    '<stop offset="1" stop-color="' + C.cyan + '" stop-opacity="0"/></linearGradient>' +
-    // glass: lit from above, a sheen across it, dark at its foot
-    '<linearGradient id="g-glass" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#3a4757" stop-opacity=".75"/>' +
-    '<stop offset=".35" stop-color="' + C.line3 + '" stop-opacity=".55"/><stop offset=".42" stop-color="#4a5a6e" stop-opacity=".5"/>' +
-    '<stop offset=".5" stop-color="' + C.line2 + '" stop-opacity=".45"/><stop offset="1" stop-color="' + C.navy + '" stop-opacity=".4"/></linearGradient>' +
-    '<linearGradient id="g-tile" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#11161d"/><stop offset="1" stop-color="#0a0e13"/></linearGradient>' +
-    '<linearGradient id="g-scr" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#0d141c"/><stop offset="1" stop-color="' + C.deep + '"/></linearGradient>' +
-    '<linearGradient id="g-plate" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#0e1218"/><stop offset="1" stop-color="' + C.deep + '"/></linearGradient>' +
+    '<filter id="glowS" x="-80%" y="-80%" width="260%" height="260%"><feGaussianBlur stdDeviation="1.1" result="b"/>' +
+    '<feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter>' +
+    '<filter id="glow2" x="-50%" y="-50%" width="200%" height="200%"><feGaussianBlur stdDeviation="2.6"/></filter>' +
+    // a room's floor while it works: a faint mint wash; while it waits on you and in the trading desk, the 3D's pool
+    // of orange light, brightest in the middle, gone at its walls
+    grad('g-fglow', L.neon, 0.16) + grad('g-fglow-b', C.blue, 0.12) +
+    '<radialGradient id="g-fglow-o"><stop offset="0" stop-color="#ff7a3c" stop-opacity=".6"/><stop offset=".45" stop-color="#ff6a30" stop-opacity=".28"/>' +
+    '<stop offset="1" stop-color="#ff6a30" stop-opacity="0"/></radialGradient>' +
+    grad('g-spill', L.neon, 0.3) + grad('g-ping', L.hub, 0.5) +
+    halo('g-halo-c', L.hub) + halo('g-halo-g', L.mint) + halo('g-halo-r', L.amber) + halo('g-halo-b', C.blue) + halo('g-halo-q', '#9ff5ec') +
+    // the column of light over the Manager's dais: soft at its sides, brightest at its foot
+    '<radialGradient id="g-beam" cx=".5" cy=".78" r=".6"><stop offset="0" stop-color="#9ff4ff" stop-opacity=".42"/>' +
+    '<stop offset=".55" stop-color="#7fe8f8" stop-opacity=".16"/><stop offset="1" stop-color="#7fe8f8" stop-opacity="0"/></radialGradient>' +
+    // the glass: a pale frosted pane, catching more light at its top; the trading desk's warmed by its light
+    pane('g-paneB', '#c9dbe4', 0.15, '#a9bfca', 0.05) + pane('g-paneF', '#c9dbe4', 0.08, '#a9bfca', 0.025) + pane('g-paneO', '#ffc49c', 0.14, '#ffb084', 0.05) +
+    '<linearGradient id="g-scr" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#0a1622"/><stop offset="1" stop-color="#050c14"/></linearGradient>' +
     // a room's ceiling lamp on its floor: plain white light
-    '<radialGradient id="g-lamp"><stop offset="0" stop-color="#eef3f8" stop-opacity=".12"/><stop offset=".55" stop-color="#eef3f8" stop-opacity=".03"/><stop offset="1" stop-color="#eef3f8" stop-opacity="0"/></radialGradient>' +
-    // the green the office floats on
-    '<linearGradient id="g-hullL" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#202b3a"/><stop offset="1" stop-color="#121923"/></linearGradient>' +
-    '<linearGradient id="g-hullR" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#161e29"/><stop offset="1" stop-color="#0c1118"/></linearGradient>' +
-    '<radialGradient id="g-rock" cx=".45" cy=".25" r=".85"><stop offset="0" stop-color="#3a4049"/><stop offset=".55" stop-color="#22262d"/><stop offset="1" stop-color="#0e1013"/></radialGradient>' +
-    '<linearGradient id="g-solar" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#1d55bb"/><stop offset="1" stop-color="#12387f"/></linearGradient>' +
-    '<radialGradient id="g-under"><stop offset="0" stop-color="' + C.green + '" stop-opacity=".14"/><stop offset=".6" stop-color="' + C.green + '" stop-opacity=".04"/><stop offset="1" stop-color="' + C.green + '" stop-opacity="0"/></radialGradient>' +
-    // a wall's own light: brighter at the top, where the lamp is
-    '<linearGradient id="g-wallL" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#1c2531"/><stop offset="1" stop-color="' + C.navy + '"/></linearGradient>' +
-    body('gb-cyan', C.cyan) + body('gb-blue', C.blue) + body('gb-green', C.green) + body('gb-red', C.red) + body('gb-slate', C.dim2) +
-    '<radialGradient id="g-shadow"><stop offset="0" stop-color="' + C.deep + '" stop-opacity=".9"/><stop offset="1" stop-color="' + C.deep + '" stop-opacity="0"/></radialGradient>' +
+    '<radialGradient id="g-lamp"><stop offset="0" stop-color="#eef6ff" stop-opacity=".13"/><stop offset=".6" stop-color="#eef6ff" stop-opacity=".04"/><stop offset="1" stop-color="#eef6ff" stop-opacity="0"/></radialGradient>' +
+    // the hull's two sides you see: the left one lit, the right one in shade
+    '<linearGradient id="g-hullL" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#303d4c"/><stop offset="1" stop-color="#222c38"/></linearGradient>' +
+    '<linearGradient id="g-hullR" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#252f3c"/><stop offset="1" stop-color="#19222c"/></linearGradient>' +
+    // an astronaut's white suit, lit from the left, and the blue helmet
+    '<linearGradient id="g-suit" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#f4f8fb"/><stop offset="1" stop-color="#b9c7d4"/></linearGradient>' +
+    '<radialGradient id="g-helmet" cx=".36" cy=".3" r=".78"><stop offset="0" stop-color="#9cc0e6"/><stop offset=".55" stop-color="#4e74a0"/><stop offset="1" stop-color="#2a4466"/></radialGradient>' +
+    '<radialGradient id="g-shadow"><stop offset="0" stop-color="#03060a" stop-opacity=".75"/><stop offset="1" stop-color="#03060a" stop-opacity="0"/></radialGradient>' +
+    // the Manager's core: white-hot, a cyan halo round it, and the cyan light on the floor round its dais
+    '<radialGradient id="g-core"><stop offset="0" stop-color="#ffffff"/><stop offset=".22" stop-color="#e6fdff" stop-opacity=".95"/>' +
+    '<stop offset=".5" stop-color="#7fe8f8" stop-opacity=".32"/><stop offset="1" stop-color="#24e8ff" stop-opacity="0"/></radialGradient>' +
+    '<radialGradient id="g-hubf"><stop offset="0" stop-color="#00e1ff" stop-opacity=".22"/><stop offset=".55" stop-color="#00c3eb" stop-opacity=".08"/><stop offset="1" stop-color="#00c3eb" stop-opacity="0"/></radialGradient>' +
+    // the Add-department pad: a faint teal disc and its wall of teal light, brightest along its top
+    '<radialGradient id="g-pad"><stop offset="0" stop-color="#14917d" stop-opacity="0"/><stop offset=".7" stop-color="#0e8c82" stop-opacity=".04"/><stop offset="1" stop-color="#20cdac" stop-opacity=".16"/></radialGradient>' +
+    '<linearGradient id="g-padw" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#3ad8c4" stop-opacity=".55"/><stop offset=".3" stop-color="#2cc8b4" stop-opacity=".2"/><stop offset="1" stop-color="#1ea896" stop-opacity=".07"/></linearGradient>' +
+    // Cymetica QA's window of light, and the vault door's brushed steel lit from the top left
+    '<linearGradient id="g-qa" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#dcfff8"/><stop offset="1" stop-color="#58f2dc"/></linearGradient>' +
+    '<radialGradient id="g-door" cx=".38" cy=".32" r=".82"><stop offset="0" stop-color="#7d8999"/><stop offset=".6" stop-color="#4a5664"/><stop offset="1" stop-color="#29323d"/></radialGradient>' +
+    '<linearGradient id="g-steel" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#a7b2bf"/><stop offset=".5" stop-color="#5d6977"/><stop offset="1" stop-color="#343e4a"/></linearGradient>' +
     '</defs>';
   function grad(id, c, op) {
     return '<radialGradient id="' + id + '"><stop offset="0" stop-color="' + c + '" stop-opacity="' + op + '"/><stop offset="1" stop-color="' + c + '" stop-opacity="0"/></radialGradient>';
@@ -90,237 +185,313 @@
     return '<radialGradient id="' + id + '"><stop offset="0" stop-color="' + c + '" stop-opacity=".95"/><stop offset=".35" stop-color="' + c +
       '" stop-opacity=".45"/><stop offset="1" stop-color="' + c + '" stop-opacity="0"/></radialGradient>';
   }
-  function body(id, c) {
-    return '<linearGradient id="' + id + '" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="' + c + '"/><stop offset="1" stop-color="' + c + '" stop-opacity=".55"/></linearGradient>';
+  function pane(id, c0, o0, c1, o1) {
+    return '<linearGradient id="' + id + '" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="' + c0 + '" stop-opacity="' + o0 + '"/>' +
+      '<stop offset="1" stop-color="' + c1 + '" stop-opacity="' + o1 + '"/></linearGradient>';
+  }
+  // the sky's stars, one tile of them repeated behind the office: small, sharp, mostly white, a few in cyan, a few
+  // brighter with a soft halo -- about one to every 2,500 px, as the 3D's sky
+  function starTile() {
+    var R = rng(20261019), W = 620, out = '<svg xmlns="http://www.w3.org/2000/svg" width="' + W + '" height="' + W + '">';
+    for (var i = 0; i < 150; i++) {
+      var x = f1(R() * W), y = f1(R() * W), b = R(), r = b > 0.96 ? 1.2 : b > 0.82 ? 0.8 : 0.5, col = R() < 0.12 ? '#9fe8ff' : '#ffffff';
+      if (r > 1) out += '<circle cx="' + x + '" cy="' + y + '" r="3.4" fill="' + col + '" opacity=".1"/>';
+      out += '<circle cx="' + x + '" cy="' + y + '" r="' + r + '" fill="' + col + '" opacity="' + (0.3 + R() * 0.6).toFixed(2) + '"/>';
+    }
+    return 'url("data:image/svg+xml,' + encodeURIComponent(out + '</svg>') + '")';
   }
 
-  function avatar(label, cls, head) {
-    var w = 5.6 * label.length + 9;
-    return '<ellipse cx="0" cy="0" rx="9" ry="4" fill="url(#g-shadow)"/>' +
-      '<ellipse class="ring" cx="0" cy="0" rx="11" ry="5"/>' +
-      '<ellipse class="ring2" cx="0" cy="0" rx="11" ry="5"/>' +
-      '<g class="bob"><rect class="body" x="-6" y="-17" width="12" height="14" rx="5"/>' +
-      '<rect x="-6" y="-9" width="12" height="6" rx="2" fill="' + C.deep + '" opacity=".28"/>' +
-      '<circle cx="0" cy="-21.5" r="4.8" fill="' + (head || C.dim) + '"/>' +
-      '<circle cx="-1.7" cy="-23.2" r="1.7" fill="' + C.text + '" opacity=".35"/></g>' +
-      (label ? '<g class="lbl"><rect x="' + f1(-w / 2) + '" y="-39.5" width="' + f1(w) + '" height="11.5" rx="5.75"/>' +
-        text(0, -30.9, label, 7.6, C.text, 600, 'middle') + '</g>' : '');
+  // An astronaut as in the 3D office: a white suit, a grey pack on the back, a blue helmet with a dark visor and its
+  // shine. Feet at 0,0; the name tag over the helmet shows only in the room under the mouse or the one open.
+  function avatar(label) {
+    var w = 5.8 * label.length + 10;
+    return '<ellipse cx="0" cy="0" rx="8" ry="3.4" fill="url(#g-shadow)"/>' +
+      '<ellipse class="ring" cx="0" cy="0" rx="11" ry="5"/><ellipse class="ring2" cx="0" cy="0" rx="11" ry="5"/>' +
+      '<g class="bob">' +
+      '<rect x="-4.3" y="-8.6" width="3.6" height="8" rx="1.6" fill="' + L.suit2 + '"/><rect x=".7" y="-8.6" width="3.6" height="8" rx="1.6" fill="' + L.suit2 + '"/>' +
+      '<rect x="-4.7" y="-2.3" width="4.1" height="2.5" rx="1" fill="' + L.pack + '"/><rect x=".6" y="-2.3" width="4.1" height="2.5" rx="1" fill="' + L.pack + '"/>' +
+      '<rect x="-3.8" y="-18.8" width="10.2" height="9.8" rx="2.6" fill="' + L.pack + '"/>' +
+      '<rect x="-7.7" y="-16.4" width="3.4" height="9.2" rx="1.7" fill="url(#g-suit)"/><rect x="4.3" y="-16.4" width="3.4" height="9.2" rx="1.7" fill="' + L.suit2 + '"/>' +
+      '<rect class="body" x="-5.4" y="-17.6" width="10.8" height="10.8" rx="4.2"/>' +
+      '<rect x="-2.9" y="-14.7" width="5.8" height="3.1" rx=".9" fill="' + L.pack + '"/><circle class="chest" cx="1.3" cy="-13.15" r=".8"/>' +
+      '<ellipse cx="0" cy="-17.4" rx="4.5" ry="1.45" fill="' + L.pack + '"/>' +
+      '<circle cx="0" cy="-22.2" r="5.7" fill="url(#g-helmet)"/>' +
+      '<ellipse cx="-1.2" cy="-21.8" rx="3.9" ry="2.8" fill="' + L.visor + '"/>' +
+      '<ellipse cx="-2.5" cy="-22.8" rx="1.3" ry=".75" fill="#cfe6ff" opacity=".75"/></g>' +
+      (label ? '<g class="lbl"><rect x="' + f1(-w / 2) + '" y="-41" width="' + f1(w) + '" height="11.5" rx="5.75"/>' +
+        text(0, -32.4, label, 7.4, L.text, 600, 'middle') + '</g>' : '');
   }
-  function agentAt(x, y, key, i, label, head) {
+  function agentAt(x, y, key, i, label) {
     var p = P(x, y, 0.1);
     return '<g class="agent idle" data-agent="' + key + ':' + i + '" data-hx="' + f1(p[0]) + '" data-hy="' + f1(p[1]) +
-      '" transform="translate(' + f1(p[0]) + ' ' + f1(p[1]) + ')">' + avatar(label, '', head) + '</g>';
+      '" transform="translate(' + f1(p[0]) + ' ' + f1(p[1]) + ')">' + avatar(label) + '</g>';
   }
-  function desk(x, y, i, screenFill) {
-    var out = box(x, y, 0, 1.9, 0.9, 0.42, C.line3, C.line, C.navy2, C.line2);
-    out += box(x + 0.6, y + 0.48, 0.42, 0.7, 0.22, 0.02, '#1a2a44', C.line, C.navy);              // keyboard
-    out += box(x + 0.88, y + 0.17, 0.42, 0.14, 0.06, 0.1, C.navy2, C.line, C.navy);              // stand
-    var mx = x + 0.5, my = y + 0.14, mz = 0.5, mw = 0.9, md = 0.08, mh = 0.52;
-    out += poly([P(mx + mw, my, mz), P(mx + mw, my + md, mz), P(mx + mw, my + md, mz + mh), P(mx + mw, my, mz + mh)], C.navy);
-    out += poly([P(mx, my, mz + mh), P(mx + mw, my, mz + mh), P(mx + mw, my + md, mz + mh), P(mx, my + md, mz + mh)], C.navy2);
-    var sp = P(x + 0.95, y + 0.75, 0.43);
-    out += '<ellipse class="spill" data-i="' + i + '" cx="' + f1(sp[0]) + '" cy="' + f1(sp[1]) + '" rx="20" ry="8" fill="url(#g-spill)"/>';
-    out += poly([P(mx, my + md, mz), P(mx + mw, my + md, mz), P(mx + mw, my + md, mz + mh), P(mx, my + md, mz + mh)],
-      screenFill || C.line2, null, 0, 1, ' class="mon" data-i="' + i + '"');
-    out += '<g class="code" transform="' + onBack(mx, 0.1, my + md, mz + mh - 0.05) + '">';
-    [13, 8, 11, 6].forEach(function (w, k) {
-      out += '<rect class="ln" x="1.5" y="' + f1(1.6 + k * 2.55) + '" width="' + w + '" height="1.1" fill="' + C.deep + '" style="animation-delay:' + (-k * 0.55 - i * 0.3).toFixed(2) + 's"/>';
+  // a screen on a stand, facing the room: dark glass that lights mint while its expert works (orange in the
+  // trading desk, whose charts always run), its code typing over it
+  function monitor(mx, my, mz, mw, mh, i) {
+    var md = 0.05, out = '';
+    out += poly([P(mx + mw, my, mz), P(mx + mw, my + md, mz), P(mx + mw, my + md, mz + mh), P(mx + mw, my, mz + mh)], L.dark);
+    out += poly([P(mx, my, mz + mh), P(mx + mw, my, mz + mh), P(mx + mw, my + md, mz + mh), P(mx, my + md, mz + mh)], L.frame);
+    out += poly([P(mx, my + md, mz), P(mx + mw, my + md, mz), P(mx + mw, my + md, mz + mh), P(mx, my + md, mz + mh)], '#0a1016', L.frame, 0.5, 1,
+      ' class="mon" data-i="' + i + '"');
+    out += '<g class="code" transform="' + onBack(mx, 0.08, my + md, mz + mh - 0.05) + '">';
+    [11, 7, 9, 5].forEach(function (w, k) {
+      out += '<rect class="ln" x="1" y="' + f1(0.9 + k * 1.8) + '" width="' + w + '" height=".8" fill="' + C.deep + '" style="animation-delay:' + (-k * 0.55 - i * 0.3).toFixed(2) + 's"/>';
     });
-    out += '</g>';
-    out += box(x + 0.7, y + 1.08, 0, 0.5, 0.45, 0.22, C.navy2, C.line, C.navy);                   // stool
+    return out + '</g>';
+  }
+  // a desk facing the back wall, as the 3D's: a top on two side panels and a drawer unit, two screens, a keyboard, a mug
+  function desk(x, y, i) {
+    var out = fb(x + 0.04, y + 0.06, 0.1, 0.12, 0.72, 0.34, L.desk, L.desk, L.deskR) +
+      fb(x + 1.1, y + 0.08, 0.1, 0.6, 0.66, 0.32, L.desk, L.desk2, L.deskR) +
+      fb(x + 1.74, y + 0.06, 0.1, 0.12, 0.72, 0.34, L.desk, L.desk, L.deskR);
+    out += fb(x, y, 0.44, 1.9, 0.86, 0.05, L.deskTop, '#25303b', '#1b232c');
+    var sp = P(x + 0.95, y + 0.5, 0.49);
+    out += '<ellipse class="spill" data-i="' + i + '" cx="' + f1(sp[0]) + '" cy="' + f1(sp[1]) + '" rx="22" ry="9" fill="url(#g-spill)"/>';
+    [x + 0.1, x + 1.0].forEach(function (mx) {
+      out += fb(mx + 0.36, y + 0.2, 0.49, 0.08, 0.06, 0.08, L.frame, L.frame, L.dark);
+      out += monitor(mx, y + 0.12, 0.56, 0.8, 0.36, i);
+    });
+    out += fb(x + 0.64, y + 0.5, 0.49, 0.62, 0.2, 0.02, '#3a4756', L.frame, L.dark);
+    out += cyl(x + 1.62, y + 0.62, 0.49, 0.6, 0.055, L.white, L.white2, L.white3);
     return out;
   }
-  // the department's computer: a lit terminal that opens the department's page on cymetica.com
+  // the department's computer: a console in the back corner whose screen opens the department's page on cymetica.com
   function terminal(x, y, link) {
     var out = '<g class="pc" data-link="' + esc(link.url) + '" data-label="' + esc(link.label) + '">';
-    var fl = P(x + 0.6, y + 0.45, 0.02);
-    out += '<ellipse class="pcglow" cx="' + f1(fl[0]) + '" cy="' + f1(fl[1]) + '" rx="34" ry="14" fill="url(#g-spill)"/>';
-    out += box(x, y, 0, 1.2, 0.8, 0.42, C.line3, C.line, C.navy2, C.line2);                         // desk
-    out += box(x + 0.5, y + 0.2, 0.42, 0.2, 0.1, 0.12, C.navy2, C.line, C.navy);                    // stand
-    var mx = x + 0.08, my = y + 0.16, mz = 0.54, mw = 1.04, md = 0.08, mh = 0.74;
-    out += poly([P(mx + mw, my, mz), P(mx + mw, my + md, mz), P(mx + mw, my + md, mz + mh), P(mx + mw, my, mz + mh)], C.navy);
-    out += poly([P(mx, my, mz + mh), P(mx + mw, my, mz + mh), P(mx + mw, my + md, mz + mh), P(mx, my + md, mz + mh)], C.navy2);
-    out += poly([P(mx, my + md, mz), P(mx + mw, my + md, mz), P(mx + mw, my + md, mz + mh), P(mx, my + md, mz + mh)],
-      '#06261f', C.green, 1.1, 1, ' class="pcscr"');
+    var fl = P(x + 0.62, y + 0.95, 0.1);
+    out += '<ellipse class="pcglow" cx="' + f1(fl[0]) + '" cy="' + f1(fl[1]) + '" rx="30" ry="12" fill="url(#g-spill)"/>';
+    out += fb(x, y, 0.1, 1.25, 0.8, 0.36, L.deskTop, L.desk, L.deskR);
+    var mx = x + 0.08, my = y + 0.1, mz = 0.46, mw = 1.09, md = 0.08, mh = 0.64;
+    out += poly([P(mx + mw, my, mz), P(mx + mw, my + md, mz), P(mx + mw, my + md, mz + mh), P(mx + mw, my, mz + mh)], L.dark);
+    out += poly([P(mx, my, mz + mh), P(mx + mw, my, mz + mh), P(mx + mw, my + md, mz + mh), P(mx, my + md, mz + mh)], L.frame);
+    out += poly([P(mx, my + md, mz), P(mx + mw, my + md, mz), P(mx + mw, my + md, mz + mh), P(mx, my + md, mz + mh)], '#06261f', L.mint, 1, 1, ' class="pcscr"');
     var sc = P(mx + mw / 2, my + md, mz + mh / 2);
-    out += text(sc[0], sc[1] + 6, '↗', 17, C.green, 700, 'middle', null, ' class="pcarrow" filter="url(#glow)"');
+    out += text(sc[0], sc[1] + 5, '↗', 14, L.mint, 700, 'middle', null, ' class="pcarrow" filter="url(#glowS)"');
     return out + '</g>';
   }
   // what the department has earned, lit, on its plate's title row: Cymetica QA's ET10
   function earnedLabel(n) { return (n ? '+' : '') + n.toLocaleString('en-US') + ' ET10'; }
-  function earned(rx, cy, n, fresh) {
-    return '<g class="earned' + (n ? ' lit' : '') + (fresh ? ' pop' : '') + '">' +
-      text(rx, cy - 2.2, earnedLabel(n), 10.6, n ? C.green : C.dim2, 700, 'end', null, n ? ' filter="url(#glow)"' : '') + '</g>';
+  function plant(x, y, k) {
+    k = k || 1;
+    var out = cyl(x, y, 0.1, 0.1 + 0.34 * k, 0.22 * k, '#2c3742', '#232c36', '#161d25'), c = P(x, y, 0.1 + 0.34 * k);
+    [[-3.6, -5.5, 5.6, '#1d5a3f'], [3.8, -6.5, 5.2, '#22684a'], [0, -9.5, 6, '#277553'], [-2, -13, 4.4, '#2e875f'], [2.4, -12.4, 3.6, '#349466']].forEach(function (l) {
+      out += '<circle cx="' + f1(c[0] + l[0] * k) + '" cy="' + f1(c[1] + l[1] * k) + '" r="' + f1(l[2] * k) + '" fill="' + l[3] + '"/>';
+    });
+    return out + '<circle cx="' + f1(c[0] - 1.5 * k) + '" cy="' + f1(c[1] - 14.5 * k) + '" r="' + f1(1.8 * k) + '" fill="#6fe0a6" opacity=".35"/>';
   }
-  function plant(x, y) {
-    var out = box(x, y, 0, 0.42, 0.42, 0.34, C.line3, C.line2, C.navy2, C.line);
-    var c = P(x + 0.21, y + 0.21, 0.34);
-    out += '<g class="leaf">' +
-      '<ellipse cx="' + f1(c[0] - 4) + '" cy="' + f1(c[1] - 6) + '" rx="6" ry="7.5" fill="#0d5a3a"/>' +
-      '<ellipse cx="' + f1(c[0] + 4) + '" cy="' + f1(c[1] - 8) + '" rx="5.5" ry="8" fill="#0f7a4c"/>' +
-      '<ellipse cx="' + f1(c[0]) + '" cy="' + f1(c[1] - 12) + '" rx="5" ry="6.5" fill="#12a05f"/>' +
-      '<ellipse cx="' + f1(c[0] + 1.5) + '" cy="' + f1(c[1] - 14) + '" rx="2" ry="2.5" fill="' + C.green + '" opacity=".45"/></g>';
-    return out;
-  }
-  function racks(x, y, n) {
+  // server racks in a row, fronts to the room: charcoal towers with blinking lights and a mint strip along the top
+  function racks(x, y, n, step) {
     var out = '';
     for (var i = 0; i < n; i++) {
-      var rx = x + i * 0.55;
-      out += box(rx, y, 0.1, 0.5, 0.55, 1.45, C.line3, C.line, C.navy2, C.line2);
-      for (var k = 0; k < 8; k++) {
-        var p = P(rx + 0.1 + (k % 2) * 0.22, y + 0.55, 0.35 + Math.floor(k / 2) * 0.3);
-        var col = [C.green, C.cyan, C.blue, C.green][(i + k) % 4];
-        out += '<rect class="led" x="' + f1(p[0]) + '" y="' + f1(p[1]) + '" width="3" height="1.5" fill="' + col + '" style="animation-delay:' + (-((i * 7 + k * 3) % 11) * 0.17).toFixed(2) + 's"/>';
+      var rx = x + i * (step || 0.72);
+      out += fb(rx, y, 0.1, 0.62, 0.68, 1.1, '#24303c', '#151d26', '#10171f');
+      out += '<g transform="' + onBack(rx, 0.06, y + 0.68, 1.16) + '"><rect x="0" y=".5" width="11.6" height=".9" fill="' + L.mint + '" opacity=".75"/>';
+      for (var k = 0; k < 5; k++) {
+        out += '<rect x="1" y="' + f1(3 + k * 4.2) + '" width="9.6" height="2.8" fill="#0b1118"/>';
+        for (var j = 0; j < 2; j++) {
+          out += '<rect class="led" x="' + (2 + j * 4.6) + '" y="' + f1(3.8 + k * 4.2) + '" width="2.2" height="1.1" fill="' + [L.mint, L.hub, C.blue][(i + k + j) % 3] +
+            '" style="animation-delay:' + (-((i * 7 + k * 3 + j * 5) % 11) * 0.17).toFixed(2) + 's"/>';
+        }
       }
+      out += '</g>';
     }
     return out;
   }
-  function devices(x, y) {
-    var out = box(x, y, 0.1, 1.1, 0.45, 1.25, C.line3, C.line, C.navy2, C.line2);
-    var tf, k;
-    for (var s = 0; s < 3; s++) {
-      tf = onBack(x, 0.08, y + 0.45, 1.27 - s * 0.38);
-      out += '<g transform="' + tf + '">';
-      for (k = 0; k < 3; k++) {
-        out += '<rect class="dev" x="' + (1.2 + k * 6.6) + '" y="1.6" width="4.6" height="6" rx="0.8" fill="' + [C.cyan, C.green, C.blue][(s + k) % 3] +
-          '" style="animation-delay:' + (-(s * 3 + k) * 0.4).toFixed(1) + 's"/>';
-      }
-      out += '<rect x="0" y="8.2" width="22" height="0.7" fill="' + C.line3 + '"/></g>';
+  // a low cabinet against a wall
+  function cabinet(x, y, w, d, h) { return fb(x, y, 0.1, w, d, h, L.deskTop, L.desk, L.deskR); }
+  // a see-through screen in a yellow-green frame on a slim stand, a small ring of light in it, as every 3D room has
+  function holoFrame(x, y) {
+    var out = line(P(x, y, 0.1), P(x, y, 0.64), L.frame, 1.4);
+    return out + '<g transform="' + onBack(x - 0.47, 0, y, 1.18) + '"><rect x="0" y="0" width="20.9" height="12.3" fill="rgba(106, 138, 58, .22)" stroke="' + L.lime + '" stroke-width=".8"/>' +
+      '<circle cx="10.45" cy="6.15" r="1.6" fill="none" stroke="' + L.lime + '" stroke-width=".6"/></g>';
+  }
+  // the laboratory's instruments: a white cabinet with a terminal on it, its screen a cyan-green hologram of data
+  function labMachine(x, y) {
+    var out = fb(x, y, 0.1, 1.15, 0.8, 0.5, L.white, L.white2, L.white3);
+    out += fb(x + 0.08, y + 0.14, 0.6, 1.0, 0.46, 0.4, L.white, L.white2, L.white3);
+    var mx = x + 0.16, my = y + 0.6, z0 = 0.66, z1 = 0.94, w = 0.84;
+    out += poly([P(mx, my, z0), P(mx + w, my, z0), P(mx + w, my, z1), P(mx, my, z1)], 'rgba(32, 235, 255, .3)', '#38f5d2', 0.6);
+    out += '<g transform="' + onBack(mx, 0, my, z1) + '"><polyline points="1.5,3.4 3.5,2.4 5.5,3.8 7.5,1.9 9.5,3 11.5,1.6 13.5,2.9 15.5,2.2 17,3.5" fill="none" stroke="#38ffb4" stroke-width=".6"/>';
+    for (var k = 0; k < 6; k++) out += '<rect x="' + (2 + k * 2.6) + '" y="' + (5.4 - (k * 1.3 % 1.8)) + '" width="1.6" height="' + (0.6 + (k * 1.3 % 1.8)) + '" fill="#24e8ff" opacity=".85"/>';
+    out += '</g>';
+    for (var j = 0; j < 3; j++) {
+      var l = P(x + 0.3 + j * 0.2, y + 0.8, 0.3);
+      out += '<rect class="led" x="' + f1(l[0] - 1.2) + '" y="' + f1(l[1] - 0.6) + '" width="2.4" height="1.2" fill="' + (j % 2 ? L.mint : L.hub) + '" style="animation-delay:' + (-j * 0.5) + 's"/>';
     }
     return out;
   }
-  function flasks(x, y) {
-    var out = box(x, y, 0, 1.3, 0.6, 0.45, C.line3, C.line, C.navy2, C.line2);
-    [[0.25, C.cyan, 0.5], [0.65, C.green, 0.36], [1.02, C.cyan, 0.42]].forEach(function (f, i) {
-      var b = P(x + f[0], y + 0.3, 0.45), h = f[2] * SC;
-      out += '<rect x="' + f1(b[0] - 3) + '" y="' + f1(b[1] - h) + '" width="6" height="' + f1(h) + '" rx="2" fill="' + C.navy + '" stroke="' + C.line3 + '" stroke-width=".6"/>';
-      out += '<rect class="liq" x="' + f1(b[0] - 2.4) + '" y="' + f1(b[1] - h * 0.62) + '" width="4.8" height="' + f1(h * 0.62 - 0.6) + '" rx="1.6" fill="' + f[1] + '" opacity=".85"/>';
-      out += '<ellipse cx="' + f1(b[0]) + '" cy="' + f1(b[1] - h * 0.5) + '" rx="7" ry="5" fill="url(#' + (f[1] === C.green ? 'g-halo-g' : 'g-halo-c') + ')" opacity=".35"/>';
-      for (var k = 0; k < 2; k++) {
-        out += '<circle class="bub" cx="' + f1(b[0] - 1 + k * 2) + '" cy="' + f1(b[1] - 2) + '" r=".7" fill="' + C.text + '" style="animation-delay:' + (-(i + k * 1.3) * 0.5).toFixed(1) + 's"/>';
-      }
+  // a white base with a holographic crystal of data turning over it
+  function labHolo(x, y) {
+    var out = fb(x, y, 0.1, 1.2, 0.85, 0.42, L.white, L.white2, L.white3) + fb(x + 0.12, y + 0.1, 0.52, 0.96, 0.65, 0.04, '#d6dde3', L.white2, L.white3);
+    var cx = x + 0.6, cy = y + 0.42, m = 1.04, r = 0.3, t = P(cx, cy, 1.34), b = P(cx, cy, 0.74);
+    var e = P(cx + r, cy, m), w = P(cx - r, cy, m), s = P(cx, cy + r, m), h = P(cx, cy, m);
+    out += '<ellipse cx="' + f1(h[0]) + '" cy="' + f1(h[1]) + '" rx="20" ry="18" fill="url(#g-halo-q)" opacity=".32"/>';
+    out += '<g class="crys">' + [[t, w, s], [t, s, e], [b, w, s], [b, s, e]].map(function (f) { return poly(f, 'rgba(111, 245, 208, .36)', '#bffff0', 0.6); }).join('') + '</g>';
+    return out;
+  }
+  function canisters(x, y) {
+    var out = '';
+    [[-0.45, 0.3, 0.34], [0, 0, 0.46], [0, 0.55, 0.4], [0, 1.1, 0.46]].sort(function (a, b) { return a[0] + a[1] - b[0] - b[1]; }).forEach(function (c) {
+      out += cyl(x + c[0], y + c[1], 0.1, 0.1 + c[2], 0.18, L.white, L.white2, L.white3);
+      out += cyl(x + c[0], y + c[1], 0.1 + c[2], 0.15 + c[2], 0.13, '#8ff4ff', '#24c8e0', '#1aa0b8');
     });
     return out;
   }
-  function candles(x0, y0, u0, u1) {
-    var z0 = 0.36, z1 = 1.1, yp = y0 + 0.13;
-    var out = poly([P(x0 + u0, yp, z0), P(x0 + u1, yp, z0), P(x0 + u1, yp, z1), P(x0 + u0, yp, z1)], 'url(#g-scr)', C.green, 0.8);
-    out += '<g transform="' + onBack(x0, u0, yp, z1) + '">';
-    var w = (u1 - u0) * SC, n = 11, bw = (w - 8) / n, v = 9;
-    for (var i = 0; i < n; i++) {
-      var up = [1, 1, 0, 1, 0, 1, 1, 0, 1, 1, 1][i], o = v;
-      v = Math.max(3.5, Math.min(13.5, v + (up ? -1.4 : 1.1) * (0.6 + (i % 3) * 0.4)));
-      var top = Math.min(o, v), hgt = Math.max(1.1, Math.abs(o - v));
-      out += '<rect' + (i === n - 1 ? ' class="lastc"' : '') + ' x="' + f1(4 + i * bw) + '" y="' + f1(top) + '" width="' + f1(bw * 0.62) + '" height="' + f1(hgt) + '" fill="' + (up ? C.green : C.red) + '"/>';
-      out += '<rect x="' + f1(4 + i * bw + bw * 0.28) + '" y="' + f1(top - 1.2) + '" width=".5" height="' + f1(hgt + 2.4) + '" fill="' + (up ? C.green : C.red) + '" opacity=".7"/>';
+  // the weekly audit's consoles: white cabinets with a green screen and a lit keyboard
+  function console3(x, y) {
+    var out = fb(x, y, 0.1, 1.2, 0.72, 0.44, L.white, L.white2, L.white3) + fb(x + 0.08, y + 0.04, 0.54, 1.04, 0.24, 0.5, L.white, L.white2, L.white3);
+    var mx = x + 0.17, my = y + 0.28, z0 = 0.62, z1 = 0.96, w = 0.86;
+    out += poly([P(mx, my, z0), P(mx + w, my, z0), P(mx + w, my, z1), P(mx, my, z1)], '#06261f', L.mint, 0.5);
+    out += '<g transform="' + onBack(mx, 0, my, z1) + '">';
+    [12, 8, 14, 6].forEach(function (lw, k) { out += '<rect x="1.4" y="' + f1(1.3 + k * 1.6) + '" width="' + lw + '" height=".7" fill="' + L.mint + '" opacity=".75"/>'; });
+    out += '</g>';
+    return out + poly([P(x + 0.15, y + 0.36, 0.545), P(x + 1.05, y + 0.36, 0.545), P(x + 1.05, y + 0.6, 0.545), P(x + 0.15, y + 0.6, 0.545)], 'rgba(56, 242, 184, .32)');
+  }
+  // a printer for the audit's report
+  function printer(x, y) {
+    return fb(x, y, 0.1, 1.0, 0.8, 0.5, L.white, L.white2, L.white3) + fb(x + 0.1, y + 0.1, 0.6, 0.8, 0.6, 0.06, '#d6dde3', L.white2, L.white3) +
+      line(P(x + 0.2, y + 0.8, 0.42), P(x + 0.8, y + 0.8, 0.42), L.dark, 1.2);
+  }
+  // Cymetica QA's window of light: a grid of glowing panes at the right end of the back wall, rising over it
+  function qaWindow(x0, y0) {
+    var w = 1.1 * SC, h = 0.8 * SC, c = P(x0 + 6.05, y0 + 0.2, 1.02), pd = 1.4, cw = (w - pd * 5) / 4, ch = (h - pd * 4) / 3;
+    var out = '<ellipse cx="' + f1(c[0]) + '" cy="' + f1(c[1]) + '" rx="36" ry="26" fill="url(#g-halo-q)" opacity=".2"/>';
+    out += '<g transform="' + onBack(x0, 5.5, y0 + 0.12, 1.42) + '"><rect x="-1" y="-1" width="' + f1(w + 2) + '" height="' + f1(h + 2) + '" fill="' + L.dark + '"/>' +
+      '<rect width="' + f1(w) + '" height="' + f1(h) + '" fill="#051418"/>';
+    for (var r = 0; r < 3; r++) for (var k = 0; k < 4; k++) {
+      out += '<rect x="' + f1(pd + k * (cw + pd)) + '" y="' + f1(pd + r * (ch + pd)) + '" width="' + f1(cw) + '" height="' + f1(ch) + '" fill="url(#g-qa)"/>';
     }
-    out += text(4, 3.4, 'BASKET H2 · +1.1%', 3.2, C.green, 700) + '</g>';
-    return out;
+    return out + '</g>';
+  }
+  // the trading desk's chart walls, warm orange across both back walls, as the 3D's
+  function chartWall(tf, w, h) {
+    var out = '<g transform="' + tf + '"><rect x="0" y="0" width="' + f1(w) + '" height="' + f1(h) + '" fill="#160b04" stroke="#ff9438" stroke-width=".7"/>';
+    out += text(2.6, 4.2, 'ALPHA FLOW · +6.2% ROI', 3, '#ffaa52', 700);
+    for (var gy = 6; gy < h - 1.5; gy += 2.6) out += '<rect x="1.5" y="' + f1(gy) + '" width="' + f1(w - 3) + '" height=".25" fill="#ff9438" opacity=".22"/>';
+    for (var i = 0; i < Math.floor((w - 4) / 4.6); i++) { var bh = 1.4 + ((i * 19) % 28) / 9; out += '<rect x="' + f1(2.2 + i * 4.6) + '" y="' + f1(h - 1.4 - bh) + '" width="2.6" height="' + f1(bh) + '" fill="#ff8c28" opacity=".4"/>'; }
+    var l = [];
+    for (var x = 2; x < w - 2; x += 1.6) l.push([x, h * 0.6 + Math.sin(x * 0.3) * h * 0.14 + Math.cos(x * 0.71) * h * 0.06]);
+    out += '<polyline points="' + pts(l) + '" fill="none" stroke="#ff9438" stroke-width=".7" stroke-linejoin="round"/>';
+    return out + '</g>';
   }
   function mood(x0, y0, u0, u1) {
-    var z0 = 0.36, z1 = 1.1, yp = y0 + 0.13;
-    var out = poly([P(x0 + u0, yp, z0), P(x0 + u1, yp, z0), P(x0 + u1, yp, z1), P(x0 + u0, yp, z1)], C.navy2, C.line3, 0.8);
-    out += '<g transform="' + onBack(x0, u0, yp, z1) + '">';
-    [C.cyan, C.green, C.blue, C.red].forEach(function (c, i) { out += '<rect x="' + (3 + i * 5.2) + '" y="2.5" width="4.2" height="4.2" rx=".6" fill="' + c + '"/>'; });
-    out += '<rect x="3" y="8.6" width="20" height="6.6" rx=".6" fill="none" stroke="' + C.dim2 + '" stroke-width=".5"/>';
-    out += '<rect x="4.2" y="9.8" width="7" height="1.2" fill="' + C.dim2 + '"/><rect x="4.2" y="12.2" width="12" height="1" fill="' + C.line3 + '"/>';
-    out += '<rect x="25" y="2.5" width="' + f1((u1 - u0) * SC - 28) + '" height="12.7" rx=".6" fill="none" stroke="' + C.cyan + '" stroke-width=".5" stroke-dasharray="1.4 1.2"/></g>';
+    var yp = y0 + 0.13, w = (u1 - u0) * SC;
+    var out = poly([P(x0 + u0, yp, WS0), P(x0 + u1, yp, WS0), P(x0 + u1, yp, WS1), P(x0 + u0, yp, WS1)], '#08121c', '#1c3248', 0.8);
+    out += '<g transform="' + onBack(x0, u0, yp, WS1) + '">';
+    ['#24e8ff', '#38f5b8', '#3b82f6', '#ff8824'].forEach(function (c, i) { out += '<rect x="' + (2.2 + i * 4.6) + '" y="1.8" width="3.6" height="3.6" rx=".5" fill="' + c + '"/>'; });
+    out += '<rect x="2.2" y="7.2" width="16" height="5.4" rx=".5" fill="none" stroke="' + L.dim2 + '" stroke-width=".45"/>';
+    out += '<rect x="21" y="1.8" width="' + f1(w - 23.4) + '" height="10.8" rx=".5" fill="none" stroke="#24e8ff" stroke-width=".45" stroke-dasharray="1.4 1.2"/></g>';
     return out;
-  }
-  function whiteboard(x, y) {
-    return box(x, y, 0.1, 1.05, 0.12, 1.15, C.line3, C.dim2, C.navy2, C.line2);
   }
 
-  function shell(x0, y0, kind) {
-    var out = '';
-    var hit = [P(x0, y0 + RS, 0), P(x0, y0 + RS, 1.3), P(x0, y0, 1.3), P(x0 + RS, y0, 1.3), P(x0 + RS, y0, 0), P(x0 + RS, y0 + RS, 0)];
-    out += poly(hit, 'transparent', null, 0, 1, ' class="hit"');
-    if (kind === 'lot') {
-      out += poly([P(x0, y0, 0.1), P(x0 + RS, y0, 0.1), P(x0 + RS, y0 + RS, 0.1), P(x0, y0 + RS, 0.1)], C.navy, C.blue, 1.1, 0.6, ' class="lotf" stroke-dasharray="5 5"');
-      return out;
+  // The glass room of the 3D office, in two halves. What stands behind its contents: the floor of large slate-blue
+  // tiles, its lamp's pool and the light of what the room does, the two pale back panes with a dark band along
+  // their foot, and the neon along their top. What stands in front: the two front panes, their pale top edges and
+  // corners, and the neon along their foot -- so the one neon line traces the room as the camera sees it.
+  function shellBack(x0, y0, kind) {
+    var out = '', z0 = 0.1;
+    out += poly([P(x0, y0 + RS, 0), P(x0, y0 + RS, WZ), P(x0, y0, WZ), P(x0 + RS, y0, WZ), P(x0 + RS, y0, 0), P(x0 + RS, y0 + RS, 0)], 'transparent', null, 0, 1, ' class="hit"');
+    var orange = kind === 'orange', R = rng(29 + x0 * 7 + y0 * 13), n = 4, s = RS / n, g = 0.035;
+    var base = kind === 'hub' ? '#33495a' : orange ? '#3b4150' : L.floor;
+    out += box(x0, y0, 0, RS, RS, z0, orange ? '#6a3f2e' : L.seam, L.slabL, L.slabR);
+    for (var i = 0; i < n; i++) for (var j = 0; j < n; j++) {
+      out += poly([P(x0 + i * s + g, y0 + j * s + g, z0), P(x0 + (i + 1) * s - g, y0 + j * s + g, z0), P(x0 + (i + 1) * s - g, y0 + (j + 1) * s - g, z0),
+        P(x0 + i * s + g, y0 + (j + 1) * s - g, z0)], shade(base, R() * 0.07 - 0.035));
     }
-    out += box(x0, y0, 0, RS, RS, 0.1, 'url(#g-tile)', C.navy2, C.navy, C.line, null, ' class="slab"');
-    for (var i = 1; i < RS; i++) {
-      var a = P(x0 + i, y0, 0.1), b = P(x0 + i, y0 + RS, 0.1), c = P(x0, y0 + i, 0.1), d = P(x0 + RS, y0 + i, 0.1);
-      out += '<line x1="' + f1(a[0]) + '" y1="' + f1(a[1]) + '" x2="' + f1(b[0]) + '" y2="' + f1(b[1]) + '" stroke="' + GRID + '" stroke-width=".7"/>';
-      out += '<line x1="' + f1(c[0]) + '" y1="' + f1(c[1]) + '" x2="' + f1(d[0]) + '" y2="' + f1(d[1]) + '" stroke="' + GRID + '" stroke-width=".7"/>';
+    var cc = P(x0 + RS / 2, y0 + RS / 2, z0), el = function (cls, k, fill) {
+      return '<ellipse class="' + cls + '" cx="' + f1(cc[0]) + '" cy="' + f1(cc[1]) + '" rx="' + f1(RS * SC * k) + '" ry="' + f1(RS * SC * k * 0.575) + '"' + (fill ? ' fill="' + fill + '"' : '') + '/>';
+    };
+    out += el('lamp', 0.8, 'url(#g-lamp)') + el('fglow', 0.86) + el('fping', 0.8, 'url(#g-ping)');
+    out += poly([P(x0, y0, z0), P(x0 + RS, y0, z0), P(x0 + RS, y0 + RS, z0), P(x0, y0 + RS, z0)], '#ffffff', null, 0, 1, ' class="hl" fill-opacity=".05"');
+    out += poly([P(x0, y0 + RS, z0), P(x0, y0, z0), P(x0, y0, WZ), P(x0, y0 + RS, WZ)], 'url(#g-paneB)', null, 0, 1, ' class="pane"');
+    out += poly([P(x0, y0, z0), P(x0 + RS, y0, z0), P(x0 + RS, y0, WZ), P(x0, y0, WZ)], 'url(#g-paneB)', null, 0, 1, ' class="pane"');
+    if (kind !== 'hub') {
+      out += box(x0 + 0.04, y0 + 0.04, z0, 0.1, RS - 0.08, 0.46, L.bandTop, L.band, L.band);
+      out += box(x0 + 0.04, y0 + 0.04, z0, RS - 0.08, 0.1, 0.46, L.bandTop, L.band, L.band);
     }
-    var cc = P(x0 + RS / 2, y0 + RS / 2, 0.1);
-    out += '<ellipse class="lamp" cx="' + f1(cc[0]) + '" cy="' + f1(cc[1]) + '" rx="' + f1(RS * SC * 0.8) + '" ry="' + f1(RS * SC * 0.46) + '" fill="url(#g-lamp)"/>';
-    out += '<ellipse class="fglow" cx="' + f1(cc[0]) + '" cy="' + f1(cc[1]) + '" rx="' + f1(RS * SC * 0.95) + '" ry="' + f1(RS * SC * 0.55) + '"/>';
-    out += '<ellipse class="fping" cx="' + f1(cc[0]) + '" cy="' + f1(cc[1]) + '" rx="' + f1(RS * SC * 0.8) + '" ry="' + f1(RS * SC * 0.46) + '" fill="url(#g-ping)"/>';
-    // glass back walls with mullions and a lit top edge
-    out += box(x0, y0, 0.1, RS, 0.12, 1.15, C.line3, 'url(#g-glass)', C.navy, null, 0.8);
-    out += box(x0, y0, 0.1, 0.12, RS, 1.15, C.line3, C.navy, 'url(#g-glass)', null, 0.8);
-    for (var m = 1; m < 4; m++) {
-      var u = m * RS / 4, p1 = P(x0 + u, y0 + 0.12, 0.1), p2 = P(x0 + u, y0 + 0.12, 1.25);
-      var q1 = P(x0 + 0.12, y0 + u, 0.1), q2 = P(x0 + 0.12, y0 + u, 1.25);
-      out += '<line x1="' + f1(p1[0]) + '" y1="' + f1(p1[1]) + '" x2="' + f1(p2[0]) + '" y2="' + f1(p2[1]) + '" stroke="' + C.line2 + '" stroke-width=".7"/>';
-      out += '<line x1="' + f1(q1[0]) + '" y1="' + f1(q1[1]) + '" x2="' + f1(q2[0]) + '" y2="' + f1(q2[1]) + '" stroke="' + C.line2 + '" stroke-width=".7"/>';
-    }
-    var e1 = P(x0, y0 + RS, 1.25), e2 = P(x0, y0, 1.25), e3 = P(x0 + RS, y0, 1.25);
-    out += '<polyline class="edge" points="' + pts([e1, e2, e3]) + '" fill="none" stroke-width="1.3"/>';
-    out += '<polyline class="edge2" points="' + pts([e1, e2, e3]) + '" fill="none" stroke-width="4"/>';
-    [[[x0 + RS, y0], [x0 + RS, y0 + RS]], [[x0, y0 + RS], [x0 + RS, y0 + RS]]].forEach(function (s) {
-      var a = P(s[0][0], s[0][1], 0.12), b = P(s[1][0], s[1][1], 0.12);
-      out += '<line class="sill" x1="' + f1(a[0]) + '" y1="' + f1(a[1]) + '" x2="' + f1(b[0]) + '" y2="' + f1(b[1]) + '" stroke-width="1.2"/>';
-    });
-    return out;
+    out += line(P(x0, y0, z0), P(x0, y0, WZ), null, 0, ' class="gedge"');
+    var nb = [P(x0, y0 + RS, WZ), P(x0, y0, WZ), P(x0 + RS, y0, WZ)];
+    return out + pline(nb, 'neonG') + pline(nb, 'neon');
+  }
+  function shellFront(x0, y0) {
+    var z0 = 0.1, out = '';
+    out += poly([P(x0, y0 + RS, z0), P(x0 + RS, y0 + RS, z0), P(x0 + RS, y0 + RS, WZ), P(x0, y0 + RS, WZ)], 'url(#g-paneF)', null, 0, 1, ' class="pane"');
+    out += poly([P(x0 + RS, y0, z0), P(x0 + RS, y0 + RS, z0), P(x0 + RS, y0 + RS, WZ), P(x0 + RS, y0, WZ)], 'url(#g-paneF)', null, 0, 1, ' class="pane"');
+    out += pline([P(x0, y0 + RS, WZ), P(x0 + RS, y0 + RS, WZ), P(x0 + RS, y0, WZ)], 'gedge');
+    [[x0, y0 + RS], [x0 + RS, y0 + RS], [x0 + RS, y0]].forEach(function (c) { out += line(P(c[0], c[1], z0), P(c[0], c[1], WZ), null, 0, ' class="gedge"'); });
+    var nf = [P(x0, y0 + RS, z0), P(x0 + RS, y0 + RS, z0), P(x0 + RS, y0, z0)];
+    return out + pline(nf, 'neonG') + pline(nf, 'neon');
   }
 
   // the room's wall screen: what runs now, or why it waits
   function wallScreen(x0, y0, u0, u1, title, sub, colour, mode) {
-    var z0 = 0.36, z1 = 1.1, yp = y0 + 0.13;
-    var out = poly([P(x0 + u0, yp, z0), P(x0 + u1, yp, z0), P(x0 + u1, yp, z1), P(x0 + u0, yp, z1)], 'url(#g-scr)', colour, 0.9);
-    var w = (u1 - u0) * SC;
-    out += '<g transform="' + onBack(x0, u0, yp, z1) + '">';
-    out += text(4, 6.6, cut(title, Math.floor((w - 7) / 3.5)), 5.8, colour, 700);
-    out += text(4, 11.6, cut(sub, Math.floor((w - 7) / 2.45)), 4, C.dim2, 500);
-    out += '<rect x="4" y="13.4" width="' + f1(w - 8) + '" height="1.3" rx=".6" fill="' + C.line3 + '"/>';
+    var yp = y0 + 0.13, w = (u1 - u0) * SC;
+    var out = poly([P(x0 + u0, yp, WS0), P(x0 + u1, yp, WS0), P(x0 + u1, yp, WS1), P(x0 + u0, yp, WS1)], 'url(#g-scr)', colour, 0.8);
+    out += '<g transform="' + onBack(x0, u0, yp, WS1) + '">';
+    out += text(3.6, 5.8, cut(title, Math.floor((w - 6) / 3.12)), 5.2, colour, 700);
+    out += text(3.6, 9.9, cut(sub, Math.floor((w - 6) / 2.16)), 3.6, '#8fa8c2', 500);
+    out += '<rect x="3.6" y="11.3" width="' + f1(w - 7.2) + '" height="1.2" rx=".6" fill="#142436"/>';
     if (mode === 'run') {
-      out += '<clipPath id="cp-' + f1(x0) + '-' + f1(y0) + '"><rect x="4" y="13.4" width="' + f1(w - 8) + '" height="1.3"/></clipPath>' +
-        '<g clip-path="url(#cp-' + f1(x0) + '-' + f1(y0) + ')"><rect class="shim" x="4" y="13.4" width="' + f1((w - 8) * 0.35) + '" height="1.3" fill="' + colour + '"/></g>';
+      var id = 'cp-' + f1(x0) + '-' + f1(y0);
+      out += '<clipPath id="' + id + '"><rect x="3.6" y="11.3" width="' + f1(w - 7.2) + '" height="1.2"/></clipPath>' +
+        '<g clip-path="url(#' + id + ')"><rect class="shim" x="3.6" y="11.3" width="' + f1((w - 7.2) * 0.35) + '" height="1.2" fill="' + colour + '"/></g>';
     } else if (mode === 'full') {
-      out += '<rect x="4" y="13.4" width="' + f1(w - 8) + '" height="1.3" rx=".6" fill="' + colour + '" opacity=".7"/>';
+      out += '<rect x="3.6" y="11.3" width="' + f1(w - 7.2) + '" height="1.2" rx=".6" fill="' + colour + '" opacity=".8"/>';
     }
-    out += '</g>';
-    return out;
+    return out + '</g>';
   }
   function barsScreen(x0, y0, u0, u1, title, bars) {
-    var z0 = 0.36, z1 = 1.1, yp = y0 + 0.13;
-    var out = poly([P(x0 + u0, yp, z0), P(x0 + u1, yp, z0), P(x0 + u1, yp, z1), P(x0 + u0, yp, z1)], 'url(#g-scr)', C.cyan, 0.9);
-    var w = (u1 - u0) * SC, top = 1;
+    var yp = y0 + 0.13, w = (u1 - u0) * SC, top = 1;
+    var out = poly([P(x0 + u0, yp, WS0), P(x0 + u1, yp, WS0), P(x0 + u1, yp, WS1), P(x0 + u0, yp, WS1)], 'url(#g-scr)', STC.working, 0.8);
     bars.forEach(function (b) { top = Math.max(top, b[1]); });
-    var bw = (w - 10) / Math.max(1, bars.length);
-    out += '<g transform="' + onBack(x0, u0, yp, z1) + '">' + text(5, 4.6, title, 3.6, C.cyan, 700);
+    var bw = (w - 8) / Math.max(1, bars.length);
+    out += '<g transform="' + onBack(x0, u0, yp, WS1) + '">' + text(4, 4.2, title, 3.2, STC.working, 700);
     bars.forEach(function (b, i) {
-      var h = 9.5 * b[1] / top;
-      out += '<rect x="' + f1(5 + i * bw) + '" y="' + f1(15.2 - h) + '" width="' + f1(bw - 2) + '" height="' + f1(Math.max(0.6, h)) + '" fill="' + b[0] + '" opacity=".9"/>';
+      var h = 7.4 * b[1] / top;
+      out += '<rect x="' + f1(4 + i * bw) + '" y="' + f1(12.6 - h) + '" width="' + f1(bw - 2) + '" height="' + f1(Math.max(0.6, h)) + '" fill="' + b[0] + '" opacity=".9"/>';
     });
     return out + '</g>';
   }
-  function kanban(x0, y0, counts) {
-    var out = poly([P(x0 + 0.13, y0 + 1.0, 0.36), P(x0 + 0.13, y0 + 5.9, 0.36), P(x0 + 0.13, y0 + 5.9, 1.08), P(x0 + 0.13, y0 + 1.0, 1.08)], C.deep, C.line3, 0.8);
+  // the task board on the left back wall: queued, running, done and failed, read from the camera left to right
+  function kanban(x0, y0, counts, v0, v1) {
+    var xp = x0 + 0.13, cw = (v1 - v0 - 0.2) / 4;
+    var out = poly([P(xp, y0 + v0, WS0), P(xp, y0 + v1, WS0), P(xp, y0 + v1, WS1), P(xp, y0 + v0, WS1)], 'url(#g-scr)', '#1c3248', 0.8);
     ['queued', 'running', 'done', 'failed'].forEach(function (st, col) {
-      var v = 1.15 + col * 1.2, c = { queued: C.blue, running: C.cyan, done: C.green, failed: C.red }[st];
-      out += poly([P(x0 + 0.14, y0 + v, 1.0), P(x0 + 0.14, y0 + v + 0.95, 1.0), P(x0 + 0.14, y0 + v + 0.95, 1.04), P(x0 + 0.14, y0 + v, 1.04)], c, null, 0, 0.9);
+      var a = y0 + v1 - 0.1 - col * cw - 0.08, b = a - cw + 0.16, c = { queued: STC.queued, running: STC.working, done: '#38f5b8', failed: STC.waiting }[st];
+      out += poly([P(xp + 0.01, a, WS1 - 0.07), P(xp + 0.01, b, WS1 - 0.07), P(xp + 0.01, b, WS1 - 0.11), P(xp + 0.01, a, WS1 - 0.11)], c, null, 0, 0.95);
       for (var k = 0; k < Math.min(counts[st] || 0, 4); k++) {
-        var z = 0.86 - k * 0.15;
-        out += poly([P(x0 + 0.14, y0 + v + 0.05, z), P(x0 + 0.14, y0 + v + 0.9, z), P(x0 + 0.14, y0 + v + 0.9, z + 0.12), P(x0 + 0.14, y0 + v + 0.05, z + 0.12)],
+        var z = WS1 - 0.24 - k * 0.12;
+        out += poly([P(xp + 0.01, a - 0.04, z), P(xp + 0.01, b + 0.04, z), P(xp + 0.01, b + 0.04, z + 0.08), P(xp + 0.01, a - 0.04, z + 0.08)],
           c, null, 0, 0.85, st === 'running' ? ' class="note-run"' : '');
       }
     });
     return out;
   }
-  function plate(cx, cy, title, colour, line2, w, key, pulse, dot) {
-    var out = '<g class="plate" data-key="' + key + '">';
-    out += '<rect x="' + f1(cx - w / 2) + '" y="' + f1(cy - 17) + '" width="' + w + '" height="34" rx="6" fill="' + C.bg + '" stroke="' + colour + '" stroke-width=".9" opacity=".95"/>';
-    out += '<rect x="' + f1(cx - w / 2 + 1) + '" y="' + f1(cy - 16) + '" width="' + (w - 2) + '" height="10" rx="5" fill="' + colour + '" opacity=".07"/>';
-    out += '<circle' + (pulse ? ' class="pdot"' : '') + ' cx="' + f1(cx - w / 2 + 11) + '" cy="' + f1(cy - 6) + '" r="3.4" fill="' + (dot || colour) + '" filter="url(#glow)"/>';
-    out += text(cx - w / 2 + 20, cy - 2.4, title, 10.2, C.text, 400, 'start', 'display');
-    var x = cx - w / 2 + 9;
-    line2.forEach(function (s) { out += text(x, cy + 11.5, s[0], 8.6, s[1], 600); x += 6.0 * s[0].length + 7; });
+  // A plate as the 3D office's: a dark glass card with a pale frame, a small square dot in the colour of what the
+  // room is doing, the name in a light sans, a line under it; framed in that colour under the mouse or when open
+  var FT = "600 9.2px 'Segoe UI', Inter, system-ui, sans-serif", FS = "500 7.6px 'JetBrains Mono', monospace",
+    FE = "700 7.2px 'JetBrains Mono', monospace", FN = "600 8.4px 'Segoe UI', Inter, system-ui, sans-serif";
+  function plate(cx, cy, key, title, dot, sub, subCol, edge, pulse, et) {
+    var tw = measure(title, FT, 0.64), sw = measure(sub, FS, 0), el = et ? earnedLabel(et.n) : '', ew = et ? measure(el, FE, 0) + 7 : 0;
+    var w = Math.round(Math.max(20 + tw + ew, 10 + sw) + 11), h = 30, x = cx - w / 2, y = cy - h / 2;
+    var r = ' x="' + f1(x) + '" y="' + f1(y) + '" width="' + w + '" height="' + h + '" rx="6"';
+    var out = '<g class="plate rp" data-key="' + key + '" style="--c:' + edge + '"><rect class="pglow"' + r + '/><rect class="pbg"' + r + '/>';
+    out += '<rect class="' + (pulse ? 'pdot' : 'pd') + '" x="' + f1(x + 10) + '" y="' + f1(y + 7.1) + '" width="4.4" height="4.4" rx=".7" fill="' + dot + '" filter="url(#glowS)"/>';
+    out += text(x + 20, y + 12.6, title, 9.2, L.text, 600, 'start', 'sans', ' letter-spacing=".64"');
+    if (et) {
+      out += '<g class="earned' + (et.n ? ' lit' : '') + (et.fresh ? ' pop' : '') + '">' +
+        text(x + 20 + tw + 7, y + 12.4, el, 7.2, et.n ? '#38f5b8' : L.dim2, 700, 'start', null, et.n ? ' filter="url(#glowS)"' : '') + '</g>';
+    }
+    out += text(x + 10, y + 23.4, sub, 7.6, subCol, 500, 'start', null, ' opacity=".9"');
     return out + '</g>';
+  }
+  // over the Manager's rings: what needs the owner, in orange, or that nothing does
+  function needPill(cx, cy, label, alert) {
+    var w = Math.round(measure(label, FN, 0.5) + 24), h = 17, x = cx - w / 2, y = cy - h / 2;
+    var r = ' x="' + f1(x) + '" y="' + f1(y) + '" width="' + w + '" height="' + h + '" rx="4"';
+    return '<g class="plate need' + (alert ? ' alert' : '') + '" data-key="hub"><rect class="pglow"' + r + '/><rect class="pbg"' + r + '/>' +
+      text(cx, y + 11.6, label, 8.4, alert ? '#ffba68' : L.dim, 600, 'middle', 'sans', ' letter-spacing=".5"') + '</g>';
   }
 
   /* ---------------- corridors: room doors to the Manager's, shortest way ---------------- */
@@ -391,6 +562,8 @@
     this.svg = svg; this.stage = stage; this.tipFor = tipFor;
     this.sel = null; this.cells = {}; this.paths = {}; this.packets = []; this.walkers = {};
     svg.innerHTML = DEFS + '<g class="world"><g class="floor"></g><g class="rooms"></g><g class="packets"></g><g class="overlay"></g></g>';
+    // the sky behind it: the stars are one tile repeated, the haze and the navy are the stylesheet's (#office)
+    try { svg.style.setProperty('--stars', starTile()); } catch (e) { /* the navy alone is a sky too */ }
     this.gWorld = svg.querySelector('.world');
     this.gFloor = svg.querySelector('.floor'); this.gRooms = svg.querySelector('.rooms');
     this.gPk = svg.querySelector('.packets'); this.gOver = svg.querySelector('.overlay');
@@ -409,73 +582,53 @@
     return S.departments.map(function (d) { return d.id + ':' + d.slot + ':' + d.key + ':' + d.experts.join(','); }).join('|');
   };
 
-  // The station under the flat office: drawn back to front -- the rock, the hull tiers, then what sticks out of
-  // the near sides. Seeded, so the same office always stands on the same rock.
-  Office.prototype.exterior = function (all, have, pad, T, maxX, maxY) {
-    var s = 20261018, R = function () { s = (s * 16807) % 2147483647; return (s - 1) / 2147483646; };
-    var HD = 1.6, span = Math.max(maxX, maxY), out = '', outs = [];
-    // the rock: a dark silhouette hanging under the middle, faceted, a few craters on its face
-    var c = P(maxX / 2, maxY / 2, -T - HD - span * 0.16), rx = span * SC * 0.62, ry = span * SC * 0.3, sil = [];
-    for (var i = 0; i < 40; i++) {
-      var a = i / 40 * Math.PI * 2, k = 1 + (R() - 0.5) * 0.22 + 0.08 * Math.sin(a * 5 + 1.3);
-      sil.push([c[0] + Math.cos(a) * rx * k, c[1] + Math.sin(a) * ry * k * (Math.sin(a) > 0 ? 1.9 : 0.5)]);
-    }
-    out += poly(sil, 'url(#g-rock)', '#0b0d10', 1);
-    var ROCK = ['#15181d', '#1b1f25', '#22272e', '#2a2f37', '#101317'];
-    for (var j = 0; j < 70; j++) {
-      var t = R() * Math.PI, u = Math.sqrt(R()) * 0.92, px = c[0] + Math.cos(t) * rx * u * (R() < 0.5 ? -1 : 1), py = c[1] + Math.sin(t) * ry * 1.4 * u, r0 = 6 + R() * 16, tri = [];
-      for (var q = 0; q < 3 + Math.floor(R() * 2); q++) { var b = q / 3.5 * Math.PI * 2 + R(); tri.push([px + Math.cos(b) * r0 * (0.6 + R() * 0.6), py + Math.sin(b) * r0 * 0.6 * (0.6 + R() * 0.6)]); }
-      out += poly(tri, ROCK[Math.floor(R() * ROCK.length)], null, 0, 0.85);
-    }
-    for (var m = 0; m < 6; m++) {
-      var cx = c[0] + (R() - 0.5) * rx * 1.2, cy = c[1] + R() * ry * 0.9, cr = 5 + R() * 12;
-      out += '<ellipse cx="' + f1(cx) + '" cy="' + f1(cy) + '" rx="' + f1(cr) + '" ry="' + f1(cr * 0.5) + '" fill="#0c0e11" stroke="#2f343c" stroke-width="1" opacity=".9"/>';
-    }
-    // the hull: a tier under every slab, inset where it is the outside; seams and small lights on the near sides
-    all.slice().sort(function (p, q2) { return (p[0] + p[1]) - (q2[0] + q2[1]); }).forEach(function (cc) {
-      var L = !have[(cc[0] - 8) + ',' + cc[1]], Rt = !have[(cc[0] + 8) + ',' + cc[1]], B = !have[cc[0] + ',' + (cc[1] - 8)], F = !have[cc[0] + ',' + (cc[1] + 8)];
-      var x0 = cc[0] - pad + (L ? 0.15 : 0), y0 = cc[1] - pad + (B ? 0.15 : 0), x1 = cc[0] + RS + pad - (Rt ? 0.15 : 0), y1 = cc[1] + RS + pad - (F ? 0.15 : 0);
-      out += box(x0, y0, -T - HD, x1 - x0, y1 - y0, HD, C.navy, 'url(#g-hullL)', 'url(#g-hullR)', C.line);
-      out += box(x0 + 0.7, y0 + 0.7, -T - HD - 0.5, x1 - x0 - 1.4, y1 - y0 - 1.4, 0.5, C.navy, '#0f141b', '#0b0f14', C.line);
-      if (F) {
-        for (var u2 = x0 + 2; u2 < x1 - 0.4; u2 += 2) { var s1 = P(u2, y1, -T), s2 = P(u2, y1, -T - HD); out += '<line x1="' + f1(s1[0]) + '" y1="' + f1(s1[1]) + '" x2="' + f1(s2[0]) + '" y2="' + f1(s2[1]) + '" stroke="#0a0d12" stroke-width="1.4"/>'; }
-        for (var w2 = x0 + 0.6; w2 < x1 - 0.3; w2 += 1.3) { var l1 = P(w2, y1, -T - HD + 0.35); out += '<rect x="' + f1(l1[0] - 1.6) + '" y="' + f1(l1[1] - 1) + '" width="3.2" height="2" fill="' + (R() < 0.3 ? '#e6f4ff' : C.cyan) + '" opacity=".85"/>'; }
-        outs.push({ ax: x0, ay: y1, bx: x1, by: y1, nx: 0, ny: 1 });
-      }
-      if (Rt) {
-        for (var v2 = y0 + 2; v2 < y1 - 0.4; v2 += 2) { var t1 = P(x1, v2, -T), t2 = P(x1, v2, -T - HD); out += '<line x1="' + f1(t1[0]) + '" y1="' + f1(t1[1]) + '" x2="' + f1(t2[0]) + '" y2="' + f1(t2[1]) + '" stroke="#080b0f" stroke-width="1.4"/>'; }
-        for (var z2 = y0 + 0.6; z2 < y1 - 0.3; z2 += 1.3) { var l2 = P(x1, z2, -T - HD + 0.35); out += '<rect x="' + f1(l2[0] - 1.6) + '" y="' + f1(l2[1] - 1) + '" width="3.2" height="2" fill="' + (R() < 0.3 ? '#e6f4ff' : C.cyan) + '" opacity=".85"/>'; }
-        outs.push({ ax: x1, ay: y0, bx: x1, by: y1, nx: 1, ny: 0 });
-      }
+  // Under the deck, the 3D office's hull: a plated tier under every slab, inset where it is the outside, its sides in
+  // slate with seams and a row of modules -- a silver plate, a dark window with a lit strip, a grille, a status light
+  // -- and a stepped keel under it. No rock, engines or solar wings: flat, they looked ugly (the operator, 2026-10-19:
+  // remove the rock and the thrusters from the 2D view). Drawn in layers, lowest first, each back to front.
+  Office.prototype.hull = function (order, have, pad) {
+    var out = ['', '', ''], zt = -T - 0.12;
+    order.forEach(function (c) {
+      var Lf = !have[(c[0] - 8) + ',' + c[1]], Rt = !have[(c[0] + 8) + ',' + c[1]], Bk = !have[c[0] + ',' + (c[1] - 8)], Fr = !have[c[0] + ',' + (c[1] + 8)];
+      var x0 = c[0] - pad, y0 = c[1] - pad, x1 = c[0] + RS + pad, y1 = c[1] + RS + pad, R = rng(41 + c[0] * 3 + c[1] * 5);
+      var tier = function (ins, z0, h, top, left, right) {
+        var ax = x0 + (Lf ? ins : 0), ay = y0 + (Bk ? ins : 0), bx = x1 - (Rt ? ins : 0), by = y1 - (Fr ? ins : 0);
+        return { s: box(ax, ay, z0, bx - ax, by - ay, h, top, left, right), ax: ax, ay: ay, bx: bx, by: by };
+      };
+      out[0] += tier(1.4, zt - HD - 0.82, 0.34, L.keelR, L.keelR, L.keelB).s;
+      out[1] += tier(0.7, zt - HD - 0.48, 0.48, L.keelL, L.keelL, L.keelR).s;
+      var t = tier(0.12, zt - HD, HD, L.hullTop, 'url(#g-hullL)', 'url(#g-hullR)');
+      out[2] += t.s;
+      if (Fr) out[2] += hullFace(onBack(t.ax, 0, t.by, zt), (t.bx - t.ax) * SC, HD * SC, R, false);
+      if (Rt) out[2] += hullFace(onSide(t.bx, t.ay, 0, zt), (t.by - t.ay) * SC, HD * SC, R, true);
     });
-    // engines on three of the near sides: a housing, a ring, a glowing nozzle and its exhaust
-    var pick = outs.length <= 3 ? outs : [outs[0], outs[Math.floor(outs.length / 2)], outs[outs.length - 1]];
-    pick.forEach(function (e, n) {
-      var fr = n % 2 ? 0.3 : 0.7, ex = e.ax + (e.bx - e.ax) * fr, ey = e.ay + (e.by - e.ay) * fr, ez = -T - HD * 0.5;
-      var a2 = P(ex, ey, ez), b2 = P(ex + e.nx * 1.3, ey + e.ny * 1.3, ez), tip = P(ex + e.nx * 3.6, ey + e.ny * 3.6, ez);
-      var dx = tip[0] - b2[0], dy = tip[1] - b2[1], dl = Math.hypot(dx, dy) || 1, nx2 = -dy / dl * 9, ny2 = dx / dl * 9;
-      out += '<polygon points="' + pts([[b2[0] + nx2, b2[1] + ny2], [b2[0] - nx2, b2[1] - ny2], tip]) + '" fill="' + C.cyan + '" opacity=".3" filter="url(#glow2)"/>';
-      out += '<line x1="' + f1(a2[0]) + '" y1="' + f1(a2[1]) + '" x2="' + f1(b2[0]) + '" y2="' + f1(b2[1]) + '" stroke="#2c343f" stroke-width="22" stroke-linecap="round"/>';
-      out += '<line x1="' + f1(a2[0]) + '" y1="' + f1(a2[1] - 4) + '" x2="' + f1(b2[0]) + '" y2="' + f1(b2[1] - 4) + '" stroke="#4a5462" stroke-width="7" stroke-linecap="round" opacity=".8"/>';
-      out += '<circle cx="' + f1(b2[0]) + '" cy="' + f1(b2[1]) + '" r="10" fill="#0b1016" stroke="#5a6676" stroke-width="2"/>';
-      out += '<circle cx="' + f1(b2[0]) + '" cy="' + f1(b2[1]) + '" r="7" fill="' + C.cyan + '" filter="url(#glow)" opacity=".9"/>';
-    });
-    // a solar wing off the right: a boom, two rows of blue panels lying flat
-    var rs = outs.filter(function (o) { return o.nx === 1; });
-    if (rs.length) {
-      var e3 = rs[Math.floor(rs.length / 2)], ym = (e3.ay + e3.by) / 2, zz = -T - 0.6, xb = e3.ax;
-      var p1 = P(xb, ym, zz), p2 = P(xb + 9.6, ym, zz);
-      out += '<line x1="' + f1(p1[0]) + '" y1="' + f1(p1[1]) + '" x2="' + f1(p2[0]) + '" y2="' + f1(p2[1]) + '" stroke="#4a5462" stroke-width="3"/>';
-      for (var k2 = 0; k2 < 4; k2++) [-1, 1].forEach(function (side) {
-        var xa = xb + 1.2 + k2 * 2.15, xc = xa + 1.95, ya = side < 0 ? ym - 2.5 : ym + 0.35, yc = side < 0 ? ym - 0.35 : ym + 2.5;
-        out += poly([P(xa, ya, zz), P(xc, ya, zz), P(xc, yc, zz), P(xa, yc, zz)], 'url(#g-solar)', C.dim2, 0.7);
-        var mA = P(xa + 0.975, ya, zz), mB = P(xa + 0.975, yc, zz), mC = P(xa, (ya + yc) / 2, zz), mD = P(xc, (ya + yc) / 2, zz);
-        out += '<line x1="' + f1(mA[0]) + '" y1="' + f1(mA[1]) + '" x2="' + f1(mB[0]) + '" y2="' + f1(mB[1]) + '" stroke="#7fa6e8" stroke-width=".6" opacity=".6"/>';
-        out += '<line x1="' + f1(mC[0]) + '" y1="' + f1(mC[1]) + '" x2="' + f1(mD[0]) + '" y2="' + f1(mD[1]) + '" stroke="#7fa6e8" stroke-width=".6" opacity=".6"/>';
-      });
+    return out.join('');
+  };
+  function hullFace(tf, W, H, R, dark) {
+    var out = '<g transform="' + tf + '"><rect width="' + f1(W) + '" height="1.6" fill="#4c5866" opacity=".75"/>' +
+      '<rect y="' + f1(H - 3) + '" width="' + f1(W) + '" height="3" fill="#121922" opacity=".85"/>';
+    for (var x = 22; x < W - 1; x += 22) out += '<rect x="' + f1(x) + '" y="1.6" width=".7" height="' + f1(H - 4.6) + '" fill="#141c26"/>';
+    var n = Math.max(1, Math.floor(W / 40)), step = W / n;
+    for (var i = 0; i < n; i++) {
+      var mw = step * (i % 2 ? 0.56 : 0.68), mx = i * step + (step - mw) / 2, my = 5.2, mh = H - 13, wh = mh * 0.48;
+      out += '<rect x="' + f1(mx) + '" y="' + my + '" width="' + f1(mw) + '" height="' + f1(mh) + '" rx=".6" fill="' + (dark ? '#5f6a77' : '#7c8897') + '"/>' +
+        '<rect x="' + f1(mx) + '" y="' + my + '" width="' + f1(mw) + '" height=".8" fill="#c4ced8" opacity="' + (dark ? '.3' : '.5') + '"/>' +
+        '<rect x="' + f1(mx + 1.8) + '" y="' + f1(my + 1.8) + '" width="' + f1(mw - 3.6) + '" height="' + f1(wh) + '" fill="#18233a"/>';
+      if (R() < 0.7) out += '<rect x="' + f1(mx + 3.4) + '" y="' + f1(my + 2 + wh * 0.62) + '" width="' + f1(mw - 6.8) + '" height="1.3" fill="#5a90e0"/>';
+      for (var k = 0; k < 4; k++) out += '<rect x="' + f1(mx + 2.4 + k * 2.4) + '" y="' + f1(my + mh * 0.66) + '" width="1.3" height="' + f1(mh * 0.24) + '" fill="#56626e"/>';
+      out += '<rect x="' + f1(mx + mw - 5.2) + '" y="' + f1(my + mh - 4.2) + '" width="2.4" height="1.7" fill="' + (i % 2 ? L.neon : '#9fe8ff') + '"/>';
+    }
+    return out + '</g>';
+  }
+  // the deck's plates: two by two over every slab, a shade apart, dark seams between them
+  function deckPanels(x0, y0, s, R) {
+    var out = '', h = s / 2, g = 0.04;
+    for (var i = 0; i < 2; i++) for (var j = 0; j < 2; j++) {
+      out += poly([P(x0 + i * h + g, y0 + j * h + g, 0), P(x0 + (i + 1) * h - g, y0 + j * h + g, 0), P(x0 + (i + 1) * h - g, y0 + (j + 1) * h - g, 0),
+        P(x0 + i * h + g, y0 + (j + 1) * h - g, 0)], shade(L.deck, R() * 0.06 - 0.03));
     }
     return out;
-  };
+  }
   Office.prototype.layout = function (opts) {
     var S = CO.S, self = this, born = opts && opts.born;
     this.shapeKey = this.shape();
@@ -491,55 +644,55 @@
     all.forEach(function (c) { maxX = Math.max(maxX, c[0] + RS); maxY = Math.max(maxY, c[1] + RS); });
     this.world = [maxX, maxY];
 
-    // The floor: a slab under every room (the free lot included), so a corner of the plan with no room is open space
-    // and the office floats; Cymetica green round its outside only, a green glow under it. As in the 3D office.
-    var pad = 0.5, T = 0.75, have = {}, f = '', edges = '', corners = [];
+    // The deck, as the 3D office's: a slab under every room (the free lot included), so a corner of the plan with no
+    // room is open space and the office floats; its outside a slate rim with a lit top edge, a small cyan beacon on
+    // the rim of every other near side, the hull and its keel under it.
+    var pad = 0.5, have = {}, f = '', rims = '', corners = [], nb = 0;
     all.forEach(function (c) { have[c[0] + ',' + c[1]] = 1; });
-    var mid = P(maxX / 2, maxY / 2, -T - 0.4);
-    f += '<ellipse cx="' + f1(mid[0]) + '" cy="' + f1(mid[1]) + '" rx="' + f1((maxX + maxY) * SC * 0.62) + '" ry="' + f1((maxX + maxY) * SC * 0.31) + '" fill="url(#g-under)"/>';
-    // Under the floor and round it, as in the 3D office: the rock it is built on, a plated hull with seams and a
-    // row of lights on the sides you see, engines with their glow, a solar wing off the right
-    f += this.exterior(all, have, pad, T, maxX, maxY);
-    all.slice().sort(function (p, q) { return (p[0] + p[1]) - (q[0] + q[1]); }).forEach(function (c) {
+    var order = all.slice().sort(function (p, q) { return (p[0] + p[1]) - (q[0] + q[1]) || p[0] - q[0]; });
+    f += this.hull(order, have, pad);
+    order.forEach(function (c) {
       var x0 = c[0] - pad, y0 = c[1] - pad, x1 = c[0] + RS + pad, y1 = c[1] + RS + pad;
-      f += box(x0, y0, -T, x1 - x0, y1 - y0, T, 'url(#g-plate)', C.navy2, C.deep, C.line);
+      f += box(x0, y0, -T, x1 - x0, y1 - y0, T, L.deckSeam, L.rimL, L.rimR);
+      f += deckPanels(x0, y0, x1 - x0, rng(23 + c[0] * 11 + c[1] * 17));
       [[x0, y0, x1, y0, !have[c[0] + ',' + (c[1] - 8)], false], [x0, y1, x1, y1, !have[c[0] + ',' + (c[1] + 8)], true],
         [x0, y0, x0, y1, !have[(c[0] - 8) + ',' + c[1]], false], [x1, y0, x1, y1, !have[(c[0] + 8) + ',' + c[1]], true]].forEach(function (s) {
         if (!s[4]) return;
-        var a = P(s[0], s[1], 0), b = P(s[2], s[3], 0);
-        edges += '<line class="pedge2" x1="' + f1(a[0]) + '" y1="' + f1(a[1]) + '" x2="' + f1(b[0]) + '" y2="' + f1(b[1]) + '" stroke="' + C.green + '" stroke-width="5"/>' +
-          '<line class="pedge" x1="' + f1(a[0]) + '" y1="' + f1(a[1]) + '" x2="' + f1(b[0]) + '" y2="' + f1(b[1]) + '" stroke="' + C.green + '" stroke-width="1.1"/>';
-        // the near sides show their foot as a dimmer line
-        if (s[5]) { var a2 = P(s[0], s[1], -T), b2 = P(s[2], s[3], -T); edges += '<line x1="' + f1(a2[0]) + '" y1="' + f1(a2[1]) + '" x2="' + f1(b2[0]) + '" y2="' + f1(b2[1]) + '" stroke="' + C.green + '" stroke-width="1" opacity=".3"/>'; }
+        rims += line(P(s[0], s[1], 0), P(s[2], s[3], 0), L.rimHi, 1.1, ' stroke-linecap="round"');
+        if (!s[5]) return;
+        rims += line(P(s[0], s[1], -T), P(s[2], s[3], -T), '#0c1219', 1);
+        if (nb++ % 2) return;
+        var mx = (s[0] + s[2]) / 2, my = (s[1] + s[3]) / 2, ax = s[0] === s[2] ? 0 : 0.42, ay = s[0] === s[2] ? 0.42 : 0;
+        var a = P(mx - ax, my - ay, -T * 0.55), b = P(mx + ax, my + ay, -T * 0.55);
+        rims += line(a, b, '#24e8ff', 3.2, ' opacity=".35" filter="url(#glow2)"') + line(a, b, '#7ff0ff', 1.3, ' stroke-linecap="round"');
       });
-      corners.push(P(x0, y0, 0), P(x1, y0, 0), P(x1, y1, -T - 2.1), P(x0, y1, -T - 2.1), P(x0, y0, 1.3));
+      corners.push(P(x0, y0, WZ), P(x1, y0, 0), P(x0, y1, 0), P(x1 - 0.12, y1 - 0.12, -T - 0.12 - HD), P(x1 - 0.7, y1 - 0.7, -T - 0.12 - HD - 0.48));
     });
-    f += edges;
+    f += rims;
     this.plateRect = {
       x: Math.min.apply(null, corners.map(function (q) { return q[0]; })), y: Math.min.apply(null, corners.map(function (q) { return q[1]; })),
       x2: Math.max.apply(null, corners.map(function (q) { return q[0]; })), y2: Math.max.apply(null, corners.map(function (q) { return q[1]; }))
     };
+    // the lanes: from every room's door to the Manager's, dim white dashes on the bare deck that light cyan while
+    // work runs along them
     this.paths = {};
     Object.keys(cells).forEach(function (k) {
       if (k === 'hub' || k === 'lot') return;
       var p = route(all, cells[k], HUB);
       if (!p) return;
       self.paths[k] = p;
-      var sp = p.map(function (q) { return P(q[0], q[1], 0.03); });
-      f += '<polyline points="' + pts(sp) + '" fill="none" stroke="' + C.line3 + '" stroke-width="5" stroke-linejoin="round" stroke-linecap="round"/>';
-      f += '<polyline class="flow" data-path="' + k + '" points="' + pts(sp) + '" fill="none" stroke="' + C.cyan + '" stroke-width="1.2" stroke-linejoin="round"/>';
+      f += '<polyline class="flow" data-path="' + k + '" points="' + pts(p.map(function (q) { return P(q[0], q[1], 0.02); })) + '" fill="none"/>';
     });
     this.gFloor.innerHTML = f;
 
     // rooms, back to front
-    var order = Object.keys(cells).sort(function (p, q) {
+    var rorder = Object.keys(cells).sort(function (p, q) {
       var A = cells[p], B = cells[q];
       return (A[0] + A[1]) - (B[0] + B[1]) || A[0] - B[0];
     });
-    this.gRooms.innerHTML = order.map(function (k) {
+    this.gRooms.innerHTML = rorder.map(function (k) {
       var c = cells[k], x0 = c[0], y0 = c[1], inner;
       if (k === 'hub') inner = self.hubRoom(x0, y0);
-      else if (k === 'you') inner = self.ownerRoom(x0, y0);
       else if (k === 'audit') inner = self.auditRoom(x0, y0);
       else if (k === 'vault') inner = self.vaultRoom(x0, y0);
       else if (k === 'lot') inner = self.lotRoom(x0, y0);
@@ -552,110 +705,175 @@
     if (!this.fitted) { this.fit(false); this.fitted = true; }
   };
 
+  // A department's room, furnished as the 3D office furnishes it: its computer in the back corner, a wall screen and
+  // a task board on the back walls, desks for its experts with them at work in front, a lime holo screen, a cabinet,
+  // plants; and what each kind of department has of its own.
   Office.prototype.deptRoom = function (d, x0, y0) {
-    var out = shell(x0, y0, 'room');
-    var k = d.key, u1 = 6.2;
-    if (k === 'trading_desk') { u1 = 4.2; out += candles(x0, y0, 4.4, 6.75); }
-    else if (k === 'design') { u1 = 4.6; out += mood(x0, y0, 4.8, 6.75); }
-    else if (k === 'development' || k === 'testing' || k === 'testing_lab') u1 = 5.4;
-    out += '<g class="scr" data-u1="' + u1 + '"></g><g class="kb"></g>';
-    if (k === 'development') out += racks(x0 + 5.7, y0 + 0.25, 2);
-    else if (k === 'testing') out += devices(x0 + 5.65, y0 + 0.28);
-    else if (k === 'testing_lab') out += flasks(x0 + 5.5, y0 + 0.3);
-    else if (k === 'custom') out += whiteboard(x0 + 5.6, y0 + 0.2);
-    var ex = d.experts.slice(0, 3), xs = ex.length === 1 ? [2.55] : ex.length === 2 ? [1.0, 3.75] : [0.55, 2.6, 4.65];
-    var key = 'd' + d.id;
-    ex.forEach(function (e, i) { out += desk(x0 + xs[i], y0 + 1.75, i); });
-    var link = d.link || CO.DEPT_LINK[k] || CO.DEPT_LINK.custom;
-    if (link) out += terminal(x0 + 0.35, y0 + 4.0, link);
-    ex.forEach(function (e, i) { out += agentAt(x0 + xs[i] + 0.95, y0 + 3.05, key, i, CO.expertName(e)); });
-    out += plant(x0 + 0.3, y0 + 6.2);
-    return out;
+    var k = d.key, orange = k === 'trading_desk', key = 'd' + d.id, items = [], walls = '';
+    var out = shellBack(x0, y0, orange ? 'orange' : 'room');
+    var ex = d.experts.slice(0, 3), link = d.link || CO.DEPT_LINK[k] || CO.DEPT_LINK.custom;
+    var add = function (x, y, s) { items.push([x + y, s]); };
+    if (link) add(x0 + 0.92, y0 + 0.72, terminal(x0 + 0.3, y0 + 0.32, link));
+    if (d.run_kind === 'stranger') {
+      // the Outsider's server room: three racks along the back wall, a pair by the back corner, three in a row to the
+      // front, one desk among them
+      walls += '<g class="kb" data-v0="2.6" data-v1="5.6"></g>';
+      add(x0 + 3.9, y0 + 0.64, racks(x0 + 2.55, y0 + 0.3, 3, 1.12));
+      add(x0 + 1.4, y0 + 1.64, racks(x0 + 0.25, y0 + 1.3, 2, 1.1));
+      add(x0 + 4.2, y0 + 5.69, racks(x0 + 2.75, y0 + 5.35, 3, 1.2));
+      add(x0 + 4.35, y0 + 3.03, desk(x0 + 3.4, y0 + 2.6, 0));
+      add(x0 + 0.72, y0 + 3.98, holoFrame(x0 + 0.72, y0 + 3.98));
+      if (ex[0]) add(x0 + 4.35, y0 + 3.9, agentAt(x0 + 4.35, y0 + 3.9, key, 0, CO.expertName(ex[0])));
+      if (ex[1]) add(x0 + 1.6, y0 + 4.9, agentAt(x0 + 1.6, y0 + 4.9, key, 1, CO.expertName(ex[1])));
+      add(x0 + 0.45, y0 + 6.5, plant(x0 + 0.45, y0 + 6.5));
+      return out + walls + sortJoin(items) + shellFront(x0, y0);
+    }
+    var u1 = 4.6, xs = ex.length === 1 ? [2.4] : ex.length === 2 ? [1.0, 3.7] : [0.35, 2.55, 4.75];
+    if (k === 'development') { u1 = 3.3; add(x0 + 1.6, y0 + 1.69, racks(x0 + 0.55, y0 + 1.35, 3, 0.78)); }
+    else if (k === 'testing') walls += qaWindow(x0, y0);
+    else if (k === 'testing_lab') {
+      u1 = 3.4;
+      add(x0 + 4.33, y0 + 0.7, labMachine(x0 + 3.75, y0 + 0.3)); add(x0 + 5.73, y0 + 0.7, labMachine(x0 + 5.15, y0 + 0.3));
+      add(x0 + 1.2, y0 + 5.42, labHolo(x0 + 0.6, y0 + 5.0)); add(x0 + 6.45, y0 + 2.4, canisters(x0 + 6.45, y0 + 1.85));
+    } else if (k === 'design') { u1 = 4.5; walls += mood(x0, y0, 4.7, 6.75); }
+    else if (d.run_kind === 'league') u1 = 4.1;
+    else if (!orange) add(x0 + 5.8, y0 + 0.64, racks(x0 + 5.2, y0 + 0.3, 2, 0.72));
+    if (orange) {
+      walls += chartWall(onBack(x0, 1.75, y0 + 0.13, WS1 + 0.06), 5.1 * SC, (WS1 + 0.06 - WS0 + 0.1) * SC) +
+        chartWall(onLeft(x0 + 0.13, y0, 6.05, WS1 + 0.06), 4.7 * SC, (WS1 + 0.06 - WS0 + 0.1) * SC);
+    } else {
+      walls += '<g class="scr" data-u0="1.75" data-u1="' + u1 + '"></g><g class="kb" data-v0="1.5" data-v1="5.8"></g>';
+    }
+    ex.forEach(function (e, i) { add(x0 + xs[i] + 0.95, y0 + 3.18, desk(x0 + xs[i], y0 + 2.75, i)); });
+    add(x0 + 0.75, y0 + 2.2, holoFrame(x0 + 0.75, y0 + 2.2));
+    ex.forEach(function (e, i) { add(x0 + xs[i] + 0.95, y0 + 4.05, agentAt(x0 + xs[i] + 0.95, y0 + 4.05, key, i, CO.expertName(e))); });
+    if (d.run_kind === 'league' && ex.length < 3) add(x0 + 5.45, y0 + 3.1, agentAt(x0 + 5.45, y0 + 3.1, key, ex.length, 'Referee'));
+    add(x0 + 6.67, y0 + 4.15, cabinet(x0 + 6.45, y0 + 3.0, 0.45, 2.3, 0.62));
+    add(x0 + 0.42, y0 + 6.5, plant(x0 + 0.42, y0 + 6.5));
+    add(x0 + 6.55, y0 + 6.55, plant(x0 + 6.55, y0 + 6.55, 0.8));
+    return out + walls + sortJoin(items) + shellFront(x0, y0);
   };
+  // The Manager's room: consoles along both back walls under its screens, cyan light on the floor round a dark
+  // dais -- a wide disc with a pale rim, a drum with a cyan lip -- a white-hot core over it in a column of light,
+  // three rings of light over that, smaller as they rise; the Manager standing in front.
   Office.prototype.hubRoom = function (x0, y0) {
-    var out = shell(x0, y0, 'hub');
-    out += '<g class="scr hubscr"></g><g class="kb"></g>';
-    out += racks(x0 + 0.45, y0 + 0.3, 3);
-    var cx = P(11.6, 11.4, 0.1), rx = 1.2247 * 1.55 * SC, ry = 0.7071 * 1.55 * SC, tz = 0.45 * SC;
-    out += '<ellipse cx="' + f1(cx[0]) + '" cy="' + f1(cx[1]) + '" rx="' + f1(rx * 1.5) + '" ry="' + f1(ry * 1.5) + '" fill="url(#g-fglow)"/>';
-    out += '<ellipse cx="' + f1(cx[0]) + '" cy="' + f1(cx[1]) + '" rx="' + f1(rx) + '" ry="' + f1(ry) + '" fill="' + C.deep + '" opacity=".6"/>';
-    out += '<path d="M' + f1(cx[0] - rx) + ',' + f1(cx[1] - tz) + ' L' + f1(cx[0] - rx) + ',' + f1(cx[1]) + ' A' + f1(rx) + ',' + f1(ry) + ' 0 0 0 ' +
-      f1(cx[0] + rx) + ',' + f1(cx[1]) + ' L' + f1(cx[0] + rx) + ',' + f1(cx[1] - tz) + ' Z" fill="' + C.navy2 + '" stroke="' + C.line2 + '"/>';
-    out += '<ellipse cx="' + f1(cx[0]) + '" cy="' + f1(cx[1] - tz) + '" rx="' + f1(rx) + '" ry="' + f1(ry) + '" fill="' + C.line3 + '" stroke="' + C.cyan + '" stroke-width=".9"/>';
-    out += '<ellipse class="holo-core" cx="' + f1(cx[0]) + '" cy="' + f1(cx[1] - tz) + '" rx="' + f1(rx * 0.55) + '" ry="' + f1(ry * 0.55) + '" fill="url(#g-halo-c)" opacity=".5"/>';
-    out += '<rect class="beam" x="' + f1(cx[0] - 10) + '" y="' + f1(cx[1] - tz - 70) + '" width="20" height="70" fill="url(#g-beam)"/>';
-    [26, 42, 58].forEach(function (z, k) {
-      out += '<ellipse class="holo h' + k + '" cx="' + f1(cx[0]) + '" cy="' + f1(cx[1] - tz - z) + '" rx="' + f1(rx * (0.75 - k * 0.15)) + '" ry="' + f1(ry * (0.75 - k * 0.15)) +
-        '" fill="none" stroke="' + C.cyan + '" stroke-width="1.1" opacity="' + (0.8 - k * 0.2).toFixed(2) + '"/>';
+    var out = shellBack(x0, y0, 'hub'), cx = x0 + 3.8, cy = y0 + 3.55, items = [], d = '';
+    var add = function (x, y, s) { items.push([x + y, s]); };
+    out += disc(cx, cy, 0.11, 3.2, 'url(#g-hubf)');
+    out += disc(cx, cy, 0.11, 2.95, 'none', STC.working, 1.1, ' opacity=".5"') + disc(cx, cy, 0.11, 2.62, 'none', '#38f5d7', 1.3, ' stroke-dasharray=".8 3.2" opacity=".6"');
+    out += disc(cx, cy, 0.11, 2.15, 'none', STC.working, 2.2, ' opacity=".2"');
+    [[0.26, 2.6], [3.4, 5.76]].forEach(function (a) { out += pline(arc(cx, cy, 0.11, 1.95, a[0], a[1]), '', ' stroke="' + STC.working + '" stroke-width="1.2" opacity=".75"'); });
+    [[0.35, 2.25], [3.55, 5.05]].forEach(function (a) { out += pline(arc(cx, cy, 0.11, 2.36, a[0], a[1]), '', ' stroke="#c8d4de" stroke-width="2.2" stroke-linecap="round" opacity=".45"'); });
+    out += '<g class="scr hubscr" data-u0="0.6" data-u1="4.0"></g><g class="kb" data-v0="1.4" data-v1="5.4"></g>';
+    add(x0 + 2.3, y0 + 0.6, fb(x0 + 0.5, y0 + 0.25, 0.1, 3.6, 0.7, 0.42, L.deskTop, L.desk, L.deskR));
+    add(x0 + 0.6, y0 + 3.3, fb(x0 + 0.25, y0 + 1.5, 0.1, 0.7, 3.6, 0.42, L.deskTop, L.desk, L.deskR));
+    d += cyl(cx, cy, 0.1, 0.26, 1.72, '#223040', '#18232e', '#4a5866');
+    d += cyl(cx, cy, 0.26, 0.46, 1.05, '#111a24', '#0b1118', '#2b3846');
+    d += disc(cx, cy, 0.46, 1.05, 'none', STC.working, 3.6, ' opacity=".4" filter="url(#glow2)"') + disc(cx, cy, 0.46, 1.05, 'none', '#7ff4ff', 1.2);
+    var top = P(cx, cy, 0.46), core = P(cx, cy, 1.0);
+    d += '<ellipse class="beam" cx="' + f1(top[0]) + '" cy="' + f1(top[1] - 30) + '" rx="14" ry="40" fill="url(#g-beam)"/>';
+    d += '<ellipse class="holo-core" cx="' + f1(core[0]) + '" cy="' + f1(core[1]) + '" rx="30" ry="28" fill="url(#g-core)" opacity=".7"/>';
+    d += '<circle cx="' + f1(core[0]) + '" cy="' + f1(core[1]) + '" r="5.6" fill="#ffffff" filter="url(#glow)"/>';
+    [[1.45, 0.98], [1.85, 0.86], [2.25, 0.74]].forEach(function (h, k) {
+      d += '<g class="holo h' + k + '">' + disc(cx, cy, h[0], h[1], 'none', STC.working, 4, ' opacity=".35" filter="url(#glow2)"') + disc(cx, cy, h[0], h[1], 'none', '#9ff8ff', 1.3) + '</g>';
     });
     for (var i = 0; i < 7; i++) {
-      out += '<circle class="mote" cx="' + f1(cx[0] - 8 + (i * 37 % 17)) + '" cy="' + f1(cx[1] - tz - 4) + '" r="' + (0.8 + (i % 3) * 0.3) + '" fill="' + C.cyan + '" style="animation-delay:' + (-i * 0.55).toFixed(2) + 's"/>';
+      d += '<circle class="mote" cx="' + f1(top[0] - 8 + (i * 37 % 17)) + '" cy="' + f1(top[1] - 4) + '" r="' + (0.8 + (i % 3) * 0.3) + '" fill="' + STC.working + '" style="animation-delay:' + (-i * 0.55).toFixed(2) + 's"/>';
     }
-    this.hubTop = [cx[0], cx[1] - tz];
-    out += agentAt(11.7, 13.9, 'hub', 0, 'Manager', C.text);
-    out += plant(x0 + 6.3, y0 + 0.4);
-    return out;
+    add(cx, cy, d);
+    this.hubTop = P(x0 + 3.0, y0 + 2.8, 2.75);
+    add(x0 + 3.8, y0 + 5.85, agentAt(x0 + 3.8, y0 + 5.85, 'hub', 0, 'Manager'));
+    add(x0 + 6.4, y0 + 0.5, plant(x0 + 6.4, y0 + 0.5));
+    return out + sortJoin(items) + shellFront(x0, y0);
   };
-  Office.prototype.ownerRoom = function (x0, y0) {
-    var out = shell(x0, y0, 'you');
-    out += '<g class="scr"></g>';
-    out += desk(x0 + 2.4, y0 + 1.8, 0, C.blue);
-    out += '<g class="badge"></g>';
-    out += agentAt(x0 + 3.35, y0 + 3.1, 'you', 0, 'You', C.text);
-    out += box(x0 + 5.6, y0 + 0.35, 0.1, 1.0, 0.5, 0.35, C.line3, C.line2, C.navy2, C.line);   // sofa
-    out += box(x0 + 5.6, y0 + 0.25, 0.1, 1.0, 0.12, 0.7, C.line3, C.line2, C.navy2, C.line);
-    out += plant(x0 + 0.3, y0 + 6.2);
-    return out;
-  };
+  // the weekly audit: two white consoles with green screens, its wall screen, a desk, a printer for the report
   Office.prototype.auditRoom = function (x0, y0) {
-    var out = shell(x0, y0, 'audit');
-    out += '<g class="scr"></g>';
-    out += desk(x0 + 2.2, y0 + 1.8, 0, C.line2);
-    out += agentAt(x0 + 3.15, y0 + 3.1, 'audit', 0, 'Supervisor');
-    out += plant(x0 + 0.3, y0 + 6.2);
-    return out;
+    var out = shellBack(x0, y0, 'room'), items = [];
+    var add = function (x, y, s) { items.push([x + y, s]); };
+    out += '<g class="scr" data-u0="3.4" data-u1="6.6"></g>';
+    add(x0 + 0.9, y0 + 0.66, console3(x0 + 0.3, y0 + 0.3)); add(x0 + 2.3, y0 + 0.66, console3(x0 + 1.7, y0 + 0.3));
+    add(x0 + 3.95, y0 + 3.18, desk(x0 + 3.0, y0 + 2.75, 0));
+    add(x0 + 3.95, y0 + 4.05, agentAt(x0 + 3.95, y0 + 4.05, 'audit', 0, 'Supervisor'));
+    add(x0 + 0.85, y0 + 4.8, printer(x0 + 0.35, y0 + 4.4));
+    add(x0 + 6.67, y0 + 3.7, cabinet(x0 + 6.45, y0 + 2.6, 0.45, 2.2, 0.62));
+    add(x0 + 6.5, y0 + 6.5, plant(x0 + 6.5, y0 + 6.5));
+    return out + sortJoin(items) + shellFront(x0, y0);
   };
-  // The vault: an armoured room with a round door in its back wall and a plinth where the earnings pile up
+  // The vault: a massive round door in its back wall -- a heavy steel frame lit mint, a ring of bolts, a wheel -- and
+  // a lit plinth where the earnings pile up under glass, ET10 green and USDC blue. A visitor finds the plinth bare.
   Office.prototype.vaultRoom = function (x0, y0) {
-    var out = shell(x0, y0, 'vault');
-    out += '<g transform="' + onBack(x0, 3.0, y0 + 0.14, 1.22) + '">' +
-      '<circle cx="18" cy="13" r="11.5" fill="' + C.navy2 + '" stroke="' + C.green + '" stroke-width="1.3"/>' +
-      '<circle cx="18" cy="13" r="7" fill="none" stroke="' + C.dim2 + '" stroke-width="1"/>' +
-      '<path d="M18 6v14 M11 13h14 M13 8l10 10 M23 8 13 18" stroke="' + C.dim2 + '" stroke-width=".8"/>' +
-      '<circle cx="18" cy="13" r="2" fill="' + C.green + '"/></g>';
-    out += box(x0 + 1.6, y0 + 2.3, 0, 3.8, 2.4, 0.22, C.line3, C.navy2, C.navy, C.line2);
-    out += '<g class="piles"></g>';
-    return out;
+    var out = shellBack(x0, y0, 'room'), items = [];
+    var add = function (x, y, s) { items.push([x + y, s]); };
+    // the door fills the wall from its foot to its top, set in a dark armoured plate with its hinges and its bolt
+    var dr = '<g class="vdoor" transform="' + onBack(x0, 3.5, y0 + 0.15, 0.7) + '">' +
+      '<rect x="-21" y="-13.2" width="42" height="26.4" rx="1.8" fill="' + L.dark + '" stroke="' + L.frame + '" stroke-width=".8"/>' +
+      '<rect x="-19" y="-8.4" width="3.2" height="5" rx=".8" fill="url(#g-steel)"/><rect x="-19" y="3.4" width="3.2" height="5" rx=".8" fill="url(#g-steel)"/>' +
+      '<rect x="14.2" y="-2.2" width="5" height="4.4" rx=".8" fill="url(#g-steel)"/>' +
+      '<circle r="14.4" fill="' + L.mint + '" opacity=".25" filter="url(#glow2)"/>' +
+      '<circle r="13.8" fill="url(#g-steel)" stroke="' + L.mint + '" stroke-width=".9"/><circle r="12.5" fill="none" stroke="#2a333e" stroke-width=".5"/>' +
+      '<circle r="11.7" fill="#151c25"/><circle r="11" fill="url(#g-door)" stroke="#9aa6b4" stroke-width=".45"/>';
+    for (var b = 0; b < 16; b++) { var a = b / 16 * Math.PI * 2; dr += '<circle cx="' + f1(Math.cos(a) * 9.5) + '" cy="' + f1(Math.sin(a) * 9.5) + '" r=".85" fill="#c3ccd4" stroke="#2a333e" stroke-width=".3"/>'; }
+    dr += '<circle r="7.2" fill="none" stroke="#2a333e" stroke-width="1.3"/><circle r="7.2" fill="none" stroke="#9aa6b4" stroke-width=".4" stroke-dasharray="2 2.2"/>';
+    for (var s = 0; s < 3; s++) {
+      var q = s * Math.PI / 3 + 0.3, cx = Math.cos(q) * 5.5, cy = Math.sin(q) * 5.5;
+      dr += '<line x1="' + f1(-cx) + '" y1="' + f1(-cy) + '" x2="' + f1(cx) + '" y2="' + f1(cy) + '" stroke="#c6cfd7" stroke-width="1.5" stroke-linecap="round"/>' +
+        '<circle cx="' + f1(cx) + '" cy="' + f1(cy) + '" r="1.2" fill="#dfe6ec"/><circle cx="' + f1(-cx) + '" cy="' + f1(-cy) + '" r="1.2" fill="#dfe6ec"/>';
+    }
+    dr += '<circle r="2.6" fill="' + L.mint + '" filter="url(#glowS)"/><circle r="1" fill="#ffffff"/></g>';
+    out += dr;
+    var pl = fb(x0 + 1.4, y0 + 2.2, 0.1, 4.2, 2.6, 0.22, '#26323e', '#1c2833', '#151f29');
+    [[y0 + 2.22], [y0 + 4.78]].forEach(function (yy) {
+      var a = P(x0 + 1.42, yy[0], 0.33), b2 = P(x0 + 5.58, yy[0], 0.33);
+      pl += line(a, b2, L.mint, 3, ' opacity=".35" filter="url(#glow2)"') + line(a, b2, '#8ff8d4', 0.9);
+    });
+    add(x0 + 3.5, y0 + 3.5, pl + '<g class="piles"></g>');
+    add(x0 + 0.42, y0 + 6.5, plant(x0 + 0.42, y0 + 6.5));
+    return out + sortJoin(items) + shellFront(x0, y0);
   };
-  // a cylinder standing on the floor plan, seen from the office's angle: its front band and its top
-  var RXc = SC * C30 * Math.SQRT2, RYc = SC * S30 * Math.SQRT2;
-  function cyl(cx, cy, z0, z1, r, top, side, stroke) {
-    var a = P(cx, cy, z0), b = P(cx, cy, z1), rx = r * RXc, ry = r * RYc;
-    return '<path d="M' + f1(a[0] - rx) + ',' + f1(b[1]) + ' A' + f1(rx) + ',' + f1(ry) + ' 0 0 0 ' + f1(a[0] + rx) + ',' + f1(b[1]) +
-      ' L' + f1(a[0] + rx) + ',' + f1(a[1]) + ' A' + f1(rx) + ',' + f1(ry) + ' 0 0 1 ' + f1(a[0] - rx) + ',' + f1(a[1]) + ' Z" fill="' + side + '" stroke="' + stroke + '" stroke-width=".5"/>' +
-      '<ellipse cx="' + f1(b[0]) + '" cy="' + f1(b[1]) + '" rx="' + f1(rx) + '" ry="' + f1(ry) + '" fill="' + top + '" stroke="' + stroke + '" stroke-width=".5"/>';
-  }
-  // two piles on the plinth, ET10 green and USDC blue: a few stacks of coins each, taller as the sum grows
+  // two piles on the plinth, ET10 green and USDC blue: five stacks of coins each, taller with every order of
+  // magnitude, each pile under a glass case with its glow over it
   function vaultPiles(x0, y0, V) {
     var out = '';
-    [[V.et10, C.green, '#0d3b2a', x0 + 2.35], [V.usdc * 100, C.blue, '#132a4d', x0 + 4.15]].forEach(function (p) {
-      var lvl = Math.max(0, Math.log10(1 + p[0] / 50)), stacks = [[0, 0, 1], [0.5, 0.15, 0.8], [-0.1, 0.55, 0.7], [0.45, 0.62, 0.55], [0.2, 0.32, 0.9]];
-      stacks.forEach(function (s, i) {
-        var h = Math.max(0.06, lvl * 0.16 * s[2]); if (lvl <= 0 && i) return;
-        out += cyl(p[3] + s[0], y0 + 3.0 + s[1], 0.22, 0.22 + h, 0.2, p[1], p[2], p[1]);
-        for (var k = 0.1; k < h; k += 0.1) { var a = P(p[3] + s[0], y0 + 3.0 + s[1], 0.22 + k); out += '<path d="M' + f1(a[0] - 0.2 * RXc) + ',' + f1(a[1]) + ' a' + f1(0.2 * RXc) + ',' + f1(0.2 * RYc) + ' 0 0 0 ' + f1(0.4 * RXc) + ',0" fill="none" stroke="' + C.deep + '" stroke-width=".6" opacity=".6"/>'; }
+    [[V.et10, '#46f5bf', '#169a68', '#0f6e4b', x0 + 2.3, 'g-halo-g'], [V.usdc * 100, '#6aa4ff', '#2a62c4', '#1d4790', x0 + 4.3, 'g-halo-b']].forEach(function (p) {
+      var lvl = Math.max(0, Math.log10(1 + p[0] / 50));
+      var stacks = [[0, 0, 1], [0.48, 0.12, 0.8], [-0.08, 0.52, 0.7], [0.46, 0.6, 0.55], [0.2, 0.3, 0.9]].map(function (s, i) { return s.concat([i]); })
+        .sort(function (a, b) { return a[0] + a[1] - b[0] - b[1]; });
+      stacks.forEach(function (s) {
+        if (lvl <= 0 && s[3]) return;
+        var h = Math.max(0.06, lvl * 0.2 * s[2]), sx = p[4] + s[0], sy = y0 + 3.0 + s[1];
+        out += cyl(sx, sy, 0.32, 0.32 + h, 0.19, p[1], p[2], p[3]);
+        for (var k = 0.08; k < h - 0.02; k += 0.08) {
+          var a = P(sx, sy, 0.32 + k);
+          out += '<path d="M' + f1(a[0] - 0.19 * RXc) + ',' + f1(a[1]) + ' a' + f1(0.19 * RXc) + ',' + f1(0.19 * RYc) + ' 0 0 0 ' + f1(0.38 * RXc) + ',0" fill="none" stroke="' + p[3] + '" stroke-width=".5" opacity=".7"/>';
+        }
       });
-      var c = P(p[3] + 0.2, y0 + 3.3, 0.3 + lvl * 0.16);
-      out += '<ellipse cx="' + f1(c[0]) + '" cy="' + f1(c[1]) + '" rx="34" ry="22" fill="url(#' + (p[1] === C.green ? 'g-halo-g' : 'g-halo-b') + ')" opacity=".35"/>';
+      var ch = Math.max(0.5, lvl * 0.2 + 0.25), c = P(p[4] + 0.25, y0 + 3.35, 0.4 + lvl * 0.2);
+      out += '<ellipse cx="' + f1(c[0]) + '" cy="' + f1(c[1]) + '" rx="30" ry="20" fill="url(#' + p[5] + ')" opacity=".3"/>';
+      out += box(p[4] - 0.375, y0 + 2.725, 0.32, 1.25, 1.25, ch, 'rgba(201, 219, 228, .07)', 'rgba(201, 219, 228, .05)', 'rgba(201, 219, 228, .035)', 'rgba(200, 222, 232, .32)');
     });
     return out;
   }
+  // The free lot, as the 3D's: the bare deck marked out by a square of lane dashes; inside it a pad -- a faint grid
+  // in a disc, a wall of teal light round it with a bright line along its top, a thin teal circle at its foot -- and
+  // one cyan dashed circle round the pad; the label lies on the floor in the middle
   Office.prototype.lotRoom = function (x0, y0) {
-    var out = shell(x0, y0, 'lot');
-    var c = P(x0 + 3.5, y0 + 3.5, 0.1);
-    out += '<circle class="lotc" cx="' + f1(c[0]) + '" cy="' + f1(c[1] - 6) + '" r="15" fill="' + C.deep + '" stroke="' + C.cyan + '" stroke-width="1.3"/>';
-    out += text(c[0], c[1] + 0.2, '+', 20, C.cyan, 400, 'middle', 'display');
-    out += text(c[0], c[1] + 23, 'ADD DEPARTMENT', 8.8, C.cyan, 700, 'middle');
+    var out = poly([P(x0, y0 + RS, 0), P(x0, y0 + RS, 1.0), P(x0, y0, 1.0), P(x0 + RS, y0, 1.0), P(x0 + RS, y0, 0), P(x0 + RS, y0 + RS, 0)], 'transparent', null, 0, 1, ' class="hit"');
+    var z = 0.02, ins = 0.35, a = ins, b = RS - ins, cx = x0 + RS / 2, cy = y0 + RS / 2;
+    [[a, a, b, a], [b, a, b, b], [b, b, a, b], [a, b, a, a]].forEach(function (s) { out += line(P(x0 + s[0], y0 + s[1], z), P(x0 + s[2], y0 + s[3], z), null, 0, ' class="lotf"'); });
+    out += disc(cx, cy, z, 2.5, 'url(#g-pad)');
+    var c = P(cx, cy, z), g = '<clipPath id="cp-lot"><ellipse cx="' + f1(c[0]) + '" cy="' + f1(c[1]) + '" rx="' + f1(2.38 * RXc) + '" ry="' + f1(2.38 * RYc) + '"/></clipPath>' +
+      '<g clip-path="url(#cp-lot)" stroke="#46d7c8" stroke-width=".5" opacity=".2">';
+    for (var t = -2.4; t <= 2.41; t += 0.4) g += line(P(cx + t, cy - 2.5, z), P(cx + t, cy + 2.5, z)) + line(P(cx - 2.5, cy + t, z), P(cx + 2.5, cy + t, z));
+    out += g + '</g>';
+    out += disc(cx, cy, z, 2.95, 'none', '#36c8e8', 1, ' stroke-dasharray="2.8 2.6" opacity=".85"');
+    out += disc(cx, cy, z, 1.92, 'none', '#1ed8cc', 0.8, ' opacity=".75"');
+    out += '<g class="padw">' + band(cx, cy, z, 0.48, 2.38, false, 'url(#g-padw)', ' opacity=".55"') + '</g>';
+    var lc = P(cx, cy, z);
+    out += text(lc[0], lc[1] - 1.5, '+', 15, '#46f8c8', 400, 'middle', 'display', ' filter="url(#glowS)"');
+    out += text(lc[0], lc[1] + 9.5, 'ADD DEPARTMENT', 7.2, '#e6faf6', 600, 'middle', 'sans', ' letter-spacing=".6" filter="url(#glowS)"');
+    out += '<g class="padw">' + band(cx, cy, z, 0.48, 2.38, true, 'url(#g-padw)') +
+      disc(cx, cy, 0.48, 2.38, 'none', '#3ae8d0', 3.4, ' opacity=".35" filter="url(#glow2)"') + disc(cx, cy, 0.48, 2.38, 'none', '#6ff8e0', 1.2) +
+      disc(cx, cy, z, 2.38, 'none', '#1ed8cc', 0.8, ' opacity=".6"') + '</g>';
     return out;
   };
 
@@ -664,95 +882,85 @@
     var S = CO.S, self = this;
     if (this.shape() !== this.shapeKey) return this.layout();
     var over = '', cells = this.cells, ex = function (k) { return self.gRooms.querySelector('[data-key="' + k + '"]'); };
+    var setCls = function (g, k, st, extra) {
+      g.setAttribute('class', 'room st-' + st + (extra || '') + (self.sel === k ? ' sel' : '') + (g.classList.contains('born') ? ' born' : '') + (g.classList.contains('hover') ? ' hover' : ''));
+    };
+    var paint = function (el, html) { if (el && el._h !== html) { el._h = html; el.innerHTML = html; } };
     var turnsBy = {};
     S.strip.forEach(function (c) { turnsBy[c.dept_id] = (turnsBy[c.dept_id] || 0) + 1; });
     var anyWork = false;
     S.departments.forEach(function (d) {
-      var g = ex('d' + d.id); if (!g) return;
-      var v = CO.deptView(d), x0 = cells['d' + d.id][0], y0 = cells['d' + d.id][1];
+      var key = 'd' + d.id, g = ex(key); if (!g) return;
+      var v = CO.deptView(d), ln = CO.deptLine(d, v), st = ln.tone === 'red' ? 'waiting' : v.status, orange = d.key === 'trading_desk';
+      var x0 = cells[key][0], y0 = cells[key][1];
       if (v.status === 'working') anyWork = true;
-      g.setAttribute('class', 'room st-' + v.status + (self.sel === 'd' + d.id ? ' sel' : '') + (g.classList.contains('born') ? ' born' : '') + (g.classList.contains('hover') ? ' hover' : ''));
-      var col = ST[v.status], title, sub, mode;
+      setCls(g, key, st, orange ? ' orange' : '');
+      var dot = orange && st !== 'working' ? STC.waiting : (STC[st] || STC.idle);
+      var col = orange && st !== 'working' ? TONEC.red : st === 'queued' ? TONEC.dim : dot, title, sub, mode;
       // the wall screen says what the plate says, a little longer: never passes or attempts
       if (v.running) { title = v.running.title; sub = CO.expertName(v.running.expert) + ' is on it'; mode = 'run'; }
-      else if (v.waiting) { title = 'Needs you'; sub = 'approve or reject on the right'; mode = 'full'; col = C.red; }
+      else if (v.waiting) { title = 'Needs you'; sub = 'approve or reject on the right'; mode = 'full'; col = STC.waiting; }
       else if (v.queued.length) { title = 'Up next: ' + v.queued[0].title; sub = ''; mode = ''; }
       else { title = d.schedule && d.next_run ? 'Next run at ' + CO.hhmm(d.next_run) : 'Idle'; sub = ''; mode = ''; }
       var scr = g.querySelector('.scr');
-      scr.innerHTML = wallScreen(x0, y0, 1.1, +scr.getAttribute('data-u1'), title, sub, col, mode);
-      var kc = { queued: v.queued.length, running: v.running ? 1 : 0, done: v.done, failed: v.failed };
-      g.querySelector('.kb').innerHTML = kanban(x0, y0, kc);
+      if (scr) paint(scr, wallScreen(x0, y0, +scr.getAttribute('data-u0'), +scr.getAttribute('data-u1'), title, sub, col, mode));
+      var kb = g.querySelector('.kb');
+      if (kb) paint(kb, kanban(x0, y0, { queued: v.queued.length, running: v.running ? 1 : 0, done: v.done, failed: v.failed }, +kb.getAttribute('data-v0'), +kb.getAttribute('data-v1')));
       v.experts.slice(0, 3).forEach(function (e, i) {
         Array.prototype.forEach.call(g.querySelectorAll('[data-i="' + i + '"]'), function (m) { m.classList.toggle('on', e.state === 'working'); });
-        var ag = g.querySelector('.agent[data-agent="d' + d.id + ':' + i + '"]');
+        var ag = g.querySelector('.agent[data-agent="' + key + ':' + i + '"]');
         if (ag) { ag.classList.toggle('working', e.state === 'working'); ag.classList.toggle('idle', e.state !== 'working'); }
       });
       // the plate says who and what it is doing, in one word or two; the counts live one click away
-      var c = P(x0 + 4.6, y0 + 5.55, 0.1), ln = CO.deptLine(d, v), tone = TONE[ln.tone] || C.dim;
-      var l2 = [[ln.short, tone]];
-      var n = d.et10 || 0, ew = d.files_as ? earnedLabel(n).length * 6.6 + 14 : 0;
-      var pw = Math.max(150, d.name.length * 10.5 + 34 + ew);
-      over += plate(c[0], c[1], d.name.toUpperCase(), ln.tone === 'red' ? C.red : col, l2, pw, 'd' + d.id, v.status === 'working', ln.tone === 'red' ? null : DOT[v.status]);
+      var n = d.et10 || 0, et = null, pa = P(x0 + 4.4, y0 + 5.6, 1.3);
       if (d.files_as) {
         var last = (self.lastEt || (self.lastEt = {}))[d.id];
-        over += earned(c[0] + pw / 2 - 9, c[1], n, last != null && n > last);
+        et = { n: n, fresh: last != null && n > last };
         self.lastEt[d.id] = n;
       }
+      var hot = ln.tone === 'red' || orange;
+      over += plate(pa[0], pa[1], key, d.name.toUpperCase(), hot ? STC.waiting : dot, ln.short, orange && ln.tone !== 'cyan' ? TONEC.red : (TONEC[ln.tone] || TONEC.dim),
+        hot ? STC.waiting : col, v.status === 'working', et);
     });
     // the Manager's room
     var hub = ex('hub');
     if (hub) {
-      var cnt = CO.counts();
-      hub.setAttribute('class', 'room st-working' + (self.sel === 'hub' ? ' sel' : ''));
-      var bars = S.departments.map(function (d) { var v = CO.deptView(d); return [ST[v.status] === C.dim2 ? C.blue : ST[v.status], turnsBy[d.id] || 0]; });
-      hub.querySelector('.scr').innerHTML = barsScreen(8, 8, 3.0, 6.4, 'TURNS BY DEPT TODAY', bars);
+      var paused = S.company.status === 'paused', hx = cells.hub[0], hy = cells.hub[1];
+      setCls(hub, 'hub', paused ? 'idle' : 'working');
+      var bars = S.departments.map(function (d) { var v = CO.deptView(d); return [v.status === 'idle' ? STC.queued : STC[v.status], turnsBy[d.id] || 0]; });
+      var hs = hub.querySelector('.scr');
+      paint(hs, barsScreen(hx, hy, +hs.getAttribute('data-u0'), +hs.getAttribute('data-u1'), 'TURNS BY DEPT TODAY', bars));
       var pc = { queued: S.plan.length, running: S.tasks.filter(function (t) { return t.status === 'running'; }).length,
         done: S.strip.filter(function (c) { return c.state === 'done'; }).length, failed: S.strip.filter(function (c) { return c.state === 'failed'; }).length };
-      hub.querySelector('.kb').innerHTML = kanban(8, 8, pc);
+      var hk = hub.querySelector('.kb');
+      paint(hk, kanban(hx, hy, pc, +hk.getAttribute('data-v0'), +hk.getAttribute('data-v1')));
       var mg = hub.querySelector('.agent');
       if (mg) { mg.classList.toggle('working', S.company.status === 'active'); mg.classList.toggle('idle', S.company.status !== 'active'); }
-      // above the hologram only what needs the owner, and only when something does
+      // over the rings: what needs the owner, or that nothing does
       var ht = this.hubTop, na = S.approvals.length;
-      if (ht && na) {
-        over += '<g class="plate needs" data-key="hub"><rect x="' + f1(ht[0] - 62) + '" y="' + f1(ht[1] - 106) + '" width="124" height="28" rx="14" fill="' + C.bg + '" stroke="' + C.red + '" stroke-width="1.2" filter="url(#glow)"/>' +
-          '<rect x="' + f1(ht[0] - 62) + '" y="' + f1(ht[1] - 106) + '" width="124" height="28" rx="14" fill="' + C.bg + '" opacity=".9"/>' +
-          text(ht[0], ht[1] - 87, na + ' NEED' + (na === 1 ? 'S' : '') + ' YOU', 12, C.red, 400, 'middle', 'display') + '</g>';
-      }
-      var mp = P(12.9, 14.25, 0.1);
-      over += plate(mp[0] + 30, mp[1] + 8, 'MANAGER', S.company.status === 'active' ? C.cyan : C.dim2,
-        [[S.company.status === 'paused' ? 'Paused' : (CO.RO ? 'Its chat' : 'Your chat') + ' · runs it all', S.company.status === 'paused' ? C.dim : C.cyan]], 170, 'hub', S.company.status === 'active' && anyWork);
-    }
-    // the owner's desk
-    var you = ex('you');
-    if (you) {
-      var n = S.approvals.length;
-      you.setAttribute('class', 'room ' + (n ? 'st-waiting' : 'st-idle') + (self.sel === 'you' ? ' sel' : ''));
-      you.querySelector('.scr').innerHTML = wallScreen(8, 16, 1.1, 6.2, n ? n + ' approval' + (n > 1 ? 's' : '') + ' waiting' : 'Nothing waits for you',
-        n ? 'oldest ' + CO.ago(S.approvals[S.approvals.length - 1].created_at) : 'the Manager asks before anything real', n ? C.red : C.dim2, n ? 'full' : '');
-      var bp = P(8 + 4.15, 16 + 2.15, 0.6);
-      you.querySelector('.badge').innerHTML = n ? box(8 + 3.95, 16 + 1.95, 0.42, 0.42, 0.42, 0.14, C.red, C.navy2, C.navy) +
-        '<circle class="bdg" cx="' + f1(bp[0]) + '" cy="' + f1(bp[1] - 12) + '" r="8.5" fill="' + C.red + '" filter="url(#glow)"/>' +
-        text(bp[0], bp[1] - 8.4, String(n), 10.5, C.bg, 700, 'middle', 'display') : '';
-      var yp = P(8 + 4.6, 16 + 5.55, 0.1);
-      over += plate(yp[0], yp[1], 'YOU', n ? C.red : C.blue, [[n ? n + ' to approve' : 'all clear', n ? C.red : C.green]], 140, 'you', false);
+      if (ht) over += needPill(ht[0], ht[1] - 10, na ? na + (CO.RO ? ' WAIT FOR ITS OWNER' : na === 1 ? ' NEEDS YOU' : ' NEED ATTENTION') : 'ALL CLEAR', na > 0);
+      var mp = P(hx + 6.1, hy + 6.75, 1.3), mc = paused ? L.dim2 : L.hub;
+      over += plate(mp[0], mp[1], 'hub', 'MANAGER', mc, paused ? 'Paused' : (CO.RO ? 'Its chat' : 'Your chat') + ' · runs it all', paused ? L.dim : L.hub, mc, !paused && anyWork);
     }
     var au = ex('audit');
     if (au) {
-      var A = S.audit, days = Math.max(0, Math.ceil((A.next_at - S.clock) / 86400000)), nf = A.last ? A.last.findings.length : 0;
-      au.setAttribute('class', 'room st-idle' + (self.sel === 'audit' ? ' sel' : ''));
-      au.querySelector('.scr').innerHTML = wallScreen(0, 16, 1.1, 5.0, 'Weekly audit: next in ' + days + 'd', nf + ' findings last week', C.dim2, '');
-      var ap = P(0 + 4.6, 16 + 5.55, 0.1);
-      over += plate(ap[0], ap[1], 'WEEKLY AUDIT', C.dim2, [['next in ' + days + (days === 1 ? ' day' : ' days'), C.dim]], 150, 'audit', false);
+      var A = S.audit, days = Math.max(0, Math.ceil((A.next_at - S.clock) / 86400000)), nf = A.last ? A.last.findings.length : 0, ax = cells.audit[0], ay = cells.audit[1];
+      setCls(au, 'audit', 'idle');
+      var as = au.querySelector('.scr');
+      paint(as, wallScreen(ax, ay, +as.getAttribute('data-u0'), +as.getAttribute('data-u1'), 'Weekly audit: next in ' + days + 'd', nf + ' findings last week', STC.idle, ''));
+      var ap = P(ax + 4.4, ay + 5.6, 1.3);
+      over += plate(ap[0], ap[1], 'audit', 'WEEKLY AUDIT', STC.idle, 'next in ' + days + (days === 1 ? ' day' : ' days'), L.dim, STC.idle, false);
     }
-    // the vault: what the company has earned, in two piles; a visitor sees a closed door
+    // the vault: what it holds is seen only by clicking it (the right column then opens it), so its plate names it
+    // and nothing more, as in 3D; a visitor finds the plinth bare
     var vr = ex('vault');
     if (vr) {
       var VT = CO.vaultTotals(), priv = !!CO.RO, vkey = priv ? 'priv' : Math.round(VT.et10) + '|' + VT.usdc.toFixed(2);
-      vr.setAttribute('class', 'room st-vault' + (priv ? ' closed' : '') + (self.sel === 'vault' ? ' sel' : ''));
+      setCls(vr, 'vault', 'idle', priv ? ' closed' : '');
       var pg = vr.querySelector('.piles');
-      if (pg._k !== vkey) { pg._k = vkey; pg.innerHTML = priv ? '' : vaultPiles(VAULT[0], VAULT[1], VT); }
-      var vp = P(VAULT[0] + 4.6, VAULT[1] + 5.55, 0.1);
-      over += plate(vp[0], vp[1], 'VAULT', C.green, priv ? [['Private', C.dim]] : [[CO.fmtEt(VT.et10) + ' ET10', C.green], [CO.fmtUsd(VT.usdc) + ' USDC', '#8fbaff']], 230, 'vault', false);
+      if (pg._k !== vkey) { pg._k = vkey; pg.innerHTML = priv ? '' : vaultPiles(cells.vault[0], cells.vault[1], VT); }
+      var vp = P(cells.vault[0] + 4.4, cells.vault[1] + 5.65, 1.35);
+      over += plate(vp[0], vp[1], 'vault', 'VAULT', STC.idle, priv ? 'Private' : 'Earnings', L.dim, STC.idle, false);
     }
     // the selection ring lies on the floor, just under the selected room: walls, people and plates stay above it
     var oldRing = this.gRooms.querySelector('.selring');
@@ -761,16 +969,25 @@
     if (selRoom) {
       var s = cells[this.sel], tmp = document.createElementNS(NS, 'g');
       tmp.innerHTML = poly([P(s[0] - 0.15, s[1] - 0.15, 0.12), P(s[0] + 7.15, s[1] - 0.15, 0.12), P(s[0] + 7.15, s[1] + 7.15, 0.12), P(s[0] - 0.15, s[1] + 7.15, 0.12)],
-        'none', C.cyan, 2.4, 1, ' class="selring" filter="url(#glow)"');
+        'none', L.hub, 2.4, 1, ' class="selring" filter="url(#glow)"');
       if (tmp.firstChild) selRoom.parentNode.insertBefore(tmp.firstChild, selRoom);
     }
     this.gOver.innerHTML = over;
-    // conduits run fast to working rooms
+    this.markPlates();
+    // a lane lights while work runs along it
     Array.prototype.forEach.call(this.gFloor.querySelectorAll('.flow'), function (pl) {
       var k = pl.getAttribute('data-path'), d = k.charAt(0) === 'd' ? CO.dept(+k.slice(1)) : null;
       pl.classList.toggle('hot', !!(d && CO.deptView(d).status === 'working'));
     });
     this.svg.classList.toggle('paused', S.company.status === 'paused');
+  };
+  // a room's plate framed in its colour while the room is under the mouse or open, as the 3D's
+  Office.prototype.markPlates = function () {
+    var self = this;
+    Array.prototype.forEach.call(this.gOver.querySelectorAll('.rp'), function (p) {
+      var k = p.getAttribute('data-key');
+      p.classList.toggle('sel', self.sel === k); p.classList.toggle('hov', self.hover === k);
+    });
   };
 
   /* ---------------- packets ---------------- */
@@ -781,12 +998,12 @@
     else if (this.paths[from] && this.paths[to]) p = this.paths[from].concat(this.paths[to].slice().reverse().slice(1));
     if (!p) return;
     var id = { cyan: 'g-halo-c', green: 'g-halo-g', red: 'g-halo-r', blue: 'g-halo-b' }[colour] || 'g-halo-c';
-    var hex = { cyan: C.cyan, green: C.green, red: C.red, blue: C.blue }[colour] || C.cyan;
+    var hex = { cyan: L.hub, green: L.mint, red: L.amber, blue: C.blue }[colour] || L.hub;
     var g = document.createElementNS(NS, 'g');
     g.setAttribute('class', 'pk');
     var html = '';
     for (var i = 4; i >= 1; i--) html += '<circle class="tr" r="' + (2.6 - i * 0.4).toFixed(1) + '" fill="' + hex + '" opacity="' + (0.5 - i * 0.1).toFixed(2) + '"/>';
-    html += '<circle r="10" fill="url(#' + id + ')"/><circle r="2.8" fill="' + hex + '"/><circle r="1.2" fill="' + C.text + '" opacity=".8"/>';
+    html += '<circle r="10" fill="url(#' + id + ')"/><circle r="2.8" fill="' + hex + '"/><circle r="1.2" fill="#ffffff" opacity=".8"/>';
     g.innerHTML = html;
     g.style.opacity = '0';
     this.gPk.appendChild(g);
@@ -840,14 +1057,12 @@
   // now and then an idle agent gets up: to the task board, the window, a colleague
   Office.prototype.wander = function () {
     if (document.hidden || CO.S.company.status === 'paused' && Math.random() < 0.5) return;
-    var idle = Array.prototype.filter.call(this.gRooms.querySelectorAll('.agent.idle'), function (a) {
-      return !a.classList.contains('walking') && a.getAttribute('data-agent').indexOf('you') !== 0;
-    });
+    var idle = Array.prototype.filter.call(this.gRooms.querySelectorAll('.agent.idle'), function (a) { return !a.classList.contains('walking'); });
     if (!idle.length || Object.keys(this.walkers).length >= 3 || Math.random() < 0.35) return;
     var el = idle[Math.floor(Math.random() * idle.length)], id = el.getAttribute('data-agent');
     var key = id.split(':')[0], c = this.cells[key]; if (!c) return;
-    // open floor only: not on a colleague's spot, not inside the computer's desk
-    var spots = key === 'hub' ? [[10.2, 13.6], [13.4, 13.0], [9.6, 11.0]] : [[c[0] + 2.2, c[1] + 4.6], [c[0] + 3.4, c[1] + 5.0], [c[0] + 2.9, c[1] + 4.3]];
+    // open floor only: in front of the desks, off the dais, not on a colleague's spot
+    var spots = key === 'hub' ? [[10.2, 13.6], [13.4, 13.0], [9.6, 11.0]] : [[c[0] + 2.6, c[1] + 4.9], [c[0] + 3.3, c[1] + 5.2], [c[0] + 2.9, c[1] + 4.6]];
     var tgt = spots[Math.floor(Math.random() * spots.length)], sp = P(tgt[0], tgt[1], 0.1);
     var home = [+el.getAttribute('data-hx'), +el.getAttribute('data-hy')];
     el.classList.add('walking');
@@ -872,7 +1087,7 @@
       if (f < 1) requestAnimationFrame(step);
     })(t0);
   };
-  // what is drawn, without the soft shadow under the plate
+  // what is drawn: the platform, its hull and keel, the rooms and the plates over them
   Office.prototype.bounds = function () {
     var r = this.plateRect || { x: 0, y: 0, x2: 100, y2: 100 }, x = r.x, y = r.y, x2 = r.x2, y2 = r.y2;
     [this.gRooms, this.gOver].forEach(function (g) {
@@ -914,7 +1129,7 @@
   Office.prototype.resize = function () {
     var c = this.client(), v = this.vb;
     if (!this.fitted) return;
-    var cx = v.x + v.w / 2, cy = v.y + v.h / 2, nh = v.w * c.h / c.w;
+    var cy = v.y + v.h / 2, nh = v.w * c.h / c.w;
     this.vb = { x: v.x, y: cy - nh / 2, w: v.w, h: nh };
     this.apply();
   };
@@ -958,6 +1173,7 @@
     this.hover = key;
     var g = key && this.gRooms.querySelector('[data-key="' + key + '"]');
     if (g) g.classList.add('hover');
+    this.markPlates();
   };
   Office.prototype.hoverAt = function (e) {
     var ag = e.target.closest('.agent'), rm = e.target.closest('[data-key]'), pc = e.target.closest('.pc');
