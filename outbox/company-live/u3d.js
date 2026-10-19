@@ -206,6 +206,24 @@ function bakeGroup(root) {
     const m = new THREE.Mesh(merged, bin.mat); m.userData.own = true; root.add(m);
   });
 }
+// How often a scene is drawn (2026-10-19, for weak computers; nothing is drawn differently, only less often while
+// nobody is doing anything). Every display frame while something moves under the user's hand -- a drag, the wheel,
+// a flight, the camera settling after it, a station the camera rides with -- and for the first seconds. Otherwise
+// what moves is the scene's own slow motion (rings, lights, people, stations on their orbits): a 120 or 144 Hz
+// screen gets it every other display frame (60 or 72 a second, nothing it shows is lost), and a computer that could
+// not hold about 45 a second while everything moved gets it at 30, so it has room to answer the next drag at once.
+function pacer(busy) {
+  let last = 0, drawn = 0, avg = 0, slow = false; const t0 = performance.now();
+  return (now) => {
+    const dt = now - last; last = now;
+    if (busy() || now - t0 < 3000) {
+      if (dt > 0 && dt < 250) { avg = avg ? avg * 0.94 + dt * 0.06 : dt; slow = avg > 22 ? true : avg < 18 ? false : slow; }
+      drawn = now; return true;
+    }
+    if (now - drawn < (slow ? 30 : 12.5)) return false;
+    drawn = now; return true;
+  };
+}
 
 /* ---------------- a station: its parts, its windows, its decks ---------------- */
 class Building {
@@ -1197,6 +1215,9 @@ class Universe3D {
       this.tw = null; this.used = true; this.lastUse = performance.now();
       if ([2, 4, 5].includes(this.controls.state)) { this.follow = null; this.followAt = null; }
     });
+    // a hand on the map, for the pacer: the controls moving the camera (also while it settles) and the mouse
+    this.controls.addEventListener('change', () => { this.lastInput = performance.now(); });
+    this.pace = pacer(() => !!this.tw || !!this.follow || this.controls.autoRotate || performance.now() - (this.lastInput || 0) < 1500);
     this.world();
     this.bind();
     this.resize();
@@ -1513,7 +1534,9 @@ class Universe3D {
     if (this.el.clientWidth !== this._cw || this.el.clientHeight !== this._ch) {
       this._cw = this.el.clientWidth; this._ch = this.el.clientHeight; this.resize();
       if (this.fitted && !this.used) { if (!this.tw) this.fit(false); else if (this.tw.home) { const h2 = this.home(); this.tw.p1 = h2.pos; this.tw.t1 = h2.tgt; } }
+      this.lastInput = performance.now();
     }
+    if (!this.pace(performance.now())) return;
     const t = this.clock.getElapsedTime(), now = performance.now();
     if (this.tw) {
       const k = Math.min(1, (now - this.tw.s) / this.tw.ms), e = k < 0.5 ? 4 * k * k * k : 1 - Math.pow(-2 * k + 2, 3) / 2;
@@ -1648,8 +1671,8 @@ class Universe3D {
   bind() {
     const cv = this.renderer.domElement;
     let down = null;
-    cv.addEventListener('pointerdown', (e) => { down = { x: e.clientX, y: e.clientY }; this.lastUse = performance.now(); });
-    cv.addEventListener('pointermove', (e) => { this.setMouse(e); this.mouseMoved = true; this.lastEv = e; });
+    cv.addEventListener('pointerdown', (e) => { down = { x: e.clientX, y: e.clientY }; this.lastUse = this.lastInput = performance.now(); });
+    cv.addEventListener('pointermove', (e) => { this.setMouse(e); this.mouseMoved = true; this.lastEv = e; this.lastInput = performance.now(); });
     cv.addEventListener('pointerenter', () => { this.mouseIn = true; });
     cv.addEventListener('pointerleave', () => { this.mouseIn = false; this.setHover(null); this.hideTip(); });
     cv.addEventListener('pointerup', (e) => {
@@ -1659,7 +1682,7 @@ class Universe3D {
       this.setMouse(e); const id = this.pickId();
       if (id != null && id !== 'core') this.open(id);
     });
-    cv.addEventListener('wheel', () => { this.tw = null; this.lastUse = performance.now(); }, { passive: true });
+    cv.addEventListener('wheel', () => { this.tw = null; this.lastUse = this.lastInput = performance.now(); }, { passive: true });
   }
   setMouse(e) { const r = this.renderer.domElement.getBoundingClientRect(); this.mouse.set((e.clientX - r.left) / r.width * 2 - 1, -(e.clientY - r.top) / r.height * 2 + 1); }
   pickId() {
@@ -2375,6 +2398,49 @@ function release(root) {
     });
   });
 }
+// A room's still parts merged per material, so a weak computer draws each room in a few dozen calls instead of a
+// few hundred (measured 2026-10-19: rooms' small parts were 1,100 of the office's 2,000 draw calls a frame, and the
+// shadow pass draws them again). The picture does not change: the merged mesh has the same material, the same
+// shadows and the same place. What moves or changes stays as it is -- anything the room's fields hold (its agents,
+// screens, crystal, rings, door, piles ...), whatever says userData.dyn or blink, instanced meshes, transparent or
+// invisible ones (the glass sorts by itself; the hit boxes are invisible), mirrored ones and multi-material boxes.
+function bakeRoom(r) {
+  const keep = new Set(), seen = new Set([r]);
+  const hold = (v, depth) => {
+    if (!v || typeof v !== 'object' || seen.has(v) || depth > 4) return;
+    seen.add(v);
+    if (v.isObject3D) { if (v !== r.g) v.traverse((o) => keep.add(o)); return; }
+    if (v.isMaterial || v.isTexture || v.isBufferGeometry || (typeof Node !== 'undefined' && v instanceof Node)) return;
+    (Array.isArray(v) ? v : Object.values(v)).forEach((x) => hold(x, depth + 1));
+  };
+  Object.keys(r).forEach((k) => { if (k !== 'g' && k !== 'dept') hold(r[k], 0); });
+  const root = r.g; root.updateMatrixWorld(true);
+  const inv = root.matrixWorld.clone().invert(), bins = new Map(), rel = new THREE.Matrix4();
+  (function walk(o) {
+    o.children.slice().forEach((ch) => {
+      if (keep.has(ch) || ch.userData.dyn || ch.userData.blink != null || ch.userData.pc || ch.userData.key || ch.isInstancedMesh || !ch.visible) return;
+      walk(ch);
+      if (!ch.isMesh || ch.isSkinnedMesh || !ch.material || Array.isArray(ch.material) || ch.children.length) return;
+      const m = ch.material, g = ch.geometry;
+      if (m.transparent || m.visible === false || m === M.hit || ch.renderOrder || g.morphAttributes && Object.keys(g.morphAttributes).length) return;
+      rel.multiplyMatrices(inv, ch.matrixWorld); if (rel.determinant() <= 0) return;
+      const key = [m.uuid, ch.castShadow, ch.receiveShadow, !!g.index, Object.keys(g.attributes).sort().join(',')].join('|');
+      let bin = bins.get(key); if (!bin) bins.set(key, bin = { mat: m, cast: ch.castShadow, recv: ch.receiveShadow, geos: [], objs: [] });
+      bin.geos.push(g.clone().applyMatrix4(rel)); bin.objs.push(ch);
+    });
+  })(root);
+  let calls = 0;
+  bins.forEach((bin) => {
+    if (bin.objs.length < 2) { bin.geos.forEach((x) => x.dispose()); return; }
+    bin.geos.forEach((x) => { x.clearGroups(); });
+    const merged = mergeGeometries(bin.geos, false); bin.geos.forEach((x) => x.dispose());
+    if (!merged) return;
+    bin.objs.forEach((o) => o.parent.remove(o));
+    const mm = new THREE.Mesh(merged, bin.mat); mm.castShadow = bin.cast; mm.receiveShadow = bin.recv; mm.userData.own = true; root.add(mm);
+    calls += bin.objs.length - 1;
+  });
+  return calls;
+}
 function emis(hex, k) { return new THREE.MeshStandardMaterial({ color: 0x000000, emissive: new THREE.Color(hex), emissiveIntensity: k == null ? 1.4 : k, roughness: 1 }); }
 function screen(w, h) {
   const c = document.createElement('canvas'); c.width = Math.round(w * 160); c.height = Math.round(h * 160);
@@ -2471,6 +2537,9 @@ class Office3D {
     Object.assign(this.controls, { enableDamping: true, dampingFactor: 0.08, minDistance: 10, maxDistance: 220, maxPolarAngle: Math.PI * 0.47, minPolarAngle: 0.2,
       screenSpacePanning: false, zoomSpeed: 0.9, rotateSpeed: 0.55 });
     this.controls.addEventListener('start', () => { this.tw = null; this.moved = true; });
+    // a hand on the office, for the pacer: the controls moving the camera (also while it settles) and the mouse
+    this.controls.addEventListener('change', () => { this.lastInput = performance.now(); });
+    this.pace = pacer(() => !!this.tw || performance.now() - (this.lastInput || 0) < 1500);
     const S = this.scene;
     S.environment = envTex(); S.environmentIntensity = 0.9;
     // his picture is lit like a studio: soft white light from above and the camera's side, everything readable, the
@@ -2574,10 +2643,13 @@ class Office3D {
       const hit = new THREE.Mesh(G.box, M.hit); hit.scale.set(RS, WH, RS); hit.position.copy(this.V(c[0] + RS / 2, c[1] + RS / 2, WH / 2)); hit.userData.key = k; g.add(hit); this.hits.push(hit);
       if (room.born) { g.scale.set(1, 0.01, 1); room.grow = performance.now(); }
     });
+    this.bakeRooms();
     this.selRing = new THREE.Group(); W.add(this.selRing);
     this.update();
     if (!this.fitted) { this.fit(false); }
   }
+  // every room's still parts merged per material (bakeRoom): the same picture in a fraction of the draw calls
+  bakeRooms() { this.baked = 0; Object.values(this.rooms).forEach((r) => { if (r.g) this.baked += bakeRoom(r); }); }
   // Under and round the deck, what makes it a station in space: a rim, a plated hull with its lights, a stepped
   // keel, the rock it is built on, engines, solar wings, asteroids drifting past. Static parts merged per
   // material.
@@ -4120,7 +4192,8 @@ class Office3D {
   /* ---------------- the frame ---------------- */
   frame() {
     const w = this.el.clientWidth, h = this.el.clientHeight; if (!w || !h) return;
-    if (w !== this._cw || h !== this._ch) { this._cw = w; this._ch = h; this.resize(); }
+    if (w !== this._cw || h !== this._ch) { this._cw = w; this._ch = h; this.resize(); this.lastInput = performance.now(); }
+    if (!this.pace(performance.now())) return;
     const t = this.clock.getElapsedTime(), now = performance.now();
     if (this.tw) {
       const k = Math.min(1, (now - this.tw.s) / this.tw.ms), e = k < 0.5 ? 4 * k * k * k : 1 - Math.pow(-2 * k + 2, 3) / 2;
@@ -4184,8 +4257,10 @@ class Office3D {
       const y = (1 - v.y) / 2 * h + (dy || 0);
       // off screen, behind the camera, or up under the stage's own bar (where the crumb and the zoom live)
       const off = v.z > 1 || v.x < -1.3 || v.x > 1.3 || y < 58 || y > h + 40;
-      el.style.display = off ? 'none' : '';
-      if (!off) el.style.transform = 'translate(' + ((v.x + 1) / 2 * w).toFixed(1) + 'px,' + y.toFixed(1) + 'px) translate(-50%,-50%)';
+      // written only when it changes: a still camera then costs the page no style work at all
+      if (el._off !== off) { el._off = off; el.style.display = off ? 'none' : ''; }
+      const tf = off ? '' : 'translate(' + ((v.x + 1) / 2 * w).toFixed(1) + 'px,' + y.toFixed(1) + 'px) translate(-50%,-50%)';
+      if (!off && el._tf !== tf) { el._tf = tf; el.style.transform = tf; }
     };
     Object.values(this.rooms).forEach((r) => {
       if (r.plate && r.plateAt) { show(r.plate, r.plateAt); r.plate.classList.toggle('sel', this.sel === r.key); r.plate.classList.toggle('hov', this.hover === r.key); }
@@ -4198,8 +4273,8 @@ class Office3D {
   /* ---------------- input ---------------- */
   bind() {
     const cv = this.renderer.domElement; let down = null;
-    cv.addEventListener('pointerdown', (e) => { down = { x: e.clientX, y: e.clientY }; });
-    cv.addEventListener('pointermove', (e) => { this.setMouse(e); this.mouseMoved = true; this.lastEv = e; });
+    cv.addEventListener('pointerdown', (e) => { down = { x: e.clientX, y: e.clientY }; this.lastInput = performance.now(); });
+    cv.addEventListener('pointermove', (e) => { this.setMouse(e); this.mouseMoved = true; this.lastEv = e; this.lastInput = performance.now(); });
     cv.addEventListener('pointerleave', () => { this.setHover(null); this.hideTip(); });
     cv.addEventListener('pointerup', (e) => {
       if (!down) return; const moved = Math.abs(e.clientX - down.x) + Math.abs(e.clientY - down.y) > 5; down = null; if (moved) return;
@@ -4207,7 +4282,7 @@ class Office3D {
       if (hit.userData.pc) { window.open(hit.userData.pc.url, '_blank', 'noopener'); return; }
       if (hit.userData.key) CO.emit('office:click', hit.userData.key);
     });
-    cv.addEventListener('wheel', () => { this.tw = null; }, { passive: true });
+    cv.addEventListener('wheel', () => { this.tw = null; this.lastInput = performance.now(); }, { passive: true });
   }
   setMouse(e) { const r = this.renderer.domElement.getBoundingClientRect(); this.mouse.set((e.clientX - r.left) / r.width * 2 - 1, -(e.clientY - r.top) / r.height * 2 + 1); }
   pickHit() {
