@@ -2168,14 +2168,17 @@ function orangeWallTex() {
     for (let i = 0; i < 22; i++) { const h = 10 + ((i * 19) % 28); g.fillRect(20 + i * 21, H - 14 - h, 13, h); }
   }));
 }
+// his Cymetica QA's window of light: three by three panes, white-hot at their middles, mint at their edges, in a
+// dark frame
 function qaGridTex() {
-  return TX.qagrid || (TX.qagrid = ctex(256, 192, (g, W, H) => {
+  return TX.qagrid || (TX.qagrid = ctex(256, 256, (g, W, H) => {
     g.fillStyle = '#051418'; g.fillRect(0, 0, W, H);
-    const cols = 4, rows = 3, pad = 10, cw = (W - pad * (cols + 1)) / cols, ch = (H - pad * (rows + 1)) / rows;
+    const cols = 3, rows = 3, pad = 16, cw = (W - pad * (cols + 1)) / cols, ch = (H - pad * (rows + 1)) / rows;
     for (let r = 0; r < rows; r++) for (let c = 0; c < cols; c++) {
       const x = pad + c * (cw + pad), y = pad + r * (ch + pad);
-      const gr = g.createLinearGradient(x, y, x, y + ch);
-      gr.addColorStop(0, '#dcfff8'); gr.addColorStop(1, '#58f2dc');
+      g.fillStyle = '#4fe8d0'; g.fillRect(x, y, cw, ch);
+      const gr = g.createRadialGradient(x + cw / 2, y + ch / 2, 0, x + cw / 2, y + ch / 2, cw * 0.62);
+      gr.addColorStop(0, '#f2fffc'); gr.addColorStop(0.55, '#bdfdf0'); gr.addColorStop(1, 'rgba(120,246,224,0)');
       g.fillStyle = gr; g.fillRect(x, y, cw, ch);
     }
   }));
@@ -2326,24 +2329,33 @@ function release(root) {
   });
 }
 function emis(hex, k) { return new THREE.MeshStandardMaterial({ color: 0x000000, emissive: new THREE.Color(hex), emissiveIntensity: k == null ? 1.4 : k, roughness: 1 }); }
+// The wall screens' measure: a face 0.5 high centred at 0.98, so with its bezel it ends at 1.27 -- under the back
+// walls' top neon (1.42 to 1.48) with a clear gap, as every screen in his picture.
+const RBW = { h: 0.5, mid: 0.98, top: 1.3 };
 function screen(w, h) {
-  const c = document.createElement('canvas'); c.width = Math.round(w * 160); c.height = Math.round(h * 160);
+  const c = document.createElement('canvas'); c.width = Math.round(w * 256); c.height = Math.round(h * 256);
   const tex = new THREE.CanvasTexture(c); tex.colorSpace = THREE.SRGBColorSpace; tex.anisotropy = 8;
   return { c, g: c.getContext('2d'), tex, key: '' };
 }
+// his wall screen: near-black glass inside a thin pale frame, a line of small text top left, faint rows of data
+// under it; ours keeps what runs or why it waits, and the bar of its progress
 function drawWall(s, title, sub, col, mode) {
   const key = [title, sub, col, mode].join('|'); if (s.key === key) return; s.key = key;
-  const { c, g } = s, W = c.width, H = c.height;
-  g.fillStyle = '#06101a'; g.fillRect(0, 0, W, H);
-  g.strokeStyle = col; g.lineWidth = 6; g.strokeRect(3, 3, W - 6, H - 6);
-  g.fillStyle = col; g.font = '700 ' + Math.round(H * 0.2) + 'px JetBrains Mono, monospace'; g.textBaseline = 'top';
-  const fit = (t) => { let s2 = String(t || ''); while (s2.length > 3 && g.measureText(s2).width > W - 40) s2 = s2.slice(0, -2); return s2 !== t ? s2.replace(/.$/, '…') : s2; };
-  g.fillText(fit(title), 20, H * 0.14);
-  g.fillStyle = '#8fa8c2'; g.font = '500 ' + Math.round(H * 0.14) + 'px JetBrains Mono, monospace';
-  g.fillText(fit(sub), 20, H * 0.44);
-  g.fillStyle = '#142436'; g.fillRect(20, H * 0.76, W - 40, H * 0.08);
-  if (mode === 'run') { g.fillStyle = col; g.fillRect(20, H * 0.76, (W - 40) * (0.25 + 0.5 * Math.random()), H * 0.08); }
-  if (mode === 'full') { g.fillStyle = col; g.globalAlpha = 0.8; g.fillRect(20, H * 0.76, W - 40, H * 0.08); g.globalAlpha = 1; }
+  const { c, g } = s, W = c.width, H = c.height, p = Math.round(H * 0.1);
+  g.fillStyle = '#060b11'; g.fillRect(0, 0, W, H);
+  const sh = g.createLinearGradient(0, 0, 0, H); sh.addColorStop(0, 'rgba(120,150,170,.08)'); sh.addColorStop(0.5, 'rgba(120,150,170,0)'); g.fillStyle = sh; g.fillRect(0, 0, W, H);
+  g.strokeStyle = 'rgba(176,196,208,.62)'; g.lineWidth = Math.max(2, H * 0.025); g.strokeRect(p * 0.5, p * 0.5, W - p, H - p);
+  g.fillStyle = col; g.font = '700 ' + Math.round(H * 0.17) + 'px JetBrains Mono, monospace'; g.textBaseline = 'top';
+  const fit = (t) => { let s2 = String(t || ''); while (s2.length > 3 && g.measureText(s2).width > W - 3 * p) s2 = s2.slice(0, -2); return s2 !== t ? s2.replace(/.$/, '…') : s2; };
+  g.fillText(fit(title), p * 1.4, H * 0.17);
+  g.fillStyle = '#8fa8c2'; g.font = '500 ' + Math.round(H * 0.12) + 'px JetBrains Mono, monospace';
+  g.fillText(fit(sub), p * 1.4, H * 0.42);
+  // faint rows of data along the right of the face, as his screens carry
+  g.fillStyle = 'rgba(143,168,194,.16)';
+  for (let k = 0; k < 3; k++) { const y = H * (0.2 + k * 0.13), x = W * 0.62; g.fillRect(x, y, (W * 0.3) * (1 - k * 0.22), H * 0.045); }
+  g.fillStyle = '#122030'; g.fillRect(p * 1.4, H * 0.72, W - 2.8 * p, H * 0.07);
+  if (mode === 'run') { g.fillStyle = col; g.fillRect(p * 1.4, H * 0.72, (W - 2.8 * p) * (0.25 + 0.5 * Math.random()), H * 0.07); }
+  if (mode === 'full') { g.fillStyle = col; g.globalAlpha = 0.8; g.fillRect(p * 1.4, H * 0.72, W - 2.8 * p, H * 0.07); g.globalAlpha = 1; }
   s.tex.needsUpdate = true;
 }
 function drawBars(s, title, bars) {
@@ -2358,11 +2370,21 @@ function drawBars(s, title, bars) {
 function drawKanban(s, counts) {
   const key = JSON.stringify(counts); if (s.key === key) return; s.key = key;
   const { c, g } = s, W = c.width, H = c.height, cols = [['queued', '#3b82f6'], ['running', '#24e8ff'], ['done', '#38f5b8'], ['failed', '#ff8824']];
-  g.fillStyle = '#06101a'; g.fillRect(0, 0, W, H); g.strokeStyle = '#1c3248'; g.lineWidth = 6; g.strokeRect(3, 3, W - 6, H - 6);
-  const cw = (W - 30) / 4;
+  // his long panel on the other back wall: a band of coloured strips along its top, one per column, and under each
+  // the cards as thin bars, a pale outline where a column is empty
+  const p = Math.round(H * 0.1);
+  g.fillStyle = '#060b11'; g.fillRect(0, 0, W, H);
+  g.strokeStyle = 'rgba(176,196,208,.4)'; g.lineWidth = Math.max(2, H * 0.02); g.strokeRect(p * 0.5, p * 0.5, W - p, H - p);
+  const cw = (W - 2 * p) / 4, ch = (H - p * 2) * 0.13;
   cols.forEach(([k, col], i) => {
-    const x = 15 + i * cw; g.fillStyle = col; g.fillRect(x + 6, 14, cw - 12, 10);
-    for (let n = 0; n < Math.min(counts[k] || 0, 4); n++) { g.globalAlpha = 0.85; g.fillRect(x + 10, 40 + n * (H - 60) / 4.4, cw - 20, (H - 60) / 5.5); g.globalAlpha = 1; }
+    const x = p + i * cw + p * 0.3, w = cw - p * 0.6;
+    g.fillStyle = col; g.globalAlpha = 0.92; g.fillRect(x, p * 1.1, w, H * 0.12); g.globalAlpha = 1;
+    const n = Math.min(counts[k] || 0, 4);
+    for (let j = 0; j < 4; j++) {
+      const y = p * 1.1 + H * 0.2 + j * (ch + H * 0.05);
+      if (j < n) { g.fillStyle = col; g.globalAlpha = 0.55; g.fillRect(x, y, w * (0.92 - (j % 2) * 0.18), ch); g.globalAlpha = 1; }
+      else if (j === n) { g.strokeStyle = 'rgba(143,168,194,.22)'; g.lineWidth = 2; g.strokeRect(x + 1, y + 1, w * 0.7, ch - 2); }
+    }
   });
   s.tex.needsUpdate = true;
 }
@@ -2663,16 +2685,33 @@ class Office3D {
   }
   // a wall screen on the back wall: what runs now, or why it waits
   wallScreen(r, u0, u1) {
-    const s = screen(u1 - u0, 0.64), mat = new THREE.MeshBasicMaterial({ map: s.tex, toneMapped: false });
-    const m = new THREE.Mesh(G.plane, mat); m.scale.set(u1 - u0, 0.64, 1); m.position.copy(this.V(r.x0 + (u0 + u1) / 2, r.y0 + 0.11, 1.14)); r.g.add(m);
-    this.box(r.g, r.x0 + u0 - 0.05, r.y0 + 0.05, 0.78, u1 - u0 + 0.1, 0.04, 0.72, OM.dark, false);
+    const s = screen(u1 - u0, RBW.h);
+    this.rbPanel(r, 'x', u0, u1, RBW.h, new THREE.MeshBasicMaterial({ map: s.tex, toneMapped: false }));
     r.wall = s; return s;
   }
   kanban(r, v0 = 1.5, v1 = 5.8) {
-    const s = screen(v1 - v0, 0.64), mat = new THREE.MeshBasicMaterial({ map: s.tex, toneMapped: false });
-    const m = new THREE.Mesh(G.plane, mat); m.scale.set(v1 - v0, 0.64, 1); m.rotation.y = Math.PI / 2; m.position.copy(this.V(r.x0 + 0.11, r.y0 + (v0 + v1) / 2, 1.14)); r.g.add(m);
-    this.box(r.g, r.x0 + 0.05, r.y0 + v0 - 0.05, 0.78, 0.04, v1 - v0 + 0.1, 0.72, OM.dark, false);
+    const s = screen(v1 - v0, RBW.h);
+    this.rbPanel(r, 'y', v0, v1, RBW.h, new THREE.MeshBasicMaterial({ map: s.tex, toneMapped: false }));
     r.kb = s;
+  }
+  // His wall screens are long low panels hung mid-wall, every one wholly under the top neon with a clear gap
+  // ("nikde se obrazovka neprekryva s hornim neonovym panelem"): a dark bezel round the face, on two short brackets
+  // that stand on the dark wainscot. Along the back wall at y0 ('x') or the one at x0 ('y'), from a0 to a1; the face
+  // h high, centred at RBW.mid, so the bezel's top stays at RBW.top or under it.
+  rbPanel(r, along, a0, a1, h, faceMat) {
+    if (!OM.rbBezel) OM.rbBezel = std({ color: 0x141b23, roughness: 0.38, metalness: 0.5 });
+    const g = r.g, L = a1 - a0, zc = RBW.mid, alongX = along === 'x', tag = (m) => { m.userData.rbWall = true; return m; };
+    const at = (a, d, z) => alongX ? this.V(r.x0 + a, r.y0 + d, z) : this.V(r.x0 + d, r.y0 + a, z);
+    const bz = new THREE.Mesh(rboxGeo(L + 0.08, h + 0.08, 0.06, 0.02), OM.rbBezel);
+    bz.position.copy(at((a0 + a1) / 2, 0.08, zc)); if (!alongX) bz.rotation.y = Math.PI / 2; bz.castShadow = true; bz.receiveShadow = true; g.add(tag(bz));
+    const face = new THREE.Mesh(G.plane, faceMat); face.scale.set(L, h, 1); face.position.copy(at((a0 + a1) / 2, 0.115, zc));
+    if (!alongX) face.rotation.y = Math.PI / 2; g.add(tag(face));
+    // the brackets: from the wainscot's top (0.60) to the bezel
+    const b0 = 0.6, b1 = zc - h / 2 - 0.04;
+    [a0 + L * 0.14, a1 - L * 0.14].forEach((a) => {
+      const p = new THREE.Mesh(G.box, OM.rbBezel); p.scale.set(alongX ? 0.05 : 0.07, b1 - b0, alongX ? 0.07 : 0.05); p.position.copy(at(a, 0.1, (b0 + b1) / 2)); g.add(tag(p));
+    });
+    return face;
   }
   // a desk facing the room: a top on two side panels and a drawer unit, two screens on stands, a keyboard, a mug
   desk(r, x, y, i, isOrange) {
@@ -2767,12 +2806,16 @@ class Office3D {
       u1 = 3.3;
       this.racks(r, x0 + 0.55, y0 + 1.35, 3);
     } else if (k === 'testing') {
-      // his Cymetica QA: a small 3 x 3 window of light at the right end of the back-right wall, rising over it
+      // his Cymetica QA: a 3 x 3 window of light at the right end of the back-right wall, standing on the floor in a
+      // dark frame; its top under the neon, as every screen of his ("nikde se obrazovka neprekryva s hornim
+      // neonovym panelem")
       u1 = 4.6;
-      const qw = new THREE.Mesh(G.plane, new THREE.MeshBasicMaterial({ map: qaGridTex(), color: new THREE.Color(0xffffff).multiplyScalar(1.15), toneMapped: false }));
-      qw.scale.set(1.05, 1.05, 1); qw.position.copy(this.V(x0 + 6.05, y0 + 0.13, 1.22)); g.add(qw);
-      this.box(g, x0 + 5.45, y0 + 0.05, 0.62, 1.2, 0.06, 1.22, OM.dark, false);
-      const qh = glowSprite(0x9ff5ec, 0.22, 2.4); qh.position.copy(this.V(x0 + 6.05, y0 + 0.3, 1.22)); g.add(qh);
+      const qa = (m) => { m.userData.rbWall = true; g.add(m); return m; };
+      const qw = qa(new THREE.Mesh(G.plane, new THREE.MeshBasicMaterial({ map: qaGridTex(), color: new THREE.Color(0xffffff).multiplyScalar(1.15), toneMapped: false })));
+      qw.scale.set(0.84, 0.84, 1); qw.position.copy(this.V(x0 + 6.0, y0 + 0.185, 0.82));
+      if (!OM.rbBezel) OM.rbBezel = std({ color: 0x141b23, roughness: 0.38, metalness: 0.5 });
+      const qf = qa(new THREE.Mesh(rboxGeo(1.02, 1.2, 0.1, 0.025), OM.rbBezel)); qf.position.copy(this.V(x0 + 6.0, y0 + 0.13, 0.08 + 0.6)); qf.castShadow = true; qf.receiveShadow = true;
+      const qh = glowSprite(0x9ff5ec, 0.2, 1.4); qh.position.copy(this.V(x0 + 6.0, y0 + 0.35, 0.82)); g.add(qh);
     } else if (k === 'testing_lab') {
       // his laboratory: white instruments along the back-right wall, a holographic crystal on a white base, canisters
       u1 = 3.4;
@@ -2810,9 +2853,9 @@ class Office3D {
     this.plant(r, x0 + 0.42, y0 + 6.5); this.plant(r, x0 + 6.55, y0 + 6.55, 0.8);
     this.plate(r);
   }
+  // a picture on the back wall at y0 (a chart, a mood board): hung as the wall screens are, under the neon
   boardTex(r, u0, u1, tex) {
-    const m = new THREE.Mesh(G.plane, new THREE.MeshBasicMaterial({ map: tex, toneMapped: false })); m.scale.set(u1 - u0, 0.76, 1); m.position.copy(this.V(r.x0 + (u0 + u1) / 2, r.y0 + 0.11, 1.14)); r.g.add(m);
-    this.box(r.g, r.x0 + u0 - 0.05, r.y0 + 0.05, 0.74, u1 - u0 + 0.1, 0.04, 0.84, OM.dark, false);
+    return this.rbPanel(r, 'x', u0, u1, 0.54, new THREE.MeshBasicMaterial({ map: tex, toneMapped: false }));
   }
   // the department's computer: a console whose screen opens its page on cymetica.com
   terminal(r, x, y, link) {
