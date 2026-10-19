@@ -3591,7 +3591,7 @@ class Office3D {
     // covering it (2026-10-19: "nazvy jsou moc velke a chci at jsou na tom skle ne na nejakym cernym pozadi, a mozna
     // nedelat vse capslockem"), and beside it the department's icon as the panel on the left has it ("a pridat ty
     // loga stejne jak vlevo v panelu"). Letters light, a soft glow under crisp strokes; the icon a glowing tile.
-    const RS = CO.iso.RS, K = 0.0056, H = 132, font = (fs) => '600 ' + fs + 'px "Segoe UI", Inter, system-ui, sans-serif';
+    const RS = CO.iso.RS, K = 0.0063, H = 132, font = (fs) => '700 ' + fs + 'px "Segoe UI", Inter, system-ui, sans-serif';
     const c = document.createElement('canvas'), g0 = c.getContext('2d'); g0.font = font(96);
     const tw = Math.ceil(g0.measureText(name).width) + 1, pad = 26;
     c.width = Math.min(1024, tw + pad * 2); c.height = H;
@@ -3600,12 +3600,13 @@ class Office3D {
     // a dark halo first, so the letters read over a bright room behind the glass without a band behind them
     g.save(); g.shadowColor = 'rgba(0,0,0,.85)'; g.shadowBlur = 16; g.fillStyle = 'rgba(0,0,0,.5)'; g.fillText(name, pad, H / 2 + 4); g.restore();
     // and a thin dark outline hugging each letter: over a white machine behind the glass a light letter alone vanished
-    g.save(); g.lineJoin = 'round'; g.lineWidth = 9; g.strokeStyle = 'rgba(2,8,14,.72)'; g.strokeText(name, pad, H / 2 + 4); g.restore();
-    draw(20, 0.45); draw(5, 0.8); draw(0, 1);
+    g.save(); g.lineJoin = 'round'; g.lineWidth = 11; g.strokeStyle = 'rgba(2,8,14,.8)'; g.strokeText(name, pad, H / 2 + 4); g.restore();
+    // bolder than at first ("chtelo by to trochu vyraznejsi ty napisy"): a wider glow, a second tight one, the strokes
+    draw(28, 0.6); draw(10, 0.9); draw(3, 1); draw(0, 1);
     const t = new THREE.CanvasTexture(c); t.colorSpace = THREE.SRGBColorSpace; t.anisotropy = 8;
     // drawn over whatever stands in front of the pane (a neighbour's back wall hid the Laboratory's from the home
     // view): a name is the one thing the office must always show
-    const m = new THREE.MeshBasicMaterial({ map: t, transparent: true, depthWrite: false, depthTest: false, toneMapped: false, color: new THREE.Color(SIGN_BLUE).multiplyScalar(1.6) });
+    const m = new THREE.MeshBasicMaterial({ map: t, transparent: true, depthWrite: false, depthTest: false, toneMapped: false, color: new THREE.Color(SIGN_BLUE).multiplyScalar(2.1) });
     const tW = c.width * K, tH = H * K, txt = new THREE.Mesh(G.plane, m); txt.scale.set(tW, tH, 1);
     // the icon: the panel's tile, drawn once from its SVG (CO.deptIconSvg, app.js)
     const S = 128, ic = document.createElement('canvas'); ic.width = ic.height = S; const gi = ic.getContext('2d');
@@ -3626,10 +3627,11 @@ class Office3D {
     }
     const iS = tH * 1.02, icon = new THREE.Mesh(G.plane, new THREE.MeshBasicMaterial({ map: it, transparent: true, depthWrite: false, depthTest: false, toneMapped: false, color: new THREE.Color(1, 1, 1).multiplyScalar(1.25) }));
     icon.scale.set(iS, iS, 1);
-    // icon, a gap, the name: centred along the pane, in its upper part (a room in front hides the lower part from the
+    // icon, a gap, the name: from the pane's left end as the screen reads it, in its upper part (a room in front hides the lower part from the
     // home view), just outside the glass; read left to right on the screen -- along +x on the front-left pane, along
     // -y on the front-right one
-    const gap = 0.14, L = iS + gap + tW, u0 = (RS - L) / 2, z = 0.08 + WH - Math.max(tH, iS) / 2 - 0.01;
+    const gap = 0.14, L = iS + gap + tW, u0 = Math.min(0.45, (RS - L) / 2),   // at the pane's left end ("dat vic doleva a ne doprostred")
+      z = 0.08 + WH - Math.max(tH, iS) / 2 - 0.01;
     const at = (u) => side === 'right' ? this.V(r.x0 + RS + 0.03, r.y0 + RS - u, z) : this.V(r.x0 + u, r.y0 + RS + 0.03, z);
     icon.position.copy(at(u0 + iS / 2)); txt.position.copy(at(u0 + iS + gap + tW / 2));
     [icon, txt].forEach((p) => { if (side === 'right') p.rotation.y = Math.PI / 2; p.userData.dyn = true; p.renderOrder = 20; r.g.add(p); });
@@ -6702,7 +6704,7 @@ class Office3D {
       else if (v.queued.length) { title = 'Up next: ' + v.queued[0].title; sub = ''; mode = isOrange ? 'full' : ''; }
       else { title = d.schedule && d.next_run ? 'Next run at ' + CO.hhmm(d.next_run) : 'Idle'; sub = ''; mode = isOrange ? 'full' : ''; }
       if (r.wall) drawWall(r.wall, title, sub, col, mode);
-      if (r.sign) r.sign.material.color.set(st === 'waiting' ? LOOK.orange : SIGN_BLUE).multiplyScalar(st === 'working' ? 1.9 : 1.5);
+      if (r.sign) r.sign.material.color.set(st === 'waiting' ? LOOK.orange : SIGN_BLUE).multiplyScalar(st === 'working' ? 2.4 : 2.1);
       if (r.kb) drawKanban(r.kb, { queued: v.queued.length, running: v.running ? 1 : 0, done: v.done, failed: v.failed });
       v.experts.slice(0, 3).forEach((e, i) => {
         const a = r.agents[i]; if (a) a.working = e.state === 'working';

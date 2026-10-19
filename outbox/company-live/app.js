@@ -154,11 +154,14 @@
     library: ['#5b9bff', '<path d="M3.4 3.4h3v13.2h-3Z M7.9 3.4h3v13.2h-3Z M12.4 4.3l2.9-.8 3.3 12.4-2.9.8Z M3.4 6h3 M7.9 6h3"/>'],
     workshop: ['#00cfff', '<path d="M12.9 3.1a4 4 0 0 0-4.7 5.2l-4.9 4.9a1.7 1.7 0 0 0 2.4 2.4l4.9-4.9a4 4 0 0 0 5.2-4.7l-2.4 2.4-2.3-.4-.4-2.3Z"/>'],
     command: ['#00cfff', '<circle cx="10" cy="10" r="7.2"/><circle cx="10" cy="10" r="3.7"/><path d="M10 10l5.1-5.1 M10 2.8v1.6 M10 15.6v1.6 M2.8 10h1.6 M15.6 10h1.6"/><circle cx="12.9" cy="8" r=".9" fill="currentColor"/>'],
-    greenhouse: ['#00ff88', '<path d="M4 16.2c0-7 4.6-11.6 12-12.1-.3 7.4-4.9 12.1-12 12.1Z M4 16.2l6.6-6.6"/>']
+    greenhouse: ['#00ff88', '<path d="M4 16.2c0-7 4.6-11.6 12-12.1-.3 7.4-4.9 12.1-12 12.1Z M4 16.2l6.6-6.6"/>'],
+    // the two built-in rooms: Operations (the weekly audit) a gear with its check, the Treasury its vault door
+    audit: ['#00ff88', '<circle cx="10" cy="10" r="3.3"/><path d="M10 2.4v2.3 M10 15.3v2.3 M2.4 10h2.3 M15.3 10h2.3 M4.6 4.6l1.6 1.6 M13.8 13.8l1.6 1.6 M4.6 15.4l1.6-1.6 M13.8 6.2l1.6-1.6 M8.6 10l1 1 1.9-2"/>'],
+    vault: ['#00ff88', '<rect x="2.6" y="3.2" width="14.8" height="13.6" rx="2"/><circle cx="10" cy="10" r="3.9"/><circle cx="10" cy="10" r="1" fill="currentColor"/><path d="M10 6.1v1.6 M10 12.3v1.6 M6.1 10h1.6 M12.3 10h1.6 M5 16.8v1 M15 16.8v1"/>']
   };
   // which icon: the Manager's, a template's, or a department of one's own by its room's look
   function iconOf(d) {
-    var k = d === 'hub' ? 'hub' : DEPT_ICON[d.key] && d.key !== 'custom' ? d.key : (d.look && DEPT_ICON[d.look] ? d.look : 'office');
+    var k = d === 'hub' || d === 'audit' || d === 'vault' ? d : DEPT_ICON[d.key] && d.key !== 'custom' ? d.key : (d.look && DEPT_ICON[d.look] ? d.look : 'office');
     return DEPT_ICON[k];
   }
   function deptIcon(d) {
