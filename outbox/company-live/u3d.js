@@ -309,54 +309,197 @@ function flame(b, y0, w, len, x = 0, z = 0) {
 
 /* ---------------- the six stations, n decks each ---------------- */
 const SKIN = {};
-// Spire: glass decks on a slight twist, a docking ring round the first, a keel and its thruster, a mast
+// Spire, Vector Trading in his orrery: a glass tower of decks on a plinth, a band of light up two of its faces and
+// lit slats across the other two (a deck's slats are its windows), lit edges, a square of light in its roof and a
+// mast; four solar wings off the platform, light tubes round a column under it and an engine at the column's foot
 SKIN.tower = (b, n) => {
-  const A = b.A, fp = fpOf(n) * 0.9, half = fp / 2, tw = 0.13;
-  b.chassis(fp + 1.0, 4);
-  const dock = b.part(G.ringT, A.rim, half * 1.6, half * 1.6, half * 1.6, 0, 0.32, 0); dock.rotation.x = Math.PI / 2;
-  for (let k = 0; k < 4; k++) { const a = k * Math.PI / 2 + Math.PI / 4; b.box(half * 0.62, 0.05, 0.05, Math.cos(a) * half * 1.28, 0.32, Math.sin(a) * half * 1.28, M.metal).rotation.y = -a; }
-  let y = 0;
+  const A = b.A, X = srdA(A), s = fpOf(n) + 1.3, h = 0.2 * s, ts = 0.38 * s, H = s * (0.3 + 0.065 * n), dh = H / n, R = b.R;
+  srdM();
+  const kb = srdBase(b, s, h, { hull: X.hullT, keel: 0.44, keelMat: X.hullT2 });
+  const ps = 0.7 * s, ph = 0.055 * s, pr = ph * 0.45;
+  b.part(srdRBox(ps, ph, ps, pr), X.hullT2, 1, 1, 1, 0, ph / 2, 0);
+  b.part(srdLoop(ps - pr * 0.5, ps - pr * 0.5, pr * 0.75, 0.026), X.neon, 1, 1, 1, 0, ph - pr * 0.22, 0);
+  for (let k = 0; k < 4; k++) srdWing(b, k * Math.PI / 2, s / 2, -h * 0.5, 0.5 * s, 0.22 * s, { lanes: 2, nx: 3, ny: 1 });
+  const cs = 0.26 * s, ch = 0.3 * s;
+  b.box(cs, ch, cs, 0, kb - ch / 2, 0, X.hullT);
+  for (const [sx, sz] of SRD.corners) b.cyl(0.014 * s, ch * 0.9, sx * cs * 0.62, kb - ch * 0.48, sz * cs * 0.62, A.rim);
+  for (const [sx, sz] of [[1, 0], [0, 1], [-1, 0], [0, -1]]) b.cyl(0.011 * s, ch * 0.7, sx * cs * 0.53, kb - ch * 0.45, sz * cs * 0.53, A.soft);
+  b.box(cs * 1.15, 0.05 * s, cs * 1.15, 0, kb - ch - 0.025 * s, 0, X.hullT2);
+  srdJet(b, 0, kb - ch - 0.05 * s, 0, 0.6 * cs, 0.14 * s);
+  let y = ph;
   for (let f = 0; f < n; f++) {
-    const h = FH - 0.08, rot = f * tw;
-    b.box(fp, h, fp, 0, y + h / 2, 0, f % 2 ? A.hull2 : A.hull).rotation.y = rot;
-    b.box(fp + 0.16, 0.06, fp + 0.16, 0, y + h + 0.03, 0, M.trim).rotation.y = rot;
-    b.faceWins(f, fp, fp, y + h / 2, h, 0.36, 0.45, rot);
-    for (const [sx, sz] of [[1, 1], [1, -1], [-1, 1], [-1, -1]]) { const p = rotXZ(sx * (half + 0.035), sz * (half + 0.035), rot); b.box(0.07, h, 0.07, p[0], y + h / 2, p[1], A.rim).rotation.y = rot; }
-    y += FH;
+    b.box(ts, dh - 0.03, ts, 0, y + dh / 2, 0, X.glassT);
+    if (f) b.box(ts + 0.05, 0.035, ts + 0.05, 0, y, 0, M.trim);
+    const k = Math.max(1, Math.round(dh / 0.3)), sh = dh / k;
+    for (let i = 0; i < k; i++) {
+      const yy = y + sh * (i + 0.5);
+      for (const sx of [1, -1]) b.win(sx * (ts / 2 + 0.012), yy, 0, sx * Math.PI / 2, ts * 0.64, Math.min(0.09, sh * 0.34), f, R() < 0.6);
+      for (const sz of [1, -1]) for (const o of [-1, 1]) b.win(o * ts * 0.3, yy, sz * (ts / 2 + 0.012), sz > 0 ? 0 : Math.PI, ts * 0.13, sh * 0.5, f, R() < 0.5);
+    }
+    y += dh;
   }
-  b.box(fp * 0.62, 0.36, fp * 0.62, 0, y + 0.18, 0, M.trim).rotation.y = n * tw;
-  // a landing pad on the roof, ringed in light, a lamp at each corner
-  b.part(G.ringT, A.soft, fp * 0.38, fp * 0.38, fp * 0.38, 0, y + 0.02, 0).rotation.x = Math.PI / 2;
-  for (const [sx, sz] of [[1, 1], [1, -1], [-1, 1], [-1, -1]]) { const p = rotXZ(sx * half * 0.86, sz * half * 0.86, (n - 1) * tw); b.part(G.sphere, A.glow, 0.05, 0.05, 0.05, p[0], y + 0.05, p[1]); }
-  b.cyl(0.035, 1.5, 0, y + 1.11, 0, M.metal);
-  b.beacon(0, y + 1.91, 0, 0.11);
-  const dish = b.part(G.hemi, M.trim, 0.34, 0.14, 0.34, half * 0.32, y + 0.52, -half * 0.2); dish.rotation.z = 0.9;
-  b.top = y + 2.1; b.foot = Math.max(b.foot, half * 1.7, 2.2);
+  for (const sz of [1, -1]) b.box(ts * 0.12, H - 0.06, 0.025, 0, ph + H / 2, sz * (ts / 2 + 0.008), A.rim);
+  for (const [sx, sz] of SRD.corners) b.box(0.08, H, 0.08, sx * ts / 2, ph + H / 2, sz * ts / 2, A.rim);
+  b.part(srdRBox(ts + 0.12, 0.16, ts + 0.12, 0.05), X.hullT2, 1, 1, 1, 0, y + 0.08, 0);
+  b.box(ts * 0.62, 0.03, ts * 0.62, 0, y + 0.17, 0, A.soft);
+  const mh = 0.2 * s; b.cyl(0.025, mh, 0, y + 0.16 + mh / 2, 0, M.metal);
+  b.beacon(0, y + 0.18 + mh, 0, 0.07);
+  b.top = y + 0.3 + mh; b.bot = kb - ch - 0.1; b.foot = s / 2 + 0.1 + 0.5 * s + 0.15;
 };
-// Biodome: a drum of decks on a small planetoid, a glass dome with a garden and a light in it, a moonlet
-SKIN.dome = (b, n) => {
-  const A = b.A, r = fpOf(n) / 2 + 0.5, rr = r * 1.45, cy = -rr * 0.62;
-  b.chassis(2 * r + 0.9, 4);
-  b.cyl(r + 0.3, 0.16, 0, 0, 0, M.trim);
-  let y = 0.08;
-  for (let f = 0; f < n; f++) {
-    const h = FH - 0.06;
-    b.cyl(r, h, 0, y + h / 2, 0, f % 2 ? A.hull2 : A.hull);
-    b.cyl(r + 0.05, 0.05, 0, y + h + 0.025, 0, M.trim);
-    b.ringWins(f, r, y + h / 2, h * 0.52, 0.42, 0.45);
-    y += FH;
+/* The Spire, the Ring station and the Biodome as in the operator's orrery (look-universe.webp): a square platform with
+ * rounded corners, a line of the company's colour along its top edge, solar wings off its sides, engines that glow
+ * blue whatever the company's colour. Their parts are their own (srd*), so the shared builders stay as they are, and
+ * their materials hang on M and on the colour's own set, where release() leaves them alone. Sizes are in parts of
+ * the platform's side, read off the picture. */
+const SRD = { jet: 0x63c4ff, corners: [[1, 1], [1, -1], [-1, 1], [-1, -1]] };
+function srdA(A) {
+  if (A.srd) return A.srd;
+  const c = A.c, tint = (hex, k) => new THREE.Color(hex).lerp(c, k);
+  // Matte enough to read in space without anything for a metal to reflect, and lit a little from within: the map's
+  // sun stands behind a station as often as before it, and his picture has no side in the dark.
+  A.srd = {
+    hullT: srdHull(tint(0x253545, 0.13), 0.6),
+    hullT2: srdHull(tint(0x334558, 0.11), 0.55),
+    glassT: std({ color: tint(0x1a3846, 0.32), roughness: 0.25, metalness: 0.2, emissive: c, emissiveIntensity: 0.18 }),
+    hullD: srdHull(tint(0x232e2d, 0.18), 0.62),
+    hullD2: srdHull(tint(0x323e3c, 0.16), 0.55),
+    glassD: std({ color: c.clone().multiplyScalar(0.5), emissive: c, emissiveIntensity: 0.55, transparent: true, opacity: 0.48, roughness: 0.08, metalness: 0.1, depthWrite: false, side: THREE.DoubleSide }),
+    neon: std({ color: 0x000000, emissive: c, emissiveIntensity: 1.5, roughness: 1 })
+  };
+  return A.srd;
+}
+function srdHull(color, rough) { const c = new THREE.Color(color); return std({ color: c, roughness: rough, metalness: 0.15, emissive: c.clone().multiplyScalar(0.16) }); }
+function srdM() {
+  if (M.srdJet) return M;
+  M.srdJet = new THREE.MeshBasicMaterial({ color: new THREE.Color(SRD.jet).multiplyScalar(1.2), transparent: true, opacity: 0.11, blending: THREE.AdditiveBlending, depthWrite: false, side: THREE.DoubleSide });
+  M.srdJetCore = new THREE.MeshBasicMaterial({ color: new THREE.Color(0x3ab4ff).multiplyScalar(1.7) });
+  M.srdPlate = srdHull(0xa4a2ad, 0.55);
+  M.srdSteel = srdHull(0x74767f, 0.5);
+  M.srdSteel2 = srdHull(0x5a5c66, 0.55);
+  M.srdCap = srdHull(0xc8cad2, 0.4);
+  M.srdModule = srdHull(0xa7b0bb, 0.5);
+  M.srdLamp = std({ color: 0x000000, emissive: new THREE.Color(0x52d6e8), emissiveIntensity: 1.1, roughness: 1 });
+  return M;
+}
+// solar cells as in his picture: slate-blue cells with pale lines in a light frame, nx along a panel and ny across it
+function srdSolar(nx, ny) {
+  const k = 'srdSolar' + nx + 'x' + ny;
+  if (M[k]) return M[k];
+  const t = TX[k] || (TX[k] = ctex(nx * 80, ny * 80, (g, W, H) => {
+    g.fillStyle = '#b6c1d2'; g.fillRect(0, 0, W, H);
+    const m = 4, sx = (W - 2 * m) / nx, sy = (H - 2 * m) / ny;
+    for (let i = 0; i < nx; i++) for (let j = 0; j < ny; j++) {
+      const x = m + i * sx, y = m + j * sy, gr = g.createLinearGradient(x, y, x + sx, y + sy);
+      gr.addColorStop(0, '#6683b0'); gr.addColorStop(1, '#41598a'); g.fillStyle = gr; g.fillRect(x + 1.5, y + 1.5, sx - 3, sy - 3);
+      g.strokeStyle = 'rgba(205,220,250,.4)'; g.lineWidth = 1; g.beginPath();
+      for (let q = 1; q < 4; q++) { const ox = x + 1.5 + q * (sx - 3) / 4, oy = y + 1.5 + q * (sy - 3) / 4; g.moveTo(ox, y + 2); g.lineTo(ox, y + sy - 2); g.moveTo(x + 2, oy); g.lineTo(x + sx - 2, oy); }
+      g.stroke();
+    }
+  }));
+  return (M[k] = std({ map: t, emissive: 0xffffff, emissiveMap: t, emissiveIntensity: 0.26, roughness: 0.45, metalness: 0.15 }));
+}
+function srdRR(w, d, r) {
+  const s = new THREE.Shape(), x = w / 2, y = d / 2;
+  s.moveTo(-x + r, -y);
+  s.lineTo(x - r, -y); s.absarc(x - r, -y + r, r, -Math.PI / 2, 0, false);
+  s.lineTo(x, y - r); s.absarc(x - r, y - r, r, 0, Math.PI / 2, false);
+  s.lineTo(-x + r, y); s.absarc(-x + r, y - r, r, Math.PI / 2, Math.PI, false);
+  s.lineTo(-x, -y + r); s.absarc(-x + r, -y + r, r, Math.PI, Math.PI * 1.5, false);
+  return s;
+}
+const srdKey = (p, v) => p + v.map((x) => x.toFixed(3)).join(',');
+function srdRBox(w, h, d, r) { const k = srdKey('srdRB', [w, h, d, r]); return G[k] || (G[k] = new RoundedBoxGeometry(w, h, d, 4, r)); }
+// a tube of light along a rounded square, lying flat
+function srdLoop(w, d, r, tube) {
+  const k = srdKey('srdLp', [w, d, r, tube]);
+  if (G[k]) return G[k];
+  const pts = srdRR(w, d, r).getSpacedPoints(200).map((p) => new THREE.Vector3(p.x, 0, -p.y)); pts.pop();
+  return (G[k] = new THREE.TubeGeometry(new THREE.CatmullRomCurve3(pts, true, 'centripetal'), 400, tube, 6, true));
+}
+// the platform: a slab with rounded corners, a tube of light along its top edge (a second inside it for o.rims 2),
+// a keel under it; returns the keel's foot
+function srdBase(b, s, h, o) {
+  const A = b.A, X = srdA(A), r = Math.min(0.26, h * 0.4), d = r * 0.25;
+  b.part(srdRBox(s, h, s, r), o.hull, 1, 1, 1, 0, -h / 2, 0);
+  b.part(srdLoop(s - 2 * d, s - 2 * d, r - d, 0.024), X.neon, 1, 1, 1, 0, -r * 0.22, 0);
+  if (o.rims > 1) b.part(srdLoop(s - 2.8 * r, s - 2.8 * r, r * 0.4, 0.022), A.rim, 1, 1, 1, 0, 0.01, 0);
+  b.part(srdLoop(s, s, r, 0.016), A.soft, 1, 1, 1, 0, -h * 0.58, 0);
+  const ks = s * (o.keel || 0.56), kh = h * 0.5;
+  b.part(srdRBox(ks, kh, ks, Math.min(0.12, kh * 0.4)), o.keelMat || o.hull, 1, 1, 1, 0, -h - kh / 2 + 0.02, 0);
+  b.srdBase = { s, y: 0 };
+  return -h - kh + 0.02;
+}
+// a solar wing off the platform's side at angle a: a strut out from it, panels along it -- rows of them end to end,
+// lanes of them side by side
+function srdWing(b, a, out, y, len, wid, o) {
+  const rows = o.rows || 1, lanes = o.lanes || 1, gap = 0.1, tilt = o.tilt != null ? o.tilt : 0.08, mat = srdSolar(o.nx || 3, o.ny || 2), at = (x, z) => rotXZ(x, z, a);
+  let p = at(out + (gap + len) / 2, 0); b.box(gap + len, 0.055, 0.055, p[0], y, p[1], M.metal).rotation.y = a;
+  p = at(out + 0.04, 0); b.box(0.14, 0.16, 0.2, p[0], y, p[1], M.trim).rotation.y = a;
+  const pl = (len - (rows - 1) * 0.06) / rows, pw = (wid - (lanes - 1) * 0.07) / lanes;
+  for (let i = 0; i < rows; i++) for (let j = 0; j < lanes; j++) {
+    p = at(out + gap + pl / 2 + i * (pl + 0.06), -wid / 2 + pw / 2 + j * (pw + 0.07));
+    const m = b.box(pl, 0.035, pw, p[0], y, p[1], mat); m.rotation.order = 'YXZ'; m.rotation.set(tilt, a, 0);
   }
-  b.cyl(r, 0.04, 0, y + 0.02, 0, M.trim);
-  b.part(G.ringT, A.rim, r + 0.03, r + 0.03, r + 0.03, 0, y + 0.03, 0).rotation.x = Math.PI / 2;
-  for (let k = 0; k < 4; k++) { const a = k / 4 * Math.PI * 2 + 0.4; b.part(G.sphere, M.leaf, 0.24, 0.3, 0.24, Math.cos(a) * r * 0.52, y + 0.22, Math.sin(a) * r * 0.52); }
-  b.part(G.hemi, A.glass, r, r * 0.95, r, 0, y, 0);
-  const wire = b.part(G.hemiWire, A.wire, r * 1.006, r * 0.956, r * 1.006, 0, y, 0, true);
-  const core = b.part(G.sphere, A.soft, r * 0.22, r * 0.22, r * 0.22, 0, y + r * 0.42, 0, true);
-  b.anim.push((t) => {
-    core.position.y = y + r * 0.42 + Math.sin(t * 1.3 + b.phase) * 0.05; wire.rotation.y = t * 0.08;
-  });
-  b.beacon(0, y + r * 0.95 + 0.06, 0, 0.08);
-  b.top = y + r * 0.95 + 0.6; b.foot = Math.max(b.foot, r * 1.3);
+}
+// an engine's jet in the engines' blue, down from (x, y, z); it grows while a deck works
+function srdJet(b, x, y, z, w, len) {
+  const m = srdM();
+  b.part(G.sphere, m.srdJetCore, w * 0.28, w * 0.28, w * 0.28, x, y, z);
+  const p = b.part(G.beam, m.srdJet, w, len, w, x, y, z, true); p.rotation.x = Math.PI;
+  b.anim.push((t) => { const k = (b.busy ? 1.3 : 0.85) + 0.12 * Math.sin(t * 17 + b.phase + x * 3 + z); p.scale.set(w * k, len * k, w * k); p.position.y = y - len * k / 2; });
+}
+// an engine out of the platform's side at angle a, o along that side: its housing, its bell, the glow in its mouth;
+// as in his picture a disc of light and no plume, a halo round it that swells while a deck works
+function srdEngine(b, a, o, y, r, half) {
+  const m = srdM(), at = (x) => rotXZ(x, o, a), turn = (mesh, z) => { mesh.rotation.order = 'YXZ'; mesh.rotation.set(0, a, z); };
+  let p = at(half + r * 0.6); turn(b.part(G.cyl, M.trim, r * 1.15, r * 1.3, r * 1.15, p[0], y, p[1]), -Math.PI / 2);
+  p = at(half + r * 1.8); turn(b.part(G.bell, M.metal, r, r, r, p[0], y, p[1]), Math.PI / 2);
+  p = at(half + r * 2.25); turn(b.part(G.cyl, m.srdJetCore, r * 0.9, 0.02, r * 0.9, p[0], y, p[1]), -Math.PI / 2);
+  const halo = b.part(G.sphere, m.srdJet, r, r, r, p[0], y, p[1], true);
+  b.anim.push((t) => halo.scale.setScalar(r * ((b.busy ? 1.6 : 1.15) + 0.1 * Math.sin(t * 13 + b.phase))));
+}
+// Biodome, Quasar Fund in his orrery: a glass dome glowing in the company's colour on a drum of ring decks, a lit
+// collar at its foot, on a dark platform with a hatch and modules on its deck; four broad solar wings
+SKIN.dome = (b, n) => {
+  const A = b.A, X = srdA(A), m = srdM(), s = fpOf(n) + 1.3, h = 0.16 * s;
+  const kb = srdBase(b, s, h, { hull: X.hullD, keelMat: X.hullD2 });
+  for (let k = 0; k < 4; k++) srdWing(b, k * Math.PI / 2, s / 2, -h * 0.5, 0.62 * s, 0.34 * s, { nx: 4, ny: 2 });
+  // on the deck: a hatch at the back, modules along the front edges, a small dome at the front corner
+  b.cyl(0.075 * s, 0.035 * s, -0.37 * s, 0.0175 * s, 0.33 * s, X.hullD2);
+  b.cyl(0.05 * s, 0.04 * s, -0.37 * s, 0.02 * s, 0.33 * s, M.dark);
+  b.part(G.ringT, m.srdModule, 0.075 * s, 0.075 * s, 0.075 * s, -0.37 * s, 0.035 * s, 0.33 * s).rotation.x = Math.PI / 2;
+  for (const [x, z] of [[-0.18, 0.42], [-0.3, 0.42], [0.42, -0.16], [0.42, -0.28]]) b.box(0.08 * s, 0.045 * s, 0.06 * s, x * s, 0.0225 * s, z * s, m.srdModule).rotation.y = z > 0.4 ? 0 : Math.PI / 2;
+  b.part(G.hemi, m.srdModule, 0.05 * s, 0.05 * s, 0.05 * s, 0.37 * s, 0, 0.37 * s);
+  // the collar where the drum meets the deck, lit ribs round it
+  const cr = 0.38 * s, chh = 0.045 * s;
+  b.cyl(cr, chh, 0, chh / 2, 0, X.hullD2);
+  b.part(G.ringT, A.rim, cr, cr, cr, 0, chh, 0).rotation.x = Math.PI / 2;
+  for (let k = 0; k < 18; k++) { const a = k / 18 * Math.PI * 2; b.box(0.02, chh * 0.5, 0.05 * s, Math.cos(a) * (cr + 0.01), chh * 0.45, -Math.sin(a) * (cr + 0.01), A.soft).rotation.y = a; }
+  // the drum: a ring deck per department
+  const dr = 0.31 * s, dh = 0.085 * s;
+  let y = chh;
+  for (let f = 0; f < n; f++) {
+    b.cyl(dr, dh * 0.8, 0, y + dh * 0.4, 0, X.hullD);
+    b.cyl(dr * 0.95, dh * 0.2, 0, y + dh * 0.9, 0, M.dark);
+    b.part(G.ringT, A.soft, dr, dr, dr, 0, y + dh * 0.8, 0).rotation.x = Math.PI / 2;
+    b.ringWins(f, dr, y + dh * 0.4, dh * 0.42, 0.26, 0.5, 0.09);
+    y += dh;
+  }
+  // the glass dome: a drum of glass and its cap, ribs, a light and a garden inside
+  const gr = 0.235 * s, gh = 0.24 * s;
+  b.cyl(gr + 0.04, 0.04, 0, y + 0.02, 0, M.trim);
+  b.part(G.ringT, A.rim, gr + 0.02, gr + 0.02, gr + 0.02, 0, y + 0.04, 0).rotation.x = Math.PI / 2;
+  b.part(G.pole, X.glassD, gr, gh, gr, 0, y + gh / 2, 0);
+  b.part(G.hemi, X.glassD, gr, 0.1 * s, gr, 0, y + gh, 0);
+  b.part(G.ringT, A.soft, gr, gr, gr, 0, y + gh, 0).rotation.x = Math.PI / 2;
+  for (let k = 0; k < 10; k++) { const a = k / 10 * Math.PI * 2; b.box(0.025, gh, 0.025, Math.cos(a) * gr, y + gh / 2, Math.sin(a) * gr, m.srdCap); }
+  for (let k = 0; k < 5; k++) { const a = k / 5 * Math.PI * 2 + 0.3; b.part(G.sphere, M.leaf, 0.07 * s, 0.09 * s, 0.07 * s, Math.cos(a) * gr * 0.6, y + 0.06 * s, Math.sin(a) * gr * 0.6); }
+  const core = b.part(G.sphere, A.soft, 0.06 * s, 0.06 * s, 0.06 * s, 0, y + gh * 0.55, 0, true);
+  const yc = y + gh * 0.55;
+  b.anim.push((t) => { core.position.y = yc + Math.sin(t * 1.3 + b.phase) * 0.04 * s; });
+  b.cyl(0.018 * s, 0.07 * s, 0, y + gh + 0.1 * s + 0.035 * s, 0, M.metal);
+  b.beacon(0, y + gh + 0.18 * s, 0, 0.06);
+  b.top = y + gh + 0.18 * s + 0.15; b.bot = kb - 0.1; b.foot = s / 2 + 0.1 + 0.62 * s + 0.1;
 };
 // Ziggurat: a tier per deck on a floating island of rock, stones drifting under it, a beam from its temple
 SKIN.pyramid = (b, n) => {
@@ -377,31 +520,51 @@ SKIN.pyramid = (b, n) => {
   b.beacon(0, y + 0.62, 0, 0.13);
   b.top = y + 1.5; b.foot = Math.max(b.foot, b0 * 0.85 + 0.4);
 };
-// Ring station: a spindle of disc decks, a great wheel round it on four spokes, turning slowly, an engine below
+// Ring station, Sigma Collective in his orrery: a stack of ring decks stepping in, a line of light round each rim,
+// a neck, a saucer and a dome over them and a dish turning on top, on a light grey platform with two lines of light
+// and lit ports along its sides; solar wings off three sides, an engine glowing blue out of the fourth
 SKIN.orbital = (b, n) => {
-  const A = b.A, rd = 0.75 + fpOf(n) * 0.15, spineH = 0.4 + n * FH, RR = rd + 1.9;
-  b.cyl(0.22, spineH + 1.6, 0, (spineH - 0.4) / 2, 0, M.metal);
-  b.part(G.bell, M.trim, 0.42, 0.55, 0.42, 0, -1.25, 0);
-  flame(b, -1.55, 0.75, 1.3);
-  let y = 0.2;
+  const A = b.A, m = srdM(), s = fpOf(n) + 1.3, h = 0.16 * s;
+  const kb = srdBase(b, s, h, { hull: m.srdPlate, rims: 2, keelMat: m.srdSteel2 });
+  for (let k = 0; k < 4; k++) for (const o of [-0.28, 0, 0.28]) {
+    if (k === 0 && o < 0) continue;
+    const a = k * Math.PI / 2, p = rotXZ(s / 2 + 0.006, o * s, a);
+    b.box(0.02, h * 0.16, s * 0.17, p[0], -h * 0.6, p[1], m.srdLamp).rotation.y = a;
+  }
+  [-Math.PI / 2, Math.PI, Math.PI / 2].forEach((a) => srdWing(b, a, s / 2, -h * 0.45, 0.62 * s, 0.28 * s, { rows: 2, nx: 3, ny: 2 }));
+  srdEngine(b, 0, -0.22 * s, -h * 0.5, 0.075 * s, s / 2);
+  // the hub: ring decks stepping in, each a light round its rim and lit ports round its side
+  const r0 = 0.36 * s, r1 = 0.25 * s, dh = 0.1 * s;
+  b.cyl(r0 + 0.04 * s, 0.03 * s, 0, 0.015 * s, 0, m.srdSteel2);
+  let y = 0.03 * s;
   for (let f = 0; f < n; f++) {
-    b.cyl(rd, 0.3, 0, y + 0.15, 0, f % 2 ? A.hull2 : A.hull);
-    b.part(G.ringT, A.rim, rd + 0.01, rd + 0.01, rd + 0.01, 0, y + 0.3, 0).rotation.x = Math.PI / 2;
-    b.ringWins(f, rd, y + 0.15, 0.14, 0.38, 0.5, 0.15);
-    y += FH;
+    const r = n > 1 ? r0 + (r1 - r0) * f / (n - 1) : r0, th = dh * 0.66;
+    b.cyl(r, th, 0, y + th / 2, 0, m.srdSteel);
+    b.cyl(r * 0.86, dh - th, 0, y + th + (dh - th) / 2, 0, m.srdSteel2);
+    b.part(G.ring, A.rim, r + 0.01, r + 0.01, r + 0.01, 0, y + th - 0.01, 0).rotation.x = Math.PI / 2;
+    b.part(G.ring, A.soft, r + 0.01, r + 0.01, r + 0.01, 0, y + 0.012, 0).rotation.x = Math.PI / 2;
+    b.ringWins(f, r, y + th * 0.5, th * 0.34, 0.3, 0.5, 0.11);
+    y += dh;
   }
-  const wheel = new THREE.Group(); wheel.position.y = 0.2 + n * FH / 2 - 0.25; wheel.userData.dyn = true; b.g.add(wheel);
-  const tor = new THREE.Mesh(G.wheel, A.hull2); tor.scale.setScalar(RR); tor.rotation.x = Math.PI / 2; wheel.add(tor);
-  const off = 0.085 * RR * 0.7;
-  for (const dy of [off, -off]) { const l = new THREE.Mesh(G.ring, A.rim); l.scale.setScalar(RR + off); l.rotation.x = Math.PI / 2; l.position.y = dy; wheel.add(l); }
-  for (let k = 0; k < 4; k++) {
-    const a = k * Math.PI / 2, s = new THREE.Mesh(G.cyl8, M.metal); s.scale.set(0.06, RR - 0.3, 0.06); s.rotation.set(0, a, Math.PI / 2);
-    s.position.set(Math.cos(a) * (RR + 0.3) / 2, 0, -Math.sin(a) * (RR + 0.3) / 2); wheel.add(s);
-  }
-  bakeGroup(wheel);
-  b.anim.push((t) => { wheel.rotation.y = t * 0.2 + b.phase; });
-  b.beacon(0, spineH + 0.68, 0, 0.1);
-  b.top = spineH + 1.1; b.bot = -2.6; b.foot = RR + 0.5;
+  // the neck, the saucer and the dome
+  const nr = 0.17 * s, sr = 0.29 * s, dr = 0.15 * s;
+  b.cyl(nr, 0.05 * s, 0, y + 0.025 * s, 0, m.srdSteel2); y += 0.05 * s;
+  b.cyl(sr, 0.065 * s, 0, y + 0.0325 * s, 0, m.srdSteel);
+  b.part(G.ring, A.rim, sr + 0.01, sr + 0.01, sr + 0.01, 0, y + 0.055 * s, 0).rotation.x = Math.PI / 2;
+  y += 0.065 * s;
+  b.cyl(dr, 0.06 * s, 0, y + 0.03 * s, 0, m.srdSteel2); y += 0.06 * s;
+  b.part(G.hemi, m.srdCap, dr, 0.11 * s, dr, 0, y, 0);
+  const yt = y + 0.11 * s;
+  // the dish on the dome, turning
+  const dish = new THREE.Group(); dish.position.set(0, yt, 0); dish.userData.dyn = true; b.g.add(dish);
+  const stalk = new THREE.Mesh(G.cyl, M.metal); stalk.scale.set(0.012 * s, 0.06 * s, 0.012 * s); stalk.position.y = 0.03 * s; dish.add(stalk);
+  const bowl = new THREE.Mesh(G.hemi, m.srdCap); bowl.scale.set(0.075 * s, 0.03 * s, 0.075 * s); bowl.rotation.set(Math.PI - 0.5, 0, 0); bowl.position.set(0, 0.07 * s, 0); dish.add(bowl);
+  const horn = new THREE.Mesh(G.cyl, M.metal); horn.scale.set(0.008 * s, 0.05 * s, 0.008 * s); horn.rotation.x = -0.5; horn.position.set(0, 0.09 * s, 0.012 * s); dish.add(horn);
+  bakeGroup(dish);
+  b.anim.push((t) => { dish.rotation.y = t * 0.4 + b.phase; });
+  b.beacon(0.12 * s, yt - 0.04 * s, 0, 0.05);
+  b.box(0.11 * s, 0.08 * s, 0.11 * s, 0.33 * s, 0.04 * s, 0.33 * s, m.srdModule).rotation.y = Math.PI / 4;
+  b.top = yt + 0.12 * s; b.bot = kb - 0.1; b.foot = s / 2 + 0.1 + 0.6 * s + 0.1;
 };
 // Laser station (key 'rocket', so a company saved with the old Starship keeps its pick), as the operator's picture
 // draws it: an armoured block in the company's colour under a round lid, a laser cannon out of one side firing a
