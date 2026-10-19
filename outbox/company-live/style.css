@@ -334,7 +334,7 @@ b.g, span.g { color: var(--green); text-shadow: 0 0 10px rgba(0, 255, 136, .45);
 .office .room .hl { opacity: 0; transition: opacity .2s; }
 .office .room.hover .hl { opacity: 1; }
 .office .room.hover .neon { opacity: 1; } .office .room.hover .neonG { opacity: .6; }
-.office .room.hover .hit, .office .plate, .office .room { cursor: pointer; }
+.office .room.hover .hit, .office .plate, .office .room, .office .sign { cursor: pointer; }
 /* the free lot: its square of lane dashes, and the pad's wall of light breathing */
 .office .lotf { stroke: #dfeaf0; stroke-width: 2; stroke-dasharray: 9.2 6.6; opacity: .55; transition: opacity .2s; }
 .office .room.lot.hover .lotf { opacity: .95; }

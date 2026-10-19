@@ -280,8 +280,6 @@
     out += text(sc[0], sc[1] + 5, '↗', 14, L.mint, 700, 'middle', null, ' class="pcarrow" filter="url(#glowS)"');
     return out + '</g>';
   }
-  // what the department has earned, lit, on its plate's title row: Cymetica QA's ET10
-  function earnedLabel(n) { return (n ? '+' : '') + n.toLocaleString('en-US') + ' ET10'; }
   function plant(x, y, k) {
     k = k || 1;
     var out = cyl(x, y, 0.1, 0.1 + 0.34 * k, 0.22 * k, '#2c3742', '#232c36', '#161d25'), c = P(x, y, 0.1 + 0.34 * k);
@@ -478,29 +476,37 @@
     });
     return out;
   }
-  // A plate as the 3D office's: a dark glass card with a pale frame, a small square dot in the colour of what the
-  // room is doing, the name in a light sans, a line under it; framed in that colour under the mouse or when open
-  var FT = "600 9.2px 'Segoe UI', Inter, system-ui, sans-serif", FS = "500 7.6px 'JetBrains Mono', monospace",
-    FE = "700 7.2px 'JetBrains Mono', monospace", FN = "600 8.4px 'Segoe UI', Inter, system-ui, sans-serif";
-  // sub is a line of text, or of parts [text, colour, lit] (the vault's amounts: the figures lit in their colours)
-  function plate(cx, cy, key, title, dot, sub, subCol, edge, pulse, et) {
-    var parts = Array.isArray(sub) ? sub : null, subS = parts ? parts.map(function (p) { return p[0]; }).join('') : sub;
-    var tw = measure(title, FT, 0.64), sw = measure(subS, FS, 0) + (parts ? 8 : 0), el = et ? earnedLabel(et.n) : '', ew = et ? measure(el, FE, 0) + 7 : 0;
-    var w = Math.round(Math.max(20 + tw + ew, 10 + sw) + 11), h = 30, x = cx - w / 2, y = cy - h / 2;
-    var r = ' x="' + f1(x) + '" y="' + f1(y) + '" width="' + w + '" height="' + h + '" rx="6"';
-    var out = '<g class="plate rp" data-key="' + key + '" style="--c:' + edge + '"><rect class="pglow"' + r + '/><rect class="pbg"' + r + '/>';
-    out += '<rect class="' + (pulse ? 'pdot' : 'pd') + '" x="' + f1(x + 10) + '" y="' + f1(y + 7.1) + '" width="4.4" height="4.4" rx=".7" fill="' + dot + '" filter="url(#glowS)"/>';
-    out += text(x + 20, y + 12.6, title, 9.2, L.text, 600, 'start', 'sans', ' letter-spacing=".64"');
-    if (et) {
-      out += '<g class="earned' + (et.n ? ' lit' : '') + (et.fresh ? ' pop' : '') + '">' +
-        text(x + 20 + tw + 7, y + 12.4, el, 7.2, et.n ? '#38f5b8' : L.dim2, 700, 'start', null, et.n ? ' filter="url(#glowS)"' : '') + '</g>';
-    }
-    if (parts) {
-      out += '<text x="' + f1(x + 10) + '" y="' + f1(y + 23.4) + '" font-family="\'JetBrains Mono\',monospace" font-size="7.6" font-weight="500">' + parts.map(function (p) {
-        return '<tspan fill="' + p[1] + '"' + (p[2] ? ' font-weight="700" filter="url(#glowS)"' : '') + '>' + esc(p[0]) + '</tspan>';
-      }).join('') + '</text>';
-    } else out += text(x + 10, y + 23.4, sub, 7.6, subCol, 500, 'start', null, ' opacity=".9"');
+  // the pills' fonts, for their widths
+  var FS = "500 7.6px 'JetBrains Mono', monospace", FN = "600 8.4px 'Segoe UI', Inter, system-ui, sans-serif";
+  // A room's name lettered on its front glass, as the 3D office's (u3d.js glassSign), and no plate over it ("tam
+  // vlastne staci jen ty nazvy mistnosti dat na to sklo ... nic vic se tam zobrazovat uz nemusi"): as written and
+  // bold, the site's cyan-blue with a soft glow and a thin dark outline, nothing behind it ("ne na nejakym cernym
+  // pozadi, a mozna nedelat vse capslockem"), the department's icon from the rail before it ("pridat ty loga stejne jak
+  // vlevo v panelu"), from the pane's left end ("dat vic doleva"), in the glass's upper part; on the front-left pane,
+  // or the front-right one when a room stands in front of the left; orange while the room waits on the owner. Drawn
+  // over the rooms, so a neighbour in front never hides it; a click on it opens the room, as a plate's did.
+  function glassSign(c, key, name, icon, have, st) {
+    var x0 = c[0], y0 = c[1], leftFree = !have[x0 + ',' + (y0 + 8)], rightFree = !have[(x0 + 8) + ',' + y0];
+    var right = !leftFree && rightFree, u0 = 0.4, zt = WZ - 0.03, fs = 13.6, is = 16, ty = 1.2 + is / 2 + fs * 0.35;
+    var tf = right ? onLeft(x0 + RS, y0 + RS, -u0, zt) : onBack(x0, u0, y0 + RS, zt);
+    var col = st === 'waiting' ? '#ff8a3a' : '#00cfff', label = cut(name, 22), lit = st === 'working' ? 1 : 0.9;
+    var def = CO.deptIconSvg ? CO.deptIconSvg(icon, is - 4) : null, ic = def ? def.color : col;
+    var out = '<g class="sign" data-key="' + key + '" transform="' + tf + '">';
+    out += '<rect x="0" y="1.2" width="' + is + '" height="' + is + '" rx="4" fill="' + ic + '" fill-opacity=".2" stroke="' + ic + '" stroke-opacity=".7" stroke-width=".8"/>';
+    if (def) out += def.svg.replace('<svg ', '<svg x="2.5" y="3.7" filter="url(#glowS)" ');
+    // the glow under the letters, then the letters on a thin dark outline
+    out += '<text x="' + (is + 5) + '" y="' + f1(ty) + '" font-family="' + SANS + '" font-size="' + fs + '" font-weight="700" fill="' + col + '" opacity="' + (0.55 * lit).toFixed(2) + '" filter="url(#glow2)">' + esc(label) + '</text>';
+    out += '<text x="' + (is + 5) + '" y="' + f1(ty) + '" font-family="' + SANS + '" font-size="' + fs + '" font-weight="700" fill="' + col + '" fill-opacity="' + lit + '" stroke="rgba(2, 8, 14, .8)" stroke-width="2.6" stroke-linejoin="round" paint-order="stroke">' + esc(label) + '</text>';
     return out + '</g>';
+  }
+  // the Treasury's amounts over its plinth, the figures lit in their colours
+  function amountPill(cx, cy, key, parts) {
+    var s = parts.map(function (p) { return p[0]; }).join(''), w = Math.round(measure(s, FS, 0) + 26), h = 17, x = cx - w / 2, y = cy - h / 2;
+    var r = ' x="' + f1(x) + '" y="' + f1(y) + '" width="' + w + '" height="' + h + '" rx="4"';
+    return '<g class="plate rp" data-key="' + key + '" style="--c:#38f2b8"><rect class="pglow"' + r + '/><rect class="pbg"' + r + '/>' +
+      '<text x="' + f1(cx) + '" y="' + f1(y + 11.6) + '" text-anchor="middle" font-family="\'JetBrains Mono\',monospace" font-size="7.6" font-weight="500">' + parts.map(function (p) {
+        return '<tspan fill="' + p[1] + '"' + (p[2] ? ' font-weight="700" filter="url(#glowS)"' : '') + '>' + esc(p[0]) + '</tspan>';
+      }).join('') + '</text></g>';
   }
   // over the Manager's rings: what needs the owner, in orange, or that nothing does
   function needPill(cx, cy, label, alert) {
@@ -994,8 +1000,9 @@
       g.setAttribute('class', 'room st-' + st + (extra || '') + (self.sel === k ? ' sel' : '') + (g.classList.contains('born') ? ' born' : '') + (g.classList.contains('hover') ? ' hover' : ''));
     };
     var paint = function (el, html) { if (el && el._h !== html) { el._h = html; el.innerHTML = html; } };
-    var turnsBy = {};
+    var turnsBy = {}, have = {};
     S.strip.forEach(function (c) { turnsBy[c.dept_id] = (turnsBy[c.dept_id] || 0) + 1; });
+    Object.keys(cells).forEach(function (k) { have[cells[k][0] + ',' + cells[k][1]] = 1; });
     var anyWork = false;
     S.departments.forEach(function (d) {
       var key = 'd' + d.id, g = ex(key); if (!g) return;
@@ -1020,16 +1027,8 @@
         var ag = g.querySelector('.agent[data-agent="' + key + ':' + i + '"]');
         if (ag) { ag.classList.toggle('working', e.state === 'working'); ag.classList.toggle('idle', e.state !== 'working'); }
       });
-      // the plate says who and what it is doing, in one word or two; the counts live one click away
-      var n = d.et10 || 0, et = null, pa = P(x0 + 4.4, y0 + 5.6, 1.3);
-      if (d.files_as) {
-        var last = (self.lastEt || (self.lastEt = {}))[d.id];
-        et = { n: n, fresh: last != null && n > last };
-        self.lastEt[d.id] = n;
-      }
-      var hot = ln.tone === 'red';
-      over += plate(pa[0], pa[1], key, d.name.toUpperCase(), hot ? STC.waiting : dot, ln.short, TONEC[ln.tone] || TONEC.dim,
-        hot ? STC.waiting : col, v.status === 'working', et);
+      // its name on its front glass; what it does is on its wall screen and one click away
+      over += glassSign(cells[key], key, d.name, d, have, st);
     });
     // the Manager's room
     var hub = ex('hub');
@@ -1048,8 +1047,7 @@
       // over the rings: what needs the owner, or that nothing does
       var ht = this.hubTop, na = S.approvals.length;
       if (ht) over += needPill(ht[0], ht[1] - 10, na ? na + (CO.RO ? ' WAIT FOR ITS OWNER' : na === 1 ? ' NEEDS YOU' : ' NEED ATTENTION') : 'ALL CLEAR', na > 0);
-      var mp = P(hx + 6.1, hy + 6.75, 1.3), mc = paused ? L.dim2 : L.hub;
-      over += plate(mp[0], mp[1], 'hub', 'COMMAND', mc, paused ? 'Paused' : (CO.RO ? 'Its chat' : 'Your chat') + ' · runs it all', paused ? L.dim : L.hub, mc, !paused && anyWork);
+      over += glassSign(cells.hub, 'hub', 'Command', 'hub', have, paused ? 'idle' : anyWork ? 'working' : 'idle');
     }
     var au = ex('audit');
     if (au) {
@@ -1057,20 +1055,21 @@
       setCls(au, 'audit', 'idle');
       var as = au.querySelector('.scr');
       paint(as, wallScreen(ax, ay, +as.getAttribute('data-u0'), +as.getAttribute('data-u1'), 'Weekly audit: next in ' + days + 'd', nf + ' findings last week', STC.idle, ''));
-      var ap = P(ax + 4.4, ay + 5.6, 1.3);
-      over += plate(ap[0], ap[1], 'audit', 'OPERATIONS', STC.idle, 'next in ' + days + (days === 1 ? ' day' : ' days'), L.dim, STC.idle, false);
+      over += glassSign(cells.audit, 'audit', 'Operations', 'audit', have, 'idle');
     }
-    // the vault: its plate says what it holds, ET10 and USDC lit, as the 3D's ("v cedulce Vaultu by melo svitit kolik
-    // tam je"); a visitor finds it private and the plinth bare
+    // the Treasury: its name on its glass, and over its plinth what it holds, ET10 and USDC lit ("v cedulce Vaultu by
+    // melo svitit kolik tam je"); a visitor finds it private and the plinth bare
     var vr = ex('vault');
     if (vr) {
       var VT = CO.vaultTotals(), priv = !!CO.RO, vkey = priv ? 'priv' : Math.round(VT.et10) + '|' + VT.usdc.toFixed(2);
       setCls(vr, 'vault', 'idle', priv ? ' closed' : '');
       var pg = vr.querySelector('.piles');
       if (pg._k !== vkey) { pg._k = vkey; pg.innerHTML = priv ? '' : vaultPiles(cells.vault[0], cells.vault[1], VT); }
-      var vp = P(cells.vault[0] + 4.4, cells.vault[1] + 5.65, 1.35);
-      over += plate(vp[0], vp[1], 'vault', 'TREASURY', STC.idle, priv ? 'Private' : [[CO.fmtEt(VT.et10), '#38f5b8', 1], [' ET10 · ', L.dim], [CO.fmtUsd(VT.usdc), '#8fbaff', 1], [' USDC', L.dim]],
-        L.dim, STC.idle, false);
+      over += glassSign(cells.vault, 'vault', 'Treasury', 'vault', have, 'idle');
+      if (!priv) {
+        var vp = P(cells.vault[0] + 5.2, cells.vault[1] + 2.6, 1.05);   // over the plinth's back, clear of the name on the glass
+        over += amountPill(vp[0], vp[1], 'vault', [[CO.fmtEt(VT.et10), '#38f5b8', 1], [' ET10 · ', L.dim], [CO.fmtUsd(VT.usdc), '#8fbaff', 1], [' USDC', L.dim]]);
+      }
     }
     // the selection ring lies on the floor, just under the selected room: walls, people and plates stay above it
     var oldRing = this.gRooms.querySelector('.selring');
