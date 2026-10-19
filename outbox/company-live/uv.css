@@ -173,8 +173,6 @@ i.lk::before { content: ''; position: absolute; left: 1.5px; top: -5px; width: 6
 .o3layer .p3 .p3l { font: 500 12.5px 'JetBrains Mono'; margin-top: 3px; opacity: .85; }
 .o3layer .p3need { font: 600 14px 'Segoe UI', 'Inter', system-ui, sans-serif; letter-spacing: .06em; padding: 6px 16px; }
 .o3layer .p3lot { font: 600 12px 'Segoe UI', 'Inter', system-ui, sans-serif; letter-spacing: .08em; }
-.o3layer .opvault { right: 16px; bottom: 16px; width: 224px; padding: 13px 18px; gap: 5px; pointer-events: auto; border-color: rgba(56, 245, 184, .42); background: rgba(8, 15, 24, .92); backdrop-filter: blur(8px); }
-.o3layer .opvault .vv b { font-size: 25px; }
 
 /* ---------- the visitor's frame ---------- */
 .robar { flex: none; display: flex; align-items: center; gap: 12px; padding: 7px 20px; border-bottom: 1px solid rgba(0, 207, 255, .35);
@@ -262,11 +260,3 @@ body.ro #dr-ch-text { cursor: default; }
   .uvsum { display: none; }
 }
 
-/* ---------- the vault: the 3D office's card in its corner ---------- */
-.opvault { position: absolute; box-sizing: border-box; display: flex; flex-direction: column; justify-content: center; gap: 8px; padding: 16px 20px; cursor: pointer;
-  background: #080d14; border: 1px solid rgba(0, 255, 136, .4); border-radius: 12px; box-shadow: 0 8px 24px rgba(0, 0, 0, .5); }
-.opvault .k { font: 700 11px 'JetBrains Mono'; letter-spacing: .16em; color: var(--dim2); }
-.opvault .vv { display: flex; align-items: baseline; gap: 8px; } .opvault .vv b { font: 400 30px 'Archivo Black', sans-serif; } .opvault .vv span { font: 700 11px 'JetBrains Mono'; color: var(--dim2); }
-.opvault b.g { color: var(--green); text-shadow: 0 0 14px rgba(0, 255, 136, .4); } .opvault b.u { color: #8fbaff; }
-.opvault .go { font: 700 11px 'JetBrains Mono'; color: var(--green); }
-.opvault:hover { border-color: rgba(0, 255, 136, .7); }
