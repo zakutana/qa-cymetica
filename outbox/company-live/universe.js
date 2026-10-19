@@ -989,10 +989,14 @@
   function glowDef(id, col, stops) {
     return '<radialGradient id="' + id + '">' + stops.map(function (s) { return '<stop offset="' + s[0] + '" stop-color="' + col + '" stop-opacity="' + s[1] + '"/>'; }).join('') + '</radialGradient>';
   }
-  // a star's point of light falls off fast; the heart's lights are as broad as the 3D map's bloom spreads them
-  var DEFS = '<defs>' + glowDef('uv-fl', '#c8f2ff', [[0, 1], [0.22, 0.35], [0.55, 0.12], [1, 0]]) + glowDef('uv-gw', '#ffffff', [[0, 1], [0.5, 0.9], [1, 0]]) +
-    glowDef('uv-gh', '#fff4dc', [[0, 1], [0.3, 0.9], [0.62, 0.42], [1, 0]]) + glowDef('uv-gm', '#ff2d8a', [[0, 0.8], [0.5, 0.35], [1, 0]]) +
-    glowDef('uv-gg', '#ffb84a', [[0, 0.9], [0.4, 0.45], [1, 0]]) + glowDef('uv-go', '#ff9d3c', [[0, 0.6], [0.5, 0.2], [1, 0]]) + glowDef('uv-gb', '#3b9dff', [[0, 0.4], [0.5, 0.12], [1, 0]]) + '</defs>';
+  // a star's point of light falls off fast; the sun's corona is as broad as the 3D map's bloom spreads it, its colours
+  // u3d.js core()'s (white-gold close, gold, orange, a faint blue at the edge of Cymetica's light); its disc white-hot
+  // in the middle, orange-gold over most of it, darker toward the limb
+  var DEFS = '<defs>' + glowDef('uv-fl', '#c8f2ff', [[0, 1], [0.22, 0.35], [0.55, 0.12], [1, 0]]) +
+    ['#fff0c8', '#ffd27a', '#ffa640', '#ff8a30', '#3b9dff'].map(function (c, i) { return glowDef('uv-co' + i, c, [[0, 1], [0.62, 0.62], [1, 0]]); }).join('') +
+    glowDef('uv-hot', '#fffbee', [[0, 1], [0.35, 0.8], [1, 0]]) +
+    '<radialGradient id="uv-sun"><stop offset="0" stop-color="#fffdf5"/><stop offset=".45" stop-color="#ffefc6"/><stop offset=".74" stop-color="#ffd896"/>' +
+    '<stop offset=".9" stop-color="#fcbf74"/><stop offset=".97" stop-color="#f3a55a"/><stop offset="1" stop-color="#e48e4a"/></radialGradient></defs>';
   function Universe(svg, stage, h) {
     this.svg = svg; this.stage = stage; this.h = h || {};
     svg.innerHTML = DEFS + '<defs class="uvd"></defs><g class="uw"><g class="space"></g><g class="plots"></g><g class="fx"></g></g>';
@@ -1048,37 +1052,45 @@
     out += this.core();
     this.gSpace.innerHTML = out;
   };
-  // Cymetica, as the 3D map draws it after the operator's collider photograph: round the heart the detector, rings of
-  // panels in a shallow bowl, the bright ones with a lit seam between every two; on the plane round it the orrery's
-  // cyan rings and pale arcs; a white-hot heart in gold, magenta and blue light, tangled tracks of gold and blue
-  // light round it, jets thrown out of it and sparks. Units are the plane's, as in u3d.js core(): its rings reach 60.
+  // Cymetica, as the 3D map draws it: a sun whose light comes out of it ("to nemaji byt letajici krouzky, to ma vse
+  // jakoby zevnitr vychazet, nad sluncem taky nepoletuji letajici krouzky", the operator, 2026-10-19). A ball of light,
+  // deep red-orange in its cells, orange-gold over them, white-gold on the hottest, darker toward its limb and white-hot
+  // in the middle; a corona round it; rays streaming out of it in three layers; its jets and sparks leaving from its
+  // surface. Round it on the plane, still, the orrery's cyan rings and pale arcs. Sizes are u3d.js's (UVSUN: the sun
+  // drawn k times its own size, y above the plane), units the plane's: his rings reach 60.
+  var SUN = { k: 1.7, y: 6, ball: 16.5, disc: 10.5 };
   var CORE = {
-    // inner and outer radius, panels, tilt, the inner edge's height, the face, its plate, seams lit
-    rings: [[9.5, 12.5, 40, 0.62, -2.6, '#625d50', '#36373b', false], [13.5, 18.8, 36, 0.48, -2.4, '#8d8678', '#6d6962', true],
-      [19.8, 25.6, 24, 0.34, -1.6, '#4f4d49', '#86817a', false], [26.6, 30.6, 16, 0.2, -0.4, '#2b2d31', '#5f5c58', true]],
     // the orrery's rings on the plane: radius, half width, colour, dots round it
     lines: [[60, 0.9, '#a5d8e6'], [57.5, 0.7, '#4f8a9c'], [53, 0.7, '#77c2d0'], [42, 0.8, '#4e8d9f', 90], [36.5, 0.8, '#81cbdb']],
     arcs: [[33.5, 0.55, [[0.2, 1.5], [2.2, 3.3], [4.1, 5.6]]], [56.5, 0.5, [[0.9, 2.6], [3.4, 4.4], [5.0, 6.0]]]],
-    // the jets: their angle on the first look's screen, how far toward it, length, colour
-    jets: [[92, -0.25, 40, '#ff9a22'], [32, 0.2, 32, '#4f9dff'], [148, -0.3, 34, '#ff8c1a'], [8, -0.35, 26, '#ffa22e'], [176, 0.25, 28, '#2f8cff'], [206, -0.2, 22, '#ff8c1a'], [334, 0.3, 20, '#5fa8ff'], [62, 0.45, 18, '#ffa22e']],
-    // the tracks: how many, their colours, how bright, how many loop back through the ball
-    sets: [[60, ['#ff8c1a', '#ffa22e', '#ff7410'], 0.5, 0.35], [40, ['#ffc23d', '#ffd56a'], 0.42, 0.3], [40, ['#1e7bff', '#2f8cff', '#1660f0'], 0.7, 0.25], [24, ['#9fd0ff', '#7fbcff'], 0.4, 0.2]],
-    Y: 5
+    // the corona's lights, across in the sun's own units, and how bright
+    corona: [[28, 0.6], [36, 0.42], [50, 0.2], [70, 0.08], [96, 0.035]],
+    // the rays' three layers: across in the sun's units, how bright
+    rays: [[66, 0.55], [72, 0.5], [60, 0.45]],
+    // the jets: their angle on the first look's screen, how far toward it, length in the sun's units, colour
+    jets: [[92, -0.25, 32, '#ff9a22'], [32, 0.2, 26, '#4f9dff'], [148, -0.3, 28, '#ff8c1a'], [8, -0.35, 21, '#ffa22e'], [176, 0.25, 23, '#2f8cff'], [206, -0.2, 18, '#ff8c1a'], [334, 0.3, 16, '#5fa8ff'], [62, 0.45, 15, '#ffa22e']]
   };
-  // a jet's light along it: none at its root, full a quarter of the way out, gone at its tip (u3d.js jetTex)
+  // where the sun's middle is on the map, and its banner's height over the plane's middle in the map's units: on the
+  // 3D map's first look the banner stands half the disc's radius over the disc
+  function sunAt() { return gp(0, SUN.y, 0); }
+  CORE.banner = SUN.y * SC + SUN.disc * SUN.k * RX * 1.5;
+  // a jet's light along it: none at its root, full a quarter of the way out, gone at its tip (u3d.js jetTex); a ray's:
+  // none where the disc covers it, brightest a little out from it, gone at its tip (u3d.js sunRaysTex)
   Universe.prototype.coreDefs = function () {
-    var h = gp(0, CORE.Y, 0), out = '';
+    var h = sunAt(), out = '';
     CORE.jets.forEach(function (j, i) {
-      var t = j[0] * Math.PI / 180, L = j[2] * RX / Math.sqrt(1 + j[1] * j[1]), e = [h[0] + Math.cos(t) * L, h[1] - Math.sin(t) * L];
+      var t = j[0] * Math.PI / 180, L = j[2] * SUN.k * RX / Math.sqrt(1 + j[1] * j[1]), e = [h[0] + Math.cos(t) * L, h[1] - Math.sin(t) * L];
       out += '<linearGradient id="uvj' + i + '" gradientUnits="userSpaceOnUse" x1="' + f1(h[0]) + '" y1="' + f1(h[1]) + '" x2="' + f1(e[0]) + '" y2="' + f1(e[1]) + '">' +
         [[0, 0], [12, 0.25], [24, 1], [50, 0.55], [85, 0.1], [100, 0]].map(function (s) { return '<stop offset="' + s[0] + '%" stop-color="' + j[3] + '" stop-opacity="' + s[1] + '"/>'; }).join('') + '</linearGradient>';
     });
-    return out;
+    CORE.rays.forEach(function (q, i) {
+      out += '<radialGradient id="uvr' + i + '" gradientUnits="userSpaceOnUse" cx="' + f1(h[0]) + '" cy="' + f1(h[1]) + '" r="' + f1(q[0] / 2 * SUN.k * RX) + '">' +
+        [[0, '#fff4d6', 0], [30, '#ffecbe', 1], [55, '#ffce82', 0.6], [100, '#ffa046', 0]].map(function (s) { return '<stop offset="' + s[0] + '%" stop-color="' + s[1] + '" stop-opacity="' + s[2] + '"/>'; }).join('') + '</radialGradient>';
+    });
+    return out + '<clipPath id="uv-sunclip"><circle cx="' + f1(h[0]) + '" cy="' + f1(h[1]) + '" r="' + f1(SUN.disc * SUN.k * RX) + '"/></clipPath>';
   };
   Universe.prototype.core = function () {
-    var c = gp(0, 0, 0), h = gp(0, CORE.Y, 0), R = rng(77), out = '<g class="core-plot" data-id="core">', panels = [];
-    var at = function (r, a, y, u) { var s = Math.sin(a), co = Math.cos(a); return gp(s * r + co * (u || 0), y, co * r - s * (u || 0)); };
-    var quad = function (l, fill, extra) { return '<polygon points="' + pts(l) + '" fill="' + fill + '"' + (extra || '') + '/>'; };
+    var c = gp(0, 0, 0), h = sunAt(), R = rng(77), out = '<g class="core-plot" data-id="core">', rD = SUN.disc * SUN.k * RX;
     // the orrery's rings and arcs on the plane
     CORE.lines.forEach(function (q) {
       out += '<ellipse cx="' + f1(c[0]) + '" cy="' + f1(c[1]) + '" rx="' + f1(q[0] * RX) + '" ry="' + f1(q[0] * RY) + '" fill="none" stroke="' + q[2] + '" stroke-width="' + f1(q[1] * 2 * 0.68 * 21) + '"' + (q[3] ? dotsOf(q[0], q[0] * Math.PI * 2 / q[3]) : '') + '/>';
@@ -1090,74 +1102,60 @@
         out += '<polyline points="' + pts(l) + '" fill="none" stroke="#93a0a8" stroke-width="' + f1(q[1] * 2 * 21) + '" opacity=".55"/>';
       });
     });
-    // the detector: every panel, its plate and its seam, far ones first
-    CORE.rings.forEach(function (q) {
-      var r0 = q[0], r1 = q[1], n = q[2], sn = Math.sin(q[3]), y0 = q[4], dr = r1 - r0, rm = (r0 + r1) / 2, half = Math.PI / n;
-      for (var i = 0; i < n; i++) {
-        var t = i / n * Math.PI * 2, w = Math.PI * rm / n * 0.9, yi = y0 + 0.27, yo = y0 + dr * sn + 0.27, warm = R() * 0.35, svg = '';
-        // its outer edge where it faces us, then its face; a smaller plate on it; the lit seam beside it
-        var face = [at(r0, t, yi, -w * r0 / rm), at(r1, t, yo, -w * r1 / rm), at(r1, t, yo, w * r1 / rm), at(r0, t, yi, w * r0 / rm)];
-        if (Math.cos(t - Math.PI / 4 - ROT) > -0.2) svg += quad([face[1], face[2], at(r1, t, yo - 0.55, w * r1 / rm), at(r1, t, yo - 0.55, -w * r1 / rm)], '#202227');
-        svg += quad(face, mix(q[5], '#e2b878', warm), ' stroke="rgba(5,7,10,.45)" stroke-width="2"');
-        var pr0 = rm + dr * 0.06 - dr * 0.275, pr1 = rm + dr * 0.06 + dr * 0.275, pw = w * 0.55, py = function (r) { return y0 + (r - r0) * sn + 0.62; };
-        svg += quad([at(pr0, t, py(pr0), -pw), at(pr1, t, py(pr1), -pw), at(pr1, t, py(pr1), pw), at(pr0, t, py(pr0), pw)], mix(q[6], '#e2b878', warm * 0.6));
-        if (q[7]) svg += quad([at(r0 + dr * 0.04, t + half, yi + 0.1, -0.09), at(r1 - dr * 0.04, t + half, yo + 0.1, -0.09), at(r1 - dr * 0.04, t + half, yo + 0.1, 0.09), at(r0 + dr * 0.04, t + half, yi + 0.1, 0.09)], '#ffb347');
-        panels.push({ d: at(rm, t, 0)[1], svg: svg });
+    // behind the disc, each added to the light under it as the 3D map adds them: the corona, wider than the disc so
+    // only its rim shows round it; the rays, streamers out of the middle in three layers, a few broad among many thin,
+    // each brightest a little out from the disc and gone at its tip; the jets, a wide soft cone round a narrow hot one
+    var corona = '', rays = '', jets = '';
+    CORE.corona.forEach(function (q, i) {
+      corona += '<circle cx="' + f1(h[0]) + '" cy="' + f1(h[1]) + '" r="' + f1(q[0] / 2 * SUN.k * RX) + '" fill="url(#uv-co' + i + ')" opacity="' + f1(Math.min(1, q[1] * 1.5) * 100) / 100 + '"/>';
+    });
+    CORE.rays.forEach(function (q, li) {
+      var Rl = q[0] / 2 * SUN.k * RX, byOp = ['', '', ''];
+      for (var i = 0; i < 110; i++) {
+        var a = R() * Math.PI * 2, len = Rl * (0.42 + R() * R() * 0.58), broad = R() < 0.12, w = Rl * (broad ? 5 + R() * 7 : 1 + R() * 3) / 256, al = broad ? 0 : R() < 0.5 ? 1 : 2;
+        var ux = Math.cos(a), uy = Math.sin(a), vx = -uy, vy = ux, p = function (u, v) { return f1(h[0] + ux * u + vx * v) + ',' + f1(h[1] + uy * u + vy * v); };
+        byOp[al] += 'M' + p(0, -w) + 'Q' + p(len * 0.5, -w * 0.6) + ' ' + p(len, 0) + 'Q' + p(len * 0.5, w * 0.6) + ' ' + p(0, w) + 'Z';
       }
+      [0.18, 0.3, 0.46].forEach(function (k, j) { if (byOp[j]) rays += '<path d="' + byOp[j] + '" fill="url(#uvr' + li + ')" opacity="' + f1(Math.min(1, k * q[1] * 2.6) * 100) / 100 + '"/>'; });
     });
-    panels.sort(function (a, b) { return a.d - b.d; });
-    out += panels.map(function (p) { return p.svg; }).join('');
-    // the heart's light: a wide blue, an orange, a gold, a warm white as wide as the 3D map's bloom spreads it, a
-    // magenta deep in it, the white-hot point
-    var glow = '';
-    [[45, 'uv-gb', 0.7], [30, 'uv-go', 0.7], [19, 'uv-gg', 0.8], [13, 'uv-gh', 0.95], [4, 'uv-gm', 0.5], [4.5, 'uv-gw', 1]].forEach(function (g) {
-      glow += '<circle cx="' + f1(h[0]) + '" cy="' + f1(h[1]) + '" r="' + f1(g[0] * RX) + '" fill="url(#' + g[1] + ')" opacity="' + g[2] + '"/>';
-    });
-    // the jets, a wide soft cone round a narrow hot one
     CORE.jets.forEach(function (j, i) {
-      var t = j[0] * Math.PI / 180, L = j[2] * RX / Math.sqrt(1 + j[1] * j[1]), ux = Math.cos(t), uy = -Math.sin(t), vx = -uy, vy = ux;
+      var t = j[0] * Math.PI / 180, L = j[2] * SUN.k * RX / Math.sqrt(1 + j[1] * j[1]), ux = Math.cos(t), uy = -Math.sin(t), vx = -uy, vy = ux;
       [[1.9, 0.5], [0.6, 0.95]].forEach(function (k) {
-        var w0 = k[0] * RX, w1 = k[0] * 0.06 * RX;
-        glow += '<polygon points="' + pts([[h[0] + vx * w0, h[1] + vy * w0], [h[0] + ux * L + vx * w1, h[1] + uy * L + vy * w1], [h[0] + ux * L - vx * w1, h[1] + uy * L - vy * w1], [h[0] - vx * w0, h[1] - vy * w0]]) + '" fill="url(#uvj' + i + ')" opacity="' + k[1] + '"/>';
+        var w0 = k[0] * SUN.k * RX, w1 = w0 * 0.06;
+        jets += '<polygon points="' + pts([[h[0] + vx * w0, h[1] + vy * w0], [h[0] + ux * L + vx * w1, h[1] + uy * L + vy * w1], [h[0] + ux * L - vx * w1, h[1] + uy * L - vy * w1], [h[0] - vx * w0, h[1] - vy * w0]]) + '" fill="url(#uvj' + i + ')" opacity="' + k[1] + '"/>';
       });
     });
-    // the tracks: each leaves the heart on a helix round an axis of its own, curling, some looping back through the
-    // ball, lit as it leaves and fading toward its end (u3d.js's, a quarter as many and half as finely)
-    var rnd = function () { var v = [R() * 2 - 1, R() * 2 - 1, R() * 2 - 1], l = Math.hypot(v[0], v[1], v[2]) || 1; return v.map(function (x) { return x / l; }); };
-    var turn = function (v, k, a) {
-      var c0 = Math.cos(a), s0 = Math.sin(a), d = k[0] * v[0] + k[1] * v[1] + k[2] * v[2], x = [k[1] * v[2] - k[2] * v[1], k[2] * v[0] - k[0] * v[2], k[0] * v[1] - k[1] * v[0]];
-      return v.map(function (q, i) { return q * c0 + x[i] * s0 + k[i] * d * (1 - c0); });
+    out += [corona, rays, jets].map(function (l) { return '<g style="mix-blend-mode:screen">' + l + '</g>'; }).join('');
+    // the disc: orange-gold, darker toward the limb; over it, kept to it, the deep red-orange of its cells and the
+    // white-gold of its hottest grains; white-hot in the middle, where it faces us
+    out += '<circle cx="' + f1(h[0]) + '" cy="' + f1(h[1]) + '" r="' + f1(rD) + '" fill="url(#uv-sun)"/>';
+    var blob = function (x, y, r, col, op) {
+      var l = [], k0 = R() * 6;
+      for (var k = 0; k < 9; k++) { var t = k / 9 * Math.PI * 2, q = r * (1 + 0.28 * Math.sin(t * 2 + k0) + 0.16 * Math.cos(t * 3 - k0)); l.push([x + Math.cos(t) * q, y + Math.sin(t) * q]); }
+      return '<polygon points="' + pts(l) + '" fill="' + col + '" opacity="' + op + '"/>';
     };
-    var tracks = '';
-    CORE.sets.forEach(function (S) {
-      for (var i = 0; i < S[0]; i++) {
-        var dir = rnd(), axis = rnd(), loop = R() < S[3], curl = (loop ? 0.16 + R() * 0.1 : (R() < 0.3 ? 0.12 : 0.03) + R() * 0.08) * 2, len = loop ? 14 + R() * 26 : 7 + R() * 12, seg = 28, step = len / seg;
-        var start = loop ? 3 + R() * 9 : R() * 1.2, col = S[1][Math.floor(R() * S[1].length)], k = S[2] * (0.45 + R() * 0.75);
-        // a loop sets off across its axis, a track straight out
-        var p = dir.map(function (v) { return v * start; }), cr = [dir[1] * axis[2] - dir[2] * axis[1], dir[2] * axis[0] - dir[0] * axis[2], dir[0] * axis[1] - dir[1] * axis[0]], cl = Math.hypot(cr[0], cr[1], cr[2]) || 1;
-        var d = loop ? cr.map(function (v) { return v / cl; }) : dir.slice(), l = [];
-        l.push(gp(p[0], CORE.Y + p[1], p[2]));
-        for (var s = 1; s <= seg; s++) {
-          d = turn(d, axis, curl * (loop ? 1 : 1 + s / seg));
-          p = p.map(function (v, q) { return v + d[q] * step; });
-          if (Math.hypot(p[0], p[1], p[2]) > 16.5) break;
-          l.push(gp(p[0], CORE.Y + p[1], p[2]));
-        }
-        if (l.length > 2) tracks += '<polyline points="' + pts(l) + '" fill="none" stroke="' + col + '" stroke-width="1" vector-effect="non-scaling-stroke" opacity="' + f1(Math.min(0.9, k * 1.2) * 100) / 100 + '"/>';
-      }
-    });
-    // the sparks: golden mostly, some white-blue; most stream out along the jets, the rest everywhere; some twinkle
-    var sparks = '';
-    for (var i = 0; i < 150; i++) {
-      var jet = R() < 0.55 ? CORE.jets[Math.floor(R() * CORE.jets.length)] : null, a = jet ? jet[0] * Math.PI / 180 + (R() - 0.5) * 0.3 : R() * Math.PI * 2;
-      var dist = (3.5 + R() * (jet ? jet[2] * (0.7 + R() * 0.6) : 16 + R() * 34)) * RX * (jet ? 1 / Math.sqrt(1 + jet[1] * jet[1]) : 0.8), sx = h[0] + Math.cos(a) * dist, sy = h[1] - Math.sin(a) * dist * (jet ? 1 : 0.7);
-      var col = R() < 0.78 ? (R() < 0.5 ? '#ffb94a' : '#ffdf8a') : '#cfe9ff', tw = R() < 0.4;
-      sparks += '<circle' + (tw ? ' class="beacon" style="animation-delay:-' + (R() * 1.8).toFixed(2) + 's"' : '') + ' cx="' + f1(sx) + '" cy="' + f1(sy) + '" r="' + f1(5 + R() * 9) + '" fill="' + col + '"/>';
+    var cells = '';
+    for (var i = 0; i < 95; i++) {
+      var ra = Math.sqrt(R()) * rD, an = R() * Math.PI * 2, hot = R() < 0.38, rim = ra / rD;
+      cells += blob(h[0] + Math.cos(an) * ra, h[1] + Math.sin(an) * ra, rD * (hot ? 0.035 + R() * 0.05 : 0.05 + R() * 0.08), hot ? '#fff6dc' : '#ee9445', f1((hot ? 0.5 * (1 - rim * 0.6) : 0.12 + 0.18 * rim) * 100) / 100);
     }
-    // each layer added to the light under it, as the 3D map adds them, so the heart stays white through the tracks
-    out += [glow, tracks, sparks].map(function (l) { return '<g style="mix-blend-mode:screen">' + l + '</g>'; }).join('');
-    // where a pointer finds it
-    out += '<circle cx="' + f1(h[0]) + '" cy="' + f1(h[1]) + '" r="' + f1(26 * RX) + '" fill="transparent"/>';
+    out += '<g clip-path="url(#uv-sunclip)">' + cells + '<circle cx="' + f1(h[0] - rD * 0.08) + '" cy="' + f1(h[1] - rD * 0.1) + '" r="' + f1(rD * 0.62) + '" fill="url(#uv-hot)" opacity=".85"/></g>';
+    // the sparks, leaving from the disc's surface: golden mostly, some white-blue; most stream out along the jets, the
+    // rest every way; a spark coming straight at us would sit on the disc like a speck of dust, so those fade; some twinkle
+    var sparks = '';
+    for (i = 0; i < 220; i++) {
+      var jet = R() < 0.55 ? CORE.jets[Math.floor(R() * CORE.jets.length)] : null, toward = jet ? jet[1] / Math.sqrt(1 + jet[1] * jet[1]) : R() * 2 - 1;
+      var a = jet ? jet[0] * Math.PI / 180 + (R() - 0.5) * 0.3 : R() * Math.PI * 2, life = R();
+      var dist = (SUN.disc * 0.94 + life * (jet ? jet[2] * (0.4 + R() * 0.45) : 6 + R() * 14)) * SUN.k * RX * Math.sqrt(1 - toward * toward);
+      if (dist < rD && toward < 0) continue;   // behind the disc
+      var op = (1 - life) * (dist < rD ? 1 - Math.min(1, Math.max(0, (toward - 0.55) / 0.3)) : 1);
+      if (op < 0.08) continue;
+      var col = R() < 0.78 ? (R() < 0.5 ? '#ffb94a' : '#ffdf8a') : '#cfe9ff', tw = R() < 0.4;
+      sparks += '<circle' + (tw ? ' class="beacon" style="animation-delay:-' + (R() * 1.8).toFixed(2) + 's"' : '') + ' cx="' + f1(h[0] + Math.cos(a) * dist) + '" cy="' + f1(h[1] - Math.sin(a) * dist) + '" r="' + f1(5 + R() * 9) + '" fill="' + col + '" opacity="' + f1(Math.min(1, op * 1.3) * 100) / 100 + '"/>';
+    }
+    out += '<g style="mix-blend-mode:screen">' + sparks + '</g>';
+    // where a pointer finds it: the sun and a little round it
+    out += '<circle cx="' + f1(h[0]) + '" cy="' + f1(h[1]) + '" r="' + f1(34 * RX) + '" fill="transparent"/>';
     return out + '</g>';
   };
   // every station, back to front; the names are the same HTML banners as the 3D map's
@@ -1209,7 +1207,7 @@
     if (!this.items) return;
     var c = this.client(), v = this.vb, k = c.w / v.w, self = this, placed = [], named = 0, cp = gp(0, 0, 0);
     var list = this.items.map(function (it) { return { el: it.el, x: (it.anchor[0] - v.x) * k, y: (it.anchor[1] - v.y) * k, px: it.size * k, mine: it.mine, keep: it.mine || String(self.hover) === String(it.c.id), d: -it.anchor[1] }; });
-    if (this.coreEl) list.push({ el: this.coreEl, x: (cp[0] - v.x) * k, y: (cp[1] - 21 * SC - v.y) * k, px: 200, keep: true, core: true, d: 0 });
+    if (this.coreEl) list.push({ el: this.coreEl, x: (cp[0] - v.x) * k, y: (cp[1] - CORE.banner - v.y) * k, px: 200, keep: true, core: true, d: 0 });
     list.sort(function (a, b) { return (b.keep - a.keep) || a.d - b.d; });
     list.forEach(function (o) {
       var el = o.el; if (!el) return;
