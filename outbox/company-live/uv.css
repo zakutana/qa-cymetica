@@ -58,36 +58,19 @@ i.lk::before { content: ''; position: absolute; left: 1.5px; top: -5px; width: 6
 .tip .uvt span { color: var(--dim2); font-size: 11px; }
 
 /* the flat map's pieces */
-.uvmap .lane { fill: none; stroke-width: 5; opacity: .16; }
-.uvmap .ship { opacity: .9; }
 .uvmap .plot { cursor: pointer; }
-.uvmap .plot .wheel { filter: drop-shadow(0 0 3px currentColor); }
 .uvmap .plot .rim { opacity: .55; transition: opacity .2s; }
-.uvmap .plot .rim.fence { stroke-dasharray: 5 4; opacity: .4; }
 .uvmap .plot.hov .rim, .uvmap .plot.mine .rim { opacity: 1; filter: drop-shadow(0 0 4px currentColor); }
 .uvmap .w, .skinsvg .w { opacity: .14; transition: opacity .35s; }
 .uvmap .w.on, .skinsvg .w.on { opacity: .82; }
-.uvmap .w.on.fl { animation: wfl 4.5s steps(1) infinite; }
-@keyframes wfl { 0%, 70% { opacity: .82; } 71%, 100% { opacity: .2; } }
 .uvmap .fl.on .w { opacity: 1; filter: drop-shadow(0 0 2.5px currentColor); }
 .uvmap .plot.paused .w, .uvmap .plot.paused .w.on { opacity: .1; animation: none; }
 .uvmap .plot.priv .w.on { opacity: .45; }
 .uvmap .beacon, .skinsvg .beacon { animation: beacon 1.8s ease-in-out infinite; }
 @keyframes beacon { 50% { opacity: .25; } }
-.uvmap .beam, .skinsvg .beam { opacity: .16; }
-.uvmap .busy .beam { opacity: .3; animation: beamp 2.2s ease-in-out infinite; }
-@keyframes beamp { 50% { opacity: .14; } }
 .uvmap .flame, .skinsvg .flame { opacity: .22; }
 .uvmap .busy .flame { opacity: .5; animation: flame .6s ease-in-out infinite alternate; transform-box: fill-box; transform-origin: center; }
 @keyframes flame { to { transform: scale(1.12, 1.25); opacity: .32; } }
-.uvmap .orb { animation: orbbob 4s ease-in-out infinite; }
-@keyframes orbbob { 50% { transform: translateY(-3px); } }
-.uvmap .led, .skinsvg .led { animation: blink 1.3s steps(2) infinite; }
-.uvmap .mering { stroke-width: 1.6; stroke-dasharray: 6 5; animation: mering 2.4s linear infinite; filter: drop-shadow(0 0 4px var(--green)); }
-@keyframes mering { to { stroke-dashoffset: -22; } }
-.uvmap .cring { stroke-width: 1.2; opacity: .45; }
-.uvmap .cring.spin { stroke-dasharray: 18 10; animation: mering 3s linear infinite; opacity: .7; }
-.uvmap .corb { filter: drop-shadow(0 0 10px var(--cyan)); animation: beacon 2.4s ease-in-out infinite; }
 .uvmap .ban { cursor: pointer; }
 .uvmap .ban .rib { transition: stroke-width .15s; }
 .uvmap .ban.hov .rib { stroke-width: 2.2; filter: drop-shadow(0 0 6px rgba(0, 207, 255, .5)); }
