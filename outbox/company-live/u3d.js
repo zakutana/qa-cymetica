@@ -2964,42 +2964,327 @@ class Office3D {
     this.plant(r, x0 + 6.5, y0 + 6.5);
     this.plate(r, 'auditp');
   }
-  // The vault: its round door in the back wall, a lit plinth where ET10 (green) and USDC (blue) pile up in stacks of
-  // coins under glass. A visitor finds the door shut and the plinth bare: it is always private.
+  // The vault: a strongroom whose round steel door stands open in the back wall the corridor comes in by (y = y0,
+  // where the lane from the Manager arrives at the middle of the wall). The door sits in a steel bulkhead with a
+  // collar round the opening; it hangs on one heavy hinge left of the opening and swings into the room until its
+  // outer face -- the ring of locking bolts, the spoked wheel, the dial -- looks at the home view, its thickness
+  // showing at the edge. Safe-deposit boxes line the other back wall, a counting desk stands by the door, and the
+  // money itself is piles(): ET10 bars and USDC coins on pallets that fill with what the company has earned.
+  // Everything on the walls stays under 1.3, clear of the top rail's neon. A visitor finds the door shut.
   vaultRoom(r) {
-    const g = r.g, x0 = r.x0, y0 = r.y0, A = OM.green, dc = this.V(x0 + 3.5, y0 + 0.17, 0.92);
-    const door = new THREE.Mesh(G.cyl, OM.engine); door.scale.set(0.76, 0.1, 0.76); door.rotation.x = Math.PI / 2; door.position.copy(dc); g.add(door);
-    const rim = new THREE.Mesh(G.ringT, A.rim); rim.scale.setScalar(0.8); rim.position.copy(dc).add(new THREE.Vector3(0, 0, 0.06)); g.add(rim);
-    r.wheel = new THREE.Group(); r.wheel.position.copy(dc).add(new THREE.Vector3(0, 0, 0.08)); g.add(r.wheel);
-    for (let k = 0; k < 3; k++) { const s = new THREE.Mesh(G.box, M.metal); s.scale.set(0.9, 0.06, 0.05); s.rotation.z = k * Math.PI / 3; r.wheel.add(s); }
-    const hubc = new THREE.Mesh(G.sphere, A.glow); hubc.scale.set(0.08, 0.08, 0.03); r.wheel.add(hubc);
-    this.box(g, x0 + 1.4, y0 + 2.2, 0.08, 4.2, 2.6, 0.24, OM.plinth);
-    const lip = emis('#38f2b8', 0.95);
-    [[x0 + 1.4, y0 + 4.8 - 0.03, 4.2, 0.05], [x0 + 1.4, y0 + 2.2 - 0.02, 4.2, 0.05]].forEach(([x, y, w, d]) => this.box(g, x, y, 0.32, w, d, 0.03, lip, false));
+    const g = r.g, x0 = r.x0, y0 = r.y0, RS = CO.iso.RS;
+    this.vtMats();
+    // the door's numbers: centre along the wall and its height, the opening, the leaf's thickness, the hinge's axis
+    // (left of the opening, off the bulkhead), where the leaf's centre sits when shut, and how far it opens
+    // (open: far enough that the leaf clears the opening as the home view sees it, short of face-on so its thickness
+    // shows at the edge)
+    const D = r.vt = { u: 3.5, ch: 0.68, hole: 0.545, T: 0.38, bw: 3.0, top: 1.3, hu: -0.67, hv: 0.4, seat: 0.145, open: -1.8,
+      // and the floor's: pallets of P a side in two columns each side of the walk from the door, five rows deep
+      P: 0.9, rows: [1.8, 2.8, 3.8, 4.8, 5.8], ue: [1.55, 0.55], uu: [4.45, 5.45] };
+    // the shell's dark dado along the door wall would cross the opening: the bulkhead takes its place there
+    g.children.forEach((m) => { if (m.material === OM.wallDark && m.scale.x > m.scale.z) m.visible = false; });
+    this.box(g, x0 + 0.04, y0 + 0.04, 0.08, D.u - D.bw / 2 - 0.04, 0.1, 0.52, OM.wallDark);
+    this.box(g, x0 + D.u + D.bw / 2, y0 + 0.04, 0.08, RS - 0.04 - D.u - D.bw / 2, 0.1, 0.52, OM.wallDark);
+    const wg = new THREE.Group(); wg.position.copy(this.V(x0 + D.u, y0, D.ch)); g.add(wg);
+    const add = (geom, mat, x, y, z, sx, sy, sz, par, shadow = true) => {
+      const m = new THREE.Mesh(geom, mat); m.position.set(x, y, z); if (sx != null) m.scale.set(sx, sy, sz); if (shadow) { m.castShadow = true; m.receiveShadow = true; } (par || wg).add(m); return m;
+    };
+    // the bulkhead: a slab of brushed steel the height of the dado and the glass under the rail, the opening cut
+    // through it, the jamb darker; then the collar, a stepped steel ring round the opening with the room's mint
+    // neon on its rim, and a thinner ring of light deep in the jamb
+    add(this.vtBulkGeo(D), [OM.vtBulk, OM.vtSteelDk], 0, 0, -0.06);
+    add(G.vtCollar, OM.vtSteel, 0, 0, 0);
+    add(G.ringT, OM.vtNeon, 0, 0, 0.31, 0.6, 0.6, 0.6, null, false);
+    add(G.ring, OM.vtNeon, 0, 0, 0.1, 0.523, 0.523, 0.523, null, false);
+    add(G.box, OM.vtSteelDk, 0, 0.08 - D.ch + 0.008, 0.12, 1.16, 0.016, 0.44);   // the threshold plate
+    // the hinge: a barrel standing off the bulkhead on two plates, its caps; the door hangs on it by two arms
+    add(G.cyl, OM.vtSteel, D.hu, 0, D.hv, 0.07, 1.0, 0.07);
+    [-0.5, 0.5].forEach((y) => add(G.cyl, OM.vtChrome, D.hu, y, D.hv, 0.082, 0.05, 0.082));
+    add(G.hemi, OM.vtChrome, D.hu, 0.525, D.hv, 0.06, 0.05, 0.06);
+    [-0.42, 0.42].forEach((y) => add(G.box, OM.vtSteelDk, D.hu - 0.03, y, 0.33, 0.22, 0.13, 0.16));
+    // the door: a pivot on the hinge's axis; in it the leaf where it sits when shut, turned so its outer face (local
+    // +z) looks out through the opening and its inner face is flush with the collar; the arms hold the inner face
+    const piv = r.doorPivot = new THREE.Group(); piv.position.set(D.hu, 0, D.hv); piv.rotation.y = CO.RO ? 0 : D.open; wg.add(piv);
+    [-0.3, 0.3].forEach((y) => {
+      add(rboxGeo(0.4, 0.11, 0.075, 0.02), OM.vtSteel, 0.18, y, -0.03, null, null, null, piv);
+      add(G.cyl, OM.vtChrome, 0, y, 0, 0.086, 0.13, 0.086, piv);
+    });
+    const leaf = new THREE.Group(); leaf.position.set(-D.hu, 0, D.seat - D.hv); leaf.rotation.y = Math.PI; piv.add(leaf);
+    const F = D.T / 2;
+    add(G.vtLeaf, OM.vtSteel, 0, 0, 0, null, null, null, leaf);
+    add(G.vtFace, OM.vtFace, 0, 0, F + 0.002, null, null, null, leaf, false);
+    add(G.ringT, OM.vtNeon, 0, 0, F + 0.006, 0.44, 0.44, 0.44, leaf, false);
+    // the locking bolts, out of the door's edge all round; bolt heads round the face
+    const o = new THREE.Object3D(), bolts = new THREE.InstancedMesh(G.cyl, OM.vtChrome, 14), heads = new THREE.InstancedMesh(G.cyl8, OM.vtSteelDk, 12);
+    for (let k = 0; k < 14; k++) {
+      const a = (k + 0.5) / 14 * Math.PI * 2;
+      o.position.set(Math.cos(a) * 0.56, Math.sin(a) * 0.56, 0.005); o.rotation.set(0, 0, a - Math.PI / 2); o.scale.set(0.033, 0.16, 0.033); o.updateMatrix(); bolts.setMatrixAt(k, o.matrix);
+    }
+    for (let k = 0; k < 12; k++) {
+      const a = k / 12 * Math.PI * 2;
+      o.position.set(Math.cos(a) * 0.395, Math.sin(a) * 0.395, F + 0.008); o.rotation.set(Math.PI / 2, 0, 0); o.scale.set(0.016, 0.014, 0.016); o.updateMatrix(); heads.setMatrixAt(k, o.matrix);
+    }
+    bolts.castShadow = true; leaf.add(bolts, heads);
+    // the wheel: a boss and a hub, five spokes with knobs and the rim joining them; the dial above it
+    add(G.cyl, OM.vtSteelDk, 0, 0, F + 0.025, 0.075, 0.05, 0.075, leaf).rotation.x = Math.PI / 2;
+    add(G.cyl, OM.vtChrome, 0, 0, F + 0.07, 0.05, 0.06, 0.05, leaf).rotation.x = Math.PI / 2;
+    add(G.wheel, OM.vtChrome, 0, 0, F + 0.075, 0.17, 0.17, 0.17, leaf);
+    for (let k = 0; k < 5; k++) {
+      const a = Math.PI / 2 + Math.PI / 5 + k * Math.PI * 2 / 5, sp = add(G.cyl, OM.vtChrome, Math.cos(a) * 0.115, Math.sin(a) * 0.115, F + 0.075, 0.013, 0.23, 0.013, leaf);
+      sp.rotation.z = a - Math.PI / 2;
+      add(G.sphere, OM.vtChrome, Math.cos(a) * 0.245, Math.sin(a) * 0.245, F + 0.075, 0.03, 0.03, 0.03, leaf);
+    }
+    add(G.cyl, OM.vtSteelDk, 0, 0.33, F + 0.014, 0.062, 0.028, 0.062, leaf).rotation.x = Math.PI / 2;
+    add(G.vtDial, OM.vtDial, 0, 0.33, F + 0.029, null, null, null, leaf, false);
+    // the inner face, what a visitor sees of a shut door: the bolt-work -- a boss, the bars that throw the bolts,
+    // a small wheel to turn them from inside
+    add(G.vtFace, OM.vtFace, 0, 0, -F - 0.002, null, null, null, leaf, false).rotation.y = Math.PI;
+    add(G.cyl8, OM.vtSteelDk, 0, 0, -F - 0.025, 0.1, 0.05, 0.1, leaf).rotation.x = Math.PI / 2;
+    for (let k = 0; k < 7; k++) {
+      const a = (k + 0.5) / 7 * Math.PI * 2, bar = add(G.box, OM.vtChrome, Math.cos(a) * 0.26, Math.sin(a) * 0.26, -F - 0.016, 0.32, 0.034, 0.024, leaf);
+      bar.rotation.z = a;
+      add(G.cyl8, OM.vtSteelDk, Math.cos(a) * 0.42, Math.sin(a) * 0.42, -F - 0.02, 0.032, 0.04, 0.032, leaf).rotation.x = Math.PI / 2;
+    }
+    add(G.wheel, OM.vtChrome, 0, 0, -F - 0.06, 0.12, 0.12, 0.12, leaf);
+    add(G.cyl, OM.vtChrome, 0, 0, -F - 0.055, 0.035, 0.07, 0.035, leaf).rotation.x = Math.PI / 2;
+    // the keypad right of the opening, its light blinking; the screen says whether the vault is open
+    add(rboxGeo(0.22, 0.31, 0.05, 0.015), OM.dark, 0.79, 0.2, 0.28);
+    r.keyFace = add(G.plane, CO.RO ? OM.vtKeyS : OM.vtKeyO, 0.79, 0.2, 0.306, 0.19, 0.27, 1, null, false);
+    const led = add(G.box, OM.green.glow, 0.79, 0.39, 0.29, 0.03, 0.018, 0.012, null, false); led.userData.blink = 2; (r.leds = r.leds || []).push(led);
+    // on the floor, the arc its edge sweeps: dashes from where the free edge sits shut (along +x from the hinge)
+    // round to where it stands open
+    if (!G.vtArc) {
+      const parts = [], n = 11;
+      for (let k = 0; k < n; k++) { const t = new THREE.TorusGeometry(1, 0.012, 4, 6, 0.075); t.rotateZ((k + 0.5) * -D.open / n - 0.0375); parts.push(t); }
+      G.vtArc = mergeGeometries(parts, false); parts.forEach((p) => p.dispose());
+    }
+    const arc = new THREE.Mesh(G.vtArc, OM.dash); arc.rotation.x = Math.PI / 2; arc.scale.set(1.26, 1.26, 0.3); arc.position.copy(this.V(x0 + D.u + D.hu, y0 + D.hv, 0.086)); g.add(arc);
+    // a cool white light on the door, as a studio lights its subject
+    const key = new THREE.PointLight(0xeef6ff, 2.6, 3.4, 1.2); key.position.copy(this.V(x0 + 3.4, y0 + 1.95, 1.8)); g.add(key);
+    // where each money is stored, painted on the floor as a dashed outline round its pallets, faintly in its colour,
+    // so an empty floor reads as room to fill
+    [[D.ue, OM.vtBayG], [D.uu, OM.vtBayB]].forEach(([us, mat]) => {
+      const a = x0 + Math.min(...us) - 0.08, b = x0 + Math.max(...us) + D.P + 0.08, c = y0 + D.rows[0] - 0.08, d = y0 + D.rows[D.rows.length - 1] + D.P + 0.08;
+      const dash = [], step = 0.3, L = 0.17, w = 0.024;
+      for (let x = a + step / 2; x < b - 0.05; x += step) dash.push([x, c, L, w], [x, d, L, w]);
+      for (let y = c + step / 2; y < d - 0.05; y += step) dash.push([a, y, w, L], [b, y, w, L]);
+      const im = new THREE.InstancedMesh(G.box, mat, dash.length);
+      dash.forEach(([x, y, sx, sz], k) => { o.position.copy(this.V(x, y, 0.082)); o.rotation.set(0, 0, 0); o.scale.set(sx, 0.004, sz); o.updateMatrix(); im.setMatrixAt(k, o.matrix); });
+      g.add(im);
+    });
+    this.vtBoxes(r);
+    this.vtDesk(r);
     r.pileG = new THREE.Group(); g.add(r.pileG);
-    this.plant(r, x0 + 0.42, y0 + 6.5);
+    this.plant(r, x0 + 0.4, y0 + 6.6, 0.85);
     this.plate(r, 'vaultp'); r.plateAt = this.V(x0 + 4.4, y0 + 5.65, 1.35);
-    if (r.glow) { r.glow.material.color.set(0x38f2b8); r.glowBase = CO.RO ? 0.04 : 0.12; }
   }
-  // the piles, rebuilt only when what they hold changes: five stacks each, taller with every order of magnitude
+  // The money, rebuilt only when what it holds changes. ET10 is green bars, eighteen to a layer in crossed layers,
+  // eight layers to a pallet, on the pallets left of the walk from the door; USDC is blue coins in sixteen stacks to
+  // a pallet on the right. Both fill pallet by pallet, back to front, on a log scale: nothing at 0, a few layers for
+  // a few hundred ET10, the whole floor near two million (a quarter of a million USDC). Shut for a visitor.
   piles(r, V, priv) {
     release(r.pileG); r.pileG.clear(); this.vaultPiles = [];
+    if (r.doorPivot) r.doorPivot.rotation.y = priv ? 0 : r.vt.open;
+    if (r.keyFace) r.keyFace.material = priv ? OM.vtKeyS : OM.vtKeyO;
     if (priv) return;
-    const x0 = r.x0, y0 = r.y0, o = new THREE.Object3D(), R = rng(5);
-    [[V.et10, OM.coinG, x0 + 2.3, 0x38f2b8], [V.usdc * 100, OM.coinB, x0 + 4.3, 0x3b82f6]].forEach(([amt, mat, px, col]) => {
-      const lvl = Math.max(0, Math.log10(1 + amt / 50)), coins = [];
-      [[0, 0, 1], [0.48, 0.12, 0.8], [-0.08, 0.52, 0.7], [0.46, 0.6, 0.55], [0.2, 0.3, 0.9]].forEach(([dx, dy, k], i) => {
-        if (lvl <= 0 && i) return;
-        const n = Math.max(1, Math.round(lvl * 0.2 * k / 0.04));
-        for (let c = 0; c < n; c++) coins.push([px + dx + (R() - 0.5) * 0.035, y0 + 3.0 + dy + (R() - 0.5) * 0.035, 0.34 + c * 0.04, 0]);
+    // the floor's plan (vaultRoom's bays): ten pallets a side, filled back row first
+    const D = r.vt, x0 = r.x0, y0 = r.y0, P = D.P, o = new THREE.Object3D(), R = rng(5), pg = r.pileG, top = 0.2;
+    const slots = (us) => D.rows.flatMap((v) => us.map((u) => [u, v]));
+    const fE = this.vtFill(V.et10, 200, 2e6), fU = this.vtFill(V.usdc, 0.5, 2.5e5);
+    const nB = V.et10 > 0 ? Math.max(1, Math.round(fE * 1440)) : 0, nC = V.usdc > 0 ? Math.max(1, Math.round(fU * 4160)) : 0;
+    const zones = [[nB, 144, slots(D.ue), OM.vtLipG, OM.vtPoolG, fE], [nC, 416, slots(D.uu), OM.vtLipB, OM.vtPoolB, fU]];
+    // the pallets that hold something: a deck on three runners, a line of colour round the deck's edge
+    const used = zones.map(([n, per, sl]) => sl.slice(0, Math.ceil(n / per)));
+    const all = used[0].concat(used[1]), lipOf = used[0].map(() => 0).concat(used[1].map(() => 1));
+    if (all.length) {
+      const deck = new THREE.InstancedMesh(G.box, OM.vtPallet, all.length * 4), nl = [0, 0];
+      const lips = [0, 1].map((z) => { const n = lipOf.filter((q) => q === z).length * 4; return n ? new THREE.InstancedMesh(G.box, zones[z][3], n) : null; });
+      all.forEach(([u, v], i) => {
+        const cx = x0 + u + P / 2, cy = y0 + v + P / 2, put = (im, k, x, y, z, sx, sy, sz) => { o.position.copy(this.V(x, y, z)); o.rotation.set(0, 0, 0); o.scale.set(sx, sy, sz); o.updateMatrix(); im.setMatrixAt(k, o.matrix); };
+        put(deck, i * 4, cx, cy, 0.18, P, 0.04, P);
+        [-0.36, 0, 0.36].forEach((d, k) => put(deck, i * 4 + 1 + k, cx + d, cy, 0.12, 0.12, 0.08, P - 0.04));
+        const L = lips[lipOf[i]], b = nl[lipOf[i]]; nl[lipOf[i]] += 4;
+        put(L, b, cx, cy + P / 2, 0.18, P + 0.008, 0.016, 0.008); put(L, b + 1, cx, cy - P / 2, 0.18, P + 0.008, 0.016, 0.008);
+        put(L, b + 2, cx + P / 2, cy, 0.18, 0.008, 0.016, P + 0.008); put(L, b + 3, cx - P / 2, cy, 0.18, 0.008, 0.016, P + 0.008);
       });
-      for (let c = 0; c < (lvl > 1 ? 4 : 0); c++) coins.push([px - 0.25 + R() * 1.1, y0 + 2.55 + R() * 1.5, 0.34, 0.25 + R() * 0.3]);
-      const im = new THREE.InstancedMesh(G.coin, mat, coins.length);
-      coins.forEach(([x, y, z, tilt], i) => { o.position.copy(this.V(x, y, z)); o.rotation.set(tilt, R() * 6, 0); o.scale.set(0.19, 0.034, 0.19); o.updateMatrix(); im.setMatrixAt(i, o.matrix); });
-      im.castShadow = true; im.receiveShadow = true; r.pileG.add(im);
-      const case_ = new THREE.Mesh(G.box, OM.glass); case_.scale.set(1.25, Math.max(0.5, lvl * 0.2 + 0.25), 1.25); case_.position.copy(this.V(px + 0.25, y0 + 3.35, 0.32 + case_.scale.y / 2)); r.pileG.add(case_);
-      const halo = glowSprite(col, 0.12, 2.2); halo.position.copy(this.V(px + 0.25, y0 + 3.35, 0.6 + lvl * 0.2)); halo.userData.y = halo.position.y; r.pileG.add(halo); this.vaultPiles.push(halo);
+      deck.castShadow = true; deck.receiveShadow = true; pg.add(deck, ...lips.filter(Boolean));
+    }
+    // the bars: even layers lie along the room, odd ones across, a hair of disorder in every bar
+    if (nB) {
+      const im = new THREE.InstancedMesh(G.vtBar, OM.vtBar, nB), sl = zones[0][2];
+      for (let i = 0; i < nB; i++) {
+        const [u, v] = sl[Math.floor(i / 144)], k = i % 144, l = Math.floor(k / 18), j = k % 18, even = l % 2 === 0;
+        const a = even ? (j % 3 - 1) * 0.295 : (j % 6 - 2.5) * 0.145, b = even ? (Math.floor(j / 3) - 2.5) * 0.145 : (Math.floor(j / 6) - 1) * 0.295;
+        o.position.copy(this.V(x0 + u + P / 2 + a + (R() - 0.5) * 0.008, y0 + v + P / 2 + b + (R() - 0.5) * 0.008, top + l * 0.077 + 0.0375));
+        o.rotation.set(0, (even ? 0 : Math.PI / 2) + (R() - 0.5) * 0.04, 0); o.scale.set(0.28, 0.075, 0.125); o.updateMatrix(); im.setMatrixAt(i, o.matrix);
+      }
+      im.castShadow = true; im.receiveShadow = true; pg.add(im);
+    }
+    // the coins: stack by stack, each stack a little off true
+    if (nC) {
+      const im = new THREE.InstancedMesh(G.vtCoin, OM.vtCoin, nC), sl = zones[1][2];
+      let su = 0, sv = 0;
+      for (let i = 0; i < nC; i++) {
+        const [u, v] = sl[Math.floor(i / 416)], k = i % 416, st = Math.floor(k / 26), c = k % 26;
+        if (c === 0) { su = (R() - 0.5) * 0.02; sv = (R() - 0.5) * 0.02; }
+        o.position.copy(this.V(x0 + u + P / 2 + (st % 4 - 1.5) * 0.215 + su + (R() - 0.5) * 0.006, y0 + v + P / 2 + (Math.floor(st / 4) - 1.5) * 0.215 + sv + (R() - 0.5) * 0.006, top + c * 0.0235 + 0.01));
+        o.rotation.set(0, R() * 6.28, 0); o.scale.set(0.094, 0.02, 0.094); o.updateMatrix(); im.setMatrixAt(i, o.matrix);
+      }
+      im.castShadow = true; im.receiveShadow = true; pg.add(im);
+    }
+    // a soft pool of each colour on the floor under what it holds, as his trading desk's light lies on its floor
+    // (a coloured lamp over the piles blew their tops out white once they filled)
+    zones.forEach(([n, per, sl, lip, pool, f], z) => {
+      if (!n) return;
+      const us = used[z], u0 = Math.min(...us.map((q) => q[0])), u1 = Math.max(...us.map((q) => q[0])) + P, v0 = Math.min(...us.map((q) => q[1])), v1 = Math.max(...us.map((q) => q[1])) + P;
+      pool.opacity = 0.16 + 0.2 * f;
+      const m = new THREE.Mesh(G.plane, pool); m.rotation.x = -Math.PI / 2; m.scale.set(u1 - u0 + 1.4, v1 - v0 + 1.4, 1); m.position.copy(this.V(x0 + (u0 + u1) / 2, y0 + (v0 + v1) / 2, 0.087)); pg.add(m);
     });
+  }
+  // how far a pile fills: nothing at 0, then by orders of magnitude, eased so a few hundred is a little and the
+  // pile is whole only near `full`
+  vtFill(amt, a0, full) { return amt > 0 ? Math.min(1, Math.pow(Math.log10(1 + amt / a0) / Math.log10(1 + full / a0), 1.6)) : 0; }
+  // the vault's materials, textures and shapes, made once and shared (release() keeps what lives on OM, TX and G)
+  vtMats() {
+    if (OM.vtSteel) return;
+    const R = rng(61);
+    // brushed steel: fine streaks one way (round the door on its lathe, along the bulkhead on the flat)
+    const brush = TX.vtBrush = ctex(256, 256, (g, W, H) => {
+      g.fillStyle = '#b4bec9'; g.fillRect(0, 0, W, H);
+      for (let y = 0; y < H; y++) { const v = 150 + Math.floor((R() - 0.5) * 50); g.fillStyle = 'rgba(' + v + ',' + (v + 8) + ',' + (v + 18) + ',' + (0.2 + R() * 0.4).toFixed(2) + ')'; g.fillRect(0, y, W, 1); }
+    });
+    brush.wrapS = brush.wrapT = THREE.RepeatWrapping;
+    // the bulkhead's face: the same steel, an engraved border, two seams, rivets along them
+    TX.vtBulk = ctex(1024, 420, (g, W, H) => {
+      g.drawImage(brush.image, 0, 0, W, H);
+      const line = (x0, y0, x1, y1) => { g.strokeStyle = 'rgba(24,32,42,.75)'; g.lineWidth = 3; g.beginPath(); g.moveTo(x0, y0); g.lineTo(x1, y1); g.stroke(); g.strokeStyle = 'rgba(235,242,250,.35)'; g.lineWidth = 1.5; g.beginPath(); g.moveTo(x0 + 2, y0 + 2); g.lineTo(x1 + 2, y1 + 2); g.stroke(); };
+      const m = 22, sx = [W * 0.17, W * 0.83];
+      line(m, m, W - m, m); line(m, H - m, W - m, H - m); line(m, m, m, H - m); line(W - m, m, W - m, H - m); sx.forEach((x) => line(x, m, x, H - m));
+      const rivet = (x, y) => { g.fillStyle = 'rgba(20,28,38,.6)'; g.beginPath(); g.arc(x + 1.5, y + 1.5, 4.5, 0, 7); g.fill(); g.fillStyle = '#c9d2dc'; g.beginPath(); g.arc(x, y, 4, 0, 7); g.fill(); };
+      for (let x = m + 22; x < W - m; x += 44) { rivet(x, m + 14); rivet(x, H - m - 14); }
+      [m + 14, W - m - 14].concat(sx.map((x) => x - 14), sx.map((x) => x + 14)).forEach((x) => { for (let y = m + 50; y < H - m - 20; y += 44) rivet(x, y); });
+    });
+    // the door's face, turned on a lathe: rings of polish, engraved circles
+    TX.vtFace = ctex(512, 512, (g, W) => {
+      const c = W / 2;
+      for (let rr = c; rr > 0; rr -= 1.4) { const v = 140 + Math.floor((R() - 0.5) * 36) + Math.floor(rr / c * 22); g.strokeStyle = 'rgb(' + v + ',' + (v + 8) + ',' + (v + 17) + ')'; g.lineWidth = 2; g.beginPath(); g.arc(c, c, rr, 0, Math.PI * 2); g.stroke(); }
+      [[0.97, 4], [0.86, 2.5], [0.36, 3]].forEach(([k, w]) => { g.strokeStyle = 'rgba(22,30,40,.75)'; g.lineWidth = w; g.beginPath(); g.arc(c, c, c * k, 0, Math.PI * 2); g.stroke(); });
+    });
+    TX.vtDial = ctex(128, 128, (g, W) => {
+      const c = W / 2; g.fillStyle = '#141c26'; g.beginPath(); g.arc(c, c, c, 0, 7); g.fill();
+      for (let k = 0; k < 60; k++) { const a = k / 60 * Math.PI * 2, l = k % 5 ? 8 : 16; g.strokeStyle = k % 5 ? '#8a98a8' : '#e6edf4'; g.lineWidth = k % 5 ? 2 : 3; g.beginPath(); g.moveTo(c + Math.sin(a) * (c - 4), c - Math.cos(a) * (c - 4)); g.lineTo(c + Math.sin(a) * (c - 4 - l), c - Math.cos(a) * (c - 4 - l)); g.stroke(); }
+      g.fillStyle = '#7cf2c4'; g.beginPath(); g.moveTo(c, 6); g.lineTo(c - 7, 22); g.lineTo(c + 7, 22); g.fill();
+      g.fillStyle = '#3a4756'; g.beginPath(); g.arc(c, c, c * 0.42, 0, 7); g.fill();
+    });
+    // the keypad: its screen (OPEN in mint, LOCKED in cyan) over twelve keys
+    const pad = (word, col, bg) => ctex(128, 180, (g, W, H) => {
+      g.fillStyle = '#0c141c'; g.fillRect(0, 0, W, H); g.strokeStyle = '#2c3b4a'; g.lineWidth = 4; g.strokeRect(2, 2, W - 4, H - 4);
+      g.fillStyle = bg; g.fillRect(12, 12, W - 24, 40); g.fillStyle = col; g.font = '700 22px JetBrains Mono, monospace'; g.textAlign = 'center'; g.textBaseline = 'middle'; g.fillText(word, W / 2, 33);
+      for (let i = 0; i < 12; i++) { const x = 14 + (i % 3) * 36, y = 64 + Math.floor(i / 3) * 28; g.fillStyle = '#3d4b5a'; g.fillRect(x, y, 28, 21); g.fillStyle = '#5a6a7a'; g.fillRect(x, y, 28, 3); g.fillStyle = '#c4ced8'; g.font = '600 12px JetBrains Mono, monospace'; g.fillText('123456789*0#'[i], x + 14, y + 12); }
+    });
+    TX.vtKeyO = pad('OPEN', '#7cf2c4', '#06231c'); TX.vtKeyS = pad('LOCKED', '#24e8ff', '#062030');
+    // the counting desk's screen: what came in, in the two colours, by day
+    TX.vtLedger = ctex(320, 180, (g, W, H) => {
+      g.fillStyle = '#06101a'; g.fillRect(0, 0, W, H); g.strokeStyle = '#38f5b8'; g.lineWidth = 5; g.strokeRect(3, 3, W - 6, H - 6);
+      g.fillStyle = '#38f5b8'; g.font = '700 22px JetBrains Mono, monospace'; g.textBaseline = 'top'; g.fillText('VAULT', 16, 12);
+      g.fillStyle = '#142436'; for (let y = 60; y < H - 14; y += 24) g.fillRect(16, y, W - 32, 2);
+      for (let i = 0; i < 12; i++) { const h1 = 20 + R() * 70, h2 = 8 + R() * 30, x = 22 + i * 24; g.fillStyle = '#38f5b8'; g.fillRect(x, H - 18 - h1, 9, h1); g.fillStyle = '#3b82f6'; g.fillRect(x + 10, H - 18 - h2, 9, h2); }
+    });
+    // safe-deposit boxes: rows of steel doors, small at the top, larger below, each with a number plate, a keyhole
+    // and a light (the glow map carries only the lights)
+    const rowsB = [[56, 24], [56, 24], [56, 24], [80, 16], [108, 10]], W2 = 1740, H2 = 400, lights = [];
+    TX.vtBoxes = ctex(W2, H2, (g) => {
+      g.fillStyle = '#2a3440'; g.fillRect(0, 0, W2, H2);
+      let y = 8;
+      rowsB.forEach(([h, n]) => {
+        const w = (W2 - 16 - (n - 1) * 6) / n;
+        for (let i = 0; i < n; i++) {
+          const x = 8 + i * (w + 6), v = Math.floor((R() - 0.5) * 16), gr = g.createLinearGradient(x, y, x, y + h);
+          gr.addColorStop(0, 'rgb(' + (156 + v) + ',' + (166 + v) + ',' + (178 + v) + ')'); gr.addColorStop(1, 'rgb(' + (112 + v) + ',' + (122 + v) + ',' + (134 + v) + ')');
+          g.fillStyle = gr; g.fillRect(x, y, w, h); g.strokeStyle = 'rgba(30,40,52,.55)'; g.lineWidth = 2; g.strokeRect(x + 4, y + 4, w - 8, h - 8);
+          g.fillStyle = '#dfe6ee'; g.fillRect(x + 9, y + 9, Math.min(26, w * 0.4), 11);
+          g.fillStyle = '#1a222c'; g.beginPath(); g.arc(x + w - 16, y + h / 2 + 2, 4, 0, 7); g.fill(); g.fillRect(x + w - 17, y + h / 2 + 2, 2, 8);
+          lights.push([x + w - 12, y + 12, R() < 0.82 ? '#7cf2c4' : '#3b82f6']);
+        }
+        y += h + 6;
+      });
+    });
+    TX.vtBoxesGlow = ctex(W2, H2, (g) => { g.fillStyle = '#000'; g.fillRect(0, 0, W2, H2); lights.forEach(([x, y, c]) => { g.fillStyle = c; g.fillRect(x - 4, y - 3, 8, 6); }); });
+    // steel as his engines and consoles read under the studio light: pale and only half a mirror (a full metal
+    // reflects the dark sky and goes black)
+    OM.vtSteel = std({ color: 0xd2dbe4, map: brush, metalness: 0.55, roughness: 0.34 });
+    OM.vtBulk = std({ map: TX.vtBulk, color: 0xe6edf4, metalness: 0.45, roughness: 0.4 });
+    OM.vtSteelDk = std({ color: 0x4e5b69, metalness: 0.6, roughness: 0.42 });
+    OM.vtChrome = std({ color: 0xe8eff6, metalness: 0.85, roughness: 0.2 });
+    OM.vtFace = std({ map: TX.vtFace, color: 0xeef3f8, metalness: 0.55, roughness: 0.3 });
+    OM.vtDial = new THREE.MeshBasicMaterial({ map: TX.vtDial });
+    OM.vtNeon = emis(LOOK.neon, 2.4);
+    OM.vtKeyO = new THREE.MeshBasicMaterial({ map: TX.vtKeyO, toneMapped: false });
+    OM.vtKeyS = new THREE.MeshBasicMaterial({ map: TX.vtKeyS, toneMapped: false });
+    OM.vtLedger = new THREE.MeshBasicMaterial({ map: TX.vtLedger, toneMapped: false });
+    OM.vtBoxes = std({ map: TX.vtBoxes, emissiveMap: TX.vtBoxesGlow, emissive: 0xffffff, emissiveIntensity: 1.6, metalness: 0.6, roughness: 0.38 });
+    // the money: Cymetica's green and USDC's blue, as satin metal that holds its colour under the white light (a
+    // glossier finish mirrored the room's lamp off the coins' flat tops into a white blot once the floor filled)
+    OM.vtBar = std({ color: 0x2ee59a, metalness: 0.62, roughness: 0.4, emissive: 0x0d7a4e, emissiveIntensity: 0.5 });
+    OM.vtCoin = std({ color: 0x5a96fa, metalness: 0.55, roughness: 0.46, emissive: 0x1d4fb8, emissiveIntensity: 0.5 });
+    OM.vtPallet = std({ color: 0x1e2a36, roughness: 0.46, metalness: 0.42 });
+    OM.vtLipG = emis('#38f5b8', 1.6); OM.vtLipB = emis('#3b82f6', 2.0);
+    OM.vtBayG = emis('#7cf2c4', 0.3); OM.vtBayB = emis('#3b82f6', 0.5);
+    TX.vtPool = radialTex('255,255,255', 0.9);
+    const pool = (hex) => new THREE.MeshBasicMaterial({ map: TX.vtPool, color: hex, transparent: true, opacity: 0.2, blending: THREE.AdditiveBlending, depthWrite: false });
+    OM.vtPoolG = pool(0x38f5b8); OM.vtPoolB = pool(0x3b82f6);
+    // the leaf turned on a lathe, back to front (so every face looks out): the back, three steps of the plug that
+    // seats in the frame, the front lip, a raised rim round the face
+    G.vtLeaf = this.vtLathe([[0, -0.19], [0.45, -0.19], [0.45, -0.07], [0.48, -0.07], [0.48, 0.08], [0.515, 0.08], [0.515, 0.17], [0.497, 0.19], [0.47, 0.19], [0.47, 0.21], [0.447, 0.21], [0.436, 0.19]], 96);
+    G.vtCollar = this.vtLathe([[0.6, 0.24], [0.6, 0.31], [0.585, 0.335], [0.56, 0.335], [0.545, 0.32], [0.545, 0.24]], 96);
+    G.vtFace = new THREE.CircleGeometry(0.437, 72);
+    G.vtDial = new THREE.CircleGeometry(0.052, 40);
+    // an ingot: a box whose top is drawn in, as cast bars are
+    const bar = new THREE.BoxGeometry(1, 1, 1), bp = bar.attributes.position;
+    for (let i = 0; i < bp.count; i++) if (bp.getY(i) > 0) bp.setXYZ(i, bp.getX(i) * 0.8, bp.getY(i), bp.getZ(i) * 0.68);
+    bar.computeVertexNormals(); G.vtBar = bar;
+    G.vtCoin = new THREE.CylinderGeometry(1, 1, 1, 20);
+  }
+  // a lathe whose every corner is crisp (each inner point doubled, so no normal is averaged across a step), its axis
+  // turned to z
+  vtLathe(pts, n) {
+    const p = [];
+    pts.forEach(([x, y], i) => { p.push(new THREE.Vector2(x, y)); if (i > 0 && i < pts.length - 1) p.push(new THREE.Vector2(x, y)); });
+    const g = new THREE.LatheGeometry(p, n); g.rotateX(Math.PI / 2); return g;
+  }
+  // the bulkhead: the slab with the opening cut through it, its top corners chamfered; the face's texture laid
+  // flat across it
+  vtBulkGeo(D) {
+    if (G.vtBulk) return G.vtBulk;
+    const W = D.bw, yb = 0.08 - D.ch, yt = D.top - D.ch, c = 0.14, s = new THREE.Shape();
+    s.moveTo(-W / 2, yb); s.lineTo(W / 2, yb); s.lineTo(W / 2, yt - c); s.lineTo(W / 2 - c, yt); s.lineTo(-W / 2 + c, yt); s.lineTo(-W / 2, yt - c); s.lineTo(-W / 2, yb);
+    const h = new THREE.Path(); h.absarc(0, 0, D.hole, 0, Math.PI * 2, true); s.holes.push(h);
+    const geo = new THREE.ExtrudeGeometry(s, { depth: 0.3, bevelEnabled: true, bevelThickness: 0.02, bevelSize: 0.02, bevelSegments: 2, curveSegments: 72 });
+    const p = geo.attributes.position, uv = geo.attributes.uv;
+    for (let i = 0; i < p.count; i++) uv.setXY(i, (p.getX(i) + W / 2) / W, (p.getY(i) - yb) / (yt - yb));
+    G.vtBulk = geo; return geo;
+  }
+  // safe-deposit boxes along the other back wall (x = x0): a steel cabinet under a cap, its front the boxes
+  vtBoxes(r) {
+    const g = r.g, x0 = r.x0, y0 = r.y0;
+    this.box(g, x0 + 0.05, y0 + 0.5, 0.08, 0.38, 4.7, 0.04, OM.dark);
+    const m = new THREE.Mesh(G.box, [OM.vtBoxes, OM.vtSteelDk, OM.vtSteelDk, OM.vtSteelDk, OM.vtSteelDk, OM.vtSteelDk]);
+    m.scale.set(0.38, 1.08, 4.7); m.position.copy(this.V(x0 + 0.24, y0 + 2.85, 0.66)); m.castShadow = true; m.receiveShadow = true; g.add(m);
+    this.rb(g, x0 + 0.03, y0 + 0.47, 1.2, 0.44, 4.76, 0.045, OM.vtSteel, 0.015);
+  }
+  // the counting desk by the door: a desk, a counting machine with its green readout, a screen of what came in
+  vtDesk(r) {
+    const g = r.g, x = r.x0 + 5.12, y = r.y0 + 0.28;
+    this.rb(g, x + 0.05, y + 0.04, 0.08, 0.1, 0.72, 0.42, OM.desk, 0.03);
+    this.rb(g, x + 1.55, y + 0.04, 0.08, 0.1, 0.72, 0.42, OM.desk, 0.03);
+    this.box(g, x + 0.15, y + 0.06, 0.12, 1.4, 0.04, 0.34, OM.desk);
+    this.rb(g, x, y, 0.5, 1.7, 0.8, 0.05, OM.deskTop, 0.02);
+    this.cyl(g, x + 1.05, y + 0.2, 0.55, 0.11, 0.02, OM.frame); this.box(g, x + 1.02, y + 0.12, 0.57, 0.06, 0.05, 0.12, OM.frame, false);
+    this.rb(g, x + 0.7, y + 0.1, 0.66, 0.7, 0.05, 0.42, OM.dark, 0.02);
+    const sc = new THREE.Mesh(G.plane, OM.vtLedger); sc.scale.set(0.64, 0.36, 1); sc.position.copy(this.V(x + 1.05, y + 0.152, 0.87)); g.add(sc);
+    this.rb(g, x + 0.12, y + 0.22, 0.55, 0.4, 0.34, 0.17, OM.white, 0.04);
+    this.box(g, x + 0.18, y + 0.3, 0.71, 0.28, 0.09, 0.02, OM.dark, false);
+    const rd = new THREE.Mesh(G.plane, OM.green.soft); rd.scale.set(0.2, 0.05, 1); rd.position.copy(this.V(x + 0.32, y + 0.562, 0.64)); g.add(rd);
   }
   // the free lot: open dark-teal deck marked out with glowing cyan-mint dashes, a crisp turquoise-aquamarine holographic pad
   // with a vertical grid cylinder and perimeter nodes; the label lies inside the ring
