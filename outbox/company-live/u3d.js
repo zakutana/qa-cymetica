@@ -1422,7 +1422,10 @@ class Universe3D {
     const c = it.c, acc = CO.accentHex(c.accent);
     if (!it.el) { it.el = document.createElement('div'); this.bans.appendChild(it.el); it.el.addEventListener('pointerenter', () => this.setHover(c.id, true)); it.el.addEventListener('pointerleave', () => this.setHover(null, true)); it.el.addEventListener('click', () => this.open(c.id)); }
     let name = String(c.name || '').toUpperCase(); if (name.length > 22) name = name.slice(0, 21) + '…';
-    it.el.className = 'b3' + (!c.public && !it.mine ? ' priv' : '') + (c.status === 'paused' ? ' paused' : '') + (it.mine ? ' mine' : '');
+    // hidden until overlay() has placed it once: a new banner otherwise sits in a heap at the stage's top left while
+    // the map is starting ("jak nacita mapa tak vlevo nahore sou nejake nesmysly"), and one overlay() hid stays hidden
+    const hid = !it.el._placed || it.el.classList.contains('hidden');
+    it.el.className = 'b3' + (!c.public && !it.mine ? ' priv' : '') + (c.status === 'paused' ? ' paused' : '') + (it.mine ? ' mine' : '') + (hid ? ' hidden' : '');
     it.el.style.setProperty('--acc', acc);
     it.el.setAttribute('data-id', c.id);
     it.el.innerHTML = (it.mine ? '<span class="you">YOU</span>' : '') + '<span class="rib">' + (!c.public && !it.mine ? '<i class="lk"></i>' : '') + esc(name) + '</span><span class="teth"></span>';
@@ -1430,7 +1433,7 @@ class Universe3D {
   }
   coreBanner() {
     if (this.coreEl) return;
-    const el = document.createElement('div'); el.className = 'b3 core'; el.style.setProperty('--acc', '#00cfff');
+    const el = document.createElement('div'); el.className = 'b3 core hidden'; el.style.setProperty('--acc', '#00cfff');
     el.innerHTML = '<span class="rib">CYMETICA</span><span class="teth"></span>';
     el.addEventListener('pointerenter', () => this.setHover('core', true)); el.addEventListener('pointerleave', () => this.setHover(null, true));
     this.bans.appendChild(el); this.coreEl = el;
@@ -1472,7 +1475,7 @@ class Universe3D {
     this.arcs.push({ curve, head, streak, tube, mat, t0: performance.now(), dur: 1600 + a.distanceTo(b) * 12 });
   }
   pop(it, label) {
-    const el = document.createElement('div'); el.className = 'b3pop'; el.textContent = label; this.bans.appendChild(el);
+    const el = document.createElement('div'); el.className = 'b3pop'; el.textContent = label; el.style.visibility = 'hidden'; this.bans.appendChild(el);
     const p = { el, it, t0: performance.now() }; this.pops.push(p);
     setTimeout(() => { el.remove(); this.pops = this.pops.filter((x) => x !== p); }, 2600);
   }
@@ -1655,7 +1658,7 @@ class Universe3D {
       const whole = r.l >= 2 && r.r <= w - 2 && r.t >= 2 && r.b <= h - 2;
       const show = !off && (o.keep || (whole && !placed.some(hit) && !this.bars.some(hit) && o.px >= 24 && named < 14));
       if (show && !o.keep) named++;
-      el.classList.toggle('hidden', !show);
+      el.classList.toggle('hidden', !show); el._placed = true;
       if (show) placed.push(r);
       el.style.transform = 'translate(' + o.x.toFixed(1) + 'px,' + o.y.toFixed(1) + 'px) translate(-50%,-100%) scale(' + s.toFixed(3) + ')';
       el.style.zIndex = String(o.keep ? 3000 : 2000 - Math.round(o.d));
@@ -1664,6 +1667,7 @@ class Universe3D {
     this.pops.forEach((p) => {
       v.copy(p.it.plateAt || p.it.anchor).project(this.camera);
       p.el.style.transform = 'translate(' + ((v.x + 1) / 2 * w).toFixed(1) + 'px,' + ((1 - v.y) / 2 * h - 46).toFixed(1) + 'px) translate(-50%,-100%)';
+      p.el.style.visibility = '';
     });
   }
 
@@ -2644,6 +2648,9 @@ class Office3D {
       if (room.born) { g.scale.set(1, 0.01, 1); room.grow = performance.now(); }
     });
     this.bakeRooms();
+    // the plates wait hidden until a frame has put them over their rooms: while the 3D was starting they sat in a
+    // heap at the stage's top left ("jak nacita mapa tak vlevo nahore sou nejake nesmysly"); labels() shows them
+    Array.prototype.forEach.call(this.layer.children, (el) => { el.style.display = 'none'; el._off = true; });
     this.selRing = new THREE.Group(); W.add(this.selRing);
     this.update();
     if (!this.fitted) { this.fit(false); }
