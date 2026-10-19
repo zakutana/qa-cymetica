@@ -5193,10 +5193,11 @@ class Office3D {
   // hit box holds the floor).
   //   s     how far in from the glass the marking starts at least: clear of the bloom of the glass's lit foot
   //   clr   how far it keeps from anything standing; end: the corners' posts at each end of a wall
-  //   z     its height: over the Manager's floor rings (0.11), under anything that stands
+  //   z     its height: a hair over the glossy floor (SH_FLOOR_Y) and the Manager's rings on it (0.11), under
+  //         anything that stands; off the mirror's layer, so the floor does not reflect it
   //   cap   the largest cap height of a name, so the rooms read alike; K: the stack (name, line, status) in caps
   //   maxL  the longest stretch; ppu: the canvas's pixels a unit; lit: brightness plain, under the mouse, open
-  static FL = { s: 0.26, clr: 0.08, end: 0.15, z: 0.12, cap: 0.62, K: 2.42, maxL: 6.4, ppu: 256, lit: [1.35, 1.8, 2.1] };
+  static FL = { s: 0.26, clr: 0.08, end: 0.15, z: SH_FLOOR_Y + 0.04, cap: 0.62, K: 2.42, maxL: 6.4, ppu: 256, lit: [1.35, 1.8, 2.1] };
   static flFont(w, px) { return w + ' ' + px.toFixed(1) + "px Bahnschrift, 'Segoe UI', 'Inter', system-ui, sans-serif"; }
   // a scratch canvas to measure with, the font's cap height as a share of its size, and a text's length at a cap
   // height of 1
@@ -5318,7 +5319,7 @@ class Office3D {
     const F = Office3D.FL, X = Office3D, RS = CO.iso.RS, st = 0.05, n = Math.round(RS / st), N1 = n + 1, t = this.flText(r);
     const [ru, rv] = this.flReach(r), occ = new Uint8Array(n * n), cl = (k) => Math.max(0, Math.min(n, k));
     (this._flParts || []).forEach((p) => {
-      const h = Math.max(0, p.top - 0.08);
+      const h = Math.max(0, p.top - SH_FLOOR_Y);
       const i0 = cl(Math.floor((p.x0 + this.cx - r.x0 - h * ru - F.clr) / st)), i1 = cl(Math.ceil((p.x1 + this.cx - r.x0 + F.clr) / st));
       const j0 = cl(Math.floor((p.z0 + this.cy - r.y0 - h * rv - F.clr) / st)), j1 = cl(Math.ceil((p.z1 + this.cy - r.y0 + F.clr) / st));
       for (let i = i0; i < i1; i++) for (let j = j0; j < j1; j++) occ[i * n + j] = 1;
