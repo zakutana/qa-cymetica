@@ -2020,22 +2020,59 @@ function hullTex() {
   };
   TX.hull = ctex(W, H, draw(false)); TX.hullGlow = ctex(W, H, draw(true)); return TX.hull;
 }
+// His racks' doors, zoomed: a dark door in a lighter frame, a label and a small display at its head, fourteen units
+// behind it -- 1U servers with a short cyan bar of light at their left and a grille, rows of drive caddies with a
+// light under the busy ones, a switch with its ports, perforated blanks -- and a grille along its foot. Every light is
+// in the emissive map; racks() blinks a few more where the door has none lit (rackTex.leds: where, as fractions of it).
 function rackTex() {
   if (TX.rack) return TX.rack;
-  const draw = (glow) => (g, W, H) => {
-    g.fillStyle = glow ? '#000000' : '#0d1520'; g.fillRect(0, 0, W, H);
-    const n = 12, step = (H - 20) / n;
-    for (let i = 0; i < n; i++) {
-      const y = 10 + i * step, h = step - 4, k = (i * 37) % 5;
-      if (!glow) { g.fillStyle = '#1a2a3a'; g.fillRect(8, y, W - 16, h); g.fillStyle = '#0b131c'; for (let x = 14; x < W - 44; x += 6) g.fillRect(x, y + 3, 3, h - 6); }
-      // his racks' fronts: a pale blue strip of light across each unit, a few coloured status lights at its end
-      g.fillStyle = glow ? (k === 3 ? 'rgba(160,215,255,.55)' : 'rgba(150,205,255,.9)') : '#5a7a9a'; g.fillRect(14, y + h / 2 - 1.5, W * 0.56 - (k * 6), 3);
-      g.fillStyle = k < 2 ? '#38f5b8' : k < 4 ? '#24e8ff' : '#3b82f6';
-      g.fillRect(W - 34, y + h / 2 - 2, 7, 4); if (k % 2) g.fillRect(W - 22, y + h / 2 - 2, 7, 4);
+  const W = 256, H = 512, R = rng(53), plan = 'sdsbswsdsbsdss', top = 36, uh = (H - top - 44) / plan.length;
+  const lit = Array.from(plan, () => Array.from({ length: 8 }, () => R()));
+  rackTex.leds = [];
+  Array.from(plan).forEach((t, i) => {
+    if (t === 'd') for (let k = 0; k < 8; k++) if (lit[i][k] >= 0.42 && lit[i][k] < 0.7) rackTex.leds.push([(26 + k * (W - 40) / 8) / W, (top + i * uh + uh - 8.5) / H]);
+    if (t === 's' && lit[i][0] <= 0.4) rackTex.leds.push([(W - 21.5) / W, (top + i * uh + (uh - 3) / 2) / H]);
+  });
+  const draw = (glow) => (g) => {
+    g.fillStyle = glow ? '#000000' : '#161d25'; g.fillRect(0, 0, W, H);
+    if (!glow) {
+      g.fillStyle = '#353f4a'; g.fillRect(0, 0, W, 10); g.fillRect(0, H - 10, W, 10); g.fillRect(0, 0, 10, H); g.fillRect(W - 10, 0, 10, H);
+      g.fillStyle = '#4c5966'; g.fillRect(0, 0, W, 3); g.fillRect(0, 0, 3, H);
+      g.fillStyle = '#212a34'; g.fillRect(16, 14, W - 32, 17); g.fillStyle = '#5c6976'; g.fillRect(22, 19, 64, 7);
     }
-    if (!glow) { g.strokeStyle = '#24384e'; g.lineWidth = 5; g.strokeRect(2, 2, W - 4, H - 4); }
+    g.fillStyle = glow ? 'rgba(36,232,255,.5)' : '#1d5e6a'; g.fillRect(W - 76, 17, 50, 11);
+    Array.from(plan).forEach((t, i) => {
+      const y = top + i * uh, h = uh - 3, L = lit[i];
+      if (!glow) { g.fillStyle = '#222b35'; g.fillRect(16, y, W - 32, h); g.fillStyle = '#0c1116'; g.fillRect(16, y + h, W - 32, 2); }
+      if (t === 'd') {
+        // eight drive caddies, a light at the foot of the busy ones
+        const cw = (W - 40) / 8;
+        for (let k = 0; k < 8; k++) {
+          const x = 20 + k * cw;
+          if (!glow) { g.fillStyle = '#2e3843'; g.fillRect(x, y + 3, cw - 4, h - 5); g.fillStyle = '#151b22'; for (let s = y + 6; s < y + h - 10; s += 3) g.fillRect(x + 3, s, cw - 10, 1); }
+          g.fillStyle = L[k] < 0.3 ? (glow ? 'rgba(56,245,184,.8)' : '#2a8a6c') : L[k] < 0.42 ? (glow ? 'rgba(36,232,255,.8)' : '#1f7f90') : (glow ? '#000000' : '#1a242e');
+          g.fillRect(x + 3, y + h - 7, 7, 3);
+        }
+      } else if (t === 's') {
+        // a server: a short cyan bar of light at its left, a grille, its status lights at the end
+        g.fillStyle = glow ? (L[1] < 0.75 ? 'rgba(90,225,240,.7)' : 'rgba(150,205,255,.5)') : '#3d7480'; g.fillRect(22, y + h / 2 - 2, 30 + Math.round(L[2] * 14), 4);
+        if (!glow) { g.fillStyle = '#111820'; for (let x = 72; x < W * 0.8; x += 5) g.fillRect(x, y + 4, 2, h - 7); }
+        g.fillStyle = glow ? 'rgba(36,232,255,.75)' : '#1f7f90'; g.fillRect(W - 36, y + h / 2 - 3, 7, 5);
+        if (L[0] > 0.4) { g.fillStyle = glow ? 'rgba(56,245,184,.75)' : '#2a8a6c'; g.fillRect(W - 25, y + h / 2 - 3, 7, 5); }
+      } else if (t === 'w') {
+        // a switch: two rows of ports, a light over each one that is linked
+        for (let k = 0; k < 12; k++) for (let row = 0; row < 2; row++) {
+          const x = 22 + k * 17.5, yy = y + 3 + row * (h / 2);
+          if (!glow) { g.fillStyle = '#05080b'; g.fillRect(x, yy + 3, 12, h / 2 - 6); }
+          if (L[(k + row * 3) % 8] > 0.55) { g.fillStyle = glow ? '#38f5b8' : '#2a8a6c'; g.fillRect(x + 1, yy, 5, 2); }
+        }
+      } else if (!glow) {
+        g.fillStyle = '#0c1217'; for (let x = 22; x < W - 22; x += 6) for (let s = y + 4; s < y + h - 3; s += 5) g.fillRect(x, s, 2, 2);
+      }
+    });
+    if (!glow) { g.fillStyle = '#0a0f14'; for (let x = 18; x < W - 18; x += 6) g.fillRect(x, H - 36, 3, 22); }
   };
-  TX.rack = ctex(128, 320, draw(false)); TX.rackGlow = ctex(128, 320, draw(true)); return TX.rack;
+  TX.rack = ctex(W, H, draw(false)); TX.rackGlow = ctex(W, H, draw(true)); return TX.rack;
 }
 // the office's solar panels as in his picture: deep navy cells with pale grid lines in a light frame (#233561 lit,
 // #6c7ea4 at the lines); the Universe's stations keep their brighter ones (solarTex)
@@ -2142,30 +2179,35 @@ function monTex() {
     g.fillStyle = '#38f5b8'; g.fillRect(14, 12, 68, 8); g.fillStyle = 'rgba(36,232,255,.65)'; g.fillRect(14, 26, 110, 5);
   }));
 }
+// a trader's screen: a price line over its grid, the volume under it, the ticker and its last price at the head
 function orangeMonTex() {
-  return TX.omon || (TX.omon = ctex(256, 144, (g, W) => {
-    g.fillStyle = '#1c0e04'; g.fillRect(0, 0, W, 144);
-    g.strokeStyle = '#ff9438'; g.lineWidth = 3.5; g.beginPath();
-    let y = 92; for (let x = 12; x < W - 10; x += 12) { y = Math.max(34, Math.min(114, y + Math.cos(x * 0.15) * 15 + (x % 24 ? -4 : 8))); if (x === 12) g.moveTo(x, y); else g.lineTo(x, y); } g.stroke();
-    g.fillStyle = 'rgba(255,148,56,.45)'; for (let i = 0; i < 8; i++) g.fillRect(14 + i * 29, 118, 18, 16 - (i % 3) * 4);
-    g.fillStyle = '#ff9438'; g.fillRect(14, 12, 72, 8); g.fillStyle = 'rgba(255,180,90,.6)'; g.fillRect(14, 26, 108, 5);
+  return TX.omon || (TX.omon = ctex(256, 144, (g, W, H) => {
+    g.fillStyle = '#1c0e04'; g.fillRect(0, 0, W, H);
+    g.strokeStyle = 'rgba(255,148,56,.16)'; g.lineWidth = 1;
+    for (let y = 40; y < 116; y += 15) { g.beginPath(); g.moveTo(10, y); g.lineTo(W - 40, y); g.stroke(); }
+    for (let x = 40; x < W - 40; x += 36) { g.beginPath(); g.moveTo(x, 36); g.lineTo(x, 114); g.stroke(); }
+    g.strokeStyle = '#ff9438'; g.lineWidth = 3; g.beginPath();
+    let y = 92, ly = 0; for (let x = 12; x < W - 42; x += 8) { y = Math.max(40, Math.min(110, y + Math.cos(x * 0.15) * 11 + (x % 24 ? -3 : 7))); if (x === 12) g.moveTo(x, y); else g.lineTo(x, y); ly = y; } g.stroke();
+    g.fillStyle = '#ff9438'; g.fillRect(W - 38, ly - 7, 32, 14);
+    g.fillStyle = 'rgba(255,148,56,.4)'; for (let x = 12; x < W - 42; x += 8) g.fillRect(x, 136 - ((x * 7) % 15), 5, (x * 7) % 15 + 2);
+    g.fillStyle = '#ff9438'; g.fillRect(12, 12, 64, 8); g.fillStyle = 'rgba(255,180,90,.6)'; g.fillRect(84, 12, 40, 8); g.fillRect(W - 60, 12, 48, 8);
   }));
 }
+// The trading desk's chart board, his picture's right-hand one on the back wall: a red line of dots wandering across a
+// dark board in a yellow-green frame, its grid and its scale faint behind it
 function orangeWallTex() {
   return TX.owall || (TX.owall = ctex(512, 160, (g, W, H) => {
-    g.fillStyle = '#160b04'; g.fillRect(0, 0, W, H);
-    g.strokeStyle = '#ff9438'; g.lineWidth = 5; g.strokeRect(3, 3, W - 6, H - 6);
-    g.fillStyle = '#ffaa52'; g.font = '700 20px JetBrains Mono, monospace'; g.fillText('ALPHA FLOW · +6.2% ROI', 20, 30);
-    g.strokeStyle = 'rgba(255,148,56,.22)'; g.lineWidth = 1;
-    for (let y = 48; y < H - 18; y += 22) { g.beginPath(); g.moveTo(16, y); g.lineTo(W - 16, y); g.stroke(); }
-    g.strokeStyle = '#ff9438'; g.lineWidth = 3.5; g.beginPath();
-    for (let x = 18; x < W - 18; x += 8) {
-      const y = H * 0.62 + Math.sin(x * 0.045) * 22 + Math.cos(x * 0.11) * 10;
-      if (x === 18) g.moveTo(x, y); else g.lineTo(x, y);
-    }
-    g.stroke();
-    g.fillStyle = 'rgba(255,140,40,.4)';
-    for (let i = 0; i < 22; i++) { const h = 10 + ((i * 19) % 28); g.fillRect(20 + i * 21, H - 14 - h, 13, h); }
+    g.fillStyle = '#0c1108'; g.fillRect(0, 0, W, H);
+    g.strokeStyle = '#c8e06a'; g.lineWidth = 5; g.strokeRect(3, 3, W - 6, H - 6);
+    g.fillStyle = '#c8e06a'; g.font = '700 17px JetBrains Mono, monospace'; g.fillText('PNL 30D', 18, 28);
+    g.fillStyle = 'rgba(200,224,106,.55)'; g.fillRect(110, 18, 70, 8); g.fillRect(W - 92, 18, 74, 8);
+    g.strokeStyle = 'rgba(200,224,106,.14)'; g.lineWidth = 1;
+    for (let y = 44; y < H - 14; y += 18) { g.beginPath(); g.moveTo(16, y); g.lineTo(W - 46, y); g.stroke(); }
+    for (let x = 16; x < W - 46; x += 40) { g.beginPath(); g.moveTo(x, 40); g.lineTo(x, H - 16); g.stroke(); }
+    g.fillStyle = 'rgba(200,224,106,.4)'; for (let y = 44; y < H - 14; y += 18) g.fillRect(W - 40, y - 2, 24, 4);
+    const pts = []; for (let x = 20; x < W - 50; x += 7) pts.push([x, H * 0.5 + Math.sin(x * 0.03) * 22 + Math.cos(x * 0.09) * 9 - (x - 20) * 0.04]);
+    g.strokeStyle = 'rgba(255,90,70,.45)'; g.lineWidth = 2; g.beginPath(); pts.forEach(([x, y], i) => (i ? g.lineTo(x, y) : g.moveTo(x, y))); g.stroke();
+    g.fillStyle = '#ff5a46'; pts.forEach(([x, y]) => { g.beginPath(); g.arc(x, y, 2.6, 0, Math.PI * 2); g.fill(); });
   }));
 }
 function qaGridTex() {
@@ -2370,7 +2412,12 @@ function candleTex() {
   if (TX.candle) return TX.candle;
   const c = document.createElement('canvas'); c.width = 512; c.height = 256; const g = c.getContext('2d');
   g.fillStyle = '#140b04'; g.fillRect(0, 0, 512, 256); g.strokeStyle = '#ff9438'; g.lineWidth = 5; g.strokeRect(3, 3, 506, 250);
-  let v = 140; for (let i = 0; i < 16; i++) { const up = [1, 1, 0, 1, 0, 1, 1, 0, 1, 1, 1, 0, 1, 1, 0, 1][i], o = v; v = Math.max(60, Math.min(210, v + (up ? -16 : 13))); g.fillStyle = up ? '#38f5b8' : '#ff8824'; g.fillRect(24 + i * 29, Math.min(o, v), 17, Math.max(6, Math.abs(o - v))); g.fillRect(31 + i * 29, Math.min(o, v) - 10, 3, Math.abs(o - v) + 20); }
+  // its grid, the price scale down the right, the volume along the foot, then the candles over them
+  g.strokeStyle = 'rgba(255,148,56,.14)'; g.lineWidth = 1;
+  for (let y = 56; y < 220; y += 28) { g.beginPath(); g.moveTo(14, y); g.lineTo(440, y); g.stroke(); g.fillStyle = 'rgba(255,170,82,.45)'; g.fillRect(452, y - 3, 44, 6); }
+  g.fillStyle = 'rgba(255,148,56,.3)'; for (let i = 0; i < 16; i++) g.fillRect(26 + i * 26, 238 - ((i * 13) % 20), 14, (i * 13) % 20 + 4);
+  let v = 140; for (let i = 0; i < 16; i++) { const up = [1, 1, 0, 1, 0, 1, 1, 0, 1, 1, 1, 0, 1, 1, 0, 1][i], o = v; v = Math.max(60, Math.min(200, v + (up ? -14 : 12))); g.fillStyle = up ? '#38f5b8' : '#ff8824'; g.fillRect(24 + i * 26, Math.min(o, v), 16, Math.max(6, Math.abs(o - v))); g.fillRect(31 + i * 26, Math.min(o, v) - 10, 3, Math.abs(o - v) + 20); }
+  g.fillStyle = '#38f5b8'; g.fillRect(446, v - 9, 54, 18);
   g.fillStyle = '#ffaa52'; g.font = '700 22px JetBrains Mono, monospace'; g.fillText('BASKET H2 · +1.1%', 22, 34);
   const t = new THREE.CanvasTexture(c); t.colorSpace = THREE.SRGBColorSpace; TX.candle = t; return t;
 }
@@ -2747,13 +2794,16 @@ class Office3D {
     const k = d.key, x0 = r.x0, y0 = r.y0, g = r.g; let u1 = 6.6;
     const isOrange = k === 'trading_desk';
     if (d.run_kind === 'stranger') {
-      // his server room, rack for rack (their places read off his picture through the fitted camera): three along
-      // the back-right wall, a pair by the back corner, three in a row towards the front, one desk among them
-      this.racks(r, x0 + 2.55, y0 + 0.3, 3, 1.12);
-      this.racks(r, x0 + 0.25, y0 + 1.3, 2, 1.1);
-      this.racks(r, x0 + 2.75, y0 + 5.35, 3, 1.2);
-      this.kanban(r, 2.6, 5.6);
-      this.desk(r, x0 + 3.4, y0 + 2.6, 0, false);
+      // his server room, rack for rack (their places read off his picture through the fitted camera): a darker,
+      // glossy raised floor; three racks a hand apart along the back-right wall, a pair by the back corner,
+      // three in a row towards the front, the workstation among them; the kanban low on the back-left wall, under
+      // its neon as every board of his is
+      this.rcServerFloor(r);
+      this.racks(r, x0 + 2.95, y0 + 0.3, 3, 0.88);
+      this.racks(r, x0 + 0.35, y0 + 1.3, 2, 0.88);
+      this.racks(r, x0 + 3.1, y0 + 5.3, 3, 0.88);
+      r.kb = this.rcBoard(r, 'left', 2.6, 5.6, null, { tiles: true });
+      this.rcWorkstation(r, x0 + 3.4, y0 + 2.6, 0);
       this.holoFrame(r, x0 + 0.72, y0 + 3.98);
       const ex = d.experts.slice(0, 2);
       if (ex[0]) this.agent(r, x0 + 4.35, y0 + 3.9, 0, CO.expertName(ex[0]));
@@ -2781,11 +2831,9 @@ class Office3D {
       this.labHolo(r, x0 + 0.6, y0 + 5.0);
       this.canisters(r, x0 + 6.45, y0 + 1.85);
     } else if (k === 'trading_desk') {
-      // Panoramic warm amber-orange chart walls across both back walls of Trading Desk
-      this.boardTex(r, 1.75, 6.85, orangeWallTex());
-      const ow = new THREE.Mesh(G.plane, new THREE.MeshBasicMaterial({ map: orangeWallTex(), toneMapped: false }));
-      ow.scale.set(4.6, 0.78, 1); ow.rotation.y = Math.PI / 2; ow.position.copy(this.V(x0 + 0.12, y0 + 3.7, 1.14)); g.add(ow);
-      this.box(g, x0 + 0.05, y0 + 1.35, 0.73, 0.04, 4.7, 0.84, OM.dark, false);
+      // his trading desk is a room of its own make (rcTradingRoom): its boards under the neon, its desks of screens
+      this.rcTradingRoom(r, d);
+      return;
     } else if (k === 'design') {
       u1 = 4.5; this.boardTex(r, 4.7, 6.75, moodTex());
     } else if (d.run_kind === 'league') {
@@ -2845,14 +2893,44 @@ class Office3D {
     const along = d > w, n = Math.max(1, Math.round((along ? d : w) / 0.6));
     for (let k = 1; k < n; k++) this.box(r.g, along ? x - 0.01 : x + k * w / n, along ? y + k * d / n : y - 0.01, 0.14, 0.012, 0.012, h - 0.12, OM.frame, false);
   }
-  // server racks in a row, fronts to the room: dark charcoal towers with glowing LEDs
+  // Server racks in a row, fronts to the room, as his: dark cabinets on a plinth, their tops a lit grey that the
+  // camera looks down on, a door full of drive caddies and servers (rackTex), a handle, panelled sides with a vent;
+  // along the row's tops a cable tray with its bundles. The tops stop at 1.42, under the back walls' neon. Over the
+  // caddies' own lights a few more blink, in three sets out of step (r.leds: one instanced draw each).
   racks(r, x, y, n, step = 0.78) {
-    for (let i = 0; i < n; i++) {
-      const rx = x + i * step, m = new THREE.Mesh(rboxGeo(0.68, 1.44, 0.76, 0.035), [OM.rack, OM.rack, OM.dark, OM.rack, OM.rackFace, OM.rack]);
-      m.position.copy(this.V(rx + 0.34, y + 0.38, 0.8)); m.castShadow = true; m.receiveShadow = true; r.g.add(m);
-      this.box(r.g, rx + 0.04, y + 0.74, 1.51, 0.6, 0.02, 0.02, OM.green.rim, false);
-      for (let k = 0; k < 3; k++) { const col = ['#38f2b8', '#00e5ff', '#3b82f6'][(i + k) % 3]; const l = new THREE.Mesh(G.box, amat(col).glow); l.scale.set(0.055, 0.035, 0.012); l.position.copy(this.V(rx + 0.12 + k * 0.09, y + 0.765, 1.34 - k * 0.34)); l.userData.blink = (i * 7 + k * 3) % 11; r.g.add(l); (r.leds = r.leds || []).push(l); }
+    if (!OM.rcRackSide) {
+      OM.rcRackSide = std({ map: this.rcTex('side'), roughness: 0.42, metalness: 0.5 });
+      OM.rcRackTop = std({ map: this.rcTex('top'), roughness: 0.48, metalness: 0.42 });
+      OM.rcMetal = std({ color: 0x8794a2, roughness: 0.3, metalness: 0.75 });
+      OM.rcTray = std({ color: 0x46525e, roughness: 0.42, metalness: 0.6 });
+      OM.rcCable = [0x1c2c44, 0x1a3a3c, 0x262b32].map((c) => std({ color: c, roughness: 0.7, metalness: 0.1 }));
     }
+    // his racks, measured on his picture: 0.7 across, 0.9 deep, about rail height
+    const g = r.g, st = new THREE.Group(), H = 1.3, z0 = 0.12, Wd = 0.7, D = 0.9; g.add(st);
+    const body = rboxGeo(Wd, H, D, 0.03), mats = [OM.rcRackSide, OM.rcRackSide, OM.rcRackTop, OM.rack, OM.rackFace, OM.rcRackSide];
+    rackTex(); const leds = rackTex.leds, R = rng(Math.round(x * 31 + y * 17 + n)), sets = [[], [], []];
+    for (let i = 0; i < n; i++) {
+      const rx = x + i * step, m = new THREE.Mesh(body, mats);
+      m.position.copy(this.V(rx + Wd / 2, y + D / 2, z0 + H / 2)); m.castShadow = true; m.receiveShadow = true; g.add(m);
+      this.box(st, rx + 0.03, y + 0.03, 0.08, Wd - 0.06, D - 0.06, z0 - 0.08, OM.dark, false);
+      this.box(st, rx + Wd - 0.08, y + D + 0.002, z0 + 0.5, 0.022, 0.02, 0.34, OM.rcMetal, false);
+      // a bundle down from the tray into the rack's top, at its back
+      this.box(st, rx + 0.12 + (i % 2) * 0.3, y + 0.14, z0 + H, 0.12, 0.08, 0.045, OM.rcCable[i % 3], false);
+      for (let k = 0; k < 5 && leds.length; k++) { const p = leds[Math.floor(R() * leds.length)]; sets[k % 3].push([rx + Wd / 2 + (p[0] - 0.5) * (Wd - 0.02), z0 + H - p[1] * H]); }
+    }
+    // the tray: two rails, rungs, three bundles laid along it
+    const L = (n - 1) * step + Wd, ty = y + 0.12, tz = z0 + H;
+    this.box(st, x, ty, tz, L, 0.025, 0.04, OM.rcTray, false); this.box(st, x, ty + 0.3, tz, L, 0.025, 0.04, OM.rcTray, false);
+    for (let k = 0.04; k < L; k += 0.17) this.box(st, x + k, ty, tz, 0.025, 0.325, 0.012, OM.rcTray, false);
+    [0.05, 0.13, 0.21].forEach((dy, c) => this.box(st, x + 0.02, ty + dy, tz + 0.012, L - 0.04, 0.065, 0.026, OM.rcCable[c], false));
+    bakeGroup(st);
+    const o = new THREE.Object3D();
+    sets.forEach((pts, s) => {
+      if (!pts.length) return;
+      const im = new THREE.InstancedMesh(G.box, amat(['#38f2b8', '#00e5ff', '#38f2b8'][s]).glow, pts.length);
+      pts.forEach(([px, pz], j) => { o.position.copy(this.V(px, y + D + 0.003, pz)); o.scale.set(0.028, 0.012, 0.006); o.updateMatrix(); im.setMatrixAt(j, o.matrix); });
+      im.computeBoundingSphere(); im.userData.blink = s * 4; g.add(im); (r.leds = r.leds || []).push(im);
+    });
   }
   // a laboratory instrument as in his picture: a white rounded cabinet, on it a white terminal leaning back, its
   // screen a cyan-green hologram of data
@@ -2908,23 +2986,179 @@ class Office3D {
     this.box(g, x, y, 0.08, 2.2, 0.75, 0.32, OM.frame); this.box(g, x, y, 0.4, 2.2, 0.2, 0.42, OM.frame);
     this.box(g, x + 0.5, y + 1.15, 0.08, 1.2, 0.6, 0.3, OM.deskTop);
   }
-  // two more screens on a trading desk, turned in a little: warm orange and candlestick charts
-  sideScreens(r, x, y) {
-    [[x - 0.35, 0.5], [x + 1.83, -0.5]].forEach(([sx, rot], idx) => {
-      this.box(r.g, sx, y + 0.12, 0.58, 0.48, 0.05, 0.36, OM.dark);
-      const f = new THREE.Mesh(G.plane, new THREE.MeshBasicMaterial({ map: idx ? candleTex() : orangeMonTex(), toneMapped: false })); f.scale.set(0.44, 0.32, 1);
-      f.position.copy(this.V(sx + 0.24, y + 0.15, 0.76)); r.g.add(f);
+  // Two more screens on a trading desk (desk() at x, y), one at each end on its own stand and turned in to the
+  // trader, so the desk is a bank of four: a price line on the left, candles on the right. left/right: which ends.
+  sideScreens(r, x, y, left = true, right = true) {
+    [[x + 0.06, 0.66, left, 0], [x + 1.84, -0.66, right, 1]].forEach(([sx, rot, on, idx]) => {
+      if (!on) return;
+      const s = new THREE.Group(); s.position.copy(this.V(sx, y + 0.42, 0)); s.rotation.y = rot; r.g.add(s);
+      // in s: x across the screen, +z towards the trader, y up from the floor
+      const add = (geo, mat, sx2, sy, sz, px, py, pz) => { const m = new THREE.Mesh(geo, mat); m.scale.set(sx2, sy, sz); m.position.set(px, py, pz); s.add(m); return m; };
+      add(rboxGeo(0.5, 0.32, 0.035, 0.012), OM.dark, 1, 1, 1, 0, 0.9, 0).castShadow = true;
+      add(G.plane, new THREE.MeshBasicMaterial({ map: idx ? candleTex() : orangeMonTex(), toneMapped: false }), 0.46, 0.28, 1, 0, 0.9, 0.019);
+      add(G.box, OM.frame, 0.035, 0.2, 0.03, 0, 0.66, -0.04);
+      add(G.box, OM.frame, 0.17, 0.012, 0.13, 0, 0.566, -0.04);
     });
   }
-  // The Manager's room: a stepped circular dais in the middle, conical 5-ring cyan hologram rising over a glowing
-  // core, concentric cyan floor rings, and consoles on both back walls.
+  // A board on a back wall that stays under the neon, as every board in his picture does: its face 0.72 to 1.27, a
+  // dark backing to 1.30, the neon from 1.44. wall 'back' is the y0 wall (along x), 'left' the x0 wall (along y),
+  // a0..a1 along it. With tex a fixed picture; without, a live screen() the update draws into, which it returns.
+  // o.edge lights a thin rim round it in that colour; o.tiles splits a kanban into its four columns with dark
+  // mullions, his row of tiles.
+  rcBoard(r, wall, a0, a1, tex, o = {}) {
+    const w = a1 - a0, h = o.h || 0.55, zc = 1.27 - h / 2, back = wall === 'back', s = tex ? null : screen(w, h);
+    const face = (mat, ww, hh, off) => {
+      const m = new THREE.Mesh(G.plane, mat); m.scale.set(ww, hh, 1);
+      if (back) m.position.copy(this.V(r.x0 + (a0 + a1) / 2, r.y0 + off, zc)); else { m.rotation.y = Math.PI / 2; m.position.copy(this.V(r.x0 + off, r.y0 + (a0 + a1) / 2, zc)); }
+      r.g.add(m); return m;
+    };
+    face(new THREE.MeshBasicMaterial({ map: tex || s.tex, toneMapped: false }), w, h, 0.11);
+    if (o.edge) { const k = 'rcEdge' + o.edge; OM[k] = OM[k] || emis(o.edge, o.glow || 1.2); face(OM[k], w + 0.04, h + 0.04, 0.104); }
+    if (back) this.box(r.g, r.x0 + a0 - 0.05, r.y0 + 0.05, zc - h / 2 - 0.03, w + 0.1, 0.05, h + 0.06, OM.dark, false);
+    else this.box(r.g, r.x0 + 0.05, r.y0 + a0 - 0.05, zc - h / 2 - 0.03, 0.05, w + 0.1, h + 0.06, OM.dark, false);
+    if (o.tiles && s) {
+      const W = s.c.width, cw = (W - 30) / 4;
+      for (let i = 1; i < 4; i++) {
+        const a = a0 + (15 + i * cw) / W * w;
+        if (back) this.box(r.g, r.x0 + a - 0.025, r.y0 + 0.112, zc - h / 2, 0.05, 0.012, h, OM.dark, false);
+        else this.box(r.g, r.x0 + 0.112, r.y0 + a - 0.025, zc - h / 2, 0.012, 0.05, h, OM.dark, false);
+      }
+    }
+    return s;
+  }
+  // His server room's floor: darker than the other rooms' and glossy, the racks faintly mirrored in it, with
+  // perforated tiles in the aisles before the racks' fronts, where the cold air comes up
+  rcServerFloor(r) {
+    if (!OM.rcFloor) OM.rcFloor = std({ map: this.rcTex('floor'), roughness: 0.4, metalness: 0.35 });
+    const RS = CO.iso.RS, m = new THREE.Mesh(G.plane, OM.rcFloor);
+    m.scale.set(RS - 0.08, RS - 0.08, 1); m.rotation.x = -Math.PI / 2; m.position.copy(this.V(r.x0 + RS / 2, r.y0 + RS / 2, 0.083)); m.receiveShadow = true; r.g.add(m);
+  }
+  // The server room's workstation, as his: one solid dark desk down to the floor, a wide monitor of the racks'
+  // status on its stand (r.mons[i]: lit while its expert works, dark glass otherwise), a keyboard, a mouse, a mug,
+  // and a small tower at its end with its lights. The expert sits where desk()'s would (x + 0.95, y + 1.3).
+  rcWorkstation(r, x, y, i) {
+    const g = r.g;
+    this.rb(g, x, y + 0.06, 0.08, 1.72, 0.76, 0.44, OM.desk, 0.03);
+    this.box(g, x + 0.04, y + 0.83, 0.12, 1.64, 0.012, 0.34, OM.frame, false);
+    this.rb(g, x - 0.03, y, 0.52, 1.78, 0.9, 0.05, OM.deskTop, 0.02);
+    this.box(g, x + 0.79, y + 0.18, 0.57, 0.2, 0.14, 0.012, OM.frame, false);
+    this.box(g, x + 0.87, y + 0.22, 0.58, 0.04, 0.04, 0.16, OM.frame, false);
+    this.rb(g, x + 0.31, y + 0.13, 0.66, 1.16, 0.05, 0.5, OM.dark, 0.02);
+    const scr = new THREE.MeshBasicMaterial({ map: this.rcTex('status'), color: new THREE.Color(0x0a1016), toneMapped: false });
+    const face = new THREE.Mesh(G.plane, scr); face.scale.set(1.08, 0.42, 1); face.position.copy(this.V(x + 0.89, y + 0.186, 0.91)); g.add(face);
+    r.mons[i] = scr;
+    this.rb(g, x + 0.58, y + 0.5, 0.57, 0.64, 0.2, 0.022, OM.frame, 0.008, false);
+    this.rb(g, x + 1.33, y + 0.54, 0.57, 0.08, 0.12, 0.022, OM.frame, 0.02, false);
+    this.cyl(g, x + 0.2, y + 0.62, 0.57, 0.045, 0.09, OM.white);
+    this.rb(g, x + 1.86, y + 0.12, 0.08, 0.26, 0.62, 0.56, OM.rack, 0.02);
+    [[0.3, '#38f2b8'], [0.38, '#00e5ff']].forEach(([z, col]) => this.box(g, x + 1.9, y + 0.742, z, 0.04, 0.008, 0.016, amat(col).glow, false));
+  }
+  // the room's textures: drawn once, kept in TX so a new layout finds them (release() spares what TX holds)
+  rcTex(k) {
+    const id = 'rc' + k; if (TX[id]) return TX[id];
+    const T = {
+      // a rack's side: a dark panel in three, a vent near its head and its foot
+      side: [128, 256, (g, W, H) => {
+        g.fillStyle = '#161d25'; g.fillRect(0, 0, W, H); g.fillStyle = '#0d1217'; g.fillRect(W / 3, 0, 2, H); g.fillRect(2 * W / 3, 0, 2, H);
+        g.fillStyle = '#222b35'; g.fillRect(0, 0, W, 4); g.fillRect(0, 0, 3, H);
+        g.fillStyle = '#0b1015'; for (let y of [22, H - 46]) for (let x = 14; x < W - 14; x += 7) g.fillRect(x, y, 3, 22);
+      }],
+      // a rack's top: a lighter plate, a grille over its fans, a cut-out at the back where the cables go in
+      top: [128, 128, (g, W, H) => {
+        g.fillStyle = '#505b67'; g.fillRect(0, 0, W, H); g.fillStyle = '#626e7b'; g.fillRect(0, 0, W, 3); g.fillRect(0, 0, 3, H);
+        g.fillStyle = '#323b45'; for (let x = 22; x < W - 22; x += 7) g.fillRect(x, 52, 3, 50);
+        g.fillStyle = '#1c232a'; g.fillRect(18, 10, W - 36, 22);
+      }],
+      // the server room's floor: dark tiles a unit across, hairline seams, perforated tiles in the aisles
+      floor: [512, 512, (g, W) => {
+        const n = 7, s = W / n, holes = { '3,1': 1, '4,1': 1, '5,1': 1, '0,2': 1, '1,2': 1, '3,6': 1, '4,6': 1, '5,6': 1, '2,4': 1 };
+        g.fillStyle = '#0b1014'; g.fillRect(0, 0, W, W);
+        for (let i = 0; i < n; i++) for (let j = 0; j < n; j++) {
+          const x = i * s + 1.5, y = j * s + 1.5, w = s - 3;
+          g.fillStyle = (i + j) % 2 ? '#1d2731' : '#1a242d'; g.fillRect(x, y, w, w);
+          if (holes[i + ',' + j]) { g.fillStyle = '#10161c'; for (let a = x + 7; a < x + w - 5; a += 6) for (let b = y + 7; b < y + w - 5; b += 6) g.fillRect(a, b, 2.5, 2.5); }
+        }
+      }],
+      // the workstation's monitor: the racks as a map of lit squares, a load line under it
+      status: [256, 128, (g, W, H) => {
+        g.fillStyle = '#04150f'; g.fillRect(0, 0, W, H); g.fillStyle = '#38f5b8'; g.fillRect(10, 8, 60, 7); g.fillStyle = 'rgba(36,232,255,.6)'; g.fillRect(80, 8, 44, 7);
+        for (let i = 0; i < 8; i++) for (let j = 0; j < 3; j++) { g.fillStyle = (i * 3 + j) % 7 ? 'rgba(56,245,184,.75)' : 'rgba(36,232,255,.9)'; g.fillRect(10 + i * 18, 24 + j * 18, 14, 14); }
+        g.strokeStyle = '#38f5b8'; g.lineWidth = 2.5; g.beginPath(); for (let x = 10; x < W - 10; x += 8) { const y = 104 - Math.abs(Math.sin(x * 0.07)) * 16 - (x % 24 ? 0 : 6); if (x === 10) g.moveTo(x, y); else g.lineTo(x, y); } g.stroke();
+        g.fillStyle = 'rgba(56,245,184,.5)'; for (let k = 0; k < 4; k++) g.fillRect(170, 26 + k * 12, 70 - k * 12, 6);
+      }],
+      // the Manager's consoles: rows of keys and small screens, a metre of console that repeats along it
+      console: [256, 84, (g, W, H) => {
+        g.fillStyle = '#141b23'; g.fillRect(0, 0, W, H); g.fillStyle = '#0a0f14'; g.fillRect(0, 0, W, 3);
+        for (let k = 0; k < 3; k++) { g.fillStyle = '#0c1520'; g.fillRect(10 + k * 82, 8, 70, 30); }
+        for (let row = 0; row < 3; row++) for (let k = 0; k < 20; k++) { g.fillStyle = '#26303b'; g.fillRect(10 + k * 12, 46 + row * 12, 9, 8); }
+      }],
+      consoleGlow: [256, 84, (g, W, H) => {
+        g.fillStyle = '#000'; g.fillRect(0, 0, W, H);
+        ['rgba(36,232,255,.35)', 'rgba(59,130,246,.4)', 'rgba(56,245,184,.3)'].forEach((c, k) => { g.fillStyle = c; g.fillRect(14 + k * 82, 12, 40 + (k % 2) * 18, 6); g.fillRect(14 + k * 82, 24, 26, 4); });
+        const R = rng(7); for (let row = 0; row < 3; row++) for (let k = 0; k < 20; k++) if (R() < 0.07) { g.fillStyle = R() < 0.5 ? 'rgba(36,232,255,.7)' : 'rgba(56,245,184,.7)'; g.fillRect(10 + k * 12, 46 + row * 12, 9, 8); }
+      }],
+      // the trading desk's computer, its link screen in orange (pcTex's, recoloured)
+      pcOrange: [256, 176, (g, W, H) => {
+        g.fillStyle = '#26140a'; g.fillRect(0, 0, W, H); g.strokeStyle = '#ff9438'; g.lineWidth = 8; g.strokeRect(4, 4, W - 8, H - 8);
+        g.fillStyle = '#ff9438'; g.font = '700 96px JetBrains Mono, monospace'; g.textAlign = 'center'; g.textBaseline = 'middle'; g.fillText('↗', W / 2, 92);
+      }],
+      // the column of light over the Manager's core: bright at its foot, gone at its head, faint bands rising in it
+      beam: [32, 256, (g, W, H) => {
+        const gr = g.createLinearGradient(0, H, 0, 0); gr.addColorStop(0, 'rgba(255,255,255,.9)'); gr.addColorStop(0.35, 'rgba(255,255,255,.45)'); gr.addColorStop(1, 'rgba(255,255,255,0)');
+        g.fillStyle = gr; g.fillRect(0, 0, W, H);
+        g.fillStyle = 'rgba(255,255,255,.12)'; for (let y = 20; y < H; y += 26) g.fillRect(0, y, W, 3);
+      }],
+    }[k];
+    const t = ctex(T[0], T[1], T[2]);
+    if (k === 'console' || k === 'consoleGlow') { t.wrapS = THREE.RepeatWrapping; t.repeat.set(4, 1); }
+    return (TX[id] = t);
+  }
+  // A console along one of the Manager's back walls, as his: a dark body, a top sloped to the room with rows of keys
+  // and small lit screens on it, a cyan lip along its front. wall 'back' or 'left', a0..a1 along it.
+  rcConsole(r, wall, a0, a1) {
+    if (!OM.rcConsole) OM.rcConsole = std({ map: this.rcTex('console'), emissiveMap: this.rcTex('consoleGlow'), emissive: 0xffffff, emissiveIntensity: 1.0, roughness: 0.42, metalness: 0.35 });
+    const len = a1 - a0, back = wall === 'back', s = new THREE.Group();
+    s.position.copy(back ? this.V(r.x0 + (a0 + a1) / 2, r.y0 + 0.06, 0) : this.V(r.x0 + 0.06, r.y0 + (a0 + a1) / 2, 0)); s.rotation.y = back ? 0 : Math.PI / 2; r.g.add(s);
+    // in s: x along the wall, +z into the room, y up from the floor
+    const add = (geo, mat, sx, sy, sz, px, py, pz, rx) => { const m = new THREE.Mesh(geo, mat); m.scale.set(sx, sy, sz); m.position.set(px, py, pz); if (rx) m.rotation.x = rx; s.add(m); return m; };
+    const body = add(rboxGeo(len, 0.36, 0.46, 0.03), OM.desk, 1, 1, 1, 0, 0.08 + 0.18, 0.23); body.castShadow = true; body.receiveShadow = true;
+    add(G.box, OM.dark, len - 0.04, 0.05, 0.42, 0, 0.47, 0.22, 0.4);
+    add(G.plane, OM.rcConsole, len - 0.1, 0.38, 1, 0, 0.497, 0.23, -Math.PI / 2 + 0.4);
+    add(G.box, OM.cyan.soft, len - 0.06, 0.014, 0.012, 0, 0.36, 0.462);
+    add(G.box, OM.dark, len - 0.02, 0.06, 0.02, 0, 0.11, 0.455);
+  }
+  // his trading desk: the orange-lit room, its boards under the neon -- on the back-right wall the desk's status in
+  // an orange frame (r.wall) and its chart in a yellow-green one, on the back-left wall the kanban in its tiles
+  // (r.kb) with the see-through frame before it -- and desks of four screens with their traders, a little apart
+  rcTradingRoom(r, d) {
+    const x0 = r.x0, y0 = r.y0, k = d.key;
+    r.wall = this.rcBoard(r, 'back', 1.8, 4.0, null, { edge: '#ff8a3a', glow: 1.6 });
+    this.rcBoard(r, 'back', 4.25, 6.7, orangeWallTex(), { edge: '#c8e06a', glow: 0.9 });
+    r.kb = this.rcBoard(r, 'left', 1.45, 5.15, null, { tiles: true });
+    // two desks as his: one towards the back, the other to the right of it and a little further forward
+    const ex = d.experts.slice(0, 3), xs = ex.length === 1 ? [2.4] : ex.length === 2 ? [1.2, 4.15] : [0.35, 2.55, 4.75], ys = ex.length === 2 ? [2.4, 2.85] : [2.75, 2.75, 2.75];
+    ex.forEach((e, i) => {
+      this.desk(r, x0 + xs[i], y0 + ys[i], i, true);
+      this.sideScreens(r, x0 + xs[i], y0 + ys[i], i === 0 || ex.length < 3, i === ex.length - 1 || ex.length < 3);
+    });
+    this.holoFrame(r, x0 + 0.75, y0 + 3.75);
+    ex.forEach((e, i) => this.agent(r, x0 + xs[i] + 0.95, y0 + ys[i] + 1.3, i, CO.expertName(e)));
+    this.terminal(r, x0 + 0.3, y0 + 0.32, d.link || CO.DEPT_LINK[k] || CO.DEPT_LINK.custom);
+    // its computer's screen in the room's orange: a green one was the only cold light in his warm room
+    if (r.pcFace) r.pcFace.map = this.rcTex('pcOrange');
+    this.plant(r, x0 + 0.45, y0 + 5.7);
+    this.plate(r);
+  }
+  // The Manager's room, as his: a stepped circular dais in the middle, a white-hot core in a column of light with
+  // three rings over it, concentric cyan rings on the floor, and a console under a board on both back walls.
   hubRoom(r) {
     const g = r.g, x0 = r.x0, y0 = r.y0, cy = OM.cyan, c = this.V(x0 + 3.8, y0 + 3.55, 0);
-    this.box(g, x0 + 0.5, y0 + 0.25, 0.08, 3.6, 0.7, 0.52, OM.desk);
-    this.box(g, x0 + 0.25, y0 + 1.5, 0.08, 0.7, 3.6, 0.52, OM.desk);
-    const s = screen(3.4, 0.62), m = new THREE.Mesh(G.plane, new THREE.MeshBasicMaterial({ map: s.tex, toneMapped: false })); m.scale.set(3.4, 0.62, 1); m.position.copy(this.V(x0 + 2.3, y0 + 0.11, 1.14)); g.add(m); r.bars = s;
-    this.box(g, x0 + 0.55, y0 + 0.05, 0.78, 3.5, 0.04, 0.72, OM.dark, false);
-    this.kanban(r, 1.4, 5.4);
+    // his back walls: a long console along each, sloped to the room; over the back-right one the turns of the day
+    // (r.bars), over the back-left one the plan's kanban in four tiles (r.kb), both in pale frames under the neon
+    this.rcConsole(r, 'back', 1.3, 6.0);
+    this.rcConsole(r, 'left', 1.15, 5.65);
+    r.bars = this.rcBoard(r, 'back', 1.45, 5.85, null, { edge: '#a9bccb', glow: 0.55 });
+    r.kb = this.rcBoard(r, 'left', 1.3, 5.5, null, { tiles: true, edge: '#a9bccb', glow: 0.55 });
     const floor = new THREE.Mesh(G.plane, new THREE.MeshBasicMaterial({ map: hubFloorTex(), color: new THREE.Color(0x46c8f0).multiplyScalar(0.5), transparent: true, blending: THREE.AdditiveBlending, depthWrite: false }));
     floor.scale.set(6.4, 6.4, 1); floor.rotation.x = -Math.PI / 2; floor.position.set(c.x, 0.1, c.z); g.add(floor); r.floor = floor;
     // his dais: a wide dark disc with a pale metal rim, a raised drum on it with a cyan lip, a white-hot core, a
@@ -2940,10 +3174,28 @@ class Office3D {
     });
     const core = new THREE.Mesh(G.sphere, new THREE.MeshBasicMaterial({ color: new THREE.Color(0xffffff).multiplyScalar(3.2) })); core.scale.setScalar(0.3); core.position.set(c.x, 1.0, c.z); g.add(core);
     const halo = glowSprite(0xbff6ff, 0.55, 3.0); halo.position.set(c.x, 1.0, c.z); g.add(halo);
-    const beam = new THREE.Mesh(G.beam, new THREE.MeshBasicMaterial({ color: new THREE.Color(0x7fe8f8).multiplyScalar(0.9), transparent: true, opacity: 0.16, blending: THREE.AdditiveBlending, depthWrite: false, side: THREE.DoubleSide }));
-    beam.scale.set(1.5, 2.5, 1.5); beam.position.set(c.x, 2.0, c.z); g.add(beam);
-    r.holo = [[1.45, 0.98], [1.85, 0.86], [2.25, 0.74]].map(([y, s]) => {
-      const h = new THREE.Mesh(G.ringT, cy.rim); h.scale.set(s, s, 1.6); h.rotation.x = Math.PI / 2; h.position.set(c.x, y, c.z); h.userData.y = y; g.add(h); return h;
+    // his drum: a pale metal band round its top, a cyan glow where it meets the disc, small lights round the disc's rim
+    const band = new THREE.Mesh(G.ringT, OM.daisRim); band.scale.set(1.08, 1.08, 2.6); band.rotation.x = Math.PI / 2; band.position.set(c.x, 0.47, c.z); g.add(band);
+    const foot = new THREE.Mesh(G.ringT, cy.rim); foot.scale.set(1.13, 1.13, 0.8); foot.rotation.x = Math.PI / 2; foot.position.set(c.x, 0.27, c.z); g.add(foot);
+    const o = new THREE.Object3D(), nodes = new THREE.InstancedMesh(G.cyl8, cy.glow, 12);
+    for (let i = 0; i < 12; i++) { const a = i / 12 * Math.PI * 2; o.position.set(c.x + Math.cos(a) * 1.6, 0.265, c.z + Math.sin(a) * 1.6); o.scale.set(0.035, 0.01, 0.035); o.updateMatrix(); nodes.setMatrixAt(i, o.matrix); }
+    nodes.computeBoundingSphere(); g.add(nodes);
+    // his column of light: a frosted shaft from the drum to over the top ring, brightest at the core, gone at its head
+    G.rcBeam = G.rcBeam || new THREE.CylinderGeometry(0.3, 0.46, 1, 40, 1, true);
+    const beam = new THREE.Mesh(G.rcBeam, new THREE.MeshBasicMaterial({ map: this.rcTex('beam'), color: new THREE.Color(0x8feeff).multiplyScalar(0.75), transparent: true, opacity: 0.5, blending: THREE.AdditiveBlending, depthWrite: false, side: THREE.DoubleSide }));
+    beam.scale.set(1, 2.3, 1); beam.position.set(c.x, 0.48 + 1.15, c.z); g.add(beam);
+    // and the sparks in it: motes rising in the shaft and drifting round the dais, turning slowly (r.spin)
+    const R = rng(83), n = 140, motes = new THREE.InstancedMesh(G.box, amat('#7fe8f8').glow, n);
+    for (let i = 0; i < n; i++) {
+      const inShaft = i < 85, a = R() * Math.PI * 2, rad = inShaft ? Math.sqrt(R()) * 0.38 : 1.2 + R() * 1.25, y = inShaft ? 0.6 + R() * R() * 2.1 : 0.16 + R() * 0.8, s = 0.012 + R() * 0.014;
+      o.position.set(Math.cos(a) * rad, y, Math.sin(a) * rad); o.rotation.set(R() * 3, R() * 3, 0); o.scale.set(s, s, s); o.updateMatrix(); motes.setMatrixAt(i, o.matrix);
+    }
+    motes.computeBoundingSphere();
+    r.spin = new THREE.Group(); r.spin.position.set(c.x, 0, c.z); r.spin.add(motes); g.add(r.spin);
+    // the rings: thin lines of light as his, smaller as they rise
+    OM.rcRing = OM.rcRing || emis('#8ff0ff', 1.15);
+    r.holo = [[1.45, 0.98], [1.85, 0.84], [2.25, 0.7]].map(([y, s]) => {
+      const h = new THREE.Mesh(G.ringT, OM.rcRing); h.scale.set(s, s, 1.1); h.rotation.x = Math.PI / 2; h.position.set(c.x, y, c.z); h.userData.y = y; g.add(h); return h;
     });
     r.core = core; r.coreAt = this.V(x0 + 3.0, y0 + 2.8, 2.75);   // his "need you" badge: over the rings, a little behind the core
     const light = new THREE.PointLight(0x00e5ff, 4.2, 11, 1.6); light.position.set(c.x, 1.8, c.z); g.add(light);
