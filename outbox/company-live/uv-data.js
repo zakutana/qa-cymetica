@@ -14,6 +14,10 @@
     { key: 'tower', name: 'Spire' }, { key: 'dome', name: 'Biodome' }, { key: 'pyramid', name: 'Ziggurat' },
     { key: 'orbital', name: 'Ring station' }, { key: 'rocket', name: 'Starship' }, { key: 'vault', name: 'Vault' }
   ];
+  // two stations as the operator's picture of the Universe draws them (2026-10-18): the Starship is his Laser
+  // station now (the key stays, so a company saved with it keeps its pick), and his Night Owl Trading is a seventh
+  CO.SKINS.forEach(function (s) { if (s.key === 'rocket') s.name = 'Laser station'; });
+  CO.SKINS.push({ key: 'stack', name: 'Data stack' });
   CO.ACCENTS = [
     { key: 'green', hex: '#00ff88' }, { key: 'cyan', hex: '#00cfff' }, { key: 'blue', hex: '#3b82f6' }, { key: 'red', hex: '#ff4444' }
   ];
@@ -88,7 +92,7 @@
       departments: [d('trading_desk'), d('testing_lab'),
         own('Seat keeper', ['trader', 'auditor'], 'Keep a bot at every open FLASH table.\n- Read each seat\'s rank, ROI and volume twice a day.\n- A bot that finishes outside the top three twice is archived, with the reason.')],
       rules: [['an agent wins on paper', 'Trading desk', 'seats it at an Agent Tournaments table']] },
-    { id: 108, name: 'Satoshi\'s Garage', owner: 'garagegm', public: false, status: 'active', plan: 'Max 5x', days: 30, skin: 'tower', accent: 'blue',
+    { id: 108, name: 'Satoshi\'s Garage', owner: 'garagegm', public: false, status: 'active', plan: 'Max 5x', days: 30, skin: 'stack', accent: 'blue',
       bugs: 6, prize: 0, league: 0, mission: 'Build it Better, from the garage.',
       departments: [d('development'), d('design'), d('testing', { runs: 1, products: ['Build it Better'] }), d('trading_desk')], rules: [] },
     { id: 109, name: 'Degen Dynamics', owner: 'dyna', public: true, status: 'active', plan: 'Max 20x', days: 25, skin: 'orbital', accent: 'green',
@@ -100,7 +104,7 @@
         own('Outsider', ['researcher'], 'Once a day, meet Cymetica as a stranger who has never seen it.\n- Hand each problem to Cymetica QA; never file it yourself.', { runs: 1, run_kind: 'stranger', products: ['cymetica.com'] })],
       rules: [['a bug is found anywhere', 'Cymetica QA', 'verifies it and files it'], ['a new build is released', 'Cymetica QA', 'tests it the same day and reports what is broken'],
         ['someone finds a way to make money', 'Testing lab', 'proves it on paper first'], ['an agent wins on paper', 'Trading desk', 'seats it at an Agent Tournaments table']] },
-    { id: 110, name: 'Night Owl Trading', owner: 'owlnight', public: true, status: 'paused', plan: 'Pro', days: 19, skin: 'vault', accent: 'blue',
+    { id: 110, name: 'Night Owl Trading', owner: 'owlnight', public: true, status: 'paused', plan: 'Pro', days: 19, skin: 'stack', accent: 'cyan',
       bugs: 0, prize: 600, league: 0,
       mission: 'Trade the quiet hours, on paper.',
       departments: [d('trading_desk'), d('testing_lab'),
@@ -158,7 +162,7 @@
       departments: [d('trading_desk'),
         own('Pool watch', ['researcher', 'trader'], 'Read pool depth before any paper trade.\n- A price from a pool with almost nothing in it is not a price.')],
       rules: [] },
-    { id: 121, name: 'Bot Breeders', owner: 'breeder', public: true, status: 'active', plan: 'Max 5x', days: 13, skin: 'tower', accent: 'red',
+    { id: 121, name: 'Bot Breeders', owner: 'breeder', public: true, status: 'active', plan: 'Max 5x', days: 13, skin: 'stack', accent: 'red',
       bugs: 1, prize: 127, league: 0,
       mission: 'Clone the best bots, change one thing at a time, and race the variants.',
       departments: [d('testing_lab'), d('trading_desk'), d('testing', { runs: 1, products: ['Agent Tournaments'] }),
