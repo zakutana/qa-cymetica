@@ -160,6 +160,14 @@ i.lk::before { content: ''; position: absolute; left: 1.5px; top: -5px; width: 6
 .p3lot { position: absolute; left: 0; top: 0; pointer-events: auto; cursor: pointer; display: flex; flex-direction: column; align-items: center; gap: 2px;
   font: 700 10px 'JetBrains Mono'; letter-spacing: .1em; color: #e6faf6; text-shadow: 0 0 12px rgba(46, 245, 196, .95); }
 .p3lot b { font: 400 24px 'Archivo Black'; line-height: 1; color: #46f8c8; }
+/* the office's plates as in his picture: a lighter sans title, larger, a square dot, a pale frame, a grey-blue glass */
+.o3layer .p3 { padding: 8px 16px 9px; border-radius: 9px; border-color: rgba(200, 215, 228, .3); background: rgba(14, 22, 32, .84); }
+.o3layer .p3 .p3h { gap: 9px; }
+.o3layer .p3 .p3h i { width: 6px; height: 6px; border-radius: 1px; }
+.o3layer .p3 .p3h b { font: 600 15px 'Segoe UI', 'Inter', system-ui, sans-serif; letter-spacing: .07em; color: #eef4f8; }
+.o3layer .p3 .p3l { font: 500 12.5px 'JetBrains Mono'; margin-top: 3px; opacity: .85; }
+.o3layer .p3need { font: 600 14px 'Segoe UI', 'Inter', system-ui, sans-serif; letter-spacing: .06em; padding: 6px 16px; }
+.o3layer .p3lot { font: 600 12px 'Segoe UI', 'Inter', system-ui, sans-serif; letter-spacing: .08em; }
 .o3layer .opvault { right: 16px; bottom: 16px; width: 224px; padding: 13px 18px; gap: 5px; pointer-events: auto; border-color: rgba(56, 245, 184, .42); background: rgba(8, 15, 24, .92); backdrop-filter: blur(8px); }
 .o3layer .opvault .vv b { font-size: 25px; }
 
