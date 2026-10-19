@@ -3411,7 +3411,8 @@ class Office3D {
     if (window.ResizeObserver) new ResizeObserver(() => this.resize()).observe(el);
     setInterval(() => this.wander(), 2600);
   }
-  shape() { return CO.S.departments.map((d) => d.id + ':' + d.slot + ':' + d.key + ':' + d.experts.join(',')).join('|') + (CO.RO ? 'ro' : ''); }
+  // what the office is built from: a change in any of it (a department's look among them) rebuilds the rooms
+  shape() { return CO.S.departments.map((d) => d.id + ':' + d.slot + ':' + d.key + ':' + (d.look || '') + ':' + d.experts.join(',')).join('|') + (CO.RO ? 'ro' : ''); }
   V(x, y, z = 0) { return new THREE.Vector3(x - this.cx, z, y - this.cy); }
   part(g, geom, mat, sx, sy, sz, x, y, z, shadow = true) {
     const m = new THREE.Mesh(geom, mat); m.scale.set(sx, sy, sz); m.position.copy(this.V(x, z, y)); if (shadow) { m.castShadow = true; m.receiveShadow = true; } g.add(m); return m;
@@ -4110,9 +4111,14 @@ class Office3D {
   // - testing_lab (Laboratory): 3 glowing aqua-cyan specimen pods + floating crystals + canisters
   // - trading_desk (Trading Desk): panoramic warm amber-orange chart walls + dual-screen orange trading desks
   // - league (Agent League): a standing board with the league's table, green terminal monitors, a standing referee
+  // - a department of the owner's own in a look he picked (d.look, CO.ROOM_LOOKS): the look builds the whole room
   deptRoom(r, d) {
     const k = d.key, x0 = r.x0, y0 = r.y0, g = r.g; let u1 = 6.6;
     const isOrange = k === 'trading_desk';
+    // the look he chose with the arrows round its room ("pro custom department tam budou sipky a budu si moct zvolit
+    // z ruznych vzhledu"): it builds the room and seats its experts itself, so nothing below runs
+    const look = this.lkLook(d);
+    if (look) { this[look](r, d); return; }
     if (d.run_kind === 'stranger') {
       // his server room, rack for rack (their places read off his picture through the fitted camera): a darker,
       // glossy raised floor; three racks a hand apart along the back-right wall, a pair by the back corner,
@@ -4195,6 +4201,1085 @@ class Office3D {
     if (d.run_kind !== 'league') this.cabinet(r, x0 + 6.45, y0 + 3.0, 0.45, 2.3, 0.72);
     this.plant(r, x0 + 0.42, y0 + 6.5); this.plant(r, x0 + 6.55, y0 + 6.55, 0.8);
     this.plate(r);
+  }
+  /* ---- the looks a department of the owner's own can have (CO.ROOM_LOOKS, its d.look) ---- */
+  // Which look a department's room is built in, as the name of its builder: its d.look when that is one of the five
+  // new ones and the department is one of the owner's own (a key we draw no room of ours for). 'office' and no look
+  // alike keep the room it always had: the Outsider its server room, the League its board, any other the office.
+  lkLook(d) {
+    const ours = { development: 1, testing: 1, testing_lab: 1, trading_desk: 1, design: 1 };
+    if (!d.look || ours[d.key]) return null;
+    return { ops: 'lkOps', library: 'lkLibrary', workshop: 'lkWorkshop', command: 'lkCommand', greenhouse: 'lkGreenhouse' }[d.look] || null;
+  }
+  // an expert at work, seated at plan x,y. agent() seats everyone facing the back wall at y0, so th (agent()'s ry: 0
+  // faces y0) turns him and the chair it put under him together; lift raises both onto a riser
+  lkSit(r, x, y, i, e, th, lift) {
+    const n0 = r.g.children.length, a = this.agent(r, x, y, i, CO.expertName(e), { role: e }), at = a.g.position.clone();
+    r.g.children.slice(n0).forEach((o) => { if (o.position.distanceTo(at) > 0.01) return; if (o !== a.g) o.rotation.y = th || 0; if (lift) o.position.y += lift; });
+    a.ry = th || 0; if (lift) a.home.y += lift;
+    return a;
+  }
+  lkStand(r, x, y, i, e, th) { return this.agent(r, x, y, i, CO.expertName(e), { stand: true, face: th, role: e }); }
+  // the turn (agent()'s ry) that has someone at x,y look at tx,ty: a visor looks down -z
+  lkToward(x, y, tx, ty) { return Math.atan2(-(tx - x), -(ty - y)); }
+  // an expert's own screen (r.mons[i]): dark glass until he works, then lit -- update() sets its colour
+  lkMon(r, i, tex) { const m = new THREE.MeshBasicMaterial({ map: tex || monTex(), color: new THREE.Color(0x0a1016), toneMapped: false }); r.mons[i] = m; return m; }
+  // The looks' fixed screens, all drawn onto one sheet (TX.lkAtlas), each picture's plane mapped to its place on it
+  // (G.lkA<picture>): every fixed screen in a room of one brightness is then one material, so bakeRoom merges them all
+  // into one draw -- the ops room's fifteen pictures were fifteen. Shelves of pictures, a little dark round each.
+  lkAtlas() {
+    if (TX.lkAtlas) return TX.lkAtlas;
+    const keys = ['map', 'chart', 'radar', 'tiles', 'log', 'log2', 'bars', 'cmd1', 'grow', 'chart2', 's1', 's2', 's3', 'print', 'timeline'];
+    const W = 1048, pad = 4, at = {}; let x = pad, y = pad, row = 0;
+    keys.forEach((k) => { const im = this.lkTex(k).image; if (x + im.width + pad > W) { x = pad; y += row + pad; row = 0; } at[k] = [x, y, im.width, im.height]; x += im.width + pad; row = Math.max(row, im.height); });
+    const H = y + row + pad, t = ctex(W, H, (g) => { g.fillStyle = '#050b12'; g.fillRect(0, 0, W, H); keys.forEach((k) => g.drawImage(this.lkTex(k).image, at[k][0], at[k][1])); });
+    keys.forEach((k) => {
+      const [px, py, w, h] = at[k], pg = new THREE.PlaneGeometry(1, 1), uv = pg.attributes.uv;
+      for (let i = 0; i < uv.count; i++) uv.setXY(i, (px + uv.getX(i) * w) / W, 1 - (py + (1 - uv.getY(i)) * h) / H);
+      G['lkA' + k] = pg;
+    });
+    return (TX.lkAtlas = t);
+  }
+  // a fixed screen in frame p: picture k, w x h, centred at x,y,z, leaning back by rx, at brightness c
+  lkFace(p, k, w, h, x, y, z, rx, c = 1.05) {
+    const map = this.lkAtlas(), id = 'lkAM' + c;
+    OM[id] = OM[id] || new THREE.MeshBasicMaterial({ map, color: new THREE.Color(0xffffff).multiplyScalar(c), toneMapped: false });
+    return this.raP(p, G['lkA' + k], OM[id], w, h, 1, x, y, z, rx || 0, false);
+  }
+  // A status light that blinks, as raLed's, but kept to be drawn with the others of its colour and step: lkLedsDone
+  // puts each set in one instanced draw (r.leds), so a room's twenty lights are a handful of draws
+  lkLed(r, p, hex, x, y, z, k) { (r.lkLedQ = r.lkLedQ || []).push({ p, hex, x, y, z, k: ((k % 3) + 3) % 3 }); }
+  lkLedsDone(r) {
+    const q = r.lkLedQ; if (!q || !q.length) return; r.lkLedQ = null;
+    r.g.updateMatrixWorld(true);
+    const inv = r.g.matrixWorld.clone().invert(), sets = new Map(), o = new THREE.Object3D(), m = new THREE.Matrix4();
+    q.forEach((l) => { const key = l.hex + ':' + l.k; if (!sets.has(key)) sets.set(key, []); sets.get(key).push(l); });
+    sets.forEach((ls) => {
+      const im = new THREE.InstancedMesh(G.box, amat(ls[0].hex).glow, ls.length);
+      ls.forEach((l, i) => { o.position.set(l.x, l.y, l.z); o.scale.set(0.024, 0.014, 0.024); o.updateMatrix(); m.multiplyMatrices(inv, l.p.matrixWorld).multiply(o.matrix); im.setMatrixAt(i, m); });
+      im.computeBoundingSphere(); im.userData.blink = ls[0].k; r.g.add(im); (r.leds = r.leds || []).push(im);
+    });
+  }
+  // his plant, its leaves let into the room's merge: a look's plants and planters' bushes are then two draws, not
+  // four for every plant
+  lkPlant(r, x, y, k) {
+    const n0 = r.g.children.length; this.plant(r, x, y, k);
+    r.g.children.slice(n0).forEach((g) => g.traverse((m) => { if (m.isMesh) m.userData.dyn = false; }));
+  }
+  // what moves in a look and has no hook in frame(): the mesh calls fn(t) before it is drawn (the shadow pass and the
+  // picture each draw it, and fn only reads the time); it stays out of every merge
+  lkDrive(r, mesh, fn) { mesh.userData.dyn = true; mesh.onBeforeRender = () => fn(performance.now() / 1000); (r.lkMove = r.lkMove || []).push(mesh); return mesh; }
+  // parts in a frame from raG: a plain box (w across, h up, d deep) centred on x,y,z; a cylinder standing on y (a
+  // small one with fewer sides: forty round a screw are triangles nobody sees, and a room has hundreds of parts)
+  lkBox(p, w, h, d, x, y, z, mat, shadow = true) { return this.raP(p, G.box, mat, w, h, d, x, y, z, 0, shadow); }
+  lkCyl(p, rad, h, x, y, z, mat, geom) { return this.raP(p, geom || (rad < 0.09 ? this.lkG('cyl') : G.cyl), mat, rad, h, rad, x, y + h / 2, z); }
+  // the looks' light shapes for small parts: a 16-sided cylinder, a 12 x 8 ball, rings of 40 and 64 segments
+  lkG(k) {
+    const id = 'lkG' + k; if (G[id]) return G[id];
+    return (G[id] = k === 'cyl' ? new THREE.CylinderGeometry(1, 1, 1, 16) : k === 'sph' ? new THREE.SphereGeometry(1, 12, 8)
+      : k === 'tor' ? new THREE.TorusGeometry(1, 0.03, 6, 40) : new THREE.TorusGeometry(1, 0.03, 6, 64));
+  }
+  // his monitor in a frame: a foot, a neck, a slim glossy bezel round the face (w x h): an expert's material, or a
+  // fixed picture named 'key' or 'key:brightness'; its foot on y, facing +z
+  lkMonitor(p, mat, w, h, x, y, z) {
+    this.raB(p, 0.26, 0.018, 0.18, x, y + 0.009, z - 0.03, OM.rbMetal, 0.008);
+    this.lkBox(p, 0.06, 0.15, 0.025, x, y + 0.09, z - 0.06, OM.rbMetal);
+    this.raB(p, w + 0.04, h + 0.04, 0.035, x, y + 0.14 + h / 2, z - 0.035, OM.rbGloss, 0.012);
+    return this.lkScreen(p, mat, w, h, x, y + 0.14 + h / 2, z - 0.0165);
+  }
+  // a screen's face in frame p: mat an expert's material (on a plain plane) or a fixed picture ('key[:brightness]')
+  lkScreen(p, mat, w, h, x, y, z, rx) {
+    if (typeof mat !== 'string') return this.raP(p, G.plane, mat, w, h, 1, x, y, z, rx || 0, false);
+    const [k, c] = mat.split(':'); return this.lkFace(p, k, w, h, x, y, z, rx, c ? +c : undefined);
+  }
+  // his keyboard: a glossy tray, its keys a texture
+  lkKeys(p, x, y, z, w = 0.56) {
+    this.raB(p, w + 0.04, 0.022, 0.19, x, y + 0.011, z, OM.rbGloss, 0.008);
+    this.raP(p, G.plane, OM.rbKeys, w, 0.16, 1, x, y + 0.0235, z, -Math.PI / 2, false);
+  }
+  // a piece of a ring round its frame's origin, al either side of the frame's back (-z), r0 to r1 across, h tall
+  // from its foot: the ops console, the pods' desks and shells' rims; made once per key
+  lkArc(key, r0, r1, al, h) {
+    if (G[key]) return G[key];
+    const s = new THREE.Shape(), a0 = Math.PI / 2 - al, a1 = Math.PI / 2 + al;
+    s.absarc(0, 0, r1, a0, a1, false); s.absarc(0, 0, r0, a1, a0, true); s.closePath();
+    const g = new THREE.ExtrudeGeometry(s, { depth: h, bevelEnabled: false, curveSegments: Math.max(8, Math.round(al * 30)) });
+    g.rotateX(-Math.PI / 2); return (G[key] = g);
+  }
+  // the same piece of ring lying flat: a carpet, a line of light on the floor
+  lkRing(key, r0, r1, al) {
+    if (G[key]) return G[key];
+    const g = new THREE.RingGeometry(r0, r1, Math.max(12, Math.round(al * 48)), 1, Math.PI / 2 - al, 2 * al); g.rotateX(-Math.PI / 2); return (G[key] = g);
+  }
+  // a turned shape (a pedestal, a vase, a tower), its profile [radius, height] from the foot; made once per key
+  lkLathe(key, pts, n = 32) { return G[key] || (G[key] = new THREE.LatheGeometry(pts.map(([a, b]) => new THREE.Vector2(a, b)), n)); }
+  // a leaf clump, low and faceted: the greenhouse's lettuces and the seedlings, many to a room
+  lkLeafGeo() {
+    if (G.lkLeaf) return G.lkLeaf;
+    const g = new THREE.IcosahedronGeometry(1, 1), p = g.attributes.position, R = rng(41), seen = new Map();
+    for (let i = 0; i < p.count; i++) {
+      const k = p.getX(i).toFixed(3) + ',' + p.getY(i).toFixed(3) + ',' + p.getZ(i).toFixed(3);
+      let f = seen.get(k); if (f == null) { f = 0.78 + R() * 0.4; seen.set(k, f); }
+      p.setXYZ(i, p.getX(i) * f, Math.max(-0.35, p.getY(i)) * f, p.getZ(i) * f);
+    }
+    g.computeVertexNormals(); return (G.lkLeaf = g);
+  }
+  // the looks' materials, made once and kept (OM.lk*): the common ones at the first look, each look's own at its first
+  // room
+  lkMats(look) {
+    rbMats(); this.raMats();
+    if (!OM.lkFrame) {
+      OM.lkFrame = std({ color: 0x161d25, roughness: 0.38, metalness: 0.5 });
+      OM.lkSteel = std({ color: 0x6c7986, roughness: 0.32, metalness: 0.74 });
+      OM.lkSteelDk = std({ color: 0x29323c, roughness: 0.42, metalness: 0.6 });
+      OM.lkRed = std({ color: 0xc8542c, roughness: 0.42, metalness: 0.35 });
+      OM.lkCyan = emis('#24e8ff', 1.15); OM.lkMint = emis('#38f5b8', 1.3); OM.lkWarm = emis('#e6f6ff', 1.6);
+      OM.lkGlass = std({ color: 0x9fd8e8, transparent: true, opacity: 0.14, roughness: 0.05, metalness: 0.1, emissive: 0x24e8ff, emissiveIntensity: 0.06, depthWrite: false });
+    }
+    const id = 'lkM' + look; if (OM[id]) return; OM[id] = 1;
+    const add = (map, c, o) => new THREE.MeshBasicMaterial({ map, color: new THREE.Color(0xffffff).multiplyScalar(c), transparent: true, opacity: o == null ? 1 : o, blending: THREE.AdditiveBlending, depthWrite: false, side: THREE.DoubleSide, toneMapped: false });
+    const lit = (k, c) => std({ map: this.lkTex(k), emissiveMap: this.lkTex(k), emissive: 0xffffff, emissiveIntensity: c, roughness: 0.55, metalness: 0.1 });
+    if (look === 'ops') {
+      OM.lkCarpet = std({ color: 0x101824, roughness: 0.95, metalness: 0.02 });
+      OM.lkSweep = add(this.lkTex('sweep'), 1.3);
+    } else if (look === 'library') {
+      OM.lkShelf = std({ color: 0x242d37, roughness: 0.4, metalness: 0.35 });
+      OM.lkShelfDk = std({ color: 0x0a0f15, roughness: 0.6, metalness: 0.2 });
+      OM.lkBooksA = lit('booksA', 0.95); OM.lkBooksB = lit('booksB', 0.95);
+      OM.lkCovers = [0x1d3a52, 0x23484a, 0x2c3550].map((c) => std({ color: c, roughness: 0.6, metalness: 0.1 }));
+      OM.lkFabric = std({ color: 0x1a2738, roughness: 0.92, metalness: 0.02, side: THREE.BackSide });
+      OM.lkFabric2 = std({ color: 0x1e4a52, roughness: 0.9, metalness: 0.02 });
+      OM.lkPodFloor = std({ color: 0x1a232d, roughness: 0.4, metalness: 0.35 });
+      OM.lkRug = std({ map: this.lkTex('rug'), roughness: 0.95, metalness: 0 });
+      OM.lkPage = add(this.lkTex('page'), 1.5);
+      OM.lkNet = new THREE.LineBasicMaterial({ color: new THREE.Color(0x7ff4ff).multiplyScalar(1.5), transparent: true, opacity: 0.75, toneMapped: false });
+      OM.lkOrb = std({ color: 0x9ff2ea, transparent: true, opacity: 0.16, roughness: 0.05, metalness: 0.1, emissive: 0x24e8ff, emissiveIntensity: 0.15, depthWrite: false });
+    } else if (look === 'workshop') {
+      OM.lkPeg = std({ map: this.lkTex('peg'), roughness: 0.62, metalness: 0.25 });
+      OM.lkPeg2 = std({ map: this.lkTex('peg2'), roughness: 0.62, metalness: 0.25 });
+      OM.lkLouver = std({ map: this.lkTex('louver'), roughness: 0.5, metalness: 0.4 });
+      OM.lkBins = [0x2a5fb8, 0x56626f, 0xd2782e, 0x1c8fa8].map((c) => std({ color: c, roughness: 0.5, metalness: 0.15 }));
+      OM.lkLabel = std({ color: 0xd8e0e8, roughness: 0.6, metalness: 0 });
+      OM.lkHazard = std({ map: this.lkTex('hazard'), roughness: 0.6, metalness: 0.1 });
+      OM.lkCell = std({ color: 0x1a222b, roughness: 0.5, metalness: 0.3 });
+      OM.lkFil = std({ color: 0x1fb7c9, roughness: 0.38, metalness: 0.1 });
+      OM.lkCrate = std({ map: this.lkTex('crate'), roughness: 0.6, metalness: 0.25 });
+      OM.lkWood = std({ color: 0x5a4632, roughness: 0.85, metalness: 0 });
+      OM.lkBeacon = emis('#ff8a3a', 0.6);
+    } else if (look === 'command') {
+      OM.lkDais = std({ color: 0x141b23, roughness: 0.36, metalness: 0.5 });
+      OM.lkTac = new THREE.MeshBasicMaterial({ map: this.lkTex('tac'), color: new THREE.Color(0xffffff).multiplyScalar(1.15), toneMapped: false });
+      OM.lkGlobe = add(this.lkTex('globe'), 1.6);
+      OM.lkBeam = new THREE.MeshBasicMaterial({ color: new THREE.Color(0x5ff0ff).multiplyScalar(0.9), transparent: true, opacity: 0.2, blending: THREE.AdditiveBlending, depthWrite: false, side: THREE.DoubleSide });
+      OM.lkDeck = std({ map: this.rcTex('console'), emissiveMap: this.rcTex('consoleGlow'), emissive: 0xffffff, emissiveIntensity: 1.0, roughness: 0.42, metalness: 0.35 });
+    } else if (look === 'greenhouse') {
+      // his grow lights in violet-pink: the bars past the bloom's threshold, a wash of their colour on what they light
+      OM.lkGrow = emis('#ff4fd2', 2.6); OM.lkGrowV = emis('#a874ff', 2.3);
+      OM.lkSpill = add(this.lkTex('spill'), 0.95, 0.85);
+      OM.lkSpillV = add(this.lkTex('spillV'), 0.8, 0.9);
+      OM.lkLeafA = std({ color: 0x2f8a4c, roughness: 0.75, flatShading: true, emissive: 0xff3cc8, emissiveIntensity: 0.15 });
+      OM.lkLeafB = std({ color: 0x55b05a, roughness: 0.75, flatShading: true, emissive: 0xff3cc8, emissiveIntensity: 0.12 });
+      OM.lkLeafC = std({ color: 0x86d86c, roughness: 0.7, flatShading: true });
+      OM.lkPlanter = std({ color: 0x1d2630, roughness: 0.5, metalness: 0.25 });
+      OM.lkBag = std({ color: 0x3a3128, roughness: 0.9, metalness: 0 });
+      OM.lkTrunk = std({ color: 0x4a3828, roughness: 0.85, metalness: 0 });
+    }
+  }
+  // the looks' canvas textures, drawn once and kept (TX.lk*): the ops room's wall of screens, the library's spines,
+  // pages and rug, the workshop's pegboard and drawings, the command table's map, the greenhouse's readout
+  lkTex(k) {
+    const key = 'lk' + k; if (TX[key]) return TX[key];
+    if (k === 'spill') return (TX[key] = radialTex('255,90,214', 1));
+    if (k === 'spillV') return (TX[key] = ctex(16, 64, (g, W, H) => { const gr = g.createLinearGradient(0, 0, 0, H); gr.addColorStop(0, 'rgba(255,90,214,.9)'); gr.addColorStop(0.5, 'rgba(190,100,255,.35)'); gr.addColorStop(1, 'rgba(255,90,214,0)'); g.fillStyle = gr; g.fillRect(0, 0, W, H); }));
+    const R = rng(k.length * 97 + k.charCodeAt(0) * 13 + k.charCodeAt(k.length - 1) * 7);
+    const mono = (px, w) => (w || 600) + ' ' + px + 'px JetBrains Mono, monospace';
+    // near-black glass with a sheen and a thin pale frame, as every wall screen of his
+    const glass = (g, W, H, edge = true) => {
+      g.fillStyle = '#050b12'; g.fillRect(0, 0, W, H);
+      const sh = g.createLinearGradient(0, 0, 0, H); sh.addColorStop(0, 'rgba(120,150,170,.08)'); sh.addColorStop(0.5, 'rgba(120,150,170,0)'); g.fillStyle = sh; g.fillRect(0, 0, W, H);
+      if (edge) { g.strokeStyle = 'rgba(176,196,208,.42)'; g.lineWidth = Math.max(2, H * 0.02); g.strokeRect(3, 3, W - 6, H - 6); }
+    };
+    const head = (g, s, x, y, col = '#38f5b8', px = 14) => { g.fillStyle = col; g.font = mono(px, 700); g.textBaseline = 'top'; g.textAlign = 'left'; g.fillText(s, x, y); };
+    const tag = (g, s, x, y) => { g.fillStyle = '#9fb4c8'; g.font = mono(11, 600); g.textBaseline = 'top'; g.textAlign = 'right'; g.fillText(s, x, y); g.textAlign = 'left'; };
+    const line = (g, pts, col, w) => { g.strokeStyle = col; g.lineWidth = w; g.beginPath(); pts.forEach(([x, y], i) => (i ? g.lineTo(x, y) : g.moveTo(x, y))); g.stroke(); };
+    const grid = (g, x0, y0, x1, y1, n) => { for (let i = 0; i < n; i++) { const y = y0 + (y1 - y0) * i / (n - 1); line(g, [[x0, y], [x1, y]], 'rgba(80,140,170,.16)', 1); } };
+    const series = (n, x0, x1, yb, amp, f, ph) => { const p = []; for (let i = 0; i <= n; i++) { const t = i / n; p.push([x0 + (x1 - x0) * t, yb - amp * (0.5 + 0.3 * Math.sin(t * f + ph) + 0.18 * Math.sin(t * f * 2.7 + ph * 2)) - R() * amp * 0.12]); } return p; };
+    const area = (g, pts, yb, col) => { g.beginPath(); g.moveTo(pts[0][0], yb); pts.forEach(([x, y]) => g.lineTo(x, y)); g.lineTo(pts[pts.length - 1][0], yb); g.closePath(); g.fillStyle = col; g.fill(); };
+    const scan = (g, W, H, a) => { g.fillStyle = 'rgba(0,0,0,' + a + ')'; for (let y = 0; y < H; y += 3) g.fillRect(0, y, W, 1); };
+    // the world as dots: a few ovals for the continents, enough to read as a map at a glance
+    const BLOBS = [[0.17, 0.28, 0.1, 0.12], [0.24, 0.42, 0.05, 0.08], [0.3, 0.66, 0.055, 0.15], [0.36, 0.12, 0.04, 0.04], [0.49, 0.25, 0.05, 0.06], [0.53, 0.53, 0.075, 0.15], [0.68, 0.28, 0.16, 0.12], [0.69, 0.45, 0.035, 0.07], [0.78, 0.5, 0.04, 0.05], [0.85, 0.72, 0.065, 0.055]];
+    const land = (u, v) => BLOBS.some(([cx, cy, rx, ry]) => ((u - cx) / rx) ** 2 + ((v - cy) / ry) ** 2 < 1);
+    const world = (g, x, y, w, h, col, step) => { g.fillStyle = col; for (let v = 0; v < h; v += step) for (let u = (v / step) % 2 ? step / 2 : 0; u < w; u += step) if (land(u / w, v / h) && R() > 0.08) g.fillRect(x + u, y + v, step * 0.55, step * 0.55); };
+    const log = (lines) => (g, W, H) => {
+      glass(g, W, H); g.font = mono(12); g.textBaseline = 'top';
+      lines.forEach((s, i) => { g.fillStyle = i ? (s.endsWith('!') ? '#ff9a52' : 'rgba(110,255,190,' + (0.6 + R() * 0.35).toFixed(2) + ')') : '#b4ffd9'; g.fillText(s, 10, 9 + i * 17); });
+      scan(g, W, H, 0.18);
+    };
+    // the spines of a shelf of data-books: dark covers, a band or two of light on each, now and then one missing
+    const books = (v) => (g, W, H) => {
+      g.fillStyle = '#04070a'; g.fillRect(0, 0, W, H);
+      const covers = v ? ['#1a2433', '#13242a', '#202a3a', '#152230', '#1d2c2c'] : ['#14202e', '#182a3a', '#101b27', '#1c2a36', '#16262b'], bands = ['#38f5b8', '#24e8ff', '#3b82f6', '#9ff6ff'];
+      let x = 2;
+      while (x < W - 4) {
+        if (R() < 0.05) { x += 6 + R() * 10; continue; }
+        const w = 12 + Math.floor(R() * 16), h = H * (0.72 + R() * 0.26), b = bands[Math.floor(R() * bands.length)];
+        g.fillStyle = covers[Math.floor(R() * covers.length)]; g.fillRect(x, H - h, w - 1.5, h);
+        g.fillStyle = 'rgba(255,255,255,.06)'; g.fillRect(x, H - h, 2, h);
+        g.fillStyle = b; g.globalAlpha = 0.75 + R() * 0.25; g.fillRect(x + 1, H - h * 0.84, w - 3.5, R() < 0.3 ? 4 : 2);
+        if (R() < 0.6) g.fillRect(x + 1, H - h * 0.18, w - 3.5, 2);
+        if (R() < 0.35) { g.globalAlpha = 0.6; g.fillRect(x + w / 2 - 3, H - h * 0.56, 4, 10); }
+        g.globalAlpha = 1; x += w;
+      }
+    };
+    const peg = (g, W, H) => {
+      g.fillStyle = '#34404c'; g.fillRect(0, 0, W, H); g.fillStyle = '#12181e';
+      for (let y = 8; y < H; y += 16) for (let x = 8; x < W; x += 16) { g.beginPath(); g.arc(x, y, 2.6, 0, 7); g.fill(); }
+    };
+    const D = {
+      // the ops room's screens
+      sweep: [128, 128, (g, W, H) => {
+        for (let i = 0; i < 40; i++) { const a = -i * 0.03; g.fillStyle = 'rgba(92,255,196,' + (0.5 * (1 - i / 40)).toFixed(3) + ')'; g.beginPath(); g.moveTo(W / 2, H / 2); g.arc(W / 2, H / 2, W / 2 - 2, a - 0.032, a); g.closePath(); g.fill(); }
+        line(g, [[W / 2, H / 2], [W - 2, H / 2]], 'rgba(170,255,225,.95)', 2);
+      }],
+      chart: [256, 150, (g, W, H) => {
+        glass(g, W, H); head(g, 'THROUGHPUT', 12, 10); tag(g, '1.24k/h', W - 12, 12); grid(g, 12, 40, W - 12, H - 16, 4);
+        const a = series(48, 14, W - 14, H - 18, 74, 6.5, 0.4); area(g, a, H - 18, 'rgba(56,245,184,.16)'); line(g, a, '#5cffc4', 2.6);
+        line(g, series(48, 14, W - 14, H - 18, 44, 4.2, 2.1), 'rgba(36,232,255,.85)', 1.6);
+      }],
+      chart2: [256, 90, (g, W, H) => {
+        glass(g, W, H); head(g, 'LATENCY p95', 10, 8, '#24e8ff', 12); tag(g, '182 ms', W - 10, 9);
+        g.setLineDash([5, 5]); line(g, [[10, 40], [W - 10, 40]], 'rgba(255,138,58,.6)', 1.2); g.setLineDash([]);
+        line(g, series(40, 10, W - 10, H - 10, 40, 9, 1), '#7ff4ff', 2);
+      }],
+      radar: [256, 150, (g, W, H) => {
+        glass(g, W, H); const cx = 72, cy = 80, rr = 58;
+        g.fillStyle = 'rgba(20,90,70,.25)'; g.beginPath(); g.arc(cx, cy, rr, 0, 7); g.fill();
+        g.strokeStyle = 'rgba(56,245,184,.45)'; g.lineWidth = 1.2; [1, 0.66, 0.33].forEach((f) => { g.beginPath(); g.arc(cx, cy, rr * f, 0, 7); g.stroke(); });
+        line(g, [[cx - rr, cy], [cx + rr, cy]], 'rgba(56,245,184,.3)', 1); line(g, [[cx, cy - rr], [cx, cy + rr]], 'rgba(56,245,184,.3)', 1);
+        [[30, -20, '#5cffc4'], [-24, 14, '#5cffc4'], [12, 36, '#7ff4ff'], [-38, -30, '#5cffc4'], [44, 18, '#ff8a3a']].forEach(([dx, dy, c]) => { g.fillStyle = c; g.beginPath(); g.arc(cx + dx, cy + dy, 3.2, 0, 7); g.fill(); });
+        head(g, 'CONTACTS', 146, 12, '#38f5b8', 12);
+        ['A-07', 'A-12', 'B-03', 'C-21', 'X-01'].forEach((s, i) => { g.fillStyle = i === 4 ? '#ff8a3a' : 'rgba(127,244,255,.8)'; g.font = mono(11, 600); g.fillText(s, 146, 34 + i * 21); g.fillStyle = 'rgba(56,245,184,.35)'; g.fillRect(190, 37 + i * 21, 50 * (0.3 + R() * 0.7), 6); });
+      }],
+      map: [512, 256, (g, W, H) => {
+        glass(g, W, H); world(g, 10, 30, W - 20, H - 40, 'rgba(70,150,180,.55)', 6);
+        const hubs = [[0.12, 0.33], [0.27, 0.33], [0.48, 0.24], [0.6, 0.4], [0.77, 0.52], [0.85, 0.31], [0.33, 0.68]].map(([u, v]) => [10 + u * (W - 20), 30 + v * (H - 40)]);
+        [[0, 2], [1, 2], [2, 3], [3, 4], [4, 5], [1, 6], [2, 5], [0, 5]].forEach(([a, b], i) => {
+          const A = hubs[a], B = hubs[b];
+          g.strokeStyle = i % 3 ? 'rgba(36,232,255,.85)' : 'rgba(92,255,196,.9)'; g.lineWidth = 2; g.shadowColor = '#24e8ff'; g.shadowBlur = 6;
+          g.beginPath(); g.moveTo(A[0], A[1]); g.quadraticCurveTo((A[0] + B[0]) / 2, Math.min(A[1], B[1]) - Math.abs(A[0] - B[0]) * 0.25, B[0], B[1]); g.stroke(); g.shadowBlur = 0;
+        });
+        hubs.forEach(([x, y]) => { g.fillStyle = '#c8fff0'; g.beginPath(); g.arc(x, y, 3.5, 0, 7); g.fill(); g.strokeStyle = 'rgba(92,255,196,.7)'; g.lineWidth = 1.5; g.beginPath(); g.arc(x, y, 8, 0, 7); g.stroke(); });
+        head(g, 'NETWORK  LIVE', 14, 10, '#38f5b8', 15); tag(g, '7 HUBS  42 LINKS', W - 14, 12);
+      }],
+      tiles: [256, 150, (g, W, H) => {
+        glass(g, W, H); head(g, 'SERVICES', 12, 10); tag(g, '17 / 18 UP', W - 12, 12);
+        for (let j = 0; j < 3; j++) for (let i = 0; i < 6; i++) {
+          const n = j * 6 + i, c = n === 13 ? '255,138,58' : n % 5 === 2 ? '36,232,255' : '56,245,184', x = 12 + i * 39.5, y = 36 + j * 36;
+          g.fillStyle = 'rgba(' + c + ',.16)'; g.fillRect(x, y, 34, 30); g.fillStyle = 'rgba(' + c + ',.9)'; g.fillRect(x, y, 34, 4); g.fillRect(x + 4, y + 12, 10 + (n * 7) % 18, 4);
+        }
+      }],
+      log: [256, 150, log(['OPS  RUN LOG', '04:12  sync ledger      ok', '04:13  ping 18 hosts   ok', '04:15  rotate keys     ok', '04:18  queue drained   ok', '04:21  backup snap     ok', '04:22  load 0.42       ok', '> watching _'])],
+      log2: [256, 150, log(['ALERTS', '03:58  disk 81% n-4     !', '04:02  resolved        ok', '04:09  latency spike   !', '04:10  resolved        ok', '04:16  cert in 12d     ~', '04:20  all clear       ok', '> 0 open _'])],
+      bars: [256, 150, (g, W, H) => {
+        glass(g, W, H); head(g, 'QUEUE / HOUR', 12, 10); tag(g, '312', W - 12, 12);
+        for (let i = 0; i < 14; i++) { const h = 20 + R() * 80; g.fillStyle = i === 11 ? '#24e8ff' : 'rgba(56,245,184,.75)'; g.fillRect(14 + i * 16.4, H - 14 - h, 11, h); }
+        line(g, [[12, H - 13], [W - 12, H - 13]], 'rgba(176,196,208,.4)', 1);
+      }],
+      timeline: [512, 80, (g, W, H) => {
+        glass(g, W, H); const y = 46; line(g, [[16, y], [W - 16, y]], 'rgba(127,160,190,.6)', 2);
+        for (let i = 0; i <= 12; i++) { const x = 16 + i * (W - 32) / 12; line(g, [[x, y - 5], [x, y + 5]], 'rgba(127,160,190,.6)', 1.5); g.fillStyle = 'rgba(143,168,194,.8)'; g.font = mono(10, 600); g.textBaseline = 'top'; g.fillText((i - 9) + 'h', x - 8, y + 10); }
+        [[0.1, '#38f5b8'], [0.22, '#24e8ff'], [0.31, '#38f5b8'], [0.47, '#3b82f6'], [0.55, '#38f5b8'], [0.63, '#ff8a3a'], [0.7, '#38f5b8']].forEach(([f, c]) => {
+          const x = 16 + f * (W - 32); g.fillStyle = c; g.beginPath(); g.moveTo(x, y - 12); g.lineTo(x + 6, y - 6); g.lineTo(x, y); g.lineTo(x - 6, y - 6); g.closePath(); g.fill();
+        });
+        const nx = 16 + 0.75 * (W - 32); g.fillStyle = '#5cffc4'; g.fillRect(nx - 1.5, 10, 3, H - 20); head(g, 'NOW', nx + 6, 9, '#5cffc4', 12); head(g, 'TIMELINE', 16, 9, '#9fb4c8', 12);
+      }],
+      s1: [128, 72, (g, W, H) => { glass(g, W, H); head(g, 'UPTIME', 8, 6, '#9fb4c8', 10); head(g, '99.98', 8, 24, '#5cffc4', 20); line(g, series(20, 76, W - 8, H - 12, 24, 5, 0.3), '#38f5b8', 1.6); }],
+      s2: [128, 72, (g, W, H) => {
+        glass(g, W, H); head(g, 'CPU', 8, 6, '#9fb4c8', 10); head(g, '72%', 8, 28, '#7ff4ff', 20);
+        g.lineWidth = 7; g.strokeStyle = 'rgba(36,232,255,.2)'; g.beginPath(); g.arc(96, 40, 20, 0, 7); g.stroke();
+        g.strokeStyle = '#24e8ff'; g.beginPath(); g.arc(96, 40, 20, -Math.PI / 2, Math.PI * 0.94); g.stroke();
+      }],
+      s3: [128, 72, (g, W, H) => {
+        glass(g, W, H); head(g, 'LINKS', 8, 6, '#9fb4c8', 10);
+        [0.8, 0.55, 0.92].forEach((f, i) => { g.fillStyle = 'rgba(56,245,184,.18)'; g.fillRect(8, 26 + i * 14, W - 16, 8); g.fillStyle = i === 1 ? '#24e8ff' : '#38f5b8'; g.fillRect(8, 26 + i * 14, (W - 16) * f, 8); });
+      }],
+      // the library's
+      booksA: [1024, 128, books(0)], booksB: [1024, 128, books(1)],
+      page: [128, 160, (g, W, H) => {
+        g.fillStyle = '#000'; g.fillRect(0, 0, W, H); g.strokeStyle = 'rgba(120,255,230,.7)'; g.lineWidth = 2; g.strokeRect(4, 4, W - 8, H - 8);
+        g.fillStyle = '#9ffbe8'; g.fillRect(12, 14, 60, 6);
+        for (let i = 0; i < 9; i++) { g.fillStyle = 'rgba(95,246,224,' + (0.45 + R() * 0.35).toFixed(2) + ')'; g.fillRect(12, 30 + i * 9, 50 + R() * 54, 3); }
+        g.strokeStyle = 'rgba(130,255,228,.9)'; g.lineWidth = 2; g.beginPath(); g.arc(64, 132, 14, 0, 7); g.stroke(); line(g, [[40, 146], [88, 118]], 'rgba(130,255,228,.9)', 1.5);
+      }],
+      read: [256, 160, (g, W, H) => {
+        g.fillStyle = '#04120e'; g.fillRect(0, 0, W, H); head(g, 'PAPER 2410.0117', 12, 10, '#5cffc4', 13);
+        for (let i = 0; i < 6; i++) { g.fillStyle = 'rgba(92,255,196,' + (0.35 + R() * 0.4).toFixed(2) + ')'; g.fillRect(12, 34 + i * 11, 110 + R() * 110, 4); }
+        g.strokeStyle = 'rgba(36,232,255,.5)'; g.lineWidth = 1.5; g.strokeRect(12, 106, W - 24, 44); line(g, series(30, 16, W - 16, 146, 34, 5, 0.7), '#7ff4ff', 2);
+      }],
+      rug: [512, 208, (g, W, H) => {
+        g.fillStyle = '#0c1d22'; g.fillRect(0, 0, W, H); g.strokeStyle = '#18363c'; g.lineWidth = 14; g.strokeRect(10, 10, W - 20, H - 20);
+        g.strokeStyle = 'rgba(56,245,184,.28)'; g.lineWidth = 2; g.strokeRect(24, 24, W - 48, H - 48);
+        g.strokeStyle = 'rgba(70,140,150,.2)'; g.lineWidth = 1.5;
+        for (let x = 40; x < W - 56; x += 32) for (let y = 40; y < H - 56; y += 32) { g.beginPath(); g.moveTo(x + 16, y); g.lineTo(x + 32, y + 16); g.lineTo(x + 16, y + 32); g.lineTo(x, y + 16); g.closePath(); g.stroke(); }
+      }],
+      // the workshop's
+      peg: [128, 128, peg], peg2: [128, 128, peg],
+      louver: [128, 128, (g, W, H) => {
+        g.fillStyle = '#3a4654'; g.fillRect(0, 0, W, H);
+        for (let y = 10; y < H; y += 32) for (let x = 8; x < W; x += 42) { g.fillStyle = '#151b22'; g.fillRect(x, y, 30, 10); g.fillStyle = 'rgba(255,255,255,.12)'; g.fillRect(x, y + 10, 30, 2); }
+      }],
+      cad: [256, 160, (g, W, H) => {
+        g.fillStyle = '#06121e'; g.fillRect(0, 0, W, H);
+        for (let x = 8; x < W; x += 16) line(g, [[x, 0], [x, H]], 'rgba(36,232,255,.1)', 1);
+        for (let y = 8; y < H; y += 16) line(g, [[0, y], [W, y]], 'rgba(36,232,255,.1)', 1);
+        const cx = 104, cy = 88;
+        [[-1, -1], [1, -1], [-1, 1], [1, 1]].forEach(([sx, sy]) => { line(g, [[cx, cy], [cx + sx * 46, cy + sy * 30]], '#7ff4ff', 2); g.beginPath(); g.ellipse(cx + sx * 46, cy + sy * 30, 20, 8, 0, 0, 7); g.stroke(); });
+        g.strokeRect(cx - 16, cy - 10, 32, 20);
+        head(g, 'DRONE  rev C', 10, 8, '#5cffc4', 12); g.fillStyle = 'rgba(127,244,255,.8)'; g.font = mono(10); g.fillText('218 mm', 186, 60); g.fillText('4 x 2207', 186, 76); g.fillText('OK', 186, 92);
+      }],
+      hazard: [128, 16, (g, W, H) => {
+        g.fillStyle = '#14181c'; g.fillRect(0, 0, W, H); g.fillStyle = '#e0a23a';
+        for (let x = -16; x < W + 16; x += 32) { g.beginPath(); g.moveTo(x, H); g.lineTo(x + 16, 0); g.lineTo(x + 32, 0); g.lineTo(x + 16, H); g.closePath(); g.fill(); }
+      }],
+      print: [128, 80, (g, W, H) => {
+        g.fillStyle = '#04120e'; g.fillRect(0, 0, W, H); g.lineWidth = 6; g.strokeStyle = 'rgba(56,245,184,.25)'; g.beginPath(); g.arc(30, 42, 18, 0, 7); g.stroke();
+        g.strokeStyle = '#5cffc4'; g.beginPath(); g.arc(30, 42, 18, -Math.PI / 2, Math.PI * 0.76); g.stroke();
+        head(g, '63%', 19, 37, '#c8fff0', 9); head(g, 'PRINTING', 58, 16, '#5cffc4', 11); head(g, '1h 12m', 58, 34, '#9fb4c8', 11); head(g, 'L 214', 58, 52, '#9fb4c8', 11);
+      }],
+      crate: [128, 128, (g, W, H) => {
+        g.fillStyle = '#2c3642'; g.fillRect(0, 0, W, H); g.strokeStyle = '#46525f'; g.lineWidth = 10; g.strokeRect(5, 5, W - 10, H - 10);
+        line(g, [[10, 10], [W - 10, H - 10]], '#3a4552', 8); head(g, 'CY-07', 30, 40, '#c9d3dc', 18); g.fillStyle = '#e0a23a'; g.fillRect(30, 76, 68, 8);
+      }],
+      // the command centre's
+      tac: [512, 512, (g, W, H) => {
+        const c = W / 2; g.fillStyle = '#000'; g.fillRect(0, 0, W, H);
+        const gr = g.createRadialGradient(c, c, 10, c, c, c); gr.addColorStop(0, '#06303a'); gr.addColorStop(1, '#020c12'); g.fillStyle = gr; g.beginPath(); g.arc(c, c, c - 2, 0, 7); g.fill();
+        g.save(); g.beginPath(); g.arc(c, c, c - 4, 0, 7); g.clip();
+        g.strokeStyle = 'rgba(36,232,255,.13)'; g.lineWidth = 1.2; const s = 18;
+        for (let row = 0; row < 20; row++) for (let col = 0; col < 20; col++) { const x = col * s * 1.5, y = row * s * 1.732 + (col % 2) * s * 0.866; g.beginPath(); for (let q = 0; q < 6; q++) g.lineTo(x + Math.cos(q * Math.PI / 3) * s, y + Math.sin(q * Math.PI / 3) * s); g.closePath(); g.stroke(); }
+        [[180, 200, 90, 60], [330, 300, 70, 100], [200, 360, 50, 40]].forEach(([x, y, rx, ry], i) => {
+          for (let q = 0; q < 4; q++) {
+            g.strokeStyle = 'rgba(92,255,196,' + (0.6 - q * 0.12).toFixed(2) + ')'; g.lineWidth = 2; g.beginPath();
+            for (let a = 0; a <= 64; a++) { const t = a / 64 * Math.PI * 2, w = 1 - q * 0.22 + 0.12 * Math.sin(t * 3 + i) + 0.07 * Math.sin(t * 7 + i * 2); g.lineTo(x + Math.cos(t) * rx * w, y + Math.sin(t) * ry * w); }
+            g.closePath(); g.stroke();
+          }
+        });
+        g.setLineDash([8, 8]); g.strokeStyle = 'rgba(127,244,255,.35)'; g.lineWidth = 1.5; [0.3, 0.6, 0.9].forEach((f) => { g.beginPath(); g.arc(c, c, c * f, 0, 7); g.stroke(); }); g.setLineDash([]);
+        line(g, [[150, 170], [250, 330], [360, 250]], 'rgba(92,255,196,.6)', 2);
+        [[150, 170, '#5cffc4', 0], [360, 250, '#5cffc4', 1], [250, 330, '#7ff4ff', 0], [310, 140, '#ff8a3a', 1], [120, 300, '#7ff4ff', 1]].forEach(([x, y, col, tri]) => {
+          g.fillStyle = col; g.beginPath(); if (tri) { g.moveTo(x, y - 9); g.lineTo(x + 8, y + 6); g.lineTo(x - 8, y + 6); } else g.rect(x - 7, y - 7, 14, 14); g.closePath(); g.fill();
+          g.strokeStyle = col; g.lineWidth = 1.5; g.beginPath(); g.arc(x, y, 16, 0, 7); g.stroke();
+        });
+        g.restore(); g.strokeStyle = 'rgba(127,244,255,.8)'; g.lineWidth = 5; g.beginPath(); g.arc(c, c, c - 5, 0, 7); g.stroke();
+      }],
+      globe: [256, 128, (g, W, H) => {
+        g.fillStyle = '#000'; g.fillRect(0, 0, W, H); world(g, 0, 0, W, H, 'rgba(92,255,220,.95)', 4);
+        g.fillStyle = 'rgba(36,232,255,.35)'; [0.25, 0.5, 0.75].forEach((f) => g.fillRect(0, H * f, W, 1));
+      }],
+      threat: [512, 148, (g, W, H) => {
+        glass(g, W, H); world(g, 12, 30, 330, 108, 'rgba(70,150,180,.5)', 4);
+        [[0.27, 0.33, 22, '255,138,58'], [0.6, 0.4, 16, '255,138,58'], [0.77, 0.52, 12, '36,232,255'], [0.48, 0.24, 10, '56,245,184']].forEach(([u, v, rr, c]) => {
+          const x = 12 + u * 330, y = 30 + v * 108, gr = g.createRadialGradient(x, y, 0, x, y, rr); gr.addColorStop(0, 'rgba(' + c + ',.55)'); gr.addColorStop(1, 'rgba(' + c + ',0)');
+          g.fillStyle = gr; g.fillRect(x - rr, y - rr, rr * 2, rr * 2); g.fillStyle = 'rgb(' + c + ')'; g.fillRect(x - 2, y - 2, 4, 4);
+        });
+        head(g, 'THREAT BOARD', 14, 9, '#24e8ff', 14);
+        [['ACTIVE', '2', '#ff8a3a'], ['WATCH', '5', '#24e8ff'], ['CLEAR', '31', '#38f5b8']].forEach(([s, n, c], i) => { head(g, s, 362, 36 + i * 34, '#9fb4c8', 12); head(g, n, 450, 31 + i * 34, c, 20); });
+      }],
+      cmd1: [256, 150, (g, W, H) => {
+        glass(g, W, H); head(g, 'UNITS', 12, 10, '#24e8ff', 13); tag(g, '6 / 6', W - 12, 12);
+        ['ALPHA', 'BRAVO', 'DELTA', 'ECHO', 'KILO', 'NOVA'].forEach((s, i) => {
+          const y = 34 + i * 18; g.fillStyle = i === 3 ? '#ff8a3a' : '#38f5b8'; g.beginPath(); g.arc(18, y + 6, 4, 0, 7); g.fill();
+          g.fillStyle = 'rgba(200,230,240,.85)'; g.font = mono(11, 600); g.fillText(s, 30, y); g.fillStyle = 'rgba(36,232,255,.35)'; g.fillRect(100, y + 2, 120 * (0.3 + R() * 0.7), 7);
+        });
+      }],
+      // the greenhouse's
+      grow: [256, 150, (g, W, H) => {
+        glass(g, W, H); head(g, 'GROW  BAY 2', 12, 10, '#5cffc4', 13); tag(g, 'DAY 23', W - 12, 12);
+        [['TEMP', '23.4 C', 0.62, '#38f5b8'], ['HUM', '68 %', 0.68, '#24e8ff'], ['pH', '6.1', 0.5, '#38f5b8'], ['LIGHT', '18 h', 0.75, '#ff5ad8']].forEach(([s, v, f, c], i) => {
+          const y = 36 + i * 27; head(g, s, 12, y, '#9fb4c8', 11); head(g, v, 66, y, c, 11);
+          g.fillStyle = 'rgba(143,168,194,.15)'; g.fillRect(140, y + 2, 102, 8); g.fillStyle = c; g.fillRect(140, y + 2, 102 * f, 8);
+        });
+      }]
+    };
+    const [w, h, draw] = D[k], t = ctex(w, h, draw);
+    // what tiles along a long surface: its repeat set once, for the one surface it is drawn for
+    const rep = { peg: [14.5, 3.1], peg2: [9, 2.3], hazard: [10, 1], louver: [4.2, 1.9] }[k];
+    if (rep) { t.wrapS = t.wrapT = THREE.RepeatWrapping; t.repeat.set(rep[0], rep[1]); }
+    return (TX[key] = t);
+  }
+  // The operations room: a wall of screens on an arc round the back corner, from the back-left wall to the back-right,
+  // two rows of them -- the department's status in the widest, at the top of the middle (r.wall) -- and before it on
+  // the same arc a desk of two tiers: the front tier on the floor, each operator's own monitor on it (r.mons) and a
+  // strip of small status screens along its raised back; the rear tier on a riser with a lit edge, the third
+  // expert's seat. A carpet under the front tier, a line of light along the wall's foot. Beyond the arc the kanban
+  // on the back-right wall with comms cabinets under it, the department's computer at the back-left wall's front
+  // end, his see-through screen, supply cabinets on the right, a light tower by the front-right glass.
+  lkOps(r, d) {
+    this.lkMats('ops');
+    const x0 = r.x0, y0 = r.y0, ex = d.experts.slice(0, 3), C = [x0 + 4.35, y0 + 4.35], R = 3.75, M = -Math.PI / 4;
+    const at = (rad, al) => [C[0] + rad * Math.sin(al), C[1] - rad * Math.cos(al)];
+    // a frame on the arc facing its centre: al from the centre's back (-y), M the back corner's way; lift for the riser
+    const P = (rad, al, lift) => { const q = at(rad, al), p = this.raG(r, q[0], q[1], -al); if (lift) p.position.y += lift; return p; };
+    // the wall: five columns, the middle one widest, each a dark frame round its two screens on a plinth with a lit
+    // lip; the frames' tops at 1.27, under the neon
+    const cols = [0.85, 0.85, 1.9, 0.85, 0.85], gap = 0.05, tops = ['chart', 'radar', null, 'map', 'tiles'], bots = ['log', 'bars', 'timeline', 'log2', 'chart2'];
+    let s0 = -(cols.reduce((s, w) => s + w, 0) + gap * 4) / 2;
+    cols.forEach((w, j) => {
+      const al = M + (s0 + w / 2) / R, p = P(R, al); s0 += w + gap;
+      this.raB(p, w + 0.02, 0.27, 0.3, 0, 0.135, -0.1, OM.rbDesk, 0.02);
+      this.lkBox(p, w - 0.04, 0.012, 0.012, 0, 0.25, 0.052, OM.lkCyan, false);
+      this.lkBox(p, w - 0.08, 0.006, 0.004, 0, 0.11, 0.051, OM.rbSeam, false);
+      this.raB(p, w + 0.06, 0.92, 0.07, 0, 0.73, -0.03, OM.lkFrame, 0.015);
+      let top = tops[j];
+      if (!top) { const s = screen(w, 0.5); r.wall = s; top = new THREE.MeshBasicMaterial({ map: s.tex, toneMapped: false }); }
+      this.lkScreen(p, top, w, 0.5, 0, 0.9, 0.007);
+      this.lkFace(p, bots[j], w, 0.3, 0, 0.46, 0.007);
+      // the radar's sweep turns over its face
+      if (tops[j] === 'radar') { const sw = this.raP(p, G.plane, OM.lkSweep, 0.39, 0.39, 1, -0.187, 0.883, 0.009, 0, false); this.lkDrive(r, sw, (t) => { sw.rotation.z = -t * 1.6; }); }
+      this.lkLed(r, p, j % 2 ? '#24e8ff' : '#38f5b8', w / 2 - 0.07, 0.19, 0.052, j);
+    });
+    this.raP(this.raG(r, C[0], C[1], -M), this.lkRing('lkOpsFoot', 3.55, 3.59, 0.72), OM.lkCyan, 1, 1, 1, 0, 0.004, 0, 0, false);
+    // the front tier: one arc of desk on its body, its raised back, a light along its front lip, the carpet under it
+    const cg = this.raG(r, C[0], C[1], -M), A = 0.62;
+    this.raP(cg, this.lkArc('lkOpsBody', 2.42, 2.95, A, 0.4), OM.rbDesk, 1, 1, 1, 0, 0.04, 0);
+    this.raP(cg, this.lkArc('lkOpsTop', 2.28, 3.03, A + 0.012, 0.035), OM.rbDeskTop, 1, 1, 1, 0, 0.44, 0);
+    this.raP(cg, this.lkArc('lkOpsLip', 2.265, 2.282, A + 0.012, 0.014), OM.lkCyan, 1, 1, 1, 0, 0.45, 0, 0, false);
+    this.raP(cg, this.lkArc('lkOpsKick', 2.4, 2.422, A, 0.05), OM.rbSeam, 1, 1, 1, 0, 0.04, 0, 0, false);
+    this.raP(cg, this.lkArc('lkOpsBack', 2.85, 3.01, A, 0.66), OM.rbDesk, 1, 1, 1, 0, 0.475, 0);
+    this.raP(cg, this.lkArc('lkOpsCap', 2.835, 3.025, A + 0.006, 0.03), OM.rbDeskTop, 1, 1, 1, 0, 1.135, 0);
+    this.raP(cg, this.lkRing('lkOpsRug', 1.5, 3.2, 0.8), OM.lkCarpet, 1, 1, 1, 0, 0.004, 0, 0, false).receiveShadow = true;
+    this.raP(cg, this.lkRing('lkOpsRugE', 3.2, 3.235, 0.8), OM.lkMint, 1, 1, 1, 0, 0.005, 0, 0, false);
+    // the upper tier: small screens along the back's face, leaning back a little
+    for (let q = -4; q <= 4; q++) {
+      const p = P(2.835, M + q * 0.128);
+      this.raP(p, rboxGeo(0.31, 0.19, 0.02, 0.008), OM.rbGloss, 1, 1, 1, 0, 1.03, -0.01, -0.12);
+      this.lkFace(p, ['s1', 's2', 's3'][(q + 4) % 3], 0.28, 0.16, 0, 1.03, 0.002, -0.12);
+    }
+    // the rear tier: a riser behind the front tier's chairs, its edge lit, a carpet on it, a shorter arc of desk on it
+    this.raP(cg, this.lkArc('lkOpsRiser', 0.2, 1.5, 0.78, 0.16), OM.rbDesk, 1, 1, 1, 0, 0, 0);
+    this.raP(cg, this.lkRing('lkOpsRiserTop', 0.22, 1.48, 0.77), OM.lkCarpet, 1, 1, 1, 0, 0.161, 0, 0, false).receiveShadow = true;
+    this.raP(cg, this.lkArc('lkOpsRiserLip', 1.5, 1.515, 0.78, 0.014), OM.lkCyan, 1, 1, 1, 0, 0.08, 0, 0, false);
+    this.raP(cg, this.lkArc('lkOpsBody2', 1.0, 1.36, 0.5, 0.4), OM.rbDesk, 1, 1, 1, 0, 0.2, 0);
+    this.raP(cg, this.lkArc('lkOpsTop2', 0.9, 1.42, 0.512, 0.035), OM.rbDeskTop, 1, 1, 1, 0, 0.6, 0);
+    this.raP(cg, this.lkArc('lkOpsLip2', 0.885, 0.902, 0.512, 0.014), OM.lkCyan, 1, 1, 1, 0, 0.61, 0, 0, false);
+    // each operator's monitor, keyboard, mouse and mug, his chair before it: two in front, the third on the riser; a
+    // radio at either end of the front tier, the riser's own screens where nobody sits
+    const seats = ex.length === 1 ? [[0, 0]] : [[-0.21, 0], [0.21, 0], [0, 0.16]];
+    ex.forEach((e, i) => {
+      const [o, lift] = seats[i], al = M + o, p = P(lift ? 1.12 : 2.66, al, lift);
+      this.lkMonitor(p, this.lkMon(r, i), 0.62, 0.3, 0, 0.475, 0.02);
+      this.lkKeys(p, -0.02, 0.475, lift ? 0.18 : 0.27);
+      this.raP(p, this.lkG('sph'), OM.rbMouse, 0.04, 0.022, 0.062, 0.4, 0.497, lift ? 0.18 : 0.27, 0, false);
+      this.lkCyl(p, 0.045, 0.1, -0.48, 0.475, 0.12, OM.rbMouse);
+      const q = at(lift ? 0.52 : 1.92, al); this.lkSit(r, q[0], q[1], i, e, -al, lift);
+    });
+    if (ex.length < 3) [-0.22, 0.22].forEach((o) => this.lkMonitor(P(1.12, M + o, 0.16), o < 0 ? 'chart:0.75' : 'tiles:0.75', 0.5, 0.28, 0, 0.475, 0.02));
+    [-0.55, 0.55].forEach((o, k) => {
+      const p = P(2.68, M + o);
+      this.raB(p, 0.3, 0.09, 0.2, 0, 0.52, 0, OM.lkSteelDk, 0.015);
+      this.lkFace(p, 's3', 0.14, 0.05, -0.05, 0.53, 0.101);
+      this.lkLed(r, p, '#38f5b8', 0.09, 0.53, 0.104, k + 1);
+      this.lkBox(p, 0.012, 0.18, 0.012, 0.11, 0.65, -0.05, OM.rbMetal);
+    });
+    // the back-right wall beyond the arc: the kanban, comms cabinets under it, their lights
+    r.kb = this.rcBoard(r, 'back', 4.45, 6.7, null, { tiles: true });
+    for (let q = 0; q < 3; q++) {
+      const p = this.raG(r, x0 + 4.9 + q * 0.72, y0 + 0.56, 0);
+      this.raB(p, 0.68, 0.5, 0.4, 0, 0.25, -0.2, OM.rbDesk, 0.02);
+      this.lkBox(p, 0.006, 0.42, 0.004, 0, 0.26, 0.001, OM.rbSeam, false);
+      this.raP(p, G.plane, OM.raVent, 0.24, 0.16, 1, -0.17, 0.2, 0.002, 0, false);
+      this.raP(p, G.plane, OM.raVent, 0.24, 0.16, 1, 0.17, 0.2, 0.002, 0, false);
+      ['#38f5b8', '#24e8ff', '#38f5b8'].forEach((c, k) => this.lkLed(r, p, c, 0.18 + k * 0.05, 0.42, 0.004, q + k * 2));
+    }
+    // two supply cabinets on the right, their readouts and lights to the room
+    [5.45, 6.25].forEach((cx, q) => {
+      const sc = this.raG(r, x0 + cx, y0 + 2.75, 0);
+      this.raB(sc, 0.74, 0.7, 0.5, 0, 0.35, -0.25, OM.rbDesk, 0.025);
+      this.lkBox(sc, 0.006, 0.6, 0.004, 0, 0.35, 0.001, OM.rbSeam, false);
+      this.lkFace(sc, q ? 's2' : 's1', 0.22, 0.12, -0.19, 0.55, 0.003);
+      this.raP(sc, G.plane, OM.raVent, 0.26, 0.2, 1, 0.18, 0.22, 0.002, 0, false);
+      this.lkLed(r, sc, '#38f5b8', 0.14, 0.6, 0.004, q); this.lkLed(r, sc, '#24e8ff', 0.2, 0.6, 0.004, q + 1);
+    });
+    // his see-through screen by the back-left wall's free end
+    this.holoFrame(r, x0 + 0.75, y0 + 4.75);
+    // the light tower: green lit, cyan blinking, blue dark
+    const t = this.raG(r, x0 + 6.55, y0 + 5.3, 0);
+    this.lkCyl(t, 0.13, 0.05, 0, 0, 0, OM.rbDesk); this.lkCyl(t, 0.022, 0.6, 0, 0.05, 0, OM.rbMetal);
+    ['#38f5b8', '#24e8ff', '#3b82f6'].forEach((hex, q) => {
+      const y = 0.66 + q * 0.09;
+      this.lkCyl(t, 0.064, 0.012, 0, y - 0.012, 0, OM.rbGloss);
+      this.lkCyl(t, 0.06, 0.075, 0, y, 0, q === 0 ? amat(hex).rim : amat(hex).fin);
+      if (q === 1) { const m = this.lkCyl(t, 0.062, 0.073, 0, y + 0.001, 0, amat(hex).glow); m.userData.dyn = true; m.userData.blink = 2; m.castShadow = false; (r.leds = r.leds || []).push(m); }
+    });
+    this.lkCyl(t, 0.064, 0.03, 0, 0.93, 0, OM.rbGloss);
+    // the coffee corner by the front glass, where the shift stands between its runs: a counter, the machine with its
+    // readout, mugs, a water cooler, two stools
+    const cc = this.raG(r, x0 + 4.7, y0 + 6.22, Math.PI);
+    this.raB(cc, 1.3, 0.5, 0.5, 0, 0.25, -0.22, OM.rbDesk, 0.02);
+    this.raB(cc, 1.34, 0.04, 0.54, 0, 0.52, -0.22, OM.rbDeskTop, 0.012);
+    this.lkBox(cc, 1.26, 0.006, 0.004, 0, 0.3, 0.031, OM.rbSeam, false);
+    this.raB(cc, 0.26, 0.36, 0.26, -0.38, 0.72, -0.3, OM.lkSteelDk, 0.03);
+    this.raB(cc, 0.2, 0.1, 0.02, -0.38, 0.8, -0.165, OM.rbGloss, 0.008);
+    this.lkFace(cc, 's1', 0.16, 0.07, -0.38, 0.8, -0.154);
+    this.lkBox(cc, 0.14, 0.012, 0.12, -0.38, 0.6, -0.12, OM.rbMetal);
+    this.lkLed(r, cc, '#38f5b8', -0.28, 0.66, -0.168, 2);
+    [-0.12, 0.0, 0.14].forEach((mx, q) => this.lkCyl(cc, 0.04, 0.09, mx, 0.54, -0.12 - q * 0.05, OM.rbMouse));
+    this.lkCyl(cc, 0.13, 0.06, 0.44, 0.54, -0.25, OM.lkSteelDk); this.raP(cc, this.lkG('cyl'), OM.lkGlass, 0.12, 0.34, 0.12, 0.44, 0.77, -0.25, 0, false);
+    this.lkCyl(cc, 0.122, 0.04, 0.44, 0.94, -0.25, OM.raLab);
+    [-0.3, 0.3].forEach((sx) => this.raStool(r, x0 + 4.7 + sx, y0 + 5.72));
+    // the department's computer: the back corner is the wall of screens', so it stands at the back-left wall's front
+    // end, its screen to the room
+    this.terminal(r, x0 + 0.3, y0 + 5.5, d.link || CO.DEPT_LINK[d.key] || CO.DEPT_LINK.custom);
+    this.lkPlant(r, x0 + 0.45, y0 + 6.62, 0.85); this.lkPlant(r, x0 + 6.55, y0 + 6.6, 0.8);
+    this.lkLedsDone(r);
+    this.plate(r);
+  }
+  // The research library: tall shelves of glowing data-books along the back-left wall with a brass ladder on its
+  // rail; low shelves under the back-right wall's two boards (the department's status, r.wall, and its kanban, r.kb);
+  // a reading pod for each expert on a rug -- a curved desk in an off-white shell lit inside, a book open in the air
+  // over it, his tablet (r.mons); an orb of knowledge turning by the front-left glass, two armchairs, a side table
+  // and a lamp in the front-right corner.
+  lkLibrary(r, d) {
+    this.lkMats('library');
+    const x0 = r.x0, y0 = r.y0, ex = d.experts.slice(0, 3);
+    if (!G.lkBook0) for (let v = 0; v < 6; v++) { const pg = new THREE.PlaneGeometry(1, 1), uv = pg.attributes.uv; for (let i = 0; i < uv.count; i++) uv.setX(i, v * 0.11 + uv.getX(i) * 0.42); G['lkBook' + v] = pg; }
+    this.wallScreen(r, 1.8, 3.95);
+    r.kb = this.rcBoard(r, 'back', 4.2, 6.65, null, { tiles: true });
+    // the tall run: six bays along the back-left wall, their tops at 1.28; the low run of six under the boards
+    for (let q = 0; q < 6; q++) this.lkShelf(this.raG(r, x0 + 0.56, y0 + 1.795 + q * 0.89, Math.PI / 2), 0.89, 1.2, 5, q);
+    for (let q = 0; q < 6; q++) this.lkShelf(this.raG(r, x0 + 2.205 + q * 0.81, y0 + 0.52, 0), 0.81, 0.5, 2, q + 6);
+    // the ladder's brass rail along the tall run's top, on brackets, and the ladder leaning on it, its foot on wheels
+    const rl = this.raG(r, x0 + 0.56, y0 + 4.0, Math.PI / 2);
+    this.lkBox(rl, 5.2, 0.024, 0.024, 0, 1.115, 0.055, OM.brass);
+    [-2.4, -0.8, 0.8, 2.4].forEach((x) => this.lkBox(rl, 0.02, 0.02, 0.06, x, 1.115, 0.025, OM.brass, false));
+    const lp = this.raG(r, x0 + 1.12, y0 + 4.6, Math.PI / 2), lad = new THREE.Group(); lad.rotation.x = -0.42; lp.add(lad);
+    [-0.19, 0.19].forEach((x) => {
+      this.lkBox(lad, 0.035, 1.24, 0.05, x, 0.62, 0, OM.brass);
+      this.raP(lp, this.lkG('cyl'), OM.raRubber, 0.035, 0.025, 0.035, x, 0.035, 0.02).rotation.z = Math.PI / 2;
+      this.lkBox(lad, 0.03, 0.06, 0.06, x, 1.21, -0.03, OM.brass, false);
+    });
+    for (let q = 0; q < 6; q++) this.lkBox(lad, 0.38, 0.022, 0.04, 0, 0.16 + q * 0.2, 0, OM.lkShelf);
+    // the rug under the pods, a pod for each expert
+    const rug = this.raG(r, x0 + 3.6, y0 + 3.15, 0);
+    this.raP(rug, G.plane, OM.lkRug, 5.4, 2.2, 1, 0, 0.004, 0, -Math.PI / 2, false).receiveShadow = true;
+    const px = ex.length === 1 ? [3.5] : ex.length === 2 ? [2.4, 4.75] : [1.75, 3.6, 5.45];
+    ex.forEach((e, i) => { this.lkPod(r, x0 + px[i], y0 + 3.3, i); this.lkSit(r, x0 + px[i], y0 + 3.3, i, e, 0); });
+    // the orb: an off-white pedestal, a glass ball, inside it a web of lit nodes turning (r.crystal)
+    const o = this.raG(r, x0 + 1.3, y0 + 6.0, 0);
+    this.raP(o, this.lkLathe('lkPed', [[0, 0], [0.26, 0], [0.27, 0.04], [0.2, 0.08], [0.12, 0.14], [0.09, 0.45], [0.13, 0.56], [0.2, 0.6], [0.21, 0.63], [0, 0.63]], 40), OM.raLab, 1, 1, 1, 0, 0, 0);
+    this.raP(o, this.lkG('tor'), OM.lkMint, 0.205, 0.205, 0.6, 0, 0.615, 0, Math.PI / 2, false);
+    this.raP(o, G.sphere, OM.lkOrb, 0.25, 0.25, 0.25, 0, 0.9, 0, 0, false);
+    if (!G.lkNet) {
+      const Rn = rng(61), pts = [];
+      for (let i = 0; i < 30; i++) { const v = new THREE.Vector3(Rn() - 0.5, Rn() - 0.5, Rn() - 0.5).normalize().multiplyScalar(0.06 + Rn() * 0.14); pts.push(v); }
+      const seg = []; pts.forEach((a, i) => pts.forEach((b, j) => { if (j > i && a.distanceTo(b) < 0.11) seg.push(a.x, a.y, a.z, b.x, b.y, b.z); }));
+      G.lkNet = new THREE.BufferGeometry(); G.lkNet.setAttribute('position', new THREE.Float32BufferAttribute(seg, 3)); G.lkNetPts = pts;
+    }
+    const net = new THREE.Group(); net.position.set(0, 0.9, 0); net.userData.dyn = true; o.add(net);
+    net.add(new THREE.LineSegments(G.lkNet, OM.lkNet));
+    const nodes = new THREE.InstancedMesh(this.lkG('sph'), amat('#9ff6ff').glow, G.lkNetPts.length), ob = new THREE.Object3D();
+    G.lkNetPts.forEach((v, i) => { ob.position.copy(v); ob.scale.setScalar(0.009 + (i % 3) * 0.003); ob.updateMatrix(); nodes.setMatrixAt(i, ob.matrix); });
+    nodes.computeBoundingSphere(); net.add(nodes);
+    const core = new THREE.Mesh(this.lkG('sph'), OM.cyan.glow); core.scale.setScalar(0.028); net.add(core);
+    (r.crystal = r.crystal || []).push(net);
+    const halo = glowSprite(0x5ff0e0, 0.2, 1.0); halo.position.set(0, 0.9, 0); o.add(halo);
+    this.lkLed(r, o, '#38f5b8', 0, 0.3, 0.1, 1);
+    // the reading corner: two armchairs at a round side table, a lamp over them
+    this.lkArmchair(r, x0 + 5.05, y0 + 5.9, 2.06);
+    this.lkArmchair(r, x0 + 6.3, y0 + 4.72, -0.57);
+    const st = this.raG(r, x0 + 5.85, y0 + 5.42, 0);
+    this.lkCyl(st, 0.16, 0.02, 0, 0, 0, OM.rbMetal); this.lkCyl(st, 0.025, 0.46, 0, 0.02, 0, OM.rbMetal); this.lkCyl(st, 0.25, 0.03, 0, 0.48, 0, OM.rbDeskTop);
+    [0, 1, 2].forEach((q) => { const b = this.raB(st, 0.17, 0.035, 0.23, 0.04, 0.528 + q * 0.036, -0.06, OM.lkCovers[q], 0.005); b.rotation.y = q * 0.35 - 0.3; });
+    this.lkCyl(st, 0.045, 0.1, -0.14, 0.51, 0.1, OM.rbMouse);
+    const lamp = this.raG(r, x0 + 6.55, y0 + 6.05, 0);
+    this.lkCyl(lamp, 0.15, 0.02, 0, 0, 0, OM.rbMetal); this.lkCyl(lamp, 0.014, 0.96, 0, 0.02, 0, OM.brass);
+    this.raP(lamp, this.lkLathe('lkShade', [[0.09, 0], [0.15, 0], [0.11, 0.16], [0.07, 0.16]], 28), OM.raLab, 1, 1, 1, 0, 0.92, 0);
+    this.lkCyl(lamp, 0.085, 0.006, 0, 0.93, 0, OM.lkWarm);
+    const lh = glowSprite(0xe8f6ff, 0.22, 0.9); lh.position.set(0, 0.9, 0); lamp.add(lh);
+    this.terminal(r, x0 + 0.3, y0 + 0.32, d.link || CO.DEPT_LINK[d.key] || CO.DEPT_LINK.custom);
+    this.lkPlant(r, x0 + 2.3, y0 + 6.5, 0.85); this.lkPlant(r, x0 + 6.6, y0 + 6.6, 0.75);
+    this.lkLedsDone(r);
+    this.plate(r);
+  }
+  // a bay of shelves in frame p, its front at p's origin, W across and H tall, n shelves of books: a dark back, sides,
+  // boards, each shelf's books a block with the spines on its front (their light in the texture), a light under the
+  // top along its front
+  lkShelf(p, W, H, n, q) {
+    const D = H > 1 ? 0.4 : 0.36, step = (H - 0.08) / n;
+    this.lkBox(p, W, H, 0.02, 0, H / 2, -D + 0.01, OM.lkShelfDk);
+    [-1, 1].forEach((s) => this.lkBox(p, 0.03, H, D, s * (W / 2 - 0.015), H / 2, -D / 2, OM.lkShelf));
+    this.lkBox(p, W, 0.04, D, 0, 0.02, -D / 2, OM.lkShelf);
+    this.lkBox(p, W + 0.02, 0.035, D + 0.02, 0, H - 0.0175, -D / 2 + 0.01, OM.lkShelf);
+    for (let k = 0; k < n; k++) {
+      const yb = 0.04 + k * step, bh = step - 0.05;
+      if (k) this.lkBox(p, W - 0.06, 0.022, D - 0.02, 0, yb, -D / 2, OM.lkShelf);
+      this.lkBox(p, W - 0.07, bh, D - 0.12, 0, yb + 0.011 + bh / 2, -D / 2 - 0.03, OM.lkShelfDk, false);
+      this.raP(p, G['lkBook' + ((q * 3 + k) % 6)], (q + k) % 2 ? OM.lkBooksB : OM.lkBooksA, W - 0.07, bh, 1, 0, yb + 0.011 + bh / 2, -0.07, 0, false);
+    }
+    this.lkBox(p, W - 0.08, 0.01, 0.012, 0, H - 0.045, -0.02, OM.lkMint, false);
+  }
+  // A reading pod round a reader seated at plan x,y facing the back wall: a low dark platform with a ring of light, a
+  // curved desk before him, an off-white shell round it lined in dark fabric with a line of light inside, a book
+  // open in the air over the desk (it floats and turns a little), his tablet (r.mons[i]), a lamp and a stack of books
+  lkPod(r, x, y, i) {
+    const p = this.raG(r, x, y, 0), sa = 1.85;
+    this.raP(p, G.cyl, OM.lkPodFloor, 0.88, 0.03, 0.88, 0, 0.015, -0.12);
+    this.raP(p, this.lkG('tor64'), OM.lkMint, 0.88, 0.88, 0.4, 0, 0.031, -0.12, Math.PI / 2, false);
+    this.raP(p, this.lkArc('lkPodTop', 0.34, 0.68, 1.05, 0.035), OM.rbDeskTop, 1, 1, 1, 0, 0.445, 0);
+    this.raP(p, this.lkArc('lkPodSkirt', 0.6, 0.66, 1.0, 0.4), OM.raLab2, 1, 1, 1, 0, 0.045, 0);
+    if (!G.lkShellO) {
+      G.lkShellO = new THREE.CylinderGeometry(0.8, 0.8, 1.04, 48, 1, true, Math.PI - sa, 2 * sa);
+      G.lkShellI = new THREE.CylinderGeometry(0.78, 0.78, 1.0, 48, 1, true, Math.PI - sa + 0.02, 2 * sa - 0.04);
+    }
+    this.raP(p, G.lkShellO, OM.raLab, 1, 1, 1, 0, 0.56, 0);
+    this.raP(p, G.lkShellI, OM.lkFabric, 1, 1, 1, 0, 0.56, 0);
+    this.raP(p, this.lkArc('lkPodRim', 0.775, 0.808, sa, 0.025), OM.raLab2, 1, 1, 1, 0, 1.08, 0);
+    this.raP(p, this.lkArc('lkPodGlow', 0.762, 0.776, sa - 0.06, 0.012), OM.lkMint, 1, 1, 1, 0, 0.94, 0, 0, false);
+    // the book in the air: two pages in a V over the desk, leaning back to him
+    const bk = new THREE.Group(); bk.position.set(0, 0.8, -0.47); bk.rotation.x = -0.55; bk.userData.dyn = true; p.add(bk);
+    let drv = null;
+    [-1, 1].forEach((s) => {
+      const hinge = new THREE.Group(); hinge.rotation.y = -s * 0.42; bk.add(hinge);
+      const pg = new THREE.Mesh(G.plane, OM.lkPage); pg.scale.set(0.19, 0.25, 1); pg.position.set(s * 0.1, 0, 0); hinge.add(pg); drv = drv || pg;
+    });
+    const bh = glowSprite(0x5ff0e0, 0.14, 0.55); bh.position.set(0, 0.74, -0.47); p.add(bh);
+    this.lkDrive(r, drv, (t) => { bk.position.y = 0.8 + 0.025 * Math.sin(t * 1.3 + i * 2); bk.rotation.y = 0.18 * Math.sin(t * 0.6 + i); });
+    // his tablet on its stand, turned to him
+    const tg = new THREE.Group(); tg.position.set(0.34, 0, -0.38); tg.rotation.y = -0.7; p.add(tg);
+    this.lkMonitor(tg, this.lkMon(r, i, this.lkTex('read')), 0.32, 0.2, 0, 0.48, 0);
+    // a lamp at his left: a foot, a stem, a head lit underneath
+    this.lkCyl(p, 0.05, 0.015, -0.42, 0.48, -0.36, OM.rbMetal); this.lkCyl(p, 0.008, 0.3, -0.42, 0.495, -0.36, OM.rbMetal);
+    this.raB(p, 0.16, 0.025, 0.06, -0.36, 0.8, -0.36, OM.rbMetal, 0.01); this.lkBox(p, 0.12, 0.004, 0.04, -0.33, 0.786, -0.36, OM.lkWarm, false);
+    [0, 1].forEach((q) => { const b = this.raB(p, 0.16, 0.03, 0.22, -0.12 + q * 0.01, 0.497 + q * 0.031, -0.56, OM.lkCovers[q + i % 2], 0.005); b.rotation.y = 0.3 + q * 0.25; });
+    this.lkLed(r, p, '#38f5b8', 0.28, 0.486, -0.52, i * 2 + 1);
+  }
+  // an armchair at plan x,y, its front turned ry (raG's): a padded base and seat, a back, arms, on chrome feet
+  lkArmchair(r, x, y, ry) {
+    const p = this.raG(r, x, y, ry);
+    [[-1, -1], [1, -1], [-1, 1], [1, 1]].forEach(([sx, sz]) => this.lkCyl(p, 0.022, 0.08, sx * 0.25, 0, sz * 0.24, OM.raChrome));
+    this.raB(p, 0.66, 0.2, 0.62, 0, 0.18, 0, OM.lkFabric2, 0.05);
+    this.raB(p, 0.48, 0.08, 0.5, 0, 0.32, 0.04, OM.lkFabric2, 0.035);
+    this.raB(p, 0.66, 0.42, 0.14, 0, 0.47, -0.25, OM.lkFabric2, 0.05);
+    [-1, 1].forEach((s) => this.raB(p, 0.11, 0.2, 0.6, s * 0.29, 0.37, 0, OM.lkFabric2, 0.045));
+  }
+  // The workshop: a bench for each expert (a pegboard upstand with its task light and his screen of drawings, r.mons;
+  // a vise, a drone half built, a parts tray, a soldering station, a magnifier); a wall of parts bins under the
+  // back-right wall's screen; tools on a pegboard along the back-left wall over a tool chest and a counter with a
+  // grinder and a drill press; a robot arm at work in its taped-off cell by the front-right glass, a 3D printer
+  // printing beside the benches, crates on a pallet by the front glass.
+  lkWorkshop(r, d) {
+    this.lkMats('workshop');
+    const x0 = r.x0, y0 = r.y0, ex = d.experts.slice(0, 3);
+    this.wallScreen(r, 1.8, 3.9);
+    this.kanban(r, 1.45, 3.3);
+    this.lkBins(r, x0 + 5.42, y0 + 0.5);
+    this.lkToolWall(r, x0 + 0.16, y0 + 5.02);
+    const xs = ex.length === 1 ? [1.5] : ex.length === 2 ? [0.9, 3.1] : [0.65, 2.55, 4.45];
+    ex.forEach((e, i) => { this.lkBench(r, x0 + xs[i] + 0.95, y0 + 2.65, i); this.lkSit(r, x0 + xs[i] + 0.95, y0 + 3.45, i, e, 0); });
+    this.lkPrinter3D(r, x0 + 6.32, y0 + 3.62);
+    this.lkRobot(r, x0 + 5.6, y0 + 5.4);
+    this.lkCrates(r, x0 + 2.65, y0 + 6.3);
+    this.terminal(r, x0 + 0.3, y0 + 0.32, d.link || CO.DEPT_LINK[d.key] || CO.DEPT_LINK.custom);
+    this.lkPlant(r, x0 + 1.5, y0 + 6.55, 0.85);
+    this.lkLedsDone(r);
+    this.plate(r);
+  }
+  // the wall of parts bins, its front centre at plan x,y facing the room: a louvred steel panel, five rows of bins
+  // hung on it -- the colours by row, each bin dark inside, a lip and a label on its front; its top at 1.28
+  lkBins(r, x, y) {
+    const p = this.raG(r, x, y, 0), R = rng(31);
+    this.raB(p, 2.56, 1.16, 0.04, 0, 0.62, -0.32, OM.lkSteelDk, 0.01);
+    this.raP(p, G.plane, OM.lkLouver, 2.5, 1.1, 1, 0, 0.62, -0.299, 0, false);
+    for (let row = 0; row < 5; row++) for (let c = 0; c < 8; c++) {
+      const bx = -1.05 + c * 0.3, yb = 0.12 + row * 0.21, mat = OM.lkBins[row === 0 ? 2 : row === 4 ? 3 : R() < 0.75 ? 0 : 1];
+      this.lkBox(p, 0.27, 0.15, 0.22, bx, yb + 0.075, -0.185, mat);
+      this.lkBox(p, 0.25, 0.008, 0.2, bx, yb + 0.152, -0.185, OM.rbSeam, false);
+      this.lkBox(p, 0.27, 0.07, 0.02, bx, yb + 0.04, -0.066, mat);
+      this.lkBox(p, 0.09, 0.03, 0.004, bx, yb + 0.045, -0.054, OM.lkLabel, false);
+    }
+  }
+  // the back-left wall's tools, in a frame at plan x,y whose x runs along the wall: a pegboard with wrenches, a
+  // hammer, screwdrivers, pliers, a saw, a tape, clamps, a coil of cable; under it a rolling tool chest and a counter
+  // with a bench grinder and a drill press (its column's top at 1.21)
+  lkToolWall(r, x, y) {
+    const p = this.raG(r, x, y, Math.PI / 2), ch = OM.raChrome, z = 0.045;
+    this.raB(p, 2.95, 0.66, 0.03, 0, 0.88, 0.015, OM.lkSteelDk, 0.01);
+    this.raP(p, G.plane, OM.lkPeg, 2.9, 0.62, 1, 0, 0.88, 0.031, 0, false);
+    [0.14, 0.17, 0.2, 0.23, 0.26].forEach((L, q) => { const tx = -1.32 + q * 0.07; this.lkBox(p, 0.018, L, 0.008, tx, 1.12 - L / 2, z, ch); this.raP(p, this.lkG('cyl'), ch, 0.024, 0.01, 0.024, tx, 1.12, z, Math.PI / 2); });
+    this.lkBox(p, 0.026, 0.26, 0.022, -0.86, 0.95, z, OM.raRubber); this.lkBox(p, 0.12, 0.035, 0.032, -0.86, 1.09, z, OM.lkSteel);
+    [2, 3, 0, 2, 3].forEach((c, q) => { const tx = -0.62 + q * 0.06; this.lkCyl(p, 0.013, 0.085, tx, 1.0, z, OM.lkBins[c]); this.lkCyl(p, 0.004, 0.11, tx, 0.89, z, ch); });
+    [-1, 1].forEach((s) => { const m = this.lkBox(p, 0.016, 0.2, 0.01, -0.25 + s * 0.016, 0.96, z, OM.lkRed); m.rotation.z = s * 0.12; });
+    this.lkBox(p, 0.05, 0.06, 0.014, -0.25, 1.08, z, ch);
+    this.lkBox(p, 0.34, 0.1, 0.004, 0.14, 0.95, z, ch); this.raB(p, 0.1, 0.09, 0.03, -0.08, 0.97, z, OM.lkRed, 0.012);
+    this.raP(p, this.lkG('cyl'), OM.lkBins[2], 0.045, 0.03, 0.045, 0.45, 1.05, z, Math.PI / 2);
+    [0.66, 0.8].forEach((cx) => { this.lkBox(p, 0.016, 0.24, 0.012, cx, 0.98, z, ch); this.lkBox(p, 0.08, 0.03, 0.02, cx + 0.03, 1.09, z, OM.lkRed); this.lkBox(p, 0.08, 0.03, 0.02, cx + 0.03, 0.87, z, OM.lkRed); });
+    this.raP(p, this.lkG('tor'), OM.raRubber, 0.09, 0.09, 1.4, 1.12, 1.02, z);
+    this.lkBox(p, 0.4, 0.035, 0.03, 1.0, 0.8, z, OM.lkBins[2]);
+    // the rolling tool chest: drawers with their seams and pulls, on casters
+    this.raB(p, 0.78, 0.66, 0.5, 1.0, 0.37, 0.28, OM.lkRed, 0.02);
+    [0.18, 0.28, 0.38, 0.48, 0.58].forEach((yy) => this.lkBox(p, 0.72, 0.006, 0.004, 1.0, yy, 0.531, OM.rbSeam, false));
+    [0.13, 0.23, 0.33, 0.43, 0.53, 0.64].forEach((yy) => this.lkBox(p, 0.28, 0.014, 0.02, 1.0, yy, 0.54, ch, false));
+    [[-1, -1], [1, -1], [-1, 1], [1, 1]].forEach(([sx, sz]) => this.lkCyl(p, 0.03, 0.04, 1.0 + sx * 0.33, 0, 0.28 + sz * 0.2, OM.raRubber));
+    // the counter, a grinder and a drill press on it
+    this.raB(p, 1.9, 0.42, 0.52, -0.48, 0.25, 0.28, OM.rbDesk, 0.02);
+    this.raB(p, 1.94, 0.04, 0.56, -0.48, 0.48, 0.28, OM.rbDeskTop, 0.012);
+    [-1.06, -0.48, 0.1].forEach((xx) => { this.lkBox(p, 0.005, 0.36, 0.004, xx, 0.25, 0.541, OM.rbSeam, false); this.lkBox(p, 0.016, 0.1, 0.02, xx + 0.06, 0.33, 0.55, ch, false); });
+    this.raB(p, 0.2, 0.04, 0.14, -1.05, 0.52, 0.28, OM.lkSteelDk, 0.01);
+    this.raP(p, this.lkG('cyl'), OM.lkSteel, 0.06, 0.18, 0.06, -1.05, 0.6, 0.28).rotation.z = Math.PI / 2;
+    [-1, 1].forEach((s) => { this.raP(p, this.lkG('cyl'), OM.raLab2, 0.075, 0.025, 0.075, -1.05 + s * 0.12, 0.6, 0.28).rotation.z = Math.PI / 2; });
+    this.raB(p, 0.22, 0.03, 0.28, -0.1, 0.515, 0.25, OM.lkSteelDk, 0.01);
+    this.lkCyl(p, 0.022, 0.6, -0.1, 0.53, 0.14, ch);
+    this.raB(p, 0.14, 0.14, 0.26, -0.1, 0.98, 0.22, OM.raCase, 0.03);
+    this.lkCyl(p, 0.025, 0.07, -0.1, 0.85, 0.3, ch);
+    this.lkCyl(p, 0.09, 0.02, -0.1, 0.72, 0.28, OM.lkSteelDk);
+    this.raP(p, this.lkG('cyl'), ch, 0.008, 0.16, 0.008, -0.02, 0.95, 0.3).rotation.z = 0.9;
+  }
+  // A workbench, its centre at plan x,y, its worker on the room's side: steel legs, a shelf with a toolbox, a thick
+  // top with a steel edge, a pegboard upstand at its back with a task light along its top and his screen of drawings
+  // on it (r.mons[i]); on the top a vise, a parts tray, a drone half built, a soldering station, a magnifier lamp,
+  // his keyboard and mouse
+  lkBench(r, x, y, i) {
+    const p = this.raG(r, x, y, 0), W = 1.86, D = 0.8, ch = OM.raChrome, zb = -D / 2;
+    [[-1, -1], [1, -1], [-1, 1], [1, 1]].forEach(([sx, sz]) => this.lkBox(p, 0.05, 0.44, 0.05, sx * (W / 2 - 0.06), 0.22, sz * (D / 2 - 0.06), OM.lkSteel));
+    this.lkBox(p, W - 0.14, 0.025, D - 0.16, 0, 0.13, 0, OM.lkSteelDk);
+    this.raB(p, 0.48, 0.18, 0.26, -0.48, 0.233, -0.1, OM.lkRed, 0.02); this.lkBox(p, 0.2, 0.02, 0.03, -0.48, 0.335, -0.1, ch);
+    this.raB(p, W, 0.05, D, 0, 0.465, 0, OM.rbDeskTop, 0.012);
+    this.lkBox(p, W + 0.012, 0.036, 0.012, 0, 0.465, D / 2 + 0.003, OM.lkSteel, false);
+    this.raB(p, W, 0.5, 0.03, 0, 0.74, zb + 0.03, OM.lkSteelDk, 0.008);
+    this.raP(p, G.plane, OM.lkPeg2, W - 0.06, 0.46, 1, 0, 0.74, zb + 0.046, 0, false);
+    this.lkBox(p, W - 0.1, 0.022, 0.07, 0, 1.0, zb + 0.05, OM.lkSteel);
+    this.lkBox(p, W - 0.14, 0.005, 0.045, 0, 0.987, zb + 0.06, OM.lkWarm, false);
+    this.raB(p, 0.62, 0.36, 0.03, 0.42, 0.74, zb + 0.065, OM.rbGloss, 0.012);
+    this.raP(p, G.plane, this.lkMon(r, i, this.lkTex('cad')), 0.57, 0.32, 1, 0.42, 0.74, zb + 0.081, 0, false);
+    this.lkKeys(p, 0.4, 0.49, 0.1, 0.5);
+    this.raP(p, this.lkG('sph'), OM.rbMouse, 0.04, 0.022, 0.062, 0.78, 0.512, 0.1, 0, false);
+    // the vise at the front-left corner, its screw and handle out past the edge
+    const vx = -0.76, vz = 0.24;
+    this.raB(p, 0.16, 0.04, 0.2, vx, 0.51, vz, OM.raCase, 0.01); this.raB(p, 0.12, 0.07, 0.16, vx, 0.565, vz, OM.raCase, 0.015);
+    [-0.045, 0.045].forEach((dz) => this.lkBox(p, 0.14, 0.05, 0.022, vx, 0.625, vz + dz, OM.lkSteelDk));
+    this.raP(p, this.lkG('cyl'), ch, 0.008, 0.2, 0.008, vx, 0.58, vz + 0.15, Math.PI / 2);
+    this.raP(p, this.lkG('cyl'), ch, 0.006, 0.14, 0.006, vx, 0.58, vz + 0.25).rotation.z = Math.PI / 2;
+    // the parts tray
+    this.raB(p, 0.26, 0.03, 0.17, -0.42, 0.505, 0.2, OM.lkSteelDk, 0.006);
+    [[-0.5, 0.17], [-0.45, 0.23], [-0.38, 0.16], [-0.34, 0.24]].forEach(([px, pz], q) => this.lkCyl(p, 0.012, 0.016, px, 0.52, pz, q % 2 ? ch : OM.lkBins[2]));
+    // the drone on the bench, half built: its body and canopy, two arms crossed, four motors and props, its eye
+    const dr = new THREE.Group(); dr.position.set(-0.06, 0.49, -0.08); dr.rotation.y = 0.3; p.add(dr);
+    this.raB(dr, 0.15, 0.045, 0.15, 0, 0.045, 0, OM.raLab, 0.02);
+    this.raP(dr, this.lkG('sph'), OM.rbGloss, 0.055, 0.035, 0.055, 0, 0.067, 0);
+    [Math.PI / 4, -Math.PI / 4].forEach((a) => { this.lkBox(dr, 0.38, 0.014, 0.024, 0, 0.04, 0, OM.raTrim).rotation.y = a; });
+    [[1, 1], [1, -1], [-1, 1], [-1, -1]].forEach(([sx, sz]) => { const mx = sx * 0.134, mz = sz * 0.134; this.lkCyl(dr, 0.018, 0.03, mx, 0.03, mz, OM.lkSteelDk); this.lkCyl(dr, 0.07, 0.003, mx, 0.062, mz, OM.raRubber); });
+    this.lkLed(r, dr, '#24e8ff', 0, 0.045, 0.077, i + 2);
+    // the soldering station, its iron in its holder
+    this.raB(p, 0.16, 0.08, 0.12, 0.82, 0.53, -0.2, OM.lkSteelDk, 0.012);
+    this.raP(p, this.lkG('cyl'), OM.raLab2, 0.022, 0.02, 0.022, 0.78, 0.53, -0.135, Math.PI / 2);
+    this.lkLed(r, p, '#ff8a3a', 0.86, 0.545, -0.138, i + 1);
+    this.raP(p, this.lkG('cyl'), ch, 0.016, 0.1, 0.016, 0.68, 0.54, -0.18).rotation.z = 0.6;
+    this.raP(p, this.lkG('cyl'), OM.raRubber, 0.01, 0.16, 0.01, 0.645, 0.57, -0.18).rotation.z = 0.6;
+    // the magnifier: a foot, a stem, an arm out over the work, its ring of light
+    this.lkCyl(p, 0.06, 0.02, -0.3, 0.49, -0.32, OM.lkSteelDk); this.lkCyl(p, 0.01, 0.34, -0.3, 0.51, -0.32, ch);
+    this.lkBox(p, 0.018, 0.018, 0.3, -0.3, 0.85, -0.18, ch);
+    this.raP(p, this.lkG('tor'), OM.lkSteelDk, 0.075, 0.075, 1.2, -0.3, 0.83, -0.03, Math.PI / 2);
+    this.raP(p, this.lkG('tor'), OM.lkWarm, 0.065, 0.065, 0.6, -0.3, 0.815, -0.03, Math.PI / 2, false);
+  }
+  // the 3D printer at plan x,y facing the room: a cabinet with its touch screen and lights, on it a dark frame with
+  // glass all round, a lit filament spool at its side; inside, the part being printed with its hot top layer and the
+  // head running over it on its gantry
+  lkPrinter3D(r, x, y) {
+    const p = this.raG(r, x, y, 0), ch = OM.raChrome;
+    this.raB(p, 0.66, 0.44, 0.62, 0, 0.22, 0, OM.rbDesk, 0.025);
+    this.lkBox(p, 0.6, 0.006, 0.004, 0, 0.24, 0.311, OM.rbSeam, false); this.lkBox(p, 0.2, 0.014, 0.02, 0, 0.16, 0.315, ch, false);
+    this.raB(p, 0.2, 0.13, 0.015, 0.16, 0.35, 0.31, OM.rbGloss, 0.008);
+    this.lkFace(p, 'print', 0.18, 0.11, 0.16, 0.35, 0.318);
+    this.lkLed(r, p, '#38f5b8', -0.24, 0.36, 0.312, 1); this.lkLed(r, p, '#24e8ff', -0.18, 0.36, 0.312, 2);
+    this.raB(p, 0.64, 0.03, 0.6, 0, 0.455, 0, OM.lkFrame, 0.01);
+    [[-1, -1], [1, -1], [-1, 1], [1, 1]].forEach(([sx, sz]) => this.lkBox(p, 0.035, 0.62, 0.035, sx * 0.3, 0.78, sz * 0.28, OM.lkFrame));
+    [-0.28, 0.28].forEach((bz) => this.lkBox(p, 0.635, 0.035, 0.035, 0, 1.07, bz, OM.lkFrame));
+    [-0.3, 0.3].forEach((bx) => this.lkBox(p, 0.035, 0.035, 0.6, bx, 1.07, 0, OM.lkFrame));
+    this.raP(p, G.box, OM.lkGlass, 0.6, 0.6, 0.56, 0, 0.775, 0, 0, false);
+    this.lkBox(p, 0.5, 0.006, 0.02, 0, 1.045, 0.2, OM.lkWarm, false);
+    this.lkBox(p, 0.46, 0.02, 0.42, 0, 0.5, 0, OM.lkSteelDk);
+    this.raP(p, this.lkLathe('lkVase', [[0, 0], [0.09, 0], [0.1, 0.04], [0.08, 0.1], [0.07, 0.14], [0.085, 0.17], [0, 0.17]], 24), OM.raLab, 1, 1, 1, 0, 0.51, 0);
+    this.raP(p, this.lkG('tor'), OM.lkCyan, 0.085, 0.085, 0.5, 0, 0.68, 0, Math.PI / 2, false);
+    const gan = new THREE.Group(); gan.position.set(0, 0.86, 0); gan.userData.dyn = true; p.add(gan);
+    this.lkBox(gan, 0.56, 0.02, 0.03, 0, 0, 0, ch, false);
+    const hd = new THREE.Group(); gan.add(hd);
+    this.raB(hd, 0.07, 0.08, 0.07, 0, -0.03, 0, OM.raTrim, 0.012);
+    const tip = this.raP(hd, G.cone, OM.lkCyan, 0.012, 0.03, 0.012, 0, -0.085, 0, Math.PI, false);
+    this.lkDrive(r, tip, (t) => { gan.position.z = 0.12 * Math.sin(t * 0.8); hd.position.x = 0.17 * Math.sin(t * 1.9); });
+    this.lkBox(p, 0.06, 0.02, 0.04, 0.33, 0.85, 0, OM.lkFrame);
+    this.raP(p, this.lkG('cyl'), OM.lkFil, 0.11, 0.06, 0.11, 0.39, 0.85, 0).rotation.z = Math.PI / 2;
+    [-1, 1].forEach((s) => { this.raP(p, this.lkG('cyl'), OM.lkSteelDk, 0.125, 0.008, 0.125, 0.39 + s * 0.034, 0.85, 0).rotation.z = Math.PI / 2; });
+  }
+  // the robot arm in its cell, at plan x,y: a dark plate inside hazard tape, a post with a beacon at each corner (two
+  // blinking), a parts table and a crate it works between; the arm off-white with dark joints and a cyan band, its
+  // turret, shoulder and elbow moving (lkDrive), its top at about 1.13
+  lkRobot(r, x, y) {
+    const p = this.raG(r, x, y, 0), S = 1.8;
+    this.raP(p, G.plane, OM.lkCell, S, S, 1, 0, 0.003, 0, -Math.PI / 2, false).receiveShadow = true;
+    [[0, -S / 2, 0], [0, S / 2, 0], [-S / 2, 0, 1], [S / 2, 0, 1]].forEach(([hx, hz, rot]) => { const m = this.lkBox(p, S + 0.08, 0.006, 0.08, hx, 0.006, hz, OM.lkHazard, false); if (rot) m.rotation.y = Math.PI / 2; m.receiveShadow = true; });
+    [[-1, -1], [1, -1], [-1, 1], [1, 1]].forEach(([sx, sz], q) => {
+      this.lkCyl(p, 0.03, 0.55, sx * S / 2, 0, sz * S / 2, OM.lkSteelDk);
+      this.lkCyl(p, 0.042, 0.06, sx * S / 2, 0.55, sz * S / 2, OM.lkBeacon);
+      if (q % 3 === 0) { const b = this.lkCyl(p, 0.044, 0.058, sx * S / 2, 0.551, sz * S / 2, amat('#ff8a3a').glow); b.castShadow = false; b.userData.dyn = true; b.userData.blink = q; (r.leds = r.leds || []).push(b); }
+    });
+    this.raB(p, 0.42, 0.04, 0.36, 0.42, 0.5, -0.55, OM.rbDeskTop, 0.01);
+    [[-1, -1], [1, -1], [-1, 1], [1, 1]].forEach(([sx, sz]) => this.lkBox(p, 0.03, 0.48, 0.03, 0.42 + sx * 0.18, 0.24, -0.55 + sz * 0.15, OM.lkSteel));
+    [[0.36, -0.6], [0.5, -0.5]].forEach(([bx, bz]) => this.raB(p, 0.08, 0.06, 0.08, bx, 0.55, bz, OM.raLab, 0.012));
+    this.raB(p, 0.4, 0.3, 0.32, -0.5, 0.15, -0.5, OM.lkCrate, 0.02);
+    this.lkCyl(p, 0.25, 0.03, 0, 0, 0, OM.lkSteelDk);
+    const base = this.lkCyl(p, 0.19, 0.13, 0, 0.03, 0, OM.raLab);
+    this.raP(p, this.lkG('tor'), OM.lkCyan, 0.19, 0.19, 0.5, 0, 0.16, 0, Math.PI / 2, false);
+    const T = new THREE.Group(); T.position.set(0, 0.16, 0); T.userData.dyn = true; p.add(T);
+    this.lkCyl(T, 0.16, 0.1, 0, 0, 0, OM.raLab);
+    this.raB(T, 0.26, 0.2, 0.22, 0, 0.18, 0, OM.raLab, 0.05);
+    this.raP(T, this.lkG('cyl'), OM.raTrim, 0.085, 0.3, 0.085, 0, 0.26, 0).rotation.z = Math.PI / 2;
+    const S1 = new THREE.Group(); S1.position.set(0, 0.26, 0); S1.rotation.x = -0.5; T.add(S1);
+    this.raB(S1, 0.12, 0.5, 0.13, 0, 0.25, 0, OM.raLab, 0.04);
+    this.lkBox(S1, 0.125, 0.014, 0.135, 0, 0.1, 0, OM.lkCyan, false);
+    this.raP(S1, this.lkG('cyl'), OM.raTrim, 0.07, 0.2, 0.07, 0, 0.5, 0).rotation.z = Math.PI / 2;
+    const E = new THREE.Group(); E.position.set(0, 0.5, 0); E.rotation.x = -1.2; S1.add(E);
+    this.raB(E, 0.1, 0.42, 0.1, 0, 0.21, 0, OM.raLab, 0.035);
+    this.lkCyl(E, 0.05, 0.07, 0, 0.42, 0, OM.raTrim);
+    this.raB(E, 0.11, 0.03, 0.07, 0, 0.505, 0, OM.lkSteelDk, 0.008);
+    [-1, 1].forEach((s) => this.lkBox(E, 0.018, 0.07, 0.04, s * 0.04, 0.55, 0, OM.lkSteel));
+    this.raLed(r, E, '#24e8ff', 0, 0.455, 0.052, 3);
+    [T, S1, E].forEach((g) => rbBake(g));
+    this.lkDrive(r, base, (t) => { T.rotation.y = 0.9 * Math.sin(t * 0.45); S1.rotation.x = -(0.5 + 0.16 * Math.sin(t * 0.9)); E.rotation.x = -(1.2 + 0.24 * Math.sin(t * 0.9 + 0.8)); });
+  }
+  // two crates on a pallet by the front glass, the top one turned
+  lkCrates(r, x, y) {
+    const p = this.raG(r, x, y, 0.25);
+    [-0.25, 0, 0.25].forEach((bx) => this.lkBox(p, 0.1, 0.07, 0.6, bx, 0.035, 0, OM.lkWood));
+    for (let q = 0; q < 4; q++) this.lkBox(p, 0.7, 0.03, 0.11, 0, 0.085, -0.24 + q * 0.16, OM.lkWood);
+    this.raB(p, 0.64, 0.4, 0.5, 0, 0.3, 0, OM.lkCrate, 0.02);
+    this.raB(p, 0.44, 0.3, 0.36, 0.05, 0.65, -0.02, OM.lkCrate, 0.02).rotation.y = -0.3;
+  }
+  // The command centre: a holographic table in the middle of the room -- a tactical map lit on its top, beams of light
+  // standing on its targets, a globe turning over it in a column of light, two dashed rings round it -- its commander
+  // standing at it at his own panel in the rim (r.mons[0]); a ring of consoles round the back of the room facing it,
+  // two screens on each, the other experts seated at theirs; rings of light on the floor round its dais, one turning
+  // (r.floor). The status and a threat board on the back-right wall, the kanban on the back-left.
+  lkCommand(r, d) {
+    this.lkMats('command');
+    const x0 = r.x0, y0 = r.y0, ex = d.experts.slice(0, 3), cx = x0 + 3.5, cy = y0 + 3.35, b0 = -Math.PI / 4;
+    this.wallScreen(r, 1.75, 4.55);
+    this.rcBoard(r, 'back', 4.8, 6.7, this.lkTex('threat'), { edge: '#24e8ff', glow: 0.7 });
+    this.kanban(r, 1.5, 5.6);
+    this.lkHoloTable(r, cx, cy, ex.length ? b0 : null);
+    if (ex[0]) { const sx = cx + 1.32 * Math.cos(b0), sy = cy + 1.32 * Math.sin(b0); this.lkStand(r, sx, sy, 0, ex[0], this.lkToward(sx, sy, cx, cy)); }
+    const seat = ex.length === 3 ? { 1: 1, 3: 2 } : ex.length === 2 ? { 2: 1 } : {};
+    [160, 190, 220, 250, 280].forEach((deg, j) => {
+      const a = deg * Math.PI / 180, i = seat[j], fx = cx + 2.18 * Math.cos(a), fy = cy + 2.18 * Math.sin(a);
+      this.lkConsole(r, fx, fy, Math.atan2(-Math.cos(a), -Math.sin(a)), i == null ? null : this.lkMon(r, i, this.lkTex('cmd1')), j);
+      if (i != null) { const sx = cx + 1.78 * Math.cos(a), sy = cy + 1.78 * Math.sin(a); this.lkSit(r, sx, sy, i, ex[i], this.lkToward(sx, sy, fx, fy)); }
+    });
+    const fl = this.raG(r, cx, cy, 0);
+    this.raP(fl, this.lkRing('lkCmdR1', 1.42, 1.45, Math.PI), OM.lkMint, 1, 1, 1, 0, 0.004, 0, 0, false);
+    this.raP(fl, this.lkRing('lkCmdR2', 2.0, 2.02, Math.PI), OM.lkCyan, 1, 1, 1, 0, 0.004, 0, 0, false);
+    const dash = new THREE.Mesh(G.holoDash, OM.lkCyan); dash.scale.set(1.72, 1.72, 0.6); dash.rotation.x = -Math.PI / 2; dash.position.copy(this.V(cx, cy, 0.092)); r.g.add(dash); r.floor = dash;
+    this.holoFrame(r, x0 + 0.8, y0 + 6.0);
+    this.cabinet(r, x0 + 6.45, y0 + 4.1, 0.45, 2.2, 0.72);
+    this.terminal(r, x0 + 0.3, y0 + 0.32, d.link || CO.DEPT_LINK[d.key] || CO.DEPT_LINK.custom);
+    this.lkPlant(r, x0 + 1.75, y0 + 6.55, 0.85); this.lkPlant(r, x0 + 6.5, y0 + 6.62, 0.75);
+    this.lkLedsDone(r);
+    this.plate(r);
+  }
+  // the holographic table at plan cx,cy: a dark dais with a lit edge, a turned base with a band of light, a rim round
+  // the map with eight panels set in it (the commander's at angle b0 is his, r.mons[0]); over the map beams on its
+  // targets with a marker each, a column of light, the globe and its two rings (lkDrive turns them)
+  lkHoloTable(r, cx, cy, b0) {
+    const p = this.raG(r, cx, cy, 0);
+    this.lkCyl(p, 1.28, 0.05, 0, 0, 0, OM.lkDais);
+    this.raP(p, this.lkG('tor64'), OM.lkCyan, 1.28, 1.28, 0.5, 0, 0.05, 0, Math.PI / 2, false);
+    this.raP(p, this.lkLathe('lkTblBase', [[0, 0.05], [0.62, 0.05], [0.64, 0.09], [0.46, 0.16], [0.36, 0.3], [0.38, 0.48], [0.7, 0.57], [0.88, 0.6], [0, 0.6]], 48), OM.lkFrame, 1, 1, 1, 0, 0, 0);
+    this.raP(p, this.lkG('tor'), OM.lkCyan, 0.37, 0.37, 0.6, 0, 0.34, 0, Math.PI / 2, false);
+    this.raP(p, this.lkLathe('lkTblRim', [[0.84, 0.6], [1.0, 0.6], [1.03, 0.63], [1.0, 0.69], [0.9, 0.72], [0.86, 0.71], [0.84, 0.665]], 64), OM.rbDeskTop, 1, 1, 1, 0, 0, 0);
+    this.raP(p, G.circle, OM.lkTac, 0.85, 0.85, 1, 0, 0.665, 0, -Math.PI / 2, false);
+    this.raP(p, this.lkG('tor64'), OM.lkMint, 0.855, 0.855, 0.35, 0, 0.67, 0, Math.PI / 2, false);
+    const base = b0 == null ? -Math.PI / 4 : b0;
+    for (let k = 0; k < 8; k++) {
+      const b = base + k * Math.PI / 4, s = new THREE.Group(); s.position.set(0.93 * Math.cos(b), 0, 0.93 * Math.sin(b)); s.rotation.y = Math.atan2(Math.cos(b), Math.sin(b)); p.add(s);
+      const mat = k === 0 && b0 != null ? this.lkMon(r, 0, this.lkTex('cmd1')) : ['s1', 's2', 's3'][k % 3] + ':0.55';
+      this.lkScreen(s, mat, 0.2, 0.09, 0, 0.73, 0, -1.05);
+    }
+    const tg = [[0.35, 0.2, 0.3], [-0.3, 0.38, 0.2], [-0.45, -0.2, 0.38], [0.15, -0.5, 0.24], [0.52, -0.22, 0.28]];
+    if (!G.lkDiamond) G.lkDiamond = new THREE.OctahedronGeometry(1, 0);
+    const o = new THREE.Object3D(), mk = new THREE.InstancedMesh(G.lkDiamond, OM.cyan.glow, tg.length);
+    tg.forEach(([tx, tz, h], q) => {
+      this.raP(p, G.beam, OM.lkBeam, 0.14, h, 0.14, tx, 0.67 + h / 2, tz, 0, false);
+      o.position.set(tx, 0.67 + h + 0.04, tz); o.scale.set(0.028, 0.042, 0.028); o.updateMatrix(); mk.setMatrixAt(q, o.matrix);
+    });
+    mk.computeBoundingSphere(); p.add(mk);
+    this.raP(p, G.beam, OM.lkBeam, 0.55, 0.2, 0.55, 0, 0.77, 0, Math.PI, false);
+    this.lkCyl(p, 0.05, 0.008, 0, 0.666, 0, OM.cyan.glow);
+    const gl = new THREE.Group(); gl.position.set(0, 1.02, 0); gl.userData.dyn = true; p.add(gl);
+    const gs = new THREE.Mesh(G.sphere, OM.lkGlobe); gs.scale.setScalar(0.15); gl.add(gs);
+    const eq = new THREE.Mesh(this.lkG('tor'), OM.lkCyan); eq.scale.set(0.19, 0.19, 0.4); eq.rotation.x = Math.PI / 2; gl.add(eq);
+    const gh = glowSprite(0x5ff0e0, 0.16, 0.9); gl.add(gh);
+    const rings = [[0.8, 0.62], [0.9, 0.46]].map(([y, s]) => { const h = new THREE.Mesh(G.holoDash, OM.lkCyan); h.scale.set(s, s, 0.6); h.rotation.x = Math.PI / 2; h.position.set(0, y, 0); h.userData.dyn = true; p.add(h); return h; });
+    const halo = glowSprite(0x5ff0e0, 0.1, 2.2); halo.position.set(0, 0.72, 0); p.add(halo);
+    this.lkDrive(r, gs, (t) => { gl.rotation.y = t * 0.5; gl.position.y = 1.02 + 0.03 * Math.sin(t * 1.4); rings[0].rotation.z = t * 0.6; rings[1].rotation.z = -t * 0.45; });
+    this.raBake(p);
+  }
+  // a console of the ring, its front at plan x,y turned ry to the table: a body drawn from the side (a kick, a lip
+  // with a line of light, a deck of keys sloping up to a shelf), two screens on the shelf -- the left one his
+  // (mon) when someone sits at it -- and its lights
+  lkConsole(r, x, y, ry, mon, j) {
+    const p = this.raG(r, x, y, ry);
+    this.raP(p, this.raProfile('lkCmdBody', [[0.04, 0], [0.04, 0.4], [-0.03, 0.43], [-0.03, 0.47], [0.3, 0.53], [0.4, 0.62], [0.55, 0.62], [0.55, 0]], 1.0, 0.025, 0.01), OM.rbDesk, 1, 1, 1, 0, 0, 0);
+    this.raP(p, G.plane, OM.lkDeck, 0.92, 0.32, 1, 0, 0.506, -0.135, -Math.PI / 2 + 0.18, false);
+    this.lkBox(p, 0.94, 0.012, 0.012, 0, 0.45, 0.036, OM.lkCyan, false);
+    this.lkMonitor(p, mon || (j % 2 ? 'chart' : 'cmd1'), 0.42, 0.24, -0.24, 0.62, -0.42);
+    this.lkMonitor(p, ['tiles', 'map', 'radar', 'bars', 'chart2'][j], 0.42, 0.24, 0.24, 0.62, -0.42);
+    this.lkLed(r, p, '#38f5b8', 0.38, 0.52, -0.2, j); this.lkLed(r, p, '#24e8ff', 0.43, 0.52, -0.2, j + 1);
+  }
+  // The greenhouse: hydroponic racks of three tiers along both back walls, lettuces in their trays under violet-pink
+  // grow lights; an island of gutters with its own canopy of lights in the middle; the potting bench where an expert
+  // sits at his readout (r.mons), the others tending the racks at their controllers; a mist unit breathing by the
+  // front-right glass, a water tank with its pump and the feed line to the island, planters with a small tree along
+  // the front glass.
+  lkGreenhouse(r, d) {
+    this.lkMats('greenhouse');
+    const x0 = r.x0, y0 = r.y0, ex = d.experts.slice(0, 3), grow = this.lkTex('grow');
+    this.wallScreen(r, 1.8, 3.95);
+    this.kanban(r, 1.45, 3.55);
+    this.lkRack(r, x0 + 5.45, y0 + 0.62, 0, 2.5, -1.0, null);
+    this.lkRack(r, x0 + 0.62, y0 + 5.25, Math.PI / 2, 2.7, 0.62, ex[2] ? this.lkMon(r, 2, grow) : null);
+    this.lkIsland(r, x0 + 4.8, y0 + 2.8, ex[1] ? this.lkMon(r, 1, grow) : null);
+    this.lkPotting(r, x0 + 2.2, y0 + 2.6, ex[0] ? this.lkMon(r, 0, grow) : null);
+    if (ex[0]) this.lkSit(r, x0 + 2.2, y0 + 3.4, 0, ex[0], 0);
+    if (ex[1]) this.lkStand(r, x0 + 5.8, y0 + 2.9, 1, ex[1], Math.PI / 2);
+    if (ex[2]) this.lkStand(r, x0 + 1.22, y0 + 4.95, 2, ex[2], Math.PI / 2);
+    this.lkMist(r, x0 + 6.2, y0 + 5.6);
+    this.lkTank(r, x0 + 6.3, y0 + 4.4, x0 + 4.8, y0 + 4.05);
+    this.lkPlanter(r, x0 + 2.95, y0 + 6.45, 1.4, true);
+    this.lkPlanter(r, x0 + 4.6, y0 + 6.45, 1.0, false);
+    this.terminal(r, x0 + 0.3, y0 + 0.32, d.link || CO.DEPT_LINK[d.key] || CO.DEPT_LINK.custom);
+    this.lkPlant(r, x0 + 1.25, y0 + 6.55, 0.9);
+    this.lkLedsDone(r);
+    this.plate(r);
+  }
+  // a hydroponic rack, its front centre at plan x,y turned ry, len long: white posts, three dark trays of lettuces
+  // with a wash of the lights' colour on them, a grow light under each tier above and one over the top (its housing's
+  // top at 1.28), feed pipes along its back, its controller on the front at cx (mon: the expert's who tends it)
+  lkRack(r, x, y, ry, len, cx, mon) {
+    const p = this.raG(r, x, y, ry), D = 0.45, n = Math.max(2, Math.round(len / 1.2) + 1), R = rng(Math.round(x * 7 + y * 3)), leaf = this.lkLeafGeo();
+    for (let q = 0; q < n; q++) { const px = -len / 2 + 0.03 + q * (len - 0.06) / (n - 1); [-0.03, -D + 0.03].forEach((z) => this.lkBox(p, 0.04, 1.2, 0.04, px, 0.6, z, OM.raLab)); }
+    [0.16, 0.54, 0.92].forEach((yt) => {
+      this.lkBox(p, len - 0.04, 0.06, D - 0.04, 0, yt, -D / 2, OM.rbDesk);
+      this.lkBox(p, len - 0.04, 0.02, 0.012, 0, yt + 0.035, -0.024, OM.raLab, false);
+      for (let px = -len / 2 + 0.12; px < len / 2 - 0.08; px += 0.17) [-0.13, -0.3].forEach((z, k) => {
+        const s = 0.065 + R() * 0.03; this.raP(p, leaf, R() < 0.5 ? OM.lkLeafA : OM.lkLeafB, s, s * 0.7, s, px + (k ? 0.085 : 0), yt + 0.03 + s * 0.4, z).rotation.y = R() * 6;
+      });
+      this.raP(p, G.plane, OM.lkSpill, len - 0.1, D - 0.08, 1, 0, yt + 0.034, -D / 2, -Math.PI / 2, false);
+      // the light's colour on the tier's back, brightest under the lamps
+      this.raP(p, G.plane, OM.lkSpillV, len - 0.08, 0.26, 1, 0, yt + 0.16, -D + 0.035, 0, false);
+      this.raP(p, this.lkG('cyl'), OM.raLab2, 0.012, len - 0.16, 0.012, 0, yt - 0.045, -D + 0.07).rotation.z = Math.PI / 2;
+    });
+    // the lamps: a bar under each tier above, at its front where the room sees it, and one over the top
+    [0.475, 0.855].forEach((yb, q) => this.lkBox(p, len - 0.1, 0.026, 0.05, 0, yb, -0.07, q ? OM.lkGrowV : OM.lkGrow, false));
+    this.lkBox(p, len - 0.08, 0.022, 0.12, 0, 1.19, -D / 2, OM.lkSteelDk);
+    this.lkBox(p, len - 0.12, 0.012, 0.08, 0, 1.172, -D / 2, OM.lkGrow, false);
+    [-0.12, -0.33].forEach((z) => this.lkBox(p, len - 0.14, 0.008, 0.02, 0, 1.204, z, OM.lkGrow, false));
+    this.lkCyl(p, 0.018, 1.15, len / 2 - 0.1, 0, -D + 0.07, OM.raLab2);
+    this.raB(p, 0.22, 0.26, 0.05, cx, 0.72, 0.01, OM.lkSteelDk, 0.012);
+    this.lkScreen(p, mon || 'grow:0.6', 0.18, 0.11, cx, 0.77, 0.036);
+    this.lkLed(r, p, '#38f5b8', cx - 0.06, 0.64, 0.036, 2); this.lkLed(r, p, '#ff5ad8', cx, 0.64, 0.036, 1);
+    const gs = glowSprite(0xff5ad8, 0.09, len); gs.position.set(0, 0.62, -0.2); p.add(gs);
+    this.raBake(p);
+  }
+  // the island of gutters at plan x,y, running along y: two low gutters wide apart, two high and close, a plant in
+  // every hole, a canopy of two grow lights over them on posts (its top at 1.16), the panel on its side to the room
+  // (mon: the expert's who tends it)
+  lkIsland(r, x, y, mon) {
+    const p = this.raG(r, x, y, Math.PI / 2), L = 2.5, R = rng(77), leaf = this.lkLeafGeo();
+    [[-1, -1], [1, -1], [-1, 1], [1, 1]].forEach(([sx, sz]) => this.lkBox(p, 0.04, 0.74, 0.04, sx * (L / 2 - 0.04), 0.37, sz * 0.48, OM.raLab));
+    [0.48, -0.48].forEach((z) => this.lkBox(p, L - 0.06, 0.03, 0.04, 0, 0.2, z, OM.raLab2));
+    [[0.4, 0.42], [0.4, -0.42], [0.7, 0.17], [0.7, -0.17]].forEach(([yg, zg]) => {
+      this.lkBox(p, L - 0.1, 0.07, 0.11, 0, yg, zg, OM.raLab);
+      this.lkBox(p, L - 0.14, 0.006, 0.06, 0, yg + 0.036, zg, OM.rbGloss, false);
+      for (let gx = -L / 2 + 0.16; gx < L / 2 - 0.1; gx += 0.2) { const s = 0.075 + R() * 0.03; this.raP(p, leaf, R() < 0.5 ? OM.lkLeafA : OM.lkLeafB, s, s * 0.75, s, gx, yg + 0.05 + s * 0.4, zg).rotation.y = R() * 6; }
+      this.raP(p, G.plane, OM.lkSpill, L - 0.14, 0.18, 1, 0, yg + 0.04, zg, -Math.PI / 2, false);
+      [-1, 1].forEach((s) => this.lkBox(p, 0.03, yg, 0.03, s * (L / 2 - 0.1), yg / 2, zg, OM.raLab2));
+    });
+    [-1, 1].forEach((s) => this.lkBox(p, 0.04, 1.14, 0.04, s * (L / 2 - 0.02), 0.57, 0, OM.lkSteelDk));
+    this.lkBox(p, L, 0.03, 0.05, 0, 1.15, 0, OM.lkSteelDk);
+    [-0.15, 0.15].forEach((z, q) => {
+      this.lkBox(p, L - 0.2, 0.02, 0.08, 0, 1.12, z, OM.lkSteelDk); this.lkBox(p, L - 0.24, 0.01, 0.05, 0, 1.105, z, q ? OM.lkGrowV : OM.lkGrow, false);
+      this.lkBox(p, L - 0.26, 0.006, 0.016, 0, 1.133, z, q ? OM.lkGrowV : OM.lkGrow, false);
+    });
+    this.raB(p, 0.3, 0.2, 0.04, 0, 0.58, 0.53, OM.lkSteelDk, 0.012);
+    this.lkScreen(p, mon || 'grow:0.6', 0.25, 0.15, 0, 0.58, 0.551);
+    this.lkLed(r, p, '#38f5b8', 0.12, 0.47, 0.55, 0);
+    const gs = glowSprite(0xff5ad8, 0.09, 2.4); gs.position.set(0, 0.8, 0); p.add(gs);
+    this.raBake(p);
+  }
+  // the potting bench at plan x,y: steel legs, bags of soil on its shelf, two trays of seedlings (one draw), the
+  // readout of the bays (mon), a keyboard, a spray bottle, a seedling in its pot, a watering can at its foot
+  lkPotting(r, x, y, mon) {
+    const p = this.raG(r, x, y, 0), W = 1.8, D = 0.78, leaf = this.lkLeafGeo(), R = rng(5);
+    [[-1, -1], [1, -1], [-1, 1], [1, 1]].forEach(([sx, sz]) => this.lkBox(p, 0.045, 0.44, 0.045, sx * (W / 2 - 0.06), 0.22, sz * (D / 2 - 0.06), OM.lkSteel));
+    this.lkBox(p, W - 0.14, 0.025, D - 0.16, 0, 0.12, 0, OM.lkSteelDk);
+    [-0.5, -0.05].forEach((bx, q) => { this.raB(p, 0.42, 0.14, 0.28, bx, 0.205, -0.08 + q * 0.04, OM.lkBag, 0.05).rotation.y = q * 0.2 - 0.1; });
+    this.raB(p, W, 0.05, D, 0, 0.465, 0, OM.rbDeskTop, 0.012);
+    const sd = new THREE.InstancedMesh(leaf, OM.lkLeafC, 48), o = new THREE.Object3D();
+    [-0.62, -0.08].forEach((tx, q) => {
+      this.raB(p, 0.46, 0.04, 0.3, tx, 0.51, 0.08, OM.rbGloss, 0.008);
+      for (let a = 0; a < 6; a++) for (let b = 0; b < 4; b++) { const s = 0.018 + R() * 0.012; o.position.set(tx - 0.19 + a * 0.076, 0.535 + s * 0.4, -0.025 + b * 0.07); o.scale.set(s, s * 0.8, s); o.rotation.y = R() * 6; o.updateMatrix(); sd.setMatrixAt(q * 24 + a * 4 + b, o.matrix); }
+    });
+    sd.computeBoundingSphere(); sd.castShadow = true; sd.receiveShadow = true; p.add(sd);
+    this.lkMonitor(p, mon || 'grow:0.6', 0.5, 0.28, 0.48, 0.49, -0.18);
+    this.lkKeys(p, 0.46, 0.49, 0.14, 0.48);
+    this.lkCyl(p, 0.03, 0.13, 0.84, 0.49, -0.12, OM.raLab); this.raB(p, 0.05, 0.04, 0.07, 0.84, 0.64, -0.13, OM.lkSteelDk, 0.01);
+    this.lkCyl(p, 0.06, 0.09, -0.86, 0.49, -0.22, OM.rbPot, G.rbPot); this.raP(p, leaf, OM.lkLeafB, 0.06, 0.06, 0.06, -0.86, 0.62, -0.22);
+    this.lkCyl(p, 0.08, 0.18, 1.08, 0, 0.18, OM.lkSteel);
+    this.raP(p, this.lkG('cyl'), OM.lkSteel, 0.012, 0.22, 0.012, 1.0, 0.18, 0.18).rotation.z = 0.9;
+    this.raP(p, this.lkG('tor'), OM.lkSteel, 0.06, 0.06, 0.5, 1.12, 0.19, 0.18);
+  }
+  // the mist unit at plan x,y: an off-white tower with a band of light, a readout and a light, its nozzle breathing
+  // puffs of mist that rise and fade (lkDrive)
+  lkMist(r, x, y) {
+    const p = this.raG(r, x, y, 0);
+    this.raP(p, this.lkLathe('lkMistBody', [[0, 0], [0.17, 0], [0.18, 0.03], [0.17, 0.62], [0.14, 0.7], [0.08, 0.74], [0.08, 0.78], [0, 0.78]], 36), OM.raLab, 1, 1, 1, 0, 0, 0);
+    this.raP(p, this.lkG('tor'), OM.lkCyan, 0.172, 0.172, 0.5, 0, 0.5, 0, Math.PI / 2, false);
+    this.lkFace(p, 's1', 0.12, 0.07, 0, 0.35, 0.174);
+    this.lkLed(r, p, '#38f5b8', 0.06, 0.26, 0.17, 1);
+    const nz = this.lkCyl(p, 0.05, 0.04, 0, 0.78, 0, OM.raChrome), puffs = [];
+    for (let q = 0; q < 4; q++) {
+      const s = new THREE.Sprite(new THREE.SpriteMaterial({ map: glowTex(), color: 0xe4f6ff, transparent: true, opacity: 0, depthWrite: false }));
+      s.userData.dyn = true; s.position.set(0, 0.84, 0); s.scale.setScalar(0.1); p.add(s); puffs.push(s);
+    }
+    this.lkDrive(r, nz, (t) => puffs.forEach((s, q) => {
+      const f = (t * 0.22 + q / 4) % 1; s.position.set(Math.sin(q * 2.1) * 0.12 * f, 0.84 + f * 0.36, Math.cos(q * 1.7) * 0.12 * f);
+      s.scale.setScalar(0.14 + f * 0.36); s.material.opacity = 0.2 * Math.sin(f * Math.PI);
+    }));
+  }
+  // the water tank at plan x,y with its level lit, a pump at its foot with its lights, and the feed line along the
+  // floor to the island's end at plan tx,ty
+  lkTank(r, x, y, tx, ty) {
+    const p = this.raG(r, x, y, 0);
+    this.lkCyl(p, 0.29, 0.04, 0, 0, 0, OM.lkSteelDk); this.lkCyl(p, 0.28, 0.78, 0, 0.02, 0, OM.raLab); this.lkCyl(p, 0.24, 0.04, 0, 0.8, 0, OM.raChrome);
+    this.lkBox(p, 0.05, 0.5, 0.012, 0, 0.42, 0.28, OM.lkCyan, false);
+    this.raB(p, 0.3, 0.2, 0.22, 0, 0.1, 0.38, OM.lkSteelDk, 0.02);
+    this.lkLed(r, p, '#38f5b8', -0.08, 0.16, 0.492, 2); this.lkLed(r, p, '#24e8ff', -0.02, 0.16, 0.492, 2);
+    if (!G.lkHose) {
+      const dx = tx - x, dz = ty - y, pts = [[0, 0.06, 0.48], [-0.3, 0.03, 0.62], [dx + 0.4, 0.03, dz + 0.4], [dx, 0.03, dz + 0.05], [dx, 0.3, dz]];
+      G.lkHose = new THREE.TubeGeometry(new THREE.CatmullRomCurve3(pts.map((v) => new THREE.Vector3(...v))), 40, 0.022, 6, false);
+    }
+    this.raP(p, G.lkHose, OM.raRubber, 1, 1, 1, 0, 0, 0);
+  }
+  // a planter along the front glass at plan x,y, len long: a dark box with a pale rim, its soil, bushes in a row, a
+  // small tree at its left end (tree), its crown at about 1.17
+  lkPlanter(r, x, y, len, tree) {
+    const p = this.raG(r, x, y, 0), R = rng(Math.round(x * 11));
+    this.raB(p, len, 0.4, 0.42, 0, 0.2, 0, OM.lkPlanter, 0.04);
+    this.raB(p, len + 0.04, 0.035, 0.46, 0, 0.41, 0, OM.raLab2, 0.012);
+    this.lkBox(p, len - 0.06, 0.01, 0.36, 0, 0.425, 0, OM.rbSoil, false);
+    for (let q = 0; q < Math.round(len * 3); q++) { const s = 0.1 + R() * 0.07, bx = -len / 2 + 0.15 + R() * (len - 0.3); this.raP(p, G.rbBush, R() < 0.5 ? OM.rbLeaf : OM.rbLeaf2, s, s * 0.85, s, bx, 0.43 + s * 0.6, (R() - 0.5) * 0.2).rotation.y = R() * 6; }
+    if (tree) {
+      const tx = -len / 2 + 0.3; this.lkCyl(p, 0.035, 0.42, tx, 0.42, 0, OM.lkTrunk);
+      [[0, 0.95, 0, 0.24], [0.12, 0.88, 0.06, 0.17], [-0.1, 0.9, -0.05, 0.16]].forEach(([dx, yy, dz, s]) => { this.raP(p, G.rbBush, OM.rbLeaf, s, s * 0.9, s, tx + dx, yy, dz).rotation.y = dx * 9; });
+    }
   }
   // a picture on the back wall at y0 (a chart, a mood board): hung as the wall screens are, under the neon
   boardTex(r, u0, u1, tex) {
