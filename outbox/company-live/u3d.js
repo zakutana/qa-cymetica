@@ -4150,39 +4150,22 @@ class Office3D {
     const look = this.lkLook(d);
     if (look) { this[look](r, d); return; }
     if (k === 'development') {
-      u1 = 3.3;
-      this.racks(r, x0 + 0.55, y0 + 1.35, 3);
+      // his departments each in a room of their own make, themed to their work ("Ty departmenty co uz existuji tak jim
+      // taky tematicky vymysli takovy top designy roomek"): the development floor
+      return this.lkDevRoom(r, d);
     } else if (k === 'testing') {
-      // his Cymetica QA: a 3 x 3 window of light at the right end of the back-right wall, standing on the floor in a
-      // dark frame; its top under the neon, as every screen of his ("nikde se obrazovka neprekryva s hornim
-      // neonovym panelem")
-      u1 = 4.6;
-      const qa = (m) => { m.userData.rbWall = true; g.add(m); return m; };
-      const qw = qa(new THREE.Mesh(G.plane, new THREE.MeshBasicMaterial({ map: qaGridTex(), color: new THREE.Color(0xffffff).multiplyScalar(1.15), toneMapped: false })));
-      qw.scale.set(0.84, 0.84, 1); qw.position.copy(this.V(x0 + 6.0, y0 + 0.185, 0.82));
-      if (!OM.rbBezel) OM.rbBezel = std({ color: 0x141b23, roughness: 0.38, metalness: 0.5 });
-      const qf = qa(new THREE.Mesh(rboxGeo(1.02, 1.2, 0.1, 0.025), OM.rbBezel)); qf.position.copy(this.V(x0 + 6.0, y0 + 0.13, 0.08 + 0.6)); qf.castShadow = true; qf.receiveShadow = true;
-      const qh = glowSprite(0x9ff5ec, 0.2, 1.4); qh.position.copy(this.V(x0 + 6.0, y0 + 0.35, 0.82)); g.add(qh);
+      // Cymetica QA: the bug-hunting lab round his 3 x 3 window of light
+      return this.lkQaRoom(r, d);
     } else if (k === 'testing_lab') {
-      // his laboratory: two display instruments with a hologram in each along the back-right wall, a tall analyser on
-      // the left facing the room with a stool at it, a projector with a turning crystal of data in front of it and a
-      // centrifuge beside that, canisters on a bench by the right wall and a dewar beside them. The desks, the
-      // terminal, the frame and the wall screens are every room's (below). The analyser stands a metre off the wall
-      // so it hides none of the board on it; the crystal stands left of the room's plate, where the home view sees it.
-      u1 = 3.4;
-      this.labMachine(r, x0 + 3.6, y0 + 0.2, 0);
-      this.labMachine(r, x0 + 4.85, y0 + 0.2, 1);
-      this.raAnalyser(r, x0 + 1.95, y0 + 5.25);
-      this.raStool(r, x0 + 2.42, y0 + 5.68);
-      this.labHolo(r, x0 + 0.78, y0 + 5.98);
-      this.raCentrifuge(r, x0 + 2.75, y0 + 6.48);
-      this.canisters(r, x0 + 6.42, y0 + 1.95);
+      // the testing lab: his instruments and his crystal of data among experiment rigs
+      return this.lkLabRoom(r, d);
     } else if (k === 'trading_desk') {
       // the trading desk is a room of its own make, built whole: its boards, its desks of screens, its people
       this.rcTrading(r, d);
       return;
     } else if (k === 'design') {
-      u1 = 4.5; this.boardTex(r, 4.7, 6.75, moodTex());
+      // the design studio
+      return this.lkDesignRoom(r, d);
     } else {
       u1 = 4.6; this.racks(r, x0 + 5.2, y0 + 0.3, 2);
     }
@@ -4225,7 +4208,8 @@ class Office3D {
   // into one draw -- the ops room's fifteen pictures were fifteen. Shelves of pictures, a little dark round each.
   lkAtlas() {
     if (TX.lkAtlas) return TX.lkAtlas;
-    const keys = ['map', 'chart', 'radar', 'tiles', 'log', 'log2', 'bars', 'cmd1', 'grow', 'chart2', 's1', 's2', 's3', 'print', 'timeline'];
+    const keys = ['map', 'chart', 'radar', 'tiles', 'log', 'log2', 'bars', 'cmd1', 'grow', 'chart2', 's1', 's2', 's3', 'print', 'timeline',
+      'code', 'ui1', 'ui2', 'ui3', 'scope', 'trace', 'phone1', 'phone2', 'phone3'];
     const W = 1048, pad = 4, at = {}; let x = pad, y = pad, row = 0;
     keys.forEach((k) => { const im = this.lkTex(k).image; if (x + im.width + pad > W) { x = pad; y += row + pad; row = 0; } at[k] = [x, y, im.width, im.height]; x += im.width + pad; row = Math.max(row, im.height); });
     const H = y + row + pad, t = ctex(W, H, (g) => { g.fillStyle = '#050b12'; g.fillRect(0, 0, W, H); keys.forEach((k) => g.drawImage(this.lkTex(k).image, at[k][0], at[k][1])); });
@@ -4245,15 +4229,22 @@ class Office3D {
   // A status light that blinks, as raLed's, but kept to be drawn with the others of its colour and step: lkLedsDone
   // puts each set in one instanced draw (r.leds), so a room's twenty lights are a handful of draws
   lkLed(r, p, hex, x, y, z, k) { (r.lkLedQ = r.lkLedQ || []).push({ p, hex, x, y, z, k: ((k % 3) + 3) % 3 }); }
+  // (the lights the room's other parts made one draw each -- his instruments' raLed -- join their sets too, those
+  // that stand still)
   lkLedsDone(r) {
-    const q = r.lkLedQ; if (!q || !q.length) return; r.lkLedQ = null;
     r.g.updateMatrixWorld(true);
-    const inv = r.g.matrixWorld.clone().invert(), sets = new Map(), o = new THREE.Object3D(), m = new THREE.Matrix4();
-    q.forEach((l) => { const key = l.hex + ':' + l.k; if (!sets.has(key)) sets.set(key, []); sets.get(key).push(l); });
-    sets.forEach((ls) => {
-      const im = new THREE.InstancedMesh(G.box, amat(ls[0].hex).glow, ls.length);
-      ls.forEach((l, i) => { o.position.set(l.x, l.y, l.z); o.scale.set(0.024, 0.014, 0.024); o.updateMatrix(); m.multiplyMatrices(inv, l.p.matrixWorld).multiply(o.matrix); im.setMatrixAt(i, m); });
-      im.computeBoundingSphere(); im.userData.blink = ls[0].k; r.g.add(im); (r.leds = r.leds || []).push(im);
+    const inv = r.g.matrixWorld.clone().invert(), sets = new Map(), o = new THREE.Object3D();
+    const put = (mat, k, mm) => { const key = mat.uuid + ':' + k; if (!sets.has(key)) sets.set(key, { mat, k, ms: [] }); sets.get(key).ms.push(mm); };
+    (r.lkLedQ || []).forEach((l) => { o.position.set(l.x, l.y, l.z); o.scale.set(0.024, 0.014, 0.024); o.updateMatrix(); put(amat(l.hex).glow, l.k, new THREE.Matrix4().multiplyMatrices(inv, l.p.matrixWorld).multiply(o.matrix)); });
+    r.lkLedQ = null;
+    const still = (m) => { for (let p = m.parent; p && p !== r.g; p = p.parent) if (p.userData.dyn) return false; return !!m.parent; };
+    r.leds = (r.leds || []).filter((m) => {
+      if (!m.isMesh || m.isInstancedMesh || m.geometry !== G.box || m.userData.blink == null || !m.material.isMeshBasicMaterial || !still(m)) return true;
+      put(m.material, ((Math.round(m.userData.blink) % 3) + 3) % 3, new THREE.Matrix4().multiplyMatrices(inv, m.matrixWorld)); m.parent.remove(m); return false;
+    });
+    sets.forEach((s) => {
+      const im = new THREE.InstancedMesh(G.box, s.mat, s.ms.length); s.ms.forEach((mm, i) => im.setMatrixAt(i, mm));
+      im.computeBoundingSphere(); im.userData.blink = s.k; r.g.add(im); r.leds.push(im);
     });
   }
   // his plant, its leaves let into the room's merge: a look's plants and planters' bushes are then two draws, not
@@ -4367,7 +4358,7 @@ class Office3D {
       OM.lkTac = new THREE.MeshBasicMaterial({ map: this.lkTex('tac'), color: new THREE.Color(0xffffff).multiplyScalar(1.15), toneMapped: false });
       OM.lkGlobe = add(this.lkTex('globe'), 1.6);
       OM.lkBeam = new THREE.MeshBasicMaterial({ color: new THREE.Color(0x5ff0ff).multiplyScalar(0.9), transparent: true, opacity: 0.2, blending: THREE.AdditiveBlending, depthWrite: false, side: THREE.DoubleSide });
-      OM.lkDeck = std({ map: this.rcTex('console'), emissiveMap: this.rcTex('consoleGlow'), emissive: 0xffffff, emissiveIntensity: 1.0, roughness: 0.42, metalness: 0.35 });
+      OM.lkDeck = OM.lkDeck || std({ map: this.rcTex('console'), emissiveMap: this.rcTex('consoleGlow'), emissive: 0xffffff, emissiveIntensity: 1.0, roughness: 0.42, metalness: 0.35 });
     } else if (look === 'greenhouse') {
       // his grow lights in violet-pink: the bars past the bloom's threshold, a wash of their colour on what they light
       OM.lkGrow = emis('#ff4fd2', 2.6); OM.lkGrowV = emis('#a874ff', 2.3);
@@ -4379,6 +4370,28 @@ class Office3D {
       OM.lkPlanter = std({ color: 0x1d2630, roughness: 0.5, metalness: 0.25 });
       OM.lkBag = std({ color: 0x3a3128, roughness: 0.9, metalness: 0 });
       OM.lkTrunk = std({ color: 0x4a3828, roughness: 0.85, metalness: 0 });
+    } else if (look === 'dev') {
+      OM.lkCodeWall = add(this.lkTex('codewall'), 1.25, 0.95);
+      OM.lkArch = std({ map: this.lkTex('arch'), roughness: 0.3, metalness: 0.05 });
+      OM.lkDuck = std({ color: 0xffcf3a, roughness: 0.45, metalness: 0.02 });
+      OM.lkBeak = std({ color: 0xff8a3a, roughness: 0.5, metalness: 0 });
+      OM.lkBean = [0x1e4a52, 0x23305a].map((c) => std({ color: c, roughness: 0.95, metalness: 0 }));
+      OM.lkPath = emis('#24e8ff', 0.55);
+    } else if (look === 'design') {
+      OM.lkStudio = std({ color: 0xa3b0bb, roughness: 0.42, metalness: 0.06 });   // his off-white, a little under: a white desktop flared
+      OM.lkOak = std({ color: 0x8a6a4a, roughness: 0.6, metalness: 0 });
+      OM.lkMood = lit('mood', 0.35);
+      OM.lkSwatch = lit('swatch', 0.25);
+      OM.lkRugLight = std({ map: this.lkTex('rug'), color: 0x9fb4bf, roughness: 0.95, metalness: 0 });
+    } else if (look === 'qa') {
+      OM.lkSlat = std({ map: this.lkTex('louver'), color: 0x8a97a5, roughness: 0.5, metalness: 0.4 });
+      OM.lkPcb = std({ color: 0x1a5a3a, roughness: 0.5, metalness: 0.2 });
+      OM.lkBug = emis('#ff8a3a', 1.8);
+      OM.lkBinders = [0x2a5fb8, 0x1c8fa8, 0xd2782e].map((c) => std({ color: c, roughness: 0.55, metalness: 0.05 }));
+    } else if (look === 'lab') {
+      OM.lkLiquid = ['#38f5b8', '#24e8ff', '#3b82f6'].map((h) => new THREE.MeshBasicMaterial({ color: new THREE.Color(h).multiplyScalar(1.6), toneMapped: false }));
+      OM.lkCard = new THREE.MeshBasicMaterial({ map: this.lkTex('card'), color: new THREE.Color(0xffffff).multiplyScalar(1.25), side: THREE.DoubleSide, toneMapped: false });
+      OM.lkDeck = OM.lkDeck || std({ map: this.rcTex('console'), emissiveMap: this.rcTex('consoleGlow'), emissive: 0xffffff, emissiveIntensity: 1.0, roughness: 0.42, metalness: 0.35 });
     }
   }
   // the looks' canvas textures, drawn once and kept (TX.lk*): the ops room's wall of screens, the library's spines,
@@ -4595,11 +4608,150 @@ class Office3D {
           const y = 36 + i * 27; head(g, s, 12, y, '#9fb4c8', 11); head(g, v, 66, y, c, 11);
           g.fillStyle = 'rgba(143,168,194,.15)'; g.fillRect(140, y + 2, 102, 8); g.fillStyle = c; g.fillRect(140, y + 2, 102 * f, 8);
         });
+      }],
+      // the development floor's: an editor, the code wall's glass, the CI board, the whiteboard, a trace
+      code: [256, 160, (g, W, H) => {
+        g.fillStyle = '#08111c'; g.fillRect(0, 0, W, H); g.fillStyle = '#0d1a28'; g.fillRect(0, 0, 22, H);
+        g.fillStyle = 'rgba(36,232,255,.08)'; g.fillRect(22, 63, W - 22, 11);
+        const cols = ['#7ff4ff', '#c8d4e0', '#5cffc4', '#ff9a52', '#8fa8c2', '#3b82f6'];
+        for (let i = 0; i < 13; i++) {
+          const y = 6 + i * 11.6; g.fillStyle = 'rgba(143,168,194,.45)'; g.fillRect(6, y + 2, 10, 4);
+          let x = 28 + ((i * 7) % 4) * 8; const n = 2 + Math.floor(R() * 4);
+          for (let k = 0; k < n && x < W - 10; k++) { const w = 8 + Math.floor(R() * 34); g.fillStyle = cols[(i + k * 3) % cols.length]; g.globalAlpha = 0.85; g.fillRect(x, y + 1, Math.min(w, W - 8 - x), 6); x += w + 5; }
+          g.globalAlpha = 1;
+        }
+        g.fillStyle = '#5cffc4'; g.fillRect(150, 64, 2, 9);
+      }],
+      codewall: [512, 256, (g, W, H) => {
+        g.fillStyle = '#000'; g.fillRect(0, 0, W, H);
+        const cols = ['rgba(127,244,255,.9)', 'rgba(92,255,196,.85)', 'rgba(200,220,235,.55)', 'rgba(255,154,82,.75)'];
+        for (let i = 0; i < 20; i++) { const y = 8 + i * 12.4; let x = 14 + ((i * 5) % 6) * 10; const n = 2 + Math.floor(R() * 5); for (let k = 0; k < n && x < W - 20; k++) { const w = 10 + Math.floor(R() * 52); g.fillStyle = cols[(i + k) % 4]; g.fillRect(x, y, Math.min(w, W - 14 - x), 5); x += w + 7; } }
+      }],
+      // the department's cycle as its charter has it, idea to iterate, the request in it now at TEST; under it the
+      // requests it has drafted, the one sent back in orange
+      ci: [600, 130, (g, W, H) => {
+        glass(g, W, H); head(g, 'BUILD IT BETTER', 14, 9, '#38f5b8', 14); tag(g, 'BiB-0412   spec drafted', W - 14, 11);
+        [['IDEA', 2], ['SPEC', 2], ['DESIGN', 2], ['BUILD', 2], ['TEST', 1], ['RELEASE', 0], ['MONITOR', 0]].forEach(([s, k], i) => {
+          const x = 12 + i * 83, y = 34, c = k === 2 ? '56,245,184' : k === 1 ? '36,232,255' : '143,168,194';
+          g.fillStyle = 'rgba(' + c + ',.14)'; g.fillRect(x, y, 70, 44); g.strokeStyle = 'rgba(' + c + ',.9)'; g.lineWidth = 2; g.strokeRect(x + 1, y + 1, 68, 42);
+          head(g, s, x + 7, y + 7, 'rgb(' + c + ')', 11); g.fillStyle = 'rgba(' + c + ',.9)'; g.fillRect(x + 7, y + 30, k === 2 ? 56 : k === 1 ? 30 : 6, 5);
+          if (i < 6) line(g, [[x + 72, y + 22], [x + 81, y + 22], [x + 77, y + 17], [x + 81, y + 22], [x + 77, y + 27]], 'rgba(143,168,194,.75)', 2);
+        });
+        line(g, [[574, 56], [590, 56], [590, 86], [40, 86], [40, 80]], 'rgba(36,232,255,.55)', 1.5);
+        for (let i = 0; i < 17; i++) { g.fillStyle = i === 6 ? '#ff8a3a' : 'rgba(56,245,184,.75)'; g.fillRect(14 + i * 34, 96, 28, 20); }
+      }],
+      arch: [256, 160, (g, W, H) => {
+        g.fillStyle = '#dde5ea'; g.fillRect(0, 0, W, H);
+        const box = (x, y, w, h, c) => { g.strokeStyle = c; g.lineWidth = 2.5; g.strokeRect(x, y, w, h); g.fillStyle = c; g.fillRect(x + 7, y + h / 2 - 2, w - 14, 3); };
+        box(16, 20, 60, 32, '#2a5fb8'); box(100, 20, 60, 32, '#2a5fb8'); box(184, 20, 56, 32, '#1a9a6a'); box(58, 98, 64, 32, '#1a9a6a'); box(150, 98, 70, 32, '#c0392b');
+        [[76, 36, 100, 36], [160, 36, 184, 36], [46, 52, 80, 98], [130, 52, 185, 98], [122, 114, 150, 114]].forEach(([a, b, c, e]) => line(g, [[a, b], [c, e]], '#33414e', 2));
+        g.fillStyle = '#33414e'; for (let i = 0; i < 9; i++) g.fillRect(16 + i * 10, 142 + (i % 2) * 2, 6, 2);
+      }],
+      trace: [160, 256, (g, W, H) => {
+        g.fillStyle = '#0a0f16'; g.fillRect(0, 0, W, H); head(g, 'TRACE', 8, 8, '#ff9a52', 11);
+        for (let i = 0; i < 19; i++) { const y = 28 + i * 11.6; g.fillStyle = i === 3 ? '#ff8a3a' : i % 4 === 0 ? 'rgba(127,244,255,.8)' : 'rgba(170,190,205,.55)'; g.fillRect(8 + (i % 4 ? 10 : 0), y, 40 + R() * 90, 4); }
+      }],
+      // the design studio's: three screens of what it makes, the drawing in progress, the swatches, the moodboard
+      ui1: [256, 160, (g, W, H) => {
+        g.fillStyle = '#0b131d'; g.fillRect(0, 0, W, H);
+        [24, 102, 180].forEach((x, i) => {
+          g.fillStyle = '#e6edf2'; g.fillRect(x, 14, 56, 132); g.fillStyle = ['#38f5b8', '#24e8ff', '#3b82f6'][i]; g.fillRect(x, 14, 56, 28);
+          for (let k = 0; k < 4; k++) { g.fillStyle = k % 2 ? '#c9d4dc' : '#d6dfe5'; g.fillRect(x + 6, 50 + k * 22, 44, 16); g.fillStyle = '#7f93ad'; g.fillRect(x + 10, 55 + k * 22, 18, 3); }
+          g.fillStyle = '#1d2c3a'; g.fillRect(x + 14, 136, 28, 5);
+        });
+      }],
+      ui2: [256, 160, (g, W, H) => {
+        g.fillStyle = '#e9eef2'; g.fillRect(0, 0, W, H); g.fillStyle = '#152230'; g.fillRect(0, 0, 44, H);
+        for (let k = 0; k < 6; k++) { g.fillStyle = k === 1 ? '#38f5b8' : '#4a5c70'; g.fillRect(10, 18 + k * 20, 24, 6); }
+        [[54, 12], [122, 12], [190, 12]].forEach(([x, y], i) => { g.fillStyle = '#ffffff'; g.fillRect(x, y, 60, 40); g.fillStyle = ['#1a9a6a', '#2a5fb8', '#d2782e'][i]; g.fillRect(x + 6, y + 8, 30, 6); g.fillStyle = '#33414e'; g.fillRect(x + 6, y + 22, 44, 10); });
+        g.fillStyle = '#ffffff'; g.fillRect(54, 60, 196, 90); line(g, series(30, 62, 244, 140, 60, 6, 0.4), '#2a5fb8', 2.5);
+      }],
+      // the review: the live page beside its brief, what differs ringed, the checklist of it
+      ui3: [256, 160, (g, W, H) => {
+        g.fillStyle = '#0b131d'; g.fillRect(0, 0, W, H); head(g, 'REVIEW vs BRIEF', 10, 8, '#00cfff', 12);
+        g.fillStyle = '#e9eef2'; g.fillRect(10, 28, 140, 122); g.fillStyle = '#152230'; g.fillRect(10, 28, 28, 122);
+        [[44, 34], [96, 34], [44, 76], [96, 76]].forEach(([x, y]) => { g.fillStyle = '#ffffff'; g.fillRect(x, y, 48, 36); g.fillStyle = '#8fa8c2'; g.fillRect(x + 5, y + 6, 26, 4); });
+        g.strokeStyle = '#ff4444'; g.lineWidth = 2.5; g.beginPath(); g.arc(120, 52, 22, 0, 7); g.stroke(); g.strokeStyle = '#00ff88'; g.beginPath(); g.arc(68, 118, 18, 0, 7); g.stroke();
+        [['type scale', 1], ['spacing', 1], ['cta colour', 0], ['empty state', 1], ['mobile', 0]].forEach(([s, ok], i) => {
+          const y = 34 + i * 22; g.fillStyle = ok ? '#00ff88' : '#ff4444'; g.fillRect(160, y + 2, 10, 10); g.fillStyle = 'rgba(200,215,228,.85)'; g.font = mono(10, 600); g.textBaseline = 'top'; g.fillText(s, 176, y + 1);
+        });
+      }],
+      // the brief being drawn, screen by screen: three wireframes and the flow between them, notes in the margin
+      sketch: [256, 180, (g, W, H) => {
+        g.fillStyle = '#e4eaee'; g.fillRect(0, 0, W, H); g.fillStyle = '#1b2633'; g.fillRect(0, 0, 18, H);
+        for (let k = 0; k < 6; k++) { g.fillStyle = ['#00ff88', '#00cfff', '#ff8a3a', '#e6edf2', '#8fa8c2', '#3b82f6'][k]; g.fillRect(4, 10 + k * 16, 10, 10); }
+        [30, 102, 174].forEach((x, i) => {
+          g.strokeStyle = '#2b3846'; g.lineWidth = 2; g.strokeRect(x, 26, 56, 100);
+          g.fillStyle = 'rgba(43,56,70,.25)'; g.fillRect(x + 6, 32, 44, 14);
+          for (let k = 0; k < 3; k++) g.strokeRect(x + 6, 54 + k * 22, 44, 16);
+          if (i === 1) { g.fillStyle = 'rgba(0,255,136,.45)'; g.fillRect(x + 6, 54, 44, 16); }
+          head(g, (i + 1) + '', x + 24, 132, '#2b3846', 12);
+          if (i < 2) line(g, [[x + 58, 76], [x + 70, 76], [x + 65, 71], [x + 70, 76], [x + 65, 81]], '#00a85a', 2);
+        });
+        g.strokeStyle = 'rgba(43,56,70,.4)'; g.lineWidth = 1; for (let k = 0; k < 3; k++) { g.beginPath(); g.moveTo(30, 156 + k * 7); g.lineTo(150 - k * 30, 156 + k * 7); g.stroke(); }
+      }],
+      swatch: [256, 192, (g, W, H) => {
+        g.fillStyle = '#e8edf0'; g.fillRect(0, 0, W, H);
+        for (let j = 0; j < 6; j++) for (let i = 0; i < 8; i++) {
+          const hue = (i * 45 + j * 9) % 360, li = 28 + j * 9; g.fillStyle = 'hsl(' + hue + ',' + (50 + i % 3 * 12) + '%,' + li + '%)'; g.fillRect(10 + i * 30, 10 + j * 30, 26, 22);
+          g.fillStyle = '#9aa7b2'; g.fillRect(10 + i * 30, 34 + j * 30, 16, 2);
+        }
+      }],
+      mood: [512, 168, (g, W, H) => {
+        g.fillStyle = '#141a20'; g.fillRect(0, 0, W, H);
+        const cards = [[14, 12, 92, 64, '#00cfff', '#0a0e17'], [116, 20, 70, 92, '#ff8a3a', '#3a1d10'], [196, 10, 104, 60, '#00ff88', '#0d2a1e'], [310, 18, 80, 80, '#3b82f6', '#0e1c3a'], [400, 10, 98, 66, '#e6edf2', '#8fa8c2'],
+          [20, 88, 84, 68, '#8fa8c2', '#1d2c3a'], [196, 80, 60, 78, '#ff4444', '#2a0e0e'], [266, 108, 120, 50, '#00cfff', '#00ff88'], [400, 86, 98, 72, '#1d2c3a', '#00cfff']];
+        cards.forEach(([x, y, w, h, a, b], i) => {
+          g.fillStyle = '#e6edf2'; g.fillRect(x - 3, y - 3, w + 6, h + 6);
+          const gr = g.createLinearGradient(x, y, x + w, y + h); gr.addColorStop(0, a); gr.addColorStop(1, b); g.fillStyle = gr; g.fillRect(x, y, w, h);
+          if (i % 3 === 1) { g.fillStyle = 'rgba(255,255,255,.75)'; g.beginPath(); g.arc(x + w / 2, y + h / 2, Math.min(w, h) * 0.22, 0, 7); g.fill(); }
+          g.fillStyle = i % 2 ? '#ff4444' : '#00ff88'; g.beginPath(); g.arc(x + w / 2, y + 2, 4, 0, 7); g.fill();
+        });
+        line(g, [[60, 14], [151, 22], [248, 12], [350, 20]], 'rgba(255,68,68,.6)', 1.5);
+      }],
+      // the QA room's: the severity board, the devices' screens, an oscilloscope's trace
+      // the reports: drafted, waiting for the owner's approval to go to the bounty, filed, paid
+      sev: [256, 112, (g, W, H) => {
+        glass(g, W, H); head(g, 'BUG REPORTS', 12, 8, '#ff9a52', 13); tag(g, 'this week', W - 12, 10);
+        [['DRAFT', '4', '#24e8ff'], ['YOU', '2', '#ff8a3a'], ['FILED', '9', '#38f5b8'], ['PAID', '3', '#38f5b8']].forEach(([s, n, c], i) => {
+          const x = 12 + i * 60; g.fillStyle = i === 1 ? 'rgba(255,138,58,.16)' : 'rgba(143,168,194,.1)'; g.fillRect(x, 32, 52, 68); head(g, s, x + 6, 36, c, 11); head(g, n, x + 10, 56, c, 30);
+        });
+      }],
+      phone1: [64, 128, (g, W, H) => { g.fillStyle = '#e6edf2'; g.fillRect(0, 0, W, H); g.fillStyle = '#00cfff'; g.fillRect(0, 0, W, 26); for (let k = 0; k < 5; k++) { g.fillStyle = '#c9d4dc'; g.fillRect(6, 34 + k * 18, 52, 12); } }],
+      phone2: [64, 128, (g, W, H) => { g.fillStyle = '#0b131d'; g.fillRect(0, 0, W, H); g.fillStyle = '#00ff88'; g.beginPath(); g.arc(32, 44, 18, 0, 7); g.fill(); g.fillStyle = '#1d2c3a'; g.fillRect(8, 78, 48, 12); g.fillRect(8, 96, 48, 12); g.fillStyle = '#00ff88'; g.fillRect(14, 112, 36, 8); }],
+      phone3: [64, 128, (g, W, H) => { g.fillStyle = '#0b131d'; g.fillRect(0, 0, W, H); line(g, series(14, 4, 60, 70, 40, 5, 0.6), '#24e8ff', 2); for (let k = 0; k < 3; k++) { g.fillStyle = k === 1 ? '#ff4444' : '#2a3a4a'; g.fillRect(6, 84 + k * 13, 52, 9); } }],
+      scope: [256, 150, (g, W, H) => {
+        g.fillStyle = '#021208'; g.fillRect(0, 0, W, H);
+        for (let x = 0; x <= W; x += 32) line(g, [[x, 0], [x, H]], 'rgba(56,245,184,.15)', 1);
+        for (let y = 11; y <= H; y += 32) line(g, [[0, y], [W, y]], 'rgba(56,245,184,.15)', 1);
+        const p = []; for (let x = 0; x <= W; x += 2) p.push([x, 60 + (Math.sin(x * 0.09) > 0 ? -26 : 26) + Math.sin(x * 0.9) * 2]); line(g, p, '#7dffc8', 2.4);
+        const q = []; for (let x = 0; x <= W; x += 2) q.push([x, 112 + Math.sin(x * 0.05) * 14]); line(g, q, 'rgba(36,232,255,.9)', 2);
+        head(g, '2.4 MHz', 8, 6, '#7dffc8', 11);
+      }],
+      // the testing lab's results wall: three experiments read at a glance
+      // the experiments, each with the rule and the window it was given before it started: how far through the window
+      // it is, its verdict at the close -- winners kept, losers archived
+      results: [640, 114, (g, W, H) => {
+        glass(g, W, H); head(g, 'QUANT LAB  EXPERIMENTS', 14, 8, '#24e8ff', 13); tag(g, 'rule and window set before start   judged at close', W - 14, 10);
+        [['EXP-0291', 'event card', 'ROI > 0 at close', 1, 'KEPT', '#38f5b8'], ['EXP-0294', 'bot setting', 'beats default 7d', 0.62, 'RUNNING', '#24e8ff'],
+          ['EXP-0297', 'memecoin signal', 'hit rate > 55%', 1, 'ARCHIVED', '#8fa8c2'], ['EXP-0301', 'head-to-head', 'A beats B 3x', 0.3, 'RUNNING', '#24e8ff']].forEach(([id, kind, rule, f, v, c], i) => {
+          const y = 30 + i * 20; g.font = mono(11, 600); g.textBaseline = 'top';
+          g.fillStyle = '#c8d4e0'; g.fillText(id, 14, y); g.fillStyle = '#8fa8c2'; g.fillText(kind, 92, y); g.fillText(rule, 232, y);
+          g.fillStyle = 'rgba(143,168,194,.18)'; g.fillRect(392, y + 2, 140, 8); g.fillStyle = c; g.fillRect(392, y + 2, 140 * f, 8);
+          g.fillStyle = c; g.fillText(v, 548, y);
+        });
+      }],
+      // an event card under test: its question, its price line, YES and NO
+      card: [128, 176, (g, W, H) => {
+        g.fillStyle = '#071019'; g.fillRect(0, 0, W, H); g.strokeStyle = '#5ff0e0'; g.lineWidth = 4; g.strokeRect(3, 3, W - 6, H - 6);
+        g.fillStyle = '#5ff0e0'; g.fillRect(12, 14, 70, 7); g.fillStyle = 'rgba(200,230,240,.6)'; g.fillRect(12, 28, 100, 5); g.fillRect(12, 38, 80, 5);
+        line(g, series(16, 12, 116, 112, 50, 5, 0.5), '#7ff4ff', 2.5);
+        g.fillStyle = 'rgba(0,255,136,.85)'; g.fillRect(12, 130, 48, 30); g.fillStyle = 'rgba(255,68,68,.8)'; g.fillRect(68, 130, 48, 30);
       }]
     };
     const [w, h, draw] = D[k], t = ctex(w, h, draw);
     // what tiles along a long surface: its repeat set once, for the one surface it is drawn for
-    const rep = { peg: [14.5, 3.1], peg2: [9, 2.3], hazard: [10, 1], louver: [4.2, 1.9] }[k];
+    const rep = { peg: [14.5, 3.1], peg2: [9, 2.3], hazard: [10, 1], louver: [4.2, 1.9], codewall: [1, 1] }[k];
     if (rep) { t.wrapS = t.wrapT = THREE.RepeatWrapping; t.repeat.set(rep[0], rep[1]); }
     return (TX[key] = t);
   }
@@ -5276,6 +5428,408 @@ class Office3D {
       const tx = -len / 2 + 0.3; this.lkCyl(p, 0.035, 0.42, tx, 0.42, 0, OM.lkTrunk);
       [[0, 0.95, 0, 0.24], [0.12, 0.88, 0.06, 0.17], [-0.1, 0.9, -0.05, 0.16]].forEach(([dx, yy, dz, s]) => { this.raP(p, G.rbBush, OM.rbLeaf, s, s * 0.9, s, tx + dx, yy, dz).rotation.y = dx * 9; });
     }
+  }
+  /* ---- his departments' own rooms, themed to their work, at the looks' detail ---- */
+  // The development floor, Build it Better as a department (idea, spec, design, build, test, release, monitor,
+  // iterate): a pair-programming desk with two ultrawide screens of code (r.mons) and a shared one of the trace
+  // between, a rubber duck and the build's lamp on it; a standing desk for a third; a glass wall of code scrolling
+  // between the desks; the cycle's board on the back-left wall with a lamp under each stage, and the kanban beside;
+  // two server racks under the back-right wall's status, a line of light on the floor carrying builds from the desks
+  // to them; a rolling whiteboard of the spec, bean bags and a laptop by the front glass.
+  lkDevRoom(r, d) {
+    this.lkMats('dev');
+    const x0 = r.x0, y0 = r.y0, ex = d.experts.slice(0, 3);
+    this.wallScreen(r, 1.8, 3.9);
+    this.rcBoard(r, 'left', 1.45, 4.0, this.lkTex('ci'), { edge: '#38f5b8', glow: 0.7 });
+    this.kanban(r, 4.25, 6.6);
+    // the cycle's lamps on a rail under its board, each under its stage: four done, the one running blinking, two to come
+    const bl = this.raG(r, x0 + 0.16, y0 + 2.725, Math.PI / 2);
+    this.lkBox(bl, 2.45, 0.03, 0.04, 0, 0.55, 0.03, OM.rbMetal);
+    for (let i = 0; i < 7; i++) {
+      const lx = (12 + i * 83 + 35) / 600 * 2.55 - 1.275;
+      this.lkCyl(bl, 0.03, 0.03, lx, 0.565, 0.06, OM.rbGloss);
+      const m = this.raP(bl, this.lkG('sph'), i < 4 ? amat('#38f5b8').glow : i === 4 ? amat('#24e8ff').glow : amat('#8fa8c2').fin, 0.032, 0.032, 0.032, lx, 0.6, 0.06, 0, false);
+      if (i === 4) { m.userData.dyn = true; m.userData.blink = 1; (r.leds = r.leds || []).push(m); }
+    }
+    // two server racks under the status screen's right, a lower unit beside them
+    [4.35, 5.05].forEach((x, q) => this.lkServer(r, x0 + x, y0 + 1.02, 1.15, q));
+    this.lkServer(r, x0 + 5.95, y0 + 1.02, 0.6, 2, 0.8);
+    // the pair desk: side panels, a modesty panel, the top with a line of light along its front edge
+    const pd = this.raG(r, x0 + 2.5, y0 + 2.9, 0), PW = 2.6, PD = 0.9;
+    [-1, 1].forEach((s) => this.raB(pd, 0.08, 0.44, PD - 0.08, s * (PW / 2 - 0.06), 0.22, 0, OM.rbDesk, 0.015));
+    this.raB(pd, PW - 0.2, 0.32, 0.05, 0, 0.28, -PD / 2 + 0.08, OM.rbDesk, 0.012);
+    this.raB(pd, PW, 0.05, PD, 0, 0.465, 0, OM.rbDeskTop, 0.012);
+    this.lkBox(pd, PW - 0.1, 0.008, 0.01, 0, 0.445, PD / 2 + 0.004, OM.lkMint, false);
+    // each seat's ultrawide screen (his own, or code), keyboard, mouse and mug; the shared trace between them
+    [-0.65, 0.65].forEach((sx, i) => {
+      this.lkMonitor(pd, ex[i] ? this.lkMon(r, i, this.lkTex('code')) : 'code:0.8', 0.78, 0.3, sx, 0.49, -0.2);
+      this.lkKeys(pd, sx, 0.49, 0.18, 0.5);
+      this.raP(pd, this.lkG('sph'), OM.rbMouse, 0.04, 0.022, 0.062, sx + 0.36, 0.512, 0.18, 0, false);
+      this.lkCyl(pd, 0.045, 0.1, sx - 0.42, 0.49, 0.05, OM.rbMouse);
+    });
+    this.lkMonitor(pd, 'trace', 0.22, 0.36, 0, 0.49, -0.26);
+    // the rubber duck every debugger talks to, and the build's lamp, green
+    const dk = new THREE.Group(); dk.position.set(0.24, 0.49, 0.04); dk.rotation.y = 0.6; pd.add(dk);
+    this.raP(dk, this.lkG('sph'), OM.lkDuck, 0.05, 0.04, 0.06, 0, 0.04, 0);
+    this.raP(dk, this.lkG('sph'), OM.lkDuck, 0.032, 0.032, 0.032, 0, 0.1, 0.03);
+    this.lkBox(dk, 0.024, 0.01, 0.03, 0, 0.096, 0.064, OM.lkBeak);
+    this.lkCyl(pd, 0.05, 0.025, -0.12, 0.49, -0.12, OM.rbGloss);
+    this.raP(pd, this.lkG('sph'), amat('#38f5b8').glow, 0.045, 0.045, 0.045, -0.12, 0.535, -0.12, 0, false);
+    const bo = glowSprite(0x38f5b8, 0.18, 0.5); bo.position.set(-0.12, 0.54, -0.12); pd.add(bo);
+    ex.slice(0, 2).forEach((e, i) => this.lkSit(r, x0 + 2.5 + (i ? 0.65 : -0.65), y0 + 3.75, i, e, 0));
+    // the glass wall of code between the desks, its lines scrolling up
+    const cw = this.raG(r, x0 + 4.45, y0 + 3.15, Math.PI / 2);
+    [-1, 1].forEach((s) => { this.lkBox(cw, 0.04, 1.2, 0.04, s * 0.85, 0.6, 0, OM.lkFrame); this.lkBox(cw, 0.05, 0.03, 0.42, s * 0.85, 0.015, 0, OM.lkFrame); });
+    [0.27, 1.17].forEach((y) => this.lkBox(cw, 1.74, 0.03, 0.04, 0, y, 0, OM.lkFrame));
+    this.lkBox(cw, 1.66, 0.008, 0.045, 0, 1.19, 0, OM.lkCyan, false);
+    const glass = this.raP(cw, G.plane, OM.lkCodeWall, 1.66, 0.86, 1, 0, 0.72, 0, 0, false);
+    this.lkDrive(r, glass, (t) => { TX.lkcodewall.offset.y = (t * 0.04) % 1; });
+    // the standing desk for a third: two columns, a top at 0.98, his screen
+    const sd = this.raG(r, x0 + 5.75, y0 + 3.05, 0);
+    [-1, 1].forEach((s) => { this.lkBox(sd, 0.07, 0.92, 0.07, s * 0.58, 0.46, -0.05, OM.lkSteelDk); this.lkBox(sd, 0.09, 0.03, 0.62, s * 0.58, 0.015, -0.05, OM.lkSteelDk); });
+    this.raB(sd, 1.4, 0.04, 0.68, 0, 0.96, 0, OM.rbDeskTop, 0.012);
+    this.lkMonitor(sd, ex[2] ? this.lkMon(r, 2, this.lkTex('code')) : 'code:0.8', 0.6, 0.3, 0, 0.98, -0.16);
+    this.lkKeys(sd, 0, 0.98, 0.16, 0.5);
+    if (ex[2]) this.lkStand(r, x0 + 5.75, y0 + 3.72, 2, ex[2], 0);
+    // the line of light from the desks to the racks, builds running along it
+    const path = [[2.5, 2.38], [2.5, 1.78], [4.7, 1.78], [4.7, 1.1]], fl = this.raG(r, x0, y0, 0);
+    for (let i = 1; i < path.length; i++) {
+      const [ax, ay] = path[i - 1], [bx, by] = path[i], len = Math.hypot(bx - ax, by - ay), n = Math.round(len / 0.2);
+      for (let k = 0; k < n; k++) { const f = (k + 0.5) / n, m = this.lkBox(fl, ay === by ? 0.12 : 0.03, 0.005, ay === by ? 0.03 : 0.12, ax + (bx - ax) * f, 0.004, ay + (by - ay) * f, OM.lkPath, false); m.receiveShadow = true; }
+    }
+    const pk = new THREE.Group(); pk.userData.dyn = true; fl.add(pk);
+    const L = path.reduce((s, q, i) => s + (i ? Math.hypot(q[0] - path[i - 1][0], q[1] - path[i - 1][1]) : 0), 0);
+    const along = (u) => { let s = u * L; for (let i = 1; i < path.length; i++) { const a = path[i - 1], b = path[i], l = Math.hypot(b[0] - a[0], b[1] - a[1]); if (s <= l) return [a[0] + (b[0] - a[0]) * s / l, a[1] + (b[1] - a[1]) * s / l]; s -= l; } return path[path.length - 1]; };
+    const pkts = [0, 1, 2].map(() => { const m = new THREE.Mesh(G.box, amat('#24e8ff').glow); m.scale.set(0.07, 0.025, 0.07); pk.add(m); return m; });
+    this.lkDrive(r, pkts[0], (t) => pkts.forEach((m, q) => { const [px, py] = along((t * 0.18 + q / 3) % 1); m.position.set(px, 0.02, py); }));
+    // the rolling whiteboard of the architecture by the front-left glass
+    const wb = this.raG(r, x0 + 1.25, y0 + 5.75, 0.5);
+    [-1, 1].forEach((s) => { this.lkBox(wb, 0.03, 1.12, 0.03, s * 0.62, 0.6, 0, OM.rbMetal); this.lkBox(wb, 0.04, 0.03, 0.46, s * 0.62, 0.06, 0, OM.rbMetal); [-1, 1].forEach((t2) => this.lkCyl(wb, 0.025, 0.04, s * 0.62, 0.0, t2 * 0.2, OM.raRubber)); });
+    this.raB(wb, 1.22, 0.74, 0.025, 0, 0.82, 0, OM.lkFrame, 0.01);
+    this.raP(wb, G.plane, OM.lkArch, 1.16, 0.68, 1, 0, 0.82, 0.014, 0, false);
+    this.lkBox(wb, 1.1, 0.02, 0.06, 0, 0.45, 0.04, OM.rbMetal);
+    [-0.3, -0.22, -0.14].forEach((mx, q) => { this.raP(wb, this.lkG('cyl'), [OM.lkBeak, OM.lkPath, OM.rbGloss][q], 0.008, 0.1, 0.008, mx, 0.47, 0.05).rotation.z = Math.PI / 2; });
+    // the bean bags and a laptop by the front-right glass
+    [[5.45, 5.95, 0], [6.35, 5.25, 1]].forEach(([bx, by, q]) => {
+      const b = this.raG(r, x0 + bx, y0 + by, q * 1.3);
+      this.raP(b, this.lkG('sph'), OM.lkBean[q], 0.4, 0.26, 0.4, 0, 0.24, 0); this.raP(b, this.lkG('sph'), OM.lkBean[q], 0.3, 0.2, 0.18, 0, 0.42, -0.22);
+    });
+    const lt = this.raG(r, x0 + 6.05, y0 + 6.05, -0.7);
+    this.lkCyl(lt, 0.26, 0.03, 0, 0.36, 0, OM.rbDeskTop); this.lkCyl(lt, 0.03, 0.34, 0, 0.02, 0, OM.rbMetal); this.lkCyl(lt, 0.16, 0.02, 0, 0, 0, OM.rbMetal);
+    this.lkBox(lt, 0.3, 0.012, 0.2, 0, 0.396, 0.04, OM.rbMetal);
+    const sc = new THREE.Group(); sc.position.set(0, 0.402, -0.06); sc.rotation.x = -0.3; lt.add(sc);
+    this.lkBox(sc, 0.3, 0.2, 0.008, 0, 0.1, 0, OM.rbGloss); this.lkFace(sc, 'code', 0.27, 0.17, 0, 0.1, 0.005);
+    this.terminal(r, x0 + 0.3, y0 + 0.32, d.link || CO.DEPT_LINK[d.key] || CO.DEPT_LINK.custom);
+    this.lkPlant(r, x0 + 0.45, y0 + 6.6, 0.85); this.lkPlant(r, x0 + 6.6, y0 + 6.62, 0.75);
+    this.lkLedsDone(r);
+    this.plate(r);
+  }
+  // The design studio, where pages are briefed before they are built and reviewed against their brief after: a
+  // drafting table whose surface is the designer's pen display with the brief's screens on it (r.mons[0]); a white
+  // desk for the second (r.mons[1]); the big moodboard standing against the back-right wall; on the back-left wall
+  // the kanban and three big screens -- the brief, the live page, the review; an easel of colour swatches; a model on
+  // a turntable under its ring light, a third expert studying it at his tablet; a plan chest by the right glass.
+  lkDesignRoom(r, d) {
+    this.lkMats('design');
+    const x0 = r.x0, y0 = r.y0, ex = d.experts.slice(0, 3);
+    this.wallScreen(r, 1.8, 3.55);
+    // the moodboard: a dark board on two feet against the wall, its top at 1.28, pinned with pictures, swatch strips
+    const mb = this.raG(r, x0 + 5.2, y0 + 0.24, 0);
+    this.raB(mb, 2.9, 1.0, 0.05, 0, 0.7, -0.02, OM.lkFrame, 0.015);
+    this.raP(mb, G.plane, OM.lkMood, 2.8, 0.92, 1, 0, 0.7, 0.007, 0, false);
+    [-1, 1].forEach((s) => this.lkBox(mb, 0.06, 0.2, 0.28, s * 1.3, 0.1, 0.02, OM.lkFrame));
+    [1.18, 1.3].forEach((sx) => { this.raP(mb, G.plane, OM.lkSwatch, 0.08, 0.7, 1, sx, 0.66, 0.012, 0, false); this.raP(mb, this.lkG('sph'), amat('#ff4444').soft, 0.012, 0.012, 0.012, sx, 1.02, 0.02, 0, false); });
+    // the back-left wall: the kanban, then the three screens of the work -- the brief, the live page, the review
+    this.kanban(r, 1.45, 3.35);
+    const pw = this.raG(r, x0 + 0.17, y0 + 5.05, Math.PI / 2);
+    this.raB(pw, 3.0, 0.66, 0.04, 0, 0.88, 0, OM.lkFrame, 0.01);
+    ['ui1', 'ui2', 'ui3'].forEach((k, i) => this.lkFace(pw, k, 0.94, 0.58, 0.98 - i * 0.98, 0.88, 0.022));
+    this.lkBox(pw, 2.9, 0.008, 0.02, 0, 0.545, 0.03, OM.lkCyan, false);
+    // a light rug under the work
+    this.raP(this.raG(r, x0 + 3.1, y0 + 3.2, 0), G.plane, OM.lkRugLight, 4.4, 2.2, 1, 0, 0.004, 0, -Math.PI / 2, false).receiveShadow = true;
+    // the drafting table: two trestles, the board tilted to him, its surface his pen display, a lamp on an arm
+    const dt = this.raG(r, x0 + 1.95, y0 + 2.85, 0);
+    [-1, 1].forEach((s) => { [-1, 1].forEach((t) => this.lkBox(dt, 0.035, 0.62, 0.035, s * 0.55, 0.31, t * 0.28, OM.lkSteel)); this.lkBox(dt, 0.035, 0.035, 0.6, s * 0.55, 0.1, 0, OM.lkSteel); });
+    this.lkBox(dt, 1.14, 0.03, 0.03, 0, 0.1, 0, OM.lkSteel);
+    const bd = new THREE.Group(); bd.position.set(0, 0.68, -0.02); bd.rotation.x = 0.42; dt.add(bd);
+    this.raB(bd, 1.3, 0.035, 0.86, 0, 0, 0, OM.lkStudio, 0.012);
+    this.lkBox(bd, 1.3, 0.04, 0.03, 0, 0.02, 0.43, OM.lkOak);
+    this.raP(bd, G.plane, ex[0] ? this.lkMon(r, 0, this.lkTex('sketch')) : this.lkMon(r, 9, this.lkTex('sketch')), 1.16, 0.74, 1, 0, 0.019, -0.02, -Math.PI / 2, false);
+    [[0.42, 0.04, 0.3, 0.012], [-0.44, 0.03, 0.03, 0.4]].forEach(([px, w, h, d2]) => this.lkBox(bd, w, 0.01, h, px, 0.025, 0.2, OM.rbMetal, false));
+    this.lkCyl(dt, 0.04, 0.12, 0.52, 0.86, -0.36, OM.rbGloss);
+    this.lkCyl(dt, 0.01, 0.42, -0.6, 0.62, -0.36, OM.rbMetal);
+    this.lkBox(dt, 0.02, 0.02, 0.42, -0.5, 1.04, -0.2, OM.rbMetal);
+    this.raB(dt, 0.16, 0.06, 0.1, -0.42, 1.0, -0.02, OM.lkStudio, 0.02); this.lkBox(dt, 0.12, 0.006, 0.06, -0.42, 0.968, -0.02, OM.lkWarm, false);
+    if (ex[0]) this.lkSit(r, x0 + 1.95, y0 + 3.72, 0, ex[0], 0);
+    // the second desk: white, a tall white screen, a drawing tablet, a fan of colour chips, a mug
+    const wd = this.raG(r, x0 + 4.25, y0 + 3.0, 0);
+    [-1, 1].forEach((s) => this.lkBox(wd, 0.05, 0.44, 0.7, s * 0.82, 0.22, 0, OM.lkStudio));
+    this.raB(wd, 1.76, 0.04, 0.8, 0, 0.465, 0, OM.lkStudio, 0.012);
+    this.lkMonitor(wd, ex[1] ? this.lkMon(r, 1, this.lkTex('ui2')) : 'ui2:0.8', 0.74, 0.42, 0.05, 0.485, -0.2);
+    this.raB(wd, 0.4, 0.012, 0.28, -0.12, 0.492, 0.17, OM.rbGloss, 0.006); this.lkBox(wd, 0.36, 0.002, 0.24, -0.12, 0.499, 0.17, OM.lkCyan, false);
+    for (let q = 0; q < 6; q++) { const c = this.raP(wd, G.plane, OM.lkSwatch, 0.05, 0.2, 1, 0.55, 0.488 + q * 0.0015, 0.16, -Math.PI / 2, false); c.rotation.z = -0.5 + q * 0.18; }
+    this.lkCyl(wd, 0.045, 0.1, -0.7, 0.485, 0.12, OM.lkStudio);
+    if (ex[1]) this.lkSit(r, x0 + 4.3, y0 + 3.82, 1, ex[1], 0);
+    // the model on its turntable under a ring light: a white helmet with its visor, turning
+    const tt = this.raG(r, x0 + 5.55, y0 + 5.05, 0);
+    this.raP(tt, this.lkLathe('lkPlinth', [[0, 0], [0.3, 0], [0.3, 0.04], [0.24, 0.08], [0.22, 0.7], [0.27, 0.74], [0, 0.74]], 36), OM.lkStudio, 1, 1, 1, 0, 0, 0);
+    const tu = new THREE.Group(); tu.position.set(0, 0.74, 0); tu.userData.dyn = true; tt.add(tu);
+    const disc = this.raP(tu, G.cyl, OM.rbGloss, 0.3, 0.03, 0.3, 0, 0.015, 0);
+    this.raP(tu, this.lkG('tor'), OM.lkCyan, 0.3, 0.3, 0.4, 0, 0.03, 0, Math.PI / 2, false);
+    this.raP(tu, G.sphere, OM.raLab, 0.17, 0.165, 0.17, 0, 0.21, 0);
+    this.raP(tu, G.sphere, OM.rbVisor, 0.13, 0.1, 0.1, 0, 0.225, 0.085);
+    this.raP(tu, this.lkG('tor'), OM.brass, 0.12, 0.12, 1.2, 0, 0.06, 0, Math.PI / 2);
+    this.lkDrive(r, disc, (t) => { tu.rotation.y = t * 0.4; });
+    const rl = this.raG(r, x0 + 6.05, y0 + 4.7, -0.8);
+    this.lkCyl(rl, 0.12, 0.02, 0, 0, 0, OM.rbMetal); this.lkCyl(rl, 0.012, 0.86, 0, 0.02, 0, OM.rbMetal);
+    this.raP(rl, this.lkG('tor64'), OM.lkWarm, 0.24, 0.24, 1.6, 0, 1.0, 0); this.raP(rl, this.lkG('tor64'), OM.rbGloss, 0.26, 0.26, 2.2, 0, 1.0, -0.01);
+    const tg = glowSprite(0xe8f6ff, 0.16, 1.2); tg.position.set(0, 0.95, 0); tt.add(tg);
+    // the tablet by it on a stand, the third expert's, him studying the model
+    const ts = this.raG(r, x0 + 5.0, y0 + 5.55, -0.64);
+    this.lkCyl(ts, 0.1, 0.02, 0, 0, 0, OM.rbMetal); this.lkCyl(ts, 0.012, 0.86, 0, 0.02, 0, OM.rbMetal);
+    this.raP(ts, rboxGeo(0.3, 0.2, 0.016, 0.01), OM.rbGloss, 1, 1, 1, 0, 0.94, 0, -0.5);
+    this.lkScreen(ts, ex[2] ? this.lkMon(r, 2, this.lkTex('ui3')) : 'ui3:0.8', 0.27, 0.17, 0, 0.944, 0.009, -0.5);
+    if (ex[2]) { const sx = x0 + 4.75, sy = y0 + 5.85; this.lkStand(r, sx, sy, 2, ex[2], this.lkToward(sx, sy, x0 + 5.55, y0 + 5.05)); }
+    // the easel of colour swatches by the front-left glass
+    const es = this.raG(r, x0 + 1.1, y0 + 5.75, 0.55);
+    [[-0.3, 0.12], [0.3, 0.12]].forEach(([lx, lz]) => { const l = this.lkBox(es, 0.035, 1.18, 0.035, lx, 0.58, lz, OM.lkOak); l.rotation.z = -lx * 0.25; l.rotation.x = -0.12; });
+    this.lkBox(es, 0.035, 1.12, 0.035, 0, 0.55, -0.28, OM.lkOak).rotation.x = 0.28;
+    this.lkBox(es, 0.74, 0.03, 0.06, 0, 0.42, 0.14, OM.lkOak);
+    const bd2 = new THREE.Group(); bd2.position.set(0, 0.76, 0.12); bd2.rotation.x = -0.12; es.add(bd2);
+    this.raB(bd2, 0.76, 0.6, 0.02, 0, 0, 0, OM.lkStudio, 0.008); this.raP(bd2, G.plane, OM.lkSwatch, 0.7, 0.53, 1, 0, 0, 0.011, 0, false);
+    // the plan chest by the right glass, a vase of rolled sheets on it
+    this.cabinet(r, x0 + 6.45, y0 + 2.0, 0.45, 2.0, 0.72);
+    const vs = this.raG(r, x0 + 6.66, y0 + 2.4, 0);
+    this.lkCyl(vs, 0.08, 0.2, 0, 0.84, 0, OM.lkStudio);
+    [[0.02, 0.0, 0.1], [-0.025, 0.02, -0.12], [0.0, -0.025, 0.06]].forEach(([dx, dz, tl]) => { const s = this.raP(vs, this.lkG('cyl'), OM.lkStudio, 0.022, 0.42, 0.022, dx, 1.02, dz); s.rotation.z = tl; });
+    this.terminal(r, x0 + 0.3, y0 + 0.32, d.link || CO.DEPT_LINK[d.key] || CO.DEPT_LINK.custom);
+    this.lkPlant(r, x0 + 0.45, y0 + 6.6, 0.85); this.lkPlant(r, x0 + 6.6, y0 + 6.62, 0.8); this.lkPlant(r, x0 + 3.0, y0 + 6.6, 0.7);
+    this.lkLedsDone(r);
+    this.plate(r);
+  }
+  // Cymetica QA, the bug-hunting lab that tests the products from their public surface and drafts the reports (filing
+  // to the bounty waits for the owner): his 3 x 3 window of light at the right end of the back-right wall, the reports'
+  // board beside the status -- drafted, waiting for you, filed, paid; the live tickets (the kanban) and a wall of test
+  // devices on the back-left wall; the debugging station (r.mons[0]): a stack trace, a log, a scope's trace, an
+  // oscilloscope wired to a board under test, a bug caught in a jar; the reviewer's desk with its binders
+  // (r.mons[1]); a robot tapping through two devices on its bench by the front-right glass, a third at its panel.
+  lkQaRoom(r, d) {
+    this.lkMats('qa');
+    const x0 = r.x0, y0 = r.y0, g = r.g, ex = d.experts.slice(0, 3);
+    this.wallScreen(r, 1.8, 3.9);
+    this.rcBoard(r, 'back', 4.1, 5.4, this.lkTex('sev'), { edge: '#ff8a3a', glow: 0.8 });
+    // his window of light, standing on the floor in a dark frame, its top under the neon ("nikde se obrazovka
+    // neprekryva s hornim neonovym panelem")
+    const qa = (m) => { m.userData.rbWall = true; g.add(m); return m; };
+    const qw = qa(new THREE.Mesh(G.plane, new THREE.MeshBasicMaterial({ map: qaGridTex(), color: new THREE.Color(0xffffff).multiplyScalar(1.15), toneMapped: false })));
+    qw.scale.set(0.84, 0.84, 1); qw.position.copy(this.V(x0 + 6.0, y0 + 0.185, 0.82));
+    const qf = qa(new THREE.Mesh(rboxGeo(1.02, 1.2, 0.1, 0.025), OM.rbBezel)); qf.position.copy(this.V(x0 + 6.0, y0 + 0.13, 0.08 + 0.6)); qf.castShadow = true; qf.receiveShadow = true;
+    const qh = glowSprite(0x9ff5ec, 0.2, 1.4); qh.position.copy(this.V(x0 + 6.0, y0 + 0.35, 0.82)); g.add(qh);
+    this.kanban(r, 1.45, 3.75);
+    // the wall of test devices: a slatted panel, three rails of phones and tablets in their clips, each with its own
+    // screen and its cable down to the hub, the hub's lights
+    const dw = this.raG(r, x0 + 0.17, y0 + 5.25, Math.PI / 2);
+    this.raB(dw, 2.6, 0.68, 0.035, 0, 0.86, 0.0175, OM.lkSlat, 0.008);
+    this.lkBox(dw, 2.5, 0.04, 0.05, 0, 0.55, 0.05, OM.lkSteelDk);
+    [0.66, 0.88, 1.1].forEach((y, row) => {
+      this.lkBox(dw, 2.5, 0.012, 0.02, 0, y - 0.09, 0.045, OM.rbMetal);
+      for (let c = 0; c < 6; c++) {
+        const tab = (c + row) % 3 === 1, w = tab ? 0.2 : 0.075, h = tab ? 0.14 : 0.15, x = -1.08 + c * 0.43;
+        this.lkBox(dw, w + 0.014, h + 0.014, 0.012, x, y, 0.056, OM.rbGloss);
+        this.lkFace(dw, ['phone1', 'phone2', 'phone3', 'ui1'][(c * 2 + row) % (tab ? 4 : 3) + (tab ? 0 : 0)], w, h, x, y, 0.0628, 0, 0.95);
+        this.lkBox(dw, 0.03, 0.02, 0.03, x, y - h / 2 - 0.012, 0.045, OM.rbMetal);
+        this.lkBox(dw, 0.006, y - h / 2 - 0.57, 0.006, x + w / 2 - 0.01, (y - h / 2 + 0.57) / 2, 0.05, OM.raRubber, false);
+        this.lkLed(r, dw, (c + row) % 4 ? '#38f5b8' : '#ff8a3a', x, 0.55, 0.078, c + row);
+      }
+    });
+    // the debugging station: his desk, the trace in the middle (his), a log turned in on the left, a scope's trace on
+    // the right; an oscilloscope on its corner wired to a board under test; the bug in its jar
+    const ds = this.raG(r, x0 + 2.4, y0 + 2.83, 0), DW = 2.1, DD = 0.85;
+    [-1, 1].forEach((s) => this.raB(ds, 0.08, 0.44, DD - 0.08, s * (DW / 2 - 0.06), 0.22, 0, OM.rbDesk, 0.015));
+    this.raB(ds, DW - 0.2, 0.32, 0.05, 0, 0.28, -DD / 2 + 0.08, OM.rbDesk, 0.012);
+    this.raB(ds, DW, 0.05, DD, 0, 0.465, 0, OM.rbDeskTop, 0.012);
+    this.lkMonitor(ds, ex[0] ? this.lkMon(r, 0, this.lkTex('trace')) : 'trace', 0.24, 0.4, 0, 0.49, -0.2);
+    const ml = new THREE.Group(); ml.position.set(-0.42, 0, -0.16); ml.rotation.y = 0.32; ds.add(ml); this.lkMonitor(ml, 'log', 0.5, 0.3, 0, 0.49, 0);
+    const mr = new THREE.Group(); mr.position.set(0.42, 0, -0.16); mr.rotation.y = -0.32; ds.add(mr); this.lkMonitor(mr, 'scope', 0.5, 0.3, 0, 0.49, 0);
+    this.lkKeys(ds, 0, 0.49, 0.2, 0.5); this.raP(ds, this.lkG('sph'), OM.rbMouse, 0.04, 0.022, 0.062, 0.36, 0.512, 0.2, 0, false);
+    const os = new THREE.Group(); os.position.set(0.82, 0.49, 0.12); os.rotation.y = -0.5; ds.add(os);
+    this.raB(os, 0.3, 0.17, 0.22, 0, 0.085, 0, OM.raCase, 0.02); this.lkBox(os, 0.2, 0.12, 0.004, -0.04, 0.095, 0.111, OM.rbGloss);
+    this.lkFace(os, 'scope', 0.18, 0.1, -0.04, 0.095, 0.114, 0, 1.2);
+    [0.03, 0.06, 0.09].forEach((ky) => this.raP(os, this.lkG('cyl'), OM.raKey, 0.012, 0.012, 0.012, 0.1, ky + 0.02, 0.112, Math.PI / 2));
+    this.raB(ds, 0.22, 0.012, 0.16, 0.5, 0.496, 0.24, OM.lkPcb, 0.004);
+    [[0.46, 0.22], [0.54, 0.26], [0.5, 0.2]].forEach(([cx, cz]) => this.lkBox(ds, 0.04, 0.012, 0.03, cx, 0.508, cz, OM.rbGloss));
+    if (!G.lkProbe) G.lkProbe = new THREE.TubeGeometry(new THREE.CatmullRomCurve3([[0.72, 0.56, 0.18], [0.66, 0.52, 0.3], [0.58, 0.505, 0.3], [0.52, 0.51, 0.24]].map((v) => new THREE.Vector3(...v))), 16, 0.006, 5, false);
+    this.raP(ds, G.lkProbe, OM.raRubber, 1, 1, 1, 0, 0, 0);
+    this.raP(ds, this.lkG('cyl'), OM.lkGlass, 0.05, 0.12, 0.05, -0.62, 0.55, 0.2, 0, false); this.lkCyl(ds, 0.052, 0.015, -0.62, 0.61, 0.2, OM.rbMetal);
+    this.raP(ds, this.lkG('sph'), OM.lkBug, 0.016, 0.012, 0.022, -0.62, 0.54, 0.2, 0, false);
+    const bg = glowSprite(0xff8a3a, 0.22, 0.3); bg.position.set(-0.62, 0.54, 0.2); ds.add(bg);
+    if (ex[0]) this.lkSit(r, x0 + 2.4, y0 + 3.66, 0, ex[0], 0);
+    // the reviewer's desk, his own make (r.mons[1]), binders of reports and a stamp beside it
+    if (ex[1]) {
+      this.desk(r, x0 + 3.95, y0 + 2.75, 1);
+      const bn = this.raG(r, x0 + 4.2, y0 + 2.95, 0);
+      OM.lkBinders.forEach((m, q) => this.raB(bn, 0.05, 0.26, 0.2, q * 0.06, 0.62, 0, m, 0.008));
+      this.lkCyl(bn, 0.03, 0.06, 0.32, 0.56, 0.12, OM.lkRed); this.lkCyl(bn, 0.04, 0.012, 0.32, 0.56, 0.12, OM.rbGloss);
+      this.lkSit(r, x0 + 4.9, y0 + 4.05, 1, ex[1], 0);
+    }
+    // the tapping robot: a bench by the front-right glass, a phone and a tablet lying on it, a gantry over them whose
+    // stylus taps its way through their screens; its panel (a third expert's)
+    const tr = this.raG(r, x0 + 5.95, y0 + 5.0, 0);
+    [[-1, -1], [1, -1], [-1, 1], [1, 1]].forEach(([sx, sz]) => this.lkBox(tr, 0.04, 0.7, 0.04, sx * 0.46, 0.35, sz * 0.26, OM.lkSteel));
+    this.raB(tr, 1.0, 0.04, 0.6, 0, 0.72, 0, OM.rbDeskTop, 0.01);
+    [[-0.18, 'phone2', 0.09, 0.17], [0.16, 'phone1', 0.2, 0.14]].forEach(([px, k, w, h]) => { this.lkBox(tr, w + 0.01, 0.01, h + 0.01, px, 0.745, 0, OM.rbGloss); this.lkFace(tr, k, w, h, px, 0.751, 0, -Math.PI / 2, 0.95); });
+    [-1, 1].forEach((s) => this.lkBox(tr, 0.03, 0.36, 0.03, s * 0.42, 0.92, -0.24, OM.lkSteelDk));
+    this.lkBox(tr, 0.88, 0.03, 0.03, 0, 1.1, -0.24, OM.lkSteelDk);
+    const car = new THREE.Group(); car.position.set(0, 1.1, -0.24); car.userData.dyn = true; tr.add(car);
+    this.lkBox(car, 0.07, 0.06, 0.06, 0, 0, 0.02, OM.raLab); this.lkBox(car, 0.03, 0.03, 0.24, 0, -0.02, 0.14, OM.raLab);
+    const sty = new THREE.Group(); sty.position.set(0, -0.02, 0.24); car.add(sty);
+    const tip = this.raP(sty, this.lkG('cyl'), OM.rbMetal, 0.008, 0.3, 0.008, 0, -0.15, 0, 0, false);
+    this.raP(sty, this.lkG('sph'), OM.lkCyan, 0.01, 0.01, 0.01, 0, -0.3, 0, 0, false);
+    this.lkDrive(r, tip, (t) => { car.position.x = -0.18 + 0.34 * (0.5 + 0.5 * Math.sin(t * 0.6)); sty.position.y = -0.02 - 0.03 * Math.pow(Math.max(0, Math.sin(t * 4)), 6); });
+    this.raB(tr, 0.24, 0.16, 0.04, -0.34, 0.85, 0.26, OM.lkSteelDk, 0.01);
+    this.lkScreen(tr, ex[2] ? this.lkMon(r, 2, this.lkTex('tiles')) : 'tiles:0.8', 0.2, 0.12, -0.34, 0.85, 0.281);
+    this.lkLed(r, tr, '#38f5b8', 0.4, 0.75, 0.3, 1); this.lkLed(r, tr, '#ff8a3a', 0.44, 0.75, 0.3, 2);
+    if (ex[2]) this.lkStand(r, x0 + 5.95, y0 + 5.72, 2, ex[2], 0);
+    // the bug under the scanner by the front glass: a dark pedestal with a lit grid, a bug of light turning on it,
+    // a ring of light reading it up and down
+    const bs = this.raG(r, x0 + 3.35, y0 + 5.72, 0);
+    this.raP(bs, this.lkLathe('lkScanBase', [[0, 0], [0.42, 0], [0.44, 0.04], [0.36, 0.1], [0.32, 0.42], [0.4, 0.46], [0, 0.46]], 40), OM.lkSteelDk, 1, 1, 1, 0, 0, 0);
+    this.raP(bs, G.circle, OM.raGrid, 0.36, 0.36, 1, 0, 0.462, 0, -Math.PI / 2, false);
+    this.raP(bs, this.lkG('tor'), OM.lkCyan, 0.39, 0.39, 0.5, 0, 0.46, 0, Math.PI / 2, false);
+    const bug = new THREE.Group(); bug.position.set(0, 0.6, 0); bug.userData.dyn = true; bs.add(bug);
+    const bb = new THREE.Mesh(this.lkG('sph'), OM.raShard); bb.scale.set(0.07, 0.05, 0.12); bug.add(bb);
+    [[0, 0.005, -0.15, 0.045], [0, 0.01, 0.06, 0.06]].forEach(([px, py, pz, s]) => { const m = new THREE.Mesh(this.lkG('sph'), OM.raShard); m.scale.setScalar(s); m.position.set(px, py, pz); bug.add(m); });
+    [-1, 1].forEach((s) => [-0.06, 0, 0.06].forEach((lz, q) => {
+      const leg = new THREE.Mesh(G.box, OM.lkCyan); leg.scale.set(0.12, 0.006, 0.006); leg.position.set(s * 0.1, -0.03, lz); leg.rotation.set(0, s * (q - 1) * 0.4, s * 0.45); bug.add(leg);
+    }));
+    [-1, 1].forEach((s) => { const an = new THREE.Mesh(G.box, OM.lkCyan); an.scale.set(0.004, 0.004, 0.09); an.position.set(s * 0.03, 0.05, -0.22); an.rotation.set(0.5, s * 0.4, 0); bug.add(an); });
+    rbBake(bug);
+    const sr = new THREE.Mesh(this.lkG('tor64'), OM.lkMint); sr.scale.set(0.24, 0.24, 0.4); sr.rotation.x = Math.PI / 2; sr.userData.dyn = true; bs.add(sr);
+    const bh = glowSprite(0x5ff0e0, 0.16, 0.8); bh.position.set(0, 0.62, 0); bs.add(bh);
+    this.lkDrive(r, sr, (t) => { bug.rotation.y = t * 0.6; bug.position.y = 0.6 + 0.015 * Math.sin(t * 2); sr.position.y = 0.5 + 0.17 * (1 + Math.sin(t * 1.4)); });
+    this.terminal(r, x0 + 0.3, y0 + 0.32, d.link || CO.DEPT_LINK[d.key] || CO.DEPT_LINK.custom);
+    this.lkPlant(r, x0 + 0.62, y0 + 6.62, 0.85); this.lkPlant(r, x0 + 1.9, y0 + 6.6, 0.7);
+    this.lkLedsDone(r);
+    this.plate(r);
+  }
+  // The testing lab, where paper experiments on event cards, bot settings, memecoin signals and head-to-head ideas run
+  // each to the rule and window set before it starts: his two instruments along the back-right wall and his crystal
+  // of data at the front; the experiments' results wall and the kanban on the back-left wall; in the
+  // middle the experiment chamber, an event card floating in it under test with its rings turning, its console where
+  // the scientist stands (r.mons[0]); the microscope bench with racks of samples (r.mons[1]); the sample fridge in
+  // the back-right corner, a bench of boxed samples and a dewar by the right glass; the kept and the archived on a
+  // cabinet by the front glass; a third at the touch table before the results.
+  lkLabRoom(r, d) {
+    this.lkMats('lab');
+    const x0 = r.x0, y0 = r.y0, ex = d.experts.slice(0, 3);
+    this.wallScreen(r, 1.8, 3.4);
+    this.labMachine(r, x0 + 3.6, y0 + 0.2, 0);
+    this.labMachine(r, x0 + 4.85, y0 + 0.2, 1);
+    this.kanban(r, 1.45, 3.3);
+    this.rcBoard(r, 'left', 3.55, 6.6, this.lkTex('results'), { edge: '#24e8ff', glow: 0.6 });
+    // the sample fridge: an off-white body, a glass door, three shelves of tubes lit inside, its handle and light
+    const fr = this.raG(r, x0 + 6.42, y0 + 0.86, 0);
+    [-1, 1].forEach((s) => this.lkBox(fr, 0.04, 1.15, 0.62, s * 0.3, 0.575, -0.31, OM.raLab));
+    this.lkBox(fr, 0.64, 0.07, 0.62, 0, 1.115, -0.31, OM.raLab); this.lkBox(fr, 0.64, 0.12, 0.62, 0, 0.06, -0.31, OM.raLab);
+    this.lkBox(fr, 0.56, 0.98, 0.03, 0, 0.6, -0.6, OM.rbGloss);
+    [0.3, 0.6, 0.9].forEach((sy, q) => {
+      this.lkBox(fr, 0.54, 0.012, 0.3, 0, sy - 0.08, -0.2, OM.raLab2);
+      for (let k = 0; k < 7; k++) this.lkCyl(fr, 0.014, 0.12, -0.21 + k * 0.07, sy - 0.074, -0.12, OM.lkLiquid[(k + q) % 3]);
+    });
+    this.lkBox(fr, 0.5, 0.008, 0.02, 0, 1.08, -0.06, OM.lkWarm, false);
+    this.raP(fr, G.box, OM.lkGlass, 0.58, 1.02, 0.02, 0, 0.6, 0.0, 0, false);
+    this.lkBox(fr, 0.02, 0.3, 0.03, 0.26, 0.62, 0.025, OM.raChrome);
+    this.lkLed(r, fr, '#38f5b8', -0.24, 1.12, 0.004, 1);
+    // the experiment chamber: a dark platform with its ring, an off-white base, a glass column, a cap with its
+    // emitter and a beam down into it, the event card under test floating in it with two rings turning round it;
+    // cables to its console
+    const cx = x0 + 4.7, cy = y0 + 2.55, ch = this.raG(r, cx, cy, 0);
+    this.lkCyl(ch, 0.7, 0.05, 0, 0, 0, OM.lkSteelDk); this.raP(ch, this.lkG('tor64'), OM.lkCyan, 0.7, 0.7, 0.5, 0, 0.05, 0, Math.PI / 2, false);
+    this.raP(ch, this.lkLathe('lkChBase', [[0, 0.05], [0.44, 0.05], [0.44, 0.1], [0.4, 0.14], [0.38, 0.34], [0.42, 0.36], [0, 0.36]], 40), OM.raLab, 1, 1, 1, 0, 0, 0);
+    this.raP(ch, this.lkG('tor'), OM.lkMint, 0.4, 0.4, 0.6, 0, 0.34, 0, Math.PI / 2, false);
+    this.raP(ch, G.cyl, OM.lkGlass, 0.34, 0.6, 0.34, 0, 0.66, 0, 0, false);
+    this.raP(ch, this.lkLathe('lkChCap', [[0, 0.96], [0.4, 0.96], [0.42, 0.99], [0.36, 1.06], [0.12, 1.1], [0, 1.1]], 40), OM.raLab, 1, 1, 1, 0, 0, 0);
+    this.lkCyl(ch, 0.06, 0.05, 0, 1.1, 0, OM.raChrome);
+    [0, 2.1, 4.2].forEach((a, q) => { const s = this.lkBox(ch, 0.06, 0.08, 0.14, Math.sin(a) * 0.46, 0.42, Math.cos(a) * 0.46, OM.raTrim); s.rotation.y = a; this.lkLed(r, ch, q ? '#24e8ff' : '#38f5b8', Math.sin(a) * 0.54, 0.44, Math.cos(a) * 0.54, q); });
+    const sm = new THREE.Group(); sm.position.set(0, 0.66, 0); sm.userData.dyn = true; ch.add(sm);
+    const card = new THREE.Mesh(G.plane, OM.lkCard); card.scale.set(0.16, 0.22, 1); sm.add(card);
+    const rg = new THREE.Group(); rg.userData.dyn = true; sm.add(rg);
+    [0.2, 0.25].forEach((s, q) => { const m = new THREE.Mesh(this.lkG('tor'), OM.lkCyan); m.scale.set(s, s, 0.5); m.rotation.x = q ? 1.2 : 0.4; m.rotation.y = q * 1.1; rg.add(m); });
+    rbBake(rg);
+    this.lkDrive(r, card, (t) => { sm.position.y = 0.66 + 0.025 * Math.sin(t * 1.2); card.rotation.y = t * 0.5; rg.rotation.y = -t * 0.8; });
+    [1, -1].forEach((s) => {
+      const k = 'lkChCable' + s; if (!G[k]) G[k] = new THREE.TubeGeometry(new THREE.CatmullRomCurve3([[0.3, 0.15, 0.3], [0.38, 0.02, 0.55], [0.3, 0.02, 0.85], [0.2, 0.25, 1.05]].map((v) => new THREE.Vector3(v[0] * s, v[1], v[2]))), 20, 0.018, 6, false);
+      this.raP(ch, G[k], OM.raRubber, 1, 1, 1, 0, 0, 0);
+    });
+    // the chamber's console, its front to the room, the scientist's screen on it and the window's countdown
+    const co = this.raG(r, cx, y0 + 3.85, 0);
+    this.raP(co, this.raProfile('lkCmdBody', [[0.04, 0], [0.04, 0.4], [-0.03, 0.43], [-0.03, 0.47], [0.3, 0.53], [0.4, 0.62], [0.55, 0.62], [0.55, 0]], 1.0, 0.025, 0.01), OM.raLab, 1, 1, 1, 0, 0, 0);
+    this.raP(co, G.plane, OM.lkDeck, 0.92, 0.32, 1, 0, 0.506, -0.135, -Math.PI / 2 + 0.18, false);
+    this.lkBox(co, 0.94, 0.012, 0.012, 0, 0.45, 0.036, OM.lkCyan, false);
+    this.lkMonitor(co, ex[0] ? this.lkMon(r, 0, this.lkTex('chart')) : 'chart', 0.42, 0.24, -0.24, 0.62, -0.42);
+    this.lkMonitor(co, 'tiles', 0.42, 0.24, 0.24, 0.62, -0.42);
+    if (ex[0]) this.lkStand(r, cx, y0 + 4.38, 0, ex[0], 0);
+    // the microscope bench: a dark body under an off-white top, the microscope, two racks of samples, his screen
+    const mb = this.raG(r, x0 + 2.3, y0 + 2.7, 0);
+    [-1, 1].forEach((s) => this.raB(mb, 0.08, 0.44, 0.72, s * 0.9, 0.22, 0, OM.rbDesk, 0.015));
+    this.raB(mb, 1.74, 0.3, 0.05, 0, 0.28, -0.32, OM.rbDesk, 0.012);
+    this.raB(mb, 1.9, 0.05, 0.8, 0, 0.465, 0, OM.raLab, 0.012);
+    const mc = new THREE.Group(); mc.position.set(-0.52, 0.49, -0.08); mc.rotation.y = 0.35; mb.add(mc);
+    this.raB(mc, 0.2, 0.04, 0.26, 0, 0.02, 0, OM.raLab, 0.012);
+    this.raB(mc, 0.07, 0.34, 0.08, 0, 0.2, -0.1, OM.raLab, 0.02);
+    this.lkBox(mc, 0.16, 0.015, 0.14, 0, 0.14, 0.02, OM.rbGloss);
+    this.lkCyl(mc, 0.04, 0.03, 0, 0.27, 0.0, OM.rbGloss);
+    [-0.025, 0.025].forEach((ox) => this.lkCyl(mc, 0.009, 0.05, ox, 0.22, 0.01, OM.raChrome));
+    const tb = this.raP(mc, this.lkG('cyl'), OM.rbGloss, 0.022, 0.16, 0.022, 0, 0.36, -0.03); tb.rotation.x = -0.5;
+    [-1, 1].forEach((s) => this.raP(mc, this.lkG('cyl'), OM.raChrome, 0.022, 0.012, 0.022, s * 0.045, 0.2, -0.1).rotation.z = Math.PI / 2);
+    [0.0, 0.32].forEach((rx, q) => {
+      this.raB(mb, 0.28, 0.05, 0.1, rx, 0.515, 0.08, OM.raLab2, 0.008);
+      for (let k = 0; k < 6; k++) { this.lkCyl(mb, 0.011, 0.11, rx - 0.11 + k * 0.044, 0.5, 0.08, OM.lkLiquid[(k + q) % 3]); this.lkCyl(mb, 0.013, 0.012, rx - 0.11 + k * 0.044, 0.61, 0.08, OM.raLab); }
+    });
+    this.lkMonitor(mb, ex[1] ? this.lkMon(r, 1, this.lkTex('chart')) : 'chart', 0.5, 0.28, 0.5, 0.49, -0.22);
+    this.lkKeys(mb, 0.5, 0.49, 0.16, 0.44);
+    if (ex[1]) this.lkSit(r, x0 + 2.3, y0 + 3.5, 1, ex[1], 0);
+    // his crystal of data, off the front-left glass so the room's name lettered on it stays clear
+    this.labHolo(r, x0 + 4.4, y0 + 5.55);
+    // the sample racks by the right glass: a bench of boxed tubes in rows, lit by what is in them, a dewar at its end
+    const sk = this.raG(r, x0 + 6.2, y0 + 3.3, -Math.PI / 2);
+    this.raB(sk, 1.6, 0.42, 0.5, 0, 0.21, -0.25, OM.rbDesk, 0.02); this.raB(sk, 1.64, 0.04, 0.54, 0, 0.44, -0.26, OM.raLab, 0.012);
+    [-0.5, 0, 0.5].forEach((bx, q) => {
+      this.raB(sk, 0.42, 0.06, 0.3, bx, 0.49, -0.26, OM.raLab2, 0.01);
+      for (let k = 0; k < 10; k++) this.lkCyl(sk, 0.012, 0.1, bx - 0.16 + (k % 5) * 0.08, 0.5, -0.32 + Math.floor(k / 5) * 0.12, OM.lkLiquid[(k + q) % 3]);
+    });
+    this.lkCyl(sk, 0.16, 0.66, 0.95, 0, -0.26, OM.raChrome); this.lkCyl(sk, 0.06, 0.08, 0.95, 0.66, -0.26, OM.raLab2);
+    // the kept and the archived: a low cabinet by the front-left glass, winners lit on its left tray, losers grey on
+    // its right
+    const ka = this.raG(r, x0 + 1.9, y0 + 6.35, 0);
+    this.raB(ka, 1.0, 0.56, 0.48, 0, 0.28, -0.24, OM.rbDesk, 0.02); this.lkBox(ka, 0.006, 0.5, 0.004, 0, 0.29, 0.001, OM.rbSeam, false);
+    [[-0.25, amat('#38f5b8').soft, OM.lkMint], [0.25, OM.raLab2, OM.rbSeam]].forEach(([tx, cm, lm]) => {
+      this.raB(ka, 0.42, 0.04, 0.32, tx, 0.58, -0.24, OM.rbGloss, 0.008);
+      for (let k = 0; k < 4; k++) this.lkBox(ka, 0.12, 0.006, 0.16, tx + (k % 2 ? 0.07 : -0.07), 0.605 + k * 0.007, -0.24 + (k > 1 ? 0.04 : -0.04), cm, false);
+      this.lkBox(ka, 0.3, 0.02, 0.006, tx, 0.42, 0.003, lm, false);
+    });
+    // the touch table before the results, for a third
+    if (ex[2]) {
+      const tt = this.raG(r, x0 + 1.15, y0 + 4.9, Math.PI / 2);
+      this.lkCyl(tt, 0.2, 0.03, 0, 0, 0, OM.rbMetal); this.lkCyl(tt, 0.03, 0.82, 0, 0.03, 0, OM.rbMetal);
+      this.raP(tt, rboxGeo(0.6, 0.03, 0.4, 0.012), OM.rbGloss, 1, 1, 1, 0, 0.88, 0, 0.35);
+      this.lkScreen(tt, this.lkMon(r, 2, this.lkTex('tiles')), 0.56, 0.36, 0, 0.896, 0.006, 0.35 - Math.PI / 2);
+      this.lkStand(r, x0 + 1.72, y0 + 4.9, 2, ex[2], Math.PI / 2);
+    }
+    this.terminal(r, x0 + 0.3, y0 + 0.32, d.link || CO.DEPT_LINK[d.key] || CO.DEPT_LINK.custom);
+    this.lkPlant(r, x0 + 6.6, y0 + 6.62, 0.75);
+    this.lkLedsDone(r);
+    this.plate(r);
+  }
+  // A short server rack at plan x,y facing the room, h tall (1.15: its top at 1.23, under the neon): a dark body, its
+  // front of drive caddies lit as his racks', a vented top, a handle, lights blinking on its front in three steps
+  lkServer(r, x, y, h, q, w = 0.62) {
+    const p = this.raG(r, x, y, 0), D = 0.78;
+    this.raB(p, w, h, D, 0, h / 2, -D / 2, OM.rack, 0.02);
+    this.raP(p, G.plane, OM.rackFace, w - 0.06, h - 0.08, 1, 0, h / 2, 0.002, 0, false);
+    this.lkBox(p, w - 0.04, 0.012, D - 0.06, 0, h + 0.006, -D / 2, OM.lkSteelDk);
+    this.lkBox(p, 0.02, 0.24, 0.02, w / 2 - 0.06, h * 0.5, 0.012, OM.rbMetal);
+    for (let k = 0; k < 4; k++) this.lkLed(r, p, k % 2 ? '#24e8ff' : '#38f5b8', -w / 2 + 0.08 + k * 0.05, h - 0.12 - (k % 2) * 0.2, 0.006, q + k);
   }
   // a picture on the back wall at y0 (a chart, a mood board): hung as the wall screens are, under the neon
   boardTex(r, u0, u1, tex) {
