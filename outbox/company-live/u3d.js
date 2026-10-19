@@ -4250,7 +4250,8 @@ class Office3D {
     ex.forEach((e, i) => this.agent(r, x0 + xs[i] + 0.95, y0 + 4.05, i, CO.expertName(e), { role: e }));
     // his League's referee stands behind the desk, towards the back corner, watching the round
     if (d.run_kind === 'league' && ex.length < 3) {
-      this.agent(r, x0 + 2.2, y0 + 1.75, ex.length, 'Referee', { stand: true, role: 'referee' });
+      // the referee wears the plain suit: role skins are only for the experts live on Cymetica (GET /api/v1/company/templates, 2026-10-19: seven) and its two built-ins, the Manager and the weekly audit's supervisor ("to same pro experty")
+      this.agent(r, x0 + 2.2, y0 + 1.75, ex.length, 'Referee', { stand: true });
     }
     this.terminal(r, x0 + 0.3, y0 + 0.32, d.link || CO.DEPT_LINK[k] || CO.DEPT_LINK.custom);
     // his League keeps its floor open along the front glass: no cabinet there

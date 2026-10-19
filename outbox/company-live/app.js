@@ -138,19 +138,43 @@
     $('tn-rules').textContent = S.rules ? S.rules.filter(function (r) { return r.on; }).length : '';
   }
 
+  // Each department's icon, drawn to its room in the office ("pridej hezke ikonky i zde k departmentum, podle toho
+  // jaky skin mistnosti delas, at je to sladene", 2026-10-19): Development's code, the Design studio's pen, Cymetica
+  // QA's bug, the Testing lab's flask, the Trading desk's candles, the Manager's core with its rings, and for a
+  // department of one's own the look its room has. Line icons in the site's colours, as the tabs' are.
+  var DEPT_ICON = {
+    hub: ['#00cfff', '<circle cx="10" cy="10" r="2.4" fill="currentColor"/><ellipse cx="10" cy="10" rx="7.6" ry="2.9"/><ellipse cx="10" cy="10" rx="7.6" ry="2.9" transform="rotate(60 10 10)"/><ellipse cx="10" cy="10" rx="7.6" ry="2.9" transform="rotate(-60 10 10)"/>'],
+    development: ['#00cfff', '<rect x="2.5" y="3.5" width="15" height="13" rx="2"/><path d="M2.5 7h15 M8.2 9.6l-2.3 2.4 2.3 2.4 M11.8 9.6l2.3 2.4-2.3 2.4"/>'],
+    design: ['#5b9bff', '<path d="M10 2.6l5.4 9.9L10 17.4l-5.4-4.9Z M10 2.6v7.4"/><circle cx="10" cy="11.3" r="1.5"/>'],
+    testing: ['#ff4f5e', '<ellipse cx="10" cy="11.6" rx="3.6" ry="4.6"/><circle cx="10" cy="5.6" r="1.8"/><path d="M10 8.4v7.6 M6.4 10.6H3.2 M16.8 10.6h-3.2 M6.6 14l-2.7 1.9 M13.4 14l2.7 1.9 M8.6 4.4 7.2 2.6 M11.4 4.4l1.4-1.8"/>'],
+    testing_lab: ['#00ff88', '<path d="M7.4 2.6h5.2 M8.5 2.6v5.2L4.1 15.4a1.4 1.4 0 0 0 1.2 2.1h9.4a1.4 1.4 0 0 0 1.2-2.1L11.5 7.8V2.6 M5.9 12.6h8.2"/><circle cx="9" cy="15" r=".8" fill="currentColor"/><circle cx="11.6" cy="14.4" r=".6" fill="currentColor"/>'],
+    trading_desk: ['#00ff88', '<path d="M5 2.8v14.4 M10 2v16 M15 4.6v11"/><rect x="3.5" y="6" width="3" height="6.2" rx=".6"/><rect x="8.5" y="9" width="3" height="5.2" rx=".6"/><rect x="13.5" y="6.6" width="3" height="4.6" rx=".6"/>'],
+    office: ['#5b9bff', '<rect x="3" y="3.4" width="14" height="9.6" rx="1.6"/><path d="M7.4 16.6h5.2 M10 13v3.6 M5.6 6.4h5 M5.6 9h3"/>'],
+    ops: ['#00cfff', '<rect x="2.4" y="3.6" width="6.8" height="5.2" rx="1"/><rect x="10.8" y="3.6" width="6.8" height="5.2" rx="1"/><rect x="6.6" y="11" width="6.8" height="5.2" rx="1"/><path d="M4.4 6.8l1.4-1.2 1.2.9 M12.6 7.2h2.8"/>'],
+    library: ['#5b9bff', '<path d="M3.4 3.4h3v13.2h-3Z M7.9 3.4h3v13.2h-3Z M12.4 4.3l2.9-.8 3.3 12.4-2.9.8Z M3.4 6h3 M7.9 6h3"/>'],
+    workshop: ['#00cfff', '<path d="M12.9 3.1a4 4 0 0 0-4.7 5.2l-4.9 4.9a1.7 1.7 0 0 0 2.4 2.4l4.9-4.9a4 4 0 0 0 5.2-4.7l-2.4 2.4-2.3-.4-.4-2.3Z"/>'],
+    command: ['#00cfff', '<circle cx="10" cy="10" r="7.2"/><circle cx="10" cy="10" r="3.7"/><path d="M10 10l5.1-5.1 M10 2.8v1.6 M10 15.6v1.6 M2.8 10h1.6 M15.6 10h1.6"/><circle cx="12.9" cy="8" r=".9" fill="currentColor"/>'],
+    greenhouse: ['#00ff88', '<path d="M4 16.2c0-7 4.6-11.6 12-12.1-.3 7.4-4.9 12.1-12 12.1Z M4 16.2l6.6-6.6"/>']
+  };
+  function deptIcon(d) {
+    var k = d === 'hub' ? 'hub' : DEPT_ICON[d.key] && d.key !== 'custom' ? d.key : (d.look && DEPT_ICON[d.look] ? d.look : 'office');
+    var ic = DEPT_ICON[k];
+    return '<span class="dic" style="--ic:' + ic[0] + '"><svg viewBox="0 0 20 20" aria-hidden="true">' + ic[1] + '</svg><i class="dot"></i></span>';
+  }
+  CO.deptIcon = deptIcon;
   function renderRail() {
     var S = CO.S;
     $('rail-n').textContent = S.departments.length;
     var cc = CO.counts();
     // Each card says three things: who, what it is doing now, and one number. The rest is one click away.
     var na = S.approvals.length;
-    var mrow = '<button class="dept mgrrow working" title="' + (RO ? 'Read its chat with the Manager' : 'Open your chat with the Manager') + '"><div class="d1"><i class="dot"></i><b>Manager</b>' +
+    var mrow = '<button class="dept mgrrow working" title="' + (RO ? 'Read its chat with the Manager' : 'Open your chat with the Manager') + '">' + deptIcon('hub') + '<div class="d1"><b>Manager</b>' +
       (na ? '<span class="et red">' + na + (RO ? ' wait for owner' : ' need' + (na === 1 ? 's' : '') + ' you') + '</span>' : '') + '</div>' +
       '<div class="dl"><span class="tx cyan">Chat · runs every department</span></div></button>';
     setHTML($('depts'), mrow + S.departments.map(function (d) {
       var v = CO.deptView(d), ln = CO.deptLine(d, v);
       return '<button class="dept ' + v.status + (ln.tone === 'red' ? ' needs' : '') + (ui.panel === d.id ? ' on' : '') + (d.born && S.clock - d.born < 4000 ? ' born' : '') + '" data-id="' + d.id + '">' +
-        '<div class="d1"><i class="dot"></i><b>' + esc(d.name) + '</b>' +
+        deptIcon(d) + '<div class="d1"><b>' + esc(d.name) + '</b>' +
         (d.files_as ? '<span class="et ' + (d.et10 ? 'lit' : 'zero') + '" title="ET10 Cymetica paid for accepted bugs, to ' + esc(d.files_as) + '">' + (d.et10 ? '+' : '') + (d.et10 || 0).toLocaleString('en-US') + ' ET10</span>' : '') + '</div>' +
         '<div class="dl"><span class="tx ' + ln.tone + '" title="' + esc(ln.text) + '">' + esc(ln.text) + '</span>' +
         '<span class="sp' + (v.capped ? ' hot' : '') + '" title="Spent of your plan today' + (v.cap ? ', of its ' + CO.fmtTok(v.cap) + ' daily cap' : '') + '">' + CO.fmtTok(v.tokToday) + '<small>today</small></span></div>' +
@@ -381,14 +405,7 @@
     if (tk._h !== tokHtml && document.activeElement !== $('dr-cap')) { tk._h = tokHtml; tk.innerHTML = tokHtml; }
     // a department on a clock: its runs, products, who the bugs are filed as, what they earned
     var runsHtml = '';
-    if (d.schedule && d.run_kind) {
-      // the league answers puzzles and the outsider hands problems on: no products, no bug count of their own
-      var third = d.run_kind === 'league' ? [(d.answers || 0), 'answers sent'] : [(d.handed || 0), 'handed to QA'];
-      runsHtml = '<div class="runs"><div class="sec">RUNS <span>' + esc(d.schedule.label) + '</span></div>' +
-        '<div class="rk" style="grid-template-columns:repeat(2,1fr)"><div><b>' + hhmm(d.next_run) + '</b><span>next run</span></div>' +
-        '<div><b class="gr">' + third[0] + '</b><span>' + third[1] + '</span></div></div>' +
-        (RO ? '' : '<div class="cb"><span class="sp" style="flex:1"></span><button class="btn cy" data-a="runnow">Run now</button></div>') + '</div>';
-    } else if (d.schedule) {
+    if (d.schedule) {
       runsHtml = '<div class="runs"><div class="sec">RUNS <span>' + esc(d.schedule.label) + '</span></div>' +
         '<div class="rk" style="grid-template-columns:repeat(2,1fr)"><div><b>' + hhmm(d.next_run) + '</b><span>next run</span></div>' +
         '<div><b class="gr">' + (d.accepted || 0) + '</b><span>bugs accepted</span></div></div>' +

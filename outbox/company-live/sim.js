@@ -168,24 +168,6 @@
         S.plan.unshift(t.id);
         feed('info', d.name, 'finished turn ' + t.turns + ' of ' + t.turns_needed + ' on "' + t.title + '"');
         outcome = 'continue';
-      } else if (t.run && d.run_kind === 'league') {
-        // a league round: the puzzles we can compute exactly, answered with the computation as the reasoning
-        t.status = 'done'; t.finished_at = S.clock; d.runs = (d.runs || 0) + 1;
-        var fams = ['cex_dex_arb', 'sequence_similarity'], na = Math.random() < 0.15 ? 0 : Math.random() < 0.4 ? 1 : 2;
-        d.answers = (d.answers || 0) + na;
-        t.outcome = na ? 'Answered ' + na + ' puzzle' + (na > 1 ? 's' : '') + ' (' + fams.slice(0, na).join(', ') + '): accepted and explained' : 'No open puzzle we can compute';
-        feed(na ? 'good' : 'info', d.name, t.outcome.toLowerCase());
-        outcome = 'done';
-      } else if (t.run && d.run_kind === 'stranger') {
-        // a stranger's pass: what confused or broke goes to whoever the processes name (Cymetica QA)
-        t.status = 'done'; t.finished_at = S.clock; d.runs = (d.runs || 0) + 1;
-        var ns = Math.random() < 0.35 ? 0 : Math.random() < 0.7 ? 1 : 2, seen = [];
-        for (var q = 0; q < ns; q++) seen.push(bugTitle(pick(['Gem Screener', 'Agent Tournaments', 'Build it Better', 'Fund Launcher', 'cymetica.com']), d));
-        d.handed = (d.handed || 0) + ns;
-        t.outcome = ns ? 'Found ' + ns + ': ' + seen.join('; ') : 'Nothing confused a newcomer today';
-        feed(ns ? 'ask' : 'good', d.name, ns ? 'stranger pass found ' + ns + ', handed on' : 'stranger pass: nothing confusing');
-        seen.forEach(function (s, k) { later(1500 + k * 1200, function () { if (!fire('bug', d, s)) say(d.name + ' found "' + s + '", and no process takes bugs yet.', d.id); }); });
-        outcome = 'done';
       } else if (t.run) {
         // a scheduled bug-hunting run: each bug found is a report drafted under the owner's name
         t.status = 'done'; t.finished_at = S.clock;
@@ -443,10 +425,8 @@
     var S = CO.S;
     var open = S.tasks.some(function (t) { return t.dept_id === d.id && t.run && (t.status === 'queued' || t.status === 'running'); });
     if (open) return null;
-    var title = d.run_kind === 'league' ? 'League round: the open puzzles we can compute'
-      : d.run_kind === 'stranger' ? 'Stranger pass: cymetica.com as a newcomer'
-      : 'Bug hunt: ' + (d.products.length ? d.products.length + ' product' + (d.products.length > 1 ? 's' : '') : 'the public site');
-    var t = newTask(d, title, { turns_needed: d.run_kind ? 1 : 2, why: why, expert: d.run_kind ? d.experts[0] : 'qa_tester' });
+    var title = 'Bug hunt: ' + (d.products.length ? d.products.length + ' product' + (d.products.length > 1 ? 's' : '') : 'the public site');
+    var t = newTask(d, title, { turns_needed: 2, why: why, expert: 'qa_tester' });
     t.run = true;
     S.plan.unshift(t.id);
     return t;
@@ -470,9 +450,7 @@
       // one draft waiting for the owner is enough: the next one waits until it is decided
       var asking = S.approvals.some(function (a) { return a.dept_id === d.id; }) ||
         S.tasks.some(function (x) { return x.dept_id === d.id && x.kind && (x.status === 'queued' || x.status === 'running'); });
-      // a company with an Outsider leaves the newcomer's look to it
-      var stranger = S.departments.some(function (x) { return x.run_kind === 'stranger'; });
-      var skip = function (q) { return (asking && q.kind) || (stranger && /^Newcomer/.test(q.title)); };
+      var skip = function (q) { return asking && q.kind; };
       var p = pool[d.pool_i % pool.length];
       for (var k = 0; skip(p) && k < pool.length; k++) { d.pool_i++; p = pool[d.pool_i % pool.length]; }
       if (skip(p)) return;
@@ -1044,7 +1022,7 @@
     CO.OURS.departments.forEach(setupDept);
     setupRules(CO.OURS.rules);
     say('Your company is set up: ' + S.departments.length + ' departments and ' + S.rules.length + ' processes. ' +
-      'Cymetica QA, the Outsider and the Agent League run on their clocks; I plan the Laboratory and the Trading desk.');
+      'Cymetica QA runs on its clock; I plan the Laboratory and the Trading desk.');
   };
   // someone else's public company, as a visitor finds it: its departments and processes, what each has
   // finished lately and learned, the ET10 it has earned, and the runner already passing
@@ -1069,10 +1047,9 @@
       d.tok_day = new Date(now).toDateString(); d.tok_today = r2(d.units_7d / 5); d.turns_today = Math.round(d.tok_today / 0.19);
     });
     var by = function (f) { return S.departments.filter(f)[0]; };
-    var qa = by(function (d) { return d.key === 'testing'; }), desk = by(function (d) { return d.key === 'trading_desk'; }), lg = by(function (d) { return d.run_kind === 'league'; });
+    var qa = by(function (d) { return d.key === 'testing'; }), desk = by(function (d) { return d.key === 'trading_desk'; });
     if (qa) { qa.et10 = V.bugs * 1000; qa.accepted = V.bugs; }
     if (desk && V.prize) { desk.et10 = V.prize; desk.prizes = Math.max(1, Math.round(V.prize / 85)); }
-    if (lg && V.league) { lg.et10 = V.league; lg.answers = Math.round(V.league / 500); }
     S.et10 = CO.uvEt10(V);
     S.meter = [0.21, 0.18, 0.24, 0.2, 0.22, 0.19];
     S.budget.session.used = r2(S.budget.session.cap * (0.18 + (V.id % 5) * 0.09));

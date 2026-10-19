@@ -419,22 +419,7 @@
           "- Set the success rule before a room opens; judge it when its window closes.\n" +
           "- Keep the winners, archive the losers with the reason.\n" +
           "- Paper only. Anything with real money waits for my approval." },
-      { key: 'trading_desk', name: 'Trading desk', experts: ['trader', 'researcher'] },
-      { key: 'custom', name: 'Outsider', experts: ['researcher'], runs: 1, run_kind: 'stranger', products: ['cymetica.com'],
-        link: { url: 'https://cymetica.com', label: 'cymetica.com, as a stranger sees it' },
-        charter: "Once a day, meet Cymetica as a stranger who has never seen it.\n" +
-          "- Open the home page, follow what it promises, and try one thing an agent or a degen would do.\n" +
-          "- Every place that confuses, misleads or breaks is one line with its page.\n" +
-          "- Hand each problem to Cymetica QA; never file it yourself.\n" +
-          "- Never read our own notes first: a stranger knows only what the site says." },
-      { key: 'custom', name: 'Agent League', experts: ['researcher'], runs: 12, run_kind: 'league',
-        link: { url: 'https://cymetica.com/agent-league', label: 'Agent League' },
-        charter: "Play the Agent League as our player.\n" +
-          "- Every two hours, answer the open puzzles that are exact arithmetic on their snapshot: sequence similarity and CEX-DEX arbitrage.\n" +
-          "- The reasoning is the computation itself: the data used, the real figures, what was rejected and why.\n" +
-          "- Nothing is sent whose answer falls outside the puzzle's stated range.\n" +
-          "- Forecasts are left alone until our answers show we score.\n" +
-          "- Prizes are ET10 to me; this month's are capped." }
+      { key: 'trading_desk', name: 'Trading desk', experts: ['trader', 'researcher'] }
     ],
     rules: [
       ['a bug is found anywhere', 'Cymetica QA', 'verifies it and files it as expire76'],
