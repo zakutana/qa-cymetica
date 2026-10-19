@@ -2774,12 +2774,19 @@ class Office3D {
       this.box(g, x0 + 5.45, y0 + 0.05, 0.62, 1.2, 0.06, 1.22, OM.dark, false);
       const qh = glowSprite(0x9ff5ec, 0.22, 2.4); qh.position.copy(this.V(x0 + 6.05, y0 + 0.3, 1.22)); g.add(qh);
     } else if (k === 'testing_lab') {
-      // his laboratory: white instruments along the back-right wall, a holographic crystal on a white base, canisters
+      // his laboratory: two display instruments with a hologram in each along the back-right wall, a tall analyser on
+      // the left facing the room with a stool at it, a projector with a turning crystal of data in front of it and a
+      // centrifuge beside that, canisters on a bench by the right wall and a dewar beside them. The desks, the
+      // terminal, the frame and the wall screens are every room's (below). The analyser stands a metre off the wall
+      // so it hides none of the board on it; the crystal stands left of the room's plate, where the home view sees it.
       u1 = 3.4;
-      this.labMachine(r, x0 + 3.75, y0 + 0.3);
-      this.labMachine(r, x0 + 5.15, y0 + 0.3);
-      this.labHolo(r, x0 + 0.6, y0 + 5.0);
-      this.canisters(r, x0 + 6.45, y0 + 1.85);
+      this.labMachine(r, x0 + 3.6, y0 + 0.2, 0);
+      this.labMachine(r, x0 + 4.85, y0 + 0.2, 1);
+      this.raAnalyser(r, x0 + 1.95, y0 + 5.25);
+      this.raStool(r, x0 + 2.42, y0 + 5.68);
+      this.labHolo(r, x0 + 0.78, y0 + 5.98);
+      this.raCentrifuge(r, x0 + 2.75, y0 + 6.48);
+      this.canisters(r, x0 + 6.42, y0 + 1.95);
     } else if (k === 'trading_desk') {
       // Panoramic warm amber-orange chart walls across both back walls of Trading Desk
       this.boardTex(r, 1.75, 6.85, orangeWallTex());
@@ -2854,28 +2861,62 @@ class Office3D {
       for (let k = 0; k < 3; k++) { const col = ['#38f2b8', '#00e5ff', '#3b82f6'][(i + k) % 3]; const l = new THREE.Mesh(G.box, amat(col).glow); l.scale.set(0.055, 0.035, 0.012); l.position.copy(this.V(rx + 0.12 + k * 0.09, y + 0.765, 1.34 - k * 0.34)); l.userData.blink = (i * 7 + k * 3) % 11; r.g.add(l); (r.leds = r.leds || []).push(l); }
     }
   }
-  // a laboratory instrument as in his picture: a white rounded cabinet, on it a white terminal leaning back, its
-  // screen a cyan-green hologram of data
-  labMachine(r, x, y) {
-    const g = r.g;
-    this.rb(g, x, y, 0.08, 1.15, 0.8, 0.62, OM.white, 0.09);
-    this.rb(g, x + 0.05, y + 0.72, 0.2, 1.05, 0.06, 0.38, OM.white2, 0.02);
-    const head = new THREE.Group(); head.position.copy(this.V(x + 0.57, y + 0.36, 0.7)); head.rotation.x = -0.32; g.add(head);
-    const shell = new THREE.Mesh(rboxGeo(0.98, 0.72, 0.5, 0.08), OM.white); shell.position.set(0, 0.36, 0); shell.castShadow = true; head.add(shell);
-    const face = new THREE.Mesh(G.plane, new THREE.MeshBasicMaterial({ map: holoTex(), color: new THREE.Color(0x9ff2e2), toneMapped: false }));
-    face.scale.set(0.8, 0.55, 1); face.position.set(0, 0.37, 0.252); head.add(face);
-    for (let k = 0; k < 3; k++) { const m = new THREE.Mesh(G.box, (k % 2 ? OM.green : OM.cyan).glow); m.scale.set(0.07, 0.03, 0.01); m.position.copy(this.V(x + 0.3 + k * 0.2, y + 0.81, 0.3)); m.userData.blink = k * 3; g.add(m); (r.leds = r.leds || []).push(m); }
+  // His laboratory's display instruments along the back wall: an off-white base with a keyboard set into its top, a
+  // dark slot with a readout and lights along its front, grilles in its sides, and on it a thick rounded frame leaning
+  // back on two hinges, a hologram of data glowing inside it over a grid (k picks which). x,y its back-left corner on
+  // the plan; it faces the room. Its top is 1.25, under the wall's neon (the old one leaned its head up to 1.38).
+  labMachine(r, x, y, k) {
+    this.raMats();
+    const W = 1.15, D = 0.78, H = 0.42, p = this.raG(r, x + W / 2, y + D, 0);
+    this.raB(p, W, H, D, 0, H / 2, -D / 2, OM.raLab, 0.07);
+    this.raB(p, W - 0.16, 0.012, 0.012, 0, 0.11, 0.003, OM.raLab2, 0.004);
+    this.raB(p, W - 0.2, 0.09, 0.03, 0, 0.3, 0, OM.raPanel, 0.015);
+    this.raP(p, G.plane, OM.raRead, 0.26, 0.065, 1, -0.28, 0.3, 0.0155, 0, false);
+    this.raLed(r, p, '#38f5b8', 0.3, 0.3, 0.016, k * 3 + 1); this.raLed(r, p, '#24e8ff', 0.36, 0.3, 0.016, k * 3 + 2);
+    [-1, 1].forEach((s) => { const v = this.raP(p, G.plane, OM.raVentLab, 0.4, 0.18, 1, s * (W / 2 + 0.002), 0.2, -0.42, 0, false); v.rotation.y = s * Math.PI / 2; });
+    this.raKeys(p, 16, 2, 0.048, 0, H, -0.13);
+    [-0.42, 0.42].forEach((hx) => this.raB(p, 0.12, 0.06, 0.12, hx, H + 0.02, -D + 0.26, OM.raLab2, 0.02));
+    // the frame stands 0.72 tall and leans back 10 degrees: its top at 1.25
+    const fr = new THREE.Group(); fr.position.set(0, H + 0.02 + 0.355, -D + 0.26); fr.rotation.x = -0.18; p.add(fr);
+    this.raP(fr, this.raFrame(), OM.raLab, 1, 1, 1, 0, 0, 0);
+    this.raB(fr, 0.9, 0.6, 0.02, 0, 0, -0.03, OM.raGlass, 0.01);
+    this.raP(fr, G.plane, k ? OM.raHoloB : OM.raHoloA, 0.88, 0.58, 1, 0, 0, -0.012, 0, false);
+    this.raP(fr, G.plane, OM.raGrid, 0.86, 0.56, 1, 0, 0, 0.03, 0, false);
+    const h = glowSprite(0x5ff0e0, 0.16, 0.8); h.position.set(0, -0.02, 0.12); fr.add(h);
+    this.raBake(p);
   }
-  // a white base with a holographic crystal of data turning over it
+  // His holographic projector at the front of the laboratory: an off-white case on dark feet, a dark glass top lit by
+  // a grid with a ring of light and an emitter in it, a readout, a drawer, buttons and lights on its dark front; over
+  // it, in a faint beam, a crystal of data turning with specks of light round it (r.crystal). x,y its back-left
+  // corner on the plan.
   labHolo(r, x, y) {
-    const g = r.g;
-    this.rb(g, x, y, 0.08, 1.2, 0.85, 0.48, OM.white, 0.08);
-    this.rb(g, x + 0.12, y + 0.1, 0.56, 0.96, 0.65, 0.06, OM.white2, 0.03);
-    const m = new THREE.Mesh(new THREE.OctahedronGeometry(1, 0), new THREE.MeshBasicMaterial({ color: new THREE.Color(0x6ff5d0).multiplyScalar(0.9), transparent: true, opacity: 0.55, blending: THREE.AdditiveBlending, depthWrite: false, wireframe: false }));
-    m.userData.own = true; m.scale.set(0.32, 0.46, 0.32); m.position.copy(this.V(x + 0.6, y + 0.42, 1.08)); g.add(m);
-    const w = new THREE.Mesh(m.geometry, new THREE.MeshBasicMaterial({ color: 0xbffff0, wireframe: true, transparent: true, opacity: 0.8 })); w.scale.copy(m.scale).multiplyScalar(1.02); w.position.copy(m.position); g.add(w);
-    const h = glowSprite(0x5ff0c8, 0.3, 1.8); h.position.copy(m.position); g.add(h);
-    r.crystal = [m, w];
+    this.raMats();
+    const W = 1.3, D = 0.9, H = 0.5, p = this.raG(r, x + W / 2, y + D, 0), zc = -D / 2, top = 0.04 + H;
+    [[-1, -1], [1, -1], [-1, 1], [1, 1]].forEach(([sx, sz]) => this.raB(p, 0.12, 0.04, 0.12, sx * (W / 2 - 0.12), 0.02, zc + sz * (D / 2 - 0.12), OM.raRubber, 0.015));
+    this.raB(p, W, H, D, 0, 0.04 + H / 2, zc, OM.raLab, 0.08);
+    this.raB(p, W - 0.22, 0.03, D - 0.22, 0, top + 0.004, zc, OM.raGlass, 0.012);
+    this.raP(p, G.plane, OM.raGrid, W - 0.3, D - 0.3, 1, 0, top + 0.021, zc, -Math.PI / 2, false);
+    this.raP(p, G.ringT, OM.cyan.rim, 0.2, 0.2, 0.5, 0, top + 0.03, zc, Math.PI / 2, false);
+    this.raP(p, G.cyl, OM.raChrome, 0.1, 0.03, 0.1, 0, top + 0.03, zc);
+    this.raB(p, W - 0.2, 0.24, 0.03, 0, 0.3, 0, OM.raPanel, 0.02);
+    this.raP(p, G.plane, OM.raRead, 0.34, 0.12, 1, -0.32, 0.33, 0.0155, 0, false);
+    this.raB(p, 0.42, 0.024, 0.012, 0.2, 0.23, 0.016, OM.raTrim, 0.004);
+    [0.08, 0.16, 0.24].forEach((bx) => this.raP(p, G.cyl, OM.raKey, 0.022, 0.02, 0.022, bx, 0.36, 0.018, Math.PI / 2));
+    this.raLed(r, p, '#38f5b8', 0.4, 0.37, 0.016, 2); this.raLed(r, p, '#24e8ff', 0.46, 0.37, 0.016, 4);
+    // the beam, widening as it rises, and the crystal in it
+    // (it stands free at the front, not against a wall, so his tall crystal may rise to the glass's height)
+    const cy = top + 0.47;
+    this.raP(p, G.beam, OM.raBeam, 0.95, 0.4, 0.95, 0, top + 0.22, zc, Math.PI, false);
+    const c = new THREE.Group(); c.position.set(0, cy, zc); c.userData.dyn = true; p.add(c);
+    const sh = new THREE.Mesh(this.raShard(), OM.raShard); sh.scale.set(0.44, 0.42, 0.44); sh.rotation.z = 0.14; c.add(sh);
+    const ed = new THREE.LineSegments(G.raShardE, OM.raEdge); ed.scale.copy(sh.scale); ed.rotation.copy(sh.rotation); c.add(ed);
+    const core = new THREE.Mesh(G.sphere, OM.cyan.glow); core.scale.setScalar(0.04); c.add(core);
+    const R = rng(19), o = new THREE.Object3D(), sp = new THREE.InstancedMesh(G.sphere, amat('#9ff6ff').glow, 26);
+    for (let i = 0; i < 26; i++) { const a = R() * Math.PI * 2, rr = 0.4 + R() * 0.22; o.position.set(Math.cos(a) * rr, (R() - 0.5) * 0.75, Math.sin(a) * rr); o.scale.setScalar(0.007 + R() * 0.007); o.updateMatrix(); sp.setMatrixAt(i, o.matrix); }
+    c.add(sp);
+    const hl = glowSprite(0x5ff0d8, 0.26, 1.9); hl.position.set(0, cy, zc); p.add(hl);
+    r.crystal = [c];
+    this.raBake(p);
   }
   // a see-through screen in a yellow-green frame on a slim stand, a small ring of light in it
   holoFrame(r, x, y) {
@@ -2887,20 +2928,350 @@ class Office3D {
     });
     const ring = new THREE.Mesh(G.ringT, fr); ring.scale.setScalar(0.07); ring.position.set(0, 0.98, 0.01); s.add(ring);
   }
-  // a console with a green screen: what the weekly audit reads its logs on
-  console3(r, x, y) {
-    const g = r.g;
-    this.rb(g, x, y, 0.08, 1.2, 0.75, 0.56, OM.white2, 0.06);
-    const top = new THREE.Mesh(rboxGeo(1.2, 0.08, 0.55, 0.03), OM.white); top.position.copy(this.V(x + 0.6, y + 0.5, 0.76)); top.rotation.x = 0.4; top.castShadow = true; g.add(top);
-    this.rb(g, x + 0.08, y + 0.05, 0.66, 1.04, 0.22, 0.62, OM.white2, 0.06);
-    const scr = new THREE.Mesh(G.plane, new THREE.MeshBasicMaterial({ map: monTex(), toneMapped: false })); scr.scale.set(0.86, 0.46, 1); scr.position.copy(this.V(x + 0.6, y + 0.275, 0.98)); g.add(scr);
-    const key = new THREE.Mesh(G.plane, OM.green.soft); key.scale.set(0.7, 0.16, 1); key.rotation.x = -Math.PI / 2 + 0.4; key.position.copy(this.V(x + 0.6, y + 0.52, 0.81)); g.add(key);
-  }
-  canisters(r, x, y) {
-    [[0, 0, 0.52], [0.0, 0.55, 0.44], [0.0, 1.1, 0.52], [-0.45, 0.3, 0.38]].forEach(([dx, dy, h]) => {
-      this.cyl(r.g, x + dx, y + dy, 0.08, 0.2, h, OM.white);
-      this.cyl(r.g, x + dx, y + dy, 0.08 + h, 0.14, 0.06, OM.cyan.soft);
+  // His weekly audit's computer: a retro console in a slate blue-grey enamel, drawn from the side and extruded across
+  // its width -- a dark kick plate, a front, a deck sloping up to a screen housing that leans back, a rounded top. Two
+  // CRTs sit in raised bezels (the left green with the audit's log, the right dark glass), a keyboard of real keys and
+  // a dark panel of labelled buttons with blinking lights lie on the deck, grilles cut its front, sides and top, a
+  // cable runs from its side to the wall. x,y the middle of its front on the plan, ry the way it faces, alt which log
+  // it shows. Its top is 1.27: under the walls' neon, as in his picture.
+  console3(r, x, y, ry, alt) {
+    this.raMats();
+    const p = this.raG(r, x, y, ry), W = 1.8, Wh = W / 2;
+    this.raP(p, this.raProfile('raConsole', [[0.02, 0], [0, 0.07], [0, 0.57], [0.46, 0.67], [0.64, 1.16], [0.9, 1.18], [0.9, 0]], W, 0.035, 0.012), OM.raCase, 1, 1, 1, 0, 0, 0);
+    this.raB(p, W - 0.1, 0.07, 0.02, 0, 0.04, 0.008, OM.raTrim, 0.008);
+    this.raB(p, W - 0.12, 0.012, 0.01, 0, 0.47, 0.012, OM.raTrim, 0.003);
+    this.raP(p, G.plane, OM.raVent, 0.42, 0.13, 1, Wh * 0.55, 0.25, 0.0125, 0, false);
+    this.raB(p, 0.2, 0.06, 0.01, -Wh * 0.62, 0.27, 0.013, OM.raCaseHi, 0.004);
+    [-1, 1].forEach((s) => { const v = this.raP(p, G.plane, OM.raVent, 0.36, 0.3, 1, s * (Wh + 0.002), 0.36, -0.62, 0, false); v.rotation.y = s * Math.PI / 2; });
+    this.raP(p, G.plane, OM.raVent, W - 0.4, 0.12, 1, 0, 1.19, -0.78, -Math.PI / 2, false);
+    // the screen housing's face, leaning back 20 degrees: two bezels, a dark recess in each, the screens in them
+    const face = new THREE.Group(); face.position.set(0, 0.919, -0.539); face.rotation.x = -0.3521; p.add(face);
+    [-0.44, 0.44].forEach((sx, i) => {
+      this.raB(face, 0.8, 0.43, 0.03, sx, 0, 0, OM.raCaseHi, 0.02);
+      this.raB(face, 0.72, 0.37, 0.03, sx, 0, 0.012, OM.raPanel, 0.014);
+      this.raP(face, G.plane, i ? OM.raDim : alt ? OM.raCrt2 : OM.raCrt1, 0.66, 0.32, 1, sx, 0, 0.0285, 0, false);
     });
+    // the deck, sloping up to the housing: the keyboard on the left, the panel of buttons and lights on the right
+    const deck = new THREE.Group(); deck.position.set(0, 0.632, -0.2275); deck.rotation.x = 0.2138; p.add(deck);
+    this.raKeys(deck, 14, 4, 0.046, -0.44, 0, 0.01);
+    this.raB(deck, 0.7, 0.016, 0.3, 0.44, 0.004, 0, OM.raPanel, 0.006);
+    this.raP(deck, G.plane, OM.raCtl, 0.66, 0.27, 1, 0.44, 0.0125, 0, -Math.PI / 2, false);
+    [0.213, 0.357, 0.502, 0.646].forEach((bx, i) => this.raP(deck, G.cyl, i === 3 ? amat('#ff4444').soft : OM.raKey, 0.025, 0.02, 0.025, bx, 0.022, -0.038));
+    ['#38f5b8', '#24e8ff', '#38f5b8'].forEach((c, i) => this.raLed(r, deck, c, 0.19 + i * 0.065, 0.016, -0.122, i * 2 + alt * 5));
+    if (!G.raCable) G.raCable = new THREE.TubeGeometry(new THREE.CatmullRomCurve3([[0, 0.22, -0.5], [0.07, 0.05, -0.56], [0.16, 0.016, -0.7], [0.19, 0.016, -0.93]].map((v) => new THREE.Vector3(...v))), 16, 0.014, 6, false);
+    this.raP(p, G.raCable, OM.raRubber, 1, 1, 1, Wh, 0, 0);
+    this.raBake(p);
+  }
+  // His canisters: three ribbed cylinders in a pale grey on a dark bench against the right wall, a chrome cap and a lit
+  // ring on each; a tall steel dewar on the floor at the bench's far end, a valve and its wheel on top. x,y the
+  // middle of the bench's front on the plan; the bench faces into the room.
+  canisters(r, x, y) {
+    this.raMats();
+    const p = this.raG(r, x, y, -Math.PI / 2);
+    this.raB(p, 1.5, 0.38, 0.48, 0, 0.21, -0.25, OM.desk, 0.03);
+    this.raB(p, 1.56, 0.04, 0.54, 0, 0.42, -0.26, OM.deskTop, 0.012);
+    [-0.37, 0.37].forEach((dx) => { this.raB(p, 0.66, 0.3, 0.012, dx, 0.22, -0.006, OM.desk, 0.012); this.raB(p, 0.14, 0.02, 0.02, dx, 0.3, 0.004, OM.raChrome, 0.006); });
+    [-0.45, 0, 0.45].forEach((cx, i) => {
+      const h = [0.36, 0.3, 0.36][i], b0 = 0.44;
+      this.raP(p, G.cyl, OM.raLab2, 0.13, h, 0.13, cx, b0 + h / 2, -0.25);
+      [0.08, 0.5, 0.9].forEach((f) => this.raP(p, G.cyl, OM.raLab, 0.137, 0.022, 0.137, cx, b0 + h * f, -0.25));
+      this.raP(p, G.cyl, OM.raChrome, 0.085, 0.045, 0.085, cx, b0 + h + 0.022, -0.25);
+      this.raP(p, G.ringT, OM.cyan.rim, 0.1, 0.1, 0.4, cx, b0 + h + 0.004, -0.25, Math.PI / 2, false);
+    });
+    this.raBake(p);
+    if (!G.raDewar) G.raDewar = new THREE.LatheGeometry([[0, 0], [0.15, 0], [0.17, 0.03], [0.17, 0.6], [0.14, 0.68], [0.07, 0.72], [0.06, 0.78], [0, 0.78]].map(([a, b]) => new THREE.Vector2(a, b)), 32);
+    const d = this.raG(r, x + 0.12, y - 1.33, 0);
+    this.raP(d, G.raDewar, OM.raChrome, 1, 1, 1, 0, 0, 0);
+    this.raP(d, G.cyl, OM.raLab2, 0.172, 0.05, 0.172, 0, 0.12, 0);
+    this.raP(d, G.cyl, OM.raLab2, 0.172, 0.05, 0.172, 0, 0.5, 0);
+    this.raP(d, G.cyl, OM.raTrim, 0.03, 0.08, 0.03, 0, 0.82, 0);
+    this.raP(d, G.ringT, amat('#ff4444').soft, 0.06, 0.06, 0.5, 0, 0.86, 0, Math.PI / 2);
+    this.raB(d, 0.1, 0.08, 0.03, 0, 0.36, 0.17, OM.raPanel, 0.01);
+    this.raBake(d);
+  }
+  /* ---- the weekly audit's and the laboratory's machines, after his picture: parts, materials, textures ---- */
+  // a machine stands in its own frame: a group on the floor at plan x,y, turned to face its room (ry 0 faces +y,
+  // PI/2 faces +x); its parts are placed in it with x across it, y up and z out of its front
+  raG(r, x, y, ry) { const p = new THREE.Group(); p.position.copy(this.V(x, y, 0.08)); p.rotation.y = ry || 0; r.g.add(p); return p; }
+  raP(p, geom, mat, sx, sy, sz, x, y, z, rx, shadow = true) {
+    const m = new THREE.Mesh(geom, mat); m.scale.set(sx, sy, sz); m.position.set(x, y, z); if (rx) m.rotation.x = rx;
+    if (shadow) { m.castShadow = true; m.receiveShadow = true; } p.add(m); return m;
+  }
+  // a box with soft edges in the machine's frame, at its real size, centred on x,y,z
+  raB(p, w, h, d, x, y, z, mat, rad = 0.02) { return this.raP(p, rboxGeo(w, h, d, rad), mat, 1, 1, 1, x, y, z); }
+  // a status light that blinks (the room's frame turns r.leds on and off); it stays out of the merge
+  raLed(r, p, hex, x, y, z, k) {
+    const m = new THREE.Mesh(G.box, amat(hex).glow); m.scale.set(0.024, 0.014, 0.024); m.position.set(x, y, z);
+    m.userData.dyn = true; m.userData.blink = k; p.add(m); (r.leds = r.leds || []).push(m); return m;
+  }
+  // a finished machine: its still parts merged by material, a dozen draw calls instead of fifty; what blinks or turns
+  // is marked dyn and stays as it is, the keys are instanced already
+  raBake(p) {
+    bakeGroup(p);
+    p.children.forEach((m) => { if (m.isMesh && m.userData.own) { const lit = !m.material.isMeshBasicMaterial && !m.material.transparent; m.castShadow = lit; m.receiveShadow = lit; } });
+    return p;
+  }
+  // a keyboard: a dark tray and rows of pale keys, all the keys one draw call; the front row has a space bar
+  raKeys(p, cols, rows, pitch, x, y, z) {
+    const at = [], skip = [], o = new THREE.Object3D();
+    this.raB(p, cols * pitch + 0.03, 0.016, rows * pitch + 0.03, x, y + 0.008, z, OM.raKeyDk, 0.005);
+    for (let j = 0; j < rows; j++) for (let i = 0; i < cols; i++) {
+      if (j === rows - 1 && rows > 2 && i > cols * 0.3 && i < cols * 0.7) { skip.push(i); continue; }
+      at.push([x + (i - (cols - 1) / 2) * pitch, z + (j - (rows - 1) / 2) * pitch, pitch * 0.76]);
+    }
+    if (skip.length) at.push([x + ((skip[0] + skip[skip.length - 1]) / 2 - (cols - 1) / 2) * pitch, z + (rows - 1) / 2 * pitch, (skip.length - 0.24) * pitch]);
+    const im = new THREE.InstancedMesh(G.box, OM.raKey, at.length);
+    at.forEach(([kx, kz, kw], i) => { o.position.set(kx, y + 0.023, kz); o.scale.set(kw, 0.014, pitch * 0.72); o.updateMatrix(); im.setMatrixAt(i, o.matrix); });
+    im.receiveShadow = true; p.add(im); return im;
+  }
+  // a polygon with every corner rounded by rad
+  raShape(pts, rad) {
+    const s = new THREE.Shape(), n = pts.length;
+    pts.forEach((q, i) => {
+      const a = pts[(i + n - 1) % n], b = pts[(i + 1) % n], da = Math.hypot(a[0] - q[0], a[1] - q[1]), db = Math.hypot(b[0] - q[0], b[1] - q[1]), rr = Math.min(rad, da / 2.2, db / 2.2);
+      const p1 = [q[0] + (a[0] - q[0]) / da * rr, q[1] + (a[1] - q[1]) / da * rr], p2 = [q[0] + (b[0] - q[0]) / db * rr, q[1] + (b[1] - q[1]) / db * rr];
+      if (i) s.lineTo(p1[0], p1[1]); else s.moveTo(p1[0], p1[1]);
+      s.quadraticCurveTo(q[0], q[1], p2[0], p2[1]);
+    });
+    s.closePath(); return s;
+  }
+  // a machine's body drawn from the side (u back from its front, v up) and extruded across its width w with soft
+  // edges: a console's sloped deck and leaning screen housing in one piece. Made once per shape (G[key]).
+  raProfile(key, pts, w, rad, bev) {
+    if (G[key]) return G[key];
+    const geo = new THREE.ExtrudeGeometry(this.raShape(pts, rad), { depth: w - 2 * bev, bevelEnabled: true, bevelThickness: bev, bevelSize: bev, bevelSegments: 2, curveSegments: 4, steps: 1 });
+    geo.rotateY(Math.PI / 2); geo.translate(-(w - 2 * bev) / 2, 0, 0);
+    G[key] = geo; return geo;
+  }
+  // the display instruments' thick rounded frame: a rounded rectangle with a rounded hole, extruded
+  raFrame() {
+    if (G.raFrame) return G.raFrame;
+    const rrect = (s, w, h, q) => {
+      const x = -w / 2, y = -h / 2;
+      s.moveTo(x + q, y); s.lineTo(x + w - q, y); s.quadraticCurveTo(x + w, y, x + w, y + q); s.lineTo(x + w, y + h - q); s.quadraticCurveTo(x + w, y + h, x + w - q, y + h);
+      s.lineTo(x + q, y + h); s.quadraticCurveTo(x, y + h, x, y + h - q); s.lineTo(x, y + q); s.quadraticCurveTo(x, y, x + q, y);
+    };
+    const s = new THREE.Shape(), hole = new THREE.Path(); rrect(s, 1.04, 0.72, 0.07); rrect(hole, 0.88, 0.58, 0.035); s.holes.push(hole);
+    const g = new THREE.ExtrudeGeometry(s, { depth: 0.06, bevelEnabled: true, bevelThickness: 0.012, bevelSize: 0.012, bevelSegments: 2, curveSegments: 5 });
+    g.translate(0, 0, -0.03); G.raFrame = g; return g;
+  }
+  // the projector's crystal: a six-sided shard, longer above than below, its facets a little uneven
+  raShard() {
+    if (G.raShard) return G.raShard;
+    const R = rng(77), top = [0.05, 1, -0.03], bot = [0, -0.85, 0.04], ring = [], pos = [];
+    for (let i = 0; i < 6; i++) { const a = i / 6 * Math.PI * 2 + (R() - 0.5) * 0.5, rr = 0.42 + R() * 0.2; ring.push([Math.cos(a) * rr, (R() - 0.5) * 0.3 + 0.08, Math.sin(a) * rr]); }
+    for (let i = 0; i < 6; i++) { const a = ring[i], b = ring[(i + 1) % 6]; pos.push(...top, ...b, ...a, ...bot, ...a, ...b); }
+    const g = new THREE.BufferGeometry(); g.setAttribute('position', new THREE.Float32BufferAttribute(pos, 3)); g.computeVertexNormals();
+    G.raShard = g; G.raShardE = new THREE.EdgesGeometry(g, 1); return g;
+  }
+  // His printer for the report: a teleprinter in the consoles' enamel. A base whose long sides slope in, a recessed
+  // tray on top with its keys and the print head on a chrome rail, a rounded platen along its back with a rubber
+  // roller and knobs at its ends, and the report coming out over it on fan-fold paper. x,y the middle of its front on
+  // the plan, ry the way it faces (his has its platen to the wall, its keys to the room).
+  raPrinter(r, x, y, ry) {
+    this.raMats();
+    const p = this.raG(r, x, y, ry), W = 1.7, rz = (m) => { m.rotation.z = Math.PI / 2; return m; };
+    this.raP(p, this.raProfile('raPrinter', [[0.05, 0], [0, 0.04], [0.06, 0.36], [0.12, 0.41], [0.64, 0.41], [0.7, 0.36], [0.76, 0.04], [0.71, 0]], W, 0.03, 0.012), OM.raCase, 1, 1, 1, 0, 0, 0);
+    this.raB(p, W - 0.26, 0.03, 0.34, 0, 0.41, -0.3, OM.raPanel, 0.01);
+    this.raKeys(p, 16, 3, 0.05, 0.12, 0.425, -0.28);
+    this.raB(p, 0.24, 0.07, 0.13, -0.56, 0.46, -0.3, OM.raTrim, 0.014);
+    rz(this.raP(p, G.cyl, OM.raChrome, 0.01, W - 0.3, 0.01, 0, 0.45, -0.44));
+    rz(this.raP(p, G.cyl, OM.raRubber, 0.075, W - 0.3, 0.075, 0, 0.5, -0.47));
+    rz(this.raP(p, G.cyl, OM.raCaseHi, 0.1, W - 0.12, 0.1, 0, 0.5, -0.56));
+    [-1, 1].forEach((s) => {
+      rz(this.raP(p, G.cyl, OM.raTrim, 0.07, 0.05, 0.07, s * (W / 2 - 0.02), 0.5, -0.56));
+      const v = this.raP(p, G.plane, OM.raVent, 0.34, 0.18, 1, s * (W / 2 + 0.002), 0.2, -0.38, 0, false); v.rotation.y = s * Math.PI / 2;
+    });
+    if (!G.raSheet) {
+      const s = new THREE.PlaneGeometry(1, 1, 1, 10), q = s.attributes.position;
+      for (let i = 0; i < q.count; i++) { const f = (q.getY(i) + 0.5) * 1.3; q.setXYZ(i, q.getX(i), 0.35 * Math.sin(f), -0.35 * (1 - Math.cos(f))); }
+      s.computeVertexNormals(); G.raSheet = s;
+    }
+    this.raP(p, G.raSheet, OM.raPaper, 0.95, 1, 1, 0, 0.6, -0.56);
+    this.raLed(r, p, '#38f5b8', W / 2 - 0.14, 0.3, -0.03, 3);
+    this.raBake(p);
+  }
+  // His laboratory's big instrument: a tall off-white analyser drawn from the side -- a dark plinth, a front with its
+  // door, a dial and a handle, a sloping shelf of buttons with a readout and lights, a screen window leaning back
+  // with a spectrum on it and a line of cyan light round it, a rounded top, grilles in its sides, a hose to the wall.
+  // x,y the middle of its front on the plan; it faces +x. Its top is 1.28.
+  raAnalyser(r, x, y) {
+    this.raMats();
+    const p = this.raG(r, x, y, Math.PI / 2), W = 1.3, Wh = W / 2, b = 0.025;
+    this.raB(p, W - 0.1, 0.06, 0.82, 0, 0.03, -0.47, OM.raTrim, 0.01);
+    this.raP(p, this.raProfile('raAnalyser', [[0, 0.08], [0, 0.55], [0.26, 0.63], [0.4, 1.08], [0.52, 1.17], [0.92, 1.17], [0.92, 0.08]], W, 0.06, b), OM.raLab, 1, 1, 1, 0, 0, 0);
+    // the door, its dial and its handle
+    this.raB(p, 0.98, 0.32, 0.014, -0.05, 0.3, b + 0.004, OM.raLab, 0.012);
+    this.raB(p, 0.98, 0.006, 0.006, -0.05, 0.46, b + 0.012, OM.raLab2, 0.002);
+    this.raP(p, G.cyl, OM.raChrome, 0.055, 0.03, 0.055, -0.42, 0.3, b + 0.02, Math.PI / 2);
+    this.raP(p, G.cyl, OM.raTrim, 0.035, 0.032, 0.035, -0.42, 0.3, b + 0.022, Math.PI / 2);
+    this.raB(p, 0.024, 0.15, 0.03, 0.38, 0.3, b + 0.024, OM.raChrome, 0.01);
+    // the shelf under the window
+    const shelf = new THREE.Group(); shelf.position.set(0, 0.614, -0.1227); shelf.rotation.x = 0.2985; p.add(shelf);
+    [-0.5, -0.42, -0.34, -0.26].forEach((bx, i) => this.raP(shelf, G.cyl, i === 3 ? OM.cyan.soft : OM.raKey, 0.022, 0.02, 0.022, bx, 0.01, 0.03));
+    this.raP(shelf, G.plane, OM.raRead, 0.28, 0.1, 1, 0.02, 0.003, -0.01, -Math.PI / 2, false);
+    this.raP(shelf, G.cyl, OM.raChrome, 0.045, 0.035, 0.045, 0.42, 0.017, 0);
+    this.raLed(r, shelf, '#38f5b8', 0.22, 0.008, 0.02, 1); this.raLed(r, shelf, '#24e8ff', 0.28, 0.008, 0.02, 5);
+    // the window, leaning back: a pale frame, dark glass, the spectrum, the cyan line round it
+    const face = new THREE.Group(); face.position.set(0, 0.862, -0.306); face.rotation.x = -0.3016; p.add(face);
+    this.raB(face, 1.1, 0.42, 0.03, 0, 0, 0, OM.raLab2, 0.025);
+    this.raB(face, 1.0, 0.35, 0.03, 0, 0, 0.012, OM.raGlass, 0.015);
+    this.raP(face, G.plane, OM.raSpec, 0.94, 0.3, 1, 0, 0, 0.0285, 0, false);
+    [[0, 0.177, 1.0, 0.01], [0, -0.177, 1.0, 0.01], [-0.502, 0, 0.01, 0.36], [0.502, 0, 0.01, 0.36]].forEach(([fx, fy, fw, fh]) => this.raP(face, G.box, OM.cyan.rim, fw, fh, 0.008, fx, fy, 0.03, 0, false));
+    [-1, 1].forEach((s) => [[0.82, -0.68, 0.36, 0.3], [0.3, -0.56, 0.5, 0.22]].forEach(([vy, vz, vw, vh]) => {
+      const v = this.raP(p, G.plane, OM.raVentLab, vw, vh, 1, s * (Wh + 0.002), vy, vz, 0, false); v.rotation.y = s * Math.PI / 2;
+    }));
+    this.raB(p, W - 0.24, 0.01, 0.02, 0, 1.17 + b + 0.003, -0.72, OM.raLab2, 0.004);
+    if (!G.raHose) G.raHose = new THREE.TubeGeometry(new THREE.CatmullRomCurve3([[0, 0.25, -0.93], [0.05, 0.05, -1.0], [0.1, 0.016, -1.2], [0.12, 0.016, -1.75]].map((v) => new THREE.Vector3(...v))), 16, 0.018, 6, false);
+    this.raP(p, G.raHose, OM.raRubber, 1, 1, 1, 0.4, 0, 0);
+    this.raBake(p);
+  }
+  // a lab stool: a round padded seat on a chrome column, a foot ring, five legs on casters
+  raStool(r, x, y) {
+    this.raMats();
+    const p = this.raG(r, x, y, 0.3);
+    this.raP(p, G.cyl, OM.chair, 0.19, 0.06, 0.19, 0, 0.58, 0);
+    this.raP(p, G.cyl, OM.raTrim, 0.15, 0.03, 0.15, 0, 0.535, 0);
+    this.raP(p, G.cyl, OM.raChrome, 0.022, 0.5, 0.022, 0, 0.29, 0);
+    this.raP(p, G.ringT, OM.raChrome, 0.15, 0.15, 0.6, 0, 0.26, 0, Math.PI / 2);
+    for (let k = 0; k < 5; k++) {
+      const a = k / 5 * Math.PI * 2, l = this.raP(p, G.box, OM.raTrim, 0.22, 0.03, 0.04, Math.cos(a) * 0.11, 0.045, Math.sin(a) * 0.11); l.rotation.y = -a;
+      this.raP(p, G.sphere, OM.raRubber, 0.026, 0.026, 0.026, Math.cos(a) * 0.21, 0.026, Math.sin(a) * 0.21);
+    }
+    this.raBake(p);
+  }
+  // a centrifuge on the floor: an off-white drum with a tinted glass dome, its rotor turning inside (r.spin), a
+  // readout and a light on its front
+  raCentrifuge(r, x, y) {
+    this.raMats();
+    if (!G.raDrum) G.raDrum = new THREE.LatheGeometry([[0, 0], [0.25, 0], [0.28, 0.03], [0.28, 0.34], [0.26, 0.39], [0.2, 0.41], [0, 0.41]].map(([a, b]) => new THREE.Vector2(a, b)), 32);
+    const p = this.raG(r, x, y, 0.5);
+    this.raP(p, G.raDrum, OM.raLab, 1, 1, 1, 0, 0, 0);
+    this.raP(p, G.cyl, OM.raLab2, 0.284, 0.024, 0.284, 0, 0.2, 0);
+    this.raB(p, 0.2, 0.1, 0.05, 0, 0.28, 0.265, OM.raPanel, 0.015);
+    this.raP(p, G.plane, OM.raRead, 0.16, 0.06, 1, 0, 0.28, 0.2905, 0, false);
+    this.raLed(r, p, '#38f5b8', 0.08, 0.2, 0.282, 5);
+    this.raP(p, G.hemi, OM.raDome, 0.2, 0.11, 0.2, 0, 0.405, 0, 0, false);
+    const rot = new THREE.Group(); rot.position.set(0, 0.43, 0); rot.userData.dyn = true; p.add(rot);
+    for (let k = 0; k < 3; k++) this.raP(rot, G.box, OM.raChrome, 0.28, 0.018, 0.035, 0, 0, 0, 0, false).rotation.y = k * Math.PI / 3;
+    this.raP(rot, G.cyl, OM.cyan.glow, 0.03, 0.03, 0.03, 0, 0.01, 0, 0, false);
+    r.spin = rot;
+    this.raBake(p);
+  }
+  // the materials, made once and kept (OM.ra*): his consoles are a slate blue-grey enamel, his laboratory's
+  // instruments a cool off-white; dark control panels, pale key caps, glossy black glass, chrome, rubber; screens that
+  // glow past the bloom's threshold, holograms that add their light
+  raMats() {
+    if (OM.raCase) return;
+    OM.raCase = std({ color: 0x7b8b9c, roughness: 0.52, metalness: 0.2 });
+    OM.raCaseHi = std({ color: 0x95a3b1, roughness: 0.46, metalness: 0.16 });
+    OM.raTrim = std({ color: 0x38434e, roughness: 0.5, metalness: 0.35 });
+    OM.raPanel = std({ color: 0x131a21, roughness: 0.36, metalness: 0.42 });
+    OM.raKey = std({ color: 0xc9d1d8, roughness: 0.62, metalness: 0.05 });
+    OM.raKeyDk = std({ color: 0x46515c, roughness: 0.6, metalness: 0.12 });
+    OM.raLab = std({ color: 0xb2bfca, roughness: 0.36, metalness: 0.06 });
+    OM.raLab2 = std({ color: 0x8c99a5, roughness: 0.42, metalness: 0.14 });
+    OM.raGlass = std({ color: 0x070d12, roughness: 0.12, metalness: 0.65 });
+    OM.raChrome = std({ color: 0x9aa6b2, roughness: 0.24, metalness: 0.85 });
+    OM.raRubber = std({ color: 0x14191f, roughness: 0.8, metalness: 0.05 });
+    OM.raVent = std({ map: this.raTex('vent'), color: 0x7b8b9c, roughness: 0.55, metalness: 0.2 });
+    OM.raVentLab = std({ map: this.raTex('vent'), color: 0xb2bfca, roughness: 0.4, metalness: 0.08 });
+    OM.raCtl = std({ map: this.raTex('ctl'), emissiveMap: this.raTex('ctl'), emissive: 0xffffff, emissiveIntensity: 0.5, roughness: 0.4, metalness: 0.3 });
+    OM.raPaper = std({ map: this.raTex('paper'), roughness: 0.85, metalness: 0, side: THREE.DoubleSide });
+    OM.raDim = std({ color: 0x04090d, roughness: 0.14, metalness: 0.5, emissiveMap: this.raTex('dim'), emissive: 0xffffff, emissiveIntensity: 0.55 });
+    const scr = (k, c) => new THREE.MeshBasicMaterial({ map: this.raTex(k), color: new THREE.Color(0xffffff).multiplyScalar(c), toneMapped: false });
+    OM.raCrt1 = scr('crt1', 1.6); OM.raCrt2 = scr('crt2', 1.6); OM.raSpec = scr('spec', 1.3); OM.raRead = scr('read', 1.25);
+    const add = (k, c) => new THREE.MeshBasicMaterial({ map: this.raTex(k), color: new THREE.Color(0xffffff).multiplyScalar(c), transparent: true, blending: THREE.AdditiveBlending, depthWrite: false, side: THREE.DoubleSide, toneMapped: false });
+    OM.raHoloA = add('holoA', 2.1); OM.raHoloB = add('holoB', 2.1); OM.raGrid = add('grid', 0.55);
+    OM.raShard = new THREE.MeshBasicMaterial({ color: new THREE.Color(0x5ff5d8).multiplyScalar(0.8), transparent: true, opacity: 0.38, blending: THREE.AdditiveBlending, depthWrite: false, side: THREE.DoubleSide });
+    OM.raEdge = new THREE.LineBasicMaterial({ color: new THREE.Color(0xc8fff4).multiplyScalar(1.8), transparent: true, opacity: 0.95, toneMapped: false });
+    OM.raBeam = new THREE.MeshBasicMaterial({ color: new THREE.Color(0x5ff0e0).multiplyScalar(0.8), transparent: true, opacity: 0.12, blending: THREE.AdditiveBlending, depthWrite: false, side: THREE.DoubleSide });
+    OM.raDome = std({ color: 0x9ff2ea, transparent: true, opacity: 0.3, roughness: 0.05, metalness: 0.1, emissive: 0x24e8ff, emissiveIntensity: 0.3, depthWrite: false });
+  }
+  // the canvas textures, drawn once (TX.ra*): green CRTs with the audit's log, a dark CRT with a faint trace, a panel
+  // of labelled buttons, a grille, a spectrum, small readouts, two holograms, a grid of light, a printed page
+  raTex(k) {
+    const key = 'ra' + k; if (TX[key]) return TX[key];
+    const R = rng(k.length * 131 + k.charCodeAt(0) * 7), mono = (px, w) => (w || 600) + ' ' + px + 'px JetBrains Mono, monospace';
+    const scan = (g, W, H, a) => { g.fillStyle = 'rgba(0,0,0,' + a + ')'; for (let yy = 0; yy < H; yy += 3) g.fillRect(0, yy, W, 1); };
+    const crt = (lines) => (g, W, H) => {
+      g.fillStyle = '#021309'; g.fillRect(0, 0, W, H);
+      const gr = g.createRadialGradient(W / 2, H / 2, 10, W / 2, H / 2, W * 0.7); gr.addColorStop(0, 'rgba(40,255,150,.16)'); gr.addColorStop(1, 'rgba(0,0,0,.45)');
+      g.fillStyle = gr; g.fillRect(0, 0, W, H); g.font = mono(15); g.textBaseline = 'top';
+      lines.forEach((s, i) => { g.fillStyle = i ? 'rgba(80,255,165,' + (0.6 + R() * 0.4).toFixed(2) + ')' : '#b4ffd9'; g.fillText(s, 12, 9 + i * 17.6); });
+      scan(g, W, H, 0.22);
+    };
+    const holo = (fn) => (g, W, H) => {
+      g.fillStyle = '#000'; g.fillRect(0, 0, W, H); g.strokeStyle = 'rgba(60,230,210,.16)'; g.lineWidth = 1;
+      for (let i = 16; i < W; i += 24) { g.beginPath(); g.moveTo(i, 0); g.lineTo(i, H); g.stroke(); }
+      for (let i = 16; i < H; i += 24) { g.beginPath(); g.moveTo(0, i); g.lineTo(W, i); g.stroke(); }
+      g.shadowColor = '#5ff6e0'; g.shadowBlur = 8; fn(g, W, H); g.shadowBlur = 0;
+      g.strokeStyle = 'rgba(120,255,230,.8)'; g.lineWidth = 2;
+      [[8, 8, 1, 1], [W - 8, 8, -1, 1], [8, H - 8, 1, -1], [W - 8, H - 8, -1, -1]].forEach(([cx, cy, sx, sy]) => { g.beginPath(); g.moveTo(cx, cy + sy * 16); g.lineTo(cx, cy); g.lineTo(cx + sx * 16, cy); g.stroke(); });
+    };
+    const D = {
+      crt1: [256, 176, crt(['AUDIT  WEEK 42', '> scan ledger', '  1687 checks  OK', '    20 failed', '   130 fixed', '> diff  W41..W42', '  +3   -11   =0', '> report ready _'])],
+      crt2: [256, 176, crt(['ID    STATE  AGE', '#212  FIXED   3d', '#209  OPEN    5d', '#206  FIXED   6d', '#201  CLAIM   8d', '#198  FIXED   9d', '#190  OPEN   12d', '> 7 of 61 shown'])],
+      dim: [256, 176, (g, W, H) => {
+        g.fillStyle = '#000'; g.fillRect(0, 0, W, H); g.strokeStyle = 'rgba(40,160,110,.5)'; g.lineWidth = 1;
+        for (let i = 20; i < W; i += 36) { g.beginPath(); g.moveTo(i, 30); g.lineTo(i, H - 14); g.stroke(); }
+        g.strokeStyle = 'rgba(70,240,160,.9)'; g.lineWidth = 2.5; g.beginPath();
+        for (let i = 0; i <= 30; i++) { const xx = 14 + i * (W - 28) / 30, yy = H * 0.6 - Math.sin(i * 0.5) * 22 - R() * 14; if (i) g.lineTo(xx, yy); else g.moveTo(xx, yy); }
+        g.stroke(); g.fillStyle = 'rgba(70,240,160,.85)'; g.font = mono(13); g.textBaseline = 'top'; g.fillText('FINDINGS / WEEK', 14, 10);
+      }],
+      ctl: [256, 128, (g, W, H) => {
+        g.fillStyle = '#121a21'; g.fillRect(0, 0, W, H); g.strokeStyle = '#2c3844'; g.lineWidth = 3; g.strokeRect(2, 2, W - 4, H - 4);
+        g.textAlign = 'center'; g.textBaseline = 'middle'; g.font = mono(12, 700);
+        ['CYCLE', 'AUDIT', 'PRINT', 'HOLD'].forEach((s, i) => { const cx = 40 + i * 56; g.strokeStyle = '#4a5866'; g.lineWidth = 3; g.beginPath(); g.arc(cx, 46, 15, 0, Math.PI * 2); g.stroke(); g.fillStyle = '#c3cdd6'; g.fillText(s, cx, 72); });
+        g.fillStyle = '#03140c'; g.fillRect(20, 88, 216, 30); g.fillStyle = '#5cffb0'; g.font = mono(17, 700); g.fillText('W42  0042  OK', 128, 104);
+      }],
+      vent: [64, 64, (g, W, H) => {
+        g.fillStyle = '#ffffff'; g.fillRect(0, 0, W, H);
+        for (let i = 0; i < 7; i++) { g.fillStyle = '#1a2026'; g.fillRect(5, 5 + i * 8.4, W - 10, 4.4); g.fillStyle = 'rgba(255,255,255,.6)'; g.fillRect(5, 9.6 + i * 8.4, W - 10, 1.2); }
+      }],
+      spec: [256, 160, (g, W, H) => {
+        g.fillStyle = '#021018'; g.fillRect(0, 0, W, H); g.strokeStyle = 'rgba(36,232,255,.18)'; g.lineWidth = 1;
+        for (let i = 0; i < 6; i++) { g.beginPath(); g.moveTo(16, 34 + i * 20); g.lineTo(W - 12, 34 + i * 20); g.stroke(); }
+        const ys = []; for (let xx = 16; xx < W - 12; xx += 2) ys.push([xx, H - 20 - ([[60, 70, 10], [104, 40, 6], [150, 95, 8], [196, 55, 12]].reduce((s, [c, h, w]) => s + h * Math.exp(-((xx - c) ** 2) / (2 * w * w)), 0) + 4 + R() * 3)]);
+        g.beginPath(); g.moveTo(16, H - 20); ys.forEach(([xx, yy]) => g.lineTo(xx, yy)); g.lineTo(W - 12, H - 20); g.closePath(); g.fillStyle = 'rgba(36,232,255,.2)'; g.fill();
+        g.beginPath(); ys.forEach(([xx, yy], i) => (i ? g.lineTo(xx, yy) : g.moveTo(xx, yy))); g.strokeStyle = '#7ff4ff'; g.lineWidth = 2.5; g.stroke();
+        g.fillStyle = '#9ff6ff'; g.font = mono(13, 700); g.textBaseline = 'top'; g.fillText('SPECTRUM  m/z', 14, 8); g.textAlign = 'right'; g.fillText('214.6', W - 12, 8);
+        scan(g, W, H, 0.18);
+      }],
+      read: [128, 48, (g, W, H) => {
+        g.fillStyle = '#021016'; g.fillRect(0, 0, W, H); g.font = mono(17, 700); g.textBaseline = 'middle';
+        g.fillStyle = '#7ff4ff'; g.fillText('37.0°C', 8, H / 2); g.fillStyle = '#38f5b8'; g.fillText('OK', W - 32, H / 2);
+      }],
+      holoA: [256, 160, holo((g, W, H) => {
+        const cx = W / 2, cy = H / 2 + 4, ring = [], top = [cx + 4, cy - 58], bot = [cx - 2, cy + 56];
+        for (let i = 0; i < 7; i++) { const a = i / 7 * Math.PI * 2; ring.push([cx + Math.cos(a) * 46, cy - 6 + Math.sin(a) * 15]); }
+        g.fillStyle = 'rgba(60,240,210,.16)'; g.beginPath(); g.moveTo(...top); ring.forEach((q) => g.lineTo(...q)); g.closePath(); g.fill();
+        g.strokeStyle = 'rgba(130,255,228,.95)'; g.lineWidth = 2;
+        ring.forEach((q, i) => { const n = ring[(i + 1) % 7]; g.beginPath(); g.moveTo(...top); g.lineTo(...q); g.lineTo(...bot); g.moveTo(...q); g.lineTo(...n); g.stroke(); });
+        g.fillStyle = '#9ffbe8'; g.font = mono(12, 700); g.textBaseline = 'top'; g.fillText('SAMPLE 07', 14, 12); g.fillText('98.2%', W - 58, H - 24);
+      })],
+      holoB: [256, 160, holo((g, W, H) => {
+        const n = [], cx = W / 2, cy = H / 2;
+        for (let i = 0; i < 34; i++) { const a = R() * Math.PI * 2, rr = Math.sqrt(R()); n.push([cx + Math.cos(a) * rr * 82, cy + Math.sin(a) * rr * 50]); }
+        g.strokeStyle = 'rgba(70,215,255,.75)'; g.lineWidth = 1.4;
+        n.forEach((a, i) => n.forEach((b, j) => { if (j > i && Math.hypot(a[0] - b[0], a[1] - b[1]) < 34) { g.beginPath(); g.moveTo(...a); g.lineTo(...b); g.stroke(); } }));
+        g.fillStyle = '#c4f6ff'; n.forEach((a) => { g.beginPath(); g.arc(a[0], a[1], 2.6, 0, Math.PI * 2); g.fill(); });
+        g.font = mono(12, 700); g.textBaseline = 'top'; g.fillText('MODEL  v3', 14, 12); g.fillText('0.87', W - 46, H - 24);
+      })],
+      grid: [128, 128, (g, W, H) => {
+        g.fillStyle = '#000'; g.fillRect(0, 0, W, H); g.strokeStyle = 'rgba(50,230,210,.55)'; g.lineWidth = 1.5;
+        for (let i = 8; i < W; i += 15) { g.beginPath(); g.moveTo(i, 0); g.lineTo(i, H); g.stroke(); g.beginPath(); g.moveTo(0, i); g.lineTo(W, i); g.stroke(); }
+        g.strokeStyle = 'rgba(90,250,230,.9)'; g.lineWidth = 3; g.strokeRect(3, 3, W - 6, H - 6);
+      }],
+      paper: [128, 192, (g, W, H) => {
+        g.fillStyle = '#e4e9ec'; g.fillRect(0, 0, W, H); g.fillStyle = '#b4bdc4';
+        for (let yy = 8; yy < H; yy += 16) [7, W - 7].forEach((xx) => { g.beginPath(); g.arc(xx, yy, 3, 0, Math.PI * 2); g.fill(); });
+        g.fillStyle = '#3b4652'; g.fillRect(18, 12, 60, 7);
+        for (let i = 0; i < 14; i++) { g.fillStyle = 'rgba(60,72,84,' + (0.45 + R() * 0.4).toFixed(2) + ')'; g.fillRect(18, 28 + i * 11, 30 + R() * 62, 4); }
+      }]
+    };
+    const [w, h, draw] = D[k];
+    TX[key] = ctex(w, h, draw); return TX[key];
   }
   // somewhere to sit and look at the site as a stranger would
   lounge(r, x, y) {
@@ -2952,16 +3323,20 @@ class Office3D {
     this.plate(r, 'hubp'); r.plateAt = this.V(x0 + 6.1, y0 + 6.75, 1.3);
     r.need = document.createElement('div'); r.need.className = 'p3need'; r.need.addEventListener('click', () => CO.emit('office:click', 'hub')); this.layer.appendChild(r.need);
   }
-  // the weekly audit: two consoles with green screens, a desk, a printer for the report
+  // The weekly audit as in his picture: two retro consoles side by side along the back-left wall facing the room,
+  // the week's screen on the back-right wall, the supervisor at a desk between them, a teleprinter for the report
+  // with its platen to the front-right wall (his stands by the front-left one, but there the room's plate hid it from
+  // the home view), a cabinet beside it, a plant in the left corner
   auditRoom(r) {
-    const g = r.g, x0 = r.x0, y0 = r.y0;
-    this.console3(r, x0 + 0.3, y0 + 0.3); this.console3(r, x0 + 1.7, y0 + 0.3);
-    this.wallScreen(r, 3.4, 6.6);
-    this.desk(r, x0 + 3.0, y0 + 2.75, 0, false);
-    this.agent(r, x0 + 3.95, y0 + 4.05, 0, 'Supervisor');
-    this.rb(g, x0 + 0.35, y0 + 4.4, 0.08, 1.0, 0.8, 0.6, OM.white2, 0.06); this.rb(g, x0 + 0.45, y0 + 4.5, 0.68, 0.8, 0.6, 0.07, OM.white, 0.03);
+    const x0 = r.x0, y0 = r.y0;
+    this.console3(r, x0 + 1.1, y0 + 1.9, Math.PI / 2, 0);
+    this.console3(r, x0 + 1.1, y0 + 3.95, Math.PI / 2, 1);
+    this.wallScreen(r, 1.6, 5.4);
+    this.desk(r, x0 + 2.9, y0 + 1.9, 0, false);
+    this.agent(r, x0 + 3.85, y0 + 3.2, 0, 'Supervisor');
+    this.raPrinter(r, x0 + 6.08, y0 + 5.75, -Math.PI / 2);
     this.cabinet(r, x0 + 6.45, y0 + 2.6, 0.45, 2.2, 0.72);
-    this.plant(r, x0 + 6.5, y0 + 6.5);
+    this.plant(r, x0 + 0.45, y0 + 6.5);
     this.plate(r, 'auditp');
   }
   // The vault: its round door in the back wall, a lit plinth where ET10 (green) and USDC (blue) pile up in stacks of
