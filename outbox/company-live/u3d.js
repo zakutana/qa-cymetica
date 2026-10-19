@@ -1991,34 +1991,61 @@ function tileTex() {
     }
   }));
 }
-// the hull's side as in his picture: slate panels with seams, and along it modules in a light grey frame -- a dark
-// blue inset with a lit strip and small lights -- a lighter band at the top, a dark chamfer at the foot
+// The hull's side as in his picture: navy plating, mostly, with a lighter band along the top and a dark chamfer at
+// the foot, seams between its plates; and along it modules that are frames, not plates -- a thin silver frame round
+// a dark bay with a slit of light and one status light, navy bays with grilles, a hatch. One side of a room's hull
+// is 8 units, the texture's width; it repeats round the station, so each side starts it at its own offset (the
+// layout's tier boxes do that) and nothing in it lines up at the wrap.
 function hullTex() {
   if (TX.hull) return TX.hull;
-  const W = 1024, H = 200, R = rng(41), lit = [0, 1, 2, 3].map(() => R() < 0.7);
-  const draw = (glow) => (g) => {
-    g.fillStyle = glow ? '#000000' : '#36424f'; g.fillRect(0, 0, W, H);
+  const W = 1024, H = 212;
+  const frame = (g, x, y, w, h, glow, led) => {
     if (!glow) {
-      g.fillStyle = '#4c5866'; g.fillRect(0, 0, W, 14);
-      g.fillStyle = '#1a222c'; g.fillRect(0, H - 26, W, 26);
-      g.fillStyle = '#202a35'; for (let x = 0; x < W; x += 128) g.fillRect(x, 14, 3, H - 40);
+      g.fillStyle = '#9ca7b4'; g.fillRect(x, y, w, h);
+      g.fillStyle = '#b4bec9'; g.fillRect(x, y, w, 3);
+      g.fillStyle = '#5c6774'; g.fillRect(x, y + h - 3, w, 3);
+      g.fillStyle = '#0b111a'; g.fillRect(x + 6, y + 6, w - 12, h - 12);
+      g.fillStyle = '#18243a'; g.fillRect(x + 12, y + 14, w - 24, 16);
+      g.fillStyle = '#141c28'; for (let k = x + 14; k < x + w - 40; k += 9) g.fillRect(k, y + h - 30, 4, 18);
     }
-    // the modules: a silver plate, a dark window in it with a lit strip, a grille, a status light
-    for (let p = 0; p < 4; p++) {
-      const x = p * 256 + (p % 2 ? 40 : 18), w = p % 2 ? 150 : 200;
-      if (!glow) {
-        g.fillStyle = '#a6b2c0'; g.fillRect(x, 30, w, 118);
-        g.fillStyle = '#c4ced8'; g.fillRect(x, 30, w, 4);
-        g.fillStyle = '#6c7886'; g.fillRect(x, 142, w, 6);
-        g.fillStyle = '#1b2638'; g.fillRect(x + 12, 40, w - 24, 52);
-        g.fillStyle = '#26344c'; g.fillRect(x + 16, 44, w - 32, 20);
-        g.fillStyle = '#56626e'; for (let k = 0; k < 6; k++) g.fillRect(x + 14 + k * 12, 104, 7, 28);
-      }
-      if (lit[p]) { g.fillStyle = glow ? '#5a90e0' : '#34507e'; g.fillRect(x + 16, 72, w - 32, 10); }
-      g.fillStyle = glow ? (p % 2 ? '#7cf2c4' : '#9fe8ff') : '#3a5a70'; g.fillRect(x + w - 30, 112, 12, 9);
-    }
+    g.fillStyle = glow ? '#5a8ed8' : '#2c4670'; g.fillRect(x + 16, y + 19, w - 32, 6);
+    g.fillStyle = glow ? led : '#2e5a52'; g.fillRect(x + w - 30, y + h - 26, 12, 8);
   };
-  TX.hull = ctex(W, H, draw(false)); TX.hullGlow = ctex(W, H, draw(true)); return TX.hull;
+  const bay = (g, x, y, w, h, glow) => {
+    if (glow) return;
+    g.fillStyle = '#1d2b47'; g.fillRect(x, y, w, h);
+    g.strokeStyle = '#2c3b56'; g.lineWidth = 2; g.strokeRect(x + 1, y + 1, w - 2, h - 2);
+    g.fillStyle = '#0c1322'; for (let k = x + 10; k < x + w - 10; k += 10) g.fillRect(k, y + 14, 5, h - 28);
+  };
+  const draw = (glow) => (g) => {
+    g.fillStyle = glow ? '#000000' : '#273346'; g.fillRect(0, 0, W, H);
+    if (!glow) {
+      g.fillStyle = '#69747f'; g.fillRect(0, 0, W, 20); g.fillStyle = '#8a95a1'; g.fillRect(0, 0, W, 3); g.fillStyle = '#121925'; g.fillRect(0, 20, W, 3);
+      g.fillStyle = '#121a26'; g.fillRect(0, H - 24, W, 24); g.fillStyle = '#26324a'; g.fillRect(0, H - 24, W, 2);
+      [0, 96, 352, 470, 640, 812, 930].forEach((x) => { g.fillStyle = '#121a27'; g.fillRect(x, 23, 2, H - 47); g.fillStyle = '#2a3750'; g.fillRect(x + 2, 23, 1, H - 47); });
+      // a hatch: a rounded square outline with two bolts
+      g.strokeStyle = '#33415a'; g.lineWidth = 3; g.beginPath(); g.roundRect(842, 58, 64, 92, 10); g.stroke();
+      g.fillStyle = '#4a5870'; g.fillRect(852, 66, 6, 6); g.fillRect(890, 136, 6, 6);
+    }
+    frame(g, 112, 44, 226, 118, glow, '#7cf2c4');
+    bay(g, 488, 52, 138, 104, glow);
+    frame(g, 656, 64, 140, 92, glow, '#9fe8ff');
+    bay(g, 14, 60, 70, 92, glow);
+    // small lights along the top band
+    [[260, '#9fe8ff'], [742, '#7cf2c4']].forEach(([x, c]) => { g.fillStyle = glow ? c : '#3a4a5a'; g.fillRect(x, 8, 26, 5); });
+  };
+  TX.hull = ctex(W, H, draw(false)); TX.hullGlow = ctex(W, H, draw(true));
+  TX.hull.wrapS = TX.hullGlow.wrapS = THREE.RepeatWrapping;
+  return TX.hull;
+}
+// a box like G.box whose four sides start the hull texture at their own offsets (k picks the set), so the modules
+// do not repeat in step round the station
+function exHullBox(k) {
+  const key = 'exHullBox' + k;
+  if (G[key]) return G[key];
+  const g = G.box.clone(), uv = g.attributes.uv;
+  [0, 1, 4, 5].forEach((f, i) => { const o = ((k * 3 + i * 5) % 8) / 8; for (let v = f * 4; v < f * 4 + 4; v++) uv.setX(v, uv.getX(v) + o); });
+  return (G[key] = g);
 }
 function rackTex() {
   if (TX.rack) return TX.rack;
@@ -2109,7 +2136,228 @@ function asteroidGeo(seed, detail = 64, flatTop = true) {
   g.computeVertexNormals();
   return g;
 }
-function rockNodeMat(freq) {
+// The rock the station is built on, as his picture has it: a craggy mass hanging below the hull like an upturned
+// mountain. Real broken rock is planes meeting at sharp edges, so it is cut: a sphere sliced by many random planes
+// (each point pulled in to the nearest plane), which leaves large faces that catch the light and an angular outline;
+// then roughened by ridged noise, so the faces are rock and not cut stone. His rock is no lighter than ours was; it
+// has contrast, so the colour is baked per vertex: each face its own tone, the hollows of the ridges dark, darker
+// deep underneath. flat: cut flat on top, where it meets the keel; drop: how far the bottom hangs, in its own radii.
+function exRockGeo(seed, detail, drop, flat) {
+  let g = new THREE.IcosahedronGeometry(1, detail);
+  g.deleteAttribute('normal'); g.deleteAttribute('uv'); g = mergeVertices(g);
+  const P = perlin3(seed), pos = g.attributes.position, v = new THREE.Vector3(), n = pos.count, R = rng(seed + 3);
+  const fbm = (x, y, z, o) => { let s = 0, a = 0.5, f = 1; for (let i = 0; i < o; i++) { s += a * P(x * f, y * f, z * f); a *= 0.5; f *= 2.03; } return s; };
+  const ridge = (x, y, z, o) => { let s = 0, a = 0.5, f = 1; for (let i = 0; i < o; i++) { const r = 1 - Math.abs(P(x * f + 31.7, y * f + 7.1, z * f)); s += a * r * r; a *= 0.5; f *= 2.1; } return s; };
+  const cuts = [];
+  for (let i = 0; i < 64; i++) {
+    const c = new THREE.Vector3(R() * 2 - 1, R() * 2 - 1, R() * 2 - 1).normalize();
+    cuts.push({ c, d: 0.58 + R() * 0.4, tone: 0.45 + R() * 1.1 });
+  }
+  const tone = new Float32Array(n), cav = new Float32Array(n);
+  for (let i = 0; i < n; i++) {
+    v.fromBufferAttribute(pos, i);
+    let r = 1 + 0.22 * fbm(v.x * 1.3, v.y * 1.3, v.z * 1.3, 3), tn = 0.85;
+    for (const k of cuts) { const dd = v.dot(k.c); if (dd > 0.05 && k.d / dd < r) { r = k.d / dd; tn = k.tone; } }
+    const rg = ridge(v.x * 2.7, v.y * 2.7, v.z * 2.7, 4) - 0.42;
+    r *= 1 + 0.12 * rg + 0.016 * fbm(v.x * 13, v.y * 13, v.z * 13, 2);
+    tone[i] = tn; cav[i] = rg;
+    let x = v.x * r, y = v.y * r, z = v.z * r;
+    if (flat && y > 0.22) y = 0.22 + (y - 0.22) * 0.08;
+    else if (y < 0.22) { const d = (0.22 - y) * drop, k = 1 - 0.3 * Math.min(1, d / (1.25 * drop)); y = 0.22 - d; x *= k; z *= k; }
+    pos.setXYZ(i, x, y, z);
+  }
+  g.computeVertexNormals();
+  // faces turned up catch the sun and go light, faces turned down sit in the station's shadow and go dark
+  const col = new Float32Array(n * 3), lo = -1.25 * drop, nr = g.attributes.normal;
+  for (let i = 0; i < n; i++) {
+    let k = Math.pow(tone[i], 1.6) * (0.1 + 1.35 * sstep(-0.26, 0.14, cav[i])) + 0.1 * (R() - 0.5);
+    k *= (1 - 0.55 * sstep(0, lo, pos.getY(i))) * (0.35 + 1.0 * Math.pow(0.5 + 0.5 * nr.getY(i), 1.6));
+    col[i * 3] = 0.064 * k; col[i * 3 + 1] = 0.067 * k; col[i * 3 + 2] = 0.076 * k;
+  }
+  g.setAttribute('color', new THREE.BufferAttribute(col, 3));
+  return g;
+}
+// his moonlet: nearly round, a little lumpy, softly cratered, light grey with darker plains -- a moon, not a rock
+function exMoonGeo(seed) {
+  let g = new THREE.IcosahedronGeometry(1, 22);
+  g.deleteAttribute('normal'); g.deleteAttribute('uv'); g = mergeVertices(g);
+  const P = perlin3(seed), pos = g.attributes.position, v = new THREE.Vector3(), n = pos.count, R = rng(seed + 5), col = new Float32Array(n * 3);
+  const fbm = (x, y, z, o) => { let s = 0, a = 0.5, f = 1; for (let i = 0; i < o; i++) { s += a * P(x * f, y * f, z * f); a *= 0.5; f *= 2.03; } return s; };
+  const craters = [];
+  for (let i = 0; i < 46; i++) craters.push({ c: new THREE.Vector3(R() * 2 - 1, R() * 2 - 1, R() * 2 - 1).normalize(), r: 0.05 + Math.pow(R(), 2) * 0.3, d: 0.06 + R() * 0.08 });
+  for (let i = 0; i < n; i++) {
+    v.fromBufferAttribute(pos, i);
+    let h = 0.07 * fbm(v.x * 1.2, v.y * 1.2, v.z * 1.2, 3) + 0.01 * fbm(v.x * 9, v.y * 9, v.z * 9, 2), tone = 0.82 + 0.6 * fbm(v.x * 1.8 + 4, v.y * 1.8, v.z * 1.8, 3);
+    for (const k of craters) {
+      const x = Math.acos(Math.max(-1, Math.min(1, v.dot(k.c)))) / k.r;
+      if (x < 1) { h -= k.r * k.d * (1 - x * x); tone -= 0.12 * (1 - x); }
+      else if (x < 1.5) { h += k.r * k.d * 0.35 * Math.pow(1 - (x - 1) / 0.5, 2); tone += 0.1 * (1 - (x - 1) / 0.5); }
+    }
+    v.multiplyScalar(1 + h); v.y *= 0.93; pos.setXYZ(i, v.x, v.y, v.z);
+    const t = Math.max(0.35, Math.min(1.3, tone)) * 0.19;
+    col[i * 3] = t; col[i * 3 + 1] = t * 1.0; col[i * 3 + 2] = t * 1.04;
+  }
+  g.setAttribute('color', new THREE.BufferAttribute(col, 3));
+  g.computeVertexNormals();
+  return g;
+}
+/* ---- the station's outside: what its engines, thrusters and solar panels are built from ---- */
+// His engines are gunmetal, not paint: a dark one for collars and bodies, a lighter one for the big engine's
+// housing, near-black for ribs, mounts and lips, a bright chrome band on the back engines, gold fittings. All of
+// them made once, on OM like the rest, so a layout reuses them.
+function exMats() {
+  if (OM.exGun) return;
+  const ds = THREE.DoubleSide;
+  OM.exGun = std({ color: 0x3c424b, roughness: 0.34, metalness: 0.78, side: ds });
+  OM.exGunL = std({ color: 0x939ba6, roughness: 0.28, metalness: 0.76, side: ds });
+  OM.exGunD = std({ color: 0x14181e, roughness: 0.42, metalness: 0.6, side: ds });
+  OM.exChrome = std({ color: 0xc4ccd5, roughness: 0.2, metalness: 0.9, side: ds });
+  // the panels catch the studio's ceiling at a glancing angle; his never flare white, so they see less of it
+  OM.exFrame = std({ color: 0x9aa4b0, roughness: 0.55, metalness: 0.5, envMapIntensity: 0.3 });
+  OM.exSolar = std({ map: exSolarTex(), roughness: 0.62, metalness: 0.15, emissive: 0x16284e, emissiveIntensity: 0.16, envMapIntensity: 0.12 });
+  // his moonlet is lit from one side with a hard terminator; the office's fill light comes from the camera and
+  // would light all of the face it shows, so it is lit by its own sun, fixed in the sky as it turns
+  OM.exMoon = new THREE.MeshBasicNodeMaterial();
+  const nd = TSL.dot(TSL.normalWorld, TSL.vec3(-0.69, 0.22, 0.69).normalize());
+  OM.exMoon.colorNode = TSL.vertexColor().xyz.mul(TSL.smoothstep(-0.02, 0.3, nd).mul(1.1).add(0.03));
+  OM.exNoz = new THREE.MeshBasicMaterial({ map: exNozTex(false), toneMapped: false });
+  OM.exNozT = new THREE.MeshBasicMaterial({ map: exNozTex(true), color: new THREE.Color(0xffffff).multiplyScalar(1.6), toneMapped: false });
+  OM.exNozB = new THREE.MeshBasicMaterial({ map: exNozTex(true), color: new THREE.Color(0x9cc0ff).multiplyScalar(1.8), toneMapped: false });
+  OM.exLedG = emis('#7cf2c4', 2.2); OM.exLedC = emis('#9fe8ff', 2.2); OM.exCable = emis('#38f5b8', 0.9);
+  // his plumes are soft: bright where they leave the nozzle, fading along their length AND toward their edges, so
+  // the cone never shows a hard outline (the fade across is how square to the eye each point of it is)
+  const plume = (hex, k) => {
+    const m = new THREE.MeshBasicNodeMaterial({ transparent: true, blending: THREE.AdditiveBlending, depthWrite: false, side: ds }), t = TSL.texture(plumeTex());
+    const face = TSL.abs(TSL.dot(TSL.normalView, TSL.positionViewDirection));
+    m.colorNode = TSL.vec3(...new THREE.Color(hex).toArray()).mul(t.rgb).mul(1.6); m.opacityNode = t.a.mul(face.mul(face)).mul(k); return m;
+  };
+  OM.exPlumeA = plume(0x3d6cff, 0.4); OM.exPlumeB = plume(0x9cc4ff, 0.4);
+  const L = (pts) => new THREE.LatheGeometry(pts.map(([r, z]) => new THREE.Vector2(r, z)), 48);
+  // profiles turned about the engine's axis, back (at the hull) to front (the nozzle), radius first
+  G.exCollar = L([[0.45, 0.18], [0.84, 0.2], [0.9, 0.28], [0.9, 0.66], [0.84, 0.74], [0.6, 0.76]]);
+  G.exHousing = L([[0.6, 1.04], [0.92, 1.06], [0.99, 1.12], [1.0, 1.2], [1.0, 2.35], [0.97, 2.43], [0.9, 2.45]]);
+  G.exThrBody = L([[0.2, 0.4], [0.36, 0.44], [0.4, 0.52], [0.41, 0.6], [0.41, 0.98], [0.38, 1.04]]);
+  G.exBackCap = L([[0.05, -0.12], [0.3, -0.1], [0.46, -0.02], [0.52, 0.1]]);
+  G.exBell = L([[0.44, 0.92], [0.5, 1.02], [0.54, 1.12], [0.52, 1.16]]);
+  G.exTube = new THREE.CylinderGeometry(1, 1, 1, 40, 1, true); G.exTube.rotateX(Math.PI / 2);
+  G.exRod = new THREE.CylinderGeometry(1, 1, 1, 10); G.exRod.rotateX(Math.PI / 2);
+  G.exTor = {}; [0.03, 0.06, 0.12].forEach((t) => { G.exTor[t] = new THREE.TorusGeometry(1, t, 10, 64); });
+}
+// his solar panels: deep blue cells, six across and eight down, with pale lines between them and a brighter
+// divide across the middle, in a silver frame (the frame is drawn too, so it reads at any distance)
+function exSolarTex() {
+  return TX.exSolar || (TX.exSolar = ctex(240, 320, (g, W, H) => {
+    g.fillStyle = '#aeb8c4'; g.fillRect(0, 0, W, H);
+    g.fillStyle = '#5f6d88'; g.fillRect(4, 4, W - 8, H - 8);
+    const nx = 7, ny = 10, x0 = 6, y0 = 6, cw = (W - 12) / nx, ch = (H - 12) / ny;
+    for (let i = 0; i < nx; i++) for (let j = 0; j < ny; j++) {
+      const x = x0 + i * cw, y = y0 + j * ch + (j >= ny / 2 ? 1.5 : -1.5), gr = g.createLinearGradient(x, y, x + cw, y + ch);
+      gr.addColorStop(0, '#2a4276'); gr.addColorStop(1, '#18284e'); g.fillStyle = gr; g.fillRect(x + 1, y + 1, cw - 2, ch - 2);
+      g.fillStyle = 'rgba(140,170,230,.16)'; g.fillRect(x + cw / 2 - 0.5, y + 2, 1, ch - 4);
+    }
+    g.fillStyle = '#9aa6bc'; g.fillRect(4, H / 2 - 1.5, W - 8, 3);
+  }));
+}
+// a nozzle seen face on: the big engine's a deep cyan behind concentric rings, a thruster's bright cyan, white
+// at the heart
+function exNozTex(hot) {
+  const k = hot ? 'exNozH' : 'exNoz';
+  return TX[k] || (TX[k] = ctex(256, 256, (g) => {
+    const gr = g.createRadialGradient(128, 128, 0, 128, 128, 128);
+    if (hot) { gr.addColorStop(0, 'rgba(240,255,255,1)'); gr.addColorStop(0.45, 'rgba(120,240,255,1)'); gr.addColorStop(0.85, 'rgba(20,190,230,1)'); gr.addColorStop(1, 'rgba(8,60,80,1)'); }
+    else { gr.addColorStop(0, 'rgba(150,250,255,1)'); gr.addColorStop(0.35, 'rgba(60,215,235,1)'); gr.addColorStop(0.7, 'rgba(18,150,180,1)'); gr.addColorStop(0.92, 'rgba(8,70,92,1)'); gr.addColorStop(1, 'rgba(6,26,36,1)'); }
+    g.fillStyle = gr; g.beginPath(); g.arc(128, 128, 128, 0, Math.PI * 2); g.fill();
+    if (!hot) { g.strokeStyle = 'rgba(6,40,54,.55)'; g.lineWidth = 3; [44, 78, 104].forEach((r) => { g.beginPath(); g.arc(128, 128, r, 0, Math.PI * 2); g.stroke(); }); }
+  }));
+}
+// a part of an engine in its own frame: +z out of the hull, the axis the engine points along
+function exPart(g, geom, mat, x, y, z, sx, sy, sz, rx = 0, ry = 0, rz = 0) {
+  const m = new THREE.Mesh(geom, mat); m.position.set(x, y, z); m.scale.set(sx, sy, sz); m.rotation.set(rx, ry, rz); g.add(m); return m;
+}
+// a bar from a to b, w thick
+function exStrut(g, a, b, w, mat) {
+  const d = new THREE.Vector3().subVectors(b, a), m = new THREE.Mesh(G.box, mat);
+  m.scale.set(w, w, d.length()); m.position.copy(a).addScaledVector(d, 0.5); m.quaternion.setFromUnitVectors(new THREE.Vector3(0, 0, 1), d.normalize()); g.add(m); return m;
+}
+// The big engine under the front of the lot, as his close-up has it, from the hull outward: a dark mount, a
+// wide dark collar with a ribbed radiator on top and gold tabs, a narrower neck of radial ribs, then the housing --
+// light gunmetal, seamed, gold bolts on top and a gold pipe along its side -- ending in a thick dark lip round a
+// nozzle that glows deep cyan behind concentric rings. Gold struts brace it to the hull below; a green cable runs
+// down the hull to its collar. In units of its housing's radius.
+function exBigEngine(g) {
+  const O = OM, T = G.exTor;
+  exPart(g, rboxGeo(1.9, 1.7, 0.24, 0.06), O.exGunD, 0, 0, 0.12, 1, 1, 1);
+  exPart(g, G.exCollar, O.exGun, 0, 0, 0, 1, 1, 1, Math.PI / 2);
+  exPart(g, T[0.06], O.exGunL, 0, 0, 0.7, 0.86, 0.86, 0.86);
+  exPart(g, T[0.03], O.exGunD, 0, 0, 0.3, 0.9, 0.9, 0.9);
+  [[0.92, 0.05], [0.66, -0.66]].forEach(([x, y]) => exPart(g, G.box, O.brass, x, y, 0.5, 0.1, 0.2, 0.2, 0, 0, Math.atan2(y, x)));
+  exPart(g, G.box, O.exGunD, 0, 0.98, 0.46, 0.84, 0.22, 0.5);
+  for (let i = 0; i < 9; i++) exPart(g, G.box, O.exGun, -0.36 + i * 0.09, 1.1, 0.46, 0.045, 0.06, 0.48);
+  exPart(g, G.exTube, O.exGunD, 0, 0, 0.9, 0.62, 0.62, 0.32);
+  for (let i = 0; i < 26; i++) { const a = i / 26 * Math.PI * 2; exPart(g, G.box, O.exGun, Math.cos(a) * 0.66, Math.sin(a) * 0.66, 0.9, 0.11, 0.05, 0.28, 0, 0, a); }
+  exPart(g, G.exHousing, O.exGunL, 0, 0, 0, 1, 1, 1, Math.PI / 2);
+  exPart(g, T[0.03], O.exGunD, 0, 0, 1.62, 1.0, 1.0, 0.4);
+  exPart(g, G.box, O.exGunD, Math.cos(2.6), Math.sin(2.6), 1.9, 0.025, 0.025, 0.56, 0, 0, 2.6);
+  [1.25, 1.57, 1.9].forEach((a) => { exPart(g, G.box, O.brass, Math.cos(a) * 1.02, Math.sin(a) * 1.02, 1.3, 0.12, 0.07, 0.12, 0, 0, a); exPart(g, G.exRod, O.brass, Math.cos(a) * 1.07, Math.sin(a) * 1.07, 1.3, 0.03, 0.03, 0.05); });
+  const pa = -0.55; exStrut(g, new THREE.Vector3(Math.cos(pa) * 0.95, Math.sin(pa) * 0.95, 0.45), new THREE.Vector3(Math.cos(pa) * 1.06, Math.sin(pa) * 1.06, 2.2), 0.05, O.brass);
+  // the lip is the housing's own silver, rolled thick; the dark is inside it
+  exPart(g, T[0.12], O.exGunL, 0, 0, 2.47, 0.9, 0.9, 1.1);
+  exPart(g, G.exTube, O.exGunD, 0, 0, 2.33, 0.8, 0.8, 0.26);
+  exPart(g, T[0.06], O.exGun, 0, 0, 2.39, 0.77, 0.77, 0.6);
+  exPart(g, T[0.03], O.exGunD, 0, 0, 2.29, 0.68, 0.68, 0.6);
+  exPart(g, G.circle, O.exNoz, 0, 0, 2.23, 0.79, 0.79, 1);
+  [-0.42, 0.42].forEach((a) => { const t = -Math.PI / 2 + a; exPart(g, G.box, O.exGunD, Math.cos(t) * 0.95, Math.sin(t) * 0.95, 2.59, 0.16, 0.12, 0.3, 0, 0, t); });
+  // the braces: from under the collar back to the hull below the engine, a Y each side
+  [-1, 1].forEach((s) => {
+    const a = new THREE.Vector3(s * 0.32, -0.86, 0.5), b = new THREE.Vector3(s * 0.75, -1.5, 0.03), c = new THREE.Vector3(s * 0.2, -1.55, 0.03);
+    exStrut(g, a, b, 0.07, O.brass); exStrut(g, a, c, 0.06, O.brass);
+  });
+  exStrut(g, new THREE.Vector3(0.62, 1.7, 0.03), new THREE.Vector3(0.5, 0.9, 0.3), 0.04, O.exCable);
+  // no halo: his big nozzle glows inside its lip and no further (a sprite out in front was cut by the rock)
+}
+// a small thruster as his: a dark mount on the hull, a short neck with a gold ring, a dark body with a broad gold
+// band, a dark lip round a bright cyan face. Its radius about 0.4.
+function exThruster(g) {
+  const O = OM, T = G.exTor;
+  exPart(g, rboxGeo(0.66, 0.66, 0.12, 0.04), O.exGunD, 0, 0, 0.06, 1, 1, 1);
+  [[0.24, 0.24], [-0.24, -0.24]].forEach(([x, y]) => exPart(g, G.exRod, O.brass, x, y, 0.14, 0.04, 0.04, 0.06));
+  exPart(g, G.exTube, O.exGun, 0, 0, 0.27, 0.17, 0.17, 0.32);
+  exPart(g, T[0.12], O.brass, 0, 0, 0.3, 0.19, 0.19, 0.3);
+  exPart(g, G.exThrBody, O.exGun, 0, 0, 0, 1, 1, 1, Math.PI / 2);
+  exPart(g, G.exTube, O.brass, 0, 0, 0.67, 0.425, 0.425, 0.22);
+  exPart(g, T[0.12], O.exGunD, 0, 0, 1.03, 0.33, 0.33, 0.5);
+  exPart(g, G.circle, O.exNozT, 0, 0, 1.0, 0.32, 0.32, 1);
+  // a small glow just off the face, round its rim (further out it floats off as a blob of its own)
+  const halo = glowSprite(0x8ff8ff, 0.3, 0.95); halo.position.z = 1.14; halo.userData.dyn = true; g.add(halo);
+  return halo;
+}
+// one of the two back engines on the nacelle, as his: a dark rounded back, a bright chrome band dotted with
+// bolts between dark bands, a gold ring, a flared bell, and a blue plume thinning away behind it
+function exBackEngine(g) {
+  const O = OM, T = G.exTor;
+  exPart(g, G.exBackCap, O.exGun, 0, 0, 0, 1, 1, 1, Math.PI / 2);
+  exPart(g, G.exTube, O.exChrome, 0, 0, 0.5, 0.53, 0.53, 0.8);
+  exPart(g, G.exTube, O.exChrome, 0, 0, 0.45, 0.545, 0.545, 0.42);
+  for (let i = 0; i < 10; i++) { const a = i / 10 * Math.PI * 2; exPart(g, G.box, O.exGunD, Math.cos(a) * 0.55, Math.sin(a) * 0.55, 0.45, 0.06, 0.02, 0.06, 0, 0, a); }
+  [0.2, 0.7].forEach((z) => exPart(g, T[0.06], O.exGunD, 0, 0, z, 0.55, 0.55, 0.8));
+  exPart(g, T[0.06], O.brass, 0, 0, 0.84, 0.53, 0.53, 0.8);
+  exPart(g, G.exBell, O.exGun, 0, 0, 0, 1, 1, 1, Math.PI / 2);
+  exPart(g, T[0.06], O.exGunD, 0, 0, 1.14, 0.52, 0.52, 0.8);
+  exPart(g, G.circle, O.exNozB, 0, 0, 1.0, 0.47, 0.47, 1);
+  // a flame as wide as the nozzle where it leaves it, thinning and fading away from it
+  [[0.5, 2.6, O.exPlumeA], [0.28, 1.7, O.exPlumeB]].forEach(([w, len, mat]) => {
+    const pm = exPart(g, G.plumeCone, mat, 0, 0, 1.12 + len / 2, w, len, w, -Math.PI / 2); pm.userData.dyn = true;
+  });
+  const halo = glowSprite(0x6a9cff, 0.3, 1.6); halo.position.z = 1.9; halo.userData.dyn = true; g.add(halo);
+  return halo;
+}
+// a solar panel: the cells on a silver frame with a dark back, w by h, its cells facing +y, hinged at its z=0 edge
+function exPanel(g, w, h) {
+  exPart(g, G.box, OM.exFrame, 0, -0.03, h / 2, w, 0.05, h);
+  exPart(g, G.plane, OM.exSolar, 0, 0.0, h / 2, w * 0.97, h * 0.97, 1, -Math.PI / 2);
+  exPart(g, G.box, OM.exGunD, 0, -0.07, h / 2, w * 0.2, 0.04, h * 0.9);
+}
+function rockNodeMat(freq, bump = 0.32) {
   const T = TSL, m = new THREE.MeshStandardNodeMaterial({ roughness: 0.9, metalness: 0.05 });
   const q = T.positionLocal.mul(freq);
   const grain = T.mx_fractal_noise_float(q.mul(0.8), 3, 2.0, 0.5);
@@ -2120,7 +2368,7 @@ function rockNodeMat(freq) {
   m.colorNode = T.vertexColor().xyz.mul(m.userData.shade).mul(0.6);
   const pv = T.positionView, n = T.normalView, dx = T.dFdx(pv), dy = T.dFdy(pv);
   const r1 = T.cross(dy, n), r2 = T.cross(n, dx), det = T.dot(dx, r1);
-  m.normalNode = T.normalize(T.abs(det).mul(n).sub(T.sign(det).mul(r1.mul(T.dFdx(h)).add(r2.mul(T.dFdy(h)))).mul(0.32)));
+  m.normalNode = T.normalize(T.abs(det).mul(n).sub(T.sign(det).mul(r1.mul(T.dFdx(h)).add(r2.mul(T.dFdy(h)))).mul(bump)));
   return m;
 }
 function nozzleTex() {
@@ -2251,7 +2499,7 @@ function omats() {
   OM.rim = std({ color: 0x2c3a4a, roughness: 0.4, metalness: 0.45 });
   OM.rimDark = std({ color: 0x18222e, roughness: 0.48, metalness: 0.4 });
   OM.hull = std({ map: hullTex(), emissiveMap: TX.hullGlow, emissive: 0xffffff, emissiveIntensity: 0.9, roughness: 0.55, metalness: 0.25 });
-  OM.hullLow = std({ color: 0x0f1620, roughness: 0.5, metalness: 0.4 });
+  OM.hullLow = std({ color: 0x141e30, roughness: 0.48, metalness: 0.4 });   // his keel's chamfer is navy, not black
   // the glass: a pale frosted pane that catches the light (his picture lifts the deck behind it by about a tenth),
   // its own edges a thin pale line; the colour is the neon's, not the glass's
   OM.glass = std({ color: 0xa9bfca, envMapIntensity: 0.7, transparent: true, opacity: 0.075, roughness: 0.1, metalness: 0.0, depthWrite: false, side: THREE.DoubleSide });
@@ -2260,7 +2508,7 @@ function omats() {
   OM.glassEdge = emis('#a9c4cc', 0.2);
   OM.wallDark = std({ color: 0x0f161e, roughness: 0.45, metalness: 0.3 });
   OM.frame = std({ color: 0x2a3644, roughness: 0.4, metalness: 0.5 });
-  OM.brass = std({ color: 0xb88c42, roughness: 0.34, metalness: 0.72 });
+  OM.brass = std({ color: 0xa8833e, roughness: 0.42, metalness: 0.75 });   // his engines' fittings: a dull, warm gold
   // furniture in his picture: charcoal desks with a lighter top, white retro consoles and lab machines
   OM.desk = std({ color: 0x1e262f, roughness: 0.5, metalness: 0.3 });
   OM.deskTop = std({ color: 0x2c3742, roughness: 0.32, metalness: 0.3 });
@@ -2273,7 +2521,7 @@ function omats() {
   OM.solar = std({ map: officeSolarTex(), roughness: 0.22, metalness: 0.5, emissive: 0x1a3a80, emissiveIntensity: 0.05 });
   OM.engine = std({ color: 0x6a7686, roughness: 0.32, metalness: 0.65 });
   OM.engineDark = std({ color: 0x121b26, roughness: 0.4, metalness: 0.55, side: THREE.DoubleSide });
-  OM.rock = rockNodeMat(1.0); OM.rockS = rockNodeMat(5.0);
+  OM.rock = rockNodeMat(4.5, 0.26); OM.rock.roughness = 0.74; OM.rockS = rockNodeMat(5.0);   // the station's rock: its ridges take a sheen
   // his asteroid top right is a light grey, cratered and lit from the left
   OM.asteroid = rockNodeMat(3.0); OM.asteroid.colorNode = TSL.vec3(0.34, 0.35, 0.38).mul(OM.asteroid.userData.shade);
   // his engines are brushed silver with dark bands, not navy -- matte enough not to read as glass
@@ -2307,7 +2555,7 @@ function omats() {
   OM.torso = new THREE.CapsuleGeometry(0.16, 0.26, 4, 14); OM.limb = new THREE.CapsuleGeometry(0.055, 0.2, 3, 10); OM.leg = new THREE.CapsuleGeometry(0.07, 0.36, 3, 10);
   OM.chair = std({ color: 0x232d38, roughness: 0.48, metalness: 0.3 });
   OM.green = amat('#38f5b8'); OM.cyan = amat('#24e8ff'); OM.blue = amat('#3b82f6'); OM.red = amat('#ff8824'); OM.amber = amat('#ff8824');
-  G.bigRock = asteroidGeo(11, 64); G.smallRock = asteroidGeo(27, 14, false);
+  G.smallRock = asteroidGeo(27, 9, false);   // twelve of them drift unmerged: 2,000 triangles each, the grain is the material's
   G.plume = new THREE.CylinderGeometry(0.42, 0.05, 1, 24, 1, true);
 }
 function release(root) {
@@ -2532,7 +2780,7 @@ class Office3D {
       const Lf = !have[kc(c[0] - 8, c[1])], Rt = !have[kc(c[0] + 8, c[1])], Bk = !have[kc(c[0], c[1] - 8)], Fr = !have[kc(c[0], c[1] + 8)];
       const x0 = c[0] - pad, y0 = c[1] - pad, x1 = c[0] + RS + pad, y1 = c[1] + RS + pad;
       const tier = (ins, z0, h, mat) => this.box(ext, x0 + (Lf ? ins : 0), y0 + (Bk ? ins : 0), z0, x1 - x0 - (Lf ? ins : 0) - (Rt ? ins : 0), y1 - y0 - (Bk ? ins : 0) - (Fr ? ins : 0), h, mat, false);
-      tier(0.12, -T - 0.12 - HD, HD, OM.hull);
+      tier(0.12, -T - 0.12 - HD, HD, OM.hull).geometry = exHullBox((c[0] * 3 + c[1] * 5) / 8 % 6);
       tier(0.7, -T - 0.12 - HD - 0.48, 0.48, OM.hullLow);
       tier(1.4, -T - 0.12 - HD - 0.82, 0.34, OM.hullLow);
     });
@@ -2548,83 +2796,137 @@ class Office3D {
     let mnx = 1e9, mxx = -1e9, mny = 1e9, mxy = -1e9;
     all.forEach((c) => { mnx = Math.min(mnx, c[0]); mxx = Math.max(mxx, c[0] + RS); mny = Math.min(mny, c[1]); mxy = Math.max(mxy, c[1] + RS); });
     const cxp = (mnx + mxx) / 2, cyp = (mny + mxy) / 2, span = Math.max(mxx - mnx, mxy - mny), keel = -T - HD - 0.95;
-    // the rock: dark jagged asteroid mass nested beneath the station hull
-    const rock = new THREE.Mesh(G.bigRock, OM.rock); rock.scale.set(span * 0.48, span * 0.28, span * 0.44); rock.position.copy(this.V(cxp - span * 0.05, cyp + span * 0.01, keel - span * 0.02)); rock.rotation.set(0.05, 0.6, 0.04); ext.add(rock);
-    const rock2 = new THREE.Mesh(G.bigRock, OM.rock); rock2.scale.set(span * 0.26, span * 0.2, span * 0.24); rock2.position.copy(this.V(cxp + span * 0.16, cyp + span * 0.1, keel - span * 0.1)); rock2.rotation.set(0.5, 2.1, 0.3); ext.add(rock2);
-    // his rock shows most under the front-left: a big shoulder of it pokes out below the audit room and the lot
-    const rock3 = new THREE.Mesh(G.bigRock, OM.rock); rock3.scale.set(span * 0.26, span * 0.19, span * 0.22); rock3.position.copy(this.V(8.5, 17.5, keel - 2.4)); rock3.rotation.set(-0.3, 1.2, -0.2); ext.add(rock3);
-    const rock4 = new THREE.Mesh(G.bigRock, OM.rock); rock4.scale.set(span * 0.2, span * 0.15, span * 0.18); rock4.position.copy(this.V(14.5, 18.5, keel - 2.2)); rock4.rotation.set(0.4, 2.6, 0.1); ext.add(rock4);
-    // Engines where his picture has them (found by sending its pixels back through the fitted camera): a long
-    // grey nacelle along the outside of the room at the platform's back-left, two engines on it at deck height
-    // throwing blue plumes outward; one big engine under the front of the Add-department lot, its nozzle a cyan
-    // glow; and small thrusters glowing cyan along the front faces.
-    this.flames = [];
-    const engine = (x, y, z, nx, ny, s, plume) => {
-      const g = new THREE.Group(); g.position.copy(this.V(x, y, z)); g.rotation.y = Math.atan2(nx, ny); g.scale.setScalar(s); ext.add(g);
-      const housing = new THREE.Mesh(G.engHousing, OM.engineL); housing.rotation.x = Math.PI / 2; g.add(housing);
-      const back = new THREE.Mesh(G.cyl, OM.engineDark); back.scale.set(0.34, 0.3, 0.34); back.rotation.x = Math.PI / 2; back.position.z = -0.82; g.add(back);
-      [0.05, 0.42].forEach((bz) => { const band = new THREE.Mesh(G.ringT, OM.engineBand); band.scale.set(0.67, 0.67, 3.2); band.position.z = bz; g.add(band); });
-      const brass = new THREE.Mesh(G.ringT, OM.brass); brass.scale.set(0.69, 0.69, 1.2); brass.position.z = 0.7; g.add(brass);
-      // his nozzles are a disc of cyan light seen face on, white at the heart
-      const nozzle = new THREE.Mesh(G.circle, new THREE.MeshBasicMaterial({ map: nozzleTex(), color: new THREE.Color(0xffffff).multiplyScalar(2.2), transparent: true, toneMapped: false }));
-      nozzle.scale.setScalar(0.62); nozzle.position.z = 1.1; nozzle.userData.dyn = true; g.add(nozzle);
-      const lip = new THREE.Mesh(G.ringT, OM.engineL); lip.scale.set(0.68, 0.68, 2.5); lip.position.z = 1.12; g.add(lip);
-      const halo = glowSprite(0x8ff8ff, plume ? 0.45 : 0.32, plume ? 1.8 : 1.6); halo.position.z = 1.3; halo.userData.dyn = true; g.add(halo);
-      if (plume) {
-        // a flame as wide as the nozzle where it leaves it, thinning and fading away from it
-        [[0.55, 2.4, 0x4a7cff, 0.22], [0.3, 1.6, 0x9cc4ff, 0.3]].forEach(([w, len, col, op]) => {
-          const pm = new THREE.Mesh(G.plumeCone, new THREE.MeshBasicMaterial({ map: plumeTex(), color: new THREE.Color(col).multiplyScalar(1.5), transparent: true, opacity: op, blending: THREE.AdditiveBlending, depthWrite: false, side: THREE.DoubleSide }));
-          pm.scale.set(w, len, w); pm.rotation.x = -Math.PI / 2; pm.position.z = 1.1 + len / 2; pm.userData.dyn = true; g.add(pm);
-        });
-        const ph = glowSprite(0x6a9cff, 0.25, 2.0); ph.position.z = 1.9; ph.userData.dyn = true; g.add(ph);
-      }
-      this.flames.push({ glow: halo, ph: R() * 6 + x, base: plume ? 0.3 : 0.16 });
-      return g;
-    };
-    const back = outer.find((o) => o.nx === -1 && o.c0 === 0 && o.c1 === 8);
-    if (back) {
-      const nac = new THREE.Mesh(rboxGeo(1.3, 1.1, 7.2, 0.4), OM.engineL); nac.position.copy(this.V(-1.05, 11.9, -0.25)); ext.add(nac);
-      this.rb(ext, -1.75, 8.5, -0.5, 0.25, 6.8, 0.5, OM.frame, 0.08, false);
-      engine(-1.5, 9.6, 0.15, -1, -0.22, 0.62, true); engine(-1.5, 14.2, 0.15, -1, -0.22, 0.62, true);
-    }
-    const lotEdge = outer.find((o) => o.ny === 1 && o.c0 === 8 && o.c1 === 16);
-    if (lotEdge) {
-      // pointing out to the front-left, as his is: its nozzle seen at an angle, the housing alongside
-      const hg = engine(11.4, 24.0, -T - HD * 0.55, -0.35, 1, 1.0, false);
-      [[-0.75, 0.2], [0.75, 0.2], [-0.65, -0.35], [0.65, -0.35]].forEach(([sx, sy]) => {
-        const strut = new THREE.Mesh(rboxGeo(0.13, 0.13, 1.1, 0.03), OM.brass); strut.position.set(sx, sy, -0.45); strut.rotation.y = sx > 0 ? -0.28 : 0.28; hg.add(strut);
+    // The rock: one craggy mass under the whole station, biased to the front-left as his is, with lumps of it
+    // breaking out under the audit room and the lot where his shows a shoulder past the hull, and nothing under
+    // the right side, where his picture shows only space. Turned about the vertical only, so every flat top stays
+    // against the keel. The geometries are made once (a layout runs on every change of shape).
+    // under 70,000 triangles for all of it: the planes need few, the grain is the material's
+    G.exRockA = G.exRockA || exRockGeo(11, 34, 1.7, true); G.exRockB = G.exRockB || exRockGeo(29, 22, 1.3, true);
+    G.exRockC = G.exRockC || exRockGeo(47, 22, 1.15, false);
+    // a flat lump's top sits at the keel; a round one (what breaks out past the hull) hangs dz below it, so what
+    // shows past the hull is crag, not a shelf
+    const lump = (geom, x, y, sx, sy, sz, yaw, dz) => { const m = new THREE.Mesh(geom, OM.rock); m.scale.set(sx, sy, sz); m.rotation.set(dz == null ? 0 : 0.25, yaw, dz == null ? 0 : -0.2); m.position.copy(this.V(x, y, dz == null ? keel + 0.2 - 0.26 * sy : keel - dz)); ext.add(m); };
+    // the main mass follows the platform as it grows; the lumps that break out sit under fixed rooms
+    lump(G.exRockA, cxp - 1, cyp + 1.8, span * 0.483, 5.8, span * 0.483, 0.4);
+    lump(G.exRockB, 19, 19.5, 4.0, 4.6, 3.5, 2.3);
+    lump(G.exRockC, 18.6, 21.4, 4.2, 3.6, 3.6, 5.2, 4.7);
+    lump(G.exRockC, 4.6, 22, 4.6, 3.6, 4.1, 0.7, 4.0);
+    lump(G.exRockC, 12.8, 21.4, 3.6, 3.2, 3.7, 3.3, 4.2);
+    // What hangs on the outside, where his picture has it, now that the vault fills the front corner (his notch
+    // is gone, so what it carried moved to the vault's two faces). Every engine and thruster points straight out
+    // of the face it sits on -- an exact axis, no yaw, no tilt -- and no two things share a stretch of face, so
+    // nothing is drawn over a panel from any side:
+    //   the long nacelle along the back-left room, two engines on it throwing blue plumes (his top left);
+    //   the big engine under the front of the lot (his front left); small thrusters on the audit room's front,
+    //   the vault's right face and the agent league's right face; a row of five panels hung under the vault's
+    //   front (his bottom centre), four under the trading desk's right side, two pairs standing on the back edge
+    //   behind the laboratory. Each looked up by its room's cell and face, and left out when that face is not
+    //   on the outside.
+    exMats();
+    this.flames = []; const tag = [], busy = new Map();
+    const edge = (c0, c1, nx, ny) => outer.find((o) => o.c0 === c0 && o.c1 === c1 && o.nx === nx && o.ny === ny);
+    // a point on an edge's hull face (the hull sits 0.12 in from the deck's edge): f along it, out from it, at z
+    const onFace = (e, f, out = 0) => { const s = e.nx ? Math.min(e.ay, e.by) : Math.min(e.ax, e.bx), l = Math.abs(e.bx - e.ax) + Math.abs(e.by - e.ay), t = s + f * l, k = -0.12 + out;
+      return e.nx ? { x: e.ax + e.nx * k, y: t } : { x: t, y: e.ay + e.ny * k }; };
+    const claim = (e, f0, f1) => { const k = e.c0 + ',' + e.c1 + ',' + e.nx + ',' + e.ny; (busy.get(k) || busy.set(k, []).get(k)).push([f0, f1]); };
+    // a part's own frame on a face: +z straight out of it, +y up
+    const mount = (e, f, z, out = 0) => { const p = onFace(e, f, out), g = new THREE.Group(); g.position.copy(this.V(p.x, p.y, z)); g.rotation.y = Math.atan2(e.nx, e.ny); ext.add(g); return g; };
+    const flame = (halo, base) => this.flames.push({ glow: halo, ph: R() * 6, base });
+    const ePort = edge(0, 8, -1, 0);
+    if (ePort) {
+      // the nacelle: a long rounded grey body along the room's outer wall at deck height, a dark spine along its
+      // top, seams across it, vents on its side; an engine on its outer side near each end
+      const nac = mount(ePort, 0.5, 0.08, 0.6);
+      exPart(nac, rboxGeo(7.0, 1.0, 1.2, 0.36), OM.exGunL, 0, 0, 0, 1, 1, 1);
+      exPart(nac, rboxGeo(6.4, 0.12, 0.34, 0.05), OM.exGunD, 0, 0.52, -0.05, 1, 1, 1);
+      [-2.6, -0.9, 0.9, 2.6].forEach((x) => exPart(nac, G.box, OM.exGunD, x, 0, 0, 0.04, 1.02, 1.22));
+      [-1.75, 0, 1.75].forEach((x) => { exPart(nac, G.box, OM.exGunD, x, -0.12, 0.6, 0.6, 0.3, 0.04); for (let k = 0; k < 4; k++) exPart(nac, G.box, OM.exGun, x - 0.22 + k * 0.146, -0.12, 0.615, 0.05, 0.26, 0.03); });
+      [0.18, 0.82].forEach((f) => {
+        const g = mount(ePort, f, 0.18, 1.2); flame(exBackEngine(g), 0.3);
+        tag.push({ kind: 'engine', name: 'back@' + f, obj: g });
       });
+      claim(ePort, 0, 1);
     }
-    [[3.7, 23.85, 0, 1], [15.95, 17.7, 1, 0], [23.95, 13.3, 1, 0]].forEach(([x, y, nx, ny]) => {
-      if (outer.some((o) => (ny && o.ny === 1 && Math.abs(o.ay - (y - 0.35)) < 1 && x > Math.min(o.ax, o.bx) && x < Math.max(o.ax, o.bx)) || (nx && o.nx === 1 && Math.abs(o.ax - (x - 0.45)) < 1 && y > Math.min(o.ay, o.by) && y < Math.max(o.ay, o.by)))) engine(x, y, -T - 0.95, nx || 0.45, ny || 0.45, 0.45, false);
+    const eLot = edge(8, 16, 0, 1);
+    if (eLot) {
+      const g = mount(eLot, 0.44, -1.45); g.scale.setScalar(0.95); exBigEngine(g);
+      tag.push({ kind: 'engine', name: 'big', obj: g }); claim(eLot, 0.3, 0.58);
+    }
+    [[edge(0, 16, 0, 1), 0.36], [edge(16, 16, 1, 0), 0.4], [edge(16, 8, 1, 0), 0.62]].forEach(([e, f]) => {
+      if (!e) return;
+      const g = mount(e, f, -1.25); flame(exThruster(g), 0.2);
+      tag.push({ kind: 'engine', name: 'thr' + e.c0 + ',' + e.c1, obj: g }); claim(e, f - 0.08, f + 0.08);
     });
-    // His solar panels: small dark-blue panels in rows hung off an outer edge just under the deck, tilted out --
-    // five along the front of the room in front of the notch, four down the right side, and two pairs standing on
-    // the back edge behind the laboratory. A row runs along its edge from (ax, ay); n panels; z its height.
-    const solarRow = (e, n, z, tilt, from = 0.6) => {
-      let dx = Math.sign(e.bx - e.ax), dy = Math.sign(e.by - e.ay), x = e.ax, y = e.ay;
-      if (-dy * e.nx + dx * e.ny < 0) { dx = -dx; dy = -dy; x = e.bx; y = e.by; }
-      const grp = new THREE.Group(); grp.position.copy(this.V(x + dx * from + e.nx * 0.15, y + dy * from + e.ny * 0.15, z)); grp.rotation.y = -Math.atan2(dy, dx); ext.add(grp);
-      const rail = new THREE.Mesh(G.box, OM.engine); rail.scale.set(n * 1.16 + 0.2, 0.07, 0.07); rail.position.set((n * 1.16) / 2, 0, 0.05); grp.add(rail);
+    // a row of n panels w by h hung from a rail at the hull's foot, from f0 to f1 along the edge, each swung out
+    // from hanging straight down by tilt, its cells to the sky and the camera; on short silver arms
+    const hangRow = (e, n, f0, f1, w, h, tilt) => {
+      const rail = mount(e, (f0 + f1) / 2, -2.04, 0.16), L = (f1 - f0) * 8;
+      exPart(rail, G.exRod, OM.exGun, 0, 0, 0, 0.05, 0.05, L + 0.3, 0, Math.PI / 2, 0);
+      for (let i = 0; i <= n; i++) exPart(rail, G.box, OM.exFrame, -L / 2 + i * L / n, 0.02, -0.08, 0.08, 0.1, 0.2);
       for (let i = 0; i < n; i++) {
-        const p = new THREE.Mesh(G.box, [OM.frame, OM.frame, OM.solar, OM.engineDark, OM.frame, OM.frame]);
-        p.scale.set(1.06, 0.045, 1.28); p.position.set(0.6 + i * 1.16, -Math.sin(tilt) * 0.66, 0.1 + Math.cos(tilt) * 0.66); p.rotation.x = tilt; grp.add(p);
+        const p = new THREE.Group(); p.position.set(-L / 2 + (i + 0.5) * L / n, -0.05, 0.06); p.rotation.x = Math.PI / 2 - tilt; rail.add(p);
+        exPanel(p, w, h); exPart(p, G.box, OM.exFrame, 0, -0.06, 0.12, 0.08, 0.05, 0.3);
+        tag.push({ kind: 'panel', name: 'panel' + e.c0 + ',' + e.c1 + '#' + i, obj: p, group: 'row' + e.c0 + ',' + e.c1 });
       }
+      claim(e, f0, f1);
     };
-    const eFront = outer.find((o) => o.ny === 1 && o.c0 === 16 && o.c1 === 8);
-    if (eFront) solarRow(eFront, 5, -T - 0.9, 0.62, 0.9);
-    const eRight = outer.find((o) => o.nx === 1 && o.c0 === 16 && o.c1 === 8);
-    if (eRight) solarRow(eRight, 4, -T - 0.7, 0.55, 1.2);
-    const eBack = outer.find((o) => o.ny === -1 && o.c0 === 8 && o.c1 === 0);
-    if (eBack) { solarRow(eBack, 2, 0.55, -0.75, 0.9); solarRow(eBack, 2, 0.55, -0.75, 4.4); }
+    const eVault = edge(16, 16, 0, 1);
+    if (eVault) hangRow(eVault, 5, 0.16, 0.94, 1.12, 1.6, 0.9);
+    const eDesk = edge(16, 0, 1, 0);
+    if (eDesk) hangRow(eDesk, 4, 0.06, 0.94, 1.64, 1.75, 0.85);
+    // his two pairs behind the laboratory stand on brackets off the deck's back edge, leaning back, their cells
+    // turned to the room and the camera, taller than its wall
+    const eLab = edge(8, 0, 0, -1);
+    if (eLab) {
+      [0.24, 0.76].forEach((f, j) => {
+        const base = mount(eLab, f, -0.05, 0.62), lean = 0.6;
+        exPart(base, G.box, OM.exGun, 0, -0.05, -0.2, 3.3, 0.12, 0.5);
+        [-0.83, 0.83].forEach((x) => {
+          const p = new THREE.Group(); p.position.set(x, 0.05, 0); p.rotation.x = lean - Math.PI / 2; base.add(p);
+          exPanel(p, 1.6, 1.45);
+          tag.push({ kind: 'panel', name: 'stand' + j + (x > 0 ? 'b' : 'a'), obj: p, group: 'pair' + j });
+        });
+        // two legs behind them, from the bracket's outer edge up to the panels' backs
+        [-1.2, 1.2].forEach((x) => exStrut(base, new THREE.Vector3(x, -0.02, 0.85), new THREE.Vector3(x, 0.05 + Math.cos(lean) * 0.8 - 0.05, Math.sin(lean) * 0.8 + 0.06), 0.06, OM.exFrame));
+      });
+      claim(eLab, 0, 1);
+    }
+    // The hull's own detail where nothing hangs: a pipe run along its foot on brackets, a slatted vent or two, a
+    // small light in the top band -- as his hull has between its modules
+    outer.forEach((e) => {
+      const k = e.c0 + ',' + e.c1 + ',' + e.nx + ',' + e.ny, used = busy.get(k) || [], free = (f) => !used.some(([a, b]) => f > a - 0.06 && f < b + 0.06);
+      const run = []; for (let f = 0.04; f <= 0.96; f += 0.04) if (free(f)) run.push(f);
+      for (let i = 0; i < run.length;) {
+        let j = i; while (j + 1 < run.length && run[j + 1] - run[j] < 0.05) j++;
+        if (run[j] - run[i] > 0.2) {
+          const g = mount(e, (run[i] + run[j]) / 2, -1.97, 0.07), L = (run[j] - run[i]) * 8;
+          exPart(g, G.exRod, OM.exGun, 0, 0, 0, 0.04, 0.04, L, 0, Math.PI / 2, 0);
+          for (let b = 0; b <= Math.floor(L / 1.6); b++) exPart(g, G.box, OM.exGunD, -L / 2 + b * L / Math.max(1, Math.floor(L / 1.6)), 0, -0.035, 0.09, 0.12, 0.08);
+        }
+        i = j + 1;
+      }
+      [0.2, 0.71].forEach((f, n) => {
+        if (!free(f)) return;
+        const g = mount(e, f, -1.62, 0.02);
+        exPart(g, G.box, OM.exGunD, 0, 0, 0, 0.72, 0.26, 0.05);
+        for (let s = 0; s < 5; s++) exPart(g, G.box, OM.exGun, -0.28 + s * 0.14, 0, 0.03, 0.06, 0.2, 0.03);
+        if (free(f + 0.12)) exPart(mount(e, f + 0.12, -0.66, 0.01), G.box, n ? OM.exLedC : OM.exLedG, 0, 0, 0, 0.16, 0.05, 0.03);
+      });
+    });
 
+    // where each engine and panel is, read before the merge: what a test checks for one drawn over another
+    ext.updateMatrixWorld(true);
+    this.exBoxes = tag.map((t) => ({ kind: t.kind, name: t.name, group: t.group, box: new THREE.Box3().setFromObject(t.obj) }));
     bakeGroup(ext);
-    ext.traverse((o) => { if (o.isMesh && o.material === OM.rock) { o.castShadow = true; o.receiveShadow = true; } });
+    // the rock takes the station's shadow but casts none: below everything, it has nothing to throw one on, and a
+    // shadow caster is drawn twice
+    ext.traverse((o) => { if (o.isMesh && o.material === OM.rock) o.receiveShadow = true; });
     // Cratered moonlet in the top-right sky and small asteroids drifting round the station
     this.drift = [];
-    // his asteroid hangs top right, behind the trading desk (plan 19, -7 at the height his pixels give)
-    const big = new THREE.Mesh(G.smallRock, OM.asteroid); big.scale.set(1.05, 0.98, 1.0);
-    big.position.copy(this.V(19, -7, 2.5)); W.add(big); this.drift.push({ m: big, sp: 0.04 });
+    // his moonlet hangs top right, behind the trading desk (plan 19, -7 at the height his pixels give)
+    G.exMoon = G.exMoon || exMoonGeo(53);
+    const big = new THREE.Mesh(G.exMoon, OM.exMoon); big.scale.set(0.74, 0.8, 0.7);
+    big.position.copy(this.V(18.6, -7.4, 2.5)); W.add(big); this.drift.push({ m: big, sp: 0.03 });
     for (let i = 0; i < 12; i++) {
       const a = R() * Math.PI * 2; if ((Math.cos(a) + Math.sin(a)) / Math.SQRT2 > 0.2) { i--; continue; }
       const d = span * (0.85 + R() * 0.7), s = 0.3 + R() * R() * 1.35, m = new THREE.Mesh(G.smallRock, OM.rockS);
