@@ -4242,9 +4242,13 @@ class Office3D {
       if (!m.isMesh || m.isInstancedMesh || m.geometry !== G.box || m.userData.blink == null || !m.material.isMeshBasicMaterial || !still(m)) return true;
       put(m.material, ((Math.round(m.userData.blink) % 3) + 3) % 3, new THREE.Matrix4().multiplyMatrices(inv, m.matrixWorld)); m.parent.remove(m); return false;
     });
+    // a set of one is one light as raLed makes it: an instanced draw of one saves nothing, and in the dialog's preview
+    // one was drawn at its room's origin as a unit box of light (2026-10-19)
     sets.forEach((s) => {
-      const im = new THREE.InstancedMesh(G.box, s.mat, s.ms.length); s.ms.forEach((mm, i) => im.setMatrixAt(i, mm));
-      im.computeBoundingSphere(); im.userData.blink = s.k; r.g.add(im); r.leds.push(im);
+      let m;
+      if (s.ms.length === 1) { m = new THREE.Mesh(G.box, s.mat); s.ms[0].decompose(m.position, m.quaternion, m.scale); m.userData.dyn = true; }
+      else { m = new THREE.InstancedMesh(G.box, s.mat, s.ms.length); s.ms.forEach((mm, i) => m.setMatrixAt(i, mm)); m.computeBoundingSphere(); }
+      m.userData.blink = s.k; r.g.add(m); r.leds.push(m);
     });
   }
   // his plant, its leaves let into the room's merge: a look's plants and planters' bushes are then two draws, not
