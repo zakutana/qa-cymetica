@@ -381,14 +381,7 @@
     if (tk._h !== tokHtml && document.activeElement !== $('dr-cap')) { tk._h = tokHtml; tk.innerHTML = tokHtml; }
     // a department on a clock: its runs, products, who the bugs are filed as, what they earned
     var runsHtml = '';
-    if (d.schedule && d.run_kind) {
-      // the league answers puzzles and the outsider hands problems on: no products, no bug count of their own
-      var third = d.run_kind === 'league' ? [(d.answers || 0), 'answers sent'] : [(d.handed || 0), 'handed to QA'];
-      runsHtml = '<div class="runs"><div class="sec">RUNS <span>' + esc(d.schedule.label) + '</span></div>' +
-        '<div class="rk" style="grid-template-columns:repeat(2,1fr)"><div><b>' + hhmm(d.next_run) + '</b><span>next run</span></div>' +
-        '<div><b class="gr">' + third[0] + '</b><span>' + third[1] + '</span></div></div>' +
-        (RO ? '' : '<div class="cb"><span class="sp" style="flex:1"></span><button class="btn cy" data-a="runnow">Run now</button></div>') + '</div>';
-    } else if (d.schedule) {
+    if (d.schedule) {
       runsHtml = '<div class="runs"><div class="sec">RUNS <span>' + esc(d.schedule.label) + '</span></div>' +
         '<div class="rk" style="grid-template-columns:repeat(2,1fr)"><div><b>' + hhmm(d.next_run) + '</b><span>next run</span></div>' +
         '<div><b class="gr">' + (d.accepted || 0) + '</b><span>bugs accepted</span></div></div>' +
