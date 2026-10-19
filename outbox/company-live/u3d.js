@@ -6610,7 +6610,9 @@ class Office3D {
       const VT = CO.vaultTotals(), priv = !!CO.RO, vk = priv ? 'priv' : Math.round(VT.et10) + '|' + VT.usdc.toFixed(2);
       if (vr._k !== vk) { vr._k = vk; this.piles(vr, VT, priv); }
       this.tint(vr, 'idle');
-      const html = '<div class="p3h"><i style="background:#38f2b8"></i><b>VAULT</b></div><div class="p3l" style="color:#a9b8cc">' + (priv ? 'Private' : 'Earnings') + '</div>';
+      // what it holds, lit on its plate ("v cedulce Vaultu by melo svitit kolik tam je", 2026-10-19): ET10 green, USDC blue
+      const html = '<div class="p3h"><i style="background:#38f2b8"></i><b>VAULT</b></div>' + (priv ? '<div class="p3l" style="color:#a9b8cc">Private</div>'
+        : '<div class="p3l p3v"><b style="color:#38f5b8">' + CO.fmtEt(VT.et10) + '</b> ET10 <span>·</span> <b style="color:#8fbaff">' + CO.fmtUsd(VT.usdc) + '</b> USDC</div>');
       if (vr.plate && vr.plate._h !== html) { vr.plate._h = html; vr.plate.innerHTML = html; }
       if (vr.plate) vr.plate.style.setProperty('--c', '#38f2b8');
     }

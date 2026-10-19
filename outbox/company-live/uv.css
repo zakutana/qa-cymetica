@@ -1,12 +1,9 @@
 /* The /company mockup: the Universe tab, the visitor's read-only frame, the station picker and
    "Create your company". The site's palette only: navy, cyan, green, red, blue and slate-blue. */
 
-/* ---------- the tab ---------- */
-.tabs .uvtab { color: var(--cyan); display: inline-flex; align-items: center; gap: 7px; }
-.tabs .uvtab i { width: 12px; height: 12px; border-radius: 50%; border: 1.5px solid var(--cyan); position: relative; box-shadow: 0 0 8px rgba(0, 207, 255, .45); }
-.tabs .uvtab i::after { content: ''; position: absolute; left: -5px; right: -5px; top: 3px; height: 3px; border: 1.2px solid var(--cyan); border-radius: 50%; transform: rotate(-18deg); opacity: .8; }
-.tabs .uvtab.on { color: var(--text); }
-/* every other tab: a line icon in the same spirit, lit cyan while its tab is open */
+/* ---------- the tabs ---------- */
+/* every tab a line icon, lit cyan while its tab is open; the Universe's one is a planet with its ring, and it is
+   drawn as the others are (it used to be cyan all the time: "a universe tab proc je modry?", 2026-10-19) */
 .tabs .ti { width: 14px; height: 14px; vertical-align: -2.5px; margin-right: 7px; fill: none; stroke: currentColor; stroke-width: 1.5;
   stroke-linecap: round; stroke-linejoin: round; opacity: .75; transition: opacity .15s, stroke .15s, filter .15s; }
 .tabs button:hover .ti { opacity: 1; }
@@ -165,6 +162,8 @@ i.lk::before { content: ''; position: absolute; left: 1.5px; top: -5px; width: 6
 .o3layer .p3 .p3h i { width: 6px; height: 6px; border-radius: 1px; }
 .o3layer .p3 .p3h b { font: 600 15px 'Segoe UI', 'Inter', system-ui, sans-serif; letter-spacing: .07em; color: #eef4f8; }
 .o3layer .p3 .p3l { font: 500 12.5px 'JetBrains Mono'; margin-top: 3px; opacity: .85; }
+/* the vault's plate: what it holds, the amounts lit */
+.o3layer .p3 .p3l.p3v { color: #a9b8cc; opacity: 1; } .o3layer .p3 .p3l.p3v b { font-weight: 700; text-shadow: 0 0 10px currentColor; } .o3layer .p3 .p3l.p3v span { opacity: .5; }
 .o3layer .p3need { font: 600 14px 'Segoe UI', 'Inter', system-ui, sans-serif; letter-spacing: .06em; padding: 6px 16px; }
 .o3layer .p3lot { font: 600 12px 'Segoe UI', 'Inter', system-ui, sans-serif; letter-spacing: .08em; }
 /* the plates as callouts round the platform (callouts() in u3d.js): a thin line in each plate's colour from the
