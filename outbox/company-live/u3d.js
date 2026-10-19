@@ -4072,9 +4072,11 @@ class Office3D {
     const st = new THREE.InstancedMesh(G.cyl, OM.vtStud, studs.length);
     studs.forEach(([u, v], k) => { o.position.copy(this.V(x0 + u, y0 + v, 0.083)); o.rotation.set(0, 0, 0); o.scale.set(0.024, 0.006, 0.024); o.updateMatrix(); st.setMatrixAt(k, o.matrix); });
     g.add(st);
-    // two floodlights on the door wall: the right one on the door's face, the left one on the bars
+    // two floodlights on the door wall, the right one turned on the door's face, the left one on the bars; their
+    // light one cool white point in front of the door, on the +u side its open face looks to
     this.vtFlood(r, 5.75, [D.u + D.hu + 0.17, D.hv + 0.9, 0.72]);
     this.vtFlood(r, 1.3, [1.6, 3.2, 0.4]);
+    const key = new THREE.PointLight(0xf2f8ff, 5, 5.2, 1.1); key.position.copy(this.V(x0 + 3.7, y0 + 2.2, 1.7)); g.add(key);
     this.vtLockers(r);
     this.vtShelf(r, 4.75, 6.75);
     this.vtDesk(r, x0 + 0.6, y0 + 5.3);
@@ -4321,16 +4323,16 @@ class Office3D {
     });
     r.g.add(im);
   }
-  // a floodlight on the door wall at u: a bracket, a housing tilted down at what it lights, its white face, a halo;
-  // a spot light from it on `aim` (u, v, height)
+  // a floodlight on the door wall at u: a bracket, a housing turned down at `aim` (u, v, height), its white face, a
+  // halo. Its light is vaultRoom()'s one point light: a spot light would be the scene's first and put a new light
+  // type into every lit material in the office (switching one recompiles them all; measured 2026-10-19)
   vtFlood(r, u, aim) {
     const D = r.vt, g = r.g, x0 = r.x0, y0 = r.y0, h = 1.2, at = this.V(x0 + u, y0 + D.WT + 0.17, h), to = this.V(x0 + aim[0], y0 + aim[1], aim[2]);
     this.box(g, x0 + u - 0.04, y0 + D.WT, h - 0.06, 0.08, 0.17, 0.05, OM.vtSteelDk);
     const head = new THREE.Group(); head.position.copy(at); head.lookAt(to); g.add(head);
     const hs = new THREE.Mesh(rboxGeo(0.36, 0.14, 0.15, 0.025), OM.vtSteelDk); hs.castShadow = true; head.add(hs);
     const face = new THREE.Mesh(G.plane, OM.vtFlood); face.scale.set(0.3, 0.1, 1); face.position.z = 0.077; head.add(face);
-    const halo = glowSprite(0xeef6ff, 0.3, 0.8); halo.position.copy(at).lerp(to, 0.06); g.add(halo);
-    const L = new THREE.SpotLight(0xf2f8ff, 9, 6.5, 0.62, 0.7, 1.2); L.position.copy(at); L.target.position.copy(to); g.add(L, L.target);
+    const halo = glowSprite(0xeef6ff, 0.3, 0.45); halo.position.copy(at).lerp(to, 0.06); g.add(halo);
   }
   // safe-deposit lockers built into the side wall's upper band (x = x0), framed in steel
   vtLockers(r) {
