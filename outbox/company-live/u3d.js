@@ -2093,49 +2093,127 @@ function deckTex() {
     }
   }));
 }
-// a room's floor: large slate-blue tiles (his picture's floors read #304a55 lit), hairline seams
+// A room's floor as his: dark charcoal-teal tiles, eight to a side, their seams a hairline a shade LIGHTER than the
+// tiles (his lines catch the light, they are not cracks). Lit and glossy it reads as his bare floor does, sRGB about
+// (31-42, 55-64, 65-80); the tiles differ by a level or two, no more, or the floor reads patched.
+const SH_TILES = 8;
 function tileTex() {
-  return TX.tile || (TX.tile = ctex(512, 512, (g, W) => {
-    const R = rng(29), s = W / 4;
-    // lit, it reads as his floors do (#334754 to #293a4a, measured on bare floor in both pictures)
-    g.fillStyle = '#1c2a36'; g.fillRect(0, 0, W, W);
-    for (let i = 0; i < 4; i++) for (let j = 0; j < 4; j++) {
-      const v = Math.floor(R() * 4);
-      g.fillStyle = 'rgb(' + (36 + v) + ',' + (52 + v) + ',' + (65 + v) + ')';
-      g.fillRect(i * s + 1.5, j * s + 1.5, s - 3, s - 3);
+  return TX.tile || (TX.tile = ctex(1024, 1024, (g, W) => {
+    const R = rng(29), s = W / SH_TILES;
+    g.fillStyle = '#354a52'; g.fillRect(0, 0, W, W);
+    for (let i = 0; i < SH_TILES; i++) for (let j = 0; j < SH_TILES; j++) {
+      const v = Math.floor(R() * 3);
+      g.fillStyle = 'rgb(' + (28 + v) + ',' + (46 + v) + ',' + (50 + v) + ')';
+      g.fillRect(i * s + 1, j * s + 1, s - 2, s - 2);
     }
   }));
 }
-// The hull's side as in his picture: navy plating with a lighter band along the top and a dark chamfer at the foot,
-// seams between its plates, a plate or two a shade apart, navy bays with grilles, a hatch. His silver modules stand
-// out from it, so they are boxes of their own (exterior()), not paint. One side of a room's hull is 8 units, the
-// texture's width; it repeats round the station, so each side starts it at its own offset (exHullBox) and nothing
-// in it lines up at the wrap.
+// The one mirror under every room (his floors show what stands on them, soft): the scene drawn again from below the
+// floors' plane at half size and blurred by its own mipmaps. They all share one height, so one is enough. What it
+// draws is layer 1 only -- the light-coloured things in the rooms (shTag), the rooms' own lamps and a light of its
+// own -- so it costs no shadow pass and a fraction of the scene's draw calls. A real mirror and not a faked sheen:
+// his floors show the astronauts standing on them, and only a second view of the room can put them there.
+const SH_FLOOR_Y = 0.08, SH_REFL = { level: 3.2, spread: 1.0, k: 1.0, lum: 0.15 };
+// The rooms' neon, a deeper mint than his line's measured core (LOOK.neon): the line is seen through the glass's
+// foot and its glow, which lift it to his core; LOOK.neon itself came out nearly white
+const SH_NEON = '#4ef0aa';
+function shRefl() {
+  if (TX.shRefl) return TX.shRefl;
+  const r = TSL.reflector({ resolution: 0.5, generateMipmaps: true, bounces: false });
+  r.target.rotateX(-Math.PI / 2); r.target.position.y = SH_FLOOR_Y;
+  // the mirror's own light, seen by its pass alone (layer 1 and nothing else): the scene's sun would bring its
+  // shadow map into the pass, and the main view must not change, so the mirror gets a soft sky of its own. Its sky
+  // is BELOW: the mirror sees things from under the floor, their fronts and undersides, and those are the faces
+  // that must read lit for a suit to show in the floor as the viewer sees it
+  r.light = new THREE.HemisphereLight(0xe2ecf6, 0x2a3644, 1.8); r.light.position.set(0, -1, 0); r.light.layers.set(1);
+  TX.shRefl = r; TX.shReflK = TSL.uniform(SH_REFL.k); return r;
+}
+// a floor that catches the mirror: its own emissive (the trading desk's seams) plus the reflection, which only adds
+// light -- where nothing bright stands over it, the floor is its own dark self. Blurred by a 3 x 3 tent over a
+// mip a step finer than the blur it gives (a single read of a coarse mip showed its texels as a ghost's squares),
+// and eased off at its top (x / (1 + x)): a suit reads as it is, nothing reflected burns a hole of white into the floor.
+function shFloor(o) {
+  const T = TSL, m = new THREE.MeshStandardNodeMaterial(o), rf = shRefl(), uv = T.screenUV.flipX(), L = SH_REFL.level;
+  const px = T.vec2(SH_REFL.spread * Math.pow(2, L + 1)).div(T.screenSize);   // the mirror is half the screen's size
+  let r = null;
+  [-1, 0, 1].forEach((a) => [-1, 0, 1].forEach((b) => {
+    const w = (a ? 1 : 2) * (b ? 1 : 2) / 16, s = rf.sample(a || b ? uv.add(px.mul(T.vec2(a, b))) : uv).level(L).rgb.mul(w);
+    r = r ? r.add(s) : s;
+  }));
+  r = r.mul(TX.shReflK);
+  m.emissiveNode = T.materialEmissive.add(r.div(r.add(1)));
+  return m;
+}
+// His glass: pale frosted panes you clearly see -- a veil over what is behind them, brighter along the top rail and a
+// little at the foot, and soft diagonal sheens as a pane catches a light. The sheens run in world space, so no two
+// walls carry the same ones.
+function shGlass(o) {
+  const T = TSL, m = new THREE.MeshStandardNodeMaterial(o), pw = T.positionWorld;
+  const h = pw.y.sub(SH_FLOOR_Y).div(WH).clamp(0, 1);
+  const top = T.smoothstep(0.78, 1.0, h).mul(0.9), foot = T.float(1).sub(T.smoothstep(0.0, 0.12, h)).mul(0.35);
+  const s = pw.x.add(pw.z).mul(0.21).add(h.mul(0.3)), f = T.fract(s), f2 = T.fract(s.mul(1.7).add(0.43));
+  const sheen = T.smoothstep(0.0, 0.06, f).mul(T.float(1).sub(T.smoothstep(0.06, 0.2, f))).mul(1.1)
+    .add(T.smoothstep(0.0, 0.03, f2).mul(T.float(1).sub(T.smoothstep(0.03, 0.09, f2))).mul(0.6));
+  m.opacityNode = T.float(o.opacity).mul(T.float(1).add(top).add(foot).add(sheen));
+  return m;
+}
+// The hull's side as in his picture: smooth deep-navy plating, all of it flush -- nothing boxy stands out ("ty
+// bocni kazety jsou jeste taky pekny hnus, to tak v originalu vubec taky nebylo", the operator of round 3's silver
+// boxes). Along it: long light-grey hatches in a thin pale frame, split into leaves, a dark slit in one with a strip
+// of cyan light and a green status light; long recessed navy panels, each a shade darker than the plating with a
+// thin pale frame, a shadow under its top edge and a highlight on its bottom one; a stack of small vents; a few
+// small green and cyan lights; a shadow under the deck's lip at the top; the bottom edge rounding away, lit along
+// its turn. One side of a room's hull is 8 units, the texture's width; it repeats round the station, so each side
+// starts it at its own offset (exHullBox) and nothing in it lines up at the wrap.
 function hullTex() {
   if (TX.hull) return TX.hull;
   const W = 1024, H = 212;
-  const plate = (g, x, y, w, h, glow, c) => { if (glow) return; g.fillStyle = c; g.fillRect(x, y, w, h); g.fillStyle = '#34425a'; g.fillRect(x, y, w, 2); };
-  const bay = (g, x, y, w, h, glow) => {
+  // a recessed navy panel: darker inside, a thin pale frame, shadowed at its top and lit at its bottom
+  const recess = (g, x, y, w, h, glow, slats) => {
     if (glow) return;
-    g.fillStyle = '#1d2b47'; g.fillRect(x, y, w, h);
-    g.strokeStyle = '#2c3b56'; g.lineWidth = 2; g.strokeRect(x + 1, y + 1, w - 2, h - 2);
-    g.fillStyle = '#0c1322'; for (let k = x + 10; k < x + w - 10; k += 10) g.fillRect(k, y + 14, 5, h - 28);
+    g.fillStyle = '#121a30'; g.fillRect(x, y, w, h);
+    g.fillStyle = '#0a101e'; g.fillRect(x, y, w, 4);
+    g.fillStyle = '#3a4a6c'; g.fillRect(x, y + h - 2, w, 2);
+    g.strokeStyle = 'rgba(150,170,205,.38)'; g.lineWidth = 1.5; g.strokeRect(x - 1.5, y - 1.5, w + 3, h + 3);
+    if (slats) { g.fillStyle = '#0c1222'; for (let k = x + 12; k < x + w * slats; k += 11) g.fillRect(k, y + 14, 5, h - 28); }
+  };
+  // a long light-grey hatch flush with the hull, in a thin paler frame, split into leaves
+  const hatch = (g, x, y, w, h, glow, leaves, slit, led) => {
+    if (!glow) {
+      g.fillStyle = '#b0bac6'; g.fillRect(x - 2, y - 2, w + 4, h + 4);
+      const gr = g.createLinearGradient(0, y, 0, y + h); gr.addColorStop(0, '#828c99'); gr.addColorStop(1, '#646e7b');
+      g.fillStyle = gr; g.fillRect(x, y, w, h);
+      g.fillStyle = '#56606d'; for (let i = 1; i < leaves; i++) g.fillRect(x + (w * i) / leaves - 1, y, 2, h);
+      g.fillStyle = '#9aa4b0'; for (let i = 1; i < leaves; i++) g.fillRect(x + (w * i) / leaves + 1, y, 1, h);
+      g.fillStyle = '#5a6470'; [[x + 8, y + 8], [x + w - 14, y + 8], [x + 8, y + h - 14], [x + w - 14, y + h - 14]].forEach(([a, b]) => g.fillRect(a, b, 5, 5));
+    }
+    if (slit) {
+      const [sx, sw] = slit;
+      if (!glow) { g.fillStyle = '#0d1422'; g.fillRect(x + sx, y + 18, sw, 26); }
+      g.fillStyle = glow ? 'rgba(110,210,255,.85)' : '#2a4a6a'; g.fillRect(x + sx + 8, y + 27, sw - 40, 7);
+      if (led) { g.fillStyle = glow ? led : '#2a5a4a'; g.fillRect(x + sx + sw - 22, y + 26, 12, 9); }
+    }
   };
   const draw = (glow) => (g) => {
-    g.fillStyle = glow ? '#000000' : '#273346'; g.fillRect(0, 0, W, H);
+    g.fillStyle = glow ? '#000000' : '#18223a'; g.fillRect(0, 0, W, H);
     if (!glow) {
-      g.fillStyle = '#69747f'; g.fillRect(0, 0, W, 20); g.fillStyle = '#8a95a1'; g.fillRect(0, 0, W, 3); g.fillStyle = '#121925'; g.fillRect(0, 20, W, 3);
-      g.fillStyle = '#121a26'; g.fillRect(0, H - 24, W, 24); g.fillStyle = '#26324a'; g.fillRect(0, H - 24, W, 2);
-      [0, 96, 352, 470, 640, 812, 930].forEach((x) => { g.fillStyle = '#121a27'; g.fillRect(x, 23, 2, H - 47); g.fillStyle = '#2a3750'; g.fillRect(x + 2, 23, 1, H - 47); });
-      // a hatch: a rounded square outline with two bolts
-      g.strokeStyle = '#33415a'; g.lineWidth = 3; g.beginPath(); g.roundRect(842, 58, 64, 92, 10); g.stroke();
-      g.fillStyle = '#4a5870'; g.fillRect(852, 66, 6, 6); g.fillRect(890, 136, 6, 6);
+      // the shadow under the deck's lip
+      const top = g.createLinearGradient(0, 0, 0, 22); top.addColorStop(0, '#070b14'); top.addColorStop(1, 'rgba(24,34,58,0)'); g.fillStyle = top; g.fillRect(0, 0, W, 22);
+      // the bottom edge rounding away: lit along its turn, dark under it
+      const bot = g.createLinearGradient(0, H - 30, 0, H); bot.addColorStop(0, '#18223a'); bot.addColorStop(0.45, '#2a3a5c'); bot.addColorStop(0.7, '#1c2842'); bot.addColorStop(1, '#0c1220');
+      g.fillStyle = bot; g.fillRect(0, H - 30, W, 30);
+      // seams between the plates
+      [0, 352, 600, 652, 960].forEach((x) => { g.fillStyle = '#0e1528'; g.fillRect(x, 22, 2, H - 52); g.fillStyle = '#2a3858'; g.fillRect(x + 2, 22, 1, H - 52); });
     }
-    plate(g, 98, 30, 252, 150, glow, '#2b384c'); plate(g, 642, 30, 168, 150, glow, '#222d3f');
-    bay(g, 488, 52, 138, 104, glow);
-    bay(g, 14, 60, 70, 92, glow);
-    // small lights along the top band
-    [[260, '#9fe8ff'], [742, '#7cf2c4']].forEach(([x, c]) => { g.fillStyle = glow ? c : '#3a4a5a'; g.fillRect(x, 8, 26, 5); });
+    hatch(g, 30, 46, 300, 120, glow, 3, [24, 170], '#38f5b8');
+    recess(g, 372, 52, 210, 92, glow, 0.45);
+    // a stack of small vents in a narrow recess
+    recess(g, 610, 46, 30, 120, glow, 0);
+    if (!glow) { g.fillStyle = '#0a1020'; for (let k = 0; k < 5; k++) g.fillRect(615, 56 + k * 21, 20, 12); }
+    hatch(g, 676, 58, 196, 92, glow, 2, [110, 76], '#7cf2c4');
+    recess(g, 900, 52, 104, 92, glow, 0.9);
+    // a few small status lights
+    [[392, 152, '#7cf2c4'], [560, 152, '#9fe8ff'], [880, 40, '#38f5b8']].forEach(([x, y, c]) => { g.fillStyle = glow ? c : '#2c4c52'; g.fillRect(x, y, 9, 6); });
   };
   TX.hull = ctex(W, H, draw(false)); TX.hullGlow = ctex(W, H, draw(true));
   TX.hull.wrapS = TX.hullGlow.wrapS = THREE.RepeatWrapping;
@@ -2359,10 +2437,8 @@ function exMats() {
   OM.exGunL = std({ color: 0x939ba6, roughness: 0.28, metalness: 0.76, side: ds });
   // the big engine's housing: his darker, bluish gunmetal, polished, so the studio's lights streak along it
   OM.exGunM = std({ color: 0x5f6e84, roughness: 0.3, metalness: 0.68, side: ds });
-  // the hull's modules: light silver boxes standing out from the navy plating, a lit strip in each
-  OM.exModule = std({ color: 0x8d97a4, roughness: 0.42, metalness: 0.55 });
-  OM.exModuleD = std({ color: 0x0c121c, roughness: 0.35, metalness: 0.4 });
-  OM.exStrip = emis('#8fc0f4', 1.6);
+  // the hull's rounded bottom edge: a navy a shade lighter than the plating, smooth enough to catch the light
+  OM.exBead = std({ color: 0x1a2440, roughness: 0.42, metalness: 0.45 });
   OM.exGunD = std({ color: 0x14181e, roughness: 0.42, metalness: 0.6, side: ds });
   OM.exChrome = std({ color: 0xc4ccd5, roughness: 0.2, metalness: 0.9, side: ds });
   // the panels catch the studio's ceiling at a glancing angle; his never flare white, so they see less of it
@@ -2597,11 +2673,11 @@ function qaGridTex() {
     }
   }));
 }
-// the trading desk's floor in his picture glows along its tile seams: the seams as an emissive map, a soft wash in
-// each tile so the floor reads lit, not only lined
+// the trading desk's floor in his picture glows along its tile seams: the seams as an emissive map (on the tiles'
+// own seams, SH_TILES to a side), a soft wash in each tile so the floor reads lit, not only lined
 function seamTex() {
   return TX.seam || (TX.seam = ctex(512, 512, (g, W) => {
-    const n = 10, s = W / n; g.fillStyle = '#000000'; g.fillRect(0, 0, W, W);
+    const n = SH_TILES, s = W / n; g.fillStyle = '#000000'; g.fillRect(0, 0, W, W);
     g.fillStyle = 'rgba(255,255,255,.1)'; g.fillRect(0, 0, W, W);
     g.fillStyle = 'rgba(255,255,255,.55)'; for (let i = 0; i <= n; i++) { g.fillRect(i * s - 1, 0, 2, W); g.fillRect(0, i * s - 1, W, 2); }
     // the pool: brightest in the middle of the room, gone at its walls -- multiplied in, as the map is read
@@ -2663,18 +2739,20 @@ function rboxGeo(w, h, d, r) {
 function omats() {
   if (OM.tile) return;
   OM.deck = std({ map: deckTex(), roughness: 0.46, metalness: 0.32 });
-  OM.tile = std({ map: tileTex(), roughness: 0.58, metalness: 0.2 });
-  OM.hubTile = std({ map: tileTex(), color: 0xb4c8dc, roughness: 0.5, metalness: 0.22 });
+  // his floors are glossy: low roughness, so the rooms' lamps and the studio overhead lie on them as soft sheens,
+  // and the mirror (shRefl) adds what stands in the room
+  OM.tile = shFloor({ map: tileTex(), roughness: 0.55, metalness: 0.28 });
+  OM.hubTile = shFloor({ map: tileTex(), color: 0xe4eef4, roughness: 0.55, metalness: 0.28 });
   OM.rim = std({ color: 0x2c3a4a, roughness: 0.4, metalness: 0.45 });
   OM.rimDark = std({ color: 0x18222e, roughness: 0.48, metalness: 0.4 });
   OM.hull = std({ map: hullTex(), emissiveMap: TX.hullGlow, emissive: 0xffffff, emissiveIntensity: 0.9, roughness: 0.55, metalness: 0.25 });
   OM.hullLow = std({ color: 0x141e30, roughness: 0.48, metalness: 0.4 });   // his keel's chamfer is navy, not black
-  // the glass: a pale frosted pane that catches the light (his picture lifts the deck behind it by about a tenth),
-  // its own edges a thin pale line; the colour is the neon's, not the glass's
-  OM.glass = std({ color: 0xa9bfca, envMapIntensity: 0.7, transparent: true, opacity: 0.075, roughness: 0.1, metalness: 0.0, depthWrite: false, side: THREE.DoubleSide });
+  // the glass: a pale frosted pane you clearly see (his picture lifts what is behind it by about ten levels), brighter
+  // at its top rail, with soft sheens (shGlass); its own edges a thin pale line; the colour is the neon's, not the glass's
+  OM.glass = shGlass({ color: 0xc4d4dc, envMapIntensity: 1.2, transparent: true, opacity: 0.055, roughness: 0.08, metalness: 0.0, depthWrite: false, side: THREE.DoubleSide });
   OM.glassCyan = OM.glass;
-  OM.glassOrange = std({ color: 0xffb084, emissive: 0x5a2008, emissiveIntensity: 0.25, envMapIntensity: 0.7, transparent: true, opacity: 0.1, roughness: 0.1, metalness: 0.0, depthWrite: false, side: THREE.DoubleSide });
-  OM.glassEdge = emis('#a9c4cc', 0.2);
+  OM.glassOrange = shGlass({ color: 0xffb084, emissive: 0x5a2008, emissiveIntensity: 0.25, envMapIntensity: 1.2, transparent: true, opacity: 0.075, roughness: 0.08, metalness: 0.0, depthWrite: false, side: THREE.DoubleSide });
+  OM.glassEdge = emis('#b4ccd4', 0.4);
   OM.wallDark = std({ color: 0x0f161e, roughness: 0.45, metalness: 0.3 });
   OM.frame = std({ color: 0x2a3644, roughness: 0.4, metalness: 0.5 });
   OM.brass = std({ color: 0xa8833e, roughness: 0.42, metalness: 0.75 });   // his engines' fittings: a dull, warm gold
@@ -2714,7 +2792,7 @@ function omats() {
   OM.daisRim = std({ color: 0x4a5866, roughness: 0.35, metalness: 0.45 });
   OM.daisArc = emis('#c8d4de', 0.55);
   // his trading floor: the blue floor under an orange-red pool of light, the tile seams a faint glow in it
-  OM.tileOrange = std({ map: tileTex(), color: 0xf0d4cc, emissiveMap: seamTex(), emissive: 0xff6a30, emissiveIntensity: 2.4, roughness: 0.5, metalness: 0.2 });
+  OM.tileOrange = shFloor({ map: tileTex(), color: 0xf0d4cc, emissiveMap: seamTex(), emissive: 0xff6a30, emissiveIntensity: 2.4, roughness: 0.55, metalness: 0.28 });
   OM.coinG = std({ color: 0x18b87a, emissive: 0x38f5b8, emissiveIntensity: 0.28, metalness: 0.8, roughness: 0.22 });
   OM.coinB = std({ color: 0x2f6fd8, emissive: 0x3b82f6, emissiveIntensity: 0.32, metalness: 0.8, roughness: 0.22 });
   G.coin = new THREE.CylinderGeometry(1, 1, 1, 28);
@@ -3177,14 +3255,11 @@ class Office3D {
     //   behind the laboratory. Each looked up by its room's cell and face, and left out when that face is not
     //   on the outside.
     exMats();
-    this.flames = []; const tag = [], busy = new Map();
+    this.flames = []; const tag = [];
     const edge = (c0, c1, nx, ny) => outer.find((o) => o.c0 === c0 && o.c1 === c1 && o.nx === nx && o.ny === ny);
     // a point on an edge's hull face (the hull sits 0.12 in from the deck's edge): f along it, out from it, at z
     const onFace = (e, f, out = 0) => { const s = e.nx ? Math.min(e.ay, e.by) : Math.min(e.ax, e.bx), l = Math.abs(e.bx - e.ax) + Math.abs(e.by - e.ay), t = s + f * l, k = -0.12 + out;
       return e.nx ? { x: e.ax + e.nx * k, y: t } : { x: t, y: e.ay + e.ny * k }; };
-    // what holds a stretch of face: 'e' an engine or thruster on the hull itself, 'p' a panel rail at its foot,
-    // 'n' the nacelle or the panel stands, above the hull's top edge
-    const claim = (e, f0, f1, kind = 'e') => { const k = e.c0 + ',' + e.c1 + ',' + e.nx + ',' + e.ny; (busy.get(k) || busy.set(k, []).get(k)).push([f0, f1, kind]); };
     // a part's own frame on a face: +z straight out of it, +y up
     const mount = (e, f, z, out = 0) => { const p = onFace(e, f, out), g = new THREE.Group(); g.position.copy(this.V(p.x, p.y, z)); g.rotation.y = Math.atan2(e.nx, e.ny); ext.add(g); return g; };
     const flame = (halo, base) => this.flames.push({ glow: halo, ph: R() * 6, base });
@@ -3201,17 +3276,16 @@ class Office3D {
         const g = mount(ePort, f, 0.18, 1.2); flame(exBackEngine(g), 0.3);
         tag.push({ kind: 'engine', name: 'back@' + f, obj: g });
       });
-      claim(ePort, 0, 1, 'n');
     }
     const eLot = edge(8, 16, 0, 1);
     if (eLot) {
       const g = mount(eLot, 0.44, -1.45); g.scale.setScalar(0.95); exBigEngine(g);
-      tag.push({ kind: 'engine', name: 'big', obj: g }); claim(eLot, 0.3, 0.58);
+      tag.push({ kind: 'engine', name: 'big', obj: g });
     }
     [[edge(0, 16, 0, 1), 0.36], [edge(16, 16, 1, 0), 0.4], [edge(16, 8, 1, 0), 0.62]].forEach(([e, f]) => {
       if (!e) return;
       const g = mount(e, f, -1.25); flame(exThruster(g), 0.1);
-      tag.push({ kind: 'engine', name: 'thr' + e.c0 + ',' + e.c1, obj: g }); claim(e, f - 0.08, f + 0.08);
+      tag.push({ kind: 'engine', name: 'thr' + e.c0 + ',' + e.c1, obj: g });
     });
     // a row of n panels w by h hung from a rail at the hull's foot, from f0 to f1 along the edge, each swung out
     // from hanging straight down by tilt, its cells to the sky and the camera; on short silver arms
@@ -3224,7 +3298,6 @@ class Office3D {
         exPanel(p, w, h); exPart(p, G.box, OM.exFrame, 0, -0.06, 0.12, 0.08, 0.05, 0.3);
         tag.push({ kind: 'panel', name: 'panel' + e.c0 + ',' + e.c1 + '#' + i, obj: p, group: 'row' + e.c0 + ',' + e.c1 });
       }
-      claim(e, f0, f1, 'p');
     };
     const eVault = edge(16, 16, 0, 1);
     if (eVault) hangRow(eVault, 5, 0.16, 0.94, 1.12, 1.6, 0.9);
@@ -3245,40 +3318,15 @@ class Office3D {
         // two legs behind them, from the bracket's outer edge up to the panels' backs
         [-1.2, 1.2].forEach((x) => exStrut(base, new THREE.Vector3(x, -0.02, 0.85), new THREE.Vector3(x, 0.05 + Math.cos(lean) * 0.8 - 0.05, Math.sin(lean) * 0.8 + 0.06), 0.06, OM.exFrame));
       });
-      claim(eLab, 0, 1, 'n');
     }
-    // The hull's own detail: his modules are light silver boxes standing out from the navy plating -- a dark window
-    // with a pale-blue lit strip across its top, a grille and a status light below -- two to a room's side, where no
-    // engine sits; between them a slatted vent, a pipe run along the foot on brackets, a small light in the top band
+    // The hull's own detail is flush, all of it in its texture (hullTex): his hull has nothing boxy standing out.
+    // What is geometry is its bottom edge, rounded as his is and catching the light along its turn: a bead along
+    // the foot of every outer face, as long as that face's hull (shortened where the hull turns a corner).
     outer.forEach((e) => {
-      const k = e.c0 + ',' + e.c1 + ',' + e.nx + ',' + e.ny, used = busy.get(k) || [];
-      const free = (f, kinds = 'ep', m = 0.06) => !used.some(([a, b, kd]) => kinds.includes(kd) && f > a - m && f < b + m);
-      [0.27, 0.73].forEach((f, n) => {
-        if (!free(f, 'e', 0.14)) return;
-        const g = mount(e, f, -1.22, 0);
-        exPart(g, rboxGeo(1.56, 0.8, 0.14, 0.03), OM.exModule, 0, 0, 0.07, 1, 1, 1);
-        exPart(g, G.box, OM.exModuleD, 0, 0.13, 0.145, 1.3, 0.32, 0.02);
-        exPart(g, G.box, OM.exStrip, 0, 0.22, 0.158, 1.12, 0.055, 0.01);
-        exPart(g, G.box, OM.exModuleD, 0, -0.04, 0.143, 1.38, 0.02, 0.01);
-        for (let s = 0; s < 7; s++) exPart(g, G.box, OM.exModuleD, -0.56 + s * 0.1, -0.21, 0.145, 0.045, 0.22, 0.02);
-        exPart(g, G.box, n ? OM.exLedC : OM.exLedG, 0.55, -0.23, 0.148, 0.11, 0.06, 0.02);
-      });
-      const run = []; for (let f = 0.04; f <= 0.96; f += 0.04) if (free(f)) run.push(f);
-      for (let i = 0; i < run.length;) {
-        let j = i; while (j + 1 < run.length && run[j + 1] - run[j] < 0.05) j++;
-        if (run[j] - run[i] > 0.2) {
-          const g = mount(e, (run[i] + run[j]) / 2, -1.97, 0.07), L = (run[j] - run[i]) * 8;
-          exPart(g, G.exRod, OM.exGun, 0, 0, 0, 0.04, 0.04, L, 0, Math.PI / 2, 0);
-          for (let b = 0; b <= Math.floor(L / 1.6); b++) exPart(g, G.box, OM.exGunD, -L / 2 + b * L / Math.max(1, Math.floor(L / 1.6)), 0, -0.035, 0.09, 0.12, 0.08);
-        }
-        i = j + 1;
-      }
-      if (free(0.5, 'e', 0.08)) {
-        const g = mount(e, 0.5, -1.45, 0.02);
-        exPart(g, G.box, OM.exGunD, 0, 0, 0, 0.62, 0.42, 0.05);
-        for (let s = 0; s < 4; s++) exPart(g, G.box, OM.exGun, -0.21 + s * 0.14, 0, 0.03, 0.06, 0.34, 0.03);
-        exPart(mount(e, 0.5, -0.62, 0.01), G.box, e.c0 % 16 ? OM.exLedC : OM.exLedG, 0, 0, 0, 0.18, 0.05, 0.03);
-      }
+      const l = Math.abs(e.bx - e.ax) + Math.abs(e.by - e.ay);
+      const a = (e.nx ? !have[kc(e.c0, e.c1 - 8)] : !have[kc(e.c0 - 8, e.c1)]) ? 0.12 : 0;
+      const b = (e.nx ? !have[kc(e.c0, e.c1 + 8)] : !have[kc(e.c0 + 8, e.c1)]) ? 0.12 : 0, L = l - a - b;
+      exPart(mount(e, (a + L / 2) / l, -T - 0.12 - HD + 0.04, 0), G.exRod, OM.exBead, 0, 0, 0, 0.1, 0.1, L, 0, Math.PI / 2, 0);
     });
 
     // where each engine and panel is, read before the merge: what a test checks for one drawn over another
@@ -3306,29 +3354,67 @@ class Office3D {
   // the two front walls ("vpredu sviti spodni listy a v zadnich stenach ty vrchni"). The glass's own edges, the
   // front walls' tops and the corners, are a thin pale line. Mint, the trading desk orange.
   shell(r) {
-    const { g, x0, y0 } = r, RS = CO.iso.RS, H = WH, t = 0.04, z0 = 0.08;
+    const { g, x0, y0 } = r, RS = CO.iso.RS, H = WH, t = 0.04, z0 = SH_FLOOR_Y;
     const dk = r.dept && r.dept.key;
     const isOrange = dk === 'trading_desk';
+    // the floors' mirror lives in the scene itself (the world is cleared at every layout) and sees layer 1 only
+    const rf = shRefl(); if (rf.target.parent !== this.scene) this.scene.add(rf.target, rf.light);
+    rf.reflector.getVirtualCamera(this.camera).layers.set(1);
     this.box(g, x0, y0, 0, RS, RS, z0, r.key === 'hub' ? OM.hubTile : isOrange ? OM.tileOrange : OM.tile);
     r.glow = new THREE.Mesh(G.plane, new THREE.MeshBasicMaterial({ map: radialTex('255,255,255', 0.85), transparent: true, opacity: 0.04, blending: THREE.AdditiveBlending, depthWrite: false, color: isOrange ? 0xff8824 : 0x7cf2c4 }));
     r.glow.scale.set(RS * 0.92, RS * 0.92, 1); r.glow.rotation.x = -Math.PI / 2; r.glow.position.copy(this.V(x0 + RS / 2, y0 + RS / 2, z0 + 0.01)); g.add(r.glow);
     const glassMat = isOrange ? OM.glassOrange : OM.glass;
-    // one pane per wall: a box's six faces stacked their opacity into a milky slab
-    [[x0 + RS / 2, y0, 0], [x0 + RS / 2, y0 + RS, 0], [x0, y0 + RS / 2, Math.PI / 2], [x0 + RS, y0 + RS / 2, Math.PI / 2]].forEach(([x, y, rot]) => {
-      const p = new THREE.Mesh(G.plane, glassMat); p.scale.set(RS, H, 1); p.rotation.y = rot; p.position.copy(this.V(x, y, z0 + H / 2)); p.renderOrder = 2; g.add(p);
+    // one pane per wall: a box's six faces stacked their opacity into a milky slab. Each pane and dado says which
+    // wall it is (userData.pane / .dado: 'y0' the back wall along x, 'x0' the one along y, 'y1' and 'x1' the front
+    // ones), so a room that puts something else there (the vault's armour) finds them by name
+    [[x0 + RS / 2, y0, 0, 'y0'], [x0 + RS / 2, y0 + RS, 0, 'y1'], [x0, y0 + RS / 2, Math.PI / 2, 'x0'], [x0 + RS, y0 + RS / 2, Math.PI / 2, 'x1']].forEach(([x, y, rot, wall]) => {
+      const p = new THREE.Mesh(G.plane, glassMat); p.scale.set(RS, H, 1); p.rotation.y = rot; p.position.copy(this.V(x, y, z0 + H / 2)); p.renderOrder = 2; p.userData.pane = wall; g.add(p);
     });
-    if (r.key !== 'hub') { this.box(g, x0 + t, y0 + t, z0, RS - 2 * t, 0.1, 0.52, OM.wallDark); this.box(g, x0 + t, y0 + t, z0, 0.1, RS - 2 * t, 0.52, OM.wallDark); }
-    r.edgeM = emis(isOrange ? LOOK.orange : LOOK.neon, 2.2);
-    const e = 0.058, zt = z0 + H - e, f = 0.022;   // his neon is a thicker soft line than a hairline
+    if (r.key !== 'hub') {
+      this.box(g, x0 + t, y0 + t, z0, RS - 2 * t, 0.1, 0.52, OM.wallDark).userData.dado = 'y0';
+      this.box(g, x0 + t, y0 + t, z0, 0.1, RS - 2 * t, 0.52, OM.wallDark).userData.dado = 'x0';
+    }
+    r.edgeM = emis(isOrange ? LOOK.orange : SH_NEON, 1.9);
+    // his neon is a crisp line, a little thinner than ours was (5 px at his render's size, ours 7), its glow tight
+    const e = 0.042, zt = z0 + H - e, f = 0.022;
     // the neon: back walls' tops (y = y0 along x, x = x0 along y), front walls' feet
     [[x0, y0, zt, RS, e], [x0, y0, zt, e, RS], [x0, y0 + RS - e, z0, RS, e], [x0 + RS - e, y0, z0, e, RS]].forEach(([x, y, z, w, d]) => this.box(g, x, y, z, w, d, e, r.edgeM, false));
-    // the glass's edges: the front walls' tops and the four corners
+    // the glass's edges: the front walls' tops, the four corners, and the joint between the two panes of each front
+    // wall, as his front walls show one
     [[x0, y0 + RS - f, z0 + H - f, RS, f, f], [x0 + RS - f, y0, z0 + H - f, f, RS, f],
-      [x0, y0, z0, f, f, H], [x0 + RS - f, y0, z0, f, f, H], [x0, y0 + RS - f, z0, f, f, H], [x0 + RS - f, y0 + RS - f, z0, f, f, H]].forEach(([x, y, z, w, d, h]) => this.box(g, x, y, z, w, d, h, OM.glassEdge, false));
+      [x0, y0, z0, f, f, H], [x0 + RS - f, y0, z0, f, f, H], [x0, y0 + RS - f, z0, f, f, H], [x0 + RS - f, y0 + RS - f, z0, f, f, H],
+      [x0 + RS / 2 - f / 2, y0 + RS - f, z0, f, f, H], [x0 + RS - f, y0 + RS / 2 - f / 2, z0, f, f, H]].forEach(([x, y, z, w, d, h]) => this.box(g, x, y, z, w, d, h, OM.glassEdge, false));
     // the room's own light: white over the floor, warm in the trading desk
     // the light stays in its room: an orange one reaching the neighbours tinted their floors
     r.lamp = new THREE.PointLight(isOrange ? 0xff6a34 : 0xeef6ff, isOrange ? 22 : 6, isOrange ? 6.5 : 9, 1.0);
     r.lamp.position.copy(this.V(x0 + RS / 2, y0 + RS / 2, isOrange ? 2.4 : 4.4)); g.add(r.lamp);
+    // it lights the room in the floor's mirror too: the one light that pass has, so it needs no shadow map
+    r.lamp.layers.enable(1);
+  }
+  // What the floors' mirror shows (layer 1): the astronauts' suits and packs, and the room's light-coloured still
+  // parts (white consoles, lab machines -- the merged meshes bakeRoom made, one draw call each). Every part drawn
+  // there is a draw call more a frame (5 to 7 microseconds each, measured), so what would not read in a soft
+  // reflection stays out: dark desks and racks (a reflection that only adds light gets nothing from them), screens
+  // (they reflected as loose coloured blobs on the floor, nothing like his), what lies flat (mice, keyboards, a
+  // collar, a patch: under 0.1 tall), the floor, the glass and the neon (emissive on black: its foot line straddles
+  // the mirror's plane and would double itself). Run after the room is baked (tint, from update), again when its
+  // parts change (the vault's piles are rebuilt).
+  shTag(r) {
+    // a room being born is still squashed flat (layout scales it up from 0.01 over a second): nothing in it is 0.1
+    // tall yet, so it waits for the first update after it has grown
+    if (!r.g || r.grow || r.g.children.length === r.shN) return;
+    r.shN = r.g.children.length; r.g.updateMatrixWorld(true);
+    const lum = (c) => (c ? 0.2126 * c.r + 0.7152 * c.g + 0.0722 * c.b : 0), agent = new Set(), bb = new THREE.Box3();
+    (r.agents || []).forEach((a) => a.g && a.g.traverse((x) => agent.add(x)));
+    r.g.traverse((x) => {
+      if (!x.isMesh || !(agent.has(x) || x.userData.own)) return;
+      const m = Array.isArray(x.material) ? x.material[0] : x.material;
+      if (!m || m.transparent || m.visible === false || m.isMeshBasicMaterial || m === OM.tile || m === OM.hubTile || m === OM.tileOrange) return;
+      // chrome and steel neither: seen from under the floor they mirror the studio's lights and burned a white
+      // blob into the vault's floor
+      if (m.metalness > 0.5) return;
+      if (lum(m.color) > SH_REFL.lum && bb.setFromObject(x).max.y - bb.min.y >= 0.1) x.layers.enable(1);
+    });
   }
   // a wall screen on the back wall: what runs now, or why it waits
   wallScreen(r, u0, u1) {
@@ -4362,11 +4448,9 @@ class Office3D {
       // cart's centre in the walk (behind the room's plate, which in the home view covers the floor round (3.9, 5))
       P: 0.85, ue: [1.63, 0.68], re: [2.2, 3.15, 4.1], uu: [4.52, 5.47], ru: [1.45, 2.4, 3.35], cart: [3.5, 3.15] };
     this.vtMats(D);
-    // the armour takes the place of the shell's glass and dark dado on the two back walls
-    const wy = this.V(0, y0, 0).z, wx = this.V(x0, 0, 0).x;
+    // the armour takes the place of the shell's glass and dark dado on the two back walls (shell() names them)
     g.children.forEach((m) => {
-      if (m.material === OM.wallDark) m.visible = false;
-      if (m.material === OM.glass && m.geometry === G.plane && ((m.rotation.y === 0 && Math.abs(m.position.z - wy) < 1e-6) || (m.rotation.y !== 0 && Math.abs(m.position.x - wx) < 1e-6))) m.visible = false;
+      if (m.userData.dado || m.userData.pane === 'y0' || m.userData.pane === 'x0') m.visible = false;
     });
     const shadowed = (m) => { m.castShadow = true; m.receiveShadow = true; g.add(m); return m; };
     const wY = shadowed(new THREE.Mesh(this.vtWallGeo('y', D), [OM.vtArmour, OM.vtSteelDk])); wY.position.copy(this.V(x0, y0 + D.WO + 0.012, 0));
@@ -4918,12 +5002,15 @@ class Office3D {
   // waits on you (and the trading desk, orange in his picture). Working shows as a brighter line and a faint mint
   // wash on the floor, not as another colour.
   tint(r, st) {
+    this.shTag(r);
     const dk = r.dept && r.dept.key;
     const isOrange = dk === 'trading_desk' || st === 'waiting';
     if (r.st === st && r.orange === isOrange) return;
     r.st = st; r.orange = isOrange;
     const c = new THREE.Color(isOrange ? LOOK.orange : LOOK.neon);
-    if (r.edgeM) { r.edgeM.emissive.copy(c); r.edgeM.emissiveIntensity = isOrange ? 2.2 : st === 'working' ? 2.0 : 1.5; }
+    // the line itself in its own deeper mint (SH_NEON), the floor's wash in his; over the bloom's threshold, so it
+    // glows, the glow tight round a thinner line, as his
+    if (r.edgeM) { r.edgeM.emissive.set(isOrange ? LOOK.orange : SH_NEON); r.edgeM.emissiveIntensity = isOrange ? 1.9 : st === 'working' ? 1.8 : 1.5; }
     if (r.glow) { r.glow.material.color.copy(c).multiplyScalar(isOrange ? 1.9 : 1); r.glowBase = isOrange ? 1.0 : st === 'working' ? 0.05 : 0; }
     if (r.lamp) { r.lamp.color.set(isOrange ? 0xff6a34 : 0xeef6ff); r.lamp.intensity = isOrange ? 22 : 6; r.lamp.distance = isOrange ? 6.5 : 9; }
   }

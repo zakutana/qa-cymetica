@@ -989,14 +989,10 @@
   function glowDef(id, col, stops) {
     return '<radialGradient id="' + id + '">' + stops.map(function (s) { return '<stop offset="' + s[0] + '" stop-color="' + col + '" stop-opacity="' + s[1] + '"/>'; }).join('') + '</radialGradient>';
   }
-  // a star's point of light falls off fast; the sun's corona is as broad as the 3D map's bloom spreads it, its colours
-  // u3d.js core()'s (white-gold close, gold, orange, a faint blue at the edge of Cymetica's light); its disc white-hot
-  // in the middle, orange-gold over most of it, darker toward the limb
+  // a star's point of light falls off fast; the glow round Cymetica's ball is u3d.js core()'s (gold, orange, a faint
+  // blue at the edge of its light), as broad as the 3D map's bloom spreads it
   var DEFS = '<defs>' + glowDef('uv-fl', '#c8f2ff', [[0, 1], [0.22, 0.35], [0.55, 0.12], [1, 0]]) +
-    ['#fff0c8', '#ffd27a', '#ffa640', '#ff8a30', '#3b9dff'].map(function (c, i) { return glowDef('uv-co' + i, c, [[0, 1], [0.62, 0.62], [1, 0]]); }).join('') +
-    glowDef('uv-hot', '#fffbee', [[0, 1], [0.35, 0.8], [1, 0]]) +
-    '<radialGradient id="uv-sun"><stop offset="0" stop-color="#fffdf5"/><stop offset=".45" stop-color="#ffefc6"/><stop offset=".74" stop-color="#ffd896"/>' +
-    '<stop offset=".9" stop-color="#fcbf74"/><stop offset=".97" stop-color="#f3a55a"/><stop offset="1" stop-color="#e48e4a"/></radialGradient></defs>';
+    ['#ffb04a', '#ff9a3c', '#3b9dff'].map(function (c, i) { return glowDef('uv-co' + i, c, [[0, 1], [0.5, 0.45], [1, 0]]); }).join('') + '</defs>';
   function Universe(svg, stage, h) {
     this.svg = svg; this.stage = stage; this.h = h || {};
     svg.innerHTML = DEFS + '<defs class="uvd"></defs><g class="uw"><g class="space"></g><g class="plots"></g><g class="fx"></g></g>';
@@ -1051,31 +1047,134 @@
     this.svg.querySelector('.uvd').innerHTML = defs + this.coreDefs();
     out += this.core();
     this.gSpace.innerHTML = out;
+    this.paintBall();
   };
-  // Cymetica, as the 3D map draws it: a sun whose light comes out of it ("to nemaji byt letajici krouzky, to ma vse
-  // jakoby zevnitr vychazet, nad sluncem taky nepoletuji letajici krouzky", the operator, 2026-10-19). A ball of light,
-  // deep red-orange in its cells, orange-gold over them, white-gold on the hottest, darker toward its limb and white-hot
-  // in the middle; a corona round it; rays streaming out of it in three layers; its jets and sparks leaving from its
-  // surface. Round it on the plane, still, the orrery's cyan rings and pale arcs. Sizes are u3d.js's (UVSUN: the sun
-  // drawn k times its own size, y above the plane), units the plane's: his rings reach 60.
-  var SUN = { k: 1.7, y: 6, ball: 16.5, disc: 10.5 };
+  // Cymetica's ball: each of its images gets its painting as soon as that is made (at once once it has been)
+  Universe.prototype.paintBall = function () {
+    Array.prototype.forEach.call(this.gSpace.querySelectorAll('image.uvball'), function (im) {
+      var k = im.getAttribute('data-k');
+      paintURL(k === 'glow' ? k : +k, function (u) { if (u) im.setAttribute('href', u); else im.remove(); });
+    });
+  };
+  // Cymetica, as the 3D map draws it after the operator's picture of a collision (2026-10-19, images/12: "ma vypadat
+  // takto presne"; before it, of the sun: "to nemaji byt letajici krouzky, to ma vse jakoby zevnitr vychazet"): a ball
+  // woven of plasma arcs round a white-hot heart, the very painting the 3D map lays over its heart (colliderPaint), its
+  // beams of blue-white and gold and its sparks flying out of it, a faint glow round it -- nothing flies round it.
+  // Round it on the plane, still, the orrery's cyan rings and pale arcs. Sizes are u3d.js's (UVSUN: the ball drawn k
+  // times its own size, y above the plane), units the plane's: his rings reach 60.
+  var SUN = { k: 1.7, y: 6, ball: 16.5, disc: 15 };
   var CORE = {
     // the orrery's rings on the plane: radius, half width, colour, dots round it
     lines: [[60, 0.9, '#a5d8e6'], [57.5, 0.7, '#4f8a9c'], [53, 0.7, '#77c2d0'], [42, 0.8, '#4e8d9f', 90], [36.5, 0.8, '#81cbdb']],
     arcs: [[33.5, 0.55, [[0.2, 1.5], [2.2, 3.3], [4.1, 5.6]]], [56.5, 0.5, [[0.9, 2.6], [3.4, 4.4], [5.0, 6.0]]]],
-    // the corona's lights, across in the sun's own units, and how bright
-    corona: [[28, 0.6], [36, 0.42], [50, 0.2], [70, 0.08], [96, 0.035]],
-    // the rays' three layers: across in the sun's units, how bright
-    rays: [[66, 0.55], [72, 0.5], [60, 0.45]],
-    // the jets: their angle on the first look's screen, how far toward it, length in the sun's units, colour
-    jets: [[92, -0.25, 32, '#ff9a22'], [32, 0.2, 26, '#4f9dff'], [148, -0.3, 28, '#ff8c1a'], [8, -0.35, 21, '#ffa22e'], [176, 0.25, 23, '#2f8cff'], [206, -0.2, 18, '#ff8c1a'], [334, 0.3, 16, '#5fa8ff'], [62, 0.45, 15, '#ffa22e']]
+    // the glow round the ball: across in the ball's own units, and how bright
+    corona: [[44, 0.07], [70, 0.035], [100, 0.025]],
+    // the beams: their angle on the first look's screen, how far toward it, length in the ball's units, colour
+    jets: [[36, 0.1, 34, '#9fd0ff'], [216, -0.1, 33, '#8fc4ff'], [166, 0.2, 29, '#ffb347'], [348, -0.25, 27, '#ffa22e'], [300, 0.3, 21, '#6fb0ff'], [118, -0.3, 20, '#ffc266'], [78, 0.4, 16, '#ffd28a'], [258, 0.35, 18, '#ff9a22']]
   };
-  // where the sun's middle is on the map, and its banner's height over the plane's middle in the map's units: on the
-  // 3D map's first look the banner stands half the disc's radius over the disc
+  // where the ball's middle is on the map, and its banner's height over the plane's middle in the map's units: as the
+  // 3D map hangs it, nine tenths of the ball's light up the screen from its heart
   function sunAt() { return gp(0, SUN.y, 0); }
-  CORE.banner = SUN.y * SC + SUN.disc * SUN.k * RX * 1.5;
-  // a jet's light along it: none at its root, full a quarter of the way out, gone at its tip (u3d.js jetTex); a ray's:
-  // none where the disc covers it, brightest a little out from it, gone at its tip (u3d.js sunRaysTex)
+  CORE.banner = SUN.y * SC + SUN.ball * SUN.k * 0.9 * RX;
+  // Cymetica's ball, painted as the operator's picture of a collision has it: u3d.js colliderTex, line for line, so
+  // that a seed paints the same ball on both maps (it draws from R in u3d.js's order). Arcs of plasma lying round a
+  // sphere -- gold most, orange, blue and white between, brighter on the near side -- over a white-hot heart that runs
+  // pink and then blue inside, a gold glow along its edge, two blue-white beams and two gold ones through it, a burst
+  // of spikes, sparks and streaks out of the middle. A 1024 canvas, the ball the middle 0.6 of it; one per seed.
+  var PAINT = {};
+  CO.colliderPaint = function (seed) {
+    if (PAINT[seed]) return PAINT[seed];
+    var cv = document.createElement('canvas'), W = 1024, R = rng(seed * 7 + 3), i;
+    cv.width = cv.height = W;
+    var g = cv.getContext('2d'), c = W / 2, rad = W * 0.3;
+    g.globalCompositeOperation = 'lighter';
+    var heart = g.createRadialGradient(c, c, 0, c, c, rad * 1.1);
+    [[0, 'rgba(255,255,255,1)'], [0.015, 'rgba(255,230,246,.9)'], [0.06, 'rgba(255,74,176,.75)'], [0.12, 'rgba(176,70,240,.5)'], [0.2, 'rgba(60,96,255,.45)'], [0.38, 'rgba(255,140,40,.12)'], [0.75, 'rgba(255,130,40,.05)'], [1, 'rgba(255,130,40,0)']].forEach(function (s) { heart.addColorStop(s[0], s[1]); });
+    g.fillStyle = heart; g.fillRect(0, 0, W, W);
+    var V = function () { var u = R() * 2 - 1, th = R() * Math.PI * 2, s = Math.sqrt(1 - u * u); return [Math.cos(th) * s, u, Math.sin(th) * s]; };
+    var cross = function (a, b) { return [a[1] * b[2] - a[2] * b[1], a[2] * b[0] - a[0] * b[2], a[0] * b[1] - a[1] * b[0]]; };
+    var nrm = function (a) { var l = Math.hypot(a[0], a[1], a[2]); return a.map(function (x) { return x / l; }); };
+    // an arc of a circle round o in a random plane, drawn in four pieces each as bright as its depth: a wide soft
+    // pass under a crisp one
+    var arc = function (o, rr, len, wa, cols, w, dim) {
+      var n = V(), u = nrm(cross(n, Math.abs(n[1]) < 0.9 ? [0, 1, 0] : [1, 0, 0])), v = cross(n, u), t0 = R() * Math.PI * 2, wf = 3 + R() * 6, ph = R() * 6, col = cols[Math.floor(R() * cols.length)], p = [], s, q;
+      for (s = 0; s <= 48; s++) {
+        var t = t0 + len * s / 48, k = rr * (1 + wa * Math.sin(t * wf + ph)), pt = [0, 1, 2].map(function (j) { return o[j] + (Math.cos(t) * u[j] + Math.sin(t) * v[j]) * k; });
+        p.push([c + pt[0], c - pt[1], Math.max(-1, Math.min(1, pt[2] / rad))]);
+      }
+      for (q = 0; q < 4; q++) {
+        var a0 = q * 12, a1 = a0 + 12, b = (0.3 + 0.7 * ((p[a0][2] + p[a1][2]) / 2 + 1) / 2) * dim;
+        [[w * 3.2, 0.06 * b], [w, 0.92 * b]].forEach(function (L) {
+          g.strokeStyle = 'rgba(' + col.join(',') + ',' + L[1].toFixed(3) + ')'; g.lineWidth = L[0]; g.lineCap = 'round';
+          g.beginPath(); g.moveTo(p[a0][0], p[a0][1]); for (var m = a0 + 1; m <= a1; m++) g.lineTo(p[m][0], p[m][1]); g.stroke();
+        });
+      }
+    };
+    var GOLD = [[255, 150, 36], [255, 150, 36], [255, 178, 70], [255, 112, 18], [255, 196, 96]], BLUE = [[36, 104, 255], [60, 130, 255], [96, 160, 255], [150, 200, 255]];
+    var DEEP = [[255, 84, 180], [150, 84, 255], [60, 110, 255], [40, 90, 255], [40, 90, 255], [255, 100, 60]];
+    // a gold glow along the ball's edge, where the weave is densest and brightest
+    var rim = g.createRadialGradient(c, c, rad * 0.72, c, c, rad * 1.16);
+    rim.addColorStop(0, 'rgba(255,170,70,0)'); rim.addColorStop(0.55, 'rgba(255,170,70,.26)'); rim.addColorStop(1, 'rgba(255,150,50,0)'); g.fillStyle = rim; g.fillRect(0, 0, W, W);
+    // inside: pink, violet and blue swirls round the heart; through the ball: gold and blue loops; on its shell: the
+    // arcs that draw its round edge; a few big loops bulging out past it
+    for (i = 0; i < 80; i++) arc(V().map(function (x) { return x * rad * R() * 0.3; }), rad * (0.12 + R() * 0.32), 2 + R() * 3.5, 0.1 * R(), DEEP, 2.2 + R() * 2.8, 0.85);
+    for (i = 0; i < 56; i++) arc(V().map(function (x) { return x * rad * R() * 0.5; }), rad * (0.25 + R() * 0.35), 1.6 + R() * 3.2, 0.08 * R(), R() < 0.5 ? GOLD : BLUE, 2.4 + R() * 2.8, 0.9);
+    for (i = 0; i < 110; i++) arc([0, 0, 0], rad * (0.86 + R() * 0.16), 0.6 + R() * 1.9, 0.04 * R(), R() < 0.6 ? GOLD : BLUE, 2.4 + R() * 2.8, 1);
+    for (i = 0; i < 18; i++) arc(V().map(function (x) { return x * rad * (0.4 + R() * 0.25); }), rad * (0.5 + R() * 0.3), 1.4 + R() * 2.2, 0.05 * R(), R() < 0.6 ? GOLD : BLUE, 2.5 + R() * 2.2, 0.95);
+    // the beams: two broad blue-white ones on one diagonal through the heart, two gold ones across it, tapering out
+    // past the ball, each a wide soft pass under a hot narrow one
+    [[-0.62 + R() * 0.1, '170,206,255', 26], [2.52 + R() * 0.1, '170,206,255', 22], [3.0 + R() * 0.2, '255,186,90', 20], [0.12 + R() * 0.2, '255,176,80', 16]].forEach(function (B) {
+      var rgb = B[1], wd = B[2];
+      g.save(); g.translate(c, c); g.rotate(B[0]);
+      [[wd * 2.6, 0.28], [wd, 0.75], [wd * 0.3, 1]].forEach(function (L) {
+        var ww = L[0], al = L[1], gr = g.createLinearGradient(rad * 0.1, 0, W * 0.5, 0);
+        gr.addColorStop(0, 'rgba(' + rgb + ',' + al + ')'); gr.addColorStop(0.6, 'rgba(' + rgb + ',' + (al * 0.55).toFixed(2) + ')'); gr.addColorStop(1, 'rgba(' + rgb + ',0)');
+        g.fillStyle = gr; g.beginPath(); g.moveTo(rad * 0.1, -ww / 2); g.lineTo(W * 0.5, 0); g.lineTo(rad * 0.1, ww / 2); g.closePath(); g.fill();
+      });
+      g.restore();
+    });
+    // the burst: spikes of light out of the ball's edge, gold and blue-white
+    for (i = 0; i < 64; i++) {
+      var a = R() * Math.PI * 2, r0 = rad * (0.55 + R() * 0.35), r1 = rad * (1.15 + R() * R() * 0.55), wd = 3 + R() * 9, rgb = R() < 0.6 ? '255,178,74' : R() < 0.6 ? '150,196,255' : '255,240,220';
+      g.save(); g.translate(c, c); g.rotate(a);
+      var gs = g.createLinearGradient(r0, 0, r1, 0); gs.addColorStop(0, 'rgba(' + rgb + ',0)'); gs.addColorStop(0.25, 'rgba(' + rgb + ',' + (0.35 + R() * 0.4).toFixed(2) + ')'); gs.addColorStop(1, 'rgba(' + rgb + ',0)');
+      g.fillStyle = gs; g.beginPath(); g.moveTo(r0, -wd); g.lineTo(r1, 0); g.lineTo(r0, wd); g.closePath(); g.fill(); g.restore();
+    }
+    // knots of light in the weave; sparks everywhere; fine streaks flying out of the middle
+    var dot = function (x, y, r, rgb, al) { var gr = g.createRadialGradient(x, y, 0, x, y, r); gr.addColorStop(0, 'rgba(' + rgb + ',' + al + ')'); gr.addColorStop(1, 'rgba(' + rgb + ',0)'); g.fillStyle = gr; g.fillRect(x - r, y - r, r * 2, r * 2); };
+    for (i = 0; i < 60; i++) { var ad = R() * Math.PI * 2, rd = rad * (0.35 + R() * 0.65); dot(c + Math.cos(ad) * rd, c + Math.sin(ad) * rd, 6 + R() * 14, R() < 0.7 ? '255,228,170' : '200,224,255', 0.45 + R() * 0.4); }
+    for (i = 0; i < 1500; i++) { var ap = R() * Math.PI * 2, rp = rad * (0.45 + R() * 1.15), sp = 0.6 + R() * 1.8; g.fillStyle = (R() < 0.78 ? 'rgba(255,196,100,' : 'rgba(190,220,255,') + (0.3 + R() * 0.65).toFixed(2) + ')'; g.fillRect(c + Math.cos(ap) * rp - sp / 2, c + Math.sin(ap) * rp - sp / 2, sp, sp); }
+    for (i = 0; i < 320; i++) {
+      var at = R() * Math.PI * 2, rt = rad * (0.2 + R() * 1.2), lt2 = 10 + R() * R() * 120, rgbt = R() < 0.62 ? '255,190,96' : R() < 0.5 ? '255,248,236' : '130,180,255';
+      var x0 = c + Math.cos(at) * rt, y0 = c + Math.sin(at) * rt, x1 = c + Math.cos(at) * (rt + lt2), y1 = c + Math.sin(at) * (rt + lt2), gt = g.createLinearGradient(x0, y0, x1, y1);
+      gt.addColorStop(0, 'rgba(' + rgbt + ',0)'); gt.addColorStop(0.5, 'rgba(' + rgbt + ',' + (0.3 + R() * 0.5).toFixed(2) + ')'); gt.addColorStop(1, 'rgba(' + rgbt + ',0)');
+      g.strokeStyle = gt; g.lineWidth = 0.9 + R() * 1.6; g.beginPath(); g.moveTo(x0, y0); g.lineTo(x1, y1); g.stroke();
+    }
+    return (PAINT[seed] = cv);
+  };
+  // The painting as an image the map can show, made once and kept: the ball of a seed, or (glow) seed 1 blurred and
+  // brightened, the glow the 3D map puts under it (none where a canvas cannot blur). Encoded off the main thread
+  // where the browser can (toBlob), as the flat map is where a weak computer goes: three paintings encoded at once
+  // there would stall its first look. cb gets the URL, or null.
+  var PAINTURL = {}, PAINTWAIT = {};
+  function paintURL(key, cb) {
+    if (PAINTURL[key] !== undefined) return cb(PAINTURL[key]);
+    if (PAINTWAIT[key]) return PAINTWAIT[key].push(cb);
+    PAINTWAIT[key] = [cb];
+    var done = function (u) { PAINTURL[key] = u; var q = PAINTWAIT[key]; delete PAINTWAIT[key]; q.forEach(function (f) { f(u); }); };
+    var src = CO.colliderPaint(key === 'glow' ? 1 : key), cv = src;
+    if (key === 'glow') {
+      cv = document.createElement('canvas'); cv.width = cv.height = src.width;
+      var g = cv.getContext('2d'); g.filter = 'blur(15px) brightness(1.5)';
+      if (g.filter !== 'blur(15px) brightness(1.5)') return done(null);
+      g.drawImage(src, 0, 0);
+    }
+    try {
+      if (cv.toBlob) cv.toBlob(function (b) { done(b ? URL.createObjectURL(b) : null); }, 'image/png');
+      else done(cv.toDataURL('image/png'));
+    } catch (e) { done(null); }
+  }
+  // a beam's light along it: none at its root, full a quarter of the way out, gone at its tip (u3d.js jetTex)
   Universe.prototype.coreDefs = function () {
     var h = sunAt(), out = '';
     CORE.jets.forEach(function (j, i) {
@@ -1083,14 +1182,10 @@
       out += '<linearGradient id="uvj' + i + '" gradientUnits="userSpaceOnUse" x1="' + f1(h[0]) + '" y1="' + f1(h[1]) + '" x2="' + f1(e[0]) + '" y2="' + f1(e[1]) + '">' +
         [[0, 0], [12, 0.25], [24, 1], [50, 0.55], [85, 0.1], [100, 0]].map(function (s) { return '<stop offset="' + s[0] + '%" stop-color="' + j[3] + '" stop-opacity="' + s[1] + '"/>'; }).join('') + '</linearGradient>';
     });
-    CORE.rays.forEach(function (q, i) {
-      out += '<radialGradient id="uvr' + i + '" gradientUnits="userSpaceOnUse" cx="' + f1(h[0]) + '" cy="' + f1(h[1]) + '" r="' + f1(q[0] / 2 * SUN.k * RX) + '">' +
-        [[0, '#fff4d6', 0], [30, '#ffecbe', 1], [55, '#ffce82', 0.6], [100, '#ffa046', 0]].map(function (s) { return '<stop offset="' + s[0] + '%" stop-color="' + s[1] + '" stop-opacity="' + s[2] + '"/>'; }).join('') + '</radialGradient>';
-    });
-    return out + '<clipPath id="uv-sunclip"><circle cx="' + f1(h[0]) + '" cy="' + f1(h[1]) + '" r="' + f1(SUN.disc * SUN.k * RX) + '"/></clipPath>';
+    return out;
   };
   Universe.prototype.core = function () {
-    var c = gp(0, 0, 0), h = sunAt(), R = rng(77), out = '<g class="core-plot" data-id="core">', rD = SUN.disc * SUN.k * RX;
+    var c = gp(0, 0, 0), h = sunAt(), R = rng(77), out = '<g class="core-plot" data-id="core">', i;
     // the orrery's rings and arcs on the plane
     CORE.lines.forEach(function (q) {
       out += '<ellipse cx="' + f1(c[0]) + '" cy="' + f1(c[1]) + '" rx="' + f1(q[0] * RX) + '" ry="' + f1(q[0] * RY) + '" fill="none" stroke="' + q[2] + '" stroke-width="' + f1(q[1] * 2 * 0.68 * 21) + '"' + (q[3] ? dotsOf(q[0], q[0] * Math.PI * 2 / q[3]) : '') + '/>';
@@ -1102,59 +1197,42 @@
         out += '<polyline points="' + pts(l) + '" fill="none" stroke="#93a0a8" stroke-width="' + f1(q[1] * 2 * 21) + '" opacity=".55"/>';
       });
     });
-    // behind the disc, each added to the light under it as the 3D map adds them: the corona, wider than the disc so
-    // only its rim shows round it; the rays, streamers out of the middle in three layers, a few broad among many thin,
-    // each brightest a little out from the disc and gone at its tip; the jets, a wide soft cone round a narrow hot one
-    var corona = '', rays = '', jets = '';
-    CORE.corona.forEach(function (q, i) {
-      corona += '<circle cx="' + f1(h[0]) + '" cy="' + f1(h[1]) + '" r="' + f1(q[0] / 2 * SUN.k * RX) + '" fill="url(#uv-co' + i + ')" opacity="' + f1(Math.min(1, q[1] * 1.5) * 100) / 100 + '"/>';
+    // under the ball, each added to the light under it as the 3D map adds them: the faint glow round it; the beams, a
+    // wide soft cone round a narrow hot one, the two long blue-white ones broad; the sparks flying out of its heart --
+    // golden mostly, some white-blue, most along the beams, the rest every way, some twinkling; one coming straight
+    // at us would sit on the ball like a speck of dust, so those fade
+    var glow = '', beams = '', sparks = '';
+    CORE.corona.forEach(function (q, k) {
+      glow += '<circle cx="' + f1(h[0]) + '" cy="' + f1(h[1]) + '" r="' + f1(q[0] / 2 * SUN.k * RX) + '" fill="url(#uv-co' + k + ')" opacity="' + f1(Math.min(1, q[1] * 5) * 100) / 100 + '"/>';
     });
-    CORE.rays.forEach(function (q, li) {
-      var Rl = q[0] / 2 * SUN.k * RX, byOp = ['', '', ''];
-      for (var i = 0; i < 110; i++) {
-        var a = R() * Math.PI * 2, len = Rl * (0.42 + R() * R() * 0.58), broad = R() < 0.12, w = Rl * (broad ? 5 + R() * 7 : 1 + R() * 3) / 256, al = broad ? 0 : R() < 0.5 ? 1 : 2;
-        var ux = Math.cos(a), uy = Math.sin(a), vx = -uy, vy = ux, p = function (u, v) { return f1(h[0] + ux * u + vx * v) + ',' + f1(h[1] + uy * u + vy * v); };
-        byOp[al] += 'M' + p(0, -w) + 'Q' + p(len * 0.5, -w * 0.6) + ' ' + p(len, 0) + 'Q' + p(len * 0.5, w * 0.6) + ' ' + p(0, w) + 'Z';
-      }
-      [0.18, 0.3, 0.46].forEach(function (k, j) { if (byOp[j]) rays += '<path d="' + byOp[j] + '" fill="url(#uvr' + li + ')" opacity="' + f1(Math.min(1, k * q[1] * 2.6) * 100) / 100 + '"/>'; });
-    });
-    CORE.jets.forEach(function (j, i) {
-      var t = j[0] * Math.PI / 180, L = j[2] * SUN.k * RX / Math.sqrt(1 + j[1] * j[1]), ux = Math.cos(t), uy = -Math.sin(t), vx = -uy, vy = ux;
-      [[1.9, 0.5], [0.6, 0.95]].forEach(function (k) {
-        var w0 = k[0] * SUN.k * RX, w1 = w0 * 0.06;
-        jets += '<polygon points="' + pts([[h[0] + vx * w0, h[1] + vy * w0], [h[0] + ux * L + vx * w1, h[1] + uy * L + vy * w1], [h[0] + ux * L - vx * w1, h[1] + uy * L - vy * w1], [h[0] - vx * w0, h[1] - vy * w0]]) + '" fill="url(#uvj' + i + ')" opacity="' + k[1] + '"/>';
+    CORE.jets.forEach(function (j, k) {
+      var t = j[0] * Math.PI / 180, L = j[2] * SUN.k * RX / Math.sqrt(1 + j[1] * j[1]), ux = Math.cos(t), uy = -Math.sin(t), vx = -uy, vy = ux, wk = j[2] > 30 ? 1.8 : 1;
+      [[1.3 * wk, 0.22], [0.3 * wk, 0.7]].forEach(function (q) {
+        var w0 = q[0] * SUN.k * RX, w1 = w0 * 0.06;
+        beams += '<polygon points="' + pts([[h[0] + vx * w0, h[1] + vy * w0], [h[0] + ux * L + vx * w1, h[1] + uy * L + vy * w1], [h[0] + ux * L - vx * w1, h[1] + uy * L - vy * w1], [h[0] - vx * w0, h[1] - vy * w0]]) + '" fill="url(#uvj' + k + ')" opacity="' + q[1] + '"/>';
       });
     });
-    out += [corona, rays, jets].map(function (l) { return '<g style="mix-blend-mode:screen">' + l + '</g>'; }).join('');
-    // the disc: orange-gold, darker toward the limb; over it, kept to it, the deep red-orange of its cells and the
-    // white-gold of its hottest grains; white-hot in the middle, where it faces us
-    out += '<circle cx="' + f1(h[0]) + '" cy="' + f1(h[1]) + '" r="' + f1(rD) + '" fill="url(#uv-sun)"/>';
-    var blob = function (x, y, r, col, op) {
-      var l = [], k0 = R() * 6;
-      for (var k = 0; k < 9; k++) { var t = k / 9 * Math.PI * 2, q = r * (1 + 0.28 * Math.sin(t * 2 + k0) + 0.16 * Math.cos(t * 3 - k0)); l.push([x + Math.cos(t) * q, y + Math.sin(t) * q]); }
-      return '<polygon points="' + pts(l) + '" fill="' + col + '" opacity="' + op + '"/>';
-    };
-    var cells = '';
-    for (var i = 0; i < 95; i++) {
-      var ra = Math.sqrt(R()) * rD, an = R() * Math.PI * 2, hot = R() < 0.38, rim = ra / rD;
-      cells += blob(h[0] + Math.cos(an) * ra, h[1] + Math.sin(an) * ra, rD * (hot ? 0.035 + R() * 0.05 : 0.05 + R() * 0.08), hot ? '#fff6dc' : '#ee9445', f1((hot ? 0.5 * (1 - rim * 0.6) : 0.12 + 0.18 * rim) * 100) / 100);
-    }
-    out += '<g clip-path="url(#uv-sunclip)">' + cells + '<circle cx="' + f1(h[0] - rD * 0.08) + '" cy="' + f1(h[1] - rD * 0.1) + '" r="' + f1(rD * 0.62) + '" fill="url(#uv-hot)" opacity=".85"/></g>';
-    // the sparks, leaving from the disc's surface: golden mostly, some white-blue; most stream out along the jets, the
-    // rest every way; a spark coming straight at us would sit on the disc like a speck of dust, so those fade; some twinkle
-    var sparks = '';
     for (i = 0; i < 220; i++) {
       var jet = R() < 0.55 ? CORE.jets[Math.floor(R() * CORE.jets.length)] : null, toward = jet ? jet[1] / Math.sqrt(1 + jet[1] * jet[1]) : R() * 2 - 1;
       var a = jet ? jet[0] * Math.PI / 180 + (R() - 0.5) * 0.3 : R() * Math.PI * 2, life = R();
-      var dist = (SUN.disc * 0.94 + life * (jet ? jet[2] * (0.4 + R() * 0.45) : 6 + R() * 14)) * SUN.k * RX * Math.sqrt(1 - toward * toward);
-      if (dist < rD && toward < 0) continue;   // behind the disc
-      var op = (1 - life) * (dist < rD ? 1 - Math.min(1, Math.max(0, (toward - 0.55) / 0.3)) : 1);
+      var dist = (2 + life * (jet ? jet[2] * (0.55 + R() * 0.45) : 10 + R() * 18)) * SUN.k * RX * Math.sqrt(1 - toward * toward);
+      var op = (1 - life) * (1 - Math.min(1, Math.max(0, (toward - 0.8) / 0.17)));
       if (op < 0.08) continue;
       var col = R() < 0.78 ? (R() < 0.5 ? '#ffb94a' : '#ffdf8a') : '#cfe9ff', tw = R() < 0.4;
       sparks += '<circle' + (tw ? ' class="beacon" style="animation-delay:-' + (R() * 1.8).toFixed(2) + 's"' : '') + ' cx="' + f1(h[0] + Math.cos(a) * dist) + '" cy="' + f1(h[1] - Math.sin(a) * dist) + '" r="' + f1(5 + R() * 9) + '" fill="' + col + '" opacity="' + f1(Math.min(1, op * 1.3) * 100) / 100 + '"/>';
     }
-    out += '<g style="mix-blend-mode:screen">' + sparks + '</g>';
-    // where a pointer finds it: the sun and a little round it
+    out += [glow, beams, sparks].map(function (l) { return '<g style="mix-blend-mode:screen">' + l + '</g>'; }).join('');
+    // the ball: the 3D map's painting at its size and place -- the ball as wide as u3d.js makes it (UVSUN.disc times
+    // k across its radius), the painting 600/360 of the ball -- seed 1 over its blurred glow, seed 2 faint over both,
+    // laid over the map as the 3D lays it (its overlay blends inside the banners' own layer, so on the map it simply
+    // covers: added to the beams' light the weave would wash out to white). Still: the 3D's pair turns and flickers,
+    // but on the flat map that would repaint the whole map every frame, on the weak computers it is for.
+    // (drawSpace gives each image its painting once it is made: paintBall)
+    var half = SUN.disc * SUN.k * RX * 600 / 360, img = function (key, op) {
+      return '<image class="uvball" data-k="' + key + '" x="' + f1(h[0] - half) + '" y="' + f1(h[1] - half) + '" width="' + f1(half * 2) + '" height="' + f1(half * 2) + '"' + (op != null ? ' opacity="' + op + '"' : '') + '/>';
+    };
+    out += '<g>' + img('glow', 0.85) + img(1) + img(2, 0.35) + '</g>';
+    // where a pointer finds it: the ball and a little round it
     out += '<circle cx="' + f1(h[0]) + '" cy="' + f1(h[1]) + '" r="' + f1(34 * RX) + '" fill="transparent"/>';
     return out + '</g>';
   };
