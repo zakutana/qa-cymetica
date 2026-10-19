@@ -6929,7 +6929,9 @@ class Office3D {
       return true;
     });
     if (this.mouseMoved) { this.mouseMoved = false; this.pick(); }
-    if (IDLE.q.length) idleFlush();
+    // (only before its first frame: what is queued later is the map's, built ahead -- its sky's 63 ms of noise had
+    // landed in an office frame -- and the map's own frame does it)
+    if (!this.frames && IDLE.q.length) idleFlush();
     try { if (this.post) this.post.render(); else this.renderer.render(this.scene, this.camera); this.frames = (this.frames || 0) + 1; }
     catch (e) { console.error('3D office stopped:', e); this.renderer.setAnimationLoop(null); if (this.onFail && !(this.frames > 30)) this.onFail(e); return; }
     keepCompiled(this.renderer, this);
