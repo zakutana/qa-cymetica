@@ -158,6 +158,16 @@ a { color: var(--cyan); text-decoration: none; cursor: pointer; }
 .dl .sp.hot { color: var(--red); }
 .ubar.capb { display: block; margin-top: 6px; height: 3px; }
 .dept.needs { border-left-color: var(--red); box-shadow: inset 0 0 0 1px rgba(255, 68, 68, .25); }
+/* the department's icon, drawn to its room (app.js DEPT_ICON): a glowing tile at the card's left, its status dot on
+   the tile's corner */
+.dept { display: grid; grid-template-columns: auto minmax(0, 1fr); column-gap: 11px; align-items: center; }
+.dept > :not(.dic):not(.run) { grid-column: 2; }
+.dic { grid-column: 1; grid-row: 1 / span 3; position: relative; width: 36px; height: 36px; border-radius: 10px; display: grid; place-items: center; color: var(--ic);
+  background: radial-gradient(circle at 32% 26%, color-mix(in srgb, var(--ic) 24%, transparent), rgba(7, 12, 20, .92) 72%);
+  border: 1px solid color-mix(in srgb, var(--ic) 40%, transparent); box-shadow: 0 0 14px color-mix(in srgb, var(--ic) 16%, transparent), inset 0 1px 0 rgba(255, 255, 255, .06); }
+.dic svg { width: 20px; height: 20px; fill: none; stroke: currentColor; stroke-width: 1.5; stroke-linecap: round; stroke-linejoin: round; filter: drop-shadow(0 0 4px color-mix(in srgb, var(--ic) 65%, transparent)); }
+.dic .dot { position: absolute; right: -3px; top: -3px; width: 9px; height: 9px; border: 2px solid var(--navy2); }
+.dept:hover .dic { border-color: color-mix(in srgb, var(--ic) 65%, transparent); }
 .dept.needs .dot { background: var(--red); box-shadow: 0 0 8px var(--red); }
 .dus { display: flex; align-items: center; gap: 10px; margin-top: 5px; font-size: 12px; font-weight: 700; color: var(--text); }
 .dus small { color: var(--dim2); font-weight: 500; margin-left: 3px; font-size: 10px; }
