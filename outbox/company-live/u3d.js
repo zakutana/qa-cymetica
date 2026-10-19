@@ -3189,6 +3189,18 @@ function drawWall(s, title, sub, col, mode) {
   g.strokeStyle = 'rgba(176,196,208,.62)'; g.lineWidth = Math.max(2, H * 0.025); g.strokeRect(p * 0.5, p * 0.5, W - p, H - p);
   g.fillStyle = col; g.font = '700 ' + Math.round(H * 0.17) + 'px JetBrains Mono, monospace'; g.textBaseline = 'top';
   const fit = (t) => { let s2 = String(t || ''); while (s2.length > 3 && g.measureText(s2).width > W - 3 * p) s2 = s2.slice(0, -2); return s2 !== t ? s2.replace(/.$/, '…') : s2; };
+  // a room whose name is on its glass (signRooms): its screen says what it does now in big type, two lines at most
+  if (s.big) {
+    const words = String(title || '').split(' '), lines = ['']; g.font = '700 ' + Math.round(H * 0.26) + 'px JetBrains Mono, monospace';
+    words.forEach((wd) => { const l = lines[lines.length - 1], t2 = l ? l + ' ' + wd : wd; if (g.measureText(t2).width > W - 3 * p && l && lines.length < 2) lines.push(wd); else lines[lines.length - 1] = t2; });
+    g.shadowColor = col; g.shadowBlur = H * 0.05;
+    lines.forEach((l, i) => g.fillText(fit(l), p * 1.4, H * (0.14 + i * 0.29)));
+    g.shadowBlur = 0;
+    g.fillStyle = '#122030'; g.fillRect(p * 1.4, H * 0.8, W - 2.8 * p, H * 0.06);
+    if (mode === 'run') { g.fillStyle = col; g.fillRect(p * 1.4, H * 0.8, (W - 2.8 * p) * (0.25 + 0.5 * Math.random()), H * 0.06); }
+    if (mode === 'full') { g.fillStyle = col; g.globalAlpha = 0.8; g.fillRect(p * 1.4, H * 0.8, W - 2.8 * p, H * 0.06); g.globalAlpha = 1; }
+    s.tex.needsUpdate = true; return;
+  }
   g.fillText(fit(title), p * 1.4, H * 0.17);
   g.fillStyle = '#8fa8c2'; g.font = '500 ' + Math.round(H * 0.12) + 'px JetBrains Mono, monospace';
   g.fillText(fit(sub), p * 1.4, H * 0.42);
@@ -3500,6 +3512,7 @@ class Office3D {
       if (room.born) { g.scale.set(1, 0.01, 1); room.grow = performance.now(); }
     });
     this.bakeRooms();
+    this.signRooms();
     // the plates wait hidden until a frame has put them over their rooms: while the 3D was starting they sat in a
     // heap at the stage's top left ("jak nacita mapa tak vlevo nahore sou nejake nesmysly"); labels() shows them
     Array.prototype.forEach.call(this.layer.children, (el) => { el.style.display = 'none'; el._off = true; });
@@ -3509,6 +3522,38 @@ class Office3D {
   }
   // every room's still parts merged per material (bakeRoom): the same picture in a fraction of the draw calls
   bakeRooms() { this.baked = 0; Object.values(this.rooms).forEach((r) => { if (r.g) this.baked += bakeRoom(r); }); }
+  // A trial of the operator's idea (2026-10-19: "zkus udelat to ze nazvy tech mistnosti budou na tom skle a ten
+  // napis pod tim treba Up Next tam bude na nejake velke obrazovce v mistnosti ... vyzkousej to tak pro jednu
+  // mistnost"): the room's name lettered on its front glass, its plate gone, and what it does now in big type on the
+  // room's own wall screen. Cymetica QA only; ?signs=all tries it in every department's room.
+  signRooms() {
+    const all = CO.Q && CO.Q.get('signs') === 'all';
+    Object.values(this.rooms).forEach((r) => {
+      if (!r.dept || !(all || r.dept.key === 'testing')) return;
+      this.glassSign(r);
+      if (r.wall) r.wall.big = true;
+      if (r.plate) { r.plate.remove(); r.plate = null; }
+    });
+  }
+  glassSign(r) {
+    const RS = CO.iso.RS, name = String(r.dept.name || '').toUpperCase();
+    const c = document.createElement('canvas'); c.width = 1024; c.height = 144; const g = c.getContext('2d');
+    // letters etched in light: a soft wide glow under crisp strokes, a thin rule under them with a bright tick
+    g.textBaseline = 'middle'; g.textAlign = 'left';
+    let fs = 92; g.font = '700 ' + fs + 'px Rajdhani, "JetBrains Mono", sans-serif';
+    const sp = 6, width = (t) => [...t].reduce((w, ch) => w + g.measureText(ch).width + sp, -sp);
+    while (width(name) > 960 && fs > 40) { fs -= 4; g.font = '700 ' + fs + 'px Rajdhani, "JetBrains Mono", sans-serif'; }
+    const draw = (blur, alpha) => { g.save(); g.shadowColor = 'rgba(255,255,255,' + alpha + ')'; g.shadowBlur = blur; g.fillStyle = 'rgba(255,255,255,' + alpha + ')'; let x = 30; [...name].forEach((ch) => { g.fillText(ch, x, 62); x += g.measureText(ch).width + sp; }); g.restore(); };
+    draw(26, 0.35); draw(8, 0.75); draw(0, 1);
+    g.fillStyle = 'rgba(255,255,255,.55)'; g.fillRect(30, 118, Math.min(960, width(name)), 3); g.fillRect(30, 113, 54, 10);
+    const t = new THREE.CanvasTexture(c); t.colorSpace = THREE.SRGBColorSpace; t.anisotropy = 8;
+    const m = new THREE.MeshBasicMaterial({ map: t, transparent: true, depthWrite: false, toneMapped: false, blending: THREE.AdditiveBlending, color: new THREE.Color(LOOK.neon).multiplyScalar(1.4) });
+    const w = RS * 0.8, h = w * 144 / 1024, p = new THREE.Mesh(G.plane, m);
+    // on the front-left pane, just outside the glass, in its upper half (a neighbour's back wall in front of the room
+    // hides the lower half from the home view), read left to right
+    p.scale.set(w, h, 1); p.position.copy(this.V(r.x0 + RS * 0.1 + w / 2, r.y0 + RS + 0.03, 0.08 + WH - h * 0.62)); p.userData.dyn = true; p.renderOrder = 3;
+    r.g.add(p); r.sign = p;
+  }
   // Under and round the deck, what makes it a station in space: a rim, a plated hull with its lights, a stepped
   // keel, the rock it is built on, engines, solar wings, asteroids drifting past. Static parts merged per
   // material.
@@ -6576,6 +6621,7 @@ class Office3D {
       else if (v.queued.length) { title = 'Up next: ' + v.queued[0].title; sub = ''; mode = isOrange ? 'full' : ''; }
       else { title = d.schedule && d.next_run ? 'Next run at ' + CO.hhmm(d.next_run) : 'Idle'; sub = ''; mode = isOrange ? 'full' : ''; }
       if (r.wall) drawWall(r.wall, title, sub, col, mode);
+      if (r.sign) r.sign.material.color.set(st === 'waiting' ? LOOK.orange : LOOK.neon).multiplyScalar(st === 'working' ? 1.7 : 1.4);
       if (r.kb) drawKanban(r.kb, { queued: v.queued.length, running: v.running ? 1 : 0, done: v.done, failed: v.failed });
       v.experts.slice(0, 3).forEach((e, i) => {
         const a = r.agents[i]; if (a) a.working = e.state === 'working';
