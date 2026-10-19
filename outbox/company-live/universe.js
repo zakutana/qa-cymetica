@@ -197,25 +197,66 @@
     out += '<g class="orb">' + rock(mc, 7, R) + '</g>';
     return { svg: out, top: z + r * 0.92 + 0.5, bot: -rr * 1.5, ext: Math.max(3, rr * 1.2) };
   };
-  // Ziggurat: a tier per deck on a floating island of rock, stones drifting under it, a beam from its temple
+  // Fortress (the key stays 'pyramid'), as u3d.js builds it after the Bull Club in the operator's orrery: crenellated
+  // walls in the company's colour round a tiled courtyard, a tower at each corner, grey blocks inside, all on a dark
+  // plinth; an engine burning blue out of two sides, a solar wing out of the other two. Its decks: the keep, the
+  // walls, a second block, then the towers rise one by one (the back one highest), the keep gains a storey, the front
+  // tower last. One deck is his small Bull Club: a block with a lamp on a mast.
   SKIN.pyramid = function (n, acc, R) {
-    var b0 = fpOf(n) + 1.0, inset = Math.min(0.3, (b0 - 1.1) / (2 * n)), z = 0, out = '', kh = b0 * 1.05, x0 = 3 - b0 / 2, y0 = 3 - b0 / 2, ap = P(3, 3, -kh);
-    out += '<polygon points="' + pts([P(x0, y0 + b0, 0), P(x0 + b0, y0 + b0, 0), ap]) + '" fill="' + ROCK.l + '" stroke="' + C.line2 + '" stroke-width=".6"/>';
-    out += '<polygon points="' + pts([P(x0 + b0, y0 + b0, 0), P(x0 + b0, y0, 0), ap]) + '" fill="' + ROCK.r + '" stroke="' + C.line2 + '" stroke-width=".6"/>';
-    out += '<polyline points="' + pts([P(x0, y0 + b0, 0), P(x0 + b0, y0 + b0, 0), P(x0 + b0, y0, 0)]) + '" fill="none" stroke="' + acc + '" stroke-width="1.2" opacity=".7"/>';
-    out += '<g class="orb">' + rock([ap[0] - 18, ap[1] - 6], 5, R) + rock([ap[0] + 16, ap[1] - 14], 4, R) + '</g>';
-    for (var f = 0; f < n; f++) {
-      var b = b0 - 2 * inset * f, xx = 3 - b / 2, yy = 3 - b / 2, h = FH - 0.04;
-      out += '<g class="fl" data-f="' + f + '">' + box(xx, yy, z, b, b, h, HULL.top, HULL.l, HULL.r, C.line2) +
-        '<polyline class="rim" points="' + pts([P(xx, yy + b, z + h), P(xx + b, yy + b, z + h), P(xx + b, yy, z + h)]) + '" fill="none" stroke="' + acc + '" stroke-width="1.1"/>' +
-        wins(I.onBack(xx, 0, yy + b, z + h), b * SC, h * SC, acc, R, 0.3, 9) + wins(I.onSide(xx + b, yy, 0, z + h), b * SC, h * SC, acc, R, 0.3, 9) + '</g>';
-      z += FH;
+    var V = vfCols(acc); VB = [0, 66, 0, 66, 66];
+    if (n === 1) return vfBlock(V, acc, R);
+    var s = fpOf(n) + 1.3, hs = s / 2, t = 0.36, Hw = 1.05, tw = 1.0, fy = 0.26, len = s - 2 * tw + 0.1, tc = hs - tw / 2 + 0.05, out = '';
+    // a wall between two towers on side (ax, ay): on a near one its outer face's arrow slits (deck 1) and pilasters,
+    // then its merlons along the outer edge, back to front
+    function wall(ax, ay) {
+      var c = hs - t / 2, o = cc(ax ? 3 + ax * c : 3, ay ? 3 + ay * c : 3, fy, ax ? t : len, ax ? len : t, Hw - fy, V.body);
+      var at = function (u, v) { return ax ? [3 + ax * v, 3 + u] : [3 + u, 3 + ay * v]; }, q = Math.max(2, Math.round(len / 0.75)), sq = len / q, i, p;
+      if (ax + ay > 0) {
+        var g = '', zc = fy + (Hw - fy) * 0.55;
+        for (i = 0; i < q; i++) { p = at(-len / 2 + sq * (i + 0.5), hs + 0.012); g += vfWin(ax ? onX(p[0], p[1] - 0.035, p[1] + 0.035, zc - 0.15, zc + 0.15) : onY(p[1], p[0] - 0.035, p[0] + 0.035, zc - 0.15, zc + 0.15), V, R() < 0.25); }
+        o += '<g class="fl" data-f="1">' + g + '</g>';
+        for (i = 1; i < q; i++) { p = at(-len / 2 + sq * i, hs + 0.03); o += cc(p[0], p[1], fy, ax ? 0.06 : 0.15, ax ? 0.15 : 0.06, Hw - fy - 0.1, V.body); }
+      }
+      var mm = Math.max(2, Math.round(len / 0.24)), st = len / mm;
+      for (i = 0; i < mm; i++) { p = at(-len / 2 + st * (i + 0.5), hs - 0.06); o += cc(p[0], p[1], Hw, ax ? 0.11 : st * 0.48, ax ? st * 0.48 : 0.11, 0.1, V.body); }
+      return o;
     }
-    out += box(2.62, 2.62, z, 0.76, 0.76, 0.45, C.line3, C.navy2, C.navy, C.line2);
-    var c = P(3, 3, z + 0.45);
-    out += '<polygon class="beam" points="' + pts([[c[0] - 6, c[1]], [c[0] + 6, c[1]], [c[0] + 1.5, c[1] - 46], [c[0] - 1.5, c[1] - 46]]) + '" fill="' + acc + '"/>';
-    out += beacon(c, acc, 3);
-    return { svg: out, top: z + 1.4, bot: -kh - 0.3, ext: Math.max(3, b0 * 0.75) };
+    // a tower at corner (sx, sy), risen when its own deck comes: slits in the outer faces we see (the back one's are
+    // turned away, so its deck's slits go in the two faces it shows over the walls), a parapet with two merlons a
+    // side round a sunken roof
+    function tower(sx, sy, f, up) {
+      var own = f < n, H = Hw + 0.16 + (own ? up : 0), x = 3 + sx * tc, y = 3 + sy * tc, wy = own ? Hw + 0.14 : H - 0.5, g = '', e = tw / 2 - 0.05, back = sx < 0 && sy < 0;
+      var o = cc(x, y, 0, tw, tw, H, V.body);
+      [-0.2, 0.2].forEach(function (u) {
+        if (sx > 0 || back) g += vfWin(onX(x + tw / 2 + 0.012, y + u * tw - 0.035, y + u * tw + 0.035, wy - 0.14, wy + 0.14), V, R() < 0.3);
+        if (sy > 0 || back) g += vfWin(onY(y + tw / 2 + 0.012, x + u * tw - 0.035, x + u * tw + 0.035, wy - 0.14, wy + 0.14), V, R() < 0.3);
+      });
+      if (g) o += '<g class="fl" data-f="' + (own ? f : 1) + '">' + g + '</g>';
+      o += pg(flat(x, y, H + 0.055, tw - 0.2, tw - 0.2), V.floor);
+      [[-1, 0], [0, -1], [1, 0], [0, 1]].forEach(function (a) {
+        o += cc(x + a[0] * e, y + a[1] * e, H, a[0] ? 0.1 : tw, a[0] ? tw : 0.1, 0.2, V.body);
+        [-0.24, 0.24].forEach(function (u) { o += cc(a[0] ? x + a[0] * e : x + u * tw, a[1] ? y + a[1] * e : y + u * tw, H + 0.2, a[0] ? 0.1 : 0.14, a[0] ? 0.14 : 0.1, 0.13, V.body); });
+      });
+      return o;
+    }
+    // behind it: the far wing and the far engine
+    out += vfWing(3 - hs - 0.15, 3 + s * 0.1, -0.3, -1, 0, 0.35, s * 0.3, s * 0.55, 0.32);
+    out += vfJet(3 + s * 0.2, 3 - hs - 0.1, -0.25, 0, -1, s * 0.085, 2.8, 0.06);
+    // the plinth, the walls' foot, the courtyard's tiles
+    out += cc(3, 3, -0.87, s * 0.7, s * 0.7, 0.3, VFX.base) + rbox(3, 3, -0.6, 0, s + 0.3, s + 0.3, 0.1, VFX.base);
+    out += cc(3, 3, 0, s + 0.1, s + 0.1, fy, V.body2) + vfTiles(fy + 0.045, 2 * (hs - t) + 0.02, V);
+    // the back tower, the back walls, the side towers; inside, the keep (deck 0, a storey more at deck 6) and a
+    // smaller block (deck 2), grey; then the near walls and the front tower
+    out += tower(-1, -1, 3, 0.6) + wall(-1, 0) + wall(0, -1) + tower(-1, 1, 4, 0.32) + tower(1, -1, 5, 0.32);
+    var kw = Math.min(1.45, s * 0.28), kh = Hw * 1.3;
+    out += vfHouse(3 - s * 0.19, 3 + s * 0.05, fy + 0.05, kw, kh, 0, V, R);
+    if (n > 6) out += vfHouse(3 - s * 0.19, 3 + s * 0.05, fy + 0.05 + kh, kw * 0.78, kh * 0.62, 6, V, R);
+    if (n > 2) out += vfHouse(3 + s * 0.14, 3 - s * 0.17, fy + 0.05, kw * 0.8, Hw * 0.85, 2, V, R);
+    out += wall(1, 0) + wall(0, 1) + tower(1, 1, 7, 0.32);
+    // in front: the near wing and the near engine
+    out += vfWing(3 + hs + 0.15, 3 - s * 0.1, -0.3, 1, 0, 0.35, s * 0.3, s * 0.55, 0.32);
+    out += vfJet(3 + s * 0.2, 3 + hs + 0.1, -0.25, 0, 1, s * 0.085, 2.8, 0.06);
+    return vfDone(out, Math.max(Hw + 0.16 + (n > 3 ? 0.6 : 0), n > 6 ? fy + 0.05 + kh * 1.62 + 0.18 : 0) + 0.6, -1.0);
   };
   // Ring station: a spindle of disc decks, a great wheel round it on four spokes, an engine below
   SKIN.orbital = function (n, acc, R) {
@@ -264,45 +305,241 @@
     });
     return { svg: out, top: cz + h + 1.0, bot: cz - 0.7, ext: Math.max(3, len / 2 + rr * 2.4 + 1.2) };
   };
-  // Vault: an armoured block of decks with its round door, two solar wings, a dish, an engine pod underneath
+  // Vault, as u3d.js builds it after the Giga Fund in the operator's orrery: a block in the company's colour narrowing
+  // upward, a band of plates per deck whose seams are its windows, in a thick rounded collar; a round door in the
+  // first deck, a pale lid with a lamp on a mast, a long solar wing out of two sides, an engine pod under the collar
   SKIN.vault = function (n, acc, R) {
-    var fp = fpOf(n), w = fp + 0.7, dd = Math.max(1.9, fp * 0.82), x0 = 3 - w / 2, y0 = 3 - dd / 2, z = 0, out = '', H = 0;
-    for (var q = 0; q < n; q++) H += (q === 0 ? FH * 1.35 : FH);
-    var wz = Math.min(H * 0.5, 1.6);
-    var wing = function (s) {
-      var px0 = s > 0 ? x0 + w + 1.1 : x0 - 1.1 - 3.2, px1 = px0 + 3.2, py0 = 3 - 0.85, py1 = 3 + 0.85, g = '';
-      g += line(P(s > 0 ? x0 + w : x0, 3, wz), P(s > 0 ? px0 : px1, 3, wz), C.dim2, 1.6);
-      g += '<polygon points="' + pts([P(px0, py0, wz), P(px1, py0, wz), P(px1, py1, wz), P(px0, py1, wz)]) + '" fill="#0e1824" stroke="' + acc + '" stroke-width="1" stroke-opacity=".85"/>';
-      for (var k = 1; k < 4; k++) g += line(P(px0, py0 + k * 0.425, wz), P(px1, py0 + k * 0.425, wz), acc, 0.6, 0.35);
-      for (k = 1; k < 8; k++) g += line(P(px0 + k * 0.4, py0, wz), P(px0 + k * 0.4, py1, wz), acc, 0.6, 0.35);
-      return g;
-    };
-    out += box(3 - w * 0.23, 3 - dd * 0.23, -0.42, w * 0.46, dd * 0.46, 0.42, C.line3, C.navy2, C.navy, C.line2);
-    out += flame(P(3, 3, -0.42), acc, 12, 24);
-    out += wing(-1);
-    for (var f = 0; f < n; f++) {
-      var h = (f === 0 ? FH * 1.35 : FH) - 0.05, g = '<g class="fl" data-f="' + f + '">' + box(x0, y0, z, w, dd, h, HULL.top, HULL.l, HULL.r, C.line2);
-      if (f === 0) {
-        var dr = h * SC * 0.4;
-        g += '<g transform="' + I.onBack(x0, 0, y0 + dd, z + h) + '"><circle cx="' + f1(w * SC * 0.32) + '" cy="' + f1(h * SC * 0.52) + '" r="' + f1(dr) + '" fill="' + C.deep + '" stroke="' + acc + '" stroke-width="1.3"/>' +
-          '<circle cx="' + f1(w * SC * 0.32) + '" cy="' + f1(h * SC * 0.52) + '" r="' + f1(dr * 0.55) + '" fill="none" stroke="' + acc + '" stroke-opacity=".6"/>' +
-          '<path d="M' + f1(w * SC * 0.32 - dr * 0.55) + ',' + f1(h * SC * 0.52) + ' h' + f1(dr * 1.1) + ' M' + f1(w * SC * 0.32) + ',' + f1(h * SC * 0.52 - dr * 0.55) + ' v' + f1(dr * 1.1) + '" stroke="' + acc + '" stroke-opacity=".6"/>' +
-          '<rect x="' + f1(w * SC * 0.55) + '" y="' + f1(h * SC * 0.35) + '" width="' + f1(w * SC * 0.36) + '" height="' + f1(h * SC * 0.3) + '" rx="1" fill="' + acc + '" opacity=".18"/></g>';
-      } else g += wins(I.onBack(x0, 0, y0 + dd, z + h), w * SC, h * SC, acc, R, 0.5, 8.4);
-      g += '<g transform="' + I.onSide(x0 + w, y0, 0, z + h) + '">';
-      for (var k = 0; k < Math.floor(dd * SC / 6); k++) g += '<rect class="led" x="' + (3 + k * 6) + '" y="' + f1(h * SC * 0.45) + '" width="3" height="1.6" fill="' + acc + '" style="animation-delay:-' + (R() * 2).toFixed(2) + 's"/>';
-      out += g + '</g></g>';
-      out += line(P(x0 + w, y0 + dd, z), P(x0 + w, y0 + dd, z + h), C.line3, 2.4);
-      z += h + 0.05;
+    var V = vfCols(acc), W = fpOf(n) * 0.8 + 0.3, h0 = 0.95, hk = n <= 3 ? 0.62 : 0.52, cw = W * 1.45, k = 0.1, m = W < 2.4 ? 3 : 4;
+    var H = h0 + (n - 1) * hk, y0 = 0.12, zt = y0 + H, at = function (z) { return W * (1 - k * (z - y0) / H); }, out = '', f, i, F;
+    VB = [0, 66, 0, 66, 66];
+    // a point on the block's left face (F 0, its +y) or right face (F 1, its +x), t across it from our left
+    var fp = function (F, t, z) { var a = at(z) / 2; return F ? [3 + a, 3 + a - 2 * a * t, z] : [3 - a + 2 * a * t, 3 + a, z]; };
+    var fq = function (F, t0, t1, z0, z1) { return [fp(F, t0, z0), fp(F, t1, z0), fp(F, t1, z1), fp(F, t0, z1)]; };
+    // behind it the far wing; under it the keel and the drum; round it the collar
+    out += vfWing(3, 3 - cw / 2, -0.06, 0, -1, 0.4, W * 1.25, W * 0.66, 0.1);
+    out += cc(3, 3, -1.2, W * 0.5, W * 0.5, 0.32, VFX.base) + cc(3, 3, -0.9, W * 0.96, W * 0.96, 0.6, V.body2);
+    out += rbox(3, 3, -0.47, 0.19, cw, cw, 0.31, V.body);
+    // the block, its plates lit down their left edge and shaded down their right, the seams between them dark, a
+    // dark line round it between two decks
+    out += loft(3, 3, [[y0, W, W, 0.12], [zt, at(zt), at(zt), 0.12 * (1 - k)]], V.body);
+    for (F = 0; F < 2; F++) for (i = 0; i <= m; i++) {
+      var t0 = i / (m + 1), t1 = (i + 1) / (m + 1), e = 0.15 / (m + 1);
+      out += pg(fq(F, Math.max(0.03, t1 - e), Math.min(0.97, t1), y0, zt), '#000', ' opacity=".16"') + pg(fq(F, Math.max(0.03, t0), t0 + e, y0, zt), '#fff', ' opacity=".07"');
+      if (i) out += pg(fq(F, t0 - 0.02, t0 + 0.02, y0, zt), VFX.seam);
     }
-    out += box(x0 + 0.4, y0 + 0.35, z, 0.5, 0.5, 0.3, C.line3, C.navy2, C.navy, C.line2) + box(x0 + 1.1, y0 + 0.35, z, 0.5, 0.5, 0.3, C.line3, C.navy2, C.navy, C.line2);
-    var dc = P(x0 + w - 0.8, y0 + dd - 0.7, z + 0.35);
-    out += line(P(x0 + w - 0.8, y0 + dd - 0.7, z), dc, C.dim2, 1.2);
-    out += '<ellipse cx="' + f1(dc[0]) + '" cy="' + f1(dc[1] - 3) + '" rx="9" ry="4.2" fill="' + C.line3 + '" stroke="' + acc + '" stroke-opacity=".7" transform="rotate(-20 ' + f1(dc[0]) + ' ' + f1(dc[1] - 3) + ')"/>';
-    out += beacon([dc[0] + 6, dc[1] - 9], acc, 1.8);
-    out += wing(1);
-    return { svg: out, top: z + 1.1, bot: -1.6, ext: w / 2 + 4.4 };
+    var z = y0, fl = '';
+    for (f = 0; f < n; f++) {
+      var h = f ? hk : h0, zc = z + h / 2, wc = at(zc), g = '';
+      if (f) out += '<polyline points="' + pts([Q.apply(null, fp(0, 0.03, z)), Q.apply(null, fp(0, 1, z)), Q.apply(null, fp(1, 0.97, z))]) + '" fill="none" stroke="' + VFX.seam + '" stroke-width="1.1"/>';
+      for (F = 0; F < 2; F++) for (i = 1; i <= m; i++) {
+        if (!f && !F && Math.abs(-wc / 2 + wc * i / (m + 1) + W * 0.18) < 0.45) continue;   // where the door is
+        var tt = i / (m + 1), dt = 0.05 / wc;
+        g += vfWin(fq(F, tt - dt, tt + dt, zc - h * 0.35, zc + h * 0.35), V, R() < 0.15);
+      }
+      fl += '<g class="fl" data-f="' + f + '">' + g + '</g>';
+      z += h;
+    }
+    out += fl;
+    // the round door in the first deck, a wheel on it, a lamp beside
+    var dz = y0 + h0 * 0.48;
+    out += '<g transform="' + I.onBack(3 - W * 0.18, 0, 3 + at(dz) / 2 + 0.02, dz) + '"><circle r="' + f1(0.31 * SC) + '" fill="' + VFX.dark.l + '" stroke="' + V.cap.top + '" stroke-width="1.6"/>' +
+      '<path d="M-4.4,-4.4 L4.4,4.4 M-4.4,4.4 L4.4,-4.4" stroke="' + VFX.silver.l + '" stroke-width="1"/><circle cx="' + f1(0.42 * SC) + '" cy="' + f1(-0.18 * SC) + '" r="1.2" fill="' + acc + '"/></g>';
+    // the lid: its rim, the far bars, the pale plate, the near bars; a mast and its lamp
+    var Wt = at(zt), bw = Wt * 0.36;
+    out += cc(3, 3, zt - 0.03, Wt * 0.96, Wt * 0.96, 0.14, V.body);
+    out += cc(3 - bw, 3, zt + 0.1, 0.09, Wt * 0.8, 0.08, V.body) + cc(3, 3 - bw, zt + 0.1, Wt * 0.8, 0.09, 0.08, V.body);
+    out += cc(3, 3, zt + 0.1, Wt * 0.68, Wt * 0.68, 0.04, V.cap);
+    out += cc(3 + bw, 3, zt + 0.1, 0.09, Wt * 0.8, 0.08, V.body) + cc(3, 3 + bw, zt + 0.1, Wt * 0.8, 0.09, 0.08, V.body);
+    out += cc(3, 3, zt + 0.12, 0.3, 0.3, 0.12, VFX.base) + line(Q(3, 3, zt + 0.24), Q(3, 3, zt + 0.52), VFX.silver.l, 1.5) + vfLamp(3, 3, zt + 0.58, 0.17, acc);
+    // in front: the near wing, and the engine pod out from under the collar's near side
+    out += vfWing(3, 3 + cw / 2, -0.06, 0, 1, 0.4, W * 1.25, W * 0.66, 0.1);
+    out += vfJet(3 + W * 0.62, 3 + W * 0.3, -0.52, 1, 0, 0.25, 2.2, cw / 2 - W * 0.62 + 0.02);
+    return vfDone(out, zt + 1.05, -1.3);
   };
+
+  /* The Vault's and the Fortress's parts, from u3d.js's vf* ones: a body in the company's own colour, as saturated as
+   * the operator's pictures have it, lit from the top left; a dark plinth; blue-grey solar wings in a pale frame;
+   * engines burning white-blue whatever the colour. Every point goes through Q, so the picture knows how far it
+   * reaches and CO.skinSVG frames all of it. */
+  var VFC = {}, VB = null;
+  var VFX = { base: { top: '#3b3e48', l: '#2c2e36', r: '#202228' }, dark: { top: '#1a1d24', l: '#0d1015', r: '#08090d' },
+    grey: { top: '#55545b', l: '#37363c', r: '#26252a' }, grey2: { top: '#b5b2bc', l: '#8a8791', r: '#66636d' },
+    silver: { top: '#d0d6de', l: '#a9b1bc', r: '#7f8792' }, frame: '#7d8594', cell: '#5f6683', grid: '#b3b9c8',
+    seam: '#16181e', jet: '#2f9cff', plume: '#5ac8ff', core: '#e6fcff', edge: 'rgba(5,7,10,.5)' };
+  function rgbOf(hex) { var v = parseInt(hex.slice(1), 16); return [v >> 16 & 255, v >> 8 & 255, v & 255]; }
+  function hexOf(c) { return '#' + c.map(function (v) { return ('0' + Math.round(Math.max(0, Math.min(255, v))).toString(16)).slice(-2); }).join(''); }
+  function mix(a, b, t) { var p = rgbOf(a), q = rgbOf(b); return hexOf(p.map(function (v, i) { return v + (q[i] - v) * t; })); }
+  // a colour of the accent's hue at saturation s and lightness l
+  function tone(acc, s, l) {
+    var c = rgbOf(acc).map(function (v) { return v / 255; }), mx = Math.max.apply(null, c), d = mx - Math.min.apply(null, c), h = 0;
+    if (d) h = (mx === c[0] ? ((c[1] - c[2]) / d + 6) % 6 : mx === c[1] ? (c[2] - c[0]) / d + 2 : (c[0] - c[1]) / d + 4) / 6;
+    var a = s * Math.min(l, 1 - l), f = function (n) { var k = (n + h * 12) % 12; return 255 * (l - a * Math.max(-1, Math.min(k - 3, 9 - k, 1))); };
+    return hexOf([f(0), f(8), f(4)]);
+  }
+  function vfCols(acc) {
+    return VFC[acc] || (VFC[acc] = {
+      body: { top: tone(acc, 0.45, 0.43), l: tone(acc, 0.5, 0.32), r: tone(acc, 0.55, 0.22) },
+      body2: { top: tone(acc, 0.42, 0.37), l: tone(acc, 0.48, 0.27), r: tone(acc, 0.5, 0.19) },
+      cap: { top: tone(acc, 0.2, 0.62), l: tone(acc, 0.2, 0.5), r: tone(acc, 0.2, 0.38) },
+      floor: tone(acc, 0.3, 0.2), tile: tone(acc, 0.3, 0.14), win: mix(acc, '#ffffff', 0.3)
+    });
+  }
+  function Q(x, y, z) {
+    var p = P(x, y, z), b = VB;
+    if (b) { b[0] = Math.min(b[0], p[0]); b[1] = Math.min(b[1], p[1]); b[2] = Math.max(b[2], p[0]); b[3] = Math.max(b[3], p[1]); if (Math.abs(p[0]) < 30) b[4] = Math.min(b[4], p[1]); }
+    return p;
+  }
+  // The picture's top (where its banner hangs: over everything near its middle) and its reach (CO.skinSVG frames
+  // +-2 ext * SC * C30 across, down to P(3 + .7 ext, 3 + .7 ext, bot - .4)) from what it drew
+  function vfDone(svg, top, bot) {
+    var b = VB, hx = SC * I.C30, hy = SC * I.S30; VB = null;
+    top = Math.max(top, (68 - b[4]) / SC);
+    var ext = Math.max(3, Math.max(-b[0], b[2]) / (2 * hx) + 0.1,((b[3] - 4 + (bot - 0.4) * SC) / hy - 6) / 1.4);
+    if (P(3, 3, top)[1] > b[1] + 8) ext = Math.max(ext, (6 - (b[1] + 8) / hy) / 2);
+    return { svg: svg, top: top, bot: bot, ext: ext };
+  }
+  function pg(l, fill, extra) { return '<polygon points="' + pts(l.map(function (q) { return Q(q[0], q[1], q[2]); })) + '" fill="' + fill + '"' + (extra || '') + '/>'; }
+  function flat(x, y, z, w, d) { return [[x - w / 2, y - d / 2, z], [x + w / 2, y - d / 2, z], [x + w / 2, y + d / 2, z], [x - w / 2, y + d / 2, z]]; }
+  // a rectangle on a wall facing +x (at x) or +y (at y), from a to b along it and z0 to z1 up it
+  function onX(x, a, b, z0, z1) { return [[x, a, z0], [x, b, z0], [x, b, z1], [x, a, z1]]; }
+  function onY(y, a, b, z0, z1) { return [[a, y, z0], [b, y, z0], [b, y, z1], [a, y, z1]]; }
+  // a window: a dark slit, and the light in it that its deck turns on
+  function vfWin(q, V, on) { return pg(q, VFX.dark.l) + pg(q, V.win, ' class="w' + (on ? ' on' : '') + '"'); }
+  // a box by the middle of its foot
+  function cc(x, y, z, w, d, h, c) {
+    var x0 = x - w / 2, y0 = y - d / 2;
+    Q(x0, y0 + d, z); Q(x0 + w, y0 + d, z); Q(x0 + w, y0, z); Q(x0, y0, z + h); Q(x0 + w, y0 + d, z + h);
+    return box(x0, y0, z, w, d, h, c.top, c.l, c.r, VFX.edge);
+  }
+  // a rounded rectangle's outline round (cx, cy), counter-clockwise on the map, k points to a corner
+  function rrect(cx, cy, w, d, r, k) {
+    var out = [], hw = w / 2, hd = d / 2;
+    r = Math.max(0, Math.min(r, hw - 0.001, hd - 0.001));
+    [[1, 1], [-1, 1], [-1, -1], [1, -1]].forEach(function (c, q) {
+      for (var i = 0; i <= k; i++) { var a = (q + i / k) * Math.PI / 2; out.push([cx + c[0] * (hw - r) + r * Math.cos(a), cy + c[1] * (hd - r) + r * Math.sin(a)]); }
+    });
+    return out;
+  }
+  // a body lofted through rounded outlines [z, w, d, r] from its foot up: each face turned to us shaded by where it
+  // faces (the left lit, the right in shade, one leaning back toward the top's colour, one leaning out darker), then
+  // its top
+  function loft(cx, cy, rings, c) {
+    var ol = rings.map(function (g) { return rrect(cx, cy, g[1], g[2], g[3], 4); }), out = '';
+    for (var i = 0; i < rings.length - 1; i++) {
+      var a = ol[i], b = ol[i + 1], z0 = rings[i][0], z1 = rings[i + 1][0];
+      for (var j = 0; j < a.length; j++) {
+        var j2 = (j + 1) % a.length, ex = a[j2][0] - a[j][0], ey = a[j2][1] - a[j][1], L = Math.hypot(ex, ey);
+        if (L < 1e-4) continue;
+        var nx = ey / L, ny = -ex / L, back = ((a[j][0] + a[j2][0] - b[j][0] - b[j2][0]) * nx + (a[j][1] + a[j2][1] - b[j][1] - b[j2][1]) * ny) / 2;
+        if ((z1 - z0) * (nx + ny) + back <= 0.002) continue;
+        var s = back / Math.hypot(back, z1 - z0), col = mix(c.l, c.r, Math.max(0, Math.min(1, nx / (Math.max(0, nx) + Math.max(0, ny)))));
+        col = s > 0 ? mix(col, c.top, Math.min(1, s * 1.1)) : mix(col, '#000000', Math.min(0.5, -s * 0.45));
+        out += pg([[a[j][0], a[j][1], z0], [a[j2][0], a[j2][1], z0], [b[j2][0], b[j2][1], z1], [b[j][0], b[j][1], z1]], col, ' stroke="' + col + '" stroke-width=".5"');
+      }
+    }
+    var t = rings[rings.length - 1][0];
+    return out + pg(ol[ol.length - 1].map(function (p) { return [p[0], p[1], t]; }), c.top, ' stroke="' + c.top + '" stroke-width=".5"');
+  }
+  // a box rounded on every edge (u3d.js's RoundedBoxGeometry), r the rounding; a slight one stays square
+  function rbox(cx, cy, z0, z1, w, d, r, c) {
+    if (r < 0.07) return cc(cx, cy, z0, w, d, z1 - z0, c);
+    var rg = [];
+    [-60, -30, 0].forEach(function (a) { a *= Math.PI / 180; var i = r * (1 - Math.cos(a)); rg.push([z0 + r + r * Math.sin(a), w - 2 * i, d - 2 * i, r - i]); });
+    [0, 35, 65, 90].forEach(function (a) { a *= Math.PI / 180; var i = r * (1 - Math.cos(a)); rg.push([z1 - r + r * Math.sin(a), w - 2 * i, d - 2 * i, r - i]); });
+    return loft(cx, cy, rg, c);
+  }
+  // the screen outline round a set of points (monotone chain)
+  function hull(p) {
+    p = p.slice().sort(function (a, b) { return a[0] - b[0] || a[1] - b[1]; });
+    var cr = function (o, a, b) { return (a[0] - o[0]) * (b[1] - o[1]) - (a[1] - o[1]) * (b[0] - o[0]); }, lo = [], up = [], i;
+    for (i = 0; i < p.length; i++) { while (lo.length > 1 && cr(lo[lo.length - 2], lo[lo.length - 1], p[i]) <= 0) lo.pop(); lo.push(p[i]); }
+    for (i = p.length - 1; i >= 0; i--) { while (up.length > 1 && cr(up[up.length - 2], up[up.length - 1], p[i]) <= 0) up.pop(); up.push(p[i]); }
+    return lo.slice(0, -1).concat(up.slice(0, -1));
+  }
+  // a cylinder lying on the map from a to b along (dx, dy), radius r: its outline, a light along its top, and the end
+  // that faces us
+  function tube(a, b, dx, dy, r, c, cap) {
+    var ring = function (p, rr, up) { var o = []; for (var i = 0; i < 16; i++) { var t = i / 16 * Math.PI * 2, u = Math.cos(t) * rr; o.push(Q(p[0] - dy * u, p[1] + dx * u, p[2] + up + Math.sin(t) * rr)); } return o; };
+    var A = ring(a, r, 0), B = ring(b, r, 0), end = dx + dy > 0 ? B : A;
+    return '<polygon points="' + pts(hull(A.concat(B))) + '" fill="' + c.l + '" stroke="' + VFX.edge + '" stroke-width=".5"/>' +
+      '<polygon points="' + pts(hull(ring(a, r * 0.45, r * 0.4).concat(ring(b, r * 0.45, r * 0.4)))) + '" fill="' + c.top + '" opacity=".55"/>' +
+      '<polygon points="' + pts(end) + '" fill="' + cap + '" stroke="' + VFX.edge + '" stroke-width=".5"/>';
+  }
+  // An engine on its side (u3d.js vfJet): a silver pod with three dark ribs, a bell, a white-hot nozzle and a blue
+  // plume. (x, y, z) is where it leaves the hull, (dx, dy) the way it points, r its radius, lk the plume in radii;
+  // only what is out from k0 along it shows (the rest is inside the hull). Drawn from its far end to its near one.
+  function vfJet(x, y, z, dx, dy, r, lk, k0) {
+    var L = r * 2.4, nz = L + r * 0.62, len = r * lk * 0.92, at = function (k) { return [x + dx * k, y + dy * k, z]; };
+    var parts = [[0, 0.3 * L - 0.08 * r, r, VFX.silver], [0.3 * L - 0.08 * r, 0.3 * L + 0.08 * r, r * 1.07, VFX.base], [0.3 * L + 0.08 * r, 0.52 * L - 0.08 * r, r, VFX.silver],
+      [0.52 * L - 0.08 * r, 0.52 * L + 0.08 * r, r * 1.07, VFX.base], [0.52 * L + 0.08 * r, 0.74 * L - 0.08 * r, r, VFX.silver], [0.74 * L - 0.08 * r, 0.74 * L + 0.08 * r, r * 1.07, VFX.base],
+      [0.74 * L + 0.08 * r, L, r, VFX.silver], [L, nz, r * 0.98, VFX.silver]].filter(function (p) { return p[1] > k0; });
+    var near = dx + dy > 0, out = '';
+    if (!near) parts.reverse();
+    parts.forEach(function (p) { out += tube(at(Math.max(k0, p[0])), at(p[1]), dx, dy, p[2], p[3], near && p[0] === L ? VFX.core : p[3].top); });
+    // the plume: a soft glow, the flame, its white core, a halo at the nozzle
+    var p0 = Q.apply(null, at(nz)), p1 = Q.apply(null, at(nz + len)), ex = p1[0] - p0[0], ey = p1[1] - p0[1], el = Math.hypot(ex, ey) || 1, ux = ex / el, uy = ey / el, vx = -uy, vy = ux;
+    var cone = function (w0, w1, k, tip) {
+      var q = [[p0[0] + vx * w0, p0[1] + vy * w0], [p0[0] + ex * k + vx * w1, p0[1] + ey * k + vy * w1], [p0[0] + ex * k + ux * tip, p0[1] + ey * k + uy * tip], [p0[0] + ex * k - vx * w1, p0[1] + ey * k - vy * w1], [p0[0] - vx * w0, p0[1] - vy * w0]];
+      q.forEach(function (c) { if (VB) { VB[0] = Math.min(VB[0], c[0]); VB[2] = Math.max(VB[2], c[0]); VB[1] = Math.min(VB[1], c[1]); VB[3] = Math.max(VB[3], c[1]); } });
+      return pts(q);
+    };
+    var plume = '<circle cx="' + f1(p0[0] + ux * r * SC * 0.5) + '" cy="' + f1(p0[1] + uy * r * SC * 0.5) + '" r="' + f1(r * SC * 2.2) + '" fill="' + VFX.jet + '" opacity=".22"/>' +
+      '<polygon class="flame" points="' + cone(r * SC * 1.2, r * SC * 0.8, 1, r * SC * 1.2) + '" fill="' + VFX.jet + '"/>' +
+      '<polygon points="' + cone(r * SC * 0.85, r * SC * 0.45, 1, r * SC * 0.6) + '" fill="' + VFX.plume + '" opacity=".75"/>' +
+      '<polygon points="' + cone(r * SC * 0.55, r * SC * 0.2, 0.45, r * SC * 0.5) + '" fill="' + VFX.core + '" opacity=".9"/>';
+    return near ? out + plume : plume + out;
+  }
+  // A solar wing (u3d.js vfWing): a boom out of the hull at (x0, y0) along (ax, ay), one panel in a pale frame, `out`
+  // long away from the hull and `side` along it, ten cells by five; its +x edge dips by tilt (his panels lean)
+  function vfWing(x0, y0, z, ax, ay, boom, out, side, tilt) {
+    var c = boom + out / 2, mx = x0 + ax * c, my = y0 + ay * c, hx = ax ? out / 2 : side / 2, hy = ax ? side / 2 : out / 2, sn = Math.sin(tilt * (ax || ay));
+    var pan = function (ex, ez) {
+      return [[-1, -1], [1, -1], [1, 1], [-1, 1]].map(function (s) { var px = s[0] * (hx + ex); return [mx + px, my + s[1] * (hy + ex), z + ez - px * sn]; });
+    };
+    var o = line(Q(x0, y0, z), Q(x0 + ax * boom, y0 + ay * boom, z), VFX.silver.r, 1.8);
+    o += pg(pan(0.05, -0.012), VFX.frame, ' stroke="' + VFX.edge + '" stroke-width=".5"') + pg(pan(0, 0), VFX.cell);
+    var p = pan(0, 0.001), lx = hx >= hy, gl = function (a, b) { return line(Q(a[0], a[1], a[2]), Q(b[0], b[1], b[2]), VFX.grid, 0.7, 0.75); };
+    var lerp = function (a, b, t) { return [a[0] + (b[0] - a[0]) * t, a[1] + (b[1] - a[1]) * t, a[2] + (b[2] - a[2]) * t]; };
+    for (var i = 1; i < 10; i++) o += lx ? gl(lerp(p[0], p[1], i / 10), lerp(p[3], p[2], i / 10)) : gl(lerp(p[0], p[3], i / 10), lerp(p[1], p[2], i / 10));
+    for (i = 1; i < 5; i++) o += lx ? gl(lerp(p[0], p[3], i / 5), lerp(p[1], p[2], i / 5)) : gl(lerp(p[0], p[1], i / 5), lerp(p[3], p[2], i / 5));
+    return o;
+  }
+  // a lamp: the station's colour, pulsing in its halo
+  function vfLamp(x, y, z, r, acc) {
+    var p = Q(x, y, z); Q(x, y, z + r * 3);
+    return '<circle cx="' + f1(p[0]) + '" cy="' + f1(p[1]) + '" r="' + f1(r * SC * 3) + '" fill="' + acc + '" opacity=".22"/>' + beacon(p, acc, f1(r * SC));
+  }
+  // the courtyard: its tiles, eight by eight
+  function vfTiles(z, w, V) {
+    var a = w / 2, o = pg(flat(3, 3, z, w, w), V.floor);
+    for (var i = 1; i < 8; i++) { var u = -a + w * i / 8; o += line(Q(3 + u, 3 - a, z), Q(3 + u, 3 + a, z), V.tile, 0.8) + line(Q(3 - a, 3 + u, z), Q(3 + a, 3 + u, z), V.tile, 0.8); }
+    return o;
+  }
+  // a grey block in the courtyard: two windows in each face we see (deck f), a pale lid with a lip
+  function vfHouse(x, y, z0, w, h, f, V, R) {
+    var o = cc(x, y, z0, w, w, h, VFX.grey), g = '', zc = z0 + h * 0.55, hh = h * 0.21;
+    [-0.22, 0.22].forEach(function (u) {
+      g += vfWin(onX(x + w / 2 + 0.012, y + u * w - 0.04, y + u * w + 0.04, zc - hh, zc + hh), V, R() < 0.3);
+      g += vfWin(onY(y + w / 2 + 0.012, x + u * w - 0.04, x + u * w + 0.04, zc - hh, zc + hh), V, R() < 0.3);
+    });
+    return o + '<g class="fl" data-f="' + f + '">' + g + '</g>' + cc(x, y, z0 + h - 0.02, w + 0.06, w + 0.06, 0.1, VFX.grey2) + cc(x, y, z0 + h + 0.06, w * 0.8, w * 0.8, 0.08, VFX.grey2);
+  }
+  // one deck of the Fortress, his small Bull Club: a block in the company's colour on a dark plinth, four windows a
+  // face, a dark hatch in its roof with a lamp on a mast, a solar wing out of two sides
+  function vfBlock(V, acc, R) {
+    var s = 2.1, h = 1.35, out = '', g = '';
+    out += vfWing(3, 3 - s / 2 - 0.17, -0.1, 0, -1, 0.4, 2.1, 0.8, 0.12);
+    out += cc(3, 3, -0.71, s * 0.6, s * 0.6, 0.3, VFX.base) + rbox(3, 3, -0.42, 0, s + 0.34, s + 0.34, 0.1, VFX.base) + rbox(3, 3, 0, h, s, s, 0.16, V.body);
+    [[-0.12, 0.62], [0.12, 0.62], [-0.12, 0.38], [0.12, 0.38]].forEach(function (q) {
+      var u = q[0] * s + 0.25, z = h * q[1];
+      g += vfWin(onY(3 + s / 2 + 0.012, 3 + u - 0.1, 3 + u + 0.1, z - 0.1, z + 0.1), V, R() < 0.5) + vfWin(onX(3 + s / 2 + 0.012, 3 + u - 0.1, 3 + u + 0.1, z - 0.1, z + 0.1), V, R() < 0.5);
+    });
+    out += '<g class="fl" data-f="0">' + g + '</g>';
+    out += pg(flat(3, 3, h + 0.005, s * 0.38, s * 0.38), VFX.base.top) + cc(3, 3, h, 0.34, 0.34, 0.16, VFX.dark);
+    out += line(Q(3, 3, h + 0.16), Q(3, 3, h + 0.5), VFX.silver.l, 1.4) + vfLamp(3, 3, h + 0.56, 0.13, acc);
+    out += vfWing(3, 3 + s / 2 + 0.17, -0.1, 0, 1, 0.4, 2.1, 0.8, 0.12);
+    return vfDone(out, h + 1.2, -0.9);
+  }
 
   /* ---------------- a station, a banner, a whole picture ---------------- */
   // the holo-ring a station floats over: solid when public, dashed when private
