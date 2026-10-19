@@ -2018,16 +2018,14 @@ function pvRoom(b, d) {
 // its board, the desks' screens lit, every astronaut at work
 function pvDress(b, r, name, n) {
   b.tint(r, 'working');
-  const orange = r.dept.key === 'trading_desk';
   pvWall(r, name, n);
   if (r.kb) drawKanban(r.kb, { queued: 1, running: 0, done: 0, failed: 0 });
-  r.mons.forEach((m) => { if (m) m.color.set(orange ? new THREE.Color(0xffae52).multiplyScalar(1.25) : new THREE.Color(0x7cf2c4).multiplyScalar(1.3)); });
+  r.mons.forEach((m) => { if (m) m.color.set(new THREE.Color(0x7cf2c4).multiplyScalar(1.3)); });
   r.agents.forEach((a) => { a.working = true; a.g.rotation.y = a.ry || 0; });
 }
 function pvWall(r, name, n) {
   if (!r.wall) return;
-  const orange = r.dept.key === 'trading_desk';
-  drawWall(r.wall, String(name || '').trim() || 'New department', n + (n === 1 ? ' expert' : ' experts') + ' · first task queued', orange ? '#ff9438' : '#7cf2c4', 'full');
+  drawWall(r.wall, String(name || '').trim() || 'New department', n + (n === 1 ? ' expert' : ' experts') + ' · first task queued', '#7cf2c4', 'full');
 }
 // what moves in a room, as the office's frame moves it (holograms, crystals, blinking lights), and its people at work
 function pvTick(r, t) {
@@ -2990,37 +2988,6 @@ function monTex() {
     g.fillStyle = '#38f5b8'; g.fillRect(14, 12, 68, 8); g.fillStyle = 'rgba(36,232,255,.65)'; g.fillRect(14, 26, 110, 5);
   }));
 }
-// a trader's screen: a price line over its grid, the volume under it, the ticker and its last price at the head
-function orangeMonTex() {
-  return TX.omon || (TX.omon = ctex(256, 144, (g, W, H) => {
-    g.fillStyle = '#1c0e04'; g.fillRect(0, 0, W, H);
-    g.strokeStyle = 'rgba(255,148,56,.16)'; g.lineWidth = 1;
-    for (let y = 40; y < 116; y += 15) { g.beginPath(); g.moveTo(10, y); g.lineTo(W - 40, y); g.stroke(); }
-    for (let x = 40; x < W - 40; x += 36) { g.beginPath(); g.moveTo(x, 36); g.lineTo(x, 114); g.stroke(); }
-    g.strokeStyle = '#ff9438'; g.lineWidth = 3; g.beginPath();
-    let y = 92, ly = 0; for (let x = 12; x < W - 42; x += 8) { y = Math.max(40, Math.min(110, y + Math.cos(x * 0.15) * 11 + (x % 24 ? -3 : 7))); if (x === 12) g.moveTo(x, y); else g.lineTo(x, y); ly = y; } g.stroke();
-    g.fillStyle = '#ff9438'; g.fillRect(W - 38, ly - 7, 32, 14);
-    g.fillStyle = 'rgba(255,148,56,.4)'; for (let x = 12; x < W - 42; x += 8) g.fillRect(x, 136 - ((x * 7) % 15), 5, (x * 7) % 15 + 2);
-    g.fillStyle = '#ff9438'; g.fillRect(12, 12, 64, 8); g.fillStyle = 'rgba(255,180,90,.6)'; g.fillRect(84, 12, 40, 8); g.fillRect(W - 60, 12, 48, 8);
-  }));
-}
-// The trading desk's chart board, his picture's right-hand one on the back wall: a red line of dots wandering across a
-// dark board in a yellow-green frame, its grid and its scale faint behind it
-function orangeWallTex() {
-  return TX.owall || (TX.owall = ctex(512, 160, (g, W, H) => {
-    g.fillStyle = '#0c1108'; g.fillRect(0, 0, W, H);
-    g.strokeStyle = '#c8e06a'; g.lineWidth = 5; g.strokeRect(3, 3, W - 6, H - 6);
-    g.fillStyle = '#c8e06a'; g.font = '700 17px JetBrains Mono, monospace'; g.fillText('PNL 30D', 18, 28);
-    g.fillStyle = 'rgba(200,224,106,.55)'; g.fillRect(110, 18, 70, 8); g.fillRect(W - 92, 18, 74, 8);
-    g.strokeStyle = 'rgba(200,224,106,.14)'; g.lineWidth = 1;
-    for (let y = 44; y < H - 14; y += 18) { g.beginPath(); g.moveTo(16, y); g.lineTo(W - 46, y); g.stroke(); }
-    for (let x = 16; x < W - 46; x += 40) { g.beginPath(); g.moveTo(x, 40); g.lineTo(x, H - 16); g.stroke(); }
-    g.fillStyle = 'rgba(200,224,106,.4)'; for (let y = 44; y < H - 14; y += 18) g.fillRect(W - 40, y - 2, 24, 4);
-    const pts = []; for (let x = 20; x < W - 50; x += 7) pts.push([x, H * 0.5 + Math.sin(x * 0.03) * 22 + Math.cos(x * 0.09) * 9 - (x - 20) * 0.04]);
-    g.strokeStyle = 'rgba(255,90,70,.45)'; g.lineWidth = 2; g.beginPath(); pts.forEach(([x, y], i) => (i ? g.lineTo(x, y) : g.moveTo(x, y))); g.stroke();
-    g.fillStyle = '#ff5a46'; pts.forEach(([x, y]) => { g.beginPath(); g.arc(x, y, 2.6, 0, Math.PI * 2); g.fill(); });
-  }));
-}
 // his Cymetica QA's window of light: three by three panes, white-hot at their middles, mint at their edges, in a
 // dark frame
 function qaGridTex() {
@@ -3036,8 +3003,8 @@ function qaGridTex() {
     }
   }));
 }
-// the trading desk's floor in his picture glows along its tile seams: the seams as an emissive map (on the tiles'
-// own seams, SH_TILES to a side), a soft wash in each tile so the floor reads lit, not only lined
+// a room that waits on its owner glows along its tile seams, as his orange room does: the seams as an emissive map
+// (on the tiles' own seams, SH_TILES to a side), a soft wash in each tile so the floor reads lit, not only lined
 function seamTex() {
   return TX.seam || (TX.seam = ctex(512, 512, (g, W) => {
     const n = SH_TILES, s = W / n; g.fillStyle = '#000000'; g.fillRect(0, 0, W, W);
@@ -3369,44 +3336,6 @@ function rbKeysTex() {
       g.fillStyle = '#3a4653'; g.fillRect(6 + c * kw + 1, 5 + r * kh + 1, kw - 2, 1.5);
     }
   }));
-}
-// his Agent League monitor: lines of green text on near-black, as a terminal shows them
-function rbTermTex() {
-  return TX.rbTerm || (TX.rbTerm = ctex(256, 144, (g, W, H) => {
-    const R = rng(23); g.fillStyle = '#03120d'; g.fillRect(0, 0, W, H);
-    g.fillStyle = '#38f5b8'; g.fillRect(12, 10, 64, 7);
-    for (let y = 26; y < H - 10; y += 10) {
-      let x = 12; while (x < W - 30) { const w = 8 + Math.floor(R() * 34); g.globalAlpha = 0.45 + R() * 0.5; g.fillRect(x, y, Math.min(w, W - 12 - x), 5); x += w + 6 + Math.floor(R() * 8); if (R() < 0.18) break; }
-    }
-    g.globalAlpha = 1;
-  }));
-}
-// the league's table on its standing board: ranks, a bar for each score, the leader lit
-function rbLeagueTex() {
-  return TX.rbLeague || (TX.rbLeague = ctex(256, 288, (g, W, H) => {
-    g.fillStyle = '#060b11'; g.fillRect(0, 0, W, H);
-    g.strokeStyle = 'rgba(176,196,208,.45)'; g.lineWidth = 3; g.strokeRect(6, 6, W - 12, H - 12);
-    g.fillStyle = '#38f5b8'; g.font = '700 22px JetBrains Mono, monospace'; g.textBaseline = 'top'; g.fillText('LEAGUE', 20, 20);
-    for (let i = 0; i < 8; i++) {
-      const y = 58 + i * 27, lead = i === 0;
-      g.fillStyle = lead ? 'rgba(56,245,184,.16)' : 'rgba(143,168,194,.05)'; g.fillRect(16, y - 3, W - 32, 22);
-      g.fillStyle = lead ? '#38f5b8' : '#8fa8c2'; g.font = '600 15px JetBrains Mono, monospace'; g.fillText(String(i + 1), 24, y);
-      g.fillStyle = lead ? '#38f5b8' : i < 3 ? '#24e8ff' : 'rgba(143,168,194,.55)'; g.fillRect(52, y + 4, (W - 120) * (1 - i * 0.1), 8);
-    }
-  }));
-}
-function candleTex() {
-  if (TX.candle) return TX.candle;
-  const c = document.createElement('canvas'); c.width = 512; c.height = 256; const g = c.getContext('2d');
-  g.fillStyle = '#140b04'; g.fillRect(0, 0, 512, 256); g.strokeStyle = '#ff9438'; g.lineWidth = 5; g.strokeRect(3, 3, 506, 250);
-  // its grid, the price scale down the right, the volume along the foot, then the candles over them
-  g.strokeStyle = 'rgba(255,148,56,.14)'; g.lineWidth = 1;
-  for (let y = 56; y < 220; y += 28) { g.beginPath(); g.moveTo(14, y); g.lineTo(440, y); g.stroke(); g.fillStyle = 'rgba(255,170,82,.45)'; g.fillRect(452, y - 3, 44, 6); }
-  g.fillStyle = 'rgba(255,148,56,.3)'; for (let i = 0; i < 16; i++) g.fillRect(26 + i * 26, 238 - ((i * 13) % 20), 14, (i * 13) % 20 + 4);
-  let v = 140; for (let i = 0; i < 16; i++) { const up = [1, 1, 0, 1, 0, 1, 1, 0, 1, 1, 1, 0, 1, 1, 0, 1][i], o = v; v = Math.max(60, Math.min(200, v + (up ? -14 : 12))); g.fillStyle = up ? '#38f5b8' : '#ff8824'; g.fillRect(24 + i * 26, Math.min(o, v), 16, Math.max(6, Math.abs(o - v))); g.fillRect(31 + i * 26, Math.min(o, v) - 10, 3, Math.abs(o - v) + 20); }
-  g.fillStyle = '#38f5b8'; g.fillRect(446, v - 9, 54, 18);
-  g.fillStyle = '#ffaa52'; g.font = '700 22px JetBrains Mono, monospace'; g.fillText('BASKET H2 · +1.1%', 22, 34);
-  const t = new THREE.CanvasTexture(c); t.colorSpace = THREE.SRGBColorSpace; TX.candle = t; return t;
 }
 // a holographic pad: a rich turquoise-aquamarine grid inside a double glowing circle
 function padTex() {
@@ -3789,26 +3718,27 @@ class Office3D {
   // front walls' tops and the corners, are a thin pale line. Mint, the trading desk orange.
   shell(r) {
     const { g, x0, y0 } = r, RS = CO.iso.RS, H = WH, t = 0.04, z0 = SH_FLOOR_Y;
-    const dk = r.dept && r.dept.key;
-    const isOrange = dk === 'trading_desk';
     // the floors' mirror lives in the scene itself (the world is cleared at every layout) and sees layer 1 only
     const rf = shRefl(); if (rf.target.parent !== this.scene) this.scene.add(rf.target, rf.light);
     rf.reflector.getVirtualCamera(this.camera).layers.set(1);
-    this.box(g, x0, y0, 0, RS, RS, z0, r.key === 'hub' ? OM.hubTile : isOrange ? OM.tileOrange : OM.tile);
-    r.glow = new THREE.Mesh(G.plane, new THREE.MeshBasicMaterial({ map: radialTex('255,255,255', 0.85), transparent: true, opacity: 0.04, blending: THREE.AdditiveBlending, depthWrite: false, color: isOrange ? 0xff8824 : 0x7cf2c4 }));
+    // every room starts mint ("A trading room nema svitit porad oranzove. Oranzove sviti jen roomka ktera chce
+    // pozornost moji, needs you"): tint() turns one orange whole -- floor, glass, neon, wash, lamp -- while it
+    // waits on its owner, and back when it no longer does. r.floorM and r.panes are what it swaps.
+    r.floorM = this.box(g, x0, y0, 0, RS, RS, z0, r.key === 'hub' ? OM.hubTile : OM.tile);
+    r.glow = new THREE.Mesh(G.plane, new THREE.MeshBasicMaterial({ map: radialTex('255,255,255', 0.85), transparent: true, opacity: 0.04, blending: THREE.AdditiveBlending, depthWrite: false, color: 0x7cf2c4 }));
     r.glow.scale.set(RS * 0.92, RS * 0.92, 1); r.glow.rotation.x = -Math.PI / 2; r.glow.position.copy(this.V(x0 + RS / 2, y0 + RS / 2, z0 + 0.01)); g.add(r.glow);
-    const glassMat = isOrange ? OM.glassOrange : OM.glass;
     // one pane per wall: a box's six faces stacked their opacity into a milky slab. Each pane and dado says which
     // wall it is (userData.pane / .dado: 'y0' the back wall along x, 'x0' the one along y, 'y1' and 'x1' the front
     // ones), so a room that puts something else there (the vault's armour) finds them by name
+    r.panes = [];
     [[x0 + RS / 2, y0, 0, 'y0'], [x0 + RS / 2, y0 + RS, 0, 'y1'], [x0, y0 + RS / 2, Math.PI / 2, 'x0'], [x0 + RS, y0 + RS / 2, Math.PI / 2, 'x1']].forEach(([x, y, rot, wall]) => {
-      const p = new THREE.Mesh(G.plane, glassMat); p.scale.set(RS, H, 1); p.rotation.y = rot; p.position.copy(this.V(x, y, z0 + H / 2)); p.renderOrder = 2; p.userData.pane = wall; g.add(p);
+      const p = new THREE.Mesh(G.plane, OM.glass); p.scale.set(RS, H, 1); p.rotation.y = rot; p.position.copy(this.V(x, y, z0 + H / 2)); p.renderOrder = 2; p.userData.pane = wall; g.add(p); r.panes.push(p);
     });
     if (r.key !== 'hub') {
       this.box(g, x0 + t, y0 + t, z0, RS - 2 * t, 0.1, 0.52, OM.wallDark).userData.dado = 'y0';
       this.box(g, x0 + t, y0 + t, z0, 0.1, RS - 2 * t, 0.52, OM.wallDark).userData.dado = 'x0';
     }
-    r.edgeM = emis(isOrange ? LOOK.orange : SH_NEON, 1.9);
+    r.edgeM = emis(SH_NEON, 1.9);
     // his neon is a crisp line, a little thinner than ours was (5 px at his render's size, ours 7), its glow tight
     const e = 0.042, zt = z0 + H - e, f = 0.022;
     // the neon: back walls' tops (y = y0 along x, x = x0 along y), front walls' feet
@@ -3818,10 +3748,10 @@ class Office3D {
     [[x0, y0 + RS - f, z0 + H - f, RS, f, f], [x0 + RS - f, y0, z0 + H - f, f, RS, f],
       [x0, y0, z0, f, f, H], [x0 + RS - f, y0, z0, f, f, H], [x0, y0 + RS - f, z0, f, f, H], [x0 + RS - f, y0 + RS - f, z0, f, f, H],
       [x0 + RS / 2 - f / 2, y0 + RS - f, z0, f, f, H], [x0 + RS - f, y0 + RS / 2 - f / 2, z0, f, f, H]].forEach(([x, y, z, w, d, h]) => this.box(g, x, y, z, w, d, h, OM.glassEdge, false));
-    // the room's own light: white over the floor, warm in the trading desk
+    // the room's own light: white over the floor, warm and lower while it waits (tint)
     // the light stays in its room: an orange one reaching the neighbours tinted their floors
-    r.lamp = new THREE.PointLight(isOrange ? 0xff6a34 : 0xeef6ff, isOrange ? 22 : 6, isOrange ? 6.5 : 9, 1.0);
-    r.lamp.position.copy(this.V(x0 + RS / 2, y0 + RS / 2, isOrange ? 2.4 : 4.4)); g.add(r.lamp);
+    r.lamp = new THREE.PointLight(0xeef6ff, 6, 9, 1.0);
+    r.lamp.position.copy(this.V(x0 + RS / 2, y0 + RS / 2, 4.4)); g.add(r.lamp);
     // it lights the room in the floor's mirror too: the one light that pass has, so it needs no shadow map
     r.lamp.layers.enable(1);
   }
@@ -3882,13 +3812,10 @@ class Office3D {
   }
   // His desk, zoomed: a near-black block with a lighter top -- a side panel, a modesty panel at the back and a
   // pedestal of drawers on the right, room for the knees between -- one wide monitor on a neck and a foot, its glass
-  // dark until its expert works, a keyboard with its keys, a white mouse, a mug. Baked to a few draw calls. The
-  // trading desk keeps its own two screens (its room is drawn to his orange picture).
-  desk(r, x, y, i, isOrange) {
-    if (isOrange) return this.deskTD(r, x, y, i);
+  // dark until its expert works, a keyboard with its keys, a white mouse, a mug. Baked to a few draw calls.
+  desk(r, x, y, i) {
     rbMats();
     const g = new THREE.Group(); r.g.add(g);
-    const league = r.dept && r.dept.run_kind === 'league';
     this.rb(g, x - 0.03, y - 0.03, 0.5, 1.96, 0.91, 0.06, OM.rbDeskTop, 0.02);
     this.rb(g, x + 0.01, y + 0.02, 0.1, 0.09, 0.82, 0.41, OM.rbDesk, 0.015);
     this.rb(g, x + 0.08, y + 0.04, 0.16, 1.2, 0.07, 0.35, OM.rbDesk, 0.012);
@@ -3904,7 +3831,7 @@ class Office3D {
     const neck = this.part(g, G.box, OM.rbMetal, 0.075, 0.17, 0.03, mx, 0.655, my - 0.02); neck.rotation.x = -0.1;
     this.rb(g, mx - 0.25, my - 0.1, 0.76, 0.5, 0.06, 0.3, OM.rbGloss, 0.025);
     this.rb(g, mx - 0.47, my - 0.04, 0.64, 0.94, 0.035, 0.56, OM.rbGloss, 0.012);
-    const scr = new THREE.MeshBasicMaterial({ map: league ? rbTermTex() : monTex(), color: new THREE.Color(0x0a1016), toneMapped: false });
+    const scr = new THREE.MeshBasicMaterial({ map: monTex(), color: new THREE.Color(0x0a1016), toneMapped: false });
     const face = new THREE.Mesh(G.plane, scr); face.scale.set(0.88, 0.5, 1); face.position.copy(this.V(mx, my - 0.004, 0.92)); g.add(face);
     // the keyboard near the desk's front, under the hands, its keys a texture; the mouse beside it, a mug
     this.rb(g, mx - 0.36, y + 0.62, 0.56, 0.68, 0.2, 0.024, OM.rbGloss, 0.008);
@@ -3913,27 +3840,6 @@ class Office3D {
     mouse.castShadow = false;
     this.cyl(g, x + 1.78, y + 0.3, 0.56, 0.046, 0.1, OM.rbMouse);
     rbBake(g);
-    r.mons[i] = scr;
-  }
-  // the trading desk's own: a top on two side panels and a drawer unit, two screens on stands (one of candles), a
-  // keyboard, a mug -- as it was, while that room is drawn to its picture
-  deskTD(r, x, y, i) {
-    const g = r.g, isOrange = true;
-    this.rb(g, x + 0.02, y + 0.06, 0.08, 0.12, 0.72, 0.42, OM.desk, 0.03);
-    this.rb(g, x + 1.76, y + 0.06, 0.08, 0.12, 0.72, 0.42, OM.desk, 0.03);
-    this.rb(g, x + 1.12, y + 0.08, 0.08, 0.6, 0.68, 0.4, OM.desk, 0.03);
-    for (let k = 0; k < 3; k++) this.box(g, x + 1.18, y + 0.76, 0.15 + k * 0.12, 0.48, 0.012, 0.09, OM.frame, false);
-    this.rb(g, x - 0.03, y - 0.03, 0.5, 1.96, 0.91, 0.06, OM.deskTop, 0.025);
-    const scr = new THREE.MeshBasicMaterial({ map: isOrange ? orangeMonTex() : monTex(), color: new THREE.Color(isOrange ? 0xffae52 : 0x0a1016), toneMapped: false });
-    [x + 0.12, x + 0.98].forEach((mx, mi) => {
-      this.cyl(g, mx + 0.39, y + 0.26, 0.56, 0.13, 0.02, OM.frame);
-      this.box(g, mx + 0.36, y + 0.2, 0.58, 0.06, 0.05, 0.14, OM.frame, false);
-      this.rb(g, mx, y + 0.12, 0.68, 0.8, 0.06, 0.46, OM.dark, 0.025);
-      const faceMat = (isOrange && mi === 1) ? new THREE.MeshBasicMaterial({ map: candleTex(), toneMapped: false }) : scr;
-      const face = new THREE.Mesh(G.plane, faceMat); face.scale.set(0.72, 0.38, 1); face.position.copy(this.V(mx + 0.4, y + 0.185, 0.91)); g.add(face);
-    });
-    this.rb(g, x + 0.66, y + 0.48, 0.56, 0.6, 0.2, 0.03, OM.frame, 0.01);
-    this.cyl(g, x + 1.62, y + 0.6, 0.56, 0.05, 0.1, OM.white);
     r.mons[i] = scr;
   }
   // His astronaut, zoomed: a white suit shaded blue-grey, a big glossy blue helmet over a near-black visor, a white
@@ -4020,8 +3926,7 @@ class Office3D {
     auditor: { helmet: [0x8a9bb0, 0.3, 0.35], glow: 0x1a2c40, trim: 0xb4c2d0, suit: 0x76899f, pack: 0x8c9eb2, joint: 0x3c4a5c },
     designer: { helmet: [0x9c4cc4, 0.16, 0.38], glow: 0x5a1270, trim: 0xe06ae8, joint: 0x4a4a70, scarf: 0xb04ac8 },
     manager: { helmet: [0xbccad6, 0.12, 0.3], glow: 0x0a6080, trim: 0x46d8f0, trimGlow: 0.35, suit: 0x9cb6cc, cape: 0x9fcfdf },
-    supervisor: { helmet: [0x1d3656, 0.14, 0.45], trim: 0xf0b040, joint: 0x26384e },
-    referee: { helmet: [0x15181d, 0.12, 0.45], visor: 0x050608, glow: 0x202428, trim: 0xeef2f4, leg: 0x23282f, stripes: true }
+    supervisor: { helmet: [0x1d3656, 0.14, 0.45], trim: 0xf0b040, joint: 0x26384e }
   };
   // A role's materials, made the first time the role is drawn and kept on OM (as_<role>), so every astronaut in
   // it shares them and a new layout does not throw them away (release keeps what OM holds). Today's suit for a
@@ -4039,7 +3944,7 @@ class Office3D {
     const pack = d.pack ? c(d.pack, { roughness: 0.5, metalness: 0.08 }) : OM.rbPack, leg = d.leg ? c(d.leg, { roughness: 0.5, metalness: 0.14 }) : suit;
     const sk = {
       suit, leg, pack, trim, boot: d.leg ? leg : pack, hip: d.leg ? leg : suit, shoulder: trim, panel: trim, band: trim, patch: pack,
-      torso: d.stripes ? std({ map: this.asTex('stripes'), roughness: 0.55, metalness: 0.06 }) : suit,
+      torso: suit,
       joint: d.joint ? c(d.joint, { roughness: 0.5, metalness: 0.12 }) : OM.rbJoint,
       helmet: d.helmet ? c(d.helmet[0], { roughness: d.helmet[1], metalness: d.helmet[2] }) : OM.rbHelmet,
       visor: d.glow != null ? std({ color: d.visor || 0x08142a, roughness: 0.06, metalness: 0.75, emissive: d.glow, emissiveIntensity: 0.25 }) : OM.rbVisor,
@@ -4056,7 +3961,6 @@ class Office3D {
     OM.asDark = std({ color: 0x1b2129, roughness: 0.38, metalness: 0.5 });
     OM.asGold = std({ color: 0xd4a24a, roughness: 0.3, metalness: 0.85 });
     OM.asCard = std({ color: 0xdfe6ec, roughness: 0.5, metalness: 0.05 });
-    OM.asYellow = std({ color: 0xffcf2e, roughness: 0.45, emissive: 0x6a4c00, emissiveIntensity: 0.35 });
     OM.asFlask = std({ color: 0x1c7a4a, roughness: 0.08, metalness: 0.2, emissive: 0x3cf09a, emissiveIntensity: 0.55 });
     OM.asGlass = std({ color: 0xcfe0ea, roughness: 0.1, metalness: 0.3 });
     OM.asLens = std({ color: 0x2c7a62, roughness: 0.06, metalness: 0.7, emissive: 0x38d088, emissiveIntensity: 0.18 }); OM.asLens.userData.lit = true;
@@ -4064,7 +3968,6 @@ class Office3D {
     OM.asPaper = std({ map: this.asTex('paper'), roughness: 0.8, metalness: 0.0 });
     OM.asPalette = std({ map: this.asTex('palette'), roughness: 0.5, metalness: 0.1 });
     G.asArc = new THREE.TorusGeometry(1, 0.09, 8, 28, Math.PI);   // over the helmet from side to side (turned: front to back)
-    G.asArcThin = new THREE.TorusGeometry(1, 0.055, 6, 32, Math.PI);
     // round the front of the visor, level: an arc of 0.7 turns centred on -z
     G.asArcFront = new THREE.TorusGeometry(1, 0.035, 6, 32, Math.PI * 0.7).rotateZ(-Math.PI * 0.35).rotateX(Math.PI / 2).rotateY(Math.PI / 2);
     G.asRing = new THREE.TorusGeometry(1, 0.13, 8, 36);
@@ -4074,12 +3977,11 @@ class Office3D {
     G.asCape = new THREE.CylinderGeometry(0.33, 0.37, 1, 28, 1, true, -1.2, 2.4);   // round the back from the shoulders, open at the front
     G.asSkirt = new THREE.CylinderGeometry(0.2, 0.23, 1, 28, 1, true, -2.55, 5.1);   // a coat's tails: open at the front
   }
-  // the small pictures a kit carries: the referee's stripes, the trader's chart on the wrist, the researcher's pad,
-  // the auditor's checklist, the designer's palette, the developer's keys and code in the air
+  // the small pictures a kit carries: the trader's chart on the wrist, the researcher's pad, the auditor's
+  // checklist, the designer's palette, the developer's keys and code in the air
   asTex(name) {
     const k = 'as' + name; if (TX[k]) return TX[k];
     const make = {
-      stripes: [256, 64, (g, W, H) => { g.fillStyle = '#e9edf0'; g.fillRect(0, 0, W, H); g.fillStyle = '#171a1f'; for (let i = 0; i < 10; i++) g.fillRect(i * W / 10, 0, W / 20, H); }],
       chart: [128, 104, (g, W, H) => {
         g.fillStyle = '#140b04'; g.fillRect(0, 0, W, H); g.strokeStyle = 'rgba(255,150,70,.18)'; g.lineWidth = 1;
         for (let y = 20; y < H; y += 20) { g.beginPath(); g.moveTo(6, y); g.lineTo(W - 6, y); g.stroke(); }
@@ -4224,13 +4126,6 @@ class Office3D {
     supervisor: {
       up: (o, g) => g.add(o.asM(G.cyl, OM.asDark, [0, 1.352, 0.01], [0.042, 0.03, 0.042]), o.asM(G.hemi, o.asGlow('#ffb44a', 1.7), [0, 1.366, 0.01], [0.034, 0.04, 0.034]),
         o.asOn(G.asHex, OM.asGold, [-0.122, 0.7, -0.087], [-0.63, 0, -0.77], [0.04, 0.012, 0.046]))
-    },
-    // the League's Referee: a striped shirt, dark legs, a black helmet with a white band over it, a whistle on a
-    // lanyard, a yellow card in the hand
-    referee: {
-      up: (o, g, sk) => g.add(o.asM(G.asArcThin, sk.trim, [0, 1.15, 0.01], 0.207, [0, Math.PI / 2, 0]),
-        o.asM(G.cyl8, OM.rbCollar, [0.075, 0.885, -0.2], [0.016, 0.052, 0.016], [0, 0, Math.PI / 2]), o.asRod(OM.asDark, [0.1, 0.975, -0.07], [0.06, 0.888, -0.195], 0.005)),
-      stand: (o, g) => g.add(...o.asRig([0.262, 0.49, -0.085], [0.5, 0, 0], [o.asM(rboxGeo(0.062, 0.088, 0.006, 0.004), OM.asYellow, [0, -0.04, -0.01])]))
     }
   };
   // A room's plate: what update() says about the room -- its name, its dot, its status, its ET10. Not hung over
@@ -4245,38 +4140,15 @@ class Office3D {
   }
   // A department's room tailored to match look-office.webp:
   // - testing (Cymetica QA): a 3x3 window of light at the right end of the back-right wall + desks
-  // - stranger (Outsider): twin-aisle Server Room with 2 rows of 4 tall dark server racks + workstation desk
   // - testing_lab (Laboratory): 3 glowing aqua-cyan specimen pods + floating crystals + canisters
-  // - trading_desk (Trading Desk): panoramic warm amber-orange chart walls + dual-screen orange trading desks
-  // - league (Agent League): a standing board with the league's table, green terminal monitors, a standing referee
+  // - trading_desk (Trading desk): a trading floor of its own make (rcTrading)
   // - a department of the owner's own in a look he picked (d.look, CO.ROOM_LOOKS): the look builds the whole room
   deptRoom(r, d) {
     const k = d.key, x0 = r.x0, y0 = r.y0, g = r.g; let u1 = 6.6;
-    const isOrange = k === 'trading_desk';
     // the look he chose with the arrows round its room ("pro custom department tam budou sipky a budu si moct zvolit
     // z ruznych vzhledu"): it builds the room and seats its experts itself, so nothing below runs
     const look = this.lkLook(d);
     if (look) { this[look](r, d); return; }
-    if (d.run_kind === 'stranger') {
-      // his server room, rack for rack (their places read off his picture through the fitted camera): a darker,
-      // glossy raised floor; three racks a hand apart along the back-right wall, a pair by the back corner,
-      // three in a row towards the front, the workstation among them; the kanban low on the back-left wall, under
-      // its neon as every board of his is
-      this.rcServerFloor(r);
-      this.racks(r, x0 + 2.95, y0 + 0.3, 3, 0.88);
-      this.racks(r, x0 + 0.35, y0 + 1.3, 2, 0.88);
-      this.racks(r, x0 + 3.1, y0 + 5.3, 3, 0.88);
-      r.kb = this.rcBoard(r, 'left', 2.6, 5.6, null, { tiles: true });
-      this.rcWorkstation(r, x0 + 3.4, y0 + 2.6, 0);
-      this.holoFrame(r, x0 + 0.72, y0 + 3.98);
-      const ex = d.experts.slice(0, 2);
-      if (ex[0]) this.agent(r, x0 + 4.35, y0 + 3.9, 0, CO.expertName(ex[0]), { role: ex[0] });
-      if (ex[1]) this.agent(r, x0 + 1.6, y0 + 4.9, 1, CO.expertName(ex[1]), { stand: true, role: ex[1] });
-      this.terminal(r, x0 + 0.3, y0 + 0.28, d.link || CO.DEPT_LINK[k] || CO.DEPT_LINK.custom);
-      this.plant(r, x0 + 0.45, y0 + 6.5);
-      this.plate(r);
-      return;
-    }
     if (k === 'development') {
       u1 = 3.3;
       this.racks(r, x0 + 0.55, y0 + 1.35, 3);
@@ -4306,45 +4178,30 @@ class Office3D {
       this.raCentrifuge(r, x0 + 2.75, y0 + 6.48);
       this.canisters(r, x0 + 6.42, y0 + 1.95);
     } else if (k === 'trading_desk') {
-      // his trading desk is a room of its own make (rcTradingRoom): its boards under the neon, its desks of screens
-      this.rcTradingRoom(r, d);
+      // the trading desk is a room of its own make, built whole: its boards, its desks of screens, its people
+      this.rcTrading(r, d);
       return;
     } else if (k === 'design') {
       u1 = 4.5; this.boardTex(r, 4.7, 6.75, moodTex());
-    } else if (d.run_kind === 'league') {
-      // his Agent League: a tall dark board standing at the right end of the back-right wall -- ours carries the
-      // league's table, dim, under the neon like every screen
-      u1 = 4.1; rbMats();
-      const lb = new THREE.Mesh(rboxGeo(1.12, 1.2, 0.1, 0.025), OM.rbBezel); lb.position.copy(this.V(x0 + 5.7, y0 + 0.21, 0.68)); lb.castShadow = true; lb.receiveShadow = true; lb.userData.rbWall = true; g.add(lb);
-      const lf = new THREE.Mesh(G.plane, new THREE.MeshBasicMaterial({ map: rbLeagueTex(), color: new THREE.Color(0xffffff).multiplyScalar(0.85), toneMapped: false }));
-      lf.scale.set(0.98, 1.04, 1); lf.position.copy(this.V(x0 + 5.7, y0 + 0.262, 0.72)); lf.userData.rbWall = true; g.add(lf);
     } else {
       u1 = 4.6; this.racks(r, x0 + 5.2, y0 + 0.3, 2);
     }
-    if (k !== 'trading_desk') {
-      this.wallScreen(r, 1.75, u1);
-      this.kanban(r);
-    }
+    this.wallScreen(r, 1.75, u1);
+    this.kanban(r);
     const ex = d.experts.slice(0, 3), xs = ex.length === 1 ? [2.4] : ex.length === 2 ? [1.0, 3.7] : [0.35, 2.55, 4.75];
-    ex.forEach((e, i) => { this.desk(r, x0 + xs[i], y0 + 2.75, i, isOrange); if (isOrange) this.sideScreens(r, x0 + xs[i], y0 + 2.75); });
+    ex.forEach((e, i) => this.desk(r, x0 + xs[i], y0 + 2.75, i));
     // his rooms each have a see-through screen in a yellow-green frame on a stand, by the left wall
     this.holoFrame(r, x0 + 0.75, y0 + 2.2);
     ex.forEach((e, i) => this.agent(r, x0 + xs[i] + 0.95, y0 + 4.05, i, CO.expertName(e), { role: e }));
-    // his League's referee stands behind the desk, towards the back corner, watching the round
-    if (d.run_kind === 'league' && ex.length < 3) {
-      // the referee wears the plain suit: role skins are only for the experts live on Cymetica (GET /api/v1/company/templates, 2026-10-19: seven) and its two built-ins, the Manager and the weekly audit's supervisor ("to same pro experty")
-      this.agent(r, x0 + 2.2, y0 + 1.75, ex.length, 'Referee', { stand: true });
-    }
     this.terminal(r, x0 + 0.3, y0 + 0.32, d.link || CO.DEPT_LINK[k] || CO.DEPT_LINK.custom);
-    // his League keeps its floor open along the front glass: no cabinet there
-    if (d.run_kind !== 'league') this.cabinet(r, x0 + 6.45, y0 + 3.0, 0.45, 2.3, 0.72);
+    this.cabinet(r, x0 + 6.45, y0 + 3.0, 0.45, 2.3, 0.72);
     this.plant(r, x0 + 0.42, y0 + 6.5); this.plant(r, x0 + 6.55, y0 + 6.55, 0.8);
     this.plate(r);
   }
   /* ---- the looks a department of the owner's own can have (CO.ROOM_LOOKS, its d.look) ---- */
   // Which look a department's room is built in, as the name of its builder: its d.look when that is one of the five
   // new ones and the department is one of the owner's own (a key we draw no room of ours for). 'office' and no look
-  // alike keep the room it always had: the Outsider its server room, the League its board, any other the office.
+  // alike keep the room it always had: the office.
   lkLook(d) {
     const ours = { development: 1, testing: 1, testing_lab: 1, trading_desk: 1, design: 1 };
     if (!d.look || ours[d.key]) return null;
@@ -5943,26 +5800,6 @@ class Office3D {
     const [w, h, draw] = D[k];
     TX[key] = ctex(w, h, draw); return TX[key];
   }
-  // somewhere to sit and look at the site as a stranger would
-  lounge(r, x, y) {
-    const g = r.g;
-    this.box(g, x, y, 0.08, 2.2, 0.75, 0.32, OM.frame); this.box(g, x, y, 0.4, 2.2, 0.2, 0.42, OM.frame);
-    this.box(g, x + 0.5, y + 1.15, 0.08, 1.2, 0.6, 0.3, OM.deskTop);
-  }
-  // Two more screens on a trading desk (desk() at x, y), one at each end on its own stand and turned in to the
-  // trader, so the desk is a bank of four: a price line on the left, candles on the right. left/right: which ends.
-  sideScreens(r, x, y, left = true, right = true) {
-    [[x + 0.06, 0.66, left, 0], [x + 1.84, -0.66, right, 1]].forEach(([sx, rot, on, idx]) => {
-      if (!on) return;
-      const s = new THREE.Group(); s.position.copy(this.V(sx, y + 0.42, 0)); s.rotation.y = rot; r.g.add(s);
-      // in s: x across the screen, +z towards the trader, y up from the floor
-      const add = (geo, mat, sx2, sy, sz, px, py, pz) => { const m = new THREE.Mesh(geo, mat); m.scale.set(sx2, sy, sz); m.position.set(px, py, pz); s.add(m); return m; };
-      add(rboxGeo(0.5, 0.32, 0.035, 0.012), OM.dark, 1, 1, 1, 0, 0.9, 0).castShadow = true;
-      add(G.plane, new THREE.MeshBasicMaterial({ map: idx ? candleTex() : orangeMonTex(), toneMapped: false }), 0.46, 0.28, 1, 0, 0.9, 0.019);
-      add(G.box, OM.frame, 0.035, 0.2, 0.03, 0, 0.66, -0.04);
-      add(G.box, OM.frame, 0.17, 0.012, 0.13, 0, 0.566, -0.04);
-    });
-  }
   // A board on a back wall that stays under the neon, as every board in his picture does: its face 0.72 to 1.27, a
   // dark backing to 1.30, the neon from 1.44. wall 'back' is the y0 wall (along x), 'left' the x0 wall (along y),
   // a0..a1 along it. With tex a fixed picture; without, a live screen() the update draws into, which it returns.
@@ -5989,36 +5826,30 @@ class Office3D {
     }
     return s;
   }
-  // His server room's floor: darker than the other rooms' and glossy, the racks faintly mirrored in it, with
-  // perforated tiles in the aisles before the racks' fronts, where the cold air comes up
-  rcServerFloor(r) {
-    if (!OM.rcFloor) OM.rcFloor = std({ map: this.rcTex('floor'), roughness: 0.4, metalness: 0.35 });
-    const RS = CO.iso.RS, m = new THREE.Mesh(G.plane, OM.rcFloor);
-    m.scale.set(RS - 0.08, RS - 0.08, 1); m.rotation.x = -Math.PI / 2; m.position.copy(this.V(r.x0 + RS / 2, r.y0 + RS / 2, 0.083)); m.receiveShadow = true; r.g.add(m);
-  }
-  // The server room's workstation, as his: one solid dark desk down to the floor, a wide monitor of the racks'
-  // status on its stand (r.mons[i]: lit while its expert works, dark glass otherwise), a keyboard, a mouse, a mug,
-  // and a small tower at its end with its lights. The expert sits where desk()'s would (x + 0.95, y + 1.3).
-  rcWorkstation(r, x, y, i) {
-    const g = r.g;
-    this.rb(g, x, y + 0.06, 0.08, 1.72, 0.76, 0.44, OM.desk, 0.03);
-    this.box(g, x + 0.04, y + 0.83, 0.12, 1.64, 0.012, 0.34, OM.frame, false);
-    this.rb(g, x - 0.03, y, 0.52, 1.78, 0.9, 0.05, OM.deskTop, 0.02);
-    this.box(g, x + 0.79, y + 0.18, 0.57, 0.2, 0.14, 0.012, OM.frame, false);
-    this.box(g, x + 0.87, y + 0.22, 0.58, 0.04, 0.04, 0.16, OM.frame, false);
-    this.rb(g, x + 0.31, y + 0.13, 0.66, 1.16, 0.05, 0.5, OM.dark, 0.02);
-    const scr = new THREE.MeshBasicMaterial({ map: this.rcTex('status'), color: new THREE.Color(0x0a1016), toneMapped: false });
-    const face = new THREE.Mesh(G.plane, scr); face.scale.set(1.08, 0.42, 1); face.position.copy(this.V(x + 0.89, y + 0.186, 0.91)); g.add(face);
-    r.mons[i] = scr;
-    this.rb(g, x + 0.58, y + 0.5, 0.57, 0.64, 0.2, 0.022, OM.frame, 0.008, false);
-    this.rb(g, x + 1.33, y + 0.54, 0.57, 0.08, 0.12, 0.022, OM.frame, 0.02, false);
-    this.cyl(g, x + 0.2, y + 0.62, 0.57, 0.045, 0.09, OM.white);
-    this.rb(g, x + 1.86, y + 0.12, 0.08, 0.26, 0.62, 0.56, OM.rack, 0.02);
-    [[0.3, '#38f2b8'], [0.38, '#00e5ff']].forEach(([z, col]) => this.box(g, x + 1.9, y + 0.742, z, 0.04, 0.008, 0.016, amat(col).glow, false));
-  }
-  // the room's textures: drawn once, kept in TX so a new layout finds them (release() spares what TX holds)
+  // the rooms' textures: drawn once, kept in TX so a new layout finds them (release() spares what TX holds)
   rcTex(k) {
     const id = 'rc' + k; if (TX[id]) return TX[id];
+    // the trading floor's pictures: near-black glass in a thin pale frame as every screen of his, small mono text,
+    // prices green up and red down, the rest cyan; no orange, which in this office means a room waits on its owner
+    const R = rng(k.length * 131 + k.charCodeAt(0) * 17), UP = '#38f5b8', DN = '#ff5a5a', CY = '#24e8ff', DIM = '#9fb4c8';
+    const mono = (px, w) => (w || 600) + ' ' + px + 'px JetBrains Mono, monospace';
+    const glass = (g, W, H) => {
+      g.fillStyle = '#050b12'; g.fillRect(0, 0, W, H);
+      const sh = g.createLinearGradient(0, 0, 0, H); sh.addColorStop(0, 'rgba(120,150,170,.08)'); sh.addColorStop(0.5, 'rgba(120,150,170,0)'); g.fillStyle = sh; g.fillRect(0, 0, W, H);
+      g.strokeStyle = 'rgba(176,196,208,.42)'; g.lineWidth = Math.max(2, H * 0.02); g.strokeRect(3, 3, W - 6, H - 6);
+    };
+    const txt = (g, s, x, y, col, px, w, al) => { g.fillStyle = col; g.font = mono(px, w || 700); g.textBaseline = 'top'; g.textAlign = al || 'left'; g.fillText(s, x, y); g.textAlign = 'left'; };
+    const line = (g, pts, col, w) => { g.strokeStyle = col; g.lineWidth = w; g.beginPath(); pts.forEach(([x, y], i) => (i ? g.lineTo(x, y) : g.moveTo(x, y))); g.stroke(); };
+    const grid = (g, x0, y0, x1, y1, n) => { for (let i = 0; i < n; i++) { const y = y0 + (y1 - y0) * i / (n - 1); line(g, [[x0, y], [x1, y]], 'rgba(80,140,170,.16)', 1); } };
+    const walk = (n, x0, x1, yb, amp, up) => { const p = []; let v = 0.5; for (let i = 0; i <= n; i++) { v = Math.max(0.05, Math.min(0.95, v + (R() - 0.5 + up * 0.04) * 0.22)); p.push([x0 + (x1 - x0) * i / n, yb - amp * v]); } return p; };
+    const candles = (g, x0, x1, yb, amp, n) => {
+      let v = 0.5; const w = (x1 - x0) / n;
+      for (let i = 0; i < n; i++) {
+        const o = v; v = Math.max(0.08, Math.min(0.92, v + (R() - 0.46) * 0.2)); const hi = Math.max(o, v) + R() * 0.06, lo = Math.min(o, v) - R() * 0.06, c = v >= o ? UP : DN, x = x0 + i * w;
+        g.fillStyle = c; g.fillRect(x + w / 2 - 0.75, yb - amp * hi, 1.5, amp * (hi - lo)); g.fillRect(x + w * 0.18, yb - amp * Math.max(o, v), w * 0.64, Math.max(2, amp * Math.abs(v - o)));
+      }
+      return v;
+    };
     const T = {
       // a rack's side: a dark panel in three, a vent near its head and its foot
       side: [128, 256, (g, W, H) => {
@@ -6032,23 +5863,6 @@ class Office3D {
         g.fillStyle = '#323b45'; for (let x = 22; x < W - 22; x += 7) g.fillRect(x, 52, 3, 50);
         g.fillStyle = '#1c232a'; g.fillRect(18, 10, W - 36, 22);
       }],
-      // the server room's floor: dark tiles a unit across, hairline seams, perforated tiles in the aisles
-      floor: [512, 512, (g, W) => {
-        const n = 7, s = W / n, holes = { '3,1': 1, '4,1': 1, '5,1': 1, '0,2': 1, '1,2': 1, '3,6': 1, '4,6': 1, '5,6': 1, '2,4': 1 };
-        g.fillStyle = '#0b1014'; g.fillRect(0, 0, W, W);
-        for (let i = 0; i < n; i++) for (let j = 0; j < n; j++) {
-          const x = i * s + 1.5, y = j * s + 1.5, w = s - 3;
-          g.fillStyle = (i + j) % 2 ? '#1d2731' : '#1a242d'; g.fillRect(x, y, w, w);
-          if (holes[i + ',' + j]) { g.fillStyle = '#10161c'; for (let a = x + 7; a < x + w - 5; a += 6) for (let b = y + 7; b < y + w - 5; b += 6) g.fillRect(a, b, 2.5, 2.5); }
-        }
-      }],
-      // the workstation's monitor: the racks as a map of lit squares, a load line under it
-      status: [256, 128, (g, W, H) => {
-        g.fillStyle = '#04150f'; g.fillRect(0, 0, W, H); g.fillStyle = '#38f5b8'; g.fillRect(10, 8, 60, 7); g.fillStyle = 'rgba(36,232,255,.6)'; g.fillRect(80, 8, 44, 7);
-        for (let i = 0; i < 8; i++) for (let j = 0; j < 3; j++) { g.fillStyle = (i * 3 + j) % 7 ? 'rgba(56,245,184,.75)' : 'rgba(36,232,255,.9)'; g.fillRect(10 + i * 18, 24 + j * 18, 14, 14); }
-        g.strokeStyle = '#38f5b8'; g.lineWidth = 2.5; g.beginPath(); for (let x = 10; x < W - 10; x += 8) { const y = 104 - Math.abs(Math.sin(x * 0.07)) * 16 - (x % 24 ? 0 : 6); if (x === 10) g.moveTo(x, y); else g.lineTo(x, y); } g.stroke();
-        g.fillStyle = 'rgba(56,245,184,.5)'; for (let k = 0; k < 4; k++) g.fillRect(170, 26 + k * 12, 70 - k * 12, 6);
-      }],
       // the Manager's consoles: rows of keys and small screens, a metre of console that repeats along it
       console: [256, 84, (g, W, H) => {
         g.fillStyle = '#141b23'; g.fillRect(0, 0, W, H); g.fillStyle = '#0a0f14'; g.fillRect(0, 0, W, 3);
@@ -6060,20 +5874,107 @@ class Office3D {
         ['rgba(36,232,255,.35)', 'rgba(59,130,246,.4)', 'rgba(56,245,184,.3)'].forEach((c, k) => { g.fillStyle = c; g.fillRect(14 + k * 82, 12, 40 + (k % 2) * 18, 6); g.fillRect(14 + k * 82, 24, 26, 4); });
         const R = rng(7); for (let row = 0; row < 3; row++) for (let k = 0; k < 20; k++) if (R() < 0.07) { g.fillStyle = R() < 0.5 ? 'rgba(36,232,255,.7)' : 'rgba(56,245,184,.7)'; g.fillRect(10 + k * 12, 46 + row * 12, 9, 8); }
       }],
-      // the trading desk's computer, its link screen in orange (pcTex's, recoloured)
-      pcOrange: [256, 176, (g, W, H) => {
-        g.fillStyle = '#26140a'; g.fillRect(0, 0, W, H); g.strokeStyle = '#ff9438'; g.lineWidth = 8; g.strokeRect(4, 4, W - 8, H - 8);
-        g.fillStyle = '#ff9438'; g.font = '700 96px JetBrains Mono, monospace'; g.textAlign = 'center'; g.textBaseline = 'middle'; g.fillText('↗', W / 2, 92);
-      }],
       // the column of light over the Manager's core: bright at its foot, gone at its head, faint bands rising in it
       beam: [32, 256, (g, W, H) => {
         const gr = g.createLinearGradient(0, H, 0, 0); gr.addColorStop(0, 'rgba(255,255,255,.9)'); gr.addColorStop(0.35, 'rgba(255,255,255,.45)'); gr.addColorStop(1, 'rgba(255,255,255,0)');
         g.fillStyle = gr; g.fillRect(0, 0, W, H);
         g.fillStyle = 'rgba(255,255,255,.12)'; for (let y = 20; y < H; y += 26) g.fillRect(0, y, W, 3);
       }],
+      // ---- the trading floor's screens (its desks' banks, on one sheet: rcAtlas) ----
+      cndl: [256, 150, (g, W, H) => {
+        glass(g, W, H); txt(g, 'BTC-PERP  1H', 12, 9, CY, 13); txt(g, '+2.41%', W - 12, 10, UP, 12, 700, 'right'); grid(g, 12, 34, W - 46, H - 30, 5);
+        const v = candles(g, 14, W - 50, H - 34, 84, 22);
+        g.fillStyle = 'rgba(36,232,255,.3)'; for (let i = 0; i < 22; i++) g.fillRect(16 + i * 8.6, H - 10 - R() * 16, 5, 1 + R() * 14);
+        g.fillStyle = UP; g.fillRect(W - 44, H - 34 - 84 * v - 7, 36, 14); txt(g, '64.2k', W - 26, H - 34 - 84 * v - 5, '#04120c', 9, 700, 'center');
+      }],
+      depth: [256, 150, (g, W, H) => {
+        glass(g, W, H); txt(g, 'ORDER BOOK', 12, 9, CY, 13); txt(g, 'ETH', W - 12, 10, DIM, 12, 700, 'right');
+        for (let i = 0; i < 5; i++) {
+          const ya = 34 + i * 11, yb = 98 + i * 11, wa = 30 + R() * 90, wb = 30 + R() * 90;
+          g.fillStyle = 'rgba(255,90,90,.28)'; g.fillRect(W - 12 - wa, ya, wa, 8); txt(g, (3418.6 - i * 0.4 + 2.2).toFixed(1), 14, ya - 1, DN, 9, 600);
+          g.fillStyle = 'rgba(56,245,184,.28)'; g.fillRect(W - 12 - wb, yb, wb, 8); txt(g, (3417.8 - i * 0.4).toFixed(1), 14, yb - 1, UP, 9, 600);
+        }
+        line(g, [[12, 92], [W - 12, 92]], 'rgba(176,196,208,.35)', 1); txt(g, '3418.2', W / 2, 85, '#e8f6ff', 10, 700, 'center');
+      }],
+      heat: [256, 150, (g, W, H) => {
+        glass(g, W, H); txt(g, 'MARKET MAP', 12, 9, CY, 13); txt(g, '24H', W - 12, 10, DIM, 12, 700, 'right');
+        [[12, 32, 92, 60, 'BTC', 2.4], [106, 32, 70, 60, 'ETH', -0.6], [178, 32, 66, 34, 'SOL', 4.1], [178, 68, 66, 24, 'BNB', 0.8], [12, 94, 52, 44, 'XRP', -1.9], [66, 94, 46, 44, 'DOGE', 6.2], [114, 94, 62, 44, 'AVAX', -3.1], [178, 94, 66, 44, 'LINK', 1.3]].forEach(([x, y, w, h, s, p]) => {
+          const a = Math.min(0.75, 0.18 + Math.abs(p) * 0.1); g.fillStyle = p >= 0 ? 'rgba(56,245,184,' + a + ')' : 'rgba(255,90,90,' + a + ')'; g.fillRect(x, y, w - 2, h - 2);
+          txt(g, s, x + 5, y + 4, '#e8f6ff', 10, 700); txt(g, (p > 0 ? '+' : '') + p.toFixed(1) + '%', x + 5, y + 17, '#e8f6ff', 9, 600);
+        });
+      }],
+      line: [256, 150, (g, W, H) => {
+        glass(g, W, H); txt(g, 'ETH  15M', 12, 9, CY, 13); txt(g, '3,418', W - 12, 10, UP, 12, 700, 'right'); grid(g, 12, 34, W - 12, H - 14, 5);
+        const a = walk(44, 14, W - 14, H - 16, 92, 1); g.beginPath(); g.moveTo(a[0][0], H - 16); a.forEach(([x, y]) => g.lineTo(x, y)); g.lineTo(a[a.length - 1][0], H - 16); g.closePath(); g.fillStyle = 'rgba(36,232,255,.13)'; g.fill();
+        line(g, a, '#7ff4ff', 2.4); line(g, walk(44, 14, W - 14, H - 16, 60, 0), 'rgba(56,245,184,.6)', 1.4);
+      }],
+      news: [256, 150, (g, W, H) => {
+        glass(g, W, H); txt(g, 'WIRE', 12, 9, CY, 13); txt(g, 'LIVE', W - 12, 10, UP, 11, 700, 'right');
+        ['ETF flows turn positive', 'Funding resets on SOL', 'Basis widens, 30D', 'Volume up 18% on DEXs', 'Vol crush after CPI', 'Gem Screener: 3 new'].forEach((s, i) => {
+          g.fillStyle = i % 3 === 1 ? DN : UP; g.fillRect(12, 37 + i * 18, 4, 9); txt(g, s, 22, 35 + i * 18, 'rgba(210,230,240,.85)', 10, 600);
+        });
+      }],
+      pos: [256, 150, (g, W, H) => {
+        glass(g, W, H); txt(g, 'PAPER BOOK', 12, 9, CY, 13); txt(g, 'NO REAL ORDERS', W - 12, 11, DIM, 9, 700, 'right');
+        txt(g, 'SYM', 12, 32, DIM, 9, 600); txt(g, 'SIDE', 74, 32, DIM, 9, 600); txt(g, 'PNL', W - 12, 32, DIM, 9, 600, 'right');
+        [['BTC', 'LONG', 412.2], ['SOL', 'LONG', 96.4], ['ETH', 'SHORT', -38.1], ['AVAX', 'LONG', 21.8], ['DOGE', 'SHORT', 14.6], ['LINK', 'LONG', -9.2]].forEach(([s, sd, p], i) => {
+          const y = 48 + i * 16; g.fillStyle = i % 2 ? 'rgba(143,168,194,.04)' : 'rgba(143,168,194,.08)'; g.fillRect(10, y - 2, W - 20, 15);
+          txt(g, s, 12, y, '#e8f6ff', 10, 700); txt(g, sd, 74, y, sd === 'LONG' ? UP : DN, 10, 600); txt(g, (p > 0 ? '+' : '') + p.toFixed(1), W - 12, y, p >= 0 ? UP : DN, 10, 700, 'right');
+        });
+      }],
+      exp: [256, 150, (g, W, H) => {
+        glass(g, W, H); txt(g, 'PAPER EXPERIMENTS', 12, 9, CY, 13);
+        [['H1 Hot basket', '+3.9%', 'RUN'], ['H2 Majors basket', '+1.1%', 'RUN'], ['C3 Event card', '-0.04%', 'DONE'], ['B4 Rally bot', '+0.7%', 'NEW']].forEach(([s, p, t], i) => {
+          const y = 36 + i * 27; txt(g, s, 12, y, '#e8f6ff', 10, 700); txt(g, p, 12, y + 12, p[0] === '-' ? DN : UP, 10, 700);
+          g.strokeStyle = t === 'RUN' ? CY : 'rgba(143,168,194,.6)'; g.lineWidth = 1.5; g.strokeRect(W - 56, y + 2, 44, 16); txt(g, t, W - 34, y + 5, t === 'RUN' ? CY : DIM, 9, 700, 'center');
+        });
+      }],
+      // the rule the room keeps, on its own small screen: real money only with the owner's say
+      gate: [256, 150, (g, W, H) => {
+        glass(g, W, H);
+        g.strokeStyle = CY; g.lineWidth = 5; g.beginPath(); g.arc(52, 58, 18, Math.PI, 0); g.stroke(); g.fillStyle = CY; g.fillRect(28, 58, 48, 40); g.fillStyle = '#050b12'; g.fillRect(49, 70, 6, 14);
+        txt(g, 'REAL MONEY', 92, 34, '#e8f6ff', 15); txt(g, 'LOCKED', 92, 54, CY, 15); txt(g, "owner's approval", 92, 78, DIM, 11, 600); txt(g, 'for every move', 92, 92, DIM, 11, 600);
+        g.fillStyle = 'rgba(56,245,184,.16)'; g.fillRect(12, 112, W - 24, 24); txt(g, 'PAPER TRADING  ON', W / 2, 118, UP, 12, 700, 'center');
+      }],
+      plaque: [128, 72, (g, W, H) => {
+        g.fillStyle = '#0a141c'; g.fillRect(0, 0, W, H); g.strokeStyle = 'rgba(176,196,208,.6)'; g.lineWidth = 2; g.strokeRect(3, 3, W - 6, H - 6);
+        txt(g, 'AGENT', W / 2, 11, '#dfeaf2', 11, 700, 'center'); txt(g, 'TOURNAMENTS', W / 2, 25, '#dfeaf2', 11, 700, 'center'); txt(g, 'paper seat · 30d', W / 2, 46, CY, 9, 600, 'center');
+      }],
+      // ---- the trading floor's boards ----
+      // the big P&L on the back-left wall: paper only, its ROI after fees over thirty days, the curve and the days
+      pnl: [1024, 198, (g, W, H) => {
+        glass(g, W, H); txt(g, 'PAPER P&L  ·  30 DAYS', 26, 20, CY, 22); txt(g, 'no real trades', W - 26, 24, DIM, 16, 600, 'right');
+        txt(g, '+$1,284.60', 26, 54, UP, 54); txt(g, 'ROI AFTER FEES  +4.1%', 26, 120, '#e8f6ff', 18); txt(g, 'TRADES 42 / 40  ·  WIN 61%', 26, 148, DIM, 16, 600);
+        const x0 = 420, x1 = W - 26, yb = H - 26; grid(g, x0, 56, x1, yb, 5);
+        const a = walk(60, x0, x1, yb, 118, 2); g.beginPath(); g.moveTo(a[0][0], yb); a.forEach(([x, y]) => g.lineTo(x, y)); g.lineTo(x1, yb); g.closePath(); g.fillStyle = 'rgba(56,245,184,.14)'; g.fill();
+        line(g, a, '#5cffc4', 3.2);
+        for (let i = 0; i < 30; i++) { const h = 6 + R() * 22, up = R() > 0.36; g.fillStyle = up ? 'rgba(56,245,184,.55)' : 'rgba(255,90,90,.55)'; g.fillRect(x0 + i * (x1 - x0) / 30 + 2, up ? yb - h : yb, (x1 - x0) / 30 - 5, up ? h : Math.min(h, 18)); }
+      }],
+      // the Agent Tournaments' table on the back-right wall: the seats a paper record earns, ours lit
+      leader: [1024, 176, (g, W, H) => {
+        glass(g, W, H); txt(g, 'AGENT TOURNAMENTS  ·  LEADERBOARD', 26, 18, CY, 21); txt(g, 'a seat: 30d paper ROI after fees, 40+ trades', W - 26, 22, DIM, 14, 600, 'right');
+        ['#', 'AGENT', 'ROI 30D', 'TRADES', 'SEAT'].forEach((s, i) => txt(g, s, [26, 70, 560, 720, 880][i], 52, DIM, 13, 600));
+        [['1', 'quantpilot', '+9.8%', '212', 'SEATED'], ['2', 'mean-revert-7', '+6.2%', '96', 'SEATED'], ['3', 'TRADING DESK (us)', '+4.1%', '42', 'EARNED'], ['4', 'gem-hunter', '+2.7%', '31', '9 TO GO'], ['5', 'basis-bot', '-0.8%', '64', '—']].forEach((row, i) => {
+          const y = 74 + i * 19, us = i === 2;
+          if (us) { g.fillStyle = 'rgba(36,232,255,.14)'; g.fillRect(16, y - 3, W - 32, 19); }
+          row.forEach((s, j) => txt(g, s, [26, 70, 560, 720, 880][j], y, j === 2 ? (s[0] === '-' ? DN : UP) : us ? CY : j === 4 && s === 'SEATED' ? UP : '#d6e4ee', 14, j === 1 && us ? 700 : 600));
+        });
+      }],
+      // the ticker along the desks' top rail: symbols and their moves, the gaps sized so one run fills the strip
+      // exactly and it wraps on without a seam
+      ticker: [2048, 32, (g, W, H) => {
+        g.fillStyle = '#03080d'; g.fillRect(0, 0, W, H);
+        const items = [['BTC', '64,218', 1.2], ['ETH', '3,418', -0.4], ['SOL', '182.6', 4.1], ['BNB', '612.0', 0.8], ['XRP', '0.612', -1.9], ['DOGE', '0.171', 6.2], ['AVAX', '38.42', -3.1], ['LINK', '17.08', 1.3], ['ARB', '1.124', 2.2], ['OP', '2.418', -0.7], ['TIA', '9.86', 3.4], ['PAPER ONLY', '', 0]];
+        const parts = items.map(([s, p, c]) => [[s, '#e8f6ff', 700], [p, DIM, 600], [c ? (c > 0 ? '▲' : '▼') + Math.abs(c).toFixed(1) + '%' : '', c > 0 ? UP : DN, 700]].filter((q) => q[0]));
+        const wOf = (q) => { g.font = mono(15, q[2]); return g.measureText(q[0]).width; };
+        const used = parts.reduce((s, ps) => s + ps.reduce((a, q) => a + wOf(q) + 8, 0), 0), gap = Math.max(14, (W - used) / parts.length);
+        let x = gap / 2;
+        parts.forEach((ps) => { ps.forEach((q) => { txt(g, q[0], x, 8, q[1], 15, q[2]); x += wOf(q) + 8; }); g.fillStyle = 'rgba(36,232,255,.5)'; g.fillRect(x + gap / 2 - 10, 14, 3, 3); x += gap; });
+      }],
     }[k];
     const t = ctex(T[0], T[1], T[2]);
     if (k === 'console' || k === 'consoleGlow') { t.wrapS = THREE.RepeatWrapping; t.repeat.set(4, 1); }
+    if (k === 'ticker') { t.wrapS = THREE.RepeatWrapping; t.anisotropy = 4; }
     return (TX[id] = t);
   }
   // A console along one of the Manager's back walls, as his: a dark body, a top sloped to the room with rows of keys
@@ -6090,27 +5991,163 @@ class Office3D {
     add(G.box, OM.cyan.soft, len - 0.06, 0.014, 0.012, 0, 0.36, 0.462);
     add(G.box, OM.dark, len - 0.02, 0.06, 0.02, 0, 0.11, 0.455);
   }
-  // his trading desk: the orange-lit room, its boards under the neon -- on the back-right wall the desk's status in
-  // an orange frame (r.wall) and its chart in a yellow-green one, on the back-left wall the kanban in its tiles
-  // (r.kb) with the see-through frame before it -- and desks of four screens with their traders, a little apart
-  rcTradingRoom(r, d) {
-    const x0 = r.x0, y0 = r.y0, k = d.key;
-    r.wall = this.rcBoard(r, 'back', 1.8, 4.0, null, { edge: '#ff8a3a', glow: 1.6 });
-    this.rcBoard(r, 'back', 4.25, 6.7, orangeWallTex(), { edge: '#c8e06a', glow: 0.9 });
-    r.kb = this.rcBoard(r, 'left', 1.45, 5.15, null, { tiles: true });
-    // two desks as his: one towards the back, the other to the right of it and a little further forward
-    const ex = d.experts.slice(0, 3), xs = ex.length === 1 ? [2.4] : ex.length === 2 ? [1.2, 4.15] : [0.35, 2.55, 4.75], ys = ex.length === 2 ? [2.4, 2.85] : [2.75, 2.75, 2.75];
-    ex.forEach((e, i) => {
-      this.desk(r, x0 + xs[i], y0 + ys[i], i, true);
-      this.sideScreens(r, x0 + xs[i], y0 + ys[i], i === 0 || ex.length < 3, i === ex.length - 1 || ex.length < 3);
+  /* ---- the trading floor: the trading desk's room, drawn whole at the looks' detail (rc*) ---- */
+  // The department Cymetica runs: "Find and prove ways to make money on Cymetica with paper experiments only. Any
+  // real-money action needs the owner's approval, and the company never places real trades itself." So its room is
+  // a trading floor on paper: on the back-right wall its status (r.wall) and the Agent Tournaments' leaderboard, the
+  // seat a paper record earns; on the back-left the paper P&L and the kanban (r.kb). Before them one long trading
+  // desk, a bank of six screens for each of its people -- three low, three high on a post, the outer ones turned in to
+  // him, the middle low one his own (r.mons: dark until he works) -- and over the banks a ticker running along their
+  // rail; a carpet with a mint edge under the desk and its chairs. At the front the room's rule on a screen of its
+  // own (real money locked: the owner's approval) and a case with the tournaments' cup; the department's computer in
+  // the back corner. Mint like every room: orange only while it waits on its owner (tint).
+  rcTrading(r, d) {
+    this.rcMats();
+    const x0 = r.x0, y0 = r.y0, ex = d.experts.slice(0, 3), n = Math.max(1, ex.length);
+    const MB = (k) => new THREE.MeshBasicMaterial({ map: this.rcTex(k), toneMapped: false });
+    // the walls, every board under the neon (rbPanel: its bezel to 1.28)
+    this.wallScreen(r, 1.65, 3.35);
+    this.rbPanel(r, 'x', 3.55, 6.8, RBW.h, MB('leader'));
+    this.rbPanel(r, 'y', 1.4, 4.3, RBW.h, MB('pnl'));
+    this.kanban(r, 4.5, 6.05);
+    // the desk, its back to the back-right wall: a long top on end panels, a modesty panel, a line of light at its lip
+    const B = this.raG(r, x0 + 3.5, y0 + 2.3, 0), L = 5.0, D = 0.86, top = 0.475;
+    this.raB(B, L, 0.04, D, 0, top - 0.02, D / 2, OM.rbDeskTop, 0.012);
+    this.raB(B, L - 0.1, 0.36, 0.05, 0, 0.26, 0.08, OM.rbDesk, 0.012);
+    [-1, 1].forEach((s) => this.raB(B, 0.07, top - 0.04, D - 0.08, s * (L / 2 - 0.06), (top - 0.04) / 2, D / 2, OM.rbDesk, 0.012));
+    this.lkBox(B, L - 0.06, 0.012, 0.012, 0, top - 0.032, D + 0.006, OM.lkCyan, false);
+    // the banks' screens, the larger the fewer the people; the low row's middle and the high row a step over it
+    const w = n < 3 ? 0.48 : 0.42, h = n < 3 ? 0.27 : 0.24, gap = w + 0.035, yc0 = top + 0.075 + h / 2, yc1 = yc0 + h + 0.04, railY = yc1 + h / 2 + 0.055;
+    // the rail over the banks on a post at either end, and the ticker running along it (its top at 1.30)
+    [-1, 1].forEach((s) => this.lkBox(B, 0.05, railY - top, 0.05, s * (L / 2 - 0.14), (top + railY) / 2, 0.1, OM.rbMetal));
+    this.lkBox(B, L - 0.22, 0.07, 0.035, 0, railY, 0.1, OM.rbGloss);
+    const tk = this.raP(B, G.plane, OM.rcTicker, L - 0.32, 0.05, 1, 0, railY, 0.119, 0, false), TT = OM.rcTicker.map;
+    TT.repeat.set((L - 0.32) / 0.05 / 64, 1);
+    this.lkDrive(r, tk, (t) => { TT.offset.x = (t * 0.03) % 1; });
+    // the banks: the low row on feet on the desk, the high row on an arm from the post; the outer screens turned in
+    const xs = n === 1 ? [0] : n === 2 ? [-1.15, 1.15] : [-1.62, 0, 1.62];
+    const pics = [['cndl', 'depth', 'heat', 'line', 'pos'], ['line', 'pos', 'news', 'cndl', 'exp'], ['depth', 'heat', 'exp', 'news', 'cndl']];
+    xs.forEach((xp, i) => {
+      const P = pics[i % 3];
+      this.lkBox(B, 0.055, yc1 - top, 0.045, xp, (top + yc1) / 2, 0.13, OM.rbMetal);
+      this.raB(B, 0.32, 0.016, 0.2, xp, top + 0.008, 0.15, OM.rbMetal, 0.006);
+      this.lkBox(B, 3 * gap - 0.2, 0.03, 0.03, xp, yc1 - h / 2 + 0.01, 0.13, OM.rbMetal);
+      [-1, 0, 1].forEach((s) => [0, 1].forEach((hi) => {
+        const m = new THREE.Group(), yc = hi ? yc1 : yc0;
+        m.position.set(xp + s * gap, 0, 0.19 + Math.abs(s) * 0.08); m.rotation.y = -s * 0.34; B.add(m);
+        this.raB(m, w + 0.03, h + 0.03, 0.026, 0, yc, 0, OM.rbGloss, 0.01);
+        if (!hi) { this.raB(m, 0.16, 0.012, 0.1, 0, top + 0.006, -0.01, OM.rbMetal, 0.004); this.lkBox(m, 0.04, 0.06, 0.02, 0, top + 0.04, -0.02, OM.rbMetal); }
+        if (!hi && !s) this.raP(m, G.plane, this.lkMon(r, i), w, h, 1, 0, yc, 0.0135, 0, false);
+        else this.rcFace(m, hi ? P[3 + s] : s < 0 ? P[0] : P[1], w, h, 0, yc, 0.0135, 0);
+      }));
+      // under his hands: the keyboard, the mouse, a mug, a desk phone with its light
+      this.lkKeys(B, xp - 0.02, top, 0.62);
+      this.raP(B, this.lkG('sph'), OM.rbMouse, 0.04, 0.022, 0.062, xp + 0.42, top + 0.022, 0.64, 0, false);
+      this.raP(B, this.lkG('cyl'), OM.rbMouse, 0.042, 0.095, 0.042, xp - 0.56, top + 0.0475, 0.66, 0, false);
+      this.raB(B, 0.17, 0.045, 0.13, xp + 0.62, top + 0.022, 0.44, OM.rbGloss, 0.01);
+      this.lkLed(r, B, i % 2 ? '#24e8ff' : '#38f5b8', xp + 0.67, top + 0.05, 0.506, i);
+      if (ex[i]) this.agent(r, x0 + 3.5 + xp, y0 + 3.62, i, CO.expertName(ex[i]), { role: ex[i] });
     });
-    this.holoFrame(r, x0 + 0.75, y0 + 3.75);
-    ex.forEach((e, i) => this.agent(r, x0 + xs[i] + 0.95, y0 + ys[i] + 1.3, i, CO.expertName(e), { role: e }));
-    this.terminal(r, x0 + 0.3, y0 + 0.32, d.link || CO.DEPT_LINK[k] || CO.DEPT_LINK.custom);
-    // its computer's screen in the room's orange: a green one was the only cold light in his warm room
-    if (r.pcFace) r.pcFace.map = this.rcTex('pcOrange');
-    this.plant(r, x0 + 0.45, y0 + 5.7);
+    // the carpet under the desk and its chairs, its edge a line of mint
+    const cp = this.raG(r, x0 + 3.5, y0 + 3.15, 0);
+    this.raP(cp, G.plane, OM.rcCarpet, 5.5, 2.3, 1, 0, 0.003, 0, -Math.PI / 2, false).receiveShadow = true;
+    [[0, -1.15, 5.5, 0.03], [0, 1.15, 5.5, 0.03], [-2.75, 0, 0.03, 2.3], [2.75, 0, 0.03, 2.3]].forEach(([x, z, w, dd]) => this.lkBox(cp, w, 0.004, dd, x, 0.004, z, OM.lkMint, false));
+    // before it the market in the air over its table and the rule; the cup by the leaderboard; his see-through screen
+    // by the left wall; the computer; plants. The front glass carries the room's name (glassSign), so nothing tall
+    // stands right behind it.
+    this.rcHoloChart(r, x0 + 5.05, y0 + 5.15);
+    this.rcGate(r, x0 + 1.25, y0 + 5.55);
+    this.rcTrophy(r, x0 + 5.95, y0 + 1.1);
+    this.holoFrame(r, x0 + 0.78, y0 + 4.75);
+    this.terminal(r, x0 + 0.3, y0 + 0.3, d.link || CO.DEPT_LINK[d.key] || CO.DEPT_LINK.custom);
+    this.lkPlant(r, x0 + 0.45, y0 + 4.2, 0.8); this.lkPlant(r, x0 + 6.55, y0 + 4.45, 0.75);
+    this.lkLedsDone(r);
     this.plate(r);
+  }
+  // the market as his rooms show their data, in the air: a round table with a lit rim and a glowing top, over it a
+  // candle chart standing on a faint grid -- green up, red down, a wick through each -- turning slowly in a ring of
+  // light, a soft beam rising to it
+  rcHoloChart(r, x, y) {
+    const p = this.raG(r, x, y, 0);
+    this.raP(p, this.lkLathe('rcHoloBase', [[0, 0], [0.4, 0], [0.42, 0.04], [0.24, 0.1], [0.18, 0.44], [0.44, 0.5], [0.48, 0.55], [0, 0.55]], 40), OM.lkFrame, 1, 1, 1, 0, 0, 0);
+    this.raP(p, this.lkG('tor64'), OM.lkCyan, 0.48, 0.48, 0.45, 0, 0.55, 0, Math.PI / 2, false);
+    this.raP(p, G.circle, OM.rcHoloDisc, 0.44, 0.44, 1, 0, 0.553, 0, -Math.PI / 2, false);
+    this.raP(p, G.beam, OM.raBeam, 0.9, 0.62, 0.9, 0, 0.87, 0, Math.PI, false);
+    // the candles stand round a cylinder of faint grid, so the chart reads from every side as it turns
+    const cg = new THREE.Group(); cg.position.set(0, 0.6, 0); cg.userData.dyn = true; p.add(cg);
+    const grid = this.raP(cg, G.pole, OM.raGrid, 0.3, 0.56, 0.3, 0, 0.28, 0, 0, false);
+    const R = rng(91), N = 24, o = new THREE.Object3D(), sets = [[], []];
+    let v = 0.22;
+    for (let i = 0; i < N; i++) {
+      const o0 = v; v = Math.max(0.05, Math.min(0.5, v + (R() - 0.42) * 0.12)); const up = v >= o0, lo = Math.min(o0, v), hb = Math.max(0.018, Math.abs(v - o0)), a = i / N * Math.PI * 2;
+      sets[up ? 0 : 1].push([a, lo + hb / 2, 0.034, hb], [a, lo + hb / 2, 0.007, hb + 0.03 + R() * 0.04]);
+    }
+    sets.forEach((pts, k) => {
+      const im = new THREE.InstancedMesh(G.box, k ? OM.rcHoloDn : OM.rcHoloUp, pts.length);
+      pts.forEach(([a, py, sw, sh], j) => { o.position.set(Math.cos(a) * 0.31, py, Math.sin(a) * 0.31); o.rotation.set(0, -a, 0); o.scale.set(sw, sh, sw); o.updateMatrix(); im.setMatrixAt(j, o.matrix); });
+      im.computeBoundingSphere(); cg.add(im);
+    });
+    const ring = new THREE.Mesh(G.holoDash, OM.lkCyan); ring.scale.set(0.5, 0.5, 0.5); ring.rotation.x = Math.PI / 2; ring.position.y = 0.02; cg.add(ring);
+    const halo = glowSprite(0x5ff0e0, 0.1, 1.3); halo.position.set(0, 0.32, 0); cg.add(halo);
+    this.lkDrive(r, grid, (t) => { cg.rotation.y = t * 0.35; });
+  }
+  // the room's rule, standing at its front where the camera reads it: a foot, a post, a head leant back with its
+  // screen -- real money locked, the owner's approval for every move, paper trading on
+  rcGate(r, x, y) {
+    const p = this.raG(r, x, y, Math.PI / 4);
+    this.lkCyl(p, 0.2, 0.04, 0, 0, 0, OM.rbDesk);
+    this.raB(p, 0.12, 0.72, 0.1, 0, 0.4, -0.02, OM.rbDesk, 0.02);
+    const hd = new THREE.Group(); hd.position.set(0, 0.84, 0); hd.rotation.x = -0.5; p.add(hd);
+    this.raB(hd, 0.5, 0.32, 0.05, 0, 0, 0, OM.rbGloss, 0.015);
+    this.rcFace(hd, 'gate', 0.46, 0.27, 0, 0, 0.0255, 0);
+    this.lkLed(r, hd, '#24e8ff', 0.21, -0.145, 0.027, 2);
+  }
+  // the Agent Tournaments' cup in a case, turned to the room's front corner: a plinth with a lit band and its plaque,
+  // the silver cup on a ring of light, a glass case over it
+  rcTrophy(r, x, y) {
+    const p = this.raG(r, x, y, Math.PI / 4);
+    G.rcHandle = G.rcHandle || new THREE.TorusGeometry(1, 0.18, 8, 24, Math.PI);
+    this.raB(p, 0.5, 0.64, 0.5, 0, 0.32, 0, OM.rbDesk, 0.02);
+    this.raB(p, 0.54, 0.035, 0.54, 0, 0.657, 0, OM.rbDeskTop, 0.01);
+    this.lkBox(p, 0.5, 0.012, 0.012, 0, 0.6, 0.253, OM.lkCyan, false);
+    this.rcFace(p, 'plaque', 0.34, 0.19, 0, 0.36, 0.2515, 0);
+    this.raP(p, this.lkLathe('rcCup', [[0, 0], [0.085, 0], [0.085, 0.022], [0.034, 0.036], [0.022, 0.1], [0.03, 0.13], [0.09, 0.17], [0.112, 0.29], [0.1, 0.292], [0.08, 0.19], [0, 0.165]], 32), OM.rcSilver, 1, 1, 1, 0, 0.675, 0);
+    [-1, 1].forEach((s) => { const hd = this.raP(p, G.rcHandle, OM.rcSilver, 0.06, 0.06, 0.06, s * 0.1, 0.675 + 0.215, 0, 0); hd.rotation.z = -s * Math.PI / 2; });
+    this.raP(p, this.lkG('cyl'), OM.lkCyan, 0.13, 0.004, 0.13, 0, 0.677, 0, 0, false);
+    this.raP(p, G.box, OM.lkGlass, 0.46, 0.5, 0.46, 0, 0.675 + 0.25, 0, 0, false);
+    this.lkLed(r, p, '#38f5b8', 0.19, 0.6, 0.256, 1);
+  }
+  // the trading floor's materials, made once and kept on OM (release() spares what OM holds)
+  rcMats() {
+    this.lkMats('rc');
+    if (OM.rcCarpet) return;
+    OM.rcCarpet = std({ color: 0x0e1720, roughness: 0.95, metalness: 0.02 });
+    OM.rcSilver = std({ color: 0xcdd8e2, roughness: 0.16, metalness: 0.9 });
+    OM.rcTicker = new THREE.MeshBasicMaterial({ map: this.rcTex('ticker'), color: new THREE.Color(0xffffff).multiplyScalar(1.1), toneMapped: false });
+    const holo = (hex, k) => new THREE.MeshBasicMaterial({ color: new THREE.Color(hex).multiplyScalar(k), transparent: true, opacity: 0.85, blending: THREE.AdditiveBlending, depthWrite: false, toneMapped: false });
+    OM.rcHoloUp = holo('#38f5b8', 1.3); OM.rcHoloDn = holo('#ff5a5a', 1.2);
+    OM.rcHoloDisc = new THREE.MeshBasicMaterial({ color: new THREE.Color(0x24e8ff).multiplyScalar(0.2), transparent: true, opacity: 0.5, blending: THREE.AdditiveBlending, depthWrite: false });
+  }
+  // the desks' screens on one sheet (TX.rcAtlas), each picture's plane mapped to its place on it (G.rcA<picture>):
+  // every fixed screen in the room is then one material, and bakeRoom merges them into one draw
+  rcAtlas() {
+    if (TX.rcAtlas) return TX.rcAtlas;
+    const keys = ['cndl', 'depth', 'heat', 'line', 'news', 'pos', 'exp', 'gate', 'plaque'];
+    const W = 1048, pad = 4, at = {}; let x = pad, y = pad, row = 0;
+    keys.forEach((k) => { const im = this.rcTex(k).image; if (x + im.width + pad > W) { x = pad; y += row + pad; row = 0; } at[k] = [x, y, im.width, im.height]; x += im.width + pad; row = Math.max(row, im.height); });
+    const H = y + row + pad, t = ctex(W, H, (g) => { g.fillStyle = '#050b12'; g.fillRect(0, 0, W, H); keys.forEach((k) => g.drawImage(this.rcTex(k).image, at[k][0], at[k][1])); });
+    keys.forEach((k) => {
+      const [px, py, w, h] = at[k], pg = new THREE.PlaneGeometry(1, 1), uv = pg.attributes.uv;
+      for (let i = 0; i < uv.count; i++) uv.setXY(i, (px + uv.getX(i) * w) / W, 1 - (py + (1 - uv.getY(i)) * h) / H);
+      G['rcA' + k] = pg;
+    });
+    return (TX.rcAtlas = t);
+  }
+  // a fixed screen in frame p: picture k, w x h, centred at x,y,z, leaning back by rx, at brightness c
+  rcFace(p, k, w, h, x, y, z, rx, c = 1.0) {
+    const map = this.rcAtlas(), id = 'rcAM' + c;
+    OM[id] = OM[id] || new THREE.MeshBasicMaterial({ map, color: new THREE.Color(0xffffff).multiplyScalar(c), toneMapped: false });
+    return this.raP(p, G['rcA' + k], OM[id], w, h, 1, x, y, z, rx || 0, false);
   }
   // The Manager's room, as his: a stepped circular dais in the middle, a white-hot core in a column of light with
   // three rings over it, concentric cyan rings on the floor, and a console under a board on both back walls.
@@ -6176,7 +6213,7 @@ class Office3D {
     this.console3(r, x0 + 1.1, y0 + 1.9, Math.PI / 2, 0);
     this.console3(r, x0 + 1.1, y0 + 3.95, Math.PI / 2, 1);
     this.wallScreen(r, 1.6, 5.4);
-    this.desk(r, x0 + 2.9, y0 + 1.9, 0, false);
+    this.desk(r, x0 + 2.9, y0 + 1.9, 0);
     this.agent(r, x0 + 3.85, y0 + 3.2, 0, 'Supervisor', { role: 'supervisor' });
     this.raPrinter(r, x0 + 6.08, y0 + 5.75, -Math.PI / 2);
     this.cabinet(r, x0 + 6.45, y0 + 2.6, 0.45, 2.2, 0.72);
@@ -6694,28 +6731,29 @@ class Office3D {
     S.departments.forEach((d) => {
       const r = this.rooms['d' + d.id]; if (!r) return;
       const v = CO.deptView(d), ln = CO.deptLine(d, v), st = ln.tone === 'red' ? 'waiting' : v.status;
-      const isOrange = d.key === 'trading_desk';
       if (v.status === 'working') anyWork = true;
       this.tint(r, st);
-      const dot = isOrange && st !== 'working' ? '#ff8824' : '#' + new THREE.Color(STC[st]).getHexString();
-      let title, sub, mode, col = isOrange && st !== 'working' ? '#ff9438' : st === 'queued' ? '#a9b8cc' : dot;
+      // no room is orange for what it is, only for waiting on its owner (tint): the trading desk's dot, plate and
+      // screens are every room's
+      const dot = '#' + new THREE.Color(STC[st]).getHexString();
+      let title, sub, mode, col = st === 'queued' ? '#a9b8cc' : dot;
       if (v.running) { title = v.running.title; sub = CO.expertName(v.running.expert) + ' is on it'; mode = 'run'; }
       else if (v.waiting) { title = 'Needs you'; sub = 'approve or reject on the right'; mode = 'full'; col = '#ff8824'; }
-      else if (v.queued.length) { title = 'Up next: ' + v.queued[0].title; sub = ''; mode = isOrange ? 'full' : ''; }
-      else { title = d.schedule && d.next_run ? 'Next run at ' + CO.hhmm(d.next_run) : 'Idle'; sub = ''; mode = isOrange ? 'full' : ''; }
+      else if (v.queued.length) { title = 'Up next: ' + v.queued[0].title; sub = ''; mode = ''; }
+      else { title = d.schedule && d.next_run ? 'Next run at ' + CO.hhmm(d.next_run) : 'Idle'; sub = ''; mode = ''; }
       if (r.wall) drawWall(r.wall, title, sub, col, mode);
       if (r.sign) r.sign.material.color.set(st === 'waiting' ? LOOK.orange : SIGN_BLUE).multiplyScalar(st === 'working' ? 2.15 : 1.9);
       if (r.kb) drawKanban(r.kb, { queued: v.queued.length, running: v.running ? 1 : 0, done: v.done, failed: v.failed });
       v.experts.slice(0, 3).forEach((e, i) => {
         const a = r.agents[i]; if (a) a.working = e.state === 'working';
-        // his desks' monitors are dark glass; a screen lights while its expert works (the trading desk's charts always)
-        if (r.mons[i]) r.mons[i].color.set(isOrange ? new THREE.Color(0xffae52).multiplyScalar(1.25) : e.state === 'working' ? new THREE.Color(0x7cf2c4).multiplyScalar(1.3) : new THREE.Color(0x0a1016));
+        // his desks' monitors are dark glass; a screen lights while its expert works
+        if (r.mons[i]) r.mons[i].color.set(e.state === 'working' ? new THREE.Color(0x7cf2c4).multiplyScalar(1.3) : new THREE.Color(0x0a1016));
       });
       const n = d.et10 || 0, et = d.files_as ? '<span class="et' + (n ? ' lit' : '') + '">' + (n ? '+' : '') + n.toLocaleString('en-US') + ' ET10</span>' : '';
-      const subCol = isOrange && ln.tone !== 'cyan' ? '#ff9438' : (TONEC[ln.tone] || '#a9b8cc');
-      const html = '<div class="p3h"><i style="background:' + (ln.tone === 'red' || isOrange ? '#ff8824' : dot) + '"></i><b>' + esc(d.name.toUpperCase()) + '</b>' + et + '</div><div class="p3l" style="color:' + subCol + '">' + esc(ln.short) + '</div>';
+      const subCol = TONEC[ln.tone] || '#a9b8cc';
+      const html = '<div class="p3h"><i style="background:' + (ln.tone === 'red' ? '#ff8824' : dot) + '"></i><b>' + esc(d.name.toUpperCase()) + '</b>' + et + '</div><div class="p3l" style="color:' + subCol + '">' + esc(ln.short) + '</div>';
       if (r.plate && r.plate._h !== html) { r.plate._h = html; r.plate.innerHTML = html; }
-      if (r.plate) { r.plate.classList.toggle('work', v.status === 'working'); r.plate.style.setProperty('--c', ln.tone === 'red' || isOrange ? '#ff8824' : col); }
+      if (r.plate) { r.plate.classList.toggle('work', v.status === 'working'); r.plate.style.setProperty('--c', ln.tone === 'red' ? '#ff8824' : col); }
       // the deck's lanes are his dim white dashes; one lights cyan while work runs along it
       if (this.conduits['d' + d.id]) { const cm = this.conduits['d' + d.id].mat; cm.emissive.set(v.status === 'working' ? 0x46d8f0 : 0xb4c4d0); cm.emissiveIntensity = v.status === 'working' ? 0.75 : 0.3; }
     });
@@ -6760,13 +6798,14 @@ class Office3D {
     this.paused = S.company.status === 'paused';
     this.drawSel();
   }
-  // A room's neon in the colour of what it needs, as in his picture: mint for every room, orange for the one that
-  // waits on you (and the trading desk, orange in his picture). Working shows as a brighter line and a faint mint
+  // A room's neon in the colour of what it needs, as in his picture: mint for every room, orange only for the one
+  // that waits on you ("Oranzove sviti jen roomka ktera chce pozornost moji, needs you") -- and then the whole room,
+  // as his orange one is: its floor's seams lit, its glass warm, its neon, the wash on its floor and a warm lamp
+  // hung lower; all of it back to mint when it no longer waits. Working shows as a brighter line and a faint mint
   // wash on the floor, not as another colour.
   tint(r, st) {
     this.shTag(r);
-    const dk = r.dept && r.dept.key;
-    const isOrange = dk === 'trading_desk' || st === 'waiting';
+    const isOrange = st === 'waiting';
     if (r.st === st && r.orange === isOrange) return;
     r.st = st; r.orange = isOrange;
     const c = new THREE.Color(isOrange ? LOOK.orange : LOOK.neon);
@@ -6774,7 +6813,10 @@ class Office3D {
     // glows, the glow tight round a thinner line, as his
     if (r.edgeM) { r.edgeM.emissive.set(isOrange ? LOOK.orange : SH_NEON); r.edgeM.emissiveIntensity = isOrange ? 1.9 : st === 'working' ? 1.8 : 1.5; }
     if (r.glow) { r.glow.material.color.copy(c).multiplyScalar(isOrange ? 1.9 : 1); r.glowBase = isOrange ? 1.0 : st === 'working' ? 0.05 : 0; }
-    if (r.lamp) { r.lamp.color.set(isOrange ? 0xff6a34 : 0xeef6ff); r.lamp.intensity = isOrange ? 22 : 6; r.lamp.distance = isOrange ? 6.5 : 9; }
+    if (r.lamp) { r.lamp.color.set(isOrange ? 0xff6a34 : 0xeef6ff); r.lamp.intensity = isOrange ? 22 : 6; r.lamp.distance = isOrange ? 6.5 : 9; r.lamp.position.y = isOrange ? 2.4 : 4.4; }
+    // the floor and the glass: only the room's own (a room that dressed its walls in something else keeps it)
+    if (r.floorM && (r.floorM.material === OM.tile || r.floorM.material === OM.tileOrange)) r.floorM.material = isOrange ? OM.tileOrange : OM.tile;
+    if (r.panes) r.panes.forEach((p) => { if (p.material === OM.glass || p.material === OM.glassOrange) p.material = isOrange ? OM.glassOrange : OM.glass; });
   }
   drawSel() {
     release(this.selRing); this.selRing.clear();
