@@ -81,9 +81,11 @@ i.lk::before { content: ''; position: absolute; left: 1.5px; top: -5px; width: 6
 
 /* ---------- the 3D map's banners: DOM over the canvas ---------- */
 .uvbans { position: absolute; inset: 0; pointer-events: none; z-index: 3; overflow: hidden; }
-/* Cymetica's ball: the painting itself over the map (u3d.js colliderTex, placed by overlay()), in its own colours;
-   two layers turning slowly against each other, the front one flickering, under every banner */
-.uvbans .uvcol { position: absolute; left: 0; top: 0; width: 600px; height: 600px; transform-origin: 300px 300px; z-index: 1; pointer-events: none; mix-blend-mode: plus-lighter; will-change: transform; }
+/* Cymetica's ball: the painting itself over the map (u3d.js colliderTex, placed by overlay()), in its own colours,
+   laid over the canvas as it is (.uvbans is its own stacking context, so nothing under it blends: the painting's
+   dark is transparent and its light is its own); two layers turning slowly against each other, the front one
+   flickering, a blurred copy under them for the glow, under every banner */
+.uvbans .uvcol { position: absolute; left: 0; top: 0; width: 600px; height: 600px; transform-origin: 300px 300px; z-index: 1; pointer-events: none; will-change: transform; }
 .uvbans .uvcol canvas { position: absolute; inset: 0; width: 100%; height: 100%; }
 .uvbans .uvcol .l1 { animation: uvcolspin 420s linear infinite, uvcolflick 2.3s ease-in-out infinite alternate; }
 .uvbans .uvcol .g1 { filter: blur(9px) brightness(1.5); opacity: .85; animation: uvcolspin 420s linear infinite; }
