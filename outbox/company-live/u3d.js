@@ -3506,9 +3506,15 @@ class Office3D {
   // life-support pack, a collar ring and a belt, a control box on the chest (it lights cyan at work), gloves, white
   // boots on dark soles, a patch on the left shoulder; seated, on his black office chair with its five-star base,
   // arms forward to the keyboard. Each half baked to a few draw calls; the chest light keeps its own.
+  // Over that body every role wears a skin of its own, opts.role ("for each role you must choose a suitable new
+  // skin, so the different astronauts will differ by role"): its helmet's shell and its visor's tint, its shoulders,
+  // arm bands and the pack's back panel in its colour -- what the office's home view sees of a worker, from behind
+  // and above -- and its kit, what it wears on the helmet and the body and carries in its hands (asSkin, AS_KIT).
+  // A role it does not know wears the suit as it was.
   agent(r, x, y, i, label, opts) {
     rbMats();
-    const at = this.V(x, y, 0.08), S = 1.0, standing = !!(opts && opts.stand);
+    const o = opts || {}, sk = this.asSkin(o.role), kit = Office3D.AS_KIT[o.role] || {};
+    const at = this.V(x, y, 0.08), S = 1.0, standing = !!o.stand;
     const cm = (geom, mat, px, py, pz, rx, sc) => { const m = new THREE.Mesh(geom, mat); m.position.set(px, py, pz); if (rx) m.rotation.x = rx; if (sc) m.scale.set(sc[0], sc[1], sc[2]); m.castShadow = true; m.receiveShadow = true; return m; };
     if (!standing) {
       const chair = new THREE.Group(); chair.position.copy(at); chair.scale.setScalar(S); r.g.add(chair);
@@ -3523,41 +3529,276 @@ class Office3D {
     }
     const g = new THREE.Group(); g.position.copy(at); g.scale.setScalar(S); r.g.add(g);
     const up = new THREE.Group(); g.add(up);
-    up.add(cm(G.rbTorso, OM.rbSuit, 0, 0.74, 0.03, 0, [1.06, 1, 0.92]), cm(rboxGeo(0.3, 0.14, 0.25, 0.05), OM.rbSuit, 0, 0.53, 0.01));
-    up.add(cm(G.cyl, OM.rbJoint, 0, 0.6, 0.03, 0, [0.176, 0.045, 0.158]), cm(G.cyl, OM.rbCollar, 0, 0.99, 0.02, 0, [0.135, 0.06, 0.135]));
-    up.add(cm(G.sphere, OM.rbHelmet, 0, 1.15, 0.01, 0, [0.205, 0.2, 0.205]));
-    const visorM = OM.rbVisor.clone();
+    up.add(cm(G.rbTorso, sk.torso, 0, 0.74, 0.03, 0, [1.06, 1, 0.92]), cm(rboxGeo(0.3, 0.14, 0.25, 0.05), sk.hip, 0, 0.53, 0.01));
+    up.add(cm(G.cyl, sk.joint, 0, 0.6, 0.03, 0, [0.176, 0.045, 0.158]), cm(G.cyl, OM.rbCollar, 0, 0.99, 0.02, 0, [0.135, 0.06, 0.135]));
+    up.add(cm(G.sphere, sk.helmet, 0, 1.15, 0.01, 0, [0.205, 0.2, 0.205]));
+    const visorM = sk.visor.clone();
     up.add(cm(G.sphere, visorM, 0, 1.165, -0.085, 0, [0.168, 0.135, 0.13]));
-    // the pack on the back: white, a darker panel and two cylinders of air along its sides
-    up.add(cm(rboxGeo(0.36, 0.44, 0.17, 0.045), OM.rbPack, 0, 0.8, 0.21), cm(G.box, OM.rbJoint, 0, 0.86, 0.3, 0, [0.22, 0.15, 0.02]));
-    [-1, 1].forEach((s) => up.add(cm(G.cyl, OM.rbPack, s * 0.2, 0.78, 0.2, 0, [0.04, 0.34, 0.04])));
-    up.add(cm(rboxGeo(0.2, 0.12, 0.06, 0.02), OM.rbJoint, 0, 0.8, -0.15));
+    // the pack on the back: white, a panel and two cylinders of air along its sides
+    up.add(cm(rboxGeo(0.36, 0.44, 0.17, 0.045), sk.pack, 0, 0.8, 0.21), cm(G.box, sk.panel, 0, 0.86, 0.3, 0, [0.22, 0.15, 0.02]));
+    [-1, 1].forEach((s) => up.add(cm(G.cyl, sk.pack, s * 0.2, 0.78, 0.2, 0, [0.04, 0.34, 0.04])));
+    up.add(cm(rboxGeo(0.2, 0.12, 0.06, 0.02), sk.joint, 0, 0.8, -0.15));
     const chest = cm(G.box, OM.pack, 0, 0.8, -0.183, 0, [0.12, 0.05, 0.01]); chest.userData.dyn = true; up.add(chest);
-    [-1, 1].forEach((s) => up.add(cm(G.sphere, OM.rbSuit, s * 0.19, 0.92, 0.0, 0, [0.085, 0.08, 0.085])));
-    const patch = cm(G.cyl, OM.rbPatch, -0.272, 0.87, -0.02, 0, [0.045, 0.012, 0.045]); patch.rotation.z = Math.PI / 2; up.add(patch);
+    [-1, 1].forEach((s) => up.add(cm(G.sphere, sk.shoulder, s * 0.19, 0.92, 0.0, 0, [0.085, 0.08, 0.085])));
+    const patch = cm(G.cyl, sk.patch, -0.272, 0.87, -0.02, 0, [0.045, 0.012, 0.045]); patch.rotation.z = Math.PI / 2; up.add(patch);
+    if (kit.up) kit.up(this, up, sk);
     rbBake(up);
     // the arms go with the legs: forward to the keyboard while seated, down at the sides while standing or walking
     // (standing lifts the upper body by 0.1, so the standing arms are built that much higher)
     const sit = new THREE.Group(), stand = new THREE.Group(); g.add(sit, stand);
-    const boot = (grp, px, pz) => { grp.add(cm(rboxGeo(0.13, 0.1, 0.21, 0.035), OM.rbPack, px, 0.07, pz), cm(rboxGeo(0.14, 0.03, 0.22, 0.012), OM.rbSole, px, 0.016, pz)); };
+    const boot = (grp, px, pz) => { grp.add(cm(rboxGeo(0.13, 0.1, 0.21, 0.035), sk.boot, px, 0.07, pz), cm(rboxGeo(0.14, 0.03, 0.22, 0.012), OM.rbSole, px, 0.016, pz)); };
     [-1, 1].forEach((s) => {
-      sit.add(cm(G.rbArm, OM.rbSuit, s * 0.215, 0.8, -0.08, 0.7), cm(G.rbFore, OM.rbSuit, s * 0.19, 0.69, -0.33, 1.38));
-      sit.add(cm(G.cyl, OM.rbJoint, s * 0.2, 0.71, -0.2, 1.38, [0.058, 0.04, 0.058]), cm(G.sphere, OM.rbJoint, s * 0.17, 0.665, -0.5, 0, [0.06, 0.05, 0.075]));
-      sit.add(cm(G.rbThigh, OM.rbSuit, s * 0.09, 0.5, -0.13, Math.PI / 2), cm(G.rbShin, OM.rbSuit, s * 0.09, 0.31, -0.29));
-      sit.add(cm(G.cyl, OM.rbJoint, s * 0.09, 0.5, -0.27, 0, [0.075, 0.07, 0.075])); boot(sit, s * 0.09, -0.33);
-      const ua = cm(G.rbArm, OM.rbSuit, s * 0.228, 0.91, 0.0), fa = cm(G.rbFore, OM.rbSuit, s * 0.248, 0.68, -0.025, 0.14);
+      sit.add(cm(G.rbArm, sk.suit, s * 0.215, 0.8, -0.08, 0.7), cm(G.rbFore, sk.suit, s * 0.19, 0.69, -0.33, 1.38));
+      sit.add(cm(G.cyl, sk.joint, s * 0.2, 0.71, -0.2, 1.38, [0.058, 0.04, 0.058]), cm(G.sphere, sk.joint, s * 0.17, 0.665, -0.5, 0, [0.06, 0.05, 0.075]));
+      sit.add(cm(G.rbThigh, sk.leg, s * 0.09, 0.5, -0.13, Math.PI / 2), cm(G.rbShin, sk.leg, s * 0.09, 0.31, -0.29));
+      sit.add(cm(G.cyl, sk.joint, s * 0.09, 0.5, -0.27, 0, [0.075, 0.07, 0.075])); boot(sit, s * 0.09, -0.33);
+      const ua = cm(G.rbArm, sk.suit, s * 0.228, 0.91, 0.0), fa = cm(G.rbFore, sk.suit, s * 0.248, 0.68, -0.025, 0.14);
       ua.rotation.z = s * 0.12; fa.rotation.z = s * 0.05; stand.add(ua, fa);
-      stand.add(cm(G.cyl, OM.rbJoint, s * 0.24, 0.79, -0.005, 0, [0.058, 0.04, 0.058]), cm(G.sphere, OM.rbJoint, s * 0.252, 0.52, -0.05, 0, [0.06, 0.07, 0.06]));
-      stand.add(cm(G.rbLeg, OM.rbSuit, s * 0.09, 0.37, 0.02), cm(G.cyl, OM.rbJoint, s * 0.09, 0.36, 0.02, 0, [0.078, 0.05, 0.078])); boot(stand, s * 0.09, -0.01);
+      stand.add(cm(G.cyl, sk.joint, s * 0.24, 0.79, -0.005, 0, [0.058, 0.04, 0.058]), cm(G.sphere, sk.joint, s * 0.252, 0.52, -0.05, 0, [0.06, 0.07, 0.06]));
+      stand.add(cm(G.rbLeg, sk.leg, s * 0.09, 0.37, 0.02), cm(G.cyl, sk.joint, s * 0.09, 0.36, 0.02, 0, [0.078, 0.05, 0.078])); boot(stand, s * 0.09, -0.01);
+      // a role's band round each upper arm, under the shoulder, in its colour
+      if (sk.band) {
+        sit.add(cm(G.cyl, sk.band, s * 0.215, 0.846, -0.041, 0.7, [0.062, 0.034, 0.062]));
+        const b = cm(G.cyl, sk.band, s * 0.232, 0.875, 0.0, 0, [0.062, 0.034, 0.062]); b.rotation.z = s * 0.12; stand.add(b);
+      }
     });
+    if (kit.sit) kit.sit(this, sit, sk);
+    if (kit.stand) kit.stand(this, stand, sk);
     rbBake(sit); rbBake(stand);
     sit.visible = !standing; stand.visible = standing;
     const ringM = emis('#00e5ff', 0); const ring = new THREE.Mesh(G.ring, ringM); ring.rotation.x = Math.PI / 2; ring.scale.setScalar(0.4); ring.position.y = 0.02; g.add(ring);
     const el = document.createElement('div'); el.className = 'a3'; el.textContent = label; this.layer.appendChild(el);
     // one sitting faces its desk; one standing faces the room and the camera (its visor looks down -z: turned 3/8 round)
-    const a = { g, b: up, by: standing ? 0.1 : 0, ry: standing ? (opts.face != null ? opts.face : -Math.PI * 0.75) : 0, standing, sit, stand, visorM, chest, ring, ringM, el, home: g.position.clone(), phase: (i + r.x0 * 0.37) % 6.28, key: r.key + ':' + i, room: r, label };
+    const a = { g, b: up, by: standing ? 0.1 : 0, ry: standing ? (o.face != null ? o.face : -Math.PI * 0.75) : 0, standing, sit, stand, visorM, chest, ring, ringM, el, home: g.position.clone(), phase: (i + r.x0 * 0.37) % 6.28, key: r.key + ':' + i, room: r, label, role: o.role || null };
     r.agents.push(a); return a;
   }
+  // The roles' skins, each a few colours over his white suit: the helmet's shell [colour, roughness, metalness] --
+  // the one thing every role shows from every side --, the visor's glass and the tint it lights in at work, the
+  // trim on the shoulders, the arm bands and the pack's panel (trimGlow: the trim itself glows), and where a role
+  // needs them, its own suit, legs, coat, cape or scarf. Studio colours, as his picture's: soft, never neon, the
+  // light only where something glows.
+  static AS = {
+    qa_tester: { helmet: [0xc4532f, 0.18, 0.35], visor: 0x160a08, glow: 0x7a2a0c, trim: 0xe8663a },
+    researcher: { trim: 0x5aaef0 },
+    trader: { helmet: [0xc49035, 0.22, 0.72], visor: 0x6a4a14, glow: 0x7a4a0a, trim: 0xff8a3a, joint: 0x3c4a5c },
+    developer: { helmet: [0x1c9cb4, 0.15, 0.4], visor: 0x021820, glow: 0x00c0e0, trim: 0x2ad0e8, trimGlow: 0.16, joint: 0x2c4e5e },
+    lab_scientist: { helmet: [0x5aa888, 0.16, 0.3], glow: 0x0e7040, trim: 0x38d088, suit: 0xa4b8cc, coat: 0xb4c4d2 },
+    auditor: { helmet: [0x8a9bb0, 0.3, 0.35], glow: 0x1a2c40, trim: 0xb4c2d0, suit: 0x76899f, pack: 0x8c9eb2, joint: 0x3c4a5c },
+    designer: { helmet: [0x9c4cc4, 0.16, 0.38], glow: 0x5a1270, trim: 0xe06ae8, joint: 0x4a4a70, scarf: 0xb04ac8 },
+    manager: { helmet: [0xbccad6, 0.12, 0.3], glow: 0x0a6080, trim: 0x46d8f0, trimGlow: 0.35, suit: 0x9cb6cc, cape: 0x9fcfdf },
+    supervisor: { helmet: [0x1d3656, 0.14, 0.45], trim: 0xf0b040, joint: 0x26384e },
+    referee: { helmet: [0x15181d, 0.12, 0.45], visor: 0x050608, glow: 0x202428, trim: 0xeef2f4, leg: 0x23282f, stripes: true }
+  };
+  // A role's materials, made the first time the role is drawn and kept on OM (as_<role>), so every astronaut in
+  // it shares them and a new layout does not throw them away (release keeps what OM holds). Today's suit for a
+  // role it does not know, and for whatever a role leaves as it was.
+  asSkin(role) {
+    if (!Office3D.AS[role]) {
+      return OM.as_default || (OM.as_default = { suit: OM.rbSuit, torso: OM.rbSuit, hip: OM.rbSuit, leg: OM.rbSuit, joint: OM.rbJoint, pack: OM.rbPack, boot: OM.rbPack,
+        panel: OM.rbJoint, shoulder: OM.rbSuit, patch: OM.rbPatch, helmet: OM.rbHelmet, visor: OM.rbVisor, band: null, trim: OM.rbJoint });
+    }
+    const key = 'as_' + role; if (OM[key]) return OM[key];
+    this.asMats();
+    const d = Office3D.AS[role], c = (hex, o) => std(Object.assign({ color: hex }, o));
+    const suit = d.suit ? c(d.suit, { roughness: 0.6, metalness: 0.06 }) : OM.rbSuit;
+    const trim = c(d.trim, { roughness: 0.4, metalness: 0.22, emissive: d.trimGlow ? d.trim : 0x000000, emissiveIntensity: d.trimGlow || 0 });
+    const pack = d.pack ? c(d.pack, { roughness: 0.5, metalness: 0.08 }) : OM.rbPack, leg = d.leg ? c(d.leg, { roughness: 0.5, metalness: 0.14 }) : suit;
+    const sk = {
+      suit, leg, pack, trim, boot: d.leg ? leg : pack, hip: d.leg ? leg : suit, shoulder: trim, panel: trim, band: trim, patch: pack,
+      torso: d.stripes ? std({ map: this.asTex('stripes'), roughness: 0.55, metalness: 0.06 }) : suit,
+      joint: d.joint ? c(d.joint, { roughness: 0.5, metalness: 0.12 }) : OM.rbJoint,
+      helmet: d.helmet ? c(d.helmet[0], { roughness: d.helmet[1], metalness: d.helmet[2] }) : OM.rbHelmet,
+      visor: d.glow != null ? std({ color: d.visor || 0x08142a, roughness: 0.06, metalness: 0.75, emissive: d.glow, emissiveIntensity: 0.25 }) : OM.rbVisor,
+      coat: d.coat ? c(d.coat, { roughness: 0.78, metalness: 0.02, side: THREE.DoubleSide }) : null,
+      cape: d.cape ? c(d.cape, { roughness: 0.66, metalness: 0.05, side: THREE.DoubleSide }) : null,
+      scarf: d.scarf ? c(d.scarf, { roughness: 0.86, metalness: 0.0 }) : null
+    };
+    return (OM[key] = sk);
+  }
+  // what the kits are made of, shared by every role: graphite for headsets and straps, gold for insignia, a white
+  // card, the lab's glass, a clipboard, a palette; and the shapes: bands over a helmet, rings, a crest, a cape
+  asMats() {
+    if (OM.asDark) return;
+    OM.asDark = std({ color: 0x1b2129, roughness: 0.38, metalness: 0.5 });
+    OM.asGold = std({ color: 0xd4a24a, roughness: 0.3, metalness: 0.85 });
+    OM.asCard = std({ color: 0xdfe6ec, roughness: 0.5, metalness: 0.05 });
+    OM.asYellow = std({ color: 0xffcf2e, roughness: 0.45, emissive: 0x6a4c00, emissiveIntensity: 0.35 });
+    OM.asFlask = std({ color: 0x1c7a4a, roughness: 0.08, metalness: 0.2, emissive: 0x3cf09a, emissiveIntensity: 0.55 });
+    OM.asGlass = std({ color: 0xcfe0ea, roughness: 0.1, metalness: 0.3 });
+    OM.asLens = std({ color: 0x2c7a62, roughness: 0.06, metalness: 0.7, emissive: 0x38d088, emissiveIntensity: 0.18 }); OM.asLens.userData.lit = true;
+    OM.asBoard = std({ color: 0x2c3846, roughness: 0.5, metalness: 0.3 });
+    OM.asPaper = std({ map: this.asTex('paper'), roughness: 0.8, metalness: 0.0 });
+    OM.asPalette = std({ map: this.asTex('palette'), roughness: 0.5, metalness: 0.1 });
+    G.asArc = new THREE.TorusGeometry(1, 0.09, 8, 28, Math.PI);   // over the helmet from side to side (turned: front to back)
+    G.asArcThin = new THREE.TorusGeometry(1, 0.055, 6, 32, Math.PI);
+    // round the front of the visor, level: an arc of 0.7 turns centred on -z
+    G.asArcFront = new THREE.TorusGeometry(1, 0.035, 6, 32, Math.PI * 0.7).rotateZ(-Math.PI * 0.35).rotateX(Math.PI / 2).rotateY(Math.PI / 2);
+    G.asRing = new THREE.TorusGeometry(1, 0.13, 8, 36);
+    G.asScarf = new THREE.TorusGeometry(1, 0.28, 10, 32);
+    G.asHex = new THREE.CylinderGeometry(1, 1, 1, 6);
+    G.asFin = new THREE.CylinderGeometry(1, 1, 1, 32, 1, false, 0.35, 2.1);   // a slice of a disc: the crest, from the back to the visor's top
+    G.asCape = new THREE.CylinderGeometry(0.33, 0.37, 1, 28, 1, true, -1.2, 2.4);   // round the back from the shoulders, open at the front
+    G.asSkirt = new THREE.CylinderGeometry(0.2, 0.23, 1, 28, 1, true, -2.55, 5.1);   // a coat's tails: open at the front
+  }
+  // the small pictures a kit carries: the referee's stripes, the trader's chart on the wrist, the researcher's pad,
+  // the auditor's checklist, the designer's palette, the developer's keys and code in the air
+  asTex(name) {
+    const k = 'as' + name; if (TX[k]) return TX[k];
+    const make = {
+      stripes: [256, 64, (g, W, H) => { g.fillStyle = '#e9edf0'; g.fillRect(0, 0, W, H); g.fillStyle = '#171a1f'; for (let i = 0; i < 10; i++) g.fillRect(i * W / 10, 0, W / 20, H); }],
+      chart: [128, 104, (g, W, H) => {
+        g.fillStyle = '#140b04'; g.fillRect(0, 0, W, H); g.strokeStyle = 'rgba(255,150,70,.18)'; g.lineWidth = 1;
+        for (let y = 20; y < H; y += 20) { g.beginPath(); g.moveTo(6, y); g.lineTo(W - 6, y); g.stroke(); }
+        g.strokeStyle = '#ffa04a'; g.lineWidth = 4; g.beginPath(); [[8, 82], [26, 70], [40, 76], [58, 52], [74, 58], [92, 34], [120, 20]].forEach(([x, y], i) => (i ? g.lineTo(x, y) : g.moveTo(x, y))); g.stroke();
+        g.fillStyle = '#38f5b8'; g.fillRect(96, 8, 26, 9); g.fillStyle = 'rgba(255,160,74,.5)'; for (let i = 0; i < 7; i++) g.fillRect(10 + i * 16, 96 - (i * 7) % 14, 9, (i * 7) % 14 + 4);
+      }],
+      pad: [128, 168, (g, W, H) => {
+        g.fillStyle = '#06131f'; g.fillRect(0, 0, W, H); g.fillStyle = '#8fd0ff'; g.fillRect(12, 14, 64, 9);
+        g.fillStyle = 'rgba(143,208,255,.45)'; for (let i = 0; i < 6; i++) g.fillRect(12, 36 + i * 13, 104 - (i * 23) % 50, 5);
+        g.strokeStyle = '#38f5b8'; g.lineWidth = 3; g.beginPath(); [[12, 150], [36, 132], [58, 140], [84, 116], [116, 122]].forEach(([x, y], i) => (i ? g.lineTo(x, y) : g.moveTo(x, y))); g.stroke();
+      }],
+      paper: [128, 176, (g, W, H) => {
+        g.fillStyle = '#e8edf1'; g.fillRect(0, 0, W, H); g.fillStyle = '#5a6a7c'; g.fillRect(14, 16, 70, 8);
+        for (let i = 0; i < 8; i++) { const y = 40 + i * 16; g.fillStyle = '#9aa8b6'; g.fillRect(34, y, 80 - (i * 17) % 34, 4); g.strokeStyle = i < 5 ? '#1f9c6a' : '#9aa8b6'; g.lineWidth = 3; g.beginPath(); if (i < 5) { g.moveTo(14, y + 1); g.lineTo(19, y + 6); g.lineTo(27, y - 4); } else g.strokeRect(14, y - 4, 10, 10); g.stroke(); }
+      }],
+      palette: [128, 128, (g, W) => {
+        g.fillStyle = '#d9dee4'; g.fillRect(0, 0, W, W); g.fillStyle = '#c8ced6'; g.beginPath(); g.arc(88, 64, 13, 0, Math.PI * 2); g.fill();
+        ['#ff5a8a', '#9c5cff', '#24e8ff', '#38f5b8', '#ffcc4a', '#ff8824'].forEach((col, i) => { const a = 1.9 + i * 0.62; g.fillStyle = col; g.beginPath(); g.arc(64 + Math.cos(a) * 40, 64 + Math.sin(a) * 40, 11, 0, Math.PI * 2); g.fill(); });
+      }],
+      keys: [256, 88, (g, W, H) => {
+        g.fillStyle = '#000'; g.fillRect(0, 0, W, H); g.strokeStyle = 'rgba(58,232,255,.85)'; g.lineWidth = 2; g.strokeRect(3, 3, W - 6, H - 6);
+        g.fillStyle = 'rgba(58,232,255,.55)'; for (let r = 0; r < 4; r++) for (let c = 0; c < 12; c++) { if (r === 3 && c > 2 && c < 9) continue; g.fillRect(12 + c * 19.5, 10 + r * 18.5, 15, 14); } g.fillRect(12 + 3 * 19.5, 10 + 3 * 18.5, 19.5 * 6 - 4, 14);
+      }],
+      code: [128, 80, (g, W, H) => {
+        g.fillStyle = '#000'; g.fillRect(0, 0, W, H); g.strokeStyle = 'rgba(58,232,255,.8)'; g.lineWidth = 2; g.strokeRect(2, 2, W - 4, H - 4);
+        [[8, 34, '#5af0ff'], [16, 60, 'rgba(90,240,255,.6)'], [16, 44, 'rgba(90,240,255,.6)'], [24, 70, 'rgba(56,245,184,.7)'], [16, 30, 'rgba(90,240,255,.6)'], [8, 20, '#5af0ff']].forEach(([x, w, col], i) => { g.fillStyle = col; g.fillRect(x + 4, 10 + i * 11, w, 5); });
+      }]
+    }[name];
+    return (TX[k] = ctex(make[0], make[1], make[2]));
+  }
+  // a kit's light: a small part that glows (a lens, a tip, a beacon), one material per colour
+  asGlow(hex, k) { const key = 'asGlow' + hex + k; if (!OM[key]) { OM[key] = emis(hex, k); OM[key].userData.lit = true; } return OM[key]; }
+  // a picture that lights itself (a wrist screen, a pad), or one that hangs in the air (a holo keyboard, code)
+  asScreen(name) { const key = 'asScr_' + name; return OM[key] || (OM[key] = new THREE.MeshBasicMaterial({ map: this.asTex(name), color: new THREE.Color(0xffffff).multiplyScalar(0.9), toneMapped: false })); }
+  asHolo(name) { const key = 'asHolo_' + name; return OM[key] || (OM[key] = new THREE.MeshBasicMaterial({ map: this.asTex(name), transparent: true, opacity: 0.85, blending: THREE.AdditiveBlending, depthWrite: false, side: THREE.DoubleSide, toneMapped: false })); }
+  // a part of a kit: at p, scaled s (one number or three), turned rot. What lights itself (a lens, a tip, a screen,
+  // a pane of light) casts no shadow: a pane of light has none, and a lit speck's would cost a draw call for nothing
+  asM(geom, mat, p, s, rot) {
+    const m = new THREE.Mesh(geom, mat); m.position.set(p[0], p[1], p[2]);
+    if (s != null) { if (typeof s === 'number') m.scale.setScalar(s); else m.scale.set(s[0], s[1], s[2]); }
+    if (rot) m.rotation.set(rot[0], rot[1], rot[2]);
+    m.castShadow = !(mat.isMeshBasicMaterial || mat.userData.lit); m.receiveShadow = !mat.isMeshBasicMaterial; return m;
+  }
+  // a disc or a badge lying on a surface: its axis along the surface's normal n
+  asOn(geom, mat, p, n, s) {
+    const m = this.asM(geom, mat, p, s); m.quaternion.setFromUnitVectors(new THREE.Vector3(0, 1, 0), new THREE.Vector3(n[0], n[1], n[2]).normalize()); return m;
+  }
+  // a rod from a to b, r thick: an antenna, a microphone's boom, a stylus, a lanyard
+  asRod(mat, a, b, r) {
+    const A = new THREE.Vector3(a[0], a[1], a[2]), B = new THREE.Vector3(b[0], b[1], b[2]), d = B.clone().sub(A), m = new THREE.Mesh(G.cyl8, mat);
+    m.position.copy(A).add(B).multiplyScalar(0.5); m.quaternion.setFromUnitVectors(new THREE.Vector3(0, 1, 0), d.clone().normalize()); m.scale.set(r, d.length(), r);
+    m.castShadow = true; return m;
+  }
+  // parts drawn in a frame of their own (a pad held at an angle, a screen on a forearm), placed back in the group's
+  // frame: they stay the group's own children, so rbBake merges them with the rest of that half
+  asRig(p, rot, parts) {
+    const f = new THREE.Object3D(); f.position.set(p[0], p[1], p[2]); f.rotation.set(rot[0], rot[1], rot[2]); f.updateMatrix();
+    parts.forEach((m) => { m.updateMatrix(); m.applyMatrix4(f.matrix); }); return parts;
+  }
+  // a screen on the wrist, in its own frame: a dark bezel, the picture facing -z
+  asWrist(name) {
+    return [this.asM(rboxGeo(0.085, 0.07, 0.016, 0.006), OM.rbGloss, [0, 0, 0]), this.asM(G.plane, this.asScreen(name), [0, 0, -0.0086], [0.074, 0.06, 1], [0, Math.PI, 0])];
+  }
+  // the auditor's clipboard, in its own frame: a board standing in the y-z plane, its sheet facing -x, the clip on top
+  asClipboard() {
+    return [this.asM(rboxGeo(0.012, 0.225, 0.165, 0.005), OM.asBoard, [0, 0, 0]), this.asM(G.plane, OM.asPaper, [-0.0068, -0.012, 0], [0.142, 0.19, 1], [0, -Math.PI / 2, 0]),
+      this.asM(G.box, OM.rbCollar, [-0.006, 0.1, 0], [0.016, 0.03, 0.06])];
+  }
+  // What each role wears and carries: up is the upper body (helmet height 1.15, chest -z, pack +z), sit the seated
+  // arms and legs (hands at 0.17, 0.665, -0.5), stand the standing ones (hands at the sides, 0.252, 0.52, -0.05,
+  // built 0.1 higher than the seated body). A role's own colour is sk.trim.
+  static AS_KIT = {
+    // the QA tester: an inspection lamp on the helmet's right, a magnifying glass in the hand -- the bug hunter
+    qa_tester: {
+      up: (o, g, sk) => g.add(o.asM(G.cyl, OM.asDark, [0.2, 1.225, -0.045], [0.03, 0.09, 0.03], [Math.PI / 2, 0, 0]),
+        o.asM(G.cyl, o.asGlow('#ff7a45', 1.8), [0.2, 1.225, -0.092], [0.024, 0.008, 0.024], [Math.PI / 2, 0, 0])),
+      stand: (o, g, sk) => g.add(...o.asRig([0.255, 0.5, -0.06], [0.6, 0, 0], [o.asM(G.cyl8, OM.asDark, [0, -0.06, 0], [0.015, 0.1, 0.015]),
+        o.asM(G.asRing, sk.trim, [0, -0.18, 0], 0.07), o.asM(G.cyl, o.asGlow('#ffb08a', 0.35), [0, -0.18, 0], [0.064, 0.006, 0.064], [Math.PI / 2, 0, 0])]))
+    },
+    // the researcher: the reference's own blue helmet with an antenna on its left, a data pad in the hand
+    researcher: {
+      up: (o, g) => g.add(o.asRod(OM.rbCollar, [-0.1, 1.28, 0.04], [-0.145, 1.46, 0.06], 0.007), o.asM(G.sphere, o.asGlow('#8fd0ff', 1.6), [-0.146, 1.466, 0.06], 0.019)),
+      stand: (o, g) => g.add(...o.asRig([-0.245, 0.5, -0.09], [0.2, 0.45, 0], [o.asM(rboxGeo(0.15, 0.2, 0.014, 0.012), OM.rbGloss, [0.02, -0.04, 0]),
+        o.asM(G.plane, o.asScreen('pad'), [0.02, -0.04, -0.0076], [0.13, 0.18, 1], [0, Math.PI, 0])]))
+    },
+    // the trader: a headset with its microphone over a gold helmet, a chart on the left wrist
+    trader: {
+      up: (o, g, sk) => g.add(o.asM(G.asArc, OM.asDark, [0, 1.15, 0.03], 0.224),
+        ...[-1, 1].map((s) => o.asM(G.cyl, OM.asDark, [s * 0.212, 1.15, 0.03], [0.062, 0.05, 0.062], [0, 0, Math.PI / 2])),
+        ...[-1, 1].map((s) => o.asM(G.cyl, sk.trim, [s * 0.238, 1.15, 0.03], [0.046, 0.008, 0.046], [0, 0, Math.PI / 2])),
+        o.asRod(OM.asDark, [0.22, 1.12, -0.01], [0.1, 1.05, -0.218], 0.008), o.asM(G.sphere, o.asGlow('#ff9a40', 1.5), [0.094, 1.047, -0.226], 0.02)),
+      sit: (o, g) => g.add(...o.asRig([-0.19, 0.69, -0.33], [1.38, 0, 0], o.asRig([0, -0.075, -0.058], [0, 0, 0], o.asWrist('chart')))),
+      stand: (o, g) => g.add(...o.asRig([-0.248, 0.68, -0.025], [0.14, 0, -0.05], o.asRig([-0.045, -0.07, -0.035], [0, Math.PI / 2 - 0.6, 0], o.asWrist('chart'))))
+    },
+    // the developer: a teal helmet, a line of light round its visor and a pane of code before it, a keyboard of
+    // light at its hands when it stands
+    developer: {
+      up: (o, g) => g.add(o.asM(G.asArcFront, o.asGlow('#5af0ff', 2.2), [0, 1.215, -0.085], [0.168, 0.168, 0.128]),
+        o.asM(G.plane, o.asHolo('code'), [-0.075, 1.2, -0.275], [0.13, 0.08, 1], [0, 0.35, 0])),
+      stand: (o, g) => g.add(o.asM(G.plane, o.asHolo('keys'), [0, 0.62, -0.25], [0.38, 0.13, 1], [-1.15, 0, 0]))
+    },
+    // the lab scientist: a white coat over the suit with pens in its pocket, goggles pushed up on a green helmet,
+    // the coat's tails and a flask while it stands
+    lab_scientist: {
+      up: (o, g, sk) => {
+        // the coat's body, and a band where it meets the hips (the capsule's lower cap would show its facets there)
+        g.add(o.asM(G.rbTorso, sk.coat, [0, 0.725, 0.03], [1.12, 1.04, 0.99]), o.asM(G.cyl, sk.coat, [0, 0.6, 0.03], [0.192, 0.06, 0.172]));
+        g.add(o.asM(rboxGeo(0.056, 0.06, 0.012, 0.004), sk.coat, [0.136, 0.835, -0.086], 1, [0, -0.76, 0]),
+          o.asRod(sk.trim, [0.128, 0.85, -0.094], [0.128, 0.905, -0.094], 0.006), o.asRod(OM.asDark, [0.145, 0.85, -0.084], [0.145, 0.896, -0.084], 0.006));
+        g.add(o.asM(G.asRing, OM.asDark, [0, 1.29, 0.01], 0.152, [Math.PI / 2, 0, 0]));
+        [-1, 1].forEach((s) => {
+          g.add(o.asOn(G.cyl, OM.asDark, [s * 0.06, 1.302, -0.1295], [s * 0.28, 0.71, -0.65], [0.042, 0.022, 0.042]));
+          g.add(o.asOn(G.cyl, OM.asLens, [s * 0.0633, 1.3106, -0.137], [s * 0.28, 0.71, -0.65], [0.034, 0.008, 0.034]));
+        });
+      },
+      stand: (o, g, sk) => g.add(o.asM(G.asSkirt, sk.coat, [0, 0.47, 0.03], [0.92, 0.3, 1.0]),
+        o.asM(G.cone, OM.asFlask, [0.258, 0.37, -0.065], [0.046, 0.09, 0.046]), o.asM(G.cyl8, OM.asGlass, [0.258, 0.45, -0.062], [0.014, 0.08, 0.014]))
+    },
+    // the auditor: steel grey-blue, an ID card on a lanyard, a clipboard -- at its side while it stands, propped by
+    // its chair while it sits
+    auditor: {
+      up: (o, g) => g.add(o.asRod(OM.asDark, [0.11, 0.975, -0.05], [0.125, 0.725, -0.09], 0.005),
+        o.asM(rboxGeo(0.06, 0.08, 0.008, 0.004), OM.asCard, [0.128, 0.69, -0.088], 1, [0, -0.72, 0])),
+      sit: (o, g) => g.add(...o.asRig([-0.262, 0.47, -0.16], [0, -0.45, 0.1], o.asClipboard())),
+      stand: (o, g) => g.add(...o.asRig([-0.285, 0.44, -0.07], [0.05, -0.6, 0.06], o.asClipboard()))
+    },
+    // the designer: a violet helmet, a scarf, a stylus with a lit tip, a palette while it stands
+    designer: {
+      up: (o, g, sk) => g.add(o.asM(G.asScarf, sk.scarf, [0, 0.975, 0.0], 0.152, [Math.PI / 2 + 0.1, 0, 0]),
+        o.asM(rboxGeo(0.07, 0.24, 0.028, 0.012), sk.scarf, [-0.13, 0.86, -0.095], 1, [-0.1, 0.6, 0.06])),
+      sit: (o, g) => g.add(o.asRod(OM.rbMouse, [0.18, 0.7, -0.47], [0.15, 0.53, -0.58], 0.009), o.asM(G.sphere, o.asGlow('#ff5ae0', 1.8), [0.149, 0.526, -0.583], 0.013)),
+      stand: (o, g) => g.add(...o.asRig([-0.275, 0.47, -0.07], [0, -0.6, Math.PI / 2], [o.asM(G.cyl, OM.asPalette, [0, 0, 0], [0.1, 0.012, 0.078])]),
+        o.asRod(OM.rbMouse, [0.252, 0.575, -0.035], [0.262, 0.4, -0.125], 0.009), o.asM(G.sphere, o.asGlow('#ff5ae0', 1.8), [0.263, 0.396, -0.127], 0.014))
+    },
+    // the Manager: a pale helmet with a crest of cyan light, a captain's gold epaulettes, a short cape while it stands
+    manager: {
+      up: (o, g, sk) => g.add(o.asM(G.asFin, sk.trim, [0, 1.15, 0.01], [0.232, 0.03, 0.232], [0, 0, Math.PI / 2]),
+        ...[-1, 1].map((s) => o.asM(rboxGeo(0.12, 0.026, 0.15, 0.012), OM.asGold, [s * 0.2, 0.998, 0.0], 1, [0, 0, s * -0.3]))),
+      stand: (o, g, sk) => g.add(o.asM(G.asCape, sk.cape, [0, 0.9, 0.04], [1, 0.42, 1]))
+    },
+    // the weekly audit's Supervisor: a navy helmet with an amber beacon on top, a gold badge
+    supervisor: {
+      up: (o, g) => g.add(o.asM(G.cyl, OM.asDark, [0, 1.352, 0.01], [0.042, 0.03, 0.042]), o.asM(G.hemi, o.asGlow('#ffb44a', 1.7), [0, 1.366, 0.01], [0.034, 0.04, 0.034]),
+        o.asOn(G.asHex, OM.asGold, [-0.122, 0.7, -0.087], [-0.63, 0, -0.77], [0.04, 0.012, 0.046]))
+    },
+    // the League's Referee: a striped shirt, dark legs, a black helmet with a white band over it, a whistle on a
+    // lanyard, a yellow card in the hand
+    referee: {
+      up: (o, g, sk) => g.add(o.asM(G.asArcThin, sk.trim, [0, 1.15, 0.01], 0.207, [0, Math.PI / 2, 0]),
+        o.asM(G.cyl8, OM.rbCollar, [0.075, 0.885, -0.2], [0.016, 0.052, 0.016], [0, 0, Math.PI / 2]), o.asRod(OM.asDark, [0.1, 0.975, -0.07], [0.06, 0.888, -0.195], 0.005)),
+      stand: (o, g) => g.add(...o.asRig([0.262, 0.49, -0.085], [0.5, 0, 0], [o.asM(rboxGeo(0.062, 0.088, 0.006, 0.004), OM.asYellow, [0, -0.04, -0.01])]))
+    }
+  };
   // A room's plate: what update() says about the room -- its name, its dot, its status, its ET10. Not hung over
   // the room any more: callouts() stands it in the free space round the platform, joined to the room by a line.
   plate(r, cls) {
@@ -3590,8 +3831,8 @@ class Office3D {
       this.rcWorkstation(r, x0 + 3.4, y0 + 2.6, 0);
       this.holoFrame(r, x0 + 0.72, y0 + 3.98);
       const ex = d.experts.slice(0, 2);
-      if (ex[0]) this.agent(r, x0 + 4.35, y0 + 3.9, 0, CO.expertName(ex[0]));
-      if (ex[1]) this.agent(r, x0 + 1.6, y0 + 4.9, 1, CO.expertName(ex[1]), { stand: true });
+      if (ex[0]) this.agent(r, x0 + 4.35, y0 + 3.9, 0, CO.expertName(ex[0]), { role: ex[0] });
+      if (ex[1]) this.agent(r, x0 + 1.6, y0 + 4.9, 1, CO.expertName(ex[1]), { stand: true, role: ex[1] });
       this.terminal(r, x0 + 0.3, y0 + 0.28, d.link || CO.DEPT_LINK[k] || CO.DEPT_LINK.custom);
       this.plant(r, x0 + 0.45, y0 + 6.5);
       this.plate(r);
@@ -3649,10 +3890,10 @@ class Office3D {
     ex.forEach((e, i) => { this.desk(r, x0 + xs[i], y0 + 2.75, i, isOrange); if (isOrange) this.sideScreens(r, x0 + xs[i], y0 + 2.75); });
     // his rooms each have a see-through screen in a yellow-green frame on a stand, by the left wall
     this.holoFrame(r, x0 + 0.75, y0 + 2.2);
-    ex.forEach((e, i) => this.agent(r, x0 + xs[i] + 0.95, y0 + 4.05, i, CO.expertName(e)));
+    ex.forEach((e, i) => this.agent(r, x0 + xs[i] + 0.95, y0 + 4.05, i, CO.expertName(e), { role: e }));
     // his League's referee stands behind the desk, towards the back corner, watching the round
     if (d.run_kind === 'league' && ex.length < 3) {
-      this.agent(r, x0 + 2.2, y0 + 1.75, ex.length, 'Referee', { stand: true });
+      this.agent(r, x0 + 2.2, y0 + 1.75, ex.length, 'Referee', { stand: true, role: 'referee' });
     }
     this.terminal(r, x0 + 0.3, y0 + 0.32, d.link || CO.DEPT_LINK[k] || CO.DEPT_LINK.custom);
     // his League keeps its floor open along the front glass: no cabinet there
@@ -4345,7 +4586,7 @@ class Office3D {
       this.sideScreens(r, x0 + xs[i], y0 + ys[i], i === 0 || ex.length < 3, i === ex.length - 1 || ex.length < 3);
     });
     this.holoFrame(r, x0 + 0.75, y0 + 3.75);
-    ex.forEach((e, i) => this.agent(r, x0 + xs[i] + 0.95, y0 + ys[i] + 1.3, i, CO.expertName(e)));
+    ex.forEach((e, i) => this.agent(r, x0 + xs[i] + 0.95, y0 + ys[i] + 1.3, i, CO.expertName(e), { role: e }));
     this.terminal(r, x0 + 0.3, y0 + 0.32, d.link || CO.DEPT_LINK[k] || CO.DEPT_LINK.custom);
     // its computer's screen in the room's orange: a green one was the only cold light in his warm room
     if (r.pcFace) r.pcFace.map = this.rcTex('pcOrange');
@@ -4402,7 +4643,7 @@ class Office3D {
     });
     r.core = core; r.coreAt = this.V(x0 + 3.0, y0 + 2.8, 2.75);   // his "need you" badge: over the rings, a little behind the core
     const light = new THREE.PointLight(0x00e5ff, 4.2, 11, 1.6); light.position.set(c.x, 1.8, c.z); g.add(light);
-    this.agent(r, x0 + 3.8, y0 + 5.85, 0, 'Manager', { stand: true });
+    this.agent(r, x0 + 3.8, y0 + 5.85, 0, 'Manager', { stand: true, role: 'manager' });
     this.plant(r, x0 + 6.4, y0 + 0.5);
     this.plate(r, 'hubp'); r.plateAt = this.V(x0 + 6.1, y0 + 6.75, 1.3);
     r.need = document.createElement('div'); r.need.className = 'p3need'; r.need.addEventListener('click', () => CO.emit('office:click', 'hub')); this.layer.appendChild(r.need);
@@ -4417,7 +4658,7 @@ class Office3D {
     this.console3(r, x0 + 1.1, y0 + 3.95, Math.PI / 2, 1);
     this.wallScreen(r, 1.6, 5.4);
     this.desk(r, x0 + 2.9, y0 + 1.9, 0, false);
-    this.agent(r, x0 + 3.85, y0 + 3.2, 0, 'Supervisor');
+    this.agent(r, x0 + 3.85, y0 + 3.2, 0, 'Supervisor', { role: 'supervisor' });
     this.raPrinter(r, x0 + 6.08, y0 + 5.75, -Math.PI / 2);
     this.cabinet(r, x0 + 6.45, y0 + 2.6, 0.45, 2.2, 0.72);
     this.plant(r, x0 + 0.45, y0 + 6.5);
