@@ -283,41 +283,60 @@ b.g, span.g { color: var(--green); text-shadow: 0 0 10px rgba(0, 255, 136, .45);
   background: rgba(6, 9, 15, .95); border: 1px solid var(--line3); box-shadow: 0 8px 24px rgba(0, 0, 0, .45); color: var(--dim); }
 .tip b { color: var(--text); } .tip .c { color: var(--cyan); } .tip .g { color: var(--green); } .tip .r { color: var(--red); } .tip .bl { color: var(--blue); }
 
-/* the SVG office: the 3D office's light, drawn flat -- a white lamp over every room, the room's own colour on its
-   floor while it works or waits, Cymetica green round the edge and along the idle corridors */
-.office .flow { stroke: var(--green); stroke-dasharray: 3 6; opacity: .28; animation: flow 1.6s linear infinite; }
-.office .flow.hot { stroke: var(--cyan); opacity: .95; animation-duration: .7s; filter: drop-shadow(0 0 2.5px rgba(0, 207, 255, .9)); }
-.office.paused .flow { animation-play-state: paused; opacity: .2; }
-@keyframes flow { to { stroke-dashoffset: -9; } }
-.office .pedge { opacity: .55; filter: drop-shadow(0 0 2px rgba(0, 255, 136, .45)); }
-.office .pedge2 { opacity: .07; filter: url(#glow2); }
-.office .lamp { mix-blend-mode: screen; }
-.office .fglow { fill: url(#g-fglow); opacity: 0; transition: opacity .8s; mix-blend-mode: screen; }
+/* The flat office: the 3D office (u3d.js) drawn flat, in its colours -- the navy sky with its teal haze and stars,
+   a slate deck on a plated hull, slate-blue tiled floors in pale frosted glass, one mint neon line round every room,
+   orange in the trading desk and while a room waits on you; dim white lanes that light cyan while work runs. */
+#office { background: var(--stars, none) 0 0 / 620px 620px repeat,
+    radial-gradient(ellipse 80% 75% at 50% 50%, transparent 62%, rgba(3, 7, 12, .55) 100%),
+    radial-gradient(ellipse 14% 9% at 15% 13%, rgba(40, 150, 160, .22), transparent 70%),
+    radial-gradient(ellipse 10% 16% at 9% 38%, rgba(34, 140, 150, .18), transparent 70%),
+    radial-gradient(ellipse 30% 26% at 17% 20%, rgba(24, 110, 122, .3), transparent 72%),
+    radial-gradient(ellipse 22% 30% at 7% 48%, rgba(18, 92, 106, .24), transparent 70%),
+    radial-gradient(ellipse 24% 14% at 33% 9%, rgba(28, 120, 132, .2), transparent 70%),
+    radial-gradient(ellipse 18% 16% at 12% 78%, rgba(16, 80, 96, .18), transparent 70%),
+    radial-gradient(ellipse 20% 18% at 88% 14%, rgba(16, 70, 90, .1), transparent 70%), #06111c; }
+.office .flow { stroke: #cfdde6; stroke-width: 1.7; stroke-dasharray: 8.8 6.6; opacity: .3; transition: stroke .4s, opacity .4s; }
+.office .flow.hot { stroke: #46d8f0; opacity: .95; animation: flow .9s linear infinite; filter: drop-shadow(0 0 2.5px rgba(70, 216, 240, .9)); }
+.office.paused .flow.hot { animation-play-state: paused; opacity: .5; }
+@keyframes flow { to { stroke-dashoffset: -15.4; } }
+.office .lamp { mix-blend-mode: screen; pointer-events: none; }
+.office .fglow { fill: url(#g-fglow); opacity: 0; transition: opacity .8s; mix-blend-mode: screen; pointer-events: none; }
 .office .st-working .fglow { opacity: 1; animation: glowp 2.6s ease-in-out infinite; }
-.office .st-waiting .fglow { fill: url(#g-fglow-r); opacity: .9; }
+.office .st-waiting .fglow, .office .orange .fglow { fill: url(#g-fglow-o); opacity: 1; animation: none; }
+.office .room[data-key="vault"] .fglow { opacity: .75; } .office .room.closed .fglow { opacity: .25; }
 @keyframes glowp { 50% { opacity: .55; } }
-.office .fping { opacity: 0; }
+.office .fping { opacity: 0; pointer-events: none; }
 .office .ping .fping { animation: ping .9s ease-out; }
 .office .ping-g .fping { fill: url(#g-halo-g); } .office .ping-r .fping { fill: url(#g-halo-r); }
 @keyframes ping { 0% { opacity: .9; } 100% { opacity: 0; } }
-.office .edge { stroke: var(--green); opacity: .32; transition: stroke .4s, opacity .4s; }
-.office .edge2 { stroke: var(--cyan); opacity: 0; filter: url(#glow2); }
-.office .st-working .edge { stroke: var(--cyan); opacity: .95; }
-.office .st-working .edge2 { opacity: .35; animation: glowp 2.6s ease-in-out infinite; }
-.office .st-waiting .edge { stroke: var(--red); opacity: .8; }
-.office .sill { stroke: var(--green); opacity: .14; }
-.office .st-working .sill { stroke: var(--cyan); opacity: .7; }
+/* the neon: one soft line with its glow; brighter while the room works */
+.office .neon, .office .neonG { stroke: #7cf2c4; stroke-linejoin: round; stroke-linecap: round; pointer-events: none; transition: stroke .4s, opacity .4s; }
+.office .neon { stroke-width: 1.5; opacity: .88; }
+.office .neonG { stroke-width: 5; opacity: .26; filter: url(#glow2); }
+.office .st-working .neon { opacity: 1; } .office .st-working .neonG { opacity: .5; animation: glowp 2.6s ease-in-out infinite; }
+.office .orange .neon, .office .st-waiting .neon, .office .orange .neonG, .office .st-waiting .neonG { stroke: #ff8a3a; }
+.office .orange .neonG, .office .st-waiting .neonG { opacity: .5; }
+/* the glass: pale panes and a thin pale line along their edges; nothing in them takes the mouse */
+.office .pane, .office .gedge, .office .hl { pointer-events: none; }
+.office .orange .pane { fill: url(#g-paneO); }
+.office .gedge { fill: none; stroke: #b4cbd4; stroke-width: .7; opacity: .36; }
 .office .room { transition: opacity .3s; }
-.office .room.hover .slab polygon:last-child { fill: #1c2531; }
-.office .room.hover .edge { opacity: 1; }
+.office .room .hl { opacity: 0; transition: opacity .2s; }
+.office .room.hover .hl { opacity: 1; }
+.office .room.hover .neon { opacity: 1; } .office .room.hover .neonG { opacity: .6; }
 .office .room.hover .hit, .office .plate, .office .room { cursor: pointer; }
-.office .room.lot.hover .lotf { opacity: .95; stroke: var(--cyan); }
-.office .lotc { animation: lotp 2.4s ease-in-out infinite; transform-box: fill-box; transform-origin: center; }
-@keyframes lotp { 50% { transform: scale(1.08); } }
+/* the free lot: its square of lane dashes, and the pad's wall of light breathing */
+.office .lotf { stroke: #dfeaf0; stroke-width: 2; stroke-dasharray: 9.2 6.6; opacity: .55; transition: opacity .2s; }
+.office .room.lot.hover .lotf { opacity: .95; }
+.office .padw { animation: lotp 2.8s ease-in-out infinite; }
+.office .room.lot.hover .padw { animation: none; }
+@keyframes lotp { 50% { opacity: .7; } }
 .office .room.born { animation: rise 1.4s cubic-bezier(.2, .9, .3, 1.2); }
 @keyframes rise { 0% { opacity: 0; transform: translateY(-40px); } 60% { opacity: 1; } 100% { transform: none; } }
+/* a desk's screens: dark glass, mint while its expert works, orange in the trading desk */
 .office .mon { transition: fill .4s; }
-.office .mon.on { fill: var(--cyan); }
+.office .mon.on { fill: #7cf2c4; }
+.office .orange .mon { fill: #ffae52; }
 /* the department's computer: opens its page on cymetica.com */
 .office .pc { cursor: pointer; }
 .office .pc .pcarrow { pointer-events: none; }
@@ -333,46 +352,57 @@ b.g, span.g { color: var(--green); text-shadow: 0 0 10px rgba(0, 255, 136, .45);
 .office .earned.pop { animation: etpop 1.2s ease-out; }
 @keyframes etpop { 0% { opacity: 0; } 40% { opacity: 1; } }
 .office .code { opacity: 0; transition: opacity .4s; }
-.office .mon.on + .code { opacity: 1; }
+.office .mon.on + .code, .office .orange .code { opacity: 1; }
 .office .ln { transform-box: fill-box; transform-origin: left center; animation: type 2.8s steps(7) infinite; }
 @keyframes type { 0% { transform: scaleX(0); } 70%, 100% { transform: scaleX(1); } }
 .office .spill { opacity: 0; transition: opacity .5s; } .office .spill.on { opacity: 1; }
-.office .agent .ring { fill: none; stroke: var(--cyan); stroke-width: 1.4; opacity: 0; transform-box: fill-box; transform-origin: center; }
+/* the astronauts: a cyan ring at the feet of whoever works, the light on their chest unit lit */
+.office .agent .ring { fill: none; stroke: #24e8ff; stroke-width: 1.4; opacity: 0; transform-box: fill-box; transform-origin: center; }
 .office .agent .ring2 { fill: url(#g-halo-c); opacity: 0; transition: opacity .4s; }
 .office .agent.working .ring { animation: ring 1.7s ease-out infinite; }
-.office .agent.working .ring2 { opacity: .35; }
+.office .agent.working .ring2 { opacity: .3; }
 @keyframes ring { 0% { opacity: .9; transform: scale(.7); } 100% { opacity: 0; transform: scale(1.5); } }
-.office .agent .body { fill: url(#gb-slate); transition: fill .3s; }
-.office .agent.working .body { fill: url(#gb-cyan); }
+.office .agent .body { fill: url(#g-suit); }
+.office .agent .chest { fill: #38f2b8; opacity: .6; transition: fill .3s, opacity .3s; }
+.office .agent.working .chest { fill: #7ff4ff; opacity: 1; }
 .office .agent.working .bob { animation: bob .9s ease-in-out infinite; }
 .office .agent.walking .bob { animation: walk .45s ease-in-out infinite; }
-/* a name tag rides only on someone at their desk: a walker's tag would cross a colleague's */
-.office .agent .lbl { transition: opacity .25s; } .office .agent.walking .lbl { opacity: 0; }
+/* name tags as in 3D: only in the room under the mouse or the one open, and never on a walker (it would cross a
+   colleague's) */
+.office .agent .lbl { opacity: 0; transition: opacity .25s; pointer-events: none; }
+.office .room.hover .agent .lbl, .office .room.sel .agent .lbl { opacity: 1; }
+.office .room .agent.walking .lbl { opacity: 0; }
 @keyframes bob { 50% { transform: translateY(-1.2px); } }
 @keyframes walk { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-2px); } }
-.office .agent .lbl rect { fill: var(--bg); stroke: var(--dim2); stroke-width: .7; opacity: .92; }
-.office .agent.working .lbl rect { stroke: var(--cyan); }
+.office .agent .lbl rect { fill: rgba(10, 18, 28, .92); stroke: #24e8ff; stroke-width: .7; }
 .office .led { animation: blink 1.3s steps(2) infinite; }
 @keyframes blink { 50% { opacity: .25; } }
-.office .dev { animation: devp 3s ease-in-out infinite; } @keyframes devp { 50% { opacity: .45; } }
-.office .bub { animation: bub 1.8s ease-in infinite; } @keyframes bub { 0% { transform: translateY(0); opacity: .9; } 100% { transform: translateY(-9px); opacity: 0; } }
-.office .liq { animation: devp 2.2s ease-in-out infinite; }
-.office .lastc { animation: blink .9s steps(2) infinite; }
-.office .shim { animation: shim 1.5s linear infinite; }
+@keyframes devp { 50% { opacity: .45; } }
+.office .crys { animation: devp 3.2s ease-in-out infinite; }
+/* the run bar's shimmer moves by its own width: measured against the view instead, it carried the office's
+   bounds (and so the fit) off the stage */
+.office .shim { transform-box: fill-box; animation: shim 1.5s linear infinite; }
 @keyframes shim { from { transform: translateX(-40%); } to { transform: translateX(240%); } }
 .office .note-run { animation: devp 1.2s ease-in-out infinite; }
+/* the Manager's hologram: the column of light and the core breathing, the rings of light pulsing in turn */
 .office .beam { animation: beam 2.2s ease-in-out infinite; } @keyframes beam { 50% { opacity: .55; } }
-.office .holo { stroke-dasharray: 18 7; animation: holo 6s linear infinite; }
-.office .holo.h1 { animation-duration: 4.5s; animation-direction: reverse; } .office .holo.h2 { animation-duration: 3.2s; }
-@keyframes holo { to { stroke-dashoffset: -150; } }
+.office .holo { animation: holo 2.4s ease-in-out infinite; }
+.office .holo.h1 { animation-delay: -.8s; } .office .holo.h2 { animation-delay: -1.6s; }
+@keyframes holo { 50% { opacity: .55; } }
 .office .holo-core { animation: glowp 2s ease-in-out infinite; }
 .office .mote { animation: mote 3.2s linear infinite; } @keyframes mote { 0% { transform: translateY(0); opacity: 0; } 15% { opacity: 1; } 100% { transform: translateY(-62px); opacity: 0; } }
-.office.paused .holo, .office.paused .mote, .office.paused .beam { animation-play-state: paused; }
-.office .scan { stroke-dasharray: 10 90; animation: holo 2.4s linear infinite; }
-.office .pdot { animation: dotp 1.4s ease-in-out infinite; }
-.office .bdg { animation: dotp 1.6s ease-in-out infinite; }
+.office.paused .holo, .office.paused .mote, .office.paused .beam, .office.paused .holo-core { animation-play-state: paused; }
 .office .selring { animation: sel 1.6s ease-in-out infinite; } @keyframes sel { 50% { opacity: .5; } }
-.office .plate:hover rect:first-child { stroke-width: 1.6; }
+/* the plates, as the 3D office's: dark glass with a pale frame, framed and lit in the room's colour under the mouse
+   or when open; the pill over the Manager orange while something needs you */
+.office .plate .pbg { fill: rgba(14, 22, 32, .86); stroke: rgba(200, 215, 228, .3); stroke-width: .7; transition: stroke .2s; }
+.office .plate .pglow { fill: none; stroke: var(--c, #24e8ff); stroke-width: 3; opacity: 0; filter: url(#glow2); transition: opacity .2s; }
+.office .rp:hover .pbg, .office .rp.hov .pbg, .office .rp.sel .pbg { stroke: var(--c, #24e8ff); stroke-width: .9; }
+.office .rp:hover .pglow, .office .rp.hov .pglow, .office .rp.sel .pglow { opacity: .5; }
+.office .pdot { animation: dotp 1.4s ease-in-out infinite; }
+.office .need .pbg { fill: rgba(8, 17, 26, .9); stroke: rgba(90, 215, 200, .34); }
+.office .need.alert .pbg { fill: rgba(24, 16, 10, .92); stroke: #ff9438; stroke-width: 1; }
+.office .need.alert .pglow { stroke: #ff8824; opacity: .7; animation: glowp 1.8s ease-in-out infinite; }
 
 /* the department drawer */
 /* focus mode: a department clicked -> the office zooms in, its detail takes the left column,
