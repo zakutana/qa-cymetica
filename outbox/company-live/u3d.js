@@ -2029,18 +2029,60 @@ function deckTex() {
     }
   }));
 }
-// a room's floor: large slate-blue tiles (his picture's floors read #304a55 lit), hairline seams
+// A room's floor as his: dark charcoal-teal tiles, eight to a side, their seams a hairline a shade LIGHTER than the
+// tiles (his lines catch the light, they are not cracks). Lit and glossy it reads as his bare floor does, sRGB about
+// (31-42, 55-64, 65-80); the tiles differ by a level or two, no more, or the floor reads patched.
+const SH_TILES = 8;
 function tileTex() {
-  return TX.tile || (TX.tile = ctex(512, 512, (g, W) => {
-    const R = rng(29), s = W / 4;
-    // lit, it reads as his floors do (#334754 to #293a4a, measured on bare floor in both pictures)
-    g.fillStyle = '#1c2a36'; g.fillRect(0, 0, W, W);
-    for (let i = 0; i < 4; i++) for (let j = 0; j < 4; j++) {
-      const v = Math.floor(R() * 4);
-      g.fillStyle = 'rgb(' + (36 + v) + ',' + (52 + v) + ',' + (65 + v) + ')';
-      g.fillRect(i * s + 1.5, j * s + 1.5, s - 3, s - 3);
+  return TX.tile || (TX.tile = ctex(1024, 1024, (g, W) => {
+    const R = rng(29), s = W / SH_TILES;
+    g.fillStyle = '#354a52'; g.fillRect(0, 0, W, W);
+    for (let i = 0; i < SH_TILES; i++) for (let j = 0; j < SH_TILES; j++) {
+      const v = Math.floor(R() * 3);
+      g.fillStyle = 'rgb(' + (28 + v) + ',' + (46 + v) + ',' + (50 + v) + ')';
+      g.fillRect(i * s + 1, j * s + 1, s - 2, s - 2);
     }
   }));
+}
+// The one mirror under every room (his floors show what stands on them, soft): the scene drawn again from below the
+// floors' plane at half size and blurred by its own mipmaps. They all share one height, so one is enough. What it
+// draws is layer 1 only -- the light-coloured things in the rooms (shTag), the rooms' own lamps and a light of its
+// own -- so it costs no shadow pass and a fraction of the scene's draw calls. A real mirror and not a faked sheen:
+// his floors show the astronauts standing on them, and only a second view of the room can put them there.
+const SH_FLOOR_Y = 0.08, SH_REFL = { level: 1.2, k: 0.5, lum: 0.15 };
+// The rooms' neon, a deeper mint than his line's measured core (LOOK.neon): the line is seen through the glass's
+// foot and its glow, which lift it to his core; LOOK.neon itself came out nearly white
+const SH_NEON = '#4ef0aa';
+function shRefl() {
+  if (TX.shRefl) return TX.shRefl;
+  const r = TSL.reflector({ resolution: 0.5, generateMipmaps: true, bounces: false });
+  r.target.rotateX(-Math.PI / 2); r.target.position.y = SH_FLOOR_Y;
+  // the mirror's own light, seen by its pass alone (layer 1 and nothing else): the scene's sun would bring its
+  // shadow map into the pass, and the main view must not change, so the mirror gets a soft sky of its own. Its sky
+  // is BELOW: the mirror sees things from under the floor, their fronts and undersides, and those are the faces
+  // that must read lit for a suit to show in the floor as the viewer sees it
+  r.light = new THREE.HemisphereLight(0xe2ecf6, 0x2a3644, 1.8); r.light.position.set(0, -1, 0); r.light.layers.set(1);
+  TX.shRefl = r; TX.shReflK = TSL.uniform(SH_REFL.k); return r;
+}
+// a floor that catches the mirror: its own emissive (the trading desk's seams) plus the reflection, which only adds
+// light -- where nothing bright stands over it, the floor is its own dark self
+function shFloor(o) {
+  const m = new THREE.MeshStandardNodeMaterial(o);
+  m.emissiveNode = TSL.materialEmissive.add(shRefl().level(SH_REFL.level).rgb.mul(TX.shReflK));
+  return m;
+}
+// His glass: pale frosted panes you clearly see -- a veil over what is behind them, brighter along the top rail and a
+// little at the foot, and soft diagonal sheens as a pane catches a light. The sheens run in world space, so no two
+// walls carry the same ones.
+function shGlass(o) {
+  const T = TSL, m = new THREE.MeshStandardNodeMaterial(o), pw = T.positionWorld;
+  const h = pw.y.sub(SH_FLOOR_Y).div(WH).clamp(0, 1);
+  const top = T.smoothstep(0.78, 1.0, h).mul(0.9), foot = T.float(1).sub(T.smoothstep(0.0, 0.12, h)).mul(0.35);
+  const s = pw.x.add(pw.z).mul(0.21).add(h.mul(0.3)), f = T.fract(s), f2 = T.fract(s.mul(1.7).add(0.43));
+  const sheen = T.smoothstep(0.0, 0.06, f).mul(T.float(1).sub(T.smoothstep(0.06, 0.2, f))).mul(1.1)
+    .add(T.smoothstep(0.0, 0.03, f2).mul(T.float(1).sub(T.smoothstep(0.03, 0.09, f2))).mul(0.6));
+  m.opacityNode = T.float(o.opacity).mul(T.float(1).add(top).add(foot).add(sheen));
+  return m;
 }
 // the hull's side as in his picture: slate panels with seams, and along it modules in a light grey frame -- a dark
 // blue inset with a lit strip and small lights -- a lighter band at the top, a dark chamfer at the foot
@@ -2276,11 +2318,11 @@ function qaGridTex() {
     }
   }));
 }
-// the trading desk's floor in his picture glows along its tile seams: the seams as an emissive map, a soft wash in
-// each tile so the floor reads lit, not only lined
+// the trading desk's floor in his picture glows along its tile seams: the seams as an emissive map (on the tiles'
+// own seams, SH_TILES to a side), a soft wash in each tile so the floor reads lit, not only lined
 function seamTex() {
   return TX.seam || (TX.seam = ctex(512, 512, (g, W) => {
-    const n = 10, s = W / n; g.fillStyle = '#000000'; g.fillRect(0, 0, W, W);
+    const n = SH_TILES, s = W / n; g.fillStyle = '#000000'; g.fillRect(0, 0, W, W);
     g.fillStyle = 'rgba(255,255,255,.1)'; g.fillRect(0, 0, W, W);
     g.fillStyle = 'rgba(255,255,255,.55)'; for (let i = 0; i <= n; i++) { g.fillRect(i * s - 1, 0, 2, W); g.fillRect(0, i * s - 1, W, 2); }
     // the pool: brightest in the middle of the room, gone at its walls -- multiplied in, as the map is read
@@ -2342,18 +2384,20 @@ function rboxGeo(w, h, d, r) {
 function omats() {
   if (OM.tile) return;
   OM.deck = std({ map: deckTex(), roughness: 0.46, metalness: 0.32 });
-  OM.tile = std({ map: tileTex(), roughness: 0.58, metalness: 0.2 });
-  OM.hubTile = std({ map: tileTex(), color: 0xb4c8dc, roughness: 0.5, metalness: 0.22 });
+  // his floors are glossy: low roughness, so the rooms' lamps and the studio overhead lie on them as soft sheens,
+  // and the mirror (shRefl) adds what stands in the room
+  OM.tile = shFloor({ map: tileTex(), roughness: 0.4, metalness: 0.28 });
+  OM.hubTile = shFloor({ map: tileTex(), color: 0xe4eef4, roughness: 0.4, metalness: 0.28 });
   OM.rim = std({ color: 0x2c3a4a, roughness: 0.4, metalness: 0.45 });
   OM.rimDark = std({ color: 0x18222e, roughness: 0.48, metalness: 0.4 });
   OM.hull = std({ map: hullTex(), emissiveMap: TX.hullGlow, emissive: 0xffffff, emissiveIntensity: 0.9, roughness: 0.55, metalness: 0.25 });
   OM.hullLow = std({ color: 0x0f1620, roughness: 0.5, metalness: 0.4 });
-  // the glass: a pale frosted pane that catches the light (his picture lifts the deck behind it by about a tenth),
-  // its own edges a thin pale line; the colour is the neon's, not the glass's
-  OM.glass = std({ color: 0xa9bfca, envMapIntensity: 0.7, transparent: true, opacity: 0.075, roughness: 0.1, metalness: 0.0, depthWrite: false, side: THREE.DoubleSide });
+  // the glass: a pale frosted pane you clearly see (his picture lifts what is behind it by about ten levels), brighter
+  // at its top rail, with soft sheens (shGlass); its own edges a thin pale line; the colour is the neon's, not the glass's
+  OM.glass = shGlass({ color: 0xc4d4dc, envMapIntensity: 1.2, transparent: true, opacity: 0.055, roughness: 0.08, metalness: 0.0, depthWrite: false, side: THREE.DoubleSide });
   OM.glassCyan = OM.glass;
-  OM.glassOrange = std({ color: 0xffb084, emissive: 0x5a2008, emissiveIntensity: 0.25, envMapIntensity: 0.7, transparent: true, opacity: 0.1, roughness: 0.1, metalness: 0.0, depthWrite: false, side: THREE.DoubleSide });
-  OM.glassEdge = emis('#a9c4cc', 0.2);
+  OM.glassOrange = shGlass({ color: 0xffb084, emissive: 0x5a2008, emissiveIntensity: 0.25, envMapIntensity: 1.2, transparent: true, opacity: 0.075, roughness: 0.08, metalness: 0.0, depthWrite: false, side: THREE.DoubleSide });
+  OM.glassEdge = emis('#b4ccd4', 0.4);
   OM.wallDark = std({ color: 0x0f161e, roughness: 0.45, metalness: 0.3 });
   OM.frame = std({ color: 0x2a3644, roughness: 0.4, metalness: 0.5 });
   OM.brass = std({ color: 0xb88c42, roughness: 0.34, metalness: 0.72 });
@@ -2391,7 +2435,7 @@ function omats() {
   OM.daisRim = std({ color: 0x4a5866, roughness: 0.35, metalness: 0.45 });
   OM.daisArc = emis('#c8d4de', 0.55);
   // his trading floor: the blue floor under an orange-red pool of light, the tile seams a faint glow in it
-  OM.tileOrange = std({ map: tileTex(), color: 0xf0d4cc, emissiveMap: seamTex(), emissive: 0xff6a30, emissiveIntensity: 2.4, roughness: 0.5, metalness: 0.2 });
+  OM.tileOrange = shFloor({ map: tileTex(), color: 0xf0d4cc, emissiveMap: seamTex(), emissive: 0xff6a30, emissiveIntensity: 2.4, roughness: 0.4, metalness: 0.28 });
   OM.coinG = std({ color: 0x18b87a, emissive: 0x38f5b8, emissiveIntensity: 0.28, metalness: 0.8, roughness: 0.22 });
   OM.coinB = std({ color: 0x2f6fd8, emissive: 0x3b82f6, emissiveIntensity: 0.32, metalness: 0.8, roughness: 0.22 });
   G.coin = new THREE.CylinderGeometry(1, 1, 1, 28);
@@ -2916,9 +2960,12 @@ class Office3D {
   // the two front walls ("vpredu sviti spodni listy a v zadnich stenach ty vrchni"). The glass's own edges, the
   // front walls' tops and the corners, are a thin pale line. Mint, the trading desk orange.
   shell(r) {
-    const { g, x0, y0 } = r, RS = CO.iso.RS, H = WH, t = 0.04, z0 = 0.08;
+    const { g, x0, y0 } = r, RS = CO.iso.RS, H = WH, t = 0.04, z0 = SH_FLOOR_Y;
     const dk = r.dept && r.dept.key;
     const isOrange = dk === 'trading_desk';
+    // the floors' mirror lives in the scene itself (the world is cleared at every layout) and sees layer 1 only
+    const rf = shRefl(); if (rf.target.parent !== this.scene) this.scene.add(rf.target, rf.light);
+    rf.reflector.getVirtualCamera(this.camera).layers.set(1);
     this.box(g, x0, y0, 0, RS, RS, z0, r.key === 'hub' ? OM.hubTile : isOrange ? OM.tileOrange : OM.tile);
     r.glow = new THREE.Mesh(G.plane, new THREE.MeshBasicMaterial({ map: radialTex('255,255,255', 0.85), transparent: true, opacity: 0.04, blending: THREE.AdditiveBlending, depthWrite: false, color: isOrange ? 0xff8824 : 0x7cf2c4 }));
     r.glow.scale.set(RS * 0.92, RS * 0.92, 1); r.glow.rotation.x = -Math.PI / 2; r.glow.position.copy(this.V(x0 + RS / 2, y0 + RS / 2, z0 + 0.01)); g.add(r.glow);
@@ -2928,17 +2975,42 @@ class Office3D {
       const p = new THREE.Mesh(G.plane, glassMat); p.scale.set(RS, H, 1); p.rotation.y = rot; p.position.copy(this.V(x, y, z0 + H / 2)); p.renderOrder = 2; g.add(p);
     });
     if (r.key !== 'hub') { this.box(g, x0 + t, y0 + t, z0, RS - 2 * t, 0.1, 0.52, OM.wallDark); this.box(g, x0 + t, y0 + t, z0, 0.1, RS - 2 * t, 0.52, OM.wallDark); }
-    r.edgeM = emis(isOrange ? LOOK.orange : LOOK.neon, 2.2);
-    const e = 0.058, zt = z0 + H - e, f = 0.022;   // his neon is a thicker soft line than a hairline
+    r.edgeM = emis(isOrange ? LOOK.orange : SH_NEON, 1.9);
+    // his neon is a crisp line, a little thinner than ours was (5 px at his render's size, ours 7), its glow tight
+    const e = 0.042, zt = z0 + H - e, f = 0.022;
     // the neon: back walls' tops (y = y0 along x, x = x0 along y), front walls' feet
     [[x0, y0, zt, RS, e], [x0, y0, zt, e, RS], [x0, y0 + RS - e, z0, RS, e], [x0 + RS - e, y0, z0, e, RS]].forEach(([x, y, z, w, d]) => this.box(g, x, y, z, w, d, e, r.edgeM, false));
-    // the glass's edges: the front walls' tops and the four corners
+    // the glass's edges: the front walls' tops, the four corners, and the joint between the two panes of each front
+    // wall, as his front walls show one
     [[x0, y0 + RS - f, z0 + H - f, RS, f, f], [x0 + RS - f, y0, z0 + H - f, f, RS, f],
-      [x0, y0, z0, f, f, H], [x0 + RS - f, y0, z0, f, f, H], [x0, y0 + RS - f, z0, f, f, H], [x0 + RS - f, y0 + RS - f, z0, f, f, H]].forEach(([x, y, z, w, d, h]) => this.box(g, x, y, z, w, d, h, OM.glassEdge, false));
+      [x0, y0, z0, f, f, H], [x0 + RS - f, y0, z0, f, f, H], [x0, y0 + RS - f, z0, f, f, H], [x0 + RS - f, y0 + RS - f, z0, f, f, H],
+      [x0 + RS / 2 - f / 2, y0 + RS - f, z0, f, f, H], [x0 + RS - f, y0 + RS / 2 - f / 2, z0, f, f, H]].forEach(([x, y, z, w, d, h]) => this.box(g, x, y, z, w, d, h, OM.glassEdge, false));
     // the room's own light: white over the floor, warm in the trading desk
     // the light stays in its room: an orange one reaching the neighbours tinted their floors
     r.lamp = new THREE.PointLight(isOrange ? 0xff6a34 : 0xeef6ff, isOrange ? 22 : 6, isOrange ? 6.5 : 9, 1.0);
     r.lamp.position.copy(this.V(x0 + RS / 2, y0 + RS / 2, isOrange ? 2.4 : 4.4)); g.add(r.lamp);
+    // it lights the room in the floor's mirror too: the one light that pass has, so it needs no shadow map
+    r.lamp.layers.enable(1);
+  }
+  // What the floors' mirror shows (layer 1): the astronauts' suits and packs, and the room's light-coloured still
+  // parts (white consoles, lab machines, rack sides -- the merged meshes bakeRoom made, one draw call each). Every part
+  // drawn there is a draw call more a frame (4 to 5 microseconds each, measured), so what would not read in a soft
+  // reflection stays out: dark desks and racks (a reflection that only adds light gets nothing from them), screens
+  // (they reflected as loose coloured blobs on the floor, nothing like his), keys, joints, the floor, the glass and
+  // the neon (emissive on black: its foot line straddles the mirror's plane and would double itself). Measured
+  // 2026-10-19: 169 draw calls more, 14 % of a frame's render. Run after the room is baked (tint, from update), again
+  // when its parts change (the vault's piles are rebuilt).
+  shTag(r) {
+    if (!r.g || r.g.children.length === r.shN) return;
+    r.shN = r.g.children.length;
+    const lum = (c) => (c ? 0.2126 * c.r + 0.7152 * c.g + 0.0722 * c.b : 0), agent = new Set();
+    (r.agents || []).forEach((a) => a.g && a.g.traverse((x) => agent.add(x)));
+    r.g.traverse((x) => {
+      if (!x.isMesh || !(agent.has(x) || x.userData.own)) return;
+      const m = Array.isArray(x.material) ? x.material[0] : x.material;
+      if (!m || m.transparent || m.visible === false || m.isMeshBasicMaterial || m === OM.tile || m === OM.hubTile || m === OM.tileOrange) return;
+      if (lum(m.color) > SH_REFL.lum) x.layers.enable(1);
+    });
   }
   // a wall screen on the back wall: what runs now, or why it waits
   wallScreen(r, u0, u1) {
@@ -4370,12 +4442,15 @@ class Office3D {
   // waits on you (and the trading desk, orange in his picture). Working shows as a brighter line and a faint mint
   // wash on the floor, not as another colour.
   tint(r, st) {
+    this.shTag(r);
     const dk = r.dept && r.dept.key;
     const isOrange = dk === 'trading_desk' || st === 'waiting';
     if (r.st === st && r.orange === isOrange) return;
     r.st = st; r.orange = isOrange;
     const c = new THREE.Color(isOrange ? LOOK.orange : LOOK.neon);
-    if (r.edgeM) { r.edgeM.emissive.copy(c); r.edgeM.emissiveIntensity = isOrange ? 2.2 : st === 'working' ? 2.0 : 1.5; }
+    // the line itself in its own deeper mint (SH_NEON), the floor's wash in his; over the bloom's threshold, so it
+    // glows, the glow tight round a thinner line, as his
+    if (r.edgeM) { r.edgeM.emissive.set(isOrange ? LOOK.orange : SH_NEON); r.edgeM.emissiveIntensity = isOrange ? 1.9 : st === 'working' ? 1.8 : 1.5; }
     if (r.glow) { r.glow.material.color.copy(c).multiplyScalar(isOrange ? 1.9 : 1); r.glowBase = isOrange ? 1.0 : st === 'working' ? 0.05 : 0; }
     if (r.lamp) { r.lamp.color.set(isOrange ? 0xff6a34 : 0xeef6ff); r.lamp.intensity = isOrange ? 22 : 6; r.lamp.distance = isOrange ? 6.5 : 9; }
   }
