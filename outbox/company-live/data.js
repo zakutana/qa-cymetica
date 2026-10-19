@@ -43,6 +43,17 @@
         "- Paper only. ET10 tables and anything with real money wait for my approval." },
     { key: 'custom', name: '', experts: ['researcher'], charter: '' }
   ];
+  // What a department of your own can look like: the owner picks one with the arrows round its room when creating it
+  // (2026-10-19: "pro custom department tam budou sipky a budu si moct zvolit z ruznych vzhledu"); the department
+  // keeps it as d.look. 'office' is the room a custom department always had.
+  CO.ROOM_LOOKS = [
+    { key: 'office', name: 'Office' },
+    { key: 'ops', name: 'Operations room' },
+    { key: 'library', name: 'Research library' },
+    { key: 'workshop', name: 'Workshop' },
+    { key: 'command', name: 'Command center' },
+    { key: 'greenhouse', name: 'Greenhouse' }
+  ];
 
   // Company rules: what anyone notices outside its own job goes where the rule says (the Manager routes it).
   // A company process is the owner's own words: when <something happens> -> a department -> does <what>.
