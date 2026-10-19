@@ -571,7 +571,8 @@
     this.vb = { x: 0, y: 0, w: 1000, h: 600 };
     this.bind();
     var self = this;
-    requestAnimationFrame(function loop(t) { self.frame(t); requestAnimationFrame(loop); });
+    var pace = pacer(function () { return !!self.tw || performance.now() - (self.lastInput || 0) < 1500; });
+    requestAnimationFrame(function loop(t) { if (pace(t)) { self.frame(t); self.stepAnims(t); } requestAnimationFrame(loop); });
     setInterval(function () { self.wander(); }, 2600);
     if (window.ResizeObserver) new ResizeObserver(function () { self.resize(); }).observe(svg);
   }
@@ -1018,6 +1019,37 @@
     g.classList.add('ping'); if (colour === 'green') g.classList.add('ping-g'); if (colour === 'red') g.classList.add('ping-r');
     setTimeout(function () { g.classList.remove('ping', 'ping-g', 'ping-r'); }, 900);
   };
+  // The flat office's own pace (2026-10-19, for weak computers; nothing is drawn differently, only less often while
+  // nobody does anything). Any change anywhere in the drawing repaints the whole SVG, and its CSS animations change
+  // it every display frame, so they run on this clock instead of the browser's: every frame while the view is being
+  // moved or zoomed and for the first seconds; otherwise every other frame on a 120/144 Hz screen (60 or 72 a
+  // second) and 30 a second on a computer that could not hold about 45 while everything moved. Measured: a 2D
+  // office left alone cost 430 ms of the main thread a second at 144 Hz, almost all of it repainting.
+  function pacer(busy) {
+    var last = 0, drawn = 0, avg = 0, slow = false, t0 = performance.now();
+    return function (now) {
+      var dt = now - last; last = now;
+      if (busy() || now - t0 < 3000) {
+        if (dt > 0 && dt < 250) { avg = avg ? avg * 0.94 + dt * 0.06 : dt; slow = avg > 22 ? true : avg < 18 ? false : slow; }
+        drawn = now; return true;
+      }
+      if (now - drawn < (slow ? 30 : 12.5)) return false;
+      drawn = now; return true;
+    };
+  }
+  // the stylesheet's animations, stepped by hand on the pace above: each is paused the first time it is seen and its
+  // time set on every paced frame; what the stylesheet pauses while the company is paused stays where it is
+  var STILL_WHEN_PAUSED = '.flow.hot, .holo, .mote, .beam, .holo-core';
+  Office.prototype.stepAnims = function (now) {
+    var list = this.svg.getAnimations ? this.svg.getAnimations({ subtree: true }) : [], still = this.svg.classList.contains('paused');
+    for (var i = 0; i < list.length; i++) {
+      var a = list[i];
+      if (a.__t0 == null) { a.__base = a.currentTime || 0; a.__t0 = now; a.pause(); }
+      var tg = a.effect && a.effect.target;
+      if (still && tg && tg.matches && tg.matches(STILL_WHEN_PAUSED)) { a.__base = a.currentTime || 0; a.__t0 = now; continue; }
+      a.currentTime = a.__base + (now - a.__t0);
+    }
+  };
   Office.prototype.frame = function (now) {
     var self = this;
     this.packets = this.packets.filter(function (k) {
@@ -1084,7 +1116,7 @@
       var f = Math.min(1, (now - t0) / ms), e = 1 - Math.pow(1 - f, 3);
       self.vb = { x: from.x + (to.x - from.x) * e, y: from.y + (to.y - from.y) * e, w: from.w + (to.w - from.w) * e, h: from.h + (to.h - from.h) * e };
       self.apply();
-      if (f < 1) requestAnimationFrame(step);
+      if (f < 1) requestAnimationFrame(step); else self.tw = 0;   // done: the pacer may slow down again
     })(t0);
   };
   // what is drawn: the platform, its hull and keel, the rooms and the plates over them
@@ -1138,6 +1170,8 @@
   /* ---------------- input ---------------- */
   Office.prototype.bind = function () {
     var self = this, svg = this.svg, drag = null;
+    // a hand on the drawing, for the pacer
+    ['pointerdown', 'pointermove', 'wheel'].forEach(function (ev) { svg.addEventListener(ev, function () { self.lastInput = performance.now(); }, { passive: true }); });
     svg.addEventListener('pointerdown', function (e) {
       if (e.button !== 0) return;
       drag = { x: e.clientX, y: e.clientY, vx: self.vb.x, vy: self.vb.y, moved: false, id: e.pointerId };
