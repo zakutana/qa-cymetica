@@ -1052,7 +1052,7 @@ const UVTURN = { min: 0.12, max: 1.25 };
 // Cymetica's sun: its parts are written at the size the detector once framed (a ball of 16.5); the sun is drawn
 // k times that, so it fills the inner rings as the light fills his (white-hot to ~20 of the plane, glow to ~40,
 // his ring at 60), and floats y above the plane. "Make the sun itself bigger" (2026-10-19).
-const UVSUN = { k: 1.7, y: 6, ball: 16.5, disc: 15 };
+const UVSUN = { k: 1.7, y: 6, ball: 14, disc: 12.75 };   // 15 % smaller than first drawn ("o 15% asi zmensil", 2026-10-19)
 // how much larger than its own decks a station is drawn on the map: his stations are 100 to 150 px across on his
 // 1533-wide frame, about 30 to 40 units of the plane; ours, 36 of them where he drew 13, a little smaller
 const UVSS = 3.8;
@@ -1378,7 +1378,7 @@ class Universe3D {
     // sparks and streaks flying out of it -- nothing flies round it. The ball is painted (colliderTex) on faces that
     // always turn to the camera, so it is the same ball from every side; two of them from different seeds turn slowly
     // against each other and flicker, so the weave shimmers. Round it a glow: white, pink, blue, gold, a faint blue.
-    this.corona = [[44, 0.07, 0xffb04a], [70, 0.035, 0xff9a3c], [100, 0.025, 0x3b9dff]].map(([s, o, c]) => { const sp = glowSprite(c, o, s); sun.add(sp); return sp; });
+    this.corona = [[37, 0.07, 0xffb04a], [60, 0.035, 0xff9a3c], [85, 0.025, 0x3b9dff]].map(([s, o, c]) => { const sp = glowSprite(c, o, s); sun.add(sp); return sp; });
     heart.children[0].visible = false;   // the painting has its own heart
     this.fil = []; this.rays = []; this.weave = [];
     // The ball itself is the painting (colliderTex), laid over the map as it is -- two of them from different seeds,
@@ -1400,7 +1400,8 @@ class Universe3D {
     const cam = new THREE.Vector3().setFromSpherical(new THREE.Spherical(1, UVCAM.polar, CO.uvGalaxy.AZ)), right = new THREE.Vector3().crossVectors(cam, up).normalize(), vup = new THREE.Vector3().crossVectors(right, cam).normalize();
     this.beams = [];
     // his beams: two long blue-white ones through the middle on one diagonal, gold ones across, shorter ones between
-    [[36, 0.1, 34, 0x9fd0ff], [216, -0.1, 33, 0x8fc4ff], [166, 0.2, 29, 0xffb347], [348, -0.25, 27, 0xffa22e], [300, 0.3, 21, 0x6fb0ff], [118, -0.3, 20, 0xffc266], [78, 0.4, 16, 0xffd28a], [258, 0.35, 18, 0xff9a22]].forEach(([deg, depth, len, hex]) => {
+    [[36, 0.1, 34, 0x9fd0ff], [216, -0.1, 33, 0x8fc4ff], [166, 0.2, 29, 0xffb347], [348, -0.25, 27, 0xffa22e], [300, 0.3, 21, 0x6fb0ff], [118, -0.3, 20, 0xffc266], [78, 0.4, 16, 0xffd28a], [258, 0.35, 18, 0xff9a22]].forEach(([deg, depth, len0, hex]) => {
+      const len = len0 * 0.85;
       const t = deg * Math.PI / 180, dir = right.clone().multiplyScalar(Math.cos(t)).addScaledVector(vup, Math.sin(t)).addScaledVector(cam, depth).normalize();
       const q = new THREE.Quaternion().setFromUnitVectors(up, dir), j = new THREE.Group();
       j.quaternion.copy(q); sun.add(j);
