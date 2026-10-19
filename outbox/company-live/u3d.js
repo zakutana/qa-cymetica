@@ -6021,9 +6021,11 @@ class Office3D {
     // the rail over the banks on a post at either end, and the ticker running along it (its top at 1.30)
     [-1, 1].forEach((s) => this.lkBox(B, 0.05, railY - top, 0.05, s * (L / 2 - 0.14), (top + railY) / 2, 0.1, OM.rbMetal));
     this.lkBox(B, L - 0.22, 0.07, 0.035, 0, railY, 0.1, OM.rbGloss);
-    const tk = this.raP(B, G.plane, OM.rcTicker, L - 0.32, 0.05, 1, 0, railY, 0.119, 0, false), TT = OM.rcTicker.map;
-    TT.repeat.set((L - 0.32) / 0.05 / 64, 1);
-    this.lkDrive(r, tk, (t) => { TT.offset.x = (t * 0.03) % 1; });
+    // it runs by its own plane's texture coordinates (a texture's offset is not read by the renderer's node
+    // materials, measured: the strip stood still): the strip shows 1.46 runs of the ticker, sliding left
+    const tg = new THREE.PlaneGeometry(1, 1), tuv = tg.attributes.uv, u0 = Array.from({ length: tuv.count }, (_, i) => tuv.getX(i) * (L - 0.32) / 0.05 / 64);
+    const tk = this.raP(B, tg, OM.rcTicker, L - 0.32, 0.05, 1, 0, railY, 0.119, 0, false); tk.userData.own = true;
+    this.lkDrive(r, tk, (t) => { const off = (t * 0.03) % 1; for (let i = 0; i < tuv.count; i++) tuv.setX(i, u0[i] + off); tuv.needsUpdate = true; });
     // the banks: the low row on feet on the desk, the high row on an arm from the post; the outer screens turned in
     const xs = n === 1 ? [0] : n === 2 ? [-1.15, 1.15] : [-1.62, 0, 1.62];
     const pics = [['cndl', 'depth', 'heat', 'line', 'pos'], ['line', 'pos', 'news', 'cndl', 'exp'], ['depth', 'heat', 'exp', 'news', 'cndl']];
