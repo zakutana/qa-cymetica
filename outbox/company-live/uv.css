@@ -32,6 +32,9 @@
 /* a cinematic edge, as faint as his picture's: the far corners a shade darker */
 .uvstage.is3d::before { content: ''; position: absolute; inset: 0; z-index: 2; pointer-events: none;
   background: radial-gradient(ellipse 80% 80% at 50% 50%, transparent 70%, rgba(1, 4, 7, .28) 100%); }
+/* the map is a .stage too, so the office's own vignette (.stage.is3d::after, which stops 72 px short of the bottom
+   for the office's bar) fell on it as well: a second, darker edge and a hard line across the map above the legend */
+.stage.uvstage.is3d::after { content: none; }
 .uvsum { font-size: 11.5px; color: var(--dim2); margin-left: 14px; letter-spacing: .02em; }
 .uvsum b { color: var(--text); } .uvsum b.cy { color: var(--cyan); }
 .uvstage .crumb { display: flex; align-items: center; padding: 6px 12px; border-radius: 9px; background: rgba(6, 9, 15, .72); border: 1px solid var(--line2); backdrop-filter: blur(4px); }

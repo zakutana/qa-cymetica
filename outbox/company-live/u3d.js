@@ -1028,6 +1028,13 @@ function makeStation(c, seed, opts) {
 // in front of Cymetica (off: right, toward the camera; in units where the outer pair sits at 206). home() keeps his
 // frame inside the stage at any size: as tall as the stage when it is wider than his picture, as wide when narrower.
 const UVCAM = { polar: 0.9865, fov: 25.04, aspect: 1533 / 820, dist: 481.7, off: [-10.57, 74.57] };
+// how far the view may turn, off vertical: from nearly straight down to 18 degrees above the plane (his first look
+// is 56.5 off vertical). A flight to a station stays inside it (flyTo keeps it at least 19 degrees up).
+const UVTURN = { min: 0.12, max: 1.25 };
+// Cymetica's sun: its parts are written at the size the detector once framed (a ball of 16.5); the sun is drawn
+// k times that, so it fills the inner rings as the light fills his (white-hot to ~20 of the plane, glow to ~40,
+// his ring at 60), and floats y above the plane. "Make the sun itself bigger" (2026-10-19).
+const UVSUN = { k: 1.7, y: 6, ball: 16.5 };
 // how much larger than its own decks a station is drawn on the map: his stations are 100 to 150 px across on his
 // 1533-wide frame, about 30 to 40 units of the plane; ours, 36 of them where he drew 13, a little smaller
 const UVSS = 3.8;
@@ -1108,27 +1115,6 @@ function jetTex() {
   // (rising over its first few percent: eight jets share one root, and at full strength there they add up to a blot)
   return TX.jet || (TX.jet = ctex(32, 256, (g, W, H) => { const gr = g.createLinearGradient(0, H, 0, 0); gr.addColorStop(0, 'rgba(255,255,255,0)'); gr.addColorStop(0.12, 'rgba(255,255,255,.25)'); gr.addColorStop(0.24, 'rgba(255,255,255,1)'); gr.addColorStop(0.5, 'rgba(255,255,255,.55)'); gr.addColorStop(0.85, 'rgba(255,255,255,.1)'); gr.addColorStop(1, 'rgba(255,255,255,0)'); g.fillStyle = gr; g.fillRect(0, 0, W, H); }));
 }
-// What the detector's silver sees: a grey hall, light above, dark below, and the collider's gold all round its
-// middle -- so silver panels show silver with warm gold in them, as in his photograph. Its own, not the scene's:
-// the stations keep their light.
-function chamberEnv() {
-  if (TX.chamber) return TX.chamber;
-  // the panels face up and in and the map looks down on them, so what they mirror is this sky's upper half: the
-  // gold is there, in patches between pale silver, with a few white lamps and a little blue
-  const R = rng(5), t = ctex(512, 256, (g, W, H) => {
-    const gr = g.createLinearGradient(0, 0, 0, H);
-    // a dark hall, so the silver shows as metal: bright where it catches a lamp or the gold, dark between
-    gr.addColorStop(0, '#9aa2ab'); gr.addColorStop(0.18, '#4b525b'); gr.addColorStop(0.45, '#23272d'); gr.addColorStop(0.6, '#15130f'); gr.addColorStop(1, '#07080a');
-    g.fillStyle = gr; g.fillRect(0, 0, W, H);
-    g.filter = 'blur(6px)';
-    for (let i = 0; i < 10; i++) { g.fillStyle = 'rgba(235,240,245,.9)'; g.fillRect(R() * W, H * (0.02 + R() * 0.3), 30 + R() * 70, 5 + R() * 9); }
-    for (let i = 0; i < 18; i++) { const x = R() * W, y = H * (0.08 + R() * 0.38), w = 24 + R() * 80; g.fillStyle = 'rgba(255,' + Math.round(140 + R() * 80) + ',' + Math.round(30 + R() * 50) + ',' + (0.45 + R() * 0.5) + ')'; g.fillRect(x - w / 2, y - 8, w, 12 + R() * 26); }
-    for (let i = 0; i < 6; i++) { g.fillStyle = 'rgba(255,255,255,.85)'; g.fillRect(R() * W, H * (0.03 + R() * 0.12), 40 + R() * 60, 8); }
-    for (let i = 0; i < 4; i++) { g.fillStyle = 'rgba(110,180,255,.5)'; g.fillRect(R() * W, H * (0.2 + R() * 0.2), 20 + R() * 40, 10); }
-    g.filter = 'none';
-  });
-  t.mapping = THREE.EquirectangularReflectionMapping; TX.chamber = t; return t;
-}
 // The sky of his picture: near-black navy, a teal haze over the top left of the first look fading to the bottom
 // right, and many small sharp white stars, a few brighter. Drawn round the camera as far as a sky is.
 function uvSky(AZ) {
@@ -1197,12 +1183,20 @@ class Universe3D {
     this.renderer.toneMappingExposure = 1.15;
     el.appendChild(this.renderer.domElement);
     this.controls = new OrbitControls(this.camera, this.renderer.domElement);
-    // a map first: the left button moves it over the galaxy's disc, the right one turns it, the wheel zooms where it points
-    Object.assign(this.controls, { enableDamping: true, dampingFactor: 0.06, minDistance: 7, maxDistance: 900, minPolarAngle: 0.06, maxPolarAngle: Math.PI - 0.06,
+    // Turned as the office is: the left button turns the view round what it looks at, the right one (or shift with
+    // the left) slides it over the galaxy's disc, the wheel zooms where it points. "Only to the sides, it cannot be
+    // turned like the office" (2026-10-19) was the left button panning. The view stays above the plane: from
+    // straight down to about 18 degrees over it, never under the disc and never edge-on, where the orbits are lines.
+    Object.assign(this.controls, { enableDamping: true, dampingFactor: 0.08, minDistance: 7, maxDistance: 900, minPolarAngle: UVTURN.min, maxPolarAngle: UVTURN.max,
       autoRotate: false, screenSpacePanning: false, zoomToCursor: true, zoomSpeed: 1.1, rotateSpeed: 0.55, panSpeed: 1.1,
-      mouseButtons: { LEFT: THREE.MOUSE.PAN, MIDDLE: THREE.MOUSE.DOLLY, RIGHT: THREE.MOUSE.ROTATE },
-      touches: { ONE: THREE.TOUCH.PAN, TWO: THREE.TOUCH.DOLLY_ROTATE } });
-    this.controls.addEventListener('start', () => { this.tw = null; this.used = true; this.follow = null; this.lastUse = performance.now(); });
+      mouseButtons: { LEFT: THREE.MOUSE.ROTATE, MIDDLE: THREE.MOUSE.DOLLY, RIGHT: THREE.MOUSE.PAN },
+      touches: { ONE: THREE.TOUCH.ROTATE, TWO: THREE.TOUCH.DOLLY_PAN } });
+    // a hand on the controls ends a flight; turning round a station the camera follows keeps following it, sliding
+    // the view away lets it go (OrbitControls has set its state by the time it says 'start': 2, 4 and 5 move the target)
+    this.controls.addEventListener('start', () => {
+      this.tw = null; this.used = true; this.lastUse = performance.now();
+      if ([2, 4, 5].includes(this.controls.state)) { this.follow = null; this.followAt = null; }
+    });
     this.world();
     this.bind();
     this.resize();
@@ -1266,24 +1260,31 @@ class Universe3D {
       return { L, a, head, size, ph: R() * 6 };
     });
   }
-  // Cymetica, as the operator's collider photograph: a ball of hundreds of tangled filaments of light, mostly
-  // golden-orange and warm yellow threads through electric-blue and white-blue ones, a white-hot heart with a
-  // little red-magenta deep inside, thick jets shot out of it in several directions (gold and blue-white,
-  // narrowing, sparkling), a spray of golden sparks, and round it all the detector: concentric rings of silver
-  // panels catching the heart's gold. On the orbits' plane round it, his orrery's cyan rings of light and silver
-  // arcs. Units are the plane's: his rings reach 60, the ball about 16.
+  // Cymetica, as the operator's collider photograph and the sun of his orrery: a ball of hundreds of tangled
+  // filaments of light, mostly golden-orange and warm yellow threads through electric-blue and white-blue ones, a
+  // white-hot heart with a little red-magenta deep inside, thick jets shot out of it in several directions (gold
+  // and blue-white, narrowing, sparkling) and a spray of golden sparks -- drawn big (UVSUN), the one thing at the
+  // centre. Round it on the orbits' plane, still, his orrery's cyan rings of light and pale silver arcs. The
+  // detector that framed it, four turning rings of silver panels, is gone: "remove those weird rings that turn
+  // round it and make the sun itself bigger" (2026-10-19). Units are the plane's: his rings reach 60.
   core() {
-    const g = new THREE.Group(), R = rng(77), up = new THREE.Vector3(0, 1, 0), Y = 5;
-    // the heart: white-hot, a warm and a magenta glow round it, a wide soft gold one, a cool one wider still
-    const heart = new THREE.Group(); heart.position.y = Y; g.add(heart); this.heart = heart;
+    const g = new THREE.Group(), R = rng(77), up = new THREE.Vector3(0, 1, 0);
+    // everything of the sun in one group, written at the ball's own size and drawn k times it: the sparks' sizes
+    // and the glows' with it, since a sprite takes its parent's scale
+    const sun = new THREE.Group(); sun.position.y = UVSUN.y; sun.scale.setScalar(UVSUN.k); g.add(sun); this.sun = sun;
+    this.heartAt = new THREE.Vector3(0, UVSUN.y, 0); this.sunR = UVSUN.ball * UVSUN.k;
+    // the heart: white-hot, a warm and a magenta glow round it, a white-gold one that fills the ball so it reads as
+    // a sun and not a tangle, a wide soft gold one, a cool one wider still
+    const heart = new THREE.Group(); sun.add(heart); this.heart = heart;
     heart.add(new THREE.Mesh(G.sphere, new THREE.MeshBasicMaterial({ color: new THREE.Color(1, 0.97, 0.9).multiplyScalar(2.6) })));
-    heart.children[0].scale.setScalar(0.9);
-    this.corona = [[6.5, 0.75, 0xff2d8a], [3.4, 0.9, 0xfff6e0], [13, 0.18, 0xffb84a], [30, 0.06, 0xff9d3c], [60, 0.03, 0x3b9dff]].map(([s, o, c]) => { const sp = glowSprite(c, o, s); heart.add(sp); return sp; });
+    heart.children[0].scale.setScalar(this.heartR = 1.8);
+    this.corona = [[9, 0.75, 0xff2d8a], [8, 0.9, 0xfff6e0], [20, 0.42, 0xffe2b0], [32, 0.22, 0xffb84a], [46, 0.08, 0xff9d3c], [66, 0.035, 0x3b9dff]].map(([s, o, c]) => { const sp = glowSprite(c, o, s); heart.add(sp); return sp; });
     // the filaments: particle tracks, each leaving the heart on a helix round its own axis, curling, some looping
     // back through the ball, and tangled loops round it; four sets, gold most, that turn each their own way and
-    // flicker. Bright enough to glow, not so bright the bloom washes their colour out.
-    const sets = [{ n: 260, cols: [0xff8c1a, 0xffa22e, 0xff7410], k: 0.5, loops: 0.35 }, { n: 170, cols: [0xffc23d, 0xffd56a], k: 0.42, loops: 0.3 },
-      { n: 170, cols: [0x1e7bff, 0x2f8cff, 0x1660f0], k: 0.7, loops: 0.25 }, { n: 110, cols: [0x9fd0ff, 0x7fbcff], k: 0.4, loops: 0.2 }];
+    // flicker. Bright enough to glow, not so bright the bloom washes their colour out. Lines are a pixel wide at
+    // any size, so a ball drawn bigger needs more of them to stay as dense.
+    const sets = [{ n: 380, cols: [0xff8c1a, 0xffa22e, 0xff7410], k: 0.5, loops: 0.35 }, { n: 250, cols: [0xffc23d, 0xffd56a], k: 0.42, loops: 0.3 },
+      { n: 250, cols: [0x1e7bff, 0x2f8cff, 0x1660f0], k: 0.7, loops: 0.25 }, { n: 160, cols: [0x9fd0ff, 0x7fbcff], k: 0.4, loops: 0.2 }];
     this.fil = sets.map((S) => {
       const pos = [], col = [], cc = new THREE.Color();
       for (let i = 0; i < S.n; i++) {
@@ -1294,7 +1295,7 @@ class Universe3D {
         let p = dir.clone().multiplyScalar(start), d = loop ? new THREE.Vector3().crossVectors(dir, axis).normalize() : dir.clone(), prev = p.clone();
         for (let s = 1; s <= seg; s++) {
           d.applyAxisAngle(axis, curl * (loop ? 1 : 1 + s / seg)).normalize(); p = p.clone().addScaledVector(d, step);
-          if (p.length() > 16.5) break;
+          if (p.length() > UVSUN.ball) break;
           // a track lights up as it leaves the heart (hundreds start there; at full strength they would add up to
           // a white blot) and fades toward its end
           const fade = loop ? 0.75 + 0.25 * Math.sin(s * 0.3) : Math.min(1, p.length() / 6) ** 1.5 * (1 - s / seg * 0.7);
@@ -1304,18 +1305,19 @@ class Universe3D {
       }
       const geo = new THREE.BufferGeometry(); geo.setAttribute('position', new THREE.Float32BufferAttribute(pos, 3)); geo.setAttribute('color', new THREE.Float32BufferAttribute(col, 3));
       const ls = new THREE.LineSegments(geo, new THREE.LineBasicMaterial({ vertexColors: true, transparent: true, opacity: 0.9, blending: THREE.AdditiveBlending, depthWrite: false }));
-      ls.position.y = Y; ls.frustumCulled = false; g.add(ls); return ls;
+      ls.frustumCulled = false; sun.add(ls); return ls;
     });
     // the jets: a wide soft cone and a hot narrow one inside it, white at the root, gone at the tip
     G.jet = G.jet || new THREE.CylinderGeometry(0.06, 1, 1, 24, 1, true).translate(0, 0.5, 0);
     // they fan out across the first look's view (an angle on its screen, a little toward or away from it), so each
-    // reads at its length instead of as a blot pointing at the camera
+    // reads at its length instead of as a blot pointing at the camera; a little shorter than the ball is wide
+    // times k, so the longest ends inside his ring at 60
     const cam = new THREE.Vector3().setFromSpherical(new THREE.Spherical(1, UVCAM.polar, CO.uvGalaxy.AZ)), right = new THREE.Vector3().crossVectors(cam, up).normalize(), vup = new THREE.Vector3().crossVectors(right, cam).normalize();
     this.beams = [];
-    [[92, -0.25, 40, 0xff9a22], [32, 0.2, 32, 0x4f9dff], [148, -0.3, 34, 0xff8c1a], [8, -0.35, 26, 0xffa22e], [176, 0.25, 28, 0x2f8cff], [206, -0.2, 22, 0xff8c1a], [334, 0.3, 20, 0x5fa8ff], [62, 0.45, 18, 0xffa22e]].forEach(([deg, depth, len, hex]) => {
+    [[92, -0.25, 32, 0xff9a22], [32, 0.2, 26, 0x4f9dff], [148, -0.3, 28, 0xff8c1a], [8, -0.35, 21, 0xffa22e], [176, 0.25, 23, 0x2f8cff], [206, -0.2, 18, 0xff8c1a], [334, 0.3, 16, 0x5fa8ff], [62, 0.45, 15, 0xffa22e]].forEach(([deg, depth, len, hex]) => {
       const t = deg * Math.PI / 180, dir = right.clone().multiplyScalar(Math.cos(t)).addScaledVector(vup, Math.sin(t)).addScaledVector(cam, depth).normalize();
       const q = new THREE.Quaternion().setFromUnitVectors(up, dir), j = new THREE.Group();
-      j.quaternion.copy(q); j.position.y = Y; g.add(j);
+      j.quaternion.copy(q); sun.add(j);
       const outer = new THREE.Mesh(G.jet, new THREE.MeshBasicMaterial({ map: jetTex(), color: new THREE.Color(hex).multiplyScalar(0.45), transparent: true, opacity: 0.5, blending: THREE.AdditiveBlending, depthWrite: false }));
       outer.scale.set(1.9, len, 1.9); j.add(outer);
       const inner = new THREE.Mesh(G.jet, new THREE.MeshBasicMaterial({ map: jetTex(), color: new THREE.Color(hex).multiplyScalar(1.05), transparent: true, opacity: 0.85, blending: THREE.AdditiveBlending, depthWrite: false }));
@@ -1329,41 +1331,20 @@ class Universe3D {
       const jet = R() < 0.55 ? this.beams[Math.floor(R() * this.beams.length)] : null;
       const d = jet ? jet.dir.clone().add(new THREE.Vector3(R() - 0.5, R() - 0.5, R() - 0.5).multiplyScalar(0.3)).normalize() : new THREE.Vector3(R() * 2 - 1, R() * 2 - 1, R() * 2 - 1).normalize();
       A.set([d.x, d.y, d.z, 0.1 + R() * 0.3], i * 4);
-      B.set([R(), 0.45 + R() * R() * 1.1, jet ? jet.len * (0.7 + R() * 0.6) : 16 + R() * 34, 0], i * 4);
+      // (the free ones fly as far as the jets do: the spray stays round the sun, not out among the stations)
+      B.set([R(), 0.45 + R() * R() * 1.1, jet ? jet.len * (0.7 + R() * 0.6) : 12 + R() * 22, 0], i * 4);
       cc.set(R() < 0.78 ? (R() < 0.5 ? 0xffb94a : 0xffdf8a) : 0xcfe9ff).multiplyScalar(1.8); C.set([cc.r, cc.g, cc.b], i * 3);
     }
     const a = TSL.instancedBufferAttribute(new THREE.InstancedBufferAttribute(A, 4)), b = TSL.instancedBufferAttribute(new THREE.InstancedBufferAttribute(B, 4)), c = TSL.instancedBufferAttribute(new THREE.InstancedBufferAttribute(C, 3));
     const life = TSL.fract(TSL.time.mul(a.w).add(b.x)), fade = life.oneMinus().pow(0.8);
     const sm = new THREE.SpriteNodeMaterial({ transparent: true, depthWrite: false, blending: THREE.AdditiveBlending });
-    sm.positionNode = a.xyz.mul(life.mul(b.z).add(3.5)).add(vec3(0, Y, 0));
+    sm.positionNode = a.xyz.mul(life.mul(b.z).add(3.5));
     sm.scaleNode = b.y.mul(fade.mul(0.7).add(0.3)).mul(TSL.sin(TSL.time.mul(19).add(b.x.mul(61))).mul(0.3).add(0.7));
     const tx = TSL.texture(glowTex(), TSL.uv());
     sm.colorNode = vec4(c.mul(fade), tx.a.mul(fade));
-    this.sparkPts = new THREE.Mesh(G.plane, sm); this.sparkPts.count = NS; this.sparkPts.frustumCulled = false; g.add(this.sparkPts);
-    // the detector, as his photograph's chamber seen from above it: concentric rings of panels round the ball in a
-    // shallow bowl, each face turned up and in to the heart so it catches its gold -- a fine inner ring, the
-    // bright calorimeter, the big plates of the muon chambers, the dark yoke -- a smaller plate on each for relief,
-    // a lit seam between every two; the rings turn slowly, every other one the other way
-    const env = chamberEnv();
-    const silver = new THREE.MeshStandardMaterial({ color: 0xdfe4e9, metalness: 0.93, roughness: 0.24, envMap: env, envMapIntensity: 1.25 });
-    const steel = new THREE.MeshStandardMaterial({ color: 0xa4acb5, metalness: 0.92, roughness: 0.32, envMap: env, envMapIntensity: 1.1 });
-    const dark = new THREE.MeshStandardMaterial({ color: 0x2c3138, metalness: 0.75, roughness: 0.45, envMap: env, envMapIntensity: 0.55 });
-    const seam = new THREE.MeshBasicMaterial({ color: new THREE.Color(0xffb347).multiplyScalar(1.6) });
-    const o = new THREE.Object3D();
-    // inner and outer radius, panels, tilt, the inner edge's height, the face, the relief plate, seams lit
-    this.machine = [[9.5, 12.5, 40, 0.62, -2.6, steel, dark, false], [13.5, 18.8, 36, 0.48, -2.4, silver, steel, true], [19.8, 25.6, 24, 0.34, -1.6, steel, silver, false], [26.6, 30.6, 16, 0.2, -0.4, dark, steel, true]].map(([r0, r1, n, tilt, y0, face, plate, lit], k) => {
-      const ring = new THREE.Group(); g.add(ring);
-      const dr = r1 - r0, rm = (r0 + r1) / 2, pan = new THREE.InstancedMesh(G.box, face, n), rel = new THREE.InstancedMesh(G.box, plate, n), sm2 = lit ? new THREE.InstancedMesh(G.box, seam, n) : null;
-      for (let i = 0; i < n; i++) {
-        const t = i / n * Math.PI * 2, place = (r, ang) => { o.position.set(Math.sin(ang) * r, y0 + (r - r0) * Math.sin(tilt), Math.cos(ang) * r); o.rotation.set(0, ang, 0); o.rotateX(-tilt); };
-        place(rm, t); o.scale.set(2 * Math.PI * rm / n * 0.9, 0.55, dr); o.updateMatrix(); pan.setMatrixAt(i, o.matrix);
-        place(rm + dr * 0.06, t); o.translateY(0.35); o.scale.set(2 * Math.PI * rm / n * 0.5, 0.3, dr * 0.55); o.updateMatrix(); rel.setMatrixAt(i, o.matrix);
-        if (sm2) { place(rm, t + Math.PI / n); o.translateY(0.1); o.scale.set(0.18, 0.5, dr * 0.92); o.updateMatrix(); sm2.setMatrixAt(i, o.matrix); }
-      }
-      ring.add(pan, rel); if (sm2) ring.add(sm2); return ring;
-    });
+    this.sparkPts = new THREE.Mesh(G.plane, sm); this.sparkPts.count = NS; this.sparkPts.frustumCulled = false; sun.add(this.sparkPts);
     // the orrery's own rings on the plane, as his: thin cyan circles at 36, 42 (dashed), 53 and a bright one at 60,
-    // a pale silver arc in pieces at 33 and 57
+    // a pale silver arc in pieces at 33 and 57; none of them turns
     const ringAt = (r, w, hex, U = 1, k = 1) => { const m = new THREE.Mesh(uvBand(r, w, U, () => look(hex, k)), new THREE.MeshBasicMaterial({ map: uvLineTex(U > 1), vertexColors: true, transparent: true, blending: THREE.AdditiveBlending, depthWrite: false, side: THREE.DoubleSide })); m.renderOrder = -4; g.add(m); return m; };
     this.coreRings = [ringAt(60, 0.9, '#a5d8e6'), ringAt(57.5, 0.7, '#4f8a9c'), ringAt(53, 0.7, '#77c2d0'), ringAt(42, 0.8, '#4e8d9f', 90), ringAt(36.5, 0.8, '#81cbdb')];
     const arcGeo = (r, w, a0, a1) => { const sh = new THREE.Shape(); sh.absarc(0, 0, r + w, a0, a1, false); sh.absarc(0, 0, r - w, a1, a0, true); return new THREE.ShapeGeometry(sh, 48).rotateX(-Math.PI / 2); };
@@ -1374,10 +1355,9 @@ class Universe3D {
     // a star of light on the outer ring, where his is
     const fl = new THREE.Sprite(new THREE.SpriteMaterial({ map: flareTex(), color: new THREE.Color(0xd8f6ff).multiplyScalar(1.4), transparent: true, blending: THREE.AdditiveBlending, depthWrite: false }));
     fl.scale.setScalar(16); g.add(fl); this.coreFlare = fl;
-    // its light: warm, and only as far as the detector, so the stations keep their own
-    const pl = new THREE.PointLight(0xffb45a, 380, 70, 1.6); pl.position.y = Y; g.add(pl); this.coreLight = pl;
-    const hit = new THREE.Mesh(G.sphere, M.hit); hit.scale.setScalar(34); hit.position.y = Y; hit.userData.id = 'core'; g.add(hit); this.coreHit = hit;
-    this.coreAt = new THREE.Vector3(0, 21, 0);
+    // (its warm point light went with the detector: it reached only the panels, and no station is that close)
+    // what the pointer finds: the sun and a little round it
+    const hit = new THREE.Mesh(G.sphere, M.hit); hit.scale.setScalar(Math.max(34, this.sunR * 1.15)); hit.position.copy(this.heartAt); hit.userData.id = 'core'; g.add(hit); this.coreHit = hit;
     this.scene.add(g); this.coreG = g;
   }
   // every company on its orbit; ours on the second, in front of Cymetica where the camera first looks
@@ -1456,7 +1436,7 @@ class Universe3D {
   // work goes in to Cymetica in the company's colour; ET10 comes back out in green
   arc(it, back) {
     if (!it.plot || this.arcs.length > 12) return;
-    const core = new THREE.Vector3(0, 5, 0), top = it.plot.root.position.clone().add(new THREE.Vector3(0, it.plot.top * 0.6 * UVSS, 0));
+    const core = this.heartAt.clone(), top = it.plot.root.position.clone().add(new THREE.Vector3(0, it.plot.top * 0.6 * UVSS, 0));
     const a = back ? core : top, b = back ? top : core, mid = a.clone().lerp(b, 0.5);
     mid.y += 8 + a.distanceTo(b) * 0.16;
     const A = back ? amat('#00ff88') : amat(CO.accentHex(it.c.accent)), curve = new THREE.QuadraticBezierCurve3(a, mid, b);
@@ -1557,17 +1537,15 @@ class Universe3D {
       if (this.followAt && !this.tw) { const d = p.clone().sub(this.followAt); this.camera.position.add(d); this.controls.target.add(d); }
       this.followAt = (this.followAt || new THREE.Vector3()).copy(p);
     }
-    // Cymetica: the filaments turn each their own way and flicker, the jets breathe, the heart pulses, the detector's
-    // rings and the silver arcs turn slowly, a star of light runs round the outer ring (the sparks fly on the GPU)
+    // Cymetica: the filaments turn each their own way and flicker, the jets breathe, the heart pulses, a star of
+    // light runs round the outer ring (the sparks fly on the GPU); the rings round it stay still
     this.fil.forEach((f, i) => { f.rotation.set(t * (0.11 + i * 0.05) * (i % 2 ? -1 : 1), t * (0.17 + i * 0.04), t * 0.04 * (i - 1.5)); f.material.opacity = 0.7 + 0.3 * Math.sin(t * (6 + i * 2.3) + i) * Math.sin(t * 2.3 + i * 1.7); });
     this.beams.forEach((b) => {
       const k = 0.5 + 0.5 * Math.sin(t * 1.9 + b.ph), fl = 0.85 + 0.15 * Math.sin(t * 23 + b.ph * 7);
       b.j.scale.set(0.85 + 0.3 * k, 0.8 + 0.3 * k, 0.85 + 0.3 * k); b.outer.material.opacity = (0.3 + 0.3 * k) * fl; b.inner.material.opacity = (0.55 + 0.4 * k) * fl;
     });
-    this.machine.forEach((m, i) => { m.rotation.y = t * (0.04 + i * 0.015) * (i % 2 ? -1 : 1); });
-    this.coneRings.forEach((r, i) => { r.rotation.y = t * 0.03 * (i % 2 ? 1 : -1); });
     this.corona[0].material.opacity = 0.62 + 0.15 * Math.sin(t * 3.3 + 1); this.corona[1].material.opacity = 0.82 + 0.12 * Math.sin(t * 2.1);
-    this.heart.children[0].scale.setScalar(0.9 * (1 + 0.08 * Math.sin(t * 4.2)));
+    this.heart.children[0].scale.setScalar(this.heartR * (1 + 0.08 * Math.sin(t * 4.2)));
     const fa = 0.53 + t * 0.05; this.coreFlare.position.set(Math.sin(fa) * 60, 0.3, Math.cos(fa) * 60);
     this.moveShips(t);
     if (this.arcs.length) {
@@ -1599,20 +1577,45 @@ class Universe3D {
     });
   }
   // The banners follow their stations. Ours, the hovered one and Cymetica's always show; the rest nearest first,
-  // each only where no nearer one stands and only while its station is big enough on screen to be worth a name.
+  // each only where no nearer one stands, wholly inside the stage and clear of its bars, and only while its station
+  // is big enough on screen to be worth a name. A plate stands on its station's top as the camera sees it: over the
+  // mast from the side, past the edge of the deck from straight above, so it names the station from any angle
+  // without covering it. Cymetica's stands on its sun the same way.
   overlay() {
-    const w = this.el.clientWidth, h = this.el.clientHeight, v = new THREE.Vector3(), placed = [];
+    const w = this.el.clientWidth, h = this.el.clientHeight, v = new THREE.Vector3(), placed = [], now = performance.now();
     // a still camera moves no banner: restyle them only when the view, the size, the hover or a station changed
-    const key = this.camera.matrixWorld.elements.join(',') + '|' + w + 'x' + h + '|' + this.hover + '|' + this.items.length + '|' + this.built + '|' + Math.floor(performance.now() / 66);
+    const key = this.camera.matrixWorld.elements.join(',') + '|' + w + 'x' + h + '|' + this.hover + '|' + this.items.length + '|' + this.built + '|' + Math.floor(now / 66);
     if (key === this.ovKey && !this.pops.length) return;
     this.ovKey = key;
+    // the stage's own bars (the count, the zoom buttons, the legend) are drawn over the plates: a plate under one is
+    // a plate cut in half. Where they are, read again once a second (they move only with the stage and the font).
+    if (!this.bars || now - this.barsAt > 1000) {
+      const S = this.stage.getBoundingClientRect();
+      this.bars = Array.prototype.map.call(this.stage.querySelectorAll('.top > *, .uvlegend'), (e) => e.getBoundingClientRect())
+        .filter((b) => b.width && b.height).map((b) => ({ l: b.left - S.left, r: b.right - S.left, t: b.top - S.top, b: b.bottom - S.top }));
+      this.barsAt = now;
+    }
     // the plates are his size on his 820-high frame, and grow and shrink with the stage as his picture would
     const f = h / (2 * Math.tan(THREE.MathUtils.degToRad(this.camera.fov) / 2)), cam = this.camera.position, bs = Math.max(0.8, Math.min(1.35, h / 820));
-    const list = this.items.map((it) => {
-      v.copy(it.anchor).project(this.camera); const d = cam.distanceTo(it.anchor);
+    // the camera's up in the world: a plate is lifted along it, so it is "above" on the screen whatever the angle.
+    // Seen from his first look's height or lower, a station's top is its mast (the lift is the mast's height as
+    // the camera sees it); looking further down, its deck shows round the mast, so the plate moves out to the
+    // deck's edge (a little over half the station's reach: the solar wings beyond it are thin, a plate may cross them).
+    const up = (this._up || (this._up = new THREE.Vector3())).setFromMatrixColumn(this.camera.matrixWorld, 1).normalize();
+    const c = new THREE.Vector3(), dir = new THREE.Vector3(), cH = Math.cos(UVCAM.polar);
+    const list = this.items.filter((it) => it.plot).map((it) => {
+      const p = it.plot, hh = (p.top - p.bot) / 2 * UVSS;
+      c.copy(p.root.position); c.y += (p.top + p.bot) / 2 * UVSS;
+      const cos = Math.max(0, Math.min(1, dir.copy(cam).sub(c).normalize().y)), sin = Math.sqrt(1 - cos * cos);
+      const lift = (hh + 0.5 * UVSS) * sin + p.b.foot * 0.55 * UVSS * Math.max(0, (cos - cH) / (1 - cH));
+      it.plateAt = (it.plateAt || new THREE.Vector3()).copy(c).addScaledVector(up, lift);
+      v.copy(it.plateAt).project(this.camera); const d = cam.distanceTo(it.anchor);
       return { el: it.el, x: (v.x + 1) / 2 * w, y: (1 - v.y) / 2 * h, z: v.z, d, px: it.size * f / d, mine: it.mine, keep: it.mine || String(this.hover) === String(it.c.id) };
     });
-    if (this.coreEl) { v.copy(this.coreAt).project(this.camera); list.push({ el: this.coreEl, x: (v.x + 1) / 2 * w, y: (1 - v.y) / 2 * h, z: v.z, d: cam.distanceTo(this.coreAt), px: 200, keep: true, core: true }); }
+    if (this.coreEl) {
+      c.copy(this.heartAt).addScaledVector(up, this.sunR * 0.9); v.copy(c).project(this.camera);
+      list.push({ el: this.coreEl, x: (v.x + 1) / 2 * w, y: (1 - v.y) / 2 * h, z: v.z, d: cam.distanceTo(this.heartAt), px: 200, keep: true, core: true });
+    }
     list.sort((a, b) => (b.keep - a.keep) || a.d - b.d);
     // a galaxy with a name on every star reads as a list: at most this many names besides ours, Cymetica and the hovered
     let named = 0;
@@ -1621,17 +1624,22 @@ class Universe3D {
       if (!el._bw) el._bw = el.offsetWidth || 160;
       const s = bs * (o.core ? 1 : Math.max(0.86, Math.min(1, 0.6 + o.px / 120)));
       const off = o.z > 1 || o.x < -80 || o.x > w + 80 || o.y < -40 || o.y > h + 60;
-      const bw = el._bw * s, bh = (o.mine ? 50 : o.core ? 42 : 32) * s, r = { l: o.x - bw / 2, r: o.x + bw / 2, t: o.y - bh, b: o.y };
-      const clash = placed.some((p) => r.l < p.r + 6 && r.r > p.l - 6 && r.t < p.b + 4 && r.b > p.t - 4);
-      const show = !off && (o.keep || (!clash && o.px >= 24 && named < 14));
+      const bw = el._bw * s, bh = (o.mine ? 50 : o.core ? 42 : 32) * s;
+      // one that must show is slid along the edge to stay whole; any other shows whole or not at all
+      if (o.keep) o.x = Math.max(bw / 2 + 4, Math.min(w - bw / 2 - 4, o.x));
+      const r = { l: o.x - bw / 2, r: o.x + bw / 2, t: o.y - bh, b: o.y };
+      const hit = (p) => r.l < p.r + 6 && r.r > p.l - 6 && r.t < p.b + 4 && r.b > p.t - 4;
+      const whole = r.l >= 2 && r.r <= w - 2 && r.t >= 2 && r.b <= h - 2;
+      const show = !off && (o.keep || (whole && !placed.some(hit) && !this.bars.some(hit) && o.px >= 24 && named < 14));
       if (show && !o.keep) named++;
       el.classList.toggle('hidden', !show);
       if (show) placed.push(r);
       el.style.transform = 'translate(' + o.x.toFixed(1) + 'px,' + o.y.toFixed(1) + 'px) translate(-50%,-100%) scale(' + s.toFixed(3) + ')';
       el.style.zIndex = String(o.keep ? 3000 : 2000 - Math.round(o.d));
     });
+    // an ET10 pop rises over its station's plate, wherever the plate now stands
     this.pops.forEach((p) => {
-      v.copy(p.it.anchor).project(this.camera);
+      v.copy(p.it.plateAt || p.it.anchor).project(this.camera);
       p.el.style.transform = 'translate(' + ((v.x + 1) / 2 * w).toFixed(1) + 'px,' + ((1 - v.y) / 2 * h - 46).toFixed(1) + 'px) translate(-50%,-100%)';
     });
   }
