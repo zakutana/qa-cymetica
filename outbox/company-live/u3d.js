@@ -1827,12 +1827,14 @@ const TONEC = { cyan: '#24e8ff', red: '#ff9438', blue: '#dfe6ee', dim: '#a9b8cc'
 const OFFICE = { bg: 0x040b14, lamp: 0xa8e8f8, mon: 0x58ffc0 };
 const WH = 1.4;   // the glass walls' height: his picture's corners put their top rail at 1.4 over the floor
 const OM = {};
-// The camera of the operator's reference picture (his full-size render, 2026-10-18), recovered from six of its
-// landmarks -- three room corners at the top rail, two at the floor, the Manager's core -- by fitting a perspective
-// camera to them (rms 4.2 px over 2000 x 1116): polar and azimuth of the view, its field of view, and where the
-// platform's bounds sit in the frame (NDC: as wide and tall as BOX, its centre at MID). home() keeps those at any
-// stage size.
-const CAM = { polar: 0.9304, az: 0.7422, fov: 30.94, box: [1.78, 1.79], mid: [0.021, -0.045] };
+// The home view the operator set by hand and sent (2026-10-19, "zakladni view dej vice seshora a oddal ho tak jak
+// posilam"): more from above and further out than his render. Recovered from seven landmarks of his screenshot --
+// three room corners at the top rail, two at the floor, the League's front foot, the Manager's core -- by fitting a
+// perspective camera at the render's lens (rms 1.4 px over 2020 x 1168): straight down the diagonal (45 degrees),
+// 47 degrees off the vertical (the render's was 53). BOX and MID are where the platform's bounds sit in the frame
+// (NDC); with the vault filling the corner his screenshot left empty, a little further out than his so the whole
+// platform stays in the frame. home() keeps those at any stage size.
+const CAM = { polar: 0.8198, az: 0.7854, fov: 30.94, box: [1.3, 1.74], mid: [0.02, -0.02] };
 // His picture's colours, read off it (sRGB): the mint of a neon line's core and its halo, the sky between the stars.
 const LOOK = { neon: '#7cf2c4', orange: '#ff8a3a', sky: 0x16232f };
 
@@ -2287,7 +2289,7 @@ function omats() {
   OM.plume = new THREE.MeshBasicMaterial({ map: plumeTex(), color: new THREE.Color(0x28e4ff).multiplyScalar(1.2), opacity: 0.88, transparent: true, blending: THREE.AdditiveBlending, depthWrite: false, side: THREE.DoubleSide });
   OM.dash = emis('#dfeaf0', 0.62);
   OM.lotRim = emis('#1ed8cc', 2.2);
-  OM.lotCyan = emis('#36c8e8', 0.9);
+  OM.lotCyan = emis('#36c8e8', 1.5);
   OM.frameLime = emis('#c8ea6a', 1.5);
   OM.paneLime = new THREE.MeshBasicMaterial({ color: 0x6a8a3a, transparent: true, opacity: 0.22, blending: THREE.AdditiveBlending, depthWrite: false, side: THREE.DoubleSide });
   OM.daisRim = std({ color: 0x4a5866, roughness: 0.35, metalness: 0.45 });
@@ -2457,8 +2459,9 @@ class Office3D {
   layout(opts) {
     const S = CO.S, L = CO.iso, born = opts && opts.born;
     this.shapeKey = this.shape();
-    // 8-cell station silhouette matching look-office.webp (with the Vault as the sleek bottom-right HUD card)
-    const cells = { hub: L.HUB, audit: L.AUDIT }, used = {};
+    // the flat office's plan: the Manager in the middle, the weekly audit and the vault in their fixed corners (the
+    // vault in front, where his screenshot had an empty notch), the departments in their slots
+    const cells = { hub: L.HUB, audit: L.AUDIT, vault: L.VAULT }, used = {};
     S.departments.forEach((d) => { cells['d' + d.id] = L.SLOTS[d.slot]; used[d.slot] = 1; });
     let lot = 0; while (used[lot]) lot++;
     if (lot < L.SLOTS.length && !CO.RO) cells.lot = L.SLOTS[lot];
@@ -2516,13 +2519,6 @@ class Office3D {
       const hit = new THREE.Mesh(G.box, M.hit); hit.scale.set(RS, WH, RS); hit.position.copy(this.V(c[0] + RS / 2, c[1] + RS / 2, WH / 2)); hit.userData.key = k; g.add(hit); this.hits.push(hit);
       if (room.born) { g.scale.set(1, 0.01, 1); room.grow = performance.now(); }
     });
-    // Bottom-right VAULT HUD card matching look-office.webp
-    const vc = document.createElement('div');
-    vc.className = 'opvault';
-    vc.setAttribute('data-key', 'vault');
-    vc.addEventListener('click', () => CO.emit('office:click', 'vault'));
-    this.layer.appendChild(vc);
-    this.vaultCard = vc;
     this.selRing = new THREE.Group(); W.add(this.selRing);
     this.update();
     if (!this.fitted) { this.fit(false); }
@@ -3019,16 +3015,16 @@ class Office3D {
     const pad = new THREE.Mesh(G.plane, new THREE.MeshBasicMaterial({ map: padTex(), transparent: true, blending: THREE.AdditiveBlending, depthWrite: false }));
     pad.scale.set(5.0, 5.0, 1); pad.rotation.x = -Math.PI / 2; pad.position.set(c.x, 0.07, c.z); g.add(pad);
     // his pad, zoomed: a speckled wall of teal light with a bright line along its top; inside it, on the floor, a
-    // ring of thick white dashes and a thin bright teal circle; outside, a thin white dashed circle and a thin
-    // cyan one further out
+    // ring of thick white dashes and a thin bright teal circle; outside, one thin dashed circle in cyan. (His further
+    // cyan circle reached past the square of lane dashes round the lot, so it went, and the white one took its
+    // colour: "to kolecko carkovane modre precniva prez ctverecek ... to co je ted bile udelej modre".)
     const ring = (geo, mat, rad, y, flat) => { const m = new THREE.Mesh(geo, mat); m.scale.set(rad, rad, flat || rad); m.rotation.x = Math.PI / 2; m.position.set(c.x, y, c.z); g.add(m); return m; };
     const wall = new THREE.Mesh(G.pole, new THREE.MeshBasicMaterial({ map: gridTex(), color: new THREE.Color(0x3ad8c4).multiplyScalar(0.8), transparent: true, blending: THREE.AdditiveBlending, depthWrite: false, side: THREE.DoubleSide }));
     wall.scale.set(2.38, 0.46, 2.38); wall.position.set(c.x, 0.3, c.z); g.add(wall);
     ring(G.ringThin, OM.lotRim, 2.38, 0.53);
     ring(G.ringThin, OM.lotRim, 1.92, 0.07);
     r.plus = ring(G.lotDash, OM.dash, 2.16, 0.07, 0.25);
-    ring(G.lotDashFine, OM.dash, 2.95, 0.06);
-    ring(G.lotDashFine, OM.lotCyan, 3.35, 0.06);
+    ring(G.lotDashFine, OM.lotCyan, 2.95, 0.06);
     const hit = new THREE.Mesh(G.box, M.hit); hit.scale.set(RS, 1.6, RS); hit.position.set(c.x, 0.8, c.z); hit.userData.key = 'lot'; g.add(hit); this.hits.push(hit);
     const el = document.createElement('div'); el.className = 'p3lot'; el.innerHTML = '<b>+</b>ADD DEPARTMENT'; el.addEventListener('click', () => CO.emit('office:click', 'lot')); this.layer.appendChild(el);
     r.plate = el; r.plateAt = new THREE.Vector3(c.x, 0.18, c.z);   // the label lies inside its ring
@@ -3090,12 +3086,16 @@ class Office3D {
       if (au.plate._h !== html) { au.plate._h = html; au.plate.innerHTML = html; }
       au.plate.style.setProperty('--c', '#38f2b8');
     }
-    if (this.vaultCard) {
-      const VT = CO.vaultTotals(), priv = !!CO.RO;
-      const vh = priv
-        ? '<span class="k">VAULT</span><div class="vv"><b class="g">Private</b></div><span class="go">Owner only</span>'
-        : '<span class="k">VAULT</span><div class="vv"><b class="g">' + CO.fmtEt(VT.et10) + '</b><span>ET10</span></div><div class="vv"><b class="u">' + CO.fmtUsd(VT.usdc) + '</b><span>USDC</span></div><span class="go">Open the vault →</span>';
-      if (this.vaultCard._h !== vh) { this.vaultCard._h = vh; this.vaultCard.innerHTML = vh; }
+    // the vault: what it holds is seen only by clicking it (the right column then opens it), so its plate names it
+    // and nothing more; the piles inside are rebuilt when what they hold changes
+    const vr = this.rooms.vault;
+    if (vr) {
+      const VT = CO.vaultTotals(), priv = !!CO.RO, vk = priv ? 'priv' : Math.round(VT.et10) + '|' + VT.usdc.toFixed(2);
+      if (vr._k !== vk) { vr._k = vk; this.piles(vr, VT, priv); }
+      this.tint(vr, 'idle');
+      const html = '<div class="p3h"><i style="background:#38f2b8"></i><b>VAULT</b></div><div class="p3l" style="color:#a9b8cc">' + (priv ? 'Private' : 'Earnings') + '</div>';
+      if (vr.plate && vr.plate._h !== html) { vr.plate._h = html; vr.plate.innerHTML = html; }
+      if (vr.plate) vr.plate.style.setProperty('--c', '#38f2b8');
     }
     this.paused = S.company.status === 'paused';
     this.drawSel();

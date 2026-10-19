@@ -222,6 +222,9 @@
   }
   // the right column's vault: its two totals, then where they came from; a visitor sees only that it is private
   function renderEarned(fd) {
+    // it shows only while the vault is open: clicked in the office (the operator, 2026-10-19: "ten vault napravo
+    // zobrazis jen kdyz nekdo klikne na trezor")
+    $('p-earn').hidden = !ui.vault;
     var V = CO.vaultTotals();
     if (RO) { $('earn-n').textContent = ''; setHTML($('earn'), '<p class="empty"><i class="lk"></i> Private: only its owner sees inside the vault.</p>'); return; }
     $('earn-n').textContent = '';
@@ -282,7 +285,7 @@
     if (ui.tab !== 'office') setTab('office');
     if (ui.panel !== id) { ui.dirty = false; $('dr-ch-text').value = d.charter; ui.open = {}; }
     var was = ui.panel != null || ui.mgr;
-    ui.panel = id; ui.mgr = false; $('mgr').hidden = true;
+    ui.panel = id; ui.mgr = false; ui.vault = false; document.body.classList.remove('vopen'); $('mgr').hidden = true;
     var dr = $('drawer'); dr.hidden = false; dr.scrollTop = 0;
     document.body.classList.add('focus');
     $('back').hidden = false; $('where').hidden = false; $('where').textContent = d.name;
@@ -295,7 +298,7 @@
   function openManager() {
     if (ui.tab !== 'office') setTab('office');
     var was = ui.panel != null || ui.mgr;
-    ui.panel = null; ui.mgr = true; $('drawer').hidden = true; $('mgr').hidden = false; $('msgs')._h = null;
+    ui.panel = null; ui.mgr = true; ui.vault = false; document.body.classList.remove('vopen'); $('drawer').hidden = true; $('mgr').hidden = false; $('msgs')._h = null;
     document.body.classList.add('focus');
     $('back').hidden = false; $('where').hidden = false; $('where').textContent = 'Manager';
     office.select('hub');
@@ -304,10 +307,22 @@
     clearTimeout(ui.flyT);
     ui.flyT = setTimeout(function () { office.focus('hub', 0, true); }, was ? 0 : 520);
   }
+  // the vault opened from the office: the camera goes to its room and the right column shows what it holds
+  function openVaultRoom() {
+    if (ui.tab !== 'office') setTab('office');
+    var was = ui.panel != null || ui.mgr;
+    ui.panel = null; ui.mgr = false; ui.vault = true; $('drawer').hidden = true; $('mgr').hidden = true;
+    document.body.classList.remove('focus'); document.body.classList.add('vopen');
+    $('back').hidden = false; $('where').hidden = false; $('where').textContent = 'Vault';
+    office.select('vault');
+    render();
+    clearTimeout(ui.flyT);
+    ui.flyT = setTimeout(function () { office.focus('vault', 0, true); }, was ? 520 : 0);
+  }
   function closeDrawer() {
-    if (ui.panel == null && !ui.mgr) return;
-    ui.panel = null; ui.mgr = false; $('drawer').hidden = true; $('mgr').hidden = true;
-    document.body.classList.remove('focus');
+    if (ui.panel == null && !ui.mgr && !ui.vault) return;
+    ui.panel = null; ui.mgr = false; ui.vault = false; $('drawer').hidden = true; $('mgr').hidden = true;
+    document.body.classList.remove('focus', 'vopen');
     $('back').hidden = true; $('where').hidden = true;
     office.select(null);
     render();
@@ -1115,7 +1130,7 @@
     document.addEventListener('keydown', function (e) {
       if (e.key !== 'Escape') return;
       if (!$('modal').hidden) return closeModal();
-      if (ui.panel != null || ui.mgr) closeDrawer();
+      if (ui.panel != null || ui.mgr || ui.vault) closeDrawer();
     });
   }
   function pageAct(a, el) {
@@ -1173,12 +1188,12 @@
     CO.on('submitted', function (e) { if (e.dept) { office.packet('d' + e.dept.id, 'hub', 'green'); } });
     CO.on('message', function () { office.packet('hub', 'you', 'cyan'); });
     // after the office changes shape, the camera goes back to what is in focus
-    function reframe() { if (ui.mgr) office.focus('hub', 0, true); else if (ui.panel != null) office.focus('d' + ui.panel, 0, true); else office.fit(true); }
+    function reframe() { if (ui.mgr) office.focus('hub', 0, true); else if (ui.panel != null) office.focus('d' + ui.panel, 0, true); else if (ui.vault) office.focus('vault', 0, true); else office.fit(true); }
     CO.on('dept:new', function (d) { office.layout({ born: d.id }); if (ui.panel != null || ui.mgr) office.select(ui.mgr ? 'hub' : 'd' + ui.panel); setTimeout(reframe, 60); });
     CO.on('dept:edit', function () { office.layout(); });
     CO.on('dept:removed', function () { office.layout(); setTimeout(reframe, 60); });
     CO.on('reset', function () {
-      closeModal(); ui.panel = null; $('drawer').hidden = true; office.sel = null; ui.open = {}; ui.prev = {};
+      closeModal(); ui.panel = null; ui.vault = false; document.body.classList.remove('vopen'); $('drawer').hidden = true; office.sel = null; ui.open = {}; ui.prev = {};
       office.layout(); office.fit(true); markSeen();
       ['depts', 'appr', 'earn', 'msgs', 'legal', 'settings'].forEach(function (id) { $(id)._h = null; });
       if (uv) uv.setMine(mineForMap());
@@ -1188,7 +1203,7 @@
       if (key === 'hub') return openManager();
       if (key === 'you') return setTab('approvals');
       if (key === 'audit') return setTab('audit');
-      if (key === 'vault') return openVault();
+      if (key === 'vault') return openVaultRoom();
       if (key === 'lot') return addDeptModal();
     });
     // people keep arriving at the apps: the vault, its plate and the Portfolio follow

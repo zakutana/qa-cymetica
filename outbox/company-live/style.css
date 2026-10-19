@@ -407,7 +407,7 @@ body.focus .rightcol > .panel:nth-child(2) { animation-delay: .05s; } body.focus
   box-shadow: 0 0 16px rgba(0, 207, 255, .25); animation: popin .35s ease; }
 .back:hover { background: var(--cyan-a); }
 .back, .where { white-space: nowrap; }
-body.focus .stage .live { display: none; }
+body.focus .stage .live, body.vopen .stage .live { display: none; }
 body.focus .strip > .vs, body.focus .strip > .use:not(.wide), body.focus .use .legend { display: none; }
 .use.wide .u1 { overflow: hidden; }
 .where { font-family: 'Archivo Black'; font-weight: 400; font-size: 15px; color: var(--text); text-shadow: 0 0 14px rgba(0, 207, 255, .35); }
