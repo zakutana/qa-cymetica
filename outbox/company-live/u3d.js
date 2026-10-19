@@ -2257,6 +2257,8 @@ const OM = {};
 const CAM = { polar: 0.8198, az: 0.7854, fov: 30.94, box: [1.3, 1.74], mid: [0.02, -0.02] };
 // His picture's colours, read off it (sRGB): the mint of a neon line's core and its halo, the sky between the stars.
 const LOOK = { neon: '#7cf2c4', orange: '#ff8a3a', sky: 0x16232f };
+// the rooms' names on their glass: the site's cyan-blue, the clearest colour over the office (signRooms)
+const SIGN_BLUE = '#00cfff';
 
 /* ---------------- space: the sky the office floats in ---------------- */
 function ctex(w, h, draw) {
@@ -3189,18 +3191,6 @@ function drawWall(s, title, sub, col, mode) {
   g.strokeStyle = 'rgba(176,196,208,.62)'; g.lineWidth = Math.max(2, H * 0.025); g.strokeRect(p * 0.5, p * 0.5, W - p, H - p);
   g.fillStyle = col; g.font = '700 ' + Math.round(H * 0.17) + 'px JetBrains Mono, monospace'; g.textBaseline = 'top';
   const fit = (t) => { let s2 = String(t || ''); while (s2.length > 3 && g.measureText(s2).width > W - 3 * p) s2 = s2.slice(0, -2); return s2 !== t ? s2.replace(/.$/, '…') : s2; };
-  // a room whose name is on its glass (signRooms): its screen says what it does now in big type, two lines at most
-  if (s.big) {
-    const words = String(title || '').split(' '), lines = ['']; g.font = '700 ' + Math.round(H * 0.26) + 'px JetBrains Mono, monospace';
-    words.forEach((wd) => { const l = lines[lines.length - 1], t2 = l ? l + ' ' + wd : wd; if (g.measureText(t2).width > W - 3 * p && l && lines.length < 2) lines.push(wd); else lines[lines.length - 1] = t2; });
-    g.shadowColor = col; g.shadowBlur = H * 0.05;
-    lines.forEach((l, i) => g.fillText(fit(l), p * 1.4, H * (0.14 + i * 0.29)));
-    g.shadowBlur = 0;
-    g.fillStyle = '#122030'; g.fillRect(p * 1.4, H * 0.8, W - 2.8 * p, H * 0.06);
-    if (mode === 'run') { g.fillStyle = col; g.fillRect(p * 1.4, H * 0.8, (W - 2.8 * p) * (0.25 + 0.5 * Math.random()), H * 0.06); }
-    if (mode === 'full') { g.fillStyle = col; g.globalAlpha = 0.8; g.fillRect(p * 1.4, H * 0.8, W - 2.8 * p, H * 0.06); g.globalAlpha = 1; }
-    s.tex.needsUpdate = true; return;
-  }
   g.fillText(fit(title), p * 1.4, H * 0.17);
   g.fillStyle = '#8fa8c2'; g.font = '500 ' + Math.round(H * 0.12) + 'px JetBrains Mono, monospace';
   g.fillText(fit(sub), p * 1.4, H * 0.42);
@@ -3522,36 +3512,47 @@ class Office3D {
   }
   // every room's still parts merged per material (bakeRoom): the same picture in a fraction of the draw calls
   bakeRooms() { this.baked = 0; Object.values(this.rooms).forEach((r) => { if (r.g) this.baked += bakeRoom(r); }); }
-  // A trial of the operator's idea (2026-10-19: "zkus udelat to ze nazvy tech mistnosti budou na tom skle a ten
-  // napis pod tim treba Up Next tam bude na nejake velke obrazovce v mistnosti ... vyzkousej to tak pro jednu
-  // mistnost"): the room's name lettered on its front glass, its plate gone, and what it does now in big type on the
-  // room's own wall screen. Cymetica QA only; ?signs=all tries it in every department's room.
+  // Every room's name lettered in light on its front glass, and nothing else over the office (the operator,
+  // 2026-10-19: "tam vlastne staci jen ty nazvy mistnosti dat na to sklo ... nic vic se tam zobrazovat uz nemusi,
+  // protoze detaily jsou vlevo v panelu ... kdyz nekoho zajima vic klikne na mistnost"; and of the colour: "nejakou
+  // viditelnejsi barvu, mozna modrou, aby to bylo jasne videt"): the plates go, the names are the site's cyan-blue
+  // over a dark band so they read over whatever is behind the glass; orange while the room waits on the owner.
   signRooms() {
-    const all = CO.Q && CO.Q.get('signs') === 'all';
+    const have = new Set(Object.values(this.cells || {}).map((c) => c[0] + ',' + c[1]));
     Object.values(this.rooms).forEach((r) => {
-      if (!r.dept || !(all || r.dept.key === 'testing')) return;
-      this.glassSign(r);
-      if (r.wall) r.wall.big = true;
+      if (r.key === 'lot') return;
+      const name = r.dept ? r.dept.name : { hub: 'Manager', audit: 'Weekly audit', vault: 'Vault' }[r.key];
+      if (!name) return;
+      // the front pane the home view sees clear: the front-left one, unless a room stands in front of it and none in
+      // front of the front-right one
+      const leftFree = !have.has(r.x0 + ',' + (r.y0 + 8)), rightFree = !have.has((r.x0 + 8) + ',' + r.y0);
+      this.glassSign(r, String(name).toUpperCase(), !leftFree && rightFree ? 'right' : 'left');
       if (r.plate) { r.plate.remove(); r.plate = null; }
     });
   }
-  glassSign(r) {
-    const RS = CO.iso.RS, name = String(r.dept.name || '').toUpperCase();
-    const c = document.createElement('canvas'); c.width = 1024; c.height = 144; const g = c.getContext('2d');
-    // letters etched in light: a soft wide glow under crisp strokes, a thin rule under them with a bright tick
+  glassSign(r, name, side) {
+    const RS = CO.iso.RS, c = document.createElement('canvas'); c.width = 1024; c.height = 176; const g = c.getContext('2d');
     g.textBaseline = 'middle'; g.textAlign = 'left';
-    let fs = 92; g.font = '700 ' + fs + 'px Rajdhani, "JetBrains Mono", sans-serif';
-    const sp = 6, width = (t) => [...t].reduce((w, ch) => w + g.measureText(ch).width + sp, -sp);
-    while (width(name) > 960 && fs > 40) { fs -= 4; g.font = '700 ' + fs + 'px Rajdhani, "JetBrains Mono", sans-serif'; }
-    const draw = (blur, alpha) => { g.save(); g.shadowColor = 'rgba(255,255,255,' + alpha + ')'; g.shadowBlur = blur; g.fillStyle = 'rgba(255,255,255,' + alpha + ')'; let x = 30; [...name].forEach((ch) => { g.fillText(ch, x, 62); x += g.measureText(ch).width + sp; }); g.restore(); };
-    draw(26, 0.35); draw(8, 0.75); draw(0, 1);
-    g.fillStyle = 'rgba(255,255,255,.55)'; g.fillRect(30, 118, Math.min(960, width(name)), 3); g.fillRect(30, 113, 54, 10);
+    let fs = 124; g.font = '700 ' + fs + 'px Rajdhani, "JetBrains Mono", sans-serif';
+    const sp = 7, width = (t) => [...t].reduce((w, ch) => w + g.measureText(ch).width + sp, -sp);
+    while (width(name) > 920 && fs > 48) { fs -= 4; g.font = '700 ' + fs + 'px Rajdhani, "JetBrains Mono", sans-serif'; }
+    const tw = width(name), x0 = 50;
+    // the band: a dark frosted strip behind the letters, a bright edge on its left and a fine rule along its foot
+    g.fillStyle = 'rgba(3, 9, 16, .55)'; g.beginPath(); g.roundRect(12, 12, Math.min(1000, tw + 72), 152, 16); g.fill();
+    g.fillStyle = 'rgba(255,255,255,.9)'; g.fillRect(12, 32, 7, 112);
+    g.fillStyle = 'rgba(255,255,255,.4)'; g.fillRect(x0, 146, tw, 3);
+    // the letters: a wide soft glow, a tighter one, the crisp strokes
+    const draw = (blur, alpha) => { g.save(); g.shadowColor = 'rgba(255,255,255,' + alpha + ')'; g.shadowBlur = blur; g.fillStyle = 'rgba(255,255,255,' + alpha + ')'; let x = x0; [...name].forEach((ch) => { g.fillText(ch, x, 82); x += g.measureText(ch).width + sp; }); g.restore(); };
+    draw(24, 0.45); draw(7, 0.8); draw(0, 1);
     const t = new THREE.CanvasTexture(c); t.colorSpace = THREE.SRGBColorSpace; t.anisotropy = 8;
-    const m = new THREE.MeshBasicMaterial({ map: t, transparent: true, depthWrite: false, toneMapped: false, blending: THREE.AdditiveBlending, color: new THREE.Color(LOOK.neon).multiplyScalar(1.4) });
-    const w = RS * 0.8, h = w * 144 / 1024, p = new THREE.Mesh(G.plane, m);
-    // on the front-left pane, just outside the glass, in its upper half (a neighbour's back wall in front of the room
-    // hides the lower half from the home view), read left to right
-    p.scale.set(w, h, 1); p.position.copy(this.V(r.x0 + RS * 0.1 + w / 2, r.y0 + RS + 0.03, 0.08 + WH - h * 0.62)); p.userData.dyn = true; p.renderOrder = 3;
+    const m = new THREE.MeshBasicMaterial({ map: t, transparent: true, depthWrite: false, toneMapped: false, color: new THREE.Color(SIGN_BLUE).multiplyScalar(1.5) });
+    const w = RS * 0.9, h = w * 176 / 1024, p = new THREE.Mesh(G.plane, m);
+    // just outside the pane, in its upper half (a room in front hides the lower half from the home view), read left
+    // to right on the screen: along +x on the front-left pane, along -y on the front-right one
+    const z = 0.08 + WH - h / 2 - 0.02;
+    if (side === 'right') { p.position.copy(this.V(r.x0 + RS + 0.03, r.y0 + RS * 0.47, z)); p.rotation.y = Math.PI / 2; }
+    else p.position.copy(this.V(r.x0 + RS * 0.53, r.y0 + RS + 0.03, z));
+    p.scale.set(w, h, 1); p.userData.dyn = true; p.renderOrder = 3;
     r.g.add(p); r.sign = p;
   }
   // Under and round the deck, what makes it a station in space: a rim, a plated hull with its lights, a stepped
@@ -6621,7 +6622,7 @@ class Office3D {
       else if (v.queued.length) { title = 'Up next: ' + v.queued[0].title; sub = ''; mode = isOrange ? 'full' : ''; }
       else { title = d.schedule && d.next_run ? 'Next run at ' + CO.hhmm(d.next_run) : 'Idle'; sub = ''; mode = isOrange ? 'full' : ''; }
       if (r.wall) drawWall(r.wall, title, sub, col, mode);
-      if (r.sign) r.sign.material.color.set(st === 'waiting' ? LOOK.orange : LOOK.neon).multiplyScalar(st === 'working' ? 1.7 : 1.4);
+      if (r.sign) r.sign.material.color.set(st === 'waiting' ? LOOK.orange : SIGN_BLUE).multiplyScalar(st === 'working' ? 1.9 : 1.5);
       if (r.kb) drawKanban(r.kb, { queued: v.queued.length, running: v.running ? 1 : 0, done: v.done, failed: v.failed });
       v.experts.slice(0, 3).forEach((e, i) => {
         const a = r.agents[i]; if (a) a.working = e.state === 'working';
@@ -6644,10 +6645,11 @@ class Office3D {
       if (hub.kb) drawKanban(hub.kb, { queued: S.plan.length, running: S.tasks.filter((t) => t.status === 'running').length, done: S.strip.filter((c) => c.state === 'done').length, failed: S.strip.filter((c) => c.state === 'failed').length });
       if (hub.agents[0]) hub.agents[0].working = !paused;
       const html = '<div class="p3h"><i style="background:' + (paused ? '#7f93ad' : '#00e5ff') + '"></i><b>MANAGER</b></div><div class="p3l" style="color:' + (paused ? '#a9b8cc' : '#00e5ff') + '">' + (paused ? 'Paused' : (CO.RO ? 'Its chat' : 'Your chat') + ' · runs it all') + '</div>';
-      if (hub.plate._h !== html) { hub.plate._h = html; hub.plate.innerHTML = html; }
-      hub.plate.classList.toggle('work', !paused && anyWork); hub.plate.style.setProperty('--c', paused ? '#7f93ad' : '#00e5ff');
+      if (hub.plate && hub.plate._h !== html) { hub.plate._h = html; hub.plate.innerHTML = html; }
+      if (hub.plate) { hub.plate.classList.toggle('work', !paused && anyWork); hub.plate.style.setProperty('--c', paused ? '#7f93ad' : '#00e5ff'); }
       const na = S.approvals.length;
-      hub.need.hidden = false;
+      // the pill shows only when something waits on the owner: the names on the glass are all the office says otherwise
+      hub.need.hidden = !na;
       hub.need.className = 'p3need' + (na ? '' : ' clear');
       hub.need.textContent = na ? na + (CO.RO ? ' WAIT FOR ITS OWNER' : na === 1 ? ' NEEDS YOU' : ' NEED ATTENTION') : 'ALL CLEAR';
     }
@@ -6657,8 +6659,8 @@ class Office3D {
       this.tint(au, 'idle');
       drawWall(au.wall, 'Weekly audit: next in ' + days + 'd', nf + ' findings last week', '#38f2b8', '');
       const html = '<div class="p3h"><i style="background:#38f2b8"></i><b>WEEKLY AUDIT</b></div><div class="p3l" style="color:#a9b8cc">next in ' + days + (days === 1 ? ' day' : ' days') + '</div>';
-      if (au.plate._h !== html) { au.plate._h = html; au.plate.innerHTML = html; }
-      au.plate.style.setProperty('--c', '#38f2b8');
+      if (au.plate && au.plate._h !== html) { au.plate._h = html; au.plate.innerHTML = html; }
+      if (au.plate) au.plate.style.setProperty('--c', '#38f2b8');
     }
     // the vault: what it holds is seen only by clicking it (the right column then opens it), so its plate names it
     // and nothing more; the piles inside are rebuilt when what they hold changes
