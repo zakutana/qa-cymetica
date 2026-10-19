@@ -889,7 +889,7 @@
     $('modal').hidden = false;
     var f = card.querySelector('input,textarea'); if (f) setTimeout(function () { f.focus(); }, 30);
   }
-  function closeModal() { $('modal').hidden = true; modalAct = null; drop3d(); }
+  function closeModal() { $('modal').hidden = true; modalAct = null; drop3d(); dlgMode = ''; }
   // the 3D dialog's live room: one renderer, let go whenever the dialog goes, however it goes
   var dlg3 = null;
   function drop3d() { if (dlg3) { dlg3.dispose(); dlg3 = null; } holdOffice(false); }
@@ -939,24 +939,23 @@
       '<div class="sec step">' + (edit ? '' : '3 · ') + 'NAME AND CHARTER</div>' +
       '<div class="form"><label class="field">Department name<input id="df-name" maxlength="60" value="' + esc(o.name) + '" placeholder="e.g. Growth"></label>' +
       '<div class="field">Who works there<div class="hiredline" id="df-hired">' + hiredLine(o.experts) + '</div></div>' +
-      (edit ? '' : lookField(o)) +
       '<label class="field full"><span>Charter · your rules, notes and lessons <span id="df-n" style="float:right">' + o.charter.length + ' / 2,000</span></span><textarea id="df-ch" maxlength="2000" rows="5">' + esc(o.charter) + '</textarea></label></div>';
   }
   function hiredLine(keys) {
-    return keys.length ? keys.map(function (k) { return '<span class="hx"><i>' + miniArt(k) + '</i>' + esc(CO.expertName(k)) + '</span>'; }).join('') : '<span class="hint">nobody yet: hire at least one</span>';
+    return keys.length ? keys.map(function (k) { return '<span class="hx" data-ex="' + k + '"><i>' + miniArt(k) + '</i>' + esc(CO.expertName(k)) + '</span>'; }).join('') : '<span class="hint">nobody yet: hire at least one</span>';
   }
-  // in the 3D dialog an expert's chip shows its astronaut once that picture is drawn; everywhere else the flat figure
+  // An expert's chip: in the Add-a-department dialog its astronaut -- the 3D one once its picture is drawn, in the 3D
+  // dialog, the flat office's in the 2D one; in the edit form the flat figure. dlgMode says which dialog is open.
+  var dlgMode = '';
   function miniArt(k) {
-    var u = dlg3 && CO.U3 && CO.U3.shotOf && CO.U3.shotOf('astro:' + k);
-    return u ? '<img alt="" src="' + u + '">' : CO.expertArt(k, true);
+    var u = dlgMode === '3d' && CO.U3 && CO.U3.shotOf && CO.U3.shotOf('astro:' + k);
+    if (u) return '<img alt="" src="' + u + '">';
+    if (dlgMode && CO.iso && CO.iso.astroArt) return CO.iso.astroArt(k, true);
+    return CO.expertArt(k, true);
   }
-  // a department of your own picks its room's look: a select in the flat form, arrows round the room in 3D
+  // the looks a department of your own can have, picked with the arrows round its room
   function looks() { return CO.ROOM_LOOKS && CO.ROOM_LOOKS.length ? CO.ROOM_LOOKS : [{ key: 'office', name: 'Office' }]; }
   function lookIdx(k) { var L = looks(); for (var i = 0; i < L.length; i++) if (L[i].key === k) return i; return 0; }
-  function lookField(o) {
-    return '<label class="field" id="df-look-f"' + (o.key === 'custom' ? '' : ' hidden') + '>Room look<select id="df-look">' +
-      looks().map(function (l) { return '<option value="' + l.key + '"' + (l.key === o.look ? ' selected' : '') + '>' + esc(l.name) + '</option>'; }).join('') + '</select></label>';
-  }
   function hiredKeys() {
     return Array.prototype.map.call(document.querySelectorAll('#ex-track .xcard.on'), function (x) { return x.getAttribute('data-ex'); });
   }
@@ -970,84 +969,116 @@
     $('ex-n').textContent = k.length + ' hired';
     $('df-hired').innerHTML = hiredLine(k);
   }
-  // Add a department. In the 3D office it is a room you look at (the operator, translated: "depending on which view you
-  // are in, 3D or 2D, that's the Add-department layout that shows"): the department's own room in the middle, built by
-  // the office's builders and turning slowly, its experts in it as astronauts; what it is on the left; the departments
-  // and the experts in two sliders under it, their pictures those rooms and astronauts, drawn once. In the flat office,
-  // or where 3D cannot start, the form as it was.
+  // Add a department, one layout in either view (the operator, translated: "depending on which view you are in, 3D or
+  // 2D, that's the Add-department layout that shows"): the department's own room in the middle -- in the 3D office
+  // built by the office's builders, turning slowly; in the flat office drawn by the flat office's own drawing,
+  // floating -- with its experts in it; on the left what it is, or the expert last clicked ("kdyz v add department
+  // kliknu na experta nejakeho tak taky se ma zobrazit nekde popis jeho o cem je"); the departments and the experts in
+  // two sliders under it, their pictures those rooms and astronauts. Where 3D cannot start, the flat one.
   function addDeptModal() {
-    var L = looks();
-    var o = { key: 'custom', name: '', experts: ['researcher'], charter: '' };
+    var L = looks(), own = CO.TEMPLATES.filter(function (t) { return t.key === 'custom'; })[0] || { key: 'custom', name: '', experts: ['researcher'], charter: '' };
+    var o = { key: 'custom', name: '', experts: own.experts.slice(), charter: '' };
     var free = CO.TEMPLATES.filter(function (t) { return t.key !== 'custom' && !CO.S.departments.some(function (d) { return d.key === t.key; }); })[0];
     if (free) o = { key: free.key, name: free.name, experts: free.experts.slice(), charter: free.charter };
     o.look = L[0].key;
-    var three = !RO && ui.view === '3d' && !!office3d && !!(CO.U3 && CO.U3.roomPreview);
-    function draw() {
-      openModal('<div class="mh"><h3>Add a department</h3><button class="btn" data-a="close">×</button></div>' + deptForm(o, false) +
-        '<div class="mf"><span class="hint">Its first task starts from this charter.</span><span class="sp"></span><button class="btn" data-a="close">Cancel</button><button class="btn gr" data-a="create">Create department</button></div>', true, act);
+    var mode = !RO && ui.view === '3d' && !!office3d && !!(CO.U3 && CO.U3.roomPreview) ? '3d' : '2d', viewing = null, nameRaf = 0;
+    function tplOf(k) { return CO.TEMPLATES.filter(function (t) { return t.key === k; })[0] || null; }
+    function draw(m) {
+      mode = dlgMode = m; viewing = null;
+      openModal(form(), 'x3', act);
+      if (m === '3d') {
+        holdOffice(true);
+        var mine = dlg3 = CO.U3.roomPreview($('d3-stage'));
+        // its renderer would not start: the same dialog, flat, with what was already chosen
+        mine.onFail = function () {
+          if (dlg3 !== mine) return;
+          dlg3 = null; o.name = $('df-name').value; o.charter = $('df-ch').value; o.experts = hiredKeys(); draw('2d');
+        };
+        sync(); shots();
+        // what a click can bring next, built while nothing happens: every department as its card staffs it, then
+        // every look of your own
+        mine.ahead(CO.TEMPLATES.map(function (t) { return { key: t.key, experts: t.experts, look: t.key === 'custom' ? L[0].key : null }; })
+          .concat(L.map(function (l) { return { key: 'custom', experts: own.experts, look: l.key }; })));
+      } else {
+        $('d3-stage').style.setProperty('--stars', CO.iso.stars());
+        sync();
+      }
     }
-    function draw3() {
-      openModal(form3(), 'x3', act);
-      holdOffice(true);
-      var mine = dlg3 = CO.U3.roomPreview($('d3-stage'));
-      // its renderer would not start: the same form, flat, with what was already chosen
-      mine.onFail = function () {
-        if (dlg3 !== mine) return;
-        dlg3 = null; o.name = $('df-name').value; o.charter = $('df-ch').value; o.experts = hiredKeys(); draw();
-      };
-      sync3(); shots();
-      // what a click can bring next, built while nothing happens: every department as its card staffs it, then every
-      // look of your own
-      var own = CO.TEMPLATES.filter(function (t) { return t.key === 'custom'; })[0] || { experts: ['researcher'] };
-      mine.ahead(CO.TEMPLATES.map(function (t) { return { key: t.key, experts: t.experts, look: t.key === 'custom' ? L[0].key : null }; })
-        .concat(L.map(function (l) { return { key: 'custom', experts: own.experts, look: l.key }; })));
-    }
-    function form3() {
-      return '<div class="ad3"><div class="d3h"><h3>Add a department</h3><button class="btn" data-a="close">×</button></div>' +
-        '<div class="d3main"><aside class="d3side">' +
-          '<div class="d3k">DEPARTMENT <span id="d3-ti"></span></div>' +
+    function form() {
+      var two = mode === '2d';
+      return '<div class="ad3' + (two ? ' two' : '') + '"><div class="d3h"><h3>Add a department</h3><button class="btn" data-a="close">×</button></div>' +
+        '<div class="d3main"><aside class="d3side"><div class="d3pane d3dept">' +
+          '<div class="d3kick"><span id="d3-ic"></span><div class="d3k">DEPARTMENT <span id="d3-ti"></span></div></div>' +
           '<input id="df-name" class="d3name" maxlength="60" autocomplete="off" value="' + esc(o.name) + '" placeholder="Name it, e.g. Growth">' +
           '<ul class="d3about" id="d3-about"></ul>' +
-          '<div class="d3k">WHO WORKS THERE</div><div class="hiredline" id="df-hired">' + hiredLine(o.experts) + '</div>' +
+          '<div class="d3k">WHO WORKS THERE <span>click one to read it</span></div><div class="hiredline" id="df-hired">' + hiredLine(o.experts) + '</div>' +
           '<div class="d3ch"><button type="button" class="d3cht" data-a="charter"><span class="d3k">CHARTER</span><span class="d3n" id="df-n">' + o.charter.length + ' / 2,000</span></button>' +
           '<textarea id="df-ch" maxlength="2000" placeholder="Your rules, notes and lessons">' + esc(o.charter) + '</textarea></div>' +
           '<div class="d3act"><span class="hint">Its first task starts from this charter.</span><span class="d3btns"><button class="btn" data-a="close">Cancel</button><button class="btn gr" data-a="create">Create department</button></span></div>' +
-        '</aside><div class="d3stage" id="d3-stage">' +
+        '</div><div class="d3pane d3ex" id="d3-ex"></div></aside>' +
+        '<div class="d3stage' + (two ? ' d2stage' : '') + '" id="d3-stage">' + (two ? '<div class="d2room" id="d2-room"></div>' : '') +
           '<button type="button" class="d3arw l" data-a="look-prev" title="Previous look">‹</button><button type="button" class="d3arw r" data-a="look-next" title="Next look">›</button>' +
-          '<div class="d3look" id="d3-look"></div><div class="d3tip">drag to turn</div>' +
+          '<div class="d3look" id="d3-look"></div>' + (two ? '' : '<div class="d3tip">drag to turn</div>') +
         '</div></div><div class="d3bot">' +
-          '<div class="d3col"><div class="sec step">PICK A DEPARTMENT</div>' + slider('tpl-track', CO.TEMPLATES.map(tcard3).join('')) + '</div>' +
+          '<div class="d3col"><div class="sec step">PICK A DEPARTMENT</div>' + slider('tpl-track', CO.TEMPLATES.map(tcard).join('')) + '</div>' +
           '<div class="d3col"><div class="sec step">HIRE ITS EXPERTS <span id="ex-n">' + o.experts.length + ' hired</span></div>' +
-            slider('ex-track', CO.EXPERTS.map(function (e) { return expertCard(e, o.experts.indexOf(e.key) >= 0); }).join('')) + '</div>' +
+            slider('ex-track', CO.EXPERTS.map(function (e) { return xcard(e, o.experts.indexOf(e.key) >= 0); }).join('')) + '</div>' +
         '</div></div>';
     }
-    // a department's card: its room (the flat picture until the 3D one is drawn), its name, its line, how many work there
-    function tcard3(t) {
+    // a department's room as its card shows it: the flat office's drawing in 2D; in 3D the picture kept from an earlier
+    // opening, or the flat art until the 3D one is drawn
+    function cardArt(t, look) {
+      if (mode === '2d') return CO.iso.roomArt({ key: t.key, experts: t.experts, look: look, name: t.name }, { still: true });
+      var u = CO.U3.shotOf('room:' + t.key + ':' + (look || ''));
+      return u ? '<img alt="" src="' + u + '">' : CO.deptArt(t.key);
+    }
+    function tcard(t) {
       var used = t.key !== 'custom' && CO.S.departments.some(function (d) { return d.key === t.key; });
-      var n = t.experts.length, sub = t.key === 'custom' ? L.length + ' looks' : n + (n === 1 ? ' expert' : ' experts');
-      return '<button type="button" class="tcard' + (t.key === o.key ? ' on' : '') + '" data-tpl="' + t.key + '"><div class="art">' + CO.deptArt(t.key) + '</div>' +
-        '<b>' + esc(t.name || 'Custom') + '</b><span>' + esc(CO.DEPT_INFO[t.key] || '') + '</span>' +
+      var n = t.experts.length, sub = t.key === 'custom' ? L.length + ' looks' : n + (n === 1 ? ' expert' : ' experts'), look = t.key === 'custom' ? o.look : null;
+      return '<button type="button" class="tcard' + (t.key === o.key ? ' on' : '') + '" data-tpl="' + t.key + '"><div class="art">' + cardArt(t, look) + '</div>' +
+        '<b>' + CO.deptIcon({ key: t.key, look: look }) + esc(t.name || 'Custom') + '</b><span>' + esc(CO.DEPT_INFO[t.key] || '') + '</span>' +
         '<em class="tst">' + sub + (used ? '<i>you have one</i>' : '') + '</em></button>';
     }
+    // an expert's card: its astronaut, its name, what it does in Cymetica's own words; the chip hires and fires, the
+    // rest of the card opens it on the left
+    function figOf(k, still) {
+      if (mode === '2d') return CO.iso.astroArt(k, still);
+      var u = CO.U3.shotOf('astro:' + k);
+      return u ? '<img alt="" src="' + u + '">' : CO.expertArt(k);
+    }
+    function xcard(e, on) {
+      return '<button type="button" class="xcard' + (on ? ' on' : '') + '" data-ex="' + e.key + '"><div class="fig">' + figOf(e.key, true) + '</div>' +
+        '<b>' + esc(e.name) + '</b><span>' + esc(e.description || '') + '</span><i class="ck">' + (on ? '✓ hired' : '+ hire') + '</i></button>';
+    }
     // the room follows what is picked, hired and (for your own) which look; the panel says what it is
-    function sync3() {
-      if (!dlg3) return;
+    function sync() {
       var custom = o.key === 'custom', i = lookIdx(o.look), ti = 0;
       CO.TEMPLATES.forEach(function (t, k) { if (t.key === o.key) ti = k; });
-      dlg3.set({ key: o.key, experts: hiredKeys(), look: custom ? o.look : null, name: $('df-name').value });
+      if (dlg3) dlg3.set({ key: o.key, experts: hiredKeys(), look: custom ? o.look : null, name: $('df-name').value });
+      else room2();
       var lk = $('d3-look'); lk.hidden = !custom; lk.innerHTML = '<b>' + (i + 1) + ' / ' + L.length + '</b>' + esc(L[i].name);
       Array.prototype.forEach.call(document.querySelectorAll('#d3-stage .d3arw'), function (b) { b.hidden = !custom; });
       $('d3-about').innerHTML = (CO.DEPT_ABOUT[o.key] || CO.DEPT_ABOUT.custom).map(function (s) { return '<li>' + esc(s) + '</li>'; }).join('');
       $('d3-ti').textContent = (ti + 1) + ' / ' + CO.TEMPLATES.length;
+      $('d3-ic').innerHTML = CO.deptIcon({ key: o.key, look: custom ? o.look : null });
+    }
+    // the flat room, redrawn whole (a few milliseconds); it rises out of its deck when it is another room
+    function room2() {
+      var box = $('d2-room'); if (!box) return;
+      var look = o.key === 'custom' ? o.look : null, ex = hiredKeys(), key = [o.key, ex.join(','), look || ''].join('|');
+      box.innerHTML = CO.iso.roomArt({ key: o.key, experts: ex, look: look, name: $('df-name').value });
+      if (box._k !== key) { box._k = key; box.classList.remove('rise'); void box.offsetWidth; box.classList.add('rise'); }
     }
     // the cards' 3D pictures, each drawn once and kept: they replace the flat ones as they come, the astronauts first
     // (quick to draw, and the chips of who works there wait for them)
     function shots() {
       if (!dlg3) return;
       Array.prototype.forEach.call(document.querySelectorAll('#ex-track .xcard'), function (c) {
-        dlg3.shot('astro', c.getAttribute('data-ex'), function (u) {
+        var k = c.getAttribute('data-ex');
+        dlg3.shot('astro', k, function (u) {
           put(c.querySelector('.fig'), u);
           var h = $('df-hired'); if (u && dlg3 && h) h.innerHTML = hiredLine(hiredKeys());
+          if (u && viewing === k) showExpert(k);
         });
       });
       CO.TEMPLATES.forEach(function (t) {
@@ -1056,44 +1087,79 @@
         dlg3.shot('room', { key: t.key, experts: t.experts }, function (u) { if (c) put(c.querySelector('.art'), u); });
       });
     }
+    // the card of your own shows the look picked
     function customShot() {
-      var c = document.querySelector('#tpl-track .tcard[data-tpl="custom"]'), lk = o.look, own = CO.TEMPLATES.filter(function (t) { return t.key === 'custom'; })[0];
-      if (!c || !dlg3 || !own) return;
-      dlg3.shot('room', { key: 'custom', experts: own.experts, look: lk }, function (u) { if (o.look === lk) put(c.querySelector('.art'), u); });
+      var c = document.querySelector('#tpl-track .tcard[data-tpl="custom"]'), lk = o.look; if (!c) return;
+      var ic = c.querySelector('b .dic'); if (ic) ic.outerHTML = CO.deptIcon({ key: 'custom', look: lk });
+      if (mode === '2d') { c.querySelector('.art').innerHTML = cardArt(own, lk); return; }
+      if (dlg3) dlg3.shot('room', { key: 'custom', experts: own.experts, look: lk }, function (u) { if (o.look === lk) put(c.querySelector('.art'), u); });
     }
     function put(box, u) { if (u && box && document.body.contains(box)) box.innerHTML = '<img alt="" src="' + u + '">'; }
+    // An expert in the panel's place: what it does and the departments it fits, word for word as Cymetica has them
+    // (CO.EXPERTS), whether it reads the web, the rule every expert keeps, and hire or fire it. Back returns to the
+    // department.
+    function showExpert(k) {
+      var e = CO.expert(k), pane = $('d3-ex'); if (!e || !pane) return;
+      viewing = k;
+      var on = hiredKeys().indexOf(k) >= 0, i = CO.EXPERTS.indexOf(e), web = (e.tools || []).length > 0, dn = $('df-name').value.trim() || (tplOf(o.key) || {}).name || 'your department';
+      var big = mode === '3d' && !CO.U3.shotOf('astro:' + k) ? CO.expertArt(k) : figOf(k, false);
+      var fits = (e.fits || []).map(function (f) { var t = tplOf(f); return '<span class="d3fit' + (f === o.key ? ' here' : '') + '">' + CO.deptIcon({ key: f }) + esc(t ? t.name : f) + '</span>'; }).join('');
+      pane.innerHTML = '<button type="button" class="d3back" data-a="xback">‹ <b>' + esc(dn) + '</b></button>' +
+        '<div class="d3xhead"><div class="d3xfig">' + big + '</div><div><div class="d3k">EXPERT <span>' + (i + 1) + ' / ' + CO.EXPERTS.length + '</span></div>' +
+        '<h4 class="d3xn">' + esc(e.name) + '</h4><div class="d3xt ' + (on ? 'on' : '') + '">' + (on ? '✓ hired here' : 'not hired') + '</div></div></div>' +
+        '<div class="d3xbody"><p class="d3xd">' + esc(e.description) + '</p>' +
+        '<div class="d3k">FITS <span>' + e.fits.length + (e.fits.length === 1 ? ' department' : ' departments') + '</span></div><div class="d3fits">' + fits + '</div>' +
+        '<div class="d3xw ' + (web ? 'ok' : 'no') + '"><i>' + (web ? '✓' : '×') + '</i><span>' + esc(e.capabilities[0]) + '</span></div>' +
+        '<div class="d3xa">' + CO.ruleIcon('real') + '<span>' + esc(e.capabilities[1]) + '</span></div></div>' +
+        '<div class="d3act"><button type="button" class="btn ' + (on ? 'd3fire' : 'gr') + '" data-a="xhire">' + (on ? 'Fire from ' + esc(dn) : '+ Hire into ' + esc(dn)) + '</button></div>';
+      document.querySelector('#modal-card .d3side').classList.add('ex');
+      Array.prototype.forEach.call(document.querySelectorAll('#ex-track .xcard'), function (c) { c.classList.toggle('view', c.getAttribute('data-ex') === k); });
+    }
+    function hideExpert() {
+      viewing = null;
+      var side = document.querySelector('#modal-card .d3side'); if (side) side.classList.remove('ex');
+      Array.prototype.forEach.call(document.querySelectorAll('#ex-track .xcard.view'), function (c) { c.classList.remove('view'); });
+    }
     function pick(el) {
-      var t = CO.TEMPLATES.filter(function (x) { return x.key === el.getAttribute('data-tpl'); })[0]; if (!t) return;
+      var t = tplOf(el.getAttribute('data-tpl')); if (!t) return;
       o = { key: t.key, name: t.name, experts: t.experts.slice(), charter: t.charter, look: o.look };
       Array.prototype.forEach.call(document.querySelectorAll('#tpl-track .tcard'), function (c) { c.classList.toggle('on', c === el); });
       Array.prototype.forEach.call(document.querySelectorAll('#ex-track .xcard'), function (c) { toggleExpert(c, o.experts.indexOf(c.getAttribute('data-ex')) >= 0); });
       $('df-name').value = t.name; $('df-ch').value = t.charter; $('df-n').textContent = t.charter.length + ' / 2,000';
-      var lf = $('df-look-f'); if (lf) lf.hidden = t.key !== 'custom';
       var ch = document.querySelector('#modal-card .d3ch'); if (ch && !t.charter) ch.classList.remove('shut');
       el.scrollIntoView({ behavior: 'smooth', inline: 'center', block: 'nearest' });
       if (!t.name) $('df-name').focus();
     }
     function act(a, el) {
-      if (a === 'tpl') { pick(el); sync3(); }
-      else if (a === 'hired') sync3();
-      else if (a === 'charter') el.parentNode.classList.toggle('shut');
+      if (a === 'tpl') { pick(el); hideExpert(); sync(); }
+      else if (a === 'hired') { sync(); if (el && el.getAttribute('data-ex')) showExpert(el.getAttribute('data-ex')); }
+      else if (a === 'expert') showExpert(el.getAttribute('data-ex'));
+      else if (a === 'xback') hideExpert();
+      else if (a === 'xhire') {
+        var c = document.querySelector('#ex-track .xcard[data-ex="' + viewing + '"]'); if (!c) return;
+        toggleExpert(c, !c.classList.contains('on')); sync(); showExpert(viewing);
+      } else if (a === 'name') {
+        if (dlg3) dlg3.name(el.value);
+        else if (mode === '2d') { cancelAnimationFrame(nameRaf); nameRaf = requestAnimationFrame(room2); }
+      } else if (a === 'charter') el.parentNode.classList.toggle('shut');
       else if (a === 'look-prev' || a === 'look-next') {
         var i = lookIdx(o.look) + (a === 'look-next' ? 1 : -1);
-        o.look = L[(i + L.length) % L.length].key; sync3(); customShot();
+        o.look = L[(i + L.length) % L.length].key; sync(); customShot();
       } else if (a === 'create') {
         var f = readDeptForm();
-        if (!f.name) { $('df-name').focus(); $('df-name').style.borderColor = 'var(--red)'; return; }
+        if (!f.name) { hideExpert(); $('df-name').focus(); $('df-name').style.borderColor = 'var(--red)'; return; }
         if (!f.experts.length) { toast('Hire at least one expert.'); return; }
-        var look = o.key !== 'custom' ? null : dlg3 ? o.look : ($('df-look') || {}).value || o.look;
+        var look = o.key === 'custom' ? o.look : null;
         closeModal();
         var d = CO.act.addDept({ key: o.key, name: f.name, experts: f.experts, charter: f.charter, look: look });
         toast('New department: ' + d.name + '. Its room is being built.');
       }
     }
-    if (three) draw3(); else draw();
+    draw(mode);
   }
   function editDeptModal(id) {
     var d = CO.dept(id); if (!d) return;
+    dlgMode = '';
     openModal('<div class="mh"><h3>Edit department</h3><button class="btn" data-a="close">×</button></div>' + deptForm({ key: d.key, name: d.name, experts: d.experts.slice(), charter: d.charter }, true) +
       '<div class="mf"><button class="btn rd" data-a="remove">Delete department</button><span class="sp"></span><button class="btn" data-a="close">Cancel</button><button class="btn gr" data-a="save">Save</button></div>', true, function (a) {
       if (a === 'save') { var f = readDeptForm(); if (!f.name) return; closeModal(); CO.act.editDept(id, f); ui.dirty = false; $('dr-ch-text').value = CO.dept(id).charter; renderDrawer(); }
@@ -1215,7 +1281,14 @@
       var ma = t.closest('#modal-card [data-a]');
       if (ma) { var m = ma.getAttribute('data-a'); if (m === 'close') return closeModal(); if (modalAct) modalAct(m, ma); return; }
       var tp = t.closest('#modal-card [data-tpl]'); if (tp && modalAct) return modalAct('tpl', tp);
-      var xc = t.closest('#modal-card .xcard'); if (xc) { toggleExpert(xc, !xc.classList.contains('on')); if (modalAct) modalAct('hired', xc); return; }
+      // in the Add-a-department dialog an expert's card opens it on the left and its chip hires or fires it; in the
+      // edit form the whole card hires or fires
+      var xc = t.closest('#modal-card .xcard');
+      if (xc) {
+        if (xc.closest('.ad3') && !t.closest('.ck')) { if (modalAct) modalAct('expert', xc); return; }
+        toggleExpert(xc, !xc.classList.contains('on')); if (modalAct) modalAct('hired', xc); return;
+      }
+      var hx = t.closest('#modal-card .ad3 .hx[data-ex]'); if (hx && modalAct) return modalAct('expert', hx);
       var sa = t.closest('#modal-card .sl-arrow');
       if (sa) { var tr = $(sa.getAttribute('data-sl')); tr.scrollBy({ left: +sa.getAttribute('data-d') * tr.clientWidth * 0.8, behavior: 'smooth' }); return; }
       // sim bar
@@ -1256,8 +1329,8 @@
     $('mem-q').addEventListener('input', function (e) { ui.memQ = e.target.value; renderMemory(); });
     document.addEventListener('input', function (e) {
       if (e.target.id === 'df-ch') { var n = $('df-n'); if (n) n.textContent = e.target.value.length + ' / 2,000'; }
-      // the 3D room's wall screen carries the name as it is typed; nothing is rebuilt for it
-      if (e.target.id === 'df-name' && dlg3) dlg3.name(e.target.value);
+      // the room's wall screen carries the name as it is typed (in 3D nothing is rebuilt for it)
+      if (e.target.id === 'df-name' && modalAct) modalAct('name', e.target);
       if (e.target.id === 'cc-name' && ui.ccPrev) ui.ccPrev();
     });
     document.addEventListener('change', function (e) {
