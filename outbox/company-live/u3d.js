@@ -2078,9 +2078,28 @@ function pvFit(camera, pts, w, h, mid) {
   camera.position.copy(tgt).addScaledVector(dir, d); camera.lookAt(tgt); camera.updateMatrixWorld();
   return tgt;
 }
-// The dialog's room: one live renderer, the room turning slowly to and fro on its own, a drag turns it any way;
-// set() rebuilds it when its department, its experts or its look change (the room grows up out of its deck, as a new
-// room does in the office), and only redraws its wall screen when the name does. dispose() lets everything go.
+// A room's own light is the scene's: a light added or taken away changes the set of lights every material is built
+// for, and three.js builds them all again -- 250 to 420 ms on the first frame after every switch of room, measured
+// 2026-10-19. So the dialog and the pictures keep one lamp of their own, and a room only says how it is lit: its
+// r.lamp is taken out of it and copied onto that lamp whenever the room is on show.
+function pvLamp() { const l = new THREE.PointLight(0xeef6ff, 0, 9, 1.0); l.layers.enable(1); return l; }
+function pvAdopt(room) {
+  const L = room.r.lamp; if (!L) return;
+  room.lamp = { color: L.color.clone(), intensity: L.intensity, distance: L.distance, decay: L.decay, pos: L.position.clone() };
+  if (L.parent) L.parent.remove(L);
+  L.dispose(); room.r.lamp = null;
+}
+function pvLit(lamp, room) {
+  const s = room && room.lamp; if (!s) { lamp.intensity = 0; return; }
+  lamp.color.copy(s.color); lamp.intensity = s.intensity; lamp.distance = s.distance; lamp.decay = s.decay; lamp.position.copy(s.pos);
+}
+// experts in the order the sliders list them (hiredKeys reads them so): the order deptRoom seats them in
+function pvOrder(ex) { const at = (k) => { const i = (CO.EXPERTS || []).findIndex((e) => e.key === k); return i < 0 ? 99 : i; }; return ex.slice().sort((a, b) => at(a) - at(b)); }
+// The dialog's room: one live renderer, the room turning slowly to and fro on its own, a drag turns it any way.
+// Every room it shows is built once and kept by its department, experts and look: set() swaps the kept one in (it
+// grows up out of its deck, as a new room does in the office), and ahead() builds the rooms a click can bring in idle
+// moments, one at a time, each drawn once off screen so its materials are compiled before anyone asks for it. Only
+// the wall screen is redrawn when the name changes. dispose() lets everything go.
 class RoomPreview {
   constructor(el) {
     geo(); omats();
@@ -2094,29 +2113,125 @@ class RoomPreview {
     this.wrap.appendChild(this.renderer.domElement);
     this.L = pvLights(this.scene);
     this.turn = new THREE.Group(); this.scene.add(this.turn);
+    this.lamp = pvLamp(); this.turn.add(this.lamp);
     this.base = pvBase(true); this.scene.add(this.base);
     this.b = pvBuilder(this.camera, CO.iso.RS / 2, CO.iso.RS / 2); this.pts = pvCorners(this.b);
     this.key = ''; this.yaw = 0; this.ph = 0; this.last = 0; this.clock = new THREE.Clock();
+    this.kept = new Map(); this.todo = []; this.jobs = []; this.warm = null; this.idleId = 0; this.shotRT = {};
     this.pace = pacer(() => !!this.drag || !!this.grow || performance.now() - (this.input || 0) < 1500);
     this.bind();
     PREVIEWS.push(this);
     this.renderer.init().then(() => {
       if (this.dead) return this.free();
       try { this.post = new Post(this.renderer, this.scene, this.camera, 0.32, 0.0, 0.86, { sat: 0.96 }); } catch (e) { this.post = null; }
+      this.offRT = new THREE.RenderTarget(64, 64);
       this.ready = true;
       this.renderer.setAnimationLoop(() => this.frame());
+      this.idle();
     }).catch((e) => { console.error('the room preview could not start:', e); this.dispose(); if (this.onFail) this.onFail(e); });
   }
+  dept(o) { return { id: 0, key: o.key || 'custom', name: o.name || '', experts: pvOrder(o.experts || []), look: o.look || null, run_kind: null, link: null, charter: '', schedule: null }; }
+  keyOf(d) { return [d.key, d.experts.join(','), d.look || ''].join('|'); }
   set(o) {
-    const d = { id: 0, key: o.key || 'custom', name: o.name || '', experts: (o.experts || []).slice(), look: o.look || null, run_kind: null, link: null, charter: '', schedule: null };
-    const key = [d.key, d.experts.join(','), d.look || ''].join('|');
+    const d = this.dept(o), key = this.keyOf(d);
     this.input = performance.now();
     if (key === this.key || this.dead) return this.name(o.name);
     this.key = key;
-    if (this.room) { this.turn.remove(this.room.root); release(this.room.root); }
-    this.room = pvRoom(this.b, d); this.turn.add(this.room.root);
-    pvDress(this.b, this.room.r, d.name, d.experts.length);
+    if (this.room) this.turn.remove(this.room.root);
+    this.room = this.get(d, key); this.turn.add(this.room.root); pvLit(this.lamp, this.room);
+    this.name(o.name);
     this.room.r.g.scale.set(1, 0.02, 1); this.grow = performance.now();
+  }
+  // a room built once and kept; at most 24, the longest unused let go first (never the one on show)
+  get(d, key) {
+    let room = this.kept.get(key);
+    if (room) { this.kept.delete(key); this.kept.set(key, room); return room; }
+    room = pvRoom(this.b, d); pvDress(this.b, room.r, d.name, d.experts.length); pvAdopt(room); room.key = key;
+    this.kept.set(key, room);
+    for (const [k, old] of this.kept) { if (this.kept.size <= 24) break; if (old !== this.room && k !== key) { this.kept.delete(k); release(old.root); } }
+    return room;
+  }
+  // the rooms a click can bring next ({ key, experts, look } each), built in idle moments in that order
+  ahead(list) { this.todo = list.map((o) => this.dept(o)); this.idle(); }
+  // A card's picture, drawn by this renderer from what it keeps, so nothing is built or compiled twice: kind 'room'
+  // with { key, experts, look }, or 'astro' with an expert's key. done(url) once it is read back (null where it could
+  // not be drawn), at once if it already was: the pictures outlive the dialog (SHOTS), the renderer does not.
+  shot(kind, o, done) {
+    const key = kind === 'room' ? 'room:' + o.key + ':' + (o.look || '') : 'astro:' + o;
+    if (SHOTS[key]) return done(SHOTS[key]);
+    const j = this.jobs.find((x) => x.key === key); if (j) return j.done.push(done);
+    this.jobs.push({ kind, key, o, done: [done] }); this.idle();
+  }
+  // one piece of work an idle moment: the cards' pictures first, in the order asked, then the rooms ahead
+  idle() {
+    if (this.dead || this.idleId || !this.ready) return;
+    const ric = window.requestIdleCallback || ((f) => setTimeout(() => f(), 50));
+    this.idleId = ric(() => {
+      this.idleId = 0;
+      if (this.dead) return;
+      // not while a hand is on it, a room is growing or the last piece is still to be drawn
+      if (this.drag || this.grow || this.warm) { setTimeout(() => this.idle(), 120); return; }
+      const job = this.jobs.shift();
+      if (job) {
+        if (job.kind === 'room') { const d = this.dept(job.o); this.warm = { room: this.get(d, this.keyOf(d)), job }; }
+        else this.warm = { astro: pvAstro(this.ab || (this.ab = pvBuilder(this.camera, 0, 0)), job.o), job };
+      } else {
+        let d = null; while (this.todo.length && !d) { const n = this.todo.shift(); if (!this.kept.has(this.keyOf(n))) d = n; }
+        if (!d) return;
+        const room = this.get(d, this.keyOf(d)); if (room !== this.room) this.warm = { room };
+      }
+      this.idle();
+    }, { timeout: 500 });
+  }
+  // One frame drawn off screen in this frame's place (the canvas keeps the last one): a room built ahead, so its
+  // materials are compiled for exactly this pass, its lights, its shadow and its mirror; and, for a card, its picture:
+  // the room framed tight or an astronaut on its disc, drawn at twice the card's size and read back.
+  offscreen(w, t) {
+    const cur = this.room, cam = this.camera, ring = this.base.userData.ring, obj = w.room ? w.room.root : w.astro;
+    const ry = this.turn.rotation.y, py = this.turn.position.y;
+    if (cur) this.turn.remove(cur.root);
+    if (w.room) { w.room.r.g.scale.set(1, 1, 1); pvLit(this.lamp, w.room); pvTick(w.room.r, t); } else pvLit(this.lamp, null);
+    this.turn.add(obj);
+    let rt = this.offRT;
+    if (w.job) {
+      const W = w.room ? 640 : 512, H = w.room ? 400 : 384;
+      rt = this.shotRT[W] || (this.shotRT[W] = new THREE.RenderTarget(W, H));
+      this.turn.rotation.y = 0; this.turn.position.y = 0; ring.visible = false; this.base.visible = !!w.room;
+      cam.aspect = W / H; cam.updateProjectionMatrix();
+      if (w.room) pvFill(this.L, cam, pvFit(cam, pvCorners(this.b, true), 1.9, 1.86, [0, -0.02]));
+      else {
+        const tgt = new THREE.Vector3(0, 0.66, 0);
+        cam.position.copy(new THREE.Vector3().setFromSpherical(new THREE.Spherical(3.25, 1.2, CAM.az)).add(tgt)); cam.lookAt(tgt); cam.updateMatrixWorld();
+        pvFill(this.L, cam, tgt);
+      }
+    }
+    try { this.renderer.setRenderTarget(rt); this.post.render(); } catch (e) { rt = null; }
+    this.renderer.setRenderTarget(null);
+    this.turn.remove(obj);
+    if (cur) { this.turn.add(cur.root); pvLit(this.lamp, cur); }
+    if (w.job) {
+      this.turn.rotation.y = ry; this.turn.position.y = py; ring.visible = true; this.base.visible = true;
+      cam.aspect = this.w / this.h; cam.updateProjectionMatrix(); this.fit();
+      this.read(rt, w.job);
+    }
+    if (w.astro) release(w.astro);
+  }
+  async read(rt, job) {
+    let url = null;
+    if (rt && !this.dead) {
+      try {
+        const W = rt.width, H = rt.height, px = await this.renderer.readRenderTargetPixelsAsync(rt, 0, 0, W, H), flip = !(this.renderer.backend && this.renderer.backend.isWebGPUBackend);
+        const c = document.createElement('canvas'); c.width = W; c.height = H; const g = c.getContext('2d'), img = g.createImageData(W, H);
+        for (let y = 0; y < H; y++) { const sy = flip ? H - 1 - y : y; img.data.set(px.subarray(sy * W * 4, (sy + 1) * W * 4), y * W * 4); }
+        for (let i = 3; i < img.data.length; i += 4) img.data[i] = 255;
+        g.putImageData(img, 0, 0);
+        // kept at the card's twice-its-pixels size, smoothed down by the canvas
+        const s = document.createElement('canvas'); s.width = W / 2; s.height = H / 2; const sg = s.getContext('2d');
+        sg.imageSmoothingQuality = 'high'; sg.drawImage(c, 0, 0, W / 2, H / 2); url = s.toDataURL('image/png');
+      } catch (e) { url = null; }
+    }
+    if (url) SHOTS[job.key] = url;
+    job.done.forEach((f) => f(url));
   }
   name(n) { if (this.room) pvWall(this.room.r, n, this.room.r.dept.experts.length); }
   // as big as his close-up of a room ("about this big"): near all of the view's height, a margin left for the turn
@@ -2133,6 +2248,7 @@ class RoomPreview {
     this.turn.rotation.y = this.yaw + Math.sin(this.ph) * 0.4;
     this.turn.position.y = Math.sin(t * 0.8) * 0.06;
     this.base.userData.ring.rotation.z = t * 0.12;
+    if (this.warm && this.post) { const w = this.warm; this.warm = null; this.offscreen(w, t); return; }
     if (this.room) {
       const r = this.room.r;
       if (this.grow) { const k = Math.min(1, (now - this.grow) / 700), e = 1 - Math.pow(1 - k, 3); r.g.scale.set(1, Math.max(0.02, e), 1); if (k >= 1) this.grow = 0; }
@@ -2151,92 +2267,32 @@ class RoomPreview {
   free() {
     if (this.freed) return; this.freed = true;
     try { this.renderer.setAnimationLoop(null); } catch (e) { /* gone */ }
+    if (this.idleId && window.cancelIdleCallback) window.cancelIdleCallback(this.idleId);
+    this.kept.forEach((rm) => { if (rm !== this.room) release(rm.root); }); this.kept.clear(); this.todo = []; this.warm = null;
+    this.jobs.forEach((j) => j.done.forEach((f) => f(null))); this.jobs = [];
     release(this.scene); this.scene.clear(); this.room = null;
+    if (this.offRT) this.offRT.dispose(); Object.values(this.shotRT).forEach((rt) => rt.dispose());
     try { this.renderer.dispose(); } catch (e) { /* gone */ }
   }
   // let go at once when the renderer is up; one still starting lets go as it comes up (init's then above)
   dispose() { this.dead = true; if (this.ready || this.freed) this.free(); this.wrap.remove(); }
 }
-// The cards' pictures: every room and every astronaut drawn once, by one renderer of their own that is let go when the
-// last is done, read back from a render target and kept as images by key (thumbs() draws the stations this way).
-// Widths 320 and 256 keep every row of the read-back on WebGPU's 256-byte boundary. Until one is ready, or where it
-// cannot be drawn, its card keeps its flat picture.
-const SHOTS = {}, SHOT_WAIT = {}, SHOT_Q = [];
-let SHOT = null;
-function shoot(key, w, h, make, done) {
-  if (SHOTS[key]) return done(SHOTS[key]);
-  if (SHOT_WAIT[key]) return SHOT_WAIT[key].push(done);
-  SHOT_WAIT[key] = [done]; SHOT_Q.push({ key, w, h, make });
-  if (!SHOT) shotRun();
-}
-function shotRun() {
-  geo(); omats();
-  const renderer = new THREE.WebGPURenderer({ antialias: false }), scene = new THREE.Scene(), camera = new THREE.PerspectiveCamera(CAM.fov, 1.6, 0.1, 600);
-  renderer.setPixelRatio(1); renderer.toneMapping = THREE.ACESFilmicToneMapping; renderer.toneMappingExposure = 1.0;
-  renderer.shadowMap.enabled = true; renderer.shadowMap.type = THREE.PCFSoftShadowMap;
-  pvSpace(scene);
-  const S = SHOT = { renderer, scene, camera, L: pvLights(scene) };
-  const out = (job, url) => { if (url) SHOTS[job.key] = url; const q = SHOT_WAIT[job.key] || []; delete SHOT_WAIT[job.key]; q.forEach((f) => f(url || null)); };
-  renderer.init().then(async () => {
-    let post = null; try { post = new Post(renderer, scene, camera, 0.32, 0.0, 0.86, { sat: 0.96 }); } catch (e) { post = null; }
-    const rts = {};
-    while (SHOT_Q.length) {
-      const job = SHOT_Q.shift(), W = job.w, H = job.h; let url = null, held = null;
-      try {
-        renderer.setSize(W, H, false); camera.aspect = W / H; camera.updateProjectionMatrix();
-        held = job.make(S); scene.add(held);
-        // the bloom pass and the floors' mirror draw once a frame: two frames before each picture
-        await new Promise((r) => requestAnimationFrame(() => requestAnimationFrame(r)));
-        const rt = rts[W + 'x' + H] || (rts[W + 'x' + H] = new THREE.RenderTarget(W, H));
-        renderer.setRenderTarget(rt);
-        if (post) post.render(); else renderer.render(scene, camera);
-        renderer.setRenderTarget(null);
-        const px = await renderer.readRenderTargetPixelsAsync(rt, 0, 0, W, H), flip = !(renderer.backend && renderer.backend.isWebGPUBackend);
-        const c = document.createElement('canvas'); c.width = W; c.height = H; const g = c.getContext('2d'), img = g.createImageData(W, H);
-        for (let y = 0; y < H; y++) { const sy = flip ? H - 1 - y : y; img.data.set(px.subarray(sy * W * 4, (sy + 1) * W * 4), y * W * 4); }
-        for (let i = 3; i < img.data.length; i += 4) img.data[i] = 255;
-        g.putImageData(img, 0, 0); url = c.toDataURL('image/png');
-      } catch (e) { console.warn('a card picture could not be drawn:', job.key, e); url = null; }
-      if (held) { scene.remove(held); release(held); }
-      out(job, url);
-    }
-    Object.values(rts).forEach((rt) => rt.dispose());
-    release(scene); scene.clear();
-    try { renderer.dispose(); } catch (e) { /* gone */ }
-    SHOT = null;
-  }).catch(() => { SHOT = null; while (SHOT_Q.length) out(SHOT_Q.shift(), null); });
-}
-// a department's room with its template's experts in it, framed tight at the office's angle; a room of your own in the
-// look asked for
-function roomThumb(key, look, done) {
-  const tpl = (CO.TEMPLATES || []).find((t) => t.key === key) || { key, name: '', experts: ['researcher'] };
-  shoot('room:' + key + ':' + (look || ''), 320, 200, (S) => {
-    const b = pvBuilder(S.camera, CO.iso.RS / 2, CO.iso.RS / 2), root = new THREE.Group();
-    const d = { id: 0, key, name: tpl.name || '', experts: tpl.experts.slice(), look: look || null, run_kind: null, link: null, charter: '', schedule: null };
-    const room = pvRoom(b, d); root.add(room.root, pvBase(false));
-    pvDress(b, room.r, tpl.name || 'Your department', d.experts.length); pvTick(room.r, 1.3);
-    pvFill(S.L, S.camera, pvFit(S.camera, pvCorners(b, true), 1.9, 1.86, [0, -0.02]));
-    return root;
-  }, done);
-}
-// an expert as an astronaut of its role (agent()'s opts.role), standing on a disc of deck ringed in its colour, seen
-// from the office's side and a little lower, turned a touch so its pack shows
-function astroThumb(role, done) {
-  shoot('astro:' + role, 256, 192, (S) => {
-    const b = pvBuilder(S.camera, 0, 0), root = new THREE.Group(), r = { key: 'ax:' + role, g: root, x0: 0, y0: 0, agents: [], mons: [] };
-    const col = (CO.EXPERT_INFO && CO.EXPERT_INFO[role] && CO.EXPERT_INFO[role].col) || '#00cfff';
-    const a = b.agent(r, 0, 0, 0, CO.expertName(role), { role, stand: true, face: -Math.PI * 0.75 + 0.42 });
-    a.g.rotation.y = a.ry || 0; a.b.position.y = a.by; a.visorM.emissiveIntensity = 0.6; a.chest.material = OM.cyan.glow;
-    a.ringM.emissive.set(col); a.ringM.emissiveIntensity = 1.6; a.ring.scale.setScalar(0.46);
-    b.cyl(root, 0, 0, -0.12, 0.62, 0.2, OM.deck);
-    const rim = new THREE.Mesh(G.ringT, emis(col, 1.5)); rim.rotation.x = Math.PI / 2; rim.scale.set(0.63, 0.63, 0.5); rim.position.y = 0.06; root.add(rim);
-    const gl = new THREE.Mesh(G.plane, new THREE.MeshBasicMaterial({ map: glowTex(), color: new THREE.Color(col), transparent: true, opacity: 0.25, blending: THREE.AdditiveBlending, depthWrite: false }));
-    gl.rotation.x = -Math.PI / 2; gl.scale.set(2.6, 2.6, 1); gl.position.y = -0.14; root.add(gl);
-    const tgt = new THREE.Vector3(0, 0.66, 0);
-    S.camera.position.copy(new THREE.Vector3().setFromSpherical(new THREE.Spherical(3.25, 1.2, CAM.az)).add(tgt)); S.camera.lookAt(tgt); S.camera.updateMatrixWorld();
-    pvFill(S.L, S.camera, tgt);
-    return root;
-  }, done);
+// The cards' pictures as images by key, kept for the session (RoomPreview.shot draws them with the dialog's own
+// renderer). Until one is ready, or where it cannot be drawn, its card keeps its flat picture.
+const SHOTS = {};
+// an expert as an astronaut of its role (agent()'s opts.role), standing at the origin on a disc of deck ringed in its
+// colour, turned a touch from the office's camera so its pack shows
+function pvAstro(b, role) {
+  const root = new THREE.Group(), r = { key: 'ax:' + role, g: root, x0: 0, y0: 0, agents: [], mons: [] };
+  const col = (CO.EXPERT_INFO && CO.EXPERT_INFO[role] && CO.EXPERT_INFO[role].col) || '#00cfff';
+  const a = b.agent(r, 0, 0, 0, CO.expertName(role), { role, stand: true, face: -Math.PI * 0.75 + 0.42 });
+  a.g.rotation.y = a.ry || 0; a.b.position.y = a.by; a.visorM.emissiveIntensity = 0.6; a.chest.material = OM.cyan.glow;
+  a.ringM.emissive.set(col); a.ringM.emissiveIntensity = 1.6; a.ring.scale.setScalar(0.46);
+  b.cyl(root, 0, 0, -0.12, 0.62, 0.2, OM.deck);
+  const rim = new THREE.Mesh(G.ringT, emis(col, 1.5)); rim.rotation.x = Math.PI / 2; rim.scale.set(0.63, 0.63, 0.5); rim.position.y = 0.06; root.add(rim);
+  const gl = new THREE.Mesh(G.plane, new THREE.MeshBasicMaterial({ map: glowTex(), color: new THREE.Color(col), transparent: true, opacity: 0.25, blending: THREE.AdditiveBlending, depthWrite: false }));
+  gl.rotation.x = -Math.PI / 2; gl.scale.set(2.6, 2.6, 1); gl.position.y = -0.14; root.add(gl);
+  return root;
 }
 
 /* ---------------- the office in 3D: the same floor plan, rooms you can walk the camera into ---------------- */
@@ -7300,7 +7356,7 @@ class Office3D {
   let gl2 = false;
   try { gl2 = !!document.createElement('canvas').getContext('webgl2'); } catch (e) { gl2 = false; }
   CO.U3 = (gl2 || navigator.gpu) ? { ok: true, gpu: !!navigator.gpu, universe: (el, stage, h) => new Universe3D(el, stage, h), office: (el, stage, tipFor) => new Office3D(el, stage, tipFor), preview, thumbs,
-    roomPreview: (el) => new RoomPreview(el), roomThumb, astroThumb, shotOf: (key) => SHOTS[key] || null, THREE, geo, makeStation, SKIN, amat, nebTex, TX, OM }
+    roomPreview: (el) => new RoomPreview(el), shotOf: (key) => SHOTS[key] || null, THREE, geo, makeStation, SKIN, amat, nebTex, TX, OM }
     : { failed: true, why: 'no WebGPU and no WebGL2' };
   window.dispatchEvent(new Event('co3d'));
 })();
