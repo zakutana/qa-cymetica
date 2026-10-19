@@ -43,6 +43,8 @@
 .uvlegend { position: absolute; left: 12px; bottom: 10px; z-index: 4; display: flex; gap: 16px; font-size: 10.5px; color: var(--dim2); padding: 6px 12px; border-radius: 9px;
   background: rgba(6, 9, 15, .72); border: 1px solid var(--line2); pointer-events: none; }
 .uvlegend b { color: var(--text); }
+/* how the map moves: the 3D map turns with a drag, the flat one only moves */
+.uvstage:not(.is3d) .uvlegend .l3, .uvstage.is3d .uvlegend .l2 { display: none; }
 .uvlegend i { display: inline-block; vertical-align: -2px; margin-right: 5px; }
 i.lk { display: inline-block; width: 9px; height: 8px; border-radius: 2px; background: currentColor; position: relative; margin-top: 3px; flex: none; }
 i.lk::before { content: ''; position: absolute; left: 1.5px; top: -5px; width: 6px; height: 6px; border: 1.5px solid currentColor; border-bottom: 0; border-radius: 4px 4px 0 0; box-sizing: border-box; }
