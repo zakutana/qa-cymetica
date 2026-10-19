@@ -1314,13 +1314,14 @@ class Universe3D {
   // pipelines compiled on the GPU's own threads (compileAsync), nothing drawn. Nothing is culled meanwhile, so what
   // the first look's camera will see is ready wherever this one points. Measured 2026-10-19: the first open's first
   // frame was 65 shaders and 67 pipelines made there and then; after this, the post chain's few.
-  warm() {
+  // pause: a promise to wait on before each piece (app.js: until the page has been left alone a moment)
+  warm(pause) {
     if (this.warming) return this.warming;
     const go = async () => {
       await this.started;
       if (!this.post || !this.post.pass) return;
       idleFlush();
-      await compileInPieces(this.renderer, this.scene, this.camera, this.post.pass.renderTarget, { all: true, mrt: this.post.pass.getMRT() });
+      await compileInPieces(this.renderer, this.scene, this.camera, this.post.pass.renderTarget, { all: true, mrt: this.post.pass.getMRT(), pause });
     };
     this.warming = go().catch((e) => console.warn('the map could not be made ready ahead:', e)).then(() => { this.warmed = true; });
     return this.warming;
@@ -3215,6 +3216,7 @@ async function compileInPieces(R, scene, camera, target, opts = {}) {
   const items = first.concat(rest), frame = R._nodes && R._nodes.nodeFrame, nMin = Math.max(1, Math.ceil(first.length / 20));
   let i = 0, n = nMin;
   while (i < items.length) {
+    if (opts.pause) await opts.pause();   // (work done ahead waits while a hand is on the page)
     const t0 = performance.now(), prevT = R.getRenderTarget(), prevM = R.getMRT(), piece = items.slice(i, i + n);
     // (as each thing is now: the page may have changed one between two pieces)
     const vis = items.map((o) => o.visible);

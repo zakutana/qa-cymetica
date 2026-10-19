@@ -43,6 +43,10 @@
     var st = $('stage');
     st.classList.toggle('is3d', v === '3d');
     Array.prototype.forEach.call(document.querySelectorAll('#vt button'), function (b) { b.classList.toggle('on', b.getAttribute('data-v') === v); });
+    // the office's screens are canvases drawn once, in JetBrains Mono: built before the web font had come they kept the
+    // browser's fallback (wider, thinner) until their text changed, as a first visit showed them. Built once it is
+    // here, the stage blank meanwhile as it is while the 3D starts (1.5 s at most; no font at all: built at once).
+    if (v === '3d' && !office3d && !monoWaited && !monoHere()) { monoWait(function () { monoWaited = true; if (ui.view === '3d' && !office3d) setView('3d'); }); return; }
     if (v === '3d') {
       if (!office3d) { office3d = CO.U3.office($('office3d'), st, tipFor); office3d.onFail = function () { office3d = null; setView('2d'); }; }
       office = office3d;
@@ -57,6 +61,13 @@
       office.resize();
       if (ui.mgr) office.focus('hub', 0, true); else if (ui.panel != null) office.focus('d' + ui.panel, 0, true); else office.fit(false);
     });
+  }
+  var MONO = ['400', '500', '600', '700'].map(function (w) { return w + ' 16px "JetBrains Mono"'; }), monoWaited = false;
+  function monoHere() { try { return !document.fonts || MONO.every(function (f) { return document.fonts.check(f); }); } catch (e) { return true; } }
+  function monoWait(cb) {
+    var done = false, fin = function () { if (!done) { done = true; cb(); } };
+    try { Promise.all(MONO.map(function (f) { return document.fonts.load(f); })).then(fin, fin); } catch (e) { fin(); }
+    setTimeout(fin, 1500);
   }
   // the 3D engine loads on its own: switch when it is there, if 3D is the choice. It says so itself (the co3d event
   // at the end of u3d.js), so nothing waits on a timer's next round; 8 s without it is a page without 3D.
@@ -509,6 +520,7 @@
   // on a computer a quarter as fast. A hand on the page comes first: a step waits until it has been still 1.2 s.
   var lastHand = 0, uvLay = null;
   ['pointerdown', 'wheel', 'keydown', 'touchstart'].forEach(function (k) { document.addEventListener(k, function () { lastHand = performance.now(); }, { capture: true, passive: true }); });
+  document.addEventListener('pointermove', function (e) { if (e.buttons) lastHand = performance.now(); }, { capture: true, passive: true });   // a drag held on
   function prebuildUniverse() {
     if (RO || uv || !(CO.U3 && CO.U3.ok)) return;
     // the renderer and its world; the plan; a station a step (uvLay, which show3D finishes if the tab opens first);
@@ -517,17 +529,24 @@
       function () { if (uv) return false; uv = CO.U3.universe($('uv3d'), $('uvstage'), uvHooks()); $('uvstage').classList.add('is3d'); CO.uv = uv; },
       function () { if (!uv || uvLaid || !uv.layoutSteps) return false; uvLay = uv.layoutSteps(); },
       function () { if (!uvLay) return false; uvLay.shift()(); if (uvLay.length) return true; uvLay = null; uvLaid = true; },
-      function () { if (uv && uv.warm && uvLaid) uv.warm(); }
+      // its pieces wait while a hand is on the page (a drag of the office ran 80 fps instead of 95 beside them), and
+      // not at all once its tab is open: then it is what the tab waits for
+      function () { if (uv && uv.warm && uvLaid) uv.warm(handsOff); }
     ], i = 0;
-    var idle = window.requestIdleCallback ? function (f) { window.requestIdleCallback(f, { timeout: 5000 }); } : function (f) { setTimeout(f, 300); };
+    function handsOff() {
+      return new Promise(function (res) { (function w() { if (uvShown || performance.now() - lastHand >= 1200) res(); else setTimeout(w, 150); })(); });
+    }
+    // (a computer the office keeps busy has no idle moment at all: there a step runs after 300 ms anyway, and the
+    // stations go on for 12 ms at a time -- at a quarter of the CPU they had waited 5 s each, the tab opened first)
+    var idle = window.requestIdleCallback ? function (f) { window.requestIdleCallback(f, { timeout: 300 }); } : function (f) { setTimeout(f, 300); };
     (function next() {
       if (i >= steps.length || uvShown) return;   // its tab opened first: show3D did the rest
       idle(function (dl) {
         if (uvShown) return;
         if (performance.now() - lastHand < 1200) return setTimeout(next, 700);
         // a step returning true has more to do: it runs again while this idle moment lasts, then at the next
-        var again;
-        do { again = steps[i]() === true; } while (again && dl && dl.timeRemaining && dl.timeRemaining() > 8);
+        var again, t0 = performance.now();
+        do { again = steps[i]() === true; } while (again && (dl && dl.didTimeout ? performance.now() - t0 < 12 : dl && dl.timeRemaining && dl.timeRemaining() > 8));
         if (!again) i++;
         setTimeout(next, again ? 0 : 120);
       });
@@ -536,7 +555,7 @@
   // after the office's first frames (the 3D office's, or the flat one's when 3D is off), not before: the office first
   function afterOffice(cb) {
     var t0 = performance.now();
-    (function wait() { if (!office3d || office3d.frames > 40 || performance.now() - t0 > 20000) return cb(); setTimeout(wait, 250); })();
+    (function wait() { if ((!office3d && ui.view !== '3d') || (office3d && office3d.frames > 40) || performance.now() - t0 > 20000) return cb(); setTimeout(wait, 250); })();
   }
   function finishShow(first) {
     uvShown = true;
