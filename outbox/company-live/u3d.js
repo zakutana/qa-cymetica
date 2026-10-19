@@ -3583,7 +3583,8 @@ class Office3D {
     const all = Object.keys(cells).map((k) => cells[k]);
     let maxX = 0, maxY = 0; all.forEach((c) => { maxX = Math.max(maxX, c[0] + L.RS); maxY = Math.max(maxY, c[1] + L.RS); });
     this.cx = maxX / 2; this.cy = maxY / 2; this.size = Math.max(maxX, maxY);
-    // clear the old floor, rooms and labels
+    // clear the old floor, rooms and labels; the rooms' lamps are kept out of it (lampsBack below)
+    (this.lampPool || []).forEach((l) => { if (l.parent) l.parent.remove(l); });
     release(this.world); this.world.clear(); this.layer.innerHTML = ''; this.rooms = {}; this.hits = []; this.pcs = [];
     const RS = L.RS, W = this.world;
     const pad = 0.5, T = 0.35, have = {}, kc = (x, y) => x + ',' + y;
@@ -3633,6 +3634,7 @@ class Office3D {
       const hit = new THREE.Mesh(G.box, M.hit); hit.scale.set(RS, WH, RS); hit.position.copy(this.V(c[0] + RS / 2, c[1] + RS / 2, WH / 2)); hit.userData.key = k; g.add(hit); this.hits.push(hit);
       if (room.born) { g.scale.set(1, 0.01, 1); room.grow = performance.now(); }
     });
+    this.lampsBack();
     this.bakeRooms();
     this.signRooms();
     // the plates wait hidden until a frame has put them over their rooms: while the 3D was starting they sat in a
@@ -3644,6 +3646,24 @@ class Office3D {
   }
   // every room's still parts merged per material (bakeRoom): the same picture in a fraction of the draw calls
   bakeRooms() { this.baked = 0; Object.values(this.rooms).forEach((r) => { if (r.g) this.baked += bakeRoom(r); }); }
+  // A rebuild keeps the rooms' lamps: the same light objects, put back in the new lamps' places in the same order,
+  // with the new lamps' settings. three.js r172 keys every lit shader by its lights' ids, so new lamps compiled every
+  // lit material of the office again -- a department added or edited cost a 1.5-1.9 s rebuild (measured
+  // 2026-10-19). A layout with more lamps than before still adds new ones, and that rebuild still compiles.
+  lampsBack() {
+    const pool = this.lampPool || (this.lampPool = []), now = [], swap = new Map();
+    this.world.traverse((x) => { if (x.isLight) now.push(x); });
+    now.forEach((n, i) => {
+      const p = pool[i];
+      if (!p || p.type !== n.type) { pool[i] = n; return; }
+      p.color.copy(n.color); p.intensity = n.intensity; p.distance = n.distance; p.decay = n.decay; p.castShadow = n.castShadow;
+      p.position.copy(n.position); p.quaternion.copy(n.quaternion); p.scale.copy(n.scale); p.layers.mask = n.layers.mask; p.visible = n.visible; p.name = n.name;
+      const par = n.parent; par.children[par.children.indexOf(n)] = p; p.parent = par; n.parent = null; swap.set(n, p);
+    });
+    pool.length = Math.max(pool.length, now.length);
+    // what holds a new lamp now holds the kept one (a room's lamp, its tint's target)
+    if (swap.size) Object.values(this.rooms).forEach((r) => Object.keys(r).forEach((k) => { if (swap.has(r[k])) r[k] = swap.get(r[k]); }));
+  }
   // Every room's name lettered in light on its front glass, and nothing else over the office (the operator,
   // 2026-10-19: "tam vlastne staci jen ty nazvy mistnosti dat na to sklo ... nic vic se tam zobrazovat uz nemusi,
   // protoze detaily jsou vlevo v panelu ... kdyz nekoho zajima vic klikne na mistnost"; and of the colour: "nejakou
