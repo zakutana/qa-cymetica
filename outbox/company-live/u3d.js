@@ -501,24 +501,50 @@ SKIN.dome = (b, n) => {
   b.beacon(0, y + gh + 0.18 * s, 0, 0.06);
   b.top = y + gh + 0.18 * s + 0.15; b.bot = kb - 0.1; b.foot = s / 2 + 0.1 + 0.62 * s + 0.1;
 };
-// Ziggurat: a tier per deck on a floating island of rock, stones drifting under it, a beam from its temple
+// Fortress (the key stays 'pyramid', so a company saved as a Ziggurat keeps its pick), as the Bull Club in the
+// operator's orrery: crenellated walls in the company's colour round a courtyard, a tower at each corner, grey
+// blocks inside, all on a dark plinth; an engine burning blue out of two sides, a solar wing out of the other two.
+// One deck per department: the keep, the walls, a second block, then the towers rise one by one (the back one
+// highest), the keep gains a storey, the front tower last. One deck is his small Bull Club: a block, a lamp on a mast.
 SKIN.pyramid = (b, n) => {
-  const A = b.A, b0 = fpOf(n) + 1.0, inset = Math.min(0.3, (b0 - 1.1) / (2 * n)), kh = b0 * 1.05;
-  b.chassis(b0 + 0.7, 2);
-  b.rimSquare(b0 + 0.04, 0.0, A.soft);
-  let y = 0;
-  for (let f = 0; f < n; f++) {
-    const s = b0 - 2 * inset * f, h = FH - 0.05;
-    b.box(s, h, s, 0, y + h / 2, 0, f % 2 ? A.hull2 : A.hull);
-    b.rimSquare(s, y + h, A.rim);
-    b.faceWins(f, s, s, y + h / 2, h, 0.62, 0.3);
-    y += FH;
+  const A = b.A, V = vfMats(A.hex), R = b.R;
+  if (n === 1) return vfBlock(b, V);
+  const s = fpOf(n) + 1.3, hs = s / 2, t = 0.36, Hw = 1.05, tw = 1.0, fy = 0.26, inner = hs - t;
+  // the plinth under it all, dark, and the walls' foot: a band a little wider than the walls
+  vfRbox(b, s + 0.3, 0.6, s + 0.3, 0, -0.3, 0, V.base, 0.1);
+  vfRbox(b, s * 0.7, 0.3, s * 0.7, 0, -0.72, 0, V.base, 0.08);
+  vfRbox(b, s + 0.1, fy, s + 0.1, 0, fy / 2, 0, V.body2, 0.04);
+  b.box(2 * inner + 0.02, 0.05, 2 * inner + 0.02, 0, fy + 0.02, 0, V.floor);
+  // the walls: a merlon every 0.24 along the outer edge, a pilaster every 0.75 down the outer face, an arrow slit
+  // between two pilasters (deck 1)
+  for (const [ax, az] of [[0, 1], [0, -1], [1, 0], [-1, 0]]) {
+    const len = s - 2 * tw + 0.1, at = (u, v) => (ax ? [ax * v, u] : [u, az * v]), ry = ax ? ax * Math.PI / 2 : az > 0 ? 0 : Math.PI;
+    const c = at(0, hs - t / 2), sz = ax ? [t, len] : [len, t];
+    vfRbox(b, sz[0], Hw, sz[1], c[0], Hw / 2, c[1], V.body, 0.03);
+    const m = Math.max(2, Math.round(len / 0.24)), st = len / m;
+    for (let i = 0; i < m; i++) { const p = at(-len / 2 + st * (i + 0.5), hs - 0.06); b.box(ax ? 0.11 : st * 0.48, 0.1, ax ? st * 0.48 : 0.11, p[0], Hw + 0.05, p[1], V.body); }
+    const q = Math.max(2, Math.round(len / 0.75)), sq = len / q;
+    for (let i = 0; i <= q; i++) {
+      const u = -len / 2 + sq * i, p = at(u, hs + 0.03);
+      if (i > 0 && i < q) b.box(ax ? 0.06 : 0.15, Hw - fy - 0.1, ax ? 0.15 : 0.06, p[0], fy + (Hw - fy - 0.1) / 2, p[1], V.body);
+      if (i < q) { const w = at(u + sq / 2, hs + 0.012); b.win(w[0], fy + (Hw - fy) * 0.55, w[1], ry, 0.07, 0.3, 1, R() < 0.25); }
+    }
   }
-  b.box(0.8, 0.5, 0.8, 0, y + 0.25, 0, M.trim);
-  const beam = b.part(G.beam, A.beam.clone(), 1, 6, 1, 0, y + 3.5, 0, true);
-  b.anim.push((t) => { beam.material.opacity = (b.busy ? 0.3 : 0.16) + 0.05 * Math.sin(t * 2 + b.phase); });
-  b.beacon(0, y + 0.62, 0, 0.13);
-  b.top = y + 1.5; b.foot = Math.max(b.foot, b0 * 0.85 + 0.4);
+  // the towers, back, left, right, front: each rises when its own deck comes (back highest), else it stands with the walls
+  [[-1, -1, 3, 0.6], [-1, 1, 4, 0.32], [1, -1, 5, 0.32], [1, 1, 7, 0.32]].forEach(([sx, sz, f, up]) => {
+    const own = f < n, H = Hw + 0.16 + (own ? up : 0), x = sx * (hs - tw / 2 + 0.05), z = sz * (hs - tw / 2 + 0.05);
+    vfTower(b, V, x, z, tw, H, own ? f : 1, own ? Hw + 0.14 : H - 0.5, sx, sz);
+  });
+  // inside: the keep (deck 0, a storey more at deck 6) and a smaller block (deck 2), grey as his
+  const kw = Math.min(1.45, s * 0.28), kh = Hw * 1.3, kx = -s * 0.19, kz = s * 0.05;
+  vfHouse(b, V, kx, fy + 0.05, kz, kw, kh, 0);
+  if (n > 6) vfHouse(b, V, kx, fy + 0.05 + kh, kz, kw * 0.78, kh * 0.62, 6);
+  if (n > 2) vfHouse(b, V, s * 0.14, fy + 0.05, -s * 0.17, kw * 0.8, Hw * 0.85, 2);
+  // engines out of the two sides the wings are not on, toward the front corner as his; a wing beside each other side
+  const reach = Math.max(vfJet(b, s * 0.2, -0.25, hs + 0.1, -Math.PI / 2, s * 0.085), vfJet(b, s * 0.2, -0.25, -hs - 0.1, Math.PI / 2, s * 0.085));
+  const wing = vfWing(b, hs + 0.15, -0.3, -s * 0.1, 1, 0, 0.35, s * 0.3, s * 0.55, 0.32);
+  vfWing(b, -hs - 0.15, -0.3, s * 0.1, -1, 0, 0.35, s * 0.3, s * 0.55, 0.32);
+  b.top = Math.max(Hw + 0.16 + (n > 3 ? 0.6 : 0), n > 6 ? fy + 0.05 + kh * 1.62 + 0.18 : 0) + 0.6; b.bot = -1.0; b.foot = Math.max(hs + wing, hs + reach);
 };
 // Ring station, Sigma Collective in his orrery: a stack of ring decks stepping in, a line of light round each rim,
 // a neck, a saucer and a dome over them and a dish turning on top, on a light grey platform with two lines of light
@@ -751,47 +777,226 @@ SKIN.stack = (b, n) => {
   b.top = (hmax + 0.3) * K; b.bot = (-bh - 0.7) * K; b.foot = Math.max(ex + 1.2, bd / 2 + 1.6, bw / 2 + 0.3) * K;
 };
 // Vault: an armoured block of decks with its round door, two solar wings, a dish, an engine pod underneath
+// -- as the Giga Fund in the operator's orrery: the block in the company's colour narrowing upward, a band of
+// plates per deck whose seams are its windows, sitting in a thick rounded collar; a pale lid with a lamp on a mast.
 SKIN.vault = (b, n) => {
-  const A = b.A, fp = fpOf(n), w = fp + 0.7, d = Math.max(1.9, fp * 0.82);
-  b.box(w * 0.46, 0.42, d * 0.46, 0, -0.29, 0, M.trim);
-  flame(b, -0.52, 0.9, 1.3);
-  let y = 0;
+  const A = b.A, V = vfMats(A.hex), R = b.R, W = fpOf(n) * 0.8 + 0.3, h0 = 0.95, hk = n <= 3 ? 0.62 : 0.52, cw = W * 1.45, k = 0.1;
+  // the collar, thick and rounded; the drum under it; the keel
+  vfRbox(b, cw, 0.66, cw, 0, -0.14, 0, V.body, 0.31);
+  vfRbox(b, W * 0.96, 0.6, W * 0.96, 0, -0.6, 0, V.body2, 0.08);
+  vfRbox(b, W * 0.5, 0.32, W * 0.5, 0, -1.04, 0, V.base, 0.06);
+  // the block: one body narrowing upward, a seam round it between two decks, the seams between its plates its windows
+  const H = h0 + (n - 1) * hk, y0 = 0.12, at = (yy) => W * (1 - k * (yy - y0) / H);
+  const m = W < 2.4 ? 3 : 4;
+  vfTaper(b, W, H, W, 0, y0 + H / 2, 0, vfPlated(A.hex, m), 0.12, k);
+  let y = y0;
   for (let f = 0; f < n; f++) {
-    const h = (f === 0 ? FH * 1.35 : FH) - 0.05;
-    b.box(w, h, d, 0, y + h / 2, 0, f % 2 ? A.hull2 : A.hull);
-    b.box(w + 0.1, 0.06, d + 0.1, 0, y + h + 0.03, 0, M.trim);
-    for (const [sx, sz] of [[1, 1], [1, -1], [-1, 1], [-1, -1]]) b.box(0.13, h, 0.13, sx * w / 2, y + h / 2, sz * d / 2, M.trim);
-    if (f === 0) {
-      b.part(G.cyl, M.dark, 0.44, 0.05, 0.44, -w * 0.18, y + h * 0.5, d / 2 + 0.02).rotation.x = Math.PI / 2;
-      b.part(G.ringT, A.rim, 0.46, 0.46, 0.46, -w * 0.18, y + h * 0.5, d / 2 + 0.05);
-      b.box(0.62, 0.04, 0.02, -w * 0.18, y + h * 0.5, d / 2 + 0.06, A.soft); b.box(0.04, 0.62, 0.02, -w * 0.18, y + h * 0.5, d / 2 + 0.06, A.soft);
-      b.box(w * 0.36, h * 0.28, 0.02, w * 0.22, y + h * 0.55, d / 2 + 0.02, A.soft);
-    } else {
-      const R = b.R, step = 0.42, m = Math.max(1, Math.floor((w - 0.3) / step)), s = w / m;
-      for (let i = 0; i < m; i++) {
-        b.win(-w / 2 + s * (i + 0.5), y + h / 2, d / 2 + 0.014, 0, 0.24, h * 0.5, f, R() < 0.5);
-        b.win(-w / 2 + s * (i + 0.5), y + h / 2, -d / 2 - 0.014, Math.PI, 0.24, h * 0.5, f, R() < 0.5);
+    const h = f ? hk : h0, yc = y + h / 2, wc = at(yc);
+    if (f) b.box(at(y) + 0.02, 0.035, at(y) + 0.02, 0, y, 0, V.base);
+    for (const [ax, az] of [[0, 1], [0, -1], [1, 0], [-1, 0]]) {
+      const ry = ax ? ax * Math.PI / 2 : az > 0 ? 0 : Math.PI;
+      for (let i = 1; i <= m; i++) {
+        const u = -wc / 2 + wc * i / (m + 1);
+        if (f === 0 && az > 0 && Math.abs(u + W * 0.18) < 0.45) continue;   // where the door is
+        b.win(ax ? ax * (wc / 2 + 0.016) : u, yc, ax ? u : az * (wc / 2 + 0.016), ry, 0.1, h * 0.7, f, R() < 0.15);
       }
     }
-    b.box(0.02, 0.05, d * 0.7, w / 2 + 0.015, y + h * 0.5, 0, A.rim);
-    b.box(0.02, 0.05, d * 0.7, -w / 2 - 0.015, y + h * 0.5, 0, A.rim);
-    y += h + 0.05;
+    y += h;
   }
-  const wy = Math.min(y * 0.5, 1.6), pw = 3.2, pd = 1.7, tilt = 0.3;
-  for (const s of [1, -1]) {
-    b.box(1.1, 0.09, 0.09, s * (w / 2 + 0.55), wy, 0, M.metal);
-    const px = s * (w / 2 + 1.1 + pw / 2);
-    b.box(pw, 0.04, pd, px, wy, 0, A.panel).rotation.x = tilt;
-    for (const e of [1, -1]) b.box(pw + 0.06, 0.05, 0.05, px, wy - e * Math.sin(tilt) * pd / 2, e * Math.cos(tilt) * pd / 2, A.rim);
-    b.box(0.05, 0.05, pd, px + s * pw / 2, wy, 0, A.rim).rotation.x = tilt;
-  }
-  b.box(0.5, 0.3, 0.5, -w / 2 + 0.6, y + 0.15, -d / 2 + 0.55, M.trim);
-  b.box(0.5, 0.3, 0.5, -w / 2 + 1.3, y + 0.15, -d / 2 + 0.55, M.trim);
-  b.cyl(0.04, 0.6, w / 2 - 0.7, y + 0.3, d / 2 - 0.6, M.metal);
-  const dish = b.part(G.hemi, M.metal, 0.42, 0.18, 0.42, w / 2 - 0.7, y + 0.66, d / 2 - 0.6); dish.rotation.x = Math.PI * 0.85; dish.rotation.z = 0.4;
-  b.beacon(w / 2 - 0.7, y + 0.95, d / 2 - 0.6, 0.07);
-  b.top = y + 1.15; b.bot = -1.9; b.foot = w / 2 + 1.1 + pw;
+  // the round door in the first deck, a wheel on it and a lamp beside
+  const dx = -W * 0.18, dy = y0 + h0 * 0.48, dz = at(dy) / 2 + 0.01;
+  b.part(G.cyl, V.dark, 0.3, 0.06, 0.3, dx, dy, dz + 0.01).rotation.x = Math.PI / 2;
+  b.part(vfTorusGeo(), V.cap, 0.33, 0.33, 0.33, dx, dy, dz + 0.04);
+  for (const r of [0, Math.PI / 2]) b.box(0.4, 0.035, 0.03, dx, dy, dz + 0.05, M.metal).rotation.z = r + Math.PI / 4;
+  b.part(G.sphere, A.glow, 0.04, 0.04, 0.04, dx + 0.42, dy + 0.18, dz + 0.02);
+  // the lid, its pale plate, the mast and its lamp
+  const Wt = at(y);
+  vfRbox(b, Wt * 0.96, 0.14, Wt * 0.96, 0, y + 0.04, 0, V.body, 0.06);
+  for (const [ax, az] of [[0, 1], [0, -1], [1, 0], [-1, 0]]) b.box(ax ? 0.09 : Wt * 0.8, 0.08, ax ? Wt * 0.8 : 0.09, ax * Wt * 0.36, y + 0.14, az * Wt * 0.36, V.body);
+  b.box(Wt * 0.68, 0.04, Wt * 0.68, 0, y + 0.12, 0, V.cap);
+  vfRbox(b, 0.3, 0.12, 0.3, 0, y + 0.18, 0, V.base, 0.04);
+  b.cyl(0.035, 0.3, 0, y + 0.37, 0, M.metal);
+  vfLamp(b, 0, y + 0.58, 0, 0.17);
+  // the wings, the engine pod under the collar's front corner, a sensor on the far side
+  const wing = vfWing(b, 0, -0.06, cw / 2, 0, 1, 0.4, W * 1.25, W * 0.66, 0.1);
+  vfWing(b, 0, -0.06, -cw / 2, 0, -1, 0.4, W * 1.25, W * 0.66, 0.1);
+  const reach = vfJet(b, W * 0.62, -0.52, W * 0.3, 0, 0.25, 2.2);
+  b.box(0.22, 0.06, 0.06, -cw / 2 - 0.08, -0.1, W * 0.3, M.metal);
+  b.part(G.hemi, M.vfSilver, 0.2, 0.09, 0.2, -cw / 2 - 0.2, -0.1, W * 0.3).rotation.z = Math.PI / 2;
+  b.top = y + 1.05; b.bot = -1.3; b.foot = Math.max(cw / 2 + wing, W * 0.62 + reach);
 };
+/* Vault and Fortress share their parts: a body in the company's own colour, as saturated as the operator's
+ * pictures have it (A.hull is slate with a touch of it), on a dark plinth; blue-grey solar wings; engines that burn
+ * white-blue whatever the colour. The materials live in M so release() never disposes them. */
+function vfMats(hex) {
+  const key = 'vf' + hex; if (M[key]) return M[key];
+  const hsl = {}; new THREE.Color(hex).getHSL(hsl, THREE.SRGBColorSpace);
+  const tone = (s, l) => new THREE.Color().setHSL(hsl.h, s, l, THREE.SRGBColorSpace), st = (o) => new THREE.MeshStandardMaterial(o);
+  vfShared();
+  M[key] = {
+    body: st({ color: tone(0.44, 0.5), emissive: tone(0.6, 0.3), emissiveIntensity: 0.14, roughness: 0.5, metalness: 0.15 }),
+    body2: st({ color: tone(0.42, 0.44), emissive: tone(0.6, 0.3), emissiveIntensity: 0.14, roughness: 0.52, metalness: 0.15 }),
+    cap: st({ color: tone(0.22, 0.56), roughness: 0.5, metalness: 0.1 }),
+    floor: st({ color: tone(0.3, 0.42), map: vfFloorTex(), roughness: 0.85, metalness: 0.05 }),
+    base: M.vfBase, dark: M.vfDark, grey: M.vfGrey, grey2: M.vfGrey2
+  };
+  return M[key];
+}
+function vfShared() {
+  if (M.vfBase) return;
+  const st = (o) => new THREE.MeshStandardMaterial(o);
+  M.vfBase = st({ color: 0x2c2e36, roughness: 0.55, metalness: 0.35 });
+  M.vfDark = st({ color: 0x0a0c11, roughness: 0.45, metalness: 0.4 });
+  M.vfGrey = st({ color: 0x48474e, roughness: 0.62, metalness: 0.2 });
+  M.vfGrey2 = st({ color: 0x918e98, roughness: 0.55, metalness: 0.15 });
+  M.vfSilver = st({ color: 0xa9b1bc, roughness: 0.36, metalness: 0.45 });
+  M.vfSolar = st({ map: vfSolarTex(), roughness: 0.38, metalness: 0.3 });
+  M.vfFrame = st({ color: 0x7d8594, roughness: 0.45, metalness: 0.4 });
+  M.vfCore = new THREE.MeshBasicMaterial({ color: new THREE.Color(0.3, 0.78, 1).multiplyScalar(1.35) });
+  M.vfPlume = new THREE.MeshBasicMaterial({ map: vfPlumeTex(), color: new THREE.Color(0x5ac8ff).multiplyScalar(1.5), transparent: true, opacity: 0.8, blending: THREE.AdditiveBlending, depthWrite: false, side: THREE.DoubleSide });
+}
+const VFG = new Map();
+function vfRgeo(w, h, d, r) {
+  const k = [w, h, d, r].map((v) => v.toFixed(3)).join(',');
+  let g = VFG.get(k);
+  if (!g) { g = new RoundedBoxGeometry(w, h, d, r > 0.08 ? 3 : 2, Math.max(0.005, Math.min(r, w / 2 - 0.005, h / 2 - 0.005, d / 2 - 0.005))); VFG.set(k, g); }
+  return g;
+}
+function vfRbox(b, w, h, d, x, y, z, mat, r) { return b.part(vfRgeo(w, h, d, r), mat, 1, 1, 1, x, y, z); }
+// the same, its top k narrower than its foot: the Vault's block, a frustum as in his picture
+function vfTaper(b, w, h, d, x, y, z, mat, r, k) {
+  const key = ['taper', w, h, d, r, k].map((v) => (typeof v === 'number' ? v.toFixed(3) : v)).join(',');
+  let g = VFG.get(key);
+  if (!g) {
+    g = vfRgeo(w, h, d, r).clone(); const p = g.attributes.position;
+    for (let i = 0; i < p.count; i++) { const s = 1 - k * (p.getY(i) / h + 0.5); p.setX(i, p.getX(i) * s); p.setZ(i, p.getZ(i) * s); }
+    VFG.set(key, g);
+  }
+  return b.part(g, mat, 1, 1, 1, x, y, z);
+}
+function vfTorusGeo() { let g = VFG.get('torus'); if (!g) { g = new THREE.TorusGeometry(1, 0.11, 10, 48); VFG.set('torus', g); } return g; }
+// solar cells: blue-grey in a thin pale grid, ten by five along the wing
+function vfSolarTex() {
+  return TX.vfSolar || (TX.vfSolar = (() => {
+    const c = document.createElement('canvas'); c.width = 512; c.height = 256; const g = c.getContext('2d');
+    g.fillStyle = '#b3b9c8'; g.fillRect(0, 0, 512, 256);
+    for (let i = 0; i < 10; i++) for (let j = 0; j < 5; j++) {
+      const x = 6 + i * 50, y = 6 + j * 49, gr = g.createLinearGradient(x, y, x + 50, y + 49);
+      gr.addColorStop(0, '#7c839c'); gr.addColorStop(1, '#5d647c'); g.fillStyle = gr; g.fillRect(x + 1.5, y + 1.5, 47, 46);
+    }
+    const t = new THREE.CanvasTexture(c); t.colorSpace = THREE.SRGBColorSpace; t.anisotropy = 8; return t;
+  })());
+}
+// The Vault's block in armour: its colour over m + 1 plates a face, the dark seams between them where its windows
+// are, each plate lit a little down its left edge and shaded down its right, as his picture's are
+function vfPlated(hex, m) {
+  const key = 'vfPlated' + m + hex; if (M[key]) return M[key];
+  const tex = TX['vfPlates' + m] || (TX['vfPlates' + m] = (() => {
+    const c = document.createElement('canvas'); c.width = c.height = 256; const g = c.getContext('2d'), s = 256 / (m + 1);
+    for (let i = 0; i <= m; i++) {
+      const x0 = i * s, gr = g.createLinearGradient(x0, 0, x0 + s, 0);
+      gr.addColorStop(0, '#ffffff'); gr.addColorStop(0.15, '#f0f0f0'); gr.addColorStop(0.85, '#dcdcdc'); gr.addColorStop(1, '#a8a8a8');
+      g.fillStyle = gr; g.fillRect(x0, 0, s, 256);
+      if (i) { g.fillStyle = '#3c3c3c'; g.fillRect(x0 - 5, 0, 10, 256); }
+    }
+    const t = new THREE.CanvasTexture(c); t.colorSpace = THREE.SRGBColorSpace; t.anisotropy = 8; return t;
+  })());
+  const V = vfMats(hex);
+  M[key] = new THREE.MeshStandardMaterial({ color: V.body.color, emissive: V.body.emissive, emissiveIntensity: V.body.emissiveIntensity, map: tex, roughness: 0.52, metalness: 0.15 });
+  return M[key];
+}
+// a courtyard's tiles: a grey grid the floor's colour multiplies
+function vfFloorTex() {
+  return TX.vfFloor || (TX.vfFloor = (() => {
+    const c = document.createElement('canvas'); c.width = c.height = 256; const g = c.getContext('2d'), R = rng(5);
+    g.fillStyle = '#b8b8b8'; g.fillRect(0, 0, 256, 256);
+    for (let i = 0; i < 8; i++) for (let j = 0; j < 8; j++) { const v = 150 + Math.floor(R() * 40); g.fillStyle = 'rgb(' + v + ',' + v + ',' + v + ')'; g.fillRect(i * 32 + 2, j * 32 + 2, 28, 28); }
+    const t = new THREE.CanvasTexture(c); t.colorSpace = THREE.SRGBColorSpace; t.anisotropy = 8; return t;
+  })());
+}
+function vfPlumeTex() {
+  return TX.vfPlume || (TX.vfPlume = (() => {
+    const c = document.createElement('canvas'); c.width = 16; c.height = 128; const g = c.getContext('2d'), gr = g.createLinearGradient(0, 0, 0, 128);
+    gr.addColorStop(0, 'rgba(230,252,255,1)'); gr.addColorStop(0.3, 'rgba(70,200,255,.6)'); gr.addColorStop(1, 'rgba(20,120,255,0)');
+    g.fillStyle = gr; g.fillRect(0, 0, 16, 128);
+    const t = new THREE.CanvasTexture(c); t.colorSpace = THREE.SRGBColorSpace; return t;
+  })());
+}
+// a lamp on a mast: the station's colour, pulsing with its halo
+function vfLamp(b, x, y, z, r) {
+  const i = b.beacons.length; b.beacon(x, y, z, r);
+  const halo = glowSprite(b.A.c, 0.8, r * 12); halo.position.set(x, y, z); b.g.add(halo);
+  b.anim.push((t) => { halo.material.opacity = 0.5 + 0.5 * Math.max(0, Math.sin(t * 2.6 + b.phase + i)); });
+}
+// An engine on its side: a ribbed pod, a bell, a white-hot nozzle and a blue plume out of it, longer while a deck
+// works. (x, y, z) is where the pod meets the hull, ry the way it points (0: +x), r its radius, lk the plume's
+// length in radii. Returns its reach.
+function vfJet(b, x, y, z, ry, r, lk = 2.8) {
+  const g = new THREE.Group(), L = r * 2.4, len = r * lk, nz = L + r * 0.62; g.position.set(x, y, z); g.rotation.y = ry; b.g.add(g);
+  const put = (geom, mat, sx, sy, sz, px, rz, dyn) => { const m = new THREE.Mesh(geom, mat); m.scale.set(sx, sy, sz); m.position.set(px, 0, 0); m.rotation.z = rz; if (dyn) m.userData.dyn = true; g.add(m); return m; };
+  put(G.cyl, M.vfSilver, r, L, r, L / 2, Math.PI / 2);
+  for (const k of [0.3, 0.52, 0.74]) put(G.cyl, M.vfBase, r * 1.07, r * 0.16, r * 1.07, L * k, Math.PI / 2);
+  put(G.bell, M.vfSilver, r * 0.98, r * 0.66, r * 0.98, L + r * 0.3, Math.PI / 2);
+  put(G.sphere, M.vfCore, r * 0.06, r * 0.86, r * 0.86, nz - r * 0.04, 0);
+  const p = put(vfPlumeGeo(), M.vfPlume, r * 0.9, len, r * 0.9, nz + len / 2, Math.PI / 2, true);
+  const s = glowSprite(0x2f9cff, 0.35, r * 4.5); s.position.set(nz + r * 0.5, 0, 0); g.add(s);
+  b.anim.push((t) => { const k = (b.busy ? 1.4 : 0.92) + 0.1 * Math.sin(t * 17 + b.phase + x + z); p.scale.y = len * k; p.position.x = nz + len * k / 2; });
+  return nz + len * 1.2;
+}
+function vfPlumeGeo() { let g = VFG.get('plume'); if (!g) { g = new THREE.CylinderGeometry(1, 0.55, 1, 24, 1, true); VFG.set('plume', g); } return g; }
+// a solar wing on a boom out of the hull at (x0, y, z0) along (ax, az): one panel in a pale frame, `out` long away
+// from the hull and `side` along it, tilted about its long side. Returns how far it reaches.
+function vfWing(b, x0, y, z0, ax, az, boom, out, side, tilt) {
+  b.box(ax ? boom : 0.08, 0.08, ax ? 0.08 : boom, x0 + ax * boom / 2, y, z0 + az * boom / 2, M.metal);
+  const c = boom + out / 2, L = Math.max(out, side), Wd = Math.min(out, side), alongX = (out >= side) === !!ax;
+  [[M.vfFrame, L + 0.1, 0.04, Wd + 0.1, -0.012], [M.vfSolar, L, 0.05, Wd, 0]].forEach(([mat, l, h, w, dy]) => {
+    const m = b.part(G.box, mat, l, h, w, x0 + ax * c, y + dy, z0 + az * c); m.rotation.order = 'YXZ'; m.rotation.set(tilt * (ax || az), alongX ? 0 : Math.PI / 2, 0);
+  });
+  return boom + out;
+}
+// a tower at a corner of the walls: its body, a parapet round a sunken roof with a merlon each side, slits in its
+// two outer faces (deck f)
+function vfTower(b, V, x, z, tw, H, f, wy, sx, sz) {
+  vfRbox(b, tw, H, tw, x, H / 2, z, V.body, 0.04);
+  b.box(tw - 0.2, 0.05, tw - 0.2, x, H + 0.03, z, V.floor);
+  for (const [ax, az] of [[0, 1], [0, -1], [1, 0], [-1, 0]]) {
+    b.box(ax ? 0.1 : tw, 0.2, ax ? tw : 0.1, x + ax * (tw / 2 - 0.05), H + 0.1, z + az * (tw / 2 - 0.05), V.body);
+    for (const u of [-0.24, 0.24]) b.box(ax ? 0.1 : 0.14, 0.13, ax ? 0.14 : 0.1, x + (ax ? ax * (tw / 2 - 0.05) : u * tw), H + 0.26, z + (az ? az * (tw / 2 - 0.05) : u * tw), V.body);
+  }
+  for (const u of [-0.2, 0.2]) {
+    b.win(x + sx * (tw / 2 + 0.012), wy, z + u * tw, sx * Math.PI / 2, 0.07, 0.28, f, b.R() < 0.3);
+    b.win(x + u * tw, wy, z + sz * (tw / 2 + 0.012), sz > 0 ? 0 : Math.PI, 0.07, 0.28, f, b.R() < 0.3);
+  }
+}
+// a grey block in the courtyard: its body, a pale lid with a lip, two windows a face (deck f)
+function vfHouse(b, V, x, y0, z, w, h, f) {
+  vfRbox(b, w, h, w, x, y0 + h / 2, z, V.grey, 0.05);
+  vfRbox(b, w + 0.06, 0.1, w + 0.06, x, y0 + h + 0.03, z, V.grey2, 0.03);
+  vfRbox(b, w * 0.8, 0.08, w * 0.8, x, y0 + h + 0.1, z, V.grey2, 0.03);
+  for (const [ax, az] of [[0, 1], [0, -1], [1, 0], [-1, 0]]) for (const u of [-0.22, 0.22]) {
+    const ry = ax ? ax * Math.PI / 2 : az > 0 ? 0 : Math.PI;
+    b.win(x + (ax ? ax * (w / 2 + 0.012) : u * w), y0 + h * 0.55, z + (az ? az * (w / 2 + 0.012) : u * w), ry, 0.08, h * 0.42, f, b.R() < 0.3);
+  }
+}
+// one deck of the Fortress: the small Bull Club, a block in the company's colour on a dark plinth, a dark hatch in
+// its roof with a lamp on a mast, a solar wing out of two sides
+function vfBlock(b, V) {
+  const s = 2.1, h = 1.35;
+  vfRbox(b, s + 0.34, 0.42, s + 0.34, 0, -0.21, 0, V.base, 0.1);
+  vfRbox(b, s * 0.6, 0.3, s * 0.6, 0, -0.56, 0, V.base, 0.06);
+  vfRbox(b, s, h, s, 0, h / 2, 0, V.body, 0.16);
+  b.box(s * 0.38, 0.03, s * 0.38, 0, h + 0.005, 0, V.base);
+  vfRbox(b, 0.34, 0.16, 0.34, 0, h + 0.08, 0, V.dark, 0.04);
+  b.cyl(0.035, 0.36, 0, h + 0.34, 0, M.metal);
+  vfLamp(b, 0, h + 0.56, 0, 0.13);
+  for (const [ax, az] of [[0, 1], [0, -1], [1, 0], [-1, 0]]) {
+    const ry = ax ? ax * Math.PI / 2 : az > 0 ? 0 : Math.PI;
+    for (const [u, v] of [[-0.12, 0.62], [0.12, 0.62], [-0.12, 0.38], [0.12, 0.38]]) b.win(ax ? ax * (s / 2 + 0.012) : u * s + 0.25, h * v, az ? az * (s / 2 + 0.012) : u * s + 0.25, ry, 0.2, 0.2, 0, b.R() < 0.5);
+  }
+  const wing = vfWing(b, 0, -0.1, s / 2 + 0.17, 0, 1, 0.4, 2.1, 0.8, 0.12);
+  vfWing(b, 0, -0.1, -s / 2 - 0.17, 0, -1, 0.4, 2.1, 0.8, 0.12);
+  b.top = h + 1.2; b.bot = -0.9; b.foot = s / 2 + 0.17 + wing;
+}
 
 // A whole station: the body (it bobs and turns), the holo-ring it floats over -- solid when public, dashed when
 // private, our own in green -- a pool of its light, and its hit box. RING: how brightly the ring burns.
