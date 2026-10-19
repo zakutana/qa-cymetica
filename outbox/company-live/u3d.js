@@ -7075,12 +7075,30 @@ class Office3D {
   // layers for a few hundred ET10, every pallet full near two million (a quarter of a million USDC). Once there is
   // a load, the cart in the walk carries the newest: nine bars, three short stacks. Shut for a visitor.
   piles(r, V, priv) {
-    release(r.pileG); r.pileG.clear(); this.vaultPiles = [];
-    if (r.doorPivot) r.doorPivot.rotation.y = priv ? 0 : r.vt.open;
-    if (r.keyFace) r.keyFace.material = priv ? OM.vtKeyS : OM.vtKeyO;
-    if (priv) return;
+    // The instanced meshes made once, at their fullest, and kept: what the vault holds changes every 7 s (the apps'
+    // visitors), and every new InstancedMesh is a new shader in three.js r172 (it keys an instanced mesh's shader by
+    // the mesh) -- 7 shaders and 7 pipelines a time, a 150 ms frame every 7 s (1.3 s at a quarter of the CPU,
+    // measured 2026-10-19). Each keeps every instance it could ever need; those not used now are folded to nothing
+    // (a zero scale draws no pixel), so the shader made for the first count is right for every later one.
     const D = r.vt, x0 = r.x0, y0 = r.y0, P = D.P, o = new THREE.Object3D(), R = rng(5), pg = r.pileG, top = 0.2;
     const BP = 180, CP = 480, CB = 9, CC = 36, slots = (us, vs) => vs.flatMap((v) => us.map((u) => [u, v]));
+    const S = r.pileSet || (r.pileSet = (() => {
+      const nE = slots(D.ue, D.re).length, nU = slots(D.uu, D.ru).length;
+      const deck = new THREE.InstancedMesh(G.box, OM.vtPallet, (nE + nU) * 4); deck.castShadow = true; deck.receiveShadow = true;
+      const lips = [new THREE.InstancedMesh(G.box, OM.vtLipG, nE * 4), new THREE.InstancedMesh(G.box, OM.vtLipB, nU * 4)];
+      const bars = new THREE.InstancedMesh(G.vtBar, OM.vtBar, 6 * BP + CB); bars.castShadow = true; bars.receiveShadow = true;
+      // they take shadows but cast none: at their size the shadow pass would draw thousands for a few pixels
+      const coins = new THREE.InstancedMesh(G.vtCoin, OM.vtCoin, 6 * CP + CC); coins.receiveShadow = true;
+      const set = { deck, lips, bars, coins, all: [deck, lips[0], lips[1], bars, coins], pools: [] };
+      set.all.forEach((im) => { im.userData.dyn = true; im.visible = false; pg.add(im); });
+      return set;
+    })());
+    S.pools.forEach((m) => pg.remove(m)); S.pools.length = 0; this.vaultPiles = [];
+    if (r.doorPivot) r.doorPivot.rotation.y = priv ? 0 : r.vt.open;
+    if (r.keyFace) r.keyFace.material = priv ? OM.vtKeyS : OM.vtKeyO;
+    const zero = new THREE.Matrix4().makeTranslation(this.V(x0 + CO.iso.RS / 2, y0 + CO.iso.RS / 2, 0.2)).scale(new THREE.Vector3(0, 0, 0));
+    const done = (im, n) => { for (let k = n; k < im.count; k++) im.setMatrixAt(k, zero); im.instanceMatrix.needsUpdate = true; im.boundingSphere = null; im.boundingBox = null; im.visible = n > 0; };
+    if (priv) { S.all.forEach((im) => { im.visible = false; }); return; }
     const fE = this.vtFill(V.et10, 200, 2e6), fU = this.vtFill(V.usdc, 0.5, 2.5e5);
     const nB = V.et10 > 0 ? Math.max(1, Math.round(fE * (6 * BP + CB))) : 0, nC = V.usdc > 0 ? Math.max(1, Math.round(fU * (6 * CP + CC))) : 0;
     const cB = nB >= 20 ? CB : 0, cC = nC >= 80 ? CC : 0;
@@ -7089,23 +7107,20 @@ class Office3D {
     const used = zones.map(([n, per, sl]) => sl.slice(0, Math.ceil(n / per)));
     const all = used[0].concat(used[1]), lipOf = used[0].map(() => 0).concat(used[1].map(() => 1));
     const put = (im, k, x, y, z, sx, sy, sz, ry = 0) => { o.position.copy(this.V(x, y, z)); o.rotation.set(0, ry, 0); o.scale.set(sx, sy, sz); o.updateMatrix(); im.setMatrixAt(k, o.matrix); };
-    if (all.length) {
-      const deck = new THREE.InstancedMesh(G.box, OM.vtPallet, all.length * 4), nl = [0, 0];
-      const lips = [0, 1].map((z) => { const n = lipOf.filter((q) => q === z).length * 4; return n ? new THREE.InstancedMesh(G.box, zones[z][3], n) : null; });
-      all.forEach(([u, v], i) => {
-        const cx = x0 + u + P / 2, cy = y0 + v + P / 2;
-        put(deck, i * 4, cx, cy, 0.18, P, 0.04, P);
-        [-0.34, 0, 0.34].forEach((d, k) => put(deck, i * 4 + 1 + k, cx + d, cy, 0.12, 0.12, 0.08, P - 0.04));
-        const L = lips[lipOf[i]], b = nl[lipOf[i]]; nl[lipOf[i]] += 4;
-        put(L, b, cx, cy + P / 2, 0.18, P + 0.008, 0.016, 0.008); put(L, b + 1, cx, cy - P / 2, 0.18, P + 0.008, 0.016, 0.008);
-        put(L, b + 2, cx + P / 2, cy, 0.18, 0.008, 0.016, P + 0.008); put(L, b + 3, cx - P / 2, cy, 0.18, 0.008, 0.016, P + 0.008);
-      });
-      deck.castShadow = true; deck.receiveShadow = true; pg.add(deck, ...lips.filter(Boolean));
-    }
+    const deck = S.deck, lips = S.lips, nl = [0, 0];
+    all.forEach(([u, v], i) => {
+      const cx = x0 + u + P / 2, cy = y0 + v + P / 2;
+      put(deck, i * 4, cx, cy, 0.18, P, 0.04, P);
+      [-0.34, 0, 0.34].forEach((d, k) => put(deck, i * 4 + 1 + k, cx + d, cy, 0.12, 0.12, 0.08, P - 0.04));
+      const L = lips[lipOf[i]], b = nl[lipOf[i]]; nl[lipOf[i]] += 4;
+      put(L, b, cx, cy + P / 2, 0.18, P + 0.008, 0.016, 0.008); put(L, b + 1, cx, cy - P / 2, 0.18, P + 0.008, 0.016, 0.008);
+      put(L, b + 2, cx + P / 2, cy, 0.18, 0.008, 0.016, P + 0.008); put(L, b + 3, cx - P / 2, cy, 0.18, 0.008, 0.016, P + 0.008);
+    });
+    done(deck, all.length * 4); done(lips[0], nl[0]); done(lips[1], nl[1]);
     const [cu, cv] = D.cart, deckTop = 0.355;
     // the bars: even layers lie along the room, odd ones across, a hair of disorder in every bar; then the cart's
     if (nB) {
-      const im = new THREE.InstancedMesh(G.vtBar, OM.vtBar, nB), sl = zones[0][2], pb = nB - cB;
+      const im = S.bars, sl = zones[0][2], pb = nB - cB;
       for (let i = 0; i < pb; i++) {
         const [u, v] = sl[Math.floor(i / BP)], k = i % BP, l = Math.floor(k / 18), j = k % 18, even = l % 2 === 0;
         const a = even ? (j % 3 - 1) * 0.275 : (j % 6 - 2.5) * 0.135, b = even ? (Math.floor(j / 3) - 2.5) * 0.135 : (Math.floor(j / 6) - 1) * 0.275;
@@ -7115,11 +7130,11 @@ class Office3D {
         const l = i < 6 ? 0 : 1, j = i < 6 ? i : i - 6, du = l ? (j - 1) * 0.135 : (j % 3 - 1) * 0.135, dv = l ? 0 : (Math.floor(j / 3) - 0.5) * 0.275;
         put(im, pb + i, x0 + cu + du + (R() - 0.5) * 0.01, y0 + cv - 0.21 + dv, deckTop + l * 0.074 + 0.036, 0.26, 0.072, 0.12, Math.PI / 2 + (R() - 0.5) * 0.06);
       }
-      im.castShadow = true; im.receiveShadow = true; pg.add(im);
     }
+    done(S.bars, nB);
     // the coins: stack by stack, each stack a little off true; then the cart's three short stacks
     if (nC) {
-      const im = new THREE.InstancedMesh(G.vtCoin, OM.vtCoin, nC), sl = zones[1][2], pc = nC - cC;
+      const im = S.coins, sl = zones[1][2], pc = nC - cC;
       let su = 0, sv = 0;
       for (let i = 0; i < pc; i++) {
         const [u, v] = sl[Math.floor(i / CP)], k = i % CP, s = Math.floor(k / 30), c = k % 30;
@@ -7127,16 +7142,15 @@ class Office3D {
         put(im, i, x0 + u + P / 2 + (s % 4 - 1.5) * 0.2 + su + (R() - 0.5) * 0.006, y0 + v + P / 2 + (Math.floor(s / 4) - 1.5) * 0.2 + sv + (R() - 0.5) * 0.006, top + c * 0.0235 + 0.01, 0.088, 0.02, 0.088, R() * 6.28);
       }
       for (let i = 0; i < cC; i++) put(im, pc + i, x0 + cu + (Math.floor(i / 12) - 1) * 0.19 + (R() - 0.5) * 0.006, y0 + cv + 0.27 + (R() - 0.5) * 0.006, deckTop + (i % 12) * 0.0235 + 0.01, 0.084, 0.02, 0.084, R() * 6.28);
-      // they take shadows but cast none: at their size the shadow pass would draw thousands for a few pixels
-      im.receiveShadow = true; pg.add(im);
     }
+    done(S.coins, nC);
     // a soft pool of each colour on the floor under what it holds, as his trading desk's light lies on its floor
     // (a coloured lamp over the piles blew their tops out white once they filled)
     zones.forEach(([n, per, sl, lip, pool, f], z) => {
       if (n <= 0) return;
       const us = used[z], u0 = Math.min(...us.map((q) => q[0])), u1 = Math.max(...us.map((q) => q[0])) + P, v0 = Math.min(...us.map((q) => q[1])), v1 = Math.max(...us.map((q) => q[1])) + P;
       pool.opacity = 0.16 + 0.2 * f;
-      const m = new THREE.Mesh(G.plane, pool); m.rotation.x = -Math.PI / 2; m.scale.set(u1 - u0 + 1.4, v1 - v0 + 1.4, 1); m.position.copy(this.V(x0 + (u0 + u1) / 2, y0 + (v0 + v1) / 2, 0.087)); pg.add(m);
+      const m = new THREE.Mesh(G.plane, pool); m.rotation.x = -Math.PI / 2; m.scale.set(u1 - u0 + 1.4, v1 - v0 + 1.4, 1); m.position.copy(this.V(x0 + (u0 + u1) / 2, y0 + (v0 + v1) / 2, 0.087)); pg.add(m); S.pools.push(m);
     });
   }
   // how far a pile fills: nothing at 0, then by orders of magnitude, eased so a few hundred is a little and the
