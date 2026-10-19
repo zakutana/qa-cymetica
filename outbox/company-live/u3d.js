@@ -2976,9 +2976,9 @@ class Office3D {
     this.vtMats();
     // the door's numbers: centre along the wall and its height, the opening, the leaf's thickness, the hinge's axis
     // (left of the opening, off the bulkhead), where the leaf's centre sits when shut, and how far it opens
-    // (open: far enough that the leaf clears the opening as the home view sees it, short of face-on so its thickness
-    // shows at the edge)
-    const D = r.vt = { u: 3.5, ch: 0.68, hole: 0.545, T: 0.38, bw: 3.0, top: 1.3, hu: -0.67, hv: 0.4, seat: 0.145, open: -1.8,
+    // (top: the slab's outline, whose bevel grows the body 0.02 past it, to 1.3; open: far enough that the leaf
+    // clears the opening as the home view sees it, short of face-on so its thickness shows at the edge)
+    const D = r.vt = { u: 3.5, ch: 0.68, hole: 0.545, T: 0.38, bw: 3.0, top: 1.28, hu: -0.67, hv: 0.4, seat: 0.145, open: -1.8,
       // and the floor's: pallets of P a side in two columns each side of the walk from the door, five rows deep
       P: 0.9, rows: [1.8, 2.8, 3.8, 4.8, 5.8], ue: [1.55, 0.55], uu: [4.45, 5.45] };
     // the shell's dark dado along the door wall would cross the opening: the bulkhead takes its place there
@@ -3014,11 +3014,12 @@ class Office3D {
     add(G.vtLeaf, OM.vtSteel, 0, 0, 0, null, null, null, leaf);
     add(G.vtFace, OM.vtFace, 0, 0, F + 0.002, null, null, null, leaf, false);
     add(G.ringT, OM.vtNeon, 0, 0, F + 0.006, 0.44, 0.44, 0.44, leaf, false);
-    // the locking bolts, out of the door's edge all round; bolt heads round the face
+    // the locking bolts, out of the door's edge all round (none straight up, so a shut door's stay under the slab's
+    // top); bolt heads round the face
     const o = new THREE.Object3D(), bolts = new THREE.InstancedMesh(G.cyl, OM.vtChrome, 14), heads = new THREE.InstancedMesh(G.cyl8, OM.vtSteelDk, 12);
     for (let k = 0; k < 14; k++) {
-      const a = (k + 0.5) / 14 * Math.PI * 2;
-      o.position.set(Math.cos(a) * 0.56, Math.sin(a) * 0.56, 0.005); o.rotation.set(0, 0, a - Math.PI / 2); o.scale.set(0.033, 0.16, 0.033); o.updateMatrix(); bolts.setMatrixAt(k, o.matrix);
+      const a = k / 14 * Math.PI * 2;
+      o.position.set(Math.cos(a) * 0.55, Math.sin(a) * 0.55, 0.005); o.rotation.set(0, 0, a - Math.PI / 2); o.scale.set(0.033, 0.14, 0.033); o.updateMatrix(); bolts.setMatrixAt(k, o.matrix);
     }
     for (let k = 0; k < 12; k++) {
       const a = k / 12 * Math.PI * 2;
@@ -3243,7 +3244,7 @@ class Office3D {
     const bar = new THREE.BoxGeometry(1, 1, 1), bp = bar.attributes.position;
     for (let i = 0; i < bp.count; i++) if (bp.getY(i) > 0) bp.setXYZ(i, bp.getX(i) * 0.8, bp.getY(i), bp.getZ(i) * 0.68);
     bar.computeVertexNormals(); G.vtBar = bar;
-    G.vtCoin = new THREE.CylinderGeometry(1, 1, 1, 20);
+    G.vtCoin = new THREE.CylinderGeometry(1, 1, 1, 16);   // sixteen sides: round at a close-up, cheap at 4,160 coins
   }
   // a lathe whose every corner is crisp (each inner point doubled, so no normal is averaged across a step), its axis
   // turned to z
@@ -3252,8 +3253,8 @@ class Office3D {
     pts.forEach(([x, y], i) => { p.push(new THREE.Vector2(x, y)); if (i > 0 && i < pts.length - 1) p.push(new THREE.Vector2(x, y)); });
     const g = new THREE.LatheGeometry(p, n); g.rotateX(Math.PI / 2); return g;
   }
-  // the bulkhead: the slab with the opening cut through it, its top corners chamfered; the face's texture laid
-  // flat across it
+  // the bulkhead: the slab with the opening cut through it, its top corners chamfered (the bevel grows the body 0.02
+  // past this outline all round, the jamb included); the face's texture laid flat across it
   vtBulkGeo(D) {
     if (G.vtBulk) return G.vtBulk;
     const W = D.bw, yb = 0.08 - D.ch, yt = D.top - D.ch, c = 0.14, s = new THREE.Shape();
