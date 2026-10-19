@@ -1386,7 +1386,7 @@ class Universe3D {
     // saturation and its tone mapping his gold and blue came out a white blot (2026-10-19: the texture alone was his
     // picture, the scene was not). overlay() puts it where the heart is on the screen, as wide as the ball there; the
     // beams and the sparks stay in the scene, so they still pass in front of and behind it.
-    const ce = document.createElement('div'); ce.className = 'uvcol';
+    const ce = document.createElement('div'); ce.className = 'uvcol'; ce.style.display = 'none'; ce._off = true;   // until overlay() places it
     // under the painting a blurred copy of it, turning with it: the glow his arcs have (a bloom of its own)
     const p1 = colliderTex(1).image, glow = document.createElement('canvas'); glow.width = p1.width; glow.height = p1.height; glow.getContext('2d').drawImage(p1, 0, 0); glow.className = 'g1';
     ce.appendChild(glow);
