@@ -3521,39 +3521,63 @@ class Office3D {
     const have = new Set(Object.values(this.cells || {}).map((c) => c[0] + ',' + c[1]));
     Object.values(this.rooms).forEach((r) => {
       if (r.key === 'lot') return;
-      const name = r.dept ? r.dept.name : { hub: 'Manager', audit: 'Weekly audit', vault: 'Vault' }[r.key];
+      const name = r.dept ? r.dept.name : { hub: 'Command', audit: 'Operations', vault: 'Treasury' }[r.key];
       if (!name) return;
       // the front pane the home view sees clear: the front-left one, unless a room stands in front of it and none in
       // front of the front-right one
       const leftFree = !have.has(r.x0 + ',' + (r.y0 + 8)), rightFree = !have.has((r.x0 + 8) + ',' + r.y0);
-      this.glassSign(r, String(name).toUpperCase(), !leftFree && rightFree ? 'right' : 'left');
+      this.glassSign(r, String(name), !leftFree && rightFree ? 'right' : 'left');
       if (r.plate) { r.plate.remove(); r.plate = null; }
     });
   }
   glassSign(r, name, side) {
-    const RS = CO.iso.RS, c = document.createElement('canvas'); c.width = 1024; c.height = 176; const g = c.getContext('2d');
-    g.textBaseline = 'middle'; g.textAlign = 'left';
-    let fs = 124; g.font = '700 ' + fs + 'px Rajdhani, "JetBrains Mono", sans-serif';
-    const sp = 7, width = (t) => [...t].reduce((w, ch) => w + g.measureText(ch).width + sp, -sp);
-    while (width(name) > 920 && fs > 48) { fs -= 4; g.font = '700 ' + fs + 'px Rajdhani, "JetBrains Mono", sans-serif'; }
-    const tw = width(name), x0 = 50;
-    // the band: a dark frosted strip behind the letters, a bright edge on its left and a fine rule along its foot
-    g.fillStyle = 'rgba(3, 9, 16, .55)'; g.beginPath(); g.roundRect(12, 12, Math.min(1000, tw + 72), 152, 16); g.fill();
-    g.fillStyle = 'rgba(255,255,255,.9)'; g.fillRect(12, 32, 7, 112);
-    g.fillStyle = 'rgba(255,255,255,.4)'; g.fillRect(x0, 146, tw, 3);
-    // the letters: a wide soft glow, a tighter one, the crisp strokes
-    const draw = (blur, alpha) => { g.save(); g.shadowColor = 'rgba(255,255,255,' + alpha + ')'; g.shadowBlur = blur; g.fillStyle = 'rgba(255,255,255,' + alpha + ')'; let x = x0; [...name].forEach((ch) => { g.fillText(ch, x, 82); x += g.measureText(ch).width + sp; }); g.restore(); };
-    draw(24, 0.45); draw(7, 0.8); draw(0, 1);
+    // On the glass itself and nothing behind it, as written and not in capitals, a size that names the room without
+    // covering it (2026-10-19: "nazvy jsou moc velke a chci at jsou na tom skle ne na nejakym cernym pozadi, a mozna
+    // nedelat vse capslockem"), and beside it the department's icon as the panel on the left has it ("a pridat ty
+    // loga stejne jak vlevo v panelu"). Letters light, a soft glow under crisp strokes; the icon a glowing tile.
+    const RS = CO.iso.RS, K = 0.0056, H = 132, font = (fs) => '600 ' + fs + 'px "Segoe UI", Inter, system-ui, sans-serif';
+    const c = document.createElement('canvas'), g0 = c.getContext('2d'); g0.font = font(96);
+    const tw = Math.ceil(g0.measureText(name).width) + 1, pad = 26;
+    c.width = Math.min(1024, tw + pad * 2); c.height = H;
+    const g = c.getContext('2d'); g.font = font(96); g.textBaseline = 'middle'; g.textAlign = 'left';
+    const draw = (blur, alpha) => { g.save(); g.shadowColor = 'rgba(255,255,255,' + alpha + ')'; g.shadowBlur = blur; g.fillStyle = 'rgba(255,255,255,' + alpha + ')'; g.fillText(name, pad, H / 2 + 4); g.restore(); };
+    // a dark halo first, so the letters read over a bright room behind the glass without a band behind them
+    g.save(); g.shadowColor = 'rgba(0,0,0,.85)'; g.shadowBlur = 16; g.fillStyle = 'rgba(0,0,0,.5)'; g.fillText(name, pad, H / 2 + 4); g.restore();
+    // and a thin dark outline hugging each letter: over a white machine behind the glass a light letter alone vanished
+    g.save(); g.lineJoin = 'round'; g.lineWidth = 9; g.strokeStyle = 'rgba(2,8,14,.72)'; g.strokeText(name, pad, H / 2 + 4); g.restore();
+    draw(20, 0.45); draw(5, 0.8); draw(0, 1);
     const t = new THREE.CanvasTexture(c); t.colorSpace = THREE.SRGBColorSpace; t.anisotropy = 8;
-    const m = new THREE.MeshBasicMaterial({ map: t, transparent: true, depthWrite: false, toneMapped: false, color: new THREE.Color(SIGN_BLUE).multiplyScalar(1.5) });
-    const w = RS * 0.9, h = w * 176 / 1024, p = new THREE.Mesh(G.plane, m);
-    // just outside the pane, in its upper half (a room in front hides the lower half from the home view), read left
-    // to right on the screen: along +x on the front-left pane, along -y on the front-right one
-    const z = 0.08 + WH - h / 2 - 0.02;
-    if (side === 'right') { p.position.copy(this.V(r.x0 + RS + 0.03, r.y0 + RS * 0.47, z)); p.rotation.y = Math.PI / 2; }
-    else p.position.copy(this.V(r.x0 + RS * 0.53, r.y0 + RS + 0.03, z));
-    p.scale.set(w, h, 1); p.userData.dyn = true; p.renderOrder = 3;
-    r.g.add(p); r.sign = p;
+    // drawn over whatever stands in front of the pane (a neighbour's back wall hid the Laboratory's from the home
+    // view): a name is the one thing the office must always show
+    const m = new THREE.MeshBasicMaterial({ map: t, transparent: true, depthWrite: false, depthTest: false, toneMapped: false, color: new THREE.Color(SIGN_BLUE).multiplyScalar(1.6) });
+    const tW = c.width * K, tH = H * K, txt = new THREE.Mesh(G.plane, m); txt.scale.set(tW, tH, 1);
+    // the icon: the panel's tile, drawn once from its SVG (CO.deptIconSvg, app.js)
+    const S = 128, ic = document.createElement('canvas'); ic.width = ic.height = S; const gi = ic.getContext('2d');
+    const def = CO.deptIconSvg ? CO.deptIconSvg(r.dept || r.key, 84) : null, col = def ? def.color : SIGN_BLUE;
+    const tile = () => {
+      gi.clearRect(0, 0, S, S);
+      const gr = gi.createRadialGradient(S * 0.34, S * 0.28, 0, S / 2, S / 2, S * 0.62);
+      gr.addColorStop(0, col + '55'); gr.addColorStop(1, 'rgba(7,12,20,.15)');
+      gi.fillStyle = gr; gi.beginPath(); gi.roundRect(8, 8, S - 16, S - 16, 26); gi.fill();
+      gi.strokeStyle = col + 'aa'; gi.lineWidth = 3; gi.stroke();
+    };
+    tile();
+    const it = new THREE.CanvasTexture(ic); it.colorSpace = THREE.SRGBColorSpace; it.anisotropy = 8;
+    if (def) {
+      const img = new Image();
+      img.onload = () => { gi.save(); gi.filter = 'blur(5px)'; gi.drawImage(img, 22, 22, 84, 84); gi.restore(); gi.drawImage(img, 22, 22, 84, 84); it.needsUpdate = true; };
+      img.src = 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(def.svg);
+    }
+    const iS = tH * 1.02, icon = new THREE.Mesh(G.plane, new THREE.MeshBasicMaterial({ map: it, transparent: true, depthWrite: false, depthTest: false, toneMapped: false, color: new THREE.Color(1, 1, 1).multiplyScalar(1.25) }));
+    icon.scale.set(iS, iS, 1);
+    // icon, a gap, the name: centred along the pane, in its upper part (a room in front hides the lower part from the
+    // home view), just outside the glass; read left to right on the screen -- along +x on the front-left pane, along
+    // -y on the front-right one
+    const gap = 0.14, L = iS + gap + tW, u0 = (RS - L) / 2, z = 0.08 + WH - Math.max(tH, iS) / 2 - 0.01;
+    const at = (u) => side === 'right' ? this.V(r.x0 + RS + 0.03, r.y0 + RS - u, z) : this.V(r.x0 + u, r.y0 + RS + 0.03, z);
+    icon.position.copy(at(u0 + iS / 2)); txt.position.copy(at(u0 + iS + gap + tW / 2));
+    [icon, txt].forEach((p) => { if (side === 'right') p.rotation.y = Math.PI / 2; p.userData.dyn = true; p.renderOrder = 20; r.g.add(p); });
+    r.sign = txt; r.signIcon = icon;
   }
   // Under and round the deck, what makes it a station in space: a rim, a plated hull with its lights, a stepped
   // keel, the rock it is built on, engines, solar wings, asteroids drifting past. Static parts merged per
@@ -6644,7 +6668,7 @@ class Office3D {
       if (hub.bars) drawBars(hub.bars, 'TURNS BY DEPT TODAY', S.departments.map((d) => { const v = CO.deptView(d); return ['#' + new THREE.Color(v.status === 'idle' ? STC.queued : STC[v.status]).getHexString(), turnsBy[d.id] || 0]; }));
       if (hub.kb) drawKanban(hub.kb, { queued: S.plan.length, running: S.tasks.filter((t) => t.status === 'running').length, done: S.strip.filter((c) => c.state === 'done').length, failed: S.strip.filter((c) => c.state === 'failed').length });
       if (hub.agents[0]) hub.agents[0].working = !paused;
-      const html = '<div class="p3h"><i style="background:' + (paused ? '#7f93ad' : '#00e5ff') + '"></i><b>MANAGER</b></div><div class="p3l" style="color:' + (paused ? '#a9b8cc' : '#00e5ff') + '">' + (paused ? 'Paused' : (CO.RO ? 'Its chat' : 'Your chat') + ' · runs it all') + '</div>';
+      const html = '<div class="p3h"><i style="background:' + (paused ? '#7f93ad' : '#00e5ff') + '"></i><b>COMMAND</b></div><div class="p3l" style="color:' + (paused ? '#a9b8cc' : '#00e5ff') + '">' + (paused ? 'Paused' : (CO.RO ? 'Its chat' : 'Your chat') + ' · runs it all') + '</div>';
       if (hub.plate && hub.plate._h !== html) { hub.plate._h = html; hub.plate.innerHTML = html; }
       if (hub.plate) { hub.plate.classList.toggle('work', !paused && anyWork); hub.plate.style.setProperty('--c', paused ? '#7f93ad' : '#00e5ff'); }
       const na = S.approvals.length;
@@ -6658,7 +6682,7 @@ class Office3D {
       const A = S.audit, days = Math.max(0, Math.ceil((A.next_at - S.clock) / 86400000)), nf = A.last ? A.last.findings.length : 0;
       this.tint(au, 'idle');
       drawWall(au.wall, 'Weekly audit: next in ' + days + 'd', nf + ' findings last week', '#38f2b8', '');
-      const html = '<div class="p3h"><i style="background:#38f2b8"></i><b>WEEKLY AUDIT</b></div><div class="p3l" style="color:#a9b8cc">next in ' + days + (days === 1 ? ' day' : ' days') + '</div>';
+      const html = '<div class="p3h"><i style="background:#38f2b8"></i><b>OPERATIONS</b></div><div class="p3l" style="color:#a9b8cc">next in ' + days + (days === 1 ? ' day' : ' days') + '</div>';
       if (au.plate && au.plate._h !== html) { au.plate._h = html; au.plate.innerHTML = html; }
       if (au.plate) au.plate.style.setProperty('--c', '#38f2b8');
     }
@@ -6670,7 +6694,7 @@ class Office3D {
       if (vr._k !== vk) { vr._k = vk; this.piles(vr, VT, priv); }
       this.tint(vr, 'idle');
       // what it holds, lit on its plate ("v cedulce Vaultu by melo svitit kolik tam je", 2026-10-19): ET10 green, USDC blue
-      const html = '<div class="p3h"><i style="background:#38f2b8"></i><b>VAULT</b></div>' + (priv ? '<div class="p3l" style="color:#a9b8cc">Private</div>'
+      const html = '<div class="p3h"><i style="background:#38f2b8"></i><b>TREASURY</b></div>' + (priv ? '<div class="p3l" style="color:#a9b8cc">Private</div>'
         : '<div class="p3l p3v"><b style="color:#38f5b8">' + CO.fmtEt(VT.et10) + '</b> ET10 <span>·</span> <b style="color:#8fbaff">' + CO.fmtUsd(VT.usdc) + '</b> USDC</div>');
       if (vr.plate && vr.plate._h !== html) { vr.plate._h = html; vr.plate.innerHTML = html; }
       if (vr.plate) vr.plate.style.setProperty('--c', '#38f2b8');

@@ -412,7 +412,7 @@
     departments: [
       { key: 'testing', name: 'Cymetica QA', experts: ['qa_tester', 'auditor'], runs: 2,
         products: ['Build it Better', 'Fund Launcher', 'Gem Screener', 'Agent Tournaments', 'Supply Analyzer', 'Chart Analyzer'] },
-      { key: 'testing_lab', name: 'Laboratory', experts: ['lab_scientist', 'researcher'],
+      { key: 'testing_lab', name: 'Quant Lab', experts: ['lab_scientist', 'researcher'],
         charter: "Prove on paper what makes money on Cymetica.\n" +
           "- Ask NEXUS first: their AI gives the guidance on what to trade; our own ideas are tried and measured, never trusted ahead of it.\n" +
           "- Rooms on paper: event cards, cloned bots, grid, head-to-head, memecoins.\n" +
@@ -424,7 +424,7 @@
     rules: [
       ['a bug is found anywhere', 'Cymetica QA', 'verifies it and files it as expire76'],
       ['a new build is released', 'Cymetica QA', 'tests it the same day and reports what is broken'],
-      ['someone finds a way to make money', 'Laboratory', 'proves it on paper first'],
+      ['someone finds a way to make money', 'Quant Lab', 'proves it on paper first'],
       ['an agent wins on paper', 'Trading desk', 'seats it at an Agent Tournaments table']
     ]
   };

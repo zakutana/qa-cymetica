@@ -1022,7 +1022,7 @@
     CO.OURS.departments.forEach(setupDept);
     setupRules(CO.OURS.rules);
     say('Your company is set up: ' + S.departments.length + ' departments and ' + S.rules.length + ' processes. ' +
-      'Cymetica QA runs on its clock; I plan the Laboratory and the Trading desk.');
+      'Cymetica QA runs on its clock; I plan the Quant Lab and the Trading desk.');
   };
   // someone else's public company, as a visitor finds it: its departments and processes, what each has
   // finished lately and learned, the ET10 it has earned, and the runner already passing

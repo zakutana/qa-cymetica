@@ -156,19 +156,29 @@
     command: ['#00cfff', '<circle cx="10" cy="10" r="7.2"/><circle cx="10" cy="10" r="3.7"/><path d="M10 10l5.1-5.1 M10 2.8v1.6 M10 15.6v1.6 M2.8 10h1.6 M15.6 10h1.6"/><circle cx="12.9" cy="8" r=".9" fill="currentColor"/>'],
     greenhouse: ['#00ff88', '<path d="M4 16.2c0-7 4.6-11.6 12-12.1-.3 7.4-4.9 12.1-12 12.1Z M4 16.2l6.6-6.6"/>']
   };
-  function deptIcon(d) {
+  // which icon: the Manager's, a template's, or a department of one's own by its room's look
+  function iconOf(d) {
     var k = d === 'hub' ? 'hub' : DEPT_ICON[d.key] && d.key !== 'custom' ? d.key : (d.look && DEPT_ICON[d.look] ? d.look : 'office');
-    var ic = DEPT_ICON[k];
+    return DEPT_ICON[k];
+  }
+  function deptIcon(d) {
+    var ic = iconOf(d);
     return '<span class="dic" style="--ic:' + ic[0] + '"><svg viewBox="0 0 20 20" aria-hidden="true">' + ic[1] + '</svg><i class="dot"></i></span>';
   }
   CO.deptIcon = deptIcon;
+  // the same icon for the office's glass (u3d.js glassSign): its colour and a standalone SVG of it
+  CO.deptIconSvg = function (d, px) {
+    var ic = iconOf(d);
+    return { color: ic[0], svg: '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" width="' + px + '" height="' + px + '" color="' + ic[0] + '" fill="none" stroke="' + ic[0] +
+      '" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">' + ic[1] + '</svg>' };
+  };
   function renderRail() {
     var S = CO.S;
     $('rail-n').textContent = S.departments.length;
     var cc = CO.counts();
     // Each card says three things: who, what it is doing now, and one number. The rest is one click away.
     var na = S.approvals.length;
-    var mrow = '<button class="dept mgrrow working" title="' + (RO ? 'Read its chat with the Manager' : 'Open your chat with the Manager') + '">' + deptIcon('hub') + '<div class="d1"><b>Manager</b>' +
+    var mrow = '<button class="dept mgrrow working" title="' + (RO ? 'Read its chat with the Manager' : 'Open your chat with the Manager') + '">' + deptIcon('hub') + '<div class="d1"><b>Command</b>' +
       (na ? '<span class="et red">' + na + (RO ? ' wait for owner' : ' need' + (na === 1 ? 's' : '') + ' you') + '</span>' : '') + '</div>' +
       '<div class="dl"><span class="tx cyan">Chat · runs every department</span></div></button>';
     setHTML($('depts'), mrow + S.departments.map(function (d) {
@@ -273,7 +283,7 @@
         return '<div class="vrow"><b>' + esc(r.name) + '</b><span class="w">' + esc(r.why) + '</span><span class="g">' + (r.et10 ? '+' + CO.fmtEt(r.et10) : '0') + ' ET10</span><span class="u">' + (r.usdc ? '+' + CO.fmtUsd(r.usdc) + ' USDC' : '') + '</span></div>';
       }).join('');
     };
-    openModal('<div class="mh"><h3>Vault</h3><span class="lockp"><i class="lk"></i>PRIVATE</span><span class="sp"></span><button class="btn" data-a="close">×</button></div>' +
+    openModal('<div class="mh"><h3>Treasury</h3><span class="lockp"><i class="lk"></i>PRIVATE</span><span class="sp"></span><button class="btn" data-a="close">×</button></div>' +
       '<div class="vbig"><div><b class="g">' + CO.fmtEt(V.et10) + '</b><span>ET10</span></div><div><b class="u">' + CO.fmtUsd(V.usdc) + '</b><span>USDC</span></div></div>' +
       '<div class="sec">BY DEPARTMENT</div>' + list('dept') + '<div class="sec">BY APP <span>proposed: ' + R.et10PerVisitor + ' ET10 a visitor, ' + R.usdcPerUse + ' USDC a use (placeholder rates)</span></div>' + list('app'), true);
   }
@@ -324,7 +334,7 @@
     var was = ui.panel != null || ui.mgr;
     ui.panel = null; ui.mgr = true; ui.vault = false; document.body.classList.remove('vopen'); $('drawer').hidden = true; $('mgr').hidden = false; $('msgs')._h = null;
     document.body.classList.add('focus');
-    $('back').hidden = false; $('where').hidden = false; $('where').textContent = 'Manager';
+    $('back').hidden = false; $('where').hidden = false; $('where').textContent = 'Command';
     office.select('hub');
     render();
     setTimeout(function () { $('msg').focus(); }, 60);
@@ -337,7 +347,7 @@
     var was = ui.panel != null || ui.mgr;
     ui.panel = null; ui.mgr = false; ui.vault = true; $('drawer').hidden = true; $('mgr').hidden = true;
     document.body.classList.remove('focus'); document.body.classList.add('vopen');
-    $('back').hidden = false; $('where').hidden = false; $('where').textContent = 'Vault';
+    $('back').hidden = false; $('where').hidden = false; $('where').textContent = 'Treasury';
     office.select('vault');
     render();
     clearTimeout(ui.flyT);
@@ -427,7 +437,7 @@
     return cap ? CO.fmtTok(cap) + ' a day · ~' + Math.max(1, Math.floor(cap / (perTurn || 0.19))) + ' turns' : 'no cap';
   }
   function switcher(on) {
-    return '<button data-sw="hub"' + (on === 'hub' ? ' class="on"' : '') + '><i class="dot working"></i>Manager</button>' + CO.S.departments.map(function (x) {
+    return '<button data-sw="hub"' + (on === 'hub' ? ' class="on"' : '') + '><i class="dot working"></i>Command</button>' + CO.S.departments.map(function (x) {
       return '<button data-sw="' + x.id + '"' + (x.id === on ? ' class="on"' : '') + '><i class="dot ' + CO.deptView(x).status + '"></i>' + esc(x.name) + '</button>';
     }).join('');
   }
@@ -854,24 +864,24 @@
     var S = CO.S, c = CO.counts();
     if (kind === 'agent') {
       var p = key.split(':'), rk = p[0], i = +p[1];
-      if (rk === 'hub') return '<b>Manager</b> · routes ' + c.open + ' open<br>' + (S.company.status === 'paused' ? 'paused' : RO ? 'plans the next pass · click to read its chat' : 'plans the next pass · click to message it');
+      if (rk === 'hub') return '<b>Command</b> · routes ' + c.open + ' open<br>' + (S.company.status === 'paused' ? 'paused' : RO ? 'plans the next pass · click to read its chat' : 'plans the next pass · click to message it');
       if (rk === 'you') return '<b>You</b> · ' + (S.approvals.length ? '<span class="r">' + S.approvals.length + ' to approve</span>' : 'nothing waits for you');
       if (rk === 'audit') return '<b>Supervisor</b> · runs the weekly audit';
       var d = CO.dept(+rk.slice(1)); if (!d) return '';
       var v = CO.deptView(d), e = v.experts[i]; if (!e) return '';
       return '<b>' + esc(e.name) + '</b> · ' + esc(d.name) + '<br>' + (e.state === 'working' && v.running ? '<span class="c">working on</span> “' + esc(v.running.title) + '”' : 'idle');
     }
-    if (key === 'hub') return '<b>Manager</b> · ' + (RO ? 'its chat' : 'your chat') + (S.approvals.length ? ' · <span class="r">' + S.approvals.length + (RO ? ' wait for its owner' : ' need' + (S.approvals.length === 1 ? 's' : '') + ' you') + '</span>' : '') + '<br>click to open';
+    if (key === 'hub') return '<b>Command</b> · ' + (RO ? 'its chat' : 'your chat') + (S.approvals.length ? ' · <span class="r">' + S.approvals.length + (RO ? ' wait for its owner' : ' need' + (S.approvals.length === 1 ? 's' : '') + ' you') + '</span>' : '') + '<br>click to open';
     if (key === 'you') return '<b>Your desk</b> · ' + (S.approvals.length ? '<span class="r">' + S.approvals.length + ' approvals waiting</span>' : 'all clear') + '<br>click to open Approvals';
     if (key === 'audit') {
       var A = S.audit;
-      return '<b>Weekly audit</b> · next in ' + Math.max(0, Math.ceil((A.next_at - S.clock) / 86400000)) + 'd · ' + (A.last ? A.last.findings.length : 0) + ' findings last week<br>click to open Audit';
+      return '<b>Operations</b> · next in ' + Math.max(0, Math.ceil((A.next_at - S.clock) / 86400000)) + 'd · ' + (A.last ? A.last.findings.length : 0) + ' findings last week<br>click to open Audit';
     }
     if (key === 'lot') return '<b>Add a department</b><br>click to staff a new room';
     if (key === 'vault') {
-      if (RO) return '<b>Vault</b> · private<br>only its owner sees inside';
+      if (RO) return '<b>Treasury</b> · private<br>only its owner sees inside';
       var VT = CO.vaultTotals();
-      return '<b>Vault</b> · <span class="g">' + CO.fmtEt(VT.et10) + ' ET10</span> · <span class="bl">' + CO.fmtUsd(VT.usdc) + ' USDC</span><br>click for where it came from';
+      return '<b>Treasury</b> · <span class="g">' + CO.fmtEt(VT.et10) + ' ET10</span> · <span class="bl">' + CO.fmtUsd(VT.usdc) + ' USDC</span><br>click for where it came from';
     }
     var dd = CO.dept(+String(key).slice(1)); if (!dd) return '';
     var ln = CO.deptLine(dd), col = { cyan: 'c', blue: 'bl', red: 'r', dim: '' }[ln.tone];

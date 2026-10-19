@@ -941,7 +941,7 @@
       var ht = this.hubTop, na = S.approvals.length;
       if (ht) over += needPill(ht[0], ht[1] - 10, na ? na + (CO.RO ? ' WAIT FOR ITS OWNER' : na === 1 ? ' NEEDS YOU' : ' NEED ATTENTION') : 'ALL CLEAR', na > 0);
       var mp = P(hx + 6.1, hy + 6.75, 1.3), mc = paused ? L.dim2 : L.hub;
-      over += plate(mp[0], mp[1], 'hub', 'MANAGER', mc, paused ? 'Paused' : (CO.RO ? 'Its chat' : 'Your chat') + ' · runs it all', paused ? L.dim : L.hub, mc, !paused && anyWork);
+      over += plate(mp[0], mp[1], 'hub', 'COMMAND', mc, paused ? 'Paused' : (CO.RO ? 'Its chat' : 'Your chat') + ' · runs it all', paused ? L.dim : L.hub, mc, !paused && anyWork);
     }
     var au = ex('audit');
     if (au) {
@@ -950,7 +950,7 @@
       var as = au.querySelector('.scr');
       paint(as, wallScreen(ax, ay, +as.getAttribute('data-u0'), +as.getAttribute('data-u1'), 'Weekly audit: next in ' + days + 'd', nf + ' findings last week', STC.idle, ''));
       var ap = P(ax + 4.4, ay + 5.6, 1.3);
-      over += plate(ap[0], ap[1], 'audit', 'WEEKLY AUDIT', STC.idle, 'next in ' + days + (days === 1 ? ' day' : ' days'), L.dim, STC.idle, false);
+      over += plate(ap[0], ap[1], 'audit', 'OPERATIONS', STC.idle, 'next in ' + days + (days === 1 ? ' day' : ' days'), L.dim, STC.idle, false);
     }
     // the vault: what it holds is seen only by clicking it (the right column then opens it), so its plate names it
     // and nothing more, as in 3D; a visitor finds the plinth bare
@@ -961,7 +961,7 @@
       var pg = vr.querySelector('.piles');
       if (pg._k !== vkey) { pg._k = vkey; pg.innerHTML = priv ? '' : vaultPiles(cells.vault[0], cells.vault[1], VT); }
       var vp = P(cells.vault[0] + 4.4, cells.vault[1] + 5.65, 1.35);
-      over += plate(vp[0], vp[1], 'vault', 'VAULT', STC.idle, priv ? 'Private' : 'Earnings', L.dim, STC.idle, false);
+      over += plate(vp[0], vp[1], 'vault', 'TREASURY', STC.idle, priv ? 'Private' : 'Earnings', L.dim, STC.idle, false);
     }
     // the selection ring lies on the floor, just under the selected room: walls, people and plates stay above it
     var oldRing = this.gRooms.querySelector('.selring');
