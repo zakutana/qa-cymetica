@@ -5195,9 +5195,16 @@ class Office3D {
   //   clr   how far it keeps from anything standing; end: the corners' posts at each end of a wall
   //   z     its height: a hair over the glossy floor (SH_FLOOR_Y) and the Manager's rings on it (0.11), under
   //         anything that stands; off the mirror's layer, so the floor does not reflect it
-  //   cap   the largest cap height of a name, so the rooms read alike; K: the stack (name, line, status) in caps
+  //   view  how tall a name's capitals stand on the home view, as a share of the view's height in NDC (2 tall):
+  //         the same for every room, so a back room's name is lettered larger on its floor than a front one's
+  //         (they read too small at one world size: "the back rooms' names are too small ... to read"); 0.032
+  //         is 17 px on a 1076 px stage, 10.5 on the page's 656. cap: the most a name may be, in world units
+  //   K     the stack (name, line, status) in caps; st: the status's capitals as a share of the name's
+  //   sx    how narrow the letters are drawn, one figure for every room so they read as one lettering: condensed
+  //         caps, as a floor marking is, since a stretch's length is what holds most names small; not narrower,
+  //         or they read squeezed ("too small and squeezed to read" at 0.74)
   //   maxL  the longest stretch; ppu: the canvas's pixels a unit; lit: brightness plain, under the mouse, open
-  static FL = { s: 0.26, clr: 0.08, end: 0.15, z: SH_FLOOR_Y + 0.04, cap: 0.62, K: 2.42, maxL: 6.4, ppu: 256, lit: [1.35, 1.8, 2.1] };
+  static FL = { s: 0.26, clr: 0.08, end: 0.15, z: SH_FLOOR_Y + 0.04, view: 0.032, cap: 1.25, K: 2.7, st: 0.72, sx: 0.84, maxL: 6.6, ppu: 256, lit: [1.35, 1.8, 2.1] };
   static flFont(w, px) { return w + ' ' + px.toFixed(1) + "px Bahnschrift, 'Segoe UI', 'Inter', system-ui, sans-serif"; }
   // a scratch canvas to measure with, the font's cap height as a share of its size, and a text's length at a cap
   // height of 1
@@ -5247,14 +5254,24 @@ class Office3D {
     const cam = this.camera;
     if (!this._flHomes || this._flHomes.corners !== this.corners) {
       const a0 = cam.aspect, homes = [];
-      [0.9, 1.5, 2.2].forEach((a) => { cam.aspect = a; cam.updateProjectionMatrix(); homes.push(this.home().pos); });
+      [0.9, 1.5, 2.2].forEach((a) => { cam.aspect = a; cam.updateProjectionMatrix(); homes.push(this.home()); });
       cam.aspect = a0; cam.updateProjectionMatrix();
       this._flHomes = { corners: this.corners, homes };
     }
     const RS = CO.iso.RS, c = this.V(r.x0 + RS / 2, r.y0 + RS / 2, 0);
     let ru = 0, rv = 0;
-    this._flHomes.homes.forEach((p) => { ru = Math.max(ru, (p.x - c.x) / (p.y - c.y)); rv = Math.max(rv, (p.z - c.z) / (p.y - c.y)); });
+    this._flHomes.homes.forEach(({ pos: p }) => { ru = Math.max(ru, (p.x - c.x) / (p.y - c.y)); rv = Math.max(rv, (p.z - c.z) / (p.y - c.y)); });
     return [ru * 1.1, rv * 1.1];
+  }
+  // How tall, on the home view at a usual stage, a unit of a name's capitals stands along a wall (fl or fr): the
+  // part of its "up" (into the room) square to its line, in NDC heights. A back room's is about half a front one's.
+  flScale(r, wall) {
+    const H = this._flHomes.homes[1], cam = this._flCam || (this._flCam = this.camera.clone()), RS = CO.iso.RS, z = Office3D.FL.z;
+    cam.aspect = 1.5; cam.updateProjectionMatrix(); cam.position.copy(H.pos); cam.lookAt(H.tgt); cam.updateMatrixWorld(true);
+    const at = (u, v) => this.V(r.x0 + u, r.y0 + v, z).project(cam), fl = wall === 'fl';
+    const a = fl ? at(RS / 2, RS - 1) : at(RS - 1, RS / 2), b = fl ? at(RS / 2 + 1, RS - 1) : at(RS - 1, RS / 2 - 1), c = fl ? at(RS / 2, RS - 2) : at(RS - 2, RS / 2);
+    const bx = (b.x - a.x) * cam.aspect, by = b.y - a.y, ux = (c.x - a.x) * cam.aspect, uy = c.y - a.y;
+    return Math.abs(bx * uy - by * ux) / Math.hypot(bx, by);
   }
   // What stands in a room, for every room's marking to keep clear of and out from behind: each mesh the room
   // stands up, by its box in the plan, with its top -- people and plants included. Not what lies flat on the floor
@@ -5331,22 +5348,24 @@ class Office3D {
       const a = Math.max(0, Math.floor((RS - s - D) / st + 1e-6)), b = Math.min(n, Math.ceil((RS - s) / st - 1e-6)), C = wall === 'fl' ? cu : cv;
       return C[k * N1 + b] - C[k * N1 + a] === 0;
     };
-    const pn = X.flLen(700, t.name, 0.05) + 0.12;
+    const pn = (X.flLen(700, t.name, 0.05) + 0.12) * F.sx;
     const say = r.dept ? [t.status, 'Daily cap reached', 'Next run 00:00'] : [t.status];
-    const ps = 0.5 * (0.62 + 0.5 + Math.max(...say.map((s) => X.flLen(500, s, 0.03))) + (t.et ? 1.1 + X.flLen(700, '+00,000 ET10', 0.03) : 0)) + 0.12;
+    const ps = (F.st * (Math.max(...say.map((s) => X.flLen(600, s, 0.03))) + (t.et ? 1.1 + X.flLen(700, '+00,000 ET10', 0.03) : 0)) + 0.12) * F.sx;
     const k0 = Math.round(F.end / st), k1 = n - Math.round(F.end / st);
     let best = null;
     ['fl', 'fr'].forEach((wall) => {
-      const pref = wall === 'fl' ? 1.03 : 1;
+      // the name's height that stands FL.view tall on the home view along this wall; a stretch is scored by how
+      // much of that it reaches
+      const pref = wall === 'fl' ? 1.03 : 1, aim = Math.min(F.cap, F.view / this.flScale(r, wall));
       for (let s = F.s; s <= F.s + 1.0 + 1e-6; s += 0.05) {
-        for (let D = 0.6; D <= F.cap * F.K + 1e-6; D += 0.05) {
+        for (let D = 0.6; D <= aim * F.K + 0.05; D += 0.05) {
           let ks = -1;
           for (let k = k0; k <= k1; k++) {
             const ok = k < k1 && clear(wall, k, s, D);
             if (ok && ks < 0) ks = k;
             if (!ok && ks >= 0) {
-              const L = Math.min(F.maxL, (k - ks) * st), hN = Math.min(F.cap, D / F.K, L / pn), score = hN * pref * (1 - 0.25 * (s - F.s));
-              if (!best || score > best.score) best = { wall, a0: ks * st, L, s, hN, score };
+              const L = Math.min(F.maxL, (k - ks) * st), hN = Math.min(aim, D / F.K, L / pn), score = hN / aim * pref * (1 - 0.25 * (s - F.s));
+              if (!best || score > best.score) best = { wall, a0: ks * st, L, s, hN, aim, score };
               ks = -1;
             }
           }
@@ -5366,18 +5385,20 @@ class Office3D {
     else { m.rotation.set(-Math.PI / 2, Math.PI / 2, 0, 'YXZ'); m.position.copy(this.V(r.x0 + inn, r.y0 + b.a0 + b.L - L / 2, F.z)); }
     r.g.add(m); m.updateMatrixWorld(true);
     const q = [[-0.5, -0.5], [0.5, -0.5], [0.5, 0.5], [-0.5, 0.5]].map(([x, y]) => new THREE.Vector3(x, y, 0).applyMatrix4(m.matrixWorld));
-    r.fl = { m, mat, tex, c, g: c.getContext('2d'), wall: b.wall, a0: b.a0, run: b.L, s: b.s, L, D, hN: b.hN, q, key: '', lit: 0 };
+    r.fl = { m, mat, tex, c, g: c.getContext('2d'), wall: b.wall, a0: b.a0, run: b.L, s: b.s, L, D, hN: b.hN, aim: b.aim, q, key: '', lit: 0 };
     r.plateAt = m.position.clone();
   }
   // Lettered as his neon is lit: the name in the room's light, a soft glow round it and a paler core, faint scan
   // lines across it, a soft shade under it so a lit floor does not drown it; a thin line of the same light under
-  // the name, a brighter tick where it starts, fading along the wall; under that the plate's square dot, the status
-  // in the plate's colour for it, the ET10 after it. The name as large as its stretch allows; the status smaller
-  // first, then cut short, so nothing runs past the stretch.
+  // the name, a brighter tick where it starts, fading along the wall; under that the status, the ET10 after it.
+  // The name as large as flMake sized it; the status smaller first, then cut short, so nothing runs past the
+  // plane. Drawn FL.sx narrow: the canvas is W wide, the lettering laid out in a W / sx wide space squeezed into it.
   flDraw(r, acc) {
-    const F = r.fl, g = F.g, W = F.c.width, cap = Office3D._flCap, t = this.flText(r), X = Office3D;
+    const F = r.fl, g = F.g, sx = Office3D.FL.sx, cap = Office3D._flCap, t = this.flText(r), X = Office3D;
     const font = (w, cp, sp) => { const px = cp / cap; g.font = X.flFont(w, px); g.fontStretch = 'semi-condensed'; g.letterSpacing = (px * sp).toFixed(1) + 'px'; };
-    g.clearRect(0, 0, W, F.c.height); g.textBaseline = 'alphabetic'; g.textAlign = 'left'; g.globalCompositeOperation = 'source-over';
+    g.setTransform(1, 0, 0, 1, 0, 0); g.clearRect(0, 0, F.c.width, F.c.height); g.setTransform(sx, 0, 0, 1, 0, 0);
+    g.textBaseline = 'alphabetic'; g.textAlign = 'left'; g.globalCompositeOperation = 'source-over';
+    const W = F.c.width / sx;
     let hN = F.hN * X.FL.ppu;
     font(700, hN, 0.05);
     hN = Math.min(hN, (W - 6) / (0.08 + g.measureText(t.name).width / hN));
@@ -5390,18 +5411,20 @@ class Office3D {
     g.globalCompositeOperation = 'destination-out'; g.fillStyle = 'rgba(0,0,0,0.3)';
     for (let y = yN - hN * 1.04; y < yN + hN * 0.06; y += Math.max(4, hN * 0.12)) g.fillRect(x0 - 2, y, nw + 4, Math.max(1.5, hN * 0.045));
     g.globalCompositeOperation = 'source-over';
-    // the status line: the dot, the status, the ET10 -- fitted to the plane, smaller first, cut short last
-    let sc = hN * 0.5, st = t.status;
-    const room = W - x0 - 6, lead = () => sc * 1.12, gap = () => (t.et ? sc * 1.1 : 0);
-    const widths = () => { font(500, sc, 0.03); const sw = g.measureText(st).width; let ew = 0; if (t.et) { font(700, sc, 0.03); ew = g.measureText(t.et).width; } return [sw, ew]; };
+    // the status line, FL.st of the name: in the plate's colour where that is a signal (cyan while it works, orange
+    // while it waits on you), in the room's own light otherwise -- the plate's greys read as nothing on a floor
+    // ("every status line ... is too small to read anywhere") -- the ET10 after it; fitted to the plane, smaller
+    // first, cut short last
+    let sc = hN * X.FL.st, st = t.status;
+    const room = W - x0 - 6, gap = () => (t.et ? sc * 1.1 : 0);
+    const widths = () => { font(600, sc, 0.03); const sw = g.measureText(st).width; let ew = 0; if (t.et) { font(700, sc, 0.03); ew = g.measureText(t.et).width; } return [sw, ew]; };
     let [sw, ew] = widths();
-    if (lead() + sw + gap() + ew > room) { sc = Math.max(hN * 0.36, sc * room / (lead() + sw + gap() + ew)); [sw, ew] = widths(); }
-    while (st.length > 2 && lead() + sw + gap() + ew > room) { st = st.slice(0, -2) + '…'; [sw, ew] = widths(); }
-    const yR = hN * 1.38, yS = yR + hN * 0.27 + sc, xs = x0 + lead(), sCol = t.sCol || '#a9b8cc', dc = t.dot || acc, ds = sc * 0.62;
-    font(500, sc, 0.03); g.shadowColor = 'rgba(0,0,0,0.8)'; g.shadowBlur = hN * 0.2; g.fillStyle = 'rgba(0,0,0,0.6)'; g.fillText(st, xs, yS);
+    if (sw + gap() + ew > room) { sc = Math.max(hN * 0.42, sc * room / (sw + gap() + ew)); [sw, ew] = widths(); }
+    while (st.length > 2 && sw + gap() + ew > room) { st = st.slice(0, -2) + '…'; [sw, ew] = widths(); }
+    const yR = hN * 1.38, yS = yR + hN * 0.26 + sc, xs = x0, rgb = X.flRgb(t.sCol), sCol = t.sCol && Math.max(...rgb) - Math.min(...rgb) > 60 ? t.sCol : acc;
+    font(600, sc, 0.03); g.shadowColor = 'rgba(0,0,0,0.8)'; g.shadowBlur = hN * 0.2; g.fillStyle = 'rgba(0,0,0,0.6)'; g.fillText(st, xs, yS);
     if (t.et) { font(700, sc, 0.03); g.fillText(t.et, xs + sw + gap(), yS); }
-    g.shadowColor = X.flMix(dc, 0, 0.9); g.shadowBlur = hN * 0.18; g.fillStyle = X.flMix(dc, 0.25); g.fillRect(x0 + sc * 0.06, yS - sc / 2 - ds / 2, ds, ds);
-    font(500, sc, 0.03); g.shadowColor = X.flMix(sCol, 0, 0.6); g.shadowBlur = hN * 0.12; g.fillStyle = X.flMix(sCol, 0.15); g.fillText(st, xs, yS);
+    font(600, sc, 0.03); g.shadowColor = X.flMix(sCol, 0, 0.7); g.shadowBlur = hN * 0.14; g.fillStyle = X.flMix(sCol, 0.3); g.fillText(st, xs, yS);
     if (t.et) { font(700, sc, 0.03); g.shadowColor = t.etLit ? 'rgba(56,245,184,.7)' : 'rgba(0,0,0,0)'; g.fillStyle = t.etLit ? '#7dffd4' : 'rgba(150,170,190,.8)'; g.fillText(t.et, xs + sw + gap(), yS); }
     g.shadowBlur = 0;
     // the line under the name: a brighter tick where it starts, then fading out past the longer of the two lines
@@ -5421,9 +5444,11 @@ class Office3D {
     if (F.lit !== lit) { F.lit = lit; F.mat.color.setScalar(lit); }
   }
   // The Manager's pill -- what needs you, or that nothing does -- stays where his picture has it, over the column
-  // of light by his back corner, but never over a room's floor marking or his own boards on the back walls (it hid
-  // the Laboratory's plate before): of the spots round there that are clear of all of them, the nearest. Looked
-  // for again only when the camera, the stage or the pill's words change; written only when its place changes.
+  // of light by his back corner, but never over a room's floor marking (it hid the Laboratory's plate before), and
+  // over his column of light and his boards on the back walls only if nothing round there is clear of them: of
+  // the spots within reach, the one nearest its place that covers least of them (the column counts most: a first
+  // try that kept off the boards alone sat it on his rings). Looked for again only when the camera, the stage or
+  // the pill's words change; written only when its place changes.
   flNeed(r, w, h) {
     const el = r.need, cam = this.camera, e = cam.matrixWorld.elements, pe = cam.projectionMatrix.elements;
     const C = r.needC || (r.needC = { m: new Float64Array(32), t: null, pw: 0 });
@@ -5442,14 +5467,21 @@ class Office3D {
       const tex = [r.bars, r.kb].filter(Boolean).map((s) => s.tex); r.flBoards = [];
       r.g.traverse((m) => { if (m.isMesh && m.material && tex.includes(m.material.map)) { const bb = new THREE.Box3().setFromObject(m), p = [];
         for (const x of [bb.min.x, bb.max.x]) for (const y of [bb.min.y, bb.max.y]) for (const z of [bb.min.z, bb.max.z]) p.push(new THREE.Vector3(x, y, z)); r.flBoards.push(p); } });
+      // and his column: the rings and the core over the dais, a box round them
+      const c = this.V(r.x0 + 3.8, r.y0 + 3.55, 0), col = [];
+      for (const dx of [-1.05, 1.05]) for (const y of [1.2, 2.85]) for (const dz of [-1.05, 1.05]) col.push(new THREE.Vector3(c.x + dx, y, c.z + dz));
+      r.flCol = col;
     }
-    const keep = Object.values(this.rooms).filter((q) => q.fl).map((q) => q.fl.q.map(at)).concat(r.flBoards.map((p) => X.flHull(p.map(at))));
+    const hard = Object.values(this.rooms).filter((q) => q.fl).map((q) => q.fl.q.map(at));
+    const soft = r.flBoards.map((p) => [X.flHull(p.map(at)), 150]).concat([[X.flHull(r.flCol.map(at)), 400]]);
     let x = bx, y = by, best = Infinity;
     if (pw && ph) {
-      for (let dy = -96; dy <= 48; dy += 6) for (let dx = -96; dx <= 96; dx += 8) {
-        const cost = Math.abs(dx) + Math.abs(dy) * 1.3; if (cost >= best) continue;
+      for (let dy = -120; dy <= 48; dy += 6) for (let dx = -96; dx <= 96; dx += 8) {
+        let cost = Math.abs(dx) + Math.abs(dy) * 1.3; if (cost >= best) continue;
         const cx = bx + dx, cy = by + dy, R = [[cx - pw / 2 - 4, cy - ph / 2 - 4], [cx + pw / 2 + 4, cy - ph / 2 - 4], [cx + pw / 2 + 4, cy + ph / 2 + 4], [cx - pw / 2 - 4, cy + ph / 2 + 4]];
-        if (cy - ph / 2 < 58 || keep.some((k) => X.flSat(R, k))) continue;
+        if (cy - ph / 2 < 58 || hard.some((k) => X.flSat(R, k))) continue;
+        soft.forEach(([k, c]) => { if (cost < best && X.flSat(R, k)) cost += c; });
+        if (cost >= best) continue;
         best = cost; x = cx; y = cy;
       }
     }
