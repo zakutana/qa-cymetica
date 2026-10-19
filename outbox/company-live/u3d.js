@@ -1052,7 +1052,7 @@ const UVTURN = { min: 0.12, max: 1.25 };
 // Cymetica's sun: its parts are written at the size the detector once framed (a ball of 16.5); the sun is drawn
 // k times that, so it fills the inner rings as the light fills his (white-hot to ~20 of the plane, glow to ~40,
 // his ring at 60), and floats y above the plane. "Make the sun itself bigger" (2026-10-19).
-const UVSUN = { k: 1.7, y: 6, ball: 16.5 };
+const UVSUN = { k: 1.7, y: 6, ball: 16.5, disc: 10.5 };
 // how much larger than its own decks a station is drawn on the map: his stations are 100 to 150 px across on his
 // 1533-wide frame, about 30 to 40 units of the plane; ours, 36 of them where he drew 13, a little smaller
 const UVSS = 3.8;
@@ -1125,6 +1125,22 @@ function flareTex() {
     g.fillStyle = gr; g.fillRect(0, 0, W, W);
     const streak = (w, h, a) => { g.save(); g.translate(c, c); g.scale(w, h); const s = g.createRadialGradient(0, 0, 0, 0, 0, c); s.addColorStop(0, 'rgba(225,252,255,' + a + ')'); s.addColorStop(1, 'rgba(160,235,255,0)'); g.fillStyle = s; g.beginPath(); g.arc(0, 0, c, 0, Math.PI * 2); g.fill(); g.restore(); };
     streak(1, 0.035, 0.9); streak(0.035, 0.55, 0.6); g.rotate(0); streak(0.6, 0.02, 0.35);
+  }));
+}
+// the sun's rays: streamers of light out of the middle, many thin and a few broad, each brightest a little out from
+// where the disc covers it and gone at its tip; one per seed, so the layers do not line up
+function sunRaysTex(seed) {
+  const key = 'rays' + seed; if (TX[key]) return TX[key];
+  const R = rng(seed * 13 + 5);
+  return (TX[key] = ctex(512, 512, (g, W) => {
+    const c = W / 2; g.translate(c, c); g.globalCompositeOperation = 'lighter';
+    for (let i = 0; i < 150; i++) {
+      const a = R() * Math.PI * 2, len = c * (0.42 + R() * R() * 0.58), w = R() < 0.12 ? 5 + R() * 7 : 1 + R() * 3, al = R() < 0.12 ? 0.18 : 0.22 + R() * 0.3;
+      g.save(); g.rotate(a);
+      const gr = g.createLinearGradient(0, 0, len, 0);
+      gr.addColorStop(0, 'rgba(255,244,214,0)'); gr.addColorStop(0.3, 'rgba(255,236,190,' + al + ')'); gr.addColorStop(0.55, 'rgba(255,206,130,' + (al * 0.6) + ')'); gr.addColorStop(1, 'rgba(255,160,70,0)');
+      g.fillStyle = gr; g.beginPath(); g.moveTo(0, -w); g.quadraticCurveTo(len * 0.5, -w * 0.6, len, 0); g.quadraticCurveTo(len * 0.5, w * 0.6, 0, w); g.closePath(); g.fill(); g.restore();
+    }
   }));
 }
 // a jet's light: white at its root, gone at its tip (the colour comes from its material). The canvas's top row is
@@ -1299,34 +1315,31 @@ class Universe3D {
     const heart = new THREE.Group(); sun.add(heart); this.heart = heart;
     heart.add(new THREE.Mesh(G.sphere, new THREE.MeshBasicMaterial({ color: new THREE.Color(1, 0.97, 0.9).multiplyScalar(2.6) })));
     heart.children[0].scale.setScalar(this.heartR = 1.8);
-    this.corona = [[9, 0.75, 0xff2d8a], [8, 0.9, 0xfff6e0], [20, 0.42, 0xffe2b0], [32, 0.22, 0xffb84a], [46, 0.08, 0xff9d3c], [66, 0.035, 0x3b9dff]].map(([s, o, c]) => { const sp = glowSprite(c, o, s); heart.add(sp); return sp; });
-    // the filaments: particle tracks, each leaving the heart on a helix round its own axis, curling, some looping
-    // back through the ball, and tangled loops round it; four sets, gold most, that turn each their own way and
-    // flicker. Bright enough to glow, not so bright the bloom washes their colour out. Lines are a pixel wide at
-    // any size, so a ball drawn bigger needs more of them to stay as dense.
-    const sets = [{ n: 380, cols: [0xff8c1a, 0xffa22e, 0xff7410], k: 0.5, loops: 0.35 }, { n: 250, cols: [0xffc23d, 0xffd56a], k: 0.42, loops: 0.3 },
-      { n: 250, cols: [0x1e7bff, 0x2f8cff, 0x1660f0], k: 0.7, loops: 0.25 }, { n: 160, cols: [0x9fd0ff, 0x7fbcff], k: 0.4, loops: 0.2 }];
-    this.fil = sets.map((S) => {
-      const pos = [], col = [], cc = new THREE.Color();
-      for (let i = 0; i < S.n; i++) {
-        const dir = new THREE.Vector3(R() * 2 - 1, R() * 2 - 1, R() * 2 - 1).normalize(), axis = new THREE.Vector3(R() * 2 - 1, R() * 2 - 1, R() * 2 - 1).normalize();
-        const loop = R() < S.loops, curl = loop ? 0.16 + R() * 0.1 : (R() < 0.3 ? 0.12 : 0.03) + R() * 0.08, len = loop ? 14 + R() * 26 : 7 + R() * 12, seg = 56, step = len / seg;
-        const start = loop ? 3 + R() * 9 : R() * 1.2;
-        cc.set(S.cols[Math.floor(R() * S.cols.length)]).multiplyScalar(S.k * (0.45 + R() * 0.75));
-        let p = dir.clone().multiplyScalar(start), d = loop ? new THREE.Vector3().crossVectors(dir, axis).normalize() : dir.clone(), prev = p.clone();
-        for (let s = 1; s <= seg; s++) {
-          d.applyAxisAngle(axis, curl * (loop ? 1 : 1 + s / seg)).normalize(); p = p.clone().addScaledVector(d, step);
-          if (p.length() > UVSUN.ball) break;
-          // a track lights up as it leaves the heart (hundreds start there; at full strength they would add up to
-          // a white blot) and fades toward its end
-          const fade = loop ? 0.75 + 0.25 * Math.sin(s * 0.3) : Math.min(1, p.length() / 6) ** 1.5 * (1 - s / seg * 0.7);
-          pos.push(prev.x, prev.y, prev.z, p.x, p.y, p.z); col.push(cc.r * fade, cc.g * fade, cc.b * fade, cc.r * fade, cc.g * fade, cc.b * fade);
-          prev = p;
-        }
-      }
-      const geo = new THREE.BufferGeometry(); geo.setAttribute('position', new THREE.Float32BufferAttribute(pos, 3)); geo.setAttribute('color', new THREE.Float32BufferAttribute(col, 3));
-      const ls = new THREE.LineSegments(geo, new THREE.LineBasicMaterial({ vertexColors: true, transparent: true, opacity: 0.9, blending: THREE.AdditiveBlending, depthWrite: false }));
-      ls.frustumCulled = false; sun.add(ls); return ls;
+    // the corona round the disc: sprites wider than it, so their middles sit behind the ball and their rims glow
+    // round it -- white-gold close, gold, orange, a faint blue at the edge of Cymetica's light
+    this.corona = [[28, 0.6, 0xfff0c8], [36, 0.42, 0xffd27a], [50, 0.2, 0xffa640], [70, 0.08, 0xff8a30], [96, 0.035, 0x3b9dff]].map(([s, o, c]) => { const sp = glowSprite(c, o, s); sun.add(sp); return sp; });
+    // The sun itself (the operator, 2026-10-19: "to nemaji byt letajici krouzky, to ma vse jakoby zevnitr vychazet,
+    // nad sluncem taky nepoletuji letajici krouzky"): no tracks looping round it any more. A ball of light whose
+    // surface boils -- noise moving over it on the GPU, white-gold where it is hottest, deep orange in the cells
+    // between -- brightest where it faces the camera, as a sun's disc is; out of it stream rays, the sparks and the
+    // jets, all leaving from inside.
+    const disc = new THREE.MeshBasicNodeMaterial(), sp = TSL.positionLocal.mul(2.6), tt = TSL.time;
+    const n1 = TSL.mx_fractal_noise_float(sp.add(vec3(tt.mul(0.05), tt.mul(0.08), 0)), 4, 2.1, 0.55);
+    const n2 = TSL.mx_noise_float(sp.mul(4.6).add(vec3(0, tt.mul(-0.3), tt.mul(0.18))));
+    const heat = n1.mul(0.7).add(n2.mul(0.3)).mul(0.9).add(0.5).clamp(0, 1), face = dot(normalView, vec3(0, 0, 1)).clamp(0, 1);
+    // deep red-orange in the cells, orange-gold over them, white-gold on the hottest; darker toward the rim (a sun's
+    // limb), a white-hot middle where it faces the camera
+    const col = mix(mix(vec3(0.85, 0.2, 0.02), vec3(1.0, 0.52, 0.08), TSL.smoothstep(0.15, 0.6, heat)), vec3(1.0, 0.86, 0.46), TSL.smoothstep(0.62, 0.95, heat));
+    disc.colorNode = col.mul(face.pow(0.6).mul(0.75).add(0.3)).add(vec3(1.0, 0.9, 0.7).mul(face.pow(10).mul(0.45))).mul(1.15);
+    G.sunBall = G.sunBall || new THREE.SphereGeometry(1, 96, 48);
+    const ball = new THREE.Mesh(G.sunBall, disc); ball.scale.setScalar(UVSUN.disc); sun.add(ball); this.sunBall = ball;
+    this.fil = [];
+    // the rays: streamers of light drawn out from the disc, on faces that always turn to the camera so they stand
+    // round the sun from every angle; three layers that each swell outward and fade as the next one rises, slowly
+    // turning, so the light seems to pour out of it
+    this.rays = [[1, 66, 0.55, 0.012], [2, 72, 0.5, -0.009], [3, 60, 0.45, 0.006]].map(([seed, size, op, spin], i) => {
+      const s = new THREE.Sprite(new THREE.SpriteMaterial({ map: sunRaysTex(seed), color: new THREE.Color(1, 0.86, 0.6).multiplyScalar(1.25), transparent: true, opacity: op, blending: THREE.AdditiveBlending, depthWrite: false }));
+      s.scale.setScalar(size); sun.add(s); return { s, size, op, spin, ph: i / 3, rot: R() * 6.28 };
     });
     // the jets: a wide soft cone and a hot narrow one inside it, white at the root, gone at the tip
     G.jet = G.jet || new THREE.CylinderGeometry(0.06, 1, 1, 24, 1, true).translate(0, 0.5, 0);
@@ -1353,16 +1366,18 @@ class Universe3D {
       const d = jet ? jet.dir.clone().add(new THREE.Vector3(R() - 0.5, R() - 0.5, R() - 0.5).multiplyScalar(0.3)).normalize() : new THREE.Vector3(R() * 2 - 1, R() * 2 - 1, R() * 2 - 1).normalize();
       A.set([d.x, d.y, d.z, 0.1 + R() * 0.3], i * 4);
       // (the free ones fly as far as the jets do: the spray stays round the sun, not out among the stations)
-      B.set([R(), 0.45 + R() * R() * 1.1, jet ? jet.len * (0.7 + R() * 0.6) : 12 + R() * 22, 0], i * 4);
+      B.set([R(), 0.45 + R() * R() * 1.1, jet ? jet.len * (0.4 + R() * 0.45) : 6 + R() * 14, 0], i * 4);
       cc.set(R() < 0.78 ? (R() < 0.5 ? 0xffb94a : 0xffdf8a) : 0xcfe9ff).multiplyScalar(1.8); C.set([cc.r, cc.g, cc.b], i * 3);
     }
     const a = TSL.instancedBufferAttribute(new THREE.InstancedBufferAttribute(A, 4)), b = TSL.instancedBufferAttribute(new THREE.InstancedBufferAttribute(B, 4)), c = TSL.instancedBufferAttribute(new THREE.InstancedBufferAttribute(C, 3));
     const life = TSL.fract(TSL.time.mul(a.w).add(b.x)), fade = life.oneMinus().pow(0.8);
     const sm = new THREE.SpriteNodeMaterial({ transparent: true, depthWrite: false, blending: THREE.AdditiveBlending });
-    sm.positionNode = a.xyz.mul(life.mul(b.z).add(3.5));
+    sm.positionNode = a.xyz.mul(life.mul(b.z).add(UVSUN.disc * 0.94));
     sm.scaleNode = b.y.mul(fade.mul(0.7).add(0.3)).mul(TSL.sin(TSL.time.mul(19).add(b.x.mul(61))).mul(0.3).add(0.7));
     const tx = TSL.texture(glowTex(), TSL.uv());
-    sm.colorNode = vec4(c.mul(fade), tx.a.mul(fade));
+    // a spark flying straight at the camera would sit on the disc all its life, a speck of dust on the sun: those fade
+    const toward = TSL.cameraViewMatrix.mul(TSL.modelWorldMatrix.mul(vec4(a.xyz, 0))).xyz.normalize().z, side = TSL.smoothstep(0.55, 0.85, toward).oneMinus();
+    sm.colorNode = vec4(c.mul(fade), tx.a.mul(fade).mul(side));
     this.sparkPts = new THREE.Mesh(G.plane, sm); this.sparkPts.count = NS; this.sparkPts.frustumCulled = false; sun.add(this.sparkPts);
     // the orrery's own rings on the plane, as his: thin cyan circles at 36, 42 (dashed), 53 and a bright one at 60,
     // a pale silver arc in pieces at 33 and 57; none of them turns
@@ -1570,7 +1585,8 @@ class Universe3D {
       const k = 0.5 + 0.5 * Math.sin(t * 1.9 + b.ph), fl = 0.85 + 0.15 * Math.sin(t * 23 + b.ph * 7);
       b.j.scale.set(0.85 + 0.3 * k, 0.8 + 0.3 * k, 0.85 + 0.3 * k); b.outer.material.opacity = (0.3 + 0.3 * k) * fl; b.inner.material.opacity = (0.55 + 0.4 * k) * fl;
     });
-    this.corona[0].material.opacity = 0.62 + 0.15 * Math.sin(t * 3.3 + 1); this.corona[1].material.opacity = 0.82 + 0.12 * Math.sin(t * 2.1);
+    this.corona[0].material.opacity = 0.55 + 0.08 * Math.sin(t * 3.3 + 1); this.corona[1].material.opacity = 0.4 + 0.06 * Math.sin(t * 2.1);
+    this.rays.forEach((r) => { const f = (t * 0.11 + r.ph) % 1; r.s.scale.setScalar(r.size * (0.8 + 0.42 * f)); r.s.material.opacity = r.op * Math.sin(Math.PI * f); r.s.material.rotation = r.rot + t * r.spin; });
     this.heart.children[0].scale.setScalar(this.heartR * (1 + 0.08 * Math.sin(t * 4.2)));
     const fa = 0.53 + t * 0.05; this.coreFlare.position.set(Math.sin(fa) * 60, 0.3, Math.cos(fa) * 60);
     this.moveShips(t);
