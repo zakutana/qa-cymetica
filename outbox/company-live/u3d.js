@@ -1679,9 +1679,15 @@ class Universe3D {
   overlay() {
     const w = this.el.clientWidth, h = this.el.clientHeight, v = new THREE.Vector3(), placed = [], now = performance.now();
     // a still camera moves no banner: restyle them only when the view, the size, the hover or a station changed
-    const key = this.camera.matrixWorld.elements.join(',') + '|' + w + 'x' + h + '|' + this.hover + '|' + this.items.length + '|' + this.built + '|' + Math.floor(now / 66);
+    const view = this.camera.matrixWorld.elements.join(',') + '|' + w + 'x' + h;
+    const key = view + '|' + this.hover + '|' + this.items.length + '|' + this.built + '|' + Math.floor(now / 66);
     if (key === this.ovKey && !this.pops.length) return;
     this.ovKey = key;
+    // Which plates show is decided only at rest: while the camera moves, one shown stays shown and one hidden stays
+    // hidden unless it leaves the stage -- decided every frame of a drag, plates crossing one another faded in and
+    // out all the while ("jak zacnu hybat kamerou tak ty cedulky vsechny zacnou uplne blikat")
+    if (view !== this.ovView) { this.ovView = view; this.ovMoveT = now; }
+    const moving = now - (this.ovMoveT || -1e9) < 300 || !!this.tw;
     // the stage's own bars (the count, the zoom buttons, the legend) are drawn over the plates: a plate under one is
     // a plate cut in half. Where they are, read again once a second (they move only with the stage and the font).
     if (!this.bars || now - this.barsAt > 1000) {
@@ -1736,12 +1742,16 @@ class Universe3D {
       const r = { l: o.x - bw / 2, r: o.x + bw / 2, t: o.y - bh, b: o.y };
       const hit = (p) => r.l < p.r + 6 && r.r > p.l - 6 && r.t < p.b + 4 && r.b > p.t - 4;
       const whole = r.l >= 2 && r.r <= w - 2 && r.t >= 2 && r.b <= h - 2;
-      const show = !off && (o.keep || (whole && !placed.some(hit) && !this.bars.some(hit) && o.px >= 24 && named < 14));
+      let show = !off && (o.keep || (whole && !placed.some(hit) && !this.bars.some(hit) && o.px >= 24 && named < 14));
+      if (moving && el._placed && !o.keep) show = !off && !!el._show;
       if (show && !o.keep) named++;
-      el.classList.toggle('hidden', !show); el._placed = true;
+      el._show = show;
+      if (el._hid !== !show) { el._hid = !show; el.classList.toggle('hidden', !show); }
+      el._placed = true;
       if (show) placed.push(r);
-      el.style.transform = 'translate(' + o.x.toFixed(1) + 'px,' + o.y.toFixed(1) + 'px) translate(-50%,-100%) scale(' + s.toFixed(3) + ')';
-      el.style.zIndex = String(o.keep ? 3000 : 2000 - Math.round(o.d));
+      const tf = 'translate(' + o.x.toFixed(1) + 'px,' + o.y.toFixed(1) + 'px) translate(-50%,-100%) scale(' + s.toFixed(3) + ')', zi = String(o.keep ? 3000 : 2000 - Math.round(o.d));
+      if (el._tf !== tf) { el._tf = tf; el.style.transform = tf; }
+      if (el._zi !== zi) { el._zi = zi; el.style.zIndex = zi; }
     });
     // an ET10 pop rises over its station's plate, wherever the plate now stands
     this.pops.forEach((p) => {
@@ -6814,9 +6824,8 @@ class Office3D {
   // middle) runs its line first along a corridor on the deck, between two rooms, from one of its corners to the
   // platform's edge. The plates on a side are stacked in their rooms' order, so no two overlap, each as close to
   // the platform as its outline allows. When there is no margin -- a room open close up, the platform larger than
-  // the stage -- every plate goes compact, small, hung from its room's back-wall top corner, with no line. All of
-  // it is worked out again only when the camera, the stage or a plate's words change (1.5 ms, measured), and
-  // written only where it changed.
+  // the stage -- every plate goes compact, small, hung from its room's back-wall top corner, with no line. The
+  // sides are decided only at rest (1.5 ms, measured); while the camera moves the plates follow (callouts()).
   static sat(A, B) {
     for (const P of [A, B]) for (let i = 0; i < P.length; i++) {
       const a = P[i], b = P[(i + 1) % P.length], nx = b[1] - a[1], ny = a[0] - b[0];
@@ -6883,20 +6892,42 @@ class Office3D {
     }
     return this._p3svg;
   }
+  // Where every plate stands, every frame something changed. Deciding is one thing, following another: which side
+  // each plate takes, by which line, in what order on its side, is decided at the start, after a new layout, and
+  // otherwise only once the camera has come to rest somewhere new -- never while it moves. Decided again on every
+  // frame of a drag, the plates jumped from side to side and blinked between callouts and compact ("jak zacnu hybat
+  // kamerou tak ty cedulky vsechny zacnou uplne blikat a nezastavi se blikat"). While it moves, each plate keeps its
+  // side, its line and its place in its stack, and only follows its room; where its side has no room for it for a
+  // moment it stands as near as the stage allows rather than vanish. And it glides to where it should be instead
+  // of jumping: quickly while the camera moves, gently when a new decision moves it. Nothing is hidden or shown
+  // while the camera moves unless it leaves the stage, and no style is written that has not changed.
   callouts(w, h) {
-    const X = Office3D, cam = this.camera, e = cam.matrixWorld.elements, pe = cam.projectionMatrix.elements;
+    const X = Office3D, cam = this.camera, e = cam.matrixWorld.elements, pe = cam.projectionMatrix.elements, now = performance.now();
     const rs = Object.values(this.rooms).filter((r) => r.plate && r.key !== 'lot' && r.plate._h);
     if (!rs.length) return;
     let key = w + 'x' + h;
     rs.forEach((r) => { const el = r.plate; if (el._szk !== el._h || !el._pw) this.p3Size(el); key += '|' + el._pw + 'x' + el._ph; });
-    // a new layout has new plates: they are placed whatever the camera
-    const C = this._co || (this._co = { m: new Float64Array(32), k: null, of: null });
-    let same = C.k === key && C.of === this.corners;
-    for (let i = 0; i < 16 && same; i++) same = C.m[i] === e[i] && C.m[16 + i] === pe[i];
-    if (same) return;
-    C.k = key; C.of = this.corners; for (let i = 0; i < 16; i++) { C.m[i] = e[i]; C.m[16 + i] = pe[i]; }
+    const C = this._co || (this._co = { m: new Float64Array(32), k: null, of: null, moveT: -1e9, at: now, dec: null, stale: true, anim: false, slowTo: 0, v: 0 });
+    let still = true;
+    for (let i = 0; i < 16 && still; i++) still = C.m[i] === e[i] && C.m[16 + i] === pe[i];
+    // moving is the rooms moving on the screen: the controls' damping goes on nudging the camera by less than a
+    // pixel for seconds after a drag, which is rest to the eye
+    if (!still) {
+      C.stale = true; for (let i = 0; i < 16; i++) { C.m[i] = e[i]; C.m[16 + i] = pe[i]; }
+      const q = new THREE.Vector3(), dots = rs.map((r) => { q.copy(this.V(r.x0, r.y0, 0)).project(cam); return [(q.x + 1) / 2 * w, (1 - q.y) / 2 * h]; });
+      if (!C.dots || C.dots.length !== dots.length || dots.some((d, i) => Math.abs(d[0] - C.dots[i][0]) + Math.abs(d[1] - C.dots[i][1]) > 0.4)) { C.moveT = now; C.dots = dots; }
+    }
+    const keyed = C.k !== key; if (keyed) { C.k = key; C.stale = true; }
+    // a new layout has new plates: they are decided and placed at once, whatever the camera does
+    const fresh = C.of !== this.corners, moving = now - C.moveT < 300 || !!this.tw;
+    const decide = fresh || !C.dec || (C.stale && !moving);
+    // the time since the last frame, not the last work: a glide that starts after a rest starts gently
+    const dt = Math.min(50, Math.max(0, now - C.at)); C.at = now;
+    if (still && !keyed && !decide && !C.anim) return;
+    C.of = this.corners;
     this._p3v = (this._p3v || 0) + 1;
     const v = new THREE.Vector3(), P = (x, y, z) => { v.copy(this.V(x, y, z)).project(cam); return [(v.x + 1) / 2 * w, (1 - v.y) / 2 * h, v.z]; };
+    const proj = (pts) => pts.map(([x, y, z]) => P(x, y, z));
     const RS = CO.iso.RS, top = SH_FLOOR_Y + WH, fl = SH_FLOOR_Y, gap = 10, pad = 8, y0s = 62, y1s = h - 6, all = Object.values(this.rooms);
     let xmin = Infinity, ymin = Infinity, xmax = -Infinity, ymax = -Infinity;
     all.forEach((r) => { xmin = Math.min(xmin, r.x0); ymin = Math.min(ymin, r.y0); xmax = Math.max(xmax, r.x0 + RS); ymax = Math.max(ymax, r.y0 + RS); });
@@ -6910,10 +6941,10 @@ class Office3D {
       H.forEach((p) => { bx0 = Math.min(bx0, p[0]); bx1 = Math.max(bx1, p[0]); by0 = Math.min(by0, p[1]); by1 = Math.max(by1, p[1]); });
       floors[r.key] = sq.map(([u, q]) => P(r.x0 + u, r.y0 + q, fl));
     });
-    let ok = !behind && bx0 > pad && bx1 < w - pad && by0 > y0s && by1 < y1s;
     const pcx = (bx0 + bx1) / 2, pcy = (by0 + by1) / 2, pw0 = bx1 - bx0;
     // a plate's place on a side, from the point its line leaves the room or the corridor (E), its own size and
-    // the middle it is given along the side (c, kept on the stage), clear of the outlines in obs
+    // the middle it is given along the side (c, kept on the stage), clear of the outlines in obs; loose: the same
+    // without the outlines, for a plate following its room through a moment with no room for it
     const across = (s) => s === 'L' || s === 'R';
     const spot = (s, E, pw, ph, c, obs) => {
       const near = (a0, a1, k, lo) => { let m = lo ? Infinity : -Infinity; obs.forEach((H) => { const b = X.band(H, a0, a1, k); if (b) m = lo ? Math.min(m, b[0]) : Math.max(m, b[1]); }); return m; };
@@ -6928,6 +6959,11 @@ class Office3D {
       if (s === 'T') { const y1 = Math.min(near(xa, xb, 1, true), E[1]) - gap; return y1 - ph < y0s ? null : [xa, y1 - ph, xb, y1]; }
       const y0 = Math.max(near(xa, xb, 1, false), E[1]) + gap; return y0 + ph > y1s ? null : [xa, y0, xb, y0 + ph];
     };
+    const cl = (x, a, b) => Math.max(a, Math.min(b, x));
+    const loose = (s, E, pw, ph, c) => {
+      if (across(s)) { c = cl(c, y0s + ph / 2, y1s - ph / 2); const x0 = s === 'L' ? cl(E[0] - gap - pw, pad, w - pad - pw) : cl(E[0] + gap, pad, w - pad - pw); return [x0, c - ph / 2, x0 + pw, c + ph / 2]; }
+      c = cl(c, pad + pw / 2, w - pad - pw / 2); const y0 = s === 'T' ? cl(E[1] - gap - ph, y0s, y1s - ph) : cl(E[1] + gap, y0s, y1s - ph); return [c - pw / 2, y0, c + pw / 2, y0 + ph];
+    };
     const attach = (s, R) => s === 'L' ? [R[2], (R[1] + R[3]) / 2] : s === 'R' ? [R[0], (R[1] + R[3]) / 2] : s === 'T' ? [(R[0] + R[2]) / 2, R[3]] : [(R[0] + R[2]) / 2, R[1]];
     const cost = (r, path) => {
       let len = 0, cross = 0;
@@ -6937,93 +6973,147 @@ class Office3D {
       }
       return cross * 6 + len;
     };
-    // every room's ways to a side, cheapest first. Straight from its highest point (the back wall's top corner)
-    // to the left, the right or up, from its left or right wall's top corner to that side, from its floor's front
-    // corner down; or from any corner of its floor out along a corridor on the deck -- between two rooms -- to the
-    // platform's edge, then to any side
-    const ways = [];
-    if (ok) rs.forEach((r) => {
-      const el = r.plate, pw = el._pw, ph = el._ph, x0 = r.x0, y0 = r.y0, x1 = x0 + RS, y1 = y0 + RS, Pt = P(x0, y0, top);
-      const routes = { L: [[Pt], [P(x0, y1, top)]], R: [[Pt], [P(x1, y0, top)]], T: [[Pt]], B: [[P(x1, y1, fl)]] };
-      [[x0, y0, -1, -1], [x1, y0, 1, -1], [x1, y1, 1, 1], [x0, y1, -1, 1]].forEach(([cx, cy, sx, sy]) => {
-        const a = P(cx, cy, fl), kx = cx + 0.5 * sx, ky = cy + 0.5 * sy, k = P(kx, ky, fl);
-        [P(sx < 0 ? xmin - 0.5 : xmax + 0.5, ky, fl), P(kx, sy < 0 ? ymin - 0.5 : ymax + 0.5, fl)].forEach((e) => {
-          ['L', 'R', 'T', 'B'].forEach((sd) => routes[sd].push([a, k, e]));
-        });
-      });
-      // the side it is on: left or right of the platform's middle by more than a twelfth of its width, else
-      // above or below it
-      const c = P(x0 + RS / 2, y0 + RS / 2, 0), dx = c[0] - pcx, pref = Math.abs(dx) > pw0 * 0.08 ? (dx < 0 ? 'L' : 'R') : (c[1] < pcy ? 'T' : 'B');
-      const list = [];
-      Object.keys(routes).forEach((s) => routes[s].forEach((rt) => {
-        // where it would stand alone: in line with where its line leaves, or slid along the side to the nearest
-        // place that has room (straight above the Cymetica QA room there is none on a wide stage)
-        const E = rt[rt.length - 1], at = across(s) ? E[1] : E[0];
-        let R = null, ideal = at;
-        const dir = (across(s) ? at > pcy : at > pcx) ? 1 : -1;   // outwards first: away from the platform's middle
-        for (let i = 0; !R && i <= 50; i++) { const d = i ? (i % 2 ? dir : -dir) * 12 * Math.ceil(i / 2) : 0; R = spot(s, E, pw, ph, at + d, hulls); ideal = at + d; }
-        if (!R) return;
-        list.push({ r, el, pw, ph, s, rt, ideal, k: cost(r, rt.concat([attach(s, R)])) + (s === pref ? 0 : 120) + (rt.length > 1 ? 90 : 0) });
-      }));
-      list.sort((a, b) => a.k - b.k);
-      if (list.length) ways.push(list); else ok = false;
-    });
-    // Each takes its cheapest way; the sides are filled in turn (left, right, above, below), the plates of a side
-    // stacked in their rooms' order from where each would stand alone, then each brought as close to the platform
-    // as the band it ended in allows, clear of the rooms and of the plates already placed. A plate that finds no
-    // room there gives that side up and the whole is laid out again.
-    let plan = [];
-    const pick = ways.map(() => 0);
-    for (let tries = 0; ok && tries < 4 * ways.length + 1; tries++) {
-      plan = ways.map((list, i) => Object.assign({}, list[pick[i]]));
-      const obs = hulls.slice(); let fail = -1;
-      for (const s of ['L', 'R', 'T', 'B']) {
-        const list = plan.filter((p) => p.s === s).sort((a, b) => a.ideal - b.ideal), size = (p) => (across(s) ? p.ph : p.pw);
-        const lo = across(s) ? y0s : pad, hi = across(s) ? y1s : w - pad;
-        let at = lo; list.forEach((p) => { p.a = Math.max(p.ideal - size(p) / 2, at); at = p.a + size(p) + 6; });
-        let lim = hi; for (let i = list.length - 1; i >= 0; i--) { const p = list[i]; p.a = Math.min(p.a, lim - size(p)); lim = p.a - 6; }
-        for (const p of list) {
-          p.R = spot(s, p.rt[p.rt.length - 1], p.pw, p.ph, p.a + size(p) / 2, obs);
-          if (!p.R || p.a < lo - 0.5) { fail = plan.indexOf(p); break; }
-          obs.push([[p.R[0], p.R[1]], [p.R[2], p.R[1]], [p.R[2], p.R[3]], [p.R[0], p.R[3]]]);
-        }
-        if (fail >= 0) break;
+    // the stack of a side, in a given order, from where each would stand alone; then each brought as close to the
+    // platform as the band it ended in allows, clear of the rooms and of the plates already placed (obs)
+    const stack = (s, list, obs, strict) => {
+      const size = (p) => (across(s) ? p.ph : p.pw), lo = across(s) ? y0s : pad, hi = across(s) ? y1s : w - pad;
+      let at = lo; list.forEach((p) => { p.a = Math.max(p.ideal - size(p) / 2, at); at = p.a + size(p) + 6; });
+      let lim = hi; for (let i = list.length - 1; i >= 0; i--) { const p = list[i]; p.a = Math.min(p.a, lim - size(p)); lim = p.a - 6; }
+      for (const p of list) {
+        const E = p.rt[p.rt.length - 1];
+        p.R = spot(s, E, p.pw, p.ph, p.a + size(p) / 2, obs);
+        if (!p.R || p.a < lo - 0.5) { if (strict) return p; p.R = loose(s, E, p.pw, p.ph, p.a + size(p) / 2); }
+        obs.push([[p.R[0], p.R[1]], [p.R[2], p.R[1]], [p.R[2], p.R[3]], [p.R[0], p.R[3]]]);
       }
-      if (fail < 0) break;
-      const i = ways.findIndex((l) => l[0].r === plan[fail].r), s = plan[fail].s;
-      while (pick[i] < ways[i].length && ways[i][pick[i]].s === s) pick[i]++;
-      if (pick[i] >= ways[i].length) ok = false;
-      if (tries === 4 * ways.length) ok = false;
+      return null;
+    };
+    // The decision. Each plate takes the side whose line crosses least of the other rooms' floors, then the side
+    // its room is on, then the shortest line: straight from its highest point (the back wall's top corner) to the
+    // left, the right or up, from its left or right wall's top corner to that side, from its floor's front corner
+    // down; or from any corner of its floor out along a corridor on the deck -- between two rooms -- to the
+    // platform's edge, then to any side. The sides are filled in turn; a plate that finds no room on its side gives
+    // it up and the whole is laid out again. No margin (the platform not whole on the stage), or a plate over a
+    // room or another plate at the end: compact.
+    if (decide) {
+      const was = C.dec; let ok = !behind && bx0 > pad && bx1 < w - pad && by0 > y0s && by1 < y1s;
+      const ways = [];
+      if (ok) rs.forEach((r) => {
+        const el = r.plate, pw = el._pw, ph = el._ph, x0 = r.x0, y0 = r.y0, x1 = x0 + RS, y1 = y0 + RS;
+        const routes = { L: [[[x0, y0, top]], [[x0, y1, top]]], R: [[[x0, y0, top]], [[x1, y0, top]]], T: [[[x0, y0, top]]], B: [[[x1, y1, fl]]] };
+        [[x0, y0, -1, -1], [x1, y0, 1, -1], [x1, y1, 1, 1], [x0, y1, -1, 1]].forEach(([cx, cy, sx, sy]) => {
+          const a = [cx, cy, fl], kx = cx + 0.5 * sx, ky = cy + 0.5 * sy, k = [kx, ky, fl];
+          [[sx < 0 ? xmin - 0.5 : xmax + 0.5, ky, fl], [kx, sy < 0 ? ymin - 0.5 : ymax + 0.5, fl]].forEach((q) => {
+            ['L', 'R', 'T', 'B'].forEach((sd) => routes[sd].push([a, k, q]));
+          });
+        });
+        // the side it is on: left or right of the platform's middle by more than a twelfth of its width, else
+        // above or below it
+        const c = P(x0 + RS / 2, y0 + RS / 2, 0), dx = c[0] - pcx, pref = Math.abs(dx) > pw0 * 0.08 ? (dx < 0 ? 'L' : 'R') : (c[1] < pcy ? 'T' : 'B');
+        const list = [];
+        Object.keys(routes).forEach((s) => routes[s].forEach((pts) => {
+          // where it would stand alone: in line with where its line leaves, or slid along the side to the nearest
+          // place that has room (straight above the Cymetica QA room there is none on a wide stage), outwards first
+          const rt = proj(pts), E = rt[rt.length - 1], at = across(s) ? E[1] : E[0], dir = (across(s) ? at > pcy : at > pcx) ? 1 : -1;
+          let R = null, slide = 0;
+          for (let i = 0; !R && i <= 50; i++) { slide = i ? (i % 2 ? dir : -dir) * 12 * Math.ceil(i / 2) : 0; R = spot(s, E, pw, ph, at + slide, hulls); }
+          if (!R) return;
+          list.push({ r, pw, ph, s, pts, rt, slide, ideal: at + slide, k: cost(r, rt.concat([attach(s, R)])) + (s === pref ? 0 : 120) + (pts.length > 1 ? 90 : 0) });
+        }));
+        list.sort((a, b) => a.k - b.k);
+        if (list.length) ways.push(list); else ok = false;
+      });
+      let plan = [];
+      const pick = ways.map(() => 0);
+      for (let tries = 0; ok && tries < 4 * ways.length + 1; tries++) {
+        plan = ways.map((list, i) => Object.assign({}, list[pick[i]]));
+        const obs = hulls.slice(); let fail = null;
+        for (const s of ['L', 'R', 'T', 'B']) { fail = stack(s, plan.filter((p) => p.s === s).sort((a, b) => a.ideal - b.ideal), obs, true); if (fail) break; }
+        if (!fail) break;
+        const i = ways.findIndex((l) => l[0].r === fail.r), s = fail.s;
+        while (pick[i] < ways[i].length && ways[i][pick[i]].s === s) pick[i]++;
+        if (pick[i] >= ways[i].length || tries === 4 * ways.length) ok = false;
+      }
+      if (ok) plan.forEach((p, i) => {
+        const Q = [[p.R[0], p.R[1]], [p.R[2], p.R[1]], [p.R[2], p.R[3]], [p.R[0], p.R[3]]];
+        if (hulls.some((H) => X.sat(Q, H))) ok = false;
+        for (let j = i + 1; j < plan.length; j++) { const o = plan[j].R; if (o && !(o[0] >= p.R[2] || o[2] <= p.R[0] || o[1] >= p.R[3] || o[3] <= p.R[1])) ok = false; }
+      });
+      const dec = { ok, items: {}, order: { L: [], R: [], T: [], B: [] } };
+      if (ok) ['L', 'R', 'T', 'B'].forEach((s) => plan.filter((p) => p.s === s).sort((a, b) => a.a - b.a).forEach((p) => {
+        dec.items[p.r.key] = { s, pts: p.pts, slide: p.slide }; dec.order[s].push(p.r.key);
+      }));
+      // a new decision that moves anything glides there gently, callouts to compact (or back) too
+      const sameDec = was && was.ok === dec.ok && JSON.stringify(was.order) === JSON.stringify(dec.order) && Object.keys(dec.items).every((k) => was.items[k] && was.items[k].pts.length === dec.items[k].pts.length && was.items[k].pts.every((q, i) => q.join() === dec.items[k].pts[i].join()));
+      if (!sameDec) { C.v++; C.slowTo = now + 700; }
+      C.snap = !was || fresh;
+      C.dec = dec; C.stale = false;
     }
-    // and nothing over a room, nor one plate over another: else compact
-    if (ok) plan.forEach((p, i) => {
-      const Q = [[p.R[0], p.R[1]], [p.R[2], p.R[1]], [p.R[2], p.R[3]], [p.R[0], p.R[3]]];
-      if (hulls.some((H) => X.sat(Q, H))) ok = false;
-      for (let j = i + 1; j < plan.length; j++) { const o = plan[j].R; if (o && !(o[0] >= p.R[2] || o[2] <= p.R[0] || o[1] >= p.R[3] || o[3] <= p.R[1])) ok = false; }
-    });
-    this.cmp = !ok; this._p3rects = []; this._p3plan = ok ? plan : null;   // the last layout, to look at from the console
-    let d = '';
+    // where each plate should be now, by the decision. At rest: stacked on its side, as close to the platform as
+    // the outlines allow, and where that is beside its line's end remembered. While the camera moves: right there
+    // beside its line's end, moving with its room as one piece -- the stacking, worked out again every frame of a
+    // drag, slid plates across the stage whenever a room's outline came into or left a plate's band
+    const D = C.dec, tg = {};
+    if (D.ok) {
+      const list = rs.filter((r) => D.items[r.key] && r.plate._pw).map((r) => {
+        const it = D.items[r.key], rt = proj(it.pts), E = rt[rt.length - 1];
+        return { r, pw: r.plate._pw, ph: r.plate._ph, s: it.s, rt, E, ideal: (across(it.s) ? E[1] : E[0]) + it.slide };
+      });
+      if (moving && !decide && list.every((p) => p.r.plate._of)) {
+        list.forEach((p) => { const of = p.r.plate._of; p.R = [p.E[0] + of[0], p.E[1] + of[1], p.E[0] + of[0] + p.pw, p.E[1] + of[1] + p.ph]; });
+      } else {
+        const obs = hulls.slice();
+        ['L', 'R', 'T', 'B'].forEach((s) => { stack(s, D.order[s].map((k) => list.find((p) => p.r.key === k)).filter(Boolean), obs, false); });
+        list.forEach((p) => { if (p.R) p.r.plate._of = [p.R[0] - p.E[0], p.R[1] - p.E[1]]; });
+      }
+      list.forEach((p) => { if (p.R) tg[p.r.key] = p; });
+    }
+    // and there they go: quickly while the camera moves (they follow their rooms), gently after a new decision or
+    // when the camera has come to rest
+    if (moving && !decide) C.slowTo = 0;
+    if (C.wasMoving && !moving) C.slowTo = now + 700;
+    C.wasMoving = moving;
+    // a glide after rest also goes no faster than 1.2 px a millisecond: a far new place is reached in a steady
+    // slide, not a leap that slows down
+    const slow = now < C.slowTo, k = 1 - Math.exp(-dt / (slow ? 150 : 45)), cap = slow ? 1.2 * Math.max(dt, 1) : Infinity;
+    const glide = (el, tx, ty) => {
+      let dx = (tx - el._x) * k, dy = (ty - el._y) * k; const m = Math.hypot(dx, dy);
+      if (m > cap) { dx *= cap / m; dy *= cap / m; }
+      el._x += dx; el._y += dy;
+      if (Math.abs(tx - el._x) < 0.3 && Math.abs(ty - el._y) < 0.3) { el._x = tx; el._y = ty; return false; }
+      return true;
+    };
+    let anim = false, d = '';
+    this.cmp = !D.ok; this._p3rects = []; this._p3plan = D.ok ? [] : null;   // the last places, to look at from the console
     rs.forEach((r) => {
-      const el = r.plate, p = ok && plan.find((q) => q.r === r);
-      let tf, off = false;
+      const el = r.plate, p = tg[r.key];
+      let tx, ty, tf, off = false;
       if (p) {
-        tf = 'translate(' + p.R[0].toFixed(1) + 'px,' + p.R[1].toFixed(1) + 'px)';
-        const pts = p.rt.concat([attach(p.s, p.R)]), col = el.style.getPropertyValue('--c') || '#7cf2c4', a = pts[0];
+        tx = p.R[0]; ty = p.R[1];
+        if (C.snap || el._x == null) { el._x = tx; el._y = ty; }
+        else if (glide(el, tx, ty)) anim = true;
+        const R = [el._x, el._y, el._x + p.pw, el._y + p.ph];
+        tf = 'translate(' + R[0].toFixed(1) + 'px,' + R[1].toFixed(1) + 'px)';
+        const pts = p.rt.concat([attach(p.s, R)]), col = el.style.getPropertyValue('--c') || '#7cf2c4', a = pts[0];
         d += '<path d="M' + pts.map((q) => q[0].toFixed(1) + ' ' + q[1].toFixed(1)).join('L') + '" stroke="' + col + '"/><circle cx="' + a[0].toFixed(1) + '" cy="' + a[1].toFixed(1) + '" r="2.6" fill="' + col + '"/>';
-        this._p3rects.push([[p.R[0], p.R[1]], [p.R[2], p.R[1]], [p.R[2], p.R[3]], [p.R[0], p.R[3]]]);
+        this._p3rects.push([[R[0], R[1]], [R[2], R[1]], [R[2], R[3]], [R[0], R[3]]]);
+        this._p3plan.push({ r, s: p.s, R });
       } else {
         // compact, hung from its room's back-wall top corner over the corner where the back walls meet -- never
-        // the room's middle -- and kept on the stage (an open room's corner is near its top edge)
+        // the room's middle -- and kept on the stage (an open room's corner is near its top edge); hidden only
+        // when that corner leaves the stage
         const Pt = P(r.x0, r.y0, top), cw = el._cw || el._pw, ch = el._ch || el._ph;
         off = Pt[2] > 1 || Pt[0] < -cw / 2 || Pt[0] > w + cw / 2 || Pt[1] > h - 10;
-        const cx = Math.max(pad + cw / 2, Math.min(w - pad - cw / 2, Pt[0])), cy = Math.max(y0s, Pt[1] + 4);
-        tf = 'translate(' + cx.toFixed(1) + 'px,' + cy.toFixed(1) + 'px) translate(-50%,0)';
-        if (!off) this._p3rects.push([[cx - cw / 2, cy], [cx + cw / 2, cy], [cx + cw / 2, cy + ch], [cx - cw / 2, cy + ch]]);
+        tx = cl(Pt[0], pad + cw / 2, w - pad - cw / 2) - cw / 2; ty = Math.max(y0s, Pt[1] + 4);
+        if (C.snap || el._x == null) { el._x = tx; el._y = ty; }
+        else if (glide(el, tx, ty)) anim = true;
+        tf = 'translate(' + el._x.toFixed(1) + 'px,' + el._y.toFixed(1) + 'px)';
+        if (!off) this._p3rects.push([[el._x, el._y], [el._x + cw, el._y], [el._x + cw, el._y + ch], [el._x, el._y + ch]]);
       }
-      el.classList.toggle('cmp', !p);
+      const cmp = !p; if (el._cmp !== cmp) { el._cmp = cmp; el.classList.toggle('cmp', cmp); }
       if (el._off !== off) { el._off = off; el.style.display = off ? 'none' : ''; }
       if (!off && el._tf !== tf) { el._tf = tf; el.style.transform = tf; }
     });
+    C.snap = false; C.anim = anim; C.moving = moving;
     const svg = this.p3Svg();
     if (svg._d !== d) { svg._d = d; svg.innerHTML = d; }
   }
@@ -7031,18 +7121,23 @@ class Office3D {
   // of light by his back corner, but never over a plate (it hid the Laboratory's plate before), and over his
   // column and his boards on the back walls only if nothing round there is clear of them: of the spots within
   // reach, the one nearest its place that covers least of them (the column counts most: keeping off the boards
-  // alone sat it on his rings). Looked for again only when the camera, the stage, the plates or the pill's words
-  // change; written only when its place changes.
+  // alone sat it on his rings). Like the plates it decides only at rest: while the camera moves it keeps its spot
+  // beside the column and follows it; a new spot is glided to.
   p3Need(r, w, h) {
-    const el = r.need, cam = this.camera, e = cam.matrixWorld.elements, pe = cam.projectionMatrix.elements;
-    const C = r.needC || (r.needC = { m: new Float64Array(32), t: null, pw: 0 });
-    const t = el.className + '|' + el.textContent + '|' + w + 'x' + h + '|' + (this._p3v || 0);
-    // its size is read only when something changed, or while it has none yet (hidden until first placed)
-    let same = C.t === t && C.pw > 0;
-    for (let i = 0; i < 16 && same; i++) same = C.m[i] === e[i] && C.m[16 + i] === pe[i];
-    if (same) return;
-    const pw = el.offsetWidth, ph = el.offsetHeight;
-    C.t = t; C.pw = pw; for (let i = 0; i < 16; i++) { C.m[i] = e[i]; C.m[16 + i] = pe[i]; }
+    const el = r.need, cam = this.camera, e = cam.matrixWorld.elements, pe = cam.projectionMatrix.elements, now = performance.now();
+    const C = r.needC || (r.needC = { m: new Float64Array(32), t: null, pw: 0, ox: 0, oy: 0, tx: 0, ty: 0, has: false, stale: true, at: now, anim: false });
+    const CO3 = this._co || {}, moving = !!CO3.moving || !!this.tw;
+    // looked for again when its words, the stage or the plates' decision change, and once the plates have glided
+    // to their places (a search made while they were on their way kept off where they no longer were)
+    const t = el.className + '|' + el.textContent + '|' + w + 'x' + h + '|' + (CO3.v || 0) + (CO3.anim ? 'a' : 'r');
+    let still = C.pw > 0;
+    for (let i = 0; i < 16 && still; i++) still = C.m[i] === e[i] && C.m[16 + i] === pe[i];
+    if (C.t !== t) { C.stale = true; C.t = t; still = false; }
+    if (!still) { C.stale = true; for (let i = 0; i < 16; i++) { C.m[i] = e[i]; C.m[16 + i] = pe[i]; } }
+    const search = !C.has || (C.stale && !moving);
+    const dt = Math.min(50, Math.max(0, now - C.at)); C.at = now;
+    if (still && !search && !C.anim) return;
+    const pw = el.offsetWidth, ph = el.offsetHeight; C.pw = pw;
     const v = new THREE.Vector3(), u = new THREE.Vector3(), at = (p) => { u.copy(p).project(cam); return [(u.x + 1) / 2 * w, (1 - u.y) / 2 * h]; };
     v.copy(r.coreAt).project(cam);
     const bz = v.z, bx = (v.x + 1) / 2 * w, by = (1 - v.y) / 2 * h - 10, X = Office3D;
@@ -7056,19 +7151,25 @@ class Office3D {
       for (const dx of [-1.05, 1.05]) for (const y of [1.2, 2.85]) for (const dz of [-1.05, 1.05]) col.push(new THREE.Vector3(c.x + dx, y, c.z + dz));
       r.p3Col = col;
     }
-    const hard = this._p3rects || [];
-    const soft = r.p3Boards.map((p) => [X.hull(p.map(at)), 150]).concat([[X.hull(r.p3Col.map(at)), 400]]);
-    let x = bx, y = by, best = Infinity;
-    if (pw && ph) {
+    if (search && pw && ph) {
+      const hard = this._p3rects || [];
+      const soft = r.p3Boards.map((p) => [X.hull(p.map(at)), 150]).concat([[X.hull(r.p3Col.map(at)), 400]]);
+      let best = Infinity, ox = 0, oy = 0;
       for (let dy = -120; dy <= 48; dy += 6) for (let dx = -96; dx <= 96; dx += 8) {
         let cost = Math.abs(dx) + Math.abs(dy) * 1.3; if (cost >= best) continue;
         const cx = bx + dx, cy = by + dy, R = [[cx - pw / 2 - 4, cy - ph / 2 - 4], [cx + pw / 2 + 4, cy - ph / 2 - 4], [cx + pw / 2 + 4, cy + ph / 2 + 4], [cx - pw / 2 - 4, cy + ph / 2 + 4]];
-        if (cy - ph / 2 < 58 || hard.some((k) => X.sat(R, k))) continue;
-        soft.forEach(([k, c]) => { if (cost < best && X.sat(R, k)) cost += c; });
+        if (cy - ph / 2 < 58 || hard.some((q) => X.sat(R, q))) continue;
+        soft.forEach(([q, c]) => { if (cost < best && X.sat(R, q)) cost += c; });
         if (cost >= best) continue;
-        best = cost; x = cx; y = cy;
+        best = cost; ox = dx; oy = dy;
       }
+      C.tx = ox; C.ty = oy; C.stale = false;
+      if (!C.has) { C.ox = ox; C.oy = oy; C.has = true; }
     }
+    const k = 1 - Math.exp(-dt / 150);
+    C.ox += (C.tx - C.ox) * k; C.oy += (C.ty - C.oy) * k;
+    if (Math.abs(C.tx - C.ox) < 0.3 && Math.abs(C.ty - C.oy) < 0.3) { C.ox = C.tx; C.oy = C.ty; C.anim = false; } else C.anim = true;
+    const x = bx + C.ox, y = by + C.oy;
     const off = bz > 1 || v.x < -1.3 || v.x > 1.3 || y < 58 || y > h + 40;
     if (el._off !== off) { el._off = off; el.style.display = off ? 'none' : ''; }
     const tf = off ? '' : 'translate(' + x.toFixed(1) + 'px,' + y.toFixed(1) + 'px) translate(-50%,-50%)';
