@@ -3405,7 +3405,9 @@ class Office3D {
   // the mirror's plane and would double itself). Run after the room is baked (tint, from update), again when its
   // parts change (the vault's piles are rebuilt).
   shTag(r) {
-    if (!r.g || r.g.children.length === r.shN) return;
+    // a room being born is still squashed flat (layout scales it up from 0.01 over a second): nothing in it is 0.1
+    // tall yet, so it waits for the first update after it has grown
+    if (!r.g || r.grow || r.g.children.length === r.shN) return;
     r.shN = r.g.children.length; r.g.updateMatrixWorld(true);
     const lum = (c) => (c ? 0.2126 * c.r + 0.7152 * c.g + 0.0722 * c.b : 0), agent = new Set(), bb = new THREE.Box3();
     (r.agents || []).forEach((a) => a.g && a.g.traverse((x) => agent.add(x)));
