@@ -158,6 +158,16 @@ a { color: var(--cyan); text-decoration: none; cursor: pointer; }
 .dl .sp.hot { color: var(--red); }
 .ubar.capb { display: block; margin-top: 6px; height: 3px; }
 .dept.needs { border-left-color: var(--red); box-shadow: inset 0 0 0 1px rgba(255, 68, 68, .25); }
+/* the department's icon, drawn to its room (app.js DEPT_ICON): a glowing tile at the card's left, its status dot on
+   the tile's corner */
+.dept { display: grid; grid-template-columns: auto minmax(0, 1fr); column-gap: 11px; align-items: center; }
+.dept > :not(.dic):not(.run) { grid-column: 2; }
+.dic { grid-column: 1; grid-row: 1 / span 3; position: relative; width: 36px; height: 36px; border-radius: 10px; display: grid; place-items: center; color: var(--ic);
+  background: radial-gradient(circle at 32% 26%, color-mix(in srgb, var(--ic) 24%, transparent), rgba(7, 12, 20, .92) 72%);
+  border: 1px solid color-mix(in srgb, var(--ic) 40%, transparent); box-shadow: 0 0 14px color-mix(in srgb, var(--ic) 16%, transparent), inset 0 1px 0 rgba(255, 255, 255, .06); }
+.dic svg { width: 20px; height: 20px; fill: none; stroke: currentColor; stroke-width: 1.5; stroke-linecap: round; stroke-linejoin: round; filter: drop-shadow(0 0 4px color-mix(in srgb, var(--ic) 65%, transparent)); }
+.dic .dot { position: absolute; right: -3px; top: -3px; width: 9px; height: 9px; border: 2px solid var(--navy2); }
+.dept:hover .dic { border-color: color-mix(in srgb, var(--ic) 65%, transparent); }
 .dept.needs .dot { background: var(--red); box-shadow: 0 0 8px var(--red); }
 .dus { display: flex; align-items: center; gap: 10px; margin-top: 5px; font-size: 12px; font-weight: 700; color: var(--text); }
 .dus small { color: var(--dim2); font-weight: 500; margin-left: 3px; font-size: 10px; }
@@ -324,7 +334,7 @@ b.g, span.g { color: var(--green); text-shadow: 0 0 10px rgba(0, 255, 136, .45);
 .office .room .hl { opacity: 0; transition: opacity .2s; }
 .office .room.hover .hl { opacity: 1; }
 .office .room.hover .neon { opacity: 1; } .office .room.hover .neonG { opacity: .6; }
-.office .room.hover .hit, .office .plate, .office .room { cursor: pointer; }
+.office .room.hover .hit, .office .plate, .office .room, .office .sign { cursor: pointer; }
 /* the free lot: its square of lane dashes, and the pad's wall of light breathing */
 .office .lotf { stroke: #dfeaf0; stroke-width: 2; stroke-dasharray: 9.2 6.6; opacity: .55; transition: opacity .2s; }
 .office .room.lot.hover .lotf { opacity: .95; }
@@ -746,6 +756,52 @@ select:focus, .search:focus, .field input:focus, .field textarea:focus { border-
 .ad3 .tcard .tst i { margin-left: auto; font-style: normal; font-size: 10px; border: 1px solid var(--line3); border-radius: 99px; padding: 0 6px; }
 .ad3 .xcard .ck { padding: 2px 0; font-size: 10.5px; }
 .ad3 .tcard.on::after { top: 12px; right: 12px; }
+/* the panel's two faces: the department, or the expert last clicked */
+.d3pane { flex: 1 1 auto; min-height: 0; display: flex; flex-direction: column; gap: 10px; }
+.d3side.ex .d3dept, .d3side:not(.ex) .d3ex { display: none; }
+.d3kick { display: flex; align-items: center; gap: 10px; }
+.ad3 .dic .dot { display: none; }
+.d3kick .dic { width: 30px; height: 30px; border-radius: 8px; } .d3kick .dic svg { width: 17px; height: 17px; }
+.ad3 .tcard b .dic { display: inline-grid; width: 20px; height: 20px; border-radius: 6px; vertical-align: -4px; margin-right: 6px; }
+.ad3 .tcard b .dic svg { width: 12px; height: 12px; }
+.ad3 .hx { cursor: pointer; } .ad3 .hx:hover { border-color: var(--cyan); }
+.ad3 .hx i svg.astroart { width: 100%; height: 100%; transform: scale(2.3); transform-origin: 50% 30%; }
+.ad3 .xcard.view { border-color: var(--cyan); box-shadow: 0 0 0 1px var(--cyan), 0 0 20px rgba(0, 207, 255, .25); }
+.ad3 .xcard.on.view { box-shadow: 0 0 0 1px var(--green), 0 0 0 3px rgba(0, 207, 255, .55), 0 0 22px rgba(0, 255, 136, .22); }
+.ad3 .xcard .ck:hover { border-color: var(--green); color: var(--green); }
+.ad3 .xcard.on .ck:hover { color: var(--bg); }
+.d3back { align-self: flex-start; font-size: 11px; color: var(--dim2); padding: 3px 8px 3px 4px; border-radius: 6px; } .d3back b { color: var(--cyan); }
+.d3back:hover { background: var(--cyan-a); }
+.d3xhead { display: flex; gap: 12px; align-items: center; flex: none; }
+.d3xfig { width: 112px; height: 98px; flex: none; border-radius: 10px; overflow: hidden; display: grid; place-items: center;
+  background: radial-gradient(ellipse at 50% 75%, #13202e, #0b131c 70%); border: 1px solid var(--line2); }
+.d3xfig img { width: 100%; height: 100%; object-fit: cover; display: block; } .d3xfig svg { height: 100%; width: 100%; }
+.d3xn { font-family: 'Archivo Black'; font-weight: 400; font-size: 20px; margin: 2px 0 4px; }
+.d3xt { display: inline-block; font-size: 10.5px; font-weight: 700; color: var(--dim2); border: 1px solid var(--line3); border-radius: 99px; padding: 1px 8px; }
+.d3xt.on { color: var(--bg); background: var(--green); border-color: var(--green); }
+.d3xbody { flex: 1 1 auto; min-height: 0; overflow: auto; display: flex; flex-direction: column; gap: 9px; padding-right: 2px; }
+.d3xd { font-size: 11.5px; line-height: 1.5; color: var(--text); }
+.d3fits { display: flex; flex-wrap: wrap; gap: 6px; }
+.d3fit { display: inline-flex; align-items: center; gap: 5px; font-size: 10.5px; padding: 1px 8px 1px 1px; border-radius: 99px; border: 1px solid var(--line3); background: var(--navy2); color: var(--dim); }
+.d3fit .dic { width: 20px; height: 20px; border-radius: 99px; } .d3fit .dic svg { width: 12px; height: 12px; }
+.d3fit.here { border-color: var(--green); color: var(--text); box-shadow: 0 0 10px rgba(0, 255, 136, .18); }
+.d3xw, .d3xa { display: flex; gap: 8px; align-items: flex-start; font-size: 11px; line-height: 1.45; color: var(--dim); }
+.d3xw i { flex: none; width: 18px; height: 18px; border-radius: 50%; display: grid; place-items: center; font-style: normal; font-weight: 800; font-size: 11px; }
+.d3xw.ok i { color: var(--bg); background: var(--green); } .d3xw.no i { color: var(--dim2); border: 1px solid var(--line3); }
+.d3xa svg { flex: none; width: 18px; height: 18px; }
+.d3ex .d3act { margin-top: 0; flex: none; } .d3ex .d3act .btn { width: 100%; padding: 9px 12px; }
+.d3ex .d3back { flex: none; } .btn.d3fire:hover { border-color: var(--red); color: var(--red); }
+/* the flat office's room in the middle, floating on its stars; the cards' rooms and astronauts drawn by it too, still */
+.d2stage { background: var(--stars, none) 0 0 / 620px 620px repeat, radial-gradient(ellipse 60% 55% at 50% 58%, rgba(0, 255, 136, .05), transparent 70%),
+  radial-gradient(ellipse 30% 26% at 18% 22%, rgba(24, 110, 122, .22), transparent 72%), #0b1520; }
+.d2room { position: absolute; inset: 5% 10% 9%; animation: d2float 7s ease-in-out infinite; }
+.d2room.rise { animation: d2rise .7s cubic-bezier(.2, .9, .3, 1.15), d2float 7s ease-in-out .7s infinite; }
+@keyframes d2float { 50% { transform: translateY(-7px); } }
+@keyframes d2rise { from { transform: translateY(18px) scaleY(.6); opacity: .2; } }
+.ad3 svg.office { position: static; width: 100%; height: 100%; display: block; cursor: default; touch-action: auto; }
+.ad3 .still, .ad3 .still * { animation: none !important; }
+.ad3.two .tcard .art, .ad3.two .xcard .fig { background: radial-gradient(ellipse at 50% 60%, #12202c, #0b1520 75%); }
+.ad3.two .tcard .art svg { padding: 4px 6px; }
 .xchips { display: flex; flex-wrap: wrap; gap: 6px; }
 .xchip { font-size: 11px; padding: 4px 10px; border-radius: 99px; border: 1px solid var(--line3); color: var(--dim); background: var(--navy2); cursor: pointer; user-select: none; }
 .xchip.on { border-color: var(--cyan); color: var(--cyan); background: var(--cyan-a); }

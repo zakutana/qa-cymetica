@@ -1,6 +1,6 @@
 /* The /company mockup: the flat office. The 3D office (u3d.js) drawn as an isometric SVG, in its colours: a navy
  * sky, a slate deck on a plated hull, slate-blue tiled floors in pale frosted glass, ONE mint neon line round every
- * room (the back walls' tops, the front walls' feet), the trading desk in orange. World coordinates are floor tiles
+ * room (the back walls' tops, the front walls' feet), orange only while a room waits on you. World coordinates are floor tiles
  * (1 unit = one tile of the plan, the plan the 3D office reads from CO.iso), so every room, desk, monitor, wall
  * screen and task note sits where the data puts it. It is also the fallback where 3D cannot start, so it stays
  * plain SVG and CSS: flat fills, a few gradients, a handful of blurs.
@@ -31,7 +31,7 @@
     text: '#eef4f8', dim: '#a9b8cc', dim2: '#7f93ad'
   };
   // What a room is doing, said as the 3D office says it: on its plate's dot and on its wall screen. The room's own
-  // light stays mint, brighter while it works, orange in the trading desk and while it waits on you.
+  // light stays mint, brighter while it works, orange while it waits on you.
   var STC = { working: '#24e8ff', queued: '#3b82f6', waiting: '#ff8824', idle: '#38f2b8' };
   var TONEC = { cyan: '#24e8ff', red: '#ff9438', blue: '#dfe6ee', dim: '#a9b8cc' };
   // The plan: the Manager in the middle, the weekly audit and the vault in two fixed corners, departments in the
@@ -138,7 +138,17 @@
   }
 
   /* ---------------- pieces ---------------- */
-  var DEFS = '<defs>' +
+  // Every role's helmet in the 3D office's colour for it (u3d.js, agent()'s role skins), so an astronaut tells its
+  // role in the flat office too; the researcher keeps the suit's own blue, and so does an unknown role. The QA tester's
+  // and the trader's visors are tinted as theirs are.
+  var ROLE2D = { qa_tester: ['#c4532f', '#160a08'], trader: ['#c49035', '#6a4a14'], developer: ['#1c9cb4'], lab_scientist: ['#5aa888'], auditor: ['#8a9bb0'],
+    designer: ['#9c4cc4'], manager: ['#bccad6'], supervisor: ['#1d3656'] };
+  var ROLEDEFS = Object.keys(ROLE2D).map(function (k) {
+    var c = ROLE2D[k][0];
+    return '<radialGradient id="g-helmet-' + k + '" cx=".36" cy=".3" r=".78"><stop offset="0" stop-color="' + shade(c, 0.45) + '"/><stop offset=".55" stop-color="' + c +
+      '"/><stop offset="1" stop-color="' + shade(c, -0.45) + '"/></radialGradient>';
+  }).join('');
+  var DEFS = '<defs>' + ROLEDEFS +
     '<filter id="glow" x="-80%" y="-80%" width="260%" height="260%"><feGaussianBlur stdDeviation="2.2" result="b"/>' +
     '<feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter>' +
     '<filter id="glowS" x="-80%" y="-80%" width="260%" height="260%"><feGaussianBlur stdDeviation="1.1" result="b"/>' +
@@ -201,10 +211,11 @@
     return 'url("data:image/svg+xml,' + encodeURIComponent(out + '</svg>') + '")';
   }
 
-  // An astronaut as in the 3D office: a white suit, a grey pack on the back, a blue helmet with a dark visor and its
-  // shine. Feet at 0,0; the name tag over the helmet shows only in the room under the mouse or the one open.
-  function avatar(label) {
-    var w = 5.8 * label.length + 10;
+  // An astronaut as in the 3D office: a white suit, a grey pack on the back, a helmet in its role's colour (blue for
+  // the rest) with a dark visor and its shine. Feet at 0,0; the name tag over the helmet shows only in the room under
+  // the mouse or the one open.
+  function avatar(label, role) {
+    var w = 5.8 * label.length + 10, rs = ROLE2D[role];
     return '<ellipse cx="0" cy="0" rx="8" ry="3.4" fill="url(#g-shadow)"/>' +
       '<ellipse class="ring" cx="0" cy="0" rx="11" ry="5"/><ellipse class="ring2" cx="0" cy="0" rx="11" ry="5"/>' +
       '<g class="bob">' +
@@ -215,19 +226,18 @@
       '<rect class="body" x="-5.4" y="-17.6" width="10.8" height="10.8" rx="4.2"/>' +
       '<rect x="-2.9" y="-14.7" width="5.8" height="3.1" rx=".9" fill="' + L.pack + '"/><circle class="chest" cx="1.3" cy="-13.15" r=".8"/>' +
       '<ellipse cx="0" cy="-17.4" rx="4.5" ry="1.45" fill="' + L.pack + '"/>' +
-      '<circle cx="0" cy="-22.2" r="5.7" fill="url(#g-helmet)"/>' +
-      '<ellipse cx="-1.2" cy="-21.8" rx="3.9" ry="2.8" fill="' + L.visor + '"/>' +
+      '<circle cx="0" cy="-22.2" r="5.7" fill="url(#g-helmet' + (rs ? '-' + role : '') + ')"/>' +
+      '<ellipse cx="-1.2" cy="-21.8" rx="3.9" ry="2.8" fill="' + (rs && rs[1] || L.visor) + '"/>' +
       '<ellipse cx="-2.5" cy="-22.8" rx="1.3" ry=".75" fill="#cfe6ff" opacity=".75"/></g>' +
       (label ? '<g class="lbl"><rect x="' + f1(-w / 2) + '" y="-41" width="' + f1(w) + '" height="11.5" rx="5.75"/>' +
         text(0, -32.4, label, 7.4, L.text, 600, 'middle') + '</g>' : '');
   }
-  function agentAt(x, y, key, i, label) {
+  function agentAt(x, y, key, i, label, role) {
     var p = P(x, y, 0.1);
     return '<g class="agent idle" data-agent="' + key + ':' + i + '" data-hx="' + f1(p[0]) + '" data-hy="' + f1(p[1]) +
-      '" transform="translate(' + f1(p[0]) + ' ' + f1(p[1]) + ')">' + avatar(label) + '</g>';
+      '" transform="translate(' + f1(p[0]) + ' ' + f1(p[1]) + ')">' + avatar(label, role) + '</g>';
   }
-  // a screen on a stand, facing the room: dark glass that lights mint while its expert works (orange in the
-  // trading desk, whose charts always run), its code typing over it
+  // a screen on a stand, facing the room: dark glass that lights mint while its expert works, its code typing over it
   function monitor(mx, my, mz, mw, mh, i) {
     var md = 0.05, out = '';
     out += poly([P(mx + mw, my, mz), P(mx + mw, my + md, mz), P(mx + mw, my + md, mz + mh), P(mx + mw, my, mz + mh)], L.dark);
@@ -270,8 +280,6 @@
     out += text(sc[0], sc[1] + 5, '↗', 14, L.mint, 700, 'middle', null, ' class="pcarrow" filter="url(#glowS)"');
     return out + '</g>';
   }
-  // what the department has earned, lit, on its plate's title row: Cymetica QA's ET10
-  function earnedLabel(n) { return (n ? '+' : '') + n.toLocaleString('en-US') + ' ET10'; }
   function plant(x, y, k) {
     k = k || 1;
     var out = cyl(x, y, 0.1, 0.1 + 0.34 * k, 0.22 * k, '#2c3742', '#232c36', '#161d25'), c = P(x, y, 0.1 + 0.34 * k);
@@ -364,15 +372,15 @@
     }
     return out + '</g>';
   }
-  // the trading desk's chart walls, warm orange across both back walls, as the 3D's
+  // the trading desk's chart walls across both back walls, in the site's green: orange is for a room waiting on you
   function chartWall(tf, w, h) {
-    var out = '<g transform="' + tf + '"><rect x="0" y="0" width="' + f1(w) + '" height="' + f1(h) + '" fill="#160b04" stroke="#ff9438" stroke-width=".7"/>';
-    out += text(2.6, 4.2, 'ALPHA FLOW · +6.2% ROI', 3, '#ffaa52', 700);
-    for (var gy = 6; gy < h - 1.5; gy += 2.6) out += '<rect x="1.5" y="' + f1(gy) + '" width="' + f1(w - 3) + '" height=".25" fill="#ff9438" opacity=".22"/>';
-    for (var i = 0; i < Math.floor((w - 4) / 4.6); i++) { var bh = 1.4 + ((i * 19) % 28) / 9; out += '<rect x="' + f1(2.2 + i * 4.6) + '" y="' + f1(h - 1.4 - bh) + '" width="2.6" height="' + f1(bh) + '" fill="#ff8c28" opacity=".4"/>'; }
+    var out = '<g transform="' + tf + '"><rect x="0" y="0" width="' + f1(w) + '" height="' + f1(h) + '" fill="#04140e" stroke="#38f5b8" stroke-width=".7"/>';
+    out += text(2.6, 4.2, 'ALPHA FLOW · +6.2% ROI', 3, '#7cf2c4', 700);
+    for (var gy = 6; gy < h - 1.5; gy += 2.6) out += '<rect x="1.5" y="' + f1(gy) + '" width="' + f1(w - 3) + '" height=".25" fill="#38f5b8" opacity=".2"/>';
+    for (var i = 0; i < Math.floor((w - 4) / 4.6); i++) { var bh = 1.4 + ((i * 19) % 28) / 9; out += '<rect x="' + f1(2.2 + i * 4.6) + '" y="' + f1(h - 1.4 - bh) + '" width="2.6" height="' + f1(bh) + '" fill="' + (i % 4 === 2 ? '#ff4f5e' : '#38f5b8') + '" opacity=".42"/>'; }
     var l = [];
     for (var x = 2; x < w - 2; x += 1.6) l.push([x, h * 0.6 + Math.sin(x * 0.3) * h * 0.14 + Math.cos(x * 0.71) * h * 0.06]);
-    out += '<polyline points="' + pts(l) + '" fill="none" stroke="#ff9438" stroke-width=".7" stroke-linejoin="round"/>';
+    out += '<polyline points="' + pts(l) + '" fill="none" stroke="#38f5b8" stroke-width=".7" stroke-linejoin="round"/>';
     return out + '</g>';
   }
   function mood(x0, y0, u0, u1) {
@@ -392,9 +400,9 @@
   function shellBack(x0, y0, kind) {
     var out = '', z0 = 0.1;
     out += poly([P(x0, y0 + RS, 0), P(x0, y0 + RS, WZ), P(x0, y0, WZ), P(x0 + RS, y0, WZ), P(x0 + RS, y0, 0), P(x0 + RS, y0 + RS, 0)], 'transparent', null, 0, 1, ' class="hit"');
-    var orange = kind === 'orange', R = rng(29 + x0 * 7 + y0 * 13), n = 4, s = RS / n, g = 0.035;
-    var base = kind === 'hub' ? '#33495a' : orange ? '#3b4150' : L.floor;
-    out += box(x0, y0, 0, RS, RS, z0, orange ? '#6a3f2e' : L.seam, L.slabL, L.slabR);
+    var R = rng(29 + x0 * 7 + y0 * 13), n = 4, s = RS / n, g = 0.035;
+    var base = kind === 'hub' ? '#33495a' : L.floor;
+    out += box(x0, y0, 0, RS, RS, z0, L.seam, L.slabL, L.slabR);
     for (var i = 0; i < n; i++) for (var j = 0; j < n; j++) {
       out += poly([P(x0 + i * s + g, y0 + j * s + g, z0), P(x0 + (i + 1) * s - g, y0 + j * s + g, z0), P(x0 + (i + 1) * s - g, y0 + (j + 1) * s - g, z0),
         P(x0 + i * s + g, y0 + (j + 1) * s - g, z0)], shade(base, R() * 0.07 - 0.035));
@@ -468,23 +476,37 @@
     });
     return out;
   }
-  // A plate as the 3D office's: a dark glass card with a pale frame, a small square dot in the colour of what the
-  // room is doing, the name in a light sans, a line under it; framed in that colour under the mouse or when open
-  var FT = "600 9.2px 'Segoe UI', Inter, system-ui, sans-serif", FS = "500 7.6px 'JetBrains Mono', monospace",
-    FE = "700 7.2px 'JetBrains Mono', monospace", FN = "600 8.4px 'Segoe UI', Inter, system-ui, sans-serif";
-  function plate(cx, cy, key, title, dot, sub, subCol, edge, pulse, et) {
-    var tw = measure(title, FT, 0.64), sw = measure(sub, FS, 0), el = et ? earnedLabel(et.n) : '', ew = et ? measure(el, FE, 0) + 7 : 0;
-    var w = Math.round(Math.max(20 + tw + ew, 10 + sw) + 11), h = 30, x = cx - w / 2, y = cy - h / 2;
-    var r = ' x="' + f1(x) + '" y="' + f1(y) + '" width="' + w + '" height="' + h + '" rx="6"';
-    var out = '<g class="plate rp" data-key="' + key + '" style="--c:' + edge + '"><rect class="pglow"' + r + '/><rect class="pbg"' + r + '/>';
-    out += '<rect class="' + (pulse ? 'pdot' : 'pd') + '" x="' + f1(x + 10) + '" y="' + f1(y + 7.1) + '" width="4.4" height="4.4" rx=".7" fill="' + dot + '" filter="url(#glowS)"/>';
-    out += text(x + 20, y + 12.6, title, 9.2, L.text, 600, 'start', 'sans', ' letter-spacing=".64"');
-    if (et) {
-      out += '<g class="earned' + (et.n ? ' lit' : '') + (et.fresh ? ' pop' : '') + '">' +
-        text(x + 20 + tw + 7, y + 12.4, el, 7.2, et.n ? '#38f5b8' : L.dim2, 700, 'start', null, et.n ? ' filter="url(#glowS)"' : '') + '</g>';
-    }
-    out += text(x + 10, y + 23.4, sub, 7.6, subCol, 500, 'start', null, ' opacity=".9"');
+  // the pills' fonts, for their widths
+  var FS = "500 7.6px 'JetBrains Mono', monospace", FN = "600 8.4px 'Segoe UI', Inter, system-ui, sans-serif";
+  // A room's name lettered on its front glass, as the 3D office's (u3d.js glassSign), and no plate over it ("tam
+  // vlastne staci jen ty nazvy mistnosti dat na to sklo ... nic vic se tam zobrazovat uz nemusi"): as written and
+  // bold, the site's cyan-blue with a soft glow and a thin dark outline, nothing behind it ("ne na nejakym cernym
+  // pozadi, a mozna nedelat vse capslockem"), the department's icon from the rail before it ("pridat ty loga stejne jak
+  // vlevo v panelu"), from the pane's left end ("dat vic doleva"), in the glass's upper part; on the front-left pane,
+  // or the front-right one when a room stands in front of the left; orange while the room waits on the owner. Drawn
+  // over the rooms, so a neighbour in front never hides it; a click on it opens the room, as a plate's did.
+  function glassSign(c, key, name, icon, have, st) {
+    var x0 = c[0], y0 = c[1], leftFree = !have[x0 + ',' + (y0 + 8)], rightFree = !have[(x0 + 8) + ',' + y0];
+    var right = !leftFree && rightFree, u0 = 0.4, zt = WZ - 0.03, fs = 13.6, is = 16, ty = 1.2 + is / 2 + fs * 0.35;
+    var tf = right ? onLeft(x0 + RS, y0 + RS, -u0, zt) : onBack(x0, u0, y0 + RS, zt);
+    var col = st === 'waiting' ? '#ff8a3a' : '#00cfff', label = cut(name, 22), lit = st === 'working' ? 1 : 0.9;
+    var def = CO.deptIconSvg ? CO.deptIconSvg(icon, is - 4) : null, ic = def ? def.color : col;
+    var out = '<g class="sign" data-key="' + key + '" transform="' + tf + '">';
+    out += '<rect x="0" y="1.2" width="' + is + '" height="' + is + '" rx="4" fill="' + ic + '" fill-opacity=".2" stroke="' + ic + '" stroke-opacity=".7" stroke-width=".8"/>';
+    if (def) out += def.svg.replace('<svg ', '<svg x="2.5" y="3.7" filter="url(#glowS)" ');
+    // the glow under the letters, then the letters on a thin dark outline
+    out += '<text x="' + (is + 5) + '" y="' + f1(ty) + '" font-family="' + SANS + '" font-size="' + fs + '" font-weight="700" fill="' + col + '" opacity="' + (0.55 * lit).toFixed(2) + '" filter="url(#glow2)">' + esc(label) + '</text>';
+    out += '<text x="' + (is + 5) + '" y="' + f1(ty) + '" font-family="' + SANS + '" font-size="' + fs + '" font-weight="700" fill="' + col + '" fill-opacity="' + lit + '" stroke="rgba(2, 8, 14, .8)" stroke-width="2.6" stroke-linejoin="round" paint-order="stroke">' + esc(label) + '</text>';
     return out + '</g>';
+  }
+  // the Treasury's amounts over its plinth, the figures lit in their colours
+  function amountPill(cx, cy, key, parts) {
+    var s = parts.map(function (p) { return p[0]; }).join(''), w = Math.round(measure(s, FS, 0) + 26), h = 17, x = cx - w / 2, y = cy - h / 2;
+    var r = ' x="' + f1(x) + '" y="' + f1(y) + '" width="' + w + '" height="' + h + '" rx="4"';
+    return '<g class="plate rp" data-key="' + key + '" style="--c:#38f2b8"><rect class="pglow"' + r + '/><rect class="pbg"' + r + '/>' +
+      '<text x="' + f1(cx) + '" y="' + f1(y + 11.6) + '" text-anchor="middle" font-family="\'JetBrains Mono\',monospace" font-size="7.6" font-weight="500">' + parts.map(function (p) {
+        return '<tspan fill="' + p[1] + '"' + (p[2] ? ' font-weight="700" filter="url(#glowS)"' : '') + '>' + esc(p[0]) + '</tspan>';
+      }).join('') + '</text></g>';
   }
   // over the Manager's rings: what needs the owner, in orange, or that nothing does
   function needPill(cx, cy, label, alert) {
@@ -580,7 +602,7 @@
 
   Office.prototype.shape = function () {
     var S = CO.S;
-    return S.departments.map(function (d) { return d.id + ':' + d.slot + ':' + d.key + ':' + d.experts.join(','); }).join('|');
+    return S.departments.map(function (d) { return d.id + ':' + d.slot + ':' + d.key + ':' + (d.look || '') + ':' + d.experts.join(','); }).join('|');
   };
 
   // Under the deck, the 3D office's hull: a plated tier under every slab, inset where it is the outside, its sides in
@@ -709,37 +731,28 @@
   // A department's room, furnished as the 3D office furnishes it: its computer in the back corner, a wall screen and
   // a task board on the back walls, desks for its experts with them at work in front, a lime holo screen, a cabinet,
   // plants; and what each kind of department has of its own.
+  // Mint like every room: orange is only for a room that waits on you ("oranzove sviti jen roomka ktera chce pozornost
+  // moji, needs you"), so the trading desk's chart walls are the site's green. A department of the owner's own in a
+  // look (d.look, CO.ROOM_LOOKS) has that look's pieces where the others have their racks, as the 3D's builds them.
+  var LOOK2D = { ops: 1, library: 1, workshop: 1, command: 1, greenhouse: 1 };
   Office.prototype.deptRoom = function (d, x0, y0) {
-    var k = d.key, orange = k === 'trading_desk', key = 'd' + d.id, items = [], walls = '';
-    var out = shellBack(x0, y0, orange ? 'orange' : 'room');
+    var k = d.key, key = 'd' + d.id, items = [], walls = '';
+    var out = shellBack(x0, y0, 'room');
     var ex = d.experts.slice(0, 3), link = d.link || CO.DEPT_LINK[k] || CO.DEPT_LINK.custom;
+    var look = k === 'custom' && LOOK2D[d.look] ? d.look : null;
     var add = function (x, y, s) { items.push([x + y, s]); };
     if (link) add(x0 + 0.92, y0 + 0.72, terminal(x0 + 0.3, y0 + 0.32, link));
-    if (d.run_kind === 'stranger') {
-      // the Outsider's server room: three racks along the back wall, a pair by the back corner, three in a row to the
-      // front, one desk among them
-      walls += '<g class="kb" data-v0="2.6" data-v1="5.6"></g>';
-      add(x0 + 3.9, y0 + 0.64, racks(x0 + 2.55, y0 + 0.3, 3, 1.12));
-      add(x0 + 1.4, y0 + 1.64, racks(x0 + 0.25, y0 + 1.3, 2, 1.1));
-      add(x0 + 4.2, y0 + 5.69, racks(x0 + 2.75, y0 + 5.35, 3, 1.2));
-      add(x0 + 4.35, y0 + 3.03, desk(x0 + 3.4, y0 + 2.6, 0));
-      add(x0 + 0.72, y0 + 3.98, holoFrame(x0 + 0.72, y0 + 3.98));
-      if (ex[0]) add(x0 + 4.35, y0 + 3.9, agentAt(x0 + 4.35, y0 + 3.9, key, 0, CO.expertName(ex[0])));
-      if (ex[1]) add(x0 + 1.6, y0 + 4.9, agentAt(x0 + 1.6, y0 + 4.9, key, 1, CO.expertName(ex[1])));
-      add(x0 + 0.45, y0 + 6.5, plant(x0 + 0.45, y0 + 6.5));
-      return out + walls + sortJoin(items) + shellFront(x0, y0);
-    }
-    var u1 = 4.6, xs = ex.length === 1 ? [2.4] : ex.length === 2 ? [1.0, 3.7] : [0.35, 2.55, 4.75];
-    if (k === 'development') { u1 = 3.3; add(x0 + 1.6, y0 + 1.69, racks(x0 + 0.55, y0 + 1.35, 3, 0.78)); }
+    var u1 = 4.6, xs = ex.length === 1 ? [2.4] : ex.length === 2 ? [1.0, 3.7] : [0.35, 2.55, 4.75], charts = k === 'trading_desk';
+    if (look) u1 = lookPieces(look, x0, y0, add, function (s) { walls += s; });
+    else if (k === 'development') { u1 = 3.3; add(x0 + 1.6, y0 + 1.69, racks(x0 + 0.55, y0 + 1.35, 3, 0.78)); }
     else if (k === 'testing') walls += qaWindow(x0, y0);
     else if (k === 'testing_lab') {
       u1 = 3.4;
       add(x0 + 4.33, y0 + 0.7, labMachine(x0 + 3.75, y0 + 0.3)); add(x0 + 5.73, y0 + 0.7, labMachine(x0 + 5.15, y0 + 0.3));
       add(x0 + 1.2, y0 + 5.42, labHolo(x0 + 0.6, y0 + 5.0)); add(x0 + 6.45, y0 + 2.4, canisters(x0 + 6.45, y0 + 1.85));
     } else if (k === 'design') { u1 = 4.5; walls += mood(x0, y0, 4.7, 6.75); }
-    else if (d.run_kind === 'league') u1 = 4.1;
-    else if (!orange) add(x0 + 5.8, y0 + 0.64, racks(x0 + 5.2, y0 + 0.3, 2, 0.72));
-    if (orange) {
+    else if (!charts) add(x0 + 5.8, y0 + 0.64, racks(x0 + 5.2, y0 + 0.3, 2, 0.72));
+    if (charts) {
       walls += chartWall(onBack(x0, 1.75, y0 + 0.13, WS1 + 0.06), 5.1 * SC, (WS1 + 0.06 - WS0 + 0.1) * SC) +
         chartWall(onLeft(x0 + 0.13, y0, 6.05, WS1 + 0.06), 4.7 * SC, (WS1 + 0.06 - WS0 + 0.1) * SC);
     } else {
@@ -747,13 +760,113 @@
     }
     ex.forEach(function (e, i) { add(x0 + xs[i] + 0.95, y0 + 3.18, desk(x0 + xs[i], y0 + 2.75, i)); });
     add(x0 + 0.75, y0 + 2.2, holoFrame(x0 + 0.75, y0 + 2.2));
-    ex.forEach(function (e, i) { add(x0 + xs[i] + 0.95, y0 + 4.05, agentAt(x0 + xs[i] + 0.95, y0 + 4.05, key, i, CO.expertName(e))); });
-    if (d.run_kind === 'league' && ex.length < 3) add(x0 + 5.45, y0 + 3.1, agentAt(x0 + 5.45, y0 + 3.1, key, ex.length, 'Referee'));
-    add(x0 + 6.67, y0 + 4.15, cabinet(x0 + 6.45, y0 + 3.0, 0.45, 2.3, 0.62));
+    ex.forEach(function (e, i) { add(x0 + xs[i] + 0.95, y0 + 4.05, agentAt(x0 + xs[i] + 0.95, y0 + 4.05, key, i, CO.expertName(e), e)); });
+    if (!look) add(x0 + 6.67, y0 + 4.15, cabinet(x0 + 6.45, y0 + 3.0, 0.45, 2.3, 0.62));
     add(x0 + 0.42, y0 + 6.5, plant(x0 + 0.42, y0 + 6.5));
-    add(x0 + 6.55, y0 + 6.55, plant(x0 + 6.55, y0 + 6.55, 0.8));
+    if (!look) add(x0 + 6.55, y0 + 6.55, plant(x0 + 6.55, y0 + 6.55, 0.8));
     return out + walls + sortJoin(items) + shellFront(x0, y0);
   };
+  // A look's own pieces, drawn as the 3D's have them, in the room's free places: the back wall's right end (from 4.2
+  // along it) and the floor's front right; the wall screen ends at the length returned. wall(s) puts s on the walls.
+  function lookPieces(look, x0, y0, add, wall) {
+    var X = function (v) { return x0 + v; }, Y = function (v) { return y0 + v; };
+    if (look === 'ops') {
+      // the operations room: a wall of screens over a console along the back wall, comms cabinets by the right wall,
+      // a light tower in the front corner
+      wall(poly([P(X(4.2), Y(0.13), WS0), P(X(6.85), Y(0.13), WS0), P(X(6.85), Y(0.13), WS1 + 0.06), P(X(4.2), Y(0.13), WS1 + 0.06)], '#061420', '#24e8ff', 0.8));
+      var sw = '<g transform="' + onBack(x0, 4.2, y0 + 0.13, WS1 + 0.06) + '">';
+      for (var i = 0; i < 3; i++) {
+        var sx = 1.6 + i * 19;
+        sw += '<rect x="' + sx + '" y="1.6" width="17" height="11" rx=".6" fill="#0a2030" stroke="#24e8ff" stroke-width=".5"/>' +
+          '<polyline points="' + [0, 1, 2, 3, 4, 5, 6].map(function (j) { return f1(sx + 1.4 + j * 2.4) + ',' + f1(9.6 - ((i * 7 + j * 5) % 6) * 1.1); }).join(' ') + '" fill="none" stroke="' + ['#38f5b8', '#24e8ff', '#5b9bff'][i] + '" stroke-width=".6"/>';
+      }
+      wall(sw + '</g>');
+      add(X(5.5), Y(0.75), fb(X(4.3), Y(0.3), 0.1, 2.5, 0.55, 0.45, L.deskTop, L.desk, L.deskR) +
+        poly([P(X(4.35), Y(0.85), 0.5), P(X(6.75), Y(0.85), 0.5), P(X(6.75), Y(0.85), 0.47), P(X(4.35), Y(0.85), 0.47)], '#24e8ff', null, 0, 0.7));
+      [2.7, 3.7].forEach(function (y) {
+        add(X(6.65), Y(y + 0.4), fb(X(6.3), Y(y), 0.1, 0.5, 0.85, 1.1, '#24303c', '#151d26', '#10171f') +
+          '<g transform="' + onSide(X(6.3), Y(y), 0.1, 1.1) + '"><rect x="2" y="3" width="1.2" height="16" fill="#24e8ff" opacity=".7"/>' +
+          '<rect class="led" x="5" y="5" width="2.2" height="1.1" fill="#38f5b8"/><rect class="led" x="5" y="9" width="2.2" height="1.1" fill="#5b9bff" style="animation-delay:-.6s"/></g>');
+      });
+      var tw = cyl(X(6.4), Y(6.3), 0.1, 0.16, 0.26, '#2c3742', '#232c36', '#161d25') + line(P(X(6.4), Y(6.3), 0.16), P(X(6.4), Y(6.3), 1.1), L.frame, 2.4);
+      [['#38f5b8', 1.1], ['#24e8ff', 0.92], ['#5b9bff', 0.74]].forEach(function (c) { tw += cyl(X(6.4), Y(6.3), c[1], c[1] + 0.14, 0.09, c[0], shade(c[0], -0.3), shade(c[0], -0.5)); });
+      add(X(6.4), Y(6.3), tw + disc(X(6.4), Y(6.3), 1.18, 0.5, 'url(#g-halo-c)', null, 0, ' opacity=".35"'));
+      return 4.0;
+    }
+    if (look === 'library') {
+      // the research library: a tall shelf of glowing data books along the back wall with its ladder, an orb of
+      // knowledge on its pedestal, an armchair by it
+      var sh = fb(X(4.25), Y(0.25), 0.1, 2.6, 0.5, 1.22, '#2a3644', '#1d2631', '#151c24'), cols = ['#24e8ff', '#5b9bff', '#38f5b8', '#9fe8ff'];
+      sh += '<g transform="' + onBack(x0, 4.3, y0 + 0.75, 1.28) + '">';
+      for (var r = 0; r < 4; r++) {
+        sh += '<rect x="0" y="' + f1(3.6 + r * 6) + '" width="56" height=".7" fill="#0d141c"/>';
+        for (var b = 0; b < 14; b++) {
+          var bh = 3 + ((r * 5 + b * 3) % 3) * 0.7;
+          sh += '<rect x="' + f1(1 + b * 3.9) + '" y="' + f1(3.6 + r * 6 - bh) + '" width="2.6" height="' + f1(bh) + '" fill="' + cols[(r + b) % 4] + '" opacity="' + (0.55 + ((b * 7) % 4) * 0.1).toFixed(2) + '"/>';
+        }
+      }
+      sh += '</g>' + line(P(X(6.2), Y(0.85), 0.1), P(X(6.45), Y(0.78), 1.3), '#b48a4a', 1.2) + line(P(X(6.5), Y(0.95), 0.1), P(X(6.75), Y(0.88), 1.3), '#b48a4a', 1.2);
+      add(X(5.6), Y(0.8), sh);
+      var orb = cyl(X(5.6), Y(5.4), 0.1, 0.6, 0.3, L.white, L.white2, L.white3), oc = P(X(5.6), Y(5.4), 0.95);
+      orb += '<circle cx="' + f1(oc[0]) + '" cy="' + f1(oc[1]) + '" r="16" fill="url(#g-halo-c)" opacity=".35"/>' +
+        '<circle class="holo-core" cx="' + f1(oc[0]) + '" cy="' + f1(oc[1]) + '" r="6.4" fill="#9ff4ff" opacity=".85" filter="url(#glowS)"/>' +
+        '<ellipse cx="' + f1(oc[0]) + '" cy="' + f1(oc[1]) + '" rx="10" ry="3.2" fill="none" stroke="#24e8ff" stroke-width=".7" opacity=".8"/>';
+      add(X(5.6), Y(5.4), orb);
+      add(X(6.4), Y(6.35), fb(X(6.0), Y(6.0), 0.1, 0.8, 0.7, 0.3, '#3a4756', '#2a3644', '#1d2631') + fb(X(6.62), Y(6.0), 0.4, 0.18, 0.7, 0.42, '#3a4756', '#2a3644', '#1d2631'));
+      return 4.0;
+    }
+    if (look === 'workshop') {
+      // the workshop: a bench under a pegboard of tools along the back wall, a wall of parts bins by the right wall,
+      // a robot arm at work in its taped cell
+      var pb = poly([P(X(4.25), Y(0.13), WS0), P(X(6.85), Y(0.13), WS0), P(X(6.85), Y(0.13), WS1 + 0.06), P(X(4.25), Y(0.13), WS1 + 0.06)], '#1a2430', '#2a3644', 0.8);
+      pb += '<g transform="' + onBack(x0, 4.25, y0 + 0.13, WS1 + 0.06) + '">';
+      for (var py = 2; py < 14; py += 2.4) for (var px = 2; px < 56; px += 2.4) pb += '<circle cx="' + f1(px) + '" cy="' + f1(py) + '" r=".3" fill="#0b1118"/>';
+      pb += '<path d="M8 3v8 M14 3l4 7 M24 3v6 M23 9h2 M34 4l-3 6 M44 3v9 M43 3h2" stroke="#c6cfd7" stroke-width="1" fill="none"/><rect x="48" y="4" width="5" height="4" fill="#24e8ff" opacity=".7"/></g>';
+      wall(pb);
+      add(X(5.5), Y(0.75), fb(X(4.3), Y(0.3), 0.1, 2.5, 0.75, 0.46, L.deskTop, L.desk, L.deskR) + fb(X(4.6), Y(0.45), 0.56, 0.5, 0.3, 0.12, '#56626e', '#3a4756', '#2a3644') +
+        fb(X(5.6), Y(0.4), 0.56, 0.7, 0.45, 0.08, '#24e8ff', '#1aa0b8', '#147a8c'));
+      var bins = fb(X(6.3), Y(2.6), 0.1, 0.5, 1.9, 1.05, '#24303c', '#151d26', '#10171f') + '<g transform="' + onSide(X(6.3), Y(2.6), 0.1, 1.1) + '">';
+      for (var br = 0; br < 4; br++) for (var bc = 0; bc < 5; bc++) bins += '<rect x="' + f1(2 + bc * 8) + '" y="' + f1(2.5 + br * 5.2) + '" width="6.4" height="3.6" rx=".5" fill="' + ['#2a6aa8', '#1c9cb4', '#38a878', '#56626e'][(br + bc) % 4] + '"/>';
+      add(X(6.6), Y(3.5), bins + '</g>');
+      var cell = '';
+      [[4.9, 4.9, 6.7, 4.9], [6.7, 4.9, 6.7, 6.7], [6.7, 6.7, 4.9, 6.7], [4.9, 6.7, 4.9, 4.9]].forEach(function (s) { cell += line(P(X(s[0]), Y(s[1]), 0.11), P(X(s[2]), Y(s[3]), 0.11), '#24e8ff', 1.4, ' stroke-dasharray="4 3" opacity=".7"'); });
+      add(X(5.0), Y(5.0), cell);
+      var a0 = P(X(5.8), Y(5.8), 0.3), a1 = P(X(5.5), Y(5.6), 1.0), a2 = P(X(5.1), Y(5.9), 0.75);
+      add(X(5.8), Y(5.8), cyl(X(5.8), Y(5.8), 0.1, 0.3, 0.32, L.white, L.white2, L.white3) +
+        line(a0, a1, L.white, 4.6, ' stroke-linecap="round"') + line(a1, a2, L.white2, 3.6, ' stroke-linecap="round"') +
+        '<circle cx="' + f1(a1[0]) + '" cy="' + f1(a1[1]) + '" r="2.6" fill="#24e8ff"/><circle cx="' + f1(a2[0]) + '" cy="' + f1(a2[1]) + '" r="1.8" fill="#38f5b8" filter="url(#glowS)"/>');
+      return 4.0;
+    }
+    if (look === 'command') {
+      // the command center: a holographic table with a tactical map, its targets' beams and a globe over it, two
+      // consoles round it
+      var cx = X(5.3), cy = Y(5.3), tb = cyl(cx, cy, 0.1, 0.48, 1.05, '#16222e', '#111a24', '#2b3846');
+      tb += disc(cx, cy, 0.49, 1.0, 'rgba(36, 232, 255, .18)', '#24e8ff', 1.1);
+      for (var g = -0.6; g <= 0.61; g += 0.3) tb += line(P(cx + g, cy - 0.8, 0.5), P(cx + g, cy + 0.8, 0.5), '#24e8ff', 0.4, ' opacity=".35"') + line(P(cx - 0.8, cy + g, 0.5), P(cx + 0.8, cy + g, 0.5), '#24e8ff', 0.4, ' opacity=".35"');
+      [[-0.4, -0.2], [0.35, 0.3], [0.1, -0.5]].forEach(function (t) { tb += line(P(cx + t[0], cy + t[1], 0.5), P(cx + t[0], cy + t[1], 1.3), '#38f5b8', 1.2, ' opacity=".7" filter="url(#glowS)"'); });
+      var gc = P(cx, cy, 1.55);
+      tb += '<g class="holo"><circle cx="' + f1(gc[0]) + '" cy="' + f1(gc[1]) + '" r="9" fill="rgba(36, 232, 255, .12)" stroke="#9ff4ff" stroke-width=".8"/>' +
+        '<ellipse cx="' + f1(gc[0]) + '" cy="' + f1(gc[1]) + '" rx="9" ry="3" fill="none" stroke="#24e8ff" stroke-width=".6"/>' +
+        '<ellipse cx="' + f1(gc[0]) + '" cy="' + f1(gc[1]) + '" rx="3.4" ry="9" fill="none" stroke="#24e8ff" stroke-width=".6"/></g>' + disc(cx, cy, 1.0, 1.4, 'none', '#24e8ff', 3, ' opacity=".25" filter="url(#glow2)"');
+      add(cx, cy, tb);
+      add(X(4.95), Y(0.75), console3(X(4.3), Y(0.3))); add(X(6.35), Y(0.75), console3(X(5.7), Y(0.3)));
+      return 4.0;
+    }
+    // the greenhouse: a hydroponic rack of plants under violet-pink grow lights along the back wall, an island of
+    // gutters by the right wall, planters in the front corner
+    var gr = fb(X(4.25), Y(0.25), 0.1, 2.6, 0.55, 1.2, '#2a3644', '#1d2631', '#151c24');
+    [0.42, 0.78, 1.14].forEach(function (z) {
+      gr += poly([P(X(4.3), Y(0.8), z + 0.05), P(X(6.8), Y(0.8), z + 0.05), P(X(6.8), Y(0.8), z + 0.02), P(X(4.3), Y(0.8), z + 0.02)], '#e07ae8', null, 0, 0.9, ' filter="url(#glowS)"');
+      for (var p = 0; p < 6; p++) { var pc = P(X(4.5 + p * 0.42), Y(0.62), z - 0.22); gr += '<circle cx="' + f1(pc[0]) + '" cy="' + f1(pc[1]) + '" r="3.2" fill="' + (p % 2 ? '#2e875f' : '#349466') + '"/>'; }
+    });
+    gr += disc(X(5.55), Y(1.2), 0.1, 1.4, 'rgba(224, 122, 232, .1)');
+    add(X(5.6), Y(0.8), gr);
+    var isl = fb(X(5.9), Y(3.0), 0.1, 0.8, 2.6, 0.42, '#3a4756', '#2a3644', '#1d2631');
+    for (var q = 0; q < 6; q++) { var qc = P(X(6.3), Y(3.25 + q * 0.42), 0.6); isl += '<circle cx="' + f1(qc[0]) + '" cy="' + f1(qc[1]) + '" r="3.6" fill="' + ['#22684a', '#2e875f', '#349466'][q % 3] + '"/>'; }
+    add(X(6.3), Y(4.3), isl);
+    add(X(5.6), Y(6.3), plant(X(5.6), Y(6.3), 1.1)); add(X(6.5), Y(5.7), plant(X(6.5), Y(5.7), 0.85));
+    return 4.0;
+  }
   // The Manager's room: consoles along both back walls under its screens, cyan light on the floor round a dark
   // dais -- a wide disc with a pale rim, a drum with a cyan lip -- a white-hot core over it in a column of light,
   // three rings of light over that, smaller as they rise; the Manager standing in front.
@@ -783,7 +896,7 @@
     }
     add(cx, cy, d);
     this.hubTop = P(x0 + 3.0, y0 + 2.8, 2.75);
-    add(x0 + 3.8, y0 + 5.85, agentAt(x0 + 3.8, y0 + 5.85, 'hub', 0, 'Manager'));
+    add(x0 + 3.8, y0 + 5.85, agentAt(x0 + 3.8, y0 + 5.85, 'hub', 0, 'Manager', 'manager'));
     add(x0 + 6.4, y0 + 0.5, plant(x0 + 6.4, y0 + 0.5));
     return out + sortJoin(items) + shellFront(x0, y0);
   };
@@ -794,7 +907,7 @@
     out += '<g class="scr" data-u0="3.4" data-u1="6.6"></g>';
     add(x0 + 0.9, y0 + 0.66, console3(x0 + 0.3, y0 + 0.3)); add(x0 + 2.3, y0 + 0.66, console3(x0 + 1.7, y0 + 0.3));
     add(x0 + 3.95, y0 + 3.18, desk(x0 + 3.0, y0 + 2.75, 0));
-    add(x0 + 3.95, y0 + 4.05, agentAt(x0 + 3.95, y0 + 4.05, 'audit', 0, 'Supervisor'));
+    add(x0 + 3.95, y0 + 4.05, agentAt(x0 + 3.95, y0 + 4.05, 'audit', 0, 'Supervisor', 'supervisor'));
     add(x0 + 0.85, y0 + 4.8, printer(x0 + 0.35, y0 + 4.4));
     add(x0 + 6.67, y0 + 3.7, cabinet(x0 + 6.45, y0 + 2.6, 0.45, 2.2, 0.62));
     add(x0 + 6.5, y0 + 6.5, plant(x0 + 6.5, y0 + 6.5));
@@ -887,17 +1000,19 @@
       g.setAttribute('class', 'room st-' + st + (extra || '') + (self.sel === k ? ' sel' : '') + (g.classList.contains('born') ? ' born' : '') + (g.classList.contains('hover') ? ' hover' : ''));
     };
     var paint = function (el, html) { if (el && el._h !== html) { el._h = html; el.innerHTML = html; } };
-    var turnsBy = {};
+    var turnsBy = {}, have = {};
     S.strip.forEach(function (c) { turnsBy[c.dept_id] = (turnsBy[c.dept_id] || 0) + 1; });
+    Object.keys(cells).forEach(function (k) { have[cells[k][0] + ',' + cells[k][1]] = 1; });
     var anyWork = false;
     S.departments.forEach(function (d) {
       var key = 'd' + d.id, g = ex(key); if (!g) return;
-      var v = CO.deptView(d), ln = CO.deptLine(d, v), st = ln.tone === 'red' ? 'waiting' : v.status, orange = d.key === 'trading_desk';
+      // orange only while it waits on the owner ("oranzove sviti jen roomka ktera chce pozornost moji, needs you")
+      var v = CO.deptView(d), ln = CO.deptLine(d, v), st = ln.tone === 'red' ? 'waiting' : v.status;
       var x0 = cells[key][0], y0 = cells[key][1];
       if (v.status === 'working') anyWork = true;
-      setCls(g, key, st, orange ? ' orange' : '');
-      var dot = orange && st !== 'working' ? STC.waiting : (STC[st] || STC.idle);
-      var col = orange && st !== 'working' ? TONEC.red : st === 'queued' ? TONEC.dim : dot, title, sub, mode;
+      setCls(g, key, st, '');
+      var dot = STC[st] || STC.idle;
+      var col = st === 'queued' ? TONEC.dim : dot, title, sub, mode;
       // the wall screen says what the plate says, a little longer: never passes or attempts
       if (v.running) { title = v.running.title; sub = CO.expertName(v.running.expert) + ' is on it'; mode = 'run'; }
       else if (v.waiting) { title = 'Needs you'; sub = 'approve or reject on the right'; mode = 'full'; col = STC.waiting; }
@@ -912,16 +1027,8 @@
         var ag = g.querySelector('.agent[data-agent="' + key + ':' + i + '"]');
         if (ag) { ag.classList.toggle('working', e.state === 'working'); ag.classList.toggle('idle', e.state !== 'working'); }
       });
-      // the plate says who and what it is doing, in one word or two; the counts live one click away
-      var n = d.et10 || 0, et = null, pa = P(x0 + 4.4, y0 + 5.6, 1.3);
-      if (d.files_as) {
-        var last = (self.lastEt || (self.lastEt = {}))[d.id];
-        et = { n: n, fresh: last != null && n > last };
-        self.lastEt[d.id] = n;
-      }
-      var hot = ln.tone === 'red' || orange;
-      over += plate(pa[0], pa[1], key, d.name.toUpperCase(), hot ? STC.waiting : dot, ln.short, orange && ln.tone !== 'cyan' ? TONEC.red : (TONEC[ln.tone] || TONEC.dim),
-        hot ? STC.waiting : col, v.status === 'working', et);
+      // its name on its front glass; what it does is on its wall screen and one click away
+      over += glassSign(cells[key], key, d.name, d, have, st);
     });
     // the Manager's room
     var hub = ex('hub');
@@ -940,8 +1047,7 @@
       // over the rings: what needs the owner, or that nothing does
       var ht = this.hubTop, na = S.approvals.length;
       if (ht) over += needPill(ht[0], ht[1] - 10, na ? na + (CO.RO ? ' WAIT FOR ITS OWNER' : na === 1 ? ' NEEDS YOU' : ' NEED ATTENTION') : 'ALL CLEAR', na > 0);
-      var mp = P(hx + 6.1, hy + 6.75, 1.3), mc = paused ? L.dim2 : L.hub;
-      over += plate(mp[0], mp[1], 'hub', 'MANAGER', mc, paused ? 'Paused' : (CO.RO ? 'Its chat' : 'Your chat') + ' · runs it all', paused ? L.dim : L.hub, mc, !paused && anyWork);
+      over += glassSign(cells.hub, 'hub', 'Command', 'hub', have, paused ? 'idle' : anyWork ? 'working' : 'idle');
     }
     var au = ex('audit');
     if (au) {
@@ -949,19 +1055,21 @@
       setCls(au, 'audit', 'idle');
       var as = au.querySelector('.scr');
       paint(as, wallScreen(ax, ay, +as.getAttribute('data-u0'), +as.getAttribute('data-u1'), 'Weekly audit: next in ' + days + 'd', nf + ' findings last week', STC.idle, ''));
-      var ap = P(ax + 4.4, ay + 5.6, 1.3);
-      over += plate(ap[0], ap[1], 'audit', 'WEEKLY AUDIT', STC.idle, 'next in ' + days + (days === 1 ? ' day' : ' days'), L.dim, STC.idle, false);
+      over += glassSign(cells.audit, 'audit', 'Operations', 'audit', have, 'idle');
     }
-    // the vault: what it holds is seen only by clicking it (the right column then opens it), so its plate names it
-    // and nothing more, as in 3D; a visitor finds the plinth bare
+    // the Treasury: its name on its glass, and over its plinth what it holds, ET10 and USDC lit ("v cedulce Vaultu by
+    // melo svitit kolik tam je"); a visitor finds it private and the plinth bare
     var vr = ex('vault');
     if (vr) {
       var VT = CO.vaultTotals(), priv = !!CO.RO, vkey = priv ? 'priv' : Math.round(VT.et10) + '|' + VT.usdc.toFixed(2);
       setCls(vr, 'vault', 'idle', priv ? ' closed' : '');
       var pg = vr.querySelector('.piles');
       if (pg._k !== vkey) { pg._k = vkey; pg.innerHTML = priv ? '' : vaultPiles(cells.vault[0], cells.vault[1], VT); }
-      var vp = P(cells.vault[0] + 4.4, cells.vault[1] + 5.65, 1.35);
-      over += plate(vp[0], vp[1], 'vault', 'VAULT', STC.idle, priv ? 'Private' : 'Earnings', L.dim, STC.idle, false);
+      over += glassSign(cells.vault, 'vault', 'Treasury', 'vault', have, 'idle');
+      if (!priv) {
+        var vp = P(cells.vault[0] + 5.2, cells.vault[1] + 2.6, 1.05);   // over the plinth's back, clear of the name on the glass
+        over += amountPill(vp[0], vp[1], 'vault', [[CO.fmtEt(VT.et10), '#38f5b8', 1], [' ET10 · ', L.dim], [CO.fmtUsd(VT.usdc), '#8fbaff', 1], [' USDC', L.dim]]);
+      }
     }
     // the selection ring lies on the floor, just under the selected room: walls, people and plates stay above it
     var oldRing = this.gRooms.querySelector('.selring');
@@ -1225,9 +1333,53 @@
   };
   Office.prototype.hideTip = function () { if (this.tip) this.tip.hidden = true; };
 
+  /* ---------------- one room on its own: the Add-a-department dialog in the flat office ---------------- */
+  // A department's room as this office draws it (deptRoom: its furniture, its look, its astronauts by role), on a slab
+  // of deck and a slice of hull of its own, at work: its wall screen naming it, the first task on its board, its desks'
+  // screens lit, its people working. An SVG of its own with the office's defs; still: no animation (a card's picture).
+  function roomArt(d, opts) {
+    opts = opts || {};
+    var dd = { id: 'pv', key: d.key || 'custom', name: d.name || '', experts: (d.experts || []).slice(), look: d.look || null, run_kind: null, link: null };
+    var n = dd.experts.length, title = String(dd.name || '').trim() || 'New department';
+    var inner = Office.prototype.deptRoom.call(null, dd, 0, 0)
+      .replace(/class="mon"/g, 'class="mon on"').replace(/class="spill"/g, 'class="spill on"').replace(/class="agent idle"/g, 'class="agent working"')
+      .replace(/<g class="scr" data-u0="([\d.]+)" data-u1="([\d.]+)"><\/g>/, function (m, u0, u1) {
+        return '<g class="scr">' + wallScreen(0, 0, +u0, +u1, title, n + (n === 1 ? ' expert' : ' experts') + ' · first task queued', L.neon, 'full') + '</g>';
+      })
+      .replace(/<g class="kb" data-v0="([\d.]+)" data-v1="([\d.]+)"><\/g>/, function (m, v0, v1) { return '<g class="kb">' + kanban(0, 0, { queued: 1, running: 0, done: 0, failed: 0 }, +v0, +v1) + '</g>'; });
+    // under it: the deck's slab with its lit rim, a hull a little lower than the office's and its keel, a glow below
+    var pad = 0.5, x0 = -pad, y0 = -pad, x1 = RS + pad, y1 = RS + pad, zt = -T - 0.12, HDp = 1.0, K = 0.35, R = rng(41);
+    var ax = x0 + 0.12, ay = y0 + 0.12, bx = x1 - 0.12, by = y1 - 0.12, gc = P(RS / 2, RS / 2, zt - HDp - K - 0.6);
+    var base = '<ellipse cx="' + f1(gc[0]) + '" cy="' + f1(gc[1]) + '" rx="' + f1(RS * SC * 1.05) + '" ry="' + f1(RS * SC * 0.5) + '" fill="url(#g-halo-g)" opacity=".16"/>' +
+      box(x0 + 0.7, y0 + 0.7, zt - HDp - K, x1 - x0 - 1.4, y1 - y0 - 1.4, K, L.keelL, L.keelL, L.keelR) +
+      box(ax, ay, zt - HDp, bx - ax, by - ay, HDp, L.hullTop, 'url(#g-hullL)', 'url(#g-hullR)') +
+      hullFace(onBack(ax, 0, by, zt), (bx - ax) * SC, HDp * SC, R, false) + hullFace(onSide(bx, ay, 0, zt), (by - ay) * SC, HDp * SC, R, true) +
+      box(x0, y0, -T, x1 - x0, y1 - y0, T, L.deckSeam, L.rimL, L.rimR) + deckPanels(x0, y0, x1 - x0, rng(23));
+    [[x0, y1, x1, y1], [x1, y0, x1, y1], [x0, y0, x1, y0], [x0, y0, x0, y1]].forEach(function (s) { base += line(P(s[0], s[1], 0), P(s[2], s[3], 0), L.rimHi, 1.1, ' stroke-linecap="round"'); });
+    var a = P(RS / 2 - 0.42, y1, -T * 0.55), b = P(RS / 2 + 0.42, y1, -T * 0.55);
+    base += line(a, b, '#24e8ff', 3.2, ' opacity=".35" filter="url(#glow2)"') + line(a, b, '#7ff0ff', 1.3, ' stroke-linecap="round"');
+    // its frame: the back corner's top, the left and right corners, the keel's foot, the glow under it
+    var top = P(0, 0, WZ + 0.35)[1] - 6, left = P(x0, y1, 0)[0] - 8, right = P(x1, y0, 0)[0] + 8;
+    var bot = Math.max(P(x1 - 0.7, y1 - 0.7, zt - HDp - K)[1], P(bx, by, zt - HDp)[1]) + 12;
+    var vb = f1(left) + ' ' + f1(top) + ' ' + f1(right - left) + ' ' + f1(bot - top);
+    return '<svg class="office roomart' + (opts.still ? ' still' : '') + '" viewBox="' + vb + '" preserveAspectRatio="xMidYMid meet" xmlns="' + NS + '">' + DEFS +
+      base + '<g class="room st-working" data-key="pv">' + inner + '</g></svg>';
+  }
+  // an expert as this office's astronaut of its role, on a disc of deck ringed in the role's colour
+  function astroArt(role, still) {
+    var col = (CO.EXPERT_INFO && CO.EXPERT_INFO[role] && CO.EXPERT_INFO[role].col) || '#00cfff';
+    return '<svg class="office astroart' + (still ? ' still' : '') + '" viewBox="-30 -36 60 45" preserveAspectRatio="xMidYMid meet" xmlns="' + NS + '">' + DEFS +
+      '<ellipse cx="0" cy="2" rx="27" ry="9" fill="' + col + '" opacity=".12"/>' +
+      '<ellipse cx="0" cy="1.6" rx="17" ry="6.4" fill="#121b25"/><ellipse cx="0" cy="0" rx="17" ry="6.2" fill="#1b2632" stroke="' + col + '" stroke-width="1.2"/>' +
+      '<ellipse cx="0" cy="0" rx="17" ry="6.2" fill="none" stroke="' + col + '" stroke-width="3" opacity=".3" filter="url(#glow2)"/>' +
+      '<g class="agent working" transform="translate(0 0)">' + avatar('', role) + '</g></svg>';
+  }
+  var STARS = null;
+  function stars() { if (STARS === null) { try { STARS = starTile(); } catch (e) { STARS = 'none'; } } return STARS; }
+
   // the same projection and palette for the Universe map and the building pictures
   CO.iso = { SC: SC, C30: C30, S30: S30, C: C, P: P, f1: f1, pts: pts, esc: esc, poly: poly, box: box, text: text,
-    onBack: onBack, onSide: onSide, cut: cut, plant: plant,
+    onBack: onBack, onSide: onSide, cut: cut, plant: plant, roomArt: roomArt, astroArt: astroArt, stars: stars,
     // the office's floor plan for the 3D office: the same rooms in the same places, the same corridors
     route: route, SLOTS: SLOTS, HUB: HUB, AUDIT: AUDIT, VAULT: VAULT, RS: RS };
 })();

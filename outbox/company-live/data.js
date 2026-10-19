@@ -6,12 +6,36 @@
   var CO = window.CO = window.CO || {};
   var MIN = 60000, H = 60 * MIN;
 
+  // The experts as Cymetica has them live, word for word (GET https://cymetica.com/api/v1/company/templates, read
+  // 2026-10-19): what each does, its brief, the departments it fits, its tools and what it can and cannot do. The same
+  // seven are live; every one of them waits for the owner before any trade, spend, publication or submission.
+  var WEB = 'Can open and read public web pages (WebFetch).',
+    NOWEB = 'Has no web tool: works from the task brief, the company memory and the finished work handed over by other departments.',
+    ASKS = "Cannot place a trade, spend, publish or submit anything itself: such an action waits for the owner's approval.";
   CO.EXPERTS = [
-    { key: 'qa_tester', name: 'QA tester' }, { key: 'researcher', name: 'Researcher' },
-    { key: 'trader', name: 'Trader' }, { key: 'developer', name: 'Developer' },
-    { key: 'lab_scientist', name: 'Lab scientist' }, { key: 'auditor', name: 'Auditor' },
-    { key: 'designer', name: 'Designer' }
+    { key: 'qa_tester', name: 'QA tester', fits: ['testing', 'testing_lab', 'development'], tools: ['WebFetch'], capabilities: [WEB, ASKS],
+      description: 'Tests Cymetica the way a stranger would, from public pages and the public API, and writes precise bug reports.',
+      brief: 'You test Cymetica products the way a stranger would: only the public pages and public API. You write precise bug reports: what you did, what you expected, what happened, the URL.' },
+    { key: 'researcher', name: 'Researcher', fits: ['development', 'testing_lab', 'trading_desk'], tools: ['WebFetch'], capabilities: [WEB, ASKS],
+      description: 'Reads before anyone builds or trades: what exists, what users ask for, what the evidence says, with sources cited.',
+      brief: 'You research before anyone builds or trades: what exists, what users ask for, what the evidence says. You cite the page you read and never state a number you did not read.' },
+    { key: 'trader', name: 'Trader', fits: ['trading_desk', 'testing_lab'], tools: [], capabilities: [NOWEB, ASKS],
+      description: 'Looks for repeatable ways to make money on Cymetica and turns each idea into a paper experiment with its success rule fixed first.',
+      brief: 'You look for repeatable ways to make money on Cymetica and prove them on paper first. Every idea becomes a paper experiment with its success rule written before it starts.' },
+    { key: 'developer', name: 'Developer', fits: ['development'], tools: [], capabilities: [NOWEB, ASKS],
+      description: 'Turns an idea into a drafted Build it Better request with a clear spec; the owner approves before anything is submitted.',
+      brief: 'You turn an idea into a Build it Better request: the app, what to improve, and a clear spec (idea, spec, design, build, test, release, monitor, iterate).' },
+    { key: 'lab_scientist', name: 'Lab scientist', fits: ['testing_lab', 'trading_desk'], tools: [], capabilities: [NOWEB, ASKS],
+      description: 'Designs paper experiments (one asset, one direction, a threshold and a window) judged later from real prices.',
+      brief: 'You design paper experiments: one asset, one direction, a threshold and a window, fixed before the start. Results are judged later from real prices, never guessed.' },
+    { key: 'auditor', name: 'Auditor', fits: ['testing', 'testing_lab', 'development', 'trading_desk', 'design'], tools: ['WebFetch'], capabilities: [WEB, ASKS],
+      description: 'Department-level evidence review: sits inside one department and checks its finished work against the pages and data it cites before that work reaches the Manager. Not the built-in weekly audit, which is the company-wide scheduled review by the built-in supervisor.',
+      brief: "You review your department's finished work before it reaches the Manager: check every claim against the page or data it cites, mark any number nobody read as unverified, name duplicated or wasted effort and stuck steps, and propose one concrete fix for each. You never pass work you could not verify." },
+    { key: 'designer', name: 'Designer', fits: ['design', 'development'], tools: ['WebFetch'], capabilities: [WEB, ASKS],
+      description: "Writes screen-by-screen design briefs and reviews live pages against their brief, within the site's own palette and type.",
+      brief: "You design the look of a page or product: layout, hierarchy of copy, states, mobile first, within the site's own palette and type. You write a screen-by-screen brief a developer can build from, and you review a live page against its brief, pixel by pixel, naming each gap with the URL." }
   ];
+  CO.expert = function (k) { for (var i = 0; i < CO.EXPERTS.length; i++) if (CO.EXPERTS[i].key === k) return CO.EXPERTS[i]; return null; };
   CO.expertName = function (k) {
     for (var i = 0; i < CO.EXPERTS.length; i++) if (CO.EXPERTS[i].key === k) return CO.EXPERTS[i].name;
     return k;
@@ -412,34 +436,19 @@
     departments: [
       { key: 'testing', name: 'Cymetica QA', experts: ['qa_tester', 'auditor'], runs: 2,
         products: ['Build it Better', 'Fund Launcher', 'Gem Screener', 'Agent Tournaments', 'Supply Analyzer', 'Chart Analyzer'] },
-      { key: 'testing_lab', name: 'Laboratory', experts: ['lab_scientist', 'researcher'],
+      { key: 'testing_lab', name: 'Quant Lab', experts: ['lab_scientist', 'researcher'],
         charter: "Prove on paper what makes money on Cymetica.\n" +
           "- Ask NEXUS first: their AI gives the guidance on what to trade; our own ideas are tried and measured, never trusted ahead of it.\n" +
           "- Rooms on paper: event cards, cloned bots, grid, head-to-head, memecoins.\n" +
           "- Set the success rule before a room opens; judge it when its window closes.\n" +
           "- Keep the winners, archive the losers with the reason.\n" +
           "- Paper only. Anything with real money waits for my approval." },
-      { key: 'trading_desk', name: 'Trading desk', experts: ['trader', 'researcher'] },
-      { key: 'custom', name: 'Outsider', experts: ['researcher'], runs: 1, run_kind: 'stranger', products: ['cymetica.com'],
-        link: { url: 'https://cymetica.com', label: 'cymetica.com, as a stranger sees it' },
-        charter: "Once a day, meet Cymetica as a stranger who has never seen it.\n" +
-          "- Open the home page, follow what it promises, and try one thing an agent or a degen would do.\n" +
-          "- Every place that confuses, misleads or breaks is one line with its page.\n" +
-          "- Hand each problem to Cymetica QA; never file it yourself.\n" +
-          "- Never read our own notes first: a stranger knows only what the site says." },
-      { key: 'custom', name: 'Agent League', experts: ['researcher'], runs: 12, run_kind: 'league',
-        link: { url: 'https://cymetica.com/agent-league', label: 'Agent League' },
-        charter: "Play the Agent League as our player.\n" +
-          "- Every two hours, answer the open puzzles that are exact arithmetic on their snapshot: sequence similarity and CEX-DEX arbitrage.\n" +
-          "- The reasoning is the computation itself: the data used, the real figures, what was rejected and why.\n" +
-          "- Nothing is sent whose answer falls outside the puzzle's stated range.\n" +
-          "- Forecasts are left alone until our answers show we score.\n" +
-          "- Prizes are ET10 to me; this month's are capped." }
+      { key: 'trading_desk', name: 'Trading desk', experts: ['trader', 'researcher'] }
     ],
     rules: [
       ['a bug is found anywhere', 'Cymetica QA', 'verifies it and files it as expire76'],
       ['a new build is released', 'Cymetica QA', 'tests it the same day and reports what is broken'],
-      ['someone finds a way to make money', 'Laboratory', 'proves it on paper first'],
+      ['someone finds a way to make money', 'Quant Lab', 'proves it on paper first'],
       ['an agent wins on paper', 'Trading desk', 'seats it at an Agent Tournaments table']
     ]
   };
