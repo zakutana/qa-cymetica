@@ -167,6 +167,16 @@ i.lk::before { content: ''; position: absolute; left: 1.5px; top: -5px; width: 6
 .o3layer .p3 .p3l { font: 500 12.5px 'JetBrains Mono'; margin-top: 3px; opacity: .85; }
 .o3layer .p3need { font: 600 14px 'Segoe UI', 'Inter', system-ui, sans-serif; letter-spacing: .06em; padding: 6px 16px; }
 .o3layer .p3lot { font: 600 12px 'Segoe UI', 'Inter', system-ui, sans-serif; letter-spacing: .08em; }
+/* the plates as callouts round the platform (callouts() in u3d.js): a thin line in each plate's colour from the
+   plate to its room, a dot where it meets the room; and the compact plate on a room's back-wall top corner when
+   there is no margin to stand in (a room open close up) */
+.o3layer .p3lines { position: absolute; left: 0; top: 0; width: 100%; height: 100%; overflow: visible; pointer-events: none; }
+.o3layer .p3lines path { fill: none; stroke-width: 1; stroke-opacity: .5; }
+.o3layer .p3lines circle { fill-opacity: .85; }
+.o3layer .p3.cmp { display: flex; align-items: baseline; gap: 8px; padding: 3px 9px 4px; border-radius: 6px; }
+.o3layer .p3.cmp .p3h { gap: 6px; }
+.o3layer .p3.cmp .p3h b { font-size: 11.5px; letter-spacing: .06em; }
+.o3layer .p3.cmp .p3l { margin-top: 0; font-size: 10.5px; }
 
 /* ---------- the visitor's frame ---------- */
 .robar { flex: none; display: flex; align-items: center; gap: 12px; padding: 7px 20px; border-bottom: 1px solid rgba(0, 207, 255, .35);
