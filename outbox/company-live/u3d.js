@@ -3078,7 +3078,8 @@ class Office3D {
     sit.visible = !standing; stand.visible = standing;
     const ringM = emis('#00e5ff', 0); const ring = new THREE.Mesh(G.ring, ringM); ring.rotation.x = Math.PI / 2; ring.scale.setScalar(0.4); ring.position.y = 0.02; g.add(ring);
     const el = document.createElement('div'); el.className = 'a3'; el.textContent = label; this.layer.appendChild(el);
-    const a = { g, b: up, by: standing ? 0.1 : 0, standing, sit, stand, visorM, chest, ring, ringM, el, home: g.position.clone(), phase: (i + r.x0 * 0.37) % 6.28, key: r.key + ':' + i, room: r, label };
+    // one sitting faces its desk; one standing faces the room and the camera (its visor looks down -z: turned 3/8 round)
+    const a = { g, b: up, by: standing ? 0.1 : 0, ry: standing ? (opts.face != null ? opts.face : -Math.PI * 0.75) : 0, standing, sit, stand, visorM, chest, ring, ringM, el, home: g.position.clone(), phase: (i + r.x0 * 0.37) % 6.28, key: r.key + ':' + i, room: r, label };
     r.agents.push(a); return a;
   }
   plate(r, cls) {
@@ -4500,7 +4501,7 @@ class Office3D {
         }
         const walking = !!a.walk && !a.standing;
         if (a.sit && !a.standing) { a.sit.visible = !walking; a.stand.visible = walking; }
-        if (a.walk) { const W3 = a.walk, dx = W3.to.x - W3.from.x, dz = W3.to.z - W3.from.z; a.g.rotation.y = (now - W3.t0) < W3.dur && Math.hypot(dx, dz) > 0.01 ? Math.atan2(-dx, -dz) : a.g.rotation.y; } else a.g.rotation.y = 0;
+        if (a.walk) { const W3 = a.walk, dx = W3.to.x - W3.from.x, dz = W3.to.z - W3.from.z; a.g.rotation.y = (now - W3.t0) < W3.dur && Math.hypot(dx, dz) > 0.01 ? Math.atan2(-dx, -dz) : a.g.rotation.y; } else a.g.rotation.y = a.ry || 0;
         a.b.position.y = a.by + (walking ? 0.1 : 0) + (a.working ? Math.abs(Math.sin(t * 7 + a.phase)) * 0.02 : 0);
         // an astronaut at work: its visor and its chest light go cyan
         a.visorM.emissiveIntensity = a.working ? 0.9 : 0.25; a.chest.material = a.working ? OM.cyan.glow : OM.pack;
