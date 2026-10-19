@@ -76,7 +76,7 @@
     CO.on('change', render);
     CO.on('tick', clock);
     render();
-    if (document.fonts && document.fonts.ready) document.fonts.ready.then(function () { office.fit(false); $('msgs').scrollTop = 1e6; });
+    if (document.fonts && document.fonts.ready) document.fonts.ready.then(function () { if (!office.moved && !office.sel) office.fit(false); $('msgs').scrollTop = 1e6; });
     window.addEventListener('resize', function () { $('msgs').scrollTop = 1e6; });
     if (CO.denied) setTimeout(function () { toast(CO.denied); }, 500);
     if (CO.MODE === 'new') setTimeout(createCompanyModal, 300);
