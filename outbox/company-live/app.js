@@ -875,7 +875,14 @@
   function closeModal() { $('modal').hidden = true; modalAct = null; drop3d(); }
   // the 3D dialog's live room: one renderer, let go whenever the dialog goes, however it goes
   var dlg3 = null;
-  function drop3d() { if (dlg3) { dlg3.dispose(); dlg3 = null; } }
+  function drop3d() { if (dlg3) { dlg3.dispose(); dlg3 = null; } holdOffice(false); }
+  // The 3D office stops drawing while the 3D dialog covers it (its last frame stays on its canvas): its own frames of
+  // 130-140 ms every few seconds (measured 2026-10-19) were the dialog's last stalls once its rooms were kept.
+  function holdOffice(on) {
+    var o = office3d; if (!o || !o.renderer) return;
+    if (on && o.frames && !o.held) { o.held = true; o.renderer.setAnimationLoop(null); }
+    else if (!on && o.held) { o.held = false; o.renderer.setAnimationLoop(function () { o.frame(); }); }
+  }
   var toastT = 0;
   function toast(text) {
     var t = $('toast'); t.textContent = text; t.hidden = false;
@@ -964,6 +971,7 @@
     }
     function draw3() {
       openModal(form3(), 'x3', act);
+      holdOffice(true);
       var mine = dlg3 = CO.U3.roomPreview($('d3-stage'));
       // its renderer would not start: the same form, flat, with what was already chosen
       mine.onFail = function () {
@@ -971,6 +979,11 @@
         dlg3 = null; o.name = $('df-name').value; o.charter = $('df-ch').value; o.experts = hiredKeys(); draw();
       };
       sync3(); shots();
+      // what a click can bring next, built while nothing happens: every department as its card staffs it, then every
+      // look of your own
+      var own = CO.TEMPLATES.filter(function (t) { return t.key === 'custom'; })[0] || { experts: ['researcher'] };
+      mine.ahead(CO.TEMPLATES.map(function (t) { return { key: t.key, experts: t.experts, look: t.key === 'custom' ? L[0].key : null }; })
+        .concat(L.map(function (l) { return { key: 'custom', experts: own.experts, look: l.key }; })));
     }
     function form3() {
       return '<div class="ad3"><div class="d3h"><h3>Add a department</h3><button class="btn" data-a="close">×</button></div>' +
@@ -1013,20 +1026,23 @@
     // the cards' 3D pictures, each drawn once and kept: they replace the flat ones as they come, the astronauts first
     // (quick to draw, and the chips of who works there wait for them)
     function shots() {
+      if (!dlg3) return;
       Array.prototype.forEach.call(document.querySelectorAll('#ex-track .xcard'), function (c) {
-        CO.U3.astroThumb(c.getAttribute('data-ex'), function (u) {
+        dlg3.shot('astro', c.getAttribute('data-ex'), function (u) {
           put(c.querySelector('.fig'), u);
           var h = $('df-hired'); if (u && dlg3 && h) h.innerHTML = hiredLine(hiredKeys());
         });
       });
-      Array.prototype.forEach.call(document.querySelectorAll('#tpl-track .tcard'), function (c) {
-        var k = c.getAttribute('data-tpl'); if (k === 'custom') return customShot();
-        CO.U3.roomThumb(k, null, function (u) { put(c.querySelector('.art'), u); });
+      CO.TEMPLATES.forEach(function (t) {
+        if (t.key === 'custom') return customShot();
+        var c = document.querySelector('#tpl-track .tcard[data-tpl="' + t.key + '"]');
+        dlg3.shot('room', { key: t.key, experts: t.experts }, function (u) { if (c) put(c.querySelector('.art'), u); });
       });
     }
     function customShot() {
-      var c = document.querySelector('#tpl-track .tcard[data-tpl="custom"]'), lk = o.look; if (!c) return;
-      CO.U3.roomThumb('custom', lk, function (u) { if (o.look === lk) put(c.querySelector('.art'), u); });
+      var c = document.querySelector('#tpl-track .tcard[data-tpl="custom"]'), lk = o.look, own = CO.TEMPLATES.filter(function (t) { return t.key === 'custom'; })[0];
+      if (!c || !dlg3 || !own) return;
+      dlg3.shot('room', { key: 'custom', experts: own.experts, look: lk }, function (u) { if (o.look === lk) put(c.querySelector('.art'), u); });
     }
     function put(box, u) { if (u && box && document.body.contains(box)) box.innerHTML = '<img alt="" src="' + u + '">'; }
     function pick(el) {
