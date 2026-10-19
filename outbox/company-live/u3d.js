@@ -2329,9 +2329,9 @@ function release(root) {
   });
 }
 function emis(hex, k) { return new THREE.MeshStandardMaterial({ color: 0x000000, emissive: new THREE.Color(hex), emissiveIntensity: k == null ? 1.4 : k, roughness: 1 }); }
-// The wall screens' measure: a face 0.5 high centred at 0.98, so with its bezel it ends at 1.27 -- under the back
-// walls' top neon (1.42 to 1.48) with a clear gap, as every screen in his picture.
-const RBW = { h: 0.5, mid: 0.98, top: 1.3 };
+// The wall screens' measure: a face 0.56 high from the wainscot up, centred at 0.96, so with its bezel it ends at
+// 1.28 -- under the back walls' top neon (1.42 to 1.48) with a clear gap, as every screen in his picture.
+const RBW = { h: 0.56, mid: 0.96, top: 1.3 };
 function screen(w, h) {
   const c = document.createElement('canvas'); c.width = Math.round(w * 256); c.height = Math.round(h * 256);
   const tex = new THREE.CanvasTexture(c); tex.colorSpace = THREE.SRGBColorSpace; tex.anisotropy = 8;
@@ -2387,6 +2387,113 @@ function drawKanban(s, counts) {
     }
   });
   s.tex.needsUpdate = true;
+}
+// The rooms' furniture and people as his picture has them, zoomed: near-black desks with a lighter top, one wide
+// monitor on a neck and a foot, a keyboard with its keys, a white mouse; black office chairs on five-star bases;
+// astronauts in white suits with glossy blue helmets; dark pots with a round bush. Made once, shared by every room.
+function rbMats() {
+  if (OM.rbDesk) return OM;
+  OM.rbBezel = OM.rbBezel || std({ color: 0x141b23, roughness: 0.38, metalness: 0.5 });
+  OM.rbDesk = std({ color: 0x141a21, roughness: 0.44, metalness: 0.32 });
+  OM.rbDeskTop = std({ color: 0x27303a, roughness: 0.3, metalness: 0.32 });
+  OM.rbSeam = std({ color: 0x06080b, roughness: 0.6, metalness: 0.2 });
+  OM.rbMetal = std({ color: 0x55606e, roughness: 0.28, metalness: 0.75 });
+  OM.rbGloss = std({ color: 0x0a0e13, roughness: 0.2, metalness: 0.55 });
+  OM.rbKeys = std({ map: rbKeysTex(), roughness: 0.55, metalness: 0.2 });
+  OM.rbMouse = std({ color: 0xd8e0e8, roughness: 0.35, metalness: 0.1 });
+  // his astronauts: white suits shaded blue-grey, a white pack, darker joints and soles, a glossy blue helmet over a
+  // near-black visor, a patch on the shoulder
+  OM.rbSuit = std({ color: 0x84a0be, roughness: 0.6, metalness: 0.06 });
+  OM.rbJoint = std({ color: 0x4c6480, roughness: 0.5, metalness: 0.12 });
+  OM.rbPack = std({ color: 0x9ab4cc, roughness: 0.5, metalness: 0.08 });
+  OM.rbCollar = std({ color: 0x9aa7b4, roughness: 0.28, metalness: 0.62 });
+  OM.rbHelmet = std({ color: 0x3a6a9c, roughness: 0.14, metalness: 0.42 });
+  OM.rbVisor = std({ color: 0x08142a, roughness: 0.06, metalness: 0.75, emissive: 0x0a2e5e, emissiveIntensity: 0.25 });
+  OM.rbSole = std({ color: 0x1a2129, roughness: 0.6, metalness: 0.2 });
+  OM.rbPatch = std({ color: 0xff8824, roughness: 0.5, emissive: 0xff8824, emissiveIntensity: 0.25 });
+  OM.rbChair = std({ color: 0x161c24, roughness: 0.52, metalness: 0.22 });
+  OM.rbChairMetal = std({ color: 0x2c3540, roughness: 0.3, metalness: 0.7 });
+  OM.rbPot = std({ color: 0x182029, roughness: 0.42, metalness: 0.32 });
+  OM.rbSoil = std({ color: 0x1c140e, roughness: 0.95 });
+  OM.rbLeaf = std({ color: 0x1e5c3c, roughness: 0.82, flatShading: true });
+  OM.rbLeaf2 = std({ color: 0x2a7448, roughness: 0.8, flatShading: true });
+  G.rbTorso = new THREE.CapsuleGeometry(0.165, 0.2, 6, 16);
+  G.rbArm = new THREE.CapsuleGeometry(0.056, 0.15, 4, 12);
+  G.rbFore = new THREE.CapsuleGeometry(0.05, 0.2, 4, 12);
+  G.rbThigh = new THREE.CapsuleGeometry(0.07, 0.2, 4, 12);
+  G.rbShin = new THREE.CapsuleGeometry(0.062, 0.3, 4, 12);
+  G.rbLeg = new THREE.CapsuleGeometry(0.07, 0.34, 4, 12);
+  G.rbPot = new THREE.CylinderGeometry(1, 0.8, 1, 28);
+  // a bush: a ball of leaves, its surface jittered so the flat shading reads as leaves catching the light
+  const bush = new THREE.IcosahedronGeometry(1, 3), p = bush.attributes.position, R = rng(17), seen = new Map();
+  for (let i = 0; i < p.count; i++) {
+    const k = p.getX(i).toFixed(3) + ',' + p.getY(i).toFixed(3) + ',' + p.getZ(i).toFixed(3);
+    let f = seen.get(k); if (f == null) { f = 0.9 + R() * 0.18; seen.set(k, f); }
+    p.setXYZ(i, p.getX(i) * f, p.getY(i) * f, p.getZ(i) * f);
+  }
+  bush.computeVertexNormals(); G.rbBush = bush;
+  return OM;
+}
+// Static parts of one piece merged by material, its direct children only: a desk, a chair or half an astronaut is a
+// handful of draw calls, not twenty. A part marked userData.dyn stays as it is: its material changes at run time,
+// or its geometry is dense enough that sharing it beats copying it.
+function rbBake(root) {
+  root.updateMatrixWorld(true);
+  const inv = root.matrixWorld.clone().invert(), bins = new Map();
+  root.children.slice().forEach((ch) => {
+    if (!ch.isMesh || ch.isInstancedMesh || ch.userData.dyn || Array.isArray(ch.material)) return;
+    const key = ch.material.uuid + (ch.geometry.index ? 'i' : 'n');
+    let bin = bins.get(key); if (!bin) bins.set(key, bin = { mat: ch.material, objs: [] });
+    bin.objs.push(ch);
+  });
+  bins.forEach((bin) => {
+    if (bin.objs.length < 2) return;
+    const geos = bin.objs.map((o) => { const g = o.geometry.clone(); g.clearGroups(); return g.applyMatrix4(new THREE.Matrix4().multiplyMatrices(inv, o.matrixWorld)); });
+    const merged = mergeGeometries(geos, false); geos.forEach((x) => x.dispose());
+    if (!merged) return;
+    const m = new THREE.Mesh(merged, bin.mat); m.userData.own = true;
+    m.castShadow = bin.objs.some((o) => o.castShadow); m.receiveShadow = bin.objs.some((o) => o.receiveShadow);
+    if (bin.objs.some((o) => o.userData.rbWall)) m.userData.rbWall = true;
+    bin.objs.forEach((o) => root.remove(o)); root.add(m);
+  });
+  return root;
+}
+// a keyboard's face: four rows of dark keys with a lighter top edge, a space bar
+function rbKeysTex() {
+  return TX.rbKeys || (TX.rbKeys = ctex(256, 72, (g, W, H) => {
+    g.fillStyle = '#0b1016'; g.fillRect(0, 0, W, H);
+    const rows = 4, kw = (W - 12) / 14, kh = (H - 10) / rows;
+    for (let r = 0; r < rows; r++) for (let c = 0; c < 14; c++) {
+      if (r === 3 && c > 3 && c < 10) { if (c === 4) { g.fillStyle = '#232c36'; g.fillRect(6 + c * kw + 1, 5 + r * kh + 1, kw * 6 - 2, kh - 3); } continue; }
+      g.fillStyle = '#232c36'; g.fillRect(6 + c * kw + 1, 5 + r * kh + 1, kw - 2, kh - 3);
+      g.fillStyle = '#3a4653'; g.fillRect(6 + c * kw + 1, 5 + r * kh + 1, kw - 2, 1.5);
+    }
+  }));
+}
+// his Agent League monitor: lines of green text on near-black, as a terminal shows them
+function rbTermTex() {
+  return TX.rbTerm || (TX.rbTerm = ctex(256, 144, (g, W, H) => {
+    const R = rng(23); g.fillStyle = '#03120d'; g.fillRect(0, 0, W, H);
+    g.fillStyle = '#38f5b8'; g.fillRect(12, 10, 64, 7);
+    for (let y = 26; y < H - 10; y += 10) {
+      let x = 12; while (x < W - 30) { const w = 8 + Math.floor(R() * 34); g.globalAlpha = 0.45 + R() * 0.5; g.fillRect(x, y, Math.min(w, W - 12 - x), 5); x += w + 6 + Math.floor(R() * 8); if (R() < 0.18) break; }
+    }
+    g.globalAlpha = 1;
+  }));
+}
+// the league's table on its standing board: ranks, a bar for each score, the leader lit
+function rbLeagueTex() {
+  return TX.rbLeague || (TX.rbLeague = ctex(256, 288, (g, W, H) => {
+    g.fillStyle = '#060b11'; g.fillRect(0, 0, W, H);
+    g.strokeStyle = 'rgba(176,196,208,.45)'; g.lineWidth = 3; g.strokeRect(6, 6, W - 12, H - 12);
+    g.fillStyle = '#38f5b8'; g.font = '700 22px JetBrains Mono, monospace'; g.textBaseline = 'top'; g.fillText('LEAGUE', 20, 20);
+    for (let i = 0; i < 8; i++) {
+      const y = 58 + i * 27, lead = i === 0;
+      g.fillStyle = lead ? 'rgba(56,245,184,.16)' : 'rgba(143,168,194,.05)'; g.fillRect(16, y - 3, W - 32, 22);
+      g.fillStyle = lead ? '#38f5b8' : '#8fa8c2'; g.font = '600 15px JetBrains Mono, monospace'; g.fillText(String(i + 1), 24, y);
+      g.fillStyle = lead ? '#38f5b8' : i < 3 ? '#24e8ff' : 'rgba(143,168,194,.55)'; g.fillRect(52, y + 4, (W - 120) * (1 - i * 0.1), 8);
+    }
+  }));
 }
 function candleTex() {
   if (TX.candle) return TX.candle;
@@ -2713,9 +2820,45 @@ class Office3D {
     });
     return face;
   }
-  // a desk facing the room: a top on two side panels and a drawer unit, two screens on stands, a keyboard, a mug
+  // His desk, zoomed: a near-black block with a lighter top -- a side panel, a modesty panel at the back and a
+  // pedestal of drawers on the right, room for the knees between -- one wide monitor on a neck and a foot, its glass
+  // dark until its expert works, a keyboard with its keys, a white mouse, a mug. Baked to a few draw calls. The
+  // trading desk keeps its own two screens (its room is drawn to his orange picture).
   desk(r, x, y, i, isOrange) {
-    const g = r.g;
+    if (isOrange) return this.deskTD(r, x, y, i);
+    rbMats();
+    const g = new THREE.Group(); r.g.add(g);
+    const league = r.dept && r.dept.run_kind === 'league';
+    this.rb(g, x - 0.03, y - 0.03, 0.5, 1.96, 0.91, 0.06, OM.rbDeskTop, 0.02);
+    this.rb(g, x + 0.01, y + 0.02, 0.1, 0.09, 0.82, 0.41, OM.rbDesk, 0.015);
+    this.rb(g, x + 0.08, y + 0.04, 0.16, 1.2, 0.07, 0.35, OM.rbDesk, 0.012);
+    this.rb(g, x + 1.26, y + 0.02, 0.1, 0.64, 0.82, 0.41, OM.rbDesk, 0.015);
+    this.box(g, x + 0.03, y + 0.06, 0.08, 0.05, 0.74, 0.03, OM.rbSeam);
+    this.box(g, x + 1.29, y + 0.06, 0.08, 0.58, 0.74, 0.03, OM.rbSeam);
+    // the pedestal's three drawers: seams and pulls on its front, the face the room sees
+    [0.235, 0.37].forEach((z) => this.box(g, x + 1.29, y + 0.835, z, 0.58, 0.008, 0.008, OM.rbSeam, false));
+    [0.18, 0.305, 0.44].forEach((z) => this.box(g, x + 1.46, y + 0.838, z, 0.24, 0.012, 0.016, OM.rbMetal, false));
+    // the monitor: a slim glossy bezel, its back housing, a neck and a foot
+    const mx = x + 1.08, my = y + 0.2;
+    this.rb(g, mx - 0.16, my - 0.1, 0.56, 0.32, 0.2, 0.018, OM.rbMetal, 0.008);
+    const neck = this.part(g, G.box, OM.rbMetal, 0.075, 0.17, 0.03, mx, 0.655, my - 0.02); neck.rotation.x = -0.1;
+    this.rb(g, mx - 0.25, my - 0.1, 0.76, 0.5, 0.06, 0.3, OM.rbGloss, 0.025);
+    this.rb(g, mx - 0.47, my - 0.04, 0.64, 0.94, 0.035, 0.56, OM.rbGloss, 0.012);
+    const scr = new THREE.MeshBasicMaterial({ map: league ? rbTermTex() : monTex(), color: new THREE.Color(0x0a1016), toneMapped: false });
+    const face = new THREE.Mesh(G.plane, scr); face.scale.set(0.88, 0.5, 1); face.position.copy(this.V(mx, my - 0.004, 0.92)); g.add(face);
+    // the keyboard near the desk's front, under the hands, its keys a texture; the mouse beside it, a mug
+    this.rb(g, mx - 0.36, y + 0.62, 0.56, 0.68, 0.2, 0.024, OM.rbGloss, 0.008);
+    const keys = new THREE.Mesh(G.plane, OM.rbKeys); keys.scale.set(0.64, 0.17, 1); keys.rotation.x = -Math.PI / 2; keys.position.copy(this.V(mx - 0.02, y + 0.72, 0.5855)); g.add(keys);
+    const mouse = this.part(g, G.sphere, OM.rbMouse, 0.04, 0.022, 0.062, mx + 0.47, 0.578, y + 0.72);
+    mouse.castShadow = false;
+    this.cyl(g, x + 1.78, y + 0.3, 0.56, 0.046, 0.1, OM.rbMouse);
+    rbBake(g);
+    r.mons[i] = scr;
+  }
+  // the trading desk's own: a top on two side panels and a drawer unit, two screens on stands (one of candles), a
+  // keyboard, a mug -- as it was, while that room is drawn to its picture
+  deskTD(r, x, y, i) {
+    const g = r.g, isOrange = true;
     this.rb(g, x + 0.02, y + 0.06, 0.08, 0.12, 0.72, 0.42, OM.desk, 0.03);
     this.rb(g, x + 1.76, y + 0.06, 0.08, 0.12, 0.72, 0.42, OM.desk, 0.03);
     this.rb(g, x + 1.12, y + 0.08, 0.08, 0.6, 0.68, 0.4, OM.desk, 0.03);
@@ -2733,35 +2876,55 @@ class Office3D {
     this.cyl(g, x + 1.62, y + 0.6, 0.56, 0.05, 0.1, OM.white);
     r.mons[i] = scr;
   }
-  // An astronaut: a shaded blue-grey space suit, a rounded helmet with a wide dark-blue glossy visor, a life-support
-  // pack, collar ring, and arms to the keyboard.
+  // His astronaut, zoomed: a white suit shaded blue-grey, a big glossy blue helmet over a near-black visor, a white
+  // life-support pack, a collar ring and a belt, a control box on the chest (it lights cyan at work), gloves, white
+  // boots on dark soles, a patch on the left shoulder; seated, on his black office chair with its five-star base,
+  // arms forward to the keyboard. Each half baked to a few draw calls; the chest light keeps its own.
   agent(r, x, y, i, label, opts) {
-    const at = this.V(x, y, 0.08), S = 1.12, standing = !!(opts && opts.stand);
-    const cm = (geom, mat, px, py, pz, rx) => { const m = new THREE.Mesh(geom, mat); m.position.set(px, py, pz); if (rx) m.rotation.x = rx; m.castShadow = true; m.receiveShadow = true; return m; };
+    rbMats();
+    const at = this.V(x, y, 0.08), S = 1.0, standing = !!(opts && opts.stand);
+    const cm = (geom, mat, px, py, pz, rx, sc) => { const m = new THREE.Mesh(geom, mat); m.position.set(px, py, pz); if (rx) m.rotation.x = rx; if (sc) m.scale.set(sc[0], sc[1], sc[2]); m.castShadow = true; m.receiveShadow = true; return m; };
     if (!standing) {
       const chair = new THREE.Group(); chair.position.copy(at); chair.scale.setScalar(S); r.g.add(chair);
-      const pole = cm(G.cyl, OM.frame, 0, 0.21, 0.06), base = cm(G.cyl, OM.dark, 0, 0.03, 0.06);
-      pole.scale.set(0.035, 0.36, 0.035); base.scale.set(0.26, 0.03, 0.26);
-      chair.add(cm(rboxGeo(0.5, 0.08, 0.48, 0.03), OM.chair, 0, 0.42, 0.06), cm(rboxGeo(0.48, 0.52, 0.07, 0.03), OM.chair, 0, 0.74, 0.3, -0.12), pole, base);
+      chair.add(cm(G.cyl, OM.rbChairMetal, 0, 0.23, 0.08, 0, [0.03, 0.3, 0.03]), cm(G.cyl, OM.rbChairMetal, 0, 0.375, 0.08, 0, [0.12, 0.03, 0.12]));
+      for (let k = 0; k < 5; k++) {
+        const a = k / 5 * Math.PI * 2 + 0.3, leg = cm(G.box, OM.rbChairMetal, Math.sin(a) * 0.13, 0.065, 0.08 + Math.cos(a) * 0.13, 0, [0.035, 0.03, 0.26]);
+        leg.rotation.y = a; chair.add(leg, cm(G.sphere, OM.rbChair, Math.sin(a) * 0.25, 0.032, 0.08 + Math.cos(a) * 0.25, 0, [0.032, 0.032, 0.032]));
+      }
+      chair.add(cm(rboxGeo(0.46, 0.08, 0.44, 0.035), OM.rbChair, 0, 0.42, 0.06), cm(rboxGeo(0.44, 0.36, 0.07, 0.035), OM.rbChair, 0, 0.7, 0.38, -0.1),
+        cm(G.box, OM.rbChairMetal, 0, 0.5, 0.33, 0, [0.05, 0.16, 0.025]));
+      rbBake(chair);
     }
     const g = new THREE.Group(); g.position.copy(at); g.scale.setScalar(S); r.g.add(g);
     const up = new THREE.Group(); g.add(up);
-    up.add(cm(OM.torso, OM.suit, 0, 0.75, 0.04));
-    const collar = cm(G.cyl, OM.pack, 0, 0.96, 0.03); collar.scale.set(0.15, 0.04, 0.15); up.add(collar);
-    const helmet = cm(G.sphere, OM.helmet, 0, 1.13, 0.02); helmet.scale.set(0.19, 0.18, 0.19); up.add(helmet);
-    const visorM = OM.visor.clone();
-    const vz = cm(G.sphere, visorM, 0, 1.15, -0.11); vz.scale.set(0.175, 0.125, 0.11); up.add(vz);
-    up.add(cm(rboxGeo(0.32, 0.4, 0.16, 0.04), OM.pack, 0, 0.8, 0.22));
-    const chest = cm(G.box, OM.pack, 0, 0.84, -0.13); chest.scale.set(0.11, 0.065, 0.025); up.add(chest);
-    [-1, 1].forEach((s) => {
-      up.add(cm(OM.limb, OM.suit, s * 0.21, 0.82, -0.04, 0.45), cm(OM.limb, OM.suit, s * 0.19, 0.67, -0.22, 1.45));
-      const hand = cm(G.sphere, OM.pack, s * 0.17, 0.66, -0.36); hand.scale.setScalar(0.058); up.add(hand);
-    });
+    up.add(cm(G.rbTorso, OM.rbSuit, 0, 0.74, 0.03, 0, [1.06, 1, 0.92]), cm(rboxGeo(0.3, 0.14, 0.25, 0.05), OM.rbSuit, 0, 0.53, 0.01));
+    up.add(cm(G.cyl, OM.rbJoint, 0, 0.6, 0.03, 0, [0.176, 0.045, 0.158]), cm(G.cyl, OM.rbCollar, 0, 0.99, 0.02, 0, [0.135, 0.06, 0.135]));
+    up.add(cm(G.sphere, OM.rbHelmet, 0, 1.15, 0.01, 0, [0.205, 0.2, 0.205]));
+    const visorM = OM.rbVisor.clone();
+    up.add(cm(G.sphere, visorM, 0, 1.165, -0.085, 0, [0.168, 0.135, 0.13]));
+    // the pack on the back: white, a darker panel and two cylinders of air along its sides
+    up.add(cm(rboxGeo(0.36, 0.44, 0.17, 0.045), OM.rbPack, 0, 0.8, 0.21), cm(G.box, OM.rbJoint, 0, 0.86, 0.3, 0, [0.22, 0.15, 0.02]));
+    [-1, 1].forEach((s) => up.add(cm(G.cyl, OM.rbPack, s * 0.2, 0.78, 0.2, 0, [0.04, 0.34, 0.04])));
+    up.add(cm(rboxGeo(0.2, 0.12, 0.06, 0.02), OM.rbJoint, 0, 0.8, -0.15));
+    const chest = cm(G.box, OM.pack, 0, 0.8, -0.183, 0, [0.12, 0.05, 0.01]); chest.userData.dyn = true; up.add(chest);
+    [-1, 1].forEach((s) => up.add(cm(G.sphere, OM.rbSuit, s * 0.19, 0.92, 0.0, 0, [0.085, 0.08, 0.085])));
+    const patch = cm(G.cyl, OM.rbPatch, -0.272, 0.87, -0.02, 0, [0.045, 0.012, 0.045]); patch.rotation.z = Math.PI / 2; up.add(patch);
+    rbBake(up);
+    // the arms go with the legs: forward to the keyboard while seated, down at the sides while standing or walking
+    // (standing lifts the upper body by 0.1, so the standing arms are built that much higher)
     const sit = new THREE.Group(), stand = new THREE.Group(); g.add(sit, stand);
+    const boot = (grp, px, pz) => { grp.add(cm(rboxGeo(0.13, 0.1, 0.21, 0.035), OM.rbPack, px, 0.07, pz), cm(rboxGeo(0.14, 0.03, 0.22, 0.012), OM.rbSole, px, 0.016, pz)); };
     [-1, 1].forEach((s) => {
-      sit.add(cm(OM.limb, OM.suit, s * 0.09, 0.5, -0.12, Math.PI / 2), cm(OM.limb, OM.suit, s * 0.09, 0.27, -0.27), cm(rboxGeo(0.12, 0.08, 0.18, 0.03), OM.pack, s * 0.09, 0.04, -0.31));
-      stand.add(cm(OM.leg, OM.suit, s * 0.09, 0.3, 0.04), cm(rboxGeo(0.12, 0.08, 0.18, 0.03), OM.pack, s * 0.09, 0.04, 0));
+      sit.add(cm(G.rbArm, OM.rbSuit, s * 0.215, 0.8, -0.08, 0.7), cm(G.rbFore, OM.rbSuit, s * 0.19, 0.69, -0.33, 1.38));
+      sit.add(cm(G.cyl, OM.rbJoint, s * 0.2, 0.71, -0.2, 1.38, [0.058, 0.04, 0.058]), cm(G.sphere, OM.rbJoint, s * 0.17, 0.665, -0.5, 0, [0.06, 0.05, 0.075]));
+      sit.add(cm(G.rbThigh, OM.rbSuit, s * 0.09, 0.5, -0.13, Math.PI / 2), cm(G.rbShin, OM.rbSuit, s * 0.09, 0.31, -0.29));
+      sit.add(cm(G.cyl, OM.rbJoint, s * 0.09, 0.5, -0.27, 0, [0.075, 0.07, 0.075])); boot(sit, s * 0.09, -0.33);
+      const ua = cm(G.rbArm, OM.rbSuit, s * 0.228, 0.91, 0.0), fa = cm(G.rbFore, OM.rbSuit, s * 0.248, 0.68, -0.025, 0.14);
+      ua.rotation.z = s * 0.12; fa.rotation.z = s * 0.05; stand.add(ua, fa);
+      stand.add(cm(G.cyl, OM.rbJoint, s * 0.24, 0.79, -0.005, 0, [0.058, 0.04, 0.058]), cm(G.sphere, OM.rbJoint, s * 0.252, 0.52, -0.05, 0, [0.06, 0.07, 0.06]));
+      stand.add(cm(G.rbLeg, OM.rbSuit, s * 0.09, 0.37, 0.02), cm(G.cyl, OM.rbJoint, s * 0.09, 0.36, 0.02, 0, [0.078, 0.05, 0.078])); boot(stand, s * 0.09, -0.01);
     });
+    rbBake(sit); rbBake(stand);
     sit.visible = !standing; stand.visible = standing;
     const ringM = emis('#00e5ff', 0); const ring = new THREE.Mesh(G.ring, ringM); ring.rotation.x = Math.PI / 2; ring.scale.setScalar(0.4); ring.position.y = 0.02; g.add(ring);
     const el = document.createElement('div'); el.className = 'a3'; el.textContent = label; this.layer.appendChild(el);
@@ -2777,11 +2940,11 @@ class Office3D {
     r.plate = el; r.plateAt = this.V(r.x0 + 4.4, r.y0 + 5.6, 1.3); return el;
   }
   // A department's room tailored to match look-office.webp:
-  // - testing (Cymetica QA): 4x3 glowing cyan window grid on the back-right wall facing the camera + dark server racks + desks
+  // - testing (Cymetica QA): a 3x3 window of light at the right end of the back-right wall + desks
   // - stranger (Outsider): twin-aisle Server Room with 2 rows of 4 tall dark server racks + workstation desk
   // - testing_lab (Laboratory): 3 glowing aqua-cyan specimen pods + floating crystals + canisters
   // - trading_desk (Trading Desk): panoramic warm amber-orange chart walls + dual-screen orange trading desks
-  // - league (Agent League): holographic league table + green/cyan monitors
+  // - league (Agent League): a standing board with the league's table, green terminal monitors, a standing referee
   deptRoom(r, d) {
     const k = d.key, x0 = r.x0, y0 = r.y0, g = r.g; let u1 = 6.6;
     const isOrange = k === 'trading_desk';
@@ -2832,7 +2995,12 @@ class Office3D {
     } else if (k === 'design') {
       u1 = 4.5; this.boardTex(r, 4.7, 6.75, moodTex());
     } else if (d.run_kind === 'league') {
-      u1 = 4.1;
+      // his Agent League: a tall dark board standing at the right end of the back-right wall -- ours carries the
+      // league's table, dim, under the neon like every screen
+      u1 = 4.1; rbMats();
+      const lb = new THREE.Mesh(rboxGeo(1.12, 1.2, 0.1, 0.025), OM.rbBezel); lb.position.copy(this.V(x0 + 5.7, y0 + 0.21, 0.68)); lb.castShadow = true; lb.receiveShadow = true; lb.userData.rbWall = true; g.add(lb);
+      const lf = new THREE.Mesh(G.plane, new THREE.MeshBasicMaterial({ map: rbLeagueTex(), color: new THREE.Color(0xffffff).multiplyScalar(0.85), toneMapped: false }));
+      lf.scale.set(0.98, 1.04, 1); lf.position.copy(this.V(x0 + 5.7, y0 + 0.262, 0.72)); lf.userData.rbWall = true; g.add(lf);
     } else {
       u1 = 4.6; this.racks(r, x0 + 5.2, y0 + 0.3, 2);
     }
@@ -2845,26 +3013,40 @@ class Office3D {
     // his rooms each have a see-through screen in a yellow-green frame on a stand, by the left wall
     this.holoFrame(r, x0 + 0.75, y0 + 2.2);
     ex.forEach((e, i) => this.agent(r, x0 + xs[i] + 0.95, y0 + 4.05, i, CO.expertName(e)));
+    // his League's referee stands behind the desk, towards the back corner, watching the round
     if (d.run_kind === 'league' && ex.length < 3) {
-      this.agent(r, x0 + 5.45, y0 + 3.1, ex.length, 'Referee', { stand: true });
+      this.agent(r, x0 + 2.2, y0 + 1.75, ex.length, 'Referee', { stand: true });
     }
     this.terminal(r, x0 + 0.3, y0 + 0.32, d.link || CO.DEPT_LINK[k] || CO.DEPT_LINK.custom);
-    this.cabinet(r, x0 + 6.45, y0 + 3.0, 0.45, 2.3, 0.72);
+    // his League keeps its floor open along the front glass: no cabinet there
+    if (d.run_kind !== 'league') this.cabinet(r, x0 + 6.45, y0 + 3.0, 0.45, 2.3, 0.72);
     this.plant(r, x0 + 0.42, y0 + 6.5); this.plant(r, x0 + 6.55, y0 + 6.55, 0.8);
     this.plate(r);
   }
   // a picture on the back wall at y0 (a chart, a mood board): hung as the wall screens are, under the neon
   boardTex(r, u0, u1, tex) {
-    return this.rbPanel(r, 'x', u0, u1, 0.54, new THREE.MeshBasicMaterial({ map: tex, toneMapped: false }));
+    return this.rbPanel(r, 'x', u0, u1, RBW.h, new THREE.MeshBasicMaterial({ map: tex, toneMapped: false }));
   }
-  // the department's computer: a console whose screen opens its page on cymetica.com
+  // the department's computer: a workstation whose screen opens its page on cymetica.com -- one of his desks, a big
+  // monitor on a neck and a foot (its top at 1.24, under the neon), a keyboard
   terminal(r, x, y, link) {
-    const g = r.g;
-    this.rb(g, x, y, 0.08, 1.25, 0.8, 0.5, OM.desk, 0.04);
-    this.rb(g, x + 0.08, y + 0.1, 0.58, 1.09, 0.08, 0.72, OM.dark, 0.03);
+    rbMats();
+    const g = new THREE.Group(); r.g.add(g);
+    this.rb(g, x, y, 0.1, 1.25, 0.8, 0.4, OM.rbDesk, 0.02);
+    this.rb(g, x - 0.02, y - 0.02, 0.48, 1.29, 0.84, 0.05, OM.rbDeskTop, 0.018);
+    this.box(g, x + 0.05, y + 0.05, 0.08, 1.15, 0.7, 0.03, OM.rbSeam);
+    this.box(g, x + 0.05, y + 0.802, 0.3, 1.15, 0.006, 0.008, OM.rbSeam, false);
+    const mx = x + 0.625, my = y + 0.2;
+    this.rb(g, mx - 0.17, my - 0.1, 0.53, 0.34, 0.22, 0.018, OM.rbMetal, 0.008);
+    this.part(g, G.box, OM.rbMetal, 0.08, 0.12, 0.03, mx, 0.6, my - 0.02);
+    this.rb(g, mx - 0.28, my - 0.1, 0.72, 0.56, 0.06, 0.34, OM.rbGloss, 0.025);
+    this.rb(g, mx - 0.52, my - 0.04, 0.62, 1.04, 0.035, 0.62, OM.rbGloss, 0.012);
+    this.rb(g, mx - 0.34, y + 0.5, 0.53, 0.68, 0.2, 0.024, OM.rbGloss, 0.008);
+    const keys = new THREE.Mesh(G.plane, OM.rbKeys); keys.scale.set(0.64, 0.17, 1); keys.rotation.x = -Math.PI / 2; keys.position.copy(this.V(mx, y + 0.6, 0.5555)); g.add(keys);
+    rbBake(g);
     const scr = new THREE.MeshBasicMaterial({ map: this.pcTex(), toneMapped: false });
-    const face = new THREE.Mesh(G.plane, scr); face.scale.set(1.0, 0.64, 1); face.position.copy(this.V(x + 0.625, y + 0.185, 0.94)); g.add(face);
-    const hit = new THREE.Mesh(G.box, M.hit); hit.scale.set(1.35, 1.4, 1.0); hit.position.copy(this.V(x + 0.62, y + 0.4, 0.75)); hit.userData.pc = link; g.add(hit);
+    const face = new THREE.Mesh(G.plane, scr); face.scale.set(0.96, 0.56, 1); face.position.copy(this.V(mx, my - 0.004, 0.93)); r.g.add(face);
+    const hit = new THREE.Mesh(G.box, M.hit); hit.scale.set(1.35, 1.2, 1.0); hit.position.copy(this.V(x + 0.62, y + 0.4, 0.68)); hit.userData.pc = link; r.g.add(hit);
     this.pcs.push(hit); r.pcFace = scr;
   }
   pcTex() {
@@ -2874,19 +3056,33 @@ class Office3D {
     g.fillStyle = '#38f2b8'; g.font = '700 96px JetBrains Mono, monospace'; g.textAlign = 'center'; g.textBaseline = 'middle'; g.fillText('↗', 128, 92);
     const t = new THREE.CanvasTexture(c); t.colorSpace = THREE.SRGBColorSpace; this._pc = t; return t;
   }
+  // his plant: a tall dark pot, tapering to its foot, a metal band at its lip, and one round bush of leaves over it
   plant(r, x, y, k = 1) {
-    this.cyl(r.g, x, y, 0.08, 0.25 * k, 0.4 * k, OM.pot);
-    this.cyl(r.g, x, y, 0.08 + 0.4 * k, 0.27 * k, 0.04, OM.frame);
-    [[0, 0, 0.72, 0.27], [-0.13, 0.09, 0.84, 0.21], [0.14, -0.06, 0.88, 0.2], [0.03, 0.12, 1.02, 0.17], [-0.05, -0.1, 0.98, 0.16]].forEach(([dx, dy, z, s]) => {
-      const m = new THREE.Mesh(G.sphere, OM.bush); m.scale.set(s * k, s * 1.1 * k, s * k); m.position.copy(this.V(x + dx * k, y + dy * k, 0.08 + (z - 0.08) * k)); m.castShadow = true; r.g.add(m);
-    });
+    rbMats();
+    const g = new THREE.Group(), ph = 0.44 * k; r.g.add(g);
+    this.cyl(g, x, y, 0.08, 0.23 * k, ph, OM.rbPot, G.rbPot);
+    this.cyl(g, x, y, 0.08 + ph - 0.03 * k, 0.24 * k, 0.035 * k, OM.rbMetal);
+    this.cyl(g, x, y, 0.08 + ph - 0.005, 0.215 * k, 0.012, OM.rbSoil);
+    // the leaves stay shared, not baked: one ball of many small facets is drawn for every plant
+    const leaf = (mat, dx, dy, z, s) => { const m = this.part(g, G.rbBush, mat, s * k, s * 0.94 * k, s * k, x + dx * k, 0.08 + ph + z * k, y + dy * k); m.rotation.y = dx * 9 + dy * 5; m.userData.dyn = true; return m; };
+    leaf(OM.rbLeaf, 0, 0, 0.2, 0.29);
+    leaf(OM.rbLeaf2, -0.12, 0.1, 0.3, 0.17); leaf(OM.rbLeaf2, 0.13, -0.05, 0.33, 0.16); leaf(OM.rbLeaf, 0.04, 0.13, 0.12, 0.16);
+    rbBake(g);
   }
-  // a low cabinet against a wall, its doors marked, a lit strip along its top
+  // a low cabinet against a wall: a recessed plinth, doors with their seams and pulls on the room's side, its top
   cabinet(r, x, y, w, d, h) {
-    this.rb(r.g, x, y, 0.08, w, d, h, OM.desk, 0.04);
-    this.rb(r.g, x - 0.02, y - 0.02, 0.08 + h, w + 0.04, d + 0.04, 0.04, OM.deskTop, 0.015);
-    const along = d > w, n = Math.max(1, Math.round((along ? d : w) / 0.6));
-    for (let k = 1; k < n; k++) this.box(r.g, along ? x - 0.01 : x + k * w / n, along ? y + k * d / n : y - 0.01, 0.14, 0.012, 0.012, h - 0.12, OM.frame, false);
+    rbMats();
+    const g = new THREE.Group(); r.g.add(g);
+    this.rb(g, x, y, 0.12, w, d, h - 0.04, OM.rbDesk, 0.03);
+    this.box(g, x + 0.04, y + 0.04, 0.08, w - 0.08, d - 0.08, 0.05, OM.rbSeam);
+    this.rb(g, x - 0.02, y - 0.02, 0.08 + h, w + 0.04, d + 0.04, 0.04, OM.rbDeskTop, 0.015);
+    const along = d > w, n = Math.max(1, Math.round((along ? d : w) / 0.6)), L = along ? d : w;
+    for (let q = 1; q < n; q++) this.box(g, along ? x - 0.008 : x + q * w / n, along ? y + q * d / n : y - 0.008, 0.16, 0.01, 0.01, h - 0.14, OM.rbSeam, false);
+    for (let q = 0; q < n; q++) {
+      const c = (q + 0.5) * L / n + (q % 2 ? -0.08 : 0.08);
+      this.box(g, along ? x - 0.02 : x + c - 0.012, along ? y + c - 0.012 : y - 0.02, 0.08 + h * 0.62, along ? 0.016 : 0.024, along ? 0.024 : 0.016, h * 0.22, OM.rbMetal, false);
+    }
+    rbBake(g);
   }
   // server racks in a row, fronts to the room: dark charcoal towers with glowing LEDs
   racks(r, x, y, n, step = 0.78) {
@@ -2920,15 +3116,26 @@ class Office3D {
     const h = glowSprite(0x5ff0c8, 0.3, 1.8); h.position.copy(m.position); g.add(h);
     r.crystal = [m, w];
   }
-  // a see-through screen in a yellow-green frame on a slim stand, a small ring of light in it
+  // his see-through screen: a yellow-green frame like a monitor's bezel round a faintly lit pane with a small ring of
+  // light in it, on a dark neck and foot, standing on a low dark cabinet (its top at 1.2, under the neon)
   holoFrame(r, x, y) {
+    rbMats();
     const g = r.g, fr = OM.frameLime, s = new THREE.Group(); s.position.copy(this.V(x, y, 0.08)); s.rotation.y = 0.55; g.add(s);
-    const pole = new THREE.Mesh(G.cyl, OM.frame); pole.scale.set(0.03, 0.62, 0.03); pole.position.y = 0.31; s.add(pole);
-    const pane = new THREE.Mesh(G.plane, OM.paneLime); pane.scale.set(0.95, 0.62, 1); pane.position.y = 0.98; pane.rotation.x = -0.12; s.add(pane);
-    [[0, 0.31, 0.95, 0.025], [0, -0.31, 0.95, 0.025], [-0.475, 0, 0.025, 0.62], [0.475, 0, 0.025, 0.62]].forEach(([px, py, w, h]) => {
-      const b = new THREE.Mesh(G.box, fr); b.scale.set(w, h, 0.02); b.position.set(px, 0.98 + py, 0); b.rotation.x = -0.12; s.add(b);
+    const cm = (geom, mat, px, py, pz, sx, sy, sz) => { const m = new THREE.Mesh(geom, mat); m.position.set(px, py, pz); m.scale.set(sx, sy, sz); m.castShadow = true; m.receiveShadow = true; s.add(m); return m; };
+    cm(rboxGeo(0.92, 0.4, 0.52, 0.02), OM.rbDesk, 0, 0.22, 0, 1, 1, 1);
+    cm(rboxGeo(0.96, 0.04, 0.56, 0.015), OM.rbDeskTop, 0, 0.43, 0, 1, 1, 1);
+    cm(G.box, OM.rbSeam, 0, 0.3, 0.262, 0.86, 0.008, 0.006);
+    cm(rboxGeo(0.3, 0.02, 0.18, 0.008), OM.rbGloss, 0, 0.46, -0.04, 1, 1, 1);
+    cm(G.box, OM.rbGloss, 0, 0.55, -0.06, 0.06, 0.18, 0.03);
+    rbBake(s);
+    const f = new THREE.Group(); f.position.set(0, 0.86, -0.04); f.rotation.x = -0.12; s.add(f);
+    const pane = new THREE.Mesh(G.plane, OM.paneLime); pane.scale.set(0.8, 0.5, 1); f.add(pane);
+    [[0, 0.25, 0.84, 0.035], [0, -0.25, 0.84, 0.035], [-0.42, 0, 0.035, 0.5], [0.42, 0, 0.035, 0.5]].forEach(([px, py, w, h]) => {
+      const b = new THREE.Mesh(G.box, fr); b.scale.set(w, h, 0.025); b.position.set(px, py, 0); f.add(b);
     });
-    const ring = new THREE.Mesh(G.ringT, fr); ring.scale.setScalar(0.07); ring.position.set(0, 0.98, 0.01); s.add(ring);
+    const ring = new THREE.Mesh(G.ringT, fr); ring.scale.setScalar(0.06); ring.position.set(0, 0, 0.01); f.add(ring);
+    const dot = new THREE.Mesh(G.sphere, fr); dot.scale.set(0.018, 0.018, 0.006); dot.position.set(0, 0, 0.012); f.add(dot);
+    rbBake(f);
   }
   // a console with a green screen: what the weekly audit reads its logs on
   console3(r, x, y) {
