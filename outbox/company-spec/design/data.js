@@ -110,9 +110,12 @@
     development: { url: 'https://cymetica.com/leaderboard/features', label: 'Build it Better board' },
     design: { url: 'https://cymetica.com/leaderboard/features', label: 'Build it Better board' },
     testing_lab: { url: 'experiments.html', label: 'Experiments: what we try and how it goes' },
-    trading_desk: { url: 'https://cymetica.com/my-agents', label: 'My Agents' },
+    trading_desk: { url: 'https://cymetica.com/my-agents', label: 'My bots' },
     custom: { url: 'https://cymetica.com/company', label: 'Company' }
   };
+  // the pages beyond the first, for a department with more than one (the operator, 2026-10-20: "trading desk ... bude
+  // mit dva, na My bots a i na agent tournaments")
+  CO.DEPT_LINK_MORE = { trading_desk: [{ url: 'https://cymetica.com/agent-tournaments', label: 'Agent Tournaments' }] };
   // what a department's work usually raises next, so a process can show what it leads to
   CO.EMITS = { development: 'released', testing_lab: 'winner', design: 'idea', trading_desk: null, testing: null, custom: null };
   // starting points the owner can click into the form; never added on their own

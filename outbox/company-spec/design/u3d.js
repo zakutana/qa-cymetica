@@ -2035,7 +2035,8 @@ function pvBase(ring) {
 // One room at the origin, as layout() builds it: its shell and its department's furniture and people, baked; the
 // deck's slab round it with its lighter lip, and a slice of the station's hull under that, so it floats as a piece of
 // the station and not as a floor in the void. d is a department as sim.js makes one (key, experts, look ...).
-function pvRoom(b, d) {
+// raw: not baked yet (RoomPreview.get bakes it, in another idle moment for a room built ahead).
+function pvRoom(b, d, raw) {
   const RS = CO.iso.RS, root = new THREE.Group(), r = { key: 'pv', dept: d, g: new THREE.Group(), x0: 0, y0: 0, agents: [], screens: [], mons: [] };
   root.add(r.g);
   b.shell(r);
@@ -2048,6 +2049,7 @@ function pvRoom(b, d) {
     .forEach(([x, y, w, dd]) => b.rb(root, x, y, EX_RIM, w, dd, 0.02 - EX_RIM, OM.rim, 0.1, false));
   b.box(root, -pad - EX_FACE, -pad - EX_FACE, -T - HD, RS + 2 * pad + 2 * EX_FACE, RS + 2 * pad + 2 * EX_FACE, HD, OM.hull, false).geometry = exHullBox(3);
   b.box(root, -pad + 0.7, -pad + 0.7, -T - HD - K, RS + 2 * pad - 1.4, RS + 2 * pad - 1.4, K, OM.hullLow, false);
+  if (raw) return { root, r, raw: true };
   bakeRoom(r);
   return { root, r };
 }
@@ -2070,8 +2072,8 @@ function pvTick(r, t) {
   if (r.leds) r.leds.forEach((m) => { m.visible = ((Math.floor(t * 3 + m.userData.blink)) % 3) !== 0; });
   if (r.holo) { r.holo.forEach((hh, i) => { hh.rotation.z = t * (0.6 + i * 0.35) * (i % 2 ? -1 : 1); hh.position.y = hh.userData.y + Math.sin(t * 1.3 + i) * 0.05; }); if (r.core) r.core.position.y = 1.0 + Math.sin(t * 1.7) * 0.05; }
   if (r.crystal) r.crystal.forEach((m) => { m.rotation.y = t * 0.7; });
-  if (r.spin) r.spin.rotation.y = t * 0.6;
-  if (r.floor) r.floor.rotation.z = t * 0.05;
+  if (r.spin) r.spin.rotation.y = -t * 0.6;
+  if (r.floor) r.floor.rotation.z = -t * 0.05;
   if (r.wheel) r.wheel.rotation.z = t * 0.12;
   r.agents.forEach((a) => {
     const f = (t * 0.9 + a.phase) % 1;
@@ -2139,9 +2141,10 @@ const pvMirror = (o) => !!(o.material && o.material.userData && o.material.userD
 // moments, one at a time, each drawn once off screen so its materials are compiled before anyone asks for it. Only
 // the wall screen is redrawn when the name changes. dispose() lets everything go.
 class RoomPreview {
+  // el: the stage it draws in; none for the dialog's own, made ready while the office is up (dialogPreview)
   constructor(el) {
     geo(); omats();
-    this.el = el; this.wrap = document.createElement('div'); this.wrap.className = 'd3cv'; el.insertBefore(this.wrap, el.firstChild);
+    this.el = el || null; this.wrap = document.createElement('div'); this.wrap.className = 'd3cv'; if (el) el.insertBefore(this.wrap, el.firstChild);
     this.scene = new THREE.Scene(); pvSpace(this.scene);
     this.camera = new THREE.PerspectiveCamera(CAM.fov, 2, 0.5, 600);
     this.renderer = new THREE.WebGPURenderer({ antialias: false });   // the pass multisamples
@@ -2158,27 +2161,117 @@ class RoomPreview {
     this.kept = new Map(); this.todo = []; this.jobs = []; this.warm = null; this.idleId = 0; this.shotRT = {};
     this.pace = pacer(() => !!this.drag || !!this.grow || performance.now() - (this.input || 0) < 1500);
     this.bind();
-    PREVIEWS.push(this);
+    if (el) PREVIEWS.push(this);   // (the dialog's own outlives its stage: it is let go of by no one)
     this.renderer.init().then(async () => {
       if (this.dead) return this.free();
       try { this.post = new Post(this.renderer, this.scene, this.camera, 0.32, 0.0, 0.86, { sat: 0.96 }); } catch (e) { this.post = null; }
       this.offRT = new THREE.RenderTarget(64, 64);
       await this.prepare();
       if (this.dead) return this.free();
+      if (!this.el) await this.dry();
       this.ready = true;
-      this.renderer.setAnimationLoop(() => this.frame());
+      if (this.el) this.renderer.setAnimationLoop(() => this.frame());
       this.idle();
     }).catch((e) => { console.error('the room preview could not start:', e); this.dispose(); if (this.onFail) this.onFail(e); });
+  }
+  // The dialog's own, from when the office is up (app.js warmDialog, 2026-10-20: "keep the RoomPreview renderer alive
+  // from when the office is up"): its first frame, its rooms ahead and the frame only a real frame makes (dry), all
+  // done while the office is shown and nobody is at it (quiet), so opening the dialog draws at once. guess: the
+  // stage's size until it has had one. first: the room the dialog opens on; list: the rooms a click brings, as ahead.
+  warmUp(guess, first, list) {
+    this.guess = guess;
+    if (!this.room && first) this.set(first);
+    this.ahead(list || []);
+    return this;
+  }
+  // Into the dialog's stage as it opens, as a new one would start: its turn, its clock, its pace from zero, the room
+  // asked for (set, after this) rising from its deck, drawn from the first frame if it is ready.
+  attach(el) {
+    this.el = el; el.insertBefore(this.wrap, el.firstChild);
+    this.key = ''; this.yaw = 0; this.ph = 0; this.last = 0; this.clock = new THREE.Clock(); this.drag = null; this.grow = 0; this.frames = 0;
+    this.input = performance.now();
+    this.pace = pacer(() => !!this.drag || !!this.grow || performance.now() - (this.input || 0) < 1500);
+    const pr = Math.min(window.devicePixelRatio || 1, 2); if (pr !== this.renderer.getPixelRatio()) this.renderer.setPixelRatio(pr);
+    const nf = this.renderer._nodes && this.renderer._nodes.nodeFrame; if (nf) { nf.time = 0; nf.lastTime = undefined; }
+    if (this.ready) this.renderer.setAnimationLoop(() => this.frame());
+    return this;
+  }
+  // out of it as the dialog goes: nothing drawn until the next opening, a room half risen put at its full height
+  detach() {
+    if (!this.el) return;
+    try { this.renderer.setAnimationLoop(null); } catch (e) { /* gone */ }
+    this.wrap.remove(); this.el = null; this.drag = null; this.onFail = null; this.renderer.domElement.classList.remove('drag');
+    if (this.grow) { this.grow = 0; if (this.room) this.room.r.g.scale.set(1, 1, 1); }
+    this.idle();
+  }
+  // While it is not in the dialog, its work waits for the page to be left alone a moment (no hand on it, no flight).
+  // (Spaced a piece a frame it took half as long again at a quarter of the CPU and had as many long frames: a piece's
+  // length is its one new shader, measured 2026-10-20.)
+  held() { const H = RoomPreview.hand(); return !this.el && !this.dead && (performance.now() - H.t < 1500 || !!(CO.o3 && CO.o3.tw) || document.hidden); }
+  quiet() {
+    if (!this.held()) return null;
+    return new Promise((res) => { const f = () => (this.held() ? setTimeout(f, 250) : res()); setTimeout(f, 250); });
+  }
+  // the dialog's own, one for the page, made on the first ask (app.js asks once the office is up, or the dialog does)
+  static dialog() { const p = RoomPreview.D; return p && !p.dead ? p : (RoomPreview.D = new RoomPreview(null)); }
+  // when a hand was last on the page: a press, the wheel, a key, a drag
+  static hand() {
+    if (RoomPreview.H) return RoomPreview.H;
+    const H = RoomPreview.H = { t: 0 }, on = () => { H.t = performance.now(); }, o = { capture: true, passive: true };
+    ['pointerdown', 'wheel', 'keydown'].forEach((e) => window.addEventListener(e, on, o));
+    window.addEventListener('pointermove', (e) => { if (e.buttons) on(); }, o);
+    return H;
+  }
+  // One frame drawn where nobody sees it, before the dialog opens: what only a real frame makes -- the bloom's and the
+  // output's pipelines (in the dialog's first frame, 62 ms on the GPU process's main thread), the studio's
+  // reflections, the shadow and the mirror's targets. The room drawn at its full height, as it is now.
+  async dry() {
+    if (!this.post) return;
+    await this.quiet();
+    if (this.el || this.dead) return;
+    try { this.post.render(); } catch (e) { /* the dialog's first frame makes them then */ }
   }
   // Its first frame's shaders made ahead a piece at a time, as the office's are (compileInPieces): this renderer is
   // its own, so it builds every material it draws, and its first frame did all of them at once -- a 400-540 ms frame
   // as the dialog opened, 2.5 s at a quarter of the CPU (measured 2026-10-20). Until then the stage shows what it
   // shows while the renderer starts. The studio's reflections made again after it, as the office's are (prepare()).
+  //
+  // The floors' mirror too, now (2026-10-20, "proc mi to zaseklo prohlizec?"): left to the first frame, its pass made
+  // its pipelines there and then, and a pipeline made inside a frame is compiled on the GPU process's main thread,
+  // the one that draws the whole browser -- 184 ms of it, a 115 ms frame on the page. Made ahead it is compiled off
+  // it. Its pass is the scene from the mirror's own camera into the mirror's own target (ReflectorBaseNode), so it is
+  // made ahead from those, after the room's own pass with its floors. Placed first: a camera still at the origin is
+  // under the floor, and three.js r172's mirror, asked to draw from there, gives up and never resets its "inside a
+  // mirror" flag -- every mirror in the page, the office's too, empty from then on (why the floors were once left out
+  // here, and what a room picked while this ran did on the page before: its floor came into a piece).
+  // A room picked while this runs waits for it (set), then is put in and made ready the same way: swapped in between
+  // two pieces, it was in every piece after and came out lit otherwise (its hull, measured 2026-10-20).
   async prepare() {
     if (!this.post || !this.post.pass) return;
-    try { await compileInPieces(this.renderer, this.scene, this.camera, this.post.pass.renderTarget, { mrt: this.post.pass.getMRT(), all: true, skip: pvMirror }); }
-    catch (e) { console.warn('the room preview could not be made ready ahead:', e); }
+    this.place(performance.now());
+    const R = this.renderer, rf = shRefl().reflector, vc = rf.getVirtualCamera(this.camera), rt = rf.getRenderTarget(vc);
+    const pause = () => this.quiet(), passes = async () => {
+      await compileInPieces(R, this.scene, this.camera, this.post.pass.renderTarget, { mrt: this.post.pass.getMRT(), all: true, skip: this.w ? null : pvMirror, budget: 16, pause });
+      if (this.w) { rf._updateResolution(rt, R); await compileInPieces(R, this.scene, vc, rt, { all: true, skip: pvMirror, budget: 16, pause }); }
+    };
+    this.preparing = true;
+    try {
+      await passes();
+      while (this.wanted && !this.dead) {
+        const o = this.wanted, at = this.wantedAt; this.wanted = null;
+        this.preparing = false; this.set(o); if (this.grow) this.grow = at; this.preparing = true;
+        await passes();
+      }
+    } catch (e) { console.warn('the room preview could not be made ready ahead:', e); }
+    this.preparing = false;
     if (this.scene.environment) this.scene.environment.needsPMREMUpdate = true;
+  }
+  // the stage's size, the camera fitted to it (each frame as the stage changes, and before the shaders are made)
+  place(now) {
+    let w = this.wrap.clientWidth, h = this.wrap.clientHeight;
+    if (!this.el && this.guess) { w = this.guess.w; h = this.guess.h; }   // (not in a stage yet: the size it will have)
+    if (!w || !h || (w === this.w && h === this.h)) return;
+    this.w = w; this.h = h; this.camera.aspect = w / h; this.camera.updateProjectionMatrix(); this.renderer.setSize(w, h, false); this.fit(); this.input = now;
   }
   // a room built ahead (or an astronaut for its card) made ready the same way, in its place for the moments it is
   // looked at, the room on show put back between them
@@ -2191,7 +2284,13 @@ class RoomPreview {
       this.turn.add(obj);
       try { return fn(); } finally { this.turn.remove(obj); if (cur) { this.turn.add(cur.root); pvLit(this.lamp, cur); } }
     };
-    return compileInPieces(this.renderer, this.scene, this.camera, this.post.pass.renderTarget, { mrt: this.post.pass.getMRT(), all: true, only: obj, around, skip: pvMirror })
+    // a room: its own pass with its floor, then the mirror's, what its floor reflects (its floor not in it), as the
+    // dialog's first frame is made (prepare); left to the frame that showed it, a room's mirror was a frame of
+    // 100-180 ms at a quarter of the CPU (measured 2026-10-20)
+    const R = this.renderer, rf = shRefl().reflector, vc = rf.getVirtualCamera(this.camera), rt = rf.getRenderTarget(vc);
+    const go = (cam, target, mrt, skip) => compileInPieces(R, this.scene, cam, target, { mrt, all: true, only: obj, around, skip, budget: 16, pause: () => this.quiet() });
+    return go(this.camera, this.post.pass.renderTarget, this.post.pass.getMRT(), null)
+      .then(() => w.room && go(vc, rt, null, pvMirror))
       .catch((e) => console.warn('a room could not be made ready ahead:', e));
   }
   dept(o) { return { id: 0, key: o.key || 'custom', name: o.name || '', experts: pvOrder(o.experts || []), look: o.look || null, run_kind: null, link: null, charter: '', schedule: null }; }
@@ -2199,20 +2298,26 @@ class RoomPreview {
   set(o) {
     const d = this.dept(o), key = this.keyOf(d);
     this.input = performance.now();
+    // (while the first frame is being made ready, the room waits for it: prepare)
+    if (this.preparing && !this.dead) { this.wanted = key === this.key ? null : o; this.wantedAt = this.input; if (!this.wanted) this.name(o.name); return; }
     if (key === this.key || this.dead) return this.name(o.name);
     this.key = key;
     if (this.room) this.turn.remove(this.room.root);
     this.room = this.get(d, key); this.turn.add(this.room.root); pvLit(this.lamp, this.room);
     this.name(o.name);
-    this.room.r.g.scale.set(1, 0.02, 1); this.grow = performance.now();
+    if (this.el) { this.room.r.g.scale.set(1, 0.02, 1); this.grow = performance.now(); }   // (rises only where it is seen)
   }
-  // a room built once and kept; at most 24, the longest unused let go first (never the one on show)
-  get(d, key) {
+  // a room built once and kept; at most 24, the longest unused let go first (never the one on show). raw: its parts
+  // only, baked and dressed when it is next asked for (a room built ahead, in two idle moments)
+  get(d, key, raw) {
     let room = this.kept.get(key);
-    if (room) { this.kept.delete(key); this.kept.set(key, room); return room; }
-    room = pvRoom(this.b, d); pvDress(this.b, room.r, d.name, d.experts.length); pvAdopt(room); room.key = key;
-    this.kept.set(key, room);
-    for (const [k, old] of this.kept) { if (this.kept.size <= 24) break; if (old !== this.room && k !== key) { this.kept.delete(k); release(old.root); } }
+    if (room) { this.kept.delete(key); this.kept.set(key, room); }
+    else {
+      room = pvRoom(this.b, d, true); room.key = key;
+      this.kept.set(key, room);
+      for (const [k, old] of this.kept) { if (this.kept.size <= 24) break; if (old !== this.room && k !== key) { this.kept.delete(k); release(old.root); } }
+    }
+    if (room.raw && !raw) { room.raw = false; bakeRoom(room.r); pvDress(this.b, room.r, d.name, d.experts.length); pvAdopt(room); }
     return room;
   }
   // the rooms a click can bring next ({ key, experts, look } each), built in idle moments in that order
@@ -2230,20 +2335,29 @@ class RoomPreview {
   idle() {
     if (this.dead || this.idleId || !this.ready) return;
     const ric = window.requestIdleCallback || ((f) => setTimeout(() => f(), 50));
-    this.idleId = ric(() => {
+    // (a room's second half right after the next frame and not in an idle moment: a slow computer drawing every
+    // frame has none, and each half waited out the half second's timeout, measured 2026-10-20)
+    const when = this.half ? (f) => { requestAnimationFrame(() => yieldTask().then(f)); return -1; } : (f, o) => ric(f, o);
+    this.idleId = when(() => {
       this.idleId = 0;
       if (this.dead) return;
       // not while a hand is on it, a room is growing or the last piece is still to be made ready or drawn
-      if (this.drag || this.grow || this.warm || this.making) { setTimeout(() => this.idle(), 120); return; }
+      // (and, out of the dialog, not while a hand is on the page: quiet)
+      if (this.drag || this.grow || this.warm || this.making || this.held()) { setTimeout(() => this.idle(), 120); return; }
       const job = this.jobs.shift();
       let w = null;
       if (job) {
         if (job.kind === 'room') { const d = this.dept(job.o); w = { room: this.get(d, this.keyOf(d)), job }; }
         else w = { astro: pvAstro(this.ab || (this.ab = pvBuilder(this.camera, 0, 0)), job.o), job };
+      } else if (this.half) {
+        const d = this.half; this.half = null;
+        const room = this.get(d, this.keyOf(d)); if (room !== this.room) w = { room };
       } else {
+        // a room ahead in two idle moments, its parts in this one and baked in the next: in one it was a task of
+        // 50 ms, 200 at a quarter of the CPU (measured 2026-10-20)
         let d = null; while (this.todo.length && !d) { const n = this.todo.shift(); if (!this.kept.has(this.keyOf(n))) d = n; }
         if (!d) return;
-        const room = this.get(d, this.keyOf(d)); if (room !== this.room) w = { room };
+        this.get(d, this.keyOf(d), true); this.half = d; this.idle(); return;
       }
       // Made ready a piece at a time first (ahead1); then a card's picture is drawn off screen in a frame's place as
       // before, now with nothing left to build, and a room built ahead needs no frame at all. Drawn off screen to make
@@ -2313,14 +2427,17 @@ class RoomPreview {
     if (url) SHOTS[job.key] = url;
     job.done.forEach((f) => f(url));
   }
-  name(n) { if (this.room) pvWall(this.room.r, n, this.room.r.dept.experts.length); }
+  name(n) {
+    if (this.wanted) this.wanted = Object.assign({}, this.wanted, { name: n });   // (typed while a room picked waits: prepare)
+    if (this.room) pvWall(this.room.r, n, this.room.r.dept.experts.length);
+  }
   // as big as his close-up of a room ("about this big"): near all of the view's height, a margin left for the turn
   fit() { pvFill(this.L, this.camera, pvFit(this.camera, this.pts, 1.64, 1.76, [0, 0.08])); }
   frame() {
     const w = this.wrap.clientWidth, h = this.wrap.clientHeight;
     if (!w || !h || !document.body.contains(this.el)) return;
     const now = performance.now();
-    if (w !== this.w || h !== this.h) { this.w = w; this.h = h; this.camera.aspect = w / h; this.camera.updateProjectionMatrix(); this.renderer.setSize(w, h, false); this.fit(); this.input = now; }
+    this.place(now);
     if (!this.pace(now)) return;
     const t = this.clock.getElapsedTime(), dt = Math.min(0.1, t - this.last); this.last = t;
     // to and fro by 23 degrees round where the hand left it, about once in 20 seconds; still while it is held
@@ -3297,35 +3414,44 @@ function compileKind(o) {
 // only: the part to make ready (an object not on show), its pieces drawn with the rest of the scene as it is;
 // around(fn): puts it where it would be drawn for the moment of fn, and back (the dialog's rooms built ahead);
 // skip(o): what stays hidden through every piece, left to the first frame that draws it.
+// budget: the milliseconds of a task, its pieces kept small and as many of them in it as fit (the dialog's, whose room
+// turns on the screen while the rooms are made ready behind it).
 async function compileInPieces(R, scene, camera, target, opts = {}) {
   const all = [], culled = [], waits = [], seen = new Set(), first = [], rest = [], around = opts.around || ((fn) => fn()), skipped = [];
   (opts.only || scene).traverse((o) => { if ((o.isMesh || o.isPoints || o.isLine || o.isSprite) && o.visible) (opts.skip && opts.skip(o) ? skipped : all).push(o); });
   all.forEach((o) => { const k = compileKind(o); if (seen.has(k)) rest.push(o); else { seen.add(k); first.push(o); } });
   // At least a twentieth of the first of each kind a piece: one at a time, a weak computer spent 4.5 s more on the
   // pieces' own passes than one frame had (13.3 s against 10.3 s at a quarter of the CPU, 141 pieces, measured).
-  const items = first.concat(rest), frame = R._nodes && R._nodes.nodeFrame, nMin = Math.max(1, Math.ceil(first.length / 20));
+  const B = opts.budget || 0, lo = B ? B / 4 : 25, hi = B || 90;
+  const items = first.concat(rest), frame = R._nodes && R._nodes.nodeFrame, nMin = B ? 1 : Math.max(1, Math.ceil(first.length / 20));
   let i = 0, n = nMin;
   while (i < items.length) {
     if (opts.pause) await opts.pause();   // (work done ahead waits while a hand is on the page)
-    const t0 = performance.now(), prevT = R.getRenderTarget(), prevM = R.getMRT(), piece = items.slice(i, i + n);
-    // (as each thing is now: the page may have changed one between two pieces)
-    const vis = items.map((o) => o.visible);
-    if (opts.all) items.forEach((o) => { if (o.frustumCulled) { o.frustumCulled = false; culled.push(o); } });
-    items.forEach((o) => { o.visible = false; });
-    piece.forEach((o, k) => { o.visible = vis[i + k]; });
-    const sv = skipped.map((o) => o.visible); skipped.forEach((o) => { o.visible = false; });
-    if (frame) frame.renderId++;
-    try { R.setRenderTarget(target); R.setMRT(opts.mrt || null); waits.push(around(() => R.compileAsync(scene, camera))); }
-    finally {
-      R.setRenderTarget(prevT); R.setMRT(prevM);
-      items.forEach((o, k) => { o.visible = vis[k]; }); culled.forEach((o) => { o.frustumCulled = true; }); culled.length = 0;
-      skipped.forEach((o, k) => { o.visible = sv[k]; });
-    }
-    const wasFirst = i < first.length; i += n;
-    const dt = performance.now() - t0;
-    // the next piece: from the time this one took; past the first of each kind they grow at once
-    n = dt < 25 ? Math.min(n * 2, 1024) : dt > 90 ? Math.max(nMin, n >> 1) : n;
-    if (wasFirst && i >= first.length) n = Math.max(n, 64);
+    const t1 = performance.now();
+    do {
+      const t0 = performance.now(), prevT = R.getRenderTarget(), prevM = R.getMRT(), piece = items.slice(i, i + n);
+      // (as each thing is now: the page may have changed one between two pieces)
+      const vis = items.map((o) => o.visible);
+      if (opts.all) items.forEach((o) => { if (o.frustumCulled) { o.frustumCulled = false; culled.push(o); } });
+      items.forEach((o) => { o.visible = false; });
+      piece.forEach((o, k) => { o.visible = vis[i + k]; });
+      const sv = skipped.map((o) => o.visible); skipped.forEach((o) => { o.visible = false; });
+      if (frame) frame.renderId++;
+      try { R.setRenderTarget(target); R.setMRT(opts.mrt || null); waits.push(around(() => R.compileAsync(scene, camera))); }
+      finally {
+        R.setRenderTarget(prevT); R.setMRT(prevM);
+        items.forEach((o, k) => { o.visible = vis[k]; }); culled.forEach((o) => { o.frustumCulled = true; }); culled.length = 0;
+        skipped.forEach((o, k) => { o.visible = sv[k]; });
+      }
+      const wasFirst = i < first.length; i += n;
+      const dt = performance.now() - t0;
+      // the next piece: from the time this one took; past the first of each kind they grow at once
+      n = dt < lo ? Math.min(n * 2, 1024) : dt > hi ? Math.max(nMin, n >> 1) : n;
+      if (wasFirst && i >= first.length) n = Math.max(n, 64);
+      // (with a budget the first of each kind go one at a time: one makes a shader of 15-20 ms or nothing at all, so
+      // a piece of four that came after a cheap one was an 80 ms task)
+      else if (B && i < first.length) n = 1;
+    } while (B && i < items.length && performance.now() - t1 < B);
     // progress: the first of each kind is nearly all of the work, the rest is cheap
     if (opts.progress) opts.progress(Math.min(1, i < first.length ? 0.9 * i / first.length : 0.9 + 0.1 * (i - first.length) / Math.max(1, rest.length)));
     await yieldTask();
@@ -7633,9 +7759,9 @@ class Office3D {
     const c = new THREE.Color(isOrange ? LOOK.orange : isWork ? WORK_CYAN : LOOK.neon);
     // the line itself in its own deeper mint (SH_NEON), the floor's wash in his; over the bloom's threshold, so it
     // glows, the glow tight round a thinner line, as his
-    if (r.edgeM) { r.edgeM.emissive.set(isOrange ? LOOK.orange : isWork ? WORK_CYAN : SH_NEON); r.edgeM.emissiveIntensity = isOrange ? 1.9 : isWork ? 1.9 : 1.5; }
-    if (r.glow) { r.glow.material.color.copy(c).multiplyScalar(isOrange ? 1.9 : isWork ? 1.4 : 1); r.glowBase = isOrange ? 1.0 : isWork ? 0.55 : 0; }
-    if (r.lamp) { r.lamp.color.set(isOrange ? 0xff6a34 : isWork ? 0x8fe6ff : 0xeef6ff); r.lamp.intensity = isOrange ? 22 : isWork ? 9 : 6; r.lamp.distance = isOrange ? 6.5 : 9; r.lamp.position.y = isOrange ? 2.4 : 4.4; }
+    if (r.edgeM) { r.edgeM.emissive.set(isOrange ? LOOK.orange : isWork ? WORK_CYAN : SH_NEON); r.edgeM.emissiveIntensity = isOrange ? 1.9 : isWork ? 1.15 : 1.5; }
+    if (r.glow) { r.glow.material.color.copy(c).multiplyScalar(isOrange ? 1.9 : isWork ? 1.0 : 1); r.glowBase = isOrange ? 1.0 : isWork ? 0.6 : 0; }
+    if (r.lamp) { r.lamp.color.set(isOrange ? 0xff6a34 : isWork ? 0x00b8ff : 0xeef6ff); r.lamp.intensity = isOrange ? 22 : isWork ? 10 : 6; r.lamp.distance = isOrange ? 6.5 : 9; r.lamp.position.y = isOrange ? 2.4 : 4.4; }
     // the floor and the glass: only the room's own (a room that dressed its walls in something else keeps it)
     if (r.floorM && (r.floorM.material === OM.tile || r.floorM.material === OM.tileOrange)) r.floorM.material = isOrange ? OM.tileOrange : OM.tile;
     if (r.panes) r.panes.forEach((p) => { if (p.material === OM.glass || p.material === OM.glassOrange) p.material = isOrange ? OM.glassOrange : OM.glass; });
@@ -7748,8 +7874,8 @@ class Office3D {
       if (r.leds) r.leds.forEach((m, i) => { m.visible = ((Math.floor(t * 3 + m.userData.blink)) % 3) !== 0; });
       if (r.holo) { r.holo.forEach((hh, i) => { hh.rotation.z = t * (0.6 + i * 0.35) * (i % 2 ? -1 : 1); hh.position.y = hh.userData.y + Math.sin(t * 1.3 + i) * 0.05; }); r.core.position.y = 1.0 + Math.sin(t * 1.7) * 0.05; }
       if (r.crystal) r.crystal.forEach((m) => { m.rotation.y = t * 0.7; });
-      if (r.spin) r.spin.rotation.y = t * 0.6;
-      if (r.floor) r.floor.rotation.z = t * 0.05;
+      if (r.spin) r.spin.rotation.y = -t * 0.6;   // clockwise seen from above
+      if (r.floor) r.floor.rotation.z = -t * 0.05;
       if (r.plus) r.plus.rotation.z = t * 0.25;
       if (r.wheel) r.wheel.rotation.z = t * 0.12;
       r.agents.forEach((a) => {
@@ -8230,7 +8356,7 @@ class Office3D {
   let gl2 = false;
   try { gl2 = !!document.createElement('canvas').getContext('webgl2'); } catch (e) { gl2 = false; }
   CO.U3 = (gl2 || navigator.gpu) ? { ok: true, gpu: !!navigator.gpu, universe: (el, stage, h) => new Universe3D(el, stage, h), office: (el, stage, tipFor) => new Office3D(el, stage, tipFor), preview, thumbs,
-    roomPreview: (el) => new RoomPreview(el), shotOf: (key) => SHOTS[key] || null, THREE, geo, makeStation, SKIN, amat, nebTex, TX, OM,
+    roomPreview: (el) => new RoomPreview(el), dialogPreview: () => RoomPreview.dialog(), shotOf: (key) => SHOTS[key] || null, THREE, geo, makeStation, SKIN, amat, nebTex, TX, OM,
     // for the entry page's own scene (start.js): the map's sun, sky, glows and bloom, the pacer and the release
     Post, starField, glowSprite, glowTex, colliderTex, flareTex, uvSky, spaceSky, LOOK, idleFlush, pacer, release, UVSUN }
     : { failed: true, why: 'no WebGPU and no WebGL2' };

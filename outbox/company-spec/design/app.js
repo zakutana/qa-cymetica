@@ -52,7 +52,7 @@
         office3d = CO.U3.office($('office3d'), st, tipFor); office3d.onFail = function () { office3d = null; setView('2d'); };
         // the loading screen follows its first frame's shaders, and goes with that frame
         office3d.onProgress = function (f) { if (ui.tab === 'office') bootSet(30 + f * 66, 'RENDERING'); };
-        office3d.onFirst = function () { if (ui.tab === 'office') bootDone(); };
+        office3d.onFirst = function () { if (ui.tab === 'office') bootDone(); warmDialog(); };
       }
       office = office3d;
     } else { office = office2d; if (ui.tab === 'office') bootDone(); }
@@ -433,7 +433,14 @@
     var ln = CO.deptLine(d, v);
     // its page on cymetica.com, one click from its head
     var lk = CO.DEPT_LINK[d.key];
-    var pgi = lk ? '<a class="pgi" href="' + esc(lk.url) + '" target="_blank" rel="noopener" title="' + esc(lk.label.split(':')[0]) + ' on cymetica.com" aria-label="Open ' + esc(lk.label.split(':')[0]) + '"><svg viewBox=\"0 0 20 20\" aria-hidden=\"true\"><circle cx=\"9\" cy=\"11\" r=\"6.2\"/><ellipse cx=\"9\" cy=\"11\" rx=\"2.6\" ry=\"6.2\"/><path d=\"M2.8 11h12.4 M3.9 7.8h10.2 M3.9 14.2h10.2 M12.6 2.6h4.8v4.8 M17.4 2.6l-5.2 5.2\"/></svg></a>' : '';
+    // one icon a page (the Trading desk has two: My bots, a globe; Agent Tournaments, a cup)
+    var GLOBE = '<svg viewBox="0 0 20 20" aria-hidden="true"><circle cx="9" cy="11" r="6.2"/><ellipse cx="9" cy="11" rx="2.6" ry="6.2"/><path d="M2.8 11h12.4 M3.9 7.8h10.2 M3.9 14.2h10.2 M12.6 2.6h4.8v4.8 M17.4 2.6l-5.2 5.2"/></svg>',
+      CUP = '<svg viewBox="0 0 20 20" aria-hidden="true"><path d="M6 3.5h8v4.2a4 4 0 0 1-8 0Z M6 5H3.4v1.4A2.6 2.6 0 0 0 6 9 M14 5h2.6v1.4A2.6 2.6 0 0 1 14 9 M10 11.7v2.8 M6.8 17h6.4 M7.6 14.5h4.8V17H7.6Z"/></svg>';
+    var lks = lk ? [lk].concat((CO.DEPT_LINK_MORE || {})[d.key] || []) : [];
+    var pgi = lks.map(function (x, i) {
+      var nm = x.label.split(':')[0];
+      return '<a class="pgi" href="' + esc(x.url) + '" target="_blank" rel="noopener" title="' + esc(nm) + ' on cymetica.com" aria-label="Open ' + esc(nm) + '">' + (/tournament/i.test(nm) ? CUP : GLOBE) + '</a>';
+    }).join('');
     setHTML($('dr-head'), '<i class="dot ' + v.status + (ln.tone === 'red' ? ' needs' : '') + '"></i><h2>' + esc(d.name) + '</h2>' +
       (d.files_as ? '<span class="et ' + (d.et10 ? 'lit' : 'zero') + '" title="ET10 Cymetica paid for accepted bugs, to ' + esc(d.files_as) + '">' + (d.et10 ? '+' : '') + (d.et10 || 0).toLocaleString('en-US') + ' ET10</span>' : '') +
       '<span class="x">' + pgi + (RO ? '' : '<button class="btn" data-a="edit">Edit</button><button class="btn rd" data-a="delete" title="Delete this department">Delete</button>') + '</span>');
@@ -527,7 +534,7 @@
     }
   }
   function renderPane() {
-    ({ portfolio: renderPortfolio, tasks: renderTasks, approvals: renderApprovals, memory: renderMemory, audit: renderAudit, rules: renderRules, investable: renderInvest, legal: renderLegal, token: renderToken, settings: renderSettings, universe: renderUniverse }[ui.tab] || function () {})();
+    ({ portfolio: renderPortfolio, tasks: renderTasks, approvals: renderApprovals, memory: renderMemory, audit: renderAudit, rules: renderRules, investable: renderInvest, legal: renderLegal, token: renderToken, connect: renderConnect, settings: renderSettings, universe: renderUniverse }[ui.tab] || function () {})();
   }
 
   /* ---------------- the Universe: every company on one map ---------------- */
@@ -693,9 +700,13 @@
     pv3(document.querySelector('#modal-card .pc-art'), { skin: c.skin, accent: c.accent, floors: n, seed: c.id, name: c.name, public: false });
   }
   // the station pictures: six shapes in the company's colour
+  // each station's 3D picture in its colour ships as a file (shots/station-<skin>-<accent>.webp, drawn by
+  // CO.U3.thumbs): shown at once, where the flat drawing showed first ("tam prvne najedou ty hnusne ikony")
   function skinButtons(sel, acc) {
     return CO.SKINS.map(function (s) {
-      return '<button type="button" class="skin' + (s.key === sel ? ' on' : '') + '" data-a="uv-skin" data-k="' + s.key + '">' + CO.skinSVG({ skin: s.key, accent: acc, floors: 3, seed: 11 }) + '<b>' + s.name + '</b></button>';
+      var file = 'shots/station-' + s.key + '-' + (acc || 'green') + '.webp';
+      return '<button type="button" class="skin has3d' + (s.key === sel ? ' on' : '') + '" data-a="uv-skin" data-k="' + s.key + '"><img class="th3" alt="" src="' + file + '">' +
+        CO.skinSVG({ skin: s.key, accent: acc, floors: 3, seed: 11 }) + '<b>' + s.name + '</b></button>';
     }).join('');
   }
   function accentButtons(sel) {
@@ -858,6 +869,36 @@
     if (RO) lockFields('legal');
   }
   function lockFields(id) { Array.prototype.forEach.call($(id).querySelectorAll('input, select, textarea'), function (el) { el.disabled = true; }); }
+
+  // Connect AI: the whole company from the owner's own AI, through Cymetica's MCP server and API -- one ready prompt for
+  // any AI, the connector, the key (the operator, 2026-10-20: "talk to NEXUS and run the whole company from your
+  // favourite AI"; "staci tam jeden prompt"). A sketch: the tab is Cymetica's to design (SPEC section 13).
+  var MCP_URL = 'https://cymetica.com/mcp/v1';
+  function connectPrompt() {
+    var S = CO.S;
+    return 'You run my company "' + S.company.name + '" on Cymetica for me. Connect to Cymetica\'s MCP server (' + MCP_URL + ') with my API key. ' +
+      'Read my company first. From then on, pass what I ask about the company to NEXUS, its AI, and show me its answers; ' +
+      'tell me what waits for my approval and approve or reject only when I say so. Keep answers short, numbers first.';
+  }
+  function renderConnect() {
+    var el = $('connect'); if (!el) return;
+    if (el._done) return;
+    el._done = true;
+    var steps = [['1', 'Your API key', '<span class="ckey">evt_••••••••••••3f9a</span><button type="button" class="btn cy" data-cc="key">Copy</button>'],
+      ['2', 'Add the connector', '<span class="ckey">' + MCP_URL + '</span><button type="button" class="btn cy" data-cc="mcp">Copy</button>'],
+      ['3', 'Paste the prompt', '<span class="chint">into ChatGPT, Claude, Gemini or any AI that speaks MCP</span>']];
+    el.innerHTML = '<div class="cnhero"><h2>Talk to NEXUS.<br><em>Run your whole company from your favourite AI.</em></h2>' +
+      '<p>Departments, processes, approvals, experiments, the Vault: everything you do here works from your AI.</p></div>' +
+      '<div class="cnsteps">' + steps.map(function (s) { return '<div class="cnstep"><b>' + s[0] + '</b><span>' + s[1] + '</span><div>' + s[2] + '</div></div>'; }).join('') + '</div>' +
+      '<div class="cnone"><div class="cnh"><b>The prompt</b><span class="cnais1">ChatGPT · Claude · Gemini · any AI</span></div>' +
+      '<pre>' + esc(connectPrompt()) + '</pre><button type="button" class="cngo" data-cc="prompt">Copy prompt</button></div>';
+    el.onclick = function (e) {
+      var b = e.target.closest('[data-cc]'); if (!b) return;
+      var w = b.getAttribute('data-cc'), txt = w === 'mcp' ? MCP_URL : w === 'key' ? 'evt_your_api_key' : connectPrompt();
+      try { navigator.clipboard.writeText(txt); } catch (err) { /* the mock goes on */ }
+      var was = b.textContent; b.textContent = 'Copied'; b.classList.add('done'); setTimeout(function () { b.textContent = was; b.classList.remove('done'); }, 1400);
+    };
+  }
   function renderToken() {
     var S = CO.S, T = S.token, ch = CO.CHAINS.filter(function (c) { return c.key === T.chain; })[0] || CO.CHAINS[0];
     setHTML($('token'), '<div class="cols2"><div class="card"><h3>Company token</h3>' +
@@ -977,9 +1018,33 @@
     var f = card.querySelector('input,textarea'); if (f) setTimeout(function () { f.focus(); }, 30);
   }
   function closeModal() { $('modal').hidden = true; modalAct = null; drop3d(); dlgMode = ''; }
-  // the 3D dialog's live room: one renderer, let go whenever the dialog goes, however it goes
+  // the 3D dialog's live room: one renderer for the page, out of the dialog whenever it goes, however it goes
   var dlg3 = null;
-  function drop3d() { if (dlg3) { dlg3.dispose(); dlg3 = null; } holdOffice(false); }
+  function drop3d() { if (dlg3) { if (dlg3.detach) dlg3.detach(); else dlg3.dispose(); dlg3 = null; warmRooms(); } holdOffice(false); }
+  // That renderer made ready while the office is shown, a few seconds after its first frame and only while the page
+  // is left alone (RoomPreview.warmUp): the room Add department opens on, every room a click brings, and every
+  // department's own as Edit shows it. Opened before, the dialog makes them as it opens, as it always did.
+  // The stage's size is a guess from the dialog's layout (style.css .modal-card.x3, .d3main, .d3bot); the dialog
+  // corrects it as it opens, and only the time that takes depends on it.
+  function warmDialog() {
+    if (RO || ui.view !== '3d' || !office3d || !(CO.U3 && CO.U3.dialogPreview)) return;
+    setTimeout(function () {
+      var ric = window.requestIdleCallback || function (f) { return setTimeout(f, 50); };
+      ric(warmRooms, { timeout: 4000 });
+    }, 2500);
+  }
+  // (and again as the dialog goes: a department added or changed meanwhile has a room of its own to make)
+  function warmRooms() {
+    if (RO || ui.view !== '3d' || !office3d || !(CO.U3 && CO.U3.dialogPreview)) return;
+    var L = looks(), own = CO.TEMPLATES.filter(function (t) { return t.key === 'custom'; })[0] || { key: 'custom', name: '', experts: ['researcher'] };
+    var free = CO.TEMPLATES.filter(function (t) { return t.key !== 'custom' && !CO.S.departments.some(function (d) { return d.key === t.key; }); })[0];
+    var first = free ? { key: free.key, experts: free.experts, look: null, name: free.name } : { key: 'custom', experts: own.experts, look: L[0].key, name: '' };
+    var list = CO.TEMPLATES.map(function (t) { return { key: t.key, experts: t.experts, look: t.key === 'custom' ? L[0].key : null }; })
+      .concat(CO.S.departments.map(function (d) { return { key: d.key, experts: d.experts, look: d.key === 'custom' ? d.look || L[0].key : null }; }))
+      .concat(L.map(function (l) { return { key: 'custom', experts: own.experts, look: l.key }; }));
+    var W = Math.min(1760, innerWidth * 0.96), H = Math.min(980, innerHeight * 0.94);
+    CO.U3.dialogPreview().warmUp({ w: Math.round(W) - 382, h: Math.round(H) - 308 }, first, list);
+  }
   // The 3D office stops drawing while the 3D dialog covers it (its last frame stays on its canvas): its own frames of
   // 130-140 ms every few seconds (measured 2026-10-19) were the dialog's last stalls once its rooms were kept.
   function holdOffice(on) {
@@ -1087,7 +1152,7 @@
       openModal(form(), 'x3', act);
       if (m === '3d') {
         holdOffice(true);
-        var mine = dlg3 = CO.U3.roomPreview($('d3-stage'));
+        var mine = dlg3 = CO.U3.dialogPreview ? CO.U3.dialogPreview().attach($('d3-stage')) : CO.U3.roomPreview($('d3-stage'));
         // its renderer would not start: the same dialog, flat, with what was already chosen
         mine.onFail = function () {
           if (dlg3 !== mine) return;
@@ -1306,6 +1371,8 @@
       if (RO && roBlocked(t)) { e.preventDefault(); toast('Read only: only @' + CO.S.company.owner + ' can change this.'); return; }
       if (t.closest('#ro-back')) { location.href = 'index.html#universe'; return; }
       if (t.closest('#sim-new')) { location.href = 'start.html'; return; }
+      // the Universe's way in for someone without a company ("musis dat nekde zelene tlacitko pro create company")
+      if (t.closest('#uv-new')) { location.href = 'builder.html'; return; }
       if (uv) {
         if (t.closest('#uv-in')) return uv.zoom(0.78);
         if (t.closest('#uv-out')) return uv.zoom(1.28);

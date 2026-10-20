@@ -15,25 +15,39 @@
 
   // The rooms every company has, and the departments a pre-built one starts with. CO.PREBUILD (data.js) is the one
   // list both this page and the office's boot read; this one stands in where it is missing.
-  // (each room's words: the operator's drafts, 2026-10-20, "o neco delsi a vystiznejsi", tightened)
+  // The tour tells one story, in this order (the operator, 2026-10-20: "cely tutorial bude mit timto pribeh a namotivuje
+  // uzivatele"): NEXUS runs it all; the Vault holds what you earn, so build products; Development builds and ships them;
+  // QA tests them and pays ET10 for verified bugs; beyond products, trading: the Quant Lab finds strategies, the
+  // Trading desk runs the proven ones; Operations keeps everything optimal. Each room's pages on cymetica.com ride in
+  // its bubble.
+  var BALANCE = { et10: 12450, usdc: 86.2 };   // the account's balance on its Cymetica profile (sample; GET /api/v1/account)
+  var PAGES = {
+    development: [['Build it Better', 'https://cymetica.com/leaderboard/features']],
+    testing: [['Bug board', 'https://cymetica.com/leaderboard/bugs?filter=mine']],
+    testing_lab: [['Experiments', 'experiments.html']],
+    trading_desk: [['My bots', 'https://cymetica.com/my-agents'], ['Agent Tournaments', 'https://cymetica.com/agent-tournaments']]
+  };
   var FIXED = [
-    { k: 'hub', n: 'Command', t: 'The heart of the company. You talk only to NEXUS, the AI at its core: say what you want, and it plans the work, runs every department and reports back.' },
-    { k: 'vault', n: 'Vault', t: 'Everything the company earns lands here: USDC from your products, ET10 rewards from Cymetica. Private: only you see inside.' },
-    { k: 'audit', n: 'Operations', t: 'Keeps the company running smoothly: watches every department and process, finds what is slow or wasted, and tunes it.' }
+    { k: 'hub', n: 'Command', t: 'The brain of your company. You run all of it through NEXUS: tell it what you want, and it creates departments, hires expert agents into them, plans the work and reports back.' },
+    { k: 'vault', n: 'Vault', t: 'Everything your company earns lands here, in USDC and ET10. Grow it by earning real revenue and ET10 rewards.' },
+    { k: 'audit', n: 'Operations', t: 'This department watches over all of it: it audits every process, finds what is slow or wasted, and optimises the way your company works.' }
   ];
   var PRE = CO.PREBUILD || [
     { key: 'testing', name: 'Cymetica QA' }, { key: 'development', name: 'Development' },
     { key: 'testing_lab', name: 'Quant Lab' }, { key: 'trading_desk', name: 'Trading desk' }
   ];
   var LINE = {
-    testing: 'Tests your products, logs every bug it finds and files it for you. Every accepted bug earns you ET10.',
-    development: 'Your builders. When the company needs a product, an app or a tool, Development designs it, builds it and ships it.',
-    // (the Lab finds the ways and proves them on paper, the desk puts its winners into production: "quant lab hleda jak
-    // vydelat a uspesne boty se pak muzou pustit do produkce v trading desku treba na agent tournaments", the operator)
-    testing_lab: 'Finds new ways to make money on Cymetica: works out strategies with NEXUS and proves them on paper in Experiments. Keeps the winners.',
-    trading_desk: "Puts the Lab's winning bots into production: a seat at Agent Tournaments, or real money, each only after your approval."
+    development: 'Tell NEXUS your idea: Development designs it, builds it and ships it on Cymetica as your product. When people use it, it earns you real revenue, plus ET10 as a bonus. Your products are shown in the Portfolio tab.',
+    testing: 'Test what you ship. QA tests your products, and anything on Cymetica you point it at, and files every bug it finds. Each verified bug pays you ET10 in rewards.',
+    testing_lab: 'Products are one way to earn, trading is another. Here researchers take your ideas and test them as experiments, looking for the most profitable trading strategies on Cymetica. All in paper money; every experiment is in the Experiments lab.',
+    trading_desk: 'Then run your verified strategies with real money: create real trading agents and send them to Agent Tournaments.'
   };
-  var TOUR = FIXED.concat(PRE.map(function (d) { return { dk: d.key, n: d.name, t: LINE[d.key] || '' }; }));
+  var ORDER = ['hub', 'vault', 'development', 'testing', 'testing_lab', 'trading_desk', 'audit'];
+  var TOUR = ORDER.map(function (k) {
+    var f = FIXED.filter(function (x) { return x.k === k; })[0]; if (f) return f;
+    var d = PRE.filter(function (x) { return x.key === k; })[0];
+    return d ? { dk: d.key, n: d.name, t: LINE[d.key] || '' } : null;
+  }).filter(Boolean);
 
   // what is being made: the modal's own defaults (app.js createCompanyModal), and the pre-built start
   // (the builder opens on the Shipyard in green: "jako uvodni firmu zobraz tuhle", 2026-10-20)
@@ -255,7 +269,11 @@
     $('bub').innerHTML =
       '<div class="bz-bh">' + (ic ? '<i class="bz-ic" style="--c:' + ic.color + '">' + ic.svg + '</i>' : '') +
         '<span class="bz-bt"><b>' + esc(r.n) + '</b><em>' + (i + 1) + ' of ' + TOUR.length + '</em></span><button type="button" class="bz-x" data-a="close" title="Back to Start">×</button></div>' +
-      '<p>' + esc(r.t) + '</p>' +
+      '<p>' + esc(r.t) + '</p>' + (r.k === 'vault' ? '<div class="bz-bal" title="Your balance on your Cymetica profile"><span><b>' + BALANCE.et10.toLocaleString('en-US') + '</b> ET10</span><span><b>' +
+        BALANCE.usdc.toFixed(2) + '</b> USDC</span><em>your balance now</em></div>' : '') +
+      ((PAGES[r.k || r.dk] || []).length ? '<div class="bz-pg">' + PAGES[r.k || r.dk].map(function (p) {
+        return '<a href="' + esc(p[1]) + '" target="_blank" rel="noopener"><svg viewBox="0 0 20 20" aria-hidden="true"><circle cx="9" cy="11" r="6.2"/><ellipse cx="9" cy="11" rx="2.6" ry="6.2"/><path d="M2.8 11h12.4 M12.6 2.6h4.8v4.8 M17.4 2.6l-5.2 5.2"/></svg>' + esc(p[0]) + '</a>';
+      }).join('') + '</div>' : '') +
       '<div class="bz-bf"><span class="bz-dots">' + TOUR.map(function (x, j) { return '<i class="' + (j < i ? 'done' : j === i ? 'on' : '') + '"></i>'; }).join('') + '</span>' +
         '<button type="button" class="btn" data-a="back">← Back</button>' +
         '<button type="button" class="bz-go' + (last ? ' fin' : '') + '" data-a="next">' + (last ? 'Create company' : 'Next') + ' →</button></div>';
@@ -277,6 +295,7 @@
   var bub = $('bub'), call = document.createElement('button'); call.type = 'button'; call.className = 'bz-call'; call.hidden = true; $('stage').appendChild(call);
   call.addEventListener('click', function () { if (step === 2) { show('tour'); tourAt(0); } else if (step === 'tour' && ti < TOUR.length - 1) tourAt(ti + 1); });
   bub.addEventListener('click', function (e) {
+    if (e.target.closest('.bz-pg a')) return;
     var a = e.target.closest('[data-a]'); if (!a) return;
     a = a.getAttribute('data-a');
     if (a === 'close') show(2); else if (a === 'back') tourBack(); else next();
@@ -348,7 +367,37 @@
   }
   function tourBack() { if (ti > 0) tourAt(ti - 1); else show(2); }
   // Saved as the modal saves it; prebuild says which start the office's boot sets up (data.js/sim.js read it)
-  function finish() {
+
+  // The Create company popup (the operator, 2026-10-20: without an account, sign up first; with one, it costs 5,000 ET10,
+  // or the Pro plan, or a 7-day free trial -- Cymetica's to choose among, SPEC section 3). The mock shows all three, and
+  // ?guest shows it signed out.
+  var GUEST = /[?&]guest\b/.test(location.search);
+  function createGate(done) {
+    var el = $('gate'); if (!el) return done();
+    var nm = o.name || 'your company', can = BALANCE.et10 >= 5000;
+    el.innerHTML = '<div class="bz-gc"><button type="button" class="bz-x" data-g="close" title="Back">×</button>' + (GUEST ?
+      '<h3>Sign up first.</h3><p>A company belongs to a Cymetica account.</p>' +
+      '<div class="bz-gb"><button type="button" class="bz-go" data-g="signup">Sign up →</button><button type="button" class="btn" data-g="login">Log in</button></div>' :
+      '<h3>Create ' + esc(nm) + '.</h3><p>Pick how you start.</p><div class="bz-gw">' +
+        '<button type="button" class="bz-gw1' + (can ? '' : ' off') + '" data-g="et10"><em>PAY ONCE</em><b>5,000 <i>ET10</i></b><span>from your balance · ' + BALANCE.et10.toLocaleString('en-US') + ' ET10</span></button>' +
+        '<button type="button" class="bz-gw1" data-g="pro"><em>PRO PLAN</em><b>Upgrade</b><span>a company comes with Pro</span></button>' +
+        '<button type="button" class="bz-gw1" data-g="trial"><em>FREE TRIAL</em><b>7 days</b><span>then choose a way to keep it</span></button>' +
+      '</div>') + '</div>';
+    el.hidden = false;
+    el.onclick = function (e) {
+      var b = e.target.closest('[data-g]');
+      if (!b && e.target === el) b = { getAttribute: function () { return 'close'; } };
+      if (!b) return;
+      var g = b.getAttribute('data-g');
+      if (g === 'close') { el.hidden = true; return; }
+      if (g === 'signup' || g === 'login') { GUEST = false; return createGate(done); }   // mockup: signed in, then on
+      if (g === 'et10' && !can) return;
+      el.hidden = true; done();
+    };
+  }
+  // Create company asks first: who is signing up, and which way in (createGate); then the company is made
+  function finish() { createGate(make); }
+  function make() {
     CO.saveProfile({ name: o.name, mission: o.mission, skin: o.skin, accent: o.accent, public: o.public, prebuild: o.start === 'pre' ? 'starter' : '' });
     location.href = 'index.html?empty&created=1';
   }
@@ -356,7 +405,7 @@
   /* ---------------- wiring ---------------- */
   function pub() {
     return '<span class="sw"></span><div><b>' + (o.public ? 'Public' : 'Private') + '</b><span>' +
-      (o.public ? 'Anyone can look inside, read only. The Vault stays private.' : 'Others see its name, station and mission. The Vault is always private.') + '</span></div>';
+      (o.public ? 'Anyone can look inside, read only. The Vault stays private.' : 'Others see its name, station and mission.') + '</span></div>';
   }
   $('f-pub').innerHTML = pub();
   accents(); opts();

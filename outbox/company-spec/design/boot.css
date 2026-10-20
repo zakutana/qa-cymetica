@@ -41,8 +41,8 @@
    against a mirrored copy of itself, as the map's two layers do; the ball is the middle 0.6 of the picture */
 .ld-sun { width: 200px; height: 200px; margin: -100px 0 0 -100px; filter: drop-shadow(0 0 18px rgba(255, 190, 90, .35)); }
 .ld-sun b { position: absolute; inset: 0; border-radius: 50%; background: url(sun.webp) center / contain no-repeat; will-change: transform; }
-.ld-sun b:first-child { animation: ld-spin 48s linear infinite, ld-flick 2.3s ease-in-out infinite alternate; }
-.ld-sun b + b { opacity: .38; mix-blend-mode: screen; transform: scaleX(-1); animation: ld-spin-r 70s linear infinite; }
+.ld-sun b:first-child { animation: ld-spin 300s linear infinite reverse, ld-flick 2.3s ease-in-out infinite alternate; }
+.ld-sun b + b { opacity: .38; mix-blend-mode: screen; transform: scaleX(-1); animation: ld-spin-r 450s linear infinite reverse; }
 @keyframes ld-spin-r { from { transform: scaleX(-1) rotate(0deg); } to { transform: scaleX(-1) rotate(-360deg); } }
 @keyframes ld-flick { to { opacity: .86; } }
 /* the collider's rings: two arcs racing each other and a fine dashed one */

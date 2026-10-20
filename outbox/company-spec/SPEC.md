@@ -47,12 +47,16 @@ Someone with no company lands on the entry, not on an empty office.
   research, generating real revenue, and much more." Two tiles: **Start a company** (opens the builder) and
   **Explore the Universe** (opens the Universe, section 9). On the right, Cymetica's sun with companies orbiting it.
 - **Builder** (`builder.html`), two steps:
-  1. **Name & look**: name, mission, public or private ("The Vault stays private" either way), the station picked
+  1. **Name & look**: name, mission, public or private (the Vault is private either way), the station picked
      with the arrows round it (seven stations) and its colour (eight). The station's label shows the name as it is
      typed.
   2. **Start**: **New** (the three rooms every company has: Command, Vault, Operations) or **CyMetica Pre-Build**
      (those three and Cymetica QA, Development, Quant Lab, Trading desk). The pre-built office is drawn whole; a
-     click on Command starts the tour, one bubble per room on the map. Finishing opens the company's office.
+     click on Command starts the tour, one bubble per room on the map, telling one story: Command (you run it all
+     through NEXUS), the Vault (what you earn, with your Cymetica balance), Development (build and ship products),
+     Cymetica QA (test them, ET10 for verified bugs), the Quant Lab (find trading strategies on paper), the Trading
+     desk (run the proven ones for real), Operations (keeps it all optimal). Each bubble links to the room's pages on
+     cymetica.com. Create company then opens the step of section 3, and finishing opens the company's office.
 - The pre-build is what NEXUS builds from one request (section 4): the builder only asks it for you.
 
 ## 3. Creating a company is not free: your call
@@ -96,13 +100,6 @@ yours to design: you are the AI-native company.
   the experts to hire or fire. The charter lives there, not in the detail.
 - **Loading**: while the 3D is built, a loading screen with a miniature of Cymetica's sun and a number, never a
   half-drawn page.
-- **A click on a room** flies the camera into it with its detail beside it (a department's work, spend, latest
-  results; the Vault's money; Operations' next audit, with the Audit tab one link away). A room at work lights in the
-  rail's Working cyan; a room waiting on its owner glows orange.
-- **Edit department** is the Add-a-department dialog on the department: its room in 3D, who works there, its charter,
-  the experts to hire or fire. The charter lives there, not in the detail.
-- **Loading**: while the 3D is built, a loading screen with a miniature of Cymetica's sun and a number, never a
-  half-drawn page.
 - **Fixed rooms**: Command (NEXUS); Vault (what the company earned, ET10 and USDC as two piles that grow; opened,
   by department and by app; always private: a visitor sees its door shut); Operations (the weekly audit of wasted
   work, duplicates and stuck flows, and keeping the processes optimised).
@@ -124,8 +121,9 @@ yours to design: you are the AI-native company.
   known bug instead of filing it twice; re-tests a claimed fix on the same ticket. Every bug it files shows in the
   owner's My Bugs on the bug board, counted as the owner's. The ET10 for accepted bugs is lit on the department,
   the rail and the Vault.
-- **Development**: Build it Better as a department: idea, spec, design, build, test, release, monitor. Submitting
-  a request waits for the owner's approval.
+- **Development**: Build it Better as a department: idea, spec, design, build, test, release, monitor. What it ships
+  goes live on Cymetica as the owner's product and is shown in the Portfolio tab. Submitting a request waits for the
+  owner's approval.
 - **Operations**: built in (above).
 - **Quant Lab** (the Testing lab template): finds the ways to make money on Cymetica. It works strategies out with
   NEXUS and proves them on paper: its success rule and window are set first, the close decides; the winners are
@@ -165,7 +163,8 @@ one station, which the camera then follows; a deck per department, lit while it 
 arc of light). Public companies open read-only on a click; a private one shows its name, station and mission only,
 with a lock. **No sample companies**: the mockup's are placeholders; the live Universe shows only companies people
 created. Today `GET /api/v1/companies` lists only Investable companies (none on 2026-10-20) and a private one
-answers 404, so it needs all of them, private ones locked. Seven stations (Dreadnought, Shipyard, Pyramid Carrier,
+answers 404, so it needs all of them, private ones locked. A green Create company on the map takes someone without
+a company to the builder. Seven stations (Dreadnought, Shipyard, Pyramid Carrier,
 Ring Habitat, Lancer, Citadel, Monolith) in eight colours, picked in the builder and changed in Settings.
 
 ## 10. Portfolio and rewards
@@ -195,10 +194,10 @@ documented for agents in llms.txt, /api-docs and openapi-public.json. Today open
 company routes and the MCP four tools (company_status, company_message_manager, company_approve, company_create);
 processes, experiments, the Vault and the start options have none.
 
-**Connect AI** (a new tab, beside Token): "Talk to NEXUS. Run your whole company from your favourite AI." Three
-steps (the API key, the MCP connector's address, the prompt) and a card each for ChatGPT, Claude, Gemini and any
-AI that speaks MCP, with a ready prompt to copy and where its connector goes. From there the owner runs the whole
-company in a chat. The words of the prompt are yours to write.
+**Connect AI** (a new tab, between Token and Settings): "Talk to NEXUS. Run your whole company from your favourite
+AI." What it must hold: the API key, the MCP connector's address, and one ready prompt to paste into ChatGPT,
+Claude, Gemini or any AI that speaks MCP; from there the owner runs the whole company in a chat. **Design this tab
+yourselves**: the mockup's is only a sketch of its contents, and the prompt's words are yours to write.
 
 ## 14. Left to you
 
@@ -218,7 +217,7 @@ anything your backend cannot do as drawn (change the design minimally and name i
 | Room links | none | QA, Development, Quant Lab, Trading desk (two) pages |
 | My Bugs link | the board reads nothing from its address | `?filter=mine` opens My Bugs with the department's bugs |
 | API and MCP | 30 routes; MCP 4 tools | every function, documented for agents (section 13) |
-| Connect AI | none | the tab: a ready prompt per AI, the connector, the key |
+| Connect AI | none | a tab of your design: the key, the connector, one ready prompt |
 | QA files bugs | drafts, submitted on approval | files verified bugs as the owner, reopens, re-tests |
 | Lab / desk | both paper experiments | lab finds and proves; desk runs winners (Tournaments, real money on approval) |
 | Experiments page | experiments only inside task detail | the page, section 7 |
@@ -229,11 +228,11 @@ anything your backend cannot do as drawn (change the design minimally and name i
 
 ## Files in `design/`
 
-`start.html` landing · `builder.html` builder and tour · `index.html` the app (office, tabs, chat) · `experiments.html`
+`start.html` landing · `builder.html` builder, tour and the Create step (`?guest` signed out) · `index.html` the app (office, tabs, chat) · `experiments.html`
 the Quant Lab's page · `stations.html` the seven stations side by side · `u3d.js` the 3D engine (office, rooms,
 Universe) · `stations.js` the stations · `entry3d.js` the entry's 3D · `office.js` the 2D office · `app.js` the
 interface · `sim.js` **the stand-in backend, to replace** · `data.js`, `uv-data.js`, `portfolio.js`, `xp-data.js`
 sample data · `style.css`, `uv.css`, `start.css`, `builder.css`, `boot.css` (the loading screen), `xp.css` · `sun.webp` the loader's sun ·
-`shots/` the dialog cards' 3D pictures, drawn by the dialog's own renderer · `look-office.webp`, `look-universe.webp`
+`shots/` the dialog cards' and the station tiles' 3D pictures, drawn by the page's own renderers · `look-office.webp`, `look-universe.webp`
 the look references · `../screenshots/` every screen at 2000 x 1100 · `PERF-NOTES.md` what was optimised and how it
 was measured.
