@@ -10,6 +10,8 @@
 <link href="https://fonts.googleapis.com/css2?family=Archivo+Black&family=JetBrains+Mono:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@600;700&display=swap" rel="stylesheet">
 <style>html.ld body { visibility: hidden; }</style>
+<!-- the veil's core, the same as the loading screens' -->
+<link rel="stylesheet" href="boot.css">
 <script type="importmap">{ "imports": {
   "three": "https://cdn.jsdelivr.net/npm/three@0.172.0/build/three.webgpu.js",
   "three/webgpu": "https://cdn.jsdelivr.net/npm/three@0.172.0/build/three.webgpu.js",
@@ -35,7 +37,10 @@
     <div class="o3layer"></div>
     <div class="tip" hidden></div>
     <div class="bz-bub" id="bub" hidden></div>
-    <div class="bz-veil on" id="veil"><i></i><span>Preparing your station</span></div>
+    <div class="bz-veil on" id="veil"><div class="ldr"><i class="ld-halo"></i><i class="ld-beams"></i><i class="ld-ping"></i><i class="ld-ping p2"></i>
+      <i class="ld-orbit o3"><b></b></i><i class="ld-orbit o2"><b></b></i><i class="ld-orbit o1"><b></b></i>
+      <i class="ld-ring r3"></i><i class="ld-ring r2"></i><i class="ld-ring r1"></i><i class="ld-heart"></i>
+      <div class="ld-what">PREPARING YOUR STATION</div><div class="ld-bar"></div></div></div>
 
     <section class="bz-card">
       <ol class="bz-steps" id="steps"><li data-s="1"><i>1</i>Name &amp; look</li><li data-s="2"><i>2</i>Start</li></ol>

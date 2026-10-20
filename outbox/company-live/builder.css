@@ -130,14 +130,16 @@
 @keyframes bzring { from { transform: scale(1); opacity: .9; } to { transform: scale(3.4); opacity: 0; } }
 @keyframes bzcall { 50% { box-shadow: 0 0 0 1px rgba(0, 207, 255, .7), 0 0 44px rgba(0, 207, 255, .85); } }
 
-/* While the office is still being built, the stage under a veil: the build holds the page for a moment, and the ring
-   keeps turning through it (a transform runs off the page's thread) so it reads as building, not as stuck */
-.bz-veil { position: absolute; inset: 0; z-index: 7; display: flex; align-items: center; justify-content: center; gap: 14px; padding-left: var(--cw);
-  background: radial-gradient(ellipse at 60% 50%, rgba(28, 46, 62, .92), rgba(16, 28, 40, .97) 70%); opacity: 0; pointer-events: none; transition: opacity .18s;
-  font: 700 12px 'JetBrains Mono'; letter-spacing: .14em; text-transform: uppercase; color: var(--dim); }
+/* While the office is still being built, the stage under a veil: the build holds the page for a moment, and the
+   loading screens' core (boot.css) keeps turning through it (transforms run off the page's thread) so it reads as
+   building, not as stuck. No number here: the bar only shimmers. */
+.bz-veil { position: absolute; inset: 0; z-index: 7; display: flex; align-items: center; justify-content: center; padding-left: var(--cw); overflow: hidden;
+  background: radial-gradient(ellipse at 60% 50%, rgba(28, 46, 62, .94), rgba(12, 20, 30, .98) 70%); opacity: 0; pointer-events: none; transition: opacity .18s; }
 .bz-veil.on { opacity: 1; pointer-events: auto; }
-.bz-veil i { width: 26px; height: 26px; border-radius: 50%; border: 2px solid rgba(0, 207, 255, .2); border-top-color: var(--cyan); animation: bzspin .8s linear infinite; will-change: transform; }
-@keyframes bzspin { to { transform: rotate(360deg); } }
+.bz-veil .ldr { transform: scale(.8); margin-top: -40px; }
+.bz-veil .ld-what { top: 372px; }
+.bz-veil .ld-bar { top: 398px; }
+.bz-veil:not(.on) .ldr *, .bz-veil:not(.on) .ldr *::before, .bz-veil:not(.on) .ldr *::after { animation-play-state: paused; }
 
 /* the station's own canvas */
 .bz-pv { position: absolute; z-index: 5; }
