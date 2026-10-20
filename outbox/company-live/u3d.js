@@ -1949,7 +1949,9 @@ function thumbs(hex, done) {
       const c = document.createElement('canvas'); c.width = W; c.height = H; const g = c.getContext('2d'), img = g.createImageData(W, H);
       for (let y = 0; y < H; y++) { const sy = flip ? H - 1 - y : y; img.data.set(px.subarray(sy * W * 4, (sy + 1) * W * 4), y * W * 4); }
       for (let i = 3; i < img.data.length; i += 4) img.data[i] = 255;
-      g.putImageData(img, 0, 0); out[s.key] = c.toDataURL('image/png');
+      // encoded off the main thread, the same PNG (as the dialog's cards: RoomPreview.read)
+      g.putImageData(img, 0, 0);
+      out[s.key] = await new Promise((res) => { try { c.toBlob((b) => res(b ? URL.createObjectURL(b) : c.toDataURL('image/png')), 'image/png'); } catch (e) { res(c.toDataURL('image/png')); } });
       scene.remove(p.root); release(p.root);
     }
     finish();
@@ -2123,6 +2125,9 @@ function pvLit(lamp, room) {
 }
 // experts in the order the sliders list them (hiredKeys reads them so): the order deptRoom seats them in
 function pvOrder(ex) { const at = (k) => { const i = (CO.EXPERTS || []).findIndex((e) => e.key === k); return i < 0 ? 99 : i; }; return ex.slice().sort((a, b) => at(a) - at(b)); }
+// The floors that catch the mirror wait for the dialog's first real frame: made ready ahead in this renderer, the
+// mirror came out empty there and in every card's picture (the floors lost their reflections, measured 2026-10-20)
+const pvMirror = (o) => !!(o.material && o.material.userData && o.material.userData.mirror);
 // The dialog's room: one live renderer, the room turning slowly to and fro on its own, a drag turns it any way.
 // Every room it shows is built once and kept by its department, experts and look: set() swaps the kept one in (it
 // grows up out of its deck, as a new room does in the office), and ahead() builds the rooms a click can bring in idle
@@ -2149,14 +2154,40 @@ class RoomPreview {
     this.pace = pacer(() => !!this.drag || !!this.grow || performance.now() - (this.input || 0) < 1500);
     this.bind();
     PREVIEWS.push(this);
-    this.renderer.init().then(() => {
+    this.renderer.init().then(async () => {
       if (this.dead) return this.free();
       try { this.post = new Post(this.renderer, this.scene, this.camera, 0.32, 0.0, 0.86, { sat: 0.96 }); } catch (e) { this.post = null; }
       this.offRT = new THREE.RenderTarget(64, 64);
+      await this.prepare();
+      if (this.dead) return this.free();
       this.ready = true;
       this.renderer.setAnimationLoop(() => this.frame());
       this.idle();
     }).catch((e) => { console.error('the room preview could not start:', e); this.dispose(); if (this.onFail) this.onFail(e); });
+  }
+  // Its first frame's shaders made ahead a piece at a time, as the office's are (compileInPieces): this renderer is
+  // its own, so it builds every material it draws, and its first frame did all of them at once -- a 400-540 ms frame
+  // as the dialog opened, 2.5 s at a quarter of the CPU (measured 2026-10-20). Until then the stage shows what it
+  // shows while the renderer starts. The studio's reflections made again after it, as the office's are (prepare()).
+  async prepare() {
+    if (!this.post || !this.post.pass) return;
+    try { await compileInPieces(this.renderer, this.scene, this.camera, this.post.pass.renderTarget, { mrt: this.post.pass.getMRT(), all: true, skip: pvMirror }); }
+    catch (e) { console.warn('the room preview could not be made ready ahead:', e); }
+    if (this.scene.environment) this.scene.environment.needsPMREMUpdate = true;
+  }
+  // a room built ahead (or an astronaut for its card) made ready the same way, in its place for the moments it is
+  // looked at, the room on show put back between them
+  ahead1(w) {
+    const obj = w.room ? w.room.root : w.astro;
+    const around = (fn) => {
+      const cur = this.room;
+      if (cur) this.turn.remove(cur.root);
+      if (w.room) pvLit(this.lamp, w.room); else pvLit(this.lamp, null);
+      this.turn.add(obj);
+      try { return fn(); } finally { this.turn.remove(obj); if (cur) { this.turn.add(cur.root); pvLit(this.lamp, cur); } }
+    };
+    return compileInPieces(this.renderer, this.scene, this.camera, this.post.pass.renderTarget, { mrt: this.post.pass.getMRT(), all: true, only: obj, around, skip: pvMirror })
+      .catch((e) => console.warn('a room could not be made ready ahead:', e));
   }
   dept(o) { return { id: 0, key: o.key || 'custom', name: o.name || '', experts: pvOrder(o.experts || []), look: o.look || null, run_kind: null, link: null, charter: '', schedule: null }; }
   keyOf(d) { return [d.key, d.experts.join(','), d.look || ''].join('|'); }
@@ -2197,17 +2228,31 @@ class RoomPreview {
     this.idleId = ric(() => {
       this.idleId = 0;
       if (this.dead) return;
-      // not while a hand is on it, a room is growing or the last piece is still to be drawn
-      if (this.drag || this.grow || this.warm) { setTimeout(() => this.idle(), 120); return; }
+      // not while a hand is on it, a room is growing or the last piece is still to be made ready or drawn
+      if (this.drag || this.grow || this.warm || this.making) { setTimeout(() => this.idle(), 120); return; }
       const job = this.jobs.shift();
+      let w = null;
       if (job) {
-        if (job.kind === 'room') { const d = this.dept(job.o); this.warm = { room: this.get(d, this.keyOf(d)), job }; }
-        else this.warm = { astro: pvAstro(this.ab || (this.ab = pvBuilder(this.camera, 0, 0)), job.o), job };
+        if (job.kind === 'room') { const d = this.dept(job.o); w = { room: this.get(d, this.keyOf(d)), job }; }
+        else w = { astro: pvAstro(this.ab || (this.ab = pvBuilder(this.camera, 0, 0)), job.o), job };
       } else {
         let d = null; while (this.todo.length && !d) { const n = this.todo.shift(); if (!this.kept.has(this.keyOf(n))) d = n; }
         if (!d) return;
-        const room = this.get(d, this.keyOf(d)); if (room !== this.room) this.warm = { room };
+        const room = this.get(d, this.keyOf(d)); if (room !== this.room) w = { room };
       }
+      // Made ready a piece at a time first (ahead1); then a card's picture is drawn off screen in a frame's place as
+      // before, now with nothing left to build, and a room built ahead needs no frame at all. Drawn off screen to make
+      // it ready, each was a frame of 50-300 ms for 2 s after the dialog opened (measured 2026-10-20).
+      if (w && this.post) {
+        this.making = this.ahead1(w).then(() => {
+          this.making = null;
+          if (this.dead) return;
+          if (w.job) this.warm = w; else if (w.astro) release(w.astro);
+          this.idle();
+        });
+        return;
+      }
+      if (w) this.warm = w;
       this.idle();
     }, { timeout: 500 });
   }
@@ -2253,9 +2298,11 @@ class RoomPreview {
         for (let y = 0; y < H; y++) { const sy = flip ? H - 1 - y : y; img.data.set(px.subarray(sy * W * 4, (sy + 1) * W * 4), y * W * 4); }
         for (let i = 3; i < img.data.length; i += 4) img.data[i] = 255;
         g.putImageData(img, 0, 0);
-        // kept at the card's twice-its-pixels size, smoothed down by the canvas
+        // kept at the card's twice-its-pixels size, smoothed down by the canvas; encoded off the main thread (toBlob,
+        // the same PNG: toDataURL waited 90 ms a picture on the GPU, measured 2026-10-20)
         const s = document.createElement('canvas'); s.width = W / 2; s.height = H / 2; const sg = s.getContext('2d');
-        sg.imageSmoothingQuality = 'high'; sg.drawImage(c, 0, 0, W / 2, H / 2); url = s.toDataURL('image/png');
+        sg.imageSmoothingQuality = 'high'; sg.drawImage(c, 0, 0, W / 2, H / 2);
+        url = await new Promise((res) => { try { s.toBlob((b) => res(b ? URL.createObjectURL(b) : s.toDataURL('image/png')), 'image/png'); } catch (e) { res(s.toDataURL('image/png')); } });
       } catch (e) { url = null; }
     }
     if (url) SHOTS[job.key] = url;
@@ -2562,6 +2609,7 @@ function shFloor(o) {
   }));
   r = r.mul(TX.shReflK);
   m.emissiveNode = T.materialEmissive.add(r.div(r.add(1)));
+  m.userData.mirror = true;   // (what the dialog's renderer leaves to its first frame: RoomPreview.prepare)
   return m;
 }
 // His glass: pale frosted panes you clearly see -- a veil over what is behind them, brighter along the top rail and a
@@ -3201,6 +3249,9 @@ function omats() {
 // instanced meshes' with their matrices in a uniform buffer: three.js names each mesh's buffer in its shader
 // (NodeBuffer_<id>), so those are new with every new mesh, and kept they would only pile up. Checked when the
 // pipeline cache has changed size, which is only after something new was drawn.
+// (Not done the same for the node builder states three.js makes on the main thread before any of that: kept past
+// their materials, a glass sign's icon drawn after its first frame stayed undrawn on a rebuilt room -- its new
+// texture's update was lost -- so a rebuild still builds those again; measured 2026-10-20, 4 of 35.)
 function keepCompiled(R, st) {
   const P = R._pipelines; if (!P || !P.caches || P.caches.size === st._kept) return;
   st._kept = P.caches.size;
@@ -3238,9 +3289,12 @@ function compileKind(o) {
   return [o.type, mats.map((m) => m.uuid).join(','), g ? Object.keys(g.attributes).sort().join(',') + (g.index ? '+i' : '') + (Object.keys(g.morphAttributes || {}).length ? '+m' : '') : '',
     o.receiveShadow, o.castShadow, o.layers.mask, o.count > 1 ? o.uuid : '', o.isInstancedMesh && o.instanceColor ? 'ic' : '', o.isSkinnedMesh ? 's' : ''].join('|');
 }
+// only: the part to make ready (an object not on show), its pieces drawn with the rest of the scene as it is;
+// around(fn): puts it where it would be drawn for the moment of fn, and back (the dialog's rooms built ahead);
+// skip(o): what stays hidden through every piece, left to the first frame that draws it.
 async function compileInPieces(R, scene, camera, target, opts = {}) {
-  const all = [], culled = [], waits = [], seen = new Set(), first = [], rest = [];
-  scene.traverse((o) => { if ((o.isMesh || o.isPoints || o.isLine || o.isSprite) && o.visible) all.push(o); });
+  const all = [], culled = [], waits = [], seen = new Set(), first = [], rest = [], around = opts.around || ((fn) => fn()), skipped = [];
+  (opts.only || scene).traverse((o) => { if ((o.isMesh || o.isPoints || o.isLine || o.isSprite) && o.visible) (opts.skip && opts.skip(o) ? skipped : all).push(o); });
   all.forEach((o) => { const k = compileKind(o); if (seen.has(k)) rest.push(o); else { seen.add(k); first.push(o); } });
   // At least a twentieth of the first of each kind a piece: one at a time, a weak computer spent 4.5 s more on the
   // pieces' own passes than one frame had (13.3 s against 10.3 s at a quarter of the CPU, 141 pieces, measured).
@@ -3254,11 +3308,13 @@ async function compileInPieces(R, scene, camera, target, opts = {}) {
     if (opts.all) items.forEach((o) => { if (o.frustumCulled) { o.frustumCulled = false; culled.push(o); } });
     items.forEach((o) => { o.visible = false; });
     piece.forEach((o, k) => { o.visible = vis[i + k]; });
+    const sv = skipped.map((o) => o.visible); skipped.forEach((o) => { o.visible = false; });
     if (frame) frame.renderId++;
-    try { R.setRenderTarget(target); R.setMRT(opts.mrt || null); waits.push(R.compileAsync(scene, camera)); }
+    try { R.setRenderTarget(target); R.setMRT(opts.mrt || null); waits.push(around(() => R.compileAsync(scene, camera))); }
     finally {
       R.setRenderTarget(prevT); R.setMRT(prevM);
       items.forEach((o, k) => { o.visible = vis[k]; }); culled.forEach((o) => { o.frustumCulled = true; }); culled.length = 0;
+      skipped.forEach((o, k) => { o.visible = sv[k]; });
     }
     const wasFirst = i < first.length; i += n;
     const dt = performance.now() - t0;
@@ -3493,6 +3549,7 @@ function moodTex() {
   const t = new THREE.CanvasTexture(c); t.colorSpace = THREE.SRGBColorSpace; return t;
 }
 
+const LAMP_SPARE = 2;   // the dark lamps the office keeps beyond its rooms' (lampsBack)
 class Office3D {
   constructor(el, stage, tipFor) {
     geo(); omats();
@@ -3570,6 +3627,31 @@ class Office3D {
   rb(g, x0, y0, z0, w, d, h, mat, r = 0.05, shadow = true) {
     const m = new THREE.Mesh(rboxGeo(w, h, d, r), mat); m.position.copy(this.V(x0 + w / 2, y0 + d / 2, z0 + h / 2)); if (shadow) { m.castShadow = true; m.receiveShadow = true; } g.add(m); return m;
   }
+  // An instanced mesh as new, taken up again from the last layout when one of the same make is there (geometry,
+  // material, count). three.js r172 builds an instanced mesh's shaders for that mesh alone (its key holds the mesh's
+  // uuid, its matrices are a buffer of its own in the shader), so every rebuild of the office built 29-31 of them again
+  // on its first frame -- 600 ms of a department removed, 2.4 s at a quarter of the CPU, measured 2026-10-20. Taken up
+  // again it keeps them. Its matrices go to the GPU every frame it is drawn, so what the room sets in it is what shows.
+  imesh(geom, mat, n) {
+    const key = geom.uuid + '|' + mat.uuid + '|' + n, l = this.imPool && this.imPool.get(key), m = l && l.pop();
+    if (!m) { const im = new THREE.InstancedMesh(geom, mat, n); im.__imk = key; return im; }
+    m.position.set(0, 0, 0); m.quaternion.identity(); m.scale.set(1, 1, 1); m.matrix.identity(); m.matrixWorld.identity();
+    m.matrixAutoUpdate = THREE.Object3D.DEFAULT_MATRIX_AUTO_UPDATE; m.matrixWorldAutoUpdate = THREE.Object3D.DEFAULT_MATRIX_WORLD_AUTO_UPDATE;
+    m.layers.mask = 1; m.visible = true; m.castShadow = false; m.receiveShadow = false; m.frustumCulled = true; m.renderOrder = 0; m.name = ''; m.userData = {};
+    delete m.onBeforeRender; delete m.onAfterRender;
+    m.count = n; m.boundingBox = null; m.boundingSphere = null;
+    const a = m.instanceMatrix.array; a.fill(0); for (let i = 0; i < n; i++) a[i * 16] = a[i * 16 + 5] = a[i * 16 + 10] = a[i * 16 + 15] = 1;
+    m.instanceMatrix.needsUpdate = true;
+    return m;
+  }
+  // before a layout lets the old rooms go: their instanced meshes out of them, into the pool
+  imKeep() {
+    const pool = this.imPool || (this.imPool = new Map()), back = [];
+    this.world.traverse((o) => { if (o.__imk) back.push(o); });
+    back.forEach((o) => { o.parent.remove(o); const l = pool.get(o.__imk); if (l) l.push(o); else pool.set(o.__imk, [o]); });
+  }
+  // once the new rooms stand: what none of them took up is let go
+  imDrop() { if (this.imPool) { this.imPool.forEach((l) => l.forEach((o) => release(o))); this.imPool.clear(); } }
 
   layout(opts) {
     const S = CO.S, L = CO.iso, born = opts && opts.born;
@@ -3584,8 +3666,10 @@ class Office3D {
     const all = Object.keys(cells).map((k) => cells[k]);
     let maxX = 0, maxY = 0; all.forEach((c) => { maxX = Math.max(maxX, c[0] + L.RS); maxY = Math.max(maxY, c[1] + L.RS); });
     this.cx = maxX / 2; this.cy = maxY / 2; this.size = Math.max(maxX, maxY);
-    // clear the old floor, rooms and labels; the rooms' lamps are kept out of it (lampsBack below)
+    // clear the old floor, rooms and labels; the rooms' lamps are kept out of it (lampsBack below), and so are the
+    // instanced meshes, for the new rooms to take up again (imesh)
     (this.lampPool || []).forEach((l) => { if (l.parent) l.parent.remove(l); });
+    this.imKeep();
     release(this.world); this.world.clear(); this.layer.innerHTML = ''; this.rooms = {}; this.hits = []; this.pcs = [];
     const RS = L.RS, W = this.world;
     const pad = 0.5, T = 0.35, have = {}, kc = (x, y) => x + ',' + y;
@@ -3643,6 +3727,7 @@ class Office3D {
     Array.prototype.forEach.call(this.layer.children, (el) => { el.style.display = 'none'; el._off = true; });
     this.selRing = new THREE.Group(); W.add(this.selRing);
     this.update();
+    this.imDrop();
     if (!this.fitted) { this.fit(false); }
   }
   // every room's still parts merged per material (bakeRoom): the same picture in a fraction of the draw calls
@@ -3652,7 +3737,7 @@ class Office3D {
   // lit material of the office again -- a department added or edited cost a 1.5-1.9 s rebuild (measured
   // 2026-10-19). A layout with more lamps than before still adds new ones, and that rebuild still compiles.
   lampsBack() {
-    const pool = this.lampPool || (this.lampPool = []), now = [], swap = new Map();
+    const first = !this.lampPool, pool = this.lampPool || (this.lampPool = []), now = [], swap = new Map();
     this.world.traverse((x) => { if (x.isLight) now.push(x); });
     now.forEach((n, i) => {
       const p = pool[i];
@@ -3662,6 +3747,11 @@ class Office3D {
       const par = n.parent; par.children[par.children.indexOf(n)] = p; p.parent = par; n.parent = null; swap.set(n, p);
     });
     pool.length = Math.max(pool.length, now.length);
+    // and, from its first build, two lamps more than the office needs, dark: a department added then takes one of
+    // them instead of bringing a new light, which made every lit material build its shaders again (2.2 s of one
+    // frame, 12 s at a quarter of the CPU, measured 2026-10-20). A dark lamp adds nothing to any surface it reaches.
+    // Only then: topped up later, the new spare would be the new light.
+    if (first) while (pool.length < now.length + LAMP_SPARE) pool.push(new THREE.PointLight(0xeef6ff, 0, 9, 1.0));
     // the kept lamps this layout has no place for stay in the world, dark: a scene with fewer lights keys every lit
     // shader anew too, so an office that shrank (a department removed, the builder's New after Pre-build) compiled
     // them all again -- 2.3 s of stalled frames there, measured by the entry's session (2026-10-20)
@@ -4423,7 +4513,7 @@ class Office3D {
     sets.forEach((s) => {
       let m;
       if (s.ms.length === 1) { m = new THREE.Mesh(G.box, s.mat); s.ms[0].decompose(m.position, m.quaternion, m.scale); m.userData.dyn = true; }
-      else { m = new THREE.InstancedMesh(G.box, s.mat, s.ms.length); s.ms.forEach((mm, i) => m.setMatrixAt(i, mm)); m.computeBoundingSphere(); }
+      else { m = this.imesh(G.box, s.mat, s.ms.length); s.ms.forEach((mm, i) => m.setMatrixAt(i, mm)); m.computeBoundingSphere(); }
       m.userData.blink = s.k; r.g.add(m); r.leds.push(m);
     });
   }
@@ -5105,7 +5195,7 @@ class Office3D {
     }
     const net = new THREE.Group(); net.position.set(0, 0.9, 0); net.userData.dyn = true; o.add(net);
     net.add(new THREE.LineSegments(G.lkNet, OM.lkNet));
-    const nodes = new THREE.InstancedMesh(this.lkG('sph'), amat('#9ff6ff').glow, G.lkNetPts.length), ob = new THREE.Object3D();
+    const nodes = this.imesh(this.lkG('sph'), amat('#9ff6ff').glow, G.lkNetPts.length), ob = new THREE.Object3D();
     G.lkNetPts.forEach((v, i) => { ob.position.copy(v); ob.scale.setScalar(0.009 + (i % 3) * 0.003); ob.updateMatrix(); nodes.setMatrixAt(i, ob.matrix); });
     nodes.computeBoundingSphere(); net.add(nodes);
     const core = new THREE.Mesh(this.lkG('sph'), OM.cyan.glow); core.scale.setScalar(0.028); net.add(core);
@@ -5432,7 +5522,7 @@ class Office3D {
     }
     const tg = [[0.35, 0.2, 0.3], [-0.3, 0.38, 0.2], [-0.45, -0.2, 0.38], [0.15, -0.5, 0.24], [0.52, -0.22, 0.28]];
     if (!G.lkDiamond) G.lkDiamond = new THREE.OctahedronGeometry(1, 0);
-    const o = new THREE.Object3D(), mk = new THREE.InstancedMesh(G.lkDiamond, OM.cyan.glow, tg.length);
+    const o = new THREE.Object3D(), mk = this.imesh(G.lkDiamond, OM.cyan.glow, tg.length);
     tg.forEach(([tx, tz, h], q) => {
       this.raP(p, G.beam, OM.lkBeam, 0.14, h, 0.14, tx, 0.67 + h / 2, tz, 0, false);
       o.position.set(tx, 0.67 + h + 0.04, tz); o.scale.set(0.028, 0.042, 0.028); o.updateMatrix(); mk.setMatrixAt(q, o.matrix);
@@ -5550,7 +5640,7 @@ class Office3D {
     this.lkBox(p, W - 0.14, 0.025, D - 0.16, 0, 0.12, 0, OM.lkSteelDk);
     [-0.5, -0.05].forEach((bx, q) => { this.raB(p, 0.42, 0.14, 0.28, bx, 0.205, -0.08 + q * 0.04, OM.lkBag, 0.05).rotation.y = q * 0.2 - 0.1; });
     this.raB(p, W, 0.05, D, 0, 0.465, 0, OM.rbDeskTop, 0.012);
-    const sd = new THREE.InstancedMesh(leaf, OM.lkLeafC, 48), o = new THREE.Object3D();
+    const sd = this.imesh(leaf, OM.lkLeafC, 48), o = new THREE.Object3D();
     [-0.62, -0.08].forEach((tx, q) => {
       this.raB(p, 0.46, 0.04, 0.3, tx, 0.51, 0.08, OM.rbGloss, 0.008);
       for (let a = 0; a < 6; a++) for (let b = 0; b < 4; b++) { const s = 0.018 + R() * 0.012; o.position.set(tx - 0.19 + a * 0.076, 0.535 + s * 0.4, -0.025 + b * 0.07); o.scale.set(s, s * 0.8, s); o.rotation.y = R() * 6; o.updateMatrix(); sd.setMatrixAt(q * 24 + a * 4 + b, o.matrix); }
@@ -6106,7 +6196,7 @@ class Office3D {
     const o = new THREE.Object3D();
     sets.forEach((pts, s) => {
       if (!pts.length) return;
-      const im = new THREE.InstancedMesh(G.box, amat(['#38f2b8', '#00e5ff', '#38f2b8'][s]).glow, pts.length);
+      const im = this.imesh(G.box, amat(['#38f2b8', '#00e5ff', '#38f2b8'][s]).glow, pts.length);
       pts.forEach(([px, pz], j) => { o.position.copy(this.V(px, y + D + 0.003, pz)); o.scale.set(0.028, 0.012, 0.006); o.updateMatrix(); im.setMatrixAt(j, o.matrix); });
       im.computeBoundingSphere(); im.userData.blink = s * 4; g.add(im); (r.leds = r.leds || []).push(im);
     });
@@ -6161,7 +6251,7 @@ class Office3D {
     const sh = new THREE.Mesh(this.raShard(), OM.raShard); sh.scale.set(0.44, 0.42, 0.44); sh.rotation.z = 0.14; c.add(sh);
     const ed = new THREE.LineSegments(G.raShardE, OM.raEdge); ed.scale.copy(sh.scale); ed.rotation.copy(sh.rotation); c.add(ed);
     const core = new THREE.Mesh(G.sphere, OM.cyan.glow); core.scale.setScalar(0.04); c.add(core);
-    const R = rng(19), o = new THREE.Object3D(), sp = new THREE.InstancedMesh(G.sphere, amat('#9ff6ff').glow, 26);
+    const R = rng(19), o = new THREE.Object3D(), sp = this.imesh(G.sphere, amat('#9ff6ff').glow, 26);
     for (let i = 0; i < 26; i++) { const a = R() * Math.PI * 2, rr = 0.4 + R() * 0.22; o.position.set(Math.cos(a) * rr, (R() - 0.5) * 0.75, Math.sin(a) * rr); o.scale.setScalar(0.007 + R() * 0.007); o.updateMatrix(); sp.setMatrixAt(i, o.matrix); }
     c.add(sp);
     const hl = glowSprite(0x5ff0d8, 0.26, 1.9); hl.position.set(0, cy, zc); p.add(hl);
@@ -6281,7 +6371,7 @@ class Office3D {
       at.push([x + (i - (cols - 1) / 2) * pitch, z + (j - (rows - 1) / 2) * pitch, pitch * 0.76]);
     }
     if (skip.length) at.push([x + ((skip[0] + skip[skip.length - 1]) / 2 - (cols - 1) / 2) * pitch, z + (rows - 1) / 2 * pitch, (skip.length - 0.24) * pitch]);
-    const im = new THREE.InstancedMesh(G.box, OM.raKey, at.length);
+    const im = this.imesh(G.box, OM.raKey, at.length);
     at.forEach(([kx, kz, kw], i) => { o.position.set(kx, y + 0.023, kz); o.scale.set(kw, 0.014, pitch * 0.72); o.updateMatrix(); im.setMatrixAt(i, o.matrix); });
     im.receiveShadow = true; p.add(im); return im;
   }
@@ -6672,7 +6762,7 @@ class Office3D {
       }],
       plaque: [128, 72, (g, W, H) => {
         g.fillStyle = '#0a141c'; g.fillRect(0, 0, W, H); g.strokeStyle = 'rgba(176,196,208,.6)'; g.lineWidth = 2; g.strokeRect(3, 3, W - 6, H - 6);
-        txt(g, 'BEST FIND', W / 2, 11, '#dfeaf2', 11, 700, 'center'); txt(g, 'OF THE MONTH', W / 2, 25, '#dfeaf2', 11, 700, 'center'); txt(g, 'paper · 30d', W / 2, 46, CY, 9, 600, 'center');
+        txt(g, 'AGENT', W / 2, 11, '#dfeaf2', 11, 700, 'center'); txt(g, 'TOURNAMENTS', W / 2, 25, '#dfeaf2', 11, 700, 'center'); txt(g, 'paper seat · 30d', W / 2, 46, CY, 9, 600, 'center');
       }],
       // ---- the trading floor's boards ----
       // the big P&L on the back-left wall: paper only, its ROI after fees over thirty days, the curve and the days
@@ -6684,14 +6774,14 @@ class Office3D {
         line(g, a, '#5cffc4', 3.2);
         for (let i = 0; i < 30; i++) { const h = 6 + R() * 22, up = R() > 0.36; g.fillStyle = up ? 'rgba(56,245,184,.55)' : 'rgba(255,90,90,.55)'; g.fillRect(x0 + i * (x1 - x0) / 30 + 2, up ? yb - h : yb, (x1 - x0) / 30 - 5, up ? h : Math.min(h, 18)); }
       }],
-      // the desk's scan on the back-right wall: the agents it found by paper record and where each went, ours lit
+      // the Agent Tournaments' table on the back-right wall: the seats a paper record earns, ours lit
       leader: [1024, 176, (g, W, H) => {
-        glass(g, W, H); txt(g, 'AGENT SCAN  ·  30-DAY PAPER ROI', 26, 18, CY, 21); txt(g, 'after fees, 40+ trades', W - 26, 22, DIM, 14, 600, 'right');
-        ['#', 'AGENT', 'ROI 30D', 'TRADES', 'STATUS'].forEach((s, i) => txt(g, s, [26, 70, 560, 720, 880][i], 52, DIM, 13, 600));
-        [['1', 'quantpilot', '+9.8%', '212', 'IN THE LAB'], ['2', 'mean-revert-7', '+6.2%', '96', 'IN THE LAB'], ['3', 'ET10 GRID (ours)', '+4.1%', '42', 'WON'], ['4', 'gem-hunter', '+2.7%', '31', '9 TO GO'], ['5', 'basis-bot', '-0.8%', '64', '—']].forEach((row, i) => {
+        glass(g, W, H); txt(g, 'AGENT TOURNAMENTS  ·  LEADERBOARD', 26, 18, CY, 21); txt(g, 'a seat: 30d paper ROI after fees, 40+ trades', W - 26, 22, DIM, 14, 600, 'right');
+        ['#', 'AGENT', 'ROI 30D', 'TRADES', 'SEAT'].forEach((s, i) => txt(g, s, [26, 70, 560, 720, 880][i], 52, DIM, 13, 600));
+        [['1', 'quantpilot', '+9.8%', '212', 'SEATED'], ['2', 'mean-revert-7', '+6.2%', '96', 'SEATED'], ['3', 'TRADING DESK (us)', '+4.1%', '42', 'EARNED'], ['4', 'gem-hunter', '+2.7%', '31', '9 TO GO'], ['5', 'basis-bot', '-0.8%', '64', '—']].forEach((row, i) => {
           const y = 74 + i * 19, us = i === 2;
           if (us) { g.fillStyle = 'rgba(36,232,255,.14)'; g.fillRect(16, y - 3, W - 32, 19); }
-          row.forEach((s, j) => txt(g, s, [26, 70, 560, 720, 880][j], y, j === 2 ? (s[0] === '-' ? DN : UP) : us ? CY : j === 4 && s === 'IN THE LAB' ? UP : '#d6e4ee', 14, j === 1 && us ? 700 : 600));
+          row.forEach((s, j) => txt(g, s, [26, 70, 560, 720, 880][j], y, j === 2 ? (s[0] === '-' ? DN : UP) : us ? CY : j === 4 && s === 'SEATED' ? UP : '#d6e4ee', 14, j === 1 && us ? 700 : 600));
         });
       }],
       // the ticker along the desks' top rail: symbols and their moves, the gaps sized so one run fills the strip
@@ -6728,12 +6818,12 @@ class Office3D {
   /* ---- the trading floor: the trading desk's room, drawn whole at the looks' detail (rc*) ---- */
   // The department Cymetica runs: "Find and prove ways to make money on Cymetica with paper experiments only. Any
   // real-money action needs the owner's approval, and the company never places real trades itself." So its room is
-  // a trading floor on paper: on the back-right wall its status (r.wall) and its scan of agents by paper record,
-  // each with where it went; on the back-left the paper P&L and the kanban (r.kb). Before them one long trading
+  // a trading floor on paper: on the back-right wall its status (r.wall) and the Agent Tournaments' leaderboard, the
+  // seat a paper record earns; on the back-left the paper P&L and the kanban (r.kb). Before them one long trading
   // desk, a bank of six screens for each of its people -- three low, three high on a post, the outer ones turned in to
   // him, the middle low one his own (r.mons: dark until he works) -- and over the banks a ticker running along their
   // rail; a carpet with a mint edge under the desk and its chairs. At the front the room's rule on a screen of its
-  // own (real money locked: the owner's approval) and a case with the month's best find; the department's computer in
+  // own (real money locked: the owner's approval) and a case with the tournaments' cup; the department's computer in
   // the back corner. Mint like every room: orange only while it waits on its owner (tint).
   rcTrading(r, d) {
     this.rcMats();
@@ -6819,7 +6909,7 @@ class Office3D {
       sets[up ? 0 : 1].push([a, lo + hb / 2, 0.034, hb], [a, lo + hb / 2, 0.007, hb + 0.03 + R() * 0.04]);
     }
     sets.forEach((pts, k) => {
-      const im = new THREE.InstancedMesh(G.box, k ? OM.rcHoloDn : OM.rcHoloUp, pts.length);
+      const im = this.imesh(G.box, k ? OM.rcHoloDn : OM.rcHoloUp, pts.length);
       pts.forEach(([a, py, sw, sh], j) => { o.position.set(Math.cos(a) * 0.31, py, Math.sin(a) * 0.31); o.rotation.set(0, -a, 0); o.scale.set(sw, sh, sw); o.updateMatrix(); im.setMatrixAt(j, o.matrix); });
       im.computeBoundingSphere(); cg.add(im);
     });
@@ -6838,7 +6928,7 @@ class Office3D {
     this.rcFace(hd, 'gate', 0.46, 0.27, 0, 0, 0.0255, 0);
     this.lkLed(r, hd, '#24e8ff', 0.21, -0.145, 0.027, 2);
   }
-  // the month's best find, a cup in a case, turned to the room's front corner: a plinth with a lit band and its plaque,
+  // the Agent Tournaments' cup in a case, turned to the room's front corner: a plinth with a lit band and its plaque,
   // the silver cup on a ring of light, a glass case over it
   rcTrophy(r, x, y) {
     const p = this.raG(r, x, y, Math.PI / 4);
@@ -6913,7 +7003,7 @@ class Office3D {
     // his drum: a pale metal band round its top, a cyan glow where it meets the disc, small lights round the disc's rim
     const band = new THREE.Mesh(G.ringT, OM.daisRim); band.scale.set(1.08, 1.08, 2.6); band.rotation.x = Math.PI / 2; band.position.set(c.x, 0.47, c.z); g.add(band);
     const foot = new THREE.Mesh(G.ringT, cy.rim); foot.scale.set(1.13, 1.13, 0.8); foot.rotation.x = Math.PI / 2; foot.position.set(c.x, 0.27, c.z); g.add(foot);
-    const o = new THREE.Object3D(), nodes = new THREE.InstancedMesh(G.cyl8, cy.glow, 12);
+    const o = new THREE.Object3D(), nodes = this.imesh(G.cyl8, cy.glow, 12);
     for (let i = 0; i < 12; i++) { const a = i / 12 * Math.PI * 2; o.position.set(c.x + Math.cos(a) * 1.6, 0.265, c.z + Math.sin(a) * 1.6); o.scale.set(0.035, 0.01, 0.035); o.updateMatrix(); nodes.setMatrixAt(i, o.matrix); }
     nodes.computeBoundingSphere(); g.add(nodes);
     // his column of light: a frosted shaft from the drum to over the top ring, brightest at the core, gone at its head
@@ -6921,7 +7011,7 @@ class Office3D {
     const beam = new THREE.Mesh(G.rcBeam, new THREE.MeshBasicMaterial({ map: this.rcTex('beam'), color: new THREE.Color(0x8feeff).multiplyScalar(0.75), transparent: true, opacity: 0.5, blending: THREE.AdditiveBlending, depthWrite: false, side: THREE.DoubleSide }));
     beam.scale.set(1, 2.3, 1); beam.position.set(c.x, 0.48 + 1.15, c.z); g.add(beam);
     // and the sparks in it: motes rising in the shaft and drifting round the dais, turning slowly (r.spin)
-    const R = rng(83), n = 140, motes = new THREE.InstancedMesh(G.box, amat('#7fe8f8').glow, n);
+    const R = rng(83), n = 140, motes = this.imesh(G.box, amat('#7fe8f8').glow, n);
     for (let i = 0; i < n; i++) {
       const inShaft = i < 85, a = R() * Math.PI * 2, rad = inShaft ? Math.sqrt(R()) * 0.38 : 1.2 + R() * 1.25, y = inShaft ? 0.6 + R() * R() * 2.1 : 0.16 + R() * 0.8, s = 0.012 + R() * 0.014;
       o.position.set(Math.cos(a) * rad, y, Math.sin(a) * rad); o.rotation.set(R() * 3, R() * 3, 0); o.scale.set(s, s, s); o.updateMatrix(); motes.setMatrixAt(i, o.matrix);
@@ -7023,7 +7113,7 @@ class Office3D {
     add(G.ringT, OM.vtNeon, 0, 0, F + 0.006, 0.505, 0.505, 0.505, leaf, false);
     // the locking bolts, twelve, thick, out of the door's edge all round (none straight up, so a shut door's stay
     // under the wall's top); bolt heads round the face
-    const o = new THREE.Object3D(), bolts = new THREE.InstancedMesh(G.cyl, OM.vtChrome, 12), heads = new THREE.InstancedMesh(G.cyl8, OM.vtSteelDk, 16);
+    const o = new THREE.Object3D(), bolts = this.imesh(G.cyl, OM.vtChrome, 12), heads = this.imesh(G.cyl8, OM.vtSteelDk, 16);
     for (let k = 0; k < 12; k++) {
       const a = (k + 0.5) / 12 * Math.PI * 2;
       o.position.set(Math.cos(a) * 0.59, Math.sin(a) * 0.59, 0); o.rotation.set(0, 0, a - Math.PI / 2); o.scale.set(0.045, 0.18, 0.045); o.updateMatrix(); bolts.setMatrixAt(k, o.matrix);
@@ -7072,14 +7162,14 @@ class Office3D {
       const dash = [], step = 0.3, L = 0.17, w = 0.024;
       for (let x = a + step / 2; x < b - 0.05; x += step) dash.push([x, c, L, w], [x, d, L, w]);
       for (let y = c + step / 2; y < d - 0.05; y += step) dash.push([a, y, w, L], [b, y, w, L]);
-      const im = new THREE.InstancedMesh(G.box, mat, dash.length);
+      const im = this.imesh(G.box, mat, dash.length);
       dash.forEach(([x, y, sx, sz], k) => { o.position.copy(this.V(x, y, 0.082)); o.rotation.set(0, 0, 0); o.scale.set(sx, 0.004, sz); o.updateMatrix(); im.setMatrixAt(k, o.matrix); });
       g.add(im);
     });
     // the walk from the door, lit along both edges by studs in the floor
     const studs = [];
     for (let v = 2.25; v < 6.8; v += 0.5) studs.push([2.72, v], [4.28, v]);
-    const st = new THREE.InstancedMesh(G.cyl, OM.vtStud, studs.length);
+    const st = this.imesh(G.cyl, OM.vtStud, studs.length);
     studs.forEach(([u, v], k) => { o.position.copy(this.V(x0 + u, y0 + v, 0.083)); o.rotation.set(0, 0, 0); o.scale.set(0.024, 0.006, 0.024); o.updateMatrix(); st.setMatrixAt(k, o.matrix); });
     g.add(st);
     // two floodlights on the door wall, the right one turned on the door's face, the left one on the bars; their
@@ -7112,11 +7202,11 @@ class Office3D {
     const BP = 180, CP = 480, CB = 9, CC = 36, slots = (us, vs) => vs.flatMap((v) => us.map((u) => [u, v]));
     const S = r.pileSet || (r.pileSet = (() => {
       const nE = slots(D.ue, D.re).length, nU = slots(D.uu, D.ru).length;
-      const deck = new THREE.InstancedMesh(G.box, OM.vtPallet, (nE + nU) * 4); deck.castShadow = true; deck.receiveShadow = true;
-      const lips = [new THREE.InstancedMesh(G.box, OM.vtLipG, nE * 4), new THREE.InstancedMesh(G.box, OM.vtLipB, nU * 4)];
-      const bars = new THREE.InstancedMesh(G.vtBar, OM.vtBar, 6 * BP + CB); bars.castShadow = true; bars.receiveShadow = true;
+      const deck = this.imesh(G.box, OM.vtPallet, (nE + nU) * 4); deck.castShadow = true; deck.receiveShadow = true;
+      const lips = [this.imesh(G.box, OM.vtLipG, nE * 4), this.imesh(G.box, OM.vtLipB, nU * 4)];
+      const bars = this.imesh(G.vtBar, OM.vtBar, 6 * BP + CB); bars.castShadow = true; bars.receiveShadow = true;
       // they take shadows but cast none: at their size the shadow pass would draw thousands for a few pixels
-      const coins = new THREE.InstancedMesh(G.vtCoin, OM.vtCoin, 6 * CP + CC); coins.receiveShadow = true;
+      const coins = this.imesh(G.vtCoin, OM.vtCoin, 6 * CP + CC); coins.receiveShadow = true;
       const set = { deck, lips, bars, coins, all: [deck, lips[0], lips[1], bars, coins], pools: [] };
       set.all.forEach((im) => { im.userData.dyn = true; im.visible = false; pg.add(im); });
       return set;
@@ -7330,7 +7420,7 @@ class Office3D {
         for (let h = 0.24; h < 0.5; h += 0.12) at(a0 + (k + 0.5) * L / 6 + d, h);
       });
     });
-    const im = new THREE.InstancedMesh(G.vtRivet, OM.vtRivet, pts.length), o = new THREE.Object3D();
+    const im = this.imesh(G.vtRivet, OM.vtRivet, pts.length), o = new THREE.Object3D();
     pts.forEach(([w, a, h], k) => {
       if (w === 'y') { o.position.copy(this.V(x0 + a, y0 + D.WT, h)); o.rotation.set(Math.PI / 2, 0, 0); }
       else { o.position.copy(this.V(x0 + D.WT, y0 + a, h)); o.rotation.set(0, 0, -Math.PI / 2); }

@@ -205,9 +205,9 @@
 
   // what an approval is, in words a person uses
   var KIND_WORD = { 'BB request': 'Build it Better request', 'bug report': 'Bug report', 'real-money action': 'Real money',
-    'start?': 'Start it?', 'review': 'Check the result' };
+    'seat request': 'Tournament seat', 'start?': 'Start it?', 'review': 'Check the result' };
   function kindWord(k) { return KIND_WORD[k] || k; }
-  function plainTitle(s) { return String(s || '').replace(/^(BB request|Real trade|Handle): /, ''); }
+  function plainTitle(s) { return String(s || '').replace(/^(BB request|Seat|Real trade|Handle): /, ''); }
   function apprCard(a, full) {
     var d = CO.dept(a.dept_id), isNew = !ui.seen[a.id];
     var kind = a.kind === 'real-money action' ? 'tag money' : a.kind === 'review' || a.kind === 'start?' ? 'tag rvk' : 'tag k';
@@ -234,13 +234,13 @@
     renderEarned(fd);
     renderChats();
   }
-  // What the company earned, by where it came from: each department that earns (ET10: accepted bugs) and
+  // What the company earned, by where it came from: each department that earns (ET10: bugs, prizes, the League) and
   // each app it built (the proposed ET10 for the visitors it brings, and USDC from its revenue share).
   function vaultRows() {
     var S = CO.S, out = [];
     S.departments.filter(function (d) { return d.et10 || d.files_as; }).forEach(function (d) {
       var why = d.files_as ? (d.accepted || 0) + ' bug' + (d.accepted === 1 ? '' : 's') + ' accepted' :
-        'rewards';
+        d.prizes ? d.prizes + ' tournament prize' + (d.prizes === 1 ? '' : 's') : d.answers ? d.answers + ' League answers' : 'prizes';
       out.push({ kind: 'dept', id: d.id, name: d.name, why: why, et10: d.et10 || 0, usdc: 0 });
     });
     CO.apps().forEach(function (a) {
@@ -508,13 +508,20 @@
         $('uvstage').classList.remove('loading');
         CO.uv = uv;   // a handle for looking at the map from the console
         uv.layout(); uvLaid = true;
-        finishShow(true);
+        whenWarm(true);
       })();
       return;
     }
     // built ahead (prebuildUniverse): whatever step it had not reached yet is done now
     if (!uvLaid) { if (uvLay) { uvLay.forEach(function (f) { f(); }); uvLay = null; } else uv.layout(); uvLaid = true; }
-    finishShow(!uvShown);
+    whenWarm(!uvShown);
+  }
+  // Shown once its shaders are made (warm(), a piece at a time), the flight in starting then: not built ahead (the page
+  // opened on the map) its first frame built all of them at once, a 1.0 s frame with the flight's start lost in it
+  // (measured 2026-10-20); built ahead but not yet warm, the frames waited for it while the flight ran on unseen.
+  function whenWarm(first) {
+    uvShown = true;   // (what is built ahead stops here, and its pieces wait for no hand)
+    if (uv.warm && !uv.warmed) uv.warm().then(function () { finishShow(first); }); else finishShow(first);
   }
   // The Universe built ahead (2026-10-19, "load things in the background"): once the office has drawn and the page
   // has been left alone for a moment, the map is built a step at a time in the browser's idle time -- its renderer,

@@ -10,8 +10,8 @@
 <link href="https://fonts.googleapis.com/css2?family=Archivo+Black&family=JetBrains+Mono:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <!-- the Universe's name plates: his picture's squared, semi-condensed caps -->
 <link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@600;700&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="style.css?v=20261021z">
-<link rel="stylesheet" href="uv.css?v=20261021z">
+<link rel="stylesheet" href="style.css?v=20261022aa">
+<link rel="stylesheet" href="uv.css?v=20261022aa">
 <!-- the 3D engine for the Universe and the office: three.js with its WebGPU renderer (WebGL2 where WebGPU is missing) -->
 <script type="importmap">{ "imports": {
   "three": "https://cdn.jsdelivr.net/npm/three@0.172.0/build/three.webgpu.js",
@@ -31,18 +31,14 @@
 <link rel="modulepreload" href="https://cdn.jsdelivr.net/npm/three@0.172.0/examples/jsm/utils/BufferGeometryUtils.js">
 </head>
 <body>
-<header class="site">
-  <a class="logo" href="#" data-mock="EventTrader home">Event<i>Trader</i></a>
-  <nav><a data-mock="Markets">Markets</a><a data-mock="Agents">Agents</a><a data-mock="Build it Better">Build it Better</a><a class="on">Company</a><a data-mock="Usage">Usage</a></nav>
-  <span class="sp"></span>
-  <span class="simbar" id="simbar" title="Not part of the design: controls for this mockup's simulated live data.">
-    <b>MOCKUP</b><span>simulated</span>
-    <button data-speed="0" title="Freeze the simulation">❚❚</button><button data-speed="1" class="on">1×</button><button data-speed="4">4×</button><button data-speed="16">16×</button>
-    <button id="sim-reset" title="Start the simulation over">↺</button>
-    <button id="sim-new" title="Mockup only: go through creating a company">+ new</button>
-  </span>
-  <span class="acct"><i></i>expire76</span>
-</header>
+<!-- no site bar: it is not part of the app ("ten vrchni panel nikde nedavej to neni soucast apky", 2026-10-20); the
+     mockup's own controls float in the corner, outside the design -->
+<span class="simbar" id="simbar" title="Not part of the design: controls for this mockup's simulated live data.">
+  <b>MOCKUP</b><span>simulated</span>
+  <button data-speed="0" title="Freeze the simulation">❚❚</button><button data-speed="1" class="on">1×</button><button data-speed="4">4×</button><button data-speed="16">16×</button>
+  <button id="sim-reset" title="Start the simulation over">↺</button>
+  <button id="sim-new" title="Mockup only: go through creating a company">+ new</button>
+</span>
 
 <div class="robar" id="robar" hidden>
   <span class="ro-pill">READ ONLY</span>
@@ -218,16 +214,16 @@
 <div class="toast" id="toast" hidden></div>
 
 <!-- ?v= changes with every edit, so a plain reload never runs yesterday's file from the cache -->
-<script src="data.js?v=20261021z"></script>
-<script src="uv-data.js?v=20261021z"></script>
-<script src="portfolio.js?v=20261021z"></script>
-<script src="sim.js?v=20261021z"></script>
-<script src="office.js?v=20261021z"></script>
-<script src="universe.js?v=20261021z"></script>
-<script src="cards.js?v=20261021z"></script>
-<script src="app.js?v=20261021z"></script>
-<script type="module" src="u3d.js?v=20261021z"></script>
+<script src="data.js?v=20261022aa"></script>
+<script src="uv-data.js?v=20261022aa"></script>
+<script src="portfolio.js?v=20261022aa"></script>
+<script src="sim.js?v=20261022aa"></script>
+<script src="office.js?v=20261022aa"></script>
+<script src="universe.js?v=20261022aa"></script>
+<script src="cards.js?v=20261022aa"></script>
+<script src="app.js?v=20261022aa"></script>
+<script type="module" src="u3d.js?v=20261022aa"></script>
 <!-- the seven stations a company can pick (stations.js puts its builders into u3d.js's table and renames CO.SKINS) -->
-<script type="module" src="stations.js?v=20261021z"></script>
+<script type="module" src="stations.js?v=20261022aa"></script>
 </body>
 </html>

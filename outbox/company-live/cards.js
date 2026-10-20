@@ -11,8 +11,8 @@
     development: 'Idea → spec → design → build → test → release → monitor',
     design: 'Screen-by-screen briefs, and reviews of live pages against them',
     testing: "Cymetica's bug bounty: tests their products, files bugs as you, earns ET10",
-    testing_lab: 'Paper experiments, success rule set first; keeps the winners',
-    trading_desk: 'Finds ways to make money; proven agents can enter Agent Tournaments',
+    testing_lab: 'Finds ways to make money; proves each on paper first',
+    trading_desk: 'Runs the lab\'s winning bots: Agent Tournaments, real money',
     custom: 'Your own name, charter and experts'
   };
   // what a department does, in three short lines off its charter: the 3D dialog's panel beside its room
@@ -20,8 +20,8 @@
     development: ['Turns ideas into Build it Better requests.', 'Idea, spec, design, build, test, release, monitor.', 'Submitting a request waits for you.'],
     design: ['Screen-by-screen briefs for new pages.', 'Reviews live pages against their brief.', 'Briefs go out as Build it Better requests.'],
     testing: ["Cymetica's bug bounty, as your department.", 'Tests their pages, API and docs; files bugs as you.', 'Every bug they accept pays you ET10.'],
-    testing_lab: ['Paper experiments: cards, bots, memecoins.', 'Sets the success rule before each one starts.', 'Keeps the winners, archives the rest.'],
-    trading_desk: ['Finds ways to make money, with NEXUS.', 'The Quant Lab proves each on paper.', 'Proven agents can enter Agent Tournaments; every step waits for you.'],
+    testing_lab: ['Finds ways to make money, with NEXUS.', 'Proves each on paper: the rule set first.', 'Keeps the winners, archives the rest.'],
+    trading_desk: ['Runs the Quant Lab\'s winning bots.', 'A seat at Agent Tournaments, or real money.', 'Every seat and every stake waits for you.'],
     custom: ['Your own department: name it, staff it.', 'Pick its room with the arrows.', 'First task: read the charter, propose a week.']
   };
   CO.EXPERT_INFO = {

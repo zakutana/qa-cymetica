@@ -59,12 +59,11 @@
     { key: 'testing_lab', name: 'Testing lab', experts: ['lab_scientist', 'researcher'],
       charter: 'Paper experiments on event cards, bot settings, memecoin signals and head-to-head. Asks NEXUS for strategies; sets the success rule before each experiment starts; judges it when the window closes; keeps winners and archives losers. Runs a daily newcomer check of the public site.' },
     { key: 'trading_desk', name: 'Trading desk', experts: ['trader', 'researcher'],
-      charter: "Find ways to make money on Cymetica and hand each to the lab as a paper experiment.\n" +
-        "- Look every day: what NEXUS recommends, the agents on cymetica.com/agents, bots built in the Bot Assembly Terminal (cymetica.com/terminal), the markets that moved.\n" +
-        "- A candidate needs a reason: a paper record, a signal or NEXUS's word. Write it up with the rule it should beat.\n" +
-        "- The Quant Lab proves it on paper; nothing is trusted before its window closes.\n" +
-        "- When an experiment wins, draft its next step: a real-money stake (the stake, the stop, the window) or a seat for the agent at an Agent Tournaments table.\n" +
-        "- Every such step waits for my approval, and the company never places a real trade itself." },
+      charter: "Put the bots that won in the Quant Lab into production on Cymetica.\n" +
+        "- Take only what passed in the lab's Experiments: its success rule met, its window closed.\n" +
+        "- Seat each at an Agent Tournaments table (cymetica.com/agent-tournaments): a FLASH table (1 day) for a quick read, a 7-day table for the verdict. Or run it with a small real-money stake, its stop set first.\n" +
+        "- Every seat and every stake waits for my approval; the company never places a real trade itself.\n" +
+        "- Follow each one's rank, ROI and P&L. One that stops earning goes back to the lab with the reason." },
     { key: 'custom', name: '', experts: ['researcher'], charter: '' }
   ];
   // What a department of your own can look like: the owner picks one with the arrows round its room when creating it
@@ -122,7 +121,7 @@
     ['a new build is released', 'testing', 'tests it the same day and reports what is broken'],
     ['someone has a product idea', 'development', 'writes it up as a Build it Better request'],
     ['someone finds a way to make money', 'testing_lab', 'proves it on paper first'],
-    ['an experiment wins on paper', 'trading_desk', 'drafts its next step for your approval: a real-money stake or an Agent Tournaments seat']
+    ['an experiment wins on paper', 'trading_desk', 'puts it into production once you approve: an Agent Tournaments seat or real money']
   ];
 
   // GET /api/v1/token-launch/chains, read 2026-10-16.
@@ -173,14 +172,14 @@
         why: 'parent bot won 3 windows' }
     ],
     trading_desk: [
-      { title: 'Ask NEXUS: where the money is this week', turns: 1, expert: 'researcher', outcome: '3 ideas, each with the rule it should beat',
-        why: 'every Monday' },
-      { title: 'Scan: agents by 30-day paper ROI', turns: 1, expert: 'researcher', outcome: '3 candidates: +4% or more after fees, 40+ trades',
-        why: 'the daily scan' },
+      { title: 'Seat: Fibonacci Phoenix at a FLASH $5 table', kind: 'seat request', turns: 1, expert: 'trader',
+        outcome: 'Waits for you', why: 'won its window in the lab' },
+      { title: 'Follow the seats: 2 tables running', turns: 1, expert: 'researcher', outcome: 'Phoenix 3rd at table 13, +2.4% ROI, day 4 of 7',
+        why: 'every 6 hours while a table runs' },
       { title: 'Real trade: ET10 grid, 50 USDC, stop -5%', kind: 'real-money action', turns: 1, expert: 'trader',
         outcome: 'Waits for you', why: 'won 3 paper windows of 3 in the lab' },
-      { title: 'Hand to the lab: Momentum Hawk with a 4% stop', turns: 1, expert: 'trader', outcome: 'Experiment opened: beat BTC by 1% in 7 days',
-        why: 'best candidate of the scan' }
+      { title: 'Back to the lab: Momentum Hawk', turns: 1, expert: 'researcher', outcome: '4th of 10 twice: off the tables, the reason kept',
+        why: 'out of the top three two tables running' }
     ],
     custom: [
       { title: 'Read the charter and propose a first week', turns: 1, expert: null, outcome: '5 tasks proposed',
@@ -200,9 +199,9 @@
       ['lesson', 'File with the exact request and the capture, never a paraphrase.']],
     testing_lab: [['lesson', 'A correct number can be untradeable: read the pool depth first.'],
       ['rule', 'The success rule is set before the window opens, never after.']],
-    trading_desk: [['rule', 'An idea goes to the lab with the rule it should beat, never straight to money.'],
-      ['lesson', 'Paper ignores slippage: a real-money draft starts small, with its stop set first.'],
-      ['knows', 'The company never places a real trade itself: the owner approves every real-money step.']],
+    trading_desk: [['rule', 'A seat only for a paper record: ROI after fees over 30 days, 40+ trades.'],
+      ['lesson', 'A FLASH day is a quick read; only a 7-day table is a verdict.'],
+      ['knows', 'A table ranks by ROI on closed trades; under 3x capital in volume it does not place.']],
     custom: [['knows', 'Every task starts from the saved charter.']]
   };
 
@@ -214,6 +213,14 @@
         '\n\nWhat happens instead\nNone of the 12 appear in the OpenAPI document; an agent that builds from it cannot find the Company API.' +
         '\n\nEvidence\nCapture 0a775df1 (request, response, time).' +
         '\n\nReward\n1,000 ET10 if verified and not a duplicate.\n\nSubmitted only after your approval.';
+    }
+    if (kind === 'seat request') {
+      var who = title.replace(/^Seat: /, '').split(' at ')[0], where = title.split(' at ').slice(1).join(' at ') || 'a paper table';
+      return 'SEAT REQUEST · drafted by ' + dept + '\n\nAgent\n' + who +
+        '\n\nTable\n' + where + ' at cymetica.com/agent-tournaments · 10 seats · paper buy-in · best ROI takes the pot' +
+        '\n\nWhy this agent\n30-day paper ROI +6.2% after fees, 48 trades, worst drawdown -3.1%.' +
+        '\n\nWhat counts\nTop three at the close: keep it and enter the next 7-day table. Otherwise it is archived with the reason.' +
+        '\n\nIf you approve\nThe seat is requested and approved in your name. Paper only: nothing real is spent.';
     }
     if (kind === 'real-money action') {
       return 'REAL-MONEY ACTION · drafted by ' + dept + '\n\nWhat\n' + title +
@@ -398,7 +405,7 @@
         { id: 'R2', on: true, when: 'a new build is released', dept_id: 3, does: 'tests it the same day and reports what is broken', fired: 0 },
         { id: 'R3', on: true, when: 'someone has a product idea', dept_id: 1, does: 'writes it up as a Build it Better request', fired: 0 },
         { id: 'R4', on: true, when: 'someone finds a way to make money', dept_id: 4, does: 'proves it on paper first', fired: 0, review: 'result', reviewer: 'you' },
-        { id: 'R5', on: true, when: 'an experiment wins on paper', dept_id: 5, does: 'drafts its next step for your approval: a real-money stake or an Agent Tournaments seat', fired: 0, review: 'start', reviewer: 'you' }
+        { id: 'R5', on: true, when: 'an experiment wins on paper', dept_id: 5, does: 'puts it into production once you approve: an Agent Tournaments seat or real money', fired: 0, review: 'start', reviewer: 'you' }
       ], next_rule: 6,
       token: { chain: '5042', symbol: '', reserved: false, perp_listed: false },
       next_id: 40, next_msg: 4, next_appr: 3, next_mem: memory.length + 1, next_dept: 6,
@@ -424,7 +431,7 @@
   // Our own company, the one that runs locally today, set up the new way: the departments, their charters,
   // clocks and products, and the processes between them. No history: it starts now and the simulation runs it.
   CO.OURS = {
-    mission: 'Find what is broken on Cymetica and get paid in ET10 for it, find what makes money there and prove it on paper before a cent of real money moves.',
+    mission: 'Find what is broken on Cymetica and get paid in ET10 for it, find what makes money there on paper, and put the bots that win into production.',
     departments: [
       { key: 'testing', name: 'Cymetica QA', experts: ['qa_tester', 'auditor'], runs: 2,
         products: ['Build it Better', 'Fund Launcher', 'Gem Screener', 'Supply Analyzer', 'Chart Analyzer'] },
@@ -441,7 +448,7 @@
       ['a bug is found anywhere', 'Cymetica QA', 'verifies it and files it as expire76'],
       ['a new build is released', 'Cymetica QA', 'tests it the same day and reports what is broken'],
       ['someone finds a way to make money', 'Quant Lab', 'proves it on paper first'],
-      ['an experiment wins on paper', 'Trading desk', 'drafts its next step for your approval: a real-money stake or an Agent Tournaments seat']
+      ['an experiment wins on paper', 'Trading desk', 'puts it into production once you approve: an Agent Tournaments seat or real money']
     ]
   };
   // The departments a pre-built company starts with (builder.html's Pre-build and its tour read this list): the
