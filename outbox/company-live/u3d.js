@@ -3675,7 +3675,9 @@ class Office3D {
   // viditelnejsi barvu, mozna modrou, aby to bylo jasne videt"): the plates go, the names are the site's cyan-blue
   // over a dark band so they read over whatever is behind the glass; orange while the room waits on the owner.
   signRooms() {
-    const have = new Set(Object.values(this.cells || {}).map((c) => c[0] + ',' + c[1]));
+    // the free lot has no walls to hide a pane: a room beside it keeps its name on the front-left glass (the Quant
+    // Lab's went round the corner to the right pane, "u quant lab mas zboku napis na spatnem miste")
+    const have = new Set(Object.entries(this.cells || {}).filter(([k]) => k !== 'lot').map(([, c]) => c[0] + ',' + c[1]));
     Object.values(this.rooms).forEach((r) => {
       if (r.key === 'lot') return;
       const name = r.dept ? r.dept.name : { hub: 'Command', audit: 'Operations', vault: 'Vault' }[r.key];

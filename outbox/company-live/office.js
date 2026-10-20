@@ -1000,7 +1000,8 @@
     var paint = function (el, html) { if (el && el._h !== html) { el._h = html; el.innerHTML = html; } };
     var turnsBy = {}, have = {};
     S.strip.forEach(function (c) { turnsBy[c.dept_id] = (turnsBy[c.dept_id] || 0) + 1; });
-    Object.keys(cells).forEach(function (k) { have[cells[k][0] + ',' + cells[k][1]] = 1; });
+    // the free lot has no walls: a room beside it keeps its name on its front-left glass
+    Object.keys(cells).forEach(function (k) { if (k !== 'lot') have[cells[k][0] + ',' + cells[k][1]] = 1; });
     var anyWork = false;
     S.departments.forEach(function (d) {
       var key = 'd' + d.id, g = ex(key); if (!g) return;
