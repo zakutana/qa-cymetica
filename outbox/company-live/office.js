@@ -1033,7 +1033,7 @@
     var hub = ex('hub');
     if (hub) {
       var paused = S.company.status === 'paused', hx = cells.hub[0], hy = cells.hub[1];
-      setCls(hub, 'hub', paused ? 'idle' : 'working');
+      setCls(hub, 'hub', paused ? 'idle' : 'working', ' core');
       var bars = S.departments.map(function (d) { var v = CO.deptView(d); return [v.status === 'idle' ? STC.queued : STC[v.status], turnsBy[d.id] || 0]; });
       var hs = hub.querySelector('.scr');
       paint(hs, barsScreen(hx, hy, +hs.getAttribute('data-u0'), +hs.getAttribute('data-u1'), 'TURNS BY DEPT TODAY', bars));

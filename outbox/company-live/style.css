@@ -324,6 +324,8 @@ b.g, span.g { color: var(--green); text-shadow: 0 0 10px rgba(0, 255, 136, .45);
 .office .neon { stroke-width: 1.5; opacity: .88; }
 .office .neonG { stroke-width: 5; opacity: .26; filter: url(#glow2); }
 .office .st-working .neon { opacity: 1; } .office .st-working .neonG { opacity: .5; animation: glowp 2.6s ease-in-out infinite; }
+/* a room at work in the rail's Working cyan, as the 3D office; Command (its core always running) keeps its mint */
+.office .st-working:not(.core) .neon, .office .st-working:not(.core) .neonG { stroke: #00cfff; }
 .office .orange .neon, .office .st-waiting .neon, .office .orange .neonG, .office .st-waiting .neonG { stroke: #ff8a3a; }
 .office .orange .neonG, .office .st-waiting .neonG { opacity: .5; }
 /* the glass: pale panes and a thin pale line along their edges; nothing in them takes the mouse */
@@ -814,6 +816,12 @@ select:focus, .search:focus, .field input:focus, .field textarea:focus { border-
 .simbar { position: fixed; right: 14px; bottom: 10px; z-index: 55; display: flex; align-items: center; gap: 3px; padding: 3px 4px 3px 9px; border-radius: 8px;
   border: 1px dashed var(--line3); background: rgba(6, 9, 15, .85); font-size: 10.5px; color: var(--dim2); opacity: .55; transition: opacity .2s; }
 .simbar:hover { opacity: 1; }
+/* a department's page, a button in its head; Operations' card on the right */
+#dr-link .pg { display: flex; align-items: center; gap: 10px; margin-top: 10px; padding: 9px 12px; border: 1px solid rgba(0, 207, 255, .45); border-radius: 9px;
+  background: rgba(0, 207, 255, .07); color: var(--text); font-size: 12px; text-decoration: none; }
+#dr-link .pg span { font-weight: 700; } #dr-link .pg em { color: var(--dim2); font-style: normal; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; flex: 1; }
+#dr-link .pg b { color: var(--cyan); white-space: nowrap; } #dr-link .pg:hover { border-color: var(--cyan); background: rgba(0, 207, 255, .13); }
+.panel.ops .hint { margin: 10px 0 12px; } .panel.ops #ops-open { width: 100%; }
 .simbar b { color: var(--cyan); letter-spacing: .1em; margin-right: 4px; } .simbar span { margin-right: 6px; }
 .simbar button { padding: 3px 7px; border-radius: 5px; color: var(--dim); font-size: 10.5px; font-weight: 700; }
 .simbar button:hover { background: var(--line2); } .simbar button.on { background: var(--line3); color: var(--cyan); }

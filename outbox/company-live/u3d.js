@@ -1982,6 +1982,8 @@ function preview(el, o) {
 // the station's side, the office's and the dialog stand's alike: the lip's foot (it runs up to the deck's top), the
 // hull's face out from the deck's edge (0.08 behind the lip's, so the lip hides only its top 0.07) and its height
 // from the slab's foot down (hullTex draws to it)
+// the rail's Working colour (style.css --cyan): a room at work lights in it (tint)
+const WORK_CYAN = 0x00cfff;
 const EX_RIM = -0.3, EX_FACE = 0.15, EX_HULL = 0.47;
 const PVS = { slab: 0.35, pad: 0.5, hull: EX_HULL, keel: 0.24, bg: 0x16232f };
 const PVHOLD = { scene: null };
@@ -7573,7 +7575,7 @@ class Office3D {
     const hub = this.rooms.hub;
     if (hub) {
       const paused = S.company.status === 'paused';
-      this.tint(hub, paused ? 'idle' : 'working');
+      this.tint(hub, 'idle');   // NEXUS's core is always running: Command keeps its mint, the cyan is for the rooms at work
       if (hub.bars) drawBars(hub.bars, 'TURNS BY DEPT TODAY', S.departments.map((d) => { const v = CO.deptView(d); return ['#' + new THREE.Color(v.status === 'idle' ? STC.queued : STC[v.status]).getHexString(), turnsBy[d.id] || 0]; }));
       if (hub.kb) drawKanban(hub.kb, { queued: S.plan.length, running: S.tasks.filter((t) => t.status === 'running').length, done: S.strip.filter((c) => c.state === 'done').length, failed: S.strip.filter((c) => c.state === 'failed').length });
       if (hub.agents[0]) hub.agents[0].working = !paused;
@@ -7614,19 +7616,20 @@ class Office3D {
   // A room's neon in the colour of what it needs, as in his picture: mint for every room, orange only for the one
   // that waits on you ("Oranzove sviti jen roomka ktera chce pozornost moji, needs you") -- and then the whole room,
   // as his orange one is: its floor's seams lit, its glass warm, its neon, the wash on its floor and a warm lamp
-  // hung lower; all of it back to mint when it no longer waits. Working shows as a brighter line and a faint mint
-  // wash on the floor, not as another colour.
+  // hung lower; all of it back to mint when it no longer waits. A room at work lights in the rail's Working cyan
+  // (2026-10-20, "jak to vlevo zobrazuje modre Working tak do stejne barvy se i rozsviti ta mistnost"): its line, a
+  // cyan wash on its floor and a cooler lamp; its glass and floor stay its own.
   tint(r, st) {
     this.shTag(r);
-    const isOrange = st === 'waiting';
+    const isOrange = st === 'waiting', isWork = st === 'working';
     if (r.st === st && r.orange === isOrange) return;
     r.st = st; r.orange = isOrange;
-    const c = new THREE.Color(isOrange ? LOOK.orange : LOOK.neon);
+    const c = new THREE.Color(isOrange ? LOOK.orange : isWork ? WORK_CYAN : LOOK.neon);
     // the line itself in its own deeper mint (SH_NEON), the floor's wash in his; over the bloom's threshold, so it
     // glows, the glow tight round a thinner line, as his
-    if (r.edgeM) { r.edgeM.emissive.set(isOrange ? LOOK.orange : SH_NEON); r.edgeM.emissiveIntensity = isOrange ? 1.9 : st === 'working' ? 1.8 : 1.5; }
-    if (r.glow) { r.glow.material.color.copy(c).multiplyScalar(isOrange ? 1.9 : 1); r.glowBase = isOrange ? 1.0 : st === 'working' ? 0.05 : 0; }
-    if (r.lamp) { r.lamp.color.set(isOrange ? 0xff6a34 : 0xeef6ff); r.lamp.intensity = isOrange ? 22 : 6; r.lamp.distance = isOrange ? 6.5 : 9; r.lamp.position.y = isOrange ? 2.4 : 4.4; }
+    if (r.edgeM) { r.edgeM.emissive.set(isOrange ? LOOK.orange : isWork ? WORK_CYAN : SH_NEON); r.edgeM.emissiveIntensity = isOrange ? 1.9 : isWork ? 1.9 : 1.5; }
+    if (r.glow) { r.glow.material.color.copy(c).multiplyScalar(isOrange ? 1.9 : isWork ? 1.4 : 1); r.glowBase = isOrange ? 1.0 : isWork ? 0.55 : 0; }
+    if (r.lamp) { r.lamp.color.set(isOrange ? 0xff6a34 : isWork ? 0x8fe6ff : 0xeef6ff); r.lamp.intensity = isOrange ? 22 : isWork ? 9 : 6; r.lamp.distance = isOrange ? 6.5 : 9; r.lamp.position.y = isOrange ? 2.4 : 4.4; }
     // the floor and the glass: only the room's own (a room that dressed its walls in something else keeps it)
     if (r.floorM && (r.floorM.material === OM.tile || r.floorM.material === OM.tileOrange)) r.floorM.material = isOrange ? OM.tileOrange : OM.tile;
     if (r.panes) r.panes.forEach((p) => { if (p.material === OM.glass || p.material === OM.glassOrange) p.material = isOrange ? OM.glassOrange : OM.glass; });

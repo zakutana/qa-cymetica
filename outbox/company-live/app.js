@@ -396,8 +396,10 @@
     var ln = CO.deptLine(d, v);
     setHTML($('dr-head'), '<i class="dot ' + v.status + (ln.tone === 'red' ? ' needs' : '') + '"></i><h2>' + esc(d.name) + '</h2>' +
       (d.files_as ? '<span class="et ' + (d.et10 ? 'lit' : 'zero') + '" title="ET10 Cymetica paid for accepted bugs, to ' + esc(d.files_as) + '">' + (d.et10 ? '+' : '') + (d.et10 || 0).toLocaleString('en-US') + ' ET10</span>' : '') +
-      (CO.DEPT_LINK[d.key] ? '<a class="btn cy pg" href="' + esc(CO.DEPT_LINK[d.key].url) + '" target="_blank" rel="noopener" title="' + esc(CO.DEPT_LINK[d.key].label) + '">' + esc(CO.DEPT_LINK[d.key].label.split(':')[0]) + ' ↗</a>' : '') +
       (RO ? '' : '<span class="x"><button class="btn" data-a="edit">Edit</button><button class="btn rd" data-a="delete" title="Delete this department">Delete</button></span>'));
+    // its page on cymetica.com, one click from its head
+    var lk = CO.DEPT_LINK[d.key];
+    setHTML($('dr-link'), lk ? '<a class="pg" href="' + esc(lk.url) + '" target="_blank" rel="noopener"><span>' + esc(lk.label.split(':')[0]) + '</span><em>' + esc(lk.url.replace(/^https:\/\//, '')) + '</em><b>Open ↗</b></a>' : '');
     // what it is doing right now, in one line: the first thing anyone wants to know
     setHTML($('dr-now'), '<div class="now t-' + ln.tone + '"><p>' + esc(ln.text) + '</p>' +
       (appr.length ? '<button class="btn rd" type="button" data-a="appr">Open</button>' : '') + (v.running ? '<span class="run"><i></i></span>' : '') + '</div>');
