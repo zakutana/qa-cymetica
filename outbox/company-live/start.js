@@ -13,6 +13,31 @@
   'use strict';
   var CO = window.CO;
 
+  // The loading screen (boot.css, as index.html's): over the page until the sun and both doors have drawn, so it never
+  // shows half built -- the painting over a sun not yet there, a door's black box ("nevadi kdyz se neco nacita ale
+  // musis tam nejakou brutalne top animaci zobrazit misto toho", 2026-10-20). Its number is the work done.
+  var boot0 = document.getElementById('boot'), bootP = 0;
+  function bootSet(p, what) {
+    if (!boot0 || p <= bootP) return; bootP = p;
+    boot0.querySelector('.ld-pct').textContent = Math.round(p);
+    boot0.querySelector('.ld-bar i').style.transform = 'scaleX(' + Math.min(1, p / 100).toFixed(3) + ')';
+    if (what) boot0.querySelector('.ld-what').textContent = what;
+  }
+  function bootDone() {
+    var el = boot0; if (!el) return; bootSet(100, 'READY'); boot0 = null;
+    setTimeout(function () { el.classList.add('gone'); setTimeout(function () { el.remove(); }, 900); }, 150);
+  }
+  bootSet(18, 'ENGINE');
+  setTimeout(bootDone, 20000);   // (never in the way for good)
+  // drawn: the sun's scene and the room's door each a frame on the screen (the Universe's door draws with the sun)
+  function whenDrawn(sc) {
+    (function w() {
+      if (sc.frames > 0) bootSet(72, 'OFFICE');
+      if (sc.frames > 0 && sc.room && sc.room.frames > 0) return bootDone();
+      requestAnimationFrame(w);
+    })();
+  }
+
   // The companies round the sun: their station, colour, decks, orbit and where on it they stand. Three a orbit, a
   // third of a turn apart, the outer three half way between the inner ones, and the whole turning as one (one speed
   // for both orbits): no two ever come one over the other ("tyto dve firmy jsou moc u sebe", 2026-10-20 -- with
@@ -131,6 +156,7 @@
     }
     this.sky.position.copy(this.camera.position);
     if (this.post) this.post.render(); else this.renderer.render(this.scene, this.camera);
+    this.frames = (this.frames || 0) + 1;
     place(T, this.camera, this.w, this.h, this.col);
     var tl = this.tile;
     // the tile without the sky's stars and nebulae: from that high its star field read as rows of dots; its navy stays
@@ -167,10 +193,15 @@
   };
 
   function go() {
-    var U = CO.U3; if (!U || !U.ok || !U.Post || !CO.E3) return;
+    var U = CO.U3; if (!U || !U.ok || !U.Post || !CO.E3) return bootDone();
+    bootSet(34, 'UNIVERSE');
     var sc = SC = new Showcase(document.getElementById('lp-space'), document.getElementById('lp-uvpic'));
     // the room after the sun, so the two engines do not build at once
-    sc.onReady = function () { setTimeout(function () { sc.room = room(document.getElementById('lp-room')); }, 400); };
+    sc.onReady = function () {
+      bootSet(55, 'UNIVERSE');
+      setTimeout(function () { sc.room = room(document.getElementById('lp-room')); if (!sc.room) bootDone(); else bootSet(80, 'OFFICE'); }, 400);
+    };
+    whenDrawn(sc);
   }
   var done = false, start = function () { if (done) return; done = true; go(); };
   if (CO.U3 && CO.U3.skins) start();

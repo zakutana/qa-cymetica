@@ -1314,14 +1314,17 @@ class Universe3D {
   // pipelines compiled on the GPU's own threads (compileAsync), nothing drawn. Nothing is culled meanwhile, so what
   // the first look's camera will see is ready wherever this one points. Measured 2026-10-19: the first open's first
   // frame was 65 shaders and 67 pipelines made there and then; after this, the post chain's few.
-  // pause: a promise to wait on before each piece (app.js: until the page has been left alone a moment)
-  warm(pause) {
+  // pause: a promise to wait on before each piece (app.js: until the page has been left alone a moment);
+  // progress(f): how far it is, for the loading screen (the last one asked for is told, if it started earlier)
+  warm(pause, progress) {
+    if (progress) this.warmProgress = progress;
     if (this.warming) return this.warming;
     const go = async () => {
       await this.started;
       if (!this.post || !this.post.pass) return;
       idleFlush();
-      await compileInPieces(this.renderer, this.scene, this.camera, this.post.pass.renderTarget, { all: true, mrt: this.post.pass.getMRT(), pause });
+      await compileInPieces(this.renderer, this.scene, this.camera, this.post.pass.renderTarget,
+        { all: true, mrt: this.post.pass.getMRT(), pause, progress: (f) => { if (this.warmProgress) this.warmProgress(f); } });
     };
     this.warming = go().catch((e) => console.warn('the map could not be made ready ahead:', e)).then(() => { this.warmed = true; });
     return this.warming;
@@ -3323,10 +3326,13 @@ async function compileInPieces(R, scene, camera, target, opts = {}) {
     // the next piece: from the time this one took; past the first of each kind they grow at once
     n = dt < 25 ? Math.min(n * 2, 1024) : dt > 90 ? Math.max(nMin, n >> 1) : n;
     if (wasFirst && i >= first.length) n = Math.max(n, 64);
+    // progress: the first of each kind is nearly all of the work, the rest is cheap
+    if (opts.progress) opts.progress(Math.min(1, i < first.length ? 0.9 * i / first.length : 0.9 + 0.1 * (i - first.length) / Math.max(1, rest.length)));
     await yieldTask();
   }
   if (frame) frame.renderId++;
   await Promise.all(waits);
+  if (opts.progress) opts.progress(1);
 }
 function release(root) {
   const shared = new Set(Object.values(TX));
@@ -3607,7 +3613,7 @@ class Office3D {
     if (!this.post || !this.post.pass) return;
     try {
       idleFlush(); this.resize();
-      await compileInPieces(this.renderer, this.scene, this.camera, this.post.pass.renderTarget, { mrt: this.post.pass.getMRT() });
+      await compileInPieces(this.renderer, this.scene, this.camera, this.post.pass.renderTarget, { mrt: this.post.pass.getMRT(), progress: (f) => { if (this.onProgress) this.onProgress(f); } });
     } catch (e) { console.warn('the office could not be made ready ahead:', e); }
     // The studio's reflections (scene.environment) are turned into their blurred form (a PMREM) by draws of their
     // own the first time a shader asks for them -- and inside compileAsync nothing is drawn, so that came out black
@@ -7783,6 +7789,8 @@ class Office3D {
     catch (e) { console.error('3D office stopped:', e); this.renderer.setAnimationLoop(null); if (this.onFail && !(this.frames > 30)) this.onFail(e); return; }
     keepCompiled(this.renderer, this);
     this.labels(w, h);
+    // its first frame is on the screen: the loading screen can go (app.js)
+    if (this.frames === 1 && this.onFirst) { const f = this.onFirst; this.onFirst = null; f(); }
   }
   // the plates round the platform (callouts), the lot's label in its ring, the Manager's pill; agents' names only
   // in the room that is open or under the mouse

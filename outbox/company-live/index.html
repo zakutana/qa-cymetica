@@ -10,8 +10,8 @@
 <link href="https://fonts.googleapis.com/css2?family=Archivo+Black&family=JetBrains+Mono:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <!-- the Universe's name plates: his picture's squared, semi-condensed caps -->
 <link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@600;700&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="style.css?v=20261022ae">
-<link rel="stylesheet" href="uv.css?v=20261022ae">
+<link rel="stylesheet" href="style.css?v=20261022af">
+<link rel="stylesheet" href="uv.css?v=20261022af">
 <!-- the 3D engine for the Universe and the office: three.js with its WebGPU renderer (WebGL2 where WebGPU is missing) -->
 <script type="importmap">{ "imports": {
   "three": "https://cdn.jsdelivr.net/npm/three@0.172.0/build/three.webgpu.js",
@@ -29,8 +29,18 @@
 <link rel="modulepreload" href="https://cdn.jsdelivr.net/npm/three@0.172.0/examples/jsm/geometries/RoundedBoxGeometry.js">
 <link rel="modulepreload" href="https://cdn.jsdelivr.net/npm/three@0.172.0/examples/jsm/controls/OrbitControls.js">
 <link rel="modulepreload" href="https://cdn.jsdelivr.net/npm/three@0.172.0/examples/jsm/utils/BufferGeometryUtils.js">
+<!-- the loading screen's look: read before the first paint, so the page never shows half built -->
+<link rel="stylesheet" href="boot.css?v=20261022af">
 </head>
 <body>
+<!-- the loading screen: over the page until the office (or, opened on it, the Universe) has drawn; app.js moves its
+     number and lets it go -->
+<div class="boot" id="boot" aria-hidden="true">
+  <div class="ldr"><i class="ld-halo"></i><i class="ld-beams"></i><i class="ld-ping"></i><i class="ld-ping p2"></i>
+    <i class="ld-orbit o3"><b></b></i><i class="ld-orbit o2"><b></b></i><i class="ld-orbit o1"><b></b></i>
+    <i class="ld-ring r3"></i><i class="ld-ring r2"></i><i class="ld-ring r1"></i><i class="ld-heart"></i>
+    <div class="ld-read"><b class="ld-pct">0</b><span>%</span></div><div class="ld-what">LOADING</div><div class="ld-bar"><i></i></div></div>
+</div>
 <!-- no site bar: it is not part of the app ("ten vrchni panel nikde nedavej to neni soucast apky", 2026-10-20); the
      mockup's own controls float in the corner, outside the design -->
 <span class="simbar" id="simbar" title="Not part of the design: controls for this mockup's simulated live data.">
@@ -151,6 +161,13 @@
     <div class="uvlegend"><span><b>1 deck</b> = 1 department</span><span><i class="lk"></i>private: name, station and mission only</span><span><i class="pb"></i>public: click to look inside</span><span class="l3"><b>drag</b> turn · <b>right-drag</b> move · <b>wheel</b> zoom</span><span class="l2"><b>drag</b> move · <b>wheel</b> zoom</span></div>
     <div class="tip" hidden></div>
     <div class="uvfade" id="uvfade" hidden></div>
+    <!-- while its map is being made: the loading screen's core, on the stage -->
+    <div class="uvload" id="uvload" hidden aria-hidden="true">
+      <div class="ldr"><i class="ld-halo"></i><i class="ld-beams"></i><i class="ld-ping"></i><i class="ld-ping p2"></i>
+        <i class="ld-orbit o3"><b></b></i><i class="ld-orbit o2"><b></b></i><i class="ld-orbit o1"><b></b></i>
+        <i class="ld-ring r3"></i><i class="ld-ring r2"></i><i class="ld-ring r1"></i><i class="ld-heart"></i>
+        <div class="ld-read"><b class="ld-pct">0</b><span>%</span></div><div class="ld-what">UNIVERSE</div><div class="ld-bar"><i></i></div></div>
+    </div>
   </section>
 </main>
 
@@ -216,16 +233,16 @@
 <div class="toast" id="toast" hidden></div>
 
 <!-- ?v= changes with every edit, so a plain reload never runs yesterday's file from the cache -->
-<script src="data.js?v=20261022ae"></script>
-<script src="uv-data.js?v=20261022ae"></script>
-<script src="portfolio.js?v=20261022ae"></script>
-<script src="sim.js?v=20261022ae"></script>
-<script src="office.js?v=20261022ae"></script>
-<script src="universe.js?v=20261022ae"></script>
-<script src="cards.js?v=20261022ae"></script>
-<script src="app.js?v=20261022ae"></script>
-<script type="module" src="u3d.js?v=20261022ae"></script>
+<script src="data.js?v=20261022af"></script>
+<script src="uv-data.js?v=20261022af"></script>
+<script src="portfolio.js?v=20261022af"></script>
+<script src="sim.js?v=20261022af"></script>
+<script src="office.js?v=20261022af"></script>
+<script src="universe.js?v=20261022af"></script>
+<script src="cards.js?v=20261022af"></script>
+<script src="app.js?v=20261022af"></script>
+<script type="module" src="u3d.js?v=20261022af"></script>
 <!-- the seven stations a company can pick (stations.js puts its builders into u3d.js's table and renames CO.SKINS) -->
-<script type="module" src="stations.js?v=20261022ae"></script>
+<script type="module" src="stations.js?v=20261022af"></script>
 </body>
 </html>

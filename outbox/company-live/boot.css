@@ -1,0 +1,91 @@
+/* The loading screen (the operator, 2026-10-20: "nevadi kdyz se neco nacita ale musis tam nejakou brutalne top animaci
+   zobrazit misto toho"). Cymetica's core turning in its rings, the companies on their orbits round it, a number for
+   the work done: over the whole page until the office (or, opened on it, the Universe) has drawn its first frame,
+   and over the Universe's stage while its map is still being made. Everything moves by transform and opacity
+   alone, so it keeps turning on the compositor while the main thread builds the 3D. The site's colours. */
+.boot { position: fixed; inset: 0; z-index: 300; display: grid; place-items: center; overflow: hidden;
+  background: radial-gradient(ellipse 70% 62% at 50% 44%, #0f1c2e 0%, #0a0e17 58%, #05070c 100%);
+  transition: opacity .7s ease, visibility .7s; }
+.boot.gone { opacity: 0; visibility: hidden; pointer-events: none; }
+.boot::before, .uvload::before, .boot::after { content: ''; position: absolute; inset: -400px; pointer-events: none;
+  background-image: radial-gradient(1.3px 1.3px at 22px 34px, #d9f4ff, transparent), radial-gradient(1px 1px at 131px 83px, #9fe8ff, transparent),
+    radial-gradient(1.1px 1.1px at 201px 171px, #ffffff, transparent), radial-gradient(1px 1px at 63px 211px, #7fffd0, transparent),
+    radial-gradient(1.4px 1.4px at 239px 22px, #cfefff, transparent), radial-gradient(.9px .9px at 91px 140px, #9fb6c9, transparent),
+    radial-gradient(1px 1px at 170px 240px, #9fe8ff, transparent), radial-gradient(.8px .8px at 12px 160px, #ffffff, transparent);
+  background-size: 260px 260px; opacity: .55; animation: ld-drift 60s linear infinite; }
+/* a second, sparser and nearer layer at another size, so no grid shows, drifting faster */
+.boot::after { background-size: 397px 397px; opacity: .35; animation-duration: 34s; }
+@keyframes ld-drift { to { transform: translate(260px, 130px); } }
+
+.ldr { position: relative; width: 420px; height: 460px; }
+.boot .ldr { transform: scale(1.32); }
+.ldr > i, .ldr > .ld-orbit { position: absolute; left: 50%; top: 180px; display: block; border-radius: 50%; will-change: transform; }
+/* the glow round it, breathing */
+.ld-halo { width: 520px; height: 520px; margin: -260px 0 0 -260px;
+  background: radial-gradient(circle, rgba(0, 207, 255, .30) 0%, rgba(0, 255, 136, .10) 30%, rgba(0, 207, 255, .04) 48%, transparent 66%);
+  animation: ld-breathe 3.2s ease-in-out infinite; }
+@keyframes ld-breathe { 50% { transform: scale(1.08); opacity: .75; } }
+/* its beams: thin spokes of light, turning slowly */
+.ld-beams { width: 460px; height: 460px; margin: -230px 0 0 -230px;
+  background: repeating-conic-gradient(from 0deg, rgba(0, 207, 255, 0) 0deg 11deg, rgba(160, 240, 255, .55) 12deg, rgba(0, 207, 255, 0) 13.5deg 40deg);
+  -webkit-mask: radial-gradient(circle, transparent 13%, #000 22%, rgba(0, 0, 0, .35) 42%, transparent 66%);
+          mask: radial-gradient(circle, transparent 13%, #000 22%, rgba(0, 0, 0, .35) 42%, transparent 66%);
+  animation: ld-spin 26s linear infinite; opacity: .7; }
+/* the heart, white-hot */
+.ld-heart { width: 46px; height: 46px; margin: -23px 0 0 -23px;
+  background: radial-gradient(circle, #ffffff 0%, #e6fbff 28%, #6fe6ff 52%, rgba(0, 207, 255, 0) 74%);
+  box-shadow: 0 0 34px 10px rgba(0, 207, 255, .55), 0 0 90px 34px rgba(0, 255, 136, .16);
+  animation: ld-pulse 1.4s ease-in-out infinite; }
+@keyframes ld-pulse { 50% { transform: scale(1.14); } }
+/* the collider's rings: two arcs racing each other and a fine dashed one */
+.ld-ring { border: 2px solid transparent; }
+.ld-ring.r1 { width: 112px; height: 112px; margin: -56px 0 0 -56px; border-top-color: #00ff88; border-left-color: rgba(0, 255, 136, .28);
+  filter: drop-shadow(0 0 6px rgba(0, 255, 136, .9)); animation: ld-spin 1.15s cubic-bezier(.55, .15, .45, .85) infinite; }
+.ld-ring.r2 { width: 160px; height: 160px; margin: -80px 0 0 -80px; border-right-color: #00cfff; border-bottom-color: rgba(0, 207, 255, .25);
+  filter: drop-shadow(0 0 6px rgba(0, 207, 255, .9)); animation: ld-spin 1.9s linear infinite reverse; }
+.ld-ring.r3 { width: 214px; height: 214px; margin: -107px 0 0 -107px; border: 1px dashed rgba(159, 232, 255, .32); animation: ld-spin 16s linear infinite; }
+@keyframes ld-spin { to { transform: rotate(360deg); } }
+/* a pulse going out from it, as the map's work goes in */
+.ld-ping { width: 120px; height: 120px; margin: -60px 0 0 -60px; border: 1px solid rgba(0, 207, 255, .55); opacity: 0;
+  animation: ld-ping 2.6s cubic-bezier(.2, .6, .3, 1) infinite; }
+.ld-ping.p2 { animation-delay: 1.3s; border-color: rgba(0, 255, 136, .45); }
+@keyframes ld-ping { 0% { transform: scale(.6); opacity: .9; } 100% { transform: scale(2.9); opacity: 0; } }
+/* companies on their orbits: a tilted circle turning, its light riding it with a comet's tail of its colour */
+.ld-orbit { border: 1px solid rgba(0, 207, 255, .2); --tc: rgba(0, 255, 136, .95); }
+.ld-orbit::before { content: ''; position: absolute; inset: -2px; border-radius: 50%;
+  background: conic-gradient(from 0deg, transparent 0deg 230deg, var(--tc) 360deg);
+  -webkit-mask: radial-gradient(farthest-side, transparent calc(100% - 3px), #000 calc(100% - 2px));
+          mask: radial-gradient(farthest-side, transparent calc(100% - 3px), #000 calc(100% - 2px)); }
+.ld-orbit b { position: absolute; left: 50%; top: -6px; width: 12px; height: 12px; margin-left: -6px; border-radius: 50%; }
+.ld-orbit.o1 { width: 270px; height: 270px; margin: -135px 0 0 -135px; animation: ld-orb1 3.4s linear infinite; }
+.ld-orbit.o1 b { background: #eafff5; box-shadow: 0 0 8px 3px #00ff88, 0 0 22px 8px rgba(0, 255, 136, .55); }
+.ld-orbit.o2 { width: 330px; height: 330px; margin: -165px 0 0 -165px; animation: ld-orb2 5.2s linear infinite; --tc: rgba(0, 207, 255, .95); }
+.ld-orbit.o2 b { background: #e6faff; box-shadow: 0 0 8px 3px #00cfff, 0 0 22px 8px rgba(0, 207, 255, .55); }
+.ld-orbit.o3 { width: 390px; height: 390px; margin: -195px 0 0 -195px; animation: ld-orb3 8s linear infinite; border-color: rgba(159, 232, 255, .1); --tc: rgba(220, 248, 255, .8); }
+.ld-orbit.o3 b { background: #ffffff; box-shadow: 0 0 8px 3px rgba(200, 245, 255, .9); width: 8px; height: 8px; margin-left: -4px; top: -4px; }
+@keyframes ld-orb1 { from { transform: rotateX(72deg) rotateZ(0deg); } to { transform: rotateX(72deg) rotateZ(360deg); } }
+@keyframes ld-orb2 { from { transform: rotateX(74deg) rotateY(-14deg) rotateZ(120deg); } to { transform: rotateX(74deg) rotateY(-14deg) rotateZ(480deg); } }
+@keyframes ld-orb3 { from { transform: rotateX(76deg) rotateY(10deg) rotateZ(240deg); } to { transform: rotateX(76deg) rotateY(10deg) rotateZ(600deg); } }
+/* the number first, then one word, then the bar */
+.ld-read { position: absolute; left: 0; right: 0; top: 360px; display: flex; justify-content: center; align-items: baseline; gap: 4px;
+  font: 400 40px/1 'Archivo Black', 'Segoe UI', sans-serif; color: #eaf8ff; letter-spacing: .01em; text-shadow: 0 0 18px rgba(0, 207, 255, .45); }
+.ld-read span { font-size: 18px; color: #00cfff; }
+.ld-what { position: absolute; left: 0; right: 0; top: 410px; text-align: center; font: 600 11px/1 'JetBrains Mono', monospace; letter-spacing: .32em; color: #7f93ad; }
+.ld-bar { position: absolute; left: 90px; right: 90px; top: 436px; height: 2px; border-radius: 2px; background: rgba(0, 207, 255, .13); overflow: hidden; }
+.ld-bar i { position: absolute; inset: 0; transform-origin: 0 50%; transform: scaleX(0); transition: transform .45s ease;
+  background: linear-gradient(90deg, #00cfff, #00ff88); box-shadow: 0 0 10px rgba(0, 255, 136, .8); }
+.ld-bar::after { content: ''; position: absolute; top: 0; bottom: 0; width: 60px; left: -60px;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, .7), transparent); animation: ld-shim 1.6s ease-in-out infinite; }
+@keyframes ld-shim { to { transform: translateX(300px); } }
+
+/* the same over the Universe's stage, while its map is being made */
+.uvload { position: absolute; inset: 0; z-index: 5; display: grid; place-items: center; overflow: hidden; border-radius: inherit;
+  background: radial-gradient(ellipse 70% 62% at 50% 44%, #0b1828 0%, #01080d 70%); transition: opacity .6s ease, visibility .6s; }
+.uvload[hidden] { display: grid; opacity: 0; visibility: hidden; pointer-events: none; }
+.uvload .ldr { transform: scale(.82); }
+
+@media (prefers-reduced-motion: reduce) {
+  .ldr > i, .ldr > .ld-orbit, .boot::before, .uvload::before { animation-duration: 12s !important; }
+}
+/* the entry pages hide their body until their own styles are in (html.ld): the loading screen shows regardless */
+.boot { visibility: visible; }

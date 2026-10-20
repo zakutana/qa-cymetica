@@ -48,15 +48,21 @@
     // here, the stage blank meanwhile as it is while the 3D starts (1.5 s at most; no font at all: built at once).
     if (v === '3d' && !office3d && !monoWaited && !monoHere()) { monoWait(function () { monoWaited = true; if (ui.view === '3d' && !office3d) setView('3d'); }); return; }
     if (v === '3d') {
-      if (!office3d) { office3d = CO.U3.office($('office3d'), st, tipFor); office3d.onFail = function () { office3d = null; setView('2d'); }; }
+      if (!office3d) {
+        office3d = CO.U3.office($('office3d'), st, tipFor); office3d.onFail = function () { office3d = null; setView('2d'); };
+        // the loading screen follows its first frame's shaders, and goes with that frame
+        office3d.onProgress = function (f) { if (ui.tab === 'office') bootSet(30 + f * 66, 'RENDERING'); };
+        office3d.onFirst = function () { if (ui.tab === 'office') bootDone(); };
+      }
       office = office3d;
-    } else office = office2d;
+    } else { office = office2d; if (ui.tab === 'office') bootDone(); }
     office.sel = ui.mgr ? 'hub' : ui.panel != null ? 'd' + ui.panel : null;
     // Back to a 3D office that is already built: brought up to date, not built again. A rebuild throws every room
     // away and compiles their shaders anew, a 2.2 s freeze on every 2D -> 3D switch (11 s at a quarter of the CPU,
     // measured 2026-10-19); update() still rebuilds it when a department was added, edited or removed meanwhile.
     if (office === office3d && office3d.cells && office3d.shapeKey === office3d.shape()) office.update();
     else office.layout();
+    if (office === office3d) bootSet(30, 'RENDERING');
     requestAnimationFrame(function () {
       office.resize();
       if (ui.mgr) office.focus('hub', 0, true); else if (ui.panel != null) office.focus('d' + ui.panel, 0, true); else office.fit(false);
@@ -79,6 +85,32 @@
     on();
   }
 
+  /* ---------------- the loading screen ---------------- */
+  // Over the whole page until the office has drawn its first frame -- or, opened on it, the Universe -- and over the
+  // Universe's stage while its map is made (boot.css), so the page never shows half built ("nevadi kdyz se neco
+  // nacita ale musis tam nejakou brutalne top animaci zobrazit misto toho", 2026-10-20). Its number is the work done.
+  var boot0 = $('boot'), bootP = 0;
+  function ldSet(root, p, what) {
+    if (!root) return;
+    root.querySelector('.ld-pct').textContent = Math.round(p);
+    root.querySelector('.ld-bar i').style.transform = 'scaleX(' + Math.min(1, p / 100).toFixed(3) + ')';
+    if (what) root.querySelector('.ld-what').textContent = what;
+  }
+  function bootSet(p, what) { if (!boot0 || p <= bootP) return; bootP = p; ldSet(boot0, p, what); }
+  function bootDone() {
+    var el = boot0; if (!el) return; boot0 = null;
+    ldSet(el, 100, 'READY');
+    setTimeout(function () { el.classList.add('gone'); setTimeout(function () { el.remove(); }, 900); }, 150);
+  }
+  bootSet(6, 'LOADING');
+  setTimeout(bootDone, 30000);   // (never in the way for good)
+  // the map's stage: its own loading screen while it is made, gone once it has drawn
+  function uvLoad(on, p) { var el = $('uvload'); if (!el) return; if (p != null) ldSet(el, p, 'UNIVERSE'); el.hidden = !on; }
+  function afterFrame(o, cb) {
+    var f0 = o.frames || 0, t0 = performance.now();
+    (function w() { if (!o.renderer || (o.frames || 0) > f0 || performance.now() - t0 > 3000) return cb(); requestAnimationFrame(w); })();
+  }
+
   /* ---------------- boot ---------------- */
   function boot() {
     CO.S = CO.fresh(Date.now());
@@ -87,8 +119,13 @@
     if (RO) roSetup();
     office = office2d = new CO.Office($('office'), $('stage'), tipFor);
     office.layout();
+    bootSet(14, 'ENGINE');
     Array.prototype.forEach.call(document.querySelectorAll('#vt button'), function (b) { b.classList.toggle('on', b.getAttribute('data-v') === '2d'); });
-    whenEngine(function (ok) { if (ok && viewPref() !== '2d') setView('3d'); if (ok) afterOffice(prebuildUniverse); });
+    whenEngine(function (ok) {
+      if (ok && viewPref() !== '2d') { bootSet(22, 'OFFICE'); setView('3d'); }
+      else if (location.hash !== '#universe') bootDone();   // the flat office is drawn already
+      if (ok) afterOffice(prebuildUniverse);
+    });
     markSeen();
     bind();
     wire();
@@ -518,7 +555,7 @@
   function show3D() {
     if (!uv) {
       var t0 = Date.now();
-      $('uvstage').classList.add('loading');
+      $('uvstage').classList.add('loading'); uvLoad(true, 8);
       (function wait() {
         if (uv) return;
         if (CO.U3 && CO.U3.ok) { uv = CO.U3.universe($('uv3d'), $('uvstage'), uvHooks()); $('uvstage').classList.add('is3d'); }
@@ -540,7 +577,10 @@
   // (measured 2026-10-20); built ahead but not yet warm, the frames waited for it while the flight ran on unseen.
   function whenWarm(first) {
     uvShown = true;   // (what is built ahead stops here, and its pieces wait for no hand)
-    if (uv.warm && !uv.warmed) uv.warm().then(function () { finishShow(first); }); else finishShow(first);
+    if (!(uv.warm && !uv.warmed)) return finishShow(first);
+    // meanwhile its loading screen, on the stage (and over the page, opened on the map), its number the work done
+    uvLoad(true, 20);
+    uv.warm(null, function (f) { var p = 20 + f * 76; uvLoad(true, p); bootSet(p, 'UNIVERSE'); }).then(function () { finishShow(first); });
   }
   // The Universe built ahead (2026-10-19, "load things in the background"): once the office has drawn and the page
   // has been left alone for a moment, the map is built a step at a time in the browser's idle time -- its renderer,
@@ -597,6 +637,8 @@
         var from = null; try { from = sessionStorage.getItem('uv.from'); sessionStorage.removeItem('uv.from'); } catch (e) { /* fine */ }
         if (from) { uv.flyTo(+from, null, 0); setTimeout(function () { uv.fit(true); }, 350); }
       }
+      // the loading screens go once the map has drawn
+      afterFrame(uv, function () { uvLoad(false); if (ui.tab === 'universe') bootDone(); });
     });
   }
   function renderUniverse() { if (uv) uv.setMine(mineForMap()); }

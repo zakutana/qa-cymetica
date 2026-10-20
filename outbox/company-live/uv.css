@@ -24,7 +24,6 @@
 .uvmap, .uv3d { position: absolute; inset: 0; width: 100%; height: 100%; display: block; cursor: grab; user-select: none; touch-action: none; }
 .uvmap.grabbing, .uv3d.grabbing { cursor: grabbing; }
 .uvstage.is3d .uvmap, .uvstage.is2d .uv3d, .uvstage.loading .uvmap { display: none; }
-.uvstage.loading::after { content: 'Loading the map…'; position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%); color: var(--dim2); font-size: 12px; letter-spacing: .12em; }
 .uv3d canvas { display: block; width: 100% !important; height: 100% !important; }
 /* a cinematic edge, as faint as his picture's: the far corners a shade darker */
 .uvstage.is3d::before { content: ''; position: absolute; inset: 0; z-index: 2; pointer-events: none;
