@@ -870,14 +870,9 @@
   }
   function lockFields(id) { Array.prototype.forEach.call($(id).querySelectorAll('input, select, textarea'), function (el) { el.disabled = true; }); }
 
-  // Connect AI: the whole company from the owner's own AI, through Cymetica's MCP server and API -- a ready prompt per
-  // AI, its connector, the key (the operator, 2026-10-20: "talk to NEXUS and run the whole company from your favourite AI")
-  var AIS = [
-    { k: 'chatgpt', n: 'ChatGPT', c: '#00c070', url: 'https://chatgpt.com', how: 'Settings → Connectors → add the MCP server' },
-    { k: 'claude', n: 'Claude', c: '#00a8d8', url: 'https://claude.ai', how: 'Settings → Connectors → Add custom connector' },
-    { k: 'gemini', n: 'Gemini', c: '#3b82f6', url: 'https://gemini.google.com', how: 'Gemini CLI or an MCP-ready client' },
-    { k: 'any', n: 'Any AI', c: '#5b6b80', url: '', how: 'anything that speaks MCP, or the API' }
-  ];
+  // Connect AI: the whole company from the owner's own AI, through Cymetica's MCP server and API -- one ready prompt for
+  // any AI, the connector, the key (the operator, 2026-10-20: "talk to NEXUS and run the whole company from your
+  // favourite AI"; "staci tam jeden prompt"). A sketch: the tab is Cymetica's to design (SPEC section 13).
   var MCP_URL = 'https://cymetica.com/mcp/v1';
   function connectPrompt() {
     var S = CO.S;
@@ -891,16 +886,12 @@
     el._done = true;
     var steps = [['1', 'Your API key', '<span class="ckey">evt_••••••••••••3f9a</span><button type="button" class="btn cy" data-cc="key">Copy</button>'],
       ['2', 'Add the connector', '<span class="ckey">' + MCP_URL + '</span><button type="button" class="btn cy" data-cc="mcp">Copy</button>'],
-      ['3', 'Paste the prompt', '<span class="chint">pick your AI below</span>']];
+      ['3', 'Paste the prompt', '<span class="chint">into ChatGPT, Claude, Gemini or any AI that speaks MCP</span>']];
     el.innerHTML = '<div class="cnhero"><h2>Talk to NEXUS.<br><em>Run your whole company from your favourite AI.</em></h2>' +
-      '<p>Everything you do here works from ChatGPT, Claude, Gemini or any AI that speaks MCP: departments, processes, approvals, experiments, the Vault.</p></div>' +
+      '<p>Departments, processes, approvals, experiments, the Vault: everything you do here works from your AI.</p></div>' +
       '<div class="cnsteps">' + steps.map(function (s) { return '<div class="cnstep"><b>' + s[0] + '</b><span>' + s[1] + '</span><div>' + s[2] + '</div></div>'; }).join('') + '</div>' +
-      '<div class="cnais">' + AIS.map(function (x) {
-        return '<div class="cnai" style="--ai:' + x.c + '"><div class="cnh"><i>' + esc(x.n.charAt(0)) + '</i><b>' + esc(x.n) + '</b>' +
-          (x.url ? '<a href="' + x.url + '" target="_blank" rel="noopener">Open ↗</a>' : '') + '</div>' +
-          '<span class="cnhow" title="Where the connector goes">' + esc(x.how) + '</span>' +
-          '<pre>' + esc(connectPrompt()) + '</pre><button type="button" class="cngo" data-cc="prompt">Copy prompt</button></div>';
-      }).join('') + '</div>';
+      '<div class="cnone"><div class="cnh"><b>The prompt</b><span class="cnais1">ChatGPT · Claude · Gemini · any AI</span></div>' +
+      '<pre>' + esc(connectPrompt()) + '</pre><button type="button" class="cngo" data-cc="prompt">Copy prompt</button></div>';
     el.onclick = function (e) {
       var b = e.target.closest('[data-cc]'); if (!b) return;
       var w = b.getAttribute('data-cc'), txt = w === 'mcp' ? MCP_URL : w === 'key' ? 'evt_your_api_key' : connectPrompt();
