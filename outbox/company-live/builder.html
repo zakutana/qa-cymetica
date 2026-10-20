@@ -1,0 +1,97 @@
+<!doctype html>
+<html lang="en" class="ld">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Start a company · EventTrader</title>
+<link rel="icon" href="data:,">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Archivo+Black&family=JetBrains+Mono:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@600;700&display=swap" rel="stylesheet">
+<style>html.ld body { visibility: hidden; }</style>
+<script type="importmap">{ "imports": {
+  "three": "https://cdn.jsdelivr.net/npm/three@0.172.0/build/three.webgpu.js",
+  "three/webgpu": "https://cdn.jsdelivr.net/npm/three@0.172.0/build/three.webgpu.js",
+  "three/tsl": "https://cdn.jsdelivr.net/npm/three@0.172.0/build/three.tsl.js",
+  "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.172.0/examples/jsm/"
+} }</script>
+<link rel="modulepreload" href="https://cdn.jsdelivr.net/npm/three@0.172.0/build/three.webgpu.js">
+<link rel="modulepreload" href="https://cdn.jsdelivr.net/npm/three@0.172.0/build/three.core.js">
+<link rel="modulepreload" href="https://cdn.jsdelivr.net/npm/three@0.172.0/build/three.tsl.js">
+</head>
+<body class="bd-page">
+<header class="site">
+  <a class="logo" href="start.html">Event<i>Trader</i></a>
+  <nav><a>Markets</a><a>Agents</a><a>Build it Better</a><a class="on" href="start.html">Company</a><a>Usage</a></nav>
+  <span class="sp"></span>
+  <span class="acct"><i></i>expire76</span>
+</header>
+
+<main class="bz">
+  <section class="panel stage bz-stage" id="stage">
+    <div class="bz-pv" id="b-prev"></div>
+    <div class="office3d" id="office3d"></div>
+    <div class="o3layer"></div>
+    <div class="tip" hidden></div>
+    <div class="bz-veil" id="veil"><i></i><span>Building your station</span></div>
+
+    <section class="bz-card">
+      <ol class="bz-steps" id="steps"><li data-s="1"><i>1</i>Basics</li><li data-s="2"><i>2</i>Look</li><li data-s="3"><i>3</i>Start</li></ol>
+
+      <div class="bz-st" data-st="1">
+        <h2>Name it.</h2>
+        <label class="field">NAME<input id="f-name" maxlength="40" placeholder="e.g. Moonshot Labs" autocomplete="off"></label>
+        <label class="field" title="What everyone reads about it in the Universe">MISSION<input id="f-mission" maxlength="200" placeholder="What it is for, in one line" autocomplete="off"></label>
+        <div class="switch" id="f-pub"></div>
+      </div>
+
+      <div class="bz-st" data-st="2" hidden>
+        <h2>Pick a station.</h2>
+        <div class="sec">STATION <span title="It grows a deck with every department">1 deck = 1 department</span></div>
+        <div class="skins" id="f-skins"></div>
+        <div class="sec">COLOUR</div>
+        <div class="accents" id="f-acc"></div>
+      </div>
+
+      <div class="bz-st" data-st="3" hidden>
+        <h2>Start.</h2>
+        <div class="bz-opts" id="opts"></div>
+      </div>
+
+      <div class="bz-st bz-tour" data-st="tour" hidden>
+        <div class="bz-tn"><em id="t-n">1</em><span>/ 7</span></div>
+        <h2 id="t-name"></h2>
+        <p id="t-line"></p>
+        <div class="bz-dots" id="t-dots"></div>
+      </div>
+
+      <div class="bz-nav"><button type="button" class="btn bz-back" id="b-back">← Back</button><span class="sp"></span><button type="button" class="bz-next" id="b-next">Next <svg viewBox="0 0 24 24"><path d="M5 12h14M13 6l6 6-6 6"/></svg></button></div>
+    </section>
+  </section>
+</main>
+
+<script>
+/* The mock's files with index.html's own cache key, read from it on every load (index.html changes the key with every
+   edit; a key written here would go stale and run an older office than index.html does), ours fresh every load; the
+   3D engine after them (a module inserted with them would not wait), then the stations over it (stations.js). */
+(function (css, js) {
+  var t = Date.now(), ours = /^(builder|start|stations)\./;
+  function go(v) {
+    var q = '?v=' + v, src = function (f) { return f + (ours.test(f) ? '?t=' + t : q); }, left = css.length;
+    var shown = function () { if (--left <= 0) document.documentElement.classList.remove('ld'); };
+    css.forEach(function (f) { var l = document.createElement('link'); l.rel = 'stylesheet'; l.href = src(f); l.onload = l.onerror = shown; document.head.appendChild(l); });
+    var mod = function (f, next) { var m = document.createElement('script'); m.type = 'module'; m.src = src(f); if (next) m.onload = next; document.body.appendChild(m); };
+    js.forEach(function (f, i) {
+      var e = document.createElement('script'); e.src = src(f); e.async = false;
+      if (i === js.length - 1) e.onload = function () { mod('u3d.js', function () { mod('stations.js'); }); };
+      document.body.appendChild(e);
+    });
+    setTimeout(function () { document.documentElement.classList.remove('ld'); }, 1500);
+  }
+  fetch('index.html', { cache: 'no-store' }).then(function (r) { return r.text(); })
+    .then(function (x) { var m = /u3d\.js\?v=([\w.-]+)/.exec(x); go(m ? m[1] : t); }, function () { go(t); });
+})(['style.css', 'uv.css', 'builder.css'], ['data.js', 'uv-data.js', 'portfolio.js', 'sim.js', 'office.js', 'universe.js', 'cards.js', 'builder.js']);
+</script>
+</body>
+</html>

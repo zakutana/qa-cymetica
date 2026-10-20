@@ -1,0 +1,106 @@
+/* The /company builder: what is being made fills the page (the station while it is named and dressed, the office once
+   it starts), the steps float over it on the left as one card. Headlines and the main button as on
+   cymetica.com/agent-tournaments. Every class here is bz-*: style.css already has .st, .back and .chips of its own. */
+.bz { flex: 1; min-height: 0; display: flex; padding: 12px 16px 16px; }
+/* --cw: the card's width and its margin. The 3D canvases are that much wider than the stage, starting at its left
+   edge, so what they centre stands in the middle of the space the card leaves free. */
+.bz-stage { flex: 1; min-height: 0; --cw: 492px; }
+.bz-stage .office3d, .bz-stage .o3layer, .bz-pv { left: 0; right: auto; top: 0; bottom: 0; width: calc(100% + var(--cw)); }
+.bz-stage.is3d::after { bottom: 0; }
+.bz-stage:not(.bz-office) .office3d, .bz-stage:not(.bz-office) .o3layer, .bz-stage:not(.bz-office) .office { display: none; }
+.bz-stage .office { position: absolute; inset: 0; width: 100%; height: 100%; }
+
+/* the card */
+.bz-card { position: absolute; left: 22px; top: 22px; z-index: 8; width: 448px; max-height: calc(100% - 44px); overflow: auto;
+  display: flex; flex-direction: column; padding: 24px 26px 22px; border-radius: 18px; border: 1px solid rgba(0, 150, 255, .18);
+  background: rgba(8, 13, 21, .84); backdrop-filter: blur(12px); box-shadow: 0 24px 60px -20px rgba(0, 0, 0, .8), inset 0 1px 0 rgba(255, 255, 255, .04); }
+.bz-st { display: flex; flex-direction: column; gap: 16px; }
+.bz-st h2 { font: 400 40px/1.04 'Archivo Black', sans-serif; letter-spacing: -.01em; color: #fff; margin: 26px 0 6px; }
+
+/* the three steps */
+.bz-steps { list-style: none; display: flex; gap: 22px; font: 700 11px 'JetBrains Mono'; letter-spacing: .12em; text-transform: uppercase; color: var(--dim2); }
+.bz-steps li { display: flex; align-items: center; gap: 8px; }
+.bz-steps li i { width: 24px; height: 24px; border-radius: 50%; display: grid; place-items: center; font-style: normal; letter-spacing: 0; border: 1px solid var(--line3); }
+.bz-steps li.on { color: var(--text); }
+.bz-steps li.on i { border-color: var(--cyan); color: var(--cyan); box-shadow: 0 0 12px rgba(0, 207, 255, .35); }
+.bz-steps li.done i { background: var(--green); border-color: var(--green); color: #03140c; }
+
+/* basics */
+.bz-st .field { font-size: 11px; font-weight: 700; letter-spacing: .12em; gap: 7px; }
+.bz-st .field input { font-size: 15px; font-weight: 500; letter-spacing: 0; padding: 13px 14px; border-radius: 10px; }
+.bz-st .switch b { font-size: 14px; }
+
+/* look */
+.bz-st .skins { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+.bz-st .skin .skinsvg { height: 80px; }
+.bz-st .accents { gap: 12px; }
+.bz-st .acc { width: 34px; height: 34px; }
+
+/* how it starts: the number of rooms first */
+.bz-opts { display: grid; gap: 12px; }
+.bz-opt { display: block; text-align: left; padding: 16px 18px 18px; border-radius: 16px; border: 1px solid rgba(0, 150, 255, .15); background: #0d1520; color: var(--text);
+  transition: border-color .15s, box-shadow .2s; }
+.bz-opt:hover { border-color: var(--dim2); }
+.bz-opt.on { border-color: var(--cyan); box-shadow: 0 0 0 1px var(--cyan), 0 0 22px rgba(0, 207, 255, .22); }
+.bz-oh { display: flex; align-items: baseline; gap: 10px; }
+.bz-oh em { font: 400 44px/1 'Archivo Black', sans-serif; font-style: normal; color: var(--green); }
+.bz-oh span { font-size: 13px; font-weight: 600; color: var(--dim2); }
+.bz-oh b { margin-left: auto; font: 400 17px 'Archivo Black', sans-serif; letter-spacing: .03em; text-transform: uppercase; }
+.bz-opt.on .bz-oh b { color: var(--cyan); }
+.bz-chips { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 12px; }
+.bz-chips i { font-style: normal; font-size: 11.5px; font-weight: 600; padding: 5px 10px; border-radius: 99px; border: 1px solid var(--line3); color: var(--dim); background: var(--navy2); }
+.bz-chips i.bz-add { color: var(--green); border-color: rgba(0, 255, 136, .35); background: rgba(0, 255, 136, .08); }
+
+/* the tour: which room of seven, its name, one line */
+.bz-tn { margin-top: 26px; display: flex; align-items: baseline; gap: 8px; }
+.bz-tn em { font: 400 64px/1 'Archivo Black', sans-serif; font-style: normal; color: var(--cyan); text-shadow: 0 0 24px rgba(0, 207, 255, .35); }
+.bz-tn span { font: 700 18px 'JetBrains Mono'; color: var(--dim2); }
+.bz-tour h2 { margin: 4px 0 0; }
+.bz-tour p { font-size: 17px; line-height: 1.55; color: var(--dim); }
+.bz-dots { display: flex; gap: 8px; margin-top: 4px; }
+.bz-dots i { width: 30px; height: 4px; border-radius: 2px; background: var(--line3); }
+.bz-dots i.done { background: rgba(0, 207, 255, .45); }
+.bz-dots i.on { background: var(--cyan); box-shadow: 0 0 10px var(--cyan); }
+
+/* back and next, right under what the step asks */
+.bz-nav { margin-top: 26px; display: flex; align-items: center; gap: 10px; }
+.bz-nav .sp { flex: 1; }
+.bz-back { padding: 13px 18px; font-size: 13px; }
+.bz-next { display: inline-flex; align-items: center; gap: 10px; padding: 17px 26px; border-radius: 16px; font: 400 15.5px 'Archivo Black', sans-serif; letter-spacing: .03em;
+  text-transform: uppercase; background: var(--green); color: #03140c; box-shadow: 0 0 0 1px rgba(0, 255, 136, .7), 0 10px 34px -6px rgba(0, 255, 136, .55); transition: transform .12s, box-shadow .2s; }
+.bz-next:hover { box-shadow: 0 0 0 1px rgba(0, 255, 136, .9), 0 12px 40px -4px rgba(0, 255, 136, .7); }
+.bz-next:active { transform: translateY(1px); }
+.bz-next svg { width: 18px; height: 18px; fill: none; stroke: currentColor; stroke-width: 2.4; stroke-linecap: round; stroke-linejoin: round; }
+
+/* the tour's pin over the room it is on: its number, its name, a line down to it */
+.bz-pin { position: absolute; left: 0; top: 0; z-index: 6; pointer-events: none; display: flex; align-items: center; gap: 10px; padding: 7px 16px 7px 7px; margin-top: -36px;
+  border-radius: 99px; border: 1px solid var(--cyan); background: rgba(6, 12, 20, .9); box-shadow: 0 0 0 1px rgba(0, 207, 255, .35), 0 0 26px rgba(0, 207, 255, .45);
+  font: 400 15px 'Archivo Black', sans-serif; letter-spacing: .03em; color: #fff; white-space: nowrap; will-change: transform; }
+.bz-pin b { width: 28px; height: 28px; border-radius: 50%; display: grid; place-items: center; background: var(--cyan); color: #03131c; font: 400 14px 'Archivo Black', sans-serif; }
+.bz-pin::after { content: ''; position: absolute; left: 50%; top: 100%; width: 2px; height: 34px; transform: translateX(-50%); background: linear-gradient(var(--cyan), transparent); }
+
+/* While the office is built, the stage under a veil: the build holds the page for a moment, and the ring keeps
+   turning through it (a transform runs off the page's thread) so it reads as building, not as stuck */
+.bz-veil { position: absolute; inset: 0; z-index: 7; display: flex; align-items: center; justify-content: center; gap: 14px; padding-left: var(--cw);
+  background: radial-gradient(ellipse at 60% 50%, rgba(10, 18, 30, .9), rgba(4, 7, 12, .97) 70%); opacity: 0; pointer-events: none; transition: opacity .18s;
+  font: 700 12px 'JetBrains Mono'; letter-spacing: .14em; text-transform: uppercase; color: var(--dim); }
+.bz-veil.on { opacity: 1; pointer-events: auto; }
+.bz-veil i { width: 26px; height: 26px; border-radius: 50%; border: 2px solid rgba(0, 207, 255, .2); border-top-color: var(--cyan); animation: bzspin .8s linear infinite; will-change: transform; }
+@keyframes bzspin { to { transform: rotate(360deg); } }
+
+/* the station, turning, flat until the 3D one is drawn */
+.bz-pv { position: absolute; z-index: 5; }
+.bz-pv .skinsvg { position: absolute; left: 50%; top: 50%; width: 46%; height: 72%; transform: translate(-50%, -50%); }
+.bz-pv .pv3 { display: none; position: absolute; inset: 0; }
+.bz-pv.has3d .skinsvg { display: none; }
+.bz-pv.has3d .pv3 { display: block; }
+.bz-pv .pv3 canvas { display: block; width: 100% !important; height: 100% !important; }
+
+@media (max-width: 980px) {
+  body.bd-page { height: auto; min-height: 100vh; overflow: auto; }
+  .bz { padding: 12px 16px 16px; }
+  .bz-stage { min-height: 120vh; --cw: 0px; overflow: visible; }
+  .bz-card { position: relative; left: auto; top: auto; width: auto; max-height: none; margin: 16px; }
+  .bz-stage .office3d, .bz-stage .o3layer, .bz-pv { top: auto; height: 62vh; }
+  .bz-veil { padding-left: 0; }
+}

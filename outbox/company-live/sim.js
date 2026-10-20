@@ -1017,6 +1017,11 @@
   CO.applySetup = function () {
     var S = CO.S;
     if (S.setup === 'visit') { delete S.setup; return applyVisit(CO.VISIT); }
+    if (S.setup === 'starter') {
+      delete S.setup;
+      CO.PREBUILD.forEach(setupDept);
+      return say('Your company is set up: ' + S.departments.length + ' departments. Tell me what to work on first.');
+    }
     if (S.setup !== 'ours') return;
     delete S.setup;
     CO.OURS.departments.forEach(setupDept);

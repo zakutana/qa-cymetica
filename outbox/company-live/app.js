@@ -98,8 +98,12 @@
     if (document.fonts && document.fonts.ready) document.fonts.ready.then(function () { if (!office.moved && !office.sel) office.fit(false); $('msgs').scrollTop = 1e6; });
     window.addEventListener('resize', function () { $('msgs').scrollTop = 1e6; });
     if (CO.denied) setTimeout(function () { toast(CO.denied); }, 500);
-    if (CO.MODE === 'new') setTimeout(createCompanyModal, 300);
-    if (CO.Q.has('created')) setTimeout(function () { toast('Created: ' + CO.S.company.name + '. Add its first department.'); addDeptModal(); }, 600);
+    // a company is made on the entry (start.html, builder.html); a pre-built one comes with its departments
+    if (CO.MODE === 'new') { location.href = 'start.html'; return; }
+    if (CO.Q.has('created')) setTimeout(function () {
+      if (CO.S.departments.length) return toast('Created: ' + CO.S.company.name + ', ' + CO.S.departments.length + ' departments.');
+      toast('Created: ' + CO.S.company.name + '. Add its first department.'); addDeptModal();
+    }, 600);
     if (location.hash === '#universe') setTab('universe');
     // back from a visit through the browser's cache: the page comes back as it was left, fade and all
     window.addEventListener('pageshow', function (e) { if (e.persisted) $('uvfade').hidden = true; });
@@ -157,43 +161,12 @@
     $('tn-rules').textContent = S.rules ? S.rules.filter(function (r) { return r.on; }).length : '';
   }
 
-  // Each department's icon, drawn to its room in the office ("pridej hezke ikonky i zde k departmentum, podle toho
-  // jaky skin mistnosti delas, at je to sladene", 2026-10-19): Development's code, the Design studio's pen, Cymetica
-  // QA's bug, the Testing lab's flask, the Trading desk's candles, the Manager's core with its rings, and for a
-  // department of one's own the look its room has. Line icons in the site's colours, as the tabs' are.
-  var DEPT_ICON = {
-    hub: ['#00cfff', '<circle cx="10" cy="10" r="2.4" fill="currentColor"/><ellipse cx="10" cy="10" rx="7.6" ry="2.9"/><ellipse cx="10" cy="10" rx="7.6" ry="2.9" transform="rotate(60 10 10)"/><ellipse cx="10" cy="10" rx="7.6" ry="2.9" transform="rotate(-60 10 10)"/>'],
-    development: ['#00cfff', '<rect x="2.5" y="3.5" width="15" height="13" rx="2"/><path d="M2.5 7h15 M8.2 9.6l-2.3 2.4 2.3 2.4 M11.8 9.6l2.3 2.4-2.3 2.4"/>'],
-    design: ['#5b9bff', '<path d="M10 2.6l5.4 9.9L10 17.4l-5.4-4.9Z M10 2.6v7.4"/><circle cx="10" cy="11.3" r="1.5"/>'],
-    testing: ['#ff4f5e', '<ellipse cx="10" cy="11.6" rx="3.6" ry="4.6"/><circle cx="10" cy="5.6" r="1.8"/><path d="M10 8.4v7.6 M6.4 10.6H3.2 M16.8 10.6h-3.2 M6.6 14l-2.7 1.9 M13.4 14l2.7 1.9 M8.6 4.4 7.2 2.6 M11.4 4.4l1.4-1.8"/>'],
-    testing_lab: ['#00ff88', '<path d="M7.4 2.6h5.2 M8.5 2.6v5.2L4.1 15.4a1.4 1.4 0 0 0 1.2 2.1h9.4a1.4 1.4 0 0 0 1.2-2.1L11.5 7.8V2.6 M5.9 12.6h8.2"/><circle cx="9" cy="15" r=".8" fill="currentColor"/><circle cx="11.6" cy="14.4" r=".6" fill="currentColor"/>'],
-    trading_desk: ['#00ff88', '<path d="M5 2.8v14.4 M10 2v16 M15 4.6v11"/><rect x="3.5" y="6" width="3" height="6.2" rx=".6"/><rect x="8.5" y="9" width="3" height="5.2" rx=".6"/><rect x="13.5" y="6.6" width="3" height="4.6" rx=".6"/>'],
-    office: ['#5b9bff', '<rect x="3" y="3.4" width="14" height="9.6" rx="1.6"/><path d="M7.4 16.6h5.2 M10 13v3.6 M5.6 6.4h5 M5.6 9h3"/>'],
-    ops: ['#00cfff', '<rect x="2.4" y="3.6" width="6.8" height="5.2" rx="1"/><rect x="10.8" y="3.6" width="6.8" height="5.2" rx="1"/><rect x="6.6" y="11" width="6.8" height="5.2" rx="1"/><path d="M4.4 6.8l1.4-1.2 1.2.9 M12.6 7.2h2.8"/>'],
-    library: ['#5b9bff', '<path d="M3.4 3.4h3v13.2h-3Z M7.9 3.4h3v13.2h-3Z M12.4 4.3l2.9-.8 3.3 12.4-2.9.8Z M3.4 6h3 M7.9 6h3"/>'],
-    workshop: ['#00cfff', '<path d="M12.9 3.1a4 4 0 0 0-4.7 5.2l-4.9 4.9a1.7 1.7 0 0 0 2.4 2.4l4.9-4.9a4 4 0 0 0 5.2-4.7l-2.4 2.4-2.3-.4-.4-2.3Z"/>'],
-    command: ['#00cfff', '<circle cx="10" cy="10" r="7.2"/><circle cx="10" cy="10" r="3.7"/><path d="M10 10l5.1-5.1 M10 2.8v1.6 M10 15.6v1.6 M2.8 10h1.6 M15.6 10h1.6"/><circle cx="12.9" cy="8" r=".9" fill="currentColor"/>'],
-    greenhouse: ['#00ff88', '<path d="M4 16.2c0-7 4.6-11.6 12-12.1-.3 7.4-4.9 12.1-12 12.1Z M4 16.2l6.6-6.6"/>'],
-    // the two built-in rooms: Operations (the weekly audit) a gear with its check, the Treasury its vault door
-    audit: ['#00ff88', '<circle cx="10" cy="10" r="3.3"/><path d="M10 2.4v2.3 M10 15.3v2.3 M2.4 10h2.3 M15.3 10h2.3 M4.6 4.6l1.6 1.6 M13.8 13.8l1.6 1.6 M4.6 15.4l1.6-1.6 M13.8 6.2l1.6-1.6 M8.6 10l1 1 1.9-2"/>'],
-    vault: ['#00ff88', '<rect x="2.6" y="3.2" width="14.8" height="13.6" rx="2"/><circle cx="10" cy="10" r="3.9"/><circle cx="10" cy="10" r="1" fill="currentColor"/><path d="M10 6.1v1.6 M10 12.3v1.6 M6.1 10h1.6 M12.3 10h1.6 M5 16.8v1 M15 16.8v1"/>']
-  };
-  // which icon: the Manager's, a template's, or a department of one's own by its room's look
-  function iconOf(d) {
-    var k = d === 'hub' || d === 'audit' || d === 'vault' ? d : DEPT_ICON[d.key] && d.key !== 'custom' ? d.key : (d.look && DEPT_ICON[d.look] ? d.look : 'office');
-    return DEPT_ICON[k];
-  }
+  // each department's icon (CO.deptIconOf, data.js), as the rail and the drawers show it
   function deptIcon(d) {
-    var ic = iconOf(d);
+    var ic = CO.deptIconOf(d);
     return '<span class="dic" style="--ic:' + ic[0] + '"><svg viewBox="0 0 20 20" aria-hidden="true">' + ic[1] + '</svg><i class="dot"></i></span>';
   }
   CO.deptIcon = deptIcon;
-  // the same icon for the office's glass (u3d.js glassSign): its colour and a standalone SVG of it
-  CO.deptIconSvg = function (d, px) {
-    var ic = iconOf(d);
-    return { color: ic[0], svg: '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" width="' + px + '" height="' + px + '" color="' + ic[0] + '" fill="none" stroke="' + ic[0] +
-      '" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">' + ic[1] + '</svg>' };
-  };
   function renderRail() {
     var S = CO.S;
     $('rail-n').textContent = S.departments.length;
@@ -686,42 +659,6 @@
         'It floats in the Universe with a lock. Others see its name, its station and its mission; nothing inside.') + '</span></div></div>' +
       '<div class="sec">STATION <span>one deck per department · ' + n + ' now</span></div><div class="skins">' + skinButtons(p.skin, p.accent) + '</div>' +
       '<div class="sec">COLOUR</div><div class="accents">' + accentButtons(p.accent) + '</div></div></div></div>';
-  }
-  // "Create your company": a name, a mission, the station in the Universe and who may look inside
-  function createCompanyModal() {
-    var o = { name: '', mission: '', skin: 'tower', accent: 'green', public: false };
-    function prev() { return CO.skinSVG({ skin: o.skin, accent: o.accent, floors: 3, seed: 7, banner: o.name || 'Your company', you: true, priv: !o.public }); }
-    function show() {
-      var el = $('cc-prev'); if (!el) return;
-      if (!el.__pv) el.innerHTML = prev();
-      pv3(el, { skin: o.skin, accent: o.accent, floors: 3, seed: 7, name: o.name || 'Your company', you: true, public: o.public });
-    }
-    function pub() {
-      return '<span class="sw"></span><div><b>' + (o.public ? 'Public' : 'Private') + '</b><span>' + (o.public ? 'Anyone can look inside, read only.' : 'Others see its name, its station and its mission.') + '</span></div>';
-    }
-    openModal('<div class="mh"><h3>Create your company</h3><button class="btn" data-a="close">×</button></div>' +
-      '<div class="cc"><div class="ccl"><div class="form"><label class="field full">Name<input id="cc-name" maxlength="40" placeholder="e.g. Moonshot Labs" autocomplete="off"></label>' +
-      '<label class="field full">Mission · what everyone reads in the Universe<input id="cc-mission" maxlength="200" placeholder="What it is for, in one line" autocomplete="off"></label></div>' +
-      '<div class="sec step">YOUR STATION IN THE UNIVERSE <span>it grows a deck with every department</span></div>' +
-      '<div class="skins" id="cc-skins">' + skinButtons(o.skin, o.accent) + '</div><div class="accents" id="cc-acc">' + accentButtons(o.accent) + '</div>' +
-      '<div class="switch" id="cc-pub" data-a="cc-public">' + pub() + '</div></div>' +
-      '<div class="ccr"><div class="uvprev big" id="cc-prev">' + prev() + '</div><p class="hint">Shown with 3 departments, as it will float in the Universe.</p></div></div>' +
-      '<div class="mf"><span class="hint">One company per account.</span><span class="sp"></span><button class="btn" data-a="close">Cancel</button><button class="btn gr" data-a="create">Create company</button></div>', true, function (a, el) {
-        if (a === 'uv-skin') { o.skin = el.getAttribute('data-k'); mark('#cc-skins .skin', el); }
-        if (a === 'uv-accent') { o.accent = el.getAttribute('data-k'); mark('#cc-acc .acc', el); $('cc-skins').innerHTML = skinButtons(o.skin, o.accent); thumbs3($('cc-skins'), o.accent); }
-        if (a === 'cc-public') { o.public = !o.public; var sw = $('cc-pub'); sw.classList.toggle('on', o.public); sw.innerHTML = pub(); }
-        if (a === 'create') {
-          var nm = $('cc-name').value.trim();
-          if (!nm) { $('cc-name').focus(); $('cc-name').style.borderColor = 'var(--red)'; return; }
-          CO.saveProfile({ name: nm, mission: $('cc-mission').value.trim(), skin: o.skin, accent: o.accent, public: o.public });
-          location.href = 'index.html?empty&created=1';
-          return;
-        }
-        show();
-      });
-    ui.ccPrev = function () { o.name = $('cc-name').value.trim(); show(); };
-    show();
-    thumbs3($('cc-skins'), o.accent);
   }
   // what a process's department raises next, and the process that picks it up
   function nextOf(r) {
@@ -1286,7 +1223,7 @@
       var t = e.target;
       if (RO && roBlocked(t)) { e.preventDefault(); toast('Read only: only @' + CO.S.company.owner + ' can change this.'); return; }
       if (t.closest('#ro-back')) { location.href = 'index.html#universe'; return; }
-      if (t.closest('#sim-new')) return createCompanyModal();
+      if (t.closest('#sim-new')) { location.href = 'start.html'; return; }
       if (uv) {
         if (t.closest('#uv-in')) return uv.zoom(0.78);
         if (t.closest('#uv-out')) return uv.zoom(1.28);
@@ -1413,7 +1350,6 @@
       if (e.target.id === 'df-ch') { var n = $('df-n'); if (n) n.textContent = e.target.value.length + ' / 2,000'; }
       // the room's wall screen carries the name as it is typed (in 3D nothing is rebuilt for it)
       if (e.target.id === 'df-name' && modalAct) modalAct('name', e.target);
-      if (e.target.id === 'cc-name' && ui.ccPrev) ui.ccPrev();
     });
     document.addEventListener('change', function (e) {
       if (e.target.classList.contains('rvw')) { var rid2 = e.target.closest('.rule').getAttribute('data-rule'); var rl2 = CO.S.rules.filter(function (x) { return x.id === rid2; })[0]; if (rl2) { CO.act.review(rid2, rl2.review, e.target.value.trim() || 'you'); toast(rid2 + ': reviewed by ' + (e.target.value.trim() || 'you') + '.'); } }

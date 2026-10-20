@@ -3662,6 +3662,10 @@ class Office3D {
       const par = n.parent; par.children[par.children.indexOf(n)] = p; p.parent = par; n.parent = null; swap.set(n, p);
     });
     pool.length = Math.max(pool.length, now.length);
+    // the kept lamps this layout has no place for stay in the world, dark: a scene with fewer lights keys every lit
+    // shader anew too, so an office that shrank (a department removed, the builder's New after Pre-build) compiled
+    // them all again -- 2.3 s of stalled frames there, measured by the entry's session (2026-10-20)
+    for (let i = now.length; i < pool.length; i++) { const p = pool[i]; if (p) { p.intensity = 0; this.world.add(p); } }
     // what holds a new lamp now holds the kept one (a room's lamp, its tint's target)
     if (swap.size) Object.values(this.rooms).forEach((r) => Object.keys(r).forEach((k) => { if (swap.has(r[k])) r[k] = swap.get(r[k]); }));
   }

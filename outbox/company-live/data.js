@@ -452,6 +452,11 @@
       ['an agent wins on paper', 'Trading desk', 'seats it at an Agent Tournaments table']
     ]
   };
+  // The departments a pre-built company starts with (builder.html's Pre-build and its tour read this list): the
+  // Quant Lab with our own charter, NEXUS first; the others as their templates have them.
+  CO.PREBUILD = [{ key: 'testing', name: 'Cymetica QA' }, { key: 'development', name: 'Development' }]
+    .concat(CO.OURS.departments.filter(function (d) { return d.key === 'testing_lab'; }))
+    .concat([{ key: 'trading_desk', name: 'Trading desk' }]);
   // Which company this page shows. Ours by default; ?demo the busy example; ?empty a blank one; ?new the
   // "Create your company" step first; ?visit=<id> someone else's public company, read only. Parsed as
   // parameters, never as a substring: a company name in the address must not switch the mode.
@@ -487,9 +492,43 @@
     var s = CO.MODE === 'demo' ? CO.seed(t0) : CO.seedEmpty(t0);
     s.company.name = me.name; s.company.owner = CO.ME;
     if (CO.MODE === 'ours') { s.setup = 'ours'; s.company.mission = CO.OURS.mission; }
+    if (CO.MODE === 'empty' && me.prebuild === 'starter') s.setup = 'starter';
     if (me.mission) s.company.mission = me.mission;
     s.legal.name = me.name + ' Ltd.';
     return s;
+  };
+
+  // Each department's icon, drawn to its room in the office ("pridej hezke ikonky i zde k departmentum, podle toho
+  // jaky skin mistnosti delas, at je to sladene", 2026-10-19): Development's code, the Design studio's pen, Cymetica
+  // QA's bug, the Testing lab's flask, the Trading desk's candles, NEXUS's core with its rings, and for a
+  // department of one's own the look its room has. Line icons in the site's colours, as the tabs' are.
+  var DEPT_ICON = {
+    hub: ['#00cfff', '<circle cx="10" cy="10" r="2.4" fill="currentColor"/><ellipse cx="10" cy="10" rx="7.6" ry="2.9"/><ellipse cx="10" cy="10" rx="7.6" ry="2.9" transform="rotate(60 10 10)"/><ellipse cx="10" cy="10" rx="7.6" ry="2.9" transform="rotate(-60 10 10)"/>'],
+    development: ['#00cfff', '<rect x="2.5" y="3.5" width="15" height="13" rx="2"/><path d="M2.5 7h15 M8.2 9.6l-2.3 2.4 2.3 2.4 M11.8 9.6l2.3 2.4-2.3 2.4"/>'],
+    design: ['#5b9bff', '<path d="M10 2.6l5.4 9.9L10 17.4l-5.4-4.9Z M10 2.6v7.4"/><circle cx="10" cy="11.3" r="1.5"/>'],
+    testing: ['#ff4f5e', '<ellipse cx="10" cy="11.6" rx="3.6" ry="4.6"/><circle cx="10" cy="5.6" r="1.8"/><path d="M10 8.4v7.6 M6.4 10.6H3.2 M16.8 10.6h-3.2 M6.6 14l-2.7 1.9 M13.4 14l2.7 1.9 M8.6 4.4 7.2 2.6 M11.4 4.4l1.4-1.8"/>'],
+    testing_lab: ['#00ff88', '<path d="M7.4 2.6h5.2 M8.5 2.6v5.2L4.1 15.4a1.4 1.4 0 0 0 1.2 2.1h9.4a1.4 1.4 0 0 0 1.2-2.1L11.5 7.8V2.6 M5.9 12.6h8.2"/><circle cx="9" cy="15" r=".8" fill="currentColor"/><circle cx="11.6" cy="14.4" r=".6" fill="currentColor"/>'],
+    trading_desk: ['#00ff88', '<path d="M5 2.8v14.4 M10 2v16 M15 4.6v11"/><rect x="3.5" y="6" width="3" height="6.2" rx=".6"/><rect x="8.5" y="9" width="3" height="5.2" rx=".6"/><rect x="13.5" y="6.6" width="3" height="4.6" rx=".6"/>'],
+    office: ['#5b9bff', '<rect x="3" y="3.4" width="14" height="9.6" rx="1.6"/><path d="M7.4 16.6h5.2 M10 13v3.6 M5.6 6.4h5 M5.6 9h3"/>'],
+    ops: ['#00cfff', '<rect x="2.4" y="3.6" width="6.8" height="5.2" rx="1"/><rect x="10.8" y="3.6" width="6.8" height="5.2" rx="1"/><rect x="6.6" y="11" width="6.8" height="5.2" rx="1"/><path d="M4.4 6.8l1.4-1.2 1.2.9 M12.6 7.2h2.8"/>'],
+    library: ['#5b9bff', '<path d="M3.4 3.4h3v13.2h-3Z M7.9 3.4h3v13.2h-3Z M12.4 4.3l2.9-.8 3.3 12.4-2.9.8Z M3.4 6h3 M7.9 6h3"/>'],
+    workshop: ['#00cfff', '<path d="M12.9 3.1a4 4 0 0 0-4.7 5.2l-4.9 4.9a1.7 1.7 0 0 0 2.4 2.4l4.9-4.9a4 4 0 0 0 5.2-4.7l-2.4 2.4-2.3-.4-.4-2.3Z"/>'],
+    command: ['#00cfff', '<circle cx="10" cy="10" r="7.2"/><circle cx="10" cy="10" r="3.7"/><path d="M10 10l5.1-5.1 M10 2.8v1.6 M10 15.6v1.6 M2.8 10h1.6 M15.6 10h1.6"/><circle cx="12.9" cy="8" r=".9" fill="currentColor"/>'],
+    greenhouse: ['#00ff88', '<path d="M4 16.2c0-7 4.6-11.6 12-12.1-.3 7.4-4.9 12.1-12 12.1Z M4 16.2l6.6-6.6"/>'],
+    // the two built-in rooms: Operations (the weekly audit) a gear with its check, the Vault its door
+    audit: ['#00ff88', '<circle cx="10" cy="10" r="3.3"/><path d="M10 2.4v2.3 M10 15.3v2.3 M2.4 10h2.3 M15.3 10h2.3 M4.6 4.6l1.6 1.6 M13.8 13.8l1.6 1.6 M4.6 15.4l1.6-1.6 M13.8 6.2l1.6-1.6 M8.6 10l1 1 1.9-2"/>'],
+    vault: ['#00ff88', '<rect x="2.6" y="3.2" width="14.8" height="13.6" rx="2"/><circle cx="10" cy="10" r="3.9"/><circle cx="10" cy="10" r="1" fill="currentColor"/><path d="M10 6.1v1.6 M10 12.3v1.6 M6.1 10h1.6 M12.3 10h1.6 M5 16.8v1 M15 16.8v1"/>']
+  };
+  // which icon: NEXUS's, a template's, or a department of one's own by its room's look
+  CO.deptIconOf = function (d) {
+    var k = d === 'hub' || d === 'audit' || d === 'vault' ? d : DEPT_ICON[d.key] && d.key !== 'custom' ? d.key : (d.look && DEPT_ICON[d.look] ? d.look : 'office');
+    return DEPT_ICON[k];
+  };
+  // the same icon for the office's glass (u3d.js glassSign): its colour and a standalone SVG of it
+  CO.deptIconSvg = function (d, px) {
+    var ic = CO.deptIconOf(d);
+    return { color: ic[0], svg: '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" width="' + px + '" height="' + px + '" color="' + ic[0] + '" fill="none" stroke="' + ic[0] +
+      '" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">' + ic[1] + '</svg>' };
   };
 
   function hhmm(t) { var d = new Date(t); return pad(d.getHours()) + ':' + pad(d.getMinutes()); }
