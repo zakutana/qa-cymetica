@@ -1411,9 +1411,7 @@ class Universe3D {
     // under the painting a blurred copy of it, turning with it: the glow his arcs have (a bloom of its own)
     const p1 = colliderTex(1).image, glow = document.createElement('canvas'); glow.width = p1.width; glow.height = p1.height; glow.getContext('2d').drawImage(p1, 0, 0); glow.className = 'g1';
     ce.appendChild(glow);
-    // the ball turns on its own axis (sun3d.js: its still part painted once, the painting's own arcs turned and redrawn),
-    // where two layers turned against each other like a clock's hands ("at se to slunce toci pomalicku kolem sve osy")
-    if (!(window.SUN3D && SUN3D.live(ce, 1))) [1, 2].forEach((seed) => { const cv = colliderTex(seed).image; cv.className = 'l' + seed; ce.appendChild(cv); });
+    [1, 2].forEach((seed) => { const cv = colliderTex(seed).image; cv.className = 'l' + seed; ce.appendChild(cv); });
     this.bans.insertBefore(ce, this.bans.firstChild); this.colEl = ce;
     // the jets: a wide soft cone and a hot narrow one inside it, white at the root, gone at the tip
     G.jet = G.jet || new THREE.CylinderGeometry(0.06, 1, 1, 24, 1, true).translate(0, 0.5, 0);

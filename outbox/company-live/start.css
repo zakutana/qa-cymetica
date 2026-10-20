@@ -16,9 +16,9 @@ body.lp-leave .lp-main { opacity: 0; }
    blurred copy -- uv.css's .uvcol, with the light added to what is under it rather than laid over it */
 .lp-col { position: absolute; left: 0; top: 0; width: 600px; height: 600px; transform-origin: 300px 300px; pointer-events: none; will-change: transform; mix-blend-mode: screen; }
 .lp-col canvas { position: absolute; inset: 0; width: 100%; height: 100%; }
-.lp-col .l1 { animation: lpcolflick 2.3s ease-in-out infinite alternate; }   /* the still part; the arcs turn in .l2 (sun3d.js) */
-.lp-col .g1 { filter: blur(9px) brightness(1.5); opacity: .85; }
-.lp-col .l2 { opacity: 1; }
+.lp-col .l1 { animation: lpcolspin 300s linear infinite reverse, lpcolflick 2.3s ease-in-out infinite alternate; }
+.lp-col .g1 { filter: blur(9px) brightness(1.5); opacity: .85; animation: lpcolspin 300s linear infinite reverse; }
+.lp-col .l2 { opacity: .35; animation: lpcolspin 450s linear infinite; }
 @keyframes lpcolspin { to { transform: rotate(360deg); } }
 @keyframes lpcolflick { from { opacity: 1; } to { opacity: .84; } }
 /* the darkness behind the text, so it reads over whatever passes behind it */
