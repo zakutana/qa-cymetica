@@ -33,18 +33,17 @@ its whole flight in.
 
 ## Second pass (the same day, against da5e32b7: the page without its top bar, so a taller 3D stage)
 
-| Place | worst frame, ms (1x) | worst frame, ms (4x CPU) |
+| Place | worst frame, ms (1x) | worst frame, ms (4x CPU, two walks) |
 |---|---|---|
-| Department added (rebuild) | 375 -> 229 | 2556 -> 1438 |
+| Department added (rebuild) | 563 -> 278 | 2174, 2361 -> 1576, 1417 |
 | everything else | within the walk's own spread (about +-50 ms at 1x run to run) | |
 
 - **The spare lamps are seen by the floors' mirror too** (layer 1, as a room's own lamp). Seen by the main view
   alone, a spare a new room took up changed the mirror's set of lights, and every material the mirror draws was
   built again: 11 shaders in the existing rooms after Create, now 0.
-- **The room a department would add is made ready while the dialog is open** (`Office3D.warmRoom`, called by the
-  dialog once a pick has stood 0.9 s): built by the office's builders without its lamp, its shaders made a piece at a
-  time with the office's renderer, its instanced meshes handed to the pool. After Create 4 shaders are built instead
-  of 12.
+- Tried and taken out (672b80d4, then out): making the room a pick would add ready while the dialog is open. Create
+  went to 229 ms (1.1 s at 4x), but building that room in the office while the dialog is browsed made the dialog's
+  own frames 360-530 ms at 4x where they were 56-180.
 
 What is left over 100 ms at full speed, and why it stays:
 - **Opening or closing a room (one or two frames of 100-170 ms):** the columns slide for 0.5 s and the 3D stage

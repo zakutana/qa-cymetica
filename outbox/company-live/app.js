@@ -253,7 +253,8 @@
   function renderEarned(fd) {
     // it shows only while the vault is open: clicked in the office (the operator, 2026-10-19: "ten vault napravo
     // zobrazis jen kdyz nekdo klikne na trezor")
-    $('p-earn').hidden = !ui.vault;
+    $('p-earn').hidden = ui.vault !== 'vault';
+    renderOps();
     var V = CO.vaultTotals();
     if (RO) { $('earn-n').textContent = ''; setHTML($('earn'), '<p class="empty"><i class="lk"></i> Private: only its owner sees inside the vault.</p>'); return; }
     $('earn-n').textContent = '';
@@ -336,17 +337,28 @@
     clearTimeout(ui.flyT);
     ui.flyT = setTimeout(function () { office.focus('hub', 0, true); }, was ? 0 : 520);
   }
+  // Operations opened from the office: its room and, on the right, what it does and when it audits next; the
+  // Audit tab is one link away ("jak kliknu na operations tak taky se ma zoomnout mistnost a az pres link se ma jit na Audit")
+  function renderOps() {
+    var el = $('p-ops'); el.hidden = ui.vault !== 'audit'; if (el.hidden) return;
+    var S = CO.S, A = S.audit, days = Math.max(0, Math.ceil((A.next_at - S.clock) / 86400000));
+    setHTML($('ops'), '<div class="kpis two"><div><b class="cy">' + days + 'd</b><span>next audit</span></div><div><b>' + (A.last ? A.last.findings.length : 0) + '</b><span>tips last week</span></div></div>' +
+      '<p class="hint">Audits every process once a week: wasted work, duplicates, stuck flows. Keeps the company optimised.</p>' +
+      '<button class="btn cy" type="button" id="ops-open">Open Audit →</button>');
+  }
+  function openOpsRoom() { openVaultRoom('audit'); }
   // the vault opened from the office: the camera goes to its room and the right column shows what it holds
-  function openVaultRoom() {
+  function openVaultRoom(key) {
+    key = key === 'audit' ? 'audit' : 'vault';
     if (ui.tab !== 'office') setTab('office');
     var was = ui.panel != null || ui.mgr;
-    ui.panel = null; ui.mgr = false; ui.vault = true; $('drawer').hidden = true; $('mgr').hidden = true;
+    ui.panel = null; ui.mgr = false; ui.vault = key; $('drawer').hidden = true; $('mgr').hidden = true;
     document.body.classList.remove('focus'); document.body.classList.add('vopen');
-    $('back').hidden = false; $('where').hidden = false; $('where').textContent = 'Vault';
-    office.select('vault');
+    $('back').hidden = false; $('where').hidden = false; $('where').textContent = key === 'audit' ? 'Operations' : 'Vault';
+    office.select(key);
     render();
     clearTimeout(ui.flyT);
-    ui.flyT = setTimeout(function () { office.focus('vault', 0, true); }, was ? 520 : 0);
+    ui.flyT = setTimeout(function () { office.focus(key, 0, true); }, was ? 520 : 0);
   }
   function closeDrawer() {
     if (ui.panel == null && !ui.mgr && !ui.vault) return;
@@ -384,10 +396,14 @@
     var ln = CO.deptLine(d, v);
     setHTML($('dr-head'), '<i class="dot ' + v.status + (ln.tone === 'red' ? ' needs' : '') + '"></i><h2>' + esc(d.name) + '</h2>' +
       (d.files_as ? '<span class="et ' + (d.et10 ? 'lit' : 'zero') + '" title="ET10 Cymetica paid for accepted bugs, to ' + esc(d.files_as) + '">' + (d.et10 ? '+' : '') + (d.et10 || 0).toLocaleString('en-US') + ' ET10</span>' : '') +
+      (CO.DEPT_LINK[d.key] ? '<a class="btn cy pg" href="' + esc(CO.DEPT_LINK[d.key].url) + '" target="_blank" rel="noopener" title="' + esc(CO.DEPT_LINK[d.key].label) + '">' + esc(CO.DEPT_LINK[d.key].label.split(':')[0]) + ' ↗</a>' : '') +
       (RO ? '' : '<span class="x"><button class="btn" data-a="edit">Edit</button><button class="btn rd" data-a="delete" title="Delete this department">Delete</button></span>'));
     // what it is doing right now, in one line: the first thing anyone wants to know
     setHTML($('dr-now'), '<div class="now t-' + ln.tone + '"><p>' + esc(ln.text) + '</p>' +
       (appr.length ? '<button class="btn rd" type="button" data-a="appr">Open</button>' : '') + (v.running ? '<span class="run"><i></i></span>' : '') + '</div>');
+    // the charter is read and changed in Edit ("charter defaultne skryj, jen v nejakem editu se zobrazi"); a visitor,
+    // who has no Edit, reads it here
+    $('dr-charter').hidden = !RO;
     var ta = $('dr-ch-text');
     if (!ui.dirty && ta.value !== d.charter) ta.value = d.charter;
     charterMeta();
@@ -403,7 +419,7 @@
       (RO ? (d.schedule ? '<div class="capr ro"><span class="l">Runs a day</span><b>' + runsNow + '×</b></div>' : '') :
       '<label class="capr"><span class="l">Daily cap</span><input type="range" id="dr-cap" min="0" max="' + (CO.CAP_STEPS.length - 1) + '" step="1" value="' + ci + '">' +
       '<b id="dr-cap-v">' + capLabel(CO.CAP_STEPS[ci], v.perTurn) + '</b></label>' +
-      (d.schedule ? '<div class="rpd"><span class="l">Runs a day</span>' + [1, 2, 3, 4, 6, 12].map(function (n) {
+      (d.schedule ? '<div class="rpd"><span class="l">' + (d.key === 'testing' ? 'Bug hunts a day' : 'Runs a day') + '</span>' + [1, 2, 3, 4, 6, 12].map(function (n) {
         return '<button type="button" data-rpd="' + n + '"' + (n === runsNow ? ' class="on"' : '') + '>' + n + '×</button>';
       }).join('') + '</div>' : '')) + '</div>';
     var tk = $('dr-tok');
@@ -411,8 +427,9 @@
     // a department on a clock: its runs, products, who the bugs are filed as, what they earned
     var runsHtml = '';
     if (d.schedule) {
-      runsHtml = '<div class="runs"><div class="sec">RUNS <span>' + esc(d.schedule.label) + '</span></div>' +
-        '<div class="rk" style="grid-template-columns:repeat(2,1fr)"><div><b>' + hhmm(d.next_run) + '</b><span>next run</span></div>' +
+      var hunt = d.key === 'testing';
+      runsHtml = '<div class="runs"><div class="sec">' + (hunt ? 'BUG HUNTS' : 'RUNS') + ' <span>' + esc(d.schedule.label) + '</span></div>' +
+        '<div class="rk" style="grid-template-columns:repeat(2,1fr)"><div><b>' + hhmm(d.next_run) + '</b><span>' + (hunt ? 'next bug hunt' : 'next run') + '</span></div>' +
         '<div><b class="gr">' + (d.accepted || 0) + '</b><span>bugs accepted</span></div></div>' +
         '<div class="prods">' + (d.products.length ? d.products.map(function (p) { return '<span class="chip">' + esc(p) + '</span>'; }).join('') : '<span class="hint">no products yet: the public site</span>') + '</div>' +
         (RO ? '' : '<div class="cb"><input id="dr-prods" placeholder="Products, comma separated" value="' + esc(d.products.join(', ')) + '"><button class="btn" data-a="prods">Save</button><button class="btn cy" data-a="runnow">Run now</button></div>') + '</div>';
@@ -891,7 +908,7 @@
     if (key === 'you') return '<b>Your desk</b> · ' + (S.approvals.length ? '<span class="r">' + S.approvals.length + ' approvals waiting</span>' : 'all clear') + '<br>click to open Approvals';
     if (key === 'audit') {
       var A = S.audit;
-      return '<b>Operations</b> · next in ' + Math.max(0, Math.ceil((A.next_at - S.clock) / 86400000)) + 'd · ' + (A.last ? A.last.findings.length : 0) + ' findings last week<br>click to open Audit';
+      return '<b>Operations</b> · next in ' + Math.max(0, Math.ceil((A.next_at - S.clock) / 86400000)) + 'd · ' + (A.last ? A.last.findings.length : 0) + ' findings last week<br>click to look inside';
     }
     if (key === 'lot') return '<b>Add a department</b><br>click to staff a new room';
     if (key === 'vault') {
@@ -1082,8 +1099,6 @@
       CO.TEMPLATES.forEach(function (t, k) { if (t.key === o.key) ti = k; });
       if (dlg3) dlg3.set({ key: o.key, experts: hiredKeys(), look: custom ? o.look : null, name: $('df-name').value });
       else room2();
-      // the office makes the room this would add ready meanwhile, so Create builds nothing new (Office3D.warmRoom)
-      if (dlg3 && office3d && office3d.warmRoom) office3d.warmRoom({ key: o.key, experts: hiredKeys(), look: custom ? o.look : null });
       var lk = $('d3-look'); lk.hidden = !custom; lk.innerHTML = '<b>' + (i + 1) + ' / ' + L.length + '</b>' + esc(L[i].name);
       Array.prototype.forEach.call(document.querySelectorAll('#d3-stage .d3arw'), function (b) { b.hidden = !custom; });
       $('d3-about').innerHTML = (CO.DEPT_ABOUT[o.key] || CO.DEPT_ABOUT.custom).map(function (s) { return '<li>' + esc(s) + '</li>'; }).join('');
@@ -1284,6 +1299,7 @@
       if (tr) { var tid = +tr.getAttribute('data-task'); ui.open[tid] = !ui.open[tid]; return render(); }
       if (t.closest('#dr-tasks-all')) { ui.tfDept = String(ui.panel); ui.tfStatus = ''; return setTab('tasks'); }
       if (t.closest('#dr-mem-t')) { ui.memOpen = !ui.memOpen; return renderDrawer(); }
+      if (t.closest('#ops-open')) { closeDrawer(); setTab('audit'); return; }
       if (t.closest('#dr-ch-discard')) { ui.dirty = false; $('dr-ch-text').value = CO.dept(ui.panel).charter; charterMeta(); return; }
       // the other tabs
       var exb = t.closest('#nr-ex [data-ex]');
@@ -1426,7 +1442,7 @@
     CO.on('submitted', function (e) { if (e.dept) { office.packet('d' + e.dept.id, 'hub', 'green'); } });
     CO.on('message', function () { office.packet('hub', 'you', 'cyan'); });
     // after the office changes shape, the camera goes back to what is in focus
-    function reframe() { if (ui.mgr) office.focus('hub', 0, true); else if (ui.panel != null) office.focus('d' + ui.panel, 0, true); else if (ui.vault) office.focus('vault', 0, true); else office.fit(true); }
+    function reframe() { if (ui.mgr) office.focus('hub', 0, true); else if (ui.panel != null) office.focus('d' + ui.panel, 0, true); else if (ui.vault) office.focus(ui.vault, 0, true); else office.fit(true); }
     CO.on('dept:new', function (d) { office.layout({ born: d.id }); if (ui.panel != null || ui.mgr) office.select(ui.mgr ? 'hub' : 'd' + ui.panel); setTimeout(reframe, 60); });
     CO.on('dept:edit', function () { office.layout(); });
     CO.on('dept:removed', function () { office.layout(); setTimeout(reframe, 60); });
@@ -1440,7 +1456,7 @@
       if (key.charAt(0) === 'd') return openDrawer(+key.slice(1));
       if (key === 'hub') return openManager();
       if (key === 'you') return setTab('approvals');
-      if (key === 'audit') return setTab('audit');
+      if (key === 'audit') return openOpsRoom();
       if (key === 'vault') return openVaultRoom();
       if (key === 'lot') return addDeptModal();
     });

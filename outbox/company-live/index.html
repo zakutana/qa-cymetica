@@ -10,8 +10,8 @@
 <link href="https://fonts.googleapis.com/css2?family=Archivo+Black&family=JetBrains+Mono:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <!-- the Universe's name plates: his picture's squared, semi-condensed caps -->
 <link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@600;700&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="style.css?v=20261022ab">
-<link rel="stylesheet" href="uv.css?v=20261022ab">
+<link rel="stylesheet" href="style.css?v=20261022ac">
+<link rel="stylesheet" href="uv.css?v=20261022ac">
 <!-- the 3D engine for the Universe and the office: three.js with its WebGPU renderer (WebGL2 where WebGPU is missing) -->
 <script type="importmap">{ "imports": {
   "three": "https://cdn.jsdelivr.net/npm/three@0.172.0/build/three.webgpu.js",
@@ -133,6 +133,7 @@
   <aside class="rightcol">
     <section class="panel ap" id="p-appr"><div class="h"><span id="ap-t">WAITING FOR YOU</span> <b class="red" id="ap-n"></b></div><div class="alist" id="appr"></div></section>
     <section class="panel earn" id="p-earn"><div class="h"><span>VAULT</span> <b class="gr" id="earn-n"></b></div><div class="elist" id="earn"></div></section>
+    <section class="panel ops" id="p-ops" hidden><div class="h"><span>OPERATIONS</span></div><div id="ops"></div></section>
   </aside>
 </main>
 
@@ -214,16 +215,16 @@
 <div class="toast" id="toast" hidden></div>
 
 <!-- ?v= changes with every edit, so a plain reload never runs yesterday's file from the cache -->
-<script src="data.js?v=20261022ab"></script>
-<script src="uv-data.js?v=20261022ab"></script>
-<script src="portfolio.js?v=20261022ab"></script>
-<script src="sim.js?v=20261022ab"></script>
-<script src="office.js?v=20261022ab"></script>
-<script src="universe.js?v=20261022ab"></script>
-<script src="cards.js?v=20261022ab"></script>
-<script src="app.js?v=20261022ab"></script>
-<script type="module" src="u3d.js?v=20261022ab"></script>
+<script src="data.js?v=20261022ac"></script>
+<script src="uv-data.js?v=20261022ac"></script>
+<script src="portfolio.js?v=20261022ac"></script>
+<script src="sim.js?v=20261022ac"></script>
+<script src="office.js?v=20261022ac"></script>
+<script src="universe.js?v=20261022ac"></script>
+<script src="cards.js?v=20261022ac"></script>
+<script src="app.js?v=20261022ac"></script>
+<script type="module" src="u3d.js?v=20261022ac"></script>
 <!-- the seven stations a company can pick (stations.js puts its builders into u3d.js's table and renames CO.SKINS) -->
-<script type="module" src="stations.js?v=20261022ab"></script>
+<script type="module" src="stations.js?v=20261022ac"></script>
 </body>
 </html>
