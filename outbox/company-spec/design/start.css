@@ -1,0 +1,56 @@
+/* The /company entry: space with a station turning in it, the slogan and two doors over it on the left. The headline is
+   set as cymetica.com/agent-tournaments sets its own (.at-h1, read off the live page 2026-10-20): Archivo Black,
+   clamp(32px, 4.6vw, 58px), line-height 1.04, letter-spacing -0.01em, white, the last line #00ff88, left-aligned with
+   its picture beside it; its CTA's green for the main door. */
+body.lp { background: #16232f; }
+/* leaving through a door: the page fades out, then the next one comes in (start.js stops the scenes first) */
+body.lp .lp-main { transition: opacity .2s ease-in; }
+body.lp-leave .lp-main { opacity: 0; }
+.lp-main { position: relative; flex: 1; min-height: 0; overflow: hidden; display: flex; align-items: center; }
+
+/* the 3D canvas: wider than the page by --sh and starting at its left edge, so the sun it centres stands right of
+   the text; its own sky (stars, the far glows) is the page's background */
+.lp-space { position: absolute; left: 0; top: 0; bottom: 0; width: calc(100% + var(--sh)); --sh: 44vw; background: #16232f; overflow: hidden; }
+.lp-space > canvas { display: block; width: 100% !important; height: 100% !important; }
+/* Cymetica's ball: the Universe's painting (colliderTex) at the ball's place, two turning against each other over a
+   blurred copy -- uv.css's .uvcol, with the light added to what is under it rather than laid over it */
+.lp-col { position: absolute; left: 0; top: 0; width: 600px; height: 600px; transform-origin: 300px 300px; pointer-events: none; will-change: transform; mix-blend-mode: screen; }
+.lp-col canvas { position: absolute; inset: 0; width: 100%; height: 100%; }
+.lp-col .l1 { animation: lpcolspin 420s linear infinite, lpcolflick 2.3s ease-in-out infinite alternate; }
+.lp-col .g1 { filter: blur(9px) brightness(1.5); opacity: .85; animation: lpcolspin 420s linear infinite; }
+.lp-col .l2 { opacity: .35; animation: lpcolspin 600s linear infinite reverse; }
+@keyframes lpcolspin { to { transform: rotate(360deg); } }
+@keyframes lpcolflick { from { opacity: 1; } to { opacity: .84; } }
+/* the darkness behind the text, so it reads over whatever passes behind it */
+.lp-main::before { content: ''; position: absolute; inset: 0; z-index: 1; pointer-events: none;
+  background: linear-gradient(90deg, rgba(8, 16, 24, .62) 0%, rgba(8, 16, 24, .36) 34%, rgba(8, 16, 24, 0) 54%); }
+
+.lp-hero { position: relative; z-index: 2; padding: 40px 0 48px max(48px, 9vw); }
+.lp-h1 { font: 400 clamp(32px, 4.6vw, 58px)/1.04 'Archivo Black', sans-serif; letter-spacing: -.01em; color: #fff; }
+.lp-h1 .g { color: var(--green); }
+.lp-real { max-width: 600px; margin-top: 22px; font-size: 15px; line-height: 1.6; color: var(--dim); }
+.lp-real b { color: var(--text); font-weight: 700; }
+
+.lp-tiles { display: grid; grid-template-columns: repeat(2, 320px); gap: 20px; margin-top: 36px; }
+.lp-tile { display: flex; flex-direction: column; aspect-ratio: 1; border-radius: 22px; overflow: hidden; color: var(--text);
+  border: 1px solid rgba(0, 150, 255, .2); background: rgba(10, 16, 26, .72); backdrop-filter: blur(8px); transition: border-color .15s, box-shadow .2s, transform .12s; }
+.lp-tile:hover { transform: translateY(-2px); }
+.lp-tile.go:hover { border-color: rgba(0, 255, 136, .6); box-shadow: 0 0 0 1px rgba(0, 255, 136, .35), 0 18px 48px -14px rgba(0, 255, 136, .45); }
+.lp-tile.uv:hover { border-color: rgba(0, 207, 255, .6); box-shadow: 0 0 0 1px rgba(0, 207, 255, .35), 0 18px 48px -14px rgba(0, 207, 255, .45); }
+/* a door's picture is the product drawn live; it only shows, the whole tile is the link (no dragging the room round) */
+.lp-art { flex: 1; min-height: 0; position: relative; display: block; margin: 8px 8px 0; border-radius: 15px; overflow: hidden; pointer-events: none; background: #06101a; }
+.lp-room .d3cv canvas { cursor: inherit; }
+.lp-uvpic > canvas { position: absolute; inset: 0; display: block; width: 100% !important; height: 100% !important; }
+/* the door's label as the live page's PICK A TABLE: Archivo Black 15.5px, dark on green, the green glow */
+.lp-cta { display: flex; align-items: center; justify-content: center; gap: 10px; margin: 12px; padding: 16px 14px; border-radius: 16px;
+  font: 400 15px 'Archivo Black', sans-serif; letter-spacing: .02em; text-transform: uppercase; white-space: nowrap; }
+.lp-cta svg { width: 18px; height: 18px; fill: none; stroke: currentColor; stroke-width: 2.4; stroke-linecap: round; stroke-linejoin: round; }
+.lp-tile.go .lp-cta { background: var(--green); color: #03140c; box-shadow: 0 0 0 1px rgba(0, 255, 136, .7), 0 10px 34px -6px rgba(0, 255, 136, .55); }
+.lp-tile.uv .lp-cta { color: var(--cyan); border: 1px solid rgba(0, 207, 255, .55); background: rgba(0, 207, 255, .08); }
+
+@media (max-width: 900px) {
+  body.lp { height: auto; min-height: 100vh; overflow: auto; }
+  .lp-space { --sh: 0px; opacity: .55; }
+  .lp-hero { padding: 32px 16px 40px; }
+  .lp-tiles { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}

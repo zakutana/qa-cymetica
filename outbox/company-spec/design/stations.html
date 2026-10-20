@@ -1,0 +1,80 @@
+<!doctype html>
+<html lang="en" class="ld">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Stations · EventTrader</title>
+<link rel="icon" href="data:,">
+<link href="https://fonts.googleapis.com/css2?family=Archivo+Black&family=JetBrains+Mono:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@600;700&display=swap" rel="stylesheet">
+<style>
+  html.ld body { visibility: hidden; }
+  body.stp { overflow: auto; height: auto; min-height: 100vh; }
+  .stp-bar { display: flex; align-items: center; gap: 14px; padding: 14px 22px; font: 700 11px 'JetBrains Mono'; letter-spacing: .12em; color: var(--dim2); }
+  .stp-bar h1 { font: 400 26px 'Archivo Black', sans-serif; letter-spacing: -.01em; color: #fff; margin-right: 18px; }
+  .stp-bar button { padding: 7px 12px; border-radius: 8px; border: 1px solid var(--line3); color: var(--dim); font: 700 12px 'JetBrains Mono'; }
+  .stp-bar button.on { border-color: var(--cyan); color: var(--cyan); }
+  .stp-grid { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 14px; padding: 0 22px 22px; }
+  .stp-tile { position: relative; height: 470px; border-radius: 16px; overflow: hidden; border: 1px solid var(--line2); background: #020306; }
+  .stp-tile .pv3 { position: absolute; inset: 0; }
+  .stp-tile .pv3 canvas { display: block; width: 100% !important; height: 100% !important; }
+  .stp-tile b { position: absolute; left: 16px; bottom: 12px; z-index: 3; font: 400 18px 'Archivo Black', sans-serif; color: #fff; letter-spacing: .02em; }
+  .stp-tile .pvb { display: none; }
+</style>
+<script type="importmap">{ "imports": {
+  "three": "https://cdn.jsdelivr.net/npm/three@0.172.0/build/three.webgpu.js",
+  "three/webgpu": "https://cdn.jsdelivr.net/npm/three@0.172.0/build/three.webgpu.js",
+  "three/tsl": "https://cdn.jsdelivr.net/npm/three@0.172.0/build/three.tsl.js",
+  "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.172.0/examples/jsm/"
+} }</script>
+</head>
+<body class="stp">
+<div class="stp-bar"><h1>Stations</h1>DECKS <span id="decks"></span><span style="width:18px"></span>COLOUR <span id="accs"></span></div>
+<div class="stp-grid" id="grid"></div>
+<script>
+/* the seven stations side by side, at any number of decks and in any colour: for looking at them, not part of the design */
+window.STP = function () {
+  // ?one=<key>: that station alone, the page's whole width; ?n= and ?acc= set decks and colour
+  var CO = window.CO, Q = new URLSearchParams(location.search), one = Q.get('one'), n = +(Q.get('n') || 3), acc = Q.get('acc') || 'green', grid = document.getElementById('grid');
+  if (one) grid.style.gridTemplateColumns = '1fr';
+  function draw() {
+    grid.innerHTML = '';
+    CO.SKINS.filter(function (s) { return !one || s.key === one; }).forEach(function (s, i) {
+      var el = document.createElement('div'); el.className = 'stp-tile'; el.innerHTML = '<b>' + s.name + '</b>'; grid.appendChild(el);
+      if (one) el.style.height = (innerHeight - 90) + 'px';
+      CO.U3.preview(el, { skin: s.key, accent: acc, floors: n, seed: 7 + i, name: '', you: false, public: true });
+    });
+    document.getElementById('decks').innerHTML = [1, 3, 5, 8].map(function (k) { return '<button data-n="' + k + '"' + (k === n ? ' class="on"' : '') + '>' + k + '</button>'; }).join(' ');
+    document.getElementById('accs').innerHTML = CO.ACCENTS.map(function (a) { return '<button data-a="' + a.key + '"' + (a.key === acc ? ' class="on"' : '') + ' style="color:' + a.hex + '">' + a.key + '</button>'; }).join(' ');
+  }
+  document.querySelector('.stp-bar').addEventListener('click', function (e) {
+    var b = e.target.closest('button'); if (!b) return;
+    if (b.dataset.n) n = +b.dataset.n; if (b.dataset.a) acc = b.dataset.a; draw();
+  });
+  draw();
+};
+window.addEventListener('co3d-skins', function () { window.STP(); });
+</script>
+<script>
+/* the mock's files with index.html's own cache key (read from it on every load: a key written here goes stale), ours
+   fresh every load; the 3D engine after them, then the stations over it */
+(function (css, js) {
+  var t = Date.now(), ours = /^(builder|start|stations)\./;
+  function go(v) {
+    var q = '?v=' + v, src = function (f) { return f + (ours.test(f) ? '?t=' + t : q); }, left = css.length;
+    var shown = function () { if (--left <= 0) document.documentElement.classList.remove('ld'); };
+    css.forEach(function (f) { var l = document.createElement('link'); l.rel = 'stylesheet'; l.href = src(f); l.onload = l.onerror = shown; document.head.appendChild(l); });
+    var mod = function (f, next) { var m = document.createElement('script'); m.type = 'module'; m.src = src(f); if (next) m.onload = next; document.body.appendChild(m); };
+    js.forEach(function (f, i) {
+      var e = document.createElement('script'); e.src = src(f); e.async = false;
+      if (i === js.length - 1) e.onload = function () { mod('u3d.js', function () { mod('stations.js'); }); };
+      document.body.appendChild(e);
+    });
+    setTimeout(function () { document.documentElement.classList.remove('ld'); }, 1500);
+  }
+  fetch('index.html', { cache: 'no-store' }).then(function (r) { return r.text(); })
+    .then(function (x) { var m = /u3d\.js\?v=([\w.-]+)/.exec(x); go(m ? m[1] : t); }, function () { go(t); });
+})(['style.css', 'uv.css'], ['data.js', 'uv-data.js', 'portfolio.js', 'sim.js', 'office.js', 'universe.js', 'cards.js']);
+</script>
+</body>
+</html>

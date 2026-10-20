@@ -6,7 +6,8 @@ optimised. What is live today was read on 2026-10-20 (llms.txt's "Build a Compan
 /api/v1/company/templates`, `GET /api/v1/companies`, the pages themselves); section 14 lists it beside what this
 asks for.
 
-Clickable mockup: PAGES_URL/start.html (the entry) and PAGES_URL/index.html (the office). The code: `design/`.
+Clickable mockup: https://raw.githack.com/zakutana/qa-cymetica/main/outbox/company-spec/design/start.html (the entry) and https://raw.githack.com/zakutana/qa-cymetica/main/outbox/company-spec/design/index.html (the office). The code, screenshots and
+this brief: https://github.com/zakutana/qa-cymetica/tree/main/outbox/company-spec (`design/`, `screenshots/`).
 
 ## 0. How to read this
 
@@ -84,6 +85,13 @@ yours to design: you are the AI-native company.
 
 - **3D office** (three.js, WebGPU with WebGL2 where a browser has none) and the **2D office** one click away; 3D
   replaces today's "3D network" view. Rooms on one platform over a rock in space, as `design/look-office.webp`.
+- **A click on a room** flies the camera into it with its detail beside it (a department's work, spend, latest
+  results; the Vault's money; Operations' next audit, with the Audit tab one link away). A room at work lights in the
+  rail's Working cyan; a room waiting on its owner glows orange.
+- **Edit department** is the Add-a-department dialog on the department: its room in 3D, who works there, its charter,
+  the experts to hire or fire. The charter lives there, not in the detail.
+- **Loading**: while the 3D is built, a loading screen with a miniature of Cymetica's sun and a number, never a
+  half-drawn page.
 - **Fixed rooms**: Command (NEXUS); Vault (what the company earned, ET10 and USDC as two piles that grow; opened,
   by department and by app; always private: a visitor sees its door shut); Operations (the weekly audit of wasted
   work, duplicates and stuck flows, and keeping the processes optimised).
@@ -92,7 +100,7 @@ yours to design: you are the AI-native company.
 - **Around it**: the rail of departments (who, what it does now, one number), the Needs-you column, NEXUS's chat,
   and the tabs Portfolio, Tasks, Needs you, Memory, Audit, Processes, Universe, Investable, Legal entity, Token,
   Settings.
-- **Every room links to its page** on cymetica.com, from the computer in the room and its detail:
+- **Every room links to its page** on cymetica.com, from the computer in the room and a globe icon in its detail:
   Cymetica QA: `/leaderboard/bugs?filter=mine` (no URL selects My Bugs today: the tab is `data-filter="mine"`);
   Development and Design studio: `/leaderboard/features`; Quant Lab: the Experiments page (section 7, new);
   Trading desk: `/my-agents`.
@@ -195,5 +203,7 @@ anything your backend cannot do as drawn (change the design minimally and name i
 the Quant Lab's page · `stations.html` the seven stations side by side · `u3d.js` the 3D engine (office, rooms,
 Universe) · `stations.js` the stations · `entry3d.js` the entry's 3D · `office.js` the 2D office · `app.js` the
 interface · `sim.js` **the stand-in backend, to replace** · `data.js`, `uv-data.js`, `portfolio.js`, `xp-data.js`
-sample data · `style.css`, `uv.css`, `start.css`, `builder.css`, `xp.css` · `look-office.webp`, `look-universe.webp`
-the look references · `screenshots/` · `PERF-NOTES.md` what was optimised and how it was measured.
+sample data · `style.css`, `uv.css`, `start.css`, `builder.css`, `boot.css` (the loading screen), `xp.css` · `sun.webp` the loader's sun ·
+`shots/` the dialog cards' 3D pictures, drawn by the dialog's own renderer · `look-office.webp`, `look-universe.webp`
+the look references · `../screenshots/` every screen at 2000 x 1100 · `PERF-NOTES.md` what was optimised and how it
+was measured.

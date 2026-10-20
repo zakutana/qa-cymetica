@@ -1,0 +1,264 @@
+/* The /company mockup: the Universe tab, the visitor's read-only frame, the station picker and
+   "Create your company". The site's palette only: navy, cyan, green, red, blue and slate-blue. */
+
+/* ---------- the tabs ---------- */
+/* every tab a line icon, lit cyan while its tab is open; the Universe's one is a planet with its ring, and it is
+   drawn as the others are (it used to be cyan all the time: "a universe tab proc je modry?", 2026-10-19) */
+.tabs .ti { width: 14px; height: 14px; vertical-align: -2.5px; margin-right: 7px; fill: none; stroke: currentColor; stroke-width: 1.5;
+  stroke-linecap: round; stroke-linejoin: round; opacity: .75; transition: opacity .15s, stroke .15s, filter .15s; }
+.tabs button:hover .ti { opacity: 1; }
+.tabs button.on .ti { opacity: 1; stroke: var(--cyan); filter: drop-shadow(0 0 4px rgba(0, 207, 255, .55)); }
+
+/* ---------- the map ---------- */
+.uvpane { flex: 1; min-height: 0; display: flex; padding: 14px 20px; }
+/* deep space behind the flat map (the 3D one paints its own sky) */
+.uvstage { flex: 1; min-height: 0; overflow: hidden;
+  background: radial-gradient(800px 460px at 18% 22%, rgba(0, 207, 255, .06), transparent 70%),
+    radial-gradient(900px 520px at 84% 80%, rgba(0, 255, 136, .045), transparent 70%),
+    radial-gradient(ellipse at 50% 50%, #050a10, #010204 72%); }
+.uvstage .stars { position: absolute; left: 0; top: 0; width: 1px; height: 1px; pointer-events: none; will-change: transform; }
+.uvstage .stars i { position: absolute; left: 0; top: 0; width: 1px; height: 1px; border-radius: 50%; }
+.uvstage .stars i.near { animation: twinkle 3.6s ease-in-out infinite; }
+@keyframes twinkle { 50% { opacity: .35; } }
+.uvstage.is3d .stars { display: none; }
+.uvmap, .uv3d { position: absolute; inset: 0; width: 100%; height: 100%; display: block; cursor: grab; user-select: none; touch-action: none; }
+.uvmap.grabbing, .uv3d.grabbing { cursor: grabbing; }
+.uvstage.is3d .uvmap, .uvstage.is2d .uv3d, .uvstage.loading .uvmap { display: none; }
+.uv3d canvas { display: block; width: 100% !important; height: 100% !important; }
+/* a cinematic edge, as faint as his picture's: the far corners a shade darker */
+.uvstage.is3d::before { content: ''; position: absolute; inset: 0; z-index: 2; pointer-events: none;
+  background: radial-gradient(ellipse 80% 80% at 50% 50%, transparent 70%, rgba(1, 4, 7, .28) 100%); }
+/* the map is a .stage too, so the office's own vignette (.stage.is3d::after, which stops 72 px short of the bottom
+   for the office's bar) fell on it as well: a second, darker edge and a hard line across the map above the legend */
+.stage.uvstage.is3d::after { content: none; }
+.uvsum { font-size: 11.5px; color: var(--dim2); margin-left: 14px; letter-spacing: .02em; }
+.uvsum b { color: var(--text); } .uvsum b.cy { color: var(--cyan); }
+.uvstage .crumb { display: flex; align-items: center; padding: 6px 12px; border-radius: 9px; background: rgba(6, 9, 15, .72); border: 1px solid var(--line2); backdrop-filter: blur(4px); }
+.uvstage .zoom .me { width: auto; padding: 0 10px; font-size: 11px; font-weight: 700; color: var(--green); border-color: rgba(0, 255, 136, .45); }
+.uvstage .zoom .me:hover { color: var(--bg); background: var(--green); border-color: var(--green); }
+.uvlegend { position: absolute; left: 12px; bottom: 10px; z-index: 4; display: flex; gap: 16px; font-size: 10.5px; color: var(--dim2); padding: 6px 12px; border-radius: 9px;
+  background: rgba(6, 9, 15, .72); border: 1px solid var(--line2); pointer-events: none; }
+.uvlegend b { color: var(--text); }
+/* how the map moves: the 3D map turns with a drag, the flat one only moves */
+.uvstage:not(.is3d) .uvlegend .l3, .uvstage.is3d .uvlegend .l2 { display: none; }
+.uvlegend i { display: inline-block; vertical-align: -2px; margin-right: 5px; }
+i.lk { display: inline-block; width: 9px; height: 8px; border-radius: 2px; background: currentColor; position: relative; margin-top: 3px; flex: none; }
+i.lk::before { content: ''; position: absolute; left: 1.5px; top: -5px; width: 6px; height: 6px; border: 1.5px solid currentColor; border-bottom: 0; border-radius: 4px 4px 0 0; box-sizing: border-box; }
+.uvlegend i.lk { color: var(--dim); }
+.uvlegend i.pb { width: 9px; height: 9px; border-radius: 50%; background: var(--cyan); box-shadow: 0 0 8px var(--cyan); }
+.uvfade { position: absolute; inset: 0; z-index: 8; background: var(--bg); opacity: 0; animation: uvfade .55s .3s ease-in forwards; pointer-events: none; }
+@keyframes uvfade { to { opacity: 1; } }
+.uvstage .tip { max-width: 320px; }
+.tip .uvt { display: flex; align-items: baseline; gap: 8px; margin-bottom: 3px; }
+.tip .uvt b { font-family: 'Archivo Black'; font-weight: 400; font-size: 14px; letter-spacing: .02em; }
+.tip .uvt span { color: var(--dim2); font-size: 11px; }
+
+/* the flat map's pieces */
+.uvmap .plot { cursor: pointer; }
+.uvmap .plot .rim { opacity: .55; transition: opacity .2s; }
+.uvmap .plot.hov .rim, .uvmap .plot.mine .rim { opacity: 1; filter: drop-shadow(0 0 4px currentColor); }
+.uvmap .w, .skinsvg .w { opacity: .14; transition: opacity .35s; }
+.uvmap .w.on, .skinsvg .w.on { opacity: .82; }
+.uvmap .fl.on .w { opacity: 1; filter: drop-shadow(0 0 2.5px currentColor); }
+.uvmap .plot.paused .w, .uvmap .plot.paused .w.on { opacity: .1; animation: none; }
+.uvmap .plot.priv .w.on { opacity: .45; }
+.uvmap .beacon, .skinsvg .beacon { animation: beacon 1.8s ease-in-out infinite; }
+@keyframes beacon { 50% { opacity: .25; } }
+.uvmap .flame, .skinsvg .flame { opacity: .22; }
+.uvmap .busy .flame { opacity: .5; animation: flame .6s ease-in-out infinite alternate; transform-box: fill-box; transform-origin: center; }
+@keyframes flame { to { transform: scale(1.12, 1.25); opacity: .32; } }
+.uvmap .ban { cursor: pointer; }
+.uvmap .ban .rib { transition: stroke-width .15s; }
+.uvmap .ban.hov .rib { stroke-width: 2.2; filter: drop-shadow(0 0 6px rgba(0, 207, 255, .5)); }
+.uvmap .ban.priv text { fill: var(--dim); }
+.uvmap .ban.paused text { fill: var(--dim2); }
+.uvmap .etpop { pointer-events: none; animation: etpop2 2.6s ease-out forwards; filter: drop-shadow(0 0 6px rgba(0, 255, 136, .8)); }
+@keyframes etpop2 { 0% { opacity: 0; transform: translateY(8px); } 15% { opacity: 1; } 70% { opacity: 1; } 100% { opacity: 0; transform: translateY(-26px); } }
+
+/* ---------- the 3D map's banners: DOM over the canvas ---------- */
+.uvbans { position: absolute; inset: 0; pointer-events: none; z-index: 3; overflow: hidden; }
+/* Cymetica's ball: the painting itself over the map (u3d.js colliderTex, placed by overlay()), in its own colours,
+   laid over the canvas as it is (.uvbans is its own stacking context, so nothing under it blends: the painting's
+   dark is transparent and its light is its own); two layers turning slowly against each other, the front one
+   flickering, a blurred copy under them for the glow, under every banner */
+.uvbans .uvcol { position: absolute; left: 0; top: 0; width: 600px; height: 600px; transform-origin: 300px 300px; z-index: 1; pointer-events: none; will-change: transform; }
+.uvbans .uvcol canvas { position: absolute; inset: 0; width: 100%; height: 100%; }
+.uvbans .uvcol .l1 { animation: uvcolspin 420s linear infinite, uvcolflick 2.3s ease-in-out infinite alternate; }
+.uvbans .uvcol .g1 { filter: blur(9px) brightness(1.5); opacity: .85; animation: uvcolspin 420s linear infinite; }
+.uvbans .uvcol .l2 { opacity: .35; animation: uvcolspin 600s linear infinite reverse; }
+@keyframes uvcolspin { to { transform: rotate(360deg); } }
+@keyframes uvcolflick { from { opacity: 1; } to { opacity: .84; } }
+/* His picture's name plates: a dark slate plate, a thin frame in a muted shade of the station's colour with a
+   rivet in each corner, squared caps in light grey, a small dot of the station's colour, a little point under it.
+   Measured on his 1533-wide frame (28 px tall, caps 11 px); the map scales them with the stage (--bs). */
+.b3 { position: absolute; left: 0; top: 0; transform: translate(-50%, -100%); transform-origin: 50% 100%; pointer-events: auto; cursor: pointer; display: flex; flex-direction: column; align-items: center;
+  will-change: transform; transition: opacity .25s; --fr: color-mix(in srgb, var(--acc) 22%, #464b54); }
+.b3 .rib { position: relative; display: flex; align-items: center; gap: 6px; padding: 4px 11px 3px; font: 700 15px/1.2 'Rajdhani', 'Archivo Black', sans-serif; letter-spacing: .045em; color: #c4cacf; white-space: nowrap;
+  background:
+    radial-gradient(circle at 4px 4px, var(--fr) 0 1px, transparent 1.7px), radial-gradient(circle at calc(100% - 4px) 4px, var(--fr) 0 1px, transparent 1.7px),
+    radial-gradient(circle at 4px calc(100% - 4px), var(--fr) 0 1px, transparent 1.7px), radial-gradient(circle at calc(100% - 4px) calc(100% - 4px), var(--fr) 0 1px, transparent 1.7px),
+    linear-gradient(rgba(29, 37, 46, .9), rgba(17, 24, 31, .9));
+  border: 1px solid var(--fr); border-radius: 4px; box-shadow: 0 0 0 1px rgba(0, 0, 0, .3), 0 3px 10px rgba(0, 0, 0, .4); text-shadow: 0 1px 2px rgba(0, 0, 0, .7); }
+.b3 .rib::before { content: ''; width: 5px; height: 5px; border-radius: 50%; background: var(--acc); box-shadow: 0 0 5px var(--acc); opacity: .85; flex: none; }
+.b3 .rib i.lk { color: var(--dim); }
+.b3 .teth { width: 0; height: 0; border: 4px solid transparent; border-top-color: var(--fr); border-bottom: 0; margin-top: -1px; }
+/* Cymetica's own: larger, teal, a bright cyan frame and a line out of either side */
+.b3.core { cursor: default; --fr: #62bdcb; }
+.b3.core .rib { font-size: 19px; letter-spacing: .07em; padding: 4px 20px 3px; color: #e2f6f9; border-color: #62bdcb;
+  background: linear-gradient(rgba(31, 74, 87, .9), rgba(16, 45, 55, .9)); box-shadow: 0 0 14px rgba(0, 207, 255, .3), 0 3px 10px rgba(0, 0, 0, .4); text-shadow: 0 0 8px rgba(120, 230, 255, .6); }
+.b3.core .rib::before { display: none; }
+.b3.core .rib::after { content: ''; position: absolute; left: -22px; right: -22px; top: 50%; height: 1px; z-index: -1;
+  background: linear-gradient(90deg, transparent, rgba(98, 189, 203, .8) 18px, transparent 26px, transparent calc(100% - 26px), rgba(98, 189, 203, .8) calc(100% - 18px), transparent); }
+.b3.core .teth { border-width: 5px; border-bottom: 0; }
+.b3 .you { font: 800 9px 'JetBrains Mono'; color: var(--bg); background: var(--green); padding: 1px 7px; border-radius: 9px; margin-bottom: 3px; box-shadow: 0 0 10px rgba(0, 255, 136, .6); }
+.b3.priv .rib { color: var(--dim); }
+.b3.paused .rib { color: var(--dim2); }
+.b3.hov, .b3:hover { --fr: var(--acc); }
+.b3.hov .rib, .b3:hover .rib { color: #eef4fa; box-shadow: 0 0 16px color-mix(in srgb, var(--acc) 55%, transparent); }
+.b3.far { opacity: .55; }
+.b3.hidden { opacity: 0; pointer-events: none; }
+.b3pop { position: absolute; left: 0; top: 0; pointer-events: none; font: 800 13px 'JetBrains Mono'; color: var(--green); text-shadow: 0 0 10px rgba(0, 255, 136, .9);
+  animation: b3pop 2.6s ease-out forwards; white-space: nowrap; }
+@keyframes b3pop { 0% { opacity: 0; margin-top: 10px; } 15% { opacity: 1; } 70% { opacity: 1; } 100% { opacity: 0; margin-top: -34px; } }
+
+/* ---------- the office in 3D ---------- */
+.vt { display: inline-flex; border: 1px solid var(--line3); border-radius: 7px; overflow: hidden; margin-right: 6px; background: var(--deep); }
+.vt button { width: auto; height: 26px; padding: 0 10px; border: 0; border-radius: 0; font-size: 10.5px; font-weight: 800; letter-spacing: .06em; color: var(--dim2); background: none; }
+.vt button.on { color: var(--bg); background: var(--cyan); box-shadow: 0 0 12px rgba(0, 207, 255, .45); }
+.vt button:not(.on):hover { color: var(--cyan); }
+.office3d { position: absolute; left: 0; top: 0; right: 0; bottom: 72px; display: none; cursor: grab; user-select: none; touch-action: none; }
+.office3d canvas { display: block; width: 100% !important; height: 100% !important; }
+.stage.is3d .office { display: none; }
+.stage.is3d .office3d { display: block; }
+.o3layer { position: absolute; left: 0; top: 0; right: 0; bottom: 72px; pointer-events: none; overflow: hidden; z-index: 3; display: none; }
+.stage.is3d .o3layer { display: block; }
+.stage.is3d::after { content: ''; position: absolute; left: 0; right: 0; top: 0; bottom: 72px; pointer-events: none; z-index: 2;
+  background: radial-gradient(ellipse 80% 75% at 50% 50%, transparent 62%, rgba(4, 7, 13, .5) 100%); }
+.p3 { position: absolute; left: 0; top: 0; pointer-events: auto; cursor: pointer; padding: 6px 13px 7px; border-radius: 8px; border: 1px solid rgba(90, 215, 200, .34);
+  background: rgba(8, 17, 26, .88); backdrop-filter: blur(6px); box-shadow: 0 6px 18px rgba(0, 0, 0, .55), inset 0 1px 0 rgba(255, 255, 255, .06); white-space: nowrap; will-change: transform; transition: box-shadow .2s, border-color .2s; }
+.p3 .p3h { display: flex; align-items: center; gap: 7px; }
+.p3 .p3h i { width: 7px; height: 7px; border-radius: 50%; box-shadow: 0 0 8px currentColor; flex: none; }
+.p3.work .p3h i { animation: dotp 1.2s infinite; }
+.p3 .p3h b { font: 400 11.5px 'Archivo Black', sans-serif; letter-spacing: .04em; color: var(--text); }
+.p3 .et { font: 700 10.5px 'JetBrains Mono'; color: var(--dim2); margin-left: 6px; }
+.p3 .et.lit { color: #38f5b8; text-shadow: 0 0 8px rgba(56, 245, 184, .65); }
+.p3 .p3l { font: 600 10.5px 'JetBrains Mono'; margin-top: 2px; }
+.p3 .p3l .g { color: #38f5b8; text-shadow: 0 0 8px rgba(56, 245, 184, .5); } .p3 .p3l .u { color: #8fbaff; }
+.p3.hov, .p3.sel { border-color: var(--c, #24e8ff); box-shadow: 0 0 0 1px var(--c), 0 0 22px color-mix(in srgb, var(--c, #24e8ff) 55%, transparent); }
+.a3 { position: absolute; left: 0; top: 0; display: none; font: 600 9.5px 'JetBrains Mono'; color: var(--text); padding: 2px 8px; border-radius: 9px;
+  background: rgba(10, 18, 28, .92); border: 1px solid #24e8ff; white-space: nowrap; pointer-events: none; }
+.a3.on { display: block; }
+.p3need { position: absolute; left: 0; top: 0; pointer-events: auto; cursor: pointer; font: 400 11px 'Archivo Black', sans-serif; letter-spacing: .05em; color: #ffba68;
+  padding: 5px 15px; border-radius: 6px; border: 1.3px solid #ff9438; background: rgba(24, 16, 10, .92); box-shadow: 0 0 20px rgba(255, 136, 36, .55); animation: needp 1.8s ease-in-out infinite; white-space: nowrap; }
+.p3need.clear { color: var(--dim); border: 1px solid rgba(90, 215, 200, .34); background: rgba(8, 17, 26, .9); box-shadow: 0 4px 14px rgba(0, 0, 0, .45); animation: none; }
+@keyframes needp { 50% { box-shadow: 0 0 8px rgba(255, 136, 36, .3); } }
+.p3lot { position: absolute; left: 0; top: 0; pointer-events: auto; cursor: pointer; display: flex; flex-direction: column; align-items: center; gap: 2px;
+  font: 700 10px 'JetBrains Mono'; letter-spacing: .1em; color: #e6faf6; text-shadow: 0 0 12px rgba(46, 245, 196, .95); }
+.p3lot b { font: 400 24px 'Archivo Black'; line-height: 1; color: #46f8c8; }
+/* the office's plates as in his picture: a lighter sans title, larger, a square dot, a pale frame, a grey-blue glass */
+.o3layer .p3 { padding: 8px 16px 9px; border-radius: 9px; border-color: rgba(200, 215, 228, .3); background: rgba(14, 22, 32, .84); }
+.o3layer .p3 .p3h { gap: 9px; }
+.o3layer .p3 .p3h i { width: 6px; height: 6px; border-radius: 1px; }
+.o3layer .p3 .p3h b { font: 600 15px 'Segoe UI', 'Inter', system-ui, sans-serif; letter-spacing: .07em; color: #eef4f8; }
+.o3layer .p3 .p3l { font: 500 12.5px 'JetBrains Mono'; margin-top: 3px; opacity: .85; }
+/* the vault's plate: what it holds, the amounts lit */
+.o3layer .p3 .p3l.p3v { color: #a9b8cc; opacity: 1; } .o3layer .p3 .p3l.p3v b { font-weight: 700; text-shadow: 0 0 10px currentColor; } .o3layer .p3 .p3l.p3v span { opacity: .5; }
+.o3layer .p3need { font: 600 14px 'Segoe UI', 'Inter', system-ui, sans-serif; letter-spacing: .06em; padding: 6px 16px; }
+.o3layer .p3lot { font: 600 12px 'Segoe UI', 'Inter', system-ui, sans-serif; letter-spacing: .08em; }
+/* the plates as callouts round the platform (callouts() in u3d.js): a thin line in each plate's colour from the
+   plate to its room, a dot where it meets the room; and the compact plate on a room's back-wall top corner when
+   there is no margin to stand in (a room open close up) */
+.o3layer .p3lines { position: absolute; left: 0; top: 0; width: 100%; height: 100%; overflow: visible; pointer-events: none; }
+.o3layer .p3lines path { fill: none; stroke-width: 1; stroke-opacity: .5; }
+.o3layer .p3lines circle { fill-opacity: .85; }
+.o3layer .p3.cmp { display: flex; align-items: baseline; gap: 8px; padding: 3px 9px 4px; border-radius: 6px; }
+.o3layer .p3.cmp .p3h { gap: 6px; }
+.o3layer .p3.cmp .p3h b { font-size: 11.5px; letter-spacing: .06em; }
+.o3layer .p3.cmp .p3l { margin-top: 0; font-size: 10.5px; }
+
+/* ---------- the visitor's frame ---------- */
+.robar { flex: none; display: flex; align-items: center; gap: 12px; padding: 7px 20px; border-bottom: 1px solid rgba(0, 207, 255, .35);
+  background: linear-gradient(90deg, rgba(0, 207, 255, .12), rgba(0, 207, 255, .03) 60%, transparent); font-size: 12px; color: var(--dim); }
+.robar .ro-pill { font-size: 10px; font-weight: 800; letter-spacing: .12em; color: var(--bg); background: var(--cyan); padding: 3px 9px; border-radius: 99px; box-shadow: 0 0 12px rgba(0, 207, 255, .5); }
+.robar b { color: var(--text); } .robar em { font-style: normal; color: var(--dim2); margin-left: 6px; }
+.robar .sp { flex: 1; }
+.ronote { display: none; }
+body.ro .ronote { display: block; padding: 10px 12px; font-size: 11.5px; color: var(--dim2); border-top: 1px solid var(--line); text-align: center; }
+body.ro #compose, body.ro #co-pause, body.ro #co-upgrade, body.ro #add-dept, body.ro #sim-new, body.ro #dr-charter .cb,
+body.ro #nr-form, body.ro #nr-ex, body.ro #nr-msg, body.ro .rule .switch, body.ro .rule .rx, body.ro #legal .mf .btn, body.ro #token .mf .btn,
+body.ro .danger { display: none !important; }
+body.ro #dr-ch-text { cursor: default; }
+.wo { font-size: 10.5px; color: var(--dim2); align-self: center; margin-right: auto; letter-spacing: .02em; }
+.capr.ro { display: flex; align-items: center; gap: 10px; margin-top: 8px; font-size: 11.5px; }
+.capr.ro .l { color: var(--dim2); min-width: 86px; }
+.rodl { display: grid; grid-template-columns: 110px minmax(0, 1fr); gap: 8px 14px; font-size: 12px; }
+.rodl dt { color: var(--dim2); font-size: 11px; letter-spacing: .04em; }
+.rodl dd { color: var(--text); line-height: 1.45; } .rodl dd.cy { color: var(--cyan); } .rodl dd.gr { color: var(--green); }
+
+/* ---------- Settings: on the Universe map ---------- */
+.uvcard h3 .hint { font-family: 'JetBrains Mono'; font-size: 11px; margin: 0 0 0 8px; }
+.uvset { display: grid; grid-template-columns: 300px minmax(0, 1fr); gap: 18px; align-items: start; }
+.uvset.ro { grid-template-columns: 220px minmax(0, 1fr); align-items: center; }
+.uvprev { border-radius: 12px; border: 1px solid var(--line2); padding: 8px 10px 4px;
+  background: radial-gradient(260px 160px at 50% 40%, rgba(0, 207, 255, .08), transparent 70%), radial-gradient(ellipse at 50% 60%, #0c1626, #06090f 80%); }
+.uvprev { position: relative; overflow: hidden; }
+.uvprev .skinsvg { display: block; width: 100%; height: 250px; }
+.uvprev.big .skinsvg { height: 330px; }
+/* the 3D building, when the browser can draw it, in the same place as the flat one */
+.uvprev .pv3 { display: none; position: relative; width: 100%; height: 250px; }
+.uvprev.big .pv3 { height: 330px; }
+.pc-art.uvprev .pv3 { height: 300px; }
+.uvprev.has3d { padding: 0; }
+.uvprev.has3d .skinsvg { display: none; }
+.uvprev.has3d .pv3 { display: block; }
+.uvprev .pv3 canvas { display: block; width: 100% !important; height: 100% !important; border-radius: 12px; }
+.uvprev .pvb { pointer-events: none; }
+.uvopts { display: grid; gap: 12px; min-width: 0; }
+.uvopts .sec, .cc .sec { margin-top: 2px; }
+.skins { display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); gap: 8px; }
+/* a station tile: a small window into space, the station drawn in 3D once it is ready (img.th3), flat until then */
+.skin { display: flex; flex-direction: column; align-items: center; gap: 4px; padding: 5px 5px 7px; border-radius: 10px; border: 1px solid var(--line2);
+  background: radial-gradient(ellipse at 50% 38%, #08131c, #03060b 75%); transition: border-color .15s, box-shadow .15s, transform .12s; }
+.skin:hover { border-color: var(--dim2); transform: translateY(-1px); }
+.skin.on { border-color: var(--cyan); box-shadow: 0 0 0 1px var(--cyan), 0 0 18px rgba(0, 207, 255, .3); }
+.skin .skinsvg { width: 100%; height: 92px; display: block; }
+.skin .th3 { display: block; width: 100%; aspect-ratio: 16 / 10; object-fit: cover; border-radius: 7px; }
+.skin.has3d .skinsvg { display: none; }
+.skin b { font-size: 10.5px; font-weight: 700; color: var(--dim); white-space: nowrap; }
+.skin.on b { color: var(--text); }
+.accents { display: flex; gap: 10px; }
+.acc { width: 30px; height: 30px; border-radius: 50%; background: var(--c); border: 3px solid var(--navy); box-shadow: 0 0 0 1px var(--line3); transition: box-shadow .15s, transform .12s; }
+.acc:hover { transform: scale(1.08); }
+.acc.on { box-shadow: 0 0 0 2px var(--c), 0 0 16px var(--c); }
+
+/* ---------- Create your company ---------- */
+.cc { display: grid; grid-template-columns: minmax(0, 1fr) 360px; gap: 18px; margin-top: 6px; }
+.ccl { display: grid; gap: 12px; align-content: start; min-width: 0; }
+.cc .skins { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+.cc .skin .skinsvg { height: 100px; }
+.ccr .hint { text-align: center; }
+
+/* ---------- a private company's card ---------- */
+.pcard { display: grid; grid-template-columns: 300px minmax(0, 1fr); gap: 20px; align-items: start; }
+.pc-art .skinsvg { height: 300px; }
+.pc-h { display: flex; align-items: center; gap: 10px; }
+.pc-h h3 { font-family: 'Archivo Black'; font-weight: 400; font-size: 22px; }
+.pc-h .sp { flex: 1; }
+.lockp { display: inline-flex; align-items: center; gap: 6px; font-size: 10px; font-weight: 800; letter-spacing: .12em; color: var(--dim); padding: 3px 9px; border-radius: 99px; border: 1px solid var(--line3); }
+.pc-o { font-size: 12px; color: var(--dim2); margin: 4px 0 14px; } .pc-o b { color: var(--dim); }
+.pc-d { font-size: 13.5px; line-height: 1.55; color: var(--text); margin: 6px 0 14px; max-width: 520px; }
+.pcard .kpis { margin-bottom: 10px; }
+.pcard .hint i.lk { color: var(--dim2); margin-right: 6px; vertical-align: -1px; }
+
+@media (max-width: 1280px) {
+  .uvpane { flex: none; height: 680px; }
+  .uvset { grid-template-columns: 1fr; }
+  .skins { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+  .cc, .pcard { grid-template-columns: 1fr; }
+}
+@media (max-width: 760px) {
+  .uvpane { height: 520px; padding: 12px; }
+  .uvlegend { display: none; }
+  .uvsum { display: none; }
+}
+
