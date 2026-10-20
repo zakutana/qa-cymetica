@@ -74,7 +74,9 @@
     var ce = document.createElement('div'); ce.className = 'lp-col';
     var p1 = U.colliderTex(1).image, glow = document.createElement('canvas'); glow.width = p1.width; glow.height = p1.height; glow.getContext('2d').drawImage(p1, 0, 0); glow.className = 'g1';
     ce.appendChild(glow);
-    [1, 2].forEach(function (seed) { var cv = document.createElement('canvas'), src = U.colliderTex(seed).image; cv.width = src.width; cv.height = src.height; cv.getContext('2d').drawImage(src, 0, 0); cv.className = 'l' + seed; ce.appendChild(cv); });
+    // the ball turns on its own axis (sun3d.js): its glow still, its arcs rings of light in 3D ("at se to slunce toci
+    // pomalicku kolem sve osy", 2026-10-20) -- where the two layers turned against each other like a clock's hands
+    if (window.SUN3D) SUN3D.live(ce, 1);
     host.appendChild(ce);
     return ce;
   }

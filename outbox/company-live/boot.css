@@ -37,14 +37,21 @@
   box-shadow: 0 0 34px 10px rgba(0, 207, 255, .55), 0 0 90px 34px rgba(0, 255, 136, .16);
   animation: ld-pulse 1.4s ease-in-out infinite; }
 @keyframes ld-pulse { 50% { transform: scale(1.14); } }
-/* the centre: a miniature of Cymetica's sun as the Universe paints it (sun.webp, CO.colliderPaint(1)), turning slowly
-   against a mirrored copy of itself, as the map's two layers do; the ball is the middle 0.6 of the picture */
-.ld-sun { width: 200px; height: 200px; margin: -100px 0 0 -100px; filter: drop-shadow(0 0 18px rgba(255, 190, 90, .35)); }
-.ld-sun b { position: absolute; inset: 0; border-radius: 50%; background: url(sun.webp) center / contain no-repeat; will-change: transform; }
-.ld-sun b:first-child { animation: ld-spin 48s linear infinite, ld-flick 2.3s ease-in-out infinite alternate; }
-.ld-sun b + b { opacity: .38; mix-blend-mode: screen; transform: scaleX(-1); animation: ld-spin-r 70s linear infinite; }
-@keyframes ld-spin-r { from { transform: scaleX(-1) rotate(0deg); } to { transform: scaleX(-1) rotate(-360deg); } }
-@keyframes ld-flick { to { opacity: .86; } }
+/* the centre: Cymetica's sun turning slowly on its own axis (sun3d.js): the painting's glow still, its arcs rings of
+   light round the ball in 3D, turning together about the tilted axis -- transforms only, on the compositor */
+.ld-sun { width: 200px; height: 200px; margin: -100px 0 0 -100px; }
+/* the turning sun, wherever it is: the box's middle 0.6 is the ball, as in the painting */
+.s3 { position: absolute; inset: 0; pointer-events: none; filter: drop-shadow(0 0 3px rgba(255, 176, 80, .6)); }
+.s3g { position: absolute; inset: 0; background: url(sun-glow.webp) center / contain no-repeat; animation: s3flick 2.3s ease-in-out infinite alternate; }
+.s3t { position: absolute; inset: 0; transform-style: preserve-3d; transform: rotateX(-16deg) rotateZ(10deg); }
+.s3w { position: absolute; inset: 0; transform-style: preserve-3d; animation: s3spin 110s linear infinite; will-change: transform; }
+.s3w b { position: absolute; left: 50%; top: 50%; width: var(--d); height: var(--d); border-radius: 50%;
+  transform: translate(-50%, -50%) rotateY(var(--ry)) rotateX(var(--rx)) rotateZ(var(--rz));
+  background: conic-gradient(from var(--a0), transparent 0deg, var(--c) calc(var(--al) * .55), transparent var(--al));
+  -webkit-mask: radial-gradient(farthest-side, transparent calc(100% - var(--w)), #000 calc(100% - var(--w) + .7px));
+          mask: radial-gradient(farthest-side, transparent calc(100% - var(--w)), #000 calc(100% - var(--w) + .7px)); }
+@keyframes s3spin { to { transform: rotateY(360deg); } }
+@keyframes s3flick { to { opacity: .86; } }
 /* the collider's rings: two arcs racing each other and a fine dashed one */
 .ld-ring { border: 2px solid transparent; }
 .ld-ring.r1 { width: 112px; height: 112px; margin: -56px 0 0 -56px; border-top-color: #00ff88; border-left-color: rgba(0, 255, 136, .28);

@@ -107,6 +107,15 @@
 .bz-x { margin-left: auto; width: 28px; height: 28px; border-radius: 8px; color: var(--dim2); font-size: 18px; line-height: 1; align-self: flex-start; }
 .bz-x:hover { color: #fff; background: #13263a; }
 .bz-bub p { margin: 10px 0 14px; font-size: 14.5px; line-height: 1.55; color: var(--dim); }
+/* the Vault's balance, numbers first; a room's pages on cymetica.com as glowing chips */
+.bz-bal { display: flex; align-items: baseline; gap: 18px; margin: -4px 0 14px; padding: 10px 14px; border-radius: 12px; border: 1px solid rgba(0, 255, 136, .35); background: rgba(0, 255, 136, .06); }
+.bz-bal span { font: 600 12px 'JetBrains Mono'; color: var(--dim); } .bz-bal b { font: 400 22px 'Archivo Black', sans-serif; color: var(--green); text-shadow: 0 0 12px rgba(0, 255, 136, .45); margin-right: 4px; }
+.bz-bal span + span b { color: var(--cyan); text-shadow: 0 0 12px rgba(0, 207, 255, .45); } .bz-bal em { margin-left: auto; font: 600 10.5px 'JetBrains Mono'; font-style: normal; color: var(--dim2); letter-spacing: .06em; }
+.bz-pg { display: flex; flex-wrap: wrap; gap: 8px; margin: -4px 0 14px; }
+.bz-pg a { display: inline-flex; align-items: center; gap: 7px; padding: 7px 12px 7px 9px; border-radius: 10px; border: 1px solid rgba(0, 207, 255, .5); background: rgba(0, 207, 255, .08);
+  color: #dff6ff; font: 600 12px 'JetBrains Mono'; text-decoration: none; box-shadow: 0 0 12px rgba(0, 207, 255, .18); transition: box-shadow .2s, border-color .2s; }
+.bz-pg a:hover { border-color: var(--cyan); box-shadow: 0 0 18px rgba(0, 207, 255, .45); }
+.bz-pg svg { width: 16px; height: 16px; fill: none; stroke: var(--cyan); stroke-width: 1.5; stroke-linecap: round; stroke-linejoin: round; filter: drop-shadow(0 0 3px rgba(0, 207, 255, .8)); }
 .bz-bf { display: flex; align-items: center; gap: 10px; }
 .bz-bf .btn { padding: 10px 14px; font-size: 12.5px; }
 .bz-bf .bz-go { padding: 11px 18px; font-size: 13.5px; border-radius: 12px; white-space: nowrap; }

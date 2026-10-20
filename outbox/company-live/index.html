@@ -10,8 +10,8 @@
 <link href="https://fonts.googleapis.com/css2?family=Archivo+Black&family=JetBrains+Mono:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <!-- the Universe's name plates: his picture's squared, semi-condensed caps -->
 <link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@600;700&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="style.css?v=20261022ba">
-<link rel="stylesheet" href="uv.css?v=20261022ba">
+<link rel="stylesheet" href="style.css?v=20261022ca">
+<link rel="stylesheet" href="uv.css?v=20261022ca">
 <!-- the 3D engine for the Universe and the office: three.js with its WebGPU renderer (WebGL2 where WebGPU is missing) -->
 <script type="importmap">{ "imports": {
   "three": "https://cdn.jsdelivr.net/npm/three@0.172.0/build/three.webgpu.js",
@@ -30,8 +30,9 @@
 <link rel="modulepreload" href="https://cdn.jsdelivr.net/npm/three@0.172.0/examples/jsm/controls/OrbitControls.js">
 <link rel="modulepreload" href="https://cdn.jsdelivr.net/npm/three@0.172.0/examples/jsm/utils/BufferGeometryUtils.js">
 <!-- the loading screen's look: read before the first paint, so the page never shows half built -->
-<link rel="preload" as="image" href="sun.webp" fetchpriority="high">
-<link rel="stylesheet" href="boot.css?v=20261022ba">
+<link rel="preload" as="image" href="sun-glow.webp" fetchpriority="high">
+<script src="sun3d.js?v=20261022ca"></script>
+<link rel="stylesheet" href="boot.css?v=20261022ca">
 </head>
 <body>
 <!-- the loading screen: over the page until the office (or, opened on it, the Universe) has drawn; app.js moves its
@@ -39,7 +40,7 @@
 <div class="boot" id="boot" aria-hidden="true">
   <div class="ldr"><i class="ld-halo"></i><i class="ld-beams"></i><i class="ld-ping"></i><i class="ld-ping p2"></i>
     <i class="ld-orbit o3"><b></b></i><i class="ld-orbit o2"><b></b></i><i class="ld-orbit o1"><b></b></i>
-    <i class="ld-ring r3"></i><i class="ld-sun"><b></b><b></b></i>
+    <i class="ld-ring r3"></i><i class="ld-sun"></i><script>SUN3D.fill(document.currentScript.previousElementSibling)</script>
     <div class="ld-read"><b class="ld-pct">0</b><span>%</span></div><div class="ld-what">LOADING</div><div class="ld-bar"><i></i></div></div>
 </div>
 <!-- no site bar: it is not part of the app ("ten vrchni panel nikde nedavej to neni soucast apky", 2026-10-20); the
@@ -165,7 +166,7 @@
     <div class="uvload" id="uvload" hidden aria-hidden="true">
       <div class="ldr"><i class="ld-halo"></i><i class="ld-beams"></i><i class="ld-ping"></i><i class="ld-ping p2"></i>
         <i class="ld-orbit o3"><b></b></i><i class="ld-orbit o2"><b></b></i><i class="ld-orbit o1"><b></b></i>
-        <i class="ld-ring r3"></i><i class="ld-sun"><b></b><b></b></i>
+        <i class="ld-ring r3"></i><i class="ld-sun"></i><script>SUN3D.fill(document.currentScript.previousElementSibling)</script>
         <div class="ld-read"><b class="ld-pct">0</b><span>%</span></div><div class="ld-what">UNIVERSE</div><div class="ld-bar"><i></i></div></div>
     </div>
   </section>
@@ -233,16 +234,16 @@
 <div class="toast" id="toast" hidden></div>
 
 <!-- ?v= changes with every edit, so a plain reload never runs yesterday's file from the cache -->
-<script src="data.js?v=20261022ba"></script>
-<script src="uv-data.js?v=20261022ba"></script>
-<script src="portfolio.js?v=20261022ba"></script>
-<script src="sim.js?v=20261022ba"></script>
-<script src="office.js?v=20261022ba"></script>
-<script src="universe.js?v=20261022ba"></script>
-<script src="cards.js?v=20261022ba"></script>
-<script src="app.js?v=20261022ba"></script>
-<script type="module" src="u3d.js?v=20261022bc"></script>
+<script src="data.js?v=20261022ca"></script>
+<script src="uv-data.js?v=20261022ca"></script>
+<script src="portfolio.js?v=20261022ca"></script>
+<script src="sim.js?v=20261022ca"></script>
+<script src="office.js?v=20261022ca"></script>
+<script src="universe.js?v=20261022ca"></script>
+<script src="cards.js?v=20261022ca"></script>
+<script src="app.js?v=20261022ca"></script>
+<script type="module" src="u3d.js?v=20261022ca"></script>
 <!-- the seven stations a company can pick (stations.js puts its builders into u3d.js's table and renames CO.SKINS) -->
-<script type="module" src="stations.js?v=20261022ba"></script>
+<script type="module" src="stations.js?v=20261022ca"></script>
 </body>
 </html>

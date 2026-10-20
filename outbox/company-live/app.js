@@ -433,7 +433,14 @@
     var ln = CO.deptLine(d, v);
     // its page on cymetica.com, one click from its head
     var lk = CO.DEPT_LINK[d.key];
-    var pgi = lk ? '<a class="pgi" href="' + esc(lk.url) + '" target="_blank" rel="noopener" title="' + esc(lk.label.split(':')[0]) + ' on cymetica.com" aria-label="Open ' + esc(lk.label.split(':')[0]) + '"><svg viewBox=\"0 0 20 20\" aria-hidden=\"true\"><circle cx=\"9\" cy=\"11\" r=\"6.2\"/><ellipse cx=\"9\" cy=\"11\" rx=\"2.6\" ry=\"6.2\"/><path d=\"M2.8 11h12.4 M3.9 7.8h10.2 M3.9 14.2h10.2 M12.6 2.6h4.8v4.8 M17.4 2.6l-5.2 5.2\"/></svg></a>' : '';
+    // one icon a page (the Trading desk has two: My bots, a globe; Agent Tournaments, a cup)
+    var GLOBE = '<svg viewBox="0 0 20 20" aria-hidden="true"><circle cx="9" cy="11" r="6.2"/><ellipse cx="9" cy="11" rx="2.6" ry="6.2"/><path d="M2.8 11h12.4 M3.9 7.8h10.2 M3.9 14.2h10.2 M12.6 2.6h4.8v4.8 M17.4 2.6l-5.2 5.2"/></svg>',
+      CUP = '<svg viewBox="0 0 20 20" aria-hidden="true"><path d="M6 3.5h8v4.2a4 4 0 0 1-8 0Z M6 5H3.4v1.4A2.6 2.6 0 0 0 6 9 M14 5h2.6v1.4A2.6 2.6 0 0 1 14 9 M10 11.7v2.8 M6.8 17h6.4 M7.6 14.5h4.8V17H7.6Z"/></svg>';
+    var lks = lk ? [lk].concat((CO.DEPT_LINK_MORE || {})[d.key] || []) : [];
+    var pgi = lks.map(function (x, i) {
+      var nm = x.label.split(':')[0];
+      return '<a class="pgi" href="' + esc(x.url) + '" target="_blank" rel="noopener" title="' + esc(nm) + ' on cymetica.com" aria-label="Open ' + esc(nm) + '">' + (/tournament/i.test(nm) ? CUP : GLOBE) + '</a>';
+    }).join('');
     setHTML($('dr-head'), '<i class="dot ' + v.status + (ln.tone === 'red' ? ' needs' : '') + '"></i><h2>' + esc(d.name) + '</h2>' +
       (d.files_as ? '<span class="et ' + (d.et10 ? 'lit' : 'zero') + '" title="ET10 Cymetica paid for accepted bugs, to ' + esc(d.files_as) + '">' + (d.et10 ? '+' : '') + (d.et10 || 0).toLocaleString('en-US') + ' ET10</span>' : '') +
       '<span class="x">' + pgi + (RO ? '' : '<button class="btn" data-a="edit">Edit</button><button class="btn rd" data-a="delete" title="Delete this department">Delete</button>') + '</span>');

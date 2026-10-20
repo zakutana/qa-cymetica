@@ -11,7 +11,8 @@
 <link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@600;700&display=swap" rel="stylesheet">
 <style>html.ld body { visibility: hidden; }</style>
 <!-- the veil's core, the same as the loading screens' -->
-<link rel="preload" as="image" href="sun.webp" fetchpriority="high">
+<link rel="preload" as="image" href="sun-glow.webp" fetchpriority="high">
+<script src="sun3d.js"></script>
 <link rel="stylesheet" href="boot.css">
 <script type="importmap">{ "imports": {
   "three": "https://cdn.jsdelivr.net/npm/three@0.172.0/build/three.webgpu.js",
@@ -40,7 +41,7 @@
     <div class="bz-bub" id="bub" hidden></div>
     <div class="bz-veil on" id="veil"><div class="ldr"><i class="ld-halo"></i><i class="ld-beams"></i><i class="ld-ping"></i><i class="ld-ping p2"></i>
       <i class="ld-orbit o3"><b></b></i><i class="ld-orbit o2"><b></b></i><i class="ld-orbit o1"><b></b></i>
-      <i class="ld-ring r3"></i><i class="ld-sun"><b></b><b></b></i>
+      <i class="ld-ring r3"></i><i class="ld-sun"></i><script>SUN3D.fill(document.currentScript.previousElementSibling)</script>
       <div class="ld-what">PREPARING YOUR STATION</div><div class="ld-bar"></div></div></div>
 
     <section class="bz-card">

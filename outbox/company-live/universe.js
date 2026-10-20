@@ -862,9 +862,14 @@
   // sphere -- gold most, orange, blue and white between, brighter on the near side -- over a white-hot heart that runs
   // pink and then blue inside, a gold glow along its edge, two blue-white beams and two gold ones through it, a burst
   // of spikes, sparks and streaks out of the middle. A 1024 canvas, the ball the middle 0.6 of it; one per seed.
+  // still: the painting without its arcs (they still draw from R, so the rest lands where it does); arcs: instead of
+  // stroking them, keep each as 49 points round the ball's middle with its colour, width and brightness -- what
+  // sun3d.js turns on the ball's own axis ("at se to slunce toci pomalicku kolem sve osy", 2026-10-20)
   var PAINT = {};
-  CO.colliderPaint = function (seed) {
-    if (PAINT[seed]) return PAINT[seed];
+  CO.colliderPaint = function (seed, mode) {
+    var key = seed + (mode ? ':' + mode : '');
+    if (PAINT[key]) return PAINT[key];
+    var ARCS = mode === 'arcs' ? [] : null;
     var cv = document.createElement('canvas'), W = 1024, R = rng(seed * 7 + 3), i;
     cv.width = cv.height = W;
     var g = cv.getContext('2d'), c = W / 2, rad = W * 0.3;
@@ -882,7 +887,10 @@
       for (s = 0; s <= 48; s++) {
         var t = t0 + len * s / 48, k = rr * (1 + wa * Math.sin(t * wf + ph)), pt = [0, 1, 2].map(function (j) { return o[j] + (Math.cos(t) * u[j] + Math.sin(t) * v[j]) * k; });
         p.push([c + pt[0], c - pt[1], Math.max(-1, Math.min(1, pt[2] / rad))]);
+        if (ARCS) p[p.length - 1].push(pt);
       }
+      if (ARCS) { ARCS.push({ pts: p.map(function (x) { return x[3]; }), col: col, w: w, dim: dim }); return; }
+      if (mode === 'still') return;
       for (q = 0; q < 4; q++) {
         var a0 = q * 12, a1 = a0 + 12, b = (0.3 + 0.7 * ((p[a0][2] + p[a1][2]) / 2 + 1) / 2) * dim;
         [[w * 3.2, 0.06 * b], [w, 0.92 * b]].forEach(function (L) {
@@ -931,8 +939,10 @@
       gt.addColorStop(0, 'rgba(' + rgbt + ',0)'); gt.addColorStop(0.5, 'rgba(' + rgbt + ',' + (0.3 + R() * 0.5).toFixed(2) + ')'); gt.addColorStop(1, 'rgba(' + rgbt + ',0)');
       g.strokeStyle = gt; g.lineWidth = 0.9 + R() * 1.6; g.beginPath(); g.moveTo(x0, y0); g.lineTo(x1, y1); g.stroke();
     }
-    return (PAINT[seed] = cv);
+    if (ARCS) { PAINT[key] = { arcs: ARCS, rad: rad, size: W }; return PAINT[key]; }
+    return (PAINT[key] = cv);
   };
+  CO.colliderArcs = function (seed) { return CO.colliderPaint(seed, 'arcs'); };
   // The painting as an image the map can show, made once and kept: the ball of a seed, or (glow) seed 1 blurred and
   // brightened, the glow the 3D map puts under it (none where a canvas cannot blur). Encoded off the main thread
   // where the browser can (toBlob), as the flat map is where a weak computer goes: three paintings encoded at once

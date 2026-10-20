@@ -1411,7 +1411,9 @@ class Universe3D {
     // under the painting a blurred copy of it, turning with it: the glow his arcs have (a bloom of its own)
     const p1 = colliderTex(1).image, glow = document.createElement('canvas'); glow.width = p1.width; glow.height = p1.height; glow.getContext('2d').drawImage(p1, 0, 0); glow.className = 'g1';
     ce.appendChild(glow);
-    [1, 2].forEach((seed) => { const cv = colliderTex(seed).image; cv.className = 'l' + seed; ce.appendChild(cv); });
+    // the ball turns on its own axis (sun3d.js: its still part painted once, the painting's own arcs turned and redrawn),
+    // where two layers turned against each other like a clock's hands ("at se to slunce toci pomalicku kolem sve osy")
+    if (!(window.SUN3D && SUN3D.live(ce, 1))) [1, 2].forEach((seed) => { const cv = colliderTex(seed).image; cv.className = 'l' + seed; ce.appendChild(cv); });
     this.bans.insertBefore(ce, this.bans.firstChild); this.colEl = ce;
     // the jets: a wide soft cone and a hot narrow one inside it, white at the root, gone at the tip
     G.jet = G.jet || new THREE.CylinderGeometry(0.06, 1, 1, 24, 1, true).translate(0, 0.5, 0);
@@ -2072,8 +2074,8 @@ function pvTick(r, t) {
   if (r.leds) r.leds.forEach((m) => { m.visible = ((Math.floor(t * 3 + m.userData.blink)) % 3) !== 0; });
   if (r.holo) { r.holo.forEach((hh, i) => { hh.rotation.z = t * (0.6 + i * 0.35) * (i % 2 ? -1 : 1); hh.position.y = hh.userData.y + Math.sin(t * 1.3 + i) * 0.05; }); if (r.core) r.core.position.y = 1.0 + Math.sin(t * 1.7) * 0.05; }
   if (r.crystal) r.crystal.forEach((m) => { m.rotation.y = t * 0.7; });
-  if (r.spin) r.spin.rotation.y = t * 0.6;
-  if (r.floor) r.floor.rotation.z = t * 0.05;
+  if (r.spin) r.spin.rotation.y = -t * 0.6;
+  if (r.floor) r.floor.rotation.z = -t * 0.05;
   if (r.wheel) r.wheel.rotation.z = t * 0.12;
   r.agents.forEach((a) => {
     const f = (t * 0.9 + a.phase) % 1;
@@ -7698,9 +7700,9 @@ class Office3D {
     const c = new THREE.Color(isOrange ? LOOK.orange : isWork ? WORK_CYAN : LOOK.neon);
     // the line itself in its own deeper mint (SH_NEON), the floor's wash in his; over the bloom's threshold, so it
     // glows, the glow tight round a thinner line, as his
-    if (r.edgeM) { r.edgeM.emissive.set(isOrange ? LOOK.orange : isWork ? WORK_CYAN : SH_NEON); r.edgeM.emissiveIntensity = isOrange ? 1.9 : isWork ? 1.9 : 1.5; }
-    if (r.glow) { r.glow.material.color.copy(c).multiplyScalar(isOrange ? 1.9 : isWork ? 1.4 : 1); r.glowBase = isOrange ? 1.0 : isWork ? 0.55 : 0; }
-    if (r.lamp) { r.lamp.color.set(isOrange ? 0xff6a34 : isWork ? 0x8fe6ff : 0xeef6ff); r.lamp.intensity = isOrange ? 22 : isWork ? 9 : 6; r.lamp.distance = isOrange ? 6.5 : 9; r.lamp.position.y = isOrange ? 2.4 : 4.4; }
+    if (r.edgeM) { r.edgeM.emissive.set(isOrange ? LOOK.orange : isWork ? WORK_CYAN : SH_NEON); r.edgeM.emissiveIntensity = isOrange ? 1.9 : isWork ? 1.15 : 1.5; }
+    if (r.glow) { r.glow.material.color.copy(c).multiplyScalar(isOrange ? 1.9 : isWork ? 1.0 : 1); r.glowBase = isOrange ? 1.0 : isWork ? 0.6 : 0; }
+    if (r.lamp) { r.lamp.color.set(isOrange ? 0xff6a34 : isWork ? 0x00b8ff : 0xeef6ff); r.lamp.intensity = isOrange ? 22 : isWork ? 10 : 6; r.lamp.distance = isOrange ? 6.5 : 9; r.lamp.position.y = isOrange ? 2.4 : 4.4; }
     // the floor and the glass: only the room's own (a room that dressed its walls in something else keeps it)
     if (r.floorM && (r.floorM.material === OM.tile || r.floorM.material === OM.tileOrange)) r.floorM.material = isOrange ? OM.tileOrange : OM.tile;
     if (r.panes) r.panes.forEach((p) => { if (p.material === OM.glass || p.material === OM.glassOrange) p.material = isOrange ? OM.glassOrange : OM.glass; });
@@ -7813,8 +7815,8 @@ class Office3D {
       if (r.leds) r.leds.forEach((m, i) => { m.visible = ((Math.floor(t * 3 + m.userData.blink)) % 3) !== 0; });
       if (r.holo) { r.holo.forEach((hh, i) => { hh.rotation.z = t * (0.6 + i * 0.35) * (i % 2 ? -1 : 1); hh.position.y = hh.userData.y + Math.sin(t * 1.3 + i) * 0.05; }); r.core.position.y = 1.0 + Math.sin(t * 1.7) * 0.05; }
       if (r.crystal) r.crystal.forEach((m) => { m.rotation.y = t * 0.7; });
-      if (r.spin) r.spin.rotation.y = t * 0.6;
-      if (r.floor) r.floor.rotation.z = t * 0.05;
+      if (r.spin) r.spin.rotation.y = -t * 0.6;   // clockwise seen from above
+      if (r.floor) r.floor.rotation.z = -t * 0.05;
       if (r.plus) r.plus.rotation.z = t * 0.25;
       if (r.wheel) r.wheel.rotation.z = t * 0.12;
       r.agents.forEach((a) => {
