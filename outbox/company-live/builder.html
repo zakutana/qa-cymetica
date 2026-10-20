@@ -30,14 +30,22 @@
 
 <main class="bz">
   <section class="panel stage bz-stage" id="stage">
+    <!-- step 1: the station, turning; arrows either side of it to go through the seven, its name and colour under it -->
     <div class="bz-pv" id="b-prev"></div>
+    <div class="bz-look" id="look">
+      <button type="button" class="bz-arrow l" id="lk-prev" title="The station before"><svg viewBox="0 0 24 24"><path d="M15 5l-7 7 7 7"/></svg></button>
+      <button type="button" class="bz-arrow r" id="lk-next" title="The next station"><svg viewBox="0 0 24 24"><path d="M9 5l7 7-7 7"/></svg></button>
+      <div class="bz-lk"><span class="bz-lkn" id="lk-n"></span><b id="lk-name"></b><div class="accents" id="lk-acc"></div></div>
+    </div>
+    <!-- step 2: the office; the tour's bubble over its rooms -->
     <div class="office3d" id="office3d"></div>
     <div class="o3layer"></div>
     <div class="tip" hidden></div>
+    <div class="bz-bub" id="bub" hidden></div>
     <div class="bz-veil" id="veil"><i></i><span>Building your station</span></div>
 
     <section class="bz-card">
-      <ol class="bz-steps" id="steps"><li data-s="1"><i>1</i>Basics</li><li data-s="2"><i>2</i>Look</li><li data-s="3"><i>3</i>Start</li></ol>
+      <ol class="bz-steps" id="steps"><li data-s="1"><i>1</i>Name &amp; look</li><li data-s="2"><i>2</i>Start</li></ol>
 
       <div class="bz-st" data-st="1">
         <h2>Name it.</h2>
@@ -47,26 +55,11 @@
       </div>
 
       <div class="bz-st" data-st="2" hidden>
-        <h2>Pick a station.</h2>
-        <div class="sec">STATION <span title="It grows a deck with every department">1 deck = 1 department</span></div>
-        <div class="skins" id="f-skins"></div>
-        <div class="sec">COLOUR</div>
-        <div class="accents" id="f-acc"></div>
-      </div>
-
-      <div class="bz-st" data-st="3" hidden>
         <h2>Start.</h2>
         <div class="bz-opts" id="opts"></div>
       </div>
 
-      <div class="bz-st bz-tour" data-st="tour" hidden>
-        <div class="bz-tn"><em id="t-n">1</em><span>/ 7</span></div>
-        <h2 id="t-name"></h2>
-        <p id="t-line"></p>
-        <div class="bz-dots" id="t-dots"></div>
-      </div>
-
-      <div class="bz-nav"><button type="button" class="btn bz-back" id="b-back">← Back</button><span class="sp"></span><span class="bz-hint" id="b-hint" hidden><span>Click <b>Command</b> in the office<br>to start the tour</span><svg viewBox="0 0 24 24"><path d="M5 12h14M13 6l6 6-6 6"/></svg></span><button type="button" class="bz-next" id="b-next">Next <svg viewBox="0 0 24 24"><path d="M5 12h14M13 6l6 6-6 6"/></svg></button></div>
+      <div class="bz-nav"><button type="button" class="btn bz-back" id="b-back">← Back</button><span class="sp"></span><button type="button" class="bz-next" id="b-next">Next <svg viewBox="0 0 24 24"><path d="M5 12h14M13 6l6 6-6 6"/></svg></button></div>
     </section>
   </section>
 </main>
@@ -76,7 +69,7 @@
    edit; a key written here would go stale and run an older office than index.html does), ours fresh every load; the
    3D engine after them (a module inserted with them would not wait), then the stations over it (stations.js). */
 (function (css, js) {
-  var t = Date.now(), ours = /^(builder|start|stations)\./;
+  var t = Date.now(), ours = /^(builder|start|stations|entry3d)\./;
   function go(v) {
     var q = '?v=' + v, src = function (f) { return f + (ours.test(f) ? '?t=' + t : q); }, left = css.length;
     var shown = function () { if (--left <= 0) document.documentElement.classList.remove('ld'); };
@@ -91,7 +84,7 @@
   }
   fetch('index.html', { cache: 'no-store' }).then(function (r) { return r.text(); })
     .then(function (x) { var m = /u3d\.js\?v=([\w.-]+)/.exec(x); go(m ? m[1] : t); }, function () { go(t); });
-})(['style.css', 'uv.css', 'builder.css'], ['data.js', 'uv-data.js', 'portfolio.js', 'sim.js', 'office.js', 'universe.js', 'cards.js', 'builder.js']);
+})(['style.css', 'uv.css', 'builder.css'], ['data.js', 'uv-data.js', 'portfolio.js', 'sim.js', 'office.js', 'universe.js', 'cards.js', 'entry3d.js', 'builder.js']);
 </script>
 </body>
 </html>

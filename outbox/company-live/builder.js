@@ -1,17 +1,21 @@
-/* The /company builder: a name, a look, and how it starts -- New (the three rooms every company has) or Pre-build
- * (those three and four departments), the pre-built office drawn by the office's own 3D engine (CO.U3.office) with
- * a room-by-room tour. Nothing here draws a room itself: the station is CO.U3.preview's, the office Office3D's, the
- * departments are added through the simulation's own door (CO.act.addDept). Finishing saves the profile
- * (CO.saveProfile) and opens the office. */
+/* The /company builder, two steps: 1 its name and its look -- the station turning big in the office's own space, big
+ * arrows either side of it to go through the seven, its colour under it -- then 2 how it starts: New (the three rooms
+ * every company has) or Pre-build (those three and four departments), the office drawn by the office's own 3D engine
+ * (CO.U3.office) and a tour of it, each room's words a bubble out of the room itself. The office is built while the
+ * name is typed, so Start shows it at once. Nothing here draws a room or a station itself: the stations are
+ * makeStation's (u3d.js, stations.js), the office Office3D's, the departments come through the simulation's own door
+ * (CO.act.addDept). Finishing saves the profile (CO.saveProfile) and opens the office.
+ * The operator, 2026-10-20: "chci vyhodit Look step a hned si ho vybirat na tomto screenu ... velke sipky po bocich
+ * tech lodi", "dalsi krok moc dlouho najizdi", "radeji kdyby z toho nejaka bublina dycky vychazela primo na mape". */
 (function () {
   'use strict';
   var CO = window.CO;
   function $(id) { return document.getElementById(id); }
   function esc(s) { return String(s == null ? '' : s).replace(/[&<>"']/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]; }); }
 
-  // The rooms every company has, and the departments a pre-built one starts with. CO.PREBUILD, once data.js defines
-  // it, is the one list both this page and the office's boot read; until then this one stands in for it.
-  // (each room's lines: the operator's drafts, 2026-10-20, "o neco delsi a vystiznejsi", tightened)
+  // The rooms every company has, and the departments a pre-built one starts with. CO.PREBUILD (data.js) is the one
+  // list both this page and the office's boot read; this one stands in where it is missing.
+  // (each room's words: the operator's drafts, 2026-10-20, "o neco delsi a vystiznejsi", tightened)
   var FIXED = [
     { k: 'hub', n: 'Command', t: 'The heart of the company. You talk only to NEXUS, the AI at its core: say what you want, and it plans the work, runs every department and reports back.' },
     { k: 'vault', n: 'Vault', t: 'Everything the company earns lands here: USDC from your products, ET10 rewards from Cymetica. Private: only you see inside.' },
@@ -31,7 +35,7 @@
 
   // what is being made: the modal's own defaults (app.js createCompanyModal), and the pre-built start
   var o = { name: '', mission: '', skin: 'tower', accent: 'green', public: false, start: 'pre' };
-  var step = 1, ti = 0, office = null, making = false;
+  var step = 1, ti = 0, office = null, making = false, stage = null;
 
   /* ---------------- the company the office shows: nothing runs while it is only being looked at ---------------- */
   CO.sim.running = false;
@@ -85,12 +89,88 @@
     try { Promise.all(['400', '500', '600', '700'].map(function (w) { return document.fonts.load(w + ' 16px "JetBrains Mono"'); })).then(fin, fin); } catch (e) { fin(); }
     setTimeout(fin, 1500);
   }
-  // the office, made once the stage is on screen; flat (office.js) where 3D cannot start
+
+  /* ---------------- step 1's picture: the station, turning in the office's space ---------------- */
+  // As the station pictures frame one (u3d.js Preview: the same lens, angle and distance), drawn by a renderer of
+  // this page's own so its sky is the office's (entry3d.js) and not near-black; the company's name over it.
+  function StationStage(el) {
+    var U = CO.U3, T = U.THREE, self = this;
+    U.geo();
+    this.el = el;
+    this.r = new T.WebGPURenderer({ antialias: false });   // the bloom pass multisamples (u3d.js, Post)
+    this.r.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
+    this.r.toneMapping = T.ACESFilmicToneMapping; this.r.toneMappingExposure = 1.15;
+    el.appendChild(this.r.domElement);
+    this.scene = new T.Scene(); this.sky = CO.E3.sky(this.scene, 0); CO.E3.lights(this.scene);
+    this.camera = new T.PerspectiveCamera(30, 1, 0.1, 2000);
+    this.turn = new T.Group(); this.scene.add(this.turn);
+    this.ban = document.createElement('div'); this.ban.className = 'b3 pvb bz-ban'; el.appendChild(this.ban);
+    this.clock = new T.Clock(); this.v = new T.Vector3(); this.on = true;
+    this.r.init().then(function () {
+      try { self.post = new U.Post(self.r, self.scene, self.camera, 0.8, 0.45, 0.7); } catch (e) { self.post = null; }
+      self.ready = true; self.go(self.on);
+      el.classList.add('has3d');
+    }).catch(function (e) { console.error('the station picture could not start:', e); });
+  }
+  StationStage.prototype.go = function (on) {
+    this.on = on;
+    if (this.ready) this.r.setAnimationLoop(on ? this.frame.bind(this) : null);
+  };
+  StationStage.prototype.set = function (s) {
+    var U = CO.U3, T = U.THREE, key = [s.skin, s.accent, s.floors].join('|');
+    if (key !== this.key) {
+      this.key = key;
+      if (this.plot) { this.turn.remove(this.plot.root); U.release(this.plot.root); }
+      this.plot = U.makeStation({ skin: s.skin, accent: s.accent, public: true, departments: new Array(s.floors).fill(0), status: 'active' }, 7, { mine: true });
+      this.plot.halo.material.opacity = 0.1;
+      this.turn.add(this.plot.root);
+      var p = this.plot, size = Math.max(p.top - p.bot, p.b.foot * 1.5), dist = size * 2.4 + 5;
+      this.target = new T.Vector3(0, (p.top + p.bot) / 2 + size * 0.13, 0);
+      this.camera.position.copy(new T.Vector3().setFromSpherical(new T.Spherical(dist, 1.16, Math.PI / 4)).add(this.target));
+      this.camera.lookAt(this.target);
+      this.anchor = new T.Vector3(0, p.top + 0.3, 0);
+    }
+    var name = String(s.name || '').toUpperCase(); if (name.length > 22) name = name.slice(0, 21) + '…';
+    this.ban.className = 'b3 pvb bz-ban' + (s.public ? '' : ' priv');
+    this.ban.style.setProperty('--acc', CO.accentHex(s.accent));
+    this.ban.innerHTML = '<span class="you">YOU</span><span class="rib">' + (s.public ? '' : '<i class="lk"></i>') + esc(name) + '</span><span class="teth"></span>';
+  };
+  StationStage.prototype.frame = function () {
+    var w = this.el.clientWidth, h = this.el.clientHeight; if (!w || !h || !this.plot) return;
+    // while the office is being built behind it, one frame in three: the GPU's time goes to the office's shaders
+    if (office && !built() && (this.skip = (this.skip || 0) + 1) % 3) return;
+    if (w !== this.w || h !== this.h) { this.w = w; this.h = h; this.camera.aspect = w / h; this.camera.updateProjectionMatrix(); this.r.setSize(w, h, false); }
+    var t = this.clock.getElapsedTime();
+    this.turn.rotation.y = t * 0.28;
+    this.plot.b.tick(t); this.plot.body.position.y = Math.sin(t * 0.6) * 0.15;
+    this.sky.position.copy(this.camera.position);
+    if (this.post) this.post.render(); else this.r.render(this.scene, this.camera);
+    var v = this.v.copy(this.anchor).project(this.camera);
+    this.ban.style.transform = 'translate(' + ((v.x + 1) / 2 * w).toFixed(1) + 'px,' + ((1 - v.y) / 2 * h).toFixed(1) + 'px) translate(-50%,-100%)';
+  };
+  function station() {
+    if (stage) stage.set({ skin: o.skin, accent: o.accent, floors: 3, name: o.name || 'Your company', public: o.public });
+    var i = CO.SKINS.findIndex(function (s) { return s.key === o.skin; });
+    $('lk-name').textContent = CO.skinName(o.skin);
+    $('lk-n').textContent = (i + 1) + ' / ' + CO.SKINS.length;
+  }
+  function turnSkin(d) {
+    var keys = CO.SKINS.map(function (s) { return s.key; }), i = keys.indexOf(o.skin);
+    o.skin = keys[(i + d + keys.length) % keys.length]; station();
+  }
+  function accents() {
+    $('lk-acc').innerHTML = CO.ACCENTS.map(function (a) {
+      return '<button type="button" class="acc' + (a.key === o.accent ? ' on' : '') + '" data-k="' + a.key + '" style="--c:' + a.hex + '" title="' + a.key + '"></button>';
+    }).join('');
+  }
+
+  /* ---------------- step 2's picture: the office, built ahead ---------------- */
+  // Made while step 1 is on screen (behind it, the same size, not seen), drawn a few frames so its shaders are made,
+  // then held still until Start shows it: Start opens on the office at once. Flat (office.js) where 3D cannot start.
   function makeOffice(cb) {
-    if (office) return cb();
+    if (office) return cb && cb();
     if (making) return;
     making = true;
-    veil(true);
     whenEngine(function (ok) {
       monoWait(function () {
         var st = $('stage');
@@ -101,16 +181,32 @@
         } else office = flat();
         office.layout();
         then();
-        function then() { requestAnimationFrame(function () { office.resize(); office.fit(false); cb(); drawn(function () { veil(false); }); }); }
+        function then() {
+          requestAnimationFrame(function () {
+            office.resize(); office.fit(false);
+            drawn(function () { veil(false); if (step === 1) hold(true); if (cb) cb(); });
+          });
+        }
       });
     });
   }
-  // the veil over the stage while the office is built (builder.css says why)
+  // The office held still while it is not on show (its renderer's loop off), and let go again. Office3D starts its
+  // own loop once its shaders are made, which can come after a hold: overLoop holds it again then.
+  var heldAt = -1;
+  function hold(on) {
+    if (!office || !office.renderer || !office.frame) return;
+    heldAt = on ? (office.frames || 0) : -1;
+    office.renderer.setAnimationLoop(on ? null : function () { office.frame(); });
+  }
+  // the veil over the stage while the office is still being built (builder.css says why)
   function veil(on) { $('veil').classList.toggle('on', on); }
+  // once the office has drawn twice from now (its shaders made: Office3D counts frames from its first; the flat one
+  // has no count and is drawn at once); 12 s at most
   function drawn(cb) {
     var f0 = office && office.frames || 0, t0 = performance.now();
-    (function w() { if (!office || office.frames === undefined || office.frames > f0 + 1 || performance.now() - t0 > 8000) return cb(); requestAnimationFrame(w); })();
+    (function w() { if (!office || !office.renderer || (office.frames || 0) >= f0 + 2 || performance.now() - t0 > 12000) return cb(); requestAnimationFrame(w); })();
   }
+  function built() { return !!office && (!office.renderer || (office.frames || 0) >= 2); }
   // New <-> Pre-build: the veil first, its fade finished, so the stage is covered before the build holds the page
   function restart(k) {
     if (!office) return setStart(k);
@@ -121,43 +217,12 @@
     var svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg'); svg.setAttribute('class', 'office'); $('stage').appendChild(svg);
     return new CO.Office(svg, $('stage'), tipFor);
   }
-  // A room clicked in the pre-built office: at Start it begins the tour there (the call-out sends you to Command,
-  // the first), in the tour it goes to that room -- the next one, which the call-out marks, as well as any other
+  // A room clicked in the pre-built office: at Start it begins the tour there (the call-out sends you to Command, the
+  // first), in the tour it goes to that room -- the next one, which the call-out marks, or any other
   CO.on('office:click', function (key) {
-    if (o.start !== 'pre' || (step !== 3 && step !== 'tour')) return;
-    for (var i = 0; i < TOUR.length; i++) if (keyOf(TOUR[i]) === key) { show('tour'); return tourAt(i); }
+    if (o.start !== 'pre' || (step !== 2 && step !== 'tour')) return;
+    for (var i = 0; i < TOUR.length; i++) if (keyOf(TOUR[i]) === key) { if (step !== 'tour') show('tour'); return tourAt(i); }
   });
-
-  /* ---------------- the station, in the stage while it is being named and dressed ---------------- */
-  function station() {
-    var el = $('b-prev');
-    if (!el.__pv) el.innerHTML = CO.skinSVG({ skin: o.skin, accent: o.accent, floors: 3, seed: 7, banner: o.name || 'Your company', you: true, priv: !o.public });
-    if (CO.U3 && CO.U3.ok && CO.U3.preview) CO.U3.preview(el, { skin: o.skin, accent: o.accent, floors: 3, seed: 7, name: o.name || 'Your company', you: true, public: o.public });
-  }
-  function pub() {
-    return '<span class="sw"></span><div><b>' + (o.public ? 'Public' : 'Private') + '</b><span>' +
-      (o.public ? 'Anyone can look inside, read only.' : 'Others see its name, its station and its mission.') + '</span></div>';
-  }
-  function skins() {
-    $('f-skins').innerHTML = CO.SKINS.map(function (s) {
-      return '<button type="button" class="skin' + (s.key === o.skin ? ' on' : '') + '" data-k="' + s.key + '">' +
-        CO.skinSVG({ skin: s.key, accent: o.accent, floors: 3, seed: 11 }) + '<b>' + esc(s.name) + '</b></button>';
-    }).join('');
-    if (!(CO.U3 && CO.U3.ok && CO.U3.thumbs)) return;
-    var acc = o.accent;
-    CO.U3.thumbs(CO.accentHex(acc), function (urls) {
-      if (acc !== o.accent) return;
-      Array.prototype.forEach.call($('f-skins').querySelectorAll('.skin[data-k]'), function (b) {
-        var u = urls[b.getAttribute('data-k')]; if (!u || b.querySelector('img.th3')) return;
-        var img = document.createElement('img'); img.className = 'th3'; img.alt = ''; img.src = u; b.insertBefore(img, b.firstChild); b.classList.add('has3d');
-      });
-    });
-  }
-  function accents() {
-    $('f-acc').innerHTML = CO.ACCENTS.map(function (a) {
-      return '<button type="button" class="acc' + (a.key === o.accent ? ' on' : '') + '" data-k="' + a.key + '" style="--c:' + a.hex + '" title="' + a.key + '"></button>';
-    }).join('');
-  }
 
   /* ---------------- how it starts ---------------- */
   function opts() {
@@ -170,19 +235,20 @@
         '<span class="bz-chips">' + fixed + PRE.map(function (d) { return chip(d.name, true); }).join('') + '</span></button>';
   }
 
-  /* ---------------- the tour of the pre-built office ---------------- */
+  /* ---------------- the tour: each room's words in a bubble out of the room ---------------- */
   function tourAt(i) {
     ti = i;
-    var r = TOUR[i], key = keyOf(r);
-    $('t-n').textContent = i + 1;
-    $('t-name').textContent = r.n;
-    $('t-line').textContent = r.t;
-    $('t-dots').innerHTML = TOUR.map(function (x, j) { return '<i class="' + (j < i ? 'done' : j === i ? 'on' : '') + '" title="' + esc(x.n) + '"></i>'; }).join('');
+    var key = keyOf(TOUR[i]), r = TOUR[i], last = i === TOUR.length - 1;
+    $('bub').innerHTML =
+      '<div class="bz-bh"><em>' + (i + 1) + '<span>/' + TOUR.length + '</span></em><b>' + esc(r.n) + '</b><button type="button" class="bz-x" data-a="close" title="Back to Start">×</button></div>' +
+      '<p>' + esc(r.t) + '</p>' +
+      '<div class="bz-bf"><span class="bz-dots">' + TOUR.map(function (x, j) { return '<i class="' + (j < i ? 'done' : j === i ? 'on' : '') + '"></i>'; }).join('') + '</span>' +
+        '<button type="button" class="btn" data-a="back">← Back</button>' +
+        '<button type="button" class="bz-go' + (last ? ' fin' : '') + '" data-a="next">' + (last ? 'Create company' : 'Next') + ' →</button></div>';
     if (office && key) { office.select(key); aim(key); }
-    labels();
   }
   // The camera from the office's own home view, the same angle, part of the way to the room: the room in the middle
-  // and its neighbours still round it (Office3D.focus goes so close the station is lost). Flat office: its own focus.
+  // and its neighbours still round it. Flat office: its own focus.
   var NEAR = 0.74;
   function aim(key) {
     var c = office.cells && office.cells[key];
@@ -191,28 +257,33 @@
     var dir = h.pos.clone().sub(h.tgt);
     office.tween(tgt.clone().add(dir.setLength(dir.length() * NEAR)), tgt, 900);
   }
-  // Over the office, following the camera: the pin (the tour's room, its number and name, over it) and the call-out,
-  // a pulsing ring on a room's floor with a label that says what a click there does -- at Start on Command, where
-  // the tour begins ("misto Next tam dej neco Click here na Command", the operator, 2026-10-20), in the tour on the
-  // next room. A click on the call-out does what a click on its room does.
-  var pin = document.createElement('div'); pin.className = 'bz-pin'; pin.hidden = true; $('stage').appendChild(pin);
-  var call = document.createElement('button'); call.type = 'button'; call.className = 'bz-call'; call.hidden = true; $('stage').appendChild(call);
-  call.addEventListener('click', function () { if (step === 3) { show('tour'); tourAt(0); } else if (step === 'tour' && ti < TOUR.length - 1) tourAt(ti + 1); });
+  // Over the office, following the camera: the bubble over the tour's room, and the call-out -- a ring pulsing on a
+  // room's floor, a solid label saying what a click there does: at Start on Command, where the tour begins, in the
+  // tour on the next room. A click on the call-out does what a click on its room does.
+  var bub = $('bub'), call = document.createElement('button'); call.type = 'button'; call.className = 'bz-call'; call.hidden = true; $('stage').appendChild(call);
+  call.addEventListener('click', function () { if (step === 2) { show('tour'); tourAt(0); } else if (step === 'tour' && ti < TOUR.length - 1) tourAt(ti + 1); });
+  bub.addEventListener('click', function (e) {
+    var a = e.target.closest('[data-a]'); if (!a) return;
+    a = a.getAttribute('data-a');
+    if (a === 'close') show(2); else if (a === 'back') back(); else next();
+  });
   function over(el, key, z, html) {
     var c = key && office.cells && office.cells[key];
     if (!c) { if (!el.hidden) el.hidden = true; return; }
     var RS = CO.iso.RS, v = office.V(c[0] + RS / 2, c[1] + RS / 2, z).project(office.camera), st = $('office3d');
-    if (el._h !== html) { el._h = html; el.innerHTML = html; }
+    if (html != null && el._h !== html) { el._h = html; el.innerHTML = html; }
     el.style.transform = 'translate(' + ((v.x + 1) / 2 * st.clientWidth).toFixed(1) + 'px,' + ((1 - v.y) / 2 * st.clientHeight).toFixed(1) + 'px) translate(-50%, -100%)';
     el.hidden = false;
   }
-  (function pinLoop() {
-    requestAnimationFrame(pinLoop);
+  (function overLoop() {
+    requestAnimationFrame(overLoop);
+    if (step === 1 && office && heldAt >= 0 && (office.frames || 0) > heldAt + 1) hold(true);
     var live = office && office.camera && office.V && !$('veil').classList.contains('on') && (office.frames || 0) > 1;
-    var tour = live && step === 'tour', start = live && step === 3 && o.start === 'pre';
-    if (tour) over(pin, keyOf(TOUR[ti]), 1.9, '<b>' + (ti + 1) + '</b>' + esc(TOUR[ti].n)); else if (!pin.hidden) pin.hidden = true;
+    var tour = live && step === 'tour', start = live && step === 2 && o.start === 'pre';
+    // (the bubble's point a little above the room's walls, so it stands over the room and not on its back wall)
+    if (tour) over(bub, keyOf(TOUR[ti]), 2.5, null); else if (!bub.hidden) bub.hidden = true;
     if (start) over(call, 'hub', 0.25, '<span class="lb">Click here<em>Click Command to start the tour</em></span><i class="stem"></i><i class="ring"></i>');
-    else if (tour && ti < TOUR.length - 1) over(call, keyOf(TOUR[ti + 1]), 0.25, '<span class="lb sm">Next: ' + esc(TOUR[ti + 1].n) + ' ›<em>click the room</em></span><i class="stem"></i><i class="ring"></i>');
+    else if (tour && ti < TOUR.length - 1) over(call, keyOf(TOUR[ti + 1]), 0.25, '<span class="lb sm">Next ›</span><i class="stem"></i><i class="ring"></i>');
     else if (!call.hidden) call.hidden = true;
   })();
 
@@ -221,43 +292,47 @@
     var was = step;
     step = s;
     Array.prototype.forEach.call(document.querySelectorAll('.bz-card .bz-st'), function (el) { el.hidden = String(el.getAttribute('data-st')) !== String(s); });
-    var n = s === 'tour' ? 3 : s;
     Array.prototype.forEach.call(document.querySelectorAll('#steps li'), function (li) {
-      var k = +li.getAttribute('data-s'); li.className = k === n ? 'on' : k < n ? 'done' : '';
+      var k = +li.getAttribute('data-s'), n = s === 'tour' ? 2 : s; li.className = k === n ? 'on' : k < n ? 'done' : '';
     });
-    var inOffice = s === 3 || s === 'tour';
-    $('b-prev').hidden = inOffice;
-    $('stage').classList.toggle('bz-office', inOffice);
-    if (inOffice) makeOffice(function () { if (step === 'tour') tourAt(ti); });
-    else if (office) office.select(null);
-    if (s === 3 && was === 'tour' && office) { office.select(null); office.fit(true); }
-    if (s === 1 || s === 2) station();
+    var st = $('stage'), inOffice = s === 2 || s === 'tour';
+    st.classList.toggle('bz-office', inOffice);
+    // the tour has no card: the office takes the whole stage, and comes back under the card after it
+    var wide = s === 'tour';
+    if (st.classList.contains('bz-wide') !== wide) { st.classList.toggle('bz-wide', wide); if (office && office.resize) office.resize(); }
+    if (stage) stage.go(s === 1);
+    if (inOffice) {
+      if (office) {
+        hold(false);
+        if (s === 2) { office.select(null); if (was === 'tour' || was === 1) office.fit(was === 'tour'); }
+        // still being built (Next came quickly): the veil until it has drawn, never an empty stage
+        if (!built()) { veil(true); drawn(function () { veil(false); }); }
+      } else { veil(true); makeOffice(function () { if (step === 'tour') tourAt(ti); }); }
+    } else hold(true);
     labels();
   }
-  // the main button: Next, Create company at the end -- and at Start with Pre-build none: the call-out on Command
-  // starts the tour, and the card says so where the button was
+  // the main button: Next, Create company for New -- and none at Start with Pre-build: the call-out on Command
+  // starts the tour (the tour's own buttons are in its bubble)
   function labels() {
-    var last = step === 'tour' ? ti === TOUR.length - 1 : step === 3 && o.start === 'new', viaRoom = step === 3 && o.start === 'pre';
+    var last = step === 2 && o.start === 'new';
     $('b-next').firstChild.nodeValue = last ? 'Create company ' : 'Next ';
     $('b-next').classList.toggle('bz-fin', last);
-    $('b-next').hidden = viaRoom; $('b-hint').hidden = !viaRoom;
+    $('b-next').hidden = step === 2 && o.start === 'pre';
   }
   function next() {
     if (step === 1) {
       if (!o.name) { var f = $('f-name'); f.focus(); f.style.borderColor = 'var(--red)'; return; }
       return show(2);
     }
-    if (step === 2) return show(3);
-    if (step === 3) { if (o.start === 'new') return finish(); show('tour'); return tourAt(0); }
+    if (step === 2) { if (o.start === 'new') return finish(); show('tour'); return tourAt(0); }
     if (ti < TOUR.length - 1) return tourAt(ti + 1);
     finish();
   }
   function back() {
     if (step === 1) { location.href = 'start.html'; return; }
     if (step === 2) return show(1);
-    if (step === 3) return show(2);
     if (ti > 0) return tourAt(ti - 1);
-    show(3);
+    show(2);
   }
   // Saved as the modal saves it; prebuild says which start the office's boot sets up (data.js/sim.js read it)
   function finish() {
@@ -266,22 +341,24 @@
   }
 
   /* ---------------- wiring ---------------- */
+  function pub() {
+    return '<span class="sw"></span><div><b>' + (o.public ? 'Public' : 'Private') + '</b><span>' +
+      (o.public ? 'Anyone can look inside, read only.' : 'Others see its name, its station and its mission.') + '</span></div>';
+  }
   $('f-pub').innerHTML = pub();
-  skins(); accents(); opts();
+  accents(); opts();
   $('f-name').addEventListener('input', function (e) { o.name = e.target.value.trim(); e.target.style.borderColor = ''; CO.S.company.name = o.name || 'My Company'; station(); });
   $('f-mission').addEventListener('input', function (e) { o.mission = e.target.value.trim(); });
   [$('f-name'), $('f-mission')].forEach(function (f) { f.addEventListener('keydown', function (e) { if (e.key === 'Enter') next(); }); });
   $('f-pub').addEventListener('click', function () { o.public = !o.public; $('f-pub').classList.toggle('on', o.public); $('f-pub').innerHTML = pub(); station(); });
-  $('f-skins').addEventListener('click', function (e) {
-    var b = e.target.closest('.skin'); if (!b) return;
-    o.skin = b.getAttribute('data-k');
-    Array.prototype.forEach.call($('f-skins').querySelectorAll('.skin'), function (x) { x.classList.toggle('on', x === b); });
-    station();
+  $('lk-prev').addEventListener('click', function () { turnSkin(-1); });
+  $('lk-next').addEventListener('click', function () { turnSkin(1); });
+  // the arrow keys go through the stations too, unless a field is being typed in
+  document.addEventListener('keydown', function (e) {
+    if (step !== 1 || /^(INPUT|TEXTAREA)$/.test((document.activeElement || {}).tagName || '')) return;
+    if (e.key === 'ArrowLeft') turnSkin(-1); else if (e.key === 'ArrowRight') turnSkin(1);
   });
-  $('f-acc').addEventListener('click', function (e) {
-    var b = e.target.closest('.acc'); if (!b) return;
-    o.accent = b.getAttribute('data-k'); accents(); skins(); station();
-  });
+  $('lk-acc').addEventListener('click', function (e) { var b = e.target.closest('.acc'); if (!b) return; o.accent = b.getAttribute('data-k'); accents(); station(); });
   $('opts').addEventListener('click', function (e) {
     var b = e.target.closest('.bz-opt'); if (!b) return;
     var k = b.getAttribute('data-start'); if (k === o.start) return;
@@ -290,10 +367,15 @@
   });
   $('b-next').addEventListener('click', next);
   $('b-back').addEventListener('click', back);
-  // the stations' 3D pictures once the engine is there
-  whenEngine(function (ok) { if (ok) { skins(); if (step === 1 || step === 2) station(); } });
   show(1);
+  station();
   setTimeout(function () { $('f-name').focus(); }, 50);
+  // the engine there: the station's picture at once, the office a moment after, behind it
+  whenEngine(function (ok) {
+    if (!ok || !CO.E3) return;
+    stage = new StationStage($('b-prev')); station(); stage.go(step === 1);
+    setTimeout(function () { makeOffice(); }, 700);
+  });
   // for looking at it from the console or a test: the steps by name
   CO.builder = { show: show, tourAt: tourAt, next: next, back: back, o: o, get office() { return office; }, get step() { return step; } };
 })();

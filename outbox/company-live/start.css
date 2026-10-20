@@ -2,12 +2,12 @@
    set as cymetica.com/agent-tournaments sets its own (.at-h1, read off the live page 2026-10-20): Archivo Black,
    clamp(32px, 4.6vw, 58px), line-height 1.04, letter-spacing -0.01em, white, the last line #00ff88, left-aligned with
    its picture beside it; its CTA's green for the main door. */
-body.lp { background: #020306; }
+body.lp { background: #16232f; }
 .lp-main { position: relative; flex: 1; min-height: 0; overflow: hidden; display: flex; align-items: center; }
 
 /* the 3D canvas: wider than the page by --sh and starting at its left edge, so the sun it centres stands right of
    the text; its own sky (stars, the far glows) is the page's background */
-.lp-space { position: absolute; left: 0; top: 0; bottom: 0; width: calc(100% + var(--sh)); --sh: 52vw; background: #01080d; overflow: hidden; }
+.lp-space { position: absolute; left: 0; top: 0; bottom: 0; width: calc(100% + var(--sh)); --sh: 52vw; background: #16232f; overflow: hidden; }
 .lp-space > canvas { display: block; width: 100% !important; height: 100% !important; }
 /* Cymetica's ball: the Universe's painting (colliderTex) at the ball's place, two turning against each other over a
    blurred copy -- uv.css's .uvcol, with the light added to what is under it rather than laid over it */
@@ -20,7 +20,7 @@ body.lp { background: #020306; }
 @keyframes lpcolflick { from { opacity: 1; } to { opacity: .84; } }
 /* the darkness behind the text, so it reads over whatever passes behind it */
 .lp-main::before { content: ''; position: absolute; inset: 0; z-index: 1; pointer-events: none;
-  background: linear-gradient(90deg, rgba(1, 6, 10, .9) 0%, rgba(1, 6, 10, .66) 36%, rgba(1, 6, 10, 0) 58%); }
+  background: linear-gradient(90deg, rgba(8, 16, 24, .62) 0%, rgba(8, 16, 24, .36) 34%, rgba(8, 16, 24, 0) 54%); }
 
 .lp-hero { position: relative; z-index: 2; padding: 40px 0 48px max(48px, 9vw); }
 .lp-h1 { font: 400 clamp(32px, 4.6vw, 58px)/1.04 'Archivo Black', sans-serif; letter-spacing: -.01em; color: #fff; }
@@ -37,7 +37,7 @@ body.lp { background: #020306; }
 /* a door's picture is the product drawn live; it only shows, the whole tile is the link (no dragging the room round) */
 .lp-art { flex: 1; min-height: 0; position: relative; display: block; margin: 8px 8px 0; border-radius: 15px; overflow: hidden; pointer-events: none; background: #06101a; }
 .lp-room .d3cv canvas { cursor: inherit; }
-.lp-uvpic .pic { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
+.lp-uvpic > canvas { position: absolute; inset: 0; display: block; width: 100% !important; height: 100% !important; }
 /* the door's label as the live page's PICK A TABLE: Archivo Black 15.5px, dark on green, the green glow */
 .lp-cta { display: flex; align-items: center; justify-content: center; gap: 10px; margin: 12px; padding: 16px 14px; border-radius: 16px;
   font: 400 15px 'Archivo Black', sans-serif; letter-spacing: .02em; text-transform: uppercase; white-space: nowrap; }

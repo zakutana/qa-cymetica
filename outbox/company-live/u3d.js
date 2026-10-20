@@ -8126,7 +8126,7 @@ class Office3D {
   CO.U3 = (gl2 || navigator.gpu) ? { ok: true, gpu: !!navigator.gpu, universe: (el, stage, h) => new Universe3D(el, stage, h), office: (el, stage, tipFor) => new Office3D(el, stage, tipFor), preview, thumbs,
     roomPreview: (el) => new RoomPreview(el), shotOf: (key) => SHOTS[key] || null, THREE, geo, makeStation, SKIN, amat, nebTex, TX, OM,
     // for the entry page's own scene (start.js): the map's sun, sky, glows and bloom, the pacer and the release
-    Post, starField, glowSprite, glowTex, colliderTex, flareTex, uvSky, pacer, release, UVSUN }
+    Post, starField, glowSprite, glowTex, colliderTex, flareTex, uvSky, spaceSky, LOOK, idleFlush, pacer, release, UVSUN }
     : { failed: true, why: 'no WebGPU and no WebGL2' };
   window.dispatchEvent(new Event('co3d'));
 })();
