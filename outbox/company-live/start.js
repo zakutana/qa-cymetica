@@ -13,20 +13,22 @@
   'use strict';
   var CO = window.CO;
 
-  // the companies round the sun: their station, colour, decks, orbit and where on it they start
-  var FLEET = [
+  // The companies round the sun: their station, colour, decks, orbit and where on it they stand. Three a orbit, a
+  // third of a turn apart, the outer three half way between the inner ones, and the whole turning as one (one speed
+  // for both orbits): no two ever come one over the other ("tyto dve firmy jsou moc u sebe", 2026-10-20 -- with
+  // two speeds the orbits drifted through each other and lined two companies up).
+  var T3 = Math.PI * 2 / 3, FLEET = [
     { skin: 'tower', accent: 'cyan', n: 4, orbit: 0, at: 0.4 },
-    { skin: 'dome', accent: 'green', n: 5, orbit: 0, at: 2.5 },
-    { skin: 'pyramid', accent: 'red', n: 3, orbit: 0, at: 4.5 },
-    { skin: 'orbital', accent: 'blue', n: 4, orbit: 1, at: 1.3 },
-    { skin: 'rocket', accent: 'green', n: 3, orbit: 1, at: 3.0 },
-    { skin: 'vault', accent: 'cyan', n: 5, orbit: 1, at: 4.4 },
-    { skin: 'stack', accent: 'red', n: 4, orbit: 1, at: 5.9 }
+    { skin: 'dome', accent: 'green', n: 5, orbit: 0, at: 0.4 + T3 },
+    { skin: 'pyramid', accent: 'red', n: 3, orbit: 0, at: 0.4 + 2 * T3 },
+    { skin: 'orbital', accent: 'blue', n: 4, orbit: 1, at: 0.4 + T3 / 2 },
+    { skin: 'rocket', accent: 'green', n: 3, orbit: 1, at: 0.4 + T3 * 1.5 },
+    { skin: 'vault', accent: 'cyan', n: 5, orbit: 1, at: 0.4 + T3 * 2.5 }
   ];
   // world units: the sun's ball, the two orbits (wide enough that a company never crosses the ball on the screen
   // from this height), how high the camera looks down (radians above the plane), how slowly they go round, how much
   // of the stage's height the ball takes, how big the stations are drawn
-  var BALL = 8, ORBITS = [20, 28.5], LIFT = 0.72, SPEED = [0.05, 0.034], SHARE = 0.245, SIZE = 1.25;
+  var BALL = 8, ORBITS = [20, 28.5], LIFT = 0.72, SPEED = [0.04, 0.04], SHARE = 0.245, SIZE = 1.25;
 
   // a renderer as the mockup makes them: no antialias of its own (the bloom pass multisamples; u3d.js says why)
   function renderer(T, el) {
@@ -140,17 +142,35 @@
     }
   };
 
-  // "Start a company": a room of the office, turning
+  // "Start a company": a room of the office, turning -- a department of one's own in the Operations look (curved
+  // command desk, comms and supply cabinets, the coffee corner with its two stools), as the Add-department dialog
+  // shows a new one ("v te dlazdici build a company vymen mistnost za tuto", 2026-10-20)
   function room(el) {
-    if (!CO.U3.roomPreview) return;
-    CO.U3.roomPreview(el).set({ key: 'development', name: 'Development', experts: ['developer', 'researcher'] });
+    if (!CO.U3.roomPreview) return null;
+    var rp = CO.U3.roomPreview(el); rp.set({ key: 'custom', name: '', experts: ['researcher'], look: 'ops' });
+    return rp;
   }
+  // A door: the page's scenes stopped and the page faded out first, then the next page -- not a page that stutters
+  // while the next one is fetched
+  var SC = null;
+  Array.prototype.forEach.call(document.querySelectorAll('.lp-tile'), function (a) {
+    a.addEventListener('click', function (e) {
+      if (e.button || e.metaKey || e.ctrlKey || e.shiftKey) return;
+      e.preventDefault();
+      if (SC) SC.stop();
+      document.body.classList.add('lp-leave');
+      setTimeout(function () { location.href = a.getAttribute('href'); }, 220);
+    });
+  });
+  Showcase.prototype.stop = function () {
+    [this.renderer, this.tile && this.tile.r, this.room && this.room.renderer].forEach(function (r) { if (r) r.setAnimationLoop(null); });
+  };
 
   function go() {
     var U = CO.U3; if (!U || !U.ok || !U.Post || !CO.E3) return;
-    var sc = new Showcase(document.getElementById('lp-space'), document.getElementById('lp-uvpic'));
+    var sc = SC = new Showcase(document.getElementById('lp-space'), document.getElementById('lp-uvpic'));
     // the room after the sun, so the two engines do not build at once
-    sc.onReady = function () { setTimeout(function () { room(document.getElementById('lp-room')); }, 400); };
+    sc.onReady = function () { setTimeout(function () { sc.room = room(document.getElementById('lp-room')); }, 400); };
   }
   var done = false, start = function () { if (done) return; done = true; go(); };
   if (CO.U3 && CO.U3.skins) start();

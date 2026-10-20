@@ -3,6 +3,9 @@
    clamp(32px, 4.6vw, 58px), line-height 1.04, letter-spacing -0.01em, white, the last line #00ff88, left-aligned with
    its picture beside it; its CTA's green for the main door. */
 body.lp { background: #16232f; }
+/* leaving through a door: the page fades out, then the next one comes in (start.js stops the scenes first) */
+body.lp .lp-main { transition: opacity .2s ease-in; }
+body.lp-leave .lp-main { opacity: 0; }
 .lp-main { position: relative; flex: 1; min-height: 0; overflow: hidden; display: flex; align-items: center; }
 
 /* the 3D canvas: wider than the page by --sh and starting at its left edge, so the sun it centres stands right of

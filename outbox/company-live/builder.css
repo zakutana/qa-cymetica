@@ -2,7 +2,8 @@
    it starts), the steps float over it on the left as one card; in the tour the office has the whole stage and each
    room's words are a bubble out of the room. Headlines and the main button as on cymetica.com/agent-tournaments.
    Every class here is bz-*: style.css already has .st, .back and .chips of its own. */
-.bz { flex: 1; min-height: 0; display: flex; padding: 12px 16px 16px; }
+.bz { flex: 1; min-height: 0; display: flex; padding: 12px 16px 16px; animation: bzin .35s ease-out both; }
+@keyframes bzin { from { opacity: 0; } }
 /* --cw: the card's width and its margin. The 3D canvases are that much wider than the stage, starting at its left
    edge, so what they centre stands in the middle of the space the card leaves free. The tour has no card (bz-wide). */
 .bz-stage { flex: 1; min-height: 0; --cw: 492px; background: #16232f; }
@@ -35,41 +36,50 @@
 .bz-st .field input { font-size: 15px; font-weight: 500; letter-spacing: 0; padding: 13px 14px; border-radius: 10px; }
 .bz-st .switch b { font-size: 14px; }
 
-/* its look, on the stage: big arrows either side of the station, its name and colour under it; all centred where the
-   station is (the canvas's middle, --cw right of the stage's) */
+/* its look: big arrows either side of the station, well clear of it (the widest station is about 800 px across at
+   this size), centred on where the station is (the canvas's middle, --cw right of the stage's) and kept off the card */
 .bz-look { position: absolute; inset: 0; z-index: 6; pointer-events: none; }
-.bz-arrow { position: absolute; top: 46%; width: 76px; height: 76px; border-radius: 50%; display: grid; place-items: center; pointer-events: auto;
+.bz-arrow { position: absolute; top: 48%; width: 76px; height: 76px; border-radius: 50%; display: grid; place-items: center; pointer-events: auto;
   border: 1px solid rgba(0, 207, 255, .55); background: #0a1622; color: var(--cyan); box-shadow: 0 0 0 1px rgba(0, 207, 255, .15), 0 10px 30px -8px rgba(0, 0, 0, .7);
   transform: translate(-50%, -50%); transition: background .15s, box-shadow .2s, transform .12s; }
-.bz-arrow.l { left: calc((100% + var(--cw)) / 2 - 400px); }
-.bz-arrow.r { left: calc((100% + var(--cw)) / 2 + 400px); }
+.bz-arrow.l { left: max(calc(var(--cw) + 60px), calc((100% + var(--cw)) / 2 - 580px)); }
+.bz-arrow.r { left: min(calc(100% - 64px), calc((100% + var(--cw)) / 2 + 580px)); }
 .bz-arrow:hover { background: #0f2433; box-shadow: 0 0 0 1px var(--cyan), 0 0 28px rgba(0, 207, 255, .45); }
 .bz-arrow:active { transform: translate(-50%, -50%) scale(.95); }
 .bz-arrow svg { width: 34px; height: 34px; fill: none; stroke: currentColor; stroke-width: 2.6; stroke-linecap: round; stroke-linejoin: round; }
-.bz-lk { position: absolute; left: calc((100% + var(--cw)) / 2); bottom: 30px; transform: translateX(-50%); pointer-events: auto;
-  display: flex; flex-direction: column; align-items: center; gap: 10px; padding: 14px 26px 16px; border-radius: 16px;
-  border: 1px solid rgba(0, 150, 255, .22); background: rgba(8, 13, 21, .84); backdrop-filter: blur(10px); }
-.bz-lkn { font: 700 11px 'JetBrains Mono'; letter-spacing: .14em; color: var(--dim2); }
-.bz-lk b { font: 400 24px 'Archivo Black', sans-serif; letter-spacing: .02em; color: #fff; white-space: nowrap; }
-.bz-lk .accents { gap: 12px; }
-.bz-lk .acc { width: 30px; height: 30px; }
+/* in the card: which station of the seven, and its colour, as the card's own fields */
+.bz-lkrow { display: flex; align-items: center; gap: 12px; min-height: 34px; }
+.bz-lkl { width: 78px; flex: none; font: 700 11px 'JetBrains Mono'; letter-spacing: .12em; color: var(--dim2); }
+.bz-lkrow b { font: 400 18px 'Archivo Black', sans-serif; color: #fff; letter-spacing: .01em; }
+.bz-lkn { margin-left: auto; font: 700 11px 'JetBrains Mono'; letter-spacing: .1em; color: var(--dim2); }
+/* (room for eight colours in one row: 8 x 28 + 7 x 9 = 287 of the row's 306 px; more wrap) */
+.bz-lkrow .accents { gap: 9px; flex-wrap: wrap; }
+.bz-lkrow .acc { width: 28px; height: 28px; flex: none; }
 /* the company's name over the station (uv.css .b3), not a link here */
 .bz-ban { pointer-events: none; z-index: 2; }
 
-/* how it starts: the number of rooms first */
+/* how it starts: two cards, the number of rooms first, the start's name, its rooms as the office's icons; the chosen
+   one lit in cyan with a tick */
 .bz-opts { display: grid; gap: 12px; }
-.bz-opt { display: block; text-align: left; padding: 16px 18px 18px; border-radius: 16px; border: 1px solid rgba(0, 150, 255, .15); background: #0d1520; color: var(--text);
-  transition: border-color .15s, box-shadow .2s; }
-.bz-opt:hover { border-color: var(--dim2); }
-.bz-opt.on { border-color: var(--cyan); box-shadow: 0 0 0 1px var(--cyan), 0 0 22px rgba(0, 207, 255, .22); }
-.bz-oh { display: flex; align-items: baseline; gap: 10px; }
-.bz-oh em { font: 400 44px/1 'Archivo Black', sans-serif; font-style: normal; color: var(--green); }
-.bz-oh span { font-size: 13px; font-weight: 600; color: var(--dim2); }
-.bz-oh b { margin-left: auto; font: 400 17px 'Archivo Black', sans-serif; letter-spacing: .03em; text-transform: uppercase; }
-.bz-opt.on .bz-oh b { color: var(--cyan); }
-.bz-chips { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 12px; }
-.bz-chips i { font-style: normal; font-size: 11.5px; font-weight: 600; padding: 5px 10px; border-radius: 99px; border: 1px solid var(--line3); color: var(--dim); background: var(--navy2); }
-.bz-chips i.bz-add { color: var(--green); border-color: rgba(0, 255, 136, .35); background: rgba(0, 255, 136, .08); }
+.bz-opt { position: relative; display: block; text-align: left; padding: 18px 18px 18px 20px; border-radius: 18px; color: var(--text);
+  border: 1px solid rgba(0, 150, 255, .16); background: linear-gradient(160deg, #0f1b28, #0a121c 70%); transition: border-color .15s, box-shadow .2s, transform .12s; }
+.bz-opt:hover { border-color: rgba(0, 207, 255, .45); transform: translateY(-1px); }
+.bz-opt.on { border-color: var(--cyan); background: linear-gradient(160deg, #0f2535, #0a1622 70%);
+  box-shadow: 0 0 0 1px var(--cyan), 0 0 30px rgba(0, 207, 255, .22), inset 0 1px 0 rgba(255, 255, 255, .05); }
+.bz-oh { display: flex; align-items: center; gap: 14px; }
+.bz-oh em { font: 400 46px/1 'Archivo Black', sans-serif; font-style: normal; color: var(--green); text-shadow: 0 0 22px rgba(0, 255, 136, .25); min-width: 34px; }
+.bz-ot { display: flex; flex-direction: column; gap: 3px; min-width: 0; }
+.bz-ot b { font: 400 17px 'Archivo Black', sans-serif; letter-spacing: .03em; text-transform: uppercase; color: #fff; white-space: nowrap; }
+.bz-opt.on .bz-ot b { color: var(--cyan); }
+.bz-ot span { font-size: 11.5px; font-weight: 600; color: var(--dim2); }
+.bz-ok { margin-left: auto; flex: none; width: 24px; height: 24px; border-radius: 50%; border: 1.5px solid var(--line3); position: relative; }
+.bz-opt.on .bz-ok { border-color: var(--cyan); background: var(--cyan); box-shadow: 0 0 12px rgba(0, 207, 255, .6); }
+.bz-opt.on .bz-ok::after { content: ''; position: absolute; left: 7px; top: 3px; width: 6px; height: 11px; border: solid #03131c; border-width: 0 2.5px 2.5px 0; transform: rotate(45deg); }
+.bz-ics { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 14px; }
+.bz-ic { width: 40px; height: 40px; border-radius: 11px; display: grid; place-items: center; font-style: normal;
+  border: 1px solid color-mix(in srgb, var(--c) 40%, transparent); background: color-mix(in srgb, var(--c) 10%, #08111a); box-shadow: inset 0 0 12px color-mix(in srgb, var(--c) 12%, transparent); }
+.bz-ic svg { filter: drop-shadow(0 0 4px color-mix(in srgb, var(--c) 70%, transparent)); }
+.bz-ic.bz-add { box-shadow: 0 0 0 1.5px rgba(0, 255, 136, .55), inset 0 0 12px color-mix(in srgb, var(--c) 12%, transparent); }
 
 /* back and next, right under what the step asks */
 .bz-nav { margin-top: 26px; display: flex; align-items: center; gap: 10px; }
@@ -84,21 +94,22 @@
 
 /* the tour's bubble: out of the room it is about, a pointer down to it; which room of seven, its name, its words,
    the step dots small, Back and Next. Solid: it reads over whatever glows behind it. */
-.bz-bub { position: absolute; left: 0; top: 0; z-index: 8; width: 420px; margin-top: -18px; padding: 16px 18px 14px; border-radius: 16px;
-  border: 1px solid var(--cyan); background: #0a1622; color: var(--text); box-shadow: 0 0 0 1px rgba(0, 207, 255, .25), 0 0 30px rgba(0, 207, 255, .3), 0 18px 40px -12px rgba(0, 0, 0, .8);
-  will-change: transform; }
-.bz-bub::after { content: ''; position: absolute; left: 50%; top: 100%; width: 18px; height: 18px; background: #0a1622; border-right: 1px solid var(--cyan); border-bottom: 1px solid var(--cyan);
+.bz-bub { position: absolute; left: 0; top: 0; z-index: 8; width: 460px; margin-top: -18px; padding: 16px 18px 14px; border-radius: 18px;
+  border: 1px solid rgba(0, 207, 255, .8); background: linear-gradient(170deg, #11293a, #0a1622 55%); color: var(--text);
+  box-shadow: 0 0 0 1px rgba(0, 207, 255, .2), 0 0 34px rgba(0, 207, 255, .28), 0 22px 46px -14px rgba(0, 0, 0, .85), inset 0 1px 0 rgba(255, 255, 255, .07); will-change: transform; }
+.bz-bub::after { content: ''; position: absolute; left: 50%; top: 100%; width: 18px; height: 18px; background: #0a1622; border-right: 1px solid rgba(0, 207, 255, .8); border-bottom: 1px solid rgba(0, 207, 255, .8);
   transform: translate(-50%, -9px) rotate(45deg); }
-.bz-bh { display: flex; align-items: baseline; gap: 12px; }
-.bz-bh em { font: 400 28px/1 'Archivo Black', sans-serif; font-style: normal; color: var(--cyan); }
-.bz-bh em span { font: 700 13px 'JetBrains Mono'; color: var(--dim2); margin-left: 2px; }
-.bz-bh b { font: 400 24px/1.1 'Archivo Black', sans-serif; color: #fff; }
-.bz-x { margin-left: auto; width: 28px; height: 28px; border-radius: 8px; color: var(--dim2); font-size: 18px; line-height: 1; align-self: center; }
+.bz-bh { display: flex; align-items: center; gap: 12px; }
+.bz-bh .bz-ic { width: 44px; height: 44px; flex: none; }
+.bz-bt { display: flex; flex-direction: column; gap: 3px; min-width: 0; }
+.bz-bt b { font: 400 23px/1.05 'Archivo Black', sans-serif; color: #fff; }
+.bz-bt em { font: 700 11px 'JetBrains Mono'; font-style: normal; letter-spacing: .12em; text-transform: uppercase; color: var(--cyan); }
+.bz-x { margin-left: auto; width: 28px; height: 28px; border-radius: 8px; color: var(--dim2); font-size: 18px; line-height: 1; align-self: flex-start; }
 .bz-x:hover { color: #fff; background: #13263a; }
 .bz-bub p { margin: 10px 0 14px; font-size: 14.5px; line-height: 1.55; color: var(--dim); }
 .bz-bf { display: flex; align-items: center; gap: 10px; }
 .bz-bf .btn { padding: 10px 14px; font-size: 12.5px; }
-.bz-bf .bz-go { padding: 11px 18px; font-size: 13.5px; border-radius: 12px; }
+.bz-bf .bz-go { padding: 11px 18px; font-size: 13.5px; border-radius: 12px; white-space: nowrap; }
 .bz-dots { display: flex; gap: 5px; margin-right: auto; }
 .bz-dots i { width: 14px; height: 3px; border-radius: 2px; background: var(--line3); }
 .bz-dots i.done { background: rgba(0, 207, 255, .45); }

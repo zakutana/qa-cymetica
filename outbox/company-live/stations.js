@@ -150,10 +150,27 @@ function greebles(b, mats, y, x0, x1, z0, z1, count, inside, seed) {
   }
 }
 function sprite(b, mat, x, y, z, s) { const sp = new THREE.Sprite(mat); sp.position.set(x, y, z); sp.scale.setScalar(s); sp.userData.dyn = true; b.g.add(sp); return sp; }
-// a few small craft on a slow circuit round the station, merged into two meshes that turn as one
+// How far out from the middle the station reaches on the plane, every part of it as built so far: the farthest
+// corner of any part's bounds (a conservative reach: a part's box is never smaller than the part)
+function reach(b) {
+  const box = new THREE.Box3(), c = new THREE.Vector3(); let far = 0;
+  b.g.updateMatrixWorld(true);
+  b.g.traverse((o) => {
+    if (!o.isMesh || !o.geometry) return;
+    if (!o.geometry.boundingBox) o.geometry.computeBoundingBox();
+    box.copy(o.geometry.boundingBox).applyMatrix4(o.matrixWorld);
+    for (const x of [box.min.x, box.max.x]) for (const z of [box.min.z, box.max.z]) far = Math.max(far, Math.hypot(x, z));
+  });
+  return far;
+}
+// A few small craft on a slow circuit round the station, merged into two meshes that turn as one. Their circuit is
+// outside everything the station has (towers, cranes, docks, at any number of decks), whatever r asks for: they flew
+// through the Shipyard's towers and dock walls ("ty letadylka litaji skrze budovy", 2026-10-20). Called last, after
+// every part it must clear. Their centres and sizes stay on the group (userData.esc) for a check.
 function escorts(b, M, r, y, count, size) {
+  r = Math.max(r, reach(b) + size * 1.15 + 0.3);
   // (uv kept: the hull's material is plated, and a geometry without uv makes its shader warn)
-  const hulls = [], glows = [], flat = (g) => (g.index ? g.toNonIndexed() : g);
+  const hulls = [], glows = [], flat = (g) => (g.index ? g.toNonIndexed() : g), esc = [];
   for (let i = 0; i < count; i++) {
     // on the circuit at angle a, its nose along the way the group turns (rotation.y falling: the angle rises)
     const a = i / count * Math.PI * 2, x = Math.cos(a) * r, z = Math.sin(a) * r, yy = y + (i % 2 ? 0.25 : -0.2), dir = Math.PI - a;
@@ -164,8 +181,9 @@ function escorts(b, M, r, y, count, size) {
     body.rotateX(-Math.PI / 2); body.rotateY(dir); body.translate(x, yy, z); hulls.push(flat(body));
     const gl = new THREE.SphereGeometry(0.11 * s, 10, 6);
     gl.translate(x + Math.sin(dir) * 0.52 * s, yy + 0.04 * s, z + Math.cos(dir) * 0.52 * s); glows.push(flat(gl));
+    esc.push({ x, y: yy, z, s });
   }
-  const g = new THREE.Group(); g.userData.dyn = true; b.g.add(g);
+  const g = new THREE.Group(); g.userData.dyn = true; g.userData.esc = esc; b.g.add(g);
   g.add(new THREE.Mesh(mergeGeometries(hulls, false), M.mid), new THREE.Mesh(mergeGeometries(glows, false), M.core));
   b.anim.push((t) => { g.rotation.y = -t * 0.22 - b.phase; });
   return g;

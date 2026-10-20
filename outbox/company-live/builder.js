@@ -28,14 +28,17 @@
   var LINE = {
     testing: 'Tests your products, logs every bug it finds and files it for you. Every accepted bug earns you ET10.',
     development: 'Your builders. When the company needs a product, an app or a tool, Development designs it, builds it and ships it.',
-    testing_lab: 'Researches new ways to make money on Cymetica: works out strategies with NEXUS and proves them on paper first.',
-    trading_desk: "Puts the Lab's strategies to the test with real agents, and seats the winners in Agent Tournaments."
+    // (the Lab finds the ways and proves them on paper, the desk puts its winners into production: "quant lab hleda jak
+    // vydelat a uspesne boty se pak muzou pustit do produkce v trading desku treba na agent tournaments", the operator)
+    testing_lab: 'Finds new ways to make money on Cymetica: works out strategies with NEXUS and proves them on paper in Experiments. Keeps the winners.',
+    trading_desk: "Puts the Lab's winning bots into production: a seat at Agent Tournaments, or real money, each only after your approval."
   };
   var TOUR = FIXED.concat(PRE.map(function (d) { return { dk: d.key, n: d.name, t: LINE[d.key] || '' }; }));
 
   // what is being made: the modal's own defaults (app.js createCompanyModal), and the pre-built start
-  var o = { name: '', mission: '', skin: 'tower', accent: 'green', public: false, start: 'pre' };
-  var step = 1, ti = 0, office = null, making = false, stage = null;
+  // (the builder opens on the Shipyard in green: "jako uvodni firmu zobraz tuhle", 2026-10-20)
+  var o = { name: '', mission: '', skin: 'dome', accent: 'green', public: false, start: 'pre' };
+  var step = 1, ti = 0, office = null, making = false, stage = null, ready = false;
 
   /* ---------------- the company the office shows: nothing runs while it is only being looked at ---------------- */
   CO.sim.running = false;
@@ -69,8 +72,9 @@
     var d = CO.S.departments.filter(function (x) { return x.key === r.dk; })[0];
     return d ? 'd' + d.id : null;
   }
+  // a room's words on hover -- not in the tour, where its bubble says them ("zbytecne navic tooltip", 2026-10-20)
   function tipFor(kind, key) {
-    if (kind !== 'room') return '';
+    if (kind !== 'room' || step === 'tour') return '';
     for (var i = 0; i < TOUR.length; i++) if (keyOf(TOUR[i]) === key) return '<b>' + esc(TOUR[i].n) + '</b><br>' + esc(TOUR[i].t);
     return '';
   }
@@ -137,17 +141,17 @@
   };
   StationStage.prototype.frame = function () {
     var w = this.el.clientWidth, h = this.el.clientHeight; if (!w || !h || !this.plot) return;
-    // while the office is being built behind it, one frame in three: the GPU's time goes to the office's shaders
-    if (office && !built() && (this.skip = (this.skip || 0) + 1) % 3) return;
+    this.frames = (this.frames || 0) + 1;
     if (w !== this.w || h !== this.h) { this.w = w; this.h = h; this.camera.aspect = w / h; this.camera.updateProjectionMatrix(); this.r.setSize(w, h, false); }
     var t = this.clock.getElapsedTime();
-    this.turn.rotation.y = t * 0.28;
+    this.turn.rotation.y = -t * 0.28;   // clockwise seen from above ("zmen smer rotace", 2026-10-20)
     this.plot.b.tick(t); this.plot.body.position.y = Math.sin(t * 0.6) * 0.15;
     this.sky.position.copy(this.camera.position);
     if (this.post) this.post.render(); else this.r.render(this.scene, this.camera);
     var v = this.v.copy(this.anchor).project(this.camera);
     this.ban.style.transform = 'translate(' + ((v.x + 1) / 2 * w).toFixed(1) + 'px,' + ((1 - v.y) / 2 * h).toFixed(1) + 'px) translate(-50%,-100%)';
   };
+  // the station as it stands: its picture, the company's name over it (every key typed), and in the card its name
   function station() {
     if (stage) stage.set({ skin: o.skin, accent: o.accent, floors: 3, name: o.name || 'Your company', public: o.public });
     var i = CO.SKINS.findIndex(function (s) { return s.key === o.skin; });
@@ -225,22 +229,32 @@
   });
 
   /* ---------------- how it starts ---------------- */
+  // The two starts as cards: how many rooms, the start's name, and its rooms as the office's own icons (CO.deptIconSvg,
+  // data.js -- the rail's and the glass signs'), each named in its tooltip; a pre-built department ringed in green.
+  // ("misto tech nazvu mistnosti tam dej spis ikonky", "misto pre-build dej spis CyMetica Pre-Build", 2026-10-20)
   function opts() {
-    var chip = function (n, add) { return '<i' + (add ? ' class="bz-add"' : '') + '>' + esc(n) + '</i>'; };
-    var fixed = FIXED.map(function (r) { return chip(r.n); }).join('');
+    var icon = function (d, n, add) {
+      var ic = CO.deptIconSvg ? CO.deptIconSvg(d, 22) : null;
+      return '<i class="bz-ic' + (add ? ' bz-add' : '') + '" title="' + esc(n) + '" style="--c:' + (ic ? ic.color : '#00cfff') + '">' + (ic ? ic.svg : '') + '</i>';
+    };
+    var fixed = FIXED.map(function (r) { return icon(r.k, r.n); }).join('');
+    var card = function (k, n, title, sub, icons) {
+      return '<button type="button" class="bz-opt' + (o.start === k ? ' on' : '') + '" data-start="' + k + '">' +
+        '<span class="bz-oh"><em>' + n + '</em><span class="bz-ot"><b>' + title + '</b><span>' + sub + '</span></span><i class="bz-ok"></i></span>' +
+        '<span class="bz-ics">' + icons + '</span></button>';
+    };
     $('opts').innerHTML =
-      '<button type="button" class="bz-opt' + (o.start === 'new' ? ' on' : '') + '" data-start="new"><span class="bz-oh"><em>3</em><span>rooms</span><b>New</b></span>' +
-        '<span class="bz-chips">' + fixed + '</span></button>' +
-      '<button type="button" class="bz-opt' + (o.start === 'pre' ? ' on' : '') + '" data-start="pre"><span class="bz-oh"><em>7</em><span>rooms</span><b>Pre-build</b></span>' +
-        '<span class="bz-chips">' + fixed + PRE.map(function (d) { return chip(d.name, true); }).join('') + '</span></button>';
+      card('new', 3, 'New', 'rooms · add departments as you go', fixed) +
+      card('pre', 7, 'CyMetica Pre-Build', 'rooms · 4 departments ready to work', fixed + PRE.map(function (d) { return icon({ key: d.key }, d.name, true); }).join(''));
   }
 
   /* ---------------- the tour: each room's words in a bubble out of the room ---------------- */
   function tourAt(i) {
     ti = i;
-    var key = keyOf(TOUR[i]), r = TOUR[i], last = i === TOUR.length - 1;
+    var key = keyOf(TOUR[i]), r = TOUR[i], last = i === TOUR.length - 1, ic = CO.deptIconSvg ? CO.deptIconSvg(r.k || { key: r.dk }, 22) : null;
     $('bub').innerHTML =
-      '<div class="bz-bh"><em>' + (i + 1) + '<span>/' + TOUR.length + '</span></em><b>' + esc(r.n) + '</b><button type="button" class="bz-x" data-a="close" title="Back to Start">×</button></div>' +
+      '<div class="bz-bh">' + (ic ? '<i class="bz-ic" style="--c:' + ic.color + '">' + ic.svg + '</i>' : '') +
+        '<span class="bz-bt"><b>' + esc(r.n) + '</b><em>' + (i + 1) + ' of ' + TOUR.length + '</em></span><button type="button" class="bz-x" data-a="close" title="Back to Start">×</button></div>' +
       '<p>' + esc(r.t) + '</p>' +
       '<div class="bz-bf"><span class="bz-dots">' + TOUR.map(function (x, j) { return '<i class="' + (j < i ? 'done' : j === i ? 'on' : '') + '"></i>'; }).join('') + '</span>' +
         '<button type="button" class="btn" data-a="back">← Back</button>' +
@@ -265,7 +279,7 @@
   bub.addEventListener('click', function (e) {
     var a = e.target.closest('[data-a]'); if (!a) return;
     a = a.getAttribute('data-a');
-    if (a === 'close') show(2); else if (a === 'back') back(); else next();
+    if (a === 'close') show(2); else if (a === 'back') tourBack(); else next();
   });
   function over(el, key, z, html) {
     var c = key && office.cells && office.cells[key];
@@ -291,16 +305,14 @@
   function show(s) {
     var was = step;
     step = s;
-    Array.prototype.forEach.call(document.querySelectorAll('.bz-card .bz-st'), function (el) { el.hidden = String(el.getAttribute('data-st')) !== String(s); });
+    Array.prototype.forEach.call(document.querySelectorAll('.bz-card .bz-st'), function (el) { el.hidden = String(el.getAttribute('data-st')) !== String(s === 'tour' ? 2 : s); });
     Array.prototype.forEach.call(document.querySelectorAll('#steps li'), function (li) {
       var k = +li.getAttribute('data-s'), n = s === 'tour' ? 2 : s; li.className = k === n ? 'on' : k < n ? 'done' : '';
     });
     var st = $('stage'), inOffice = s === 2 || s === 'tour';
     st.classList.toggle('bz-office', inOffice);
-    // the tour has no card: the office takes the whole stage, and comes back under the card after it
-    var wide = s === 'tour';
-    if (st.classList.contains('bz-wide') !== wide) { st.classList.toggle('bz-wide', wide); if (office && office.resize) office.resize(); }
-    if (stage) stage.go(s === 1);
+    // (the card stays through the tour, on its Start step: "ten panel nalevo nechej", 2026-10-20)
+    if (stage && ready) stage.go(s === 1);
     if (inOffice) {
       if (office) {
         hold(false);
@@ -317,7 +329,7 @@
     var last = step === 2 && o.start === 'new';
     $('b-next').firstChild.nodeValue = last ? 'Create company ' : 'Next ';
     $('b-next').classList.toggle('bz-fin', last);
-    $('b-next').hidden = step === 2 && o.start === 'pre';
+    $('b-next').hidden = (step === 2 && o.start === 'pre') || step === 'tour';
   }
   function next() {
     if (step === 1) {
@@ -328,12 +340,13 @@
     if (ti < TOUR.length - 1) return tourAt(ti + 1);
     finish();
   }
+  // the card's Back: a step back, and out of the tour to Start; the bubble's Back goes a room back (tourBack)
   function back() {
     if (step === 1) { location.href = 'start.html'; return; }
     if (step === 2) return show(1);
-    if (ti > 0) return tourAt(ti - 1);
     show(2);
   }
+  function tourBack() { if (ti > 0) tourAt(ti - 1); else show(2); }
   // Saved as the modal saves it; prebuild says which start the office's boot sets up (data.js/sim.js read it)
   function finish() {
     CO.saveProfile({ name: o.name, mission: o.mission, skin: o.skin, accent: o.accent, public: o.public, prebuild: o.start === 'pre' ? 'starter' : '' });
@@ -343,7 +356,7 @@
   /* ---------------- wiring ---------------- */
   function pub() {
     return '<span class="sw"></span><div><b>' + (o.public ? 'Public' : 'Private') + '</b><span>' +
-      (o.public ? 'Anyone can look inside, read only.' : 'Others see its name, its station and its mission.') + '</span></div>';
+      (o.public ? 'Anyone can look inside, read only. The Vault stays private.' : 'Others see its name, station and mission. The Vault is always private.') + '</span></div>';
   }
   $('f-pub').innerHTML = pub();
   accents(); opts();
@@ -370,11 +383,17 @@
   show(1);
   station();
   setTimeout(function () { $('f-name').focus(); }, 50);
-  // the engine there: the station's picture at once, the office a moment after, behind it
+  // The engine there: the station drawn twice (its shaders made) and held, the office built behind it, then both
+  // shown at once. Before, the ship turned while the office's build held the page in turns of up to 1.4 s -- "jak
+  // kliknu start company tak se to seka nez se to nacte" (measured 2026-10-20: 13 frames over 50 ms in the first
+  // 5 s); now only the veil's ring turns (off the page's thread) until everything is made, and nothing stutters.
+  function reveal() { ready = true; if (stage) stage.go(step === 1); veil(false); }
   whenEngine(function (ok) {
-    if (!ok || !CO.E3) return;
-    stage = new StationStage($('b-prev')); station(); stage.go(step === 1);
-    setTimeout(function () { makeOffice(); }, 700);
+    if (!ok || !CO.E3) return reveal();
+    stage = new StationStage($('b-prev')); station(); stage.go(true);
+    (function wait() {
+      if ((stage.frames || 0) >= 2) { stage.go(false); makeOffice(reveal); } else requestAnimationFrame(wait);
+    })();
   });
   // for looking at it from the console or a test: the steps by name
   CO.builder = { show: show, tourAt: tourAt, next: next, back: back, o: o, get office() { return office; }, get step() { return step; } };
