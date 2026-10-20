@@ -200,7 +200,7 @@
     var cc = CO.counts();
     // Each card says three things: who, what it is doing now, and one number. The rest is one click away.
     var na = S.approvals.length;
-    var mrow = '<button class="dept mgrrow working" title="' + (RO ? 'Read its chat with the Manager' : 'Open your chat with the Manager') + '">' + deptIcon('hub') + '<div class="d1"><b>Command</b>' +
+    var mrow = '<button class="dept mgrrow working" title="' + (RO ? 'Read its chat with NEXUS' : 'Open your chat with NEXUS') + '">' + deptIcon('hub') + '<div class="d1"><b>Command</b>' +
       (na ? '<span class="et red">' + na + (RO ? ' wait for owner' : ' need' + (na === 1 ? 's' : '') + ' you') + '</span>' : '') + '</div>' +
       '<div class="dl"><span class="tx cyan">Chat · runs every department</span></div></button>';
     setHTML($('depts'), mrow + S.departments.map(function (d) {
@@ -305,7 +305,7 @@
         return '<div class="vrow"><b>' + esc(r.name) + '</b><span class="w">' + esc(r.why) + '</span><span class="g">' + (r.et10 ? '+' + CO.fmtEt(r.et10) : '0') + ' ET10</span><span class="u">' + (r.usdc ? '+' + CO.fmtUsd(r.usdc) + ' USDC' : '') + '</span></div>';
       }).join('');
     };
-    openModal('<div class="mh"><h3>Treasury</h3><span class="lockp"><i class="lk"></i>PRIVATE</span><span class="sp"></span><button class="btn" data-a="close">×</button></div>' +
+    openModal('<div class="mh"><h3>Vault</h3><span class="lockp"><i class="lk"></i>PRIVATE</span><span class="sp"></span><button class="btn" data-a="close">×</button></div>' +
       '<div class="vbig"><div><b class="g">' + CO.fmtEt(V.et10) + '</b><span>ET10</span></div><div><b class="u">' + CO.fmtUsd(V.usdc) + '</b><span>USDC</span></div></div>' +
       '<div class="sec">BY DEPARTMENT</div>' + list('dept') + '<div class="sec">BY APP <span>proposed: ' + R.et10PerVisitor + ' ET10 a visitor, ' + R.usdcPerUse + ' USDC a use (placeholder rates)</span></div>' + list('app'), true);
   }
@@ -315,7 +315,7 @@
     var S = CO.S, last = msgs[msgs.length - 1];
     var mh = msgs.map(function (m) {
       var md = tagged && m.dept_id ? CO.dept(m.dept_id) : null;
-      return '<div class="msg' + (m.role === 'owner' ? ' me' : '') + '"><em>' + (m.role === 'owner' ? 'You' : 'Manager') + ' · ' + hhmm(m.at) +
+      return '<div class="msg' + (m.role === 'owner' ? ' me' : '') + '"><em>' + (m.role === 'owner' ? 'You' : 'NEXUS') + ' · ' + hhmm(m.at) +
         (md ? '<span class="tagd">' + esc(md.name) + '</span>' : '') + '</em>' + esc(m.text) + '</div>';
     }).join('');
     if (S.notice && last && last.role === 'owner' && !last.answered) mh += '<div class="msgwait">' + esc(S.notice.text) + '</div>';
@@ -328,7 +328,7 @@
     var S = CO.S;
     if (ui.mgr) {
       setHTML($('mg-switch'), switcher('hub'));
-      fillChat($('msgs'), chatHTML(S.messages, true) || '<p class="hint">' + (RO ? 'No messages yet.' : 'No messages yet. Say hello to your Manager: ask how it goes, give it work, or tell it to add a department.') + '</p>');
+      fillChat($('msgs'), chatHTML(S.messages, true) || '<p class="hint">' + (RO ? 'No messages yet.' : 'No messages yet. Say hello to NEXUS: ask how it goes, give it work, or tell it to add a department.') + '</p>');
       $('typing').hidden = !S.typing;
       var c = CO.counts();
       $('mg-pill').textContent = S.company.status === 'paused' ? 'PAUSED' : c.working ? c.working + ' WORKING' : 'RUNNING';
@@ -369,7 +369,7 @@
     var was = ui.panel != null || ui.mgr;
     ui.panel = null; ui.mgr = false; ui.vault = true; $('drawer').hidden = true; $('mgr').hidden = true;
     document.body.classList.remove('focus'); document.body.classList.add('vopen');
-    $('back').hidden = false; $('where').hidden = false; $('where').textContent = 'Treasury';
+    $('back').hidden = false; $('where').hidden = false; $('where').textContent = 'Vault';
     office.select('vault');
     render();
     clearTimeout(ui.flyT);
@@ -951,9 +951,9 @@
     }
     if (key === 'lot') return '<b>Add a department</b><br>click to staff a new room';
     if (key === 'vault') {
-      if (RO) return '<b>Treasury</b> · private<br>only its owner sees inside';
+      if (RO) return '<b>Vault</b> · private<br>only its owner sees inside';
       var VT = CO.vaultTotals();
-      return '<b>Treasury</b> · <span class="g">' + CO.fmtEt(VT.et10) + ' ET10</span> · <span class="bl">' + CO.fmtUsd(VT.usdc) + ' USDC</span><br>click for where it came from';
+      return '<b>Vault</b> · <span class="g">' + CO.fmtEt(VT.et10) + ' ET10</span> · <span class="bl">' + CO.fmtUsd(VT.usdc) + ' USDC</span><br>click for where it came from';
     }
     var dd = CO.dept(+String(key).slice(1)); if (!dd) return '';
     var ln = CO.deptLine(dd), col = { cyan: 'c', blue: 'bl', red: 'r', dim: '' }[ln.tone];

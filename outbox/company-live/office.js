@@ -896,7 +896,7 @@
     }
     add(cx, cy, d);
     this.hubTop = P(x0 + 3.0, y0 + 2.8, 2.75);
-    add(x0 + 3.8, y0 + 5.85, agentAt(x0 + 3.8, y0 + 5.85, 'hub', 0, 'Manager', 'manager'));
+    // nobody stands here: the core is NEXUS
     add(x0 + 6.4, y0 + 0.5, plant(x0 + 6.4, y0 + 0.5));
     return out + sortJoin(items) + shellFront(x0, y0);
   };
@@ -1065,7 +1065,7 @@
       setCls(vr, 'vault', 'idle', priv ? ' closed' : '');
       var pg = vr.querySelector('.piles');
       if (pg._k !== vkey) { pg._k = vkey; pg.innerHTML = priv ? '' : vaultPiles(cells.vault[0], cells.vault[1], VT); }
-      over += glassSign(cells.vault, 'vault', 'Treasury', 'vault', have, 'idle');
+      over += glassSign(cells.vault, 'vault', 'Vault', 'vault', have, 'idle');
       if (!priv) {
         var vp = P(cells.vault[0] + 5.2, cells.vault[1] + 2.6, 1.05);   // over the plinth's back, clear of the name on the glass
         over += amountPill(vp[0], vp[1], 'vault', [[CO.fmtEt(VT.et10), '#38f5b8', 1], [' ET10 · ', L.dim], [CO.fmtUsd(VT.usdc), '#8fbaff', 1], [' USDC', L.dim]]);

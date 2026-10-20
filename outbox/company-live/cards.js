@@ -30,7 +30,7 @@
     trader: { col: C.green, line: 'Runs paper trades and proves what makes money' },
     developer: { col: C.cyan, line: 'Writes specs and Build it Better requests; checks builds' },
     lab_scientist: { col: C.green, line: 'Designs experiments, sets the success rule, judges results' },
-    auditor: { col: C.blue, line: "Reviews a department's work before it reaches the Manager" },
+    auditor: { col: C.blue, line: "Reviews a department's work before it reaches NEXUS" },
     designer: { col: C.cyan, line: 'Draws screens and reviews live pages against their brief' }
   };
 

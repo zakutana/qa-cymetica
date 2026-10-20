@@ -1977,7 +1977,11 @@ function preview(el, o) {
 // (shRefl): its plane stays in the office's scene, where shell() looks for it, and each scene here gets the mirror's
 // own light (layer 1). The operator, translated: "when creating a department I want the office to float in the middle,
 // in 3D, about this big".
-const PVS = { slab: 0.35, pad: 0.5, hull: 0.7, keel: 0.3, bg: 0x16232f };
+// the station's side, the office's and the dialog stand's alike: the lip's foot (it runs up to the deck's top), the
+// hull's face out from the deck's edge (0.08 behind the lip's, so the lip hides only its top 0.07) and its height
+// from the slab's foot down (hullTex draws to it)
+const EX_RIM = -0.3, EX_FACE = 0.15, EX_HULL = 0.47;
+const PVS = { slab: 0.35, pad: 0.5, hull: EX_HULL, keel: 0.24, bg: 0x16232f };
 const PVHOLD = { scene: null };
 function pvBuilder(camera, cx, cy) {
   geo(); omats();
@@ -2010,7 +2014,7 @@ function pvSpace(scene) {
 }
 // what it floats on: a soft mint glow under the hull, and (ring) a fine dashed ring of light round its foot, turning
 function pvBase(ring) {
-  const g = new THREE.Group(), y = -PVS.slab - 0.12 - PVS.hull - PVS.keel - 0.35;
+  const g = new THREE.Group(), y = -PVS.slab - PVS.hull - PVS.keel - 0.35;
   const glow = new THREE.Mesh(G.plane, new THREE.MeshBasicMaterial({ map: glowTex(), color: new THREE.Color(0x38f2b8), transparent: true, opacity: 0.2, blending: THREE.AdditiveBlending, depthWrite: false }));
   glow.rotation.x = -Math.PI / 2; glow.scale.set(13, 13, 1); glow.position.y = y - 0.3; g.add(glow);
   if (ring) {
@@ -2034,9 +2038,9 @@ function pvRoom(b, d) {
   const s = new THREE.Mesh(G.box, [OM.rimDark, OM.rimDark, OM.deck, OM.rimDark, OM.rimDark, OM.rimDark]);
   s.scale.set(RS + 2 * pad, T, RS + 2 * pad); s.position.copy(b.V(RS / 2, RS / 2, -T / 2)); s.receiveShadow = true; root.add(s);
   [[-pad - 0.22, -pad - 0.23, L, 0.24], [-pad - 0.22, RS + pad - 0.01, L, 0.24], [-pad - 0.23, -pad - 0.22, 0.24, L], [RS + pad - 0.01, -pad - 0.22, 0.24, L]]
-    .forEach(([x, y, w, dd]) => b.rb(root, x, y, -T - 0.14, w, dd, T + 0.16, OM.rim, 0.1, false));
-  b.box(root, -pad + 0.12, -pad + 0.12, -T - 0.12 - HD, RS + 2 * pad - 0.24, RS + 2 * pad - 0.24, HD, OM.hull, false).geometry = exHullBox(3);
-  b.box(root, -pad + 0.7, -pad + 0.7, -T - 0.12 - HD - K, RS + 2 * pad - 1.4, RS + 2 * pad - 1.4, K, OM.hullLow, false);
+    .forEach(([x, y, w, dd]) => b.rb(root, x, y, EX_RIM, w, dd, 0.02 - EX_RIM, OM.rim, 0.1, false));
+  b.box(root, -pad - EX_FACE, -pad - EX_FACE, -T - HD, RS + 2 * pad + 2 * EX_FACE, RS + 2 * pad + 2 * EX_FACE, HD, OM.hull, false).geometry = exHullBox(3);
+  b.box(root, -pad + 0.7, -pad + 0.7, -T - HD - K, RS + 2 * pad - 1.4, RS + 2 * pad - 1.4, K, OM.hullLow, false);
   bakeRoom(r);
   return { root, r };
 }
@@ -2573,63 +2577,60 @@ function shGlass(o) {
   m.opacityNode = T.float(o.opacity).mul(T.float(1).add(top).add(foot).add(sheen));
   return m;
 }
-// The hull's side as in his picture: smooth deep-navy plating, all of it flush -- nothing boxy stands out ("ty
-// bocni kazety jsou jeste taky pekny hnus, to tak v originalu vubec taky nebylo", the operator of round 3's silver
-// boxes). Along it: long light-grey hatches in a thin pale frame, split into leaves, a dark slit in one with a strip
-// of cyan light and a green status light; long recessed navy panels, each a shade darker than the plating with a
-// thin pale frame, a shadow under its top edge and a highlight on its bottom one; a stack of small vents; a few
-// small green and cyan lights; a shadow under the deck's lip at the top; the bottom edge rounding away, lit along
-// its turn. One side of a room's hull is 8 units, the texture's width; it repeats round the station, so each side
-// starts it at its own offset (exHullBox) and nothing in it lines up at the wrap.
+// The hull's side as in his picture, read off it at its own zoom: under the deck's dark slab a light-grey rail runs
+// flush along the side, a few dark windows let into it, each with one small green or cyan light; under the rail the
+// navy plating, a few long panels a shade darker in it, its bottom edge rounding away, lit along its turn. Nothing
+// boxy and no bars of light: the round before had big pale hatches with cyan bars, and the hull was twice his height
+// ("bocni panel mi prijde jeste moc vysoky a hnusny, v orginialu byl mnohem lepsi", 2026-10-20). One side of a
+// room's hull is 8 units, the texture's width, and EX_HULL high; it repeats round the station, so each side starts
+// it at its own offset (exHullBox) and nothing in it lines up at the wrap.
 function hullTex() {
   if (TX.hull) return TX.hull;
-  const W = 1024, H = 212;
-  // a recessed navy panel: darker inside, a thin pale frame, shadowed at its top and lit at its bottom
-  const recess = (g, x, y, w, h, glow, slats) => {
-    if (glow) return;
-    g.fillStyle = '#121a30'; g.fillRect(x, y, w, h);
-    g.fillStyle = '#0a101e'; g.fillRect(x, y, w, 4);
-    g.fillStyle = '#3a4a6c'; g.fillRect(x, y + h - 2, w, 2);
-    g.strokeStyle = 'rgba(150,170,205,.38)'; g.lineWidth = 1.5; g.strokeRect(x - 1.5, y - 1.5, w + 3, h + 3);
-    if (slats) { g.fillStyle = '#0c1222'; for (let k = x + 12; k < x + w * slats; k += 11) g.fillRect(k, y + 14, 5, h - 28); }
-  };
-  // a long light-grey hatch flush with the hull, in a thin paler frame, split into leaves
-  const hatch = (g, x, y, w, h, glow, leaves, slit, led) => {
-    if (!glow) {
-      g.fillStyle = '#b0bac6'; g.fillRect(x - 2, y - 2, w + 4, h + 4);
-      const gr = g.createLinearGradient(0, y, 0, y + h); gr.addColorStop(0, '#828c99'); gr.addColorStop(1, '#646e7b');
-      g.fillStyle = gr; g.fillRect(x, y, w, h);
-      g.fillStyle = '#56606d'; for (let i = 1; i < leaves; i++) g.fillRect(x + (w * i) / leaves - 1, y, 2, h);
-      g.fillStyle = '#9aa4b0'; for (let i = 1; i < leaves; i++) g.fillRect(x + (w * i) / leaves + 1, y, 1, h);
-      g.fillStyle = '#5a6470'; [[x + 8, y + 8], [x + w - 14, y + 8], [x + 8, y + h - 14], [x + w - 14, y + h - 14]].forEach(([a, b]) => g.fillRect(a, b, 5, 5));
-    }
-    if (slit) {
-      const [sx, sw] = slit;
-      if (!glow) { g.fillStyle = '#0d1422'; g.fillRect(x + sx, y + 18, sw, 26); }
-      g.fillStyle = glow ? 'rgba(110,210,255,.85)' : '#2a4a6a'; g.fillRect(x + sx + 8, y + 27, sw - 40, 7);
-      if (led) { g.fillStyle = glow ? led : '#2a5a4a'; g.fillRect(x + sx + sw - 22, y + 26, 12, 9); }
-    }
-  };
+  const W = 1536, H = Math.round(W * EX_HULL / 8), r0 = Math.round(H * 0.15), r1 = Math.round(H * 0.6);
+  // the rail's seams, and the windows let into it: [x, width, the light's colour, the light at the window's left]
+  const seams = [0, 236, 512, 748, 1010, 1288];
+  const wins = [[300, 150, '#38f5b8', false], [820, 118, '#9fe8ff', true], [1352, 96, '#38f5b8', false]];
+  // the navy's long panels: [x, width]
+  const pans = [[40, 380], [560, 300], [960, 420]];
   const draw = (glow) => (g) => {
-    g.fillStyle = glow ? '#000000' : '#18223a'; g.fillRect(0, 0, W, H);
+    g.fillStyle = glow ? '#000000' : '#1a2644'; g.fillRect(0, 0, W, H);
+    // the rail glows a little of its own, so it reads light grey on the sides the sun does not reach, as his do
+    if (glow) { g.fillStyle = '#343a43'; g.fillRect(0, r0 + 2, W, r1 - r0 - 4); }
     if (!glow) {
-      // the shadow under the deck's lip
-      const top = g.createLinearGradient(0, 0, 0, 22); top.addColorStop(0, '#070b14'); top.addColorStop(1, 'rgba(24,34,58,0)'); g.fillStyle = top; g.fillRect(0, 0, W, 22);
+      // the rail: light grey, paler along its top where it catches the sky, darker at its foot
+      const rl = g.createLinearGradient(0, r0, 0, r1); rl.addColorStop(0, '#9aa4b1'); rl.addColorStop(0.18, '#838d9a'); rl.addColorStop(1, '#646e7c');
+      g.fillStyle = rl; g.fillRect(0, r0, W, r1 - r0);
+      g.fillStyle = '#c3ccd6'; g.fillRect(0, r0, W, 1.5);
+      g.fillStyle = '#323b4a'; g.fillRect(0, r1 - 2, W, 2);
+      // its seams: a dark joint with a pale edge beside it
+      seams.forEach((x) => { g.fillStyle = '#4a5361'; g.fillRect(x, r0 + 2, 2, r1 - r0 - 4); g.fillStyle = '#a8b2be'; g.fillRect(x + 2, r0 + 2, 1, r1 - r0 - 4); });
+      // the shadow the deck's lip throws on its top
+      const top = g.createLinearGradient(0, 0, 0, r0 + 4); top.addColorStop(0, '#070b14'); top.addColorStop(1, 'rgba(7,11,20,0)'); g.fillStyle = top; g.fillRect(0, 0, W, r0 + 4);
+      // the navy's panels, a shade darker, a thin pale frame, shadowed under their top edge
+      const p0 = r1 + Math.round(H * 0.1), ph = Math.round(H * 0.2);
+      pans.forEach(([x, w]) => {
+        g.fillStyle = '#131c32'; g.fillRect(x, p0, w, ph);
+        g.fillStyle = '#0b1222'; g.fillRect(x, p0, w, 2);
+        g.strokeStyle = 'rgba(140,165,205,.22)'; g.lineWidth = 1; g.strokeRect(x - 0.5, p0 - 0.5, w + 1, ph + 1);
+      });
       // the bottom edge rounding away: lit along its turn, dark under it
-      const bot = g.createLinearGradient(0, H - 30, 0, H); bot.addColorStop(0, '#18223a'); bot.addColorStop(0.45, '#2a3a5c'); bot.addColorStop(0.7, '#1c2842'); bot.addColorStop(1, '#0c1220');
-      g.fillStyle = bot; g.fillRect(0, H - 30, W, 30);
-      // seams between the plates
-      [0, 352, 600, 652, 960].forEach((x) => { g.fillStyle = '#0e1528'; g.fillRect(x, 22, 2, H - 52); g.fillStyle = '#2a3858'; g.fillRect(x + 2, 22, 1, H - 52); });
+      const bot = g.createLinearGradient(0, H - 16, 0, H); bot.addColorStop(0, '#1a2644'); bot.addColorStop(0.45, '#2e4068'); bot.addColorStop(0.75, '#1c2842'); bot.addColorStop(1, '#0c1220');
+      g.fillStyle = bot; g.fillRect(0, H - 16, W, 16);
     }
-    hatch(g, 30, 46, 300, 120, glow, 3, [24, 170], '#38f5b8');
-    recess(g, 372, 52, 210, 92, glow, 0.45);
-    // a stack of small vents in a narrow recess
-    recess(g, 610, 46, 30, 120, glow, 0);
-    if (!glow) { g.fillStyle = '#0a1020'; for (let k = 0; k < 5; k++) g.fillRect(615, 56 + k * 21, 20, 12); }
-    hatch(g, 676, 58, 196, 92, glow, 2, [110, 76], '#7cf2c4');
-    recess(g, 900, 52, 104, 92, glow, 0.9);
-    // a few small status lights
-    [[392, 152, '#7cf2c4'], [560, 152, '#9fe8ff'], [880, 40, '#38f5b8']].forEach(([x, y, c]) => { g.fillStyle = glow ? c : '#2c4c52'; g.fillRect(x, y, 9, 6); });
+    // the windows in the rail: dark glass in a recess, its top edge in shadow, one small light in it
+    const wy = r0 + Math.round((r1 - r0) * 0.3), wh = Math.round((r1 - r0) * 0.42);
+    wins.forEach(([x, w, c, left]) => {
+      if (!glow) {
+        g.fillStyle = '#56606d'; g.fillRect(x - 2, wy - 2, w + 4, wh + 4);
+        const gl = g.createLinearGradient(0, wy, 0, wy + wh); gl.addColorStop(0, '#0a101c'); gl.addColorStop(1, '#1a2536');
+        g.fillStyle = gl; g.fillRect(x, wy, w, wh);
+        g.fillStyle = 'rgba(160,200,230,.10)'; g.fillRect(x + 4, wy + 3, w * 0.45, 2);
+      }
+      const lx = left ? x + 8 : x + w - 26, ly = wy + wh / 2 - 3;
+      g.fillStyle = glow ? c : '#2c5450'; g.fillRect(lx, ly, 18, 6);
+    });
+    // two small status lights on the navy
+    [[470, r1 + 8, '#7cf2c4'], [1180, r1 + 8, '#9fe8ff']].forEach(([x, y, c]) => { g.fillStyle = glow ? c : '#2c4c52'; g.fillRect(x, y, 8, 4); });
   };
   TX.hull = ctex(W, H, draw(false)); TX.hullGlow = ctex(W, H, draw(true));
   TX.hull.wrapS = TX.hullGlow.wrapS = THREE.RepeatWrapping;
@@ -3673,7 +3674,7 @@ class Office3D {
     const have = new Set(Object.values(this.cells || {}).map((c) => c[0] + ',' + c[1]));
     Object.values(this.rooms).forEach((r) => {
       if (r.key === 'lot') return;
-      const name = r.dept ? r.dept.name : { hub: 'Command', audit: 'Operations', vault: 'Treasury' }[r.key];
+      const name = r.dept ? r.dept.name : { hub: 'Command', audit: 'Operations', vault: 'Vault' }[r.key];
       if (!name) return;
       // the front pane the home view sees clear: the front-left one, unless a room stands in front of it and none in
       // front of the front-right one
@@ -3737,19 +3738,21 @@ class Office3D {
   // keel, the rock it is built on, engines, solar wings, asteroids drifting past. Static parts merged per
   // material.
   exterior(all, outer, have, pad, T) {
-    const W = this.world, RS = CO.iso.RS, ext = new THREE.Group(), HD = 1.65, R = rng(17), kc = (x, y) => x + ',' + y; W.add(ext);
+    // the hull as high as his: deck slab, rail and navy together a seventh of a room's side, where ours was a quarter
+    // (measured on both pictures, 2026-10-20); one shallow keel step under it, where there were two deep ones
+    const W = this.world, RS = CO.iso.RS, ext = new THREE.Group(), HD = EX_HULL, KD = 0.24, R = rng(17), kc = (x, y) => x + ',' + y; W.add(ext);
     all.forEach((c) => {
       const Lf = !have[kc(c[0] - 8, c[1])], Rt = !have[kc(c[0] + 8, c[1])], Bk = !have[kc(c[0], c[1] - 8)], Fr = !have[kc(c[0], c[1] + 8)];
       const x0 = c[0] - pad, y0 = c[1] - pad, x1 = c[0] + RS + pad, y1 = c[1] + RS + pad;
       const tier = (ins, z0, h, mat) => this.box(ext, x0 + (Lf ? ins : 0), y0 + (Bk ? ins : 0), z0, x1 - x0 - (Lf ? ins : 0) - (Rt ? ins : 0), y1 - y0 - (Bk ? ins : 0) - (Fr ? ins : 0), h, mat, false);
-      tier(0.12, -T - 0.12 - HD, HD, OM.hull).geometry = exHullBox((c[0] * 3 + c[1] * 5) / 8 % 6);
-      tier(0.7, -T - 0.12 - HD - 0.48, 0.48, OM.hullLow);
-      tier(1.4, -T - 0.12 - HD - 0.82, 0.34, OM.hullLow);
+      tier(-EX_FACE, -T - HD, HD, OM.hull).geometry = exHullBox((c[0] * 3 + c[1] * 5) / 8 % 6);
+      tier(0.6, -T - HD - KD, KD, OM.hullLow);
     });
+    const hullMid = (EX_RIM - 0.07 - T - HD) / 2, hullFoot = -T - HD;
     // the rim: a lighter lip round the outside of the deck, with small cyan beacon strips along the bevel
     outer.forEach((e, idx) => {
       const len = Math.hypot(e.bx - e.ax, e.by - e.ay) + 0.44, mx = (e.ax + e.bx) / 2 + e.nx * 0.11, my = (e.ay + e.by) / 2 + e.ny * 0.11, along = e.ax === e.bx;
-      this.rb(ext, mx - (along ? 0.12 : len / 2), my - (along ? len / 2 : 0.12), -T - 0.14, along ? 0.24 : len, along ? len : 0.24, T + 0.16, OM.rim, 0.1, false);
+      this.rb(ext, mx - (along ? 0.12 : len / 2), my - (along ? len / 2 : 0.12), EX_RIM, along ? 0.24 : len, along ? len : 0.24, 0.02 - EX_RIM, OM.rim, 0.1, false);
       if (idx % 2 === 0) {
         const bx = (e.ax + e.bx) / 2 + e.nx * 0.24, by = (e.ay + e.by) / 2 + e.ny * 0.24;
         this.box(ext, bx - (along ? 0.03 : 0.42), by - (along ? 0.42 : 0.03), -T * 0.55, along ? 0.05 : 0.84, along ? 0.84 : 0.05, 0.05, OM.cyan.rim, false);
@@ -3757,7 +3760,7 @@ class Office3D {
     });
     let mnx = 1e9, mxx = -1e9, mny = 1e9, mxy = -1e9;
     all.forEach((c) => { mnx = Math.min(mnx, c[0]); mxx = Math.max(mxx, c[0] + RS); mny = Math.min(mny, c[1]); mxy = Math.max(mxy, c[1] + RS); });
-    const cxp = (mnx + mxx) / 2, cyp = (mny + mxy) / 2, span = Math.max(mxx - mnx, mxy - mny), keel = -T - HD - 0.95;
+    const cxp = (mnx + mxx) / 2, cyp = (mny + mxy) / 2, span = Math.max(mxx - mnx, mxy - mny), keel = hullFoot - KD - 0.01;
     // The rock: one craggy mass under the whole station, biased to the front-left as his is, with lumps of it
     // breaking out under the audit room and the lot where his shows a shoulder past the hull, and nothing under
     // the right side, where his picture shows only space. Turned about the vertical only, so every flat top stays
@@ -3787,8 +3790,8 @@ class Office3D {
     exMats();
     this.flames = []; const tag = [];
     const edge = (c0, c1, nx, ny) => outer.find((o) => o.c0 === c0 && o.c1 === c1 && o.nx === nx && o.ny === ny);
-    // a point on an edge's hull face (the hull sits 0.12 in from the deck's edge): f along it, out from it, at z
-    const onFace = (e, f, out = 0) => { const s = e.nx ? Math.min(e.ay, e.by) : Math.min(e.ax, e.bx), l = Math.abs(e.bx - e.ax) + Math.abs(e.by - e.ay), t = s + f * l, k = -0.12 + out;
+    // a point on an edge's hull face (EX_FACE out from the deck's edge): f along it, out from it, at z
+    const onFace = (e, f, out = 0) => { const s = e.nx ? Math.min(e.ay, e.by) : Math.min(e.ax, e.bx), l = Math.abs(e.bx - e.ax) + Math.abs(e.by - e.ay), t = s + f * l, k = EX_FACE + out;
       return e.nx ? { x: e.ax + e.nx * k, y: t } : { x: t, y: e.ay + e.ny * k }; };
     // a part's own frame on a face: +z straight out of it, +y up
     const mount = (e, f, z, out = 0) => { const p = onFace(e, f, out), g = new THREE.Group(); g.position.copy(this.V(p.x, p.y, z)); g.rotation.y = Math.atan2(e.nx, e.ny); ext.add(g); return g; };
@@ -3797,30 +3800,30 @@ class Office3D {
     if (ePort) {
       // the nacelle: a long rounded grey body along the room's outer wall at deck height, a dark spine along its
       // top, seams across it, vents on its side; an engine on its outer side near each end
-      const nac = mount(ePort, 0.5, 0.08, 0.6);
+      const nac = mount(ePort, 0.5, 0.08, 0.6 - 0.12 - EX_FACE);
       exPart(nac, rboxGeo(7.0, 1.0, 1.2, 0.36), OM.exGunL, 0, 0, 0, 1, 1, 1);
       exPart(nac, rboxGeo(6.4, 0.12, 0.34, 0.05), OM.exGunD, 0, 0.52, -0.05, 1, 1, 1);
       [-2.6, -0.9, 0.9, 2.6].forEach((x) => exPart(nac, G.box, OM.exGunD, x, 0, 0, 0.04, 1.02, 1.22));
       [-1.75, 0, 1.75].forEach((x) => { exPart(nac, G.box, OM.exGunD, x, -0.12, 0.6, 0.6, 0.3, 0.04); for (let k = 0; k < 4; k++) exPart(nac, G.box, OM.exGun, x - 0.22 + k * 0.146, -0.12, 0.615, 0.05, 0.26, 0.03); });
       [0.18, 0.82].forEach((f) => {
-        const g = mount(ePort, f, 0.18, 1.2); flame(exBackEngine(g), 0.3);
+        const g = mount(ePort, f, 0.18, 1.2 - 0.12 - EX_FACE); flame(exBackEngine(g), 0.3);
         tag.push({ kind: 'engine', name: 'back@' + f, obj: g });
       });
     }
     const eLot = edge(8, 16, 0, 1);
     if (eLot) {
-      const g = mount(eLot, 0.44, -1.45); g.scale.setScalar(0.95); exBigEngine(g);
+      const g = mount(eLot, 0.44, hullFoot - 0.12); g.scale.setScalar(0.85); exBigEngine(g);
       tag.push({ kind: 'engine', name: 'big', obj: g });
     }
     [[edge(0, 16, 0, 1), 0.36], [edge(16, 16, 1, 0), 0.4], [edge(16, 8, 1, 0), 0.62]].forEach(([e, f]) => {
       if (!e) return;
-      const g = mount(e, f, -1.25); flame(exThruster(g), 0.1);
+      const g = mount(e, f, hullMid); g.scale.setScalar(0.85); flame(exThruster(g), 0.1);
       tag.push({ kind: 'engine', name: 'thr' + e.c0 + ',' + e.c1, obj: g });
     });
     // a row of n panels w by h hung from a rail at the hull's foot, from f0 to f1 along the edge, each swung out
     // from hanging straight down by tilt, its cells to the sky and the camera; on short silver arms
     const hangRow = (e, n, f0, f1, w, h, tilt) => {
-      const rail = mount(e, (f0 + f1) / 2, -2.04, 0.16), L = (f1 - f0) * 8;
+      const rail = mount(e, (f0 + f1) / 2, hullFoot + 0.08, 0.16), L = (f1 - f0) * 8;
       exPart(rail, G.exRod, OM.exGun, 0, 0, 0, 0.05, 0.05, L + 0.3, 0, Math.PI / 2, 0);
       for (let i = 0; i <= n; i++) exPart(rail, G.box, OM.exFrame, -L / 2 + i * L / n, 0.02, -0.08, 0.08, 0.1, 0.2);
       for (let i = 0; i < n; i++) {
@@ -3838,7 +3841,7 @@ class Office3D {
     const eLab = edge(8, 0, 0, -1);
     if (eLab) {
       [0.24, 0.76].forEach((f, j) => {
-        const base = mount(eLab, f, -0.05, 0.62), lean = 0.6;
+        const base = mount(eLab, f, -0.05, 0.62 - 0.12 - EX_FACE), lean = 0.6;
         exPart(base, G.box, OM.exGun, 0, -0.05, -0.2, 3.3, 0.12, 0.5);
         [-0.83, 0.83].forEach((x) => {
           const p = new THREE.Group(); p.position.set(x, 0.05, 0); p.rotation.x = lean - Math.PI / 2; base.add(p);
@@ -3854,9 +3857,9 @@ class Office3D {
     // the foot of every outer face, as long as that face's hull (shortened where the hull turns a corner).
     outer.forEach((e) => {
       const l = Math.abs(e.bx - e.ax) + Math.abs(e.by - e.ay);
-      const a = (e.nx ? !have[kc(e.c0, e.c1 - 8)] : !have[kc(e.c0 - 8, e.c1)]) ? 0.12 : 0;
-      const b = (e.nx ? !have[kc(e.c0, e.c1 + 8)] : !have[kc(e.c0 + 8, e.c1)]) ? 0.12 : 0, L = l - a - b;
-      exPart(mount(e, (a + L / 2) / l, -T - 0.12 - HD + 0.04, 0), G.exRod, OM.exBead, 0, 0, 0, 0.1, 0.1, L, 0, Math.PI / 2, 0);
+      const a = (e.nx ? !have[kc(e.c0, e.c1 - 8)] : !have[kc(e.c0 - 8, e.c1)]) ? -EX_FACE : 0;
+      const b = (e.nx ? !have[kc(e.c0, e.c1 + 8)] : !have[kc(e.c0 + 8, e.c1)]) ? -EX_FACE : 0, L = l - a - b;
+      exPart(mount(e, (a + L / 2) / l, hullFoot + 0.04, 0), G.exRod, OM.exBead, 0, 0, 0, 0.1, 0.1, L, 0, Math.PI / 2, 0);
     });
 
     // where each engine and panel is, read before the merge: what a test checks for one drawn over another
@@ -6926,7 +6929,7 @@ class Office3D {
     });
     r.core = core; r.coreAt = this.V(x0 + 3.0, y0 + 2.8, 2.75);   // his "need you" badge: over the rings, a little behind the core
     const light = new THREE.PointLight(0x00e5ff, 4.2, 11, 1.6); light.position.set(c.x, 1.8, c.z); g.add(light);
-    this.agent(r, x0 + 3.8, y0 + 5.85, 0, 'Manager', { stand: true, role: 'manager' });
+    // nobody stands here: the core is NEXUS ("v command roomu vyhod astornauta protoze tma je uz to jadro a to je NEXUS")
     this.plant(r, x0 + 6.4, y0 + 0.5);
     this.plate(r, 'hubp'); r.plateAt = this.V(x0 + 6.1, y0 + 6.75, 1.3);
     r.need = document.createElement('div'); r.need.className = 'p3need'; r.need.addEventListener('click', () => CO.emit('office:click', 'hub')); this.layer.appendChild(r.need);
@@ -6954,7 +6957,7 @@ class Office3D {
   // stands open into the room until its outer face (bolts, wheel, dial) looks at the home view. Safe-deposit lockers
   // are built into the other armoured wall; two floodlights on the door wall light the door and the money. The money
   // itself is piles(): pallets that fill with what the company has earned, and a cart in the walk wheeling in the
-  // latest. In front: a counting table, two safes; by the door a shelf of strongboxes. Every top stays at 1.38 or
+  // latest. In front: two safes; by the door a shelf of strongboxes. Every top stays at 1.38 or
   // under, clear of the neon over the walls. A visitor finds the door shut.
   vaultRoom(r) {
     const g = r.g, x0 = r.x0, y0 = r.y0;
@@ -7080,7 +7083,6 @@ class Office3D {
     const key = new THREE.PointLight(0xf2f8ff, 5, 5.2, 1.1); key.position.copy(this.V(x0 + 3.7, y0 + 2.2, 1.7)); g.add(key);
     this.vtLockers(r);
     this.vtShelf(r, 4.75, 6.75);
-    this.vtDesk(r, x0 + 0.6, y0 + 5.3);
     this.vtCart(r);
     this.vtSafe(r, 5.38, 5.72, 0.72, 0.6, 0.82);
     this.vtSafe(r, 6.2, 5.92, 0.5, 0.46, 0.56);
@@ -7222,13 +7224,6 @@ class Office3D {
       for (let i = 0; i < 12; i++) { const x = 14 + (i % 3) * 36, y = 64 + Math.floor(i / 3) * 28; g.fillStyle = '#3d4b5a'; g.fillRect(x, y, 28, 21); g.fillStyle = '#5a6a7a'; g.fillRect(x, y, 28, 3); g.fillStyle = '#c4ced8'; g.font = '600 12px JetBrains Mono, monospace'; g.fillText('123456789*0#'[i], x + 14, y + 12); }
     });
     TX.vtKeyO = pad('OPEN', '#7cf2c4', '#06231c'); TX.vtKeyS = pad('LOCKED', '#24e8ff', '#062030');
-    // the counting table's screen: what came in, in the two colours, by day
-    TX.vtLedger = ctex(320, 180, (g, W, H) => {
-      g.fillStyle = '#06101a'; g.fillRect(0, 0, W, H); g.strokeStyle = '#38f5b8'; g.lineWidth = 5; g.strokeRect(3, 3, W - 6, H - 6);
-      g.fillStyle = '#38f5b8'; g.font = '700 22px JetBrains Mono, monospace'; g.textBaseline = 'top'; g.fillText('VAULT', 16, 12);
-      g.fillStyle = '#142436'; for (let y = 60; y < H - 14; y += 24) g.fillRect(16, y, W - 32, 2);
-      for (let i = 0; i < 12; i++) { const h1 = 20 + R() * 70, h2 = 8 + R() * 30, x = 22 + i * 24; g.fillStyle = '#38f5b8'; g.fillRect(x, H - 18 - h1, 9, h1); g.fillStyle = '#3b82f6'; g.fillRect(x + 10, H - 18 - h2, 9, h2); }
-    });
     // safe-deposit lockers: rows of steel doors, small at the top, larger below, each with a number plate, a keyhole
     // and a light (the glow map carries only the lights)
     const rowsB = [[52, 30], [52, 30], [52, 30], [74, 20], [100, 14]], W2 = 2400, H2 = 372, lights = [];
@@ -7265,7 +7260,6 @@ class Office3D {
     OM.vtFlood = new THREE.MeshBasicMaterial({ color: new THREE.Color(0xf4f9ff).multiplyScalar(3) });
     OM.vtKeyO = new THREE.MeshBasicMaterial({ map: TX.vtKeyO, toneMapped: false });
     OM.vtKeyS = new THREE.MeshBasicMaterial({ map: TX.vtKeyS, toneMapped: false });
-    OM.vtLedger = new THREE.MeshBasicMaterial({ map: TX.vtLedger, toneMapped: false });
     OM.vtBoxes = std({ map: TX.vtBoxes, emissiveMap: TX.vtBoxesGlow, emissive: 0xffffff, emissiveIntensity: 1.6, metalness: 0.6, roughness: 0.38 });
     // the money: Cymetica's green and USDC's blue, as satin metal that holds its colour under the white light (a
     // glossier finish mirrored the room's lamp off the coins' flat tops into a white blot once the floor filled)
@@ -7374,27 +7368,6 @@ class Office3D {
         const l = new THREE.Mesh(G.box, OM.green.glow); l.scale.set(0.025, 0.015, 0.01); l.position.copy(this.V(bx + bw - 0.05, y0 + v0 + 0.355, h + bh - 0.04)); g.add(l);
       }
     });
-  }
-  // the counting table at (x, y): a desk, a counting machine with its green readout, a screen of what came in, a
-  // lamp on an arm with its light on the desk
-  vtDesk(r, x, y) {
-    const g = r.g;
-    this.rb(g, x + 0.05, y + 0.04, 0.08, 0.1, 0.72, 0.42, OM.desk, 0.03);
-    this.rb(g, x + 1.55, y + 0.04, 0.08, 0.1, 0.72, 0.42, OM.desk, 0.03);
-    this.box(g, x + 0.15, y + 0.06, 0.12, 1.4, 0.04, 0.34, OM.desk);
-    this.rb(g, x, y, 0.5, 1.7, 0.8, 0.05, OM.deskTop, 0.02);
-    this.cyl(g, x + 1.0, y + 0.2, 0.55, 0.11, 0.02, OM.frame); this.box(g, x + 0.97, y + 0.12, 0.57, 0.06, 0.05, 0.12, OM.frame, false);
-    this.rb(g, x + 0.65, y + 0.1, 0.66, 0.7, 0.05, 0.42, OM.dark, 0.02);
-    const sc = new THREE.Mesh(G.plane, OM.vtLedger); sc.scale.set(0.64, 0.36, 1); sc.position.copy(this.V(x + 1.0, y + 0.152, 0.87)); g.add(sc);
-    this.rb(g, x + 0.1, y + 0.3, 0.55, 0.42, 0.36, 0.18, OM.white, 0.04);
-    this.box(g, x + 0.17, y + 0.38, 0.72, 0.28, 0.1, 0.02, OM.dark, false);
-    const rd = new THREE.Mesh(G.plane, OM.green.soft); rd.scale.set(0.22, 0.05, 1); rd.position.copy(this.V(x + 0.31, y + 0.662, 0.64)); g.add(rd);
-    this.cyl(g, x + 1.52, y + 0.62, 0.55, 0.07, 0.025, OM.dark);
-    this.box(g, x + 1.505, y + 0.605, 0.57, 0.03, 0.03, 0.42, OM.frame, false);
-    this.box(g, x + 1.3, y + 0.605, 0.97, 0.24, 0.03, 0.03, OM.frame, false);
-    this.cyl(g, x + 1.3, y + 0.62, 0.9, 0.065, 0.07, OM.dark);
-    const lf = new THREE.Mesh(G.circle, OM.vtFlood); lf.scale.setScalar(0.05); lf.rotation.x = Math.PI / 2; lf.position.copy(this.V(x + 1.3, y + 0.62, 0.895)); g.add(lf);
-    const halo = glowSprite(0xf4f9ff, 0.22, 0.6); halo.position.copy(this.V(x + 1.3, y + 0.62, 0.86)); g.add(halo);
   }
   // the cart in the walk: a deck and a shelf under it on four legs and casters, a handle at its front end; what it
   // carries is piles()'
@@ -7531,7 +7504,7 @@ class Office3D {
       if (vr._k !== vk) { vr._k = vk; this.piles(vr, VT, priv); }
       this.tint(vr, 'idle');
       // what it holds, lit on its plate ("v cedulce Vaultu by melo svitit kolik tam je", 2026-10-19): ET10 green, USDC blue
-      const html = '<div class="p3h"><i style="background:#38f2b8"></i><b>TREASURY</b></div>' + (priv ? '<div class="p3l" style="color:#a9b8cc">Private</div>'
+      const html = '<div class="p3h"><i style="background:#38f2b8"></i><b>VAULT</b></div>' + (priv ? '<div class="p3l" style="color:#a9b8cc">Private</div>'
         : '<div class="p3l p3v"><b style="color:#38f5b8">' + CO.fmtEt(VT.et10) + '</b> ET10 <span>·</span> <b style="color:#8fbaff">' + CO.fmtUsd(VT.usdc) + '</b> USDC</div>');
       if (vr.plate && vr.plate._h !== html) { vr.plate._h = html; vr.plate.innerHTML = html; }
       if (vr.plate) vr.plate.style.setProperty('--c', '#38f2b8');

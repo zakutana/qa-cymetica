@@ -282,7 +282,7 @@
           '\n\nWhat the process does\n' + to.name + ' ' + r.does + '.\n\nIf you approve\n' + to.name + ' starts it on the next pass.\n\nIf you reject\nNothing starts; the event is dropped.';
         S.approvals.unshift(ap);
         r.fired++; hit++;
-        feed('ask', 'Manager', 'process ' + r.id + ' waits for ' + ap.reviewer + ' before ' + to.name + ' starts');
+        feed('ask', 'NEXUS', 'process ' + r.id + ' waits for ' + ap.reviewer + ' before ' + to.name + ' starts');
         say('When ' + r.when + ': "' + subject + '". Process ' + r.id + ' would hand it to ' + to.name + ', but it asks ' + (ap.reviewer === 'you' ? 'you' : ap.reviewer) + ' first: approve to start.', to.id);
         CO.emit('approval:new', ap);
         return;
@@ -457,14 +457,14 @@
       d.pool_i++;
       var t = newTask(d, p.title, { kind: p.kind || null, turns_needed: p.turns || 1, outcome_text: p.outcome, why: p.why, expert: p.expert });
       S.plan.push(t.id);
-      feed('info', 'Manager', 'queued "' + t.title + '" for ' + d.name);
+      feed('info', 'NEXUS', 'queued "' + t.title + '" for ' + d.name);
     }
   }
   function newTask(d, title, o) {
     var S = CO.S;
     var t = { id: S.next_id++, dept_id: d.id, title: title, status: 'queued', attempt: 1, max_attempts: 3, turns: 0,
       turns_needed: o.turns_needed || 1, units: 0, created_at: S.clock, started_at: null, finished_at: null,
-      outcome: '', last_error: '', next_attempt_at: null, kind: o.kind || null, why: o.why || 'planned by the Manager',
+      outcome: '', last_error: '', next_attempt_at: null, kind: o.kind || null, why: o.why || 'planned by NEXUS',
       expert: o.expert && d.experts.indexOf(o.expert) >= 0 ? o.expert : d.experts[0],
       brief: title + '. Start from the charter; report what you found in one line, with the evidence.' };
     t.outcome_text = o.outcome_text || 'Done: findings in the department memory';
@@ -505,7 +505,7 @@
     S.departments.forEach(function (d) {
       if (!d.schedule || !d.next_run || S.clock < d.next_run) return;
       d.next_run = nextRun(d, S.clock + 1000);
-      if (queueRun(d, 'scheduled · ' + d.schedule.label)) { feed('info', 'Manager', 'queued the scheduled run of ' + d.name); changed(); }
+      if (queueRun(d, 'scheduled · ' + d.schedule.label)) { feed('info', 'NEXUS', 'queued the scheduled run of ' + d.name); changed(); }
     });
     if (S.company.status === 'active' && S.clock >= S.next_pass_at) pass();
     CO.emit('tick');
@@ -562,7 +562,7 @@
         if (t) { t.status = 'done'; t.outcome = verb.charAt(0).toUpperCase() + verb.slice(1) + ' after your approval'; t.finished_at = S.clock; }
         feed('good', 'You', 'approved: ' + a.summary);
         later(2600, function () {
-          feed('good', d ? d.name : 'Manager', verb + ' after your approval: ' + a.summary.replace(/^Seat: /, ''));
+          feed('good', d ? d.name : 'NEXUS', verb + ' after your approval: ' + a.summary.replace(/^Seat: /, ''));
           CO.emit('submitted', { approval: a, dept: d });
         });
         if (a.kind === 'BB request') {
@@ -606,12 +606,12 @@
       var S = CO.S;
       var m = { id: S.next_msg++, role: 'owner', text: text, at: S.clock, answered: false, dept_id: deptId || null };
       S.messages.push(m);
-      feed('info', 'You', 'wrote to the Manager');
+      feed('info', 'You', 'wrote to NEXUS');
       var g = CO.gate();
       if (!g.ok && g.code === 'paused') {
-        S.notice = { text: 'Paused: the Manager answers on Resume.' };
+        S.notice = { text: 'Paused: NEXUS answers on Resume.' };
       } else if (!g.ok) {
-        S.notice = { text: 'Plan limit: the Manager answers after the reset at ' + CO.hhmm(g.until) + '.' };
+        S.notice = { text: 'Plan limit: NEXUS answers after the reset at ' + CO.hhmm(g.until) + '.' };
       } else {
         S.notice = null;
         answer(m);
@@ -634,7 +634,7 @@
         files_as: o.files_as || (o.key === 'testing' ? CO.HUNTER : null), et10: 0, accepted: 0, runs: 0,
         run_kind: o.run_kind || null, link: o.link || null, look: o.look || null };
       S.departments.push(d);
-      feed('good', 'Manager', 'new department: ' + d.name);
+      feed('good', 'NEXUS', 'new department: ' + d.name);
       if (d.schedule) {
         // first run now, then on its clock
         var r = queueRun(d, 'first run, right after setup');
@@ -727,7 +727,7 @@
       m.answered = true;
       var out = reply(m.text, m.at, m.dept_id);
       say(out.text || out, out.dept_id || m.dept_id);
-      feed('info', 'Manager', 'replied');
+      feed('info', 'NEXUS', 'replied');
     });
   }
   var ALIAS = [
