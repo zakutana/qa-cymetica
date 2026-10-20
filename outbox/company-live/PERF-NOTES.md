@@ -86,6 +86,35 @@ room, Command, 2D, back, after Create and Delete) are 0 px. The expert card, the
 dialog differ as much as two runs of bb32b014 do. start.html's room tile: 0 px. A room clicked 400, 900, 1500 and
 2500 ms after opening (two rooms) and one clicked half-built: 0 px against the same room on bb32b014 settled.
 
+## Fourth pass: the dialog made ready before it opens (against a4f3efd3)
+
+The dialog's renderer now lives for the page (`RoomPreview.dialog`, `warmUp`, `attach`, `detach`; app.js `warmDialog`,
+`warmRooms`). 2.5 s after the office's first frame, while nobody is at the page, it makes everything ready behind
+the office: the room Add department opens on, every room a click brings, every department's own room as Edit shows
+it, the mirror, and one frame nobody sees (the bloom's and the output's pipelines, the studio's reflections). Opening
+the dialog puts it in the stage and resets it the way a new one starts. A hand on the page pauses the work.
+
+| | a4f3efd3 / d54f27f6 | now |
+|---|---|---|
+| Add department opens, worst frame (1x / 4x) | 63-83 / 229 ms | 69-70 / 97-111 ms |
+| Add department opens, frames over 100 ms (4x) | 21 | 0-1 |
+| Edit opens, worst frame (4x) | 195 ms, 11 over 100 | 132-139 ms, 1 over 100 |
+| Switching rooms, worst frame (4x) | 146 ms | 56-70 ms |
+| Pipelines made as the dialog opens (1x) | 11 in a frame (the bloom's) | none |
+| The office meanwhile, nobody at it (4x) | 11 frames over 100 ms | 59-61 over 100 ms, for ~25 s |
+
+At full speed the dialog is ready 4.3-4.7 s after the office's first frame, and the office meanwhile has a few
+frames of 50-67 ms. At 4x it takes ~25 s, and the office stutters while it does: a piece's length is its one new
+shader (50-200 ms there), so the work moved from the dialog's first seconds to a quiet moment rather than went away.
+Opened before it is ready, the dialog takes it from where it got to. The rest of the opening at full speed (60-70 ms
+frames) is the dialog's own HTML drawn for the first time.
+
+Pixel check, each state frozen on its own page load: Add department opened 1, 2.8, 3.6, 4.6 and 12 s after the office's
+first frame (the early ones while it is still being made ready), Edit on each of the three departments, a look of
+your own and an expert opened: 0 px against a4f3efd3. start.html's room tile: 0 px. `pix.py`'s walk froze the page
+state after state, and its look and expert pictures differed by a 1-level card glow and an artefact of its own
+(a hull rail drawn askew, in both versions); captured on their own they are identical.
+
 What is left over 100 ms at full speed, and why it stays:
 - **Opening or closing a room (one or two frames of 100-170 ms):** the columns slide for 0.5 s and the 3D stage
   changes size every frame, and three.js makes its render targets again at each size. Measured: with the size held
@@ -97,7 +126,7 @@ What is left over 100 ms at full speed, and why it stays:
   shaders; nothing on the stage moves yet.
 - start.html and builder.html are not measured here: they were still being changed by the entry's session.
 - **The dialog's first frame still makes its bloom's 7 pipelines inside the frame** (62 ms on the GPU process's main
-  thread). They belong to the post-processing quad, which `compileAsync` does not reach.
+  thread) -- only when the dialog opens before it was made ready (fourth pass).
 - **The dialog's own HTML is drawn for the first time** (68 ms on the GPU process's main thread, the browser's
   raster). It was there before too.
 

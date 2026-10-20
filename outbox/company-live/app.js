@@ -52,7 +52,7 @@
         office3d = CO.U3.office($('office3d'), st, tipFor); office3d.onFail = function () { office3d = null; setView('2d'); };
         // the loading screen follows its first frame's shaders, and goes with that frame
         office3d.onProgress = function (f) { if (ui.tab === 'office') bootSet(30 + f * 66, 'RENDERING'); };
-        office3d.onFirst = function () { if (ui.tab === 'office') bootDone(); };
+        office3d.onFirst = function () { if (ui.tab === 'office') bootDone(); warmDialog(); };
       }
       office = office3d;
     } else { office = office2d; if (ui.tab === 'office') bootDone(); }
@@ -984,9 +984,33 @@
     var f = card.querySelector('input,textarea'); if (f) setTimeout(function () { f.focus(); }, 30);
   }
   function closeModal() { $('modal').hidden = true; modalAct = null; drop3d(); dlgMode = ''; }
-  // the 3D dialog's live room: one renderer, let go whenever the dialog goes, however it goes
+  // the 3D dialog's live room: one renderer for the page, out of the dialog whenever it goes, however it goes
   var dlg3 = null;
-  function drop3d() { if (dlg3) { dlg3.dispose(); dlg3 = null; } holdOffice(false); }
+  function drop3d() { if (dlg3) { if (dlg3.detach) dlg3.detach(); else dlg3.dispose(); dlg3 = null; warmRooms(); } holdOffice(false); }
+  // That renderer made ready while the office is shown, a few seconds after its first frame and only while the page
+  // is left alone (RoomPreview.warmUp): the room Add department opens on, every room a click brings, and every
+  // department's own as Edit shows it. Opened before, the dialog makes them as it opens, as it always did.
+  // The stage's size is a guess from the dialog's layout (style.css .modal-card.x3, .d3main, .d3bot); the dialog
+  // corrects it as it opens, and only the time that takes depends on it.
+  function warmDialog() {
+    if (RO || ui.view !== '3d' || !office3d || !(CO.U3 && CO.U3.dialogPreview)) return;
+    setTimeout(function () {
+      var ric = window.requestIdleCallback || function (f) { return setTimeout(f, 50); };
+      ric(warmRooms, { timeout: 4000 });
+    }, 2500);
+  }
+  // (and again as the dialog goes: a department added or changed meanwhile has a room of its own to make)
+  function warmRooms() {
+    if (RO || ui.view !== '3d' || !office3d || !(CO.U3 && CO.U3.dialogPreview)) return;
+    var L = looks(), own = CO.TEMPLATES.filter(function (t) { return t.key === 'custom'; })[0] || { key: 'custom', name: '', experts: ['researcher'] };
+    var free = CO.TEMPLATES.filter(function (t) { return t.key !== 'custom' && !CO.S.departments.some(function (d) { return d.key === t.key; }); })[0];
+    var first = free ? { key: free.key, experts: free.experts, look: null, name: free.name } : { key: 'custom', experts: own.experts, look: L[0].key, name: '' };
+    var list = CO.TEMPLATES.map(function (t) { return { key: t.key, experts: t.experts, look: t.key === 'custom' ? L[0].key : null }; })
+      .concat(CO.S.departments.map(function (d) { return { key: d.key, experts: d.experts, look: d.key === 'custom' ? d.look || L[0].key : null }; }))
+      .concat(L.map(function (l) { return { key: 'custom', experts: own.experts, look: l.key }; }));
+    var W = Math.min(1760, innerWidth * 0.96), H = Math.min(980, innerHeight * 0.94);
+    CO.U3.dialogPreview().warmUp({ w: Math.round(W) - 382, h: Math.round(H) - 308 }, first, list);
+  }
   // The 3D office stops drawing while the 3D dialog covers it (its last frame stays on its canvas): its own frames of
   // 130-140 ms every few seconds (measured 2026-10-19) were the dialog's last stalls once its rooms were kept.
   function holdOffice(on) {
@@ -1094,7 +1118,7 @@
       openModal(form(), 'x3', act);
       if (m === '3d') {
         holdOffice(true);
-        var mine = dlg3 = CO.U3.roomPreview($('d3-stage'));
+        var mine = dlg3 = CO.U3.dialogPreview ? CO.U3.dialogPreview().attach($('d3-stage')) : CO.U3.roomPreview($('d3-stage'));
         // its renderer would not start: the same dialog, flat, with what was already chosen
         mine.onFail = function () {
           if (dlg3 !== mine) return;
