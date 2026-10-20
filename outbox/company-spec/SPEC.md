@@ -6,8 +6,8 @@ optimised. What is live today was read on 2026-10-20 (llms.txt's "Build a Compan
 /api/v1/company/templates`, `GET /api/v1/companies`, the pages themselves); section 14 lists it beside what this
 asks for.
 
-Clickable mockup: https://raw.githack.com/zakutana/qa-cymetica/main/outbox/company-spec/design/start.html (the entry) and https://raw.githack.com/zakutana/qa-cymetica/main/outbox/company-spec/design/index.html (the office). The code, screenshots and
-this brief: https://github.com/zakutana/qa-cymetica/tree/main/outbox/company-spec (`design/`, `screenshots/`).
+Clickable mockup: https://rawcdn.githack.com/zakutana/qa-cymetica/4247a501222e7e4f195a41935ddf6a2e79b5db38/outbox/company-spec/design/start.html (the entry) and https://rawcdn.githack.com/zakutana/qa-cymetica/4247a501222e7e4f195a41935ddf6a2e79b5db38/outbox/company-spec/design/index.html (the office). The code, screenshots and
+this brief: https://github.com/zakutana/qa-cymetica/tree/4247a501222e7e4f195a41935ddf6a2e79b5db38/outbox/company-spec (`design/`, `screenshots/`).
 
 ## 0. How to read this
 
@@ -85,6 +85,13 @@ yours to design: you are the AI-native company.
 
 - **3D office** (three.js, WebGPU with WebGL2 where a browser has none) and the **2D office** one click away; 3D
   replaces today's "3D network" view. Rooms on one platform over a rock in space, as `design/look-office.webp`.
+- **A click on a room** flies the camera into it with its detail beside it (a department's work, spend, latest
+  results; the Vault's money; Operations' next audit, with the Audit tab one link away). A room at work lights in the
+  rail's Working cyan; a room waiting on its owner glows orange.
+- **Edit department** is the Add-a-department dialog on the department: its room in 3D, who works there, its charter,
+  the experts to hire or fire. The charter lives there, not in the detail.
+- **Loading**: while the 3D is built, a loading screen with a miniature of Cymetica's sun and a number, never a
+  half-drawn page.
 - **A click on a room** flies the camera into it with its detail beside it (a department's work, spend, latest
   results; the Vault's money; Operations' next audit, with the Audit tab one link away). A room at work lights in the
   rail's Working cyan; a room waiting on its owner glows orange.
