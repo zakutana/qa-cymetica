@@ -11,20 +11,21 @@
 
   // The rooms every company has, and the departments a pre-built one starts with. CO.PREBUILD, once data.js defines
   // it, is the one list both this page and the office's boot read; until then this one stands in for it.
+  // (each room's lines: the operator's drafts, 2026-10-20, "o neco delsi a vystiznejsi", tightened)
   var FIXED = [
-    { k: 'hub', n: 'Command', t: 'Everything runs from here. You only talk to NEXUS.' },
-    { k: 'vault', n: 'Vault', t: 'What the company earns: USDC, and ET10 rewards.' },
-    { k: 'audit', n: 'Operations', t: 'Keeps the company running and every process optimised.' }
+    { k: 'hub', n: 'Command', t: 'The heart of the company. You talk only to NEXUS, the AI at its core: say what you want, and it plans the work, runs every department and reports back.' },
+    { k: 'vault', n: 'Vault', t: 'Everything the company earns lands here: USDC from your products, ET10 rewards from Cymetica. Private: only you see inside.' },
+    { k: 'audit', n: 'Operations', t: 'Keeps the company running smoothly: watches every department and process, finds what is slow or wasted, and tunes it.' }
   ];
   var PRE = CO.PREBUILD || [
     { key: 'testing', name: 'Cymetica QA' }, { key: 'development', name: 'Development' },
     { key: 'testing_lab', name: 'Quant Lab' }, { key: 'trading_desk', name: 'Trading desk' }
   ];
   var LINE = {
-    testing: 'Tests your products and logs the bugs. Every bug earns you ET10.',
-    development: 'Builds what the company needs: products, apps.',
-    testing_lab: 'Researches new ways to earn on Cymetica.',
-    trading_desk: 'Tests those strategies.'
+    testing: 'Tests your products, logs every bug it finds and files it for you. Every accepted bug earns you ET10.',
+    development: 'Your builders. When the company needs a product, an app or a tool, Development designs it, builds it and ships it.',
+    testing_lab: 'Researches new ways to make money on Cymetica: works out strategies with NEXUS and proves them on paper first.',
+    trading_desk: "Puts the Lab's strategies to the test with real agents, and seats the winners in Agent Tournaments."
   };
   var TOUR = FIXED.concat(PRE.map(function (d) { return { dk: d.key, n: d.name, t: LINE[d.key] || '' }; }));
 
@@ -120,6 +121,8 @@
     var svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg'); svg.setAttribute('class', 'office'); $('stage').appendChild(svg);
     return new CO.Office(svg, $('stage'), tipFor);
   }
+  // A room clicked in the pre-built office: at Start it begins the tour there (the call-out sends you to Command,
+  // the first), in the tour it goes to that room -- the next one, which the call-out marks, as well as any other
   CO.on('office:click', function (key) {
     if (o.start !== 'pre' || (step !== 3 && step !== 'tour')) return;
     for (var i = 0; i < TOUR.length; i++) if (keyOf(TOUR[i]) === key) { show('tour'); return tourAt(i); }
@@ -188,17 +191,29 @@
     var dir = h.pos.clone().sub(h.tgt);
     office.tween(tgt.clone().add(dir.setLength(dir.length() * NEAR)), tgt, 900);
   }
-  // the step's number and the room's name, pinned over the room as the camera moves
+  // Over the office, following the camera: the pin (the tour's room, its number and name, over it) and the call-out,
+  // a pulsing ring on a room's floor with a label that says what a click there does -- at Start on Command, where
+  // the tour begins ("misto Next tam dej neco Click here na Command", the operator, 2026-10-20), in the tour on the
+  // next room. A click on the call-out does what a click on its room does.
   var pin = document.createElement('div'); pin.className = 'bz-pin'; pin.hidden = true; $('stage').appendChild(pin);
+  var call = document.createElement('button'); call.type = 'button'; call.className = 'bz-call'; call.hidden = true; $('stage').appendChild(call);
+  call.addEventListener('click', function () { if (step === 3) { show('tour'); tourAt(0); } else if (step === 'tour' && ti < TOUR.length - 1) tourAt(ti + 1); });
+  function over(el, key, z, html) {
+    var c = key && office.cells && office.cells[key];
+    if (!c) { if (!el.hidden) el.hidden = true; return; }
+    var RS = CO.iso.RS, v = office.V(c[0] + RS / 2, c[1] + RS / 2, z).project(office.camera), st = $('office3d');
+    if (el._h !== html) { el._h = html; el.innerHTML = html; }
+    el.style.transform = 'translate(' + ((v.x + 1) / 2 * st.clientWidth).toFixed(1) + 'px,' + ((1 - v.y) / 2 * st.clientHeight).toFixed(1) + 'px) translate(-50%, -100%)';
+    el.hidden = false;
+  }
   (function pinLoop() {
     requestAnimationFrame(pinLoop);
-    var key = step === 'tour' && office && office.camera && office.V ? keyOf(TOUR[ti]) : null, c = key && office.cells && office.cells[key];
-    if (!c) { if (!pin.hidden) pin.hidden = true; return; }
-    var RS = CO.iso.RS, v = office.V(c[0] + RS / 2, c[1] + RS / 2, 1.9).project(office.camera), st = $('office3d');
-    var html = '<b>' + (ti + 1) + '</b>' + esc(TOUR[ti].n);
-    if (pin._h !== html) { pin._h = html; pin.innerHTML = html; }
-    pin.style.transform = 'translate(' + ((v.x + 1) / 2 * st.clientWidth).toFixed(1) + 'px,' + ((1 - v.y) / 2 * st.clientHeight).toFixed(1) + 'px) translate(-50%, -100%)';
-    pin.hidden = false;
+    var live = office && office.camera && office.V && !$('veil').classList.contains('on') && (office.frames || 0) > 1;
+    var tour = live && step === 'tour', start = live && step === 3 && o.start === 'pre';
+    if (tour) over(pin, keyOf(TOUR[ti]), 1.9, '<b>' + (ti + 1) + '</b>' + esc(TOUR[ti].n)); else if (!pin.hidden) pin.hidden = true;
+    if (start) over(call, 'hub', 0.25, '<span class="lb">Click here<em>Click Command to start the tour</em></span><i class="stem"></i><i class="ring"></i>');
+    else if (tour && ti < TOUR.length - 1) over(call, keyOf(TOUR[ti + 1]), 0.25, '<span class="lb sm">Next: ' + esc(TOUR[ti + 1].n) + ' ›<em>click the room</em></span><i class="stem"></i><i class="ring"></i>');
+    else if (!call.hidden) call.hidden = true;
   })();
 
   /* ---------------- the steps ---------------- */
@@ -219,10 +234,13 @@
     if (s === 1 || s === 2) station();
     labels();
   }
+  // the main button: Next, Create company at the end -- and at Start with Pre-build none: the call-out on Command
+  // starts the tour, and the card says so where the button was
   function labels() {
-    var last = step === 'tour' ? ti === TOUR.length - 1 : step === 3 && o.start === 'new';
+    var last = step === 'tour' ? ti === TOUR.length - 1 : step === 3 && o.start === 'new', viaRoom = step === 3 && o.start === 'pre';
     $('b-next').firstChild.nodeValue = last ? 'Create company ' : 'Next ';
     $('b-next').classList.toggle('bz-fin', last);
+    $('b-next').hidden = viaRoom; $('b-hint').hidden = !viaRoom;
   }
   function next() {
     if (step === 1) {

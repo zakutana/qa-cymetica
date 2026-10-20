@@ -79,6 +79,27 @@
 .bz-pin b { width: 28px; height: 28px; border-radius: 50%; display: grid; place-items: center; background: var(--cyan); color: #03131c; font: 400 14px 'Archivo Black', sans-serif; }
 .bz-pin::after { content: ''; position: absolute; left: 50%; top: 100%; width: 2px; height: 34px; transform: translateX(-50%); background: linear-gradient(var(--cyan), transparent); }
 
+/* the call-out: a ring pulsing on a room's floor, a line up to a label saying what a click there does */
+.bz-call { position: absolute; left: 0; top: 0; z-index: 7; display: flex; flex-direction: column; align-items: center; padding: 0; border: 0; background: none;
+  cursor: pointer; will-change: transform; }
+.bz-call .lb { display: block; padding: 10px 18px 11px; border-radius: 12px; border: 1px solid var(--cyan); background: rgba(4, 18, 28, .9); color: #fff; text-align: center;
+  font: 400 17px 'Archivo Black', sans-serif; letter-spacing: .05em; text-transform: uppercase; white-space: nowrap;
+  box-shadow: 0 0 0 1px rgba(0, 207, 255, .35), 0 0 26px rgba(0, 207, 255, .5); animation: bzcall 1.6s ease-in-out infinite; }
+.bz-call .lb em { display: block; margin-top: 3px; font: 600 12px 'JetBrains Mono'; font-style: normal; letter-spacing: 0; text-transform: none; color: var(--cyan); }
+.bz-call .lb.sm { padding: 7px 13px 8px; font-size: 13px; }
+.bz-call .lb.sm em { font-size: 11px; color: var(--dim); }
+.bz-call:hover .lb { background: rgba(0, 207, 255, .22); }
+.bz-call .stem { width: 2px; height: 30px; background: linear-gradient(var(--cyan), rgba(0, 207, 255, .2)); }
+.bz-call .ring { position: relative; width: 20px; height: 20px; border-radius: 50%; border: 2px solid var(--cyan); background: rgba(0, 207, 255, .25); box-shadow: 0 0 14px var(--cyan); }
+.bz-call .ring::after { content: ''; position: absolute; inset: -2px; border-radius: 50%; border: 2px solid var(--cyan); animation: bzring 1.6s ease-out infinite; }
+@keyframes bzring { from { transform: scale(1); opacity: .9; } to { transform: scale(3.4); opacity: 0; } }
+@keyframes bzcall { 50% { box-shadow: 0 0 0 1px rgba(0, 207, 255, .7), 0 0 44px rgba(0, 207, 255, .85); } }
+/* where Next is, when the office's call-out starts the tour instead */
+.bz-hint { display: inline-flex; align-items: center; gap: 10px; font: 600 13px/1.5 'JetBrains Mono'; color: var(--cyan); text-align: right; }
+.bz-hint b { color: #fff; }
+.bz-hint svg { width: 18px; height: 18px; fill: none; stroke: currentColor; stroke-width: 2.4; stroke-linecap: round; stroke-linejoin: round; flex: none; }
+.bz-hint[hidden] { display: none; }
+
 /* While the office is built, the stage under a veil: the build holds the page for a moment, and the ring keeps
    turning through it (a transform runs off the page's thread) so it reads as building, not as stuck */
 .bz-veil { position: absolute; inset: 0; z-index: 7; display: flex; align-items: center; justify-content: center; gap: 14px; padding-left: var(--cw);

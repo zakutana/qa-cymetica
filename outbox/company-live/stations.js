@@ -1,8 +1,9 @@
 /* The seven stations, drawn again (the operator, 2026-10-20: "vzhled tech firem je nic moc ... uplne top brutalni
- * designy ... prvky nebo lode ze star wars nebo stargate"). Capital ships and gates in that spirit, none of them a
- * copy of a film's ship: a wedge dreadnought, a ring gate, a pyramid carrier, a ring habitat, a lancer, a citadel orb,
- * a monolith. Each keeps the station's rules: one deck per department, a deck's windows light while it works
- * (b.win, deck f), b.top / b.bot / b.foot frame it, b.busy makes it burn brighter.
+ * designy ... prvky nebo lode ze star wars nebo stargate"). Capital ships and yards in that spirit, none of them a
+ * copy of a film's ship: a wedge dreadnought, a shipyard, a pyramid carrier, a ring habitat, a lancer, a citadel
+ * orb, a monolith. Each keeps the station's rules: one deck per department, a deck's windows light while it works
+ * (b.win, deck f), b.top / b.bot / b.foot frame it. Nothing on them pulses: no thruster plumes (the operator, the
+ * same day: "pulsujici trysky u vseho zrus tu animaci u firem"); what moves turns or travels slowly.
  *
  * A module of its own, run after u3d.js: it puts its builders into u3d.js's own table (CO.U3.SKIN), so the Universe,
  * the previews and the station tiles all draw these, and nothing in u3d.js changes. The keys stay (a saved company
@@ -11,11 +12,11 @@ import * as THREE from 'three/webgpu';
 import { mergeGeometries } from 'three/addons/utils/BufferGeometryUtils.js';
 
 const CO = window.CO;
-const NAMES = { tower: 'Dreadnought', dome: 'Gateway', pyramid: 'Pyramid Carrier', orbital: 'Ring Habitat', rocket: 'Lancer', vault: 'Citadel', stack: 'Monolith' };
+const NAMES = { tower: 'Dreadnought', dome: 'Shipyard', pyramid: 'Pyramid Carrier', orbital: 'Ring Habitat', rocket: 'Lancer', vault: 'Citadel', stack: 'Monolith' };
 const TS = 2.2;               // world units per tile of the hull's plating
 const G = {}, T = {};         // geometries and textures, made once
 
-/* ---------------- textures: plating, its lights, a gate's horizon, a soft glow ---------------- */
+/* ---------------- textures: plating, its lights, a soft glow ---------------- */
 function canvas(w, h, draw) { const c = document.createElement('canvas'); c.width = w; c.height = h; draw(c.getContext('2d'), w, h); return c; }
 function rnd(seed) { let s = seed >>> 0; return () => { s = (s * 1664525 + 1013904223) >>> 0; return s / 4294967296; }; }
 // The hull's plating, grey so a material's colour tints it: plates of slightly different tone, dark seams between
@@ -55,22 +56,6 @@ function plating() {
   T.plate = tex(plate); T.lights = tex(lights);
   return T;
 }
-function horizonTex() {
-  if (T.horizon) return T.horizon;
-  const S = 512, c = canvas(S, S, (g) => {
-    const m = S / 2, gr = g.createRadialGradient(m, m, 0, m, m, m);
-    gr.addColorStop(0, 'rgba(255,255,255,1)'); gr.addColorStop(0.25, 'rgba(190,235,255,.85)'); gr.addColorStop(0.75, 'rgba(90,170,255,.55)'); gr.addColorStop(0.97, 'rgba(160,220,255,.9)'); gr.addColorStop(1, 'rgba(160,220,255,0)');
-    g.fillStyle = gr; g.fillRect(0, 0, S, S);
-    // ripples: rings a little off round, brighter and darker in turn
-    const R = rnd(31);
-    for (let i = 0; i < 26; i++) {
-      const r = 10 + i * 9.5 + R() * 5;
-      g.strokeStyle = 'rgba(255,255,255,' + (0.05 + R() * 0.16) + ')'; g.lineWidth = 2 + R() * 5;
-      g.beginPath(); for (let a = 0; a <= 64; a++) { const t = a / 64 * Math.PI * 2, rr = r * (1 + 0.035 * Math.sin(t * 3 + i) + 0.02 * Math.sin(t * 7 - i * 2)); g.lineTo(m + Math.cos(t) * rr, m + Math.sin(t) * rr); } g.stroke();
-    }
-  });
-  const t = new THREE.CanvasTexture(c); t.colorSpace = THREE.SRGBColorSpace; return (T.horizon = t);
-}
 function softTex() {
   if (T.soft) return T.soft;
   const c = canvas(128, 128, (g) => { const gr = g.createRadialGradient(64, 64, 0, 64, 64, 64); gr.addColorStop(0, 'rgba(255,255,255,1)'); gr.addColorStop(0.35, 'rgba(255,255,255,.35)'); gr.addColorStop(1, 'rgba(255,255,255,0)'); g.fillStyle = gr; g.fillRect(0, 0, 128, 128); });
@@ -95,15 +80,9 @@ function mats(A) {
     neonSoft: new THREE.MeshStandardMaterial({ color: 0x000000, emissive: c.clone(), emissiveIntensity: 0.9, roughness: 1 }),
     glass: new THREE.MeshStandardMaterial({ color: 0x0a1622, roughness: 0.08, metalness: 0.4, emissive: c.clone(), emissiveIntensity: 0.25 }),
     core: new THREE.MeshBasicMaterial({ color: new THREE.Color(ENGINE).multiplyScalar(2.6) }),
-    // an engine's plume: faint, a shimmer behind the nozzle (brighter, it read as a solid tube under the bloom)
-    plume: new THREE.MeshBasicMaterial({ color: new THREE.Color(ENGINE).multiplyScalar(0.9), transparent: true, opacity: 0.08, blending: THREE.AdditiveBlending, depthWrite: false, side: THREE.DoubleSide }),
     hot: new THREE.MeshBasicMaterial({ color: c.clone().multiplyScalar(3.2) }),
     halo: new THREE.SpriteMaterial({ map: softTex(), color: c.clone(), transparent: true, opacity: 0.55, blending: THREE.AdditiveBlending, depthWrite: false }),
-    engHalo: new THREE.SpriteMaterial({ map: softTex(), color: new THREE.Color(ENGINE), transparent: true, opacity: 0.45, blending: THREE.AdditiveBlending, depthWrite: false }),
-    // a gate's horizon: water-blue ripples (a little of the station's colour in them), never a white blot under the bloom
-    horizon: new THREE.MeshBasicMaterial({ map: horizonTex(), color: new THREE.Color(0x3d8fe0).lerp(c, 0.22).multiplyScalar(0.62), transparent: true, opacity: 0.85, blending: THREE.AdditiveBlending, depthWrite: false, side: THREE.DoubleSide }),
-    horizon2: new THREE.MeshBasicMaterial({ map: horizonTex(), color: new THREE.Color(0x8fd0ff).lerp(c, 0.3).multiplyScalar(0.35), transparent: true, opacity: 0.6, blending: THREE.AdditiveBlending, depthWrite: false, side: THREE.DoubleSide }),
-    deep: new THREE.MeshBasicMaterial({ color: 0x061a33, side: THREE.DoubleSide })
+    engHalo: new THREE.SpriteMaterial({ map: softTex(), color: new THREE.Color(ENGINE), transparent: true, opacity: 0.45, blending: THREE.AdditiveBlending, depthWrite: false })
   };
   return A.ns;
 }
@@ -149,17 +128,15 @@ function wins(b, f, cx, y, cz, w, d, rows, rowH, step, lit, faces) {
     });
   }
 }
-// an engine pointing along +z rotated by ry: housing, nozzle, glowing core and a plume that burns harder while busy
+// an engine pointing along +z rotated by ry: housing, nozzle, its glowing core and a soft light at its mouth -- and
+// nothing that pulses or streams out of it: "pulsujici trysky u vseho zrus" (the operator, 2026-10-20), so no plume
 function engine(b, M, x, y, z, r, ry, len, to) {
   const g = new THREE.Group(); g.position.set(x, y, z); g.rotation.y = ry || 0; (to || b.g).add(g);
   put(b, cyl(r * 1.08, r * 1.12, r * 1.1, 24), M.metal, 0, 0, r * 0.2, { rx: Math.PI / 2, to: g });
   put(b, cyl(r, r * 0.78, r * 0.7, 24, true), M.dark, 0, 0, -r * 0.65, { rx: Math.PI / 2, to: g });
   put(b, cyl(r * 0.82, r * 0.82, 0.02, 24), M.core, 0, 0, -r * 0.98, { rx: Math.PI / 2, to: g });
-  const plume = put(b, cyl(r * 0.2, r * 0.75, 1, 20, true), M.plume, 0, 0, 0, { rx: Math.PI / 2, dyn: true, to: g });
-  const halo = new THREE.Sprite(M.engHalo); halo.position.set(0, 0, -r * 1.05); halo.userData.dyn = true; g.add(halo);
-  const L = (len || r * 3.2) * 0.6, ph = b.phase + x * 3 + y;
-  // (the halo tight round the nozzle: wide, from in front it read as a pale balloon behind the ship)
-  b.anim.push((t) => { const k = (b.busy ? 1.35 : 1) * (1 + 0.08 * Math.sin(t * 19 + ph)); plume.scale.set(1, L * k, 1); plume.position.z = -r - L * k / 2; halo.scale.setScalar(r * 2.1 * k); });
+  // (tight round the nozzle: wide, from in front it read as a pale balloon behind the ship)
+  const halo = new THREE.Sprite(M.engHalo); halo.position.set(0, 0, -r * 1.05); halo.scale.setScalar(r * 2.1); halo.userData.dyn = true; g.add(halo);
   return g;
 }
 // surface detail: small blocks scattered over a deck at height y wherever inside(x, z) holds (sizes in steps of
@@ -250,61 +227,75 @@ function dreadnought(b, n) {
   b.top = hy + 0.6; b.bot = -H * 2.1; b.foot = L * 0.5;
 }
 
-/* ---------------- 2. Gateway: a ring gate on a stepped dais, its horizon rippling ---------------- */
-function gateway(b, n) {
-  const A = b.A, M = mats(A), s0 = 3.0 + 0.22 * n, th = 0.3;
-  // the dais: a ziggurat, one tier a deck, windows round each; a ramp up the front
-  let y = 0, s = s0;
-  for (let f = 0; f < n; f++) {
-    box(b, s, th, s, 0, y + th / 2, 0, f % 2 ? M.light : M.mid);
-    box(b, s + 0.03, 0.025, s + 0.03, 0, y + th - 0.005, 0, M.neonSoft);
-    wins(b, f, 0, y + th * 0.5, 0, s, s, 1, th, 0.24, 0.6);
-    const ns = s - Math.min(0.32, (s0 - 1.9) / Math.max(1, n)), lo = ns / 2 + 0.06, hi = s / 2 - 0.06;
-    // the ledge each tier leaves round the next: machinery on it, none on the ramp's line
-    if (f < n - 1 || n === 1) greebles(b, [M.dark, M.mid], y + th, -hi, hi, -hi, hi, 10 + Math.round(s * 2),
-      (x, z) => (Math.abs(x) > lo || Math.abs(z) > lo) && !(Math.abs(x) < 0.45 && z > 0), 20 + f);
-    y += th; s = ns;
-  }
-  // the ramp: from the deck in front of the dais up to its top tier's front edge, lit along both sides
-  const top = y, run = s0 / 2 + 0.75 - s / 2, rl = Math.hypot(top, run), ra = Math.atan2(top, run), rz = s / 2 + run / 2;
-  box(b, 0.62, 0.05, rl, 0, top / 2 + 0.02, rz, M.light, { rx: ra });
-  for (const sx of [1, -1]) box(b, 0.03, 0.04, rl, sx * 0.32, top / 2 + 0.05, rz, M.neon, { rx: ra });
-  // under it, the keel and its engines
-  put(b, cyl(s0 * 0.42, s0 * 0.2, 0.9, 6), M.dark, 0, -0.45, 0);
-  engine(b, M, 0, -0.95, 0, 0.3, 0, 0.9).rotation.x = -Math.PI / 2;
-  // the gate: a heavy ring standing on the dais, an inner track, nine chevrons, the horizon inside
-  const R = 1.25 + 0.06 * n, gy = top + R + 0.12, g = new THREE.Group(); g.position.set(0, gy, -s * 0.12); b.g.add(g);
-  put(b, torus(R, 0.2, 10, 72), M.dark, 0, 0, 0, { to: g });
-  put(b, torus(R - 0.12, 0.07, 8, 72), M.metal, 0, 0, 0.09, { to: g });
-  put(b, torus(R + 0.17, 0.035, 6, 72), M.neonSoft, 0, 0, 0, { to: g });
-  for (let k = 0; k < 9; k++) {
-    const a = Math.PI / 2 + k / 9 * Math.PI * 2, x = Math.cos(a) * (R + 0.05), yy = Math.sin(a) * (R + 0.05);
-    put(b, pbox(0.2, 0.26, 0.5), M.metal, x, yy, 0, { rz: a - Math.PI / 2, to: g });
-    put(b, new THREE.ConeGeometry(0.09, 0.2, 3), M.neon, x * 0.985, yy * 0.985, 0.27, { rz: a + Math.PI / 2, to: g });
-  }
-  // its feet, and four obelisks on the lowest tier's corners framing it
-  for (const sx of [1, -1]) box(b, 0.36, 0.4, 0.62, sx * R * 0.62, top + 0.2, -s * 0.12, M.mid);
-  const oh = 1.3 + 0.1 * n, oc = s0 / 2 - 0.28;
+/* ---------------- 2. Shipyard: a dry dock, a ship half built in it, a gantry crane over it ---------------- */
+// In place of the Gateway ("tu hvezdnou branu nechci", the operator, 2026-10-20): two great dock walls, a deck a
+// storey of each with its windows; between them on cradles a wedge of a ship, its bow plated and its stern still a
+// skeleton of ribs; a gantry crane running slowly along the walls' rails with a welding light under it; a control
+// tower at each corner; shuttles on a circuit round it.
+function shipyard(b, n) {
+  const A = b.A, M = mats(A), Ld = 4.1 + 0.2 * n, Wg = 1.9, tw = 0.52, dh = 0.32, Hw = 0.5 + n * dh, wx = Wg / 2 + tw / 2;
+  // the floor of the dock, its edge lit, and the keel under it with a thruster pod at each corner
+  box(b, Wg + 2 * tw + 0.3, 0.34, Ld + 0.4, 0, -0.17, 0, M.dark);
+  for (const sx of [1, -1]) box(b, 0.035, 0.035, Ld + 0.4, sx * (Wg / 2 + tw + 0.15), -0.05, 0, M.neon);
+  put(b, cyl(Wg * 0.55, Wg * 0.3, 0.8, 6), M.mid, 0, -0.74, 0, { s: [1, 1, Ld / Wg * 0.7] });
   for (const [sx, sz] of [[1, 1], [1, -1], [-1, 1], [-1, -1]]) {
-    box(b, 0.26, oh, 0.26, sx * oc, th + oh / 2, sz * oc, M.light);
-    box(b, 0.27, 0.05, 0.27, sx * oc, th + oh * 0.82, sz * oc, M.neon);
-    put(b, new THREE.ConeGeometry(0.19, 0.3, 4), M.light, sx * oc, th + oh + 0.15, sz * oc, { ry: Math.PI / 4 });
-    b.beacon(sx * oc, th + oh + 0.34, sz * oc, 0.05);
+    put(b, cyl(0.16, 0.2, 0.3, 12), M.metal, sx * (wx + 0.1), -0.48, sz * (Ld / 2 - 0.25));
+    put(b, cyl(0.12, 0.12, 0.02, 12), M.core, sx * (wx + 0.1), -0.64, sz * (Ld / 2 - 0.25));
   }
-  // the dialler: a pedestal with a glowing dome, at the ramp's head
-  put(b, cyl(0.16, 0.2, 0.3, 16), M.metal, s * 0.3, top + 0.15, s * 0.3);
-  put(b, new THREE.SphereGeometry(0.11, 16, 8, 0, Math.PI * 2, 0, Math.PI / 2), M.hot, s * 0.3, top + 0.3, s * 0.3);
-  // the horizon: a deep blue pool, ripples over it turning against each other, a soft light thrown forward
-  put(b, new THREE.CircleGeometry(R - 0.1, 64), M.deep, 0, 0, -0.01, { to: g });
-  const h1 = put(b, new THREE.CircleGeometry(R - 0.1, 64), M.horizon, 0, 0, 0.02, { dyn: true, to: g });
-  const h2 = put(b, new THREE.CircleGeometry(R - 0.1, 64), M.horizon2, 0, 0, 0.05, { dyn: true, to: g });
-  const glow = new THREE.Sprite(M.engHalo); glow.scale.setScalar(R * 2.6); glow.position.z = 0.25; glow.userData.dyn = true; g.add(glow);
-  b.anim.push((t) => {
-    h1.rotation.z = t * 0.35 + b.phase; h2.rotation.z = -t * 0.55;
-    const k = 1 + 0.03 * Math.sin(t * 2.3 + b.phase); h2.scale.set(k, k, 1);
-    glow.scale.setScalar(R * (b.busy ? 3 : 2.6) * (1 + 0.04 * Math.sin(t * 2)));
-  });
-  b.top = gy + R + 0.3; b.bot = -1.5; b.foot = s0 / 2 + 0.3;
+  // the walls: a plinth, then a storey a deck, windows down both faces, ribs up the outer face; rails on top
+  for (const sx of [1, -1]) {
+    const x = sx * wx;
+    box(b, tw, 0.5, Ld, x, 0.25, 0, M.mid);
+    for (let f = 0; f < n; f++) {
+      const y = 0.5 + f * dh;
+      box(b, tw, dh - 0.03, Ld * 0.97, x, y + (dh - 0.03) / 2, 0, f % 2 ? M.mid : M.light);
+      box(b, tw + 0.04, 0.03, Ld * 0.97 + 0.04, x, y + dh - 0.015, 0, M.metal);
+      wins(b, f, x, y + dh * 0.48, 0, tw, Ld * 0.97, 1, dh, 0.19, 0.7, '+x-x');
+    }
+    for (let k = 0; k < Math.floor(Ld / 0.7); k++) box(b, 0.08, Hw - 0.1, 0.1, x + sx * (tw / 2 + 0.03), (Hw - 0.1) / 2 + 0.05, -Ld / 2 + 0.35 + k * 0.7, M.dark);
+    for (const o of [-0.13, 0.13]) box(b, 0.05, 0.06, Ld, x + o, Hw + 0.03, 0, M.metal);
+    // the bay's edge lit along each wall's top, inside
+    box(b, 0.03, 0.03, Ld * 0.97, x - sx * (tw / 2 + 0.01), Hw - 0.04, 0, M.neon);
+    // work lights down the inner face
+    for (let k = 0; k < 4; k++) box(b, 0.02, 0.06, 0.16, x - sx * (tw / 2 + 0.012), 0.42 + (k % 2) * Math.max(0.3, Hw * 0.45), -Ld * 0.36 + k * Ld * 0.24, M.hot);
+  }
+  // a control tower at each corner, taller than the walls, a band of glass round its head
+  const th = Hw + 0.7;
+  for (const [sx, sz] of [[1, 1], [1, -1], [-1, 1], [-1, -1]]) {
+    const x = sx * (wx + 0.08), z = sz * (Ld / 2 + 0.12);
+    box(b, 0.62, th, 0.62, x, th / 2, z, M.light);
+    box(b, 0.7, 0.18, 0.7, x, th - 0.22, z, M.glass);
+    wins(b, Math.max(0, n - 1), x, th - 0.22, z, 0.7, 0.7, 1, 0.18, 0.16, 0.8);
+    box(b, 0.7, 0.06, 0.7, x, th + 0.03, z, M.metal);
+    put(b, cyl(0.02, 0.03, 0.5, 6), M.metal, x, th + 0.3, z);
+    b.beacon(x, th + 0.58, z, 0.045);
+  }
+  // the ship in the bay, nose to +z on three cradles: its bow plated, its stern ribs round a spine
+  const Ls = Ld * 0.8, Ws = Wg * 0.74, hs = 0.34, y0 = 0.22, nose = Ls * 0.55, tail = -Ls * 0.45;
+  const half = (z) => Ws / 2 * (nose - z) / (nose - tail);   // the wedge's half-width at z
+  for (const z of [-Ls * 0.3, 0, Ls * 0.28]) box(b, Ws * 0.5, y0, 0.22, 0, y0 / 2, z, M.dark);
+  const bow = new THREE.Shape(), zc = -Ls * 0.02; bow.moveTo(0, nose); bow.lineTo(half(zc), zc); bow.lineTo(-half(zc), zc); bow.closePath();
+  // (a shape's +y lies at -z once laid flat; turned half round, its nose is at +z again)
+  put(b, slab(key('syB', [Ls, Ws]), bow, hs, 0.04), M.light, 0, y0, 0, { ry: Math.PI });
+  box(b, Ws * 0.18, hs * 0.5, nose - zc, 0, y0 + hs + hs * 0.25, (nose + zc) / 2 - 0.1, M.mid);
+  box(b, 0.1, 0.1, Ls, 0, y0 + hs * 0.55, (nose + tail) / 2, M.metal);
+  for (let k = 1; k <= 6; k++) {
+    const z = zc - k * (zc - tail) / 6.2, w = half(z);
+    box(b, w * 2, 0.05, 0.05, 0, y0 + 0.03, z, M.metal);
+    for (const s of [1, -1]) box(b, 0.05, Math.hypot(w, hs), 0.05, s * w / 2, y0 + hs / 2, z, M.metal, { rz: s * Math.atan2(w, hs) });
+  }
+  // the gantry: a bridge over the bay on trucks riding the rails, a trolley with a cable down to a welding light
+  const gy = Hw + 0.12, gantry = new THREE.Group(); gantry.userData.dyn = true; b.g.add(gantry);
+  put(b, pbox(Wg + 2 * tw + 0.24, 0.17, 0.34), M.light, 0, gy + 0.12, 0, { to: gantry });
+  for (const sx of [1, -1]) put(b, pbox(0.36, 0.2, 0.52), M.mid, sx * wx, gy, 0, { to: gantry });
+  put(b, pbox(0.34, 0.16, 0.44), M.mid, 0, gy - 0.04, 0, { to: gantry });
+  const cable = gy - 0.12 - (y0 + hs + 0.35);
+  put(b, cyl(0.012, 0.012, cable, 6), M.metal, 0, gy - 0.12 - cable / 2, 0, { to: gantry });
+  put(b, new THREE.SphereGeometry(0.06, 12, 8), M.hot, 0, y0 + hs + 0.33, 0, { to: gantry });
+  const weld = new THREE.Sprite(M.halo); weld.position.set(0, y0 + hs + 0.3, 0); weld.scale.setScalar(0.7); gantry.add(weld);
+  b.anim.push((t) => { gantry.position.z = Math.sin(t * 0.12 + b.phase) * Ld * 0.3; });
+  escorts(b, M, Ld * 0.62, Hw * 0.75, 2, 0.26);
+  b.top = th + 0.7; b.bot = -1.2; b.foot = Math.max(Ld / 2 + 0.5, wx + 0.6);
 }
 
 /* ---------------- 3. Pyramid Carrier: a stepped pyramid inside a ring of armoured petals ---------------- */
@@ -385,17 +376,17 @@ function ringHabitat(b, n) {
   b.top = y + 1.6; b.bot = y0 - 1.4; b.foot = R + 0.4;
 }
 
-/* ---------------- 5. Lancer: a spine with accelerator rings and its lance of light ---------------- */
+/* ---------------- 5. Lancer: a long spine banded with rings, armoured flanks, its decks along its back ---------------- */
+// (no lance of light out of its prow any more: "u te rakety ji zrus ten laser vepredu", the operator, 2026-10-20)
 function lancer(b, n) {
   const A = b.A, M = mats(A), L = 4.8 + 0.24 * n, r = 0.38, zt = L / 2;
-  // the spine, its prow, the rings that drive the shot down it
+  // the spine, its prow, the rings round its front half, each with a line of light
   put(b, cyl(r, r * 1.05, L, 8), M.mid, 0, 0, 0, { rx: Math.PI / 2, ry: Math.PI / 8 });
   put(b, new THREE.ConeGeometry(r, 1.2, 8), M.light, 0, 0, zt + 0.6, { rx: Math.PI / 2 });
-  const rings = [];
   for (let k = 0; k < 6; k++) {
     const z = zt - 0.35 - k * 0.42;
     put(b, torus(r + 0.12, 0.08, 8, 32), M.dark, 0, 0, z);
-    rings.push(put(b, torus(r + 0.13, 0.03, 6, 32), M.neon.clone(), 0, 0, z + 0.06, { dyn: true }));
+    put(b, torus(r + 0.13, 0.03, 6, 32), M.neonSoft, 0, 0, z + 0.06);
   }
   // the hull round the spine's back half: two armoured flanks and the decks along its top
   for (const s of [1, -1]) {
@@ -419,21 +410,9 @@ function lancer(b, n) {
   b.beacon(0, ty + 1.05, tz, 0.05);
   // engines: four round the stern
   for (const [x, y] of [[0.45, 0.3], [-0.45, 0.3], [0.45, -0.3], [-0.45, -0.3]]) engine(b, M, x, y, -zt - 0.15, 0.26, 0, 1.3);
-  // the lance: a core and a sheath of light out of the prow, a bolt running down it
-  const zb = zt + 1.15, bl = L * 0.7, beam = new THREE.Group(); beam.userData.dyn = true; b.g.add(beam);
-  const core = put(b, cyl(0.035, 0.035, 1, 8, true), M.hot, 0, 0, 0, { rx: Math.PI / 2, to: beam });
-  const sheath = put(b, cyl(0.11, 0.11, 1, 16, true), M.plume.clone(), 0, 0, 0, { rx: Math.PI / 2, to: beam });
-  sheath.material.color.copy(A.c).multiplyScalar(1.4);
-  const bolt = put(b, new THREE.SphereGeometry(0.09, 12, 8), M.hot, 0, 0, 0, { s: [1, 1, 4], to: beam });
-  const tip = new THREE.Sprite(M.halo); beam.add(tip);
-  b.anim.push((t) => {
-    const k = (b.busy ? 1.4 : 1) * (1 + 0.12 * Math.sin(t * 7 + b.phase));
-    core.scale.set(k, bl, k); core.position.z = zb + bl / 2; sheath.scale.set(k, bl, k); sheath.position.z = zb + bl / 2;
-    bolt.position.z = zb + ((t * (b.busy ? 1.7 : 1) + b.phase) % 1) * bl;
-    tip.position.z = zb + bl; tip.scale.setScalar(1.1 + 0.3 * Math.sin(t * 11));
-    rings.forEach((m, i) => { m.material.emissiveIntensity = 0.6 + 2.6 * Math.max(0, Math.sin(t * 5 - i * 0.9 + b.phase)); });
-  });
-  b.top = ty + 1.2; b.bot = -1.0; b.foot = L * 0.5 + 0.6;
+  // the prow's sensor tip: a small light, still (not a beacon: those blink)
+  put(b, new THREE.SphereGeometry(0.05, 12, 8), M.hot, 0, 0, zt + 1.22);
+  b.top = ty + 1.2; b.bot = -1.0; b.foot = L * 0.5 + 0.4;
 }
 
 /* ---------------- 6. Citadel: an armoured orb, its decks in bands, a docking ring round it ---------------- */
@@ -450,7 +429,9 @@ function citadel(b, n) {
   for (let f = 0; f < n; f++) {
     const lat = (f % 2 ? -1 : 1) * (0.28 + Math.floor(f / 2) * 0.22), yy = Math.sin(lat) * R, rr = Math.cos(lat) * R;
     put(b, torus(rr + 0.01, 0.022, 6, 64), M.dark, 0, yy + 0.06, 0, { rx: Math.PI / 2 });
-    b.ringWins(f, rr - 0.03, yy, 0.07, 0.2, 0.6, 0.1);
+    // just outside the armour: the windows are upright and the orb slopes under them, so at rr - 0.03 (as first
+    // written) the orb hid every one, lit or not; 0.05 out clears the slope at the highest band (54 degrees)
+    b.ringWins(f, rr + 0.05, yy, 0.07, 0.2, 0.6, 0.1);
   }
   // the poles: a spire with its beacon above, a long antenna below
   put(b, cyl(0.1, 0.32, 1.2, 12), M.mid, 0, R + 0.5, 0);
@@ -511,7 +492,7 @@ function monolith(b, n) {
 }
 
 /* ---------------- into u3d.js's table ---------------- */
-const BUILD = { tower: dreadnought, dome: gateway, pyramid: pyramidCarrier, orbital: ringHabitat, rocket: lancer, vault: citadel, stack: monolith };
+const BUILD = { tower: dreadnought, dome: shipyard, pyramid: pyramidCarrier, orbital: ringHabitat, rocket: lancer, vault: citadel, stack: monolith };
 function install() {
   const U = CO.U3;
   if (!U || !U.ok || !U.SKIN || U.skins === 'ns1') return;

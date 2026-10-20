@@ -5,24 +5,22 @@
 body.lp { background: #020306; }
 .lp-main { position: relative; flex: 1; min-height: 0; overflow: hidden; display: flex; align-items: center; }
 
-/* the 3D canvas: wider than the page by --sh and starting at its left edge, so the station it centres stands right of
+/* the 3D canvas: wider than the page by --sh and starting at its left edge, so the sun it centres stands right of
    the text; its own sky (stars, the far glows) is the page's background */
-.lp-space { position: absolute; left: 0; top: 0; bottom: 0; width: calc(100% + var(--sh)); --sh: 46vw; background: #020306; }
-.lp-space .skinsvg { position: absolute; left: 50%; top: 50%; width: 30%; height: 70%; transform: translate(-50%, -50%); }
-.lp-space .pv3 { display: none; position: absolute; inset: 0; }
-.lp-space.has3d .skinsvg { display: none; }
-.lp-space.has3d .pv3 { display: block; }
-.lp-space .pv3 canvas { display: block; width: 100% !important; height: 100% !important; }
-.lp-space .pvb { display: none; }
+.lp-space { position: absolute; left: 0; top: 0; bottom: 0; width: calc(100% + var(--sh)); --sh: 52vw; background: #01080d; overflow: hidden; }
+.lp-space > canvas { display: block; width: 100% !important; height: 100% !important; }
+/* Cymetica's ball: the Universe's painting (colliderTex) at the ball's place, two turning against each other over a
+   blurred copy -- uv.css's .uvcol, with the light added to what is under it rather than laid over it */
+.lp-col { position: absolute; left: 0; top: 0; width: 600px; height: 600px; transform-origin: 300px 300px; pointer-events: none; will-change: transform; mix-blend-mode: screen; }
+.lp-col canvas { position: absolute; inset: 0; width: 100%; height: 100%; }
+.lp-col .l1 { animation: lpcolspin 420s linear infinite, lpcolflick 2.3s ease-in-out infinite alternate; }
+.lp-col .g1 { filter: blur(9px) brightness(1.5); opacity: .85; animation: lpcolspin 420s linear infinite; }
+.lp-col .l2 { opacity: .35; animation: lpcolspin 600s linear infinite reverse; }
+@keyframes lpcolspin { to { transform: rotate(360deg); } }
+@keyframes lpcolflick { from { opacity: 1; } to { opacity: .84; } }
 /* the darkness behind the text, so it reads over whatever passes behind it */
 .lp-main::before { content: ''; position: absolute; inset: 0; z-index: 1; pointer-events: none;
-  background: linear-gradient(90deg, rgba(2, 3, 6, .88) 0%, rgba(2, 3, 6, .62) 34%, rgba(2, 3, 6, 0) 56%); }
-/* which station this is, under it */
-.lp-cap { position: absolute; z-index: 2; right: 4vw; bottom: 34px; display: flex; align-items: center; gap: 12px;
-  font: 700 11px 'JetBrains Mono'; letter-spacing: .16em; text-transform: uppercase; color: var(--dim2); }
-.lp-cap b { font: 400 18px 'Archivo Black', sans-serif; letter-spacing: .04em; color: #fff; }
-.lp-cap i { display: inline-block; width: 18px; height: 3px; border-radius: 2px; background: var(--line3); margin-left: 4px; }
-.lp-cap i.on { background: var(--green); box-shadow: 0 0 8px var(--green); }
+  background: linear-gradient(90deg, rgba(1, 6, 10, .9) 0%, rgba(1, 6, 10, .66) 36%, rgba(1, 6, 10, 0) 58%); }
 
 .lp-hero { position: relative; z-index: 2; padding: 40px 0 48px max(48px, 9vw); }
 .lp-h1 { font: 400 clamp(32px, 4.6vw, 58px)/1.04 'Archivo Black', sans-serif; letter-spacing: -.01em; color: #fff; }
@@ -36,8 +34,10 @@ body.lp { background: #020306; }
 .lp-tile:hover { transform: translateY(-2px); }
 .lp-tile.go:hover { border-color: rgba(0, 255, 136, .6); box-shadow: 0 0 0 1px rgba(0, 255, 136, .35), 0 18px 48px -14px rgba(0, 255, 136, .45); }
 .lp-tile.uv:hover { border-color: rgba(0, 207, 255, .6); box-shadow: 0 0 0 1px rgba(0, 207, 255, .35), 0 18px 48px -14px rgba(0, 207, 255, .45); }
-.lp-art { flex: 1; min-height: 0; position: relative; display: block; }
-.lp-art svg { position: absolute; inset: 8px 8px 0; width: calc(100% - 16px); height: calc(100% - 8px); }
+/* a door's picture is the product drawn live; it only shows, the whole tile is the link (no dragging the room round) */
+.lp-art { flex: 1; min-height: 0; position: relative; display: block; margin: 8px 8px 0; border-radius: 15px; overflow: hidden; pointer-events: none; background: #06101a; }
+.lp-room .d3cv canvas { cursor: inherit; }
+.lp-uvpic .pic { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
 /* the door's label as the live page's PICK A TABLE: Archivo Black 15.5px, dark on green, the green glow */
 .lp-cta { display: flex; align-items: center; justify-content: center; gap: 10px; margin: 12px; padding: 16px 14px; border-radius: 16px;
   font: 400 15px 'Archivo Black', sans-serif; letter-spacing: .02em; text-transform: uppercase; white-space: nowrap; }
@@ -45,21 +45,9 @@ body.lp { background: #020306; }
 .lp-tile.go .lp-cta { background: var(--green); color: #03140c; box-shadow: 0 0 0 1px rgba(0, 255, 136, .7), 0 10px 34px -6px rgba(0, 255, 136, .55); }
 .lp-tile.uv .lp-cta { color: var(--cyan); border: 1px solid rgba(0, 207, 255, .55); background: rgba(0, 207, 255, .08); }
 
-/* the office from above */
-.lp-plan .rm path { fill: rgba(0, 255, 136, .06); stroke: rgba(0, 255, 136, .7); stroke-width: 1.4; filter: drop-shadow(0 0 4px rgba(0, 255, 136, .5)); }
-.lp-plan .hub { fill: rgba(0, 207, 255, .1); stroke: #00cfff; stroke-width: 1.6; filter: drop-shadow(0 0 6px rgba(0, 207, 255, .7)); }
-.lp-plan .lot { fill: none; stroke: rgba(0, 207, 255, .55); stroke-width: 1.2; stroke-dasharray: 5 4; }
-.lp-plan .nx { fill: #fff; filter: drop-shadow(0 0 6px #00cfff); }
-.lp-plan .nxr { fill: none; stroke: #00cfff; stroke-width: 1.2; opacity: .7; transform-origin: 150px 124px; animation: lpnx 2.4s ease-in-out infinite; }
-@keyframes lpnx { 50% { transform: scale(1.35); opacity: .2; } }
-/* the Universe: Cymetica's light in the middle, companies on their orbits */
-.lp-orbit .ob { fill: none; stroke: rgba(0, 207, 255, .35); stroke-width: 1; stroke-dasharray: 3 4; }
-.lp-orbit .lp-co circle { filter: drop-shadow(0 0 5px currentColor); }
-
 @media (max-width: 900px) {
   body.lp { height: auto; min-height: 100vh; overflow: auto; }
   .lp-space { --sh: 0px; opacity: .55; }
   .lp-hero { padding: 32px 16px 40px; }
   .lp-tiles { grid-template-columns: repeat(2, minmax(0, 1fr)); }
-  .lp-cap { display: none; }
 }

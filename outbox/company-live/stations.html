@@ -34,11 +34,14 @@
 <script>
 /* the seven stations side by side, at any number of decks and in any colour: for looking at them, not part of the design */
 window.STP = function () {
-  var CO = window.CO, n = 3, acc = 'green', grid = document.getElementById('grid');
+  // ?one=<key>: that station alone, the page's whole width; ?n= and ?acc= set decks and colour
+  var CO = window.CO, Q = new URLSearchParams(location.search), one = Q.get('one'), n = +(Q.get('n') || 3), acc = Q.get('acc') || 'green', grid = document.getElementById('grid');
+  if (one) grid.style.gridTemplateColumns = '1fr';
   function draw() {
     grid.innerHTML = '';
-    CO.SKINS.forEach(function (s, i) {
+    CO.SKINS.filter(function (s) { return !one || s.key === one; }).forEach(function (s, i) {
       var el = document.createElement('div'); el.className = 'stp-tile'; el.innerHTML = '<b>' + s.name + '</b>'; grid.appendChild(el);
+      if (one) el.style.height = (innerHeight - 90) + 'px';
       CO.U3.preview(el, { skin: s.key, accent: acc, floors: n, seed: 7 + i, name: '', you: false, public: true });
     });
     document.getElementById('decks').innerHTML = [1, 3, 5, 8].map(function (k) { return '<button data-n="' + k + '"' + (k === n ? ' class="on"' : '') + '>' + k + '</button>'; }).join(' ');
