@@ -31,6 +31,32 @@ Before = bc690b01. After = the same pages with the changes below (they went in w
 an 868 ms first frame, then a 160 ms one during the flight in). The map shows 1.1 s later (2.4 s instead of 1.3 s), with
 its whole flight in.
 
+## Second pass (the same day, against da5e32b7: the page without its top bar, so a taller 3D stage)
+
+| Place | worst frame, ms (1x) | worst frame, ms (4x CPU) |
+|---|---|---|
+| Department added (rebuild) | 375 -> 229 | 2556 -> 1438 |
+| everything else | within the walk's own spread (about +-50 ms at 1x run to run) | |
+
+- **The spare lamps are seen by the floors' mirror too** (layer 1, as a room's own lamp). Seen by the main view
+  alone, a spare a new room took up changed the mirror's set of lights, and every material the mirror draws was
+  built again: 11 shaders in the existing rooms after Create, now 0.
+- **The room a department would add is made ready while the dialog is open** (`Office3D.warmRoom`, called by the
+  dialog once a pick has stood 0.9 s): built by the office's builders without its lamp, its shaders made a piece at a
+  time with the office's renderer, its instanced meshes handed to the pool. After Create 4 shaders are built instead
+  of 12.
+
+What is left over 100 ms at full speed, and why it stays:
+- **Opening or closing a room (one or two frames of 100-170 ms):** the columns slide for 0.5 s and the 3D stage
+  changes size every frame, and three.js makes its render targets again at each size. Measured: with the size held
+  for the slide there are none, but the picture would be stretched for those frames.
+- **3D -> 2D (~250 ms once):** the flat office is drawn for the first time (browser rasterisation of its SVG).
+- **Settings' station pictures (~130 ms):** a renderer of their own; making their shaders ahead changed the
+  Shipyard's picture, so it was taken out.
+- **Before the first frame of a page** (office, visit, the Universe opened directly): pieces of the first frame's
+  shaders; nothing on the stage moves yet.
+- start.html and builder.html are not measured here: they were still being changed by the entry's session.
+
 ## What changed (u3d.js, app.js)
 
 - **Two dark lamps more than the rooms need, from the office's first build** (`lampsBack`, `LAMP_SPARE`). A new room's
@@ -59,6 +85,7 @@ pixel by pixel. 0 pixels differ in the office (home, a room, Command, zoom, afte
 and back, after the Universe), the Universe (home and a station), every tab, the visit, all seven station pictures
 and every expert's card picture. What differs also differs between two runs of the old page, in the same places:
 the rooms' card pictures (drawn while their people move), a 1 px GPU speck, the code wall and the crystal in two
-rooms after a department is added, the cards' strip in the dialog (its scroll).
+rooms after a department is added, the cards' strip in the dialog (its scroll). The second pass was checked the same
+way against da5e32b7, with the same result.
 
 Scripts (Python + Playwright): in the session notes folder `harness/` (perf, pix, diff, prof, trace).

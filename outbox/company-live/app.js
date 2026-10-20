@@ -1082,6 +1082,8 @@
       CO.TEMPLATES.forEach(function (t, k) { if (t.key === o.key) ti = k; });
       if (dlg3) dlg3.set({ key: o.key, experts: hiredKeys(), look: custom ? o.look : null, name: $('df-name').value });
       else room2();
+      // the office makes the room this would add ready meanwhile, so Create builds nothing new (Office3D.warmRoom)
+      if (dlg3 && office3d && office3d.warmRoom) office3d.warmRoom({ key: o.key, experts: hiredKeys(), look: custom ? o.look : null });
       var lk = $('d3-look'); lk.hidden = !custom; lk.innerHTML = '<b>' + (i + 1) + ' / ' + L.length + '</b>' + esc(L[i].name);
       Array.prototype.forEach.call(document.querySelectorAll('#d3-stage .d3arw'), function (b) { b.hidden = !custom; });
       $('d3-about').innerHTML = (CO.DEPT_ABOUT[o.key] || CO.DEPT_ABOUT.custom).map(function (s) { return '<li>' + esc(s) + '</li>'; }).join('');

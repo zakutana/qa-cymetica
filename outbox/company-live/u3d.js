@@ -3652,6 +3652,43 @@ class Office3D {
   }
   // once the new rooms stand: what none of them took up is let go
   imDrop() { if (this.imPool) { this.imPool.forEach((l) => l.forEach((o) => release(o))); this.imPool.clear(); } }
+  // The room a department being added will have, made ready while the Add-department dialog is open (app.js calls
+  // this as a department, its experts or its look is picked): built by the office's own builders where the free lot
+  // is, its lamp taken out (a new light would build every lit shader again), its shaders made a piece at a time with
+  // this renderer (compileInPieces), in the world only for those moments. Kept out of sight until the next layout:
+  // its materials keep their shaders made, and its instanced meshes go to the pool for the real room to take up.
+  // Created without this, the new room's shaders were made in its first frame: 347 ms and a 206 ms frame after it,
+  // 2.1 s at a quarter of the CPU (measured 2026-10-20).
+  warmRoom(o) {
+    const d = { id: -1, key: o.key || 'custom', name: '', experts: pvOrder(o.experts || []), look: o.look || null, run_kind: null, link: null, charter: '', schedule: null, products: [] };
+    const key = [d.key, d.experts.join(','), d.look || ''].join('|');
+    if (this._warmKey === key) return;
+    this._warmKey = key; clearTimeout(this._warmT);
+    // (once the pick has stood a moment: clicking through the departments builds nothing in the office)
+    this._warmT = setTimeout(() => { if (this._warmKey === key) this.warmNow(d).catch((e) => console.warn('the new room could not be made ready ahead:', e)); }, 900);
+  }
+  async warmNow(d) {
+    if (!this.post || !this.post.pass || !this.frames || !this.cells) return;
+    const c = this.cells.lot || CO.iso.SLOTS[0];
+    const b = Object.assign(Object.create(Office3D.prototype), { cx: this.cx, cy: this.cy, camera: this.camera, scene: this.scene, layer: document.createElement('div'), pcs: [], hits: [], rooms: {}, conduits: {}, cells: {} });
+    const g = new THREE.Group(), r = { key: 'warm', dept: d, g, x0: c[0], y0: c[1], agents: [], screens: [], mons: [] };
+    b.shell(r); b.deptRoom(r, d);
+    const ls = []; g.traverse((x) => { if (x.isLight) ls.push(x); }); ls.forEach((l) => { l.parent.remove(l); l.dispose(); }); r.lamp = null;
+    bakeRoom(r);
+    // only the last one picked is kept; one a layout has let go is not made ready any further
+    this.warmDrop();
+    const gen = this._wgen = (this._wgen || 0) + 1, world = this.world;
+    this._warmed = g;
+    await compileInPieces(this.renderer, this.scene, this.camera, this.post.pass.renderTarget,
+      { mrt: this.post.pass.getMRT(), all: true, only: g, around: (fn) => { if (this._wgen !== gen) return Promise.resolve(); world.add(g); try { return fn(); } finally { world.remove(g); } } });
+  }
+  warmDrop() { if (this._warmed) { release(this._warmed); this._warmed = null; } this._wgen = (this._wgen || 0) + 1; }
+  // a layout: the room made ready gives its instanced meshes to the pool (imKeep's), and goes once the rooms stand
+  warmKeep() {
+    const g = this._warmed; if (!g || !this.imPool) return;
+    const back = []; g.traverse((o) => { if (o.__imk) back.push(o); });
+    back.forEach((o) => { o.parent.remove(o); const l = this.imPool.get(o.__imk); if (l) l.push(o); else this.imPool.set(o.__imk, [o]); });
+  }
 
   layout(opts) {
     const S = CO.S, L = CO.iso, born = opts && opts.born;
@@ -3669,7 +3706,7 @@ class Office3D {
     // clear the old floor, rooms and labels; the rooms' lamps are kept out of it (lampsBack below), and so are the
     // instanced meshes, for the new rooms to take up again (imesh)
     (this.lampPool || []).forEach((l) => { if (l.parent) l.parent.remove(l); });
-    this.imKeep();
+    this.imKeep(); this.warmKeep();
     release(this.world); this.world.clear(); this.layer.innerHTML = ''; this.rooms = {}; this.hits = []; this.pcs = [];
     const RS = L.RS, W = this.world;
     const pad = 0.5, T = 0.35, have = {}, kc = (x, y) => x + ',' + y;
@@ -3728,6 +3765,9 @@ class Office3D {
     this.selRing = new THREE.Group(); W.add(this.selRing);
     this.update();
     this.imDrop();
+    // the room made ready goes once the new rooms have been drawn (until then its materials hold their shaders)
+    if (this._warmed) this._warmDropAt = (this.frames || 0) + 2;
+    this._warmKey = null;
     if (!this.fitted) { this.fit(false); }
   }
   // every room's still parts merged per material (bakeRoom): the same picture in a fraction of the draw calls
@@ -3751,7 +3791,10 @@ class Office3D {
     // them instead of bringing a new light, which made every lit material build its shaders again (2.2 s of one
     // frame, 12 s at a quarter of the CPU, measured 2026-10-20). A dark lamp adds nothing to any surface it reaches.
     // Only then: topped up later, the new spare would be the new light.
-    if (first) while (pool.length < now.length + LAMP_SPARE) pool.push(new THREE.PointLight(0xeef6ff, 0, 9, 1.0));
+    // A spare is a room's lamp as shell() makes it, seen by the floors' mirror too (layer 1): one seen by the main view
+    // alone changed the mirror's set of lights when a room took it up, and every material the mirror draws was built
+    // again (11 shaders and a 368 ms frame after Create, measured 2026-10-20).
+    if (first) while (pool.length < now.length + LAMP_SPARE) { const s = new THREE.PointLight(0xeef6ff, 0, 9, 1.0); s.layers.enable(1); pool.push(s); }
     // the kept lamps this layout has no place for stay in the world, dark: a scene with fewer lights keys every lit
     // shader anew too, so an office that shrank (a department removed, the builder's New after Pre-build) compiled
     // them all again -- 2.3 s of stalled frames there, measured by the entry's session (2026-10-20)
@@ -7776,6 +7819,7 @@ class Office3D {
     try { if (this.post) this.post.render(); else this.renderer.render(this.scene, this.camera); this.frames = (this.frames || 0) + 1; }
     catch (e) { console.error('3D office stopped:', e); this.renderer.setAnimationLoop(null); if (this.onFail && !(this.frames > 30)) this.onFail(e); return; }
     keepCompiled(this.renderer, this);
+    if (this._warmDropAt && this.frames >= this._warmDropAt) { this._warmDropAt = 0; this.warmDrop(); }
     this.labels(w, h);
   }
   // the plates round the platform (callouts), the lot's label in its ring, the Manager's pill; agents' names only
