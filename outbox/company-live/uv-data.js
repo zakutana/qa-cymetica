@@ -10,14 +10,12 @@
 
   // a station's shape and its colour: the colour is one of the site's four, the variety is in the shape. The keys
   // are the buildings' old ones, so a company saved before the Universe went to space keeps its pick.
+  // The seven as stations.js draws them since 2026-10-20 (it sets these names too when it installs them; here, so the
+  // flat pictures where 3D cannot start carry the same ones).
   CO.SKINS = [
-    { key: 'tower', name: 'Spire' }, { key: 'dome', name: 'Biodome' }, { key: 'pyramid', name: 'Fortress' },
-    { key: 'orbital', name: 'Ring station' }, { key: 'rocket', name: 'Starship' }, { key: 'vault', name: 'Vault' }
+    { key: 'tower', name: 'Dreadnought' }, { key: 'dome', name: 'Shipyard' }, { key: 'pyramid', name: 'Pyramid Carrier' },
+    { key: 'orbital', name: 'Ring Habitat' }, { key: 'rocket', name: 'Lancer' }, { key: 'vault', name: 'Citadel' }, { key: 'stack', name: 'Monolith' }
   ];
-  // two stations as the operator's picture of the Universe draws them (2026-10-18): the Starship is his Laser
-  // station now (the key stays, so a company saved with it keeps its pick), and his Night Owl Trading is a seventh
-  CO.SKINS.forEach(function (s) { if (s.key === 'rocket') s.name = 'Laser station'; });
-  CO.SKINS.push({ key: 'stack', name: 'Data stack' });
   CO.ACCENTS = [
     { key: 'green', hex: '#00ff88' }, { key: 'cyan', hex: '#00cfff' }, { key: 'blue', hex: '#3b82f6' }, { key: 'red', hex: '#ff4444' }
   ];
