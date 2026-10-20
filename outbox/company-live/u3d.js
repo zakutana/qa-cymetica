@@ -2366,7 +2366,10 @@ class RoomPreview {
     if (url) SHOTS[job.key] = url;
     job.done.forEach((f) => f(url));
   }
-  name(n) { if (this.room) pvWall(this.room.r, n, this.room.r.dept.experts.length); }
+  name(n) {
+    if (this.wanted) this.wanted = Object.assign({}, this.wanted, { name: n });   // (typed while a room picked waits: prepare)
+    if (this.room) pvWall(this.room.r, n, this.room.r.dept.experts.length);
+  }
   // as big as his close-up of a room ("about this big"): near all of the view's height, a margin left for the turn
   fit() { pvFill(this.L, this.camera, pvFit(this.camera, this.pts, 1.64, 1.76, [0, 0.08])); }
   frame() {
