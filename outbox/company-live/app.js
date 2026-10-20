@@ -431,12 +431,12 @@
     var v = CO.deptView(d), appr = S.approvals.filter(function (a) { return a.dept_id === d.id; });
     setHTML($('dr-switch'), switcher(d.id));
     var ln = CO.deptLine(d, v);
-    setHTML($('dr-head'), '<i class="dot ' + v.status + (ln.tone === 'red' ? ' needs' : '') + '"></i><h2>' + esc(d.name) + '</h2>' +
-      (d.files_as ? '<span class="et ' + (d.et10 ? 'lit' : 'zero') + '" title="ET10 Cymetica paid for accepted bugs, to ' + esc(d.files_as) + '">' + (d.et10 ? '+' : '') + (d.et10 || 0).toLocaleString('en-US') + ' ET10</span>' : '') +
-      (RO ? '' : '<span class="x"><button class="btn" data-a="edit">Edit</button><button class="btn rd" data-a="delete" title="Delete this department">Delete</button></span>'));
     // its page on cymetica.com, one click from its head
     var lk = CO.DEPT_LINK[d.key];
-    setHTML($('dr-link'), lk ? '<a class="pg" href="' + esc(lk.url) + '" target="_blank" rel="noopener"><span>' + esc(lk.label.split(':')[0]) + '</span><em>' + esc(lk.url.replace(/^https:\/\//, '')) + '</em><b>Open ↗</b></a>' : '');
+    var pgi = lk ? '<a class="pgi" href="' + esc(lk.url) + '" target="_blank" rel="noopener" title="' + esc(lk.label.split(':')[0]) + ' on cymetica.com" aria-label="Open ' + esc(lk.label.split(':')[0]) + '"><svg viewBox=\"0 0 20 20\" aria-hidden=\"true\"><circle cx=\"9\" cy=\"11\" r=\"6.2\"/><ellipse cx=\"9\" cy=\"11\" rx=\"2.6\" ry=\"6.2\"/><path d=\"M2.8 11h12.4 M3.9 7.8h10.2 M3.9 14.2h10.2 M12.6 2.6h4.8v4.8 M17.4 2.6l-5.2 5.2\"/></svg></a>' : '';
+    setHTML($('dr-head'), '<i class="dot ' + v.status + (ln.tone === 'red' ? ' needs' : '') + '"></i><h2>' + esc(d.name) + '</h2>' +
+      (d.files_as ? '<span class="et ' + (d.et10 ? 'lit' : 'zero') + '" title="ET10 Cymetica paid for accepted bugs, to ' + esc(d.files_as) + '">' + (d.et10 ? '+' : '') + (d.et10 || 0).toLocaleString('en-US') + ' ET10</span>' : '') +
+      '<span class="x">' + pgi + (RO ? '' : '<button class="btn" data-a="edit">Edit</button><button class="btn rd" data-a="delete" title="Delete this department">Delete</button>') + '</span>');
     // what it is doing right now, in one line: the first thing anyone wants to know
     setHTML($('dr-now'), '<div class="now t-' + ln.tone + '"><p>' + esc(ln.text) + '</p>' +
       (appr.length ? '<button class="btn rd" type="button" data-a="appr">Open</button>' : '') + (v.running ? '<span class="run"><i></i></span>' : '') + '</div>');
@@ -1034,8 +1034,17 @@
   // An expert's chip: in the Add-a-department dialog its astronaut -- the 3D one once its picture is drawn, in the 3D
   // dialog, the flat office's in the 2D one; in the edit form the flat figure. dlgMode says which dialog is open.
   var dlgMode = '';
+  // the cards' 3D pictures, drawn once by the dialog's own renderer and kept as files (shots/): shown at once, where
+  // the renderer drew 18 of them as the dialog opened and the flat figures stood in meanwhile
+  var SHOT_FILES = { astro: ['qa_tester', 'researcher', 'trader', 'developer', 'lab_scientist', 'auditor', 'designer'],
+    room: ['development', 'design', 'testing', 'testing_lab', 'trading_desk', 'custom-office', 'custom-ops', 'custom-library', 'custom-workshop', 'custom-command', 'custom-greenhouse'] };
+  function shotFile(kind, k, look) {
+    var n = kind === 'astro' ? k : k + (look ? '-' + look : '');
+    return SHOT_FILES[kind].indexOf(n) >= 0 ? 'shots/' + kind + '-' + n + '.webp' : null;
+  }
+  CO.shotFile = shotFile;
   function miniArt(k) {
-    var u = dlgMode === '3d' && CO.U3 && CO.U3.shotOf && CO.U3.shotOf('astro:' + k);
+    var u = dlgMode === '3d' && (shotFile('astro', k) || (CO.U3 && CO.U3.shotOf && CO.U3.shotOf('astro:' + k)));
     if (u) return '<img alt="" src="' + u + '">';
     if (dlgMode && CO.iso && CO.iso.astroArt) return CO.iso.astroArt(k, true);
     return CO.expertArt(k, true);
@@ -1062,12 +1071,15 @@
   // floating -- with its experts in it; on the left what it is, or the expert last clicked ("kdyz v add department
   // kliknu na experta nejakeho tak taky se ma zobrazit nekde popis jeho o cem je"); the departments and the experts in
   // two sliders under it, their pictures those rooms and astronauts. Where 3D cannot start, the flat one.
-  function addDeptModal() {
+  function addDeptModal(editId) {
     var L = looks(), own = CO.TEMPLATES.filter(function (t) { return t.key === 'custom'; })[0] || { key: 'custom', name: '', experts: ['researcher'], charter: '' };
     var o = { key: 'custom', name: '', experts: own.experts.slice(), charter: '' };
     var free = CO.TEMPLATES.filter(function (t) { return t.key !== 'custom' && !CO.S.departments.some(function (d) { return d.key === t.key; }); })[0];
     if (free) o = { key: free.key, name: free.name, experts: free.experts.slice(), charter: free.charter };
     o.look = L[0].key;
+    // Edit is this dialog on a department that exists: its own room, kind and look, no picker of kinds
+    var ed = editId != null ? CO.dept(editId) : null;
+    if (ed) o = { key: ed.key, name: ed.name, experts: ed.experts.slice(), charter: ed.charter, look: ed.look || L[0].key };
     var mode = !RO && ui.view === '3d' && !!office3d && !!(CO.U3 && CO.U3.roomPreview) ? '3d' : '2d', viewing = null, nameRaf = 0;
     function tplOf(k) { return CO.TEMPLATES.filter(function (t) { return t.key === k; })[0] || null; }
     function draw(m) {
@@ -1083,8 +1095,9 @@
         };
         sync(); shots();
         // what a click can bring next, built while nothing happens: every department as its card staffs it, then
-        // every look of your own
-        mine.ahead(CO.TEMPLATES.map(function (t) { return { key: t.key, experts: t.experts, look: t.key === 'custom' ? L[0].key : null }; })
+        // every look of your own (editing, only the looks of its own room, if it is one of your own)
+        if (ed) mine.ahead(o.key === 'custom' ? L.map(function (l) { return { key: 'custom', experts: o.experts, look: l.key }; }) : []);
+        else mine.ahead(CO.TEMPLATES.map(function (t) { return { key: t.key, experts: t.experts, look: t.key === 'custom' ? L[0].key : null }; })
           .concat(L.map(function (l) { return { key: 'custom', experts: own.experts, look: l.key }; })));
       } else {
         $('d3-stage').style.setProperty('--stars', CO.iso.stars());
@@ -1093,7 +1106,7 @@
     }
     function form() {
       var two = mode === '2d';
-      return '<div class="ad3' + (two ? ' two' : '') + '"><div class="d3h"><h3>Add a department</h3><button class="btn" data-a="close">×</button></div>' +
+      return '<div class="ad3' + (two ? ' two' : '') + (ed ? ' edit' : '') + '"><div class="d3h"><h3>' + (ed ? 'Edit department' : 'Add a department') + '</h3><button class="btn" data-a="close">×</button></div>' +
         '<div class="d3main"><aside class="d3side"><div class="d3pane d3dept">' +
           '<div class="d3kick"><span id="d3-ic"></span><div class="d3k">DEPARTMENT <span id="d3-ti"></span></div></div>' +
           '<input id="df-name" class="d3name" maxlength="60" autocomplete="off" value="' + esc(o.name) + '" placeholder="Name it, e.g. Growth">' +
@@ -1101,13 +1114,14 @@
           '<div class="d3k">WHO WORKS THERE <span>click one to read it</span></div><div class="hiredline" id="df-hired">' + hiredLine(o.experts) + '</div>' +
           '<div class="d3ch"><button type="button" class="d3cht" data-a="charter"><span class="d3k">CHARTER</span><span class="d3n" id="df-n">' + o.charter.length + ' / 2,000</span></button>' +
           '<textarea id="df-ch" maxlength="2000" placeholder="Your rules, notes and lessons">' + esc(o.charter) + '</textarea></div>' +
-          '<div class="d3act"><span class="hint">Its first task starts from this charter.</span><span class="d3btns"><button class="btn" data-a="close">Cancel</button><button class="btn gr" data-a="create">Create department</button></span></div>' +
+          '<div class="d3act"><span class="hint">' + (ed ? 'Its next task starts from this charter.' : 'Its first task starts from this charter.') + '</span><span class="d3btns">' +
+            (ed ? '<button class="btn rd" data-a="remove">Delete</button>' : '') + '<button class="btn" data-a="close">Cancel</button><button class="btn gr" data-a="create">' + (ed ? 'Save' : 'Create department') + '</button></span></div>' +
         '</div><div class="d3pane d3ex" id="d3-ex"></div></aside>' +
         '<div class="d3stage' + (two ? ' d2stage' : '') + '" id="d3-stage">' + (two ? '<div class="d2room" id="d2-room"></div>' : '') +
           '<button type="button" class="d3arw l" data-a="look-prev" title="Previous look">‹</button><button type="button" class="d3arw r" data-a="look-next" title="Next look">›</button>' +
           '<div class="d3look" id="d3-look"></div>' + (two ? '' : '<div class="d3tip">drag to turn</div>') +
         '</div></div><div class="d3bot">' +
-          '<div class="d3col"><div class="sec step">PICK A DEPARTMENT</div>' + slider('tpl-track', CO.TEMPLATES.map(tcard).join('')) + '</div>' +
+          (ed ? '' : '<div class="d3col"><div class="sec step">PICK A DEPARTMENT</div>' + slider('tpl-track', CO.TEMPLATES.map(tcard).join('')) + '</div>') +
           '<div class="d3col"><div class="sec step">HIRE ITS EXPERTS <span id="ex-n">' + o.experts.length + ' hired</span></div>' +
             slider('ex-track', CO.EXPERTS.map(function (e) { return xcard(e, o.experts.indexOf(e.key) >= 0); }).join('')) + '</div>' +
         '</div></div>';
@@ -1116,7 +1130,7 @@
     // opening, or the flat art until the 3D one is drawn
     function cardArt(t, look) {
       if (mode === '2d') return CO.iso.roomArt({ key: t.key, experts: t.experts, look: look, name: t.name }, { still: true });
-      var u = CO.U3.shotOf('room:' + t.key + ':' + (look || ''));
+      var u = shotFile('room', t.key, look) || CO.U3.shotOf('room:' + t.key + ':' + (look || ''));
       return u ? '<img alt="" src="' + u + '">' : CO.deptArt(t.key);
     }
     function tcard(t) {
@@ -1130,7 +1144,7 @@
     // rest of the card opens it on the left
     function figOf(k, still) {
       if (mode === '2d') return CO.iso.astroArt(k, still);
-      var u = CO.U3.shotOf('astro:' + k);
+      var u = shotFile('astro', k) || CO.U3.shotOf('astro:' + k);
       return u ? '<img alt="" src="' + u + '">' : CO.expertArt(k);
     }
     function xcard(e, on) {
@@ -1162,6 +1176,7 @@
       if (!dlg3) return;
       Array.prototype.forEach.call(document.querySelectorAll('#ex-track .xcard'), function (c) {
         var k = c.getAttribute('data-ex');
+        if (shotFile('astro', k)) return;
         dlg3.shot('astro', k, function (u) {
           put(c.querySelector('.fig'), u);
           var h = $('df-hired'); if (u && dlg3 && h) h.innerHTML = hiredLine(hiredKeys());
@@ -1170,6 +1185,7 @@
       });
       CO.TEMPLATES.forEach(function (t) {
         if (t.key === 'custom') return customShot();
+        if (shotFile('room', t.key)) return;
         var c = document.querySelector('#tpl-track .tcard[data-tpl="' + t.key + '"]');
         dlg3.shot('room', { key: t.key, experts: t.experts }, function (u) { if (c) put(c.querySelector('.art'), u); });
       });
@@ -1178,7 +1194,7 @@
     function customShot() {
       var c = document.querySelector('#tpl-track .tcard[data-tpl="custom"]'), lk = o.look; if (!c) return;
       var ic = c.querySelector('b .dic'); if (ic) ic.outerHTML = CO.deptIcon({ key: 'custom', look: lk });
-      if (mode === '2d') { c.querySelector('.art').innerHTML = cardArt(own, lk); return; }
+      if (mode === '2d' || shotFile('room', 'custom', lk)) { c.querySelector('.art').innerHTML = cardArt(own, lk); return; }
       if (dlg3) dlg3.shot('room', { key: 'custom', experts: own.experts, look: lk }, function (u) { if (o.look === lk) put(c.querySelector('.art'), u); });
     }
     function put(box, u) { if (u && box && document.body.contains(box)) box.innerHTML = '<img alt="" src="' + u + '">'; }
@@ -1189,7 +1205,7 @@
       var e = CO.expert(k), pane = $('d3-ex'); if (!e || !pane) return;
       viewing = k;
       var on = hiredKeys().indexOf(k) >= 0, i = CO.EXPERTS.indexOf(e), web = (e.tools || []).length > 0, dn = $('df-name').value.trim() || (tplOf(o.key) || {}).name || 'your department';
-      var big = mode === '3d' && !CO.U3.shotOf('astro:' + k) ? CO.expertArt(k) : figOf(k, false);
+      var big = mode === '3d' && !shotFile('astro', k) && !CO.U3.shotOf('astro:' + k) ? CO.expertArt(k) : figOf(k, false);
       var fits = (e.fits || []).map(function (f) { var t = tplOf(f); return '<span class="d3fit' + (f === o.key ? ' here' : '') + '">' + CO.deptIcon({ key: f }) + esc(t ? t.name : f) + '</span>'; }).join('');
       pane.innerHTML = '<button type="button" class="d3back" data-a="xback">‹ <b>' + esc(dn) + '</b></button>' +
         '<div class="d3xhead"><div class="d3xfig">' + big + '</div><div><div class="d3k">EXPERT <span>' + (i + 1) + ' / ' + CO.EXPERTS.length + '</span></div>' +
@@ -1232,27 +1248,25 @@
       else if (a === 'look-prev' || a === 'look-next') {
         var i = lookIdx(o.look) + (a === 'look-next' ? 1 : -1);
         o.look = L[(i + L.length) % L.length].key; sync(); customShot();
-      } else if (a === 'create') {
+      } else if (a === 'remove' && ed) deleteDeptModal(ed.id);
+      else if (a === 'create') {
         var f = readDeptForm();
         if (!f.name) { hideExpert(); $('df-name').focus(); $('df-name').style.borderColor = 'var(--red)'; return; }
         if (!f.experts.length) { toast('Hire at least one expert.'); return; }
         var look = o.key === 'custom' ? o.look : null;
         closeModal();
+        if (ed) {
+          CO.act.editDept(ed.id, { name: f.name, experts: f.experts, charter: f.charter, look: look });
+          ui.dirty = false; $('dr-ch-text').value = CO.dept(ed.id).charter; renderDrawer(); toast(f.name + ' saved.'); return;
+        }
         var d = CO.act.addDept({ key: o.key, name: f.name, experts: f.experts, charter: f.charter, look: look });
         toast('New department: ' + d.name + '. Its room is being built.');
       }
     }
     draw(mode);
   }
-  function editDeptModal(id) {
-    var d = CO.dept(id); if (!d) return;
-    dlgMode = '';
-    openModal('<div class="mh"><h3>Edit department</h3><button class="btn" data-a="close">×</button></div>' + deptForm({ key: d.key, name: d.name, experts: d.experts.slice(), charter: d.charter }, true) +
-      '<div class="mf"><button class="btn rd" data-a="remove">Delete department</button><span class="sp"></span><button class="btn" data-a="close">Cancel</button><button class="btn gr" data-a="save">Save</button></div>', true, function (a) {
-      if (a === 'save') { var f = readDeptForm(); if (!f.name) return; closeModal(); CO.act.editDept(id, f); ui.dirty = false; $('dr-ch-text').value = CO.dept(id).charter; renderDrawer(); }
-      if (a === 'remove') deleteDeptModal(id);
-    });
-  }
+  // Edit is the Add dialog on the department ("edit departmentu vypada stare")
+  function editDeptModal(id) { if (CO.dept(id)) addDeptModal(id); }
   // deleting a department asks once: its work stops, its room goes, what it learned stays readable
   function deleteDeptModal(id) {
     var d = CO.dept(id); if (!d) return;

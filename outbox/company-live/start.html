@@ -11,6 +11,7 @@
 <link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@600;700&display=swap" rel="stylesheet">
 <style>html.ld body { visibility: hidden; }</style>
 <!-- the loading screen's look, before the first paint: until the sun and both doors have drawn, it is what shows -->
+<link rel="preload" as="image" href="sun.webp" fetchpriority="high">
 <link rel="stylesheet" href="boot.css">
 <!-- the stations turn in 3D: the office's own engine (u3d.js) with the stations over it (stations.js) -->
 <script type="importmap">{ "imports": {
@@ -27,7 +28,7 @@
 <div class="boot" id="boot" aria-hidden="true">
   <div class="ldr"><i class="ld-halo"></i><i class="ld-beams"></i><i class="ld-ping"></i><i class="ld-ping p2"></i>
     <i class="ld-orbit o3"><b></b></i><i class="ld-orbit o2"><b></b></i><i class="ld-orbit o1"><b></b></i>
-    <i class="ld-ring r3"></i><i class="ld-ring r2"></i><i class="ld-ring r1"></i><i class="ld-heart"></i>
+    <i class="ld-ring r3"></i><i class="ld-sun"><b></b><b></b></i>
     <div class="ld-read"><b class="ld-pct">0</b><span>%</span></div><div class="ld-what">LOADING</div><div class="ld-bar"><i></i></div></div>
 </div>
 <!-- (no site bar: it is the site's, not the app's -- "ten vrchni panel nikde nedavej to neni soucast apky") -->

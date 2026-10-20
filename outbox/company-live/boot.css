@@ -37,6 +37,14 @@
   box-shadow: 0 0 34px 10px rgba(0, 207, 255, .55), 0 0 90px 34px rgba(0, 255, 136, .16);
   animation: ld-pulse 1.4s ease-in-out infinite; }
 @keyframes ld-pulse { 50% { transform: scale(1.14); } }
+/* the centre: a miniature of Cymetica's sun as the Universe paints it (sun.webp, CO.colliderPaint(1)), turning slowly
+   against a mirrored copy of itself, as the map's two layers do; the ball is the middle 0.6 of the picture */
+.ld-sun { width: 200px; height: 200px; margin: -100px 0 0 -100px; filter: drop-shadow(0 0 18px rgba(255, 190, 90, .35)); }
+.ld-sun b { position: absolute; inset: 0; border-radius: 50%; background: url(sun.webp) center / contain no-repeat; will-change: transform; }
+.ld-sun b:first-child { animation: ld-spin 48s linear infinite, ld-flick 2.3s ease-in-out infinite alternate; }
+.ld-sun b + b { opacity: .38; mix-blend-mode: screen; transform: scaleX(-1); animation: ld-spin-r 70s linear infinite; }
+@keyframes ld-spin-r { from { transform: scaleX(-1) rotate(0deg); } to { transform: scaleX(-1) rotate(-360deg); } }
+@keyframes ld-flick { to { opacity: .86; } }
 /* the collider's rings: two arcs racing each other and a fine dashed one */
 .ld-ring { border: 2px solid transparent; }
 .ld-ring.r1 { width: 112px; height: 112px; margin: -56px 0 0 -56px; border-top-color: #00ff88; border-left-color: rgba(0, 255, 136, .28);

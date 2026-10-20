@@ -743,6 +743,8 @@ select:focus, .search:focus, .field input:focus, .field textarea:focus { border-
 .d3look b { font-family: 'JetBrains Mono'; font-size: 11px; color: var(--green); }
 .d3tip { position: absolute; right: 14px; top: 12px; z-index: 2; font-size: 10.5px; color: var(--dim2); letter-spacing: .06em; pointer-events: none; }
 .d3bot { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 34px; padding: 0 22px 14px; }
+/* editing: no picker of kinds, the experts across the whole width; Delete beside Cancel */
+.ad3.edit .d3bot { grid-template-columns: minmax(0, 1fr); } .d3btns .rd { margin-right: auto; }
 .d3col { min-width: 0; }
 .ad3 .sec.step { margin: 0 0 2px; font-size: 10.5px; letter-spacing: .12em; font-weight: 700; }
 .ad3 .slider { margin: 0 -4px; }
@@ -817,10 +819,11 @@ select:focus, .search:focus, .field input:focus, .field textarea:focus { border-
   border: 1px dashed var(--line3); background: rgba(6, 9, 15, .85); font-size: 10.5px; color: var(--dim2); opacity: .55; transition: opacity .2s; }
 .simbar:hover { opacity: 1; }
 /* a department's page, a button in its head; Operations' card on the right */
-#dr-link .pg { display: flex; align-items: center; gap: 10px; margin-top: 10px; padding: 9px 12px; border: 1px solid rgba(0, 207, 255, .45); border-radius: 9px;
-  background: rgba(0, 207, 255, .07); color: var(--text); font-size: 12px; text-decoration: none; }
-#dr-link .pg span { font-weight: 700; } #dr-link .pg em { color: var(--dim2); font-style: normal; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; flex: 1; }
-#dr-link .pg b { color: var(--cyan); white-space: nowrap; } #dr-link .pg:hover { border-color: var(--cyan); background: rgba(0, 207, 255, .13); }
+/* a department's page on cymetica.com: a glowing tile with a globe, its name in the tooltip */
+.dh .pgi { width: 34px; height: 34px; display: grid; place-items: center; border-radius: 9px; border: 1px solid rgba(0, 207, 255, .5);
+  background: radial-gradient(circle at 35% 30%, rgba(0, 207, 255, .28), rgba(7, 12, 20, .2)); box-shadow: 0 0 12px rgba(0, 207, 255, .25); transition: box-shadow .2s, border-color .2s; }
+.dh .pgi svg { width: 19px; height: 19px; fill: none; stroke: var(--cyan); stroke-width: 1.5; stroke-linecap: round; stroke-linejoin: round; filter: drop-shadow(0 0 3px rgba(0, 207, 255, .8)); }
+.dh .pgi:hover { border-color: var(--cyan); box-shadow: 0 0 18px rgba(0, 207, 255, .55); }
 .panel.ops .hint { margin: 10px 0 12px; } .panel.ops #ops-open { width: 100%; }
 .simbar b { color: var(--cyan); letter-spacing: .1em; margin-right: 4px; } .simbar span { margin-right: 6px; }
 .simbar button { padding: 3px 7px; border-radius: 5px; color: var(--dim); font-size: 10.5px; font-weight: 700; }
