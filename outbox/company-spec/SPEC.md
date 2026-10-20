@@ -63,6 +63,10 @@ A free company would let anyone create thousands of them. Pick what fits, and ke
 - a price in ET10 (for example 5,000 ET10);
 - a 7-day trial.
 
+The mockup shows the step as a popup on Create company (`builder.html`): signed out, "Sign up first" with Sign up and
+Log in (`builder.html?guest`); signed in, the three ways in as tiles -- 5,000 ET10 from the balance, upgrade to Pro, a
+7-day free trial. Keep the ones you choose and drop the rest.
+
 Today creating one is free and its work runs only on a paid NEXUS plan (on Free it stays queued).
 
 ## 4. NEXUS builds the whole company from one request

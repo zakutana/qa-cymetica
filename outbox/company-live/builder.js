@@ -22,26 +22,25 @@
   // its bubble.
   var BALANCE = { et10: 12450, usdc: 86.2 };   // the account's balance on its Cymetica profile (sample; GET /api/v1/account)
   var PAGES = {
-    vault: [['Your balance', 'https://cymetica.com/account']],
     development: [['Build it Better', 'https://cymetica.com/leaderboard/features']],
     testing: [['Bug board', 'https://cymetica.com/leaderboard/bugs?filter=mine']],
     testing_lab: [['Experiments', 'experiments.html']],
     trading_desk: [['My bots', 'https://cymetica.com/my-agents'], ['Agent Tournaments', 'https://cymetica.com/agent-tournaments']]
   };
   var FIXED = [
-    { k: 'hub', n: 'Command', t: 'The heart of your company. You talk only to NEXUS, the AI at its core: tell it what you want, and it creates departments, hires expert agents into them, plans the work and reports back.' },
-    { k: 'vault', n: 'Vault', t: 'Everything your company earns lands here, in USDC and ET10. Private: only you see inside. Want it to grow? Start by building products.' },
-    { k: 'audit', n: 'Operations', t: 'And Operations watches over all of it: it audits every process, finds what is slow or wasted, and optimises the way your company works.' }
+    { k: 'hub', n: 'Command', t: 'The brain of your company. You run all of it through NEXUS: tell it what you want, and it creates departments, hires expert agents into them, plans the work and reports back.' },
+    { k: 'vault', n: 'Vault', t: 'Everything your company earns lands here, in USDC and ET10. Grow it by earning real revenue and ET10 rewards.' },
+    { k: 'audit', n: 'Operations', t: 'This department watches over all of it: it audits every process, finds what is slow or wasted, and optimises the way your company works.' }
   ];
   var PRE = CO.PREBUILD || [
     { key: 'testing', name: 'Cymetica QA' }, { key: 'development', name: 'Development' },
     { key: 'testing_lab', name: 'Quant Lab' }, { key: 'trading_desk', name: 'Trading desk' }
   ];
   var LINE = {
-    development: 'Tell NEXUS your idea: Development designs it, builds it and ships it on Cymetica as your product. When people use it, it earns you real revenue, plus ET10 as a bonus. Follow it all in the Portfolio tab.',
-    testing: 'Test what you ship. QA tests your products, and anything else on Cymetica, and files every bug it finds. Each verified bug pays you ET10.',
-    testing_lab: 'Products are one way to earn, trading is another. Here researchers take your ideas and instructions and hunt for strategies that make money on Cymetica, proving each on paper in its own Experiments tab.',
-    trading_desk: 'What wins on paper goes to work here: run your proven strategies and bots, with real money once you approve, or send them to compete in Agent Tournaments.'
+    development: 'Tell NEXUS your idea: Development designs it, builds it and ships it on Cymetica as your product. When people use it, it earns you real revenue, plus ET10 as a bonus. Your products are shown in the Portfolio tab.',
+    testing: 'Test what you ship. QA tests your products, and anything on Cymetica you point it at, and files every bug it finds. Each verified bug pays you ET10 in rewards.',
+    testing_lab: 'Products are one way to earn, trading is another. Here researchers take your ideas and test them as experiments, looking for the most profitable trading strategies on Cymetica. All in paper money; every experiment is in the Experiments lab.',
+    trading_desk: 'Then run your verified strategies with real money: create real trading agents and send them to Agent Tournaments.'
   };
   var ORDER = ['hub', 'vault', 'development', 'testing', 'testing_lab', 'trading_desk', 'audit'];
   var TOUR = ORDER.map(function (k) {
@@ -368,7 +367,37 @@
   }
   function tourBack() { if (ti > 0) tourAt(ti - 1); else show(2); }
   // Saved as the modal saves it; prebuild says which start the office's boot sets up (data.js/sim.js read it)
-  function finish() {
+
+  // The Create company popup (the operator, 2026-10-20: without an account, sign up first; with one, it costs 5,000 ET10,
+  // or the Pro plan, or a 7-day free trial -- Cymetica's to choose among, SPEC section 3). The mock shows all three, and
+  // ?guest shows it signed out.
+  var GUEST = /[?&]guest\b/.test(location.search);
+  function createGate(done) {
+    var el = $('gate'); if (!el) return done();
+    var nm = o.name || 'your company', can = BALANCE.et10 >= 5000;
+    el.innerHTML = '<div class="bz-gc"><button type="button" class="bz-x" data-g="close" title="Back">×</button>' + (GUEST ?
+      '<h3>Sign up first.</h3><p>A company belongs to a Cymetica account.</p>' +
+      '<div class="bz-gb"><button type="button" class="bz-go" data-g="signup">Sign up →</button><button type="button" class="btn" data-g="login">Log in</button></div>' :
+      '<h3>Create ' + esc(nm) + '.</h3><p>Pick how you start.</p><div class="bz-gw">' +
+        '<button type="button" class="bz-gw1' + (can ? '' : ' off') + '" data-g="et10"><em>PAY ONCE</em><b>5,000 <i>ET10</i></b><span>from your balance · ' + BALANCE.et10.toLocaleString('en-US') + ' ET10</span></button>' +
+        '<button type="button" class="bz-gw1" data-g="pro"><em>PRO PLAN</em><b>Upgrade</b><span>a company comes with Pro</span></button>' +
+        '<button type="button" class="bz-gw1" data-g="trial"><em>FREE TRIAL</em><b>7 days</b><span>then choose a way to keep it</span></button>' +
+      '</div>') + '</div>';
+    el.hidden = false;
+    el.onclick = function (e) {
+      var b = e.target.closest('[data-g]');
+      if (!b && e.target === el) b = { getAttribute: function () { return 'close'; } };
+      if (!b) return;
+      var g = b.getAttribute('data-g');
+      if (g === 'close') { el.hidden = true; return; }
+      if (g === 'signup' || g === 'login') { GUEST = false; return createGate(done); }   // mockup: signed in, then on
+      if (g === 'et10' && !can) return;
+      el.hidden = true; done();
+    };
+  }
+  // Create company asks first: who is signing up, and which way in (createGate); then the company is made
+  function finish() { createGate(make); }
+  function make() {
     CO.saveProfile({ name: o.name, mission: o.mission, skin: o.skin, accent: o.accent, public: o.public, prebuild: o.start === 'pre' ? 'starter' : '' });
     location.href = 'index.html?empty&created=1';
   }
