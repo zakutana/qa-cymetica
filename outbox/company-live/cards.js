@@ -12,7 +12,7 @@
     design: 'Screen-by-screen briefs, and reviews of live pages against them',
     testing: "Cymetica's bug bounty: tests their products, files bugs as you, earns ET10",
     testing_lab: 'Paper experiments, success rule set first; keeps the winners',
-    trading_desk: 'Finds profitable agents and proves them at Agent Tournaments tables',
+    trading_desk: 'Finds ways to make money; proven agents can enter Agent Tournaments',
     custom: 'Your own name, charter and experts'
   };
   // what a department does, in three short lines off its charter: the 3D dialog's panel beside its room
@@ -21,7 +21,7 @@
     design: ['Screen-by-screen briefs for new pages.', 'Reviews live pages against their brief.', 'Briefs go out as Build it Better requests.'],
     testing: ["Cymetica's bug bounty, as your department.", 'Tests their pages, API and docs; files bugs as you.', 'Every bug they accept pays you ET10.'],
     testing_lab: ['Paper experiments: cards, bots, memecoins.', 'Sets the success rule before each one starts.', 'Keeps the winners, archives the rest.'],
-    trading_desk: ['Finds agents that make money on Cymetica.', 'Proves them at Agent Tournaments tables.', 'Paper only: every seat waits for you.'],
+    trading_desk: ['Finds ways to make money, with NEXUS.', 'The Quant Lab proves each on paper.', 'Proven agents can enter Agent Tournaments; every step waits for you.'],
     custom: ['Your own department: name it, staff it.', 'Pick its room with the arrows.', 'First task: read the charter, propose a week.']
   };
   CO.EXPERT_INFO = {

@@ -59,12 +59,12 @@
     { key: 'testing_lab', name: 'Testing lab', experts: ['lab_scientist', 'researcher'],
       charter: 'Paper experiments on event cards, bot settings, memecoin signals and head-to-head. Asks NEXUS for strategies; sets the success rule before each experiment starts; judges it when the window closes; keeps winners and archives losers. Runs a daily newcomer check of the public site.' },
     { key: 'trading_desk', name: 'Trading desk', experts: ['trader', 'researcher'],
-      charter: "Find agents that make money on Cymetica and prove them in Agent Tournaments.\n" +
-        "- Look for candidates every day: the agents on cymetica.com/agents, bots built in the Bot Assembly Terminal (cymetica.com/terminal), and what NEXUS recommends.\n" +
-        "- A candidate needs a paper record first: positive ROI after fees over 30 days, at least 40 trades, drawdown under 10%.\n" +
-        "- Send each candidate to a paper table at cymetica.com/agent-tournaments: a FLASH table (1 day) for a quick read, a 7-day table for the verdict. Every seat waits for my approval.\n" +
-        "- Follow each seat's rank, ROI and volume. Top three at a 7-day table: keep it and enter the next table. Otherwise archive it with the reason.\n" +
-        "- Paper only. ET10 tables and anything with real money wait for my approval." },
+      charter: "Find ways to make money on Cymetica and hand each to the lab as a paper experiment.\n" +
+        "- Look every day: what NEXUS recommends, the agents on cymetica.com/agents, bots built in the Bot Assembly Terminal (cymetica.com/terminal), the markets that moved.\n" +
+        "- A candidate needs a reason: a paper record, a signal or NEXUS's word. Write it up with the rule it should beat.\n" +
+        "- The Quant Lab proves it on paper; nothing is trusted before its window closes.\n" +
+        "- When an experiment wins, draft its next step: a real-money stake (the stake, the stop, the window) or a seat for the agent at an Agent Tournaments table.\n" +
+        "- Every such step waits for my approval, and the company never places a real trade itself." },
     { key: 'custom', name: '', experts: ['researcher'], charter: '' }
   ];
   // What a department of your own can look like: the owner picks one with the arrows round its room when creating it
@@ -110,8 +110,8 @@
     testing: { url: 'https://cymetica.com/leaderboard/bugs?filter=mine', label: 'Bug board · My Bugs' },
     development: { url: 'https://cymetica.com/leaderboard/features', label: 'Build it Better board' },
     design: { url: 'https://cymetica.com/leaderboard/features', label: 'Build it Better board' },
-    testing_lab: { url: 'https://cymetica.com/my-agents', label: 'My Agents' },
-    trading_desk: { url: 'experiments.html', label: 'Experiments: what we try and how it goes' },
+    testing_lab: { url: 'experiments.html', label: 'Experiments: what we try and how it goes' },
+    trading_desk: { url: 'https://cymetica.com/my-agents', label: 'My Agents' },
     custom: { url: 'https://cymetica.com/company', label: 'Company' }
   };
   // what a department's work usually raises next, so a process can show what it leads to
@@ -122,7 +122,7 @@
     ['a new build is released', 'testing', 'tests it the same day and reports what is broken'],
     ['someone has a product idea', 'development', 'writes it up as a Build it Better request'],
     ['someone finds a way to make money', 'testing_lab', 'proves it on paper first'],
-    ['an agent wins on paper', 'trading_desk', 'seats it at an Agent Tournaments table']
+    ['an experiment wins on paper', 'trading_desk', 'drafts its next step for your approval: a real-money stake or an Agent Tournaments seat']
   ];
 
   // GET /api/v1/token-launch/chains, read 2026-10-16.
@@ -139,7 +139,7 @@
         outcome: 'Draft: 9 lines, 2 pictures', why: 'from the Supply Analyzer notes' },
       { title: 'Chart Analyzer: check the one-number build', turns: 1, expert: 'developer',
         outcome: 'Score matches its study on 18 of 20 coins', why: 'delivery claimed this morning' },
-      { title: 'Agent Tournaments v3: diff their BB-SPEC', turns: 1, expert: 'researcher',
+      { title: 'Chart Analyzer v3: diff their BB-SPEC', turns: 1, expert: 'researcher',
         outcome: '24 of 24 lines word for word', why: 'their spec arrived' },
       { title: 'Gem Screener: the four Guardians to add', kind: 'BB request', turns: 2, expert: 'developer',
         outcome: 'Draft: Who holds it, Fake volume, Insider flow, Whales', why: 'token-movement analyzer is live' }
@@ -147,7 +147,7 @@
     design: [
       { title: 'Brief: Trading Station on a phone', turns: 2, expert: 'designer', outcome: '6 screens at 390 px',
         why: 'the phone view is open in their tracker' },
-      { title: 'Review: Agent Tournaments lobby vs its brief', turns: 1, expert: 'designer',
+      { title: 'Review: Gem Screener lobby vs its brief', turns: 1, expert: 'designer',
         outcome: '2 gaps: strip height, chip colour', why: 'build went live at 14:10' },
       { title: 'Review: /company office at 1440', turns: 1, expert: 'designer', outcome: 'Labels 3-5 px; office height-limited',
         why: 'you asked for it' }
@@ -173,14 +173,14 @@
         why: 'parent bot won 3 windows' }
     ],
     trading_desk: [
+      { title: 'Ask NEXUS: where the money is this week', turns: 1, expert: 'researcher', outcome: '3 ideas, each with the rule it should beat',
+        why: 'every Monday' },
       { title: 'Scan: agents by 30-day paper ROI', turns: 1, expert: 'researcher', outcome: '3 candidates: +4% or more after fees, 40+ trades',
         why: 'the daily scan' },
-      { title: 'Seat: Fibonacci Phoenix at a FLASH $5 table', kind: 'seat request', turns: 1, expert: 'trader',
-        outcome: 'Waits for you', why: 'best candidate of the scan' },
-      { title: 'Terminal: Momentum Hawk with a 4% stop', turns: 2, expert: 'trader', outcome: 'Backtest +6.2% in 30 days, 52 trades',
-        why: 'its parent placed 2nd at table 13' },
-      { title: 'Follow the seats: 2 tables running', turns: 1, expert: 'researcher', outcome: 'Phoenix 3rd at table 13, +2.4% ROI, day 4 of 7',
-        why: 'every 6 hours while a table runs' }
+      { title: 'Real trade: ET10 grid, 50 USDC, stop -5%', kind: 'real-money action', turns: 1, expert: 'trader',
+        outcome: 'Waits for you', why: 'won 3 paper windows of 3 in the lab' },
+      { title: 'Hand to the lab: Momentum Hawk with a 4% stop', turns: 1, expert: 'trader', outcome: 'Experiment opened: beat BTC by 1% in 7 days',
+        why: 'best candidate of the scan' }
     ],
     custom: [
       { title: 'Read the charter and propose a first week', turns: 1, expert: null, outcome: '5 tasks proposed',
@@ -200,9 +200,9 @@
       ['lesson', 'File with the exact request and the capture, never a paraphrase.']],
     testing_lab: [['lesson', 'A correct number can be untradeable: read the pool depth first.'],
       ['rule', 'The success rule is set before the window opens, never after.']],
-    trading_desk: [['rule', 'A seat only for a paper record: ROI after fees over 30 days, 40+ trades.'],
-      ['lesson', 'A FLASH day is a quick read; only a 7-day table is a verdict.'],
-      ['knows', 'A table ranks by ROI on closed trades; under 3x capital in volume it does not place.']],
+    trading_desk: [['rule', 'An idea goes to the lab with the rule it should beat, never straight to money.'],
+      ['lesson', 'Paper ignores slippage: a real-money draft starts small, with its stop set first.'],
+      ['knows', 'The company never places a real trade itself: the owner approves every real-money step.']],
     custom: [['knows', 'Every task starts from the saved charter.']]
   };
 
@@ -214,14 +214,6 @@
         '\n\nWhat happens instead\nNone of the 12 appear in the OpenAPI document; an agent that builds from it cannot find the Company API.' +
         '\n\nEvidence\nCapture 0a775df1 (request, response, time).' +
         '\n\nReward\n1,000 ET10 if verified and not a duplicate.\n\nSubmitted only after your approval.';
-    }
-    if (kind === 'seat request') {
-      var who = title.replace(/^Seat: /, '').split(' at ')[0], where = title.split(' at ').slice(1).join(' at ') || 'a paper table';
-      return 'SEAT REQUEST · drafted by ' + dept + '\n\nAgent\n' + who +
-        '\n\nTable\n' + where + ' at cymetica.com/agent-tournaments · 10 seats · paper buy-in · best ROI takes the pot' +
-        '\n\nWhy this agent\n30-day paper ROI +6.2% after fees, 48 trades, worst drawdown -3.1%.' +
-        '\n\nWhat counts\nTop three at the close: keep it and enter the next 7-day table. Otherwise it is archived with the reason.' +
-        '\n\nIf you approve\nThe seat is requested and approved in your name. Paper only: nothing real is spent.';
     }
     if (kind === 'real-money action') {
       return 'REAL-MONEY ACTION · drafted by ' + dept + '\n\nWhat\n' + title +
@@ -287,7 +279,7 @@
       T(27, 1, 'Gem Screener: read the parent-app list', 'done', { turns: 1, units: 0.22, started_at: at(-120), finished_at: at(-116), outcome: '41 apps; 9 without a logo', expert: 'researcher' }),
       T(28, 3, 'Inventory testable surface from llms.txt', 'done', { turns: 1, units: 0.25, started_at: at(-31), finished_at: at(-27), outcome: 'Public no-auth GETs: /gem-screener/picks, /prop/config, /agent-league/puzzles and 41 more', expert: 'qa_tester' }),
       T(29, 1, 'Supply Analyzer: what is known about locks', 'done', { turns: 1, units: 0.24, started_at: at(-100), finished_at: at(-96), outcome: 'Staking and locks known for 68 of 244 coins', expert: 'researcher' }),
-      T(30, 1, 'Agent Tournaments v3: lobby strip spec', 'done', { turns: 1, units: 0.22, started_at: at(-80), finished_at: at(-76), outcome: '13 lines, 6 pictures', expert: 'developer' }),
+      T(30, 1, 'Chart Analyzer v3: score history spec', 'done', { turns: 1, units: 0.22, started_at: at(-80), finished_at: at(-76), outcome: '13 lines, 6 pictures', expert: 'developer' }),
       T(31, 3, 'Doc vs behaviour: public pages', 'running', { outcome_text: 'Found 3 mismatches: /prop/config, /llms.txt, /gem-screener', turns: 1, attempt: 2, units: 0.20, started_at: at(-25), last_error: 'no answer', expert: 'qa_tester', why: 'retry after no answer' }),
       T(32, 4, 'Paper: ETH event card, 6h exit', 'done', { turns: 1, units: 0.17, started_at: at(-60), finished_at: at(-56), outcome: 'Archived: -2.1% after costs (rule was > 0)', expert: 'lab_scientist' }),
       T(33, 1, 'Gem Screener: parent-app logos', 'waiting_approval', { turns: 1, units: 0.24, kind: 'BB request', started_at: at(-9), finished_at: at(-5), expert: 'developer', outcome: 'Draft ready: 3 lines, 2 checks' }),
@@ -339,7 +331,7 @@
       [1, 'rule', 'Every spec is checked line by line against their BB-SPEC.'],
       [1, 'knows', 'The owner view is feature #911 (ET-30909).'],
       [1, 'lesson', 'Read the vendor design rule before drawing.'],
-      [1, 'knows', 'Agent Tournaments tables seat 10.'],
+      [1, 'knows', 'Build it Better specs carry up to six pictures.'],
       [2, 'lesson', 'Numbers before words; an explanation goes in a tooltip.'],
       [2, 'knows', 'The owner reads at ~2,000 px; check 1920 and 1440 before calling it done.'],
       [2, 'mistake', 'Shipped a panel of paragraphs; it was read as 2/10.'],
@@ -406,7 +398,7 @@
         { id: 'R2', on: true, when: 'a new build is released', dept_id: 3, does: 'tests it the same day and reports what is broken', fired: 0 },
         { id: 'R3', on: true, when: 'someone has a product idea', dept_id: 1, does: 'writes it up as a Build it Better request', fired: 0 },
         { id: 'R4', on: true, when: 'someone finds a way to make money', dept_id: 4, does: 'proves it on paper first', fired: 0, review: 'result', reviewer: 'you' },
-        { id: 'R5', on: true, when: 'an agent wins on paper', dept_id: 5, does: 'seats it at an Agent Tournaments table', fired: 0, review: 'start', reviewer: 'you' }
+        { id: 'R5', on: true, when: 'an experiment wins on paper', dept_id: 5, does: 'drafts its next step for your approval: a real-money stake or an Agent Tournaments seat', fired: 0, review: 'start', reviewer: 'you' }
       ], next_rule: 6,
       token: { chain: '5042', symbol: '', reserved: false, perp_listed: false },
       next_id: 40, next_msg: 4, next_appr: 3, next_mem: memory.length + 1, next_dept: 6,
@@ -432,10 +424,10 @@
   // Our own company, the one that runs locally today, set up the new way: the departments, their charters,
   // clocks and products, and the processes between them. No history: it starts now and the simulation runs it.
   CO.OURS = {
-    mission: 'Find what is broken on Cymetica and get paid in ET10 for it, prove on paper what makes money there, and send the agents that win to Agent Tournaments.',
+    mission: 'Find what is broken on Cymetica and get paid in ET10 for it, find what makes money there and prove it on paper before a cent of real money moves.',
     departments: [
       { key: 'testing', name: 'Cymetica QA', experts: ['qa_tester', 'auditor'], runs: 2,
-        products: ['Build it Better', 'Fund Launcher', 'Gem Screener', 'Agent Tournaments', 'Supply Analyzer', 'Chart Analyzer'] },
+        products: ['Build it Better', 'Fund Launcher', 'Gem Screener', 'Supply Analyzer', 'Chart Analyzer'] },
       { key: 'testing_lab', name: 'Quant Lab', experts: ['lab_scientist', 'researcher'],
         charter: "Prove on paper what makes money on Cymetica.\n" +
           "- Ask NEXUS first: their AI gives the guidance on what to trade; our own ideas are tried and measured, never trusted ahead of it.\n" +
@@ -449,7 +441,7 @@
       ['a bug is found anywhere', 'Cymetica QA', 'verifies it and files it as expire76'],
       ['a new build is released', 'Cymetica QA', 'tests it the same day and reports what is broken'],
       ['someone finds a way to make money', 'Quant Lab', 'proves it on paper first'],
-      ['an agent wins on paper', 'Trading desk', 'seats it at an Agent Tournaments table']
+      ['an experiment wins on paper', 'Trading desk', 'drafts its next step for your approval: a real-money stake or an Agent Tournaments seat']
     ]
   };
   // The departments a pre-built company starts with (builder.html's Pre-build and its tour read this list): the

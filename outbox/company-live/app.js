@@ -205,9 +205,9 @@
 
   // what an approval is, in words a person uses
   var KIND_WORD = { 'BB request': 'Build it Better request', 'bug report': 'Bug report', 'real-money action': 'Real money',
-    'seat request': 'Tournament seat', 'start?': 'Start it?', 'review': 'Check the result' };
+    'start?': 'Start it?', 'review': 'Check the result' };
   function kindWord(k) { return KIND_WORD[k] || k; }
-  function plainTitle(s) { return String(s || '').replace(/^(BB request|Seat|Real trade|Handle): /, ''); }
+  function plainTitle(s) { return String(s || '').replace(/^(BB request|Real trade|Handle): /, ''); }
   function apprCard(a, full) {
     var d = CO.dept(a.dept_id), isNew = !ui.seen[a.id];
     var kind = a.kind === 'real-money action' ? 'tag money' : a.kind === 'review' || a.kind === 'start?' ? 'tag rvk' : 'tag k';
@@ -234,13 +234,13 @@
     renderEarned(fd);
     renderChats();
   }
-  // What the company earned, by where it came from: each department that earns (ET10: bugs, prizes, the League) and
+  // What the company earned, by where it came from: each department that earns (ET10: accepted bugs) and
   // each app it built (the proposed ET10 for the visitors it brings, and USDC from its revenue share).
   function vaultRows() {
     var S = CO.S, out = [];
     S.departments.filter(function (d) { return d.et10 || d.files_as; }).forEach(function (d) {
       var why = d.files_as ? (d.accepted || 0) + ' bug' + (d.accepted === 1 ? '' : 's') + ' accepted' :
-        d.prizes ? d.prizes + ' tournament prize' + (d.prizes === 1 ? '' : 's') : d.answers ? d.answers + ' League answers' : 'prizes';
+        'rewards';
       out.push({ kind: 'dept', id: d.id, name: d.name, why: why, et10: d.et10 || 0, usdc: 0 });
     });
     CO.apps().forEach(function (a) {

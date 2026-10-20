@@ -255,7 +255,7 @@
   function ruleTarget(r) { return r ? dept(r.dept_id) : null; }
   CO.ruleTarget = ruleTarget;
   var SIDE = {
-    idea: ['Gem Screener: a filter for coins with a team unlock this month', 'Chart Analyzer: show the score\'s history, not only today', 'Agent Tournaments: a replay of the last table'],
+    idea: ['Gem Screener: a filter for coins with a team unlock this month', 'Chart Analyzer: show the score\'s history, not only today', 'Supply Analyzer: unlock dates in the coin list'],
     money: ['Memecoins that FOMO >= 70 flags twice within an hour', 'Event cards priced below the BTC basket\'s implied move', 'League puzzles of one family solved on the same snapshot'],
     design: ['Supply Analyzer: unlock bars overlap on a phone', 'Gem Screener: Guardians tooltip covers the price', 'Company page: the plan list cuts long titles'],
     custom: ['a vendor message that needs an answer', 'a page that changed overnight']
@@ -299,10 +299,10 @@
       var o = { turns_needed: 1, why: 'rule ' + r.id + ': ' + r.when + (from ? ' · from ' + from.name : '') };
       if (kind === 'bug') { o.kind = 'bug report'; o.expert = 'qa_tester'; }
       if (kind === 'idea') o.kind = 'BB request';
-      var seat = kind === 'winner' && to.key === 'trading_desk';
-      if (kind === 'winner') { o.kind = seat ? 'seat request' : 'real-money action'; if (seat) o.expert = 'trader'; }
+      // a winning experiment becomes a real-money draft: the owner approves it, the company never trades itself
+      if (kind === 'winner') { o.kind = 'real-money action'; o.expert = 'trader'; }
       if (kind === 'released') { o.turns_needed = 2; o.expert = 'qa_tester'; if (Math.random() < 0.5) o.kind = 'bug report'; }
-      var title = seat ? 'Seat: ' + subject + ' at a FLASH $5 table' : PREFIX[kind] + subject;
+      var title = PREFIX[kind] + subject;
       // the same thing already on its way there is not handed over twice
       if (S.tasks.some(function (x) { return x.dept_id === to.id && x.title === title && /queued|running|waiting_approval/.test(x.status); })) return null;
       var nt = newTask(to, title, o);
@@ -320,18 +320,19 @@
     }
   }
   CO.fire = fire;
-  // what a finished piece of work raises next: something noticed on the side, a winning experiment
+  // what a finished piece of work raises next: something noticed on the side, a winning experiment, a way to
+  // make money the desk found
   function afterDone(t, d) {
     if (Math.random() < 0.3) later(rand(1500, 4000), function () { noticeInPassing(d); });
     if (Math.random() < 0.12) later(rand(2000, 5000), function () { fire('custom', d, pick(SIDE.custom)); });
-    // only a bot can win a seat: a winning basket or signal is not an agent
+    if (d.key === 'trading_desk' && /^(Ask NEXUS|Scan)/.test(t.title) && Math.random() < 0.5) later(rand(2000, 4000), function () { fire('money', d, pick(SIDE.money)); });
     if (d.key === 'testing_lab' && /^Bot variant/.test(t.title) && Math.random() < 0.6) later(rand(2000, 4000), function () { fire('winner', d, t.title.replace(/^Bot variant: /, '')); });
   }
   // a department finishing its own work notices something outside its job
   function noticeInPassing(d) {
     if (!dept(d.id)) return;
     var kinds = ['bug', 'bug', 'idea', 'money', 'design'], kind = kinds[Math.floor(Math.random() * kinds.length)];
-    var subject = kind === 'bug' ? bugTitle(pick(['Gem Screener', 'Chart Analyzer', 'Supply Analyzer', 'Agent Tournaments']), d) : pick(SIDE[kind]);
+    var subject = kind === 'bug' ? bugTitle(pick(['Gem Screener', 'Chart Analyzer', 'Supply Analyzer', 'Fund Launcher']), d) : pick(SIDE[kind]);
     fire(kind, d, subject);
   }
 
@@ -340,7 +341,6 @@
     'gem screener': ['holders count differs from the chain', 'Guardians ring shows green without data', 'sort by 24h volume drops 3 coins'],
     'chart analyzer': ['score differs from its study on 2 coins', 'RSI panel shows candles an hour old'],
     'supply analyzer': ['circulating supply above total supply', 'past unlock shown as upcoming'],
-    'agent tournaments': ['deleted bot still seated at table 2', 'leaderboard ROI ignores fees'],
     'trading station': ['order book total off by one level', 'chart and ticker disagree on last price'],
     'agent league': ['puzzle closes before its stated time', 'prize list omits a scored answer'],
     'build it better': ['a request shows one status on the board and another in the API', 'the spec field cuts text the docs allow'],
@@ -372,26 +372,6 @@
       changed();
     });
   }
-  // an approved seat: the table runs, then closes with a rank and an ROI (paper; the top three share the ET10 prize)
-  function seatLater(a, d, t) {
-    var S = CO.S, flash = /FLASH/i.test(a.summary), agent = a.summary.replace(/^Seat: /, '').split(' at ')[0];
-    var table = 10 + Math.floor(Math.random() * 20);
-    later(rand(50000, 90000), function () {
-      var rank = 1 + Math.floor(Math.random() * 10), roi = 7 - (rank - 1) * 1.15 + (Math.random() - 0.5);
-      var prize = rank <= 3 ? (flash ? [85, 42, 14] : [600, 300, 100])[rank - 1] : 0;
-      var r = (roi >= 0 ? '+' : '') + roi.toFixed(1) + '%';
-      if (prize) {
-        S.et10 = (S.et10 || 0) + prize;
-        if (d) { d.et10 = (d.et10 || 0) + prize; d.prizes = (d.prizes || 0) + 1; }
-      }
-      var verdict = rank <= 3 ? 'keep it: next a 7-day table' : 'archived: ' + (roi < 0 ? 'lost money after fees' : 'not in the top three');
-      if (t) t.outcome = 'Table ' + table + ' closed: ' + agent + ' ' + ordinal(rank) + ' of 10, ' + r + ' ROI · ' + verdict;
-      feed(rank <= 3 ? 'good' : 'info', 'Agent Tournaments', 'table ' + table + ' closed: ' + agent + ' ' + ordinal(rank) + ' of 10, ' + r + ' ROI' + (prize ? ', +' + prize + ' ET10' : ''));
-      say('Table ' + table + ' closed: ' + agent + ' finished ' + ordinal(rank) + ' of 10 at ' + r + ' ROI' + (prize ? ' and won ' + prize + ' ET10' : '') + '. ' + verdict.charAt(0).toUpperCase() + verdict.slice(1) + '.', d && d.id);
-      changed();
-    });
-  }
-  function ordinal(n) { return n + (n === 1 ? 'st' : n === 2 ? 'nd' : n === 3 ? 'rd' : 'th'); }
   // Cymetica QA files a bug straight into their tracker under the owner's hunter name, as we do: no approval
   function fileNow(b, d) {
     var S = CO.S;
@@ -558,11 +538,11 @@
       }
       if (decision === 'approve') {
         S.approved_7d++;
-        var verb = a.kind === 'real-money action' ? 'placed' : a.kind === 'seat request' ? 'seated' : 'submitted';
+        var verb = a.kind === 'real-money action' ? 'ready for you to place' : 'submitted';
         if (t) { t.status = 'done'; t.outcome = verb.charAt(0).toUpperCase() + verb.slice(1) + ' after your approval'; t.finished_at = S.clock; }
         feed('good', 'You', 'approved: ' + a.summary);
         later(2600, function () {
-          feed('good', d ? d.name : 'NEXUS', verb + ' after your approval: ' + a.summary.replace(/^Seat: /, ''));
+          feed('good', d ? d.name : 'NEXUS', verb + ' after your approval: ' + a.summary);
           CO.emit('submitted', { approval: a, dept: d });
         });
         if (a.kind === 'BB request') {
@@ -573,7 +553,6 @@
           });
         }
         if (a.kind === 'bug report') verdictLater(a, d);
-        if (a.kind === 'seat request') seatLater(a, d, t);
         // a task waiting on this approval may now run
         S.tasks.forEach(function (x) { if (x.blocked_by === a.task_id) x.blocked_by = null; });
       } else {
@@ -732,7 +711,7 @@
   }
   var ALIAS = [
     ['testing_lab', /\b(lab|laborat|experiment|paper|strateg|nexus|backtest|room)/],
-    ['trading_desk', /\b(trad|desk|money|profit|basket|buy|sell|position|pnl|agent|tournament|turnaj|ziskov|vydel)/],
+    ['trading_desk', /\b(trad|desk|money|profit|basket|buy|sell|position|pnl|agent|ziskov|vydel)/],
     ['design', /\b(design|brief|mock|look|layout|ui|page|colou?r|picture)/],
     ['development', /\b(develop|build|spec|feature|request|bb\b|build it better)/],
     ['testing', /\b(test|bug|check|verify|docs?|api|report|broken|fix)/]
@@ -819,7 +798,7 @@
         pr.review === 'result' ? ' Its result waits for ' + (nr.reviewer === 'you' ? 'your' : nr.reviewer + '\'s') + ' review.' : '') + ' Everyone follows it from now on.';
   };
   // "add a QA department that runs twice a day on X and Y, under my name" -> a department spec
-  var KNOWN = ['Gem Screener', 'Chart Analyzer', 'Supply Analyzer', 'Agent Tournaments', 'Trading Station', 'Agent League', 'Memecoin Terminal', 'Build it Better', 'Fund Launcher'];
+  var KNOWN = ['Gem Screener', 'Chart Analyzer', 'Supply Analyzer', 'Trading Station', 'Agent League', 'Memecoin Terminal', 'Build it Better', 'Fund Launcher'];
   function splitList(s) {
     return s.split(/\s*(?:,|;|\/|\sa\s|\sand\s|\+)\s*/i).map(function (x) { return x.trim().replace(/[.!]+$/, ''); })
       .filter(Boolean).map(function (x) {
@@ -1031,8 +1010,8 @@
   };
   // someone else's public company, as a visitor finds it: its departments and processes, what each has
   // finished lately and learned, the ET10 it has earned, and the runner already passing
-  var OWNER_DONE = { 'BB request': 'Submitted after the owner\'s approval', 'real-money action': 'Placed after the owner\'s approval',
-    'seat request': 'Seated after the owner\'s approval', 'bug report': 'Filed after the owner\'s approval' };
+  var OWNER_DONE = { 'BB request': 'Submitted after the owner\'s approval', 'real-money action': 'Handed to the owner to place',
+    'bug report': 'Filed after the owner\'s approval' };
   function applyVisit(V) {
     var S = CO.S, now = S.clock;
     V.departments.forEach(setupDept);
@@ -1054,7 +1033,6 @@
     var by = function (f) { return S.departments.filter(f)[0]; };
     var qa = by(function (d) { return d.key === 'testing'; }), desk = by(function (d) { return d.key === 'trading_desk'; });
     if (qa) { qa.et10 = V.bugs * 1000; qa.accepted = V.bugs; }
-    if (desk && V.prize) { desk.et10 = V.prize; desk.prizes = Math.max(1, Math.round(V.prize / 85)); }
     S.et10 = CO.uvEt10(V);
     S.meter = [0.21, 0.18, 0.24, 0.2, 0.22, 0.19];
     S.budget.session.used = r2(S.budget.session.cap * (0.18 + (V.id % 5) * 0.09));

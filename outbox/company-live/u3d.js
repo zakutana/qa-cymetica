@@ -6672,7 +6672,7 @@ class Office3D {
       }],
       plaque: [128, 72, (g, W, H) => {
         g.fillStyle = '#0a141c'; g.fillRect(0, 0, W, H); g.strokeStyle = 'rgba(176,196,208,.6)'; g.lineWidth = 2; g.strokeRect(3, 3, W - 6, H - 6);
-        txt(g, 'AGENT', W / 2, 11, '#dfeaf2', 11, 700, 'center'); txt(g, 'TOURNAMENTS', W / 2, 25, '#dfeaf2', 11, 700, 'center'); txt(g, 'paper seat · 30d', W / 2, 46, CY, 9, 600, 'center');
+        txt(g, 'BEST FIND', W / 2, 11, '#dfeaf2', 11, 700, 'center'); txt(g, 'OF THE MONTH', W / 2, 25, '#dfeaf2', 11, 700, 'center'); txt(g, 'paper · 30d', W / 2, 46, CY, 9, 600, 'center');
       }],
       // ---- the trading floor's boards ----
       // the big P&L on the back-left wall: paper only, its ROI after fees over thirty days, the curve and the days
@@ -6684,14 +6684,14 @@ class Office3D {
         line(g, a, '#5cffc4', 3.2);
         for (let i = 0; i < 30; i++) { const h = 6 + R() * 22, up = R() > 0.36; g.fillStyle = up ? 'rgba(56,245,184,.55)' : 'rgba(255,90,90,.55)'; g.fillRect(x0 + i * (x1 - x0) / 30 + 2, up ? yb - h : yb, (x1 - x0) / 30 - 5, up ? h : Math.min(h, 18)); }
       }],
-      // the Agent Tournaments' table on the back-right wall: the seats a paper record earns, ours lit
+      // the desk's scan on the back-right wall: the agents it found by paper record and where each went, ours lit
       leader: [1024, 176, (g, W, H) => {
-        glass(g, W, H); txt(g, 'AGENT TOURNAMENTS  ·  LEADERBOARD', 26, 18, CY, 21); txt(g, 'a seat: 30d paper ROI after fees, 40+ trades', W - 26, 22, DIM, 14, 600, 'right');
-        ['#', 'AGENT', 'ROI 30D', 'TRADES', 'SEAT'].forEach((s, i) => txt(g, s, [26, 70, 560, 720, 880][i], 52, DIM, 13, 600));
-        [['1', 'quantpilot', '+9.8%', '212', 'SEATED'], ['2', 'mean-revert-7', '+6.2%', '96', 'SEATED'], ['3', 'TRADING DESK (us)', '+4.1%', '42', 'EARNED'], ['4', 'gem-hunter', '+2.7%', '31', '9 TO GO'], ['5', 'basis-bot', '-0.8%', '64', '—']].forEach((row, i) => {
+        glass(g, W, H); txt(g, 'AGENT SCAN  ·  30-DAY PAPER ROI', 26, 18, CY, 21); txt(g, 'after fees, 40+ trades', W - 26, 22, DIM, 14, 600, 'right');
+        ['#', 'AGENT', 'ROI 30D', 'TRADES', 'STATUS'].forEach((s, i) => txt(g, s, [26, 70, 560, 720, 880][i], 52, DIM, 13, 600));
+        [['1', 'quantpilot', '+9.8%', '212', 'IN THE LAB'], ['2', 'mean-revert-7', '+6.2%', '96', 'IN THE LAB'], ['3', 'ET10 GRID (ours)', '+4.1%', '42', 'WON'], ['4', 'gem-hunter', '+2.7%', '31', '9 TO GO'], ['5', 'basis-bot', '-0.8%', '64', '—']].forEach((row, i) => {
           const y = 74 + i * 19, us = i === 2;
           if (us) { g.fillStyle = 'rgba(36,232,255,.14)'; g.fillRect(16, y - 3, W - 32, 19); }
-          row.forEach((s, j) => txt(g, s, [26, 70, 560, 720, 880][j], y, j === 2 ? (s[0] === '-' ? DN : UP) : us ? CY : j === 4 && s === 'SEATED' ? UP : '#d6e4ee', 14, j === 1 && us ? 700 : 600));
+          row.forEach((s, j) => txt(g, s, [26, 70, 560, 720, 880][j], y, j === 2 ? (s[0] === '-' ? DN : UP) : us ? CY : j === 4 && s === 'IN THE LAB' ? UP : '#d6e4ee', 14, j === 1 && us ? 700 : 600));
         });
       }],
       // the ticker along the desks' top rail: symbols and their moves, the gaps sized so one run fills the strip
@@ -6728,12 +6728,12 @@ class Office3D {
   /* ---- the trading floor: the trading desk's room, drawn whole at the looks' detail (rc*) ---- */
   // The department Cymetica runs: "Find and prove ways to make money on Cymetica with paper experiments only. Any
   // real-money action needs the owner's approval, and the company never places real trades itself." So its room is
-  // a trading floor on paper: on the back-right wall its status (r.wall) and the Agent Tournaments' leaderboard, the
-  // seat a paper record earns; on the back-left the paper P&L and the kanban (r.kb). Before them one long trading
+  // a trading floor on paper: on the back-right wall its status (r.wall) and its scan of agents by paper record,
+  // each with where it went; on the back-left the paper P&L and the kanban (r.kb). Before them one long trading
   // desk, a bank of six screens for each of its people -- three low, three high on a post, the outer ones turned in to
   // him, the middle low one his own (r.mons: dark until he works) -- and over the banks a ticker running along their
   // rail; a carpet with a mint edge under the desk and its chairs. At the front the room's rule on a screen of its
-  // own (real money locked: the owner's approval) and a case with the tournaments' cup; the department's computer in
+  // own (real money locked: the owner's approval) and a case with the month's best find; the department's computer in
   // the back corner. Mint like every room: orange only while it waits on its owner (tint).
   rcTrading(r, d) {
     this.rcMats();
@@ -6838,7 +6838,7 @@ class Office3D {
     this.rcFace(hd, 'gate', 0.46, 0.27, 0, 0, 0.0255, 0);
     this.lkLed(r, hd, '#24e8ff', 0.21, -0.145, 0.027, 2);
   }
-  // the Agent Tournaments' cup in a case, turned to the room's front corner: a plinth with a lit band and its plaque,
+  // the month's best find, a cup in a case, turned to the room's front corner: a plinth with a lit band and its plaque,
   // the silver cup on a ring of light, a glass case over it
   rcTrophy(r, x, y) {
     const p = this.raG(r, x, y, Math.PI / 4);

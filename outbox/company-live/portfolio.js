@@ -21,7 +21,6 @@
   var OURS = [
     { name: 'Gem Screener', path: '/gem-screener', views: 449, visitors: 221, uses: 206, likes: 1 },
     { name: 'Chart Analyzer', path: '/chart-analyzer', views: 549, visitors: 175, uses: 300, likes: 2 },
-    { name: 'Agent Tournaments', path: '/agent-tournaments', views: 183, visitors: 46, uses: 120, likes: 2 },
     { name: 'Supply Analyzer', path: '/supply-analyzer', views: 70, visitors: 26, uses: 45, likes: 1 }
   ];
   // placeholders until Cymetica sets real rates: ET10 for each visitor an app brings, USDC for each use
