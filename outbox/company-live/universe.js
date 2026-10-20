@@ -621,7 +621,7 @@
     for (f = 0; f < n; f++) {
       var lat = (f % 2 ? -1 : 1) * (0.28 + Math.floor(f / 2) * 0.22), yy = Math.sin(lat) * Rs, rr = Math.cos(lat) * Rs, seam = narc([0, yy + 0.06, 0], X3, Z3, rr + 0.01, 'near');
       out += '<polyline points="' + pts(seam.map(nq)) + '" fill="none" stroke="' + nsShade(C.dark, [0.6, 0.4, 0.6]) + '" stroke-width="1.3"/>';
-      out += nfl(f, nrwins(rr - 0.03, yy, 0.07, 0.2, 0.6, 0.1, C, R));
+      out += nfl(f, nrwins(rr + 0.05, yy, 0.07, 0.2, 0.6, 0.1, C, R));
     }
     // the band's line of light and its eight hangar mouths, glowing
     out += nring([0, 0, 0], X3, Z3, Rs * 1.04, C.neon, 1.4, 'near');
