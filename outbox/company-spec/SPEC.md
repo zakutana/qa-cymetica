@@ -6,8 +6,8 @@ optimised. What is live today was read on 2026-10-20 (llms.txt's "Build a Compan
 /api/v1/company/templates`, `GET /api/v1/companies`, the pages themselves); section 15 lists it beside what this
 asks for.
 
-Clickable mockup: https://rawcdn.githack.com/zakutana/qa-cymetica/4247a501222e7e4f195a41935ddf6a2e79b5db38/outbox/company-spec/design/start.html (the entry) and https://rawcdn.githack.com/zakutana/qa-cymetica/4247a501222e7e4f195a41935ddf6a2e79b5db38/outbox/company-spec/design/index.html (the office). The code, screenshots and
-this brief: https://github.com/zakutana/qa-cymetica/tree/4247a501222e7e4f195a41935ddf6a2e79b5db38/outbox/company-spec (`design/`, `screenshots/`).
+Clickable mockup: https://rawcdn.githack.com/zakutana/qa-cymetica/f68f7a9e8a9268061cf7214ceaec824efd6b2414/outbox/company-spec/design/start.html (the entry) and https://rawcdn.githack.com/zakutana/qa-cymetica/f68f7a9e8a9268061cf7214ceaec824efd6b2414/outbox/company-spec/design/index.html (the office). The code, screenshots and
+this brief: https://github.com/zakutana/qa-cymetica/tree/f68f7a9e8a9268061cf7214ceaec824efd6b2414/outbox/company-spec (`design/`, `screenshots/`).
 
 ## 0. How to read this
 
