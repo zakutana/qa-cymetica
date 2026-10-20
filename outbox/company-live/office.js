@@ -41,7 +41,7 @@
   var NS = 'http://www.w3.org/2000/svg';
   var WZ = 1.3;               // the glass walls' top: the 3D's 1.4, a little lower for this flatter angle
   var WS0 = 0.56, WS1 = 1.2;  // a wall screen's foot and top, over the dark band along the back walls
-  var T = 0.35, HD = 1.5;     // the deck's thickness and the hull's under it (the 3D's 0.35 and 1.65)
+  var T = 0.35, HD = 0.45;    // the deck's thickness and the hull's under it (the 3D's 0.35 and 0.47, 2026-10-20)
   var EDGE = 'rgba(4, 8, 12, .45)';
   var SANS = "'Segoe UI','Inter',system-ui,sans-serif";
 
@@ -605,9 +605,8 @@
     return S.departments.map(function (d) { return d.id + ':' + d.slot + ':' + d.key + ':' + (d.look || '') + ':' + d.experts.join(','); }).join('|');
   };
 
-  // Under the deck, the 3D office's hull: a plated tier under every slab, inset where it is the outside, its sides in
-  // slate with seams and a row of modules -- a silver plate, a dark window with a lit strip, a grille, a status light
-  // -- and a stepped keel under it. No rock, engines or solar wings: flat, they looked ugly (the operator, 2026-10-19:
+  // Under the deck, the 3D office's hull: a plated tier under every slab, inset where it is the outside, as low as
+  // the 3D's, its sides a grey rail with a few windows over slate (hullFace), and one keel step under it. No rock, engines or solar wings: flat, they looked ugly (the operator, 2026-10-19:
   // remove the rock and the thrusters from the 2D view). Drawn in layers, lowest first, each back to front.
   Office.prototype.hull = function (order, have, pad) {
     var out = ['', '', ''], zt = -T - 0.12;
@@ -618,8 +617,7 @@
         var ax = x0 + (Lf ? ins : 0), ay = y0 + (Bk ? ins : 0), bx = x1 - (Rt ? ins : 0), by = y1 - (Fr ? ins : 0);
         return { s: box(ax, ay, z0, bx - ax, by - ay, h, top, left, right), ax: ax, ay: ay, bx: bx, by: by };
       };
-      out[0] += tier(1.4, zt - HD - 0.82, 0.34, L.keelR, L.keelR, L.keelB).s;
-      out[1] += tier(0.7, zt - HD - 0.48, 0.48, L.keelL, L.keelL, L.keelR).s;
+      out[1] += tier(0.6, zt - HD - 0.24, 0.24, L.keelL, L.keelL, L.keelR).s;
       var t = tier(0.12, zt - HD, HD, L.hullTop, 'url(#g-hullL)', 'url(#g-hullR)');
       out[2] += t.s;
       if (Fr) out[2] += hullFace(onBack(t.ax, 0, t.by, zt), (t.bx - t.ax) * SC, HD * SC, R, false);
@@ -627,19 +625,19 @@
     });
     return out.join('');
   };
+  // a side of the hull as the 3D's (hullTex): a light-grey rail flush along its upper half with a few dark windows
+  // in it, one small light in each, seams between its lengths; the slate under it, its foot dark
   function hullFace(tf, W, H, R, dark) {
-    var out = '<g transform="' + tf + '"><rect width="' + f1(W) + '" height="1.6" fill="#4c5866" opacity=".75"/>' +
-      '<rect y="' + f1(H - 3) + '" width="' + f1(W) + '" height="3" fill="#121922" opacity=".85"/>';
-    for (var x = 22; x < W - 1; x += 22) out += '<rect x="' + f1(x) + '" y="1.6" width=".7" height="' + f1(H - 4.6) + '" fill="#141c26"/>';
-    var n = Math.max(1, Math.floor(W / 40)), step = W / n;
+    var r0 = H * 0.12, r1 = H * 0.58, out = '<g transform="' + tf + '">' +
+      '<rect y="' + f1(r0) + '" width="' + f1(W) + '" height="' + f1(r1 - r0) + '" fill="' + (dark ? '#5f6a77' : '#7c8897') + '"/>' +
+      '<rect y="' + f1(r0) + '" width="' + f1(W) + '" height=".6" fill="#c4ced8" opacity="' + (dark ? '.3' : '.55') + '"/>' +
+      '<rect y="' + f1(H - 1.6) + '" width="' + f1(W) + '" height="1.6" fill="#121922" opacity=".85"/>';
+    var n = Math.max(1, Math.round(W / 60)), step = W / n;
     for (var i = 0; i < n; i++) {
-      var mw = step * (i % 2 ? 0.56 : 0.68), mx = i * step + (step - mw) / 2, my = 5.2, mh = H - 13, wh = mh * 0.48;
-      out += '<rect x="' + f1(mx) + '" y="' + my + '" width="' + f1(mw) + '" height="' + f1(mh) + '" rx=".6" fill="' + (dark ? '#5f6a77' : '#7c8897') + '"/>' +
-        '<rect x="' + f1(mx) + '" y="' + my + '" width="' + f1(mw) + '" height=".8" fill="#c4ced8" opacity="' + (dark ? '.3' : '.5') + '"/>' +
-        '<rect x="' + f1(mx + 1.8) + '" y="' + f1(my + 1.8) + '" width="' + f1(mw - 3.6) + '" height="' + f1(wh) + '" fill="#18233a"/>';
-      if (R() < 0.7) out += '<rect x="' + f1(mx + 3.4) + '" y="' + f1(my + 2 + wh * 0.62) + '" width="' + f1(mw - 6.8) + '" height="1.3" fill="#5a90e0"/>';
-      for (var k = 0; k < 4; k++) out += '<rect x="' + f1(mx + 2.4 + k * 2.4) + '" y="' + f1(my + mh * 0.66) + '" width="1.3" height="' + f1(mh * 0.24) + '" fill="#56626e"/>';
-      out += '<rect x="' + f1(mx + mw - 5.2) + '" y="' + f1(my + mh - 4.2) + '" width="2.4" height="1.7" fill="' + (i % 2 ? L.neon : '#9fe8ff') + '"/>';
+      var x = i * step, ww = step * (0.3 + R() * 0.15), wx = x + step * 0.3, wy = r0 + (r1 - r0) * 0.28, wh = (r1 - r0) * 0.44;
+      if (i) out += '<rect x="' + f1(x) + '" y="' + f1(r0) + '" width=".7" height="' + f1(r1 - r0) + '" fill="#3e4855"/>';
+      out += '<rect x="' + f1(wx) + '" y="' + f1(wy) + '" width="' + f1(ww) + '" height="' + f1(wh) + '" fill="#121a28"/>' +
+        '<rect x="' + f1(wx + ww - 3.2) + '" y="' + f1(wy + wh / 2 - 0.6) + '" width="2.2" height="1.2" fill="' + (i % 2 ? '#9fe8ff' : L.neon) + '"/>';
     }
     return out + '</g>';
   }
@@ -689,7 +687,7 @@
         var a = P(mx - ax, my - ay, -T * 0.55), b = P(mx + ax, my + ay, -T * 0.55);
         rims += line(a, b, '#24e8ff', 3.2, ' opacity=".35" filter="url(#glow2)"') + line(a, b, '#7ff0ff', 1.3, ' stroke-linecap="round"');
       });
-      corners.push(P(x0, y0, WZ), P(x1, y0, 0), P(x0, y1, 0), P(x1 - 0.12, y1 - 0.12, -T - 0.12 - HD), P(x1 - 0.7, y1 - 0.7, -T - 0.12 - HD - 0.48));
+      corners.push(P(x0, y0, WZ), P(x1, y0, 0), P(x0, y1, 0), P(x1 - 0.12, y1 - 0.12, -T - 0.12 - HD), P(x1 - 0.6, y1 - 0.6, -T - 0.12 - HD - 0.24));
     });
     f += rims;
     this.plateRect = {
@@ -1348,7 +1346,7 @@
       })
       .replace(/<g class="kb" data-v0="([\d.]+)" data-v1="([\d.]+)"><\/g>/, function (m, v0, v1) { return '<g class="kb">' + kanban(0, 0, { queued: 1, running: 0, done: 0, failed: 0 }, +v0, +v1) + '</g>'; });
     // under it: the deck's slab with its lit rim, a hull a little lower than the office's and its keel, a glow below
-    var pad = 0.5, x0 = -pad, y0 = -pad, x1 = RS + pad, y1 = RS + pad, zt = -T - 0.12, HDp = 1.0, K = 0.35, R = rng(41);
+    var pad = 0.5, x0 = -pad, y0 = -pad, x1 = RS + pad, y1 = RS + pad, zt = -T - 0.12, HDp = HD, K = 0.24, R = rng(41);
     var ax = x0 + 0.12, ay = y0 + 0.12, bx = x1 - 0.12, by = y1 - 0.12, gc = P(RS / 2, RS / 2, zt - HDp - K - 0.6);
     var base = '<ellipse cx="' + f1(gc[0]) + '" cy="' + f1(gc[1]) + '" rx="' + f1(RS * SC * 1.05) + '" ry="' + f1(RS * SC * 0.5) + '" fill="url(#g-halo-g)" opacity=".16"/>' +
       box(x0 + 0.7, y0 + 0.7, zt - HDp - K, x1 - x0 - 1.4, y1 - y0 - 1.4, K, L.keelL, L.keelL, L.keelR) +

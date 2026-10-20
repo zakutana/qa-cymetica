@@ -3812,7 +3812,7 @@ class Office3D {
     }
     const eLot = edge(8, 16, 0, 1);
     if (eLot) {
-      const g = mount(eLot, 0.44, hullFoot - 0.12); g.scale.setScalar(0.85); exBigEngine(g);
+      const g = mount(eLot, 0.44, hullFoot - 0.22); g.scale.setScalar(0.85); exBigEngine(g);
       tag.push({ kind: 'engine', name: 'big', obj: g });
     }
     [[edge(0, 16, 0, 1), 0.36], [edge(16, 16, 1, 0), 0.4], [edge(16, 8, 1, 0), 0.62]].forEach(([e, f]) => {
