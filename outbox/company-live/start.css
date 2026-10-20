@@ -7,7 +7,7 @@ body.lp { background: #16232f; }
 
 /* the 3D canvas: wider than the page by --sh and starting at its left edge, so the sun it centres stands right of
    the text; its own sky (stars, the far glows) is the page's background */
-.lp-space { position: absolute; left: 0; top: 0; bottom: 0; width: calc(100% + var(--sh)); --sh: 52vw; background: #16232f; overflow: hidden; }
+.lp-space { position: absolute; left: 0; top: 0; bottom: 0; width: calc(100% + var(--sh)); --sh: 44vw; background: #16232f; overflow: hidden; }
 .lp-space > canvas { display: block; width: 100% !important; height: 100% !important; }
 /* Cymetica's ball: the Universe's painting (colliderTex) at the ball's place, two turning against each other over a
    blurred copy -- uv.css's .uvcol, with the light added to what is under it rather than laid over it */
