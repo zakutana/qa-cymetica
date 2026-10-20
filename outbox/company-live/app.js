@@ -700,9 +700,13 @@
     pv3(document.querySelector('#modal-card .pc-art'), { skin: c.skin, accent: c.accent, floors: n, seed: c.id, name: c.name, public: false });
   }
   // the station pictures: six shapes in the company's colour
+  // each station's 3D picture in its colour ships as a file (shots/station-<skin>-<accent>.webp, drawn by
+  // CO.U3.thumbs): shown at once, where the flat drawing showed first ("tam prvne najedou ty hnusne ikony")
   function skinButtons(sel, acc) {
     return CO.SKINS.map(function (s) {
-      return '<button type="button" class="skin' + (s.key === sel ? ' on' : '') + '" data-a="uv-skin" data-k="' + s.key + '">' + CO.skinSVG({ skin: s.key, accent: acc, floors: 3, seed: 11 }) + '<b>' + s.name + '</b></button>';
+      var file = 'shots/station-' + s.key + '-' + (acc || 'green') + '.webp';
+      return '<button type="button" class="skin has3d' + (s.key === sel ? ' on' : '') + '" data-a="uv-skin" data-k="' + s.key + '"><img class="th3" alt="" src="' + file + '">' +
+        CO.skinSVG({ skin: s.key, accent: acc, floors: 3, seed: 11 }) + '<b>' + s.name + '</b></button>';
     }).join('');
   }
   function accentButtons(sel) {
@@ -1337,6 +1341,8 @@
       if (RO && roBlocked(t)) { e.preventDefault(); toast('Read only: only @' + CO.S.company.owner + ' can change this.'); return; }
       if (t.closest('#ro-back')) { location.href = 'index.html#universe'; return; }
       if (t.closest('#sim-new')) { location.href = 'start.html'; return; }
+      // the Universe's way in for someone without a company ("musis dat nekde zelene tlacitko pro create company")
+      if (t.closest('#uv-new')) { location.href = 'builder.html'; return; }
       if (uv) {
         if (t.closest('#uv-in')) return uv.zoom(0.78);
         if (t.closest('#uv-out')) return uv.zoom(1.28);
