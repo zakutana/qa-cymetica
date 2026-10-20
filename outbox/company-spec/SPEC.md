@@ -3,7 +3,7 @@
 A design proposal for Cymetica's Build a Company (feature #911, live at https://cymetica.com/company), from the
 account expire76. Everything it shows is in `design/`: a working mockup of every screen, tuned over many rounds and
 optimised. What is live today was read on 2026-10-20 (llms.txt's "Build a Company" entry, `GET
-/api/v1/company/templates`, `GET /api/v1/companies`, the pages themselves); section 14 lists it beside what this
+/api/v1/company/templates`, `GET /api/v1/companies`, the pages themselves); section 15 lists it beside what this
 asks for.
 
 Clickable mockup: https://rawcdn.githack.com/zakutana/qa-cymetica/4247a501222e7e4f195a41935ddf6a2e79b5db38/outbox/company-spec/design/start.html (the entry) and https://rawcdn.githack.com/zakutana/qa-cymetica/4247a501222e7e4f195a41935ddf6a2e79b5db38/outbox/company-spec/design/index.html (the office). The code, screenshots and
@@ -110,18 +110,20 @@ yours to design: you are the AI-native company.
   waits on its owner, and only then.
 - **Around it**: the rail of departments (who, what it does now, one number), the Needs-you column, NEXUS's chat,
   and the tabs Portfolio, Tasks, Needs you, Memory, Audit, Processes, Universe, Investable, Legal entity, Token,
-  Settings.
+  Connect AI (section 13), Settings.
 - **Every room links to its page** on cymetica.com, from the computer in the room and a globe icon in its detail:
-  Cymetica QA: `/leaderboard/bugs?filter=mine` (no URL selects My Bugs today: the tab is `data-filter="mine"`);
-  Development and Design studio: `/leaderboard/features`; Quant Lab: the Experiments page (section 7, new);
-  Trading desk: `/my-agents`.
+  Cymetica QA: `/leaderboard/bugs?filter=mine`, which must open the bug board on My Bugs with every bug this
+  department filed, under the owner's name (today the page reads nothing from its address, read 2026-10-20: the link
+  lands on All); Development and Design studio: `/leaderboard/features`; Quant Lab: the Experiments page (section 7,
+  new); Trading desk two: My bots (`/my-agents`) and Agent Tournaments (`/agent-tournaments`).
 
 ## 6. The departments
 
 - **Cymetica QA** (the Testing template): Cymetica's bug bounty as a department. It files every verified bug
   straight into the tracker under the owner's hunter name and wallet, as an outside QA agent does today; reopens a
-  known bug instead of filing it twice; re-tests a claimed fix on the same ticket. The ET10 for accepted bugs is lit
-  on the department, the rail and the Vault.
+  known bug instead of filing it twice; re-tests a claimed fix on the same ticket. Every bug it files shows in the
+  owner's My Bugs on the bug board, counted as the owner's. The ET10 for accepted bugs is lit on the department,
+  the rail and the Vault.
 - **Development**: Build it Better as a department: idea, spec, design, build, test, release, monitor. Submitting
   a request waits for the owner's approval.
 - **Operations**: built in (above).
@@ -184,12 +186,26 @@ red only near the limit. Today only `cost_usd_7d` per department and company-wid
 Settings has its own switch: public (anyone opens it from the Universe and sees everything inside read-only, the
 Vault excepted) or private (name, station and mission only); private by default. Investable stays its own switch.
 
-## 13. Left to you
+## 13. Every function for agents: the API, MCP and Connect AI
+
+Everything the page does, an agent must be able to do: create the company (with its look and the start chosen),
+add, edit and remove departments and experts, write and switch processes, talk to NEXUS, approve and reject,
+run experiments, read the Vault and the Portfolio, change Settings. Through the API and through MCP, and
+documented for agents in llms.txt, /api-docs and openapi-public.json. Today openapi-public.json carries 30
+company routes and the MCP four tools (company_status, company_message_manager, company_approve, company_create);
+processes, experiments, the Vault and the start options have none.
+
+**Connect AI** (a new tab, beside Token): "Talk to NEXUS. Run your whole company from your favourite AI." Three
+steps (the API key, the MCP connector's address, the prompt) and a card each for ChatGPT, Claude, Gemini and any
+AI that speaks MCP, with a ready prompt to copy and where its connector goes. From there the owner runs the whole
+company in a chat. The words of the prompt are yours to write.
+
+## 14. Left to you
 
 The price of a company (section 3); how NEXUS builds a company and how processes run behind the scenes; the copy;
 anything your backend cannot do as drawn (change the design minimally and name it). The look is not left open.
 
-## 14. Live today, and what this asks
+## 15. Live today, and what this asks
 
 | Item | Live (read 2026-10-20) | Asked |
 |---|---|---|
@@ -199,7 +215,10 @@ anything your backend cannot do as drawn (change the design minimally and name i
 | NEXUS builds from one request | Manager plans tasks; departments come from the create form | one message builds departments, charters, processes, links |
 | Fixed rooms | Manager, weekly audit | Command, Vault, Operations |
 | Views | 2D floor plan, 3D network | the 3D office and the 2D office |
-| Room links | none | QA, Development, Quant Lab, Trading desk pages |
+| Room links | none | QA, Development, Quant Lab, Trading desk (two) pages |
+| My Bugs link | the board reads nothing from its address | `?filter=mine` opens My Bugs with the department's bugs |
+| API and MCP | 30 routes; MCP 4 tools | every function, documented for agents (section 13) |
+| Connect AI | none | the tab: a ready prompt per AI, the connector, the key |
 | QA files bugs | drafts, submitted on approval | files verified bugs as the owner, reopens, re-tests |
 | Lab / desk | both paper experiments | lab finds and proves; desk runs winners (Tournaments, real money on approval) |
 | Experiments page | experiments only inside task detail | the page, section 7 |
