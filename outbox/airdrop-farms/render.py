@@ -14,7 +14,7 @@ out = here / "1-build-it-better"
 out.mkdir(exist_ok=True)
 for old in out.glob("*.png"):
     old.unlink()
-src = (here / "mock.html").read_text(encoding="utf-8")
+src = "".join((here / n).read_text(encoding="utf-8") for n in ("mock.html", "farm-core.js", "farm-ui.js"))
 ALLOWED = {"#00cfff", "#00ff88", "#ff4444", "#3b82f6", "#e6edf7", "#a9b8cc", "#7f93ad", "#1e3050", "#06090f",
            "#0d1520", "#0a0e17"}
 ALLOWED_RGB = {"0,207,255", "0,255,136", "255,68,68", "59,130,246", "6,9,15", "13,21,32", "30,48,80", "10,14,23",
@@ -38,9 +38,10 @@ with sync_playwright() as p:
         print(w, "horizontal overflow px:", t.evaluate("() => document.documentElement.scrollWidth - innerWidth"))
         t.screenshot(path=str(out / f"1-farms-{w}.png"), full_page=True)
         if w == 1440:
-            box = t.evaluate("""() => { const c = [...document.querySelectorAll('#list .fcard')].slice(0, 3).map(e => e.getBoundingClientRect());
-                return {x: c[0].left - 24, y: c[0].top + scrollY - 24, width: c[2].right - c[0].left + 48, height: c[0].height + 48}; }""")
-            t.screenshot(path=str(out / "2-farm-cards.png"), clip=box, full_page=True)
+            box = t.evaluate("""() => { const a = document.querySelector('.list').getBoundingClientRect(),
+                c = [...document.querySelectorAll('#list .row')][3].getBoundingClientRect();
+                return {x: a.left - 1, y: a.top + scrollY - 1, width: a.width + 2, height: c.bottom - a.top + 2}; }""")
+            t.screenshot(path=str(out / "2-farm-list.png"), clip=box, full_page=True)
             t.goto(url + "?tab=farms&shot=1&modal=1", wait_until="networkidle")
             t.wait_for_timeout(500)
             t.screenshot(path=str(out / "3-start-farming.png"))
