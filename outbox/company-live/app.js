@@ -24,7 +24,7 @@
   function setHTML(el, html) { if (el && el._h !== html) { el._h = html; el.innerHTML = html; return true; } return false; }
   function initials(n) { return String(n || '?').split(/\s+/).map(function (w) { return w.charAt(0); }).join('').slice(0, 2).toUpperCase(); }
   var WORD = { working: 'Working', queued: 'Queued', waiting: 'Waiting for you', idle: 'Idle' };
-  var TSTAT = { queued: 'next', running: 'working', waiting_approval: 'needs you', done: 'done', failed: 'failed', cancelled: 'cancelled' };
+  var TSTAT = { queued: 'next', running: 'working', waiting_approval: 'approval', done: 'done', failed: 'failed', cancelled: 'cancelled' };
 
   var ui = { tab: 'office', view: '2d', panel: null, open: {}, seen: {}, feedTop: 0, dirty: false, prev: {}, tfDept: '', tfStatus: '', memQ: '', memDept: null };
   var office, office2d = null, office3d = null;
@@ -183,13 +183,15 @@
   function renderBar() {
     var S = CO.S, c = S.company, b = S.budget, l = CO.left(), paused = c.status === 'paused';
     $('co-name').textContent = c.name;
-    $('co-logo').textContent = initials(c.name);
+    // the logo: the company's station in miniature, as it floats in the Universe ("logo firmy dej miniaturni ikonu te firmy")
+    var lp = RO ? c : CO.profile(), lsrc = 'shots/station-' + (lp.skin || 'dome') + '-' + (lp.accent || 'green') + '.webp', lg = $('co-logo');
+    if (lg._src !== lsrc) { lg._src = lsrc; lg.innerHTML = '<img alt="" src="' + lsrc + '">'; lg.title = c.name; }
     var st = $('co-status'); st.textContent = paused ? 'PAUSED' : 'RUNNING'; st.className = 'pill ' + (paused ? 'off' : 'on');
     $('co-pause').textContent = paused ? 'Resume' : 'Pause';
     // what the company earned lives in its vault (the office and the right column), not in this bar
     var n = S.approvals.length, w = $('co-waiting');
-    w.innerHTML = n ? '<b>' + n + '</b> ' + (RO ? 'wait' + (n === 1 ? 's' : '') + ' for its owner' : 'need' + (n === 1 ? 's' : '') + ' you') : '✓ all clear';
-    w.classList.toggle('none', !n);
+    w.innerHTML = n ? '<b>' + n + '</b> ' + (RO ? 'wait' + (n === 1 ? 's' : '') + ' for its owner' : 'approval' + (n === 1 ? '' : 's')) : '';
+    w.hidden = !n;
   }
   function setN(box, id, v, low) {
     var el = $(id), bx = $(box), s = String(v);
@@ -217,7 +219,7 @@
     // Each card says three things: who, what it is doing now, and one number. The rest is one click away.
     var na = S.approvals.length;
     var mrow = '<button class="dept mgrrow working" title="' + (RO ? 'Read its chat with NEXUS' : 'Open your chat with NEXUS') + '">' + deptIcon('hub') + '<div class="d1"><b>Command</b>' +
-      (na ? '<span class="et red">' + na + (RO ? ' wait for owner' : ' need' + (na === 1 ? 's' : '') + ' you') + '</span>' : '') + '</div>' +
+      (na ? '<span class="et red">' + na + (RO ? ' wait for owner' : ' approval' + (na === 1 ? '' : 's')) + '</span>' : '') + '</div>' +
       '<div class="dl"><span class="tx cyan">Chat · runs every department</span></div></button>';
     setHTML($('depts'), mrow + S.departments.map(function (d) {
       var v = CO.deptView(d), ln = CO.deptLine(d, v);
@@ -268,11 +270,11 @@
   function renderRight() {
     var S = CO.S, fd = ui.panel != null ? CO.dept(ui.panel) : null;
     var apprs = fd ? S.approvals.filter(function (a) { return a.dept_id === fd.id; }) : S.approvals, n = apprs.length;
-    var head = RO ? 'WAITING FOR ITS OWNER' : 'NEEDS YOU';
+    var head = RO ? 'WAITING FOR ITS OWNER' : 'APPROVALS';
     $('ap-t').textContent = fd ? head + ' · ' + fd.name.toUpperCase() : head;
     $('ap-n').textContent = n || '';
     $('p-appr').classList.toggle('none', !n);
-    setHTML($('appr'), n ? apprs.map(function (a) { return apprCard(a, false); }).join('') : '<p class="empty ok">' + (RO ? 'Nothing waits for its owner' : 'All clear: nothing needs you') + (fd ? ' from ' + esc(fd.name) : '') + '.</p>');
+    setHTML($('appr'), n ? apprs.map(function (a) { return apprCard(a, false); }).join('') : '<p class="empty ok">' + (RO ? 'Nothing waits for its owner' : 'No approvals') + (fd ? ' from ' + esc(fd.name) : '') + '.</p>');
     S.approvals.forEach(function (a) { ui.seen[a.id] = 1; });
     renderEarned(fd);
     renderChats();
@@ -813,7 +815,7 @@
   }
   function renderApprovals() {
     var S = CO.S;
-    setHTML($('appr-full'), S.approvals.length ? S.approvals.map(function (a) { return apprCard(a, false); }).join('') : '<p class="empty ok">All clear: nothing needs you.</p>');
+    setHTML($('appr-full'), S.approvals.length ? S.approvals.map(function (a) { return apprCard(a, false); }).join('') : '<p class="empty ok">No approvals.</p>');
     S.approvals.forEach(function (a) { ui.seen[a.id] = 1; });
     setHTML($('appr-done'), S.decided.length ? S.decided.map(function (a) {
       var d = CO.dept(a.dept_id), filed = a.decision === 'filed', ok = filed || a.decision === 'approve';
@@ -967,7 +969,7 @@
     var heart;
     if (S.company.status === 'paused') heart = '<span class="stop">Paused: nothing runs until you resume</span>';
     else if (!g.ok) heart = '<span class="stop">' + (g.code === 'cap' ? 'Daily limit reached' : 'Plan used up') + (g.until ? ': back at ' + hhmm(g.until) : '') + '</span>';
-    else heart = (working ? '<span class="hot">' + working + ' working now</span>' : 'Waiting for the next job') + (g.code === 'extra' ? ' · <span class="hot">on extra usage</span>' : '');
+    else heart = '';   // nothing while it runs ("odstran ten maly napis waiting"): the rail and the rooms say who works
     $('co-heart').innerHTML = heart;
     var ur = $('us-r');
     ur.textContent = g.code === 'extra' ? 'on extra usage · resets in ' + hm(b.session.resets_at - S.clock) : 'Resets in ' + hm(b.session.resets_at - S.clock);
@@ -995,7 +997,7 @@
       var v = CO.deptView(d), e = v.experts[i]; if (!e) return '';
       return '<b>' + esc(e.name) + '</b> · ' + esc(d.name) + '<br>' + (e.state === 'working' && v.running ? '<span class="c">working on</span> “' + esc(v.running.title) + '”' : 'idle');
     }
-    if (key === 'hub') return '<b>Command</b> · ' + (RO ? 'its chat' : 'your chat') + (S.approvals.length ? ' · <span class="r">' + S.approvals.length + (RO ? ' wait for its owner' : ' need' + (S.approvals.length === 1 ? 's' : '') + ' you') + '</span>' : '') + '<br>click to open';
+    if (key === 'hub') return '<b>Command</b> · ' + (RO ? 'its chat' : 'your chat') + (S.approvals.length ? ' · <span class="r">' + S.approvals.length + (RO ? ' wait for its owner' : ' approval' + (S.approvals.length === 1 ? '' : 's')) + '</span>' : '') + '<br>click to open';
     if (key === 'you') return '<b>Your desk</b> · ' + (S.approvals.length ? '<span class="r">' + S.approvals.length + ' approvals waiting</span>' : 'all clear') + '<br>click to open Approvals';
     if (key === 'audit') {
       var A = S.audit;

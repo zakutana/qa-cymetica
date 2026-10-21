@@ -28,19 +28,19 @@
     trading_desk: [['My bots', 'https://cymetica.com/my-agents'], ['Agent Tournaments', 'https://cymetica.com/agent-tournaments']]
   };
   var FIXED = [
-    { k: 'hub', n: 'Command', t: 'The brain of your company. You run all of it through NEXUS: tell it what you want, and it creates departments, hires expert agents into them, plans the work and reports back.' },
-    { k: 'vault', n: 'Vault', t: 'Everything your company earns lands here, in USDC and ET10. Grow it by earning real revenue and ET10 rewards.' },
-    { k: 'audit', n: 'Operations', t: 'This department watches over all of it: it audits every process, finds what is slow or wasted, and optimises the way your company works.' }
+    { k: 'hub', n: 'Command', t: 'The main control point of your company, where NEXUS, the superintelligence, lives. You run the whole company just by talking to it: it runs every department, plans the work and reports back.' },
+    { k: 'vault', n: 'Vault', t: 'The treasury of your company. All its earnings and rewards are stored here, in real USDC and ET10. Private: invisible to the public.' },
+    { k: 'audit', n: 'Operations', t: 'This department watches over the whole run of your company: it monitors every agent and process, optimises them, and makes sure no agent gets stuck in the mud.' }
   ];
   var PRE = CO.PREBUILD || [
     { key: 'testing', name: 'Cymetica QA' }, { key: 'development', name: 'Development' },
     { key: 'testing_lab', name: 'Quant Lab' }, { key: 'trading_desk', name: 'Trading desk' }
   ];
   var LINE = {
-    development: 'Tell NEXUS your idea: Development designs it, builds it and ships it on Cymetica as your product. When people use it, it earns you real revenue, plus ET10 as a bonus. Your products are shown in the Portfolio tab.',
-    testing: 'Test what you ship. QA tests your products, and anything on Cymetica you point it at, and files every bug it finds. Each verified bug pays you ET10 in rewards.',
-    testing_lab: 'Products are one way to earn, trading is another. Here researchers take your ideas and test them as experiments, looking for the most profitable trading strategies on Cymetica. All in paper money; every experiment is in the Experiments lab.',
-    trading_desk: 'Then run your verified strategies with real money: create real trading agents and send them to Agent Tournaments.'
+    development: 'Tell NEXUS your idea: Development designs it, builds it and ships it on Cymetica as your product. When people use it, it earns you real revenue, plus ET10 as a bonus. You can track how your products perform in the Products tab later.',
+    testing: 'Test what you ship. QA tests your products, or any other app on Cymetica, and files every bug it finds. Each verified bug pays you ET10 in rewards. Track your bugs on the Bugs leaderboard page.',
+    testing_lab: 'Products are one way to earn, trading is another. Here researchers take your ideas and test them as experiments, looking for the most profitable trading strategies on Cymetica. All in paper money; all your experiments can be found on the Experiments lab page later.',
+    trading_desk: 'Then run your verified strategies with real money: create real trading agents and let them trade on Cymetica, or send them to Agent Tournaments to win additional rewards.'
   };
   var ORDER = ['hub', 'vault', 'development', 'testing', 'testing_lab', 'trading_desk', 'audit'];
   var TOUR = ORDER.map(function (k) {
@@ -51,7 +51,7 @@
 
   // what is being made: the modal's own defaults (app.js createCompanyModal), and the pre-built start
   // (the builder opens on the Shipyard in green: "jako uvodni firmu zobraz tuhle", 2026-10-20)
-  var o = { name: '', mission: '', skin: 'dome', accent: 'green', public: false, start: 'pre' };
+  var o = { name: '', mission: 'Make a massive amount of money.', skin: 'dome', accent: 'green', public: false, start: 'pre' };
   var step = 1, ti = 0, office = null, making = false, stage = null, ready = false;
 
   /* ---------------- the company the office shows: nothing runs while it is only being looked at ---------------- */
@@ -88,7 +88,7 @@
   }
   // a room's words on hover -- not in the tour, where its bubble says them ("zbytecne navic tooltip", 2026-10-20)
   function tipFor(kind, key) {
-    if (kind !== 'room' || step === 'tour') return '';
+    return '';   // no tooltips in the builder: the tour's bubbles say what each room is
     for (var i = 0; i < TOUR.length; i++) if (keyOf(TOUR[i]) === key) return '<b>' + esc(TOUR[i].n) + '</b><br>' + esc(TOUR[i].t);
     return '';
   }
@@ -259,17 +259,32 @@
     };
     $('opts').innerHTML =
       card('new', 3, 'New', 'rooms · add departments as you go', fixed) +
-      card('pre', 7, 'CyMetica Pre-Build', 'rooms · 4 departments ready to work', fixed + PRE.map(function (d) { return icon({ key: d.key }, d.name, true); }).join(''));
+      card('pre', 7, 'CyMetica Pre-Build', 'rooms · ' + PRE.length + ' departments · ' + PRE.reduce(function (n, d) { var t = (CO.TEMPLATES || []).filter(function (x) { return x.key === d.key; })[0]; return n + (t ? t.experts.length : 0); }, 1) + ' agents', fixed + PRE.map(function (d) { return icon({ key: d.key }, d.name, true); }).join(''));
   }
 
   /* ---------------- the tour: each room's words in a bubble out of the room ---------------- */
+  // who works in a room, first in its bubble ("do kazdeho stepu ... Agents: a tady das ty ikonky"): its experts' astronauts
+  // (shots/astro-*.webp), NEXUS in Command, the supervisor in Operations; the Vault has nobody
+  function expertsOf(r) {
+    if (r.k === 'hub') return [['NEXUS', null]];
+    if (r.k === 'audit') return [['Supervisor', null]];
+    if (r.k) return [];
+    var t = (CO.TEMPLATES || []).filter(function (x) { return x.key === r.dk; })[0];
+    return (t ? t.experts : []).map(function (k) { return [CO.expertName ? CO.expertName(k) : k, 'shots/astro-' + k + '.webp']; });
+  }
+  function agentsRow(r) {
+    var a = expertsOf(r); if (!a.length) return '';
+    return '<div class="bz-ag"><span>AGENTS</span>' + a.map(function (x) {
+      return '<i>' + (x[1] ? '<img alt="" src="' + x[1] + '">' : '<b class="core"></b>') + esc(x[0]) + '</i>';
+    }).join('') + '</div>';
+  }
   function tourAt(i) {
     ti = i;
     var key = keyOf(TOUR[i]), r = TOUR[i], last = i === TOUR.length - 1, ic = CO.deptIconSvg ? CO.deptIconSvg(r.k || { key: r.dk }, 22) : null;
     $('bub').innerHTML =
       '<div class="bz-bh">' + (ic ? '<i class="bz-ic" style="--c:' + ic.color + '">' + ic.svg + '</i>' : '') +
         '<span class="bz-bt"><b>' + esc(r.n) + '</b><em>' + (i + 1) + ' of ' + TOUR.length + '</em></span><button type="button" class="bz-x" data-a="close" title="Back to Start">×</button></div>' +
-      '<p>' + esc(r.t) + '</p>' + (r.k === 'vault' ? '<div class="bz-bal" title="Your balance on your Cymetica profile"><span><b>' + BALANCE.et10.toLocaleString('en-US') + '</b> ET10</span><span><b>' +
+      agentsRow(r) + '<p>' + esc(r.t) + '</p>' + (r.k === 'vault' ? '<div class="bz-bal" title="Your balance on your Cymetica profile"><span><b>' + BALANCE.et10.toLocaleString('en-US') + '</b> ET10</span><span><b>' +
         BALANCE.usdc.toFixed(2) + '</b> USDC</span><em>your balance now</em></div>' : '') +
       ((PAGES[r.k || r.dk] || []).length ? '<div class="bz-pg">' + PAGES[r.k || r.dk].map(function (p) {
         return '<a href="' + esc(p[1]) + '" target="_blank" rel="noopener"><svg viewBox="0 0 20 20" aria-hidden="true"><circle cx="9" cy="11" r="6.2"/><ellipse cx="9" cy="11" rx="2.6" ry="6.2"/><path d="M2.8 11h12.4 M12.6 2.6h4.8v4.8 M17.4 2.6l-5.2 5.2"/></svg>' + esc(p[0]) + '</a>';
@@ -315,7 +330,7 @@
     var tour = live && step === 'tour', start = live && step === 2 && o.start === 'pre';
     // (the bubble's point a little above the room's walls, so it stands over the room and not on its back wall)
     if (tour) over(bub, keyOf(TOUR[ti]), 2.5, null); else if (!bub.hidden) bub.hidden = true;
-    if (start) over(call, 'hub', 0.25, '<span class="lb">Click here<em>Click Command to start the tour</em></span><i class="stem"></i><i class="ring"></i>');
+    if (start) over(call, 'hub', 0.25, '<span class="lb"><small><b>Welcome to your AI-native company</b>run by expert agents</small>Click here<em>to start the tour</em></span><i class="stem"></i><i class="ring"></i>');
     else if (tour && ti < TOUR.length - 1) over(call, keyOf(TOUR[ti + 1]), 0.25, '<span class="lb sm">Next ›</span><i class="stem"></i><i class="ring"></i>');
     else if (!call.hidden) call.hidden = true;
   })();

@@ -3306,7 +3306,8 @@ function omats() {
   // the glass: a pale frosted pane you clearly see (his picture lifts what is behind it by about ten levels), brighter
   // at its top rail, with soft sheens (shGlass); its own edges a thin pale line; the colour is the neon's, not the glass's
   OM.glass = shGlass({ color: 0xc4d4dc, envMapIntensity: 1.2, transparent: true, opacity: 0.055, roughness: 0.08, metalness: 0.0, depthWrite: false, side: THREE.DoubleSide });
-  OM.glassCyan = OM.glass;
+  // a room at work: its glass a touch of the rail's cyan (tint), as a waiting room's is orange
+  OM.glassCyan = shGlass({ color: 0x9fe4ff, emissive: 0x00405a, emissiveIntensity: 0.25, envMapIntensity: 1.2, transparent: true, opacity: 0.07, roughness: 0.08, metalness: 0.0, depthWrite: false, side: THREE.DoubleSide });
   OM.glassOrange = shGlass({ color: 0xffb084, emissive: 0x5a2008, emissiveIntensity: 0.25, envMapIntensity: 1.2, transparent: true, opacity: 0.075, roughness: 0.08, metalness: 0.0, depthWrite: false, side: THREE.DoubleSide });
   OM.glassEdge = emis('#b4ccd4', 0.4);
   OM.wallDark = std({ color: 0x0f161e, roughness: 0.45, metalness: 0.3 });
@@ -3349,6 +3350,8 @@ function omats() {
   OM.daisArc = emis('#c8d4de', 0.55);
   // his trading floor: the blue floor under an orange-red pool of light, the tile seams a faint glow in it
   OM.tileOrange = shFloor({ map: tileTex(), color: 0xf0d4cc, emissiveMap: seamTex(), emissive: 0xff6a30, emissiveIntensity: 2.4, roughness: 0.55, metalness: 0.28 });
+  // a room at work: its floor's seams lit in the rail's cyan (tint)
+  OM.tileCyan = shFloor({ map: tileTex(), color: 0xcfe8f2, emissiveMap: seamTex(), emissive: 0x00b4ff, emissiveIntensity: 2.0, roughness: 0.55, metalness: 0.28 });
   OM.coinG = std({ color: 0x18b87a, emissive: 0x38f5b8, emissiveIntensity: 0.28, metalness: 0.8, roughness: 0.22 });
   OM.coinB = std({ color: 0x2f6fd8, emissive: 0x3b82f6, emissiveIntensity: 0.32, metalness: 0.8, roughness: 0.22 });
   G.coin = new THREE.CylinderGeometry(1, 1, 1, 28);
@@ -7689,7 +7692,7 @@ class Office3D {
       const dot = '#' + new THREE.Color(STC[st]).getHexString();
       let title, sub, mode, col = st === 'queued' ? '#a9b8cc' : dot;
       if (v.running) { title = v.running.title; sub = CO.expertName(v.running.expert) + ' is on it'; mode = 'run'; }
-      else if (v.waiting) { title = 'Needs you'; sub = 'approve or reject on the right'; mode = 'full'; col = '#ff8824'; }
+      else if (v.waiting) { title = 'Approval'; sub = 'approve or reject on the right'; mode = 'full'; col = '#ff8824'; }
       else if (v.queued.length) { title = 'Up next: ' + v.queued[0].title; sub = ''; mode = ''; }
       else { title = d.schedule && d.next_run ? 'Next run at ' + CO.hhmm(d.next_run) : 'Idle'; sub = ''; mode = ''; }
       if (r.wall) drawWall(r.wall, title, sub, col, mode);
@@ -7722,7 +7725,7 @@ class Office3D {
       // the pill shows only when something waits on the owner: the names on the glass are all the office says otherwise
       hub.need.hidden = !na;
       hub.need.className = 'p3need' + (na ? '' : ' clear');
-      hub.need.textContent = na ? na + (CO.RO ? ' WAIT FOR ITS OWNER' : na === 1 ? ' NEEDS YOU' : ' NEED ATTENTION') : 'ALL CLEAR';
+      hub.need.textContent = na ? na + (CO.RO ? ' WAIT FOR ITS OWNER' : na === 1 ? ' APPROVAL' : ' APPROVALS') : 'ALL CLEAR';
     }
     const au = this.rooms.audit;
     if (au) {
@@ -7763,12 +7766,15 @@ class Office3D {
     const c = new THREE.Color(isOrange ? LOOK.orange : isWork ? WORK_CYAN : LOOK.neon);
     // the line itself in its own deeper mint (SH_NEON), the floor's wash in his; over the bloom's threshold, so it
     // glows, the glow tight round a thinner line, as his
-    if (r.edgeM) { r.edgeM.emissive.set(isOrange ? LOOK.orange : isWork ? WORK_CYAN : SH_NEON); r.edgeM.emissiveIntensity = isOrange ? 1.9 : isWork ? 1.15 : 1.5; }
-    if (r.glow) { r.glow.material.color.copy(c).multiplyScalar(isOrange ? 1.9 : isWork ? 1.0 : 1); r.glowBase = isOrange ? 1.0 : isWork ? 0.6 : 0; }
-    if (r.lamp) { r.lamp.color.set(isOrange ? 0xff6a34 : isWork ? 0x00b8ff : 0xeef6ff); r.lamp.intensity = isOrange ? 22 : isWork ? 10 : 6; r.lamp.distance = isOrange ? 6.5 : 9; r.lamp.position.y = isOrange ? 2.4 : 4.4; }
+    // A room at work is told apart as the orange one is, whole, in the rail's cyan ("porad mi prijde ta modra malo
+    // vyrazna", 2026-10-21): its floor's seams lit, its glass tinted, its line, a wash on its floor, a cyan lamp hung lower
+    if (r.edgeM) { r.edgeM.emissive.set(isOrange ? LOOK.orange : isWork ? WORK_CYAN : SH_NEON); r.edgeM.emissiveIntensity = isOrange ? 1.9 : isWork ? 1.7 : 1.5; }
+    if (r.glow) { r.glow.material.color.copy(c).multiplyScalar(isOrange ? 1.9 : isWork ? 1.6 : 1); r.glowBase = isOrange ? 1.0 : isWork ? 0.9 : 0; }
+    if (r.lamp) { r.lamp.color.set(isOrange ? 0xff6a34 : isWork ? 0x1aa8ff : 0xeef6ff); r.lamp.intensity = isOrange ? 22 : isWork ? 20 : 6; r.lamp.distance = isOrange || isWork ? 6.5 : 9; r.lamp.position.y = isOrange || isWork ? 2.4 : 4.4; }
     // the floor and the glass: only the room's own (a room that dressed its walls in something else keeps it)
-    if (r.floorM && (r.floorM.material === OM.tile || r.floorM.material === OM.tileOrange)) r.floorM.material = isOrange ? OM.tileOrange : OM.tile;
-    if (r.panes) r.panes.forEach((p) => { if (p.material === OM.glass || p.material === OM.glassOrange) p.material = isOrange ? OM.glassOrange : OM.glass; });
+    const own = (m, a, b, cc) => m === a || m === b || m === cc;
+    if (r.floorM && own(r.floorM.material, OM.tile, OM.tileOrange, OM.tileCyan)) r.floorM.material = isOrange ? OM.tileOrange : isWork ? OM.tileCyan : OM.tile;
+    if (r.panes) r.panes.forEach((p) => { if (own(p.material, OM.glass, OM.glassOrange, OM.glassCyan)) p.material = isOrange ? OM.glassOrange : isWork ? OM.glassCyan : OM.glass; });
   }
   drawSel() {
     release(this.selRing); this.selRing.clear();

@@ -988,7 +988,7 @@
     var S = CO.S; v = v || CO.deptView(d);
     var asks = S.approvals.filter(function (a) { return a.dept_id === d.id; }).length;
     if (v.capped) return { tone: 'red', short: 'Daily cap reached', text: 'Paused: daily cap reached' };
-    if (asks) return { tone: 'red', short: 'Needs you', text: 'Needs you · approve ' + asks };
+    if (asks) return { tone: 'red', short: 'Approval', text: asks + ' approval' + (asks === 1 ? '' : 's') };
     if (v.running) return { tone: 'cyan', short: 'Working', text: 'Working: ' + v.running.title };
     if (S.company.status === 'paused') return { tone: 'dim', short: 'Paused', text: 'Paused' };
     if (v.queued.length) return { tone: 'blue', short: 'Up next', text: 'Up next: ' + v.queued[0].title };
