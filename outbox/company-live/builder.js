@@ -29,7 +29,7 @@
   };
   var FIXED = [
     { k: 'hub', n: 'Command', t: 'The main control point of your company, where NEXUS, the superintelligence, lives. You run the whole company just by talking to it: it runs every department, plans the work and reports back.' },
-    { k: 'vault', n: 'Vault', t: 'The treasury of your company. All its earnings and rewards are stored here, in real USDC and ET10. Private: invisible to the public.' },
+    { k: 'vault', n: 'Vault', t: 'The treasury of your company. All its earnings and rewards are stored here, in real USDC and ET10. Always private, even if your company is public.' },
     { k: 'audit', n: 'Operations', t: 'Your company is watched over by a supervisor: it monitors every agent and process, optimises them, and makes sure no agent gets stuck in the mud.' }
   ];
   var PRE = CO.PREBUILD || [
@@ -51,7 +51,7 @@
 
   // what is being made: the modal's own defaults (app.js createCompanyModal), and the pre-built start
   // (the builder opens on the Shipyard in green: "jako uvodni firmu zobraz tuhle", 2026-10-20)
-  var o = { name: '', mission: 'Make a massive amount of money.', skin: 'dome', accent: 'green', public: false, start: 'pre' };
+  var o = { name: '', mission: 'Build a profitable company that generates real, recurring revenue.', skin: 'dome', accent: 'green', public: false, start: 'pre' };
   var step = 1, ti = 0, office = null, making = false, stage = null, ready = false;
 
   /* ---------------- the company the office shows: nothing runs while it is only being looked at ---------------- */
@@ -267,7 +267,7 @@
   // (shots/astro-*.webp), NEXUS in Command, the supervisor in Operations; the Vault has nobody
   function expertsOf(r) {
     if (r.k === 'hub') return [['NEXUS', null]];
-    if (r.k === 'audit') return [['Supervisor', null]];
+    if (r.k === 'audit') return [['Supervisor', 'shots/astro-supervisor.webp']];
     if (r.k) return [];
     var t = (CO.TEMPLATES || []).filter(function (x) { return x.key === r.dk; })[0];
     return (t ? t.experts : []).map(function (k) { return [CO.expertName ? CO.expertName(k) : k, 'shots/astro-' + k + '.webp']; });
@@ -330,7 +330,7 @@
     var tour = live && step === 'tour', start = live && step === 2 && o.start === 'pre';
     // (the bubble's point a little above the room's walls, so it stands over the room and not on its back wall)
     if (tour) over(bub, keyOf(TOUR[ti]), 2.5, null); else if (!bub.hidden) bub.hidden = true;
-    if (start) over(call, 'hub', 0.25, '<span class="lb"><small><b>Welcome to your AI-native company</b>run by real AI expert agents</small>Click here<em>to start the tour</em></span><i class="stem"></i><i class="ring"></i>');
+    if (start) over(call, 'hub', 0.25, '<span class="lb"><small><b>Welcome to your AI-native company</b>run by real AI agents</small>Click here<em>to start the tour</em></span><i class="stem"></i><i class="ring"></i>');
     else if (tour && ti < TOUR.length - 1) over(call, keyOf(TOUR[ti + 1]), 0.25, '<span class="lb sm">Next ›</span><i class="stem"></i><i class="ring"></i>');
     else if (!call.hidden) call.hidden = true;
   })();
