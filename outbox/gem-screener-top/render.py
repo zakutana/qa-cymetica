@@ -11,7 +11,7 @@ css = (here / "patch.css").read_text(encoding="utf-8")
 js = (here / "patch.js").read_text(encoding="utf-8")
 src = css + js
 ALLOWED = {"#00cfff", "#00ff88", "#ff4444", "#3b82f6", "#e6edf7", "#a9b8cc", "#7f93ad", "#1e3050", "#06090f",
-           "#0d1520"}  # the last is the header's own navy, kept under the new layers
+           "#0d1520", "#070b13"}  # the header's near-black base, and the site navy kept for the panels
 ALLOWED_RGB = {"0,207,255", "0,255,136", "255,68,68", "6,9,15"}
 hexes = {h.lower() for h in re.findall(r"#[0-9a-fA-F]{6}\b", src)} | {"#" + h.lower() for h in re.findall(r"%23([0-9a-fA-F]{6})", src)}
 rgbs = {re.sub(r"\s", "", m) for m in re.findall(r"rgba?\(([\d\s]+,[\d\s]+,[\d\s]+),", src)}
