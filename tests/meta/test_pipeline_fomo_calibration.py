@@ -183,3 +183,22 @@ def test_the_calibration_counts_signals_whose_depth_was_never_read():
     whole = fomo.compare(rows, multiple=3.0, within_hours=24, now=now,
                          min_liquidity=0, min_volume=0, require_depth=False)
     assert (whole["hot"]["n"], whole["hot"]["hits"]) == (1, 1), whole
+
+
+@qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
+def test_the_tail_probability_survives_a_diary_of_thousands_of_windows():
+    """2026-10-21: the sweep's check died with OverflowError ("int too large to convert to
+    float") because the tail multiplied math.comb(n, i) -- an exact integer, a thousand digits
+    long once n passed ~1030 -- by a float. The diary only grows, so the check would have
+    crashed on every later sweep. A crash is not a verdict; the tail must be computed in logs."""
+    import math
+
+    tail = _check().improbability
+    # Small n against the exact definition.
+    exact = sum(math.comb(20, i) * 0.3 ** i * 0.7 ** (20 - i) for i in range(6))
+    assert abs(tail(5, 20, 0.3) - exact) < 1e-12
+    # Large n: finite, a probability, and ordered the way a tail must be.
+    low, mid, high = tail(100, 5000, 0.112), tail(560, 5000, 0.112), tail(900, 5000, 0.112)
+    assert 0.0 <= low <= 1.0 and 0.0 <= mid <= 1.0 and 0.0 <= high <= 1.0
+    assert low < 1e-100 and 0.3 < mid < 0.7 and high > 0.999999, (low, mid, high)
+    assert abs(tail(5000, 5000, 0.112) - 1.0) < 1e-9

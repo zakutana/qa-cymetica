@@ -293,6 +293,16 @@ def test_every_served_tool_is_declared_somewhere(mcp_trusted, rest_anon):
         sources={"catalogue": "/.well-known/mcp.json", "served": "tools/list"}))
 
 
+# A tool that exists to hand out the credential has nothing to offer a caller that holds one:
+# register_agent -- "Register this agent and get its API key" -- is listed with no identity and
+# not with one (2026-10-21: 149 tools with it, 157 without it). Its absence is the design.
+CREDENTIAL_TOOLS = frozenset({"register_agent"})
+
+
+def tools_lost_by_authenticating(anon: set[str], trusted: set[str]) -> list[str]:
+    return sorted(anon - trusted - CREDENTIAL_TOOLS)
+
+
 @qa(component="mcp.trust_ladder", tier=SafetyTier.SAFE, surface="mcp")
 def test_higher_tier_is_a_superset_of_lower(mcp_anon, mcp_trusted):
     """Authentication must not REDUCE what you can see.
@@ -303,7 +313,7 @@ def test_higher_tier_is_a_superset_of_lower(mcp_anon, mcp_trusted):
     """
     anon = mcp_anon.tool_names()
     trusted = mcp_trusted.tool_names()
-    lost = sorted(anon - trusted)
+    lost = tools_lost_by_authenticating(anon, trusted)
     assert not lost, (
         f"\nA TRUSTED key sees {len(trusted)} tools; anonymous sees {len(anon)}.\n"
         f"These {len(lost)} are served anonymously but NOT to the credentialed "

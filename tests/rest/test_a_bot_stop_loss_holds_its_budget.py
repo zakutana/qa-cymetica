@@ -65,6 +65,10 @@ def judged(row: dict, events: dict, profile: dict) -> dict | None:
         profit = float(row["total_profit_usdc"])
     except (KeyError, TypeError, ValueError):
         return None
+    # A stopped bot has had its balance returned (our laboratory retires its bots this way):
+    # balance 0.0 makes baseline = -profit and the loss exactly 100 %, whatever the stop did.
+    if balance <= 0 or row.get("status") == "stopped":
+        return None
     baseline = balance - profit
     if baseline <= 0:
         return None

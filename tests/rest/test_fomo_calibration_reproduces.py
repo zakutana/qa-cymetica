@@ -124,8 +124,14 @@ def published(body: dict) -> dict | None:
 
 def improbability(hits: int, n: int, rate: float) -> float:
     """P(at most this many hits) if their published rate were true."""
-    return sum(math.comb(n, i) * rate ** i * (1 - rate) ** (n - i)
-               for i in range(hits + 1))
+    # In logs: math.comb(n, i) is an exact integer and overflows a float once n passes ~1000
+    # (OverflowError on 2026-10-21, with the diary at thousands of windows).
+    hits = min(hits, n)
+    logs = [math.lgamma(n + 1) - math.lgamma(i + 1) - math.lgamma(n - i + 1)
+            + i * math.log(rate) + (n - i) * math.log1p(-rate)
+            for i in range(hits + 1)]
+    top = max(logs)
+    return min(1.0, math.exp(top) * sum(math.exp(x - top) for x in logs))
 
 
 @qa(component="rest.clones", tier=SafetyTier.SAFE, surface="rest")
