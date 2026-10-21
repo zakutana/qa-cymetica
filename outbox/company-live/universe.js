@@ -28,34 +28,48 @@
   var ORBITS = [90, 105, 120, 136, 154, 178, 203], AZ = 1.08, SPIN = 2.2, R1 = ORBITS[ORBITS.length - 1];
   CO.uvRng = rng; CO.fpOf = fpOf;
   CO.uvGalaxy = { ORBITS: ORBITS, AZ: AZ, R1: R1, outer: R1, omega: function (r) { return SPIN / Math.pow(r, 1.5); } };
-  CO.uvPlan = function (mine) {
-    var list = CO.UNIVERSE.slice().sort(function (a, b) { return floorsOf(b) - floorsOf(a) || a.id - b.id; });
-    var R = rng(2026), items = [], n = list.length + 1, tot = 0, k = 0;
+  // Since 2026-10-21 the orrery holds no companies: it is land for sale. Every orbit carries SLOTS, places a slot at a
+  // time is bought on (with ET10, then built on through Build it Better), as many to an orbit as its length gives
+  // (36 in all, where the 35 sample companies and ours stood); and the two ADS (CO.ADS), each on its orbit at its
+  // angle from the first look's front, so both stand in it. A slot where an ad stands at the first moment is left
+  // out (adClear: about an ad's reach, in the plane's units). Items: { kind: 'slot' | 'ad', c: { id, name, accent },
+  // orbit, pos }; a slot also has n (its orbit, 1 nearest Cymetica) and owned. Ids are fixed by the seed, so a slot
+  // bought keeps its id. (The station code below still takes a company item, kind unset, should companies return.)
+  CO.uvGalaxy.adClear = 44;
+  CO.uvPlan = function () {
+    var R = rng(2026), items = [], n = 36, tot = 0, own = CO.land ? CO.land() : [], clear = CO.uvGalaxy.adClear;
+    var at = function (r, a) { return [Math.sin(a) * r, 0, Math.cos(a) * r]; };
+    (CO.ADS || []).forEach(function (ad) {
+      var r = ORBITS[ad.orbit], a = AZ + ad.at;
+      items.push({ kind: 'ad', ad: ad, c: { id: 'ad-' + ad.key, name: ad.name, accent: ad.accent }, orbit: { r: r, a: a, w: CO.uvGalaxy.omega(r) }, pos: at(r, a) });
+    });
+    var ads = items.slice();
     ORBITS.forEach(function (r) { tot += r; });
-    // stations per orbit in proportion to its length, so they stand about as far apart on every one
+    // slots per orbit in proportion to its length, so they stand about as far apart on every one
     var counts = ORBITS.map(function (r) { return Math.max(1, Math.round(r / tot * n)); }), d = n - counts.reduce(function (a, b) { return a + b; }, 0);
     for (var i = counts.length - 1; d !== 0; i = (i + counts.length - 1) % counts.length) { if (d > 0) { counts[i]++; d--; } else if (counts[i] > 1) { counts[i]--; d++; } }
     ORBITS.forEach(function (r, o) {
-      var m = counts[o], a0 = o === 1 ? AZ + 0.55 : R() * Math.PI * 2;
+      var m = counts[o], a0 = R() * Math.PI * 2;
       for (var j = 0; j < m; j++) {
-        var me = o === 1 && j === 0, c = me ? mine : list[k++]; if (!c) return;
-        var a = a0 + (j + (me ? 0 : (R() - 0.5) * 0.4)) / m * Math.PI * 2;
-        items.push({ c: c, mine: me, orbit: { r: r, a: a, w: CO.uvGalaxy.omega(r) }, pos: [Math.sin(a) * r, 0, Math.cos(a) * r] });
+        var a = a0 + (j + (R() - 0.5) * 0.4) / m * Math.PI * 2, pos = at(r, a), id = 'slot-' + (o + 1) + '-' + (j + 1);
+        if (ads.some(function (x) { return Math.hypot(x.pos[0] - pos[0], x.pos[2] - pos[2]) < clear; })) continue;
+        items.push({ kind: 'slot', n: o + 1, owned: own.indexOf(id) >= 0, c: { id: id, name: own.indexOf(id) >= 0 ? 'Your land' : 'Free slot', accent: 'green' },
+          orbit: { r: r, a: a, w: CO.uvGalaxy.omega(r) }, pos: pos });
       }
     });
     return items;
   };
-  // a lively first look: some decks already at work
+  // a lively first look: some decks already at work (companies only: land and ads have no decks)
   CO.uvSeed = function (items, live) {
     items.forEach(function (it) {
-      if (it.mine || it.c.status === 'paused') return;
+      if (it.kind || it.mine || it.c.status === 'paused') return;
       var n = floorsOf(it.c), R = rng(it.c.id * 3);
       live[it.c.id] = R() < 0.55 ? [Math.floor(R() * n)] : [];
     });
   };
   // one beat of the sample companies: up to three change which decks work; the picture answers what changed
   CO.uvStep = function (items, live) {
-    var pool = items.filter(function (it) { return !it.mine && it.c.status !== 'paused'; }), out = [];
+    var pool = items.filter(function (it) { return !it.kind && !it.mine && it.c.status !== 'paused'; }), out = [];
     for (var k = 0; k < 3 && pool.length; k++) {
       var it = pool[Math.floor(Math.random() * pool.length)], n = floorsOf(it.c), on = [];
       var w = Math.random() < 0.3 ? 0 : (n > 1 && Math.random() < 0.3 ? 2 : 1);
@@ -70,16 +84,37 @@
     return out;
   };
   CO.uvStats = function (items, live) {
-    var pub = 0, work = 0;
+    var pub = 0, work = 0, free = 0, owned = 0, ads = 0, cos = 0;
     items.forEach(function (it) {
+      if (it.kind === 'slot') { if (it.owned) owned++; else free++; return; }
+      if (it.kind === 'ad') { ads++; return; }
+      cos++;
       if (it.c.public) pub++;
       work += (it.mine ? (it.c.working || []) : (live[it.c.id] || [])).length;
     });
-    return { companies: items.length, public: pub, working: work };
+    return { companies: cos, public: pub, working: work, free: free, owned: owned, ads: ads };
   };
+  // a slot's address and an ad's page, for the tooltip and the cards
+  CO.uvSlotName = function (it) { return 'Orbit ' + it.n + ' · slot ' + String(it.c.id).split('-').pop(); };
+  // the plate over an ad, and over a slot of your own; a free slot has none (its tooltip says what it is). undefined:
+  // a company, whose plate each map draws itself. Both maps use this, so the two say the same.
+  CO.uvPlate = function (it) {
+    if (it.kind === 'ad') return { cls: 'b3 ad', html: '<span class="adt">AD</span><span class="rib">' + esc(String(it.c.name).toUpperCase()) + '</span><span class="teth"></span>' };
+    if (it.kind === 'slot') return it.owned ? { cls: 'b3 land', html: '<span class="rib">YOUR LAND</span><span class="teth"></span>' } : null;
+    return undefined;
+  };
+  CO.uvAdPath = function (ad) { return ad.url.replace(/^https?:\/\//, '').replace(/\?.*$/, ''); };
   CO.uvTip = function (id, it, live) {
-    if (id === 'core') return '<b class="c">Cymetica</b><br>Every company here works on it.';
+    if (id === 'core') return '<b class="c">Cymetica</b><br>The land round it is for sale.';
     if (!it) return '';
+    if (it.kind === 'ad') {
+      return '<div class="uvt"><b style="color:' + CO.accentHex(it.c.accent) + '">' + esc(it.c.name) + '</b><span>AD</span></div><div><span class="c">Click to open ' + esc(CO.uvAdPath(it.ad)) + ' →</span></div>';
+    }
+    if (it.kind === 'slot') {
+      return it.owned
+        ? '<div class="uvt"><b class="g">Your land</b><span>' + esc(CO.uvSlotName(it)) + '</span></div><div><span class="c">Click to add a building with Build it Better →</span></div>'
+        : '<div class="uvt"><b>Free slot</b><span>' + esc(CO.uvSlotName(it)) + '</span></div><div><b class="g">' + CO.LAND_PRICE.toLocaleString('en-US') + '</b> ET10 <span class="dim">placeholder price</span></div><div><span class="c">Click to buy →</span></div>';
+    }
     var c = it.c, n = floorsOf(c), work = (it.mine ? (c.working || []) : (live[c.id] || [])).length;
     var et = it.mine ? (c.et10 || 0) : CO.uvEt10(c), acc = CO.accentHex(c.accent);
     var nums = '<b>' + n + '</b> department' + (n === 1 ? '' : 's') + (c.public || it.mine ? ' · <b>' + work + '</b> working now' + (et ? ' · <b class="g">+' + et.toLocaleString('en-US') + '</b> ET10' : '') : '');
@@ -1031,6 +1066,8 @@
   // reads at a glance orbit by orbit; only ours keeps its ring of light, the others ride their orbits, as in his picture
   var UVSS = 3.8;
   Universe.prototype.plotSVG = function (it) {
+    if (it.kind === 'ad') return this.adSVG(it);
+    if (it.kind === 'slot') return this.slotSVG(it);
     var c = it.c, n = floorsOf(c), priv = !c.public && !it.mine, paused = c.status === 'paused';
     var a = CO.skinArt({ skin: c.skin, accent: c.accent, floors: n, seed: it.mine ? 7 : c.id, priv: priv, you: it.mine, plot: it.mine ? true : false });
     var o = gp(it.pos[0], it.pos[1], it.pos[2]), base = P(3, 3, 0), tx = o[0] - base[0] * UVSS, ty = o[1] - base[1] * UVSS, e = Math.min(a.ext, 4.5);
@@ -1039,14 +1076,55 @@
     it.anchor = [tx + top[0] * UVSS, ty + top[1] * UVSS]; it.size = (a.top - a.bot) * SC * UVSS;
     return '<g class="plot' + (priv ? ' priv' : '') + (paused ? ' paused' : '') + (it.mine ? ' mine' : '') + '" data-id="' + c.id + '" transform="matrix(' + UVSS + ' 0 0 ' + UVSS + ' ' + f1(tx) + ' ' + f1(ty) + ')">' + a.svg + hit + '</g>';
   };
+  // The ads, flat: the gem a cut diamond floating over its shadow, the casino a poker chip with chips stacked on it and
+  // a wheel on top -- the shapes the 3D map builds, as simple as the flat map is. As wide as an ad reaches (adClear).
+  Universe.prototype.adSVG = function (it) {
+    var o = gp(it.pos[0], it.pos[1], it.pos[2]), x = o[0], y = o[1], s = CO.uvGalaxy.adClear * RX * 0.8, acc = CO.accentHex(it.c.accent), out, top;
+    var shadow = '<ellipse cx="' + f1(x) + '" cy="' + f1(y) + '" rx="' + f1(s * 0.5) + '" ry="' + f1(s * 0.5 * RY / RX) + '" fill="' + acc + '" opacity=".12"/>';
+    if (it.ad.key === 'gem') {
+      var cy = y - s * 0.4, gy = cy - s * 0.85, ty = gy - s * 0.32, gw = s * 0.52, tw = s * 0.3;
+      out = shadow + '<polygon points="' + pts([[x, cy], [x - gw, gy], [x - tw, ty], [x + tw, ty], [x + gw, gy]]) + '" fill="' + acc + '" fill-opacity=".28" stroke="' + acc + '" stroke-width="2.5"/>' +
+        [[x - gw, gy, x + gw, gy], [x - tw, ty, x - gw * 0.35, gy], [x + tw, ty, x + gw * 0.35, gy], [x - gw * 0.35, gy, x, cy], [x + gw * 0.35, gy, x, cy], [x, ty, x - gw * 0.35, gy], [x, ty, x + gw * 0.35, gy]].map(function (l) {
+          return '<line x1="' + f1(l[0]) + '" y1="' + f1(l[1]) + '" x2="' + f1(l[2]) + '" y2="' + f1(l[3]) + '" stroke="#bff3ff" stroke-width="1.2" opacity=".7"/>';
+        }).join('');
+      top = ty;
+    } else {
+      var k = RY / RX, chip = function (cy, r, h, fill) {
+        return '<path d="M' + f1(x - r) + ',' + f1(cy) + ' v' + f1(-h) + ' a' + f1(r) + ',' + f1(r * k) + ' 0 0 1 ' + f1(2 * r) + ',0 v' + f1(h) + ' a' + f1(r) + ',' + f1(r * k) + ' 0 0 1 ' + f1(-2 * r) + ',0Z" fill="#0b2a1d" stroke="' + acc + '" stroke-width="2"/>' +
+          '<ellipse cx="' + f1(x) + '" cy="' + f1(cy - h) + '" rx="' + f1(r) + '" ry="' + f1(r * k) + '" fill="' + fill + '" stroke="' + acc + '" stroke-width="2"/>';
+      };
+      var b = y - s * 0.12;
+      out = shadow + chip(b, s * 0.55, s * 0.1, '#0f3a27') + chip(b - s * 0.14, s * 0.36, s * 0.16, '#123f2b') + chip(b - s * 0.34, s * 0.26, s * 0.16, '#164a32') +
+        '<ellipse cx="' + f1(x) + '" cy="' + f1(b - s * 0.62) + '" rx="' + f1(s * 0.2) + '" ry="' + f1(s * 0.2 * k) + '" fill="#2a0a0a" stroke="#ffc83d" stroke-width="2"/>';
+      top = b - s * 0.7;
+    }
+    it.anchor = [x, top - 4]; it.size = s * 1.2;
+    return '<g class="plot ad" data-id="' + esc(it.c.id) + '">' + out + '<circle cx="' + f1(x) + '" cy="' + f1(y - s * 0.6) + '" r="' + f1(s * 0.7) + '" fill="transparent"/></g>';
+  };
+  // a slot: a ring of land on its orbit, dashed while it is for sale (shown only while buying), solid green once yours
+  Universe.prototype.slotSVG = function (it) {
+    var o = gp(it.pos[0], it.pos[1], it.pos[2]), r = 9, col = it.owned ? C.green : '#00cfff';
+    it.anchor = [o[0], o[1] - 14]; it.size = r * RX * 2;
+    return '<g class="plot slot' + (it.owned ? ' own' : '') + '" data-id="' + esc(it.c.id) + '"><ellipse cx="' + f1(o[0]) + '" cy="' + f1(o[1]) + '" rx="' + f1(r * RX) + '" ry="' + f1(r * RY) + '" fill="' + col + '" fill-opacity=".12" stroke="' + col + '" stroke-width="2.5"' + (it.owned ? '' : ' stroke-dasharray="7 6"') + '/>' +
+      '<text x="' + f1(o[0]) + '" y="' + f1(o[1] + 6) + '" text-anchor="middle" font-family="\'JetBrains Mono\',monospace" font-weight="800" font-size="18" fill="' + col + '">' + (it.owned ? '✓' : '+') + '</text></g>';
+  };
+  // Buy land: the free slots show and can be clicked while it is on
+  Universe.prototype.setBuying = function (on) { this.buying = !!on; this.svg.classList.toggle('buying', this.buying); this.labels(); };
+  // a slot bought: the plan again (it reads what is owned) and the picture with it
+  Universe.prototype.refreshLand = function () {
+    (this.items || []).forEach(function (it) { if (it.el) it.el.remove(); });
+    this.items = CO.uvPlan(); this.draw(); this.labels();
+  };
   Universe.prototype.banner = function (it) {
-    var c = it.c, self = this;
+    var c = it.c, self = this, pl = CO.uvPlate(it);
+    if (pl === null) { if (it.el) { it.el.remove(); it.el = null; } return; }
     if (!it.el) {
       it.el = document.createElement('div'); this.bans.appendChild(it.el);
       it.el.addEventListener('pointerenter', function () { self.setHover(c.id); });
       it.el.addEventListener('pointerleave', function () { self.setHover(null); });
       it.el.addEventListener('click', function () { self.open(it.c.id); });
     }
+    if (pl) { it.el.className = pl.cls; it.el.style.setProperty('--acc', CO.accentHex(c.accent)); it.el.innerHTML = pl.html; it.el._bw = 0; return; }
     var name = String(c.name || '').toUpperCase(); if (name.length > 22) name = name.slice(0, 21) + '…';
     it.el.className = 'b3' + (!c.public && !it.mine ? ' priv' : '') + (c.status === 'paused' ? ' paused' : '') + (it.mine ? ' mine' : '');
     it.el.style.setProperty('--acc', CO.accentHex(c.accent));
@@ -1065,7 +1143,7 @@
   Universe.prototype.labels = function () {
     if (!this.items) return;
     var c = this.client(), v = this.vb, k = c.w / v.w, self = this, placed = [], named = 0, cp = gp(0, 0, 0);
-    var list = this.items.map(function (it) { return { el: it.el, x: (it.anchor[0] - v.x) * k, y: (it.anchor[1] - v.y) * k, px: it.size * k, mine: it.mine, keep: it.mine || String(self.hover) === String(it.c.id), d: -it.anchor[1] }; });
+    var list = this.items.map(function (it) { return { el: it.el, x: (it.anchor[0] - v.x) * k, y: (it.anchor[1] - v.y) * k, px: it.size * k, mine: it.mine, keep: it.mine || it.kind === 'ad' || !!it.owned || String(self.hover) === String(it.c.id), d: -it.anchor[1] }; });
     if (this.coreEl) list.push({ el: this.coreEl, x: (cp[0] - v.x) * k, y: (cp[1] - CORE.banner - v.y) * k, px: 200, keep: true, core: true, d: 0 });
     list.sort(function (a, b) { return (b.keep - a.keep) || a.d - b.d; });
     list.forEach(function (o) {

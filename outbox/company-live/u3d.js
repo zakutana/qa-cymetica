@@ -1039,6 +1039,146 @@ function makeStation(c, seed, opts) {
   return { root, body, b, rimMat, ring, pool, ringR, hit, halo, haloBase: halo.material.opacity, top: b.top, bot: ringY, n, pub, spin: (seed % 13) / 13 * Math.PI * 2 };
 }
 
+/* ---------------- the land: ads and slots (2026-10-21) ---------------- */
+// The Universe as marketing: land round Cymetica bought a slot at a time, and our two products standing on it as ads
+// ("1 Gem screener to bude takovy velky diamant vznasejici se a druhy bude velke Agent Casino"). Each is a plot like a
+// station's (makeStation's fields), so the map moves, names, picks and flies to it the same way. Written in a
+// station's units and drawn UVAD times (a station UVSS times): an ad is the bigger thing on the map.
+function ownGeo(mesh) { mesh.userData.own = true; return mesh; }
+// the striped edge of a poker chip: its colour with six white inserts round it
+function chipEdgeTex(hex) {
+  const key = 'chip' + hex; if (TX[key]) return TX[key];
+  const c = document.createElement('canvas'); c.width = 512; c.height = 32; const g = c.getContext('2d');
+  g.fillStyle = hex; g.fillRect(0, 0, 512, 32);
+  g.fillStyle = '#f2f5f7'; for (let i = 0; i < 6; i++) g.fillRect(i * 512 / 6 + 20, 4, 44, 24);
+  g.fillStyle = 'rgba(0,0,0,.25)'; g.fillRect(0, 0, 512, 3); g.fillRect(0, 29, 512, 3);
+  const t = new THREE.CanvasTexture(c); t.colorSpace = THREE.SRGBColorSpace; t.wrapS = THREE.RepeatWrapping; t.anisotropy = 4; TX[key] = t; return t;
+}
+// the casino's felt, seen from above: Agent Tournaments' green with its honeycomb weave, clear in the middle, a
+// printed ring round it and a rail of chip inserts at the edge
+function feltTex() {
+  if (TX.felt) return TX.felt;
+  const W = 512, c = document.createElement('canvas'); c.width = c.height = W; const g = c.getContext('2d'), m = W / 2;
+  const gr = g.createRadialGradient(m, m, 0, m, m, m); gr.addColorStop(0, '#0f5a37'); gr.addColorStop(0.8, '#0a3f27'); gr.addColorStop(1, '#06281a');
+  g.fillStyle = gr; g.fillRect(0, 0, W, W);
+  g.strokeStyle = 'rgba(0,255,136,.16)'; g.lineWidth = 1.5;
+  const s = 14, h = s * Math.sqrt(3);
+  for (let y = -h; y < W + h; y += h) for (let x = -s * 3; x < W + s * 3; x += s * 3) {
+    [[x, y], [x + s * 1.5, y + h / 2]].forEach(([cx, cy]) => {
+      if (Math.hypot(cx - m, cy - m) < W * 0.2) return;
+      g.beginPath(); for (let k = 0; k <= 6; k++) { const a = k * Math.PI / 3; g[k ? 'lineTo' : 'moveTo'](cx + Math.cos(a) * s, cy + Math.sin(a) * s); } g.stroke();
+    });
+  }
+  g.strokeStyle = 'rgba(255,200,61,.75)'; g.lineWidth = 5; g.beginPath(); g.arc(m, m, W * 0.36, 0, Math.PI * 2); g.stroke();
+  g.lineWidth = 2; g.beginPath(); g.arc(m, m, W * 0.33, 0, Math.PI * 2); g.stroke();
+  for (let i = 0; i < 24; i++) { g.fillStyle = i % 2 ? '#f2f5f7' : '#ff4444'; g.save(); g.translate(m, m); g.rotate(i / 24 * Math.PI * 2); g.fillRect(W * 0.44, -10, W * 0.05, 20); g.restore(); }
+  const t = new THREE.CanvasTexture(c); t.colorSpace = THREE.SRGBColorSpace; t.anisotropy = 8; TX.felt = t; return t;
+}
+// a roulette wheel from above: red and black pockets, one green, a gold rim, a hub
+function wheelTex() {
+  if (TX.wheel) return TX.wheel;
+  const W = 512, c = document.createElement('canvas'); c.width = c.height = W; const g = c.getContext('2d'), m = W / 2, n = 37;
+  g.fillStyle = '#3a2410'; g.beginPath(); g.arc(m, m, m, 0, Math.PI * 2); g.fill();
+  for (let i = 0; i < n; i++) {
+    g.fillStyle = i === 0 ? '#00b86b' : i % 2 ? '#d01f2e' : '#111418';
+    g.beginPath(); g.moveTo(m, m); g.arc(m, m, m * 0.9, i / n * Math.PI * 2, (i + 1) / n * Math.PI * 2); g.closePath(); g.fill();
+  }
+  g.strokeStyle = '#ffc83d'; g.lineWidth = 10; g.beginPath(); g.arc(m, m, m * 0.92, 0, Math.PI * 2); g.stroke();
+  g.fillStyle = '#5a3a18'; g.beginPath(); g.arc(m, m, m * 0.5, 0, Math.PI * 2); g.fill();
+  g.fillStyle = '#ffc83d'; g.beginPath(); g.arc(m, m, m * 0.12, 0, Math.PI * 2); g.fill();
+  for (let i = 0; i < 4; i++) { g.save(); g.translate(m, m); g.rotate(i * Math.PI / 2); g.fillStyle = '#ffd86a'; g.fillRect(-6, -m * 0.48, 12, m * 0.36); g.restore(); }
+  const t = new THREE.CanvasTexture(c); t.colorSpace = THREE.SRGBColorSpace; t.anisotropy = 8; TX.wheel = t; return t;
+}
+// Gem Screener: a cut diamond floating high over its ring and turning, in the Gem Screener's cyan crystal -- a
+// brilliant of eight facets round (the table on top, the crown down to the girdle, the pavilion to a point), its
+// edges lit, a light inside it and glints that come and go on its girdle
+function adGem(body, b, A) {
+  const R = 3.4, Y = 5.2, prof = [[0, -4.3], [R, 0], [R, 0.26], [R * 0.58, 1.6], [0, 1.6]].map(([x, y]) => new THREE.Vector2(x, y));
+  const geom = new THREE.LatheGeometry(prof, 8), gem = new THREE.Group(); gem.position.y = Y; body.add(gem);
+  gem.add(ownGeo(new THREE.Mesh(geom, new THREE.MeshStandardMaterial({ color: A.c.clone().multiplyScalar(0.6), emissive: A.c, emissiveIntensity: 0.22, roughness: 0.06,
+    metalness: 0.5, flatShading: true, transparent: true, opacity: 0.92, side: THREE.DoubleSide }))));
+  gem.add(ownGeo(new THREE.LineSegments(new THREE.EdgesGeometry(geom, 1), new THREE.LineBasicMaterial({ color: new THREE.Color(0x9ff0ff).multiplyScalar(1.5), transparent: true, opacity: 0.7 }))));
+  const core = glowSprite(A.c, 0.6, 8); core.position.y = 0.2; gem.add(core);
+  const glints = [0, 2, 5].map((k, i) => {
+    const sp = new THREE.Sprite(new THREE.SpriteMaterial({ map: flareTex(), color: new THREE.Color(0xe8fdff).multiplyScalar(1.6), transparent: true, opacity: 0, blending: THREE.AdditiveBlending, depthWrite: false }));
+    const a = k / 8 * Math.PI * 2; sp.position.set(Math.sin(a) * R * (i === 2 ? 0.58 : 1), i === 2 ? 1.6 : 0.13, Math.cos(a) * R * (i === 2 ? 0.58 : 1)); sp.scale.setScalar(2.6); gem.add(sp);
+    return { sp, ph: i * 2.1 };
+  });
+  b.tick = (t) => {
+    gem.rotation.y = t * 0.32; gem.position.y = Y + Math.sin(t * 0.9) * 0.4;
+    glints.forEach((g) => { g.sp.material.opacity = Math.pow(Math.max(0, Math.sin(t * 1.3 + g.ph)), 6); });
+  };
+  b.top = Y + 1.6 + 0.4; b.bot = 0; b.foot = R;
+}
+// Agent Casino: a giant poker chip with Agent Tournaments' felt on top, a tower of chips stacked on it under gold
+// neon, a roulette wheel turning on its crown, and a ring of marquee lights round the chip that chase each other
+function adCasino(body, b, A) {
+  const gold = amat('#ffc83d'), dark = new THREE.MeshStandardMaterial({ color: 0x0a0e14, roughness: 0.5, metalness: 0.4 });
+  const chip = (r, h, y, hex, top) => {
+    const side = new THREE.MeshStandardMaterial({ map: chipEdgeTex(hex), roughness: 0.45, metalness: 0.1, emissive: new THREE.Color(hex), emissiveIntensity: 0.12 });
+    side.map.repeat.set(Math.max(1, Math.round(r * 1.2)), 1);
+    const cap = top || new THREE.MeshStandardMaterial({ color: new THREE.Color(hex).multiplyScalar(0.8), roughness: 0.5, metalness: 0.1 });
+    const m = ownGeo(new THREE.Mesh(new THREE.CylinderGeometry(r, r, h, 64), [side, cap, dark])); m.position.y = y + h / 2; body.add(m);
+    // a thin line of gold neon round each chip's top edge (the rim's glow, not a light: the chips' colours stay)
+    const neon = new THREE.Mesh(G.ringT, gold.rim); neon.scale.setScalar(r * 1.005); neon.rotation.x = Math.PI / 2; neon.position.y = y + h; body.add(neon);
+    return m;
+  };
+  const R = 3.5, H0 = 0.8, H = 1.3;
+  chip(R, H0, 0, '#0b5e3a', new THREE.MeshStandardMaterial({ map: feltTex(), roughness: 0.85, metalness: 0, emissive: 0x00ff88, emissiveIntensity: 0.04 }));
+  chip(2.3, H, H0, '#c81e2c'); chip(1.75, H, H0 + H, '#0b5e3a'); chip(1.25, H, H0 + 2 * H, '#1d3d8f');
+  // the wheel: tilted toward the first look a little, turning
+  const wheel = ownGeo(new THREE.Mesh(new THREE.CylinderGeometry(1.15, 1.25, 0.28, 48), [new THREE.MeshStandardMaterial({ color: 0x5a3a18, roughness: 0.4, metalness: 0.5 }),
+    new THREE.MeshStandardMaterial({ map: wheelTex(), roughness: 0.35, metalness: 0.15, emissive: 0xffffff, emissiveMap: wheelTex(), emissiveIntensity: 0.12 }), dark]));
+  const top = H0 + 3 * H, tilt = new THREE.Group(); tilt.position.y = top + 0.35; tilt.rotation.x = 0.32; tilt.add(wheel); body.add(tilt);
+  const glow = glowSprite(gold.c, 0.08, 6); glow.position.y = top + 0.3; body.add(glow);
+  // the marquee: bulbs round the chip, every other one lit, the two halves swapping
+  const on = new THREE.MeshBasicMaterial({ color: new THREE.Color(0xffd86a).multiplyScalar(1.8) }), off = new THREE.MeshBasicMaterial({ color: new THREE.Color(0xffd86a).multiplyScalar(0.35) });
+  const bulbs = [];
+  for (let i = 0; i < 40; i++) {
+    const a = i / 40 * Math.PI * 2, s = new THREE.Mesh(G.sphere, i % 2 ? on : off); s.scale.setScalar(0.1); s.position.set(Math.sin(a) * (R + 0.05), H0 / 2, Math.cos(a) * (R + 0.05)); body.add(s); bulbs.push(s);
+  }
+  b.tick = (t) => {
+    wheel.rotation.y = t * 0.6;
+    const k = Math.floor(t * 2.5) % 2; if (k !== b._k) { b._k = k; bulbs.forEach((s, i) => { s.material = (i + k) % 2 ? on : off; }); }
+  };
+  b.top = top + 0.35 + 0.6; b.bot = 0; b.foot = R;
+}
+// how much larger than its own units an ad is drawn on the map (a station: UVSS): about twice a station's size, the
+// widest station (Citadel, 43) under it -- measured on the page 2026-10-21, the gem 54 across and the casino 56
+const UVAD = 8;
+function makeAd(ad) {
+  geo();
+  const A = amat(CO.accentHex(ad.accent)), root = new THREE.Group(), body = new THREE.Group(); root.add(body);
+  const b = { phase: ad.key === 'gem' ? 0.4 : 2.1, foot: 3, top: 4, bot: 0, paint() {}, tick() {} };
+  (ad.key === 'gem' ? adGem : adCasino)(body, b, A);
+  // the holo-ring it floats over and its pool of light, as a public station's
+  const rimMat = A.rim.clone(); rimMat.emissiveIntensity = RING.pub;
+  const ringR = b.foot * 1.05, ringY = b.bot - 0.4;
+  const ring = new THREE.Mesh(G.holo, rimMat); ring.scale.setScalar(ringR); ring.rotation.x = Math.PI / 2; ring.position.y = ringY; root.add(ring);
+  const pool = new THREE.Mesh(G.plane, new THREE.MeshBasicMaterial({ map: glowTex(), color: A.c, transparent: true, opacity: 0.12, blending: THREE.AdditiveBlending, depthWrite: false, side: THREE.DoubleSide }));
+  pool.scale.setScalar(ringR * 2.4); pool.rotation.x = -Math.PI / 2; pool.position.y = ringY; root.add(pool);
+  const halo = glowSprite(A.c, 0.4, 9 + b.foot * 2); halo.position.y = (b.top + b.bot) / 2; body.add(halo);
+  const hw = b.foot * 1.9, hit = new THREE.Mesh(G.box, M.hit); hit.scale.set(hw, b.top - ringY + 0.6, hw); hit.position.y = (b.top + ringY) / 2; root.add(hit);
+  return { root, body, b, rimMat, ring, pool, ringR, hit, halo, haloBase: halo.material.opacity, top: b.top, bot: ringY, pub: true, spin: 0, k: UVAD };
+}
+// A slot of land: the ring a private station floats over, dashed and cyan while it is for sale, with a "+" turning
+// over it; once bought, a solid green ring with a beam of light standing out of it.
+function makeSlot(owned) {
+  geo();
+  const A = amat(owned ? '#00ff88' : '#00cfff'), root = new THREE.Group(), body = new THREE.Group(); root.add(body);
+  const ringR = 2.2, rimMat = A.rim.clone(); rimMat.emissiveIntensity = RING[owned ? 'pub' : 'priv'];
+  const ring = new THREE.Mesh(owned ? G.holo : G.holoDash, rimMat); ring.scale.setScalar(ringR); ring.rotation.x = Math.PI / 2; root.add(ring);
+  const pool = new THREE.Mesh(G.plane, new THREE.MeshBasicMaterial({ map: glowTex(), color: A.c, transparent: true, opacity: owned ? 0.16 : 0.1, blending: THREE.AdditiveBlending, depthWrite: false, side: THREE.DoubleSide }));
+  pool.scale.setScalar(ringR * 2.4); pool.rotation.x = -Math.PI / 2; root.add(pool);
+  const mark = new THREE.Group(); mark.position.y = 1.1; body.add(mark);
+  if (owned) { const beam = new THREE.Mesh(G.beam, A.beam); beam.scale.set(ringR * 1.6, 3.2, ringR * 1.6); beam.position.y = 0.5; mark.position.y = 0; mark.add(beam); }
+  else [[0.9, 0.16], [0.16, 0.9]].forEach(([w, h]) => { const bar = new THREE.Mesh(G.box, A.glow); bar.scale.set(w, h, 0.16); mark.add(bar); });
+  const halo = glowSprite(A.c, owned ? 0.3 : 0.2, 5); halo.position.y = 1; body.add(halo);
+  const hit = new THREE.Mesh(G.box, M.hit); hit.scale.set(ringR * 2.2, 2.6, ringR * 2.2); hit.position.y = 1; root.add(hit);
+  const b = { phase: Math.random() * 6, foot: ringR, paint() {}, tick(t) { mark.rotation.y = t * 0.9; pool.material.opacity = (owned ? 0.16 : 0.1) * (0.75 + 0.25 * Math.sin(t * 2.2 + b.phase)); } };
+  return { root, body, b, rimMat, ring, pool, ringR, hit, halo, haloBase: halo.material.opacity, top: 2.2, bot: 0, pub: owned, spin: 0, k: UVSS };
+}
+
 /* ---------------- the map: a galaxy ---------------- */
 // The camera of the operator's orrery picture (look-universe.webp, 1533 x 820), recovered by fitting a perspective
 // camera to two of its landmarks -- the outer orbit's ellipse (centre 817,390; 738 x 378 px) and Cymetica's own
@@ -1488,6 +1628,17 @@ class Universe3D {
   place(it) {
     this.built = (this.built || 0) + 1;
     if (it.plot) { this.scene.remove(it.plot.root); release(it.plot.root); }
+    // the land: an ad or a slot, each a plot of its own make (its scale k with it)
+    if (it.kind) {
+      const p = it.kind === 'ad' ? makeAd(it.ad) : makeSlot(it.owned);
+      p.root.scale.setScalar(p.k); p.hit.userData.id = it.c.id;
+      this.scene.add(p.root); it.plot = p;
+      it.anchor = new THREE.Vector3(); this.orbit(it, this.clock ? this.clock.getElapsedTime() : 0);
+      it.size = (p.top - p.bot) * p.k;
+      this.landShow(it);
+      this.banner(it);
+      return;
+    }
     const c = it.c, p = makeStation(c, it.mine ? 7 : c.id, { mine: it.mine });
     // larger than a deck's height makes it: in the picture a station reads at a glance, orbit by orbit
     p.root.scale.setScalar(UVSS);
@@ -1506,19 +1657,50 @@ class Universe3D {
   orbit(it, t) {
     const o = it.orbit, p = it.plot; if (!o || !p) return;
     const a = o.a + o.w * t; p.root.position.set(Math.sin(a) * o.r, 0, Math.cos(a) * o.r);
-    it.anchor.set(p.root.position.x, (p.top + 0.5) * UVSS, p.root.position.z);
+    it.anchor.set(p.root.position.x, (p.top + 0.5) * (p.k || UVSS), p.root.position.z);
+  }
+  // Buy land: while it is on, the free slots show and can be clicked; a slot of your own shows always. A slot an ad
+  // stands over at this moment is hidden (the orbits turn at their own paces, so one passes under an ad now and then).
+  landShow(it) {
+    if (it.kind !== 'slot' || !it.plot) return;
+    const pos = it.plot.root.position, clear = CO.uvGalaxy.adClear;
+    const under = this.items.some((x) => x.kind === 'ad' && x.plot && Math.hypot(x.plot.root.position.x - pos.x, x.plot.root.position.z - pos.z) < clear);
+    const show = (it.owned || !!this.buying) && !under;
+    if (it.plot.root.visible !== show) { it.plot.root.visible = show; this.ovKey = ''; }
+  }
+  setBuying(on) {
+    this.buying = !!on; this.lastInput = performance.now(); this.ovKey = '';
+    this.items.forEach((it) => this.landShow(it));
+    if (this.buying) this.fit(true);
+  }
+  // a slot bought: it is drawn again as yours, with its plate
+  refreshLand() {
+    const own = CO.land();
+    this.items.forEach((it) => {
+      if (it.kind !== 'slot') return;
+      const o = own.indexOf(it.c.id) >= 0; if (o === it.owned) return;
+      it.owned = o; it.c.name = o ? 'Your land' : 'Free slot'; this.place(it);
+    });
+    this.lastInput = performance.now(); this.stats();
   }
   paint(it) {
+    if (it.kind) return;   // land and ads have no decks to light
     const on = it.mine ? (it.c.working || []) : (this.live[it.c.id] || []);
     it.plot.b.paint(on, it.c.status === 'paused' ? 'paused' : !it.c.public && !it.mine ? 'priv' : '');
   }
   banner(it) {
-    const c = it.c, acc = CO.accentHex(c.accent);
+    const c = it.c, acc = CO.accentHex(c.accent), pl = CO.uvPlate(it);
+    // a free slot has no plate: its tooltip says what it is
+    if (pl === null) { if (it.el) { it.el.remove(); it.el = null; } return; }
     if (!it.el) { it.el = document.createElement('div'); this.bans.appendChild(it.el); it.el.addEventListener('pointerenter', () => this.setHover(c.id, true)); it.el.addEventListener('pointerleave', () => this.setHover(null, true)); it.el.addEventListener('click', () => this.open(c.id)); }
     let name = String(c.name || '').toUpperCase(); if (name.length > 22) name = name.slice(0, 21) + '…';
     // hidden until overlay() has placed it once: a new banner otherwise sits in a heap at the stage's top left while
     // the map is starting ("jak nacita mapa tak vlevo nahore sou nejake nesmysly"), and one overlay() hid stays hidden
     const hid = !it.el._placed || it.el.classList.contains('hidden');
+    if (pl) {
+      it.el.className = pl.cls + (hid ? ' hidden' : ''); it.el.style.setProperty('--acc', acc); it.el.setAttribute('data-id', c.id);
+      it.el.innerHTML = pl.html; it.el._bw = 0; return;
+    }
     it.el.className = 'b3' + (!c.public && !it.mine ? ' priv' : '') + (c.status === 'paused' ? ' paused' : '') + (it.mine ? ' mine' : '') + (hid ? ' hidden' : '');
     it.el.style.setProperty('--acc', acc);
     it.el.setAttribute('data-id', c.id);
@@ -1605,11 +1787,11 @@ class Universe3D {
   }
   flyTo(id, done, ms) {
     const it = this.find(id); if (!it || !it.plot) { if (done) done(); return; }
-    const p = it.plot.root.position, tgt = new THREE.Vector3(p.x, p.y + (it.plot.top + it.plot.bot) * 0.5 * UVSS, p.z);
+    const k = it.plot.k || UVSS, p = it.plot.root.position, tgt = new THREE.Vector3(p.x, p.y + (it.plot.top + it.plot.bot) * 0.5 * k, p.z);
     const dir = this.camera.position.clone().sub(this.controls.target); if (dir.lengthSq() < 1e-6) dir.set(1, 0.6, 1);
     dir.y = Math.max(dir.y, dir.length() * 0.35); dir.normalize();
     // as near as the old 36-degree lens stood: a station fills the view as much as it did
-    const dist = (16 + (it.plot.top - it.plot.bot) * 1.4 + it.plot.b.foot * 0.9) * UVSS * Math.tan(THREE.MathUtils.degToRad(18)) / Math.tan(THREE.MathUtils.degToRad(this.camera.fov) / 2);
+    const dist = (16 + (it.plot.top - it.plot.bot) * 1.4 + it.plot.b.foot * 0.9) * k * Math.tan(THREE.MathUtils.degToRad(18)) / Math.tan(THREE.MathUtils.degToRad(this.camera.fov) / 2);
     this.follow = null; this.followAt = null;
     this.tween(tgt.clone().add(dir.multiplyScalar(dist)), tgt, ms == null ? 1300 : ms, () => { this.follow = it; this.followAt = null; if (done) done(); });
   }
@@ -1649,6 +1831,7 @@ class Universe3D {
     this.items.forEach((it) => {
       const p = it.plot; if (!p) return;
       this.orbit(it, t);
+      if (it.kind === 'slot') this.landShow(it);
       p.b.tick(t); p.body.position.y = Math.sin(t * 0.45 + p.b.phase) * 0.22; p.body.rotation.y = p.spin + t * 0.035;
       if (p.meRing) p.meRing.scale.setScalar(p.ringR * (1 + Math.sin(t * 2.4) * 0.05));
       p.halo.material.opacity = p.haloBase * 0.15 * ss(cam.distanceTo(p.root.position), 40, 160);
@@ -1744,14 +1927,15 @@ class Universe3D {
       if (this.colEl._off !== off) { this.colEl._off = off; this.colEl.style.display = off ? 'none' : ''; }
       if (!off) this.colEl.style.transform = 'translate(' + (x - 300).toFixed(1) + 'px,' + (y - 300).toFixed(1) + 'px) scale(' + s.toFixed(4) + ')';
     }
-    const list = this.items.filter((it) => it.plot).map((it) => {
-      const p = it.plot, hh = (p.top - p.bot) / 2 * UVSS;
-      c.copy(p.root.position); c.y += (p.top + p.bot) / 2 * UVSS;
+    const list = this.items.filter((it) => it.plot && it.el).map((it) => {
+      const p = it.plot, k = p.k || UVSS, hh = (p.top - p.bot) / 2 * k;
+      c.copy(p.root.position); c.y += (p.top + p.bot) / 2 * k;
       const cos = Math.max(0, Math.min(1, dir.copy(cam).sub(c).normalize().y)), sin = Math.sqrt(1 - cos * cos);
-      const lift = (hh + 0.5 * UVSS) * sin + p.b.foot * 0.55 * UVSS * Math.max(0, (cos - cH) / (1 - cH));
+      const lift = (hh + 0.5 * k) * sin + p.b.foot * 0.55 * k * Math.max(0, (cos - cH) / (1 - cH));
       it.plateAt = (it.plateAt || new THREE.Vector3()).copy(c).addScaledVector(up, lift);
       v.copy(it.plateAt).project(this.camera); const d = cam.distanceTo(it.anchor);
-      return { el: it.el, x: (v.x + 1) / 2 * w, y: (1 - v.y) / 2 * h, z: v.z, d, px: it.size * f / d, mine: it.mine, keep: it.mine || String(this.hover) === String(it.c.id) };
+      // ours, the ads and land of your own are always named; the rest as room allows
+      return { el: it.el, x: (v.x + 1) / 2 * w, y: (1 - v.y) / 2 * h, z: v.z, d, px: it.size * f / d, mine: it.mine, keep: it.mine || it.kind === 'ad' || !!it.owned || String(this.hover) === String(it.c.id) };
     });
     if (this.coreEl) {
       c.copy(this.heartAt).addScaledVector(up, this.sunR * 0.9); v.copy(c).project(this.camera);
@@ -1810,7 +1994,8 @@ class Universe3D {
   setMouse(e) { const r = this.renderer.domElement.getBoundingClientRect(); this.mouse.set((e.clientX - r.left) / r.width * 2 - 1, -(e.clientY - r.top) / r.height * 2 + 1); }
   pickId() {
     this.ray.setFromCamera(this.mouse, this.camera);
-    const hits = this.ray.intersectObjects(this.items.filter((it) => it.plot).map((it) => it.plot.hit).concat([this.coreHit]), false);
+    // (a slot hidden -- for sale while Buy land is off, or under an ad -- is not there to be found)
+    const hits = this.ray.intersectObjects(this.items.filter((it) => it.plot && it.plot.root.visible).map((it) => it.plot.hit).concat([this.coreHit]), false);
     return hits.length ? hits[0].object.userData.id : null;
   }
   pick() {

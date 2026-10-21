@@ -683,10 +683,45 @@
       '<p class="pfsrc">Visitors, uses, views, likes: Cymetica (' + esc(Rd.src) + '), last ' + Rd.days + ' days, read ' + Rd.at + '. Earnings: proposed, placeholder rates.</p>');
   }
   function uvStats(s) {
-    setHTML($('uv-sum'), '<b>' + s.companies + '</b> companies · <b>' + s.public + '</b> public · <b class="cy">' + s.working + '</b> working now');
+    setHTML($('uv-sum'), '<b>' + s.free + '</b> free slots · <b class="gr">' + s.owned + '</b> yours · <b class="cy">' + s.ads + '</b> ads');
+  }
+  // Buy land: a mode the stage is in. On, the free slots show on the map and a click on one buys it; Esc or the button
+  // again turns it off.
+  var buying = false;
+  function setBuying(on) {
+    buying = !!on;
+    $('uvstage').classList.toggle('buying', buying);
+    $('uv-buy').classList.toggle('on', buying);
+    $('uv-buy').textContent = buying ? '× Done' : '+ Buy land';
+    $('uv-price').textContent = CO.LAND_PRICE.toLocaleString('en-US');
+    if (uv && uv.setBuying) uv.setBuying(buying);
+  }
+  // a slot: for sale, its price and a Buy; yours, the way to build on it (Build it Better)
+  function slotCard(it) {
+    var where = CO.uvSlotName(it), price = CO.LAND_PRICE.toLocaleString('en-US');
+    if (it.owned) {
+      return openModal('<div class="mh"><h3>Your land</h3><span class="sp"></span><button class="btn" data-a="close">×</button></div>' +
+        '<div class="kpis two"><div><b class="gr">' + esc(where) + '</b><span>bought with ET10</span></div><div><b>Empty</b><span>no building yet</span></div></div>' +
+        '<p class="hint">A building goes up here through Build it Better: describe it, and it stands on this slot once it ships.</p>' +
+        '<div class="mf"><span class="sp"></span><button class="btn" data-a="close">Close</button><button class="btn gr" data-a="build">Add a building with Build it Better ↗</button></div>', false, function (a) {
+        if (a === 'build') { window.open(CO.BUILD_URL, '_blank', 'noopener'); closeModal(); }
+      });
+    }
+    openModal('<div class="mh"><h3>Buy this slot</h3><span class="sp"></span><button class="btn" data-a="close">×</button></div>' +
+      '<div class="kpis two"><div><b class="gr">' + price + '</b><span>ET10 · placeholder price</span></div><div><b>' + esc(where) + '</b><span>orbit 1 is nearest Cymetica</span></div></div>' +
+      '<p class="hint">Yours once bought: then add a building here with Build it Better.</p>' +
+      '<div class="mf"><span class="sp"></span><button class="btn" data-a="close">Cancel</button><button class="btn gr" data-a="buy">Buy for ' + price + ' ET10</button></div>', false, function (a) {
+      if (a !== 'buy') return;
+      CO.buyLand(it.c.id); closeModal();
+      if (uv && uv.refreshLand) uv.refreshLand();
+      toast('Bought ' + where + '. Add a building with Build it Better.');
+    });
   }
   function openFromMap(it) {
     var c = it.c;
+    // an ad opens its product; a slot its card (one for sale only while Buy land is on)
+    if (it.kind === 'ad') { window.open(it.ad.url, '_blank', 'noopener'); return; }
+    if (it.kind === 'slot') { if (it.owned || buying) slotCard(it); return; }
     if (it.mine) return setTab('office');
     if (!c.public) return privateCard(c);
     try { sessionStorage.setItem('uv.from', String(c.id)); } catch (e) { /* fine */ }
@@ -1385,7 +1420,7 @@
         if (t.closest('#uv-in')) return uv.zoom(0.78);
         if (t.closest('#uv-out')) return uv.zoom(1.28);
         if (t.closest('#uv-fit')) return uv.fit(true);
-        if (t.closest('#uv-me')) return uv.flyTo(0);
+        if (t.closest('#uv-buy')) return setBuying(!buying);
       }
       var mock = t.closest('[data-mock]');
       if (mock) { e.preventDefault(); toast('Mockup: ' + mock.getAttribute('data-mock') + ' is another page.'); return; }
@@ -1517,6 +1552,7 @@
     document.addEventListener('keydown', function (e) {
       if (e.key !== 'Escape') return;
       if (!$('modal').hidden) return closeModal();
+      if (buying) return setBuying(false);
       if (ui.panel != null || ui.mgr || ui.vault) closeDrawer();
     });
   }
