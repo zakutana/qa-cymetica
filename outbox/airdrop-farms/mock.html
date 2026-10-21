@@ -1,0 +1,466 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Airdrop Farms</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Archivo+Black&family=Inter:wght@500;600;700&family=JetBrains+Mono:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#0a0e17; --deep:#06090f; --panel:#0d1520; --line:#1e3050;
+  --text:#e6edf7; --muted:#a9b8cc; --dim:#7f93ad;
+  --cyan:#00cfff; --green:#00ff88; --red:#ff4444; --blue:#3b82f6;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:var(--bg);color:var(--text);font:13px/1.45 "JetBrains Mono",monospace;-webkit-font-smoothing:antialiased;
+  background-image:radial-gradient(ellipse 900px 420px at 18% 120px,rgba(0,255,136,.07),transparent 70%),
+    radial-gradient(ellipse 700px 380px at 85% 80px,rgba(0,207,255,.06),transparent 70%),
+    radial-gradient(rgba(0,207,255,.07) 1px,transparent 1.2px);
+  background-size:auto,auto,22px 22px}
+.wrap{width:1240px;margin:0 auto;padding-bottom:56px}
+.back{width:1440px;margin:0 auto;padding:16px 18px 0;color:var(--cyan);font-size:13px}
+
+/* app header, as Agent Tournaments */
+.app{display:flex;align-items:center;gap:26px;padding:18px 0 16px;border-bottom:1px solid var(--line)}
+.brand{display:flex;align-items:center;gap:12px;text-decoration:none}
+.brand svg{width:46px;height:46px;flex:none}
+.brand .w{display:flex;flex-direction:column;line-height:1.05}
+.brand .w span{color:var(--cyan);font-size:9.5px;letter-spacing:.32em;font-weight:600}
+.brand .w b{color:var(--text);font-size:16px;font-weight:800;letter-spacing:.02em;margin-top:3px}
+nav{display:flex;gap:6px}
+nav a{padding:9px 14px;border-radius:9px;color:var(--dim);font-size:14px;font-weight:600;display:flex;align-items:center;gap:8px}
+nav a.on{color:var(--text);background:rgba(0,207,255,.10);border:1px solid rgba(0,207,255,.28)}
+nav a i{font-style:normal;font-size:11px;color:var(--deep);background:var(--green);border-radius:9px;padding:1px 7px;font-weight:800}
+.status{margin-left:auto;display:flex;align-items:center;gap:10px;font-size:12.5px;color:var(--muted)}
+.status b{color:var(--text)}
+.dot{width:9px;height:9px;border-radius:50%;background:var(--green);box-shadow:0 0 0 3px rgba(0,255,136,.18),0 0 10px rgba(0,255,136,.7);display:inline-block;flex:none}
+
+/* hero */
+.hero{display:grid;grid-template-columns:1fr 470px;gap:48px;padding:40px 0 34px;align-items:center}
+.pill{display:inline-flex;align-items:center;gap:9px;padding:7px 14px;border-radius:20px;border:1px solid rgba(0,255,136,.35);
+  background:rgba(0,255,136,.07);color:var(--green);font-size:11.5px;font-weight:700;letter-spacing:.14em}
+h1{font:54px/1.06 "Archivo Black",sans-serif;margin:22px 0 18px;letter-spacing:-.01em}
+h1 em{font-style:normal;color:var(--green)}
+.sub{font-size:17px;color:var(--muted)}
+.sub b{color:var(--text);font-weight:700}
+
+.card{background:linear-gradient(180deg,rgba(13,21,32,.96),rgba(6,9,15,.96));border:1px solid var(--line);border-radius:18px;padding:22px 24px}
+.cap{color:var(--cyan);font-size:10.5px;font-weight:700;letter-spacing:.22em}
+.plan label{display:block;color:var(--dim);font-size:11.5px;margin:14px 0 6px}
+.bigin{display:flex;align-items:baseline;gap:10px;background:var(--deep);border:1px solid rgba(0,207,255,.45);border-radius:12px;padding:10px 16px;
+  box-shadow:0 0 0 3px rgba(0,207,255,.08)}
+.bigin b{font:40px/1 "Archivo Black",sans-serif;color:var(--text)}
+.bigin span{color:var(--muted);font-weight:700;font-size:15px}
+.bigin .caret{width:2px;height:34px;background:var(--cyan);align-self:center;margin-left:-6px}
+.quick{display:flex;justify-content:space-between;align-items:center;margin-top:9px;color:var(--dim);font-size:11.5px}
+.quick .q{display:flex;gap:6px}
+.quick .q span{border:1px solid var(--line);border-radius:7px;padding:3px 8px;color:var(--muted)}
+.alloc{margin-top:16px}
+.bar{height:8px;border-radius:5px;background:var(--line);overflow:hidden}
+.bar i{display:block;height:100%;background:linear-gradient(90deg,var(--cyan),var(--green));border-radius:5px}
+.alloc .r{display:flex;justify-content:space-between;margin-top:7px;font-size:12px;color:var(--muted)}
+.alloc .r b{color:var(--text)}
+.kpis{display:grid;grid-template-columns:.7fr 1.6fr .8fr;gap:10px;margin-top:16px}
+.kpis div{background:rgba(30,48,80,.35);border:1px solid var(--line);border-radius:10px;padding:9px 11px}
+.kpis small{display:block;color:var(--dim);font-size:10.5px}
+.kpis b{font:21px/1.25 "Archivo Black",sans-serif}
+.g{color:var(--green)}
+.btns{display:grid;grid-template-columns:1fr 1.25fr;gap:10px;margin-top:16px}
+button{font:700 14px Inter,sans-serif;border-radius:11px;cursor:pointer}
+.ghost{background:transparent;border:1px solid rgba(0,207,255,.5);color:var(--cyan);padding:13px}
+.go{background:var(--green);border:0;color:var(--deep);padding:13px;font-size:15.5px;box-shadow:0 0 22px rgba(0,255,136,.35)}
+.fine{margin-top:11px;text-align:center;color:var(--dim);font-size:11px}
+
+/* list */
+.sechead{display:flex;justify-content:space-between;align-items:flex-end;margin-top:8px}
+.cap2{color:var(--dim);font-size:11px;font-weight:700;letter-spacing:.2em}
+h2{font:28px/1.2 "Archivo Black",sans-serif;margin-top:6px}
+.tools{display:flex;gap:10px;align-items:center}
+.sel,.search{border:1px solid var(--line);background:var(--panel);border-radius:9px;padding:8px 12px;color:var(--muted);font-size:12px}
+.search{width:220px;color:var(--dim)}
+.chips{display:flex;gap:8px;margin:18px 0 14px;flex-wrap:wrap}
+.chips span{border:1px solid var(--line);border-radius:20px;padding:6px 13px;color:var(--muted);font-size:12px;background:rgba(13,21,32,.8)}
+.chips span b{color:var(--text);margin-left:5px}
+.chips span.on{border-color:rgba(0,207,255,.55);color:var(--cyan);background:rgba(0,207,255,.08)}
+.chips span.free b{color:var(--green)}
+
+.table{border:1px solid var(--line);border-radius:14px;overflow:hidden;background:rgba(10,14,23,.9)}
+.cols{display:grid;grid-template-columns:60px 228px 96px 206px 240px 122px 112px 150px 26px;align-items:center;column-gap:0}
+.thead{padding:11px 0;color:var(--dim);font-size:10.5px;letter-spacing:.12em;font-weight:700;background:var(--panel);border-bottom:1px solid var(--line)}
+.thead>div:first-child{padding-left:18px}
+.frow{padding:12px 0;border-bottom:1px solid rgba(30,48,80,.7)}
+.frow>div:first-child{padding-left:18px}
+.frow.off{opacity:.55}
+.tg{width:36px;height:20px;border-radius:12px;background:var(--line);position:relative;display:block}
+.tg::after{content:"";position:absolute;top:3px;left:3px;width:14px;height:14px;border-radius:50%;background:var(--dim)}
+.tg.on{background:rgba(0,255,136,.25);box-shadow:inset 0 0 0 1px rgba(0,255,136,.6)}
+.tg.on::after{left:19px;background:var(--green);box-shadow:0 0 8px rgba(0,255,136,.8)}
+.farm{display:flex;align-items:center;gap:11px}
+.lg{width:34px;height:34px;border-radius:50%;display:grid;place-items:center;font-weight:800;font-size:12px;flex:none}
+.c1{background:rgba(0,207,255,.14);color:var(--cyan);box-shadow:inset 0 0 0 1px rgba(0,207,255,.45)}
+.c2{background:rgba(0,255,136,.12);color:var(--green);box-shadow:inset 0 0 0 1px rgba(0,255,136,.45)}
+.c3{background:rgba(59,130,246,.16);color:var(--blue);box-shadow:inset 0 0 0 1px rgba(59,130,246,.5)}
+.c4{background:rgba(127,147,173,.14);color:var(--muted);box-shadow:inset 0 0 0 1px rgba(127,147,173,.4)}
+.farm b{font-size:14px;display:block}
+.farm small,.tok small,.est small{color:var(--dim);font-size:11px;display:block}
+.tag{font-size:11px;font-weight:700;border-radius:6px;padding:3px 8px;border:1px solid var(--line);color:var(--muted)}
+.tag.free{color:var(--green);border-color:rgba(0,255,136,.4)}
+.tok b{font-size:12.5px;font-weight:600}
+.tok b.y{color:var(--green)}
+.tok b.n{color:var(--muted)}
+.tok b.w{color:var(--red)}
+.sl{padding-right:22px}
+.track{position:relative;height:6px;border-radius:4px;background:var(--line)}
+.track .fill{position:absolute;left:0;top:0;bottom:0;border-radius:4px;background:linear-gradient(90deg,var(--cyan),var(--green))}
+.track .recm{position:absolute;top:-6px;width:2px;height:18px;background:var(--cyan);border-radius:1px;transform:translateX(-1px)}
+.track .recm::after{content:"";position:absolute;top:-5px;left:-3px;border:4px solid transparent;border-top-color:var(--cyan)}
+.track .thumb{position:absolute;top:50%;width:16px;height:16px;border-radius:50%;background:var(--text);box-shadow:0 0 0 3px var(--green),0 0 12px rgba(0,255,136,.6);transform:translate(-50%,-50%)}
+.track.dis{background:repeating-linear-gradient(90deg,var(--line) 0 6px,transparent 6px 10px)}
+.scale{display:flex;justify-content:space-between;color:var(--dim);font-size:10px;margin-top:7px}
+.amt{display:flex;align-items:center;gap:6px;background:var(--deep);border:1px solid var(--line);border-radius:8px;padding:7px 9px;width:108px}
+.amt b{font-size:14px;flex:1;text-align:right}
+.amt span{color:var(--dim);font-size:10px}
+.amt.free{justify-content:center;border-style:dashed;color:var(--green);font-weight:800;font-size:12px}
+.rec{display:flex;align-items:center;gap:7px;padding-left:4px}
+.rec b{color:var(--cyan);font-size:13.5px}
+.rec u{text-decoration:none;font-size:10.5px;border:1px solid rgba(0,207,255,.4);color:var(--cyan);border-radius:6px;padding:1px 6px}
+.rec .ok{color:var(--green);font-size:12px}
+.est b{font-size:14px;color:var(--green)}
+.est b.no{color:var(--dim);font-weight:500;font-size:12.5px}
+.chev{color:var(--dim);font-size:14px;text-align:center}
+.chev.open{color:var(--cyan)}
+.frow.open{background:linear-gradient(180deg,rgba(0,207,255,.06),transparent);border-bottom:0}
+
+/* simulator */
+.sim{display:grid;grid-template-columns:1fr 372px;gap:26px;padding:6px 24px 22px 78px;border-bottom:1px solid rgba(30,48,80,.7);
+  background:linear-gradient(180deg,transparent,rgba(0,207,255,.03))}
+.sim .chart{background:var(--deep);border:1px solid var(--line);border-radius:12px;padding:14px 16px 8px}
+.sim .ct{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:6px}
+.sim .ct b{font-size:12px;color:var(--muted);font-weight:700;letter-spacing:.08em}
+.sim .ct span{font-size:11px;color:var(--dim)}
+.sim svg text{font-family:"JetBrains Mono",monospace}
+.out{background:var(--deep);border:1px solid var(--line);border-radius:12px;padding:14px 16px}
+.out .h{color:var(--muted);font-size:12px}
+.out .h b{color:var(--text)}
+.out .big{font:30px/1.15 "Archivo Black",sans-serif;color:var(--green);margin:6px 0 2px}
+.out .bigl{color:var(--dim);font-size:11px}
+.out dl{display:grid;grid-template-columns:1fr auto;gap:5px 10px;margin-top:12px;font-size:12px}
+.out dt{color:var(--dim)}
+.out dd{text-align:right;color:var(--text);font-weight:600}
+.hz{display:flex;gap:6px;margin-top:12px}
+.hz span{flex:1;text-align:center;border:1px solid var(--line);border-radius:7px;padding:5px 0;font-size:11.5px;color:var(--muted)}
+.hz span.on{border-color:rgba(0,255,136,.55);color:var(--green);background:rgba(0,255,136,.07)}
+.asof{margin-top:10px;font-size:10.5px;color:var(--dim)}
+.more{display:flex;justify-content:space-between;align-items:center;padding:14px 18px;color:var(--dim);font-size:12px;background:var(--panel)}
+.more span:last-child{color:var(--cyan);border:1px solid rgba(0,207,255,.4);border-radius:8px;padding:6px 14px}
+
+/* live farms */
+.tiles{display:grid;grid-template-columns:repeat(6,1fr);gap:12px;margin-top:26px}
+.tile{background:var(--panel);border:1px solid var(--line);border-radius:13px;padding:13px 15px}
+.tile small{display:block;color:var(--dim);font-size:10.5px;letter-spacing:.1em;font-weight:700}
+.tile b{display:block;font:25px/1.3 "Archivo Black",sans-serif;margin-top:4px}
+.tile span{font-size:11px;color:var(--dim)}
+.tile.hi b{font-size:20px;line-height:1.55;white-space:nowrap}
+.tile.hi{border-color:rgba(0,255,136,.45);background:linear-gradient(180deg,rgba(0,255,136,.08),var(--panel))}
+.mid{display:grid;grid-template-columns:1fr 400px;gap:16px;margin-top:16px}
+.feed .it{display:grid;grid-template-columns:44px 18px 1fr;gap:8px;padding:8px 0;border-bottom:1px solid rgba(30,48,80,.6);font-size:12px}
+.feed .it:last-child{border-bottom:0}
+.feed .t{color:var(--dim)}
+.feed .ic{width:8px;height:8px;border-radius:50%;margin-top:5px}
+.feed .it b{color:var(--text);font-weight:600}
+.feed .it em{font-style:normal;color:var(--green)}
+.lcols{display:grid;grid-template-columns:250px 190px 100px 70px 210px 170px 1fr;align-items:center}
+.lrow{padding:12px 0;border-bottom:1px solid rgba(30,48,80,.7)}
+.lrow>div:first-child,.lhead>div:first-child,.ltot>div:first-child{padding-left:18px}
+.lhead{padding:11px 0;color:var(--dim);font-size:10.5px;letter-spacing:.12em;font-weight:700;background:var(--panel);border-bottom:1px solid var(--line)}
+.st{font-size:10.5px;font-weight:800;letter-spacing:.08em;border-radius:6px;padding:3px 8px;display:inline-flex;align-items:center;gap:6px}
+.st.f{color:var(--green);background:rgba(0,255,136,.08);border:1px solid rgba(0,255,136,.35)}
+.st.f::before{content:"";width:6px;height:6px;border-radius:50%;background:var(--green);box-shadow:0 0 6px var(--green)}
+.st.c{color:var(--deep);background:var(--green)}
+.st.s{color:var(--cyan);background:rgba(0,207,255,.08);border:1px solid rgba(0,207,255,.35)}
+.st.r{color:var(--red);background:rgba(255,68,68,.08);border:1px solid rgba(255,68,68,.35)}
+.st.m{color:var(--muted);border:1px solid var(--line)}
+.lrow small,.ltot small{display:block;color:var(--dim);font-size:11px}
+.pts b{font-size:13.5px}
+.pts em{font-style:normal;color:var(--green);font-size:11.5px;margin-left:6px}
+.acts{display:flex;gap:8px;justify-content:flex-end;padding-right:18px}
+.acts span{font:700 12px Inter,sans-serif;border-radius:8px;padding:6px 12px;border:1px solid var(--line);color:var(--muted)}
+.acts span.claim{background:var(--green);color:var(--deep);border-color:var(--green);box-shadow:0 0 14px rgba(0,255,136,.35)}
+.acts span.stop{color:var(--red);border-color:rgba(255,68,68,.4)}
+.ltot{padding:14px 0;background:var(--panel);font-weight:700}
+.ltot b{font-size:14px}
+
+/* logo sheet */
+.sheet{display:flex;gap:40px;align-items:center;justify-content:center;padding:60px 40px}
+.sheet .bigl svg{width:300px;height:300px}
+.sheet .wm{display:flex;align-items:center;gap:18px}
+.sheet .wm svg{width:92px;height:92px}
+.sheet .wm span{color:var(--cyan);font-size:19px;letter-spacing:.32em;font-weight:600;display:block}
+.sheet .wm b{font-size:34px;font-weight:800;letter-spacing:.02em;display:block;margin-top:4px}
+.sizes{display:flex;gap:22px;align-items:flex-end;margin-top:34px}
+.sizes div{display:flex;flex-direction:column;align-items:center;gap:8px;color:var(--dim);font-size:11px}
+</style>
+</head>
+<body>
+<svg width="0" height="0" style="position:absolute">
+  <defs>
+    <linearGradient id="afg" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#00cfff"/><stop offset="1" stop-color="#00ff88"/></linearGradient>
+    <linearGradient id="afh" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#00ff88"/><stop offset="1" stop-color="#00cfff"/></linearGradient>
+    <filter id="afglow" x="-50%" y="-50%" width="200%" height="200%"><feGaussianBlur stdDeviation="1.1" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
+  </defs>
+  <symbol id="logo" viewBox="0 0 64 64">
+    <circle cx="32" cy="41" r="17" fill="#06090f" stroke="url(#afg)" stroke-width="3"/>
+    <circle cx="32" cy="41" r="12" fill="none" stroke="#00cfff" stroke-opacity=".4" stroke-width="1" stroke-dasharray="1.6 2.6"/>
+    <rect x="24.5" y="37" width="5" height="9" rx="2.5" fill="#00ff88" filter="url(#afglow)"/>
+    <rect x="34.5" y="37" width="5" height="9" rx="2.5" fill="#00ff88" filter="url(#afglow)"/>
+    <path d="M20.5 25.5 L22.6 14.6 Q23.2 12 26 12 Q32 14.2 38 12 Q40.8 12 41.4 14.6 L43.5 25.5 Z" fill="url(#afh)"/>
+    <path d="M21.2 21.6 Q32 19.6 42.8 21.6" stroke="#06090f" stroke-width="2.6" fill="none"/>
+    <path d="M2.5 30 C8 25.2 15 24 22 24 L42 24 C49 24 56 25.2 61.5 30 C50 30.6 40 31.8 32 31.8 C24 31.8 14 30.6 2.5 30 Z" fill="url(#afg)"/>
+    <path d="M32 12.5 V5.8" stroke="#00ff88" stroke-width="1.9" stroke-linecap="round"/>
+    <path d="M31.8 8 C27.6 8 25.5 5.8 25 2.6 C28.8 2.6 31.3 4.6 31.8 8 Z" fill="#00ff88"/>
+    <path d="M32.2 6.6 C36.4 6.6 38.8 4.1 39.3 0.9 C35.2 0.9 32.7 3 32.2 6.6 Z" fill="#00cfff"/>
+  </symbol>
+</svg>
+
+<div id="root"></div>
+
+<script>
+const TAB = new URLSearchParams(location.search).get("tab") || "farms";
+const BUDGET = 5000;
+const logo = (cls = "") => `<svg class="${cls}"><use href="#logo"/></svg>`;
+const fmt = n => n.toLocaleString("en-US");
+
+function header(active) {
+  return `
+  <header class="app">
+    <a class="brand">${logo()}<div class="w"><span>AIRDROP</span><b>FARMS</b></div></a>
+    <nav><a class="${active === "farms" ? "on" : ""}">Farms</a><a class="${active === "live" ? "on" : ""}">Live farms <i>12</i></a></nav>
+    <div class="status"><span class="dot"></span><b>FARMING</b> · 12 farms · $4,850 in</div>
+  </header>`;
+}
+
+// [logo class, initials, name, sub, how, token line, token class, season, amount, recommended, est low, est high, cost, free?]
+const FARMS = [
+  ["c1", "AR", "Arcus", "Perp DEX · dYdX Labs", "Deposit", "Token confirmed", "y", "Season 1 · to H1 2027", 1000, 1000, 260, 940, "gas ≈ $1"],
+  ["c2", "VA", "Variational", "Perp DEX", "Trade", "VAR · 32% airdrop", "y", "TGE Q4 2026", 800, 800, 180, 720, "fees ≈ $34"],
+  ["c3", "PM", "Polymarket", "Prediction", "LP", "No token yet", "n", "$75K / day LP rewards", 600, 700, 40, 310, "+ pUSD rewards"],
+  ["c1", "LI", "Lighter", "Perp DEX", "Trade", "11M LIT pool", "y", "weekly payout", 500, 500, 90, 260, "fees ≈ $22"],
+  ["c2", "RX", "RISEx", "Perp DEX", "Trade", "No token yet", "n", "Season 1 · to Q2 2027", 400, 400, 70, 410, "fees ≈ $17"],
+  ["c3", "NA", "Nado", "Perp DEX · Ink", "Trade", "Points → INK", "y", "Season 2", 400, 350, 60, 300, "fees ≈ $16"],
+  ["c4", "N1", "N1", "Perp DEX", "Trade", "No token yet", "n", "Season 1", 300, 300, 30, 250, "fees ≈ $13"],
+  ["c1", "OS", "Ostium", "Perp DEX", "Trade", "Points live", "n", "Season 2 · 25M cap", 300, 300, 40, 190, "fees ≈ $12"],
+  ["c3", "BA", "Base", "L2 · Coinbase", "Bridge", "Exploring a token", "n", "no points program", 300, 300, null, null, "gas ≈ $3"],
+  ["c2", "PA", "Pacifica", "Perp DEX", "Trade", "Points live", "n", "Season 1", 250, 250, 20, 140, "fees ≈ $10"],
+  ["c1", "AC", "Arc Testnet", "Circle · USDC gas", "Testnet", "No token yet", "n", "testnet, free", 0, 0, null, null, "free", true],
+  ["c2", "AX", "Axis Robotics", "Tasks", "Tasks", "No token yet", "n", "2-week epochs", 0, 0, null, null, "free", true],
+  ["c4", "EX", "Extended", "Perp DEX", "Trade", "Cap 99% used", "w", "69.2M of 70M points", 0, 0, null, null, "ending", false, true],
+  ["c4", "HL", "Hyperliquid", "Perp DEX", "Trade", "No Season 2 announced", "n", "no points phase", 0, 0, null, null, "", false, true],
+];
+
+function slider(amt, rec, free) {
+  if (free) return `<div class="sl"><div class="track dis"></div><div class="scale"><span>no USDC needed</span><span></span></div></div>`;
+  const p = v => Math.min(100, v / BUDGET * 100);
+  return `<div class="sl"><div class="track"><i class="fill" style="width:${p(amt)}%"></i>${rec ? `<i class="recm" style="left:${p(rec)}%"></i>` : ""}<i class="thumb" style="left:${p(amt)}%"></i></div>
+    <div class="scale"><span>0</span><span>2.5K</span><span>5K</span></div></div>`;
+}
+
+function row(f, open) {
+  const [c, ini, name, sub, how, tok, tc, season, amt, rec, lo, hi, cost, free, off] = f;
+  const on = !off;
+  const recCell = off ? `<div class="rec"><b style="color:var(--dim)">—</b></div>`
+    : free ? `<div class="rec"><span class="ok">free</span></div>`
+    : amt === rec ? `<div class="rec"><b>$${fmt(rec)}</b><span class="ok">✓</span></div>`
+    : `<div class="rec"><b>$${fmt(rec)}</b><u>use</u></div>`;
+  const est = lo == null
+    ? `<div class="est"><b class="no">no estimate</b><small>${off ? (cost === "ending" ? "points nearly gone" : "nothing to farm now") : "no points rate"}</small></div>`
+    : `<div class="est"><b>$${fmt(lo)} – $${fmt(hi)}</b><small>${cost}</small></div>`;
+  return `<div class="frow cols ${on ? "" : "off"} ${open ? "open" : ""}">
+    <div><i class="tg ${on ? "on" : ""}"></i></div>
+    <div class="farm"><span class="lg ${c}">${ini}</span><div><b>${name}</b><small>${sub}</small></div></div>
+    <div class="how"><span class="tag ${free ? "free" : ""}">${how}</span></div>
+    <div class="tok"><b class="${tc}">${tok}</b><small>${season}</small></div>
+    ${slider(amt, off ? 0 : rec, free)}
+    <div>${free ? `<div class="amt free">FREE</div>` : `<div class="amt"><b>${off ? "0" : fmt(amt)}</b><span>USDC</span></div>`}</div>
+    ${recCell}
+    ${est}
+    <div class="chev ${open ? "open" : ""}">${open ? "▴" : "▾"}</div>
+  </div>`;
+}
+
+// the simulator: est. airdrop band against USDC for one farm; flattens above the recommendation
+function simChart() {
+  const W = 640, H = 236, L = 54, R = 14, T = 12, B = 30;
+  const x = v => L + v / 5000 * (W - L - R);
+  const y = v => H - B - v / 2400 * (H - T - B);
+  const f = (v, k) => { const knee = 1000; const a = Math.min(v, knee) / knee; const b = Math.max(0, v - knee) / knee; return k * (a + 0.32 * b); };
+  const pts = [];
+  for (let v = 0; v <= 5000; v += 100) pts.push(v);
+  const hi = pts.map(v => `${x(v)},${y(f(v, 940))}`);
+  const lo = pts.map(v => `${x(v)},${y(f(v, 260))}`).reverse();
+  const mid = pts.map(v => `${x(v)},${y(f(v, 600))}`).join(" ");
+  let grid = "";
+  for (const g of [0, 500, 1000, 1500, 2000]) grid += `<line x1="${L}" x2="${W - R}" y1="${y(g)}" y2="${y(g)}" stroke="#1e3050" stroke-width="1"/><text x="${L - 8}" y="${y(g) + 4}" fill="#7f93ad" font-size="10" text-anchor="end">$${g ? (g / 1000) + "K" : 0}</text>`;
+  for (const g of [0, 1000, 2000, 3000, 4000, 5000]) grid += `<text x="${x(g)}" y="${H - 10}" fill="#7f93ad" font-size="10" text-anchor="middle">${g ? (g / 1000) + "K" : 0}</text>`;
+  return `<svg width="${W}" height="${H}" viewBox="0 0 ${W} ${H}">
+    ${grid}
+    <polygon points="${hi.join(" ")} ${lo.join(" ")}" fill="rgba(0,207,255,.14)"/>
+    <polyline points="${mid}" fill="none" stroke="#00ff88" stroke-width="2.2"/>
+    <rect x="${x(1000)}" y="${T}" width="${x(5000) - x(1000)}" height="${H - T - B}" fill="rgba(6,9,15,.35)"/>
+    <text x="${x(3000)}" y="${y(1700)}" fill="#7f93ad" font-size="10.5" text-anchor="middle">above $1K each dollar earns less here</text>
+    <text x="${x(3000)}" y="${y(1700) + 14}" fill="#7f93ad" font-size="10.5" text-anchor="middle">than in your next farm</text>
+    <line x1="${x(1000)}" x2="${x(1000)}" y1="${T}" y2="${H - B}" stroke="#00cfff" stroke-width="1.5" stroke-dasharray="4 4"/>
+    <text x="${x(1000) + 6}" y="${T + 10}" fill="#00cfff" font-size="10.5" font-weight="700">recommended $1,000</text>
+    <circle cx="${x(1000)}" cy="${y(600)}" r="6" fill="#06090f" stroke="#00ff88" stroke-width="3"/>
+    <text x="${x(1000) + 12}" y="${y(600) + 26}" fill="#e6edf7" font-size="11" font-weight="700">you: $1,000 → $260 – $940</text>
+    <text x="${W - R}" y="${y(f(5000, 940)) - 8}" fill="#a9b8cc" font-size="10" text-anchor="end">$5,000 → $590 – $2,140</text>
+    <text x="${L}" y="${H - B + 0}" fill="#7f93ad" font-size="9.5" dy="-4" dx="4"></text>
+  </svg>`;
+}
+
+function sim() {
+  return `<div class="sim">
+    <div class="chart">
+      <div class="ct"><b>SIMULATOR · ARCUS</b><span>USDC deployed → est. airdrop, 6 months</span></div>
+      ${simChart()}
+    </div>
+    <div class="out">
+      <div class="h">If you deploy <b>$1,000</b> for <b>6 months</b></div>
+      <div class="big">$260 – $940</div>
+      <div class="bigl">est. airdrop at the token launch</div>
+      <dl>
+        <dt>Points per week</dt><dd>≈ 1,840</dd>
+        <dt>Your share of the points</dt><dd>≈ 0.0021 %</dd>
+        <dt>Points pool</dt><dd>≈ 5 % of supply</dd>
+        <dt>Token value at launch (FDV)</dt><dd>$250M – $900M</dd>
+        <dt>Cost</dt><dd>gas ≈ $1 · no trading</dd>
+      </dl>
+      <div class="hz"><span>3 mo</span><span class="on">6 mo</span><span>12 mo</span></div>
+      <div class="asof">as of 21 Oct 14:05 UTC · points: Arcus Season 1 rules · FDV: comparable launches</div>
+    </div>
+  </div>`;
+}
+
+function farms() {
+  return `<div class="back">← Back</div><div class="wrap">${header("farms")}
+  <section class="hero">
+    <div>
+      <div class="pill"><span class="dot"></span>412 FARMS · ONE DEPOSIT</div>
+      <h1>Deploy USDC.<br>Farm every airdrop.<br><em>Cymetica does the rest.</em></h1>
+      <div class="sub">Chatbots explain airdrops. <b>Cymetica farms them.</b></div>
+    </div>
+    <div class="card plan">
+      <div class="cap">YOUR FARM PLAN</div>
+      <label>USDC to farm</label>
+      <div class="bigin"><b>5,000</b><i class="caret"></i><span>USDC</span></div>
+      <div class="quick"><span>Balance 7,240 USDC</span><span class="q"><span>25%</span><span>50%</span><span>75%</span><span>Max</span></span></div>
+      <div class="alloc"><div class="bar"><i style="width:97%"></i></div>
+        <div class="r"><span>Allocated <b>$4,850</b> of $5,000</span><span>$150 left</span></div></div>
+      <div class="kpis">
+        <div><small>Farms on</small><b>12</b></div>
+        <div><small>Est. airdrops · 6 mo</small><b class="g">$790 – $3,520</b></div>
+        <div><small>Est. cost</small><b>$134</b></div>
+      </div>
+      <div class="btns"><button class="ghost">Use recommended</button><button class="go">▶&nbsp; Start farming</button></div>
+      <div class="fine">Stop any farm any time · USDC back to your balance</div>
+    </div>
+  </section>
+  <div class="sechead">
+    <div><div class="cap2">ALL FARMS</div><h2>412 farms. Toggle, size, start.</h2></div>
+    <div class="tools"><span class="sel">Sort: est. airdrop per $ ▾</span><span class="search">⌕ Search farms</span></div>
+  </div>
+  <div class="chips"><span class="on">All<b>412</b></span><span>Perp DEX<b>96</b></span><span>Prediction<b>14</b></span><span>Lending<b>71</b></span><span>LP vaults<b>124</b></span><span>Chains<b>69</b></span><span class="free">Testnets · free<b>22</b></span><span class="free">Tasks · free<b>16</b></span></div>
+  <div class="table">
+    <div class="thead cols"><div>ON</div><div>FARM</div><div>HOW</div><div>TOKEN</div><div>DEPLOY</div><div>USDC</div><div>RECOMMENDED</div><div>EST. AIRDROP · 6 MO</div><div></div></div>
+    ${FARMS.map((f, i) => row(f, i === 0) + (i === 0 ? sim() : "")).join("")}
+    <div class="more"><span>Showing 14 of 412 farms</span><span>Show 50 more</span></div>
+  </div></div>`;
+}
+
+const LIVE = [
+  ["c1", "AR", "Arcus", "Deposit", ["f", "FARMING"], "Season 1", 1000, 21, "41,280 pts", "+1,960", "$110 – $400", "stop"],
+  ["c2", "VA", "Variational", "Trade", ["f", "FARMING"], "TGE Q4 2026", 800, 23, "2,310 pts", "+104", "$80 – $310", "stop"],
+  ["c1", "LI", "Lighter", "Trade", ["c", "CLAIMABLE"], "weekly LIT", 500, 23, "96 LIT this week", "", "96 LIT", "claim:Claim 96 LIT"],
+  ["c3", "PM", "Polymarket", "LP", ["c", "CLAIMABLE"], "daily pUSD", 600, 23, "23.40 pUSD", "+4.10", "23.40 pUSD", "claim:Claim 23.40"],
+  ["c2", "RX", "RISEx", "Trade", ["f", "FARMING"], "Season 1", 400, 23, "8,940 pts", "+390", "$30 – $180", "stop"],
+  ["c3", "NA", "Nado", "Trade", ["f", "FARMING"], "Season 2", 400, 19, "12,600 pts", "+610", "$25 – $130", "stop"],
+  ["c1", "OS", "Ostium", "Trade", ["s", "CAP 81% USED"], "Season 2", 300, 23, "3,120 pts", "+140", "$15 – $80", "stop"],
+  ["c4", "N1", "N1", "Trade", ["f", "FARMING"], "Season 1", 300, 16, "5,480 pts", "+330", "$10 – $95", "stop"],
+  ["c3", "BA", "Base", "Bridge", ["m", "ACTIVE · NO POINTS"], "34 txs", 300, 23, "—", "", "no estimate", "stop"],
+  ["c2", "PA", "Pacifica", "Trade", ["f", "FARMING"], "Season 1", 250, 12, "1,050 pts", "+90", "$5 – $55", "stop"],
+  ["c1", "AC", "Arc Testnet", "Testnet", ["f", "FARMING"], "free", 0, 23, "61 txs", "+3", "no estimate", "stop"],
+  ["c2", "AX", "Axis Robotics", "Tasks", ["s", "EPOCH ENDS FRI"], "free", 0, 23, "18 tasks", "+1", "no estimate", "stop"],
+];
+
+function liveChart() {
+  const W = 800, H = 262, L = 50, R = 24, T = 14, B = 28;
+  const N = 23, x = d => L + d / N * (W - L - R), y = v => H - B - v / 3000 * (H - T - B);
+  const lo = [], hi = [], mid = [];
+  for (let d = 0; d <= N; d++) { const k = Math.pow(d / N, 1.15); lo.push(640 * k); hi.push(2880 * k); mid.push(1500 * k); }
+  let g = "";
+  for (const v of [0, 1000, 2000, 3000]) g += `<line x1="${L}" x2="${W - R}" y1="${y(v)}" y2="${y(v)}" stroke="#1e3050"/><text x="${L - 8}" y="${y(v) + 4}" fill="#7f93ad" font-size="10" text-anchor="end">$${v ? v / 1000 + "K" : 0}</text>`;
+  for (const d of [0, 5, 10, 15, 20, 23]) g += `<text x="${x(d)}" y="${H - 9}" fill="#7f93ad" font-size="10" text-anchor="${d === 23 ? "end" : d === 0 ? "start" : "middle"}">${d === 0 ? "29 Sep" : d === 23 ? "today" : "day " + d}</text>`;
+  const band = hi.map((v, d) => `${x(d)},${y(v)}`).join(" ") + " " + lo.map((v, d) => `${x(d)},${y(v)}`).reverse().join(" ");
+  // claims: two payouts so far
+  return `<svg width="${W}" height="${H}" viewBox="0 0 ${W} ${H}" style="width:100%;height:auto">${g}
+    <polygon points="${band}" fill="rgba(0,207,255,.14)"/>
+    <polyline points="${mid.map((v, d) => `${x(d)},${y(v)}`).join(" ")}" fill="none" stroke="#00ff88" stroke-width="2.4"/>
+    <circle cx="${x(N)}" cy="${y(1500)}" r="5" fill="#00ff88"/>
+    <text x="${x(N) - 10}" y="${y(2880) - 6}" fill="#e6edf7" font-size="11" font-weight="700" text-anchor="end">$640 – $2,880 earned so far</text>
+    ${[7, 14, 21].map(d => `<line x1="${x(d)}" x2="${x(d)}" y1="${y(0)}" y2="${y(0) - 10}" stroke="#00ff88" stroke-width="2"/>`).join("")}
+    <text x="${x(14)}" y="${y(0) - 14}" fill="#7f93ad" font-size="9.5" text-anchor="middle">claims</text>
+  </svg>`;
+}
+
+function live() {
+  const rows = LIVE.map(([c, ini, name, how, st, season, amt, days, pts, today, est, act]) => {
+    const [kind, label] = act.split(":");
+    return `<div class="lrow lcols">
+      <div class="farm"><span class="lg ${c}">${ini}</span><div><b>${name}</b><small>${how} · ${season}</small></div></div>
+      <div><span class="st ${st[0]}">${st[1]}</span></div>
+      <div><b>${amt ? "$" + fmt(amt) : "free"}</b></div>
+      <div>${days} d</div>
+      <div class="pts"><b>${pts}</b>${today ? `<em>${today} today</em>` : ""}</div>
+      <div>${est === "no estimate" ? `<span style="color:var(--dim)">no estimate</span>` : `<b class="g">${est}</b>`}</div>
+      <div class="acts">${kind === "claim" ? `<span class="claim">${label}</span>` : ""}<span class="stop">Stop</span></div>
+    </div>`;
+  }).join("");
+  return `<div class="back">← Back</div><div class="wrap">${header("live")}
+  <div class="tiles">
+    <div class="tile"><small>IN FARMS</small><b>$4,850</b><span>of $5,000 plan</span></div>
+    <div class="tile"><small>FARMS RUNNING</small><b>12</b><span>2 claimable</span></div>
+    <div class="tile hi"><small>EST. AIRDROPS</small><b class="g">$640–$2,880</b><span>earned so far</span></div>
+    <div class="tile"><small>CLAIMED</small><b>$207</b><span>LIT + pUSD</span></div>
+    <div class="tile"><small>COST SO FAR</small><b>$58</b><span>fees, funding, gas</span></div>
+    <div class="tile"><small>DAYS FARMING</small><b>23</b><span>since 29 Sep</span></div>
+  </div>
+  <div class="mid">
+    <div class="card" style="padding:16px 18px 10px"><div class="cap" style="margin-bottom:8px">EST. AIRDROP VALUE EARNED</div>${liveChart()}</div>
+    <div class="card feed" style="padding:16px 18px">
+      <div class="cap" style="margin-bottom:6px">WHAT CYMETICA DID TODAY</div>
+      <div class="it"><span class="t">14:05</span><i class="ic" style="background:var(--green)"></i><span>Points synced: <em>+3,628</em> across 9 farms</span></div>
+      <div class="it"><span class="t">13:40</span><i class="ic" style="background:var(--cyan)"></i><span><b>Variational</b> long hedged with a <b>Lighter</b> short, $400 each</span></div>
+      <div class="it"><span class="t">11:15</span><i class="ic" style="background:var(--green)"></i><span><b>Lighter</b> weekly payout ready: <em>96 LIT</em></span></div>
+      <div class="it"><span class="t">09:30</span><i class="ic" style="background:var(--cyan)"></i><span>Polymarket quotes refreshed on 6 markets</span></div>
+      <div class="it"><span class="t">08:00</span><i class="ic" style="background:var(--blue)"></i><span>Axis Robotics: 1 task done, epoch ends Fri</span></div>
+      <div class="it"><span class="t">07:12</span><i class="ic" style="background:var(--red)"></i><span><b>Ostium</b> 81% of its points cap used</span></div>
+    </div>
+  </div>
+  <div class="table" style="margin-top:16px">
+    <div class="lhead lcols"><div>FARM</div><div>STATUS</div><div>IN</div><div>DAYS</div><div>POINTS</div><div>EST. AIRDROP</div><div></div></div>
+    ${rows}
+    <div class="ltot lcols"><div>Total · 12 farms</div><div></div><div><b>$4,850</b></div><div></div><div><small>+3,628 pts today</small></div><div><b class="g">$640 – $2,880</b></div><div class="acts"><span class="claim">Claim all</span><span class="stop">Stop all</span></div></div>
+  </div></div>`;
+}
+
+function sheet() {
+  return `<div class="sheet"><div class="bigl">${logo()}</div>
+    <div><div class="wm">${logo()}<div><span>AIRDROP</span><b>FARMS</b></div></div>
+      <div class="sizes"><div>${logo().replace("<svg", '<svg style="width:64px;height:64px"')}64</div><div>${logo().replace("<svg", '<svg style="width:40px;height:40px"')}40</div><div>${logo().replace("<svg", '<svg style="width:24px;height:24px"')}24</div><div>${logo().replace("<svg", '<svg style="width:16px;height:16px"')}16</div></div>
+    </div></div>`;
+}
+
+document.getElementById("root").innerHTML = TAB === "live" ? live() : TAB === "logo" ? sheet() : farms();
+</script>
+</body>
+</html>
