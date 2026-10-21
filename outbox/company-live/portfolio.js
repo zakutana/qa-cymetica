@@ -38,12 +38,18 @@
     return { et10: v * CO.RATE.et10PerVisitor, usdc: u * CO.RATE.usdcPerUse };
   };
   // the two piles, and where they came from
+  // The Vault shows everything the owner's Cymetica account holds, ET10 and USDC ("vault je prazdny coz je bug, on ma
+  // zobrazovat veskere ET10 a USDC co mam na ucte v balancu na cymetice", 2026-10-21): the live build's tile read
+  // "0 ET10 paid" (only the bug bounty it had paid) while `vault.et10_balance` in the same response held the balance.
+  // CO.ACCOUNT stands for that balance (the mockup's sample; the app reads it from the account); what the company
+  // earned after, by department and by app, is listed under it and added on top.
+  CO.ACCOUNT = { et10: 12450, usdc: 86.2 };
   CO.vaultTotals = function () {
-    var S = CO.S || {}, depts = 0, et10 = 0, usdc = 0;
+    var S = CO.S || {}, depts = 0, et10 = 0, usdc = 0, A = CO.ACCOUNT;
     (S.departments || []).forEach(function (d) { depts += d.et10 || 0; });
     depts = Math.max(depts, S.et10 || 0);
     CO.apps().forEach(function (a) { var e = CO.appEarn(a); et10 += e.et10; usdc += e.usdc; });
-    return { et10: depts + et10, usdc: usdc, fromDepts: depts, fromApps: et10 };
+    return { et10: A.et10 + depts + et10, usdc: A.usdc + usdc, fromDepts: depts, fromApps: et10, earnedEt10: depts + et10, earnedUsdc: usdc };
   };
   CO.fmtEt = function (n) { return Math.round(n).toLocaleString('en-US'); };
   CO.fmtUsd = function (n) { return n >= 100 ? Math.round(n).toLocaleString('en-US') : n.toFixed(2); };

@@ -77,20 +77,38 @@
   // The land: a slot is bought with ET10, then built on through Build it Better. The price is a PLACEHOLDER (the
   // operator named the currency, not the amount); one number to change. What this browser bought, by slot id.
   CO.LAND_PRICE = 1000;
+  // At most three slots to an account for now, so nobody buys the whole map up ("aby to nekdo nevykoupil vsechno",
+  // 2026-10-21). One number; a slot the account holds already counts.
+  CO.LAND_MAX = 3;
   CO.BUILD_URL = 'https://cymetica.com/build-it-better';
   var LKEY = 'co.land.v1';
   CO.land = function () {
     try { var a = JSON.parse(localStorage.getItem(LKEY) || '[]'); return Array.isArray(a) ? a : []; } catch (e) { return []; }
   };
+  CO.landLeft = function () { return Math.max(0, CO.LAND_MAX - CO.land().length); };
   CO.buyLand = function (id) {
     var a = CO.land();
-    if (CO.RO || a.indexOf(id) >= 0) return a;
+    if (CO.RO || a.indexOf(id) >= 0 || a.length >= CO.LAND_MAX) return a;
     a.push(id);
     try { localStorage.setItem(LKEY, JSON.stringify(a)); } catch (e) { /* the page still works, it just forgets */ }
     return a;
   };
+  // One public company to look inside, for the visit view only (index.html?visit=101): the map holds no companies, but
+  // the spec's visit has to be drawn once -- what a visitor sees of a public company, and what stays private.
+  function d(key, o) { o = o || {}; o.key = key; return o; }
+  function own(name, experts, charter, o) { o = o || {}; o.key = 'custom'; o.name = name; o.experts = experts; o.charter = charter; return o; }
+  CO.VISITABLE = [
+    { id: 101, name: 'Moonshot Labs', owner: '0xmila', public: true, status: 'active', plan: 'Max 5x', days: 12, skin: 'tower', accent: 'cyan',
+      bugs: 6,
+      mission: 'Find the next memecoin runner on paper before anyone else, and get paid in ET10 for every bug on the way.',
+      departments: [d('testing', { runs: 2, products: ['Gem Screener', 'Supply Analyzer', 'Chart Analyzer'] }), d('testing_lab'), d('trading_desk'), d('development'), d('design'),
+        own('Memecoin scouts', ['researcher', 'trader'], 'Watch the memecoin terminal for new launches.\n- A coin goes on the list only when the Gem Screener and the Supply Analyzer agree on its numbers.\n- Hand every promising coin to the Testing lab for a paper test. Never buy.')],
+      rules: [['a bug is found anywhere', 'Cymetica QA', 'verifies it and files it'], ['someone finds a way to make money', 'Testing lab', 'proves it on paper first'],
+        ['an experiment wins on paper', 'Trading desk', 'puts it into production once you approve: an Agent Tournaments seat or real money']] }
+  ];
   CO.uvCompany = function (id) {
-    for (var i = 0; i < CO.UNIVERSE.length; i++) if (CO.UNIVERSE[i].id === id) return CO.UNIVERSE[i];
+    var all = CO.UNIVERSE.concat(CO.VISITABLE);
+    for (var i = 0; i < all.length; i++) if (all[i].id === id) return all[i];
     return null;
   };
   CO.uvEt10 = function (c) { return (c.bugs || 0) * 1000; };

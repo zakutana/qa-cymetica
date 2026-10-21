@@ -603,9 +603,9 @@
       if (t) { t.status = 'cancelled'; t.outcome = 'Removed from the plan by you'; t.finished_at = S.clock; feed('info', 'You', 'removed from the plan: ' + t.title); }
       changed();
     },
-    message: function (text, deptId) {
+    message: function (text, deptId, images) {
       var S = CO.S;
-      var m = { id: S.next_msg++, role: 'owner', text: text, at: S.clock, answered: false, dept_id: deptId || null };
+      var m = { id: S.next_msg++, role: 'owner', text: text, at: S.clock, answered: false, dept_id: deptId || null, images: images || null };
       S.messages.push(m);
       feed('info', 'You', 'wrote to NEXUS');
       var g = CO.gate();

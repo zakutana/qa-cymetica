@@ -367,7 +367,7 @@
       budget: {
         session: { used: 0.34, cap: 1.00, resets_at: t0 + 4 * H + 28 * MIN, every: 5 * H },
         week: { used: 4.46, cap: 6.00, resets_at: nextSat16(t0), every: 7 * 24 * H },
-        extra: { on: true, left: 4.62, usdc_per_unit: 1.0 },
+        extra: { on: true, left: 4.62, usdc_per_unit: 1.0, month_cap: 25 },
         cap: 40
       },
       meter: [0.12, 0.21, 0.32, 0.22, 0.18, 0.24, 0.20, 0.25, 0.21, 0.17, 0.24, 0.23, 0.22, 0.25, 0.20, 0.24, 0.22, 0.16, 0.23, 0.24],

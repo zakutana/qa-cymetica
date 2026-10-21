@@ -209,6 +209,9 @@ body.ro .ronote { display: block; padding: 10px 12px; font-size: 11.5px; color: 
 body.ro #compose, body.ro #co-pause, body.ro #co-upgrade, body.ro #add-dept, body.ro #sim-new, body.ro #dr-charter .cb,
 body.ro #nr-form, body.ro #nr-ex, body.ro #nr-msg, body.ro .rule .switch, body.ro .rule .rx, body.ro #legal .mf .btn, body.ro #token .mf .btn,
 body.ro .danger { display: none !important; }
+/* a visit shows no Tasks, Memory, Waits for owner or Audit: the tabs, and the panel of what waits for the owner */
+body.ro #tabs [data-tab="tasks"], body.ro #tabs [data-tab="approvals"], body.ro #tabs [data-tab="memory"], body.ro #tabs [data-tab="audit"],
+body.ro #p-appr, body.ro #co-waiting { display: none !important; }
 body.ro #dr-ch-text { cursor: default; }
 .wo { font-size: 10.5px; color: var(--dim2); align-self: center; margin-right: auto; letter-spacing: .02em; }
 .capr.ro { display: flex; align-items: center; gap: 10px; margin-top: 8px; font-size: 11.5px; }

@@ -156,11 +156,15 @@
     var c = CO.S.company;
     document.body.classList.add('ro');
     $('robar').hidden = false;
-    $('ro-t').innerHTML = 'Inside <b>' + esc(c.name) + '</b> by <b>@' + esc(c.owner) + '</b><em>· you can look at everything; only its owner can change it</em>';
+    $('ro-t').innerHTML = 'Inside <b>' + esc(c.name) + '</b> by <b>@' + esc(c.owner) + '</b><em>· you can look at its office, departments and processes; only its owner can change them</em>';
     document.title = c.name + ' · Universe';
-    var ap = document.querySelector('#tabs [data-tab="approvals"] .tl'); if (ap) ap.textContent = 'Waits for owner';
+    // What a public company keeps to itself (the operator, 2026-10-21: "Tasks, memory, waits for owner a audit by mely
+    // byt privatni, to muzou skryt uplne ty taby v tom nahledu"): those four tabs are not in a visit at all, nor the panel of
+    // what waits for the owner, nor the chat with NEXUS. The office, the departments (charters, experts, what they
+    // are doing now), the processes and the Universe stay.
+    ['tasks', 'approvals', 'memory', 'audit'].forEach(function (k) { var b = document.querySelector('#tabs [data-tab="' + k + '"]'); if (b) b.hidden = true; });
+    ['p-appr', 'co-waiting'].forEach(function (id) { var e = $(id); if (e) e.hidden = true; });
     var rs = document.querySelector('[data-pane="rules"] .sub'); if (rs) rs.textContent = 'the processes its owner wrote';
-    var as = document.querySelector('[data-pane="approvals"] .sub'); if (as) as.textContent = 'What its departments asked the owner, and what the owner decided.';
     $('dr-ch-text').readOnly = true;
   }
   function markSeen() {
@@ -303,7 +307,7 @@
     var V = CO.vaultTotals();
     if (RO) { $('earn-n').textContent = ''; setHTML($('earn'), '<p class="empty"><i class="lk"></i> Private: only its owner sees inside the vault.</p>'); return; }
     $('earn-n').textContent = '';
-    var rows = vaultRows(), top = Math.max(1, V.et10);
+    var rows = vaultRows(), top = Math.max(1, V.earnedEt10);
     setHTML($('earn'), '<button class="vtot" data-a="vault"><div><b class="g">' + CO.fmtEt(V.et10) + '</b><span>ET10</span></div><div><b class="u">' + CO.fmtUsd(V.usdc) + '</b><span>USDC</span></div></button>' +
       rows.slice(0, 5).map(function (r) {
         var pct = Math.round(r.et10 / top * 100);
@@ -325,8 +329,8 @@
       }).join('');
     };
     openModal('<div class="mh"><h3>Vault</h3><span class="lockp"><i class="lk"></i>PRIVATE</span><span class="sp"></span><button class="btn" data-a="close">×</button></div>' +
-      '<div class="vbig"><div><b class="g">' + CO.fmtEt(V.et10) + '</b><span>ET10</span></div><div><b class="u">' + CO.fmtUsd(V.usdc) + '</b><span>USDC</span></div></div>' +
-      '<div class="sec">BY DEPARTMENT</div>' + list('dept') + '<div class="sec">BY APP <span>proposed: ' + R.et10PerVisitor + ' ET10 a visitor, ' + R.usdcPerUse + ' USDC a use (placeholder rates)</span></div>' + list('app'), true);
+      '<div class="vbig"><div><b class="g">' + CO.fmtEt(V.et10) + '</b><span>ET10 · your account balance</span></div><div><b class="u">' + CO.fmtUsd(V.usdc) + '</b><span>USDC · your account balance</span></div></div>' +
+      '<div class="sec">EARNED BY THE COMPANY <span>' + CO.fmtEt(V.earnedEt10) + ' ET10 · ' + CO.fmtUsd(V.earnedUsdc) + ' USDC, already in the balance</span></div><div class="sec">BY DEPARTMENT</div>' + list('dept') + '<div class="sec">BY APP <span>proposed: ' + R.et10PerVisitor + ' ET10 a visitor, ' + R.usdcPerUse + ' USDC a use (placeholder rates)</span></div>' + list('app'), true);
   }
 
   // the conversation with the Manager: all of it in the Manager's focus, one department's in its detail
@@ -335,7 +339,8 @@
     var mh = msgs.map(function (m) {
       var md = tagged && m.dept_id ? CO.dept(m.dept_id) : null;
       return '<div class="msg' + (m.role === 'owner' ? ' me' : '') + '"><em>' + (m.role === 'owner' ? 'You' : 'NEXUS') + ' · ' + hhmm(m.at) +
-        (md ? '<span class="tagd">' + esc(md.name) + '</span>' : '') + '</em>' + esc(m.text) + '</div>';
+        (md ? '<span class="tagd">' + esc(md.name) + '</span>' : '') + '</em>' + esc(m.text) +
+        (m.images && m.images.length ? '<div class="mimgs">' + m.images.map(function (p) { return '<img alt="' + esc(p.name) + '" src="' + p.src + '">'; }).join('') + '</div>' : '') + '</div>';
     }).join('');
     if (S.notice && last && last.role === 'owner' && !last.answered) mh += '<div class="msgwait">' + esc(S.notice.text) + '</div>';
     return mh;
@@ -707,14 +712,21 @@
         if (a === 'build') { window.open(CO.BUILD_URL, '_blank', 'noopener'); closeModal(); }
       });
     }
+    // three slots to an account for now: with all three held, the card says so and offers nothing to buy
+    if (!CO.landLeft()) {
+      return openModal('<div class="mh"><h3>Land limit reached</h3><span class="sp"></span><button class="btn" data-a="close">×</button></div>' +
+        '<div class="kpis two"><div><b class="gr">' + CO.land().length + ' / ' + CO.LAND_MAX + '</b><span>slots you hold</span></div><div><b>' + esc(where) + '</b><span>this one stays free</span></div></div>' +
+        '<p class="hint">An account can hold ' + CO.LAND_MAX + ' slots for now, so nobody buys the whole map up.</p>' +
+        '<div class="mf"><span class="sp"></span><button class="btn" data-a="close">Close</button></div>', false);
+    }
     openModal('<div class="mh"><h3>Buy this slot</h3><span class="sp"></span><button class="btn" data-a="close">×</button></div>' +
       '<div class="kpis two"><div><b class="gr">' + price + '</b><span>ET10 · placeholder price</span></div><div><b>' + esc(where) + '</b><span>orbit 1 is nearest Cymetica</span></div></div>' +
-      '<p class="hint">Yours once bought: then add a building here with Build it Better.</p>' +
+      '<p class="hint">Yours once bought: then add a building here with Build it Better. You can hold ' + CO.LAND_MAX + ' slots for now; ' + CO.landLeft() + ' left.</p>' +
       '<div class="mf"><span class="sp"></span><button class="btn" data-a="close">Cancel</button><button class="btn gr" data-a="buy">Buy for ' + price + ' ET10</button></div>', false, function (a) {
       if (a !== 'buy') return;
       CO.buyLand(it.c.id); closeModal();
       if (uv && uv.refreshLand) uv.refreshLand();
-      toast('Bought ' + where + '. Add a building with Build it Better.');
+      toast('Bought ' + where + '. Add a building with Build it Better. ' + CO.landLeft() + ' of ' + CO.LAND_MAX + ' slots left.');
     });
   }
   function openFromMap(it) {
@@ -1007,7 +1019,10 @@
     else heart = '';   // nothing while it runs ("odstran ten maly napis waiting"): the rail and the rooms say who works
     $('co-heart').innerHTML = heart;
     var ur = $('us-r');
-    ur.textContent = g.code === 'extra' ? 'on extra usage · resets in ' + hm(b.session.resets_at - S.clock) : 'Resets in ' + hm(b.session.resets_at - S.clock);
+    // The plan windows run out and work goes on, paid from the owner's own USDC (the live /mine says so: at_zero,
+    // extra.month_spend_usdc of monthly_cap_usdc, turns_left). The bar says it in numbers: a red bar with no word about
+    // it read as work running for free past the limit ("nechapu jak to funguje", 2026-10-21; their build shows "Resets in" only).
+    ur.textContent = g.code === 'extra' ? 'on extra usage · ' + CO.fmtUsd(b.extra.month_cap - b.extra.left) + ' of ' + CO.fmtUsd(b.extra.month_cap) + ' USDC this month · resets in ' + hm(b.session.resets_at - S.clock) : 'Resets in ' + hm(b.session.resets_at - S.clock);
     ur.classList.toggle('ex', g.code === 'extra');
     $('uw-r').textContent = 'Resets ' + dayTime(b.week.resets_at);
     var lv = $('live');
@@ -1398,10 +1413,24 @@
     Array.prototype.forEach.call(els, function (el) { el.classList.add('leaving'); });
     setTimeout(function () { CO.act.decide(id, how); toast(how === 'approve' ? 'Approved: it goes out now.' : 'Rejected: nothing is sent.'); }, els.length ? 230 : 0);
   }
-  function sendMessage(text, deptId) {
-    if (!text) return;
-    CO.act.message(text, deptId);
+  function sendMessage(text, deptId, images) {
+    if (!text && !(images && images.length)) return;
+    CO.act.message(text || 'Screenshot', deptId, images);
     office.packet('you', 'hub', 'blue');
+  }
+  // the pictures waiting to go with the next message: at most four, each a PNG or JPEG under 5 MB
+  var pics = [];
+  function addPic(f) {
+    if (!f || !/^image\//.test(f.type)) return;
+    if (pics.length >= 4) return toast('Four images at most in one message.');
+    if (f.size > 5 * 1024 * 1024) return toast('That image is over 5 MB.');
+    var r = new FileReader();
+    r.onload = function () { pics.push({ name: f.name || 'screenshot.png', src: String(r.result) }); renderAttach(); };
+    r.readAsDataURL(f);
+  }
+  function renderAttach() {
+    var el = $('attach'); el.hidden = !pics.length;
+    el.innerHTML = pics.map(function (p, i) { return '<span class="apic"><img alt="" src="' + p.src + '"><button type="button" data-x="' + i + '" title="Take it out">×</button></span>'; }).join('');
   }
 
   // what a visitor may still press: moving around and reading. Everything else that writes says so instead.
@@ -1513,7 +1542,21 @@
       }
       if (t.closest('#sim-reset')) { CO.reset(); return toast('Simulation started over.'); }
     });
-    $('compose').addEventListener('submit', function (e) { e.preventDefault(); var i = $('msg'); sendMessage(i.value.trim(), null); i.value = ''; });
+    $('compose').addEventListener('submit', function (e) {
+      e.preventDefault(); var i = $('msg'), text = i.value.trim();
+      if (!text && !pics.length) return;
+      sendMessage(text, null, pics.slice()); i.value = ''; pics.length = 0; renderAttach();
+    });
+    // Pictures in the chat with NEXUS ("chci at jde vkladat obrazky do chatu nexuse, ze jak nekde udelam print screen tak to
+    // tam pujde vlozit", 2026-10-21): a screenshot pasted into the box (Ctrl+V) or an image picked with the clip is shown as a
+    // small card above the box, with a cross to take it back, and goes with the message.
+    $('msg').addEventListener('paste', function (e) {
+      var items = (e.clipboardData && e.clipboardData.items) || [], got = false;
+      Array.prototype.forEach.call(items, function (it) { if (it.kind === 'file' && /^image\//.test(it.type)) { got = true; addPic(it.getAsFile()); } });
+      if (got) e.preventDefault();
+    });
+    $('msg-file').addEventListener('change', function (e) { Array.prototype.forEach.call(e.target.files || [], addPic); e.target.value = ''; });
+    $('attach').addEventListener('click', function (e) { var x = e.target.closest('[data-x]'); if (x) { pics.splice(+x.getAttribute('data-x'), 1); renderAttach(); } });
     $('nr-form').addEventListener('submit', function (e) { e.preventDefault(); addRuleFromPage(); });
     // a department's daily token cap: the label follows the slider, the cap is set where it is let go
     $('dr-tok').addEventListener('input', function (e) {
