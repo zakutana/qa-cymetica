@@ -19,11 +19,12 @@ turn with their orbit like the stations did. Where 3D cannot start, the flat map
 
 **2. Buying a slot** (`03`). A click on a free slot, in Buy land, opens a card: the slot's address (orbit and number), the
 price in ET10 and a button. The server takes the ET10 from the owner's balance in the same transaction that records the
-slot, and fails closed. **The price is yours to set**: the mockup's 1,000 ET10 is a placeholder (one number). A click on
-a free slot with Buy land off does nothing.
+slot, and fails closed. **The price is yours to set**: the mockup's 1,000 ET10 is only an example. A click on a free slot with
+Buy land off does nothing.
 
-**3. At most three slots to an account, for now** (`04`). So nobody buys the whole map. At three, the card says so and offers
-no button. The server enforces it; the page only mirrors it. One constant, so it can be raised later.
+**3. A limit of slots to an account** (`04`), so nobody buys the whole map: **how many is yours to decide**. The mockup shows three
+as an example. At the limit the card says so and offers no button. The server enforces the limit; the page only mirrors it. Keep
+it one number, so it can be changed later.
 
 **4. What a slot is for.** A bought slot is kept on the account (the mockup keeps it in the browser, which is not the
 design). Its card says: *Add a building with Build it Better* and links to `/build-it-better`. **Products from Build it Better
