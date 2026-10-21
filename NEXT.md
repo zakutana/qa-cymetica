@@ -24,10 +24,8 @@ nikdy nebylo další na řadě.
 
 ---
 
-- [x] 2026-10-11  Před „zapni laborku“ (C9) nejdřív body 1–8 z docs/crew-before-c9.md (deep pass 11. 10.): špinavý strom bez majitele, zápis „odesláno“ za operátora, cizí BB tikety, hold v jednom Bash volání, zaseknutý tick, push přes testy, poznámka manažera = data, skill. Testy napřed. (hotovo 2026-10-12 na operátorovo slovo; body 9–11 zbývají)
 - [ ] 2026-10-12  Kód pro firmu (session/deep pass, testy napřed): commit.py a záznam běhu (OP-0009); desk H2 čtení (OP-0013); BTC rozpětí verdiktu (T-0039); manifest v cizím commitu (T-0038); body 9 a 11 crew-before-c9.
 - [x] 2026-10-12  Clock nedá desku další krok, dokud jeho pracovník běží, a pauzu počítá i od zavření tiketu (T-0040). (hotovo 2026-10-18, deep pass)
-- [x] 2026-10-11  Firma (docs/crew-plan.md): C0–C8 hotové (627f4a3e). Zbývá C9: start jen na „zapni laborku“ (`claude` přihlášený 11. 10.); první den pak `crew.py status` a `crew.py audit`. (spuštěno 12. 10. 16:14 UTC; první den proběhl, 13. 10. dodělala frontu a vypnuta na slovo operátora; hotovo 2026-10-13)
 - [ ] 2026-10-11  Laborka v3 (docs/laborator-plan.md) postavená, P3, P4, P5, P6, P7 čekají na tahy: v prvním `python scripts/lab.py launch NEX-0137`; outsider až po přihlášení `claude` a `outsider.py probe`. Zbytek výzkumu botů: docs/bots-research-plan.md „Zbývá".
 - [x] 2026-10-11  FOMO sběr: 9. 10. 48 557 dotazů na cymetica.com, 39 784 na nezdokumentované /clones/memecoin-terminal/search; REPLY-0030 žádá žádnou zátěž. Denní strop ve fomo_watch (10 000 za den UTC; strop v patrolu přešel do řádku z 18. 10.; hotovo 2026-10-18, 1b636163)
 - [ ] 2026-10-18  Z ohlédnutí: strop requestů v patrolu (od 11. 10.); firma nesmí psát kořenové *.py a conftest; outsider bez holého MEMORY.md + state/outsider/ do .gitignore; zámek manifestu; FAIL ověření řekne proč; a2a k MSG-0156 a komentář #156; potvrdit REPLY-0169/0170 a opravit studii.

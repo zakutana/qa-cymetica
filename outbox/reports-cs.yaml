@@ -96,3 +96,5 @@ reports:
   214: "My Balances: tlačítko pro tx hash nezachyceného vkladu se skryje, když nic nečeká, tedy když je potřeba"
   215: "Gem Screener: ředění za 12 měsíců u 5 coinů neřekne, odkud nové tokeny jsou (Rainbow +64,3 %)"
   216: "/traffic/mine radí AI agentům volat API s klíčem v X-API-Key, ale endpoint tomu klíči odpoví 401 „Sign in“"
+  46: "MCP: anonymní volající vidí ve výpisu nástrojů i ty vyhrazené registrovaným (objednávky, pozice, vklady)"
+  93: "Dokumentované GET cesty: backtest/quote klonovaných botů odpoví 401 klíči, který jim vydá vlastní onboarding"
