@@ -53,7 +53,7 @@ Someone with no company lands on the entry, not on an empty office.
   2. **Start**: **New** (the three rooms every company has: Command, Vault, Operations) or **CyMetica Pre-Build**
      (those three and Cymetica QA, Development, Quant Lab, Trading desk; its card counts the departments and the
      agents). The pre-built office is drawn whole, with a welcome over Command ("Welcome to your AI-native company,
-     run by expert agents. Click here to start the tour"); the click starts the tour, one bubble per room on the
+     run by real AI expert agents. Click here to start the tour"); the click starts the tour, one bubble per room on the
      map, telling one story: Command (you run it all through NEXUS), the Vault (what you earn, with your Cymetica
      balance), Development (build and ship products, tracked in Products), Cymetica QA (test them, ET10 for verified
      bugs), the Quant Lab (find trading strategies on paper), the Trading desk (run the proven ones for real),

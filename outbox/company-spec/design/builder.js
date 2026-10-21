@@ -30,7 +30,7 @@
   var FIXED = [
     { k: 'hub', n: 'Command', t: 'The main control point of your company, where NEXUS, the superintelligence, lives. You run the whole company just by talking to it: it runs every department, plans the work and reports back.' },
     { k: 'vault', n: 'Vault', t: 'The treasury of your company. All its earnings and rewards are stored here, in real USDC and ET10. Private: invisible to the public.' },
-    { k: 'audit', n: 'Operations', t: 'This department watches over the whole run of your company: it monitors every agent and process, optimises them, and makes sure no agent gets stuck in the mud.' }
+    { k: 'audit', n: 'Operations', t: 'Your company is watched over by a supervisor: it monitors every agent and process, optimises them, and makes sure no agent gets stuck in the mud.' }
   ];
   var PRE = CO.PREBUILD || [
     { key: 'testing', name: 'Cymetica QA' }, { key: 'development', name: 'Development' },
@@ -38,9 +38,9 @@
   ];
   var LINE = {
     development: 'Tell NEXUS your idea: Development designs it, builds it and ships it on Cymetica as your product. When people use it, it earns you real revenue, plus ET10 as a bonus. You can track how your products perform in the Products tab later.',
-    testing: 'Test what you ship. QA tests your products, or any other app on Cymetica, and files every bug it finds. Each verified bug pays you ET10 in rewards. Track your bugs on the Bugs leaderboard page.',
+    testing: 'Test what you ship. QA tests your products, or any app on Cymetica you point it at, and files every bug it finds. Each verified bug pays you ET10 in rewards. Track your bugs on the Bugs leaderboard page.',
     testing_lab: 'Products are one way to earn, trading is another. Here researchers take your ideas and test them as experiments, looking for the most profitable trading strategies on Cymetica. All in paper money; all your experiments can be found on the Experiments lab page later.',
-    trading_desk: 'Then run your verified strategies with real money: create real trading agents and let them trade on Cymetica, or send them to Agent Tournaments to win additional rewards.'
+    trading_desk: 'Run your verified strategies with real money: create real trading agents and let them trade on Cymetica, or send them to Agent Tournaments to win additional rewards.'
   };
   var ORDER = ['hub', 'vault', 'development', 'testing', 'testing_lab', 'trading_desk', 'audit'];
   var TOUR = ORDER.map(function (k) {
@@ -330,7 +330,7 @@
     var tour = live && step === 'tour', start = live && step === 2 && o.start === 'pre';
     // (the bubble's point a little above the room's walls, so it stands over the room and not on its back wall)
     if (tour) over(bub, keyOf(TOUR[ti]), 2.5, null); else if (!bub.hidden) bub.hidden = true;
-    if (start) over(call, 'hub', 0.25, '<span class="lb"><small><b>Welcome to your AI-native company</b>run by expert agents</small>Click here<em>to start the tour</em></span><i class="stem"></i><i class="ring"></i>');
+    if (start) over(call, 'hub', 0.25, '<span class="lb"><small><b>Welcome to your AI-native company</b>run by real AI expert agents</small>Click here<em>to start the tour</em></span><i class="stem"></i><i class="ring"></i>');
     else if (tour && ti < TOUR.length - 1) over(call, keyOf(TOUR[ti + 1]), 0.25, '<span class="lb sm">Next ›</span><i class="stem"></i><i class="ring"></i>');
     else if (!call.hidden) call.hidden = true;
   })();
