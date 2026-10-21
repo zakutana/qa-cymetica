@@ -85,6 +85,15 @@ uses, views and likes (30 days, as `GET /api/v1/build-it-better/apps/leaderboard
 are your rates). Neither the leaderboard (no owner on a row) nor the public request list (only `requester_kind`, no requester)
 says whose an app is, so **please add the owner's own list** to the API; the tab reads it.
 
+**13. A question: the headline of the start page.** The first build changed it. Ours was *Build real products. Bring in users. Earn
+real revenue and rewards. This is not a simulation.* with *Your company runs real AI agents that take on any task: trading,
+building real apps, research, anything you can think of.* The live page says *Start an AI-native company. Give it departments.
+Let NEXUS run them. You approve what goes out.* with *Real AI agents, on your own NEXUS plan. Departments work on their own: they
+test, research and draft. Nothing is sent, filed or traded without your approval, and Cymetica pays ET10 for the bug reports it
+verifies.* **Why was it changed, and could ours be used instead?** If a claim in ours is not true of your backend, please name it,
+and we will reword it with you; the same for the tour's texts (Command, Vault, Operations and the four departments), which were
+rewritten in the same way. The headline sells the product, so we would like it to be the one drawn.
+
 ## What stays as it is
 
 Everything not named above stays as the first brief and your first build have it; this round asks only for what is listed.
