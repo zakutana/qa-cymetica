@@ -12,20 +12,22 @@
   --bg:#0a0e17; --deep:#06090f; --panel:#0d1520; --line:#1e3050;
   --text:#e6edf7; --muted:#a9b8cc; --dim:#7f93ad;
   --cyan:#00cfff; --green:#00ff88; --red:#ff4444; --blue:#3b82f6;
+  --weave:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='42' height='24.25'><path d='M0 12.12 L7 0 H21 L28 12.12 L21 24.25 H7 Z M28 12.12 H42' fill='none' stroke='%2300ff88' stroke-width='1'/></svg>");
 }
 *{box-sizing:border-box;margin:0;padding:0}
-body{background:var(--bg);color:var(--text);font:13px/1.45 "JetBrains Mono",monospace;-webkit-font-smoothing:antialiased;
-  background-image:radial-gradient(ellipse 900px 420px at 18% 120px,rgba(0,255,136,.07),transparent 70%),
-    radial-gradient(ellipse 700px 380px at 85% 80px,rgba(0,207,255,.06),transparent 70%),
-    radial-gradient(rgba(0,207,255,.07) 1px,transparent 1.2px);
-  background-size:auto,auto,22px 22px}
+body{background:var(--bg);color:var(--text);font:13px/1.45 "JetBrains Mono",monospace;-webkit-font-smoothing:antialiased;position:relative;min-height:100vh}
+/* the honeycomb weave of Agent Tournaments, behind the top of the page only */
+body::before{content:"";position:absolute;inset:0 0 auto 0;height:900px;z-index:-1;pointer-events:none;opacity:.07;background-image:var(--weave);
+  -webkit-mask-image:linear-gradient(to bottom,rgba(6,9,15,1) 0,rgba(6,9,15,1) 55%,rgba(6,9,15,0) 100%);mask-image:linear-gradient(to bottom,rgba(6,9,15,1) 0,rgba(6,9,15,1) 55%,rgba(6,9,15,0) 100%)}
+body::after{content:"";position:absolute;inset:0 0 auto 0;height:900px;z-index:-2;pointer-events:none;
+  background:radial-gradient(ellipse 760px 420px at 22% 260px,rgba(0,255,136,.07),transparent 70%),radial-gradient(ellipse 620px 380px at 80% 220px,rgba(0,207,255,.06),transparent 70%)}
 button,input{font:inherit;color:inherit}
 button{cursor:pointer;background:none;border:0}
-.wrap{width:1240px;margin:0 auto;padding-bottom:64px}
+.wrap{width:1240px;margin:0 auto;padding-bottom:70px}
 .back{max-width:1440px;margin:0 auto;padding:16px 18px 0;color:var(--cyan);font-size:13px}
 
 /* app header, as Agent Tournaments */
-.app{display:flex;align-items:center;gap:26px;padding:18px 0 16px;border-bottom:1px solid var(--line)}
+.app{display:flex;align-items:center;gap:26px;padding:18px 0 16px;border-bottom:1px solid rgba(30,48,80,.7)}
 .brand{display:flex;align-items:center;gap:12px;text-decoration:none}
 .brand svg{width:46px;height:46px;flex:none}
 .brand .w{display:flex;flex-direction:column;line-height:1.05}
@@ -40,192 +42,176 @@ nav a i{font-style:normal;font-size:11px;color:var(--deep);background:var(--gree
 .dot{width:9px;height:9px;border-radius:50%;background:var(--green);box-shadow:0 0 0 3px rgba(0,255,136,.18),0 0 10px rgba(0,255,136,.7);display:inline-block;flex:none}
 .dot.idle{background:var(--dim);box-shadow:none}
 
+/* surfaces: one radius scale (12 / 18 / 22), glass over the weave, a soft lift */
+.glass{background:linear-gradient(180deg,rgba(13,21,32,.92),rgba(6,9,15,.94));border:1px solid rgba(30,48,80,.9);border-radius:22px;
+  box-shadow:0 24px 60px rgba(6,9,15,.55),inset 0 1px 0 rgba(0,207,255,.06);backdrop-filter:blur(10px)}
+.glow{border-color:rgba(0,255,136,.42);box-shadow:0 0 0 1px rgba(0,255,136,.06),0 0 36px rgba(0,255,136,.10),0 24px 60px rgba(6,9,15,.55),inset 0 1px 0 rgba(0,255,136,.10)}
+.cap{color:var(--cyan);font-size:10.5px;font-weight:700;letter-spacing:.22em}
+.lab{color:var(--dim);font-size:10px;font-weight:700;letter-spacing:.2em}
+.chip{font-size:10px;font-weight:800;letter-spacing:.09em;border-radius:99px;padding:3px 9px;white-space:nowrap;display:inline-flex;align-items:center;gap:6px}
+.chip.g{color:var(--green);background:rgba(0,255,136,.1);border:1px solid rgba(0,255,136,.38)}
+.chip.c{color:var(--cyan);background:rgba(0,207,255,.08);border:1px solid rgba(0,207,255,.32)}
+.chip.f{color:var(--deep);background:var(--green)}
+.chip.m{color:var(--muted);border:1px solid var(--line)}
+.chip.s{color:var(--deep);background:var(--green);box-shadow:0 0 14px rgba(0,255,136,.45)}
+.chip.lv{color:var(--green);background:rgba(0,255,136,.08);border:1px solid rgba(0,255,136,.38)}
+.chip.lv::before{content:"";width:6px;height:6px;border-radius:50%;background:var(--green);box-shadow:0 0 6px var(--green)}
+.go{background:var(--green);border:0;color:var(--deep);border-radius:14px;font:800 15px Inter,sans-serif;letter-spacing:.05em;
+  box-shadow:0 0 28px rgba(0,255,136,.42),inset 0 -2px 0 rgba(6,9,15,.18);display:flex;align-items:center;justify-content:center;gap:10px;transition:box-shadow .2s,transform .1s}
+.go:hover{box-shadow:0 0 40px rgba(0,255,136,.65),inset 0 -2px 0 rgba(6,9,15,.18)}
+.go:active{transform:translateY(1px)}
+.go svg{width:18px;height:18px;flex:none}
+.ghost{background:transparent;border:1px solid rgba(0,207,255,.5);color:var(--cyan);padding:14px;border-radius:14px;font:700 14px Inter,sans-serif}
+
 /* hero */
-.hero{display:grid;grid-template-columns:1fr 460px;gap:56px;padding:44px 0 40px;align-items:center}
+.hero{display:grid;grid-template-columns:1fr 470px;gap:52px;padding:40px 0 46px;align-items:start}
 .pill{display:inline-flex;align-items:center;gap:9px;padding:7px 14px;border-radius:20px;border:1px solid rgba(0,255,136,.35);
   background:rgba(0,255,136,.07);color:var(--green);font-size:11.5px;font-weight:700;letter-spacing:.14em}
-h1{font:54px/1.06 "Archivo Black",sans-serif;margin:22px 0 18px;letter-spacing:-.01em}
+h1{font:56px/1.04 "Archivo Black",sans-serif;margin:22px 0 26px;letter-spacing:-.015em}
 h1 em{font-style:normal;color:var(--green)}
-.sub{font-size:17px;color:var(--muted)}
-.sub b{color:var(--text);font-weight:700}
+.info{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}
+.info div{background:linear-gradient(180deg,rgba(13,21,32,.9),rgba(6,9,15,.9));border:1px solid rgba(30,48,80,.9);border-radius:18px;padding:16px 18px}
+.info small{display:block;color:var(--dim);font-size:10px;font-weight:700;letter-spacing:.2em}
+.info b{display:block;font:30px/1.2 "Archivo Black",sans-serif;color:var(--green);margin:8px 0 6px}
+.info b.c{color:var(--cyan)}
+.info span{color:var(--muted);font-size:12px;line-height:1.5}
+.steps{display:flex;align-items:center;gap:10px;margin-top:24px;color:var(--muted);font-size:13px}
+.steps i{font-style:normal;width:20px;height:20px;border-radius:50%;background:var(--cyan);color:var(--deep);display:inline-grid;place-items:center;font-weight:800;font-size:11px;margin-right:6px}
+.steps em{font-style:normal;color:var(--dim)}
+.sub{margin-top:18px;color:var(--muted);font-size:13px}
+.sub b{color:var(--green)}
 
-.card{background:linear-gradient(180deg,rgba(13,21,32,.96),rgba(6,9,15,.96));border:1px solid var(--line);border-radius:18px;padding:22px 24px}
-.cap{color:var(--cyan);font-size:10.5px;font-weight:700;letter-spacing:.22em}
-
-/* the plan: one amount, one number, one button */
-.plan{padding:24px 26px}
-.bigin{display:flex;align-items:center;gap:12px;margin-top:12px;background:var(--deep);border:1px solid rgba(0,207,255,.45);border-radius:14px;
-  padding:10px 12px 10px 18px;box-shadow:0 0 0 3px rgba(0,207,255,.08)}
-.bigin input{font:44px/1.1 "Archivo Black",sans-serif;color:var(--text);background:transparent;border:0;outline:0;flex:1;min-width:0;caret-color:var(--cyan)}
-.bigin span{color:var(--muted);font-weight:700;font-size:15px}
-.max{border:1px solid rgba(0,207,255,.5);color:var(--cyan);border-radius:9px;padding:8px 12px;font-weight:800;font-size:12px;letter-spacing:.06em}
-.max:hover{background:rgba(0,207,255,.1)}
-.bal{margin-top:8px;color:var(--dim);font-size:11.5px}
-.bal b{color:var(--muted);font-weight:600}
-.youfarm{margin-top:22px}
-.youfarm small{display:block;color:var(--muted);font-size:12.5px}
-.youfarm b{display:block;font:40px/1.15 "Archivo Black",sans-serif;color:var(--green);text-shadow:0 0 26px rgba(0,255,136,.35);margin:2px 0;white-space:nowrap}
-.youfarm span{color:var(--dim);font-size:12px}
-.planline{display:flex;justify-content:space-between;align-items:center;margin-top:14px;font-size:12.5px;color:var(--muted);min-height:20px}
-.planline b{color:var(--text)}
-.planline .over{color:var(--red);font-weight:700}
-.bestbtn{color:var(--cyan);font-size:12px;font-weight:700}
+/* the plan card: one amount, the felt with one number, one button */
+.plan{padding:22px 22px 20px}
+.plan .top{display:flex;justify-content:space-between;align-items:center}
+.bestok{color:var(--green);font-size:11px;font-weight:800;letter-spacing:.08em}
+.bestbtn{color:var(--cyan);font-size:11px;font-weight:800;letter-spacing:.08em}
 .bestbtn:hover{text-decoration:underline}
-.bestok{color:var(--green);font-size:12px;font-weight:700}
-.go{background:var(--green);border:0;color:var(--deep);border-radius:12px;font:800 15px Inter,sans-serif;box-shadow:0 0 24px rgba(0,255,136,.38)}
-.go:hover{box-shadow:0 0 34px rgba(0,255,136,.6)}
-.go.big{width:100%;margin-top:16px;padding:17px;font-size:17px;letter-spacing:.05em;display:flex;align-items:center;justify-content:center;gap:10px}
-.go svg{width:18px;height:18px;flex:none}
-.ghost{background:transparent;border:1px solid rgba(0,207,255,.5);color:var(--cyan);padding:14px;border-radius:12px;font:700 14px Inter,sans-serif}
-.fine{margin-top:11px;text-align:center;color:var(--dim);font-size:11px}
+.bigin{display:flex;align-items:center;gap:10px;margin-top:12px;background:var(--deep);border:1px solid rgba(0,207,255,.42);border-radius:16px;
+  padding:9px 10px 9px 18px;box-shadow:0 0 0 4px rgba(0,207,255,.06),inset 0 2px 10px rgba(6,9,15,.8)}
+.bigin input{font:40px/1.15 "Archivo Black",sans-serif;color:var(--text);background:transparent;border:0;outline:0;flex:1;min-width:0;caret-color:var(--cyan)}
+.token{display:inline-flex;align-items:center;gap:7px;background:rgba(59,130,246,.14);border:1px solid rgba(59,130,246,.4);border-radius:99px;padding:6px 11px 6px 6px;font-weight:800;font-size:13px}
+.token i{font-style:normal;width:22px;height:22px;border-radius:50%;background:var(--blue);color:var(--text);display:grid;place-items:center;font-size:12px;font-weight:800}
+.max{border:1px solid rgba(0,207,255,.5);color:var(--cyan);border-radius:10px;padding:9px 12px;font-weight:800;font-size:12px;letter-spacing:.06em}
+.max:hover{background:rgba(0,207,255,.1)}
+.bal{margin-top:8px;color:var(--dim);font-size:11.5px;display:flex;justify-content:space-between}
+.bal b{color:var(--muted);font-weight:600}
+/* the felt: Agent Tournaments' table cloth, here the plot the money grows on */
+.felt{position:relative;margin-top:16px;height:178px;border-radius:999px;border:2px solid rgba(0,255,136,.55);
+  background:radial-gradient(ellipse at 50% 40%,rgba(0,255,136,.10),rgba(6,9,15,.6) 70%);
+  box-shadow:0 0 30px rgba(0,255,136,.16),inset 0 0 40px rgba(0,255,136,.08);display:flex;flex-direction:column;align-items:center;justify-content:center;overflow:hidden}
+.felt::before{content:"";position:absolute;inset:0;opacity:.14;background-image:var(--weave);
+  -webkit-mask-image:radial-gradient(ellipse 50% 50% at 50% 50%,rgba(6,9,15,.1) 35%,rgba(6,9,15,1) 80%);mask-image:radial-gradient(ellipse 50% 50% at 50% 50%,rgba(6,9,15,.1) 35%,rgba(6,9,15,1) 80%)}
+.felt::after{content:"";position:absolute;inset:9% 6%;border-radius:999px;border:1px solid rgba(0,255,136,.16);pointer-events:none}
+.felt small{position:relative;color:var(--dim);font-size:10px;font-weight:700;letter-spacing:.24em}
+.felt b{position:relative;font:44px/1.15 "Archivo Black",sans-serif;color:var(--green);text-shadow:0 0 30px rgba(0,255,136,.45);margin:4px 0 2px;white-space:nowrap}
+.felt span{position:relative;color:var(--cyan);font-size:12px;font-weight:600}
+.boxes{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-top:14px}
+.boxes div{background:rgba(6,9,15,.7);border:1px solid rgba(30,48,80,.9);border-radius:12px;padding:9px 6px;text-align:center}
+.boxes small{display:block;color:var(--dim);font-size:9.5px;font-weight:700;letter-spacing:.2em}
+.boxes b{display:block;font:17px/1.35 "Archivo Black",sans-serif;color:var(--text);white-space:nowrap}
+.boxes b.g{color:var(--green)}
+.boxes b.c{color:var(--cyan)}
+.plan .go{width:100%;margin-top:14px;padding:17px;font-size:17px}
+.fine{margin-top:10px;text-align:center;color:var(--dim);font-size:11px}
 
-/* the list */
-.sechead{display:flex;justify-content:space-between;align-items:flex-end;margin:6px 0 16px}
-.cap2{color:var(--dim);font-size:11px;font-weight:700;letter-spacing:.2em}
-h2{font:28px/1.2 "Archivo Black",sans-serif;margin-top:6px}
-.search{border:1px solid var(--line);background:var(--panel);border-radius:10px;padding:9px 14px;color:var(--muted);font-size:12.5px;width:240px;outline:0}
+/* farms */
+.sechead{display:flex;justify-content:space-between;align-items:center;margin:4px 0 18px}
+h2{font:30px/1.2 "Archivo Black",sans-serif;display:flex;align-items:center;gap:12px}
+h2 i{font:800 12px Inter,sans-serif;font-style:normal;background:var(--cyan);color:var(--deep);border-radius:99px;padding:3px 9px}
+.sechead p{color:var(--dim);font-size:12.5px;margin-top:4px}
+.search{border:1px solid rgba(30,48,80,.9);background:rgba(13,21,32,.9);border-radius:12px;padding:11px 16px;color:var(--muted);font-size:13px;width:260px;outline:0}
 .search::placeholder{color:var(--dim)}
 .search:focus{border-color:rgba(0,207,255,.6)}
-.table{border:1px solid var(--line);border-radius:16px;overflow:hidden;background:rgba(10,14,23,.9)}
-.rcols{display:grid;grid-template-columns:70px 360px 330px 150px 1fr 44px;align-items:center}
-.thead{padding:11px 0;color:var(--dim);font-size:10.5px;letter-spacing:.12em;font-weight:700;background:var(--panel);border-bottom:1px solid var(--line)}
-.frow{padding:14px 0;border-bottom:1px solid rgba(30,48,80,.7)}
-.frow>div:first-child{padding-left:22px}
-.frow.off .farm,.frow.off .sl,.frow.off .amt{opacity:.5}
-.tg{width:38px;height:22px;border-radius:12px;background:var(--line);position:relative;display:block}
-.tg::after{content:"";position:absolute;top:3px;left:3px;width:16px;height:16px;border-radius:50%;background:var(--dim);transition:left .12s}
+.grid{display:grid;grid-template-columns:repeat(3,1fr);gap:18px}
+.fcard{padding:18px 18px 16px;transition:border-color .2s,box-shadow .2s,opacity .2s}
+.fcard.off{opacity:.62}
+.fhead{display:flex;align-items:center;gap:12px}
+.logo{width:42px;height:42px;border-radius:50%;flex:none;position:relative;display:grid;place-items:center;font-weight:800;font-size:13px;color:var(--text);overflow:hidden;
+  box-shadow:0 0 0 2px rgba(30,48,80,.9),0 0 18px rgba(0,207,255,.12)}
+.logo img{width:100%;height:100%;object-fit:cover;display:block}
+.o1{background:linear-gradient(135deg,var(--cyan),var(--blue))}
+.o2{background:linear-gradient(135deg,var(--green),var(--cyan))}
+.o3{background:linear-gradient(135deg,var(--blue),var(--cyan))}
+.o4{background:linear-gradient(135deg,var(--dim),var(--line))}
+.logo.o2,.logo.o1{color:var(--deep)}
+.fname{min-width:0;flex:1}
+.fname b{display:block;font:18px/1.2 "Archivo Black",sans-serif;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.fname .chip{margin-top:5px}
+.tg{width:44px;height:26px;border-radius:14px;background:var(--line);position:relative;display:block;flex:none;transition:background .15s}
+.tg::after{content:"";position:absolute;top:3px;left:3px;width:20px;height:20px;border-radius:50%;background:var(--dim);transition:left .15s}
 .tg.on{background:rgba(0,255,136,.25);box-shadow:inset 0 0 0 1px rgba(0,255,136,.6)}
-.tg.on::after{left:19px;background:var(--green);box-shadow:0 0 8px rgba(0,255,136,.8)}
-.farm{display:flex;align-items:center;gap:12px;min-width:0}
-.farm b{font-size:15px;white-space:nowrap}
-.lg{width:36px;height:36px;border-radius:50%;display:grid;place-items:center;font-weight:800;font-size:12px;flex:none}
-.c1{background:rgba(0,207,255,.14);color:var(--cyan);box-shadow:inset 0 0 0 1px rgba(0,207,255,.45)}
-.c2{background:rgba(0,255,136,.12);color:var(--green);box-shadow:inset 0 0 0 1px rgba(0,255,136,.45)}
-.c3{background:rgba(59,130,246,.16);color:var(--blue);box-shadow:inset 0 0 0 1px rgba(59,130,246,.5)}
-.c4{background:rgba(127,147,173,.14);color:var(--muted);box-shadow:inset 0 0 0 1px rgba(127,147,173,.4)}
-.chip{font-size:10px;font-weight:800;letter-spacing:.08em;border-radius:6px;padding:3px 7px;white-space:nowrap;display:inline-flex;align-items:center;gap:6px}
-.chip.g{color:var(--green);background:rgba(0,255,136,.1);border:1px solid rgba(0,255,136,.35)}
-.chip.c{color:var(--cyan);background:rgba(0,207,255,.08);border:1px solid rgba(0,207,255,.3)}
-.chip.f{color:var(--green);border:1px dashed rgba(0,255,136,.55)}
-.chip.r{color:var(--red);background:rgba(255,68,68,.08);border:1px solid rgba(255,68,68,.35)}
-.chip.m{color:var(--muted);border:1px solid var(--line)}
-.chip.s{color:var(--deep);background:var(--green)}
-.chip.lv{color:var(--green);background:rgba(0,255,136,.08);border:1px solid rgba(0,255,136,.35)}
-.chip.lv::before{content:"";width:6px;height:6px;border-radius:50%;background:var(--green);box-shadow:0 0 6px var(--green)}
-.sl{padding-right:34px}
-.rng{position:relative;height:20px}
-.rng .trk,.rng .fil{position:absolute;left:0;top:7px;height:6px;border-radius:4px}
-.rng .trk{right:0;background:var(--line)}
-.rng .fil{background:linear-gradient(90deg,var(--cyan),var(--green))}
-.rng .recm{position:absolute;top:1px;width:2px;height:18px;background:var(--cyan);border-radius:1px;transform:translateX(-1px)}
-.rng .recm::after{content:"";position:absolute;top:-5px;left:-3px;border:4px solid transparent;border-top-color:var(--cyan)}
-.rng input{position:absolute;inset:0;width:100%;height:20px;margin:0;background:transparent;-webkit-appearance:none;appearance:none;outline:0;cursor:pointer}
-.rng input::-webkit-slider-runnable-track{height:20px;background:transparent}
-.rng input::-webkit-slider-thumb{-webkit-appearance:none;width:18px;height:18px;margin-top:1px;border-radius:50%;background:var(--text);box-shadow:0 0 0 3px var(--green),0 0 12px rgba(0,255,136,.6);cursor:grab}
-.rng input::-moz-range-thumb{width:18px;height:18px;border:0;border-radius:50%;background:var(--text);box-shadow:0 0 0 3px var(--green)}
-.frow.off .rng input::-webkit-slider-thumb{box-shadow:0 0 0 3px var(--dim)}
-.freeline{color:var(--dim);font-size:12px}
-.amt{display:flex;align-items:center;gap:6px;background:var(--deep);border:1px solid var(--line);border-radius:9px;padding:8px 10px;width:126px}
-.amt:focus-within{border-color:rgba(0,207,255,.6)}
-.amt input{flex:1;min-width:0;width:100%;background:transparent;border:0;outline:0;font-size:15px;font-weight:700;text-align:right;color:var(--text)}
-.amt span{color:var(--dim);font-size:10px}
-.amt.free{justify-content:center;border-style:dashed;border-color:rgba(0,255,136,.45);color:var(--green);font-weight:800;font-size:12px;letter-spacing:.08em}
-.best{margin-top:5px;font-size:11px;height:16px;color:var(--dim)}
-.best:empty{display:none}
-.best .ok{color:var(--green);font-weight:700}
-.best button{color:var(--cyan);font-size:11px;font-weight:700}
-.best button:hover{text-decoration:underline}
-.est b{font:21px/1.2 "Archivo Black",sans-serif;color:var(--green);white-space:nowrap}
-.est b.dim{font:600 14px "JetBrains Mono",monospace;color:var(--dim)}
-.est b.no{font:500 13px "JetBrains Mono",monospace;color:var(--dim)}
-.chev{color:var(--dim);font-size:14px;text-align:center;width:26px;height:26px;border-radius:7px}
-.chev:hover{background:rgba(0,207,255,.1);color:var(--cyan)}
-.chev.open{color:var(--cyan)}
-.frow.open{background:linear-gradient(180deg,rgba(0,207,255,.06),transparent);border-bottom:0}
+.tg.on::after{left:21px;background:var(--green);box-shadow:0 0 10px rgba(0,255,136,.8)}
+.dial{display:block;width:100%;height:auto;margin:6px 0 2px;touch-action:none}
+.dial .knob{cursor:grab}
+.dial text{font-family:"JetBrains Mono",monospace}
+.dial text.num{font-family:"Archivo Black",sans-serif}
+.fboxes{display:grid;grid-template-columns:1.25fr 1fr 1fr;gap:8px}
+.fboxes>div{background:rgba(6,9,15,.7);border:1px solid rgba(30,48,80,.9);border-radius:12px;padding:8px 6px 7px;text-align:center;min-width:0}
+.fboxes small{display:block;color:var(--dim);font-size:9px;font-weight:700;letter-spacing:.18em;white-space:nowrap}
+.fboxes b{display:block;font:15px/1.4 "Archivo Black",sans-serif;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.fboxes b.g{color:var(--green)}
+.fboxes b.c{color:var(--cyan)}
+.fboxes .in{border-color:rgba(0,207,255,.45);background:rgba(0,207,255,.05)}
+.fboxes .in:focus-within{border-color:rgba(0,207,255,.8);box-shadow:0 0 0 3px rgba(0,207,255,.1)}
+.fboxes input{width:100%;background:transparent;border:0;outline:0;text-align:center;font:15px/1.4 "Archivo Black",sans-serif;color:var(--text)}
+.fboxes button.use{font:15px/1.4 "Archivo Black",sans-serif;color:var(--cyan)}
+.fboxes button.use:hover{text-decoration:underline}
+.more{display:flex;justify-content:center;margin-top:22px;color:var(--dim);font-size:12.5px;gap:16px;align-items:center}
+.more span.btn{color:var(--cyan);border:1px solid rgba(0,207,255,.45);border-radius:12px;padding:10px 20px;font-weight:700}
 
-/* simulator */
-.sim{display:grid;grid-template-columns:1fr 400px;gap:26px;padding:4px 30px 24px 92px;border-bottom:1px solid rgba(30,48,80,.7);
-  background:linear-gradient(180deg,transparent,rgba(0,207,255,.03))}
-.sim .chart{background:var(--deep);border:1px solid var(--line);border-radius:14px;padding:10px 14px 4px}
-.sim .chart svg{display:block;width:100%;height:auto;cursor:crosshair}
-.sim svg text{font-family:"JetBrains Mono",monospace}
-.out{display:flex;flex-direction:column;justify-content:center;background:var(--deep);border:1px solid var(--line);border-radius:14px;padding:18px 22px}
-.out .h{color:var(--muted);font-size:12px}
-.out .big{font:27px/1.2 "Archivo Black",sans-serif;margin:6px 0 2px;white-space:nowrap}
-.out .big em{font-style:normal;color:var(--green)}
-.out .bigl{color:var(--dim);font-size:11.5px}
-.out dl{display:grid;grid-template-columns:1fr auto;gap:6px 12px;margin-top:14px;font-size:12px}
-.out dt{color:var(--dim)}
-.out dd{text-align:right;color:var(--text);font-weight:600}
-.how{margin-top:14px;font-size:11.5px;color:var(--cyan);cursor:help;align-self:flex-start;display:inline-flex;gap:7px;align-items:center}
-.how i{font-style:normal;width:15px;height:15px;border-radius:50%;border:1px solid var(--cyan);display:grid;place-items:center;font-size:10px;font-weight:800}
-.noest{grid-column:1/-1;display:flex;gap:16px;align-items:center;background:var(--deep);border:1px solid var(--line);border-radius:14px;padding:18px 22px;color:var(--muted);font-size:13px}
-.noest b{font:18px "Archivo Black",sans-serif;color:var(--dim);white-space:nowrap}
-.more{display:flex;justify-content:space-between;align-items:center;padding:14px 22px;color:var(--dim);font-size:12px;background:var(--panel)}
-.more span.btn{color:var(--cyan);border:1px solid rgba(0,207,255,.4);border-radius:8px;padding:6px 14px}
-
-/* live farms: three numbers, the climb, the farms */
-.ltiles{display:grid;grid-template-columns:1fr 1.35fr 1fr;gap:14px;margin-top:26px}
-.tile{background:var(--panel);border:1px solid var(--line);border-radius:16px;padding:18px 22px;position:relative;min-height:122px}
-.tile small{display:block;color:var(--dim);font-size:10.5px;letter-spacing:.14em;font-weight:700}
-.tile b{display:block;font:34px/1.25 "Archivo Black",sans-serif;margin-top:6px;white-space:nowrap}
-.tile span{font-size:12px;color:var(--dim)}
-.tile span em{font-style:normal;color:var(--green);font-weight:800}
-.tile.hi{border-color:rgba(0,255,136,.5);background:linear-gradient(180deg,rgba(0,255,136,.1),var(--panel))}
-.tile.hi b{color:var(--green);font-size:38px;text-shadow:0 0 26px rgba(0,255,136,.35)}
-.claimbig{position:absolute;right:20px;bottom:20px;background:var(--green);color:var(--deep);font:800 13px Inter,sans-serif;letter-spacing:.05em;
-  border-radius:10px;padding:10px 16px;box-shadow:0 0 22px rgba(0,255,136,.45)}
-.chartc{margin-top:14px;padding:16px 22px 12px}
-.chartc svg{display:block;width:100%;height:auto}
-.ticker{display:flex;gap:18px;align-items:center;border-top:1px solid var(--line);margin-top:8px;padding-top:11px;font-size:12px;color:var(--muted);white-space:nowrap;overflow:hidden}
-.ticker .lab{color:var(--cyan);font-size:10.5px;letter-spacing:.14em;font-weight:700;flex:none}
+/* live farms */
+.lhero{display:grid;grid-template-columns:1fr 410px;gap:18px;margin-top:28px}
+.lhero>*{min-width:0}
+.earn{padding:22px 24px 16px}
+.earn .row{display:flex;justify-content:space-between;align-items:flex-end;gap:20px}
+.earn .big{font:56px/1.05 "Archivo Black",sans-serif;color:var(--green);text-shadow:0 0 34px rgba(0,255,136,.4);margin-top:8px;white-space:nowrap}
+.earn .today{display:inline-flex;align-items:center;gap:8px;margin-top:10px;font-size:12.5px;color:var(--muted)}
+.earn .today em{font-style:normal;font-weight:800;color:var(--deep);background:var(--green);border-radius:99px;padding:3px 10px;box-shadow:0 0 16px rgba(0,255,136,.4)}
+.earn .kpis{display:flex;gap:26px;text-align:right}
+.earn .kpis b{display:block;font:22px/1.3 "Archivo Black",sans-serif}
+.earn svg{display:block;width:100%;height:auto;margin-top:14px}
+.ticker{display:flex;gap:20px;align-items:center;border-top:1px solid rgba(30,48,80,.8);margin-top:10px;padding-top:12px;font-size:12px;color:var(--muted);white-space:nowrap;overflow:hidden;
+  -webkit-mask-image:linear-gradient(90deg,rgba(6,9,15,1) 88%,rgba(6,9,15,0));mask-image:linear-gradient(90deg,rgba(6,9,15,1) 88%,rgba(6,9,15,0))}
 .ticker .ev{display:inline-flex;gap:7px;align-items:center;flex:none}
 .ticker .ev i{width:7px;height:7px;border-radius:50%;flex:none}
 .ticker .ev time{color:var(--dim)}
 .ticker .ev b{color:var(--text);font-weight:600}
 .ticker .ev em{font-style:normal;color:var(--green)}
-.lcols{display:grid;grid-template-columns:420px 130px 250px 210px 1fr;align-items:center}
-.lrow{padding:14px 0;border-bottom:1px solid rgba(30,48,80,.7)}
-.lrow>div:first-child,.lhead>div:first-child,.ltot>div:first-child{padding-left:22px}
-.lhead{padding:11px 0;color:var(--dim);font-size:10.5px;letter-spacing:.12em;font-weight:700;background:var(--panel);border-bottom:1px solid var(--line)}
-.lrow b{font-size:14px}
-.pts b{font-size:14px}
-.pts em{font-style:normal;color:var(--green);font-size:12px;margin-left:8px;font-weight:700}
-.earn{font:16px "Archivo Black",sans-serif;color:var(--green);white-space:nowrap}
-.earn.no{font:500 13px "JetBrains Mono",monospace;color:var(--dim)}
-.acts{display:flex;gap:8px;justify-content:flex-end;align-items:center;padding-right:20px}
-.acts .claim{background:var(--green);color:var(--deep);font:800 12.5px Inter,sans-serif;border-radius:9px;padding:8px 14px;box-shadow:0 0 16px rgba(0,255,136,.4);white-space:nowrap}
-.acts .stop{color:var(--dim);font:600 12px Inter,sans-serif;padding:7px 9px;border-radius:7px}
-.acts .stop:hover{color:var(--red);background:rgba(255,68,68,.08)}
-.ltot{padding:14px 0;background:var(--panel);font-weight:700}
-.ltot .earn{font-size:17px}
-.emptylive{padding:46px 20px;text-align:center;color:var(--muted);font-size:14px;margin-top:26px}
-.emptylive b{display:block;font:24px "Archivo Black",sans-serif;color:var(--text);margin-bottom:8px}
-.emptylive .go{margin-top:18px;padding:13px 24px}
-.float{position:fixed;z-index:70;font:22px "Archivo Black",sans-serif;color:var(--green);pointer-events:none;text-shadow:0 0 16px rgba(0,255,136,.7);
-  animation:up 1.2s ease-out forwards}
-@keyframes up{to{transform:translateY(-70px);opacity:0}}
+.claimc{padding:22px 22px 20px;display:flex;flex-direction:column}
+.claimc .felt{height:170px}
+.claimc .go{margin-top:16px;padding:16px;font-size:16px}
+.claimc .go[disabled]{background:var(--line);color:var(--dim);box-shadow:none;cursor:default}
+.lcard{padding:18px 18px 16px;display:flex;flex-direction:column}
+.lcard .stop{margin-left:auto;color:var(--dim);font:600 12px Inter,sans-serif;padding:6px 9px;border-radius:8px;align-self:flex-start}
+.lcard .stop:hover{color:var(--red);background:rgba(255,68,68,.08)}
+.lcard .claim{margin-top:10px;background:var(--green);color:var(--deep);font:800 13.5px Inter,sans-serif;border-radius:12px;padding:11px;box-shadow:0 0 18px rgba(0,255,136,.4)}
+.lcard .noclaim{margin-top:10px;text-align:center;color:var(--dim);font-size:11.5px;padding:11px;border:1px dashed rgba(30,48,80,.9);border-radius:12px}
+.emptylive{padding:54px 20px;text-align:center;color:var(--muted);font-size:14px;margin-top:28px}
+.emptylive b{display:block;font:26px "Archivo Black",sans-serif;color:var(--text);margin-bottom:8px}
+.emptylive .go{margin:20px auto 0;padding:14px 26px;display:inline-flex}
+.float{position:fixed;z-index:70;font:24px "Archivo Black",sans-serif;color:var(--green);pointer-events:none;text-shadow:0 0 18px rgba(0,255,136,.75);animation:up 1.2s ease-out forwards}
+@keyframes up{to{transform:translateY(-80px);opacity:0}}
 
 /* confirmation, toast, test ribbon */
-.ov{position:fixed;inset:0;background:rgba(6,9,15,.8);display:grid;place-items:center;z-index:50}
-.modal{width:520px;max-height:86vh;overflow:auto;padding:26px 28px}
-.modal h3{font:26px "Archivo Black",sans-serif;margin:8px 0 2px}
-.modal .mbig{font:34px/1.2 "Archivo Black",sans-serif;color:var(--green);text-shadow:0 0 24px rgba(0,255,136,.3);margin-top:14px}
-.modal .mbigl{color:var(--dim);font-size:12px}
-.modal details{margin-top:16px;border-top:1px solid var(--line)}
-.modal summary{cursor:pointer;color:var(--cyan);font-size:12.5px;padding:10px 0;list-style:none}
+.ov{position:fixed;inset:0;background:rgba(6,9,15,.82);display:grid;place-items:center;z-index:50;backdrop-filter:blur(3px)}
+.modal{width:520px;max-height:88vh;overflow:auto;padding:26px 28px}
+.modal h3{font:26px "Archivo Black",sans-serif;margin:8px 0 0}
+.modal .felt{height:150px}
+.modal details{margin-top:14px;border-top:1px solid rgba(30,48,80,.9)}
+.modal summary{cursor:pointer;color:var(--cyan);font-size:12.5px;padding:11px 0;list-style:none}
 .modal summary::-webkit-details-marker{display:none}
-.modal .ln{display:grid;grid-template-columns:1fr 90px 140px;gap:8px;padding:7px 0;border-bottom:1px solid rgba(30,48,80,.6);font-size:12.5px}
+.modal .ln{display:grid;grid-template-columns:1fr 90px 150px;gap:8px;padding:7px 0;border-bottom:1px solid rgba(30,48,80,.6);font-size:12.5px}
 .modal .ln span:nth-child(2){text-align:right;font-weight:700}
 .modal .ln span:nth-child(3){text-align:right;color:var(--green)}
 .modal .ln small{color:var(--dim)}
-.modal .kv{display:flex;justify-content:space-between;padding:10px 0;border-top:1px solid var(--line);font-size:12.5px;color:var(--muted)}
+.modal .kv{display:flex;justify-content:space-between;padding:11px 0;border-top:1px solid rgba(30,48,80,.9);font-size:12.5px;color:var(--muted)}
 .modal .kv b{color:var(--text)}
-.modal .lead{color:var(--dim);font-size:12px;margin-top:12px}
+.modal .lead{color:var(--dim);font-size:12px;margin-top:12px;line-height:1.55}
 .modal .btns{display:grid;grid-template-columns:1fr 1.5fr;gap:10px;margin-top:18px}
-.modal .btns .go{padding:15px;display:flex;align-items:center;justify-content:center;gap:9px}
+.modal .btns .go{padding:15px}
 .toast{position:fixed;left:50%;bottom:28px;transform:translateX(-50%);background:var(--panel);border:1px solid rgba(0,207,255,.5);color:var(--text);
-  padding:10px 18px;border-radius:10px;font-size:13px;z-index:60;box-shadow:0 8px 30px rgba(6,9,15,.8)}
+  padding:11px 18px;border-radius:12px;font-size:13px;z-index:60;box-shadow:0 10px 34px rgba(6,9,15,.85)}
 .ribbon{position:fixed;right:16px;top:6px;z-index:40;background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:5px 10px;font-size:11.5px;color:var(--muted);display:flex;gap:10px;align-items:center}
 .ribbon b{color:var(--cyan);letter-spacing:.12em;font-size:10.5px}
 .ribbon button{border:1px solid var(--line);border-radius:7px;padding:3px 8px;color:var(--muted);font-size:11px}
@@ -248,6 +234,16 @@ h2{font:28px/1.2 "Archivo Black",sans-serif;margin-top:6px}
     <linearGradient id="afg" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#00cfff"/><stop offset="1" stop-color="#00ff88"/></linearGradient>
     <linearGradient id="afh" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#00ff88"/><stop offset="1" stop-color="#00cfff"/></linearGradient>
     <filter id="afglow" x="-50%" y="-50%" width="200%" height="200%"><feGaussianBlur stdDeviation="1.1" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
+    <!-- the dial -->
+    <linearGradient id="arc" x1="0" y1="1" x2="1" y2="0"><stop offset="0" stop-color="#00cfff"/><stop offset="1" stop-color="#00ff88"/></linearGradient>
+    <filter id="soft" x="-30%" y="-30%" width="160%" height="160%"><feGaussianBlur stdDeviation="3.2" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
+    <filter id="haze" x="-40%" y="-80%" width="180%" height="260%"><feGaussianBlur stdDeviation="7"/></filter>
+    <pattern id="hexp" width="28" height="16.17" patternUnits="userSpaceOnUse"><path d="M0 8.08 L4.67 0 H14 L18.67 8.08 L14 16.17 H4.67 Z M18.67 8.08 H28" fill="none" stroke="#00ff88" stroke-width="1" stroke-opacity=".5"/></pattern>
+    <radialGradient id="feltfade"><stop offset=".45" stop-color="#06090f" stop-opacity=".96"/><stop offset="1" stop-color="#06090f" stop-opacity=".25"/></radialGradient>
+    <radialGradient id="feltglow"><stop offset="0" stop-color="#00ff88" stop-opacity=".10"/><stop offset="1" stop-color="#00ff88" stop-opacity="0"/></radialGradient>
+    <!-- the earned chart -->
+    <linearGradient id="earnfill" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#00ff88" stop-opacity=".38"/><stop offset="1" stop-color="#00ff88" stop-opacity="0"/></linearGradient>
+    <linearGradient id="projfill" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#00cfff" stop-opacity=".14"/><stop offset="1" stop-color="#00cfff" stop-opacity="0"/></linearGradient>
   </defs>
   <symbol id="logo" viewBox="0 0 64 64">
     <circle cx="32" cy="41" r="17" fill="#06090f" stroke="url(#afg)" stroke-width="3"/>
@@ -272,103 +268,118 @@ h2{font:28px/1.2 "Archivo Black",sans-serif;margin-top:6px}
 /* Airdrop Farmer: the design and a local test version in one page.
    ?shot=1 is the state the Build it Better pictures show (render.py), computed by the same code: the Farms tab
    before Start, and Live farms after a 23-day run of that same plan. Without it every control works on test data
-   kept in this browser only. Nothing here talks to any server. */
+   kept in this browser only. Nothing here talks to any server; the farm logos load from DefiLlama's icon CDN. */
 const Q = new URLSearchParams(location.search);
 const SHOT = Q.has("shot");
 let TAB = Q.get("tab") || "farms";
-const KEY = "airdrop-farmer-test-v2";
-const H = 6; // every estimate is over six months
+const KEY = "airdrop-farmer-test-v3";
+const H = 6;     // every estimate is over six months
+const E = .7;    // a bigger wallet gets less per dollar: most airdrops flatten whales
+const FIX = 5;   // gas to enter a farm, so the best split does not scatter $50 bets
 const fmt = n => Math.round(n).toLocaleString("en-US");
 const usd = n => "$" + fmt(n);
 const r10 = n => Math.round(n / 10) * 10;
 const money = n => n < 100 ? "$" + Math.round(n) : usd(r10(n)); // small amounts to the dollar
+const rng = (lo, hi, sep = " – ") => Math.round(lo) === Math.round(hi) ? money(lo) : money(lo) + sep + money(hi);
 const kM = v => v >= 1e9 ? +(v / 1e9).toFixed(1) + "B" : Math.round(v / 1e6) + "M";
-const logo = () => `<svg><use href="#logo"/></svg>`;
+const logoSvg = () => `<svg><use href="#logo"/></svg>`;
 const BOLT = `<svg viewBox="0 0 24 24" fill="currentColor"><path d="M13.5 2 4 14h6.5L9.5 22 20 9.5h-6.6z"/></svg>`;
 const $ = s => document.querySelector(s);
 function mulberry32(a) { return () => { a |= 0; a = a + 0x6D2B79F5 | 0; let t = Math.imul(a ^ a >>> 15, 1 | a); t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t; return ((t ^ t >>> 14) >>> 0) / 4294967296; }; }
 const rnd = SHOT ? mulberry32(7) : Math.random; // the pictures come out the same every run
+const ICON = s => `https://icons.llamao.fi/icons/protocols/${s}?w=96`;
 
 /* ---------- farms: the examples from the live points programs, then test data ---------- */
-// ref: the amount lo/hi (est. airdrop over 6 months) are given at; knee: above it each dollar earns 0.32x here.
-// cf: fixed cost (gas) per 6 months; cp: cost per $1,000 per 6 months (fees, funding); ppw: points a week at ref.
-// chip: the one thing a degen needs to know about the farm.
+// ref: the amount lo/hi (est. airdrop over 6 months) are given at; cf: gas per 6 months; cp: fees and funding per
+// $1,000 per 6 months; ppw: points a week at ref; chip: the one thing a degen needs to know about the farm.
 const FARMS = [
-  {id: "arcus", c: "c1", ini: "AR", name: "Arcus", chip: ["TOKEN CONFIRMED", "g"], how: "Deposit", season: "Season 1", ref: 1000, knee: 1000, lo: 260, hi: 940, cf: 1, cp: 0, ppw: 1840, pool: .05, fdv: 250e6, live: {pts: 1}},
-  {id: "variational", c: "c2", ini: "VA", name: "Variational", chip: ["TGE Q4 2026", "g"], how: "Trade", season: "TGE Q4 2026", ref: 800, knee: 800, lo: 180, hi: 720, cf: 0, cp: 42.5, ppw: 420, pool: .32, fdv: 60e6, live: {pts: 1, tge: 30, tk: "VAR", px: .45}},
-  {id: "polymarket", c: "c3", ini: "PM", name: "Polymarket", chip: ["PAYS DAILY", "c"], how: "LP", season: "LP rewards", ref: 600, knee: 700, lo: 40, hi: 310, cf: 0, cp: 10, ppw: 0, pool: .05, fdv: 5e9, live: {daily: .0004, tk: "pUSD", px: 1}},
-  {id: "lighter", c: "c1", ini: "LI", name: "Lighter", chip: ["PAYS WEEKLY", "c"], how: "Trade", season: "11M LIT pool", ref: 500, knee: 500, lo: 90, hi: 260, cf: 0, cp: 44, ppw: 0, pool: .011, fdv: 1.6e9, live: {weekly: .007, tk: "LIT", px: 1.92}},
-  {id: "risex", c: "c2", ini: "RX", name: "RISEx", chip: ["POINTS LIVE", "c"], how: "Trade", season: "Season 1", ref: 400, knee: 400, lo: 70, hi: 410, cf: 0, cp: 42.5, ppw: 2730, pool: .08, fdv: 150e6, live: {pts: 1}},
-  {id: "nado", c: "c3", ini: "NA", name: "Nado", chip: ["POINTS → INK", "g"], how: "Trade", season: "Season 2", ref: 400, knee: 350, lo: 60, hi: 300, cf: 0, cp: 40, ppw: 4270, pool: .04, fdv: 300e6, live: {pts: 1, tge: 45, tk: "INK", px: .12}},
-  {id: "n1", c: "c4", ini: "N1", name: "N1", chip: ["POINTS LIVE", "c"], how: "Trade", season: "Season 1", ref: 300, knee: 300, lo: 30, hi: 250, cf: 0, cp: 43, ppw: 2400, pool: .06, fdv: 100e6, live: {pts: 1}},
-  {id: "ostium", c: "c1", ini: "OS", name: "Ostium", chip: ["POINTS LIVE", "c"], how: "Trade", season: "Season 2", ref: 300, knee: 300, lo: 40, hi: 190, cf: 0, cp: 40, ppw: 980, pool: .05, fdv: 120e6, live: {pts: 1, cap0: .62, capDay: .0083}},
-  {id: "base", c: "c3", ini: "BA", name: "Base", chip: ["SPECULATIVE", "m"], how: "Bridge", season: "no points program", lo: null, cf: 3, cp: 0, why: "no points program yet", live: {txs: 1.5}},
-  {id: "pacifica", c: "c2", ini: "PA", name: "Pacifica", chip: ["POINTS LIVE", "c"], how: "Trade", season: "Season 1", ref: 250, knee: 250, lo: 20, hi: 140, cf: 0, cp: 40, ppw: 630, pool: .05, fdv: 80e6, live: {pts: 1}},
-  {id: "arc", c: "c1", ini: "AC", name: "Arc Testnet", chip: ["FREE", "f"], how: "Testnet", season: "testnet", lo: null, free: 1, why: "no points rate published", live: {txs: 3}},
-  {id: "axis", c: "c2", ini: "AX", name: "Axis Robotics", chip: ["FREE", "f"], how: "Tasks", season: "2-week epochs", lo: null, free: 1, why: "no points rate published", live: {tasks: 1, epoch: 14}},
+  {id: "arcus", o: "o1", ini: "AR", icon: "arcus-perps", name: "Arcus", chip: ["TOKEN CONFIRMED", "g"], how: "Deposit", season: "Season 1", ref: 1000, lo: 260, hi: 940, cf: 1, cp: 0, ppw: 1840, pool: .05, fdv: 250e6, live: {pts: 1}},
+  {id: "variational", o: "o2", ini: "VA", icon: "variational", name: "Variational", chip: ["TGE Q4 2026", "g"], how: "Trade", season: "TGE Q4 2026", ref: 800, lo: 180, hi: 720, cf: 0, cp: 42.5, ppw: 420, pool: .32, fdv: 60e6, live: {pts: 1, tge: 30, tk: "VAR", px: .45}},
+  {id: "polymarket", o: "o3", ini: "PM", icon: "polymarket-international", name: "Polymarket", chip: ["PAYS DAILY", "c"], how: "LP", season: "LP rewards", ref: 600, lo: 40, hi: 310, cf: 0, cp: 10, ppw: 0, pool: .05, fdv: 5e9, live: {daily: .0004, tk: "pUSD", px: 1}},
+  {id: "lighter", o: "o1", ini: "LI", icon: "lighter-perps", name: "Lighter", chip: ["PAYS WEEKLY", "c"], how: "Trade", season: "11M LIT pool", ref: 500, lo: 90, hi: 260, cf: 0, cp: 44, ppw: 0, pool: .011, fdv: 1.6e9, live: {weekly: .007, tk: "LIT", px: 1.92}},
+  {id: "risex", o: "o2", ini: "RX", icon: "risex", name: "RISEx", chip: ["POINTS LIVE", "c"], how: "Trade", season: "Season 1", ref: 400, lo: 70, hi: 410, cf: 0, cp: 42.5, ppw: 2730, pool: .08, fdv: 150e6, live: {pts: 1}},
+  {id: "nado", o: "o3", ini: "NA", icon: "nado-perps", name: "Nado", chip: ["POINTS → INK", "g"], how: "Trade", season: "Season 2", ref: 400, lo: 60, hi: 300, cf: 0, cp: 40, ppw: 4270, pool: .04, fdv: 300e6, live: {pts: 1, tge: 45, tk: "INK", px: .12}},
+  {id: "n1", o: "o4", ini: "N1", icon: "n1-exchange-perps", name: "N1", chip: ["POINTS LIVE", "c"], how: "Trade", season: "Season 1", ref: 300, lo: 30, hi: 250, cf: 0, cp: 43, ppw: 2400, pool: .06, fdv: 100e6, live: {pts: 1}},
+  {id: "ostium", o: "o1", ini: "OS", icon: "ostium", name: "Ostium", chip: ["POINTS LIVE", "c"], how: "Trade", season: "Season 2", ref: 300, lo: 40, hi: 190, cf: 0, cp: 40, ppw: 980, pool: .05, fdv: 120e6, live: {pts: 1, cap0: .62, capDay: .0083}},
+  {id: "base", o: "o3", ini: "BA", icon: "base-app", name: "Base", chip: ["SPECULATIVE", "m"], how: "Bridge", season: "no points program", lo: null, cf: 3, cp: 0, why: "no points program yet", live: {txs: 1.5}},
+  {id: "pacifica", o: "o2", ini: "PA", icon: "pacifica-perps", name: "Pacifica", chip: ["POINTS LIVE", "c"], how: "Trade", season: "Season 1", ref: 250, lo: 20, hi: 140, cf: 0, cp: 40, ppw: 630, pool: .05, fdv: 80e6, live: {pts: 1}},
+  {id: "arc", o: "o1", ini: "AC", name: "Arc Testnet", chip: ["FREE", "f"], how: "Testnet", season: "testnet", lo: null, free: 1, why: "no points rate published", live: {txs: 3}},
+  {id: "axis", o: "o2", ini: "AX", name: "Axis Robotics", chip: ["FREE", "f"], how: "Tasks", season: "2-week epochs", lo: null, free: 1, why: "no points rate published", live: {tasks: 1, epoch: 14}},
 ];
 // not listed: a farm with nothing to farm now (Extended, its points cap used up; Hyperliquid, no points phase)
-if (!SHOT) { // test farms, so the list is long enough to try search and big budgets
+if (!SHOT) { // test farms, so the list is long enough to try search and big amounts
   [["Lending", "Deposit", 0, [["Alpha", 400, .26], ["Beta", 600, .22], ["Gamma", 500, .19], ["Delta", 800, .16]]],
    ["Vault", "LP", 8, [["Alpha", 500, .24], ["Beta", 700, .2], ["Gamma", 400, .18], ["Delta", 900, .14]]],
    ["Chain", "Bridge", 4, [["Alpha", 300, .21], ["Beta", 400, .17], ["Gamma", 250, .15]]],
    ["Predict", "LP", 10, [["Alpha", 300, .2]]],
    ["Perp", "Trade", 40, [["Alpha", 400, .27], ["Beta", 300, .22]]],
-  ].forEach(([label, how, cp, list], j) => list.forEach(([gr, knee, eff], i) => {
-    const mid = (eff + cp / 1000) * knee;
-    FARMS.push({id: (label + gr).toLowerCase(), c: ["c1", "c2", "c3", "c4"][(i + j) % 4], ini: label[0] + gr[0], name: label + " " + gr,
-      chip: ["POINTS LIVE", "c"], how, season: "test data", ref: knee, knee, lo: r10(mid * .45), hi: r10(mid * 1.55), cf: cp ? 0 : 1, cp,
-      ppw: knee * 3, pool: .05, fdv: 200e6, live: {pts: 1}, test: 1});
+  ].forEach(([label, how, cp, list], j) => list.forEach(([gr, ref, eff], i) => {
+    const mid = (eff + cp / 1000) * ref;
+    FARMS.push({id: (label + gr).toLowerCase(), o: ["o1", "o2", "o3", "o4"][(i + j) % 4], ini: label[0] + gr[0], name: label + " " + gr,
+      chip: ["POINTS LIVE", "c"], how, season: "test data", ref, lo: r10(mid * .45), hi: r10(mid * 1.55), cf: cp ? 0 : 1, cp,
+      ppw: ref * 3, pool: .05, fdv: 200e6, live: {pts: 1}, test: 1});
   }));
   [["Testnet Alpha", "Testnet"], ["Testnet Beta", "Testnet"], ["Tasks Alpha", "Tasks"]].forEach(([name, how], i) =>
-    FARMS.push({id: name.replace(" ", "").toLowerCase(), c: ["c2", "c3", "c1"][i], ini: name[0] + name.split(" ")[1][0], name, chip: ["FREE", "f"],
+    FARMS.push({id: name.replace(" ", "").toLowerCase(), o: ["o2", "o3", "o1"][i], ini: name[0] + name.split(" ")[1][0], name, chip: ["FREE", "f"],
       how, season: "test data", lo: null, free: 1, why: "no points rate published", live: how === "Tasks" ? {tasks: 1, epoch: 14} : {txs: 2}, test: 1}));
 }
 const BY = Object.fromEntries(FARMS.map(f => [f.id, f]));
 
 /* ---------- the maths ---------- */
-const g = (f, x) => Math.min(x, f.knee) + .32 * Math.max(0, x - f.knee);
+const curve = (f, x) => Math.pow(Math.max(0, x) / f.ref, E);
 function est(f, x, months = H) {
   if (f.lo == null || x <= 0) return null;
-  const k = g(f, x) / g(f, f.ref) * months / 6;
+  const k = curve(f, x) * months / 6;
   return {lo: f.lo * k, hi: f.hi * k};
 }
 const cost = (f, x, months = H) => f.free || x <= 0 ? 0 : (f.cf + (f.cp || 0) * x / 1000) * months / 6;
-const midPer = (f, x) => { const e = est(f, x); return e ? (e.lo + e.hi) / 2 : 0; };
-const eff = f => f.lo == null ? -1 : midPer(f, f.ref) / f.ref - (f.cp || 0) / 1000;
-// best first: estimated farms by what a dollar earns, then free ones, then the rest, ending last
-const rank = f => f.lo != null ? 1 - eff(f) : f.free ? 2 : f.chip[1] === "r" ? 4 : 3;
-// the best split of a budget: a step at a time to the farm where the next dollar earns most, net of costs,
-// at most 20% of the budget in one farm; a farm with no estimate gets nothing
+// what a farm brings in six months: the airdrop, plus what it pays out daily on the way (Polymarket's LP rewards)
+function estPlan(f, x) {
+  const e = est(f, x);
+  if (!e) return null;
+  const p = f.live.daily ? f.live.daily * x * 180 : 0;
+  return {lo: e.lo + p, hi: e.hi + p};
+}
+const midAt = (f, x) => { const e = estPlan(f, x); return e ? (e.lo + e.hi) / 2 : 0; };
+const weekly = (f, x) => midAt(f, x) / 180 * 7 / f.live.px; // a weekly payer pays its estimate out week by week
+const ptsWeek = (f, x) => (f.ppw || 0) * x / f.ref; // points are linear in what is deposited
+const eff = f => f.lo == null ? -1 : midAt(f, f.ref) / f.ref - (f.cp || 0) / 1000;
+// best first: estimated farms by what a dollar earns, then free ones, then the rest
+const rank = f => f.lo != null ? 1 - eff(f) : f.free ? 2 : 3;
+// the best split of an amount: a first ticket, then a step at a time, always to the farm where the next dollar
+// earns most net of costs and gas, at most 20% of the amount in one farm; a farm with no estimate gets nothing
 function recommend(B) {
   const a = {}, ok = FARMS.filter(f => f.lo != null && !f.free);
   ok.forEach(f => a[f.id] = 0);
-  const step = Math.max(50, Math.ceil(B / 400 / 50) * 50);
-  let left = Math.floor(B / step) * step;
+  const step = Math.max(10, Math.ceil(B / 500 / 10) * 10), t0 = Math.max(step, Math.round(B * .05 / 10) * 10);
+  let left = B;
   while (left >= step) {
-    let best = null, bm = .05;
+    let best = null, bm = .05, add = 0;
     for (const f of ok) {
-      if (a[f.id] + step > B * .2) continue;
-      const m = (midPer(f, a[f.id] + step) - midPer(f, a[f.id])) / step - (f.cp || 0) / 1000;
-      if (m > bm) { bm = m; best = f; }
+      const d = a[f.id] ? step : t0;
+      if (d > left || a[f.id] + d > B * .2) continue;
+      const m = (midAt(f, a[f.id] + d) - midAt(f, a[f.id]) - (a[f.id] ? 0 : FIX)) / d - (f.cp || 0) / 1000;
+      if (m > bm) { bm = m; best = f; add = d; }
     }
     if (!best) break;
-    a[best.id] += step; left -= step;
+    a[best.id] += add; left -= add;
   }
+  for (const id in a) a[id] = Math.round(a[id] / 10) * 10;
   return a;
 }
 
 /* ---------- state ---------- */
-const DEFAULT = () => ({budget: 5000, balance: 7240, amt: {}, on: {}, last: {}, custom: false, open: null, q: "", farming: null, speed: 4});
+const DEFAULT = () => ({budget: 5000, balance: 7240, amt: {}, on: {}, last: {}, custom: false, q: "", farming: null, speed: 4});
 let S = DEFAULT();
 if (!SHOT) try { const s = JSON.parse(localStorage.getItem(KEY) || "null"); if (s) S = Object.assign(DEFAULT(), s); } catch (e) {}
 const save = () => { if (SHOT) return; try { localStorage.setItem(KEY, JSON.stringify(S)); } catch (e) {} };
 let REC = recommend(S.budget);
 const rec = f => f.free ? 0 : (REC[f.id] || 0);
 const amtOf = id => S.amt[id] || 0;
-const allocated = () => FARMS.reduce((s, f) => s + (S.on[f.id] && !f.free ? amtOf(f.id) : 0), 0);
+const planSum = () => FARMS.reduce((s, f) => s + (S.on[f.id] && !f.free ? amtOf(f.id) : 0), 0);
 const liveSum = () => S.farming ? Object.values(S.farming.farms).reduce((s, l) => s + l.amount, 0) : 0;
-// the list starts as the best split and follows the amount until the user changes a farm
+const maxAmt = () => Math.floor(S.balance + liveSum()); // every farm can take up to all your USDC
+// the list starts as the best split of the amount and follows it while you type
 function applyBest() {
   FARMS.forEach(f => { const r = rec(f); S.amt[f.id] = f.free ? 0 : r; S.on[f.id] = f.free ? true : r > 0; });
   S.custom = false;
@@ -384,20 +395,75 @@ function toast(t) {
 function floatUp(x, y, text) {
   const el = document.createElement("div");
   el.className = "float"; el.textContent = text;
-  el.style.left = x - 20 + "px"; el.style.top = y - 30 + "px";
+  el.style.left = x - 24 + "px"; el.style.top = y - 34 + "px";
   document.body.appendChild(el);
   setTimeout(() => el.remove(), 1300);
 }
+const logo = f => `<span class="logo ${f.o}">${f.icon ? `<img src="${ICON(f.icon)}" alt="" onerror="this.remove()">` : ""}${f.icon ? "" : f.ini}</span>`;
 
 /* ---------- header ---------- */
 function header() {
   const n = S.farming ? Object.keys(S.farming.farms).length : 0;
   const status = n ? `<span class="dot"></span><b>FARMING</b> · ${n} farm${n > 1 ? "s" : ""} · ${usd(liveSum())} in` : `<span class="dot idle"></span><b>NOT FARMING</b>`;
   return `<header class="app">
-    <a class="brand">${logo()}<div class="w"><span>AIRDROP</span><b>FARMER</b></div></a>
+    <a class="brand">${logoSvg()}<div class="w"><span>AIRDROP</span><b>FARMER</b></div></a>
     <nav><a href="?tab=farms" data-tab="farms" class="${TAB === "farms" ? "on" : ""}">Farms</a><a href="?tab=live" data-tab="live" class="${TAB === "live" ? "on" : ""}">Live farms${n ? ` <i>${n}</i>` : ""}</a></nav>
     <div class="status" id="hstatus">${status}</div>
   </header>`;
+}
+
+/* ---------- the dial: a 270° ring, the amount on a square-root scale so small and big bets both fit ---------- */
+const D = {w: 364, h: 214, cx: 182, cy: 112, r: 88, a0: 135, sweep: 270};
+const frac = v => Math.sqrt(Math.min(1, Math.max(0, v) / Math.max(1, maxAmt())));
+const pt = t => { const a = (D.a0 + D.sweep * t) * Math.PI / 180; return [D.cx + D.r * Math.cos(a), D.cy + D.r * Math.sin(a)]; };
+function arcPath(t0, t1) {
+  if (t1 - t0 < .0005) return "";
+  const [x0, y0] = pt(t0), [x1, y1] = pt(t1), big = (t1 - t0) * D.sweep > 180 ? 1 : 0;
+  return `M${x0.toFixed(1)} ${y0.toFixed(1)} A${D.r} ${D.r} 0 ${big} 1 ${x1.toFixed(1)} ${y1.toFixed(1)}`;
+}
+function feltSvg(dim) {
+  return `<circle cx="${D.cx}" cy="${D.cy}" r="${D.r - 16}" fill="#06090f"/>
+    <circle cx="${D.cx}" cy="${D.cy}" r="${D.r - 16}" fill="url(#hexp)" opacity="${dim ? .12 : .3}"/>
+    <circle cx="${D.cx}" cy="${D.cy}" r="${D.r - 16}" fill="url(#feltfade)"/>
+    <circle cx="${D.cx}" cy="${D.cy}" r="${D.r - 16}" fill="url(#feltglow)"/>
+    <circle cx="${D.cx}" cy="${D.cy}" r="${D.r - 24}" fill="none" stroke="#00ff88" stroke-opacity="${dim ? .06 : .14}"/>`;
+}
+const fitNum = s => s.length <= 9 ? 27 : s.length <= 11 ? 24 : s.length <= 13 ? 21 : 18;
+// a big number with a haze behind it: the glow without blurring the digits
+const bigText = (txt, size, color, y = D.cy + 12) =>
+  (color === "#00ff88" ? `<text class="num" x="${D.cx}" y="${y}" text-anchor="middle" fill="#00ff88" font-size="${size}" opacity=".55" filter="url(#haze)">${txt}</text>` : "")
+  + `<text class="num" x="${D.cx}" y="${y}" text-anchor="middle" fill="${color}" font-size="${size}">${txt}</text>`;
+// the gauge's scale: faint ticks round the ring, every ninth a little longer
+function ticks() {
+  let s = "";
+  for (let i = 0; i <= 27; i++) {
+    const a = (D.a0 + D.sweep * i / 27) * Math.PI / 180, r1 = D.r + 13, r2 = D.r + (i % 9 ? 17 : 21);
+    s += `<line x1="${(D.cx + r1 * Math.cos(a)).toFixed(1)}" y1="${(D.cy + r1 * Math.sin(a)).toFixed(1)}" x2="${(D.cx + r2 * Math.cos(a)).toFixed(1)}" y2="${(D.cy + r2 * Math.sin(a)).toFixed(1)}" stroke="#7f93ad" stroke-opacity="${i % 9 ? .22 : .4}" stroke-width="1.5" stroke-linecap="round"/>`;
+  }
+  return s;
+}
+// what the dial shows in its middle and on its ring
+function dialSvg(f, mode) {
+  const on = !!S.on[f.id], a = on ? amtOf(f.id) : 0, r = rec(f);
+  let ring = "", center;
+  if (f.free) {
+    ring = `<path d="${arcPath(0, 1)}" stroke="#00ff88" stroke-opacity="${on ? .55 : .2}" stroke-width="10" stroke-linecap="round" fill="none" stroke-dasharray="2 9"/>`;
+    center = `<text x="${D.cx}" y="${D.cy - 18}" text-anchor="middle" fill="#7f93ad" font-size="9.5" font-weight="700" letter-spacing="2.2">NO USDC NEEDED</text>
+      ${bigText("FREE", 32, on ? "#00ff88" : "#7f93ad", D.cy + 14)}
+      <text x="${D.cx}" y="${D.cy + 34}" text-anchor="middle" fill="#00cfff" font-size="10.5" font-weight="600">no estimate</text>`;
+  } else {
+    const t = frac(a), tr = r ? frac(r) : null, e = estPlan(f, a), shown = e ? null : estPlan(f, r || f.ref);
+    ring = `<path d="${arcPath(0, 1)}" stroke="#1e3050" stroke-width="10" stroke-linecap="round" fill="none"/>
+      ${t > 0 ? `<path class="fillarc" d="${arcPath(0, t)}" stroke="url(#arc)" stroke-width="10" stroke-linecap="round" fill="none" filter="url(#soft)"/>` : ""}
+      ${tr != null ? (() => { const [x, y] = pt(tr), ang = D.a0 + D.sweep * tr; return `<g transform="translate(${x.toFixed(1)} ${y.toFixed(1)}) rotate(${ang + 90})"><path d="M0 -12 L5 -20 L-5 -20 Z" fill="#00cfff"/></g>`; })() : ""}
+      ${(() => { const [x, y] = pt(t); return `<g class="knob"><circle cx="${x.toFixed(1)}" cy="${y.toFixed(1)}" r="11" fill="#e6edf7" stroke="${on ? "#00ff88" : "#7f93ad"}" stroke-width="4" ${on ? 'filter="url(#soft)"' : ""}/></g>`; })()}`;
+    const txt = f.lo == null ? "no estimate" : e ? rng(e.lo, e.hi, "–") : rng(shown.lo, shown.hi, "–");
+    const col = f.lo == null || !e ? "#7f93ad" : "#00ff88";
+    center = `<text x="${D.cx}" y="${D.cy - 18}" text-anchor="middle" fill="#7f93ad" font-size="9.5" font-weight="700" letter-spacing="2.2">EST. AIRDROP</text>
+      ${f.lo == null ? `<text x="${D.cx}" y="${D.cy + 10}" text-anchor="middle" fill="#7f93ad" font-size="15">no estimate</text>` : bigText(txt, fitNum(txt), col)}
+      <text x="${D.cx}" y="${D.cy + 34}" text-anchor="middle" fill="#00cfff" font-size="10.5" font-weight="600">${f.lo == null ? f.why : e ? "in 6 months" : `if ${usd(r || f.ref)}`}</text>`;
+  }
+  return `<svg class="dial" viewBox="0 0 ${D.w} ${D.h}" data-dial="${f.id}">${ticks()}${feltSvg(!on)}${ring}${center}</svg>`;
 }
 
 /* ---------- Farms tab ---------- */
@@ -408,91 +474,101 @@ function farmsView() {
     <div>
       <div class="pill"><span class="dot"></span>${N} FARMS · ONE DEPOSIT</div>
       <h1>Deploy USDC.<br>Farm every airdrop.<br><em>Cymetica does the rest.</em></h1>
+      <div class="info">
+        <div><small>FARMS</small><b>${N}</b><span>Every live points program, testnet and task.</span></div>
+        <div><small>THE SPLIT</small><b class="c">Auto</b><span>Your USDC goes where a dollar farms most.</span></div>
+        <div><small>WALLETS</small><b>1</b><span>Your USDC. No sybil. Every farm's rules kept.</span></div>
+      </div>
+      <div class="steps"><span><i>1</i>type an amount</span><em>›</em><span><i>2</i>start farming</span><em>›</em><span><i>3</i>claim</span></div>
       <div class="sub">Chatbots explain airdrops. <b>Cymetica farms them.</b></div>
     </div>
-    <div class="card plan">
-      <div class="cap">HOW MUCH USDC?</div>
-      <div class="bigin"><input id="budget" inputmode="decimal" autocomplete="off" value="${fmt(S.budget)}" aria-label="USDC to farm"><span>USDC</span><button class="max" data-act="max">MAX</button></div>
-      <div class="bal">Balance <b id="bal">${fmt(S.balance)}</b> USDC</div>
-      <div class="youfarm"><small>You farm ≈</small><b id="kest"></b><span>in airdrops over 6 months</span></div>
-      <div class="planline"><span id="pline"></span><span id="bestslot"></span></div>
-      <button class="go big" data-act="start" id="gobtn"></button>
+    <div class="glass glow plan">
+      <div class="top"><span class="cap">YOUR FARM PLAN</span><span id="bestslot"></span></div>
+      <div class="bigin"><input id="budget" inputmode="decimal" autocomplete="off" value="${fmt(S.budget)}" aria-label="USDC to farm"><span class="token"><i>$</i>USDC</span><button class="max" data-act="max">MAX</button></div>
+      <div class="bal"><span>Balance <b id="bal">${fmt(S.balance)}</b> USDC</span><span>any farm takes any amount</span></div>
+      <div class="felt"><small>YOU FARM</small><b id="kest"></b><span>in airdrops over 6 months</span></div>
+      <div class="boxes"><div><small>FARMS</small><b id="kn"></b></div><div><small>IN</small><b id="ka"></b></div><div><small>CONFIRMED</small><b class="g" id="kt"></b></div></div>
+      <button class="go" data-act="start" id="gobtn"></button>
       <div class="fine">Stop any farm any time</div>
     </div>
   </section>
   <div class="sechead">
-    <div><div class="cap2">ALL FARMS</div><h2>${N} farms. Best first.</h2></div>
+    <div><h2>Farms <i>${N}</i></h2><p>Best first. Drag a ring or type an amount: the airdrop updates as you go.</p></div>
     <input id="q" class="search" placeholder="Search farms" value="${S.q}" aria-label="Search farms">
   </div>
-  <div class="table">
-    <div class="thead rcols"><div></div><div>FARM</div><div>DEPLOY</div><div>USDC</div><div>EST. AIRDROP · 6 MO</div><div></div></div>
-    <div id="list"></div>
-    <div class="more" id="more"></div>
-  </div></div>`;
+  <div class="grid" id="list"></div>
+  <div class="more" id="more"></div>
+  </div>`;
 }
 
 function visible() {
-  const L = FARMS.filter(f => f.name.toLowerCase().includes(S.q.toLowerCase()));
-  return L.sort((a, b) => rank(a) - rank(b));
+  return FARMS.filter(f => f.name.toLowerCase().includes(S.q.toLowerCase())).sort((a, b) => rank(a) - rank(b));
 }
-const sstep = () => Math.max(50, Math.ceil(S.budget / 400 / 50) * 50);
-const pct = v => Math.min(1, v / Math.max(S.budget, 1));
-const pos = v => `calc(9px + (100% - 18px) * ${pct(v)})`;
-
-function rowHTML(f) {
-  const a = amtOf(f.id), on = !!S.on[f.id], r = rec(f), open = S.open === f.id;
-  const sl = f.free ? `<div class="sl"><span class="freeline">no USDC needed</span></div>`
-    : `<div class="sl"><div class="rng"><i class="trk"></i><i class="fil" style="width:${pos(a)}"></i>${r ? `<i class="recm" style="left:${pos(r)}" title="best ${usd(r)}"></i>` : ""}
-        <input type="range" min="0" max="${S.budget}" step="${sstep()}" value="${a}" data-rng="${f.id}" aria-label="USDC into ${f.name}"></div></div>`;
-  const field = f.free ? "" : `<div class="amt"><input data-amt="${f.id}" inputmode="decimal" value="${fmt(a)}" aria-label="${f.name} USDC"><span>USDC</span></div>`;
-  return `<div class="frow rcols ${on ? "" : "off"} ${open ? "open" : ""}" data-row="${f.id}">
-    <div><button class="tg ${on ? "on" : ""}" data-tog="${f.id}" aria-label="Farm ${f.name}"></button></div>
-    <div class="farm"><span class="lg ${f.c}">${f.ini}</span><b>${f.name}</b><span class="chip ${f.chip[1]}">${f.chip[0]}</span></div>
-    ${sl}
-    <div>${field}<div class="best" id="best-${f.id}">${bestHTML(f)}</div></div>
-    <div class="est" id="est-${f.id}">${estHTML(f)}</div>
-    <div><button class="chev ${open ? "open" : ""}" data-open="${f.id}" aria-label="Simulator for ${f.name}">${open ? "▴" : "▾"}</button></div>
-  </div>${open ? `<div class="sim" id="sim">${simHTML(f)}</div>` : ""}`;
+function boxesHTML(f) {
+  const a = amtOf(f.id), r = rec(f), on = !!S.on[f.id];
+  if (f.free) return `<div><small>YOU DEPLOY</small><b>$0</b></div><div><small>COST</small><b class="g">free</b></div><div><small>${f.how === "Tasks" ? "TASKS" : "TXS"}</small><b class="c">auto</b></div>`;
+  const best = !r ? `<b style="color:var(--dim)">—</b>` : a === r && on ? `<b class="g">${usd(r)} ✓</b>` : `<button class="use" data-use="${f.id}">${usd(r)}</button>`;
+  const third = f.ppw ? `<small>PTS / WEEK</small><b class="c">${a > 0 ? fmt(ptsWeek(f, a)) : "—"}</b>`
+    : f.live.weekly ? `<small>PAYS / WEEK</small><b class="c">${a > 0 ? weekly(f, a).toFixed(1) : "—"} ${f.live.tk}</b>`
+    : f.live.daily ? `<small>PAYS / DAY</small><b class="c">${a > 0 ? (f.live.daily * a).toFixed(2) : "—"} ${f.live.tk}</b>`
+    : `<small>POINTS</small><b style="color:var(--dim)">none yet</b>`;
+  return `<div class="in"><small>YOU DEPLOY</small><input data-amt="${f.id}" inputmode="decimal" value="${fmt(a)}" aria-label="${f.name} USDC"></div>
+    <div><small>BEST</small>${best}</div><div>${third}</div>`;
 }
-// the best amount is the tick on the slider; spelled out only where the farm is off it
-function bestHTML(f) {
-  const r = rec(f), a = amtOf(f.id);
-  if (f.free || !r || (a === r && S.on[f.id])) return "";
-  return `<button data-use="${f.id}">best ${usd(r)}</button>`;
+function howText(f) {
+  if (f.lo == null) return `${f.name}: ${f.why}.`;
+  const fdvHi = f.fdv * f.hi / f.lo;
+  return `Est. airdrop = points a week x 26 weeks x your share of all points x the points pool (${+(f.pool * 100).toFixed(1)}% of supply) x the token value at launch ($${kM(f.fdv)} – $${kM(fdvHi)}). A bigger wallet gets less per dollar: most airdrops flatten whales. Always a range. As of 21 Oct 14:05 UTC. ${f.test ? "Test data." : `${f.name} ${f.season} rules; FDV from comparable launches.`}`;
 }
-function estHTML(f) {
-  if (f.lo == null) return `<b class="no">no estimate</b>`;
-  const a = S.on[f.id] ? amtOf(f.id) : 0, e = est(f, a);
-  if (!e) { const ep = est(f, rec(f) || f.ref); return `<b class="dim">${usd(r10(ep.lo))} – ${usd(r10(ep.hi))}</b>`; }
-  return `<b>${usd(r10(e.lo))} – ${usd(r10(e.hi))}</b>`;
+function cardHTML(f) {
+  const on = !!S.on[f.id];
+  return `<div class="glass fcard ${on ? "glow" : "off"}" data-card="${f.id}" title="">
+    <div class="fhead">${logo(f)}<div class="fname"><b>${f.name}</b><span class="chip ${f.chip[1]}">${f.chip[0]}</span></div>
+      <button class="tg ${on ? "on" : ""}" data-tog="${f.id}" aria-label="Farm ${f.name}"></button></div>
+    <div class="dialwrap" title="${howText(f).replace(/"/g, "&quot;")}">${dialSvg(f)}</div>
+    <div class="fboxes" id="box-${f.id}">${boxesHTML(f)}</div>
+  </div>`;
 }
-
 function renderList() {
   const L = visible();
-  $("#list").innerHTML = L.length ? L.map(rowHTML).join("") : `<div class="more" style="background:none">No farm matches.</div>`;
-  $("#more").innerHTML = SHOT ? `<span>Showing ${L.length} of 412 farms</span><span class="btn">Show 50 more</span>`
-    : `<span>Showing ${L.length} of ${FARMS.length} farms</span><span>test data</span>`;
+  $("#list").innerHTML = L.length ? L.map(cardHTML).join("") : `<div class="more">No farm matches.</div>`;
+  $("#more").innerHTML = SHOT ? `<span>Showing ${L.length} of 412 farms</span><span class="btn">Show 50 more</span>` : `<span>Showing ${L.length} of ${FARMS.length} farms · test data</span>`;
+}
+// one card's moving parts, without redrawing the input being typed in
+function updateCard(id) {
+  const f = BY[id], card = document.querySelector(`[data-card="${id}"]`);
+  if (!card) return;
+  const on = !!S.on[id];
+  card.classList.toggle("glow", on); card.classList.toggle("off", !on);
+  card.querySelector(".tg").classList.toggle("on", on);
+  card.querySelector(".dialwrap").innerHTML = dialSvg(f);
+  const box = $("#box-" + id), fi = box.querySelector("[data-amt]");
+  if (fi && document.activeElement === fi) {
+    const kids = box.children; const tmp = document.createElement("div"); tmp.innerHTML = boxesHTML(f);
+    for (let i = 1; i < kids.length; i++) kids[i].innerHTML = tmp.children[i].innerHTML;
+  } else box.innerHTML = boxesHTML(f);
 }
 
 function planTotals() {
-  let lo = 0, hi = 0, n = 0, a = 0, c = 0;
+  let lo = 0, hi = 0, n = 0, a = 0, c = 0, tok = 0;
   FARMS.forEach(f => {
     if (!S.on[f.id]) return;
-    const x = f.free ? 0 : amtOf(f.id), e = est(f, x);
+    const x = f.free ? 0 : amtOf(f.id), e = estPlan(f, x);
     n++; a += x; c += Math.round(cost(f, x));
+    if (f.chip[1] === "g") tok++;
     if (e) { lo += r10(e.lo); hi += r10(e.hi); }
   });
-  return {lo, hi, n, a, c};
+  return {lo, hi, n, a, c, tok};
 }
 // the big number counts to its new value
 function tweenRange(el, lo, hi) {
   const from = el._v || [lo, hi]; el._v = [lo, hi];
   cancelAnimationFrame(el._raf);
-  if (SHOT || (from[0] === lo && from[1] === hi)) { el.textContent = `${usd(lo)} – ${usd(hi)}`; return; }
+  if (SHOT || (from[0] === lo && from[1] === hi)) { el.textContent = rng(lo, hi); return; }
   const t0 = performance.now();
   const step = now => {
-    const k = Math.min(1, (now - t0) / 380), e = 1 - Math.pow(1 - k, 3);
-    el.textContent = `${usd(from[0] + (lo - from[0]) * e)} – ${usd(from[1] + (hi - from[1]) * e)}`;
+    const k = Math.min(1, (now - t0) / 420), e = 1 - Math.pow(1 - k, 3);
+    el.textContent = rng(from[0] + (lo - from[0]) * e, from[1] + (hi - from[1]) * e);
     if (k < 1) el._raf = requestAnimationFrame(step);
   };
   el._raf = requestAnimationFrame(step);
@@ -500,113 +576,69 @@ function tweenRange(el, lo, hi) {
 function updatePlan() {
   const t = planTotals();
   tweenRange($("#kest"), t.lo, t.hi);
-  $("#pline").innerHTML = `<b>${t.n}</b> farms · <b>${usd(t.a)}</b> of ${usd(S.budget)}${t.a > S.budget ? ` <span class="over">over</span>` : ""}`;
-  $("#bestslot").innerHTML = S.custom ? `<button class="bestbtn" data-act="best">↺ best split</button>` : `<span class="bestok">best split ✓</span>`;
+  $("#kn").textContent = t.n;
+  $("#ka").textContent = usd(t.a);
+  $("#kt").textContent = t.tok + (t.tok === 1 ? " token" : " tokens");
+  $("#bestslot").innerHTML = S.custom ? `<button class="bestbtn" data-act="best">↺ BEST SPLIT</button>` : `<span class="bestok">BEST SPLIT ✓</span>`;
   $("#bal").textContent = fmt(S.balance);
+  const bi = $("#budget"); if (bi && document.activeElement !== bi) bi.value = fmt(S.budget);
   $("#gobtn").innerHTML = BOLT + (S.farming ? "UPDATE FARMS" : "START FARMING");
 }
 
-// one row's moving parts, without redrawing the slider being dragged
-function updateRow(id) {
-  const f = BY[id], row = document.querySelector(`[data-row="${id}"]`);
-  if (!row) return;
-  const a = amtOf(id), on = !!S.on[id];
-  row.classList.toggle("off", !on);
-  row.querySelector(".tg").classList.toggle("on", on);
-  const fil = row.querySelector(".fil"); if (fil) fil.style.width = pos(a);
-  const rg = row.querySelector("[data-rng]"); if (rg && +rg.value !== a) rg.value = a;
-  const fi = row.querySelector("[data-amt]"); if (fi && document.activeElement !== fi) fi.value = fmt(a);
-  $("#best-" + id).innerHTML = bestHTML(f);
-  $("#est-" + id).innerHTML = estHTML(f);
-  if (S.open === id && $("#sim")) $("#sim").innerHTML = simHTML(f);
-}
-
-// set one farm's amount by hand, never past the budget
+// set one farm's amount by hand: anything up to all your USDC. The plan's total follows; once all of it is in
+// farms, what you add here comes out of the farms that farm least, so nothing ever stops you
+let moved = {usd: 0, n: new Set()};
 function setAmt(id, v, quiet) {
   const f = BY[id];
   if (f.free) return;
   v = Math.max(0, Math.round(v || 0));
-  const room = S.budget - (allocated() - (S.on[id] ? amtOf(id) : 0));
-  if (v > room) { v = Math.max(0, Math.floor(room)); if (!quiet) toast(`All your USDC is in farms: raise the amount or lower another farm`); }
+  let over = planSum() - (S.on[id] ? amtOf(id) : 0) + v - maxAmt();
+  if (over > 0) {
+    const others = FARMS.filter(g => g.id !== id && S.on[g.id] && !g.free && amtOf(g.id) > 0).sort((a, b) => rank(b) - rank(a));
+    for (const g of others) {
+      if (over <= 0) break;
+      const take = Math.min(amtOf(g.id), over);
+      S.amt[g.id] -= take; if (!S.amt[g.id]) S.on[g.id] = false;
+      over -= take; moved.usd += take; moved.n.add(g.id);
+      updateCard(g.id);
+    }
+    if (over > 0) { v -= over; if (!quiet) toast(`That is all your USDC: ${usd(maxAmt())}`); }
+  }
   S.amt[id] = v; S.on[id] = v > 0; S.custom = true;
   if (v > 0) S.last[id] = v;
-  updateRow(id); updatePlan(); save();
+  S.budget = planSum();
+  updateCard(id); updatePlan(); save();
+  if (!quiet) tellMoved(f);
 }
-
-// typing moves the plan at once; on Enter, leaving the field or MAX the amount is held to the balance
+function tellMoved(f) {
+  if (moved.usd > 0) toast(`${usd(moved.usd)} moved to ${f.name} from ${moved.n.size} farm${moved.n.size > 1 ? "s" : ""} that farm less`);
+  moved = {usd: 0, n: new Set()};
+}
+// typing an amount means "split it for me"; on Enter, leaving the field or MAX it is held to the balance
 function setBudget(B, commit) {
   B = Math.max(0, Math.round(B || 0));
-  const most = Math.floor(S.balance + liveSum());
-  if (commit && B > most) { B = most; toast(`Only ${usd(most)} USDC in your balance`); const el = $("#budget"); if (el) el.value = fmt(B); }
-  S.budget = B;
-  REC = recommend(B);
-  if (!S.custom) applyBest();
-  else if (commit && allocated() > B) {
-    const k = B / allocated();
-    FARMS.forEach(f => { if (S.on[f.id] && !f.free) { S.amt[f.id] = Math.floor(amtOf(f.id) * k); if (!S.amt[f.id]) S.on[f.id] = false; } });
-    toast(`Your farms were scaled down to fit ${usd(B)}`);
-  }
+  const most = maxAmt();
+  if (commit && B > most) { B = most; toast(`Only ${usd(most)} USDC in your balance`); }
+  S.budget = B; REC = recommend(B); applyBest();
   renderList(); updatePlan(); save();
-}
-
-/* ---------- simulator: drag, see the airdrop ---------- */
-function simHTML(f) {
-  const a = S.on[f.id] ? amtOf(f.id) : 0, r = rec(f), B = Math.max(S.budget, 100);
-  if (f.lo == null) return `<div class="noest"><b>No estimate</b><span>${f.name}: ${f.why}. ${f.free ? "It is free, so Cymetica farms it in case a token comes." : "Cymetica can farm it, but nothing would put a number on it."}</span></div>`;
-  const W = 640, Hh = 196, L = 14, R = 14, T = 28, Bm = 26;
-  const ymax = est(f, B).hi * 1.08;
-  const x = v => L + v / B * (W - L - R), y = v => Hh - Bm - v / ymax * (Hh - T - Bm);
-  const pts = []; for (let i = 0; i <= 60; i++) pts.push(B * i / 60);
-  [f.knee, r, a].forEach(v => v > 0 && v < B && pts.push(v)); pts.sort((p, q) => p - q);
-  const E = v => est(f, v) || {lo: 0, hi: 0}, M = v => (E(v).lo + E(v).hi) / 2;
-  const band = pts.map(v => `${x(v)},${y(E(v).hi)}`).join(" ") + " " + pts.slice().reverse().map(v => `${x(v)},${y(E(v).lo)}`).join(" ");
-  const line = pts.map(v => `${x(v)},${y(M(v))}`).join(" ");
-  const right = r && x(r) > W - 150; // the one label in the chart, kept inside it
-  const bestl = r ? `<line x1="${x(r)}" x2="${x(r)}" y1="${T - 6}" y2="${Hh - Bm}" stroke="#00cfff" stroke-width="1.5" stroke-dasharray="4 4"/>
-    <text x="${x(r) + (right ? -7 : 7)}" y="${T - 10}" fill="#00cfff" font-size="11" font-weight="700" text-anchor="${right ? "end" : "start"}">best ${usd(r)}</text>` : "";
-  const dot = a > 0 ? `<circle cx="${x(a)}" cy="${y(M(a))}" r="7" fill="#06090f" stroke="#00ff88" stroke-width="3"/>` : "";
-  const shown = a || r || f.ref, es = est(f, shown), fdvHi = f.fdv * f.hi / f.lo;
-  const rate = f.ppw ? `<dt>Points a week</dt><dd>≈ ${fmt(f.ppw * g(f, shown) / g(f, f.ref))}</dd>`
-    : f.live.weekly ? `<dt>Paid every week</dt><dd>≈ ${(f.live.weekly * shown).toFixed(1)} ${f.live.tk}</dd>`
-    : f.live.daily ? `<dt>Paid every day</dt><dd>≈ ${(f.live.daily * shown).toFixed(2)} ${f.live.tk}</dd>` : "";
-  const how = `Points a week x 26 weeks x your share of all points x the points pool (${+(f.pool * 100).toFixed(1)}% of supply) x the token value at launch, always a range.`
-    + (f.knee < B ? ` Above ${usd(f.knee)} each dollar earns less here than in your next farm.` : "")
-    + ` As of 21 Oct 14:05 UTC. ${f.test ? "Test data." : `${f.name} ${f.season} rules; FDV from comparable launches.`}`;
-  return `<div class="chart"><svg viewBox="0 0 ${W} ${Hh}" data-chart="${f.id}" data-l="${L}" data-w="${W - L - R}" data-vw="${W}">
-      <line x1="${L}" x2="${W - R}" y1="${Hh - Bm}" y2="${Hh - Bm}" stroke="#1e3050"/>
-      ${f.knee < B ? `<rect x="${x(f.knee)}" y="${T - 6}" width="${x(B) - x(f.knee)}" height="${Hh - Bm - T + 6}" fill="rgba(6,9,15,.45)"/>` : ""}
-      <polygon points="${band}" fill="rgba(0,207,255,.14)"/><polyline points="${line}" fill="none" stroke="#00ff88" stroke-width="2.4"/>
-      ${bestl}${dot}
-      <text x="${L}" y="${Hh - 7}" fill="#7f93ad" font-size="10.5">$0</text>
-      <text x="${W - R}" y="${Hh - 7}" fill="#7f93ad" font-size="10.5" text-anchor="end">${usd(B)}</text>
-    </svg></div>
-    <div class="out">
-      <div class="h">If you deploy</div>
-      <div class="big">${usd(shown)} → <em>${usd(r10(es.lo))} – ${usd(r10(es.hi))}</em></div>
-      <div class="bigl">est. airdrop in 6 months</div>
-      <dl>${rate}<dt>Token value at launch</dt><dd>$${kM(f.fdv)} – $${kM(fdvHi)}</dd></dl>
-      <span class="how" title="${how}"><i>i</i>How we estimate</span>
-    </div>`;
 }
 
 /* ---------- start farming ---------- */
 const FIRST = {Deposit: (n, f) => `Deposited ${n} into <b>${f}</b>`, Trade: (n, f) => `<b>${f}</b>: hedged positions opened, ${n}`,
   LP: (n, f) => `Quoting liquidity on <b>${f}</b> with ${n}`, Bridge: (n, f) => `Bridged ${n} to <b>${f}</b>`,
   Testnet: (n, f) => `<b>${f}</b>: testnet wallet set up`, Tasks: (n, f) => `<b>${f}</b>: first task started`};
-const planLines = () => FARMS.filter(f => S.on[f.id]).sort((a, b) => rank(a) - rank(b)).map(f => ({f, a: f.free ? 0 : amtOf(f.id), e: est(f, f.free ? 0 : amtOf(f.id))}));
+const planLines = () => FARMS.filter(f => S.on[f.id]).sort((a, b) => rank(a) - rank(b)).map(f => ({f, a: f.free ? 0 : amtOf(f.id), e: estPlan(f, f.free ? 0 : amtOf(f.id))}));
 function openStart() {
   const L = planLines();
   if (!L.length) return toast("Switch on at least one farm");
   const t = planTotals(), need = t.a - liveSum();
-  if (t.a > S.budget) return toast("Your farms add up to more than your amount");
   if (need > S.balance) return toast(`Not enough USDC: you need ${usd(need)}, the balance is ${usd(S.balance)}`);
-  $("#modal").innerHTML = `<div class="ov" data-act="close"><div class="card modal">
+  $("#modal").innerHTML = `<div class="ov" data-act="close"><div class="glass glow modal">
     <div class="cap">${S.farming ? "UPDATE YOUR FARMS" : "START FARMING"}</div>
     <h3>${t.n} farms · ${usd(t.a)}</h3>
-    <div class="mbig">≈ ${usd(t.lo)} – ${usd(t.hi)}</div>
-    <div class="mbigl">est. airdrops over 6 months</div>
+    <div class="felt"><small>YOU FARM</small><b>${rng(t.lo, t.hi)}</b><span>in airdrops over 6 months</span></div>
     <details><summary>See the ${t.n} farms ▾</summary>
-      ${L.map(l => `<div class="ln"><span>${l.f.name}</span><span>${l.f.free ? "free" : usd(l.a)}</span><span>${l.e ? `${usd(r10(l.e.lo))} – ${usd(r10(l.e.hi))}` : `<small>no estimate</small>`}</span></div>`).join("")}
+      ${L.map(l => `<div class="ln"><span>${l.f.name}</span><span>${l.f.free ? "free" : usd(l.a)}</span><span>${l.e ? rng(l.e.lo, l.e.hi) : `<small>no estimate</small>`}</span></div>`).join("")}
     </details>
     <div class="kv"><span>Est. cost (fees, funding, gas)</span><b>${usd(t.c)}</b></div>
     <div class="kv"><span>Cymetica fee</span><b style="color:var(--dim)">set by Cymetica</b></div>
@@ -664,6 +696,7 @@ function stopFarm(id, quiet) {
   feed(`<b>${BY[id].name}</b> stopped: ${usd(back)} back to your balance`, "red");
   if (!Object.keys(F.farms).length) { S.farming = null; if (!quiet) toast("All farms stopped"); }
   else if (!quiet) toast(`${BY[id].name} stopped · ${usd(back)} back`);
+  S.budget = planSum();
 }
 
 /* ---------- the clock ---------- */
@@ -682,11 +715,11 @@ function advance(dd) {
       if (l.cap >= 1) earning = false;
     }
     if (earning && (L.pts || L.daily)) {
-      if (L.pts) l.pts += (f.ppw || 0) / 7 * g(f, l.amount) / g(f, f.ref) * dd;
+      if (L.pts) l.pts += ptsWeek(f, l.amount) / 7 * dd;
       const e = est(f, l.amount); l.lo += e.lo / 180 * dd; l.hi += e.hi / 180 * dd;
     }
     if (L.daily) l.claim += L.daily * l.amount * dd;
-    if (L.weekly) l.week += L.weekly * l.amount / 7 * dd;
+    if (L.weekly) l.week += weekly(f, l.amount) / 7 * dd;
     if (L.txs || L.tasks) l.n += (L.txs || L.tasks) * dd;
   }
   for (let d = Math.floor(d0) + 1; d <= Math.floor(F.day); d++) {
@@ -694,7 +727,7 @@ function advance(dd) {
     const log = (txt, c) => feed(txt, c, d - .46 + rnd() * .45); // late in the day just ended
     for (const [id, l] of Object.entries(F.farms)) {
       const f = BY[id], L = f.live;
-      if (L.pts && !l.done && (L.cap0 == null || l.cap < 1)) { gained += (f.ppw || 0) / 7 * g(f, l.amount) / g(f, f.ref); k++; }
+      if (L.pts && !l.done && (L.cap0 == null || l.cap < 1)) { gained += ptsWeek(f, l.amount) / 7; k++; }
       if (L.weekly && (d - Math.ceil(l.start)) % 7 === 0) { l.claim += l.week; log(`<b>${f.name}</b> paid <em>${l.week.toFixed(1)} ${L.tk}</em>, ready to claim`, "green"); l.week = 0; }
       if (L.epoch && (d - Math.ceil(l.start)) % L.epoch === 0) log(`<b>${f.name}</b> epoch closed: ${Math.round(l.n)} tasks counted`, "blue");
       if (l.tge != null && !l.done && !l.claim && d >= l.tge) {
@@ -714,100 +747,134 @@ function totals() {
   for (const [id, l] of Object.entries(F.farms)) { const p = pendUsd(BY[id], l); lo += l.lo + p; hi += l.hi + p; }
   return {lo: lo + F.claimed, hi: hi + F.claimed};
 }
+// where the running plan lands at six months: what is earned plus the plan's estimate for the days left,
+// so on day 0 it is exactly the number the Farms tab showed at Start
+function projection() {
+  const F = S.farming, T = totals(); let lo = T.lo, hi = T.hi;
+  for (const [id, l] of Object.entries(F.farms)) {
+    const f = BY[id], e = estPlan(f, l.amount), left = Math.max(0, 180 - (F.day - l.start)) / 180;
+    if (e && !l.done && !(f.live.cap0 != null && l.cap >= 1)) { lo += e.lo * left; hi += e.hi * left; }
+  }
+  return {lo, hi};
+}
 
 /* ---------- Live farms tab ---------- */
-// how long ago, on the farm's own clock
 function ago(d) {
-  const m = Math.max(1, Math.round((S.farming.day - d) * 1440));
-  return m < 60 ? `${m}m ago` : m < 1440 ? `${Math.round(m / 60)}h ago` : `${Math.round(m / 1440)}d ago`;
+  const m = Math.round((S.farming.day - d) * 1440);
+  return m < 2 ? "just now" : m < 60 ? `${m}m ago` : m < 1440 ? `${Math.round(m / 60)}h ago` : `${Math.round(m / 1440)}d ago`;
 }
-function liveRow(id, l) {
-  const f = BY[id], L = f.live, F = S.farming;
-  let st = ["lv", "FARMING"], pts = "—", today = "";
-  if (l.done) st = ["m", "CLAIMED"];
-  else if (claimable(f, l)) st = ["s", "CLAIMABLE"];
-  else if (L.cap0 != null && l.cap >= 1) st = ["m", "CAP REACHED"];
-  else if (L.cap0 != null && l.cap >= .8) st = ["c", `CAP ${Math.round(l.cap * 100)}% USED`];
-  else if (L.tge && l.tge - F.day <= 10) st = ["c", `TGE IN ${Math.max(1, Math.ceil(l.tge - F.day))} D`];
-  else if (L.epoch) st = ["c", `EPOCH ENDS IN ${L.epoch - (Math.floor(F.day - l.start) % L.epoch)} D`];
-  else if (L.txs && !f.free) st = ["m", "NO POINTS YET"];
-  else if (L.wait) st = ["m", "WAITING"];
-  const rate = f.ppw ? f.ppw / 7 * g(f, l.amount) / g(f, f.ref) : 0;
+function liveStatus(f, l) {
+  const L = f.live, F = S.farming;
+  if (l.done) return ["m", "CLAIMED"];
+  if (claimable(f, l)) return ["s", "CLAIMABLE"];
+  if (L.cap0 != null && l.cap >= 1) return ["m", "CAP REACHED"];
+  if (L.cap0 != null && l.cap >= .8) return ["c", `CAP ${Math.round(l.cap * 100)}% USED`];
+  if (L.tge && l.tge - F.day <= 10) return ["c", `TGE IN ${Math.max(1, Math.ceil(l.tge - F.day))} D`];
+  if (L.epoch) return ["c", `EPOCH ENDS IN ${L.epoch - (Math.floor(F.day - l.start) % L.epoch)} D`];
+  if (L.txs && !f.free) return ["m", "NO POINTS YET"];
+  return ["lv", "FARMING"];
+}
+// a live farm's ring: how far into its six months it is, what it has earned in the middle
+function liveDial(f, l) {
+  const F = S.farming, t = Math.min(1, (F.day - l.start) / 180), p = pendUsd(f, l);
+  const lo = l.lo + l.got + p, hi = l.hi + l.got + p, any = f.lo != null || l.got || p;
+  const txt = any ? rng(lo, hi, "–") : "no estimate";
+  const [x, y] = pt(t);
+  return `<svg class="dial" viewBox="0 0 ${D.w} ${D.h}">${ticks()}${feltSvg(false)}
+    <path d="${arcPath(0, 1)}" stroke="#1e3050" stroke-width="10" stroke-linecap="round" fill="none"/>
+    ${t > .003 ? `<path d="${arcPath(0, t)}" stroke="url(#arc)" stroke-width="10" stroke-linecap="round" fill="none" filter="url(#soft)"/>` : ""}
+    <circle cx="${x.toFixed(1)}" cy="${y.toFixed(1)}" r="7" fill="#00ff88" filter="url(#soft)"/>
+    <text x="${D.cx}" y="${D.cy - 18}" text-anchor="middle" fill="#7f93ad" font-size="9.5" font-weight="700" letter-spacing="2.2">EARNED SO FAR</text>
+    ${any ? bigText(txt, fitNum(txt), "#00ff88") : `<text x="${D.cx}" y="${D.cy + 10}" text-anchor="middle" fill="#7f93ad" font-size="15">no estimate</text>`}
+    <text x="${D.cx}" y="${D.cy + 34}" text-anchor="middle" fill="#00cfff" font-size="10.5" font-weight="600">day ${Math.floor(F.day - l.start)} of 180</text>
+  </svg>`;
+}
+function liveCard(id, l) {
+  const f = BY[id], L = f.live, st = liveStatus(f, l);
   const earning = !l.done && !(L.cap0 != null && l.cap >= 1);
-  if (L.pts) { pts = `${fmt(l.pts)} pts`; today = earning ? `+${fmt(rate)}` : ""; }
-  else if (L.daily) { pts = `${l.claim.toFixed(2)} ${L.tk}`; today = `+${(L.daily * l.amount).toFixed(2)}`; }
-  else if (L.weekly) pts = `${l.week.toFixed(1)} ${L.tk} this week`;
-  else if (L.txs) { pts = `${Math.floor(l.n)} txs`; today = `+${L.txs}`; }
-  else if (L.tasks) { pts = `${Math.floor(l.n)} tasks`; today = `+${L.tasks}`; }
-  const p = pendUsd(f, l), lo = l.lo + l.got + p, hi = l.hi + l.got + p;
-  const earn = f.lo == null && !l.got && !p ? `<span class="earn no">no estimate</span>`
-    : `<span class="earn">${Math.round(lo) === Math.round(hi) ? money(lo) : `${money(lo)} – ${money(hi)}`}</span>`;
-  const claim = claimable(f, l) ? `<button class="claim" data-claim="${id}">Claim ${tokAmt(f, l.claim)} ${L.tk}</button>` : "";
-  return `<div class="lrow lcols">
-    <div class="farm"><span class="lg ${f.c}">${f.ini}</span><b>${f.name}</b><span class="chip ${st[0]}">${st[1]}</span></div>
-    <div><b>${l.amount ? usd(l.amount) : "free"}</b></div>
-    <div class="pts"><b>${pts}</b>${today ? `<em>${today}</em>` : ""}</div>
-    <div>${earn}</div>
-    <div class="acts">${claim}<button class="stop" data-stop="${id}">Stop</button></div>
+  let third;
+  if (L.pts) third = `<small>POINTS</small><b class="c">${fmt(l.pts)}</b>`;
+  else if (L.daily) third = `<small>PAID</small><b class="c">${(l.claim + l.got).toFixed(2)} ${L.tk}</b>`;
+  else if (L.weekly) third = `<small>THIS WEEK</small><b class="c">${l.week.toFixed(1)} ${L.tk}</b>`;
+  else third = `<small>${L.tasks ? "TASKS" : "TXS"}</small><b class="c">${Math.floor(l.n)}</b>`;
+  const today = !earning ? "—" : L.pts ? `+${fmt(ptsWeek(f, l.amount) / 7)} pts` : L.daily ? `+${(L.daily * l.amount).toFixed(2)}` : L.weekly ? `+${(weekly(f, l.amount) / 7).toFixed(2)}` : `+${L.txs || L.tasks}`;
+  return `<div class="glass lcard ${st[0] === "s" ? "glow" : ""}">
+    <div class="fhead">${logo(f)}<div class="fname"><b>${f.name}</b><span class="chip ${st[0]}">${st[1]}</span></div><button class="stop" data-stop="${id}">Stop</button></div>
+    ${liveDial(f, l)}
+    <div class="fboxes"><div><small>IN</small><b>${l.amount ? usd(l.amount) : "free"}</b></div><div><small>TODAY</small><b class="g">${today}</b></div><div>${third}</div></div>
+    ${claimable(f, l) ? `<button class="claim" data-claim="${id}">Claim ${tokAmt(f, l.claim)} ${L.tk}</button>` : `<div class="noclaim">${L.tge && !l.done ? `token in ${Math.max(1, Math.ceil(l.tge - S.farming.day))} days` : L.weekly ? "next payout this week" : "nothing to claim yet"}</div>`}
   </div>`;
 }
-function liveChart(F) {
-  const W = 1196, Hh = 150, L = 4, R = 4, T = 12, B = 22;
-  const hist = F.hist.concat([{d: F.day, ...totals()}]);
-  const N = Math.max(7, F.day), top = Math.max(50, ...hist.map(h => h.hi)) * 1.1;
-  const x = d => L + d / N * (W - L - R), y = v => Hh - B - v / top * (Hh - T - B);
-  const band = hist.map(p => `${x(p.d)},${y(p.hi)}`).join(" ") + " " + hist.slice().reverse().map(p => `${x(p.d)},${y(p.lo)}`).join(" ");
-  const line = hist.map(p => `${x(p.d)},${y((p.lo + p.hi) / 2)}`).join(" ");
-  const last = hist[hist.length - 1];
-  const start = SHOT ? "28 Sep" : "start"; // the picture's run began on 28 Sep
+function liveChart(F, P) {
+  const W = 760, Hh = 168, L = 2, R = 2, T = 26, B = 22;
+  const hist = F.hist.concat([{d: F.day, ...totals()}]), now = hist[hist.length - 1];
+  const top = Math.max(50, P.hi) * 1.08;
+  const x = d => L + Math.min(180, d) / 180 * (W - L - R), y = v => Hh - B - v / top * (Hh - T - B);
+  const mid = p => (p.lo + p.hi) / 2;
+  const area = `M${x(0)} ${y(0)} ` + hist.map(p => `L${x(p.d).toFixed(1)} ${y(mid(p)).toFixed(1)}`).join(" ") + ` L${x(now.d).toFixed(1)} ${y(0)} Z`;
+  const line = hist.map((p, i) => `${i ? "L" : "M"}${x(p.d).toFixed(1)} ${y(mid(p)).toFixed(1)}`).join(" ");
+  const pm = (P.lo + P.hi) / 2;
+  const band = `M${x(now.d)} ${y(now.hi)} L${x(180)} ${y(P.hi)} L${x(180)} ${y(P.lo)} L${x(now.d)} ${y(now.lo)} Z`;
+  const nx = x(now.d), right = nx > W - 200;
   return `<svg viewBox="0 0 ${W} ${Hh}">
-    <line x1="${L}" x2="${W - R}" y1="${Hh - B}" y2="${Hh - B}" stroke="#1e3050"/>
-    <polygon points="${band}" fill="rgba(0,207,255,.14)"/>
-    <polyline points="${line}" fill="none" stroke="#00ff88" stroke-width="2.6"/>
-    <circle cx="${x(last.d)}" cy="${y((last.lo + last.hi) / 2)}" r="5.5" fill="#00ff88"/>
-    ${F.claims.map(d => `<line x1="${x(d)}" x2="${x(d)}" y1="${Hh - B}" y2="${Hh - B - 9}" stroke="#00ff88" stroke-width="2"/>`).join("")}
-    <text x="${L}" y="${Hh - 5}" fill="#7f93ad" font-size="11">${start}</text>
-    <text x="${W - R}" y="${Hh - 5}" fill="#7f93ad" font-size="11" text-anchor="end">today</text>
+    <line x1="${L}" x2="${W - R}" y1="${y(0)}" y2="${y(0)}" stroke="#1e3050"/>
+    <path d="${band}" fill="url(#projfill)"/>
+    <path d="M${nx} ${y(mid(now))} L${x(180)} ${y(pm)}" stroke="#00cfff" stroke-width="2" stroke-dasharray="5 6" fill="none" stroke-opacity=".8"/>
+    <path d="${area}" fill="url(#earnfill)"/>
+    <path d="${line}" stroke="#00ff88" stroke-width="3" fill="none" filter="url(#soft)"/>
+    ${F.claims.map(d => `<circle cx="${x(d)}" cy="${y(mid(hist.reduce((b, p) => Math.abs(p.d - d) < Math.abs(b.d - d) ? p : b, hist[0])))}" r="3.5" fill="#e6edf7"/>`).join("")}
+    <circle cx="${nx}" cy="${y(mid(now))}" r="12" fill="#00ff88" fill-opacity=".18"/><circle cx="${nx}" cy="${y(mid(now))}" r="5.5" fill="#00ff88" filter="url(#soft)"/>
+    <circle cx="${x(180)}" cy="${y(pm)}" r="5" fill="#06090f" stroke="#00cfff" stroke-width="2"/>
+    <text x="${x(180) - 4}" y="${Math.max(12, y(P.hi) - 8)}" text-anchor="end" fill="#00cfff" font-size="12" font-weight="700">6 months ≈ ${rng(P.lo, P.hi)}</text>
+    <text x="${L}" y="${Hh - 5}" fill="#7f93ad" font-size="11">${SHOT ? "28 Sep" : "start"}</text>
+    ${nx > 90 ? `<text x="${nx + (right ? -8 : 8)}" y="${Hh - 5}" text-anchor="${right ? "end" : "start"}" fill="#00ff88" font-size="11" font-weight="700">now</text>` : ""}
+    <text x="${W - R}" y="${Hh - 5}" text-anchor="end" fill="#7f93ad" font-size="11">${SHOT ? "27 Mar" : "6 months"}</text>
   </svg>`;
 }
 function liveView() {
   const F = S.farming;
   if (!F) return `<div class="back">← Back</div><div class="wrap">${header()}
-    <div class="card emptylive"><b>Nothing farming yet</b>Type an amount on the Farms tab and press Start farming.<br>
-    <button class="go" data-tab="farms">Go to Farms</button></div></div>`;
-  const T = totals(), ids = Object.keys(F.farms).sort((a, b) => rank(BY[a]) - rank(BY[b]));
-  let perDay = 0, ready = 0, ptsDay = 0;
+    <div class="glass emptylive"><b>Nothing farming yet</b>Type an amount on the Farms tab and press Start farming.<br>
+    <button class="go" data-tab="farms">${BOLT}GO TO FARMS</button></div></div>`;
+  const T = totals(), P = projection(), ids = Object.keys(F.farms).sort((a, b) => rank(BY[a]) - rank(BY[b]));
+  let perDay = 0, ready = 0;
   ids.forEach(id => {
     const f = BY[id], l = F.farms[id], L = f.live;
     if (claimable(f, l)) ready += l.claim * L.px;
     if (l.done || (L.cap0 != null && l.cap >= 1)) return;
     const e = est(f, l.amount); if (e && (L.pts || L.daily)) perDay += (e.lo + e.hi) / 2 / 180;
     if (L.daily) perDay += L.daily * l.amount;
-    if (L.weekly) perDay += L.weekly * l.amount / 7 * L.px;
-    if (L.pts) ptsDay += (f.ppw || 0) / 7 * g(f, l.amount) / g(f, f.ref);
+    if (L.weekly) perDay += weekly(f, l.amount) / 7 * L.px;
   });
   const seen = new Set(), ev = F.feed.filter(e => { const k = e.txt.replace(/<[^>]+>/g, "").split(/[:+\d]/)[0]; return !seen.has(k) && seen.add(k); })
     .slice(0, 3).map(e => `<span class="ev"><i style="background:var(--${e.c})"></i><time>${ago(e.d)}</time><span>${e.txt}</span></span>`).join("");
   return `<div class="back">← Back</div><div class="wrap">${header()}
-  <div class="ltiles">
-    <div class="tile"><small>IN FARMS</small><b>${usd(liveSum())}</b><span>${ids.length} farms · ${Math.floor(F.day)} days in</span></div>
-    <div class="tile hi"><small>EARNED SO FAR</small><b>${money(T.lo)} – ${money(T.hi)}</b><span><em>+${money(perDay)}</em> today</span></div>
-    <div class="tile"><small>READY TO CLAIM</small><b>${money(ready)}</b>${ready > 0 ? `<button class="claimbig" data-act="claimall">CLAIM ALL</button>` : `<span>nothing yet</span>`}</div>
+  <div class="lhero">
+    <div class="glass glow earn">
+      <div class="row">
+        <div><span class="cap">EARNED SO FAR</span><div class="big">${rng(T.lo, T.hi)}</div><div class="today"><em>+${money(perDay)} today</em>day ${Math.floor(F.day)} of your 6 months</div></div>
+      </div>
+      ${liveChart(F, P)}
+      <div class="ticker"><span class="cap">CYMETICA 24/7</span>${ev}</div>
+    </div>
+    <div class="glass claimc">
+      <span class="cap">READY TO CLAIM</span>
+      <div class="felt"><small>CLAIM NOW</small><b>${money(ready)}</b><span>${ready > 0 ? "tokens waiting for you" : "nothing yet"}</span></div>
+      <button class="go" data-act="claimall" ${ready > 0 ? "" : "disabled"}>${BOLT}CLAIM ALL</button>
+      <div class="boxes"><div><small>IN FARMS</small><b>${usd(liveSum())}</b></div><div><small>FARMS</small><b>${ids.length}</b></div><div><small>CLAIMED</small><b class="g">${money(F.claimed)}</b></div></div>
+      <div class="fine" style="margin-top:auto;padding-top:12px"><button class="stopall" data-act="stopall" style="color:var(--dim);font-size:11.5px">Stop all farms</button></div>
+    </div>
   </div>
-  <div class="card chartc">${liveChart(F)}<div class="ticker"><span class="lab">CYMETICA 24/7</span>${ev}</div></div>
-  <div class="table" style="margin-top:14px">
-    <div class="lhead lcols"><div>FARM</div><div>IN</div><div>POINTS</div><div>EARNED SO FAR</div><div></div></div>
-    ${ids.map(id => liveRow(id, F.farms[id])).join("")}
-    <div class="ltot lcols"><div>Total · ${ids.length} farms</div><div><b>${usd(liveSum())}</b></div><div><span style="color:var(--dim);font-size:12px">+${fmt(ptsDay)} pts today</span></div>
-      <div><span class="earn">${money(T.lo)} – ${money(T.hi)}</span></div><div class="acts"><button class="stop" data-act="stopall">Stop all</button></div></div>
-  </div></div>`;
+  <div class="sechead" style="margin-top:34px"><div><h2>Live now <i>${ids.length}</i></h2></div></div>
+  <div class="grid">${ids.map(id => liveCard(id, F.farms[id])).join("")}</div>
+  </div>`;
 }
 
 /* ---------- logo sheet ---------- */
 function sheet() {
-  const sz = n => logo().replace("<svg", `<svg style="width:${n}px;height:${n}px"`);
-  return `<div class="sheet"><div class="bigl">${logo()}</div>
-    <div><div class="wm">${logo()}<div><span>AIRDROP</span><b>FARMER</b></div></div>
+  const sz = n => logoSvg().replace("<svg", `<svg style="width:${n}px;height:${n}px"`);
+  return `<div class="sheet"><div class="bigl">${logoSvg()}</div>
+    <div><div class="wm">${logoSvg()}<div><span>AIRDROP</span><b>FARMER</b></div></div>
       <div class="sizes">${[64, 40, 24, 16].map(n => `<div>${sz(n)}${n}</div>`).join("")}</div></div></div>`;
 }
 
@@ -830,34 +897,28 @@ function go(tab) {
   render(); scrollTo(0, 0);
 }
 function openStopAll() {
-  $("#modal").innerHTML = `<div class="ov" data-act="close"><div class="card modal" style="width:440px"><div class="cap">STOP ALL</div>
+  $("#modal").innerHTML = `<div class="ov" data-act="close"><div class="glass modal" style="width:440px"><div class="cap">STOP ALL</div>
     <h3>Stop every farm?</h3><div class="lead">Anything claimable is claimed first, positions are closed and about ${usd(Object.values(S.farming.farms).reduce((s, l) => s + Math.max(0, l.amount - l.cost), 0))} goes back to your balance.</div>
-    <div class="btns"><button class="ghost" data-act="close">Cancel</button><button class="go" style="background:var(--red);box-shadow:none;color:var(--text)" data-act="stopall-ok">Stop all</button></div></div></div>`;
+    <div class="btns"><button class="ghost" data-act="close">Cancel</button><button class="go" style="background:var(--red);box-shadow:none;color:var(--text)" data-act="stopall-ok">STOP ALL</button></div></div></div>`;
 }
 
 document.addEventListener("click", e => {
-  const t = e.target.closest("[data-tab],[data-tog],[data-use],[data-open],[data-act],[data-speed]");
+  const t = e.target.closest("[data-tab],[data-tog],[data-use],[data-act],[data-speed]");
   if (!t || SHOT) return;
   const d = t.dataset;
   if (d.tab) return e.preventDefault(); // switched on pointerdown, below
   if (d.tog) {
     const f = BY[d.tog];
-    S.custom = true;
-    if (S.on[f.id]) { S.on[f.id] = false; if (!f.free) { S.last[f.id] = amtOf(f.id) || S.last[f.id]; S.amt[f.id] = 0; } updateRow(f.id); updatePlan(); save(); }
-    else if (f.free) { S.on[f.id] = true; updateRow(f.id); updatePlan(); save(); }
-    else {
-      const room = S.budget - allocated();
-      if (room < 1) return toast(`All your USDC is in farms: raise the amount or lower another farm`);
-      setAmt(f.id, Math.min(rec(f) || S.last[f.id] || 300, room), true);
-    }
+    if (S.on[f.id]) { S.on[f.id] = false; S.custom = true; if (!f.free) { S.last[f.id] = amtOf(f.id) || S.last[f.id]; S.amt[f.id] = 0; } S.budget = planSum(); updateCard(f.id); updatePlan(); save(); }
+    else if (f.free) { S.on[f.id] = true; S.custom = true; updateCard(f.id); updatePlan(); save(); }
+    else setAmt(f.id, Math.min(rec(f) || S.last[f.id] || 300, maxAmt()));
     return;
   }
   if (d.use) return setAmt(d.use, rec(BY[d.use]));
-  if (d.open) { S.open = S.open === d.open ? null : d.open; renderList(); save(); return; }
   if (d.speed != null) { S.speed = +d.speed; ribbon(); save(); return; }
   switch (d.act) {
-    case "max": { const B = Math.floor(S.balance + liveSum()); $("#budget").value = fmt(B); setBudget(B, true); break; }
-    case "best": applyBest(); renderList(); updatePlan(); save(); toast("Best split for " + usd(S.budget)); break;
+    case "max": setBudget(maxAmt(), true); break;
+    case "best": REC = recommend(S.budget); applyBest(); renderList(); updatePlan(); save(); toast("Best split for " + usd(S.budget)); break;
     case "start": openStart(); break;
     case "close": if (e.target === t) $("#modal").innerHTML = ""; break;
     case "confirm": confirmStart(); break;
@@ -865,14 +926,22 @@ document.addEventListener("click", e => {
     case "reset": try { localStorage.removeItem(KEY); } catch (err) {} S = DEFAULT(); REC = recommend(S.budget); applyBest(); go("farms"); toast("Test reset"); break;
   }
 });
+// drag a ring: the amount follows the pointer round the dial
+let drag = null;
+function dialAmount(svg, e) {
+  const r = svg.getBoundingClientRect(), sx = D.w / r.width;
+  const px = (e.clientX - r.left) * sx - D.cx, py = (e.clientY - r.top) * sx - D.cy;
+  let a = Math.atan2(py, px) * 180 / Math.PI; if (a < 0) a += 360;
+  let t = ((a - D.a0) % 360 + 360) % 360 / D.sweep;
+  if (t > 1) t = t - 1 < (360 / D.sweep - 1) / 2 ? 1 : 0; // in the gap at the bottom: the nearer end
+  const v = maxAmt() * t * t;
+  return v < 1000 ? Math.round(v / 10) * 10 : v < 5000 ? Math.round(v / 50) * 50 : Math.round(v / 100) * 100;
+}
 // the live tab redraws twice a second, so the tabs and its buttons act on pointerdown
 document.addEventListener("pointerdown", e => {
   if (SHOT || e.button) return;
-  const svg = e.target.closest("svg[data-chart]");
-  if (svg) { // click the simulator's chart to set the amount
-    const r = svg.getBoundingClientRect(), px = (e.clientX - r.left) * (+svg.dataset.vw / r.width);
-    return setAmt(svg.dataset.chart, Math.max(0, Math.round((px - +svg.dataset.l) / +svg.dataset.w * S.budget / sstep()) * sstep()));
-  }
+  const svg = e.target.closest("svg[data-dial]");
+  if (svg && !BY[svg.dataset.dial].free) { drag = svg.dataset.dial; svg.setPointerCapture && svg.setPointerCapture(e.pointerId); setAmt(drag, dialAmount(svg, e), true); e.preventDefault(); return; }
   const t = e.target.closest("[data-tab],[data-claim],[data-stop],[data-act=claimall],[data-act=stopall]");
   if (!t) return;
   const d = t.dataset;
@@ -880,12 +949,17 @@ document.addEventListener("pointerdown", e => {
   if (d.act === "stopall") return openStopAll();
   if (d.claim) { const v = claimFarm(d.claim); if (v) floatUp(e.clientX, e.clientY, "+" + money(v)); }
   else if (d.stop) stopFarm(d.stop);
-  else if (d.act === "claimall") { const v = Object.keys(S.farming.farms).reduce((s, id) => s + claimFarm(id), 0); if (v) floatUp(e.clientX, e.clientY, "+" + money(v)); }
+  else if (d.act === "claimall") { if (!S.farming) return; const v = Object.keys(S.farming.farms).reduce((s, id) => s + claimFarm(id), 0); if (v) floatUp(e.clientX, e.clientY, "+" + money(v)); }
   save(); render();
 });
+document.addEventListener("pointermove", e => {
+  if (!drag) return;
+  const svg = document.querySelector(`svg[data-dial="${drag}"]`);
+  if (svg) setAmt(drag, dialAmount(svg, e), true);
+});
+document.addEventListener("pointerup", () => { if (drag) tellMoved(BY[drag]); drag = null; });
 document.addEventListener("input", e => {
   const t = e.target;
-  if (t.dataset.rng) { setAmt(t.dataset.rng, +t.value); if (+t.value !== amtOf(t.dataset.rng)) t.value = amtOf(t.dataset.rng); return; }
   if (t.dataset.amt) { setAmt(t.dataset.amt, +t.value.replace(/[^\d.]/g, "")); return; }
   if (t.id === "budget") { setBudget(+t.value.replace(/[^\d.]/g, ""), false); return; }
   if (t.id === "q") { S.q = t.value; renderList(); save(); }
@@ -893,7 +967,7 @@ document.addEventListener("input", e => {
 document.addEventListener("focusout", e => {
   const t = e.target;
   if (t.dataset && t.dataset.amt) t.value = fmt(amtOf(t.dataset.amt));
-  if (t.id === "budget") { t.value = fmt(S.budget); setBudget(S.budget, true); }
+  if (t.id === "budget") { if (S.budget > maxAmt()) setBudget(S.budget, true); t.value = fmt(S.budget); }
 });
 document.addEventListener("keydown", e => {
   if (e.key === "Escape") $("#modal").innerHTML = "";
@@ -916,15 +990,12 @@ setInterval(() => {
 }, 250);
 
 // the pictures: the same plan before Start (Farms) and 23 days into it (Live farms), the weekly pays claimed on days 7 and 14
-if (SHOT) {
-  S.open = "arcus";
-  if (TAB === "live") {
-    startFarms();
-    const runTo = d => { while (S.farming.day < d - 1e-9) advance(Math.min(.25, d - S.farming.day)); };
-    runTo(7.4); claimFarm("lighter");
-    runTo(14.4); claimFarm("lighter"); claimFarm("polymarket");
-    runTo(23 + .6 / 24);
-  }
+if (SHOT && TAB === "live") {
+  startFarms();
+  const runTo = d => { while (S.farming.day < d - 1e-9) advance(Math.min(.25, d - S.farming.day)); };
+  runTo(7.4); claimFarm("lighter");
+  runTo(14.4); claimFarm("lighter"); claimFarm("polymarket");
+  runTo(23 + .6 / 24);
 }
 render();
 if (SHOT && Q.has("modal")) openStart();

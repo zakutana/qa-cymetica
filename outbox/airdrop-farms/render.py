@@ -38,15 +38,15 @@ with sync_playwright() as p:
         print(w, "horizontal overflow px:", t.evaluate("() => document.documentElement.scrollWidth - innerWidth"))
         t.screenshot(path=str(out / f"1-farms-{w}.png"), full_page=True)
         if w == 1440:
-            box = t.evaluate("""() => { const a = document.querySelector('.thead').getBoundingClientRect(),
-                c = document.querySelector('.sim').getBoundingClientRect();
-                return {x: a.left - 1, y: a.top + scrollY - 1, width: a.width + 2, height: c.bottom - a.top + 2}; }""")
-            t.screenshot(path=str(out / "2-farm-simulator.png"), clip=box, full_page=True)
+            box = t.evaluate("""() => { const c = [...document.querySelectorAll('#list .fcard')].slice(0, 3).map(e => e.getBoundingClientRect());
+                return {x: c[0].left - 24, y: c[0].top + scrollY - 24, width: c[2].right - c[0].left + 48, height: c[0].height + 48}; }""")
+            t.screenshot(path=str(out / "2-farm-cards.png"), clip=box, full_page=True)
             t.goto(url + "?tab=farms&shot=1&modal=1", wait_until="networkidle")
             t.wait_for_timeout(500)
             t.screenshot(path=str(out / "3-start-farming.png"))
             t.goto(url + "?tab=live&shot=1", wait_until="networkidle")
             t.wait_for_timeout(800)
+            print("live horizontal overflow px:", t.evaluate("() => document.documentElement.scrollWidth - innerWidth"))
             t.screenshot(path=str(out / "4-live-farms-1440.png"), full_page=True)
             t.goto(url + "?tab=logo&shot=1", wait_until="networkidle")
             t.wait_for_timeout(500)
