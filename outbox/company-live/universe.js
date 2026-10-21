@@ -39,7 +39,7 @@
   CO.uvPlan = function () {
     var R = rng(2026), items = [], n = 36, tot = 0, own = CO.land ? CO.land() : [], clear = CO.uvGalaxy.adClear;
     var at = function (r, a) { return [Math.sin(a) * r, 0, Math.cos(a) * r]; };
-    (CO.ADS || []).forEach(function (ad) {
+    (CO.ADS_ON ? CO.ADS || [] : []).forEach(function (ad) {
       var r = ORBITS[ad.orbit], a = AZ + ad.at;
       items.push({ kind: 'ad', ad: ad, c: { id: 'ad-' + ad.key, name: ad.name, accent: ad.accent }, orbit: { r: r, a: a, w: CO.uvGalaxy.omega(r) }, pos: at(r, a) });
     });

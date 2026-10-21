@@ -70,6 +70,11 @@
   // its live page. orbit: which of the galaxy's orbits (0 is the innermost); at: its angle from the front of the first
   // look, so both stand in that view. accent: its plate's colour -- the gem green as its logo, the casino the pink of
   // its neon.
+  // The ads are held back: the operator, 2026-10-21, "bod 5 zatim nepodavej, to podame az ve specu 3 az budu mit koupene
+  // pozemky". They are built and drawn (u3d.js adGem, adCasino) but stand on the map only with ?ads in the address, so the
+  // mockup the second spec points at does not show them.
+  CO.ADS_ON = /[?&]ads\b/.test(location.search);
+  document.documentElement.classList.toggle('ads', CO.ADS_ON);
   CO.ADS = [
     { key: 'gem', name: 'Gem Screener', url: 'https://cymetica.com/gem-screener/app?view=apps', accent: 'green', orbit: 1, at: -0.62 },
     { key: 'casino', name: 'Agent Casino', url: 'https://cymetica.com/agent-tournaments', accent: 'pink', orbit: 1, at: 0.62 }

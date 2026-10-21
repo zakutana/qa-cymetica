@@ -9,11 +9,10 @@ The clickable mockup is `outbox/company-live` (open `index.html#universe`; `?vis
 of this round are in `screenshots/`. As before, **the look of the mockup is binding; the logic is yours**: where your
 backend cannot do what is drawn, change the design as little as it takes and name each change in your BB-SPEC.
 
-## A. New: the Universe is land for sale, with two ads on it
+## A. New: the Universe is land for sale
 
-**1. No companies on the map; land instead** (`screenshots/01`, `02`). Cymetica's sun in the middle and **34 slots** along
-the seven orbits (the number is the layout's: each orbit holds as many as its length allows, the places in front of the two ads
-left free). A free slot shows only while the owner has turned on **Buy land** (a button beside Create company): a ring
+**1. No companies on the map; land instead** (`screenshots/01`, `02`). Cymetica's sun in the middle and **36 slots** along
+the seven orbits (the number is the layout's: each orbit holds as many as its length allows). A free slot shows only while the owner has turned on **Buy land** (a button beside Create company): a ring
 with a plus, dashed. A slot you own is always drawn: a solid green ring, a beam of light and the plate YOUR LAND. Slots
 turn with their orbit like the stations did. Where 3D cannot start, the flat map draws the same (design `universe.js`).
 
@@ -30,14 +29,9 @@ it one number, so it can be changed later.
 design). Its card says: *Add a building with Build it Better* and links to `/build-it-better`. **Products from Build it Better
 will stand on slots later; nothing more is asked of that here.**
 
-**5. Two ads** (`01`). Our two top products stand on the map, **larger than any station and smaller than the sun**: Gem
-Screener as a floating cut diamond in its logo's greens, Agent Casino as an orbital chip, a ring station in neon magenta
-and violet with a hologram of the Agent Tournaments logo over its mast. Each has a plate with AD over it and opens its live
-page in a new tab (`/gem-screener/app?view=apps`, `/agent-tournaments`). The two are a list Cymetica controls, so more ads
-can come. The builders are `adGem` and `adCasino` in `design/u3d.js`; they are code, not pictures.
-
-**Not part of this round:** how a visitor finds a public company now that companies do not stand on the map. The visit view
-itself stays (`?visit=<id>`, see item 8).
+**Not part of this round:** advertising buildings on the map (the mockup has two, which stay hidden unless `?ads` is in the
+address; they come in a later round), and how a visitor finds a public company now that companies do not stand on the map. The visit view itself stays
+(`?visit=<id>`, see item 8).
 
 ## B. Fixes and what is missing after the first build
 

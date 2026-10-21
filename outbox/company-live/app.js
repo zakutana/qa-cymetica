@@ -688,7 +688,7 @@
       '<p class="pfsrc">Visitors, uses, views, likes: Cymetica (' + esc(Rd.src) + '), last ' + Rd.days + ' days, read ' + Rd.at + '. Earnings: proposed, placeholder rates.</p>');
   }
   function uvStats(s) {
-    setHTML($('uv-sum'), '<b>' + s.free + '</b> free slots · <b class="gr">' + s.owned + '</b> yours · <b class="cy">' + s.ads + '</b> ads');
+    setHTML($('uv-sum'), '<b>' + s.free + '</b> free slots · <b class="gr">' + s.owned + '</b> yours' + (s.ads ? ' · <b class="cy">' + s.ads + '</b> ads' : ''));
   }
   // Buy land: a mode the stage is in. On, the free slots show on the map and a click on one buys it; Esc or the button
   // again turns it off.
@@ -698,8 +698,7 @@
     $('uvstage').classList.toggle('buying', buying);
     $('uv-buy').classList.toggle('on', buying);
     $('uv-buy').textContent = buying ? '× Done' : '+ Buy land';
-    $('uv-price').textContent = CO.LAND_PRICE.toLocaleString('en-US');
-    if (uv && uv.setBuying) uv.setBuying(buying);
+    $('uv-price').textContent = CO.LAND_PRICE.toLocaleString('en-US');    if (uv && uv.setBuying) uv.setBuying(buying);
   }
   // a slot: for sale, its price and a Buy; yours, the way to build on it (Build it Better)
   function slotCard(it) {
