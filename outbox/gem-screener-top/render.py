@@ -57,5 +57,18 @@ with sync_playwright() as p:
           top: getComputedStyle(document.querySelector('.shell')).getPropertyValue('--gs-top')})""")
         print(view, n)
         t.screenshot(path=str(here / f"{view}-1440.png"), full_page=True)
+    # the header's light follows the logo on wide screens: the top of Top Picks at 1920 and 2560
+    for w in (1920, 2560):
+        t2 = b.new_page(viewport={"width": w, "height": 900})
+        t2.goto(URL + "apps", wait_until="load", timeout=90000)
+        t2.wait_for_timeout(6000)
+        t2.click('a[href*="view=start"], [data-view="start"]')
+        t2.wait_for_timeout(2500)
+        t2.evaluate(HIDE_FIXED)
+        t2.add_style_tag(content=css)
+        t2.evaluate(js)
+        t2.wait_for_timeout(800)
+        t2.screenshot(path=str(here / f"head-{w}.png"), clip={"x": 0, "y": 0, "width": w, "height": 420})
+        t2.close()
     b.close()
 print("rendered")

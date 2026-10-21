@@ -1,6 +1,10 @@
 // Gem Screener patch, the part CSS cannot do. Everything shown comes from the page itself: each card's own text,
 // and the Holders-paid smiley the Apps table already shows beside the same project's name.
 (() => {
+  // the header's light starts at the gem: the logo sits at x=32 at 1440 px and further right on wide screens
+  const logo = document.querySelector('.gs-logo img'), hd = document.querySelector('header.top');
+  if (logo && hd) hd.style.setProperty('--logo-x', Math.round(logo.getBoundingClientRect().left) + 'px');
+
   // the top background ends where the content starts: "Degen picks" on Top Picks, the table on Apps and Chains
   const view = document.querySelector('.view.active');
   const end = view && (view.id === 'view-start'

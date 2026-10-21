@@ -14,7 +14,7 @@ from pathlib import Path
 
 HERE = Path(__file__).resolve().parent
 W, H = 1920, 130
-CX, CY = 68, 58      # the gem's centre in the header at 1440+ (the logo's left edge sits at x=32, 64 px tall)
+CX, CY = 66, 46      # the gem's centre in the header when the logo's left edge sits at x=32 (it is 64 px tall, 14 px from the top)
 
 
 def light():
@@ -30,6 +30,12 @@ def light():
         "<stop offset='.55' stop-color='white' stop-opacity='.35'/>"
         "<stop offset='1' stop-color='white' stop-opacity='0'/></radialGradient>"
         "<mask id='k'><rect width='1920' height='130' fill='url(%23m)'/></mask>"
+        # the whole picture fades in over its first 140 px, so on a wide screen (where it starts further right, at the
+        # logo) there is no edge where it begins
+        "<linearGradient id='l' x1='0' x2='140' y1='0' y2='0' gradientUnits='userSpaceOnUse'>"
+        "<stop offset='0' stop-color='white' stop-opacity='0'/><stop offset='1' stop-color='white' stop-opacity='1'/></linearGradient>"
+        "<mask id='e'><rect width='1920' height='130' fill='url(%23l)'/>"
+        "<rect x='140' width='1780' height='130' fill='white'/></mask>"
         "<filter id='b' x='-5%' y='-80%' width='110%' height='260%'><feGaussianBlur stdDeviation='13'/></filter>"
         "<filter id='s' x='-50%' y='-50%' width='200%' height='200%'><feGaussianBlur stdDeviation='4'/></filter>"
         "<filter id='h' x='0' y='0' width='100%' height='100%'>"
@@ -61,7 +67,7 @@ def light():
                       f"Q{x} {y} {x} {y - r * 2.4} Z' fill='%2300cfff' fill-opacity='.34'/>")
     out.append(f"<g filter='url(%23s)'>{''.join(glints)}</g>")
     return (f"<svg xmlns='http://www.w3.org/2000/svg' width='{W}' height='{H}' viewBox='0 0 {W} {H}'>"
-            f"<!--motif-->{''.join(out)}</svg>")
+            f"<!--motif-->{out[0]}<g mask='url(%23e)'>{''.join(out[1:])}</g></svg>")
 
 
 css = (HERE / "patch.css").read_text(encoding="utf-8")

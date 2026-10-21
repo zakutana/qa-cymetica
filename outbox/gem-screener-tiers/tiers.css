@@ -1,0 +1,37 @@
+/* Gem Screener Top Picks: the tier list. The site's own cyan, green and blue, and its slate neutrals; its fonts. */
+.gt-wrap { margin: 6px 0 30px; }
+.gt-wrap .dp-head { margin-top: 2px; }
+.gt-live { display: inline-block; width: 9px; height: 9px; border-radius: 50%; margin-right: 12px; vertical-align: middle;
+  background: #00ff88; box-shadow: 0 0 10px #00ff88; animation: gtp 1.8s infinite; }
+@keyframes gtp { 50% { opacity: .35; } }
+.gt-sub { font-size: 12.5px; color: #a9b8cc; margin: 4px 0 16px; letter-spacing: .02em; }
+.gt-sub b { color: #e6edf7; }
+.gt-tiers { display: flex; flex-direction: column; gap: 8px; }
+
+.gt-row { display: grid; grid-template-columns: 138px minmax(0, 1fr); border-radius: 14px; overflow: hidden;
+  background: #0d1520; border: 1px solid #1a2a44; }
+.gt-lab { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4px; padding: 12px 8px; text-align: center; }
+.gt-lab b { font-family: 'Archivo Black', sans-serif; font-weight: 400; font-size: 52px; line-height: 1; }
+.gt-lab span { display: inline-flex; align-items: center; gap: 6px; font-size: 11px; font-weight: 700; letter-spacing: .14em; text-transform: uppercase; }
+.gt-s .gt-lab { background: #00ff88; color: #06090f; box-shadow: 0 0 26px rgba(0,255,136,.30); position: relative; z-index: 1; }
+.gt-a .gt-lab { background: rgba(0,255,136,.62); color: #06090f; }
+.gt-b .gt-lab { background: #00cfff; color: #06090f; }
+.gt-c .gt-lab { background: #3b82f6; color: #e6edf7; }
+.gt-d .gt-lab { background: #7f93ad; color: #06090f; }
+.gt-f .gt-lab { background: rgba(127,147,173,.45); color: #e6edf7; }
+.gt-gem { width: 14px; height: 14px; background: #06090f;
+  clip-path: polygon(22% 8%, 78% 8%, 100% 38%, 50% 94%, 0 38%); }
+
+.gt-ico { display: flex; flex-wrap: wrap; align-content: center; gap: 12px 8px; padding: 14px 16px; }
+.gt-ico em { font-size: 12px; color: #7f93ad; font-style: normal; align-self: center; }
+.gt-app { all: unset; box-sizing: border-box; cursor: pointer; width: 70px; display: flex; flex-direction: column; align-items: center; gap: 6px;
+  border-radius: 12px; padding: 4px 0 2px; }
+.gt-app img { width: 52px; height: 52px; border-radius: 50%; object-fit: cover; background: #06090f; border: 1.5px solid #1e3050;
+  transition: transform .15s, border-color .15s, box-shadow .15s; }
+.gt-app span { font-size: 10.5px; font-weight: 700; letter-spacing: .04em; color: #e6edf7; max-width: 68px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.gt-app:hover img, .gt-app:focus-visible img { transform: translateY(-2px); border-color: #00cfff; box-shadow: 0 0 14px rgba(0,207,255,.45); }
+.gt-s .gt-app img { border-color: rgba(0,255,136,.7); }
+.gt-s .gt-app:hover img { border-color: #00ff88; box-shadow: 0 0 14px rgba(0,255,136,.5); }
+.gt-more { all: unset; box-sizing: border-box; cursor: pointer; width: 52px; height: 52px; margin: 4px 9px 0; border-radius: 50%; display: grid; place-items: center;
+  border: 1.5px dashed #3b82f6; color: #3b82f6; font-size: 13px; font-weight: 700; }
+@media (max-width: 700px) { .gt-row { grid-template-columns: 82px minmax(0, 1fr); } .gt-lab b { font-size: 38px; } }
