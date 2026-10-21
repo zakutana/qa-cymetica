@@ -1043,109 +1043,157 @@ function makeStation(c, seed, opts) {
 // The Universe as marketing: land round Cymetica bought a slot at a time, and our two products standing on it as ads
 // ("1 Gem screener to bude takovy velky diamant vznasejici se a druhy bude velke Agent Casino"). Each is a plot like a
 // station's (makeStation's fields), so the map moves, names, picks and flies to it the same way. Written in a
-// station's units and drawn UVAD times (a station UVSS times): an ad is the bigger thing on the map.
+// station's units and drawn UVAD times. Bigger than a station, smaller than the sun: "nic nesmi byt vetsi nez
+// slunce" (2026-10-21) -- the sun's ball is 2 x UVSUN.disc x UVSUN.k = 43 across, and an ad stands nearer the first
+// look's camera than the sun does, so on the screen it is up to a sixth larger than here.
 function ownGeo(mesh) { mesh.userData.own = true; return mesh; }
-// the striped edge of a poker chip: its colour with six white inserts round it
-function chipEdgeTex(hex) {
-  const key = 'chip' + hex; if (TX[key]) return TX[key];
-  const c = document.createElement('canvas'); c.width = 512; c.height = 32; const g = c.getContext('2d');
-  g.fillStyle = hex; g.fillRect(0, 0, 512, 32);
-  g.fillStyle = '#f2f5f7'; for (let i = 0; i < 6; i++) g.fillRect(i * 512 / 6 + 20, 4, 44, 24);
-  g.fillStyle = 'rgba(0,0,0,.25)'; g.fillRect(0, 0, 512, 3); g.fillRect(0, 29, 512, 3);
-  const t = new THREE.CanvasTexture(c); t.colorSpace = THREE.SRGBColorSpace; t.wrapS = THREE.RepeatWrapping; t.anisotropy = 4; TX[key] = t; return t;
-}
-// the casino's felt, seen from above: Agent Tournaments' green with its honeycomb weave, clear in the middle, a
-// printed ring round it and a rail of chip inserts at the edge
-function feltTex() {
-  if (TX.felt) return TX.felt;
-  const W = 512, c = document.createElement('canvas'); c.width = c.height = W; const g = c.getContext('2d'), m = W / 2;
-  const gr = g.createRadialGradient(m, m, 0, m, m, m); gr.addColorStop(0, '#0f5a37'); gr.addColorStop(0.8, '#0a3f27'); gr.addColorStop(1, '#06281a');
-  g.fillStyle = gr; g.fillRect(0, 0, W, W);
-  g.strokeStyle = 'rgba(0,255,136,.16)'; g.lineWidth = 1.5;
-  const s = 14, h = s * Math.sqrt(3);
-  for (let y = -h; y < W + h; y += h) for (let x = -s * 3; x < W + s * 3; x += s * 3) {
-    [[x, y], [x + s * 1.5, y + h / 2]].forEach(([cx, cy]) => {
-      if (Math.hypot(cx - m, cy - m) < W * 0.2) return;
-      g.beginPath(); for (let k = 0; k <= 6; k++) { const a = k * Math.PI / 3; g[k ? 'lineTo' : 'moveTo'](cx + Math.cos(a) * s, cy + Math.sin(a) * s); } g.stroke();
-    });
+// Gem Screener: its logo turned into a stone, floating over its ring and turning -- a brilliant of eight facets round
+// (the table on top, the crown down to the girdle, the pavilion to its point), each facet flat in one of the logo's
+// greens (pale mint on the table, mint and aqua across the crown, deep teal-green below, the shades alternating round
+// it), outlined dark as the logo is, and glints that come and go on its girdle. Unlit, as a logo is: the shades are
+// the facets', and turning shows them one after another.
+// (drawn a shade deeper than the logo's own: the map's bloom lights anything near white, and a pale table read as a
+// white stone rather than a green one)
+const GEM = { table: '#8eead6', crown: ['#5fd8bd', '#35c2a3'], girdle: ['#27b593', '#1a9c80'], pav: ['#1fae8c', '#0d7a68'], line: '#071319' };
+function adGem(body, b) {
+  const R = 3.2, Hc = 1.45, Hg = 0.25, P = 3.7, Y = 4.6, top = Hg + Hc;
+  const prof = [[0, -P], [R, 0], [R, Hg], [R * 0.6, top], [0, top]].map(([x, y]) => new THREE.Vector2(x, y));
+  const lathe = new THREE.LatheGeometry(prof, 8), geom = lathe.toNonIndexed(); lathe.dispose();
+  const pos = geom.attributes.position, col = new Float32Array(pos.count * 3);
+  const pal = { table: look(GEM.table), crown: GEM.crown.map((h) => look(h)), girdle: GEM.girdle.map((h) => look(h)), pav: GEM.pav.map((h) => look(h)) };
+  for (let i = 0; i < pos.count; i += 3) {
+    let x = 0, y = 0, z = 0;
+    for (let j = 0; j < 3; j++) { x += pos.getX(i + j); y += pos.getY(i + j); z += pos.getZ(i + j); }
+    x /= 3; y /= 3; z /= 3;
+    const k = Math.floor((Math.atan2(x, z) + Math.PI) / (Math.PI / 4)) % 2;   // which shade: the facets alternate round it
+    const f = y > top - 0.01 ? pal.table : y > Hg ? pal.crown[k] : y > 0 ? pal.girdle[k] : pal.pav[k];
+    for (let j = 0; j < 3; j++) col.set([f.r, f.g, f.b], (i + j) * 3);
   }
-  g.strokeStyle = 'rgba(255,200,61,.75)'; g.lineWidth = 5; g.beginPath(); g.arc(m, m, W * 0.36, 0, Math.PI * 2); g.stroke();
-  g.lineWidth = 2; g.beginPath(); g.arc(m, m, W * 0.33, 0, Math.PI * 2); g.stroke();
-  for (let i = 0; i < 24; i++) { g.fillStyle = i % 2 ? '#f2f5f7' : '#ff4444'; g.save(); g.translate(m, m); g.rotate(i / 24 * Math.PI * 2); g.fillRect(W * 0.44, -10, W * 0.05, 20); g.restore(); }
-  const t = new THREE.CanvasTexture(c); t.colorSpace = THREE.SRGBColorSpace; t.anisotropy = 8; TX.felt = t; return t;
-}
-// a roulette wheel from above: red and black pockets, one green, a gold rim, a hub
-function wheelTex() {
-  if (TX.wheel) return TX.wheel;
-  const W = 512, c = document.createElement('canvas'); c.width = c.height = W; const g = c.getContext('2d'), m = W / 2, n = 37;
-  g.fillStyle = '#3a2410'; g.beginPath(); g.arc(m, m, m, 0, Math.PI * 2); g.fill();
-  for (let i = 0; i < n; i++) {
-    g.fillStyle = i === 0 ? '#00b86b' : i % 2 ? '#d01f2e' : '#111418';
-    g.beginPath(); g.moveTo(m, m); g.arc(m, m, m * 0.9, i / n * Math.PI * 2, (i + 1) / n * Math.PI * 2); g.closePath(); g.fill();
-  }
-  g.strokeStyle = '#ffc83d'; g.lineWidth = 10; g.beginPath(); g.arc(m, m, m * 0.92, 0, Math.PI * 2); g.stroke();
-  g.fillStyle = '#5a3a18'; g.beginPath(); g.arc(m, m, m * 0.5, 0, Math.PI * 2); g.fill();
-  g.fillStyle = '#ffc83d'; g.beginPath(); g.arc(m, m, m * 0.12, 0, Math.PI * 2); g.fill();
-  for (let i = 0; i < 4; i++) { g.save(); g.translate(m, m); g.rotate(i * Math.PI / 2); g.fillStyle = '#ffd86a'; g.fillRect(-6, -m * 0.48, 12, m * 0.36); g.restore(); }
-  const t = new THREE.CanvasTexture(c); t.colorSpace = THREE.SRGBColorSpace; t.anisotropy = 8; TX.wheel = t; return t;
-}
-// Gem Screener: a cut diamond floating high over its ring and turning, in the Gem Screener's cyan crystal -- a
-// brilliant of eight facets round (the table on top, the crown down to the girdle, the pavilion to a point), its
-// edges lit, a light inside it and glints that come and go on its girdle
-function adGem(body, b, A) {
-  const R = 3.4, Y = 5.2, prof = [[0, -4.3], [R, 0], [R, 0.26], [R * 0.58, 1.6], [0, 1.6]].map(([x, y]) => new THREE.Vector2(x, y));
-  const geom = new THREE.LatheGeometry(prof, 8), gem = new THREE.Group(); gem.position.y = Y; body.add(gem);
-  gem.add(ownGeo(new THREE.Mesh(geom, new THREE.MeshStandardMaterial({ color: A.c.clone().multiplyScalar(0.6), emissive: A.c, emissiveIntensity: 0.22, roughness: 0.06,
-    metalness: 0.5, flatShading: true, transparent: true, opacity: 0.92, side: THREE.DoubleSide }))));
-  gem.add(ownGeo(new THREE.LineSegments(new THREE.EdgesGeometry(geom, 1), new THREE.LineBasicMaterial({ color: new THREE.Color(0x9ff0ff).multiplyScalar(1.5), transparent: true, opacity: 0.7 }))));
-  const core = glowSprite(A.c, 0.6, 8); core.position.y = 0.2; gem.add(core);
-  const glints = [0, 2, 5].map((k, i) => {
-    const sp = new THREE.Sprite(new THREE.SpriteMaterial({ map: flareTex(), color: new THREE.Color(0xe8fdff).multiplyScalar(1.6), transparent: true, opacity: 0, blending: THREE.AdditiveBlending, depthWrite: false }));
-    const a = k / 8 * Math.PI * 2; sp.position.set(Math.sin(a) * R * (i === 2 ? 0.58 : 1), i === 2 ? 1.6 : 0.13, Math.cos(a) * R * (i === 2 ? 0.58 : 1)); sp.scale.setScalar(2.6); gem.add(sp);
+  geom.setAttribute('color', new THREE.BufferAttribute(col, 3));
+  const gem = new THREE.Group(); gem.position.y = Y; body.add(gem);
+  gem.add(ownGeo(new THREE.Mesh(geom, new THREE.MeshBasicMaterial({ vertexColors: true, side: THREE.DoubleSide }))));
+  gem.add(ownGeo(new THREE.LineSegments(new THREE.EdgesGeometry(geom, 1), new THREE.LineBasicMaterial({ color: look(GEM.line) }))));
+  const aura = glowSprite(new THREE.Color(GEM.pav[0]), 0.16, 8); gem.add(aura);
+  const glints = [0, 3, 6].map((k, i) => {
+    const sp = new THREE.Sprite(new THREE.SpriteMaterial({ map: flareTex(), color: new THREE.Color(0xeafff8).multiplyScalar(1.5), transparent: true, opacity: 0, blending: THREE.AdditiveBlending, depthWrite: false }));
+    const a = k / 8 * Math.PI * 2, r = i === 1 ? R * 0.6 : R;
+    sp.position.set(Math.sin(a) * r, i === 1 ? top : Hg / 2, Math.cos(a) * r); sp.scale.setScalar(1.8); gem.add(sp);
     return { sp, ph: i * 2.1 };
   });
   b.tick = (t) => {
-    gem.rotation.y = t * 0.32; gem.position.y = Y + Math.sin(t * 0.9) * 0.4;
+    gem.rotation.y = t * 0.32; gem.position.y = Y + Math.sin(t * 0.9) * 0.3;
     glints.forEach((g) => { g.sp.material.opacity = Math.pow(Math.max(0, Math.sin(t * 1.3 + g.ph)), 6); });
   };
-  b.top = Y + 1.6 + 0.4; b.bot = 0; b.foot = R;
+  b.top = Y + top + 0.3; b.bot = 0; b.foot = R;
 }
-// Agent Casino: a giant poker chip with Agent Tournaments' felt on top, a tower of chips stacked on it under gold
-// neon, a roulette wheel turning on its crown, and a ring of marquee lights round the chip that chase each other
-function adCasino(body, b, A) {
-  const gold = amat('#ffc83d'), dark = new THREE.MeshStandardMaterial({ color: 0x0a0e14, roughness: 0.5, metalness: 0.4 });
-  const chip = (r, h, y, hex, top) => {
-    const side = new THREE.MeshStandardMaterial({ map: chipEdgeTex(hex), roughness: 0.45, metalness: 0.1, emissive: new THREE.Color(hex), emissiveIntensity: 0.12 });
-    side.map.repeat.set(Math.max(1, Math.round(r * 1.2)), 1);
-    const cap = top || new THREE.MeshStandardMaterial({ color: new THREE.Color(hex).multiplyScalar(0.8), roughness: 0.5, metalness: 0.1 });
-    const m = ownGeo(new THREE.Mesh(new THREE.CylinderGeometry(r, r, h, 64), [side, cap, dark])); m.position.y = y + h / 2; body.add(m);
-    // a thin line of gold neon round each chip's top edge (the rim's glow, not a light: the chips' colours stay)
-    const neon = new THREE.Mesh(G.ringT, gold.rim); neon.scale.setScalar(r * 1.005); neon.rotation.x = Math.PI / 2; neon.position.y = y + h; body.add(neon);
-    return m;
-  };
-  const R = 3.5, H0 = 0.8, H = 1.3;
-  chip(R, H0, 0, '#0b5e3a', new THREE.MeshStandardMaterial({ map: feltTex(), roughness: 0.85, metalness: 0, emissive: 0x00ff88, emissiveIntensity: 0.04 }));
-  chip(2.3, H, H0, '#c81e2c'); chip(1.75, H, H0 + H, '#0b5e3a'); chip(1.25, H, H0 + 2 * H, '#1d3d8f');
-  // the wheel: tilted toward the first look a little, turning
-  const wheel = ownGeo(new THREE.Mesh(new THREE.CylinderGeometry(1.15, 1.25, 0.28, 48), [new THREE.MeshStandardMaterial({ color: 0x5a3a18, roughness: 0.4, metalness: 0.5 }),
-    new THREE.MeshStandardMaterial({ map: wheelTex(), roughness: 0.35, metalness: 0.15, emissive: 0xffffff, emissiveMap: wheelTex(), emissiveIntensity: 0.12 }), dark]));
-  const top = H0 + 3 * H, tilt = new THREE.Group(); tilt.position.y = top + 0.35; tilt.rotation.x = 0.32; tilt.add(wheel); body.add(tilt);
-  const glow = glowSprite(gold.c, 0.08, 6); glow.position.y = top + 0.3; body.add(glow);
-  // the marquee: bulbs round the chip, every other one lit, the two halves swapping
-  const on = new THREE.MeshBasicMaterial({ color: new THREE.Color(0xffd86a).multiplyScalar(1.8) }), off = new THREE.MeshBasicMaterial({ color: new THREE.Color(0xffd86a).multiplyScalar(0.35) });
-  const bulbs = [];
-  for (let i = 0; i < 40; i++) {
-    const a = i / 40 * Math.PI * 2, s = new THREE.Mesh(G.sphere, i % 2 ? on : off); s.scale.setScalar(0.1); s.position.set(Math.sin(a) * (R + 0.05), H0 / 2, Math.cos(a) * (R + 0.05)); body.add(s); bulbs.push(s);
+// The casino's ring as a poker chip's edge: a band of cyan light, the chip's twelve white inserts round it, rows of
+// windows between them (most white, a few pink), as the operator's reference station has its rings lit
+function chipBandTex() {
+  if (TX.chipBand) return TX.chipBand;
+  const W = 1024, H = 64, c = document.createElement('canvas'); c.width = W; c.height = H; const g = c.getContext('2d'), R = rng(57);
+  g.fillStyle = '#06101c'; g.fillRect(0, 0, W, H);
+  const gr = g.createLinearGradient(0, 0, 0, H); gr.addColorStop(0, '#0b5f94'); gr.addColorStop(0.5, '#43d4ff'); gr.addColorStop(1, '#0b5f94');
+  g.fillStyle = gr; g.fillRect(0, 8, W, H - 16);
+  for (let x = 2; x < W; x += 6) for (const y of [14, 24, 34, 44]) {
+    const r = R(); if (r < 0.62) continue;
+    g.fillStyle = r < 0.9 ? 'rgba(235,250,255,.85)' : 'rgba(255,92,150,.95)'; g.fillRect(x, y, 3, 4);
   }
-  b.tick = (t) => {
-    wheel.rotation.y = t * 0.6;
-    const k = Math.floor(t * 2.5) % 2; if (k !== b._k) { b._k = k; bulbs.forEach((s, i) => { s.material = (i + k) % 2 ? on : off; }); }
-  };
-  b.top = top + 0.35 + 0.6; b.bot = 0; b.foot = R;
+  g.fillStyle = '#cfe8f4'; for (let i = 0; i < 12; i++) g.fillRect(i * W / 12 + 22, 8, 30, H - 16);
+  const t = new THREE.CanvasTexture(c); t.colorSpace = THREE.SRGBColorSpace; t.wrapS = THREE.RepeatWrapping; t.anisotropy = 8; TX.chipBand = t; return t;
 }
-// how much larger than its own units an ad is drawn on the map (a station: UVSS): about twice a station's size, the
-// widest station (Citadel, 43) under it -- measured on the page 2026-10-21, the gem 54 across and the casino 56
-const UVAD = 8;
+// The ring's top and bottom, seen from above a chip's face round its edge: strips of light round it and the same twelve
+// inserts across it. A RingGeometry maps its outer radius to the canvas's edge, so the annulus is drawn from q (its
+// inner radius over its outer) to 1.
+function chipFaceTex(q) {
+  const key = 'chipFace' + q.toFixed(2); if (TX[key]) return TX[key];
+  const W = 512, m = W / 2, c = document.createElement('canvas'); c.width = c.height = W; const g = c.getContext('2d'), R = rng(61);
+  const at = (f) => m * (q + (1 - q) * f);
+  g.fillStyle = '#081627'; g.fillRect(0, 0, W, W);
+  g.strokeStyle = '#43d4ff'; [[0.2, 5], [0.5, 9], [0.8, 5]].forEach(([f, w]) => { g.lineWidth = w; g.beginPath(); g.arc(m, m, at(f), 0, Math.PI * 2); g.stroke(); });
+  for (let i = 0; i < 360; i++) {
+    const a = i / 360 * Math.PI * 2, f = R() < 0.5 ? 0.35 : 0.65, r = R(); if (r < 0.55) continue;
+    g.fillStyle = r < 0.9 ? 'rgba(235,250,255,.85)' : 'rgba(255,92,150,.95)'; g.fillRect(m + Math.cos(a) * at(f) - 1.5, m + Math.sin(a) * at(f) - 1.5, 3, 3);
+  }
+  g.fillStyle = '#cfe8f4';
+  for (let i = 0; i < 12; i++) { g.save(); g.translate(m, m); g.rotate((i + 0.5) / 12 * Math.PI * 2); g.fillRect(-W * 0.022, at(0.08), W * 0.044, at(0.92) - at(0.08)); g.restore(); }
+  const t = new THREE.CanvasTexture(c); t.colorSpace = THREE.SRGBColorSpace; t.anisotropy = 8; TX[key] = t; return t;
+}
+// bronze ribs for the spine, the reference's copper sections
+function ribTex() {
+  if (TX.rib) return TX.rib;
+  const c = document.createElement('canvas'); c.width = 16; c.height = 128; const g = c.getContext('2d');
+  for (let y = 0; y < 128; y += 8) { g.fillStyle = '#8a5a32'; g.fillRect(0, y, 16, 5); g.fillStyle = '#3a2412'; g.fillRect(0, y + 5, 16, 3); }
+  const t = new THREE.CanvasTexture(c); t.colorSpace = THREE.SRGBColorSpace; t.wrapS = t.wrapT = THREE.RepeatWrapping; TX.rib = t; return t;
+}
+// Agent Casino: a big orbital chip ("udelej spis takovy velky orbitalni chip", 2026-10-21, after the operator's
+// picture of a ring station). A spine through its middle -- copper sections, a module at its foot with pink lights,
+// a light at either end -- with a saucer and long golden solar panels at its top; round the spine two big rings, one
+// over the other, and a smaller one under them, lit cyan with windows, each ring's edge and faces a poker chip's
+// (white inserts round it), turning slowly on spokes from the hub.
+function adCasino(body, b) {
+  const cy = amat('#00cfff');
+  const metal = new THREE.MeshStandardMaterial({ color: 0x8e9aa8, roughness: 0.35, metalness: 0.75 });
+  const dark = new THREE.MeshStandardMaterial({ color: 0x141b26, roughness: 0.5, metalness: 0.6 });
+  const bronze = new THREE.MeshStandardMaterial({ color: 0xb07a48, map: ribTex(), roughness: 0.4, metalness: 0.7 });
+  const gold = new THREE.MeshStandardMaterial({ color: 0xdcbd84, roughness: 0.4, metalness: 0.55, emissive: 0x5a4220, emissiveIntensity: 0.7, side: THREE.DoubleSide });
+  const band = new THREE.MeshStandardMaterial({ color: 0x0d2236, map: chipBandTex(), emissive: 0xffffff, emissiveMap: chipBandTex(), emissiveIntensity: 1.25, roughness: 0.35, metalness: 0.3 });
+  const pink = new THREE.MeshBasicMaterial({ color: new THREE.Color(0xff5c96).multiplyScalar(1.6) });
+  // Upright, its rings in the galaxy's plane like a chip lying flat: the picture's station leans, but on the map a lean
+  // read as a station falling over ("proc je tak nasikmene to casino?", 2026-10-21)
+  const st = new THREE.Group(); st.position.y = 3.3; body.add(st);
+  const part = (geo, mat, x, y, z, parent = st) => { const m = ownGeo(new THREE.Mesh(geo, mat)); m.position.set(x, y, z); parent.add(m); return m; };
+  const light = (y, size, parent = st) => { const s = new THREE.Sprite(new THREE.SpriteMaterial({ map: flareTex(), color: new THREE.Color(0xd8f6ff).multiplyScalar(1.6), transparent: true, blending: THREE.AdditiveBlending, depthWrite: false })); s.scale.setScalar(size); s.position.y = y; parent.add(s); return s; };
+  // a ring habitat: its outer band, its inner wall, its two faces
+  const hab = (R, w, h, y, parent) => {
+    const g = new THREE.Group(); g.position.y = y; parent.add(g);
+    const face = new THREE.MeshStandardMaterial({ map: chipFaceTex(1 - w / R), emissive: 0xffffff, emissiveMap: chipFaceTex(1 - w / R), emissiveIntensity: 1.1, roughness: 0.4, metalness: 0.3, side: THREE.DoubleSide });
+    part(new THREE.CylinderGeometry(R, R, h, 96, 1, true), band, 0, 0, 0, g);
+    part(new THREE.CylinderGeometry(R - w, R - w, h, 96, 1, true), dark, 0, 0, 0, g);
+    part(new THREE.RingGeometry(R - w, R, 96, 1), face, 0, h / 2, 0, g).rotation.x = -Math.PI / 2;
+    part(new THREE.RingGeometry(R - w, R, 96, 1), face, 0, -h / 2, 0, g).rotation.x = Math.PI / 2;
+    // spokes from the hub
+    for (let k = 0; k < 6; k++) {
+      const s = new THREE.Mesh(G.cyl, metal), arm = new THREE.Group(); arm.rotation.y = k * Math.PI / 3; g.add(arm);
+      s.scale.set(0.045, R - w - 0.5, 0.045); s.rotation.z = Math.PI / 2; s.position.x = (R - w + 0.5) / 2; arm.add(s);
+    }
+    return g;
+  };
+  const rings = new THREE.Group(); st.add(rings);
+  hab(3.35, 0.46, 0.32, 0.52, rings); hab(3.35, 0.46, 0.32, -0.05, rings);
+  const small = new THREE.Group(); st.add(small); hab(2.15, 0.34, 0.26, -0.66, small);
+  // the hub and the spine
+  part(new THREE.CylinderGeometry(0.55, 0.55, 1.5, 24), metal, 0, 0.1, 0);
+  const hubRim = new THREE.Mesh(G.ringT, cy.rim); hubRim.scale.setScalar(0.6); hubRim.rotation.x = Math.PI / 2; hubRim.position.y = 0.86; st.add(hubRim);
+  part(new THREE.CylinderGeometry(0.28, 0.32, 1.7, 20), bronze, 0, -1.55, 0).material.map.repeat.set(1, 3);
+  part(new THREE.CylinderGeometry(0.4, 0.4, 0.14, 20), dark, 0, -1.1, 0);
+  part(new THREE.CylinderGeometry(0.5, 0.42, 0.5, 8), dark, 0, -2.6, 0);
+  [-2.5, -2.7].forEach((y) => part(new THREE.CylinderGeometry(0.505, 0.505, 0.05, 8, 1, true), pink, 0, y, 0));
+  // (the cones are the shared geometry: placed as they are, never marked the casino's own, so letting the casino go
+  // does not dispose them)
+  const cone = (y, r, h, down) => { const m = new THREE.Mesh(G.cone, metal); m.scale.set(r, h, r); m.position.y = y; if (down) m.rotation.x = Math.PI; st.add(m); return m; };
+  cone(-3.05, 0.14, 0.4, true);
+  const tipLo = light(-3.3, 0.9);
+  // the top: the mast, the saucer, the solar panels, a light
+  part(new THREE.CylinderGeometry(0.13, 0.16, 2.0, 12), metal, 0, 1.85, 0);
+  const saucer = new THREE.LatheGeometry([[0.16, 0], [1.05, 0], [1.0, 0.12], [0.55, 0.4], [0.16, 0.48]].map(([x, y]) => new THREE.Vector2(x, y)), 24);
+  part(saucer, new THREE.MeshStandardMaterial({ color: 0x9aa3ad, roughness: 0.4, metalness: 0.7, flatShading: true, side: THREE.DoubleSide }), 0, 1.05, 0);
+  // the solar panels: long golden blades fanned out from the mast, as in the picture
+  [0, 1, 2, 3, 4].forEach((i) => {
+    const arm = new THREE.Group(); arm.position.y = 2.05 + i * 0.13; arm.rotation.set(0.1, 0.55 + i * 0.12, 0.04); st.add(arm);
+    const pn = new THREE.Mesh(G.box, gold); pn.scale.set(4.0, 0.02, 0.17); arm.add(pn);
+  });
+  const tipHi = light(2.95, 1.1);
+  cone(2.8, 0.07, 0.35, false);
+  const hubGlow = glowSprite(cy.c, 0.22, 5); hubGlow.position.y = 0.2; st.add(hubGlow);
+  b.tick = (t) => {
+    rings.rotation.y = t * 0.12; small.rotation.y = -t * 0.18;
+    tipLo.material.opacity = 0.6 + 0.4 * Math.sin(t * 2.6); tipHi.material.opacity = 0.6 + 0.4 * Math.sin(t * 2.6 + 1.6);
+  };
+  b.top = 3.3 + 3.0; b.bot = 0; b.foot = 3.4;
+}
+// how much larger than its own units an ad is drawn on the map: as a station is (UVSS). Measured on the page
+// 2026-10-21 by projecting their vertices: each under three quarters of the sun's ball on the screen.
+const UVAD = 3.8;
 function makeAd(ad) {
   geo();
   const A = amat(CO.accentHex(ad.accent)), root = new THREE.Group(), body = new THREE.Group(); root.add(body);
@@ -1157,7 +1205,7 @@ function makeAd(ad) {
   const ring = new THREE.Mesh(G.holo, rimMat); ring.scale.setScalar(ringR); ring.rotation.x = Math.PI / 2; ring.position.y = ringY; root.add(ring);
   const pool = new THREE.Mesh(G.plane, new THREE.MeshBasicMaterial({ map: glowTex(), color: A.c, transparent: true, opacity: 0.12, blending: THREE.AdditiveBlending, depthWrite: false, side: THREE.DoubleSide }));
   pool.scale.setScalar(ringR * 2.4); pool.rotation.x = -Math.PI / 2; pool.position.y = ringY; root.add(pool);
-  const halo = glowSprite(A.c, 0.4, 9 + b.foot * 2); halo.position.y = (b.top + b.bot) / 2; body.add(halo);
+  const halo = glowSprite(A.c, 0.4, 5 + b.foot); halo.position.y = (b.top + b.bot) / 2; body.add(halo);
   const hw = b.foot * 1.9, hit = new THREE.Mesh(G.box, M.hit); hit.scale.set(hw, b.top - ringY + 0.6, hw); hit.position.y = (b.top + ringY) / 2; root.add(hit);
   return { root, body, b, rimMat, ring, pool, ringR, hit, halo, haloBase: halo.material.opacity, top: b.top, bot: ringY, pub: true, spin: 0, k: UVAD };
 }

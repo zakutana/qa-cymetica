@@ -129,7 +129,7 @@ i.lk::before { content: ''; position: absolute; left: 1.5px; top: -5px; width: 6
 .b3 .you { font: 800 9px 'JetBrains Mono'; color: var(--bg); background: var(--green); padding: 1px 7px; border-radius: 9px; margin-bottom: 3px; box-shadow: 0 0 10px rgba(0, 255, 136, .6); }
 /* an ad's plate: bigger than a station's, framed in its own colour, AD over it */
 .b3.ad { --fr: color-mix(in srgb, var(--acc) 70%, #464b54); }
-.b3.ad .rib { font-size: 19px; letter-spacing: .07em; padding: 4px 16px 3px; color: #eef6fa; box-shadow: 0 0 16px color-mix(in srgb, var(--acc) 40%, transparent), 0 3px 10px rgba(0, 0, 0, .4); }
+.b3.ad .rib { font-size: 16.5px; letter-spacing: .06em; padding: 4px 14px 3px; color: #eef6fa; box-shadow: 0 0 16px color-mix(in srgb, var(--acc) 40%, transparent), 0 3px 10px rgba(0, 0, 0, .4); }
 .b3 .adt { font: 800 9px 'JetBrains Mono'; color: var(--bg); background: var(--acc); padding: 1px 7px; border-radius: 9px; margin-bottom: 3px; box-shadow: 0 0 10px color-mix(in srgb, var(--acc) 60%, transparent); }
 .b3.land { --acc: #00ff88; --fr: color-mix(in srgb, #00ff88 45%, #464b54); }
 .b3.land .rib { color: var(--green); }

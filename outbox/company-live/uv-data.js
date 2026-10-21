@@ -65,12 +65,14 @@
   // round Cymetica, sold a slot at a time, and two ads stand on it. A visit (?visit=<id>) finds no company.
   CO.UNIVERSE = [];
 
-  // The ads: our two top products, drawn bigger than any station so they are seen ("tyto reklamni budovy musi byt
-  // vetsi nez normalni firmy"), each a click away from its live page. orbit: which of the galaxy's orbits (0 is the
-  // innermost); at: its angle from the front of the first look, so both stand in that view.
+  // The ads: our two top products, drawn bigger than a station so they are seen ("tyto reklamni budovy musi byt
+  // vetsi nez normalni firmy") and smaller than the sun ("nic nesmi byt vetsi nez slunce"), each a click away from
+  // its live page. orbit: which of the galaxy's orbits (0 is the innermost); at: its angle from the front of the first
+  // look, so both stand in that view. accent: its plate's colour -- the gem green as its logo, the casino the cyan of
+  // its rings.
   CO.ADS = [
-    { key: 'gem', name: 'Gem Screener', url: 'https://cymetica.com/gem-screener/app?view=apps', accent: 'cyan', orbit: 1, at: -0.62 },
-    { key: 'casino', name: 'Agent Casino', url: 'https://cymetica.com/agent-tournaments', accent: 'green', orbit: 1, at: 0.62 }
+    { key: 'gem', name: 'Gem Screener', url: 'https://cymetica.com/gem-screener/app?view=apps', accent: 'green', orbit: 1, at: -0.62 },
+    { key: 'casino', name: 'Agent Casino', url: 'https://cymetica.com/agent-tournaments', accent: 'cyan', orbit: 1, at: 0.62 }
   ];
   // The land: a slot is bought with ET10, then built on through Build it Better. The price is a PLACEHOLDER (the
   // operator named the currency, not the amount); one number to change. What this browser bought, by slot id.

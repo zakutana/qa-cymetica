@@ -35,7 +35,7 @@
   // out (adClear: about an ad's reach, in the plane's units). Items: { kind: 'slot' | 'ad', c: { id, name, accent },
   // orbit, pos }; a slot also has n (its orbit, 1 nearest Cymetica) and owned. Ids are fixed by the seed, so a slot
   // bought keeps its id. (The station code below still takes a company item, kind unset, should companies return.)
-  CO.uvGalaxy.adClear = 44;
+  CO.uvGalaxy.adClear = 26;
   CO.uvPlan = function () {
     var R = rng(2026), items = [], n = 36, tot = 0, own = CO.land ? CO.land() : [], clear = CO.uvGalaxy.adClear;
     var at = function (r, a) { return [Math.sin(a) * r, 0, Math.cos(a) * r]; };
@@ -1076,27 +1076,27 @@
     it.anchor = [tx + top[0] * UVSS, ty + top[1] * UVSS]; it.size = (a.top - a.bot) * SC * UVSS;
     return '<g class="plot' + (priv ? ' priv' : '') + (paused ? ' paused' : '') + (it.mine ? ' mine' : '') + '" data-id="' + c.id + '" transform="matrix(' + UVSS + ' 0 0 ' + UVSS + ' ' + f1(tx) + ' ' + f1(ty) + ')">' + a.svg + hit + '</g>';
   };
-  // The ads, flat: the gem a cut diamond floating over its shadow, the casino a poker chip with chips stacked on it and
-  // a wheel on top -- the shapes the 3D map builds, as simple as the flat map is. As wide as an ad reaches (adClear).
+  // The ads, flat: the gem its logo, a cut diamond in the logo's greens floating over its shadow; the casino an orbital
+  // chip, its spine through two cyan rings with a chip's white inserts round them -- the shapes the 3D map builds, as
+  // simple as the flat map is.
   Universe.prototype.adSVG = function (it) {
-    var o = gp(it.pos[0], it.pos[1], it.pos[2]), x = o[0], y = o[1], s = CO.uvGalaxy.adClear * RX * 0.8, acc = CO.accentHex(it.c.accent), out, top;
+    var o = gp(it.pos[0], it.pos[1], it.pos[2]), x = o[0], y = o[1], s = CO.uvGalaxy.adClear * RX * 1.1, acc = CO.accentHex(it.c.accent), out, top;
     var shadow = '<ellipse cx="' + f1(x) + '" cy="' + f1(y) + '" rx="' + f1(s * 0.5) + '" ry="' + f1(s * 0.5 * RY / RX) + '" fill="' + acc + '" opacity=".12"/>';
+    var poly = function (p, fill) { return '<polygon points="' + pts(p) + '" fill="' + fill + '" stroke="#0b1a22" stroke-width="2" stroke-linejoin="round"/>'; };
     if (it.ad.key === 'gem') {
-      var cy = y - s * 0.4, gy = cy - s * 0.85, ty = gy - s * 0.32, gw = s * 0.52, tw = s * 0.3;
-      out = shadow + '<polygon points="' + pts([[x, cy], [x - gw, gy], [x - tw, ty], [x + tw, ty], [x + gw, gy]]) + '" fill="' + acc + '" fill-opacity=".28" stroke="' + acc + '" stroke-width="2.5"/>' +
-        [[x - gw, gy, x + gw, gy], [x - tw, ty, x - gw * 0.35, gy], [x + tw, ty, x + gw * 0.35, gy], [x - gw * 0.35, gy, x, cy], [x + gw * 0.35, gy, x, cy], [x, ty, x - gw * 0.35, gy], [x, ty, x + gw * 0.35, gy]].map(function (l) {
-          return '<line x1="' + f1(l[0]) + '" y1="' + f1(l[1]) + '" x2="' + f1(l[2]) + '" y2="' + f1(l[3]) + '" stroke="#bff3ff" stroke-width="1.2" opacity=".7"/>';
-        }).join('');
+      var cy = y - s * 0.3, gy = cy - s * 0.62, ty = gy - s * 0.26, gw = s * 0.5, tw = s * 0.3, m = gw * 0.34;
+      out = shadow + poly([[x - gw, gy], [x - m, gy], [x, cy]], '#2fc3a0') + poly([[x - m, gy], [x + m, gy], [x, cy]], '#16967f') + poly([[x + m, gy], [x + gw, gy], [x, cy]], '#2fc3a0') +
+        poly([[x - gw, gy], [x - tw, ty], [x - m, gy]], '#7fdccd') + poly([[x - tw, ty], [x + tw, ty], [x + m, gy], [x - m, gy]], '#dafcf6') + poly([[x + tw, ty], [x + gw, gy], [x + m, gy]], '#aef2e8');
       top = ty;
     } else {
-      var k = RY / RX, chip = function (cy, r, h, fill) {
-        return '<path d="M' + f1(x - r) + ',' + f1(cy) + ' v' + f1(-h) + ' a' + f1(r) + ',' + f1(r * k) + ' 0 0 1 ' + f1(2 * r) + ',0 v' + f1(h) + ' a' + f1(r) + ',' + f1(r * k) + ' 0 0 1 ' + f1(-2 * r) + ',0Z" fill="#0b2a1d" stroke="' + acc + '" stroke-width="2"/>' +
-          '<ellipse cx="' + f1(x) + '" cy="' + f1(cy - h) + '" rx="' + f1(r) + '" ry="' + f1(r * k) + '" fill="' + fill + '" stroke="' + acc + '" stroke-width="2"/>';
+      var c0 = y - s * 0.55, rx = s * 0.5, ry = rx * RY / RX, ring = function (cyy, k) {
+        return '<ellipse cx="' + f1(x) + '" cy="' + f1(cyy) + '" rx="' + f1(rx * k) + '" ry="' + f1(ry * k) + '" fill="none" stroke="#43d4ff" stroke-width="' + f1(6 * k) + '"/>' +
+          '<ellipse cx="' + f1(x) + '" cy="' + f1(cyy) + '" rx="' + f1(rx * k) + '" ry="' + f1(ry * k) + '" fill="none" stroke="#f2f7fb" stroke-width="' + f1(6 * k) + '" stroke-dasharray="' + f1(rx * k * 0.18) + ' ' + f1(rx * k * 0.34) + '"/>';
       };
-      var b = y - s * 0.12;
-      out = shadow + chip(b, s * 0.55, s * 0.1, '#0f3a27') + chip(b - s * 0.14, s * 0.36, s * 0.16, '#123f2b') + chip(b - s * 0.34, s * 0.26, s * 0.16, '#164a32') +
-        '<ellipse cx="' + f1(x) + '" cy="' + f1(b - s * 0.62) + '" rx="' + f1(s * 0.2) + '" ry="' + f1(s * 0.2 * k) + '" fill="#2a0a0a" stroke="#ffc83d" stroke-width="2"/>';
-      top = b - s * 0.7;
+      out = shadow + '<line x1="' + f1(x) + '" y1="' + f1(c0 + s * 0.5) + '" x2="' + f1(x) + '" y2="' + f1(c0 - s * 0.55) + '" stroke="#b07a48" stroke-width="5"/>' +
+        ring(c0 + s * 0.12, 0.65) + ring(c0, 1) + ring(c0 - s * 0.08, 1) +
+        '<line x1="' + f1(x - s * 0.36) + '" y1="' + f1(c0 - s * 0.42) + '" x2="' + f1(x + s * 0.36) + '" y2="' + f1(c0 - s * 0.5) + '" stroke="#c9a46a" stroke-width="3"/>';
+      top = c0 - s * 0.6;
     }
     it.anchor = [x, top - 4]; it.size = s * 1.2;
     return '<g class="plot ad" data-id="' + esc(it.c.id) + '">' + out + '<circle cx="' + f1(x) + '" cy="' + f1(y - s * 0.6) + '" r="' + f1(s * 0.7) + '" fill="transparent"/></g>';
