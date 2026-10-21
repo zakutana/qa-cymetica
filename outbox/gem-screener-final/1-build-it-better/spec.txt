@@ -1,0 +1,22 @@
+New on Gem Screener, Top Picks: a tier list section, and Degen pick cards that show why each app is a pick. Pictures 1-5 are the target: layout, parts and look as drawn (pictures 1-3 are your live page with the section added, 4-5 your live cards with the change), in the site's fonts and palette. No existing figure is computed differently and no gate changes; nothing else on the page changes.
+1. A new section "Live Gem Revenue Generating Tier List" between the Altseason Index panel and "Degen picks": a heading with a small green live dot, one line of numbers under it ("79 vetted apps · $100K+ revenue in 30 days · by upside", the count is live), and at the right of that line a thin bar showing how many apps are in each tier.
+2. Which apps: the vetted apps with $100K+ revenue in the last 30 days, the set the Apps tab shows by default, whatever filters are set on that tab.
+3. Six rows, S A B C D F, each with a coloured label block (a big letter, its range, the app count in a small pill) and the app icons beside it. Row tints and label colours from the site palette: S and A green, B cyan, C blue, D and F slate. S is lit with a soft green glow.
+4. S is the Degen picks, the apps that pass all six gates, the same ones as the cards below; its label shows a small gem and "picks" (not "all 6 gates"). A to F by upside, highest first, each app in exactly one row (a pick only in S): A 10x+, B 5 to 10x, C 2 to 5x, D 1 to 2x, F under 1x. The upside is the one the Apps table shows.
+5. Icons: the app's logo in a circle with its symbol under it; the circles get smaller tier by tier (S largest, F smallest); in S, A and B the upside is shown under the symbol. The tooltip gives the name, upside, market cap and 30-day revenue.
+6. A click on an icon opens the same right-hand side panel a row of the Apps tab opens; Esc or the cross closes it; Tab focuses an icon and Enter opens it.
+7. No row is ever crowded: a row shows at most two lines of icons (24 at 1440 px); beyond that the lowest-upside apps fold into one "+N" tile that opens the Apps tab. Today: S 6, A 9, B 8, C 19, D 15, F 22. An empty row says "none today".
+8. The section recalculates when the page's data refreshes, with no reload.
+9. Degen pick cards: under the upside, a block "Why it is a pick  6 / 6 gates" of five rows, one per gate, replacing the three tiles (tokens out, revenue a month, revenue to holders). Each row: a gate icon, the name, the figure behind the gate, and under the figure the gate's bar in small type.
+10. Real revenue: the 30-day revenue ($17.9M) with the app's monthly revenue as a small bar chart (the one the Apps table shows), bar "$100K+ in 30 days". Market cap: the figure, bar "$3M+ & vetted". Revenue growth: the monthly growth ("+474% / mo"), bar "grows over 6 mo".
+11. Liquid: the slippage of a $10K buy when the card is a pick on that reading ("1.0% slip"), otherwise the 24-hour volume ("$10.5M"); bar "≤ 3% slip or $2M+ vol".
+12. Dilution: the 12-month dilution the Supply column shows; when it is unknown, "unknown" in grey (no data passes this gate), never a green tick; bar "under 25% in 12 mo".
+13. The upside stays large under the app's name, with "upside" and "gate 2.5x+" beside it; its i tooltip is unchanged. Each gate row has a tooltip with the gate's full definition, the same text as the gate's own tooltip in the gate row under "Degen picks".
+14. The tags under the figures (theme revenue rising, phase, theme lags BTC, days of history, not growing) leave the card. The logo and name with the Holders-paid smiley, the theme chip and the Degen meter stay.
+Done when:
+[ ] 1-2 The section, its numbers line and the app set are as described.
+[ ] 3-5 Six rows with the rules above; no app appears twice; S matches the Degen pick cards; icons carry symbol, upside (S, A, B) and tooltip.
+[ ] 6 A click on an icon opens the Apps row's side panel.
+[ ] 7-8 No row has more than two lines; the "+N" tile works; the section updates without a reload.
+[ ] 9-14 Every card shows the five rows with the figures of its own app; the tags are gone; everything else on the card is unchanged.
+[ ] The section and the cards look like the pictures at 1440 and 1920 px and nothing overlaps.

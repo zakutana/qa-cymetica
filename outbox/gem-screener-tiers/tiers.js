@@ -41,22 +41,26 @@
   });
 
   const fmt = u => (u >= 100 ? Math.round(u) : u >= 10 ? Math.round(u) : u >= 1 ? u.toFixed(1) : u.toFixed(2).replace(/0+$/, '')) + 'x';
-  const tile = a => `<button type="button" class="gt-app tipme" data-id="${esc(a.id)}" data-tipb="${esc(a.name)}"
+  // the upside shows under the symbol in the three top tiers, where the apps are few and the number is the point
+  const tile = (a, k) => `<button type="button" class="gt-app tipme" data-id="${esc(a.id)}" data-tipb="${esc(a.name)}"
       data-tip="${esc(fmt(a.up))} upside · market cap ${esc(a.cap)} · revenue ${esc(a.rev)} in 30 days" aria-label="${esc(a.name)}, ${esc(fmt(a.up))} upside">
-      <img src="${esc(a.logo)}" alt="" width="56" height="56" loading="lazy" decoding="async"><span>${esc(a.sym)}</span></button>`;
+      <img src="${esc(a.logo)}" alt="" width="64" height="64" decoding="async"><span>${esc(a.sym)}</span>${'sab'.includes(k) ? `<em class="gt-x">${esc(fmt(a.up))}</em>` : ''}</button>`;
 
   const html = rows.map(t => {
     const shown = t.list.slice(0, MAX), more = t.list.length - shown.length;
-    return `<div class="gt-row gt-${t.k}"><div class="gt-lab"><b>${t.letter}</b><span>${t.k === 's' ? '<i class="gt-gem"></i>' : ''}${esc(t.sub)}</span></div>
-      <div class="gt-ico">${shown.map(tile).join('')}${more > 0 ? `<button type="button" class="gt-more" data-go="apps">+${more}</button>` : ''}${t.list.length ? '' : '<em>none today</em>'}</div></div>`;
+    return `<div class="gt-row gt-${t.k}"><div class="gt-lab"><i class="gt-n" title="${t.list.length} apps">${t.list.length}</i><b>${t.letter}</b><span>${t.k === 's' ? '<i class="gt-gem"></i>' : ''}${esc(t.sub)}</span></div>
+      <div class="gt-ico">${shown.map(a => tile(a, t.k)).join('')}${more > 0 ? `<button type="button" class="gt-more" data-go="apps">+${more}</button>` : ''}${t.list.length ? '' : '<em>none today</em>'}</div></div>`;
   }).join('');
+
+  // one thin bar of how the apps fall into the tiers, segments as wide as the tiers are full
+  const dist = rows.map(t => `<i class="gt-seg gt-${t.k}" style="flex-grow:${Math.max(t.list.length, 0.6)}" title="${t.letter}: ${t.list.length}"></i>`).join('');
 
   const wrap = document.createElement('section');
   wrap.className = 'gt-wrap';
   wrap.setAttribute('aria-label', 'Live Gem Revenue Generating Tier List');
   wrap.innerHTML = `<h3 class="st-h">Tier list</h3>
     <div class="dp-head"><h2 class="lb-title"><i class="gt-live"></i>Live Gem Revenue Generating Tier List</h2></div>
-    <div class="gt-sub"><b>${apps.length}</b> vetted apps · <b>$100K+</b> revenue in 30 days · by upside</div>
+    <div class="gt-subrow"><div class="gt-sub"><b>${apps.length}</b> vetted apps · <b>$100K+</b> revenue in 30 days · by upside</div><div class="gt-dist">${dist}</div></div>
     <div class="gt-tiers">${html}</div>`;
   anchor.before(wrap);
 

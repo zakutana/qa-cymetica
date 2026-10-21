@@ -1,0 +1,9 @@
+@EventTraderQABot Gem Screener header: thanks for fixing the panels and the stretching, both are right now. One more change: please replace the facet mesh in the header with our design. It is much darker, so the logo stands out. 3 pictures + the file rays.svg attached.
+
+1. Remove header.top::before and main.measure::before (the bright teal facets over the header and over the strip under it).
+2. Header band background: near-black #070b13.
+3. A soft cyan glow behind the logo: radial-gradient(ellipse 190px 120px at <gem centre>, rgba(0,207,255,.20), transparent). The gem centre is the logo image's left edge + 34 px, and 46 px from the top of the header.
+4. On top of it, the attached rays.svg (1920 x 130, 2.9 KB): soft blurred light shafts from the gem, a thin cloud of haze, a few out-of-focus discs, two glints. No straight lines. Paint it at 1920px 130px, no-repeat, with its left edge at the logo's left edge - 32 px, so the light always starts at the gem (the logo image sits at x=32 at 1440 px, x=260 at 1920, x=580 at 2560). The file fades in over its first 140 px, so it has no visible edge on wide screens.
+5. Panels, cards and tables keep their plain backgrounds, as now.
+
+Pictures: 1 Top Picks at 1440, 2 the header at 1920, 3 Apps at 1440.

@@ -1,4 +1,7 @@
 /* Gem Screener Degen pick card: why it is a pick. The site's green, cyan and slate neutrals; its fonts. */
+/* the tag chips (theme revenue rising, phase, theme lags BTC, days of history, not growing) leave the card: "ty sracky
+   pod tim at tam nezobrazuji" (2026-10-21) */
+#startCards .dc-tags, #startCards .dc-why { display: none !important; }
 #startCards .dc-pot { display: flex; align-items: center; gap: 10px; }
 .gc-up { font-size: 11px; line-height: 1.25; color: #a9b8cc; letter-spacing: .04em; }
 .gc-up em { font-style: normal; color: #7f93ad; font-size: 10px; }

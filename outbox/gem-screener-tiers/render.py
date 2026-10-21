@@ -11,7 +11,7 @@ here = Path(__file__).resolve().parent
 css = (here / "tiers.css").read_text(encoding="utf-8")
 js = (here / "tiers.js").read_text(encoding="utf-8")
 ALLOWED = {"#00cfff", "#00ff88", "#3b82f6", "#7f93ad", "#a9b8cc", "#e6edf7", "#1e3050", "#1a2a44", "#06090f", "#0d1520"}
-ALLOWED_RGB = {"0,207,255", "0,255,136", "59,130,246", "127,147,173"}
+ALLOWED_RGB = {"0,207,255", "0,255,136", "59,130,246", "127,147,173", "6,9,15", "230,237,247"}
 src = css + js
 hexes = {h.lower() for h in re.findall(r"#[0-9a-fA-F]{6}\b", src)}
 rgbs = {re.sub(r"\s", "", m) for m in re.findall(r"rgba?\(([\d\s]+,[\d\s]+,[\d\s]+),", src)}
