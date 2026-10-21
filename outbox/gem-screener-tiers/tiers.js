@@ -48,7 +48,7 @@
 
   const html = rows.map(t => {
     const shown = t.list.slice(0, MAX), more = t.list.length - shown.length;
-    return `<div class="gt-row gt-${t.k}"><div class="gt-lab"><i class="gt-n" title="${t.list.length} apps">${t.list.length}</i><b>${t.letter}</b><span>${t.k === 's' ? '<i class="gt-gem"></i>' : ''}${esc(t.sub)}</span></div>
+    return `<div class="gt-row gt-${t.k}"><div class="gt-lab"><b>${t.letter}</b><span>${t.k === 's' ? '<i class="gt-gem"></i>' : ''}${esc(t.sub)}</span></div>
       <div class="gt-ico">${shown.map(a => tile(a, t.k)).join('')}${more > 0 ? `<button type="button" class="gt-more" data-go="apps">+${more}</button>` : ''}${t.list.length ? '' : '<em>none today</em>'}</div></div>`;
   }).join('');
 
@@ -57,10 +57,10 @@
 
   const wrap = document.createElement('section');
   wrap.className = 'gt-wrap';
-  wrap.setAttribute('aria-label', 'Live Gem Revenue Generating Tier List');
-  wrap.innerHTML = `<h3 class="st-h">Tier list</h3>
-    <div class="dp-head"><h2 class="lb-title"><i class="gt-live"></i>Live Gem Revenue Generating Tier List</h2></div>
-    <div class="gt-subrow"><div class="gt-sub"><b>${apps.length}</b> vetted apps · <b>$100K+</b> revenue in 30 days · by upside</div><div class="gt-dist">${dist}</div></div>
+  wrap.setAttribute('aria-label', 'Gem Tier List');
+  wrap.innerHTML = `<h3 class="st-h">Live ranking</h3>
+    <div class="dp-head"><h2 class="lb-title"><i class="gt-live"></i>Gem Tier List</h2></div>
+    <div class="gt-subrow"><div class="gt-sub"><b>${apps.length}</b> vetted apps · <b>$100K+</b> revenue in 30 days · ranked by upside</div><div class="gt-dist">${dist}</div></div>
     <div class="gt-tiers">${html}</div>`;
   anchor.before(wrap);
 
