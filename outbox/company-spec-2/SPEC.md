@@ -2,7 +2,7 @@
 
 A follow-up to the first brief (`outbox/company-spec/SPEC.md`, built and live at https://cymetica.com/company/app).
 Thank you for taking the design as it was drawn: the 3D office, the Universe, the stations and the entry came over almost
-unchanged. This round asks for one new feature and seven fixes. What is live was read on 2026-10-21 (the pages, and
+unchanged. This round asks for one new feature and seven fixes, and two things missing from the first build. What is live was read on 2026-10-21 (the pages, and
 `GET /api/v1/company/mine`, `/office`, `/creation`, `/company/14/messages` on the account expire76).
 
 The clickable mockup is `outbox/company-live` (open `index.html#universe`; `?visit=101` is the visit view). The pictures
@@ -38,9 +38,10 @@ can come. The builders are `adGem` and `adCasino` in `design/u3d.js`; they are c
 **Not part of this round:** how a visitor finds a public company now that companies do not stand on the map. The visit view
 itself stays (`?visit=<id>`, see item 8).
 
-## B. Fixes after the first build
+## B. Fixes and what is missing after the first build
 
-Each is something read on the live page on 2026-10-21 against what the design shows.
+Each is something read on the live page on 2026-10-21 against what the design shows. Items 11 and 12 are pages the design has and
+the build does not.
 
 **6. NEXUS does not know the Operations room.** On 2026-10-21 at 20:48:55 and again at 20:50:26 (`/company/14/messages`) the
 owner asked what Operations does; NEXUS answered that no such department exists and that it had only four. The page has the
@@ -68,11 +69,20 @@ clip puts a small card above the box, with a cross to take it back; at most four
 message and shows in the thread. NEXUS must be able to read it. Neither is possible today: there is no paste handler and no
 file field in the chat.
 
-**11. Experiments as drawn.** The live Experiments page is a bare list of cards. The design (`first brief, section 7,
-design/experiments.html`) has per experiment one big return, a line from start to now, the bots as green and red squares and the
-instructions; opened, the bots ranked with P&L and trades, Run / Pause, add and remove bots, rename, edit the instructions, and
-a New experiment form. It is a scope cut (the design's `experiments.js` is 19.7 KB and `xp.css` 11.4 KB, the live ones 6.9 and 2.0).
-Please build the page as drawn.
+**11. Experiments exactly as drawn** (`09`, `10`). The live page is a bare list that **cannot be clicked into**: its script has
+only two handlers, New experiment and close, so a card does nothing; the card is one narrow column (about 250 px) in which the
+title wraps one word to a line, and it shows no return, no line and no bots. The design (first brief section 7;
+`design/experiments.html`) has per experiment one big return, a line from start to now, the bots as green and red squares and
+the instructions; a click opens it: the bots ranked with return, P&L and trades, Run / Pause, add and remove bots, rename, edit
+the instructions; and a New experiment card. It is a scope cut (the design's `experiments.js` is 19.7 KB and `xp.css` 11.4 KB,
+the live ones 6.9 and 2.0). Please build the page as drawn.
+
+**12. The Products tab is missing** (`11`). The live tab bar is Headquarters, Tasks, Approvals, Memory, Audit, Processes; the design
+has **Products** after Headquarters (first brief section 10). It lists **every product the owner owns**: an app counts as the
+owner's when the owner was the first to put it into Build it Better and it did not exist before. Per product: its page, visitors,
+uses, views and likes (30 days, as `GET /api/v1/build-it-better/apps/leaderboard` counts them), and what it earned (the rewards
+are your rates). Neither the leaderboard (no owner on a row) nor the public request list (only `requester_kind`, no requester)
+says whose an app is, so **please add the owner's own list** to the API; the tab reads it.
 
 ## What stays as it is
 
