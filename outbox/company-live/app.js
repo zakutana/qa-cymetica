@@ -48,8 +48,14 @@
     // here, the stage blank meanwhile as it is while the 3D starts (1.5 s at most; no font at all: built at once).
     if (v === '3d' && !office3d && !monoWaited && !monoHere()) { monoWait(function () { monoWaited = true; if (ui.view === '3d' && !office3d) setView('3d'); }); return; }
     if (v === '3d') {
+      // a 3D office that stopped (its graphics device lost, a frame that threw) starts again with the page: a second
+      // office in the same page cannot use the textures the first one made ("Texture already initialized", tried
+      // 2026-10-21), so the click reloads into 3D ("jak na 3D klikam nic se nedeje" -- it used to stay dead, silent)
+      if (office3d && office3d.stopped) { try { localStorage.setItem('co.view', '3d'); } catch (e) { /* fine */ } location.reload(); return; }
       if (!office3d) {
-        office3d = CO.U3.office($('office3d'), st, tipFor); office3d.onFail = function () { office3d = null; setView('2d'); };
+        office3d = CO.U3.office($('office3d'), st, tipFor);
+        office3d.onFail = function () { office3d = null; setView('2d'); toast('3D could not start in this browser: the flat office instead. Reload to try again.'); };
+        office3d.onStop = function () { if (ui.view === '3d') { setView('2d'); toast('3D stopped in this browser. Click 3D to start it again.'); } };
         // the loading screen follows its first frame's shaders, and goes with that frame
         office3d.onProgress = function (f) { if (ui.tab === 'office') bootSet(30 + f * 66, 'RENDERING'); };
         office3d.onFirst = function () { if (ui.tab === 'office') bootDone(); warmDialog(); };

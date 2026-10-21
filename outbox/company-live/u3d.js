@@ -3729,6 +3729,10 @@ class Office3D {
       catch (e) { this.post = null; }
       await this.prepare();
       this.renderer.setAnimationLoop(() => this.frame());
+      // the graphics card can take its device back (a driver reset, memory pressure from many 3D tabs): the office then
+      // stops for good, and says so (onStop), so the page can offer to start it again instead of going quiet
+      const dev = this.renderer.backend && this.renderer.backend.device;
+      if (dev && dev.lost) dev.lost.then((info) => { if (this.disposed) return; console.error('3D office lost its graphics device:', info && info.message); this.stop(info); });
     }).catch((e) => { console.error('3D office could not start:', e); if (this.onFail) this.onFail(e); });
     if (window.ResizeObserver) new ResizeObserver(() => this.resize()).observe(el);
     setInterval(() => this.wander(), 2600);
@@ -7912,7 +7916,7 @@ class Office3D {
     // landed in an office frame -- and the map's own frame does it)
     if (!this.frames && IDLE.q.length) idleFlush();
     try { if (this.post) this.post.render(); else this.renderer.render(this.scene, this.camera); this.frames = (this.frames || 0) + 1; }
-    catch (e) { console.error('3D office stopped:', e); this.renderer.setAnimationLoop(null); if (this.onFail && !(this.frames > 30)) this.onFail(e); return; }
+    catch (e) { console.error('3D office stopped:', e); if (this.onFail && !(this.frames > 30)) { this.renderer.setAnimationLoop(null); this.onFail(e); } else this.stop(e); return; }
     keepCompiled(this.renderer, this);
     this.labels(w, h);
     // its first frame is on the screen: the loading screen can go (app.js)
@@ -8348,7 +8352,9 @@ class Office3D {
   roomOf(obj) { for (const k in this.rooms) { let o = obj; while (o) { if (o === this.rooms[k].g) return k; o = o.parent; } } return null; }
   setHover(key) { this.hover = key; }
   hideTip() { if (this.tip) this.tip.hidden = true; }
-  dispose() { try { this.renderer.setAnimationLoop(null); this.renderer.dispose(); } catch (e) { /* gone */ } this.layer.innerHTML = ''; this.el.innerHTML = ''; }
+  // stopped after it had run: its loop off, marked, and the page told (app.js starts a new one on the next 3D click)
+  stop(e) { if (this.stopped) return; this.stopped = true; try { this.renderer.setAnimationLoop(null); } catch (x) { /* gone */ } if (this.onStop) this.onStop(e); }
+  dispose() { this.disposed = true; try { this.renderer.setAnimationLoop(null); this.renderer.dispose(); } catch (e) { /* gone */ } this.layer.innerHTML = ''; this.el.innerHTML = ''; }
 }
 
 // can this browser draw it at all? WebGPU, or WebGL2 underneath it
