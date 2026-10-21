@@ -344,7 +344,9 @@ CEILINGS = {
     # 838 -> 839 for the process auditor's daily half (C7): lead time, failures, retries,
     # idle against stuck, work done twice and tokens per result, in the clock's day, the
     # manager's review and the patrol -- and no flag from a company that never ran.
-    "meta_tests": 839,
+    # 839 -> 840 on 2026-10-21: one merged guard for three repaired checks
+    # (test_pipeline_repaired_checks.py), five written and cut to one.
+    "meta_tests": 840,
 }
 
 BASH_SCRIPT = re.compile(r"python\s+scripts[/\\]([a-z_]+)\.py")
