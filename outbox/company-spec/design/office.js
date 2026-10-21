@@ -1014,7 +1014,7 @@
       var col = st === 'queued' ? TONEC.dim : dot, title, sub, mode;
       // the wall screen says what the plate says, a little longer: never passes or attempts
       if (v.running) { title = v.running.title; sub = CO.expertName(v.running.expert) + ' is on it'; mode = 'run'; }
-      else if (v.waiting) { title = 'Needs you'; sub = 'approve or reject on the right'; mode = 'full'; col = STC.waiting; }
+      else if (v.waiting) { title = 'Approval'; sub = 'approve or reject on the right'; mode = 'full'; col = STC.waiting; }
       else if (v.queued.length) { title = 'Up next: ' + v.queued[0].title; sub = ''; mode = ''; }
       else { title = d.schedule && d.next_run ? 'Next run at ' + CO.hhmm(d.next_run) : 'Idle'; sub = ''; mode = ''; }
       var scr = g.querySelector('.scr');
@@ -1045,7 +1045,7 @@
       if (mg) { mg.classList.toggle('working', S.company.status === 'active'); mg.classList.toggle('idle', S.company.status !== 'active'); }
       // over the rings: what needs the owner, or that nothing does
       var ht = this.hubTop, na = S.approvals.length;
-      if (ht) over += needPill(ht[0], ht[1] - 10, na ? na + (CO.RO ? ' WAIT FOR ITS OWNER' : na === 1 ? ' NEEDS YOU' : ' NEED ATTENTION') : 'ALL CLEAR', na > 0);
+      if (ht) over += needPill(ht[0], ht[1] - 10, na ? na + (CO.RO ? ' WAIT FOR ITS OWNER' : na === 1 ? ' APPROVAL' : ' APPROVALS') : 'ALL CLEAR', na > 0);
       over += glassSign(cells.hub, 'hub', 'Command', 'hub', have, paused ? 'idle' : anyWork ? 'working' : 'idle');
     }
     var au = ex('audit');

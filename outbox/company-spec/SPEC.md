@@ -44,19 +44,21 @@ Someone with no company lands on the entry, not on an empty office.
 - **Landing** (`start.html`): the headline in four lines in the type of `/agent-tournaments`, the last one green:
   "Start an AI-native company. / Build real products. / Bring in users. / Earn real revenue and rewards." Under it:
   "This is not a simulation. Your company runs real AI agents that take on any task: trading, building real apps,
-  research, generating real revenue, and much more." Two tiles: **Start a company** (opens the builder) and
+  research, anything you can think of." Two tiles: **Start a company** (opens the builder) and
   **Explore the Universe** (opens the Universe, section 9). On the right, Cymetica's sun with companies orbiting it.
 - **Builder** (`builder.html`), two steps:
-  1. **Name & look**: name, mission, public or private (the Vault is private either way), the station picked
+  1. **Name & look**: name, mission (prefilled with an example: "Make a massive amount of money."), public or private (the Vault is private either way), the station picked
      with the arrows round it (seven stations) and its colour (eight). The station's label shows the name as it is
      typed.
   2. **Start**: **New** (the three rooms every company has: Command, Vault, Operations) or **CyMetica Pre-Build**
-     (those three and Cymetica QA, Development, Quant Lab, Trading desk). The pre-built office is drawn whole; a
-     click on Command starts the tour, one bubble per room on the map, telling one story: Command (you run it all
-     through NEXUS), the Vault (what you earn, with your Cymetica balance), Development (build and ship products),
-     Cymetica QA (test them, ET10 for verified bugs), the Quant Lab (find trading strategies on paper), the Trading
-     desk (run the proven ones for real), Operations (keeps it all optimal). Each bubble links to the room's pages on
-     cymetica.com. Create company then opens the step of section 3, and finishing opens the company's office.
+     (those three and Cymetica QA, Development, Quant Lab, Trading desk; its card counts the departments and the
+     agents). The pre-built office is drawn whole, with a welcome over Command ("Welcome to your AI-native company,
+     run by expert agents. Click here to start the tour"); the click starts the tour, one bubble per room on the
+     map, telling one story: Command (you run it all through NEXUS), the Vault (what you earn, with your Cymetica
+     balance), Development (build and ship products, tracked in Products), Cymetica QA (test them, ET10 for verified
+     bugs), the Quant Lab (find trading strategies on paper), the Trading desk (run the proven ones for real),
+     Operations (keeps it all optimal). Each bubble opens with the room's agents (AGENTS and their pictures) and
+     links to the room's pages on cymetica.com; the rooms carry no hover tooltips. Create company then opens the step of section 3, and finishing opens the company's office.
 - The pre-build is what NEXUS builds from one request (section 4): the builder only asks it for you.
 
 ## 3. Creating a company is not free: your call
@@ -105,9 +107,11 @@ yours to design: you are the AI-native company.
   work, duplicates and stuck flows, and keeping the processes optimised).
 - **Departments**: each in a room of its own look; its name and icon on the glass; the room glows orange while it
   waits on its owner, and only then.
-- **Around it**: the rail of departments (who, what it does now, one number), the Needs-you column, NEXUS's chat,
-  and the tabs Portfolio, Tasks, Needs you, Memory, Audit, Processes, Universe, Investable, Legal entity, Token,
-  Connect AI (section 13), Settings.
+- **Around it**: the top bar (the company's logo is a miniature of its own station in its colour, the name, its
+  state, Pause; on the right a red "N approvals" only while something waits, and Upgrade; no status line, no "all
+  clear"), the rail of departments (who, what it does now, one number), the Approvals column, NEXUS's chat, and the
+  tabs Headquarters (the office), Products, Tasks, Approvals, Memory, Audit, Processes, Universe, Investable, Legal
+  entity, Token, Connect AI (section 13), Settings.
 - **Every room links to its page** on cymetica.com, from the computer in the room and a globe icon in its detail:
   Cymetica QA: `/leaderboard/bugs?filter=mine`, which must open the bug board on My Bugs with every bug this
   department filed, under the owner's name (today the page reads nothing from its address, read 2026-10-20: the link
@@ -122,7 +126,7 @@ yours to design: you are the AI-native company.
   owner's My Bugs on the bug board, counted as the owner's. The ET10 for accepted bugs is lit on the department,
   the rail and the Vault.
 - **Development**: Build it Better as a department: idea, spec, design, build, test, release, monitor. What it ships
-  goes live on Cymetica as the owner's product and is shown in the Portfolio tab. Submitting a request waits for the
+  goes live on Cymetica as the owner's product and is shown in the Products tab. Submitting a request waits for the
   owner's approval.
 - **Operations**: built in (above).
 - **Quant Lab** (the Testing lab template): finds the ways to make money on Cymetica. It works strategies out with
@@ -134,6 +138,9 @@ yours to design: you are the AI-native company.
   give both the Testing lab and the Trading desk paper experiments; this split is the ask.)
 - **Design studio and the owner's own departments** as live today; an own department picks its room's look with
   the arrows round it in the Add-a-department dialog.
+- **Please review every department's experts and decide them.** The mockup keeps your live templates' experts,
+  and some read oddly: a Researcher in Development, in the Design studio and on the Trading desk. Which agents work
+  in each department is yours to set; the tour, the rooms and the Pre-Build card show whatever you decide.
 
 ## 7. The Experiments page (`experiments.html`), the Quant Lab's
 
@@ -167,7 +174,7 @@ answers 404, so it needs all of them, private ones locked. A green Create compan
 a company to the builder. Seven stations (Dreadnought, Shipyard, Pyramid Carrier,
 Ring Habitat, Lancer, Citadel, Monolith) in eight colours, picked in the builder and changed in Settings.
 
-## 10. Portfolio and rewards
+## 10. Products and rewards
 
 A tab listing every Build it Better app the account made, with your traffic numbers (visitors, uses, views, likes
 over 30 days, from `GET /api/v1/build-it-better/apps/leaderboard`). Two rewards it shows are proposals for you to
@@ -189,7 +196,7 @@ Vault excepted) or private (name, station and mission only); private by default.
 
 Everything the page does, an agent must be able to do: create the company (with its look and the start chosen),
 add, edit and remove departments and experts, write and switch processes, talk to NEXUS, approve and reject,
-run experiments, read the Vault and the Portfolio, change Settings. Through the API and through MCP, and
+run experiments, read the Vault and Products, change Settings. Through the API and through MCP, and
 documented for agents in llms.txt, /api-docs and openapi-public.json. Today openapi-public.json carries 30
 company routes and the MCP four tools (company_status, company_message_manager, company_approve, company_create);
 processes, experiments, the Vault and the start options have none.
@@ -219,6 +226,7 @@ anything your backend cannot do as drawn (change the design minimally and name i
 | API and MCP | 30 routes; MCP 4 tools | every function, documented for agents (section 13) |
 | Connect AI | none | a tab of your design: the key, the connector, one ready prompt |
 | QA files bugs | drafts, submitted on approval | files verified bugs as the owner, reopens, re-tests |
+| Experts per department | your templates (a Researcher in Development, Design studio, Trading desk) | you review and decide each department's agents |
 | Lab / desk | both paper experiments | lab finds and proves; desk runs winners (Tournaments, real money on approval) |
 | Experiments page | experiments only inside task detail | the page, section 7 |
 | Processes | no department-to-department handoff | section 8 |

@@ -10,8 +10,8 @@
 <link href="https://fonts.googleapis.com/css2?family=Archivo+Black&family=JetBrains+Mono:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <!-- the Universe's name plates: his picture's squared, semi-condensed caps -->
 <link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@600;700&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="style.css?v=20261022cg">
-<link rel="stylesheet" href="uv.css?v=20261022cg">
+<link rel="stylesheet" href="style.css?v=20261022ck">
+<link rel="stylesheet" href="uv.css?v=20261022ck">
 <!-- the 3D engine for the Universe and the office: three.js with its WebGPU renderer (WebGL2 where WebGPU is missing) -->
 <script type="importmap">{ "imports": {
   "three": "https://cdn.jsdelivr.net/npm/three@0.172.0/build/three.webgpu.js",
@@ -31,7 +31,7 @@
 <link rel="modulepreload" href="https://cdn.jsdelivr.net/npm/three@0.172.0/examples/jsm/utils/BufferGeometryUtils.js">
 <!-- the loading screen's look: read before the first paint, so the page never shows half built -->
 <link rel="preload" as="image" href="sun.webp" fetchpriority="high">
-<link rel="stylesheet" href="boot.css?v=20261022cg">
+<link rel="stylesheet" href="boot.css?v=20261022ck">
 </head>
 <body>
 <!-- the loading screen: over the page until the office (or, opened on it, the Universe) has drawn; app.js moves its
@@ -71,10 +71,10 @@
 
 <nav class="tabs" id="tabs">
   <!-- every tab carries a small line icon in the Universe tab's style; the label sits in .tl so a visit can rename it -->
-  <button data-tab="office" class="on"><svg class="ti" viewBox="0 0 16 16"><path d="M8 1.8 14 5v6l-6 3.2L2 11V5Z M2 5l6 3.2L14 5 M8 8.2v6"/></svg><span class="tl">Office</span></button>
-  <button data-tab="portfolio"><svg class="ti" viewBox="0 0 16 16"><rect x="2" y="2" width="5" height="5" rx="1"/><rect x="9" y="2" width="5" height="5" rx="1"/><rect x="2" y="9" width="5" height="5" rx="1"/><path d="M9.5 13.5 14 9 M11 9h3v3"/></svg><span class="tl">Portfolio</span></button>
+  <button data-tab="office" class="on"><svg class="ti" viewBox="0 0 16 16"><path d="M8 1.8 14 5v6l-6 3.2L2 11V5Z M2 5l6 3.2L14 5 M8 8.2v6"/></svg><span class="tl">Headquarters</span></button>
+  <button data-tab="portfolio"><svg class="ti" viewBox="0 0 16 16"><rect x="2" y="2" width="5" height="5" rx="1"/><rect x="9" y="2" width="5" height="5" rx="1"/><rect x="2" y="9" width="5" height="5" rx="1"/><path d="M9.5 13.5 14 9 M11 9h3v3"/></svg><span class="tl">Products</span></button>
   <button data-tab="tasks"><svg class="ti" viewBox="0 0 16 16"><path d="M2 4.3l1.3 1.3L5.8 3 M2 9.3l1.3 1.3L5.8 8 M8 4.4h6 M8 9.4h6 M2.6 13.6h1.8 M8 13.6h6"/></svg><span class="tl">Tasks</span><sup id="tn-tasks"></sup></button>
-  <button data-tab="approvals"><svg class="ti" viewBox="0 0 16 16"><path d="M4 11.3V7.6a4 4 0 0 1 8 0v3.7l1.3 1.3H2.7Z M6.5 14.4a1.7 1.7 0 0 0 3 0"/></svg><span class="tl">Needs you</span><sup class="r" id="tn-appr"></sup></button>
+  <button data-tab="approvals"><svg class="ti" viewBox="0 0 16 16"><path d="M4 11.3V7.6a4 4 0 0 1 8 0v3.7l1.3 1.3H2.7Z M6.5 14.4a1.7 1.7 0 0 0 3 0"/></svg><span class="tl">Approvals</span><sup class="r" id="tn-appr"></sup></button>
   <button data-tab="memory"><svg class="ti" viewBox="0 0 16 16"><rect x="3.6" y="3.6" width="8.8" height="8.8" rx="1.6"/><rect x="6.3" y="6.3" width="3.4" height="3.4" rx=".6"/><path d="M6 1.4v2.2 M10 1.4v2.2 M6 12.4v2.2 M10 12.4v2.2 M1.4 6h2.2 M1.4 10h2.2 M12.4 6h2.2 M12.4 10h2.2"/></svg><span class="tl">Memory</span></button>
   <button data-tab="audit"><svg class="ti" viewBox="0 0 16 16"><circle cx="7" cy="7" r="4.8"/><path d="M10.5 10.5l3.9 3.9 M4.9 7.2l1.5 1.5 2.7-2.9"/></svg><span class="tl">Audit</span></button>
   <button data-tab="rules"><svg class="ti" viewBox="0 0 16 16"><circle cx="3.4" cy="3.8" r="1.9"/><circle cx="12.6" cy="3.8" r="1.9"/><circle cx="8" cy="12.4" r="1.9"/><path d="M5.3 3.8h5.4 M4.4 5.5l2.6 5.1 M11.6 5.5 9 10.6"/></svg><span class="tl">Processes</span><sup id="tn-rules"></sup></button>
@@ -123,7 +123,7 @@
 
   <section class="panel stage" id="stage">
     <div class="top">
-      <div class="crumb"><button class="back" id="back" hidden>← Office</button><b class="where" id="where" hidden></b><span class="live" id="live"></span></div>
+      <div class="crumb"><button class="back" id="back" hidden>← Headquarters</button><b class="where" id="where" hidden></b><span class="live" id="live"></span></div>
       <div class="zoom"><span class="vt" id="vt" title="The office flat, or in 3D"><button data-v="2d">2D</button><button data-v="3d">3D</button></span><button id="z-in" title="Zoom in">+</button><button id="z-out" title="Zoom out">−</button><button id="z-fit" title="Fit">⤢</button></div>
     </div>
     <svg id="office" class="office" xmlns="http://www.w3.org/2000/svg"></svg>
@@ -181,7 +181,7 @@
 </main>
 
 <main class="page pane" data-pane="approvals" hidden>
-  <div class="ph"><h2>Needs you</h2><span class="sub">Nothing real happens until you say yes.</span></div>
+  <div class="ph"><h2>Approvals</h2><span class="sub">Nothing real happens until you say yes.</span></div>
   <div class="grid2"><section><div class="sec">WAITING</div><div id="appr-full"></div></section><section><div class="sec">DECIDED</div><div id="appr-done"></div></section></div>
 </main>
 
@@ -196,7 +196,7 @@
 </main>
 
 <main class="page pane" data-pane="portfolio" hidden>
-  <div class="ph"><h2>Portfolio</h2><span class="sub" title="Every app the company, or the account it runs on, built through Build it Better: its visitors, its uses, and what it earns.">built, brought in, earned</span></div>
+  <div class="ph"><h2>Products</h2><span class="sub" title="Every app the company, or the account it runs on, built through Build it Better: its visitors, its uses, and what it earns.">built, brought in, earned</span></div>
   <div id="portfolio"></div>
 </main>
 
@@ -238,16 +238,16 @@
 <div class="toast" id="toast" hidden></div>
 
 <!-- ?v= changes with every edit, so a plain reload never runs yesterday's file from the cache -->
-<script src="data.js?v=20261022cg"></script>
-<script src="uv-data.js?v=20261022cg"></script>
-<script src="portfolio.js?v=20261022cg"></script>
-<script src="sim.js?v=20261022cg"></script>
-<script src="office.js?v=20261022cg"></script>
-<script src="universe.js?v=20261022cg"></script>
-<script src="cards.js?v=20261022cg"></script>
-<script src="app.js?v=20261022cg"></script>
-<script type="module" src="u3d.js?v=20261022cg"></script>
+<script src="data.js?v=20261022ck"></script>
+<script src="uv-data.js?v=20261022ck"></script>
+<script src="portfolio.js?v=20261022ck"></script>
+<script src="sim.js?v=20261022ck"></script>
+<script src="office.js?v=20261022ck"></script>
+<script src="universe.js?v=20261022ck"></script>
+<script src="cards.js?v=20261022ck"></script>
+<script src="app.js?v=20261022ck"></script>
+<script type="module" src="u3d.js?v=20261022ck"></script>
 <!-- the seven stations a company can pick (stations.js puts its builders into u3d.js's table and renames CO.SKINS) -->
-<script type="module" src="stations.js?v=20261022cg"></script>
+<script type="module" src="stations.js?v=20261022ck"></script>
 </body>
 </html>

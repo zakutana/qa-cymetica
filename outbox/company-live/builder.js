@@ -420,7 +420,7 @@
   /* ---------------- wiring ---------------- */
   function pub() {
     return '<span class="sw"></span><div><b>' + (o.public ? 'Public' : 'Private') + '</b><span>' +
-      (o.public ? 'Anyone can look inside, read only. The Vault stays private.' : 'Others see its name, station and mission.') + '</span></div>';
+      (o.public ? 'Anyone can look inside, read only.' : 'Others see its name, station and mission.') + '</span></div>';
   }
   $('f-pub').innerHTML = pub();
   accents(); opts();
