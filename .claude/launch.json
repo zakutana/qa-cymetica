@@ -24,6 +24,12 @@
       "runtimeExecutable": "python",
       "runtimeArgs": ["-m", "http.server", "8795", "--bind", "127.0.0.1", "--directory", "outbox/account-redesign"],
       "port": 8795
+    },
+    {
+      "name": "airdrop-farms-mock",
+      "runtimeExecutable": "python",
+      "runtimeArgs": ["-m", "http.server", "8796", "--bind", "127.0.0.1", "--directory", "outbox/airdrop-farms"],
+      "port": 8796
     }
   ]
 }

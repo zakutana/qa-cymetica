@@ -21,12 +21,12 @@ if bad:
     raise SystemExit(f"off-palette colours {bad}")
 print("colours ok:", " ".join(sorted(hexes)))
 
-url = (here / "mock.html").as_uri()
+url = (here / "mock.html").as_uri()  # every view below adds &shot=1: the frozen state the pictures show
 with sync_playwright() as p:
     b = p.chromium.launch(channel="chrome", args=["--disable-lcd-text", "--font-render-hinting=none"])
     for w in [int(a) for a in sys.argv[1:]] or [1440]:
         t = b.new_page(viewport={"width": w, "height": 900}, device_scale_factor=1)
-        t.goto(url + "?tab=farms", wait_until="networkidle")
+        t.goto(url + "?tab=farms&shot=1", wait_until="networkidle")
         t.wait_for_timeout(800)
         over = t.evaluate("() => document.documentElement.scrollWidth - innerWidth")
         print(w, "horizontal overflow px:", over)
@@ -36,10 +36,10 @@ with sync_playwright() as p:
                 c = document.querySelector('.sim').getBoundingClientRect();
                 return {x: a.left - 1, y: a.top + scrollY - 1, width: a.width + 2, height: c.bottom - a.top + 2}; }""")
             t.screenshot(path=str(out / "2-farm-simulator-closeup.png"), clip=box, full_page=True)
-            t.goto(url + "?tab=live", wait_until="networkidle")
+            t.goto(url + "?tab=live&shot=1", wait_until="networkidle")
             t.wait_for_timeout(800)
             t.screenshot(path=str(out / "3-live-farms-1440.png"), full_page=True)
-            t.goto(url + "?tab=logo", wait_until="networkidle")
+            t.goto(url + "?tab=logo&shot=1", wait_until="networkidle")
             t.wait_for_timeout(500)
             h = t.evaluate("() => document.querySelector('.sheet').getBoundingClientRect().bottom")
             t.screenshot(path=str(out / "4-logo.png"), clip={"x": 220, "y": 0, "width": 1000, "height": h})
