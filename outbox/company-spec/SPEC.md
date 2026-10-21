@@ -107,7 +107,7 @@ yours to design: you are the AI-native company.
   work, duplicates and stuck flows, and keeping the processes optimised).
 - **Departments**: each in a room of its own look; its name and icon on the glass; the room glows orange while it
   waits on its owner, and only then.
-- **Around it**: the top bar (the company's logo is a miniature of its own station in its colour, the name, its
+- **Around it**: the top bar (the company's logo is a line icon of its station, drawn like the departments' icons, in the company's colour; the name, its
   state, Pause; on the right a red "N approvals" only while something waits, and Upgrade; no status line, no "all
   clear"), the rail of departments (who, what it does now, one number), the Approvals column, NEXUS's chat, and the
   tabs Headquarters (the office), Products, Tasks, Approvals, Memory, Audit, Processes, Universe, Investable, Legal

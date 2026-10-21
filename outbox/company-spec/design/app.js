@@ -183,9 +183,9 @@
   function renderBar() {
     var S = CO.S, c = S.company, b = S.budget, l = CO.left(), paused = c.status === 'paused';
     $('co-name').textContent = c.name;
-    // the logo: the company's station in miniature, as it floats in the Universe ("logo firmy dej miniaturni ikonu te firmy")
-    var lp = RO ? c : CO.profile(), lsrc = 'shots/station-' + (lp.skin || 'dome') + '-' + (lp.accent || 'green') + '.webp', lg = $('co-logo');
-    if (lg._src !== lsrc) { lg._src = lsrc; lg.innerHTML = '<img alt="" src="' + lsrc + '">'; lg.title = c.name; }
+    // the logo: the company's station as a line icon in the company's colour (CO.stationIcon, uv-data.js)
+    var lp = RO ? c : CO.profile(), lsrc = (lp.skin || 'dome') + '-' + (lp.accent || 'green'), lg = $('co-logo');
+    if (lg._src !== lsrc) { lg._src = lsrc; lg.innerHTML = CO.stationIcon(lp.skin || 'dome', lp.accent || 'green'); lg.title = c.name; }
     var st = $('co-status'); st.textContent = paused ? 'PAUSED' : 'RUNNING'; st.className = 'pill ' + (paused ? 'off' : 'on');
     $('co-pause').textContent = paused ? 'Resume' : 'Pause';
     // what the company earned lives in its vault (the office and the right column), not in this bar

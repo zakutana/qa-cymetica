@@ -34,8 +34,9 @@ a { color: var(--cyan); text-decoration: none; cursor: pointer; }
 .cobar { flex: none; display: grid; grid-template-columns: minmax(0, 1fr) auto; align-items: center; gap: 20px; padding: 10px 20px;
   border-bottom: 1px solid var(--line); background: linear-gradient(180deg, rgba(13, 21, 32, .9), rgba(10, 14, 23, .9)); }
 .who { display: flex; align-items: center; gap: 12px; min-width: 0; }
-.mark img { width: 100%; height: 100%; object-fit: cover; border-radius: inherit; display: block; }
-.mark { overflow: hidden; }
+/* the logo is the station's line icon, a department icon's tile at the bar's size */
+.mark:has(.logo) { background: none; border: 0; box-shadow: none; }
+.mark .dic.logo { width: 100%; height: 100%; border-radius: inherit; } .mark .dic.logo svg { width: 26px; height: 26px; }
 .mark { width: 42px; height: 42px; border-radius: 10px; flex: none; display: grid; place-items: center; font-family: 'Archivo Black'; color: var(--cyan); font-size: 15px;
   background: linear-gradient(135deg, var(--line3), var(--navy)); border: 1px solid var(--cyan); box-shadow: 0 0 18px rgba(0, 207, 255, .25), inset 0 0 12px rgba(0, 207, 255, .12); }
 .who-t { min-width: 0; }
