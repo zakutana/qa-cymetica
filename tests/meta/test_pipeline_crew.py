@@ -1005,7 +1005,11 @@ def test_the_auditor_counts_what_each_department_cost_and_produced(company, monk
     # as printed: the dry run found every CLI line printing "None" (printable() was taken
     # for a filter; it configures the stream).
     capsys.readouterr()
-    assert sup.main(["audit", "--days", "7"]) == 0
+    # The rows are dated `now` (2026-10-11); the CLI counts back from the real clock. A fixed
+    # "--days 7" went stale on 2026-10-18 and aborted a sweep before any live request, so the
+    # window is the fixture's age plus its week.
+    window = (datetime.now(timezone.utc) - now).total_seconds() / 86400 + 7
+    assert sup.main(["audit", "--days", f"{window:.2f}"]) == 0
     printed = capsys.readouterr().out
     assert "bugs" in printed and "twice" in printed and "None" not in printed, printed
     procs = _script("processes")
