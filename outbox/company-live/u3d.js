@@ -1211,12 +1211,13 @@ function adCasino(body, b) {
   // (the projector's light is the logo's cyan, not the station's pink: it is the logo it throws)
   const ice = amat(CASINO.ice);
   part(new THREE.CylinderGeometry(0.24, 0.2, 0.08, 20), ice.glow, 0, MT + 0.04, 0);
-  const beam = new THREE.Mesh(G.beam, ice.beam); beam.rotation.x = Math.PI; beam.scale.set(3.2, 0.45, 3.2); beam.position.y = MT + 0.3; st.add(beam);
-  const HR = 1.15, HY = MT + 0.45 + HR, holo = new THREE.MeshBasicMaterial({ map: holoLogoTex(), transparent: true, opacity: 0.85, blending: THREE.AdditiveBlending, depthWrite: false, side: THREE.DoubleSide });
+  const beam = new THREE.Mesh(G.beam, ice.beam); beam.rotation.x = Math.PI; beam.scale.set(2.72, 0.45, 2.72); beam.position.y = MT + 0.3; st.add(beam);
+  // 15 % smaller than first drawn ("ten hologram zmensi o 15%", 2026-10-21)
+  const HR = 0.98, HY = MT + 0.45 + HR, holo = new THREE.MeshBasicMaterial({ map: holoLogoTex(), transparent: true, opacity: 0.85, blending: THREE.AdditiveBlending, depthWrite: false, side: THREE.DoubleSide });
   const spin = new THREE.Group(); spin.position.y = HY; st.add(spin);
   // the logo's disc, leaning back a little so its face meets the first look's camera, which looks down on it
   part(new THREE.CircleGeometry(HR, 64), holo, 0, 0, 0, spin).rotation.x = -0.45;
-  const holoGlow = glowSprite(ice.c, 0.12, 3.4); holoGlow.position.y = HY; st.add(holoGlow);
+  const holoGlow = glowSprite(ice.c, 0.12, 2.9); holoGlow.position.y = HY; st.add(holoGlow);
   const hubGlow = glowSprite(deep.c, 0.22, 5); hubGlow.position.y = 0.2; st.add(hubGlow);
   b.tick = (t) => {
     rings.rotation.y = t * 0.12; small.rotation.y = -t * 0.18;
