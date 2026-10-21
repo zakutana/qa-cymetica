@@ -1086,63 +1086,92 @@ function adGem(body, b) {
   };
   b.top = Y + top + 0.3; b.bot = 0; b.foot = R;
 }
-// The casino's ring as a poker chip's edge: a band of cyan light, the chip's twelve white inserts round it, rows of
-// windows between them (most white, a few pink), as the operator's reference station has its rings lit
+// The space casino's colours, chosen for the map ("zeton ma byt v nejakych barvach hustych pro space casino, co bys
+// zvolil. i celkovou stanici tak muzes zabarvit", 2026-10-21): neon magenta and violet, the cyan of the galaxy's own
+// lines for the small things, white for a chip's inserts. Among the teal orbits, the gold sun and the green gem, the
+// casino is the one thing in pink.
+const CASINO = { hot: '#ff3dc8', deep: '#8a5cff', ice: '#3de0ff', white: '#f6eeff' };
+// The casino's ring as a poker chip's edge: a band of violet into magenta light, the chip's twelve inserts round it
+// (white and cyan in turn), rows of windows between them, as the operator's reference station has its rings lit
 function chipBandTex() {
   if (TX.chipBand) return TX.chipBand;
   const W = 1024, H = 64, c = document.createElement('canvas'); c.width = W; c.height = H; const g = c.getContext('2d'), R = rng(57);
-  g.fillStyle = '#06101c'; g.fillRect(0, 0, W, H);
-  const gr = g.createLinearGradient(0, 0, 0, H); gr.addColorStop(0, '#0b5f94'); gr.addColorStop(0.5, '#43d4ff'); gr.addColorStop(1, '#0b5f94');
+  g.fillStyle = '#12061f'; g.fillRect(0, 0, W, H);
+  const gr = g.createLinearGradient(0, 0, 0, H); gr.addColorStop(0, '#4a1a8c'); gr.addColorStop(0.5, CASINO.hot); gr.addColorStop(1, '#4a1a8c');
   g.fillStyle = gr; g.fillRect(0, 8, W, H - 16);
   for (let x = 2; x < W; x += 6) for (const y of [14, 24, 34, 44]) {
     const r = R(); if (r < 0.62) continue;
-    g.fillStyle = r < 0.9 ? 'rgba(235,250,255,.85)' : 'rgba(255,92,150,.95)'; g.fillRect(x, y, 3, 4);
+    g.fillStyle = r < 0.85 ? 'rgba(255,240,255,.85)' : 'rgba(61,224,255,.95)'; g.fillRect(x, y, 3, 4);
   }
-  g.fillStyle = '#cfe8f4'; for (let i = 0; i < 12; i++) g.fillRect(i * W / 12 + 22, 8, 30, H - 16);
+  for (let i = 0; i < 12; i++) { g.fillStyle = i % 2 ? CASINO.ice : CASINO.white; g.fillRect(i * W / 12 + 22, 8, 30, H - 16); }
   const t = new THREE.CanvasTexture(c); t.colorSpace = THREE.SRGBColorSpace; t.wrapS = THREE.RepeatWrapping; t.anisotropy = 8; TX.chipBand = t; return t;
 }
-// The ring's top and bottom, seen from above a chip's face round its edge: strips of light round it and the same twelve
-// inserts across it. A RingGeometry maps its outer radius to the canvas's edge, so the annulus is drawn from q (its
-// inner radius over its outer) to 1.
+// The ring's top and bottom, seen from above a chip's face round its edge: strips of magenta and violet light round it
+// and the same twelve inserts across it. A RingGeometry maps its outer radius to the canvas's edge, so the annulus is
+// drawn from q (its inner radius over its outer) to 1.
 function chipFaceTex(q) {
   const key = 'chipFace' + q.toFixed(2); if (TX[key]) return TX[key];
   const W = 512, m = W / 2, c = document.createElement('canvas'); c.width = c.height = W; const g = c.getContext('2d'), R = rng(61);
   const at = (f) => m * (q + (1 - q) * f);
-  g.fillStyle = '#081627'; g.fillRect(0, 0, W, W);
-  g.strokeStyle = '#43d4ff'; [[0.2, 5], [0.5, 9], [0.8, 5]].forEach(([f, w]) => { g.lineWidth = w; g.beginPath(); g.arc(m, m, at(f), 0, Math.PI * 2); g.stroke(); });
+  g.fillStyle = '#140822'; g.fillRect(0, 0, W, W);
+  [[0.2, 5, CASINO.deep], [0.5, 9, CASINO.hot], [0.8, 5, CASINO.deep]].forEach(([f, w, col]) => { g.strokeStyle = col; g.lineWidth = w; g.beginPath(); g.arc(m, m, at(f), 0, Math.PI * 2); g.stroke(); });
   for (let i = 0; i < 360; i++) {
     const a = i / 360 * Math.PI * 2, f = R() < 0.5 ? 0.35 : 0.65, r = R(); if (r < 0.55) continue;
-    g.fillStyle = r < 0.9 ? 'rgba(235,250,255,.85)' : 'rgba(255,92,150,.95)'; g.fillRect(m + Math.cos(a) * at(f) - 1.5, m + Math.sin(a) * at(f) - 1.5, 3, 3);
+    g.fillStyle = r < 0.85 ? 'rgba(255,240,255,.85)' : 'rgba(61,224,255,.95)'; g.fillRect(m + Math.cos(a) * at(f) - 1.5, m + Math.sin(a) * at(f) - 1.5, 3, 3);
   }
-  g.fillStyle = '#cfe8f4';
-  for (let i = 0; i < 12; i++) { g.save(); g.translate(m, m); g.rotate((i + 0.5) / 12 * Math.PI * 2); g.fillRect(-W * 0.022, at(0.08), W * 0.044, at(0.92) - at(0.08)); g.restore(); }
+  for (let i = 0; i < 12; i++) { g.fillStyle = i % 2 ? CASINO.ice : CASINO.white; g.save(); g.translate(m, m); g.rotate((i + 0.5) / 12 * Math.PI * 2); g.fillRect(-W * 0.022, at(0.08), W * 0.044, at(0.92) - at(0.08)); g.restore(); }
   const t = new THREE.CanvasTexture(c); t.colorSpace = THREE.SRGBColorSpace; t.anisotropy = 8; TX[key] = t; return t;
 }
-// bronze ribs for the spine, the reference's copper sections
+// the spine's ribbed sections, in the station's dark violet steel
 function ribTex() {
   if (TX.rib) return TX.rib;
   const c = document.createElement('canvas'); c.width = 16; c.height = 128; const g = c.getContext('2d');
-  for (let y = 0; y < 128; y += 8) { g.fillStyle = '#8a5a32'; g.fillRect(0, y, 16, 5); g.fillStyle = '#3a2412'; g.fillRect(0, y + 5, 16, 3); }
+  for (let y = 0; y < 128; y += 8) { g.fillStyle = '#5b4a86'; g.fillRect(0, y, 16, 5); g.fillStyle = '#1c1430'; g.fillRect(0, y + 5, 16, 3); }
   const t = new THREE.CanvasTexture(c); t.colorSpace = THREE.SRGBColorSpace; t.wrapS = t.wrapT = THREE.RepeatWrapping; TX.rib = t; return t;
 }
+// Agent Tournaments' logo as a hologram ("misto toho chipu chci at je to hologram primo logo z agent tournamentu",
+// 2026-10-21): the site's own mark, drawn from its SVG (.at-logo on /agent-tournaments, read that day, viewBox 48) --
+// a ring stroked cyan into green (#at-g-brand, #00cfff to #00ff88), eight pale segments over it (#E6EDF7, dashes 5 in
+// 16.886), a dotted ring inside it, and the two pills, cyan and green. Its dark disc is light here instead (a hologram
+// adds light, so what is black on the page is a faint glow), and the faint scan lines a hologram has cross it.
+function holoLogoTex() {
+  if (TX.holoLogo) return TX.holoLogo;
+  const W = 512, c = document.createElement('canvas'); c.width = c.height = W; const g = c.getContext('2d');
+  g.save(); g.scale(W / 48, W / 48);
+  const brand = g.createLinearGradient(0, 0, 48, 48); brand.addColorStop(0, '#00cfff'); brand.addColorStop(1, '#00ff88');
+  const ring = (r, w, style, dash, off, alpha) => { g.globalAlpha = alpha; g.strokeStyle = style; g.lineWidth = w; g.setLineDash(dash || []); g.lineDashOffset = off || 0; g.beginPath(); g.arc(24, 24, r, 0, Math.PI * 2); g.stroke(); };
+  g.fillStyle = 'rgba(0,207,255,.1)'; g.beginPath(); g.arc(24, 24, 21.5, 0, Math.PI * 2); g.fill();
+  g.shadowColor = 'rgba(0,230,200,.9)'; g.shadowBlur = 1.2;
+  ring(21.5, 3.6, brand, null, 0, 1);
+  ring(21.5, 3.6, '#E6EDF7', [5, 11.886], 2.5, 0.92);
+  ring(15.2, 1.3, brand, [1.6, 2.4], 0, 0.75);
+  g.globalAlpha = 1; g.setLineDash([]);
+  const pill = (x, fill) => { g.fillStyle = fill; g.beginPath(); g.moveTo(x + 2.8, 18.5); g.arc(x + 2.8, 21.3, 2.8, -Math.PI / 2, 0); g.lineTo(x + 5.6, 26.7); g.arc(x + 2.8, 26.7, 2.8, 0, Math.PI); g.lineTo(x, 21.3); g.arc(x + 2.8, 21.3, 2.8, Math.PI, Math.PI * 1.5); g.fill(); };
+  pill(16.2, '#00cfff'); pill(26.2, '#00ff88');
+  g.restore();
+  g.globalCompositeOperation = 'destination-out'; g.fillStyle = 'rgba(0,0,0,.3)';
+  for (let y = 0; y < W; y += 8) g.fillRect(0, y, W, 3);
+  const t = new THREE.CanvasTexture(c); t.colorSpace = THREE.SRGBColorSpace; t.anisotropy = 8; TX.holoLogo = t; return t;
+}
 // Agent Casino: a big orbital chip ("udelej spis takovy velky orbitalni chip", 2026-10-21, after the operator's
-// picture of a ring station). A spine through its middle -- copper sections, a module at its foot with pink lights,
-// a light at either end -- with a saucer and long golden solar panels at its top; round the spine two big rings, one
-// over the other, and a smaller one under them, lit cyan with windows, each ring's edge and faces a poker chip's
-// (white inserts round it), turning slowly on spokes from the hub.
+// picture of a ring station), in the space casino's colours (CASINO). A spine through its middle -- ribbed sections, a
+// module at its foot with magenta lights, a light at its foot -- with a saucer and a projector at its top, and over the
+// projector a hologram of Agent Tournaments' logo (where the picture's golden solar panels were: "ty zlute spursle ...
+// je hnusna", then a chip's hologram, then the logo itself: holoLogoTex); round the spine two big rings, one over the other, and a smaller one
+// under them, lit magenta and violet with windows, each ring's edge and faces a poker chip's (inserts round it),
+// turning slowly on spokes from the hub.
 function adCasino(body, b) {
-  const cy = amat('#00cfff');
-  const metal = new THREE.MeshStandardMaterial({ color: 0x8e9aa8, roughness: 0.35, metalness: 0.75 });
-  const dark = new THREE.MeshStandardMaterial({ color: 0x141b26, roughness: 0.5, metalness: 0.6 });
-  const bronze = new THREE.MeshStandardMaterial({ color: 0xb07a48, map: ribTex(), roughness: 0.4, metalness: 0.7 });
-  const gold = new THREE.MeshStandardMaterial({ color: 0xdcbd84, roughness: 0.4, metalness: 0.55, emissive: 0x5a4220, emissiveIntensity: 0.7, side: THREE.DoubleSide });
-  const band = new THREE.MeshStandardMaterial({ color: 0x0d2236, map: chipBandTex(), emissive: 0xffffff, emissiveMap: chipBandTex(), emissiveIntensity: 1.25, roughness: 0.35, metalness: 0.3 });
-  const pink = new THREE.MeshBasicMaterial({ color: new THREE.Color(0xff5c96).multiplyScalar(1.6) });
+  const hot = amat(CASINO.hot), deep = amat(CASINO.deep);
+  const metal = new THREE.MeshStandardMaterial({ color: 0x8a84a8, roughness: 0.32, metalness: 0.78 });
+  const dark = new THREE.MeshStandardMaterial({ color: 0x170f26, roughness: 0.5, metalness: 0.6 });
+  const ribbed = new THREE.MeshStandardMaterial({ color: 0xa597d0, map: ribTex(), roughness: 0.4, metalness: 0.7 });
+  const band = new THREE.MeshStandardMaterial({ color: 0x1c0a2c, map: chipBandTex(), emissive: 0xffffff, emissiveMap: chipBandTex(), emissiveIntensity: 1.2, roughness: 0.35, metalness: 0.3 });
+  const lamp = new THREE.MeshBasicMaterial({ color: new THREE.Color(CASINO.hot).multiplyScalar(1.6) });
   // Upright, its rings in the galaxy's plane like a chip lying flat: the picture's station leans, but on the map a lean
   // read as a station falling over ("proc je tak nasikmene to casino?", 2026-10-21)
   const st = new THREE.Group(); st.position.y = 3.3; body.add(st);
   const part = (geo, mat, x, y, z, parent = st) => { const m = ownGeo(new THREE.Mesh(geo, mat)); m.position.set(x, y, z); parent.add(m); return m; };
-  const light = (y, size, parent = st) => { const s = new THREE.Sprite(new THREE.SpriteMaterial({ map: flareTex(), color: new THREE.Color(0xd8f6ff).multiplyScalar(1.6), transparent: true, blending: THREE.AdditiveBlending, depthWrite: false })); s.scale.setScalar(size); s.position.y = y; parent.add(s); return s; };
+  const light = (y, size, parent = st) => { const s = new THREE.Sprite(new THREE.SpriteMaterial({ map: flareTex(), color: new THREE.Color(0xf0dcff).multiplyScalar(1.6), transparent: true, blending: THREE.AdditiveBlending, depthWrite: false })); s.scale.setScalar(size); s.position.y = y; parent.add(s); return s; };
   // a ring habitat: its outer band, its inner wall, its two faces
   const hab = (R, w, h, y, parent) => {
     const g = new THREE.Group(); g.position.y = y; parent.add(g);
@@ -1163,33 +1192,41 @@ function adCasino(body, b) {
   const small = new THREE.Group(); st.add(small); hab(2.15, 0.34, 0.26, -0.66, small);
   // the hub and the spine
   part(new THREE.CylinderGeometry(0.55, 0.55, 1.5, 24), metal, 0, 0.1, 0);
-  const hubRim = new THREE.Mesh(G.ringT, cy.rim); hubRim.scale.setScalar(0.6); hubRim.rotation.x = Math.PI / 2; hubRim.position.y = 0.86; st.add(hubRim);
-  part(new THREE.CylinderGeometry(0.28, 0.32, 1.7, 20), bronze, 0, -1.55, 0).material.map.repeat.set(1, 3);
+  const hubRim = new THREE.Mesh(G.ringT, deep.rim); hubRim.scale.setScalar(0.6); hubRim.rotation.x = Math.PI / 2; hubRim.position.y = 0.86; st.add(hubRim);
+  part(new THREE.CylinderGeometry(0.28, 0.32, 1.7, 20), ribbed, 0, -1.55, 0).material.map.repeat.set(1, 3);
   part(new THREE.CylinderGeometry(0.4, 0.4, 0.14, 20), dark, 0, -1.1, 0);
   part(new THREE.CylinderGeometry(0.5, 0.42, 0.5, 8), dark, 0, -2.6, 0);
-  [-2.5, -2.7].forEach((y) => part(new THREE.CylinderGeometry(0.505, 0.505, 0.05, 8, 1, true), pink, 0, y, 0));
+  [-2.5, -2.7].forEach((y) => part(new THREE.CylinderGeometry(0.505, 0.505, 0.05, 8, 1, true), lamp, 0, y, 0));
   // (the cones are the shared geometry: placed as they are, never marked the casino's own, so letting the casino go
   // does not dispose them)
   const cone = (y, r, h, down) => { const m = new THREE.Mesh(G.cone, metal); m.scale.set(r, h, r); m.position.y = y; if (down) m.rotation.x = Math.PI; st.add(m); return m; };
   cone(-3.05, 0.14, 0.4, true);
   const tipLo = light(-3.3, 0.9);
-  // the top: the mast, the saucer, the solar panels, a light
-  part(new THREE.CylinderGeometry(0.13, 0.16, 2.0, 12), metal, 0, 1.85, 0);
+  // the top: the mast, the saucer, the projector, and the logo's hologram over it -- standing up, a cone of light up
+  // into it from the projector, flickering a little as a hologram does
+  const MT = 2.2;
+  part(new THREE.CylinderGeometry(0.13, 0.16, MT - 0.85, 12), metal, 0, (MT + 0.85) / 2, 0);
   const saucer = new THREE.LatheGeometry([[0.16, 0], [1.05, 0], [1.0, 0.12], [0.55, 0.4], [0.16, 0.48]].map(([x, y]) => new THREE.Vector2(x, y)), 24);
-  part(saucer, new THREE.MeshStandardMaterial({ color: 0x9aa3ad, roughness: 0.4, metalness: 0.7, flatShading: true, side: THREE.DoubleSide }), 0, 1.05, 0);
-  // the solar panels: long golden blades fanned out from the mast, as in the picture
-  [0, 1, 2, 3, 4].forEach((i) => {
-    const arm = new THREE.Group(); arm.position.y = 2.05 + i * 0.13; arm.rotation.set(0.1, 0.55 + i * 0.12, 0.04); st.add(arm);
-    const pn = new THREE.Mesh(G.box, gold); pn.scale.set(4.0, 0.02, 0.17); arm.add(pn);
-  });
-  const tipHi = light(2.95, 1.1);
-  cone(2.8, 0.07, 0.35, false);
-  const hubGlow = glowSprite(cy.c, 0.22, 5); hubGlow.position.y = 0.2; st.add(hubGlow);
+  part(saucer, new THREE.MeshStandardMaterial({ color: 0x8c86a8, roughness: 0.4, metalness: 0.7, flatShading: true, side: THREE.DoubleSide }), 0, 1.05, 0);
+  // (the projector's light is the logo's cyan, not the station's pink: it is the logo it throws)
+  const ice = amat(CASINO.ice);
+  part(new THREE.CylinderGeometry(0.24, 0.2, 0.08, 20), ice.glow, 0, MT + 0.04, 0);
+  const beam = new THREE.Mesh(G.beam, ice.beam); beam.rotation.x = Math.PI; beam.scale.set(3.2, 0.45, 3.2); beam.position.y = MT + 0.3; st.add(beam);
+  const HR = 1.15, HY = MT + 0.45 + HR, holo = new THREE.MeshBasicMaterial({ map: holoLogoTex(), transparent: true, opacity: 0.85, blending: THREE.AdditiveBlending, depthWrite: false, side: THREE.DoubleSide });
+  const spin = new THREE.Group(); spin.position.y = HY; st.add(spin);
+  // the logo's disc, leaning back a little so its face meets the first look's camera, which looks down on it
+  part(new THREE.CircleGeometry(HR, 64), holo, 0, 0, 0, spin).rotation.x = -0.45;
+  const holoGlow = glowSprite(ice.c, 0.12, 3.4); holoGlow.position.y = HY; st.add(holoGlow);
+  const hubGlow = glowSprite(deep.c, 0.22, 5); hubGlow.position.y = 0.2; st.add(hubGlow);
   b.tick = (t) => {
     rings.rotation.y = t * 0.12; small.rotation.y = -t * 0.18;
-    tipLo.material.opacity = 0.6 + 0.4 * Math.sin(t * 2.6); tipHi.material.opacity = 0.6 + 0.4 * Math.sin(t * 2.6 + 1.6);
+    tipLo.material.opacity = 0.6 + 0.4 * Math.sin(t * 2.6);
+    // its face toward the first look (the map's azimuth, less the slow turn frame() gives the body), swaying either way
+    // a little: a chip spinning right round showed its edge half the time
+    spin.rotation.y = CO.uvGalaxy.AZ - t * 0.035 + Math.sin(t * 0.7) * 0.6; spin.position.y = HY + Math.sin(t * 1.3) * 0.06;
+    holo.opacity = 0.82 + 0.12 * Math.sin(t * 13) * Math.sin(t * 3.1);
   };
-  b.top = 3.3 + 3.0; b.bot = 0; b.foot = 3.4;
+  b.top = 3.3 + HY + HR + 0.1; b.bot = 0; b.foot = 3.4;
 }
 // how much larger than its own units an ad is drawn on the map: as a station is (UVSS). Measured on the page
 // 2026-10-21 by projecting their vertices: each under three quarters of the sun's ball on the screen.

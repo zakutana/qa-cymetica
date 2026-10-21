@@ -1077,8 +1077,8 @@
     return '<g class="plot' + (priv ? ' priv' : '') + (paused ? ' paused' : '') + (it.mine ? ' mine' : '') + '" data-id="' + c.id + '" transform="matrix(' + UVSS + ' 0 0 ' + UVSS + ' ' + f1(tx) + ' ' + f1(ty) + ')">' + a.svg + hit + '</g>';
   };
   // The ads, flat: the gem its logo, a cut diamond in the logo's greens floating over its shadow; the casino an orbital
-  // chip, its spine through two cyan rings with a chip's white inserts round them -- the shapes the 3D map builds, as
-  // simple as the flat map is.
+  // chip, its spine through two magenta rings with a chip's white inserts round them and Agent Tournaments' logo over it
+  // -- the shapes the 3D map builds, as simple as the flat map is.
   Universe.prototype.adSVG = function (it) {
     var o = gp(it.pos[0], it.pos[1], it.pos[2]), x = o[0], y = o[1], s = CO.uvGalaxy.adClear * RX * 1.1, acc = CO.accentHex(it.c.accent), out, top;
     var shadow = '<ellipse cx="' + f1(x) + '" cy="' + f1(y) + '" rx="' + f1(s * 0.5) + '" ry="' + f1(s * 0.5 * RY / RX) + '" fill="' + acc + '" opacity=".12"/>';
@@ -1090,13 +1090,15 @@
       top = ty;
     } else {
       var c0 = y - s * 0.55, rx = s * 0.5, ry = rx * RY / RX, ring = function (cyy, k) {
-        return '<ellipse cx="' + f1(x) + '" cy="' + f1(cyy) + '" rx="' + f1(rx * k) + '" ry="' + f1(ry * k) + '" fill="none" stroke="#43d4ff" stroke-width="' + f1(6 * k) + '"/>' +
+        return '<ellipse cx="' + f1(x) + '" cy="' + f1(cyy) + '" rx="' + f1(rx * k) + '" ry="' + f1(ry * k) + '" fill="none" stroke="#ff3dc8" stroke-width="' + f1(6 * k) + '"/>' +
           '<ellipse cx="' + f1(x) + '" cy="' + f1(cyy) + '" rx="' + f1(rx * k) + '" ry="' + f1(ry * k) + '" fill="none" stroke="#f2f7fb" stroke-width="' + f1(6 * k) + '" stroke-dasharray="' + f1(rx * k * 0.18) + ' ' + f1(rx * k * 0.34) + '"/>';
       };
-      out = shadow + '<line x1="' + f1(x) + '" y1="' + f1(c0 + s * 0.5) + '" x2="' + f1(x) + '" y2="' + f1(c0 - s * 0.55) + '" stroke="#b07a48" stroke-width="5"/>' +
+      out = shadow + '<line x1="' + f1(x) + '" y1="' + f1(c0 + s * 0.5) + '" x2="' + f1(x) + '" y2="' + f1(c0 - s * 0.55) + '" stroke="#8a84a8" stroke-width="5"/>' +
         ring(c0 + s * 0.12, 0.65) + ring(c0, 1) + ring(c0 - s * 0.08, 1) +
-        '<line x1="' + f1(x - s * 0.36) + '" y1="' + f1(c0 - s * 0.42) + '" x2="' + f1(x + s * 0.36) + '" y2="' + f1(c0 - s * 0.5) + '" stroke="#c9a46a" stroke-width="3"/>';
-      top = c0 - s * 0.6;
+        '<circle cx="' + f1(x) + '" cy="' + f1(c0 - s * 0.72) + '" r="' + f1(s * 0.16) + '" fill="#0d1520" stroke="#00e6c0" stroke-width="3"/>' +
+        '<rect x="' + f1(x - s * 0.07) + '" y="' + f1(c0 - s * 0.77) + '" width="' + f1(s * 0.045) + '" height="' + f1(s * 0.09) + '" rx="' + f1(s * 0.022) + '" fill="#00cfff"/>' +
+        '<rect x="' + f1(x + s * 0.025) + '" y="' + f1(c0 - s * 0.77) + '" width="' + f1(s * 0.045) + '" height="' + f1(s * 0.09) + '" rx="' + f1(s * 0.022) + '" fill="#00ff88"/>';
+      top = c0 - s * 0.9;
     }
     it.anchor = [x, top - 4]; it.size = s * 1.2;
     return '<g class="plot ad" data-id="' + esc(it.c.id) + '">' + out + '<circle cx="' + f1(x) + '" cy="' + f1(y - s * 0.6) + '" r="' + f1(s * 0.7) + '" fill="transparent"/></g>';
