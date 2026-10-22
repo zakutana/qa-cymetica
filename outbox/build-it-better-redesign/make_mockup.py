@@ -37,6 +37,12 @@ script = re.search(r"<script[^>]*>\s*\(function \(\) \{\s*'use strict';\s*var AP
 assert start > 0 and script, "the Build it Better block or its script moved"
 out = out[:start] + frag + out[start + script.start():]
 
+# 2b. the board card ("tady mi prijde ze pouzivas porad stary design jejich"): their card(b) is the one function of
+#     their script that is replaced, by card.js; render.py checks that everything else in the script is byte for byte.
+CARD = re.compile(r"        function card\(b\) \{\n.*?\n        \}\n", re.S)
+assert len(CARD.findall(out)) == 1, "their card(b) moved"
+out = CARD.sub(lambda _: (HERE / "card.js").read_text(encoding="utf-8"), out, count=1)
+
 # 3. the catalog (asked for the same day): its own script, after the page script and apart from it
 end = out.find("</script>", start + len(frag)) + len("</script>")
 nonce = re.search(r'<script nonce="([^"]+)"', out[start + len(frag):end])
@@ -57,6 +63,10 @@ SHIM = """<script id="mockup-only">/* mockup preview only, not part of the desig
   window.WebSocket.prototype = WS.prototype; ['CONNECTING', 'OPEN', 'CLOSING', 'CLOSED'].forEach(function (k) { window.WebSocket[k] = WS[k]; });
 })();</script>
 """
+import json  # noqa: E402
+shots = HERE / "previews" / "index.json"   # written by shoot_previews.py; the pictures are not in git
+SHIM += ('<script id="mockup-previews">/* mockup only: the live apps as pictured by shoot_previews.py */ window.BB_PREVIEWS = '
+         + (shots.read_text(encoding="utf-8") if shots.exists() else "{}") + ";</script>\n")
 head = out.find("<head>") + len("<head>")
 out = out[:head] + "\n" + SHIM + out[head:]
 

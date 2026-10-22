@@ -11,6 +11,13 @@
 
         function el(tag, cls, txt) { var e = document.createElement(tag); if (cls) e.className = cls; if (txt != null) e.textContent = txt; return e; }
         function fmt(n) { return Number(n || 0).toLocaleString('en-US'); }
+        // The app's picture: preview_url once the leaderboard carries one (it does not today), else the app's /og/app
+        // card. window.BB_PREVIEWS exists only in the mockup, which pictured the live apps itself.
+        function shot(a) {
+            var slug = String(a.path || '').replace(/^\/+|\/+$/g, '').replace(/\//g, '-');
+            return a.preview_url || (window.BB_PREVIEWS || {})[a.path] || (slug ? '/og/app/' + slug + '.png' : '');
+        }
+        function initials(name) { return String(name || '?').replace(/[^A-Za-z0-9 ]/g, ' ').trim().split(/\s+/).slice(0, 2).map(function (w) { return w.charAt(0); }).join('').toUpperCase(); }
         function arrows() {
             prev.disabled = track.scrollLeft <= 2;
             next.disabled = track.scrollLeft >= track.scrollWidth - track.clientWidth - 2;
@@ -23,18 +30,23 @@
             apps.forEach(function (a, i) {
                 var c = el('a', 'cat-card'); c.href = a.path || a.url; c.setAttribute('role', 'listitem');
                 c.dataset.views = a.views || 0; c.dataset.visitors = a.visitors || 0;
-                var head = el('div', 'cat-top'); head.appendChild(el('span', 'cat-rank', '#' + (i + 1))); head.appendChild(el('span', 'cat-open', 'Open →'));
-                c.appendChild(head);
-                c.appendChild(el('div', 'cat-name', a.name));
-                c.appendChild(el('div', 'cat-path', a.path));
+                var pv = el('div', 'cat-pv'); pv.appendChild(el('span', 'pv-mono', initials(a.name)));
+                var src = shot(a);
+                if (src) { var img = el('img'); img.loading = 'lazy'; img.alt = ''; img.onerror = function () { if (this.parentNode) this.parentNode.removeChild(this); }; img.src = src; pv.appendChild(img); }
+                pv.appendChild(el('span', 'cat-rank', '#' + (i + 1)));
+                c.appendChild(pv);
+                var body = el('div', 'cat-body'); c.appendChild(body);
+                body.appendChild(el('div', 'cat-name', a.name));
+                var line = el('div', 'cat-top'); line.appendChild(el('span', 'cat-path', a.path)); line.appendChild(el('span', 'cat-open', 'Open →'));
+                body.appendChild(line);
                 var nums = el('div', 'cat-nums');
                 [['views', 'Views'], ['visitors', 'Visitors']].forEach(function (k) {
                     var n = el('div', k[0] === sort ? 'on' : ''); n.appendChild(el('b', '', fmt(a[k[0]]))); n.appendChild(el('span', '', k[1])); nums.appendChild(n);
                 });
-                c.appendChild(nums);
+                body.appendChild(nums);
                 var bar = el('div', 'cat-bar'), fill = el('i');
                 fill.style.width = (top ? Math.max(2, 100 * (Number(a[sort]) || 0) / top) : 0) + '%';
-                bar.appendChild(fill); c.appendChild(bar);
+                bar.appendChild(fill); body.appendChild(bar);
                 track.appendChild(c);
             });
             sub.textContent = 'Ranked by ' + sort + ' · last ' + (d.days || 30) + ' days';

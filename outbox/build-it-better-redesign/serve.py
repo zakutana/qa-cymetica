@@ -3,7 +3,8 @@
 The page is cymetica.com's own (header, footer, scripts) with the new Build it Better block in it, so it needs their
 static files and the board's public reads. Nothing else reaches cymetica.com:
 
-* GET /static/*, /i18n/*                      their public files, fetched once and kept in memory
+* GET /static/*, /i18n/*, /og/app/*           their public files and app cards, fetched once and kept in memory
+* GET /previews/*                             the mockup's own pictures of the live apps (shoot_previews.py)
 * GET the board's public reads                /api/v1/build-it-better/requests[/ET-n], /apps?q=, /apps/leaderboard,
                                               /token-launch/chains
 * GET /api/v1/build-it-better/me              404, so the button reads "Send the request" as it does signed in
@@ -54,7 +55,10 @@ class Handler(BaseHTTPRequestHandler):
         path = self.path
         if path.split("?")[0] in ("/", "/build-it-better", "/index.html"):
             return self.send(200, "text/html; charset=utf-8", (HERE / "index.html").read_bytes())
-        if path.startswith(("/static/", "/i18n/")) or READS.match(path):
+        if path.startswith("/previews/"):   # the mockup's own pictures of the live apps (shoot_previews.py)
+            f = HERE / "previews" / Path(path.split("?")[0]).name
+            return self.send(200, "image/jpeg", f.read_bytes()) if f.is_file() else self.send(404, "text/plain", b"")
+        if path.startswith(("/static/", "/i18n/", "/og/app/")) or READS.match(path):
             fresh = path.startswith("/api/")
             if fresh:
                 cache.pop(path, None)   # the board is read live, every time, like the real page

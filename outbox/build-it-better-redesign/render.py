@@ -12,6 +12,9 @@ coding against Build it Better. So what has to hold, before any picture is worth
 5. Palette: cyan, green, red, blue and navy tints only (the site's rule: no orange, yellow, purple or plain gray).
 6. Rendered through serve.py: no error from the page script, no horizontal scroll at 1920, 1440 or 390, the board filled,
    and the comparison inside the first screen at 1920 x 1080 (above the site's fixed chat bar, not the window's edge).
+8. The board card is the one function of their script replaced (card.js, "tady mi prijde ze pouzivas porad stary design
+   jejich"), so its duties are checked here: every card links its ticket and the link opens it in #bb-mine; every
+   shipped card with a page links it; every traffic line links /build-it-better/stats?app=; shipped cards carry a preview.
 7. The catalog the operator asked for the same day ("katalog ze klikam doprava a doleva uz buildnutych apek ... serazenych
    podle nejvic views a navstevniku"): cards from /apps/leaderboard, in descending views, re-sorted by visitors on the
    toggle, and the right arrow moves the row while the left one starts disabled.
@@ -45,11 +48,13 @@ def bb_block(src):
     return src[i:src.find("<script", i)]
 
 
-# 1. the logic is theirs
+# 1. the logic is theirs: byte for byte, except card(b), which card.js replaces (its links are checked in the browser, 8)
+THEIR_CARD = re.compile(r"        function card\(b\) \{\n.*?\n        \}\n", re.S)
+OUR_CARD = re.compile(r"        // ── board card, redesigned.*?// ── end of the board card ─+\n", re.S)
 if not page_script(live):
     fails.append("1: the page script is not where it was in the live copy")
-elif page_script(live) != page_script(page):
-    fails.append("1: the page script differs from the live one")
+elif THEIR_CARD.sub("", page_script(live), count=1) != OUR_CARD.sub("", page_script(page) or "", count=1):
+    fails.append("1: the page script differs from the live one outside card(b)")
 
 # 2. ids and queried structure (the DOM half is checked in the browser below)
 script = page_script(live) or ""
@@ -71,7 +76,8 @@ for k, t in sorted(new_k - old_k):
     fails.append(f"3: {k} is new or changed ({t[:50]!r})")
 
 # 4. CSS for what the script creates
-for sel in (".bb-card", ".bb-card .t", ".bb-card .n", ".bb-card .w", ".bb-card .m", ".bb-pill.pos", ".bb-pill.neg", ".bb-empty",
+for sel in (".bb-card", ".bb-card .t", ".bb-card .n", ".bb-card .w", ".bb-card .m", ".bb-card .pv", ".bb-card .tr", ".bb-bar.late",
+            ".bb-pill.pos", ".bb-pill.neg", ".bb-empty",
             ".bb-card.flash", ".bb-showall.on", ".bb-thumb.load", ".bb-thumb .x", ".bb-msg.ok", ".bb-msg.err", ".bb-suggest a",
             ".bb-suggest small", ".bb-live.on i", ".bb-closed .row", ".bb-mode.on", ".bb-drop.over"):
     if sel not in css:
@@ -115,6 +121,13 @@ FIRST = """() => { const v = document.querySelector('.bb-vs').getBoundingClientR
    const r = e.getBoundingClientRect(); if (r.height && r.width > innerWidth / 2 && r.bottom >= innerHeight - 2 && r.top > innerHeight / 2) floor = Math.min(floor, r.top); });
  return [Math.round(v.top), Math.round(v.bottom), Math.round(floor)]; }"""
 CAT = """() => [...document.querySelectorAll('#bb-cat-track .cat-card')].map(c => [c.dataset.views, c.dataset.visitors].map(Number))"""
+CARDS = """() => { const out = [];
+ document.querySelectorAll('#bb-board .bb-card').forEach(c => { const tk = c.id.replace('bbc-', '');
+  if (!c.querySelector('a[href="?t=' + encodeURIComponent(tk) + '"]')) out.push(tk + ': no ticket link');
+  if (c.classList.contains('shipped') && !c.querySelector('.pv')) out.push(tk + ': no preview');
+  if (c.classList.contains('shipped') && c.querySelector('.pv a, a.pv') && !c.querySelector('a.open')) out.push(tk + ': no open link');
+  c.querySelectorAll('a.tr').forEach(a => { if (!a.getAttribute('href').startsWith('/build-it-better/stats?app=')) out.push(tk + ': traffic link ' + a.getAttribute('href')); }); });
+ return out; }"""
 CAT_NAV = """async () => { const t = document.getElementById('bb-cat-track'), prev = document.getElementById('bb-cat-prev'), next = document.getElementById('bb-cat-next');
  const before = t.scrollLeft, prevOff = prev.disabled; next.click(); await new Promise(r => setTimeout(r, 900));
  return [prevOff, t.scrollLeft > before, prev.disabled]; }"""
@@ -159,19 +172,29 @@ with sync_playwright() as p:
             prev_off, moved, prev_after = t.evaluate(CAT_NAV)
             if not (prev_off and moved and not prev_after):
                 fails.append(f"7: arrows: left disabled at start {prev_off}, right moves the row {moved}, left enabled after {not prev_after}")
+            fails += [f"8: {x}" for x in t.evaluate(CARDS)]
+            first = t.evaluate("document.querySelector('#bb-board [data-stage=shipped] .bb-card .tk').textContent")
+            t.click("#bb-board [data-stage=shipped] .bb-card .tk")
+            t.wait_for_timeout(1500)
+            if not t.evaluate("(tk) => getComputedStyle(document.getElementById('bb-mine')).display !== 'none' && document.getElementById('bb-mine-ticket').textContent.startsWith(tk)", first):
+                fails.append(f"8: clicking {first} did not open it in #bb-mine")
             t.evaluate("document.getElementById('bb-cat-track').scrollLeft = 0")
             t.wait_for_timeout(600)
             t.screenshot(path=str(shots / "catalog-1920.png"), full_page=True,
                          clip={"x": 0, "y": t.evaluate("document.querySelector('.bb-cat').getBoundingClientRect().top + scrollY") - 20, "width": 1920, "height": 460})
             t.evaluate("window.scrollTo(0, 0)")
             t.wait_for_timeout(400)
+        # a full-page capture never scrolls, so lazy pictures below the fold would stay unloaded in it; only the board's
+        # (forcing all 130 catalog pictures too queues the board's behind them, six connections at a time)
+        t.evaluate("document.querySelectorAll('#bb-board img[loading=lazy]').forEach(i => i.loading = 'eager')")
+        t.wait_for_timeout(2500)
         name = {1920: "first-screen-1920.png", 1440: "page-1440.png", 390: "phone-390.png"}[w]
         t.screenshot(path=str(shots / name), full_page=full)
         t.close()
     b.close()
 srv.shutdown()
 
-print(f"{len(ids)} ids, {len(old_k)} i18n keys, script {'identical' if not any(f.startswith('1') for f in fails) else 'DIFFERS'}")
+print(f"{len(ids)} ids, {len(old_k)} i18n keys, script {'identical outside card(b)' if not any(f.startswith('1') for f in fails) else 'DIFFERS'}")
 if fails:
     print("\n".join(fails))
     raise SystemExit(f"{len(fails)} problem(s)")
