@@ -1230,29 +1230,69 @@ function adCasino(body, b) {
   b.top = 3.3 + HY + HR + 0.1; b.bot = 0; b.foot = 3.4;
 }
 // Promo Market (2026-10-22): Cymetica's own building, where a company hires creators, agents and firms to promote its
-// products (outbox/promo-market). A relay for AI agents, not a billboard: a spire over a hex platform, three signal
-// rings turning round it, a holographic band carrying the market's numbers, and an emitter at the top that sends rings
-// of light out over the galaxy. In the site's cyan with the money in its green; as big as the other two, under the sun.
-const PROMO = { c: '#00cfff', money: '#00ff88', metal: 0x8fa3b8, dark: 0x0d1520 };
+// products (outbox/promo-market). Redrawn the same day to the operator's brief ("me se hlavne libi ta kostka z
+// obrazovkama"): at the map's first zoom it reads as a billboard. A hex platform and a cyan spire carrying a ticker band
+// and two inner rings; on top a cube of four screens showing abstract ads, crossfading magenta and amber every few
+// seconds and turning once in 13 s; two searchlights crossing over it; a small ad blimp circling at the cube's height
+// with a banner behind it. The structure stays cyan; light is emissive and additive only, no lamps added to the scene.
+// As tall as Agent Casino, smaller than the sun.
+const PROMO = { c: '#00cfff', magenta: '#ff2d95', amber: '#ffb020', beam: '#e8fbff', metal: 0x8fa3b8, dark: 0x0d1520 };
 function promoBandTex() {
   if (TX.promoBand) return TX.promoBand;
-  const W = 2048, H = 96, c = document.createElement('canvas'); c.width = W; c.height = H; const g = c.getContext('2d');
+  const W = 1408, H = 96, c = document.createElement('canvas'); c.width = W; c.height = H; const g = c.getContext('2d');
   const m = window.PM && window.PM.market, briefs = m ? m.briefs : [];
   const offer = briefs.reduce((s, x) => s + (x.cur === 'USDC' ? x.left : 0), 0), k = (n) => n >= 1e4 ? Math.round(n / 1e3) + 'K' : n.toLocaleString('en-US');
-  const parts = [['PROMO MARKET', PROMO.c], [briefs.length + ' BRIEFS OPEN', '#e6edf7'], [k(offer) + ' USDC ON OFFER', PROMO.money], ['PAID PER NEW USER', '#e6edf7']];
-  g.clearRect(0, 0, W, H); g.font = '800 46px "JetBrains Mono", monospace'; g.textBaseline = 'middle';
-  let x = 30;
-  for (let rep = 0; rep < 2; rep++) parts.forEach(([t, col]) => { g.fillStyle = col; g.fillText(t, x, H / 2 + 2); x += g.measureText(t).width + 34; g.fillStyle = PROMO.c; g.fillRect(x - 22, H / 2 - 4, 8, 8); x += 18; });
-  g.fillStyle = 'rgba(0,207,255,.55)'; g.fillRect(0, 4, W, 3); g.fillRect(0, H - 7, W, 3);
+  const parts = [['PROMO MARKET', PROMO.c], [briefs.length + ' BRIEFS OPEN', '#e6edf7'], [k(offer) + ' USDC ON OFFER', PROMO.c], ['PAID PER NEW USER', '#e6edf7']];
+  g.clearRect(0, 0, W, H); g.font = '800 44px "JetBrains Mono", monospace'; g.textBaseline = 'middle';
+  let x = 24;
+  parts.forEach(([t, col]) => { g.fillStyle = col; g.fillText(t, x, H / 2 + 2); x += g.measureText(t).width + 30; g.fillStyle = PROMO.c; g.fillRect(x - 20, H / 2 - 4, 8, 8); x += 14; });
+  g.fillStyle = 'rgba(0,207,255,.6)'; g.fillRect(0, 4, W, 3); g.fillRect(0, H - 7, W, 3);
   const t = new THREE.CanvasTexture(c); t.colorSpace = THREE.SRGBColorSpace; t.wrapS = THREE.RepeatWrapping; t.anisotropy = 8; TX.promoBand = t; return t;
 }
+// One screen of the cube: an abstract ad, no text -- a product card, a play button, a burst, a grid with an arrow --
+// in one of the two palettes, with a frame and scan lines so it reads as a screen.
+function promoScreenTex(v, hot) {
+  const key = 'promoScreen' + v + hot; if (TX[key]) return TX[key];
+  const W = 512, c = document.createElement('canvas'); c.width = c.height = W; const g = c.getContext('2d');
+  const P = hot === 'm' ? { a: PROMO.magenta, b: '#ff8cc6', d: '#2a0618', bg: '#13030c' } : { a: PROMO.amber, b: '#ffd98a', d: '#2a1a03', bg: '#140c02' };
+  const grd = g.createLinearGradient(0, 0, W, W); grd.addColorStop(0, P.d); grd.addColorStop(1, P.bg); g.fillStyle = grd; g.fillRect(0, 0, W, W);
+  const rr = (x, y, w, h, r, col) => { g.fillStyle = col; g.beginPath(); g.roundRect(x, y, w, h, r); g.fill(); };
+  g.globalAlpha = 1;
+  if (v === 0) { rr(64, 70, 384, 230, 28, P.a); rr(96, 104, 150, 150, 20, P.bg); rr(270, 112, 150, 26, 13, P.b); rr(270, 156, 110, 22, 11, P.bg); rr(270, 196, 130, 22, 11, P.bg);
+    rr(64, 340, 260, 34, 17, P.b); rr(64, 394, 190, 26, 13, P.a); g.fillStyle = '#ffffff'; g.beginPath(); g.arc(400, 404, 42, 0, Math.PI * 2); g.fill(); }
+  if (v === 1) { g.fillStyle = P.a; g.beginPath(); g.arc(256, 210, 130, 0, Math.PI * 2); g.fill(); g.fillStyle = '#ffffff'; g.beginPath(); g.moveTo(220, 140); g.lineTo(330, 210); g.lineTo(220, 280); g.closePath(); g.fill();
+    for (let i = 0; i < 5; i++) rr(70 + i * 76, 380 - (i % 3) * 22, 56, 70 + (i % 3) * 22, 10, i % 2 ? P.b : P.a); }
+  if (v === 2) { g.save(); g.translate(256, 256); for (let i = 0; i < 16; i++) { g.rotate(Math.PI / 8); g.fillStyle = i % 2 ? P.a : P.b; g.beginPath(); g.moveTo(0, 0); g.lineTo(240, -26); g.lineTo(240, 26); g.closePath(); g.globalAlpha = 0.55; g.fill(); }
+    g.restore(); g.globalAlpha = 1; g.fillStyle = P.a; g.beginPath(); g.arc(256, 256, 120, 0, Math.PI * 2); g.fill(); g.fillStyle = '#ffffff'; g.beginPath(); g.arc(256, 256, 70, 0, Math.PI * 2); g.fill();
+    g.fillStyle = P.a; g.beginPath(); g.arc(256, 256, 34, 0, Math.PI * 2); g.fill(); }
+  if (v === 3) { [[64, 64], [272, 64], [64, 272], [272, 272]].forEach(([x, y], i) => rr(x, y, 176, 176, 22, i === 1 ? '#ffffff' : (i % 3 ? P.b : P.a)));
+    g.fillStyle = P.bg; g.beginPath(); g.moveTo(320, 128); g.lineTo(392, 152); g.lineTo(320, 176); g.closePath(); g.fill(); }
+  g.globalAlpha = 0.16; g.fillStyle = '#000000'; for (let y = 0; y < W; y += 6) g.fillRect(0, y, W, 2);
+  g.globalAlpha = 1; g.strokeStyle = P.b; g.lineWidth = 10; g.strokeRect(14, 14, W - 28, W - 28);
+  const t = new THREE.CanvasTexture(c); t.colorSpace = THREE.SRGBColorSpace; t.anisotropy = 8; TX[key] = t; return t;
+}
+function promoBeamTex() {
+  if (TX.promoBeam) return TX.promoBeam;
+  const c = document.createElement('canvas'); c.width = 4; c.height = 128; const g = c.getContext('2d');
+  const grd = g.createLinearGradient(0, 0, 0, 128); grd.addColorStop(0, '#ffffff'); grd.addColorStop(0.55, '#3a3a3a'); grd.addColorStop(1, '#000000');
+  g.fillStyle = grd; g.fillRect(0, 0, 4, 128);
+  const t = new THREE.CanvasTexture(c); TX.promoBeam = t; return t;
+}
+function promoBannerTex() {
+  if (TX.promoBanner) return TX.promoBanner;
+  const W = 512, H = 128, c = document.createElement('canvas'); c.width = W; c.height = H; const g = c.getContext('2d');
+  g.fillStyle = '#1a0612'; g.fillRect(0, 0, W, H);
+  for (let i = 0; i < 8; i++) { g.fillStyle = i % 2 ? PROMO.amber : PROMO.magenta; g.fillRect(i * 64, 0, 64, H); }
+  g.fillStyle = 'rgba(255,255,255,.9)'; [[96, 64, 30], [256, 64, 38], [416, 64, 30]].forEach(([x, y, r]) => { g.beginPath(); g.arc(x, y, r, 0, Math.PI * 2); g.fill(); });
+  const t = new THREE.CanvasTexture(c); t.colorSpace = THREE.SRGBColorSpace; TX.promoBanner = t; return t;
+}
 function adPromo(body, b) {
-  const C = amat(PROMO.c), M = amat(PROMO.money);
+  const C = amat(PROMO.c);
   const metal = new THREE.MeshStandardMaterial({ color: PROMO.metal, roughness: 0.3, metalness: 0.8 });
   const dark = new THREE.MeshStandardMaterial({ color: PROMO.dark, roughness: 0.5, metalness: 0.6 });
   const st = new THREE.Group(); st.position.y = 0.2; body.add(st);
   const part = (geo, mat, x, y, z, parent = st) => { const m = ownGeo(new THREE.Mesh(geo, mat)); m.position.set(x, y, z); parent.add(m); return m; };
-  // the platform: a hexagon, its edge lit, a pylon with a lamp at every other corner
+  // the platform: a hexagon, its edge lit, a pylon with a cyan lamp at every other corner
   part(new THREE.CylinderGeometry(2.45, 2.8, 0.42, 6), dark, 0, 0, 0);
   part(new THREE.CylinderGeometry(2.47, 2.47, 0.06, 6, 1, true), C.glow, 0, 0.2, 0);
   part(new THREE.CylinderGeometry(1.3, 1.6, 0.3, 6), metal, 0, 0.36, 0);
@@ -1260,45 +1300,65 @@ function adPromo(body, b) {
   for (let i = 0; i < 3; i++) {
     const a = i * Math.PI * 2 / 3 + Math.PI / 6, px = Math.cos(a) * 2.15, pz = Math.sin(a) * 2.15;
     part(new THREE.CylinderGeometry(0.07, 0.1, 1.1, 8), metal, px, 0.75, pz);
-    const l = part(new THREE.SphereGeometry(0.12, 12, 8), M.glow, px, 1.35, pz); lamps.push(l);
+    lamps.push(part(new THREE.SphereGeometry(0.12, 12, 8), C.glow, px, 1.35, pz));
   }
-  // the spire, in three tapering stages with lit collars between them
-  part(new THREE.CylinderGeometry(0.5, 0.78, 2.4, 12), metal, 0, 1.7, 0);
-  part(new THREE.CylinderGeometry(0.55, 0.55, 0.12, 12), C.rim, 0, 2.95, 0);
-  part(new THREE.CylinderGeometry(0.3, 0.48, 2.2, 12), dark, 0, 4.1, 0);
-  part(new THREE.CylinderGeometry(0.34, 0.34, 0.1, 12), C.rim, 0, 5.25, 0);
-  part(new THREE.CylinderGeometry(0.1, 0.28, 1.5, 10), metal, 0, 6.0, 0);
-  // three signal rings, each with its nodes, turning opposite ways
-  const rings = [[1.95, 1.9, 1], [1.5, 3.55, -1], [1.05, 4.95, 1]].map(([R, y, dir]) => {
+  // the spire: three stages with lit collars, the ticker band round the first, two inner rings round the second
+  part(new THREE.CylinderGeometry(0.5, 0.78, 2.0, 12), metal, 0, 1.35, 0);
+  part(new THREE.CylinderGeometry(0.55, 0.55, 0.12, 12), C.rim, 0, 2.4, 0);
+  part(new THREE.CylinderGeometry(0.3, 0.48, 2.0, 12), dark, 0, 3.45, 0);
+  part(new THREE.CylinderGeometry(0.34, 0.34, 0.1, 12), C.rim, 0, 4.5, 0);
+  part(new THREE.CylinderGeometry(0.14, 0.28, 0.9, 10), metal, 0, 4.95, 0);
+  const bandMat = new THREE.MeshBasicMaterial({ map: promoBandTex(), transparent: true, opacity: 0.95, blending: THREE.AdditiveBlending, depthWrite: false, side: THREE.DoubleSide });
+  part(new THREE.CylinderGeometry(1.6, 1.6, 0.75, 96, 1, true), bandMat, 0, 1.6, 0);
+  const rings = [[1.25, 3.05, 1], [0.92, 4.1, -1]].map(([R, y, dir]) => {
     const g = new THREE.Group(); g.position.y = y; g.rotation.x = 0.08 * dir; st.add(g);
-    part(new THREE.TorusGeometry(R, 0.06, 8, 96), C.rim, 0, 0, 0, g).rotation.x = Math.PI / 2;
-    for (let k = 0; k < 4; k++) { const a = k * Math.PI / 2; part(new THREE.BoxGeometry(0.22, 0.12, 0.22), metal, Math.cos(a) * R, 0, Math.sin(a) * R, g); }
-    for (let k = 0; k < 2; k++) { const s = new THREE.Mesh(G.cyl, metal); s.scale.set(0.03, R * 2, 0.03); s.rotation.z = Math.PI / 2; s.rotation.y = k * Math.PI / 2; g.add(s); }
+    part(new THREE.TorusGeometry(R, 0.055, 8, 80), C.rim, 0, 0, 0, g).rotation.x = Math.PI / 2;
+    for (let k = 0; k < 4; k++) { const a = k * Math.PI / 2; part(new THREE.BoxGeometry(0.2, 0.11, 0.2), metal, Math.cos(a) * R, 0, Math.sin(a) * R, g); }
     return { g, dir };
   });
-  // the band: the market's numbers going round, between the first two rings
-  const bandMat = new THREE.MeshBasicMaterial({ map: promoBandTex(), transparent: true, opacity: 0.95, blending: THREE.AdditiveBlending, depthWrite: false, side: THREE.DoubleSide });
-  const band = part(new THREE.CylinderGeometry(1.32, 1.32, 0.5, 96, 1, true), bandMat, 0, 2.7, 0);
-  bandMat.map.repeat.set(1, 1);
-  // the emitter, its flare, a beam up, and the rings of light it sends out
-  const EY = 6.95;
-  part(new THREE.SphereGeometry(0.34, 24, 16), C.glow, 0, EY, 0);
-  const flare = new THREE.Sprite(new THREE.SpriteMaterial({ map: flareTex(), color: new THREE.Color(PROMO.c).multiplyScalar(1.5), transparent: true, blending: THREE.AdditiveBlending, depthWrite: false }));
-  flare.scale.setScalar(2.2); flare.position.y = EY; st.add(flare);
-  const beam = new THREE.Mesh(G.beam, C.beam); beam.scale.set(1.2, 2.6, 1.2); beam.position.y = EY + 1.3; st.add(beam);
-  const waves = [0, 1, 2].map(() => {
-    const mat = new THREE.MeshBasicMaterial({ color: new THREE.Color(PROMO.c).multiplyScalar(1.4), transparent: true, opacity: 0, blending: THREE.AdditiveBlending, depthWrite: false });
-    const w = new THREE.Mesh(G.holo, mat); w.rotation.x = Math.PI / 2; w.position.y = EY; st.add(w); return { w, mat };
-  });
-  const glow = glowSprite(C.c, 0.22, 6.5); glow.position.y = 3.2; st.add(glow);
+  // the cube: four screens, magenta under amber, the amber faded in and out; dark top and bottom; a thin cyan frame
+  const S = 3.0, CY = 5.4 + S / 2, cube = new THREE.Group(); cube.position.y = CY; st.add(cube);
+  const box = new THREE.BoxGeometry(S, S, S), cap = new THREE.MeshStandardMaterial({ color: 0x0a0e17, roughness: 0.6, metalness: 0.5 });
+  const screen = (v, hot, o) => new THREE.MeshBasicMaterial({ map: promoScreenTex(v, hot), color: new THREE.Color(0xffffff).multiplyScalar(0.92), transparent: o < 1, opacity: o, depthWrite: o >= 1 });
+  cube.add(ownGeo(new THREE.Mesh(box, [screen(0, 'm', 1), screen(2, 'm', 1), cap, cap, screen(1, 'm', 1), screen(3, 'm', 1)])));
+  const amberMats = [screen(1, 'a', 0), screen(3, 'a', 0), screen(0, 'a', 0), screen(2, 'a', 0)];
+  const hid = new THREE.MeshBasicMaterial({ visible: false });
+  const amber = new THREE.Mesh(box, [amberMats[0], amberMats[1], hid, hid, amberMats[2], amberMats[3]]); amber.scale.setScalar(1.004); cube.add(amber);
+  const h = S / 2 + 0.035, bar = (sx, sy, sz, x, y, z) => part(new THREE.BoxGeometry(sx, sy, sz), C.rim, x, y, z, cube);
+  for (const a of [-1, 1]) for (const c2 of [-1, 1]) {
+    bar(S + 0.07, 0.07, 0.07, 0, a * h, c2 * h); bar(0.07, 0.07, S + 0.07, a * h, c2 * h, 0); bar(0.07, S + 0.07, 0.07, a * h, 0, c2 * h);
+  }
+  part(new THREE.CylinderGeometry(0.22, 0.22, 0.25, 12), metal, 0, CY + S / 2 + 0.1, 0);
+  // two searchlights from the cube's top, crossing, sweeping slowly
+  // (a beam fades out along its length: bright at the cube, nothing at its open end)
+  const lightMat = new THREE.MeshBasicMaterial({ color: PROMO.beam, map: promoBeamTex(), transparent: true, opacity: 0.32, blending: THREE.AdditiveBlending, depthWrite: false, side: THREE.DoubleSide });
+  const coneGeo = new THREE.ConeGeometry(1.0, 6.0, 24, 1, true);
+  coneGeo.rotateX(Math.PI); coneGeo.translate(0, 3.0, 0);
+  const lights = [-1, 1].map((sgn) => { const m = ownGeo(new THREE.Mesh(coneGeo, lightMat)); m.position.set(sgn * 0.55, CY + S / 2 + 0.2, 0); st.add(m); return { m, sgn }; });
+  // the blimp: a small airship circling at the cube's height, nose first, a magenta and amber banner behind it
+  const orbit = new THREE.Group(); orbit.position.y = CY; st.add(orbit);
+  const blimp = new THREE.Group(); blimp.position.x = 3.8; orbit.add(blimp);
+  const hull = part(new THREE.SphereGeometry(0.42, 20, 12), new THREE.MeshStandardMaterial({ color: 0xc9d6e3, roughness: 0.4, metalness: 0.4 }), 0, 0, 0, blimp); hull.scale.set(1, 1, 2.4);
+  part(new THREE.TorusGeometry(0.43, 0.03, 6, 40), C.rim, 0, 0, -0.2, blimp);
+  part(new THREE.BoxGeometry(0.16, 0.12, 0.4), dark, 0, -0.45, -0.1, blimp);
+  part(new THREE.BoxGeometry(0.04, 0.5, 0.36), metal, 0, 0, 0.92, blimp); part(new THREE.BoxGeometry(0.5, 0.04, 0.36), metal, 0, 0, 0.92, blimp);
+  const banner = part(new THREE.PlaneGeometry(2.3, 0.55), new THREE.MeshBasicMaterial({ map: promoBannerTex(), side: THREE.DoubleSide, color: new THREE.Color(0xffffff).multiplyScalar(0.9) }), 0, -0.05, 2.65, blimp);
+  banner.rotation.y = Math.PI / 2;
+  const tether = new THREE.Mesh(G.cyl, metal); tether.scale.set(0.012, 0.42, 0.012); tether.rotation.x = Math.PI / 2; tether.position.set(0, -0.05, 1.33); blimp.add(tether);
+  const glow = glowSprite(C.c, 0.2, 6); glow.position.y = 3; st.add(glow);
   b.tick = (t) => {
-    rings.forEach((r, i) => { r.g.rotation.y = t * (0.22 + i * 0.08) * r.dir; });
+    rings.forEach((r, i) => { r.g.rotation.y = t * (0.3 + i * 0.1) * r.dir; });
     bandMat.map.offset.x = -t * 0.025;
-    flare.material.opacity = 0.75 + 0.25 * Math.sin(t * 3.1);
+    cube.rotation.y = t * Math.PI * 2 / 13;
+    // magenta for ~3.5 s, amber for ~3.5 s, a short fade between
+    const f = Math.min(1, Math.max(0, 0.5 + 1.8 * Math.sin(t * Math.PI * 2 / 7)));
+    amberMats.forEach((m) => { m.opacity = f; });
+    lights.forEach((l, i) => { l.m.rotation.z = l.sgn * (0.42 + 0.17 * Math.sin(t * 0.55 + i * 1.7)); l.m.rotation.x = 0.12 * Math.sin(t * 0.4 + i); });
+    orbit.rotation.y = t * Math.PI * 2 / 20;
+    blimp.position.y = Math.sin(t * 0.9) * 0.08;
     lamps.forEach((l, i) => { l.visible = Math.sin(t * 2.2 + i * 2.1) > -0.35; });
-    waves.forEach((o, i) => { const p = ((t * 0.42) + i / 3) % 1; o.w.scale.setScalar(0.5 + p * 5.2); o.mat.opacity = 0.75 * (1 - p) * Math.min(1, p * 6); });
   };
-  b.top = 0.2 + EY + 0.6; b.bot = 0; b.foot = 3.0;
+  b.top = 0.2 + CY + S / 2 + 0.35; b.bot = 0; b.foot = 3.0;
 }
 // how much larger than its own units an ad is drawn on the map: as a station is (UVSS). Measured on the page
 // 2026-10-21 by projecting their vertices: each under three quarters of the sun's ball on the screen.

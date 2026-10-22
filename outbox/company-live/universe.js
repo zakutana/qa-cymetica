@@ -1112,16 +1112,24 @@
         poly([[x - gw, gy], [x - tw, ty], [x - m, gy]], '#7fdccd') + poly([[x - tw, ty], [x + tw, ty], [x + m, gy], [x - m, gy]], '#dafcf6') + poly([[x + tw, ty], [x + gw, gy], [x + m, gy]], '#aef2e8');
       top = ty;
     } else if (it.ad.key === 'promo') {
-      // the Promo Market as u3d.js adPromo draws it: a hex platform, the spire, three signal rings, the emitter and its waves
-      var ex = x, ey = y - s * 1.02, el = function (cyy, k, col, w, dash) { return '<ellipse cx="' + f1(x) + '" cy="' + f1(cyy) + '" rx="' + f1(s * 0.5 * k) + '" ry="' + f1(s * 0.5 * k * RY / RX) + '" fill="none" stroke="' + col + '" stroke-width="' + f1(w) + '"' + (dash ? ' stroke-dasharray="' + dash + '" opacity=".55"' : '') + '/>'; };
+      // the Promo Market as u3d.js adPromo draws it: a hex platform, the cyan spire with its ticker band and two rings,
+      // the cube of screens on top (a magenta face and an amber one), two searchlights crossing over it, the blimp
+      var el = function (cyy, k, w) { return '<ellipse cx="' + f1(x) + '" cy="' + f1(cyy) + '" rx="' + f1(s * 0.5 * k) + '" ry="' + f1(s * 0.5 * k * RY / RX) + '" fill="none" stroke="#00cfff" stroke-width="' + f1(w) + '"/>'; };
       var hex = [0, 1, 2, 3, 4, 5].map(function (i) { var a = i * Math.PI / 3; return [x + Math.cos(a) * s * 0.42, y - s * 0.06 + Math.sin(a) * s * 0.42 * RY / RX]; });
-      out = shadow + poly(hex, '#0d1520') + '<polygon points="' + pts(hex) + '" fill="none" stroke="#00cfff" stroke-width="2"/>' +
-        '<polygon points="' + pts([[x - s * 0.07, y - s * 0.1], [x + s * 0.07, y - s * 0.1], [x + s * 0.025, ey + s * 0.06], [x - s * 0.025, ey + s * 0.06]]) + '" fill="#8fa3b8" stroke="#0b1a22" stroke-width="2"/>' +
-        el(y - s * 0.32, 0.8, '#00cfff', 4) + el(y - s * 0.56, 0.62, '#00cfff', 3.5) + el(y - s * 0.78, 0.44, '#00cfff', 3) +
-        '<rect x="' + f1(x - s * 0.22) + '" y="' + f1(y - s * 0.47) + '" width="' + f1(s * 0.44) + '" height="' + f1(s * 0.07) + '" rx="' + f1(s * 0.02) + '" fill="#00ff88" opacity=".85"/>' +
-        el(ey, 0.55, '#00cfff', 2, '6 7') + el(ey, 0.9, '#00cfff', 1.5, '4 9') +
-        '<circle cx="' + f1(ex) + '" cy="' + f1(ey) + '" r="' + f1(s * 0.13) + '" fill="#00cfff" opacity=".25"/><circle cx="' + f1(ex) + '" cy="' + f1(ey) + '" r="' + f1(s * 0.06) + '" fill="#e6edf7"/>';
-      top = ey - s * 0.2;
+      var cs = s * 0.2, cy0 = y - s * 0.86, cb = cy0 + cs * 0.55;   // the cube's half width, its top edge's middle, its bottom corner
+      var top3 = [[x, cy0 - cs * 0.5], [x + cs, cy0], [x, cy0 + cs * 0.5], [x - cs, cy0]];
+      var left = [[x - cs, cy0], [x, cy0 + cs * 0.5], [x, cb + cs * 0.5 + cs], [x - cs, cb + cs]];
+      var right = [[x + cs, cy0], [x, cy0 + cs * 0.5], [x, cb + cs * 0.5 + cs], [x + cs, cb + cs]];
+      var beam = function (dx) { return '<polygon points="' + pts([[x - dx * cs * 0.3, cy0 - cs * 0.3], [x + dx * s * 0.62, cy0 - s * 0.62], [x + dx * s * 0.38, cy0 - s * 0.7]]) + '" fill="#e8fbff" opacity=".16"/>'; };
+      out = shadow + beam(1) + beam(-1) + poly(hex, '#0d1520') + '<polygon points="' + pts(hex) + '" fill="none" stroke="#00cfff" stroke-width="2"/>' +
+        '<polygon points="' + pts([[x - s * 0.07, y - s * 0.1], [x + s * 0.07, y - s * 0.1], [x + s * 0.03, cb + cs], [x - s * 0.03, cb + cs]]) + '" fill="#8fa3b8" stroke="#0b1a22" stroke-width="2"/>' +
+        '<rect x="' + f1(x - s * 0.26) + '" y="' + f1(y - s * 0.32) + '" width="' + f1(s * 0.52) + '" height="' + f1(s * 0.08) + '" rx="' + f1(s * 0.02) + '" fill="#00cfff" opacity=".8"/>' +
+        el(y - s * 0.46, 0.5, 3) + el(y - s * 0.6, 0.36, 2.5) +
+        '<polygon points="' + pts(left) + '" fill="#ff2d95" stroke="#00cfff" stroke-width="2"/><polygon points="' + pts(right) + '" fill="#ffb020" stroke="#00cfff" stroke-width="2"/>' +
+        '<polygon points="' + pts(top3) + '" fill="#0a0e17" stroke="#00cfff" stroke-width="2"/>' +
+        '<ellipse cx="' + f1(x + s * 0.55) + '" cy="' + f1(cy0 + cs) + '" rx="' + f1(s * 0.12) + '" ry="' + f1(s * 0.045) + '" fill="#c9d6e3"/>' +
+        '<rect x="' + f1(x + s * 0.68) + '" y="' + f1(cy0 + cs - s * 0.03) + '" width="' + f1(s * 0.26) + '" height="' + f1(s * 0.06) + '" fill="#ff2d95"/>';
+      top = cy0 - s * 0.7;
     } else {
       var c0 = y - s * 0.55, rx = s * 0.5, ry = rx * RY / RX, ring = function (cyy, k) {
         return '<ellipse cx="' + f1(x) + '" cy="' + f1(cyy) + '" rx="' + f1(rx * k) + '" ry="' + f1(ry * k) + '" fill="none" stroke="#ff3dc8" stroke-width="' + f1(6 * k) + '"/>' +
