@@ -49,7 +49,9 @@ SHIM = """<script id="mockup-only">/* mockup preview only, not part of the desig
   window.WebSocket = function (url, p) {
     if (!/\\/ws\\/build-it-better$/.test(String(url))) return p ? new WS(url, p) : new WS(url);
     var s = { readyState: 0, send: function () {}, close: function () { s.readyState = 3; } };
-    setTimeout(function () { s.readyState = 1; if (s.onopen) s.onopen(); }, 300);
+    /* after the translations land, as the real socket does: i18n.js rewrites #bb-live-text when its bundle loads */
+    var open = function () { if (s.readyState) return; s.readyState = 1; if (s.onopen) s.onopen(); };
+    window.addEventListener('i18n-ready', function () { setTimeout(open, 50); }); setTimeout(open, 2500);
     return s;
   };
   window.WebSocket.prototype = WS.prototype; ['CONNECTING', 'OPEN', 'CLOSING', 'CLOSED'].forEach(function (k) { window.WebSocket[k] = WS[k]; });
