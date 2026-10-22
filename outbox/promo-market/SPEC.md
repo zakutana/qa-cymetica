@@ -28,8 +28,12 @@ In [`spec/`](spec/); "picture N" below means these. The look to build to.
 
 ## A. The market, at /creator-dashboard
 
-Today /creator-dashboard is a page of text that sends you to Telegram for a login link. It becomes the market's front
-door: anyone can read it without logging in. A creator's own dashboard stays at `/<username>` (part B).
+Today /creator-dashboard is a page of text that sends you to Telegram for a login link, and sends a creator who is
+logged in to their own dashboard (`/<username>`). It becomes the market's front door for everyone who is not logged in:
+anyone can read it without an account. **A logged-in creator still lands on their own dashboard, as today**, so the
+link you post every day ("see the impact of your posts": clicks, reads, referred visitors) keeps doing what it says: it
+opens on Promote · Today, where those numbers are (part B), and the market is one click away in the rail. An account
+that has products of its own lands on My products instead, with Promote one click away.
 
 **1. A brief pays two things, in USDC.** A fixed sum **per post** (one that stays up 7 days, confirmed by the checker
 that confirms displayed posts today) and a sum **per new user** (a new unique user the promoter's link brought, after
