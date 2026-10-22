@@ -843,6 +843,8 @@
     this.bind();
     var self = this;
     setInterval(function () { if (self.visible()) self.pulse(); }, 1700);
+    // the revenue share's top 3 (uvboard.js): a gold pop over each now and then (the 3D map sends an arc with it)
+    setInterval(function () { if (self.visible()) self.sharePulse(); }, 10000);
     if (window.ResizeObserver) new ResizeObserver(function () { self.resize(); }).observe(svg);
   }
   CO.Universe = Universe;
@@ -1222,11 +1224,19 @@
     });
     this.stats();
   };
-  Universe.prototype.pop = function (it, label) {
+  Universe.prototype.sharePulse = function () {
+    if (!CO.uvBoard || !this.items) return;
+    var self = this, mine = this.h.mine ? this.h.mine() : null;
+    CO.uvBoard(mine).top.forEach(function (r, i) {
+      var it = self.items.filter(function (x) { return r.mine ? x.mine : !x.kind && !x.mine && String(x.c.id) === String(r.c.id); })[0];
+      if (it) setTimeout(function () { self.pop(it, '+' + r.share + '% of fees', '#ffc83d'); }, i * 450);
+    });
+  };
+  Universe.prototype.pop = function (it, label, colour) {
     if (!it.anchor) return;
     var x = it.anchor[0], y = it.anchor[1] - 64, g = document.createElementNS('http://www.w3.org/2000/svg', 'g');
     g.setAttribute('class', 'etpop');
-    g.innerHTML = '<text x="' + f1(x) + '" y="' + f1(y) + '" text-anchor="middle" font-family="\'JetBrains Mono\',monospace" font-weight="800" font-size="13" fill="' + C.green + '">' + esc(label) + '</text>';
+    g.innerHTML = '<text x="' + f1(x) + '" y="' + f1(y) + '" text-anchor="middle" font-family="\'JetBrains Mono\',monospace" font-weight="800" font-size="' + (colour ? 15 : 13) + '" fill="' + (colour || C.green) + '">' + esc(label) + '</text>';
     this.gFx.appendChild(g);
     setTimeout(function () { g.remove(); }, 2600);
   };

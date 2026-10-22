@@ -690,6 +690,8 @@
       '<p class="pfsrc">Visitors, uses, views, likes: Cymetica (' + esc(Rd.src) + '), last ' + Rd.days + ' days, read ' + Rd.at + '. Earnings: proposed, placeholder rates.</p>');
   }
   function uvStats(s) {
+    // the revenue-share board over the map (uvboard.js) follows the same beat
+    if (CO.uvBoardRender) CO.uvBoardRender(mineForMap());
     setHTML($('uv-sum'), '<b>' + s.companies + '</b> companies · <b>' + s.free + '</b> free slots · <b class="gr">' + (s.owned + s.ads) + '</b> your land' + (s.ads ? ' · <b class="cy">' + s.ads + '</b> products' : ''));
   }
   // Buy land: a mode the stage is in. On, the free slots show on the map and a click on one buys it; Esc or the button
@@ -1469,6 +1471,8 @@
       if (t.closest('#uv-new')) { location.href = 'builder.html'; return; }
       if (t.closest('#uv-panel [data-a="close"]')) return closeAd();
       if (t.closest('#uv-panel [data-a="owner"]')) { e.preventDefault(); closeAd(); return setTab('office'); }
+      if (t.closest('#uv-board [data-a="board-all"]')) return openModal(CO.uvBoardTable(mineForMap()), true);
+      if (t.closest('#uv-board [data-a="board-fold"]')) return $('uv-board').classList.toggle('open');
       if (uv) {
         if (t.closest('#uv-in')) return uv.zoom(0.78);
         if (t.closest('#uv-out')) return uv.zoom(1.28);

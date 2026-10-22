@@ -296,4 +296,29 @@
     return null;
   };
   CO.uvEt10 = function (c) { return (c.bugs || 0) * 1000; };
+
+  // The revenue share (the operator, 2026-10-22): every company ranked by its Revenue, 30 days (USD) -- what the platform
+  // paid it in that time: bug bounties (ET10 at the day's price), its products' rewards, tournament and League prizes; no
+  // trading P&L (it can be faked between two accounts and goes negative). The top 3 at or above the floor get 5% / 3% / 1% of
+  // every fee on Cymetica, paid monthly in USDC; a place nobody reaches stays empty. The floor and the fees are SAMPLES
+  // (Cymetica sets the floor); the figures all come from this one model, so the board, the leaderboard and the pulse agree.
+  CO.SHARE = [5, 3, 1];
+  CO.SHARE_FLOOR = 10000;
+  CO.PLATFORM_FEES_30D = 386000;
+  CO.uvRevenue = function (c) {
+    var R = CO.uvRng((+c.id || 0) * 13 + 7), u = R();
+    var v = Math.pow(u, 4) * 72000 + R() * 900;
+    if (c.status === 'paused') v *= 0.35;
+    return Math.round(v / 10) * 10;
+  };
+  // the ranking, highest first; top: the first three at or above the floor (fewer when fewer reach it)
+  CO.uvBoard = function (mine) {
+    var rows = CO.UNIVERSE.map(function (c) { return { c: c, rev: CO.uvRevenue(c), mine: false }; });
+    if (mine) rows.push({ c: mine, rev: CO.uvRevenue(mine), mine: true });
+    rows.sort(function (a, b) { return b.rev - a.rev || (a.c.id || 0) - (b.c.id || 0); });
+    rows.forEach(function (r, i) { r.rank = i + 1; r.qualifies = r.rev >= CO.SHARE_FLOOR; });
+    var top = rows.filter(function (r) { return r.qualifies; }).slice(0, CO.SHARE.length);
+    top.forEach(function (r, i) { r.share = CO.SHARE[i]; r.month = Math.round(CO.PLATFORM_FEES_30D * CO.SHARE[i] / 100); });
+    return { rows: rows, top: top, fees: CO.PLATFORM_FEES_30D, floor: CO.SHARE_FLOOR };
+  };
 })();

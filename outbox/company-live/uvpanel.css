@@ -111,4 +111,69 @@ a.uvr { color: var(--text); text-decoration: none; } a.uvr:hover { background: v
 .uvp.k-promo .pmm > div { padding: 8px 10px; border-radius: 9px; background: var(--navy); border: 1px solid var(--line); }
 .uvp.k-promo .pmm b { display: block; font-size: 16px; font-weight: 800; color: var(--cyan); } .uvp.k-promo .pmm span { font-size: 9.5px; color: var(--dim2); }
 
+/* The revenue-share board (uvboard.js): a HUD of glass over the map's top-left, fixed while the galaxy turns. Gold, silver,
+   bronze for the three places: the Universe is a game scene (SPEC-NOTES 2026-10-18), and money here is gold. */
+:root { --gold: #ffc83d; --silver: #c9d4e2; --bronze: #d29a6a; }
+.uvb { position: absolute; z-index: 5; top: 56px; left: 12px; width: 330px; font-family: 'JetBrains Mono', monospace; color: var(--text); }
+/* a department icon (.dic, style.css) places itself in column 1 over three rows: here it is one cell in its row */
+.uvb-r .dic, .lb-r .dic { grid-column: auto; grid-row: auto; }
+.uvb-in { padding: 12px 12px 10px; border-radius: 12px; background: rgba(8, 12, 20, .5); backdrop-filter: blur(9px) saturate(1.25); -webkit-backdrop-filter: blur(9px) saturate(1.25);
+  border: 1px solid rgba(255, 200, 61, .3); border-top: 2px solid var(--gold); box-shadow: 0 0 34px rgba(255, 200, 61, .13), 0 12px 32px rgba(0, 0, 0, .45); }
+.uvb-h { display: flex; align-items: center; gap: 8px; }
+.uvb-h b { font: 400 15px 'Archivo Black', sans-serif; letter-spacing: .07em; color: #ffe39a; text-shadow: 0 0 14px rgba(255, 200, 61, .45); }
+.uvb-h span:last-child { margin-left: auto; font-size: 9px; font-weight: 800; letter-spacing: .12em; color: var(--bg); background: var(--gold); padding: 2px 7px; border-radius: 8px; }
+.uvb-live { width: 8px; height: 8px; border-radius: 50%; background: var(--gold); box-shadow: 0 0 10px var(--gold); animation: tlpulse 1.8s ease-in-out infinite; }
+.uvb-sub { margin: 4px 0 8px; font-size: 10.5px; color: var(--dim); cursor: help; }
+.uvb-r { display: grid; grid-template-columns: 24px 28px minmax(0, 1fr) auto; align-items: center; gap: 9px; margin-top: 6px; padding: 8px 10px 8px 8px; border-radius: 9px;
+  background: rgba(255, 255, 255, .035); border: 1px solid rgba(255, 255, 255, .07); }
+.uvb-r .dic { width: 28px; height: 28px; }
+.uvb-ic { width: 28px; height: 28px; border-radius: 8px; border: 1px dashed var(--line3); }
+.uvb-rk, .lb-rk { display: grid; place-items: center; width: 22px; height: 22px; border-radius: 50%; font: 400 11.5px 'Archivo Black', sans-serif; font-style: normal; color: #0a0e17;
+  background: linear-gradient(150deg, #8b97a8, #5d6878); }
+/* pl1-pl3, not p1-p3: .p3 is the office's 3D preview card (uv.css) */
+.pl1 .uvb-rk, .lb-r.pl1 .lb-rk { background: linear-gradient(150deg, #fff1b8, var(--gold) 45%, #b8861b); box-shadow: 0 0 12px rgba(255, 200, 61, .6); }
+.pl2 .uvb-rk, .lb-r.pl2 .lb-rk { background: linear-gradient(150deg, #ffffff, var(--silver) 45%, #7d8a9c); box-shadow: 0 0 10px rgba(201, 212, 226, .45); }
+.pl3 .uvb-rk, .lb-r.pl3 .lb-rk { background: linear-gradient(150deg, #f6d2b0, var(--bronze) 45%, #8a5a33); box-shadow: 0 0 10px rgba(210, 154, 106, .45); }
+.uvb-n { min-width: 0; }
+.uvb-n b, .lb-n b { display: inline-flex; align-items: center; gap: 5px; max-width: 100%; font-size: 12.5px; font-weight: 700; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.uvb-n b .lk, .lb-n b .lk { width: 10px; height: 10px; flex: none; color: var(--dim2); }
+.uvb-n span { display: block; margin-top: 2px; font-size: 10px; color: var(--dim2); }
+.you { margin-left: 6px; font: 800 8px 'JetBrains Mono'; font-style: normal; letter-spacing: .08em; color: var(--bg); background: var(--green); padding: 1px 5px; border-radius: 7px; vertical-align: 2px; }
+.uvb-s { text-align: right; }
+.uvb-s b { display: block; font: 400 21px/1 'Archivo Black', sans-serif; }
+.pl1 .uvb-s b { color: var(--gold); text-shadow: 0 0 14px rgba(255, 200, 61, .5); } .pl2 .uvb-s b { color: var(--silver); } .pl3 .uvb-s b { color: var(--bronze); }
+.uvb-s span { display: block; margin-top: 3px; font-size: 9.5px; color: var(--dim); white-space: nowrap; }
+.uvb-r.me { border-color: rgba(0, 255, 136, .5); background: rgba(0, 255, 136, .06); }
+.uvb-r.empty { opacity: .55; } .uvb-r.empty .uvb-s b { color: var(--dim2); text-shadow: none; }
+.uvb-f { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-top: 10px; font-size: 9.5px; color: var(--dim2); }
+.uvb-f b { color: var(--text); }
+.uvb-f button { flex: none; padding: 0; border: 0; background: none; font: 700 10px 'JetBrains Mono'; color: var(--cyan); cursor: pointer; white-space: nowrap; }
+.uvb-f button:hover { color: #6fe4ff; }
+.uvb-pill { display: none; padding: 6px 12px; border-radius: 16px; border: 1px solid rgba(255, 200, 61, .6); background: rgba(8, 12, 20, .7); backdrop-filter: blur(6px);
+  font: 800 10px 'JetBrains Mono'; letter-spacing: .1em; color: var(--gold); cursor: pointer; }
+.uvb-pill i { font-style: normal; color: var(--dim); letter-spacing: 0; margin-left: 4px; }
+.uvstage.buying .uvb { display: none; }
+/* the full leaderboard (modal) */
+.lb-sub { margin: 2px 0 12px; font-size: 11px; color: var(--dim); } .lb-sub b { color: var(--text); }
+.lb-head, .lb-r { display: grid; grid-template-columns: 30px 30px minmax(0, 1fr) 130px 160px; align-items: center; gap: 10px; }
+.lb-head { padding: 0 12px 6px; font-size: 9.5px; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; color: var(--dim2); }
+.lb-head span:nth-child(4), .lb-head span:nth-child(5) { text-align: right; }
+.lb { max-height: 56vh; overflow-y: auto; display: flex; flex-direction: column; gap: 4px; padding-right: 4px; scrollbar-width: thin; scrollbar-color: var(--line3) transparent; }
+.lb-r { padding: 7px 12px; border-radius: 8px; background: var(--navy); border: 1px solid var(--line); font-size: 12px; }
+.lb-r .dic { width: 26px; height: 26px; }
+.lb-r.top { border-color: rgba(255, 200, 61, .35); background: rgba(255, 200, 61, .05); }
+.lb-r.me { border-color: rgba(0, 255, 136, .55); background: rgba(0, 255, 136, .07); }
+.lb-v { text-align: right; font-weight: 700; }
+.lb-s { text-align: right; font-size: 10.5px; color: var(--dim2); }
+.lb-s .sh { font: 400 15px 'Archivo Black', sans-serif; color: var(--gold); margin-right: 6px; } .lb-r.pl2 .lb-s .sh { color: var(--silver); } .lb-r.pl3 .lb-s .sh { color: var(--bronze); }
+.lb-s .ok { color: var(--green); }
+/* the money pulse's pop over a top-3 station */
+.b3pop.gold { color: #ffc83d; font-size: 16px; text-shadow: 0 0 12px rgba(255, 200, 61, .95); }
+
+@media (max-width: 760px) {
+  .uvb { width: auto; max-width: calc(100% - 24px); }
+  .uvb-pill { display: inline-flex; }
+  .uvb:not(.open) .uvb-in { display: none; }
+  .uvb.open .uvb-in { margin-top: 6px; width: min(330px, calc(100vw - 48px)); }
+}
 @media (max-width: 760px) { .uvp { top: auto; height: 62%; bottom: 8px; right: 8px; width: calc(100% - 16px); } }

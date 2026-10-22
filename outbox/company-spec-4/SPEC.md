@@ -67,6 +67,35 @@ The live line reads *8 companies · 34 free slots · 0 yours · 2 products* and 
 the owner's two slots now hold the two products, so no slot counts as his. **Say *your land* and count the slots the owner holds, products on them included**:
 *8 companies · 34 free slots · 2 your land · 2 products*. The word *yours* alone is not used.
 
+## H. The revenue share: the top 3 companies get 5%, 3% and 1% of every fee on Cymetica (settled, drawn)
+
+Every company in the Universe is ranked, and the top three get a share of **all fees on the whole platform**: 1st 5%, 2nd 3%, 3rd 1%.
+
+**The measure: Revenue, last 30 days (USD)**, what the platform itself paid the company in that time: bug bounties (ET10 at the day's
+price), its products' rewards, Agent Tournaments and League prizes. Not counted: trading P&L (it can be faked between two accounts and goes
+negative) and money moved between one owner's own accounts. One number per company, from the platform's own records, never typed in.
+
+**A floor: a company qualifies at $10,000 revenue in 30 days** (the mockup's example; the number is yours to set, as with the slot price), so
+a company that earns $5 a month never takes a share of everyone's fees. A place nobody reaches stays empty and its share is not paid.
+Paid monthly in USDC, from that month's fees, by the ranking at the month's end; a tie goes to the company that got there first. Private
+companies are on the board too, with name, station and revenue: the share comes from everyone's fees, so who receives it is public.
+
+**The board** (`uvboard.js`, styles in `uvpanel.css`): a HUD of glass over the Universe's top-left, under the LIVE line, that does not move
+when the map turns or zooms. *REVENUE SHARE · TOP 3*, *5% · 3% · 1% of every fee on Cymetica*, then three rows: the place (gold, silver,
+bronze), the company's station icon in its colour and name (YOU on ours), its revenue, and the share with about what it pays a month
+(platform fees of the last 30 days × the share). Under them *Platform fees · 30 d* and *qualify at*, and *Full leaderboard →*. On a stage under
+760 px it folds into a *TOP 3* pill. It hides while Buy land is on.
+
+**The full leaderboard** (a dialog from the board): every company ranked, its revenue, and for the top three the share and the month's
+amount, for the rest *qualifies* or *$X to qualify*; our row highlighted. Nothing else.
+
+**The pulse**: every 10 seconds a gold arc carrying a dollar sign leaves Cymetica's sun to each of the three, one after another, and
+*+5% of fees* / *+3% of fees* / *+1% of fees* rises over each. Only the top three get it. The flat map shows the gold line of text.
+
+What the build needs from you: per company the 30-day revenue from your records (the sources above), the platform's fees for the month so far
+and for the last 30 days, and the payout itself. Left to you: the floor, and a cap if you want one (for example, a share never larger than the
+company's own revenue). The figures in the mockup are samples from one model (`CO.uvBoard` in `uv-data.js`).
+
 ## What stays as it is
 
 Everything not named above stays as rounds 1 to 3 and your builds have it.

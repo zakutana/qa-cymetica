@@ -1122,6 +1122,16 @@ function chipFaceTex(q) {
   for (let i = 0; i < 12; i++) { g.fillStyle = i % 2 ? CASINO.ice : CASINO.white; g.save(); g.translate(m, m); g.rotate((i + 0.5) / 12 * Math.PI * 2); g.fillRect(-W * 0.022, at(0.08), W * 0.044, at(0.92) - at(0.08)); g.restore(); }
   const t = new THREE.CanvasTexture(c); t.colorSpace = THREE.SRGBColorSpace; t.anisotropy = 8; TX[key] = t; return t;
 }
+// the revenue share's pulse carries a dollar sign: gold, glowing, drawn once
+function dollarTex() {
+  if (TX.dollar) return TX.dollar;
+  const c = document.createElement('canvas'); c.width = c.height = 128; const g = c.getContext('2d');
+  const r = g.createRadialGradient(64, 64, 4, 64, 64, 62); r.addColorStop(0, 'rgba(255,214,90,.55)'); r.addColorStop(1, 'rgba(255,200,61,0)');
+  g.fillStyle = r; g.fillRect(0, 0, 128, 128);
+  g.font = '900 84px Arial, sans-serif'; g.textAlign = 'center'; g.textBaseline = 'middle';
+  g.shadowColor = '#ffc83d'; g.shadowBlur = 18; g.fillStyle = '#fff3c4'; g.fillText('$', 64, 68);
+  const t = new THREE.CanvasTexture(c); t.colorSpace = THREE.SRGBColorSpace; TX.dollar = t; return t;
+}
 // the spine's ribbed sections, in the station's dark violet steel
 function ribTex() {
   if (TX.rib) return TX.rib;
@@ -1685,6 +1695,9 @@ class Universe3D {
       this.ready = true;
     }).catch((e) => { console.error('3D map could not start:', e); if (this.h.onFail) this.h.onFail(e); });
     setInterval(() => { if (this.visible()) this.pulse(); }, 1700);
+    // the revenue share: now and then Cymetica pays its top 3 (uvboard.js), a gold arc from the sun to each
+    setTimeout(() => { if (this.visible()) this.sharePulse(); }, 4000);
+    setInterval(() => { if (this.visible()) this.sharePulse(); }, 10000);
     if (window.ResizeObserver) new ResizeObserver(() => this.resize()).observe(el);
     // the plates' font arrives after their first measure: measure them again when it has, for the overlap test
     const remeasure = () => { this.items.forEach((it) => { if (it.el) it.el._bw = 0; }); if (this.coreEl) this.coreEl._bw = 0; this.ovKey = ''; };
@@ -1975,25 +1988,42 @@ class Universe3D {
     });
     this.stats();
   }
-  // work goes in to Cymetica in the company's colour; ET10 comes back out in green
-  arc(it, back) {
+  // the top 3 of the revenue share (CO.uvBoard): a gold arc from the sun to each, one after another, and its share over it
+  sharePulse() {
+    if (!CO.uvBoard || !this.items) return;
+    const mine = this.h.mine ? this.h.mine() : null;
+    CO.uvBoard(mine).top.forEach((r, i) => {
+      const it = this.items.find((x) => (r.mine ? x.mine : !x.kind && !x.mine && String(x.c.id) === String(r.c.id)));
+      if (!it) return;
+      setTimeout(() => { this.arc(it, true, '#ffc83d'); setTimeout(() => this.pop(it, '+' + r.share + '% of fees', 'gold'), 1500); }, i * 450);
+    });
+  }
+  // work goes in to Cymetica in the company's colour; ET10 comes back out in green (or in the colour given: gold for the share)
+  arc(it, back, colour) {
     if (!it.plot || this.arcs.length > 12) return;
     const core = this.heartAt.clone(), top = it.plot.root.position.clone().add(new THREE.Vector3(0, it.plot.top * 0.6 * UVSS, 0));
     const a = back ? core : top, b = back ? top : core, mid = a.clone().lerp(b, 0.5);
     mid.y += 8 + a.distanceTo(b) * 0.16;
-    const A = back ? amat('#00ff88') : amat(CO.accentHex(it.c.accent)), curve = new THREE.QuadraticBezierCurve3(a, mid, b);
-    const head = new THREE.Mesh(G.sphere, A.glow); head.scale.setScalar(0.42);
+    const A = colour ? amat(colour) : back ? amat('#00ff88') : amat(CO.accentHex(it.c.accent)), curve = new THREE.QuadraticBezierCurve3(a, mid, b);
+    // the share's pulse (a colour given) is bigger and carries a gold dollar sign
+    const money = !!colour;
+    const head = new THREE.Mesh(G.sphere, A.glow); head.scale.setScalar(money ? 0.8 : 0.42);
     const halo = new THREE.Mesh(G.sphere, A.atmo); halo.scale.setScalar(2.6); head.add(halo);
+    let signMat = null;
+    if (money) {
+      signMat = new THREE.SpriteMaterial({ map: dollarTex(), transparent: true, depthWrite: false, depthTest: false, blending: THREE.AdditiveBlending });
+      const sign = new THREE.Sprite(signMat); sign.scale.setScalar(16); head.add(sign);
+    }
     // the streak: a thin tube along the arc, drawn as the light travels and let go behind it
-    const tube = new THREE.TubeGeometry(curve, 64, 0.12, 6, false);
+    const tube = new THREE.TubeGeometry(curve, 64, money ? 0.26 : 0.12, 6, false);
     const mat = new THREE.MeshBasicMaterial({ color: A.c.clone().multiplyScalar(2.6), transparent: true, opacity: 0.85, blending: THREE.AdditiveBlending, depthWrite: false });
     // hidden while there is nothing of it to draw: a draw of zero indices is a warning on WebGPU
     const streak = new THREE.Mesh(tube, mat); tube.setDrawRange(0, 0); streak.visible = false;
     this.scene.add(head, streak);
-    this.arcs.push({ curve, head, streak, tube, mat, t0: performance.now(), dur: 1600 + a.distanceTo(b) * 12 });
+    this.arcs.push({ curve, head, streak, tube, mat, signMat, t0: performance.now(), dur: 1600 + a.distanceTo(b) * 12 });
   }
-  pop(it, label) {
-    const el = document.createElement('div'); el.className = 'b3pop'; el.textContent = label; el.style.visibility = 'hidden'; this.bans.appendChild(el);
+  pop(it, label, cls) {
+    const el = document.createElement('div'); el.className = 'b3pop' + (cls ? ' ' + cls : ''); el.textContent = label; el.style.visibility = 'hidden'; this.bans.appendChild(el);
     const p = { el, it, t0: performance.now() }; this.pops.push(p);
     setTimeout(() => { el.remove(); this.pops = this.pops.filter((x) => x !== p); }, 2600);
   }
@@ -2104,7 +2134,7 @@ class Universe3D {
     if (this.arcs.length) {
       this.arcs = this.arcs.filter((a) => {
         const f = (now - a.t0) / a.dur;
-        if (f >= 1.25) { this.scene.remove(a.head, a.streak); a.tube.dispose(); a.mat.dispose(); return false; }
+        if (f >= 1.25) { this.scene.remove(a.head, a.streak); a.tube.dispose(); a.mat.dispose(); if (a.signMat) a.signMat.dispose(); return false; }
         const e = Math.min(1, f < 0.5 ? 2 * f * f : 1 - Math.pow(-2 * Math.min(f, 1) + 2, 2) / 2);
         a.head.position.copy(a.curve.getPoint(e)); a.head.visible = f < 1;
         const n = a.tube.index.count, seg = n / 64, from = Math.max(0, Math.min(f, 1.25) - 0.4) / 0.85, to = e, cnt = Math.max(0, Math.floor((to - from) * 64)) * seg;
