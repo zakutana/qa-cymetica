@@ -76,9 +76,13 @@ list); paragraphs become tooltips.
 
 ## C. The Universe at /company: Cymetica's Promo Market building
 
-Cymetica's own building, not a company's or a product: a relay spire on a hex platform, three signal rings turning,
-a band carrying the market's numbers, and an emitter sending rings of light out (mockup `u3d.js` `adPromo`, the flat
-map in `universe.js`). It stands on **Orbit 5 · slot 3**, bigger than a station and smaller than the sun, and is not
+Cymetica's own building, not a company's or a product, and at the map's first zoom it reads as a billboard: a cyan
+spire on a hex platform with a ticker band carrying the market's numbers and two inner rings, and on top **a cube of
+four screens** showing abstract ads (no text), magenta #FF2D95 and amber #FFB020 crossfading every 3 to 4 seconds,
+with a thin cyan frame and dark top and bottom, turning once in about 13 seconds. Two searchlights cross over it,
+sweeping slowly and fading along their length, and a small blimp circles at the cube's height (about 20 seconds a
+lap) trailing a magenta and amber banner. The structure stays cyan; light is emissive and additive only. Mockup:
+`u3d.js` `adPromo`, the flat map in `universe.js`. It stands on **Orbit 5 · slot 3**, bigger than a station and smaller than the sun, and is not
 counted among the products in the map's summary line. A click flies to it and opens its panel (`uvpanel.js`): briefs
 open, USDC on offer, users paid for; "Paid only for verified new users"; the best paid briefs; the company's own
 briefs; **Post a brief** and **Open the market**. The panel reads the same data as the market, so the two never differ.
