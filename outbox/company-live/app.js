@@ -681,7 +681,6 @@
       '<div class="pfgrid">' + apps.slice().sort(function (a, b) { return (b.visitors + b.todayVisitors) - (a.visitors + a.todayVisitors); }).map(function (a) {
         var e = CO.appEarn(a), v = a.visitors + a.todayVisitors, pct = Math.round(v / top * 100);
         return '<div class="pf"><div class="pf1"><b>' + esc(a.name) + '</b><a href="' + esc(a.url) + '" target="_blank" rel="noopener">' + esc(a.path) + ' ↗</a></div>' +
-          '<div class="pfown" style="--acc:' + CO.accentHex(CO.profile().accent) + '"><span class="mkb sm"><span class="mkt">MADE BY</span><span class="mkr">' + esc(CO.S.company.name) + '</span></span></div>' +
           '<div class="pfn"><div><b>' + v.toLocaleString('en-US') + '</b><span>visitors</span></div><div><b>' + (a.uses + a.todayUses).toLocaleString('en-US') + '</b><span>uses</span></div>' +
           '<div><b>' + a.views.toLocaleString('en-US') + '</b><span>views</span></div><div><b>' + a.likes + '</b><span>likes</span></div></div>' +
           '<span class="pfbar"><i style="width:' + pct + '%"></i></span>' +
