@@ -245,7 +245,7 @@
         var n = counts[t[0]], hot = t[0] === 'queues';
         return '<a href="#me/' + t[0] + '" class="' + (t[0] === tab ? 'on' : '') + '">' + ic(t[2]) + t[1] + (n != null ? '<span class="n' + (hot ? ' hot' : '') + '">' + short(n) + '</span>' : '') + '</a>';
       }).join('') + '</nav>'; }).join('') +
-      '<div class="rlinks"><a href="#market">' + ic('briefs') + 'Promo Market</a><a href="#profile/me">' + ic('ext') + 'Your public page</a><a href="#" data-act="agent">' + ic('agent') + 'Agent prompts</a></div>' +
+      '<div class="rlinks"><a href="#market">' + ic('briefs') + 'Promo Market</a><a href="#profile/me">' + ic('ext') + 'Your public page</a><a href="#" data-act="agent">' + ic('agent') + 'Agent prompts</a><a href="https://cymetica.com/companies/start/cayman" target="_blank" rel="noopener">' + ic('company') + 'Start an app and a company</a></div>' +
       '<div class="earn"><div class="k">Earned promoting · ' + rw.paid + ' posts</div><div class="v">' + fmt(rw.et10) + ' <small>ET10</small></div><div class="s">+ ' + fmt(rw.etlp) + ' ETLP</div></div>' +
       '</aside><section class="main">' +
       '<div class="ph"><h1>' + title + '</h1><span class="sub">' + (tab === 'products' ? 'built with Build it Better' : esc(me.username) + ' · ' + dShort(new Date(DAY + 'T12:00:00Z')) + ' 2026') + '</span><span class="sp"></span>' + right + '</div>' +
@@ -383,6 +383,8 @@
       '<span class="sp"></span><span class="dim mono" style="font-size:11.5px">' + esc(it.at) + ' UTC</span></div>' +
       (t === 'reddit' ? '<h3 style="margin:0 0 12px;font:19px/1.3 var(--display)">' + esc(it.title) + '</h3>' : '') +
       '<div class="body">' + esc(it.body) + '</div>' +
+      '<div class="posted"><a class="btn sm" href="' + esc(it.permalink || '#') + '" target="_blank" rel="noopener">' + ic(t) + 'Open on ' + (t === 'reddit' ? 'Reddit' : 'X') + ' ' + ic('ext') + '</a><span class="dim mono" style="font-size:11.5px">best page: ' + esc(it.tool) + '</span></div>' +
+      '<div class="how3" style="margin-top:12px"><span><i>1</i>Pick the page</span><span><i>2</i>Copy the reply</span><span><i>3</i>Post it on ' + (t === 'reddit' ? 'Reddit' : 'X') + '</span><span><i>4</i>Mark posted</span></div>' +
       '<div class="sec">Reply with this page<span class="ln"></span><span class="chip c" data-tip="This thread is held for you first; the rest of the queue stays open">' + ic('lock') + 'First look: you</span></div>' +
       '<div class="sel">' + ic('pages') + esc(it.tool) + '<span class="dim mono" style="font-size:11.5px;margin-left:8px">' + esc(it.path) + '</span><span class="chev">' + ic('down') + '</span></div>' +
       '<button class="lnkb" data-act="leadpage">' + ic('plus') + 'New page for this thread</button>' +
@@ -421,6 +423,7 @@
         '<div class="sec">X post<span class="ln"></span></div><div class="post"><div class="tx">' + esc(a.x_post).replace(/(https:\/\/\S+)/g, '<span class="u">$1</span>') + '</div></div>' +
         '<div class="acts"><button class="btn sm c" data-copy="radar-x">' + ic('copy') + 'Copy post</button><a class="btn sm" href="https://x.com/intent/post" target="_blank" rel="noopener">' + ic('x') + 'Open in X</a></div>' +
         '<div class="sec">Reddit title<span class="ln"></span></div><div class="post"><div class="tx" style="font-weight:600">' + esc(a.reddit_title) + '</div></div>' +
+        '<div class="acts"><button class="btn sm g" data-act="radarlink">' + ic('link') + 'Get my tracked link</button></div>' +
         '<div class="acts"><button class="btn sm c" data-copy="radar-r">' + ic('copy') + 'Copy title</button><button class="btn sm" data-copy="radar-b">' + ic('copy') + 'Copy body</button></div>' +
         '<div class="sec">Telegram post<span class="ln"></span></div><div class="post"><div class="tx">' + esc(a.tg_post || '').replace(/(https:\/\/\S+)/g, '<span class="u">$1</span>') + '</div></div>' +
         '<div class="acts"><button class="btn sm c" data-copy="radar-t">' + ic('copy') + 'Copy post</button></div></div>' +
@@ -451,6 +454,8 @@
     var k = PM.kit, c = communityKit(S.kitName || 'Bittensor', S.kitNarr || 'deai', S.kitTag || 'TAO');
     var outlet = function (icon, name, tags, rule) { return '<div class="kitrow"><span class="ic">' + ic(icon) + '</span><div><b>' + name + '</b>' + (tags ? '<span class="mono acc">' + esc(tags) + '</span>' : '') + '<span>' + esc(rule) + '</span></div>' + (tags ? '<button class="btn sm" data-copy="kit:' + esc(tags) + '">' + ic('copy') + '</button>' : '') + '</div>'; };
     return '<div class="cols"><div class="card"><div class="ch"><h3>Post kit</h3><span class="dim mono" style="font-size:12px">hashtags and tags per outlet</span></div>' +
+        '<div class="posted" style="margin:0 0 6px"><div class="sel" style="flex:1">' + ic('pages') + 'EventTrader home · product<span class="chev">' + ic('down') + '</span></div></div>' +
+        '<div class="post kp"><div class="tx">EventTrader home — <span class="h">' + esc(k.x_tags) + '</span> ' + esc(k.mention) + '<br><span class="u">https://cymetica.com/</span></div><div class="acts"><button class="btn sm c" data-copy="kitx">' + ic('copy') + 'Copy X post</button><span class="dim mono" style="font-size:11.5px">hashtags for the tool you pick</span></div></div>' +
         outlet('x', 'X', k.x_tags + ' ' + k.mention, k.x_rule) + outlet('reddit', 'Reddit', '', k.reddit_rule) + outlet('telegram', 'Telegram', k.tg_tags + ' ' + k.mention, k.telegram_rule) +
         '<div class="kitrow"><span class="ic">' + ic('discord') + '</span><div><b>Discord</b><a class="mono acc" href="' + esc(k.discord_invite) + '" target="_blank" rel="noopener">' + esc(k.discord_invite) + '</a><span>' + esc(k.discord_rule) + '</span></div></div>' +
         '<details class="fold sm"><summary>' + ic('check') + 'Playbook · ' + k.playbook.length + ' rules' + ic('down', 'chevd') + '</summary><div class="rules" style="padding:0 14px 14px">' + k.playbook.map(function (p) { return '<div>' + ic('check') + '<span><b style="color:var(--text)">' + esc(p.title) + '.</b> ' + esc(p.text) + '</span></div>'; }).join('') + '</div></details></div>' +
@@ -496,7 +501,7 @@
       '<div class="card"><div class="ch"><h3>Recent posts</h3><span class="sp"></span><span class="dim mono" style="font-size:12px">A post is paid once the checker sees it displayed</span></div><div class="rl">' +
       R.recent.map(function (r) {
         var c = st[r.status] || ['', r.status], icon = /Reddit/.test(r.where) ? 'reddit' : 'x';
-        return '<div class="rr"><span class="ic">' + ic(icon) + '</span><div style="min-width:0"><b>' + esc(r.text) + '</b><span>' + esc(r.where) + '</span></div><span class="mono dim" style="font-size:12px">' + dShort(new Date(r.day + 'T12:00:00Z')) + '</span>' +
+        return '<div class="rr"><span class="ic">' + ic(icon) + '</span><div style="min-width:0"><b>' + esc(r.text) + '</b><span>' + esc(r.where) + ' · <a class="lnk" href="' + esc(r.url || '#') + '" target="_blank" rel="noopener">your reply ↗</a></span></div><span class="mono dim" style="font-size:12px">' + dShort(new Date(r.day + 'T12:00:00Z')) + '</span>' +
           '<span class="chip ' + c[0] + '" data-tip="' + esc(r.note || '') + '">' + c[1] + '</span><span class="amt ' + (r.status === 'paid' ? 'pos' : 'dim') + '">' + (r.status === 'paid' ? '+' + fmt(s.per_post.et10) + ' ET10' : '—') + '</span></div>';
       }).join('') + '</div></div>';
   }
@@ -618,11 +623,14 @@
     var tools = PM.queues.pages;
     $('modal').className = 'modal sm';
     $('modal').innerHTML = '<div class="mh"><span class="kick">Pages & links</span><h2>Create a page</h2><button class="x" data-act="close">' + ic('close') + '</button></div>' +
-      '<div class="mb"><div class="f"><div class="fl"><label>Tool</label><div class="sel">' + ic('pages') + 'Gem Screener<span class="dim mono" style="font-size:11.5px;margin-left:8px">/gem-screener</span><span class="chev">' + ic('down') + '</span></div></div>' +
-      '<div class="fl"><label>Headline <span>up to 120</span></label><input class="in" maxlength="120" placeholder="One line a reader stops for"></div>' +
-      '<div class="fl"><label>Why it matters <span>up to 600</span></label><textarea class="in" maxlength="600" placeholder="One line on why it matters"></textarea></div>' +
-      '<div class="rules"><div>' + ic('check') + '<span>You get a page with a tracked URL. Reuse it on every matching thread; make a new one only for a new tool. ' + tools.length + ' pages so far.</span></div></div></div></div>' +
-      '<div class="mf"><span class="note"></span><button class="btn gh" data-act="close">Cancel</button><button class="btn g" data-act="made">Create page ' + ic('arrow') + '</button></div>';
+      '<div class="mb"><div class="f"><div class="fl"><label>Tool, app, product or service <span>' + PM.live.surfaces + ' to pick from</span></label><div class="sel">' + ic('pages') + 'Gem Screener · tool<span class="chev">' + ic('down') + '</span></div></div>' +
+      '<div class="fl"><label>Headline <span>optional · defaults to the name</span></label><input class="in" maxlength="120" placeholder="Defaults to the surface name"></div>' +
+      '<div class="fl"><label>Your pitch <span>optional · the page’s opening line</span></label><textarea class="in" maxlength="600" placeholder="Why should a reader care?"></textarea></div>' +
+      '<div class="how3"><span><i>1</i>Create the page</span><span><i>2</i>Copy its HTML and publish it on claude.ai</span><span><i>3</i>Save the artifact URL</span></div>' +
+      '<div class="posted"><button class="btn sm" data-act="copyhtml">' + ic('copy') + 'Copy the page HTML</button><a class="btn sm" href="https://claude.ai" target="_blank" rel="noopener">claude.ai ' + ic('ext') + '</a></div>' +
+      '<div class="posted"><input class="in" placeholder="https://claude.ai/artifact/…"><button class="btn" data-act="saveart">Save artifact URL</button></div>' +
+      '<div class="rules" style="margin-top:12px"><div>' + ic('check') + '<span>Every button on the page is tracked and the heart counts likes. Reuse it on every matching thread; make a new one only for a new tool. ' + tools.length + ' pages so far.</span></div></div></div></div>' +
+      '<div class="mf"><span class="note"></span><button class="btn gh" data-act="close">Cancel</button><button class="btn g" data-act="made">Create artifact page ' + ic('arrow') + '</button></div>';
     show('modal');
   }
   function trackForm() {
@@ -630,7 +638,7 @@
     $('modal').innerHTML = '<div class="mh"><span class="kick">Pages & links</span><h2>Track a link</h2><button class="x" data-act="close">' + ic('close') + '</button></div>' +
       '<div class="mb"><div class="f"><div class="fl"><label>Target <span>choose a surface or paste a URL</span></label><input class="in" placeholder="https://claude.ai/artifact/… or /exchange"></div>' +
       '<div class="two"><div class="fl"><label>Title <span>up to 200</span></label><input class="in" maxlength="200" placeholder="Shown on your dashboard"></div>' +
-      '<div class="fl"><label>Kind</label><div class="seg" style="height:44px;align-items:center">' + ['artifact', 'tool', 'product', 'post', 'other'].map(function (k, i) { return '<button class="' + (i === 0 ? 'on' : '') + '" style="height:36px">' + k + '</button>'; }).join('') + '</div></div></div></div></div>' +
+      '<div class="fl"><label>Kind</label><div class="sel" style="height:44px">artifact<span class="dim mono" style="font-size:11px;margin-left:8px">tool · app · product · service · post · other</span><span class="chev">' + ic('down') + '</span></div></div></div></div></div>' +
       '<div class="mf"><span class="note"></span><button class="btn gh" data-act="close">Cancel</button><button class="btn g" data-act="made">Create link ' + ic('arrow') + '</button></div>';
     show('modal');
   }
@@ -638,7 +646,9 @@
     $('drawer').innerHTML = '<div class="dh plain"><button class="x" data-act="close">' + ic('close') + '</button></div><div class="db top">' +
       '<span class="kick">Stay in your chatbox</span><h2>From your own AI agent</h2><p class="ask">Copy into ChatGPT, Claude, Gemini, Meta Muse or any MCP/HTTP agent: it registers itself, no website, no install.</p>' +
       '<div class="sec">Promote · take briefs<span class="ln"></span><span class="chip g">new</span></div><pre class="code">' + codeHTML(PROMO_PROMPT) + '</pre><button class="btn c" data-copy="promo">' + ic('copy') + 'Copy prompt</button>' +
-      '<div class="sec">Your agent’s key<span class="ln"></span></div><div class="posted"><input class="in" value="creator-agent"><button class="btn g" data-act="newkey">Create key</button></div><div class="onote" style="margin-top:6px">' + ic('lock') + PM.live.active_keys + ' active keys on this account</div>' +
+      '<div class="sec">Your agent’s key<span class="ln"></span></div><div class="posted"><input class="in" placeholder="key name (e.g. my-agent)"><button class="btn g" data-act="newkey">Create key</button></div>' +
+      '<div class="onote" style="margin-top:6px" data-tip="It belongs to this creator account: the queues and tracked-link endpoints answer for it. Sent as the X-API-Key header; read and trade, never withdraw. Shown once.">' + ic('lock') + PM.live.active_keys + ' active keys on this account <span class="i">i</span></div>' +
+      '<div class="sec">Work my queues · with the key<span class="ln"></span></div><pre class="code">' + codeHTML(PM.live.queue_prompt) + '</pre><button class="btn c" data-copy="queueprompt">' + ic('copy') + 'Copy prompt</button>' +
       '<div class="sec">Trade · fund with your own USDC<span class="ln"></span></div><pre class="code">' + codeHTML(PM.live.trade_prompt) + '</pre><button class="btn" data-copy="trade">' + ic('copy') + 'Copy prompt</button></div>';
     show('drawer');
   }
@@ -673,12 +683,12 @@
     if (d.sendoffer) { sendOffer(); return; }
     if (d.copy) {
       var k = d.copy, a = PM.radar[S.radar];
-      var txt = k === 'promo' ? PROMO_PROMPT : k === 'trade' ? PM.live.trade_prompt : k === 'tweet' ? PM.live.tweet : k === 'radar-x' ? a.x_post : k === 'radar-r' ? a.reddit_title :
+      var txt = k === 'promo' ? PROMO_PROMPT : k === 'trade' ? PM.live.trade_prompt : k === 'queueprompt' ? PM.live.queue_prompt : k === 'tweet' ? PM.live.tweet : k === 'radar-x' ? a.x_post : k === 'radar-r' ? a.reddit_title :
         k === 'radar-b' ? a.reddit_body : k === 'radar-t' ? a.tg_post : k.indexOf('link:') === 0 ? 'https://cymetica.com/c/' + k.slice(5) :
-          k.indexOf('ask:') === 0 ? (briefOf(k.slice(4)) || {}).ask : k.indexOf('kit:') === 0 ? k.slice(4) :
+          k.indexOf('ask:') === 0 ? (briefOf(k.slice(4)) || {}).ask : k.indexOf('kit:') === 0 ? k.slice(4) : k === 'kitx' ? 'EventTrader home — ' + PM.kit.x_tags + ' ' + PM.kit.mention + '\nhttps://cymetica.com/' :
             k.indexOf('kitpost:') === 0 ? communityKit(S.kitName || 'Bittensor', S.kitNarr || 'deai', S.kitTag || 'TAO').posts[+k.slice(8)] :
               k === 'kitreply' ? communityKit(S.kitName || 'Bittensor', S.kitNarr || 'deai', S.kitTag || 'TAO').reply : '';
-      copy(txt, k === 'promo' || k === 'trade' ? 'Prompt' : k.indexOf('link:') === 0 ? 'Link' : 'Post'); return;
+      copy(txt, k === 'promo' || k === 'trade' || k === 'queueprompt' ? 'Prompt' : k.indexOf('link:') === 0 ? 'Link' : 'Post'); return;
     }
     if (d.s) { S.sort = d.s; document.querySelectorAll('#bsort button').forEach(function (b) { b.classList.toggle('on', b.dataset.s === d.s); }); refreshBoard(); return; }
     if (d.qtab) { S.qtab = d.qtab; return; }
@@ -704,6 +714,9 @@
       case 'regen': $('draft').textContent = 'Drafting another reply…'; break;
       case 'copyreply': toast('Reply · copied'); break;
       case 'copypitch': toast('Pitch · copied'); break;
+      case 'copyhtml': toast('Page HTML · copied'); break;
+      case 'saveart': toast('Artifact URL saved'); break;
+      case 'radarlink': toast('Your tracked link · copied'); break;
       case 'leadposted': toast('Marked posted · reward once the checker sees it'); break;
       case 'leadpage': pageForm(); break;
       case 'addpage': pageForm(); break;

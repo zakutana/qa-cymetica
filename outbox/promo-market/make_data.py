@@ -69,7 +69,10 @@ def live_texts():
     per_day = re.search(r"One posted page brings at least ([\d–-]+) visitors a day", t).group(1)
     agent = re.search(r"(Read https://cymetica.com/llms.txt.*?Wait for my instructions before placing any trade\.)", t, re.S).group(1)
     # the agent keys the account holds, as the operator's own logged-in page showed them (screenshot, 2026-10-22)
-    return {"tweet": tweet, "tweet_nth": nth, "measure": measure, "per_day": per_day, "trade_prompt": agent, "active_keys": 81}
+    # the logged-in page's own: the key's queue prompt and the number of surfaces a page or a queue can be for (2026-10-22)
+    queue_prompt = (HERE / "snap" / "queue_prompt.txt").read_text(encoding="utf-8").strip()
+    return {"tweet": tweet, "tweet_nth": nth, "measure": measure, "per_day": per_day, "trade_prompt": agent, "active_keys": 81,
+            "queue_prompt": queue_prompt, "surfaces": 128}
 
 
 def radar():
@@ -125,7 +128,7 @@ def radar():
 def rewards():
     d = load("api_v1_creator_rewards.json")
     rec = [{"where": r["where"], "text": r["text"][:90], "status": r["reward_status"], "note": r["reward_note"],
-            "day": r["replied_at"][:10]} for r in d["recent"]]
+            "day": r["replied_at"][:10], "url": r.get("reply_url") or r.get("permalink")} for r in d["recent"]]
     return {"summary": d["summary"], "recent": rec}
 
 
@@ -133,10 +136,10 @@ def queues():
     r = load("api_v1_creator_reddit-leads.json")
     x = load("api_v1_creator_twitter-leads.json")
     p = load("api_v1_creator_journalist-requests.json")
-    reddit = [{"id": l["id"], "sub": l["subreddit"], "title": l["title"], "rel": l["relevance"], "score": l["score"],
+    reddit = [{"id": l["id"], "sub": l["subreddit"], "title": l["title"], "rel": l["relevance"], "score": l["score"], "permalink": l.get("permalink"),
                "tool": l["tool_name"], "path": l["tool_path"], "at": (l.get("posted_at") or "")[:16].replace("T", " "),
                "kind": l["kind"], "body": re.sub(r"\s+", " ", l.get("body") or "")[:260]} for l in r["leads"][:14]]
-    xs = [{"id": l["id"], "group": l["group_name"], "followers": l["author_followers"], "likes": l["likes"],
+    xs = [{"id": l["id"], "group": l["group_name"], "followers": l["author_followers"], "likes": l["likes"], "permalink": l.get("permalink"),
            "views": l["impressions"], "tool": l["tool_name"], "path": l["tool_path"],
            "at": (l.get("posted_at") or "")[:16].replace("T", " "),
            "body": re.sub(r"@\w+\s*", "", re.sub(r"\s+", " ", l.get("body") or ""))[:220]} for l in x["leads"][:10]]

@@ -40,7 +40,7 @@ HAS = ["Most token lists rank by hype", "Copy", "Open in X", "Mark posted", "Sav
        "Also on claude.ai", "Open page", "Are you Mumtaz?", "Log in", "Reply with this page", "Skip", "Mumtaz",
        "4,335", "6,852", "1,443", "2,821", "liking removed", "Press", "Email the journalist", "Promo Market", "Post a brief",
        "Up for grabs", "per new user", "per post", "My products", "Create brief", "How a new user is counted",
-       "Visitors your briefs brought", "Promote from your AI agent", "Briefs I took", "After you post it", "Wrote your own post?", "Article published?", "Create key", "First look: you", "New page for this thread", "Mark pitched", "Community kit", "Post kit", "Queue for", "Journalists", "Register post", "active keys on this account", "Copy pitch", "Read the full request", "Telegram communities", "Playbook", "up to 3 a day", "All creators, last 30 days"]
+       "Visitors your briefs brought", "Promote from your AI agent", "Briefs I took", "After you post it", "Wrote your own post?", "Article published?", "Create key", "First look: you", "New page for this thread", "Mark pitched", "Community kit", "Post kit", "Queue for", "Journalists", "Register post", "active keys on this account", "Copy pitch", "Read the full request", "Telegram communities", "Playbook", "up to 3 a day", "All creators, last 30 days", "Work my queues", "Create artifact page", "Copy the page HTML", "Save artifact URL", "Copy X post", "Get my tracked link", "Open on Reddit", "Pick the page", "your reply"]
 CHECK = """() => { const out = [];
   document.querySelectorAll('.bc, .stat, .kpi, .qt, .sb, .qi, .ra, .house, .step, .rr, .prod, .chip, .btn, .tp').forEach(c => {
     if (!c.offsetParent) return; const cr = c.getBoundingClientRect();

@@ -110,7 +110,18 @@ budget is locked from the balance and what is not spent returns when it ends.
 - **Kits** (picture 10): the **Post kit** (hashtags, @mention and the rule per outlet, the Discord invite, the playbook
   folded) and the **Community kit** (a community, its narrative and its coin tag in; three X posts with their weighted
   length out of 280, Copy and Open in X; one Telegram or Discord reply; its four rules).
-- *Track a link* keeps its fields: target (a surface or any URL), title, kind (artifact, tool, product, post, other).
+- *Track a link* keeps its fields: target (a surface or any URL), title, kind (artifact, tool, app, product, service, post,
+  other). *Create a page* keeps its 128 surfaces, the optional headline and pitch, and its after-step: copy the page HTML,
+  publish it on claude.ai, save the artifact URL.
+- A lead keeps *Open on Reddit / Open on X*, its best page and the four steps (pick the page, copy the reply, post it,
+  mark posted); Radar keeps *Get my tracked link* per app; the post kit keeps its tool picker and *Copy X post*; a reward
+  links to its reply; the agent key keeps its name, its note (belongs to this account, read and trade, never withdraw,
+  shown once) and the prompt that works the creator's queues with it; *Start an app and a company* is a link in the rail.
+
+Read against the operator's own logged-in page on 2026-10-22, section by section (Tweet this now, Wrote your own post,
+Why post, Start an app and a company, Your agent's API key, Create a Claude artifact page, Post for maximum reach, Bring
+Build it Better to a crypto community, Post rewards, Reply queues, Journalists, Track any other link, Radar apps, Tracked
+links): every control on it has its place in Promote.
 - **Pages & links**: one sortable table (clicks, reads, likes, unique, 14 days, top source, replies); a row opens its
   replies and Open page, Download HTML, Also on claude.ai, the tracked link, where it was posted (saved); *Create a page*
   and *Track a link* dialogs.
