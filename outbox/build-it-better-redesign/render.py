@@ -175,9 +175,10 @@ with sync_playwright() as p:
             fails += [f"8: {x}" for x in t.evaluate(CARDS)]
             first = t.evaluate("document.querySelector('#bb-board [data-stage=shipped] .bb-card .tk').textContent")
             t.click("#bb-board [data-stage=shipped] .bb-card .tk")
-            t.wait_for_timeout(1500)
-            if not t.evaluate("(tk) => getComputedStyle(document.getElementById('bb-mine')).display !== 'none' && document.getElementById('bb-mine-ticket').textContent.startsWith(tk)", first):
-                fails.append(f"8: clicking {first} did not open it in #bb-mine")
+            try:   # the ticket is read live from cymetica.com through serve.py: wait for it, up to 10 s, not a fixed beat
+                t.wait_for_function("(tk) => getComputedStyle(document.getElementById('bb-mine')).display !== 'none' && document.getElementById('bb-mine-ticket').textContent.startsWith(tk)", arg=first, timeout=10000)
+            except Exception:
+                fails.append(f"8: clicking {first} did not open it in #bb-mine within 10 s")
             t.evaluate("document.getElementById('bb-cat-track').scrollLeft = 0")
             t.wait_for_timeout(600)
             t.screenshot(path=str(shots / "catalog-1920.png"), full_page=True,

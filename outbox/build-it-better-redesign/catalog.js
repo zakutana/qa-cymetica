@@ -21,6 +21,8 @@
         function arrows() {
             prev.disabled = track.scrollLeft <= 2;
             next.disabled = track.scrollLeft >= track.scrollWidth - track.clientWidth - 2;
+            track.classList.toggle('more', !next.disabled);   // the edge fades only where there is more to see
+            track.classList.toggle('back', !prev.disabled);
         }
 
         function render(d, sort) {
