@@ -114,7 +114,9 @@
     // who made it, big and first: the company that holds the slot the product stands on (ours, bought by the operator);
     // a click opens its office
     var me = CO.profile ? CO.profile() : {}, who = (CO.S && CO.S.company && CO.S.company.name) || 'My Company';
-    var owner = '<a href="#" class="uvown" data-a="owner" title="Open the company\'s office"><span class="lb">Made by</span>' + CO.stationIcon(me.skin, me.accent) + '<b>' + esc(who) + '</b><i aria-hidden="true">›</i></a>';
+    // drawn as the plate over a station on the map (style.css .mkb), in the company's colour
+    var owner = '<div class="mkrow" style="--acc:' + CO.accentHex(me.accent) + '"><a href="#" class="mkb" data-a="owner" title="Made by ' + esc(who) + ': open its office">' +
+      '<span class="mkt">MADE BY</span><span class="mkr">' + esc(who) + '</span><span class="mkp"></span></a></div>';
     return { cls: 'k-' + it.ad.key, acc: CO.accentHex(it.c.accent), icon: s.icon, title: it.c.name,
       sub: esc(s.tag) + ' · ' + esc(CO.uvSlotName(it)), body: owner + s.body(),
       foot: '<a class="uvp-go" href="' + esc(it.ad.url) + '" target="_blank" rel="noopener">' + esc(s.go) + ' <span aria-hidden="true">↗</span></a>' };

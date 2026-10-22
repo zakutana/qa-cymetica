@@ -75,7 +75,7 @@ not a product and has no card. **The totals are wrong for the same reason**: the
 599 visitors, 822 uses and 8 likes (read off the screenshot): a page's visitors must not be counted once for every request that touched
 it. The mockup's Products tab draws it as meant: one card per product.
 
-**9. Every product says clearly who made it.** Wherever a product is shown (a Products card, a product's panel on the map) it names the company that owns it, **in plain sight and not as small print**: a bar of its own at the top of the product's panel, *MADE BY*, the company's logo and its name in the site's green (a click opens its office), and the same *MADE BY* line on a Products card. The owner of a product that stands on the map is **the company that holds the slot it stands on** (ours: *My Company*), not Cymetica: the panel does not say *by Cymetica*. The mockup draws both (`uvpanel.js` `productView`, the Products card in `app.js`).
+**9. Every product says clearly who made it.** Wherever a product is shown (a Products card, a product's panel on the map) it names the company that owns it, **in plain sight and not as small print**: a badge drawn as the plate over a station on the map (riveted dark glass framed in the company's colour, squared caps, the colour's dot) with a *MADE BY* pill over it, centred at the top of the product's panel (a click opens the company's office), and a smaller one on a Products card. The owner of a product that stands on the map is **the company that holds the slot it stands on** (ours: *My Company*), not Cymetica: the panel does not say *by Cymetica*. The mockup draws both (`style.css` `.mkb`; `uvpanel.js` `productView`, the Products card in `app.js`).
 
 ## What stays as it is
 

@@ -244,8 +244,29 @@ b.g, span.g { color: var(--green); text-shadow: 0 0 10px rgba(0, 255, 136, .45);
 .pf1 { display: flex; align-items: baseline; justify-content: space-between; gap: 10px; }
 .pf1 b { font: 400 15px 'Archivo Black', sans-serif; } .pf1 a { font-size: 11px; color: var(--cyan); }
 /* whose product it is: its company, on every product card */
-.pfown { display: flex; align-items: baseline; gap: 8px; margin: -2px 0 10px; padding: 5px 9px; border-radius: 7px; background: rgba(0, 255, 136, .07); border: 1px solid rgba(0, 255, 136, .35); }
-.pfown span { font-size: 9px; font-weight: 800; letter-spacing: .12em; text-transform: uppercase; color: var(--dim2); } .pfown b { font: 400 13px 'Archivo Black', sans-serif; color: var(--green); }
+.pfown { margin: 0 0 10px; }
+/* Who made a product: the plate a station carries on the map (uv.css .b3) -- riveted dark glass framed in the company's
+   colour, squared caps, the colour's dot -- with a MADE BY pill over it, as YOU stands over ours. --acc: the company's colour. */
+.mkb { display: inline-flex; flex-direction: column; align-items: center; text-decoration: none; cursor: pointer; --fr: color-mix(in srgb, var(--acc) 60%, #464b54); }
+.mkb .mkt { font: 800 9px 'JetBrains Mono', monospace; letter-spacing: .12em; color: var(--bg); background: var(--acc); padding: 1px 8px; border-radius: 9px; margin-bottom: 4px;
+  box-shadow: 0 0 10px color-mix(in srgb, var(--acc) 60%, transparent); }
+.mkb .mkr { display: flex; align-items: center; gap: 9px; padding: 5px 18px 4px; font: 700 22px/1.15 'Rajdhani', 'Archivo Black', sans-serif; letter-spacing: .07em; text-transform: uppercase;
+  color: #eef6fa; white-space: nowrap; max-width: 320px; overflow: hidden; text-overflow: ellipsis;
+  background:
+    radial-gradient(circle at 4px 4px, var(--fr) 0 1px, transparent 1.7px), radial-gradient(circle at calc(100% - 4px) 4px, var(--fr) 0 1px, transparent 1.7px),
+    radial-gradient(circle at 4px calc(100% - 4px), var(--fr) 0 1px, transparent 1.7px), radial-gradient(circle at calc(100% - 4px) calc(100% - 4px), var(--fr) 0 1px, transparent 1.7px),
+    linear-gradient(rgba(29, 37, 46, .95), rgba(17, 24, 31, .95));
+  border: 1px solid var(--fr); border-radius: 4px; text-shadow: 0 1px 2px rgba(0, 0, 0, .7);
+  box-shadow: 0 0 0 1px rgba(0, 0, 0, .3), 0 0 18px color-mix(in srgb, var(--acc) 35%, transparent), 0 3px 10px rgba(0, 0, 0, .4); }
+.mkb .mkr::before { content: ''; width: 7px; height: 7px; border-radius: 50%; background: var(--acc); box-shadow: 0 0 7px var(--acc); flex: none; }
+.mkb .mkp { width: 0; height: 0; border: 5px solid transparent; border-top-color: var(--fr); border-bottom: 0; margin-top: -1px; }
+.mkb:hover { --fr: var(--acc); }
+.mkb:hover .mkr { box-shadow: 0 0 0 1px rgba(0, 0, 0, .3), 0 0 26px color-mix(in srgb, var(--acc) 60%, transparent), 0 3px 10px rgba(0, 0, 0, .4); }
+.mkb.sm { cursor: default; } .mkb.sm .mkr { font-size: 15px; padding: 3px 12px 2px; gap: 7px; } .mkb.sm .mkr::before { width: 5px; height: 5px; } .mkb.sm .mkt { font-size: 8px; }
+/* in the product's panel: centred, a line of the colour out of either side, as Cymetica's own plate has */
+.mkrow { display: flex; align-items: center; gap: 12px; margin: 2px 0 16px; }
+.mkrow::before, .mkrow::after { content: ''; flex: 1; height: 1px; margin-top: 14px; background: linear-gradient(90deg, transparent, color-mix(in srgb, var(--acc) 75%, transparent)); }
+.mkrow::after { background: linear-gradient(270deg, transparent, color-mix(in srgb, var(--acc) 75%, transparent)); }
 .pfn { display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; margin: 12px 0 8px; }
 .pfn b { display: block; font-size: 20px; font-weight: 800; } .pfn span { font-size: 10px; color: var(--dim2); letter-spacing: .08em; text-transform: uppercase; }
 .pfbar { display: block; height: 4px; border-radius: 2px; background: var(--line); overflow: hidden; }
