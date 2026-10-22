@@ -199,12 +199,25 @@ h2{font:28px/1.2 "Archivo Black",sans-serif}
 .ct.h{color:var(--dim);font-size:10px;font-weight:700;letter-spacing:.16em}
 .ct span:not(:first-child){text-align:right}
 .ctw{margin-bottom:16px}
+.how .ctn{margin:10px 0 0;color:var(--dim);font-size:11.5px}
 
 .signin{padding:26px 24px 22px;margin-top:22px}
 .signin .go{width:100%;padding:17px;font-size:17px;margin-top:18px}
 .signin .free{display:flex;flex-wrap:wrap;gap:10px;margin-top:16px}
 .signin .edit{margin-top:12px}
 .signin .top{display:flex;justify-content:space-between;align-items:center;gap:12px}
+.xline{display:flex;align-items:center;gap:10px;margin-top:14px;padding-top:12px;border-top:1px solid rgba(30,48,80,.8);font-size:12px;color:var(--dim)}
+.xline b{color:var(--green);font-size:12px}
+.xline b.off{color:var(--dim)}
+.xline i{flex:1}
+.xline button{color:var(--cyan);font-size:12px;font-weight:700;border:1px solid rgba(0,207,255,.45);border-radius:9px;padding:6px 11px}
+.xline button.q{border-color:var(--line);color:var(--dim)}
+.bal{color:var(--dim);font-size:10.5px;font-weight:700;letter-spacing:.18em;border:1px solid rgba(30,48,80,.95);border-radius:12px;padding:9px 14px;background:rgba(13,21,32,.8)}
+.bal b{color:var(--green);font:18px "Archivo Black",sans-serif;letter-spacing:0;margin-left:8px}
+.pc .nw{color:var(--muted);font-size:11.5px;margin-top:6px;min-height:17px}
+.pc .nw b{color:var(--text)}
+.pc .nw em{font-style:normal;color:var(--red);font-weight:700}
+.pc .nw a{color:var(--cyan)}
 
 .ribbon{position:fixed;right:calc(16px + env(safe-area-inset-right,0px));top:calc(6px + env(safe-area-inset-top,0px));z-index:40;background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:5px 10px;font-size:11.5px;color:var(--muted);display:flex;gap:8px;align-items:center}
 .ribbon b{color:var(--cyan);letter-spacing:.12em;font-size:10.5px}
@@ -374,7 +387,7 @@ function drawLeft(m) {
   }
   const go = resets > 0 ? `<button class="go" id="usereset">USE A LIMIT RESET</button>`
     : !m.xOn ? `<button class="go">TURN ON EXTRA USAGE</button>`
-    : xCapped ? `<button class="go" id="raise">RAISE EXTRA LIMIT</button>`
+    : xCapped ? `<button class="go" id="raise">CHANGE MONTHLY LIMIT</button>`
     : nextPlan ? `<button class="go">UPGRADE TO ${nextPlan.name.toUpperCase()}</button>` : "";
   el.innerHTML = `<div class="pills"><span class="pill"><i></i>${(S.plan_name || S.plan).toUpperCase()} &middot; ${usd0(S.price_usdc)}/MO</span></div>
     <h1>Your build usage.<br><em>What's left, live.</em></h1>
@@ -382,9 +395,13 @@ function drawLeft(m) {
     <div class="glass ${m.blocked ? "glowc" : "glow"} signin">${head}${go}
       <div class="edit" id="edit"><span>MONTHLY LIMIT $</span><input value="${m.xCap == null ? "" : m.xCap.toFixed(2)}" inputmode="decimal"><button>SAVE</button></div>
       <div class="edit" id="rs"><span>RESET WHICH?</span><i style="flex:1"></i><button>SESSION</button><button>WEEK</button></div>
-      <div class="free"><span class="chip m">${ua(m.sCap)} u / 5h</span><span class="chip m">${ua(m.wCap)} u / week</span><span class="chip m">${resets} LIMIT RESET${resets === 1 ? "" : "S"}</span><button class="chip c">EXTRA ${m.xOn ? "ON &middot; TURN OFF" : "OFF &middot; TURN ON"}</button></div>
+      <div class="free"><span class="chip m">${ua(m.sCap)} u / 5h</span><span class="chip m">${ua(m.wCap)} u / week</span><span class="chip m">${resets} LIMIT RESET${resets === 1 ? "" : "S"}</span></div>
+      <div class="xline"><span class="cap">EXTRA USAGE</span>${m.xOn
+        ? `<b>ON</b><span>${m.xCap == null ? "no monthly limit" : usd(m.xCap) + " a month"}</span><i></i>${xCapped ? "" : `<button id="chg">Change monthly limit</button>`}<button class="q">Turn off</button>`
+        : `<b class="off">OFF</b><span>you set the monthly limit when you turn it on</span><i></i><button>Turn on</button>`}</div>
     </div>`;
   const r = $("raise"); if (r) r.onclick = () => $("edit").classList.toggle("on");
+  const c = $("chg"); if (c) c.onclick = () => $("edit").classList.toggle("on");
   const u = $("usereset"); if (u) u.onclick = () => $("rs").classList.toggle("on");
 }
 
@@ -552,11 +569,18 @@ function drawPlans(m) {
       : `<div class="pb"><div class="t"><span>YOUR WEEK</span><em class="${wPct > 100 ? "r" : ""}">${u2(m.wUsed)} / ${ua(p.week_units)} u</em></div>
          <div class="gbar"><i class="${wPct > 100 ? "r" : ""}" style="width:${Math.min(100, Math.max(2, wPct))}%"></i></div></div>`;
     const feats = (p.features || []).filter(f => !/^Limited time/.test(f));
+    // what an upgrade takes from the balance now, and what to deposit when the balance is short (live since 2026-10-22)
+    const q = !out && window.NOW && NOW.plans.find(x => x.code === p.code);
+    const ends = NOW && NOW.period_end ? `${MON[new Date(NOW.period_end).getUTCMonth()]} ${new Date(NOW.period_end).getUTCDate()}` : "";
+    const nw = out ? ""
+      : q && q.change === "upgrade" && num(q.charge_now_usdc) > 0
+      ? `<div class="nw"><b>${usd(q.charge_now_usdc)} now</b> &middot; until ${ends}${num(q.short_usdc) > 0 ? `<br><em>deposit ${usd(q.short_usdc)} more</em> &middot; <a href="#">Deposit</a>` : ""}</div>`
+      : q && q.change === "current" && ends ? `<div class="nw">this period ends ${ends}</div>` : `<div class="nw"></div>`;
     const act = out ? (price ? `<button class="up">LOG IN TO SUBSCRIBE</button>` : `<button class="mv">START FREE</button>`)
       : on ? `<button class="cur">CURRENT PLAN</button>` : i > cur ? `<button class="up">UPGRADE &middot; ${usd0(price)}/MO</button>` : `<button class="mv">Move to ${p.name} at period end</button>`;
     cards += `<div class="glass pc ${on ? "glow" : ""}">
       <div class="h"><b>${p.name}</b><span class="mx">${p.multiplier}&times;</span>${on ? `<span class="chip s">YOURS</span>` : ""}</div>
-      <div class="pr">${price ? usd0(price) : "$0"}<small>/mo</small></div>
+      <div class="pr">${price ? usd0(price) : "$0"}<small>/mo</small></div>${nw}
       <div class="al">${ua(p.session_units)} u / ${p.session_hours}h &middot; ${ua(p.week_units)} u / week</div>
       ${bar}
       ${p.et10_offer ? `<div class="et10">+<b>${p.et10_offer.et10_per_month.toLocaleString("en-US")} ET10</b> every month paid by ${p.et10_offer.ends_label.replace(/, \d+$/, "")}</div>` : ""}
@@ -575,7 +599,7 @@ function drawPlans(m) {
       <details><summary>What's included &#9662;</summary><ul>${(dyn.features || []).map(f => `<li>${f}</li>`).join("")}</ul></details>
       <div class="act"><button class="dyn">${out ? "LOG IN TO SEE YOUR FORECAST" : "SWITCH TO DYNAMIC"}</button></div></div>`;
   }
-  el.innerHTML = `<div class="sechead"><div><h2>Plans</h2><p>${out ? "Paid plans add more every 5 hours and every week." : "Bars: your week so far, against each plan."}</p></div></div>
+  el.innerHTML = `<div class="sechead"><div><h2>Plans</h2><p>${out ? "Paid plans add more every 5 hours and every week." : "Bars: your week so far, against each plan."}</p></div>${!out && window.NOW && NOW.usdc_balance != null ? `<div class="bal">USDC BALANCE <b>${usd(NOW.usdc_balance)}</b></div>` : ""}</div>
     <div class="plans">${cards}</div>`;
 }
 
@@ -586,8 +610,10 @@ function drawHow() {
     "Usage is measured in units of compute: a build conversation turn adds what it cost; a filing adds a fixed weight.",
     "Paid plans can turn on extra usage to keep building past a window, paid from your own USDC up to a monthly limit you set, and get one saveable limit reset a week.",
     "Paying subscribers are served first: when NEXUS or agent-to-agent questions are waiting in a queue, Max 20x, Max 5x and Pro accounts run ahead of free accounts, in arrival order within each plan. A free question keeps its place and is never dropped for it."];
-  const ct = `<div class="ct h"><span>RUN</span><span>RUNS</span><span>MEAN</span><span>MEDIAN</span><span>P90</span></div>` +
-    CO.items.map(c => `<div class="ct"><span>${c.label}</span><span>${c.runs.toLocaleString("en-US")}</span><span>$${c.mean_usd}</span><span>$${c.p50_usd}</span><span>$${c.p90_usd}</span></div>`).join("");
+  // the table /usage/costs shows since 2026-10-22, in its columns and order, with its note and a way to the page
+  const ct = `<div class="ct h"><span>KIND OF RUN</span><span>TYPICAL (MEDIAN)</span><span>AVERAGE</span><span>HEAVY (P90)</span><span>RUNS MEASURED</span></div>` +
+    CO.items.map(c => `<div class="ct"><span>${c.label}</span><span>$${c.p50_usd}</span><span>$${c.mean_usd}</span><span>$${c.p90_usd}</span><span>${c.runs.toLocaleString("en-US")}</span></div>`).join("") +
+    `<p class="ctn">Measured ${CO.computed_at.slice(0, 10)}, in US dollars per run. A run that does more work costs more; a heavy run is one in the top tenth. <a href="/usage/costs">Open the full page &rarr;</a></p>`;
   $("how").innerHTML = (STATE === "out" ? "" : went()) +
     `<details><summary>How the windows work</summary><ul>${how.map(h => `<li>${h}</li>`).join("")}</ul></details>
     <details><summary>When a build is refused</summary><p>${P.limit_rule}</p></details>
