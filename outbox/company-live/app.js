@@ -690,7 +690,7 @@
       '<p class="pfsrc">Visitors, uses, views, likes: Cymetica (' + esc(Rd.src) + '), last ' + Rd.days + ' days, read ' + Rd.at + '. Earnings: proposed, placeholder rates.</p>');
   }
   function uvStats(s) {
-    setHTML($('uv-sum'), '<b>' + s.companies + '</b> companies · <b>' + s.free + '</b> free slots · <b class="gr">' + s.owned + '</b> yours' + (s.ads ? ' · <b class="cy">' + s.ads + '</b> products' : ''));
+    setHTML($('uv-sum'), '<b>' + s.companies + '</b> companies · <b>' + s.free + '</b> free slots · <b class="gr">' + (s.owned + s.ads) + '</b> your land' + (s.ads ? ' · <b class="cy">' + s.ads + '</b> products' : ''));
   }
   // Buy land: a mode the stage is in. On, the free slots show on the map and a click on one buys it; Esc or the button
   // again turns it off.

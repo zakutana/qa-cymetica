@@ -53,6 +53,20 @@ which helps once a message is sent. **Show the pulse where the owner looks all t
 beside it. The data is served: `GET /company/mine` has `heartbeat.last_pass_at`, `heartbeat.next_pass_at` (null while paused) and `heartbeat.pass_every_s`, and
 `run_state.turns_today` and `turns_cap`.
 
+## F. Play and pause for each department (settled)
+
+Each department row gets a small play / pause button (icon, in the department's colour, with a tooltip *Pause Development* / *Resume Development*). It stops or
+starts **that department only**: its queued tasks wait, the other departments and Command go on. The row says why it is stopped: *Paused by you* against
+*Paused: the company is paused*, so the two are not mixed (today every row reads just "Paused"). It survives a reload. Command, the Manager, has no button: it answers
+the owner. While a department is paused its `units` stop and the daily cap does not matter. Please tell us if the API cannot pause one department; then the
+button is drawn and the rest is yours.
+
+## G. The Universe's top line says what it counts (settled)
+
+The live line reads *8 companies · 34 free slots · 0 yours · 2 products* and the owner, who has one company, asked why *yours* is 0. It counts land, not companies:
+the owner's two slots now hold the two products, so no slot counts as his. **Say *your land* and count the slots the owner holds, products on them included**:
+*8 companies · 34 free slots · 2 your land · 2 products*. The word *yours* alone is not used.
+
 ## What stays as it is
 
 Everything not named above stays as rounds 1 to 3 and your builds have it.
