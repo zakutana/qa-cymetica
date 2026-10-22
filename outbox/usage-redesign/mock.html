@@ -8,8 +8,9 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Archivo+Black&family=Inter:wght@500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <style>
-/* Layout: when the next build can go and what is left, beside three tanks (session, week, extra); under them what still
-   fits, where the units went, and the plans against the account's own usage. Every figure is computed from data.js. */
+/* Layout: when the next build can go, beside three tanks (session, week, extra) filled to what is left; under them one
+   table of what each build costs, the plans against the account's own week, and everything else folded. Signed in and
+   signed out share the build. Every figure is computed from data.js. */
 :root{
   --bg:#0a0e17; --deep:#06090f; --panel:#0d1520; --line:#1e3050;
   --text:#e6edf7; --muted:#a9b8cc; --dim:#7f93ad;
@@ -85,18 +86,6 @@ h1 em{font-style:normal;color:var(--green)}
 .big small{font-size:24px;margin-left:6px}
 .when{color:var(--muted);font-size:12.5px}
 .when b{color:var(--text)}
-.tiles{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-top:18px}
-.tl{background:var(--deep);border:1px solid rgba(30,48,80,.95);border-radius:14px;padding:11px 14px 10px}
-.tl small{display:block;color:var(--dim);font-size:9.5px;font-weight:700;letter-spacing:.2em}
-.tl b{display:block;font:24px/1.15 "Archivo Black",sans-serif;margin-top:5px}
-.tl span{color:var(--dim);font-size:11px}
-.tl.g b{color:var(--green)} .tl.r b{color:var(--red)} .tl.c b{color:var(--cyan)}
-.tl.r{border-color:rgba(255,68,68,.35)}
-.why{display:flex;gap:9px;align-items:flex-start;margin-top:14px;color:var(--muted);font-size:12px}
-.why i{width:7px;height:7px;border-radius:50%;background:var(--red);box-shadow:0 0 8px var(--red);margin-top:5px;flex:none}
-.why b{color:var(--text)}
-.btns{display:grid;grid-template-columns:1.25fr 1fr;gap:10px;margin-top:16px}
-.btns .go,.btns .ghost{padding:16px;font-size:15px}
 .edit{display:none;align-items:center;gap:8px;margin-top:12px;background:var(--deep);border:1px solid rgba(0,207,255,.42);border-radius:12px;padding:8px 10px 8px 14px}
 .edit.on{display:flex}
 .edit span{color:var(--dim);font-size:11px;font-weight:700;letter-spacing:.14em}
@@ -114,41 +103,15 @@ h1 em{font-style:normal;color:var(--green)}
 .sechead{display:flex;justify-content:space-between;align-items:flex-end;gap:20px;margin:34px 0 14px}
 h2{font:28px/1.2 "Archivo Black",sans-serif}
 .sechead p{color:var(--dim);font-size:12.5px;margin-top:4px}
-.seg{display:flex;gap:4px;background:rgba(13,21,32,.8);border:1px solid rgba(30,48,80,.9);border-radius:12px;padding:4px}
-.seg button{padding:7px 15px;border-radius:9px;color:var(--dim);font-size:12.5px;font-weight:700}
-.seg button.on{color:var(--deep);background:var(--green)}
-
-.fits{display:grid;grid-template-columns:repeat(5,1fr);gap:12px}
-.ft{padding:15px 16px 14px;border-radius:16px;min-width:0;display:flex;flex-direction:column}
-.ft .h{display:flex;justify-content:space-between;align-items:flex-start;gap:8px;min-height:34px}
-.ft .h b{font:600 12px/1.35 Inter,sans-serif;color:var(--text)}
-.ft .n{font:38px/1.05 "Archivo Black",sans-serif;color:var(--green);text-shadow:0 0 24px rgba(0,255,136,.35);margin-top:10px;white-space:nowrap}
-.ft .n.dim{color:var(--dim);text-shadow:none}
-.ft .n.c{color:var(--cyan);text-shadow:0 0 24px rgba(0,207,255,.35)}
-.ft .n.r{color:var(--red);text-shadow:none;font-size:22px;line-height:1.3;margin-top:16px}
-.ft .l{color:var(--dim);font-size:10.5px}
-.ft .dots{display:flex;flex-wrap:wrap;gap:4px;margin-top:10px;min-height:10px}
-.ft .dots i{width:10px;height:10px;border-radius:3px;border:1px solid rgba(0,207,255,.55)}
-.ft .dots i.on{background:var(--green);border-color:var(--green);box-shadow:0 0 8px rgba(0,255,136,.6)}
-.ft .dots em{font-style:normal;color:var(--dim);font-size:10px;line-height:10px}
-.ft .now{margin-top:auto;padding-top:10px;font-size:11px;color:var(--muted)}
-.ft .now b{color:var(--green)}
-.ft .now b.r{color:var(--red)}
-
-.went{display:grid;grid-template-columns:1.25fr 1fr;gap:16px}
-.pane{padding:18px 22px 16px}
-.pane svg{display:block;width:100%;height:auto;margin-top:8px}
-.legend{display:grid;gap:9px;align-content:center}
-.lg{display:grid;grid-template-columns:12px 1fr auto 46px;gap:10px;align-items:center;font-size:12.5px}
-.lg i{width:12px;height:12px;border-radius:4px}
-.lg b{font-weight:600}
-.lg span{color:var(--dim);text-align:right}
-.lg em{font-style:normal;text-align:right;font:15px "Archivo Black",sans-serif}
-.donut{display:grid;grid-template-columns:200px 1fr;gap:22px;align-items:center;margin-top:8px}
-.items{margin-top:16px;overflow:hidden}
-.day{display:flex;justify-content:space-between;padding:12px 22px;color:var(--cyan);font-size:10.5px;font-weight:700;letter-spacing:.2em;border-bottom:1px solid rgba(30,48,80,.8);background:rgba(6,9,15,.5)}
+.kinds{display:grid;gap:8px;margin-bottom:14px}
+.kd{display:grid;grid-template-columns:minmax(220px,300px) 1fr 80px 46px;gap:14px;align-items:center;font-size:12.5px}
+.kd b{font:600 13px Inter,sans-serif}
+.kd span{color:var(--dim);text-align:right}
+.kd em{font-style:normal;text-align:right;font:15px "Archivo Black",sans-serif}
+.items{border-top:1px solid rgba(30,48,80,.8)}
+.day{display:flex;justify-content:space-between;padding:12px 0;color:var(--cyan);font-size:10.5px;font-weight:700;letter-spacing:.2em;border-bottom:1px solid rgba(30,48,80,.8)}
 .day span{color:var(--dim);letter-spacing:.08em}
-.it{display:grid;grid-template-columns:40px minmax(240px,1fr) 90px 110px 240px 84px;gap:14px;align-items:center;padding:11px 22px;border-bottom:1px solid rgba(30,48,80,.5)}
+.it{display:grid;grid-template-columns:40px minmax(240px,1fr) 90px 110px 240px 84px;gap:14px;align-items:center;padding:9px 0;border-bottom:1px solid rgba(30,48,80,.5)}
 .it:last-child{border-bottom:0}
 .it:hover{background:rgba(0,207,255,.03)}
 .kic{width:34px;height:34px;border-radius:10px;display:grid;place-items:center;font:800 11px Inter,sans-serif;color:var(--deep)}
@@ -162,7 +125,7 @@ h2{font:28px/1.2 "Archivo Black",sans-serif}
 .ub{height:6px;border-radius:4px;background:rgba(30,48,80,.9);overflow:hidden}
 .ub i{display:block;height:100%;background:linear-gradient(90deg,var(--cyan),var(--green));box-shadow:0 0 10px rgba(0,255,136,.5)}
 .it .u{font:15px "Archivo Black",sans-serif;text-align:right}
-.more{display:flex;justify-content:center;padding:14px;border-top:1px solid rgba(30,48,80,.8);color:var(--dim);font-size:12.5px;gap:16px;align-items:center}
+.more{display:flex;justify-content:center;padding:14px 0 16px;color:var(--dim);font-size:12.5px;gap:16px;align-items:center}
 .more button{color:var(--cyan);border:1px solid rgba(0,207,255,.45);border-radius:12px;padding:9px 18px;font-weight:700}
 
 .plans{display:grid;grid-template-columns:repeat(5,1fr);gap:12px;align-items:stretch}
@@ -203,10 +166,15 @@ h2{font:28px/1.2 "Archivo Black",sans-serif}
 .tr.h{color:var(--dim);font-size:10px;font-weight:700;letter-spacing:.18em;border-bottom:1px solid rgba(30,48,80,.8)}
 .tr b{font:600 13px Inter,sans-serif}
 .tr .u{color:var(--muted)}
+.tr .u .ms{color:var(--cyan);font-size:11.5px}
 .tr .f{font:16px "Archivo Black",sans-serif;color:var(--green)}
 .tr .f.no{font:600 11px "JetBrains Mono",monospace;color:var(--red)}
 .tr .f.ms{font:600 11px "JetBrains Mono",monospace;color:var(--cyan)}
 .tr .f small{font:500 10.5px "JetBrains Mono",monospace;color:var(--dim);margin-left:4px}
+.tr .ot{opacity:.45}
+.tr.h .me{color:var(--green)}
+.tr.h .me i{font-style:normal;margin-left:6px;font-size:9px;padding:2px 6px}
+.tr .f.me{text-shadow:0 0 16px rgba(0,255,136,.4)}
 
 .how{margin-top:34px;padding:4px 22px}
 .how details{border-bottom:1px solid rgba(30,48,80,.8)}
@@ -224,7 +192,9 @@ h2{font:28px/1.2 "Archivo Black",sans-serif}
 
 .signin{padding:26px 24px 22px;margin-top:22px}
 .signin .go{width:100%;padding:17px;font-size:17px;margin-top:18px}
-.signin .free{display:flex;gap:10px;margin-top:16px}
+.signin .free{display:flex;flex-wrap:wrap;gap:10px;margin-top:16px}
+.signin .edit{margin-top:12px}
+.signin .top{display:flex;justify-content:space-between;align-items:center;gap:12px}
 
 .ribbon{position:fixed;right:calc(16px + env(safe-area-inset-right,0px));top:calc(6px + env(safe-area-inset-top,0px));z-index:40;background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:5px 10px;font-size:11.5px;color:var(--muted);display:flex;gap:8px;align-items:center}
 .ribbon b{color:var(--cyan);letter-spacing:.12em;font-size:10.5px}
@@ -234,16 +204,15 @@ h2{font:28px/1.2 "Archivo Black",sans-serif}
 .shot .surf,.shot .halo{animation:none}
 
 @media (max-width:1100px){
-  .hero,.went{grid-template-columns:1fr}
-  .fits{grid-template-columns:repeat(2,1fr)}
+  .hero{grid-template-columns:1fr}
   .plans{grid-template-columns:repeat(2,1fr)}
+  .kd{grid-template-columns:1fr 1fr 70px 40px}
   .it{grid-template-columns:40px 1fr 84px}
   .it>.chipcell,.it time,.it .ub{display:none}
   .tr{grid-template-columns:minmax(150px,1.6fr) 70px repeat(4,1fr)}
 }
 @media (max-width:620px){
-  .fits,.plans{grid-template-columns:1fr}
-  .tiles{grid-template-columns:1fr 1fr 1fr}
+  .plans{grid-template-columns:1fr}
   .big{font-size:46px}
   h1{font-size:32px}
 }
@@ -294,7 +263,6 @@ h2{font:28px/1.2 "Archivo Black",sans-serif}
   </section>
 
   <section id="fitsec"></section>
-  <section id="wentsec"></section>
   <section id="plansec"></section>
   <section class="glass how" id="how"></section>
 </div>
@@ -305,7 +273,7 @@ h2{font:28px/1.2 "Archivo Black",sans-serif}
 const Q = new URLSearchParams(location.search);
 const SHOT = Q.has("shot");
 let STATE = Q.get("state") || "live";
-let RANGE = "week", SHOWALL = false;
+let SHOWALL = false;
 const S = window.SNAP, DAY = window.DAY, P = window.PUB, DY = window.DYN, CO = window.COSTS;
 const T0 = Date.now(), AS_OF = Date.parse(S.as_of);
 const num = v => parseFloat(v) || 0;
@@ -365,7 +333,6 @@ function fitsIn(units, cost) { return cost > 0 ? Math.floor(units / cost + 1e-9)
 const BB = P.filing_costs.find(f => f.kind === "bb_request");
 function drawLeft(m) {
   const el = $("left");
-  const offer = PLAN.et10_offer;
   if (STATE === "out") {
     const free = P.plans.find(p => p.code === "free");
     el.innerHTML = `<div class="pills"><span class="pill c"><i></i>FREE TO START</span></div>
@@ -380,39 +347,31 @@ function drawLeft(m) {
       </div>`;
     return;
   }
-  const pills = `<div class="pills"><span class="pill"><i></i>${(S.plan_name || S.plan).toUpperCase()} &middot; ${S.multiplier}&times; &middot; ${usd0(S.price_usdc)}/MO</span>` +
-    (offer ? `<span class="pill c">+${offer.et10_per_month.toLocaleString("en-US")} ET10 / MO &middot; PAY BY ${offer.ends_label.replace(/, \d+$/, "").toUpperCase()}</span>` : "") + `</div>`;
-  const xTile = !m.xOn ? `<div class="tl"><small>EXTRA</small><b style="color:var(--dim)">OFF</b><span>pay as you go</span></div>`
-    : `<div class="tl ${m.xLeft > 0 ? "g" : "r"}"><small>EXTRA LEFT</small><b>${m.xCap == null ? "&infin;" : usd(m.xLeft)}</b><span>${usd(m.xSpend)} of ${m.xCap == null ? "no limit" : usd(m.xCap)}</span></div>`;
-  const tiles = `<div class="tiles">
-      <div class="tl ${m.sLeft > 0 ? "g" : "r"}"><small>SESSION LEFT</small><b>${u2(m.sLeft)}</b><span>of ${u2(m.sCap)} u</span></div>
-      <div class="tl ${m.wLeft > 0 ? "g" : "r"}"><small>WEEK LEFT</small><b>${u2(m.wLeft)}</b><span>of ${u2(m.wCap)} u</span></div>
-      ${xTile}</div>`;
-  let head, why = "";
+  // signed in: the same panel as signed out, the Log in swapped for the one answer (when, or how much)
+  const xCapped = m.xOn && m.xCap != null && m.xSpend >= m.xCap;
+  const resets = parseInt(S.limit_resets_available, 10) || 0;
+  const nextPlan = P.plans[P.plans.findIndex(p => p.code === S.plan) + 1];
+  let head;
   if (m.blocked) {
     head = `<div class="top"><span class="cap">NEXT BUILD IN</span><span class="chip r">${m.sLeft <= 0 ? "SESSION FULL" : "WEEK FULL"}</span></div>
       <div class="big c" id="cd">${dur((m.opensAt - m.t) / 1000)}</div>
-      <div class="when">at <b>${hm(m.opensAt)}</b> &middot; ${m.sLeft <= 0 ? "a fresh 5-hour session starts with your next build" : "when your week resets"}</div>`;
+      <div class="when">at <b>${hm(m.opensAt)}</b> &middot; ${xCapped ? `extra usage is at its ${usd(m.xCap)} limit` : m.sLeft <= 0 ? "a new session starts" : "your week resets"}</div>`;
   } else {
     const n = fitsIn(m.left, num(BB.units));
     head = `<div class="top"><span class="cap">READY TO BUILD</span><span class="chip g">${m.sActive ? "SESSION ENDS " + hm(m.sEnd) : "SESSION NOT STARTED"}</span></div>
       <div class="big g">${u2(m.left)}<small>u</small></div>
       <div class="when">left now &middot; <b>${n} Build it Better request${n === 1 ? "" : "s"}</b> fit${n === 1 ? "s" : ""}</div>`;
   }
-  if (m.xOn && m.xCap != null && m.xSpend >= m.xCap)
-    why = `<div class="why"><i></i><span>Extra usage is at its monthly limit: <b>${usd(m.xSpend)} of ${usd(m.xCap)}</b>, so nothing goes past ${m.sLeft <= 0 ? "a full session" : "the session's " + u2(m.sCap) + " u"}.</span></div>`;
-  const resets = parseInt(S.limit_resets_available, 10) || 0;
-  const nextPlan = P.plans[P.plans.findIndex(p => p.code === S.plan) + 1];
-  const primary = resets > 0 ? `<button class="go">USE A LIMIT RESET</button>`
-    : m.xOn ? `<button class="go" id="raise">RAISE EXTRA LIMIT</button>` : `<button class="go">TURN ON EXTRA USAGE</button>`;
-  const secondary = nextPlan ? `<button class="ghost">${nextPlan.name.toUpperCase()} &middot; ${usd0(nextPlan.price_usdc)}/MO</button>` : `<button class="ghost">SEE PLANS</button>`;
-  el.innerHTML = `${pills}
+  const go = resets > 0 ? `<button class="go">USE A LIMIT RESET</button>`
+    : !m.xOn ? `<button class="go">TURN ON EXTRA USAGE</button>`
+    : xCapped ? `<button class="go" id="raise">RAISE EXTRA LIMIT</button>`
+    : nextPlan ? `<button class="go">UPGRADE TO ${nextPlan.name.toUpperCase()}</button>` : "";
+  el.innerHTML = `<div class="pills"><span class="pill"><i></i>${(S.plan_name || S.plan).toUpperCase()} &middot; ${usd0(S.price_usdc)}/MO</span></div>
     <h1>Your build usage.<br><em>What's left, live.</em></h1>
     <p class="sub">Every NEXUS build counts against a <b>5-hour session</b> and a <b>week</b>.</p>
-    <div class="glass ${m.blocked ? "glowc" : "glow"} card">${head}${tiles}${why}
-      <div class="btns">${primary}${secondary}</div>
+    <div class="glass ${m.blocked ? "glowc" : "glow"} signin">${head}${go}
       <div class="edit" id="edit"><span>MONTHLY LIMIT $</span><input value="${m.xCap == null ? "" : m.xCap.toFixed(2)}" inputmode="decimal"><button>SAVE</button></div>
-      <div class="fine">Limit resets <b>${resets} left</b> this week &middot; extra usage <b>${m.xOn ? "on" : "off"}</b> &middot; <button>${m.xOn ? "Turn off" : "Turn on"}</button></div>
+      <div class="free"><span class="chip m">${ua(m.sCap)} u / 5h</span><span class="chip m">${ua(m.wCap)} u / week</span><span class="chip m">${resets} LIMIT RESET${resets === 1 ? "" : "S"}</span><button class="chip c">EXTRA ${m.xOn ? "ON &middot; TURN OFF" : "OFF &middot; TURN ON"}</button></div>
     </div>`;
   const r = $("raise"); if (r) r.onclick = () => $("edit").classList.toggle("on");
 }
@@ -493,121 +452,46 @@ function drawTanks(m) {
     : "What's left in each window. A tank refills when its window resets.";
 }
 
-/* ---- what still fits ---- */
+/* ---- what each build costs: one table, signed in or out; signed in, your plan's column is lit ---- */
 const SHORT = {bb_request: "Build it Better request", bb_change: "Build it Better scope change", feature_request: "Feature request",
   startup: "Startup application", creator_artifact: "Creator page", clone_bot: "Bot clone", nexus_build_turn: "NEXUS build conversation turn",
   company_turn: "Build a Company agent turn", feature_bid: "Feature bid", startup_bid: "Startup bid"};
-function measuredAvg(kind) {
-  const xs = (S.items || []).filter(i => i.kind === kind).map(i => num(i.units));
-  return xs.length ? {avg: xs.reduce((a, b) => a + b, 0) / xs.length, n: xs.length} : null;
-}
-function dots(now, week) {
-  const N = Math.min(week, 12);
-  let s = "";
-  for (let i = 0; i < N; i++) s += `<i class="${i < now ? "on" : ""}"></i>`;
-  if (week > 12) s += `<em>+${week - 12}</em>`;
-  return `<div class="dots">${s}</div>`;
-}
 function drawFits(m) {
-  const el = $("fitsec");
-  if (STATE === "out") {
-    const plans = P.plans;
-    let rows = `<div class="tr h"><span>FILING</span><span>UNITS</span>${plans.map(p => `<span>${p.name.toUpperCase()}</span>`).join("")}</div>`;
-    for (const f of P.filing_costs) {
-      const c = num(f.units), measured = /measured/.test(f.charged || "");
-      rows += `<div class="tr"><b>${SHORT[f.kind] || f.label}</b><span class="u">${c ? c.toFixed(2) : "0"}</span>` + plans.map(p => {
-        if (!c) return `<span class="f">free</span>`;
-        if (measured) return `<span class="f ms">measured</span>`;
-        const k = fitsIn(num(p.session_units), c);
-        return k ? `<span class="f">${k}<small>a session</small></span>` : `<span class="f no">too big</span>`;
-      }).join("") + `</div>`;
-    }
-    el.innerHTML = `<div class="sechead"><div><h2>What each build costs</h2><p>How many fit in one 5-hour session on each plan.</p></div></div>
-      <div class="glass tbl">${rows}</div>`;
-    return;
+  const el = $("fitsec"), out = STATE === "out", plans = P.plans;
+  const me = p => !out && p.code === S.plan;
+  let rows = `<div class="tr h"><span>FILING</span><span>UNITS</span>${plans.map(p => `<span class="${me(p) ? "me" : out ? "" : "ot"}">${p.name.toUpperCase()}${me(p) ? ` <i class="chip s">YOURS</i>` : ""}</span>`).join("")}</div>`;
+  for (const f of P.filing_costs) {
+    const c = num(f.units), measured = /measured/.test(f.charged || "");
+    // a measured turn is charged what it ran, so its 0.05 is a reserve, not a price: show the account's own average
+    const own = (S.items || []).filter(i => i.kind === f.kind).map(i => num(i.units));
+    const unit = !measured ? (c ? c.toFixed(2) : "0")
+      : !out && own.length ? `<span class="ms">&asymp;${(own.reduce((a, b) => a + b, 0) / own.length).toFixed(2)} yours</span>` : `<span class="ms">measured</span>`;
+    rows += `<div class="tr"><b>${SHORT[f.kind] || f.label}</b><span class="u">${unit}</span>` + plans.map(p => {
+      const cls = me(p) ? " me" : out ? "" : " ot";
+      if (!c) return `<span class="f${cls}">free</span>`;
+      if (measured) return `<span class="f ms${cls}">measured</span>`;
+      const k = fitsIn(num(p.session_units), c);
+      return k ? `<span class="f${cls}">${k}<small>a session</small></span>` : `<span class="f no${cls}">too big</span>`;
+    }).join("") + `</div>`;
   }
-  const order = ["bb_request", "feature_request", "startup", "bb_change", "creator_artifact", "clone_bot", "company_turn", "nexus_build_turn"];
-  const nowUnits = m.blocked ? 0 : m.left;
-  let tiles = "";
-  for (const k of order) {
-    const f = P.filing_costs.find(x => x.kind === k); if (!f) continue;
-    const measured = /measured/.test(f.charged || "");
-    let c = num(f.units), lab = `${c.toFixed(2)} u`, approx = "";
-    if (measured) {
-      const a = measuredAvg(k);
-      if (!a) { tiles += `<div class="glass ft"><div class="h"><b>${SHORT[k]}</b><span class="chip c">MEASURED</span></div>
-        <div class="n dim">&mdash;</div><span class="l">no turns yet</span><div class="now">charged what it measured</div></div>`; continue; }
-      c = a.avg; lab = `&asymp;${c.toFixed(2)} u`; approx = "&asymp;";
-    }
-    const week = fitsIn(m.wLeft, c), nw = fitsIn(nowUnits, c);
-    const tooBig = c > m.sCap;
-    tiles += `<div class="glass ft"><div class="h"><b>${SHORT[k]}</b><span class="chip ${measured ? "c" : "m"}">${lab}</span></div>` +
-      (tooBig ? `<div class="n r">too big for a session</div><span class="l">needs a bigger plan</span>`
-        : `<div class="n ${week ? "" : "dim"}">${approx}${week}</div><span class="l">left this week${measured ? `, at your average turn` : ""}</span>${dots(nw, week)}
-           <div class="now">${nw ? `<b>${approx}${nw} now</b>` : `<b class="r">0 now</b> &middot; next at ${hm(m.opensAt)}`}</div>`) + `</div>`;
-  }
-  const bids = P.filing_costs.filter(f => !num(f.units));
-  tiles += `<div class="glass ft"><div class="h"><b>${bids.map(b => SHORT[b.kind].replace(/ bid$/, "")).join(" &amp; ")} bids</b><span class="chip g">0 u</span></div>
-    <div class="n">FREE</div><span class="l">always fit</span><div class="now"><b>any number now</b></div></div>`;
-  const da = S.deep_answers;
-  if (da) {
-    // the hour rolls over on its own; past the reading's hour, the full limit is back
-    let secs = da.resets_in_s - (m.t - AS_OF) / 1000, left = da.remaining;
-    if (secs <= 0) { left = da.hourly_limit; while (secs <= 0) secs += 3600; }
-    tiles += `<div class="glass ft"><div class="h"><b>NEXUS deep answers</b><span class="chip m">PER HOUR</span></div>
-    <div class="n c">${left}<small style="font-size:16px;color:var(--dim)"> / ${da.hourly_limit}</small></div><span class="l">left this hour</span>
-    <div class="now">resets in <b>${dur(secs)}</b></div></div>`;
-  }
-  el.innerHTML = `<div class="sechead"><div><h2>What you can still build</h2><p>Counted from what's left in your week; lit squares fit right now.</p></div></div>
-    <div class="fits">${tiles}</div>`;
+  el.innerHTML = `<div class="sechead"><div><h2>What each build costs</h2><p>How many fit in one 5-hour session on each plan.</p></div></div>
+    <div class="glass tbl">${rows}</div>`;
 }
 
-/* ---- where it went ---- */
+/* ---- where it went: folded at the bottom, signed in only ---- */
 const KCOL = {company_turn: "#00cfff", bb_request: "#00ff88", bb_change: "#3b82f6"};
 const KIC = {company_turn: "CO", bb_request: "BB", bb_change: "SC", feature_request: "FR", startup: "SU", creator_artifact: "CP", clone_bot: "BC", nexus_build_turn: "NX"};
 const DEPT = r => { const p = String(r || "").split(":"); return p.length >= 2 ? p[1].replace(/_/g, " ").replace(/^./, c => c.toUpperCase()) : ""; };
-function bars() {
-  const H = S.history || [], W = 600, Ht = 230, pad = 34, bw = 46;
-  const max = Math.max(...H.map(h => num(h.units)), 0.01);
-  const step = (W - pad * 2) / H.length;
-  let s = `<line x1="${pad - 10}" y1="${Ht - 30}" x2="${W - pad + 10}" y2="${Ht - 30}" stroke="#1e3050"/>`;
-  H.forEach((h, i) => {
-    const v = num(h.units), x = pad + i * step + (step - bw) / 2, bh = (Ht - 70) * v / max, y = Ht - 30 - bh;
-    const today = i === H.length - 1;
-    if (v > 0) s += `<rect x="${x}" y="${y}" width="${bw}" height="${bh}" rx="7" fill="${today ? "#00ff88" : "#00cfff"}" fill-opacity="${today ? .9 : .55}" ${today ? 'filter="url(#soft)"' : ""}/>`;
-    else s += `<rect x="${x}" y="${Ht - 33}" width="${bw}" height="3" rx="1.5" fill="#1e3050"/>`;
-    s += `<text x="${x + bw / 2}" y="${(v > 0 ? y : Ht - 33) - 8}" text-anchor="middle" font-family="Archivo Black,sans-serif" font-size="13" fill="${v > 0 ? "#e6edf7" : "#7f93ad"}">${v ? v.toFixed(2) : "0"}</text>`;
-    const d = new Date(h.day + "T12:00:00Z");
-    s += `<text x="${x + bw / 2}" y="${Ht - 10}" text-anchor="middle" font-family="JetBrains Mono,monospace" font-size="11" fill="${today ? "#00ff88" : "#7f93ad"}">${today ? "today" : DOW[d.getUTCDay()] + " " + d.getUTCDate()}</text>`;
-  });
-  return `<svg viewBox="0 0 ${W} ${Ht}">${s}</svg>`;
-}
-function donut(bd) {
-  const tot = bd.reduce((a, b) => a + num(b.units), 0) || 1;
-  let a0 = -Math.PI / 2, s = `<circle cx="100" cy="100" r="74" fill="none" stroke="#1e3050" stroke-width="22"/>`;
-  for (const b of bd) {
-    const f = num(b.units) / tot; if (f <= 0) continue;
-    const a1 = a0 + f * Math.PI * 2 - (f < 1 ? 0.03 : 0);
-    const large = a1 - a0 > Math.PI ? 1 : 0;
-    s += `<path d="M${100 + 74 * Math.cos(a0)} ${100 + 74 * Math.sin(a0)} A74 74 0 ${large} 1 ${100 + 74 * Math.cos(a1)} ${100 + 74 * Math.sin(a1)}" fill="none" stroke="${KCOL[b.kind] || "#7f93ad"}" stroke-width="22" stroke-linecap="butt"/>`;
-    a0 += f * Math.PI * 2;
-  }
-  s += `<text x="100" y="98" text-anchor="middle" font-family="Archivo Black,sans-serif" font-size="30" fill="#e6edf7">${tot.toFixed(2)}</text>
-    <text x="100" y="120" text-anchor="middle" font-family="JetBrains Mono,monospace" font-size="11" fill="#7f93ad">units used</text>`;
-  return `<svg viewBox="0 0 200 200" style="margin:0">${s}</svg>`;
-}
-function drawWent(m) {
-  const el = $("wentsec");
-  if (STATE === "out") { el.innerHTML = ""; return; }
-  const bd = (RANGE === "day" ? DAY.breakdown : S.breakdown).filter(b => num(b.units) > 0);
-  const legend = bd.map(b => `<div class="lg"><i style="background:${KCOL[b.kind] || "#7f93ad"}"></i><b>${b.label}</b><span>${u2(b.units)} u</span><em>${b.pct}%</em></div>`).join("");
-  const since = RANGE === "day" ? Date.parse(DAY.as_of) - 864e5 : 0;
-  const items = (S.items || []).filter(i => Date.parse(i.at) >= since);
+function went() {
+  const bd = S.breakdown.filter(b => num(b.units) > 0);
+  const tot = bd.reduce((a, b) => a + num(b.units), 0);
+  const items = S.items || [];
   const maxU = Math.max(...items.map(i => num(i.units)), 0.01);
   const shown = SHOWALL ? items : items.slice(0, 10);
-  let rows = "", lastDay = "";
+  const kinds = bd.map(b => `<div class="kd"><b>${b.label}</b><div class="ub"><i style="width:${Math.max(2, b.pct)}%;background:${KCOL[b.kind] || "#7f93ad"};box-shadow:none"></i></div><span>${u2(b.units)} u</span><em>${b.pct}%</em></div>`).join("");
   const dayTot = {};
   for (const i of items) { const d = i.at.slice(0, 10); dayTot[d] = (dayTot[d] || 0) + num(i.units); }
+  let rows = "", lastDay = "";
   for (const i of shown) {
     const d = i.at.slice(0, 10);
     if (d !== lastDay) {
@@ -626,18 +510,12 @@ function drawWent(m) {
       <b class="u">${u2(i.units)}</b></div>`;
   }
   const extraN = items.filter(i => i.overage).length;
-  el.innerHTML = `<div class="sechead"><div><h2>Where it went</h2><p>${extraN} of ${items.length} items ran on extra usage, paid from your USDC.</p></div>
-      <div class="seg"><button data-r="day" class="${RANGE === "day" ? "on" : ""}">24 hours</button><button data-r="week" class="${RANGE === "week" ? "on" : ""}">7 days</button></div></div>
-    <div class="went">
-      <div class="glass pane"><div class="cap">UNITS A DAY</div>${bars()}</div>
-      <div class="glass pane"><div class="cap">BY KIND &middot; ${RANGE === "day" ? "LAST 24 HOURS" : "LAST 7 DAYS"}</div><div class="donut">${donut(bd)}<div class="legend">${legend}</div></div></div>
-    </div>
-    <div class="glass items">${rows}${items.length > 10 ? `<div class="more"><span>Showing ${shown.length} of ${items.length}</span><button id="all">${SHOWALL ? "Show fewer" : "Show all " + items.length}</button></div>` : ""}</div>`;
-  el.querySelectorAll("[data-r]").forEach(b => b.onclick = () => { RANGE = b.dataset.r; drawWent(model()); });
-  const a = $("all"); if (a) a.onclick = () => { SHOWALL = !SHOWALL; drawWent(model()); };
+  return `<details${SHOWALL ? " open" : ""}><summary>Where it went &middot; ${u2(tot)} u in the last 7 days &middot; ${extraN} of ${items.length} on extra usage</summary>
+    <div class="kinds">${kinds}</div><div class="items">${rows}</div>
+    ${items.length > 10 ? `<div class="more"><span>Showing ${shown.length} of ${items.length}</span><button id="all">${SHOWALL ? "Show fewer" : "Show all " + items.length}</button></div>` : ""}</details>`;
 }
 
-/* ---- plans, against this account's own session and week ---- */
+/* ---- plans, against this account's own week ---- */
 function drawPlans(m) {
   const el = $("plansec"), out = STATE === "out";
   const cur = P.plans.findIndex(p => p.code === S.plan);
@@ -645,12 +523,11 @@ function drawPlans(m) {
   let cards = "";
   P.plans.forEach((p, i) => {
     const on = !out && p.code === S.plan, price = num(p.price_usdc);
-    const sPct = 100 * num(S.session.used_units) / num(p.session_units), wPct = 100 * m.wUsed / num(p.week_units);
-    const bar = (label, pct, used, cap) => `<div class="pb"><div class="t"><span>${label}</span><em class="${pct > 100 ? "r" : ""}">${u2(used)} / ${ua(cap)} u</em></div>
-      <div class="gbar"><i class="${pct > 100 ? "r" : ""}" style="width:${Math.min(100, Math.max(2, pct))}%"></i></div></div>`;
-    const bars = out
+    const wPct = 100 * m.wUsed / num(p.week_units);
+    const bar = out
       ? `<div class="pb"><div class="t"><span>WEEKLY ALLOWANCE</span><em>${ua(p.week_units)} u</em></div><div class="gbar"><i style="width:${Math.max(2, 100 * Math.sqrt(num(p.week_units) / maxWeek))}%"></i></div></div>`
-      : (m.sActive ? bar("YOUR SESSION", sPct, num(S.session.used_units), num(p.session_units)) : "") + bar("YOUR WEEK", wPct, m.wUsed, num(p.week_units));
+      : `<div class="pb"><div class="t"><span>YOUR WEEK</span><em class="${wPct > 100 ? "r" : ""}">${u2(m.wUsed)} / ${ua(p.week_units)} u</em></div>
+         <div class="gbar"><i class="${wPct > 100 ? "r" : ""}" style="width:${Math.min(100, Math.max(2, wPct))}%"></i></div></div>`;
     const feats = (p.features || []).filter(f => !/^Limited time/.test(f));
     const act = out ? (price ? `<button class="up">LOG IN TO SUBSCRIBE</button>` : `<button class="mv">START FREE</button>`)
       : on ? `<button class="cur">CURRENT PLAN</button>` : i > cur ? `<button class="up">UPGRADE &middot; ${usd0(price)}/MO</button>` : `<button class="mv">Move to ${p.name} at period end</button>`;
@@ -658,7 +535,7 @@ function drawPlans(m) {
       <div class="h"><b>${p.name}</b><span class="mx">${p.multiplier}&times;</span>${on ? `<span class="chip s">YOURS</span>` : ""}</div>
       <div class="pr">${price ? usd0(price) : "$0"}<small>/mo</small></div>
       <div class="al">${ua(p.session_units)} u / ${p.session_hours}h &middot; ${ua(p.week_units)} u / week</div>
-      ${bars}
+      ${bar}
       ${p.et10_offer ? `<div class="et10">+<b>${p.et10_offer.et10_per_month.toLocaleString("en-US")} ET10</b> every month paid by ${p.et10_offer.ends_label.replace(/, \d+$/, "")}</div>` : ""}
       <details><summary>What's included &#9662;</summary><ul>${feats.map(f => `<li>${f}</li>`).join("")}</ul></details>
       <div class="act">${act}</div></div>`;
@@ -675,11 +552,11 @@ function drawPlans(m) {
       <details><summary>What's included &#9662;</summary><ul>${(dyn.features || []).map(f => `<li>${f}</li>`).join("")}</ul></details>
       <div class="act"><button class="dyn">${out ? "LOG IN TO SEE YOUR FORECAST" : "SWITCH TO DYNAMIC"}</button></div></div>`;
   }
-  el.innerHTML = `<div class="sechead"><div><h2>Plans</h2><p>${out ? "Paid plans add more every 5 hours and every week." : "Bars: your session and your week so far, against each plan."}</p></div></div>
+  el.innerHTML = `<div class="sechead"><div><h2>Plans</h2><p>${out ? "Paid plans add more every 5 hours and every week." : "Bars: your week so far, against each plan."}</p></div></div>
     <div class="plans">${cards}</div>`;
 }
 
-/* ---- the explanations, folded ---- */
+/* ---- folded at the bottom: where it went (signed in), then the explanations ---- */
 function drawHow() {
   const how = ["A session starts with your first build request and lasts 5 hours. When it ends, the next request starts a fresh one.",
     "The weekly window resets at a fixed time each week, assigned to your account when you subscribed.",
@@ -688,14 +565,16 @@ function drawHow() {
     "Paying subscribers are served first: when NEXUS or agent-to-agent questions are waiting in a queue, Max 20x, Max 5x and Pro accounts run ahead of free accounts, in arrival order within each plan. A free question keeps its place and is never dropped for it."];
   const ct = `<div class="ct h"><span>RUN</span><span>RUNS</span><span>MEAN</span><span>MEDIAN</span><span>P90</span></div>` +
     CO.items.map(c => `<div class="ct"><span>${c.label}</span><span>${c.runs.toLocaleString("en-US")}</span><span>$${c.mean_usd}</span><span>$${c.p50_usd}</span><span>$${c.p90_usd}</span></div>`).join("");
-  $("how").innerHTML = `<details><summary>How the windows work</summary><ul>${how.map(h => `<li>${h}</li>`).join("")}</ul></details>
+  $("how").innerHTML = (STATE === "out" ? "" : went()) +
+    `<details><summary>How the windows work</summary><ul>${how.map(h => `<li>${h}</li>`).join("")}</ul></details>
     <details><summary>When a build is refused</summary><p>${P.limit_rule}</p></details>
     <details><summary>What each app and feature costs to run &middot; last ${CO.window_days} days</summary><div class="ctw">${ct}</div></details>`;
+  const a = $("all"); if (a) a.onclick = () => { SHOWALL = !SHOWALL; drawHow(); };
 }
 
 function draw() {
   const m = model();
-  drawStatus(m); drawLeft(m); drawTanks(m); drawFits(m); drawWent(m); drawPlans(m); drawHow();
+  drawStatus(m); drawLeft(m); drawTanks(m); drawFits(m); drawPlans(m); drawHow();
   document.querySelectorAll("#ribbon [data-st]").forEach(b => b.classList.toggle("on", b.dataset.st === STATE));
 }
 document.querySelectorAll("#ribbon [data-st]").forEach(b => b.onclick = () => { STATE = b.dataset.st; draw(); });
