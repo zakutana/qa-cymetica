@@ -1122,14 +1122,14 @@ function chipFaceTex(q) {
   for (let i = 0; i < 12; i++) { g.fillStyle = i % 2 ? CASINO.ice : CASINO.white; g.save(); g.translate(m, m); g.rotate((i + 0.5) / 12 * Math.PI * 2); g.fillRect(-W * 0.022, at(0.08), W * 0.044, at(0.92) - at(0.08)); g.restore(); }
   const t = new THREE.CanvasTexture(c); t.colorSpace = THREE.SRGBColorSpace; t.anisotropy = 8; TX[key] = t; return t;
 }
-// the revenue share's pulse carries a dollar sign: in the board's magenta (the casino's neon), glowing, drawn once
+// the revenue share's pulse carries a dollar sign: in the board's cyan (Cymetica's own), glowing, drawn once
 function dollarTex() {
   if (TX.dollar) return TX.dollar;
   const c = document.createElement('canvas'); c.width = c.height = 128; const g = c.getContext('2d');
-  const r = g.createRadialGradient(64, 64, 4, 64, 64, 62); r.addColorStop(0, 'rgba(255,110,225,.55)'); r.addColorStop(1, 'rgba(255,79,216,0)');
+  const r = g.createRadialGradient(64, 64, 4, 64, 64, 62); r.addColorStop(0, 'rgba(90,225,255,.55)'); r.addColorStop(1, 'rgba(0,207,255,0)');
   g.fillStyle = r; g.fillRect(0, 0, 128, 128);
   g.font = '900 84px Arial, sans-serif'; g.textAlign = 'center'; g.textBaseline = 'middle';
-  g.shadowColor = '#ff4fd8'; g.shadowBlur = 18; g.fillStyle = '#ffe3f8'; g.fillText('$', 64, 68);
+  g.shadowColor = '#00cfff'; g.shadowBlur = 18; g.fillStyle = '#e8fbff'; g.fillText('$', 64, 68);
   const t = new THREE.CanvasTexture(c); t.colorSpace = THREE.SRGBColorSpace; TX.dollar = t; return t;
 }
 // the spine's ribbed sections, in the station's dark violet steel
@@ -1995,7 +1995,7 @@ class Universe3D {
     CO.uvBoard(mine).top.forEach((r, i) => {
       const it = this.items.find((x) => (r.mine ? x.mine : !x.kind && !x.mine && String(x.c.id) === String(r.c.id)));
       if (!it) return;
-      setTimeout(() => { this.arc(it, true, '#ff4fd8'); setTimeout(() => this.pop(it, '+' + r.share + '% of fees', 'share'), 1500); }, i * 450);
+      setTimeout(() => { this.arc(it, true, '#00cfff'); setTimeout(() => this.pop(it, '+' + r.share + '% of fees', 'share'), 1500); }, i * 450);
     });
   }
   // work goes in to Cymetica in the company's colour; ET10 comes back out in green (or in the colour given: gold for the share)
@@ -2034,10 +2034,20 @@ class Universe3D {
   /* ---------------- camera ---------------- */
   // His camera (UVCAM): the same place at every stage size, aimed where his is; the lens (resize) widens only on a
   // stage narrower than his picture, so his whole frame stays in view
+  // The first look stands a little farther back and shows the galaxy right of the middle (the operator, 2026-10-22: "at je
+  // vesmir trochu oddalenejsi a vic vpravo"), so the revenue-share board over the left (uvboard.js) covers open space, not
+  // the orbits: 12% farther, the aim moved left by 15% of the frame's width. A stage too narrow for the board (it folds
+  // into a pill under 760 px) keeps his frame as it was.
   home() {
     const Gx = CO.uvGalaxy, [ox, oz] = rotXZ(UVCAM.off[0], UVCAM.off[1], Gx.AZ);
     const tgt = new THREE.Vector3(ox, 0, oz), dir = new THREE.Vector3().setFromSpherical(new THREE.Spherical(1, UVCAM.polar, Gx.AZ));
-    return { pos: tgt.clone().addScaledVector(dir, UVCAM.dist), tgt };
+    const wide = (this.el && this.el.clientWidth || 0) >= 760, dist = UVCAM.dist * (wide ? 1.12 : 1);
+    if (wide) {
+      const right = new THREE.Vector3(0, 1, 0).cross(dir).normalize(), aspect = this.camera ? this.camera.aspect : UVCAM.aspect;
+      const frameW = 2 * dist * Math.tan(THREE.MathUtils.degToRad(this.camera ? this.camera.fov : UVCAM.fov) / 2) * aspect;
+      tgt.addScaledVector(right, -0.15 * frameW);
+    }
+    return { pos: tgt.clone().addScaledVector(dir, dist), tgt };
   }
   lens(aspect) { return aspect >= UVCAM.aspect ? UVCAM.fov : 2 * THREE.MathUtils.radToDeg(Math.atan(Math.tan(THREE.MathUtils.degToRad(UVCAM.fov) / 2) * UVCAM.aspect / aspect)); }
   fit(anim) {
