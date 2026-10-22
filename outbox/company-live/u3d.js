@@ -1405,10 +1405,12 @@ function adPromo(body, b) {
 // metal, the logo's dotted ring is the edge of a dark glass visor, the eyes are yellow LEDs behind it, the rim is gold
 // into lime (the logo's gradient stroke), the hat is straw with a brown band, and the sprout is green. Its face turns to
 // the first look's camera, swaying a little, and blinks. The green shell was thrown out too ("nahovno ta zelena ...
-// udelej ty barvy podle sebe"), so the colours are ours: a helmet of polished gold (harvest, and the one metal a robot
-// can wear without reading as skin), a seam of dark bronze round it, a visor of smoked glass with amber lights, eyes of
-// warm white, the straw hat with a dark-brown band, the sprout lime and gold.
-const FARM = { shell: 0xe0a92e, visor: 0x140d06, band: 0x4a2c12, rim: ['#8a5a1c', '#4a2c12'], dots: '#ffb347', eye: '#fff1b0', leaf: ['#c8d64a', '#f0c43c'] };
+// udelej ty barvy podle sebe"), so the colours are ours: a head of polished gold (harvest, and a metal: a robot's, not
+// skin), a seam of dark bronze round it, the straw hat with a dark-brown band, the sprout lime and gold. And the visor
+// went: dark glass over the face read as a balaclava ("proc ma takovou debilni kuklu"). So the robot is told by its
+// parts instead: eyes of warm white light set in dark bronze bezels, the logo's dotted ring as amber lights in the
+// gold, and a bolt of bronze on either side where ears would be.
+const FARM = { shell: 0xe0a92e, bezel: 0x2a1a08, bolt: 0x7a4a14, band: 0x4a2c12, rim: ['#8a5a1c', '#4a2c12'], dots: '#ffb347', eye: '#fff1b0', leaf: ['#c8d64a', '#f0c43c'] };
 function strawTex() {
   if (TX.straw) return TX.straw;
   const W = 256, c = document.createElement('canvas'); c.width = c.height = W; const g = c.getContext('2d');
@@ -1427,13 +1429,13 @@ function adFarmer(body, b) {
   const head = new THREE.Group(); head.position.y = Y; head.rotation.order = 'YXZ'; head.rotation.x = -0.4; body.add(head);
   part(new THREE.SphereGeometry(R, 48, 32), new THREE.MeshStandardMaterial({ color: FARM.shell, emissive: 0x5a3a06, emissiveIntensity: 0.5, roughness: 0.28, metalness: 0.5 }), 0, 0, 0, head);
   const face = new THREE.Group(); head.add(face);
-  // the visor: a cap of dark glass over the face, standing a little proud, a shade narrower than the logo's dotted ring
-  // (11 of 17, not 12) so the green shell shows round it, and a streak of glare across its top left
-  const th = Math.asin(11 / 17), RV = R * 1.015, visor = new THREE.SphereGeometry(RV, 48, 16, 0, Math.PI * 2, 0, th); visor.rotateX(Math.PI / 2);
-  part(visor, new THREE.MeshStandardMaterial({ color: FARM.visor, emissive: 0x0a0602, roughness: 0.12, metalness: 0.6 }), 0, 0, 0, face);
-  const GR = 0.78;
-  part(new THREE.TorusGeometry(GR, 0.04, 6, 32, 1.0), new THREE.MeshBasicMaterial({ color: 0xffffff, transparent: true, opacity: 0.32, blending: THREE.AdditiveBlending, depthWrite: false }),
-    0, 0, Math.sqrt(RV * RV - GR * GR) + 0.05, face).rotation.z = Math.PI * 0.55;
+  // the bolts: a bronze disc on either side, an amber light in each
+  const bronze = new THREE.MeshStandardMaterial({ color: FARM.bolt, emissive: 0x2a1604, roughness: 0.35, metalness: 0.6 });
+  const boltGeo = new THREE.CylinderGeometry(0.42, 0.46, 0.34, 28), boltLamp = new THREE.CylinderGeometry(0.2, 0.2, 0.4, 20), lampMat = basic(FARM.dots, 1.1);
+  [-1, 1].forEach((s, i) => {
+    const own = i ? (m) => m : ownGeo, bolt = own(new THREE.Mesh(boltGeo, bronze)), lamp = own(new THREE.Mesh(boltLamp, lampMat));
+    bolt.position.set(s * (R - 0.02), -0.1, 0); bolt.rotation.z = Math.PI / 2; lamp.position.copy(bolt.position); lamp.rotation.z = Math.PI / 2; face.add(bolt, lamp);
+  });
   // the rim: the logo's stroke round the head, a seam of bronze into dark bronze, standing as the head's outline seen
   // from the first look (33.5 degrees above it); its top, under the hat, left out
   const rimGeo = new THREE.TorusGeometry(R + 0.06, 0.1, 10, 120, Math.PI * 2 - 1.34), rp = rimGeo.attributes.position, rc = new Float32Array(rp.count * 3);
@@ -1441,18 +1443,21 @@ function adFarmer(body, b) {
   for (let i = 0; i < rp.count; i++) { const a = Math.atan2(rp.getY(i), rp.getX(i)) + 2.24; cc.copy(g0).lerp(g1, 0.5 - 0.5 * Math.cos(a - 3 * Math.PI / 4)); rc.set([cc.r, cc.g, cc.b], i * 3); }
   rimGeo.setAttribute('color', new THREE.BufferAttribute(rc, 3));
   part(rimGeo, new THREE.MeshBasicMaterial({ vertexColors: true }), 0, 0, 0, face).rotation.set(-0.185, 0, 2.24);
-  // the dotted ring: 18 amber lights round the visor's edge
-  const dotGeo = new THREE.SphereGeometry(0.08, 8, 6), dotMat = basic(FARM.dots, 1.1);
+  // the dotted ring: 18 amber lights set in the gold round the face, the logo's r 12 of 17
+  const th = Math.asin(12 / 17), dotGeo = new THREE.SphereGeometry(0.075, 8, 6), dotMat = basic(FARM.dots, 1.1);
   for (let i = 0; i < 18; i++) {
     const a = i / 18 * Math.PI * 2, d = (i ? (m) => m : ownGeo)(new THREE.Mesh(dotGeo, dotMat));
-    d.position.set(Math.sin(th) * Math.cos(a), Math.sin(th) * Math.sin(a), Math.cos(th)).multiplyScalar(RV * 1.008); face.add(d);
+    d.position.set(Math.sin(th) * Math.cos(a), Math.sin(th) * Math.sin(a), Math.cos(th)).multiplyScalar(R * 1.005); face.add(d);
   }
-  // the eyes: two pills of light, 5 by 9 of the logo, 5 either side of the middle, standing out of the visor's glass
-  const eyeGeo = new THREE.CapsuleGeometry(2.5 * u, 4 * u, 8, 16), eyeMat = basic(FARM.eye, 1.2), eyes = [];
+  // the eyes: two pills of light, 5 by 9 of the logo, 5 either side of the middle, each in a dark bronze bezel a size
+  // larger, both sunk into the gold so they bulge
+  const eyeGeo = new THREE.CapsuleGeometry(2.5 * u, 4 * u, 8, 16), eyeMat = basic(FARM.eye, 1.2), bezelGeo = new THREE.CapsuleGeometry(3.3 * u, 4 * u, 8, 16);
+  const bezelMat = new THREE.MeshStandardMaterial({ color: FARM.bezel, roughness: 0.3, metalness: 0.6 }), eyes = [];
   [-1, 1].forEach((s, i) => {
-    const x = s * 5 * u, y = -0.5 * u, z = Math.sqrt(RV * RV - x * x - y * y) - 0.06;
-    const e = (i ? (m) => m : ownGeo)(new THREE.Mesh(eyeGeo, eyeMat)); e.position.set(x, y, z); e.rotation.y = Math.atan2(x, z); e.scale.z = 0.55; face.add(e); eyes.push(e);
-    const gl = glowSprite(new THREE.Color(FARM.eye), 0.4, 1.3); gl.position.set(x, y, z + 0.25); face.add(gl); eyes.push(gl);
+    const x = s * 5 * u, y = -0.5 * u, z = Math.sqrt(R * R - x * x - y * y), own = i ? (m) => m : ownGeo;
+    const bz = own(new THREE.Mesh(bezelGeo, bezelMat)); bz.position.set(x, y, z - 0.14); bz.rotation.y = Math.atan2(x, z); bz.scale.z = 0.5; face.add(bz);
+    const e = own(new THREE.Mesh(eyeGeo, eyeMat)); e.position.set(x, y, z - 0.08); e.rotation.y = Math.atan2(x, z); e.scale.z = 0.55; face.add(e); eyes.push(e);
+    const gl = glowSprite(new THREE.Color(FARM.eye), 0.4, 1.3); gl.position.set(x, y, z + 0.2); face.add(gl); eyes.push(gl);
   });
   // the hat: the brim (59 of the logo across, its edge turned up a little), the crown (23 wide at the brim, 19.6 at the
   // top, 13.5 high, its top dented 2.2), sitting low on the head as the logo's covers its top; the band round the crown

@@ -1137,12 +1137,14 @@
       top = cy0 - s * 0.7;
     } else if (it.ad.key === 'farmer') {
       // Airdrop Farmer: its logo itself (airdrop-farms mock.html, #logo, viewBox 64) in the 3D head's colours: a gold
-      // helmet with a bronze seam, a smoked visor edged in amber dots, warm white eyes, a straw hat with a brown band, a
-      // lime-and-gold sprout; the head's bottom a little over its shadow
+      // head with a bronze seam, amber dots in it, warm white eyes in dark bezels, a bronze bolt either side, a straw hat
+      // with a brown band, a lime-and-gold sprout; the head's bottom a little over its shadow
       var k = s * 1.15 / 64, by = y - s * 0.15 - (58 - 0) * k;
       out = shadow + '<g transform="translate(' + f1(x - 32 * k) + ' ' + f1(by) + ') scale(' + k.toFixed(4) + ')">' +
+        '<rect x="12" y="37" width="5" height="8" rx="1.6" fill="#7a4a14"/><rect x="47" y="37" width="5" height="8" rx="1.6" fill="#7a4a14"/>' +
         '<circle cx="32" cy="41" r="17" fill="#e0a92e" stroke="#7a4a14" stroke-width="3"/>' +
-        '<circle cx="32" cy="41" r="11" fill="#140d06" stroke="#ffb347" stroke-width="1.2" stroke-dasharray="1.6 2.6"/>' +
+        '<circle cx="32" cy="41" r="12" fill="none" stroke="#ffb347" stroke-width="1.2" stroke-dasharray="1.6 2.6"/>' +
+        '<rect x="23.2" y="35.7" width="7.6" height="11.6" rx="3.8" fill="#2a1a08"/><rect x="33.2" y="35.7" width="7.6" height="11.6" rx="3.8" fill="#2a1a08"/>' +
         '<rect x="24.5" y="37" width="5" height="9" rx="2.5" fill="#fff1b0"/><rect x="34.5" y="37" width="5" height="9" rx="2.5" fill="#fff1b0"/>' +
         '<path d="M20.5 25.5 L22.6 14.6 Q23.2 12 26 12 Q32 14.2 38 12 Q40.8 12 41.4 14.6 L43.5 25.5 Z" fill="#e9b84a"/>' +
         '<path d="M21.2 21.6 Q32 19.6 42.8 21.6" stroke="#4a2c12" stroke-width="2.6" fill="none"/>' +
