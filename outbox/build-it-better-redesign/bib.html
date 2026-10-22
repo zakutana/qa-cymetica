@@ -1,0 +1,305 @@
+<div class="bb-page">
+    <!-- The first screen: the line, then the comparison. New copy carries no data-i18n: keys come from Cymetica. -->
+    <section class="bb-top">
+        <div class="bb-hero">
+            <div class="bb-eyebrow-row">
+                <span class="bb-eyebrow" data-i18n="build_it_better.title">Build it Better</span>
+                <p class="bb-kicker">AI is a tool. Like a brain surgeon's kit.</p>
+            </div>
+            <h1>Owning the kit doesn't make you a <em>brain surgeon</em>.</h1>
+            <div class="bb-sub-row">
+                <p class="bb-sub"><b>Cymetica is the surgeon</b> for building apps.</p>
+                <div class="bb-ctas">
+                    <a class="bb-cta" href="#bb-request">Name an app →</a>
+                    <div class="proof"><a href="/tools"><span data-i18n="build_it_better.proof_a">See the</span> <b>122</b> <span data-i18n="build_it_better.proof_b2">apps already rebuilt</span> →</a></div>
+                </div>
+            </div>
+        </div>
+
+        <div class="bb-vs-wrap">
+        <!-- the panel's top edge is a heart monitor: erratic red over vibe coding, a steady green beat over Build it Better -->
+        <svg class="bb-ecg" viewBox="0 0 1200 160" preserveAspectRatio="none" aria-hidden="true">
+            <defs>
+                <linearGradient id="bbEcgGrad" gradientUnits="userSpaceOnUse" x1="0" y1="0" x2="1200" y2="0">
+                    <stop offset="0" stop-color="#ff4444"/><stop offset=".44" stop-color="#ff4444"/>
+                    <stop offset=".54" stop-color="#00ff88"/><stop offset="1" stop-color="#00ff88"/>
+                </linearGradient>
+            </defs>
+            <polyline class="base" points="0,80 30,80 38,62 46,104 54,80 90,80 96,40 104,120 112,70 120,86 160,80 190,80 196,96 204,30 212,128 220,80 300,80 306,66 312,96 318,80 360,80 366,20 374,140 382,80 470,80 476,72 482,90 488,80 600,80 620,80 626,74 632,80 644,80 648,88 654,28 660,104 666,80 680,80 690,70 700,80 732,80 738,74 744,80 756,80 760,88 766,28 772,104 778,80 792,80 802,70 812,80 844,80 850,74 856,80 868,80 872,88 878,28 884,104 890,80 904,80 914,70 924,80 956,80 962,74 968,80 980,80 984,88 990,28 996,104 1002,80 1016,80 1026,70 1036,80 1068,80 1074,74 1080,80 1092,80 1096,88 1102,28 1108,104 1114,80 1128,80 1138,70 1148,80 1200,80"/>
+            <polyline class="sweep" points="0,80 30,80 38,62 46,104 54,80 90,80 96,40 104,120 112,70 120,86 160,80 190,80 196,96 204,30 212,128 220,80 300,80 306,66 312,96 318,80 360,80 366,20 374,140 382,80 470,80 476,72 482,90 488,80 600,80 620,80 626,74 632,80 644,80 648,88 654,28 660,104 666,80 680,80 690,70 700,80 732,80 738,74 744,80 756,80 760,88 766,28 772,104 778,80 792,80 802,70 812,80 844,80 850,74 856,80 868,80 872,88 878,28 884,104 890,80 904,80 914,70 924,80 956,80 962,74 968,80 980,80 984,88 990,28 996,104 1002,80 1016,80 1026,70 1036,80 1068,80 1074,74 1080,80 1092,80 1096,88 1102,28 1108,104 1114,80 1128,80 1138,70 1148,80 1200,80"/>
+        </svg>
+
+        <div class="bb-vs" aria-label="Vibe coding compared with Build it Better">
+            <div class="vs-col vibe">
+                <div class="vs-head">
+                    <span class="vs-ico" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 21l7-7"/><path d="M10 14L19 5c1.6 1.6 1.6 3.4.3 4.8L12 16z"/></svg></span>
+                    <div><div class="vs-name">Vibe coding</div><div class="vs-tag">You + a chatbot + hope</div></div>
+                </div>
+                <div class="vs-visual">
+                    <div class="vs-code" aria-label="Typical vibe-coded app, four holes marked">
+                        <div class="bar"><i></i><i></i><i></i><span>app.js · vibe-coded · shipped</span></div>
+                        <div class="ln"><b>1</b><span class="src">const KEY = <u>"sk-live-••••"</u>;</span><s>secret sent to every visitor</s></div>
+                        <div class="ln"><b>2</b><span class="src"><u>app.post("/withdraw", pay)</u>;</span><s>no login check</s></div>
+                        <div class="ln"><b>3</b><span class="src">db.query(<u>"…" + req.query.q</u>);</span><s>SQL injection</s></div>
+                        <div class="ln"><b>4</b><span class="src cm">// tests: none</span><s>nobody looked</s></div>
+                    </div>
+                </div>
+                <div class="vs-row" data-k="Who builds"><span class="no" aria-label="Vibe coding"></span>One chatbot, and you</div>
+                <div class="vs-row" data-k="Security"><span class="no" aria-label="Vibe coding"></span>Keys in the code, open endpoints. Nobody checked.</div>
+                <div class="vs-row" data-k="Scope"><span class="no" aria-label="Vibe coding"></span>Whatever the prompt guessed</div>
+                <div class="vs-row" data-k="Clock"><span class="no" aria-label="Vibe coding"></span>Weekends, then debugging</div>
+                <div class="vs-row" data-k="Done when"><span class="no" aria-label="Vibe coding"></span>It ran once</div>
+                <div class="vs-row" data-k="Runs on"><span class="no" aria-label="Vibe coding"></span>Your server, your bills, your outages</div>
+            </div>
+
+            <div class="vs-mid" aria-hidden="true">
+                <div class="vs-badge">VS</div>
+                <div class="vs-gap"></div>
+                <div class="vs-k">Who builds</div>
+                <div class="vs-k">Security</div>
+                <div class="vs-k">Scope</div>
+                <div class="vs-k">Clock</div>
+                <div class="vs-k">Done when</div>
+                <div class="vs-k">Runs on</div>
+            </div>
+
+            <div class="vs-col bib">
+                <div class="vs-head">
+                    <span class="vs-ico" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="5 12 8.5 12 10.5 7 13.5 17 15.5 12 19 12"/></svg></span>
+                    <div><div class="vs-name">Build it Better</div><div class="vs-tag">Cymetica's AI system: thousands of agents</div></div>
+                </div>
+                <div class="vs-visual">
+                    <div class="vs-monitor">
+                        <div class="bar"><i></i><span>Build monitor</span><em>from the live board</em></div>
+                        <svg class="vs-pulse" viewBox="0 0 500 70" preserveAspectRatio="none" aria-hidden="true">
+                            <polyline class="base" points="0,48 20,48 36,48 40,42 44,48 46,48 49,54 52,6 56,60 59,48 70,48 76,40 82,48 136,48 140,42 144,48 146,48 149,54 152,6 156,60 159,48 170,48 176,40 182,48 236,48 240,42 244,48 246,48 249,54 252,6 256,60 259,48 270,48 276,40 282,48 336,48 340,42 344,48 346,48 349,54 352,6 356,60 359,48 370,48 376,40 382,48 436,48 440,42 444,48 446,48 449,54 452,6 456,60 459,48 470,48 476,40 482,48 500,48"/>
+                            <polyline class="sweep" points="0,48 20,48 36,48 40,42 44,48 46,48 49,54 52,6 56,60 59,48 70,48 76,40 82,48 136,48 140,42 144,48 146,48 149,54 152,6 156,60 159,48 170,48 176,40 182,48 236,48 240,42 244,48 246,48 249,54 252,6 256,60 259,48 270,48 276,40 282,48 336,48 340,42 344,48 346,48 349,54 352,6 356,60 359,48 370,48 376,40 382,48 436,48 440,42 444,48 446,48 449,54 452,6 456,60 459,48 470,48 476,40 482,48 500,48"/>
+                        </svg>
+                        <div class="vs-stages"><span>Scope</span><span>Lock</span><span>Build</span><span>Live</span><span>Verdict</span></div>
+                        <div class="vs-stats">
+                            <div class="bb-stat"><div class="v" id="bs-shipped">–</div><div class="k" data-i18n="build_it_better.s_shipped">Shipped</div></div>
+                            <div class="bb-stat"><div class="v" id="bs-ontime">–</div><div class="k" data-i18n="build_it_better.s_ontime">Shipped inside 24 h</div></div>
+                            <div class="bb-stat"><div class="v" id="bs-median">–</div><div class="k" data-i18n="build_it_better.s_median">Median build time</div></div>
+                        </div>
+                    </div>
+                </div>
+                <div class="vs-row" data-k="Who builds"><span class="yes" aria-label="Build it Better"></span>An AI system of thousands of agents</div>
+                <div class="vs-row" data-k="Security"><span class="yes" aria-label="Build it Better"></span>Read-only by default. Money needs human review.</div>
+                <div class="vs-row" data-k="Scope"><span class="yes" aria-label="Build it Better"></span>Written scope first, including what it won't do</div>
+                <div class="vs-row" data-k="Clock"><span class="yes" aria-label="Build it Better"></span>Public 24 h clock from the moment you accept</div>
+                <div class="vs-row" data-k="Done when"><span class="yes" aria-label="Build it Better"></span>You say pass. A fail goes back to the queue.</div>
+                <div class="vs-row" data-k="Runs on"><span class="yes" aria-label="Build it Better"></span>Live on EventTrader, free to use</div>
+            </div>
+        </div>
+        </div>
+    </section>
+
+    <!-- New: the apps already built, ranked by their public traffic (GET /api/v1/build-it-better/apps/leaderboard). -->
+    <section class="bb-band bb-cat" aria-label="Apps already built">
+        <div class="bb-cat-head">
+            <div>
+                <h2 class="bb-h2">Already built</h2>
+                <div class="bb-cat-sub" id="bb-cat-sub">Ranked by views · last 30 days</div>
+            </div>
+            <div class="bb-cat-ctl">
+                <div class="bb-cat-sort" id="bb-cat-sort" role="group" aria-label="Sort the catalog">
+                    <button type="button" data-sort="views" aria-pressed="true">Most viewed</button>
+                    <button type="button" data-sort="visitors" aria-pressed="false">Most visitors</button>
+                </div>
+                <button type="button" class="bb-cat-arrow" id="bb-cat-prev" aria-label="Previous apps" disabled><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 18l-6-6 6-6"/></svg></button>
+                <button type="button" class="bb-cat-arrow" id="bb-cat-next" aria-label="Next apps"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 18l6-6-6-6"/></svg></button>
+            </div>
+        </div>
+        <div class="bb-cat-track loading" id="bb-cat-track" role="list"></div>
+    </section>
+
+    <section class="bb-band">
+        <h2 class="bb-h2" data-i18n="build_it_better.how_title">How it works</h2>
+        <ol class="bb-how">
+            <li data-i18n="build_it_better.step1">You name the app and what is wrong with it.</li>
+            <li data-i18n="build_it_better.step2">We answer with the scope, including what we will not build.</li>
+            <li data-i18n="build_it_better.step3">You lock the scope, or ask for a change.</li>
+            <li data-i18n="build_it_better.step4">It goes live on EventTrader. The clock shows how long it really took.</li>
+            <li data-i18n="build_it_better.step5">You test it and say pass or fail. A fail goes back to the queue.</li>
+            <li><span data-i18n="build_it_better.step6">Prove it: run your original bot against the rebuild head-to-head in paper, same market and window, and share the card.</span> <a href="/h2h">cymetica.com/h2h</a></li>
+        </ol>
+    </section>
+
+    <section class="bb-band bb-request" id="bb-request">
+        <div class="bb-req-main">
+            <h2 class="bb-h2 big" data-i18n="build_it_better.h1">Name an app. We rebuild it better.</h2>
+            <p class="bb-lede" data-i18n="build_it_better.lede">Tell us which financial app you use and what it should do better; our AI pipeline rebuilds it on EventTrader and you judge the result.</p>
+
+            <form class="bb-panel raise" id="bb-form" novalidate>
+                <div class="bb-modes" role="tablist" aria-label="What are you asking for?">
+                    <button type="button" class="bb-mode on" id="bb-mode-link" role="tab" aria-selected="true" data-i18n="build_it_better.mode_link">I have a link</button>
+                    <button type="button" class="bb-mode" id="bb-mode-idea" role="tab" aria-selected="false" data-i18n="build_it_better.mode_idea">It does not exist yet</button>
+                </div>
+
+                <div id="bb-link-fields">
+                    <label for="bb-url" data-i18n="build_it_better.url_only_label">Paste a link to the financial app you want built better</label>
+                    <input type="url" id="bb-url" maxlength="2000" autocomplete="off" inputmode="url" placeholder="https://…">
+                    <div class="bb-hint" data-i18n="build_it_better.url_only_hint">That is all we need. Everything below is optional.</div>
+                    <label for="bb-better" data-i18n="build_it_better.better_label">What should it do better?</label>
+                    <textarea id="bb-better" maxlength="8000" placeholder="One line per change. What is slow, missing, paywalled or wrong, and what you would do with it if it worked."></textarea>
+                </div>
+
+                <div id="bb-idea-fields" style="display:none">
+                    <label for="bb-idea-name" data-i18n="build_it_better.idea_name_label">What should we call your app?</label>
+                    <input type="text" id="bb-idea-name" maxlength="120" autocomplete="off" placeholder="A short name">
+                    <label for="bb-idea-what" data-i18n="build_it_better.idea_what_label">What should it do?</label>
+                    <textarea id="bb-idea-what" maxlength="8000" placeholder="One line per thing it must do. Who it is for, what they see, and what they can do with it."></textarea>
+                </div>
+
+                <div class="bb-hint bb-file"><label for="bb-text-file" class="bb-btn small ghost" data-i18n="build_it_better.text_file">Load the list from a .md or .txt file</label>
+                    <input type="file" id="bb-text-file" accept=".md,.markdown,.txt,text/markdown,text/plain" hidden>
+                    <span data-i18n="build_it_better.text_limit">Up to 8,000 characters, one line per change.</span></div>
+
+                <label for="bb-design-input" data-i18n="build_it_better.design_label">Show us the design you want (optional)</label>
+                <div class="bb-drop" id="bb-drop" tabindex="0" role="button" aria-label="Drop design pictures or click to choose">
+                    <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="3" width="18" height="18" rx="3"/><circle cx="9" cy="9" r="2"/><path d="M21 15l-5-5L5 21"/></svg>
+                    <span class="bb-drop-text" data-i18n="build_it_better.design_hint">Drop pictures here, paste a screenshot, or click to choose. We build it to match.</span>
+                    <input type="file" id="bb-design-input" accept="image/png,image/jpeg,image/webp,image/gif" multiple hidden>
+                </div>
+                <div class="bb-thumbs" id="bb-thumbs" aria-live="polite"></div>
+
+                <details class="bb-more" id="bb-more">
+                    <summary data-i18n="build_it_better.more_summary2">More options: coin, ticker, ship notice</summary>
+                    <div id="bb-link-extra">
+                        <label for="bb-app" data-i18n="build_it_better.app_opt_label">The app's name (we read it from the link if you skip this)</label>
+                        <input type="text" id="bb-app" maxlength="120" autocomplete="off" placeholder="A screener, a charting tool, a portfolio tracker, a tax tool…">
+                        <div class="bb-suggest" id="bb-suggest" role="listbox" aria-label="Apps we already have a page for"></div>
+                    </div>
+
+                    <div class="bb-row">
+                        <div>
+                            <label for="bb-symbol" data-i18n="build_it_better.symbol_opt_label">Your build's coin ticker (we pick one if blank)</label>
+                            <input type="text" id="bb-symbol" maxlength="10" autocomplete="off" placeholder="MYAPP" style="text-transform:uppercase">
+                        </div>
+                        <div>
+                            <label for="bb-coin" data-i18n="build_it_better.coin_opt_label">Your coin's name</label>
+                            <input type="text" id="bb-coin" maxlength="64" autocomplete="off" placeholder="My App Coin">
+                        </div>
+                    </div>
+                    <div class="bb-hint" data-i18n="build_it_better.coin_hint">Every build gets its own memecoin, owned by whoever asked for it. Sign in first to own it outright.</div>
+                    <div class="bb-row">
+                        <div>
+                            <label for="bb-chain" data-i18n="build_it_better.chain_opt_label">Launch its token on (optional - you can also do it later)</label>
+                            <select id="bb-chain" autocomplete="off"><option value="" data-i18n="build_it_better.chain_later">Not now - the offer stays open before, during and after the build</option></select>
+                        </div>
+                    </div>
+
+                    <div class="bb-row">
+                        <div>
+                            <label for="bb-name" data-i18n="build_it_better.name_label">Your name or handle (optional)</label>
+                            <input type="text" id="bb-name" maxlength="80" autocomplete="nickname">
+                        </div>
+                        <div>
+                            <label for="bb-email" data-i18n="build_it_better.email_label">Email for the ship notice (optional)</label>
+                            <input type="email" id="bb-email" maxlength="200" autocomplete="email">
+                        </div>
+                    </div>
+                </details>
+
+                <button type="submit" class="bb-btn" id="bb-submit" data-i18n="build_it_better.submit">Send the request</button>
+                <div class="bb-msg err" id="bb-err" role="alert"></div>
+            </form>
+
+            <div class="bb-panel" id="bb-mine" style="display:none" aria-live="polite">
+                <div><b id="bb-mine-ticket"></b> · <span id="bb-mine-msg"></span></div>
+                <div id="bb-token-box" style="display:none">
+                    <div class="bb-hint" data-i18n="build_it_better.token_hint">Your request token, shown once. It is the only key to accept the scope and post your verdict. It is also saved in this browser.</div>
+                    <code class="bb-token" id="bb-token"></code>
+                </div>
+                <div class="bb-spec" id="bb-spec"></div>
+                <div class="bb-spec" id="bb-verdict-note" style="display:none" aria-live="polite">
+                    <b id="bb-verdict-label"></b>
+                    <div id="bb-verdict-text" style="white-space:pre-wrap;margin-top:6px"></div>
+                </div>
+                <div class="bb-actions" id="bb-spec-actions">
+                    <button type="button" class="bb-btn small" id="bb-accept" data-i18n="build_it_better.accept">Accept this scope</button>
+                    <button type="button" class="bb-btn small ghost" id="bb-change-toggle" data-i18n="build_it_better.change">Ask for a change</button>
+                    <button type="button" class="bb-btn small ghost" id="bb-withdraw" data-i18n="build_it_better.withdraw">Withdraw this request</button>
+                </div>
+                <div id="bb-change-box" style="display:none">
+                    <textarea id="bb-change-text" maxlength="4000" placeholder="What to change in the scope"></textarea>
+                    <button type="button" class="bb-btn small" id="bb-change-send" data-i18n="build_it_better.change_send">Send the change</button>
+                </div>
+                <div class="bb-actions" id="bb-verdict-actions" style="display:none">
+                    <a class="bb-btn small" id="bb-live-link" href="#" style="text-decoration:none" data-i18n="build_it_better.open_live">Open the live build</a>
+                    <button type="button" class="bb-btn small ghost" id="bb-pass" data-i18n="build_it_better.pass">It is better: pass</button>
+                    <button type="button" class="bb-btn small ghost" id="bb-fail" data-i18n="build_it_better.fail">Not yet: fail</button>
+                    <a class="bb-btn small ghost" id="bb-startup-link" href="/build-it-better/startup" style="text-decoration:none" data-i18n="build_it_better.startup_cta">Turn it into a startup</a>
+                </div>
+                <div class="bb-actions" id="bb-token-actions" style="display:none">
+                    <a class="bb-btn small" id="bb-tokenize-link" href="/build-it-better/tokenize" style="text-decoration:none" data-i18n="build_it_better.tokenize_cta">Tokenize this build</a>
+                    <span class="bb-hint" id="bb-token-state"></span>
+                    <span class="bb-hint"><a href="/company/classic#rwa-issuer" data-i18n="rwa.offer_link">Have a company? Issue equity or revenue-share tokens</a></span>
+                </div>
+                <div class="bb-msg err" id="bb-mine-err" role="alert"></div>
+            </div>
+        </div>
+
+        <aside class="bb-req-side">
+            <p class="bb-gate" id="bb-gate"><span data-i18n="build_it_better.gate_line_plans">Requests run on your NEXUS build plan, not an ET10 holding. A Build it Better request needs a Pro, Max 5x or Max 20x plan: it is larger than the Free plan's 5-hour allowance.</span><a href="/usage" data-i18n="build_it_better.see_usage">Plans and usage →</a></p>
+
+            <div class="bb-side-card scope">
+                <h2 class="bb-h2" data-i18n="build_it_better.scope_title">What gets built, and what does not</h2>
+                <p class="bb-hint" data-i18n="build_it_better.scope_body">Automatic builds are tools that read: screeners, dashboards, alerts, analytics, calculators, research. Anything that moves money (deposits, withdrawals, placing orders, signing) is reviewed by a person before it ships. Every build says plainly what it does not do, and carries our own name and branding, never the original's.</p>
+            </div>
+
+            <div class="bb-dev-links">
+                <a href="/build-it-better/mcp" class="bb-dev-pill mcp" title="MCP tools for Claude &amp; LLM clients">MCP</a>
+                <a href="/build-it-better/api" class="bb-dev-pill" title="REST API &amp; WebSocket reference">API</a>
+                <a href="/build-it-better/sdk" class="bb-dev-pill" title="Python SDK with copy/paste examples">SDK</a>
+            </div>
+        </aside>
+    </section>
+
+    <section class="bb-band">
+        <div class="bb-board-head">
+            <div>
+                <h2 class="bb-h2" data-i18n="build_it_better.board_title">Live build board</h2>
+                <div class="bb-live" id="bb-live"><i></i><span id="bb-live-text" data-i18n="build_it_better.live_off">Connecting…</span></div>
+            </div>
+            <div class="bb-stats">
+                <div class="bb-stat"><div class="v" id="bs-total">–</div><div class="k" data-i18n="build_it_better.s_total">Requests</div></div>
+                <div class="bb-stat"><div class="v" id="bs-building">–</div><div class="k" data-i18n="build_it_better.s_building">Building now</div></div>
+            </div>
+        </div>
+
+        <div class="bb-board" id="bb-board">
+            <div class="bb-col" data-stage="requested"><h3><span data-i18n="build_it_better.col_requested">Requested</span><span class="c">0</span></h3><div class="list"></div></div>
+            <div class="bb-col" data-stage="funded"><h3><span data-i18n="build_it_better.col_queued">Queued</span><span class="c">0</span></h3><div class="list"></div></div>
+            <div class="bb-col" data-stage="building"><h3><span data-i18n="build_it_better.col_building">Building</span><span class="c">0</span></h3><div class="list"></div></div>
+            <div class="bb-col" data-stage="shipped"><h3><span data-i18n="build_it_better.col_shipped">Shipped</span><span class="c">0</span></h3><div class="list"></div></div>
+        </div>
+        <div class="bb-closed" id="bb-closed" hidden>
+            <h3><span data-i18n="build_it_better.col_closed">Closed without a build</span> <span class="c">0</span></h3>
+            <p class="bb-hint" data-i18n="build_it_better.closed_hint">Withdrawn by the requester, or closed with no build page on record. These are never counted as shipped.</p>
+            <div class="list"></div>
+        </div>
+    </section>
+
+    <section class="bb-band bb-more-grid">
+        <div class="bb-side-card">
+            <h2 class="bb-h2" data-i18n="build_it_better.traffic_title">Is the rebuild being used?</h2>
+            <p class="bb-hint"><a href="/build-it-better/stats" data-i18n="build_it_better.traffic_link">See public traffic and likes for every rebuilt app</a> →</p>
+        </div>
+        <div class="bb-side-card">
+            <h2 class="bb-h2" data-i18n="build_it_better.startup_title">Turn your App into a Startup</h2>
+            <p class="bb-hint"><span data-i18n="build_it_better.startup_body">If your rebuilt app deserves a life of its own, apply to spin it out as its own startup: name, website, socials. We take a percentage of each spinoff, agreed with you in writing before anything is registered or launched. Open to accounts holding at least 100,000 ET10; nothing is charged or locked.</span> <a href="/build-it-better/startup" data-i18n="build_it_better.startup_cta">Turn it into a startup</a> →</p>
+        </div>
+    </section>
+
+    <section class="bb-band">
+        <h2 class="bb-h2" data-i18n="build_it_better.venues_title">Where the conversation happens</h2>
+        <p class="bb-hint" data-i18n="build_it_better.venues_lede">Build talk, yours, your AI agent's and ours, lives in its own rooms so the general channels stay readable. Every stage change on this board is posted there.</p>
+        <div class="bb-venues">
+            <a href="https://t.me/vsbcorp/234611" rel="noopener" target="_blank"><b>Telegram</b><span data-i18n="build_it_better.venue_tg">The "Build it Better" topic</span></a>
+            <a href="https://discord.com/channels/1481073767512936579/1550920181369274439" id="bb-discord" rel="noopener" target="_blank"><b>Discord</b><span data-i18n="build_it_better.venue_dc">#build-it-better, one thread per build</span></a>
+            <a href="/build"><b data-i18n="build_it_better.venue_agent_t">Bring your own AI agent</b><span data-i18n="build_it_better.venue_agent">The whole loop is five API calls. Agents read this page as markdown.</span></a>
+        </div>
+    </section>
+</div>
+
