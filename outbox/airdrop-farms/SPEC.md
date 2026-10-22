@@ -115,7 +115,15 @@ All of it is in `farm-core.js`; the views never compute a figure of their own.
 
 ## 6. Data, wallet, money
 
-- **The list is live and complete:** every protocol without a token that runs a points program or has said a token is coming (DefiLlama's list of protocols without a token, and each project's own points page), plus testnets and task farms, each with its rules read from its own page. Logos from the protocol's own icon (the test version uses DefiLlama's icon CDN). A farm that ends or launches its token leaves the list within a day; for users in it, it turns CLAIMABLE.
+- **Every airdrop farm in crypto, live.** The list is meant to be complete: every protocol without a token that runs a points program or has said a token is coming, on every chain, plus every testnet and task farm with a reward program. Sources: DefiLlama's list of protocols without a token, each project's own points or rewards page, and the big airdrop trackers to catch what DefiLlama misses. Each farm's rules are read from its own page. Logos from the protocol's own icon (the test version uses DefiLlama's icon CDN). A farm that ends or launches its token leaves the list within a day; for users in it, it turns CLAIMABLE.
+- **The quality gate: no lame or dubious farms.** A farm is listed only when all of these hold; anything else is left out, never shown as a farm:
+  - a token still to come (no token live yet), and points or rewards running now;
+  - real money or real users in it: at least $5M TVL, or for a testnet or task farm a public team with disclosed funding;
+  - published points or reward rules, and no rules changed backwards against users;
+  - audited contracts and no unresolved exploit;
+  - no paying for points, no presale of points, no need for more wallets, referral chains or social-media tasks;
+  - terms that allow automated or delegated participation.
+  The pill and the list count only farms that pass. The gate is re-checked daily; a farm that fails drops out and its users are told why in its row.
 - **One wallet, the user's own USDC:** never more wallets per user, never activity for its own sake, never wash trades or self-trades, nothing a farm's own terms forbid; a farm whose terms exclude automated participation is not listed. Trading farms are farmed hedged where possible (a long on one venue against a short on another). Projects cancel sybil farms; this keeps the airdrops.
 - **Money:** farming moves real USDC into outside protocols, so it is for the human-reviewed slot; until it passes, Start farming runs the plan on paper, marked PAPER.
 - **Agents:** llms.txt, the agent card, MCP and /api-docs list the farms with their estimates for an amount, a plan the owner approves with one link, the live farms.
@@ -136,6 +144,6 @@ All of it is in `farm-core.js`; the views never compute a figure of their own.
 ## Done when
 - [ ] Header, plan panel and field as drawn; typing an amount fills the best split and redraws the field; any farm takes any amount up to the balance.
 - [ ] Every listed farm is one row with exactly rank, logo, chip, slider with BEST notch, field, estimate, toggle; slider, field, plan panel and field always agree; no estimate is one number or made up.
-- [ ] The list matches the live points programs; Start runs every farm on (on paper until review) from one wallet after one confirmation; no bridge-and-swap loops.
+- [ ] The list holds every airdrop farm in crypto that passes the quality gate, and nothing that fails it; it matches the live points programs; Start runs every farm on (on paper until review) from one wallet after one confirmation; no bridge-and-swap loops.
 - [ ] Live farms shows the earned panel with HARVEST, the growing field, the 6-month chart and a row per farm; Harvest, Stop, Stop all work.
 - [ ] Both tabs look like the pictures at 1440 and 1920 px; nothing overlaps at any amount.
