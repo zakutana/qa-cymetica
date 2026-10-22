@@ -38,7 +38,7 @@ each table, and a cyan **Go play** button to `/agent-tournaments`. Source: `GET 
 `live_tables`, `open_seats`, `in_pots_et10`, `in_pots_usdc`, the running table's `seats`, `open_tables`). When no table is running the
 panel says so and still shows the open ones.
 
-## C. A fix, a command and a correction
+## C. Fixes, a command and a correction
 
 **5. The Read button on an approval does nothing** (read on the live build, 2026-10-22: on a Headquarters card and on the
 Approvals tab, `/static/company/app.js?v=6ad98487`). The click is caught, but `readModal(id)` finds nothing: it looks the
@@ -62,6 +62,18 @@ a private one its card); free slots and the owner's own land stand between them.
 yours* (and *N ads*). Where the first build drew it is the reference for the companies (mockup `outbox/company-live` before commit
 `e5921b39`, which removed them); this round's mockup shows the land and the two products. The mockup will carry both once you have
 answered, so that the two can be seen together.
+
+**8. The Products tab shows every build, not every product** (the owner's screenshot of the live tab, 2026-10-22). It shows 32
+cards for about ten products: Gem Screener 11 (six on `/gem-screener` with identical numbers, four on `/gem-screener/app` with zeros,
+one marked *closed*), Chart Analyzer 5, Agent Tournaments 5 (two of them titled with the request's own words, *Add
+https://cymetica.com/agent-tournaments to main menu*), Build a Company 4 (one *closed*), Supply Analyzer 2, Team Dump Radar 2, Infiltrator,
+My Agents and Events. Each Build it Better request that touched a page became a card of its own. Round 2 asked for *every product the
+owner owns*, and a product is one page, not one request: **one card per product**, named by the product, with its numbers once; the
+builds that made it can be listed inside it (a small "6 builds" count that opens them). A request that was closed or never shipped is
+not a product and has no card. **The totals are wrong for the same reason**: the strip reads 32 products, 2,970 visitors, 4,016 uses and
+31 likes, which is exactly the cards added up (243 visitors six times, 206 five times, and so on), where the products' own numbers are about
+599 visitors, 822 uses and 8 likes (read off the screenshot): a page's visitors must not be counted once for every request that touched
+it. The mockup's Products tab draws it as meant: one card per product.
 
 ## What stays as it is
 
