@@ -132,10 +132,10 @@ own Universe line (item J).
 
 **The building is the product's logo turned into a 3D head**, its shapes and proportions as the logo has them (the head 34 across, the brim 59, the
 crown 13.5 high and dented on top, in the logo's 64 units), **in yellow, brown and green, and as a robot's helmet, not a face** (the farmer is an
-agent; a round brown head with eyes reads as a person's skin, so do not draw one): a shell of green metal ringed in gold into lime (the logo's
-gradient stroke); over the face a visor of dark glass with a streak of glare, its edge a ring of lime lights (the logo's dotted ring); behind it two
-pill eyes of warm yellow light that blink now and then; a straw hat (a woven texture) with a dark-brown band, its brim turned up a little at the edge;
-a green sprout of two leaves on the crown. It floats over a gold ring, leans back a little so the visor shows under the brim from above, and turns
+agent; a round brown head with eyes reads as a person's skin, so do not draw one): a helmet of polished gold with a seam of dark bronze round it
+(the logo's stroke); over the face a visor of smoked glass with a streak of glare, its edge a ring of amber lights (the logo's dotted ring); in it two
+pill eyes of warm white light that blink now and then; a straw hat (a woven texture) with a dark-brown band, its brim turned up a little at the edge;
+a sprout of two leaves on the crown, lime and gold. It floats over a gold ring, leans back a little so the visor shows under the brim from above, and turns
 toward the viewer, looking about a little. As big as the other two products, smaller than the sun. Mockup: `u3d.js` (`adFarmer`), the flat map `universe.js` (the logo
 itself, recoloured), the data `uv-data.js` (`CO.ADS`).
 

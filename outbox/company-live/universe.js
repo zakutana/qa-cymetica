@@ -1136,19 +1136,19 @@
         '<polygon points="' + pts(top3) + '" fill="#00cfff" fill-opacity=".12" stroke="#bff3ff" stroke-width="2"/>';
       top = cy0 - s * 0.7;
     } else if (it.ad.key === 'farmer') {
-      // Airdrop Farmer: its logo itself (airdrop-farms mock.html, #logo, viewBox 64) in the 3D head's colours: a green
-      // helmet ringed in gold, a dark visor edged in lime dots, yellow eyes, a straw hat with a brown band, a green sprout;
-      // the head's bottom a little over its shadow
+      // Airdrop Farmer: its logo itself (airdrop-farms mock.html, #logo, viewBox 64) in the 3D head's colours: a gold
+      // helmet with a bronze seam, a smoked visor edged in amber dots, warm white eyes, a straw hat with a brown band, a
+      // lime-and-gold sprout; the head's bottom a little over its shadow
       var k = s * 1.15 / 64, by = y - s * 0.15 - (58 - 0) * k;
       out = shadow + '<g transform="translate(' + f1(x - 32 * k) + ' ' + f1(by) + ') scale(' + k.toFixed(4) + ')">' +
-        '<circle cx="32" cy="41" r="17" fill="#2c6a3c" stroke="#ffc83d" stroke-width="3"/>' +
-        '<circle cx="32" cy="41" r="12" fill="#0b1a12" stroke="#c8f26a" stroke-width="1.2" stroke-dasharray="1.6 2.6"/>' +
-        '<rect x="24.5" y="37" width="5" height="9" rx="2.5" fill="#ffd84a"/><rect x="34.5" y="37" width="5" height="9" rx="2.5" fill="#ffd84a"/>' +
+        '<circle cx="32" cy="41" r="17" fill="#e0a92e" stroke="#7a4a14" stroke-width="3"/>' +
+        '<circle cx="32" cy="41" r="11" fill="#140d06" stroke="#ffb347" stroke-width="1.2" stroke-dasharray="1.6 2.6"/>' +
+        '<rect x="24.5" y="37" width="5" height="9" rx="2.5" fill="#fff1b0"/><rect x="34.5" y="37" width="5" height="9" rx="2.5" fill="#fff1b0"/>' +
         '<path d="M20.5 25.5 L22.6 14.6 Q23.2 12 26 12 Q32 14.2 38 12 Q40.8 12 41.4 14.6 L43.5 25.5 Z" fill="#e9b84a"/>' +
         '<path d="M21.2 21.6 Q32 19.6 42.8 21.6" stroke="#4a2c12" stroke-width="2.6" fill="none"/>' +
         '<path d="M2.5 30 C8 25.2 15 24 22 24 L42 24 C49 24 56 25.2 61.5 30 C50 30.6 40 31.8 32 31.8 C24 31.8 14 30.6 2.5 30 Z" fill="#f2c14e" stroke="#8a5a1c" stroke-width=".8"/>' +
-        '<path d="M32 12.5 V5.8" stroke="#7ee04a" stroke-width="1.9" stroke-linecap="round"/>' +
-        '<path d="M31.8 8 C27.6 8 25.5 5.8 25 2.6 C28.8 2.6 31.3 4.6 31.8 8 Z" fill="#7ee04a"/><path d="M32.2 6.6 C36.4 6.6 38.8 4.1 39.3 0.9 C35.2 0.9 32.7 3 32.2 6.6 Z" fill="#c8e83a"/></g>';
+        '<path d="M32 12.5 V5.8" stroke="#c8d64a" stroke-width="1.9" stroke-linecap="round"/>' +
+        '<path d="M31.8 8 C27.6 8 25.5 5.8 25 2.6 C28.8 2.6 31.3 4.6 31.8 8 Z" fill="#c8d64a"/><path d="M32.2 6.6 C36.4 6.6 38.8 4.1 39.3 0.9 C35.2 0.9 32.7 3 32.2 6.6 Z" fill="#f0c43c"/></g>';
       top = by + 0.9 * k;
     } else {
       var c0 = y - s * 0.55, rx = s * 0.5, ry = rx * RY / RX, ring = function (cyy, k) {

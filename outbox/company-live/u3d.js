@@ -1404,8 +1404,11 @@ function adPromo(body, b) {
 // blbe"); a second try, a yellow face with a grin and a stalk of grass, was thrown out ("nahovno"). So the shell is green
 // metal, the logo's dotted ring is the edge of a dark glass visor, the eyes are yellow LEDs behind it, the rim is gold
 // into lime (the logo's gradient stroke), the hat is straw with a brown band, and the sprout is green. Its face turns to
-// the first look's camera, swaying a little, and blinks.
-const FARM = { shell: 0x2c6a3c, visor: 0x0b1a12, band: 0x4a2c12, rim: ['#ffc83d', '#a6e22e'], dots: '#c8f26a', eye: '#ffe680', leaf: ['#7ee04a', '#c8e83a'] };
+// the first look's camera, swaying a little, and blinks. The green shell was thrown out too ("nahovno ta zelena ...
+// udelej ty barvy podle sebe"), so the colours are ours: a helmet of polished gold (harvest, and the one metal a robot
+// can wear without reading as skin), a seam of dark bronze round it, a visor of smoked glass with amber lights, eyes of
+// warm white, the straw hat with a dark-brown band, the sprout lime and gold.
+const FARM = { shell: 0xe0a92e, visor: 0x140d06, band: 0x4a2c12, rim: ['#8a5a1c', '#4a2c12'], dots: '#ffb347', eye: '#fff1b0', leaf: ['#c8d64a', '#f0c43c'] };
 function strawTex() {
   if (TX.straw) return TX.straw;
   const W = 256, c = document.createElement('canvas'); c.width = c.height = W; const g = c.getContext('2d');
@@ -1422,23 +1425,23 @@ function adFarmer(body, b) {
   // the whole head leans back toward the camera, which looks down on it: upright, the brim hid the face (turned first,
   // then leant: order YXZ)
   const head = new THREE.Group(); head.position.y = Y; head.rotation.order = 'YXZ'; head.rotation.x = -0.4; body.add(head);
-  part(new THREE.SphereGeometry(R, 48, 32), new THREE.MeshStandardMaterial({ color: FARM.shell, emissive: 0x0c2414, roughness: 0.32, metalness: 0.55 }), 0, 0, 0, head);
+  part(new THREE.SphereGeometry(R, 48, 32), new THREE.MeshStandardMaterial({ color: FARM.shell, emissive: 0x5a3a06, emissiveIntensity: 0.5, roughness: 0.28, metalness: 0.5 }), 0, 0, 0, head);
   const face = new THREE.Group(); head.add(face);
   // the visor: a cap of dark glass over the face, standing a little proud, a shade narrower than the logo's dotted ring
   // (11 of 17, not 12) so the green shell shows round it, and a streak of glare across its top left
   const th = Math.asin(11 / 17), RV = R * 1.015, visor = new THREE.SphereGeometry(RV, 48, 16, 0, Math.PI * 2, 0, th); visor.rotateX(Math.PI / 2);
-  part(visor, new THREE.MeshStandardMaterial({ color: FARM.visor, emissive: 0x03100a, roughness: 0.12, metalness: 0.6 }), 0, 0, 0, face);
+  part(visor, new THREE.MeshStandardMaterial({ color: FARM.visor, emissive: 0x0a0602, roughness: 0.12, metalness: 0.6 }), 0, 0, 0, face);
   const GR = 0.78;
   part(new THREE.TorusGeometry(GR, 0.04, 6, 32, 1.0), new THREE.MeshBasicMaterial({ color: 0xffffff, transparent: true, opacity: 0.32, blending: THREE.AdditiveBlending, depthWrite: false }),
     0, 0, Math.sqrt(RV * RV - GR * GR) + 0.05, face).rotation.z = Math.PI * 0.55;
-  // the rim: the logo's stroke round the head, gold at the top left into lime at the bottom right, standing as the head's
-  // outline seen from the first look (33.5 degrees above it); its top, under the hat, left out
+  // the rim: the logo's stroke round the head, a seam of bronze into dark bronze, standing as the head's outline seen
+  // from the first look (33.5 degrees above it); its top, under the hat, left out
   const rimGeo = new THREE.TorusGeometry(R + 0.06, 0.1, 10, 120, Math.PI * 2 - 1.34), rp = rimGeo.attributes.position, rc = new Float32Array(rp.count * 3);
   const g0 = look(FARM.rim[0], 0.9), g1 = look(FARM.rim[1], 0.9), cc = new THREE.Color();
   for (let i = 0; i < rp.count; i++) { const a = Math.atan2(rp.getY(i), rp.getX(i)) + 2.24; cc.copy(g0).lerp(g1, 0.5 - 0.5 * Math.cos(a - 3 * Math.PI / 4)); rc.set([cc.r, cc.g, cc.b], i * 3); }
   rimGeo.setAttribute('color', new THREE.BufferAttribute(rc, 3));
   part(rimGeo, new THREE.MeshBasicMaterial({ vertexColors: true }), 0, 0, 0, face).rotation.set(-0.185, 0, 2.24);
-  // the dotted ring: 18 lime lights round the visor's edge
+  // the dotted ring: 18 amber lights round the visor's edge
   const dotGeo = new THREE.SphereGeometry(0.08, 8, 6), dotMat = basic(FARM.dots, 1.1);
   for (let i = 0; i < 18; i++) {
     const a = i / 18 * Math.PI * 2, d = (i ? (m) => m : ownGeo)(new THREE.Mesh(dotGeo, dotMat));
