@@ -124,6 +124,23 @@ product's name in its map tooltip and in its panel. **Until the owner writes one
 buildings (the Promo Market) keep their own line. Mockup: `app.js` (`uvLineModal`, the Products card), `uv-data.js` (`CO.uvLine`, `CO.setUvLine`),
 `universe.js` (the tooltip), `uvpanel.js` (the panel).
 
+## K. Airdrop Farmer on Orbit 5 · slot 5: its logo as a head, in straw and brown (settled, drawn)
+
+The owner bought a third slot on 2026-10-22 (`GET /company/land` lists `slot-5-5` taken, with no product on it). **Put Airdrop Farmer on it**, as
+round 3 put Gem Screener and Agent Casino on theirs: the same click (the map flies to it, the panel opens), the same MADE BY plate, the owner's
+own Universe line (item J).
+
+**The building is the product's logo turned into a 3D head**, its shapes and proportions as the logo has them (the head 34 across, the brim 59, the
+crown 13.5 high and dented on top, in the logo's 64 units), **in yellow and brown instead of the site's green and cyan**: a brown head; round it a
+rim of gold into warm yellow (the logo's gradient stroke) and a ring of amber dots on the face; two pill eyes of warm yellow light that blink now
+and then; a straw hat (a woven texture) with a dark-brown band, its brim turned up a little at the edge; a sprout of two leaves on the crown, lime
+and gold. It floats over a gold ring, leans back a little so the face shows under the brim from above, and turns its face toward the viewer,
+looking about a little. As big as the other two products, smaller than the sun. Mockup: `u3d.js` (`adFarmer`), the flat map `universe.js` (the logo
+itself, recoloured), the data `uv-data.js` (`CO.ADS`).
+
+**Its panel** shows the three numbers the live page leads with: *23 airdrop farms*, *1 USDC deposit*, *10% of realized profit* (the fee; tooltip:
+nothing on a loss), the date they were read, and *Visit Airdrop Farmer* to `/airdrop-farmer`. Read them live from the page's own data, not typed in.
+
 ## What stays as it is
 
 Everything not named above stays as rounds 1 to 3 and your builds have it.

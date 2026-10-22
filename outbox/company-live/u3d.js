@@ -1395,14 +1395,90 @@ function adPromo(body, b) {
   };
   b.top = 0.2 + K * (CY + S / 2 + 0.3); b.bot = 0; b.foot = 3.0 * K;
 }
+// Airdrop Farmer (2026-10-22, on the third slot the operator bought, Orbit 5 · slot 5): its logo as a head ("bude to 3D
+// hlava toho farmera ale chci ho v zluto hnedych barvach"). The logo's shapes and proportions (outbox/airdrop-farms
+// mock.html, #logo, viewBox 64: a dark head of radius 17 stroked with a gradient, a dotted ring of 12 inside it, two
+// pill eyes glowing, a hat whose brim is 59 wide and whose crown is 13.5 high and dented on top, a dark band round the
+// crown, a sprout of two leaves) in straw and brown instead of the site's green and cyan: a dark-brown head, a rim of
+// gold into amber, amber dots, eyes of warm yellow light, a straw hat with a brown band, and the sprout lime-gold (a
+// sprout in pure yellow read as a flame). Its face turns to the first look's camera, swaying a little, and blinks.
+const FARM = { head: 0x6b4423, band: 0x3b2410, rim: ['#ffd24d', '#e8a83a'], dots: '#ffc060', eye: '#ffd84a', leaf: ['#c8d64a', '#f0c43c'] };
+function strawTex() {
+  if (TX.straw) return TX.straw;
+  const W = 256, c = document.createElement('canvas'); c.width = c.height = W; const g = c.getContext('2d');
+  g.fillStyle = '#e9b84a'; g.fillRect(0, 0, W, W);
+  // a weave: squares light and dark in turn, a darker line between the rows
+  for (let x = 0; x < W; x += 16) for (let y = 0; y < W; y += 16) { g.fillStyle = (x / 16 + y / 16) % 2 ? 'rgba(255,232,160,.35)' : 'rgba(150,95,25,.28)'; g.fillRect(x + 1, y + 2, 14, 13); }
+  g.fillStyle = 'rgba(110,64,16,.45)'; for (let y = 0; y < W; y += 16) g.fillRect(0, y, W, 2);
+  const t = new THREE.CanvasTexture(c); t.colorSpace = THREE.SRGBColorSpace; t.wrapS = t.wrapT = THREE.RepeatWrapping; t.repeat.set(6, 2); t.anisotropy = 8; TX.straw = t; return t;
+}
+function adFarmer(body, b) {
+  const R = 2.0, u = R / 17, Y = 3.3;                                    // u: one unit of the logo's viewBox
+  const part = (geo, mat, x, y, z, parent) => { const m = ownGeo(new THREE.Mesh(geo, mat)); m.position.set(x, y, z); parent.add(m); return m; };
+  const basic = (hex, k = 1) => new THREE.MeshBasicMaterial({ color: look(hex).multiplyScalar(k) });
+  // the whole head leans back toward the camera, which looks down on it: upright, the brim hid the face (turned first,
+  // then leant: order YXZ)
+  const head = new THREE.Group(); head.position.y = Y; head.rotation.order = 'YXZ'; head.rotation.x = -0.4; body.add(head);
+  part(new THREE.SphereGeometry(R, 48, 32), new THREE.MeshStandardMaterial({ color: FARM.head, emissive: 0x24140a, roughness: 0.5, metalness: 0.3 }), 0, 0, 0, head);
+  const face = new THREE.Group(); head.add(face);
+  // the rim: the logo's stroke round the head, gold at the top left into warm yellow at the bottom right, standing as
+  // the head's outline seen from the first look (33.5 degrees above it); its top, under the hat, left out. (In amber it
+  // bloomed red.)
+  const rimGeo = new THREE.TorusGeometry(R + 0.06, 0.1, 10, 120, Math.PI * 2 - 1.34), rp = rimGeo.attributes.position, rc = new Float32Array(rp.count * 3);
+  const g0 = look(FARM.rim[0], 0.9), g1 = look(FARM.rim[1], 0.9), cc = new THREE.Color();
+  for (let i = 0; i < rp.count; i++) { const a = Math.atan2(rp.getY(i), rp.getX(i)) + 2.24; cc.copy(g0).lerp(g1, 0.5 - 0.5 * Math.cos(a - 3 * Math.PI / 4)); rc.set([cc.r, cc.g, cc.b], i * 3); }
+  rimGeo.setAttribute('color', new THREE.BufferAttribute(rc, 3));
+  part(rimGeo, new THREE.MeshBasicMaterial({ vertexColors: true }), 0, 0, 0, face).rotation.set(-0.185, 0, 2.24);
+  // the dotted ring: 18 dots on the head's surface round the face, the logo's r 12 of 17
+  const dotGeo = new THREE.SphereGeometry(0.09, 8, 6), dotMat = basic(FARM.dots, 1.1), th = Math.asin(12 / 17);
+  for (let i = 0; i < 18; i++) {
+    const a = i / 18 * Math.PI * 2, d = (i ? (m) => m : ownGeo)(new THREE.Mesh(dotGeo, dotMat));
+    d.position.set(Math.sin(th) * Math.cos(a), Math.sin(th) * Math.sin(a), Math.cos(th)).multiplyScalar(R * 1.01); face.add(d);
+  }
+  // the eyes: two pills of light, 5 by 9 of the logo, 5 either side of the middle, sunk into the head so they bulge
+  const eyeGeo = new THREE.CapsuleGeometry(2.5 * u, 4 * u, 8, 16), eyeMat = basic(FARM.eye, 1.45), eyes = [];
+  [-1, 1].forEach((s, i) => {
+    const x = s * 5 * u, y = -0.5 * u, z = Math.sqrt(R * R - x * x - y * y) - 0.08;
+    const e = (i ? (m) => m : ownGeo)(new THREE.Mesh(eyeGeo, eyeMat)); e.position.set(x, y, z); e.rotation.y = Math.atan2(x, z); e.scale.z = 0.55; face.add(e); eyes.push(e);
+    const gl = glowSprite(new THREE.Color(FARM.eye), 0.4, 1.3); gl.position.set(x, y, z + 0.25); face.add(gl); eyes.push(gl);
+  });
+  // the hat: the brim (59 of the logo across, its edge turned up a little), the crown (23 wide at the brim, 19.6 at the
+  // top, 13.5 high, its top dented 2.2), sitting low on the head as the logo's covers its top; the band round the crown
+  const straw = new THREE.MeshStandardMaterial({ color: 0xffffff, map: strawTex(), roughness: 0.75, metalness: 0.05, side: THREE.DoubleSide });
+  const hat = new THREE.Group(); hat.position.y = 11.5 * u; head.add(hat);
+  const BR = 29.5 * u, CB = 11.5 * u, CT = 9.8 * u, CH = 13.5 * u, DIP = 2.2 * u;
+  const brim = [[CB - 0.15, 0.1], [BR * 0.75, 0.04], [BR * 0.93, 0.1], [BR, 0.26], [BR - 0.05, 0.31], [BR * 0.92, 0.17], [BR * 0.75, 0.13], [CB - 0.15, 0.2]];
+  part(new THREE.LatheGeometry(brim.concat([brim[0]]).map(([x, y]) => new THREE.Vector2(x, y)), 64), straw, 0, 0, 0, hat);
+  part(new THREE.LatheGeometry([[CB, 0.1], [CT + 0.08, CH - 0.06], [CT, CH], [CT * 0.55, CH - DIP * 0.55], [0, CH - DIP]].map(([x, y]) => new THREE.Vector2(x, y)), 48), straw, 0, 0, 0, hat);
+  const bandY = 3 * u + 0.1;
+  part(new THREE.CylinderGeometry(CB - (CB - CT) * (bandY + 0.17) / CH + 0.03, CB - (CB - CT) * (bandY - 0.17) / CH + 0.03, 0.34, 48, 1, true), new THREE.MeshStandardMaterial({ color: FARM.band, roughness: 0.6, metalness: 0.2 }), 0, bandY + 0.05, 0, hat);
+  // the sprout: a stem out of the dent and two leaves, the left one higher, as the logo's
+  const sp = new THREE.Group(); sp.position.y = CH - DIP; hat.add(sp);
+  const leafMat = (hex) => new THREE.MeshStandardMaterial({ color: look(hex), emissive: new THREE.Color(hex), emissiveIntensity: 0.35, roughness: 0.6 });
+  part(new THREE.CylinderGeometry(0.06, 0.08, 6.7 * u, 10), leafMat(FARM.leaf[0]), 0, 3.35 * u, 0, sp);
+  [[-1, 4.5 * u, 0.55, FARM.leaf[0]], [1, 5.9 * u, 0.62, FARM.leaf[1]]].forEach(([s, y, tilt, hex]) => {
+    const l = part(new THREE.SphereGeometry(1, 20, 12), leafMat(hex), s * 3.6 * u, y + 0.12, 0, sp);
+    l.scale.set(4.4 * u, 2.1 * u, 0.07); l.rotation.z = s * tilt;          // flat toward the face, as the logo's
+  });
+  const hatY = hat.position.y + CH - DIP + 7 * u;
+  b.tick = (t) => {
+    head.position.y = Y + Math.sin(t * 0.9) * 0.25;
+    // its face toward the first look (the map's azimuth, less the slow turn frame() gives the body), looking about a little
+    head.rotation.y = CO.uvGalaxy.AZ - t * 0.035 + Math.sin(t * 0.5) * 0.35;
+    sp.rotation.z = Math.sin(t * 1.3) * 0.08;
+    // a blink every few seconds
+    const shut = (t % 4.7) < 0.14; eyes.forEach((e, i) => { if (i % 2) e.material.opacity = shut ? 0 : 0.4; else e.scale.y = shut ? 0.12 : 1; });
+  };
+  b.top = Y + hatY + 0.3; b.bot = 0; b.foot = BR * 0.96;
+}
 // how much larger than its own units an ad is drawn on the map: as a station is (UVSS). Measured on the page
 // 2026-10-21 by projecting their vertices: each under three quarters of the sun's ball on the screen.
 const UVAD = 3.8;
 function makeAd(ad) {
   geo();
   const A = amat(CO.accentHex(ad.accent)), root = new THREE.Group(), body = new THREE.Group(); root.add(body);
-  const b = { phase: { gem: 0.4, casino: 2.1, promo: 3.7 }[ad.key] || 0, foot: 3, top: 4, bot: 0, paint() {}, tick() {} };
-  ({ gem: adGem, casino: adCasino, promo: adPromo }[ad.key] || adCasino)(body, b, A);
+  const b = { phase: { gem: 0.4, casino: 2.1, promo: 3.7, farmer: 5.2 }[ad.key] || 0, foot: 3, top: 4, bot: 0, paint() {}, tick() {} };
+  ({ gem: adGem, casino: adCasino, promo: adPromo, farmer: adFarmer }[ad.key] || adCasino)(body, b, A);
   // the holo-ring it floats over and its pool of light, as a public station's
   const rimMat = A.rim.clone(); rimMat.emissiveIntensity = RING.pub;
   const ringR = b.foot * 1.05, ringY = b.bot - 0.4;

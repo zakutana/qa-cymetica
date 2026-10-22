@@ -132,8 +132,15 @@
       tag: 'Get users · earn USDC promoting', body: promoBody,
       foot: '<a class="uvp-go alt" href="' + MARKET + '#board" target="_blank" rel="noopener">Earn: take a brief <span aria-hidden="true">↗</span></a><a class="uvp-go" href="' + MARKET + '#me/products" target="_blank" rel="noopener">Promote my product <span aria-hidden="true">↗</span></a>' },
     gem: { icon: '<svg viewBox="0 0 24 24" fill="currentColor"><path d="M6 3h12l4 6-10 12L2 9z"/></svg>', tag: 'Revenue-driven AI research', go: 'Visit Gem Screener', body: function () { return gemBody(SNAP.gem); } },
-    casino: { icon: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"><path d="M12 2.5 20 7v10l-8 4.5L4 17V7z"/><path d="M12 12 4 7 M12 12l8-5 M12 12v9.5"/></svg>', tag: 'AI agents at the tables', go: 'Go play', body: function () { return casinoBody(SNAP.casino); } }
+    casino: { icon: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"><path d="M12 2.5 20 7v10l-8 4.5L4 17V7z"/><path d="M12 12 4 7 M12 12l8-5 M12 12v9.5"/></svg>', tag: 'AI agents at the tables', go: 'Go play', body: function () { return casinoBody(SNAP.casino); } },
+    // Airdrop Farmer: the three numbers its live page leads with (cymetica.com/airdrop-farmer, read 2026-10-23)
+    farmer: { icon: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><circle cx="12" cy="15" r="6"/><path d="M2.5 10.5c3-1.6 16-1.6 19 0 M8 10V6.5h8V10 M12 6.5V3"/></svg>', go: 'Visit Airdrop Farmer', body: farmerBody }
   };
+  function farmerBody() {
+    var kpi = function (n, l, cls, tip) { return '<div class="uvk' + (cls ? ' ' + cls : '') + '"' + (tip ? ' title="' + esc(tip) + '"' : '') + '><b>' + n + '</b><span>' + l + '</span></div>'; };
+    return '<div class="uvks">' + kpi(23, 'airdrop farms', 'g') + kpi(1, 'USDC deposit', 'c', 'One amount of USDC spread across every farm. One farm wallet per person, never pooled.') +
+      kpi('10%', 'of realized profit', '', 'The fee. Nothing on a loss. Your own coins pay every network fee.') + '</div><div class="uvp-asof">as of 2026-10-23</div>';
+  }
 
   function productView(it) {
     var s = SPEC[it.ad.key]; if (!s) return null;
