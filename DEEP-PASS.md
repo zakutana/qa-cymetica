@@ -17,6 +17,6 @@
 - **Dvě navržené úpravy laborky (z 15. 10.) čekají na tvoje kliknutí: otevřené pozice event karet ve verdiktu bota, a laborka pro automatické obnovení botů a stropy 100/200.**
 - **Spec Gem Screeneru z 5. 10. (Launchpady, vyřazené appky, příjmy a buybacky, velké peněženky) je hotový a čeká na tvoje slovo k podání.**
 - **Připomínka z 4. 10.: další spec pro Supply Analyzer o stakingu a zámcích (dnes ho zná u 68 z 244 coinů).**
-- **Nový design Build it Better (22. 10., outbox/build-it-better-redesign) čeká, až ho zkontroluješ; nic se nepodává, dokud neřekneš.** Spustí ho `python outbox\build-it-better-redesign\serve.py`, pak http://127.0.0.1:8791/build-it-better.
+- **Nový design Build it Better (22. 10., outbox/build-it-better-redesign) máš schválený jako 10/10; podání Cymetice čeká na tvoje slovo („podej to").** Spustí ho `python outbox\build-it-better-redesign\serve.py`, pak http://127.0.0.1:8791/build-it-better.
 ## Týden
 - **Opakuje se jedna chyba: kontroly hlásí „v pořádku“ na to, co nepřečetly (7 z 9 dnešních oprav kontrol, 15. 10. totéž), a denní strop pro FOMO slíbený 11. 10. čekal týden, než ho postavila tahle noc.** Posuzovatelé pořád škrtají (3 ze 30), trojí kontrola se vyplácí; 1 555 testů hlídá nás, 201 měří Cymetiku; 303 commitů Opus, 71 Sonnet, žádné stažení reportu. Tři vnější čtenáři: 15 nálezů; strop FOMO hotový, osm oprav naší strany v plánu práce, nález k #202 vyvrátil text našeho vlastního reportu (sami jsme nabídli „řekněte, že historie může mít díry“).
