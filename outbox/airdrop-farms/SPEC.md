@@ -127,7 +127,7 @@ All of it is in `farm-core.js`; the views never compute a figure of their own.
   - terms that allow automated or delegated participation.
   The pill and the list count only farms that pass. The gate is re-checked daily; a farm that fails drops out and its users are told why in its row.
 - **One wallet, the user's own USDC:** never more wallets per user, never activity for its own sake, never wash trades or self-trades, nothing a farm's own terms forbid; a farm whose terms exclude automated participation is not listed. Trading farms are farmed hedged where possible (a long on one venue against a short on another). Projects cancel sybil farms; this keeps the airdrops.
-- **Money:** farming moves real USDC into outside protocols, so it is for the human-reviewed slot; until it passes, Start farming runs the plan on paper, marked PAPER.
+- **Money: real USDC from day one, no paper mode.** Deposits into the farms, withdrawals and claims are signed by the user's farm wallet on the rails the live Airdrop Farmer already has (its farm wallets already move real USDC). That needs the human-reviewed build slot; the request asks for it.
 - **Agents:** llms.txt, the agent card, MCP and /api-docs list the farms with their estimates for an amount, a plan the owner approves with one link, the live farms.
 
 ---
@@ -146,6 +146,6 @@ All of it is in `farm-core.js`; the views never compute a figure of their own.
 ## Done when
 - [ ] Header, plan panel and field as drawn; typing an amount fills the best split and redraws the field; any farm takes any amount up to the balance.
 - [ ] Every listed farm is one row with exactly heat flame and score, logo, chip (and EARLY when it applies), slider with BEST notch, field, estimate, toggle; the list is sorted hottest first; slider, field, plan panel and field always agree; no estimate is one number or made up.
-- [ ] The list holds every airdrop farm in crypto that passes the quality gate, and nothing that fails it; it matches the live points programs; Start runs every farm on (on paper until review) from one wallet after one confirmation; no bridge-and-swap loops.
+- [ ] The list holds every airdrop farm in crypto that passes the quality gate, and nothing that fails it; it matches the live points programs; Start runs every farm on with real USDC from one wallet after one confirmation; no bridge-and-swap loops.
 - [ ] Live farms shows the earned panel with HARVEST, the growing field, the 6-month chart and a row per farm; Harvest, Stop, Stop all work.
 - [ ] Both tabs look like the pictures at 1440 and 1920 px; nothing overlaps at any amount.
