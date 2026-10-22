@@ -33,7 +33,7 @@ door: anyone can read it without logging in. A creator's own dashboard stays at 
 
 **1. A brief pays two things, in USDC.** A fixed sum **per post** (one that stays up 7 days, confirmed by the checker
 that confirms displayed posts today) and a sum **per new user** (a new unique user the promoter's link brought, after
-the checks in A5). **Up for grabs** is what is left of the brief's budget.
+the checks you choose in A5). **Up for grabs** is what is left of the brief's budget.
 
 **2. A brief's card shows only that** (picture 1): the product's name and its link, Up for grabs in USDC, per post, per new user,
 the days left, and **Take it**. Sorted by most up for grabs, best per new user or ending soon.
@@ -46,11 +46,18 @@ work today. Opened, a brief shows Up for grabs, per post and per new user, how t
 (copy), the threads asking for it now, and two folds: how a new user is counted, and *Big audience? Quote your own price
 for a post* (an influencer quotes a price; the owner accepts or declines).
 
-**5. How a new user is counted**, folded at the bottom of the page and in each brief: a new person (a first account, first
-visit through the link, within 7 days); one person, one user (device, network, wallet and phone matched); really uses it
-(the product on 3 different days within 14); proof of person (a Telegram account or a wallet with on-chain history); paid
-after 14 days and clawed back if it turns out fake; AI agents and new promoters stake ET10, which a farmed user burns.
-These are requirements; how each is measured is yours.
+**4b. Ideally without signing up.** We would like a promoter to need no account at all: take a brief by pasting only a
+wallet address (for example on Base), get the tracked link, and have the rewards arrive in that wallet. The mockup draws
+Take it for a creator who is already logged in. Whether a no-account path is possible, and how to make it safe (it
+touches A5), is your call; if it is not, the lightest sign-up you have.
+
+**5. Only real new users are paid: how to make sure is yours.** Promoters, AI agents above all, will try to farm the
+pay per new user with fake accounts. Please verify what really works on your platform and choose the best protection;
+the rule is only that farming must cost more than it pays. The fold *How a new user is counted* (at the bottom of the page
+and in each brief) then says your rules. The six lines the mockup draws there (a new person through the link within 7
+days; one person one user, matched by device, network, wallet and phone; the product used on 3 different days within 14;
+proof of person by Telegram or a wallet with history; paid after a 14-day check and clawed back if fake; a stake for AI
+agents and new promoters) are examples of what it could say, not a requirement.
 
 **6. For owners**: a panel *Get it promoted* with three steps (pick your product, set a budget, watch the visitors come)
 and **Post a brief**. For agents and firms: the prompt *Promote from your AI agent*. New routes (our names, your shapes):
@@ -125,12 +132,13 @@ owner's approval; its computer opens My products.
 ## What is a sample
 
 Every brief, its prices, budget, posts, new users, visitors and not-counted sign-ups is a **sample** from one model
-(`make_data.py`, `BRIEFS`); the prices, the 7- and 14-day checks, the 3-days-of-use rule and the stake are
-**placeholders**, yours to set. Real, as read on 2026-10-22: the owner's eight Build it Better apps and their 30-day
+(`make_data.py`, `BRIEFS`); the prices are **placeholders**, and the checks in the fold are examples (A5), yours to
+choose. Real, as read on 2026-10-22: the owner's eight Build it Better apps and their 30-day
 traffic (the leaderboard), our own account's links, rewards and queues (expire76), Mumtaz's public links, the priority
 post, the Radar apps. The product pictures on the cards are drawn in the mockup.
 
 ## Left to you
 
-How escrow, clawback and the stake work; how quotes and disputes are handled; the exact anti-fraud measurements; any
-fee. The look is not left open.
+How only real new users get paid (A5: verify and choose the best protection); whether promoters can work with a wallet
+address alone, without an account (A4b); how escrow and payouts work; how quotes and disputes are handled; any fee. The
+look is not left open.
