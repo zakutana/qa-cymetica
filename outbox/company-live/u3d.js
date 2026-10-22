@@ -1122,14 +1122,14 @@ function chipFaceTex(q) {
   for (let i = 0; i < 12; i++) { g.fillStyle = i % 2 ? CASINO.ice : CASINO.white; g.save(); g.translate(m, m); g.rotate((i + 0.5) / 12 * Math.PI * 2); g.fillRect(-W * 0.022, at(0.08), W * 0.044, at(0.92) - at(0.08)); g.restore(); }
   const t = new THREE.CanvasTexture(c); t.colorSpace = THREE.SRGBColorSpace; t.anisotropy = 8; TX[key] = t; return t;
 }
-// the revenue share's pulse carries a dollar sign: gold, glowing, drawn once
+// the revenue share's pulse carries a dollar sign: in the board's magenta (the casino's neon), glowing, drawn once
 function dollarTex() {
   if (TX.dollar) return TX.dollar;
   const c = document.createElement('canvas'); c.width = c.height = 128; const g = c.getContext('2d');
-  const r = g.createRadialGradient(64, 64, 4, 64, 64, 62); r.addColorStop(0, 'rgba(255,214,90,.55)'); r.addColorStop(1, 'rgba(255,200,61,0)');
+  const r = g.createRadialGradient(64, 64, 4, 64, 64, 62); r.addColorStop(0, 'rgba(255,110,225,.55)'); r.addColorStop(1, 'rgba(255,79,216,0)');
   g.fillStyle = r; g.fillRect(0, 0, 128, 128);
   g.font = '900 84px Arial, sans-serif'; g.textAlign = 'center'; g.textBaseline = 'middle';
-  g.shadowColor = '#ffc83d'; g.shadowBlur = 18; g.fillStyle = '#fff3c4'; g.fillText('$', 64, 68);
+  g.shadowColor = '#ff4fd8'; g.shadowBlur = 18; g.fillStyle = '#ffe3f8'; g.fillText('$', 64, 68);
   const t = new THREE.CanvasTexture(c); t.colorSpace = THREE.SRGBColorSpace; TX.dollar = t; return t;
 }
 // the spine's ribbed sections, in the station's dark violet steel
@@ -1995,7 +1995,7 @@ class Universe3D {
     CO.uvBoard(mine).top.forEach((r, i) => {
       const it = this.items.find((x) => (r.mine ? x.mine : !x.kind && !x.mine && String(x.c.id) === String(r.c.id)));
       if (!it) return;
-      setTimeout(() => { this.arc(it, true, '#ffc83d'); setTimeout(() => this.pop(it, '+' + r.share + '% of fees', 'gold'), 1500); }, i * 450);
+      setTimeout(() => { this.arc(it, true, '#ff4fd8'); setTimeout(() => this.pop(it, '+' + r.share + '% of fees', 'share'), 1500); }, i * 450);
     });
   }
   // work goes in to Cymetica in the company's colour; ET10 comes back out in green (or in the colour given: gold for the share)

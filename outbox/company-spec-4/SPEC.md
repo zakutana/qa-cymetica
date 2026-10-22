@@ -80,17 +80,20 @@ a company that earns $5 a month never takes a share of everyone's fees. A place 
 Paid monthly in USDC, from that month's fees, by the ranking at the month's end; a tie goes to the company that got there first. Private
 companies are on the board too, with name, station and revenue: the share comes from everyone's fees, so who receives it is public.
 
-**The board** (`uvboard.js`, styles in `uvpanel.css`): a HUD of glass over the Universe's top-left, under the LIVE line, that does not move
-when the map turns or zooms. *REVENUE SHARE · TOP 3*, *5% · 3% · 1% of every fee on Cymetica*, then three rows: the place (gold, silver,
-bronze), the company's station icon in its colour and name (YOU on ours), its revenue, and the share with about what it pays a month
+**The board** (`uvboard.js`, styles in `uvpanel.css`): one big pane of frosted glass over the Universe's top-left, under the LIVE line, that
+does not move when the map turns or zooms. It is turned away on its left edge like a cockpit panel (rotateY 18.4°, rotateX 3.4°), with wide
+margins all round, a magenta rim (the casino's neon), a lit top edge, its thickness along the bottom and a slow sheen; on the glass there is only
+type and light: **no row boxes, no tiles round the icons, no frames**. *REVENUE SHARE · TOP 3*, *5% · 3% · 1% of every fee on Cymetica*, then
+three rows: a big place numeral in magenta (brightest for the first), the company's station glyph in its colour and its name (YOU on ours), its
+revenue, and the share with about what it pays a month
 (platform fees of the last 30 days × the share). Under them *Platform fees · 30 d* and *qualify at*, and *Full leaderboard →*. On a stage under
 760 px it folds into a *TOP 3* pill. It hides while Buy land is on.
 
 **The full leaderboard** (a dialog from the board): every company ranked, its revenue, and for the top three the share and the month's
 amount, for the rest *qualifies* or *$X to qualify*; our row highlighted. Nothing else.
 
-**The pulse**: every 10 seconds a gold arc carrying a dollar sign leaves Cymetica's sun to each of the three, one after another, and
-*+5% of fees* / *+3% of fees* / *+1% of fees* rises over each. Only the top three get it. The flat map shows the gold line of text.
+**The pulse**: every 10 seconds a magenta arc carrying a dollar sign leaves Cymetica's sun to each of the three, one after another, and
+*+5% of fees* / *+3% of fees* / *+1% of fees* rises over each in the same magenta. Only the top three get it. The flat map shows the line of text.
 
 What the build needs from you: per company the 30-day revenue from your records (the sources above), the platform's fees for the month so far
 and for the last 30 days, and the payout itself. Left to you: the floor, and a cap if you want one (for example, a share never larger than the

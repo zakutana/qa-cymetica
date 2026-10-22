@@ -111,85 +111,90 @@ a.uvr { color: var(--text); text-decoration: none; } a.uvr:hover { background: v
 .uvp.k-promo .pmm > div { padding: 8px 10px; border-radius: 9px; background: var(--navy); border: 1px solid var(--line); }
 .uvp.k-promo .pmm b { display: block; font-size: 16px; font-weight: 800; color: var(--cyan); } .uvp.k-promo .pmm span { font-size: 9.5px; color: var(--dim2); }
 
-/* The revenue-share board (uvboard.js): a HUD of glass over the map's top-left, fixed while the galaxy turns. Gold, silver,
-   bronze for the three places: the Universe is a game scene (SPEC-NOTES 2026-10-18), and money here is gold. */
-:root { --gold: #ffc83d; --silver: #c9d4e2; --bronze: #d29a6a; }
-/* 2026-10-22, the operator: "profi sklo 3D zesikma a vetsi o 15 %". A slab of glass turned away on its left edge like a
-   cockpit panel (perspective on .uvb), frosted, a gold rim, a lit top edge, its thickness showing along the bottom, corner
-   brackets and a slow sheen across; every size 15% up from the first draw. */
-.uvb { position: absolute; z-index: 5; top: 58px; left: 14px; width: 380px; font-family: 'JetBrains Mono', monospace; color: var(--text);
+/* The revenue-share board (uvboard.js): a HUD of glass over the map's top-left, fixed while the galaxy turns. Magenta, the
+   casino's neon, for the three places (2026-10-22: "misto zlute bych dal tu magentu jak mame casino"); a game scene's colour. */
+:root { --mg: #ff4fd8; --mg2: #e2a0ff; --mg3: #c98bc4; }
+/* 2026-10-22, the operator, twice: "profi sklo 3D zesikma a vetsi o 15 %", then "jeste o 15 % vic pootocil", "po okrajich mnohem
+   vetsi margin, takove sklo jakoby velke", magenta for the yellow, "zadne obdelnicky a ramecky, proste na tom skle jen tak husto".
+   So: one big pane of frosted glass, turned away on its left edge (rotateY 18.4deg, 15% past the first 16), wide margins all
+   round, and on it only type and light: no row boxes, no tiles round the icons, no corner frames; a magenta rim, a lit top
+   edge, its thickness along the bottom, a slow sheen. */
+.uvb { position: absolute; z-index: 5; top: 58px; left: 14px; width: 450px; font-family: 'JetBrains Mono', monospace; color: var(--text);
   perspective: 1200px; perspective-origin: 0% 35%; }
 /* a department icon (.dic, style.css) places itself in column 1 over three rows: here it is one cell in its row */
 .uvb-r .dic, .lb-r .dic { grid-column: auto; grid-row: auto; }
-.uvb-in { position: relative; padding: 16px 16px 14px; border-radius: 14px; transform: rotateY(16deg) rotateX(3deg); transform-origin: 0% 50%;
+.uvb-in { position: relative; padding: 34px 38px 30px; border-radius: 24px; transform: rotateY(18.4deg) rotateX(3.4deg); transform-origin: 0% 50%;
   transition: transform .5s cubic-bezier(.2, .8, .2, 1);
   background:
-    linear-gradient(135deg, rgba(255, 255, 255, .17) 0%, rgba(255, 255, 255, .05) 26%, rgba(255, 255, 255, 0) 46%),
-    linear-gradient(180deg, rgba(22, 30, 46, .4), rgba(6, 9, 15, .6));
-  backdrop-filter: blur(14px) saturate(1.45) brightness(1.08); -webkit-backdrop-filter: blur(14px) saturate(1.45) brightness(1.08);
-  border: 1px solid rgba(255, 255, 255, .16);
-  box-shadow: inset 0 1px 0 rgba(255, 255, 255, .5), inset 0 0 0 1px rgba(255, 200, 61, .22), inset 0 -18px 30px -18px rgba(255, 200, 61, .2),
-    0 0 0 1px rgba(255, 200, 61, .3), 0 0 46px rgba(255, 200, 61, .16), -6px 26px 46px rgba(0, 0, 0, .6); }
-.uvb:hover .uvb-in { transform: rotateY(9deg) rotateX(2deg); }
-/* the slab's thickness: a gold-lit edge under it */
-.uvb-in::after { content: ''; position: absolute; left: 10px; right: 6px; bottom: -7px; height: 7px; border-radius: 0 0 12px 12px; pointer-events: none;
-  background: linear-gradient(180deg, rgba(255, 200, 61, .55), rgba(120, 86, 18, .35) 60%, rgba(0, 0, 0, .25)); transform: skewX(-8deg); transform-origin: left top; }
-/* the corner brackets */
-.uvb-cn { position: absolute; inset: 7px; pointer-events: none; opacity: .8; filter: drop-shadow(0 0 4px rgba(255, 200, 61, .8));
-  background:
-    linear-gradient(var(--gold), var(--gold)) left top / 18px 2px no-repeat, linear-gradient(var(--gold), var(--gold)) left top / 2px 18px no-repeat,
-    linear-gradient(var(--gold), var(--gold)) right top / 18px 2px no-repeat, linear-gradient(var(--gold), var(--gold)) right top / 2px 18px no-repeat,
-    linear-gradient(var(--gold), var(--gold)) left bottom / 18px 2px no-repeat, linear-gradient(var(--gold), var(--gold)) left bottom / 2px 18px no-repeat,
-    linear-gradient(var(--gold), var(--gold)) right bottom / 18px 2px no-repeat, linear-gradient(var(--gold), var(--gold)) right bottom / 2px 18px no-repeat; }
+    linear-gradient(135deg, rgba(255, 255, 255, .16) 0%, rgba(255, 255, 255, .05) 24%, rgba(255, 255, 255, 0) 44%),
+    radial-gradient(120% 90% at 0% 0%, rgba(255, 79, 216, .16), rgba(255, 79, 216, 0) 60%),
+    linear-gradient(180deg, rgba(24, 22, 44, .36), rgba(6, 8, 16, .58));
+  backdrop-filter: blur(16px) saturate(1.5) brightness(1.08); -webkit-backdrop-filter: blur(16px) saturate(1.5) brightness(1.08);
+  border: 1px solid rgba(255, 255, 255, .14);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, .5), inset 0 0 0 1px rgba(255, 79, 216, .2), inset 0 -22px 36px -22px rgba(255, 79, 216, .22),
+    0 0 0 1px rgba(255, 79, 216, .32), 0 0 70px rgba(255, 79, 216, .18), -8px 30px 54px rgba(0, 0, 0, .62); }
+.uvb:hover .uvb-in { transform: rotateY(10deg) rotateX(2deg); }
+/* the pane's thickness: a magenta-lit edge under it */
+.uvb-in::after { content: ''; position: absolute; left: 14px; right: 8px; bottom: -8px; height: 8px; border-radius: 0 0 18px 18px; pointer-events: none;
+  background: linear-gradient(180deg, rgba(255, 79, 216, .55), rgba(110, 30, 100, .35) 60%, rgba(0, 0, 0, .25)); transform: skewX(-8deg); transform-origin: left top; }
 /* a slow sheen across the glass */
 .uvb-sh { position: absolute; inset: 0; border-radius: inherit; overflow: hidden; pointer-events: none; }
 .uvb-sh::before { content: ''; position: absolute; top: -40%; bottom: -40%; left: -60%; width: 38%; transform: skewX(-18deg); animation: uvbsheen 7s ease-in-out infinite;
-  background: linear-gradient(100deg, transparent, rgba(255, 255, 255, .1) 45%, rgba(255, 240, 200, .17) 50%, transparent 60%); }
+  background: linear-gradient(100deg, transparent, rgba(255, 255, 255, .1) 45%, rgba(255, 220, 248, .17) 50%, transparent 60%); }
 @keyframes uvbsheen { 0%, 62% { left: -60%; } 100% { left: 130%; } }
-.uvb-in > :not(.uvb-sh):not(.uvb-cn) { position: relative; }
-.uvb-h { display: flex; align-items: center; gap: 9px; }
-.uvb-h b { font: 400 17.5px 'Archivo Black', sans-serif; letter-spacing: .08em; color: transparent; -webkit-background-clip: text; background-clip: text;
-  background-image: linear-gradient(180deg, #fff6d6, #ffd35c 55%, #c8901f); filter: drop-shadow(0 0 10px rgba(255, 200, 61, .45)); }
-.uvb-h span:last-child { margin-left: auto; font-size: 10.5px; font-weight: 800; letter-spacing: .14em; color: var(--bg); padding: 3px 9px; border-radius: 9px;
-  background: linear-gradient(180deg, #ffe08a, var(--gold)); box-shadow: 0 0 12px rgba(255, 200, 61, .5); }
-.uvb-live { width: 9px; height: 9px; border-radius: 50%; background: var(--gold); box-shadow: 0 0 12px var(--gold); animation: tlpulse 1.8s ease-in-out infinite; }
-.uvb-sub { margin: 5px 0 10px; font-size: 12px; color: #c6d2e2; cursor: help; }
-.uvb-r { display: grid; grid-template-columns: 28px 32px minmax(0, 1fr) auto; align-items: center; gap: 10px; margin-top: 7px; padding: 10px 12px 10px 9px; border-radius: 10px;
-  background: linear-gradient(180deg, rgba(255, 255, 255, .075), rgba(255, 255, 255, .02)); border: 1px solid rgba(255, 255, 255, .1);
-  box-shadow: inset 0 1px 0 rgba(255, 255, 255, .12), 0 4px 12px rgba(0, 0, 0, .25); }
-.uvb-r.pl1 { border-color: rgba(255, 200, 61, .45); background: linear-gradient(180deg, rgba(255, 200, 61, .15), rgba(255, 200, 61, .03));
-  box-shadow: inset 0 1px 0 rgba(255, 236, 170, .35), 0 0 18px rgba(255, 200, 61, .14); }
-.uvb-r .dic { width: 32px; height: 32px; }
-.uvb-ic { width: 32px; height: 32px; border-radius: 9px; border: 1px dashed var(--line3); }
-.uvb-rk, .lb-rk { display: grid; place-items: center; width: 22px; height: 22px; border-radius: 50%; font: 400 11.5px 'Archivo Black', sans-serif; font-style: normal; color: #0a0e17;
-  background: linear-gradient(150deg, #8b97a8, #5d6878); }
-.uvb-rk { width: 26px; height: 26px; font-size: 13px; }
-/* pl1-pl3, not p1-p3: .p3 is the office's 3D preview card (uv.css) */
-.pl1 .uvb-rk, .lb-r.pl1 .lb-rk { background: linear-gradient(150deg, #fff1b8, var(--gold) 45%, #b8861b); box-shadow: 0 0 12px rgba(255, 200, 61, .6); }
-.pl2 .uvb-rk, .lb-r.pl2 .lb-rk { background: linear-gradient(150deg, #ffffff, var(--silver) 45%, #7d8a9c); box-shadow: 0 0 10px rgba(201, 212, 226, .45); }
-.pl3 .uvb-rk, .lb-r.pl3 .lb-rk { background: linear-gradient(150deg, #f6d2b0, var(--bronze) 45%, #8a5a33); box-shadow: 0 0 10px rgba(210, 154, 106, .45); }
+.uvb-in > :not(.uvb-sh) { position: relative; }
+/* the head: type only */
+.uvb-h { display: flex; align-items: baseline; gap: 10px; }
+.uvb-live { width: 9px; height: 9px; border-radius: 50%; align-self: center; background: var(--mg); box-shadow: 0 0 14px var(--mg); animation: tlpulse 1.8s ease-in-out infinite; }
+.uvb-h b { font: 400 20px 'Archivo Black', sans-serif; letter-spacing: .08em; color: transparent; -webkit-background-clip: text; background-clip: text;
+  background-image: linear-gradient(180deg, #ffe6fa, #ff7fe3 52%, #c23bd6); filter: drop-shadow(0 0 12px rgba(255, 79, 216, .5)); }
+.uvb-h span:last-child { margin-left: auto; font: 800 12px 'JetBrains Mono'; letter-spacing: .2em; color: var(--mg); text-shadow: 0 0 10px rgba(255, 79, 216, .7); }
+.uvb-sub { margin: 6px 0 18px; font-size: 12.5px; color: #d6c8e2; cursor: help; }
+/* a row: a big place numeral, the station's glyph, the name, the share; nothing round them */
+.uvb-r { display: grid; grid-template-columns: 34px 30px minmax(0, 1fr) auto; align-items: center; gap: 14px; padding: 13px 0; }
+.uvb-r + .uvb-r { border-top: 1px solid transparent; border-image: linear-gradient(90deg, rgba(255, 255, 255, 0), rgba(255, 255, 255, .1) 30%, rgba(255, 79, 216, .18) 70%, rgba(255, 255, 255, 0)) 1; }
+.uvb-r .dic { width: 30px; height: 30px; background: none; border: 0; box-shadow: none; }
+.uvb-r .dic svg { width: 27px; height: 27px; filter: drop-shadow(0 0 7px var(--ic)); }
+.uvb-ic { width: 30px; text-align: center; color: var(--dim2); }
+.uvb-ic::before { content: '\2014'; }
+.uvb-rk { font: 400 34px/1 'Archivo Black', sans-serif; font-style: normal; text-align: center; color: transparent; -webkit-background-clip: text; background-clip: text;
+  background-image: linear-gradient(180deg, #e6e9f2, #8b93a6); }
+.pl1 .uvb-rk { background-image: linear-gradient(180deg, #ffe0f8, var(--mg) 55%, #a321c0); filter: drop-shadow(0 0 12px rgba(255, 79, 216, .75)); }
+.pl2 .uvb-rk { background-image: linear-gradient(180deg, #f6e8ff, var(--mg2) 55%, #8a57c4); filter: drop-shadow(0 0 9px rgba(226, 160, 255, .5)); }
+.pl3 .uvb-rk { background-image: linear-gradient(180deg, #f3dcef, var(--mg3) 55%, #7e4c78); filter: drop-shadow(0 0 7px rgba(201, 139, 196, .4)); }
 .uvb-n { min-width: 0; }
-.uvb-n b, .lb-n b { display: inline-flex; align-items: center; gap: 5px; max-width: 100%; font-size: 12.5px; font-weight: 700; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.uvb-n b { font-size: 14.5px; }
-.uvb-n b .lk, .lb-n b .lk { width: 10px; height: 10px; flex: none; color: var(--dim2); }
-.uvb-n span { display: block; margin-top: 3px; font-size: 11.5px; color: #9fb0c6; }
-.you { margin-left: 6px; font: 800 8px 'JetBrains Mono'; font-style: normal; letter-spacing: .08em; color: var(--bg); background: var(--green); padding: 1px 5px; border-radius: 7px; vertical-align: 2px; }
+.uvb-n b { display: flex; align-items: center; gap: 6px; max-width: 100%; font-size: 15.5px; font-weight: 700; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+  text-shadow: 0 1px 8px rgba(0, 0, 0, .55); }
+.uvb-n b .lk { width: 11px; height: 11px; flex: none; color: var(--dim2); }
+.uvb-n span { display: block; margin-top: 4px; font-size: 12px; color: #b9a9c8; }
+.uvb-n .you { margin-left: 2px; padding: 0; background: none; color: var(--green); font-size: 10px; letter-spacing: .14em; text-shadow: 0 0 8px rgba(0, 255, 136, .6); }
 .uvb-s { text-align: right; }
-.uvb-s b { display: block; font: 400 24px/1 'Archivo Black', sans-serif; }
-.pl1 .uvb-s b { color: var(--gold); text-shadow: 0 0 16px rgba(255, 200, 61, .6); } .pl2 .uvb-s b { color: var(--silver); text-shadow: 0 0 12px rgba(201, 212, 226, .35); }
-.pl3 .uvb-s b { color: var(--bronze); text-shadow: 0 0 12px rgba(210, 154, 106, .35); }
-.uvb-s span { display: block; margin-top: 4px; font-size: 11px; color: #b4c2d4; white-space: nowrap; }
-.uvb-r.me { border-color: rgba(0, 255, 136, .5); background: rgba(0, 255, 136, .07); }
-.uvb-r.empty { opacity: .55; } .uvb-r.empty .uvb-s b { color: var(--dim2); text-shadow: none; }
-.uvb-f { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin-top: 12px; font-size: 11px; color: #9fb0c6; }
+.uvb-s b { display: block; font: 400 28px/1 'Archivo Black', sans-serif; color: var(--mg3); }
+.pl1 .uvb-s b { color: var(--mg); text-shadow: 0 0 18px rgba(255, 79, 216, .7); }
+.pl2 .uvb-s b { color: var(--mg2); text-shadow: 0 0 12px rgba(226, 160, 255, .45); }
+.pl3 .uvb-s b { color: var(--mg3); text-shadow: 0 0 10px rgba(201, 139, 196, .35); }
+.uvb-s span { display: block; margin-top: 5px; font-size: 12px; color: #cdbfdb; white-space: nowrap; }
+.uvb-r.me .uvb-n b { color: #b8ffd9; }
+.uvb-r.empty { opacity: .5; } .uvb-r.empty .uvb-s b { color: var(--dim2); text-shadow: none; }
+.uvb-f { display: flex; align-items: baseline; justify-content: space-between; gap: 14px; margin-top: 16px; font-size: 11.5px; color: #a898b8; }
 .uvb-f b { color: var(--text); }
-.uvb-f button { flex: none; padding: 0; border: 0; background: none; font: 700 11.5px 'JetBrains Mono'; color: var(--cyan); cursor: pointer; white-space: nowrap; }
-.uvb-f button:hover { color: #6fe4ff; }
-.uvb-pill { display: none; padding: 7px 13px; border-radius: 16px; border: 1px solid rgba(255, 200, 61, .6); background: rgba(8, 12, 20, .7); backdrop-filter: blur(6px);
-  font: 800 11px 'JetBrains Mono'; letter-spacing: .1em; color: var(--gold); cursor: pointer; }
+.uvb-f button { flex: none; padding: 0; border: 0; background: none; font: 700 12px 'JetBrains Mono'; color: #ff8ae6; cursor: pointer; white-space: nowrap;
+  text-shadow: 0 0 10px rgba(255, 79, 216, .45); }
+.uvb-f button:hover { color: #ffc2f2; }
+.uvb-pill { display: none; padding: 7px 13px; border-radius: 16px; border: 1px solid rgba(255, 79, 216, .6); background: rgba(8, 12, 20, .7); backdrop-filter: blur(6px);
+  font: 800 11px 'JetBrains Mono'; letter-spacing: .1em; color: var(--mg); cursor: pointer; }
 .uvb-pill i { font-style: normal; color: var(--dim); letter-spacing: 0; margin-left: 4px; }
 .uvstage.buying .uvb { display: none; }
 /* the full leaderboard (modal) */
+.lb-rk { display: grid; place-items: center; width: 22px; height: 22px; border-radius: 50%; font: 400 11.5px 'Archivo Black', sans-serif; font-style: normal; color: #0a0e17;
+  background: linear-gradient(150deg, #8b97a8, #5d6878); }
+/* pl1-pl3, not p1-p3: .p3 is the office's 3D preview card (uv.css) */
+.lb-r.pl1 .lb-rk { background: linear-gradient(150deg, #ffe0f8, var(--mg) 50%, #a321c0); box-shadow: 0 0 12px rgba(255, 79, 216, .6); }
+.lb-r.pl2 .lb-rk { background: linear-gradient(150deg, #f6e8ff, var(--mg2) 50%, #8a57c4); box-shadow: 0 0 10px rgba(226, 160, 255, .45); }
+.lb-r.pl3 .lb-rk { background: linear-gradient(150deg, #f3dcef, var(--mg3) 50%, #7e4c78); box-shadow: 0 0 10px rgba(201, 139, 196, .4); }
+.lb-n b { display: inline-flex; align-items: center; gap: 5px; max-width: 100%; font-size: 12.5px; font-weight: 700; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.lb-n b .lk { width: 10px; height: 10px; flex: none; color: var(--dim2); }
+.you { margin-left: 6px; font: 800 8px 'JetBrains Mono'; font-style: normal; letter-spacing: .08em; color: var(--bg); background: var(--green); padding: 1px 5px; border-radius: 7px; vertical-align: 2px; }
 .lb-sub { margin: 2px 0 12px; font-size: 11px; color: var(--dim); } .lb-sub b { color: var(--text); }
 .lb-head, .lb-r { display: grid; grid-template-columns: 30px 30px minmax(0, 1fr) 130px 160px; align-items: center; gap: 10px; }
 .lb-head { padding: 0 12px 6px; font-size: 9.5px; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; color: var(--dim2); }
@@ -197,19 +202,19 @@ a.uvr { color: var(--text); text-decoration: none; } a.uvr:hover { background: v
 .lb { max-height: 56vh; overflow-y: auto; display: flex; flex-direction: column; gap: 4px; padding-right: 4px; scrollbar-width: thin; scrollbar-color: var(--line3) transparent; }
 .lb-r { padding: 7px 12px; border-radius: 8px; background: var(--navy); border: 1px solid var(--line); font-size: 12px; }
 .lb-r .dic { width: 26px; height: 26px; }
-.lb-r.top { border-color: rgba(255, 200, 61, .35); background: rgba(255, 200, 61, .05); }
+.lb-r.top { border-color: rgba(255, 79, 216, .38); background: rgba(255, 79, 216, .06); }
 .lb-r.me { border-color: rgba(0, 255, 136, .55); background: rgba(0, 255, 136, .07); }
 .lb-v { text-align: right; font-weight: 700; }
 .lb-s { text-align: right; font-size: 10.5px; color: var(--dim2); }
-.lb-s .sh { font: 400 15px 'Archivo Black', sans-serif; color: var(--gold); margin-right: 6px; } .lb-r.pl2 .lb-s .sh { color: var(--silver); } .lb-r.pl3 .lb-s .sh { color: var(--bronze); }
+.lb-s .sh { font: 400 15px 'Archivo Black', sans-serif; color: var(--mg); margin-right: 6px; } .lb-r.pl2 .lb-s .sh { color: var(--mg2); } .lb-r.pl3 .lb-s .sh { color: var(--mg3); }
 .lb-s .ok { color: var(--green); }
-/* the money pulse's pop over a top-3 station */
-.b3pop.gold { color: #ffc83d; font-size: 16px; text-shadow: 0 0 12px rgba(255, 200, 61, .95); }
+/* the money pulse's pop over a top-3 station, in the board's magenta */
+.b3pop.share { color: #ff7fe3; font-size: 16px; text-shadow: 0 0 12px rgba(255, 79, 216, .95); }
 
 @media (max-width: 760px) {
   .uvb { width: auto; max-width: calc(100% - 24px); }
   .uvb-pill { display: inline-flex; }
   .uvb:not(.open) .uvb-in { display: none; }
-  .uvb.open .uvb-in { margin-top: 6px; width: min(380px, calc(100vw - 48px)); transform: none; }
+  .uvb.open .uvb-in { margin-top: 6px; width: min(420px, calc(100vw - 48px)); padding: 22px 22px 20px; transform: none; }
 }
 @media (max-width: 760px) { .uvp { top: auto; height: 62%; bottom: 8px; right: 8px; width: calc(100% - 16px); } }

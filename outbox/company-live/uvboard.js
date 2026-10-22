@@ -26,7 +26,7 @@
         '<div class="uvb-s"><b>' + pct + '%</b><span>≈ ' + usd(r.month) + ' / mo</span></div></div>';
     }).join('');
     return '<button type="button" class="uvb-pill" data-a="board-fold" title="The top 3 get a share of every fee on Cymetica">TOP 3 <i>' + CO.SHARE.join(' · ') + '%</i></button>' +
-      '<div class="uvb-in"><i class="uvb-sh"></i><i class="uvb-cn"></i><div class="uvb-h"><span class="uvb-live"></span><b>REVENUE SHARE</b><span>TOP 3</span></div>' +
+      '<div class="uvb-in"><i class="uvb-sh"></i><div class="uvb-h"><span class="uvb-live"></span><b>REVENUE SHARE</b><span>TOP 3</span></div>' +
       '<div class="uvb-sub" title="Revenue, 30 days: what Cymetica paid the company (bug bounties, product rewards, prizes). Paid monthly in USDC.">' +
         CO.SHARE.join('% · ') + '% of every fee on Cymetica</div>' + rows +
       '<div class="uvb-f"><span>Platform fees · 30 d <b>' + usd(b.fees) + '</b> · qualify at <b>' + usd(b.floor) + '</b></span>' +

@@ -1229,7 +1229,7 @@
     var self = this, mine = this.h.mine ? this.h.mine() : null;
     CO.uvBoard(mine).top.forEach(function (r, i) {
       var it = self.items.filter(function (x) { return r.mine ? x.mine : !x.kind && !x.mine && String(x.c.id) === String(r.c.id); })[0];
-      if (it) setTimeout(function () { self.pop(it, '+' + r.share + '% of fees', '#ffc83d'); }, i * 450);
+      if (it) setTimeout(function () { self.pop(it, '+' + r.share + '% of fees', '#ff4fd8'); }, i * 450);
     });
   };
   Universe.prototype.pop = function (it, label, colour) {
