@@ -2036,16 +2036,16 @@ class Universe3D {
   // stage narrower than his picture, so his whole frame stays in view
   // The first look stands a little farther back and shows the galaxy right of the middle (the operator, 2026-10-22: "at je
   // vesmir trochu oddalenejsi a vic vpravo"), so the revenue-share board over the left (uvboard.js) covers open space, not
-  // the orbits: 12% farther, the aim moved left by 15% of the frame's width. A stage too narrow for the board (it folds
+  // the orbits: 30% farther, the aim moved left by 9% of the frame's width (his second try: "vic to oddal", the whole galaxy in view). A stage too narrow for the board (it folds
   // into a pill under 760 px) keeps his frame as it was.
   home() {
     const Gx = CO.uvGalaxy, [ox, oz] = rotXZ(UVCAM.off[0], UVCAM.off[1], Gx.AZ);
     const tgt = new THREE.Vector3(ox, 0, oz), dir = new THREE.Vector3().setFromSpherical(new THREE.Spherical(1, UVCAM.polar, Gx.AZ));
-    const wide = (this.el && this.el.clientWidth || 0) >= 760, dist = UVCAM.dist * (wide ? 1.12 : 1);
+    const wide = (this.el && this.el.clientWidth || 0) >= 760, dist = UVCAM.dist * (wide ? 1.3 : 1);
     if (wide) {
       const right = new THREE.Vector3(0, 1, 0).cross(dir).normalize(), aspect = this.camera ? this.camera.aspect : UVCAM.aspect;
       const frameW = 2 * dist * Math.tan(THREE.MathUtils.degToRad(this.camera ? this.camera.fov : UVCAM.fov) / 2) * aspect;
-      tgt.addScaledVector(right, -0.15 * frameW);
+      tgt.addScaledVector(right, -0.09 * frameW);
     }
     return { pos: tgt.clone().addScaledVector(dir, dist), tgt };
   }

@@ -89,7 +89,7 @@ revenue, and the share with about what it pays a month
 (platform fees of the last 30 days × the share). Under them *Platform fees · 30 d* and *qualify at*, and *Full leaderboard →*. On a stage under
 760 px it folds into a *TOP 3* pill. It hides while Buy land is on.
 
-**The first look** stands 12% farther back and shows the galaxy right of the middle (aimed 15% of the frame's width to the left), so the board
+**The first look** stands 30% farther back, the whole galaxy in view and right of the middle (aimed 9% of the frame's width to the left), so the board
 covers open space and not the orbits (`u3d.js`, `home()`); a stage under 760 px, where the board folds, keeps the old frame.
 
 **The full leaderboard** (a dialog from the board): every company ranked, its revenue, and for the top three the share and the month's
