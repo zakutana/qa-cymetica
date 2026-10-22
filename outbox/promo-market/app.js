@@ -63,19 +63,20 @@
   function copy(text, what) { try { navigator.clipboard.writeText(text); } catch (e) { /* the mock still says so */ } toast((what || 'Copied') + ' · copied'); }
 
   /* ---------------- state ---------------- */
-  var R = PM.market.results;
   var S = {
     briefs: PM.market.briefs.slice(),
-    taken: { gem: { slug: slugOf('gem'), at: '2026-10-21' } },  // a brief this creator took yesterday: the Briefs tab's sample
-    sent: {},                                                   // post offers this creator sent, by brief
-    filter: 'all', sort: 'pay', qtab: 'reddit', qsel: {}, radar: 0, open: {}, pgSort: 'uniq', pgQ: '', oplat: 'x'
+    mine: PM.market.mine.slice(),
+    taken: { chart: { slug: slugOf('chart'), at: '2026-10-21' } },  // a brief this creator took yesterday: "Briefs I took"'s sample
+    sort: 'left', qtab: 'reddit', qsel: {}, radar: 0, open: {}, pgSort: 'uniq', pgQ: ''
   };
   function stats() {
-    var b = S.briefs, of = function (c) { return sum(b.filter(function (x) { return x.cur === c; }), function (x) { return x.left; }); };
-    return { usdc: of('USDC'), et10: of('ET10'), paid: sum(b, function (x) { return x.paid; }), held: sum(b, function (x) { return x.held; }),
-      rejected: sum(b, function (x) { return x.rejected; }), offers: sum(b, function (x) { return x.offers.length; }), n: b.length };
+    var b = S.briefs;
+    return { left: sum(b, function (x) { return x.left; }), n: b.length,
+      top: b.slice().sort(function (p, q) { return q.per_user - p.per_user; })[0] };
   }
-  function cap(s) { return s.charAt(0).toUpperCase() + s.slice(1); }
+  function briefOf(key) { return S.briefs.filter(function (x) { return x.key === key; })[0]; }
+  function productOf(key) { return S.mine.filter(function (x) { return x.key === key; })[0]; }
+  function usd(n) { return fmt(n) + ' USDC'; }
 
   /* ---------------- charts ---------------- */
   function bars(days, tot, h) {
@@ -102,11 +103,16 @@
     casino: '<circle cx="10" cy="10" r="6.5"/><circle cx="10" cy="10" r="3"/><path d="M10 3.5v2 M10 14.5v2 M3.5 10h2 M14.5 10h2 M5.4 5.4l1.4 1.4 M13.2 13.2l1.4 1.4 M5.4 14.6l1.4-1.4 M13.2 6.8l1.4-1.4"/>',
     chart: '<path d="M5 4v12 M10 3v14 M15 5v9"/><rect x="3.5" y="7" width="3" height="5" rx=".6"/><rect x="8.5" y="5" width="3" height="7" rx=".6"/><rect x="13.5" y="8" width="3" height="4" rx=".6"/>',
     supply: '<circle cx="10" cy="10" r="6.5"/><path d="M10 3.5V10l5.6 3.2"/>',
-    company: I.company, launch: I.shield
+    company: I.company, launch: I.shield,
+    nexus: '<path d="M4 5.5h12v7H9.5L6 15.5v-3H4z"/><circle cx="8" cy="9" r=".7" fill="currentColor"/><circle cx="12" cy="9" r=".7" fill="currentColor"/>',
+    team: I.radar, infil: I.reads, agents: I.agent
   };
-  var HUE = { gem: ['#00ff88', '#00cfff'], casino: ['#00cfff', '#00ff88'], chart: ['#00ff88', '#ff4444'], supply: ['#3b82f6', '#00cfff'], company: ['#00cfff', '#3b82f6'], launch: ['#00ff88', '#00cfff'] };
+  // which of the six motifs each picture uses
+  var MOTIF = { nexus: 'supply', team: 'chart', infil: 'company', agents: 'casino' };
+  var HUE = { gem: ['#00ff88', '#00cfff'], casino: ['#00cfff', '#00ff88'], chart: ['#00ff88', '#ff4444'], supply: ['#3b82f6', '#00cfff'], company: ['#00cfff', '#3b82f6'], launch: ['#00ff88', '#00cfff'],
+    nexus: ['#00cfff', '#00ff88'], team: ['#3b82f6', '#ff4444'], infil: ['#3b82f6', '#00cfff'], agents: ['#00ff88', '#3b82f6'] };
   function art(b) {
-    var k = HUE[b.art || b.key] ? (b.art || b.key) : 'gem', c = HUE[k], id = 'g' + k + Math.random().toString(36).slice(2, 7), m = '', i, x, y;
+    var g = HUE[b.art || b.key] ? (b.art || b.key) : 'gem', k = MOTIF[g] || g, c = HUE[g], id = 'g' + g + Math.random().toString(36).slice(2, 7), m = '', i, x, y;
     var grid = ''; for (x = 12; x < 360; x += 24) grid += 'M' + x + ' 0V150 '; for (y = 6; y < 150; y += 24) grid += 'M0 ' + y + 'H360 ';
     if (k === 'gem') [26, 40, 34, 58, 47, 72, 64, 88, 79, 104, 96, 118].forEach(function (h, j) { m += '<rect x="' + (186 + j * 13.5) + '" y="' + (138 - h) + '" width="9" height="' + h + '" rx="2" fill="url(#' + id + 'v)" opacity="' + (0.35 + j * 0.055).toFixed(2) + '"/>'; });
     if (k === 'casino') for (i = 0; i < 4; i++) for (var j2 = 0; j2 < 5; j2++) { x = 200 + j2 * 30 + (i % 2) * 15; y = 22 + i * 30; var f = (i * 5 + j2) % 4 === 1;
@@ -128,131 +134,150 @@
       '<rect width="360" height="150" fill="#0a0e17"/><rect width="360" height="150" fill="url(#' + id + 'b)"/><rect width="360" height="150" fill="url(#' + id + 'r)"/>' +
       '<path d="' + grid + '" stroke="#e6edf7" stroke-opacity=".035"/><g transform="translate(' + (k === 'gem' || k === 'casino' ? 14 : 0) + ' 0)">' + m + '</g>' +
       '<g transform="translate(22 22)"><rect width="46" height="46" rx="12" fill="#06090f" fill-opacity=".7" stroke="' + c[0] + '" stroke-opacity=".5"/>' +
-      '<g transform="translate(11 11)" fill="none" stroke="' + c[0] + '" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><svg width="24" height="24" viewBox="0 0 20 20">' + (GLYPH[k] || '') + '</svg></g></g>' +
+      '<g transform="translate(11 11)" fill="none" stroke="' + c[0] + '" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><svg width="24" height="24" viewBox="0 0 20 20">' + (GLYPH[g] || '') + '</svg></g></g>' +
       '<text x="24" y="92" fill="#7f93ad" font-family="JetBrains Mono, monospace" font-size="10">cymetica.com' + esc(b.path || '') + '</text></svg>';
   }
 
   /* ---------------- pieces ---------------- */
-  var KINDS = [['all', 'All'], ['active', 'Active user'], ['funded', 'Funded user'], ['paying', 'Paying user']];
-  var PLAT = { x: ['X', 'followers'], youtube: ['YouTube', 'subscribers'], telegram: ['Telegram', 'channel members'] };
   function daysChip(b) { return b.days <= 2 ? '<span class="chip r">' + ic('clock') + b.days + 'd left</span>' : '<span class="chip">' + ic('clock') + b.days + 'd left</span>'; }
-  function perTxt(b) { return 'per ' + R[b.kind].name; }
+  function lnk(path) { return '<a class="lnk" href="https://cymetica.com' + esc(path) + '" target="_blank" rel="noopener">cymetica.com' + esc(path) + ' ↗</a>'; }
+  function pay2(b) {
+    return '<div class="pay2"><div><b>' + fmt(b.per_post) + ' <small>USDC</small></b><span>per post</span></div>' +
+      '<div><b>' + fmt(b.per_user) + ' <small>USDC</small></b><span>per new user</span></div></div>';
+  }
+  // a promoter's card: the product and its link, what is up for grabs, what one post and one new user pay. Nothing else.
   function briefCard(b) {
-    var pct = Math.round(b.left / b.budget * 100), taken = S.taken[b.key], k = R[b.kind];
+    var taken = S.taken[b.key];
     return '<article class="bc" data-brief="' + b.key + '">' +
       '<div class="img">' + art(b) + '<div class="dl">' + daysChip(b) + '</div></div>' +
-      '<div class="bd"><div class="nm"><b>' + esc(b.name) + '</b><span class="by2">by ' + esc(b.buyer) + '</span></div>' +
-      '<div class="ask">' + esc(b.ask) + '</div>' +
-      '<div class="pay"><span class="v">' + fmt(b.price) + ' <small>' + b.cur + '</small></span><span class="per" data-tip="' + esc(cap(k.rule)) + '">' + perTxt(b) + '</span></div>' +
-      '<div class="facts"><span class="chip g" data-tip="Results that passed every check and the hold">' + ic('check') + b.paid + ' paid</span>' +
-        '<span class="chip r" data-tip="Sign-ups that failed a check: never paid">' + ic('shield') + b.rejected + ' rejected</span>' +
-        '<span class="chip" data-tip="Each result waits this long before it is paid">' + ic('lock') + b.hold + 'd hold</span></div>' +
-      '<div><div class="bar"><i style="width:' + pct + '%"></i></div><div class="meta" style="margin-top:7px"><span><b>' + short(b.left) + '</b> of ' + short(b.budget) + ' ' + b.cur + ' left</span><span>' +
-        (b.offers.length ? '<b>' + b.offers.length + '</b> post offer' + (b.offers.length > 1 ? 's' : '') : 'no post offers yet') + '</span></div></div>' +
-      '<div class="ft"><button class="btn sm gh" data-offer="' + b.key + '" data-tip="Quote a price for one post to your audience">' + ic('reply') + 'Offer a post</button>' +
-        (taken ? '<button class="btn sm gh" data-brief="' + b.key + '">' + ic('check') + 'Taken · open</button>' : '<button class="btn sm g" data-take="' + b.key + '">Take it ' + ic('arrow') + '</button>') + '</div></div></article>';
+      '<div class="bd"><div class="nm"><b>' + esc(b.name) + '</b>' + lnk(b.path) + '</div>' +
+      '<div class="ufg"><span>Up for grabs</span><b>' + fmt(b.left) + ' <small>USDC</small></b></div>' + pay2(b) +
+      (taken ? '<button class="btn gh full" data-brief="' + b.key + '">' + ic('check') + 'Taken · my link</button>' :
+        '<button class="btn g full" data-take="' + b.key + '">Take it ' + ic('arrow') + '</button>') + '</div></article>';
   }
   function sortBriefs(list) {
-    var l = list.filter(function (b) { return S.filter === 'all' || b.kind === S.filter; });
-    // ET10 and USDC are not compared with each other: USDC prices first, by size, then ET10
-    var f = { pay: function (a, b) { return (b.cur === 'USDC') - (a.cur === 'USDC') || b.price - a.price; }, ending: function (a, b) { return a.days - b.days; }, newest: function (a, b) { return a.age - b.age; } }[S.sort];
-    return l.sort(f);
+    var f = { left: function (a, b) { return b.left - a.left; }, user: function (a, b) { return b.per_user - a.per_user; }, ending: function (a, b) { return a.days - b.days; } }[S.sort];
+    return list.sort(f);
   }
   function boardHead(title) {
     return '<div class="bhead"><h2>' + title + '</h2><span class="cnt" id="bcnt"></span><span class="sp"></span>' +
-      '<div class="seg" id="bfilter">' + KINDS.map(function (k) { return '<button data-f="' + k[0] + '" class="' + (S.filter === k[0] ? 'on' : '') + '">' + k[1] + '</button>'; }).join('') + '</div>' +
-      '<div class="seg" id="bsort">' + [['pay', 'Best paid'], ['ending', 'Ending soon'], ['newest', 'Newest']].map(function (s) { return '<button data-s="' + s[0] + '" class="' + (S.sort === s[0] ? 'on' : '') + '">' + s[1] + '</button>'; }).join('') + '</div></div>';
+      '<div class="seg" id="bsort">' + [['left', 'Most up for grabs'], ['user', 'Best per new user'], ['ending', 'Ending soon']].map(function (s) { return '<button data-s="' + s[0] + '" class="' + (S.sort === s[0] ? 'on' : '') + '">' + s[1] + '</button>'; }).join('') + '</div></div>';
   }
   function board() { var l = sortBriefs(S.briefs.slice()); return '<div class="grid" id="bgrid">' + l.map(briefCard).join('') + '</div>'; }
   function refreshBoard() { var g = $('bgrid'); if (!g) return; var l = sortBriefs(S.briefs.slice()); g.innerHTML = l.map(briefCard).join(''); var c = $('bcnt'); if (c) c.textContent = l.length; }
-  // the way from a click to a paid result, as five numbers
-  function funnel(f) {
-    var steps = [['Clicks', f.clicks, ''], ['New accounts', f.accounts, ''], ['Qualified', f.qualified, 'c'], ['In hold', f.held, ''], ['Paid', f.paid, 'g']];
-    return '<div class="fun">' + steps.map(function (s, i) { return (i ? '<span class="fa">' + ic('chev') + '</span>' : '') + '<div class="fs ' + s[2] + '"><b>' + fmt(s[1]) + '</b><span>' + s[0] + '</span></div>'; }).join('') + '</div>';
+  // the six checks a new user passes before it is paid: kept out of the way, behind a fold
+  function rules() {
+    var r = [['uniq', 'A new person', 'A first account, first visit through your link, within 7 days.'],
+      ['shield', 'One person, one user', 'Device, network, wallet and phone are matched across every user.'],
+      ['today', 'Really uses it', 'Uses the product on 3 different days within 14.'],
+      ['telegram', 'Proof of person', 'A Telegram account or a wallet with on-chain history.'],
+      ['lock', 'Checked for 14 days', 'Paid after 14 days; clawed back if it turns out fake.'],
+      ['coin', 'Promoters stake', 'AI agents and new promoters stake ET10; a farmed user burns it.']];
+    return '<div class="cgrid">' + r.map(function (x) { return '<div class="chk"><span class="n">' + ic(x[0]) + '</span><div><b>' + x[1] + '</b><span>' + x[2] + '</span></div></div>'; }).join('') + '</div>';
+  }
+  // visitors per day as bars, one colour per series, stacked
+  var SER = ['#00ff88', '#00cfff', '#3b82f6', '#a9b8cc'];
+  function vbars(series, H) {
+    var W = 520, n = 14, bw = W / n, h = H || 120, tot = [], o = '', i;
+    for (i = 0; i < n; i++) tot.push(sum(series, function (s) { return s[i] || 0; }));
+    var max = Math.max.apply(null, tot) || 1;
+    for (i = 0; i < n; i++) { var y = h; series.forEach(function (s, k) { var hh = (s[i] || 0) / max * (h - 6); if (hh > 0) { y -= hh; o += '<rect x="' + (i * bw + bw * 0.16).toFixed(1) + '" y="' + y.toFixed(1) + '" width="' + (bw * 0.68).toFixed(1) + '" height="' + hh.toFixed(1) + '" rx="2" fill="' + SER[k % SER.length] + '" opacity=".9"/>'; } }); }
+    var d = PM.me.days, lab = function (j) { return '<span>' + dShort(new Date(d[j] + 'T12:00:00Z')) + '</span>'; };
+    return '<svg viewBox="0 0 ' + W + ' ' + h + '" preserveAspectRatio="none" style="width:100%;height:' + h + 'px">' + o + '</svg><div class="dl">' + lab(0) + lab(n - 1) + '</div>';
   }
 
   var PROMO_PROMPT = 'Read https://cymetica.com/llms.txt and https://cymetica.com/.well-known/mcp.json.\n' +
     'Then register me as an agent: POST https://cymetica.com/mcp/v1/register\n' +
     'with {"name": "my-agent", "contact_email": "", "intended_use": "promotion"}.\n' +
     'Save the returned api_key privately and send it as the X-API-Key header on every later call.\n' +
-    'Then list the open promo briefs: GET https://cymetica.com/api/v1/promo/briefs?sort=pay\n' +
-    'Each one pays per verified new user, never per click: read what counts as a result in each.\n' +
+    'Then list the open promo briefs: GET https://cymetica.com/api/v1/promo/briefs?sort=per_user\n' +
+    'Each one pays USDC per post and per new user its link brings.\n' +
     'Show me the three best paid briefs I can take.\n' +
     'Wait for my go before taking a brief or posting anything.';
   function codeHTML(t) { return esc(t).replace(/(https:\/\/[^\s]+)/g, '<span class="u">$1</span>'); }
 
   /* ---------------- the market (/creator-dashboard) ---------------- */
   function market() {
-    var st = stats(), h = PM.market.house, m = PM.live.measure.match(/([\d.]+) clicks per posted link per day.*?over ([\d,]+) links, ([\d,]+) unique visitors/);
-    var all = st.paid + st.held + st.rejected;
+    var st = stats();
+    var tut = [['Pick a brief', 'Each one says what it pays per post and per new user.'], ['Take it', 'You get your own link. One click.'],
+      ['Post it', 'X, Reddit, Telegram, YouTube, a group chat: anywhere.'], ['Get paid in USDC', 'For every post that stays up and every new user your link brings.']];
     return '<div class="wrap">' +
       '<section class="hero"><div>' +
         '<span class="chip g"><i class="live"></i>PROMO MARKET</span>' +
-        '<h1>Get real users.<br><em>Pay only for results.</em></h1>' +
-        '<p class="lead">Show your product and lock a budget. Creators, agents and firms compete to bring you new users; you pay for each one that passes the checks.</p>' +
-        '<div class="ctas"><button class="btn g lg" data-act="brief">' + ic('plus') + 'Post a brief</button>' +
-        '<a class="btn c lg" href="#board">Find a brief to take ' + ic('arrow') + '</a>' +
+        '<h1>Post it. Bring users.<br><em>Get paid in USDC.</em></h1>' +
+        '<p class="lead">Take a brief, share your link, earn for every post and every new user it brings.</p>' +
+        '<div class="ctas"><a class="btn g lg" href="#board">Browse briefs ' + ic('arrow') + '</a>' +
+        '<a class="btn c lg" href="#me/products">' + ic('plus') + 'Promote my product</a>' +
         '<button class="btn gh lg" data-act="agent">' + ic('agent') + 'From your AI agent</button></div></div>' +
-      '<div class="stats">' +
-        '<div class="stat" style="--c:#00ff88"><div class="k">' + ic('coin') + 'On offer</div><div class="v pos">' + short(st.usdc) + '<small>USDC</small></div><div class="s">+ ' + short(st.et10) + ' ET10 · ' + st.n + ' briefs</div></div>' +
-        '<div class="stat"><div class="k">' + ic('check') + 'Results paid</div><div class="v">' + fmt(st.paid) + '</div><div class="s">' + st.held + ' in hold now</div></div>' +
-        '<div class="stat" style="--c:#ff4444"><div class="k">' + ic('shield') + 'Rejected by the checks <span class="i" data-tip="Sign-ups that failed a check (same device, a wallet the promoter funded, no proof of person, gone before the hold ended) and were never paid">i</span></div><div class="v neg">' + fmt(st.rejected) + '</div><div class="s">' + Math.round(st.rejected / all * 100) + '% of sign-ups, never paid</div></div>' +
-        '<div class="stat" style="--c:#3b82f6"><div class="k">' + ic('uniq') + 'Visitors from creators <span class="i tipr" data-tip="Live measure across all creators: ' + m[1] + ' clicks per posted link per day">i</span></div><div class="v">' + fmt(+m[3]) + '</div><div class="s">last 30 days · ' + fmt(+m[2]) + ' links</div></div>' +
+      '<div class="stats three">' +
+        '<div class="stat" style="--c:#00ff88"><div class="k">' + ic('coin') + 'Up for grabs</div><div class="v pos">' + fmt(st.left) + '<small>USDC</small></div></div>' +
+        '<div class="stat"><div class="k">' + ic('briefs') + 'Open briefs</div><div class="v">' + st.n + '</div></div>' +
+        '<div class="stat" style="--c:#00cfff"><div class="k">' + ic('uniq') + 'Top per new user</div><div class="v">' + st.top.per_user + '<small>USDC</small></div><div class="s">' + esc(st.top.name) + '</div></div>' +
       '</div></section>' +
-      '<section class="steps">' +
-        step('briefs', 'Show your product', 'lock a budget, name the result', 'The budget is locked when the brief opens. What is not spent comes back when it ends.') +
-        step('link', 'Anyone promotes', 'a tracked link each', 'Creators, AI agents and marketing firms take the brief; each gets its own cymetica.com/c/ link, and one per thread it replies in.') +
-        step('shield', 'Every result checked', 'new person · real action · hold', 'A new person, through the link, doing the brief’s action, with proof of person, held 14 or 30 days.') +
-        step('coin', 'Paid per result', 'or per post, if you accept an offer', 'A result is paid from the budget when its hold ends. An influencer’s post offer is paid once the post has stayed up 7 days.') +
-      '</section>' +
-      '<section class="checks"><div class="ch2"><span class="kick">What counts as a result</span><h2>Cheaper to earn than to fake.</h2><p>Every rule is checked by the platform, for every result, before a cent moves.</p></div><div class="cgrid">' +
-        chk('uniq', 'A new person', 'A first account, first visit through the promoter’s link, within 7 days.') +
-        chk('shield', 'One person, one result', 'Device, network, wallet and phone are matched across every result.') +
-        chk('today', 'A real action', 'The brief’s own: 3 days of use, a $20 deposit of own funds, or a paid plan.') +
-        chk('telegram', 'Proof of person', 'A Telegram account or a wallet with on-chain history, one per result.') +
-        chk('lock', 'Held, then paid', '14 or 30 days in escrow, clawed back if it turns out fake.') +
-        chk('coin', 'Promoters stake', 'Agents and new promoters stake ET10 to take a brief; a farmed result burns it.') +
-      '</div></section>' +
+      '<section class="tut">' + tut.map(function (t, i) { return '<div class="ts"><span class="no">' + (i + 1) + '</span><div><b>' + t[0] + '</b><span>' + t[1] + '</span></div></div>'; }).join('') + '</section>' +
       '<section id="board">' + boardHead('Open briefs') + board() + '</section>' +
-      '<section class="house"><div class="badge">' + ic('coin') + '</div><div><span class="kick">Per post · Cymetica’s own programme</span>' +
-        '<h3>Any Cymetica tool, in the thread that asks for it</h3><div class="row">' +
-        h.outlets.map(function (o) { return '<span class="chip">' + ic(o) + OUT[o] + '</span>'; }).join('') +
-        '<span class="chip g">' + fmt(h.replied) + ' replies posted</span><span class="chip c">' + fmt(h.open_threads) + ' threads waiting</span></div></div>' +
-        '<div class="pay"><div class="v">' + fmt(h.pay) + ' ET10 <small>+ ' + fmt(h.pay2) + ' ETLP / post</small></div><a class="btn g" href="#me/queues" style="margin-top:12px">Open the queue ' + ic('arrow') + '</a></div></section>' +
       '<section class="duo">' +
-        '<div class="panel"><span class="kick">For companies</span><h3>Show your product. Name a budget.</h3><p>Anyone may bring you users; you choose what a result is.</p>' +
-          '<div class="pledge"><div>' + ic('lock') + 'Budget locked when the brief opens; unspent comes back</div><div>' + ic('shield') + 'Paid per verified new user, never per click</div><div>' + ic('reply') + 'Influencers may quote a price per post; you accept or decline</div></div>' +
-          '<div class="ctas" style="display:flex;gap:10px"><button class="btn g" data-act="brief">' + ic('plus') + 'Post a brief</button><a class="btn gh" href="https://cymetica.com/company" target="_blank" rel="noopener" data-tip="A Marketing department writes the briefs for your products; each one waits for your approval">' + ic('company') + 'Let your company’s Marketing do it</a></div></div>' +
-        '<div class="panel"><span class="kick">For agents and firms</span><h3>Promote from your own AI agent</h3><p>Paste into Claude, ChatGPT, Gemini or any MCP agent.</p>' +
+        '<div class="panel"><span class="kick">Have a product?</span><h3>Get it promoted.</h3><p>You pay only for posts that stay up and new users that are real.</p>' +
+          '<div class="how" style="margin-bottom:20px">' + [['Pick your product', 'Anything you built with Build it Better.'], ['Set a budget', 'And what you pay per post and per new user.'], ['Watch the visitors come', 'Every visitor and new user it brought, by day.']].map(function (h, i) {
+            return '<div><span class="no">' + (i + 1) + '</span><div><b>' + h[0] + '</b><span>' + h[1] + '</span></div></div>'; }).join('') + '</div>' +
+          '<div class="ctas" style="display:flex;gap:10px"><a class="btn g" href="#me/products">' + ic('plus') + 'Post a brief</a></div></div>' +
+        '<div class="panel"><span class="kick">For agents and firms</span><h3>Promote from your AI agent</h3><p>Paste into Claude, ChatGPT, Gemini or any MCP agent.</p>' +
           '<pre class="code">' + codeHTML(PROMO_PROMPT) + '</pre><button class="btn c" data-copy="promo">' + ic('copy') + 'Copy prompt</button></div>' +
       '</section>' +
-      '<footer class="foot"><a href="#profile">Creator pages</a><a href="#me">Your dashboard</a><a href="https://cymetica.com/company" target="_blank" rel="noopener">Start a company ↗</a><span style="margin-left:auto">Data read ' + DAY + ' · briefs are samples</span></footer>' +
+      '<details class="fold"><summary>' + ic('shield') + 'How a new user is counted <span class="dim mono">6 checks before anyone is paid</span>' + ic('down', 'chevd') + '</summary>' + rules() + '</details>' +
+      '<footer class="foot"><a href="#profile">Creator pages</a><a href="#me/today">Promote: your queues</a><a href="https://cymetica.com/company" target="_blank" rel="noopener">Start a company ↗</a><span style="margin-left:auto">Data read ' + DAY + ' · briefs are samples</span></footer>' +
     '</div>';
   }
-  function step(i, b, s, tip) { return '<div class="step" data-tip="' + esc(tip) + '"><span class="n">' + ic(i) + '</span><div><b>' + b + '</b><span>' + s + '</span></div></div>'; }
-  function chk(i, b, s) { return '<div class="chk"><span class="n">' + ic(i) + '</span><div><b>' + b + '</b><span>' + s + '</span></div></div>'; }
 
-  /* ---------------- the creator's dashboard ---------------- */
-  var TABS = [['today', 'Today', 'today'], ['briefs', 'Briefs', 'briefs'], ['queues', 'Queues', 'queues'], ['pages', 'Pages & links', 'pages'], ['rewards', 'Rewards', 'coin']];
+  /* ---------------- the dashboard: my products (the owner) and promote (the creator) ---------------- */
+  var NAV = [['MY PRODUCTS', [['products', 'Products', 'pages']]],
+    ['PROMOTE', [['today', 'Today', 'today'], ['taken', 'Briefs I took', 'briefs'], ['queues', 'Queues', 'queues'], ['pages', 'Pages & links', 'link'], ['rewards', 'Rewards', 'coin']]]];
   function dash(tab) {
     var me = PM.me, rw = PM.rewards.summary, q = PM.queues;
-    var counts = { briefs: Object.keys(S.taken).length, queues: q.reddit.stats.new + q.x.stats.new + q.press.stats.open, pages: me.summary.links, rewards: rw.paid };
-    var title = { today: 'Today', briefs: 'Briefs', queues: 'Queues', pages: 'Pages & links', rewards: 'Rewards' }[tab];
+    var counts = { products: S.mine.length, taken: Object.keys(S.taken).length, queues: q.reddit.stats.new + q.x.stats.new + q.press.stats.open, pages: me.summary.links, rewards: rw.paid };
+    var title = { products: 'My products', today: 'Today', taken: 'Briefs I took', queues: 'Queues', pages: 'Pages & links', rewards: 'Rewards' }[tab];
+    var right = tab === 'products' ? '<button class="btn sm g" data-act="brief">' + ic('plus') + 'Post a brief</button>' :
+      tab === 'pages' ? '<button class="btn sm" data-act="track">' + ic('link') + 'Track a link</button><button class="btn sm c" data-act="page">' + ic('plus') + 'Create a page</button>' :
+        '<button class="btn sm" data-act="agent">' + ic('agent') + 'From your agent</button>';
     return '<div class="app"><aside class="rail">' +
-      '<div class="me"><span class="av lg">E</span><div><b>' + esc(me.username) + '</b><span>Creator · ' + me.summary.links + ' pages</span></div></div>' +
-      '<nav class="rnav">' + TABS.map(function (t) {
+      '<div class="me"><span class="av lg">E</span><div><b>' + esc(me.username) + '</b><span>' + S.mine.length + ' products · ' + me.summary.links + ' pages</span></div></div>' +
+      NAV.map(function (g) { return '<div class="rsec">' + g[0] + '</div><nav class="rnav">' + g[1].map(function (t) {
         var n = counts[t[0]], hot = t[0] === 'queues';
         return '<a href="#me/' + t[0] + '" class="' + (t[0] === tab ? 'on' : '') + '">' + ic(t[2]) + t[1] + (n != null ? '<span class="n' + (hot ? ' hot' : '') + '">' + short(n) + '</span>' : '') + '</a>';
-      }).join('') + '</nav>' +
+      }).join('') + '</nav>'; }).join('') +
       '<div class="rlinks"><a href="#market">' + ic('briefs') + 'Promo Market</a><a href="#profile/me">' + ic('ext') + 'Your public page</a><a href="#" data-act="agent">' + ic('agent') + 'Agent prompts</a></div>' +
-      '<div class="earn"><div class="k">Earned · ' + rw.paid + ' posts</div><div class="v">' + fmt(rw.et10) + ' <small>ET10</small></div><div class="s">+ ' + fmt(rw.etlp) + ' ETLP</div></div>' +
+      '<div class="earn"><div class="k">Earned promoting · ' + rw.paid + ' posts</div><div class="v">' + fmt(rw.et10) + ' <small>ET10</small></div><div class="s">+ ' + fmt(rw.etlp) + ' ETLP</div></div>' +
       '</aside><section class="main">' +
-      '<div class="ph"><h1>' + title + '</h1><span class="sub">' + esc(me.username) + ' · ' + dShort(new Date(DAY + 'T12:00:00Z')) + ' 2026</span><span class="sp"></span>' +
-        (tab === 'pages' ? '<button class="btn sm" data-act="track">' + ic('link') + 'Track a link</button><button class="btn sm c" data-act="page">' + ic('plus') + 'Create a page</button>' :
-          '<button class="btn sm" data-act="agent">' + ic('agent') + 'From your agent</button>') + '</div>' +
-      ({ today: today, briefs: myBriefs, queues: queues, pages: pages, rewards: rewards }[tab])() +
+      '<div class="ph"><h1>' + title + '</h1><span class="sub">' + (tab === 'products' ? 'built with Build it Better' : esc(me.username) + ' · ' + dShort(new Date(DAY + 'T12:00:00Z')) + ' 2026') + '</span><span class="sp"></span>' + right + '</div>' +
+      ({ products: products, today: today, taken: taken, queues: queues, pages: pages, rewards: rewards }[tab] || products)() +
       '</section></div>';
   }
+  // the owner's view: my products, each with its traffic; one click makes a brief, then the numbers it brought
+  function myBriefs() { return S.mine.filter(function (p) { return p.brief; }).map(function (p) { return briefOf(p.brief); }).filter(Boolean); }
+  function products() {
+    var mb = myBriefs(), vis14 = sum(mb, function (b) { return sum(b.series, function (v) { return v; }); });
+    var tile = function (icon, k, v, s, cls) { return '<div class="kpi"><div class="k">' + ic(icon) + k + '</div><div class="v ' + (cls || '') + '">' + v + '</div><div class="s">' + s + '</div></div>'; };
+    return '<div class="kpis four">' +
+        tile('coin', 'Up for grabs', fmt(sum(mb, function (b) { return b.left; })) + ' <small class="u">USDC</small>', 'in your ' + mb.length + ' live briefs', 'pos') +
+        tile('reads', 'Visitors brought', fmt(vis14), 'last 14 days') +
+        tile('uniq', 'New users', fmt(sum(mb, function (b) { return b.users; })), 'checked and paid') +
+        tile('check', 'Spent', fmt(sum(mb, function (b) { return b.spent; })) + ' <small class="u">USDC</small>', 'posts and new users') +
+      '</div>' +
+      '<div class="card chartc"><div class="ch"><h3>Visitors your briefs brought</h3><span class="sp"></span><span class="lgd">' + mb.map(function (b, i) { return '<span><i style="background:' + SER[i % SER.length] + '"></i>' + esc(b.name) + '</span>'; }).join('') + '</span></div>' +
+        vbars(mb.map(function (b) { return b.series; }), 130) + '</div>' +
+      '<div class="pgrid">' + S.mine.map(productCard).join('') + '</div>';
+  }
+  function productCard(p) {
+    var b = p.brief && briefOf(p.brief);
+    return '<article class="pc" data-product="' + p.key + '"><div class="img">' + art(p) + (b ? '<div class="dl"><span class="chip g"><i class="live"></i>Live · ' + b.days + 'd left</span></div>' : '') + '</div>' +
+      '<div class="bd"><div class="nm"><b>' + esc(p.name) + '</b></div>' + lnk(p.path) +
+      '<div class="tr" data-tip="All traffic in the last 30 days, from the Build it Better leaderboard"><span><b>' + fmt(p.visitors30) + '</b> visitors</span><span><b>' + fmt(p.views30) + '</b> views</span><span class="dim">30 d</span></div>' +
+      (b ? '<div class="pr3"><div><b class="pos">' + fmt(b.left) + '</b><span>USDC left</span></div><div><b>' + fmt(sum(b.series, function (v) { return v; })) + '</b><span>visitors 14 d</span></div><div><b>' + b.users + '</b><span>new users</span></div></div>' +
+        '<button class="btn sm full" data-product="' + p.key + '">See what it brought ' + ic('arrow') + '</button>' :
+        '<div class="nob">No brief yet</div><button class="btn sm g full" data-newbrief="' + p.key + '">' + ic('plus') + 'Create brief</button>') + '</div></article>';
+  }
+
+  /* ---------------- promote: the creator's side, as /creator-dashboard has it today ---------------- */
   function kpis(c) {
     var s = c.summary, t = c.total, l14 = function (k) { return sum(t, function (d) { return d[k]; }); };
     var likeTip = s.likes_excluded ? 'Corrected on ' + s.likes_date + ': ' + s.likes_excluded + ' likes no longer shown, ' + s.likes_note : '';
@@ -267,7 +292,7 @@
   }
   function today() {
     var L = PM.live, q = PM.queues, top = PM.me.links.slice().sort(function (a, b) { return b.uniq - a.uniq; }).slice(0, 4);
-    var best = S.briefs.filter(function (b) { return b.cur === 'USDC'; }).sort(function (a, b) { return b.price - a.price; }).slice(0, 3);
+    var best = S.briefs.slice().sort(function (a, b) { return b.per_user - a.per_user; }).slice(0, 3);
     var tx = esc(L.tweet).replace(/(https:\/\/\S+)/g, '<span class="u">$1</span>').replace(/(#\w+)/g, '<span class="h">$1</span>');
     var nextPress = q.press.items.slice().sort(function (a, b) { return a.hours - b.hours; })[0];
     return kpis(PM.me) + '<div class="cols"><div>' +
@@ -275,10 +300,10 @@
         '<div class="tw"><div><div class="post"><div class="ah"><span class="av">E</span><b>' + esc(PM.me.username) + '</b><span>· now</span></div><div class="tx">' + tx + '</div></div>' +
         '<div class="acts"><button class="btn sm c" data-copy="tweet">' + ic('copy') + 'Copy</button><a class="btn sm" href="https://x.com/intent/post" target="_blank" rel="noopener">' + ic('x') + 'Open in X</a><button class="btn sm g" data-act="posted">' + ic('check') + 'Mark posted</button>' +
         '<span class="reward" data-tip="Paid once the checker sees the post displayed">+1,000 ET10 · +1,000 ETLP</span></div></div>' +
-        '<div class="og" data-tip="X may not show the link card right away: attach this graphic to the post">' + art(S.briefs.filter(function (x) { return x.key === 'gem'; })[0]) + '<div>Save graphic · cymetica.com/gem-screener</div></div></div></div>' +
-      '<div class="card"><div class="ch"><h3>Briefs paying per result</h3><span class="chip c">new users, not clicks</span><span class="sp"></span><a class="btn sm gh" href="#me/briefs">All briefs ' + ic('arrow') + '</a></div>' +
+        '<div class="og" data-tip="X may not show the link card right away: attach this graphic to the post">' + art(briefOf('gem')) + '<div>Save graphic · cymetica.com/gem-screener</div></div></div></div>' +
+      '<div class="card"><div class="ch"><h3>Briefs to take</h3><span class="sp"></span><a class="btn sm gh" href="#market">All briefs ' + ic('arrow') + '</a></div>' +
         '<div class="strip">' + best.map(function (b) {
-          return '<div class="sb" data-brief="' + b.key + '"><div class="art">' + art(b) + '</div><div><b>' + esc(b.name) + '</b><div class="pv">' + fmt(b.price) + ' <small>' + b.cur + ' per ' + R[b.kind].short + '</small></div><div class="m">' + b.days + 'd left · ' + short(b.left) + ' ' + b.cur + ' left</div></div></div>';
+          return '<div class="sb" data-brief="' + b.key + '"><div class="art">' + art(b) + '</div><div><b>' + esc(b.name) + '</b><div class="pv">' + b.per_user + ' <small>USDC / new user</small></div><div class="m">' + b.per_post + ' USDC / post · ' + fmt(b.left) + ' up for grabs</div></div></div>';
         }).join('') + '</div></div>' +
       '</div><div>' +
       '<div class="card"><div class="ch"><h3>Queues</h3><span class="sp"></span><a class="btn sm gh" href="#me/queues">Open ' + ic('arrow') + '</a></div><div class="q4">' +
@@ -294,29 +319,21 @@
   function qt(icon, name, sub, v, unit, tab) {
     return '<a class="qt" href="#me/queues" data-qtab="' + tab + '"><span class="ic">' + ic(icon) + '</span><div><b>' + name + '</b><span>' + sub + '</span></div><div class="v">' + short(v) + '<small>' + unit + '</small></div></a>';
   }
-  // this creator's share of a brief's funnel: one fixed share of the brief's own numbers (a sample, from the one model)
-  function mine(b) {
-    var f = b.funnel, s = function (n, k) { return Math.round(n * k); };
-    return { clicks: s(f.clicks, 0.08), accounts: s(f.accounts, 0.06), qualified: s(f.qualified, 0.05), held: s(f.held, 0.05), paid: s(f.paid, 0.05) };
-  }
-  function myBriefs() {
+  // what this creator's own link did for a brief: one fixed share of the brief's own numbers (a sample, from the one model)
+  function mineOf(b) { return { posts: Math.round(b.posts * 0.1), visitors: Math.round(b.visitors * 0.06), users: Math.round(b.users * 0.06) }; }
+  function taken() {
     var keys = Object.keys(S.taken);
     var rows = keys.map(function (k) {
-      var b = S.briefs.filter(function (x) { return x.key === k; })[0], t = S.taken[k]; if (!b) return '';
-      var m = mine(b), rej = m.accounts - m.qualified;
-      return '<div class="card cmb"><div class="ch"><h3>' + esc(b.name) + '</h3><span class="chip g">' + fmt(b.price) + ' ' + b.cur + ' ' + perTxt(b) + '</span><span class="chip">' + ic('lock') + b.hold + 'd hold</span><span class="sp"></span>' +
-          '<span class="mono acc" style="font-size:12.5px">cymetica.com/c/' + t.slug + '</span><button class="btn sm c" data-copy="link:' + t.slug + '">' + ic('copy') + 'Copy link</button><a class="btn sm" href="#me/queues">' + ic('queues') + 'Threads for it</a></div>' +
-        '<div class="mrow">' + funnel(m) + '<div class="earned"><span>Earned</span><b>' + fmt(m.paid * b.price) + ' <small>' + b.cur + '</small></b><em>' + fmt(m.held * b.price) + ' ' + b.cur + ' in hold · ' + rej + ' not counted</em></div></div></div>';
+      var b = briefOf(k), t = S.taken[k]; if (!b) return '';
+      var m = mineOf(b), earned = m.posts * b.per_post + m.users * b.per_user;
+      return '<div class="card cmb"><div class="ch"><h3>' + esc(b.name) + '</h3><span class="chip">' + b.per_post + ' USDC / post</span><span class="chip g">' + b.per_user + ' USDC / new user</span><span class="sp"></span>' +
+          '<span class="mono acc" style="font-size:12.5px">cymetica.com/c/' + t.slug + '</span><button class="btn sm c" data-copy="link:' + t.slug + '">' + ic('copy') + 'Copy link</button></div>' +
+        '<div class="mrow"><div class="fun">' + [['Posts', m.posts], ['Visitors', m.visitors], ['New users', m.users]].map(function (s, i) { return (i ? '<span class="fa">' + ic('chev') + '</span>' : '') + '<div class="fs' + (i === 2 ? ' g' : '') + '"><b>' + fmt(s[1]) + '</b><span>' + s[0] + '</span></div>'; }).join('') + '</div>' +
+        '<div class="earned"><span>Earned</span><b>' + fmt(earned) + ' <small>USDC</small></b><em>' + m.posts + ' × ' + b.per_post + ' + ' + m.users + ' × ' + b.per_user + '</em></div></div></div>';
     }).join('');
-    var sent = Object.keys(S.sent).map(function (k) {
-      var o = S.sent[k], b = S.briefs.filter(function (x) { return x.key === k; })[0];
-      return '<div class="ofr">' + ic(o.platform) + '<b>' + esc(b.name) + '</b><span>' + esc(PLAT[o.platform][0]) + ' · ' + esc(o.handle || 'your account') + '</span><b class="pos">' + fmt(o.price) + ' ' + b.cur + '</b><span class="chip c">waiting for the owner</span></div>';
-    }).join('');
-    return '<div class="sech"><h2>Taken by you</h2><span class="dim mono">paid per verified new user · the house programme needs no taking</span></div>' + rows +
-      '<div class="card cmb"><div class="ch"><h3>Your post offers</h3><span class="chip">' + Object.keys(S.sent).length + '</span><span class="sp"></span><span class="dim mono" style="font-size:12px">Paid once the post has stayed up 7 days</span></div>' +
-        (sent || '<div class="draft">None yet. Have an audience? Quote a price for one post on any brief: the owner accepts or declines.</div>') + '</div>' +
-      boardHead('Open briefs') + board();
+    return rows + boardHead('Open briefs') + board();
   }
+
   function queues() {
     var q = PM.queues, t = S.qtab;
     var seg = '<div class="seg" id="qseg" style="margin-bottom:16px">' + [['reddit', 'Reddit', q.reddit.stats.new], ['x', 'X', q.x.stats.new], ['press', 'Press', q.press.stats.open], ['radar', 'Radar apps', PM.radar.length]].map(function (s) {
@@ -417,107 +434,108 @@
       kpis(c) + linkTable(c, false) + '<footer class="foot" style="margin-top:30px"><a href="#market">Promo Market</a><span style="margin-left:auto">Data read ' + DAY + '</span></footer></div>';
   }
 
-  /* ---------------- drawer: one brief ---------------- */
+  /* ---------------- drawer: one brief, as a promoter sees it ---------------- */
   function openBrief(key, mode) {
-    var b = S.briefs.filter(function (x) { return x.key === key; })[0]; if (!b) return;
-    var t = S.taken[key], k = R[b.kind], all = b.paid + b.held + b.rejected;
+    var b = briefOf(key); if (!b) return;
+    var t = S.taken[key];
     var threads = PM.queues.reddit.items.concat(PM.queues.x.items).filter(function (l) { return l.path === b.path; });
-    var maxRej = Math.max.apply(null, b.rejects.map(function (r) { return r[1]; })) || 1;
-    var offers = b.offers.map(function (o) {
-      var st = { live: ['c', 'up · paid after 7 days'], pending: ['', 'waiting for the owner'], paid: ['g', 'paid'] }[o.state] || ['', o.state];
-      return '<div class="ofr">' + ic(o.platform) + '<b>' + short(o.audience) + '</b><span>' + PLAT[o.platform][1] + ' on ' + PLAT[o.platform][0] + '</span><b class="pos">' + fmt(o.price) + ' ' + b.cur + '</b><span class="chip ' + st[0] + '">' + st[1] + '</span></div>';
-    }).join('');
+    var how = [['Copy your link', 'Only you have it; every post can use it.'], ['Post it anywhere', 'X, Reddit, Telegram, YouTube, a group chat.'],
+      ['Get paid in USDC', b.per_post + ' per post that stays up 7 days, ' + b.per_user + ' per new user after the 14-day check.']];
     $('drawer').innerHTML = '<div class="dh">' + art(b) + '<button class="x" data-act="close">' + ic('close') + '</button></div>' +
-      '<div class="db"><div style="display:flex;gap:8px;align-items:center"><span class="chip">by ' + esc(b.buyer) + '</span>' + daysChip(b) + '<span class="chip">' + ic('clock') + 'ends ' + dShort(addDays(DAY, b.days)) + '</span></div>' +
-      '<h2>' + esc(b.name) + '</h2><p class="ask">' + esc(b.ask) + '</p>' +
-      '<div class="pbx"><div><span class="v">' + fmt(b.price) + ' <small>' + b.cur + '</small></span><span class="per">' + perTxt(b) + '</span></div><span class="chip">' + ic('lock') + b.hold + '-day hold</span></div>' +
-      '<p class="rule">' + esc(cap(k.rule)) + '.</p>' +
-      (t ? '<div class="taken">' + ic('check') + '<div style="flex:1"><b>' + (mode === 'took' ? 'Taken. Your link for this brief:' : 'You took this brief') + '</b><span class="mono">cymetica.com/c/' + t.slug + '</span></div><button class="btn sm c" data-copy="link:' + t.slug + '">' + ic('copy') + 'Copy</button></div>' : '') +
-      '<div class="sec">This brief so far<span class="ln"></span></div>' + funnel(b.funnel) +
-      '<div class="bar" style="margin-top:14px"><i style="width:' + Math.round(b.left / b.budget * 100) + '%"></i></div><div class="meta2"><span><b>' + fmt(b.left) + '</b> of ' + fmt(b.budget) + ' ' + b.cur + ' left · locked</span><span><b>' + fmt(b.spent) + '</b> paid · ' + fmt(b.committed) + ' due</span></div>' +
-      '<div class="sec">Not paid · ' + b.rejected + ' of ' + all + ' sign-ups<span class="ln"></span></div><div class="rej">' + b.rejects.map(function (r) {
-        return '<div><span>' + esc(cap(r[0])) + '</span><i style="width:' + Math.round(r[1] / maxRej * 100) + '%"></i><b>' + r[1] + '</b></div>'; }).join('') + '</div>' +
-      '<div class="sec">What counts as a result<span class="ln"></span></div><div class="rules">' +
-        '<div>' + ic('uniq') + '<span><b style="color:var(--text)">A new person,</b> first account and first visit through your link, within 7 days.</span></div>' +
-        '<div>' + ic('today') + '<span><b style="color:var(--text)">The action:</b> ' + esc(k.rule.replace(/^a new account that /, '')) + '.</span></div>' +
-        '<div>' + ic('shield') + '<span><b style="color:var(--text)">One person, one result:</b> device, network, wallet and phone matched; proof of person by Telegram or a wallet with history.</span></div>' +
-        '<div>' + ic('lock') + '<span><b style="color:var(--text)">Held ' + b.hold + ' days,</b> then paid; clawed back if it turns out fake. Self-referrals and wallets you funded never count.</span></div></div>' +
-      '<div class="sec" id="offers">Post offers<span class="ln"></span><span class="chip">' + b.offers.length + '</span></div>' +
-        (offers ? '<div class="ofl">' + offers + '</div>' : '') +
-        '<div class="ofrm' + (mode === 'offer' ? ' hl' : '') + '"><div class="seg" id="oplat">' + Object.keys(PLAT).map(function (p) { return '<button data-oplat="' + p + '" class="' + (S.oplat === p ? 'on' : '') + '">' + ic(p) + PLAT[p][0] + '</button>'; }).join('') + '</div>' +
-          '<div class="two"><input class="in" id="o-handle" placeholder="Your account, e.g. @handle"><div class="unit"><input class="in num" id="o-price" placeholder="Price for one post"><em>' + b.cur + '</em></div></div>' +
-          '<div class="onote">' + ic('shield') + 'Your audience is read from the account you link. Paid once the post has stayed up 7 days.</div>' +
-          '<button class="btn c" data-sendoffer="' + b.key + '">' + ic('reply') + 'Send offer</button></div>' +
-      (threads.length ? '<div class="sec">Threads asking for it now<span class="ln"></span><span class="chip c">' + threads.length + '</span></div><div class="thr">' + threads.slice(0, 3).map(function (l) { return '<a href="#me/queues">' + ic(l.sub ? 'reddit' : 'x') + '<span>' + esc(l.title || l.body) + '</span><b class="acc mono">' + l.rel + '</b></a>'; }).join('') + '</div>' : '') +
+      '<div class="db"><div style="display:flex;gap:8px;align-items:center">' + daysChip(b) + '<span class="chip">' + ic('clock') + 'ends ' + dShort(addDays(DAY, b.days)) + '</span></div>' +
+      '<h2>' + esc(b.name) + '</h2>' + lnk(b.path) +
+      '<div class="ufg big"><span>Up for grabs</span><b>' + fmt(b.left) + ' <small>USDC</small></b></div>' + pay2(b) +
+      (t ? '<div class="taken">' + ic('check') + '<div style="flex:1"><b>' + (mode === 'took' ? 'Taken. Your link:' : 'Your link') + '</b><span class="mono">cymetica.com/c/' + t.slug + '</span></div><button class="btn sm c" data-copy="link:' + t.slug + '">' + ic('copy') + 'Copy</button></div>' : '') +
+      '<div class="sec">How you earn<span class="ln"></span></div><div class="how">' + how.map(function (h, i) { return '<div><span class="no">' + (i + 1) + '</span><div><b>' + h[0] + '</b><span>' + h[1] + '</span></div></div>'; }).join('') + '</div>' +
+      '<div class="sec">Say this<span class="ln"></span></div><div class="say"><span>' + esc(b.ask) + '</span><button class="btn sm c" data-copy="ask:' + b.key + '">' + ic('copy') + 'Copy</button></div>' +
+      (threads.length ? '<div class="sec">People asking for it now<span class="ln"></span><span class="chip c">' + threads.length + '</span></div><div class="thr">' + threads.slice(0, 3).map(function (l) { return '<a href="#me/queues">' + ic(l.sub ? 'reddit' : 'x') + '<span>' + esc(l.title || l.body) + '</span><b class="acc mono">' + l.rel + '</b></a>'; }).join('') + '</div>' : '') +
+      '<details class="fold sm"><summary>' + ic('shield') + 'How a new user is counted' + ic('down', 'chevd') + '</summary>' + rules() + '</details>' +
+      '<details class="fold sm"' + (mode === 'quote' ? ' open' : '') + '><summary>' + ic('reply') + 'Big audience? Quote your own price for a post' + ic('down', 'chevd') + '</summary>' +
+        '<div class="ofrm"><div class="two"><input class="in" id="o-handle" placeholder="Your account, e.g. @handle"><div class="unit"><input class="in num" id="o-price" placeholder="Price for one post"><em>USDC</em></div></div>' +
+        '<div class="onote">' + ic('shield') + 'Your audience is read from the account you link. The owner accepts or declines.</div>' +
+        '<button class="btn c" data-sendoffer="' + b.key + '">' + ic('reply') + 'Send quote</button></div></details>' +
       '</div>' +
-      '<div class="dfoot">' + (t ? '<a class="btn g full" href="#me/briefs">' + ic('briefs') + 'Your results for it</a>' :
-        '<button class="btn gh" data-act="close">Not now</button><button class="btn g full" data-take="' + b.key + '">Take this brief ' + ic('arrow') + '</button>') + '</div>';
+      '<div class="dfoot">' + (t ? '<a class="btn g full" href="#me/taken">' + ic('briefs') + 'What my link earned</a>' :
+        '<button class="btn gh" data-act="close">Not now</button><button class="btn g full" data-take="' + b.key + '">Take it · get my link ' + ic('arrow') + '</button>') + '</div>';
     show('drawer');
-    if (mode === 'offer') { var o = $('offers'); if (o) setTimeout(function () { o.scrollIntoView({ block: 'start' }); }, 60); }
   }
   function take(key) {
     if (!S.taken[key]) S.taken[key] = { slug: slugOf(key + '·' + PM.me.username), at: DAY };
-    openBrief(key, 'took'); refreshBoard(); toast('Brief taken · your tracked link is ready');
+    openBrief(key, 'took'); refreshBoard(); toast('Brief taken · your link is ready');
   }
-  function sendOffer(key) {
-    var b = S.briefs.filter(function (x) { return x.key === key; })[0], price = num('o-price', 0);
-    if (!price) { toast('Name a price for the post'); return; }
-    S.sent[key] = { platform: S.oplat, handle: ($('o-handle') || {}).value, price: price };
-    b.offers = b.offers.concat([{ platform: S.oplat, audience: 0, price: price, state: 'pending', mine: true }]);
-    openBrief(key); toast('Offer sent · the owner accepts or declines');
+  function sendOffer() {
+    if (!num('o-price', 0)) { toast('Name a price for the post'); return; }
+    hide(); toast('Quote sent · the owner accepts or declines');
   }
 
-  /* ---------------- modal: post a brief ---------------- */
+  /* ---------------- drawer: one of my products, as its owner sees it ---------------- */
+  function openProduct(key) {
+    var p = productOf(key); if (!p) return;
+    var b = p.brief && briefOf(p.brief);
+    var tile = function (v, k, cls) { return '<div class="kv"><b class="' + (cls || '') + '">' + v + '</b><span>' + k + '</span></div>'; };
+    var body = '<div class="sec">All traffic · last 30 days<span class="ln"></span></div><div class="kvs">' +
+      tile(fmt(p.visitors30), 'visitors') + tile(fmt(p.uses30), 'uses') + tile(fmt(p.views30), 'views') + '</div>';
+    if (b) {
+      var maxR = Math.max.apply(null, b.rejects.map(function (r) { return r[1]; })) || 1;
+      body += '<div class="sec">Your brief<span class="ln"></span>' + daysChip(b) + '</div>' +
+        '<div class="ufg big"><span>Up for grabs</span><b>' + fmt(b.left) + ' <small>USDC of ' + fmt(b.budget) + '</small></b></div>' +
+        '<div class="bar"><i style="width:' + Math.round(b.left / b.budget * 100) + '%"></i></div>' + pay2(b) +
+        '<div class="sec">What it brought<span class="ln"></span></div><div class="kvs four">' +
+          tile(fmt(b.visitors), 'visitors', 'acc') + tile(fmt(b.users), 'new users', 'pos') + tile(fmt(b.posts), 'posts') + tile(fmt(b.spent) + ' <small>USDC</small>', 'spent') + '</div>' +
+        '<div class="card mini2">' + vbars([b.series], 96) + '</div>' +
+        '<details class="fold sm"><summary>' + ic('shield') + 'Not counted · ' + b.rejected + ' sign-ups, never paid' + ic('down', 'chevd') + '</summary><div class="rej">' + b.rejects.map(function (r) {
+          return '<div><span>' + esc(r[0].charAt(0).toUpperCase() + r[0].slice(1)) + '</span><i style="width:' + Math.round(r[1] / maxR * 100) + '%"></i><b>' + r[1] + '</b></div>'; }).join('') + '</div></details>';
+    } else {
+      body += '<div class="nob big"><b>No brief yet</b><span>Set a budget and what you pay per post and per new user. Promoters do the rest.</span></div>';
+    }
+    $('drawer').innerHTML = '<div class="dh">' + art(p) + '<button class="x" data-act="close">' + ic('close') + '</button></div>' +
+      '<div class="db"><h2>' + esc(p.name) + '</h2>' + lnk(p.path) + body + '</div>' +
+      '<div class="dfoot">' + (b ? '<button class="btn" data-act="pause">Pause</button><button class="btn" data-newbrief="' + p.key + '">Edit prices</button><button class="btn g full" data-act="topup">' + ic('plus') + 'Add budget</button>' :
+        '<button class="btn g full" data-newbrief="' + p.key + '">' + ic('plus') + 'Create brief</button>') + '</div>';
+    show('drawer');
+  }
+
+  /* ---------------- modal: post a brief (the owner) ---------------- */
   var F;
-  function briefForm() {
-    var prods = PM.market.briefs.filter(function (b) { return b.buyer === 'Cymetica QA'; });
-    F = F || { prod: prods[0].key, ask: prods[0].ask, kind: prods[0].kind, price: prods[0].price, cur: prods[0].cur, hold: 14, offers: true, maxOffer: 500, budget: 2000, days: 14, as: 'Cymetica QA' };
+  function briefForm(key) {
+    var p = productOf(key || (F && F.prod) || S.mine[0].key), b = p.brief && briefOf(p.brief);
+    if (!F || key) F = { prod: p.key, per_post: b ? b.per_post : 5, per_user: b ? b.per_user : 4, budget: b ? b.budget : 1000, days: 14 };
     $('modal').className = 'modal';
-    $('modal').innerHTML = '<div class="mh"><span class="kick">Promo Market</span><h2>Post a brief</h2><button class="x" data-act="close">' + ic('close') + '</button></div>' +
+    $('modal').innerHTML = '<div class="mh"><span class="kick">Promo Market</span><h2>' + (b ? 'Edit brief' : 'Post a brief') + '</h2><button class="x" data-act="close">' + ic('close') + '</button></div>' +
       '<div class="mb"><div class="f">' +
-        '<div class="fl"><label>What to promote <span>your products, or any cymetica.com page</span></label><div class="prods">' +
-          prods.map(function (x) { return '<button class="prod' + (x.key === F.prod ? ' on' : '') + '" data-prod="' + x.key + '"><span class="pa">' + art(x) + '</span><b>' + esc(x.name) + '</b></button>'; }).join('') +
-          '<button class="prod" data-act="anyurl"><span class="chip" style="height:30px">' + ic('link') + '</span><b>Any page</b></button></div></div>' +
-        '<div class="fl"><label>The ask <span id="askn">' + F.ask.length + ' / 120</span></label><input class="in" id="f-ask" maxlength="120" value="' + esc(F.ask) + '"></div>' +
-        '<div class="fl"><label>Pay for <span>what one result is</span></label><div class="kinds">' + Object.keys(R).map(function (k) {
-          return '<button class="kc' + (F.kind === k ? ' on' : '') + '" data-kind="' + k + '"><b>' + cap(R[k].name) + '</b><span>' + esc(cap(R[k].rule.replace(/^a new account that /, ''))) + '</span></button>'; }).join('') + '</div></div>' +
-        '<div class="three"><div class="fl"><label>Price per result</label><div class="unit"><input class="in num" id="f-price" value="' + F.price + '"><em>' + F.cur + '</em></div></div>' +
-          '<div class="fl"><label>Pay in</label><div class="seg" style="height:44px;align-items:center">' + ['USDC', 'ET10'].map(function (c) { return '<button data-cur="' + c + '" class="' + (F.cur === c ? 'on' : '') + '" style="height:36px;padding:0 16px">' + c + '</button>'; }).join('') + '</div></div>' +
-          '<div class="fl"><label>Hold <span class="i" data-tip="How long a result waits before it is paid; a fake found in that time is not paid">i</span></label><div class="seg" style="height:44px;align-items:center">' + [14, 30].map(function (d) { return '<button data-hold="' + d + '" class="' + (F.hold === d ? 'on' : '') + '" style="height:36px;padding:0 14px">' + d + ' days</button>'; }).join('') + '</div></div></div>' +
-        '<div class="two"><div class="fl"><label>Budget</label><div class="unit"><input class="in num" id="f-budget" value="' + F.budget + '"><em>' + F.cur + '</em></div></div>' +
+        '<div class="fl"><label>Your product <span>built with Build it Better</span></label><div class="prods">' +
+          S.mine.map(function (x) { return '<button class="prod' + (x.key === F.prod ? ' on' : '') + '" data-prod="' + x.key + '"><span class="pa">' + art(x) + '</span><b>' + esc(x.name) + '</b></button>'; }).join('') + '</div></div>' +
+        '<div class="two"><div class="fl"><label>Per post <span>a post that stays up 7 days</span></label><div class="unit"><input class="in num" id="f-post" value="' + F.per_post + '"><em>USDC</em></div></div>' +
+          '<div class="fl"><label>Per new user <span>after the 14-day check</span></label><div class="unit"><input class="in num" id="f-user" value="' + F.per_user + '"><em>USDC</em></div></div></div>' +
+        '<div class="two"><div class="fl"><label>Budget</label><div class="unit"><input class="in num" id="f-budget" value="' + F.budget + '"><em>USDC</em></div></div>' +
           '<div class="fl"><label>Runs for</label><div class="seg" style="height:44px;align-items:center">' + [7, 14, 30].map(function (d) { return '<button data-days="' + d + '" class="' + (F.days === d ? 'on' : '') + '" style="height:36px;flex:1;justify-content:center">' + d + ' days</button>'; }).join('') + '</div></div></div>' +
-        '<div class="two"><div class="fl"><label>Post offers <span>influencers quote a price</span></label><div class="seg" style="height:44px;align-items:center">' + [[true, 'Take offers'], [false, 'Results only']].map(function (o) { return '<button data-acc="' + o[0] + '" class="' + (F.offers === o[0] ? 'on' : '') + '" style="height:36px;flex:1;justify-content:center">' + o[1] + '</button>'; }).join('') + '</div></div>' +
-          (F.offers ? '<div class="fl"><label>Up to, per post</label><div class="unit"><input class="in num" id="f-max" value="' + F.maxOffer + '"><em>' + F.cur + '</em></div></div>' : '<div></div>') + '</div>' +
-        '<div class="fl"><label>Posted by <span>a department’s brief waits for your approval</span></label><div class="seg" style="align-self:start">' + ['Cymetica QA', PM.me.username].map(function (a) { return '<button data-as="' + esc(a) + '" class="' + (F.as === a ? 'on' : '') + '">' + ic(a === PM.me.username ? 'uniq' : 'company') + esc(a) + '</button>'; }).join('') + '</div></div>' +
-      '</div><div class="prev"><span class="cap">How it shows on the board</span><div id="pv"></div><div class="calc" id="calc"></div></div></div>' +
-      '<div class="mf"><span class="note">' + ic('lock') + '<span id="lockn"></span></span><button class="btn gh" data-act="close">Cancel</button><button class="btn g" data-act="publish" id="pub"></button></div>';
+        '<div class="calc" id="calc"></div>' +
+      '</div><div class="prev"><span class="cap">How promoters see it</span><div id="pv"></div></div></div>' +
+      '<div class="mf"><span class="note">' + ic('lock') + '<span id="lockn"></span></span><button class="btn gh" data-act="close">Cancel</button><button class="btn g" data-act="publish">Lock &amp; publish ' + ic('arrow') + '</button></div>';
     show('modal'); briefPreview();
   }
   function num(id, d) { var e = $(id); if (!e) return d; var v = parseInt(String(e.value).replace(/[^\d]/g, ''), 10); return isFinite(v) ? v : 0; }
-  function readForm() { if (!$('f-ask')) return; F.ask = $('f-ask').value; F.price = num('f-price', F.price); F.budget = num('f-budget', F.budget); F.maxOffer = num('f-max', F.maxOffer); }
+  function readForm() { if (!$('f-post')) return; F.per_post = num('f-post', F.per_post); F.per_user = num('f-user', F.per_user); F.budget = num('f-budget', F.budget); }
   function briefPreview() {
     if (!$('pv')) return;
     readForm();
-    $('askn').textContent = F.ask.length + ' / 120';
-    var p = PM.market.briefs.filter(function (x) { return x.key === F.prod; })[0];
-    var b = { key: 'preview', art: p.key, name: p.name, path: p.path, buyer: F.as, ask: F.ask || '…', kind: F.kind, price: F.price, cur: F.cur, hold: F.hold,
-      budget: Math.max(F.budget, 1), left: F.budget, paid: 0, held: 0, rejected: 0, offers: [], days: F.days, age: 0 };
-    $('pv').innerHTML = briefCard(b).replace(/data-take="preview"/, 'disabled').replace(/data-offer="preview"/, 'disabled').replace(/data-brief="preview"/g, '');
-    var n = F.price ? Math.floor(F.budget / F.price) : 0;
-    $('calc').innerHTML = '<div><span>Per result</span><b>' + fmt(F.price) + ' ' + F.cur + '</b></div><div><span>Budget</span><b>' + fmt(F.budget) + ' ' + F.cur + '</b></div>' +
-      (F.offers ? '<div><span>Post offers, from the same budget</span><b>≤ ' + fmt(F.maxOffer) + ' ' + F.cur + '</b></div>' : '') +
-      '<div class="t"><span>Pays for up to</span><b>' + fmt(n) + ' new users</b></div>';
-    $('lockn').textContent = F.as === PM.me.username ? fmt(F.budget) + ' ' + F.cur + ' locked from your balance now · unspent returns ' + dShort(addDays(DAY, F.days)) :
-      fmt(F.budget) + ' ' + F.cur + ' locks from ' + F.as + '’s balance when you approve · unspent returns at the end';
-    $('pub').innerHTML = (F.as === PM.me.username ? 'Lock & publish' : 'Send for approval') + ' ' + ic('arrow');
+    var p = productOf(F.prod);
+    var b = { key: 'preview', art: p.key, name: p.name, path: p.path, per_post: F.per_post, per_user: F.per_user, left: F.budget, days: F.days };
+    $('pv').innerHTML = briefCard(b).replace(/data-take="preview"/, 'disabled').replace(/data-brief="preview"/g, '');
+    $('calc').innerHTML = '<div><span>Pays for up to</span><b>' + fmt(F.per_post ? Math.floor(F.budget / F.per_post) : 0) + ' posts</b></div>' +
+      '<div><span>or up to</span><b>' + fmt(F.per_user ? Math.floor(F.budget / F.per_user) : 0) + ' new users</b></div>';
+    $('lockn').textContent = fmt(F.budget) + ' USDC locked from your balance · unspent returns ' + dShort(addDays(DAY, F.days));
   }
   function publish() {
     readForm();
-    var p = PM.market.briefs.filter(function (x) { return x.key === F.prod; })[0], key = 'new' + Date.now();
-    if (F.as !== PM.me.username) { hide(); toast('Sent to your approvals · ' + fmt(F.budget) + ' ' + F.cur + ' locks when you approve'); return; }
-    S.briefs.unshift({ key: key, art: p.key, name: p.name, path: p.path, buyer: F.as, ask: F.ask, kind: F.kind, price: F.price, cur: F.cur, hold: F.hold, budget: F.budget,
-      paid: 0, held: 0, rejected: 0, trying: 0, funnel: { clicks: 0, accounts: 0, qualified: 0, held: 0, paid: 0 }, rejects: [], offers: [], spent: 0, committed: 0, left: F.budget, days: F.days, age: 0, threads: 0 });
-    hide(); S.sort = 'newest'; route(); toast('Brief published · ' + fmt(F.budget) + ' ' + F.cur + ' locked');
+    var p = productOf(F.prod), old = p.brief && briefOf(p.brief);
+    if (old) { old.per_post = F.per_post; old.per_user = F.per_user; old.budget = Math.max(old.budget, F.budget); old.left = old.budget - old.spent; }
+    else {
+      S.briefs.unshift({ key: p.key, name: p.name, path: p.path, ask: '', per_post: F.per_post, per_user: F.per_user, budget: F.budget, posts: 0, users: 0, rejected: 0,
+        visitors: 0, spent: 0, left: F.budget, days: F.days, age: 0, series: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0], rejects: [], threads: 0 });
+      p.brief = p.key;
+    }
+    hide(); route(); toast((old ? 'Brief updated · ' : 'Brief live · ') + fmt(F.budget) + ' USDC up for grabs');
   }
 
   /* ---------------- small modals: create a page, track a link; drawer: agent prompts ---------------- */
@@ -558,11 +576,11 @@
     var h = (location.hash || '#market').slice(1).split('/'), r = h[0] || 'market';
     if (r === 'board' || r === 'brief') { r = 'market'; }
     var v = $('view');
-    if (r === 'me') v.innerHTML = dash(h[1] || 'today');
+    if (r === 'me') v.innerHTML = dash(h[1] || 'products');
     else if (r === 'profile') v.innerHTML = profile(h[1]);
     else v.innerHTML = market();
     document.querySelectorAll('#tnav a').forEach(function (a) { a.classList.toggle('on', a.getAttribute('data-r') === r); });
-    var c = $('bcnt'); if (c) c.textContent = sortBriefs(S.briefs.slice()).length;
+    var c = $('bcnt'); if (c) c.textContent = S.briefs.length;
     if (location.hash === '#board') { var b = $('board'); if (b) b.scrollIntoView(); } else window.scrollTo(0, 0);
     // #brief: the form, straight away (the Universe's Promo Market panel links here)
     if (location.hash === '#brief') briefForm();
@@ -570,20 +588,20 @@
   window.addEventListener('hashchange', route);
 
   document.addEventListener('click', function (e) {
-    var t = e.target.closest('[data-act],[data-take],[data-offer],[data-sendoffer],[data-oplat],[data-brief],[data-copy],[data-f],[data-s],[data-q],[data-qi],[data-ra],[data-row],[data-sort],[data-prod],[data-kind],[data-cur],[data-hold],[data-acc],[data-days],[data-as],[data-qtab]');
+    if (e.target.closest('a.lnk')) return;                    // a product's own link opens the product, nothing else
+    var t = e.target.closest('[data-act],[data-take],[data-sendoffer],[data-brief],[data-product],[data-newbrief],[data-copy],[data-s],[data-q],[data-qi],[data-ra],[data-row],[data-sort],[data-prod],[data-days],[data-qtab]');
     if (!t) { if (e.target.id === 'scrim') hide(); return; }
     var d = t.dataset;
     if (d.take) { e.stopPropagation(); take(d.take); return; }
-    if (d.offer) { e.stopPropagation(); openBrief(d.offer, 'offer'); return; }
-    if (d.sendoffer) { sendOffer(d.sendoffer); return; }
-    if (d.oplat) { S.oplat = d.oplat; document.querySelectorAll('#oplat button').forEach(function (b) { b.classList.toggle('on', b.dataset.oplat === d.oplat); }); return; }
+    if (d.newbrief) { e.stopPropagation(); hide(); briefForm(d.newbrief); return; }
+    if (d.sendoffer) { sendOffer(); return; }
     if (d.copy) {
       var k = d.copy, a = PM.radar[S.radar];
       var txt = k === 'promo' ? PROMO_PROMPT : k === 'trade' ? PM.live.trade_prompt : k === 'tweet' ? PM.live.tweet : k === 'radar-x' ? a.x_post : k === 'radar-r' ? a.reddit_title :
-        k === 'radar-b' ? a.reddit_body : k === 'radar-t' ? a.tg_post : k.indexOf('link:') === 0 ? 'https://cymetica.com/c/' + k.slice(5) : '';
+        k === 'radar-b' ? a.reddit_body : k === 'radar-t' ? a.tg_post : k.indexOf('link:') === 0 ? 'https://cymetica.com/c/' + k.slice(5) :
+          k.indexOf('ask:') === 0 ? (briefOf(k.slice(4)) || {}).ask : '';
       copy(txt, k === 'promo' || k === 'trade' ? 'Prompt' : k.indexOf('link:') === 0 ? 'Link' : 'Post'); return;
     }
-    if (d.f) { S.filter = d.f; document.querySelectorAll('#bfilter button').forEach(function (b) { b.classList.toggle('on', b.dataset.f === d.f); }); refreshBoard(); return; }
     if (d.s) { S.sort = d.s; document.querySelectorAll('#bsort button').forEach(function (b) { b.classList.toggle('on', b.dataset.s === d.s); }); refreshBoard(); return; }
     if (d.qtab) { S.qtab = d.qtab; return; }
     if (d.q) { S.qtab = d.q; route(); return; }
@@ -591,13 +609,9 @@
     if (d.ra) { S.radar = +d.ra; var y2 = window.scrollY; route(); window.scrollTo(0, y2); return; }
     if (d.row) { S.open[d.row] = !S.open[d.row]; var y3 = window.scrollY; route(); window.scrollTo(0, y3); return; }
     if (d.sort) { S.pgSort = d.sort; var y4 = window.scrollY; route(); window.scrollTo(0, y4); return; }
-    if (d.prod) { var p = PM.market.briefs.filter(function (x) { return x.key === d.prod; })[0]; F.prod = d.prod; F.ask = p.ask; F.kind = p.kind; F.price = p.price; F.cur = p.cur; briefForm(); return; }
-    if (d.kind) { readForm(); F.kind = d.kind; briefForm(); return; }
-    if (d.cur) { readForm(); F.cur = d.cur; briefForm(); return; }
-    if (d.hold) { readForm(); F.hold = +d.hold; briefForm(); return; }
-    if (d.acc) { readForm(); F.offers = d.acc === 'true'; briefForm(); return; }
+    if (d.prod) { readForm(); briefForm(d.prod); return; }
     if (d.days) { readForm(); F.days = +d.days; briefForm(); return; }
-    if (d.as) { readForm(); F.as = d.as; briefForm(); return; }
+    if (d.product) { openProduct(d.product); return; }
     if (d.brief) { openBrief(d.brief); return; }
     switch (d.act) {
       case 'close': hide(); break;
@@ -611,7 +625,8 @@
       case 'draft': $('draft').textContent = 'Drafting the reply for this thread…'; break;
       case 'skip': toast('Skipped'); break;
       case 'pitched': toast('Marked pitched'); break;
-      case 'anyurl': toast('Any cymetica.com page: paste its address'); break;
+      case 'topup': toast('Add budget · the form opens with your card on file'); break;
+      case 'pause': toast('Paused · promoters see it as closed'); break;
     }
   });
   document.addEventListener('input', function (e) {

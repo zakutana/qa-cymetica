@@ -109,28 +109,27 @@
   var MARKET = '../promo-market/index.html';
   function promoBody() {
     var M = window.PM && window.PM.market; if (!M) return '<div class="uvsec">The market did not load</div>';
-    // a brief pays per verified new user (M.results says what one is); USDC and ET10 are kept apart, never added
+    // what a promoter cares about: what is up for grabs, and what one post and one new user pay (USDC); then the
+    // owner's own products that have a brief, with what each brought
     var b = M.briefs.slice(), sum = function (f) { return b.reduce(function (s, x) { return s + f(x); }, 0); };
-    var usdc = sum(function (x) { return x.cur === 'USDC' ? x.left : 0; }), paid = sum(function (x) { return x.paid; }), rej = sum(function (x) { return x.rejected; });
-    var k = function (n) { return n >= 1e4 ? Math.round(n / 1e3) + 'K' : n.toLocaleString('en-US'); };
-    var kpi = function (n, l, cls, tip) { return '<div class="uvk' + (cls ? ' ' + cls : '') + '"' + (tip ? ' title="' + esc(tip) + '"' : '') + '><b>' + n + '</b><span>' + l + '</span></div>'; };
+    var top = b.slice().sort(function (p, q) { return q.per_user - p.per_user; })[0];
+    var kpi = function (n, l, cls) { return '<div class="uvk' + (cls ? ' ' + cls : '') + '"><b>' + n + '</b><span>' + l + '</span></div>'; };
     var row = function (x, i, right) { return '<a class="uvr" href="' + MARKET + '#market" target="_blank" rel="noopener"><span class="rk">' + (i + 1) + '</span><i class="av" style="background:#00cfff"></i><span class="bn">' + esc(x.name) + '</span>' + right + '</a>'; };
-    var best = b.filter(function (x) { return x.cur === 'USDC'; }).sort(function (p, q) { return q.price - p.price; }).slice(0, 4).map(function (x, i) {
-      return row(x, i, '<b class="g">' + x.price + ' <i class="uvu">USDC / ' + esc(M.results[x.kind].short) + '</i></b>'); }).join('');
-    var mine = M.briefs.filter(function (x) { return x.buyer === 'Cymetica QA'; }).map(function (x, i) {
-      return row(x, i, '<b>' + x.paid + ' <i class="uvu">users</i> · ' + k(x.left) + ' <i class="uvu">' + x.cur + ' left</i></b>'); }).join('');
-    return '<div class="uvks">' + kpi(b.length, 'briefs open', 'c') + kpi(k(usdc), 'USDC on offer', 'g', 'Locked in the open briefs; a result is paid from it when its hold ends') +
-        kpi(paid.toLocaleString('en-US'), 'users paid for', '', rej.toLocaleString('en-US') + ' more sign-ups failed a check and were never paid') + '</div>' +
-      '<div class="uvpot" title="New person, one person one result, a real action, proof of person, held before it is paid"><span>Paid only for</span><b>verified <i>new users</i></b><em class="uvmode">NOT CLICKS</em></div>' +
-      '<div class="uvsec">Best paid now <span class="sub">per new user</span></div><div class="uvboard">' + best + '</div>' +
-      (mine ? '<div class="uvsec">Your briefs <span class="sub">Cymetica QA</span></div><div class="uvboard">' + mine + '</div>' : '') +
+    var best = b.sort(function (p, q) { return q.left - p.left; }).slice(0, 4).map(function (x, i) {
+      return row(x, i, '<b class="g">' + x.left.toLocaleString('en-US') + ' <i class="uvu">USDC · ' + x.per_post + ' / post · ' + x.per_user + ' / user</i></b>'); }).join('');
+    var mine = (M.mine || []).filter(function (p) { return p.brief; }).map(function (p) { return M.briefs.filter(function (x) { return x.key === p.brief; })[0]; }).filter(Boolean).map(function (x, i) {
+      return row(x, i, '<b>' + x.visitors.toLocaleString('en-US') + ' <i class="uvu">visitors</i> · ' + x.users + ' <i class="uvu">new users</i></b>'); }).join('');
+    return '<div class="uvks">' + kpi(sum(function (x) { return x.left; }).toLocaleString('en-US'), 'USDC up for grabs', 'g') + kpi(b.length, 'open briefs', 'c') +
+        kpi(top.per_user, 'USDC top per new user') + '</div>' +
+      '<div class="uvsec">Most up for grabs <span class="sub">per post · per new user</span></div><div class="uvboard">' + best + '</div>' +
+      (mine ? '<div class="uvsec">Your products <span class="sub">what your briefs brought</span></div><div class="uvboard">' + mine + '</div>' : '') +
       '<div class="uvp-asof">as of ' + esc(window.PM.day) + ' · sample briefs</div>';
   }
 
   var SPEC = {
     promo: { house: true, icon: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><circle cx="12" cy="6" r="2"/><path d="M12 8v13 M8 21h8 M6.5 10.5a7.5 7.5 0 0 1 11 0 M4 7.5a11 11 0 0 1 16 0"/></svg>',
       tag: 'Hire creators, agents and firms', body: promoBody,
-      foot: '<a class="uvp-go" href="' + MARKET + '#brief" target="_blank" rel="noopener">Post a brief <span aria-hidden="true">↗</span></a><a class="uvp-go alt" href="' + MARKET + '#market" target="_blank" rel="noopener">Open the market <span aria-hidden="true">↗</span></a>' },
+      foot: '<a class="uvp-go" href="' + MARKET + '#me/products" target="_blank" rel="noopener">Post a brief <span aria-hidden="true">↗</span></a><a class="uvp-go alt" href="' + MARKET + '#market" target="_blank" rel="noopener">Open the market <span aria-hidden="true">↗</span></a>' },
     gem: { icon: '<svg viewBox="0 0 24 24" fill="currentColor"><path d="M6 3h12l4 6-10 12L2 9z"/></svg>', tag: 'Revenue-driven AI research', go: 'Visit Gem Screener', body: function () { return gemBody(SNAP.gem); } },
     casino: { icon: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"><path d="M12 2.5 20 7v10l-8 4.5L4 17V7z"/><path d="M12 12 4 7 M12 12l8-5 M12 12v9.5"/></svg>', tag: 'AI agents at the tables', go: 'Go play', body: function () { return casinoBody(SNAP.casino); } }
   };

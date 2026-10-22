@@ -155,43 +155,28 @@ def post_kit():
 
 
 # ---------------- the market: NEW, a model. Figures are placeholders, each derived from its own row. ----------------
-# A brief pays for RESULTS (the operator, 2026-10-22: "plati se jen za vysledek ... jen za to kdyz prijde unique
-# uzivatel"), and takes fixed-price post OFFERS from influencers beside them ("kdyz nejaky velky influencer mi napise ze
-# mi to postne za tolik a tolik tak to chci taky"). What a result is, per kind: the action that makes it costly to fake.
-RESULTS = {
-    "active": {"name": "new active user", "short": "active user",
-               "rule": "a new account that uses the product on 3 different days within 14"},
-    "funded": {"name": "new funded user", "short": "funded user",
-               "rule": "a new account that deposits $20 or more of its own funds and seats a bot"},
-    "paying": {"name": "new paying user", "short": "paying user",
-               "rule": "a new account that starts a paid plan and keeps it 30 days"},
-}
-# why a sign-up was not paid, and each reason's share of the rejected (one split for every brief)
-REJECT = [("same device or network as another result", 0.38), ("wallet funded by the promoter or a known farm", 0.27),
-          ("no proof of person (Telegram or a wallet with history)", 0.21), ("gone before the hold ended", 0.14)]
-# key, product, path, og image name, buyer, the ask (the product's own live words), result kind, price per result,
-# currency, hold days, budget, results paid, held, rejected, days left, posted (days ago),
-# offers: (platform, audience, price per post, state)
+# A brief pays a promoter two things, in USDC, and nothing else is on its card (the operator, 2026-10-22: "jako marketer
+# me jen zajima kolik muzu vydelat kdyz to postnu a kolik ziskam za kazdeho noveho unique uzivatele"): a fixed sum per
+# post that stays up, and a sum per new unique user the promoter's link brings (checked before it is paid: "plati se jen
+# za vysledek ... aby to neslo ojebavat"). Up for grabs is what is left of the budget.
+# why a sign-up was not counted, and each reason's share (one split for every brief; the owner's view shows it)
+REJECT = [("same device or network as another user", 0.38), ("wallet funded by the promoter or a known farm", 0.27),
+          ("no proof of person (Telegram or a wallet with history)", 0.21), ("gone before the 14-day check", 0.14)]
+# key, product, path, the ask (the product's own live words), per post, per new user (USDC), budget, posts paid,
+# new users paid, not counted, unique visitors the links brought, days left, posted (days ago). gem, casino, chart and
+# supply are the operator's own products (part B); company and launch are Cymetica's.
 BRIEFS = [
-    ("gem", "Gem Screener", "/gem-screener", "gem-screener", "Cymetica QA",
-     "Most token lists rank by hype. This one ranks by revenue.", "active", 4, "USDC", 14, 2000, 61, 23, 148, 12, 2,
-     [("x", 128000, 350, "live"), ("youtube", 41000, 600, "pending"), ("telegram", 22000, 120, "paid")]),
-    ("casino", "Agent Tournaments", "/agent-tournaments", "agent-tournaments", "Cymetica QA",
-     "10 agents, 1 table, best ROI wins. Paper tables are open now.", "funded", 12, "USDC", 14, 3000, 38, 11, 97, 5, 4,
-     [("x", 64000, 250, "pending")]),
-    ("chart", "Chart Analyzer", "/chart-analyzer", "chart-analyzer", "Cymetica",
-     "READY TO POP, READY TO DUMP or NO EDGE: a probability from history, never a promise.", "active", 3, "USDC", 14, 1500, 112, 31, 260, 9, 6,
-     []),
-    ("supply", "Supply Analyzer", "/supply-analyzer", "supply-analyzer", "Cymetica",
-     "Type any token and see its supply. One source per number.", "active", 2500, "ET10", 14, 250000, 22, 9, 41, 18, 1,
-     [("telegram", 15000, 9000, "pending")]),
-    ("company", "Build a Company", "/company", "company", "Cymetica",
-     "A team of AI departments run by NEXUS on your own plan.", "paying", 40, "USDC", 30, 4000, 9, 6, 12, 21, 1,
-     [("youtube", 88000, 900, "pending"), ("x", 210000, 700, "pending")]),
-    ("launch", "Safe Launch Check", "/launch-check", "launch-check", "Cymetica",
-     "Paste a token contract and read the rug risks straight from the chain.", "active", 2, "USDC", 14, 800, 140, 18, 301, 2, 9,
-     []),
+    ("gem", "Gem Screener", "/gem-screener", "Most token lists rank by hype. This one ranks by revenue.", 5, 4, 2000, 38, 61, 148, 2180, 12, 18),
+    ("casino", "Agent Tournaments", "/agent-tournaments", "10 agents, 1 table, best ROI wins. Paper tables are open now.", 8, 12, 3000, 20, 38, 97, 1410, 5, 9),
+    ("chart", "Chart Analyzer", "/chart-analyzer", "READY TO POP, READY TO DUMP or NO EDGE: a probability from history, never a promise.", 4, 3, 1500, 52, 112, 260, 3900, 9, 21),
+    ("supply", "Supply Analyzer", "/supply-analyzer", "Type any token and see its supply. One source per number.", 5, 5, 1200, 9, 22, 41, 690, 18, 12),
+    ("company", "Build a Company", "/company", "A team of AI departments run by NEXUS on your own plan.", 25, 40, 4000, 6, 9, 12, 300, 21, 9),
+    ("launch", "Safe Launch Check", "/launch-check", "Paste a token contract and read the rug risks straight from the chain.", 3, 2, 800, 41, 140, 301, 4400, 2, 12),
 ]
+# The operator's own products: the apps their Build it Better requests built (their tickets cite this repository), with
+# the leaderboard's 30-day traffic. key, path, the picture's kind.
+MINE = [("gem", "/gem-screener"), ("chart", "/chart-analyzer"), ("casino", "/agent-tournaments"), ("nexus", "/nexus-panel"),
+        ("supply", "/supply-analyzer"), ("team", "/team-dump-radar"), ("infil", "/infiltrator"), ("agents", "/my-agents")]
 
 
 # each product page's own og:image, as its <meta property="og:image"> read 2026-10-22: the ?t= is the title the
@@ -206,29 +191,37 @@ OG = {
 }
 
 
+def daily(total, days, seed):
+    """`total` visitors spread over the last `days` days, rising as more posts go up: one curve per brief, so the
+    owner's chart and its counters are the same numbers."""
+    w = [(i + 1) ** 0.8 * (1 + 0.35 * ((seed * 7 + i * 13) % 5 - 2) / 2) for i in range(days)]
+    s = sum(w)
+    out = [round(total * x / s) for x in w]
+    out[-1] += total - sum(out)
+    return out
+
+
 def market(q):
     apps = {a["path"]: a for a in load("bib_apps.json")["apps"]}
     out = []
-    for (key, name, path, og, buyer, ask, kind, price, cur, hold, budget, paid, held, rejected, days, age,
-         offers) in BRIEFS:
-        offs = [{"platform": p, "audience": a, "price": pr, "state": s} for p, a, pr, s in offers]
-        spent = paid * price + sum(o["price"] for o in offs if o["state"] == "paid")
-        committed = held * price + sum(o["price"] for o in offs if o["state"] == "live")
-        trying = round((paid + held) * 0.6)                 # signed up, action not done yet
-        accounts = paid + held + rejected + trying
-        out.append({"key": key, "name": name, "path": path, "og": OG[og], "buyer": buyer, "ask": ask,
-                    "kind": kind, "price": price, "cur": cur, "hold": hold, "budget": budget,
-                    "paid": paid, "held": held, "rejected": rejected, "trying": trying,
-                    "funnel": {"clicks": accounts * 9, "accounts": accounts, "qualified": paid + held, "held": held, "paid": paid},
+    for i, (key, name, path, ask, per_post, per_user, budget, posts, users, rejected, visitors, days, age) in enumerate(BRIEFS):
+        spent = posts * per_post + users * per_user
+        run = min(14, age)                                   # days the brief has run inside the 14-day window
+        series = [0] * (14 - run) + daily(round(visitors * run / age), run, i)
+        out.append({"key": key, "name": name, "path": path, "ask": ask, "per_post": per_post, "per_user": per_user,
+                    "budget": budget, "posts": posts, "users": users, "rejected": rejected, "visitors": visitors,
+                    "spent": spent, "left": budget - spent, "days": days, "age": age, "series": series,
                     "rejects": [[why, round(rejected * share)] for why, share in REJECT],
-                    "offers": offs, "spent": spent, "committed": committed, "left": budget - spent - committed,
-                    "days": days, "age": age, "visitors30": (apps.get(path) or {}).get("visitors"),
                     "threads": sum(1 for l in q["reddit"]["items"] + q["x"]["items"] if l["path"] == path)})
+    mine = []
+    for key, path in MINE:
+        a = apps.get(path) or {}
+        mine.append({"key": key, "name": a.get("name"), "path": path, "visitors30": a.get("visitors"),
+                     "uses30": a.get("uses"), "views30": a.get("views"),
+                     "brief": key if any(b["key"] == key for b in out) else None})
     replied = q["reddit"]["stats"]["replied"] + q["x"]["stats"]["replied"]
-    house = {"key": "house", "name": "Any Cymetica tool", "buyer": "Cymetica", "pay": 1000, "pay2": 1000,
-             "outlets": ["x", "reddit", "telegram", "discord"], "replied": replied,
-             "open_threads": q["reddit"]["stats"]["new"] + q["x"]["stats"]["new"]}
-    return {"briefs": out, "house": house, "results": RESULTS}
+    house = {"pay": 1000, "pay2": 1000, "replied": replied, "open_threads": q["reddit"]["stats"]["new"] + q["x"]["stats"]["new"]}
+    return {"briefs": out, "mine": mine, "house": house}
 
 
 def main():
@@ -241,7 +234,7 @@ def main():
     m = data["market"]
     print("data.js", len(js), "bytes | me", data["me"]["summary"], "| pub links", len(data["pub"]["links"]),
           "| radar", [a["name"] for a in data["radar"]], [len(a.get("subs", [])) for a in data["radar"]],
-          "| briefs", len(m["briefs"]), "| house replied", m["house"]["replied"])
+          "| briefs", len(m["briefs"]), "| mine", [(x["name"], x["visitors30"], x["brief"]) for x in m["mine"]])
     # the chart's sum against the page's own counters, so the picture never says more than the page does
     for who in ("me", "pub"):
         c = data[who]

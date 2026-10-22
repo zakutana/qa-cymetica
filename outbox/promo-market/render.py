@@ -35,11 +35,12 @@ HAS = ["Most token lists rank by hype", "Copy", "Open in X", "Mark posted", "Sav
        "Wait for my instructions before placing any trade", "Trade", "Radar apps", "Safe Launch Check", "Event Cover",
        "Best Rate Check", "Funding Rate Radar", "Loop Yield", "Who to reach", "r/CryptoMoonShots", "@StonkFunXyz",
        "Copy title", "Copy body", "Copy post", "Telegram post", "Links", "Clicks", "Reads", "Likes", "Unique", "Queues",
-       "Rewards", "Create a page", "Track a link", "1,000 ET10", "ETLP", "5,393", "1,297", "Start a company",
+       "Rewards", "Create a page", "Track a link", "1,000 ET10", "ETLP", "Start a company",
        "Reuse it on every matching thread", "moomoo", "Hyblock Capital", "r/ai_trading", "google.com", "Download HTML",
        "Also on claude.ai", "Open page", "Are you Mumtaz?", "Log in", "Reply with this page", "Skip", "Mumtaz",
        "4,335", "6,852", "1,443", "2,821", "liking removed", "Press", "Pitch by email", "Promo Market", "Post a brief",
-       "Take this brief", "Promote from your own AI agent", "per new active user", "Rejected by the checks", "Offer a post", "Send offer", "What counts as a result", "Pay for"]
+       "Up for grabs", "per new user", "per post", "My products", "Create brief", "How a new user is counted",
+       "Visitors your briefs brought", "Promote from your AI agent", "Briefs I took"]
 CHECK = """() => { const out = [];
   document.querySelectorAll('.bc, .stat, .kpi, .qt, .sb, .qi, .ra, .house, .step, .rr, .prod, .chip, .btn, .tp').forEach(c => {
     if (!c.offsetParent) return; const cr = c.getBoundingClientRect();
@@ -49,7 +50,7 @@ CHECK = """() => { const out = [];
   if (document.documentElement.scrollWidth > innerWidth) out.push('page scrolls sideways');
   return [...new Set(out)].slice(0, 14); }"""
 
-VIEWS = [("market", "#market", None), ("me-today", "#me/today", None), ("me-briefs", "#me/briefs", None),
+VIEWS = [("market", "#market", None), ("me-products", "#me/products", None), ("me-today", "#me/today", None), ("me-briefs", "#me/taken", None),
          ("me-queues", "#me/queues", None), ("me-press", "#me/queues", "[data-q=press]"), ("me-radar", "#me/queues", "[data-q=radar]"),
          ("me-pages", "#me/pages", "[data-row]"), ("me-rewards", "#me/rewards", None), ("profile", "#profile", "[data-row]")]
 # a tooltip is part of what the page says: count its text too
@@ -75,8 +76,8 @@ with sync_playwright() as p:
         if name == "profile":
             t.screenshot(path=str(shots / f"{name}-1440.png"))
     # the overlays: one brief, the form, the agent prompts, create a page
-    for name, h, click in [("brief-drawer", "#market", ".bc[data-brief=chart]"), ("post-brief", "#market", ".hero [data-act=brief]"),
-                           ("agent", "#market", ".hero [data-act=agent]"), ("take", "#market", ".bc[data-brief=supply] [data-take]"),
+    for name, h, click in [("brief-drawer", "#market", ".bc[data-brief=gem]"), ("post-brief", "#me/products", "[data-newbrief=nexus]"),
+                           ("agent", "#market", ".hero [data-act=agent]"), ("take", "#market", ".bc[data-brief=supply] [data-take]"), ("product-drawer", "#me/products", ".pc[data-product=gem] .btn"),
                            ("create-page", "#me/pages", "[data-act=page]")]:
         t.evaluate(f"location.hash = '{h}'")
         t.wait_for_timeout(300)
