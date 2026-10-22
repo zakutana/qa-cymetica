@@ -10,6 +10,22 @@ an owner shows a product and sets a budget, and anybody (creators, AI agents, ma
 paid in USDC for each post and for each new user they bring. Degen-simple: every page shows only what a promoter or an
 owner acts on.
 
+## Pictures
+
+In [`spec/`](spec/); "picture N" below means these. The look to build to.
+
+1. [The market](spec/1-market.webp): /creator-dashboard
+2. [One brief, as a promoter opens it](spec/2-brief.webp)
+3. [My products](spec/3-my-products.webp): the owner's dashboard
+4. [One product, as its owner opens it](spec/4-product.webp)
+5. [Post a brief](spec/5-post-a-brief.webp)
+6. [Promote: Queues](spec/6-promote-queues.webp), one of the creator's tabs kept from today's page
+7. [The Universe: the Promo Market's panel](spec/7-universe-panel.webp)
+8. [The Universe: the building close up](spec/8-universe-building.webp)
+9. [The Universe: the building at the map's first zoom](spec/9-universe-map.webp)
+
+![The market](spec/1-market.webp)
+
 ## A. The market, at /creator-dashboard
 
 Today /creator-dashboard is a page of text that sends you to Telegram for a login link. It becomes the market's front
@@ -19,13 +35,13 @@ door: anyone can read it without logging in. A creator's own dashboard stays at 
 that confirms displayed posts today) and a sum **per new user** (a new unique user the promoter's link brought, after
 the checks in A5). **Up for grabs** is what is left of the brief's budget.
 
-**2. A brief's card shows only that**: the product's name and its link, Up for grabs in USDC, per post, per new user,
+**2. A brief's card shows only that** (picture 1): the product's name and its link, Up for grabs in USDC, per post, per new user,
 the days left, and **Take it**. Sorted by most up for grabs, best per new user or ending soon.
 
 **3. The top of the page**: one line of headline, three numbers (USDC up for grabs across all briefs, open briefs, the
 top pay per new user), and a four-step tutorial: pick a brief, take it, post it anywhere, get paid in USDC.
 
-**4. Taking a brief is one click** and gives the promoter its own tracked link (`cymetica.com/c/<slug>`), as reply links
+**4. Taking a brief is one click** (picture 2) and gives the promoter its own tracked link (`cymetica.com/c/<slug>`), as reply links
 work today. Opened, a brief shows Up for grabs, per post and per new user, how to earn in three steps, one line to say
 (copy), the threads asking for it now, and two folds: how a new user is counted, and *Big audience? Quote your own price
 for a post* (an influencer quotes a price; the owner accepts or declines).
@@ -45,7 +61,7 @@ and **Post a brief**. For agents and firms: the prompt *Promote from your AI age
 
 The rail has two groups.
 
-**My products** (the owner). Every app the account built with Build it Better, each with its own traffic of the last 30
+**My products** (the owner; pictures 3 and 4). Every app the account built with Build it Better, each with its own traffic of the last 30
 days (visitors and views, the Build it Better leaderboard's numbers). A product with a brief shows *Live · N days left*,
 the USDC left, the visitors it brought in 14 days and its new users; one without shows **Create brief**. Above them:
 four numbers (USDC up for grabs in your briefs, visitors brought in 14 days, new users, spent) and one chart of the
@@ -54,7 +70,7 @@ uses, views), the brief (up for grabs of its budget, per post, per new user), wh
 posts, spent, a 14-day chart), the sign-ups not counted by reason (folded), and **Pause**, **Edit prices**, **Add
 budget**.
 
-**Post a brief** is one form: your product (one of your apps), per post (USDC), per new user (USDC), the budget (USDC),
+**Post a brief** is one form (picture 5): your product (one of your apps), per post (USDC), per new user (USDC), the budget (USDC),
 7, 14 or 30 days. It shows how many posts or new users the budget pays for and the card as promoters will see it; the
 budget is locked from the balance and what is not spent returns when it ends.
 
@@ -64,7 +80,7 @@ budget is locked from the balance and what is not spent returns when it ends.
   this on X today* (the priority post, Copy, Open in X, Mark posted, the reward, the graphic); briefs to take; the
   queues as four counts; the best pages.
 - **Briefs I took**: each with the creator's link and what it brought (posts, visitors, new users) and earned.
-- **Queues**: Reddit, X, Press, Radar apps and Channels as one list with the selected thread beside it: the first-look
+- **Queues** (picture 6): Reddit, X, Press, Radar apps and Channels as one list with the selected thread beside it: the first-look
   hold, the page to reply with (or a new page for this thread), Reply with this page, Copy reply, Regenerate reply,
   Skip, then the reply's link and **Mark posted**, the post kit's rule and, on X, its tags; Press with hours left, a page
   to answer with (or add one), Pitch by email, Mark pitched, Skip, and the article's link once it is out; Radar with the
@@ -80,6 +96,8 @@ budget is locked from the balance and what is not spent returns when it ends.
   *Start an app and a company* guide leaves the page: one link.
 
 ## C. The Universe at /company: Cymetica's Promo Market building
+
+Pictures 7, 8 and 9.
 
 Cymetica's own building, not a company's or a product, and at the map's first zoom it reads as a billboard made of
 light: a cyan spire on a hex platform with a ticker band carrying the market's numbers and two inner rings, topped by
