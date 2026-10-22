@@ -219,6 +219,25 @@ h2{font:28px/1.2 "Archivo Black",sans-serif}
 .pc .nw em{font-style:normal;color:var(--red);font-weight:700}
 .pc .nw a{color:var(--cyan)}
 
+.ov{position:fixed;inset:0;background:rgba(6,9,15,.82);display:grid;place-items:center;z-index:50;backdrop-filter:blur(3px)}
+.modal{width:500px;max-width:calc(100vw - 32px);padding:26px 28px 24px}
+.modal h3{font:28px "Archivo Black",sans-serif;margin:8px 0 0}
+.modal h3 span{color:var(--cyan)}
+.modal .mnum{margin:16px 0 2px;font:48px/1.1 "Archivo Black",sans-serif;color:var(--green);text-shadow:0 0 30px rgba(0,255,136,.4)}
+.modal .mnum small{font-size:20px}
+.modal .mnuml{color:var(--muted);font-size:12.5px;margin-bottom:16px}
+.modal .mnuml b{color:var(--text)}
+.modal .how2{margin:-8px 0 16px;color:var(--cyan);font-size:12px}
+.modal .kv{display:flex;justify-content:space-between;gap:12px;padding:11px 0;border-top:1px solid rgba(30,48,80,.9);font-size:12.5px;color:var(--muted)}
+.modal .kv b{color:var(--text);text-align:right}
+.modal .kv b em{font-style:normal;color:var(--green)}
+.modal .kv b.g{color:var(--green);font:18px "Archivo Black",sans-serif}
+.modal .kv b.r{color:var(--red);font:18px "Archivo Black",sans-serif}
+.modal .mshort{margin-top:6px;padding:11px 14px;border:1px solid rgba(255,68,68,.45);border-radius:12px;background:rgba(255,68,68,.06);color:var(--muted);font-size:12px}
+.modal .mshort b{color:var(--red)}
+.btns2{display:grid;grid-template-columns:1fr 1.6fr;gap:10px;margin-top:18px}
+.btns2 .go,.btns2 .ghost{padding:15px;font-size:14px}
+.go[disabled]{background:var(--line);color:var(--dim);box-shadow:none;cursor:default}
 .ribbon{position:fixed;right:calc(16px + env(safe-area-inset-right,0px));top:calc(6px + env(safe-area-inset-top,0px));z-index:40;background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:5px 10px;font-size:11.5px;color:var(--muted);display:flex;gap:8px;align-items:center}
 .ribbon b{color:var(--cyan);letter-spacing:.12em;font-size:10.5px}
 .ribbon button{border:1px solid var(--line);border-radius:7px;padding:3px 8px;color:var(--muted);font-size:11px}
@@ -577,7 +596,7 @@ function drawPlans(m) {
       ? `<div class="nw"><b>${usd(q.charge_now_usdc)} now</b> &middot; until ${ends}${num(q.short_usdc) > 0 ? `<br><em>deposit ${usd(q.short_usdc)} more</em> &middot; <a href="#">Deposit</a>` : ""}</div>`
       : q && q.change === "current" && ends ? `<div class="nw">this period ends ${ends}</div>` : `<div class="nw"></div>`;
     const act = out ? (price ? `<button class="up">LOG IN TO SUBSCRIBE</button>` : `<button class="mv">START FREE</button>`)
-      : on ? `<button class="cur">CURRENT PLAN</button>` : i > cur ? `<button class="up">UPGRADE &middot; ${usd0(price)}/MO</button>` : `<button class="mv">Move to ${p.name} at period end</button>`;
+      : on ? `<button class="cur">CURRENT PLAN</button>` : i > cur ? `<button class="up" data-plan="${p.code}">UPGRADE &middot; ${usd0(price)}/MO</button>` : `<button class="mv" data-plan="${p.code}">Move to ${p.name} at period end</button>`;
     cards += `<div class="glass pc ${on ? "glow" : ""}">
       <div class="h"><b>${p.name}</b><span class="mx">${p.multiplier}&times;</span>${on ? `<span class="chip s">YOURS</span>` : ""}</div>
       <div class="pr">${price ? usd0(price) : "$0"}<small>/mo</small></div>${nw}
@@ -628,8 +647,42 @@ function draw() {
   drawStatus(m); drawLeft(m); drawTanks(m); drawFits(m); drawPlans(m); drawHow();
   document.querySelectorAll("#ribbon [data-st]").forEach(b => b.classList.toggle("on", b.dataset.st === STATE));
 }
+/* ---- the plan change, confirmed on the page instead of the browser's confirm() ---- */
+function planModal(code) {
+  const p = P.plans.find(x => x.code === code), cur = P.plans.find(x => x.code === S.plan);
+  const q = window.NOW && NOW.plans.find(x => x.code === code);
+  if (!p || !cur || !q) return;
+  const ends = NOW.period_end ? `${MON[new Date(NOW.period_end).getUTCMonth()]} ${new Date(NOW.period_end).getUTCDate()}` : "the period end";
+  const up = q.change === "upgrade", charge = num(q.charge_now_usdc), bal = num(NOW.usdc_balance), short = num(q.short_usdc);
+  // how the charge is counted: both readings fit the price difference times the whole days left, over 30
+  const daysLeft = Math.ceil((Date.parse(NOW.period_end) - Date.parse(NOW.as_of)) / 864e5);
+  const body = up ? `
+      <div class="cap">UPGRADE</div>
+      <h3>${cur.name} <span>&rarr;</span> ${p.name}</h3>
+      <div class="mnum">${usd(charge)} <small>now</small></div>
+      <div class="mnuml">the rest of this period, until ${ends}; then ${usd(p.price_usdc)} a month from your USDC balance</div>
+      <div class="how2">= (${usd0(p.price_usdc)} &minus; ${usd0(cur.price_usdc)}) &times; ${daysLeft} day${daysLeft === 1 ? "" : "s"} left of 30</div>
+      <div class="kv"><span>Allowance</span><b>${ua(cur.session_units)} &rarr; <em>${ua(p.session_units)}</em> u / 5h &middot; ${ua(cur.week_units)} &rarr; <em>${ua(p.week_units)}</em> u / week</b></div>
+      <div class="kv"><span>USDC balance</span><b>${usd(bal)}</b></div>
+      <div class="kv"><span>After this charge</span><b class="${short > 0 ? "r" : "g"}">${short > 0 ? "&minus;" + usd(short) : usd(bal - charge)}</b></div>
+      ${short > 0 ? `<div class="mshort">Deposit <b>${usd(short)}</b> more in USDC or USDT first, then upgrade. <a href="#">Deposit on your account page &rarr;</a></div>` : ""}
+      <div class="btns2"><button class="ghost" data-x>Cancel</button><button class="go"${short > 0 ? " disabled" : ""}>UPGRADE &middot; PAY ${usd(charge)}</button></div>`
+    : `
+      <div class="cap">CHANGE PLAN</div>
+      <h3>${cur.name} <span>&rarr;</span> ${p.name}</h3>
+      <div class="mnuml" style="margin-top:14px">${cur.name} stays until <b>${ends}</b>, then ${p.name}${num(p.price_usdc) ? ` at ${usd(p.price_usdc)} a month` : ""}.</div>
+      <div class="kv"><span>Allowance from ${ends}</span><b>${ua(p.session_units)} u / 5h &middot; ${ua(p.week_units)} u / week</b></div>
+      <div class="btns2"><button class="ghost" data-x>Keep ${cur.name}</button><button class="go">MOVE TO ${p.name.toUpperCase()}</button></div>`;
+  const ov = document.createElement("div");
+  ov.className = "ov";
+  ov.innerHTML = `<div class="glass glow modal">${body}</div>`;
+  ov.onclick = e => { if (e.target === ov || e.target.hasAttribute("data-x")) ov.remove(); };
+  document.body.appendChild(ov);
+}
+document.addEventListener("click", e => { const b = e.target.closest(".pc [data-plan]"); if (b) planModal(b.dataset.plan); });
 document.querySelectorAll("#ribbon [data-st]").forEach(b => b.onclick = () => { STATE = b.dataset.st; draw(); });
 draw();
+if (Q.get("modal")) planModal(Q.get("modal"));
 if (!SHOT) setInterval(() => { const m = model(); drawStatus(m); drawTanks(m); const cd = $("cd"); if (cd && m.blocked) cd.textContent = dur((m.opensAt - m.t) / 1000); }, 1000);
 </script>
 </body>

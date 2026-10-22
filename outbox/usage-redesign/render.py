@@ -55,6 +55,10 @@ with sync_playwright() as p:
             box = t.evaluate("""() => { const r = document.querySelector('#how').getBoundingClientRect();
                 return {x: r.left - 4, y: r.top + scrollY - 4, width: r.width + 8, height: r.height + 8}; }""")
             t.screenshot(path=str(out / "4-folds-open.png"), clip=box, full_page=True)
+            # an upgrade confirmed on the page, in place of the browser's confirm()
+            t.goto(url + "?state=live&shot=1&modal=max5", wait_until="networkidle")
+            t.wait_for_timeout(700)
+            t.screenshot(path=str(out / "5-upgrade.png"))
         t.close()
     b.close()
 print("page errors:", errors or "none")
