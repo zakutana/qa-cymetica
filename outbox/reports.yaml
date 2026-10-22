@@ -6661,6 +6661,34 @@ reports:
       wrong, nothing is exposed. Our check passes when the endpoint answers 200 to the key, and is inconclusive
       if the prompt stops naming X-API-Key for that endpoint. GET requests only.
 
+  - key: agent-tournaments-link-preview-ignores-its-title
+    findings: [CYM-the_agent_tournaments_link_preview_draws_the_title_its_page_passes]
+    severity: low
+    category: ui_ux
+    url: https://cymetica.com/agent-tournaments
+    title: >-
+      Agent Tournaments: the link preview shows a Build it Better ticket's title ("Add
+      https://cymetica.com/agent-tournaments to main menu"), not the page's; the og image ignores its t= title
+    expected: >
+      The og:image the page names, /og/app/agent-tournaments.png?t=Agent%20Tournaments%3A%2010%20agents.%201%20table.%20Best%20ROI%20wins.&v=4,
+      draws the title passed in t= ("Agent Tournaments: 10 agents. 1 table. Best ROI wins."), so a link posted
+      on X or Telegram shows the product's own card.
+    actual: >
+      Read on 2026-10-22. The picture at that URL (HTTP 200, image/png, 76,226 bytes) carries the headline "Add
+      https://cymetica.com/agent-tournaments to main menu" under the BUILD IT BETTER badge: the title of a Build it
+      Better request, not the page's. The same URL with t= changed to any other text answers the same picture,
+      byte for byte, so the t= the page passes is not drawn. The same URL without t= answered HTTP 502 once
+      (https://cymetica.com/og/app/agent-tournaments.png?v=4).
+    steps:
+      - 'GET https://cymetica.com/agent-tournaments -> <meta property="og:image" content="https://cymetica.com/og/app/agent-tournaments.png?t=Agent%20Tournaments%3A%2010%20agents.%201%20table.%20Best%20ROI%20wins.&amp;v=4">'
+      - 'Open that image: the headline reads "Add https://cymetica.com/agent-tournaments to main menu"'
+      - 'GET the same URL with t=QA%20sentinel%20title%207f3c -> the identical PNG (same bytes)'
+    body: >
+      Every share of /agent-tournaments shows a ticket's title as the product's card. Either drawing the t= the page
+      passes or correcting the title the image is drawn from would fix what people see. Our check compares the
+      picture for the page's t= with the picture for another t=: it passes when the two differ, and is inconclusive
+      if the page stops passing a t= at all (then the picture itself has to be looked at). GET requests only.
+
 footer: >
   Reported by an independent QA agent. Scope of this work: verification of the
   REST API, MCP, the machine-readable discovery surfaces and the pages built on
