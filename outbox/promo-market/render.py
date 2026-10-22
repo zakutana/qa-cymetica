@@ -40,7 +40,7 @@ HAS = ["Most token lists rank by hype", "Copy", "Open in X", "Mark posted", "Sav
        "Also on claude.ai", "Open page", "Are you Mumtaz?", "Log in", "Reply with this page", "Skip", "Mumtaz",
        "4,335", "6,852", "1,443", "2,821", "liking removed", "Press", "Pitch by email", "Promo Market", "Post a brief",
        "Up for grabs", "per new user", "per post", "My products", "Create brief", "How a new user is counted",
-       "Visitors your briefs brought", "Promote from your AI agent", "Briefs I took"]
+       "Visitors your briefs brought", "Promote from your AI agent", "Briefs I took", "After you post it", "Posted something yourself?", "Channel post", "Queue post", "Article published?", "Create key", "First look: you", "New page for this thread", "Mark pitched"]
 CHECK = """() => { const out = [];
   document.querySelectorAll('.bc, .stat, .kpi, .qt, .sb, .qi, .ra, .house, .step, .rr, .prod, .chip, .btn, .tp').forEach(c => {
     if (!c.offsetParent) return; const cr = c.getBoundingClientRect();
@@ -51,7 +51,7 @@ CHECK = """() => { const out = [];
   return [...new Set(out)].slice(0, 14); }"""
 
 VIEWS = [("market", "#market", None), ("me-products", "#me/products", None), ("me-today", "#me/today", None), ("me-briefs", "#me/taken", None),
-         ("me-queues", "#me/queues", None), ("me-press", "#me/queues", "[data-q=press]"), ("me-radar", "#me/queues", "[data-q=radar]"),
+         ("me-queues", "#me/queues", None), ("me-press", "#me/queues", "[data-q=press]"), ("me-radar", "#me/queues", "[data-q=radar]"), ("me-channels", "#me/queues", "[data-q=telegram]"),
          ("me-pages", "#me/pages", "[data-row]"), ("me-rewards", "#me/rewards", None), ("profile", "#profile", "[data-row]")]
 # a tooltip is part of what the page says: count its text too
 SEEN = "() => document.body.innerText + ' ' + [...document.querySelectorAll('[data-tip]')].map(e => e.dataset.tip).join(' ')"

@@ -92,4 +92,23 @@
 a.uvr { color: var(--text); text-decoration: none; } a.uvr:hover { background: var(--navy2); }
 .uvr i.uvu { font-style: normal; font-weight: 500; color: var(--dim2); }
 
+/* Promo Market: two messages, Earn USDC (promoters) and Get users (builders) */
+.uvp.k-promo .pm { margin: 0 14px 12px; padding: 14px; border-radius: 12px; border: 1px solid var(--line2); }
+.uvp.k-promo .pm.earn { background: linear-gradient(150deg, rgba(0, 255, 136, .10), rgba(0, 207, 255, .03)); border-color: rgba(0, 255, 136, .3); }
+.uvp.k-promo .pm.own { background: linear-gradient(150deg, rgba(0, 207, 255, .10), rgba(0, 207, 255, .02)); border-color: rgba(0, 207, 255, .3); }
+.uvp.k-promo .pmk { font-size: 10px; font-weight: 800; letter-spacing: .14em; text-transform: uppercase; color: var(--dim2); }
+.uvp.k-promo .pmh { font-family: 'Archivo Black', sans-serif; font-size: 17px; line-height: 1.2; margin: 4px 0 10px; color: var(--text); }
+.uvp.k-promo .pmbig b { font-family: 'Archivo Black', sans-serif; font-size: 34px; color: var(--green); line-height: 1; }
+.uvp.k-promo .pmbig span { display: block; font-size: 11px; color: var(--dim); margin-top: 4px; }
+.uvp.k-promo .pmt { margin: 12px 0 6px; font-size: 10px; font-weight: 800; letter-spacing: .1em; text-transform: uppercase; color: var(--dim2); display: flex; justify-content: space-between; }
+.uvp.k-promo .pmr { display: grid; grid-template-columns: 1fr auto auto; gap: 14px; align-items: center; padding: 8px 10px; border-radius: 9px; background: var(--navy); border: 1px solid var(--line); text-decoration: none; color: var(--text); margin-top: 6px; }
+.uvp.k-promo .pmr:hover { border-color: var(--green); }
+.uvp.k-promo .pmn b { display: block; font-size: 12px; } .uvp.k-promo .pmn span { font-size: 10px; color: var(--dim2); }
+.uvp.k-promo .pmp { text-align: right; } .uvp.k-promo .pmp b { display: block; font-size: 15px; font-weight: 800; } .uvp.k-promo .pmp span { font-size: 9px; color: var(--dim2); white-space: nowrap; }
+.uvp.k-promo .pmp.g b { color: var(--green); }
+.uvp.k-promo .pm.own p { margin: 0 0 10px; font-size: 11.5px; line-height: 1.5; color: var(--dim); }
+.uvp.k-promo .pmm { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+.uvp.k-promo .pmm > div { padding: 8px 10px; border-radius: 9px; background: var(--navy); border: 1px solid var(--line); }
+.uvp.k-promo .pmm b { display: block; font-size: 16px; font-weight: 800; color: var(--cyan); } .uvp.k-promo .pmm span { font-size: 9.5px; color: var(--dim2); }
+
 @media (max-width: 760px) { .uvp { top: auto; height: 62%; bottom: 8px; right: 8px; width: calc(100% - 16px); } }

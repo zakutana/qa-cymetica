@@ -1240,11 +1240,12 @@ function adCasino(body, b) {
 const PROMO = { c: '#00cfff', magenta: '#ff2d95', amber: '#ffb020', beam: '#e8fbff', metal: 0x8fa3b8, dark: 0x0d1520 };
 function promoBandTex() {
   if (TX.promoBand) return TX.promoBand;
-  const W = 1408, H = 96, c = document.createElement('canvas'); c.width = W; c.height = H; const g = c.getContext('2d');
+  // the two messages of its panel, going round: earn USDC (promoters), get users (builders)
+  const W = 1560, H = 96, c = document.createElement('canvas'); c.width = W; c.height = H; const g = c.getContext('2d');
   const m = window.PM && window.PM.market, briefs = m ? m.briefs : [];
-  const offer = briefs.reduce((s, x) => s + (x.cur === 'USDC' ? x.left : 0), 0), k = (n) => n >= 1e4 ? Math.round(n / 1e3) + 'K' : n.toLocaleString('en-US');
-  const parts = [['PROMO MARKET', PROMO.c], [briefs.length + ' BRIEFS OPEN', '#e6edf7'], [k(offer) + ' USDC ON OFFER', PROMO.c], ['PAID PER NEW USER', '#e6edf7']];
-  g.clearRect(0, 0, W, H); g.font = '800 44px "JetBrains Mono", monospace'; g.textBaseline = 'middle';
+  const left = briefs.reduce((s, x) => s + x.left, 0), k = (n) => n >= 1e4 ? (n / 1e3).toFixed(1) + 'K' : n.toLocaleString('en-US');
+  const parts = [['EARN USDC', PROMO.c], [k(left) + ' UP FOR GRABS', '#e6edf7'], ['PROMOTE YOUR PRODUCT', PROMO.c], ['PROMO MARKET', '#e6edf7']];
+  g.clearRect(0, 0, W, H); g.font = '800 40px "JetBrains Mono", monospace'; g.textBaseline = 'middle';
   let x = 24;
   parts.forEach(([t, col]) => { g.fillStyle = col; g.fillText(t, x, H / 2 + 2); x += g.measureText(t).width + 30; g.fillStyle = PROMO.c; g.fillRect(x - 20, H / 2 - 4, 8, 8); x += 14; });
   g.fillStyle = 'rgba(0,207,255,.6)'; g.fillRect(0, 4, W, 3); g.fillRect(0, H - 7, W, 3);

@@ -151,7 +151,8 @@ def post_kit():
     k = load("api_v1_creator_post-kit.json")
     return {"x_rule": k["kit"]["x"]["rule"], "reddit_rule": k["kit"]["reddit"]["rule"],
             "telegram_rule": k["kit"]["telegram"]["rule"], "discord_rule": k["kit"]["discord"]["rule"],
-            "mention": k["kit"]["x"]["mention"], "playbook": k["playbook"]}
+            "mention": k["kit"]["x"]["mention"], "x_tags": k["kit"]["x"]["hashtags"],
+            "discord_invite": k["kit"]["discord"]["invite"], "playbook": k["playbook"]}
 
 
 # ---------------- the market: NEW, a model. Figures are placeholders, each derived from its own row. ----------------

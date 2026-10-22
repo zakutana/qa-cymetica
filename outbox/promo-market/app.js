@@ -299,7 +299,8 @@
       '<div class="card"><div class="ch"><span class="chip g"><i class="live"></i>Top priority</span><h3>Post this on X today</h3><span class="sp"></span><span class="chip" data-tip="Two posts share this slot and alternate daily; it changes at 00:00 UTC">post ' + esc(L.tweet_nth) + '</span></div>' +
         '<div class="tw"><div><div class="post"><div class="ah"><span class="av">E</span><b>' + esc(PM.me.username) + '</b><span>· now</span></div><div class="tx">' + tx + '</div></div>' +
         '<div class="acts"><button class="btn sm c" data-copy="tweet">' + ic('copy') + 'Copy</button><a class="btn sm" href="https://x.com/intent/post" target="_blank" rel="noopener">' + ic('x') + 'Open in X</a><button class="btn sm g" data-act="posted">' + ic('check') + 'Mark posted</button>' +
-        '<span class="reward" data-tip="Paid once the checker sees the post displayed">+1,000 ET10 · +1,000 ETLP</span></div></div>' +
+        '<span class="reward" data-tip="Paid once the checker sees the post displayed">+1,000 ET10 · +1,000 ETLP</span></div>' +
+        '<div class="posted" id="prio-posted" hidden><input class="in" placeholder="Link to your post on X"><button class="btn g" data-act="prioposted">Save</button></div></div>' +
         '<div class="og" data-tip="X may not show the link card right away: attach this graphic to the post">' + art(briefOf('gem')) + '<div>Save graphic · cymetica.com/gem-screener</div></div></div></div>' +
       '<div class="card"><div class="ch"><h3>Briefs to take</h3><span class="sp"></span><a class="btn sm gh" href="#market">All briefs ' + ic('arrow') + '</a></div>' +
         '<div class="strip">' + best.map(function (b) {
@@ -312,6 +313,8 @@
         qt('press', 'Press', 'next deadline in ' + Math.round(nextPress.hours) + ' h', q.press.stats.open, 'open', 'press') +
         qt('radar', 'Radar apps', 'where their users already are', PM.radar.length, 'apps', 'radar') +
       '</div></div>' +
+      '<div class="card"><div class="ch"><h3>Posted something yourself?</h3></div><div class="posted"><input class="in" placeholder="Link to your post"><button class="btn g" data-act="register">Register</button></div>' +
+        '<div class="onote" style="margin-top:8px">' + ic('coin') + 'Paid like a reply once it carries one of your cymetica.com/c/ links</div></div>' +
       '<div class="card"><div class="ch"><h3>Your best pages</h3><span class="sp"></span><a class="btn sm gh" href="#me/pages">All ' + ic('arrow') + '</a></div><div class="tops">' +
         top.map(function (l) { return '<div class="tp"><div><b>' + esc(l.title) + '</b><span>' + fmt(l.reads) + ' reads · ' + fmt(l.likes) + ' likes</span></div>' + spark(l.series) + '<div class="u">' + l.uniq + '</div></div>'; }).join('') +
       '</div></div></div></div>';
@@ -336,10 +339,11 @@
 
   function queues() {
     var q = PM.queues, t = S.qtab;
-    var seg = '<div class="seg" id="qseg" style="margin-bottom:16px">' + [['reddit', 'Reddit', q.reddit.stats.new], ['x', 'X', q.x.stats.new], ['press', 'Press', q.press.stats.open], ['radar', 'Radar apps', PM.radar.length]].map(function (s) {
-      return '<button data-q="' + s[0] + '" class="' + (t === s[0] ? 'on' : '') + '">' + ic(s[0]) + s[1] + ' <span class="n">' + short(s[2]) + '</span></button>';
+    var seg = '<div class="seg" id="qseg" style="margin-bottom:16px">' + [['reddit', 'Reddit', q.reddit.stats.new], ['x', 'X', q.x.stats.new], ['press', 'Press', q.press.stats.open], ['radar', 'Radar apps', PM.radar.length], ['telegram', 'Channels', null]].map(function (s) {
+      return '<button data-q="' + s[0] + '" class="' + (t === s[0] ? 'on' : '') + '">' + ic(s[0]) + s[1] + (s[2] != null ? ' <span class="n">' + short(s[2]) + '</span>' : '') + '</button>';
     }).join('') + '</div>';
     if (t === 'radar') return seg + radarView();
+    if (t === 'telegram') return seg + channelsView();
     var items = q[t].items, sel = S.qsel[t] != null ? S.qsel[t] : 0, it = items[sel];
     var list = items.map(function (l, i) {
       if (t === 'press') return '<div class="qi' + (i === sel ? ' on' : '') + '" data-qi="' + i + '"><div class="rel press"><b class="' + (l.hours < 24 ? 'neg' : '') + '">' + Math.round(l.hours) + 'h</b><span>left</span></div><div style="min-width:0"><div class="t">' + esc(l.subject) + '</div><div class="m"><span class="chip">' + ic('press') + esc(l.outlet) + '</span><span class="chip">Tier ' + l.tier + '</span><span class="chip">' + esc(l.cat) + '</span></div></div><div class="pv">' + ic('chev', 'dim') + '</div></div>';
@@ -356,17 +360,33 @@
       return '<div class="card qd"><div class="ch"><span class="chip">' + ic('press') + esc(it.outlet) + '</span><span class="chip">Tier ' + it.tier + '</span><span class="sp"></span><span class="chip ' + (it.hours < 24 ? 'r' : '') + '">' + ic('clock') + Math.round(it.hours) + ' h left</span></div>' +
         '<h3 style="margin:0 0 12px;font:20px var(--display)">' + esc(it.subject) + '</h3><div class="m" style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:16px">' + it.topics.map(function (x) { return '<span class="chip">' + esc(x.replace(/_/g, ' ')) + '</span>'; }).join('') + '</div>' +
         '<div class="sec">Answer with a page<span class="ln"></span></div><div class="sel">' + ic('pages') + 'Build a Company<span class="chev">' + ic('down') + '</span></div>' +
-        '<div class="acts"><button class="btn c" data-act="pitched">' + ic('mail') + 'Pitch by email</button><button class="btn gh" data-act="skip">' + ic('skip') + 'Skip</button></div></div>';
+        '<button class="lnkb" data-act="addpage">' + ic('plus') + 'Add a page</button>' +
+        '<div class="acts"><button class="btn c" data-act="mailto">' + ic('mail') + 'Pitch by email</button><button class="btn" data-act="pitched">' + ic('check') + 'Mark pitched</button><button class="btn gh" data-act="skip">' + ic('skip') + 'Skip</button></div>' +
+        '<div class="sec">Article published?<span class="ln"></span></div><div class="posted"><input class="in" placeholder="Link to the article"><button class="btn g" data-act="article">Save</button></div></div>';
     }
     var rule = t === 'reddit' ? kit.reddit_rule : kit.x_rule;
     return '<div class="card qd"><div class="ch">' + (t === 'reddit' ? '<span class="chip">' + ic('reddit') + 'r/' + esc(it.sub) + '</span>' : '<span class="chip">' + ic('x') + esc(it.group) + '</span>') +
       '<span class="sp"></span><span class="dim mono" style="font-size:11.5px">' + esc(it.at) + ' UTC</span></div>' +
       (t === 'reddit' ? '<h3 style="margin:0 0 12px;font:19px/1.3 var(--display)">' + esc(it.title) + '</h3>' : '') +
       '<div class="body">' + esc(it.body) + '</div>' +
-      '<div class="sec">Reply with this page<span class="ln"></span></div><div class="sel">' + ic('pages') + esc(it.tool) + '<span class="dim mono" style="font-size:11.5px;margin-left:8px">' + esc(it.path) + '</span><span class="chev">' + ic('down') + '</span></div>' +
+      '<div class="sec">Reply with this page<span class="ln"></span><span class="chip c" data-tip="This thread is held for you first; the rest of the queue stays open">' + ic('lock') + 'First look: you</span></div>' +
+      '<div class="sel">' + ic('pages') + esc(it.tool) + '<span class="dim mono" style="font-size:11.5px;margin-left:8px">' + esc(it.path) + '</span><span class="chev">' + ic('down') + '</span></div>' +
+      '<button class="lnkb" data-act="leadpage">' + ic('plus') + 'New page for this thread</button>' +
       '<div class="acts"><button class="btn g" data-act="draft">' + ic('reply') + 'Reply with this page</button><button class="btn gh" data-act="skip">' + ic('skip') + 'Skip</button></div>' +
       '<div class="draft" id="draft" style="margin-top:12px">The reply opens on this thread’s own question, adds one line about the page and ends with a tracked link made for this thread.</div>' +
-      '<div class="rules" style="margin-top:14px"><div>' + ic('check') + esc(rule) + '</div></div></div>';
+      '<div class="acts" id="draftacts" hidden><button class="btn sm c" data-act="copyreply">' + ic('copy') + 'Copy reply</button><button class="btn sm" data-act="regen">Regenerate reply</button></div>' +
+      '<div class="sec">After you post it<span class="ln"></span></div><div class="posted"><input class="in" placeholder="Link to your reply"><button class="btn g" data-act="leadposted">' + ic('check') + 'Mark posted</button></div>' +
+      '<div class="onote" style="margin-top:8px">' + ic('coin') + '1,000 ET10 + 1,000 ETLP once the checker sees it displayed</div>' +
+      '<div class="rules" style="margin-top:14px"><div>' + ic('check') + esc(rule) + '</div>' + (t === 'x' ? '<div>' + ic('x') + esc(kit.x_tags + ' ' + kit.mention) + '</div>' : '') + '</div></div>';
+  }
+  // a post to the EventTrader channels, Telegram or Discord (POST /api/v1/creator/channel-posts: platform, symbol, message)
+  function channelsView() {
+    return '<div class="cols"><div class="card"><div class="ch"><h3>Channel post</h3><span class="sp"></span><a class="btn sm" href="' + esc(PM.kit.discord_invite) + '" target="_blank" rel="noopener">' + ic('discord') + 'Discord ' + ic('ext') + '</a></div>' +
+      '<div class="f"><div class="fl"><label>Platform</label><div class="seg" style="align-self:start"><button class="on">' + ic('telegram') + 'Telegram</button><button>' + ic('discord') + 'Discord</button></div></div>' +
+      '<div class="fl"><label>Symbol <span>the coin or card it is about</span></label><input class="in" maxlength="32" placeholder="e.g. BTC"></div>' +
+      '<div class="fl"><label>Message <span>up to 400</span></label><textarea class="in" maxlength="400" placeholder="What you want to say"></textarea></div>' +
+      '<button class="btn g" data-act="queuepost" style="justify-self:start">' + ic('telegram') + 'Queue post</button></div></div>' +
+      '<div class="card"><div class="ch"><h3>Rules</h3></div><div class="rules"><div>' + ic('telegram') + esc(PM.kit.telegram_rule) + '</div><div>' + ic('discord') + esc(PM.kit.discord_rule) + '</div></div></div></div>';
   }
   function radarView() {
     var R = PM.radar, a = R[S.radar] || R[0];
@@ -401,6 +421,7 @@
         (l.page ? '<a class="btn sm" href="' + esc(l.target) + '" target="_blank" rel="noopener">' + ic('ext') + 'Open page</a><a class="btn sm" href="' + esc(l.target) + '" download>Download HTML</a>' : '') +
         (l.art ? '<a class="btn sm" href="' + esc(l.art) + '" target="_blank" rel="noopener">Also on claude.ai ' + ic('ext') + '</a>' : '') +
         '<button class="btn sm c" data-copy="link:' + l.slug + '">' + ic('copy') + 'cymetica.com/c/' + l.slug + '</button>' +
+        '<input class="in sm" placeholder="Where you posted it" style="width:220px"><button class="btn sm" data-act="record">Save</button>' +
         '<span class="dim mono" style="margin-left:auto;font-size:11.5px">' + (l.refs.length ? 'from ' + l.refs.map(function (f) { return esc(f[0]) + ' ' + f[1]; }).join(' · ') + ' · ' : '') + 'last ' + esc(l.last || '—') + ' UTC</span></div></td></tr>' +
         l.kids.map(function (x) {
         var t = x[0], icon = /^Reddit/.test(t) ? 'reddit' : /^X /.test(t) ? 'x' : 'link';
@@ -563,6 +584,7 @@
     $('drawer').innerHTML = '<div class="dh plain"><button class="x" data-act="close">' + ic('close') + '</button></div><div class="db top">' +
       '<span class="kick">Stay in your chatbox</span><h2>From your own AI agent</h2><p class="ask">Copy into ChatGPT, Claude, Gemini, Meta Muse or any MCP/HTTP agent: it registers itself, no website, no install.</p>' +
       '<div class="sec">Promote · take briefs<span class="ln"></span><span class="chip g">new</span></div><pre class="code">' + codeHTML(PROMO_PROMPT) + '</pre><button class="btn c" data-copy="promo">' + ic('copy') + 'Copy prompt</button>' +
+      '<div class="sec">Your agent’s key<span class="ln"></span></div><div class="posted"><span class="dim mono" style="flex:1;font-size:12px">An API key for this account, for an agent that works for you</span><button class="btn g" data-act="newkey">Create key</button></div>' +
       '<div class="sec">Trade · fund with your own USDC<span class="ln"></span></div><pre class="code">' + codeHTML(PM.live.trade_prompt) + '</pre><button class="btn" data-copy="trade">' + ic('copy') + 'Copy prompt</button></div>';
     show('drawer');
   }
@@ -621,8 +643,20 @@
       case 'page': pageForm(); break;
       case 'track': trackForm(); break;
       case 'made': hide(); toast('Done · it shows on your dashboard'); break;
-      case 'posted': toast('Marked posted · the checker confirms it is displayed'); break;
-      case 'draft': $('draft').textContent = 'Drafting the reply for this thread…'; break;
+      case 'posted': $('prio-posted').hidden = false; break;
+      case 'draft': $('draft').textContent = 'Drafting the reply for this thread…'; $('draftacts').hidden = false; break;
+      case 'regen': $('draft').textContent = 'Drafting another reply…'; break;
+      case 'copyreply': toast('Reply · copied'); break;
+      case 'leadposted': toast('Marked posted · reward once the checker sees it'); break;
+      case 'leadpage': pageForm(); break;
+      case 'addpage': pageForm(); break;
+      case 'mailto': toast('Your mail opens with the pitch'); break;
+      case 'article': toast('Article saved'); break;
+      case 'prioposted': toast('Marked posted · reward once the checker sees it'); break;
+      case 'register': toast('Registered · reward once it carries your link'); break;
+      case 'queuepost': toast('Post queued'); break;
+      case 'record': toast('Saved where you posted it'); break;
+      case 'newkey': toast('Key created · shown once, keep it private'); break;
       case 'skip': toast('Skipped'); break;
       case 'pitched': toast('Marked pitched'); break;
       case 'topup': toast('Add budget · the form opens with your card on file'); break;
