@@ -41240,6 +41240,7 @@
 {"archive": "evidence-2026-09", "bytes": 5960, "call": "POST https://cymetica.com/mcp/v1/? tools/call:get_fund", "id": "cc348c739b762ff00ea291765e500f7566e76019f3f8a88db99bbef19070912f", "why": "row"}
 {"archive": "evidence-2026-10", "bytes": 429458, "call": "GET https://cymetica.com/api/v1/event-cards?include_user_submitted,limit,offset", "id": "cc34bf566db240b02b1f1a7adc188373052d96510abeee76865db362256ce351", "why": "promised"}
 {"archive": "evidence-2026-10", "bytes": 509213, "call": "GET https://stablecoins.llama.fi/stablecoincharts/EthereumClassic?", "id": "cc34e1809624bedfb0cf797b34b030d94aa8917ec23a44abfffebf43875bd1b6", "why": "row"}
+{"archive": "", "bytes": 7468, "call": "POST https://cymetica.com/api/v1/bounty/a2a/send?", "id": "cc34f76908587562e1063e8c886a20ad9511147132e0c1f0ed7fd16fa6ead4da", "why": "their-words"}
 {"archive": "evidence-2026-10", "bytes": 5902, "call": "POST https://cymetica.com/mcp/v1/? tools/call:get_event_card_info", "id": "cc3615b5fd757e57a7ec7bc0002dc2b2f3e30ae5eb1b9848fa7e76df967ae6c7", "why": "row"}
 {"archive": "evidence-2026-10", "bytes": 4111, "call": "GET https://cymetica.com/api/v1/perpetual/agents?", "id": "cc38517b3746a9bd35262cf52aca9fe4817a3eb59592c7dfc8fd0ae46435d1d3", "why": "row"}
 {"archive": "evidence-2026-10", "bytes": 2940, "call": "GET https://data-api.binance.vision/api/v3/klines?interval,limit,startTime,symbol", "id": "cc387f330161b8e231abd7dfb0fcf317858a12a2aef10bf62a9ff82f0209d23d", "why": "row"}
