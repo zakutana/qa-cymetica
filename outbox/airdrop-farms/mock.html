@@ -110,7 +110,24 @@ h2{font:28px/1.2 "Archivo Black",sans-serif}
 .search::placeholder{color:var(--dim)}
 .search:focus{border-color:rgba(0,207,255,.6)}
 .list{overflow:hidden}
-.cols{display:grid;grid-template-columns:62px minmax(220px,1fr) 360px 150px 240px 64px;align-items:center}
+.cols{display:grid;grid-template-columns:88px minmax(220px,1fr) 340px 150px 240px 64px;align-items:center}
+/* heat: how much the groups talk about a farm now; the flame grows and lights with it */
+.heat{display:flex;align-items:center;gap:8px}
+.heat svg{width:18px;height:27px;flex:none}
+.heat.h3 svg{width:24px;height:36px}
+.heat.h2 svg{width:21px;height:31px}
+.heat b{font:20px "Archivo Black",sans-serif;color:var(--dim)}
+.heat.h3 svg{filter:drop-shadow(0 0 8px rgba(0,255,136,.85))}
+.heat.h3 b{color:var(--green);text-shadow:0 0 14px rgba(0,255,136,.5)}
+.heat.h2 b{color:var(--text)}
+.heat.h1 b{color:var(--muted)}
+.heat.mini{gap:4px}
+.heat.mini svg,.heat.mini.h3 svg,.heat.mini.h2 svg{width:11px;height:16px}
+.heat.mini b{font-size:12px}
+.tags{display:flex;flex-wrap:wrap;gap:6px;margin-top:5px}
+.tags .chip{margin-top:0}
+.early{display:inline-flex;align-items:center;gap:4px;font-size:10px;font-weight:800;letter-spacing:.09em;color:var(--cyan);border:1px dashed rgba(0,207,255,.6);border-radius:6px;padding:2px 7px 2px 5px;white-space:nowrap}
+.early svg{width:12px;height:12px}
 .rowh{padding:12px 22px;color:var(--dim);font-size:10px;font-weight:700;letter-spacing:.18em;border-bottom:1px solid rgba(30,48,80,.8)}
 .row{padding:16px 22px;border-bottom:1px solid rgba(30,48,80,.55);transition:background .15s}
 .row:last-child{border-bottom:0}
@@ -237,7 +254,7 @@ h2{font:28px/1.2 "Archivo Black",sans-serif}
 
 @media (max-width:1100px){
   .hero,.lhero{grid-template-columns:1fr}
-  .cols{grid-template-columns:48px minmax(180px,1fr) 240px 130px 200px 56px}
+  .cols{grid-template-columns:76px minmax(180px,1fr) 220px 130px 200px 56px}
   .lcols{grid-template-columns:minmax(200px,1fr) 100px 220px 200px 200px}
 }
 </style>
@@ -254,6 +271,7 @@ h2{font:28px/1.2 "Archivo Black",sans-serif}
     <linearGradient id="fl" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#00cfff" stop-opacity=".45"/><stop offset="1" stop-color="#00cfff" stop-opacity=".05"/></linearGradient>
     <radialGradient id="ground"><stop offset="0" stop-color="#00ff88" stop-opacity=".16"/><stop offset="1" stop-color="#00ff88" stop-opacity="0"/></radialGradient>
     <clipPath id="disc" clipPathUnits="objectBoundingBox"><circle cx=".5" cy=".5" r=".5"/></clipPath>
+    <linearGradient id="flameg" x1="0" y1="1" x2="0" y2="0"><stop offset="0" stop-color="#00cfff"/><stop offset="1" stop-color="#00ff88"/></linearGradient>
     <linearGradient id="earnfill" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#00ff88" stop-opacity=".38"/><stop offset="1" stop-color="#00ff88" stop-opacity="0"/></linearGradient>
     <linearGradient id="projfill" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#00cfff" stop-opacity=".14"/><stop offset="1" stop-color="#00cfff" stop-opacity="0"/></linearGradient>
   </defs>

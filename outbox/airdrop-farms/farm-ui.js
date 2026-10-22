@@ -12,6 +12,20 @@ function header() {
   </header>`;
 }
 
+/* ---------- heat and EARLY: the flame grows and lights with the heat; a sprout marks a farm few know yet ---------- */
+const FLAME = "M12 2.2c1.1 3.4-1.2 5.2-2.5 7C8.1 11.1 7 12.9 7 15.1a5 5 0 0 0 10 0c0-2.6-1.4-4.3-2.4-5.5.1 1.6-.5 2.7-1.6 3.3.3-3.7-.9-7.5-1-10.7z";
+const FLAME_IN = "M12 13.2c.8 1.2 2 2 2 3.4a2 2 0 0 1-4 0c0-1.1.9-1.9 2-3.4z";
+const SPROUT = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 21v-8"/><path d="M12 13c-4 0-6-2.5-6-6 4 0 6 2.5 6 6z"/><path d="M12 11c0-3.5 2.2-6 6-6 0 3.5-2.2 6-6 6z"/></svg>`;
+const tier = h => h >= 85 ? "h3" : h >= 60 ? "h2" : h >= 35 ? "h1" : "h0";
+function flameSvg(h) {
+  const t = tier(h);
+  if (t === "h0") return `<svg viewBox="5.5 1.5 13 19.5"><path d="${FLAME}" fill="none" stroke="#7f93ad" stroke-width="1.4"/></svg>`;
+  const fill = t === "h3" ? "url(#flameg)" : t === "h2" ? "#00ff88" : "#00cfff";
+  return `<svg viewBox="5.5 1.5 13 19.5"><path d="${FLAME}" fill="${fill}" fill-opacity="${t === "h1" ? .75 : 1}"/>${t === "h3" ? `<path d="${FLAME_IN}" fill="#e6edf7" fill-opacity=".85"/>` : ""}</svg>`;
+}
+const heatHTML = (f, mini) => `<span class="heat ${tier(f.heat)}${mini ? " mini" : ""}" title="Heat ${f.heat}/100: how much the groups talk about ${f.name} now (Cymetica's sentiment engine)">${flameSvg(f.heat)}<b>${f.heat}</b></span>`;
+const earlyHTML = f => f.early ? `<span class="early" title="Few people talk about ${f.name} yet; Cymetica's sentiment engine sees potential">${SPROUT}EARLY</span>` : "";
+
 /* ---------- the farm from above: plots on a lattice, a pillar of light on each farm, its logo on top ---------- */
 const FD = {tw: 116, th: 58, pw: 26, ph: 13, hmax: 150};
 const earnedOf = (f, l) => (l.lo + l.hi) / 2 + l.got + pendUsd(f, l);
@@ -21,7 +35,9 @@ function plantTop(f, x, y, ready) {
     <circle cx="${x}" cy="${y}" r="${r + 2.5}" fill="#06090f" stroke="${ready ? "#00ff88" : "#00cfff"}" stroke-opacity="${ready ? 1 : .55}" stroke-width="2"/>
     ${f.icon ? `<image href="${ICON(f.icon)}" x="${x - r}" y="${y - r}" width="${2 * r}" height="${2 * r}" clip-path="url(#disc)"/>`
       : `<text x="${x}" y="${y + 4}" text-anchor="middle" fill="#00ff88" font-size="11" font-weight="800" font-family="JetBrains Mono,monospace">${f.ini}</text>`}
-    ${ready ? `<g transform="translate(${x} ${y - r - 16})"><rect x="-32" y="-10" width="64" height="19" rx="9.5" fill="#00ff88"/><text y="3.5" text-anchor="middle" fill="#06090f" font-size="9.5" font-weight="800" font-family="Inter,sans-serif" letter-spacing="1">HARVEST</text></g>` : ""}`;
+    ${ready ? `<g transform="translate(${x} ${y - r - 16})"><rect x="-32" y="-10" width="64" height="19" rx="9.5" fill="#00ff88"/><text y="3.5" text-anchor="middle" fill="#06090f" font-size="9.5" font-weight="800" font-family="Inter,sans-serif" letter-spacing="1">HARVEST</text></g>` : ""}
+    ${f.heat >= 85 ? `<g transform="translate(${x + 13} ${y - 15})"><circle r="9" fill="#06090f" stroke="#00ff88" stroke-width="1.5"/><path d="${FLAME}" fill="url(#flameg)" transform="translate(-6.5 -7) scale(.55)"/></g>`
+      : f.early ? `<g transform="translate(${x + 13} ${y - 15})"><circle r="9" fill="#06090f" stroke="#00cfff" stroke-width="1.5" stroke-dasharray="2.5 2"/><g transform="translate(-6 -6.5) scale(.5)" stroke="#00cfff" stroke-width="2.6" fill="none" stroke-linecap="round"><path d="M12 21v-8"/><path d="M12 13c-4 0-6-2.5-6-6 4 0 6 2.5 6 6z"/><path d="M12 11c0-3.5 2.2-6 6-6 0 3.5-2.2 6-6 6z"/></g></g>` : ""}`;
 }
 function fieldSvg(live) {
   const F = S.farming, {tw, th, pw, ph, hmax} = FD;
@@ -86,18 +102,18 @@ function farmsView() {
     <div class="fieldwrap"><div id="field"></div><div class="fcap">Your farm from above: one pillar per farm, as tall as the USDC you plant.</div></div>
   </section>
   <div class="sechead">
-    <div><h2>Every farm, best first</h2><p>Ranked by what a dollar farms there. Drag to plant more or less.</p></div>
+    <div><h2>Every farm, hottest first</h2><p>Heat from Cymetica's sentiment engine: how much the groups talk about each farm now. Drag to plant more or less.</p></div>
     <input id="q" class="search" placeholder="Search farms" value="${S.q}" aria-label="Search farms">
   </div>
   <div class="glass list">
-    <div class="rowh cols"><div>#</div><div>FARM</div><div>PLANT</div><div>USDC</div><div>EST. AIRDROP · 6 MO</div><div style="text-align:right">ON</div></div>
+    <div class="rowh cols"><div>HEAT</div><div>FARM</div><div>PLANT</div><div>USDC</div><div>EST. AIRDROP · 6 MO</div><div style="text-align:right">ON</div></div>
     <div id="list"></div>
   </div>
   <div class="more" id="more"></div>
   </div>`;
 }
 function visible() {
-  return FARMS.filter(f => f.name.toLowerCase().includes(S.q.toLowerCase())).sort((a, b) => rank(a) - rank(b));
+  return FARMS.filter(f => f.name.toLowerCase().includes(S.q.toLowerCase())).sort(byHeat);
 }
 function estHTML(f) {
   if (f.free) return `<b>FREE</b><small>no USDC · no estimate</small>`;
@@ -113,8 +129,8 @@ function rowHTML(f, rk) {
     : `<div class="trk"><i class="bar"></i><i class="fil" style="width:${along(a)}"></i>${r ? `<i class="notch" style="left:${along(r)}"><em>BEST</em></i>` : ""}
         <input type="range" min="0" max="1000" step="1" value="${toPos(a)}" data-rng="${f.id}" aria-label="USDC into ${f.name}"></div>`;
   return `<div class="row cols ${on ? "on" : "off"}" data-row="${f.id}">
-    <div class="rank ${rk <= 3 ? "top" : ""}">${rk}</div>
-    <div class="who">${logo(f)}<div><b>${f.name}</b><span class="chip ${f.chip[1]}">${f.chip[0]}</span></div></div>
+    <div>${heatHTML(f)}</div>
+    <div class="who">${logo(f)}<div><b>${f.name}</b><div class="tags"><span class="chip ${f.chip[1]}">${f.chip[0]}</span>${earlyHTML(f)}</div></div></div>
     <div class="plant">${plant}</div>
     <div>${f.free ? "" : `<div class="amt"><input data-amt="${f.id}" inputmode="decimal" value="${fmt(a)}" aria-label="${f.name} USDC"><span>USDC</span></div>`}<span id="ub-${f.id}">${useBestHTML(f)}</span></div>
     <div class="est" id="est-${f.id}">${estHTML(f)}</div>
@@ -183,7 +199,7 @@ function liveRowHTML(id, l) {
   const p = pendUsd(f, l), lo = l.lo + l.got + p, hi = l.hi + l.got + p, any = f.lo != null || l.got || p;
   const ready = claimable(f, l);
   return `<div class="lrow lcols ${ready ? "ready" : ""}">
-    <div class="who">${logo(f)}<div><b>${f.name}</b><span class="chip ${st[0]}">${st[1]}</span></div></div>
+    <div class="who">${logo(f)}<div><b>${f.name}</b><div class="tags"><span class="chip ${st[0]}">${st[1]}</span>${heatHTML(f, true)}${earlyHTML(f)}</div></div></div>
     <div class="cell"><small>IN</small><b>${l.amount ? usd(l.amount) : "free"}</b></div>
     <div class="growth"><div class="gbar"><i style="width:${grown}%"></i></div><small>${line}</small></div>
     <div class="est">${any ? `<b>${rng(lo, hi)}</b><small>earned so far</small>` : `<b class="no">no estimate</b><small>${f.why}</small>`}</div>

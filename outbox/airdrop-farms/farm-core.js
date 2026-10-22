@@ -60,6 +60,16 @@ if (!SHOT) { // test farms, so the list is long enough to try search and big amo
       how, season: "test data", lo: null, free: 1, why: "no points rate published", live: how === "Tasks" ? {tasks: 1, epoch: 14} : {txs: 2}, test: 1}));
 }
 const BY = Object.fromEntries(FARMS.map(f => [f.id, f]));
+// heat 0-100: how much the groups talk about a farm now, from Cymetica's own sentiment engine; EARLY: few talk about
+// it yet, and the engine sees potential. Test values here; test farms get a stable number from their id.
+const HEAT = {polymarket: 96, variational: 91, lighter: 88, base: 84, arcus: 79, risex: 72, nado: 64, ostium: 55, arc: 47, n1: 41, pacifica: 38, axis: 22};
+const EARLY = new Set(["n1", "pacifica", "axis", "lendinggamma", "vaultgamma"]);
+FARMS.forEach(f => {
+  let h = 0; for (const ch of f.id) h = (h * 31 + ch.charCodeAt(0)) % 997;
+  f.heat = HEAT[f.id] ?? 15 + h % 60;
+  f.early = EARLY.has(f.id);
+});
+const byHeat = (a, b) => b.heat - a.heat;
 
 /* ---------- the maths ---------- */
 const curve = (f, x) => Math.pow(Math.max(0, x) / f.ref, E);
