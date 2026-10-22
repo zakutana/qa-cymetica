@@ -66,18 +66,19 @@
   CO.UNIVERSE = [];
 
   // The ads: our two top products, drawn bigger than a station so they are seen ("tyto reklamni budovy musi byt
-  // vetsi nez normalni firmy") and smaller than the sun ("nic nesmi byt vetsi nez slunce"), each a click away from
-  // its live page. orbit: which of the galaxy's orbits (0 is the innermost); at: its angle from the front of the first
-  // look, so both stand in that view. accent: its plate's colour -- the gem green as its logo, the casino the pink of
-  // its neon.
+  // vetsi nez normalni firmy") and smaller than the sun ("nic nesmi byt vetsi nez slunce"). A click flies to one and
+  // opens its panel (uvpanel.js); the panel's button goes to the live page. accent: its plate's colour -- the gem green
+  // as its logo, the casino the pink of its neon.
   // The ads are held back: the operator, 2026-10-21, "bod 5 zatim nepodavej, to podame az ve specu 3 az budu mit koupene
   // pozemky". They are built and drawn (u3d.js adGem, adCasino) but stand on the map only with ?ads in the address, so the
   // mockup the second spec points at does not show them.
   CO.ADS_ON = /[?&]ads\b/.test(location.search);
   document.documentElement.classList.toggle('ads', CO.ADS_ON);
   CO.ADS = [
-    { key: 'gem', name: 'Gem Screener', url: 'https://cymetica.com/gem-screener/app?view=apps', accent: 'green', orbit: 1, at: -0.62 },
-    { key: 'casino', name: 'Agent Casino', url: 'https://cymetica.com/agent-tournaments', accent: 'pink', orbit: 1, at: 0.62 }
+    // slot: the slot each stands on (CO.uvPlan puts it there): Orbit 2 · slot 4 and Orbit 4 · slot 2, the two the operator
+    // bought, 2026-10-22. A click flies to it and opens its panel (uvpanel.js); url is that panel's Visit / Go play.
+    { key: 'gem', name: 'Gem Screener', url: 'https://cymetica.com/gem-screener/app', accent: 'green', slot: 'slot-2-4' },
+    { key: 'casino', name: 'Agent Casino', url: 'https://cymetica.com/agent-tournaments', accent: 'pink', slot: 'slot-4-2' }
   ];
   // The land: a slot is bought with ET10, then built on through Build it Better. The price is a PLACEHOLDER (the
   // operator named the currency, not the amount); one number to change. What this browser bought, by slot id.

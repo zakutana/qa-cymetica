@@ -12,6 +12,7 @@
 <link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@600;700&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="style.css?v=20261021land12">
 <link rel="stylesheet" href="uv.css?v=20261021land12">
+<link rel="stylesheet" href="uvpanel.css?v=20261022panel1">
 <!-- the 3D engine for the Universe and the office: three.js with its WebGPU renderer (WebGL2 where WebGPU is missing) -->
 <script type="importmap">{ "imports": {
   "three": "https://cdn.jsdelivr.net/npm/three@0.172.0/build/three.webgpu.js",
@@ -159,8 +160,10 @@
       <div class="crumb"><span class="live"><i></i>LIVE</span><span class="uvsum" id="uv-sum"></span></div>
       <div class="zoom"><button class="mk" id="uv-new" title="Start your own company">+ Create company</button><button class="buy" id="uv-buy" title="Buy a slot of land round Cymetica, then build on it with Build it Better">+ Buy land</button><button id="uv-in" title="Zoom in">+</button><button id="uv-out" title="Zoom out">−</button><button id="uv-fit" title="See everything">⤢</button></div>
     </div>
-    <div class="uvlegend"><span class="lo"><i class="ad">AD</i>click to open the product</span><span class="lo"><b>+ Buy land</b> to buy a slot</span><span class="lb"><i class="sl"></i>click a free slot to buy it · <b id="uv-price"></b> ET10 a slot, placeholder · <b>Esc</b> done</span><span class="l3"><b>drag</b> turn · <b>right-drag</b> move · <b>wheel</b> zoom</span><span class="l2"><b>drag</b> move · <b>wheel</b> zoom</span></div>
+    <div class="uvlegend"><span class="lo"><i class="ad">AD</i>click to look closer</span><span class="lo"><b>+ Buy land</b> to buy a slot</span><span class="lb"><i class="sl"></i>click a free slot to buy it · <b id="uv-price"></b> ET10 a slot, placeholder · <b>Esc</b> done</span><span class="l3"><b>drag</b> turn · <b>right-drag</b> move · <b>wheel</b> zoom</span><span class="l2"><b>drag</b> move · <b>wheel</b> zoom</span></div>
     <div class="tip" hidden></div>
+    <!-- a product's panel: slides in over the right side when an ad is clicked (uvpanel.js) -->
+    <aside class="uvp" id="uv-panel" hidden aria-label="Product"></aside>
     <div class="uvfade" id="uvfade" hidden></div>
     <!-- while its map is being made: the loading screen's core, on the stage -->
     <div class="uvload" id="uvload" hidden aria-hidden="true">
@@ -240,6 +243,8 @@
 <!-- ?v= changes with every edit, so a plain reload never runs yesterday's file from the cache -->
 <script src="data.js?v=20261021land12"></script>
 <script src="uv-data.js?v=20261021land12"></script>
+<script src="uv-snap.js?v=20261022panel1"></script>
+<script src="uvpanel.js?v=20261022panel1"></script>
 <script src="portfolio.js?v=20261021land12"></script>
 <script src="sim.js?v=20261021land12"></script>
 <script src="office.js?v=20261021land12"></script>

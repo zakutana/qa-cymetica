@@ -1871,13 +1871,19 @@ class Universe3D {
     const len = Math.max(this.controls.minDistance, Math.min(this.controls.maxDistance, off.length() * f));
     this.tween(t.clone().add(off.setLength(len)), t.clone(), 380);
   }
-  flyTo(id, done, ms) {
+  // shiftPx: keep the station that many pixels left of the stage's middle (a panel stands over the right side): the
+  // camera looks at a point to the right of it, as far as that many pixels are at its distance
+  flyTo(id, done, ms, shiftPx) {
     const it = this.find(id); if (!it || !it.plot) { if (done) done(); return; }
     const k = it.plot.k || UVSS, p = it.plot.root.position, tgt = new THREE.Vector3(p.x, p.y + (it.plot.top + it.plot.bot) * 0.5 * k, p.z);
     const dir = this.camera.position.clone().sub(this.controls.target); if (dir.lengthSq() < 1e-6) dir.set(1, 0.6, 1);
     dir.y = Math.max(dir.y, dir.length() * 0.35); dir.normalize();
     // as near as the old 36-degree lens stood: a station fills the view as much as it did
     const dist = (16 + (it.plot.top - it.plot.bot) * 1.4 + it.plot.b.foot * 0.9) * k * Math.tan(THREE.MathUtils.degToRad(18)) / Math.tan(THREE.MathUtils.degToRad(this.camera.fov) / 2);
+    if (shiftPx) {
+      const right = new THREE.Vector3(0, 1, 0).cross(dir).normalize(), px = 2 * dist * Math.tan(THREE.MathUtils.degToRad(this.camera.fov) / 2) / Math.max(1, this.el.clientHeight);
+      tgt.addScaledVector(right, shiftPx * px);
+    }
     this.follow = null; this.followAt = null;
     this.tween(tgt.clone().add(dir.multiplyScalar(dist)), tgt, ms == null ? 1300 : ms, () => { this.follow = it; this.followAt = null; if (done) done(); });
   }

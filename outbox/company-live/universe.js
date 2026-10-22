@@ -36,26 +36,33 @@
   // orbit, pos }; a slot also has n (its orbit, 1 nearest Cymetica) and owned. Ids are fixed by the seed, so a slot
   // bought keeps its id. (The station code below still takes a company item, kind unset, should companies return.)
   CO.uvGalaxy.adClear = 26;
+  // An ad stands ON a slot, one of the 36 ("Orbit 2 · slot 4": the operator bought two, 2026-10-22): CO.ADS names the
+  // slot's id, and the ad takes that slot's place on its orbit, so the map holds 34 free slots and two ads.
   CO.uvPlan = function () {
     var R = rng(2026), items = [], n = 36, tot = 0, own = CO.land ? CO.land() : [], clear = CO.uvGalaxy.adClear;
     var at = function (r, a) { return [Math.sin(a) * r, 0, Math.cos(a) * r]; };
-    (CO.ADS_ON ? CO.ADS || [] : []).forEach(function (ad) {
-      var r = ORBITS[ad.orbit], a = AZ + ad.at;
-      items.push({ kind: 'ad', ad: ad, c: { id: 'ad-' + ad.key, name: ad.name, accent: ad.accent }, orbit: { r: r, a: a, w: CO.uvGalaxy.omega(r) }, pos: at(r, a) });
-    });
-    var ads = items.slice();
     ORBITS.forEach(function (r) { tot += r; });
     // slots per orbit in proportion to its length, so they stand about as far apart on every one
     var counts = ORBITS.map(function (r) { return Math.max(1, Math.round(r / tot * n)); }), d = n - counts.reduce(function (a, b) { return a + b; }, 0);
     for (var i = counts.length - 1; d !== 0; i = (i + counts.length - 1) % counts.length) { if (d > 0) { counts[i]++; d--; } else if (counts[i] > 1) { counts[i]--; d++; } }
+    var cand = [];
     ORBITS.forEach(function (r, o) {
       var m = counts[o], a0 = R() * Math.PI * 2;
       for (var j = 0; j < m; j++) {
-        var a = a0 + (j + (R() - 0.5) * 0.4) / m * Math.PI * 2, pos = at(r, a), id = 'slot-' + (o + 1) + '-' + (j + 1);
-        if (ads.some(function (x) { return Math.hypot(x.pos[0] - pos[0], x.pos[2] - pos[2]) < clear; })) continue;
-        items.push({ kind: 'slot', n: o + 1, owned: own.indexOf(id) >= 0, c: { id: id, name: own.indexOf(id) >= 0 ? 'Your land' : 'Free slot', accent: 'green' },
-          orbit: { r: r, a: a, w: CO.uvGalaxy.omega(r) }, pos: pos });
+        var a = a0 + (j + (R() - 0.5) * 0.4) / m * Math.PI * 2;
+        cand.push({ n: o + 1, id: 'slot-' + (o + 1) + '-' + (j + 1), r: r, a: a, pos: at(r, a) });
       }
+    });
+    var ads = [];
+    (CO.ADS_ON ? CO.ADS || [] : []).forEach(function (ad) {
+      var s = cand.filter(function (x) { return x.id === ad.slot; })[0]; if (!s) return;
+      var it = { kind: 'ad', ad: ad, slotId: s.id, n: s.n, c: { id: 'ad-' + ad.key, name: ad.name, accent: ad.accent }, orbit: { r: s.r, a: s.a, w: CO.uvGalaxy.omega(s.r) }, pos: s.pos };
+      ads.push(it); items.push(it);
+    });
+    cand.forEach(function (s) {
+      if (ads.some(function (x) { return x.slotId === s.id || Math.hypot(x.pos[0] - s.pos[0], x.pos[2] - s.pos[2]) < clear; })) return;
+      items.push({ kind: 'slot', n: s.n, owned: own.indexOf(s.id) >= 0, c: { id: s.id, name: own.indexOf(s.id) >= 0 ? 'Your land' : 'Free slot', accent: 'green' },
+        orbit: { r: s.r, a: s.a, w: CO.uvGalaxy.omega(s.r) }, pos: s.pos });
     });
     return items;
   };
@@ -95,7 +102,7 @@
     return { companies: cos, public: pub, working: work, free: free, owned: owned, ads: ads };
   };
   // a slot's address and an ad's page, for the tooltip and the cards
-  CO.uvSlotName = function (it) { return 'Orbit ' + it.n + ' · slot ' + String(it.c.id).split('-').pop(); };
+  CO.uvSlotName = function (it) { return 'Orbit ' + it.n + ' · slot ' + String(it.slotId || it.c.id).split('-').pop(); };
   // the plate over an ad, and over a slot of your own; a free slot has none (its tooltip says what it is). undefined:
   // a company, whose plate each map draws itself. Both maps use this, so the two say the same.
   CO.uvPlate = function (it) {
@@ -108,7 +115,7 @@
     if (id === 'core') return '<b class="c">Cymetica</b><br>The land round it is for sale.';
     if (!it) return '';
     if (it.kind === 'ad') {
-      return '<div class="uvt"><b style="color:' + CO.accentHex(it.c.accent) + '">' + esc(it.c.name) + '</b><span>AD</span></div><div><span class="c">Click to open ' + esc(CO.uvAdPath(it.ad)) + ' →</span></div>';
+      return '<div class="uvt"><b style="color:' + CO.accentHex(it.c.accent) + '">' + esc(it.c.name) + '</b><span>' + esc(CO.uvSlotName(it)) + '</span></div><div><span class="c">Click to look closer →</span></div>';
     }
     if (it.kind === 'slot') {
       return it.owned
@@ -1268,9 +1275,9 @@
     if (cx == null) this.tween(to, 260); else { this.tw = 0; this.vb = to; this.apply(); }
   };
   // bring one company to the middle, close up
-  Universe.prototype.flyTo = function (id, done, ms) {
+  Universe.prototype.flyTo = function (id, done, ms, shiftPx) {
     var it = this.find(id); if (!it || !it.anchor) { if (done) done(); return; }
-    var c = this.client(), w = Math.max(1100, it.size * 2.6), h = w * c.h / c.w, m = [it.anchor[0], it.anchor[1] + it.size * 0.55];
+    var c = this.client(), w = Math.max(1100, it.size * 2.6), h = w * c.h / c.w, m = [it.anchor[0] + (shiftPx || 0) * w / c.w, it.anchor[1] + it.size * 0.55];
     this.tween({ x: m[0] - w / 2, y: m[1] - h / 2, w: w, h: h }, ms || 750, done);
   };
   Universe.prototype.resize = function () {

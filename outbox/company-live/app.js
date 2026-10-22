@@ -728,10 +728,25 @@
       toast('Bought ' + where + '. Add a building with Build it Better. ' + CO.landLeft() + ' of ' + CO.LAND_MAX + ' slots left.');
     });
   }
+  // The panel stands over the stage's right side, so the product is flown to the middle of what is left (a stage too
+  // narrow for both lets the panel take the lower part of it instead, and the product stays in the middle)
+  function openAd(it) {
+    var st = $('uvstage'), W = st.clientWidth, pw = Math.min(420, W - 24), side = W > 760;
+    if (!CO.uvPanel || !CO.uvPanel.el) { window.open(it.ad.url, '_blank', 'noopener'); return; }
+    if (buying) setBuying(false);
+    CO.uvPanel.show(it);
+    uv.flyTo(it.c.id, null, 1100, side ? (pw + 12) / 2 : 0);
+  }
+  function closeAd() {
+    if (!CO.uvPanel || !CO.uvPanel.isOpen()) return false;
+    CO.uvPanel.hide();
+    if (uv) uv.fit(true);
+    return true;
+  }
   function openFromMap(it) {
     var c = it.c;
-    // an ad opens its product; a slot its card (one for sale only while Buy land is on)
-    if (it.kind === 'ad') { window.open(it.ad.url, '_blank', 'noopener'); return; }
+    // an ad: the map flies to it and its panel slides in (Visit / Go play opens the live page); a slot its card (one for sale only while Buy land is on)
+    if (it.kind === 'ad') return openAd(it);
     if (it.kind === 'slot') { if (it.owned || buying) slotCard(it); return; }
     if (it.mine) return setTab('office');
     if (!c.public) return privateCard(c);
@@ -1444,10 +1459,11 @@
       if (t.closest('#sim-new')) { location.href = 'start.html'; return; }
       // the Universe's way in for someone without a company ("musis dat nekde zelene tlacitko pro create company")
       if (t.closest('#uv-new')) { location.href = 'builder.html'; return; }
+      if (t.closest('#uv-panel [data-a="close"]')) return closeAd();
       if (uv) {
         if (t.closest('#uv-in')) return uv.zoom(0.78);
         if (t.closest('#uv-out')) return uv.zoom(1.28);
-        if (t.closest('#uv-fit')) return uv.fit(true);
+        if (t.closest('#uv-fit')) return closeAd() || uv.fit(true);
         if (t.closest('#uv-buy')) return setBuying(!buying);
       }
       var mock = t.closest('[data-mock]');
@@ -1595,6 +1611,7 @@
       if (e.key !== 'Escape') return;
       if (!$('modal').hidden) return closeModal();
       if (buying) return setBuying(false);
+      if (closeAd()) return;
       if (ui.panel != null || ui.mgr || ui.vault) closeDrawer();
     });
   }
