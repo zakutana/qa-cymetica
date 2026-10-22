@@ -124,9 +124,10 @@
   };
   function companyBody(it) {
     var c = it.c, n = CO.floorsOf(c), live = (CO.uv && CO.uv.live && CO.uv.live[c.id]) || [], prods = CO.uvProducts(c), kpi = function (v, l, cls) { return '<div class="uvk' + (cls ? ' ' + cls : '') + '"><b>' + v + '</b><span>' + l + '</span></div>'; };
-    var nums = c.public
-      ? kpi(n, 'department' + (n === 1 ? '' : 's')) + kpi(c.status === 'paused' ? 'Paused' : live.length, c.status === 'paused' ? 'status' : 'working now', c.status === 'paused' ? '' : 'g') + kpi('+' + CO.uvEt10(c).toLocaleString('en-US'), 'ET10 earned', 'c')
-      : kpi(n, 'department' + (n === 1 ? '' : 's')) + kpi(c.status === 'paused' ? 'Paused' : 'Active', 'status') + kpi('Private', 'inside', '');
+    // a public company shows how many decks work now; a private one only its status (what its card showed in round 1)
+    var nums = kpi(n, 'department' + (n === 1 ? '' : 's')) +
+      (c.public ? kpi(c.status === 'paused' ? 'Paused' : live.length, c.status === 'paused' ? 'status' : 'working now', c.status === 'paused' ? '' : 'g') : kpi(c.status === 'paused' ? 'Paused' : 'Active', 'status')) +
+      kpi(prods.length, 'product' + (prods.length === 1 ? '' : 's'), 'c');
     var rows = prods.map(function (p) {
       return '<a class="uvprod" href="#" data-mock="' + esc(p.name) + '\'s page"><b>' + esc(p.name) + '</b><span>' + esc(p.path) + '</span><em>' + p.visitors.toLocaleString('en-US') + ' <i>visitors · 30 d</i></em></a>';
     }).join('');
@@ -146,7 +147,8 @@
   function productView(it) {
     var s = SPEC[it.ad.key]; if (!s) return null;
     return { cls: 'k-' + it.ad.key, acc: CO.accentHex(it.c.accent), icon: s.icon, title: it.c.name,
-      sub: 'by <em>Cymetica</em> · ' + esc(s.tag) + ' · ' + esc(CO.uvSlotName(it)), body: s.body(),
+      // the owner is the company that holds the slot it stands on: ours, bought by the operator (a click opens its office)
+      sub: 'by <a href="#" class="own" data-a="owner" title="Open the company\'s office">' + esc((CO.S && CO.S.company && CO.S.company.name) || 'My Company') + '</a> · ' + esc(CO.uvSlotName(it)), body: s.body(),
       foot: '<a class="uvp-go" href="' + esc(it.ad.url) + '" target="_blank" rel="noopener">' + esc(s.go) + ' <span aria-hidden="true">↗</span></a>' };
   }
 

@@ -1469,6 +1469,7 @@
       if (t.closest('#uv-new')) { location.href = 'builder.html'; return; }
       if (t.closest('#uv-panel [data-a="close"]')) return closeAd();
       if (t.closest('#uv-panel [data-a="look"]') && CO.uvPanel.cur) return lookInside(CO.uvPanel.cur.c);
+      if (t.closest('#uv-panel [data-a="owner"]')) { e.preventDefault(); closeAd(); return setTab('office'); }
       if (uv) {
         if (t.closest('#uv-in')) return uv.zoom(0.78);
         if (t.closest('#uv-out')) return uv.zoom(1.28);

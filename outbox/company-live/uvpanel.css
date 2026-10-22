@@ -13,6 +13,7 @@
 .uvp-t b { display: block; font: 400 17px 'Archivo Black', sans-serif; letter-spacing: .02em; color: var(--acc); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .uvp-t span { display: block; margin-top: 2px; font-size: 10.5px; color: var(--dim2); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .uvp-t span em { font-style: normal; color: var(--green); font-weight: 700; }
+.uvp-t span a.own { color: var(--green); font-weight: 700; text-decoration: none; border-bottom: 1px dotted rgba(0, 255, 136, .6); } .uvp-t span a.own:hover { color: #3dffa6; }
 .uvp-x { flex: none; width: 28px; height: 28px; font-size: 18px; line-height: 1; color: var(--dim); background: transparent; border: 1px solid var(--line3); border-radius: 7px; cursor: pointer; }
 .uvp-x:hover { color: var(--bg); background: var(--cyan); border-color: var(--cyan); }
 .uvp-b { flex: 1; min-height: 0; overflow-y: auto; padding: 12px 14px; scrollbar-width: thin; scrollbar-color: var(--line3) transparent; }
