@@ -32,11 +32,13 @@
         .bb-hero { position: relative; z-index: 1; text-align: center; padding: 22px 0 46px; }
         .bb-eyebrow { display: inline-flex; align-items: center; gap: 8px; color: var(--accent); font-size: 0.76rem; font-weight: 700; letter-spacing: 0.18em; text-transform: uppercase; padding: 6px 14px; border: 1px solid rgba(0,207,255,0.35); border-radius: 999px; background: rgba(0,207,255,0.06); }
         .bb-eyebrow::before { content: ""; width: 6px; height: 6px; border-radius: 50%; background: var(--positive); box-shadow: 0 0 8px var(--positive); animation: bb-blink 1.6s ease-in-out infinite; }
-        .bb-hero h1 { font-family: 'Archivo Black', sans-serif; font-weight: 400; font-size: clamp(2.2rem, 4.6vw, 4.6rem); line-height: 1.03; letter-spacing: -0.015em; margin: 18px auto 0; max-width: 1100px; text-wrap: balance;
+        .bb-hero h1 { font-family: 'Archivo Black', sans-serif; font-weight: 400; font-size: clamp(2.2rem, 4.6vw, 4.6rem); line-height: 1.03; letter-spacing: -0.015em; margin: 18px auto 0; max-width: min(14em, 100%); text-wrap: balance;
                       background: linear-gradient(92deg, #ffffff 0%, #ffffff 46%, #00cfff 76%, #00ff88 100%); -webkit-background-clip: text; background-clip: text; color: transparent; }
-        /* two lines on a wide screen: the first white, the second (the promise) in the brand gradient */
+        /* two lines on a wide screen: the first white, the second (the promise) in the brand gradient. Only where the
+           headline is sure to wrap in two: the Latin-script languages the page is served in (zh fits one line between
+           ~900 and ~1600 px and keeps the single gradient above) */
         @media (min-width: 900px) {
-            .bb-hero h1 { background: linear-gradient(#ffffff, #ffffff) 0 0 / 100% 52% no-repeat, linear-gradient(90deg, #00cfff 20%, #00ff88 80%) 0 100% / 100% 48% no-repeat; -webkit-background-clip: text; background-clip: text; }
+            .bb-hero h1:is(:lang(en), :lang(es), :lang(pt)) { background: linear-gradient(#ffffff, #ffffff) 0 0 / 100% 52% no-repeat, linear-gradient(90deg, #00cfff 20%, #00ff88 80%) 0 100% / 100% 48% no-repeat; -webkit-background-clip: text; background-clip: text; }
         }
         .bb-surgeon { margin: 18px auto 0; max-width: 760px; font-size: 1.12rem; line-height: 1.55; color: var(--text-secondary); }
         .bb-surgeon b { color: var(--positive); white-space: nowrap; }
@@ -394,7 +396,7 @@
       [data-theme="light"] .bb-top::after { background-image: linear-gradient(rgba(3,105,161,0.08) 1px, rgba(3,105,161,0) 1px), linear-gradient(90deg, rgba(3,105,161,0.08) 1px, rgba(3,105,161,0) 1px); }
       [data-theme="light"] .bb-hero h1 { background: linear-gradient(92deg, #0f172a 0%, #0f172a 46%, #0369a1 76%, #047857 100%); -webkit-background-clip: text; background-clip: text; color: transparent; }
       @media (min-width: 900px) {
-          [data-theme="light"] .bb-hero h1 { background: linear-gradient(#0f172a, #0f172a) 0 0 / 100% 52% no-repeat, linear-gradient(90deg, #0369a1 20%, #047857 80%) 0 100% / 100% 48% no-repeat; -webkit-background-clip: text; background-clip: text; }
+          [data-theme="light"] .bb-hero h1:is(:lang(en), :lang(es), :lang(pt)) { background: linear-gradient(#0f172a, #0f172a) 0 0 / 100% 52% no-repeat, linear-gradient(90deg, #0369a1 20%, #047857 80%) 0 100% / 100% 48% no-repeat; -webkit-background-clip: text; background-clip: text; }
       }
       [data-theme="light"] .bb-cta, [data-theme="light"] .bb-btn.bb-send { background: linear-gradient(90deg, #0369a1, #047857); color: #ffffff; box-shadow: none; }
       [data-theme="light"] .vs-card.vibe { border-color: rgba(193,33,33,0.45); background: repeating-linear-gradient(135deg, rgba(193,33,33,0.05) 0 2px, rgba(193,33,33,0) 2px 14px), radial-gradient(120% 90% at 0% 0%, rgba(193,33,33,0.10), rgba(193,33,33,0) 60%), #ffffff; }
