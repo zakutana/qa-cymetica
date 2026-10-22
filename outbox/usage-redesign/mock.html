@@ -127,7 +127,8 @@ h2{font:28px/1.2 "Archivo Black",sans-serif}
 .kic{width:34px;height:34px;border-radius:10px;display:grid;place-items:center;font:800 11px Inter,sans-serif;color:var(--deep)}
 .k-company_turn{background:linear-gradient(135deg,var(--cyan),var(--blue))}
 .k-bb_request{background:linear-gradient(135deg,var(--green),var(--cyan))}
-.k-bb_change{background:linear-gradient(135deg,var(--blue),var(--cyan))}
+.k-bb_change{background:linear-gradient(135deg,var(--dim),var(--line));color:var(--text)}
+.k-nexus_chat_turn{background:linear-gradient(135deg,var(--blue),var(--cyan))}
 .k-other{background:linear-gradient(135deg,var(--dim),var(--line));color:var(--text)}
 .it .w b{display:block;font:600 13px Inter,sans-serif}
 .it .w small{color:var(--dim);font-size:11.5px}
@@ -503,7 +504,7 @@ function drawTanks(m) {
 /* ---- what each build costs: one table, signed in or out; signed in, your plan's column is lit ---- */
 const SHORT = {bb_request: "Build it Better request", bb_change: "Build it Better scope change", feature_request: "Feature request",
   startup: "Startup application", creator_artifact: "Creator page", clone_bot: "Bot clone", nexus_build_turn: "NEXUS build conversation turn",
-  company_turn: "Build a Company agent turn", feature_bid: "Feature bid", startup_bid: "Startup bid"};
+  company_turn: "Build a Company agent turn", feature_bid: "Feature bid", startup_bid: "Startup bid", nexus_chat_turn: "NEXUS chat turn"};
 function drawFits(m) {
   const el = $("fitsec"), out = STATE === "out", plans = P.plans;
   const me = p => !out && p.code === S.plan;
@@ -527,8 +528,9 @@ function drawFits(m) {
 }
 
 /* ---- where it went: folded at the bottom, signed in only ---- */
-const KCOL = {company_turn: "#00cfff", bb_request: "#00ff88", bb_change: "#3b82f6"};
-const KIC = {company_turn: "CO", bb_request: "BB", bb_change: "SC", feature_request: "FR", startup: "SU", creator_artifact: "CP", clone_bot: "BC", nexus_build_turn: "NX"};
+// every kind its own colour and mark; NEXUS chat turns appeared on the live page on 2026-10-22 (refs "deep:<id>")
+const KCOL = {company_turn: "#00cfff", bb_request: "#00ff88", bb_change: "#7f93ad", nexus_chat_turn: "#3b82f6"};
+const KIC = {company_turn: "CO", bb_request: "BB", bb_change: "SC", feature_request: "FR", startup: "SU", creator_artifact: "CP", clone_bot: "BC", nexus_build_turn: "NB", nexus_chat_turn: "DA"};
 const DEPT = r => { const p = String(r || "").split(":"); return p.length >= 2 ? p[1].replace(/_/g, " ").replace(/^./, c => c.toUpperCase()) : ""; };
 // the live page's own toggle (Day | Week) and its 7-day chart, kept inside the fold
 function days() {
@@ -558,7 +560,7 @@ function went() {
       lastDay = d;
     }
     const isTurn = /_turn$/.test(i.kind);
-    const what = isTurn ? DEPT(i.ref) : (i.ref || "").split(":")[0];
+    const what = /^deep:/.test(i.ref || "") ? "Deep answer" : isTurn ? DEPT(i.ref) : (i.ref || "").split(":")[0];
     const link = i.link ? `<a href="${i.link}">${what}</a>` : what;  // linked when the item carries a link, as today
     rows += `<div class="it"><span class="kic ${KCOL[i.kind] ? "k-" + i.kind : "k-other"}">${KIC[i.kind] || "&bull;"}</span>
       <div class="w"><b>${SHORT[i.kind] || i.label}</b><small>${link}</small></div>
@@ -570,7 +572,7 @@ function went() {
   const extraN = items.filter(i => i.overage).length;
   return `<details${OPEN ? " open" : ""} id="went"><summary>Where it went &middot; ${u2(tot)} u in the last ${day ? "24 hours" : "7 days"} &middot; ${extraN} of ${items.length} on extra usage</summary>
     <div class="seg"><button data-r="week" class="${day ? "" : "on"}">7 days</button><button data-r="day" class="${day ? "on" : ""}">24 hours</button></div>
-    ${day ? "" : days()}<div class="kinds">${kinds}</div><div class="items">${rows}</div>
+    ${day ? "" : days()}<div class="kinds">${kinds}</div><p class="ctn" style="margin:-4px 0 14px">Each bar is that kind's share of what you used in this range, not of your plan limit.</p><div class="items">${rows}</div>
     ${items.length > 10 ? `<div class="more"><span>Showing ${shown.length} of ${items.length}</span><button id="all">${SHOWALL ? "Show fewer" : "Show all " + items.length}</button></div>` : ""}</details>`;
 }
 
