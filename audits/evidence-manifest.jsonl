@@ -26619,6 +26619,7 @@
 {"archive": "evidence-2026-09", "bytes": 17456, "call": "GET https://cymetica.com/api/v1/crypto-outlook/coins?", "id": "830830f66934fa32576eda1e84088437a201fb9b2fbc6c88dd03b37fe13d0fab", "why": "row"}
 {"archive": "evidence-2026-10", "bytes": 5778, "call": "GET https://data-api.binance.vision/api/v3/klines?interval,limit,startTime,symbol", "id": "830846248e9c9bfa1279a4c36dd46115545a4801baf98569ae89d592a39934fd", "why": "row"}
 {"archive": "evidence-2026-10", "bytes": 4430, "call": "GET https://cymetica.com/api/v1/microfunds/features?", "id": "83098163cb1c1474c31f1807caca915017eb7d2206d4b85fa361fd35aa69845d", "why": "row"}
+{"archive": "", "bytes": 9749, "call": "POST https://cymetica.com/api/v1/bounty/a2a/send?", "id": "830ac2757067fe31c036459d69d97b779c4178c6df373a1d9188df6651c070dd", "why": "their-words"}
 {"archive": "evidence-2026-10", "bytes": 7079, "call": "POST https://cymetica.com/mcp/v1/? tools/call:backtest_event_card_idea", "id": "830b129e4f8702bb3c7d32d2e4490680b7d70c41ca77533f8f24875a5b058b74", "why": "row"}
 {"archive": "evidence-2026-10", "bytes": 39136, "call": "GET https://cymetica.com/api/v1/cloned-bots/9ba3d9e8-22a5-4d8d-a4fa-74213959090e/activity?page,page_size", "id": "830b39971a062be6e788dd037a2b51ac0e8a497901c3942b7d8c5fcff17c3662", "why": "row"}
 {"archive": "evidence-2026-09", "bytes": 5620, "call": "POST https://cymetica.com/mcp/v1/? tools/call:get_fund", "id": "830b44aa9cd4e7f6601106d74643023a0486ce2faa24525500c80c1c14ab03ae", "why": "row"}
