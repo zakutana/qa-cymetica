@@ -23,6 +23,7 @@ In [`spec/`](spec/); "picture N" below means these. The look to build to.
 7. [The Universe: the Promo Market's panel](spec/7-universe-panel.webp)
 8. [The Universe: the building close up](spec/8-universe-building.webp)
 9. [The Universe: the building at the map's first zoom](spec/9-universe-map.webp)
+10. [Promote: Kits](spec/10-promote-kits.webp), the post kit and the community kit kept from today's page
 
 ![The market](spec/1-market.webp)
 
@@ -96,9 +97,20 @@ budget is locked from the balance and what is not spent returns when it ends.
   Skip, then the reply's link and **Mark posted**, the post kit's rule and, on X, its tags; Press with hours left, a page
   to answer with (or add one), Pitch by email, Mark pitched, Skip, and the article's link once it is out; Radar with the
   X, Reddit and Telegram posts to copy; Channels: a post to the Telegram or Discord channel (platform, symbol, message).
-- **Today** also takes the priority post's link when it is marked posted, and **Posted something yourself?** registers
-  a post the creator wrote on its own (paid once it carries one of their links). The agent prompts include the
-  account's own **agent key**.
+- **Today** also takes the priority post's link when it is marked posted, shows the all-creators measure in one line
+  (clicks per posted link per day, links, unique visitors; *why post* in its tooltip), and **Wrote your own post?**
+  registers a post the creator wrote (its link, what it is about, up to 3 a day) and lists the ones registered with their
+  state (e.g. UNVERIFIABLE: no tracked link). The agent prompts include the account's own **agent key** (its name, and
+  how many active keys the account holds).
+- **Queues** has the tool picker (*Queue for: every tool, one mixed queue*), Reddit, X, Telegram and Discord (the
+  communities among the 30-day movers, one post a day each from the EventTrader account), Journalists and Radar apps;
+  LinkedIn and YouTube stay marked *next*. A journalist's request opens with its relevance, category and deadline, the
+  full request behind *Read the full request*, who asked, the three steps, the pitch to edit, a page to link (or add one),
+  Copy pitch, Email the journalist, Mark pitched, Skip, and the article's link once it is out.
+- **Kits** (picture 10): the **Post kit** (hashtags, @mention and the rule per outlet, the Discord invite, the playbook
+  folded) and the **Community kit** (a community, its narrative and its coin tag in; three X posts with their weighted
+  length out of 280, Copy and Open in X; one Telegram or Discord reply; its four rules).
+- *Track a link* keeps its fields: target (a surface or any URL), title, kind (artifact, tool, product, post, other).
 - **Pages & links**: one sortable table (clicks, reads, likes, unique, 14 days, top source, replies); a row opens its
   replies and Open page, Download HTML, Also on claude.ai, the tracked link, where it was posted (saved); *Create a page*
   and *Track a link* dialogs.

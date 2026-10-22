@@ -68,7 +68,8 @@ def live_texts():
     measure = re.search(r"Live measure across all creators, last 30 days: (.*?)\n", t).group(1).strip()
     per_day = re.search(r"One posted page brings at least ([\d–-]+) visitors a day", t).group(1)
     agent = re.search(r"(Read https://cymetica.com/llms.txt.*?Wait for my instructions before placing any trade\.)", t, re.S).group(1)
-    return {"tweet": tweet, "tweet_nth": nth, "measure": measure, "per_day": per_day, "trade_prompt": agent}
+    # the agent keys the account holds, as the operator's own logged-in page showed them (screenshot, 2026-10-22)
+    return {"tweet": tweet, "tweet_nth": nth, "measure": measure, "per_day": per_day, "trade_prompt": agent, "active_keys": 81}
 
 
 def radar():
@@ -140,7 +141,10 @@ def queues():
            "at": (l.get("posted_at") or "")[:16].replace("T", " "),
            "body": re.sub(r"@\w+\s*", "", re.sub(r"\s+", " ", l.get("body") or ""))[:220]} for l in x["leads"][:10]]
     press = [{"id": q["id"], "outlet": q["outlet"], "tier": q["outlet_tier"].replace("tier_", "").upper(),
-              "cat": q["category"], "subject": q["subject"], "hours": q["hours_left"], "topics": q.get("topics") or []}
+              "cat": q["category"], "subject": q["subject"], "hours": q["hours_left"], "topics": q.get("topics") or [],
+              "relevance": q.get("relevance") or 0, "deadline": (q.get("deadline_at") or "")[:16].replace("T", " "),
+              # the request as the creator reads it; who asked and their address stay out of the mockup
+              "query": q.get("query") or ""}
              for q in p["requests"]]
     pages = [{"slug": a["slug"], "title": clean_title(a["title"]), "surface": a.get("surface")} for a in r["artifacts"]]
     return {"reddit": {"stats": r["stats"], "items": reddit}, "x": {"stats": x["stats"], "items": xs},
@@ -151,7 +155,7 @@ def post_kit():
     k = load("api_v1_creator_post-kit.json")
     return {"x_rule": k["kit"]["x"]["rule"], "reddit_rule": k["kit"]["reddit"]["rule"],
             "telegram_rule": k["kit"]["telegram"]["rule"], "discord_rule": k["kit"]["discord"]["rule"],
-            "mention": k["kit"]["x"]["mention"], "x_tags": k["kit"]["x"]["hashtags"],
+            "mention": k["kit"]["x"]["mention"], "x_tags": k["kit"]["x"]["hashtags"], "tg_tags": k["kit"]["telegram"]["hashtags"],
             "discord_invite": k["kit"]["discord"]["invite"], "playbook": k["playbook"]}
 
 

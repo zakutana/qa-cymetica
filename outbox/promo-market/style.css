@@ -543,3 +543,29 @@ details.fold.sm > .ofrm { margin: 0 14px 14px; }
 .lnkb svg { width: 14px; height: 14px; }
 
 [hidden] { display: none !important; }
+
+/* parity with the operator's own page (2026-10-22): queue picker, communities, journalists, own posts, kits */
+.qtop { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; margin-bottom: 16px; }
+.qtop .qfor { height: 38px; font-size: 13px; }
+.seg button.next { opacity: .45; cursor: default; }
+details.req summary { cursor: pointer; font: 600 12.5px var(--sans); color: var(--cyan); margin: 4px 0 8px; }
+details.req .body { max-height: none; } details.req .body::after { display: none; }
+.how3 { display: flex; flex-wrap: wrap; gap: 6px 16px; padding: 10px 12px; border-radius: 10px; background: var(--bg2); border: 1px solid var(--line); font: 500 12px var(--mono); color: var(--text2); margin-bottom: 8px; }
+.how3 i { font-style: normal; color: var(--cyan); margin-right: 6px; }
+textarea.in.pitch { height: 190px; font: 500 12.5px/1.5 var(--mono); }
+.own { display: flex; gap: 10px; align-items: center; margin-top: 10px; font-size: 12px; color: var(--text3); }
+.measure { display: flex; gap: 8px; align-items: center; margin: -8px 0 18px; font: 500 12px var(--mono); color: var(--text3); }
+.measure svg { width: 14px; height: 14px; color: var(--cyan); } .measure b { color: var(--text); }
+.kitrow { display: grid; grid-template-columns: 36px 1fr auto; gap: 12px; align-items: start; padding: 12px 0; border-bottom: 1px solid var(--line); }
+.kitrow .ic { width: 36px; height: 36px; border-radius: 10px; display: grid; place-items: center; background: var(--bg2); border: 1px solid var(--line2); }
+.kitrow .ic svg { width: 16px; height: 16px; }
+.kitrow b { display: block; font-size: 14px; } .kitrow .mono { display: block; font-size: 12.5px; margin: 2px 0; }
+.kitrow > div > span:last-child { display: block; font-size: 12.5px; color: var(--text3); line-height: 1.45; }
+.post.kp { margin-bottom: 10px; } .post.kp .tx { font-size: 13.5px; } .post.kp .acts { margin-top: 10px; }
+
+.qd .posted .sel { min-width: 0; overflow: hidden; white-space: nowrap; font-size: 12.5px; }
+.qd { min-width: 0; }
+
+.qd .ch { flex-wrap: wrap; row-gap: 8px; }
+.qtop .seg button { white-space: nowrap; }
+.card .three:has(#kit-name) { grid-template-columns: 1fr 1.3fr .6fr; }

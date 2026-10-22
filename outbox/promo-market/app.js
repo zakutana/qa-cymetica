@@ -231,11 +231,11 @@
 
   /* ---------------- the dashboard: my products (the owner) and promote (the creator) ---------------- */
   var NAV = [['MY PRODUCTS', [['products', 'Products', 'pages']]],
-    ['PROMOTE', [['today', 'Today', 'today'], ['taken', 'Briefs I took', 'briefs'], ['queues', 'Queues', 'queues'], ['pages', 'Pages & links', 'link'], ['rewards', 'Rewards', 'coin']]]];
+    ['PROMOTE', [['today', 'Today', 'today'], ['taken', 'Briefs I took', 'briefs'], ['queues', 'Queues', 'queues'], ['kits', 'Kits', 'copy'], ['pages', 'Pages & links', 'link'], ['rewards', 'Rewards', 'coin']]]];
   function dash(tab) {
     var me = PM.me, rw = PM.rewards.summary, q = PM.queues;
     var counts = { products: S.mine.length, taken: Object.keys(S.taken).length, queues: q.reddit.stats.new + q.x.stats.new + q.press.stats.open, pages: me.summary.links, rewards: rw.paid };
-    var title = { products: 'My products', today: 'Today', taken: 'Briefs I took', queues: 'Queues', pages: 'Pages & links', rewards: 'Rewards' }[tab];
+    var title = { products: 'My products', today: 'Today', taken: 'Briefs I took', queues: 'Queues', kits: 'Kits', pages: 'Pages & links', rewards: 'Rewards' }[tab];
     var right = tab === 'products' ? '<button class="btn sm g" data-act="brief">' + ic('plus') + 'Post a brief</button>' :
       tab === 'pages' ? '<button class="btn sm" data-act="track">' + ic('link') + 'Track a link</button><button class="btn sm c" data-act="page">' + ic('plus') + 'Create a page</button>' :
         '<button class="btn sm" data-act="agent">' + ic('agent') + 'From your agent</button>';
@@ -249,7 +249,7 @@
       '<div class="earn"><div class="k">Earned promoting · ' + rw.paid + ' posts</div><div class="v">' + fmt(rw.et10) + ' <small>ET10</small></div><div class="s">+ ' + fmt(rw.etlp) + ' ETLP</div></div>' +
       '</aside><section class="main">' +
       '<div class="ph"><h1>' + title + '</h1><span class="sub">' + (tab === 'products' ? 'built with Build it Better' : esc(me.username) + ' · ' + dShort(new Date(DAY + 'T12:00:00Z')) + ' 2026') + '</span><span class="sp"></span>' + right + '</div>' +
-      ({ products: products, today: today, taken: taken, queues: queues, pages: pages, rewards: rewards }[tab] || products)() +
+      ({ products: products, today: today, taken: taken, queues: queues, kits: kits, pages: pages, rewards: rewards }[tab] || products)() +
       '</section></div>';
   }
   // the owner's view: my products, each with its traffic; one click makes a brief, then the numbers it brought
@@ -295,7 +295,10 @@
     var best = S.briefs.slice().sort(function (a, b) { return b.per_user - a.per_user; }).slice(0, 3);
     var tx = esc(L.tweet).replace(/(https:\/\/\S+)/g, '<span class="u">$1</span>').replace(/(#\w+)/g, '<span class="h">$1</span>');
     var nextPress = q.press.items.slice().sort(function (a, b) { return a.hours - b.hours; })[0];
-    return kpis(PM.me) + '<div class="cols"><div>' +
+    var mm = L.measure.match(/([\d.]+) clicks per posted link per day.*?over ([\d,]+) links, ([\d,]+) unique visitors/);
+    return kpis(PM.me) + '<div class="measure" data-tip="One posted page brings at least ' + esc(L.per_day) + ' visitors a day and a post never expires: ten posts are 20 to 30 visitors every day, and next week’s posts stack on this week’s.">' + ic('uniq') +
+        'All creators, last 30 days: <b>' + mm[1] + '</b> clicks per posted link per day · <b>' + fmt(+mm[2]) + '</b> links · <b>' + fmt(+mm[3]) + '</b> unique visitors <span class="i">i</span></div>' +
+      '<div class="cols"><div>' +
       '<div class="card"><div class="ch"><span class="chip g"><i class="live"></i>Top priority</span><h3>Post this on X today</h3><span class="sp"></span><span class="chip" data-tip="Two posts share this slot and alternate daily; it changes at 00:00 UTC">post ' + esc(L.tweet_nth) + '</span></div>' +
         '<div class="tw"><div><div class="post"><div class="ah"><span class="av">E</span><b>' + esc(PM.me.username) + '</b><span>· now</span></div><div class="tx">' + tx + '</div></div>' +
         '<div class="acts"><button class="btn sm c" data-copy="tweet">' + ic('copy') + 'Copy</button><a class="btn sm" href="https://x.com/intent/post" target="_blank" rel="noopener">' + ic('x') + 'Open in X</a><button class="btn sm g" data-act="posted">' + ic('check') + 'Mark posted</button>' +
@@ -313,8 +316,11 @@
         qt('press', 'Press', 'next deadline in ' + Math.round(nextPress.hours) + ' h', q.press.stats.open, 'open', 'press') +
         qt('radar', 'Radar apps', 'where their users already are', PM.radar.length, 'apps', 'radar') +
       '</div></div>' +
-      '<div class="card"><div class="ch"><h3>Posted something yourself?</h3></div><div class="posted"><input class="in" placeholder="Link to your post"><button class="btn g" data-act="register">Register</button></div>' +
-        '<div class="onote" style="margin-top:8px">' + ic('coin') + 'Paid like a reply once it carries one of your cymetica.com/c/ links</div></div>' +
+      '<div class="card"><div class="ch"><h3>Wrote your own post?</h3><span class="sp"></span><span class="chip">up to 3 a day</span></div>' +
+        '<div class="posted"><input class="in" placeholder="https://x.com/you/status/…"></div><div class="posted"><input class="in" placeholder="what it is about (optional)"><button class="btn g" data-act="register">Register post</button></div>' +
+        '<div class="onote" style="margin-top:8px">' + ic('coin') + 'Paid like a queue reply while it is displayed and carries one of your cymetica.com/c/ links</div>' +
+        PM.rewards.recent.filter(function (r) { return /your own post/.test(r.where); }).map(function (r) {
+          return '<div class="own"><span class="chip ' + (r.status === 'paid' ? 'g' : 'r') + '">' + esc(r.status.toUpperCase()) + '</span><span>' + esc(r.note || '') + '</span></div>'; }).join('') + '</div>' +
       '<div class="card"><div class="ch"><h3>Your best pages</h3><span class="sp"></span><a class="btn sm gh" href="#me/pages">All ' + ic('arrow') + '</a></div><div class="tops">' +
         top.map(function (l) { return '<div class="tp"><div><b>' + esc(l.title) + '</b><span>' + fmt(l.reads) + ' reads · ' + fmt(l.likes) + ' likes</span></div>' + spark(l.series) + '<div class="u">' + l.uniq + '</div></div>'; }).join('') +
       '</div></div></div></div>';
@@ -339,11 +345,14 @@
 
   function queues() {
     var q = PM.queues, t = S.qtab;
-    var seg = '<div class="seg" id="qseg" style="margin-bottom:16px">' + [['reddit', 'Reddit', q.reddit.stats.new], ['x', 'X', q.x.stats.new], ['press', 'Press', q.press.stats.open], ['radar', 'Radar apps', PM.radar.length], ['telegram', 'Channels', null]].map(function (s) {
-      return '<button data-q="' + s[0] + '" class="' + (t === s[0] ? 'on' : '') + '">' + ic(s[0]) + s[1] + (s[2] != null ? ' <span class="n">' + short(s[2]) + '</span>' : '') + '</button>';
-    }).join('') + '</div>';
+    var all = q.reddit.stats.new + q.x.stats.new;
+    var seg = '<div class="qtop"><div class="sel qfor">' + ic('pages') + '<span class="dim mono" style="font-size:12px;margin-right:6px">Queue for</span>every tool (one mixed queue) (' + fmt(all) + ')<span class="chev">' + ic('down') + '</span></div>' +
+      '<div class="seg" id="qseg">' + [['reddit', 'Reddit', fmt(q.reddit.stats.new), 'open threads'], ['x', 'X', q.x.stats.new, 'open posts'], ['telegram', 'Telegram', 0, 'communities'], ['discord', 'Discord', 0, 'communities'],
+        ['press', 'Journalists', q.press.stats.open, 'open requests'], ['radar', 'Radar apps', PM.radar.length, 'apps']].map(function (s) {
+      return '<button data-q="' + s[0] + '" class="' + (t === s[0] ? 'on' : '') + '" data-tip="' + s[2] + ' ' + s[3] + '">' + ic(s[0]) + s[1] + ' <span class="n">' + s[2] + '</span></button>';
+    }).join('') + '<button disabled class="next">LinkedIn <span class="n">next</span></button><button disabled class="next">' + ic('youtube') + 'YouTube <span class="n">next</span></button></div></div>';
     if (t === 'radar') return seg + radarView();
-    if (t === 'telegram') return seg + channelsView();
+    if (t === 'telegram' || t === 'discord') return seg + communitiesView(t);
     var items = q[t].items, sel = S.qsel[t] != null ? S.qsel[t] : 0, it = items[sel];
     var list = items.map(function (l, i) {
       if (t === 'press') return '<div class="qi' + (i === sel ? ' on' : '') + '" data-qi="' + i + '"><div class="rel press"><b class="' + (l.hours < 24 ? 'neg' : '') + '">' + Math.round(l.hours) + 'h</b><span>left</span></div><div style="min-width:0"><div class="t">' + esc(l.subject) + '</div><div class="m"><span class="chip">' + ic('press') + esc(l.outlet) + '</span><span class="chip">Tier ' + l.tier + '</span><span class="chip">' + esc(l.cat) + '</span></div></div><div class="pv">' + ic('chev', 'dim') + '</div></div>';
@@ -357,11 +366,16 @@
     var kit = PM.kit;
     if (!it) return '<div></div>';
     if (t === 'press') {
-      return '<div class="card qd"><div class="ch"><span class="chip">' + ic('press') + esc(it.outlet) + '</span><span class="chip">Tier ' + it.tier + '</span><span class="sp"></span><span class="chip ' + (it.hours < 24 ? 'r' : '') + '">' + ic('clock') + Math.round(it.hours) + ' h left</span></div>' +
-        '<h3 style="margin:0 0 12px;font:20px var(--display)">' + esc(it.subject) + '</h3><div class="m" style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:16px">' + it.topics.map(function (x) { return '<span class="chip">' + esc(x.replace(/_/g, ' ')) + '</span>'; }).join('') + '</div>' +
-        '<div class="sec">Answer with a page<span class="ln"></span></div><div class="sel">' + ic('pages') + 'Build a Company<span class="chev">' + ic('down') + '</span></div>' +
-        '<button class="lnkb" data-act="addpage">' + ic('plus') + 'Add a page</button>' +
-        '<div class="acts"><button class="btn c" data-act="mailto">' + ic('mail') + 'Pitch by email</button><button class="btn" data-act="pitched">' + ic('check') + 'Mark pitched</button><button class="btn gh" data-act="skip">' + ic('skip') + 'Skip</button></div>' +
+      var pitch = 'Hi [first name],\n\nAnswering your ' + it.outlet + ' request "' + it.subject + '".\n\n[Your answer: 2 to 4 sentences. Lead with one concrete fact, number or result from your own work.]\n\nAbout me: [your name, what you do, one line on what you build]. I build on EventTrader (https://cymetica.com), an exchange where people and AI agents trade.\n\nHappy to add detail or get on a call before your deadline.';
+      return '<div class="card qd"><div class="ch"><span class="chip">' + ic('press') + esc(it.outlet) + '</span><span class="chip">' + esc(it.cat) + '</span><span class="chip g">relevance ' + it.relevance.toFixed(2) + '</span><span class="sp"></span><span class="chip ' + (it.hours < 24 ? 'r' : '') + '" data-tip="Deadline ' + esc(it.deadline) + ' UTC">' + ic('clock') + Math.round(it.hours) + ' h left</span></div>' +
+        '<h3 style="margin:0 0 10px;font:20px var(--display)">' + esc(it.subject) + '</h3><div class="m" style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:12px">' + it.topics.map(function (x) { return '<span class="chip">' + esc(x.replace(/_/g, ' ')) + '</span>'; }).join('') + '</div>' +
+        '<details class="req"><summary>Read the full request</summary><div class="body">' + esc(it.query) + '</div></details>' +
+        '<div class="dim mono" style="font-size:12px;margin:8px 0 12px">Asked by [journalist] · reply to [their address]</div>' +
+        '<div class="how3"><span><i>1</i>Write your answer</span><span><i>2</i>Email it to the journalist</span><span><i>3</i>Mark pitched</span></div>' +
+        '<textarea class="in pitch">' + esc(pitch) + '</textarea>' +
+        '<div class="posted"><div class="sel" style="flex:1">' + ic('pages') + 'add a link to one of my pages (optional)<span class="chev">' + ic('down') + '</span></div><button class="lnkb" data-act="addpage" style="margin:0">' + ic('plus') + 'Add a page</button></div>' +
+        '<div class="acts"><button class="btn sm c" data-act="copypitch">' + ic('copy') + 'Copy pitch</button><button class="btn sm" data-act="mailto">' + ic('mail') + 'Email the journalist ' + ic('ext') + '</button><button class="btn sm g" data-act="pitched">' + ic('check') + 'Mark pitched</button><button class="btn sm gh" data-act="skip">' + ic('skip') + 'Skip</button></div>' +
+        '<div class="onote" style="margin-top:8px">' + ic('shield') + 'Only pitch what you can back up: a journalist checks who you are. Replace every bracket with your own words before you send.</div>' +
         '<div class="sec">Article published?<span class="ln"></span></div><div class="posted"><input class="in" placeholder="Link to the article"><button class="btn g" data-act="article">Save</button></div></div>';
     }
     var rule = t === 'reddit' ? kit.reddit_rule : kit.x_rule;
@@ -378,6 +392,15 @@
       '<div class="sec">After you post it<span class="ln"></span></div><div class="posted"><input class="in" placeholder="Link to your reply"><button class="btn g" data-act="leadposted">' + ic('check') + 'Mark posted</button></div>' +
       '<div class="onote" style="margin-top:8px">' + ic('coin') + '1,000 ET10 + 1,000 ETLP once the checker sees it displayed</div>' +
       '<div class="rules" style="margin-top:14px"><div>' + ic('check') + esc(rule) + '</div>' + (t === 'x' ? '<div>' + ic('x') + esc(kit.x_tags + ' ' + kit.mention) + '</div>' : '') + '</div></div>';
+  }
+  // Telegram and Discord as the live page has them: the top 30-day crypto movers that have a community there, each with a
+  // pro terminal; a post goes out from the EventTrader account with the creator's own tracked link, one per community a
+  // day, shared by everyone (POST /api/v1/creator/radar-channel-posts). None among the movers on 2026-10-22.
+  function communitiesView(t) {
+    var name = t === 'telegram' ? 'Telegram' : 'Discord';
+    return '<div class="card"><div class="ch">' + ic(t) + '<h3>' + name + ' communities</h3><span class="i" data-tip="The top 30-day crypto movers that have a ' + name + ' community, each with a pro terminal. Your post goes out from the EventTrader account with your own tracked link. One post per community per day, shared by everyone.">i</span><span class="sp"></span><span class="chip">0 today</span></div>' +
+      '<div class="draft">No ' + name + ' communities among the current movers.</div>' +
+      '<div class="rules" style="margin-top:14px"><div>' + ic(t) + esc(t === 'telegram' ? PM.kit.telegram_rule : PM.kit.discord_rule) + '</div></div></div>';
   }
   // a post to the EventTrader channels, Telegram or Discord (POST /api/v1/creator/channel-posts: platform, symbol, message)
   function channelsView() {
@@ -407,6 +430,37 @@
         '<div class="rules" style="margin-top:16px"><div>' + ic('check') + 'Post by hand, from your own account, and answer replies yourself.</div></div></div></div>';
   }
   function pages() { return kpis(PM.me) + linkTable(PM.me, true); }
+  // the post kit (hashtags and tags per outlet) and the community kit (Build it Better to a crypto community)
+  var NARR = { ai_agents: ['AI agents', '#AIAgents', 'an AI agent dashboard'], privacy: ['Privacy', '#Privacy', 'a privacy dashboard'],
+    deai: ['Decentralized AI', '#DeAI', 'a model and GPU tracker'], rwa: ['Real-world assets', '#RWA', 'an RWA yield tracker'],
+    stablecoins: ['Stablecoins', '#Stablecoins', 'a stablecoin flow tracker'], prediction: ['Prediction markets', '#PredictionMarkets', 'a market odds screener'],
+    perps: ['Perp DEXs', '#PerpDEX', 'a funding-rate screener'] };
+  function weighted(t) { return String(t).replace(/https?:\/\/\S+/g, new Array(24).join('x')).length; }
+  function communityKit(name, narrative, tag) {
+    var url = 'https://cymetica.com/build-it-better', n = NARR[narrative] || NARR.ai_agents;
+    var ctag = '#' + (String(tag || name).replace(/[^A-Za-z0-9_]/g, '') || 'coin'), tags = ctag + ' ' + n[1];
+    var posts = [name + " builders: want an app but don't write code? Name the tool you wish existed, like " + n[2] + ', a wallet tracker or an alert bot, and an AI pipeline builds it, tracked in public from request to delivery. ' + url + ' ' + tags,
+      "Communities don't fade when the price drops. They fade when nobody is building. Name one app the " + name + ' community is missing and watch it get built in public: ' + url + ' ' + tags,
+      'Point an AI builder at a public ' + name + ' repo, say what the app should do better, and get a working version you can test. ' + url + ' ' + tags];
+    var reply = 'Someone here asked for a way to build apps without writing code. Build it Better does that: you name the app or tool you want and what it should do better, or point it at a public repo, and an AI pipeline builds it. Every build is tracked on a public board from request to delivery. Tools that only read data ship automatically; anything that moves money is reviewed by a person first. ' + url;
+    var rules = ['Answer someone who asked for this. Never cold-drop the link into a busy chat.', 'Offer to build one thing the ' + name + ' community is missing, then share the live board so they can watch it happen.',
+      'Stay positive. Say nothing about their team, leadership or price: it reads as vulture marketing and gets you banned.', "One or two hashtags: the coin's own tag and one live narrative tag. Never #crypto or #web3."];
+    return { posts: posts, reply: reply, rules: rules };
+  }
+  function kits() {
+    var k = PM.kit, c = communityKit(S.kitName || 'Bittensor', S.kitNarr || 'deai', S.kitTag || 'TAO');
+    var outlet = function (icon, name, tags, rule) { return '<div class="kitrow"><span class="ic">' + ic(icon) + '</span><div><b>' + name + '</b>' + (tags ? '<span class="mono acc">' + esc(tags) + '</span>' : '') + '<span>' + esc(rule) + '</span></div>' + (tags ? '<button class="btn sm" data-copy="kit:' + esc(tags) + '">' + ic('copy') + '</button>' : '') + '</div>'; };
+    return '<div class="cols"><div class="card"><div class="ch"><h3>Post kit</h3><span class="dim mono" style="font-size:12px">hashtags and tags per outlet</span></div>' +
+        outlet('x', 'X', k.x_tags + ' ' + k.mention, k.x_rule) + outlet('reddit', 'Reddit', '', k.reddit_rule) + outlet('telegram', 'Telegram', k.tg_tags + ' ' + k.mention, k.telegram_rule) +
+        '<div class="kitrow"><span class="ic">' + ic('discord') + '</span><div><b>Discord</b><a class="mono acc" href="' + esc(k.discord_invite) + '" target="_blank" rel="noopener">' + esc(k.discord_invite) + '</a><span>' + esc(k.discord_rule) + '</span></div></div>' +
+        '<details class="fold sm"><summary>' + ic('check') + 'Playbook · ' + k.playbook.length + ' rules' + ic('down', 'chevd') + '</summary><div class="rules" style="padding:0 14px 14px">' + k.playbook.map(function (p) { return '<div>' + ic('check') + '<span><b style="color:var(--text)">' + esc(p.title) + '.</b> ' + esc(p.text) + '</span></div>'; }).join('') + '</div></details></div>' +
+      '<div class="card"><div class="ch"><h3>Community kit</h3><span class="dim mono" style="font-size:12px">bring Build it Better to a crypto community</span></div>' +
+        '<div class="three"><input class="in" id="kit-name" value="' + esc(S.kitName || 'Bittensor') + '" placeholder="Community (its coin or project)"><div class="sel">' + esc((NARR[S.kitNarr || 'deai'] || NARR.deai)[0]) + '<span class="chev">' + ic('down') + '</span></div><input class="in" id="kit-tag" value="' + esc(S.kitTag || 'TAO') + '" placeholder="Coin tag"></div>' +
+        '<div class="sec">X posts<span class="ln"></span></div>' + c.posts.map(function (p, i) { var w = weighted(p);
+          return '<div class="post kp"><div class="tx">' + esc(p).replace(/(https:\/\/\S+)/g, '<span class="u">$1</span>').replace(/(#\w+)/g, '<span class="h">$1</span>') + '</div><div class="acts"><span class="chip ' + (w <= 280 ? 'g' : 'r') + '">' + w + ' / 280</span><button class="btn sm c" data-copy="kitpost:' + i + '">' + ic('copy') + 'Copy</button><a class="btn sm" href="https://x.com/intent/post?text=' + encodeURIComponent(p) + '" target="_blank" rel="noopener">' + ic('x') + 'Open in X</a></div></div>'; }).join('') +
+        '<div class="sec">Telegram or Discord reply<span class="ln"></span></div><div class="post kp"><div class="tx">' + esc(c.reply) + '</div><div class="acts"><button class="btn sm c" data-copy="kitreply">' + ic('copy') + 'Copy</button></div></div>' +
+        '<div class="sec">Rules<span class="ln"></span></div><div class="rules">' + c.rules.map(function (r) { return '<div>' + ic('check') + '<span>' + esc(r) + '</span></div>'; }).join('') + '</div></div></div>';
+  }
   function linkTable(c, own) {
     var q = S.pgQ.toLowerCase(), k = S.pgSort;
     var L = c.links.filter(function (l) { return !q || l.title.toLowerCase().indexOf(q) >= 0; }).sort(function (a, b) { return b[k] - a[k]; });
@@ -574,17 +628,17 @@
   function trackForm() {
     $('modal').className = 'modal sm';
     $('modal').innerHTML = '<div class="mh"><span class="kick">Pages & links</span><h2>Track a link</h2><button class="x" data-act="close">' + ic('close') + '</button></div>' +
-      '<div class="mb"><div class="f"><div class="fl"><label>Where it goes</label><input class="in" placeholder="https://cymetica.com/…"></div>' +
+      '<div class="mb"><div class="f"><div class="fl"><label>Target <span>choose a surface or paste a URL</span></label><input class="in" placeholder="https://claude.ai/artifact/… or /exchange"></div>' +
       '<div class="two"><div class="fl"><label>Title <span>up to 200</span></label><input class="in" maxlength="200" placeholder="Shown on your dashboard"></div>' +
-      '<div class="fl"><label>Kind</label><div class="seg" style="height:44px;align-items:center">' + ['tool', 'product', 'other'].map(function (k, i) { return '<button class="' + (i === 0 ? 'on' : '') + '" style="height:36px">' + k + '</button>'; }).join('') + '</div></div></div></div></div>' +
-      '<div class="mf"><span class="note"></span><button class="btn gh" data-act="close">Cancel</button><button class="btn g" data-act="made">Track ' + ic('arrow') + '</button></div>';
+      '<div class="fl"><label>Kind</label><div class="seg" style="height:44px;align-items:center">' + ['artifact', 'tool', 'product', 'post', 'other'].map(function (k, i) { return '<button class="' + (i === 0 ? 'on' : '') + '" style="height:36px">' + k + '</button>'; }).join('') + '</div></div></div></div></div>' +
+      '<div class="mf"><span class="note"></span><button class="btn gh" data-act="close">Cancel</button><button class="btn g" data-act="made">Create link ' + ic('arrow') + '</button></div>';
     show('modal');
   }
   function agentDrawer() {
     $('drawer').innerHTML = '<div class="dh plain"><button class="x" data-act="close">' + ic('close') + '</button></div><div class="db top">' +
       '<span class="kick">Stay in your chatbox</span><h2>From your own AI agent</h2><p class="ask">Copy into ChatGPT, Claude, Gemini, Meta Muse or any MCP/HTTP agent: it registers itself, no website, no install.</p>' +
       '<div class="sec">Promote · take briefs<span class="ln"></span><span class="chip g">new</span></div><pre class="code">' + codeHTML(PROMO_PROMPT) + '</pre><button class="btn c" data-copy="promo">' + ic('copy') + 'Copy prompt</button>' +
-      '<div class="sec">Your agent’s key<span class="ln"></span></div><div class="posted"><span class="dim mono" style="flex:1;font-size:12px">An API key for this account, for an agent that works for you</span><button class="btn g" data-act="newkey">Create key</button></div>' +
+      '<div class="sec">Your agent’s key<span class="ln"></span></div><div class="posted"><input class="in" value="creator-agent"><button class="btn g" data-act="newkey">Create key</button></div><div class="onote" style="margin-top:6px">' + ic('lock') + PM.live.active_keys + ' active keys on this account</div>' +
       '<div class="sec">Trade · fund with your own USDC<span class="ln"></span></div><pre class="code">' + codeHTML(PM.live.trade_prompt) + '</pre><button class="btn" data-copy="trade">' + ic('copy') + 'Copy prompt</button></div>';
     show('drawer');
   }
@@ -621,7 +675,9 @@
       var k = d.copy, a = PM.radar[S.radar];
       var txt = k === 'promo' ? PROMO_PROMPT : k === 'trade' ? PM.live.trade_prompt : k === 'tweet' ? PM.live.tweet : k === 'radar-x' ? a.x_post : k === 'radar-r' ? a.reddit_title :
         k === 'radar-b' ? a.reddit_body : k === 'radar-t' ? a.tg_post : k.indexOf('link:') === 0 ? 'https://cymetica.com/c/' + k.slice(5) :
-          k.indexOf('ask:') === 0 ? (briefOf(k.slice(4)) || {}).ask : '';
+          k.indexOf('ask:') === 0 ? (briefOf(k.slice(4)) || {}).ask : k.indexOf('kit:') === 0 ? k.slice(4) :
+            k.indexOf('kitpost:') === 0 ? communityKit(S.kitName || 'Bittensor', S.kitNarr || 'deai', S.kitTag || 'TAO').posts[+k.slice(8)] :
+              k === 'kitreply' ? communityKit(S.kitName || 'Bittensor', S.kitNarr || 'deai', S.kitTag || 'TAO').reply : '';
       copy(txt, k === 'promo' || k === 'trade' ? 'Prompt' : k.indexOf('link:') === 0 ? 'Link' : 'Post'); return;
     }
     if (d.s) { S.sort = d.s; document.querySelectorAll('#bsort button').forEach(function (b) { b.classList.toggle('on', b.dataset.s === d.s); }); refreshBoard(); return; }
@@ -647,6 +703,7 @@
       case 'draft': $('draft').textContent = 'Drafting the reply for this thread…'; $('draftacts').hidden = false; break;
       case 'regen': $('draft').textContent = 'Drafting another reply…'; break;
       case 'copyreply': toast('Reply · copied'); break;
+      case 'copypitch': toast('Pitch · copied'); break;
       case 'leadposted': toast('Marked posted · reward once the checker sees it'); break;
       case 'leadpage': pageForm(); break;
       case 'addpage': pageForm(); break;
@@ -666,6 +723,7 @@
   document.addEventListener('input', function (e) {
     if (e.target.id === 'pgq') { S.pgQ = e.target.value; var pos = e.target.selectionStart, y = window.scrollY; route(); window.scrollTo(0, y); var q = $('pgq'); q.focus(); q.setSelectionRange(pos, pos); }
     else if (/^f-/.test(e.target.id)) briefPreview();
+    else if (e.target.id === 'kit-name' || e.target.id === 'kit-tag') { S[e.target.id === 'kit-name' ? 'kitName' : 'kitTag'] = e.target.value; var id = e.target.id, pos = e.target.selectionStart, y = window.scrollY; route(); window.scrollTo(0, y); var el = $(id); el.focus(); el.setSelectionRange(pos, pos); }
   });
   document.addEventListener('keydown', function (e) { if (e.key === 'Escape') hide(); });
   route();
