@@ -335,8 +335,10 @@
 
   // the conversation with the Manager: all of it in the Manager's focus, one department's in its detail
   function chatHTML(msgs, tagged) {
-    var S = CO.S, last = msgs[msgs.length - 1];
-    var mh = msgs.map(function (m) {
+    var S = CO.S, cut = S.cleared_to || 0;
+    msgs = msgs.filter(function (m) { return m.id > cut; });
+    var last = msgs[msgs.length - 1];
+    var mh = (cut ? '<div class="msgclr" title="/clear empties this window only. The messages stay on your account: the Supervisor\'s audit and NEXUS\'s memory still read all of them.">Cleared ' + hhmm(S.cleared_at) + ' · history kept for the audit</div>' : '') + msgs.map(function (m) {
       var md = tagged && m.dept_id ? CO.dept(m.dept_id) : null;
       return '<div class="msg' + (m.role === 'owner' ? ' me' : '') + '"><em>' + (m.role === 'owner' ? 'You' : 'NEXUS') + ' · ' + hhmm(m.at) +
         (md ? '<span class="tagd">' + esc(md.name) + '</span>' : '') + '</em>' + esc(m.text) +
@@ -1130,7 +1132,9 @@
     clearTimeout(toastT); toastT = setTimeout(function () { t.hidden = true; }, 2600);
   }
   function readModal(id) {
-    var a = CO.S.approvals.filter(function (x) { return x.id === id; })[0]; if (!a) return;
+    // ids come off the page as text and may be numbers in the data: compared as text, as decide() does (their live build
+    // compared with === and Read did nothing, 2026-10-22)
+    var a = CO.S.approvals.filter(function (x) { return String(x.id) === String(id); })[0]; if (!a) return;
     var d = CO.dept(a.dept_id);
     openModal('<div class="mh"><span class="tag">' + esc(d ? d.name : '') + '</span><span class="' + (a.kind === 'real-money action' ? 'tag money' : 'tag k') + '">' + esc(a.kind) + '</span><h3>' + esc(a.summary) + '</h3></div>' +
       '<div class="draft" style="max-height:52vh">' + fmtDraft(a.body) + '</div>' +
@@ -1429,6 +1433,8 @@
   }
   function sendMessage(text, deptId, images) {
     if (!text && !(images && images.length)) return;
+    // /clear on its own is a command, not a message: it is not sent to NEXUS and costs no turn
+    if (/^\/clear$/i.test(text) && !(images && images.length)) { CO.act.clear(); toast('Window cleared. The history is kept for the audit.'); return; }
     CO.act.message(text || 'Screenshot', deptId, images);
     office.packet('you', 'hub', 'blue');
   }

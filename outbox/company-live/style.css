@@ -560,6 +560,9 @@ body.focus .strip > .vs, body.focus .strip > .use:not(.wide), body.focus .use .l
 .msg.me { align-self: flex-end; background: rgba(0, 207, 255, .08); border-color: rgba(0, 207, 255, .35); }
 .msg em { display: block; font-style: normal; font-size: 10px; color: var(--dim2); margin-bottom: 3px; }
 .msgwait { align-self: flex-end; font-size: 10.5px; color: var(--blue); }
+/* /clear: the window starts over; what was said stays on the account (the audit reads it) */
+.msgclr { align-self: stretch; display: flex; align-items: center; gap: 10px; margin: 2px 0; font-size: 10px; color: var(--dim2); letter-spacing: .02em; }
+.msgclr::before, .msgclr::after { content: ''; flex: 1; height: 1px; background: var(--line3); }
 .compose { display: flex; gap: 8px; margin-top: 10px; }
 .compose input { flex: 1; min-width: 0; border: 1px solid var(--line3); border-radius: 8px; padding: 8px 10px; background: var(--deep); font-size: 12px; outline: none; }
 .compose input:focus { border-color: var(--cyan); box-shadow: 0 0 0 2px rgba(0, 207, 255, .15); }

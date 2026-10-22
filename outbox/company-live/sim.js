@@ -603,6 +603,13 @@
       if (t) { t.status = 'cancelled'; t.outcome = 'Removed from the plan by you'; t.finished_at = S.clock; feed('info', 'You', 'removed from the plan: ' + t.title); }
       changed();
     },
+    // /clear in the chat with NEXUS: the window starts over. Nothing is deleted: the messages stay on the account, so the
+    // Supervisor's weekly audit and NEXUS's own memory read the whole history; only what the owner sees is cut.
+    clear: function () {
+      var S = CO.S;
+      S.cleared_to = S.next_msg - 1; S.cleared_at = S.clock;
+      changed();
+    },
     message: function (text, deptId, images) {
       var S = CO.S;
       var m = { id: S.next_msg++, role: 'owner', text: text, at: S.clock, answered: false, dept_id: deptId || null, images: images || null };

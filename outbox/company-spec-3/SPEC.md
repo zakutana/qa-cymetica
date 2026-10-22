@@ -1,4 +1,4 @@
-# Build a Company, round 3: our two products on the Universe, with a panel
+# Build a Company, round 3: our two products on the Universe, a /clear, and two fixes
 
 Draft, not filed (it waits for Cymetica's answer on round 2; see NEXT.md). The clickable mockup is `outbox/company-live`:
 open `index.html?ads#universe` (the `?ads` is what shows the two products; round 2 held them back). As before, **the look
@@ -37,6 +37,31 @@ the most in its pot; rank, bot, return; the first six, then "+N more" to its pag
 each table, and a cyan **Go play** button to `/agent-tournaments`. Source: `GET /api/v1/agent-tournaments/lobby` (`agents_trading`,
 `live_tables`, `open_seats`, `in_pots_et10`, `in_pots_usdc`, the running table's `seats`, `open_tables`). When no table is running the
 panel says so and still shows the open ones.
+
+## C. A fix, a command and a correction
+
+**5. The Read button on an approval does nothing** (read on the live build, 2026-10-22: on a Headquarters card and on the
+Approvals tab, `/static/company/app.js?v=6ad98487`). The click is caught, but `readModal(id)` finds nothing: it looks the
+approval up with `x.id === id`, where `id` is the card's `data-id` (always text). If the approval's id is a number, the
+comparison is false and the function returns without opening anything; that is what we read in the code (we cannot call `/office`
+as the owner here, so please confirm the type). Your own `decide(id, how)` already compares `String(x.id) === String(id)` and `live.js`
+uses `==`, which fits Approve and Reject working while only Read is dead. After the fix a click opens
+the approval's full text with Approve, Reject and Close (the mockup's `readModal` does, and is the design).
+
+**6. `/clear` in the chat with NEXUS.** Typing `/clear` on its own and sending it empties the chat window, as `/clear` does in
+Claude Code. **It empties what the owner sees, not what the account holds**: the messages stay stored, so the Supervisor's weekly audit
+(and anything NEXUS reads of the conversation) still sees all of them, and the command is not sent to NEXUS and costs no turn. In the
+window a thin line stays where it happened: *Cleared 07:42 · history kept for the audit* (tooltip: what `/clear` does). New messages
+go on below it; a reload keeps the window cleared, so the line and the cut-off must be stored on the account (one timestamp). The box's
+placeholder names it: *Message NEXUS… (Ctrl+V a screenshot · /clear)*. Mockup: `app.js` (`sendMessage`, `chatHTML`), `sim.js` (`act.clear`).
+
+**7. Correction to round 2: companies stay on the map.** Round 2 said *No companies on the map; land instead*. **That was our
+mistake and is withdrawn**: the Universe must keep showing every company that exists, private and public, as the first build did,
+and the land comes in addition to them. A company stands as its station on an orbit as in round 1 (a public one opens its visit,
+a private one its card); free slots and the owner's own land stand between them. The summary line reads *N companies · N free slots · N
+yours* (and *N ads*). Where the first build drew it is the reference for the companies (mockup `outbox/company-live` before commit
+`e5921b39`, which removed them); this round's mockup shows the land and the two products. The mockup will carry both once you have
+answered, so that the two can be seen together.
 
 ## What stays as it is
 
