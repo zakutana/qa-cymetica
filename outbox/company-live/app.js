@@ -691,7 +691,7 @@
       '<p class="pfsrc">Visitors, uses, views, likes: Cymetica (' + esc(Rd.src) + '), last ' + Rd.days + ' days, read ' + Rd.at + '. Earnings: proposed, placeholder rates.</p>');
   }
   function uvStats(s) {
-    setHTML($('uv-sum'), '<b>' + s.free + '</b> free slots · <b class="gr">' + s.owned + '</b> yours' + (s.ads ? ' · <b class="cy">' + s.ads + '</b> ads' : ''));
+    setHTML($('uv-sum'), '<b>' + s.companies + '</b> companies · <b>' + s.free + '</b> free slots · <b class="gr">' + s.owned + '</b> yours' + (s.ads ? ' · <b class="cy">' + s.ads + '</b> products' : ''));
   }
   // Buy land: a mode the stage is in. On, the free slots show on the map and a click on one buys it; Esc or the button
   // again turns it off.
@@ -752,13 +752,14 @@
     if (it.kind === 'ad') return openAd(it);
     if (it.kind === 'slot') { if (it.owned || buying) slotCard(it); return; }
     if (it.mine) return setTab('office');
-    if (!c.public) return privateCard(c);
+    // another company: the map flies to it and its panel slides in (basics, the products it owns); a public one has Look inside
+    return openAd(it);
+  }
+  // Look inside, in a public company's panel: the way into its visit, as the flight used to be
+  function lookInside(c) {
     try { sessionStorage.setItem('uv.from', String(c.id)); } catch (e) { /* fine */ }
     $('uvfade').hidden = false;
-    // the flight is only the way in: a drag or a wheel that cuts it short must not cut the visit too
-    var gone = false, go = function () { if (!gone) { gone = true; location.href = 'index.html?visit=' + c.id; } };
-    uv.flyTo(c.id, go);
-    setTimeout(go, 1300);
+    setTimeout(function () { location.href = 'index.html?visit=' + c.id; }, 500);
   }
   // a private company: what it shows the world, and nothing from inside
   function privateCard(c) {
@@ -1467,6 +1468,7 @@
       // the Universe's way in for someone without a company ("musis dat nekde zelene tlacitko pro create company")
       if (t.closest('#uv-new')) { location.href = 'builder.html'; return; }
       if (t.closest('#uv-panel [data-a="close"]')) return closeAd();
+      if (t.closest('#uv-panel [data-a="look"]') && CO.uvPanel.cur) return lookInside(CO.uvPanel.cur.c);
       if (uv) {
         if (t.closest('#uv-in')) return uv.zoom(0.78);
         if (t.closest('#uv-out')) return uv.zoom(1.28);

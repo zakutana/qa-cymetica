@@ -38,7 +38,10 @@
   CO.uvGalaxy.adClear = 26;
   // An ad stands ON a slot, one of the 36 ("Orbit 2 · slot 4": the operator bought two, 2026-10-22): CO.ADS names the
   // slot's id, and the ad takes that slot's place on its orbit, so the map holds 34 free slots and two ads.
-  CO.uvPlan = function () {
+  // The companies stand again (2026-10-22): each orbit's slots leave gaps, and a company stands in each, the biggest on the
+  // inner orbits, ours on the second in front of Cymetica where the camera first looks. So the slots keep their ids and
+  // places whatever the companies are, and no company stands on a slot.
+  CO.uvPlan = function (mine) {
     var R = rng(2026), items = [], n = 36, tot = 0, own = CO.land ? CO.land() : [], clear = CO.uvGalaxy.adClear;
     var at = function (r, a) { return [Math.sin(a) * r, 0, Math.cos(a) * r]; };
     ORBITS.forEach(function (r) { tot += r; });
@@ -58,6 +61,19 @@
       var s = cand.filter(function (x) { return x.id === ad.slot; })[0]; if (!s) return;
       var it = { kind: 'ad', ad: ad, slotId: s.id, n: s.n, c: { id: 'ad-' + ad.key, name: ad.name, accent: ad.accent }, orbit: { r: s.r, a: s.a, w: CO.uvGalaxy.omega(s.r) }, pos: s.pos };
       ads.push(it); items.push(it);
+    });
+    var list = CO.UNIVERSE.slice().sort(function (a, b) { return floorsOf(b) - floorsOf(a) || a.id - b.id; }), k = 0, TAU = Math.PI * 2;
+    ORBITS.forEach(function (r, o) {
+      var on = cand.filter(function (s) { return s.n === o + 1; }), gaps = on.map(function (s, j) { var nx = on[(j + 1) % on.length]; return (s.a + (nx.a + (j + 1 === on.length ? TAU : 0))) / 2; });
+      var mi = -1;
+      if (o === 1 && mine) {
+        var want = AZ + 0.55, dist = function (g) { var d = Math.abs(((g - want) % TAU + TAU) % TAU); return Math.min(d, TAU - d); };
+        gaps.forEach(function (g, j) { if (mi < 0 || dist(g) < dist(gaps[mi])) mi = j; });
+      }
+      gaps.forEach(function (a, j) {
+        var me = j === mi, c = me ? mine : list[k++]; if (!c) return;
+        items.push({ c: c, mine: me, orbit: { r: r, a: a, w: CO.uvGalaxy.omega(r) }, pos: at(r, a) });
+      });
     });
     cand.forEach(function (s) {
       if (ads.some(function (x) { return x.slotId === s.id || Math.hypot(x.pos[0] - s.pos[0], x.pos[2] - s.pos[2]) < clear; })) return;
@@ -106,7 +122,7 @@
   // the plate over an ad, and over a slot of your own; a free slot has none (its tooltip says what it is). undefined:
   // a company, whose plate each map draws itself. Both maps use this, so the two say the same.
   CO.uvPlate = function (it) {
-    if (it.kind === 'ad') return { cls: 'b3 ad', html: '<span class="adt">AD</span><span class="rib">' + esc(String(it.c.name).toUpperCase()) + '</span><span class="teth"></span>' };
+    if (it.kind === 'ad') return { cls: 'b3 ad', html: '<span class="rib">' + esc(String(it.c.name).toUpperCase()) + '</span><span class="teth"></span>' };
     if (it.kind === 'slot') return it.owned ? { cls: 'b3 land', html: '<span class="rib">YOUR LAND</span><span class="teth"></span>' } : null;
     return undefined;
   };

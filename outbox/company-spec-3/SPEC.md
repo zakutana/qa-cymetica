@@ -1,14 +1,14 @@
 # Build a Company, round 3: our two products on the Universe, a /clear, and two fixes
 
 Draft, not filed (it waits for Cymetica's answer on round 2; see NEXT.md). The clickable mockup is `outbox/company-live`:
-open `index.html?ads#universe` (the `?ads` is what shows the two products; round 2 held them back). As before, **the look
+open `index.html#universe` (the two products stand on it now; `?noads` hides them, as round 2's pinned mockup had it). As before, **the look
 of the mockup is binding; the logic is yours**: where your backend cannot do what is drawn, change the design as little as
 it takes and name each change in your BB-SPEC.
 
 ## A. Our two products stand on two bought slots
 
 **1. Two of the 36 slots are taken by us.** The owner bought them: **Gem Screener on Orbit 2 · slot 4** and **Agent Casino on
-Orbit 4 · slot 2**. Each stands where its slot stood, turns with its orbit, and carries a plate: AD, the product's name.
+Orbit 4 · slot 2**. Each stands where its slot stood, turns with its orbit, and carries a plate with the product's name (nothing on it says *AD*).
 The two slots are no longer for sale. The mockup draws them bigger than a station and smaller than the sun
 (`u3d.js` adGem, adCasino); a free slot that would stand inside one's reach is left out. Where 3D cannot start, the flat map
 draws the same (`universe.js`).
@@ -59,9 +59,9 @@ placeholder names it: *Message NEXUS… (Ctrl+V a screenshot · /clear)*. Mockup
 mistake and is withdrawn**: the Universe must keep showing every company that exists, private and public, as the first build did,
 and the land comes in addition to them. A company stands as its station on an orbit as in round 1 (a public one opens its visit,
 a private one its card); free slots and the owner's own land stand between them. The summary line reads *N companies · N free slots · N
-yours* (and *N ads*). Where the first build drew it is the reference for the companies (mockup `outbox/company-live` before commit
-`e5921b39`, which removed them); this round's mockup shows the land and the two products. The mockup will carry both once you have
-answered, so that the two can be seen together.
+yours* (and *N products*). Where the first build drew it is the reference for the companies (mockup `outbox/company-live` before commit
+`e5921b39`, which removed them); this round's mockup draws all of it together: 36 companies (35 samples and ours), the land and the two products
+(the summary line reads *36 companies · 33 free slots · 0 yours · 2 products*; free slots show in Buy land as before).
 
 **8. The Products tab shows every build, not every product** (the owner's screenshot of the live tab, 2026-10-22). It shows 32
 cards for about ten products: Gem Screener 11 (six on `/gem-screener` with identical numbers, four on `/gem-screener/app` with zeros,
@@ -87,7 +87,7 @@ days on Cymetica, its mission, how many departments and how many are working now
 *Look inside* button to its visit; a **private** one shows what its card showed in round 1 (name, station, mission) and its products, and
 no button. (The products of a private company are public pages already, and item 9 names their owner, so listing them leaks nothing the
 page does not; if you see a reason to hide them, say so.) The panel is the same one as the products', so one component draws all
-three. The company's own station opens its office as before.
+three. The company's own station opens its office as before. Mockup: click any company on the map (`uvpanel.js`, `companyView`; the products listed are sample figures).
 
 ## What stays as it is
 

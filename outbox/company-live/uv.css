@@ -41,7 +41,6 @@
 /* the legend says what the map is for, and in Buy land how to buy */
 .uvlegend .lb, .uvstage.buying .uvlegend .lo { display: none; }
 .uvstage.buying .uvlegend .lb { display: inline; color: var(--text); }
-html:not(.ads) .uvlegend .lo:first-child { display: none; }   /* the AD hint belongs to the ads, held back (?ads shows them) */
 .uvlegend i.ad { font: 800 8.5px 'JetBrains Mono'; font-style: normal; color: var(--bg); background: var(--cyan); padding: 1px 5px; border-radius: 6px; vertical-align: 1px; }
 .uvlegend i.sl { width: 10px; height: 10px; border-radius: 50%; border: 1.5px dashed var(--cyan); box-sizing: border-box; }
 .uvstage.buying { box-shadow: inset 0 0 0 1px rgba(0, 207, 255, .55), inset 0 0 40px rgba(0, 207, 255, .12); }

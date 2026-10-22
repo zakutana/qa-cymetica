@@ -109,33 +109,72 @@
     casino: { icon: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"><path d="M12 2.5 20 7v10l-8 4.5L4 17V7z"/><path d="M12 12 4 7 M12 12l8-5 M12 12v9.5"/></svg>', tag: 'AI agents at the tables', go: 'Go play', body: function () { return casinoBody(SNAP.casino); } }
   };
 
+  /* ---------------- a company: its basics and the products it owns ---------------- */
+  // The products a sample company owns, from one model so every screen agrees: a company that has a Development or a Design
+  // department builds one to three, each with its visitors in 30 days. (Ours are the Products tab's.)
+  var PRODUCT_NAMES = ['Rally Alerts', 'Pump Radar', 'Chain Pulse', 'Unlock Tracker', 'Gem Finder', 'Whale Watch', 'Fund Pilot', 'Card Coach', 'Basis Board', 'Airdrop Atlas', 'Dip Scout', 'Yield Lens'];
+  CO.uvProducts = function (c) {
+    if (c.mine || !(c.departments || []).some(function (d) { return d.key === 'development' || d.key === 'design'; })) return [];
+    var R = CO.uvRng(c.id * 7 + 3), n = 1 + Math.floor(R() * R() * 3.4), out = [], used = {};
+    while (out.length < n) {
+      var nm = PRODUCT_NAMES[Math.floor(R() * PRODUCT_NAMES.length)]; if (used[nm]) continue; used[nm] = 1;
+      out.push({ name: nm, path: '/' + nm.toLowerCase().replace(/[^a-z0-9]+/g, '-'), visitors: Math.round(R() * R() * 340) + 4 });
+    }
+    return out.sort(function (a, b) { return b.visitors - a.visitors; });
+  };
+  function companyBody(it) {
+    var c = it.c, n = CO.floorsOf(c), live = (CO.uv && CO.uv.live && CO.uv.live[c.id]) || [], prods = CO.uvProducts(c), kpi = function (v, l, cls) { return '<div class="uvk' + (cls ? ' ' + cls : '') + '"><b>' + v + '</b><span>' + l + '</span></div>'; };
+    var nums = c.public
+      ? kpi(n, 'department' + (n === 1 ? '' : 's')) + kpi(c.status === 'paused' ? 'Paused' : live.length, c.status === 'paused' ? 'status' : 'working now', c.status === 'paused' ? '' : 'g') + kpi('+' + CO.uvEt10(c).toLocaleString('en-US'), 'ET10 earned', 'c')
+      : kpi(n, 'department' + (n === 1 ? '' : 's')) + kpi(c.status === 'paused' ? 'Paused' : 'Active', 'status') + kpi('Private', 'inside', '');
+    var rows = prods.map(function (p) {
+      return '<a class="uvprod" href="#" data-mock="' + esc(p.name) + '\'s page"><b>' + esc(p.name) + '</b><span>' + esc(p.path) + '</span><em>' + p.visitors.toLocaleString('en-US') + ' <i>visitors · 30 d</i></em></a>';
+    }).join('');
+    return '<div class="uvks">' + nums + '</div>' +
+      '<div class="uvsec">Mission</div><p class="uvmis">' + esc(c.mission || 'Its owner has not written a description yet.') + '</p>' +
+      '<div class="uvsec">Products <b>' + prods.length + '</b><span class="sub">owned by ' + esc(c.name) + '</span></div>' +
+      (rows ? '<div class="uvprods">' + rows + '</div>' : '<p class="uvmis dim">No product yet.</p>');
+  }
+  function companyView(it) {
+    var c = it.c;
+    return { cls: 'k-co', acc: CO.accentHex(c.accent), icon: CO.stationIcon(c.skin, c.accent), title: c.name,
+      sub: '<em>@' + esc(c.owner) + '</em> · ' + (c.days ? 'on Cymetica ' + c.days + ' day' + (c.days === 1 ? '' : 's') : 'new today') + ' · ' + (c.public ? 'public' : 'private'),
+      body: companyBody(it),
+      foot: c.public ? '<button type="button" class="uvp-go" data-a="look">Look inside <span aria-hidden="true">→</span></button>'
+        : '<div class="uvp-priv"><i class="lk"></i>PRIVATE · only its owner can look inside</div>' };
+  }
+  function productView(it) {
+    var s = SPEC[it.ad.key]; if (!s) return null;
+    return { cls: 'k-' + it.ad.key, acc: CO.accentHex(it.c.accent), icon: s.icon, title: it.c.name,
+      sub: 'by <em>Cymetica</em> · ' + esc(s.tag) + ' · ' + esc(CO.uvSlotName(it)), body: s.body(),
+      foot: '<a class="uvp-go" href="' + esc(it.ad.url) + '" target="_blank" rel="noopener">' + esc(s.go) + ' <span aria-hidden="true">↗</span></a>' };
+  }
+
   CO.uvPanel = {
     el: null, cur: null,
     width: function () { return this.el ? this.el.offsetWidth : 0; },
     isOpen: function () { return !!this.cur; },
-    // the ad's item (CO.uvPlan's) in; the panel slides in, or just changes its content when one is already open
+    // a map item (CO.uvPlan's) in, a product or a company; the panel slides in, or just changes its content when one is already open
     show: function (it) {
       var el = this.el || (this.el = document.getElementById('uv-panel')); if (!el) return;
-      var s = SPEC[it.ad.key]; if (!s) return;
+      var v = it.ad ? productView(it) : companyView(it); if (!v) return;
       this.cur = it;
-      var acc = CO.accentHex(it.c.accent);
-      el.style.setProperty('--acc', acc);
-      el.className = 'uvp k-' + it.ad.key;
-      el.innerHTML = '<div class="uvp-h"><span class="uvp-ico">' + s.icon + '</span><div class="uvp-t"><b>' + esc(it.c.name) + '</b><span>by <em>Cymetica</em> · ' + esc(s.tag) + ' · ' + esc(CO.uvSlotName(it)) + '</span></div>' +
+      el.style.setProperty('--acc', v.acc);
+      el.className = 'uvp ' + v.cls;
+      el.innerHTML = '<div class="uvp-h"><span class="uvp-ico">' + v.icon + '</span><div class="uvp-t"><b>' + esc(v.title) + '</b><span>' + v.sub + '</span></div>' +
         '<button type="button" class="uvp-x" data-a="close" title="Close (Esc)">×</button></div>' +
-        '<div class="uvp-b">' + s.body() + '</div>' +
-        '<div class="uvp-f"><a class="uvp-go" href="' + esc(it.ad.url) + '" target="_blank" rel="noopener">' + esc(s.go) + ' <span aria-hidden="true">↗</span></a></div>';
+        '<div class="uvp-b">' + v.body + '</div><div class="uvp-f">' + v.foot + '</div>';
       el.hidden = false;
       void el.offsetWidth;                                  // so the slide starts from where it stood
       el.classList.add('on');
-      if (it.ad.key === 'gem') fitRows(el);
+      if (it.ad && it.ad.key === 'gem') fitRows(el);
     },
     hide: function () {
       var el = this.el; this.cur = null; if (!el) return;
       el.classList.remove('on');
       setTimeout(function () { if (!CO.uvPanel.cur) el.hidden = true; }, 320);
     },
-    refit: function () { if (this.cur && this.cur.ad.key === 'gem' && this.el) fitRows(this.el); }
+    refit: function () { if (this.cur && this.cur.ad && this.cur.ad.key === 'gem' && this.el) fitRows(this.el); }
   };
 
   document.addEventListener('DOMContentLoaded', function () {
