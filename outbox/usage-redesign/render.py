@@ -47,6 +47,14 @@ with sync_playwright() as p:
             t.wait_for_timeout(700)
             print("signed out horizontal overflow px:", t.evaluate("() => document.documentElement.scrollWidth - innerWidth"))
             t.screenshot(path=str(out / "3-signed-out-1440.png"), full_page=True)
+            # the folds at the bottom, signed in, every one open: what the live page shows that pictures 1-3 fold away
+            t.goto(url + "?state=live&shot=1", wait_until="networkidle")
+            t.wait_for_timeout(700)
+            t.evaluate("() => document.querySelectorAll('#how details').forEach(d => d.open = true)")
+            t.wait_for_timeout(300)
+            box = t.evaluate("""() => { const r = document.querySelector('#how').getBoundingClientRect();
+                return {x: r.left - 4, y: r.top + scrollY - 4, width: r.width + 8, height: r.height + 8}; }""")
+            t.screenshot(path=str(out / "4-folds-open.png"), clip=box, full_page=True)
         t.close()
     b.close()
 print("page errors:", errors or "none")

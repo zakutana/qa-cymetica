@@ -103,6 +103,16 @@ h1 em{font-style:normal;color:var(--green)}
 .sechead{display:flex;justify-content:space-between;align-items:flex-end;gap:20px;margin:34px 0 14px}
 h2{font:28px/1.2 "Archivo Black",sans-serif}
 .sechead p{color:var(--dim);font-size:12.5px;margin-top:4px}
+.seg{display:inline-flex;gap:4px;background:rgba(13,21,32,.8);border:1px solid rgba(30,48,80,.9);border-radius:12px;padding:4px;margin-bottom:14px}
+.seg button{padding:6px 14px;border-radius:9px;color:var(--dim);font-size:12px;font-weight:700}
+.seg button.on{color:var(--deep);background:var(--green)}
+.days{display:grid;grid-template-columns:repeat(7,1fr);gap:10px;margin-bottom:16px}
+.dc{display:flex;flex-direction:column;align-items:center;gap:6px;font-size:11px;color:var(--dim)}
+.dc b{font:13px "Archivo Black",sans-serif;color:var(--text)}
+.dc .col{width:38px;height:90px;border-radius:7px;background:rgba(30,48,80,.5);display:flex;align-items:flex-end;overflow:hidden}
+.dc .col i{display:block;width:100%;background:linear-gradient(0deg,var(--cyan),var(--green));opacity:.7}
+.dc.t span{color:var(--green)}
+.dc.t .col i{opacity:1;box-shadow:0 0 14px rgba(0,255,136,.5)}
 .kinds{display:grid;gap:8px;margin-bottom:14px}
 .kd{display:grid;grid-template-columns:minmax(220px,300px) 1fr 80px 46px;gap:14px;align-items:center;font-size:12.5px}
 .kd b{font:600 13px Inter,sans-serif}
@@ -273,7 +283,7 @@ h2{font:28px/1.2 "Archivo Black",sans-serif}
 const Q = new URLSearchParams(location.search);
 const SHOT = Q.has("shot");
 let STATE = Q.get("state") || "live";
-let SHOWALL = false;
+let SHOWALL = false, OPEN = false, RANGE = "week";
 const S = window.SNAP, DAY = window.DAY, P = window.PUB, DY = window.DYN, CO = window.COSTS;
 const T0 = Date.now(), AS_OF = Date.parse(S.as_of);
 const num = v => parseFloat(v) || 0;
@@ -362,7 +372,7 @@ function drawLeft(m) {
       <div class="big g">${u2(m.left)}<small>u</small></div>
       <div class="when">left now &middot; <b>${n} Build it Better request${n === 1 ? "" : "s"}</b> fit${n === 1 ? "s" : ""}</div>`;
   }
-  const go = resets > 0 ? `<button class="go">USE A LIMIT RESET</button>`
+  const go = resets > 0 ? `<button class="go" id="usereset">USE A LIMIT RESET</button>`
     : !m.xOn ? `<button class="go">TURN ON EXTRA USAGE</button>`
     : xCapped ? `<button class="go" id="raise">RAISE EXTRA LIMIT</button>`
     : nextPlan ? `<button class="go">UPGRADE TO ${nextPlan.name.toUpperCase()}</button>` : "";
@@ -371,9 +381,11 @@ function drawLeft(m) {
     <p class="sub">Every NEXUS build counts against a <b>5-hour session</b> and a <b>week</b>.</p>
     <div class="glass ${m.blocked ? "glowc" : "glow"} signin">${head}${go}
       <div class="edit" id="edit"><span>MONTHLY LIMIT $</span><input value="${m.xCap == null ? "" : m.xCap.toFixed(2)}" inputmode="decimal"><button>SAVE</button></div>
+      <div class="edit" id="rs"><span>RESET WHICH?</span><i style="flex:1"></i><button>SESSION</button><button>WEEK</button></div>
       <div class="free"><span class="chip m">${ua(m.sCap)} u / 5h</span><span class="chip m">${ua(m.wCap)} u / week</span><span class="chip m">${resets} LIMIT RESET${resets === 1 ? "" : "S"}</span><button class="chip c">EXTRA ${m.xOn ? "ON &middot; TURN OFF" : "OFF &middot; TURN ON"}</button></div>
     </div>`;
   const r = $("raise"); if (r) r.onclick = () => $("edit").classList.toggle("on");
+  const u = $("usereset"); if (u) u.onclick = () => $("rs").classList.toggle("on");
 }
 
 /* ---- right of the hero: three tanks, each as full as what is left in its window ---- */
@@ -482,10 +494,20 @@ function drawFits(m) {
 const KCOL = {company_turn: "#00cfff", bb_request: "#00ff88", bb_change: "#3b82f6"};
 const KIC = {company_turn: "CO", bb_request: "BB", bb_change: "SC", feature_request: "FR", startup: "SU", creator_artifact: "CP", clone_bot: "BC", nexus_build_turn: "NX"};
 const DEPT = r => { const p = String(r || "").split(":"); return p.length >= 2 ? p[1].replace(/_/g, " ").replace(/^./, c => c.toUpperCase()) : ""; };
+// the live page's own toggle (Day | Week) and its 7-day chart, kept inside the fold
+function days() {
+  const H = S.history || [], max = Math.max(...H.map(h => num(h.units)), 0.01);
+  return `<div class="days">${H.map((h, i) => {
+    const v = num(h.units), today = i === H.length - 1, d = new Date(h.day + "T12:00:00Z");
+    return `<div class="dc${today ? " t" : ""}"><b>${v ? v.toFixed(2) : "0"}</b><div class="col"><i style="height:${v ? Math.max(4, 100 * v / max) : 0}%"></i></div><span>${today ? "today" : DOW[d.getUTCDay()] + " " + d.getUTCDate()}</span></div>`;
+  }).join("")}</div>`;
+}
 function went() {
-  const bd = S.breakdown.filter(b => num(b.units) > 0);
+  const day = RANGE === "day";
+  const bd = (day ? DAY.breakdown : S.breakdown).filter(b => num(b.units) > 0);
   const tot = bd.reduce((a, b) => a + num(b.units), 0);
-  const items = S.items || [];
+  const since = day ? Date.parse(DAY.as_of) - 864e5 : 0;
+  const items = (S.items || []).filter(i => Date.parse(i.at) >= since);
   const maxU = Math.max(...items.map(i => num(i.units)), 0.01);
   const shown = SHOWALL ? items : items.slice(0, 10);
   const kinds = bd.map(b => `<div class="kd"><b>${b.label}</b><div class="ub"><i style="width:${Math.max(2, b.pct)}%;background:${KCOL[b.kind] || "#7f93ad"};box-shadow:none"></i></div><span>${u2(b.units)} u</span><em>${b.pct}%</em></div>`).join("");
@@ -501,7 +523,7 @@ function went() {
     }
     const isTurn = /_turn$/.test(i.kind);
     const what = isTurn ? DEPT(i.ref) : (i.ref || "").split(":")[0];
-    const link = !isTurn && /^ET-\d+/.test(what) ? `<a href="#">${what}</a>` : what;
+    const link = i.link ? `<a href="${i.link}">${what}</a>` : what;  // linked when the item carries a link, as today
     rows += `<div class="it"><span class="kic ${KCOL[i.kind] ? "k-" + i.kind : "k-other"}">${KIC[i.kind] || "&bull;"}</span>
       <div class="w"><b>${SHORT[i.kind] || i.label}</b><small>${link}</small></div>
       <span class="chipcell">${i.overage ? `<span class="chip c">EXTRA</span>` : ""}</span>
@@ -510,8 +532,9 @@ function went() {
       <b class="u">${u2(i.units)}</b></div>`;
   }
   const extraN = items.filter(i => i.overage).length;
-  return `<details${SHOWALL ? " open" : ""}><summary>Where it went &middot; ${u2(tot)} u in the last 7 days &middot; ${extraN} of ${items.length} on extra usage</summary>
-    <div class="kinds">${kinds}</div><div class="items">${rows}</div>
+  return `<details${OPEN ? " open" : ""} id="went"><summary>Where it went &middot; ${u2(tot)} u in the last ${day ? "24 hours" : "7 days"} &middot; ${extraN} of ${items.length} on extra usage</summary>
+    <div class="seg"><button data-r="week" class="${day ? "" : "on"}">7 days</button><button data-r="day" class="${day ? "on" : ""}">24 hours</button></div>
+    ${day ? "" : days()}<div class="kinds">${kinds}</div><div class="items">${rows}</div>
     ${items.length > 10 ? `<div class="more"><span>Showing ${shown.length} of ${items.length}</span><button id="all">${SHOWALL ? "Show fewer" : "Show all " + items.length}</button></div>` : ""}</details>`;
 }
 
@@ -570,6 +593,8 @@ function drawHow() {
     <details><summary>When a build is refused</summary><p>${P.limit_rule}</p></details>
     <details><summary>What each app and feature costs to run &middot; last ${CO.window_days} days</summary><div class="ctw">${ct}</div></details>`;
   const a = $("all"); if (a) a.onclick = () => { SHOWALL = !SHOWALL; drawHow(); };
+  const w = $("went"); if (w) w.ontoggle = () => { OPEN = w.open; };
+  document.querySelectorAll("#how [data-r]").forEach(b => b.onclick = () => { RANGE = b.dataset.r; SHOWALL = false; drawHow(); });
 }
 
 function draw() {
