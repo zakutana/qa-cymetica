@@ -6689,6 +6689,48 @@ reports:
       picture for the page's t= with the picture for another t=: it passes when the two differ, and is inconclusive
       if the page stops passing a t= at all (then the picture itself has to be looked at). GET requests only.
 
+  - key: usage-dynamic-card-tells-a-signed-in-user-to-log-in
+    findings: [CYM-the_dynamic_plan_card_takes_a_cookie_session_as_signed_in]
+    severity: medium
+    category: logic
+    url: https://cymetica.com/usage
+    title: >-
+      /usage: the Dynamic plan card tells a signed-in user "Log in to see your forecast and switch." because it
+      decides signed-in from getAuthToken() alone, which is empty for a cookie session
+    expected: >
+      A signed-in user on /usage sees their 30-day forecast and the Switch to Dynamic control in the Dynamic
+      plan card, as the usage card beside it shows their plan. The card decides "signed out" the way the rest of
+      the page does: from the server's answer (a 401) or the page's session helpers (window.hasSession()).
+    actual: >
+      Seen on 2026-10-22 around 18:30 UTC in a signed-in browser session on /usage: the usage card drew the
+      account's live data (plan Max 5x, session 0.650 of 5.00 units, week 4.34 of 30.00), while the Dynamic plan
+      card (#nxd-body) read "Transaction fee 0.05% on top of measured cost · BRRR payments discounted · smallest
+      BRRR buy $0.01" and "Log in to see your forecast and switch." In that tab window.getAuthToken() returned
+      nothing, and fetch('/api/v1/nexus/dynamic', {credentials: 'same-origin'}) from the same page answered HTTP
+      200 with the account's forecast (with_fee_usd "163.57" at that time). So the server knows the session; the
+      card never asks it. Cause, read from the page as it is served to everyone: the card's inline script (the
+      one with var API = '/api/v1/nexus/dynamic') runs load(), which does if (!tok()) { fetch('/api/v1/nexus/plans')
+      ... 'Log in to see your forecast and switch.' ... return; } before it requests /api/v1/nexus/dynamic, and
+      tok() is window.getAuthToken(), which reads only bearer tokens stored in localStorage / sessionStorage.
+      auth.js removes those stored tokens whenever the et_session cookie is present, and the page's own head
+      script says so ("Audit #20: the credential is an httpOnly cookie, so getAuthToken() is null for a
+      perfectly valid session"). So with a cookie session the card always shows the signed-out text, and the
+      Switch to Dynamic button, which is drawn only after that request, never appears. The usage card
+      (/static/js/nexus-usage.js) requests with the cookie and treats a 401 as signed out, which is why it works.
+    steps:
+      - 'Sign in on https://cymetica.com (cookie session) and open https://cymetica.com/usage: the usage card shows the plan, the Dynamic plan card says "Log in to see your forecast and switch."'
+      - 'In that tab: window.getAuthToken() -> null; fetch("/api/v1/nexus/dynamic", {credentials: "same-origin"}) -> HTTP 200 with forecast.with_fee_usd'
+      - 'GET https://cymetica.com/usage -> the inline script with var API = ''/api/v1/nexus/dynamic'': function tok() returns window.getAuthToken(); function load(msg) { ... if (!tok()) { fetch(''/api/v1/nexus/plans'', ...) ... ''Log in to see your forecast and switch.'' ... return; } call(''GET'', '''') ... }'
+      - 'GET https://cymetica.com/static/js/auth.js?v=20261021-1 -> the AuthManager constructor removes accessToken, access_token, auth_token, refreshToken and refresh_token from localStorage and sessionStorage when hasSessionCookie() (et_session) is true'
+    body: >
+      Every user signed in with the cookie session is told to log in on /usage and cannot see their Dynamic
+      forecast or switch to Dynamic from the page. Deciding signed-out the way nexus-usage.js does (request
+      /api/v1/nexus/dynamic with the cookie and treat a 401 as signed out), or adding window.hasSession() to the
+      gate, would fix it. Our check reads the card's script on the live page: it fails while a gate that tests
+      only a bearer token sends the card to its signed-out view without requesting /api/v1/nexus/dynamic or
+      consulting the session, passes whichever way that gate is changed, and is inconclusive if the card or its
+      script is gone. GET requests only.
+
 footer: >
   Reported by an independent QA agent. Scope of this work: verification of the
   REST API, MCP, the machine-readable discovery surfaces and the pages built on

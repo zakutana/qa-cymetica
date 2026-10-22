@@ -98,3 +98,5 @@ reports:
   216: "/traffic/mine radí AI agentům volat API s klíčem v X-API-Key, ale endpoint tomu klíči odpoví 401 „Sign in“"
   46: "MCP: anonymní volající vidí ve výpisu nástrojů i ty vyhrazené registrovaným (objednávky, pozice, vklady)"
   93: "Dokumentované GET cesty: backtest/quote klonovaných botů odpoví 401 klíči, který jim vydá vlastní onboarding"
+  217: "Agent Tournaments: náhled odkazu ukazuje název cizího Build it Better požadavku, ne název stránky"
+  220: "/usage: karta plánu Dynamic říká přihlášenému uživateli, ať se přihlásí; předpověď ani přepnutí neukáže"
