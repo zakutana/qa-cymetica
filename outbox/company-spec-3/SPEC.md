@@ -75,21 +75,7 @@ not a product and has no card. **The totals are wrong for the same reason**: the
 599 visitors, 822 uses and 8 likes (read off the screenshot): a page's visitors must not be counted once for every request that touched
 it. The mockup's Products tab draws it as meant: one card per product.
 
-**9. Every product says whose it is.** Wherever a product is shown (a Products card, a product's panel on the map, a list of what a
-company owns) it names the company that owns it: *by Moonshot Labs*, a link to the company when it is public, plain text when it is private.
-The owner of a product that stands on the map is **the company that holds the slot it stands on** (ours: *by My Company*, a link
-to its office), not Cymetica: the products' panel does not say *by Cymetica*. The mockup draws it as one small line under the product's name on a
-Products card and in the products' panel.
-
-**10. A click on a company flies to it and opens its panel**, as a click on a product does (item 2; round 1 flew to a public company
-and went straight into its visit). The camera flies to the station, the station stays in the middle of what is left of the stage, and a
-panel slides in on the right, 420 px, with the same × and Esc. It shows the basics, numbers first: the company's name, its owner (@name), status and
-days on Cymetica, its mission, how many departments and how many are working now (a public company; a private one shows only its status), how many products, and
-**the products it owns** (name, page, and its visitors in 30 days), each a link to the product's page. A **public** company has a
-*Look inside* button to its visit; a **private** one shows what its card showed in round 1 (name, station, mission) and its products, and
-no button. (The products of a private company are public pages already, and item 9 names their owner, so listing them leaks nothing the
-page does not; if you see a reason to hide them, say so.) The panel is the same one as the products', so one component draws all
-three. The company's own station opens its office as before. Mockup: click any company on the map (`uvpanel.js`, `companyView`; the products listed are sample figures).
+**9. Every product says clearly who made it.** Wherever a product is shown (a Products card, a product's panel on the map) it names the company that owns it, **in plain sight and not as small print**: a bar of its own at the top of the product's panel, *MADE BY*, the company's logo and its name in the site's green (a click opens its office), and the same *MADE BY* line on a Products card. The owner of a product that stands on the map is **the company that holds the slot it stands on** (ours: *My Company*), not Cymetica: the panel does not say *by Cymetica*. The mockup draws both (`uvpanel.js` `productView`, the Products card in `app.js`).
 
 ## What stays as it is
 

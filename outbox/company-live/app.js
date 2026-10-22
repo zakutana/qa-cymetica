@@ -681,7 +681,7 @@
       '<div class="pfgrid">' + apps.slice().sort(function (a, b) { return (b.visitors + b.todayVisitors) - (a.visitors + a.todayVisitors); }).map(function (a) {
         var e = CO.appEarn(a), v = a.visitors + a.todayVisitors, pct = Math.round(v / top * 100);
         return '<div class="pf"><div class="pf1"><b>' + esc(a.name) + '</b><a href="' + esc(a.url) + '" target="_blank" rel="noopener">' + esc(a.path) + ' ↗</a></div>' +
-          '<div class="pfown">by <b>' + esc(CO.S.company.name) + '</b></div>' +
+          '<div class="pfown"><span>Made by</span><b>' + esc(CO.S.company.name) + '</b></div>' +
           '<div class="pfn"><div><b>' + v.toLocaleString('en-US') + '</b><span>visitors</span></div><div><b>' + (a.uses + a.todayUses).toLocaleString('en-US') + '</b><span>uses</span></div>' +
           '<div><b>' + a.views.toLocaleString('en-US') + '</b><span>views</span></div><div><b>' + a.likes + '</b><span>likes</span></div></div>' +
           '<span class="pfbar"><i style="width:' + pct + '%"></i></span>' +
@@ -752,14 +752,15 @@
     if (it.kind === 'ad') return openAd(it);
     if (it.kind === 'slot') { if (it.owned || buying) slotCard(it); return; }
     if (it.mine) return setTab('office');
-    // another company: the map flies to it and its panel slides in (basics, the products it owns); a public one has Look inside
-    return openAd(it);
-  }
-  // Look inside, in a public company's panel: the way into its visit, as the flight used to be
-  function lookInside(c) {
+    // another company: as it always was (the operator, 2026-10-22: no change, no side panel for companies): a private one
+    // shows its card, a public one the flight into its visit
+    if (!c.public) return privateCard(c);
     try { sessionStorage.setItem('uv.from', String(c.id)); } catch (e) { /* fine */ }
     $('uvfade').hidden = false;
-    setTimeout(function () { location.href = 'index.html?visit=' + c.id; }, 500);
+    // the flight is only the way in: a drag or a wheel that cuts it short must not cut the visit too
+    var gone = false, go = function () { if (!gone) { gone = true; location.href = 'index.html?visit=' + c.id; } };
+    uv.flyTo(c.id, go);
+    setTimeout(go, 1300);
   }
   // a private company: what it shows the world, and nothing from inside
   function privateCard(c) {
@@ -1468,7 +1469,6 @@
       // the Universe's way in for someone without a company ("musis dat nekde zelene tlacitko pro create company")
       if (t.closest('#uv-new')) { location.href = 'builder.html'; return; }
       if (t.closest('#uv-panel [data-a="close"]')) return closeAd();
-      if (t.closest('#uv-panel [data-a="look"]') && CO.uvPanel.cur) return lookInside(CO.uvPanel.cur.c);
       if (t.closest('#uv-panel [data-a="owner"]')) { e.preventDefault(); closeAd(); return setTab('office'); }
       if (uv) {
         if (t.closest('#uv-in')) return uv.zoom(0.78);
