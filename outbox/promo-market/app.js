@@ -304,7 +304,7 @@
     var rows = keys.map(function (k) {
       var b = S.briefs.filter(function (x) { return x.key === k; })[0], t = S.taken[k]; if (!b) return '';
       var m = mine(b), rej = m.accounts - m.qualified;
-      return '<div class="card mb"><div class="ch"><h3>' + esc(b.name) + '</h3><span class="chip g">' + fmt(b.price) + ' ' + b.cur + ' ' + perTxt(b) + '</span><span class="chip">' + ic('lock') + b.hold + 'd hold</span><span class="sp"></span>' +
+      return '<div class="card cmb"><div class="ch"><h3>' + esc(b.name) + '</h3><span class="chip g">' + fmt(b.price) + ' ' + b.cur + ' ' + perTxt(b) + '</span><span class="chip">' + ic('lock') + b.hold + 'd hold</span><span class="sp"></span>' +
           '<span class="mono acc" style="font-size:12.5px">cymetica.com/c/' + t.slug + '</span><button class="btn sm c" data-copy="link:' + t.slug + '">' + ic('copy') + 'Copy link</button><a class="btn sm" href="#me/queues">' + ic('queues') + 'Threads for it</a></div>' +
         '<div class="mrow">' + funnel(m) + '<div class="earned"><span>Earned</span><b>' + fmt(m.paid * b.price) + ' <small>' + b.cur + '</small></b><em>' + fmt(m.held * b.price) + ' in hold · ' + rej + ' not counted</em></div></div></div>';
     }).join('');
@@ -313,7 +313,7 @@
       return '<div class="ofr">' + ic(o.platform) + '<b>' + esc(b.name) + '</b><span>' + esc(PLAT[o.platform][0]) + ' · ' + esc(o.handle || 'your account') + '</span><b class="pos">' + fmt(o.price) + ' ' + b.cur + '</b><span class="chip c">waiting for the owner</span></div>';
     }).join('');
     return '<div class="sech"><h2>Taken by you</h2><span class="dim mono">paid per verified new user · the house programme needs no taking</span></div>' + rows +
-      '<div class="card mb"><div class="ch"><h3>Your post offers</h3><span class="chip">' + Object.keys(S.sent).length + '</span><span class="sp"></span><span class="dim mono" style="font-size:12px">Paid once the post has stayed up 7 days</span></div>' +
+      '<div class="card cmb"><div class="ch"><h3>Your post offers</h3><span class="chip">' + Object.keys(S.sent).length + '</span><span class="sp"></span><span class="dim mono" style="font-size:12px">Paid once the post has stayed up 7 days</span></div>' +
         (sent || '<div class="draft">None yet. Have an audience? Quote a price for one post on any brief: the owner accepts or declines.</div>') + '</div>' +
       boardHead('Open briefs') + board();
   }
