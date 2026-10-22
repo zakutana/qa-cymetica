@@ -1297,7 +1297,8 @@ function adPromo(body, b) {
   const C = amat(PROMO.c);
   const metal = new THREE.MeshStandardMaterial({ color: PROMO.metal, roughness: 0.3, metalness: 0.8 });
   const dark = new THREE.MeshStandardMaterial({ color: PROMO.dark, roughness: 0.5, metalness: 0.6 });
-  const st = new THREE.Group(); st.position.y = 0.2; body.add(st);
+  // 15 % lower than first drawn, all of it, so the proportions stay ("jen bych tu budovu udelal trochu nizsi o 15%")
+  const K = 0.85, st = new THREE.Group(); st.position.y = 0.2; st.scale.setScalar(K); body.add(st);
   const part = (geo, mat, x, y, z, parent = st) => { const m = ownGeo(new THREE.Mesh(geo, mat)); m.position.set(x, y, z); parent.add(m); return m; };
   const light = (col, o) => new THREE.MeshBasicMaterial({ color: new THREE.Color(col), transparent: true, opacity: o, blending: THREE.AdditiveBlending, depthWrite: false, side: THREE.DoubleSide });
   // the platform: a hexagon, its edge lit, a pylon with a cyan lamp at every other corner
@@ -1381,7 +1382,7 @@ function adPromo(body, b) {
     lights.forEach((l, i) => { l.m.rotation.z = l.sgn * (0.42 + 0.17 * Math.sin(t * 0.55 + i * 1.7)); l.m.rotation.x = 0.12 * Math.sin(t * 0.4 + i); });
     lamps.forEach((l, i) => { l.visible = Math.sin(t * 2.2 + i * 2.1) > -0.35; });
   };
-  b.top = 0.2 + CY + S / 2 + 0.3; b.bot = 0; b.foot = 3.0;
+  b.top = 0.2 + K * (CY + S / 2 + 0.3); b.bot = 0; b.foot = 3.0 * K;
 }
 // how much larger than its own units an ad is drawn on the map: as a station is (UVSS). Measured on the page
 // 2026-10-21 by projecting their vertices: each under three quarters of the sun's ball on the screen.

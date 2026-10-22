@@ -1113,7 +1113,9 @@
       top = ty;
     } else if (it.ad.key === 'promo') {
       // the Promo Market as u3d.js adPromo draws it: a hex platform, the cyan spire with its ticker band and two rings,
-      // the hologram on top (a cube of light: a magenta screen and an amber one, its edges lit), two searchlights over it
+      // the hologram on top (a cube of light: a magenta screen and an amber one, its edges lit), two searchlights over it;
+      // 15 % smaller than the other two, as in 3D
+      s = s * 0.85;
       var el = function (cyy, k, w) { return '<ellipse cx="' + f1(x) + '" cy="' + f1(cyy) + '" rx="' + f1(s * 0.5 * k) + '" ry="' + f1(s * 0.5 * k * RY / RX) + '" fill="none" stroke="#00cfff" stroke-width="' + f1(w) + '"/>'; };
       var hex = [0, 1, 2, 3, 4, 5].map(function (i) { var a = i * Math.PI / 3; return [x + Math.cos(a) * s * 0.42, y - s * 0.06 + Math.sin(a) * s * 0.42 * RY / RX]; });
       var cs = s * 0.2, cy0 = y - s * 0.86, cb = cy0 + cs * 0.55;   // the cube's half width, its top edge's middle, its bottom corner
