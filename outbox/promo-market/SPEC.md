@@ -64,10 +64,17 @@ budget is locked from the balance and what is not spent returns when it ends.
   this on X today* (the priority post, Copy, Open in X, Mark posted, the reward, the graphic); briefs to take; the
   queues as four counts; the best pages.
 - **Briefs I took**: each with the creator's link and what it brought (posts, visitors, new users) and earned.
-- **Queues**: Reddit, X, Press and Radar apps as one list with the selected thread beside it (Reply with this page,
-  Skip, the post kit's rule); Press with hours left; Radar with the X, Reddit and Telegram posts to copy.
+- **Queues**: Reddit, X, Press, Radar apps and Channels as one list with the selected thread beside it: the first-look
+  hold, the page to reply with (or a new page for this thread), Reply with this page, Copy reply, Regenerate reply,
+  Skip, then the reply's link and **Mark posted**, the post kit's rule and, on X, its tags; Press with hours left, a page
+  to answer with (or add one), Pitch by email, Mark pitched, Skip, and the article's link once it is out; Radar with the
+  X, Reddit and Telegram posts to copy; Channels: a post to the Telegram or Discord channel (platform, symbol, message).
+- **Today** also takes the priority post's link when it is marked posted, and **Posted something yourself?** registers
+  a post the creator wrote on its own (paid once it carries one of their links). The agent prompts include the
+  account's own **agent key**.
 - **Pages & links**: one sortable table (clicks, reads, likes, unique, 14 days, top source, replies); a row opens its
-  replies and Open page, Download HTML, Also on claude.ai, the tracked link; *Create a page* and *Track a link* dialogs.
+  replies and Open page, Download HTML, Also on claude.ai, the tracked link, where it was posted (saved); *Create a page*
+  and *Track a link* dialogs.
 - **Rewards**: paid, pending, unverifiable, failed, what was earned, and each post with its state.
 - A creator's public page shows the counters, the chart and the table, read only, with "Are you … ? Log in". The
   *Start an app and a company* guide leaves the page: one link.
@@ -83,9 +90,12 @@ once in about 13 seconds. Only the faces turned to the camera are drawn, so the 
 ones. Three small holographic ad cards circle it and two searchlights cross over it, fading along their length. The
 structure stays cyan; everything above it is emissive, additive light. Mockup: `u3d.js` `adPromo`, the flat map in
 `universe.js`. It stands on **Orbit 5 · slot 3**, smaller than the sun, and is not counted among the products in the
-map's summary line. A click flies to it and opens its panel (`uvpanel.js`): USDC up for grabs, open briefs, the top pay
-per new user; the briefs with most up for grabs (per post, per new user); the owner's products with what their briefs
-brought; **Post a brief** (to My products) and **Open the market**. The panel reads the same data as the market.
+map's summary line. A click flies to it and opens its panel (`uvpanel.js`), which says two things plainly. **For
+promoters: earn USDC for every post and every new user**: the USDC up for grabs, the top pay per new user, and the three
+briefs that pay most per new user (each with its per post, per new user and what is up for grabs). **For builders:
+have a product? Get users**: one line on how it works, and what the owner's briefs brought (visitors, new users). Its
+two buttons: **Earn: take a brief** and **Promote my product**. The tower's ticker band carries the same words (earn
+USDC, up for grabs, promote your product). The panel reads the same data as the market.
 
 ## D. A Marketing department for /company
 
