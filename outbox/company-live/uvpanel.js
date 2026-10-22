@@ -145,7 +145,9 @@
       '<span class="mkt">MADE BY</span><span class="mkr">' + esc(who) + '</span><span class="mkp"></span></a></div>';
     // (Cymetica's own building has no maker row: it is the platform's, not a company's)
     return { cls: 'k-' + it.ad.key, acc: CO.accentHex(it.c.accent), icon: s.icon, title: it.c.name,
-      sub: esc(s.tag) + ' · ' + esc(CO.uvSlotName(it)), body: (s.house ? '' : owner) + s.body(),
+      // an owner's product shows the line its owner wrote on the Products tab (none until he writes one); Cymetica's own
+      // building keeps its own
+      sub: (s.house ? esc(s.tag) + ' · ' : CO.uvLine(it.c.name) ? esc(CO.uvLine(it.c.name)) + ' · ' : '') + esc(CO.uvSlotName(it)), body: (s.house ? '' : owner) + s.body(),
       foot: s.foot || '<a class="uvp-go" href="' + esc(it.ad.url) + '" target="_blank" rel="noopener">' + esc(s.go) + ' <span aria-hidden="true">↗</span></a>' };
   }
 

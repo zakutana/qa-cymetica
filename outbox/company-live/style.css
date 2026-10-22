@@ -245,6 +245,13 @@ b.g, span.g { color: var(--green); text-shadow: 0 0 10px rgba(0, 255, 136, .45);
 .pf1 b { font: 400 15px 'Archivo Black', sans-serif; } .pf1 a { font-size: 11px; color: var(--cyan); }
 /* whose product it is: its company, on every product card */
 .pfown { margin: 0 0 10px; }
+/* the line the Universe shows for a product, its owner's to write (Edit opens a small dialog) */
+.pfline { display: flex; align-items: baseline; gap: 8px; margin: 6px 0 10px; min-width: 0; }
+.pfline .k { flex: none; font-size: 9px; font-weight: 800; letter-spacing: .12em; text-transform: uppercase; color: var(--dim2); }
+.pfline em { flex: 1; min-width: 0; font-style: normal; font-size: 11.5px; color: var(--text); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.pfline em.none { color: var(--dim2); }
+.pfedit { flex: none; padding: 2px 9px; border-radius: 7px; border: 1px solid var(--line3); background: none; font: 700 10px 'JetBrains Mono'; color: var(--cyan); cursor: pointer; }
+.pfedit:hover { border-color: var(--cyan); }
 /* Who made a product: the plate a station carries on the map (uv.css .b3) -- riveted dark glass framed in the company's
    colour, squared caps, the colour's dot -- with a MADE BY pill over it, as YOU stands over ours. --acc: the company's colour. */
 .mkb { display: inline-flex; flex-direction: column; align-items: center; text-decoration: none; cursor: pointer; --fr: color-mix(in srgb, var(--acc) 60%, #464b54); }

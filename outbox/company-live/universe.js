@@ -131,7 +131,10 @@
     if (id === 'core') return '<b class="c">Cymetica</b><br>The land round it is for sale.';
     if (!it) return '';
     if (it.kind === 'ad') {
-      return '<div class="uvt"><b style="color:' + CO.accentHex(it.c.accent) + '">' + esc(it.c.name) + '</b><span>' + esc(CO.uvSlotName(it)) + '</span></div><div><span class="c">Click to look closer →</span></div>';
+      // the line its owner wrote for it on the Products tab, when there is one (Cymetica's own building has none)
+      var line = it.ad.house || !CO.uvLine ? '' : CO.uvLine(it.c.name);
+      return '<div class="uvt"><b style="color:' + CO.accentHex(it.c.accent) + '">' + esc(it.c.name) + '</b><span>' + esc(CO.uvSlotName(it)) + '</span></div>' +
+        (line ? '<div class="uvl">' + esc(line) + '</div>' : '') + '<div><span class="c">Click to look closer →</span></div>';
     }
     if (it.kind === 'slot') {
       return it.owned

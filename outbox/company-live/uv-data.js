@@ -297,6 +297,20 @@
   };
   CO.uvEt10 = function (c) { return (c.bugs || 0) * 1000; };
 
+  // The line a product shows in the Universe (under its name, in its tooltip and its panel), written by its owner on the
+  // Products tab (the operator, 2026-10-22: "v products si chci umet editovat napis ktery se zobrazuje v univerzu, ted tam
+  // pise blbost"). None until the owner writes one, so nothing is invented for him. Kept in this browser, by product name.
+  var VKEY = 'co.uvline.v1';
+  CO.UVLINE_MAX = 70;
+  function uvLines() { try { return JSON.parse(localStorage.getItem(VKEY) || '{}') || {}; } catch (e) { return {}; } }
+  CO.uvLine = function (name) { return String(uvLines()[String(name || '').toLowerCase()] || ''); };
+  CO.setUvLine = function (name, text) {
+    if (CO.RO) return;
+    var m = uvLines(), k = String(name || '').toLowerCase(), t = String(text || '').replace(/\s+/g, ' ').trim().slice(0, CO.UVLINE_MAX);
+    if (t) m[k] = t; else delete m[k];
+    try { localStorage.setItem(VKEY, JSON.stringify(m)); } catch (e) { /* the page still works, it just forgets */ }
+  };
+
   // The revenue share (the operator, 2026-10-22): every company ranked by its Revenue, 30 days (USD) -- what the platform
   // paid it in that time: bug bounties (ET10 at the day's price), its products' rewards, tournament and League prizes; no
   // trading P&L (it can be faked between two accounts and goes negative). The top 3 at or above the floor get 5% / 3% / 1% of

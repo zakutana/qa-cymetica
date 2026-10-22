@@ -681,6 +681,9 @@
       '<div class="pfgrid">' + apps.slice().sort(function (a, b) { return (b.visitors + b.todayVisitors) - (a.visitors + a.todayVisitors); }).map(function (a) {
         var e = CO.appEarn(a), v = a.visitors + a.todayVisitors, pct = Math.round(v / top * 100);
         return '<div class="pf"><div class="pf1"><b>' + esc(a.name) + '</b><a href="' + esc(a.url) + '" target="_blank" rel="noopener">' + esc(a.path) + ' ↗</a></div>' +
+          // the line the Universe shows for it, the owner's to write
+          '<div class="pfline"><span class="k">In the Universe</span><em class="' + (CO.uvLine(a.name) ? '' : 'none') + '">' + (CO.uvLine(a.name) ? '“' + esc(CO.uvLine(a.name)) + '”' : 'no line yet') + '</em>' +
+            (RO ? '' : '<button type="button" class="pfedit" data-a="uvline" data-n="' + esc(a.name) + '">Edit</button>') + '</div>' +
           '<div class="pfn"><div><b>' + v.toLocaleString('en-US') + '</b><span>visitors</span></div><div><b>' + (a.uses + a.todayUses).toLocaleString('en-US') + '</b><span>uses</span></div>' +
           '<div><b>' + a.views.toLocaleString('en-US') + '</b><span>views</span></div><div><b>' + a.likes + '</b><span>likes</span></div></div>' +
           '<span class="pfbar"><i style="width:' + pct + '%"></i></span>' +
@@ -688,6 +691,21 @@
           (a.todayVisitors ? '<i>+' + a.todayVisitors + ' now</i>' : '') + '</div></div>';
       }).join('') + '</div>' +
       '<p class="pfsrc">Visitors, uses, views, likes: Cymetica (' + esc(Rd.src) + '), last ' + Rd.days + ' days, read ' + Rd.at + '. Earnings: proposed, placeholder rates.</p>');
+  }
+  // the line a product shows in the Universe: its owner writes it here (Products), the map shows it in the product's
+  // tooltip and panel; an empty line takes it away
+  function uvLineModal(name) {
+    var cur = CO.uvLine(name), max = CO.UVLINE_MAX;
+    openModal('<div class="mh"><h3>' + esc(name) + ' · line in the Universe</h3><span class="sp"></span><button class="btn" data-a="close">×</button></div>' +
+      '<label class="field">Shown under its name on the map, when someone points at it or opens it' +
+        '<input id="uvl-in" maxlength="' + max + '" value="' + esc(cur) + '" placeholder="What it does, in one line"></label>' +
+      '<div class="mf"><span class="hint" id="uvl-n">' + cur.length + ' / ' + max + '</span><span class="sp"></span>' +
+        '<button class="btn" data-a="close">Cancel</button><button class="btn gr" data-a="uvl-save">Save</button></div>', false, function (a) {
+      if (a !== 'uvl-save') return;
+      CO.setUvLine(name, $('uvl-in').value); closeModal(); renderPortfolio();
+      toast(CO.uvLine(name) ? 'Saved: the Universe shows it now.' : 'Line removed: the Universe shows none.');
+    });
+    var inp = $('uvl-in'); if (inp) inp.addEventListener('input', function () { $('uvl-n').textContent = inp.value.length + ' / ' + max; });
   }
   function uvStats(s) {
     // the revenue-share board over the map (uvboard.js) follows the same beat
@@ -1471,6 +1489,7 @@
       if (t.closest('#uv-new')) { location.href = 'builder.html'; return; }
       if (t.closest('#uv-panel [data-a="close"]')) return closeAd();
       if (t.closest('#uv-panel [data-a="owner"]')) { e.preventDefault(); closeAd(); return setTab('office'); }
+      var uvl = t.closest('[data-a="uvline"]'); if (uvl && !t.closest('#modal-card')) return uvLineModal(uvl.getAttribute('data-n'));
       if (t.closest('#uv-board [data-a="board-all"]')) return openModal(CO.uvBoardTable(mineForMap()), true);
       if (t.closest('#uv-board [data-a="board-fold"]')) return $('uv-board').classList.toggle('open');
       if (uv) {

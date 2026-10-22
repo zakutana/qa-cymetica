@@ -99,6 +99,28 @@ What the build needs from you: per company the 30-day revenue from your records 
 and for the last 30 days, and the payout itself. Left to you: the floor, and a cap if you want one (for example, a share never larger than the
 company's own revenue). The figures in the mockup are samples from one model (`CO.uvBoard` in `uv-data.js`).
 
+## I. A station on the map looks washed in its colour; in Settings it looks right (a bug, settled)
+
+The owner's screenshots, 2026-10-22: his company FDS (Citadel, green) in **Settings** ("In the Universe" preview) is dark steel plating with green
+only in its windows, lights and ring; the same station **on the map** is pale mint all over, walls and roof alike, so the building's detail is gone.
+Expected: the map draws every station the way the Settings preview does: the steel stays steel, the company's colour lives in the lights.
+
+Our own mockup does the same (the map's stations come out tinted in their colour, the Settings preview does not), so the design you copied has
+the fault; we could not pin it down. What we ruled out in the mockup (`u3d.js`): the lights and tone mapping are the same in both scenes
+(ambient 0x1a2230, hemisphere 0xdfe8f2, sun 2.0 to 2.1, rim 0x00cfff, ACES at exposure 1.15); it is not the colour grade (the map at the preview's
+saturation, 0.66, is still pale), not the station's halo or its pool of light (both hidden: no change), not the sky, not the bloom (with the post pass
+off the hull is greener still) and not the viewing angle (the map's camera brought down to the preview's angle: still pale). Left: how the map builds
+or scales a station (`UVSS` 2.7) and its materials there. Please find it on your side and match the preview; tell us what it was, and we fix the mockup.
+
+## J. The owner writes the line his product shows in the Universe (settled, drawn)
+
+The live map's tooltip for Gem Screener reads *made by BJ Ironstar Capital · Which apps earn money, ranked by upside.*, and its panel repeats the
+line: a sentence the owner never wrote and does not want. **Each card on the Products tab gets an *In the Universe* line with an Edit button**: a
+small dialog with one field (up to 70 characters, a counter) and Save; an empty field removes the line. That line, and only that line, shows under the
+product's name in its map tooltip and in its panel. **Until the owner writes one, no line shows**: nothing is generated for him. Cymetica's own
+buildings (the Promo Market) keep their own line. Mockup: `app.js` (`uvLineModal`, the Products card), `uv-data.js` (`CO.uvLine`, `CO.setUvLine`),
+`universe.js` (the tooltip), `uvpanel.js` (the panel).
+
 ## What stays as it is
 
 Everything not named above stays as rounds 1 to 3 and your builds have it.

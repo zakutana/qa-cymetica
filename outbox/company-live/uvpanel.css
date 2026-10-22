@@ -208,6 +208,8 @@ a.uvr { color: var(--text); text-decoration: none; } a.uvr:hover { background: v
 .lb-s { text-align: right; font-size: 10.5px; color: var(--dim2); }
 .lb-s .sh { font: 400 15px 'Archivo Black', sans-serif; color: var(--mg); margin-right: 6px; } .lb-r.pl2 .lb-s .sh { color: var(--mg2); } .lb-r.pl3 .lb-s .sh { color: var(--mg3); }
 .lb-s .ok { color: var(--green); }
+/* a product's own line in its map tooltip (the owner writes it on the Products tab) */
+.tip .uvl { margin: 1px 0 4px; font-size: 11.5px; color: #d6e0ec; }
 /* the money pulse's pop over a top-3 station, in the board's magenta */
 .b3pop.share { color: #ff7fe3; font-size: 16px; text-shadow: 0 0 12px rgba(255, 79, 216, .95); }
 
