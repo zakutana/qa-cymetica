@@ -1230,12 +1230,13 @@ function adCasino(body, b) {
   b.top = 3.3 + HY + HR + 0.1; b.bot = 0; b.foot = 3.4;
 }
 // Promo Market (2026-10-22): Cymetica's own building, where a company hires creators, agents and firms to promote its
-// products (outbox/promo-market). Redrawn the same day to the operator's brief ("me se hlavne libi ta kostka z
-// obrazovkama"): at the map's first zoom it reads as a billboard. A hex platform and a cyan spire carrying a ticker band
-// and two inner rings; on top a cube of four screens showing abstract ads, crossfading magenta and amber every few
-// seconds and turning once in 13 s; two searchlights crossing over it; a small ad blimp circling at the cube's height
-// with a banner behind it. The structure stays cyan; light is emissive and additive only, no lamps added to the scene.
-// As tall as Agent Casino, smaller than the sun.
+// products (outbox/promo-market). Drawn three times that day: a relay spire; then, to the operator's brief, a solid cube
+// of screens ("me se hlavne libi ta kostka z obrazovkama"); then, the cube looking "trapne", all hologram ("spis by to
+// mel byt cele hologram husty"). Now the spire is a projector and the billboard is light: four screens of abstract ads
+// hanging in the air as a cube, magenta and amber crossfading, with scan lines, flicker and a glitch now and then,
+// glowing edges, a scan plane sweeping through it, sparks rising from the projector, and three small holographic ad
+// cards circling it. Two searchlights cross over it. The structure stays cyan; everything above it is additive light,
+// no lamps added to the scene. As tall as the other two products, smaller than the sun.
 const PROMO = { c: '#00cfff', magenta: '#ff2d95', amber: '#ffb020', beam: '#e8fbff', metal: 0x8fa3b8, dark: 0x0d1520 };
 function promoBandTex() {
   if (TX.promoBand) return TX.promoBand;
@@ -1249,27 +1250,41 @@ function promoBandTex() {
   g.fillStyle = 'rgba(0,207,255,.6)'; g.fillRect(0, 4, W, 3); g.fillRect(0, H - 7, W, 3);
   const t = new THREE.CanvasTexture(c); t.colorSpace = THREE.SRGBColorSpace; t.wrapS = THREE.RepeatWrapping; t.anisotropy = 8; TX.promoBand = t; return t;
 }
-// One screen of the cube: an abstract ad, no text -- a product card, a play button, a burst, a grid with an arrow --
-// in one of the two palettes, with a frame and scan lines so it reads as a screen.
-function promoScreenTex(v, hot) {
-  const key = 'promoScreen' + v + hot; if (TX[key]) return TX[key];
+// One holographic screen: light on black (black adds nothing), an abstract ad drawn glowing, corner brackets, scan lines
+// and one torn row, so it reads as projected light rather than a panel.
+function holoScreenTex(v, hot) {
+  const key = 'holoScreen' + v + hot; if (TX[key]) return TX[key];
   const W = 512, c = document.createElement('canvas'); c.width = c.height = W; const g = c.getContext('2d');
-  const P = hot === 'm' ? { a: PROMO.magenta, b: '#ff8cc6', d: '#2a0618', bg: '#13030c' } : { a: PROMO.amber, b: '#ffd98a', d: '#2a1a03', bg: '#140c02' };
-  const grd = g.createLinearGradient(0, 0, W, W); grd.addColorStop(0, P.d); grd.addColorStop(1, P.bg); g.fillStyle = grd; g.fillRect(0, 0, W, W);
-  const rr = (x, y, w, h, r, col) => { g.fillStyle = col; g.beginPath(); g.roundRect(x, y, w, h, r); g.fill(); };
-  g.globalAlpha = 1;
-  if (v === 0) { rr(64, 70, 384, 230, 28, P.a); rr(96, 104, 150, 150, 20, P.bg); rr(270, 112, 150, 26, 13, P.b); rr(270, 156, 110, 22, 11, P.bg); rr(270, 196, 130, 22, 11, P.bg);
-    rr(64, 340, 260, 34, 17, P.b); rr(64, 394, 190, 26, 13, P.a); g.fillStyle = '#ffffff'; g.beginPath(); g.arc(400, 404, 42, 0, Math.PI * 2); g.fill(); }
-  if (v === 1) { g.fillStyle = P.a; g.beginPath(); g.arc(256, 210, 130, 0, Math.PI * 2); g.fill(); g.fillStyle = '#ffffff'; g.beginPath(); g.moveTo(220, 140); g.lineTo(330, 210); g.lineTo(220, 280); g.closePath(); g.fill();
-    for (let i = 0; i < 5; i++) rr(70 + i * 76, 380 - (i % 3) * 22, 56, 70 + (i % 3) * 22, 10, i % 2 ? P.b : P.a); }
-  if (v === 2) { g.save(); g.translate(256, 256); for (let i = 0; i < 16; i++) { g.rotate(Math.PI / 8); g.fillStyle = i % 2 ? P.a : P.b; g.beginPath(); g.moveTo(0, 0); g.lineTo(240, -26); g.lineTo(240, 26); g.closePath(); g.globalAlpha = 0.55; g.fill(); }
-    g.restore(); g.globalAlpha = 1; g.fillStyle = P.a; g.beginPath(); g.arc(256, 256, 120, 0, Math.PI * 2); g.fill(); g.fillStyle = '#ffffff'; g.beginPath(); g.arc(256, 256, 70, 0, Math.PI * 2); g.fill();
-    g.fillStyle = P.a; g.beginPath(); g.arc(256, 256, 34, 0, Math.PI * 2); g.fill(); }
-  if (v === 3) { [[64, 64], [272, 64], [64, 272], [272, 272]].forEach(([x, y], i) => rr(x, y, 176, 176, 22, i === 1 ? '#ffffff' : (i % 3 ? P.b : P.a)));
-    g.fillStyle = P.bg; g.beginPath(); g.moveTo(320, 128); g.lineTo(392, 152); g.lineTo(320, 176); g.closePath(); g.fill(); }
-  g.globalAlpha = 0.16; g.fillStyle = '#000000'; for (let y = 0; y < W; y += 6) g.fillRect(0, y, W, 2);
-  g.globalAlpha = 1; g.strokeStyle = P.b; g.lineWidth = 10; g.strokeRect(14, 14, W - 28, W - 28);
+  const A = hot === 'm' ? PROMO.magenta : PROMO.amber, B = hot === 'm' ? '#ff9fd0' : '#ffe0a0';
+  g.fillStyle = '#000000'; g.fillRect(0, 0, W, W);
+  const wash = g.createRadialGradient(256, 256, 40, 256, 256, 330); wash.addColorStop(0, hot === 'm' ? 'rgba(255,45,149,.22)' : 'rgba(255,176,32,.22)'); wash.addColorStop(1, 'rgba(0,0,0,0)');
+  g.fillStyle = wash; g.fillRect(0, 0, W, W);
+  g.shadowColor = A; g.shadowBlur = 26;
+  const rr = (x, y, w, h, r, col, stroke) => { g.beginPath(); g.roundRect(x, y, w, h, r); if (stroke) { g.strokeStyle = col; g.lineWidth = stroke; g.stroke(); } else { g.fillStyle = col; g.fill(); } };
+  if (v === 0) { rr(70, 80, 372, 220, 26, A, 8); rr(100, 110, 140, 140, 18, A); rr(266, 120, 146, 24, 12, B); rr(266, 162, 104, 18, 9, A); rr(266, 198, 124, 18, 9, A);
+    rr(70, 340, 250, 30, 15, B); rr(70, 390, 180, 22, 11, A); g.fillStyle = B; g.beginPath(); g.arc(398, 396, 40, 0, Math.PI * 2); g.fill(); }
+  if (v === 1) { g.strokeStyle = A; g.lineWidth = 12; g.beginPath(); g.arc(256, 205, 120, 0, Math.PI * 2); g.stroke(); g.fillStyle = B; g.beginPath(); g.moveTo(222, 140); g.lineTo(326, 205); g.lineTo(222, 270); g.closePath(); g.fill();
+    for (let i = 0; i < 5; i++) rr(76 + i * 74, 380 - (i % 3) * 24, 52, 72 + (i % 3) * 24, 8, i % 2 ? B : A); }
+  if (v === 2) { g.strokeStyle = A; g.lineWidth = 6; for (let r = 60; r <= 210; r += 50) { g.beginPath(); g.arc(256, 256, r, 0, Math.PI * 2); g.stroke(); }
+    g.fillStyle = B; g.beginPath(); g.arc(256, 256, 36, 0, Math.PI * 2); g.fill();
+    for (let i = 0; i < 12; i++) { const a = i * Math.PI / 6; g.fillStyle = i % 2 ? A : B; g.fillRect(256 + Math.cos(a) * 225 - 7, 256 + Math.sin(a) * 225 - 7, 14, 14); } }
+  if (v === 3) { [[70, 70], [272, 70], [70, 272], [272, 272]].forEach(([x, y], i) => rr(x, y, 170, 170, 20, i === 1 ? B : A, i === 1 ? 0 : 8));
+    g.fillStyle = A; g.beginPath(); g.moveTo(322, 130); g.lineTo(392, 155); g.lineTo(322, 180); g.closePath(); g.fill(); }
+  g.shadowBlur = 0;
+  g.strokeStyle = B; g.lineWidth = 7; const L = 60, m = 16;
+  [[m, m, 1, 1], [W - m, m, -1, 1], [m, W - m, 1, -1], [W - m, W - m, -1, -1]].forEach(([x, y, sx, sy]) => { g.beginPath(); g.moveTo(x + sx * L, y); g.lineTo(x, y); g.lineTo(x, y + sy * L); g.stroke(); });
+  g.fillStyle = 'rgba(0,0,0,.55)'; for (let y = 0; y < W; y += 5) g.fillRect(0, y, W, 2);
+  const ty = 300 + v * 37; g.drawImage(c, 0, ty, W, 14, 18, ty, W, 14);      // one row torn sideways
   const t = new THREE.CanvasTexture(c); t.colorSpace = THREE.SRGBColorSpace; t.anisotropy = 8; TX[key] = t; return t;
+}
+// the scan plane: a square of light, bright at its edges and faint inside
+function holoScanTex() {
+  if (TX.holoScan) return TX.holoScan;
+  const W = 256, c = document.createElement('canvas'); c.width = c.height = W; const g = c.getContext('2d');
+  g.fillStyle = '#000000'; g.fillRect(0, 0, W, W);
+  const grd = g.createRadialGradient(128, 128, 20, 128, 128, 180); grd.addColorStop(0, 'rgba(0,207,255,.10)'); grd.addColorStop(1, 'rgba(0,207,255,.35)');
+  g.fillStyle = grd; g.fillRect(0, 0, W, W); g.strokeStyle = '#bff3ff'; g.lineWidth = 10; g.strokeRect(5, 5, W - 10, W - 10);
+  const t = new THREE.CanvasTexture(c); t.colorSpace = THREE.SRGBColorSpace; TX.holoScan = t; return t;
 }
 function promoBeamTex() {
   if (TX.promoBeam) return TX.promoBeam;
@@ -1278,20 +1293,13 @@ function promoBeamTex() {
   g.fillStyle = grd; g.fillRect(0, 0, 4, 128);
   const t = new THREE.CanvasTexture(c); TX.promoBeam = t; return t;
 }
-function promoBannerTex() {
-  if (TX.promoBanner) return TX.promoBanner;
-  const W = 512, H = 128, c = document.createElement('canvas'); c.width = W; c.height = H; const g = c.getContext('2d');
-  g.fillStyle = '#1a0612'; g.fillRect(0, 0, W, H);
-  for (let i = 0; i < 8; i++) { g.fillStyle = i % 2 ? PROMO.amber : PROMO.magenta; g.fillRect(i * 64, 0, 64, H); }
-  g.fillStyle = 'rgba(255,255,255,.9)'; [[96, 64, 30], [256, 64, 38], [416, 64, 30]].forEach(([x, y, r]) => { g.beginPath(); g.arc(x, y, r, 0, Math.PI * 2); g.fill(); });
-  const t = new THREE.CanvasTexture(c); t.colorSpace = THREE.SRGBColorSpace; TX.promoBanner = t; return t;
-}
 function adPromo(body, b) {
   const C = amat(PROMO.c);
   const metal = new THREE.MeshStandardMaterial({ color: PROMO.metal, roughness: 0.3, metalness: 0.8 });
   const dark = new THREE.MeshStandardMaterial({ color: PROMO.dark, roughness: 0.5, metalness: 0.6 });
   const st = new THREE.Group(); st.position.y = 0.2; body.add(st);
   const part = (geo, mat, x, y, z, parent = st) => { const m = ownGeo(new THREE.Mesh(geo, mat)); m.position.set(x, y, z); parent.add(m); return m; };
+  const light = (col, o) => new THREE.MeshBasicMaterial({ color: new THREE.Color(col), transparent: true, opacity: o, blending: THREE.AdditiveBlending, depthWrite: false, side: THREE.DoubleSide });
   // the platform: a hexagon, its edge lit, a pylon with a cyan lamp at every other corner
   part(new THREE.CylinderGeometry(2.45, 2.8, 0.42, 6), dark, 0, 0, 0);
   part(new THREE.CylinderGeometry(2.47, 2.47, 0.06, 6, 1, true), C.glow, 0, 0.2, 0);
@@ -1307,7 +1315,7 @@ function adPromo(body, b) {
   part(new THREE.CylinderGeometry(0.55, 0.55, 0.12, 12), C.rim, 0, 2.4, 0);
   part(new THREE.CylinderGeometry(0.3, 0.48, 2.0, 12), dark, 0, 3.45, 0);
   part(new THREE.CylinderGeometry(0.34, 0.34, 0.1, 12), C.rim, 0, 4.5, 0);
-  part(new THREE.CylinderGeometry(0.14, 0.28, 0.9, 10), metal, 0, 4.95, 0);
+  part(new THREE.CylinderGeometry(0.16, 0.28, 0.7, 10), metal, 0, 4.85, 0);
   const bandMat = new THREE.MeshBasicMaterial({ map: promoBandTex(), transparent: true, opacity: 0.95, blending: THREE.AdditiveBlending, depthWrite: false, side: THREE.DoubleSide });
   part(new THREE.CylinderGeometry(1.6, 1.6, 0.75, 96, 1, true), bandMat, 0, 1.6, 0);
   const rings = [[1.25, 3.05, 1], [0.92, 4.1, -1]].map(([R, y, dir]) => {
@@ -1316,49 +1324,64 @@ function adPromo(body, b) {
     for (let k = 0; k < 4; k++) { const a = k * Math.PI / 2; part(new THREE.BoxGeometry(0.2, 0.11, 0.2), metal, Math.cos(a) * R, 0, Math.sin(a) * R, g); }
     return { g, dir };
   });
-  // the cube: four screens, magenta under amber, the amber faded in and out; dark top and bottom; a thin cyan frame
-  const S = 3.0, CY = 5.4 + S / 2, cube = new THREE.Group(); cube.position.y = CY; st.add(cube);
-  const box = new THREE.BoxGeometry(S, S, S), cap = new THREE.MeshStandardMaterial({ color: 0x0a0e17, roughness: 0.6, metalness: 0.5 });
-  const screen = (v, hot, o) => new THREE.MeshBasicMaterial({ map: promoScreenTex(v, hot), color: new THREE.Color(0xffffff).multiplyScalar(0.92), transparent: o < 1, opacity: o, depthWrite: o >= 1 });
-  cube.add(ownGeo(new THREE.Mesh(box, [screen(0, 'm', 1), screen(2, 'm', 1), cap, cap, screen(1, 'm', 1), screen(3, 'm', 1)])));
-  const amberMats = [screen(1, 'a', 0), screen(3, 'a', 0), screen(0, 'a', 0), screen(2, 'a', 0)];
-  const hid = new THREE.MeshBasicMaterial({ visible: false });
-  const amber = new THREE.Mesh(box, [amberMats[0], amberMats[1], hid, hid, amberMats[2], amberMats[3]]); amber.scale.setScalar(1.004); cube.add(amber);
-  const h = S / 2 + 0.035, bar = (sx, sy, sz, x, y, z) => part(new THREE.BoxGeometry(sx, sy, sz), C.rim, x, y, z, cube);
-  for (const a of [-1, 1]) for (const c2 of [-1, 1]) {
-    bar(S + 0.07, 0.07, 0.07, 0, a * h, c2 * h); bar(0.07, 0.07, S + 0.07, a * h, c2 * h, 0); bar(0.07, S + 0.07, 0.07, a * h, 0, c2 * h);
-  }
-  part(new THREE.CylinderGeometry(0.22, 0.22, 0.25, 12), metal, 0, CY + S / 2 + 0.1, 0);
-  // two searchlights from the cube's top, crossing, sweeping slowly
-  // (a beam fades out along its length: bright at the cube, nothing at its open end)
-  const lightMat = new THREE.MeshBasicMaterial({ color: PROMO.beam, map: promoBeamTex(), transparent: true, opacity: 0.32, blending: THREE.AdditiveBlending, depthWrite: false, side: THREE.DoubleSide });
-  const coneGeo = new THREE.ConeGeometry(1.0, 6.0, 24, 1, true);
-  coneGeo.rotateX(Math.PI); coneGeo.translate(0, 3.0, 0);
-  const lights = [-1, 1].map((sgn) => { const m = ownGeo(new THREE.Mesh(coneGeo, lightMat)); m.position.set(sgn * 0.55, CY + S / 2 + 0.2, 0); st.add(m); return { m, sgn }; });
-  // the blimp: a small airship circling at the cube's height, nose first, a magenta and amber banner behind it
-  const orbit = new THREE.Group(); orbit.position.y = CY; st.add(orbit);
-  const blimp = new THREE.Group(); blimp.position.x = 3.8; orbit.add(blimp);
-  const hull = part(new THREE.SphereGeometry(0.42, 20, 12), new THREE.MeshStandardMaterial({ color: 0xc9d6e3, roughness: 0.4, metalness: 0.4 }), 0, 0, 0, blimp); hull.scale.set(1, 1, 2.4);
-  part(new THREE.TorusGeometry(0.43, 0.03, 6, 40), C.rim, 0, 0, -0.2, blimp);
-  part(new THREE.BoxGeometry(0.16, 0.12, 0.4), dark, 0, -0.45, -0.1, blimp);
-  part(new THREE.BoxGeometry(0.04, 0.5, 0.36), metal, 0, 0, 0.92, blimp); part(new THREE.BoxGeometry(0.5, 0.04, 0.36), metal, 0, 0, 0.92, blimp);
-  const banner = part(new THREE.PlaneGeometry(2.3, 0.55), new THREE.MeshBasicMaterial({ map: promoBannerTex(), side: THREE.DoubleSide, color: new THREE.Color(0xffffff).multiplyScalar(0.9) }), 0, -0.05, 2.65, blimp);
-  banner.rotation.y = Math.PI / 2;
-  const tether = new THREE.Mesh(G.cyl, metal); tether.scale.set(0.012, 0.42, 0.012); tether.rotation.x = Math.PI / 2; tether.position.set(0, -0.05, 1.33); blimp.add(tether);
+  // the projector: a dish on the spire's top, its lens, and a cone of light up into the hologram
+  const PY = 5.25;
+  const dish = new THREE.LatheGeometry([[0.16, 0], [1.0, 0], [0.95, 0.12], [0.5, 0.36], [0.16, 0.42]].map(([x, y]) => new THREE.Vector2(x, y)), 24);
+  part(dish, new THREE.MeshStandardMaterial({ color: PROMO.metal, roughness: 0.4, metalness: 0.75, flatShading: true, side: THREE.DoubleSide }), 0, PY, 0);
+  part(new THREE.CylinderGeometry(0.3, 0.24, 0.1, 20), C.glow, 0, PY + 0.45, 0);
+  const S = 2.9, CY = PY + 0.75 + S / 2;                       // the hologram's side and its middle
+  const cone = new THREE.Mesh(G.beam, C.beam); cone.rotation.x = Math.PI; cone.scale.set(S * 1.6, CY - PY - 0.5, S * 1.6); cone.position.y = (PY + 0.5 + CY) / 2; st.add(cone);
+  // the hologram: four screens as a cube of light, magenta under amber, the amber faded in and out
+  const holo = new THREE.Group(); holo.position.y = CY; st.add(holo);
+  const face = new THREE.PlaneGeometry(S, S); ownGeo(new THREE.Mesh(face));
+  const screens = { m: [], a: [] };
+  [['m', [0, 2, 1, 3]], ['a', [1, 3, 0, 2]]].forEach(([hot, vs]) => vs.forEach((v, i) => {
+    // (front faces only: the far screens seen through the near ones read as a mess, not as light)
+    const mat = new THREE.MeshBasicMaterial({ map: holoScreenTex(v, hot), transparent: true, opacity: 1, blending: THREE.AdditiveBlending, depthWrite: false, side: THREE.FrontSide });
+    const m = new THREE.Mesh(face, mat), a = i * Math.PI / 2; m.position.set(Math.sin(a) * S / 2, 0, Math.cos(a) * S / 2); m.rotation.y = a; holo.add(m); screens[hot].push(mat);
+  }));
+  // its edges, lines of light; a scan plane sweeping up and down through it
+  const edgeMat = light(new THREE.Color(PROMO.c).multiplyScalar(1.6), 0.9), e = S / 2;
+  const edge = (sx, sy, sz, x, y, z) => part(new THREE.BoxGeometry(sx, sy, sz), edgeMat, x, y, z, holo);
+  for (const a of [-1, 1]) for (const c2 of [-1, 1]) { edge(S, 0.035, 0.035, 0, a * e, c2 * e); edge(0.035, 0.035, S, a * e, c2 * e, 0); edge(0.035, S, 0.035, a * e, 0, c2 * e); }
+  const scanMat = new THREE.MeshBasicMaterial({ map: holoScanTex(), transparent: true, opacity: 0.7, blending: THREE.AdditiveBlending, depthWrite: false, side: THREE.DoubleSide });
+  const scan = part(new THREE.PlaneGeometry(S * 1.04, S * 1.04), scanMat, 0, 0, 0, holo); scan.rotation.x = -Math.PI / 2;
+  // sparks rising from the lens through the hologram
+  const N = 140, pos = new Float32Array(N * 3), seeds = [];
+  for (let i = 0; i < N; i++) { const r = Math.random() * S * 0.48, a = Math.random() * Math.PI * 2; seeds.push([Math.cos(a) * r, Math.sin(a) * r, Math.random(), 0.25 + Math.random() * 0.5]); }
+  const sparkGeo = new THREE.BufferGeometry(); sparkGeo.setAttribute('position', new THREE.BufferAttribute(pos, 3));
+  const sparks = ownGeo(new THREE.Points(sparkGeo, new THREE.PointsMaterial({ color: new THREE.Color('#bff3ff'), size: 0.09, transparent: true, opacity: 0.85, blending: THREE.AdditiveBlending, depthWrite: false })));
+  st.add(sparks);
+  // three small holographic ad cards circling the billboard
+  const cards = new THREE.Group(); cards.position.y = CY; st.add(cards);
+  const cardGeo = new THREE.PlaneGeometry(1.15, 1.15); ownGeo(new THREE.Mesh(cardGeo));
+  const cardMats = [[1, 'a', 0.7], [3, 'm', -0.6], [0, 'a', 0.15]].map(([v, hot, y], i) => {
+    const mat = new THREE.MeshBasicMaterial({ map: holoScreenTex(v, hot), transparent: true, opacity: 0.8, blending: THREE.AdditiveBlending, depthWrite: false, side: THREE.DoubleSide });
+    const m = new THREE.Mesh(cardGeo, mat), a = i * Math.PI * 2 / 3; m.position.set(Math.cos(a) * 3.0, y, Math.sin(a) * 3.0); m.rotation.y = Math.PI / 2 - a; cards.add(m); return mat;
+  });
+  // two searchlights from the hologram's top, crossing, sweeping slowly, fading along their length
+  const lightMat = new THREE.MeshBasicMaterial({ color: PROMO.beam, map: promoBeamTex(), transparent: true, opacity: 0.3, blending: THREE.AdditiveBlending, depthWrite: false, side: THREE.DoubleSide });
+  const coneGeo = new THREE.ConeGeometry(1.0, 6.0, 24, 1, true); coneGeo.rotateX(Math.PI); coneGeo.translate(0, 3.0, 0);
+  const lights = [-1, 1].map((sgn) => { const m = ownGeo(new THREE.Mesh(coneGeo, lightMat)); m.position.set(sgn * 0.55, CY + S / 2 + 0.1, 0); st.add(m); return { m, sgn }; });
   const glow = glowSprite(C.c, 0.2, 6); glow.position.y = 3; st.add(glow);
+  const holoGlow = glowSprite(new THREE.Color(PROMO.magenta), 0.18, S * 3); holoGlow.position.y = CY; st.add(holoGlow);
   b.tick = (t) => {
     rings.forEach((r, i) => { r.g.rotation.y = t * (0.3 + i * 0.1) * r.dir; });
     bandMat.map.offset.x = -t * 0.025;
-    cube.rotation.y = t * Math.PI * 2 / 13;
-    // magenta for ~3.5 s, amber for ~3.5 s, a short fade between
+    holo.rotation.y = t * Math.PI * 2 / 13; holo.position.y = CY + Math.sin(t * 1.1) * 0.06;
+    // magenta for ~3.5 s, amber for ~3.5 s; a hologram's flicker over both, and a hard drop for a frame now and then
     const f = Math.min(1, Math.max(0, 0.5 + 1.8 * Math.sin(t * Math.PI * 2 / 7)));
-    amberMats.forEach((m) => { m.opacity = f; });
+    const flick = (0.82 + 0.12 * Math.sin(t * 23) * Math.sin(t * 7.3)) * (Math.sin(t * 1.7) * Math.sin(t * 5.3) > 0.93 ? 0.35 : 1);
+    screens.m.forEach((m) => { m.opacity = (1 - f) * flick; }); screens.a.forEach((m) => { m.opacity = f * flick; });
+    holoGlow.material.color.set(f > 0.5 ? PROMO.amber : PROMO.magenta);
+    const sy = ((t * 0.35) % 1) * 2 - 1; scan.position.y = sy * S / 2; scanMat.opacity = 0.7 * (1 - Math.abs(sy) * 0.6) * flick;
+    for (let i = 0; i < N; i++) { const s = seeds[i], p = (s[2] + t * s[3] * 0.25) % 1; pos[i * 3] = s[0] * (0.4 + p * 0.6); pos[i * 3 + 1] = PY + 0.5 + p * (S + 0.9); pos[i * 3 + 2] = s[1] * (0.4 + p * 0.6); }
+    sparkGeo.attributes.position.needsUpdate = true;
+    cards.rotation.y = -t * Math.PI * 2 / 20; cardMats.forEach((m, i) => { m.opacity = 0.75 * (0.85 + 0.15 * Math.sin(t * 17 + i * 2)); });
     lights.forEach((l, i) => { l.m.rotation.z = l.sgn * (0.42 + 0.17 * Math.sin(t * 0.55 + i * 1.7)); l.m.rotation.x = 0.12 * Math.sin(t * 0.4 + i); });
-    orbit.rotation.y = t * Math.PI * 2 / 20;
-    blimp.position.y = Math.sin(t * 0.9) * 0.08;
     lamps.forEach((l, i) => { l.visible = Math.sin(t * 2.2 + i * 2.1) > -0.35; });
   };
-  b.top = 0.2 + CY + S / 2 + 0.35; b.bot = 0; b.foot = 3.0;
+  b.top = 0.2 + CY + S / 2 + 0.3; b.bot = 0; b.foot = 3.0;
 }
 // how much larger than its own units an ad is drawn on the map: as a station is (UVSS). Measured on the page
 // 2026-10-21 by projecting their vertices: each under three quarters of the sun's ball on the screen.

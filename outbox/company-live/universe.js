@@ -1113,7 +1113,7 @@
       top = ty;
     } else if (it.ad.key === 'promo') {
       // the Promo Market as u3d.js adPromo draws it: a hex platform, the cyan spire with its ticker band and two rings,
-      // the cube of screens on top (a magenta face and an amber one), two searchlights crossing over it, the blimp
+      // the hologram on top (a cube of light: a magenta screen and an amber one, its edges lit), two searchlights over it
       var el = function (cyy, k, w) { return '<ellipse cx="' + f1(x) + '" cy="' + f1(cyy) + '" rx="' + f1(s * 0.5 * k) + '" ry="' + f1(s * 0.5 * k * RY / RX) + '" fill="none" stroke="#00cfff" stroke-width="' + f1(w) + '"/>'; };
       var hex = [0, 1, 2, 3, 4, 5].map(function (i) { var a = i * Math.PI / 3; return [x + Math.cos(a) * s * 0.42, y - s * 0.06 + Math.sin(a) * s * 0.42 * RY / RX]; });
       var cs = s * 0.2, cy0 = y - s * 0.86, cb = cy0 + cs * 0.55;   // the cube's half width, its top edge's middle, its bottom corner
@@ -1125,10 +1125,8 @@
         '<polygon points="' + pts([[x - s * 0.07, y - s * 0.1], [x + s * 0.07, y - s * 0.1], [x + s * 0.03, cb + cs], [x - s * 0.03, cb + cs]]) + '" fill="#8fa3b8" stroke="#0b1a22" stroke-width="2"/>' +
         '<rect x="' + f1(x - s * 0.26) + '" y="' + f1(y - s * 0.32) + '" width="' + f1(s * 0.52) + '" height="' + f1(s * 0.08) + '" rx="' + f1(s * 0.02) + '" fill="#00cfff" opacity=".8"/>' +
         el(y - s * 0.46, 0.5, 3) + el(y - s * 0.6, 0.36, 2.5) +
-        '<polygon points="' + pts(left) + '" fill="#ff2d95" stroke="#00cfff" stroke-width="2"/><polygon points="' + pts(right) + '" fill="#ffb020" stroke="#00cfff" stroke-width="2"/>' +
-        '<polygon points="' + pts(top3) + '" fill="#0a0e17" stroke="#00cfff" stroke-width="2"/>' +
-        '<ellipse cx="' + f1(x + s * 0.55) + '" cy="' + f1(cy0 + cs) + '" rx="' + f1(s * 0.12) + '" ry="' + f1(s * 0.045) + '" fill="#c9d6e3"/>' +
-        '<rect x="' + f1(x + s * 0.68) + '" y="' + f1(cy0 + cs - s * 0.03) + '" width="' + f1(s * 0.26) + '" height="' + f1(s * 0.06) + '" fill="#ff2d95"/>';
+        '<polygon points="' + pts(left) + '" fill="#ff2d95" fill-opacity=".38" stroke="#bff3ff" stroke-width="2"/><polygon points="' + pts(right) + '" fill="#ffb020" fill-opacity=".3" stroke="#bff3ff" stroke-width="2"/>' +
+        '<polygon points="' + pts(top3) + '" fill="#00cfff" fill-opacity=".12" stroke="#bff3ff" stroke-width="2"/>';
       top = cy0 - s * 0.7;
     } else {
       var c0 = y - s * 0.55, rx = s * 0.5, ry = rx * RY / RX, ring = function (cyy, k) {
