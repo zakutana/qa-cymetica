@@ -121,7 +121,7 @@
       var acc = CO.accentHex(it.c.accent);
       el.style.setProperty('--acc', acc);
       el.className = 'uvp k-' + it.ad.key;
-      el.innerHTML = '<div class="uvp-h"><span class="uvp-ico">' + s.icon + '</span><div class="uvp-t"><b>' + esc(it.c.name) + '</b><span>' + esc(s.tag) + ' · ' + esc(CO.uvSlotName(it)) + '</span></div>' +
+      el.innerHTML = '<div class="uvp-h"><span class="uvp-ico">' + s.icon + '</span><div class="uvp-t"><b>' + esc(it.c.name) + '</b><span>by <em>Cymetica</em> · ' + esc(s.tag) + ' · ' + esc(CO.uvSlotName(it)) + '</span></div>' +
         '<button type="button" class="uvp-x" data-a="close" title="Close (Esc)">×</button></div>' +
         '<div class="uvp-b">' + s.body() + '</div>' +
         '<div class="uvp-f"><a class="uvp-go" href="' + esc(it.ad.url) + '" target="_blank" rel="noopener">' + esc(s.go) + ' <span aria-hidden="true">↗</span></a></div>';

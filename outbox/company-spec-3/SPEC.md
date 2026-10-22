@@ -75,6 +75,20 @@ not a product and has no card. **The totals are wrong for the same reason**: the
 599 visitors, 822 uses and 8 likes (read off the screenshot): a page's visitors must not be counted once for every request that touched
 it. The mockup's Products tab draws it as meant: one card per product.
 
+**9. Every product says whose it is.** Wherever a product is shown (a Products card, a product's panel on the map, a list of what a
+company owns) it names the company that owns it: *by Moonshot Labs*, a link to the company when it is public, plain text when it is private.
+The mockup draws it as one small line under the product's name on a Products card and in the products' panel (*by Cymetica* on our two).
+
+**10. A click on a company flies to it and opens its panel**, as a click on a product does (item 2; round 1 flew to a public company
+and went straight into its visit). The camera flies to the station, the station stays in the middle of what is left of the stage, and a
+panel slides in on the right, 420 px, with the same × and Esc. It shows the basics, numbers first: the company's name, its owner (@name), status and
+days on Cymetica, its mission, how many departments and how many are working now, what it has earned in ET10 (a public company), and
+**the products it owns** (name, page, and its visitors in 30 days), each a link to the product's page. A **public** company has a
+*Look inside* button to its visit; a **private** one shows what its card showed in round 1 (name, station, mission) and its products, and
+no button. (The products of a private company are public pages already, and item 9 names their owner, so listing them leaks nothing the
+page does not; if you see a reason to hide them, say so.) The panel is the same one as the products', so one component draws all
+three. The company's own station opens its office as before.
+
 ## What stays as it is
 
 Everything not named above stays as the second brief and your build have it.

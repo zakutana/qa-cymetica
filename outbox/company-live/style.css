@@ -243,6 +243,8 @@ b.g, span.g { color: var(--green); text-shadow: 0 0 10px rgba(0, 255, 136, .45);
 .pf:hover { border-color: rgba(0, 207, 255, .45); }
 .pf1 { display: flex; align-items: baseline; justify-content: space-between; gap: 10px; }
 .pf1 b { font: 400 15px 'Archivo Black', sans-serif; } .pf1 a { font-size: 11px; color: var(--cyan); }
+/* whose product it is: its company, on every product card */
+.pfown { margin: -4px 0 8px; font-size: 10.5px; color: var(--dim2); } .pfown b { color: var(--green); font-weight: 600; }
 .pfn { display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; margin: 12px 0 8px; }
 .pfn b { display: block; font-size: 20px; font-weight: 800; } .pfn span { font-size: 10px; color: var(--dim2); letter-spacing: .08em; text-transform: uppercase; }
 .pfbar { display: block; height: 4px; border-radius: 2px; background: var(--line); overflow: hidden; }
