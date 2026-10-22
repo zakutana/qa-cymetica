@@ -119,7 +119,7 @@ a.uvr { color: var(--text); text-decoration: none; } a.uvr:hover { background: v
    vetsi margin, takove sklo jakoby velke", magenta for the yellow (then Cymetica's cyan to green), "zadne obdelnicky a ramecky, proste na tom skle jen tak husto".
    So: one big pane of frosted glass, turned away on its left edge (rotateY 18.4deg, 15% past the first 16), wide margins all
    round, and on it only type and light: no row boxes, no tiles round the icons, no corner frames; a cyan rim, a lit top
-   edge, its thickness along the bottom, a slow sheen. */
+   edge, a slow sheen. */
 .uvb { position: absolute; z-index: 5; top: 58px; left: 14px; width: 450px; font-family: 'JetBrains Mono', monospace; color: var(--text);
   perspective: 1200px; perspective-origin: 0% 35%; }
 /* a department icon (.dic, style.css) places itself in column 1 over three rows: here it is one cell in its row */
@@ -135,9 +135,7 @@ a.uvr { color: var(--text); text-decoration: none; } a.uvr:hover { background: v
   box-shadow: inset 0 1px 0 rgba(255, 255, 255, .5), inset 0 0 0 1px rgba(0, 207, 255, .2), inset 0 -22px 36px -22px rgba(0, 207, 255, .22),
     0 0 0 1px rgba(0, 207, 255, .32), 0 0 70px rgba(0, 207, 255, .18), -8px 30px 54px rgba(0, 0, 0, .62); }
 .uvb:hover .uvb-in { transform: rotateY(10deg) rotateX(2deg); }
-/* the pane's thickness: a cyan-lit edge under it */
-.uvb-in::after { content: ''; position: absolute; left: 14px; right: 8px; bottom: -8px; height: 8px; border-radius: 0 0 18px 18px; pointer-events: none;
-  background: linear-gradient(180deg, rgba(0, 207, 255, .55), rgba(0, 78, 104, .35) 60%, rgba(0, 0, 0, .25)); transform: skewX(-8deg); transform-origin: left top; }
+/* (the pane's thickness, a cyan-lit edge under it, was taken off: "ten spodni panel odstran hruby", 2026-10-23) */
 /* a slow sheen across the glass */
 .uvb-sh { position: absolute; inset: 0; border-radius: inherit; overflow: hidden; pointer-events: none; }
 .uvb-sh::before { content: ''; position: absolute; top: -40%; bottom: -40%; left: -60%; width: 38%; transform: skewX(-18deg); animation: uvbsheen 7s ease-in-out infinite;

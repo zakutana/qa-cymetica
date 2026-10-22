@@ -82,7 +82,7 @@ companies are on the board too, with name, station and revenue: the share comes 
 
 **The board** (`uvboard.js`, styles in `uvpanel.css`): one big pane of frosted glass over the Universe's top-left, under the LIVE line, that
 does not move when the map turns or zooms. It is turned away on its left edge like a cockpit panel (rotateY 18.4°, rotateX 3.4°), with wide
-margins all round, a cyan rim, a lit top edge, its thickness along the bottom and a slow sheen; on the glass there is only
+margins all round, a cyan rim, a lit top edge and a slow sheen (no thick edge under it); on the glass there is only
 type and light: **no row boxes, no tiles round the icons, no frames**. *REVENUE SHARE · TOP 3*, *5% · 3% · 1% of every fee on Cymetica*, then
 three rows: a big place numeral in Cymetica's own colours (green, cyan, blue: the share is paid by Cymetica), the company's station glyph in its colour and its name (YOU on ours), its
 revenue, and the share with about what it pays a month
