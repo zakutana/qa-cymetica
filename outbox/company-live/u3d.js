@@ -1330,7 +1330,7 @@ function adPromo(body, b) {
   const dish = new THREE.LatheGeometry([[0.16, 0], [1.0, 0], [0.95, 0.12], [0.5, 0.36], [0.16, 0.42]].map(([x, y]) => new THREE.Vector2(x, y)), 24);
   part(dish, new THREE.MeshStandardMaterial({ color: PROMO.metal, roughness: 0.4, metalness: 0.75, flatShading: true, side: THREE.DoubleSide }), 0, PY, 0);
   part(new THREE.CylinderGeometry(0.3, 0.24, 0.1, 20), C.glow, 0, PY + 0.45, 0);
-  const S = 2.9, CY = PY + 0.75 + S / 2;                       // the hologram's side and its middle
+  const S = 2.6, CY = PY + 0.75 + S / 2;                       // the hologram's side (2.9 first, "jeste malicko zmensil") and its middle
   const cone = new THREE.Mesh(G.beam, C.beam); cone.rotation.x = Math.PI; cone.scale.set(S * 1.6, CY - PY - 0.5, S * 1.6); cone.position.y = (PY + 0.5 + CY) / 2; st.add(cone);
   // the hologram: four screens as a cube of light, magenta under amber, the amber faded in and out
   const holo = new THREE.Group(); holo.position.y = CY; st.add(holo);
