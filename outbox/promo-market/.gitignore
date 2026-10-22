@@ -1,0 +1,5 @@
+# The snapshot the mockup is drawn from: raw API answers (queues hold strangers' posts and journalists' addresses), not
+# for git. make_data.py keeps only what the page shows. render.py draws the pictures again in a minute.
+snap/
+*.png
+!spec/*.png

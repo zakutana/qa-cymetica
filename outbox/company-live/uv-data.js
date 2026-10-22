@@ -252,7 +252,11 @@
     // slot: the slot each stands on (CO.uvPlan puts it there): Orbit 2 · slot 4 and Orbit 4 · slot 2, the two the operator
     // bought, 2026-10-22. A click flies to it and opens its panel (uvpanel.js); url is that panel's Visit / Go play.
     { key: 'gem', name: 'Gem Screener', url: 'https://cymetica.com/gem-screener/app', accent: 'green', slot: 'slot-2-4' },
-    { key: 'casino', name: 'Agent Casino', url: 'https://cymetica.com/agent-tournaments', accent: 'pink', slot: 'slot-4-2' }
+    { key: 'casino', name: 'Agent Casino', url: 'https://cymetica.com/agent-tournaments', accent: 'pink', slot: 'slot-4-2' },
+    // Cymetica's own building, not one of ours: the Promo Market, where a company hires creators, agents and firms to
+    // promote its products (2026-10-22, "pridame do universa nejakou budovu kde si budem moct najimat sluzby ostatnich").
+    // Its panel reads the market's own data (../promo-market/data.js), so the two pages say the same.
+    { key: 'promo', name: 'Promo Market', url: 'https://cymetica.com/creator-dashboard', accent: 'cyan', slot: 'slot-5-3', house: true }
   ];
   // The land: a slot is bought with ET10, then built on through Build it Better. The price is a PLACEHOLDER (the
   // operator named the currency, not the amount); one number to change. What this browser bought, by slot id.

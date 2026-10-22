@@ -110,7 +110,7 @@
     var pub = 0, work = 0, free = 0, owned = 0, ads = 0, cos = 0;
     items.forEach(function (it) {
       if (it.kind === 'slot') { if (it.owned) owned++; else free++; return; }
-      if (it.kind === 'ad') { ads++; return; }
+      if (it.kind === 'ad') { if (!it.ad.house) ads++; return; }   // Cymetica's own Promo Market is not a product
       cos++;
       if (it.c.public) pub++;
       work += (it.mine ? (it.c.working || []) : (live[it.c.id] || [])).length;
@@ -1111,6 +1111,17 @@
       out = shadow + poly([[x - gw, gy], [x - m, gy], [x, cy]], '#2fc3a0') + poly([[x - m, gy], [x + m, gy], [x, cy]], '#16967f') + poly([[x + m, gy], [x + gw, gy], [x, cy]], '#2fc3a0') +
         poly([[x - gw, gy], [x - tw, ty], [x - m, gy]], '#7fdccd') + poly([[x - tw, ty], [x + tw, ty], [x + m, gy], [x - m, gy]], '#dafcf6') + poly([[x + tw, ty], [x + gw, gy], [x + m, gy]], '#aef2e8');
       top = ty;
+    } else if (it.ad.key === 'promo') {
+      // the Promo Market as u3d.js adPromo draws it: a hex platform, the spire, three signal rings, the emitter and its waves
+      var ex = x, ey = y - s * 1.02, el = function (cyy, k, col, w, dash) { return '<ellipse cx="' + f1(x) + '" cy="' + f1(cyy) + '" rx="' + f1(s * 0.5 * k) + '" ry="' + f1(s * 0.5 * k * RY / RX) + '" fill="none" stroke="' + col + '" stroke-width="' + f1(w) + '"' + (dash ? ' stroke-dasharray="' + dash + '" opacity=".55"' : '') + '/>'; };
+      var hex = [0, 1, 2, 3, 4, 5].map(function (i) { var a = i * Math.PI / 3; return [x + Math.cos(a) * s * 0.42, y - s * 0.06 + Math.sin(a) * s * 0.42 * RY / RX]; });
+      out = shadow + poly(hex, '#0d1520') + '<polygon points="' + pts(hex) + '" fill="none" stroke="#00cfff" stroke-width="2"/>' +
+        '<polygon points="' + pts([[x - s * 0.07, y - s * 0.1], [x + s * 0.07, y - s * 0.1], [x + s * 0.025, ey + s * 0.06], [x - s * 0.025, ey + s * 0.06]]) + '" fill="#8fa3b8" stroke="#0b1a22" stroke-width="2"/>' +
+        el(y - s * 0.32, 0.8, '#00cfff', 4) + el(y - s * 0.56, 0.62, '#00cfff', 3.5) + el(y - s * 0.78, 0.44, '#00cfff', 3) +
+        '<rect x="' + f1(x - s * 0.22) + '" y="' + f1(y - s * 0.47) + '" width="' + f1(s * 0.44) + '" height="' + f1(s * 0.07) + '" rx="' + f1(s * 0.02) + '" fill="#00ff88" opacity=".85"/>' +
+        el(ey, 0.55, '#00cfff', 2, '6 7') + el(ey, 0.9, '#00cfff', 1.5, '4 9') +
+        '<circle cx="' + f1(ex) + '" cy="' + f1(ey) + '" r="' + f1(s * 0.13) + '" fill="#00cfff" opacity=".25"/><circle cx="' + f1(ex) + '" cy="' + f1(ey) + '" r="' + f1(s * 0.06) + '" fill="#e6edf7"/>';
+      top = ey - s * 0.2;
     } else {
       var c0 = y - s * 0.55, rx = s * 0.5, ry = rx * RY / RX, ring = function (cyy, k) {
         return '<ellipse cx="' + f1(x) + '" cy="' + f1(cyy) + '" rx="' + f1(rx * k) + '" ry="' + f1(ry * k) + '" fill="none" stroke="#ff3dc8" stroke-width="' + f1(6 * k) + '"/>' +

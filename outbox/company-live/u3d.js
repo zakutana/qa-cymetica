@@ -1229,14 +1229,85 @@ function adCasino(body, b) {
   };
   b.top = 3.3 + HY + HR + 0.1; b.bot = 0; b.foot = 3.4;
 }
+// Promo Market (2026-10-22): Cymetica's own building, where a company hires creators, agents and firms to promote its
+// products (outbox/promo-market). A relay for AI agents, not a billboard: a spire over a hex platform, three signal
+// rings turning round it, a holographic band carrying the market's numbers, and an emitter at the top that sends rings
+// of light out over the galaxy. In the site's cyan with the money in its green; as big as the other two, under the sun.
+const PROMO = { c: '#00cfff', money: '#00ff88', metal: 0x8fa3b8, dark: 0x0d1520 };
+function promoBandTex() {
+  if (TX.promoBand) return TX.promoBand;
+  const W = 2048, H = 96, c = document.createElement('canvas'); c.width = W; c.height = H; const g = c.getContext('2d');
+  const m = window.PM && window.PM.market, briefs = m ? m.briefs : [];
+  const offer = briefs.reduce((s, x) => s + (x.cur === 'USDC' ? x.left : 0), 0), k = (n) => n >= 1e4 ? Math.round(n / 1e3) + 'K' : n.toLocaleString('en-US');
+  const parts = [['PROMO MARKET', PROMO.c], [briefs.length + ' BRIEFS OPEN', '#e6edf7'], [k(offer) + ' USDC ON OFFER', PROMO.money], ['PAID PER NEW USER', '#e6edf7']];
+  g.clearRect(0, 0, W, H); g.font = '800 46px "JetBrains Mono", monospace'; g.textBaseline = 'middle';
+  let x = 30;
+  for (let rep = 0; rep < 2; rep++) parts.forEach(([t, col]) => { g.fillStyle = col; g.fillText(t, x, H / 2 + 2); x += g.measureText(t).width + 34; g.fillStyle = PROMO.c; g.fillRect(x - 22, H / 2 - 4, 8, 8); x += 18; });
+  g.fillStyle = 'rgba(0,207,255,.55)'; g.fillRect(0, 4, W, 3); g.fillRect(0, H - 7, W, 3);
+  const t = new THREE.CanvasTexture(c); t.colorSpace = THREE.SRGBColorSpace; t.wrapS = THREE.RepeatWrapping; t.anisotropy = 8; TX.promoBand = t; return t;
+}
+function adPromo(body, b) {
+  const C = amat(PROMO.c), M = amat(PROMO.money);
+  const metal = new THREE.MeshStandardMaterial({ color: PROMO.metal, roughness: 0.3, metalness: 0.8 });
+  const dark = new THREE.MeshStandardMaterial({ color: PROMO.dark, roughness: 0.5, metalness: 0.6 });
+  const st = new THREE.Group(); st.position.y = 0.2; body.add(st);
+  const part = (geo, mat, x, y, z, parent = st) => { const m = ownGeo(new THREE.Mesh(geo, mat)); m.position.set(x, y, z); parent.add(m); return m; };
+  // the platform: a hexagon, its edge lit, a pylon with a lamp at every other corner
+  part(new THREE.CylinderGeometry(2.45, 2.8, 0.42, 6), dark, 0, 0, 0);
+  part(new THREE.CylinderGeometry(2.47, 2.47, 0.06, 6, 1, true), C.glow, 0, 0.2, 0);
+  part(new THREE.CylinderGeometry(1.3, 1.6, 0.3, 6), metal, 0, 0.36, 0);
+  const lamps = [];
+  for (let i = 0; i < 3; i++) {
+    const a = i * Math.PI * 2 / 3 + Math.PI / 6, px = Math.cos(a) * 2.15, pz = Math.sin(a) * 2.15;
+    part(new THREE.CylinderGeometry(0.07, 0.1, 1.1, 8), metal, px, 0.75, pz);
+    const l = part(new THREE.SphereGeometry(0.12, 12, 8), M.glow, px, 1.35, pz); lamps.push(l);
+  }
+  // the spire, in three tapering stages with lit collars between them
+  part(new THREE.CylinderGeometry(0.5, 0.78, 2.4, 12), metal, 0, 1.7, 0);
+  part(new THREE.CylinderGeometry(0.55, 0.55, 0.12, 12), C.rim, 0, 2.95, 0);
+  part(new THREE.CylinderGeometry(0.3, 0.48, 2.2, 12), dark, 0, 4.1, 0);
+  part(new THREE.CylinderGeometry(0.34, 0.34, 0.1, 12), C.rim, 0, 5.25, 0);
+  part(new THREE.CylinderGeometry(0.1, 0.28, 1.5, 10), metal, 0, 6.0, 0);
+  // three signal rings, each with its nodes, turning opposite ways
+  const rings = [[1.95, 1.9, 1], [1.5, 3.55, -1], [1.05, 4.95, 1]].map(([R, y, dir]) => {
+    const g = new THREE.Group(); g.position.y = y; g.rotation.x = 0.08 * dir; st.add(g);
+    part(new THREE.TorusGeometry(R, 0.06, 8, 96), C.rim, 0, 0, 0, g).rotation.x = Math.PI / 2;
+    for (let k = 0; k < 4; k++) { const a = k * Math.PI / 2; part(new THREE.BoxGeometry(0.22, 0.12, 0.22), metal, Math.cos(a) * R, 0, Math.sin(a) * R, g); }
+    for (let k = 0; k < 2; k++) { const s = new THREE.Mesh(G.cyl, metal); s.scale.set(0.03, R * 2, 0.03); s.rotation.z = Math.PI / 2; s.rotation.y = k * Math.PI / 2; g.add(s); }
+    return { g, dir };
+  });
+  // the band: the market's numbers going round, between the first two rings
+  const bandMat = new THREE.MeshBasicMaterial({ map: promoBandTex(), transparent: true, opacity: 0.95, blending: THREE.AdditiveBlending, depthWrite: false, side: THREE.DoubleSide });
+  const band = part(new THREE.CylinderGeometry(1.32, 1.32, 0.5, 96, 1, true), bandMat, 0, 2.7, 0);
+  bandMat.map.repeat.set(1, 1);
+  // the emitter, its flare, a beam up, and the rings of light it sends out
+  const EY = 6.95;
+  part(new THREE.SphereGeometry(0.34, 24, 16), C.glow, 0, EY, 0);
+  const flare = new THREE.Sprite(new THREE.SpriteMaterial({ map: flareTex(), color: new THREE.Color(PROMO.c).multiplyScalar(1.5), transparent: true, blending: THREE.AdditiveBlending, depthWrite: false }));
+  flare.scale.setScalar(2.2); flare.position.y = EY; st.add(flare);
+  const beam = new THREE.Mesh(G.beam, C.beam); beam.scale.set(1.2, 2.6, 1.2); beam.position.y = EY + 1.3; st.add(beam);
+  const waves = [0, 1, 2].map(() => {
+    const mat = new THREE.MeshBasicMaterial({ color: new THREE.Color(PROMO.c).multiplyScalar(1.4), transparent: true, opacity: 0, blending: THREE.AdditiveBlending, depthWrite: false });
+    const w = new THREE.Mesh(G.holo, mat); w.rotation.x = Math.PI / 2; w.position.y = EY; st.add(w); return { w, mat };
+  });
+  const glow = glowSprite(C.c, 0.22, 6.5); glow.position.y = 3.2; st.add(glow);
+  b.tick = (t) => {
+    rings.forEach((r, i) => { r.g.rotation.y = t * (0.22 + i * 0.08) * r.dir; });
+    bandMat.map.offset.x = -t * 0.025;
+    flare.material.opacity = 0.75 + 0.25 * Math.sin(t * 3.1);
+    lamps.forEach((l, i) => { l.visible = Math.sin(t * 2.2 + i * 2.1) > -0.35; });
+    waves.forEach((o, i) => { const p = ((t * 0.42) + i / 3) % 1; o.w.scale.setScalar(0.5 + p * 5.2); o.mat.opacity = 0.75 * (1 - p) * Math.min(1, p * 6); });
+  };
+  b.top = 0.2 + EY + 0.6; b.bot = 0; b.foot = 3.0;
+}
 // how much larger than its own units an ad is drawn on the map: as a station is (UVSS). Measured on the page
 // 2026-10-21 by projecting their vertices: each under three quarters of the sun's ball on the screen.
 const UVAD = 3.8;
 function makeAd(ad) {
   geo();
   const A = amat(CO.accentHex(ad.accent)), root = new THREE.Group(), body = new THREE.Group(); root.add(body);
-  const b = { phase: ad.key === 'gem' ? 0.4 : 2.1, foot: 3, top: 4, bot: 0, paint() {}, tick() {} };
-  (ad.key === 'gem' ? adGem : adCasino)(body, b, A);
+  const b = { phase: { gem: 0.4, casino: 2.1, promo: 3.7 }[ad.key] || 0, foot: 3, top: 4, bot: 0, paint() {}, tick() {} };
+  ({ gem: adGem, casino: adCasino, promo: adPromo }[ad.key] || adCasino)(body, b, A);
   // the holo-ring it floats over and its pool of light, as a public station's
   const rimMat = A.rim.clone(); rimMat.emissiveIntensity = RING.pub;
   const ringR = b.foot * 1.05, ringY = b.bot - 0.4;

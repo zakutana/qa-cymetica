@@ -85,4 +85,11 @@
 .uvchip b { color: var(--text); font-weight: 700; }
 .uvchip:hover { border-color: var(--cyan); color: var(--cyan); } .uvchip:hover b { color: var(--cyan); }
 
+/* Promo Market: Cymetica's building; its two buttons side by side, Post a brief green, the market cyan */
+.uvp.k-promo .uvp-f { display: flex; gap: 8px; } .uvp.k-promo .uvp-go { flex: 1; }
+.uvp.k-promo .uvp-go.alt { color: var(--bg); background: var(--cyan); box-shadow: 0 0 18px rgba(0, 207, 255, .4); }
+.uvp.k-promo .uvp-go.alt:hover { background: #4fdcff; }
+a.uvr { color: var(--text); text-decoration: none; } a.uvr:hover { background: var(--navy2); }
+.uvr i.uvu { font-style: normal; font-weight: 500; color: var(--dim2); }
+
 @media (max-width: 760px) { .uvp { top: auto; height: 62%; bottom: 8px; right: 8px; width: calc(100% - 16px); } }

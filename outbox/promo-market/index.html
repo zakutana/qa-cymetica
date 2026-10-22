@@ -1,0 +1,34 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Promo Market · EventTrader</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo+Black&family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700&display=swap">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<!-- The mockup of /creator-dashboard as the Promo Market's front door, and of a creator's own dashboard (/<username>).
+     #market is what anyone sees, #me the logged-in creator (our account, expire76), #profile a creator's public page
+     (Mumtaz, the live demo). Data: data.js, written by make_data.py from the snapshot of 2026-10-22. -->
+<header class="top">
+  <a class="brand" href="#market"><span class="mk"><i></i></span><span><b>EventTrader</b><small>Financial AI Models</small></span></a>
+  <nav class="tnav" id="tnav">
+    <a href="#market" data-r="market">Promo Market</a>
+    <a href="#me" data-r="me">My dashboard</a>
+    <a href="#profile" data-r="profile">Creators</a>
+  </nav>
+  <span class="sp"></span>
+  <button class="btn c sm" data-act="brief"><svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M10 4v12 M4 10h12"/></svg>Post a brief</button>
+  <a class="who" href="#me"><span class="av">E</span>expire76</a>
+</header>
+<main id="view"></main>
+<div class="scrim" id="scrim"></div>
+<aside class="drawer" id="drawer"></aside>
+<section class="modal" id="modal"></section>
+<div class="toast" id="toast"></div>
+<script src="data.js"></script>
+<script src="app.js"></script>
+</body>
+</html>
