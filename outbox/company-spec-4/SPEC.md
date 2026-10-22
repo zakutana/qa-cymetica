@@ -27,12 +27,13 @@ The same cards also show three requests that have no page: **Usage**, **Creator 
 crypto communities...**, marked *funded*, and **Airdrop Farmer** marked *building*; a request with no page is not a product (round 3 asked the same: no card
 for a request that was closed or never shipped).
 
-## B. The Quant Lab tests cloned bots (waits for their answer to MSG-0206)
+## B. The Quant Lab tests cloned bots (built by them; nothing asked here)
 
-An experiment is a cloned bot, or two head to head, judged on paper results; the lab runs combinations of skills, models and indicator settings until
-a profitable clone is found, proposes new algorithms and skills when none is, and hands a promising clone to the Trading desk (live, or a tournament
-seat), always with the owner's approval. Their REPLY-0191 says the last step is not built and the experiments today are price rules. What this item
-asks is fixed after they answer the three questions in MSG-0206 (what the company's own tools can do with clones today).
+Asked in MSG-0206; their answer REPLY-0193 (2026-10-23) says it is built, and it is live: `GET /api/v1/company/14/quant-lab` returns the owner's rule
+(at least 10 closed trades, a return of at least 2% and a drawdown under 15% in each 3-day window, 2 windows in a row; the lab varies a bot itself, 6 a
+day, and tries another bot after 3 misses; hand-off to a tournament seat or a live copy), the backtest board (11 bots), our 70 bots, and no experiment
+yet. The Experiments page (`/company/app/experiments`, `quantlab.js`) has the Bots section, *Your rule* and *+ Add bot*. Nothing to request until a first
+experiment has run; one gap: these endpoints are not in `/llms.txt`.
 
 ## C. The Supervisor works as the owner expects (waits for their answer to MSG-0212 / MSG-0214)
 
