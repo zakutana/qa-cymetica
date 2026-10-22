@@ -44,6 +44,15 @@ what exists. Their Manager says it does not. Asked in MSG-0214.
 A bubble in the thread while NEXUS works, with the queued task's number; every reply says which message it answers; a task number in a message is a link
 to that task.
 
+## E. A countdown to the next pass (settled)
+
+The company works in passes (`pass_every_s` 120: every 2 minutes, up to two agent turns a pass), and the owner cannot see when the next one is. The page now
+says *NEXUS answers on the next pass (every 2 minute(s), oldest message first). Approvals that wait do not hold a message. (about 22:37)* under a waiting message,
+which helps once a message is sent. **Show the pulse where the owner looks all the time**: next to the company's name and the Pause button, a small
+*next pass in 1:12* that counts down, becomes *running now* while a pass runs and *paused* / *waiting for the window* when none will start, with *turns today 21 of 40*
+beside it. The data is served: `GET /company/mine` has `heartbeat.last_pass_at`, `heartbeat.next_pass_at` (null while paused) and `heartbeat.pass_every_s`, and
+`run_state.turns_today` and `turns_cap`.
+
 ## What stays as it is
 
 Everything not named above stays as rounds 1 to 3 and your builds have it.
