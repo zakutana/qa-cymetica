@@ -306,7 +306,7 @@
       var m = mine(b), rej = m.accounts - m.qualified;
       return '<div class="card cmb"><div class="ch"><h3>' + esc(b.name) + '</h3><span class="chip g">' + fmt(b.price) + ' ' + b.cur + ' ' + perTxt(b) + '</span><span class="chip">' + ic('lock') + b.hold + 'd hold</span><span class="sp"></span>' +
           '<span class="mono acc" style="font-size:12.5px">cymetica.com/c/' + t.slug + '</span><button class="btn sm c" data-copy="link:' + t.slug + '">' + ic('copy') + 'Copy link</button><a class="btn sm" href="#me/queues">' + ic('queues') + 'Threads for it</a></div>' +
-        '<div class="mrow">' + funnel(m) + '<div class="earned"><span>Earned</span><b>' + fmt(m.paid * b.price) + ' <small>' + b.cur + '</small></b><em>' + fmt(m.held * b.price) + ' in hold · ' + rej + ' not counted</em></div></div></div>';
+        '<div class="mrow">' + funnel(m) + '<div class="earned"><span>Earned</span><b>' + fmt(m.paid * b.price) + ' <small>' + b.cur + '</small></b><em>' + fmt(m.held * b.price) + ' ' + b.cur + ' in hold · ' + rej + ' not counted</em></div></div></div>';
     }).join('');
     var sent = Object.keys(S.sent).map(function (k) {
       var o = S.sent[k], b = S.briefs.filter(function (x) { return x.key === k; })[0];
