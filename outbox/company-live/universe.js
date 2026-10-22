@@ -1136,23 +1136,19 @@
         '<polygon points="' + pts(top3) + '" fill="#00cfff" fill-opacity=".12" stroke="#bff3ff" stroke-width="2"/>';
       top = cy0 - s * 0.7;
     } else if (it.ad.key === 'farmer') {
-      // Airdrop Farmer: its logo itself (airdrop-farms mock.html, #logo, viewBox 64) in the 3D head's colours (a yellow
-      // head, dark eyes, a brown hat with a yellow band) with its grin and the stalk of grass, the head's bottom a
-      // little over its shadow
+      // Airdrop Farmer: its logo itself (airdrop-farms mock.html, #logo, viewBox 64) in the 3D head's colours: a green
+      // helmet ringed in gold, a dark visor edged in lime dots, yellow eyes, a straw hat with a brown band, a green sprout;
+      // the head's bottom a little over its shadow
       var k = s * 1.15 / 64, by = y - s * 0.15 - (58 - 0) * k;
       out = shadow + '<g transform="translate(' + f1(x - 32 * k) + ' ' + f1(by) + ') scale(' + k.toFixed(4) + ')">' +
-        '<circle cx="32" cy="41" r="17" fill="#ffc61a" stroke="#6b4423" stroke-width="3"/>' +
-        '<circle cx="32" cy="41" r="12" fill="none" stroke="#b07a24" stroke-width="1" stroke-dasharray="1.6 2.6"/>' +
-        '<rect x="24.5" y="37" width="5" height="9" rx="2.5" fill="#2a1608"/><rect x="34.5" y="37" width="5" height="9" rx="2.5" fill="#2a1608"/>' +
-        '<circle cx="26.4" cy="39" r="1" fill="#fff6d8"/><circle cx="36.4" cy="39" r="1" fill="#fff6d8"/>' +
-        '<path d="M30 50 Q34 53.4 38.4 49.6" stroke="#2a1608" stroke-width="1.5" fill="none" stroke-linecap="round"/>' +
-        '<path d="M38.4 49.6 Q46 52.6 54.5 46.5" stroke="#b9cc45" stroke-width="1.3" fill="none" stroke-linecap="round"/>' +
-        '<ellipse cx="55.6" cy="45.2" rx="1" ry="2.2" transform="rotate(40 55.6 45.2)" fill="#e8c24a"/><ellipse cx="57.2" cy="44.6" rx="1" ry="2.2" transform="rotate(70 57.2 44.6)" fill="#e8c24a"/>' +
-        '<path d="M20.5 25.5 L22.6 14.6 Q23.2 12 26 12 Q32 14.2 38 12 Q40.8 12 41.4 14.6 L43.5 25.5 Z" fill="#93602d"/>' +
-        '<path d="M21.2 21.6 Q32 19.6 42.8 21.6" stroke="#f2bf2e" stroke-width="2.6" fill="none"/>' +
-        '<path d="M2.5 30 C8 25.2 15 24 22 24 L42 24 C49 24 56 25.2 61.5 30 C50 30.6 40 31.8 32 31.8 C24 31.8 14 30.6 2.5 30 Z" fill="#a8743c" stroke="#4a2a10" stroke-width=".8"/>' +
-        '<path d="M32 12.5 V5.8" stroke="#c8d64a" stroke-width="1.9" stroke-linecap="round"/>' +
-        '<path d="M31.8 8 C27.6 8 25.5 5.8 25 2.6 C28.8 2.6 31.3 4.6 31.8 8 Z" fill="#c8d64a"/><path d="M32.2 6.6 C36.4 6.6 38.8 4.1 39.3 0.9 C35.2 0.9 32.7 3 32.2 6.6 Z" fill="#f0c43c"/></g>';
+        '<circle cx="32" cy="41" r="17" fill="#2c6a3c" stroke="#ffc83d" stroke-width="3"/>' +
+        '<circle cx="32" cy="41" r="12" fill="#0b1a12" stroke="#c8f26a" stroke-width="1.2" stroke-dasharray="1.6 2.6"/>' +
+        '<rect x="24.5" y="37" width="5" height="9" rx="2.5" fill="#ffd84a"/><rect x="34.5" y="37" width="5" height="9" rx="2.5" fill="#ffd84a"/>' +
+        '<path d="M20.5 25.5 L22.6 14.6 Q23.2 12 26 12 Q32 14.2 38 12 Q40.8 12 41.4 14.6 L43.5 25.5 Z" fill="#e9b84a"/>' +
+        '<path d="M21.2 21.6 Q32 19.6 42.8 21.6" stroke="#4a2c12" stroke-width="2.6" fill="none"/>' +
+        '<path d="M2.5 30 C8 25.2 15 24 22 24 L42 24 C49 24 56 25.2 61.5 30 C50 30.6 40 31.8 32 31.8 C24 31.8 14 30.6 2.5 30 Z" fill="#f2c14e" stroke="#8a5a1c" stroke-width=".8"/>' +
+        '<path d="M32 12.5 V5.8" stroke="#7ee04a" stroke-width="1.9" stroke-linecap="round"/>' +
+        '<path d="M31.8 8 C27.6 8 25.5 5.8 25 2.6 C28.8 2.6 31.3 4.6 31.8 8 Z" fill="#7ee04a"/><path d="M32.2 6.6 C36.4 6.6 38.8 4.1 39.3 0.9 C35.2 0.9 32.7 3 32.2 6.6 Z" fill="#c8e83a"/></g>';
       top = by + 0.9 * k;
     } else {
       var c0 = y - s * 0.55, rx = s * 0.5, ry = rx * RY / RX, ring = function (cyy, k) {
