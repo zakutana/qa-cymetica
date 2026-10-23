@@ -211,6 +211,31 @@ BJ Ironstar Capital, green for ours):
 PROMO market at je tam made by CYMETICA"*); it opens nothing, since the platform has no office to visit. A company's product never says Cymetica
 (round 3, C9).
 
+## M. Ten new station skins to choose from (settled, designed)
+
+A company picks its station's look in Settings (*In the Universe*) and when it is created; today there are seven (tower, dome, pyramid,
+orbital, rocket, vault, stack). **Add ten more**, every one drawn and specified:
+
+1. **Armillary Core**: three gimbal rings, each turning on its own axis, round a glass capsule of decks.
+2. **Helix Spire**: thin glass floors, each turned on the one below; lit corners climb a 90° twist.
+3. **Solar Sail**: four glass sail panels form a square of light and turn slowly round a mast of decks.
+4. **Deep Array**: a giant dish on a turret of decks sweeps the sky slowly, its focus lit.
+5. **Glass Arcology**: a shallow glass dome over a lit city, one tower per department, a tram circling inside.
+6. **Pylon Crown**: tapered glass pylons round a ring, one per department, a core of light floating in the middle.
+7. **Rift Hold**: an asteroid split in two, a glass deck per department bridging the glowing rift.
+8. **Tesseract Frame**: a cube of struts balanced on one corner and turning, a glass cube of decks turning the other way inside.
+9. **Nautilus Shell**: chambers on a two-turn spiral round a glass heart; each department adds one chamber.
+10. **Halo Vortex**: floating rings widen upward round a column of light, alternate ones turning the other way.
+
+**See them:** `outbox/company-skins/index.html`: each drawn in 3D from its own numbers, at the map's look-down and one scale, with a switch
+for 1 / 4 / 8 departments (how each one grows) and the eight company colours; a card moves while hovered. **Build them:**
+`outbox/company-skins/SPEC.md`: per skin its silhouette and proportions, the parts with the helpers `u3d.js` and `stations.js` already have, where
+the company's colour lives, what moves and how fast, its footprint and height, and its line icon for Settings.
+
+The same rules as the seven: **the hull stays steel and slate, the company's colour lives only in its lights** (never the accent-blended hull
+materials: that is the washed look of item I); one deck per department, lit while that department works; each under 30% of the sun's diameter
+on the map; nothing pulses (no plumes, no beams out of a prow), what moves only turns, runs along a track or bobs slowly.
+
 ## What stays as it is
 
 Everything not named above stays as rounds 1 to 3 and your builds have it.
