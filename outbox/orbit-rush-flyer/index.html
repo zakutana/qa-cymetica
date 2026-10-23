@@ -6,99 +6,81 @@
 <title>Orbit Rush · Cymetica</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Archivo+Black&family=JetBrains+Mono:wght@400;500;700;800&display=swap" rel="stylesheet">
-<!-- Orbit Rush (the operator, 2026-10-23): the gold rush of the space-and-AI age, the five steps of the quest with an
-     arrow from each to the next. Second take. The first put the steps on glowing cards round an orbit; the operator:
-     "trapne a amaterske ... nikdy uz nedavej ty prstence na zadny letak ... je to takove detinske". So: a poster, not a
-     game screen. Big white type, one accent (Cymetica green) on the prize and the call only, Cymetica's sun alone as
-     the one warm light (the gold of this rush), thin rules, no ring, no glow on the type, no bubbles. 1080 x 1350. -->
+<!-- Orbit Rush (the operator, 2026-10-23): the gold rush of the space-and-AI age, how to get in, an arrow from each step
+     to the next. Third take. The first (glowing cards round an orbit ring) was "trapne a amaterske ... detinske" and no
+     ring may be on a flyer again; the second (a poster) had type too small: "moc male pismo a nemusis se drzet textu
+     co jsem podal, udelej to podle sebe vse". So: the fewest words, each read at phone size -- a headline, one number,
+     four steps of three words, one call. Cymetica's sun alone as the one warm light (sun-bg.jpg, render.py), green
+     only on the prize, the numbers and the call. 1080 x 1350. -->
 <style>
-  :root { --bg: #05070c; --green: #00ff88; --text: #f2f5f7; --dim: #93a1ad; --rule: rgba(255, 255, 255, .12); }
+  :root { --bg: #05070c; --green: #00ff88; --text: #f2f5f7; --dim: #9aa8b4; --rule: rgba(255, 255, 255, .14); }
   * { box-sizing: border-box; margin: 0; padding: 0; }
   html, body { width: 1080px; height: 1350px; background: var(--bg); overflow: hidden; }
   body { position: relative; font-family: 'JetBrains Mono', monospace; color: var(--text); -webkit-font-smoothing: antialiased; }
   .bg { position: absolute; inset: 0; width: 1080px; height: 1350px; }
-  /* the type stands on dark: darker to the left and to the foot, the sun's light kept at the top right */
   .shade { position: absolute; inset: 0;
     background:
-      linear-gradient(90deg, rgba(5, 7, 12, .9) 0%, rgba(5, 7, 12, .72) 40%, rgba(5, 7, 12, .1) 70%, rgba(5, 7, 12, 0) 100%),
-      linear-gradient(180deg, rgba(5, 7, 12, 0) 30%, rgba(5, 7, 12, .86) 44%, rgba(5, 7, 12, .97) 100%); }
-  .page { position: absolute; inset: 0; padding: 60px 72px 56px; display: flex; flex-direction: column; }
+      linear-gradient(90deg, rgba(5, 7, 12, .9) 0%, rgba(5, 7, 12, .7) 42%, rgba(5, 7, 12, .08) 72%, rgba(5, 7, 12, 0) 100%),
+      linear-gradient(180deg, rgba(5, 7, 12, 0) 28%, rgba(5, 7, 12, .88) 40%, rgba(5, 7, 12, .97) 100%); }
+  .page { position: absolute; inset: 0; padding: 58px 68px 54px; display: flex; flex-direction: column; }
 
-  .brand { display: flex; justify-content: space-between; align-items: center; font: 700 14px 'JetBrains Mono'; letter-spacing: .32em; }
-  .brand .logo { display: flex; align-items: center; gap: 12px; color: var(--text); }
-  .brand .logo i { width: 9px; height: 9px; border-radius: 50%; background: var(--green); }
-  .brand .what { color: var(--dim); font-weight: 500; }
+  .brand { display: flex; align-items: center; gap: 14px; font: 800 20px 'JetBrains Mono'; letter-spacing: .3em; color: var(--text); }
+  .brand i { width: 12px; height: 12px; border-radius: 50%; background: var(--green); }
 
-  h1 { margin-top: 44px; font-family: 'Archivo Black', sans-serif; font-weight: 400; color: var(--text); }
-  h1 .l1 { display: block; font-size: 42px; letter-spacing: .06em; line-height: 1; }
-  h1 .l2, h1 .l3 { display: block; font-size: 158px; line-height: .84; letter-spacing: -.012em; }
+  h1 { margin-top: 28px; font-family: 'Archivo Black', sans-serif; font-weight: 400; color: var(--text); }
+  h1 .l1 { display: block; font-size: 54px; letter-spacing: .05em; line-height: 1; }
+  h1 .l2, h1 .l3 { display: block; font-size: 166px; line-height: .84; letter-spacing: -.014em; }
   h1 .l2 { margin-top: 14px; }
   h1 .l3 em { font-style: normal; color: var(--green); }
-  .lede { margin-top: 24px; font: 500 22px/1.45 'JetBrains Mono'; color: #cfd8df; }
-  .lede b { color: var(--text); font-weight: 800; }
 
-  .rule { height: 1px; background: var(--rule); }
-  .label { font: 700 13px 'JetBrains Mono'; letter-spacing: .26em; color: var(--dim); }
-  .label b { color: var(--green); font-weight: 800; }
+  /* the prize: one number */
+  .prize { margin-top: 34px; display: flex; align-items: center; gap: 30px; padding: 22px 0 24px; border-top: 1px solid var(--rule); border-bottom: 1px solid var(--rule); }
+  .prize .pct { font: 400 214px/.78 'Archivo Black', sans-serif; letter-spacing: -.035em; color: var(--green); }
+  .prize .what b { display: block; font: 400 46px/1.02 'Archivo Black', sans-serif; color: var(--text); }
+  .prize .what span { display: block; margin-top: 12px; font: 700 25px/1.3 'JetBrains Mono'; color: var(--dim); }
+  .prize .what span em { font-style: normal; color: var(--text); }
 
-  /* 01, the prize: the one big number */
-  .prize { margin-top: 28px; padding-top: 20px; border-top: 1px solid var(--rule); }
-  .prize .row { display: flex; align-items: flex-end; gap: 34px; margin-top: 8px; }
-  .prize .pct { font: 400 176px/.8 'Archivo Black', sans-serif; letter-spacing: -.03em; color: var(--green); }
-  .prize .pct small { display: block; margin: 0 0 12px 4px; font: 800 15px 'JetBrains Mono'; letter-spacing: .26em; color: var(--green); }
-  .prize .what { padding-bottom: 6px; }
-  .prize .what b { display: block; font: 400 36px/1.06 'Archivo Black', sans-serif; color: var(--text); }
-  .prize .what span { display: block; margin-top: 12px; font: 500 17px/1.5 'JetBrains Mono'; color: var(--dim); }
+  /* the way in: four steps, an arrow into each */
+  .steps { margin-top: 18px; list-style: none; }
+  .steps li { position: relative; display: grid; grid-template-columns: 92px 1fr; align-items: center; padding: 12px 0; }
+  .steps .n { font: 800 30px 'JetBrains Mono'; color: var(--green); }
+  .steps b { display: block; font: 400 50px/1 'Archivo Black', sans-serif; color: var(--text); }
+  .steps span { display: block; margin-top: 7px; font: 700 24px/1.25 'JetBrains Mono'; color: var(--dim); }
+  .steps span em { font-style: normal; color: var(--text); }
+  .steps li + li::before { content: ''; position: absolute; left: 17px; top: -13px; width: 2px; height: 24px; border-radius: 1px; background: linear-gradient(180deg, rgba(0, 255, 136, .15), var(--green)); }
+  .steps li + li::after { content: ''; position: absolute; left: 11px; top: 0; width: 12px; height: 12px; border-right: 2.5px solid var(--green); border-bottom: 2.5px solid var(--green); transform: rotate(45deg); transform-origin: center; margin-top: -2px; }
+  .steps li + li .n { padding-top: 6px; }
 
-  /* 02 to 05, each step one line of bold and one of plain; a thin rail on the left with an arrow into each number */
-  .steps { position: relative; margin-top: 26px; border-top: 1px solid var(--rule); list-style: none; }
-  .steps li { position: relative; display: grid; grid-template-columns: 74px 1fr; align-items: baseline; padding: 15px 0 12px; }
-  .steps li + li { border-top: 1px solid rgba(255, 255, 255, .06); }
-  .steps .n { font: 800 17px 'JetBrains Mono'; letter-spacing: .08em; color: var(--green); }
-  .steps b { display: block; font: 400 28px/1.05 'Archivo Black', sans-serif; color: var(--text); }
-  .steps span { display: block; margin-top: 6px; font: 500 17px/1.45 'JetBrains Mono'; color: var(--dim); }
-  .steps span em { font-style: normal; color: #dbe3e9; }
-  /* the arrow from one step to the next (the first from the prize): a hairline down the number column ending in a
-     small head */
-  .steps li::before { content: ''; position: absolute; left: 9px; top: -20px; width: 1px; height: 28px; background: linear-gradient(180deg, rgba(0, 255, 136, 0), rgba(0, 255, 136, .7)); }
-  .steps li::after { content: ''; position: absolute; left: 5px; top: 5px; width: 9px; height: 9px; border-right: 1.5px solid var(--green); border-bottom: 1.5px solid var(--green); transform: rotate(45deg) translate(-3px, -3px); opacity: .9; }
-  .steps li .n { padding-top: 14px; }
-
-  .foot { margin-top: auto; display: flex; align-items: center; justify-content: space-between; gap: 24px; padding-top: 26px; border-top: 1px solid var(--rule); }
-  .foot .open b { display: block; font: 400 26px 'Archivo Black', sans-serif; color: var(--text); letter-spacing: .01em; }
-  .foot .open b em { font-style: normal; color: var(--green); }
-  .foot .open span { display: block; margin-top: 6px; font: 500 16px 'JetBrains Mono'; color: var(--dim); }
+  .foot { margin-top: auto; display: flex; align-items: center; justify-content: space-between; gap: 24px; padding-top: 24px; border-top: 1px solid var(--rule); }
+  .foot .open { font: 400 36px/1.05 'Archivo Black', sans-serif; color: var(--text); }
+  .foot .open em { font-style: normal; color: var(--green); }
   .cta { text-align: right; }
-  .cta b { display: inline-block; font: 400 22px 'Archivo Black', sans-serif; letter-spacing: .03em; color: #03110a; background: var(--green); padding: 17px 26px 16px; border-radius: 6px; }
-  .cta span { display: block; margin-top: 10px; font: 700 16px 'JetBrains Mono'; letter-spacing: .04em; color: var(--text); }
+  .cta b { display: inline-block; font: 400 30px 'Archivo Black', sans-serif; letter-spacing: .02em; color: #03110a; background: var(--green); padding: 20px 30px 19px; border-radius: 8px; }
+  .cta span { display: block; margin-top: 10px; font: 800 22px 'JetBrains Mono'; color: var(--text); }
 </style>
 </head>
 <body>
 <img class="bg" src="sun-bg.jpg" alt="">
 <div class="shade"></div>
 <div class="page">
-  <div class="brand"><span class="logo"><i></i>CYMETICA · BUILD A COMPANY</span></div>
+  <div class="brand"><i></i>CYMETICA</div>
 
   <h1><span class="l1">JOIN THE</span><span class="l2">ORBIT</span><span class="l3">RUSH<em>.</em></span></h1>
-  <p class="lede">Three seats. A cut of <b>every fee</b> on Cymetica.<br>Be the first to claim one.</p>
 
   <div class="prize">
-    <div class="label"><b>01</b> &nbsp;THE PRIZE</div>
-    <div class="row">
-      <div class="pct"><small>UP TO</small>5%</div>
-      <div class="what"><b>of every fee<br>on Cymetica.</b><span>For the #1 company. #2 takes 3%, #3 takes 1%.</span></div>
-    </div>
+    <div class="pct">5%</div>
+    <div class="what"><b>of every fee<br>on Cymetica.</b><span>To the #1 builder. <em>3% to #2, 1% to #3.</em></span></div>
   </div>
 
   <ol class="steps">
-    <li><span class="n">02</span><div><b>Most fees wins.</b><span>Your products bring Cymetica fees. <em>The top 3 take the share.</em></span></div></li>
-    <li><span class="n">03</span><div><b>Start a company.</b><span>In the Cymetica Universe. Ship any idea with <em>Build it Better</em>.</span></div></li>
-    <li><span class="n">04</span><div><b>Get seen.</b><span>Buy land so everyone sees it, or deal with influencers on <em>Promo Market</em>.</span></div></li>
-    <li><span class="n">05</span><div><b>Make the top 3.</b><span>Climb the leaderboard. <em>Earn from every fee on Cymetica.</em></span></div></li>
+    <li><span class="n">01</span><div><b>START A COMPANY</b><span>in the Cymetica Universe</span></div></li>
+    <li><span class="n">02</span><div><b>SHIP PRODUCTS</b><span>any idea, with <em>Build it Better</em></span></div></li>
+    <li><span class="n">03</span><div><b>GET SEEN</b><span>land in orbit · <em>Promo Market</em></span></div></li>
+    <li><span class="n">04</span><div><b>BRING THE MOST FEES</b><span>top 3 get paid by all of Cymetica</span></div></li>
   </ol>
 
   <div class="foot">
-    <div class="open"><b>3 seats. All <em>open.</em></b><span>The rush has started.</span></div>
+    <div class="open">3 seats.<br>All <em>open.</em></div>
     <div class="cta"><b>STAKE YOUR CLAIM &rarr;</b><span>cymetica.com/company</span></div>
   </div>
 </div>
