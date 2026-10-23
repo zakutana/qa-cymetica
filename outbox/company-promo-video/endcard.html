@@ -1,0 +1,56 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=1920">
+<title>Cymetica Quest · end card</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Archivo+Black&family=JetBrains+Mono:wght@500;700;800&display=swap" rel="stylesheet">
+<!-- The promo video's last frame (16:9): the flyer's slogan, the three seats and the address over Cymetica's sun, on one
+     pane of the board's glass, as the flyer (../company-flyer). Its background is shots/00-endcard-bg.png (shots.py). -->
+<style>
+  :root { --green: #00ff88; --cyan: #00cfff; --blue: #3b82f6; }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body { width: 1920px; height: 1080px; background: #0a0e17; overflow: hidden; }
+  body { position: relative; font-family: 'JetBrains Mono', monospace; color: #e6edf7; }
+  .bg { position: absolute; inset: 0; width: 1920px; height: 1080px; object-fit: cover; }
+  .pane { position: absolute; inset: 36px; border-radius: 36px; padding: 88px 96px; display: flex; flex-direction: column; justify-content: center;
+    background:
+      linear-gradient(135deg, rgba(255, 255, 255, .12) 0%, rgba(255, 255, 255, .03) 22%, rgba(255, 255, 255, 0) 40%),
+      linear-gradient(90deg, rgba(6, 10, 18, .5), rgba(6, 10, 18, .2) 45%, rgba(6, 10, 18, 0) 65%);
+    backdrop-filter: blur(2px) saturate(1.25); -webkit-backdrop-filter: blur(2px) saturate(1.25);
+    border: 1px solid rgba(255, 255, 255, .18);
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, .55), inset 0 0 0 1px rgba(0, 207, 255, .22), 0 0 0 1px rgba(0, 207, 255, .35), 0 0 90px rgba(0, 207, 255, .18); }
+  .tag { display: flex; align-items: center; gap: 14px; font: 800 22px 'JetBrains Mono'; letter-spacing: .24em; color: var(--cyan); text-shadow: 0 0 12px rgba(0, 207, 255, .6); }
+  .tag i { width: 14px; height: 14px; border-radius: 50%; background: var(--green); box-shadow: 0 0 16px var(--green); }
+  h1 { margin-top: 28px; font: 400 88px/1.02 'Archivo Black', sans-serif; text-shadow: 0 4px 24px rgba(0, 0, 0, .45); }
+  h1 span { display: block; white-space: nowrap; }
+  h1 .g { color: transparent; -webkit-background-clip: text; background-clip: text; background-image: linear-gradient(180deg, #f2fff9, #4dffb4 50%, #00b4e0);
+    filter: drop-shadow(0 0 26px rgba(0, 207, 255, .5)); text-shadow: none; }
+  .seats { display: flex; gap: 46px; margin-top: 44px; align-items: flex-end; }
+  .seat { display: flex; flex-direction: column; align-items: center; gap: 2px; }
+  .seat i { font: 400 30px/1 'Archivo Black'; font-style: normal; color: transparent; -webkit-background-clip: text; background-clip: text; }
+  .seat b { font: 400 72px/1 'Archivo Black'; }
+  .p1 i { background-image: linear-gradient(180deg, #eafff4, var(--green) 55%, #00a067); } .p1 b { color: var(--green); text-shadow: 0 0 26px rgba(0, 255, 136, .6); }
+  .p2 i { background-image: linear-gradient(180deg, #e6fbff, var(--cyan) 55%, #0086b5); } .p2 b { color: var(--cyan); text-shadow: 0 0 24px rgba(0, 207, 255, .55); }
+  .p3 i { background-image: linear-gradient(180deg, #e3edff, var(--blue) 55%, #1d4ea8); } .p3 b { color: var(--blue); text-shadow: 0 0 22px rgba(59, 130, 246, .5); }
+  .of { margin-left: 8px; padding-bottom: 12px; font: 800 18px 'JetBrains Mono'; letter-spacing: .18em; color: #bcd0dc; }
+  .cta { align-self: flex-start; margin-top: 48px; font: 800 34px 'JetBrains Mono'; color: #0a0e17; background: linear-gradient(90deg, var(--green), var(--cyan));
+    padding: 18px 32px; border-radius: 16px; box-shadow: 0 0 34px rgba(0, 255, 136, .45), inset 0 1px 0 rgba(255, 255, 255, .6); }
+</style>
+</head>
+<body>
+<img class="bg" src="shots/00-endcard-bg.png" alt="">
+<div class="pane">
+  <div class="tag"><i></i>CYMETICA QUEST</div>
+  <h1><span>STOP PAYING FEES.</span><span class="g">START EARNING THEM.</span></h1>
+  <div class="seats">
+    <div class="seat p1"><i>1</i><b>5%</b></div>
+    <div class="seat p2"><i>2</i><b>3%</b></div>
+    <div class="seat p3"><i>3</i><b>1%</b></div>
+    <span class="of">OF EVERY FEE ON CYMETICA</span>
+  </div>
+  <span class="cta">cymetica.com/company</span>
+</div>
+</body>
+</html>
