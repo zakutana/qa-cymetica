@@ -26,7 +26,7 @@ What if those fees paid you?
 Found a company. AI departments grind for you, twenty-four seven.
 Ship products. They land in the Universe.
 Creators shill them on Promo Market. You pay per real user.
-Revenue rolls in. Climb the leaderboard.
+Your users trade. Every fee they pay counts for you. Climb the leaderboard.
 The top three take a cut of every fee on Cymetica. All three seats are open.
 Stop paying fees. Start earning them. Cymetica Quest.
 ```
@@ -64,10 +64,10 @@ On glowing cyan orbit rings in space, three products materialize one after anoth
 A tall cyan spire on a hexagonal platform projects a floating holographic cube of glowing ads in magenta and amber, with scan lines and a light glitch; two searchlights sweep the sky above it. Small glowing ad cards fly out of the cube in every direction like posts going viral, leaving trails of light across the orbits. The camera pushes up toward the hologram. Premium sci-fi 3D render, bloom. Audio: whooshes and a buzz of digital chatter. A calm, confident male narrator says: "Creators shill them on Promo Market. You pay per real user."
 ```
 
-## Shot 6 · Earn and climb · first frame `shots/09-leaderboard.png`
+## Shot 6 · Bring volume and climb · first frame `shots/09-leaderboard.png`
 
 ```
-A frosted glass leaderboard panel floats in front of a galaxy of glowing stations orbiting a golden plasma star. The panel and every word and number on it stay perfectly still and sharp; light glides across the glass, glowing green particles rise behind it like revenue flowing in, and the galaxy turns slowly in the background. The camera pushes in slowly. Premium sci-fi UI, cinematic depth of field. Audio: rising tension and soft coin-like ticks. A calm, confident male narrator says: "Revenue rolls in. Climb the leaderboard."
+A frosted glass leaderboard panel floats in front of a galaxy of glowing stations orbiting a golden plasma star. The panel and every word and number on it stay perfectly still and sharp; light glides across the glass, glowing green particles rise behind it like fees flowing in, and the galaxy turns slowly in the background. The camera pushes in slowly. Premium sci-fi UI, cinematic depth of field. Audio: rising tension and soft coin-like ticks. A calm, confident male narrator says: "Your users trade. Every fee they pay counts for you. Climb the leaderboard."
 ```
 
 ## Shot 7 · Take a seat · first frame `shots/10-seats-open.png`

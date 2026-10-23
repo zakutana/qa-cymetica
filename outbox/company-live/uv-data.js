@@ -313,11 +313,13 @@
     try { localStorage.setItem(VKEY, JSON.stringify(m)); } catch (e) { /* the page still works, it just forgets */ }
   };
 
-  // The revenue share (the operator, 2026-10-22): every company ranked by its Revenue, 30 days (USD) -- what the platform
-  // paid it in that time: bug bounties (ET10 at the day's price), its products' rewards, tournament and League prizes; no
-  // trading P&L (it can be faked between two accounts and goes negative). The top 3 at or above the floor get 5% / 3% / 1% of
-  // every fee on Cymetica, paid monthly in USDC; a place nobody reaches stays empty. The floor and the fees are SAMPLES
-  // (Cymetica sets the floor); the figures all come from this one model, so the board, the leaderboard and the pulse agree.
+  // The revenue share: every company ranked by the fees it brought Cymetica in the last 30 days (USD) -- the fees Cymetica
+  // earned from the users and the volume the company's products brought (the operator, 2026-10-23: "top 3 firmy ktere cymetice
+  // zajisti nejvetsi revenue"; first it was what the platform paid the company, bounties and prizes). Fees paid by the owner's
+  // own accounts do not count. The top 3 at or above the floor get 5% / 3% / 1% of every fee on Cymetica, paid monthly in USDC;
+  // a place nobody reaches stays empty. The floor and the fees are SAMPLES (Cymetica sets the terms); the figures all come from
+  // this one model, so the board, the leaderboard and the pulse agree -- and what the companies brought adds up to about half
+  // of the platform's fees, never more (scaled to 0.4 of the first samples, which summed past the platform's own total).
   CO.SHARE = [5, 3, 1];
   CO.SHARE_FLOOR = 10000;
   CO.PLATFORM_FEES_30D = 386000;
@@ -326,7 +328,7 @@
   CO.BOARD_LAUNCH = /[?&]board=empty\b/.test(location.search);
   CO.uvRevenue = function (c) {
     var R = CO.uvRng((+c.id || 0) * 13 + 7), u = R();
-    var v = Math.pow(u, 4) * 72000 + R() * 900;
+    var v = (Math.pow(u, 4) * 72000 + R() * 900) * 0.4;
     if (c.status === 'paused') v *= 0.35;
     if (CO.BOARD_LAUNCH) v *= 0.12;
     return Math.round(v / 10) * 10;

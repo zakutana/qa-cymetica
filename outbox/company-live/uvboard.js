@@ -1,5 +1,5 @@
 /* The /company mockup: the Universe's revenue-share board (the operator, 2026-10-22). A HUD fixed over the map's top-left,
- * glass you see the galaxy through, that never moves with it: the top 3 companies by Revenue, 30 days, each with its share
+ * glass you see the galaxy through, that never moves with it: the top 3 companies by the fees they brought Cymetica in 30 days, each with its share
  * of every fee on Cymetica (5% / 3% / 1%) and about what that pays a month; under it the full leaderboard. Every figure
  * comes from CO.uvBoard (uv-data.js), one model, so the board, the leaderboard and the gold pulses agree. */
 (function () {
@@ -20,16 +20,16 @@
       var r = b.top[i];
       if (!r) {
         return '<div class="uvb-r pl' + (i + 1) + ' open"><i class="uvb-rk">' + (i + 1) + '</i><span class="uvb-seat" aria-hidden="true">+</span>' +
-          '<div class="uvb-n"><b>Open seat</b><span>reach ' + usd(b.floor) + ' in 30 d</span></div><div class="uvb-s"><b>' + pct + '%</b><span>≈ ' + usd(b.pot[i]) + ' / mo</span></div></div>';
+          '<div class="uvb-n"><b>Open seat</b><span>bring ' + usd(b.floor) + ' in fees · 30 d</span></div><div class="uvb-s"><b>' + pct + '%</b><span>≈ ' + usd(b.pot[i]) + ' / mo</span></div></div>';
       }
       return '<div class="uvb-r pl' + (i + 1) + (r.mine ? ' me' : '') + '"><i class="uvb-rk">' + (i + 1) + '</i>' + CO.stationIcon(r.c.skin, r.c.accent) +
-        '<div class="uvb-n">' + name(r.c, r.mine) + '<span>' + usd(r.rev) + ' · 30 d</span></div>' +
+        '<div class="uvb-n">' + name(r.c, r.mine) + '<span>' + usd(r.rev) + ' fees · 30 d</span></div>' +
         '<div class="uvb-s"><b>' + pct + '%</b><span>≈ ' + usd(r.month) + ' / mo</span></div></div>';
     }).join('');
     var none = !b.top.length, all = b.pot.reduce(function (s, v) { return s + v; }, 0);
     return '<button type="button" class="uvb-pill" data-a="board-fold" title="The top 3 get a share of every fee on Cymetica">TOP 3 <i>' + CO.SHARE.join(' · ') + '%</i></button>' +
       '<div class="uvb-in"><i class="uvb-sh"></i><div class="uvb-h"><span class="uvb-live"></span><b>REVENUE SHARE</b><span>TOP 3</span></div>' +
-      '<div class="uvb-sub" title="Revenue, 30 days: what Cymetica paid the company (bug bounties, product rewards, prizes). Paid monthly in USDC.">' +
+      '<div class="uvb-sub" title="Ranked by the fees each company brought Cymetica in 30 days: what its users paid in fees on their volume, plays and subscriptions. Its own accounts do not count. Paid monthly in USDC.">' +
         CO.SHARE.join('% · ') + '% of every fee on Cymetica</div>' +
       (none ? '<div class="uvb-hero"><b>All 3 seats are open.</b><span>Be the first company to take one.</span></div>' : '') + rows +
       '<div class="uvb-f"><span>' + (none ? 'Up for grabs <b>≈ ' + usd(all) + ' / mo</b>' : 'Platform fees · 30 d <b>' + usd(b.fees) + '</b>') + ' · qualify at <b>' + usd(b.floor) + '</b></span>' +
@@ -43,9 +43,9 @@
     if (html !== last) { el.innerHTML = html; last = html; }
   };
 
-  // the full leaderboard, for the modal: every company, its revenue, its share or how far it is from the floor. On top,
+  // the full leaderboard, for the modal: every company, the fees it brought, its share or how far it is from the floor. On top,
   // big, who gets a seat ("zretelneji vysvetli nebo zvetsi kdo ma pravo na sloty", 2026-10-23): the three seats and what
-  // each pays, the three conditions, what counts as revenue; in the list, the line at the floor
+  // each pays, the three conditions, what counts as fees brought; in the list, the line at the floor
   CO.uvBoardTable = function (mine) {
     var b = CO.uvBoard(mine), cut = false;
     var line = function (none) { return '<div class="lb-cut"><span>' + usd(b.floor) + ' · the line to qualify' + (none ? ' · nobody above it yet' : '') + '</span></div>'; };
@@ -64,11 +64,11 @@
     return '<div class="mh lbh"><span class="uvb-live"></span><h3>REVENUE SHARE</h3><span class="lbt">LEADERBOARD</span><button class="btn" data-a="close">×</button></div>' +
       '<div class="lb-rule"><div class="lb-seats">' + seats + '</div>' +
         '<div class="lb-who"><h4>Who gets a seat</h4>' +
-          '<div class="lb-c"><i>1</i><b>Top 3</b><span>by revenue in the last 30 days</span></div>' +
-          '<div class="lb-c"><i>2</i><b>' + usd(b.floor) + '+</b><span>of revenue in those 30 days, or the seat stays open</span></div>' +
+          '<div class="lb-c"><i>1</i><b>Top 3</b><span>by fees brought to Cymetica in the last 30 days</span></div>' +
+          '<div class="lb-c"><i>2</i><b>' + usd(b.floor) + '+</b><span>of fees in those 30 days, or the seat stays open</span></div>' +
           '<div class="lb-c"><i>3</i><b>Month end</b><span>the ranking then decides; paid in USDC from that month\'s fees</span></div>' +
-          '<p>Revenue = what Cymetica paid the company: bug bounties, its products\' rewards, tournament and League prizes. Trading P&amp;L does not count.</p></div></div>' +
-      '<div class="lb-head"><span>#</span><span></span><span>Company</span><span>Revenue · 30 d</span><span>Share</span></div>' +
+          '<p>Fees brought = what Cymetica earned from the users your products brought: their trading volume, plays and subscriptions. Fees paid by your own accounts do not count.</p></div></div>' +
+      '<div class="lb-head"><span>#</span><span></span><span>Company</span><span>Fees brought · 30 d</span><span>Share</span></div>' +
       '<div class="lb">' + rows + (cut ? '' : line(false)) + '</div>';
   };
 })();

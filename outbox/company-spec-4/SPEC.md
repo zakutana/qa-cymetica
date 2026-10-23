@@ -95,30 +95,38 @@ lit. Resume, and the lights come back. The row of a paused department dims with 
 
 ## H. The revenue share: the top 3 companies get a share of every fee on Cymetica (settled, drawn)
 
-**The numbers in this item are an example for the design, not our terms.** The shares (5% / 3% / 1%), how many places are paid, the measure
-(revenue over 30 days and what counts in it), the floor to qualify ($10,000), the payout (monthly, in USDC) and any cap are **yours to set**: decide
-your own conditions, who gets how many percent and what it takes to qualify, and the board, the leaderboard and the pulse show whatever you set.
-What is asked is the feature and its look; the terms are yours.
+**The numbers in this item are an example for the design, not our terms.** The shares (5% / 3% / 1%), how many places are paid, the floor
+to qualify ($10,000), the payout (monthly, in USDC) and any cap are **yours to set**: decide your own conditions, who gets how many percent and
+what it takes to qualify, and the board, the leaderboard and the pulse show whatever you set. What is asked is the feature, its measure (below)
+and its look; the terms are yours.
 
 Every company in the Universe is ranked, and the top three get a share of **all fees on the whole platform**; in the mockup 1st 5%, 2nd 3%, 3rd 1%.
 
-**The measure: Revenue, last 30 days (USD)**, what the platform itself paid the company in that time: bug bounties (ET10 at the day's
-price), its products' rewards, Agent Tournaments and League prizes. Not counted: trading P&L (it can be faked between two accounts and goes
-negative) and money moved between one owner's own accounts. One number per company, from the platform's own records, never typed in.
+**The measure: the fees the company brought Cymetica in the last 30 days (USD)** (the owner, 2026-10-23: the top 3 are the companies that
+make Cymetica the most revenue). A company's products bring people to the platform; those people trade, play and subscribe, and Cymetica takes
+its fees on that volume. **Those fees are the company's number**: the share is paid from fees, so it goes to whoever brings them. This replaces
+the first measure (what the platform paid the company: bounties, rewards, prizes), which rewarded taking money out, not bringing it in.
+- **Whose fees they are:** a user who comes through a company's product or its link counts for that company (for a window you set, for example
+  12 months), and so does every fee on volume that runs through the company's products (its bots, its tables, its apps), whoever the user is.
+- **Not counted:** fees paid by the owner's own accounts and wallets, and by accounts linked to them (otherwise a company could trade with itself
+  to climb); bounties, rewards and prizes paid to the company.
+- **A cap, so that wash trading can never pay:** a company's share is never more than the fees it brought that month. Fees the company pays to
+  itself do not count, and even if some slipped through, it could never get back more than it put in.
+- One number per company, from the platform's own records, never typed in.
 
-**A floor: a company qualifies at $10,000 revenue in 30 days** (the mockup's example; the number is yours to set, as with the slot price), so
-a company that earns $5 a month never takes a share of everyone's fees. A place nobody reaches stays empty and its share is not paid.
-Paid monthly in USDC, from that month's fees, by the ranking at the month's end; a tie goes to the company that got there first. Private
-companies are on the board too, with name, station and revenue: the share comes from everyone's fees, so who receives it is public.
+**A floor: a company qualifies at $10,000 of fees brought in 30 days** (the mockup's example; the number is yours to set, as with the slot
+price), so a company that brings $5 a month never takes a share of everyone's fees. A place nobody reaches stays empty and its share is not
+paid. Paid monthly in USDC, from that month's fees, by the ranking at the month's end; a tie goes to the company that got there first. Private
+companies are on the board too, with name, station and fees brought: the share comes from everyone's fees, so who receives it is public.
 
 **The board** (`uvboard.js`, styles in `uvpanel.css`): one big pane of frosted glass over the Universe's top-left, under the LIVE line, that
 does not move when the map turns or zooms. It is turned away on its left edge like a cockpit panel (rotateY 18.4°, rotateX 3.4°), with wide
 margins all round, a cyan rim, a lit top edge and a slow sheen (no thick edge under it); on the glass there is only
 type and light: **no row boxes, no tiles round the icons, no frames**. *REVENUE SHARE · TOP 3*, *5% · 3% · 1% of every fee on Cymetica*, then
-three rows: a big place numeral in Cymetica's own colours (green, cyan, blue: the share is paid by Cymetica), the company's station glyph in its colour and its name (YOU on ours), its
-revenue, and the share with about what it pays a month
+three rows: a big place numeral in Cymetica's own colours (green, cyan, blue: the share is paid by Cymetica), the company's station glyph in its colour and its name (YOU on ours), the
+fees it brought (*$26,840 fees · 30 d*), and the share with about what it pays a month
 (platform fees of the last 30 days × the share). Under them *Platform fees · 30 d* and *qualify at*, and *Full leaderboard →*. **A place nobody
-holds is an open seat, not a blank**: a dashed ring with a plus breathing in the place's colour, *Open seat*, *reach $10,000 in 30 d*, and what the seat
+holds is an open seat, not a blank**: a dashed ring with a plus breathing in the place's colour, *Open seat*, *bring $10,000 in fees · 30 d*, and what the seat
 pays a month (*5% ≈ $19,300 / mo*). **At launch nobody will have reached the floor**, so the board must sell the seats: under the subtitle *All 3 seats
 are open. Be the first company to take one.*, the three open seats, and at the foot *Up for grabs ≈ $34,740 / mo · qualify at $10,000* (the mockup shows
 it with `?board=empty`). On a stage under
@@ -128,11 +136,11 @@ it with `?board=empty`). On a stage under
 the left and 6.5% of its height up: on a 2.2-to-1 stage the outer orbit spans 25% to 92% of the width and 12% to 92% of the height), so the board
 covers open space and not the orbits (`u3d.js`, `home()`); a stage under 760 px, where the board folds, keeps the old frame.
 
-**The full leaderboard** (a dialog from the board): every company ranked, its revenue, and for the top three the share and the month's
+**The full leaderboard** (a dialog from the board): every company ranked, the fees it brought (column *Fees brought · 30 d*), and for the top three the share and the month's
 amount, for the rest *qualifies* or *$X to qualify*; our row highlighted. **On top of it, big, who gets a seat** (the owner, 2026-10-23: explain it
 more clearly, bigger): the three seats as tiles (*1 · 5% · ≈ $19,300 / mo*, nothing under it: who holds a seat is the list's first rows), and beside them *Who gets a seat* in three
-numbered lines: *Top 3* by revenue in the last 30 days; *$10,000+* of revenue in those 30 days, or the seat stays open; *Month end*: the ranking then
-decides, paid in USDC from that month's fees; and one small line on what counts as revenue (trading P&L does not). In the list a dashed line marks
+numbered lines: *Top 3* by fees brought to Cymetica in the last 30 days; *$10,000+* of fees in those 30 days, or the seat stays open; *Month end*: the ranking then
+decides, paid in USDC from that month's fees; and one small line on what counts (the users the products brought, their volume, plays and subscriptions; not the owner's own accounts). In the list a dashed line marks
 the floor (*$10,000 · the line to qualify*, *nobody above it yet* when that is so); rows under it are dimmed. **The dialog is the board's own
 glass** (the owner: as beautiful as the board): the same frosted pane, cyan rim and lit top edge, flat and without the sheen; the same head (*REVENUE SHARE*
 in the glowing gradient, *LEADERBOARD* beside it); and only type and light on it: no boxes round rows, seats or icons, big gradient place numerals,
@@ -141,9 +149,9 @@ thin glowing lines between rows.
 **The pulse**: every 10 seconds a cyan arc carrying a dollar sign leaves Cymetica's sun to each of the three, one after another, and
 *+5% of fees* / *+3% of fees* / *+1% of fees* rises over each in the same cyan. Only the top three get it. The flat map shows the line of text.
 
-What the build needs from you: per company the 30-day revenue from your records (the sources above), the platform's fees for the month so far
+What the build needs from you: per company the fees its users and products brought in 30 days (attributed as above), the platform's fees for the month so far
 and for the last 30 days, and the payout itself. Left to you, as said at the top: every term (shares, places, measure, floor, payout, a cap if you want
-one, for example a share never larger than the company's own revenue). The figures in the mockup are samples from one model (`CO.uvBoard` in
+one; we propose: never more than the fees the company brought). The figures in the mockup are samples from one model (`CO.uvBoard` in
 `uv-data.js`).
 
 ## I. A station on the map looks washed in its colour; in Settings it looks right (a bug, settled)
