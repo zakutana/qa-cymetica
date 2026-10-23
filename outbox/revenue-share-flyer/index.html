@@ -25,45 +25,26 @@
   .bg { position: absolute; inset: 0; width: 1080px; height: 1350px; }
   .shade { position: absolute; inset: 0; background: radial-gradient(130% 90% at 50% 45%, rgba(0, 0, 0, 0) 55%, rgba(2, 3, 7, .6) 100%); }
 
-  /* the slogan in metal. Each word is four layers: .ext behind (the letters stacked downward, darkening, then a soft
-     cast shadow: the depth), .face (a chrome gradient with a hard horizon), .edge (a thin lit outline), .glint (one
-     sweep of light). */
-  .head { position: absolute; left: 64px; top: 44px; }
-  .w { position: relative; display: block; font-family: 'Archivo Black', sans-serif; font-weight: 400; white-space: nowrap; line-height: .86; }
-  .w span { display: block; }
-  .w .ext { position: absolute; left: 0; top: 0; color: #0b3f45; }
-  .w .face { position: relative; color: transparent; -webkit-background-clip: text; background-clip: text; }
-  .w .edge { position: absolute; left: 0; top: 0; color: transparent; }
-  .w .glint { position: absolute; left: 0; top: 0; color: transparent; -webkit-background-clip: text; background-clip: text;
-    background-image: linear-gradient(104deg, rgba(255, 255, 255, 0) 40%, rgba(255, 255, 255, .32) 45%, rgba(255, 255, 255, 0) 50%); }
-  /* the faces lit from above in one smooth fall of colour (a hard chrome horizon read as the eighties), the sides
-     a lit teal going dark, deep enough to read against the dark sky */
-  .join { font-size: 74px; letter-spacing: .06em; }
-  .join .ext { text-shadow: 0 1px 0 #3f6676, 0 2px 0 #385c6b, 0 3px 0 #31525f, 0 4px 0 #2a4753, 0 5px 0 #233c47, 0 6px 0 #1c323b, 0 7px 0 #152830,
-      0 16px 24px rgba(0, 0, 0, .75); }
-  .join .face { background-image: linear-gradient(180deg, #ffffff 0%, #f2f8fb 40%, #d6e4ec 70%, #b7cad6 100%); }
-  .join .edge { -webkit-text-stroke: 1px rgba(255, 255, 255, .45); }
-  .cym { margin-top: 12px; font-size: 108px; letter-spacing: .05em; }
-  .cym .ext { text-shadow: 0 1px 0 #13707e, 0 2px 0 #116775, 0 3px 0 #0f5d6b, 0 4px 0 #0d5361, 0 5px 0 #0b4956, 0 6px 0 #093f4b, 0 7px 0 #073540,
-      0 8px 0 #062c36, 0 9px 0 #04232c, 0 20px 32px rgba(0, 0, 0, .75); }
-  .cym .face { background-image: linear-gradient(180deg, #f2fdff 0%, #a8ecff 26%, #45d2f6 55%, #14aee0 80%, #0c95cc 100%); }
-  .cym .edge { -webkit-text-stroke: 1.2px rgba(220, 250, 255, .55); }
-  .quest { margin-top: 14px; font-size: 168px; letter-spacing: .01em; filter: drop-shadow(0 0 34px rgba(0, 255, 160, .18)); }
-  .quest .ext { text-shadow:
-      0 1px 0 #149a7c, 0 2px 0 #138f74, 0 3px 0 #11846c, 0 4px 0 #0f7963, 0 5px 0 #0e6e5b, 0 6px 0 #0c6352, 0 7px 0 #0b594a,
-      0 8px 0 #094e42, 0 9px 0 #08443a, 0 10px 0 #063a32, 0 11px 0 #05302a, 0 12px 0 #042722, 0 13px 0 #031e1b,
-      0 26px 40px rgba(0, 0, 0, .78), 0 0 80px rgba(0, 207, 255, .14); }
-  .quest .face { background-image: linear-gradient(180deg, #eafff6 0%, #8fffd0 24%, #2ff3a5 50%, #00d79c 76%, #00b6cf 100%); }
-  .quest .edge { -webkit-text-stroke: 1.4px rgba(225, 255, 242, .6); }
-  /* the line under it, smaller and hazy: what the board is */
-  .lede { margin-top: 36px; font: 700 26px/1.32 'JetBrains Mono'; letter-spacing: .02em; color: rgba(214, 240, 248, .9);
-    text-shadow: 0 0 14px rgba(160, 230, 255, .55), 0 0 40px rgba(0, 207, 255, .25); }
-  .lede b { color: #ffffff; } .lede em { font-style: normal; font-weight: 800; color: var(--green); text-shadow: 0 0 16px rgba(0, 255, 136, .7); }
+  /* the slogan as the board sets its own title (uvpanel.css .uvb-h b: the green-to-cyan fall, a soft glow, no
+     extrusion), turned in space exactly as the board is (rotateY 12, rotateX 2.6 about its left edge, the same
+     perspective), so the words and the board read as one HUD. The metal take was "trapny ... moc detinsky, neni vubec
+     profesionalni ... moc animovany", and the line under it is the message: "ten podslogan musi byt vetsi a hlavni
+     slogan klidne mensi trochu". */
+  .headstage { position: absolute; left: 60px; top: 62px; width: 960px; height: 360px; perspective: 2000px; perspective-origin: 0% 40%; }
+  .head { transform: rotateY(12deg) rotateX(2.6deg); transform-origin: 0% 50%; }
+  .slogan { font-family: 'Archivo Black', sans-serif; font-weight: 400; line-height: .98; letter-spacing: .05em; color: transparent; -webkit-background-clip: text; background-clip: text;
+    background-image: linear-gradient(180deg, #f4fffa 0%, #9dffd2 34%, #2ef09e 60%, #00c6e6 100%); filter: drop-shadow(0 0 16px rgba(0, 207, 255, .45)) drop-shadow(0 4px 18px rgba(0, 0, 0, .7)); }
+  .slogan .a { display: block; font-size: 52px; letter-spacing: .3em; }
+  .slogan .b { display: block; margin-top: 8px; font-size: 84px; }
+  .lede { margin-top: 30px; font: 800 37px/1.28 'JetBrains Mono'; letter-spacing: .005em; color: #f2fbff;
+    text-shadow: 0 0 18px rgba(160, 230, 255, .45), 0 2px 14px rgba(0, 0, 0, .85); }
+  .lede em { font: 400 52px/1 'Archivo Black', sans-serif; font-style: normal; color: var(--green); letter-spacing: -.01em; vertical-align: -2px;
+    text-shadow: 0 0 22px rgba(0, 255, 136, .75), 0 2px 12px rgba(0, 0, 0, .8); }
 
   /* the board's glass, as in the Universe: turned away on its left edge, frosted, a cyan rim and a lit top edge */
   .frost { position: absolute; inset: 0; pointer-events: none; }
   .frost img { position: absolute; inset: 0; width: 1080px; height: 1350px; filter: blur(24px) saturate(1.3) brightness(1.15); transform: scale(1.02); }
-  .stage { position: absolute; left: 50px; top: 494px; width: 980px; height: 818px; perspective: 2000px; perspective-origin: 0% 40%; }
+  .stage { position: absolute; left: 50px; top: 450px; width: 980px; height: 862px; perspective: 2000px; perspective-origin: 0% 40%; }
   .glass { position: absolute; inset: 0; padding: 34px 52px 32px; border-radius: 30px; transform: rotateY(12deg) rotateX(2.6deg); transform-origin: 0% 50%;
     background:
       linear-gradient(135deg, rgba(255, 255, 255, .16) 0%, rgba(255, 255, 255, .05) 24%, rgba(255, 255, 255, 0) 44%),
@@ -85,7 +66,7 @@
   .gsub b { color: #ffffff; }
 
   .seats { margin-top: 14px; }
-  .seat { display: grid; grid-template-columns: 70px 52px 1fr auto; align-items: center; gap: 20px; padding: 10px 0; }
+  .seat { display: grid; grid-template-columns: 70px 52px 1fr auto; align-items: center; gap: 20px; padding: 13px 0; }
   .seat + .seat { border-top: 1px solid transparent; border-image: linear-gradient(90deg, rgba(255, 255, 255, 0), rgba(255, 255, 255, .12) 30%, rgba(0, 207, 255, .22) 70%, rgba(255, 255, 255, 0)) 1; }
   .rk { font: 400 70px/1 'Archivo Black', sans-serif; text-align: center; color: transparent; -webkit-background-clip: text; background-clip: text; }
   .p1 .rk { background-image: linear-gradient(180deg, #eafff4, var(--rs1) 55%, #00a067); filter: drop-shadow(0 0 14px rgba(0, 255, 136, .65)); }
@@ -121,12 +102,10 @@
 <img class="bg" src="space-bg.jpg" alt="">
 <div class="shade"></div>
 
-<div class="head">
-  <div class="w join"><span class="ext">JOIN THE</span><span class="face">JOIN THE</span><span class="edge">JOIN THE</span><span class="glint">JOIN THE</span></div>
-  <div class="w cym"><span class="ext">CYMETICA</span><span class="face">CYMETICA</span><span class="edge">CYMETICA</span><span class="glint">CYMETICA</span></div>
-  <div class="w quest"><span class="ext">QUEST</span><span class="face">QUEST</span><span class="edge">QUEST</span><span class="glint">QUEST</span></div>
-  <div class="lede">Be the first to take a seat and earn<br><em>5%</em> of <b>all Cymetica fees</b>.</div>
-</div>
+<div class="headstage"><div class="head">
+  <div class="slogan"><span class="a">JOIN THE</span><span class="b">CYMETICA QUEST</span></div>
+  <div class="lede">Be the first to take a seat<br>and earn <em>5%</em> of all Cymetica fees.</div>
+</div></div>
 
 <div class="frost" id="frost"><img src="space-bg.jpg" alt=""></div>
 <div class="stage"><div class="glass">
