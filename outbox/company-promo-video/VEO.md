@@ -1,5 +1,16 @@
 # Cymetica Quest: promo video for Google Veo 3.1
 
+## One video, one generation (8 s, nothing to join)
+
+Veo 3.1 makes at most 8 seconds per generation. This is the whole idea in one: **Frames to Video**, first frame
+`shots/02-universe.png`, last frame `shots/11-endcard.png`, 16:9, 8 s, this prompt:
+
+```
+Start on this galaxy: glowing low-poly space stations riding cyan orbit rings around a colossal golden plasma star. The camera glides in toward the star; the star pulses and fires three brilliant cyan arcs of light, each carrying a glowing dollar sign, to three stations, which flare green as they are hit. A pane of frosted glass slides in over the scene and the shot settles exactly on the final frame: the slogan, the three percentages and the button, perfectly sharp and still. Premium sci-fi 3D render, strong bloom, cinematic. Audio: dark synthwave building to a bass drop on the final frame. A calm, confident male narrator says: "Stop paying fees. Start earning them. Build a company, take a top-three seat. Cymetica Quest."
+```
+
+## The long cut (8 shots, joined in Flow)
+
 8 shots × 8 s ≈ 64 s, 16:9, 1080p. Images are in `shots/` (made from our mockup by `shots.py`).
 
 **How:** in Flow (or Gemini → Veo 3.1), for each shot choose **Frames to Video**, upload the shot's image as the **first frame**
