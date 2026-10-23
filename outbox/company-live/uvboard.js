@@ -43,18 +43,32 @@
     if (html !== last) { el.innerHTML = html; last = html; }
   };
 
-  // the full leaderboard, for the modal: every company, its revenue, its share or how far it is from the floor
+  // the full leaderboard, for the modal: every company, its revenue, its share or how far it is from the floor. On top,
+  // big, who gets a seat ("zretelneji vysvetli nebo zvetsi kdo ma pravo na sloty", 2026-10-23): the three seats and what
+  // each pays, the three conditions, what counts as revenue; in the list, the line at the floor
   CO.uvBoardTable = function (mine) {
-    var b = CO.uvBoard(mine);
-    var rows = b.rows.map(function (r) {
+    var b = CO.uvBoard(mine), cut = false;
+    var line = function (none) { return '<div class="lb-cut"><span>' + usd(b.floor) + ' · the line to qualify' + (none ? ' · nobody above it yet' : '') + '</span></div>'; };
+    var rows = b.rows.map(function (r, i) {
       var right = r.share ? '<b class="sh">' + r.share + '%</b><span>≈ ' + usd(r.month) + ' / mo</span>'
         : r.qualifies ? '<span class="ok">qualifies</span>' : '<span>' + usd(b.floor - r.rev) + ' to qualify</span>';
-      return '<div class="lb-r' + (r.share ? ' top pl' + r.rank : '') + (r.mine ? ' me' : '') + '"><i class="lb-rk">' + r.rank + '</i>' + CO.stationIcon(r.c.skin, r.c.accent) +
+      var pre = !cut && !r.qualifies ? (cut = true, line(i === 0)) : '';
+      return pre + '<div class="lb-r' + (r.share ? ' top pl' + r.rank : '') + (r.mine ? ' me' : '') + (r.qualifies ? '' : ' below') + '"><i class="lb-rk">' + r.rank + '</i>' + CO.stationIcon(r.c.skin, r.c.accent) +
         '<div class="lb-n">' + name(r.c, r.mine) + '</div><div class="lb-v">' + usd(r.rev) + '</div><div class="lb-s">' + right + '</div></div>';
     }).join('');
+    var seats = CO.SHARE.map(function (pct, i) {
+      var r = b.top[i];
+      return '<div class="lb-seat pl' + (i + 1) + (r ? '' : ' open') + '"><i>' + (i + 1) + '</i><b>' + pct + '%</b><span>≈ ' + usd(b.pot[i]) + ' / mo</span>' +
+        '<em>' + (r ? esc(r.c.name) : 'Open seat') + '</em></div>';
+    }).join('');
     return '<div class="mh"><h3>Revenue share · leaderboard</h3><span class="sp"></span><button class="btn" data-a="close">×</button></div>' +
-      '<div class="lb-sub">Revenue, last 30 days. The top 3 at or above <b>' + usd(b.floor) + '</b> get <b>' + CO.SHARE.join('% · ') + '%</b> of every fee on Cymetica, paid monthly in USDC.</div>' +
+      '<div class="lb-rule"><div class="lb-seats">' + seats + '</div>' +
+        '<div class="lb-who"><h4>Who gets a seat</h4>' +
+          '<div class="lb-c"><i>1</i><b>Top 3</b><span>by revenue in the last 30 days</span></div>' +
+          '<div class="lb-c"><i>2</i><b>' + usd(b.floor) + '+</b><span>of revenue in those 30 days, or the seat stays open</span></div>' +
+          '<div class="lb-c"><i>3</i><b>Month end</b><span>the ranking then decides; paid in USDC from that month\'s fees</span></div>' +
+          '<p>Revenue = what Cymetica paid the company: bug bounties, its products\' rewards, tournament and League prizes. Trading P&amp;L does not count.</p></div></div>' +
       '<div class="lb-head"><span>#</span><span></span><span>Company</span><span>Revenue · 30 d</span><span>Share</span></div>' +
-      '<div class="lb">' + rows + '</div>';
+      '<div class="lb">' + rows + (cut ? '' : line(false)) + '</div>';
   };
 })();

@@ -217,6 +217,29 @@ a.uvr { color: var(--text); text-decoration: none; } a.uvr:hover { background: v
 .lb-s { text-align: right; font-size: 10.5px; color: var(--dim2); }
 .lb-s .sh { font: 400 15px 'Archivo Black', sans-serif; color: var(--rs1); margin-right: 6px; } .lb-r.pl2 .lb-s .sh { color: var(--rs2); } .lb-r.pl3 .lb-s .sh { color: var(--rs3); }
 .lb-s .ok { color: var(--green); }
+/* who gets a seat, big, over the list: the three seats and what each pays, then the three conditions */
+.lb-rule { display: grid; grid-template-columns: minmax(0, 1.1fr) minmax(0, 1fr); gap: 18px; margin: 4px 0 16px; padding: 16px; border: 1px solid rgba(0, 207, 255, .3);
+  border-radius: 12px; background: linear-gradient(135deg, rgba(0, 255, 136, .06), rgba(0, 207, 255, .05)); }
+.lb-seats { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px; }
+.lb-seat { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 3px; padding: 12px 8px; border-radius: 10px; background: rgba(10, 14, 23, .7);
+  border: 1px solid color-mix(in srgb, var(--sc) 55%, transparent); box-shadow: 0 0 18px color-mix(in srgb, var(--sc) 18%, transparent); text-align: center; }
+.lb-seat.pl1 { --sc: var(--rs1); } .lb-seat.pl2 { --sc: var(--rs2); } .lb-seat.pl3 { --sc: var(--rs3); }
+.lb-seat i { font: 400 13px 'Archivo Black', sans-serif; font-style: normal; color: var(--dim); }
+.lb-seat b { font: 400 30px/1 'Archivo Black', sans-serif; color: var(--sc); text-shadow: 0 0 14px color-mix(in srgb, var(--sc) 55%, transparent); }
+.lb-seat span { font-size: 12px; font-weight: 700; color: var(--text); }
+.lb-seat em { font-style: normal; font-size: 11px; color: #a9bccb; max-width: 100%; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.lb-seat.open em { color: #5fe0ff; }
+.lb-who h4 { margin: 0 0 8px; font: 400 16px 'Archivo Black', sans-serif; color: var(--green); letter-spacing: .02em; }
+.lb-c { display: grid; grid-template-columns: 22px auto minmax(0, 1fr); align-items: baseline; gap: 8px; margin: 5px 0; }
+.lb-c i { font-style: normal; display: grid; place-items: center; width: 20px; height: 20px; border-radius: 50%; background: rgba(0, 207, 255, .14); color: #5fe0ff; font: 700 11px 'JetBrains Mono'; }
+.lb-c b { font: 400 15px 'Archivo Black', sans-serif; color: var(--text); white-space: nowrap; }
+.lb-c span { font-size: 12px; color: #a9bccb; }
+.lb-who p { margin: 8px 0 0; font-size: 11px; line-height: 1.45; color: var(--dim); }
+/* the line at the floor: above it a company can take a seat, below it not yet */
+.lb-cut { display: flex; align-items: center; gap: 10px; margin: 6px 0; font: 700 11px 'JetBrains Mono'; color: #5fe0ff; letter-spacing: .04em; }
+.lb-cut::before, .lb-cut::after { content: ''; flex: 1; border-top: 1px dashed rgba(0, 207, 255, .55); }
+.lb-r.below { opacity: .78; }
+@media (max-width: 760px) { .lb-rule { grid-template-columns: 1fr; } }
 /* a product's own line in its map tooltip (the owner writes it on the Products tab) */
 .tip .uvl { margin: 1px 0 4px; font-size: 11.5px; color: #d6e0ec; }
 /* the money pulse's pop over a top-3 station, in the board's cyan */
