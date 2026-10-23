@@ -1,0 +1,68 @@
+--- a/company/app/app.html
++++ b/company/app/app.html
+@@ -112,4 +112,11 @@
+     <div class="o3layer" id="o3layer"></div>
+     <div class="tip" hidden></div>
++    <!-- while the 3D office is made after the page (the page opened on the Universe): the loading screen's core, on the stage -->
++    <div class="uvload" id="o3load" hidden aria-hidden="true">
++      <div class="ldr"><i class="ld-halo"></i><i class="ld-beams"></i><i class="ld-ping"></i><i class="ld-ping p2"></i>
++        <i class="ld-orbit o3"><b></b></i><i class="ld-orbit o2"><b></b></i><i class="ld-orbit o1"><b></b></i>
++        <i class="ld-ring r3"></i><i class="ld-sun"><b></b><b></b></i>
++        <div class="ld-read"><b class="ld-pct">0</b><span>%</span></div><div class="ld-what">OFFICE</div><div class="ld-bar"><i></i></div></div>
++    </div>
+     <div class="strip">
+       <div class="use wide" title="Your plan's current 5-hour window: how much of it the company has used.">
+@@ -220,4 +227,5 @@
+ <div class="toast" id="toast" hidden></div>
+ 
++<script src="/static/company/quality.js?v=6adb7183"></script>
+ <script src="/static/company/data.js?v=6adb7183"></script>
+ <script src="/static/company/uv-data.js?v=6adb7183"></script>
+--- a/company/app/builder.html
++++ b/company/app/builder.html
+@@ -70,4 +70,5 @@
+ </main>
+ 
++<script src="/static/company/quality.js?v=6adb7183"></script>
+ <script src="/static/company/data.js?v=6adb7183"></script>
+ <script src="/static/company/uv-data.js?v=6adb7183"></script>
+--- a/company/app/start.html
++++ b/company/app/start.html
+@@ -15,6 +15,5 @@
+ <link rel="stylesheet" href="/static/company/start.css?v=6adb7183">
+ <style nonce="wgisBeGo1abhR27PFtVOUQ==">html.ld body { visibility: hidden; }</style>
+-<link rel="preload" as="image" href="/static/company/sun.webp" fetchpriority="high">
+-<link rel="stylesheet" href="/static/company/boot.css?v=6adb7183">
++<link rel="preload" as="image" href="/static/company/start-space.webp" fetchpriority="high">
+ <script type="importmap" nonce="wgisBeGo1abhR27PFtVOUQ==">{ "imports": {
+   "three": "https://cdn.jsdelivr.net/npm/three@0.172.0/build/three.webgpu.js",
+@@ -23,15 +22,7 @@
+   "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.172.0/examples/jsm/"
+ } }</script>
+-<link rel="modulepreload" href="https://cdn.jsdelivr.net/npm/three@0.172.0/build/three.webgpu.js">
+-<link rel="modulepreload" href="https://cdn.jsdelivr.net/npm/three@0.172.0/build/three.core.js">
+-<link rel="modulepreload" href="https://cdn.jsdelivr.net/npm/three@0.172.0/build/three.tsl.js">
+ </head>
+ <body class="lp">
+-<div class="boot" id="boot" aria-hidden="true">
+-  <div class="ldr"><i class="ld-halo"></i><i class="ld-beams"></i><i class="ld-ping"></i><i class="ld-ping p2"></i>
+-    <i class="ld-orbit o3"><b></b></i><i class="ld-orbit o2"><b></b></i><i class="ld-orbit o1"><b></b></i>
+-    <i class="ld-ring r3"></i><i class="ld-sun"><b></b><b></b></i>
+-    <div class="ld-read"><b class="ld-pct">0</b><span>%</span></div><div class="ld-what">LOADING</div><div class="ld-bar"><i></i></div></div>
+-</div>
++<!-- no loading screen: the scenes are pictures first (start.css, start-*.webp) and come alive over them (start.js) -->
+ <main class="lp-main">
+   <!-- space: Cymetica's sun, the Universe's own, with a few companies on their orbits round it (start.js) -->
+@@ -56,4 +47,5 @@
+ </main>
+ 
++<script src="/static/company/quality.js?v=6adb7183"></script>
+ <script src="/static/company/data.js?v=6adb7183"></script>
+ <script src="/static/company/uv-data.js?v=6adb7183"></script>
+@@ -64,6 +56,4 @@
+ <script src="/static/company/entry3d.js?v=6adb7183"></script>
+ <script src="/static/company/start.js?v=6adb7183"></script>
+-<script type="module" src="/static/company/u3d.js?v=6adb7183"></script>
+-<script type="module" src="/static/company/stations.js?v=6adb7183"></script>
+ <script nonce="wgisBeGo1abhR27PFtVOUQ==">setTimeout(function () { document.documentElement.classList.remove("ld"); }, 1500); window.addEventListener("load", function () { document.documentElement.classList.remove("ld"); });</script>
+ </body>

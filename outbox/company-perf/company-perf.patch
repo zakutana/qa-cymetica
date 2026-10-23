@@ -1,0 +1,737 @@
+--- a/static/company/app.js
++++ b/static/company/app.js
+@@ -55,9 +55,10 @@
+         office3d = CO.U3.office($('office3d'), st, tipFor);
+         office3d.onFail = function () { office3d = null; setView('2d'); toast('3D could not start in this browser: the flat office instead. Reload to try again.'); };
+         office3d.onStop = function () { if (ui.view === '3d') { setView('2d'); toast('3D stopped in this browser. Click 3D to start it again.'); } };
+-        // the loading screen follows its first frame's shaders, and goes with that frame
+-        office3d.onProgress = function (f) { if (ui.tab === 'office') bootSet(30 + f * 66, 'RENDERING'); };
+-        office3d.onFirst = function () { if (ui.tab === 'office') bootDone(); warmDialog(); };
++        // the loading screen follows its first frame's shaders, and goes with that frame (the page's, or the stage's
++        // when the office is built after the page: o3Load)
++        office3d.onProgress = function (f) { if (ui.tab === 'office') bootSet(30 + f * 66, 'RENDERING'); if (ui.o3late) o3Load(true, 30 + f * 66); };
++        office3d.onFirst = function () { if (ui.tab === 'office') bootDone(); ui.o3late = false; o3Load(false); warmDialog(); };
+       }
+       office = office3d;
+     } else { office = office2d; if (ui.tab === 'office') bootDone(); }
+@@ -111,6 +112,13 @@
+   setTimeout(bootDone, 30000);   // (never in the way for good)
+   // the map's stage: its own loading screen while it is made, gone once it has drawn
+   function uvLoad(on, p) { var el = $('uvload'); if (!el) return; if (p != null) ldSet(el, p, 'UNIVERSE'); el.hidden = !on; }
++  // the office's stage the same, when the 3D office is built after the page (opened on the Universe: boot)
++  function o3Load(on, p) { var el = $('o3load'); if (!el) return; if (p != null) ldSet(el, p, 'OFFICE'); el.hidden = !on; }
++  // Things built ahead, in the background, before anyone asks for them (the Universe behind the office, the
++  // Add-department dialog's rooms): at high, as before ("load things in the background", 2026-10-19); at medium and
++  // low each is built when it is opened, because on a weak computer the building is what made the office stutter
++  // (quality.js, 2026-10-23)
++  function ahead() { return !CO.Q3 || !!CO.Q3.ahead; }
+   function afterFrame(o, cb) {
+     var f0 = o.frames || 0, t0 = performance.now();
+     (function w() { if (!o.renderer || (o.frames || 0) > f0 || performance.now() - t0 > 3000) return cb(); requestAnimationFrame(w); })();
+@@ -129,10 +137,13 @@
+     bootSet(14, 'ENGINE');
+     Array.prototype.forEach.call(document.querySelectorAll('#vt button'), function (b) { b.classList.toggle('on', b.getAttribute('data-v') === '2d'); });
+     whenEngine(function (ok) {
+-      if (none) { if (ok) afterOffice(prebuildUniverse); return; }
+-      if (ok && viewPref() !== '2d') { bootSet(22, 'OFFICE'); setView('3d'); }
++      if (none) { if (ok && ahead()) afterOffice(prebuildUniverse); return; }
++      // The 3D office is built when the office is what is shown. Opened on the Universe it waits for its tab (setTab):
++      // it was built behind the map, and its "OFFICE" was the loading screen's word while the map was asked for
++      // (2026-10-23, "nechapu proc na uvodni strane se nacita office. nemel by se nacitat az kdyz je potreba?").
++      if (ok && viewPref() !== '2d') { if (location.hash !== '#universe') { bootSet(22, 'OFFICE'); setView('3d'); } else ui.o3wait = true; }
+       else if (location.hash !== '#universe') bootDone();   // the flat office is drawn already
+-      if (ok) afterOffice(prebuildUniverse);
++      if (ok && ahead()) afterOffice(prebuildUniverse);
+     });
+     markSeen();
+     if (CO.start) CO.start();
+@@ -584,6 +595,9 @@
+     Array.prototype.forEach.call(document.querySelectorAll('.pane'), function (p) { p.hidden = p.getAttribute('data-pane') !== name; });
+     if (name !== 'office') { $('drawer').hidden = true; } else if (ui.panel != null) { $('drawer').hidden = false; }
+     render();
++    // the 3D office the first time its tab opens, when the page opened on the Universe (boot): the stage's own loading
++    // screen until its first frame
++    if (name === 'office' && ui.o3wait) { ui.o3wait = false; ui.o3late = true; o3Load(true, 22); setView('3d'); }
+     if (name === 'office') requestAnimationFrame(function () { office.resize(); });
+     if (name === 'universe') showUniverse();
+     if (name === 'portfolio' && !RO) CO.loadProducts().then(function () { if (ui.tab === 'portfolio') renderPortfolio(); });
+@@ -1043,6 +1057,14 @@
+     pv3(nuPv, myPv());
+     thumbs3($('settings'), CO.profile().accent);
+   }
++  // Graphics (quality.js): Auto, the level this computer was given and why, or one chosen by hand; kept in this browser
++  function graphicsCard() {
++    var Q = CO.Q3; if (!Q) return '';
++    var cur = Q.hand || 'auto', name = { auto: 'Auto', high: 'High', medium: 'Medium', low: 'Low' };
++    return '<div class="card"><h3>Graphics</h3><div class="qrow">' + ['auto', 'high', 'medium', 'low'].map(function (k) {
++      return '<button class="btn' + (cur === k ? ' cy' : '') + '" data-a="q3" data-v="' + k + '">' + name[k] + (k === 'auto' && cur === 'auto' ? ' · ' + name[Q.name] : '') + '</button>';
++    }).join('') + '</div><p class="hint" style="margin-top:10px">Lower draws the 3D with fewer effects, for a smoother office and Universe on a weaker computer.</p></div>';
++  }
+   function settingsHTML(S, c, paused) {
+     setHTML($('settings'), uvCard() + '<div class="cols2"><div class="card"><h3>Company</h3><div class="form">' +
+       '<label class="field">Name<input id="st-name" maxlength="120" value="' + esc(c.name) + '"></label>' +
+@@ -1052,6 +1074,7 @@
+       '<div class="switch' + (paused ? '' : ' on') + '" data-a="pause"><span class="sw"></span><div><b>' + (paused ? 'Paused' : 'Active') + '</b><span>' + (paused ? 'Nothing new starts.' : 'Your departments work on their own.') + '</span></div></div>' +
+       '<p class="hint" style="margin-top:10px">Every agent turn is metered to your own NEXUS plan' + (S.budget.extra.on ? ', and extra usage is on' : '') + '. Extra usage and plans are set at <a href="/usage" target="_blank" rel="noopener">/usage</a>.</p>' +
+       '<div class="mf"><span class="hint">Plan: <b>' + esc(c.plan || '—') + '</b></span><span class="sp"></span><button class="btn cy" data-a="upgrade">Plans</button></div></div>' +
++      graphicsCard() +
+       '<div class="card danger"><h3 class="red">Danger zone</h3><p class="hint">Deleting the company cancels every open task and removes its memory. One company per account.</p>' +
+       '<div class="mf"><span class="sp"></span><button class="btn rd" data-a="delete">Delete company</button></div></div></div></div>');
+   }
+@@ -1145,7 +1168,7 @@
+   // The stage's size is a guess from the dialog's layout (style.css .modal-card.x3, .d3main, .d3bot); the dialog
+   // corrects it as it opens, and only the time that takes depends on it.
+   function warmDialog() {
+-    if (RO || ui.view !== '3d' || !office3d || !(CO.U3 && CO.U3.dialogPreview)) return;
++    if (RO || !ahead() || ui.view !== '3d' || !office3d || !(CO.U3 && CO.U3.dialogPreview)) return;
+     setTimeout(function () {
+       var ric = window.requestIdleCallback || function (f) { return setTimeout(f, 50); };
+       ric(warmRooms, { timeout: 4000 });
+@@ -1153,7 +1176,7 @@
+   }
+   // (and again as the dialog goes: a department added or changed meanwhile has a room of its own to make)
+   function warmRooms() {
+-    if (RO || ui.view !== '3d' || !office3d || !(CO.U3 && CO.U3.dialogPreview)) return;
++    if (RO || !ahead() || ui.view !== '3d' || !office3d || !(CO.U3 && CO.U3.dialogPreview)) return;
+     var L = looks(), own = CO.TEMPLATES.filter(function (t) { return t.key === 'custom'; })[0] || { key: 'custom', name: '', experts: ['researcher'] };
+     var free = CO.TEMPLATES.filter(function (t) { return t.key !== 'custom' && !CO.S.departments.some(function (d) { return d.key === t.key; }); })[0];
+     var first = free ? { key: free.key, experts: free.experts, look: null, name: free.name } : { key: 'custom', experts: own.experts, look: L[0].key, name: '' };
+@@ -1667,6 +1690,8 @@
+         'Your station in the Universe: ' + CO.skinName(p.skin) + ', ' + p.accent + '.');
+     }
+     if (a === 'invest') { var on = !(S.invest && S.invest.investable); CO.act.invest(on); toast(on ? 'Investable: backers can pledge.' : 'Not investable any more.'); }
++    // Graphics: a level by hand, or automatic; the 3D is built at a level once, so the page starts again with it
++    if (a === 'q3' && CO.Q3) { var qv = el.getAttribute('data-v'); CO.Q3.set(qv === 'auto' ? null : qv); location.reload(); return; }
+     if (a === 'st-save') {
+       CO.act.settings({ name: $('st-name').value.trim() || S.company.name, mission: $('st-mission').value.trim() });
+       document.activeElement.blur(); renderSettings(); toast('Settings saved.');
+--- /dev/null
++++ b/static/company/quality.js
+@@ -0,0 +1,83 @@
++/* How much 3D this computer gets, decided once before anything 3D is built (2026-10-23, the owner on a Ryzen 5 5500U
++ * laptop with 8 GB and Radeon graphics: "aby se v tom loadingu vzdy nahrala spravna verze pro dany pocitac a jelo to co
++ * nejlepe i na horsich pocitacich").
++ *
++ *   high    the page as it was, pixel for pixel, things built ahead in the background as before.
++ *   medium  the same pictures, cheaper to draw: the sun's shadow redrawn 4 times a second at 1024 instead of every
++ *           frame at 2048, the floors' mirror at a third of the screen instead of half, at most ~2.4 million pixels,
++ *           30 frames a second while nobody touches it, nothing built ahead, the labels' glass opaque.
++ *   low     what medium does, and no floors' mirror, no edge smoothing (the pass is not multisampled), at most ~1.3
++ *           million pixels, the shadow redrawn once a second, the entry page's pictures as images (no 3D there at all).
++ *
++ * On a weak computer a frame of the office is mostly the processor's (three.js sets up ~800 draws one by one), so the
++ * levels cut whole passes first (the shadow's, the mirror's), pixels second, and build nothing nobody opened.
++ *
++ * The first guess is the graphics chip's name (WebGL's renderer string, which every browser gives); the frames then
++ * have the last word (u3d.js govern(): a scene that cannot hold ~38 frames a second while it is moved draws fewer
++ * pixels at once, and a level that needed that is kept one lower for this chip's next visit). ?q=high|medium|low, or
++ * Settings > Graphics, choose by hand and are never overruled.
++ */
++(function () {
++  'use strict';
++  var CO = window.CO = window.CO || {};
++  //   pr: the pixel ratio at most · px: the pixels drawn at most, 0 none (the office, the dialog, the pictures) ·
++  //   uvPx: the same for the Universe (4.5 M was its cap before, ET-32470) · samples: the pass's multisampling ·
++  //   shadow: the sun's shadow map · shadowMs: how often it is drawn again, 0 every frame · mirror: the floors'
++  //   mirror's size against the screen, 0 none · idleMs: a frame at most this often while nobody touches the scene ·
++  //   lanes: a corridor's dashes drawn as one mesh · ahead: build the Universe and the Add-department dialog in the
++  //   background · live: the entry page draws its pictures live · glass: the labels' frosted glass over the moving scene
++  var LEVELS = {
++    high: { name: 'high', pr: 2, px: 0, uvPx: 4.5e6, samples: 4, shadow: 2048, shadowMs: 0, mirror: 0.5, idleMs: 12.5, lanes: false, ahead: true, live: true, glass: true },
++    medium: { name: 'medium', pr: 1.5, px: 2.4e6, uvPx: 2.4e6, samples: 4, shadow: 1024, shadowMs: 250, mirror: 0.33, idleMs: 33, lanes: true, ahead: false, live: true, glass: false },
++    low: { name: 'low', pr: 1.25, px: 1.3e6, uvPx: 1.3e6, samples: 0, shadow: 1024, shadowMs: 1000, mirror: 0, idleMs: 33, lanes: true, ahead: false, live: false, glass: false }
++  };
++  var ORDER = ['low', 'medium', 'high'];
++  function read(k) { try { return localStorage.getItem(k); } catch (e) { return null; } }
++  function store(k, v) { try { if (v == null) localStorage.removeItem(k); else localStorage.setItem(k, v); } catch (e) { /* private mode */ } }
++
++  // the chip's name as the browser gives it ("ANGLE (AMD, AMD Radeon(TM) Graphics (0x...) Direct3D11 ...)"), and
++  // whether WebGL2 is there at all (gl2: u3d.js asks the same and need not make a context of its own for it)
++  var gl2 = false;
++  function chip() {
++    try {
++      var c = document.createElement('canvas'), gl = c.getContext('webgl2');
++      gl2 = !!gl; gl = gl || c.getContext('webgl');
++      if (!gl) return '';
++      var ext = gl.getExtension('WEBGL_debug_renderer_info');
++      var n = String((ext && gl.getParameter(ext.UNMASKED_RENDERER_WEBGL)) || gl.getParameter(gl.RENDERER) || '');
++      var lose = gl.getExtension('WEBGL_lose_context'); if (lose) lose.loseContext();
++      return n;
++    } catch (e) { return ''; }
++  }
++  // A first guess from the name, the frames correcting it. Graphics built into the processor (Intel HD/UHD, the Radeon
++  // in a Ryzen like the owner's 5500U) are low; the stronger built-in ones (Iris Xe, Radeon 680M/780M, Apple M1/M2,
++  // the weakest add-in cards) medium; add-in cards high. Nothing known: the processor's threads decide.
++  function guess(name) {
++    var cores = navigator.hardwareConcurrency || 4;
++    var phone = window.matchMedia && matchMedia('(pointer: coarse)').matches && Math.min(screen.width, screen.height) < 820;
++    if (/SwiftShader|llvmpipe|softpipe|Software|Basic Render/i.test(name) || phone) return 'low';
++    if (/GeForce (MX|GT )|GeForce \d{3}M|Iris|Radeon(\(TM\))? ?[678]\d0M|Arc\(TM\) Graphics|Apple (M\d(?! (Pro|Max|Ultra))|GPU)|Adreno \(TM\) [78]/i.test(name)) return 'medium';
++    if (/NVIDIA|GeForce|Quadro|RTX|GTX|Radeon (RX|Pro|VII)|Arc\(TM\) A\d|Arc A\d|Apple M\d (Pro|Max|Ultra)/i.test(name)) return 'high';
++    if (/Intel|UHD|HD Graphics|Radeon\(TM\) Graphics|Radeon Graphics|Vega|Radeon\(TM\) R\d|Mali|Adreno|PowerVR/i.test(name)) return 'low';
++    return cores >= 8 ? 'medium' : 'low';
++  }
++
++  var asked = null; try { asked = new URLSearchParams(location.search).get('q'); } catch (e) { /* none */ }
++  var hand = read('co.q3'), name = chip(), kept = (read('co.q3.auto') || '').split('|');
++  var level, by;
++  if (LEVELS[asked]) { level = asked; by = 'url'; }
++  else if (LEVELS[hand]) { level = hand; by = 'hand'; }
++  else if (LEVELS[kept[0]] && kept.slice(1).join('|') === name) { level = kept[0]; by = 'frames'; }
++  else { level = guess(name); by = 'chip'; }
++
++  var Q = CO.Q3 = Object.assign({}, LEVELS[level], { by: by, chip: name, gl2: gl2, scale: 1, levels: ORDER });
++  document.documentElement.classList.add('q-' + Q.name);
++  // the frames' verdict on this chip (u3d.js govern): one level lower from the next visit; a level chosen by hand stays
++  Q.down = function () {
++    var i = ORDER.indexOf(Q.name);
++    if (i > 0 && Q.by !== 'url' && Q.by !== 'hand') store('co.q3.auto', ORDER[i - 1] + '|' + name);
++  };
++  // Settings > Graphics: a level by hand, or null for automatic (the guess and the frames again)
++  Q.set = function (v) { store('co.q3', LEVELS[v] ? v : null); store('co.q3.auto', null); };
++  Q.hand = LEVELS[hand] ? hand : null;
++})();
+--- a/static/company/start.css
++++ b/static/company/start.css
+@@ -11,6 +11,13 @@
+ /* the 3D canvas: wider than the page by --sh and starting at its left edge, so the sun it centres stands right of
+    the text; its own sky (stars, the far glows) is the page's background */
+ .lp-space { position: absolute; left: 0; top: 0; bottom: 0; width: calc(100% + var(--sh)); --sh: 44vw; background: #16232f; overflow: hidden; }
++/* Each scene as a picture of itself (start-*.webp, drawn by these scenes at their first frames, the hero hidden): the
++   page complete from its first paint; at high and medium the live scene draws over its picture once the page is
++   idle, at low the picture is the scene (start.js). The sun's picture is centred and scaled to the height, as the
++   camera frames the sun (start.js aim: the ball a set share of the height, in the middle). */
++.lp-space { background: #16232f url(start-space.webp) 50% 50% / auto 100% no-repeat; }
++.lp-art.lp-room { background: #06101a url(start-room.webp) 50% 50% / cover no-repeat; }
++.lp-art.lp-uvpic { background: #06101a url(start-uv.webp) 50% 50% / cover no-repeat; }
+ .lp-space > canvas { display: block; width: 100% !important; height: 100% !important; }
+ /* Cymetica's ball: the Universe's painting (colliderTex) at the ball's place, two turning against each other over a
+    blurred copy -- uv.css's .uvcol, with the light added to what is under it rather than laid over it */
+@@ -19,6 +26,7 @@
+ .lp-col .l1 { animation: lpcolspin 300s linear infinite reverse, lpcolflick 2.3s ease-in-out infinite alternate; }
+ .lp-col .g1 { filter: blur(9px) brightness(1.5); opacity: .85; animation: lpcolspin 300s linear infinite reverse; }
+ .lp-col .l2 { opacity: .35; animation: lpcolspin 450s linear infinite; }
++.lp-col .g1.pre { filter: none; }   /* medium: its blur already in its pixels (start.js painting) */
+ @keyframes lpcolspin { to { transform: rotate(360deg); } }
+ @keyframes lpcolflick { from { opacity: 1; } to { opacity: .84; } }
+ /* the darkness behind the text, so it reads over whatever passes behind it */
+@@ -34,6 +42,9 @@
+ .lp-tiles { display: grid; grid-template-columns: repeat(2, 320px); gap: 20px; margin-top: 36px; }
+ .lp-tile { display: flex; flex-direction: column; aspect-ratio: 1; border-radius: 22px; overflow: hidden; color: var(--text);
+   border: 1px solid rgba(0, 150, 255, .2); background: rgba(10, 16, 26, .72); backdrop-filter: blur(8px); transition: border-color .15s, box-shadow .2s, transform .12s; }
++/* medium: the doors' glass over the live scene is blurred again by the browser on every frame it moves (over the
++   picture, at low, once) */
++html.q-medium .lp-tile { backdrop-filter: none; background: rgba(10, 16, 26, .9); }
+ .lp-tile:hover { transform: translateY(-2px); }
+ .lp-tile.go:hover { border-color: rgba(0, 255, 136, .6); box-shadow: 0 0 0 1px rgba(0, 255, 136, .35), 0 18px 48px -14px rgba(0, 255, 136, .45); }
+ .lp-tile.uv:hover { border-color: rgba(0, 207, 255, .6); box-shadow: 0 0 0 1px rgba(0, 207, 255, .35), 0 18px 48px -14px rgba(0, 207, 255, .45); }
+--- a/static/company/start.js
++++ b/static/company/start.js
+@@ -1,5 +1,6 @@
+-/* The /company entry's pictures, all drawn live by the app's own 3D engine (u3d.js, its stations from
+- * stations.js), nothing painted for the page, in the office's own space (entry3d.js: its navy, nebulae and glow):
++/* The /company entry's pictures, drawn live by the app's own 3D engine (u3d.js, its stations from stations.js) over
++ * pictures of themselves (start-*.webp; at low the pictures stay), in the office's own space (entry3d.js: its navy,
++ * nebulae and glow):
+  *  - on the right, Cymetica's sun as the Universe has it -- the collider painting (colliderTex) laid over the scene
+  *    at the ball's place, a corona round it -- and a few companies on two orbits round it, slowly, nose first
+  *    (the operator, 2026-10-20: "cymetica slunce na te uvodni strane vpravo ... a kolem ni by rotovalo par firem
+@@ -12,31 +13,21 @@
+ (function () {
+   'use strict';
+   var CO = window.CO;
+-
+-  // The loading screen (boot.css, as index.html's): over the page until the sun and both doors have drawn, so it never
+-  // shows half built -- the painting over a sun not yet there, a door's black box ("nevadi kdyz se neco nacita ale
+-  // musis tam nejakou brutalne top animaci zobrazit misto toho", 2026-10-20). Its number is the work done.
+-  var boot0 = document.getElementById('boot'), bootP = 0;
+-  function bootSet(p, what) {
+-    if (!boot0 || p <= bootP) return; bootP = p;
+-    boot0.querySelector('.ld-pct').textContent = Math.round(p);
+-    boot0.querySelector('.ld-bar i').style.transform = 'scaleX(' + Math.min(1, p / 100).toFixed(3) + ')';
+-    if (what) boot0.querySelector('.ld-what').textContent = what;
+-  }
+-  function bootDone() {
+-    var el = boot0; if (!el) return; bootSet(100, 'READY'); boot0 = null;
+-    setTimeout(function () { el.classList.add('gone'); setTimeout(function () { el.remove(); }, 900); }, 150);
+-  }
+-  bootSet(18, 'ENGINE');
+-  setTimeout(bootDone, 20000);   // (never in the way for good)
+-  // drawn: the sun's scene and the room's door each a frame on the screen (the Universe's door draws with the sun)
+-  function whenDrawn(sc) {
+-    (function w() {
+-      if (sc.frames > 0) bootSet(72, 'OFFICE');
+-      if (sc.frames > 0 && sc.room && sc.room.frames > 0) return bootDone();
+-      requestAnimationFrame(w);
+-    })();
+-  }
++  // this file's own version (?v=...), for the 3D engine's modules loaded from here
++  var VER = ((document.currentScript && /\?v=[^&#]*/.exec(document.currentScript.src)) || [''])[0];
++
++  // The page is its pictures at once: each scene's picture as an image (start.css, start-*.webp, made from these very
++  // scenes), the page usable from its first paint, no loading screen (2026-10-23: "nechapu proc na uvodni strane se
++  // nacita office", the owner on a laptop where its "OFFICE" was the longest step of this page). At high and medium
++  // the live scenes come over the pictures once the page is idle, each where its picture was, from its first frame
++  // (CO.Q3.live); at low nothing 3D is loaded here at all: three renderers and 3.6 MB of script for two doors.
++  // A scene's own pictures (the painting over the sun) show from its first frame on, not over the image before it.
++  function shown(el) { if (el) el.style.visibility = ''; }
++  // and its picture goes from under it: where the glow leaves the canvas less than opaque, the picture's own sun would
++  // shine through
++  function unpicture(el) { if (el) el.style.backgroundImage = 'none'; }
++  // the time of the frame being drawn (the document's timeline), for the scenes' 30 a second
++  function frameTime() { var t = document.timeline && document.timeline.currentTime; return t != null ? +t : performance.now(); }
+ 
+   // The companies round the sun: their station, colour, decks, orbit and where on it they stand. Three a orbit, a
+   // third of a turn apart, the outer three half way between the inner ones, and the whole turning as one (one speed
+@@ -71,8 +62,11 @@
+   // the painting over the ball, in its own element: middle at the ball's on the screen, scaled so its ball (360 of
+   // its 600 px) is the ball's width there -- the Universe's own sum (overlay() in u3d.js)
+   function painting(U, host) {
+-    var ce = document.createElement('div'); ce.className = 'lp-col';
+-    var p1 = U.colliderTex(1).image, glow = document.createElement('canvas'); glow.width = p1.width; glow.height = p1.height; glow.getContext('2d').drawImage(p1, 0, 0); glow.className = 'g1';
++    var ce = document.createElement('div'); ce.className = 'lp-col'; ce.style.visibility = 'hidden';   // (until its scene draws: shown)
++    var p1 = U.colliderTex(1).image, glow = document.createElement('canvas'); glow.width = p1.width; glow.height = p1.height; glow.className = 'g1';
++    // at medium its blur is made here once, not by the browser on every frame it turns (start.css .g1.pre, as uv.css)
++    var gx = glow.getContext('2d'); if (CO.Q3 && !CO.Q3.glass && 'filter' in gx) { gx.filter = 'blur(9px) brightness(1.5)'; glow.classList.add('pre'); }
++    gx.drawImage(p1, 0, 0);
+     ce.appendChild(glow);
+     [1, 2].forEach(function (seed) { var cv = document.createElement('canvas'), src = U.colliderTex(seed).image; cv.width = src.width; cv.height = src.height; cv.getContext('2d').drawImage(src, 0, 0); cv.className = 'l' + seed; ce.appendChild(cv); });
+     host.appendChild(ce);
+@@ -142,6 +136,10 @@
+   };
+   Showcase.prototype.frame = function () {
+     if (!this.w) return;
++    // 30 frames a second at most: nothing here moves fast, and each frame is two scenes through their bloom (drawn at
++    // every display frame they kept a strong graphics card 87 % busy on a page nobody touched, measured 2026-10-23).
++    // (By the frame's own time, the display's, which is also what a held clock in a picture test leaves running.)
++    var now = frameTime(); if (now - (this.drawnAt || 0) < 29) return; this.drawnAt = now;
+     var T = CO.U3.THREE, t = this.clock.getElapsedTime(), dt = Math.min(0.1, t - this.last); this.last = t;
+     this.fleet.forEach(function (s, i) {
+       s.a += s.w * dt;
+@@ -158,6 +156,7 @@
+     if (this.post) this.post.render(); else this.renderer.render(this.scene, this.camera);
+     this.frames = (this.frames || 0) + 1;
+     place(T, this.camera, this.w, this.h, this.col);
++    if (this.frames === 1) { shown(this.col); unpicture(this.el); }
+     var tl = this.tile;
+     // the tile without the sky's stars and nebulae: from that high its star field read as rows of dots; its navy stays
+     if (tl && tl.w) {
+@@ -165,7 +164,9 @@
+       if (tl.post) tl.post.render(); else tl.r.render(this.scene, tl.cam);
+       this.sky.visible = true;
+       place(T, tl.cam, tl.w, tl.h, tl.col);
+-    }
++      if (this.frames === 1) { shown(tl.col); unpicture(tl.el); }
++    }
++    if (this.room && !this.roomLive && this.room.frames > 0) { this.roomLive = true; unpicture(this.room.el); }
+   };
+ 
+   // "Start a company": a room of the office, turning -- a department of one's own in the Operations look (curved
+@@ -174,6 +175,9 @@
+   function room(el) {
+     if (!CO.U3.roomPreview) return null;
+     var rp = CO.U3.roomPreview(el); rp.set({ key: 'custom', name: '', experts: ['researcher'], look: 'ops' });
++    // 30 frames a second at most, as the sun's scene: the room turns by a few degrees a second
++    var pace = rp.pace, at = 0;
++    rp.pace = function (now) { var ft = frameTime(); if (ft - at < 29) return false; var go = pace(now); if (go) at = ft; return go; };
+     return rp;
+   }
+   // A door: the page's scenes stopped and the page faded out first, then the next page -- not a page that stutters
+@@ -193,17 +197,19 @@
+   };
+ 
+   function go() {
+-    var U = CO.U3; if (!U || !U.ok || !U.Post || !CO.E3) return bootDone();
+-    bootSet(34, 'UNIVERSE');
++    var U = CO.U3; if (!U || !U.ok || !U.Post || !CO.E3) return;
+     var sc = SC = new Showcase(document.getElementById('lp-space'), document.getElementById('lp-uvpic'));
+     // the room after the sun, so the two engines do not build at once
+-    sc.onReady = function () {
+-      bootSet(55, 'UNIVERSE');
+-      setTimeout(function () { sc.room = room(document.getElementById('lp-room')); if (!sc.room) bootDone(); else bootSet(80, 'OFFICE'); }, 400);
+-    };
+-    whenDrawn(sc);
+-  }
+-  var done = false, start = function () { if (done) return; done = true; go(); };
+-  if (CO.U3 && CO.U3.skins) start();
+-  else { window.addEventListener('co3d-skins', start, { once: true }); setTimeout(function () { if (CO.U3 && CO.U3.ok) start(); else bootDone(); }, 8000); }
++    sc.onReady = function () { setTimeout(function () { sc.room = room(document.getElementById('lp-room')); }, 400); };
++  }
++  // The live scenes once the page is idle, at high and medium; the engine's modules from here (start.html no longer
++  // loads them: at low they are never loaded on this page)
++  if (!CO.Q3 || CO.Q3.live) {
++    var later = window.requestIdleCallback || function (f) { return setTimeout(f, 300); };
++    later(function () {
++      import('/static/company/u3d.js' + VER).then(function () { return import('/static/company/stations.js' + VER); })
++        .then(function () { if (CO.U3 && CO.U3.ok) go(); })
++        .catch(function (e) { console.warn('the entry pictures stay pictures:', e); });
++    }, { timeout: 1500 });
++  }
+ })();
+--- a/static/company/style.css
++++ b/static/company/style.css
+@@ -689,6 +689,8 @@
+ 
+ /* modal, toast, sim bar */
+ .modal { position: fixed; inset: 0; z-index: 50; display: grid; place-items: center; background: rgba(6, 9, 15, .72); backdrop-filter: blur(3px); animation: fadein .2s; }
++/* medium and low (quality.js): the office keeps drawing under a modal, and its blur would be made again every frame */
++html.q-medium .modal, html.q-low .modal { backdrop-filter: none; background: rgba(6, 9, 15, .84); }
+ @keyframes fadein { from { opacity: 0; } }
+ .modal-card { width: min(640px, 92vw); max-height: 88vh; overflow: auto; background: var(--navy); border: 1px solid var(--line3); border-radius: 14px; padding: 18px;
+   box-shadow: 0 30px 80px rgba(0, 0, 0, .6), 0 0 0 1px rgba(0, 207, 255, .08); animation: popin .3s cubic-bezier(.2, .9, .3, 1.2); }
+@@ -929,3 +931,5 @@
+ /* a visit shows no Tasks, Memory, Waits for owner or Audit: the tabs, and the panel of what waits for the owner */
+ body.ro #tabs [data-tab="tasks"], body.ro #tabs [data-tab="approvals"], body.ro #tabs [data-tab="memory"], body.ro #tabs [data-tab="audit"],
+ body.ro #p-appr, body.ro #co-waiting { display: none !important; }
++/* Settings > Graphics (quality.js): the four levels in a row */
++.qrow { display: flex; flex-wrap: wrap; gap: 8px; }
+--- a/static/company/u3d.js
++++ b/static/company/u3d.js
+@@ -7,13 +7,34 @@
+ import { pass, renderOutput, vec4, vec3, mrt, output, normalView, dot, mix } from 'three/tsl';
+ import * as TSL from 'three/tsl';
+ import { bloom } from 'three/addons/tsl/display/BloomNode.js';
+-import { ao } from 'three/addons/tsl/display/GTAONode.js';
+ import { RoundedBoxGeometry } from 'three/addons/geometries/RoundedBoxGeometry.js';
+ import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+ import { mergeGeometries, mergeVertices } from 'three/addons/utils/BufferGeometryUtils.js';
+ 
+ const CO = window.CO;
+ const FH = 0.82;
++
++// The level this computer draws at (quality.js: high is the page as it always was; medium and low are cheaper). A page
++// without quality.js draws at high.
++const Q3 = CO.Q3 || { name: 'high', pr: 2, px: 0, uvPx: 4.5e6, samples: 4, shadow: 2048, shadowMs: 0, mirror: 0.5, idleMs: 12.5, lanes: false, glass: true, scale: 1 };
++// the pixel ratio a canvas of w x h CSS pixels draws at: the screen's, at most the level's, at most its pixels (cap,
++// the level's px if not given; none where it is 0), times the frames' own scale (govern)
++function qPr(w, h, cap) {
++  let pr = Math.min(window.devicePixelRatio || 1, Q3.pr);
++  const px = cap == null ? Q3.px : cap;
++  if (px && w && h) pr = Math.min(pr, Math.sqrt(px / (w * h)));
++  return Math.max(0.5, pr * (Q3.scale || 1));
++}
++// The frames' verdict (pacer's onSlow): a scene that cannot hold ~38 frames a second while it is moved draws a fifth
++// fewer pixels at once, down to about half; one that needed that draws one level lower from this chip's next visit
++// (quality.js down). On a computer that holds its frames it never runs, so high stays the page as it was; nor on a
++// level chosen by hand (Settings > Graphics, ?q=), which is drawn as chosen.
++function govern(scene) {
++  if (Q3.by === 'hand' || Q3.by === 'url' || !(Q3.scale > 0.56)) return;
++  Q3.scale = Math.max(0.55, (Q3.scale || 1) * 0.8);
++  if (Q3.scale < 0.7 && Q3.down) Q3.down();
++  if (scene && scene.resize) scene.resize();
++}
+ 
+ /* ---------------- shared geometry, materials and textures ---------------- */
+ const G = {}, M = {}, AM = {}, TX = {};
+@@ -78,16 +99,10 @@
+ class Post {
+   constructor(renderer, scene, camera, strength, radius, threshold, opts) {
+     this.renderer = renderer;
+-    const sp = pass(scene, camera, { samples: 4 }); this.pass = sp;   // (its render target: what warm() compiles for)
+-    let col = sp.getTextureNode('output');
+-    // ambient occlusion (the office): where things meet -- a desk on the floor, a wall in a corner -- the light is
+-    // softer, as in a render. The scene writes its normals beside its colour in the same pass.
+-    if (opts && opts.ao) {
+-      sp.setMRT(mrt({ output, normal: normalView }));
+-      const a = ao(sp.getTextureNode('depth'), sp.getTextureNode('normal'), camera);
+-      a.resolutionScale = 0.5; a.radius.value = opts.ao.radius; a.scale.value = opts.ao.scale; a.thickness.value = opts.ao.thickness || 1;
+-      col = vec4(col.rgb.mul(a.getTextureNode().r), col.a); this.ao = a;
+-    }
++    // multisampled 4 times (the edges' smoothing), none at low (Q3.samples)
++    const sp = pass(scene, camera, { samples: Q3.samples }); this.pass = sp;   // (its render target: what warm() compiles for)
++    const col = sp.getTextureNode('output');
++    // (the ambient occlusion that was here was asked for by nobody: GTAONode.js was loaded on every page for it)
+     this.material = new THREE.NodeMaterial();
+     let out = col.add(bloom(col, strength, radius, threshold));
+     // Pastel, as in the operator's pictures ('mene razici pastelove'): every colour pulled part of the way to its
+@@ -212,15 +227,22 @@
+ // what moves is the scene's own slow motion (rings, lights, people, stations on their orbits): a 120 or 144 Hz
+ // screen gets it every other display frame (60 or 72 a second, nothing it shows is lost), and a computer that could
+ // not hold about 45 a second while everything moved gets it at 30, so it has room to answer the next drag at once.
+-function pacer(busy) {
+-  let last = 0, drawn = 0, avg = 0, slow = false; const t0 = performance.now();
++// At medium and low the scene's own slow motion gets 30 a second (Q3.idleMs) whatever the computer holds.
++// onSlow: the frames' verdict (govern), asked when the frames under a hand stay longer than 26 ms for 1.5 s.
++function pacer(busy, onSlow) {
++  let last = 0, drawn = 0, avg = 0, slow = false, bad = 0, first = 0; const t0 = performance.now();
+   return (now) => {
+     const dt = now - last; last = now;
++    if (!first) first = now;
+     if (busy() || now - t0 < 3000) {
+-      if (dt > 0 && dt < 250) { avg = avg ? avg * 0.94 + dt * 0.06 : dt; slow = avg > 22 ? true : avg < 18 ? false : slow; }
++      if (dt > 0 && dt < 250) {
++        avg = avg ? avg * 0.94 + dt * 0.06 : dt; slow = avg > 22 ? true : avg < 18 ? false : slow;
++        // (not in the first 3 s after the scene's first frame: those make what is left of its shaders)
++        if (onSlow && now - first > 3000) { bad = avg > 26 ? bad + dt : 0; if (bad > 1500) { bad = 0; avg = 0; onSlow(); } }
++      }
+       drawn = now; return true;
+     }
+-    if (now - drawn < (slow ? 30 : 12.5)) return false;
++    if (now - drawn < (slow ? 30 : Q3.idleMs)) return false;
+     drawn = now; return true;
+   };
+ }
+@@ -1517,7 +1539,7 @@
+     });
+     // a hand on the map, for the pacer: the controls moving the camera (also while it settles) and the mouse
+     this.controls.addEventListener('change', () => { this.lastInput = performance.now(); });
+-    this.pace = pacer(() => !!this.tw || !!this.follow || this.controls.autoRotate || performance.now() - (this.lastInput || 0) < 1500);
++    this.pace = pacer(() => !!this.tw || !!this.follow || this.controls.autoRotate || performance.now() - (this.lastInput || 0) < 1500, () => govern(this));
+     this.world();
+     this.bind();
+     this.resize();
+@@ -1645,7 +1667,10 @@
+     // beams and the sparks stay in the scene, so they still pass in front of and behind it.
+     const ce = document.createElement('div'); ce.className = 'uvcol'; ce.style.display = 'none'; ce._off = true;   // until overlay() places it
+     // under the painting a blurred copy of it, turning with it: the glow his arcs have (a bloom of its own)
+-    const p1 = colliderTex(1).image, glow = document.createElement('canvas'); glow.width = p1.width; glow.height = p1.height; glow.getContext('2d').drawImage(p1, 0, 0); glow.className = 'g1';
++    const p1 = colliderTex(1).image, glow = document.createElement('canvas'); glow.width = p1.width; glow.height = p1.height; glow.className = 'g1';
++    // at medium and low its blur is made here once, not by the browser on every frame it turns (uv.css .g1.pre)
++    const gx = glow.getContext('2d'); if (!Q3.glass && 'filter' in gx) { gx.filter = 'blur(9px) brightness(1.5)'; glow.classList.add('pre'); }
++    gx.drawImage(p1, 0, 0);
+     ce.appendChild(glow);
+     [1, 2].forEach((seed) => { const cv = colliderTex(seed).image; cv.className = 'l' + seed; ce.appendChild(cv); });
+     this.bans.insertBefore(ce, this.bans.firstChild); this.colEl = ce;
+@@ -1901,8 +1926,9 @@
+     // ET-32470: the map draws through a bloom pass (several full-size targets, multisampled). On a big or
+     // high-density screen at pixel ratio 2 that is hundreds of MB of GPU memory, and a browser that runs out of it
+     // takes the whole window down. The drawn area is capped at ~4.5 million pixels (a 1080p screen at ratio 1.5 and
+-    // below keeps its full sharpness); only bigger stages are drawn a little softer.
+-    const pr = Math.max(0.75, Math.min(window.devicePixelRatio || 1, 2, Math.sqrt(4.5e6 / (w * h))));
++    // below keeps its full sharpness); only bigger stages are drawn a little softer. Medium and low cap it lower
++    // (Q3.uvPx), and a computer that cannot hold its frames draws fewer still (Q3.scale, govern).
++    const pr = Math.max(0.75 * (Q3.scale || 1), qPr(w, h, Q3.uvPx));
+     if (Math.abs(pr - (this._pr || 0)) > 0.01) { this._pr = pr; this.renderer.setPixelRatio(pr); }
+     this.renderer.setSize(w, h, false);
+   }
+@@ -2144,7 +2170,7 @@
+     this.scene = new THREE.Scene(); this.scene.background = new THREE.Color(0x020306);
+     this.camera = new THREE.PerspectiveCamera(30, 1, 0.1, 600);
+     this.renderer = new THREE.WebGPURenderer({ antialias: false });   // see Universe3D: the pass multisamples
+-    this.renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
++    this.renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, Q3.pr));
+     this.renderer.toneMapping = THREE.ACESFilmicToneMapping; this.renderer.toneMappingExposure = 1.15;
+     this.wrap.insertBefore(this.renderer.domElement, this.ban);
+     this.scene.add(new THREE.HemisphereLight(0xdfe8f2, 0x05070a, 0.8), new THREE.AmbientLight(0x1a2230, 0.7));
+@@ -2286,7 +2312,8 @@
+ function pvLights(scene) {
+   scene.environment = envTex(); scene.environmentIntensity = 0.9;
+   scene.add(new THREE.HemisphereLight(0xe2ecf6, 0x10161e, 0.6), new THREE.AmbientLight(0x2a3644, 0.4));
+-  const sun = new THREE.DirectionalLight(0xffffff, 1.5); sun.position.set(-2.1, 9, 6.3); sun.castShadow = true; sun.shadow.mapSize.set(2048, 2048);
++  // (the room turns under it, so its shadow is drawn every frame at every level; its size is the level's)
++  const sun = new THREE.DirectionalLight(0xffffff, 1.5); sun.position.set(-2.1, 9, 6.3); sun.castShadow = true; sun.shadow.mapSize.set(Q3.shadow, Q3.shadow);
+   sun.shadow.normalBias = 0.02; sun.shadow.bias = -0.0005;
+   Object.assign(sun.shadow.camera, { left: -7, right: 7, top: 7, bottom: -7, near: 1, far: 30 }); sun.shadow.camera.updateProjectionMatrix();
+   scene.add(sun, sun.target);
+@@ -2326,7 +2353,7 @@
+   const RS = CO.iso.RS, root = new THREE.Group(), r = { key: 'pv', dept: d, g: new THREE.Group(), x0: 0, y0: 0, agents: [], screens: [], mons: [] };
+   root.add(r.g);
+   b.shell(r);
+-  const rf = shRefl(); if (rf.target.parent === PVHOLD.scene) rf.target.updateMatrixWorld(true);   // no office to keep it placed
++  if (Q3.mirror) { const rf = shRefl(); if (rf.target.parent === PVHOLD.scene) rf.target.updateMatrixWorld(true); }   // no office to keep it placed
+   b.deptRoom(r, d);
+   const { slab: T, pad, hull: HD, keel: K } = PVS, L = RS + 2 * pad + 0.44;
+   const s = new THREE.Mesh(G.box, [OM.rimDark, OM.rimDark, OM.deck, OM.rimDark, OM.rimDark, OM.rimDark]);
+@@ -2434,7 +2461,7 @@
+     this.scene = new THREE.Scene(); pvSpace(this.scene);
+     this.camera = new THREE.PerspectiveCamera(CAM.fov, 2, 0.5, 600);
+     this.renderer = new THREE.WebGPURenderer({ antialias: false });   // the pass multisamples
+-    this.renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
++    this.renderer.setPixelRatio(qPr(el ? el.clientWidth : 0, el ? el.clientHeight : 0));
+     this.renderer.toneMapping = THREE.ACESFilmicToneMapping; this.renderer.toneMappingExposure = 1.0;
+     this.renderer.shadowMap.enabled = true; this.renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+     this.wrap.appendChild(this.renderer.domElement);
+@@ -2477,7 +2504,7 @@
+     this.key = ''; this.yaw = 0; this.ph = 0; this.last = 0; this.clock = new THREE.Clock(); this.drag = null; this.grow = 0; this.frames = 0;
+     this.input = performance.now();
+     this.pace = pacer(() => !!this.drag || !!this.grow || performance.now() - (this.input || 0) < 1500);
+-    const pr = Math.min(window.devicePixelRatio || 1, 2); if (pr !== this.renderer.getPixelRatio()) this.renderer.setPixelRatio(pr);
++    const pr = qPr(el.clientWidth, el.clientHeight); if (pr !== this.renderer.getPixelRatio()) this.renderer.setPixelRatio(pr);
+     const nf = this.renderer._nodes && this.renderer._nodes.nodeFrame; if (nf) { nf.time = 0; nf.lastTime = undefined; }
+     if (this.ready) this.renderer.setAnimationLoop(() => this.frame());
+     return this;
+@@ -2535,10 +2562,11 @@
+   async prepare() {
+     if (!this.post || !this.post.pass) return;
+     this.place(performance.now());
+-    const R = this.renderer, rf = shRefl().reflector, vc = rf.getVirtualCamera(this.camera), rt = rf.getRenderTarget(vc);
++    // (no mirror at low: Q3.mirror)
++    const R = this.renderer, rf = Q3.mirror ? shRefl().reflector : null, vc = rf && rf.getVirtualCamera(this.camera), rt = rf && rf.getRenderTarget(vc);
+     const pause = () => this.quiet(), passes = async () => {
+-      await compileInPieces(R, this.scene, this.camera, this.post.pass.renderTarget, { mrt: this.post.pass.getMRT(), all: true, skip: this.w ? null : pvMirror, budget: 16, pause });
+-      if (this.w) { rf._updateResolution(rt, R); await compileInPieces(R, this.scene, vc, rt, { all: true, skip: pvMirror, budget: 16, pause }); }
++      await compileInPieces(R, this.scene, this.camera, this.post.pass.renderTarget, { mrt: this.post.pass.getMRT(), all: true, skip: this.w || !rf ? null : pvMirror, budget: 16, pause });
++      if (this.w && rf) { rf._updateResolution(rt, R); await compileInPieces(R, this.scene, vc, rt, { all: true, skip: pvMirror, budget: 16, pause }); }
+     };
+     this.preparing = true;
+     try {
+@@ -2557,6 +2585,7 @@
+     let w = this.wrap.clientWidth, h = this.wrap.clientHeight;
+     if (!this.el && this.guess) { w = this.guess.w; h = this.guess.h; }   // (not in a stage yet: the size it will have)
+     if (!w || !h || (w === this.w && h === this.h)) return;
++    const pr = qPr(w, h); if (Math.abs(pr - this.renderer.getPixelRatio()) > 0.01) this.renderer.setPixelRatio(pr);   // (the level's, for this size)
+     this.w = w; this.h = h; this.camera.aspect = w / h; this.camera.updateProjectionMatrix(); this.renderer.setSize(w, h, false); this.fit(); this.input = now;
+   }
+   // a room built ahead (or an astronaut for its card) made ready the same way, in its place for the moments it is
+@@ -2573,10 +2602,10 @@
+     // a room: its own pass with its floor, then the mirror's, what its floor reflects (its floor not in it), as the
+     // dialog's first frame is made (prepare); left to the frame that showed it, a room's mirror was a frame of
+     // 100-180 ms at a quarter of the CPU (measured 2026-10-20)
+-    const R = this.renderer, rf = shRefl().reflector, vc = rf.getVirtualCamera(this.camera), rt = rf.getRenderTarget(vc);
++    const R = this.renderer, rf = Q3.mirror ? shRefl().reflector : null, vc = rf && rf.getVirtualCamera(this.camera), rt = rf && rf.getRenderTarget(vc);
+     const go = (cam, target, mrt, skip) => compileInPieces(R, this.scene, cam, target, { mrt, all: true, only: obj, around, skip, budget: 16, pause: () => this.quiet() });
+     return go(this.camera, this.post.pass.renderTarget, this.post.pass.getMRT(), null)
+-      .then(() => w.room && go(vc, rt, null, pvMirror))
++      .then(() => w.room && rf && go(vc, rt, null, pvMirror))
+       .catch((e) => console.warn('a room could not be made ready ahead:', e));
+   }
+   dept(o) { return { id: 0, key: o.key || 'custom', name: o.name || '', experts: pvOrder(o.experts || []), look: o.look || null, run_kind: null, link: null, charter: '', schedule: null }; }
+@@ -2992,9 +3021,11 @@
+ // The rooms' neon, a deeper mint than his line's measured core (LOOK.neon): the line is seen through the glass's
+ // foot and its glow, which lift it to his core; LOOK.neon itself came out nearly white
+ const SH_NEON = '#4ef0aa';
++// Its size against the screen's is the level's (Q3.mirror: half at high, a third at medium); at low there is none
++// (shFloor), and nothing asks for it.
+ function shRefl() {
+   if (TX.shRefl) return TX.shRefl;
+-  const r = TSL.reflector({ resolution: 0.5, generateMipmaps: true, bounces: false });
++  const r = TSL.reflector({ resolution: Q3.mirror || 0.5, generateMipmaps: true, bounces: false });
+   r.target.rotateX(-Math.PI / 2); r.target.position.y = SH_FLOOR_Y;
+   // the mirror's own light, seen by its pass alone (layer 1 and nothing else): the scene's sun would bring its
+   // shadow map into the pass, and the main view must not change, so the mirror gets a soft sky of its own. Its sky
+@@ -3008,8 +3039,12 @@
+ // mip a step finer than the blur it gives (a single read of a coarse mip showed its texels as a ghost's squares),
+ // and eased off at its top (x / (1 + x)): a suit reads as it is, nothing reflected burns a hole of white into the floor.
+ function shFloor(o) {
+-  const T = TSL, m = new THREE.MeshStandardNodeMaterial(o), rf = shRefl(), uv = T.screenUV.flipX(), L = SH_REFL.level;
+-  const px = T.vec2(SH_REFL.spread * Math.pow(2, L + 1)).div(T.screenSize);   // the mirror is half the screen's size
++  // low: the floor its own dark self, as it is wherever nothing bright stands over it (the mirror's pass is a second
++  // drawing of the rooms every frame)
++  if (!Q3.mirror) return new THREE.MeshStandardNodeMaterial(o);
++  // a smaller mirror (medium) is read a mip level finer for the same blur on the screen (at high, + 0)
++  const T = TSL, m = new THREE.MeshStandardNodeMaterial(o), rf = shRefl(), uv = T.screenUV.flipX(), L = SH_REFL.level + Math.log2(Q3.mirror / 0.5);
++  const px = T.vec2(SH_REFL.spread * Math.pow(2, SH_REFL.level + 1)).div(T.screenSize);   // the mirror is half the screen's size
+   let r = null;
+   [-1, 0, 1].forEach((a) => [-1, 0, 1].forEach((b) => {
+     const w = (a ? 1 : 2) * (b ? 1 : 2) / 16, s = rf.sample(a || b ? uv.add(px.mul(T.vec2(a, b))) : uv).level(L).rgb.mul(w);
+@@ -3984,7 +4019,7 @@
+     this.scene = new THREE.Scene(); this.scene.background = new THREE.Color(LOOK.sky); this.scene.fog = new THREE.Fog(LOOK.sky, 180, 460);
+     this.camera = new THREE.PerspectiveCamera(CAM.fov, 2, 0.5, 900);
+     this.renderer = new THREE.WebGPURenderer({ antialias: false });
+-    this.renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
++    this.renderer.setPixelRatio(qPr(el.clientWidth, el.clientHeight));
+     this.renderer.toneMapping = THREE.ACESFilmicToneMapping; this.renderer.toneMappingExposure = 1.0;
+     this.renderer.shadowMap.enabled = true; this.renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+     el.appendChild(this.renderer.domElement);
+@@ -3994,13 +4029,17 @@
+     this.controls.addEventListener('start', () => { this.tw = null; this.moved = true; });
+     // a hand on the office, for the pacer: the controls moving the camera (also while it settles) and the mouse
+     this.controls.addEventListener('change', () => { this.lastInput = performance.now(); });
+-    this.pace = pacer(() => !!this.tw || performance.now() - (this.lastInput || 0) < 1500);
++    this.pace = pacer(() => !!this.tw || performance.now() - (this.lastInput || 0) < 1500, () => govern(this));
+     const S = this.scene;
+     S.environment = envTex(); S.environmentIntensity = 0.9;
+     // his picture is lit like a studio: soft white light from above and the camera's side, everything readable, the
+     // colour only where something glows. No coloured fill: it tinted every surface teal.
+     S.add(new THREE.HemisphereLight(0xe2ecf6, 0x10161e, 0.6), new THREE.AmbientLight(0x2a3644, 0.4));
+-    this.sun = new THREE.DirectionalLight(0xffffff, 1.5); this.sun.castShadow = true; this.sun.shadow.mapSize.set(2048, 2048);
++    // The sun's shadow: 2048 and drawn again every frame at high. The sun stands still (layout() places it) and what
++    // moves under it is the people, so at medium and low it is drawn again every Q3.shadowMs (frame()) at Q3.shadow:
++    // a turn of the camera costs it nothing, and a walking astronaut's shadow follows a moment late.
++    this.sun = new THREE.DirectionalLight(0xffffff, 1.5); this.sun.castShadow = true; this.sun.shadow.mapSize.set(Q3.shadow, Q3.shadow);
++    if (Q3.shadowMs) { this.sun.shadow.autoUpdate = false; this.sun.shadow.needsUpdate = true; }
+     this.sun.shadow.normalBias = 0.02; this.sun.shadow.bias = -0.0005; S.add(this.sun); S.add(this.sun.target);
+     const rim = new THREE.DirectionalLight(0xb8dcf4, 0.45); rim.position.set(-34, 14, -42); S.add(rim);
+     const under = new THREE.DirectionalLight(0x8aa4c0, 0.55); under.position.set(22, -24, 44); S.add(under);
+@@ -4129,11 +4168,20 @@
+           m.position.copy(this.V(a[0] + (b[0] - a[0]) * f, a[1] + (b[1] - a[1]) * f, 0.012)); m.rotation.y = ang; W.add(m); segs.push(m);
+         }
+       }
++      // Below high, the corridor's dashes as one mesh, one draw instead of one a dash (2026-10-23: 51 of the office's
++      // 755 draws a frame, for company 14). The same material, so the lane still lights while its department works
++      // (update()). (Not at high, where it would be the same picture: fewer objects made draws three.js's ids from
++      // Math.random in another order, and the page's random wander picked another astronaut.)
++      if (Q3.lanes && segs.length > 1) {
++        const merged = mergeGeometries(segs.map((s) => { s.updateMatrix(); return G.box.clone().applyMatrix4(s.matrix); }), false);
++        if (merged) { segs.forEach((s) => W.remove(s)); const one = new THREE.Mesh(merged, mat); one.userData.own = true; W.add(one); segs.length = 0; segs.push(one); }
++      }
+       this.conduits[k] = { mat, segs };
+     });
+     const sz = this.size;
+     this.sun.position.copy(new THREE.Vector3(-sz * 0.35, sz * 1.5, sz * 1.05)); this.sun.target.position.set(0, 0, 0);
+     Object.assign(this.sun.shadow.camera, { left: -sz * 0.85, right: sz * 0.85, top: sz * 0.85, bottom: -sz * 0.85, near: 1, far: sz * 4 }); this.sun.shadow.camera.updateProjectionMatrix();
++    this.sun.shadow.needsUpdate = true;   // (a new set of rooms: drawn again on the next frame whatever Q3.shadowMs says)
+     // rooms
+     Object.keys(cells).forEach((k) => {
+       const c = cells[k], g = new THREE.Group(); W.add(g);
+@@ -4415,8 +4463,10 @@
+   shell(r) {
+     const { g, x0, y0 } = r, RS = CO.iso.RS, H = WH, t = 0.04, z0 = SH_FLOOR_Y;
+     // the floors' mirror lives in the scene itself (the world is cleared at every layout) and sees layer 1 only
+-    const rf = shRefl(); if (rf.target.parent !== this.scene) this.scene.add(rf.target, rf.light);
+-    rf.reflector.getVirtualCamera(this.camera).layers.set(1);
++    if (Q3.mirror) {
++      const rf = shRefl(); if (rf.target.parent !== this.scene) this.scene.add(rf.target, rf.light);
++      rf.reflector.getVirtualCamera(this.camera).layers.set(1);
++    }
+     // every room starts mint ("A trading room nema svitit porad oranzove. Oranzove sviti jen roomka ktera chce
+     // pozornost moji, needs you"): tint() turns one orange whole -- floor, glass, neon, wash, lamp -- while it
+     // waits on its owner, and back when it no longer does. r.floorM and r.panes are what it swaps.
+@@ -8141,6 +8191,8 @@
+   }
+   resize() {
+     const w = this.el.clientWidth, h = this.el.clientHeight; if (!w || !h) return;
++    // the level's pixel ratio for this size (at high the screen's, at most 2, as it always was)
++    const pr = qPr(w, h); if (Math.abs(pr - this.renderer.getPixelRatio()) > 0.01) this.renderer.setPixelRatio(pr);
+     this.camera.aspect = w / h; this.camera.updateProjectionMatrix(); this.renderer.setSize(w, h, false);
+     if (this.fitted && !this.moved && !this.sel && !this.tw) this.fit(false);
+   }
+@@ -8204,6 +8256,8 @@
+       return true;
+     });
+     if (this.mouseMoved) { this.mouseMoved = false; this.pick(); }
++    // the sun's shadow drawn again now and then (Q3.shadowMs; at high every frame, by three.js)
++    if (Q3.shadowMs && now - (this.shadowAt || 0) >= Q3.shadowMs) { this.shadowAt = now; this.sun.shadow.needsUpdate = true; }
+     // (only before its first frame: what is queued later is the map's, built ahead -- its sky's 63 ms of noise had
+     // landed in an office frame -- and the map's own frame does it)
+     if (!this.frames && IDLE.q.length) idleFlush();
+@@ -8652,7 +8706,8 @@
+ // can this browser draw it at all? WebGPU, or WebGL2 underneath it
+ (function () {
+   let gl2 = false;
+-  try { gl2 = !!document.createElement('canvas').getContext('webgl2'); } catch (e) { gl2 = false; }
++  // (quality.js has asked already, with the context it made for the chip's name)
++  try { gl2 = CO.Q3 && CO.Q3.gl2 != null ? CO.Q3.gl2 : !!document.createElement('canvas').getContext('webgl2'); } catch (e) { gl2 = false; }
+   CO.U3 = (gl2 || navigator.gpu) ? { ok: true, gpu: !!navigator.gpu, universe: (el, stage, h) => new Universe3D(el, stage, h), office: (el, stage, tipFor) => new Office3D(el, stage, tipFor), preview, thumbs,
+     roomPreview: (el) => new RoomPreview(el), dialogPreview: () => RoomPreview.dialog(), shotOf: (key) => SHOTS[key] || null, THREE, geo, makeStation, SKIN, amat, nebTex, TX, OM,
+     // for the entry page's own scene (start.js): the map's sun, sky, glows and bloom, the pacer and the release
+--- a/static/company/uv.css
++++ b/static/company/uv.css
+@@ -34,6 +34,7 @@
+ .uvsum { font-size: 11.5px; color: var(--dim2); margin-left: 14px; letter-spacing: .02em; }
+ .uvsum b { color: var(--text); } .uvsum b.cy { color: var(--cyan); }
+ .uvstage .crumb { display: flex; align-items: center; padding: 6px 12px; border-radius: 9px; background: rgba(6, 9, 15, .72); border: 1px solid var(--line2); backdrop-filter: blur(4px); }
++html.q-medium .uvstage .crumb, html.q-low .uvstage .crumb { backdrop-filter: none; background: rgba(6, 9, 15, .86); }
+ /* Buy land: a mode, so the button stays lit while it is on */
+ .uvstage .zoom .buy { width: auto; padding: 0 12px; font-size: 11px; font-weight: 800; letter-spacing: .03em; color: var(--cyan); border-color: rgba(0, 207, 255, .5); }
+ .uvstage .zoom .buy:hover, .uvstage .zoom .buy.on { color: var(--bg); background: var(--cyan); border-color: var(--cyan); box-shadow: 0 0 16px rgba(0, 207, 255, .5); }
+@@ -100,6 +101,9 @@
+ .uvbans .uvcol .l1 { animation: uvcolspin 300s linear infinite reverse, uvcolflick 2.3s ease-in-out infinite alternate; }
+ .uvbans .uvcol .g1 { filter: blur(9px) brightness(1.5); opacity: .85; animation: uvcolspin 300s linear infinite reverse; }
+ .uvbans .uvcol .l2 { opacity: .35; animation: uvcolspin 450s linear infinite; }
++/* medium and low (quality.js): the glow's blur already in its pixels (u3d.js core), the browser does not blur it again
++   on every frame it turns */
++.uvbans .uvcol .g1.pre { filter: none; }
+ @keyframes uvcolspin { to { transform: rotate(360deg); } }
+ @keyframes uvcolflick { from { opacity: 1; } to { opacity: .84; } }
+ /* His picture's name plates: a dark slate plate, a thin frame in a muted shade of the station's colour with a
+@@ -150,6 +154,9 @@
+   background: radial-gradient(ellipse 80% 75% at 50% 50%, transparent 62%, rgba(4, 7, 13, .5) 100%); }
+ .p3 { position: absolute; left: 0; top: 0; pointer-events: auto; cursor: pointer; padding: 6px 13px 7px; border-radius: 8px; border: 1px solid rgba(90, 215, 200, .34);
+   background: rgba(8, 17, 26, .88); backdrop-filter: blur(6px); box-shadow: 0 6px 18px rgba(0, 0, 0, .55), inset 0 1px 0 rgba(255, 255, 255, .06); white-space: nowrap; will-change: transform; transition: box-shadow .2s, border-color .2s; }
++/* medium and low (quality.js): no frosted glass over the moving office -- the browser blurs what is under each plate
++   again on every frame the scene moves; a plate a shade more opaque reads the same */
++html.q-medium .p3, html.q-low .p3 { backdrop-filter: none; background: rgba(8, 17, 26, .94); }
+ .p3 .p3h { display: flex; align-items: center; gap: 7px; }
+ .p3 .p3h i { width: 7px; height: 7px; border-radius: 50%; box-shadow: 0 0 8px currentColor; flex: none; }
+ .p3.work .p3h i { animation: dotp 1.2s infinite; }
