@@ -1,11 +1,13 @@
-"""The Cymetica Quest flyer, made again from scratch: first its background (our 3D Universe, rendered from the /company
-mockup with Cymetica's sun on the right), then the flyer itself (index.html) as a 1080 x 1350 PNG at 2x.
+"""The Cymetica Quest flyer, made again from scratch: first its background (Cymetica's sun and its orbits, rendered from
+the /company mockup's 3D Universe with every station hidden), then the flyer itself (index.html) as a 1080 x 1350 PNG at 2x.
 
-    python outbox/company-flyer/render.py
+    python outbox/company-flyer/render.py            # both
+    python outbox/company-flyer/render.py flyer      # the flyer only, over the background already made
 
 Needs the mockup served on http://localhost:8793 (the company-mock server in .claude/launch.json) and Playwright's
 Chromium. Writes universe-bg.jpg and flyer-1080x1350.png next to this file; neither is kept in git (they are made here).
 """
+import sys
 import time
 from pathlib import Path
 
@@ -14,8 +16,12 @@ from playwright.sync_api import sync_playwright
 
 HERE = Path(__file__).resolve().parent
 W, H = 1080, 1350
-# the camera: 63 degrees from straight down, 260 units from the sun, the sun at 73% across and 47% down the frame
-POLAR, DIST, SUN_X, SUN_Y = 1.1, 260.0, 0.73, 0.47
+# the camera: 63 degrees from straight down, close to the sun, the sun at the right edge a third of the way down -- where
+# the first take's green light was ("do pozadi dej to slunce cymeticy ... misto toho zeleneho svetla")
+POLAR, DIST, SUN_X, SUN_Y = 1.1, 190.0, 0.79, 0.34
+# no company on it ("ty firmy tam nechci videt"): every station, product and slot hidden; the sun, the orbits and the
+# lights passing along them stay
+NO_STATIONS = "() => { CO.uv.items.forEach((it) => { if (it.plot) it.plot.root.visible = false; }); }"
 HIDE = ("#uv-board, .b3, .b3pop, #uvstage .top, .uvlegend, #uv-panel, .tip, .uvtip { display: none !important; }"
         "#uvstage { position: fixed !important; left: 0 !important; top: 0 !important; width: %dpx !important; height: %dpx !important;"
         " margin: 0 !important; border-radius: 0 !important; border: 0 !important; z-index: 99999 !important; }" % (W, H))
@@ -43,6 +49,7 @@ def background(p):
     time.sleep(3)
     for _ in range(2):
         pg.evaluate(CAMERA, [POLAR, DIST, SUN_X, SUN_Y])
+        pg.evaluate(NO_STATIONS)
         time.sleep(4)
     png = HERE / 'universe-bg.png'
     pg.screenshot(path=str(png))
@@ -64,6 +71,7 @@ def flyer(p):
 
 if __name__ == '__main__':
     with sync_playwright() as p:
-        background(p)
+        if 'flyer' not in sys.argv[1:]:
+            background(p)
         flyer(p)
     print('wrote', HERE / 'universe-bg.jpg', 'and', HERE / 'flyer-1080x1350.png')

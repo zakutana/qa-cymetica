@@ -8,125 +8,115 @@
 <link href="https://fonts.googleapis.com/css2?family=Archivo+Black&family=JetBrains+Mono:wght@500;700;800&display=swap" rel="stylesheet">
 <!-- The flyer for degens (the operator, 2026-10-23): Build a Company as one quest -- found a company, build products, promote
      them on the Promo Market, earn revenue, take a top-3 seat and a cut of every fee. 1080 x 1350, for X and Telegram.
-     Second take: our own Universe behind it, rendered from the mockup (universe-bg.jpg, render.py) with Cymetica's sun
-     ("do pozadi dej to slunce cymeticy ... misto toho zeleneho svetla"); the panes in the revenue-share board's glass
-     ("v tom top sklenenem stylu jak mame tabuli"); a new slogan ("slogan je nic moc"); no example figures ("nepis tam zadne
-     priklady"). Cymetica's palette only: dark #0a0e17, green #00ff88, cyan #00cfff, blue #3b82f6. -->
+     Third take: the first take's layout ("melo to byt vse jako predtim"); behind it only Cymetica's sun and its orbits,
+     rendered from the mockup with every station hidden (universe-bg.jpg, render.py; "ty firmy tam nechci videt"); and one
+     pane of the revenue-share board's glass over the whole flyer, see-through ("sklo bude pres cely letak a vic
+     prusvitne"). The slogan of the second take; no example figures. Cymetica's palette only: dark #0a0e17, green #00ff88,
+     cyan #00cfff, blue #3b82f6. -->
 <style>
   :root { --bg: #0a0e17; --green: #00ff88; --cyan: #00cfff; --blue: #3b82f6; --text: #e6edf7; --dim: #9fb3c4; --rs1: #00ff88; --rs2: #00cfff; --rs3: #3b82f6; }
   * { box-sizing: border-box; margin: 0; padding: 0; }
   html, body { width: 1080px; height: 1350px; background: var(--bg); overflow: hidden; }
   body { position: relative; font-family: 'JetBrains Mono', monospace; color: var(--text); }
-  /* our Universe, rendered from the mockup: Cymetica's sun on the right, the orbits and the stations round it */
+  /* Cymetica's sun at the right edge, its orbits sweeping across: the mockup's own Universe, no station on it */
   .bg { position: absolute; inset: 0; width: 1080px; height: 1350px; object-fit: cover; }
-  /* the top kept dark for the slogan, the edges a little darker */
-  .shade { position: absolute; inset: 0;
-    background: linear-gradient(180deg, rgba(10, 14, 23, .85) 0%, rgba(10, 14, 23, .55) 22%, rgba(10, 14, 23, 0) 38%, rgba(10, 14, 23, 0) 70%, rgba(10, 14, 23, .55) 100%),
-      radial-gradient(120% 90% at 70% 48%, rgba(10, 14, 23, 0) 55%, rgba(10, 14, 23, .55) 100%); }
-  .wrap { position: absolute; inset: 0; padding: 60px 56px 46px; }
+
+  /* one pane of the board's glass over the whole flyer, frosted only lightly so the sun and the orbits show through */
+  /* (frosted at 7 px first: the sun came through as an orange smudge, "vic prusvitne"; now barely frosted, and darker only
+     on the left where the type stands, clear on the right where the sun is) */
+  .pane { position: absolute; inset: 30px; border-radius: 32px; padding: 48px 52px 40px; display: flex; flex-direction: column;
+    background:
+      linear-gradient(135deg, rgba(255, 255, 255, .12) 0%, rgba(255, 255, 255, .035) 22%, rgba(255, 255, 255, 0) 40%),
+      radial-gradient(90% 60% at 0% 0%, rgba(0, 207, 255, .1), rgba(0, 207, 255, 0) 60%),
+      linear-gradient(90deg, rgba(6, 10, 18, .4), rgba(6, 10, 18, .18) 55%, rgba(6, 10, 18, 0) 80%),
+      linear-gradient(180deg, rgba(12, 24, 36, .12), rgba(6, 10, 18, .3));
+    backdrop-filter: blur(2px) saturate(1.25) brightness(1.03); -webkit-backdrop-filter: blur(2px) saturate(1.25) brightness(1.03);
+    border: 1px solid rgba(255, 255, 255, .18);
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, .55), inset 0 0 0 1px rgba(0, 207, 255, .22), inset 0 -30px 50px -30px rgba(0, 207, 255, .25),
+      0 0 0 1px rgba(0, 207, 255, .35), 0 0 80px rgba(0, 207, 255, .18), 0 30px 60px rgba(0, 0, 0, .5); }
+  /* a band of light across the glass, still */
+  .pane::before { content: ''; position: absolute; inset: 0; border-radius: inherit; pointer-events: none;
+    background: linear-gradient(115deg, rgba(255, 255, 255, 0) 30%, rgba(255, 255, 255, .05) 38%, rgba(220, 255, 248, .09) 41%, rgba(255, 255, 255, 0) 48%); }
+  .pane > * { position: relative; }
+
   /* the head */
   .tag { display: flex; align-items: center; gap: 12px; font: 800 17px 'JetBrains Mono'; letter-spacing: .22em; color: var(--cyan); text-shadow: 0 0 12px rgba(0, 207, 255, .6); }
   .tag i { width: 12px; height: 12px; border-radius: 50%; background: var(--green); box-shadow: 0 0 14px var(--green); }
-  .tag span { color: #7f93ad; text-shadow: none; }
-  h1 { margin-top: 22px; font: 400 68px/1.02 'Archivo Black', sans-serif; letter-spacing: .005em; }
+  .tag span { color: #8fa3b8; text-shadow: none; }
+  h1 { margin-top: 22px; font: 400 64px/1.04 'Archivo Black', sans-serif; letter-spacing: .005em; text-shadow: 0 4px 24px rgba(0, 0, 0, .45); }
   h1 span { display: block; white-space: nowrap; }
   h1 .g { color: transparent; -webkit-background-clip: text; background-clip: text; background-image: linear-gradient(180deg, #f2fff9, #4dffb4 50%, #00b4e0);
-    filter: drop-shadow(0 0 24px rgba(0, 207, 255, .5)); }
-  .hook { margin-top: 20px; max-width: 700px; font: 700 23px/1.4 'JetBrains Mono'; color: #d3e4ee; text-shadow: 0 2px 10px rgba(0, 0, 0, .8); }
+    filter: drop-shadow(0 0 22px rgba(0, 207, 255, .5)); text-shadow: none; }
+  .hook { margin-top: 18px; font: 700 23px/1.4 'JetBrains Mono'; color: #dbe9f2; text-shadow: 0 2px 10px rgba(0, 0, 0, .7); }
   .hook b { color: var(--green); text-shadow: 0 0 14px rgba(0, 255, 136, .5); }
 
-  /* the board's glass: a frosted pane, a cyan rim, a lit top edge, a sheen across it, only type and light on it. The frost is
-     the galaxy behind the pane, blurred inside it (.fg, placed by the script at the foot): a backdrop-filter under a 3D tilt
-     frosted only part of the pane in Chromium's render, the rest showed sharp through it. */
-  .glass { position: relative; border-radius: 26px; border: 1px solid rgba(255, 255, 255, .16);
-    box-shadow: inset 0 1px 0 rgba(255, 255, 255, .5), inset 0 0 0 1px rgba(0, 207, 255, .2), inset 0 -22px 36px -22px rgba(0, 207, 255, .22),
-      0 0 0 1px rgba(0, 207, 255, .32), 0 0 70px rgba(0, 207, 255, .2), -8px 30px 54px rgba(0, 0, 0, .62); }
-  .glass .fgw { position: absolute; inset: 0; border-radius: inherit; overflow: hidden; }
-  .glass .fg { position: absolute; inset: -40px; background: url(universe-bg.jpg) no-repeat; background-size: 1080px 1350px;
-    background-position: calc(40px - var(--x, 0px)) calc(40px - var(--y, 0px)); filter: blur(20px) saturate(1.45) brightness(.92); }
-  .glass .tint { position: absolute; inset: 0; border-radius: inherit;
-    background:
-      linear-gradient(135deg, rgba(255, 255, 255, .16) 0%, rgba(255, 255, 255, .05) 24%, rgba(255, 255, 255, 0) 44%),
-      radial-gradient(120% 90% at 0% 0%, rgba(0, 207, 255, .16), rgba(0, 207, 255, 0) 60%),
-      linear-gradient(180deg, rgba(14, 28, 40, .46), rgba(6, 8, 16, .66)); }
-  .glass .sh { position: absolute; inset: 0; border-radius: inherit; overflow: hidden; pointer-events: none; }
-  .glass .sh::before { content: ''; position: absolute; top: -40%; bottom: -40%; left: 18%; width: 34%; transform: skewX(-18deg);
-    background: linear-gradient(100deg, transparent, rgba(255, 255, 255, .07) 45%, rgba(220, 255, 248, .12) 50%, transparent 60%); }
-  .glass > :not(.sh):not(.fgw):not(.tint) { position: relative; }
+  /* the quest: five steps on one glowing line */
+  .mhead { display: flex; align-items: center; gap: 16px; margin-top: 30px; }
+  .mlabel { font: 800 15px 'JetBrains Mono'; letter-spacing: .28em; color: #0a0e17; background: var(--green); padding: 6px 14px; border-radius: 99px; box-shadow: 0 0 22px rgba(0, 255, 136, .55); }
+  .mhead small { font: 700 15px 'JetBrains Mono'; letter-spacing: .14em; color: #a9bccb; }
+  .mhead small b { color: var(--cyan); }
+  .steps { position: relative; margin-top: 20px; }
+  .steps::before { content: ''; position: absolute; left: 36px; top: 38px; bottom: 38px; width: 3px; border-radius: 3px;
+    background: linear-gradient(180deg, var(--green), var(--cyan) 55%, var(--blue)); box-shadow: 0 0 16px rgba(0, 207, 255, .6); }
+  .st { position: relative; display: grid; grid-template-columns: 76px 1fr; align-items: center; gap: 22px; height: 108px; }
+  .node { position: relative; width: 76px; height: 76px; border-radius: 50%; display: grid; place-items: center;
+    background: radial-gradient(circle at 35% 30%, #1b2a36, #0a0e17 72%); border: 2px solid var(--c);
+    box-shadow: 0 0 0 6px rgba(10, 14, 23, .55), 0 0 26px color-mix(in srgb, var(--c) 70%, transparent), inset 0 0 18px color-mix(in srgb, var(--c) 30%, transparent); }
+  .node svg { width: 34px; height: 34px; color: var(--c); filter: drop-shadow(0 0 8px var(--c)); }
+  .node em { position: absolute; top: -8px; right: -8px; width: 28px; height: 28px; border-radius: 50%; display: grid; place-items: center; font: 400 14px 'Archivo Black';
+    font-style: normal; color: #0a0e17; background: var(--c); box-shadow: 0 0 12px var(--c); }
+  .st h2 { font: 400 34px/1 'Archivo Black', sans-serif; letter-spacing: .02em; color: var(--c); text-shadow: 0 0 18px color-mix(in srgb, var(--c) 55%, transparent); }
+  .st p { margin-top: 7px; font: 500 19px/1.3 'JetBrains Mono'; color: #cddde8; text-shadow: 0 1px 8px rgba(0, 0, 0, .6); }
+  .st p b { color: #ffffff; }
+  .s1 { --c: #00ff88; } .s2 { --c: #2cffb0; } .s3 { --c: #00e6e0; } .s4 { --c: #00cfff; } .s5 { --c: #5aa8ff; }
+
+  /* the reward, on the same glass: a line of light over it, the three seats, the call */
+  .reward { margin-top: auto; padding-top: 22px; border-top: 1px solid transparent;
+    border-image: linear-gradient(90deg, rgba(255, 255, 255, 0), rgba(0, 207, 255, .45) 25%, rgba(0, 255, 136, .35) 75%, rgba(255, 255, 255, 0)) 1; }
   .gh { display: flex; align-items: baseline; gap: 12px; }
   .gh .dot { width: 10px; height: 10px; border-radius: 50%; align-self: center; background: var(--rs1); box-shadow: 0 0 14px var(--rs1); }
-  .gh b { font: 400 25px 'Archivo Black', sans-serif; letter-spacing: .08em; color: transparent; -webkit-background-clip: text; background-clip: text;
+  .gh b { font: 400 27px 'Archivo Black', sans-serif; letter-spacing: .08em; color: transparent; -webkit-background-clip: text; background-clip: text;
     background-image: linear-gradient(180deg, #effff8, #4dffb4 50%, #00b4e0); filter: drop-shadow(0 0 12px rgba(0, 207, 255, .5)); }
   .gh .tg { margin-left: auto; font: 800 13px 'JetBrains Mono'; letter-spacing: .18em; color: var(--cyan); text-shadow: 0 0 10px rgba(0, 207, 255, .7); }
-
-  /* the quest: a pane turned away on its left edge like the board, over the galaxy's left */
-  .stage { position: absolute; left: 56px; top: 436px; width: 560px; perspective: 1300px; perspective-origin: 0% 40%; }
-  .quest { padding: 30px 34px 22px; transform: rotateY(16deg) rotateX(3deg); transform-origin: 0% 50%; }
-  .row { display: grid; grid-template-columns: 40px 34px minmax(0, 1fr); align-items: center; gap: 16px; padding: 15px 0; }
-  .row + .row { border-top: 1px solid transparent; border-image: linear-gradient(90deg, rgba(255, 255, 255, 0), rgba(255, 255, 255, .12) 30%, rgba(0, 207, 255, .22) 70%, rgba(255, 255, 255, 0)) 1; }
-  .rows { margin-top: 12px; }
-  .rk { font: 400 38px/1 'Archivo Black', sans-serif; font-style: normal; text-align: center; color: transparent; -webkit-background-clip: text; background-clip: text; }
-  .q1 .rk { background-image: linear-gradient(180deg, #eafff4, #00ff88 55%, #00a067); filter: drop-shadow(0 0 12px rgba(0, 255, 136, .65)); }
-  .q2 .rk { background-image: linear-gradient(180deg, #eafff6, #2cffb0 55%, #00a878); filter: drop-shadow(0 0 11px rgba(0, 255, 170, .55)); }
-  .q3 .rk { background-image: linear-gradient(180deg, #e6fffb, #00e6e0 55%, #00a0a8); filter: drop-shadow(0 0 11px rgba(0, 230, 224, .55)); }
-  .q4 .rk { background-image: linear-gradient(180deg, #e6fbff, #00cfff 55%, #0086b5); filter: drop-shadow(0 0 10px rgba(0, 207, 255, .6)); }
-  .q5 .rk { background-image: linear-gradient(180deg, #e3edff, #3b82f6 55%, #1d4ea8); filter: drop-shadow(0 0 9px rgba(59, 130, 246, .55)); }
-  .ic { width: 34px; height: 34px; filter: drop-shadow(0 0 8px currentColor); }
-  .q1 .ic { color: #00ff88; } .q2 .ic { color: #2cffb0; } .q3 .ic { color: #00e6e0; } .q4 .ic { color: #00cfff; } .q5 .ic { color: #5aa8ff; }
-  .nm b { display: block; font: 400 24px/1.1 'Archivo Black', sans-serif; letter-spacing: .03em; color: #f2f7fb; text-shadow: 0 1px 2px rgba(0, 0, 0, .6); }
-  .nm span { display: block; margin-top: 5px; font: 500 15.5px/1.35 'JetBrains Mono'; color: #b9ccd8; }
-  .nm span em { font-style: normal; color: #ffffff; font-weight: 800; }
-
-  /* the reward: a wide pane at the foot, leaning back a little */
-  .stage2 { position: absolute; left: 56px; right: 56px; bottom: 44px; perspective: 1400px; perspective-origin: 50% 100%; }
-  .reward { padding: 26px 36px 22px; transform: rotateX(7deg); transform-origin: 50% 100%; }
-  .seats { display: grid; grid-template-columns: repeat(3, 1fr); margin-top: 12px; }
+  .seats { display: grid; grid-template-columns: repeat(3, 1fr); margin-top: 14px; }
   /* the place over its share, never beside it: "1 5%" read as fifteen */
-  .seat { display: flex; flex-direction: column; align-items: center; gap: 4px; padding: 4px 4px 0; }
-  .seat + .seat { border-left: 1px solid transparent; border-image: linear-gradient(180deg, rgba(255, 255, 255, 0), rgba(0, 207, 255, .38), rgba(255, 255, 255, 0)) 1; }
+  .seat { display: flex; flex-direction: column; align-items: center; gap: 4px; padding: 2px 4px 0; }
+  .seat + .seat { border-left: 1px solid transparent; border-image: linear-gradient(180deg, rgba(255, 255, 255, 0), rgba(0, 207, 255, .4), rgba(255, 255, 255, 0)) 1; }
   .seat i { font: 400 30px/1 'Archivo Black'; font-style: normal; color: transparent; -webkit-background-clip: text; background-clip: text; }
-  .seat b { font: 400 62px/1 'Archivo Black'; }
-  .p1 i { background-image: linear-gradient(180deg, #eafff4, var(--rs1) 55%, #00a067); filter: drop-shadow(0 0 14px rgba(0, 255, 136, .65)); } .p1 b { color: var(--rs1); text-shadow: 0 0 22px rgba(0, 255, 136, .6); }
-  .p2 i { background-image: linear-gradient(180deg, #e6fbff, var(--rs2) 55%, #0086b5); filter: drop-shadow(0 0 11px rgba(0, 207, 255, .55)); } .p2 b { color: var(--rs2); text-shadow: 0 0 20px rgba(0, 207, 255, .55); }
-  .p3 i { background-image: linear-gradient(180deg, #e3edff, var(--rs3) 55%, #1d4ea8); filter: drop-shadow(0 0 9px rgba(59, 130, 246, .5)); } .p3 b { color: var(--rs3); text-shadow: 0 0 18px rgba(59, 130, 246, .5); }
-  .rf { display: flex; align-items: center; justify-content: space-between; gap: 18px; margin-top: 18px; padding-top: 16px;
-    border-top: 1px solid transparent; border-image: linear-gradient(90deg, rgba(255, 255, 255, 0), rgba(0, 207, 255, .35) 30%, rgba(0, 255, 136, .28) 70%, rgba(255, 255, 255, 0)) 1; }
-  .open b { display: block; font: 400 22px 'Archivo Black', sans-serif; color: var(--green); text-shadow: 0 0 14px rgba(0, 255, 136, .5); }
-  .open span { display: block; margin-top: 3px; font: 500 15px 'JetBrains Mono'; color: #c8dbe6; }
+  .seat b { font: 400 66px/1 'Archivo Black'; }
+  .p1 i { background-image: linear-gradient(180deg, #eafff4, var(--rs1) 55%, #00a067); filter: drop-shadow(0 0 14px rgba(0, 255, 136, .65)); } .p1 b { color: var(--rs1); text-shadow: 0 0 24px rgba(0, 255, 136, .6); }
+  .p2 i { background-image: linear-gradient(180deg, #e6fbff, var(--rs2) 55%, #0086b5); filter: drop-shadow(0 0 11px rgba(0, 207, 255, .55)); } .p2 b { color: var(--rs2); text-shadow: 0 0 22px rgba(0, 207, 255, .55); }
+  .p3 i { background-image: linear-gradient(180deg, #e3edff, var(--rs3) 55%, #1d4ea8); filter: drop-shadow(0 0 9px rgba(59, 130, 246, .5)); } .p3 b { color: var(--rs3); text-shadow: 0 0 20px rgba(59, 130, 246, .5); }
+  .rf { display: flex; align-items: center; justify-content: space-between; gap: 18px; margin-top: 22px; }
+  .open b { display: block; font: 400 23px 'Archivo Black', sans-serif; color: var(--green); text-shadow: 0 0 14px rgba(0, 255, 136, .5); }
+  .open span { display: block; margin-top: 4px; font: 500 16px 'JetBrains Mono'; color: #d0e1eb; }
   .cta { flex: none; font: 800 22px 'JetBrains Mono'; color: #0a0e17; background: linear-gradient(90deg, var(--green), var(--cyan)); padding: 13px 22px; border-radius: 12px;
     box-shadow: 0 0 26px rgba(0, 255, 136, .45), inset 0 1px 0 rgba(255, 255, 255, .6); }
 </style>
 </head>
 <body>
 <img class="bg" src="universe-bg.jpg" alt="">
-<div class="shade"></div>
 
-<div class="wrap">
+<div class="pane">
   <div class="tag"><i></i>CYMETICA QUEST <span>· BUILD A COMPANY</span></div>
   <h1><span>STOP PAYING FEES.</span><span class="g">START EARNING THEM.</span></h1>
   <div class="hook">Build a company. Climb to the <b>top 3</b>.<br>Take a cut of <b>every fee</b> on Cymetica.</div>
-</div>
 
-<div class="stage">
-  <div class="glass quest"><i class="fgw"><i class="fg"></i></i><i class="tint"></i><i class="sh"></i>
-    <div class="gh"><span class="dot"></span><b>MAIN QUEST</b><span class="tg">5 STEPS</span></div>
-    <div class="rows">
-      <div class="row q1"><i class="rk">1</i><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2.5c3.5 2.2 5 5.6 5 9.5l-2 4H9l-2-4c0-3.9 1.5-7.3 5-9.5z"/><circle cx="12" cy="10" r="2"/><path d="M9 16l-2.5 4M15 16l2.5 4M12 16v5"/></svg>
-        <div class="nm"><b>LAUNCH</b><span>Found it. <em>AI departments</em> grind 24/7.</span></div></div>
-      <div class="row q2"><i class="rk">2</i><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"><path d="M12 2.5l8.5 4.8v9.4L12 21.5l-8.5-4.8V7.3z"/><path d="M12 12l8.5-4.7M12 12L3.5 7.3M12 12v9.5"/></svg>
-        <div class="nm"><b>BUILD</b><span>Ship <em>products</em> to the Universe.</span></div></div>
-      <div class="row q3"><i class="rk">3</i><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 10v4h3l7 4V6L6 10z"/><path d="M16.5 9a4 4 0 0 1 0 6M19 6.5a7.5 7.5 0 0 1 0 11"/></svg>
-        <div class="nm"><b>PROMOTE</b><span>Creators shill it on <em>Promo Market</em>.</span></div></div>
-      <div class="row q4"><i class="rk">4</i><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><ellipse cx="12" cy="6" rx="7" ry="2.8"/><path d="M5 6v6c0 1.5 3.1 2.8 7 2.8s7-1.3 7-2.8V6M5 12v6c0 1.5 3.1 2.8 7 2.8s7-1.3 7-2.8v-6"/></svg>
-        <div class="nm"><b>EARN</b><span><em>Revenue</em> rolls in: bounties, prizes.</span></div></div>
-      <div class="row q5"><i class="rk">5</i><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M7 4h10v4a5 5 0 0 1-10 0z"/><path d="M7 6H4a3 3 0 0 0 3 4M17 6h3a3 3 0 0 1-3 4M12 13v4M8 21h8M9.5 17h5"/></svg>
-        <div class="nm"><b>TAKE A SEAT</b><span><em>Top 3</em> by revenue split every fee.</span></div></div>
-    </div>
+  <div class="mhead"><span class="mlabel">MAIN QUEST</span><small>5 STEPS · REWARD: <b>A CUT OF EVERY FEE</b></small></div>
+  <div class="steps">
+    <div class="st s1"><div class="node"><em>1</em><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2.5c3.5 2.2 5 5.6 5 9.5l-2 4H9l-2-4c0-3.9 1.5-7.3 5-9.5z"/><circle cx="12" cy="10" r="2"/><path d="M9 16l-2.5 4M15 16l2.5 4M12 16v5"/></svg></div>
+      <div><h2>LAUNCH</h2><p>Found it. <b>AI departments</b> grind 24/7.</p></div></div>
+    <div class="st s2"><div class="node"><em>2</em><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"><path d="M12 2.5l8.5 4.8v9.4L12 21.5l-8.5-4.8V7.3z"/><path d="M12 12l8.5-4.7M12 12L3.5 7.3M12 12v9.5"/></svg></div>
+      <div><h2>BUILD</h2><p>Ship <b>products</b> to the Universe.</p></div></div>
+    <div class="st s3"><div class="node"><em>3</em><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 10v4h3l7 4V6L6 10z"/><path d="M16.5 9a4 4 0 0 1 0 6M19 6.5a7.5 7.5 0 0 1 0 11"/></svg></div>
+      <div><h2>PROMOTE</h2><p>Creators shill it on <b>Promo Market</b>.</p></div></div>
+    <div class="st s4"><div class="node"><em>4</em><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><ellipse cx="12" cy="6" rx="7" ry="2.8"/><path d="M5 6v6c0 1.5 3.1 2.8 7 2.8s7-1.3 7-2.8V6M5 12v6c0 1.5 3.1 2.8 7 2.8s7-1.3 7-2.8v-6"/></svg></div>
+      <div><h2>EARN</h2><p><b>Revenue</b> rolls in: bounties, prizes.</p></div></div>
+    <div class="st s5"><div class="node"><em>5</em><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M7 4h10v4a5 5 0 0 1-10 0z"/><path d="M7 6H4a3 3 0 0 0 3 4M17 6h3a3 3 0 0 1-3 4M12 13v4M8 21h8M9.5 17h5"/></svg></div>
+      <div><h2>TAKE A SEAT</h2><p><b>Top 3</b> by revenue split every fee.</p></div></div>
   </div>
-</div>
 
-<div class="stage2">
-  <div class="glass reward"><i class="fgw"><i class="fg"></i></i><i class="tint"></i><i class="sh"></i>
+  <div class="reward">
     <div class="gh"><span class="dot"></span><b>QUEST REWARD</b><span class="tg">OF EVERY FEE ON CYMETICA</span></div>
     <div class="seats">
       <div class="seat p1"><i>1</i><b>5%</b></div>
@@ -136,12 +126,5 @@
     <div class="rf"><div class="open"><b>ALL 3 SEATS ARE OPEN.</b><span>Be the first company to take one.</span></div><span class="cta">cymetica.com/company</span></div>
   </div>
 </div>
-<script>
-  // each pane's frost is the page's own background, lined up with where the pane stands before its tilt
-  document.querySelectorAll('.glass').forEach(function (g) {
-    var x = 0, y = 0, e = g; while (e && e !== document.body) { x += e.offsetLeft; y += e.offsetTop; e = e.offsetParent; }
-    g.style.setProperty('--x', x + 'px'); g.style.setProperty('--y', y + 'px');
-  });
-</script>
 </body>
 </html>
