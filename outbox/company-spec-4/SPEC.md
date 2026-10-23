@@ -1,7 +1,7 @@
-# Build a Company, round 4 (draft, open)
+# Build a Company, round 4
 
-Started 2026-10-22 so nothing is forgotten; **the operator adds more items before it is filed**, and the mockup (`outbox/company-live`)
-is drawn only for what is settled. Not filed, not pushed. Items marked *waits for their answer* depend on a Telegram question to Cymetica.
+Started 2026-10-22, filed 2026-10-23 as one Build it Better request (`build-it-better/improvements.txt`). The clickable mockup is `outbox/company-live`;
+its look is binding where an item says *drawn*. Where the mockup still shows dollars, item A wins: units.
 
 ## A. Units, not dollars (settled)
 
@@ -69,7 +69,7 @@ to that task.
 
 The company works in passes (`pass_every_s` 120: every 2 minutes, up to two agent turns a pass), and the owner cannot see when the next one is. The page now
 says *NEXUS answers on the next pass (every 2 minute(s), oldest message first). Approvals that wait do not hold a message. (about 22:37)* under a waiting message,
-which helps once a message is sent. **Show the pulse where the owner looks all the time**: next to the company's name and the Pause button, a small
+which helps once a message is sent. **Show the pulse where the owner looks all the time** (where: below), a small
 *next pass in 1:12* that counts down, becomes *running now* while a pass runs and *paused* / *waiting for the window* when none will start, with *turns today 21 of 40*
 beside it. The data is served: `GET /company/mine` has `heartbeat.last_pass_at`, `heartbeat.next_pass_at` (null while paused) and `heartbeat.pass_every_s`, and
 `run_state.turns_today` and `turns_cap`.
@@ -79,7 +79,7 @@ Drawn in the mockup as one chip (`index.html` `.strip #co-pass`, `app.js` `clock
 *next pass 0:12*, and after a thin divider *2/40 turns*; green with a pulsing dot and *running now* while a turn runs; grey *paused* or *waiting for the
 window · 14:05* when nothing will start. A tooltip says what a pass is.
 
-## F. Play and pause for each department (settled)
+## F. Play and pause for each department (settled, drawn)
 
 Each department row gets a small play / pause button (icon, in the department's colour, with a tooltip *Pause Development* / *Resume Development*). It stops or
 starts **that department only**: its queued tasks wait, the other departments and Command go on. The row says why it is stopped: *Paused by you* against
