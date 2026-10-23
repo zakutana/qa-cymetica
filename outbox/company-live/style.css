@@ -47,6 +47,17 @@ a { color: var(--cyan); text-decoration: none; cursor: pointer; }
 .pill { font-size: 10.5px; font-weight: 700; letter-spacing: .08em; padding: 3px 9px; border-radius: 99px; border: 1px solid; white-space: nowrap; }
 .pill.on { color: var(--green); border-color: var(--green); background: var(--green-a); box-shadow: 0 0 10px rgba(0, 255, 136, .15); }
 .pill.off { color: var(--dim2); border-color: var(--dim2); background: rgba(127, 147, 173, .08); }
+/* the countdown to the next pass, next to Pause (spec 4, item E): a ring that empties, the time, the turns today */
+.pass { display: inline-flex; align-items: center; gap: 8px; margin-left: 4px; padding: 4px 11px 4px 6px; border-radius: 99px; border: 1px solid rgba(0, 207, 255, .35);
+  background: rgba(0, 207, 255, .06); font: 600 11.5px 'JetBrains Mono', monospace; color: #bfd0dc; white-space: nowrap; cursor: help; }
+.pass b { color: var(--cyan); font-weight: 800; }
+.pass em { font-style: normal; color: var(--dim2); padding-left: 8px; border-left: 1px solid var(--line2); }
+.pass .pr { width: 14px; height: 14px; border-radius: 50%; flex: none; background: conic-gradient(var(--cyan) calc(var(--k) * 360deg), rgba(0, 207, 255, .15) 0);
+  -webkit-mask: radial-gradient(circle, transparent 3.5px, #000 4px); mask: radial-gradient(circle, transparent 3.5px, #000 4px); }
+.pass.run { border-color: rgba(0, 255, 136, .45); background: rgba(0, 255, 136, .07); color: var(--green); }
+.pass.run .pr { background: var(--green); -webkit-mask: none; mask: none; box-shadow: 0 0 8px var(--green); animation: tlpulse 1.4s ease-in-out infinite; width: 9px; height: 9px; margin: 0 2px; }
+.pass.off { border-color: var(--line2); background: none; color: var(--dim2); }
+.pass.off .pr { background: var(--dim2); -webkit-mask: none; mask: none; width: 8px; height: 8px; margin: 0 3px; }
 .btn { font: 600 12px 'JetBrains Mono'; padding: 7px 12px; border-radius: 7px; border: 1px solid var(--line3); background: var(--navy2); color: var(--text); white-space: nowrap;
   transition: border-color .15s, background .15s, box-shadow .15s, transform .1s; }
 .btn:hover { border-color: var(--dim2); } .btn:active { transform: translateY(1px); }

@@ -1059,6 +1059,20 @@
     else if (!g.ok) heart = '<span class="stop">' + (g.code === 'cap' ? 'Daily limit reached' : 'Plan used up') + (g.until ? ': back at ' + hhmm(g.until) : '') + '</span>';
     else heart = '';   // nothing while it runs ("odstran ten maly napis waiting"): the rail and the rooms say who works
     $('co-heart').innerHTML = heart;
+    // the next pass, in one place next to Pause (spec 4, item E; "to ma byt nekde na 1 miste", 2026-10-23): a ring that
+    // empties to the pass and a countdown; running now while a turn runs; paused, or waiting for the window, when none
+    // will start; the turns today of the daily ceiling beside it
+    var ps = $('co-pass');
+    if (ps) {
+      var left = Math.max(0, S.next_pass_at - S.clock), every = CO.PASS_MS || 30000, mode, txt;
+      if (S.company.status === 'paused') { mode = 'off'; txt = 'paused'; }
+      else if (!g.ok) { mode = 'off'; txt = 'waiting for the window' + (g.until ? ' · ' + hhmm(g.until) : ''); }
+      else if (working) { mode = 'run'; txt = 'running now'; }
+      else { mode = ''; txt = 'next pass <b>' + Math.floor(left / 60000) + ':' + ('0' + Math.floor(left / 1000) % 60).slice(-2) + '</b>'; }
+      var k = mode ? 0 : Math.min(1, left / every);
+      setHTML(ps, '<i class="pr" style="--k:' + k.toFixed(3) + '"></i><span>' + txt + '</span><em>' + S.strip.length + '/' + b.cap + ' turns</em>');
+      ps.className = 'pass' + (mode ? ' ' + mode : '');
+    }
     var ur = $('us-r');
     // The plan windows run out and work goes on, paid from the owner's own USDC (the live /mine says so: at_zero,
     // extra.month_spend_usdc of monthly_cap_usdc, turns_left). The bar says it in numbers: a red bar with no word about

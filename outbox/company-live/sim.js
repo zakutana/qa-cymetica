@@ -7,6 +7,7 @@
   'use strict';
   var CO = window.CO;
   var PASS = 30000, TURN_MIN = 10000, TURN_MAX = 18000, RETRY = 50000, FAIL_P = 0.16;
+  CO.PASS_MS = PASS;   // the header's countdown to the next pass reads it (app.js clock)
 
   var L = {};
   CO.on = function (ev, fn) { (L[ev] = L[ev] || []).push(fn); };

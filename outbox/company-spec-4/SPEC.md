@@ -62,7 +62,7 @@ click). The next review's date is shown; the owner can also run one now.
 A bubble in the thread while NEXUS works, with the queued task's number; every reply says which message it answers; a task number in a message is a link
 to that task.
 
-## E. A countdown to the next pass (settled)
+## E. A countdown to the next pass (settled, drawn)
 
 The company works in passes (`pass_every_s` 120: every 2 minutes, up to two agent turns a pass), and the owner cannot see when the next one is. The page now
 says *NEXUS answers on the next pass (every 2 minute(s), oldest message first). Approvals that wait do not hold a message. (about 22:37)* under a waiting message,
@@ -70,6 +70,11 @@ which helps once a message is sent. **Show the pulse where the owner looks all t
 *next pass in 1:12* that counts down, becomes *running now* while a pass runs and *paused* / *waiting for the window* when none will start, with *turns today 21 of 40*
 beside it. The data is served: `GET /company/mine` has `heartbeat.last_pass_at`, `heartbeat.next_pass_at` (null while paused) and `heartbeat.pass_every_s`, and
 `run_state.turns_today` and `turns_cap`.
+
+**One place only**, at the top of the page beside the company's own Pause, never per department (the owner, 2026-10-23: *"to ma byt nekde na 1 miste"*).
+Drawn in the mockup as one chip (`index.html` `#co-pass`, `app.js` `clock`, `style.css` `.pass`): a small cyan ring that empties as the pass comes,
+*next pass 0:12*, and after a thin divider *2/40 turns*; green with a pulsing dot and *running now* while a turn runs; grey *paused* or *waiting for the
+window · 14:05* when nothing will start. A tooltip says what a pass is.
 
 ## F. Play and pause for each department (settled)
 
