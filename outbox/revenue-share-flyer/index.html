@@ -26,7 +26,7 @@
   /* the one sheet of glass: the board's, from the top of the page to the foot */
   .frost { position: absolute; inset: 0; pointer-events: none; }
   .frost img { position: absolute; inset: 0; width: 1080px; height: 1350px; filter: blur(24px) saturate(1.3) brightness(1.15); transform: scale(1.02); }
-  .stage { position: absolute; left: 50px; top: 120px; width: 980px; height: 1192px; perspective: 2000px; perspective-origin: 0% 40%; }
+  .stage { position: absolute; left: 50px; top: 108px; width: 980px; height: 1204px; perspective: 2000px; perspective-origin: 0% 40%; }
   .glass { position: absolute; inset: 0; padding: 40px 52px 34px; border-radius: 30px; transform: rotateY(12deg) rotateX(2.6deg); transform-origin: 0% 50%;
     background:
       linear-gradient(135deg, rgba(255, 255, 255, .16) 0%, rgba(255, 255, 255, .05) 24%, rgba(255, 255, 255, 0) 44%),
@@ -57,7 +57,7 @@
     text-shadow: 0 0 18px rgba(160, 230, 255, .45), 0 2px 14px rgba(0, 0, 0, .85); }
   .lede em { font: 400 52px/1 'Archivo Black', sans-serif; font-style: normal; color: var(--green); letter-spacing: -.01em; vertical-align: -2px;
     text-shadow: 0 0 22px rgba(0, 255, 136, .75), 0 2px 12px rgba(0, 0, 0, .8); }
-  .rule { height: 1px; margin: 26px 0 22px; background: linear-gradient(90deg, rgba(255, 255, 255, 0), rgba(255, 255, 255, .16) 20%, rgba(0, 207, 255, .34) 75%, rgba(255, 255, 255, 0)); }
+  .rule { height: 1px; margin: 20px 0 16px; background: linear-gradient(90deg, rgba(255, 255, 255, 0), rgba(255, 255, 255, .16) 20%, rgba(0, 207, 255, .34) 75%, rgba(255, 255, 255, 0)); }
 
   .gh { display: flex; align-items: baseline; gap: 14px; }
   .gh .dot { width: 13px; height: 13px; border-radius: 50%; align-self: center; background: var(--rs1); box-shadow: 0 0 16px var(--rs1); }
@@ -68,7 +68,7 @@
   .gsub b { color: #ffffff; }
 
   .seats { margin-top: 10px; }
-  .seat { display: grid; grid-template-columns: 70px 52px 1fr auto; align-items: center; gap: 20px; padding: 13px 0; }
+  .seat { display: grid; grid-template-columns: 70px 52px 1fr auto; align-items: center; gap: 20px; padding: 8px 0; }
   .seat + .seat { border-top: 1px solid transparent; border-image: linear-gradient(90deg, rgba(255, 255, 255, 0), rgba(255, 255, 255, .12) 30%, rgba(0, 207, 255, .22) 70%, rgba(255, 255, 255, 0)) 1; }
   .rk { font: 400 70px/1 'Archivo Black', sans-serif; text-align: center; color: transparent; -webkit-background-clip: text; background-clip: text; }
   .p1 .rk { background-image: linear-gradient(180deg, #eafff4, var(--rs1) 55%, #00a067); filter: drop-shadow(0 0 14px rgba(0, 255, 136, .65)); }
@@ -86,7 +86,7 @@
   .p3 .pay b { color: var(--rs3); text-shadow: 0 0 16px rgba(59, 130, 246, .45); }
 
   /* the way in, larger ("zvetsit celou sekci trochu") */
-  .way { margin-top: 16px; padding-top: 24px; border-top: 1px solid transparent;
+  .way { margin-top: 10px; padding-top: 20px; border-top: 1px solid transparent;
     border-image: linear-gradient(90deg, rgba(255, 255, 255, 0), rgba(0, 207, 255, .45) 25%, rgba(0, 255, 136, .35) 75%, rgba(255, 255, 255, 0)) 1; }
   .way .lb { font: 800 25px 'JetBrains Mono'; letter-spacing: .22em; color: var(--cyan); text-shadow: 0 0 10px rgba(0, 207, 255, .6); }
   .steps { display: grid; grid-template-columns: 1fr 30px 1fr 30px 1fr 30px 1fr; align-items: start; margin-top: 18px; }
@@ -95,10 +95,18 @@
   .st span { display: block; margin-top: 10px; font: 600 22px/1.25 'JetBrains Mono'; color: #b9cdd9; }
   .ar { padding-top: 46px; text-align: center; font: 800 34px 'JetBrains Mono'; color: var(--cyan); text-shadow: 0 0 12px rgba(0, 207, 255, .7); }
 
-  .call { display: flex; align-items: center; justify-content: space-between; margin-top: 26px; }
-  .call .cta { font: 400 30px 'Archivo Black', sans-serif; letter-spacing: .03em; color: #04120b; padding: 18px 30px; border-radius: 14px;
-    background: linear-gradient(90deg, var(--green), var(--cyan)); box-shadow: 0 0 34px rgba(0, 255, 136, .45), inset 0 1px 0 rgba(255, 255, 255, .7); }
-  .call .url { font: 800 24px 'JetBrains Mono'; color: var(--cyan); text-shadow: 0 0 10px rgba(0, 207, 255, .6); }
+  /* the one link, to the guide (the operator, 2026-10-23: "tlacitko stake your claim smaz ... misto nej dej link na guide
+     co udelame ... staci jen jeden link a nejak pekne"). The guide page does not exist yet: cymetica.com/quest is a
+     placeholder address until it does. A bar of the board's glass, a lit rim in green to cyan, the text, no button. */
+  .guide { position: relative; display: grid; grid-template-columns: auto 1fr auto; align-items: center; gap: 22px; margin-top: 26px; padding: 20px 30px; border-radius: 18px;
+    background: linear-gradient(90deg, rgba(0, 255, 136, .1), rgba(0, 207, 255, .08)); box-shadow: inset 0 1px 0 rgba(255, 255, 255, .22), 0 0 30px rgba(0, 255, 160, .12); }
+  .guide::before { content: ''; position: absolute; inset: 0; border-radius: inherit; padding: 1.5px; pointer-events: none;
+    background: linear-gradient(90deg, #00ff88, #00cfff); -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0); -webkit-mask-composite: xor; mask-composite: exclude; }
+  .guide .g1 { font: 400 30px 'Archivo Black', sans-serif; letter-spacing: .04em; color: transparent; -webkit-background-clip: text; background-clip: text;
+    background-image: linear-gradient(180deg, #f2fffb, #4dffb4 55%, #00d0e8); filter: drop-shadow(0 0 12px rgba(0, 255, 160, .45)); }
+  .guide .g2 { font: 600 22px 'JetBrains Mono'; color: #cfe0ea; }
+  .guide .g3 { font: 800 25px 'JetBrains Mono'; color: var(--cyan); text-shadow: 0 0 10px rgba(0, 207, 255, .6); white-space: nowrap; }
+  .guide .g3 i { font-style: normal; color: var(--green); margin-left: 6px; }
 </style>
 </head>
 <body>
@@ -137,7 +145,7 @@
     <div class="ln a"><span class="wide">JOIN THE</span><span class="bloom">JOIN THE</span><span class="ghost">JOIN THE</span><span class="cut">JOIN THE</span></div>
     <div class="ln b"><span class="wide">CYMETICA QUEST</span><span class="bloom">CYMETICA QUEST</span><span class="ghost">CYMETICA QUEST</span><span class="cut">CYMETICA QUEST</span></div>
   </div>
-  <div class="lede">Build the best company<br>and earn <em>5%</em> of all Cymetica fees.</div>
+  <div class="lede">Build the best company<br>in the Universe and earn<br><em>5%</em> of all Cymetica fees.</div>
   <div class="rule"></div>
 
   <div class="gh"><span class="dot"></span><b>REVENUE SHARE</b><span class="tg">TOP 3</span></div>
@@ -158,7 +166,7 @@
     </div>
   </div>
 
-  <div class="call"><span class="cta">STAKE YOUR CLAIM &rarr;</span><span class="url">cymetica.com/company</span></div>
+  <div class="guide"><span class="g1">START HERE</span><span class="g2">The Cymetica Quest guide</span><span class="g3">cymetica.com/quest <i>&rarr;</i></span></div>
 </div></div>
 <script>
 (function () {

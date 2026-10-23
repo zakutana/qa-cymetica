@@ -96,7 +96,7 @@ def flyer(p, page='index.html'):
     print('glass box', {k: round(v) for k, v in pg.evaluate("() => window.GLASS_BOX").items() if k in ('left', 'top', 'right', 'bottom')},
           'frost outline', {k: round(v) for k, v in pg.evaluate("() => window.GLASS_PROJ").items()})
     # and the board's content stays on the glass: the call's bottom against the glass's inner bottom, in its own box
-    print('room under the call (px, glass coords):', pg.evaluate("""() => { const g = document.querySelector('.glass'), c = document.querySelector('.call');
+    print('room under the guide link (px, glass coords):', pg.evaluate("""() => { const g = document.querySelector('.glass'), c = document.querySelector('.guide');
       return g.clientHeight - parseFloat(getComputedStyle(g).paddingBottom) - (c.offsetTop + c.offsetHeight); }"""))
     pg.screenshot(path=str(out))
     b.close()
