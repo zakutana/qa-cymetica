@@ -1884,8 +1884,7 @@ class Universe3D {
   }
   // Starlanes: every orbit a lane of light-dust drifting round the sun at a pace of its own (the inner ones faster, as
   // orbits are), in three kinds of dot -- a fine thread of small ones in broken arcs, a wide dim haze of big soft ones,
-  // and now and then a bright star -- each lane tinted by its distance from the sun (UVTINT); and a swarm of embers
-  // circling the sun on the plane where the five small rings were. All of it on the GPU (the sparks' way: where a dot is
+  // and now and then a bright star -- each lane tinted by its distance from the sun (UVTINT). All of it on the GPU (the sparks' way: where a dot is
   // is time and its own numbers), brighter on the left and the far side of the first look as the lines were. Under it a
   // soft dust plane. The stars of light that ride the orbits keep their pace and gain a tail.
   starlanes() {
@@ -1920,11 +1919,8 @@ class Universe3D {
     // prstencu moc?"), the other four only a drift of dust
     ORB.forEach((r) => { if (UVSTRONG.includes(r)) { lane(r, 'thread'); lane(r, 'haze'); lane(r, 'star'); } else lane(r, 'faint'); });
     lane(210, 'haze');   // the system's edge: a faint haze instead of a bright double ring
-    // the embers round the sun: thicker near it, quick (an orbit's pace at that radius, ~25 times over), warm
-    for (let i = 0; i < 700; i++) {
-      const r = 30 + 36 * Math.pow(R(), 1.5), c = tint(r);
-      P.push({ r, a: R() * TAU, w: Gx.omega(r) * 25 * (0.95 + R() * 0.1), y: gauss() * 0.4 + 0.3, size: 0.45 + R() * R() * 1.5, br: 0.35 + R() * 0.8, ph: R() * 6.3, fl: R(), col: c });
-    }
+    // (no embers round the sun: they were there on 2026-10-23 and the operator took them out, "smazal bych ty svitici
+    // zlute kulicky co rotuji kolem slunce")
     const N = P.length, A = new Float32Array(N * 4), B = new Float32Array(N * 4), Cc = new Float32Array(N * 3);
     P.forEach((p, i) => { A.set([p.r, p.a, p.w, p.y], i * 4); B.set([p.size, p.br, p.ph, p.fl], i * 4); Cc.set([p.col.r, p.col.g, p.col.b], i * 3); });
     const a = TSL.instancedBufferAttribute(new THREE.InstancedBufferAttribute(A, 4)), b = TSL.instancedBufferAttribute(new THREE.InstancedBufferAttribute(B, 4)), c = TSL.instancedBufferAttribute(new THREE.InstancedBufferAttribute(Cc, 3));
@@ -2175,7 +2171,7 @@ class Universe3D {
     it.el.className = 'b3' + (!c.public && !it.mine ? ' priv' : '') + (c.status === 'paused' ? ' paused' : '') + (it.mine ? ' mine' : '') + (hid ? ' hidden' : '');
     it.el.style.setProperty('--acc', acc);
     it.el.setAttribute('data-id', c.id);
-    it.el.innerHTML = (it.mine ? '<span class="you">YOU</span>' : '') + '<span class="rib">' + (!c.public && !it.mine ? '<i class="lk"></i>' : '') + esc(name) + '</span><span class="teth"></span>';
+    it.el.innerHTML = (it.mine ? '<span class="you">YOU</span>' : '') + '<span class="rib">' + (!c.public && !it.mine ? '<i class="lk"></i>' : '') + '<span class="nm">' + esc(name) + '</span></span><span class="teth"></span>';
     it.el._bw = 0;
   }
   coreBanner() {
@@ -2394,11 +2390,22 @@ class Universe3D {
     });
     if (this.haze) this.haze.rotation.z = t * 0.004;   // the dust plane turns once in about 26 minutes
   }
-  // The banners follow their stations. Ours, the hovered one and Cymetica's always show; the rest nearest first,
-  // each only where no nearer one stands, wholly inside the stage and clear of its bars, and only while its station
-  // is big enough on screen to be worth a name. A plate stands on its station's top as the camera sees it: over the
-  // mast from the side, past the edge of the deck from straight above, so it names the station from any angle
-  // without covering it. Cymetica's stands on its sun the same way.
+  // The three that earn most (the revenue share's top 3): the names the map gives besides its own
+  topIds() {
+    if (this._topK !== this.built) {
+      this._topK = this.built;
+      const b = CO.uvBoard && CO.uvBoard(this.h.mine ? this.h.mine() : null);
+      this._top = new Set(b && b.top ? b.top.map((r) => String(r.c.id)) : []);
+    }
+    return this._top;
+  }
+  // The banners follow their stations. Names (2026-10-23, "vyres nejak ty vsechny napisy nad firmama ... kdyz tam bude
+  // moc firem bude to uplny hnus"): Cymetica, ours, Cymetica's products, land of your own and the hovered one always
+  // show; the revenue share's top 3 show where there is room; any other only once the camera has come close to it
+  // (its station 110 px or more across); every other station carries a dot (.dot), the name in its tooltip and on
+  // hover. So a hundred companies are a hundred dots, never a hundred plates. A name stands on its station's top as the
+  // camera sees it: over the mast from the side, past the edge of the deck from straight above, so it names the station
+  // from any angle without covering it. Cymetica's stands on its sun the same way.
   overlay() {
     const w = this.el.clientWidth, h = this.el.clientHeight, v = this._ov1 || (this._ov1 = new THREE.Vector3()), placed = [], now = performance.now();
     // a still camera moves no banner: restyle them only when the view, the size, the hover or a station changed
@@ -2438,6 +2445,7 @@ class Universe3D {
       if (this.colEl._off !== off) { this.colEl._off = off; this.colEl.style.display = off ? 'none' : ''; }
       if (!off) this.colEl.style.transform = 'translate(' + (x - 300).toFixed(1) + 'px,' + (y - 300).toFixed(1) + 'px) scale(' + s.toFixed(4) + ')';
     }
+    const top = this.topIds();
     const list = this.items.filter((it) => it.plot && it.el).map((it) => {
       const p = it.plot, k = p.k || UVSS, hh = (p.top - p.bot) / 2 * k;
       c.copy(p.root.position); c.y += (p.top + p.bot) / 2 * k;
@@ -2446,15 +2454,15 @@ class Universe3D {
       it.plateAt = (it.plateAt || new THREE.Vector3()).copy(c).addScaledVector(up, lift);
       v.copy(it.plateAt).project(this.camera); const d = cam.distanceTo(it.anchor);
       // ours, the ads and land of your own are always named; the rest as room allows
-      return { el: it.el, x: (v.x + 1) / 2 * w, y: (1 - v.y) / 2 * h, z: v.z, d, px: it.size * f / d, mine: it.mine, keep: it.mine || it.kind === 'ad' || !!it.owned || String(this.hover) === String(it.c.id) };
+      return { el: it.el, x: (v.x + 1) / 2 * w, y: (1 - v.y) / 2 * h, z: v.z, d, px: it.size * f / d, mine: it.mine, star: top.has(String(it.c.id)), keep: it.mine || it.kind === 'ad' || !!it.owned || String(this.hover) === String(it.c.id) };
     });
     if (this.coreEl) {
       c.copy(this.heartAt).addScaledVector(up, this.sunR * 0.9); v.copy(c).project(this.camera);
       list.push({ el: this.coreEl, x: (v.x + 1) / 2 * w, y: (1 - v.y) / 2 * h, z: v.z, d: cam.distanceTo(this.heartAt), px: 200, keep: true, core: true });
     }
-    list.sort((a, b) => (b.keep - a.keep) || a.d - b.d);
+    list.sort((a, b) => (b.keep - a.keep) || (!!b.star - !!a.star) || a.d - b.d);
     // a galaxy with a name on every star reads as a list: at most this many names besides ours, Cymetica and the hovered
-    // (14 at first; with 36 companies they stood in heaps: "jak jich je moc to vypada uz prestackovani", 2026-10-23)
+    // (14 at first, then 10; with 36 companies they stood in heaps: "jak jich je moc to vypada uz prestackovani", 2026-10-23)
     let named = 0;
     // a plate's width is measured once, and a width measured before the plates' font had loaded was too narrow: plates
     // that looked apart to this test overlapped on the screen. Measured again when the fonts arrive.
@@ -2465,7 +2473,8 @@ class Universe3D {
     }
     list.forEach((o) => {
       const el = o.el; if (!el) return;
-      if (!el._bw) el._bw = el.offsetWidth || 160;
+      // (measured with its name showing: a dot is as wide as a dot)
+      if (!el._bw) { const dt = el.classList.contains('dot'); if (dt) el.classList.remove('dot'); el._bw = el.offsetWidth || 160; if (dt) el.classList.add('dot'); }
       const s = bs * (o.core ? 1 : Math.max(0.86, Math.min(1, 0.6 + o.px / 120)));
       const off = o.z > 1 || o.x < -80 || o.x > w + 80 || o.y < -40 || o.y > h + 60;
       const bw = el._bw * s, bh = (o.mine ? 50 : o.core ? 42 : 32) * s;
@@ -2475,11 +2484,17 @@ class Universe3D {
       // room round each plate, so two never read as one heap (6 and 4 px at first)
       const hit = (p) => r.l < p.r + 14 && r.r > p.l - 14 && r.t < p.b + 9 && r.b > p.t - 9;
       const whole = r.l >= 2 && r.r <= w - 2 && r.t >= 2 && r.b <= h - 2;
-      let show = !off && (o.keep || (whole && !placed.some(hit) && !this.bars.some(hit) && o.px >= 24 && named < 10));
+      // a name: for the top 3 where there is room, for any other only once its station is big on the screen
+      const want = o.star ? o.px >= 24 : o.px >= 110;
+      let show = !off && (o.keep || (want && whole && !placed.some(hit) && !this.bars.some(hit) && named < 8));
       if (moving && el._placed && !o.keep) show = !off && !!el._show;
       if (show && !o.keep) named++;
       el._show = show;
-      if (el._hid !== !show) { el._hid = !show; el.classList.toggle('hidden', !show); }
+      // not named: a dot, while the station is on the stage and not too small to be worth one
+      const dot = !show && !off && !o.core && o.px >= 14;
+      if (el._dot !== dot) { el._dot = dot; el.classList.toggle('dot', dot); }
+      const vis = show || dot;
+      if (el._hid !== !vis) { el._hid = !vis; el.classList.toggle('hidden', !vis); }
       el._placed = true;
       if (show) placed.push(r);
       const tf = 'translate(' + o.x.toFixed(1) + 'px,' + o.y.toFixed(1) + 'px) translate(-50%,-100%) scale(' + s.toFixed(3) + ')', zi = String(o.keep ? 3000 : 2000 - Math.round(o.d));

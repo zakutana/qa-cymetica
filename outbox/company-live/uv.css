@@ -287,3 +287,33 @@ body.ro #dr-ch-text { cursor: default; }
   .uvsum { display: none; }
 }
 
+/* The names on the map, 2026-10-23 ("vyres nejak ty vsechny napisy nad firmama, to vypada taky skarede a kdyz tam bude
+   moc firem bude to uplny hnus"): the riveted plates of his picture are gone. A name is type with a dark halo, a lit dot
+   of the station's colour before it and a thin line down to the station; a station without a name carries only the dot
+   (.dot, set by u3d.js overlay()). Cymetica's keeps a glowing rule under it, the ads and your land a little more type. */
+.b3 .rib { gap: 7px; padding: 0; background: none; border: 0; border-radius: 0; box-shadow: none; font: 700 12.5px/1.2 'Rajdhani', 'Archivo Black', sans-serif; letter-spacing: .11em; color: #dbe8ef;
+  text-shadow: 0 0 5px rgba(1, 8, 13, .95), 0 0 12px rgba(1, 8, 13, .9), 0 1px 2px #000; transition: padding .2s, background .2s; }
+.b3 .rib::before { width: 7px; height: 7px; opacity: 1; box-shadow: 0 0 8px var(--acc), 0 0 0 3px color-mix(in srgb, var(--acc) 24%, transparent); }
+.b3 { padding-bottom: 5px; }   /* the name floats a little above its station, the line between them */
+.b3 .teth { width: 1px; height: 14px; border: 0; margin-top: 4px; background: linear-gradient(rgba(0, 0, 0, 0), var(--acc)); opacity: .95; }
+.b3 .teth::after { content: ''; position: absolute; left: -2px; bottom: -3px; width: 5px; height: 5px; border-radius: 50%; background: var(--acc); box-shadow: 0 0 6px var(--acc); }
+.b3 .teth { position: relative; }
+.b3.dot { padding-bottom: 0; }
+.b3.core .rib { font-size: 18px; letter-spacing: .26em; padding: 0 0 5px; color: #e8f9fc; text-shadow: 0 0 14px rgba(0, 207, 255, .85), 0 0 5px rgba(1, 8, 13, .95), 0 1px 2px #000;
+  border-bottom: 1px solid transparent; border-image: linear-gradient(90deg, transparent, rgba(98, 189, 203, .9), transparent) 1; background: none; box-shadow: none; }
+.b3.core .rib::after { display: none; }
+.b3.core .teth { height: 16px; margin-top: 3px; background: linear-gradient(rgba(0, 0, 0, 0), #62bdcb); }
+.b3.core .teth::after { background: #62bdcb; box-shadow: 0 0 6px #62bdcb; }
+.b3.ad .rib { font-size: 14.5px; letter-spacing: .13em; padding: 0; color: #f4fafc; box-shadow: none;
+  text-shadow: 0 0 12px color-mix(in srgb, var(--acc) 70%, transparent), 0 0 5px rgba(1, 8, 13, .95), 0 1px 2px #000; }
+.b3.land .rib { color: var(--green); }
+.b3.priv .rib { color: var(--dim); }
+.b3.paused .rib { color: var(--dim2); }
+.b3.hov .rib, .b3:hover .rib { color: #fff; box-shadow: none; padding: 3px 10px 3px 9px; margin-bottom: -3px; border-radius: 999px; background: rgba(5, 12, 20, .78); box-shadow: 0 0 0 1px color-mix(in srgb, var(--acc) 65%, transparent), 0 0 18px color-mix(in srgb, var(--acc) 45%, transparent); }
+.b3.core:hover .rib { background: none; box-shadow: none; padding: 0 0 5px; border-radius: 0; }
+/* a station without a name: its dot, big enough to point at */
+.b3.dot .nm, .b3.dot .lk, .b3.dot .teth { display: none; }
+.b3.dot .rib { padding: 6px; }
+.b3.dot .rib::before { width: 7px; height: 7px; box-shadow: 0 0 9px var(--acc), 0 0 0 2px color-mix(in srgb, var(--acc) 30%, transparent); opacity: .9; }
+.b3.dot:hover .rib { padding: 3px 10px 3px 9px; }
+

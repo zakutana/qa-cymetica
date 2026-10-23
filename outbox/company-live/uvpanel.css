@@ -120,7 +120,7 @@ a.uvr { color: var(--text); text-decoration: none; } a.uvr:hover { background: v
    So: one big pane of frosted glass, turned away on its left edge (rotateY 18.4deg, 15% past the first 16), wide margins all
    round, and on it only type and light: no row boxes, no tiles round the icons, no corner frames; a cyan rim, a lit top
    edge, a slow sheen. */
-.uvb { position: absolute; z-index: 5; top: 58px; left: 14px; width: 450px; font-family: 'JetBrains Mono', monospace; color: var(--text);
+.uvb { position: absolute; z-index: 5; top: 84px; left: 56px; width: 450px;   /* 2026-10-23, "moc nalevo namackany": in from the edge and clear of the count chip above it */ font-family: 'JetBrains Mono', monospace; color: var(--text);
   perspective: 1200px; perspective-origin: 0% 35%; }
 /* a department icon (.dic, style.css) places itself in column 1 over three rows: here it is one cell in its row */
 .uvb-r .dic, .lb-r .dic { grid-column: auto; grid-row: auto; }
