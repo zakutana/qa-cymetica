@@ -258,11 +258,64 @@ b.g, span.g { color: var(--green); text-shadow: 0 0 10px rgba(0, 255, 136, .45);
 .pk.g { border-color: rgba(0, 255, 136, .4); background: radial-gradient(ellipse at 20% 0%, rgba(0, 255, 136, .12), transparent 70%), var(--navy2); } .pk.g b { color: var(--green); text-shadow: 0 0 12px rgba(0, 255, 136, .45); }
 .pk.u { border-color: rgba(59, 130, 246, .45); background: radial-gradient(ellipse at 20% 0%, rgba(59, 130, 246, .14), transparent 70%), var(--navy2); } .pk.u b { color: #8fbaff; }
 .pkpis .arr { align-self: center; font-style: normal; color: var(--dim2); font-size: 18px; }
-.pfgrid { display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 12px; }
-.pf { padding: 14px 16px; border-radius: 12px; border: 1px solid var(--line2); background: var(--navy2); }
-.pf:hover { border-color: rgba(0, 207, 255, .45); }
-.pf1 { display: flex; align-items: baseline; justify-content: space-between; gap: 10px; }
-.pf1 b { font: 400 15px 'Archivo Black', sans-serif; } .pf1 a { font-size: 11px; color: var(--cyan); }
+/* Products (2026-10-23): one tile per product -- its logo, its line, visitors, uses, the fees it brought, its 30 days --
+   and a click slides its panel out on the right (#pf-panel: the Universe's panel, .uvp). --acc: the company's colour. */
+.pfgrid { display: grid; grid-template-columns: repeat(auto-fill, minmax(290px, 1fr)); gap: 12px; }
+.pf { position: relative; padding: 14px 16px 10px; border-radius: 14px; border: 1px solid var(--line2); cursor: pointer; outline: none;
+  background: linear-gradient(165deg, rgba(255, 255, 255, .035), transparent 45%), var(--navy2); transition: border-color .15s, transform .15s, box-shadow .15s; }
+.pf:hover, .pf:focus-visible { border-color: rgba(0, 207, 255, .5); transform: translateY(-2px); box-shadow: 0 8px 24px rgba(0, 0, 0, .35), 0 0 18px rgba(0, 207, 255, .12); }
+.pf.on { border-color: var(--acc); box-shadow: 0 0 0 1px var(--acc), 0 0 24px color-mix(in srgb, var(--acc) 28%, transparent); }
+.pf1 { display: flex; align-items: center; gap: 12px; min-width: 0; }
+.pft { flex: 1; min-width: 0; }
+.pft b { display: block; font: 400 15px 'Archivo Black', sans-serif; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.pft span { display: block; margin-top: 3px; font-size: 11px; color: var(--text); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.pft span.none { color: var(--dim2); }
+.pfgo { flex: none; font-style: normal; font-size: 22px; line-height: 1; color: var(--dim2); transition: color .15s, transform .15s; }
+.pf:hover .pfgo, .pf.on .pfgo { color: var(--cyan); transform: translateX(2px); }
+/* the logo: the owner's picture, or the product's initials in the company's colour until he sets one */
+.pflogo { flex: none; position: relative; width: 46px; height: 46px; border-radius: 12px; overflow: hidden; display: grid; place-items: center;
+  background: radial-gradient(circle at 30% 18%, color-mix(in srgb, var(--acc) 38%, transparent), transparent 72%), #0d1522;
+  border: 1px solid color-mix(in srgb, var(--acc) 45%, var(--line3)); box-shadow: inset 0 1px 0 rgba(255, 255, 255, .06); }
+.pflogo i { font: 400 16px 'Archivo Black', sans-serif; font-style: normal; color: var(--acc); text-shadow: 0 0 10px color-mix(in srgb, var(--acc) 60%, transparent); }
+.pflogo.img { background: #0d1522; border-color: var(--line3); }
+.pflogo img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.pflogo.hd { width: 48px; height: 48px; }
+.pflogo.lg { width: 64px; height: 64px; border-radius: 15px; } .pflogo.lg i { font-size: 22px; }
+.pflogo em { position: absolute; left: 0; right: 0; bottom: 0; padding: 2px 0 3px; font: 800 8.5px 'JetBrains Mono', monospace; font-style: normal; letter-spacing: .06em; text-align: center;
+  color: var(--cyan); background: rgba(6, 10, 18, .82); opacity: 0; transition: opacity .15s; }
+.pflogo-b { flex: none; padding: 0; border: 0; background: none; cursor: pointer; border-radius: 12px; }
+.pflogo-b:hover .pflogo { border-color: var(--cyan); box-shadow: 0 0 14px rgba(0, 207, 255, .35); } .pflogo-b:hover em { opacity: 1; }
+.pfn { display: grid; grid-template-columns: 1fr 1fr 1.25fr; gap: 6px; margin: 14px 0 8px; }
+.pfn b { display: block; font-size: 20px; font-weight: 800; white-space: nowrap; }
+.pfn b em { font-style: normal; font-size: 10px; font-weight: 700; color: var(--green); margin-left: 4px; vertical-align: 3px; }
+.pfn span { font-size: 9.5px; color: var(--dim2); letter-spacing: .08em; text-transform: uppercase; }
+.pfn .g b { color: var(--green); text-shadow: 0 0 12px rgba(0, 255, 136, .35); }
+.pfsp { display: block; width: 100%; height: 26px; }
+.pfsp .a { fill: rgba(0, 207, 255, .1); } .pfsp .l { fill: none; stroke: var(--cyan); stroke-width: 1.4; vector-effect: non-scaling-stroke; stroke-linejoin: round; }
+.pf:hover .pfsp .a, .pf.on .pfsp .a { fill: rgba(0, 207, 255, .18); }
+/* its panel: fixed beside the tiles, which step aside for it on a wide screen */
+.uvp.pfp { position: fixed; z-index: 40; top: var(--pfp-top, 112px); right: 16px; bottom: 54px; width: min(430px, calc(100vw - 32px)); }
+.page.pfo { padding-right: 466px; }
+@media (max-width: 1100px) { .page.pfo { padding-right: 20px; } }
+.pfp .uvp-t span em { font-style: normal; color: var(--green); font-weight: 700; }
+.pfch { padding: 10px 11px 8px; border-radius: 9px; background: var(--navy); border: 1px solid var(--line2); }
+.pfcr { display: grid; grid-template-columns: 62px 1fr; align-items: end; gap: 10px; }
+.pfcr + .pfcr { margin-top: 10px; }
+.pfcr .k b { display: block; font-size: 10.5px; font-weight: 800; letter-spacing: .06em; text-transform: uppercase; color: var(--cyan); } .pfcr .k.g b { color: var(--green); }
+.pfcr .k span { font-size: 9.5px; color: var(--dim2); white-space: nowrap; }
+.pfbars { display: flex; align-items: flex-end; gap: 2px; height: 40px; border-bottom: 1px solid var(--line2); }
+.pfbars i { flex: 1; border-radius: 2px 2px 0 0; background: linear-gradient(var(--cyan), rgba(0, 207, 255, .45)); opacity: .85; }
+.pfbars.f i { background: linear-gradient(var(--green), rgba(0, 255, 136, .4)); }
+.pfbars i:hover { opacity: 1; filter: brightness(1.3); }
+.pfdates { display: flex; justify-content: space-between; margin: 5px 0 0 72px; font-size: 9px; color: var(--dim2); }
+.pfs { display: grid; grid-template-columns: 1fr auto; align-items: baseline; gap: 6px 10px; padding: 9px 11px; border-radius: 9px; background: var(--navy); border: 1px solid var(--line2); }
+.pfs + .pfs { margin-top: 6px; }
+.pfs span { font-size: 11px; color: var(--dim); } .pfs b { font-size: 14px; color: var(--green); } .pfs .pfbar { grid-column: 1 / -1; }
+.pfbrand { display: flex; align-items: center; gap: 12px; padding: 10px 11px; border-radius: 9px; background: var(--navy); border: 1px dashed var(--line3); }
+.pfbrand .bt { min-width: 0; display: flex; flex-direction: column; gap: 7px; }
+.pfbrand .row { display: flex; gap: 6px; }
+.pfbrand small { font-size: 9.5px; line-height: 1.4; color: var(--dim2); }
+.pfp .pfline { margin: 10px 0 12px; }
 /* whose product it is: its company, on every product card */
 .pfown { margin: 0 0 10px; }
 /* the line the Universe shows for a product, its owner's to write (Edit opens a small dialog) */
@@ -295,13 +348,8 @@ b.g, span.g { color: var(--green); text-shadow: 0 0 10px rgba(0, 255, 136, .45);
 .mkrow { display: flex; align-items: center; gap: 12px; margin: 2px 0 16px; }
 .mkrow::before, .mkrow::after { content: ''; flex: 1; height: 1px; margin-top: 14px; background: linear-gradient(90deg, transparent, color-mix(in srgb, var(--acc) 75%, transparent)); }
 .mkrow::after { background: linear-gradient(270deg, transparent, color-mix(in srgb, var(--acc) 75%, transparent)); }
-.pfn { display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; margin: 12px 0 8px; }
-.pfn b { display: block; font-size: 20px; font-weight: 800; } .pfn span { font-size: 10px; color: var(--dim2); letter-spacing: .08em; text-transform: uppercase; }
 .pfbar { display: block; height: 4px; border-radius: 2px; background: var(--line); overflow: hidden; }
 .pfbar i { display: block; height: 100%; background: linear-gradient(90deg, var(--cyan), var(--green)); box-shadow: 0 0 8px rgba(0, 255, 136, .5); }
-.pfe { display: flex; align-items: baseline; gap: 12px; margin-top: 10px; font-size: 13px; font-weight: 800; }
-.pfe em { font-style: normal; font-size: 9.5px; font-weight: 700; letter-spacing: .1em; color: var(--dim2); border: 1px solid var(--line3); border-radius: 9px; padding: 1px 7px; text-transform: uppercase; }
-.pfe i { font-style: normal; font-size: 11px; color: var(--green); margin-left: auto; }
 .pfsrc { margin-top: 14px; font-size: 10.5px; color: var(--dim2); }
 .pfempty { padding: 40px; text-align: center; border: 1px dashed var(--line3); border-radius: 12px; }
 .pfempty b { display: block; font: 400 18px 'Archivo Black', sans-serif; margin-bottom: 6px; } .pfempty span { color: var(--dim2); font-size: 12px; }

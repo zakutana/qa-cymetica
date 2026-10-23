@@ -667,33 +667,111 @@
     });
   }
   function renderUniverse() { if (uv) uv.setMine(mineForMap()); }
-  // Portfolio: build products, bring in users, earn. The flow first, as numbers; then one card per app.
+  // Products: one tile per product the company built -- its logo, its line, visitors, uses, the fees it brought and its
+  // 30 days -- and a click slides its panel out on the right (the operator, 2026-10-23: "kdyz kliknu na kazdy vyjede nejake
+  // bocni menu kde uvidim kolik mam visitoru a kolik to vygenerovalo fee ta aplikace"). Fees brought is the revenue
+  // share's measure, so the tiles add up to the company's line on the Universe's board.
+  var usd = function (n) { return '$' + Math.round(n).toLocaleString('en-US'); };
+  function logoTile(a, cls, inner) {
+    var url = CO.prodLogo(a.name);
+    return '<span class="pflogo' + (cls ? ' ' + cls : '') + (url ? ' img' : '') + '">' +
+      (url ? '<img src="' + esc(url) + '" alt="">' : '<i>' + esc(CO.prodInitials(a.name)) + '</i>') + (inner || '') + '</span>';
+  }
+  function spark(days) {
+    // the 30 days of visitors as a shape, no axis: a 5-day mean, so a product with a visitor a day is not a saw
+    var n = days.length; if (n < 2) return '';
+    var sm = days.map(function (d, i) { var s = 0, k = 0; for (var j = Math.max(0, i - 2); j <= Math.min(n - 1, i + 2); j++) { s += days[j].v; k++; } return s / k; });
+    var mx = Math.max.apply(null, sm) || 1;
+    var pts = sm.map(function (v, i) { return (i / (n - 1) * 100).toFixed(1) + ',' + (24 - v / mx * 21).toFixed(1); }).join(' L');
+    return '<svg class="pfsp" viewBox="0 0 100 24" preserveAspectRatio="none"><path class="a" d="M0,24 L' + pts + ' L100,24 Z"/><path class="l" d="M' + pts + '"/></svg>';
+  }
   function renderPortfolio() {
-    var apps = CO.apps(), Rd = CO.PORTFOLIO_READ, R = CO.RATE;
-    if (!apps.length) return setHTML($('portfolio'), '<div class="pfempty"><b>No apps yet</b><span>Build one with Build it Better: its visitors, its uses and what it earns show here.</span></div>');
-    var sum = { visitors: 0, uses: 0, likes: 0, et10: 0, usdc: 0, today: 0 };
-    apps.forEach(function (a) { var e = CO.appEarn(a); sum.visitors += a.visitors + a.todayVisitors; sum.uses += a.uses + a.todayUses; sum.likes += a.likes; sum.et10 += e.et10; sum.usdc += e.usdc; sum.today += a.todayVisitors; });
+    var apps = CO.apps(), Rd = CO.PORTFOLIO_READ;
+    $('portfolio').closest('.page').style.setProperty('--acc', CO.accentHex(CO.profile().accent));
+    if (!apps.length) return setHTML($('portfolio'), '<div class="pfempty"><b>No products yet</b><span>Build one with Build it Better: its visitors, its uses and the fees it brings show here.</span></div>');
+    var sum = { visitors: 0, uses: 0, today: 0 }, fees = CO.appFeesTotal();
+    apps.forEach(function (a) { sum.visitors += a.visitors + a.todayVisitors; sum.uses += a.uses + a.todayUses; sum.today += a.todayVisitors; });
     var step = function (n, l, cls, tip) { return '<div class="pk' + (cls ? ' ' + cls : '') + '"' + (tip ? ' title="' + esc(tip) + '"' : '') + '><b>' + n + '</b><span>' + l + '</span></div>'; };
-    var top = Math.max.apply(null, apps.map(function (a) { return a.visitors + a.todayVisitors; }));
     setHTML($('portfolio'),
-      '<div class="pkpis">' + step(apps.length, 'apps built') + '<i class="arr">→</i>' +
+      '<div class="pkpis">' + step(apps.length, 'products') + '<i class="arr">→</i>' +
       step(sum.visitors.toLocaleString('en-US'), 'visitors · 30 d' + (sum.today ? ' <em>+' + sum.today + ' now</em>' : ''), '', 'Distinct daily visitors, summed over the days: Cymetica\'s own count') + '<i class="arr">→</i>' +
       step(sum.uses.toLocaleString('en-US'), 'uses · 30 d', '', 'Page loads where the visitor clicked, typed or filled a form') + '<i class="arr">→</i>' +
-      step('+' + CO.fmtEt(sum.et10), 'ET10 · proposed', 'g', R.et10PerVisitor + ' ET10 for each visitor an app brings: a placeholder rate. Asked of Cymetica on 2026-10-18') +
-      step('+' + CO.fmtUsd(sum.usdc), 'USDC · proposed', 'u', R.usdcPerUse + ' USDC for each use, a revenue share: a placeholder rate') + '</div>' +
-      '<div class="pfgrid">' + apps.slice().sort(function (a, b) { return (b.visitors + b.todayVisitors) - (a.visitors + a.todayVisitors); }).map(function (a) {
-        var e = CO.appEarn(a), v = a.visitors + a.todayVisitors, pct = Math.round(v / top * 100);
-        return '<div class="pf"><div class="pf1"><b>' + esc(a.name) + '</b><a href="' + esc(a.url) + '" target="_blank" rel="noopener">' + esc(a.path) + ' ↗</a></div>' +
-          // the line the Universe shows for it, the owner's to write
-          '<div class="pfline"><span class="k">In the Universe</span><em class="' + (CO.uvLine(a.name) ? '' : 'none') + '">' + (CO.uvLine(a.name) ? '“' + esc(CO.uvLine(a.name)) + '”' : 'no line yet') + '</em>' +
-            (RO ? '' : '<button type="button" class="pfedit" data-a="uvline" data-n="' + esc(a.name) + '">Edit</button>') + '</div>' +
-          '<div class="pfn"><div><b>' + v.toLocaleString('en-US') + '</b><span>visitors</span></div><div><b>' + (a.uses + a.todayUses).toLocaleString('en-US') + '</b><span>uses</span></div>' +
-          '<div><b>' + a.views.toLocaleString('en-US') + '</b><span>views</span></div><div><b>' + a.likes + '</b><span>likes</span></div></div>' +
-          '<span class="pfbar"><i style="width:' + pct + '%"></i></span>' +
-          '<div class="pfe"><span class="g">+' + CO.fmtEt(e.et10) + ' ET10</span><span class="u">+' + CO.fmtUsd(e.usdc) + ' USDC</span><em>proposed</em>' +
-          (a.todayVisitors ? '<i>+' + a.todayVisitors + ' now</i>' : '') + '</div></div>';
+      step(usd(fees), 'fees brought · 30 d', 'g', 'What Cymetica earned in fees from the users your products brought and from the volume run through them. The revenue share ranks every company by it.') + '</div>' +
+      '<div class="pfgrid">' + apps.slice().sort(function (a, b) { return CO.appFees(b).fees - CO.appFees(a).fees; }).map(function (a) {
+        var f = CO.appFees(a), v = a.visitors + a.todayVisitors, line = CO.uvLine(a.name);
+        return '<div class="pf' + (ui.prod === a.name ? ' on' : '') + '" data-a="prod" data-n="' + esc(a.name) + '" role="button" tabindex="0">' +
+          '<div class="pf1">' + logoTile(a) + '<div class="pft"><b>' + esc(a.name) + '</b><span class="' + (line ? '' : 'none') + '">' + esc(line || a.path) + '</span></div><i class="pfgo">›</i></div>' +
+          '<div class="pfn"><div><b>' + v.toLocaleString('en-US') + (a.todayVisitors ? '<em>+' + a.todayVisitors + '</em>' : '') + '</b><span>visitors</span></div>' +
+          '<div><b>' + (a.uses + a.todayUses).toLocaleString('en-US') + '</b><span>uses</span></div>' +
+          '<div class="g"><b>' + usd(f.fees) + '</b><span>fees brought</span></div></div>' + spark(f.days) + '</div>';
       }).join('') + '</div>' +
-      '<p class="pfsrc">Visitors, uses, views, likes: Cymetica (' + esc(Rd.src) + '), last ' + Rd.days + ' days, read ' + Rd.at + '. Earnings: proposed, placeholder rates.</p>');
+      '<p class="pfsrc">Visitors, uses, views, likes, builds: Cymetica (' + esc(Rd.src) + '), last ' + Rd.days + ' days, read ' + Rd.at + '. Fees brought: a sample, split from your company\'s figure on the revenue-share board.</p>');
+    if (ui.prod) renderProdPanel();
+  }
+  // a product's panel: its numbers, its 30 days, where its fees came from, its logo and its line in the Universe
+  function prodDay(k) { var d = new Date(Date.UTC(2026, 9, 23 - (29 - k))); return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric', timeZone: 'UTC' }); }
+  function renderProdPanel() {
+    var el = $('pf-panel'), a = CO.apps().filter(function (x) { return x.name === ui.prod; })[0];
+    if (!a) return closeProd();
+    var f = CO.appFees(a), v = a.visitors + a.todayVisitors, u = a.uses + a.todayUses, line = CO.uvLine(a.name), logo = CO.prodLogo(a.name);
+    var mxv = Math.max(1, Math.max.apply(null, f.days.map(function (d) { return d.v; }))), mxf = Math.max(1, Math.max.apply(null, f.days.map(function (d) { return d.f; })));
+    var bars = function (key, mx) {
+      return f.days.map(function (d, k) { return '<i style="height:' + Math.max(4, Math.round(d[key] / mx * 100)) + '%" title="' + prodDay(k) + ': ' + d.v + ' visitors · ' + usd(d.f) + ' in fees"></i>'; }).join('');
+    };
+    var kpi = function (n, l, cls) { return '<div class="uvk' + (cls ? ' ' + cls : '') + '"><b>' + n + '</b><span>' + l + '</span></div>'; };
+    var src = function (l, n, tip) { return '<div class="pfs" title="' + esc(tip) + '"><span>' + l + '</span><b>' + usd(n) + '</b><span class="pfbar"><i style="width:' + (f.fees ? Math.round(n / f.fees * 100) : 0) + '%"></i></span></div>'; };
+    var body = el.querySelector('.uvp-b'), keep = body ? body.scrollTop : 0;
+    el.style.setProperty('--acc', CO.accentHex(CO.profile().accent));
+    el.innerHTML =
+      '<div class="uvp-h">' + (RO ? logoTile(a, 'hd') : '<button type="button" class="pflogo-b" data-a="prod-logo" title="' + (logo ? 'Change the logo' : 'Add a logo') + '">' + logoTile(a, 'hd', '<em>' + (logo ? 'Change' : '+ Logo') + '</em>') + '</button>') +
+        '<div class="uvp-t"><b>' + esc(a.name) + '</b><span>' + esc(a.path) + ' · <em>live</em> · ' + a.builds + ' build' + (a.builds === 1 ? '' : 's') + '</span></div>' +
+        '<button type="button" class="uvp-x" data-a="prod-close" title="Close (Esc)">×</button></div>' +
+      '<div class="uvp-b">' +
+        '<div class="uvks">' + kpi(v.toLocaleString('en-US'), 'visitors · 30 d', 'c') + kpi(u.toLocaleString('en-US'), 'uses · 30 d') + kpi(usd(f.fees), 'fees brought', 'g') + '</div>' +
+        '<div class="uvsec">Last 30 days<span class="sub">per day</span></div>' +
+        '<div class="pfch"><div class="pfcr"><div class="k"><b>Visitors</b><span>peak ' + mxv + '</span></div><div class="pfbars">' + bars('v', mxv) + '</div></div>' +
+          '<div class="pfcr"><div class="k g"><b>Fees</b><span>peak ' + usd(mxf) + '</span></div><div class="pfbars f">' + bars('f', mxf) + '</div></div>' +
+          '<div class="pfdates"><span>' + prodDay(0) + '</span><span>' + prodDay(29) + '</span></div></div>' +
+        '<div class="uvsec">Fees brought<span class="sub">' + Math.round(f.share * 100) + '% of your ' + usd(CO.appFeesTotal()) + '</span></div>' +
+        src('From users it brought', f.users, 'Fees paid on Cymetica by the people who first came through this product, not the owner\'s own accounts') +
+        src('From volume through it', f.volume, 'Fees on what was traded through the product itself') +
+        '<div class="uvsec">Logo and line</div>' +
+        '<div class="pfbrand">' + logoTile(a, 'lg') + '<div class="bt">' +
+          (RO ? '' : '<div class="row"><button type="button" class="btn gr xs" data-a="prod-logo">' + (logo ? 'Change logo' : 'Upload logo') + '</button>' +
+            (logo ? '<button type="button" class="btn xs" data-a="prod-logo-rm">Remove</button>' : '') + '</div>') +
+          '<small>PNG, JPG, SVG or WebP · square · shown wherever Cymetica shows ' + esc(a.name) + '</small></div></div>' +
+        '<div class="pfline"><span class="k">In the Universe</span><em class="' + (line ? '' : 'none') + '">' + (line ? '“' + esc(line) + '”' : 'no line yet') + '</em>' +
+          (RO ? '' : '<button type="button" class="pfedit" data-a="uvline" data-n="' + esc(a.name) + '">Edit</button>') + '</div>' +
+        '<div class="uvchips"><span class="uvchip"><b>' + a.views.toLocaleString('en-US') + '</b> view' + (a.views === 1 ? '' : 's') + '</span><span class="uvchip"><b>' + a.likes + '</b> like' + (a.likes === 1 ? '' : 's') + '</span>' +
+          '<span class="uvchip"><b>' + a.builds + '</b> build' + (a.builds === 1 ? '' : 's') + '</span></div>' +
+        '<div class="uvp-asof">Cymetica · last 30 days · read ' + CO.PORTFOLIO_READ.at + ' · fees: a sample</div>' +
+      '</div>' +
+      '<div class="uvp-f"><a class="uvp-go" href="' + esc(a.url) + '" target="_blank" rel="noopener">Open ' + esc(a.path) + ' ↗</a></div>';
+    if (keep) el.querySelector('.uvp-b').scrollTop = keep;
+  }
+  function openProd(name) {
+    ui.prod = name; var el = $('pf-panel');
+    el.style.setProperty('--pfp-top', Math.round($('portfolio').closest('.page').getBoundingClientRect().top + 12) + 'px');
+    el.hidden = false; $('portfolio').closest('.page').classList.add('pfo');
+    renderPortfolio();
+    void el.offsetWidth; el.classList.add('on');   // laid out off-screen first, so it slides in
+  }
+  function closeProd() {
+    if (!ui.prod) return false;
+    ui.prod = null; var el = $('pf-panel');
+    el.classList.remove('on'); $('portfolio').closest('.page').classList.remove('pfo');
+    setTimeout(function () { if (!ui.prod) el.hidden = true; }, 320);
+    renderPortfolio();
+    return true;
+  }
+  // the owner picks a picture: cut to a square, kept, shown at once on the tile and in the panel
+  function pickLogo() { var inp = $('pf-file'); inp.value = ''; inp.click(); }
+  function takeLogo(file) {
+    var name = ui.prod; if (!name) return;
+    CO.readLogo(file).then(function (url) {
+      if (!CO.setProdLogo(name, url)) return toast('Could not keep the logo in this browser.');
+      renderPortfolio(); toast('Logo saved: ' + name + ' shows it now.');
+    }, function (e) { toast('Not saved: ' + e.message + '.'); });
   }
   // the line a product shows in the Universe: its owner writes it here (Products), the map shows it in the product's
   // tooltip and panel; an empty line takes it away
@@ -1494,7 +1572,7 @@
 
   // what a visitor may still press: moving around and reading. Everything else that writes says so instead.
   var RO_OK = '#tabs button, #back, .dswitch [data-sw], .dept, #earn .er, [data-a="vault"], #co-waiting, #z-in, #z-out, #z-fit, .trow, tr.row, #dr-tasks-all, #dr-mem-t, ' +
-    '[data-r], [data-a="close"], [data-a="appr"], #simbar [data-speed], #sim-reset, #ro-back, [data-mock], #modal, #vt button, .p3, .p3need';
+    '[data-r], [data-a="close"], [data-a="appr"], #simbar [data-speed], #sim-reset, #ro-back, [data-mock], #modal, #vt button, .p3, .p3need, .pf, [data-a="prod-close"]';
   function roBlocked(t) { return !t.closest(RO_OK) && !!t.closest('button, [data-a], [data-d], .switch, [data-rpd]'); }
   function bind() {
     document.addEventListener('click', function (e) {
@@ -1507,6 +1585,13 @@
       if (t.closest('#uv-panel [data-a="close"]')) return closeAd();
       if (t.closest('#uv-panel [data-a="owner"]')) { e.preventDefault(); closeAd(); return setTab('office'); }
       var uvl = t.closest('[data-a="uvline"]'); if (uvl && !t.closest('#modal-card')) return uvLineModal(uvl.getAttribute('data-n'));
+      // Products: a tile opens its panel (the same one again closes it); a click on the page beside them closes it
+      var pcard = t.closest('.pf[data-a="prod"]');
+      if (pcard) { var pn = pcard.getAttribute('data-n'); return pn === ui.prod ? closeProd() : openProd(pn); }
+      if (t.closest('#pf-panel [data-a="prod-close"]')) return closeProd();
+      if (t.closest('#pf-panel [data-a="prod-logo"]')) return pickLogo();
+      if (t.closest('#pf-panel [data-a="prod-logo-rm"]')) { CO.setProdLogo(ui.prod, ''); renderPortfolio(); return toast('Logo removed: ' + ui.prod + ' shows its initials.'); }
+      if (ui.prod && t.closest('[data-pane="portfolio"]') && !t.closest('#pf-panel')) closeProd();
       if (t.closest('#uv-board [data-a="board-all"]')) return openModal(CO.uvBoardTable(mineForMap()), 'wide lbg');
       if (t.closest('#uv-board [data-a="board-fold"]')) return $('uv-board').classList.toggle('open');
       if (uv) {
@@ -1658,12 +1743,16 @@
       if (e.target.classList.contains('rvw')) { var rid2 = e.target.closest('.rule').getAttribute('data-rule'); var rl2 = CO.S.rules.filter(function (x) { return x.id === rid2; })[0]; if (rl2) { CO.act.review(rid2, rl2.review, e.target.value.trim() || 'you'); toast(rid2 + ': reviewed by ' + (e.target.value.trim() || 'you') + '.'); } }
       if (e.target.id === 'tk-chain') CO.S.token.chain = e.target.value;
       if (e.target.id === 'lg-dom') { CO.S.legal.domicile = e.target.value; toast('Domicile: ' + e.target.value); }
+      if (e.target.id === 'pf-file' && e.target.files && e.target.files[0]) takeLogo(e.target.files[0]);
     });
     document.addEventListener('keydown', function (e) {
+      var pc = e.target.closest && e.target.closest('.pf[data-a="prod"]');
+      if (pc && (e.key === 'Enter' || e.key === ' ')) { e.preventDefault(); return pc.click(); }
       if (e.key !== 'Escape') return;
       if (!$('modal').hidden) return closeModal();
       if (buying) return setBuying(false);
       if (closeAd()) return;
+      if (closeProd()) return;
       if (ui.panel != null || ui.mgr || ui.vault) closeDrawer();
     });
   }

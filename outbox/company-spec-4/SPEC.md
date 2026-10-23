@@ -170,11 +170,11 @@ or scales a station (`UVSS` 2.7) and its materials there. Please find it on your
 ## J. The owner writes the line his product shows in the Universe (settled, drawn)
 
 The live map's tooltip for Gem Screener reads *made by BJ Ironstar Capital · Which apps earn money, ranked by upside.*, and its panel repeats the
-line: a sentence the owner never wrote and does not want. **Each card on the Products tab gets an *In the Universe* line with an Edit button**: a
-small dialog with one field (up to 70 characters, a counter) and Save; an empty field removes the line. That line, and only that line, shows under the
-product's name in its map tooltip and in its panel. **Until the owner writes one, no line shows**: nothing is generated for him. Cymetica's own
-buildings (the Promo Market) keep their own line. Mockup: `app.js` (`uvLineModal`, the Products card), `uv-data.js` (`CO.uvLine`, `CO.setUvLine`),
-`universe.js` (the tooltip), `uvpanel.js` (the panel).
+line: a sentence the owner never wrote and does not want. **Each product on the Products tab gets an *In the Universe* line with an Edit button**
+(in the product's panel, item N; the tile shows the line under the name): a small dialog with one field (up to 70 characters, a counter) and Save; an
+empty field removes the line. That line, and only that line, shows under the product's name in its map tooltip and in its panel. **Until the owner
+writes one, no line shows**: nothing is generated for him. Cymetica's own buildings (the Promo Market) keep their own line. Mockup: `app.js`
+(`uvLineModal`, `renderProdPanel`), `uv-data.js` (`CO.uvLine`, `CO.setUvLine`), `universe.js` (the tooltip), `uvpanel.js` (the panel).
 
 ## K. Airdrop Farmer on Orbit 5 · slot 5: its logo as a robot's head in gold, under a straw hat (settled, drawn)
 
@@ -235,6 +235,30 @@ the company's colour lives, what moves and how fast, its footprint and height, a
 The same rules as the seven: **the hull stays steel and slate, the company's colour lives only in its lights** (never the accent-blended hull
 materials: that is the washed look of item I); one deck per department, lit while that department works; each under 30% of the sun's diameter
 on the map; nothing pulses (no plumes, no beams out of a prow), what moves only turns, runs along a track or bobs slowly.
+
+## N. Products: a tile per product, its panel with the visitors and the fees it brought, and its logo (settled, drawn)
+
+The owner, 2026-10-23: *"kdyz kliknu ankazdy vyjede nejake bocni menu kde uvidim kolik mam visitsoru a kolik to vygenerovlao fee ta aplikace. a
+chci moznost taky pridat si ikonku ke kazdemu produktu. nejake logo"* (a click on a product slides out a side panel with its visitors and the fees
+it brought; and a logo for each product).
+
+**The tab.** Four numbers on top: products, visitors (30 days), uses (30 days) and **fees brought (30 days)**, item H's measure, the same figure the
+company has on the revenue-share board. Under them one tile per product (which ones: A3): its logo, its name, its Universe line (item J; its path
+until it has one), visitors, uses, fees brought, and its 30 days of visitors as a line; the most fees first. The whole tile is the button.
+
+**Its panel** slides out on the right, in the look of a product's panel in the Universe; on a wide screen the tiles step aside for it. ×, Esc or a
+click beside it closes it; another tile switches it. In it: visitors, uses and fees brought over 30 days; the 30 days per day as two rows of bars,
+visitors and fees, each day's figures on hover; where the fees came from, item H's two sources, *from users it brought* and *from volume through
+it*, and its share of the company's figure; its logo and its Universe line (Edit lives here); views, likes and builds; *Open* the product.
+
+**The logo.** The owner uploads one (PNG, JPG, SVG or WebP, cut to a square from its middle) and can change or remove it; until then the product
+shows its initials in the company's colour. **It is the product's icon wherever Cymetica shows the product**: its tile and panel here, its panel
+and tooltip in the Universe, the Build it Better boards. Only the owner changes it; a visitor of a public company sees it.
+
+**Data.** `GET /company/products` serves visitors, uses, views, likes and builds per product (read 2026-10-23); it serves **no fees per product**
+(`earned` is what was paid, "0") and no logo. The build needs per product the fees brought in 30 days, split into the two sources and per day, and a
+logo upload with its URL in that list. The mockup's fees are a sample split of the company's figure on the board. Mockup: `app.js`
+(`renderPortfolio`, `renderProdPanel`), `portfolio.js` (`CO.appFees`, `CO.prodLogo`, `CO.readLogo`), `style.css` (`.pf`, `.pflogo`, `.pfp`).
 
 ## What stays as it is
 
