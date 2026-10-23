@@ -297,7 +297,7 @@
     });
     CO.apps().forEach(function (a) {
       var e = CO.appEarn(a);
-      out.push({ kind: 'app', name: a.name, why: (a.visitors + a.todayVisitors).toLocaleString('en-US') + ' visitors · ' + (a.uses + a.todayUses).toLocaleString('en-US') + ' uses', et10: e.et10, usdc: e.usdc });
+      out.push({ kind: 'app', name: a.name, why: (a.people + a.todayPeople).toLocaleString('en-US') + ' people · ' + (a.newUsers || 0) + ' new users', et10: e.et10, usdc: e.usdc });
     });
     return out.sort(function (a, b) { return (b.et10 + b.usdc * 100) - (a.et10 + a.usdc * 100); });
   }
@@ -318,12 +318,12 @@
           '<div class="e1"><b>' + esc(r.name) + '</b><span class="v">' + (r.et10 ? '+' + CO.fmtEt(r.et10) + ' ET10' : '') + (r.usdc ? ' <em>+' + CO.fmtUsd(r.usdc) + ' USDC</em>' : '') + (!r.et10 && !r.usdc ? '0 ET10' : '') + '</span></div>' +
           '<div class="e2"><span>' + (r.kind === 'app' ? 'app · ' : '') + esc(r.why) + '</span><span>' + pct + '%</span></div>' +
           '<span class="ebar"><i style="width:' + pct + '%"></i></span></button>';
-      }).join('') + (CO.apps().length ? '<p class="hint vnote" title="Build it Better apps earn nothing today; Cymetica was asked on 2026-10-18 to pay ET10 for the users they bring. The rates here are placeholders.">App earnings: proposed, placeholder rates</p>' : ''));
+      }).join('') + (CO.apps().length ? '<p class="hint vnote" title="Cymetica credits ' + CO.fmtEt(CO.REFERRAL.et10PerUser) + ' ET10 for each new user your pages bring, every morning at ' + CO.REFERRAL.at + ' (/traffic/mine). None so far.">Apps: ' + CO.fmtEt(CO.REFERRAL.et10PerUser) + ' ET10 per new user</p>' : ''));
   }
   // the vault opened: both totals, every department and every app that put something in it
   function openVault() {
     if (RO) return toast('The vault is private: only its owner sees inside.');
-    var V = CO.vaultTotals(), rows = vaultRows(), R = CO.RATE;
+    var V = CO.vaultTotals(), rows = vaultRows(), R = CO.REFERRAL;
     var list = function (kind) {
       var rs = rows.filter(function (r) { return r.kind === kind; });
       if (!rs.length) return '<p class="empty">' + (kind === 'app' ? 'No apps yet: build one with Build it Better and it earns here.' : 'No department has earned yet.') + '</p>';
@@ -333,7 +333,7 @@
     };
     openModal('<div class="mh"><h3>Vault</h3><span class="lockp"><i class="lk"></i>PRIVATE</span><span class="sp"></span><button class="btn" data-a="close">×</button></div>' +
       '<div class="vbig"><div><b class="g">' + CO.fmtEt(V.et10) + '</b><span>ET10 · your account balance</span></div><div><b class="u">' + CO.fmtUsd(V.usdc) + '</b><span>USDC · your account balance</span></div></div>' +
-      '<div class="sec">EARNED BY THE COMPANY <span>' + CO.fmtEt(V.earnedEt10) + ' ET10 · ' + CO.fmtUsd(V.earnedUsdc) + ' USDC, already in the balance</span></div><div class="sec">BY DEPARTMENT</div>' + list('dept') + '<div class="sec">BY APP <span>proposed: ' + R.et10PerVisitor + ' ET10 a visitor, ' + R.usdcPerUse + ' USDC a use (placeholder rates)</span></div>' + list('app'), true);
+      '<div class="sec">EARNED BY THE COMPANY <span>' + CO.fmtEt(V.earnedEt10) + ' ET10 · ' + CO.fmtUsd(V.earnedUsdc) + ' USDC, already in the balance</span></div><div class="sec">BY DEPARTMENT</div>' + list('dept') + '<div class="sec">BY APP <span>' + CO.fmtEt(R.et10PerUser) + ' ET10 for each new user they bring, credited at ' + R.at + '</span></div>' + list('app'), true);
   }
 
   // the conversation with the Manager: all of it in the Manager's focus, one department's in its detail
@@ -686,55 +686,52 @@
     return '<svg class="pfsp" viewBox="0 0 100 24" preserveAspectRatio="none"><path class="a" d="M0,24 L' + pts + ' L100,24 Z"/><path class="l" d="M' + pts + '"/></svg>';
   }
   function renderPortfolio() {
-    var apps = CO.apps(), Rd = CO.PORTFOLIO_READ;
+    var apps = CO.apps(), Rd = CO.PORTFOLIO_READ, RF = CO.REFERRAL;
     $('portfolio').closest('.page').style.setProperty('--acc', CO.accentHex(CO.profile().accent));
-    if (!apps.length) return setHTML($('portfolio'), '<div class="pfempty"><b>No products yet</b><span>Build one with Build it Better: its visitors, its uses and the fees it brings show here.</span></div>');
-    var sum = { visitors: 0, uses: 0, today: 0 }, fees = CO.appFeesTotal();
-    apps.forEach(function (a) { sum.visitors += a.visitors + a.todayVisitors; sum.uses += a.uses + a.todayUses; sum.today += a.todayVisitors; });
+    if (!apps.length) return setHTML($('portfolio'), '<div class="pfempty"><b>No products yet</b><span>Build one with Build it Better: the people it brings and the fees they pay show here.</span></div>');
+    var people = 0, today = 0, fees = CO.appFeesTotal();
+    apps.forEach(function (a) { people += a.people + a.todayPeople; today += a.todayPeople; });
     var step = function (n, l, cls, tip) { return '<div class="pk' + (cls ? ' ' + cls : '') + '"' + (tip ? ' title="' + esc(tip) + '"' : '') + '><b>' + n + '</b><span>' + l + '</span></div>'; };
     setHTML($('portfolio'),
       '<div class="pkpis">' + step(apps.length, 'products') + '<i class="arr">→</i>' +
-      step(sum.visitors.toLocaleString('en-US'), 'visitors · 30 d' + (sum.today ? ' <em>+' + sum.today + ' now</em>' : ''), '', 'Distinct daily visitors, summed over the days: Cymetica\'s own count') + '<i class="arr">→</i>' +
-      step(sum.uses.toLocaleString('en-US'), 'uses · 30 d', '', 'Page loads where the visitor clicked, typed or filled a form') + '<i class="arr">→</i>' +
-      step(usd(fees), 'fees brought · 30 d', 'g', 'What Cymetica earned in fees from the users your products brought and from the volume run through them. The revenue share ranks every company by it.') + '</div>' +
+      step(people.toLocaleString('en-US'), 'people · 30 d' + (today ? ' <em>+' + today + ' now</em>' : ''), '', 'Different people who opened your products, product by product (someone who opened two counts in both). AI agents are not people: they are in each product\'s panel.') + '<i class="arr">→</i>' +
+      step(RF.qualified.toLocaleString('en-US'), 'new users<em class="nl">+' + CO.fmtEt(RF.et10PerUser) + ' ET10 each</em>', 'g', 'People who signed up on Cymetica through your pages. Cymetica credits ' + CO.fmtEt(RF.et10PerUser) + ' ET10 for each, every morning at ' + RF.at + '. None so far.') + '<i class="arr">→</i>' +
+      step(usd(fees), 'fees brought · 30 d', 'g', 'What Cymetica earned in fees from what the people your products brought traded, and from trades made through them. The revenue share ranks every company by it.') + '</div>' +
       '<div class="pfgrid">' + apps.slice().sort(function (a, b) { return CO.appFees(b).fees - CO.appFees(a).fees; }).map(function (a) {
-        var f = CO.appFees(a), v = a.visitors + a.todayVisitors, line = CO.uvLine(a.name);
+        var f = CO.appFees(a), line = CO.uvLine(a.name);
         return '<div class="pf' + (ui.prod === a.name ? ' on' : '') + '" data-a="prod" data-n="' + esc(a.name) + '" role="button" tabindex="0">' +
           '<div class="pf1">' + logoTile(a) + '<div class="pft"><b>' + esc(a.name) + '</b><span class="' + (line ? '' : 'none') + '">' + esc(line || a.path) + '</span></div><i class="pfgo">›</i></div>' +
-          '<div class="pfn"><div><b>' + v.toLocaleString('en-US') + (a.todayVisitors ? '<em>+' + a.todayVisitors + '</em>' : '') + '</b><span>visitors</span></div>' +
-          '<div><b>' + (a.uses + a.todayUses).toLocaleString('en-US') + '</b><span>uses</span></div>' +
+          '<div class="pfn"><div><b>' + (a.people + a.todayPeople).toLocaleString('en-US') + (a.todayPeople ? '<em>+' + a.todayPeople + '</em>' : '') + '</b><span>people</span></div>' +
           '<div class="g"><b>' + usd(f.fees) + '</b><span>fees brought</span></div></div>' + spark(f.days) + '</div>';
       }).join('') + '</div>' +
-      '<p class="pfsrc">Visitors, uses, views, likes, builds: Cymetica (' + esc(Rd.src) + '), last ' + Rd.days + ' days, read ' + Rd.at + '. Fees brought: a sample, split from your company\'s figure on the revenue-share board.</p>');
+      '<p class="pfsrc">People, visits and AI agents: Cymetica (/traffic/mine), last ' + Rd.days + ' days, read ' + Rd.at + '. Fees brought: a sample, split from your company\'s figure on the revenue-share board.</p>');
     if (ui.prod) renderProdPanel();
   }
-  // a product's panel: its numbers, its 30 days, where its fees came from, its logo and its line in the Universe
+  // a product's panel: its people and its fees, its 30 days, where its visits came from, its logo and its line
   function prodDay(k) { var d = new Date(Date.UTC(2026, 9, 23 - (29 - k))); return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric', timeZone: 'UTC' }); }
   function renderProdPanel() {
     var el = $('pf-panel'), a = CO.apps().filter(function (x) { return x.name === ui.prod; })[0];
     if (!a) return closeProd();
-    var f = CO.appFees(a), v = a.visitors + a.todayVisitors, u = a.uses + a.todayUses, line = CO.uvLine(a.name), logo = CO.prodLogo(a.name);
-    var mxv = Math.max(1, Math.max.apply(null, f.days.map(function (d) { return d.v; }))), mxf = Math.max(1, Math.max.apply(null, f.days.map(function (d) { return d.f; })));
-    var bars = function (key, mx) {
-      return f.days.map(function (d, k) { return '<i style="height:' + Math.max(4, Math.round(d[key] / mx * 100)) + '%" title="' + prodDay(k) + ': ' + d.v + ' visitors · ' + usd(d.f) + ' in fees"></i>'; }).join('');
-    };
-    var kpi = function (n, l, cls) { return '<div class="uvk' + (cls ? ' ' + cls : '') + '"><b>' + n + '</b><span>' + l + '</span></div>'; };
-    var src = function (l, n, tip) { return '<div class="pfs" title="' + esc(tip) + '"><span>' + l + '</span><b>' + usd(n) + '</b><span class="pfbar"><i style="width:' + (f.fees ? Math.round(n / f.fees * 100) : 0) + '%"></i></span></div>'; };
+    var f = CO.appFees(a), line = CO.uvLine(a.name), logo = CO.prodLogo(a.name);
+    var mx = Math.max(1, Math.max.apply(null, f.days.map(function (d) { return d.v; })));
+    var site = a.visits ? Math.round(a.fromSite / a.visits * 100) : 0, out = a.visits - a.fromSite;
+    var kpi = function (n, l, cls, tip) { return '<div class="uvk' + (cls ? ' ' + cls : '') + '"' + (tip ? ' title="' + esc(tip) + '"' : '') + '><b>' + n + '</b><span>' + l + '</span></div>'; };
     var body = el.querySelector('.uvp-b'), keep = body ? body.scrollTop : 0;
     el.style.setProperty('--acc', CO.accentHex(CO.profile().accent));
     el.innerHTML =
       '<div class="uvp-h">' + (RO ? logoTile(a, 'hd') : '<button type="button" class="pflogo-b" data-a="prod-logo" title="' + (logo ? 'Change the logo' : 'Add a logo') + '">' + logoTile(a, 'hd', '<em>' + (logo ? 'Change' : '+ Logo') + '</em>') + '</button>') +
-        '<div class="uvp-t"><b>' + esc(a.name) + '</b><span>' + esc(a.path) + ' · <em>live</em> · ' + a.builds + ' build' + (a.builds === 1 ? '' : 's') + '</span></div>' +
+        '<div class="uvp-t"><b>' + esc(a.name) + '</b><span>' + esc(a.path) + ' · <em>live</em></span></div>' +
         '<button type="button" class="uvp-x" data-a="prod-close" title="Close (Esc)">×</button></div>' +
       '<div class="uvp-b">' +
-        '<div class="uvks">' + kpi(v.toLocaleString('en-US'), 'visitors · 30 d', 'c') + kpi(u.toLocaleString('en-US'), 'uses · 30 d') + kpi(usd(f.fees), 'fees brought', 'g') + '</div>' +
-        '<div class="uvsec">Last 30 days<span class="sub">per day</span></div>' +
-        '<div class="pfch"><div class="pfcr"><div class="k"><b>Visitors</b><span>peak ' + mxv + '</span></div><div class="pfbars">' + bars('v', mxv) + '</div></div>' +
-          '<div class="pfcr"><div class="k g"><b>Fees</b><span>peak ' + usd(mxf) + '</span></div><div class="pfbars f">' + bars('f', mxf) + '</div></div>' +
-          '<div class="pfdates"><span>' + prodDay(0) + '</span><span>' + prodDay(29) + '</span></div></div>' +
-        '<div class="uvsec">Fees brought<span class="sub">' + Math.round(f.share * 100) + '% of your ' + usd(CO.appFeesTotal()) + '</span></div>' +
-        src('From users it brought', f.users, 'Fees paid on Cymetica by the people who first came through this product, not the owner\'s own accounts') +
-        src('From volume through it', f.volume, 'Fees on what was traded through the product itself') +
+        '<div class="uvks two">' + kpi((a.people + a.todayPeople).toLocaleString('en-US'), 'people · 30 d', 'c', 'Different people who opened it in the last 30 days') +
+          kpi(usd(f.fees), 'fees brought · 30 d', 'g', 'What Cymetica earned in fees from what the people it brought traded, and from trades made through it') + '</div>' +
+        '<div class="uvsec">People per day<span class="sub">last 30 days</span></div>' +
+        '<div class="pfch"><div class="pfbars">' + f.days.map(function (d, k) { return '<i style="height:' + Math.max(4, Math.round(d.v / mx * 100)) + '%" title="' + prodDay(k) + ': ' + d.v + ' people"></i>'; }).join('') + '</div>' +
+          '<div class="pfdates"><span>' + prodDay(0) + '</span><span>peak ' + mx + ' a day</span><span>' + prodDay(29) + '</span></div></div>' +
+        '<div class="uvsec">Visits came from<span class="sub">' + a.visits.toLocaleString('en-US') + ' visits</span></div>' +
+        '<div class="pfwhere"><div class="bar"><i class="s" style="width:' + site + '%"></i><i class="o" style="width:' + (100 - site) + '%"></i></div>' +
+          '<div class="lg"><span class="s" title="Visits that came from Cymetica\'s own pages"><i></i>Cymetica <b>' + site + '%</b></span><span class="o" title="Visits from outside: Google, X, Telegram, other sites"><i></i>Outside <b>' + (100 - site) + '%</b> · ' + out.toLocaleString('en-US') + '</span></div>' +
+          '<div class="ai" title="Visits by AI agents and crawlers, counted apart from people">AI agents <b>' + a.ai.toLocaleString('en-US') + '</b> visits</div></div>' +
         '<div class="uvsec">Logo and line</div>' +
         '<div class="pfbrand">' + logoTile(a, 'lg') + '<div class="bt">' +
           (RO ? '' : '<div class="row"><button type="button" class="btn gr xs" data-a="prod-logo">' + (logo ? 'Change logo' : 'Upload logo') + '</button>' +
@@ -742,9 +739,7 @@
           '<small>PNG, JPG, SVG or WebP · square · shown wherever Cymetica shows ' + esc(a.name) + '</small></div></div>' +
         '<div class="pfline"><span class="k">In the Universe</span><em class="' + (line ? '' : 'none') + '">' + (line ? '“' + esc(line) + '”' : 'no line yet') + '</em>' +
           (RO ? '' : '<button type="button" class="pfedit" data-a="uvline" data-n="' + esc(a.name) + '">Edit</button>') + '</div>' +
-        '<div class="uvchips"><span class="uvchip"><b>' + a.views.toLocaleString('en-US') + '</b> view' + (a.views === 1 ? '' : 's') + '</span><span class="uvchip"><b>' + a.likes + '</b> like' + (a.likes === 1 ? '' : 's') + '</span>' +
-          '<span class="uvchip"><b>' + a.builds + '</b> build' + (a.builds === 1 ? '' : 's') + '</span></div>' +
-        '<div class="uvp-asof">Cymetica · last 30 days · read ' + CO.PORTFOLIO_READ.at + ' · fees: a sample</div>' +
+        '<div class="uvp-asof">Cymetica /traffic/mine · last 30 days · read ' + CO.PORTFOLIO_READ.at + ' · fees: a sample</div>' +
       '</div>' +
       '<div class="uvp-f"><a class="uvp-go" href="' + esc(a.url) + '" target="_blank" rel="noopener">Open ' + esc(a.path) + ' ↗</a></div>';
     if (keep) el.querySelector('.uvp-b').scrollTop = keep;

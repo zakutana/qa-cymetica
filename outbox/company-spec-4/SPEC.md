@@ -242,23 +242,33 @@ The owner, 2026-10-23: *"kdyz kliknu ankazdy vyjede nejake bocni menu kde uvidim
 chci moznost taky pridat si ikonku ke kazdemu produktu. nejake logo"* (a click on a product slides out a side panel with its visitors and the fees
 it brought; and a logo for each product).
 
-**The tab.** Four numbers on top: products, visitors (30 days), uses (30 days) and **fees brought (30 days)**, item H's measure, the same figure the
-company has on the revenue-share board. Under them one tile per product (which ones: A3): its logo, its name, its Universe line (item J; its path
-until it has one), visitors, uses, fees brought, and its 30 days of visitors as a line; the most fees first. The whole tile is the button.
+**One word for traffic.** Your pages count it five ways (visits, unique visitors, views, visitors, uses); the owner, on `/traffic` and
+`/traffic/mine`, could not tell them apart (*"moc se v tom nevyznam co je co"*). The tab shows one: **People** = `/traffic/mine`'s
+`unique_visitors` for the product's page. AI agents are not people and are shown apart.
+
+**The tab.** Four numbers on top: products; **people** (30 days); **new users**, with *+1,000 ET10 each* under it: the referral reward
+`/traffic/mine` already serves (`referrals.per_user_et10` 1000, `qualified` 0 on 2026-10-23); and **fees brought** (30 days), item H's measure,
+the same figure the company has on the revenue-share board. Under them one tile per product (which ones: A3): its logo, its name, its Universe
+line (item J; its path until it has one), **people and fees brought** in large figures, its 30 days of people as a line; the most fees first. The
+whole tile is the button.
 
 **Its panel** slides out on the right, in the look of a product's panel in the Universe; on a wide screen the tiles step aside for it. ×, Esc or a
-click beside it closes it; another tile switches it. In it: visitors, uses and fees brought over 30 days; the 30 days per day as two rows of bars,
-visitors and fees, each day's figures on hover; where the fees came from, item H's two sources, *from users it brought* and *from volume through
-it*, and its share of the company's figure; its logo and its Universe line (Edit lives here); views, likes and builds; *Open* the product.
+click beside it closes it; another tile switches it. In it, top to bottom: **people** and **fees brought** (30 days), each with a one-line tooltip;
+**people per day** over 30 days as bars (a day's figure on hover); **where its visits came from**, one bar: Cymetica's own pages against outside
+(Google, X, Telegram, other sites), from `from_site` and `visits`, and under it the AI-agent visits on one line; its logo and its Universe line (Edit
+lives here); *Open* the product. Nothing else: no uses, views, likes or builds, and fees as one figure, not split by source.
 
 **The logo.** The owner uploads one (PNG, JPG, SVG or WebP, cut to a square from its middle) and can change or remove it; until then the product
 shows its initials in the company's colour. **It is the product's icon wherever Cymetica shows the product**: its tile and panel here, its panel
 and tooltip in the Universe, the Build it Better boards. Only the owner changes it; a visitor of a public company sees it.
 
-**Data.** `GET /company/products` serves visitors, uses, views, likes and builds per product (read 2026-10-23); it serves **no fees per product**
-(`earned` is what was paid, "0") and no logo. The build needs per product the fees brought in 30 days, split into the two sources and per day, and a
-logo upload with its URL in that list. The mockup's fees are a sample split of the company's figure on the board. Mockup: `app.js`
-(`renderPortfolio`, `renderProdPanel`), `portfolio.js` (`CO.appFees`, `CO.prodLogo`, `CO.readLogo`), `style.css` (`.pf`, `.pflogo`, `.pfp`).
+**Data.** `GET /api/v1/traffic/mine` serves per page people, visits, AI-agent visits and `from_site`, and the account's referrals (read
+2026-10-23; the mockup's figures are that read). Missing, and needed: **fees brought per product** (30 days; `/company/products`' `earned` is what
+was paid, "0"); **people per day per product** (only the account has `unique_daily`; the mockup spreads each product's total over that shape);
+**which product brought each new user** (referrals are account-wide); and a **logo upload** with its URL in the products list. Gem Screener has two
+rows (`/gem-screener` 177 people, `/gem-screener/app` 162): one product, people not double-counted. Mockup: `app.js` (`renderPortfolio`,
+`renderProdPanel`), `portfolio.js` (`CO.apps`, `CO.appFees`, `CO.REFERRAL`, `CO.prodLogo`, `CO.readLogo`), `style.css` (`.pf`, `.pflogo`, `.pfp`,
+`.pfwhere`). The vault's apps follow the referral rule (1,000 ET10 a new user), replacing the placeholder per-visitor rate.
 
 ## What stays as it is
 

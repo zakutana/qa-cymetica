@@ -255,6 +255,7 @@ b.g, span.g { color: var(--green); text-shadow: 0 0 10px rgba(0, 255, 136, .45);
 .pk b { display: block; font: 400 28px 'Archivo Black', sans-serif; color: var(--text); }
 .pk span { font-size: 10.5px; font-weight: 700; letter-spacing: .1em; color: var(--dim2); text-transform: uppercase; }
 .pk span em { font-style: normal; color: var(--green); letter-spacing: 0; margin-left: 4px; }
+.pk span em.nl { display: block; margin: 4px 0 0; letter-spacing: .06em; }
 .pk.g { border-color: rgba(0, 255, 136, .4); background: radial-gradient(ellipse at 20% 0%, rgba(0, 255, 136, .12), transparent 70%), var(--navy2); } .pk.g b { color: var(--green); text-shadow: 0 0 12px rgba(0, 255, 136, .45); }
 .pk.u { border-color: rgba(59, 130, 246, .45); background: radial-gradient(ellipse at 20% 0%, rgba(59, 130, 246, .14), transparent 70%), var(--navy2); } .pk.u b { color: #8fbaff; }
 .pkpis .arr { align-self: center; font-style: normal; color: var(--dim2); font-size: 18px; }
@@ -285,8 +286,8 @@ b.g, span.g { color: var(--green); text-shadow: 0 0 10px rgba(0, 255, 136, .45);
   color: var(--cyan); background: rgba(6, 10, 18, .82); opacity: 0; transition: opacity .15s; }
 .pflogo-b { flex: none; padding: 0; border: 0; background: none; cursor: pointer; border-radius: 12px; }
 .pflogo-b:hover .pflogo { border-color: var(--cyan); box-shadow: 0 0 14px rgba(0, 207, 255, .35); } .pflogo-b:hover em { opacity: 1; }
-.pfn { display: grid; grid-template-columns: 1fr 1fr 1.25fr; gap: 6px; margin: 14px 0 8px; }
-.pfn b { display: block; font-size: 20px; font-weight: 800; white-space: nowrap; }
+.pfn { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; margin: 14px 0 8px; }
+.pfn b { display: block; font-size: 24px; font-weight: 800; white-space: nowrap; }
 .pfn b em { font-style: normal; font-size: 10px; font-weight: 700; color: var(--green); margin-left: 4px; vertical-align: 3px; }
 .pfn span { font-size: 9.5px; color: var(--dim2); letter-spacing: .08em; text-transform: uppercase; }
 .pfn .g b { color: var(--green); text-shadow: 0 0 12px rgba(0, 255, 136, .35); }
@@ -298,19 +299,24 @@ b.g, span.g { color: var(--green); text-shadow: 0 0 10px rgba(0, 255, 136, .45);
 .page.pfo { padding-right: 466px; }
 @media (max-width: 1100px) { .page.pfo { padding-right: 20px; } }
 .pfp .uvp-t span em { font-style: normal; color: var(--green); font-weight: 700; }
+.uvks.two { grid-template-columns: 1fr 1fr; }
+.uvk[title] { cursor: help; }
 .pfch { padding: 10px 11px 8px; border-radius: 9px; background: var(--navy); border: 1px solid var(--line2); }
-.pfcr { display: grid; grid-template-columns: 62px 1fr; align-items: end; gap: 10px; }
-.pfcr + .pfcr { margin-top: 10px; }
-.pfcr .k b { display: block; font-size: 10.5px; font-weight: 800; letter-spacing: .06em; text-transform: uppercase; color: var(--cyan); } .pfcr .k.g b { color: var(--green); }
-.pfcr .k span { font-size: 9.5px; color: var(--dim2); white-space: nowrap; }
-.pfbars { display: flex; align-items: flex-end; gap: 2px; height: 40px; border-bottom: 1px solid var(--line2); }
+.pfbars { display: flex; align-items: flex-end; gap: 2px; height: 56px; border-bottom: 1px solid var(--line2); }
 .pfbars i { flex: 1; border-radius: 2px 2px 0 0; background: linear-gradient(var(--cyan), rgba(0, 207, 255, .45)); opacity: .85; }
-.pfbars.f i { background: linear-gradient(var(--green), rgba(0, 255, 136, .4)); }
 .pfbars i:hover { opacity: 1; filter: brightness(1.3); }
-.pfdates { display: flex; justify-content: space-between; margin: 5px 0 0 72px; font-size: 9px; color: var(--dim2); }
-.pfs { display: grid; grid-template-columns: 1fr auto; align-items: baseline; gap: 6px 10px; padding: 9px 11px; border-radius: 9px; background: var(--navy); border: 1px solid var(--line2); }
-.pfs + .pfs { margin-top: 6px; }
-.pfs span { font-size: 11px; color: var(--dim); } .pfs b { font-size: 14px; color: var(--green); } .pfs .pfbar { grid-column: 1 / -1; }
+.pfdates { display: flex; justify-content: space-between; margin-top: 5px; font-size: 9px; color: var(--dim2); }
+/* where its visits came from: Cymetica's own pages (cyan) or outside (green), and the AI agents apart */
+.pfwhere { padding: 10px 11px; border-radius: 9px; background: var(--navy); border: 1px solid var(--line2); }
+.pfwhere .bar { display: flex; height: 8px; border-radius: 4px; overflow: hidden; background: var(--line); }
+.pfwhere .bar i { display: block; height: 100%; }
+.pfwhere .s i, .pfwhere .bar i.s { background: var(--cyan); } .pfwhere .o i, .pfwhere .bar i.o { background: var(--green); box-shadow: 0 0 8px rgba(0, 255, 136, .5); }
+.pfwhere .lg { display: flex; justify-content: space-between; gap: 10px; margin-top: 8px; font-size: 11px; color: var(--dim); }
+.pfwhere .lg span { display: inline-flex; align-items: center; gap: 6px; cursor: help; }
+.pfwhere .lg span i { width: 8px; height: 8px; border-radius: 2px; }
+.pfwhere .lg b { color: var(--text); }
+.pfwhere .ai { margin-top: 8px; padding-top: 8px; border-top: 1px solid var(--line); font-size: 11px; color: var(--dim2); cursor: help; }
+.pfwhere .ai b { color: var(--text); }
 .pfbrand { display: flex; align-items: center; gap: 12px; padding: 10px 11px; border-radius: 9px; background: var(--navy); border: 1px dashed var(--line3); }
 .pfbrand .bt { min-width: 0; display: flex; flex-direction: column; gap: 7px; }
 .pfbrand .row { display: flex; gap: 6px; }

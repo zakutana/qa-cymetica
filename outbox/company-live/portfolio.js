@@ -1,49 +1,53 @@
-/* The /company mockup: the company's Portfolio and its Vault.
+/* The /company mockup: the company's Products and its Vault.
  *
- * Portfolio: the products the company (or the account it runs on) built through Build it Better. Their numbers are
- * REAL, read from Cymetica: GET /api/v1/build-it-better/apps/leaderboard, 30 days, on 2026-10-18 (views, visitors,
- * uses, likes; "visitors" is theirs: distinct daily visitors, summed over the days). Which apps are ours is our own
- * record of the requests we filed.
+ * Products: the products the company (or the account it runs on) built through Build it Better. Their numbers are
+ * REAL, read from Cymetica on 2026-10-23: which ones are ours from GET /api/v1/company/products, the figures from
+ * GET /api/v1/traffic/mine?days=30 (the page /traffic/mine). Of its vocabularies (visits, unique visitors, views,
+ * visitors, uses) one is shown, in a word a degen knows: People = its `unique_visitors` (the operator, 2026-10-23:
+ * "vyber z toho nejpodstatnejsi ... a moc se v tom nevyznam co je co").
  *
- * What the apps would EARN is not live: Build it Better apps pay nothing today (their llms.txt: "Build it Better apps
- * are free to use; their public numbers are traffic and likes, not revenue"). The operator asked Cymetica on
- * 2026-10-18 (MSG-0192) for ET10 for every new user an app brings in, and the concept adds a USDC revenue share. The
- * RATE below is a placeholder that makes the picture, named as one wherever it shows.
+ * What an app EARNS its owner is live since then: /traffic/mine's `referrals` pays 1,000 ET10 for each new user one's
+ * pages bring (what the operator asked for on 2026-10-18, MSG-0192), 0 so far. Fees brought is the revenue share's
+ * measure (uv-data.js), a sample split per product: Cymetica serves no fees per product.
  *
  * Vault: everything the company earned, in two piles. ET10 = what its departments earned (accepted bugs, prizes,
- * the League) + the proposed new-user reward; USDC = the proposed revenue share. Always private.
+ * the League) + the new-user reward; USDC = its balance. Always private.
  */
 (function () {
   'use strict';
   var CO = window.CO = window.CO || {};
 
-  // Read again on 2026-10-23 from the live build's own source of the tab, GET /api/v1/company/products: it lists 13, of
-  // which these 7 are pages this account created (spec 4, A3: My Agents and Events existed before it asked, Usage, Creator
-  // rewards, the communities hub and Airdrop Farmer have no page yet). `builds`: the requests filed for it.
-  CO.PORTFOLIO_READ = { at: '2026-10-23', days: 30, src: 'GET /api/v1/company/products' };
+  // The 7 of /company/products' 13 that are pages this account created (spec 4, A3: My Agents and Events existed before it
+  // asked; Usage, Creator rewards, the communities hub and Airdrop Farmer have no page yet), with /traffic/mine's row for
+  // each: people (`unique_visitors`), visits, AI-agent visits, and the visits that came from Cymetica's own pages
+  // (`from_site`). Gem Screener has a second row, /gem-screener/app (162 people); its people are not added, since a
+  // person who opens both would count twice.
+  CO.PORTFOLIO_READ = { at: '2026-10-23', days: 30, src: 'GET /api/v1/traffic/mine?days=30' };
   var OURS = [
-    { name: 'Gem Screener', path: '/gem-screener', views: 495, visitors: 248, uses: 224, likes: 1, builds: 11 },
-    { name: 'Chart Analyzer', path: '/chart-analyzer', views: 728, visitors: 207, uses: 351, likes: 2, builds: 5 },
-    { name: 'Agent Tournaments', path: '/agent-tournaments', views: 215, visitors: 62, uses: 145, likes: 2, builds: 5 },
-    { name: 'Supply Analyzer', path: '/supply-analyzer', views: 73, visitors: 29, uses: 47, likes: 1, builds: 2 },
-    { name: 'Build a Company', path: '/company', views: 37, visitors: 25, uses: 26, likes: 0, builds: 5 },
-    { name: 'Team Dump Radar', path: '/team-dump-radar', views: 38, visitors: 21, uses: 12, likes: 1, builds: 2 },
-    { name: 'Infiltrator', path: '/infiltrator', views: 20, visitors: 14, uses: 17, likes: 1, builds: 1 }
+    { name: 'Gem Screener', path: '/gem-screener', people: 177, visits: 634, ai: 663, fromSite: 547 },
+    { name: 'Chart Analyzer', path: '/chart-analyzer', people: 127, visits: 788, ai: 445, fromSite: 745 },
+    { name: 'Build a Company', path: '/company', people: 73, visits: 378, ai: 42, fromSite: 351 },
+    { name: 'Agent Tournaments', path: '/agent-tournaments', people: 70, visits: 366, ai: 52, fromSite: 359 },
+    { name: 'Supply Analyzer', path: '/supply-analyzer', people: 20, visits: 69, ai: 50, fromSite: 60 },
+    { name: 'Team Dump Radar', path: '/team-dump-radar', people: 20, visits: 27, ai: 34, fromSite: 19 },
+    { name: 'Infiltrator', path: '/infiltrator', people: 6, visits: 15, ai: 21, fromSite: 3 }
   ];
-  // placeholders until Cymetica sets real rates: ET10 for each visitor an app brings, USDC for each use
-  CO.RATE = { et10PerVisitor: 50, usdcPerUse: 0.02, placeholder: true };
+  // the account's people per day over the same 30 days (`unique_daily`, 09-24 to 10-23, the last day not over): no
+  // product has its own series, so each product's 30 days take this shape
+  var PEOPLE_DAILY = [12, 2, 2, 17, 21, 26, 21, 44, 26, 31, 19, 63, 38, 27, 23, 14, 28, 41, 39, 63, 46, 32, 28, 37, 29, 20, 24, 17, 26, 6];
+  // /traffic/mine's `referrals`: 1,000 ET10 for each new user your pages bring, credited at 05:20 UTC; none so far.
+  // Account-wide: Cymetica does not say which product brought whom.
+  CO.REFERRAL = { et10PerUser: 1000, attributed: 0, qualified: 0, earnedEt10: 0, pendingEt10: 0, at: '05:20 UTC' };
 
   // the apps of the company on the page: ours carry the real numbers; a fresh or an example company has none.
-  // `today` counts what arrives while the page is open, on top of the 30-day read, so the vault visibly grows.
+  // `todayPeople` counts who arrives while the page is open, on top of the 30-day read.
   var APPS = null;
   CO.apps = function () {
-    if (!APPS) APPS = (CO.MODE === 'ours' ? OURS : []).map(function (a) { return Object.assign({ url: 'https://cymetica.com' + a.path, todayVisitors: 0, todayUses: 0 }, a); });
+    if (!APPS) APPS = (CO.MODE === 'ours' ? OURS : []).map(function (a) { return Object.assign({ url: 'https://cymetica.com' + a.path, todayPeople: 0, newUsers: 0 }, a); });
     return APPS;
   };
-  CO.appEarn = function (a) {
-    var v = a.visitors + a.todayVisitors, u = a.uses + a.todayUses;
-    return { et10: v * CO.RATE.et10PerVisitor, usdc: u * CO.RATE.usdcPerUse };
-  };
+  // what an app has earned its owner: the new-user reward (0 until Cymetica says which product brought a user)
+  CO.appEarn = function (a) { return { et10: (a.newUsers || 0) * CO.REFERRAL.et10PerUser, usdc: 0 }; };
   // the two piles, and where they came from
   // The Vault shows everything the owner's Cymetica account holds, ET10 and USDC ("vault je prazdny coz je bug, on ma
   // zobrazovat veskere ET10 a USDC co mam na ucte v balancu na cymetice", 2026-10-21): the live build's tile read
@@ -60,9 +64,9 @@
   };
   // Fees brought, per product: the revenue share's measure (uv-data.js, CO.uvRevenue) split over the company's products,
   // so the panels add up to the company's line on the board. Cymetica serves no per-product figure (GET /company/products
-  // has `earned`, what it paid, "0") and the split is a SAMPLE: by visitors and uses, skewed per product. `users`: the
-  // fees paid by the people who came through it; `volume`: the fees on what was traded through the product itself.
-  // `days`: the last 30 days, oldest first, visitors and fees, summing to the 30-day figures.
+  // has `earned`, what it paid, "0") and the split is a SAMPLE: by people, skewed per product. One number: the fees on
+  // what the people it brought traded and on what was traded through it (the operator could not tell a split apart).
+  // `days`: the last 30 days, oldest first, the product's people in the account's daily shape (PEOPLE_DAILY).
   var FEES = null;
   function hash(s) { var h = 7; for (var i = 0; i < s.length; i++) h = (h * 31 + s.charCodeAt(i)) % 100003; return h; }
   function spread(total, w) {
@@ -75,18 +79,14 @@
   CO.appFees = function (a) {
     var S = CO.S || {}, total = CO.uvRevenue ? CO.uvRevenue({ id: 0, status: S.company && S.company.status }) : 0;
     if (!FEES || FEES.total !== total) {
-      var apps = CO.apps(), w = apps.map(function (x) { var R = CO.uvRng(hash(x.name)); return (x.visitors + x.uses) * (0.6 + 0.8 * R()); });
+      var apps = CO.apps(), w = apps.map(function (x) { var R = CO.uvRng(hash(x.name)); return x.people * (0.6 + 0.8 * R()); });
       var by = spread(Math.round(total), w);
       FEES = { total: total, of: {} };
       apps.forEach(function (x, i) {
-        var R = CO.uvRng(hash(x.name) + 11), f = by[i], users = Math.round(f * (0.35 + 0.4 * R()));
-        var wv = [], wf = [];
-        for (var d = 0; d < 30; d++) { var g = 0.7 + d / 60; wv.push(g * (0.45 + R())); wf.push(g * (0.3 + R() * 1.4)); }
-        var dv = spread(x.visitors, wv), df = spread(f, wf);
-        FEES.of[x.name] = { fees: f, users: users, volume: f - users, share: total ? f / total : 0, days: dv.map(function (v, k) { return { v: v, f: df[k] }; }) };
+        FEES.of[x.name] = { fees: by[i], share: total ? by[i] / total : 0, days: spread(x.people, PEOPLE_DAILY).map(function (v) { return { v: v }; }) };
       });
     }
-    return FEES.of[a.name] || { fees: 0, users: 0, volume: 0, share: 0, days: [] };
+    return FEES.of[a.name] || { fees: 0, share: 0, days: [] };
   };
   CO.appFeesTotal = function () { CO.appFees(CO.apps()[0] || { name: '' }); return FEES ? Math.round(FEES.total) : 0; };
 
@@ -136,12 +136,12 @@
   CO.fmtEt = function (n) { return Math.round(n).toLocaleString('en-US'); };
   CO.fmtUsd = function (n) { return n >= 100 ? Math.round(n).toLocaleString('en-US') : n.toFixed(2); };
 
-  // while the page is open, people keep arriving at the apps: now and then a visitor, a use
+  // while the page is open, people keep arriving at the apps: now and then a person, more often at the busier ones
   setInterval(function () {
-    var apps = CO.apps(); if (!apps.length || document.hidden) return;
-    var a = apps[Math.floor(Math.random() * apps.length)];
-    a.todayUses += 1 + (Math.random() < 0.4 ? 1 : 0);
-    if (Math.random() < 0.6) a.todayVisitors += 1;
+    var apps = CO.apps(); if (!apps.length || document.hidden || Math.random() < 0.4) return;
+    var all = apps.reduce(function (s, x) { return s + x.people; }, 0), r = Math.random() * all, a = apps[0];
+    for (var i = 0; i < apps.length; i++) { r -= apps[i].people; if (r < 0) { a = apps[i]; break; } }
+    a.todayPeople += 1;
     if (CO.emit) CO.emit('vault');
   }, 7000);
 })();
