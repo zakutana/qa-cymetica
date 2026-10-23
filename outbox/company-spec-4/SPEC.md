@@ -106,7 +106,7 @@ covers open space and not the orbits (`u3d.js`, `home()`); a stage under 760 px,
 
 **The full leaderboard** (a dialog from the board): every company ranked, its revenue, and for the top three the share and the month's
 amount, for the rest *qualifies* or *$X to qualify*; our row highlighted. **On top of it, big, who gets a seat** (the owner, 2026-10-23: explain it
-more clearly, bigger): the three seats as tiles (*5% ≈ $19,300 / mo* and who holds it, or *Open seat*), and beside them *Who gets a seat* in three
+more clearly, bigger): the three seats as tiles (*1 · 5% · ≈ $19,300 / mo*, nothing under it: who holds a seat is the list's first rows), and beside them *Who gets a seat* in three
 numbered lines: *Top 3* by revenue in the last 30 days; *$10,000+* of revenue in those 30 days, or the seat stays open; *Month end*: the ranking then
 decides, paid in USDC from that month's fees; and one small line on what counts as revenue (trading P&L does not). In the list a dashed line marks
 the floor (*$10,000 · the line to qualify*, *nobody above it yet* when that is so); rows under it are dimmed.

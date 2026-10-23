@@ -56,10 +56,9 @@
       return pre + '<div class="lb-r' + (r.share ? ' top pl' + r.rank : '') + (r.mine ? ' me' : '') + (r.qualifies ? '' : ' below') + '"><i class="lb-rk">' + r.rank + '</i>' + CO.stationIcon(r.c.skin, r.c.accent) +
         '<div class="lb-n">' + name(r.c, r.mine) + '</div><div class="lb-v">' + usd(r.rev) + '</div><div class="lb-s">' + right + '</div></div>';
     }).join('');
+    // (who holds a seat is the list's first rows; under the amount it was one line too many: "to podtim uz nezobrazuj")
     var seats = CO.SHARE.map(function (pct, i) {
-      var r = b.top[i];
-      return '<div class="lb-seat pl' + (i + 1) + (r ? '' : ' open') + '"><i>' + (i + 1) + '</i><b>' + pct + '%</b><span>≈ ' + usd(b.pot[i]) + ' / mo</span>' +
-        '<em>' + (r ? esc(r.c.name) : 'Open seat') + '</em></div>';
+      return '<div class="lb-seat pl' + (i + 1) + '"><i>' + (i + 1) + '</i><b>' + pct + '%</b><span>≈ ' + usd(b.pot[i]) + ' / mo</span></div>';
     }).join('');
     return '<div class="mh"><h3>Revenue share · leaderboard</h3><span class="sp"></span><button class="btn" data-a="close">×</button></div>' +
       '<div class="lb-rule"><div class="lb-seats">' + seats + '</div>' +
