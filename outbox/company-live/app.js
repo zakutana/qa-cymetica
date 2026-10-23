@@ -1493,7 +1493,7 @@
       if (t.closest('#uv-panel [data-a="close"]')) return closeAd();
       if (t.closest('#uv-panel [data-a="owner"]')) { e.preventDefault(); closeAd(); return setTab('office'); }
       var uvl = t.closest('[data-a="uvline"]'); if (uvl && !t.closest('#modal-card')) return uvLineModal(uvl.getAttribute('data-n'));
-      if (t.closest('#uv-board [data-a="board-all"]')) return openModal(CO.uvBoardTable(mineForMap()), true);
+      if (t.closest('#uv-board [data-a="board-all"]')) return openModal(CO.uvBoardTable(mineForMap()), 'wide lbg');
       if (t.closest('#uv-board [data-a="board-fold"]')) return $('uv-board').classList.toggle('open');
       if (uv) {
         if (t.closest('#uv-in')) return uv.zoom(0.78);

@@ -240,6 +240,62 @@ a.uvr { color: var(--text); text-decoration: none; } a.uvr:hover { background: v
 .lb-cut::before, .lb-cut::after { content: ''; flex: 1; border-top: 1px dashed rgba(0, 207, 255, .55); }
 .lb-r.below { opacity: .78; }
 @media (max-width: 760px) { .lb-rule { grid-template-columns: 1fr; } }
+
+/* The full leaderboard in the board's own glass ("da se cela ta tabulka udelat tak husté krasna jako ten postranni panel",
+   2026-10-23): the same frosted pane, cyan rim, lit top edge and slow sheen, flat (not turned) since it is read up close;
+   the same head; and only type and light on it: no boxes round the rows, the seats or the icons, big gradient place
+   numerals, thin glowing lines between rows. */
+.modal-card.lbg { position: relative; padding: 30px 36px 26px; border-radius: 24px; overflow: hidden; display: flex; flex-direction: column;
+  background:
+    linear-gradient(135deg, rgba(255, 255, 255, .13) 0%, rgba(255, 255, 255, .04) 22%, rgba(255, 255, 255, 0) 42%),
+    radial-gradient(90% 70% at 0% 0%, rgba(0, 207, 255, .16), rgba(0, 207, 255, 0) 60%),
+    radial-gradient(70% 60% at 100% 100%, rgba(0, 255, 136, .07), rgba(0, 255, 136, 0) 60%),
+    linear-gradient(180deg, rgba(12, 24, 36, .8), rgba(6, 8, 16, .9));   /* (.62 / .82 at first: the board behind showed through as a ghost) */
+  backdrop-filter: blur(18px) saturate(1.5) brightness(1.05); -webkit-backdrop-filter: blur(18px) saturate(1.5) brightness(1.05);
+  border: 1px solid rgba(255, 255, 255, .14);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, .45), inset 0 0 0 1px rgba(0, 207, 255, .2), inset 0 -26px 40px -26px rgba(0, 207, 255, .2),
+    0 0 0 1px rgba(0, 207, 255, .32), 0 0 80px rgba(0, 207, 255, .16), 0 30px 70px rgba(0, 0, 0, .65); }
+.modal-card.lbg > :not(.uvb-sh) { position: relative; }
+/* the galaxy shows through the glass: the shade behind the dialog lighter than for the others */
+.modal:has(.modal-card.lbg) { background: rgba(6, 9, 15, .5); }
+/* the head, as the board's */
+.lbh { gap: 12px; margin-bottom: 18px; }
+.lbh h3 { flex: none; font: 400 22px 'Archivo Black', sans-serif; letter-spacing: .08em; color: transparent; -webkit-background-clip: text; background-clip: text;
+  background-image: linear-gradient(180deg, #effff8, #4dffb4 50%, #00b4e0); filter: drop-shadow(0 0 12px rgba(0, 207, 255, .5)); }
+.lbh .lbt { flex: 1; font: 800 12px 'JetBrains Mono'; letter-spacing: .2em; color: var(--rs1); text-shadow: 0 0 10px rgba(0, 207, 255, .7); }
+.lbh .btn { background: rgba(255, 255, 255, .04); border-color: rgba(255, 255, 255, .14); }
+/* the seats and the rule: no box, a glowing line under them */
+.lbg .lb-rule { background: none; border: 0; border-radius: 0; padding: 4px 0 22px; margin: 0 0 14px; gap: 28px;
+  border-bottom: 1px solid transparent; border-image: linear-gradient(90deg, rgba(255, 255, 255, 0), rgba(0, 207, 255, .35) 30%, rgba(0, 255, 136, .25) 70%, rgba(255, 255, 255, 0)) 1; }
+.lbg .lb-seats { gap: 0; }
+.lbg .lb-seat { background: none; border: 0; box-shadow: none; padding: 6px 4px; gap: 5px; }
+.lbg .lb-seat + .lb-seat { border-left: 1px solid transparent; border-image: linear-gradient(180deg, rgba(255, 255, 255, 0), rgba(0, 207, 255, .3), rgba(255, 255, 255, 0)) 1; }
+.lbg .lb-seat i { font: 400 34px/1 'Archivo Black', sans-serif; color: transparent; -webkit-background-clip: text; background-clip: text; }
+.lbg .lb-seat.pl1 i { background-image: linear-gradient(180deg, #eafff4, var(--rs1) 55%, #00a067); filter: drop-shadow(0 0 12px rgba(0, 207, 255, .75)); }
+.lbg .lb-seat.pl2 i { background-image: linear-gradient(180deg, #e6fbff, var(--rs2) 55%, #0086b5); filter: drop-shadow(0 0 9px rgba(0, 207, 255, .5)); }
+.lbg .lb-seat.pl3 i { background-image: linear-gradient(180deg, #e3edff, var(--rs3) 55%, #1d4ea8); filter: drop-shadow(0 0 7px rgba(59, 130, 246, .4)); }
+.lbg .lb-seat b { font-size: 34px; text-shadow: 0 0 18px color-mix(in srgb, var(--sc) 70%, transparent); }
+.lbg .lb-seat span { color: #bfd0dc; font-weight: 600; }
+.lbg .lb-c i { background: none; border: 1px solid rgba(0, 207, 255, .45); box-shadow: 0 0 8px rgba(0, 207, 255, .3); }
+/* the list: rows without boxes, a big numeral each */
+.lbg .lb-head { padding: 0 4px 8px; color: #7f93ad; }
+.lbg .lb { gap: 0; max-height: 50vh; }
+.lbg .lb-r { background: none; border: 0; border-radius: 0; padding: 11px 4px; font-size: 13px; grid-template-columns: 38px 30px minmax(0, 1fr) 130px 170px; }
+.lbg .lb-r + .lb-r { border-top: 1px solid transparent; border-image: linear-gradient(90deg, rgba(255, 255, 255, 0), rgba(255, 255, 255, .09) 30%, rgba(0, 207, 255, .16) 70%, rgba(255, 255, 255, 0)) 1; }
+.lbg .lb-r .dic { background: none; border: 0; box-shadow: none; }
+.lbg .lb-r .dic svg { filter: drop-shadow(0 0 6px var(--ic)); }
+.lbg .lb-rk { width: auto; height: auto; border-radius: 0; background: none; box-shadow: none; font: 400 22px/1 'Archivo Black', sans-serif; color: transparent;
+  -webkit-background-clip: text; background-clip: text; background-image: linear-gradient(180deg, #e6e9f2, #7f879a); }
+.lbg .lb-r.pl1 .lb-rk { background: linear-gradient(180deg, #eafff4, var(--rs1) 55%, #00a067); -webkit-background-clip: text; background-clip: text; box-shadow: none; filter: drop-shadow(0 0 10px rgba(0, 207, 255, .7)); font-size: 26px; }
+.lbg .lb-r.pl2 .lb-rk { background: linear-gradient(180deg, #e6fbff, var(--rs2) 55%, #0086b5); -webkit-background-clip: text; background-clip: text; box-shadow: none; filter: drop-shadow(0 0 8px rgba(0, 207, 255, .5)); font-size: 26px; }
+.lbg .lb-r.pl3 .lb-rk { background: linear-gradient(180deg, #e3edff, var(--rs3) 55%, #1d4ea8); -webkit-background-clip: text; background-clip: text; box-shadow: none; filter: drop-shadow(0 0 7px rgba(59, 130, 246, .4)); font-size: 26px; }
+.lbg .lb-r.top { background: linear-gradient(90deg, rgba(0, 207, 255, .07), rgba(0, 207, 255, 0) 70%); }
+.lbg .lb-r.me { background: linear-gradient(90deg, rgba(0, 255, 136, .1), rgba(0, 255, 136, 0) 70%); }
+.lbg .lb-n b { font-size: 14px; }
+.lbg .lb-v { font-size: 13.5px; }
+.lbg .lb-s .sh { font-size: 20px; text-shadow: 0 0 12px rgba(0, 207, 255, .5); }
+.lbg .lb-s .ok { text-shadow: 0 0 8px rgba(0, 255, 136, .45); }
+.lbg .lb-cut { margin: 10px 0; }
 /* a product's own line in its map tooltip (the owner writes it on the Products tab) */
 .tip .uvl { margin: 1px 0 4px; font-size: 11.5px; color: #d6e0ec; }
 /* the money pulse's pop over a top-3 station, in the board's cyan */
