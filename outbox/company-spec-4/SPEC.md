@@ -100,7 +100,8 @@ are open. Be the first company to take one.*, the three open seats, and at the f
 it with `?board=empty`). On a stage under
 760 px it folds into a *TOP 3* pill. It hides while Buy land is on.
 
-**The first look** stands 30% farther back, the whole galaxy in view and right of the middle (aimed 9% of the frame's width to the left), so the board
+**The first look** stands 20% farther back than the original frame, the whole galaxy in view, right of the middle and low (aimed 7% of the frame's width to
+the left and 6.5% of its height up: on a 2.2-to-1 stage the outer orbit spans 25% to 92% of the width and 12% to 92% of the height), so the board
 covers open space and not the orbits (`u3d.js`, `home()`); a stage under 760 px, where the board folds, keeps the old frame.
 
 **The full leaderboard** (a dialog from the board): every company ranked, its revenue, and for the top three the share and the month's

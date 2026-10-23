@@ -2129,16 +2129,20 @@ class Universe3D {
   // stage narrower than his picture, so his whole frame stays in view
   // The first look stands a little farther back and shows the galaxy right of the middle (the operator, 2026-10-22: "at je
   // vesmir trochu oddalenejsi a vic vpravo"), so the revenue-share board over the left (uvboard.js) covers open space, not
-  // the orbits: 30% farther, the aim moved left by 9% of the frame's width (his second try: "vic to oddal", the whole galaxy in view). A stage too narrow for the board (it folds
-  // into a pill under 760 px) keeps his frame as it was.
+  // the orbits. His third frame (2026-10-23, "tu defaultni pozici posunul dolu a doleva asi takto", a screenshot): 20%
+  // farther than his picture, the aim moved left by 7% of the frame's width and up by 6.5% of its height, so the galaxy
+  // sits lower and further left -- fitted to the outer orbit in his screenshot (left 25.8%, right 91.6%, top 11.2%, bottom
+  // 92.4% of a stage 2.22 wide to 1). A stage too narrow for the board (it folds into a pill under 760 px) keeps his frame
+  // as it was.
   home() {
     const Gx = CO.uvGalaxy, [ox, oz] = rotXZ(UVCAM.off[0], UVCAM.off[1], Gx.AZ);
     const tgt = new THREE.Vector3(ox, 0, oz), dir = new THREE.Vector3().setFromSpherical(new THREE.Spherical(1, UVCAM.polar, Gx.AZ));
-    const wide = (this.el && this.el.clientWidth || 0) >= 760, dist = UVCAM.dist * (wide ? 1.3 : 1);
+    const wide = (this.el && this.el.clientWidth || 0) >= 760, dist = UVCAM.dist * (wide ? 1.195 : 1);
     if (wide) {
-      const right = new THREE.Vector3(0, 1, 0).cross(dir).normalize(), aspect = this.camera ? this.camera.aspect : UVCAM.aspect;
-      const frameW = 2 * dist * Math.tan(THREE.MathUtils.degToRad(this.camera ? this.camera.fov : UVCAM.fov) / 2) * aspect;
-      tgt.addScaledVector(right, -0.09 * frameW);
+      const right = new THREE.Vector3(0, 1, 0).cross(dir).normalize(), up = new THREE.Vector3().crossVectors(right, dir.clone().negate()).normalize();
+      const aspect = this.camera ? this.camera.aspect : UVCAM.aspect;
+      const frameH = 2 * dist * Math.tan(THREE.MathUtils.degToRad(this.camera ? this.camera.fov : UVCAM.fov) / 2), frameW = frameH * aspect;
+      tgt.addScaledVector(right, -0.0725 * frameW).addScaledVector(up, 0.065 * frameH);
     }
     return { pos: tgt.clone().addScaledVector(dir, dist), tgt };
   }
