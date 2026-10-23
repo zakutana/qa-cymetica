@@ -149,7 +149,7 @@ product's name in its map tooltip and in its panel. **Until the owner writes one
 buildings (the Promo Market) keep their own line. Mockup: `app.js` (`uvLineModal`, the Products card), `uv-data.js` (`CO.uvLine`, `CO.setUvLine`),
 `universe.js` (the tooltip), `uvpanel.js` (the panel).
 
-## K. Airdrop Farmer on Orbit 5 · slot 5: its logo as a head, in straw and brown (settled, drawn)
+## K. Airdrop Farmer on Orbit 5 · slot 5: its logo as a robot's head in gold, under a straw hat (settled, drawn)
 
 The owner bought a third slot on 2026-10-22 (`GET /company/land` lists `slot-5-5` taken, with no product on it). **Put Airdrop Farmer on it**, as
 round 3 put Gem Screener and Agent Casino on theirs: the same click (the map flies to it, the panel opens), the same MADE BY plate, the owner's
@@ -166,6 +166,19 @@ itself, recoloured), the data `uv-data.js` (`CO.ADS`).
 
 **Its panel** shows the three numbers the live page leads with: *23 airdrop farms*, *1 USDC deposit*, *10% of realized profit* (the fee; tooltip:
 nothing on a loss), the date they were read, and *Visit Airdrop Farmer* to `/airdrop-farmer`. Read them live from the page's own data, not typed in.
+
+## L. The MADE BY plate in a product's panel as the mockup draws it (settled, drawn)
+
+Round 3 (C9) asked for the maker's plate at the top of a product's panel; the live build has one, but not the mockup's (the owner's screenshot,
+2026-10-23: *"nas vypada lepe"*). Today it is a cyan *MADE BY* pill whatever the company's colour, over a plain dark box with a thin frame and a dot.
+**Draw it as the mockup does** (`style.css`, `.mkrow` and `.mkb`; `uvpanel.js`, `productView`), everything in **the company's colour** (gold for
+BJ Ironstar Capital, green for ours):
+- the *MADE BY* pill in the company's colour with a soft glow of it (not always cyan);
+- the plate as a station's plate on the map: dark riveted glass (a rivet in each corner), squared caps, a frame of the company's colour mixed toward
+  steel, an outer glow of the colour, the name in large white letter-spaced capitals with the colour's dot before it;
+- a small pointer under the plate, in the frame's colour;
+- a line of the company's colour running out of either side of the plate to the panel's edges, fading outward;
+- on hover the frame takes the full colour and the glow grows; a click opens the company's office.
 
 ## What stays as it is
 
