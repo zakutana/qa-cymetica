@@ -176,8 +176,8 @@ BJ Ironstar Capital, green for ours):
 - the *MADE BY* pill in the company's colour with a soft glow of it (not always cyan);
 - the plate as a station's plate on the map: dark riveted glass (a rivet in each corner), squared caps, a frame of the company's colour mixed toward
   steel, an outer glow of the colour, the name in large white letter-spaced capitals with the colour's dot before it;
-- a small pointer under the plate, in the frame's colour;
-- a line of the company's colour running out of either side of the plate to the panel's edges, fading outward;
+- **a small arrow under the plate**, pointing down at the product, in the frame's colour (missing on the live build);
+- **a line of the company's colour running out of either side of the plate** to the panel's edges, fading outward (missing on the live build);
 - on hover the frame takes the full colour and the glow grows; a click opens the company's office.
 
 ## What stays as it is
