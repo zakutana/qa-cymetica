@@ -8337,7 +8337,8 @@ class Office3D {
     r.st = st; r.orange = isOrange;
     if (isDark && !r.shade) {
       const RS = CO.iso.RS, h = WH + 0.55;
-      r.shade = new THREE.Mesh(G.box, new THREE.MeshBasicMaterial({ color: 0x020509, transparent: true, opacity: 0.8, depthWrite: false }));
+      // (0.8 at first: "to je az moc velka tma, o 20 % bych ji ubral", 2026-10-23)
+      r.shade = new THREE.Mesh(G.box, new THREE.MeshBasicMaterial({ color: 0x020509, transparent: true, opacity: 0.64, depthWrite: false }));
       r.shade.scale.set(RS + 0.06, h, RS + 0.06); r.shade.position.copy(this.V(r.x0 + RS / 2, r.y0 + RS / 2, SH_FLOOR_Y + h / 2)); r.shade.renderOrder = 3; r.g.add(r.shade);
     }
     if (r.shade) r.shade.visible = isDark;
