@@ -162,6 +162,15 @@ a { color: var(--cyan); text-decoration: none; cursor: pointer; }
 .dl .sp.hot { color: var(--red); }
 .ubar.capb { display: block; margin-top: 6px; height: 3px; }
 .dept.needs { border-left-color: var(--red); box-shadow: inset 0 0 0 1px rgba(255, 68, 68, .25); }
+/* a department's own play / pause (spec 4, item F): a round switch in its colour at the end of its name's line; paused,
+   it shows play and the row goes dark with its room */
+.dpp { flex: none; display: grid; place-items: center; width: 24px; height: 24px; border-radius: 50%; color: var(--ic); cursor: pointer;
+  border: 1px solid color-mix(in srgb, var(--ic) 45%, transparent); background: color-mix(in srgb, var(--ic) 10%, transparent); transition: transform .15s, box-shadow .15s, background .15s; }
+.dpp svg { width: 11px; height: 11px; }
+.dpp:hover, .dpp:focus-visible { transform: scale(1.12); background: color-mix(in srgb, var(--ic) 22%, transparent); box-shadow: 0 0 12px color-mix(in srgb, var(--ic) 55%, transparent); outline: none; }
+.dpp.off { color: #0a0e17; background: var(--ic); border-color: var(--ic); box-shadow: 0 0 10px color-mix(in srgb, var(--ic) 50%, transparent); }
+.dept.dark { border-left-color: var(--dim2); background: #0b1220; }
+.dept.dark .dic, .dept.dark .d1 b, .dept.dark .dl .sp { opacity: .55; }
 /* the department's icon, drawn to its room (app.js DEPT_ICON): a glowing tile at the card's left, its status dot on
    the tile's corner */
 .dept { display: grid; grid-template-columns: auto minmax(0, 1fr); column-gap: 11px; align-items: center; }
@@ -418,6 +427,8 @@ b.g, span.g { color: var(--green); text-shadow: 0 0 10px rgba(0, 255, 136, .45);
    colleague's) */
 .office .agent .lbl { opacity: 0; transition: opacity .25s; pointer-events: none; }
 .office .room.hover .agent .lbl, .office .room.sel .agent .lbl { opacity: 1; }
+/* a paused room in the flat office: its lights off */
+.office .room.dark { filter: brightness(.38) saturate(.5); }
 .office .room .agent.walking .lbl { opacity: 0; }
 @keyframes bob { 50% { transform: translateY(-1.2px); } }
 @keyframes walk { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-2px); } }

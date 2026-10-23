@@ -227,9 +227,12 @@
       '<div class="dl"><span class="tx cyan">Chat · runs every department</span></div></button>';
     setHTML($('depts'), mrow + S.departments.map(function (d) {
       var v = CO.deptView(d), ln = CO.deptLine(d, v);
-      return '<button class="dept ' + v.status + (ln.tone === 'red' ? ' needs' : '') + (ui.panel === d.id ? ' on' : '') + (d.born && S.clock - d.born < 4000 ? ' born' : '') + '" data-id="' + d.id + '">' +
+      // its own play / pause, in its colour (spec 4, item F): Command has none, it answers the owner
+      var pp = RO ? '' : '<span class="dpp' + (v.paused ? ' off' : '') + '" role="button" tabindex="0" data-a="dept-pause" data-id="' + d.id + '" style="--ic:' + CO.deptIconOf(d)[0] + '" title="' + (v.paused ? 'Resume ' : 'Pause ') + esc(d.name) + '">' +
+        (v.paused ? '<svg viewBox="0 0 12 12" aria-hidden="true"><path d="M3.5 2.2v7.6L9.8 6z" fill="currentColor"/></svg>' : '<svg viewBox="0 0 12 12" aria-hidden="true"><rect x="2.8" y="2.2" width="2.3" height="7.6" rx=".6" fill="currentColor"/><rect x="6.9" y="2.2" width="2.3" height="7.6" rx=".6" fill="currentColor"/></svg>') + '</span>';
+      return '<button class="dept ' + v.status + (v.dark ? ' dark' : '') + (ln.tone === 'red' ? ' needs' : '') + (ui.panel === d.id ? ' on' : '') + (d.born && S.clock - d.born < 4000 ? ' born' : '') + '" data-id="' + d.id + '">' +
         deptIcon(d) + '<div class="d1"><b>' + esc(d.name) + '</b>' +
-        (d.files_as ? '<span class="et ' + (d.et10 ? 'lit' : 'zero') + '" title="ET10 Cymetica paid for accepted bugs, to ' + esc(d.files_as) + '">' + (d.et10 ? '+' : '') + (d.et10 || 0).toLocaleString('en-US') + ' ET10</span>' : '') + '</div>' +
+        (d.files_as ? '<span class="et ' + (d.et10 ? 'lit' : 'zero') + '" title="ET10 Cymetica paid for accepted bugs, to ' + esc(d.files_as) + '">' + (d.et10 ? '+' : '') + (d.et10 || 0).toLocaleString('en-US') + ' ET10</span>' : '') + pp + '</div>' +
         '<div class="dl"><span class="tx ' + ln.tone + '" title="' + esc(ln.text) + '">' + esc(ln.text) + '</span>' +
         '<span class="sp' + (v.capped ? ' hot' : '') + '" title="Spent of your plan today' + (v.cap ? ', of its ' + CO.fmtTok(v.cap) + ' daily cap' : '') + '">' + CO.fmtTok(v.tokToday) + '<small>today</small></span></div>' +
         (v.cap ? '<span class="ubar capb"><i class="' + (v.capped ? 'hot' : '') + '" style="width:' + Math.min(100, v.tokToday / v.cap * 100).toFixed(0) + '%"></i></span>' : '') +
@@ -1510,6 +1513,9 @@
       var sw = t.closest('.dswitch [data-sw]'); if (sw) return sw.getAttribute('data-sw') === 'hub' ? openManager() : openDrawer(+sw.getAttribute('data-sw'));
       if (t.closest('.dept.mgrrow')) return openManager();
       if (t.closest('#add-dept') || t.closest('#rail-add')) return addDeptModal();
+      var dpp = t.closest('[data-a="dept-pause"]');
+      if (dpp) { var did = +dpp.getAttribute('data-id'); CO.act.deptPause(did); var dd = CO.S.departments.filter(function (x) { return x.id === did; })[0];
+        if (dd) toast(dd.paused ? dd.name + ' paused: its tasks wait, a running turn finishes. The others go on.' : dd.name + ' resumed: it starts on the next pass.'); return; }
       var row = t.closest('.dept'); if (row) return openDrawer(+row.getAttribute('data-id'));
       var dd = t.closest('[data-d]');
       if (dd && dd.closest('.ai')) return decide(dd.closest('.ai').getAttribute('data-id'), dd.getAttribute('data-d'));

@@ -3061,7 +3061,7 @@ function pvAstro(b, role) {
 /* ---------------- the office in 3D: the same floor plan, rooms you can walk the camera into ---------------- */
 // What a room is doing, in light. Blue is only "up next", and only on the room's edge line: the floor, the walls,
 // the furniture and the light itself are the site's navy-black under white light, the structure Cymetica green.
-const STC = { working: 0x24e8ff, queued: 0x3b82f6, waiting: 0xff8824, idle: 0x38f2b8 };
+const STC = { working: 0x24e8ff, queued: 0x3b82f6, waiting: 0xff8824, idle: 0x38f2b8, dark: 0x7f93ad };
 const TONEC = { cyan: '#24e8ff', red: '#ff9438', blue: '#dfe6ee', dim: '#a9b8cc' };
 const OFFICE = { bg: 0x040b14, lamp: 0xa8e8f8, mon: 0x58ffc0 };
 const WH = 1.4;   // the glass walls' height: his picture's corners put their top rail at 1.4 over the floor
@@ -8250,19 +8250,21 @@ class Office3D {
     let anyWork = false;
     S.departments.forEach((d) => {
       const r = this.rooms['d' + d.id]; if (!r) return;
-      const v = CO.deptView(d), ln = CO.deptLine(d, v), st = ln.tone === 'red' ? 'waiting' : v.status;
+      // a paused room (its owner's switch, or the whole company) with no turn still finishing goes dark (tint)
+      const v = CO.deptView(d), ln = CO.deptLine(d, v), st = v.dark ? 'dark' : ln.tone === 'red' ? 'waiting' : v.status;
       if (v.status === 'working') anyWork = true;
       this.tint(r, st);
       // no room is orange for what it is, only for waiting on its owner (tint): the trading desk's dot, plate and
       // screens are every room's
       const dot = '#' + new THREE.Color(STC[st]).getHexString();
       let title, sub, mode, col = st === 'queued' ? '#a9b8cc' : dot;
-      if (v.running) { title = v.running.title; sub = CO.expertName(v.running.expert) + ' is on it'; mode = 'run'; }
+      if (v.dark) { title = 'Paused'; sub = v.paused ? 'by you: lights off until you resume' : 'the company is paused'; mode = ''; col = '#7f93ad'; }
+      else if (v.running) { title = v.running.title; sub = CO.expertName(v.running.expert) + ' is on it'; mode = 'run'; }
       else if (v.waiting) { title = 'Approval'; sub = 'approve or reject on the right'; mode = 'full'; col = '#ff8824'; }
       else if (v.queued.length) { title = 'Up next: ' + v.queued[0].title; sub = ''; mode = ''; }
       else { title = d.schedule && d.next_run ? 'Next run at ' + CO.hhmm(d.next_run) : 'Idle'; sub = ''; mode = ''; }
       if (r.wall) drawWall(r.wall, title, sub, col, mode);
-      if (r.sign) r.sign.material.color.set(st === 'waiting' ? LOOK.orange : SIGN_BLUE).multiplyScalar(st === 'working' ? 2.15 : 1.9);
+      if (r.sign) r.sign.material.color.set(st === 'waiting' ? LOOK.orange : SIGN_BLUE).multiplyScalar(st === 'working' ? 2.15 : st === 'dark' ? 0.22 : 1.9);
       if (r.kb) drawKanban(r.kb, { queued: v.queued.length, running: v.running ? 1 : 0, done: v.done, failed: v.failed });
       v.experts.slice(0, 3).forEach((e, i) => {
         const a = r.agents[i]; if (a) a.working = e.state === 'working';
@@ -8324,19 +8326,29 @@ class Office3D {
   // hung lower; all of it back to mint when it no longer waits. A room at work lights in the rail's Working cyan
   // (2026-10-20, "jak to vlevo zobrazuje modre Working tak do stejne barvy se i rozsviti ta mistnost"): its line, a
   // cyan wash on its floor and a cooler lamp; its glass and floor stay its own.
+  // A paused room goes dark ("kdyz je neco pauznute tak tam zhasnes v mistnosti svetla vsechna", 2026-10-23): its lamp
+  // off, its neon and wash out, its sign dimmed (update), and a shade of night over the whole room -- a dark volume as
+  // big as the room and a little taller than its glass, so every lit thing inside (screens, lamps, the people's lights)
+  // is dimmed with it, whatever material it shares with the rooms still lit.
   tint(r, st) {
     this.shTag(r);
-    const isOrange = st === 'waiting', isWork = st === 'working';
+    const isOrange = st === 'waiting', isWork = st === 'working', isDark = st === 'dark';
     if (r.st === st && r.orange === isOrange) return;
     r.st = st; r.orange = isOrange;
+    if (isDark && !r.shade) {
+      const RS = CO.iso.RS, h = WH + 0.55;
+      r.shade = new THREE.Mesh(G.box, new THREE.MeshBasicMaterial({ color: 0x020509, transparent: true, opacity: 0.8, depthWrite: false }));
+      r.shade.scale.set(RS + 0.06, h, RS + 0.06); r.shade.position.copy(this.V(r.x0 + RS / 2, r.y0 + RS / 2, SH_FLOOR_Y + h / 2)); r.shade.renderOrder = 3; r.g.add(r.shade);
+    }
+    if (r.shade) r.shade.visible = isDark;
     const c = new THREE.Color(isOrange ? LOOK.orange : isWork ? WORK_CYAN : LOOK.neon);
     // the line itself in its own deeper mint (SH_NEON), the floor's wash in his; over the bloom's threshold, so it
     // glows, the glow tight round a thinner line, as his
     // A room at work is told apart as the orange one is, whole, in the rail's cyan ("porad mi prijde ta modra malo
     // vyrazna", 2026-10-21): its floor's seams lit, its glass tinted, its line, a wash on its floor, a cyan lamp hung lower
-    if (r.edgeM) { r.edgeM.emissive.set(isOrange ? LOOK.orange : isWork ? WORK_CYAN : SH_NEON); r.edgeM.emissiveIntensity = isOrange ? 1.9 : isWork ? 1.7 : 1.5; }
+    if (r.edgeM) { r.edgeM.emissive.set(isOrange ? LOOK.orange : isWork ? WORK_CYAN : SH_NEON); r.edgeM.emissiveIntensity = isOrange ? 1.9 : isWork ? 1.7 : isDark ? 0.06 : 1.5; }
     if (r.glow) { r.glow.material.color.copy(c).multiplyScalar(isOrange ? 1.9 : isWork ? 1.6 : 1); r.glowBase = isOrange ? 1.0 : isWork ? 0.9 : 0; }
-    if (r.lamp) { r.lamp.color.set(isOrange ? 0xff6a34 : isWork ? 0x1aa8ff : 0xeef6ff); r.lamp.intensity = isOrange ? 22 : isWork ? 20 : 6; r.lamp.distance = isOrange || isWork ? 6.5 : 9; r.lamp.position.y = isOrange || isWork ? 2.4 : 4.4; }
+    if (r.lamp) { r.lamp.color.set(isOrange ? 0xff6a34 : isWork ? 0x1aa8ff : 0xeef6ff); r.lamp.intensity = isOrange ? 22 : isWork ? 20 : isDark ? 0 : 6; r.lamp.distance = isOrange || isWork ? 6.5 : 9; r.lamp.position.y = isOrange || isWork ? 2.4 : 4.4; }
     // the floor and the glass: only the room's own (a room that dressed its walls in something else keeps it)
     const own = (m, a, b, cc) => m === a || m === b || m === cc;
     if (r.floorM && own(r.floorM.material, OM.tile, OM.tileOrange, OM.tileCyan)) r.floorM.material = isOrange ? OM.tileOrange : isWork ? OM.tileCyan : OM.tile;

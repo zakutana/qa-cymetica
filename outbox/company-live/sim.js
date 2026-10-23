@@ -103,6 +103,7 @@
       if (t.blocked_by && task(t.blocked_by) && task(t.blocked_by).status === 'waiting_approval') continue;
       if (deptRunning(t.dept_id)) continue;
       if (capped(dept(t.dept_id))) continue;
+      if (CO.deptPaused(dept(t.dept_id))) continue;   // its owner paused it: its tasks wait, the others go on
       if (!CO.gate().ok) break;
       start(t); started++; i--;
     }
@@ -513,8 +514,29 @@
   }
   setInterval(tick, 200);
 
+  // One department paused by its owner (spec 4, item F, 2026-10-22: "cool tlacitko ke kazdemu oddeleni play a pause"):
+  // its queued tasks wait, a running turn finishes, the others and Command go on. Kept in this browser, so it survives
+  // a reload (the build keeps it on the department).
+  var DPKEY = 'co.deptpause.v1';
+  function pausedIds() { try { var a = JSON.parse(localStorage.getItem(DPKEY) || '[]'); return Array.isArray(a) ? a : []; } catch (e) { return []; } }
+  CO.deptPaused = function (d) {
+    if (!d) return false;
+    if (d.paused == null) d.paused = pausedIds().indexOf(d.id) >= 0;
+    return d.paused;
+  };
+
   /* ---------- the owner's actions ---------- */
   CO.act = {
+    deptPause: function (id) {
+      var d = dept(id); if (!d) return;
+      d.paused = !CO.deptPaused(d);
+      var a = pausedIds().filter(function (x) { return x !== id; });
+      if (d.paused) a.push(id);
+      try { localStorage.setItem(DPKEY, JSON.stringify(a)); } catch (e) { /* the page still works, it just forgets */ }
+      feed('info', 'You', (d.paused ? 'paused ' : 'resumed ') + d.name);
+      if (!d.paused) CO.S.next_pass_at = Math.min(CO.S.next_pass_at, CO.S.clock + 3000);
+      changed();
+    },
     pause: function () {
       var S = CO.S;
       if (S.company.status === 'paused') {
@@ -946,6 +968,7 @@
   CO.waitText = function (t) {
     var S = CO.S, g = CO.gate();
     if (S.company.status === 'paused') return 'company paused';
+    if (t && CO.deptPaused(dept(t.dept_id))) return 'paused by you';
     if (!g.ok) return g.text + (g.until ? ' until ' + CO.hhmm(g.until) : '');
     if (t && capped(dept(t.dept_id))) return 'daily token cap reached · back at 00:00';
     if (t && t.blocked_by && task(t.blocked_by) && task(t.blocked_by).status === 'waiting_approval') return 'waits on your approval';
@@ -964,6 +987,8 @@
     v.failed = d.failed_7d;
     v.memory = S.memory.filter(function (m) { return m.dept_id === d.id; }).length;
     v.status = v.running ? 'working' : v.queued.length ? 'queued' : v.waiting ? 'waiting' : 'idle';
+    // paused: by its owner, or with the whole company; dark: paused and no turn still finishing (its room's lights go off)
+    v.paused = CO.deptPaused(d); v.dark = (v.paused || S.company.status === 'paused') && !v.running;
     v.waits = !v.running && v.queued.length ? CO.waitText(v.queued[0]) : '';
     var lit = false;
     v.experts = d.experts.map(function (k) {
@@ -996,8 +1021,10 @@
     var asks = S.approvals.filter(function (a) { return a.dept_id === d.id; }).length;
     if (v.capped) return { tone: 'red', short: 'Daily cap reached', text: 'Paused: daily cap reached' };
     if (asks) return { tone: 'red', short: 'Approval', text: asks + ' approval' + (asks === 1 ? '' : 's') };
-    if (v.running) return { tone: 'cyan', short: 'Working', text: 'Working: ' + v.running.title };
-    if (S.company.status === 'paused') return { tone: 'dim', short: 'Paused', text: 'Paused' };
+    if (v.running) return { tone: 'cyan', short: 'Working', text: (v.paused ? 'Pausing after this turn: ' : 'Working: ') + v.running.title };
+    // why it is stopped, so the two are not mixed: the owner's switch on this department, or the whole company
+    if (v.paused) return { tone: 'dim', short: 'Paused by you', text: 'Paused by you' };
+    if (S.company.status === 'paused') return { tone: 'dim', short: 'Company paused', text: 'Paused: the company is paused' };
     if (v.queued.length) return { tone: 'blue', short: 'Up next', text: 'Up next: ' + v.queued[0].title };
     if (d.schedule && d.next_run) return { tone: 'dim', short: 'Next run ' + CO.hhmm(d.next_run), text: 'Next run at ' + CO.hhmm(d.next_run) };
     return { tone: 'dim', short: 'Idle', text: 'Idle: nothing to do' };

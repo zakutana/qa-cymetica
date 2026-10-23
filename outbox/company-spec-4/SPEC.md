@@ -62,6 +62,12 @@ starts **that department only**: its queued tasks wait, the other departments an
 the owner. While a department is paused its `units` stop and the daily cap does not matter. Please tell us if the API cannot pause one department; then the
 button is drawn and the rest is yours.
 
+**A paused room goes dark in the office** (the owner, 2026-10-23: *"kdyz je neco pauznute tak tam zhasnes v mistnosti svetla vsechna"*): once its last turn has
+finished, its lamp is off, its neon outline and floor wash are out, its name on the glass is dimmed, its wall screen reads *Paused · by you* (or *the company is
+paused*), and everything inside is seen as in a room with the lights off. When the whole company is paused, every department's room goes dark; Command stays
+lit. Resume, and the lights come back. The row of a paused department dims with it, and its button turns into a filled play. Drawn in the mockup:
+`sim.js` (`CO.deptPaused`, `CO.act.deptPause`), `app.js` (the button), `u3d.js` (`tint`, state *dark*), `office.js` and `style.css` (the flat office).
+
 ## G. The Universe's top line says what it counts (settled)
 
 The live line reads *8 companies · 34 free slots · 0 yours · 2 products* and the owner, who has one company, asked why *yours* is 0. It counts land, not companies:

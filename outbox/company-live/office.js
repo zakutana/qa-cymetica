@@ -1009,11 +1009,13 @@
       var v = CO.deptView(d), ln = CO.deptLine(d, v), st = ln.tone === 'red' ? 'waiting' : v.status;
       var x0 = cells[key][0], y0 = cells[key][1];
       if (v.status === 'working') anyWork = true;
-      setCls(g, key, st, '');
+      // paused with no turn finishing: its lights go off, as in the 3D office (style: .room.dark)
+      setCls(g, key, st, v.dark ? ' dark' : '');
       var dot = STC[st] || STC.idle;
       var col = st === 'queued' ? TONEC.dim : dot, title, sub, mode;
       // the wall screen says what the plate says, a little longer: never passes or attempts
-      if (v.running) { title = v.running.title; sub = CO.expertName(v.running.expert) + ' is on it'; mode = 'run'; }
+      if (v.dark) { title = 'Paused'; sub = v.paused ? 'by you: lights off until you resume' : 'the company is paused'; mode = ''; col = TONEC.dim; }
+      else if (v.running) { title = v.running.title; sub = CO.expertName(v.running.expert) + ' is on it'; mode = 'run'; }
       else if (v.waiting) { title = 'Approval'; sub = 'approve or reject on the right'; mode = 'full'; col = STC.waiting; }
       else if (v.queued.length) { title = 'Up next: ' + v.queued[0].title; sub = ''; mode = ''; }
       else { title = d.schedule && d.next_run ? 'Next run at ' + CO.hhmm(d.next_run) : 'Idle'; sub = ''; mode = ''; }
