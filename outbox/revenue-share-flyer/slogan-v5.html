@@ -1,0 +1,197 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=1080">
+<title>Cymetica Quest</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Archivo+Black&family=JetBrains+Mono:wght@400;500;700;800&family=Syncopate:wght@400;700&display=swap" rel="stylesheet">
+<!-- Slogan variant 5 (2026-10-23): a cinematic title made of light. Everything but the head block is index.html's.
+     JOIN THE CYMETICA QUEST in Syncopate (a wide geometric display face, the film-title kind), the letters drawn as
+     light by an SVG filter (#lt): an overexposed white glyph, a thin cyan halation hugging it, a low wide bloom.
+     One anamorphic streak (.flare), flat because a flare belongs to the lens, not the scene: it leaves the sun at
+     the sun's own height and runs left through the title. The words keep the board's turn (rotateY 12, rotateX
+     2.6), with the perspective's origin on the title's centre line so that line stays level under the streak. -->
+<style>
+  :root { --bg: #05070c; --green: #00ff88; --cyan: #00cfff; --blue: #3b82f6; --rs1: #00ff88; --rs2: #00cfff; --rs3: #3b82f6; --text: #eef6fa; }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body { width: 1080px; height: 1350px; background: var(--bg); overflow: hidden; }
+  body { position: relative; font-family: 'JetBrains Mono', monospace; color: var(--text); -webkit-font-smoothing: antialiased; }
+  .bg { position: absolute; inset: 0; width: 1080px; height: 1350px; }
+  .shade { position: absolute; inset: 0; background: radial-gradient(130% 90% at 50% 45%, rgba(0, 0, 0, 0) 55%, rgba(2, 3, 7, .6) 100%); }
+
+  /* the title, made of light, in the board's plane */
+  .headstage { position: absolute; left: 60px; top: 183px; width: 960px; height: 260px; perspective: 2000px; perspective-origin: 0px 87px; }
+  .head { transform: rotateY(12deg) rotateX(2.6deg); transform-origin: 0% 50%; }
+  .kick { font: 400 35px/1 'Syncopate', sans-serif; letter-spacing: .46em; color: #fff; white-space: nowrap; -webkit-text-stroke: .9px #fff; filter: url(#lt-s); }
+  .main { margin-top: 18px; font: 400 70px/1 'Syncopate', sans-serif; letter-spacing: .07em; color: #fff; white-space: nowrap; -webkit-text-stroke: 2.3px #fff; filter: url(#lt); }
+  .lede { margin-top: 24px; font: 700 37px/1.2 'JetBrains Mono'; letter-spacing: .005em; color: #e6f5fb;
+    text-shadow: 0 0 16px rgba(0, 207, 255, .32), 0 2px 14px rgba(0, 0, 0, .85); }
+  /* the 5% lit the same way as the title, in the board's green: a hotter centre, a green halation and bloom */
+  .lede em { font: 400 52px/1 'Archivo Black', sans-serif; font-style: normal; color: #19ff92; letter-spacing: -.01em; vertical-align: -2px;
+    text-shadow: none; filter: url(#lt-g); }
+
+  /* the anamorphic streak: the sun's light smeared level across the lens, thinner and bluer the farther it runs */
+  .flare { position: absolute; left: 0; top: 200px; width: 1080px; height: 140px; pointer-events: none; mix-blend-mode: screen;
+    background:
+      radial-gradient(ellipse 600px 1.1px at 896px 70px, #fff, rgba(210, 245, 255, .85) 14%, rgba(120, 220, 255, .42) 40%, rgba(0, 190, 255, .1) 70%, rgba(0, 190, 255, 0) 88%),
+      radial-gradient(ellipse 760px 5px at 896px 70px, rgba(140, 225, 255, .6), rgba(0, 200, 255, .22) 30%, rgba(0, 170, 255, .05) 62%, rgba(0, 170, 255, 0) 90%),
+      radial-gradient(ellipse 560px 16px at 896px 70px, rgba(90, 200, 255, .28), rgba(0, 160, 255, .07) 50%, rgba(0, 160, 255, 0) 100%),
+      radial-gradient(ellipse 220px 40px at 896px 70px, rgba(170, 230, 255, .3), rgba(170, 230, 255, 0) 100%),
+      radial-gradient(ellipse 1000px 60px at 896px 70px, rgba(59, 130, 246, .07), rgba(59, 130, 246, 0) 100%); }
+
+  /* the board's glass, as in the Universe: turned away on its left edge, frosted, a cyan rim and a lit top edge */
+  .frost { position: absolute; inset: 0; pointer-events: none; }
+  .frost img { position: absolute; inset: 0; width: 1080px; height: 1350px; filter: blur(24px) saturate(1.3) brightness(1.15); transform: scale(1.02); }
+  .stage { position: absolute; left: 50px; top: 450px; width: 980px; height: 862px; perspective: 2000px; perspective-origin: 0% 40%; }
+  .glass { position: absolute; inset: 0; padding: 34px 52px 32px; border-radius: 30px; transform: rotateY(12deg) rotateX(2.6deg); transform-origin: 0% 50%;
+    background:
+      linear-gradient(135deg, rgba(255, 255, 255, .16) 0%, rgba(255, 255, 255, .05) 24%, rgba(255, 255, 255, 0) 44%),
+      radial-gradient(120% 90% at 0% 0%, rgba(0, 207, 255, .16), rgba(0, 207, 255, 0) 60%),
+      linear-gradient(180deg, rgba(14, 28, 40, .4), rgba(6, 8, 16, .62));
+    border: 1px solid rgba(255, 255, 255, .14);
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, .5), inset 0 0 0 1px rgba(0, 207, 255, .2), inset 0 -28px 44px -28px rgba(0, 207, 255, .22),
+      0 0 0 1px rgba(0, 207, 255, .32), 0 0 90px rgba(0, 207, 255, .18), -10px 40px 70px rgba(0, 0, 0, .65); }
+  .glass::before { content: ''; position: absolute; inset: 0; border-radius: inherit; pointer-events: none;
+    background: linear-gradient(112deg, rgba(255, 255, 255, 0) 52%, rgba(255, 255, 255, .05) 60%, rgba(220, 255, 248, .08) 63%, rgba(255, 255, 255, 0) 70%); }
+  .glass > * { position: relative; }
+
+  .gh { display: flex; align-items: baseline; gap: 14px; }
+  .gh .dot { width: 13px; height: 13px; border-radius: 50%; align-self: center; background: var(--rs1); box-shadow: 0 0 16px var(--rs1); }
+  .gh b { font: 400 34px 'Archivo Black', sans-serif; letter-spacing: .08em; color: transparent; -webkit-background-clip: text; background-clip: text;
+    background-image: linear-gradient(180deg, #effff8, #4dffb4 50%, #00b4e0); filter: drop-shadow(0 0 12px rgba(0, 207, 255, .5)); }
+  .gh .tg { margin-left: auto; font: 800 19px 'JetBrains Mono'; letter-spacing: .2em; color: var(--rs1); text-shadow: 0 0 12px rgba(0, 207, 255, .7); }
+  .gsub { margin-top: 10px; font: 500 24px 'JetBrains Mono'; color: #d3e3ec; }
+  .gsub b { color: #ffffff; }
+
+  .seats { margin-top: 14px; }
+  .seat { display: grid; grid-template-columns: 70px 52px 1fr auto; align-items: center; gap: 20px; padding: 13px 0; }
+  .seat + .seat { border-top: 1px solid transparent; border-image: linear-gradient(90deg, rgba(255, 255, 255, 0), rgba(255, 255, 255, .12) 30%, rgba(0, 207, 255, .22) 70%, rgba(255, 255, 255, 0)) 1; }
+  .rk { font: 400 70px/1 'Archivo Black', sans-serif; text-align: center; color: transparent; -webkit-background-clip: text; background-clip: text; }
+  .p1 .rk { background-image: linear-gradient(180deg, #eafff4, var(--rs1) 55%, #00a067); filter: drop-shadow(0 0 14px rgba(0, 255, 136, .65)); }
+  .p2 .rk { background-image: linear-gradient(180deg, #e6fbff, var(--rs2) 55%, #0086b5); filter: drop-shadow(0 0 11px rgba(0, 207, 255, .55)); }
+  .p3 .rk { background-image: linear-gradient(180deg, #e3edff, var(--rs3) 55%, #1d4ea8); filter: drop-shadow(0 0 9px rgba(59, 130, 246, .5)); }
+  .open { display: grid; place-items: center; width: 48px; height: 48px; border: 2px dashed currentColor; border-radius: 50%; font: 800 26px/1 'JetBrains Mono'; opacity: .9; }
+  .p1 .open { color: var(--rs1); } .p2 .open { color: var(--rs2); } .p3 .open { color: var(--rs3); }
+  .who b { display: block; font: 400 32px/1.05 'Archivo Black', sans-serif; color: #f4fbff; }
+  .who span { display: block; margin-top: 6px; font: 600 21px 'JetBrains Mono'; color: #b9cdd9; }
+  .pay { text-align: right; }
+  .pay b { display: block; font: 400 64px/.9 'Archivo Black', sans-serif; }
+  .pay span { display: block; margin-top: 6px; font: 700 20px 'JetBrains Mono'; color: #c6d8e3; white-space: nowrap; }
+  .p1 .pay b { color: var(--rs1); text-shadow: 0 0 26px rgba(0, 255, 136, .6); }
+  .p2 .pay b { color: var(--rs2); text-shadow: 0 0 20px rgba(0, 207, 255, .5); }
+  .p3 .pay b { color: var(--rs3); text-shadow: 0 0 16px rgba(59, 130, 246, .45); }
+
+  .way { margin-top: 14px; padding-top: 20px; border-top: 1px solid transparent;
+    border-image: linear-gradient(90deg, rgba(255, 255, 255, 0), rgba(0, 207, 255, .45) 25%, rgba(0, 255, 136, .35) 75%, rgba(255, 255, 255, 0)) 1; }
+  .way .lb { font: 800 19px 'JetBrains Mono'; letter-spacing: .24em; color: var(--cyan); text-shadow: 0 0 10px rgba(0, 207, 255, .6); }
+  .steps { display: grid; grid-template-columns: 1fr 34px 1fr 34px 1fr 34px 1fr; align-items: start; margin-top: 14px; }
+  .st i { display: block; font: 800 20px 'JetBrains Mono'; font-style: normal; color: var(--green); }
+  .st b { display: block; margin-top: 6px; font: 400 27px/1.06 'Archivo Black', sans-serif; color: #f4fbff; }
+  .st span { display: block; margin-top: 8px; font: 600 19px/1.25 'JetBrains Mono'; color: #b9cdd9; }
+  .ar { padding-top: 36px; text-align: center; font: 800 28px 'JetBrains Mono'; color: var(--cyan); text-shadow: 0 0 12px rgba(0, 207, 255, .7); }
+
+  .call { display: flex; align-items: center; justify-content: space-between; margin-top: 22px; }
+  .call .cta { font: 400 30px 'Archivo Black', sans-serif; letter-spacing: .03em; color: #04120b; padding: 18px 30px; border-radius: 14px;
+    background: linear-gradient(90deg, var(--green), var(--cyan)); box-shadow: 0 0 34px rgba(0, 255, 136, .45), inset 0 1px 0 rgba(255, 255, 255, .7); }
+  .call .url { font: 800 24px 'JetBrains Mono'; color: var(--cyan); text-shadow: 0 0 10px rgba(0, 207, 255, .6); }
+</style>
+</head>
+<body>
+<!-- the light: an overexposed white glyph (its core a touch whiter than its edge), a faint cyan halation hugging it, a
+     low cyan bloom and a wide blue one. Restraint is what keeps it a film title and not a neon sign: the tight halo is
+     kept faint (.6) and the colour lives in the wide blooms. The region is set wide so no bloom is clipped to the line
+     box. lt-s is the same light for JOIN THE, lt-g for the 5% in the board's green. -->
+
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <filter id="lt" x="-12%" y="-260%" width="124%" height="620%" color-interpolation-filters="sRGB">
+    <feMorphology in="SourceAlpha" operator="erode" radius="1.2" result="e"/>
+    <feGaussianBlur in="e" stdDeviation="1.1" result="core"/>
+    <feFlood flood-color="#ffffff"/><feComposite in2="core" operator="in" result="white"/>
+    <feFlood flood-color="#dcf8ff"/><feComposite in2="SourceAlpha" operator="in" result="body"/>
+    <feGaussianBlur in="SourceAlpha" stdDeviation="1.4" result="b1"/>
+    <feFlood flood-color="#5fdfff" flood-opacity=".6"/><feComposite in2="b1" operator="in" result="halo"/>
+    <feGaussianBlur in="SourceAlpha" stdDeviation="5" result="b15"/>
+    <feFlood flood-color="#00cfff" flood-opacity=".3"/><feComposite in2="b15" operator="in" result="halo2"/>
+    <feGaussianBlur in="SourceAlpha" stdDeviation="13" result="b2"/>
+    <feFlood flood-color="#00cfff" flood-opacity=".32"/><feComposite in2="b2" operator="in" result="bloom"/>
+    <feGaussianBlur in="SourceAlpha" stdDeviation="36" result="b3"/>
+    <feFlood flood-color="#3b82f6" flood-opacity=".28"/><feComposite in2="b3" operator="in" result="wide"/>
+    <feMerge><feMergeNode in="wide"/><feMergeNode in="bloom"/><feMergeNode in="halo2"/><feMergeNode in="halo"/><feMergeNode in="body"/><feMergeNode in="white"/></feMerge>
+  </filter>
+  <filter id="lt-g" x="-40%" y="-120%" width="180%" height="340%" color-interpolation-filters="sRGB">
+    <feMorphology in="SourceAlpha" operator="erode" radius="3" result="e"/>
+    <feGaussianBlur in="e" stdDeviation="2" result="core"/>
+    <feFlood flood-color="#c9ffe4" flood-opacity=".85"/><feComposite in2="core" operator="in" result="white"/>
+    <feFlood flood-color="#19ff92"/><feComposite in2="SourceAlpha" operator="in" result="body"/>
+    <feGaussianBlur in="SourceAlpha" stdDeviation="1.6" result="b1"/>
+    <feFlood flood-color="#00ff88" flood-opacity=".8"/><feComposite in2="b1" operator="in" result="halo"/>
+    <feGaussianBlur in="SourceAlpha" stdDeviation="10" result="b2"/>
+    <feFlood flood-color="#00ff88" flood-opacity=".38"/><feComposite in2="b2" operator="in" result="bloom"/>
+    <feMerge><feMergeNode in="bloom"/><feMergeNode in="halo"/><feMergeNode in="body"/><feMergeNode in="white"/></feMerge>
+  </filter>
+  <filter id="lt-s" x="-12%" y="-260%" width="124%" height="620%" color-interpolation-filters="sRGB">
+    <feFlood flood-color="#ffffff"/><feComposite in2="SourceAlpha" operator="in" result="body"/>
+    <feGaussianBlur in="SourceAlpha" stdDeviation="1.2" result="b1"/>
+    <feFlood flood-color="#36d6ff" flood-opacity=".7"/><feComposite in2="b1" operator="in" result="halo"/>
+    <feGaussianBlur in="SourceAlpha" stdDeviation="8" result="b2"/>
+    <feFlood flood-color="#00cfff" flood-opacity=".25"/><feComposite in2="b2" operator="in" result="bloom"/>
+    <feMerge><feMergeNode in="bloom"/><feMergeNode in="halo"/><feMergeNode in="body"/></feMerge>
+  </filter>
+</svg>
+<img class="bg" src="space-bg.jpg" alt="">
+<div class="shade"></div>
+
+<div class="headstage"><div class="head">
+  <div class="kick"><span>JOIN THE</span></div>
+  <div class="main"><span>CYMETICA QUEST</span></div>
+  <div class="lede">Be the first to take a seat<br>and earn <em>5%</em> of all Cymetica fees.</div>
+</div></div>
+<div class="flare"></div>
+
+<div class="frost" id="frost"><img src="space-bg.jpg" alt=""></div>
+<div class="stage"><div class="glass">
+  <div class="gh"><span class="dot"></span><b>REVENUE SHARE</b><span class="tg">TOP 3</span></div>
+  <div class="gsub">A cut of <b>every fee</b> on Cymetica. All 3 seats are open.</div>
+
+  <div class="seats">
+    <div class="seat p1"><span class="rk">1</span><span class="open">?</span><span class="who"><b>Open seat</b><span>could be yours</span></span><span class="pay"><b>5%</b><span>of every fee</span></span></div>
+    <div class="seat p2"><span class="rk">2</span><span class="open">?</span><span class="who"><b>Open seat</b><span>could be yours</span></span><span class="pay"><b>3%</b><span>of every fee</span></span></div>
+    <div class="seat p3"><span class="rk">3</span><span class="open">?</span><span class="who"><b>Open seat</b><span>could be yours</span></span><span class="pay"><b>1%</b><span>of every fee</span></span></div>
+  </div>
+
+  <div class="way">
+    <div class="lb">HOW TO TAKE A SEAT</div>
+    <div class="steps">
+      <div class="st"><i>01</i><b>Start a company</b><span>in the Universe</span></div><div class="ar">&rarr;</div>
+      <div class="st"><i>02</i><b>Ship products</b><span>Build it Better</span></div><div class="ar">&rarr;</div>
+      <div class="st"><i>03</i><b>Get seen</b><span>land · Promo Market</span></div><div class="ar">&rarr;</div>
+      <div class="st"><i>04</i><b>Bring the most fees</b><span>top 3 get paid</span></div>
+    </div>
+  </div>
+
+  <div class="call"><span class="cta">STAKE YOUR CLAIM &rarr;</span><span class="url">cymetica.com/company</span></div>
+</div></div>
+<script>
+(function () {
+  'use strict';
+  // the glass's outline as the page shows it: its rounded rectangle, turned by its own transform round its origin
+  // (0, 50 %), then seen through the stage's perspective from the stage's perspective-origin
+  var stage = document.querySelector('.stage'), glass = document.querySelector('.glass');
+  var W = glass.offsetWidth, H = glass.offsetHeight, R = 30, ox = 0, oy = H / 2;
+  var m = new DOMMatrix(getComputedStyle(glass).transform), ps = getComputedStyle(stage);
+  var d = parseFloat(ps.perspective), po = ps.perspectiveOrigin.split(' ').map(parseFloat), at = stage.getBoundingClientRect();
+  function project(x, y) {
+    var p = m.transformPoint(new DOMPoint(x - ox, y - oy, 0)), X = p.x + ox, Y = p.y + oy, s = d / (d - p.z);
+    return [at.left + po[0] + (X - po[0]) * s, at.top + po[1] + (Y - po[1]) * s];
+  }
+  var out = [], corners = [[W - R, R, -90], [W - R, H - R, 0], [R, H - R, 90], [R, R, 180]];
+  corners.forEach(function (c) { for (var a = 0; a <= 90; a += 6) { var t = (c[2] + a) * Math.PI / 180; out.push(project(c[0] + R * Math.cos(t), c[1] + R * Math.sin(t))); } });
+  document.getElementById('frost').style.clipPath = 'polygon(' + out.map(function (p) { return p[0].toFixed(1) + 'px ' + p[1].toFixed(1) + 'px'; }).join(', ') + ')';
+  window.GLASS_BOX = glass.getBoundingClientRect().toJSON();
+  window.GLASS_PROJ = { minX: Math.min.apply(null, out.map(function (p) { return p[0]; })), maxX: Math.max.apply(null, out.map(function (p) { return p[0]; })),
+    minY: Math.min.apply(null, out.map(function (p) { return p[1]; })), maxY: Math.max.apply(null, out.map(function (p) { return p[1]; })) };
+})();
+</script>
+</body>
+</html>

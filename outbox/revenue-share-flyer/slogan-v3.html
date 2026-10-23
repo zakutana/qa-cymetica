@@ -1,0 +1,325 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=1080">
+<title>Cymetica Quest</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Archivo+Black&family=JetBrains+Mono:wght@400;500;700;800&display=swap" rel="stylesheet">
+<!-- Slogan variant v3 (2026-10-23): JOIN THE CYMETICA QUEST as slabs of clear acrylic standing in the board's space.
+     Everything but the slogan is index.html as it was. The depth is the slab's real geometry: every depth of it is
+     projected through the slogan's own camera (rotateY 12, rotateX 2.6, perspective 2000, as the board) and drawn on
+     the face's plane, so the walls are where a block of that thickness would show them. Drawn as one flat picture, not
+     as a stack of 3D layers: a stack rasterised soft and left fine ridges on every curve. The face shows the space
+     behind it, a little magnified; the far walls show through it at acrylic's apparent depth; a thin rim lit from
+     above and from the sun's side, light gathered just inside the edges, and the board's own diagonal streak. -->
+<style>
+  :root { --bg: #05070c; --green: #00ff88; --cyan: #00cfff; --blue: #3b82f6; --rs1: #00ff88; --rs2: #00cfff; --rs3: #3b82f6; --text: #eef6fa; }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body { width: 1080px; height: 1350px; background: var(--bg); overflow: hidden; }
+  body { position: relative; font-family: 'JetBrains Mono', monospace; color: var(--text); -webkit-font-smoothing: antialiased; }
+  .bg { position: absolute; inset: 0; width: 1080px; height: 1350px; }
+  .shade { position: absolute; inset: 0; background: radial-gradient(130% 90% at 50% 45%, rgba(0, 0, 0, 0) 55%, rgba(2, 3, 7, .6) 100%); }
+
+  /* the slogan: clear acrylic, turned as the board is. The eye sits a little below the words (330 px down this box),
+     so the slabs show their underside as well as their left side, and the lines fall gently toward the board. */
+  .headstage { position: absolute; left: 60px; top: 62px; width: 960px; height: 360px; perspective: 2000px; perspective-origin: 0px 330px; }
+  .head { transform: rotateY(12deg) rotateX(2.6deg); transform-origin: 0% 50%; }
+  .sign { position: relative; width: 900px; height: 128px; }
+  .sign svg { position: absolute; left: 0; top: 0; overflow: visible; }
+  .lede { margin-top: 30px; font: 800 37px/1.28 'JetBrains Mono'; letter-spacing: .005em; color: #f2fbff;
+    text-shadow: 0 0 18px rgba(160, 230, 255, .45), 0 2px 14px rgba(0, 0, 0, .85); }
+  .lede em { font: 400 52px/1 'Archivo Black', sans-serif; font-style: normal; color: var(--green); letter-spacing: -.01em; vertical-align: -2px;
+    text-shadow: 0 0 22px rgba(0, 255, 136, .75), 0 2px 12px rgba(0, 0, 0, .8); }
+
+  /* the board's glass, as in the Universe: turned away on its left edge, frosted, a cyan rim and a lit top edge */
+  .frost { position: absolute; inset: 0; pointer-events: none; }
+  .frost img { position: absolute; inset: 0; width: 1080px; height: 1350px; filter: blur(24px) saturate(1.3) brightness(1.15); transform: scale(1.02); }
+  .stage { position: absolute; left: 50px; top: 450px; width: 980px; height: 862px; perspective: 2000px; perspective-origin: 0% 40%; }
+  .glass { position: absolute; inset: 0; padding: 34px 52px 32px; border-radius: 30px; transform: rotateY(12deg) rotateX(2.6deg); transform-origin: 0% 50%;
+    background:
+      linear-gradient(135deg, rgba(255, 255, 255, .16) 0%, rgba(255, 255, 255, .05) 24%, rgba(255, 255, 255, 0) 44%),
+      radial-gradient(120% 90% at 0% 0%, rgba(0, 207, 255, .16), rgba(0, 207, 255, 0) 60%),
+      linear-gradient(180deg, rgba(14, 28, 40, .4), rgba(6, 8, 16, .62));
+    border: 1px solid rgba(255, 255, 255, .14);
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, .5), inset 0 0 0 1px rgba(0, 207, 255, .2), inset 0 -28px 44px -28px rgba(0, 207, 255, .22),
+      0 0 0 1px rgba(0, 207, 255, .32), 0 0 90px rgba(0, 207, 255, .18), -10px 40px 70px rgba(0, 0, 0, .65); }
+  .glass::before { content: ''; position: absolute; inset: 0; border-radius: inherit; pointer-events: none;
+    background: linear-gradient(112deg, rgba(255, 255, 255, 0) 52%, rgba(255, 255, 255, .05) 60%, rgba(220, 255, 248, .08) 63%, rgba(255, 255, 255, 0) 70%); }
+  .glass > * { position: relative; }
+
+  .gh { display: flex; align-items: baseline; gap: 14px; }
+  .gh .dot { width: 13px; height: 13px; border-radius: 50%; align-self: center; background: var(--rs1); box-shadow: 0 0 16px var(--rs1); }
+  .gh b { font: 400 34px 'Archivo Black', sans-serif; letter-spacing: .08em; color: transparent; -webkit-background-clip: text; background-clip: text;
+    background-image: linear-gradient(180deg, #effff8, #4dffb4 50%, #00b4e0); filter: drop-shadow(0 0 12px rgba(0, 207, 255, .5)); }
+  .gh .tg { margin-left: auto; font: 800 19px 'JetBrains Mono'; letter-spacing: .2em; color: var(--rs1); text-shadow: 0 0 12px rgba(0, 207, 255, .7); }
+  .gsub { margin-top: 10px; font: 500 24px 'JetBrains Mono'; color: #d3e3ec; }
+  .gsub b { color: #ffffff; }
+
+  .seats { margin-top: 14px; }
+  .seat { display: grid; grid-template-columns: 70px 52px 1fr auto; align-items: center; gap: 20px; padding: 13px 0; }
+  .seat + .seat { border-top: 1px solid transparent; border-image: linear-gradient(90deg, rgba(255, 255, 255, 0), rgba(255, 255, 255, .12) 30%, rgba(0, 207, 255, .22) 70%, rgba(255, 255, 255, 0)) 1; }
+  .rk { font: 400 70px/1 'Archivo Black', sans-serif; text-align: center; color: transparent; -webkit-background-clip: text; background-clip: text; }
+  .p1 .rk { background-image: linear-gradient(180deg, #eafff4, var(--rs1) 55%, #00a067); filter: drop-shadow(0 0 14px rgba(0, 255, 136, .65)); }
+  .p2 .rk { background-image: linear-gradient(180deg, #e6fbff, var(--rs2) 55%, #0086b5); filter: drop-shadow(0 0 11px rgba(0, 207, 255, .55)); }
+  .p3 .rk { background-image: linear-gradient(180deg, #e3edff, var(--rs3) 55%, #1d4ea8); filter: drop-shadow(0 0 9px rgba(59, 130, 246, .5)); }
+  .open { display: grid; place-items: center; width: 48px; height: 48px; border: 2px dashed currentColor; border-radius: 50%; font: 800 26px/1 'JetBrains Mono'; opacity: .9; }
+  .p1 .open { color: var(--rs1); } .p2 .open { color: var(--rs2); } .p3 .open { color: var(--rs3); }
+  .who b { display: block; font: 400 32px/1.05 'Archivo Black', sans-serif; color: #f4fbff; }
+  .who span { display: block; margin-top: 6px; font: 600 21px 'JetBrains Mono'; color: #b9cdd9; }
+  .pay { text-align: right; }
+  .pay b { display: block; font: 400 64px/.9 'Archivo Black', sans-serif; }
+  .pay span { display: block; margin-top: 6px; font: 700 20px 'JetBrains Mono'; color: #c6d8e3; white-space: nowrap; }
+  .p1 .pay b { color: var(--rs1); text-shadow: 0 0 26px rgba(0, 255, 136, .6); }
+  .p2 .pay b { color: var(--rs2); text-shadow: 0 0 20px rgba(0, 207, 255, .5); }
+  .p3 .pay b { color: var(--rs3); text-shadow: 0 0 16px rgba(59, 130, 246, .45); }
+
+  .way { margin-top: 14px; padding-top: 20px; border-top: 1px solid transparent;
+    border-image: linear-gradient(90deg, rgba(255, 255, 255, 0), rgba(0, 207, 255, .45) 25%, rgba(0, 255, 136, .35) 75%, rgba(255, 255, 255, 0)) 1; }
+  .way .lb { font: 800 19px 'JetBrains Mono'; letter-spacing: .24em; color: var(--cyan); text-shadow: 0 0 10px rgba(0, 207, 255, .6); }
+  .steps { display: grid; grid-template-columns: 1fr 34px 1fr 34px 1fr 34px 1fr; align-items: start; margin-top: 14px; }
+  .st i { display: block; font: 800 20px 'JetBrains Mono'; font-style: normal; color: var(--green); }
+  .st b { display: block; margin-top: 6px; font: 400 27px/1.06 'Archivo Black', sans-serif; color: #f4fbff; }
+  .st span { display: block; margin-top: 8px; font: 600 19px/1.25 'JetBrains Mono'; color: #b9cdd9; }
+  .ar { padding-top: 36px; text-align: center; font: 800 28px 'JetBrains Mono'; color: var(--cyan); text-shadow: 0 0 12px rgba(0, 207, 255, .7); }
+
+  .call { display: flex; align-items: center; justify-content: space-between; margin-top: 22px; }
+  .call .cta { font: 400 30px 'Archivo Black', sans-serif; letter-spacing: .03em; color: #04120b; padding: 18px 30px; border-radius: 14px;
+    background: linear-gradient(90deg, var(--green), var(--cyan)); box-shadow: 0 0 34px rgba(0, 255, 136, .45), inset 0 1px 0 rgba(255, 255, 255, .7); }
+  .call .url { font: 800 24px 'JetBrains Mono'; color: var(--cyan); text-shadow: 0 0 10px rgba(0, 207, 255, .6); }
+</style>
+</head>
+<body>
+<img class="bg" src="space-bg.jpg" alt="">
+<div class="shade"></div>
+
+<div class="headstage"><div class="head">
+  <div class="sign" role="heading" aria-level="1" aria-label="Join the Cymetica Quest">
+    <svg id="slab" width="900" height="128" viewBox="0 0 900 128" aria-hidden="true">
+      <defs>
+        <!-- the two lines, once; everything else draws them by reference -->
+        <text id="gA" x="3" y="39" text-rendering="geometricPrecision" style="font: 48px 'Archivo Black', sans-serif; letter-spacing: 15.4px">JOIN THE</text>
+        <text id="gB" x="0" y="113" text-rendering="geometricPrecision" style="font: 80px 'Archivo Black', sans-serif; letter-spacing: 3.2px">CYMETICA QUEST</text>
+        <clipPath id="clipA"><use href="#gA"/></clipPath>
+        <clipPath id="clipB"><use href="#gB"/></clipPath>
+
+        <!-- what the glass shows: the space behind it, a touch magnified, lifted and cooled -->
+        <filter id="see" x="0" y="0" width="1" height="1" color-interpolation-filters="sRGB">
+          <feColorMatrix type="matrix" values="1.15 0 0 0 0.01  0 1.35 0 0 0.05  0 0 1.4 0 0.08  0 0 0 1 0"/>
+        </filter>
+        <!-- light gathered just inside the edges, strongest on the edges facing up and toward the sun -->
+        <filter id="edge" x="-10%" y="-40%" width="120%" height="180%" color-interpolation-filters="sRGB">
+          <feGaussianBlur in="SourceAlpha" stdDeviation="1.9" result="b"/>
+          <feOffset in="b" dx="-1.1" dy="1.8" result="bo"/>
+          <feComponentTransfer in="bo" result="inv"><feFuncA type="table" tableValues="1 .3 0 0"/></feComponentTransfer>
+          <feComposite in="inv" in2="SourceAlpha" operator="in" result="ring"/>
+          <feFlood flood-color="#ecfeff"/>
+          <feComposite in2="ring" operator="in"/>
+        </filter>
+        <!-- and the bottom edges, where that light pools, lit from inside -->
+        <filter id="pool" x="-10%" y="-40%" width="120%" height="180%" color-interpolation-filters="sRGB">
+          <feGaussianBlur in="SourceAlpha" stdDeviation="2.4" result="b"/>
+          <feOffset in="b" dx="0" dy="-2.6" result="bo"/>
+          <feComponentTransfer in="bo" result="inv"><feFuncA type="table" tableValues="1 .25 0 0"/></feComponentTransfer>
+          <feComposite in="inv" in2="SourceAlpha" operator="in" result="ring"/>
+          <feFlood flood-color="#5cffc0"/>
+          <feComposite in2="ring" operator="in"/>
+        </filter>
+        <filter id="bloom" x="-20%" y="-80%" width="140%" height="260%"><feGaussianBlur stdDeviation="9"/></filter>
+
+        <!-- the face's own tint: clear, cool white where it faces the light, a breath of green-cyan low down -->
+        <!-- light that came in at the top runs down the block and gathers at its bottom edge, as it does in a real
+             acrylic block: clear above, cyan through the middle, the site's green where it pools -->
+        <linearGradient id="tintA" gradientUnits="userSpaceOnUse" x1="0" y1="6" x2="0" y2="39">
+          <stop offset="0" stop-color="#e8fcff" stop-opacity=".28"/><stop offset=".35" stop-color="#9fefff" stop-opacity=".09"/><stop offset=".7" stop-color="#00cfff" stop-opacity=".2"/><stop offset="1" stop-color="#00ff88" stop-opacity=".42"/>
+        </linearGradient>
+        <linearGradient id="tintB" gradientUnits="userSpaceOnUse" x1="0" y1="58" x2="0" y2="113">
+          <stop offset="0" stop-color="#e8fcff" stop-opacity=".28"/><stop offset=".35" stop-color="#9fefff" stop-opacity=".09"/><stop offset=".7" stop-color="#00cfff" stop-opacity=".2"/><stop offset="1" stop-color="#00ff88" stop-opacity=".42"/>
+        </linearGradient>
+        <!-- the far walls as seen through the face: polished acrylic catching the light from inside -->
+        <linearGradient id="farTint" gradientUnits="userSpaceOnUse" x1="0" y1="0" x2="900" y2="128">
+          <stop offset="0" stop-color="#9eeaff" stop-opacity=".14"/><stop offset="1" stop-color="#d9fbff" stop-opacity=".24"/>
+        </linearGradient>
+        <!-- the board's diagonal streak, the one reflection on the face -->
+        <linearGradient id="streak" gradientUnits="userSpaceOnUse" x1="230" y1="-30" x2="420" y2="160">
+          <stop offset="0" stop-color="#fff" stop-opacity="0"/><stop offset=".45" stop-color="#fff" stop-opacity="0"/>
+          <stop offset=".49" stop-color="#fff" stop-opacity=".34"/><stop offset=".52" stop-color="#fff" stop-opacity=".05"/>
+          <stop offset=".58" stop-color="#e6fff8" stop-opacity=".16"/><stop offset=".62" stop-color="#fff" stop-opacity="0"/><stop offset="1" stop-color="#fff" stop-opacity="0"/>
+        </linearGradient>
+        <!-- the polished front edge: white where the light falls on it, cyan below -->
+        <linearGradient id="rimA" gradientUnits="userSpaceOnUse" x1="0" y1="6" x2="0" y2="39">
+          <stop offset="0" stop-color="#ffffff" stop-opacity=".95"/><stop offset=".55" stop-color="#bff4ff" stop-opacity=".55"/><stop offset="1" stop-color="#00cfff" stop-opacity=".55"/>
+        </linearGradient>
+        <linearGradient id="rimB" gradientUnits="userSpaceOnUse" x1="0" y1="58" x2="0" y2="113">
+          <stop offset="0" stop-color="#ffffff" stop-opacity=".95"/><stop offset=".55" stop-color="#bff4ff" stop-opacity=".55"/><stop offset="1" stop-color="#00cfff" stop-opacity=".55"/>
+        </linearGradient>
+        <radialGradient id="sunlit" gradientUnits="userSpaceOnUse" cx="900" cy="170" r="460">
+          <stop offset="0" stop-color="#fff6e6" stop-opacity=".9"/><stop offset=".55" stop-color="#e8fbff" stop-opacity=".25"/><stop offset="1" stop-color="#fff" stop-opacity="0"/>
+        </radialGradient>
+        <linearGradient id="backRim" gradientUnits="userSpaceOnUse" x1="0" y1="0" x2="0" y2="128">
+          <stop offset="0" stop-color="#d6fcff"/><stop offset=".6" stop-color="#5ee9ff"/><stop offset="1" stop-color="#22f0b0"/>
+        </linearGradient>
+
+        <!-- the far walls seen through the face: everything inside the letter that the back outline (as acrylic shows
+             it) does not cover. The script sets each mask's transform. -->
+        <mask id="farA" maskUnits="userSpaceOnUse" x="-40" y="-40" width="980" height="210"><rect x="-40" y="-40" width="980" height="210" fill="#fff"/><use id="farmA" href="#gA" fill="#000"/></mask>
+        <mask id="farB" maskUnits="userSpaceOnUse" x="-40" y="-40" width="980" height="210"><rect x="-40" y="-40" width="980" height="210" fill="#fff"/><use id="farmB" href="#gB" fill="#000"/></mask>
+      </defs>
+
+      <!-- behind it all: the light the glass lets through; then the walls (the script draws them, deepest first) -->
+      <g id="bloom"></g>
+      <g id="wallsA"></g>
+      <g id="wallsB"></g>
+      <g id="edgesA"></g>
+      <g id="edgesB"></g>
+
+      <!-- the faces -->
+      <g clip-path="url(#clipA)">
+        <image href="space-bg.jpg" x="-60" y="-62" width="1080" height="1350" preserveAspectRatio="none" filter="url(#see)" transform="translate(190 22) scale(1.06) translate(-190 -22)"/>
+        <rect x="-20" y="-20" width="940" height="170" fill="url(#farTint)" mask="url(#farA)"/>
+        <use id="backA" href="#gA" fill="none" stroke="#bdf3ff" stroke-opacity=".2" stroke-width="1"/>
+        <rect x="-20" y="-20" width="940" height="170" fill="url(#tintA)"/>
+        <rect x="-20" y="-20" width="940" height="170" fill="url(#streak)"/>
+      </g>
+      <g clip-path="url(#clipB)">
+        <image href="space-bg.jpg" x="-60" y="-62" width="1080" height="1350" preserveAspectRatio="none" filter="url(#see)" transform="translate(430 86) scale(1.06) translate(-430 -86)"/>
+        <rect x="-20" y="-20" width="940" height="170" fill="url(#farTint)" mask="url(#farB)"/>
+        <use id="backB" href="#gB" fill="none" stroke="#bdf3ff" stroke-opacity=".2" stroke-width="1.1"/>
+        <rect x="-20" y="-20" width="940" height="170" fill="url(#tintB)"/>
+        <rect x="-20" y="-20" width="940" height="170" fill="url(#streak)"/>
+      </g>
+      <use href="#gA" fill="#fff" filter="url(#edge)"/>
+      <use href="#gB" fill="#fff" filter="url(#edge)"/>
+      <use href="#gA" fill="#fff" filter="url(#pool)" opacity=".8"/>
+      <use href="#gB" fill="#fff" filter="url(#pool)" opacity=".8"/>
+      <use href="#gA" fill="none" stroke="url(#rimA)" stroke-width="1.5"/>
+      <use href="#gB" fill="none" stroke="url(#rimB)" stroke-width="1.8"/>
+      <use href="#gA" fill="none" stroke="url(#sunlit)" stroke-width="1.3"/>
+      <use href="#gB" fill="none" stroke="url(#sunlit)" stroke-width="1.5"/>
+    </svg>
+  </div>
+  <div class="lede">Be the first to take a seat<br>and earn <em>5%</em> of all Cymetica fees.</div>
+</div></div>
+
+<div class="frost" id="frost"><img src="space-bg.jpg" alt=""></div>
+<div class="stage"><div class="glass">
+  <div class="gh"><span class="dot"></span><b>REVENUE SHARE</b><span class="tg">TOP 3</span></div>
+  <div class="gsub">A cut of <b>every fee</b> on Cymetica. All 3 seats are open.</div>
+
+  <div class="seats">
+    <div class="seat p1"><span class="rk">1</span><span class="open">?</span><span class="who"><b>Open seat</b><span>could be yours</span></span><span class="pay"><b>5%</b><span>of every fee</span></span></div>
+    <div class="seat p2"><span class="rk">2</span><span class="open">?</span><span class="who"><b>Open seat</b><span>could be yours</span></span><span class="pay"><b>3%</b><span>of every fee</span></span></div>
+    <div class="seat p3"><span class="rk">3</span><span class="open">?</span><span class="who"><b>Open seat</b><span>could be yours</span></span><span class="pay"><b>1%</b><span>of every fee</span></span></div>
+  </div>
+
+  <div class="way">
+    <div class="lb">HOW TO TAKE A SEAT</div>
+    <div class="steps">
+      <div class="st"><i>01</i><b>Start a company</b><span>in the Universe</span></div><div class="ar">&rarr;</div>
+      <div class="st"><i>02</i><b>Ship products</b><span>Build it Better</span></div><div class="ar">&rarr;</div>
+      <div class="st"><i>03</i><b>Get seen</b><span>land · Promo Market</span></div><div class="ar">&rarr;</div>
+      <div class="st"><i>04</i><b>Bring the most fees</b><span>top 3 get paid</span></div>
+    </div>
+  </div>
+
+  <div class="call"><span class="cta">STAKE YOUR CLAIM &rarr;</span><span class="url">cymetica.com/company</span></div>
+</div></div>
+<script>
+(function () {
+  'use strict';
+  // the glass's outline as the page shows it: its rounded rectangle, turned by its own transform round its origin
+  // (0, 50 %), then seen through the stage's perspective from the stage's perspective-origin
+  var stage = document.querySelector('.stage'), glass = document.querySelector('.glass');
+  var W = glass.offsetWidth, H = glass.offsetHeight, R = 30, ox = 0, oy = H / 2;
+  var m = new DOMMatrix(getComputedStyle(glass).transform), ps = getComputedStyle(stage);
+  var d = parseFloat(ps.perspective), po = ps.perspectiveOrigin.split(' ').map(parseFloat), at = stage.getBoundingClientRect();
+  function project(x, y) {
+    var p = m.transformPoint(new DOMPoint(x - ox, y - oy, 0)), X = p.x + ox, Y = p.y + oy, s = d / (d - p.z);
+    return [at.left + po[0] + (X - po[0]) * s, at.top + po[1] + (Y - po[1]) * s];
+  }
+  var out = [], corners = [[W - R, R, -90], [W - R, H - R, 0], [R, H - R, 90], [R, R, 180]];
+  corners.forEach(function (c) { for (var a = 0; a <= 90; a += 6) { var t = (c[2] + a) * Math.PI / 180; out.push(project(c[0] + R * Math.cos(t), c[1] + R * Math.sin(t))); } });
+  document.getElementById('frost').style.clipPath = 'polygon(' + out.map(function (p) { return p[0].toFixed(1) + 'px ' + p[1].toFixed(1) + 'px'; }).join(', ') + ')';
+  window.GLASS_BOX = glass.getBoundingClientRect().toJSON();
+  window.GLASS_PROJ = { minX: Math.min.apply(null, out.map(function (p) { return p[0]; })), maxX: Math.max.apply(null, out.map(function (p) { return p[0]; })),
+    minY: Math.min.apply(null, out.map(function (p) { return p[1]; })), maxY: Math.max.apply(null, out.map(function (p) { return p[1]; })) };
+})();
+</script>
+<script>
+(function () {
+  'use strict';
+  // The slab. A point (x, y) of the face at depth t behind it lands on the page where the slogan's camera puts it;
+  // carried back onto the face's own plane, that is where the face's picture must draw it. Over one line that map is
+  // affine to a fraction of a pixel (it is projective, and SVG takes an affine), so each depth is one transform.
+  var NS = 'http://www.w3.org/2000/svg';
+  var LINES = [
+    { k: 'A', T: 11, box: [0, 380, 6, 40], top: 6, base: 39 },
+    { k: 'B', T: 18, box: [0, 860, 58, 114], top: 58, base: 113 }
+  ];
+  var head = document.querySelector('.head'), hs = document.querySelector('.headstage');
+  var hm = new DOMMatrix(getComputedStyle(head).transform), hcs = getComputedStyle(hs);
+  var hd = parseFloat(hcs.perspective), hpo = hcs.perspectiveOrigin.split(' ').map(parseFloat), hoy = head.offsetHeight / 2;
+  function proj(x, y, z) {
+    var p = hm.transformPoint(new DOMPoint(x, y - hoy, z)), s = hd / (hd - p.z);
+    return [hpo[0] + (p.x - hpo[0]) * s, hpo[1] + (p.y + hoy - hpo[1]) * s];
+  }
+  function onFace(P) {
+    var u = P[0], v = P[1];
+    for (var k = 0; k < 10; k++) {
+      var q = proj(u, v, 0), qx = proj(u + 1, v, 0), qy = proj(u, v + 1, 0);
+      var a = qx[0] - q[0], b = qy[0] - q[0], c = qx[1] - q[1], d = qy[1] - q[1], ex = P[0] - q[0], ey = P[1] - q[1], det = a * d - b * c;
+      u += (d * ex - b * ey) / det; v += (-c * ex + a * ey) / det;
+    }
+    return [u, v];
+  }
+  function det3(m) { return m[0][0] * (m[1][1] * m[2][2] - m[1][2] * m[2][1]) - m[0][1] * (m[1][0] * m[2][2] - m[1][2] * m[2][0]) + m[0][2] * (m[1][0] * m[2][1] - m[1][1] * m[2][0]); }
+  function solve3(M, r) { var D = det3(M); return [0, 1, 2].map(function (j) { return det3(M.map(function (row, i) { var c = row.slice(); c[j] = r[i]; return c; })) / D; }); }
+  function fit(b, depth) {   // least squares over a grid of the line's box
+    var S = [[0, 0, 0], [0, 0, 0], [0, 0, 0]], ru = [0, 0, 0], rv = [0, 0, 0];
+    for (var x = b[0]; x <= b[1] + 1e-6; x += (b[1] - b[0]) / 12) for (var y = b[2]; y <= b[3] + 1e-6; y += (b[3] - b[2]) / 4) {
+      var f = onFace(proj(x, y, depth)), row = [x, y, 1];
+      for (var i = 0; i < 3; i++) { for (var j = 0; j < 3; j++) S[i][j] += row[i] * row[j]; ru[i] += row[i] * f[0]; rv[i] += row[i] * f[1]; }
+    }
+    var cu = solve3(S, ru), cv = solve3(S, rv);
+    return 'matrix(' + [cu[0], cv[0], cu[1], cv[1], cu[2], cv[2]].map(function (n) { return n.toFixed(5); }).join(' ') + ')';
+  }
+  function el(name, attrs, parent) {
+    var e = document.createElementNS(NS, name);
+    Object.keys(attrs).forEach(function (a) { e.setAttribute(a, attrs[a]); });
+    if (parent) parent.appendChild(e);
+    return e;
+  }
+  function hex(c) { return '#' + c.map(function (v) { return ('0' + Math.round(v).toString(16)).slice(-2); }).join(''); }
+  function mix(a, b, f) { return a.map(function (v, i) { return v + (b[i] - v) * f; }); }
+  var defs = document.querySelector('#slab defs'), WHITE = [255, 255, 255], WALL = '.5';
+  // the wall's colour by depth: just behind the polished front edge nearly white, then clear cyan glass, and at the
+  // back a little deeper; and by place: the cut edges nearest the sun catch the most of it
+  var NEAR = [214, 249, 255], FAR = [60, 200, 236], POOL = [40, 255, 170];
+
+  LINES.forEach(function (L) {
+    var n = Math.ceil(L.T / 0.25), walls = document.getElementById('walls' + L.k);
+    walls.setAttribute('opacity', WALL);
+    // one colour per depth, so the wall shades continuously (eight bands showed as steps on every corner)
+    for (var bI = 0; bI <= n; bI++) {
+      var c = mix(NEAR, FAR, Math.pow(bI / n, .8)), g = el('linearGradient', { id: 'w' + L.k + bI, gradientUnits: 'userSpaceOnUse', x1: 0, y1: L.top, x2: 0, y2: L.base + 4 }, defs);
+      el('stop', { offset: 0, 'stop-color': hex(mix(c, WHITE, .45)) }, g);
+      el('stop', { offset: .55, 'stop-color': hex(c) }, g);
+      el('stop', { offset: 1, 'stop-color': hex(mix(c, POOL, .55)) }, g);
+    }
+    // the light it lets through, softly behind it
+    el('use', { href: '#g' + L.k, transform: fit(L.box, -L.T), fill: '#00cfff', 'fill-opacity': '.2', filter: 'url(#bloom)' }, document.getElementById('bloom'));
+    for (var i = n; i >= 1; i--) {
+      var t = L.T * i / n;
+      el('use', { href: '#g' + L.k, transform: fit(L.box, -t), fill: t < 0.6 ? '#f6feff' : 'url(#w' + L.k + i + ')' }, walls);
+    }
+    // the polished back edge, whole: clear glass shows it through the near walls as well as beyond them
+    el('use', { href: '#g' + L.k, transform: fit(L.box, -L.T), fill: 'none', stroke: 'url(#backRim)', 'stroke-width': '1', 'stroke-opacity': '.75' }, document.getElementById('edges' + L.k));
+    // the back outline as the face shows it, at acrylic's apparent depth (T / 1.49)
+    var seen = fit(L.box, -L.T / 1.49);
+    document.getElementById('back' + L.k).setAttribute('transform', seen);
+    document.getElementById('farm' + L.k).setAttribute('transform', seen);
+  });
+})();
+</script>
+</body>
+</html>

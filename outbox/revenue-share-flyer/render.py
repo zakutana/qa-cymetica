@@ -26,7 +26,7 @@ import nebula  # noqa: E402  (beside this file)
 W, H = 1080, 1350
 # the camera: from the side and far off, so the sun is a distant star, its centre at 83 % across and 20 % down, beside
 # the headline ("aby to slunce bylo vic v dalce v hlubokem vesmiru", then "jeste vic dal" twice: 360 -> 600 -> 900)
-POLAR, DIST, SUN_X, SUN_Y = 1.25, 900.0, 0.83, 0.2
+POLAR, DIST, SUN_X, SUN_Y = 1.25, 900.0, 0.85, 0.055   # high, over the glass's top edge now that it is one sheet
 # the nebula's seed and density (nebula.py): dark deep space, navy and teal
 SEED, STRENGTH = 7, 0.5
 # the sun's light in the space round it ("z toho slunce zare"): a warm-white core glow and a wide cyan haze, in 2x px
@@ -83,10 +83,13 @@ def background(p):
     print('the render\'s ground, taken out:', ground)
 
 
-def flyer(p):
+def flyer(p, page='index.html'):
+    """Render one page of this folder to a PNG beside it: index.html -> flyer-1080x1350.png, any other X.html -> X.png
+    (the slogan variants of 2026-10-23 are slogan-v1.html ... each rendered on its own)."""
+    out = HERE / ('flyer-1080x1350.png' if page == 'index.html' else Path(page).stem + '.png')
     b = p.chromium.launch()
     pg = b.new_page(viewport={'width': W, 'height': H}, device_scale_factor=2)
-    pg.goto((HERE / 'index.html').as_uri())
+    pg.goto((HERE / page).as_uri())
     pg.wait_for_function("() => document.fonts.status === 'loaded'", timeout=30000)
     time.sleep(1.5)
     # the drawn frost must cover the glass as the page draws it: its projected outline against the glass's own box
@@ -95,13 +98,19 @@ def flyer(p):
     # and the board's content stays on the glass: the call's bottom against the glass's inner bottom, in its own box
     print('room under the call (px, glass coords):', pg.evaluate("""() => { const g = document.querySelector('.glass'), c = document.querySelector('.call');
       return g.clientHeight - parseFloat(getComputedStyle(g).paddingBottom) - (c.offsetTop + c.offsetHeight); }"""))
-    pg.screenshot(path=str(HERE / 'flyer-1080x1350.png'))
+    pg.screenshot(path=str(out))
     b.close()
+    return out
 
 
 if __name__ == '__main__':
+    # render.py            the background, then index.html
+    # render.py flyer      index.html over the background already made
+    # render.py flyer X.html   that page of this folder, to X.png
+    args = sys.argv[1:]
     with sync_playwright() as p:
-        if 'flyer' not in sys.argv[1:]:
+        if 'flyer' not in args:
             background(p)
-        flyer(p)
-    print('->', HERE / 'flyer-1080x1350.png')
+        pages = [a for a in args if a.endswith('.html')] or ['index.html']
+        for page in pages:
+            print('->', flyer(p, page))

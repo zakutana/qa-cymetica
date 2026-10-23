@@ -7,14 +7,12 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Archivo+Black&family=JetBrains+Mono:wght@400;500;700;800&display=swap" rel="stylesheet">
 <!-- The revenue-share flyer (the operator, 2026-10-23): the gold rush of the space-and-AI age and how to get in.
-     Eighth take. The background is done ("pozadi je uz dokonale 10/10": render.py, nebula.py). Then: "zbytek musi byt
-     zretelnejsi na 1 pohled ze se da vybrat 5 % veskerych fees z cele cymeticy", "to pismo cymetica quest si taky s tim
-     pohraj, ted je to takovy 2d napis obycejny", "hlavni slogan musi byt join the cymetica quest ... a pak nejak mensim
-     mlzne trochu be the first to take the slot and earn 5 % of all cymetica revenue", and "chapes ze to prectou a pak uz
-     pochopi co je to za tabuli a uvidi vsechny sloty prazdne". So: JOIN THE CYMETICA QUEST in metal with depth (each
-     word a stacked extrusion behind a chrome face, a lit edge, a glint); under it, smaller and hazy, the line that says
-     what the board is; then the Universe's revenue-share board with every seat empty, the way in and the call. The
-     board's glass and the site's colours. No ring of any kind. Nothing under 19 px. 1080 x 1350.
+     Tenth take: ONE sheet of glass with everything on it. Five agents each made a slogan treatment (slogan-v1..v5);
+     he chose the glass one ("asi jen ten skleneny") and said "2 skla bych vyhodil a udelal z toho jen jedno velke sklo
+     a na tom vse". So: the board's glass (the Universe's, tilted on its left edge, frosted, a cyan rim, a lit top edge)
+     runs from the top of the page to the foot, and the slogan is cut into it (slogan-v4's V-cut, lit from within), the
+     line under it and the board's rows, steps and call all on the same sheet. Space behind it is done (render.py,
+     nebula.py). No ring of any kind. Nothing under 19 px. 1080 x 1350.
      The frost is drawn, not filtered: backdrop-filter under a 3D transform left the background sharp behind the glass
      in Chromium's screenshot, so .frost is a blurred copy of the background clipped to the pane's projected outline. -->
 <style>
@@ -25,27 +23,11 @@
   .bg { position: absolute; inset: 0; width: 1080px; height: 1350px; }
   .shade { position: absolute; inset: 0; background: radial-gradient(130% 90% at 50% 45%, rgba(0, 0, 0, 0) 55%, rgba(2, 3, 7, .6) 100%); }
 
-  /* the slogan as the board sets its own title (uvpanel.css .uvb-h b: the green-to-cyan fall, a soft glow, no
-     extrusion), turned in space exactly as the board is (rotateY 12, rotateX 2.6 about its left edge, the same
-     perspective), so the words and the board read as one HUD. The metal take was "trapny ... moc detinsky, neni vubec
-     profesionalni ... moc animovany", and the line under it is the message: "ten podslogan musi byt vetsi a hlavni
-     slogan klidne mensi trochu". */
-  .headstage { position: absolute; left: 60px; top: 62px; width: 960px; height: 360px; perspective: 2000px; perspective-origin: 0% 40%; }
-  .head { transform: rotateY(12deg) rotateX(2.6deg); transform-origin: 0% 50%; }
-  .slogan { font-family: 'Archivo Black', sans-serif; font-weight: 400; line-height: .98; letter-spacing: .05em; color: transparent; -webkit-background-clip: text; background-clip: text;
-    background-image: linear-gradient(180deg, #f4fffa 0%, #9dffd2 34%, #2ef09e 60%, #00c6e6 100%); filter: drop-shadow(0 0 16px rgba(0, 207, 255, .45)) drop-shadow(0 4px 18px rgba(0, 0, 0, .7)); }
-  .slogan .a { display: block; font-size: 52px; letter-spacing: .3em; }
-  .slogan .b { display: block; margin-top: 8px; font-size: 84px; }
-  .lede { margin-top: 30px; font: 800 37px/1.28 'JetBrains Mono'; letter-spacing: .005em; color: #f2fbff;
-    text-shadow: 0 0 18px rgba(160, 230, 255, .45), 0 2px 14px rgba(0, 0, 0, .85); }
-  .lede em { font: 400 52px/1 'Archivo Black', sans-serif; font-style: normal; color: var(--green); letter-spacing: -.01em; vertical-align: -2px;
-    text-shadow: 0 0 22px rgba(0, 255, 136, .75), 0 2px 12px rgba(0, 0, 0, .8); }
-
-  /* the board's glass, as in the Universe: turned away on its left edge, frosted, a cyan rim and a lit top edge */
+  /* the one sheet of glass: the board's, from the top of the page to the foot */
   .frost { position: absolute; inset: 0; pointer-events: none; }
   .frost img { position: absolute; inset: 0; width: 1080px; height: 1350px; filter: blur(24px) saturate(1.3) brightness(1.15); transform: scale(1.02); }
-  .stage { position: absolute; left: 50px; top: 450px; width: 980px; height: 862px; perspective: 2000px; perspective-origin: 0% 40%; }
-  .glass { position: absolute; inset: 0; padding: 34px 52px 32px; border-radius: 30px; transform: rotateY(12deg) rotateX(2.6deg); transform-origin: 0% 50%;
+  .stage { position: absolute; left: 50px; top: 120px; width: 980px; height: 1192px; perspective: 2000px; perspective-origin: 0% 40%; }
+  .glass { position: absolute; inset: 0; padding: 40px 52px 34px; border-radius: 30px; transform: rotateY(12deg) rotateX(2.6deg); transform-origin: 0% 50%;
     background:
       linear-gradient(135deg, rgba(255, 255, 255, .16) 0%, rgba(255, 255, 255, .05) 24%, rgba(255, 255, 255, 0) 44%),
       radial-gradient(120% 90% at 0% 0%, rgba(0, 207, 255, .16), rgba(0, 207, 255, 0) 60%),
@@ -57,6 +39,26 @@
     background: linear-gradient(112deg, rgba(255, 255, 255, 0) 52%, rgba(255, 255, 255, .05) 60%, rgba(220, 255, 248, .08) 63%, rgba(255, 255, 255, 0) 70%); }
   .glass > * { position: relative; }
 
+  /* the engraving (slogan-v4): three registered copies of each line in one grid cell -- the light in the glass round
+     the cut (blurred), the cut's reflection off the back face (faint, offset), and the cut itself (#cut below) */
+  .eng { font-family: 'Archivo Black', sans-serif; font-weight: 400; white-space: nowrap; }
+  .ln { display: grid; }
+  .ln > span { grid-area: 1 / 1; display: block; }
+  .ln.a { font-size: 42px; line-height: 1; letter-spacing: .385em; }
+  .ln.b { margin-top: 14px; font-size: 74px; line-height: 1; letter-spacing: .01em; }
+  .ln .wide { color: rgba(0, 200, 255, .32); filter: blur(38px); }
+  .ln .bloom { color: rgba(0, 235, 180, .42); filter: blur(16px); }
+  .ln .ghost { color: rgba(150, 255, 225, .22); filter: blur(5px); }
+  .ln .cut { color: transparent; -webkit-background-clip: text; background-clip: text;
+    background-image: linear-gradient(180deg, #f2fffb 0%, #b0ffe0 28%, #34f2a6 60%, #00c6ee 100%); filter: url(#cut); }
+
+  /* the message, big, right under it */
+  .lede { margin-top: 26px; font: 800 37px/1.28 'JetBrains Mono'; letter-spacing: .005em; color: #f2fbff;
+    text-shadow: 0 0 18px rgba(160, 230, 255, .45), 0 2px 14px rgba(0, 0, 0, .85); }
+  .lede em { font: 400 52px/1 'Archivo Black', sans-serif; font-style: normal; color: var(--green); letter-spacing: -.01em; vertical-align: -2px;
+    text-shadow: 0 0 22px rgba(0, 255, 136, .75), 0 2px 12px rgba(0, 0, 0, .8); }
+  .rule { height: 1px; margin: 26px 0 22px; background: linear-gradient(90deg, rgba(255, 255, 255, 0), rgba(255, 255, 255, .16) 20%, rgba(0, 207, 255, .34) 75%, rgba(255, 255, 255, 0)); }
+
   .gh { display: flex; align-items: baseline; gap: 14px; }
   .gh .dot { width: 13px; height: 13px; border-radius: 50%; align-self: center; background: var(--rs1); box-shadow: 0 0 16px var(--rs1); }
   .gh b { font: 400 34px 'Archivo Black', sans-serif; letter-spacing: .08em; color: transparent; -webkit-background-clip: text; background-clip: text;
@@ -65,7 +67,7 @@
   .gsub { margin-top: 10px; font: 500 24px 'JetBrains Mono'; color: #d3e3ec; }
   .gsub b { color: #ffffff; }
 
-  .seats { margin-top: 14px; }
+  .seats { margin-top: 10px; }
   .seat { display: grid; grid-template-columns: 70px 52px 1fr auto; align-items: center; gap: 20px; padding: 13px 0; }
   .seat + .seat { border-top: 1px solid transparent; border-image: linear-gradient(90deg, rgba(255, 255, 255, 0), rgba(255, 255, 255, .12) 30%, rgba(0, 207, 255, .22) 70%, rgba(255, 255, 255, 0)) 1; }
   .rk { font: 400 70px/1 'Archivo Black', sans-serif; text-align: center; color: transparent; -webkit-background-clip: text; background-clip: text; }
@@ -92,25 +94,53 @@
   .st span { display: block; margin-top: 8px; font: 600 19px/1.25 'JetBrains Mono'; color: #b9cdd9; }
   .ar { padding-top: 36px; text-align: center; font: 800 28px 'JetBrains Mono'; color: var(--cyan); text-shadow: 0 0 12px rgba(0, 207, 255, .7); }
 
-  .call { display: flex; align-items: center; justify-content: space-between; margin-top: 22px; }
+  .call { display: flex; align-items: center; justify-content: space-between; margin-top: 26px; }
   .call .cta { font: 400 30px 'Archivo Black', sans-serif; letter-spacing: .03em; color: #04120b; padding: 18px 30px; border-radius: 14px;
     background: linear-gradient(90deg, var(--green), var(--cyan)); box-shadow: 0 0 34px rgba(0, 255, 136, .45), inset 0 1px 0 rgba(255, 255, 255, .7); }
   .call .url { font: 800 24px 'JetBrains Mono'; color: var(--cyan); text-shadow: 0 0 10px rgba(0, 207, 255, .6); }
 </style>
 </head>
 <body>
+<!-- the V-cut, from the letter's own outline (slogan-v4): a bright lip all round, the upper wall in shadow under it, the
+     lower wall lit from above, over the glowing floor (the gradient fill itself) -->
+<svg width="0" height="0" style="position: absolute" aria-hidden="true"><defs>
+  <filter id="cut" x="-3%" y="-15%" width="106%" height="130%" color-interpolation-filters="sRGB">
+    <feMorphology in="SourceAlpha" operator="erode" radius="3.2" result="core"/>
+    <feGaussianBlur in="core" stdDeviation="2.2" result="coreS"/>
+    <feComposite in="coreS" in2="SourceAlpha" operator="in" result="coreIn"/>
+    <feFlood flood-color="#002a38" flood-opacity=".16"/>
+    <feComposite in2="coreIn" operator="in" result="floor"/>
+    <feMorphology in="SourceAlpha" operator="erode" radius=".75" result="er"/>
+    <feComposite in="SourceAlpha" in2="er" operator="out" result="rim"/>
+    <feFlood flood-color="#ffffff" flood-opacity=".5"/>
+    <feComposite in2="rim" operator="in" result="rimLit"/>
+    <feOffset in="SourceAlpha" dy="2.4" result="dn"/>
+    <feGaussianBlur in="dn" stdDeviation=".7" result="dnb"/>
+    <feComposite in="SourceAlpha" in2="dnb" operator="out" result="upper"/>
+    <feFlood flood-color="#003646" flood-opacity=".6"/>
+    <feComposite in2="upper" operator="in" result="upperShade"/>
+    <feOffset in="SourceAlpha" dy="-1.4" result="up"/>
+    <feComposite in="SourceAlpha" in2="up" operator="out" result="low"/>
+    <feFlood flood-color="#ffffff"/>
+    <feComposite in2="low" operator="in" result="lowLit"/>
+    <feMerge><feMergeNode in="SourceGraphic"/><feMergeNode in="floor"/><feMergeNode in="upperShade"/><feMergeNode in="rimLit"/><feMergeNode in="lowLit"/></feMerge>
+  </filter>
+</defs></svg>
+
 <img class="bg" src="space-bg.jpg" alt="">
 <div class="shade"></div>
 
-<div class="headstage"><div class="head">
-  <div class="slogan"><span class="a">JOIN THE</span><span class="b">CYMETICA QUEST</span></div>
-  <div class="lede">Be the first to take a seat<br>and earn <em>5%</em> of all Cymetica fees.</div>
-</div></div>
-
 <div class="frost" id="frost"><img src="space-bg.jpg" alt=""></div>
 <div class="stage"><div class="glass">
+  <div class="eng" aria-label="JOIN THE CYMETICA QUEST">
+    <div class="ln a"><span class="wide">JOIN THE</span><span class="bloom">JOIN THE</span><span class="ghost">JOIN THE</span><span class="cut">JOIN THE</span></div>
+    <div class="ln b"><span class="wide">CYMETICA QUEST</span><span class="bloom">CYMETICA QUEST</span><span class="ghost">CYMETICA QUEST</span><span class="cut">CYMETICA QUEST</span></div>
+  </div>
+  <div class="lede">Be the first to take a seat<br>and earn <em>5%</em> of all Cymetica fees.</div>
+  <div class="rule"></div>
+
   <div class="gh"><span class="dot"></span><b>REVENUE SHARE</b><span class="tg">TOP 3</span></div>
-  <div class="gsub">A cut of <b>every fee</b> on Cymetica. All 3 seats are open.</div>
+  <div class="gsub">All 3 seats are open.</div>
 
   <div class="seats">
     <div class="seat p1"><span class="rk">1</span><span class="open">?</span><span class="who"><b>Open seat</b><span>could be yours</span></span><span class="pay"><b>5%</b><span>of every fee</span></span></div>
