@@ -1,12 +1,12 @@
-"""The Orbit Rush flyer: first its background (Cymetica's sun alone, big, top right, rendered from the /company
-mockup's 3D Universe with every orbit, ring, station and nebula hidden), then the flyer (index.html) over it as a
-1080 x 1350 PNG at 2x.
+"""The revenue-share flyer (BE EARLY.): first its background (Cymetica's sun alone, big, top right, rendered from the
+/company mockup's 3D Universe with every orbit, ring, station and nebula hidden), then the flyer (index.html) over it
+as a 1080 x 1350 PNG at 2x.
 
 No ring on it, ever (the operator, 2026-10-23, of the first take: "nikdy uz nedavej ty prstence na zadny letak jsou
 hnusne"): the sun's own rings, the orbits and the quest ring of that take are all gone.
 
-    python outbox/orbit-rush-flyer/render.py            # both
-    python outbox/orbit-rush-flyer/render.py flyer      # the flyer only, over the background already made
+    python outbox/revenue-share-flyer/render.py            # both
+    python outbox/revenue-share-flyer/render.py flyer      # the flyer only, over the background already made
 
 Needs the mockup served on http://localhost:8793 (the company-mock server in .claude/launch.json) and Playwright's
 Chromium. Writes sun-bg.jpg and flyer-1080x1350.png next to this file; neither is kept in git (they are made here).
@@ -20,9 +20,9 @@ from playwright.sync_api import sync_playwright
 
 HERE = Path(__file__).resolve().parent
 W, H = 1080, 1350
-# the camera: from the side, close, the sun's centre at 80 % across and 18 % down, so it sits beside the headline and
-# its light falls over the top of the page
-POLAR, DIST, SUN_X, SUN_Y = 1.25, 150.0, 0.8, 0.18
+# the camera: from the side, close, the sun's centre at 80 % across and 22 % down, beside the headline, low enough that
+# its lower glow lies behind the glass's top right and comes through it frosted
+POLAR, DIST, SUN_X, SUN_Y = 1.25, 150.0, 0.8, 0.22
 HIDE = ("#uv-board, .b3, .b3pop, #uvstage .top, .uvlegend, #uv-panel, .tip, .uvtip { display: none !important; }"
         "#uvstage { position: fixed !important; left: 0 !important; top: 0 !important; width: %dpx !important; height: %dpx !important;"
         " margin: 0 !important; border-radius: 0 !important; border: 0 !important; z-index: 99999 !important; }" % (W, H))
@@ -72,6 +72,9 @@ def flyer(p):
     pg.goto((HERE / 'index.html').as_uri())
     pg.wait_for_function("() => document.fonts.status === 'loaded'", timeout=30000)
     time.sleep(1.5)
+    # the drawn frost must cover the glass as the page draws it: its projected outline against the glass's own box
+    print('glass box', {k: round(v) for k, v in pg.evaluate("() => window.GLASS_BOX").items() if k in ('left', 'top', 'right', 'bottom')},
+          'frost outline', {k: round(v) for k, v in pg.evaluate("() => window.GLASS_PROJ").items()})
     pg.screenshot(path=str(HERE / 'flyer-1080x1350.png'))
     b.close()
 
