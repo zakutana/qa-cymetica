@@ -1,6 +1,6 @@
 """The revenue-share flyer (JOIN THE CYMETICA QUEST): first its background -- Cymetica's sun alone, small and far off,
 rendered from the /company mockup's 3D Universe with every orbit, ring, station and its sky hidden, screened into
-nebula.py's deep purple space -- then the flyer (index.html) over it as a 1080 x 1350 PNG at 2x.
+nebula.py's dark deep space -- then the flyer (index.html) over it as a 1080 x 1350 PNG at 2x.
 
 No ring on it, ever (the operator, 2026-10-23, of the first take: "nikdy uz nedavej ty prstence na zadny letak jsou
 hnusne"): the sun's own rings, the orbits and the quest ring of that take are all gone.
@@ -24,10 +24,11 @@ HERE = Path(__file__).resolve().parent
 sys.path.insert(0, str(HERE))
 import nebula  # noqa: E402  (beside this file)
 W, H = 1080, 1350
-# the camera: from the side and far off, so the sun is a distant star, its centre at 83 % across and 20 % down, in the
-# nebula beside the headline ("aby to slunce bylo vic v dalce v hlubokem vesmiru")
-POLAR, DIST, SUN_X, SUN_Y = 1.25, 360.0, 0.83, 0.2
-SEED = 7   # the nebula's (nebula.py)
+# the camera: from the side and far off, so the sun is a distant star, its centre at 83 % across and 20 % down, beside
+# the headline ("aby to slunce bylo vic v dalce v hlubokem vesmiru", then "jeste vic dal": 360 -> 600)
+POLAR, DIST, SUN_X, SUN_Y = 1.25, 600.0, 0.83, 0.2
+# the nebula's seed and density (nebula.py): dark, a trace of purple ("tmavsi jen s minimem te fialove")
+SEED, STRENGTH = 7, 0.35
 HIDE = ("#uv-board, .b3, .b3pop, #uvstage .top, .uvlegend, #uv-panel, .tip, .uvtip { display: none !important; }"
         "#uvstage { position: fixed !important; left: 0 !important; top: 0 !important; width: %dpx !important; height: %dpx !important;"
         " margin: 0 !important; border-radius: 0 !important; border: 0 !important; z-index: 99999 !important; }" % (W, H))
@@ -67,7 +68,7 @@ def background(p):
     sun = np.asarray(Image.open(png).convert('RGB'), np.float32)
     ground = np.median(np.concatenate([sun[:40, :40].reshape(-1, 3), sun[-40:, :40].reshape(-1, 3)]), axis=0)
     sun = np.clip((sun - ground) / (255 - ground) * 255, 0, 255)
-    out = 255 - (255 - nebula.make(SEED)) * (255 - sun) / 255
+    out = 255 - (255 - nebula.make(SEED, STRENGTH)) * (255 - sun) / 255
     Image.fromarray(np.clip(out, 0, 255).astype(np.uint8), 'RGB').save(HERE / 'space-bg.jpg', quality=92, optimize=True)
     png.unlink()
     print('the render\'s ground, taken out:', ground)

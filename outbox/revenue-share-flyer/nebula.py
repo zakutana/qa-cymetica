@@ -10,8 +10,9 @@ from PIL import Image, ImageFilter
 W, H = 2160, 2700
 
 
-def make(seed=7):
-    """The nebula as an RGB float array (0..255), H x W."""
+def make(seed=7, strength=1.0):
+    """The nebula as an RGB float array (0..255), H x W. `strength` scales the cloud's density: below 1 the space is
+    darker and the purple only a trace ("vic ten deep vesmir tmavsi jen s minimem te fialove", 2026-10-23)."""
     rng = np.random.default_rng(seed)
 
     def noise(scale):
@@ -44,13 +45,13 @@ def make(seed=7):
     d = mask * (0.5 * big + 0.35 * mid + 0.15 * fine) ** 1.8 * 1.95
     d += mask * 0.32 * ridge ** 7
     d *= 0.35 + 0.8 * np.clip((dust - 0.3) * 2.0, 0, 1)    # dark lanes
-    d = np.clip(1 - np.exp(-1.9 * d), 0, 1)                 # a soft shoulder: no blown highlights
+    d = np.clip(1 - np.exp(-1.9 * d * strength), 0, 1)      # a soft shoulder: no blown highlights
 
     # colour: black, indigo, deep purple, violet, a little magenta, pale lavender at the very densest
     stops = np.array([0.0, 0.18, 0.36, 0.55, 0.72, 0.86, 1.0])
     cols = np.array([[3, 2, 9], [10, 6, 28], [26, 11, 62], [52, 20, 108], [88, 34, 148], [140, 70, 190], [205, 160, 235]], np.float32)
     rgb = np.stack([np.interp(d, stops, cols[:, c]) for c in range(3)], -1)
-    blue = np.clip(mask * fbm(500, 5) ** 2 * 0.9 - d * 0.6, 0, 1)   # a cold blue in the thin parts, for depth
+    blue = np.clip(mask * fbm(500, 5) ** 2 * 0.9 * strength - d * 0.6, 0, 1)   # a cold blue in the thin parts, for depth
     rgb += blue[..., None] * np.array([20, 34, 90], np.float32)
 
     # stars: many faint, some with a soft halo, six bright with thin spikes
