@@ -92,6 +92,9 @@ def flyer(p):
     # the drawn frost must cover the glass as the page draws it: its projected outline against the glass's own box
     print('glass box', {k: round(v) for k, v in pg.evaluate("() => window.GLASS_BOX").items() if k in ('left', 'top', 'right', 'bottom')},
           'frost outline', {k: round(v) for k, v in pg.evaluate("() => window.GLASS_PROJ").items()})
+    # and the board's content stays on the glass: the call's bottom against the glass's inner bottom, in its own box
+    print('room under the call (px, glass coords):', pg.evaluate("""() => { const g = document.querySelector('.glass'), c = document.querySelector('.call');
+      return g.clientHeight - parseFloat(getComputedStyle(g).paddingBottom) - (c.offsetTop + c.offsetHeight); }"""))
     pg.screenshot(path=str(HERE / 'flyer-1080x1350.png'))
     b.close()
 
