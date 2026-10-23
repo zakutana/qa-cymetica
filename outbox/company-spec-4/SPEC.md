@@ -180,6 +180,10 @@ BJ Ironstar Capital, green for ours):
 - **a line of the company's colour running out of either side of the plate** to the panel's edges, fading outward (missing on the live build);
 - on hover the frame takes the full colour and the glow grows; a click opens the company's office.
 
+**Cymetica's own buildings carry the same plate: *MADE BY · CYMETICA***, in Cymetica's cyan (the owner, 2026-10-23: *"u firemnich budov jako treba
+PROMO market at je tam made by CYMETICA"*); it opens nothing, since the platform has no office to visit. A company's product never says Cymetica
+(round 3, C9).
+
 ## What stays as it is
 
 Everything not named above stays as rounds 1 to 3 and your builds have it.

@@ -150,11 +150,14 @@
     // drawn as the plate over a station on the map (style.css .mkb), in the company's colour
     var owner = '<div class="mkrow" style="--acc:' + CO.accentHex(me.accent) + '"><a href="#" class="mkb" data-a="owner" title="Made by ' + esc(who) + ': open its office">' +
       '<span class="mkt">MADE BY</span><span class="mkr">' + esc(who) + '</span><span class="mkp"></span></a></div>';
-    // (Cymetica's own building has no maker row: it is the platform's, not a company's)
+    // Cymetica's own building says so on the same plate, in its cyan ("u firemnich budov jako treba PROMO market at je tam
+    // made by CYMETICA", 2026-10-23); it has no office to open, so the plate is not a link
+    var house = '<div class="mkrow" style="--acc:#00cfff"><span class="mkb house" title="Made by Cymetica: the platform\'s own building">' +
+      '<span class="mkt">MADE BY</span><span class="mkr">CYMETICA</span><span class="mkp"></span></span></div>';
     return { cls: 'k-' + it.ad.key, acc: CO.accentHex(it.c.accent), icon: s.icon, title: it.c.name,
       // an owner's product shows the line its owner wrote on the Products tab (none until he writes one); Cymetica's own
       // building keeps its own
-      sub: (s.house ? esc(s.tag) + ' · ' : CO.uvLine(it.c.name) ? esc(CO.uvLine(it.c.name)) + ' · ' : '') + esc(CO.uvSlotName(it)), body: (s.house ? '' : owner) + s.body(),
+      sub: (s.house ? esc(s.tag) + ' · ' : CO.uvLine(it.c.name) ? esc(CO.uvLine(it.c.name)) + ' · ' : '') + esc(CO.uvSlotName(it)), body: (s.house ? house : owner) + s.body(),
       foot: s.foot || '<a class="uvp-go" href="' + esc(it.ad.url) + '" target="_blank" rel="noopener">' + esc(s.go) + ' <span aria-hidden="true">↗</span></a>' };
   }
 

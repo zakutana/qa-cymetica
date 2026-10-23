@@ -278,6 +278,7 @@ b.g, span.g { color: var(--green); text-shadow: 0 0 10px rgba(0, 255, 136, .45);
 .mkb .mkp { width: 0; height: 0; border: 5px solid transparent; border-top-color: var(--fr); border-bottom: 0; margin-top: -1px; }
 .mkb:hover { --fr: var(--acc); }
 .mkb:hover .mkr { box-shadow: 0 0 0 1px rgba(0, 0, 0, .3), 0 0 26px color-mix(in srgb, var(--acc) 60%, transparent), 0 3px 10px rgba(0, 0, 0, .4); }
+.mkb.house { cursor: default; }
 .mkb.sm { cursor: default; } .mkb.sm .mkr { font-size: 15px; padding: 3px 12px 2px; gap: 7px; } .mkb.sm .mkr::before { width: 5px; height: 5px; } .mkb.sm .mkt { font-size: 8px; }
 /* in the product's panel: centred, a line of the colour out of either side, as Cymetica's own plate has */
 .mkrow { display: flex; align-items: center; gap: 12px; margin: 2px 0 16px; }
