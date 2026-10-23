@@ -74,9 +74,14 @@ The live line reads *8 companies · 34 free slots · 0 yours · 2 products* and 
 the owner's two slots now hold the two products, so no slot counts as his. **Say *your land* and count the slots the owner holds, products on them included**:
 *8 companies · 34 free slots · 2 your land · 2 products*. The word *yours* alone is not used.
 
-## H. The revenue share: the top 3 companies get 5%, 3% and 1% of every fee on Cymetica (settled, drawn)
+## H. The revenue share: the top 3 companies get a share of every fee on Cymetica (settled, drawn)
 
-Every company in the Universe is ranked, and the top three get a share of **all fees on the whole platform**: 1st 5%, 2nd 3%, 3rd 1%.
+**The numbers in this item are an example for the design, not our terms.** The shares (5% / 3% / 1%), how many places are paid, the measure
+(revenue over 30 days and what counts in it), the floor to qualify ($10,000), the payout (monthly, in USDC) and any cap are **yours to set**: decide
+your own conditions, who gets how many percent and what it takes to qualify, and the board, the leaderboard and the pulse show whatever you set.
+What is asked is the feature and its look; the terms are yours.
+
+Every company in the Universe is ranked, and the top three get a share of **all fees on the whole platform**; in the mockup 1st 5%, 2nd 3%, 3rd 1%.
 
 **The measure: Revenue, last 30 days (USD)**, what the platform itself paid the company in that time: bug bounties (ET10 at the day's
 price), its products' rewards, Agent Tournaments and League prizes. Not counted: trading P&L (it can be faked between two accounts and goes
@@ -118,8 +123,9 @@ thin glowing lines between rows.
 *+5% of fees* / *+3% of fees* / *+1% of fees* rises over each in the same cyan. Only the top three get it. The flat map shows the line of text.
 
 What the build needs from you: per company the 30-day revenue from your records (the sources above), the platform's fees for the month so far
-and for the last 30 days, and the payout itself. Left to you: the floor, and a cap if you want one (for example, a share never larger than the
-company's own revenue). The figures in the mockup are samples from one model (`CO.uvBoard` in `uv-data.js`).
+and for the last 30 days, and the payout itself. Left to you, as said at the top: every term (shares, places, measure, floor, payout, a cap if you want
+one, for example a share never larger than the company's own revenue). The figures in the mockup are samples from one model (`CO.uvBoard` in
+`uv-data.js`).
 
 ## I. A station on the map looks washed in its colour; in Settings it looks right (a bug, settled)
 
