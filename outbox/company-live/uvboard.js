@@ -61,7 +61,7 @@
       return '<div class="lb-seat pl' + (i + 1) + '"><i>' + (i + 1) + '</i><b>' + pct + '%</b><span>≈ ' + usd(b.pot[i]) + ' / mo</span></div>';
     }).join('');
     // the board's own glass and type (the modal card's class lbg, uvpanel.css: "udelat to husté krasne jako ten postranni panel")
-    return '<i class="uvb-sh"></i><div class="mh lbh"><span class="uvb-live"></span><h3>REVENUE SHARE</h3><span class="lbt">LEADERBOARD</span><button class="btn" data-a="close">×</button></div>' +
+    return '<div class="mh lbh"><span class="uvb-live"></span><h3>REVENUE SHARE</h3><span class="lbt">LEADERBOARD</span><button class="btn" data-a="close">×</button></div>' +
       '<div class="lb-rule"><div class="lb-seats">' + seats + '</div>' +
         '<div class="lb-who"><h4>Who gets a seat</h4>' +
           '<div class="lb-c"><i>1</i><b>Top 3</b><span>by revenue in the last 30 days</span></div>' +

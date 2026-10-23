@@ -110,7 +110,7 @@ more clearly, bigger): the three seats as tiles (*1 · 5% · ≈ $19,300 / mo*, 
 numbered lines: *Top 3* by revenue in the last 30 days; *$10,000+* of revenue in those 30 days, or the seat stays open; *Month end*: the ranking then
 decides, paid in USDC from that month's fees; and one small line on what counts as revenue (trading P&L does not). In the list a dashed line marks
 the floor (*$10,000 · the line to qualify*, *nobody above it yet* when that is so); rows under it are dimmed. **The dialog is the board's own
-glass** (the owner: as beautiful as the board): the same frosted pane, cyan rim, lit top edge and slow sheen, flat; the same head (*REVENUE SHARE*
+glass** (the owner: as beautiful as the board): the same frosted pane, cyan rim and lit top edge, flat and without the sheen; the same head (*REVENUE SHARE*
 in the glowing gradient, *LEADERBOARD* beside it); and only type and light on it: no boxes round rows, seats or icons, big gradient place numerals,
 thin glowing lines between rows.
 
