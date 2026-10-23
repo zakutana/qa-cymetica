@@ -11,15 +11,21 @@ picture both times, or nothing can be judged), then once more with its `t` swapp
 sentinel's picture is byte for byte the same, the image does not draw the `t` the page passes, and draws a title from
 somewhere else: failed. If it differs, `t` is drawn: passed.
 
-NOT asserted: which title the picture shows. The defect has a second face, a wrong stored title; this check reads the
-first. If the page stops passing a `t` at all (a fix that corrects the stored title instead), there is nothing to
-compare and the check is inconclusive, never passed: that fix needs a look at the picture.
+The defect has a second face, a wrong stored title, and that is the fix they made (#217, paid 2026-10-22): the picture
+still ignores `t`, but the title stored for it is now the page's. The first version of this check sent that fix to
+inconclusive only when the page stopped passing a `t`; the page kept passing one, so the corrected picture read as
+"failed" and a FAIL was owed on a defect that is gone (the sweep of 2026-10-23, run-20261023T163916Z-8a403f54).
+So a picture that ignores `t` is judged by its text, read by a person: LOOKED holds the sha256 of each picture
+somebody read and the title it draws. Read and the same as the page's `t` (punctuation and case aside): passed. Read
+and different: failed, the second face. Never read: inconclusive, until somebody looks and adds it.
 
 SAFE: GETs only, anonymous.
 """
 
 from __future__ import annotations
 
+import hashlib
+import re
 from urllib.parse import parse_qsl, urlencode, urlparse
 
 import httpx
@@ -32,6 +38,37 @@ from tests.rest.test_gem_screener_numbers_match_their_sources import get_patient
 PAGE = "/agent-tournaments"
 HOST = "cymetica.com"
 SENTINEL = "QA sentinel title 7f3c"
+# sha256 of the picture's bytes (of the file, not qa/evidence.py's content_id) -> the title read off it, and when
+LOOKED = {
+    "1c683f1a1f919809203231f40fd1265b88493de0d021e080f80ff33c97911886":
+        ("Agent Tournaments: 10 agents, 1 table, best ROI wins", "2026-10-23"),
+}
+
+
+def _norm(title: str) -> str:
+    return " ".join(re.sub(r"[.,:;!?]", " ", title).casefold().split())
+
+
+def drawn_title(first: bytes, other: bytes, title: str, looked: dict = LOOKED) -> tuple[str, str, dict]:
+    """The verdict on one picture: `first` fetched with the page's `t`, `other` with the sentinel's.
+
+    A picture that changes with `t` draws it: passed. One that does not draws a stored title, judged by the title a
+    person read off it: the page's `t` but for punctuation and case passes, another fails; never read, inconclusive.
+    """
+    if other != first:
+        return "passed", (f"the picture changes with t= ({len(first)} bytes for the page's title, {len(other)} for a "
+                          "sentinel)"), {}
+    sha = hashlib.sha256(first).hexdigest()
+    if sha not in looked:
+        return "inconclusive", (f"the picture is the same ({len(first)} bytes, sha256 {sha[:12]}) whatever t= says, and "
+                                "nobody has read this picture: look at it and add the title it draws to LOOKED"), {"sha256": sha}
+    drawn, read_on = looked[sha]
+    seen = {"sha256": sha, "title_read": drawn, "read_on": read_on}
+    if _norm(drawn) == _norm(title):
+        return "passed", (f"the picture ignores t= and draws its stored title {drawn!r} (read {read_on}), which is the "
+                          f"page's t={title!r} but for punctuation and case"), seen
+    return "failed", (f"the picture ignores t= and draws {drawn!r} (read {read_on}), while the page passes "
+                      f"t={title!r}: the preview shows another title"), seen
 
 
 def _image(client, path: str) -> bytes:
@@ -48,7 +85,7 @@ def _image(client, path: str) -> bytes:
 
 @qa(component="rest.agent_tournaments", tier=SafetyTier.SAFE, surface="rest")
 def test_the_agent_tournaments_link_preview_draws_the_title_its_page_passes(rest_anon):
-    """The og:image /agent-tournaments names changes when its `t` title changes."""
+    """The og:image /agent-tournaments names draws its `t` title: it changes with `t`, or a person read the title."""
     try:
         page = get_patiently(rest_anon, PAGE, headers={"Accept": "text/html"})
     except httpx.HTTPError as exc:
@@ -73,14 +110,14 @@ def test_the_agent_tournaments_link_preview_draws_the_title_its_page_passes(rest
         raise Inconclusive(f"{path} answered two different pictures to two identical reads ({len(first)} and "
                            f"{len(second)} bytes); a byte comparison judges nothing here")
     other = _image(rest_anon, sentinel)
-    ignored = other == first
+    verdict, reason, seen = drawn_title(first, other, title)
+    if verdict == "inconclusive":
+        raise Inconclusive(f"{url}: {reason}")
     conclude(Measurement(
-        verdict="failed" if ignored else "passed",
-        reason=(f"{url} draws the same picture ({len(first)} bytes) whatever t= says: with t={title!r} and with "
-                f"t={SENTINEL!r} the bytes are identical, so the title the page passes is not the title shown"
-                if ignored else
-                f"the picture changes with t= ({len(first)} bytes for the page's title, {len(other)} for a sentinel)"),
-        left={"t_ignored": int(ignored)},
-        right={"t_ignored": 0},
-        population={"og_image": url, "page_title_t": title, "bytes_page_t": len(first), "bytes_sentinel_t": len(other)},
+        verdict=verdict,
+        reason=f"{url}: {reason}",
+        left={"title_drawn": int(verdict == "passed")},
+        right={"title_drawn": 1},
+        population={"og_image": url, "page_title_t": title, "bytes_page_t": len(first), "bytes_sentinel_t": len(other),
+                    **seen},
         sources={"page": PAGE, "og_image": url}))

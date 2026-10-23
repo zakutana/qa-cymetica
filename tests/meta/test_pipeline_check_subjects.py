@@ -709,6 +709,9 @@ def test_a_card_that_is_closed_on_rest_and_open_on_mcp_fails():
     _the_company_charter_cap_readings()
     _the_company_heartbeat_readings()
 
+    # And the Agent Tournaments link preview's title (#217, repaired 2026-10-23), the same way.
+    _the_link_preview_title_readings()
+
     # And a free Agent Tournaments table at each buy-in (2026-10-12), the same way.
     _the_free_table_readings()
 
@@ -1230,6 +1233,24 @@ def _the_company_heartbeat_readings():
     assert unpromised({"next_pass_at": None}, {"state": "paused", "can_run": False}) == "passed"
     assert unpromised({"next_pass_at": None}, {"state": "running", "can_run": True}) is None
     assert unpromised(first, {"state": "paused", "can_run": False}) is None, "a promise is judged by its pass"
+
+
+def _the_link_preview_title_readings():
+    """The readings behind the link preview check (#217, 2026-10-23): a picture that changes with t= draws it; their
+    fix, a picture that ignores t= but whose stored title a person read as the page's (commas for full stops, a small
+    b), passes; the defect as filed, a ticket's title in the picture, fails; a picture nobody read is not judged."""
+    import hashlib
+
+    from tests.rest.test_agent_tournaments_link_preview_draws_its_title import drawn_title
+
+    t = "Agent Tournaments: 10 agents. 1 table. Best ROI wins."
+    fixed, filed = b"picture as of 2026-10-23", b"picture as of 2026-10-22"
+    looked = {hashlib.sha256(fixed).hexdigest(): ("Agent Tournaments: 10 agents, 1 table, best ROI wins", "2026-10-23"),
+              hashlib.sha256(filed).hexdigest(): ("Add https://cymetica.com/agent-tournaments to main menu", "2026-10-22")}
+    assert drawn_title(b"drawn with t", b"drawn with the sentinel", t, looked)[0] == "passed"
+    assert drawn_title(fixed, fixed, t, looked)[0] == "passed", "their fix: the stored title is the page's"
+    assert drawn_title(filed, filed, t, looked)[0] == "failed", "the defect as filed: a ticket's title"
+    assert drawn_title(b"never read", b"never read", t, looked)[0] == "inconclusive"
 
 
 def _the_tournament_own_seat_readings():
