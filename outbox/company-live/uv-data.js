@@ -321,10 +321,14 @@
   CO.SHARE = [5, 3, 1];
   CO.SHARE_FLOOR = 10000;
   CO.PLATFORM_FEES_30D = 386000;
+  // The first days ("spocatku tam urcite zadne nebudou firmy", 2026-10-23): nobody has reached the floor yet. ?board=empty
+  // shows it: every company's revenue is what a young company earns, an eighth of these samples, all under the floor.
+  CO.BOARD_LAUNCH = /[?&]board=empty\b/.test(location.search);
   CO.uvRevenue = function (c) {
     var R = CO.uvRng((+c.id || 0) * 13 + 7), u = R();
     var v = Math.pow(u, 4) * 72000 + R() * 900;
     if (c.status === 'paused') v *= 0.35;
+    if (CO.BOARD_LAUNCH) v *= 0.12;
     return Math.round(v / 10) * 10;
   };
   // the ranking, highest first; top: the first three at or above the floor (fewer when fewer reach it)
@@ -335,6 +339,8 @@
     rows.forEach(function (r, i) { r.rank = i + 1; r.qualifies = r.rev >= CO.SHARE_FLOOR; });
     var top = rows.filter(function (r) { return r.qualifies; }).slice(0, CO.SHARE.length);
     top.forEach(function (r, i) { r.share = CO.SHARE[i]; r.month = Math.round(CO.PLATFORM_FEES_30D * CO.SHARE[i] / 100); });
-    return { rows: rows, top: top, fees: CO.PLATFORM_FEES_30D, floor: CO.SHARE_FLOOR };
+    // what each place pays a month whoever holds it: an open seat shows what it is worth
+    var pot = CO.SHARE.map(function (p) { return Math.round(CO.PLATFORM_FEES_30D * p / 100); });
+    return { rows: rows, top: top, pot: pot, fees: CO.PLATFORM_FEES_30D, floor: CO.SHARE_FLOOR };
   };
 })();

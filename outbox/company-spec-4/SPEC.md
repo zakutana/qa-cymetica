@@ -87,7 +87,11 @@ margins all round, a cyan rim, a lit top edge and a slow sheen (no thick edge un
 type and light: **no row boxes, no tiles round the icons, no frames**. *REVENUE SHARE · TOP 3*, *5% · 3% · 1% of every fee on Cymetica*, then
 three rows: a big place numeral in Cymetica's own colours (green, cyan, blue: the share is paid by Cymetica), the company's station glyph in its colour and its name (YOU on ours), its
 revenue, and the share with about what it pays a month
-(platform fees of the last 30 days × the share). Under them *Platform fees · 30 d* and *qualify at*, and *Full leaderboard →*. On a stage under
+(platform fees of the last 30 days × the share). Under them *Platform fees · 30 d* and *qualify at*, and *Full leaderboard →*. **A place nobody
+holds is an open seat, not a blank**: a dashed ring with a plus breathing in the place's colour, *Open seat*, *reach $10,000 in 30 d*, and what the seat
+pays a month (*5% ≈ $19,300 / mo*). **At launch nobody will have reached the floor**, so the board must sell the seats: under the subtitle *All 3 seats
+are open. Be the first company to take one.*, the three open seats, and at the foot *Up for grabs ≈ $34,740 / mo · qualify at $10,000* (the mockup shows
+it with `?board=empty`). On a stage under
 760 px it folds into a *TOP 3* pill. It hides while Buy land is on.
 
 **The first look** stands 30% farther back, the whole galaxy in view and right of the middle (aimed 9% of the frame's width to the left), so the board

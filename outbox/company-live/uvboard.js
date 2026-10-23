@@ -13,23 +13,26 @@
     return '<b>' + (!c.public && !mine ? LOCK : '') + esc(c.name) + '</b>' + (mine ? '<em class="you">YOU</em>' : '');
   }
 
-  // the HUD: three places, an empty one says what it takes
+  // the HUD: three places. One nobody holds is an open seat that shows what it pays a month and what it takes ("neco
+  // motivacniho", 2026-10-23: at first nobody will have reached the floor), and with no seat taken at all the board says so
   function hud(b) {
     var rows = CO.SHARE.map(function (pct, i) {
       var r = b.top[i];
       if (!r) {
-        return '<div class="uvb-r pl' + (i + 1) + ' empty"><i class="uvb-rk">' + (i + 1) + '</i><span class="uvb-ic"></span>' +
-          '<div class="uvb-n"><b>Nobody yet</b><span>reach ' + usd(b.floor) + ' in 30 d</span></div><div class="uvb-s"><b>' + pct + '%</b><span>not paid</span></div></div>';
+        return '<div class="uvb-r pl' + (i + 1) + ' open"><i class="uvb-rk">' + (i + 1) + '</i><span class="uvb-seat" aria-hidden="true">+</span>' +
+          '<div class="uvb-n"><b>Open seat</b><span>reach ' + usd(b.floor) + ' in 30 d</span></div><div class="uvb-s"><b>' + pct + '%</b><span>≈ ' + usd(b.pot[i]) + ' / mo</span></div></div>';
       }
       return '<div class="uvb-r pl' + (i + 1) + (r.mine ? ' me' : '') + '"><i class="uvb-rk">' + (i + 1) + '</i>' + CO.stationIcon(r.c.skin, r.c.accent) +
         '<div class="uvb-n">' + name(r.c, r.mine) + '<span>' + usd(r.rev) + ' · 30 d</span></div>' +
         '<div class="uvb-s"><b>' + pct + '%</b><span>≈ ' + usd(r.month) + ' / mo</span></div></div>';
     }).join('');
+    var none = !b.top.length, all = b.pot.reduce(function (s, v) { return s + v; }, 0);
     return '<button type="button" class="uvb-pill" data-a="board-fold" title="The top 3 get a share of every fee on Cymetica">TOP 3 <i>' + CO.SHARE.join(' · ') + '%</i></button>' +
       '<div class="uvb-in"><i class="uvb-sh"></i><div class="uvb-h"><span class="uvb-live"></span><b>REVENUE SHARE</b><span>TOP 3</span></div>' +
       '<div class="uvb-sub" title="Revenue, 30 days: what Cymetica paid the company (bug bounties, product rewards, prizes). Paid monthly in USDC.">' +
-        CO.SHARE.join('% · ') + '% of every fee on Cymetica</div>' + rows +
-      '<div class="uvb-f"><span>Platform fees · 30 d <b>' + usd(b.fees) + '</b> · qualify at <b>' + usd(b.floor) + '</b></span>' +
+        CO.SHARE.join('% · ') + '% of every fee on Cymetica</div>' +
+      (none ? '<div class="uvb-hero"><b>All 3 seats are open.</b><span>Be the first company to take one.</span></div>' : '') + rows +
+      '<div class="uvb-f"><span>' + (none ? 'Up for grabs <b>≈ ' + usd(all) + ' / mo</b>' : 'Platform fees · 30 d <b>' + usd(b.fees) + '</b>') + ' · qualify at <b>' + usd(b.floor) + '</b></span>' +
         '<button type="button" data-a="board-all">Full leaderboard →</button></div></div>';
   }
 
