@@ -47,34 +47,49 @@ def make(seed=7, strength=1.0):
     d *= 0.35 + 0.8 * np.clip((dust - 0.3) * 2.0, 0, 1)    # dark lanes
     d = np.clip(1 - np.exp(-1.9 * d * strength), 0, 1)      # a soft shoulder: no blown highlights
 
-    # colour: black, indigo, deep purple, violet, a little magenta, pale lavender at the very densest
+    # colour: the site's own dark, then deep navy and teal (the board's cyan, far off), a trace of violet only where the
+    # cloud is densest ("top slad vsechny barvy", 2026-10-23: the purple of the fifth take fought the board's cyan)
     stops = np.array([0.0, 0.18, 0.36, 0.55, 0.72, 0.86, 1.0])
-    cols = np.array([[3, 2, 9], [10, 6, 28], [26, 11, 62], [52, 20, 108], [88, 34, 148], [140, 70, 190], [205, 160, 235]], np.float32)
+    cols = np.array([[2, 3, 8], [5, 10, 22], [8, 20, 40], [14, 36, 62], [28, 54, 96], [62, 74, 140], [150, 165, 220]], np.float32)
     rgb = np.stack([np.interp(d, stops, cols[:, c]) for c in range(3)], -1)
-    blue = np.clip(mask * fbm(500, 5) ** 2 * 0.9 * strength - d * 0.6, 0, 1)   # a cold blue in the thin parts, for depth
-    rgb += blue[..., None] * np.array([20, 34, 90], np.float32)
+    teal = np.clip(mask * fbm(500, 5) ** 2 * 0.9 * strength - d * 0.6, 0, 1)   # a cold teal in the thin parts, for depth
+    rgb += teal[..., None] * np.array([8, 40, 58], np.float32)
 
-    # stars: many faint, some with a soft halo, six bright with thin spikes
-    stars = np.zeros((H, W), np.float32)
-    n = 9000
-    sx, sy = rng.integers(0, W, n), rng.integers(0, H, n)
-    np.add.at(stars, (sy, sx), np.clip(rng.pareto(2.6, n) * 0.18 + 0.05, 0, 1.4))
-    starim = Image.fromarray(np.clip(stars * 255, 0, 255).astype(np.uint8), 'L')
-    soft = np.asarray(starim.filter(ImageFilter.GaussianBlur(1.1)), np.float32) / 255 * 3.2
-    halo = np.asarray(starim.filter(ImageFilter.GaussianBlur(5)), np.float32) / 255 * 6
-    bright = np.zeros((H, W), np.float32)
-    for _ in range(6):
-        x, y = int(rng.integers(80, W - 80)), int(rng.integers(80, H - 80))
-        r, L = rng.uniform(0.5, 1.0), int(rng.uniform(26, 70))
+    # stars, as space has them: thousands of faint ones, thicker along the cloud's band; hundreds of clear ones with a
+    # little halo; a dozen bright ones with short spikes. Each its own colour: white, blue-white, a few warm.
+    palette = np.array([[1.0, 1.0, 1.0], [0.82, 0.9, 1.0], [0.78, 0.95, 1.0], [1.0, 0.92, 0.82]], np.float32)
+
+    def scatter(n, lo, hi, power):
+        xs, ys = rng.integers(0, W, n * 2), rng.integers(0, H, n * 2)
+        keep = rng.random(n * 2) < (0.35 + 0.65 * mask[ys, xs])
+        xs, ys = xs[keep][:n], ys[keep][:n]
+        b = lo + (hi - lo) * rng.random(len(xs)) ** power
+        c = palette[rng.choice(len(palette), len(xs), p=[0.45, 0.3, 0.15, 0.1])]
+        layer = np.zeros((H, W, 3), np.float32)
+        for ch in range(3):
+            np.add.at(layer[..., ch], (ys, xs), b * c[:, ch])
+        return layer
+
+    def blur(layer, r):
+        out = np.empty_like(layer)
+        for ch in range(3):
+            im = Image.fromarray(np.clip(layer[..., ch] * 255, 0, 255).astype(np.uint8), 'L').filter(ImageFilter.GaussianBlur(r))
+            out[..., ch] = np.asarray(im, np.float32) / 255
+        return out
+
+    faint = scatter(26000, 0.06, 0.55, 3.0)
+    clear = scatter(1100, 0.5, 1.0, 1.5)
+    light = blur(faint, 0.75) * 3.0 + blur(clear, 1.1) * 4.5 + blur(clear, 5) * 5.0
+    spikes = np.zeros((H, W), np.float32)
+    for _ in range(12):
+        x, y = int(rng.integers(90, W - 90)), int(rng.integers(90, H - 90))
+        r, L = rng.uniform(0.45, 1.0), int(rng.uniform(20, 52))
         for k in range(-L, L + 1):
-            f = (1 - abs(k) / L) ** 3 * r
-            bright[y, x + k] += f
-            bright[y + k, x] += f
-        bright[y - 2:y + 3, x - 2:x + 3] += 1.4 * r
-    brightim = Image.fromarray(np.clip(bright * 255, 0, 255).astype(np.uint8), 'L')
-    bright = (np.asarray(brightim.filter(ImageFilter.GaussianBlur(1.3)), np.float32) / 255 * 1.6
-              + np.asarray(brightim.filter(ImageFilter.GaussianBlur(9)), np.float32) / 255 * 1.2)
-    tint = np.where(rng.random((H, W)) < 0.5, 1.0, 0.0)[..., None]
-    starcol = tint * np.array([0.9, 0.92, 1.0]) + (1 - tint) * np.array([1.0, 0.88, 1.0])
-    starlight = np.clip((soft + 0.35 * halo + bright)[..., None] * starcol * 255, 0, 255)
+            f = (1 - abs(k) / L) ** 4 * r
+            spikes[y, x + k] += f
+            spikes[y + k, x] += f
+        spikes[y - 2:y + 3, x - 2:x + 3] += 1.6 * r
+    spikes = np.repeat(spikes[..., None], 3, -1) * np.array([0.92, 0.97, 1.0], np.float32)
+    light += blur(spikes, 1.2) * 1.7 + blur(spikes, 10) * 1.6
+    starlight = np.clip(light * 255, 0, 255)
     return 255 - (255 - np.clip(rgb, 0, 255)) * (255 - starlight) / 255   # screen

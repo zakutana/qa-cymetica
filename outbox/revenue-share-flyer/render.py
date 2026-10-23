@@ -25,10 +25,12 @@ sys.path.insert(0, str(HERE))
 import nebula  # noqa: E402  (beside this file)
 W, H = 1080, 1350
 # the camera: from the side and far off, so the sun is a distant star, its centre at 83 % across and 20 % down, beside
-# the headline ("aby to slunce bylo vic v dalce v hlubokem vesmiru", then "jeste vic dal": 360 -> 600)
-POLAR, DIST, SUN_X, SUN_Y = 1.25, 600.0, 0.83, 0.2
-# the nebula's seed and density (nebula.py): dark, a trace of purple ("tmavsi jen s minimem te fialove")
-SEED, STRENGTH = 7, 0.35
+# the headline ("aby to slunce bylo vic v dalce v hlubokem vesmiru", then "jeste vic dal" twice: 360 -> 600 -> 900)
+POLAR, DIST, SUN_X, SUN_Y = 1.25, 900.0, 0.83, 0.2
+# the nebula's seed and density (nebula.py): dark deep space, navy and teal
+SEED, STRENGTH = 7, 0.5
+# the sun's light in the space round it ("z toho slunce zare"): a warm-white core glow and a wide cyan haze, in 2x px
+GLOW_CORE, GLOW_WIDE = 150.0, 620.0
 HIDE = ("#uv-board, .b3, .b3pop, #uvstage .top, .uvlegend, #uv-panel, .tip, .uvtip { display: none !important; }"
         "#uvstage { position: fixed !important; left: 0 !important; top: 0 !important; width: %dpx !important; height: %dpx !important;"
         " margin: 0 !important; border-radius: 0 !important; border: 0 !important; z-index: 99999 !important; }" % (W, H))
@@ -68,7 +70,14 @@ def background(p):
     sun = np.asarray(Image.open(png).convert('RGB'), np.float32)
     ground = np.median(np.concatenate([sun[:40, :40].reshape(-1, 3), sun[-40:, :40].reshape(-1, 3)]), axis=0)
     sun = np.clip((sun - ground) / (255 - ground) * 255, 0, 255)
-    out = 255 - (255 - nebula.make(SEED, STRENGTH)) * (255 - sun) / 255
+    # its light round it: a warm-white glow close in, fading through the board's cyan into the dark
+    hh, ww = sun.shape[:2]
+    yy, xx = np.mgrid[0:hh, 0:ww].astype(np.float32)
+    r = np.hypot(xx - SUN_X * ww, yy - SUN_Y * hh)
+    glow = (np.exp(-(r / GLOW_CORE) ** 2)[..., None] * np.array([255, 226, 180], np.float32) * 0.55
+            + np.exp(-(r / GLOW_WIDE) ** 1.4)[..., None] * np.array([40, 150, 190], np.float32) * 0.42)
+    light = 255 - (255 - sun) * (255 - np.clip(glow, 0, 255)) / 255
+    out = 255 - (255 - nebula.make(SEED, STRENGTH)) * (255 - light) / 255
     Image.fromarray(np.clip(out, 0, 255).astype(np.uint8), 'RGB').save(HERE / 'space-bg.jpg', quality=92, optimize=True)
     png.unlink()
     print('the render\'s ground, taken out:', ground)
