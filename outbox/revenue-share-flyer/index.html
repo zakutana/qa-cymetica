@@ -3,108 +3,105 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=1080">
-<title>Be Early · Cymetica</title>
+<title>Cymetica Quest</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Archivo+Black&family=JetBrains+Mono:wght@400;500;700;800&display=swap" rel="stylesheet">
 <!-- The revenue-share flyer (the operator, 2026-10-23): the gold rush of the space-and-AI age and how to get in.
-     Fourth take. The third was a plain poster: "moc basic, nas sklovity screen v universu je total top ve srovnani s
-     tim". So the flyer is that screen: the revenue-share board's glass (uvpanel.css .uvb-in -- one big pane of frosted
-     glass turned away on its left edge, a cyan rim, a lit top edge, only type and light on it, no boxes), here with its
-     three seats open and the way to one under them. Behind it Cymetica's sun alone, its light frosted through the glass;
-     no ring of any kind (the first take's rule). The name: "Orbit Rush je trapny nazev"; now BE EARLY., the gold rush in
-     the words crypto uses for it. Big type: nothing under 19 px. 1080 x 1350.
-     The frost is drawn, not filtered: backdrop-filter under a 3D transform left the sun sharp behind the glass in
-     Chromium's screenshot, so .frost is a blurred copy of the background clipped to the pane's projected outline. -->
-
+     Fifth take. The fourth (BE EARLY. on the Universe board's glass) kept the glass and lost the rest: "aby to slunce
+     bylo vic v dalce v hlubokem vesmiru a vic ten vesmir na pozadi a pak to sklo a barvy takove temne fialove a slogan
+     be early je na nic. Spis neco tajemneho jako cymetica quest ... Join cymetica quest". So: deep space in dark purple
+     (space-bg.jpg: nebula.py's nebula with Cymetica's sun far off in it, render.py), the board's glass tinted violet,
+     and JOIN THE CYMETICA QUEST. No ring of any kind (the first take's rule). Nothing under 19 px. 1080 x 1350.
+     (Cymetica's own site palette excludes purple; this is the operator's flyer, not a page of theirs.)
+     The frost is drawn, not filtered: backdrop-filter under a 3D transform left the background sharp behind the glass
+     in Chromium's screenshot, so .frost is a blurred copy of the background clipped to the pane's projected outline. -->
 <style>
-  :root { --bg: #05070c; --green: #00ff88; --cyan: #00cfff; --blue: #3b82f6; --rs1: #00ff88; --rs2: #00cfff; --rs3: #3b82f6; --text: #eef6fa; }
+  :root { --bg: #06040d; --text: #f3f0ff; --lav: #d8ccff; --dim: #b7a9d9;
+    --s1: #e879f9; --s2: #a78bfa; --s3: #818cf8; --rim: rgba(196, 181, 253, .34); --glow: rgba(139, 92, 246, .3); }
   * { box-sizing: border-box; margin: 0; padding: 0; }
   html, body { width: 1080px; height: 1350px; background: var(--bg); overflow: hidden; }
   body { position: relative; font-family: 'JetBrains Mono', monospace; color: var(--text); -webkit-font-smoothing: antialiased; }
   .bg { position: absolute; inset: 0; width: 1080px; height: 1350px; }
-  .shade { position: absolute; inset: 0;
-    background: linear-gradient(90deg, rgba(5, 7, 12, .78) 0%, rgba(5, 7, 12, .45) 45%, rgba(5, 7, 12, 0) 75%),
-      linear-gradient(180deg, rgba(5, 7, 12, 0) 40%, rgba(5, 7, 12, .5) 100%); }
+  .shade { position: absolute; inset: 0; background: radial-gradient(130% 90% at 50% 45%, rgba(0, 0, 0, 0) 55%, rgba(3, 1, 8, .6) 100%); }
 
-  /* the head, on the dark beside the sun */
+  /* the head: an invitation, quiet and big */
   .head { position: absolute; left: 70px; top: 58px; }
-  .brand { display: flex; align-items: center; gap: 14px; font: 800 20px 'JetBrains Mono'; letter-spacing: .3em; }
-  .brand i { width: 12px; height: 12px; border-radius: 50%; background: var(--green); box-shadow: 0 0 14px var(--green); }
-  h1 { margin-top: 34px; font-family: 'Archivo Black', sans-serif; font-weight: 400; }
-  h1 .l2 { display: block; font-size: 160px; line-height: .86; letter-spacing: -.015em; color: transparent; -webkit-background-clip: text; background-clip: text;
-    background-image: linear-gradient(180deg, #ffffff 0%, #c9ffe6 30%, #39ff9f 62%, #00c8ee 100%); filter: drop-shadow(0 0 24px rgba(0, 255, 160, .28)); }
-  /* the frosted copy of the background, under the glass and clipped to it (set by the script below) */
-  .frost { position: absolute; inset: 0; pointer-events: none; }
-  .frost img { position: absolute; inset: 0; width: 1080px; height: 1350px; filter: blur(22px) saturate(1.45) brightness(1.12); transform: scale(1.02); }
+  .brand { display: flex; align-items: center; gap: 14px; font: 800 19px 'JetBrains Mono'; letter-spacing: .34em; color: var(--lav); }
+  .brand i { width: 11px; height: 11px; border-radius: 50%; background: var(--s1); box-shadow: 0 0 14px var(--s1); }
+  h1 { margin-top: 30px; font-family: 'Archivo Black', sans-serif; font-weight: 400; }
+  h1 .a { display: block; font-size: 40px; letter-spacing: .34em; line-height: 1; color: var(--text); }
+  h1 .b { display: block; margin-top: 14px; font-size: 114px; line-height: .86; letter-spacing: .005em; color: transparent; -webkit-background-clip: text; background-clip: text;
+    background-image: linear-gradient(180deg, #ffffff 0%, #ece4ff 30%, #c4b5fd 62%, #8b5cf6 100%); filter: drop-shadow(0 0 28px rgba(167, 139, 250, .45)); }
+  .lede { margin-top: 20px; font: 700 23px 'JetBrains Mono'; letter-spacing: .02em; color: var(--lav); }
 
-  /* the board's glass, as in the Universe: turned away on its left edge, frosted, a cyan rim and a lit top edge */
-  .stage { position: absolute; left: 50px; top: 440px; width: 980px; height: 870px; perspective: 2000px; perspective-origin: 0% 40%; }
-  .glass { position: absolute; inset: 0; padding: 44px 52px 40px; border-radius: 30px; transform: rotateY(12deg) rotateX(2.6deg); transform-origin: 0% 50%;
+  /* the board's glass, as in the Universe, tinted violet: turned away on its left edge, frosted, a lit rim */
+  .frost { position: absolute; inset: 0; pointer-events: none; }
+  .frost img { position: absolute; inset: 0; width: 1080px; height: 1350px; filter: blur(24px) saturate(1.3) brightness(1.15); transform: scale(1.02); }
+  .stage { position: absolute; left: 50px; top: 452px; width: 980px; height: 858px; perspective: 2000px; perspective-origin: 0% 40%; }
+  .glass { position: absolute; inset: 0; padding: 40px 52px 38px; border-radius: 30px; transform: rotateY(12deg) rotateX(2.6deg); transform-origin: 0% 50%;
     background:
-      linear-gradient(135deg, rgba(255, 255, 255, .16) 0%, rgba(255, 255, 255, .05) 24%, rgba(255, 255, 255, 0) 44%),
-      radial-gradient(120% 90% at 0% 0%, rgba(0, 207, 255, .16), rgba(0, 207, 255, 0) 60%),
-      linear-gradient(180deg, rgba(14, 28, 40, .4), rgba(6, 8, 16, .62));
+      linear-gradient(135deg, rgba(255, 255, 255, .15) 0%, rgba(255, 255, 255, .045) 24%, rgba(255, 255, 255, 0) 44%),
+      radial-gradient(120% 90% at 0% 0%, rgba(167, 139, 250, .2), rgba(167, 139, 250, 0) 60%),
+      linear-gradient(180deg, rgba(30, 14, 60, .4), rgba(10, 5, 22, .66));
     border: 1px solid rgba(255, 255, 255, .14);
-    box-shadow: inset 0 1px 0 rgba(255, 255, 255, .5), inset 0 0 0 1px rgba(0, 207, 255, .2), inset 0 -28px 44px -28px rgba(0, 207, 255, .22),
-      0 0 0 1px rgba(0, 207, 255, .32), 0 0 90px rgba(0, 207, 255, .18), -10px 40px 70px rgba(0, 0, 0, .65); }
-  /* the board's sheen, held still */
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, .5), inset 0 0 0 1px rgba(196, 181, 253, .2), inset 0 -28px 44px -28px rgba(167, 139, 250, .28),
+      0 0 0 1px var(--rim), 0 0 90px var(--glow), -10px 40px 70px rgba(0, 0, 0, .7); }
   .glass::before { content: ''; position: absolute; inset: 0; border-radius: inherit; pointer-events: none;
-    background: linear-gradient(112deg, rgba(255, 255, 255, 0) 52%, rgba(255, 255, 255, .05) 60%, rgba(220, 255, 248, .08) 63%, rgba(255, 255, 255, 0) 70%); }
+    background: linear-gradient(112deg, rgba(255, 255, 255, 0) 52%, rgba(255, 255, 255, .05) 60%, rgba(240, 230, 255, .08) 63%, rgba(255, 255, 255, 0) 70%); }
   .glass > * { position: relative; }
 
   .gh { display: flex; align-items: baseline; gap: 14px; }
-  .gh .dot { width: 13px; height: 13px; border-radius: 50%; align-self: center; background: var(--rs1); box-shadow: 0 0 16px var(--rs1); }
+  .gh .dot { width: 13px; height: 13px; border-radius: 50%; align-self: center; background: var(--s1); box-shadow: 0 0 16px var(--s1); }
   .gh b { font: 400 34px 'Archivo Black', sans-serif; letter-spacing: .08em; color: transparent; -webkit-background-clip: text; background-clip: text;
-    background-image: linear-gradient(180deg, #effff8, #4dffb4 50%, #00b4e0); filter: drop-shadow(0 0 12px rgba(0, 207, 255, .5)); }
-  .gh .tg { margin-left: auto; font: 800 19px 'JetBrains Mono'; letter-spacing: .2em; color: var(--rs1); text-shadow: 0 0 12px rgba(0, 207, 255, .7); }
-  .gsub { margin-top: 10px; font: 500 24px 'JetBrains Mono'; color: #d3e3ec; }
+    background-image: linear-gradient(180deg, #faf5ff, #d8b4fe 50%, #a78bfa); filter: drop-shadow(0 0 12px rgba(167, 139, 250, .55)); }
+  .gh .tg { margin-left: auto; font: 800 19px 'JetBrains Mono'; letter-spacing: .2em; color: var(--s1); text-shadow: 0 0 12px rgba(232, 121, 249, .7); }
+  .gsub { margin-top: 10px; font: 500 24px 'JetBrains Mono'; color: #ddd3f5; }
   .gsub b { color: #ffffff; }
 
-  /* the three seats, the board's rows: the place in its colour, an open seat, what it pays */
-  .seats { margin-top: 22px; }
+  .seats { margin-top: 18px; }
   .seat { display: grid; grid-template-columns: 70px 52px 1fr auto; align-items: center; gap: 20px; padding: 13px 0; }
-  .seat + .seat { border-top: 1px solid transparent; border-image: linear-gradient(90deg, rgba(255, 255, 255, 0), rgba(255, 255, 255, .12) 30%, rgba(0, 207, 255, .22) 70%, rgba(255, 255, 255, 0)) 1; }
+  .seat + .seat { border-top: 1px solid transparent; border-image: linear-gradient(90deg, rgba(255, 255, 255, 0), rgba(255, 255, 255, .12) 30%, rgba(196, 181, 253, .24) 70%, rgba(255, 255, 255, 0)) 1; }
   .rk { font: 400 70px/1 'Archivo Black', sans-serif; text-align: center; color: transparent; -webkit-background-clip: text; background-clip: text; }
-  .p1 .rk { background-image: linear-gradient(180deg, #eafff4, var(--rs1) 55%, #00a067); filter: drop-shadow(0 0 14px rgba(0, 255, 136, .65)); }
-  .p2 .rk { background-image: linear-gradient(180deg, #e6fbff, var(--rs2) 55%, #0086b5); filter: drop-shadow(0 0 11px rgba(0, 207, 255, .55)); }
-  .p3 .rk { background-image: linear-gradient(180deg, #e3edff, var(--rs3) 55%, #1d4ea8); filter: drop-shadow(0 0 9px rgba(59, 130, 246, .5)); }
+  .p1 .rk { background-image: linear-gradient(180deg, #fdf4ff, var(--s1) 55%, #a21caf); filter: drop-shadow(0 0 14px rgba(232, 121, 249, .6)); }
+  .p2 .rk { background-image: linear-gradient(180deg, #f5f3ff, var(--s2) 55%, #6d28d9); filter: drop-shadow(0 0 11px rgba(167, 139, 250, .55)); }
+  .p3 .rk { background-image: linear-gradient(180deg, #eef2ff, var(--s3) 55%, #4338ca); filter: drop-shadow(0 0 9px rgba(129, 140, 248, .5)); }
   .open { display: grid; place-items: center; width: 48px; height: 48px; border: 2px dashed currentColor; border-radius: 50%; font: 800 26px/1 'JetBrains Mono'; opacity: .9; }
-  .p1 .open { color: var(--rs1); } .p2 .open { color: var(--rs2); } .p3 .open { color: var(--rs3); }
-  .who b { display: block; font: 400 32px/1.05 'Archivo Black', sans-serif; color: #f4fbff; }
-  .who span { display: block; margin-top: 6px; font: 600 21px 'JetBrains Mono'; color: #b9cdd9; }
+  .p1 .open { color: var(--s1); } .p2 .open { color: var(--s2); } .p3 .open { color: var(--s3); }
+  .who b { display: block; font: 400 32px/1.05 'Archivo Black', sans-serif; color: var(--text); }
+  .who span { display: block; margin-top: 6px; font: 600 21px 'JetBrains Mono'; color: var(--dim); }
   .pay { text-align: right; }
   .pay b { display: block; font: 400 64px/.9 'Archivo Black', sans-serif; }
-  .pay span { display: block; margin-top: 6px; font: 700 20px 'JetBrains Mono'; color: #c6d8e3; white-space: nowrap; }
-  .p1 .pay b { color: var(--rs1); text-shadow: 0 0 26px rgba(0, 255, 136, .6); }
-  .p2 .pay b { color: var(--rs2); text-shadow: 0 0 20px rgba(0, 207, 255, .5); }
-  .p3 .pay b { color: var(--rs3); text-shadow: 0 0 16px rgba(59, 130, 246, .45); }
+  .pay span { display: block; margin-top: 6px; font: 700 20px 'JetBrains Mono'; color: #d6caf2; white-space: nowrap; }
+  .p1 .pay b { color: var(--s1); text-shadow: 0 0 26px rgba(232, 121, 249, .55); }
+  .p2 .pay b { color: var(--s2); text-shadow: 0 0 20px rgba(167, 139, 250, .5); }
+  .p3 .pay b { color: var(--s3); text-shadow: 0 0 16px rgba(129, 140, 248, .45); }
 
-  /* the way to a seat: four steps, an arrow between each */
-  .way { margin-top: 18px; padding-top: 24px; border-top: 1px solid transparent;
-    border-image: linear-gradient(90deg, rgba(255, 255, 255, 0), rgba(0, 207, 255, .45) 25%, rgba(0, 255, 136, .35) 75%, rgba(255, 255, 255, 0)) 1; }
-  .way .lb { font: 800 19px 'JetBrains Mono'; letter-spacing: .24em; color: var(--cyan); text-shadow: 0 0 10px rgba(0, 207, 255, .6); }
-  .steps { display: grid; grid-template-columns: 1fr 34px 1fr 34px 1fr 34px 1fr; align-items: start; margin-top: 16px; }
-  .st i { display: block; font: 800 20px 'JetBrains Mono'; font-style: normal; color: var(--green); }
-  .st b { display: block; margin-top: 6px; font: 400 27px/1.06 'Archivo Black', sans-serif; color: #f4fbff; }
-  .st span { display: block; margin-top: 8px; font: 600 19px/1.25 'JetBrains Mono'; color: #b9cdd9; }
-  .ar { padding-top: 36px; text-align: center; font: 800 28px 'JetBrains Mono'; color: var(--cyan); text-shadow: 0 0 12px rgba(0, 207, 255, .7); }
+  .way { margin-top: 16px; padding-top: 22px; border-top: 1px solid transparent;
+    border-image: linear-gradient(90deg, rgba(255, 255, 255, 0), rgba(167, 139, 250, .5) 25%, rgba(232, 121, 249, .4) 75%, rgba(255, 255, 255, 0)) 1; }
+  .way .lb { font: 800 19px 'JetBrains Mono'; letter-spacing: .24em; color: #c4b5fd; text-shadow: 0 0 10px rgba(167, 139, 250, .6); }
+  .steps { display: grid; grid-template-columns: 1fr 34px 1fr 34px 1fr 34px 1fr; align-items: start; margin-top: 14px; }
+  .st i { display: block; font: 800 20px 'JetBrains Mono'; font-style: normal; color: var(--s1); }
+  .st b { display: block; margin-top: 6px; font: 400 27px/1.06 'Archivo Black', sans-serif; color: var(--text); }
+  .st span { display: block; margin-top: 8px; font: 600 19px/1.25 'JetBrains Mono'; color: var(--dim); }
+  .ar { padding-top: 36px; text-align: center; font: 800 28px 'JetBrains Mono'; color: #c4b5fd; text-shadow: 0 0 12px rgba(167, 139, 250, .7); }
 
   .call { display: flex; align-items: center; justify-content: space-between; margin-top: 24px; }
-  .call .cta { font: 400 30px 'Archivo Black', sans-serif; letter-spacing: .03em; color: #04120b; padding: 19px 30px; border-radius: 14px;
-    background: linear-gradient(90deg, var(--green), var(--cyan)); box-shadow: 0 0 34px rgba(0, 255, 136, .45), inset 0 1px 0 rgba(255, 255, 255, .7); }
-  .call .url { font: 800 24px 'JetBrains Mono'; color: var(--cyan); text-shadow: 0 0 10px rgba(0, 207, 255, .6); }
+  .call .cta { font: 400 30px 'Archivo Black', sans-serif; letter-spacing: .03em; color: #ffffff; padding: 19px 30px; border-radius: 14px;
+    background: linear-gradient(90deg, #c026d3, #7c3aed 55%, #4f46e5); box-shadow: 0 0 36px rgba(168, 85, 247, .5), inset 0 1px 0 rgba(255, 255, 255, .45); }
+  .call .url { font: 800 24px 'JetBrains Mono'; color: #d8b4fe; text-shadow: 0 0 10px rgba(167, 139, 250, .6); }
 </style>
 </head>
 <body>
-<img class="bg" src="sun-bg.jpg" alt="">
+<img class="bg" src="space-bg.jpg" alt="">
 <div class="shade"></div>
 
 <div class="head">
   <div class="brand"><i></i>CYMETICA</div>
-  <h1><span class="l2">BE<br>EARLY.</span></h1>
+  <h1><span class="a">JOIN THE</span><span class="b">CYMETICA<br>QUEST</span></h1>
+  <div class="lede">Three seats. One universe. A cut of every fee.</div>
 </div>
 
-<div class="frost" id="frost"><img src="sun-bg.jpg" alt=""></div>
+<div class="frost" id="frost"><img src="space-bg.jpg" alt=""></div>
 <div class="stage"><div class="glass">
   <div class="gh"><span class="dot"></span><b>REVENUE SHARE</b><span class="tg">TOP 3</span></div>
   <div class="gsub">A cut of <b>every fee</b> on Cymetica. All 3 seats are open.</div>
