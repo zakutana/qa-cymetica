@@ -85,12 +85,6 @@ paused*), and everything inside is seen as in a room with the lights off. When t
 lit. Resume, and the lights come back. The row of a paused department dims with it, and its button turns into a filled play. Drawn in the mockup:
 `sim.js` (`CO.deptPaused`, `CO.act.deptPause`), `app.js` (the button), `u3d.js` (`tint`, state *dark*), `office.js` and `style.css` (the flat office).
 
-## G. The Universe's top line says what it counts (settled)
-
-The live line reads *8 companies · 34 free slots · 0 yours · 2 products* and the owner, who has one company, asked why *yours* is 0. It counts land, not companies:
-the owner's two slots now hold the two products, so no slot counts as his. **Say *your land* and count the slots the owner holds, products on them included**:
-*8 companies · 34 free slots · 2 your land · 2 products*. The word *yours* alone is not used.
-
 ## H. The revenue share: the top 3 companies get a share of every fee on Cymetica (settled, drawn)
 
 **The numbers in this item are an example for the design, not our terms.** The shares (5% / 3% / 1%), how many places are paid, the measure
