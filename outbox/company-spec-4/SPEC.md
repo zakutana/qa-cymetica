@@ -39,23 +39,26 @@ experiment has run; one gap: these endpoints are not in `/llms.txt`.
 
 The company's Manager says today that the Supervisor only lists repeated work, unfinished tasks and stuck flows with a proposed fix each, does not read
 the chats, does not touch the app and passes nothing to Cymetica; the one audit so far (id 18) ran a minute after the company was set up and found
-nothing. **That is not what the owner expected from the start.** The weekly review should work like this:
+nothing. **That is not what the owner expected from the start.** The Supervisor has **two layers** (the owner, 2026-10-23):
 
-1. **It reads everything the company did that week**: every chat with the Manager and the departments, the tasks and what came of them, the processes,
-   and what the owner approved or rejected.
-2. **It finds what does not work and what bothers the owner**: his complaints in the chats, what the Manager promised and did not do, gaps in the company
-   app, missing features. (One evening of the owner reading his own chat found five such faults, MSG-0211 / MSG-0213: a charter "rewritten" that was not,
-   monitoring that ran once, replies that do not say which message they answer, no sign that NEXUS is working, task numbers that point nowhere.)
-3. **It reports them to Cymetica automatically**, as if the owner had written them on Cymetica's Telegram: bugs as bug reports under the owner's account,
-   wishes as feature requests, each once (nothing already reported goes again).
-4. **In the same pass it improves the owner's own company** with what already exists: charters, processes, department setup. Safe changes it applies
-   itself (a reworded charter, a fixed process), each one listed and undone with one click; anything that spends units or money, or adds or removes a
-   department, waits for the owner as an approval.
+**1. The engine layer: the platform improving itself, in the background.** The owner has watched your Telegram bot since the start of the year and seen
+it improve massively, again and again, from the conversations it has with people. The Supervisor should do the same for Build a Company: **instead of the
+Telegram chats it follows every chat with NEXUS in every company**, the tasks and what came of them, what the owners approved, rejected and complained
+about, and from that it **keeps improving the engine that runs all companies**: how NEXUS plans and answers, how departments pick up and finish work, how
+tasks, passes, approvals and processes behave, what breaks and what is missing. (One evening of the owner reading his own chat found five such faults,
+MSG-0211 / MSG-0213: a charter "rewritten" that was not, monitoring that ran once, replies that do not say which message they answer, no sign that NEXUS
+is working, task numbers that point nowhere; an engine reading every company's chats finds these without anyone spending an evening.) **This is the
+backend and owners never see it**: it is in no company's audit log, it asks nothing of the owner and files nothing under his name. Owners only notice
+that the company works better week by week. (What it may read is yours to set under your terms.)
 
-**Where the owner sees it: the Operations room** (the Audit tab). Each review: when it ran, what it read (chats, tasks, processes, counts), and its
-findings, each with a link to the message or task it came from and what was done with it: *filed to Cymetica as ET-… / feature request*, *applied: …
-(undo)*, or *waits for you*. A switch for the owner: *report to Cymetica on my behalf* (on by default) or *ask me first* (each report waits for one
-click). The next review's date is shown; the owner can also run one now.
+**2. The company layer: what the owner sees in his Audit tab.** On top of the engine, a review of **this one company**: it reads its chats, tasks,
+processes and decisions and **optimizes what is specific to it**: its processes, its departments' charters, how its departments are set up, what its
+Manager keeps getting wrong for this owner. Safe changes it applies itself (a reworded charter, a fixed process), each one listed and undone with one
+click; anything that spends units or money, or adds or removes a department, waits for the owner as an approval.
+
+**Where the owner sees the company layer: the Operations room** (the Audit tab). Each review: when it ran, what it read (chats, tasks, processes,
+counts), and its findings, each with a link to the message or task it came from and what was done with it: *applied: … (undo)* or *waits for you*. The
+next review's date is shown; the owner can also run one now. Nothing of the engine layer appears there.
 
 ## D. The chat (reported as bugs in MSG-0211 and MSG-0213; drawn here only if they do not fix them as bugs)
 
