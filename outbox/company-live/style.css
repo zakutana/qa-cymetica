@@ -48,7 +48,7 @@ a { color: var(--cyan); text-decoration: none; cursor: pointer; }
 .pill.on { color: var(--green); border-color: var(--green); background: var(--green-a); box-shadow: 0 0 10px rgba(0, 255, 136, .15); }
 .pill.off { color: var(--dim2); border-color: var(--dim2); background: rgba(127, 147, 173, .08); }
 /* the countdown to the next pass, next to Pause (spec 4, item E): a ring that empties, the time, the turns today */
-.pass { display: inline-flex; align-items: center; gap: 8px; margin-left: 4px; padding: 4px 11px 4px 6px; border-radius: 99px; border: 1px solid rgba(0, 207, 255, .35);
+.pass { flex: none; display: inline-flex; align-items: center; gap: 8px; padding: 4px 11px 4px 6px; border-radius: 99px; border: 1px solid rgba(0, 207, 255, .35);
   background: rgba(0, 207, 255, .06); font: 600 11.5px 'JetBrains Mono', monospace; color: #bfd0dc; white-space: nowrap; cursor: help; }
 .pass b { color: var(--cyan); font-weight: 800; }
 .pass em { font-style: normal; color: var(--dim2); padding-left: 8px; border-left: 1px solid var(--line2); }

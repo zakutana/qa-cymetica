@@ -10,7 +10,7 @@
 <link href="https://fonts.googleapis.com/css2?family=Archivo+Black&family=JetBrains+Mono:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <!-- the Universe's name plates: his picture's squared, semi-condensed caps -->
 <link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@600;700&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="style.css?v=20261023pass1">
+<link rel="stylesheet" href="style.css?v=20261023pass2">
 <link rel="stylesheet" href="uv.css?v=20261022panel11">
 <link rel="stylesheet" href="uvpanel.css?v=20261023lbg2">
 <!-- the 3D engine for the Universe and the office: three.js with its WebGPU renderer (WebGL2 where WebGPU is missing) -->
@@ -63,7 +63,7 @@
   <div class="who">
     <div class="mark" id="co-logo">MC</div>
     <div class="who-t">
-      <div class="who-1"><h1 id="co-name"></h1><span class="pill" id="co-status"></span><button class="btn" id="co-pause"></button><span class="pass" id="co-pass" title="The company works in passes: at each pass up to two turns start, oldest task first. Turns today of the daily ceiling."></span></div>
+      <div class="who-1"><h1 id="co-name"></h1><span class="pill" id="co-status"></span><button class="btn" id="co-pause"></button></div>
       <div class="heart" id="co-heart"></div>
     </div>
   </div>
@@ -132,6 +132,9 @@
     <div class="o3layer" id="o3layer"></div>
     <div class="tip" hidden></div>
     <div class="strip">
+      <!-- the next pass, at the foot beside the plan's windows ("bych dal spis nekde dolu", 2026-10-23) -->
+      <span class="pass" id="co-pass" title="The company works in passes: at each pass up to two turns start, oldest task first. Turns today of the daily ceiling."></span>
+      <span class="vs"></span>
       <div class="use wide" title="Your plan's current 5-hour window: how much of it the company has used.">
         <div class="u1"><b>This session</b><span id="us-p"></span><span class="sp"></span><em id="us-r"></em></div>
         <div class="track sess"><i id="us-bar"></i></div>

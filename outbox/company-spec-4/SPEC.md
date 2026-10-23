@@ -71,8 +71,8 @@ which helps once a message is sent. **Show the pulse where the owner looks all t
 beside it. The data is served: `GET /company/mine` has `heartbeat.last_pass_at`, `heartbeat.next_pass_at` (null while paused) and `heartbeat.pass_every_s`, and
 `run_state.turns_today` and `turns_cap`.
 
-**One place only**, at the top of the page beside the company's own Pause, never per department (the owner, 2026-10-23: *"to ma byt nekde na 1 miste"*).
-Drawn in the mockup as one chip (`index.html` `#co-pass`, `app.js` `clock`, `style.css` `.pass`): a small cyan ring that empties as the pass comes,
+**One place only**, never per department: at the foot of the office, first in the bar of the plan's windows (This session, This week; the owner first had it by Pause, then: *"bych dal spis nekde dolu"*) (the owner, 2026-10-23: *"to ma byt nekde na 1 miste"*).
+Drawn in the mockup as one chip (`index.html` `.strip #co-pass`, `app.js` `clock`, `style.css` `.pass`): a small cyan ring that empties as the pass comes,
 *next pass 0:12*, and after a thin divider *2/40 turns*; green with a pulsing dot and *running now* while a turn runs; grey *paused* or *waiting for the
 window · 14:05* when nothing will start. A tooltip says what a pass is.
 
