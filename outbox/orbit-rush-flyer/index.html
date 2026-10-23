@@ -3,174 +3,104 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=1080">
-<title>Orbit Rush · Cymetica Quest</title>
+<title>Orbit Rush · Cymetica</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Archivo+Black&family=JetBrains+Mono:wght@500;700;800&display=swap" rel="stylesheet">
-<!-- Orbit Rush (the operator, 2026-10-23): the gold rush of the space-and-AI age. "Join the Gold Rush" was the message he
-     wanted, in a modern phrase; the five steps of the quest as a loop with arrows from step to step, and everyone who
-     sees it wanting in. The steps ride a real orbit of the Cymetica Universe (r = 90, its screen path in orbit.js from
-     render.py), round Cymetica's sun -- the only warm thing on the page, the gold of this rush: every fee on the
-     platform. 1080 x 1350, for X, Telegram and Instagram. Cymetica's palette: dark #0a0e17, green #00ff88, cyan #00cfff,
-     blue #3b82f6. -->
+<link href="https://fonts.googleapis.com/css2?family=Archivo+Black&family=JetBrains+Mono:wght@400;500;700;800&display=swap" rel="stylesheet">
+<!-- Orbit Rush (the operator, 2026-10-23): the gold rush of the space-and-AI age, the five steps of the quest with an
+     arrow from each to the next. Second take. The first put the steps on glowing cards round an orbit; the operator:
+     "trapne a amaterske ... nikdy uz nedavej ty prstence na zadny letak ... je to takove detinske". So: a poster, not a
+     game screen. Big white type, one accent (Cymetica green) on the prize and the call only, Cymetica's sun alone as
+     the one warm light (the gold of this rush), thin rules, no ring, no glow on the type, no bubbles. 1080 x 1350. -->
 <style>
-  :root { --bg: #0a0e17; --green: #00ff88; --cyan: #00cfff; --blue: #3b82f6; --text: #e6edf7; }
+  :root { --bg: #05070c; --green: #00ff88; --text: #f2f5f7; --dim: #93a1ad; --rule: rgba(255, 255, 255, .12); }
   * { box-sizing: border-box; margin: 0; padding: 0; }
   html, body { width: 1080px; height: 1350px; background: var(--bg); overflow: hidden; }
-  body { position: relative; font-family: 'JetBrains Mono', monospace; color: var(--text); }
+  body { position: relative; font-family: 'JetBrains Mono', monospace; color: var(--text); -webkit-font-smoothing: antialiased; }
   .bg { position: absolute; inset: 0; width: 1080px; height: 1350px; }
-  /* dark where the type stands: the head over the outer orbits, the foot under them */
-  .shade { position: absolute; inset: 0; pointer-events: none;
+  /* the type stands on dark: darker to the left and to the foot, the sun's light kept at the top right */
+  .shade { position: absolute; inset: 0;
     background:
-      linear-gradient(180deg, rgba(4, 7, 13, .92) 0%, rgba(4, 7, 13, .78) 24%, rgba(4, 7, 13, .2) 36%, rgba(4, 7, 13, 0) 42%),
-      linear-gradient(0deg, rgba(4, 7, 13, .95) 0%, rgba(4, 7, 13, .7) 9%, rgba(4, 7, 13, 0) 17%),
-      radial-gradient(120% 80% at 50% 58%, rgba(0, 0, 0, 0) 55%, rgba(0, 0, 0, .55) 100%); }
-  svg.orbit { position: absolute; inset: 0; width: 1080px; height: 1350px; overflow: visible; }
+      linear-gradient(90deg, rgba(5, 7, 12, .9) 0%, rgba(5, 7, 12, .72) 40%, rgba(5, 7, 12, .1) 70%, rgba(5, 7, 12, 0) 100%),
+      linear-gradient(180deg, rgba(5, 7, 12, 0) 30%, rgba(5, 7, 12, .86) 44%, rgba(5, 7, 12, .97) 100%); }
+  .page { position: absolute; inset: 0; padding: 60px 72px 56px; display: flex; flex-direction: column; }
 
-  /* the head */
-  .head { position: absolute; left: 0; right: 0; top: 52px; text-align: center; }
-  .tag { display: inline-flex; align-items: center; gap: 12px; font: 800 16px 'JetBrains Mono'; letter-spacing: .3em; color: var(--cyan);
-    text-shadow: 0 0 12px rgba(0, 207, 255, .6); }
-  .tag i { width: 10px; height: 10px; border-radius: 50%; background: var(--green); box-shadow: 0 0 14px var(--green); }
-  .tag span { color: #8fa3b8; text-shadow: none; }
-  h1 { margin-top: 16px; font-family: 'Archivo Black', sans-serif; font-weight: 400; line-height: .92; }
-  h1 .a { display: block; font-size: 52px; letter-spacing: .32em; padding-left: .32em; color: #eef6fa; text-shadow: 0 4px 24px rgba(0, 0, 0, .6); }
-  h1 .b { display: block; margin-top: 8px; font-size: 128px; letter-spacing: .01em; color: transparent; -webkit-background-clip: text; background-clip: text;
-    background-image: linear-gradient(180deg, #ffffff 0%, #b9ffe0 22%, #2bff9c 52%, #00d2f0 82%, #0094d6 100%);
-    filter: drop-shadow(0 0 26px rgba(0, 255, 160, .45)) drop-shadow(0 0 60px rgba(0, 207, 255, .3)); }
-  .sub { margin-top: 18px; font: 700 23px/1.35 'JetBrains Mono'; color: #dbe9f2; text-shadow: 0 2px 10px rgba(0, 0, 0, .8); }
-  .sub b { color: var(--green); text-shadow: 0 0 14px rgba(0, 255, 136, .55); }
+  .brand { display: flex; justify-content: space-between; align-items: center; font: 700 14px 'JetBrains Mono'; letter-spacing: .32em; }
+  .brand .logo { display: flex; align-items: center; gap: 12px; color: var(--text); }
+  .brand .logo i { width: 9px; height: 9px; border-radius: 50%; background: var(--green); }
+  .brand .what { color: var(--dim); font-weight: 500; }
 
-  /* a step: frosted glass on the orbit, its number on the line */
-  .card { position: absolute; width: 300px; padding: 16px 18px 15px 18px; border-radius: 18px; transform: translate(-50%, -50%);
-    background: linear-gradient(160deg, rgba(255, 255, 255, .1), rgba(255, 255, 255, .02) 38%), rgba(7, 12, 22, .66);
-    backdrop-filter: blur(9px) saturate(1.3); -webkit-backdrop-filter: blur(9px) saturate(1.3);
-    border: 1px solid rgba(255, 255, 255, .14);
-    box-shadow: inset 0 1px 0 rgba(255, 255, 255, .28), inset 0 0 0 1px color-mix(in srgb, var(--c) 22%, transparent),
-      0 0 0 1px color-mix(in srgb, var(--c) 40%, transparent), 0 0 34px color-mix(in srgb, var(--c) 22%, transparent), 0 18px 40px rgba(0, 0, 0, .55); }
-  .card::before { content: ''; position: absolute; left: 22px; right: 22px; top: -1px; height: 2px; border-radius: 2px;
-    background: linear-gradient(90deg, transparent, var(--c), transparent); box-shadow: 0 0 12px var(--c); }
-  .card .n { position: absolute; top: -20px; left: -16px; width: 44px; height: 44px; border-radius: 50%; display: grid; place-items: center;
-    font: 400 21px 'Archivo Black'; color: #04120b; background: radial-gradient(circle at 35% 30%, #ffffff, var(--c) 55%, color-mix(in srgb, var(--c) 70%, #000) 100%);
-    box-shadow: 0 0 0 5px rgba(6, 10, 18, .85), 0 0 24px var(--c), 0 0 48px color-mix(in srgb, var(--c) 50%, transparent); }
-  .card .k { font: 800 13px 'JetBrains Mono'; letter-spacing: .26em; color: var(--c); text-shadow: 0 0 10px color-mix(in srgb, var(--c) 60%, transparent); padding-left: 22px; }
-  .card h2 { margin-top: 7px; font: 400 24px/1.08 'Archivo Black', sans-serif; letter-spacing: .015em; color: #f4fbff; text-transform: uppercase; }
-  .card p { margin-top: 8px; font: 500 16.5px/1.36 'JetBrains Mono'; color: #c9dbe6; }
-  .card p b { color: #ffffff; font-weight: 800; }
-  .card p em { font-style: normal; font-weight: 800; color: var(--c); }
-  .card .nw { white-space: nowrap; }
-  .s1 { --c: #00ff88; } .s2 { --c: #2cffb0; } .s3 { --c: #00e6e0; } .s4 { --c: #00cfff; } .s5 { --c: #5aa8ff; }
-  /* the prize is the hook: the number first, brighter and a little larger */
-  .card.s1 { width: 330px; background: linear-gradient(160deg, rgba(0, 255, 136, .16), rgba(255, 255, 255, .02) 45%), rgba(7, 14, 20, .7); }
-  .card.s1 .big { display: flex; align-items: center; gap: 12px; margin-top: 8px; }
-  .card.s1 .big b { font: 400 64px/.9 'Archivo Black'; color: var(--green); text-shadow: 0 0 26px rgba(0, 255, 136, .65); }
-  .card.s1 .big b i { display: block; margin: 0 0 4px 3px; font: 800 13px 'JetBrains Mono'; font-style: normal; letter-spacing: .18em; color: #d9fff0; text-shadow: none; }
-  .card.s1 .big span { font: 400 18px/1.15 'Archivo Black'; letter-spacing: .02em; color: #f4fbff; text-transform: uppercase; padding-top: 14px; }
-  /* the words round the sun: what it stands for */
-  .sunword { font: 800 13px 'JetBrains Mono'; letter-spacing: .34em; fill: #d6f6ff; }
+  h1 { margin-top: 44px; font-family: 'Archivo Black', sans-serif; font-weight: 400; color: var(--text); }
+  h1 .l1 { display: block; font-size: 42px; letter-spacing: .06em; line-height: 1; }
+  h1 .l2, h1 .l3 { display: block; font-size: 158px; line-height: .84; letter-spacing: -.012em; }
+  h1 .l2 { margin-top: 14px; }
+  h1 .l3 em { font-style: normal; color: var(--green); }
+  .lede { margin-top: 24px; font: 500 22px/1.45 'JetBrains Mono'; color: #cfd8df; }
+  .lede b { color: var(--text); font-weight: 800; }
 
-  /* the foot: the seats, the call */
-  .foot { position: absolute; left: 56px; right: 56px; bottom: 44px; display: flex; align-items: center; justify-content: space-between; gap: 24px; }
-  .open b { display: block; font: 400 27px 'Archivo Black', sans-serif; color: #f4fbff; letter-spacing: .02em; }
-  .open b i { font-style: normal; color: var(--green); text-shadow: 0 0 16px rgba(0, 255, 136, .55); }
-  .open span { display: block; margin-top: 6px; font: 500 17px 'JetBrains Mono'; color: #b8cad6; }
-  .cta { flex: none; text-align: center; }
-  .cta b { display: block; font: 400 24px 'Archivo Black', sans-serif; letter-spacing: .04em; color: #04120b; padding: 15px 28px; border-radius: 14px;
-    background: linear-gradient(90deg, var(--green), var(--cyan)); box-shadow: 0 0 34px rgba(0, 255, 136, .5), inset 0 1px 0 rgba(255, 255, 255, .7); }
-  .cta span { display: block; margin-top: 9px; font: 800 17px 'JetBrains Mono'; letter-spacing: .06em; color: var(--cyan); text-shadow: 0 0 10px rgba(0, 207, 255, .6); }
+  .rule { height: 1px; background: var(--rule); }
+  .label { font: 700 13px 'JetBrains Mono'; letter-spacing: .26em; color: var(--dim); }
+  .label b { color: var(--green); font-weight: 800; }
+
+  /* 01, the prize: the one big number */
+  .prize { margin-top: 28px; padding-top: 20px; border-top: 1px solid var(--rule); }
+  .prize .row { display: flex; align-items: flex-end; gap: 34px; margin-top: 8px; }
+  .prize .pct { font: 400 176px/.8 'Archivo Black', sans-serif; letter-spacing: -.03em; color: var(--green); }
+  .prize .pct small { display: block; margin: 0 0 12px 4px; font: 800 15px 'JetBrains Mono'; letter-spacing: .26em; color: var(--green); }
+  .prize .what { padding-bottom: 6px; }
+  .prize .what b { display: block; font: 400 36px/1.06 'Archivo Black', sans-serif; color: var(--text); }
+  .prize .what span { display: block; margin-top: 12px; font: 500 17px/1.5 'JetBrains Mono'; color: var(--dim); }
+
+  /* 02 to 05, each step one line of bold and one of plain; a thin rail on the left with an arrow into each number */
+  .steps { position: relative; margin-top: 26px; border-top: 1px solid var(--rule); list-style: none; }
+  .steps li { position: relative; display: grid; grid-template-columns: 74px 1fr; align-items: baseline; padding: 15px 0 12px; }
+  .steps li + li { border-top: 1px solid rgba(255, 255, 255, .06); }
+  .steps .n { font: 800 17px 'JetBrains Mono'; letter-spacing: .08em; color: var(--green); }
+  .steps b { display: block; font: 400 28px/1.05 'Archivo Black', sans-serif; color: var(--text); }
+  .steps span { display: block; margin-top: 6px; font: 500 17px/1.45 'JetBrains Mono'; color: var(--dim); }
+  .steps span em { font-style: normal; color: #dbe3e9; }
+  /* the arrow from one step to the next (the first from the prize): a hairline down the number column ending in a
+     small head */
+  .steps li::before { content: ''; position: absolute; left: 9px; top: -20px; width: 1px; height: 28px; background: linear-gradient(180deg, rgba(0, 255, 136, 0), rgba(0, 255, 136, .7)); }
+  .steps li::after { content: ''; position: absolute; left: 5px; top: 5px; width: 9px; height: 9px; border-right: 1.5px solid var(--green); border-bottom: 1.5px solid var(--green); transform: rotate(45deg) translate(-3px, -3px); opacity: .9; }
+  .steps li .n { padding-top: 14px; }
+
+  .foot { margin-top: auto; display: flex; align-items: center; justify-content: space-between; gap: 24px; padding-top: 26px; border-top: 1px solid var(--rule); }
+  .foot .open b { display: block; font: 400 26px 'Archivo Black', sans-serif; color: var(--text); letter-spacing: .01em; }
+  .foot .open b em { font-style: normal; color: var(--green); }
+  .foot .open span { display: block; margin-top: 6px; font: 500 16px 'JetBrains Mono'; color: var(--dim); }
+  .cta { text-align: right; }
+  .cta b { display: inline-block; font: 400 22px 'Archivo Black', sans-serif; letter-spacing: .03em; color: #03110a; background: var(--green); padding: 17px 26px 16px; border-radius: 6px; }
+  .cta span { display: block; margin-top: 10px; font: 700 16px 'JetBrains Mono'; letter-spacing: .04em; color: var(--text); }
 </style>
 </head>
 <body>
-<img class="bg" src="universe-bg.jpg" alt="">
+<img class="bg" src="sun-bg.jpg" alt="">
 <div class="shade"></div>
-<svg class="orbit" id="orbit" viewBox="0 0 1080 1350"></svg>
+<div class="page">
+  <div class="brand"><span class="logo"><i></i>CYMETICA · BUILD A COMPANY</span></div>
 
-<div class="head">
-  <div class="tag"><i></i>CYMETICA QUEST <span>· BUILD A COMPANY</span></div>
-  <h1><span class="a">JOIN THE</span><span class="b">ORBIT RUSH</span></h1>
-  <div class="sub">Three seats. A cut of <b>every fee</b> on Cymetica.</div>
+  <h1><span class="l1">JOIN THE</span><span class="l2">ORBIT</span><span class="l3">RUSH<em>.</em></span></h1>
+  <p class="lede">Three seats. A cut of <b>every fee</b> on Cymetica.<br>Be the first to claim one.</p>
+
+  <div class="prize">
+    <div class="label"><b>01</b> &nbsp;THE PRIZE</div>
+    <div class="row">
+      <div class="pct"><small>UP TO</small>5%</div>
+      <div class="what"><b>of every fee<br>on Cymetica.</b><span>For the #1 company. #2 takes 3%, #3 takes 1%.</span></div>
+    </div>
+  </div>
+
+  <ol class="steps">
+    <li><span class="n">02</span><div><b>Most fees wins.</b><span>Your products bring Cymetica fees. <em>The top 3 take the share.</em></span></div></li>
+    <li><span class="n">03</span><div><b>Start a company.</b><span>In the Cymetica Universe. Ship any idea with <em>Build it Better</em>.</span></div></li>
+    <li><span class="n">04</span><div><b>Get seen.</b><span>Buy land so everyone sees it, or deal with influencers on <em>Promo Market</em>.</span></div></li>
+    <li><span class="n">05</span><div><b>Make the top 3.</b><span>Climb the leaderboard. <em>Earn from every fee on Cymetica.</em></span></div></li>
+  </ol>
+
+  <div class="foot">
+    <div class="open"><b>3 seats. All <em>open.</em></b><span>The rush has started.</span></div>
+    <div class="cta"><b>STAKE YOUR CLAIM &rarr;</b><span>cymetica.com/company</span></div>
+  </div>
 </div>
-
-<div class="card s1" data-at="-90" data-dy="-10"><span class="n">1</span><div class="k">THE PRIZE</div>
-  <div class="big"><b><i>UP TO</i>5%</b><span>of every fee<br>on Cymetica</span></div><p>The whole platform pays you.<br><b>Be the first to claim it.</b></p></div>
-<div class="card s2" data-at="-18" data-dx="22"><span class="n">2</span><div class="k">THE RULE</div>
-  <h2>Most fees wins</h2><p>Your products bring Cymetica fees. The <b>top 3</b> take <em class="nw">5% · 3% · 1%</em>.</p></div>
-<div class="card s3" data-at="54" data-dx="18"><span class="n">3</span><div class="k">BUILD</div>
-  <h2>Start a company</h2><p>In the Cymetica Universe. Ship <b>any idea</b> with <em class="nw">Build it Better</em>.</p></div>
-<div class="card s4" data-at="126" data-dx="-18"><span class="n">4</span><div class="k">PROMOTE</div>
-  <h2>Get seen</h2><p>Buy <b>land</b> so everyone sees it, or deal with <b>influencers</b> on <em class="nw">Promo Market</em>.</p></div>
-<div class="card s5" data-at="198" data-dx="-22"><span class="n">5</span><div class="k">CLIMB</div>
-  <h2>Make the top 3</h2><p>Climb the leaderboard. <b>Earn from every fee</b> <span class="nw">on Cymetica.</span></p></div>
-
-<div class="foot">
-  <div class="open"><b>ALL 3 SEATS ARE <i>OPEN.</i></b><span>The rush has started. Be first.</span></div>
-  <div class="cta"><b>STAKE YOUR CLAIM</b><span>cymetica.com/company</span></div>
-</div>
-
-<script src="orbit.js"></script>
-<script>
-(function () {
-  'use strict';
-  var NS = 'http://www.w3.org/2000/svg', svg = document.getElementById('orbit'), O = window.ORBIT;
-  function el(name, attrs, parent) { var e = document.createElementNS(NS, name); for (var k in attrs) e.setAttribute(k, attrs[k]); (parent || svg).appendChild(e); return e; }
-  // the orbit's own centre on screen (the sun sits above it: the near side is nearer the camera), and its points in
-  // clockwise order round that centre
-  var xs = O.pts.map(function (p) { return p[0]; }), ys = O.pts.map(function (p) { return p[1]; });
-  var cx = (Math.min.apply(null, xs) + Math.max.apply(null, xs)) / 2, cy = (Math.min.apply(null, ys) + Math.max.apply(null, ys)) / 2;
-  var pts = O.pts.map(function (p) { return { x: p[0], y: p[1], a: Math.atan2(p[1] - cy, p[0] - cx) * 180 / Math.PI }; }).sort(function (p, q) { return p.a - q.a; });
-  function norm(d) { d = ((d + 180) % 360 + 360) % 360 - 180; return d; }
-  function at(deg) { var best = pts[0], bd = 1e9; pts.forEach(function (p) { var d = Math.abs(norm(p.a - deg)); if (d < bd) { bd = d; best = p; } }); return best; }
-  function arc(a0, a1, step) { var out = []; for (var d = a0; d <= a1 + 1e-6; d += step) out.push(at(d)); return out; }
-  var line = function (ps) { return 'M' + ps.map(function (p) { return p.x.toFixed(1) + ',' + p.y.toFixed(1); }).join(' L'); };
-
-  var defs = el('defs', {});
-  var f = el('filter', { id: 'glow', x: '-20%', y: '-20%', width: '140%', height: '140%' }, defs); el('feGaussianBlur', { stdDeviation: 7 }, f);
-  var f2 = el('filter', { id: 'soft', x: '-50%', y: '-50%', width: '200%', height: '200%' }, defs); el('feGaussianBlur', { stdDeviation: 3 }, f2);
-
-  // the five steps where they sit on the orbit, clockwise from the top; the ring between two is coloured from one
-  // step's colour to the next, so the loop reads green to blue and back to green
-  var cards = Array.prototype.slice.call(document.querySelectorAll('.card'));
-  var colour = cards.map(function (c) { return getComputedStyle(c).getPropertyValue('--c').trim(); });
-  var ats = cards.map(function (c) { return +c.getAttribute('data-at'); });
-  ats.forEach(function (a, i) {
-    var a0 = a, a1 = ats[(i + 1) % ats.length]; if (a1 <= a0) a1 += 360;
-    var seg = arc(a0, a1, 0.5), p0 = at(a0), p1 = at(a1);
-    var g = el('linearGradient', { id: 'g' + i, gradientUnits: 'userSpaceOnUse', x1: p0.x, y1: p0.y, x2: p1.x, y2: p1.y }, defs);
-    el('stop', { offset: '0', 'stop-color': colour[i] }, g); el('stop', { offset: '1', 'stop-color': colour[(i + 1) % colour.length] }, g);
-    var d = line(seg);
-    el('path', { d: d, fill: 'none', stroke: 'url(#g' + i + ')', 'stroke-width': 16, opacity: 0.28, filter: 'url(#glow)', 'stroke-linecap': 'round' });
-    el('path', { d: d, fill: 'none', stroke: 'url(#g' + i + ')', 'stroke-width': 5, opacity: 0.95, 'stroke-linecap': 'round' });
-    el('path', { d: d, fill: 'none', stroke: '#eafff7', 'stroke-width': 1.2, opacity: 0.7, 'stroke-linecap': 'round' });
-    // a comet running to the next step, and the arrow it arrives at, half way between the two
-    var mid = a0 + (a1 - a0) / 2, tail = 30, n = 46;
-    for (var k = 0; k <= n; k++) {
-      var t = k / n, p = at(mid - 6 - tail + tail * t);
-      el('circle', { cx: p.x, cy: p.y, r: (0.8 + 3.6 * t * t).toFixed(2), fill: colour[(i + 1) % colour.length], opacity: (0.06 + 0.9 * Math.pow(t, 1.6)).toFixed(3) });
-    }
-    var head = at(mid - 6); el('circle', { cx: head.x, cy: head.y, r: 9, fill: '#ffffff', opacity: 0.55, filter: 'url(#soft)' });
-    var pa = at(mid - 1), pb = at(mid + 1), pm = at(mid), ang = Math.atan2(pb.y - pa.y, pb.x - pa.x) * 180 / Math.PI;
-    // longer than it is wide, so its point reads as the way round (a wide one read backwards)
-    var arrow = el('g', { transform: 'translate(' + pm.x.toFixed(1) + ',' + pm.y.toFixed(1) + ') rotate(' + ang.toFixed(1) + ')' });
-    el('path', { d: 'M-12,-9 L14,0 L-12,9 L-6,0 Z', fill: colour[(i + 1) % colour.length], filter: 'url(#soft)', opacity: 0.95 }, arrow);
-    el('path', { d: 'M-12,-9 L14,0 L-12,9 L-6,0 Z', fill: '#f2fffa' }, arrow);
-  });
-  // the sun is every fee on Cymetica: the words run over its top, along a ring of the Universe's own plane
-  if (O.label) {
-    var lx = O.label.map(function (p) { return p[0]; }), ly = O.label.map(function (p) { return p[1]; });
-    var lcx = (Math.min.apply(null, lx) + Math.max.apply(null, lx)) / 2, lcy = (Math.min.apply(null, ly) + Math.max.apply(null, ly)) / 2;
-    var lp = O.label.map(function (p) { return { x: p[0], y: p[1], a: Math.atan2(p[1] - lcy, p[0] - lcx) * 180 / Math.PI }; })
-      .filter(function (p) { return p.a >= -168 && p.a <= -12; }).sort(function (p, q) { return p.a - q.a; });
-    el('path', { id: 'sunring', d: line(lp), fill: 'none' }, defs);
-    var tx = el('text', { class: 'sunword', 'text-anchor': 'middle' });
-    var tp = el('textPath', { href: '#sunring', startOffset: '50%' }, tx); tp.textContent = 'EVERY FEE ON CYMETICA';
-    tx.setAttribute('style', 'filter: drop-shadow(0 0 6px rgba(0, 207, 255, .9)) drop-shadow(0 1px 2px rgba(0, 0, 0, .9))');
-  }
-  // each card on its point of the orbit, nudged where the frame or the sun needs it
-  cards.forEach(function (c, i) {
-    var p = at(ats[i]), dx = +(c.getAttribute('data-dx') || 0), dy = +(c.getAttribute('data-dy') || 0);
-    c.style.left = (p.x + dx).toFixed(1) + 'px'; c.style.top = (p.y + dy).toFixed(1) + 'px';
-  });
-  document.fonts.ready.then(function () { window.FLYER_READY = true; });
-})();
-</script>
 </body>
 </html>
