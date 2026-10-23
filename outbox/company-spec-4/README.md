@@ -1,7 +1,7 @@
 # Build a Company, round 4 (ready to file)
 
-Started 2026-10-22 at the operator's word. Pushed 2026-10-23 at the operator's word; the request text is `build-it-better/improvements.txt` (15 lines,
-5,862 characters), its brief and mockup links pinned to e74d4f3e (both checked: 200). E, F, H, J, K and L are drawn in the mockup; A is not (the
+Started 2026-10-22 at the operator's word. The request text is `build-it-better/improvements.txt` (16 lines, items A to M;
+its links pinned to 799aed45, the fees-brought measure and the skins; they open once that commit is pushed). E, F, H, J, K and L are drawn in the mockup; A is not (the
 request says A wins where the mockup still shows dollars). When it is filed, its ET number goes here and the verdict is ours to give.
 
 - `SPEC.md`: A units instead of dollars and units per task (settled; evidence read from their API); B the Quant Lab as a lab of cloned bots
