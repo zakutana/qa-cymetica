@@ -1554,6 +1554,53 @@ const UVLINES = [
   { r: 105, hex: '#8fb8b2', px: 4.4, glow: 0.45 }, { r: 100, hex: '#3f7d71', px: 4, glow: 0.3 },
   { r: 90, hex: '#3e706d', px: 2.4, dots: 1 }
 ];
+// The orbits' look, 2026-10-23 ("ty prstence se mi moc nelibi ... vymysli to nejak top"): no lines. Each orbit is a
+// lane of drifting light-dust (starlanes()) over a soft dust plane (uvHazeTex), the colour cooling with the distance
+// from the sun. ?orbits=lines is the look above, ?orbits=none leaves the plane bare: for comparing, not for keeping.
+const UVORBITS = (() => { try { return new URLSearchParams(location.search).get('orbits') || 'dust'; } catch (e) { return 'dust'; } })();
+// light-dust colour by distance from the sun: gold-white where the sun still warms it, mint, cyan, the site's blue
+const UVSTRONG = [105, 154, 203];   // the lanes drawn as streams; the other orbits carry only faint dust
+const UVTINT = [[34, '#ffe9c4'], [66, '#ffd9a0'], [90, '#ffe2b4'], [120, '#c8f0e6'], [154, '#8fe6ea'], [178, '#5cc8f2'], [208, '#4a96ff']];
+// The dust plane under the stations: a warm glow round the sun, a cool haze over the orbits, and soft broken arcs of
+// dust where the stations ride (drawn as arcs at the orbits' radii with a random reach, never a full circle, three
+// passes each so the edge is soft). 232 units across half the texture. Round, still; the mesh turns very slowly.
+function uvHazeTex(orbits) {
+  const S = 1024, C = S / 2, K = C / 232, R = rng(23);
+  return ctexIdle(S, S, (g) => {
+    // The base, written pixel by pixel as COLOUR on an opaque canvas (the plane is added to the sky, so a faint colour
+    // is the same as a faint alpha, with far more levels to it): the canvas's own gradients are dithered in a regular
+    // pattern that showed as fine diagonal lines when zoomed in, and at an alpha of 0.02 they have four levels to them.
+    // A warm colour at a low level over the dark blue reads brown, so the glow stays pale, white-gold and tight.
+    const prof = [[0, 0.1, 255, 232, 190], [30, 0.055, 255, 226, 176], [56, 0.018, 255, 226, 190], [92, 0.014, 120, 210, 230], [150, 0.032, 0, 170, 210], [205, 0.026, 0, 150, 215], [232, 0, 0, 120, 200]];
+    // (the texture is read as sRGB: a faint light stored as the plain product colour x alpha would come out several
+    // times darker than it was drawn at, so what is stored is that light's sRGB encoding)
+    const GAIN_BASE = 0.5, GAIN_ARC = 0.22;   // set by eye against the first version, drawn as alpha on a transparent canvas
+    const s2l = (v) => v <= 0.04045 ? v / 12.92 : Math.pow((v + 0.055) / 1.055, 2.4), l2s = (v) => v <= 0.0031308 ? v * 12.92 : 1.055 * Math.pow(v, 1 / 2.4) - 0.055;
+    const lut = new Float32Array(S * 3);   // by distance from the middle: S steps from 0 to 232 units
+    for (let i = 0; i < S; i++) {
+      const r = i * 232 / (S - 1); let j = 0; while (j < prof.length - 2 && r > prof[j + 1][0]) j++;
+      const p = prof[j], q = prof[j + 1], f = Math.min(1, Math.max(0, (r - p[0]) / (q[0] - p[0]))), a = p[1] + (q[1] - p[1]) * f;
+      for (let ch = 0; ch < 3; ch++) lut[i * 3 + ch] = 255 * l2s(s2l((p[2 + ch] + (q[2 + ch] - p[2 + ch]) * f) / 255) * a * GAIN_BASE);
+    }
+    const img = g.createImageData(S, S), d = img.data;
+    for (let y = 0; y < S; y++) for (let x = 0; x < S; x++) {
+      const i = Math.min(S - 1, Math.round(Math.hypot(x + 0.5 - C, y + 0.5 - C) * (S - 1) / C)), k = (y * S + x) * 4;
+      for (let ch = 0; ch < 3; ch++) d[k + ch] = lut[i * 3 + ch] + (R() - 0.5);   // our own white-noise dither
+      d[k + 3] = 255;
+    }
+    g.putImageData(img, 0, 0);
+    g.globalCompositeOperation = 'lighter';
+    // arcs of dust: on the orbits (most), a few between them, the reach and the strength random
+    for (let i = 0; i < 260; i++) {
+      const o = R() < 0.7 ? UVSTRONG[Math.floor(R() * UVSTRONG.length)] : orbits[Math.floor(R() * orbits.length)], r = o + (R() - 0.5) * (R() < 0.8 ? 5 : 22), a0 = R() * Math.PI * 2, len = 0.18 + R() * R() * 1.5, w = (1.2 + R() * 4.5) * K, al = 0.014 + R() * 0.03;
+      const hot = Math.min(1, Math.max(0, (r - 80) / 130)), rgb = [205 - 165 * hot, 236 - 28 * hot, 226 + 14 * hot];   // pale mint near the sun, cyan-blue out
+      [[w, 0.35], [w * 0.55, 0.4], [w * 0.22, 0.5]].forEach(([lw, k]) => {
+        g.strokeStyle = 'rgb(' + rgb.map((c) => (255 * l2s(s2l(c / 255) * al * k * GAIN_ARC)).toFixed(1)).join(',') + ')'; g.lineWidth = lw; g.lineCap = 'round';
+        g.beginPath(); g.arc(C, C, r * K, a0, a0 + len); g.stroke();
+      });
+    }
+  });
+}
 // The colour to give a light so it shows on screen as his hex: the map's frame is desaturated a little (sat) and
 // goes through three.js's ACES (exposure 1.15), which lifts the middle and crushes the darkest tones to black, so a
 // colour written as measured comes out wrong. Undone here in reverse: ACES's output matrix, its curve, its input
@@ -1830,10 +1877,83 @@ class Universe3D {
     this.lanes();
     this.core();
   }
+  lanes() {
+    if (UVORBITS === 'lines') return this.lanesLines();
+    if (UVORBITS === 'none') { this.laneDefs = []; this.ships = []; return; }
+    this.starlanes();
+  }
+  // Starlanes: every orbit a lane of light-dust drifting round the sun at a pace of its own (the inner ones faster, as
+  // orbits are), in three kinds of dot -- a fine thread of small ones in broken arcs, a wide dim haze of big soft ones,
+  // and now and then a bright star -- each lane tinted by its distance from the sun (UVTINT); and a swarm of embers
+  // circling the sun on the plane where the five small rings were. All of it on the GPU (the sparks' way: where a dot is
+  // is time and its own numbers), brighter on the left and the far side of the first look as the lines were. Under it a
+  // soft dust plane. The stars of light that ride the orbits keep their pace and gain a tail.
+  starlanes() {
+    const Gx = CO.uvGalaxy, R = rng(11), peak = Gx.AZ - Math.PI / 2 - 0.45, TAU = Math.PI * 2, ORB = Gx.ORBITS;
+    const tint = (r) => {
+      let i = 0; while (i < UVTINT.length - 2 && r > UVTINT[i + 1][0]) i++;
+      const [r0, h0] = UVTINT[i], [r1, h1] = UVTINT[i + 1];
+      return new THREE.Color(h0).lerp(new THREE.Color(h1), Math.min(1, Math.max(0, (r - r0) / (r1 - r0))));
+    };
+    const gauss = () => (R() + R() + R() - 1.5) * 2;
+    // the lane's density along it: gaps and thick arcs, so a lane never reads as a drawn circle
+    const dens = (p1, p2, p3) => (a) => Math.max(0.06, 0.55 + 0.3 * Math.sin(a * 3 + p1) + 0.25 * Math.sin(a * 7 + p2) * Math.sin(a * 2 + p3));
+    const P = [];
+    const lane = (r, kind) => {
+      const circ = TAU * r, d = dens(R() * 6, R() * 6, R() * 6), col = tint(r);
+      const spec = {
+        thread: { n: circ / 0.85, sr: 0.45, size: [0.4, 0.9], br: [0.3, 0.7] },
+        haze: { n: circ / 2.4, sr: 2.6, size: [1.0, 2.2], br: [0.06, 0.14] },
+        faint: { n: circ / 6, sr: 3.4, size: [0.8, 1.8], br: [0.04, 0.09] },
+        star: { n: circ / 70, sr: 1.1, size: [2.2, 4.2], br: [0.8, 1.5] }
+      }[kind];
+      const n = Math.round(spec.n), q = [R() * 6, R() * 6, R() * 6];
+      // the lane wanders a little off its circle (a few units, slowly), so it is a stream and not a drawn ellipse;
+      // fixed to each dot's start, so the bends travel round with the lane
+      const wob = (a) => 2.4 * Math.sin(a * 2 + q[0]) + 1.5 * Math.sin(a * 5 + q[1]) + 0.9 * Math.sin(a * 11 + q[2]);
+      for (let i = 0; i < n; i++) {
+        let a; do { a = R() * TAU; } while (R() > d(a));
+        P.push({ r: r + wob(a) + gauss() * spec.sr, a, w: Gx.omega(r) * 9 * (0.97 + R() * 0.06), y: gauss() * 0.18 + 0.05, size: spec.size[0] + R() * R() * (spec.size[1] - spec.size[0]), br: spec.br[0] + R() * (spec.br[1] - spec.br[0]), ph: R() * 6.3, fl: R(), col });
+      }
+    };
+    // three lanes you can see (the stations ride all seven, but seven streams read as seven rings again: "neni tam tech
+    // prstencu moc?"), the other four only a drift of dust
+    ORB.forEach((r) => { if (UVSTRONG.includes(r)) { lane(r, 'thread'); lane(r, 'haze'); lane(r, 'star'); } else lane(r, 'faint'); });
+    lane(210, 'haze');   // the system's edge: a faint haze instead of a bright double ring
+    // the embers round the sun: thicker near it, quick (an orbit's pace at that radius, ~25 times over), warm
+    for (let i = 0; i < 700; i++) {
+      const r = 30 + 36 * Math.pow(R(), 1.5), c = tint(r);
+      P.push({ r, a: R() * TAU, w: Gx.omega(r) * 25 * (0.95 + R() * 0.1), y: gauss() * 0.4 + 0.3, size: 0.45 + R() * R() * 1.5, br: 0.35 + R() * 0.8, ph: R() * 6.3, fl: R(), col: c });
+    }
+    const N = P.length, A = new Float32Array(N * 4), B = new Float32Array(N * 4), Cc = new Float32Array(N * 3);
+    P.forEach((p, i) => { A.set([p.r, p.a, p.w, p.y], i * 4); B.set([p.size, p.br, p.ph, p.fl], i * 4); Cc.set([p.col.r, p.col.g, p.col.b], i * 3); });
+    const a = TSL.instancedBufferAttribute(new THREE.InstancedBufferAttribute(A, 4)), b = TSL.instancedBufferAttribute(new THREE.InstancedBufferAttribute(B, 4)), c = TSL.instancedBufferAttribute(new THREE.InstancedBufferAttribute(Cc, 3));
+    const ang = a.y.add(TSL.time.mul(a.z)), rr = a.x.add(TSL.sin(TSL.time.mul(0.35).add(b.z)).mul(0.3));
+    const sm = new THREE.SpriteNodeMaterial({ transparent: true, depthWrite: false, blending: THREE.AdditiveBlending });
+    sm.positionNode = vec3(TSL.sin(ang).mul(rr), a.w.add(TSL.sin(TSL.time.mul(0.5).add(b.z)).mul(0.12)), TSL.cos(ang).mul(rr));
+    sm.scaleNode = b.x.mul(TSL.sin(TSL.time.mul(b.w.mul(2.2).add(0.8)).add(b.z.mul(5))).mul(0.12).add(0.88));
+    const lit = TSL.pow(TSL.cos(ang.sub(peak)).mul(0.5).add(0.5), 1.3).mul(0.7).add(0.3), tx = TSL.texture(glowTex(), TSL.uv());
+    sm.colorNode = vec4(c.mul(b.y).mul(lit), tx.a);
+    const dust = new THREE.Mesh(G.plane, sm); dust.count = N; dust.frustumCulled = false; dust.renderOrder = -4; this.scene.add(dust); this.dust = dust;
+    // the dust plane under it all
+    const haze = new THREE.Mesh(G.plane, new THREE.MeshBasicMaterial({ map: uvHazeTex(ORB), transparent: true, blending: THREE.AdditiveBlending, depthWrite: false, side: THREE.DoubleSide }));
+    haze.rotation.x = -Math.PI / 2; haze.scale.setScalar(464); haze.position.y = -0.3; haze.renderOrder = -6; haze.frustumCulled = false; this.scene.add(haze); this.haze = haze;
+    // the stars of light on the orbits: where they were (an orbit each), each now trailing a tail along its lane
+    const TC = { 203: '#80c8d0', 178: '#7fb8ff', 136: '#7fe8c0', 105: '#c8f0e6' };
+    this.laneDefs = Object.keys(TC).map((r) => ({ r: +r, col: TC[r], speed: Gx.omega(+r) * 6 }));
+    this.ships = [[203, -1.0, 24, 1.5], [136, 0.42, 9, 0.9], [178, -1.47, 8, 0.7], [203, 2.3, 16, 1.2], [105, 3.9, 13, 1.1]].map(([r, ang0, size, k]) => {
+      const L = this.laneDefs.find((x) => x.r === r) || this.laneDefs[0], col = new THREE.Color(L.col).lerp(new THREE.Color(0xffffff), 0.6);
+      const head = new THREE.Sprite(new THREE.SpriteMaterial({ map: flareTex(), color: col.clone().multiplyScalar(k), transparent: true, blending: THREE.AdditiveBlending, depthWrite: false }));
+      head.scale.setScalar(size); this.scene.add(head);
+      // (close and overlapping, so it is a tail and not a string of beads)
+      const tail = []; for (let i = 1; i <= 7; i++) { const s = glowSprite(col.clone().multiplyScalar(k * 0.55 * (1 - i / 8)), 0.5, size * (0.46 - i * 0.055)); this.scene.add(s); tail.push(s); }
+      return { L, a: ang0, head, tail, size, ph: R() * 6 };
+    });
+  }
   // The orbits as he drew them (UVLINES): each a sharp line of light in its own colour, the bright ones in a soft
   // halo, some dotted; all brighter on the left and the far side of the first look and dim on the right, as in his
   // picture. A few stars of light ride the orbits, faster than the stations.
-  lanes() {
+  lanesLines() {
     const Gx = CO.uvGalaxy, R = rng(3), peak = Gx.AZ - Math.PI / 2 - 0.45;
     // at the first look one unit of the plane is about 3.6 px wide on his 1533-wide frame
     // how lit a point of an orbit is: 1 on the far left, about .75 at the back, .45 in front, .3 on the right
@@ -1945,15 +2065,18 @@ class Universe3D {
     // the orrery's own rings on the plane, as his: thin cyan circles at 36, 42 (dashed), 53 and a bright one at 60,
     // a pale silver arc in pieces at 33 and 57; none of them turns
     const ringAt = (r, w, hex, U = 1, k = 1) => { const m = new THREE.Mesh(uvBand(r, w, U, () => look(hex, k)), new THREE.MeshBasicMaterial({ map: uvLineTex(U > 1), vertexColors: true, transparent: true, blending: THREE.AdditiveBlending, depthWrite: false, side: THREE.DoubleSide })); m.renderOrder = -4; g.add(m); return m; };
-    this.coreRings = [ringAt(60, 0.9, '#a5d8e6'), ringAt(57.5, 0.7, '#4f8a9c'), ringAt(53, 0.7, '#77c2d0'), ringAt(42, 0.8, '#4e8d9f', 90), ringAt(36.5, 0.8, '#81cbdb')];
-    const arcGeo = (r, w, a0, a1) => { const sh = new THREE.Shape(); sh.absarc(0, 0, r + w, a0, a1, false); sh.absarc(0, 0, r - w, a1, a0, true); return new THREE.ShapeGeometry(sh, 48).rotateX(-Math.PI / 2); };
-    const arcMat = new THREE.MeshBasicMaterial({ color: look('#b8c8d2', 0.8), transparent: true, opacity: 0.55, depthWrite: false, side: THREE.DoubleSide });
-    this.coneRings = [[33.5, 0.55, [[0.2, 1.5], [2.2, 3.3], [4.1, 5.6]]], [56.5, 0.5, [[0.9, 2.6], [3.4, 4.4], [5.0, 6.0]]]].map(([r, w, arcs]) => {
-      const grp = new THREE.Group(); arcs.forEach(([a0, a1]) => grp.add(new THREE.Mesh(arcGeo(r, w, a0, a1), arcMat))); grp.position.y = 0.05; g.add(grp); return grp;
-    });
+    // (only in the old look, ?orbits=lines: from 2026-10-23 the sun's rings are embers, see starlanes())
+    if (UVORBITS === 'lines') {
+      this.coreRings = [ringAt(60, 0.9, '#a5d8e6'), ringAt(57.5, 0.7, '#4f8a9c'), ringAt(53, 0.7, '#77c2d0'), ringAt(42, 0.8, '#4e8d9f', 90), ringAt(36.5, 0.8, '#81cbdb')];
+      const arcGeo = (r, w, a0, a1) => { const sh = new THREE.Shape(); sh.absarc(0, 0, r + w, a0, a1, false); sh.absarc(0, 0, r - w, a1, a0, true); return new THREE.ShapeGeometry(sh, 48).rotateX(-Math.PI / 2); };
+      const arcMat = new THREE.MeshBasicMaterial({ color: look('#b8c8d2', 0.8), transparent: true, opacity: 0.55, depthWrite: false, side: THREE.DoubleSide });
+      this.coneRings = [[33.5, 0.55, [[0.2, 1.5], [2.2, 3.3], [4.1, 5.6]]], [56.5, 0.5, [[0.9, 2.6], [3.4, 4.4], [5.0, 6.0]]]].map(([r, w, arcs]) => {
+        const grp = new THREE.Group(); arcs.forEach(([a0, a1]) => grp.add(new THREE.Mesh(arcGeo(r, w, a0, a1), arcMat))); grp.position.y = 0.05; g.add(grp); return grp;
+      });
+    }
     // a star of light on the outer ring, where his is
     const fl = new THREE.Sprite(new THREE.SpriteMaterial({ map: flareTex(), color: new THREE.Color(0xd8f6ff).multiplyScalar(1.4), transparent: true, blending: THREE.AdditiveBlending, depthWrite: false }));
-    fl.scale.setScalar(16); g.add(fl); this.coreFlare = fl;
+    fl.scale.setScalar(16); fl.visible = UVORBITS !== 'none'; g.add(fl); this.coreFlare = fl;
     // (its warm point light went with the detector: it reached only the panels, and no station is that close)
     // what the pointer finds: the sun and a little round it
     const hit = new THREE.Mesh(G.sphere, M.hit); hit.scale.setScalar(Math.max(34, this.sunR * 1.15)); hit.position.copy(this.heartAt); hit.userData.id = 'core'; g.add(hit); this.coreHit = hit;
@@ -2266,7 +2389,10 @@ class Universe3D {
       const L = s.L, a = s.a + t * L.speed;
       s.head.position.set(Math.sin(a) * L.r, 0.2, Math.cos(a) * L.r);
       s.head.scale.setScalar(s.size * (0.85 + 0.15 * Math.sin(t * 3.1 + s.ph) * Math.sin(t * 1.7 + s.ph * 2)));
+      // a tail: seven soft points behind it along the lane, close, each smaller and fainter
+      if (s.tail) s.tail.forEach((p, i) => { const b = a - (i + 1) * s.size * 0.17 / L.r; p.position.set(Math.sin(b) * L.r, 0.2, Math.cos(b) * L.r); });
     });
+    if (this.haze) this.haze.rotation.z = t * 0.004;   // the dust plane turns once in about 26 minutes
   }
   // The banners follow their stations. Ours, the hovered one and Cymetica's always show; the rest nearest first,
   // each only where no nearer one stands, wholly inside the stage and clear of its bars, and only while its station
