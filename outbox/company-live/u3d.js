@@ -2328,7 +2328,15 @@ class Universe3D {
     }
     list.sort((a, b) => (b.keep - a.keep) || a.d - b.d);
     // a galaxy with a name on every star reads as a list: at most this many names besides ours, Cymetica and the hovered
+    // (14 at first; with 36 companies they stood in heaps: "jak jich je moc to vypada uz prestackovani", 2026-10-23)
     let named = 0;
+    // a plate's width is measured once, and a width measured before the plates' font had loaded was too narrow: plates
+    // that looked apart to this test overlapped on the screen. Measured again when the fonts arrive.
+    if (!this._fontsHooked && document.fonts) {
+      this._fontsHooked = true;
+      const again = () => { this.items.forEach((it) => { if (it.el) it.el._bw = 0; }); if (this.coreEl) this.coreEl._bw = 0; this.ovKey = null; };
+      document.fonts.ready.then(again); document.fonts.addEventListener('loadingdone', again);
+    }
     list.forEach((o) => {
       const el = o.el; if (!el) return;
       if (!el._bw) el._bw = el.offsetWidth || 160;
@@ -2338,9 +2346,10 @@ class Universe3D {
       // one that must show is slid along the edge to stay whole; any other shows whole or not at all
       if (o.keep) o.x = Math.max(bw / 2 + 4, Math.min(w - bw / 2 - 4, o.x));
       const r = { l: o.x - bw / 2, r: o.x + bw / 2, t: o.y - bh, b: o.y };
-      const hit = (p) => r.l < p.r + 6 && r.r > p.l - 6 && r.t < p.b + 4 && r.b > p.t - 4;
+      // room round each plate, so two never read as one heap (6 and 4 px at first)
+      const hit = (p) => r.l < p.r + 14 && r.r > p.l - 14 && r.t < p.b + 9 && r.b > p.t - 9;
       const whole = r.l >= 2 && r.r <= w - 2 && r.t >= 2 && r.b <= h - 2;
-      let show = !off && (o.keep || (whole && !placed.some(hit) && !this.bars.some(hit) && o.px >= 24 && named < 14));
+      let show = !off && (o.keep || (whole && !placed.some(hit) && !this.bars.some(hit) && o.px >= 24 && named < 10));
       if (moving && el._placed && !o.keep) show = !off && !!el._show;
       if (show && !o.keep) named++;
       el._show = show;
