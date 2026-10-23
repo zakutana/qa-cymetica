@@ -35,7 +35,7 @@ day, and tries another bot after 3 misses; hand-off to a tournament seat or a li
 yet. The Experiments page (`/company/app/experiments`, `quantlab.js`) has the Bots section, *Your rule* and *+ Add bot*. Nothing to request until a first
 experiment has run; one gap: these endpoints are not in `/llms.txt`.
 
-## C. The Supervisor works as the owner expects (asked in MSG-0212 / MSG-0214; no answer yet)
+## C. The Supervisor works as the owner expects (asked in MSG-0212 / MSG-0214; REPLY-0197: the audit still reads only work records, no date given)
 
 The company's Manager says today that the Supervisor only lists repeated work, unfinished tasks and stuck flows with a proposed fix each, does not read
 the chats, does not touch the app and passes nothing to Cymetica; the one audit so far (id 18) ran a minute after the company was set up and found
@@ -60,10 +60,10 @@ click; anything that spends units or money, or adds or removes a department, wai
 counts), and its findings, each with a link to the message or task it came from and what was done with it: *applied: … (undo)* or *waits for you*. The
 next review's date is shown; the owner can also run one now. Nothing of the engine layer appears there.
 
-## D. The chat (reported as bugs in MSG-0211 and MSG-0213; drawn here only if they do not fix them as bugs)
+## D. (dropped) The chat
 
-A bubble in the thread while NEXUS works, with the queued task's number; every reply says which message it answers; a task number in a message is a link
-to that task.
+Fixed as the bugs we reported (MSG-0211, MSG-0213): their answer REPLY-0197 (2026-10-23) and the live app.js / live.js (v=6adb7183) have the working
+bubble, replies that say which message they answer and task numbers as links. Nothing asked here.
 
 ## E. A countdown to the next pass (settled, drawn)
 
