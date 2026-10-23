@@ -1,0 +1,139 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=1080">
+<title>Cymetica Quest · Build a Company</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Archivo+Black&family=JetBrains+Mono:wght@500;700;800&display=swap" rel="stylesheet">
+<!-- The flyer for degens (the operator, 2026-10-23): the whole idea of Build a Company as one mission -- found a company, build
+     products, promote them on the Promo Market, earn revenue, take a top-3 seat and a cut of every fee. 1080 x 1350, for X and
+     Telegram. Cymetica's palette only (dark #0a0e17, green #00ff88, cyan #00cfff, blue #3b82f6): no orange, purple or gold.
+     The revenue share's numbers are the mockup's example; Cymetica sets the terms, and the foot says so. -->
+<style>
+  :root { --bg: #0a0e17; --green: #00ff88; --cyan: #00cfff; --blue: #3b82f6; --text: #e6edf7; --dim: #8fa3b8; }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body { width: 1080px; height: 1350px; background: var(--bg); overflow: hidden; }
+  body { position: relative; font-family: 'JetBrains Mono', monospace; color: var(--text); }
+  /* space: two nebulae and a field of stars */
+  .sky { position: absolute; inset: 0;
+    background:
+      radial-gradient(60% 40% at 82% 12%, rgba(0, 207, 255, .18), rgba(0, 207, 255, 0) 70%),
+      radial-gradient(55% 38% at 8% 58%, rgba(0, 255, 136, .13), rgba(0, 255, 136, 0) 70%),
+      radial-gradient(50% 30% at 70% 92%, rgba(59, 130, 246, .16), rgba(59, 130, 246, 0) 70%),
+      var(--bg); }
+  #stars { position: absolute; inset: 0; }
+  /* a sun on the right, Cymetica's: the platform every fee flows through */
+  .sun { position: absolute; right: -150px; top: 210px; width: 430px; height: 430px; border-radius: 50%;
+    background: radial-gradient(circle, #ffffff 0 6%, #c9fff0 12%, rgba(0, 255, 200, .55) 28%, rgba(0, 207, 255, .18) 52%, rgba(0, 207, 255, 0) 70%);
+    filter: blur(.5px); }
+  .orbit { position: absolute; border: 1.5px solid rgba(0, 207, 255, .22); border-radius: 50%; }
+  .o1 { right: -330px; top: 70px; width: 790px; height: 710px; }
+  .o2 { right: -470px; top: -30px; width: 1070px; height: 910px; border-style: dashed; border-color: rgba(0, 255, 136, .16); }
+  .wrap { position: absolute; inset: 0; padding: 64px 70px 52px; display: flex; flex-direction: column; }
+  /* the head */
+  .tag { display: inline-flex; align-items: center; gap: 12px; font: 800 17px 'JetBrains Mono'; letter-spacing: .22em; color: var(--cyan); text-shadow: 0 0 12px rgba(0, 207, 255, .6); }
+  .tag i { width: 12px; height: 12px; border-radius: 50%; background: var(--green); box-shadow: 0 0 14px var(--green); }
+  h1 { margin-top: 22px; font: 400 82px/0.98 'Archivo Black', sans-serif; letter-spacing: .01em; }
+  h1 span { display: block; }
+  h1 .g { color: transparent; -webkit-background-clip: text; background-clip: text; background-image: linear-gradient(180deg, #f2fff9, #4dffb4 50%, #00b4e0);
+    filter: drop-shadow(0 0 22px rgba(0, 207, 255, .45)); }
+  .hook { margin-top: 20px; max-width: 760px; font: 700 25px/1.35 'JetBrains Mono'; color: #cfe3ee; }
+  .hook b { color: var(--green); text-shadow: 0 0 14px rgba(0, 255, 136, .5); }
+  /* the mission: five steps on one glowing line */
+  .mission { position: relative; margin-top: 32px; margin-bottom: 26px; padding-left: 4px; }
+  .mhead { display: flex; align-items: center; gap: 16px; }
+  .mhead small { font: 700 15px 'JetBrains Mono'; letter-spacing: .14em; color: var(--dim); }
+  .mhead small b { color: var(--cyan); }
+  .mlabel { display: inline-block; font: 800 15px 'JetBrains Mono'; letter-spacing: .28em; color: #0a0e17; background: var(--green); padding: 6px 14px; border-radius: 99px;
+    box-shadow: 0 0 22px rgba(0, 255, 136, .55); }
+  .steps { position: relative; margin-top: 26px; }
+  .steps::before { content: ''; position: absolute; left: 36px; top: 30px; bottom: 30px; width: 3px; border-radius: 3px;
+    background: linear-gradient(180deg, var(--green), var(--cyan) 50%, var(--blue)); box-shadow: 0 0 16px rgba(0, 207, 255, .6); }
+  .st { position: relative; display: grid; grid-template-columns: 76px 1fr; align-items: center; gap: 22px; height: 104px; }
+  /* opaque, so the line runs behind the node, not through its icon */
+  .node { position: relative; width: 76px; height: 76px; border-radius: 50%; display: grid; place-items: center;
+    background: radial-gradient(circle at 35% 30%, #1b2a36, #0a0e17 70%); border: 2px solid var(--c);
+    box-shadow: 0 0 0 6px rgba(10, 14, 23, .9), 0 0 26px color-mix(in srgb, var(--c) 70%, transparent), inset 0 0 18px color-mix(in srgb, var(--c) 30%, transparent); }
+  .node svg { width: 34px; height: 34px; color: var(--c); filter: drop-shadow(0 0 8px var(--c)); }
+  .node em { position: absolute; top: -8px; right: -8px; width: 30px; height: 30px; border-radius: 50%; display: grid; place-items: center; font: 400 15px 'Archivo Black';
+    font-style: normal; color: #0a0e17; background: var(--c); box-shadow: 0 0 12px var(--c); }
+  .st h2 { font: 400 34px/1 'Archivo Black', sans-serif; letter-spacing: .02em; color: var(--c); text-shadow: 0 0 18px color-mix(in srgb, var(--c) 55%, transparent); }
+  .st p { margin-top: 6px; font: 500 19px/1.3 'JetBrains Mono'; color: #c2d4df; }
+  .st p b { color: var(--text); }
+  .s1 { --c: #00ff88; } .s2 { --c: #33ffb0; } .s3 { --c: #00e0e8; } .s4 { --c: #00cfff; } .s5 { --c: #5aa8ff; }
+  /* the prize: the three seats on a pane of glass */
+  .prize { position: relative; margin-top: auto; padding: 24px 32px 20px; border-radius: 26px; overflow: hidden;
+    background: linear-gradient(135deg, rgba(255, 255, 255, .14), rgba(255, 255, 255, .03) 30%, rgba(255, 255, 255, 0) 50%),
+      radial-gradient(90% 80% at 0% 0%, rgba(0, 207, 255, .18), rgba(0, 207, 255, 0) 60%), linear-gradient(180deg, rgba(14, 28, 40, .78), rgba(6, 8, 16, .9));
+    border: 1px solid rgba(255, 255, 255, .16);
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, .5), inset 0 0 0 1px rgba(0, 207, 255, .22), 0 0 0 1px rgba(0, 207, 255, .35), 0 0 80px rgba(0, 207, 255, .22), 0 30px 60px rgba(0, 0, 0, .6); }
+  .ph { display: flex; align-items: baseline; gap: 14px; }
+  .ph b { font: 400 30px 'Archivo Black', sans-serif; letter-spacing: .08em; color: transparent; -webkit-background-clip: text; background-clip: text;
+    background-image: linear-gradient(180deg, #effff8, #4dffb4 50%, #00b4e0); filter: drop-shadow(0 0 12px rgba(0, 207, 255, .5)); }
+  .ph span { margin-left: auto; font: 800 16px 'JetBrains Mono'; letter-spacing: .2em; color: var(--cyan); text-shadow: 0 0 10px rgba(0, 207, 255, .7); }
+  .seats { display: grid; grid-template-columns: repeat(3, 1fr); margin-top: 18px; }
+  .seat { text-align: center; padding: 4px 6px; }
+  .seat + .seat { border-left: 1px solid transparent; border-image: linear-gradient(180deg, rgba(255, 255, 255, 0), rgba(0, 207, 255, .35), rgba(255, 255, 255, 0)) 1; }
+  .seat i { display: block; font: 400 38px/1 'Archivo Black'; font-style: normal; color: transparent; -webkit-background-clip: text; background-clip: text; }
+  .seat b { display: block; margin-top: 2px; font: 400 54px/1 'Archivo Black'; }
+  .seat span { display: block; margin-top: 8px; font: 700 20px 'JetBrains Mono'; color: #cfe3ee; }
+  .p1 i { background-image: linear-gradient(180deg, #eafff4, var(--green) 55%, #00a067); filter: drop-shadow(0 0 12px rgba(0, 255, 136, .6)); } .p1 b { color: var(--green); text-shadow: 0 0 22px rgba(0, 255, 136, .6); }
+  .p2 i { background-image: linear-gradient(180deg, #e6fbff, var(--cyan) 55%, #0086b5); filter: drop-shadow(0 0 10px rgba(0, 207, 255, .55)); } .p2 b { color: var(--cyan); text-shadow: 0 0 20px rgba(0, 207, 255, .55); }
+  .p3 i { background-image: linear-gradient(180deg, #e3edff, var(--blue) 55%, #1d4ea8); filter: drop-shadow(0 0 8px rgba(59, 130, 246, .5)); } .p3 b { color: var(--blue); text-shadow: 0 0 18px rgba(59, 130, 246, .5); }
+  .pf { display: flex; align-items: center; justify-content: space-between; gap: 18px; margin-top: 20px; }
+  .pf small { font: 500 14px/1.4 'JetBrains Mono'; color: var(--dim); }
+  .cta { flex: none; font: 800 22px 'JetBrains Mono'; color: #0a0e17; background: linear-gradient(90deg, var(--green), var(--cyan)); padding: 13px 22px; border-radius: 12px;
+    box-shadow: 0 0 26px rgba(0, 255, 136, .45); }
+</style>
+</head>
+<body>
+<div class="sky"></div>
+<svg id="stars" width="1080" height="1350"></svg>
+<div class="orbit o2"></div><div class="orbit o1"></div><div class="sun"></div>
+
+<div class="wrap">
+  <div class="tag"><i></i>CYMETICA QUEST · BUILD A COMPANY</div>
+  <h1><span>START A COMPANY.</span><span class="g">EAT THE FEES.</span></h1>
+  <div class="hook">The <b>top 3 companies</b> get a cut of <b>every fee</b> on Cymetica. Every month. In USDC.</div>
+
+  <div class="mission">
+    <div class="mhead"><span class="mlabel">MAIN QUEST</span><small>5 STEPS · REWARD: <b>A CUT OF EVERY FEE</b></small></div>
+    <div class="steps">
+      <div class="st s1"><div class="node"><em>1</em><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2.5c3.5 2.2 5 5.6 5 9.5l-2 4H9l-2-4c0-3.9 1.5-7.3 5-9.5z"/><circle cx="12" cy="10" r="2"/><path d="M9 16l-2.5 4M15 16l2.5 4M12 16v5"/></svg></div>
+        <div><h2>LAUNCH</h2><p>Found your company. <b>AI departments</b> work for you 24/7.</p></div></div>
+      <div class="st s2"><div class="node"><em>2</em><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"><path d="M12 2.5l8.5 4.8v9.4L12 21.5l-8.5-4.8V7.3z"/><path d="M12 12l8.5-4.7M12 12L3.5 7.3M12 12v9.5"/></svg></div>
+        <div><h2>BUILD</h2><p>Ship <b>products</b>. They stand on <b>your land</b> in the Universe.</p></div></div>
+      <div class="st s3"><div class="node"><em>3</em><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 10v4h3l7 4V6L6 10z"/><path d="M16.5 9a4 4 0 0 1 0 6M19 6.5a7.5 7.5 0 0 1 0 11"/></svg></div>
+        <div><h2>PROMOTE</h2><p><b>Promo Market</b>: creators and agents push it. Pay per real user.</p></div></div>
+      <div class="st s4"><div class="node"><em>4</em><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><ellipse cx="12" cy="6" rx="7" ry="2.8"/><path d="M5 6v6c0 1.5 3.1 2.8 7 2.8s7-1.3 7-2.8V6M5 12v6c0 1.5 3.1 2.8 7 2.8s7-1.3 7-2.8v-6"/></svg></div>
+        <div><h2>EARN</h2><p><b>Revenue</b> rolls in: bounties, product rewards, prizes.</p></div></div>
+      <div class="st s5"><div class="node"><em>5</em><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M7 4h10v4a5 5 0 0 1-10 0z"/><path d="M7 6H4a3 3 0 0 0 3 4M17 6h3a3 3 0 0 1-3 4M12 13v4M8 21h8M9.5 17h5"/></svg></div>
+        <div><h2>TAKE A SEAT</h2><p><b>Top 3</b> by 30-day revenue split the platform's fees.</p></div></div>
+    </div>
+  </div>
+
+  <div class="prize">
+    <div class="ph"><b>QUEST REWARD</b><span>REVENUE SHARE · TOP 3</span></div>
+    <div class="seats">
+      <div class="seat p1"><i>1</i><b>5%</b><span>≈ $19,300 / mo</span></div>
+      <div class="seat p2"><i>2</i><b>3%</b><span>≈ $11,580 / mo</span></div>
+      <div class="seat p3"><i>3</i><b>1%</b><span>≈ $3,860 / mo</span></div>
+    </div>
+    <div class="pf"><small>Of every fee on Cymetica. Example split and figures,<br>at $386K fees a month. Terms set by Cymetica.</small><span class="cta">cymetica.com/company</span></div>
+  </div>
+</div>
+
+<script>
+  // a field of stars, the same every time (a fixed seed), mostly white, a few cyan and green
+  (function () {
+    var s = 7, R = function () { s = (s * 16807) % 2147483647; return s / 2147483647; }, svg = document.getElementById('stars'), out = '';
+    for (var i = 0; i < 230; i++) {
+      var r = R(), col = r < 0.12 ? '#00cfff' : r < 0.2 ? '#00ff88' : '#e6edf7';
+      out += '<circle cx="' + (R() * 1080).toFixed(1) + '" cy="' + (R() * 1350).toFixed(1) + '" r="' + (0.4 + R() * R() * 1.8).toFixed(2) + '" fill="' + col + '" opacity="' + (0.25 + R() * 0.65).toFixed(2) + '"/>';
+    }
+    svg.innerHTML = out;
+  })();
+</script>
+</body>
+</html>
