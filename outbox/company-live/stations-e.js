@@ -31,6 +31,34 @@ function flat(g) {
   return n;
 }
 function joined(list) { return list.length ? mergeGeometries(list.map(flat), false) : null; }
+// Light out of a plated material, so a part that moves can be ONE mesh in ONE material (a draw call each counts on a weak
+// computer): the plating's emissive map (stations.js plating(), its "lights") is black but for small lit dashes, and a
+// part whose every uv sits on the middle of the brightest dash glows in the station's colour, the hull round it does
+// not. The dash is found in the texture itself, so a change to its pattern cannot leave the lines dark.
+function litUV() {
+  if (GE.lit) return GE.lit;
+  const c = CO.ST.plating().lights.image, S = c.width, d = c.getContext('2d').getImageData(0, 0, S, S).data;
+  let best = -1, bx = 0, by = 0;
+  for (let y = 1; y < S - 1; y++) for (let x = 1; x < S - 1; x++) {
+    const i = (y * S + x) * 4, v = Math.min(d[i], d[i - 4], d[i + 4]);
+    if (v > best) { best = v; bx = x; by = y; }
+  }
+  // (a canvas texture is flipped: its first row is v = 1)
+  return (GE.lit = [(bx + 0.5) / S, 1 - (by + 0.5) / S]);
+}
+function lit(g) { const [u, v] = litUV(), a = g.attributes.uv; for (let i = 0; i < a.count; i++) a.setXY(i, u, v); return g; }
+// The bake (u3d.js bakeGroup) merges a material's parts only among those alike in having an index or not: a station built
+// of both (CO.ST's shapes have one, an extruded slab or a merged part has none) gets two draw calls for a material. So
+// every still part is made index-free before the bake (a copy of its own, released with the station).
+function unindexed(root) {
+  (function walk(o) {
+    o.children.forEach((ch) => {
+      if (ch.userData.dyn || ch.isInstancedMesh) return;
+      if (ch.isMesh && ch.geometry && ch.geometry.index) { ch.geometry = flat(ch.geometry); ch.userData.own = true; }
+      walk(ch);
+    });
+  })(root);
+}
 function tubeAlong(fn, t0, t1, steps, rad) {
   const pts = [];
   for (let i = 0; i <= steps; i++) { const t = t0 + (t1 - t0) * i / steps; pts.push(new THREE.Vector3(...fn(t))); }
@@ -146,7 +174,7 @@ function nautilus(b, n) {
   const last = chambers[K - 1], tE = last.t1, aE = nAng(tE), hM = last.h, rcM = (nIn(tE) + nOut(tE)) / 2, wM = nOut(tE) - nIn(tE);
   const nx = -Math.sin(aE), nz = -Math.cos(aE), ex = Math.cos(aE), ez = -Math.sin(aE), ry = aE + Math.PI;
   const at = (off, u, y) => [rcM * ex + u * ex + nx * off, y, -rcM * Math.sin(aE) + u * ez + nz * off];
-  box(b, wM * 0.9, hM * 0.84, 0.012, ...at(0.014, 0, hM / 2), M.glass, { ry });
+  box(b, wM * 0.9, hM * 0.84, 0.012, ...at(0.014, 0, hM / 2), M.dark, { ry });
   for (let k = -2; k <= 2; k++) box(b, 0.012, hM * 0.84, 0.012, ...at(0.022, k * wM * 0.2, hM / 2), M.neonSoft, { ry });
   put(b, new THREE.PlaneGeometry(wM * 0.94, hM * 0.92), A.glass, ...at(0.032, 0, hM / 2), { ry });
   box(b, wM * 0.98, 0.03, 0.03, ...at(0.03, 0, 0.03), M.neon, { ry });
@@ -160,14 +188,14 @@ function nautilus(b, n) {
   put(b, sphere(0.3), A.glass, 0, 0.22, 0);
   put(b, sphere(0.13), A.glow, 0, 0.22, 0);
   sprite(b, M.halo, 0, 0.22, 0, 1.6);
-  for (let k = 0; k < 6; k++) { const a = k / 6 * TAU; box(b, 0.04, 0.02, 0.04, Math.cos(a) * 0.33, 0.13, Math.sin(a) * 0.33, M.hot); }
+  for (let k = 0; k < 6; k++) { const a = k / 6 * TAU; box(b, 0.04, 0.02, 0.04, Math.cos(a) * 0.33, 0.13, Math.sin(a) * 0.33, A.glow); }
   put(b, cyl(0.02, 0.03, 0.93, 8), M.metal, 0, 0.99, 0);
   put(b, cyl(0.06, 0.06, 0.05, 12), M.mid, 0, 0.78, 0);
   put(b, cyl(0.12, 0.12, 0.02, 20), M.mid, 0, 1.0, 0);
   put(b, torus(0.12, 0.008, 5, 24), M.neonSoft, 0, 1.012, 0, { rx: Math.PI / 2 });
   put(b, cyl(0.06, 0.06, 0.05, 12), M.mid, 0, 1.2, 0);
   box(b, 0.4, 0.02, 0.02, 0, 1.24, 0, M.metal);
-  for (const s of [1, -1]) put(b, new THREE.SphereGeometry(0.03, 8, 6), M.hot, s * 0.2, 1.24, 0);
+  for (const s of [1, -1]) put(b, new THREE.SphereGeometry(0.03, 8, 6), A.glow, s * 0.2, 1.24, 0);
   put(b, cyl(0.005, 0.02, 0.1, 6), M.metal, 0, 1.5, 0);
   b.beacon(0, 1.56, 0, 0.055);
   sprite(b, M.halo, 0, 1.56, 0, 0.8);
@@ -175,28 +203,29 @@ function nautilus(b, n) {
   // the keel's engine, burning down, nothing streaming out of it
   engine(b, M, 0, -0.62, 0, 0.2, 0, 1.0).rotation.x = -Math.PI / 2;
 
-  // all the small lines and blocks, merged by material
-  [['neon', M.neon], ['soft', M.neonSoft], ['hot', M.hot], ['dark', M.dark], ['mid', M.mid], ['metal', M.metal]].forEach(([k, mat]) => {
+  // all the small lines and blocks, merged by material (the small lamps in the glow the heart's core is: one material
+  // fewer, one draw call fewer, spec 4 O1.5)
+  [['neon', M.neon], ['soft', M.neonSoft], ['hot', A.glow], ['dark', M.dark], ['mid', M.mid], ['metal', M.metal]].forEach(([k, mat]) => {
     const g = joined(L[k]); if (g) { const m = new THREE.Mesh(g, mat); m.userData.own = true; b.g.add(m); }
   });
 
-  // three lights run out along the outer rim, heart to mouth, each starting again at the heart
-  const bead = GE.bead || (GE.bead = new THREE.SphereGeometry(0.055, 12, 8)), runs = [];
-  for (let k = 0; k < 3; k++) {
-    const g = new THREE.Group(); g.userData.dyn = true; b.g.add(g);
-    g.add(new THREE.Mesh(bead, M.hot));
-    const sp = new THREE.Sprite(M.halo); sp.scale.setScalar(0.6); g.add(sp);
-    runs.push({ g, th: k * TH / 3 });
-  }
+  // three lights run out along the outer rim, heart to mouth, each starting again at the heart: ONE mesh, its three
+  // beads moved by rewriting its vertices (a group each was six draw calls with their halos; the bloom is their halo)
+  const bead = GE.bead || (GE.bead = flat(new THREE.OctahedronGeometry(0.06, 1))), nv = bead.attributes.position.count;
+  const beads = joined([bead.clone(), bead.clone(), bead.clone()]), pos = beads.attributes.position, base = bead.attributes.position.array;
+  const runs = new THREE.Mesh(beads, M.hot); runs.userData.dyn = true; runs.userData.own = true; runs.frustumCulled = false; b.g.add(runs);
+  const th = [0, TH / 3, 2 * TH / 3];
   let last0 = null;
   b.anim.push((t) => {
     const dt = last0 == null ? 0 : Math.min(0.25, Math.max(0, t - last0)); last0 = t;
-    runs.forEach((r) => {
-      r.th = (r.th + 0.35 * (b.busy ? 1.6 : 1) * dt) % TH;
-      const [x, z] = nXZ(nOut(r.th) + 0.02, r.th), fade = Math.min(1, r.th / 0.5, (TH - r.th) / 0.5);
-      r.g.position.set(x, nH(r.th) + 0.1, z); r.g.scale.setScalar(Math.max(0.001, fade));
-    });
+    for (let k = 0; k < 3; k++) {
+      th[k] = (th[k] + 0.35 * (b.busy ? 1.6 : 1) * dt) % TH;
+      const [x, z] = nXZ(nOut(th[k]) + 0.02, th[k]), y = nH(th[k]) + 0.1, s = Math.max(0.001, Math.min(1, th[k] / 0.5, (TH - th[k]) / 0.5));
+      for (let i = 0; i < nv; i++) pos.setXYZ(k * nv + i, x + base[i * 3] * s, y + base[i * 3 + 1] * s, z + base[i * 3 + 2] * s);
+    }
+    pos.needsUpdate = true;
   });
+  unindexed(b.g);
   b.top = 1.75; b.bot = -0.85; b.foot = 2.95;
 }
 
@@ -239,17 +268,18 @@ function ringGeo(ri, ro) {
   // round a bright line buries the plating)
   lamp.push(placed(new THREE.TorusGeometry(ro - 0.01, 0.013, 5, seg), 0, hh, 0, Math.PI / 2));
   lamp.push(placed(new THREE.TorusGeometry(ri + 0.01, 0.007, 5, Math.max(40, Math.round(seg * ri / ro))), 0, hh, 0, Math.PI / 2));
-  return (GE[k] = { hull: mergeGeometries([joined(topL), joined(wallL), joined(lamp)], true), m });
+  lamp.forEach(lit);
+  return (GE[k] = { hull: joined(topL.concat(wallL, lamp)), m });
 }
 
 function vortex(b, n) {
-  const { mats, put, box, sprite, cyl, torus, sphere, engine, scaleUV } = CO.ST;
+  const { mats, put, box, sprite, cyl, torus, scaleUV } = CO.ST;
   const A = b.A, M = mats(A), K = Math.max(4, n), dh = Math.min(0.42, 2.15 / (K - 1)), top = 0.15 + (K - 1) * dh, R = b.R;
   const rings = [];
   for (let k = 0; k < K; k++) {
     const ri = 1.0 + 1.8 * k / (K - 1), ro = ri + 0.2, y0 = 0.15 + k * dh, geo = ringGeo(ri, ro), g = new THREE.Group();
     g.userData.dyn = true; g.position.y = y0; b.g.add(g);
-    g.add(new THREE.Mesh(geo.hull, [M.mid, M.dark, M.neonSoft]));
+    g.add(new THREE.Mesh(geo.hull, M.dark));
     // a deck's windows round the outer wall and the inner one (rings past n carry none)
     const i0 = b.w.length;
     if (k < n) {
@@ -271,23 +301,22 @@ function vortex(b, n) {
   put(b, cyl(0.2, 0.2, len, 32, true), A.glass, 0, mid, 0);
   put(b, cyl(0.15, 0.15, len, 24, true), A.beam, 0, mid, 0);
   put(b, cyl(0.06, 0.06, len, 16), A.glow, 0, mid, 0);
+  // (the still parts keep to six materials -- glass, beam, glow, steel, slate, neon -- so the bake leaves six draw calls;
+  // the turning rings are one each: "every object is one more draw call, merge", spec 4 O1.5)
   for (const y of [-0.05, yc]) {
     put(b, cyl(0.28, 0.28, 0.14, 32), M.mid, 0, y, 0);
     put(b, torus(0.285, 0.016, 6, 48), M.neon, 0, y + 0.075, 0, { rx: Math.PI / 2 });
-    put(b, cyl(0.31, 0.31, 0.03, 32), M.metal, 0, y + (y < 0 ? -0.085 : 0.085), 0);   // a flange on the outer side of each
+    put(b, cyl(0.31, 0.31, 0.03, 32), M.dark, 0, y + (y < 0 ? -0.085 : 0.085), 0);   // a flange on the outer side of each
   }
-  for (let q = 1; q <= 3; q++) {
-    const y = -0.05 + (yc + 0.05) * q / 4;
-    put(b, torus(0.205, 0.012, 6, 40), M.neonSoft, 0, y, 0, { rx: Math.PI / 2 });
-    if (q === 2) sprite(b, M.halo, 0, y, 0, 1.0);   // (one halo mid-column: three of them lit the whole stack)
-  }
-  put(b, new THREE.SphereGeometry(0.085, 14, 10), M.hot, 0, yc + 0.13, 0);
+  for (let q = 1; q <= 3; q++) put(b, torus(0.205, 0.008, 6, 40), M.neon, 0, -0.05 + (yc + 0.05) * q / 4, 0, { rx: Math.PI / 2 });
+  sprite(b, M.halo, 0, -0.05 + (yc + 0.05) / 2, 0, 1.0);
+  put(b, new THREE.SphereGeometry(0.085, 14, 10), A.glow, 0, yc + 0.13, 0);
   sprite(b, M.halo, 0, yc + 0.13, 0, 1.3);
-  put(b, cyl(0.012, 0.024, 0.14, 6), M.metal, 0, yc + 0.24, 0);
+  put(b, cyl(0.012, 0.024, 0.14, 6), M.mid, 0, yc + 0.24, 0);
   b.beacon(0, yc + 0.3, 0, 0.045);
-  sprite(b, M.halo, 0, yc + 0.3, 0, 0.6);
 
-  // the emitter under it: a lathed hull in two tones, a ring of light round it, fins, a lens under the column, an engine
+  // the emitter under it: a lathed hull in two tones, rings of light round it, fins, a lens under the column, a light at
+  // its tip
   const emit = (pts, mat) => {
     const g = new THREE.LatheGeometry(pts.map((p) => new THREE.Vector2(p[0], p[1])), 48); scaleUV(g, 3);
     return put(b, g, mat, 0, 0, 0);
@@ -295,14 +324,15 @@ function vortex(b, n) {
   emit([[0.0001, -0.95], [0.26, -0.88], [0.56, -0.5], [0.62, -0.32]], M.dark);
   emit([[0.62, -0.32], [0.36, -0.16], [0.22, -0.06]], M.mid);
   put(b, torus(0.6, 0.026, 6, 64), M.neon, 0, -0.4, 0, { rx: Math.PI / 2 });
-  put(b, torus(0.37, 0.014, 6, 48), M.neonSoft, 0, -0.16, 0, { rx: Math.PI / 2 });
-  put(b, cyl(0.21, 0.21, 0.03, 24), M.core, 0, -0.04, 0);
+  put(b, torus(0.37, 0.01, 6, 48), M.neon, 0, -0.16, 0, { rx: Math.PI / 2 });
+  put(b, torus(0.2, 0.012, 6, 32), M.neon, 0, -0.78, 0, { rx: Math.PI / 2 });
+  put(b, cyl(0.21, 0.21, 0.03, 24), A.glow, 0, -0.04, 0);
+  put(b, new THREE.SphereGeometry(0.05, 10, 8), A.glow, 0, -0.94, 0);
   for (let q = 0; q < 6; q++) {
     const a = q / 6 * TAU + 0.26, r = 0.5;
-    box(b, 0.05, 0.3, 0.16, Math.cos(a) * r, -0.52, Math.sin(a) * r, M.metal, { ry: Math.PI / 2 - a });
-    box(b, 0.03, 0.03, 0.03, Math.cos(a) * (r + 0.1), -0.4, Math.sin(a) * (r + 0.1), M.hot);
+    box(b, 0.05, 0.3, 0.16, Math.cos(a) * r, -0.52, Math.sin(a) * r, M.mid, { ry: Math.PI / 2 - a });
+    box(b, 0.03, 0.03, 0.03, Math.cos(a) * (r + 0.1), -0.4, Math.sin(a) * (r + 0.1), A.glow);
   }
-  engine(b, M, 0, -0.74, 0, 0.18, 0, 1.0).rotation.x = -Math.PI / 2;
 
   // the rings turn (alternate ones the other way) and bob, a slow wave up the stack; their windows go with them
   let last = null;
