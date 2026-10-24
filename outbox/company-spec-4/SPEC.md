@@ -93,7 +93,13 @@ paused*), and everything inside is seen as in a room with the lights off. When t
 lit. Resume, and the lights come back. The row of a paused department dims with it, and its button turns into a filled play. Drawn in the mockup:
 `sim.js` (`CO.deptPaused`, `CO.act.deptPause`), `app.js` (the button), `u3d.js` (`tint`, state *dark*), `office.js` and `style.css` (the flat office).
 
-## H. The revenue share: the top 3 companies get a share of every fee on Cymetica (settled, drawn)
+## H. The revenue share: the top 3 companies get a share of Cymetica's revenue (settled, drawn)
+
+**Wording (the owner, 2026-10-24): *revenue*, not *fees*, and a place is a *slot*, not a seat.** A plan's subscription is Cymetica's revenue too, and
+*up to 5% of Cymetica revenue* is what he promises companies (only the first place gets 5%). So wherever this item below says *fees*, read
+*revenue* (what counts as revenue is yours to set), and *seat* means *slot*. The mockup's board, leaderboard, pulse and Products tab use these words
+now (*Open slot*, *Who gets a slot*, *Revenue brought · 30 d*, *+5% of revenue*), and the promo flyer for degens shows the same board:
+`outbox/revenue-share-flyer/` (*JOIN THE CYMETICA QUEST · Build the best company in the Universe and earn up to 5% of Cymetica revenue*).
 
 **The numbers in this item are an example for the design, not our terms.** The shares (5% / 3% / 1%), how many places are paid, the floor
 to qualify ($10,000), the payout (monthly, in USDC) and any cap are **yours to set**: decide your own conditions, who gets how many percent and
@@ -167,6 +173,12 @@ saturation, 0.66, is still pale), not the station's halo or its pool of light (b
 off the hull is greener still) and not the viewing angle (the map's camera brought down to the preview's angle: still pale). Left: how the map builds
 or scales a station (`UVSS` 2.7) and its materials there. Please find it on your side and match the preview; tell us what it was, and we fix the mockup.
 
+**Added 2026-10-24: a paused company's station goes dark on the map** (the owner: *"budou zhasnute firmy co zrovna nemakaji a jsou pauznute ...
+zmizi ty barvy"*). A company that is paused (its owner's pause, or the company paused as a whole) is drawn in plain steel: its windows out, its
+ring and halo (almost) off, and the colour that lives in its lights gone, until it runs again; the flat map draws it grey. A company that is
+active stays as it is, lit deck by deck while a department works. It follows the pause switch at once, ours included. Mockup: `u3d.js`
+(`makeStation`, `PAUSED_HEX`), `uv.css` (`.plot.paused`).
+
 ## J. The owner writes the line his product shows in the Universe (settled, drawn)
 
 The live map's tooltip for Gem Screener reads *made by BJ Ironstar Capital · Which apps earn money, ranked by upside.*, and its panel repeats the
@@ -236,7 +248,22 @@ The same rules as the seven: **the hull stays steel and slate, the company's col
 materials: that is the washed look of item I); one deck per department, lit while that department works; each under 30% of the sun's diameter
 on the map; nothing pulses (no plumes, no beams out of a prow), what moves only turns, runs along a track or bobs slowly.
 
-## N. Products: a tile per product, its panel with the visitors and the fees it brought, and its logo (settled, drawn)
+**Settings: the picker is icons and one preview** (the owner, 2026-10-24: *"jen ty ikonky a 1 obrazovka kde se bude zobrazovat aktualni skin a v nem jen
+barvy menit, zbytek jen ikonky se bude klikat"*). In *In the Universe* the grid of picture tiles goes. One strip of line icons, **all seventeen
+in one row** (the seven, then the ten), each only an icon with its name as a tooltip, and under it, centred, **one large preview** of the current
+station in the company's colour with the colour dots on it. Clicking an icon changes the preview; changing the colour changes the **model only**,
+never the icons (they stay one neutral colour, the current one with the selection rim). The Public / Private switch is a compact pill above the strip.
+The same on "Create your company". Mockup: `app.js` (`uvCard`), `style.css`.
+
+**All seventeen are built one way** (the owner: *"ty spodni modely jsou udelane v jinem stylu, nejsou osvetlene, nemaji zari, nejsou tak propracovane ...
+at to udelaji stejne a mame jen jeden zpusob"*): a dark plated steel hull, the company colour only in the lights, windows lit deck by deck while a
+department works, surface detail, a beacon, slow motion only, and the same glow and halo as the seven. The ten are real 3D in the mockup
+(`stations-a.js` to `stations-e.js`, on the parts `stations.js` publishes as `CO.ST`), not the flat pictures of `company-skins/index.html`, which stays
+as the sheet to build them from.
+
+## N. Products: a tile per product, its panel with the people and the revenue it brought, and its logo (settled, drawn)
+
+(In this item *fees brought* reads *revenue brought* since 2026-10-24, see H; the mockup's tab says *revenue brought*.)
 
 The owner, 2026-10-23: *"kdyz kliknu ankazdy vyjede nejake bocni menu kde uvidim kolik mam visitsoru a kolik to vygenerovlao fee ta aplikace. a
 chci moznost taky pridat si ikonku ke kazdemu produktu. nejake logo"* (a click on a product slides out a side panel with its visitors and the fees
@@ -269,6 +296,31 @@ was paid, "0"); **people per day per product** (only the account has `unique_dai
 rows (`/gem-screener` 177 people, `/gem-screener/app` 162): one product, people not double-counted. Mockup: `app.js` (`renderPortfolio`,
 `renderProdPanel`), `portfolio.js` (`CO.apps`, `CO.appFees`, `CO.REFERRAL`, `CO.prodLogo`, `CO.readLogo`), `style.css` (`.pf`, `.pflogo`, `.pfp`,
 `.pfwhere`). The vault's apps follow the referral rule (1,000 ET10 a new user), replacing the placeholder per-visitor rate.
+
+## O. Speed on a weak computer, and a plan that lasts a working session (settled, rules)
+
+**O1. Drawing: rules for everything new in this spec.** Your performance package (`outbox/company-perf`, branch `company-perf`: `SPEC.md`,
+`company-perf.patch`, `request.txt`, the measuring harness) is filed on its own and first; this spec builds on it and changes nothing in it. Every
+item above that draws something new obeys its rules:
+1. Every new 3D thing reads its quality level from `CO.Q3` (`quality.js`: high / medium / low). On high it looks as drawn here; lower it is drawn cheaper.
+2. Below high nothing is built ahead in the background (`CO.Q3.ahead`) and nothing behind another scene: it is built when it is opened.
+3. No frosted glass (`backdrop-filter`) over moving 3D: below high an opaque plate instead. This reaches the revenue-share board over the Universe (H),
+   the Products panel (N) and the Settings preview (M).
+4. New shadows, reflections and passes are drawn less often below high, or not at all (the package's C1 and C2 are the pattern). A paused company's dark
+   station (I) is cheaper to draw than a lit one: no halo, no ring.
+5. A weak PC is held up by the processor, not the graphics: every new object is one more draw call, so merge. The ten new stations (M) bake into few meshes, as the seven do.
+6. Share materials across rooms and stations: one material and one TSL node per look, not per room (the office's load is 70% three.js building shaders:
+   113 builds for 70 different shaders, package sections 1 and 7).
+Our local copy of the mockup does not have the package's patch, nor your fix ET-32470 (the Universe's pixel cap); the measuring harness in
+`outbox/company-perf/harness` (`perf.py`, `batch.py`) is the way to measure any of this.
+
+**O2. The plan: a Max 5x window that lasts.** Read from the owner's company on 2026-10-23 (`GET /company/mine`, `budget`, `turn_strip`): on Max 5x the
+5-hour window ran out after 11 turns in 23 minutes (4.94 of 5 units) and the company was blocked for three hours (*"You've hit your session build
+limit. It resets at 11:55pm UTC"*). 8 of those 11 turns were the Manager answering the owner in the chat (2.84 units in all); only 3 were department
+work. The same price buys Claude Code a day of work on Opus at the highest effort. What we ask: (a) a window that carries a real working session
+on Max 5x; (b) a chat turn that costs a fraction of a department turn (a short answer needs no full pass); (c) work that continues while tasks are
+queued, instead of waiting for the next pass (`pass_every_s` 120). Asked on Telegram and a2a as MSG-0219. The owner's own words are in that message;
+how it is solved is yours.
 
 ## What stays as it is
 
