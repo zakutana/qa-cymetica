@@ -237,6 +237,13 @@ CEILINGS = {
     # answer lands in the next minute and a few in flight can stack -- hence 70, not
     # 60. Above it, something is sending past the brake. 2026-10-07, REPLY-0030.
     "peak_requests_per_minute": 70,
+    # The busiest UTC day on their host, from the same rows and window (2026-10-25; NEXT.md
+    # 2026-10-18, crew-before-c9 point 10). The minute's brake still allows 86,400 a day, and
+    # 2026-10-09 made 48,557 (the FOMO collector's ~2,000 an hour) with no minute over 70. Half
+    # of that day: above the busiest day without the collector (2026-10-04, 19,359) and above
+    # 2026-10-11 counted with the collector at its 10,000 cap (1b636163; ~22,760); below each
+    # of 2026-10-08..11 as they ran (45,133 / 48,557 / 30,472 / 25,229).
+    "peak_requests_per_day": 25_000,
     # 1000 -> 5000 on 2026-10-03: the operator has 800 GB free, so disk is not the limit; the
     # archives and the manifest keep what git must not hold. Still a ceiling, so a runaway
     # capture loop is noticed, just not a single heavy day of sweeps.
@@ -669,11 +676,14 @@ def sizes(root: Path | None = None) -> dict:
     # process to 60. Counted only since the brake went in, so the ceiling is held
     # above where the repository stands and still catches a process that slips
     # past it -- a client built outside qa/client.py, a brake switched off.
+    # The busiest UTC day from the same rows and window: a flat 2,000 an hour never lit the
+    # minute, and made 48,557 on 2026-10-09 (crew-before-c9 point 10).
     timings = base / "state" / "timings.jsonl"
     week_ago = (datetime.now(timezone.utc) - timedelta(days=7)).isoformat()
     since = max(week_ago, BRAKE_SINCE)
     try:
         per_minute: dict[str, int] = {}
+        per_day: dict[str, int] = {}
         with open(timings, encoding="utf-8") as fh:
             for line in fh:
                 if '"cymetica.com"' not in line:
@@ -684,7 +694,9 @@ def sizes(root: Path | None = None) -> dict:
                     continue
                 if at >= since:
                     per_minute[at[:16]] = per_minute.get(at[:16], 0) + 1
+                    per_day[at[:10]] = per_day.get(at[:10], 0) + 1
         out["peak_requests_per_minute"] = max(per_minute.values(), default=0)
+        out["peak_requests_per_day"] = max(per_day.values(), default=0)
     except OSError:
         pass
     return out
