@@ -176,3 +176,33 @@ archive/
 # The /company mockup's downloaded textures and models (CC0, ambientCG and Poly Haven): the bodies stay out
 # of git, outbox/company-live/assets.json (in git) names each file with its source, licence, bytes and sha256.
 outbox/company-live/assets/
+
+# Pictures our own scripts render from a page in git (render.py, make_mockup.py, shoot_previews.py, the station
+# agents' shots): 97 MB of them sat untracked on 2026-10-25, the pack is 209 MB against its 150 ceiling and the
+# 2026-10-18 pass found each mockup picture committed up to six times. Each is remade by running its script; what a
+# request text links (a spec/ folder, a picture named in request.txt) is committed by name and is not listed here.
+# Exact paths, or a name pattern inside one folder of shots; never a repo-wide pattern like *-1440.png, which would
+# silently keep out the next picture a request links.
+outbox/company-skins/built-*.png
+outbox/company-skins/settings-*.png
+outbox/company-skins/showcase-*.png
+outbox/company-skins/preview.png
+outbox/company-promo-video/shots/
+outbox/company-promo-video/shots-overview.png
+outbox/company-flyer/flyer-1080x1350.png
+outbox/revenue-share-flyer/flyer-1080x1350.png
+outbox/revenue-share-flyer/slogan-v*.png
+outbox/gem-screener-tiers/tiers-*.png
+outbox/gem-screener-cards/card-1440.png
+outbox/gem-screener-cards/cards-1440.png
+outbox/gem-screener-cards/cards-before-1440.png
+outbox/build-it-better-redesign/index.html
+outbox/build-it-better-redesign/catalog-1920.png
+outbox/build-it-better-redesign/first-screen-1920.png
+outbox/build-it-better-redesign/page-1440.png
+outbox/build-it-better-redesign/previews/
+outbox/event-card-redesign/index.html
+outbox/event-card-redesign/page-1440.png
+outbox/event-card-redesign/page-1920.png
+outbox/gem-screener-top/crystal.svg
+outbox/gem-screener-final/3-telegram-et32311/rays.svg
