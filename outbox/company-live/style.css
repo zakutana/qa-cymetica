@@ -1072,22 +1072,23 @@ select:focus, .search:focus, .field input:focus, .field textarea:focus { border-
 .spv .bloom { opacity: .8; mix-blend-mode: screen; }
 .spv .gl { mix-blend-mode: screen; }
 /* over the screen: a bar along its top (what it is showing on the left, who may look on the right), the colour dots
-   standing down its right edge */
+   standing down its right edge. Opaque plates, no frosted glass: a blur over moving 3D is redrawn every frame
+   (company-perf, spec 4 O1.3). */
 .uvcard .stbar { position: absolute; left: 26px; right: 26px; top: 22px; z-index: 3; display: flex; align-items: center; gap: 10px; pointer-events: none; }
 .uvcard .stbar .sp { flex: 1; }
 .uvcard .stnm { display: flex; align-items: baseline; gap: 10px; padding: 7px 14px; border-radius: 99px;
-  background: rgba(6, 9, 15, .55); border: 1px solid var(--line2); backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px); }
+  background: rgba(6, 9, 15, .86); border: 1px solid var(--line2); }
 .uvcard .stnm b { font: 400 17px 'Archivo Black', sans-serif; letter-spacing: .03em; color: var(--text); text-transform: uppercase; }
 .uvcard .stnm span { font-size: 11px; color: var(--dim2); letter-spacing: .08em; text-transform: uppercase; }
 .uvcard .sttag { pointer-events: auto; padding: 4px 10px; border-radius: 99px; cursor: help; font-size: 9.5px; font-weight: 800; letter-spacing: .14em; color: var(--cyan);
   border: 1px solid rgba(0, 207, 255, .4); background: rgba(0, 207, 255, .08); }
 .uvcard .sttag[hidden] { display: none; }
 .uvcard .switch.onprev { pointer-events: auto; gap: 10px; padding: 7px 14px 7px 9px; border-radius: 99px;
-  background: rgba(6, 9, 15, .62); border-color: var(--line2); backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px); }
+  background: rgba(6, 9, 15, .86); border-color: var(--line2); }
 .uvcard .switch.onprev .sw { width: 36px; height: 20px; } .uvcard .switch.onprev .sw::after { width: 14px; height: 14px; }
 .uvcard .switch.onprev.on .sw::after { left: 19px; }
 .uvcard .accents.onprev { position: absolute; right: 26px; top: 50%; transform: translateY(-50%); z-index: 3; flex-direction: column; gap: 10px; padding: 12px 8px; border-radius: 99px;
-  background: rgba(6, 9, 15, .62); border: 1px solid var(--line2); backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px); }
+  background: rgba(6, 9, 15, .86); border: 1px solid var(--line2); }
 .uvcard .accents.onprev .acc { width: 24px; height: 24px; flex: none; border-width: 2px; }
 /* the dock: every station a line icon (the departments' drawing), the name a tooltip, one row joined under the screen */
 .uvcard .skpick { width: 100%; min-width: 0; padding: 14px 18px; overflow-x: auto; overscroll-behavior-x: contain; scrollbar-width: thin; scrollbar-color: var(--line3) transparent;

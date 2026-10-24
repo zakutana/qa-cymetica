@@ -2699,7 +2699,7 @@ class Universe3D {
 function esc(s) { return String(s == null ? '' : s).replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c])); }
 
 /* ---------------- one station, turning slowly in space: Settings, Create your company, a private company's card ---------------- */
-const PREVIEWS = [];
+const PREVIEWS = [], PV_PX = 1.2e6;
 class Preview {
   constructor(el) {
     geo();
@@ -2752,7 +2752,13 @@ class Preview {
   frame() {
     const w = this.wrap.clientWidth, h = this.wrap.clientHeight;
     if (!w || !h || !document.body.contains(this.el)) return;
-    if (this.w !== w || this.h !== h) { this.w = w; this.h = h; this.camera.aspect = w / h; this.camera.updateProjectionMatrix(); this.renderer.setSize(w, h, false); }
+    // at most PV_PX pixels drawn a frame, bloom included: the old 600 x 500 screen at 2x. The wide Settings showroom
+    // (1850 x 605 on a 1920 screen) stays under it at 1x and is drawn a little softer on a 2x screen, never dearer than
+    // the screen it replaced (company-perf, spec 4 O1). Where the package's quality level runs (CO.Q3), its own pixel cap
+    // and pixel ratio are the tighter ones below high.
+    if (this.w !== w || this.h !== h) { this.w = w; this.h = h; this.camera.aspect = w / h; this.camera.updateProjectionMatrix();
+      const q = CO.Q3, cap = q && q.px > 0 ? Math.min(PV_PX, q.px) : PV_PX;
+      this.renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, (q && q.pr) || 2, Math.sqrt(cap / (w * h)))); this.renderer.setSize(w, h, false); }
     const t = this.clock.getElapsedTime();
     this.turn.rotation.y = t * 0.28;
     if (this.plot) { this.plot.b.tick(t); this.plot.body.position.y = Math.sin(t * 0.6) * 0.15; }
