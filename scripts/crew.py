@@ -619,7 +619,8 @@ def clock_look(now: datetime | None = None) -> tuple[str, str]:
     daily = crew.daily_key(now)
     if daily and state.get("metrics_day") != daily:
         # The auditor's daily half, written before the manager's day so the day reads it.
-        numbers = crew.metrics(crew.tickets(), crew.load(crew.runs_path()), now)
+        numbers = crew.metrics(crew.tickets(), crew.load(crew.runs_path()), now,
+                               since=crew.running_since())
         crew.record({"type": "metrics", **numbers, "flags": crew.metric_flags(numbers)},
                     now=now)
         state["metrics_day"] = daily
@@ -1084,7 +1085,7 @@ def audit(days: float) -> int:
     """The auditor's numbers over a window, for the manager and the deep pass's week."""
     now = datetime.now(timezone.utc)
     numbers = crew.metrics(crew.tickets(), crew.load(crew.runs_path()), now,
-                           timedelta(days=days))
+                           timedelta(days=days), since=crew.running_since())
     print(f"the company over {days:g} day(s), to {numbers['at'][:16]}")
     print(f"{'dept':9} {'state':20} {'open':>4} {'done':>4} {'fail':>4} {'retry':>5} "
           f"{'lead m':>6} {'runs':>4} {'bad':>4} {'tok/done':>9}")

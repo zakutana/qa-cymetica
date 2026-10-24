@@ -950,14 +950,18 @@ def _tokens(run: dict) -> int:
 
 
 def metrics(state: dict[str, dict], runs: list[dict], now: datetime,
-            window: timedelta = timedelta(days=1)) -> dict:
-    """Each department's numbers over the window, and the work done twice. Pure."""
-    since = now - window
-    stuck = set(stuck_departments(state, runs, now))
+            window: timedelta = timedelta(days=1), since: datetime | None = None) -> dict:
+    """Each department's numbers over the window, and the work done twice. Pure.
+
+    `since` is when the company last started (`running_since`), as the watchdog passes it to
+    `stuck_departments`: without it a ticket left over a weekend switched off read stuck here
+    while the watchdog, the same minute, said it was not (crew-before-c9 point 11)."""
+    stuck = set(stuck_departments(state, runs, now, since))
+    floor = now - window
 
     def inside(value) -> bool:
         at = moment(value)
-        return at is not None and at >= since
+        return at is not None and at >= floor
 
     out: dict = {"at": stamp(now), "window_hours": round(window.total_seconds() / 3600, 1),
                  "departments": {}, "duplicates": []}

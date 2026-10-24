@@ -864,7 +864,13 @@ def crew_section(base: Path, since: str | None = None) -> dict:
     now = datetime.now(timezone.utc)
     start = _moment(since) if since else None
     window = (now - start) if start else timedelta(days=1)
-    numbers = crew.metrics(tickets, runs, now, window)
+    # When the company last started, as the watchdog counts stuck from it: this base's own
+    # marker, not state_dir()'s (crew-before-c9 point 11).
+    try:
+        started = _moment((state / "crew" / "running").read_text(encoding="utf-8").strip())
+    except OSError:
+        started = None
+    numbers = crew.metrics(tickets, runs, now, window, since=started)
     numbers["flags"] = crew.metric_flags(numbers)
     return numbers
 
