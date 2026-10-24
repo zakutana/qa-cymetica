@@ -2176,13 +2176,13 @@ class Universe3D {
     const hid = !it.el._placed || it.el.classList.contains('hidden');
     if (pl) {
       it.el.className = pl.cls + (hid ? ' hidden' : ''); it.el.style.setProperty('--acc', acc); it.el.setAttribute('data-id', c.id);
-      it.el.innerHTML = pl.html; it.el._bw = 0; return;
+      it.el.innerHTML = pl.html; it.el._bw = 0; it.el._rk = undefined; return;
     }
     it.el.className = 'b3' + (!c.public && !it.mine ? ' priv' : '') + (c.status === 'paused' ? ' paused' : '') + (it.mine ? ' mine' : '') + (hid ? ' hidden' : '');
     it.el.style.setProperty('--acc', acc);
     it.el.setAttribute('data-id', c.id);
     it.el.innerHTML = (it.mine ? '<span class="you">YOU</span>' : '') + '<span class="rib">' + (!c.public && !it.mine ? '<i class="lk"></i>' : '') + esc(name) + '</span><span class="teth"></span>';
-    it.el._bw = 0;
+    it.el._bw = 0; it.el._rk = undefined;   // overlay() puts the place in the ranking back
   }
   coreBanner() {
     if (this.coreEl) return;
@@ -2405,7 +2405,7 @@ class Universe3D {
     if (this._topK !== this.built) {
       this._topK = this.built;
       const b = CO.uvBoard && CO.uvBoard(this.h.mine ? this.h.mine() : null);
-      this._top = new Set(b && b.rows ? b.rows.slice(0, 10).map((r) => String(r.c.id)) : []);
+      this._top = new Map(b && b.rows ? b.rows.map((r, i) => [String(r.c.id), i + 1]) : []);   // id -> place in the ranking
     }
     return this._top;
   }
@@ -2465,7 +2465,7 @@ class Universe3D {
       it.plateAt = (it.plateAt || new THREE.Vector3()).copy(c).addScaledVector(up, lift);
       v.copy(it.plateAt).project(this.camera); const d = cam.distanceTo(it.anchor);
       // ours, the ads and land of your own are always named; the rest as room allows
-      return { el: it.el, x: (v.x + 1) / 2 * w, y: (1 - v.y) / 2 * h, z: v.z, d, px: it.size * f / d, mine: it.mine, star: top.has(String(it.c.id)), keep: it.mine || it.kind === 'ad' || !!it.owned || String(this.hover) === String(it.c.id) };
+      return { el: it.el, x: (v.x + 1) / 2 * w, y: (1 - v.y) / 2 * h, z: v.z, d, px: it.size * f / d, mine: it.mine, star: (top.get(String(it.c.id)) || 99) <= 10, rank: top.get(String(it.c.id)), isCo: !it.kind, keep: it.mine || it.kind === 'ad' || !!it.owned || String(this.hover) === String(it.c.id) };
     });
     if (this.coreEl) {
       c.copy(this.heartAt).addScaledVector(up, this.sunR * 0.9); v.copy(c).project(this.camera);
@@ -2495,6 +2495,14 @@ class Universe3D {
       const hit = (p) => r.l < p.r + 14 && r.r > p.l - 14 && r.t < p.b + 9 && r.b > p.t - 9;
       const whole = r.l >= 2 && r.r <= w - 2 && r.t >= 2 && r.b <= h - 2;
       // a company's plate: only the ten that earn most, where there is room and its station is big enough on the screen
+      // its place in the ranking, before the name, on the ten that earn most and on ours: which company is which
+      const rk = o.isCo && (o.star || o.mine) && o.rank ? o.rank : 0;
+      if (el._rk !== rk) {
+        el._rk = rk; el._bw = 0;
+        const rib = el.querySelector('.rib'), old = rib && rib.querySelector('.rk');
+        if (old) old.remove();
+        if (rib && rk) { const b = document.createElement('b'); b.className = 'rk r' + (rk <= 3 ? rk : 'n'); b.textContent = '#' + rk; rib.insertBefore(b, rib.firstChild); }
+      }
       let show = !off && (o.keep || (o.star && whole && !placed.some(hit) && !this.bars.some(hit) && o.px >= 24 && named < 10));
       if (moving && el._placed && !o.keep) show = !off && !!el._show;
       if (show && !o.keep) named++;

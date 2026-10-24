@@ -142,6 +142,12 @@ i.lk::before { content: ''; position: absolute; left: 1.5px; top: -5px; width: 6
 .b3pop { position: absolute; left: 0; top: 0; pointer-events: none; font: 800 13px 'JetBrains Mono'; color: var(--green); text-shadow: 0 0 10px rgba(0, 255, 136, .9);
   animation: b3pop 2.6s ease-out forwards; white-space: nowrap; }
 @keyframes b3pop { 0% { opacity: 0; margin-top: 10px; } 15% { opacity: 1; } 70% { opacity: 1; } 100% { opacity: 0; margin-top: -34px; } }
+/* Its place in the revenue share's ranking, on a company's plate (the ten that earn most, and ours): which company is which.
+   The first three in the board's own colours, green, cyan and blue (uvpanel.css --rs1..3). */
+.b3 .rk { flex: none; width: auto; display: inline-block; font: 800 11px 'JetBrains Mono', monospace; letter-spacing: .02em; padding: 1px 5px 0; margin: 0 1px 0 -4px; border-radius: 3px; color: #0a0e17; background: #8b97a3; line-height: 1.35; }
+.b3 .rk.r1 { background: var(--rs1, #00ff88); box-shadow: 0 0 8px rgba(0, 255, 136, .6); }
+.b3 .rk.r2 { background: var(--rs2, #00cfff); box-shadow: 0 0 8px rgba(0, 207, 255, .55); }
+.b3 .rk.r3 { background: var(--rs3, #3b82f6); color: #fff; box-shadow: 0 0 8px rgba(59, 130, 246, .55); }
 
 /* ---------- the office in 3D ---------- */
 .vt { display: inline-flex; border: 1px solid var(--line3); border-radius: 7px; overflow: hidden; margin-right: 6px; background: var(--deep); }
