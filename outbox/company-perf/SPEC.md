@@ -6,7 +6,8 @@ longest word was OFFICE, the entry page was loading an office he had not asked f
 the company he then opened loaded slowly again and stuttered too.
 
 This folder is the whole change, ready to apply: `company-perf.patch` against your live files (`/static/company/*`,
-`?v=6adb7183`), the three pictures in `new/`, and below what each part does, where, and what it buys, measured. On a
+`?v=6adb7183`; in `?v=6adc2f0f`, served on 2026-10-24, the seven files it touches are byte for byte the same and it
+applies cleanly, checked), the three pictures in `new/`, and below what each part does, where, and what it buys, measured. On a
 strong computer the 3D draws the same picture as today (section 5). A weak one gets a cheaper drawing of the same
 pictures, and nothing is built before someone asks for it. What it does not shorten is an office's own loading: that is
 three.js making shaders (section 1), and section 7 says where that time could go.
