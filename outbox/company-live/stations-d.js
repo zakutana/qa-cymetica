@@ -443,7 +443,9 @@ function tesseract(b, n) {
   ST.engine(b, M, 0, -1.86, 0, 0.2, 0, 0.8).rotation.x = -PI / 2;
   put(b, lathe('tsCup', [[0.3, -1.44], [0.42, -1.44], [0.3, -1.3], [0.16, -1.12], [0.3, -0.98]], 28, 2, 1), M.metal, 0, 0, 0);
   put(b, torus(0.42, 0.018, 6, 40), M.neon, 0, -1.43, 0, { rx: PI / 2 });
-  greebles(b, [M.mid, M.dark, M.light, M.mid], -1.44, -1.2, 1.2, -1.2, 1.2, 36, (x, z) => {
+  // (few materials, on purpose: every material on a station is one more draw call after the bake, and a weak computer
+  // is held by its CPU -- spec 4, O1.5; so the base is mid, dark and metal, the lights hot, neon and neonSoft)
+  greebles(b, [M.mid, M.dark, M.metal, M.mid], -1.44, -1.2, 1.2, -1.2, 1.2, 36, (x, z) => {
     const r = Math.hypot(x, z); if (r < 0.95 || r > 1.2) return false;
     for (let k = 0; k < 4; k++) { const t = k * PI / 2 + 0.4; if (Math.hypot(x - Math.cos(t), z - Math.sin(t)) < 0.34) return false; }
     return true;
@@ -452,7 +454,7 @@ function tesseract(b, n) {
   put(b, cylp(0.82, 0.92, 0.1, 40), M.dark, 0, -1.39, 0); put(b, torus(0.82, 0.014, 6, 80), M.neonSoft, 0, -1.34, 0, { rx: PI / 2 });
   for (let k = 0; k < 4; k++) {
     const t = k * PI / 2 + 0.4, x = Math.cos(t) * 1.0, z = Math.sin(t) * 1.0, ry = PI / 2 - t;
-    box(b, 0.34, 0.2, 0.3, x, -1.33, z, k % 2 ? M.mid : M.light, { ry });
+    box(b, 0.34, 0.2, 0.3, x, -1.33, z, M.mid, { ry });
     box(b, 0.38, 0.03, 0.34, x, -1.225, z, M.metal, { ry });
     box(b, 0.05, 0.05, 0.02, x + Math.cos(t) * 0.17, -1.31, z + Math.sin(t) * 0.17, M.hot, { ry });
     // (a box turned by ry: its +z face looks along (sin ry, cos ry); a window row on each of the four faces)
@@ -468,9 +470,9 @@ function tesseract(b, n) {
     const t = k * PI * 2 / 3 + 1.3;
     put(b, new THREE.CylinderGeometry(0.012, 0.018, 0.34, 6), M.metal, Math.cos(t) * 1.12, -1.27, Math.sin(t) * 1.12);
   }
-  b.beacon(Math.cos(1.3) * 1.12, -1.09, Math.sin(1.3) * 1.12, 0.035);
+  put(b, new THREE.SphereGeometry(0.03, 8, 6), M.hot, Math.cos(1.3) * 1.12, -1.09, Math.sin(1.3) * 1.12);   // a lamp, not a beacon: each beacon is a draw call of its own
   // the axis: a thin line of light up through the middle of both cubes, bottom corner to top
-  put(b, new THREE.CylinderGeometry(0.022, 0.022, yt - yb - 0.4, 8), A.glow, 0, (yt + yb) / 2, 0);
+  put(b, new THREE.CylinderGeometry(0.022, 0.022, yt - yb - 0.4, 8), M.hot, 0, (yt + yb) / 2, 0);
 
   /* the frame: twelve struts, eight nodes; each edge a line of light; turning about the vertical */
   const spin = new THREE.Group(); spin.position.set(0, yc, 0); spin.userData.dyn = true; b.g.add(spin);
@@ -484,20 +486,22 @@ function tesseract(b, n) {
   }
   for (let ax = 0; ax < 3; ax++) for (const s1 of sd) for (const s2 of sd) {
     const o = [0, 0, 0], oth = [0, 1, 2].filter((i) => i !== ax); o[oth[0]] = s1 * h; o[oth[1]] = s2 * h;
+    // (the frame is four materials -- light, dark, neon, hot -- so its turning group is four draw calls)
     const len = a - ND + 0.04, dims = [SW, SW, SW]; dims[ax] = len;
-    fb.add(pbox(dims[0], dims[1], dims[2]), (ax + (s1 > 0 ? 1 : 0) + (s2 > 0 ? 1 : 0)) % 2 ? M.light : M.mid, lc(o[0], o[1], o[2]));
+    fb.add(pbox(dims[0], dims[1], dims[2]), M.light, lc(o[0], o[1], o[2]));
     const ou = new V3(o[0], o[1], o[2]).normalize(), put3 = (t, off) => { const p = [o[0] + ou.x * off, o[1] + ou.y * off, o[2] + ou.z * off]; p[ax] += t; return p; };
     // the edge's line of light on its outer corner
     const ld = [0.034, 0.034, 0.034]; ld[ax] = len * 0.88;
     let p = put3(0, SW * 0.707 + 0.012); fb.add(pbox(ld[0], ld[1], ld[2]), M.neon, lc(p[0], p[1], p[2]));
     // clamps along it, a junction at its middle with a lamp
     for (const t of [-0.3, 0.3]) { const cd = [SW + 0.05, SW + 0.05, SW + 0.05]; cd[ax] = 0.09; p = put3(t * len, 0); fb.add(pbox(cd[0], cd[1], cd[2]), M.dark, lc(p[0], p[1], p[2])); }
-    const jd = [SW + 0.07, SW + 0.07, SW + 0.07]; jd[ax] = 0.15; p = put3(0, 0); fb.add(pbox(jd[0], jd[1], jd[2]), M.metal, lc(p[0], p[1], p[2]));
+    const jd = [SW + 0.07, SW + 0.07, SW + 0.07]; jd[ax] = 0.15; p = put3(0, 0); fb.add(pbox(jd[0], jd[1], jd[2]), M.dark, lc(p[0], p[1], p[2]));
     p = put3(0, SW * 0.707 + 0.07); fb.add(new THREE.SphereGeometry(0.032, 8, 6), M.hot, lc(p[0], p[1], p[2]));
   }
   fb.flush(spin);
   // its crown, on the top corner (on the axis, so it stands still while the frame turns): a prism of light, its halo, a beacon
-  put(b, new THREE.OctahedronGeometry(0.085), M.hot, 0, yt + 0.27, 0, { s: [0.8, 1.45, 0.8] });
+  // (two four-sided cones base to base: an octahedron, but indexed, so the bake merges it with the other hot parts)
+  for (const s of [1, -1]) put(b, new THREE.ConeGeometry(0.068, 0.123, 4), M.hot, 0, yt + 0.27 + s * 0.0615, 0, s < 0 ? { rx: PI } : null);
   sprite(b, M.halo, 0, yt + 0.27, 0, 1.3);
   b.beacon(0, yt + 0.42, 0, 0.04);
 
@@ -506,7 +510,8 @@ function tesseract(b, n) {
   const ib = makeBin(), innerH = c - 0.2, FL = Math.max(1, Math.round(innerH / n / 0.17)), J = n * FL, pitch = innerH / J, hc = c / 2;
   ib.add(new THREE.BoxGeometry(c, c, c), A.glass, mx4(0, 0, 0));
   ib.add(pbox(c + 0.08, 0.05, c + 0.08), M.mid, mx4(0, hc + 0.025, 0)); ib.add(pbox(c + 0.08, 0.05, c + 0.08), M.dark, mx4(0, -hc - 0.025, 0));
-  ib.add(pbox(c * 0.5, 0.04, c * 0.5), M.light, mx4(0, hc + 0.07, 0)); ib.add(pbox(c * 0.5, 0.04, c * 0.5), M.light, mx4(0, -hc - 0.07, 0));
+  // (five materials in the inner cube -- glass, mid, dark, neonSoft, hot -- so five draw calls as it turns)
+  ib.add(pbox(c * 0.5, 0.04, c * 0.5), M.dark, mx4(0, hc + 0.07, 0)); ib.add(pbox(c * 0.5, 0.04, c * 0.5), M.mid, mx4(0, -hc - 0.07, 0));
   for (const sx of sd) for (const sz of sd) {
     ib.add(pbox(0.07, c, 0.07), M.dark, mx4(sx * hc, 0, sz * hc));
     ib.add(pbox(0.03, c - 0.1, 0.03), M.neonSoft, mx4(sx * (hc + 0.045), 0, sz * (hc + 0.045)));
@@ -533,7 +538,7 @@ function tesseract(b, n) {
     }
   }
   // the core: a column of light, a bright heart, the centre's halo
-  ib.add(new THREE.CylinderGeometry(0.035, 0.035, c - 0.1, 10), A.glow, mx4(0, 0, 0));
+  ib.add(new THREE.CylinderGeometry(0.035, 0.035, c - 0.1, 10), M.hot, mx4(0, 0, 0));
   ib.add(new THREE.SphereGeometry(0.09, 14, 10), M.hot, mx4(0, 0, 0));
   ib.flush(ic);
   sprite(b, M.halo, 0, yc, 0, 2.3);
