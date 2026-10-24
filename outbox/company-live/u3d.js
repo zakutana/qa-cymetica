@@ -1310,6 +1310,25 @@ function promoBeamTex() {
   g.fillStyle = grd; g.fillRect(0, 0, 4, 128);
   const t = new THREE.CanvasTexture(c); TX.promoBeam = t; return t;
 }
+// The airship's banner, a hologram as the billboard is: light on black, PROMO MARKET and its two offers glowing in the
+// billboard's colour of the moment, a frame of light, scan lines and one torn row.
+function holoBannerTex(hot) {
+  const key = 'holoBanner' + hot; if (TX[key]) return TX[key];
+  const W = 1024, H = 296, c = document.createElement('canvas'); c.width = W; c.height = H; const g = c.getContext('2d');
+  const A = hot === 'm' ? PROMO.magenta : PROMO.amber, B = hot === 'm' ? '#ffb3da' : '#ffe6b0';
+  g.fillStyle = '#000000'; g.fillRect(0, 0, W, H);
+  const wash = g.createLinearGradient(0, 0, 0, H); wash.addColorStop(0, 'rgba(0,0,0,0)'); wash.addColorStop(0.5, hot === 'm' ? 'rgba(255,45,149,.2)' : 'rgba(255,176,32,.2)'); wash.addColorStop(1, 'rgba(0,0,0,0)');
+  g.fillStyle = wash; g.fillRect(0, 0, W, H);
+  g.textAlign = 'center'; g.textBaseline = 'middle'; g.shadowColor = A; g.shadowBlur = 30;
+  g.fillStyle = B; g.font = '800 104px "JetBrains Mono", monospace'; g.fillText('PROMO MARKET', W / 2, 118);
+  g.fillStyle = A; g.font = '800 44px "JetBrains Mono", monospace'; g.fillText('EARN USDC  \u00b7  GET USERS', W / 2, 214);
+  g.shadowBlur = 18; g.strokeStyle = A; g.lineWidth = 6; g.beginPath(); g.roundRect(12, 12, W - 24, H - 24, 22); g.stroke();
+  g.shadowBlur = 0; g.strokeStyle = B; g.lineWidth = 8; const L = 54, m = 6;
+  [[m, m, 1, 1], [W - m, m, -1, 1], [m, H - m, 1, -1], [W - m, H - m, -1, -1]].forEach(([x, y, sx, sy]) => { g.beginPath(); g.moveTo(x + sx * L, y); g.lineTo(x, y); g.lineTo(x, y + sy * L); g.stroke(); });
+  g.fillStyle = 'rgba(0,0,0,.5)'; for (let y = 0; y < H; y += 5) g.fillRect(0, y, W, 2);
+  g.drawImage(c, 0, 150, W, 12, 22, 150, W, 12);                // one row torn sideways
+  const t = new THREE.CanvasTexture(c); t.colorSpace = THREE.SRGBColorSpace; t.anisotropy = 8; TX[key] = t; return t;
+}
 function adPromo(body, b) {
   const C = amat(PROMO.c);
   const metal = new THREE.MeshStandardMaterial({ color: PROMO.metal, roughness: 0.3, metalness: 0.8 });
@@ -1383,6 +1402,32 @@ function adPromo(body, b) {
   const lights = [-1, 1].map((sgn) => { const m = ownGeo(new THREE.Mesh(coneGeo, lightMat)); m.position.set(sgn * 0.55, CY + S / 2 + 0.1, 0); st.add(m); return { m, sgn }; });
   const glow = glowSprite(C.c, 0.2, 6); glow.position.y = 3; st.add(glow);
   const holoGlow = glowSprite(new THREE.Color(PROMO.magenta), 0.18, S * 3); holoGlow.position.y = CY; st.add(holoGlow);
+  // the PROMO airship, back (the operator, 2026-10-24: "kolem promo marketu vrat tu PROMO vzducholod ktera kolem toho
+  // krouzila s nejakym holografickym banerem"): a white airship circling outside the ad cards, nose first, a lamp on its
+  // nose, a lit gondola, a cyan band; behind its tail a banner of light, held to the fins by two lines of light, magenta
+  // and amber in turn with the billboard, flickering as it does. Two banners back to back so it reads from both sides.
+  const orbit = new THREE.Group(); orbit.position.y = CY + 0.35; st.add(orbit);
+  const ship = new THREE.Group(); ship.position.x = 4.3; orbit.add(ship);
+  const hullMat = new THREE.MeshStandardMaterial({ color: 0xe4ecf5, roughness: 0.45, metalness: 0.15, emissive: 0x16222e, emissiveIntensity: 0.6 });
+  part(new THREE.SphereGeometry(0.5, 32, 16), hullMat, 0, 0, 0, ship).scale.set(1, 1, 2.4);
+  [-0.35, 0.25].forEach((z) => { const r = 0.5 * Math.sqrt(1 - (z / 1.2) ** 2); part(new THREE.TorusGeometry(r + 0.005, 0.03, 6, 48), C.rim, 0, 0, z, ship); });
+  part(new THREE.BoxGeometry(0.22, 0.15, 0.56), dark, 0, -0.52, -0.1, ship);
+  part(new THREE.BoxGeometry(0.235, 0.05, 0.42), C.glow, 0, -0.51, -0.1, ship);
+  part(new THREE.SphereGeometry(0.07, 12, 8), C.glow, 0, 0, -1.2, ship);
+  part(new THREE.BoxGeometry(0.04, 0.62, 0.4), metal, 0, 0, 1.0, ship); part(new THREE.BoxGeometry(0.62, 0.04, 0.4), metal, 0, 0, 1.0, ship);
+  part(new THREE.CylinderGeometry(0.07, 0.07, 0.08, 14), C.glow, 0, 0, 1.22, ship).rotation.x = Math.PI / 2;
+  const BL = 3.2, BH = 0.92, BZ = 1.55 + BL / 2, banners = { m: [], a: [] };
+  const bannerGeo = new THREE.PlaneGeometry(BL, BH); ownGeo(new THREE.Mesh(bannerGeo));
+  ['m', 'a'].forEach((hot) => [1, -1].forEach((side) => {
+    const mat = new THREE.MeshBasicMaterial({ map: holoBannerTex(hot), color: new THREE.Color(0xffffff).multiplyScalar(1.4), transparent: true, opacity: 0, blending: THREE.AdditiveBlending, depthWrite: false, side: THREE.FrontSide });
+    const m = new THREE.Mesh(bannerGeo, mat); m.position.set(0, 0, BZ); m.rotation.y = side * Math.PI / 2; ship.add(m); banners[hot].push(mat);
+  }));
+  const tieMat = light(PROMO.c, 0.55);
+  [1, -1].forEach((sy) => {
+    const a = new THREE.Vector3(0, sy * 0.3, 1.18), z = new THREE.Vector3(0, sy * BH / 2, 1.55), d = z.clone().sub(a);
+    const tie = part(new THREE.CylinderGeometry(0.012, 0.012, 1, 6), tieMat, (a.x + z.x) / 2, (a.y + z.y) / 2, (a.z + z.z) / 2, ship);
+    tie.scale.y = d.length(); tie.quaternion.setFromUnitVectors(new THREE.Vector3(0, 1, 0), d.normalize());
+  });
   b.tick = (t) => {
     rings.forEach((r, i) => { r.g.rotation.y = t * (0.3 + i * 0.1) * r.dir; });
     bandMat.map.offset.x = -t * 0.025;
@@ -1392,6 +1437,8 @@ function adPromo(body, b) {
     const flick = (0.82 + 0.12 * Math.sin(t * 23) * Math.sin(t * 7.3)) * (Math.sin(t * 1.7) * Math.sin(t * 5.3) > 0.93 ? 0.35 : 1);
     screens.m.forEach((m) => { m.opacity = (1 - f) * flick; }); screens.a.forEach((m) => { m.opacity = f * flick; });
     holoGlow.material.color.set(f > 0.5 ? PROMO.amber : PROMO.magenta);
+    orbit.rotation.y = t * Math.PI * 2 / 22; ship.position.y = Math.sin(t * 0.9) * 0.1; ship.rotation.z = Math.sin(t * 0.7) * 0.04;
+    banners.m.forEach((m) => { m.opacity = (1 - f) * flick * 0.95; }); banners.a.forEach((m) => { m.opacity = f * flick * 0.95; });
     const sy = ((t * 0.35) % 1) * 2 - 1; scan.position.y = sy * S / 2; scanMat.opacity = 0.7 * (1 - Math.abs(sy) * 0.6) * flick;
     for (let i = 0; i < N; i++) { const s = seeds[i], p = (s[2] + t * s[3] * 0.25) % 1; pos[i * 3] = s[0] * (0.4 + p * 0.6); pos[i * 3 + 1] = PY + 0.5 + p * (S + 0.9); pos[i * 3 + 2] = s[1] * (0.4 + p * 0.6); }
     sparkGeo.attributes.position.needsUpdate = true;
@@ -1426,6 +1473,56 @@ function strawTex() {
   g.fillStyle = 'rgba(110,64,16,.45)'; for (let y = 0; y < W; y += 16) g.fillRect(0, y, W, 2);
   const t = new THREE.CanvasTexture(c); t.colorSpace = THREE.SRGBColorSpace; t.wrapS = t.wrapT = THREE.RepeatWrapping; t.repeat.set(6, 2); t.anisotropy = 8; TX.straw = t; return t;
 }
+// The farmer's head is woven willow, a harvest basket (the operator, 2026-10-24: no metal of any kind, "zvol lepsi vice
+// farmarsky material, treba slameny klobouk je top"), stained a chestnut brown so the light straw hat stands off it
+// (golden willow under golden straw: "moc zlute je cele"). A basket weave: pairs of round willow strands laid across, then
+// pairs laid down, in turn, over the dark gaps; each strand shaded across its width so it reads round. bump: the same
+// strands as height, light in the middle, dark in the gaps.
+function weave(g, W, H, bump) {
+  g.fillStyle = bump ? '#000' : '#140a04'; g.fillRect(0, 0, W, H);
+  let sd = 7; const R = () => (sd = (sd * 16807) % 2147483647) / 2147483647;
+  const C = 32, strand = (x, y, w, h, across) => {
+    const gr = across ? g.createLinearGradient(0, y, 0, y + h) : g.createLinearGradient(x, 0, x + w, 0), k = 0.86 + R() * 0.22;
+    const tone = (r, gg, b2) => 'rgb(' + Math.min(255, r * k | 0) + ',' + Math.min(255, gg * k | 0) + ',' + Math.min(255, b2 * k | 0) + ')';
+    if (bump) { gr.addColorStop(0, '#222'); gr.addColorStop(0.5, '#fff'); gr.addColorStop(1, '#222'); }
+    else { gr.addColorStop(0, tone(50, 28, 13)); gr.addColorStop(0.45, tone(140, 88, 50)); gr.addColorStop(0.6, tone(162, 108, 64)); gr.addColorStop(1, tone(46, 25, 12)); }
+    g.fillStyle = gr; g.beginPath(); g.roundRect(x, y, w, h, Math.min(w, h) / 2); g.fill();
+  };
+  for (let i = 0; i < W / C; i++) for (let j = 0; j < H / C; j++) {
+    const x = i * C, y = j * C;
+    if ((i + j) % 2) { strand(x + 1, y + 2, C - 2, 13, true); strand(x + 1, y + 17, C - 2, 13, true); }
+    else { strand(x + 2, y + 1, 13, C - 2, false); strand(x + 17, y + 1, 13, C - 2, false); }
+  }
+}
+function wickerTex(bump) {
+  const k = bump ? 'wickerB' : 'wicker'; if (TX[k]) return TX[k];
+  const t = ctex(512, 256, (g, W, H) => weave(g, W, H, bump));
+  if (bump) t.colorSpace = THREE.NoColorSpace;
+  t.wrapS = t.wrapT = THREE.RepeatWrapping; t.repeat.set(5, 3); TX[k] = t; return t;
+}
+// hemp rope: strands twisting along it, light and dark in turn on a slant
+function ropeTex() {
+  if (TX.rope) return TX.rope;
+  const t = ctex(256, 64, (g, W, H) => {
+    g.fillStyle = '#4a3418'; g.fillRect(0, 0, W, H);
+    for (let x = -H; x < W + H; x += 16) {
+      const gr = g.createLinearGradient(x, 0, x + 12, 0); gr.addColorStop(0, '#5a4020'); gr.addColorStop(0.5, '#c9a466'); gr.addColorStop(1, '#5a4020');
+      g.fillStyle = gr; g.beginPath(); g.moveTo(x, H); g.lineTo(x + 12, H); g.lineTo(x + 12 + H * 0.8, 0); g.lineTo(x + H * 0.8, 0); g.closePath(); g.fill();
+    }
+  });
+  t.wrapS = t.wrapT = THREE.RepeatWrapping; t.repeat.set(28, 1); TX.rope = t; return t;
+}
+// dark walnut with its grain, for the pegs and the eyes' rims
+function woodTex() {
+  if (TX.wood) return TX.wood;
+  const t = ctex(128, 128, (g, W, H) => {
+    g.fillStyle = '#5b3a1c'; g.fillRect(0, 0, W, H);
+    let sd = 3; const R = () => (sd = (sd * 16807) % 2147483647) / 2147483647;
+    for (let i = 0; i < 40; i++) { g.strokeStyle = 'rgba(' + (R() < 0.5 ? '30,16,6' : '140,96,52') + ',' + (0.2 + R() * 0.3) + ')'; g.lineWidth = 1 + R() * 2;
+      const x = R() * W; g.beginPath(); g.moveTo(x, 0); g.bezierCurveTo(x + R() * 10 - 5, H / 3, x + R() * 10 - 5, 2 * H / 3, x + R() * 8 - 4, H); g.stroke(); }
+  });
+  TX.wood = t; return t;
+}
 function adFarmer(body, b) {
   const R = 2.0, u = R / 17, Y = 3.3;                                    // u: one unit of the logo's viewBox
   const part = (geo, mat, x, y, z, parent) => { const m = ownGeo(new THREE.Mesh(geo, mat)); m.position.set(x, y, z); parent.add(m); return m; };
@@ -1433,32 +1530,43 @@ function adFarmer(body, b) {
   // the whole head leans back toward the camera, which looks down on it: upright, the brim hid the face (turned first,
   // then leant: order YXZ)
   const head = new THREE.Group(); head.position.y = Y; head.rotation.order = 'YXZ'; head.rotation.x = -0.4; body.add(head);
-  part(new THREE.SphereGeometry(R, 48, 32), new THREE.MeshStandardMaterial({ color: FARM.shell, emissive: 0x5a3a06, emissiveIntensity: 0.5, roughness: 0.28, metalness: 0.5 }), 0, 0, 0, head);
+  // The head: a basket of willow (wickerTex), lit by the scene as straw is, its weave in relief (the same picture as
+  // bump); round the face a braid of hemp rope where a metal head had a seam; a peg of walnut on either side where ears
+  // would be, a warm light in each; the logo's dotted ring as eighteen small lights shining out of the weave, each in a
+  // collar of wood; nothing of metal anywhere ("ja nechci at je to kovove", 2026-10-24).
+  const wicker = new THREE.MeshStandardMaterial({ map: wickerTex(false), bumpMap: wickerTex(true), bumpScale: 2.4, roughness: 0.82, metalness: 0, emissive: 0x1c0d05, emissiveIntensity: 0.22 });
+  const rope = new THREE.MeshStandardMaterial({ map: ropeTex(), bumpMap: ropeTex(), bumpScale: 1.4, roughness: 0.9, metalness: 0 });
+  const wood = new THREE.MeshStandardMaterial({ map: woodTex(), roughness: 0.7, metalness: 0, emissive: 0x140902, emissiveIntensity: 0.3 });
+  part(new THREE.SphereGeometry(R, 64, 40), wicker, 0, 0, 0, head);
   const face = new THREE.Group(); head.add(face);
-  // the bolts: a bronze disc on either side, an amber light in each
-  const bronze = new THREE.MeshStandardMaterial({ color: FARM.bolt, emissive: 0x2a1604, roughness: 0.35, metalness: 0.6 });
-  const boltGeo = new THREE.CylinderGeometry(0.42, 0.46, 0.34, 28), boltLamp = new THREE.CylinderGeometry(0.2, 0.2, 0.4, 20), lampMat = basic(FARM.dots, 1.1);
+  const up = new THREE.Vector3(0, 1, 0), nrm = new THREE.Vector3(), q = new THREE.Quaternion();
+  const onShell = (geo, polar, az, out) => {
+    nrm.set(Math.sin(polar) * Math.cos(az), Math.sin(polar) * Math.sin(az), Math.cos(polar));
+    q.setFromUnitVectors(up, nrm);
+    return geo.clone().applyQuaternion(q).translate(nrm.x * out, nrm.y * out, nrm.z * out);
+  };
+  // the braid round the face
+  const PA = 0.92;
+  part(new THREE.TorusGeometry(R * Math.sin(PA), 0.08, 12, 128), rope, 0, 0, R * Math.cos(PA), face);
+  // the pegs: a disc of walnut on either side, a warm light in each
+  const boltGeo = new THREE.CylinderGeometry(0.4, 0.46, 0.3, 28), boltLamp = new THREE.CylinderGeometry(0.17, 0.17, 0.36, 20), lampMat = basic(FARM.dots, 1.1);
   [-1, 1].forEach((s, i) => {
-    const own = i ? (m) => m : ownGeo, bolt = own(new THREE.Mesh(boltGeo, bronze)), lamp = own(new THREE.Mesh(boltLamp, lampMat));
+    const own = i ? (m) => m : ownGeo, bolt = own(new THREE.Mesh(boltGeo, wood)), lamp = own(new THREE.Mesh(boltLamp, lampMat));
     bolt.position.set(s * (R - 0.02), -0.1, 0); bolt.rotation.z = Math.PI / 2; lamp.position.copy(bolt.position); lamp.rotation.z = Math.PI / 2; face.add(bolt, lamp);
   });
-  // the rim: the logo's stroke round the head, a seam of bronze into dark bronze, standing as the head's outline seen
-  // from the first look (33.5 degrees above it); its top, under the hat, left out
-  const rimGeo = new THREE.TorusGeometry(R + 0.06, 0.1, 10, 120, Math.PI * 2 - 1.34), rp = rimGeo.attributes.position, rc = new Float32Array(rp.count * 3);
-  const g0 = look(FARM.rim[0], 0.9), g1 = look(FARM.rim[1], 0.9), cc = new THREE.Color();
-  for (let i = 0; i < rp.count; i++) { const a = Math.atan2(rp.getY(i), rp.getX(i)) + 2.24; cc.copy(g0).lerp(g1, 0.5 - 0.5 * Math.cos(a - 3 * Math.PI / 4)); rc.set([cc.r, cc.g, cc.b], i * 3); }
-  rimGeo.setAttribute('color', new THREE.BufferAttribute(rc, 3));
-  part(rimGeo, new THREE.MeshBasicMaterial({ vertexColors: true }), 0, 0, 0, face).rotation.set(-0.185, 0, 2.24);
-  // the dotted ring: 18 amber lights set in the gold round the face, the logo's r 12 of 17
-  const th = Math.asin(12 / 17), dotGeo = new THREE.SphereGeometry(0.075, 8, 6), dotMat = basic(FARM.dots, 1.1);
-  for (let i = 0; i < 18; i++) {
-    const a = i / 18 * Math.PI * 2, d = (i ? (m) => m : ownGeo)(new THREE.Mesh(dotGeo, dotMat));
-    d.position.set(Math.sin(th) * Math.cos(a), Math.sin(th) * Math.sin(a), Math.cos(th)).multiplyScalar(R * 1.005); face.add(d);
-  }
+  // the rim: the logo's stroke round the head, now a thick rope standing as the head's outline seen from the first look
+  // (33.5 degrees above it); its top, under the hat, left out
+  part(new THREE.TorusGeometry(R + 0.06, 0.1, 12, 140, Math.PI * 2 - 1.34), rope, 0, 0, 0, face).rotation.set(-0.185, 0, 2.24);
+  // the dotted ring: 18 small lights in the weave, the logo's r 12 of 17, each in a collar of wood; merged
+  const th = Math.asin(12 / 17), sockG = new THREE.CylinderGeometry(0.115, 0.115, 0.08, 20), lensG = new THREE.SphereGeometry(0.075, 12, 8);
+  const socks = [], lenses = [];
+  for (let i = 0; i < 18; i++) { const a = i / 18 * Math.PI * 2; socks.push(onShell(sockG, th, a, R * 1.01)); lenses.push(onShell(lensG, th, a, R * 1.035)); }
+  part(mergeGeometries(socks, false), wood, 0, 0, 0, face);
+  part(mergeGeometries(lenses, false), basic(FARM.dots, 1.3), 0, 0, 0, face);
   // the eyes: two pills of light, 5 by 9 of the logo, 5 either side of the middle, each in a dark bronze bezel a size
   // larger, both sunk into the gold so they bulge
   const eyeGeo = new THREE.CapsuleGeometry(2.5 * u, 4 * u, 8, 16), eyeMat = basic(FARM.eye, 1.2), bezelGeo = new THREE.CapsuleGeometry(3.3 * u, 4 * u, 8, 16);
-  const bezelMat = new THREE.MeshStandardMaterial({ color: FARM.bezel, roughness: 0.3, metalness: 0.6 }), eyes = [];
+  const bezelMat = wood, eyes = [];
   [-1, 1].forEach((s, i) => {
     const x = s * 5 * u, y = -0.5 * u, z = Math.sqrt(R * R - x * x - y * y), own = i ? (m) => m : ownGeo;
     const bz = own(new THREE.Mesh(bezelGeo, bezelMat)); bz.position.set(x, y, z - 0.14); bz.rotation.y = Math.atan2(x, z); bz.scale.z = 0.5; face.add(bz);
