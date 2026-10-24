@@ -215,6 +215,15 @@ components:
     surface: rest
     criticality: medium
     staleness_hours: 24
+  rest.airdrop_farmer:
+    # A Build it Better app (ET-32463, built from our request in
+    # outbox/airdrop-farms): the gated farm list /api/v1/airdrop-farm/farms
+    # and the farm wallet. First check 2026-10-24: farms whose token already
+    # trades sit in a list gated "No token live yet".
+    title: Airdrop Farmer (the farm list and the farm wallet)
+    surface: rest
+    criticality: medium
+    staleness_hours: 24
   rest.gem_screener:
     # A Build it Better app (ET-26608, follow-up ET-27671) with its own REST
     # reads: /api/v1/gem-screener and /api/v1/gem-screener/status. First
