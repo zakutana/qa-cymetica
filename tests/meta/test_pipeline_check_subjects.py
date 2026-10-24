@@ -721,6 +721,9 @@ def test_a_card_that_is_closed_on_rest_and_open_on_mcp_fails():
     # And #93's documented GETs, read against the auth note on their own line (2026-10-25).
     _the_documented_get_auth_note_readings()
 
+    # And the cards our OPEN positions point at (2026-10-25), the same way.
+    _the_open_position_card_readings()
+
     # And a clone's perpetual markets against the live 5-minute markets (2026-10-13).
     from tests.rest.test_a_clone_trades_only_live_epoch_markets import dead_markets, live_symbols
     live = live_symbols({"markets": [{"symbol": s} for s in
@@ -1408,6 +1411,40 @@ def _the_documented_get_auth_note_readings():
         run([me, keyed], {"/api/v1/creator/rewards": bare})  # its note names the key: judged
     with pytest.raises(AssertionError, match="build-stats"):
         run([me, stats], {"/api/v1/build-stats": bare})  # "sessions" in prose is not an auth note
+
+
+def _the_open_position_card_readings():
+    """The position check (2026-10-25): PRE-0274 failed it on a CLOSED position whose card had been
+    deleted. llms.txt documents the route as "Your open card positions", and its rows carry `status`
+    (open 33, closed 90 on 2026-10-25). A closed row has nothing to price or close; only open
+    positions are judged, a row whose status does not read is named, and none open is nothing."""
+    check = _load("tests/rest/test_build_recipes.py", "position_cards_under_test")
+    pos = lambda card, status: {"card_id": card, "status": status}  # noqa: E731
+
+    def run(rows, cards):
+        rest = _Rest({check.POSITIONS: (200, {"positions": rows}),
+                      **{check.CARD.format(card_id=c): (200, {"id": c}) for c in cards}})
+        check.test_every_card_we_hold_a_position_in_still_resolves(rest)
+        return rest
+
+    asked = run([pos("live", "open"), pos("deleted", "closed")], ["live"])
+    assert check.CARD.format(card_id="deleted") not in asked.asked, "a closed row's card is not probed"
+    with pytest.raises(AssertionError, match="gone"):
+        run([pos("live", "open"), pos("gone", "open")], ["live"])
+    with pytest.raises(Inconclusive):
+        run([pos("deleted", "closed")], [])
+    with pytest.raises(Inconclusive):
+        run([{"card_id": "gone"}], [])  # no status: not known to be open
+
+    class _Drops(_Rest):  # 2026-10-25: a card read died on RemoteProtocolError mid-probe
+        def get(self, path, **kw):
+            if path == check.CARD.format(card_id="flaky"):
+                raise ConnectionError("Server disconnected without sending a response.")
+            return super().get(path, **kw)
+
+    with pytest.raises(Inconclusive):
+        check.test_every_card_we_hold_a_position_in_still_resolves(_Drops({
+            check.POSITIONS: (200, {"positions": [pos("flaky", "open")]})}))
 
 
 def _the_idea_template_readings():

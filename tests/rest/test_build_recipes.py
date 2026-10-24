@@ -20,7 +20,7 @@ step is exactly what a report about this needs to say.
 
 from __future__ import annotations
 
-from qa.marks import SafetyTier, qa
+from qa.marks import Inconclusive, SafetyTier, qa
 from qa.measure import Measurement, conclude
 
 BUILD = "/build"
@@ -300,6 +300,14 @@ def test_every_card_we_hold_a_position_in_still_resolves(rest_trusted):
     position whose card_id 404s is a row an agent cannot price, close or
     explain, and nothing else here would notice: the position endpoint answers
     200 with the stale row in it.
+
+    OPEN POSITIONS ONLY (2026-10-25). PRE-0274 failed this on a closed position
+    whose card had since been deleted. A closed row has nothing left to price or
+    close, llms.txt documents the route as "Your open card positions", and each
+    row carries `status` (33 open, 90 closed that day). So only rows whose
+    status reads "open" are judged; closed rows are counted, and a row whose
+    status does not read is named and not judged (rule 8). A card read that
+    raises is unread, not unresolved.
     """
     response = rest_trusted.get(POSITIONS)
     if response.status_code != 200:
@@ -310,12 +318,19 @@ def test_every_card_we_hold_a_position_in_still_resolves(rest_trusted):
             sources={"positions": POSITIONS}))
         return
 
-    positions = (response.json() or {}).get("positions") or []
+    every = (response.json() or {}).get("positions") or []
+    positions = [p for p in every if isinstance(p, dict) and p.get("status") == "open"]
+    closed = sum(1 for p in every if isinstance(p, dict) and p.get("status") == "closed")
+    no_status = [str(p.get("position_id") or p.get("card_id")) for p in every
+                 if not isinstance(p, dict) or p.get("status") not in ("open", "closed")]
     if not positions:
         conclude(Measurement(
             verdict="inconclusive",
-            reason="we hold no event-card position, so there is no card to "
-                   "resolve and this establishes nothing",
+            reason=(f"we hold no OPEN event-card position ({len(every)} row(s): "
+                    f"{closed} closed, {len(no_status)} with no readable status), so "
+                    f"there is no card to resolve and this establishes nothing"),
+            population={"positions": len(every), "open": 0, "closed": closed,
+                        "status_unread": no_status[:20]},
             sources={"positions": POSITIONS}))
         return
 
@@ -330,23 +345,37 @@ def test_every_card_we_hold_a_position_in_still_resolves(rest_trusted):
     # that is fewer than we hold. Deep pass, 2026-09-08, 2/3.
     distinct = list(dict.fromkeys(p.get("card_id") for p in positions))
     probed = distinct[:CARD_PROBE_CAP]
-    unresolved = []
+    unresolved, unread = [], {}
     for card_id in probed:
-        if rest_trusted.get(CARD.format(card_id=card_id)).status_code != 200:
+        try:
+            status = rest_trusted.get(CARD.format(card_id=card_id)).status_code
+        except Exception as exc:  # noqa: BLE001 -- a failed read is not a 404
+            unread[card_id] = type(exc).__name__
+            continue
+        if status != 200:
             unresolved.append(card_id)
     complete = len(probed) == len(distinct)
+    if not unresolved and len(unread) > len(probed) // 4:
+        # A pass may not rest on the cards that happened to answer: more than a
+        # quarter unread is a hole in the sample, not a sample.
+        raise Inconclusive(f"{len(unread)} of the {len(probed)} cards of our open positions "
+                           f"could not be read ({sorted(set(unread.values()))})")
 
     conclude(Measurement(
         verdict="passed" if not unresolved else "failed",
-        reason=((f"every card we hold a position in resolves"
+        reason=((f"every card we hold an open position in resolves"
                  if complete else
                  f"the {len(probed)} most recent of our {len(distinct)} "
-                 f"distinct cards resolve; the rest were not probed")
+                 f"distinct open-position cards resolve; the rest were not probed")
+                + (f" ({len(unread)} could not be read: {', '.join(sorted(unread))})"
+                   if unread else "")
                 if not unresolved else
-                f"{len(unresolved)} card(s) we hold a position in no longer "
+                f"{len(unresolved)} card(s) we hold an OPEN position in no longer "
                 f"resolve, so those rows cannot be priced or closed from the "
-                f"API: {', '.join(unresolved)}"),
+                f"API: {', '.join(unresolved)}")
+               + f". Closed positions are not judged ({closed} of {len(every)} rows)",
         left=sorted(unresolved), right=[],
-        population={"positions": len(positions), "distinct_cards": len(distinct),
-                    "cards_probed": len(probed)},
+        population={"positions": len(every), "open": len(positions), "closed": closed,
+                    "status_unread": no_status[:20], "distinct_cards": len(distinct),
+                    "cards_probed": len(probed), "cards_unread": unread},
         sources={"positions": POSITIONS, "card": CARD}))
