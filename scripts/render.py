@@ -68,6 +68,8 @@ COMPONENT_TO_SECTION = {
     "rest.supply_analyzer": "build_it_better",
     # And Agent Tournaments (ET-30773).
     "rest.agent_tournaments": "build_it_better",
+    # And the Airdrop Farmer (ET-32463).
+    "rest.airdrop_farmer": "build_it_better",
     # The Agent League we play (scripts/league.py) has no checks of its own yet; the tile is
     # where they will sit, beside the other agents' surfaces.
     "rest.agent_league": "clones",
