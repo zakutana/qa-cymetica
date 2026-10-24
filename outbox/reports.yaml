@@ -6731,6 +6731,44 @@ reports:
       consulting the session, passes whichever way that gate is changed, and is inconclusive if the card or its
       script is gone. GET requests only.
 
+  - key: airdrop-farmer-lists-farms-whose-token-trades
+    findings: [CYM-airdrop_farmer_lists_no_farm_whose_token_trades]
+    severity: medium
+    category: logic
+    url: https://cymetica.com/airdrop-farmer
+    title: >-
+      Airdrop Farmer: six farms in the list gated "No token live yet" have a token that already trades (Fables,
+      Zircuit, Travala, Sonic SVM, INFINIT, Rivalz); chips come from name-matched headlines
+    expected: >
+      Every farm in GET /api/v1/airdrop-farm/farms passes the gate the same response publishes, whose first line is
+      "No token live yet", as the page promises ("Every farm here passed the automatic checks"). A farm whose token
+      is already out has had its airdrop: an agent farming it for a user farms nothing.
+    actual: >
+      Read on 2026-10-24 around 08:40 UTC: the list held 49 farms, and six of them have a token priced and traded
+      that day, with 24-hour volume from CoinGecko /coins/markets (DexScreener for FABLES): Fables (FABLES on
+      Robinhood Chain, about $253,000), Zircuit Staking (ZRC, about $398,000), and the Galxe task farms Travala.com
+      (AVA, about $38 million), Sonic SVM (SONIC, about $2.1 million), INFINIT (IN, about $205 million) and Rivalz
+      Network (RIZ, about $11,000). Cause, read in each row's own evidence array: the chips and the token test are
+      fed by news headlines matched on the farm's name. Axis carries TOKEN CONFIRMED on "Axis Robotics price today,
+      AXIS to USD live price" (a different project); Ink network carries TOKEN CONFIRMED on "Fire Country Musical
+      Guest INK Brought Her Superfan Mom To Set" (a TV singer); Tempo network carries POINTS LIVE on "Tempo Guard
+      Kiki Rice Named to 2026 WNBA All-Rookie Team - Toronto Tempo"; Fables carries POINTS LIVE on "Royal Fables
+      Season 16 - The Heirloom Series". The same matches fill news.n7 and news.n30, which feed heat.
+    steps:
+      - 'curl -s https://cymetica.com/api/v1/airdrop-farm/farms -> gate[0] "No token live yet"; farms with id fables, zircuit-staking, task-travala, task-sonicsvm, task-infinit, task-rivalznetwork'
+      - 'curl -s "https://api.coingecko.com/api/v3/coins/markets?vs_currency=usd&ids=zircuit,concierge-io,sonic-svm,infinit,rivalz-network" -> each with a current_price and total_volume'
+      - 'curl -s https://api.dexscreener.com/latest/dex/pairs/robinhood/0xcce8dcf7c4dcfee6b6588db724240d9d6a22ee456f9387bb831c8fcea970869e -> FABLES/WETH with 24h volume and liquidity'
+      - 'In the same /farms answer, the evidence array of axis, ink, tempo and fables: the headlines quoted above, under the chips TOKEN CONFIRMED / POINTS LIVE'
+    body: >
+      Users are offered farms whose airdrop already happened, under a gate that says it cannot happen, and the chips
+      that tell them a token is coming or points are live are drawn from unrelated news. Checking each farm's token
+      against a market source (a CoinGecko id or a DEX pair) before it is listed, and matching news on the project's
+      own handle or domain rather than its bare name, would fix both. Our check reads the farms list and the six
+      tokens' markets: it fails while any of these six is listed with a token that traded at least $5,000 in 24
+      hours, finds a renamed row by its id, name or page, passes once they are gone (or their token stops trading),
+      and is inconclusive if the list or a market cannot be read or the gate no longer promises tokenless farms. GET
+      requests only.
+
 footer: >
   Reported by an independent QA agent. Scope of this work: verification of the
   REST API, MCP, the machine-readable discovery surfaces and the pages built on
