@@ -1,0 +1,576 @@
+/* GENERATED, do not edit: the ten new station skins' own projector, copied verbatim from ../company-skins/index.html
+ * (its script, from "a tiny projector" to the end of picture()), so Settings can draw a skin the Universe's 3D has no
+ * builder for yet. The builders there are the source; change them there and make this file again: keep this header and
+ * the CO.SPEC footer, and replace what is between them with the output of
+ *   awk '/a tiny projector/{p=1} /^if \(typeof module/{p=0} p' ../company-skins/index.html
+ * It puts CO.SPEC = { SKINS, picture(i, n, t) -> { svg, fr }, indexOf(key) } and nothing else in the page's scope.
+ * The svg takes its colour from --acc on its host, and its glow filter is #fb (app.js puts that def in the preview). */
+(function () {
+  'use strict';
+  window.CO = window.CO || {};
+/* ---------------- a tiny projector: the same 33-degree camera the map uses, one scale for every card ---------------- */
+const TAU = Math.PI * 2, PI = Math.PI, D2R = PI / 180;
+const PIT = 33 * D2R, SP = Math.sin(PIT), CP = Math.cos(PIT);
+const S = 40, CX = 180, CY = 154;                       // px per station unit; where the station's origin lands
+const norm = v => { const l = Math.hypot(v[0], v[1], v[2]) || 1; return [v[0] / l, v[1] / l, v[2] / l]; };
+const dot3 = (a, b) => a[0] * b[0] + a[1] * b[1] + a[2] * b[2];
+const sub3 = (a, b) => [a[0] - b[0], a[1] - b[1], a[2] - b[2]];
+const add3 = (a, b) => [a[0] + b[0], a[1] + b[1], a[2] + b[2]];
+const scl3 = (a, k) => [a[0] * k, a[1] * k, a[2] * k];
+const lerp3 = (a, b, t) => [a[0] + (b[0] - a[0]) * t, a[1] + (b[1] - a[1]) * t, a[2] + (b[2] - a[2]) * t];
+const cross = (a, b) => [a[1] * b[2] - a[2] * b[1], a[2] * b[0] - a[0] * b[2], a[0] * b[1] - a[1] * b[0]];
+const LV = norm([-0.52, 0.8, 0.3]), VV = [0, SP, CP];  // light from upper left; the way to the camera
+function rng(seed) { let s = seed >>> 0; return () => { s = (s + 0x6D2B79F5) >>> 0; let t = s; t = Math.imul(t ^ (t >>> 15), t | 1); t ^= t + Math.imul(t ^ (t >>> 7), t | 61); return ((t ^ (t >>> 14)) >>> 0) / 4294967296; }; }
+// 3x4 matrices, row-major; tf(A, B, C) applies C first
+const I4 = () => [1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0];
+const T = (x, y, z) => [1, 0, 0, x, 0, 1, 0, y, 0, 0, 1, z];
+const RX = a => { const c = Math.cos(a), s = Math.sin(a); return [1, 0, 0, 0, 0, c, -s, 0, 0, s, c, 0]; };
+const RY = a => { const c = Math.cos(a), s = Math.sin(a); return [c, 0, s, 0, 0, 1, 0, 0, -s, 0, c, 0]; };
+const RZ = a => { const c = Math.cos(a), s = Math.sin(a); return [c, -s, 0, 0, s, c, 0, 0, 0, 0, 1, 0]; };
+function mul(a, b) {
+  const r = new Array(12);
+  for (let i = 0; i < 3; i++) {
+    const a0 = a[i * 4], a1 = a[i * 4 + 1], a2 = a[i * 4 + 2];
+    r[i * 4] = a0 * b[0] + a1 * b[4] + a2 * b[8];
+    r[i * 4 + 1] = a0 * b[1] + a1 * b[5] + a2 * b[9];
+    r[i * 4 + 2] = a0 * b[2] + a1 * b[6] + a2 * b[10];
+    r[i * 4 + 3] = a0 * b[3] + a1 * b[7] + a2 * b[11] + a[i * 4 + 3];
+  }
+  return r;
+}
+const tf = (...ms) => ms.reduce((m, x) => mul(m, x), I4());
+const ap = (m, p) => [m[0] * p[0] + m[1] * p[1] + m[2] * p[2] + m[3], m[4] * p[0] + m[5] * p[1] + m[6] * p[2] + m[7], m[8] * p[0] + m[9] * p[1] + m[10] * p[2] + m[11]];
+const av = (m, v) => [m[0] * v[0] + m[1] * v[1] + m[2] * v[2], m[4] * v[0] + m[5] * v[1] + m[6] * v[2], m[8] * v[0] + m[9] * v[1] + m[10] * v[2]];
+const dep = v => v[2] * CP + v[1] * SP;
+const scr = v => [CX + S * v[0], CY + S * (v[2] * SP - v[1] * CP)];
+
+// hull tones, dark to lit (slate and steel, never the accent); what glows is a class that takes --acc
+const HULL = { steel: [[15, 21, 31], [118, 136, 160]], pale: [[36, 44, 58], [200, 210, 224]], metal: [[24, 31, 43], [146, 160, 180]], dark: [[7, 10, 16], [36, 46, 60]], rock: [[13, 16, 22], [92, 100, 112]] };
+const ACC = { rim: 'a', soft: 'as', glass: 'ag', sail: 'ag2', beam: 'ab', win: 'w1', off: 'w0' };
+const TWO = { glass: 1, sail: 1, beam: 1, win: 1, off: 1 };
+
+class Sc {
+  constructor(yaw) { this.c = Math.cos(yaw); this.s = Math.sin(yaw); this.it = []; this.gl = []; }
+  v(p) { return [p[0] * this.c + p[2] * this.s, p[1], -p[0] * this.s + p[2] * this.c]; }
+  // a face: its outward side is away from ref (a point inside the solid); culled when it faces away, unless two-sided
+  face(P, mat, ref, bias) {
+    const V = P.map(p => this.v(p)), k = V.length;
+    let nx = 0, ny = 0, nz = 0, cx = 0, cy = 0, cz = 0;
+    for (let i = 0; i < k; i++) {
+      const a = V[i], b = V[(i + 1) % k];
+      nx += (a[1] - b[1]) * (a[2] + b[2]); ny += (a[2] - b[2]) * (a[0] + b[0]); nz += (a[0] - b[0]) * (a[1] + b[1]);
+      cx += a[0]; cy += a[1]; cz += a[2];
+    }
+    const l = Math.hypot(nx, ny, nz); if (l < 1e-9) return;
+    let n = [nx / l, ny / l, nz / l]; const c = [cx / k, cy / k, cz / k];
+    if (ref) { const r = this.v(ref); if (dot3(n, sub3(c, r)) < 0) n = scl3(n, -1); if (!TWO[mat] && dot3(n, VV) < -0.01) return; }
+    let f = dot3(n, VV); if (f < 0) { n = scl3(n, -1); f = -f; }
+    this.it.push({ t: 'p', d: dep(c) + (bias || 0), pts: V.map(scr), mat, k: Math.max(0, dot3(n, LV)), f });
+  }
+  line(P, cls, w, bias) {
+    const V = P.map(p => this.v(p));
+    for (let i = 0; i < V.length - 1; i++) { const a = V[i], b = V[i + 1]; this.it.push({ t: 'l', d: dep(lerp3(a, b, 0.5)) + (bias == null ? 0.006 : bias), a: scr(a), b: scr(b), cls, w }); }
+  }
+  dot(p, r, cls) { const v = this.v(p); this.it.push({ t: 'c', d: dep(v) + 0.02, c: scr(v), r, cls }); }
+  glow(p, size, op) { const v = this.v(p); this.gl.push({ c: scr(v), r: size * S * 0.5, op }); }
+  // a window: a small pane on a wall, lit or dark, only where the wall faces the camera
+  win(p, nrm, w, h, lit) {
+    if (dot3(this.v(nrm), VV) < 0.05) return;
+    const r = norm([nrm[2], 0, -nrm[0]]), u = [0, 1, 0], q = (a, b) => add3(p, add3(scl3(r, a * w / 2), scl3(u, b * h / 2)));
+    this.face([q(-1, -1), q(1, -1), q(1, 1), q(-1, 1)], lit ? 'win' : 'off', null, 0.03);
+  }
+}
+
+/* ---------------- primitives: the shapes the three.js builders have (box, lathe, cylinder, torus, sphere, rod) ---------------- */
+function box(sc, m, w, h, d, mat, o) {
+  o = o || {}; const x = w / 2, y = h / 2, z = d / 2, tile = o.tile || 0.7, ref = ap(m, [0, 0, 0]);
+  const F = [[[-x, -y, z], [w, 0, 0], [0, h, 0]], [[x, -y, -z], [-w, 0, 0], [0, h, 0]], [[x, -y, z], [0, 0, -d], [0, h, 0]], [[-x, -y, -z], [0, 0, d], [0, h, 0]], [[-x, y, z], [w, 0, 0], [0, 0, -d]], [[-x, -y, -z], [w, 0, 0], [0, 0, d]]];
+  for (const [o0, e1, e2] of F) {
+    const n1 = Math.max(1, Math.ceil(Math.hypot(e1[0], e1[1], e1[2]) / tile)), n2 = Math.max(1, Math.ceil(Math.hypot(e2[0], e2[1], e2[2]) / tile));
+    const q = (a, b) => ap(m, [o0[0] + e1[0] * a / n1 + e2[0] * b / n2, o0[1] + e1[1] * a / n1 + e2[1] * b / n2, o0[2] + e1[2] * a / n1 + e2[2] * b / n2]);
+    for (let i = 0; i < n1; i++) for (let j = 0; j < n2; j++) sc.face([q(i, j), q(i + 1, j), q(i + 1, j + 1), q(i, j + 1)], mat, ref, o.bias);
+  }
+}
+// a profile [[r, y, mat?], ...] turned about the local y axis; listed bottom to top, its outside is to the right
+function lathe(sc, m, prof, seg, mat, o) {
+  o = o || {}; const a0 = o.a0 || 0, a1 = o.a1 == null ? TAU : o.a1, tile = o.tile || 0.6, pr = [];
+  for (let i = 0; i < prof.length - 1; i++) {
+    const p = prof[i], q = prof[i + 1], k = Math.max(1, Math.ceil(Math.hypot(q[0] - p[0], q[1] - p[1]) / tile));
+    for (let j = 0; j < k; j++) pr.push([p[0] + (q[0] - p[0]) * j / k, p[1] + (q[1] - p[1]) * j / k, p[2]]);
+  }
+  pr.push(prof[prof.length - 1]);
+  const P = (r, y, b) => ap(m, [Math.cos(b) * r, y, Math.sin(b) * r]);
+  for (let i = 0; i < pr.length - 1; i++) {
+    const [r0, y0] = pr[i], [r1, y1] = pr[i + 1], mt = pr[i][2] || mat;
+    let nr = y1 - y0, ny = -(r1 - r0); const nl = Math.hypot(nr, ny) || 1; nr /= nl; ny /= nl;
+    for (let j = 0; j < seg; j++) {
+      const b0 = a0 + (a1 - a0) * j / seg, b1 = a0 + (a1 - a0) * (j + 1) / seg, bm = (b0 + b1) / 2;
+      const pts = [P(r0, y0, b0), P(r0, y0, b1), P(r1, y1, b1), P(r1, y1, b0)];
+      const ref = P((r0 + r1) / 2 - nr * 0.05, (y0 + y1) / 2 - ny * 0.05, bm);
+      sc.face(r0 < 1e-6 ? [pts[0], pts[2], pts[3]] : r1 < 1e-6 ? [pts[0], pts[1], pts[2]] : pts, mt, ref, o.bias);
+    }
+  }
+}
+const cyl = (sc, m, r, h, mat, o) => lathe(sc, m, [[0, -h / 2], [r, -h / 2], [r, h / 2], [0, h / 2]], (o && o.seg) || 28, mat, o);
+function sphere(sc, m, r, mat, o) {
+  o = o || {}; const v = o.v || 10, prof = [];
+  for (let i = 0; i <= v; i++) { const ph = -PI / 2 + PI * i / v; prof.push([i === 0 || i === v ? 0 : Math.cos(ph) * r, Math.sin(ph) * r]); }
+  lathe(sc, m, prof, o.u || 18, mat, { tile: 9 });
+}
+function torus(sc, m, R, r, mat, o) {
+  o = o || {}; const U = o.u || 48, V = o.v || 6;
+  const P = (u, v) => ap(m, [(R + r * Math.cos(v)) * Math.cos(u), r * Math.sin(v), (R + r * Math.cos(v)) * Math.sin(u)]);
+  for (let i = 0; i < U; i++) for (let j = 0; j < V; j++) {
+    const u0 = i / U * TAU, u1 = (i + 1) / U * TAU, v0 = j / V * TAU, v1 = (j + 1) / V * TAU, um = (u0 + u1) / 2;
+    sc.face([P(u0, v0), P(u1, v0), P(u1, v1), P(u0, v1)], mat, ap(m, [R * Math.cos(um), 0, R * Math.sin(um)]), o.bias);
+  }
+}
+// a line of light (or of metal) round a circle in the local x-z plane
+function ring(sc, m, R, y, cls, w, segs, bias) { const P = []; for (let i = 0; i <= segs; i++) { const a = i / segs * TAU; P.push(ap(m, [Math.cos(a) * R, y, Math.sin(a) * R])); } sc.line(P, cls, w, bias); }
+// a square strut between two points
+function rod(sc, p, q, r, mat) {
+  const d = norm(sub3(q, p)), a = Math.abs(d[1]) < 0.9 ? [0, 1, 0] : [1, 0, 0], u = norm(cross(d, a)), w = cross(d, u), mid = lerp3(p, q, 0.5);
+  const C = (e, su, sw) => add3(e, add3(scl3(u, su * r), scl3(w, sw * r))), cs = [[1, 1], [-1, 1], [-1, -1], [1, -1]];
+  const k = Math.max(1, Math.ceil(Math.hypot(...sub3(q, p)) / 0.6));
+  for (let s = 0; s < k; s++) {
+    const e0 = lerp3(p, q, s / k), e1 = lerp3(p, q, (s + 1) / k);
+    for (let i = 0; i < 4; i++) { const [a1, b1] = cs[i], [a2, b2] = cs[(i + 1) % 4]; sc.face([C(e0, a1, b1), C(e0, a2, b2), C(e1, a2, b2), C(e1, a1, b1)], mat, lerp3(e0, e1, 0.5)); }
+  }
+  sc.face(cs.map(([a1, b1]) => C(p, a1, b1)), mat, mid); sc.face(cs.map(([a1, b1]) => C(q, a1, b1)), mat, mid);
+}
+// a flat ring with a rectangular section: inner and outer walls, a top (rs bands across)
+function annulus(sc, m, ri, ro, y0, y1, top, side, seg, rs) {
+  rs = rs || 1; const P = (r, a, y) => ap(m, [Math.cos(a) * r, y, Math.sin(a) * r]);
+  for (let j = 0; j < seg; j++) {
+    const a0 = j / seg * TAU, a1 = (j + 1) / seg * TAU, ref = P((ri + ro) / 2, (a0 + a1) / 2, (y0 + y1) / 2);
+    for (let q = 0; q < rs; q++) { const r0 = ri + (ro - ri) * q / rs, r1 = ri + (ro - ri) * (q + 1) / rs; sc.face([P(r0, a0, y1), P(r1, a0, y1), P(r1, a1, y1), P(r0, a1, y1)], top, ref); }
+    sc.face([P(ro, a0, y0), P(ro, a1, y0), P(ro, a1, y1), P(ro, a0, y1)], side, ref);
+    sc.face([P(ri, a0, y0), P(ri, a0, y1), P(ri, a1, y1), P(ri, a1, y0)], side, ref);
+  }
+}
+function ringWins(sc, m, r, y, w, h, count, lit, R, a0) {
+  for (let i = 0; i < count; i++) { const a = (a0 || 0) + i / count * TAU, ca = Math.cos(a), sa = Math.sin(a); const on = R() < lit; sc.win(ap(m, [ca * (r + 0.012), y, sa * (r + 0.012)]), av(m, [ca, 0, sa]), w, h, on); }
+}
+// lit: the share of windows on; litOnly: a dark window is left out (on glass, a dark pane reads as a hole)
+function faceWins(sc, m, w, d, y, h, step, lit, R, ww, litOnly) {
+  const run = (len, f) => { const k = Math.max(1, Math.floor((len - 0.1) / step)); for (let i = 0; i < k; i++) f(-len / 2 + len / k * (i + 0.5)); };
+  const put = (p, nrm) => { const on = R() < lit; if (on || !litOnly) sc.win(p, nrm, ww, h, on); };
+  run(w, u => put(ap(m, [u, y, d / 2 + 0.012]), av(m, [0, 0, 1])));
+  run(w, u => put(ap(m, [u, y, -d / 2 - 0.012]), av(m, [0, 0, -1])));
+  run(d, u => put(ap(m, [w / 2 + 0.012, y, u]), av(m, [1, 0, 0])));
+  run(d, u => put(ap(m, [-w / 2 - 0.012, y, u]), av(m, [-1, 0, 0])));
+}
+// a box that narrows: w0 x d0 at its foot (local y = 0), w1 x d1 at its top, h tall
+function tbox(sc, m, w0, d0, w1, d1, h, mat, tile) {
+  const c = [[-1, -1], [1, -1], [1, 1], [-1, 1]], B = c.map(([a, b]) => ap(m, [a * w0 / 2, 0, b * d0 / 2])), Tp = c.map(([a, b]) => ap(m, [a * w1 / 2, h, b * d1 / 2])), ref = ap(m, [0, h / 2, 0]);
+  const k = Math.max(1, Math.ceil(h / (tile || 0.5)));
+  for (let i = 0; i < 4; i++) { const j = (i + 1) % 4; for (let s = 0; s < k; s++) sc.face([lerp3(B[i], Tp[i], s / k), lerp3(B[j], Tp[j], s / k), lerp3(B[j], Tp[j], (s + 1) / k), lerp3(B[i], Tp[i], (s + 1) / k)], mat, ref); }
+  sc.face(Tp, mat, ref); sc.face(B, mat, ref);
+}
+function cubeEdges() { const k = []; for (const x of [-1, 1]) for (const y of [-1, 1]) for (const z of [-1, 1]) k.push([x, y, z]); const e = []; for (let i = 0; i < 8; i++) for (let j = i + 1; j < 8; j++) if (k[i].filter((v, q) => v !== k[j][q]).length === 1) e.push([k[i], k[j]]); return e; }
+
+/* ---------------- the ten skins: (scene, departments, time, rng) -> {top, bot, foot} in station units ---------------- */
+
+// 01 Armillary Core: three gimbal rings, each on its own axis, round a glass capsule of decks with a spine of light
+function armillary(sc, n, t, R) {
+  const I = I4(), Hc = 1.2 + 0.2 * n, yc = 1.2, y0 = yc - Hc / 2, y1 = yc + Hc / 2, rc = 0.55;
+  const R3 = Math.max(1.6, Hc / 2 + 0.45), R2 = R3 + 0.3, R1 = R2 + 0.3;
+  for (const [y, s] of [[y0, 1], [y1, -1]]) { cyl(sc, T(0, y + s * 0.07, 0), rc + 0.08, 0.14, 'steel', { seg: 24 }); ring(sc, I, rc + 0.09, y + s * 0.14, 'l', 1.1, 32, 0.02); }
+  lathe(sc, I, [[rc, y0 + 0.14], [rc, y1 - 0.14]], 24, 'glass', { tile: 0.45 });
+  lathe(sc, T(0, y1, 0), [[rc + 0.02, 0], [rc * 0.9, 0.11], [rc * 0.62, 0.2], [rc * 0.3, 0.26], [0, 0.28]], 24, 'glass');
+  lathe(sc, T(0, y0, 0), [[0, -0.28], [rc * 0.3, -0.26], [rc * 0.62, -0.2], [rc * 0.9, -0.11], [rc + 0.02, 0]], 24, 'glass');
+  const dh = (Hc - 0.4) / n;
+  for (let f = 0; f < n; f++) {
+    const yf = y0 + 0.2 + (f + 0.5) * dh;
+    cyl(sc, T(0, yf - dh * 0.4, 0), rc - 0.05, 0.05, 'pale', { seg: 20 });
+    ringWins(sc, I, rc, yf, 0.12, Math.min(0.11, dh * 0.4), 10, 0.62, R, f * 0.31);
+  }
+  cyl(sc, T(0, yc, 0), 0.045, Hc - 0.2, 'rim', { seg: 8, tile: 0.4 });
+  sc.glow([0, yc, 0], 2.4, 0.5);
+  sc.dot([0, y1 + 0.3, 0], 2.2, 'a');
+  const F1 = tf(T(0, yc, 0), RY(0.12 * t + 0.39)), F2 = tf(F1, RX(0.21 * t - 0.38)), F3 = tf(F2, RZ(-0.33 * t + 2.09));
+  const gimbal = (m, Rr, tube) => { torus(sc, m, Rr, tube, 'metal', { u: 64, v: 6 }); ring(sc, m, Rr + tube * 1.05, 0, 'l', 1.3, 64, 0.02); };
+  gimbal(tf(F1, RX(PI / 2)), R1, 0.075);
+  gimbal(F2, R2, 0.062);
+  gimbal(F3, R3, 0.052);
+  for (const s of [1, -1]) {
+    rod(sc, ap(F1, [s * (R2 + 0.04), 0, 0]), ap(F1, [s * (R1 - 0.06), 0, 0]), 0.045, 'metal');
+    rod(sc, ap(F2, [0, 0, s * (R3 + 0.035)]), ap(F2, [0, 0, s * (R2 - 0.05)]), 0.04, 'metal');
+    sc.dot(ap(F1, [s * (R1 + 0.09), 0, 0]), 1.5, 'a');
+  }
+  return { top: yc + R1 + 0.1, bot: yc - R1 - 0.1, foot: R1 + 0.1 };
+}
+
+// 02 Helix Spire: square glass decks, each turned on the one below; their lit corners climb as a helix
+function helix(sc, n, t, R) {
+  const I = I4();
+  lathe(sc, I, [[0, -1.05], [0.45, -1.0], [1.0, -0.66], [1.35, -0.36]], 36, 'dark');
+  cyl(sc, T(0, -0.18, 0), 1.4, 0.36, 'steel', { seg: 40 });
+  ring(sc, I, 1.405, 0.0, 'l', 1.3, 64);
+  // thin floors, about 0.2 each, each turned a little more: 90 degrees of twist over the whole tower; the tower is
+  // 0.62 a department, never under 1.8 (one department is still a spire) nor over 3.05; a deck is 3 floors or more
+  const dh = Math.min(3.05, Math.max(1.8, 0.62 * n)) / n, FL = Math.max(3, Math.round(dh / 0.2)), fh = dh / FL, gh = fh - 0.035, J = n * FL, st = 90 * D2R / J;
+  let y = 0.0, w = 1.3;
+  for (let j = 0; j < J; j++) {
+    const f = Math.floor(j / FL), u = j / Math.max(1, J - 1);
+    w = 1.3 - 0.4 * u;
+    const m = tf(T(0, y, 0), RY(j * st)), mc = tf(m, T(0, 0.035 + gh / 2, 0));
+    box(sc, tf(m, T(0, 0.0175, 0)), w + 0.06, 0.035, w + 0.06, 'steel');
+    box(sc, mc, 0.5, gh, 0.5, 'metal');
+    box(sc, mc, w, gh, w, 'glass', { tile: 0.5 });
+    for (const [sx, sz] of [[1, 1], [1, -1], [-1, 1], [-1, -1]]) box(sc, tf(m, T(sx * w / 2, 0.035 + gh / 2, sz * w / 2)), 0.045, gh, 0.045, 'rim');
+    faceWins(sc, mc, w, w, 0, gh * 0.5, 0.28, 0.55, R, 0.14, true);
+    void f; y += fh;
+  }
+  box(sc, tf(T(0, y + 0.03, 0), RY(J * st)), w + 0.06, 0.06, w + 0.06, 'steel');
+  lathe(sc, T(0, y + 0.06, 0), [[0, 0], [0.14, 0], [0.04, 0.78], [0, 0.88]], 12, 'metal');
+  sc.dot([0, y + 0.96, 0], 2.2, 'a');
+  const k = 0.5 - 0.5 * Math.cos(t * 0.32), yh = 0.02 + (y - 0.04) * k, wh = 1.3 - 0.4 * k;
+  ring(sc, I, wh * 0.72 + 0.12, yh, 'l', 1.6, 72);
+  sc.glow([0, yh, 0], 1.2, 0.18);
+  return { top: y + 0.96, bot: -1.05, foot: 1.45 };
+}
+
+// 03 Solar Sail: four sail panels between four booms, a square of light at their edge, turning round a mast of decks
+function sail(sc, n, t, R) {
+  const I = I4();
+  lathe(sc, I, [[0, -1.0], [0.45, -0.72], [0.88, -0.24]], 24, 'dark');
+  cyl(sc, T(0, -0.12, 0), 0.95, 0.24, 'steel', { seg: 30 });
+  ring(sc, I, 0.955, 0.0, 'l', 1.2, 40);
+  const dh = 0.3;
+  for (let f = 0; f < n; f++) {
+    const yb = 0.02 + f * dh;
+    cyl(sc, T(0, yb + (dh - 0.05) / 2, 0), 0.42, dh - 0.05, 'pale', { seg: 22 });
+    cyl(sc, T(0, yb + dh - 0.025, 0), 0.5, 0.05, 'metal', { seg: 22 });
+    ringWins(sc, I, 0.42, yb + (dh - 0.05) / 2, 0.11, 0.08, 9, 0.6, R, f * 0.5);
+  }
+  const ym = 0.02 + n * dh;
+  lathe(sc, T(0, ym, 0), [[0, 0], [0.42, 0], [0.36, 0.12], [0.2, 0.2], [0, 0.23]], 20, 'metal');
+  rod(sc, [0, ym + 0.2, 0], [0, ym + 0.7, 0], 0.025, 'metal');
+  sc.dot([0, ym + 0.76, 0], 2, 'a');
+  const a = 0.08 * t, Rt = 3.2, Ri = 0.98, yS = -0.05;
+  const B = (k, r) => { const g = a + PI / 4 + k * PI / 2; return [Math.cos(g) * r, yS + (r - Ri) * 0.07, Math.sin(g) * r]; };
+  for (let k = 0; k < 4; k++) { rod(sc, B(k, 0.9), B(k, Rt + 0.1), 0.04, 'metal'); sc.dot(B(k, Rt + 0.14), 1.7, 'a'); }
+  const NU = 5, NV = 4;
+  for (let k = 0; k < 4; k++) {
+    const P = (u, v) => { const r = Ri + (Rt - Ri) * u, p = lerp3(B(k, r), B(k + 1, r), v); p[1] -= 0.24 * Math.sin(PI * v) * Math.sin(PI * Math.min(1, u * 1.1)); return p; };
+    for (let i = 0; i < NU; i++) for (let j = 0; j < NV; j++) sc.face([P(i / NU, j / NV), P((i + 1) / NU, j / NV), P((i + 1) / NU, (j + 1) / NV), P(i / NU, (j + 1) / NV)], 'sail', null);
+    const edge = [], b1 = [], b2 = [];
+    for (let j = 0; j <= 8; j++) { edge.push(P(1, j / 8)); b1.push(P(0.64, j / 8)); b2.push(P(0.32, j / 8)); }
+    sc.line(edge, 'l', 1.7); sc.line(b1, 'ls', 0.8); sc.line(b2, 'ls', 0.6);
+  }
+  return { top: ym + 0.8, bot: -1.0, foot: 3.3 };
+}
+
+// 04 Deep Array: a parabolic dish on a yoke over a turret of decks, sweeping slowly, its focus burning
+function dish(sc, n, t, R) {
+  const I = I4();
+  lathe(sc, I, [[0, -1.15], [0.35, -1.1], [1.05, -0.72], [1.68, -0.3]], 32, 'dark');
+  cyl(sc, T(0, -0.15, 0), 1.75, 0.3, 'steel', { seg: 40 });
+  ring(sc, I, 1.755, 0, 'l', 1.3, 60);
+  const dh = 0.17; let y = 0;
+  for (let f = 0; f < n; f++) {
+    const r = 0.95 - 0.1 * f / Math.max(1, n - 1);
+    cyl(sc, T(0, y + (dh - 0.03) / 2, 0), r, dh - 0.03, 'pale', { seg: 30 });
+    cyl(sc, T(0, y + dh - 0.015, 0), r + 0.05, 0.03, 'metal', { seg: 30 });
+    ringWins(sc, I, r, y + (dh - 0.03) / 2, 0.1, 0.06, 14, 0.6, R, f * 0.4);
+    y += dh;
+  }
+  const az = -1.35 + 0.35 * Math.sin(t * 0.09), MT = tf(T(0, y, 0), RY(az));
+  cyl(sc, tf(MT, T(0, 0.07, 0)), 0.9, 0.14, 'metal', { seg: 30 });
+  ring(sc, MT, 0.905, 0.14, 'l', 1.1, 44);
+  for (const s of [1, -1]) box(sc, tf(MT, T(s * 0.8, 0.14 + 0.31, 0)), 0.16, 0.62, 0.34, 'steel');
+  const el = 0.75 + 0.06 * Math.sin(t * 0.05), MD = tf(MT, T(0, 0.76, 0), RX(el));
+  rod(sc, ap(MT, [-0.88, 0.76, 0]), ap(MT, [0.88, 0.76, 0]), 0.05, 'metal');
+  const RD = 1.85, fF = 1.3, py = r => r * r / (4 * fF), prof = [];
+  for (let i = 0; i <= 7; i++) { const r = 0.3 + (RD - 0.3) * i / 7; prof.push([r, py(r)]); }
+  lathe(sc, tf(MD, T(0, -0.05, 0)), prof, 44, 'steel', { tile: 9 });
+  lathe(sc, MD, prof.slice().reverse(), 44, 'pale', { tile: 9 });
+  cyl(sc, tf(MD, T(0, -0.02, 0)), 0.32, 0.18, 'metal', { seg: 18 });
+  torus(sc, tf(MD, T(0, py(RD) - 0.02, 0)), RD, 0.055, 'metal', { u: 64, v: 5 });
+  ring(sc, MD, RD + 0.065, py(RD) - 0.02, 'l', 1.3, 72, 0.02);
+  for (let k = 0; k < 10; k++) { const g = k / 10 * TAU, pts = []; for (let i = 0; i <= 6; i++) { const r = 0.4 + (RD - 0.5) * i / 6; pts.push(ap(MD, [Math.cos(g) * r, py(r) + 0.02, Math.sin(g) * r])); } sc.line(pts, 'ls', 0.8, 0.01); }
+  for (const r of [1.15, 1.7]) ring(sc, MD, r, py(r) + 0.02, 'ls', 0.8, 56, 0.01);
+  const F = ap(MD, [0, fF, 0]);
+  for (const g of [PI / 2, PI / 2 + TAU / 3, PI / 2 + 2 * TAU / 3]) rod(sc, ap(MD, [Math.cos(g) * RD, py(RD), Math.sin(g) * RD]), F, 0.022, 'metal');
+  lathe(sc, tf(MD, T(0, fF - 0.14, 0)), [[0, 0], [0.13, 0], [0.19, 0.16], [0.09, 0.26], [0, 0.26]], 14, 'metal');
+  sc.dot(F, 2.6, 'a'); sc.glow(F, 1.5, 0.75);
+  let top = 0; for (let k = 0; k < 24; k++) { const g = k / 24 * TAU; top = Math.max(top, ap(MD, [Math.cos(g) * RD, py(RD), Math.sin(g) * RD])[1]); }
+  return { top: top + 0.06, bot: -1.15, foot: 2.3 };
+}
+
+// 05 Glass Arcology: a shallow glass dome over a terraced city, one tower per department, a tram ring inside
+function arcology(sc, n, t, R) {
+  const I = I4(), RD = 2.9, DR = 2.72, DH = 2.0;
+  lathe(sc, I, [[0, -1.2], [1.1, -1.1], [2.2, -0.75], [2.8, -0.4]], 44, 'dark');
+  cyl(sc, T(0, -0.2, 0), RD, 0.4, 'steel', { seg: 56 });
+  ring(sc, I, RD + 0.005, 0, 'l', 1.3, 80); ring(sc, I, RD + 0.005, -0.3, 'ls', 0.9, 80);
+  cyl(sc, T(0, 0.02, 0), DR + 0.06, 0.04, 'metal', { seg: 56 });
+  const spots = [];
+  for (let f = 0; f < n; f++) {
+    const r = f ? (f % 2 ? 1.05 : 1.6) : 0, a = f * 2.4 + 0.5, x = Math.cos(a) * r, z = Math.sin(a) * r, w = f ? 0.4 : 0.56;
+    const hmax = DH * Math.sqrt(Math.max(0, 1 - Math.pow((r + w * 0.75) / DR, 2))) - 0.25, h = Math.min(hmax, f ? 1.25 - 0.07 * f : 1.6);
+    spots.push([x, z]);
+    box(sc, T(x, 0.04 + h / 2, z), w, h, w, 'pale', { tile: 0.45 });
+    box(sc, T(x, 0.04 + h + 0.03, z), w + 0.06, 0.06, w + 0.06, 'metal');
+    for (let yy = 0.22; yy < h - 0.08; yy += 0.2) faceWins(sc, T(x, 0.04, z), w, w, yy, 0.07, 0.15, 0.62, R, 0.08);
+    sc.dot([x, 0.04 + h + 0.1, z], 1.2, 'a');
+  }
+  const G = rng(77);
+  for (let i = 0, tries = 0; i < 40 && tries < 400; tries++) {
+    const r = 0.5 + G() * 1.85, a = G() * TAU, x = Math.cos(a) * r, z = Math.sin(a) * r;
+    if (spots.some(([sx, sz]) => Math.hypot(sx - x, sz - z) < 0.5)) continue;
+    const w = 0.14 + G() * 0.2, d = 0.14 + G() * 0.2, h = 0.06 + G() * G() * 0.34;
+    box(sc, tf(T(x, 0.04 + h / 2, z), RY(a)), w, h, d, i % 3 ? 'steel' : 'metal'); i++;
+  }
+  ring(sc, I, 2.3, 0.3, 'lm', 1.2, 64);
+  for (let k = 0; k < 3; k++) { const a = 0.15 * t + k * TAU / 3, x = Math.cos(a) * 2.3, z = Math.sin(a) * 2.3; box(sc, tf(T(x, 0.33, z), RY(-a)), 0.12, 0.09, 0.32, 'pale'); sc.dot([x, 0.4, z], 1.3, 'a'); }
+  const prof = []; for (let i = 0; i <= 10; i++) { const ph = i / 10 * PI / 2; prof.push([i === 10 ? 0 : DR * Math.cos(ph), 0.04 + DH * Math.sin(ph)]); }
+  lathe(sc, I, prof, 36, 'glass', { tile: 9 });
+  for (let k = 0; k < 12; k++) { const g = k / 12 * TAU, pts = []; for (let i = 0; i <= 9; i++) { const ph = i / 9 * PI / 2 * 0.92; pts.push([Math.cos(g) * DR * Math.cos(ph), 0.04 + DH * Math.sin(ph), Math.sin(g) * DR * Math.cos(ph)]); } sc.line(pts, 'lg', 0.8); }
+  for (const ph of [0.55, 1.0]) ring(sc, I, DR * Math.cos(ph), 0.04 + DH * Math.sin(ph), 'lg', 0.8, 64);
+  ring(sc, I, DR * Math.cos(1.42), 0.04 + DH * Math.sin(1.42), 'l', 1.3, 32);
+  sc.dot([0, 0.04 + DH + 0.08, 0], 2, 'a');
+  return { top: DH + 0.2, bot: -1.2, foot: 2.95 };
+}
+
+// 06 Pylon Crown: eight seats round a ring, a glass pylon on each department's seat, a core of light floating in the middle
+function crown(sc, n, t, R) {
+  const I = I4(), ri = 1.45, ro = 2.25, rp = 1.85;
+  lathe(sc, I, [[1.65, -0.8], [2.0, -0.68], [2.23, -0.3]], 44, 'dark');
+  lathe(sc, I, [[1.45, -0.3], [1.65, -0.8]], 40, 'dark');
+  annulus(sc, I, ri, ro, -0.3, 0, 'steel', 'steel', 56, 2);
+  ring(sc, I, ro + 0.005, 0, 'l', 1.3, 80); ring(sc, I, ri - 0.005, 0, 'ls', 1, 60);
+  // eight seats; the departments' pylons spread evenly over them (4 departments: every other seat)
+  const taken = new Set(); for (let f = 0; f < n; f++) taken.add(Math.floor(f * 8 / n));
+  for (let k = 0; k < 8; k++) {
+    const a = (k + 0.5) * PI / 4 + 0.2, x = Math.cos(a) * rp, z = Math.sin(a) * rp;
+    if (taken.has(k)) {
+      // a blade: thin across the ring (local x, outward), wide along it (local z), narrowing to its top
+      const H = k % 2 ? 2.45 : 2.95, m = tf(T(x, 0, z), RY(-a), RZ(-0.1)), Hg = H * 0.95, wAt = y => 0.26 - 0.1 * y / Hg, dAt = y => 0.82 - 0.46 * y / Hg;
+      tbox(sc, m, 0.12, 0.26, 0.08, 0.12, H, 'steel');
+      tbox(sc, m, 0.26, 0.82, 0.16, 0.36, Hg, 'glass', 0.45);
+      for (const s of [1, -1]) sc.line([ap(m, [0.13, 0.02, s * 0.41]), ap(m, [0.08, Hg, s * 0.18])], 'l', 1.3, 0.03);
+      for (let y = 0.2; y < Hg - 0.15; y += 0.19) for (const s of [1, -1]) for (const c of [-1, 1]) { const on = R() < 0.6; if (on || s > 0) sc.win(ap(m, [s * (wAt(y) / 2 + 0.012), y, c * dAt(y) * 0.2]), av(m, [s, 0, 0]), 0.1, 0.07, on); }
+      box(sc, tf(m, T(0, H + 0.03, 0)), 0.14, 0.06, 0.32, 'metal');
+      sc.dot(ap(m, [0, H + 0.12, 0]), 1.7, 'a');
+    } else {
+      box(sc, tf(T(x, 0.1, z), RY(-a)), 0.3, 0.2, 0.52, 'steel');
+      box(sc, tf(T(x, 0.22, z), RY(-a)), 0.22, 0.04, 0.44, 'metal');
+    }
+  }
+  const yc = 1.45 + 0.08 * Math.sin(t * 0.9);
+  lathe(sc, I, [[0.62, -0.3], [0.16, yc - 0.52]], 24, 'beam');
+  sphere(sc, T(0, yc, 0), 0.5, 'glass', { u: 22, v: 11 });
+  sphere(sc, T(0, yc, 0), 0.22, 'rim', { u: 12, v: 6 });
+  sc.glow([0, yc, 0], 2.8, 0.6);
+  ring(sc, I, 0.86, yc, 'ls', 0.8, 48);
+  for (let k = 0; k < 3; k++) { const g = 0.5 * t + k * TAU / 3; sc.dot([Math.cos(g) * 0.86, yc, Math.sin(g) * 0.86], 1.8, 'a'); }
+  return { top: 3.1, bot: -0.8, foot: 2.3 };
+}
+
+// 07 Rift Hold: an asteroid split in two, the halves held apart, a glass deck per department bridging the lit rift
+// a lump of rock, its poles at its two ends (left, right) so their seams are never on top; clip(p) may cut it
+function rock(sc, C, RA, seed, clip, ref) {
+  const U = 22, V = 14, P = [];
+  for (let i = 0; i <= V; i++) {
+    const ph = -PI / 2 + PI * i / V, cp = Math.cos(ph), row = [];
+    for (let j = 0; j <= U; j++) {
+      const th = j / U * TAU, nz = 1 + cp * (0.1 * Math.sin(th * 3 + seed) * Math.cos(ph * 2.3 + seed * 0.7) + 0.06 * Math.sin(th * 5 + ph * 3 + seed * 1.3) + 0.04 * Math.cos(ph * 7 + th * 2 + seed));
+      const p = [C[0] + RA[0] * Math.sin(ph) * nz, C[1] + RA[1] * cp * Math.cos(th) * nz, C[2] + RA[2] * cp * Math.sin(th) * nz];
+      if (clip) clip(p);
+      row.push(p);
+    }
+    P.push(row);
+  }
+  for (let i = 0; i < V; i++) for (let j = 0; j < U; j++) sc.face([P[i][j], P[i][j + 1], P[i + 1][j + 1], P[i + 1][j]], 'rock', ref || C);
+}
+function rift(sc, n, t, R) {
+  const C = [0, 0.55, 0], RA = [2.1, 1.45, 1.8], G2 = 0.5, Wb = 2 * G2 + 0.5;
+  rock(sc, C, RA, 3.1, p => { p[0] = Math.max(p[0], 0) + G2; }, [G2 + 1.1, 0.55, 0]);
+  rock(sc, C, RA, 3.1, p => { p[0] = Math.min(p[0], 0) - G2; }, [-G2 - 1.1, 0.55, 0]);
+  // the rift's light: a sheet of it between the halves, seams of it along both walls
+  for (let i = 0; i < 16; i++) { const a0 = i / 16 * TAU, a1 = (i + 1) / 16 * TAU, e = a => [0, C[1] + Math.sin(a) * RA[1] * 0.82, Math.cos(a) * RA[2] * 0.82]; sc.face([[0, C[1], 0], e(a0), e(a1)], 'beam', null); }
+  for (const s of [1, -1]) for (const y of [-0.15, 0.55, 1.25]) { const hz = RA[2] * Math.sqrt(Math.max(0, 1 - Math.pow((y - C[1]) / RA[1], 2))) * 0.8, pts = []; for (let i = 0; i <= 8; i++) pts.push([s * (G2 - 0.012), y, -hz + 2 * hz * i / 8]); sc.line(pts, 'ls', 1, 0.01); }
+  for (const y of [-0.1, 0.6, 1.3]) sc.glow([0, y, 0], 1.9, 0.3);
+  // the bridges, one a department, front and back in turn
+  const dh = Math.min(0.42, 1.9 / n), y0 = 0.62 - n * dh / 2;
+  for (let f = 0; f < n; f++) {
+    const y = y0 + f * dh + dh / 2, z = n > 1 ? (f % 2 ? -0.42 : 0.42) : 0, gh = dh * 0.6;
+    box(sc, T(0, y - gh / 2 - 0.02, z), Wb + 0.1, 0.04, 0.6, 'steel');
+    box(sc, T(0, y + gh / 2 + 0.02, z), Wb + 0.1, 0.04, 0.6, 'steel');
+    box(sc, T(0, y, z), Wb, gh, 0.52, 'glass', { tile: 0.4 });
+    for (const s of [1, -1]) for (let i = 0; i < 5; i++) { const on = R() < 0.66; sc.win([-Wb / 2 + Wb / 5 * (i + 0.5), y, z + s * 0.272], [0, 0, s], 0.15, gh * 0.5, on); }
+    sc.line([[-Wb / 2 - 0.05, y - gh / 2 - 0.045, z + 0.31], [Wb / 2 + 0.05, y - gh / 2 - 0.045, z + 0.31]], 'l', 1.2, 0.03);
+  }
+  // a pad on the right half, a mast on the left
+  cyl(sc, T(1.3, 1.8, -0.2), 0.26, 0.36, 'steel', { seg: 16 });
+  cyl(sc, T(1.3, 2.02, -0.2), 0.55, 0.08, 'metal', { seg: 28 });
+  ring(sc, T(1.3, 2.065, -0.2), 0.44, 0, 'l', 1.1, 40, 0.02);
+  for (let k = 0; k < 4; k++) { const g = k * PI / 2 + PI / 4; sc.dot([1.3 + Math.cos(g) * 0.53, 2.07, -0.2 + Math.sin(g) * 0.53], 1.1, 'a'); }
+  rod(sc, [-1.15, 1.5, -0.35], [-1.15, 2.7, -0.35], 0.03, 'metal'); sc.dot([-1.15, 2.77, -0.35], 2, 'a');
+  for (let k = 0; k < 2; k++) {
+    const g = 0.2 * t + k * PI + 0.6, r = 3.25, y = 0.8 + 0.25 * k, x = Math.cos(g) * r, z = Math.sin(g) * r;
+    box(sc, tf(T(x, y, z), RY(-g)), 0.14, 0.07, 0.36, 'pale');
+    sc.dot([x + Math.sin(g) * 0.2, y, z - Math.cos(g) * 0.2], 1.3, 'a');
+  }
+  return { top: 2.85, bot: -0.95, foot: 3.45 };
+}
+
+// 08 Tesseract Frame: a cube of struts balanced on one corner, turning; inside it a glass cube of decks turning the other way
+function tesseract(sc, n, t, R) {
+  const I = I4(), a = n <= 4 ? 2.3 : 2.6, diag = a * Math.sqrt(3), yc = -0.95 + diag / 2, h = a / 2;
+  lathe(sc, I, [[0, -2.05], [0.55, -1.95], [1.15, -1.66]], 32, 'dark');
+  cyl(sc, T(0, -1.55, 0), 1.25, 0.22, 'steel', { seg: 36 });
+  ring(sc, I, 1.255, -1.44, 'l', 1.2, 52);
+  lathe(sc, I, [[0.42, -1.44], [0.16, -1.12], [0.3, -0.98], [0, -0.98]], 20, 'metal');
+  const MF = tf(T(0, yc, 0), RY(0.1 * t + 0.25), RZ(Math.atan(Math.SQRT2)), RY(PI / 4)), ctr = [0, yc, 0];
+  for (const [p, q] of cubeEdges()) {
+    const A = ap(MF, scl3(p, h)), B = ap(MF, scl3(q, h));
+    rod(sc, A, B, 0.055, 'metal');
+    const o = x => add3(x, scl3(sub3(x, ctr), 0.045)), pts = []; for (let i = 0; i <= 5; i++) pts.push(o(lerp3(A, B, i / 5)));
+    sc.line(pts, 'l', 1.2, 0.02);
+  }
+  for (const x of [-1, 1]) for (const y of [-1, 1]) for (const z of [-1, 1]) box(sc, tf(MF, T(x * h, y * h, z * h)), 0.2, 0.2, 0.2, 'pale');
+  const vt = ap(MF, [h, h, h]); sc.dot(add3(vt, [0, 0.17, 0]), 2, 'a'); sc.glow(vt, 0.9, 0.5);
+  const c = n <= 4 ? 1.25 : 1.45, MI = tf(T(0, yc, 0), RY(-0.06 * t + 0.4)), ce = c / 2;
+  box(sc, MI, c, c, c, 'glass', { tile: 0.42 });
+  for (const [p, q] of cubeEdges()) sc.line([ap(MI, scl3(p, ce)), ap(MI, scl3(q, ce))], 'ls', 0.9, 0.01);
+  for (let f = 0; f < n; f++) {
+    const yy = -ce + (f + 0.5) * c / n;
+    box(sc, tf(MI, T(0, yy - c / n * 0.32, 0)), c - 0.1, 0.045, c - 0.1, 'pale');
+    faceWins(sc, MI, c, c, yy, Math.min(0.09, c / n * 0.4), 0.3, 0.6, R, 0.17);
+  }
+  sc.glow([0, yc, 0], 2.2, 0.45);
+  return { top: yc + diag / 2 + 0.2, bot: -2.05, foot: a * 0.8165 + 0.12 };
+}
+
+// 09 Nautilus Shell: chambers on a log spiral from a glass heart, 4 sealed ones and one per department outside them
+function nautilus(sc, n, t, R) {
+  // a log spiral of two turns: each whorl's inner wall clear of the one before it, a lit groove between;
+  // six sealed chambers round the heart, then one a department
+  const I = I4(), K = 6 + n, TS = 0, TE = 12.6, D = (TE - TS) / K, g = 0.04, b = 0.12, th0 = -10.2;
+  const rin = th => 0.384 * Math.exp(b * th), rout = th => 0.64 * Math.exp(b * th), hh = th => 0.2 * Math.exp(0.09 * th);
+  for (let i = 0, gp = []; i <= 60; i++) { const th = 2 * PI + (TE - 2 * PI) * i / 60, r = 0.5 * (rin(th) + rout(th - 2 * PI)); gp.push([Math.cos(th + th0) * r, 0.01, Math.sin(th + th0) * r]); if (i === 60) sc.line(gp, 'l', 1.3, 0); }
+  const P = (r, th, y) => [Math.cos(th + th0) * r, y, Math.sin(th + th0) * r];
+  lathe(sc, I, [[0, -0.85], [0.7, -0.78], [1.5, -0.45], [1.9, -0.05]], 44, 'dark');
+  for (let k = 0; k < K; k++) {
+    const t0 = TS + k * D + g / 2, t1 = TS + (k + 1) * D - g / 2, dept = k - (K - n), st = 5, top = [], inner = [];
+    const ref = th => P((rin(th) + rout(th)) / 2, th, hh(th) / 2);
+    for (let s = 0; s < st; s++) {
+      const a0 = t0 + (t1 - t0) * s / st, a1 = t0 + (t1 - t0) * (s + 1) / st, rf = ref((a0 + a1) / 2);
+      sc.face([P(rin(a0), a0, hh(a0)), P(rout(a0), a0, hh(a0)), P(rout(a1), a1, hh(a1)), P(rin(a1), a1, hh(a1))], 'pale', rf);
+      sc.face([P(rout(a0), a0, 0), P(rout(a1), a1, 0), P(rout(a1), a1, hh(a1)), P(rout(a0), a0, hh(a0))], 'steel', rf);
+      sc.face([P(rin(a0), a0, 0), P(rin(a0), a0, hh(a0)), P(rin(a1), a1, hh(a1)), P(rin(a1), a1, 0)], 'steel', rf);
+      top.push(P(rout(a0) + 0.01, a0, hh(a0) + 0.005));
+      inner.push(P(rin(a0) - 0.01, a0, hh(a0) + 0.005));
+    }
+    top.push(P(rout(t1) + 0.01, t1, hh(t1) + 0.005)); inner.push(P(rin(t1) - 0.01, t1, hh(t1) + 0.005));
+    sc.line(inner, 'ls', 0.8, 0.02);
+    const mouth = k === K - 1;
+    for (const e of [t0, t1]) {
+      const wall = [P(rin(e), e, 0), P(rout(e), e, 0), P(rout(e), e, hh(e)), P(rin(e), e, hh(e))];
+      if (mouth && e === t1) { sc.face(wall, 'glass', null); sc.line(wall.concat([wall[0]]), 'l', 1.5, 0.03); }
+      else sc.face(wall, 'steel', ref((t0 + t1) / 2));
+    }
+    if (mouth) sc.glow(P((rin(t1) + rout(t1)) / 2, t1, hh(t1) / 2), 1.6, 0.4);
+    sc.line([P(rin(t1), t1, hh(t1) + 0.012), P(rout(t1), t1, hh(t1) + 0.012)], 'l', 1.4, 0.03);
+    if (k === 0) sc.line([P(rin(t0), t0, hh(t0) + 0.012), P(rout(t0), t0, hh(t0) + 0.012)], 'l', 1.4, 0.03);
+    sc.line(top, dept >= 0 ? 'ls' : 'lg', 0.9, 0.02);
+    if (dept >= 0) for (let i = 0; i < 3; i++) { const th = t0 + (t1 - t0) * (i + 0.5) / 3, ca = Math.cos(th + th0), sa = Math.sin(th + th0), r = rout(th) + 0.012, on = R() < 0.66; sc.win([ca * r, hh(th) * 0.5, sa * r], [ca, 0, sa], 0.08 + 0.05 * Math.exp(b * th) / 3, hh(th) * 0.3, on); }
+  }
+  // the heart in the spiral's eye, a mast over it; three lights running out along the rim, heart to mouth
+  sphere(sc, T(0, 0.22, 0), 0.3, 'glass', { u: 14, v: 8 });
+  sphere(sc, T(0, 0.22, 0), 0.13, 'rim', { u: 10, v: 6 }); sc.glow([0, 0.24, 0], 1.6, 0.6);
+  rod(sc, [0, 0.5, 0], [0, 1.45, 0], 0.022, 'metal'); sc.dot([0, 1.52, 0], 2, 'a');
+  for (let k = 0; k < 3; k++) { const th = TS + ((0.35 * t + k * (TE - TS) / 3) % (TE - TS)), p = P(rout(th) + 0.03, th, hh(th) + 0.03); sc.dot(p, 1.9, 'a'); sc.glow(p, 0.6, 0.55); }
+  return { top: 1.75, bot: -0.85, foot: 2.95 };
+}
+
+// 10 Halo Vortex: flat rings floating one above another, wider as they rise, alternate ones turning the other way, round a column of light
+function vortex(sc, n, t, R) {
+  const I = I4(), K = Math.max(4, n), dh = Math.min(0.42, 2.15 / (K - 1));
+  lathe(sc, I, [[0, -0.95], [0.26, -0.88], [0.56, -0.5], [0.62, -0.32], [0.36, -0.16], [0.22, -0.06], [0, -0.06]], 28, 'steel');
+  ring(sc, I, 0.6, -0.4, 'l', 1.3, 40, 0.02);
+  let yt = 0;
+  for (let k = 0; k < K; k++) {
+    const r = 1.0 + 1.8 * k / (K - 1), y = 0.15 + k * dh + 0.035 * Math.sin(0.8 * t + k * 0.7), ph = (k % 2 ? -1 : 1) * (0.22 - 0.015 * k) * t + k * 0.7, M = T(0, y, 0);
+    annulus(sc, M, r, r + 0.2, 0, 0.11, 'metal', 'steel', 48 + k * 8);
+    ring(sc, M, r + 0.205, 0.11, 'l', 1.3, 72, 0.02); ring(sc, M, r - 0.005, 0.11, 'ls', 0.8, 60, 0.02);
+    if (k < n) ringWins(sc, M, r + 0.2, 0.055, 0.12, 0.045, Math.round(TAU * (r + 0.2) / 0.3), 0.6, R, ph);
+    for (const s of [0, PI]) { const g = ph + s, x = Math.cos(g) * (r + 0.1), z = Math.sin(g) * (r + 0.1); box(sc, tf(T(x, y + 0.15, z), RY(-g)), 0.14, 0.08, 0.28, 'metal'); sc.dot([x, y + 0.22, z], 1.4, 'a'); }
+    yt = y;
+  }
+  const ys = yt + 0.45;
+  cyl(sc, T(0, ys / 2, 0), 0.2, ys + 0.1, 'glass', { seg: 16, tile: 0.4 });
+  cyl(sc, T(0, ys / 2, 0), 0.06, ys + 0.1, 'rim', { seg: 8, tile: 0.4 });
+  cyl(sc, T(0, 0.0, 0), 0.28, 0.08, 'metal', { seg: 18 }); cyl(sc, T(0, ys + 0.05, 0), 0.28, 0.08, 'metal', { seg: 18 });
+  sc.dot([0, ys + 0.22, 0], 2.4, 'a'); sc.glow([0, ys + 0.22, 0], 1.6, 0.7);
+  for (const q of [0.25, 0.55, 0.85]) sc.glow([0, ys * q, 0], 1.3, 0.22);
+  return { top: ys + 0.35, bot: -0.95, foot: 3.05 };
+}
+
+/* ---------------- the cards ---------------- */
+const SKINS = [
+  { k: 'armillary', name: 'Armillary Core', line: 'Three gimbal rings turn round a glass core of decks.', tags: ['gimbal rings', 'glass core', '3-axis turn'], yaw: 0, t0: 3, b: armillary,
+    icon: '<ellipse cx="10" cy="10" rx="4.4" ry="8.2" transform="rotate(18 10 10)"/><ellipse cx="10" cy="10" rx="8.4" ry="3" transform="rotate(-12 10 10)"/><rect x="8.7" y="6.2" width="2.6" height="7.6" rx="1.3"/>' },
+  { k: 'helix', name: 'Helix Spire', line: 'Glass decks, each turned on the one below; lit corners spiral up.', tags: ['twisted tower', 'lit corners', 'gliding halo'], yaw: 0.35, t0: 5, b: helix,
+    icon: '<path d="M5 17.6h10 M6.4 17.6C7.2 12.4 8.8 8.8 8 4.4h4C11.2 8.8 12.8 12.4 13.6 17.6 M10.6 17.6C9.6 12.6 11.4 8.6 9.8 4.4 M10 4.4V1.8"/>' },
+  { k: 'sail', name: 'Solar Sail', line: 'Four glass sail panels turn slowly round a mast of decks.', tags: ['solar sails', 'slow spin', 'glowing edge'], yaw: 0, t0: 9.8, b: sail,
+    icon: '<path d="M1.6 12.4 10 8.4l8.4 4L10 16.4Z M1.6 12.4h16.8 M10 8.4v8 M10 5V2.8"/><rect x="8.8" y="5" width="2.4" height="7.4" rx=".8"/>' },
+  { k: 'dish', name: 'Deep Array', line: 'A giant dish on a turret, sweeping the sky, its focus lit.', tags: ['parabolic dish', 'tracking', 'lit focus'], yaw: 0, t0: 4, b: dish,
+    icon: '<path d="M2.8 11.8a8 8 0 0 0 9-9Z M2.8 11.8 5.2 5.2 11.8 2.8 M9.6 9.6l1.6 5.2 M7.4 17.4h8.8 M8.8 17.4l1.6-2.6h2.6l1.4 2.6"/><circle cx="5.2" cy="5.2" r=".9" fill="currentColor"/>' },
+  { k: 'arcology', name: 'Glass Arcology', line: 'A shallow glass dome over a lit city, a tram circling inside.', tags: ['glass dome', 'city lights', 'tram ring'], yaw: 0, t0: 2, b: arcology,
+    icon: '<path d="M1.8 15.2h16.4 M3.2 15.2a6.8 6.8 0 0 1 13.6 0 M3.6 17.4h12.8 M8.8 15.2v-4.6h2.4v4.6 M6 15.2v-2.4h1.8v2.4 M12.2 15.2v-3.2h1.8v3.2 M10 8.4V6.2"/>' },
+  { k: 'crown', name: 'Pylon Crown', line: 'Glass pylons in a circle, one per department, round a floating core.', tags: ['pylon per dept', 'floating core', '8 seats'], yaw: 0, t0: 2, b: crown,
+    icon: '<ellipse cx="10" cy="15.4" rx="8" ry="2.4"/><path d="M3.4 14.4V8 M6.6 13.2V4.2 M13.4 13.2V4.2 M16.6 14.4V8"/><circle cx="10" cy="9" r="1.8"/>' },
+  { k: 'rift', name: 'Rift Hold', line: 'An asteroid split open, glass decks bridging its glowing rift.', tags: ['split asteroid', 'glass bridges', 'rift light'], yaw: -0.3, t0: 2, b: rift,
+    icon: '<path d="M8.2 4.4 4.6 5.2 2.2 9.2l.8 5 3.4 2.6h1.8Z M11.8 4l4 1 2.2 4.4-1 5.2-3.2 2.4h-2Z M8.2 8.2h3.6 M8.2 11.2h3.6 M8.2 14.2h3.6"/>' },
+  { k: 'tesseract', name: 'Tesseract Frame', line: 'A frame cube balanced on its corner, a glass cube turning inside.', tags: ['cube on corner', 'counter-turn', 'glass decks'], yaw: 0, t0: 2, b: tesseract,
+    icon: '<path d="M10 1.4 16.2 5v7.2L10 15.8 3.8 12.2V5Z M3.8 5 10 8.6 16.2 5 M10 8.6v7.2 M10 15.8v2 M6.6 18.6h6.8"/>' },
+  { k: 'nautilus', name: 'Nautilus Shell', line: 'Chambers spiral out from a glass heart; each department adds one.', tags: ['log spiral', 'lit septa', 'moving pearls'], yaw: 0, t0: 3, b: nautilus,
+    icon: '<path d="M7.3 11.6 7.1 10.8 7.4 10.2 8 9.8 8.7 9.7 9.5 10 10.2 10.7 10.4 11.8 10.1 12.9 9.2 13.8 7.9 14.2 6.4 13.9 5 12.9 4.3 11.1 4.5 9.1 5.7 7.2 8 6 10.8 5.9 13.5 7.4 15.4 10.2 15.8 12.1 M7.1 11 4.3 10.2 M8.2 9.8 7.9 6 M10.1 10.6 14.6 8.8"/>' },
+  { k: 'vortex', name: 'Halo Vortex', line: 'Floating rings widen upward round a column of light, counter-turning.', tags: ['floating rings', 'counter-turn', 'light column'], yaw: 0, t0: 2, b: vortex,
+    icon: '<path d="M2 5.4a8 2.2 0 1 0 16 0 8 2.2 0 1 0-16 0 M4.2 9.6a5.8 1.6 0 1 0 11.6 0 5.8 1.6 0 1 0-11.6 0 M6.3 13.4a3.7 1.1 0 1 0 7.4 0 3.7 1.1 0 1 0-7.4 0 M10 18.4V3.2"/>' }
+];
+const f1 = x => Math.round(x * 10) / 10;
+function pathOf(pts) { let s = 'M' + f1(pts[0][0]) + ' ' + f1(pts[0][1]); for (let i = 1; i < pts.length; i++) s += 'L' + f1(pts[i][0]) + ' ' + f1(pts[i][1]); return s + 'Z'; }
+function hullFill(mat, k) { const [lo, hi] = HULL[mat], q = 0.16 + 0.84 * k; return 'rgb(' + lo.map((x, i) => Math.round(x + (hi[i] - x) * q)).join(',') + ')'; }
+function itemSvg(it) {
+  if (it.t === 'p') {
+    const d = pathOf(it.pts);
+    if (HULL[it.mat]) { const c = hullFill(it.mat, it.k); return '<path d="' + d + '" fill="' + c + '" stroke="' + c + '" stroke-width=".6" stroke-linejoin="round"/>'; }
+    if (it.mat === 'glass') return '<path d="' + d + '" class="ag" style="fill-opacity:' + (0.05 + 0.3 * Math.pow(1 - it.f, 2)).toFixed(3) + '"/>';
+    if (it.mat === 'sail') return '<path d="' + d + '" class="ag2" style="fill-opacity:' + (0.15 + 0.12 * Math.pow(1 - it.f, 2)).toFixed(3) + '"/>';
+    return '<path d="' + d + '" class="' + ACC[it.mat] + '"/>';
+  }
+  if (it.t === 'l') return '<path d="M' + f1(it.a[0]) + ' ' + f1(it.a[1]) + 'L' + f1(it.b[0]) + ' ' + f1(it.b[1]) + '" class="' + it.cls + '" stroke-width="' + it.w + '"/>';
+  return '<circle cx="' + f1(it.c[0]) + '" cy="' + f1(it.c[1]) + '" r="' + it.r + '" class="' + it.cls + '"/>';
+}
+const STARS = SKINS.map((s, i) => {
+  const G = rng(900 + i * 13); let o = '';
+  for (let k = 0; k < 56; k++) { const x = G() * 360, y = G() * 300, r = 0.25 + G() * G() * 1.1, h = G(), c = h < 0.12 ? '#00cfff' : h < 0.18 ? '#00ff88' : '#dfe8f5'; o += '<circle cx="' + f1(x) + '" cy="' + f1(y) + '" r="' + r.toFixed(2) + '" fill="' + c + '" opacity="' + (0.12 + G() * 0.5).toFixed(2) + '"/>'; }
+  return o;
+});
+function picture(i, n, t) {
+  const s = SKINS[i], sc = new Sc(s.yaw), fr = s.b(sc, n, t, rng(11 + i * 7));
+  const ringR = Math.max(2.0, fr.foot * 0.72), g = scr(sc.v([0, fr.bot - 0.5, 0]));
+  sc.it.sort((a, b) => a.d - b.d);
+  let body = '', bloom = '', glow = '';
+  for (const it of sc.it) {
+    const x = itemSvg(it); body += x;
+    if ((it.t === 'p' && (it.mat === 'rim' || it.mat === 'win')) || (it.t === 'l' && it.cls === 'l') || it.t === 'c') bloom += x;
+  }
+  for (const q of sc.gl) glow += '<circle cx="' + f1(q.c[0]) + '" cy="' + f1(q.c[1]) + '" r="' + f1(q.r) + '" fill="url(#rg' + i + ')" opacity="' + q.op + '"/>';
+  const ground = '<ellipse cx="' + f1(g[0]) + '" cy="' + f1(g[1]) + '" rx="' + f1(ringR * S * 1.3) + '" ry="' + f1(ringR * S * SP * 1.3) + '" fill="url(#rg' + i + ')" opacity=".16"/>' +
+    '<ellipse class="hr" cx="' + f1(g[0]) + '" cy="' + f1(g[1]) + '" rx="' + f1(ringR * S) + '" ry="' + f1(ringR * S * SP) + '"/>';
+  const defs = '<defs><radialGradient id="rg' + i + '"><stop offset="0" style="stop-color:var(--acc);stop-opacity:1"/><stop offset=".45" style="stop-color:var(--acc);stop-opacity:.35"/><stop offset="1" style="stop-color:var(--acc);stop-opacity:0"/></radialGradient></defs>';
+  const svg = '<svg viewBox="0 0 360 300" role="img" aria-label="' + s.name + '">' + defs + '<g>' + STARS[i] + '</g><g>' + ground + '</g><g>' + body + '</g><g class="bloom" filter="url(#fb)">' + bloom + '</g><g class="gl">' + glow + '</g></svg>';
+  return { svg, fr, count: sc.it.length };
+}
+
+  CO.SPEC = {
+    SKINS: SKINS, picture: picture,
+    indexOf: function (k) { for (var i = 0; i < SKINS.length; i++) if (SKINS[i].k === k) return i; return -1; }
+  };
+})();

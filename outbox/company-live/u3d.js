@@ -1019,22 +1019,28 @@ function vfBlock(b, V) {
 // A whole station: the body (it bobs and turns), the holo-ring it floats over -- solid when public, dashed when
 // private, our own in green -- a pool of its light, and its hit box. RING: how brightly the ring burns.
 const RING = { pub: 0.7, priv: 0.45, hover: 2.6 }, SS = 2.7;   // SS: how much larger a station is drawn on the map
+// A paused company's station is dark: no colour in its lights, its ring, its halo or its hull, plain steel with its
+// windows out, until it runs again ("pak budou zhasnute firmy co zrovna nemakaji a sou pauznute ... zmizi ty barvy",
+// the operator, 2026-10-23, spec 4 item I). Our own station follows its own pause switch the same way (setMine's key
+// holds the status, so it is built again when the switch is thrown).
+const PAUSED_HEX = '#3a4658';
 function makeStation(c, seed, opts) {
   geo();
-  const n = floorsOf(c), A = amat(CO.accentHex(c.accent)), root = new THREE.Group(), body = new THREE.Group();
+  const paused = c.status === 'paused';
+  const n = floorsOf(c), A = amat(paused ? PAUSED_HEX : CO.accentHex(c.accent)), root = new THREE.Group(), body = new THREE.Group();
   const b = new Building(A.hex, seed);
   (SKIN[c.skin] || SKIN.tower)(b, n);
   b.finish(); b.bake();
   body.add(b.g); root.add(body);
-  const own = !!opts.mine, pub = !!c.public || own, RA = own ? amat('#00ff88') : A;
-  const rimMat = RA.rim.clone(); rimMat.emissiveIntensity = RING[pub ? 'pub' : 'priv'];
+  const own = !!opts.mine, pub = !!c.public || own, RA = own && !paused ? amat('#00ff88') : A;
+  const rimMat = RA.rim.clone(); rimMat.emissiveIntensity = paused ? 0.1 : RING[pub ? 'pub' : 'priv'];
   const ringR = Math.max(2.0, b.foot * 0.72), ringY = b.bot - 0.5;
   const ring = new THREE.Mesh(pub ? G.holo : G.holoDash, rimMat); ring.scale.setScalar(ringR); ring.rotation.x = Math.PI / 2; ring.position.y = ringY; root.add(ring);
   const pool = new THREE.Mesh(G.plane, new THREE.MeshBasicMaterial({ map: glowTex(), color: RA.c, transparent: true, opacity: pub ? 0.1 : 0.05, blending: THREE.AdditiveBlending, depthWrite: false, side: THREE.DoubleSide }));
   pool.scale.setScalar(ringR * 2.3); pool.rotation.x = -Math.PI / 2; pool.position.y = ringY; root.add(pool);
   // seen from far off, a station is a point of light in its own colour among the galaxy's stars; close up the
   // light gives way to the station itself (Universe3D fades it with distance)
-  const halo = glowSprite(RA.c, own ? 0.5 : pub ? 0.32 : 0.18, 7 + b.foot); halo.position.y = (b.top + b.bot) / 2; body.add(halo);
+  const halo = glowSprite(RA.c, paused ? 0.04 : own ? 0.5 : pub ? 0.32 : 0.18, 7 + b.foot); halo.position.y = (b.top + b.bot) / 2; body.add(halo);
   const hw = Math.max(3, b.foot * 1.5), hit = new THREE.Mesh(G.box, M.hit); hit.scale.set(hw, b.top - ringY + 0.6, hw); hit.position.y = (b.top + ringY) / 2; root.add(hit);
   return { root, body, b, rimMat, ring, pool, ringR, hit, halo, haloBase: halo.material.opacity, top: b.top, bot: ringY, n, pub, spin: (seed % 13) / 13 * Math.PI * 2 };
 }
@@ -2082,7 +2088,10 @@ class Universe3D {
     }
     // a star of light on the outer ring, where his is
     const fl = new THREE.Sprite(new THREE.SpriteMaterial({ map: flareTex(), color: new THREE.Color(0xd8f6ff).multiplyScalar(1.4), transparent: true, blending: THREE.AdditiveBlending, depthWrite: false }));
-    fl.scale.setScalar(16); fl.visible = UVORBITS !== 'none'; g.add(fl); this.coreFlare = fl;
+    // (gone: it circled the sun's outer ring for ever, a bright star with a cone of haze behind it -- "ta kometa je na
+    // nejvic vzdalenem prstenci a porad dokola jezdi ... je tam moc koure, je moc prehustena", the operator, 2026-10-24;
+    // the sprite stays so the frame loop that moves it keeps working, it is just never drawn)
+    fl.scale.setScalar(16); fl.visible = false; g.add(fl); this.coreFlare = fl;
     // (its warm point light went with the detector: it reached only the panels, and no station is that close)
     // what the pointer finds: the sun and a little round it
     const hit = new THREE.Mesh(G.sphere, M.hit); hit.scale.setScalar(Math.max(34, this.sunR * 1.15)); hit.position.copy(this.heartAt); hit.userData.id = 'core'; g.add(hit); this.coreHit = hit;
@@ -2217,7 +2226,7 @@ class Universe3D {
     CO.uvBoard(mine).top.forEach((r, i) => {
       const it = this.items.find((x) => (r.mine ? x.mine : !x.kind && !x.mine && String(x.c.id) === String(r.c.id)));
       if (!it) return;
-      setTimeout(() => { this.arc(it, true, '#00cfff'); setTimeout(() => this.pop(it, '+' + r.share + '% of fees', 'share'), 1500); }, i * 450);
+      setTimeout(() => { this.arc(it, true, '#00cfff'); setTimeout(() => this.pop(it, '+' + r.share + '% of revenue', 'share'), 1500); }, i * 450);
     });
   }
   // work goes in to Cymetica in the company's colour; ET10 comes back out in green (or in the colour given: gold for the share)

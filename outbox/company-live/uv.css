@@ -77,6 +77,8 @@ i.lk::before { content: ''; position: absolute; left: 1.5px; top: -5px; width: 6
 .uvmap .w.on, .skinsvg .w.on { opacity: .82; }
 .uvmap .fl.on .w { opacity: 1; filter: drop-shadow(0 0 2.5px currentColor); }
 .uvmap .plot.paused .w, .uvmap .plot.paused .w.on { opacity: .1; animation: none; }
+/* a paused company's station on the flat map has no colour left in it either (spec 4, item I) */
+.uvmap .plot.paused { filter: grayscale(.9) brightness(.62); }
 .uvmap .plot.priv .w.on { opacity: .45; }
 .uvmap .beacon, .skinsvg .beacon { animation: beacon 1.8s ease-in-out infinite; }
 @keyframes beacon { 50% { opacity: .25; } }

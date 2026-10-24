@@ -13,6 +13,21 @@
     { key: 'tower', name: 'Dreadnought' }, { key: 'dome', name: 'Shipyard' }, { key: 'pyramid', name: 'Pyramid Carrier' },
     { key: 'orbital', name: 'Ring Habitat' }, { key: 'rocket', name: 'Lancer' }, { key: 'vault', name: 'Citadel' }, { key: 'stack', name: 'Monolith' }
   ];
+  // The ten new picks (outbox/company-skins: SPEC.md, and index.html, which draws them). Designed and previewed, not yet
+  // built into the Universe's 3D: spec = true. Settings shows each from the showcase's own projector (spec-skins.js);
+  // the map and the flat pictures draw an unbuilt key as a Dreadnought (their `|| SKIN.tower`) until a builder for it
+  // is put into CO.U3.SKIN, which CO.skinBuilt notices by itself.
+  [['armillary', 'Armillary Core'], ['helix', 'Helix Spire'], ['sail', 'Solar Sail'], ['dish', 'Deep Array'], ['arcology', 'Glass Arcology'],
+    ['crown', 'Pylon Crown'], ['rift', 'Rift Hold'], ['tesseract', 'Tesseract Frame'], ['nautilus', 'Nautilus Shell'], ['vortex', 'Halo Vortex']
+  ].forEach(function (s) { CO.SKINS.push({ key: s[0], name: s[1], spec: true }); });
+  // is this station drawn by the Universe itself (3D), or only previewed?
+  CO.skinBuilt = function (k) {
+    for (var i = 0; i < CO.SKINS.length; i++) if (CO.SKINS[i].key === k) {
+      if (!CO.SKINS[i].spec) return true;
+      return !!(CO.U3 && CO.U3.ok && CO.U3.SKIN && CO.U3.SKIN[k]);
+    }
+    return true;
+  };
   CO.ACCENTS = [
     { key: 'green', hex: '#00ff88' }, { key: 'cyan', hex: '#00cfff' }, { key: 'blue', hex: '#3b82f6' }, { key: 'red', hex: '#ff4444' },
     // four more for a station ("a pridej vice barev", 2026-10-20): the Universe is a game scene, outside the site's
@@ -32,8 +47,20 @@
     orbital: '<ellipse cx="10" cy="11.6" rx="8" ry="3.7"/><path d="M4.4 9.2l11.2 4.8 M15.6 9.2 4.4 14 M10 6.6V2.8"/><rect x="8.3" y="6.6" width="3.4" height="7.2" rx="1.7"/>',
     rocket: '<path d="M1.8 11.2l4.4-2.6h9.4l2.6 1.1v3l-2.6 1.1H6.2Z M7.6 8.6v5.2 M9.4 8.6v5.2 M13 8.6V5.8h2.2v2.8 M18.2 10.4v1.6"/>',
     vault: '<ellipse cx="10" cy="14.8" rx="8" ry="2.5"/><path d="M5.2 14.4v-3.6a4.8 4.8 0 0 1 9.6 0v3.6 M10 6V2.2 M5.4 11.8h9.2"/>',
-    stack: '<rect x="7.6" y="3" width="4.8" height="11.2" rx=".6"/><path d="M3.8 15.6l2.1-1.4h8.2l2.1 1.4-2.1 1.4H5.9Z M9.1 5.6h1.8 M9.1 8h1.8 M9.1 10.4h1.8"/><rect x="3.2" y="5" width="1.8" height="1.8"/><rect x="15" y="8" width="1.8" height="1.8"/>'
+    stack: '<rect x="7.6" y="3" width="4.8" height="11.2" rx=".6"/><path d="M3.8 15.6l2.1-1.4h8.2l2.1 1.4-2.1 1.4H5.9Z M9.1 5.6h1.8 M9.1 8h1.8 M9.1 10.4h1.8"/><rect x="3.2" y="5" width="1.8" height="1.8"/><rect x="15" y="8" width="1.8" height="1.8"/>',
+    // the ten new ones, as SPEC.md draws them
+    armillary: '<ellipse cx="10" cy="10" rx="4.4" ry="8.2" transform="rotate(18 10 10)"/><ellipse cx="10" cy="10" rx="8.4" ry="3" transform="rotate(-12 10 10)"/><rect x="8.7" y="6.2" width="2.6" height="7.6" rx="1.3"/>',
+    helix: '<path d="M5 17.6h10 M6.4 17.6C7.2 12.4 8.8 8.8 8 4.4h4C11.2 8.8 12.8 12.4 13.6 17.6 M10.6 17.6C9.6 12.6 11.4 8.6 9.8 4.4 M10 4.4V1.8"/>',
+    sail: '<path d="M1.6 12.4 10 8.4l8.4 4L10 16.4Z M1.6 12.4h16.8 M10 8.4v8 M10 5V2.8"/><rect x="8.8" y="5" width="2.4" height="7.4" rx=".8"/>',
+    dish: '<path d="M2.8 11.8a8 8 0 0 0 9-9Z M2.8 11.8 5.2 5.2 11.8 2.8 M9.6 9.6l1.6 5.2 M7.4 17.4h8.8 M8.8 17.4l1.6-2.6h2.6l1.4 2.6"/><circle cx="5.2" cy="5.2" r=".9" fill="currentColor"/>',
+    arcology: '<path d="M1.8 15.2h16.4 M3.2 15.2a6.8 6.8 0 0 1 13.6 0 M3.6 17.4h12.8 M8.8 15.2v-4.6h2.4v4.6 M6 15.2v-2.4h1.8v2.4 M12.2 15.2v-3.2h1.8v3.2 M10 8.4V6.2"/>',
+    crown: '<ellipse cx="10" cy="15.4" rx="8" ry="2.4"/><path d="M3.4 14.4V8 M6.6 13.2V4.2 M13.4 13.2V4.2 M16.6 14.4V8"/><circle cx="10" cy="9" r="1.8"/>',
+    rift: '<path d="M8.2 4.4 4.6 5.2 2.2 9.2l.8 5 3.4 2.6h1.8Z M11.8 4l4 1 2.2 4.4-1 5.2-3.2 2.4h-2Z M8.2 8.2h3.6 M8.2 11.2h3.6 M8.2 14.2h3.6"/>',
+    tesseract: '<path d="M10 1.4 16.2 5v7.2L10 15.8 3.8 12.2V5Z M3.8 5 10 8.6 16.2 5 M10 8.6v7.2 M10 15.8v2 M6.6 18.6h6.8"/>',
+    nautilus: '<path d="M7.3 11.6 7.1 10.8 7.4 10.2 8 9.8 8.7 9.7 9.5 10 10.2 10.7 10.4 11.8 10.1 12.9 9.2 13.8 7.9 14.2 6.4 13.9 5 12.9 4.3 11.1 4.5 9.1 5.7 7.2 8 6 10.8 5.9 13.5 7.4 15.4 10.2 15.8 12.1 M7.1 11 4.3 10.2 M8.2 9.8 7.9 6 M10.1 10.6 14.6 8.8"/>',
+    vortex: '<path d="M2 5.4a8 2.2 0 1 0 16 0 8 2.2 0 1 0-16 0 M4.2 9.6a5.8 1.6 0 1 0 11.6 0 5.8 1.6 0 1 0-11.6 0 M6.3 13.4a3.7 1.1 0 1 0 7.4 0 3.7 1.1 0 1 0-7.4 0 M10 18.4V3.2"/>'
   };
+  CO.SKINS.forEach(function (s) { s.icon = CO.STATION_ICON[s.key]; });
   CO.stationIcon = function (skin, accent) {
     return '<span class="dic logo" style="--ic:' + CO.accentHex(accent) + '"><svg viewBox="0 0 20 20" aria-hidden="true">' +
       (CO.STATION_ICON[skin] || CO.STATION_ICON.dome) + '</svg></span>';

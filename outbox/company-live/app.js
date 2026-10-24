@@ -688,7 +688,7 @@
   function renderPortfolio() {
     var apps = CO.apps(), Rd = CO.PORTFOLIO_READ, RF = CO.REFERRAL;
     $('portfolio').closest('.page').style.setProperty('--acc', CO.accentHex(CO.profile().accent));
-    if (!apps.length) return setHTML($('portfolio'), '<div class="pfempty"><b>No products yet</b><span>Build one with Build it Better: the people it brings and the fees they pay show here.</span></div>');
+    if (!apps.length) return setHTML($('portfolio'), '<div class="pfempty"><b>No products yet</b><span>Build one with Build it Better: the people it brings and the revenue they pay show here.</span></div>');
     var people = 0, today = 0, fees = CO.appFeesTotal();
     apps.forEach(function (a) { people += a.people + a.todayPeople; today += a.todayPeople; });
     var step = function (n, l, cls, tip) { return '<div class="pk' + (cls ? ' ' + cls : '') + '"' + (tip ? ' title="' + esc(tip) + '"' : '') + '><b>' + n + '</b><span>' + l + '</span></div>'; };
@@ -696,15 +696,15 @@
       '<div class="pkpis">' + step(apps.length, 'products') + '<i class="arr">→</i>' +
       step(people.toLocaleString('en-US'), 'people · 30 d' + (today ? ' <em>+' + today + ' now</em>' : ''), '', 'Different people who opened your products, product by product (someone who opened two counts in both). AI agents are not people: they are in each product\'s panel.') + '<i class="arr">→</i>' +
       step(RF.qualified.toLocaleString('en-US'), 'new users<em class="nl">+' + CO.fmtEt(RF.et10PerUser) + ' ET10 each</em>', 'g', 'People who signed up on Cymetica through your pages. Cymetica credits ' + CO.fmtEt(RF.et10PerUser) + ' ET10 for each, every morning at ' + RF.at + '. None so far.') + '<i class="arr">→</i>' +
-      step(usd(fees), 'fees brought · 30 d', 'g', 'What Cymetica earned in fees from what the people your products brought traded, and from trades made through them. The revenue share ranks every company by it.') + '</div>' +
+      step(usd(fees), 'revenue brought · 30 d', 'g', 'What Cymetica earned from what the people your products brought traded, and from trades made through them. The revenue share ranks every company by it.') + '</div>' +
       '<div class="pfgrid">' + apps.slice().sort(function (a, b) { return CO.appFees(b).fees - CO.appFees(a).fees; }).map(function (a) {
         var f = CO.appFees(a), line = CO.uvLine(a.name);
         return '<div class="pf' + (ui.prod === a.name ? ' on' : '') + '" data-a="prod" data-n="' + esc(a.name) + '" role="button" tabindex="0">' +
           '<div class="pf1">' + logoTile(a) + '<div class="pft"><b>' + esc(a.name) + '</b><span class="' + (line ? '' : 'none') + '">' + esc(line || a.path) + '</span></div><i class="pfgo">›</i></div>' +
           '<div class="pfn"><div><b>' + (a.people + a.todayPeople).toLocaleString('en-US') + (a.todayPeople ? '<em>+' + a.todayPeople + '</em>' : '') + '</b><span>people</span></div>' +
-          '<div class="g"><b>' + usd(f.fees) + '</b><span>fees brought</span></div></div>' + spark(f.days) + '</div>';
+          '<div class="g"><b>' + usd(f.fees) + '</b><span>revenue brought</span></div></div>' + spark(f.days) + '</div>';
       }).join('') + '</div>' +
-      '<p class="pfsrc">People, visits and AI agents: Cymetica (/traffic/mine), last ' + Rd.days + ' days, read ' + Rd.at + '. Fees brought: a sample, split from your company\'s figure on the revenue-share board.</p>');
+      '<p class="pfsrc">People, visits and AI agents: Cymetica (/traffic/mine), last ' + Rd.days + ' days, read ' + Rd.at + '. Revenue brought: a sample, split from your company\'s figure on the revenue-share board.</p>');
     if (ui.prod) renderProdPanel();
   }
   // a product's panel: its people and its fees, its 30 days, where its visits came from, its logo and its line
@@ -724,7 +724,7 @@
         '<button type="button" class="uvp-x" data-a="prod-close" title="Close (Esc)">×</button></div>' +
       '<div class="uvp-b">' +
         '<div class="uvks two">' + kpi((a.people + a.todayPeople).toLocaleString('en-US'), 'people · 30 d', 'c', 'Different people who opened it in the last 30 days') +
-          kpi(usd(f.fees), 'fees brought · 30 d', 'g', 'What Cymetica earned in fees from what the people it brought traded, and from trades made through it') + '</div>' +
+          kpi(usd(f.fees), 'revenue brought · 30 d', 'g', 'What Cymetica earned from what the people it brought traded, and from trades made through it') + '</div>' +
         '<div class="uvsec">People per day<span class="sub">last 30 days</span></div>' +
         '<div class="pfch"><div class="pfbars">' + f.days.map(function (d, k) { return '<i style="height:' + Math.max(4, Math.round(d.v / mx * 100)) + '%" title="' + prodDay(k) + ': ' + d.v + ' people"></i>'; }).join('') + '</div>' +
           '<div class="pfdates"><span>' + prodDay(0) + '</span><span>peak ' + mx + ' a day</span><span>' + prodDay(29) + '</span></div></div>' +
@@ -739,7 +739,7 @@
           '<small>PNG, JPG, SVG or WebP · square · shown wherever Cymetica shows ' + esc(a.name) + '</small></div></div>' +
         '<div class="pfline"><span class="k">In the Universe</span><em class="' + (line ? '' : 'none') + '">' + (line ? '“' + esc(line) + '”' : 'no line yet') + '</em>' +
           (RO ? '' : '<button type="button" class="pfedit" data-a="uvline" data-n="' + esc(a.name) + '">Edit</button>') + '</div>' +
-        '<div class="uvp-asof">Cymetica /traffic/mine · last 30 days · read ' + CO.PORTFOLIO_READ.at + ' · fees: a sample</div>' +
+        '<div class="uvp-asof">Cymetica /traffic/mine · last 30 days · read ' + CO.PORTFOLIO_READ.at + ' · revenue: a sample</div>' +
       '</div>' +
       '<div class="uvp-f"><a class="uvp-go" href="' + esc(a.url) + '" target="_blank" rel="noopener">Open ' + esc(a.path) + ' ↗</a></div>';
     if (keep) el.querySelector('.uvp-b').scrollTop = keep;
@@ -868,15 +868,20 @@
       '<p class="hint"><i class="lk"></i>Private: only its owner can look inside.</p></div></div>', true);
     pv3(document.querySelector('#modal-card .pc-art'), { skin: c.skin, accent: c.accent, floors: n, seed: c.id, name: c.name, public: false });
   }
-  // the station pictures: six shapes in the company's colour
-  // each station's 3D picture in its colour ships as a file (shots/station-<skin>-<accent>.webp, drawn by
-  // CO.U3.thumbs): shown at once, where the flat drawing showed first ("tam prvne najedou ty hnusne ikony")
-  function skinButtons(sel, acc) {
-    return CO.SKINS.map(function (s) {
-      var file = 'shots/station-' + s.key + '-' + (acc || 'green') + '.webp';
-      return '<button type="button" class="skin has3d' + (s.key === sel ? ' on' : '') + '" data-a="uv-skin" data-k="' + s.key + '"><img class="th3" alt="" src="' + file + '">' +
-        CO.skinSVG({ skin: s.key, accent: acc, floors: 3, seed: 11 }) + '<b>' + s.name + '</b></button>';
-    }).join('');
+  // the station pickers (the operator, 2026-10-24: "jen ty ikonky a 1 obrazovka kde se bude zobrazovat aktualni skin a v nem
+  // jen barvy menit, zbytek jen ikonky se bude klikat"): every station is one line icon, its name only a tooltip; the
+  // current one is shown on one screen, its colour dots on it. The seven the map draws, then the ten previewed from the spec.
+  function skinOf(k) { for (var i = 0; i < CO.SKINS.length; i++) if (CO.SKINS[i].key === k) return CO.SKINS[i]; return CO.SKINS[0]; }
+  // one strip, one row: the seven the map draws, a hairline, the ten previewed. The icons are one neutral colour: the
+  // company's colour belongs to the station on the screen, never to these (the operator, 2026-10-24).
+  function skinButtons(sel) {
+    var btn = function (s) {
+      var tip = s.name + (s.spec && !CO.skinBuilt(s.key) ? ' · preview only' : '');
+      return '<button type="button" class="skic' + (s.key === sel ? ' on' : '') + '" data-a="uv-skin" data-k="' + s.key + '" title="' + esc(tip) + '" aria-label="' + esc(s.name) +
+        '" aria-pressed="' + (s.key === sel) + '"><svg viewBox="0 0 20 20" aria-hidden="true">' + (CO.STATION_ICON[s.key] || '') + '</svg></button>';
+    };
+    return '<div class="skrow">' + CO.SKINS.filter(function (s) { return !s.spec; }).map(btn).join('') + '<i class="skdiv" aria-hidden="true"></i>' +
+      CO.SKINS.filter(function (s) { return !!s.spec; }).map(btn).join('') + '</div>';
   }
   function accentButtons(sel) {
     return CO.ACCENTS.map(function (a) { return '<button type="button" class="acc' + (a.key === sel ? ' on' : '') + '" data-a="uv-accent" data-k="' + a.key + '" style="--c:' + a.hex + '" title="' + a.key + '"></button>'; }).join('');
@@ -884,29 +889,76 @@
   function mark(sel, el) { Array.prototype.forEach.call(document.querySelectorAll(sel), function (x) { x.classList.toggle('on', x === el); }); }
   // the station turning in 3D where the browser can draw it; the flat picture stays underneath until then
   function pv3(el, o) { if (el && CO.U3 && CO.U3.ok && CO.U3.preview) CO.U3.preview(el, o); }
-  // the six station tiles as 3D pictures once they are drawn; the flat ones until then
-  function thumbs3(root, accent) {
-    if (!root || !(CO.U3 && CO.U3.ok && CO.U3.thumbs)) return;
-    CO.U3.thumbs(CO.accentHex(accent), function (urls) {
-      Array.prototype.forEach.call(root.querySelectorAll('.skin[data-k]'), function (b) {
-        var u = urls[b.getAttribute('data-k')]; if (!u || b.querySelector('img.th3')) return;
-        var img = document.createElement('img'); img.className = 'th3'; img.alt = ''; img.src = u; b.insertBefore(img, b.firstChild); b.classList.add('has3d');
-      });
+  // A station the Universe cannot draw yet (CO.skinBuilt) is shown by the skins showcase's own projector, spec-skins.js,
+  // loaded the first time one is picked: the same drawing company-skins/index.html turns, in the company's colour and
+  // with its departments. The flat picture (CO.skinSVG) is no stand-in: for a key it has no builder for it draws a
+  // Dreadnought. If the file cannot be fetched the station's own line icon is shown, large, so the screen never lies.
+  var spec = { q: null, raf: 0, prev: 0, last: 0, gap: 33, s: null };   // spec.s: which skin is turning, its departments and its clock; it outlives a re-render of Settings
+  var still = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  function loadSpec(cb) {
+    if (CO.SPEC) return cb(true);
+    if (spec.q) return spec.q.push(cb);
+    spec.q = [cb];
+    var s = document.createElement('script'), fin = function (ok) { var q = spec.q; spec.q = null; q.forEach(function (f) { f(ok); }); };
+    s.src = 'spec-skins.js?v=20261024pick1'; s.onload = function () { fin(!!CO.SPEC); }; s.onerror = function () { fin(false); };
+    document.head.appendChild(s);
+  }
+  // the turning picture; it stops by itself when its screen is gone or on another tab, and the next render of Settings starts it
+  function specTick(now) {
+    var box = document.querySelector('#st-prev.spec .spv'), q = spec.s;
+    if (!box || !q || box.offsetParent === null) { spec.raf = 0; return; }
+    var dt = Math.min(0.1, (now - spec.prev) / 1000); spec.prev = now;
+    if (!document.hidden) {
+      q.t += dt * 1.6;   // the spec's speeds are per second; a little quicker so a slow turn reads at a glance
+      // about 30 pictures a second, fewer for a heavy one (a vortex of 8 decks is 350 KB of SVG): the clock still runs in real time
+      if (now - spec.last > spec.gap) { var t0 = performance.now(); spec.last = now; box.innerHTML = CO.SPEC.picture(q.i, q.n, q.t).svg; spec.gap = Math.max(33, (performance.now() - t0) * 3); }
+    }
+    spec.raf = requestAnimationFrame(specTick);
+  }
+  function specDraw(host, key, n) {
+    var box = host.querySelector('.spv'); if (!box) return;
+    loadSpec(function (ok) {
+      if (!box.isConnected || host.getAttribute('data-skin') !== key) return;   // picked something else while it loaded
+      var i = ok ? CO.SPEC.indexOf(key) : -1;
+      if (i < 0) { spec.s = null; box.innerHTML = '<div class="spfb"><svg viewBox="0 0 20 20" aria-hidden="true">' + (CO.STATION_ICON[key] || '') + '</svg></div>'; return; }
+      if (!spec.s || spec.s.key !== key) spec.s = { key: key, i: i, n: 4, t: CO.SPEC.SKINS[i].t0 };
+      spec.s.n = Math.max(1, Math.min(8, n));
+      box.innerHTML = CO.SPEC.picture(spec.s.i, spec.s.n, spec.s.t).svg;
+      if (!spec.raf && !still) { spec.prev = performance.now(); spec.raf = requestAnimationFrame(specTick); }
     });
+  }
+  // The Universe card's one screen, filled once the card is on the page (the card's HTML already says which skin, colour and
+  // departments): the flat picture for a station the Universe draws, kept ready where 3D cannot start; the turning 3D one
+  // where it can; the showcase's picture for one it cannot draw yet. Safe to call on every render of Settings.
+  function uvSync() {
+    var host = $('st-prev'); if (!host) return;
+    var S = CO.S, p = CO.profile(), s = skinOf(p.skin), n = Math.max(1, S.departments.length);
+    if (CO.skinBuilt(s.key)) {
+      var fl = host.querySelector('.flat'), fk = [s.key, p.accent, n, p.public, S.company.name].join('|');
+      if (fl && fl._k !== fk) { fl._k = fk; fl.innerHTML = CO.skinSVG({ skin: s.key, accent: p.accent, floors: n, seed: 7, banner: S.company.name, you: true, priv: !p.public }); }
+      pv3(host, myPv());
+    } else specDraw(host, s.key, n);
   }
   function myPv() {
     var S = CO.S, p = CO.profile();
     return { skin: p.skin, accent: p.accent, floors: Math.max(1, S.departments.length), seed: 7, name: S.company.name, you: true, public: !!p.public };
   }
   function uvCard() {
-    var S = CO.S, p = CO.profile(), n = Math.max(1, S.departments.length);
-    return '<div class="card uvcard"><h3>In the Universe <span class="hint">where every company on Cymetica floats</span></h3><div class="uvset">' +
-      '<div class="uvprev" id="st-prev">' + CO.skinSVG({ skin: p.skin, accent: p.accent, floors: n, seed: 7, banner: S.company.name, you: true, priv: !p.public }) + '</div>' +
-      '<div class="uvopts"><div class="switch' + (p.public ? ' on' : '') + '" data-a="uv-public"><span class="sw"></span><div><b>' + (p.public ? 'Public' : 'Private') + '</b><span>' +
-      (p.public ? 'Anyone can open it from the map and look at everything inside: office, departments, charters, processes, tasks, settings. Only you change anything.' :
-        'It floats in the Universe with a lock. Others see its name, its station and its mission; nothing inside.') + '</span></div></div>' +
-      '<div class="sec">STATION <span>one deck per department · ' + n + ' now</span></div><div class="skins">' + skinButtons(p.skin, p.accent) + '</div>' +
-      '<div class="sec">COLOUR</div><div class="accents">' + accentButtons(p.accent) + '</div></div></div></div>';
+    var S = CO.S, p = CO.profile(), n = Math.max(1, S.departments.length), s = skinOf(p.skin), built = CO.skinBuilt(s.key), hex = CO.accentHex(p.accent);
+    // top to bottom, all centred: who may look (compact), one strip of every station as an icon, and under it the one screen
+    // (the current station, its name and decks over it, its colour dots on it). #st-prev is filled by uvSync: flat, 3D or the
+    // showcase's picture.
+    return '<div class="card uvcard"><h3>In the Universe <span class="hint">where every company on Cymetica floats</span></h3><div class="uvset v3">' +
+      '<div class="switch' + (p.public ? ' on' : '') + '" data-a="uv-public" title="' + esc(p.public ?
+        'Anyone can open it from the map and look at everything inside: office, departments, charters, processes, tasks, settings. Only you change anything.' :
+        'It floats in the Universe with a lock. Others see its name, its station and its mission; nothing inside.') + '"><span class="sw"></span><div><b>' + (p.public ? 'Public' : 'Private') + '</b></div></div>' +
+      '<div class="skpick" id="st-skins" role="group" aria-label="Station">' + skinButtons(p.skin) + '</div>' +
+      '<div class="uvprev st' + (built ? '' : ' spec') + '" id="st-prev" data-skin="' + s.key + '" style="--acc:' + hex + '">' +
+      '<div class="flat"></div><div class="spv" id="st-spv"></div>' +
+      '<svg class="spdef" width="0" height="0" aria-hidden="true"><defs><filter id="fb" x="-40%" y="-40%" width="180%" height="180%"><feGaussianBlur stdDeviation="2.3"/></filter></defs></svg>' +
+      '<div class="stnm"><b id="st-nm">' + esc(s.name) + '</b><span id="st-n">' + n + ' deck' + (n === 1 ? '' : 's') + '</span></div>' +
+      '<span class="sttag" id="st-tag" title="Drawn from the spec by the skins showcase. The Universe map draws this station as a Dreadnought until its 3D model is built."' + (built ? ' hidden' : '') + '>PREVIEW</span>' +
+      '<div class="accents onprev" id="st-acc">' + accentButtons(p.accent) + '</div></div></div></div>';
   }
   // what a process's department raises next, and the process that picks it up
   function nextOf(r) {
@@ -1100,8 +1152,7 @@
     settingsHTML(S, c, paused);
     var nuPv = $('st-prev');
     if (keepPv && nuPv && nuPv !== oldPv && !keepPv.dead) { nuPv.appendChild(keepPv.wrap); nuPv.__pv = keepPv; keepPv.el = nuPv; nuPv.classList.add('has3d'); }
-    pv3(nuPv, myPv());
-    thumbs3($('settings'), CO.profile().accent);
+    uvSync();
   }
   function settingsHTML(S, c, paused) {
     setHTML($('settings'), uvCard() + '<div class="cols2"><div class="card"><h3>Company</h3><div class="form">' +
@@ -1761,6 +1812,7 @@
       if (a === 'uv-accent') p = CO.saveProfile({ accent: el.getAttribute('data-k') });
       if (document.activeElement) document.activeElement.blur();
       renderSettings();
+      renderBar();   // the logo in the header is this station's icon: it follows the pick now, not at the next tick
       if (uv) uv.setMine(mineForMap());
       return toast(a === 'uv-public' ? (p.public ? 'Public: anyone can look inside, read only.' : 'Private: others see its name, station and mission only.') :
         'Your station in the Universe: ' + CO.skinName(p.skin) + ', ' + p.accent + '.');

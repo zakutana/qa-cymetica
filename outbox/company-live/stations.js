@@ -509,6 +509,12 @@ function monolith(b, n) {
   b.top = H + 1.1; b.bot = -1.4; b.foot = 2.6;
 }
 
+/* ---------------- the parts, for the modules that add more stations the same way ---------------- */
+// stations-a.js .. stations-e.js (the ten newer stations, 2026-10-24: "predelej vsechny ty spodni modely na zpusob
+// vrchnich ... at to udelaji stejne a mame jen jeden zpusob") build with these very parts and materials, so all
+// seventeen are one family: dark plated hull, the colour only in lights, windows lit deck by deck, the same glow.
+CO.ST = { TS, G, T, mats, plating, softTex, pbox, scaleUV, slab, cyl, torus, sphere, put, box, wins, engine, greebles, sprite, reach, escorts, rnd, canvas, key };
+
 /* ---------------- into u3d.js's table ---------------- */
 const BUILD = { tower: dreadnought, dome: shipyard, pyramid: pyramidCarrier, orbital: ringHabitat, rocket: lancer, vault: citadel, stack: monolith };
 function install() {
