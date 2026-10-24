@@ -473,6 +473,35 @@ def settled_before(item: dict, since) -> bool | None:
     return False if deadline >= since else None
 
 
+def first_shipped(record: dict):
+    """When the build first went live: the earliest BB-SHIPPED in its own log, or None."""
+    times = [_moment(m.get("at")) for m in (record or {}).get("messages") or []
+             if isinstance(m, dict) and m.get("kind") == "BB-SHIPPED"]
+    times = [t for t in times if t is not None]
+    return min(times) if times else None
+
+
+def as_first_delivered(item: dict, record: dict) -> dict | None:
+    """The board item with its finish time set to its first BB-SHIPPED, or None when the log
+    names no ship earlier than the finish time the board publishes.
+
+    2026-10-25, #112/#136: a requester's FAIL verdict reopens a shipped build, and since
+    October the rework's going live moves `resolved_at` (and `on_time`, `elapsed_seconds`)
+    with no second BB-SHIPPED. ET-31818 went live 15.7 h into its clock and its board row says
+    resolved 99 h in; ET-30773 the same. The 24 hours is a promise about the first delivery,
+    so that is the time it is held to; the board's time is kept beside it.
+    """
+    first = first_shipped(record)
+    if first is None:
+        return None
+    published = item.get("resolved_at") or item.get("shipped_at")
+    moment = _moment(published)
+    if moment is not None and moment <= first:
+        return None
+    return {**item, "resolved_at": first.isoformat(), "shipped_at": None,
+            "published_finish": published}
+
+
 @qa(component="rest.build_it_better", tier=SafetyTier.SAFE, surface="rest")
 def test_a_build_ships_inside_the_24_hours_it_publishes(rest_anon):
     """The product's headline promise, read off the clock it publishes itself.
@@ -497,6 +526,15 @@ def test_a_build_ships_inside_the_24_hours_it_publishes(rest_anon):
     until then ET-26036 held this red for good, "does a build ship inside 24
     hours" answered as "has one ever been late". A window in which nothing
     settled is nothing measured (rule 10): inconclusive, not a promise kept.
+
+    SHIPPED MEANS FIRST SHIPPED (2026-10-25, #112/#136). A requester's FAIL
+    verdict reopens a build, and the rework's going live moves the record's
+    `resolved_at` and `on_time`. So every request that carries a verdict, unless
+    it is history that met its deadline anyway, is read in its own log, and its
+    first BB-SHIPPED is the time held against the deadline -- in the verdict and
+    in the history's "shipped late" label alike. One whose log does not read, and whose
+    board row looks late or cannot be placed, is named and not judged (rule 8):
+    its finish time may be a re-ship.
     """
     from datetime import datetime, timedelta, timezone
 
@@ -518,8 +556,40 @@ def test_a_build_ships_inside_the_24_hours_it_publishes(rest_anon):
             "promise of theirs to hold them to")
 
     since = now - timedelta(hours=SETTLED_WITHIN_HOURS)
+    first_ship, log_unread = [], []
+    for n, item in enumerate(dated):
+        if not item.get("verdict") or not _shipped(item):
+            continue
+        placed, late = settled_before(item, since), overdue(item, now)
+        if placed is True and not late:
+            # History that met its deadline: a first ship can only be earlier.
+            continue
+        one = rest_anon.get(f"{BOARD}/{item.get('ticket')}")
+        try:
+            record = (one.json() or {}) if one.status_code == 200 else None
+        except ValueError:
+            record = None
+        if record is None:
+            # History stays history under the board's label; anything else
+            # that looks late, or cannot be placed, is not judged on a time
+            # that may be a re-ship.
+            if placed is not True and (late or placed is None):
+                log_unread.append(str(item.get("ticket")))
+            continue
+        moved = as_first_delivered(item, record)
+        if moved:
+            dated[n] = moved
+            first_ship.append({"ticket": str(item.get("ticket")),
+                               "first_shipped_at": moved["resolved_at"],
+                               "published_finish": moved["published_finish"],
+                               "deadline_at": item.get("deadline_at"),
+                               "verdict": item.get("verdict"),
+                               "on_time": item.get("on_time")})
+
     judged, history, unplaced = [], [], []
     for item in dated:
+        if str(item.get("ticket")) in log_unread:
+            continue
         placed = settled_before(item, since)
         if placed is None:
             unplaced.append(str(item.get("ticket")))
@@ -583,18 +653,33 @@ def test_a_build_ships_inside_the_24_hours_it_publishes(rest_anon):
         said += (f". NOT measured: {len(not_placed)} request(s) publish no "
                  f"finish time or no readable deadline, so whether or when "
                  f"they met it cannot be read: {', '.join(not_placed)}")
+    if log_unread:
+        said += (f". NOT measured: {len(log_unread)} request(s) carry a verdict and "
+                 f"their own log did not read, so whether their finish time is a "
+                 f"re-ship after it cannot be told: {', '.join(log_unread)}")
+    if first_ship:
+        said += (". Held to their FIRST delivery, because a verdict reopened them and "
+                 "the record's finish time moved with the rework: "
+                 + "; ".join(f"{f['ticket']} first shipped {str(f['first_shipped_at'])[:16]} "
+                             f"(deadline {str(f['deadline_at'])[:16]}; their record: "
+                             + (f"resolved {str(f['published_finish'])[:16]}"
+                                if f.get("published_finish") else "reopened, no finish time")
+                             + (", on_time false" if f.get("on_time") is False else "") + ")"
+                             for f in first_ship))
 
     conclude(Measurement(
         verdict=verdict,
         reason=said,
-        left={"overdue": len(breaches), "unreadable": len(not_placed)},
+        left={"overdue": len(breaches),
+              "unreadable": len(not_placed) + len(log_unread)},
         right={"overdue": 0},
         population={"with_a_deadline": len(dated), "judged": len(judged),
                     "late": len(breaches), "met": met, "waiting": waiting,
                     "history": [str(i.get("ticket")) for i in history],
                     "history_late": history_late,
+                    "first_shipped": first_ship, "log_unread": log_unread,
                     "settled_within_hours": SETTLED_WITHIN_HOURS},
-        sources={"board": BOARD}))
+        sources={"board": BOARD, "record": f"{BOARD}/{{ticket}}"}))
 
 
 def stage_counts(items: list) -> dict:

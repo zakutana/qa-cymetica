@@ -509,6 +509,56 @@ def test_a_build_that_shipped_late_once_does_not_hold_the_verdict_red_for_good()
         run({"ticket": "ET-5", "deadline_at": at(-72), "stage": "funded"},
             old_late, on_time)
 
+    # 2026-10-25, #112/#136: a RE-SHIP after the requester's FAIL verdict is
+    # not the delivery. ET-31818 went live 15.7 h into its clock (BB-SHIPPED
+    # 2026-10-18T00:43, deadline 09:03); the requester failed it at 07:33; the
+    # rework went live 2026-10-21T12:02 and their record moved `resolved_at`
+    # there (and `on_time` to false) with no second BB-SHIPPED. The check read
+    # that as "shipped 75.0h after its own published deadline" (run 96b56e4e);
+    # ET-30773 was the same shape in PRE-0274. The record's own log says when
+    # it first shipped, so that is what the 24 hours is held against.
+    def run_with(records, *items):
+        answers = {bb.BOARD: _Answer(200, {"items": list(items)})}
+        answers.update({f"{bb.BOARD}/{t}": _Answer(200, r) for t, r in records.items()})
+        bb.test_a_build_ships_inside_the_24_hours_it_publishes(_Board(answers))
+        return CURRENT_MEASUREMENT.get()
+
+    def log(*kinds_at):
+        return {"messages": [{"kind": k, "at": at(h), "body": ""} for k, h in kinds_at]}
+
+    reshipped = {"ticket": "ET-31818", "deadline_at": at(-75), "stage": "shipped",
+                 "our_url": "/my-agents", "resolved_at": at(-3),
+                 "on_time": False, "verdict": "fail"}
+    first_log = log(("BB-ACCEPT", -99), ("BB-SHIPPED", -84), ("BB-VERDICT", -77))
+    said = run_with({"ET-31818": first_log}, reshipped, on_time)
+    assert said.verdict == "passed", (
+        "a build that went live inside its window and was re-shipped after a "
+        "FAIL verdict was read as late by its re-ship: " + said.reason)
+    assert "ET-31818" in said.reason and "first" in said.reason, said.reason
+    # And once the re-ship is itself older than the window, the history list
+    # does not call it "shipped late" off the re-ship either.
+    said = run_with({"ET-31818": first_log}, dict(reshipped, resolved_at=at(-30)), on_time)
+    assert "ET-31818" in said.reason and "ET-31818 (shipped late)" not in said.reason, said.reason
+    # The same build while its rework is open (the run of 2026-10-18 11:58):
+    # stage back to building, no resolved_at, on_time false -- shipped inside
+    # its window all the same.
+    reopened = {"ticket": "ET-31818", "deadline_at": at(-3), "stage": "building",
+                "our_url": "/my-agents", "on_time": False, "verdict": "fail"}
+    said = run_with({"ET-31818": log(("BB-SHIPPED", -11), ("BB-VERDICT", -4))}, reopened)
+    assert said.verdict == "passed", said.reason
+    # A first ship that was itself late still fails, by the first ship.
+    with pytest.raises(AssertionError, match="ET-7 shipped 4.0h after"):
+        run_with({"ET-7": log(("BB-SHIPPED", -6), ("BB-VERDICT", -5))},
+                 {"ticket": "ET-7", "deadline_at": at(-10), "stage": "shipped",
+                  "our_url": "/z", "resolved_at": at(-1), "on_time": False,
+                  "verdict": "fail"}, on_time)
+    # A log that does not read leaves a late-looking build with a verdict
+    # unplaced (rule 8): its finish time may be a re-ship, so it is neither a
+    # breach nor a promise kept -- named, not judged.
+    said = run_with({}, dict(reshipped, ticket="ET-8"), on_time)
+    assert said.verdict == "passed" and "ET-8" in said.reason, said.reason
+    assert "ET-8" not in str(said.population.get("met")), said.population
+
 
 @qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
 def test_the_building_tile_is_judged_by_the_arithmetic_behind_its_name():
