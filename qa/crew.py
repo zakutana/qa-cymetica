@@ -457,7 +457,10 @@ A level-V run needs a clean tree while four other departments edit it. Before
 3. Preregister, run, fold; `python scripts/crew.py unhold` once its commit is in, or when
    it fails. Your hold also ends with your run.
 After any change to state: `python scripts/ledger.py --run <id>` and
-`python scripts/render.py`, then the ledger, the journal and the dashboard in one commit.
+`python scripts/render.py`, then the ledger, the journal, the dashboard and the run record the
+fold staged in one commit: `python scripts/commit.py -m "..." -- state/ledger.json
+state/journal/events.jsonl dashboard/index.html state/runs/<id>.json`. The record is yours to
+commit; left staged, it keeps every level-V run out.
 """,
     "lab": """\
 Your ticket holds what the laboratory's tick decided (`items` in the details) and the
@@ -468,7 +471,11 @@ says, and then its step 3 (`lab.py log`), with three differences under the compa
 - hunts, the outsider and the desk are other departments' and never in your items;
 - a bug -- from `gap` or met anywhere -- is a ticket to Bugs, never a filing of yours. A
   gap in their documentation goes to the manager as a `decision` ticket carrying the text
-  the operator relays to Cymetica.
+  the operator relays to Cymetica;
+- a lesson you write (`lab.py log --lesson`, docs/lab-knowledge.md) or a line in
+  docs/lab-manager.md is committed before you close, by name: `python scripts/commit.py -m
+  "lab <ticket>: lesson" -- docs/lab-knowledge.md`. Left changed, it is a dirty tree that
+  stops Bugs' level-V sweep (T-0025's lesson stopped T-0002's).
 """,
     "desk": """\
 You are the desk: one goal, to prove that money can be made on Cymetica. Your procedure

@@ -897,8 +897,11 @@ HOUSEKEEPING = ("state/bounty.json", "state/journal/events.jsonl", "state/ledger
                 "dashboard/index.html", "audits/evidence-manifest.jsonl", "state/chat.jsonl",
                 "state/league.jsonl", "state/league/report.json", "audits/processes.jsonl")
 # And everything under these: the tick's diary snapshots (`keep.py snapshot`), which the
-# company's first tick left changed (2026-10-12).
-HOUSEKEEPING_DIRS = ("audits/lab/",)
+# company's first tick left changed (2026-10-12); and the run record a fold staged (`ledger.py
+# --run`, `git add -f`). state/runs/ is ignored, so git status names a record there only once
+# the index holds it, and scripts/commit.py commits exactly those (OP-0009: T-0002's sweep
+# stopped three times on one staged record nobody could commit).
+HOUSEKEEPING_DIRS = ("audits/lab/", "state/runs/")
 
 
 def housekeeping(path: str) -> bool:

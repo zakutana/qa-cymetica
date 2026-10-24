@@ -8,7 +8,9 @@ department's half-done edit into the wrong commit -- so a worker's `git add` and
 are denied in its argv (`qa.crew.DENY_ALL`) and this is what it has instead:
 
   * it holds one lock (`state/crew/commit.lock`) for the add and the commit together;
-  * it commits only the paths it names (`git commit -- PATH`), whatever else is staged;
+  * it commits only the paths it names (`git commit -- PATH`), whatever else is staged --
+    an ignored one only when git's index already holds it, which is how the run record a
+    fold staged goes in (OP-0009);
   * a worker's commit says which department and ticket wrote it, `Crew: <dept> <ticket>`,
     so the week can read who did what without a transcript;
   * every git call it makes carries its marker (`qa.keepset.COMMIT_PY_MARKER`), so the
@@ -80,6 +82,26 @@ def _git(base: Path, *args: str) -> subprocess.CompletedProcess:
                           env={**os.environ, COMMIT_PY_MARKER: "1"})
 
 
+def _add(base: Path, paths: list[str]) -> str | None:
+    """Stage the named paths; why not, or None.
+
+    `-f` for what git's index already holds, and only for that. A plain `git add` refuses a
+    path under an ignored folder even when the index holds it, so the run record `ledger.py
+    --run` staged with `git add -f` under the ignored state/runs/ could not be committed by
+    any worker: a company sweep failed three times on it (OP-0009, T-0002). What nothing
+    staged stays refused -- a debug run's record, a capture body: the reason those folders
+    are ignored at all."""
+    held = [path for path in paths
+            if _git(base, "ls-files", "--error-unmatch", "--", path).returncode == 0]
+    rest = [path for path in paths if path not in held]
+    for flags, group in ((["-f"], held), ([], rest)):
+        if group:
+            added = _git(base, "add", *flags, "--", *group)
+            if added.returncode != 0:
+                return added.stderr.strip() or f"git add exited {added.returncode}"
+    return None
+
+
 def pass_in_flight() -> bool:
     """The deep pass's own notebook says it runs (`processes.pass_in_flight`)."""
     spec = importlib.util.spec_from_file_location("commit_processes",
@@ -116,9 +138,9 @@ def commit(text: str, paths: list[str]) -> int:
             continue
         with held:
             try:
-                added = _git(base, "add", "--", *paths)
-                if added.returncode != 0:
-                    print(f"[commit] git add failed: {added.stderr.strip()[:300]}")
+                why = _add(base, paths)
+                if why:
+                    print(f"[commit] git add failed: {why[:300]}")
                     return 1
                 done = _git(base, "commit", "-m", message(text), "--", *paths)
                 print((done.stdout or done.stderr).strip()[:600])
