@@ -240,7 +240,10 @@ Each value is read from `CO.Q3` where the renderer, pass or light is made; at hi
   while it loads on a weak computer. What would bring the builds toward the pairs: materials and their TSL nodes made
   once and shared across rooms and looks rather than made again per room (a node's id is in the key), the same flags on
   materials that draw alike, geometries with the same attributes. And building the office a room at a time behind its
-  loading screen would keep any one piece from holding the page the 1.3 s it does today.
+  loading screen would keep any one piece from holding the page the 1.3 s it does today. A second visit is not faster
+  (measured): with the browser's cache warm from a first load, an office on the weak machine came on screen in 8.8 and
+  10.7 s today and 7.9 and 10.1 s at low, against 9.4 and 8.3 s the first time. The files are cached already (yours 30
+  days, three.js a year); the time is the build, which nothing keeps from one visit to the next.
 - **The entry page at medium**: its three scenes, built after the page shows, hold the main thread 5 s on the weak
   machine (section 2). Built in smaller steps, as `prebuildUniverse` builds the Universe, a click would wait less.
 - Fewer draws per room: 825 in the main pass for 4 departments, which is what a weak processor pays for on every frame.
