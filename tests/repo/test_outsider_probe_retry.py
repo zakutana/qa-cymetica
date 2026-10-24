@@ -166,10 +166,9 @@ def test_the_clock_does_not_ticket_an_outsider_whose_newest_probe_ran_and_leaked
 
 
 @qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
-@pytest.mark.xfail(strict=True, reason="T-0069: LEAKS holds 'MEMORY.md', which a stranger's "
-                   "denial repeats from Claude Code's own memory prompt; the 17:02Z probe ran "
-                   "clean and was recorded NOT a stranger")
 def test_a_stranger_that_denies_having_seen_memory_md_is_a_stranger():
+    """Fixed 2026-10-25 (NEXT.md 2026-10-18): the bare marker went, the specific ones stay
+    (tests/repo/test_outsider_alone.py)."""
     ok, why = _script("outsider").independent(CLEAN_DENIAL, 0)
     assert ok, f"a denial naming the file was read as a leak: {why}"
     # Control inside the test: what only our context could say is still a leak.

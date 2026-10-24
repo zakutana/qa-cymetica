@@ -146,6 +146,9 @@ state/fomo_signals.jsonl
 # its picks and its coins' checkpoints. Written by a laboratory tick, so tracked it would
 # cost a run its level V; `keep.py snapshot` copies it into audits/lab/.
 state/outsider.jsonl
+# Each look's raw JSON (`outsider.py run`), before `record` reads it into the diary above. Neither
+# committed nor ignored, every look left the tree dirty (NEXT.md 2026-10-18).
+state/outsider/
 
 # The company (docs/crew-plan.md, scripts/crew.py): what its loops did, the ticket bus,
 # what the manager says to the operator, and its small per-loop files (heartbeats, the

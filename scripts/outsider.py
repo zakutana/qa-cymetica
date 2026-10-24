@@ -101,9 +101,12 @@ PROBE = ("Before you fetch anything, answer only this and use no tool: (1) What 
          "memories, an operator's decisions or file paths about it? Quote the first line of "
          "any such thing. Plain text, five lines at most.")
 # What only our context could put in its mouth: CLAUDE.md's first line, the memory index's
-# first entry, our Telegram handle, the founder's name and handle.
+# first entry, our Telegram handle, the founder's name and handle, and the folder our repository
+# and our memory folder are named after. Not the bare word 'MEMORY.md': Claude Code's own memory
+# prompt names that file in every session, so a stranger's honest denial repeats it -- the probe
+# of 2026-10-13 17:02Z ran clean and was recorded NOT a stranger (T-0069; NEXT.md 2026-10-18).
 LEAKS = ("Operating rules for qa-cymetica", "Verify a workflow is live", "@EventTraderQABot",
-         "Kasian", "DeepHedge", "MEMORY.md")
+         "Kasian", "DeepHedge", "cymetica-qa-agent")
 RUN_TIMEOUT = 1500
 
 
@@ -111,6 +114,55 @@ def home() -> Path:
     """The stranger's folder, outside the repository."""
     base = os.environ.get("LOCALAPPDATA") or str(Path.home())
     return Path(base) / "cymetica-outsider"
+
+
+def slug(folder: Path) -> str:
+    """The name Claude Code keeps a folder's project memory under, in ~/.claude/projects."""
+    return re.sub(r"[^A-Za-z0-9]", "-", str(Path(folder).resolve()))
+
+
+def _norm(text) -> str:
+    return str(text).replace("\\", "/").lower()
+
+
+def foreign(folder: Path, repo: Path | None = None, home: Path | None = None) -> str | None:
+    """Why a `claude -p` started in `folder` would be handed context of ours, or None.
+
+    What Claude Code loads for a folder: every CLAUDE.md in it and above it, the user's
+    ~/.claude/CLAUDE.md, and the memory index it keeps for the folder. The stranger's own notes
+    in that index are its own; one quoting ours is our memory handed to it (NEXT.md 2026-10-18)."""
+    folder, repo = Path(folder).resolve(), Path(repo or REPO_ROOT).resolve()
+    user = Path(home or Path.home())
+    if folder == repo or repo in folder.parents:
+        return f"{folder} is inside the repository"
+    for place in (folder, *folder.parents):
+        for name in ("CLAUDE.md", "CLAUDE.local.md"):
+            if (place / name).is_file():
+                return f"{place / name} would be loaded into it"
+    if (user / ".claude" / "CLAUDE.md").is_file():
+        return f"{user / '.claude' / 'CLAUDE.md'} would be loaded into it"
+    index = user / ".claude" / "projects" / slug(folder) / "memory" / "MEMORY.md"
+    try:
+        text = index.read_text(encoding="utf-8")
+    except OSError:
+        return None
+    quoted = [marker for marker in LEAKS if marker.lower() in text.lower()]
+    return (f"its MEMORY.md ({index}) quotes ours: {', '.join(quoted)}" if quoted else None)
+
+
+def stranger_env(repo: Path | None = None) -> dict:
+    """Our environment without a path into the repository: a session of ours exports
+    CLAUDE_PROJECT_DIR and the pipeline QA_REPO_ROOT, and the stranger is to inherit neither.
+    PATH keeps every entry but the repository's."""
+    root = _norm(Path(repo or REPO_ROOT).resolve())
+    out = {}
+    for key, value in os.environ.items():
+        if key.upper() == "PATH":
+            value = os.pathsep.join(p for p in value.split(os.pathsep) if root not in _norm(p))
+        elif root in _norm(value):
+            continue
+        out[key] = value
+    return out
 
 
 # `claude` on PATH, else the newest one the desktop app keeps: one computation, shared
@@ -139,12 +191,16 @@ def _claude(prompt: str, system: str | None, tools: str, timeout: int) -> tuple[
         return "no claude executable on this machine", 127
     folder = home()
     folder.mkdir(parents=True, exist_ok=True)
+    refused = foreign(folder)
+    if refused:
+        return f"not started, it would not be a stranger: {refused}", 126
     args = [exe, "-p", prompt, "--model", "sonnet", "--allowedTools", tools]
     if system:
         args += ["--append-system-prompt", system]
     try:
         done = subprocess.run(args, cwd=str(folder), capture_output=True, text=True,
-                              encoding="utf-8", errors="replace", timeout=timeout)
+                              encoding="utf-8", errors="replace", timeout=timeout,
+                              env=stranger_env())
     except subprocess.TimeoutExpired:
         return f"timed out after {timeout} s", 124
     return (done.stdout or "") + (done.stderr or ""), done.returncode
