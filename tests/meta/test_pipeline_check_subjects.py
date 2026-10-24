@@ -1455,7 +1455,10 @@ def _the_documented_get_auth_note_readings():
         rest = _Key({"/llms.txt": (200, "\n".join(lines)), "/api/v1/account/me": (200, {}), **answers})
         check.test_every_documented_get_accepts_the_key_its_own_document_issues(rest)
 
-    run([quote, me], {"/api/v1/cloned-bots/backtest/quote": jwt})  # documented session JWT: passes
+    try:  # an Inconclusive here would SKIP the host test and every reading after it
+        run([quote, me], {"/api/v1/cloned-bots/backtest/quote": jwt})  # documented session JWT: passes
+    except Inconclusive as exc:
+        raise AssertionError(f"inconclusive where a pass was due: {exc}") from exc
     with pytest.raises(AssertionError) as caught:
         run([quote, me, summary], {"/api/v1/cloned-bots/backtest/quote": jwt, "/api/v1/rewards/summary": bare})
     assert "/api/v1/rewards/summary" in str(caught.value) and "backtest/quote" not in str(caught.value).split(
@@ -1480,7 +1483,10 @@ def _the_open_position_card_readings():
         check.test_every_card_we_hold_a_position_in_still_resolves(rest)
         return rest
 
-    asked = run([pos("live", "open"), pos("deleted", "closed")], ["live"])
+    try:  # an Inconclusive here would SKIP the host test and every reading after it
+        asked = run([pos("live", "open"), pos("deleted", "closed")], ["live"])
+    except Inconclusive as exc:
+        raise AssertionError(f"inconclusive where a pass was due: {exc}") from exc
     assert check.CARD.format(card_id="deleted") not in asked.asked, "a closed row's card is not probed"
     with pytest.raises(AssertionError, match="gone"):
         run([pos("live", "open"), pos("gone", "open")], ["live"])
