@@ -1719,10 +1719,11 @@ function uvHazeTex(orbits) {
 // One lane of light-dust, pushed on P as dots (dustMesh draws them): kind 'thread' a fine thread of small dots in broken
 // arcs, 'haze' a wide dim one of big soft ones, 'faint' only a drift, 'star' now and then a bright one. o: omega the
 // dots' angular speed (rad/s, positive turns the way the map's stations go; negative the other), k the scale of sizes
-// and of how far the lane wanders off its circle (1 on the map), col the dots' colour, den how many (1 on the map).
+// and of how far the lane wanders off its circle (1 on the map), col the dots' colour, den how many (1 on the map), ks
+// the dots' size alone where it is not k's (the entry page: its dots smaller than its lanes' width would make them).
 // The lane is never a closed circle: its density has gaps and thick arcs, it bends a little off its radius.
 function dustLane(P, R, r, kind, o) {
-  const TAU = Math.PI * 2, k = o.k || 1, den = o.den || 1, circ = TAU * r;
+  const TAU = Math.PI * 2, k = o.k || 1, ks = o.ks || k, den = o.den || 1, circ = TAU * r;
   const gauss = () => (R() + R() + R() - 1.5) * 2;
   const p = [R() * 6, R() * 6, R() * 6], d = (a) => Math.max(0.06, 0.55 + 0.3 * Math.sin(a * 3 + p[0]) + 0.25 * Math.sin(a * 7 + p[1]) * Math.sin(a * 2 + p[2]));
   const spec = {
@@ -1736,7 +1737,7 @@ function dustLane(P, R, r, kind, o) {
   const wob = (a) => k * (2.4 * Math.sin(a * 2 + q[0]) + 1.5 * Math.sin(a * 5 + q[1]) + 0.9 * Math.sin(a * 11 + q[2]));
   for (let i = 0; i < n; i++) {
     let a; do { a = R() * TAU; } while (R() > d(a));
-    P.push({ r: r + wob(a) + gauss() * spec.sr * k, a, w: o.omega * (0.97 + R() * 0.06), y: (gauss() * 0.18 + 0.05) * k, size: (spec.size[0] + R() * R() * (spec.size[1] - spec.size[0])) * k, br: spec.br[0] + R() * (spec.br[1] - spec.br[0]), ph: R() * 6.3, fl: R(), col: o.col });
+    P.push({ r: r + wob(a) + gauss() * spec.sr * k, a, w: o.omega * (0.97 + R() * 0.06), y: (gauss() * 0.18 + 0.05) * k, size: (spec.size[0] + R() * R() * (spec.size[1] - spec.size[0])) * ks, br: spec.br[0] + R() * (spec.br[1] - spec.br[0]), ph: R() * 6.3, fl: R(), col: o.col });
   }
 }
 // The dots of P as one instanced mesh, all on the GPU (the sparks' way: where a dot is is time and its own numbers):
@@ -2700,13 +2701,14 @@ function esc(s) { return String(s == null ? '' : s).replace(/[&<>"']/g, (c) => (
 
 /* ---------------- one station, turning slowly in space: Settings, Create your company, a private company's card ---------------- */
 const PREVIEWS = [], PV_PX = 1.2e6;
+let PV_SKY = null;
 class Preview {
   constructor(el) {
     geo();
     this.el = el; this.wrap = document.createElement('div'); this.wrap.className = 'pv3';
     this.ban = document.createElement('div'); this.ban.className = 'b3 pvb'; this.wrap.appendChild(this.ban);
     el.appendChild(this.wrap);
-    this.scene = new THREE.Scene(); this.scene.background = new THREE.Color(0x020306);
+    this.scene = new THREE.Scene();
     this.camera = new THREE.PerspectiveCamera(30, 1, 0.1, 600);
     this.renderer = new THREE.WebGPURenderer({ antialias: false });   // see Universe3D: the pass multisamples
     this.renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
@@ -2715,11 +2717,19 @@ class Preview {
     this.scene.add(new THREE.HemisphereLight(0xdfe8f2, 0x05070a, 0.8), new THREE.AmbientLight(0x1a2230, 0.7));
     const sun = new THREE.DirectionalLight(0xf4f8fc, 2.0); sun.position.set(-8, 12, 6); this.scene.add(sun);
     const rim = new THREE.DirectionalLight(0x00cfff, 0.6); rim.position.set(9, 2, -9); this.scene.add(rim);
-    // space behind it: stars, and the site's colours glowing far off
-    this.scene.add(starField(1400, 140, 90, 1.0, 21));
-    [[0x00cfff, 0.18, [-22, 6, -26], 46], [0x00ff88, 0.09, [16, -8, -30], 40], [0x3b82f6, 0.08, [-30, -10, 8], 36]].forEach(([c, o, p, s]) => {
-      const sp = glowSprite(c, o, s); sp.position.set(p[0], p[1], p[2]); this.scene.add(sp);
-    });
+    // space behind it: the entry pages' sky (entry3d.js, the builder's station picture), the office's navy, nebulae and
+    // stars with the site's colours glowing very far off, kept at the camera. Not the near glows it had, which on the
+    // wide Settings screen stood as blobs of light ("proc tam jsou ty svetla v pozadi? v start strance pri start a
+    // company to je mnohem hezci", 2026-10-24). One sky built once, each preview a clone sharing its geometry and
+    // materials (company-perf, spec 4 O1.6).
+    this.scene.background = new THREE.Color(LOOK.sky);
+    if (!PV_SKY) {
+      PV_SKY = spaceSky(true);
+      [[0x00cfff, 0.16, [-170, 40, -220], 360], [0x00ff88, 0.08, [140, -70, -250], 300], [0x3b82f6, 0.08, [-250, -90, 40], 300]].forEach(([c, o, p, s]) => {
+        const sp = glowSprite(c, o, s); sp.position.set(p[0], p[1], p[2]); PV_SKY.add(sp);
+      });
+    }
+    this.sky = PV_SKY.clone(); this.scene.add(this.sky);
     this.turn = new THREE.Group(); this.scene.add(this.turn);
     this.clock = new THREE.Clock(); this.key = '';
     this.renderer.init().then(() => {
@@ -2762,6 +2772,7 @@ class Preview {
     const t = this.clock.getElapsedTime();
     this.turn.rotation.y = t * 0.28;
     if (this.plot) { this.plot.b.tick(t); this.plot.body.position.y = Math.sin(t * 0.6) * 0.15; }
+    this.sky.position.copy(this.camera.position);
     if (this.post) this.post.render(); else this.renderer.render(this.scene, this.camera);
     if (this.anchor) {
       const v = this.anchor.clone().project(this.camera);

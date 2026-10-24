@@ -249,11 +249,14 @@ materials: that is the washed look of item I); one deck per department, lit whil
 on the map; nothing pulses (no plumes, no beams out of a prow), what moves only turns, runs along a track or bobs slowly.
 
 **Settings: the picker is icons and one preview** (the owner, 2026-10-24: *"jen ty ikonky a 1 obrazovka kde se bude zobrazovat aktualni skin a v nem jen
-barvy menit, zbytek jen ikonky se bude klikat"*). In *In the Universe* the grid of picture tiles goes. One strip of line icons, **all seventeen
-in one row** (the seven, then the ten), each only an icon with its name as a tooltip, and under it, centred, **one large preview** of the current
-station in the company's colour with the colour dots on it. Clicking an icon changes the preview; changing the colour changes the **model only**,
-never the icons (they stay one neutral colour, the current one with the selection rim). The Public / Private switch is a compact pill above the strip.
-The same on "Create your company". Mockup: `app.js` (`uvCard`), `style.css`.
+barvy menit, zbytek jen ikonky se bude klikat"*). In *In the Universe* the grid of picture tiles goes. It becomes **one showroom across the card's
+whole width** (*"to je divne jak je to cele tak na stredu"*): a wide preview of the current station in the company's colour, over the same space as
+the "Create your company" picture (the office's sky, not near glows: *"proc tam jsou ty svetla v pozadi?"*), with its name and decks top left,
+the Public / Private pill top right and the colour dots standing down its right edge; joined under it a dock of line icons, **all seventeen in one
+row, no divider**, each only an icon with its name as a tooltip. Clicking an icon changes the preview; changing the colour changes the **model only**,
+never the icons (they stay one neutral colour, the current one with the selection rim). The plates over the moving 3D are opaque, and the preview
+draws at most 1.2 million pixels a frame (O1). **"Create your company" offers all seventeen too**, its arrows going through the new ten as through
+the seven. Mockup: `app.js` (`uvCard`), `style.css`, `u3d.js` (`Preview`), `builder.html`.
 
 **All seventeen are built one way** (the owner: *"ty spodni modely jsou udelane v jinem stylu, nejsou osvetlene, nemaji zari, nejsou tak propracovane ...
 at to udelaji stejne a mame jen jeden zpusob"*): a dark plated steel hull, the company colour only in the lights, windows lit deck by deck while a

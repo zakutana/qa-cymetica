@@ -80,7 +80,8 @@
     var mod = function (f, next) { var m = document.createElement('script'); m.type = 'module'; m.src = src(f); if (next) m.onload = next; document.body.appendChild(m); };
     js.forEach(function (f, i) {
       var e = document.createElement('script'); e.src = src(f); e.async = false;
-      if (i === js.length - 1) e.onload = function () { mod('u3d.js', function () { mod('stations.js'); }); };
+      // (the ten new stations after the seven, as index.html loads them: otherwise the builder's arrows draw them as Dreadnoughts)
+      if (i === js.length - 1) e.onload = function () { mod('u3d.js', function () { mod('stations.js', function () { 'abcde'.split('').forEach(function (k) { mod('stations-' + k + '.js'); }); }); }); };
       document.body.appendChild(e);
     });
     setTimeout(function () { document.documentElement.classList.remove('ld'); }, 1500);

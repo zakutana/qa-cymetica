@@ -78,6 +78,22 @@
     host.appendChild(ce);
     return ce;
   }
+  // the soft band of light under each lane (the map's dust plane, uvHazeTex, for these two orbits): colour on black, the
+  // plane added to the sky, so it shows as a faint glow along the orbit that the dots ride
+  function bands(T, U) {
+    var N = 1024, C = N / 2, EXT = 34, c = document.createElement('canvas'); c.width = c.height = N;
+    var g = c.getContext('2d'), px = C / EXT;
+    g.fillStyle = '#000'; g.fillRect(0, 0, N, N);
+    [[ORBITS[0], 1.3, '143,230,234', 0.15], [ORBITS[1], 1.7, '92,200,242', 0.12]].forEach(function (b) {
+      var r = b[0] * px, w = b[1] * px * 3, gr = g.createRadialGradient(C, C, Math.max(0, r - w), C, C, r + w);
+      gr.addColorStop(0, 'rgba(' + b[2] + ',0)'); gr.addColorStop(0.5, 'rgba(' + b[2] + ',' + b[3] + ')'); gr.addColorStop(1, 'rgba(' + b[2] + ',0)');
+      g.globalCompositeOperation = 'lighter'; g.fillStyle = gr; g.fillRect(0, 0, N, N);
+    });
+    var t = new T.CanvasTexture(c); t.colorSpace = T.SRGBColorSpace;
+    var m = new T.Mesh(new T.PlaneGeometry(EXT * 2, EXT * 2), new T.MeshBasicMaterial({ map: t, transparent: true, blending: T.AdditiveBlending, depthWrite: false, side: T.DoubleSide }));
+    m.rotation.x = -Math.PI / 2; m.position.y = -0.1; m.renderOrder = -6; m.frustumCulled = false;
+    return m;
+  }
   var V = [], place = function (T, cam, w, h, el) {
     var v = (V[0] || (V[0] = new T.Vector3())).set(0, 0, 0).project(cam), right = (V[1] || (V[1] = new T.Vector3())).setFromMatrixColumn(cam.matrixWorld, 0).normalize();
     var c = (V[2] || (V[2] = new T.Vector3())).set(0, 0, 0).addScaledVector(right, BALL).project(cam), s = Math.abs(c.x - v.x) * w / 360;
@@ -103,11 +119,14 @@
     var R = CO.uvRng(5), P = [];
     ORBITS.forEach(function (r, i) {
       // (one unit here is about 16 px, on the map about 3.6: k 0.2 makes a dot as small on the screen as there; the first
-      // try, k 0.5 and 2.4 times as many, was "strasne moc bublinkove")
-      var o = { omega: i ? -0.065 : -0.08, k: 0.27, den: 1.3, col: new T.Color(i ? 0x5cc8f2 : 0x8fe6ea).multiplyScalar(3.4) };
-      U.dustLane(P, R, r, 'thread', o); U.dustLane(P, R, r, 'haze', o);
+      // try, k 0.5 and 2.4 times as many, was "strasne moc bublinkove"; the second, k 0.27 with the haze's big soft dots,
+      // still "moc tech bublinek" (2026-10-24). So as the map reads: a dense thread of fine dim dots, no haze dots, and
+      // under it a soft band of light (the map's dust plane), so each lane is a stream and not a string of beads.)
+      var o = { omega: i ? -0.065 : -0.08, k: 0.27, ks: 0.16, den: 2.8, col: new T.Color(i ? 0x5cc8f2 : 0x8fe6ea).multiplyScalar(2.1) };
+      U.dustLane(P, R, r, 'thread', o);
     });
     S.add(U.dustMesh(P, 3.6));
+    S.add(bands(T, U));
     // the companies, nose first along their orbits; the Universe's ring and pool under each are its pickers, not here
     this.fleet = FLEET.map(function (f, i) {
       var p = U.makeStation({ skin: f.skin, accent: f.accent, public: true, departments: new Array(f.n).fill(0), status: 'active' }, 31 + i * 7, {});
