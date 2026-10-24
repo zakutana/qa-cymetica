@@ -57,11 +57,11 @@
     background-image: linear-gradient(180deg, #eafffa 0%, #8dffd6 24%, #00f0a8 58%, #00cfbe 100%); filter: url(#cut); }
 
   /* the message, big, right under it */
-  .lede { margin-top: 26px; font: 800 37px/1.28 'JetBrains Mono'; letter-spacing: .005em; color: #f2fbff;
+  .lede { margin-top: 26px; font: 800 34px/1.3 'JetBrains Mono'; letter-spacing: .005em; color: #f2fbff; white-space: nowrap;
     text-shadow: 0 0 18px rgba(160, 230, 255, .45), 0 2px 14px rgba(0, 0, 0, .85); }
-  .lede em { font: 400 52px/1 'Archivo Black', sans-serif; font-style: normal; color: var(--green); letter-spacing: -.01em; vertical-align: -2px;
+  .lede em { font: 400 48px/1 'Archivo Black', sans-serif; font-style: normal; color: var(--green); letter-spacing: -.01em; vertical-align: -2px;
     text-shadow: 0 0 22px rgba(0, 255, 136, .75), 0 2px 12px rgba(0, 0, 0, .8); }
-  .rule { height: 1px; margin: 20px 0 16px; background: linear-gradient(90deg, rgba(255, 255, 255, 0), rgba(255, 255, 255, .16) 20%, rgba(0, 207, 255, .34) 75%, rgba(255, 255, 255, 0)); }
+  .rule { height: 1px; margin: 26px 0 22px; background: linear-gradient(90deg, rgba(255, 255, 255, 0), rgba(255, 255, 255, .16) 20%, rgba(0, 207, 255, .34) 75%, rgba(255, 255, 255, 0)); }
 
   .gh { display: flex; align-items: baseline; gap: 14px; }
   .gh .dot { width: 13px; height: 13px; border-radius: 50%; align-self: center; background: var(--rs1); box-shadow: 0 0 16px var(--rs1); }
@@ -72,7 +72,7 @@
   .gsub b { color: #ffffff; }
 
   .seats { margin-top: 10px; }
-  .seat { display: grid; grid-template-columns: 70px 52px 1fr auto; align-items: center; gap: 20px; padding: 8px 0; }
+  .seat { display: grid; grid-template-columns: 70px 52px 1fr auto; align-items: center; gap: 20px; padding: 12px 0; }
   .seat + .seat { border-top: 1px solid transparent; border-image: linear-gradient(90deg, rgba(255, 255, 255, 0), rgba(255, 255, 255, .12) 30%, rgba(0, 207, 255, .22) 70%, rgba(255, 255, 255, 0)) 1; }
   .rk { font: 400 70px/1 'Archivo Black', sans-serif; text-align: center; color: transparent; -webkit-background-clip: text; background-clip: text; }
   .p1 .rk { background-image: linear-gradient(180deg, #eafff4, var(--rs1) 55%, #00a067); filter: drop-shadow(0 0 14px rgba(0, 255, 136, .65)); }
@@ -108,7 +108,7 @@
      placeholder address until it does. A bar of the board's glass, a lit rim in green to cyan, the text, no button. */
   /* no box round it (glass on glass); a hairline above, then the label small and the address big, in the board's own
      green-to-cyan */
-  .guide { margin-top: 30px; padding-top: 22px; border-top: 1px solid transparent;
+  .guide { margin-top: 44px; padding-top: 26px; border-top: 1px solid transparent;
     border-image: linear-gradient(90deg, rgba(255, 255, 255, 0), rgba(0, 255, 136, .5) 20%, rgba(0, 207, 255, .5) 80%, rgba(255, 255, 255, 0)) 1; }
   .guide .g2 { display: block; font: 800 19px 'JetBrains Mono'; letter-spacing: .24em; color: var(--cyan); text-shadow: 0 0 10px rgba(0, 207, 255, .6); text-transform: uppercase; }
   .guide .g1 { display: inline-block; margin-top: 8px; margin-right: 22px; font: 400 38px 'Archivo Black', sans-serif; letter-spacing: .03em; color: transparent; -webkit-background-clip: text; background-clip: text;
@@ -153,15 +153,15 @@
     <div class="ln a"><span class="wide">JOIN THE</span><span class="bloom">JOIN THE</span><span class="ghost">JOIN THE</span><span class="cut">JOIN THE</span></div>
     <div class="ln b"><span class="wide">CYMETICA QUEST</span><span class="bloom">CYMETICA QUEST</span><span class="ghost">CYMETICA QUEST</span><span class="cut">CYMETICA QUEST</span></div>
   </div>
-  <div class="lede">Build the best company<br>in the Universe and earn<br><em>5%</em> of all Cymetica fees.</div>
+  <div class="lede">Build the best company in the Universe<br>and earn up to <em>5%</em> of Cymetica revenue.</div>
   <div class="rule"></div>
 
   <div class="gh"><span class="dot"></span><b>REVENUE SHARE</b><span class="tg">TOP 3</span></div>
 
   <div class="seats">
-    <div class="seat p1"><span class="rk">1</span><span class="open">?</span><span class="who"><b>Open slot</b><span>could be yours</span></span><span class="pay"><b>5%</b><span>of every fee</span></span></div>
-    <div class="seat p2"><span class="rk">2</span><span class="open">?</span><span class="who"><b>Open slot</b><span>could be yours</span></span><span class="pay"><b>3%</b><span>of every fee</span></span></div>
-    <div class="seat p3"><span class="rk">3</span><span class="open">?</span><span class="who"><b>Open slot</b><span>could be yours</span></span><span class="pay"><b>1%</b><span>of every fee</span></span></div>
+    <div class="seat p1"><span class="rk">1</span><span class="open">?</span><span class="who"><b>Open slot</b><span>could be yours</span></span><span class="pay"><b>5%</b><span>of revenue</span></span></div>
+    <div class="seat p2"><span class="rk">2</span><span class="open">?</span><span class="who"><b>Open slot</b><span>could be yours</span></span><span class="pay"><b>3%</b><span>of revenue</span></span></div>
+    <div class="seat p3"><span class="rk">3</span><span class="open">?</span><span class="who"><b>Open slot</b><span>could be yours</span></span><span class="pay"><b>1%</b><span>of revenue</span></span></div>
   </div>
 
   <div class="way">
@@ -170,7 +170,7 @@
       <div class="st"><i>01</i><b>Start a company</b><span>in the Universe</span></div><div class="ar">&rarr;</div>
       <div class="st"><i>02</i><b>Ship products</b><span>Build it Better</span></div><div class="ar">&rarr;</div>
       <div class="st"><i>03</i><b>Get seen</b><span>land · Promo Market</span></div><div class="ar">&rarr;</div>
-      <div class="st"><i>04</i><b>Bring the most fees</b><span>top 3 get paid</span></div>
+      <div class="st"><i>04</i><b>Bring the most revenue</b><span>top 3 get paid</span></div>
     </div>
   </div>
 
