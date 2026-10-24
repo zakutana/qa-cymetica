@@ -97,11 +97,15 @@
     this.fill = new T.DirectionalLight(0xdfe8f2, 0.9); S.add(this.fill, this.fill.target);
     // the corona: the Universe's three glows round the ball, in the same proportion to it
     [[2.64, 0.07, 0xffb04a], [4.3, 0.035, 0xff9a3c], [6.1, 0.025, 0x3b9dff]].forEach(function (c) { S.add(U.glowSprite(c[2], c[1], BALL * c[0])); });
-    // the orbits: thin lines of the Universe's cyan, lying on the plane
+    // the orbits: lanes of drifting light-dust, as the Universe's are (u3d.js dustLane, 2026-10-23: "uprav ty prstence i
+    // na uvodni strane"), not lines -- the Universe's cyan, the inner one paler; they flow the way the companies go,
+    // brighter on the far side of the view; k scales the dots to this scene (its ball is a third of the Universe's)
+    var R = CO.uvRng(5), P = [];
     ORBITS.forEach(function (r, i) {
-      var m = new T.Mesh(new T.TorusGeometry(r, 0.05, 6, 360), new T.MeshBasicMaterial({ color: new T.Color(i ? 0x5fa6b4 : 0x8fd6de), transparent: true, opacity: 0.6, blending: T.AdditiveBlending, depthWrite: false }));
-      m.rotation.x = Math.PI / 2; S.add(m);
+      var o = { omega: i ? -0.065 : -0.08, k: 0.5, den: 2.4, col: new T.Color(i ? 0x5cc8f2 : 0x8fe6ea).multiplyScalar(2.2) };
+      U.dustLane(P, R, r, 'thread', o); U.dustLane(P, R, r, 'haze', o); U.dustLane(P, R, r, 'star', o);
     });
+    S.add(U.dustMesh(P, 3.6));
     // the companies, nose first along their orbits; the Universe's ring and pool under each are its pickers, not here
     this.fleet = FLEET.map(function (f, i) {
       var p = U.makeStation({ skin: f.skin, accent: f.accent, public: true, departments: new Array(f.n).fill(0), status: 'active' }, 31 + i * 7, {});

@@ -1601,6 +1601,45 @@ function uvHazeTex(orbits) {
     }
   });
 }
+// One lane of light-dust, pushed on P as dots (dustMesh draws them): kind 'thread' a fine thread of small dots in broken
+// arcs, 'haze' a wide dim one of big soft ones, 'faint' only a drift, 'star' now and then a bright one. o: omega the
+// dots' angular speed (rad/s, positive turns the way the map's stations go; negative the other), k the scale of sizes
+// and of how far the lane wanders off its circle (1 on the map), col the dots' colour, den how many (1 on the map).
+// The lane is never a closed circle: its density has gaps and thick arcs, it bends a little off its radius.
+function dustLane(P, R, r, kind, o) {
+  const TAU = Math.PI * 2, k = o.k || 1, den = o.den || 1, circ = TAU * r;
+  const gauss = () => (R() + R() + R() - 1.5) * 2;
+  const p = [R() * 6, R() * 6, R() * 6], d = (a) => Math.max(0.06, 0.55 + 0.3 * Math.sin(a * 3 + p[0]) + 0.25 * Math.sin(a * 7 + p[1]) * Math.sin(a * 2 + p[2]));
+  const spec = {
+    thread: { n: circ / (0.85 * k), sr: 0.45, size: [0.4, 0.9], br: [0.3, 0.7] },
+    haze: { n: circ / (2.4 * k), sr: 2.6, size: [1.0, 2.2], br: [0.06, 0.14] },
+    faint: { n: circ / (6 * k), sr: 3.4, size: [0.8, 1.8], br: [0.04, 0.09] },
+    star: { n: circ / (70 * k), sr: 1.1, size: [2.2, 4.2], br: [0.8, 1.5] }
+  }[kind];
+  const n = Math.round(spec.n * den), q = [R() * 6, R() * 6, R() * 6];
+  // fixed to each dot's start, so the bends travel round with the lane
+  const wob = (a) => k * (2.4 * Math.sin(a * 2 + q[0]) + 1.5 * Math.sin(a * 5 + q[1]) + 0.9 * Math.sin(a * 11 + q[2]));
+  for (let i = 0; i < n; i++) {
+    let a; do { a = R() * TAU; } while (R() > d(a));
+    P.push({ r: r + wob(a) + gauss() * spec.sr * k, a, w: o.omega * (0.97 + R() * 0.06), y: (gauss() * 0.18 + 0.05) * k, size: (spec.size[0] + R() * R() * (spec.size[1] - spec.size[0])) * k, br: spec.br[0] + R() * (spec.br[1] - spec.br[0]), ph: R() * 6.3, fl: R(), col: o.col });
+  }
+}
+// The dots of P as one instanced mesh, all on the GPU (the sparks' way: where a dot is is time and its own numbers):
+// each drifts round at its own angular speed, breathes a little in radius and in size, and is brighter the nearer its
+// angle to peak (the lit side of the view; 0.3 of it on the dim side).
+function dustMesh(P, peak) {
+  const N = P.length, A = new Float32Array(N * 4), B = new Float32Array(N * 4), Cc = new Float32Array(N * 3);
+  P.forEach((p, i) => { A.set([p.r, p.a, p.w, p.y], i * 4); B.set([p.size, p.br, p.ph, p.fl], i * 4); Cc.set([p.col.r, p.col.g, p.col.b], i * 3); });
+  const a = TSL.instancedBufferAttribute(new THREE.InstancedBufferAttribute(A, 4)), b = TSL.instancedBufferAttribute(new THREE.InstancedBufferAttribute(B, 4)), c = TSL.instancedBufferAttribute(new THREE.InstancedBufferAttribute(Cc, 3));
+  const ang = a.y.add(TSL.time.mul(a.z)), rr = a.x.add(TSL.sin(TSL.time.mul(0.35).add(b.z)).mul(0.3));
+  const sm = new THREE.SpriteNodeMaterial({ transparent: true, depthWrite: false, blending: THREE.AdditiveBlending });
+  sm.positionNode = vec3(TSL.sin(ang).mul(rr), a.w.add(TSL.sin(TSL.time.mul(0.5).add(b.z)).mul(0.12)), TSL.cos(ang).mul(rr));
+  sm.scaleNode = b.x.mul(TSL.sin(TSL.time.mul(b.w.mul(2.2).add(0.8)).add(b.z.mul(5))).mul(0.12).add(0.88));
+  const lit = TSL.pow(TSL.cos(ang.sub(peak)).mul(0.5).add(0.5), 1.3).mul(0.7).add(0.3), tx = TSL.texture(glowTex(), TSL.uv());
+  sm.colorNode = vec4(c.mul(b.y).mul(lit), tx.a);
+  const m = new THREE.Mesh(G.plane, sm); m.count = N; m.frustumCulled = false; m.renderOrder = -4;
+  return m;
+}
 // The colour to give a light so it shows on screen as his hex: the map's frame is desaturated a little (sat) and
 // goes through three.js's ACES (exposure 1.15), which lifts the middle and crushes the darkest tones to black, so a
 // colour written as measured comes out wrong. Undone here in reverse: ACES's output matrix, its curve, its input
@@ -1894,43 +1933,14 @@ class Universe3D {
       const [r0, h0] = UVTINT[i], [r1, h1] = UVTINT[i + 1];
       return new THREE.Color(h0).lerp(new THREE.Color(h1), Math.min(1, Math.max(0, (r - r0) / (r1 - r0))));
     };
-    const gauss = () => (R() + R() + R() - 1.5) * 2;
-    // the lane's density along it: gaps and thick arcs, so a lane never reads as a drawn circle
-    const dens = (p1, p2, p3) => (a) => Math.max(0.06, 0.55 + 0.3 * Math.sin(a * 3 + p1) + 0.25 * Math.sin(a * 7 + p2) * Math.sin(a * 2 + p3));
-    const P = [];
-    const lane = (r, kind) => {
-      const circ = TAU * r, d = dens(R() * 6, R() * 6, R() * 6), col = tint(r);
-      const spec = {
-        thread: { n: circ / 0.85, sr: 0.45, size: [0.4, 0.9], br: [0.3, 0.7] },
-        haze: { n: circ / 2.4, sr: 2.6, size: [1.0, 2.2], br: [0.06, 0.14] },
-        faint: { n: circ / 6, sr: 3.4, size: [0.8, 1.8], br: [0.04, 0.09] },
-        star: { n: circ / 70, sr: 1.1, size: [2.2, 4.2], br: [0.8, 1.5] }
-      }[kind];
-      const n = Math.round(spec.n), q = [R() * 6, R() * 6, R() * 6];
-      // the lane wanders a little off its circle (a few units, slowly), so it is a stream and not a drawn ellipse;
-      // fixed to each dot's start, so the bends travel round with the lane
-      const wob = (a) => 2.4 * Math.sin(a * 2 + q[0]) + 1.5 * Math.sin(a * 5 + q[1]) + 0.9 * Math.sin(a * 11 + q[2]);
-      for (let i = 0; i < n; i++) {
-        let a; do { a = R() * TAU; } while (R() > d(a));
-        P.push({ r: r + wob(a) + gauss() * spec.sr, a, w: Gx.omega(r) * 9 * (0.97 + R() * 0.06), y: gauss() * 0.18 + 0.05, size: spec.size[0] + R() * R() * (spec.size[1] - spec.size[0]), br: spec.br[0] + R() * (spec.br[1] - spec.br[0]), ph: R() * 6.3, fl: R(), col });
-      }
-    };
+    const P = [], lane = (r, kind) => dustLane(P, R, r, kind, { omega: Gx.omega(r) * 9, col: tint(r) });
     // three lanes you can see (the stations ride all seven, but seven streams read as seven rings again: "neni tam tech
     // prstencu moc?"), the other four only a drift of dust
     ORB.forEach((r) => { if (UVSTRONG.includes(r)) { lane(r, 'thread'); lane(r, 'haze'); lane(r, 'star'); } else lane(r, 'faint'); });
     lane(210, 'haze');   // the system's edge: a faint haze instead of a bright double ring
     // (no embers round the sun: they were there on 2026-10-23 and the operator took them out, "smazal bych ty svitici
     // zlute kulicky co rotuji kolem slunce")
-    const N = P.length, A = new Float32Array(N * 4), B = new Float32Array(N * 4), Cc = new Float32Array(N * 3);
-    P.forEach((p, i) => { A.set([p.r, p.a, p.w, p.y], i * 4); B.set([p.size, p.br, p.ph, p.fl], i * 4); Cc.set([p.col.r, p.col.g, p.col.b], i * 3); });
-    const a = TSL.instancedBufferAttribute(new THREE.InstancedBufferAttribute(A, 4)), b = TSL.instancedBufferAttribute(new THREE.InstancedBufferAttribute(B, 4)), c = TSL.instancedBufferAttribute(new THREE.InstancedBufferAttribute(Cc, 3));
-    const ang = a.y.add(TSL.time.mul(a.z)), rr = a.x.add(TSL.sin(TSL.time.mul(0.35).add(b.z)).mul(0.3));
-    const sm = new THREE.SpriteNodeMaterial({ transparent: true, depthWrite: false, blending: THREE.AdditiveBlending });
-    sm.positionNode = vec3(TSL.sin(ang).mul(rr), a.w.add(TSL.sin(TSL.time.mul(0.5).add(b.z)).mul(0.12)), TSL.cos(ang).mul(rr));
-    sm.scaleNode = b.x.mul(TSL.sin(TSL.time.mul(b.w.mul(2.2).add(0.8)).add(b.z.mul(5))).mul(0.12).add(0.88));
-    const lit = TSL.pow(TSL.cos(ang.sub(peak)).mul(0.5).add(0.5), 1.3).mul(0.7).add(0.3), tx = TSL.texture(glowTex(), TSL.uv());
-    sm.colorNode = vec4(c.mul(b.y).mul(lit), tx.a);
-    const dust = new THREE.Mesh(G.plane, sm); dust.count = N; dust.frustumCulled = false; dust.renderOrder = -4; this.scene.add(dust); this.dust = dust;
+    const dust = dustMesh(P, peak); this.scene.add(dust); this.dust = dust;
     // the dust plane under it all
     const haze = new THREE.Mesh(G.plane, new THREE.MeshBasicMaterial({ map: uvHazeTex(ORB), transparent: true, blending: THREE.AdditiveBlending, depthWrite: false, side: THREE.DoubleSide }));
     haze.rotation.x = -Math.PI / 2; haze.scale.setScalar(464); haze.position.y = -0.3; haze.renderOrder = -6; haze.frustumCulled = false; this.scene.add(haze); this.haze = haze;
@@ -2171,7 +2181,7 @@ class Universe3D {
     it.el.className = 'b3' + (!c.public && !it.mine ? ' priv' : '') + (c.status === 'paused' ? ' paused' : '') + (it.mine ? ' mine' : '') + (hid ? ' hidden' : '');
     it.el.style.setProperty('--acc', acc);
     it.el.setAttribute('data-id', c.id);
-    it.el.innerHTML = (it.mine ? '<span class="you">YOU</span>' : '') + '<span class="rib">' + (!c.public && !it.mine ? '<i class="lk"></i>' : '') + '<span class="nm">' + esc(name) + '</span></span><span class="teth"></span>';
+    it.el.innerHTML = (it.mine ? '<span class="you">YOU</span>' : '') + '<span class="rib">' + (!c.public && !it.mine ? '<i class="lk"></i>' : '') + esc(name) + '</span><span class="teth"></span>';
     it.el._bw = 0;
   }
   coreBanner() {
@@ -2390,22 +2400,23 @@ class Universe3D {
     });
     if (this.haze) this.haze.rotation.z = t * 0.004;   // the dust plane turns once in about 26 minutes
   }
-  // The three that earn most (the revenue share's top 3): the names the map gives besides its own
+  // The ten companies that earn most (the revenue share's ranking): the only companies the map names
   topIds() {
     if (this._topK !== this.built) {
       this._topK = this.built;
       const b = CO.uvBoard && CO.uvBoard(this.h.mine ? this.h.mine() : null);
-      this._top = new Set(b && b.top ? b.top.map((r) => String(r.c.id)) : []);
+      this._top = new Set(b && b.rows ? b.rows.slice(0, 10).map((r) => String(r.c.id)) : []);
     }
     return this._top;
   }
   // The banners follow their stations. Names (2026-10-23, "vyres nejak ty vsechny napisy nad firmama ... kdyz tam bude
-  // moc firem bude to uplny hnus"): Cymetica, ours, Cymetica's products, land of your own and the hovered one always
-  // show; the revenue share's top 3 show where there is room; any other only once the camera has come close to it
-  // (its station 110 px or more across); every other station carries a dot (.dot), the name in its tooltip and on
-  // hover. So a hundred companies are a hundred dots, never a hundred plates. A name stands on its station's top as the
-  // camera sees it: over the mast from the side, past the edge of the deck from straight above, so it names the station
-  // from any angle without covering it. Cymetica's stands on its sun the same way.
+  // moc firem bude to uplny hnus", then "ty obdelniky minule tam nech byly hezci ... vsechny produkty budou mit tabulky
+  // a jen treba top 10 firem"): Cymetica, ours, Cymetica's products, land of your own and the hovered one always show;
+  // of the companies only the ten that earn most do, each where there is room, wholly inside the stage and clear of its
+  // bars, and only while its station is big enough on screen to be worth a name; the others have none (their tooltip,
+  // and their plate while the pointer is on them). So a hundred companies are ten plates. A plate stands on its
+  // station's top as the camera sees it: over the mast from the side, past the edge of the deck from straight above, so
+  // it names the station from any angle without covering it. Cymetica's stands on its sun the same way.
   overlay() {
     const w = this.el.clientWidth, h = this.el.clientHeight, v = this._ov1 || (this._ov1 = new THREE.Vector3()), placed = [], now = performance.now();
     // a still camera moves no banner: restyle them only when the view, the size, the hover or a station changed
@@ -2473,8 +2484,7 @@ class Universe3D {
     }
     list.forEach((o) => {
       const el = o.el; if (!el) return;
-      // (measured with its name showing: a dot is as wide as a dot)
-      if (!el._bw) { const dt = el.classList.contains('dot'); if (dt) el.classList.remove('dot'); el._bw = el.offsetWidth || 160; if (dt) el.classList.add('dot'); }
+      if (!el._bw) el._bw = el.offsetWidth || 160;
       const s = bs * (o.core ? 1 : Math.max(0.86, Math.min(1, 0.6 + o.px / 120)));
       const off = o.z > 1 || o.x < -80 || o.x > w + 80 || o.y < -40 || o.y > h + 60;
       const bw = el._bw * s, bh = (o.mine ? 50 : o.core ? 42 : 32) * s;
@@ -2484,17 +2494,12 @@ class Universe3D {
       // room round each plate, so two never read as one heap (6 and 4 px at first)
       const hit = (p) => r.l < p.r + 14 && r.r > p.l - 14 && r.t < p.b + 9 && r.b > p.t - 9;
       const whole = r.l >= 2 && r.r <= w - 2 && r.t >= 2 && r.b <= h - 2;
-      // a name: for the top 3 where there is room, for any other only once its station is big on the screen
-      const want = o.star ? o.px >= 24 : o.px >= 110;
-      let show = !off && (o.keep || (want && whole && !placed.some(hit) && !this.bars.some(hit) && named < 8));
+      // a company's plate: only the ten that earn most, where there is room and its station is big enough on the screen
+      let show = !off && (o.keep || (o.star && whole && !placed.some(hit) && !this.bars.some(hit) && o.px >= 24 && named < 10));
       if (moving && el._placed && !o.keep) show = !off && !!el._show;
       if (show && !o.keep) named++;
       el._show = show;
-      // not named: a dot, while the station is on the stage and not too small to be worth one
-      const dot = !show && !off && !o.core && o.px >= 14;
-      if (el._dot !== dot) { el._dot = dot; el.classList.toggle('dot', dot); }
-      const vis = show || dot;
-      if (el._hid !== !vis) { el._hid = !vis; el.classList.toggle('hidden', !vis); }
+      if (el._hid !== !show) { el._hid = !show; el.classList.toggle('hidden', !show); }
       el._placed = true;
       if (show) placed.push(r);
       const tf = 'translate(' + o.x.toFixed(1) + 'px,' + o.y.toFixed(1) + 'px) translate(-50%,-100%) scale(' + s.toFixed(3) + ')', zi = String(o.keep ? 3000 : 2000 - Math.round(o.d));
@@ -9103,7 +9108,9 @@ class Office3D {
   CO.U3 = (gl2 || navigator.gpu) ? { ok: true, gpu: !!navigator.gpu, universe: (el, stage, h) => new Universe3D(el, stage, h), office: (el, stage, tipFor) => new Office3D(el, stage, tipFor), preview, thumbs,
     roomPreview: (el) => new RoomPreview(el), dialogPreview: () => RoomPreview.dialog(), shotOf: (key) => SHOTS[key] || null, THREE, geo, makeStation, SKIN, amat, nebTex, TX, OM,
     // for the entry page's own scene (start.js): the map's sun, sky, glows and bloom, the pacer and the release
-    Post, starField, glowSprite, glowTex, colliderTex, flareTex, uvSky, spaceSky, LOOK, idleFlush, pacer, release, UVSUN }
+    Post, starField, glowSprite, glowTex, colliderTex, flareTex, uvSky, spaceSky, LOOK, idleFlush, pacer, release, UVSUN,
+    // the map's orbits as lanes of light-dust (dustLane, dustMesh), for the entry page's scene too
+    dustLane, dustMesh }
     : { failed: true, why: 'no WebGPU and no WebGL2' };
   window.dispatchEvent(new Event('co3d'));
 })();
