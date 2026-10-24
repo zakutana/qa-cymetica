@@ -277,15 +277,26 @@ def run_outsider(ticket: dict) -> dict:
         return {**ran, "code": ran["code"] or 1, "stdout": "",
                 "stderr": (ran["stdout"] + ran["stderr"])[-400:]}
     run_id = found.group(1)
-    step("lab.py", "outsider-act", run_id)
+    acted = step("lab.py", "outsider-act", run_id)
     step("outsider.py", "track")
     row = next((r for r in reversed(_sibling("outsider").load())
                 if r.get("type") == "run" and r.get("id") == run_id), {})
     made = [crew.add_ticket(t["to"], t["kind"], t["text"], key=t["key"], by="outsider")
             for t in crew.outsider_tickets(row)]
     opened = [ticket_["id"] for ticket_, new in made if new]
-    return ended(ran, f"{run_id}: {len(opened)} ticket(s) handed on "
-                      f"({', '.join(opened) or 'none'})", False)
+    handed = f"{len(opened)} ticket(s) handed on ({', '.join(opened) or 'none'})"
+    if acted["code"] != 0 or acted["timed_out"]:
+        # Its picks were not acted on (crew-before-c9 point 11: the exit was discarded and the
+        # look closed ok). An attempt, said by name. Its own words stay out of the result: a
+        # 'connection refused' in them is their host met by our code, and the reader would
+        # take it for the CLI's machinery that every ticket shares. Acting is idempotent, so
+        # the command below shows why and finishes the job.
+        why = "timed out" if acted["timed_out"] else f"exited {acted['code']}"
+        return {**ended(ran, f"{run_id}: lab.py outsider-act {why}, its picks were not acted "
+                             f"on (`python scripts/lab.py outsider-act {run_id}` shows why); "
+                             f"{handed}", True), "code": 1,
+                "stderr": (acted["stdout"] + acted["stderr"])[-400:]}
+    return ended(ran, f"{run_id}: {handed}", False)
 
 
 CODE_DEPARTMENTS = {"outsider": run_outsider}
