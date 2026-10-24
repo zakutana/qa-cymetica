@@ -3471,7 +3471,8 @@ def h2h_step() -> dict:
     stored = rooms.load()
     proposals = {str(p.get("id")): p for p in lab.proposals()}
     tried = lab_register.register(stored, proposals=proposals)
-    paired = {r["key"] for r in tried if r["section"] == "h2h" and r["key"]}
+    # A pair that never started is tried again, spaced and bounded (crew-before-c9 point 11).
+    paired = lab.h2h_paired(tried, _now())
     cells = lab.proven_cells(tried, paired)[:1]
     held_read = _read_matchups()
     if not cells:

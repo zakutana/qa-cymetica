@@ -2652,6 +2652,31 @@ def grid_next(register_rows: list[dict], species: list[str], thrown: set[str],
     return out
 
 
+# A head-to-head pair stopped before any verdict never ran (a clone refused, a read timed out). It
+# held its cell for good (crew-before-c9 point 11); cloned again every tick, it leaves one more clone
+# each time the second keeps failing (R08, deep pass 2026-10-11). So: again, but not before this
+# long since the last one stopped, and at most GRID_LAUNCH_TRIES launches in all.
+H2H_RETRY_AFTER = timedelta(hours=6)
+
+
+def h2h_paired(register_rows: list[dict], now: datetime) -> set[str]:
+    """The cells a head-to-head room has taken (`proven_cells`' `paired`): one with a pair open
+    or judged, one whose failed launches reached GRID_LAUNCH_TRIES, and one whose last failed
+    launch stopped less than H2H_RETRY_AFTER ago. Pure."""
+    by_key: dict[str, list[dict]] = {}
+    for row in register_rows or ():
+        if row.get("section") == "h2h" and row.get("key"):
+            by_key.setdefault(row["key"], []).append(row)
+    out = set()
+    for key, rows in by_key.items():
+        failed = [r for r in rows if not r.get("verdict") and r.get("status") == "stopped"]
+        last = max((_at(r.get("at")) for r in failed if _at(r.get("at"))), default=None)
+        if (len(failed) != len(rows) or len(failed) >= GRID_LAUNCH_TRIES
+                or last is None or now - last < H2H_RETRY_AFTER):
+            out.add(key)
+    return out
+
+
 def proven_cells(register_rows: list[dict], paired: set[str]) -> list[dict]:
     """Section 4, head-to-head (laboratory v3, P7): the grid cells two of whose windows
     survived -- a claim, by the rule that one window is a measurement and two are a finding --
