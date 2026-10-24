@@ -1030,11 +1030,22 @@ select:focus, .search:focus, .field input:focus, .field textarea:focus { border-
 /* ---------- Settings > In the Universe: one screen, every station an icon ----------
    ("jen ty ikonky a 1 obrazovka kde se bude zobrazovat aktualni skin a v nem jen barvy menit", 2026-10-24.) uv.css loads after
    this file and styles .uvset / .uvprev, so these carry .uvcard to win. */
-/* top to bottom and centred: the Public / Private switch, one strip of icons, the one screen */
-.uvcard .uvset.v3 { display: flex; flex-direction: column; align-items: center; gap: 14px; }
-.uvcard .uvset.v3 > .switch { width: fit-content; max-width: 100%; padding: 9px 14px; }
-.uvcard .uvprev.st { width: 100%; max-width: 600px; aspect-ratio: 6 / 5; padding: 0; border-radius: 14px;
-  background: radial-gradient(ellipse 65% 60% at 50% 46%, color-mix(in srgb, var(--acc) 7%, transparent), transparent 72%), radial-gradient(ellipse 120% 90% at 50% 40%, #0b1424, #060a12 80%); }
+/* one showroom the card's whole width: the wide screen, and joined under it the dock of icons ("to je divne jak je to
+   cele tak na stredu", 2026-10-24) */
+.uvcard .uvshow { border: 1px solid var(--line2); border-radius: 16px; overflow: hidden; background: #060a12;
+  box-shadow: 0 0 0 1px rgba(0, 207, 255, .05), 0 18px 50px rgba(0, 0, 0, .45); }
+.uvcard .uvprev.st { width: 100%; max-width: none; height: clamp(340px, 56vh, 620px); padding: 0; border: 0; border-radius: 0;
+  background: radial-gradient(ellipse 40% 60% at 50% 50%, color-mix(in srgb, var(--acc) 8%, transparent), transparent 72%), radial-gradient(ellipse 90% 100% at 50% 45%, #0b1424, #060a12 80%); }
+.uvcard .uvprev.st .pv3 canvas { border-radius: 0; }
+/* the HUD over it: four corner marks in cyan, and the edges darkened so the overlays sit on something */
+.uvcard .sthud { position: absolute; inset: 0; z-index: 2; pointer-events: none;
+  background:
+    linear-gradient(var(--cyan), var(--cyan)) 14px 14px / 22px 2px, linear-gradient(var(--cyan), var(--cyan)) 14px 14px / 2px 22px,
+    linear-gradient(var(--cyan), var(--cyan)) calc(100% - 14px) 14px / 22px 2px, linear-gradient(var(--cyan), var(--cyan)) calc(100% - 14px) 14px / 2px 22px,
+    linear-gradient(var(--cyan), var(--cyan)) 14px calc(100% - 14px) / 22px 2px, linear-gradient(var(--cyan), var(--cyan)) 14px calc(100% - 14px) / 2px 22px,
+    linear-gradient(var(--cyan), var(--cyan)) calc(100% - 14px) calc(100% - 14px) / 22px 2px, linear-gradient(var(--cyan), var(--cyan)) calc(100% - 14px) calc(100% - 14px) / 2px 22px,
+    radial-gradient(ellipse 75% 80% at 50% 50%, transparent 60%, rgba(3, 6, 11, .55));
+  background-repeat: no-repeat; opacity: .75; }
 /* three ways to fill the screen, one at a time: the flat picture (shown while 3D is not running), the turning 3D one, the showcase's */
 .uvcard .uvprev.st .flat { position: absolute; inset: 0; padding: 8px 10px 4px; }
 .uvcard .uvprev.st .flat .skinsvg { height: 100%; }
@@ -1060,27 +1071,38 @@ select:focus, .search:focus, .field input:focus, .field textarea:focus { border-
 .spv .hr { fill: none; stroke: var(--acc); stroke-opacity: .7; stroke-width: 1.1; }
 .spv .bloom { opacity: .8; mix-blend-mode: screen; }
 .spv .gl { mix-blend-mode: screen; }
-/* over the screen: what it is showing, and the colour dots */
-.uvcard .stnm { position: absolute; left: 14px; top: 12px; z-index: 3; display: flex; align-items: baseline; gap: 9px; padding: 5px 11px; border-radius: 99px; pointer-events: none;
+/* over the screen: a bar along its top (what it is showing on the left, who may look on the right), the colour dots
+   standing down its right edge */
+.uvcard .stbar { position: absolute; left: 26px; right: 26px; top: 22px; z-index: 3; display: flex; align-items: center; gap: 10px; pointer-events: none; }
+.uvcard .stbar .sp { flex: 1; }
+.uvcard .stnm { display: flex; align-items: baseline; gap: 10px; padding: 7px 14px; border-radius: 99px;
   background: rgba(6, 9, 15, .55); border: 1px solid var(--line2); backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px); }
-.uvcard .stnm b { font: 400 14px 'Archivo Black', sans-serif; letter-spacing: .02em; color: var(--text); }
-.uvcard .stnm span { font-size: 11px; color: var(--dim2); }
-.uvcard .sttag { position: absolute; right: 14px; top: 13px; z-index: 3; padding: 3px 9px; border-radius: 99px; cursor: help; font-size: 9.5px; font-weight: 800; letter-spacing: .14em; color: var(--cyan);
+.uvcard .stnm b { font: 400 17px 'Archivo Black', sans-serif; letter-spacing: .03em; color: var(--text); text-transform: uppercase; }
+.uvcard .stnm span { font-size: 11px; color: var(--dim2); letter-spacing: .08em; text-transform: uppercase; }
+.uvcard .sttag { pointer-events: auto; padding: 4px 10px; border-radius: 99px; cursor: help; font-size: 9.5px; font-weight: 800; letter-spacing: .14em; color: var(--cyan);
   border: 1px solid rgba(0, 207, 255, .4); background: rgba(0, 207, 255, .08); }
 .uvcard .sttag[hidden] { display: none; }
-.uvcard .accents.onprev { position: absolute; left: 50%; bottom: 12px; transform: translateX(-50%); z-index: 3; gap: 9px; padding: 7px 12px; border-radius: 99px;
+.uvcard .switch.onprev { pointer-events: auto; gap: 10px; padding: 7px 14px 7px 9px; border-radius: 99px;
+  background: rgba(6, 9, 15, .62); border-color: var(--line2); backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px); }
+.uvcard .switch.onprev .sw { width: 36px; height: 20px; } .uvcard .switch.onprev .sw::after { width: 14px; height: 14px; }
+.uvcard .switch.onprev.on .sw::after { left: 19px; }
+.uvcard .accents.onprev { position: absolute; right: 26px; top: 50%; transform: translateY(-50%); z-index: 3; flex-direction: column; gap: 10px; padding: 12px 8px; border-radius: 99px;
   background: rgba(6, 9, 15, .62); border: 1px solid var(--line2); backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px); }
-.uvcard .accents.onprev .acc { width: 22px; height: 22px; flex: none; border-width: 2px; }
-/* the stations: a line icon each (the departments' drawing), the name a tooltip; the seven the map draws, then the ten previewed */
-.uvcard .skpick { width: 100%; min-width: 0; padding: 14px; overflow-x: auto; overscroll-behavior-x: contain; scrollbar-width: thin; scrollbar-color: var(--line3) transparent;
-  border: 1px solid var(--line3); border-radius: 10px; background: var(--navy2); }
+.uvcard .accents.onprev .acc { width: 24px; height: 24px; flex: none; border-width: 2px; }
+/* the dock: every station a line icon (the departments' drawing), the name a tooltip, one row joined under the screen */
+.uvcard .skpick { width: 100%; min-width: 0; padding: 14px 18px; overflow-x: auto; overscroll-behavior-x: contain; scrollbar-width: thin; scrollbar-color: var(--line3) transparent;
+  border-top: 1px solid var(--line2); background: linear-gradient(180deg, #0c1422, #080d16); }
 /* one row: centred while it fits (auto margins), from the left and scrolling sideways when it does not */
-.uvcard .skrow { display: flex; align-items: center; gap: 8px; width: max-content; margin: 0 auto; }
-.uvcard .skdiv { flex: none; align-self: stretch; width: 1px; margin: 4px 4px; background: var(--line3); }
+.uvcard .skrow { display: flex; align-items: center; gap: 10px; width: max-content; margin: 0 auto; }
 /* the icons are one neutral steel, lit white with the selection rim when current: the company's colour is the screen's, not theirs */
-.uvcard .skic { position: relative; flex: none; width: 42px; height: 42px; display: grid; place-items: center; border-radius: 11px; color: var(--dim2); border: 1px solid var(--line2);
+.uvcard .skic { position: relative; flex: none; width: 50px; height: 50px; display: grid; place-items: center; border-radius: 13px; color: var(--dim2); border: 1px solid var(--line2);
   background: radial-gradient(circle at 32% 26%, rgba(255, 255, 255, .06), rgba(7, 12, 20, .92) 72%); transition: color .15s, border-color .15s, box-shadow .15s, transform .12s; }
-.uvcard .skic svg { width: 22px; height: 22px; fill: none; stroke: currentColor; stroke-width: 1.5; stroke-linecap: round; stroke-linejoin: round; }
+.uvcard .skic svg { width: 26px; height: 26px; fill: none; stroke: currentColor; stroke-width: 1.5; stroke-linecap: round; stroke-linejoin: round; }
+@media (max-width: 760px) {
+  .uvcard .uvprev.st { height: 340px; }
+  .uvcard .stbar { left: 14px; right: 14px; top: 14px; }
+  .uvcard .accents.onprev { right: 12px; }
+}
 .uvcard .skic:hover { color: var(--text); border-color: var(--dim2); transform: translateY(-1px); }
 .uvcard .skic.on { color: var(--text); border-color: var(--cyan); box-shadow: 0 0 0 1px var(--cyan), 0 0 18px rgba(0, 207, 255, .3); }
 .uvcard .skic:focus-visible { outline: 2px solid var(--cyan); outline-offset: 2px; }

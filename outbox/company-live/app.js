@@ -872,16 +872,15 @@
   // jen barvy menit, zbytek jen ikonky se bude klikat"): every station is one line icon, its name only a tooltip; the
   // current one is shown on one screen, its colour dots on it. The seven the map draws, then the ten previewed from the spec.
   function skinOf(k) { for (var i = 0; i < CO.SKINS.length; i++) if (CO.SKINS[i].key === k) return CO.SKINS[i]; return CO.SKINS[0]; }
-  // one strip, one row: the seven the map draws, a hairline, the ten previewed. The icons are one neutral colour: the
-  // company's colour belongs to the station on the screen, never to these (the operator, 2026-10-24).
+  // one strip, one row of all seventeen, no line between the seven and the ten ("odstran tu malou carku", 2026-10-24).
+  // The icons are one neutral colour: the company's colour belongs to the station on the screen, never to these.
   function skinButtons(sel) {
     var btn = function (s) {
       var tip = s.name + (s.spec && !CO.skinBuilt(s.key) ? ' · preview only' : '');
       return '<button type="button" class="skic' + (s.key === sel ? ' on' : '') + '" data-a="uv-skin" data-k="' + s.key + '" title="' + esc(tip) + '" aria-label="' + esc(s.name) +
         '" aria-pressed="' + (s.key === sel) + '"><svg viewBox="0 0 20 20" aria-hidden="true">' + (CO.STATION_ICON[s.key] || '') + '</svg></button>';
     };
-    return '<div class="skrow">' + CO.SKINS.filter(function (s) { return !s.spec; }).map(btn).join('') + '<i class="skdiv" aria-hidden="true"></i>' +
-      CO.SKINS.filter(function (s) { return !!s.spec; }).map(btn).join('') + '</div>';
+    return '<div class="skrow">' + CO.SKINS.map(btn).join('') + '</div>';
   }
   function accentButtons(sel) {
     return CO.ACCENTS.map(function (a) { return '<button type="button" class="acc' + (a.key === sel ? ' on' : '') + '" data-a="uv-accent" data-k="' + a.key + '" style="--c:' + a.hex + '" title="' + a.key + '"></button>'; }).join('');
@@ -945,20 +944,23 @@
   }
   function uvCard() {
     var S = CO.S, p = CO.profile(), n = Math.max(1, S.departments.length), s = skinOf(p.skin), built = CO.skinBuilt(s.key), hex = CO.accentHex(p.accent);
-    // top to bottom, all centred: who may look (compact), one strip of every station as an icon, and under it the one screen
-    // (the current station, its name and decks over it, its colour dots on it). #st-prev is filled by uvSync: flat, 3D or the
-    // showcase's picture.
-    return '<div class="card uvcard"><h3>In the Universe <span class="hint">where every company on Cymetica floats</span></h3><div class="uvset v3">' +
-      '<div class="switch' + (p.public ? ' on' : '') + '" data-a="uv-public" title="' + esc(p.public ?
-        'Anyone can open it from the map and look at everything inside: office, departments, charters, processes, tasks, settings. Only you change anything.' :
-        'It floats in the Universe with a lock. Others see its name, its station and its mission; nothing inside.') + '"><span class="sw"></span><div><b>' + (p.public ? 'Public' : 'Private') + '</b></div></div>' +
-      '<div class="skpick" id="st-skins" role="group" aria-label="Station">' + skinButtons(p.skin) + '</div>' +
+    // One showroom across the card's whole width ("to je divne jak je to cele tak na stredu", 2026-10-24): the screen,
+    // wide, with what it shows in its top left (name, decks), who may look in its top right, the colour dots standing
+    // down its right edge and a HUD's corner marks; under it, joined to it, the dock of every station as an icon.
+    // #st-prev is filled by uvSync: flat, 3D or the showcase's picture.
+    return '<div class="card uvcard"><h3>In the Universe <span class="hint">where every company on Cymetica floats</span></h3><div class="uvshow">' +
       '<div class="uvprev st' + (built ? '' : ' spec') + '" id="st-prev" data-skin="' + s.key + '" style="--acc:' + hex + '">' +
       '<div class="flat"></div><div class="spv" id="st-spv"></div>' +
       '<svg class="spdef" width="0" height="0" aria-hidden="true"><defs><filter id="fb" x="-40%" y="-40%" width="180%" height="180%"><feGaussianBlur stdDeviation="2.3"/></filter></defs></svg>' +
-      '<div class="stnm"><b id="st-nm">' + esc(s.name) + '</b><span id="st-n">' + n + ' deck' + (n === 1 ? '' : 's') + '</span></div>' +
+      '<i class="sthud" aria-hidden="true"></i>' +
+      '<div class="stbar"><div class="stnm"><b id="st-nm">' + esc(s.name) + '</b><span id="st-n">' + n + ' deck' + (n === 1 ? '' : 's') + '</span></div>' +
       '<span class="sttag" id="st-tag" title="Drawn from the spec by the skins showcase. The Universe map draws this station as a Dreadnought until its 3D model is built."' + (built ? ' hidden' : '') + '>PREVIEW</span>' +
-      '<div class="accents onprev" id="st-acc">' + accentButtons(p.accent) + '</div></div></div></div>';
+      '<span class="sp"></span>' +
+      '<div class="switch onprev' + (p.public ? ' on' : '') + '" data-a="uv-public" title="' + esc(p.public ?
+        'Anyone can open it from the map and look at everything inside: office, departments, charters, processes, tasks, settings. Only you change anything.' :
+        'It floats in the Universe with a lock. Others see its name, its station and its mission; nothing inside.') + '"><span class="sw"></span><div><b>' + (p.public ? 'Public' : 'Private') + '</b></div></div></div>' +
+      '<div class="accents onprev" id="st-acc" role="group" aria-label="Colour">' + accentButtons(p.accent) + '</div></div>' +
+      '<div class="skpick" id="st-skins" role="group" aria-label="Station">' + skinButtons(p.skin) + '</div></div></div>';
   }
   // what a process's department raises next, and the process that picks it up
   function nextOf(r) {

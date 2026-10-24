@@ -1437,7 +1437,8 @@ function adPromo(body, b) {
     const flick = (0.82 + 0.12 * Math.sin(t * 23) * Math.sin(t * 7.3)) * (Math.sin(t * 1.7) * Math.sin(t * 5.3) > 0.93 ? 0.35 : 1);
     screens.m.forEach((m) => { m.opacity = (1 - f) * flick; }); screens.a.forEach((m) => { m.opacity = f * flick; });
     holoGlow.material.color.set(f > 0.5 ? PROMO.amber : PROMO.magenta);
-    orbit.rotation.y = t * Math.PI * 2 / 22; ship.position.y = Math.sin(t * 0.9) * 0.1; ship.rotation.z = Math.sin(t * 0.7) * 0.04;
+    // a lap in 80 s: an airship is slow, never the hologram's 13 ("vzducholod ma o hodne pomaleji kolem kostky litat")
+    orbit.rotation.y = t * Math.PI * 2 / 80; ship.position.y = Math.sin(t * 0.45) * 0.1; ship.rotation.z = Math.sin(t * 0.35) * 0.03;
     banners.m.forEach((m) => { m.opacity = (1 - f) * flick * 0.95; }); banners.a.forEach((m) => { m.opacity = f * flick * 0.95; });
     const sy = ((t * 0.35) % 1) * 2 - 1; scan.position.y = sy * S / 2; scanMat.opacity = 0.7 * (1 - Math.abs(sy) * 0.6) * flick;
     for (let i = 0; i < N; i++) { const s = seeds[i], p = (s[2] + t * s[3] * 0.25) % 1; pos[i * 3] = s[0] * (0.4 + p * 0.6); pos[i * 3 + 1] = PY + 0.5 + p * (S + 0.9); pos[i * 3 + 2] = s[1] * (0.4 + p * 0.6); }
