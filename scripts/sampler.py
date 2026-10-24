@@ -13,8 +13,9 @@ running (qa/rooms.py says the rest).
 
 SAFE, GET only, through the guarded client, and only about what is ours by our
 own records: the bots clones.jsonl says we cloned, the positions paper.jsonl
-says we opened and have not closed, and the cards and Arena teams a strategy's
-plan names while that strategy is not stopped (qa/rooms.py). Seven doors:
+says we opened and have not closed, the cards and Arena teams a strategy's
+plan names while that strategy is not stopped (qa/rooms.py), and the benchmark
+card a running room is judged against (OP-0018). Seven doors:
 
     my-clones              the bot's balance, P&L, trades, and its indicators
     {id}/balance           what is locked in open trades, and what is free
@@ -145,9 +146,19 @@ def follow() -> dict:
                     teams.append(rooms.leg_ref(leg))
             elif leg.get("card") and leg["card"] not in proposed:
                 proposed.append(leg["card"])
+    # The benchmark every RUNNING room is judged against (OP-0018, 5), followed
+    # like a held card: their windows end at now, so a buy's BTC reads on 5d for
+    # five days and on 30d's 3 h points after it, and only our own record keeps
+    # the finer one. The verdict itself still reads live.
+    accepted = {row.get("room"): row for row in stored if row.get("type") == "acceptance"}
+    benchmarks: list[str] = []
+    for room, row in accepted.items():
+        card = row.get("benchmark_card")
+        if status.get(room) == "running" and card and card not in benchmarks:
+            benchmarks.append(card)
     return {"bots": bots,
             "positions": {p: c for p, c in opened.items() if p not in closed},
-            "cards": proposed, "teams": teams}
+            "cards": proposed, "teams": teams, "benchmarks": benchmarks}
 
 
 def _signature(row: dict, fields) -> str:
@@ -431,7 +442,8 @@ def tick(client, every: float) -> list[dict]:
         # 41 bots read first starved the cards in 40 rounds of 40 (NEXT 2026-10-11).
         listed, samples = _bots(client, reads, ours["bots"], seen, at)
         rows += listed
-        rows += _cards(client, reads, ours["positions"], ours["cards"], seen, at)
+        cards = list(dict.fromkeys(ours["cards"] + ours.get("benchmarks", [])))
+        rows += _cards(client, reads, ours["positions"], cards, seen, at)
         rows += _arena(client, reads, ours["teams"], at)
         more, detail = _bot_detail(client, reads, ours["bots"], samples, seen, at)
         rows += more
