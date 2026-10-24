@@ -39,7 +39,10 @@
   "review": {"done": false, "findings": null},
   "implemented": [
     {"line": "2026-10-12 Kod pro firmu: BTC rozpeti verdiktu (T-0039, T-0050, OP-0018 body 1-6)", "commit": "4403c058"},
-    {"line": "2026-10-12 Kod pro firmu: sampler sleduje benchmark bezicich roomu (OP-0018 bod 5)", "commit": "bad17f14"}
+    {"line": "2026-10-12 Kod pro firmu: sampler sleduje benchmark bezicich roomu (OP-0018 bod 5)", "commit": "bad17f14"},
+    {"line": "2026-10-12 Kod pro firmu: manifest v cizim commitu (T-0038, OP-0016)", "commit": "30bd74ce"},
+    {"line": "2026-10-12 Kod pro firmu: commit.py a zaznam behu (OP-0009)", "commit": "acd8d749"},
+    {"line": "2026-10-18 Z ohlednuti: zamek manifestu", "commit": "98e3bda9"}
   ],
   "left": [
     {"line": "2026-10-11 Laborka v3 P3-P7 ceka na tahy", "why": "waits on laboratory ticks and the outsider's claude login; the laboratory is paused"},
