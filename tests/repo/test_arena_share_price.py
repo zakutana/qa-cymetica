@@ -211,8 +211,8 @@ def test_an_arena_room_is_judged_on_its_bids_and_waits_on_a_failed_read(
     rounds = (_round(opened, 5, 0.50) + _round(opened, 720, 0.55)
               + _round(opened, 1435, 0.60))
     read = []
-    monkeypatch.setattr(scripts_lab, "_history",
-                        lambda client, card: read.append(card) or [])
+    monkeypatch.setattr(scripts_lab, "_read_history",
+                        lambda client, card, interval: read.append(card) or [])
 
     _write(tmp_path / "samples.jsonl", rounds + _round(opened, 1445, None, "HTTP 502"))
     said = scripts_lab.verdicts(now=opened + timedelta(days=2))

@@ -1011,15 +1011,61 @@ def _body(response, what: str) -> dict:
     return body
 
 
-def _history(client, card: str) -> list[dict]:
-    """A card's index history, `[]` when they have none, Unread when the read
-    failed."""
-    # Without `interval` they answer the last five days, and a verdict is read
-    # after its window closed: STR-0005 lost two days of its seven that way.
+# The intervals their index-history answers, finest first, and how far back each reaches from the
+# moment it is read: every window ends at now (openapi capture 4f67ff26). Measured on the BTC proxy
+# 2026-10-12 (T-0036): 1d 289 points ~5 min apart, 5d 241 at 30 min, 30d 224 at 3 h (a 51.6 h
+# hole, T-0052), all 107 at 9.8 h over 44 days.
+HISTORY_INTERVALS = (("1d", timedelta(days=1)), ("5d", timedelta(days=5)),
+                     ("30d", timedelta(days=30)), ("all", None))
+
+
+def _read_history(client, card: str, interval: str) -> list[dict]:
+    """One read of a card's index history at one interval: `[]` when they
+    have none, Unread when the read failed."""
     response = client.get(INDEX_HISTORY.format(card=card),
-                          params={"interval": "all"})
-    body = _body(response, f"index-history of {card[:8]}")
+                          params={"interval": interval})
+    body = _body(response, f"index-history of {card[:8]} ({interval})")
     return body.get("points") or body.get("history") or []
+
+
+def _history(client, card: str, since, *, now=None, read=None) -> dict:
+    """A card's index history from `since` on, read at the finest interval
+    that reaches it: `{"interval", "points", "tried"}`. Unread when a read
+    failed -- a failed read is never a reason to try a coarser one (rule 8).
+
+    Without `interval` they answer the last five days: STR-0005, a 7-day window
+    read 10 h after it closed, lost two days of its seven. `all` was the
+    opposite error (T-0036/T-0039): 107 points over 44 days, 9.8 h apart, so a
+    1-day room's BTC leg covered 15.5 h of its 24 and a held card exited at a
+    point 9 h stale (T-0050). Their windows all end at the read, so the interval
+    follows the AGE of `since` at `now` -- 1d never covers a 1-day room at its
+    close -- and goes one step coarser while the read's first point is later
+    than `since` (an empty answer reaches nothing either). `all` is taken
+    whatever it holds.
+
+    `read(card, interval)` is the one read, injectable so a caller can cache it
+    by (card, interval) -- `verdicts()` does. `now` is the caller's moment, never
+    the wall clock when the caller has one: a verdict replayed or tested at an
+    earlier moment picks the interval that moment would have.
+    """
+    moment = _moment(now) if now is not None else _now()
+    start = since if isinstance(since, datetime) else _moment(since)
+    if moment is None or start is None:
+        raise ValueError(f"index-history of {card[:8]}: since {since!r} is not a moment")
+    if start.tzinfo is None:
+        start = start.replace(tzinfo=timezone.utc)
+    reader = read or (lambda c, interval: _read_history(client, c, interval))
+    age = moment - start
+    finest = next(n for n, (_, reach) in enumerate(HISTORY_INTERVALS)
+                  if reach is None or age < reach)
+    tried: list[str] = []
+    for interval, reach in HISTORY_INTERVALS[finest:]:
+        points = reader(card, interval)
+        tried.append(interval)
+        stamps = lab._points(points)
+        if reach is None or (stamps and stamps[0][0] <= start):
+            return {"interval": interval, "points": points, "tried": tried}
+    raise AssertionError("unreachable: the last interval is taken whatever it holds")
 
 
 def _closes_at(client, card: str) -> str | None:
@@ -1119,9 +1165,14 @@ def book_correlation(now=None) -> dict:
     identity = ids["trusted"] if ids["trusted"].present else ids["anon"]
     client = build_client(identity, EndpointRegistry.load(), timeout=30.0)
     token = CURRENT_TIER.set(SafetyTier.SAFE)
+    moment = _moment(now) if now is not None else _now()
+    # The fourteen days open_book_returns correlates over (T-0039: the interval
+    # follows how far back the read has to reach).
+    since = moment - timedelta(days=14)
     try:
         returns = open_book_returns(
-            now=now, history=lambda card: _history(client, card))
+            now=moment,
+            history=lambda card: _history(client, card, since, now=moment)["points"])
     finally:
         CURRENT_TIER.reset(token)
         client.close()
@@ -1129,6 +1180,41 @@ def book_correlation(now=None) -> dict:
     if "n_eff" in said:
         lab.note_n_eff(said)
     return said
+
+
+def index_at_moments(card: str, times: list[str], now=None) -> dict:
+    """A card's index AT each of `times`, read the way a verdict reads its
+    benchmark (`qa.lab.index_at`): linear between the points around a moment,
+    the nearest within an hour when there is nothing on its other side, no value
+    beyond that. One read, at the finest interval that reaches the earliest
+    moment (`_history`), GET only. OP-0018, 4: the desk reads BTC at a card's
+    buy and sale through it."""
+    from qa.client import build_client
+    from qa.config import identities, load_dotenv
+    from qa.safety import CURRENT_TIER, EndpointRegistry, SafetyTier
+
+    moments = []
+    for text in times:
+        moment = _moment(text)
+        if moment is None:
+            raise SystemExit(f"{text!r} is not a moment (ISO 8601, UTC unless it says otherwise)")
+        moments.append(moment)
+    if not moments:
+        raise SystemExit("index-at needs at least one moment")
+    read_at = _moment(now) if now is not None else _now()
+    load_dotenv()
+    ids = identities()
+    identity = ids["trusted"] if ids["trusted"].present else ids["anon"]
+    client = build_client(identity, EndpointRegistry.load(), timeout=30.0)
+    token = CURRENT_TIER.set(SafetyTier.SAFE)
+    try:
+        got = _history(client, card, min(moments), now=read_at)
+    finally:
+        CURRENT_TIER.reset(token)
+        client.close()
+    return {"card": card, "interval": got["interval"], "tried": got["tried"],
+            "read_at": read_at.isoformat(), "points": len(got["points"]),
+            "at": [lab.index_at(got["points"], moment) for moment in moments]}
 
 
 def adopt(room: str, window_days: float = 7.0, stop_pct: float = 5.0,
@@ -1436,7 +1522,9 @@ def verdicts(now=None) -> list[dict]:
     # R08, deep pass of 2026-09-21: every room fetched the same benchmark for
     # itself -- up to 125 identical reads an hour. One read per card per call,
     # and a failed one is remembered as failed for the rest of the call (C1).
-    def once(cache: dict, key: str, read):
+    # Since T-0039 one read per (card, interval): rooms of different ages read
+    # the same card at different intervals, and each is read once.
+    def once(cache: dict, key, read):
         if key not in cache:
             try:
                 cache[key] = read()
@@ -1448,10 +1536,19 @@ def verdicts(now=None) -> list[dict]:
             raise cache[key]
         return cache[key]
 
-    histories: dict[str, object] = {}
+    histories: dict[tuple[str, str], object] = {}
 
-    def history(card: str) -> list:
-        return once(histories, card, lambda: _history(client, card))
+    def history(card: str, since, chosen: dict) -> list:
+        """The card's index from `since` (the room's acceptance) on, at the
+        finest interval that reaches it, and which interval that was, into
+        `chosen` -- the verdict records it. An acceptance with no moment is
+        judged inconclusive whatever is read, so nothing is read for it."""
+        if since is None:
+            return []
+        got = _history(client, card, since, now=moment, read=lambda c, interval: once(
+            histories, (c, interval), lambda: _read_history(client, c, interval)))
+        chosen[card] = got["interval"]
+        return got["points"]
 
     closings: dict[str, object] = {}
 
@@ -1463,7 +1560,8 @@ def verdicts(now=None) -> list[dict]:
     clone_rows: list[dict] = []
     fund_histories: dict[str, object] = {}
 
-    def series_of(leg: dict, acceptance: dict | None = None) -> list:
+    def series_of(leg: dict, acceptance: dict | None = None,
+                  chosen: dict | None = None) -> list:
         """A leg's index, by its kind: a card's from their index-history, a
         bot's and an Arena team's from the sampler's rows on this machine, a
         fund's from get_fund_history. A read that failed raises Unread and
@@ -1503,16 +1601,20 @@ def verdicts(now=None) -> list[dict]:
         if kind == "fund":
             return once(fund_histories, ref,
                         lambda: lab.fund_series(_fund_points(ref)))
-        return history(ref)
+        return history(ref, _moment((acceptance or {}).get("at")),
+                       chosen if chosen is not None else {})
     try:
         for room, acceptance, strategy, closed, halted in due:
             legs = acceptance.get("legs") or []
+            # The room's own start: every card series is read from it (T-0039).
+            start = _moment(acceptance.get("at"))
+            chosen: dict[str, str] = {}
             try:
-                series = {rooms.leg_ref(leg): series_of(leg, acceptance)
+                series = {rooms.leg_ref(leg): series_of(leg, acceptance, chosen)
                           for leg in legs if rooms.leg_ref(leg)}
                 if acceptance.get("benchmark_card"):
                     series[acceptance["benchmark_card"]] = history(
-                        acceptance["benchmark_card"])
+                        acceptance["benchmark_card"], start, chosen)
                 closes = {rooms.leg_ref(leg): closes_at(rooms.leg_ref(leg))
                           for leg in legs
                           if rooms.leg_kind(leg) == "card" and rooms.leg_ref(leg)}
@@ -1528,7 +1630,6 @@ def verdicts(now=None) -> list[dict]:
             # Our book on every card leg we hold (the plan's V2): their index
             # rebased on our fill, and what we sold for from the sale on. The
             # index alone is the cross-check, judged beside it.
-            start = _moment(acceptance.get("at"))
             until = moment
             if start is not None:
                 until = min(moment, start + timedelta(
@@ -1559,6 +1660,19 @@ def verdicts(now=None) -> list[dict]:
                         sold.add(ref)    # the book ends in our sale: credited at it (W03)
             said = lab.verdict(acceptance, booked, moment, closes=closes,
                                stopped=halted, sold=sold)
+            if said["verdict"] == "waiting":
+                # The window closed, but the benchmark has no point near its end
+                # yet (T-0039): like a failed read, nothing is written -- a
+                # recorded verdict settles the room for good -- and the next
+                # call reads it again.
+                if closed:
+                    out.append({"room": room, "verdict": "waiting",
+                                "why": said.get("why", ""), "intervals": dict(chosen)})
+                continue
+            if chosen:
+                # Which interval each series came from: a verdict can be read
+                # back against the spacing it was judged on.
+                said["intervals"] = dict(chosen)
             if booked != series:
                 said["index_return_pct"] = lab.verdict(
                     acceptance, series, moment, closes=closes,
@@ -4701,6 +4815,12 @@ def main(argv: list[str] | None = None) -> int:
     adopt_cmd.add_argument("--stop-pct", type=float, default=5.0)
     adopt_cmd.add_argument("--no-benchmark", action="store_true")
     sub.add_parser("verdicts", help="close every window that has come due")
+    at_cmd = sub.add_parser(
+        "index-at", help="a card's index AT given moments, as a verdict reads its benchmark "
+                         "(GET only)")
+    at_cmd.add_argument("card", help="the card's whole UUID")
+    at_cmd.add_argument("times", nargs="+", help="ISO moments, UTC unless they say otherwise")
+    at_cmd.add_argument("--json", action="store_true", help="the whole reading, as JSON")
     again_cmd = sub.add_parser("rejudge-costs", help="judge again, without the 1.4%% round trip, "
                                                      "every card verdict it was charged on")
     again_cmd.add_argument("--confirm", action="store_true")
@@ -4909,8 +5029,17 @@ def main(argv: list[str] | None = None) -> int:
                   f"{row.get('why', '')}")
             for line in row.get("close_failed") or []:
                 print(f"      close failed: {line}")
-    elif args.cmd == "surface":
-        print(json.dumps(surface(), ensure_ascii=False, indent=1))
+    elif args.cmd == "index-at":
+        said = index_at_moments(args.card, args.times)
+        if args.json:
+            print(json.dumps(said, ensure_ascii=False, indent=1))
+        else:
+            print(f"  {args.card[:8]}  read on {said['interval']} "
+                  f"({said['points']} points; tried {', '.join(said['tried'])})")
+            for row in said["at"]:
+                value = "  -   " if row["value"] is None else f"{row['value']:.6g}"
+                gap = "" if row["gap_h"] is None else f", {row['gap_h']:.2f} h"
+                print(f"    {row['at']}  {value}  ({row['how']}{gap})")
     elif args.cmd == "ask":
         print(json.dumps(ask(args.question, wait=not args.no_wait,
                              lane=args.lane),

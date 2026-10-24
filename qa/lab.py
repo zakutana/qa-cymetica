@@ -1465,8 +1465,10 @@ def formula_fingerprint() -> str:
         # And every helper they call to reach a number: a change inside one
         # is a change to what a verdict means, and a hash of the callers
         # alone would not move (A8's lesson, review of 2026-09-23).
+        # index_at since T-0039 (2026-10-12, OP-0018): the benchmark is read AT the window's
+        # ends through it, so how it interpolates is part of what a verdict means.
         source = "".join(inspect.getsource(f) for f in (
-            verdict, _early, _from_peak, _inside, bot_series, fund_series,
+            verdict, _early, _from_peak, _inside, index_at, bot_series, fund_series,
             arena_series, book_series, _cost, _net_of))
     except (OSError, TypeError):  # pragma: no cover -- frozen or stripped
         return "unknown"
@@ -1586,6 +1588,58 @@ def _early(acceptance: dict, series: dict, start, moment, sold=()) -> dict | Non
     return None
 
 
+# How far one point may stand from a moment it is read for when nothing lies on the other side of
+# it (OP-0018): within an hour it is the value there; beyond it the read does not reach the moment.
+BENCHMARK_REACH_H = 1.0
+
+
+def index_at(points, moment, reach_h: float = BENCHMARK_REACH_H) -> dict:
+    """Their index AT `moment`: how a verdict reads its benchmark at the window's two ends, and
+    what `lab.py index-at` answers (T-0039, OP-0018).
+
+    A point on the moment is its value. Otherwise the value is linear between the last point
+    before the moment and the first after it, and `gap_h` is the span between those two -- the
+    BTC proxy's `all` read is 9.8 h apart, its 30d read 3 h, its 5d read 30 min. With points on
+    one side only (a read made minutes after the window closed has nothing after it yet), the
+    nearest point counts when it is within `reach_h`, and `gap_h` is how far away it stands;
+    beyond that there is no value, and `how` says which side the points are on: "before" (the
+    read does not reach the moment yet) or "after" (it begins later). Never the first or last
+    point inside a window: that is a different span from the one judged.
+
+    This is for an index that is continuous between its points, like BTC. A card leg is NOT read
+    through it: their index is written when it moves, a US card stands still at night, so a leg
+    is judged on measured points only (`_inside`).
+    """
+    at = moment if isinstance(moment, datetime) else _at(moment)
+    out = {"at": at.isoformat() if at else None, "value": None, "how": "none",
+           "gap_h": None, "from": None, "to": None}
+    if at is None:
+        return out
+    if at.tzinfo is None:
+        at = at.replace(tzinfo=timezone.utc)
+    marks = _points(points)
+    before = [(t, v) for t, v in marks if t <= at]
+    after = [(t, v) for t, v in marks if t > at]
+    if before and before[-1][0] == at:
+        return {**out, "value": before[-1][1], "how": "point", "gap_h": 0.0,
+                "from": at.isoformat(), "to": at.isoformat()}
+    if before and after:
+        (t0, v0), (t1, v1) = before[-1], after[0]
+        share = (at - t0) / (t1 - t0)
+        return {**out, "value": v0 + (v1 - v0) * share, "how": "between",
+                "gap_h": (t1 - t0).total_seconds() / 3600.0,
+                "from": t0.isoformat(), "to": t1.isoformat()}
+    if not before and not after:
+        return out
+    side = "before" if before else "after"
+    when, value = before[-1] if before else after[0]
+    distance = abs((at - when).total_seconds()) / 3600.0
+    stamp = {"from": when.isoformat(), "to": when.isoformat(), "side": side}
+    if distance <= reach_h:
+        return {**out, **stamp, "value": value, "how": "nearest", "gap_h": distance}
+    return {**out, **stamp, "how": side, "gap_h": distance}
+
+
 def _inside(points, start, end):
     """A leg's points inside [start, end], with the value it held at `start`.
 
@@ -1619,6 +1673,16 @@ def verdict(acceptance: dict, series: dict, now, closes: dict | None = None,
         refuted        it lost, or it lost to the benchmark, or its drawdown
                        went past the stop it was accepted with
         survived       none of the above
+
+    and a fifth that is no verdict at all: `waiting`, when the window has
+    closed but the benchmark has no point within an hour of its end and none
+    after it yet (T-0039). Nothing is written; the next call reads it again,
+    as it does a read that failed (`scripts/lab.py::verdicts`).
+
+    The benchmark is the proxy's value AT the window's start and AT its end
+    (`index_at`), never the first and last point inside it; a gap over an hour
+    between the points around either end is named in `why` and the verdict
+    counts. The legs are read on measured points only.
 
     `stopped`, the moment the room was stopped by hand while it held its
     pick, ends the window there: it is judged over what it ran (V2 of the
@@ -1729,16 +1793,35 @@ def verdict(acceptance: dict, series: dict, now, closes: dict | None = None,
         peak = value if peak is None else max(peak, value)
         drawdown = max(drawdown, _from_peak(peak, value))
 
-    benchmark = None
+    benchmark, gap_h, missing = None, None, ""
     card = acceptance.get("benchmark_card")
     if card:
         # Over the stretch the legs were judged on, not the whole window: a
         # leg that closed on day two is not measured against five days of BTC.
         until = max(judged) if judged else end
-        marks = [(t, v) for t, v in _points(series.get(card))
-                 if start <= t <= until]
-        if len(marks) >= 2:
-            benchmark = (marks[-1][1] / marks[0][1] - 1.0) * 100.0
+        # AT the two ends, not the first and last point inside them (T-0039,
+        # OP-0018): the `all` read held three points in a day, the first 8.5 h
+        # in, and a 24 h room was set against 15.5 h of BTC.
+        marks = _points(series.get(card))
+        first, last = index_at(marks, start), index_at(marks, until)
+        if first["value"] and last["value"] is not None:
+            benchmark = (last["value"] / first["value"] - 1.0) * 100.0
+            gap_h = max(first["gap_h"], last["gap_h"])
+        elif first["value"] and last["how"] == "before":
+            # Its newest point is over an hour before the end and none has come
+            # after it yet: the end will be read once one does. It waits, as a
+            # read that failed waits -- neither a gap nor a shorter span.
+            return {"verdict": "waiting",
+                    "why": (f"the benchmark's newest point is {last['gap_h']:.1f} h "
+                            f"before the window's end and none has come after it yet; "
+                            f"judged again on the next call"),
+                    "return_pct": ret, "max_drawdown_pct": drawdown,
+                    "coverage": coverage, "formula": formula_fingerprint()}
+        elif first["how"] in ("before", "after"):
+            missing = (f"its benchmark has no point within {BENCHMARK_REACH_H:g} h of "
+                       f"the window's start (the nearest is {first['gap_h']:.1f} h away)")
+    stretched = (f"; the benchmark is read across a {gap_h:.1f} h gap between its points"
+                 if gap_h is not None and gap_h > BENCHMARK_REACH_H else "")
 
     stop_pct = float(acceptance.get("stop_pct") or 0) or None
     if ret <= 0:
@@ -1754,17 +1837,17 @@ def verdict(acceptance: dict, series: dict, now, closes: dict | None = None,
         # beating it cannot be claimed, and a gap is not a loss either (C1,
         # review of 2026-09-23 -- on return alone, a room that lost to BTC
         # survived).
-        why, name = (f"it returned {ret:+.2f}%, but its benchmark has no "
-                     f"marks over the window, so beating it cannot be "
-                     f"claimed"), "inconclusive"
+        why, name = (f"it returned {ret:+.2f}%, but "
+                     + (missing or "its benchmark has no marks over the window")
+                     + ", so beating it cannot be claimed"), "inconclusive"
     else:
         why, name = (f"it returned {ret:+.2f}% inside a {drawdown:.2f}% drawdown"
                      + (f", against the benchmark's {benchmark:+.2f}%"
                         if benchmark is not None else "")), "survived"
 
-    return {"verdict": name, "why": why,
+    return {"verdict": name, "why": why + stretched,
             "return_pct": ret, "max_drawdown_pct": drawdown,
-            "benchmark_pct": benchmark, "coverage": coverage,
+            "benchmark_pct": benchmark, "benchmark_gap_h": gap_h, "coverage": coverage,
             "legs": [{k: v for k, v in leg.items() if k != "curve"}
                      for leg in legs],
             "window": {"from": start.isoformat(), "to": end.isoformat()},

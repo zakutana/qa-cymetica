@@ -1849,8 +1849,8 @@ def test_a_room_past_its_stop_is_stopped_early_and_its_position_closed(
     points = lambda values: [{"t": (start + timedelta(hours=h)).isoformat(),
                               "index": v} for h, v in enumerate(values)]
     path = {"now": points([100, 99, 97])}
-    monkeypatch.setattr(scripts_lab, "_history",
-                        lambda client, c: path["now"] if c == card else [])
+    monkeypatch.setattr(scripts_lab, "_read_history",
+                        lambda client, c, interval: path["now"] if c == card else [])
     # 2026-09-27: without this the verdict asked THEIR server when the card
     # settles, a live read; on a slow day it timed out, the verdict waited,
     # and tests/meta went red -- blocking every live run behind it.
@@ -1964,7 +1964,8 @@ def test_a_card_leg_is_sold_at_his_take_profit_and_the_room_runs_on(
     path = {"now": before + points([100, 102, 104, 105.5]),
             falling: before + points([100, 101, 100, 99]),
             steady: before + points([100, 101, 101, 101, 101])}
-    monkeypatch.setattr(scripts_lab, "_history", lambda client, c: path.get(c, path["now"]))
+    monkeypatch.setattr(scripts_lab, "_read_history",
+                        lambda client, c, interval: path.get(c, path["now"]))
     monkeypatch.setattr(scripts_lab, "_closes_at", lambda client, c: None)
 
     said = scripts_lab.verdicts(now=later)
@@ -2078,8 +2079,8 @@ def test_a_room_whose_card_closed_inside_the_window_gets_a_verdict(
     # A flat benchmark: since C1 (2026-09-23) a room accepted against one is
     # not survived on its return alone.
     flat = [{"t": p["t"], "index": 100.0} for p in points]
-    monkeypatch.setattr(scripts_lab, "_history",
-                        lambda client, c: points if c == card else flat)
+    monkeypatch.setattr(scripts_lab, "_read_history",
+                        lambda client, c, interval: points if c == card else flat)
     monkeypatch.setattr(scripts_lab, "_closes_at",
                         lambda client, c: close.isoformat() if c == card else None)
 
@@ -2140,9 +2141,9 @@ def test_a_failed_benchmark_read_does_not_turn_refuted_into_survived(
         def get(self, path, **kwargs):
             return Response(path.split("/event-cards/")[1].split("/")[0])
 
-    real = scripts_lab._history
-    monkeypatch.setattr(scripts_lab, "_history",
-                        lambda client, c: real(Client(), c))
+    real = scripts_lab._read_history
+    monkeypatch.setattr(scripts_lab, "_read_history",
+                        lambda client, c, interval: real(Client(), c, interval))
     monkeypatch.setattr(scripts_lab, "_closes_at", lambda client, c: None)
     after = start + timedelta(days=days, hours=1)
 
@@ -2249,8 +2250,8 @@ def test_a_window_that_closes_normally_sells_the_rooms_card_position(
     points = [{"t": (start + timedelta(hours=h)).isoformat(),
                "index": 100 + h * 0.05} for h in range(hours + 1)]
     flat = [{"t": p["t"], "index": 100.0} for p in points]
-    monkeypatch.setattr(scripts_lab, "_history",
-                        lambda client, c: points if c in cards else flat)
+    monkeypatch.setattr(scripts_lab, "_read_history",
+                        lambda client, c, interval: points if c in cards else flat)
     monkeypatch.setattr(scripts_lab, "_closes_at", lambda client, c: None)
     after = start + timedelta(days=days, hours=1)
 
@@ -2334,8 +2335,8 @@ def test_a_card_room_is_judged_on_our_position_net_of_the_round_trip(
                      "index": 50.0 + 10.0 * h / hours} for h in range(hours)]}
     flat = [{"t": (start + timedelta(hours=h)).isoformat(), "index": 100.0}
             for h in range(hours + 1)]
-    monkeypatch.setattr(scripts_lab, "_history",
-                        lambda client, c: index.get(c, flat))
+    monkeypatch.setattr(scripts_lab, "_read_history",
+                        lambda client, c, interval: index.get(c, flat))
     monkeypatch.setattr(scripts_lab, "_closes_at", lambda client, c: None)
 
     said = {s["room"]: s for s in scripts_lab.verdicts(now=end + timedelta(hours=1))}
@@ -2451,8 +2452,8 @@ def test_a_stopped_room_is_archived_or_judged_up_to_its_stop(
     rising = [{"t": (start + timedelta(hours=h)).isoformat(),
                "index": 100 + h * 0.1} for h in range(hours + 1)]
     flat = [{"t": p["t"], "index": 100.0} for p in rising]
-    monkeypatch.setattr(scripts_lab, "_history",
-                        lambda client, c: rising if c != scripts_lab.BTC_PROXY
+    monkeypatch.setattr(scripts_lab, "_read_history",
+                        lambda client, c, interval: rising if c != scripts_lab.BTC_PROXY
                         else flat)
     monkeypatch.setattr(scripts_lab, "_closes_at", lambda client, c: None)
 
@@ -2521,14 +2522,15 @@ def test_an_early_close_that_failed_is_tried_again_and_the_benchmark_read_once(
     start = datetime.fromisoformat(opened)
     fetched = []
 
-    def history(client, card):
-        fetched.append(card)
+    def history(client, card, interval):
+        # One read per (card, interval) per call since T-0039: the interval follows the room's age.
+        fetched.append((card, interval))
         # The first room's card falls through its stop; the second's is flat,
         # so that room stays open and is looked at again an hour later.
         values = [100, 99, 85] if card == cards[0] else [100, 100, 100]
         return [{"t": (start + timedelta(hours=h)).isoformat(), "index": v}
                 for h, v in enumerate(values)]
-    monkeypatch.setattr(scripts_lab, "_history", history)
+    monkeypatch.setattr(scripts_lab, "_read_history", history)
     # A live read otherwise (see the test above): no network in tests/meta.
     monkeypatch.setattr(scripts_lab, "_closes_at", lambda client, c: None)
 
@@ -3033,36 +3035,54 @@ def test_picking_up_a_refused_question_says_it_was_refused(tmp_path, monkeypatch
 
 
 @qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
-def test_a_verdict_reads_the_whole_index_history_not_the_last_five_days(
+def test_a_verdict_reads_the_finest_interval_that_reaches_its_window(
         tmp_path, monkeypatch):
-    """`index-history` with no `interval` answers the last five days only.
+    """Replaces test_a_verdict_reads_the_whole_index_history_not_the_last_five_days
+    (T-0039, OP-0018, 2026-10-12).
 
-    A verdict is read after its window closes, so five days back from then
-    starts inside the window, or past it: STR-0005 (a 7-day window read 10 h
-    after it closed) came back inconclusive at 65% coverage with its entry
-    taken two days late. The operator was told the holes were in their
-    history; that one was in our request.
+    `index-history` with no `interval` answers the last five days only: STR-0005
+    (a 7-day window read 10 h after it closed) came back inconclusive at 65%
+    coverage with its entry taken two days late. The fix pinned `all`, the
+    opposite error: 107 points over 44 days, 9.8 h apart, so a 1-day room's BTC
+    leg covered 15.5 h of its 24. Every window ends at the read, so the interval
+    follows how long ago the window began -- 1d, 5d, 30d, all -- one step
+    coarser while its first point does not reach the start, and never no
+    interval at all.
     """
     scripts_lab = _scripts_lab(tmp_path, monkeypatch)
+    now = datetime(2026, 10, 13, 18, 0, tzinfo=timezone.utc)
+    reach = {"1d": timedelta(days=1), "5d": timedelta(days=5),
+             "30d": timedelta(days=30), "all": timedelta(days=44)}
     asked = []
 
     class Response:
         status_code = 200
 
+        def __init__(self, interval):
+            self.interval = interval
+
         def json(self):
-            return {"interval": "all", "points": []}
+            first = now - reach[self.interval]
+            return {"interval": self.interval, "points": [
+                {"t": (first + timedelta(hours=h)).isoformat(), "index": 100.0}
+                for h in range(int(reach[self.interval].total_seconds() // 3600) + 1)]}
 
     class Client:
-        def get(self, path, **kwargs):
-            asked.append((path, kwargs))
-            return Response()
+        def get(self, path, params=None, **kwargs):
+            interval = (params or {}).get("interval")
+            if interval is None and "interval=" in path:
+                interval = path.split("interval=", 1)[1].split("&", 1)[0]
+            asked.append(interval)
+            return Response(interval)
 
-    scripts_lab._history(Client(), "2a6f5562-01f2-4522-ae8a-eb355e74be94")
-    ((path, kwargs),) = asked
-    interval = (kwargs.get("params") or {}).get("interval")
-    if interval is None and "interval=" in path:
-        interval = path.split("interval=", 1)[1].split("&", 1)[0]
-    assert interval == "all", (path, kwargs)
+    card = "2a6f5562-01f2-4522-ae8a-eb355e74be94"
+    for age, want in ((timedelta(hours=2), "1d"), (timedelta(days=1, minutes=20), "5d"),
+                      (timedelta(days=7, hours=10), "30d"), (timedelta(days=40), "all")):
+        asked.clear()
+        got = scripts_lab._history(Client(), card, now - age, now=now)
+        assert (got["interval"], asked) == (want, [want]), (age, got["interval"], asked)
+    # The coarser step, the cache key and the verdict's own reads are held in
+    # tests/repo/test_benchmark_span.py.
 
 
 # ---------------------------------------------------------------------------
@@ -3843,8 +3863,8 @@ def _bot_room(scripts_lab, tmp_path, monkeypatch):
     (room,) = qa_rooms.strategies(rows)
     acceptance = qa_rooms.acceptance_of(rows, room["id"])
     funded = calls[1][2]
-    monkeypatch.setattr(scripts_lab, "_history",
-                        lambda client, c: [
+    monkeypatch.setattr(scripts_lab, "_read_history",
+                        lambda client, c, interval: [
                             {"t": (datetime.fromisoformat(acceptance["at"])
                                    + timedelta(hours=h)).isoformat(),
                              "index": 100.0} for h in range(0, 24 * 6)])
@@ -4011,9 +4031,9 @@ def test_a_fund_is_marked_not_bought_and_judged_on_its_own_series(
     count = int(days * 24 / 6) + 2
     series["AIB-SPACE"] = _flat_then(
         opened, [64.0 * (1 + 0.04 * n / count) for n in range(count)])
-    monkeypatch.setattr(scripts_lab, "_history",
-                        lambda client, c: [{"t": p["t"], "index": 100.0}
-                                           for p in series["AIB-SPACE"]])
+    monkeypatch.setattr(scripts_lab, "_read_history",
+                        lambda client, c, interval: [{"t": p["t"], "index": 100.0}
+                                                     for p in series["AIB-SPACE"]])
     said = scripts_lab.verdicts(now=opened + timedelta(days=days, hours=13))
     assert [s["verdict"] for s in said] == ["survived"], said
 
@@ -4050,8 +4070,8 @@ def test_an_arena_leg_is_a_gap_until_something_reads_its_series(
     qa_rooms.set_status(room["id"], "running", "an arena room under test")
 
     read = []
-    monkeypatch.setattr(scripts_lab, "_history",
-                        lambda client, card: read.append(card) or [])
+    monkeypatch.setattr(scripts_lab, "_read_history",
+                        lambda client, card, interval: read.append(card) or [])
     said = scripts_lab.verdicts(now=datetime.now(timezone.utc) + timedelta(days=2))
 
     assert "BLUE" not in read, f"a team was read as a card: {read}"

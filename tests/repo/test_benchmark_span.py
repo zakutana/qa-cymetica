@@ -1,4 +1,4 @@
-"""A verdict's benchmark must cover the room's own span, not the stretch the proxy happened to record in it (T-0036).
+"""A verdict's benchmark must cover the room's own span, not the stretch the proxy happened to record in it (T-0036, T-0039, OP-0018).
 
 2026-10-12, read live through our client (GET /event-cards/a4a5b71e.../index-history, the BTC proxy):
 
@@ -8,26 +8,33 @@
     30d          224      3.0 h       51.6 h      09-12 20:50
     all          107      9.8 h       54 h        08-29 01:43
 
-`scripts/lab.py::_history` reads every verdict series with `interval=all`, which is 107 points over
+`scripts/lab.py::_history` read every verdict series with `interval=all`, which is 107 points over
 44 days, not the 300 the schema promises. A 24 h window ending at the last point holds THREE of them,
-the first 8.5 h after the window's start: a span of 15.5 h of 24. `qa/lab.py::verdict` takes the first
-and last point inside [start, until] and divides, so the room's return (our fill to our sale, 24 h) is
-set against a BTC leg of 15.5-19.6 h, and 'refuted if ret <= benchmark' compares two different spans.
+the first 8.5 h after the window's start: a span of 15.5 h of 24. `qa/lab.py::verdict` took the first
+and last point inside [start, until] and divided, so the room's return (our fill to our sale, 24 h) was
+set against a BTC leg of 15.5-19.6 h, and 'refuted if ret <= benchmark' compared two different spans.
 
-The fix is the session's (qa/ and scripts/ are closed to workers). What it must do, from the ticket:
-read the finest interval that covers the window (5d/30d/all, never `all` for a 1-day room), take the
-proxy's value AT start and AT until by interpolating between the points around each, say a gap over
-1 h, and never fall back to a shorter span. `formula_fingerprint()` moves with it; verdicts already
-written stand.
+What the manager decided (OP-0018); 2 and 3 are held below, 1 and 4 (the reads) in
+tests/repo/test_history_interval.py, and the card leg of it (T-0050) in test_card_leg_exit.py:
 
-This test holds the verdict to that: the benchmark is the proxy's value at `until` over its value at
-`start`, whatever the spacing of the points. Strict xfail: it fails on the ASSERTION today and turns
-red the day the fix lands, and the marker must go then. The control beside it passes now and must keep
-passing: points exactly on both ends are the plain ratio.
+  1. `_history(client, card, since)` picks the interval by the age of `since` at the read (1d, 5d, 30d,
+     all -- every window ends at now, so 1d never covers a 1-day room at its close), one step coarser
+     while the first point does not reach `since`; the verdict caches each read by (card, interval)
+     and records which interval each series came from.
+  2. The benchmark is the proxy's value AT start and AT until, linear between the points around each
+     (`qa.lab.index_at`, in the formula's fingerprint). A point on one side only counts within 1 h;
+     beyond it the start is None (inconclusive) and the end waits, as an unread read does. A wider
+     gap than 1 h is named in `why`, and the verdict still counts. Never the first/last point inside.
+  3. Legs are NOT interpolated: their index is written when it moves, a US card stands still at
+     night, so coverage is from measured points only (`_inside` and `_early` unchanged).
+  4. `lab.py index-at <card> <time>...` is the same helper over one GET, for the desk.
+
+Verdicts already written stand: nothing here rewrites a diary.
 """
 
 from __future__ import annotations
 
+import inspect
 from datetime import datetime, timedelta, timezone
 
 import pytest
@@ -37,6 +44,8 @@ from qa.marks import SafetyTier, qa
 
 START = datetime(2026, 10, 12, 17, 28, tzinfo=timezone.utc)
 NOW = START + timedelta(days=1, hours=1)
+BTC = "a4a5b71e-de11-4805-b8a3-ed9c3f8f8161"
+LEG = "e22876b3-a32b-469e-8136-71ecf8b82ffb"
 
 
 def _rows(offsets_h, value):
@@ -44,10 +53,12 @@ def _rows(offsets_h, value):
             for h in offsets_h]
 
 
-def _acceptance():
-    return {"at": START.isoformat(), "window_days": 1, "stop_pct": 50.0,
+def _acceptance(**over):
+    base = {"at": START.isoformat(), "window_days": 1, "stop_pct": 50.0,
             "legs": [{"card": "card-a", "side": "bull", "share": 1.0}],
             "benchmark_card": "btc"}
+    base.update(over)
+    return base
 
 
 def _room():
@@ -60,8 +71,6 @@ def _btc(offsets_h):
     return _rows(offsets_h, lambda h: 100.0 + h)
 
 
-@pytest.mark.xfail(strict=True, reason="verdict() takes the proxy's first and last point inside the "
-                   "window, a 17.48% leg for a 24% day (T-0036)")
 @qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
 def test_the_benchmark_is_the_proxys_value_at_start_and_at_until():
     # Points as sparse as the `all` read gives: six hours apart, none on either end of the window.
@@ -79,3 +88,109 @@ def test_control_a_proxy_with_points_on_both_ends_is_the_plain_ratio():
     said = lab.verdict(_acceptance(), series, NOW)
     assert said["benchmark_pct"] == pytest.approx(24.0), said
     assert said["verdict"] == "refuted", said
+    assert said["benchmark_gap_h"] == 0.0, said
+    assert "gap" not in said["why"], said
+
+
+# --- the helper ----------------------------------------------------------------------------------
+
+
+@qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
+def test_index_at_reads_a_point_between_its_neighbours_or_one_side_within_an_hour():
+    points = _btc([0, 6, 12])
+    on = lab.index_at(points, START + timedelta(hours=6))
+    assert (on["value"], on["how"], on["gap_h"]) == (106.0, "point", 0.0), on
+    between = lab.index_at(points, START + timedelta(hours=7, minutes=30))
+    assert between["value"] == pytest.approx(107.5) and between["how"] == "between", between
+    assert between["gap_h"] == pytest.approx(6.0), "the gap is the span it was read across"
+    # One side only: the nearest point within the hour is the value there, on either side.
+    late = lab.index_at(points, START + timedelta(hours=12, minutes=40))
+    assert (late["value"], late["how"], late["side"]) == (112.0, "nearest", "before"), late
+    early = lab.index_at(points, START - timedelta(minutes=50))
+    assert (early["value"], early["how"], early["side"]) == (100.0, "nearest", "after"), early
+    # Beyond the hour there is no value -- the read does not reach the moment -- and it says how far.
+    beyond = lab.index_at(points, START + timedelta(hours=14))
+    assert (beyond["value"], beyond["how"]) == (None, "before"), beyond
+    assert beyond["gap_h"] == pytest.approx(2.0), beyond
+    assert lab.index_at(points, START - timedelta(hours=2))["how"] == "after"
+    nothing = lab.index_at([], START)
+    assert (nothing["value"], nothing["how"], nothing["gap_h"]) == (None, "none", None), nothing
+    # The same reading from a datetime and from its ISO text, and from [t, v] pairs.
+    pairs = [[p["t"], p["index"]] for p in points]
+    assert lab.index_at(pairs, (START + timedelta(hours=3)).isoformat())["value"] == pytest.approx(103.0)
+
+
+# --- the verdict's two ends ----------------------------------------------------------------------
+
+
+@qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
+def test_a_one_sided_start_counts_within_an_hour_and_is_inconclusive_beyond_it():
+    # The proxy's history begins 40 min into the window: its first point stands for the start.
+    near = lab.verdict(_acceptance(), {"card-a": _room(), "btc": _btc([40 / 60, 6, 12, 18, 24])}, NOW)
+    assert near["benchmark_pct"] == pytest.approx((124.0 / (100.0 + 40 / 60) - 1) * 100), near
+    # Two hours in: nothing measured the start, and a later first point is not it.
+    far = lab.verdict(_acceptance(), {"card-a": _room(), "btc": _btc([2, 6, 12, 18, 24])}, NOW)
+    assert far["verdict"] == "inconclusive" and far["benchmark_pct"] is None, far
+    assert "start" in far["why"], far
+
+
+@qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
+def test_a_one_sided_end_counts_within_an_hour_and_waits_beyond_it():
+    # Read 20 min after the close, the proxy's newest point 30 min before it: that point stands.
+    near = lab.verdict(_acceptance(), {"card-a": _room(), "btc": _btc([0, 6, 12, 18, 23.5])},
+                       START + timedelta(days=1, minutes=20))
+    assert near["benchmark_pct"] == pytest.approx(23.5) and near["verdict"] == "refuted", near
+    # Its newest point two hours before the close and none after it yet: the verdict waits, the
+    # way it waits on a read that failed -- not inconclusive, and not judged on a shorter span.
+    far = lab.verdict(_acceptance(), {"card-a": _room(), "btc": _btc([0, 6, 12, 18, 22])},
+                      START + timedelta(days=1, minutes=20))
+    assert far["verdict"] == "waiting", far
+    assert "benchmark" in far["why"] and "2.0 h" in far["why"], far
+    # Once a point after the close arrives, the end is read between the two around it.
+    later = lab.verdict(_acceptance(), {"card-a": _room(), "btc": _btc([0, 6, 12, 18, 22, 25])},
+                        START + timedelta(days=1, hours=2))
+    assert later["benchmark_pct"] == pytest.approx(24.0), later
+    assert later["verdict"] == "refuted", later
+
+
+@qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
+def test_a_gap_over_an_hour_is_named_in_why_and_the_verdict_still_counts():
+    # The 30d read's 3 h spacing around the window's end: interpolated, said, and judged.
+    said = lab.verdict(_acceptance(), {"card-a": _room(), "btc": _btc([0, 6, 12, 18, 22.5, 25.5])}, NOW)
+    assert said["verdict"] == "refuted", said
+    assert said["benchmark_pct"] == pytest.approx(24.0), said
+    assert said["benchmark_gap_h"] == pytest.approx(3.0), said
+    assert "3.0 h" in said["why"], said
+    # A room that beat it survives, gap named all the same.
+    won = lab.verdict(_acceptance(), {"card-a": _rows(range(25), lambda h: 100.0 + 30.0 * h / 24.0),
+                                      "btc": _btc([0, 6, 12, 18, 22.5, 25.5])}, NOW)
+    assert won["verdict"] == "survived" and "3.0 h" in won["why"], won
+
+
+@qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
+def test_a_leg_is_not_interpolated_its_coverage_is_from_measured_points():
+    # The leg's last point inside the window is 6 h before its end, and the next one 6 h after it.
+    # Interpolated to the end like the benchmark it would cover the whole day; measured, 18 of 24 h.
+    leg = _rows([0, 6, 12, 18, 30], lambda h: 100.0 + h)
+    said = lab.verdict(_acceptance(), {"card-a": leg, "btc": _btc([0, 6, 12, 18, 24])}, NOW)
+    assert said["verdict"] == "inconclusive", said
+    assert said["coverage"] == pytest.approx(0.75), said
+    # Inside the floor, the leg exits at its last measured point, not at a value made up for the end.
+    leg = _rows([0, 6, 12, 20, 30], lambda h: 100.0 + h)
+    said = lab.verdict(_acceptance(), {"card-a": leg, "btc": _btc([0, 6, 12, 18, 24])}, NOW)
+    (judged,) = said["legs"]
+    assert judged["exit_index"] == pytest.approx(120.0) and judged["gross_return_pct"] == pytest.approx(20.0)
+
+
+@qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
+def test_the_helper_is_in_the_formula_fingerprint(monkeypatch):
+    hashed = []
+    real = inspect.getsource
+
+    def watch(obj):
+        hashed.append(obj)
+        return real(obj)
+    monkeypatch.setattr(inspect, "getsource", watch)
+    assert lab.formula_fingerprint() != "unknown"
+    assert lab.index_at in hashed, "a change to how the benchmark is read would not move the formula"
+    assert lab.verdict in hashed

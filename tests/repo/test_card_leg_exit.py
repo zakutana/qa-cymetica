@@ -43,9 +43,11 @@ interval means five days. A 1-day room, a held leg, no sale yet, read an hour af
 (verdicts() is run at ~20-min ticks). The index rises 100 -> 120 over the window, so the leg is
 +20% gross at its end: the last `all` point inside sits 9 h before the end, a coverage of 62.5%.
 
-Strict xfail: it fails on the ASSERTION today (the verdict is inconclusive) and turns red the day
-the fix lands, when the marker must go. The control beside it passes now and must keep passing: the
-same room read on a dense series is judged at +20%.
+It was a strict xfail until the fix (T-0039, OP-0018): `_history(client, card, since)` now reads the
+finest interval that reaches the room's start, 5d for a 1-day room an hour after its close, so the
+leg is judged on 30-minute points to the window's end. The leg itself is still not interpolated: an
+index is written when it moves, so its coverage comes from measured points only. The control beside
+it must keep passing: the same room read on a dense series is judged at +20%.
 """
 
 from __future__ import annotations
@@ -176,8 +178,6 @@ def _one_day_room_with_a_held_leg(scripts_lab, tmp_path, monkeypatch, dense_all)
     return room["id"], now, theirs, sold
 
 
-@pytest.mark.xfail(strict=True, reason="a held card leg exits at the last `interval=all` point inside "
-                   "its window, 9 h stale and 62.5% covered, so the verdict is inconclusive (T-0050)")
 @qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
 def test_a_held_card_leg_is_judged_at_the_end_of_its_window_not_at_a_coarse_point(
         tmp_path, monkeypatch):
@@ -188,9 +188,10 @@ def test_a_held_card_leg_is_judged_at_the_end_of_its_window_not_at_a_coarse_poin
     said = scripts_lab.verdicts(now=now)
 
     (verdict,) = [s for s in said if s.get("room") == room]
-    # Today: inconclusive at 62% -- "the index covers 62% of the window", a gap read as unfit.
+    # Before the fix: inconclusive at 62% -- "the index covers 62% of the window", a gap read as unfit.
     assert verdict["verdict"] == "survived", (verdict, theirs.asked)
     assert verdict["coverage"] >= 0.95, verdict
+    assert verdict["intervals"] == {CARD: "5d"} and "all" not in theirs.asked, (verdict, theirs.asked)
     (leg,) = verdict["legs"]
     # +20% at the window's end; the last `all` point inside would have said +12.5%.
     assert leg["gross_return_pct"] == pytest.approx(20.0, abs=0.5), leg
