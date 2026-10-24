@@ -46,11 +46,13 @@
   .ln > span { grid-area: 1 / 1; display: block; }
   .ln.a { font-size: 42px; line-height: 1; letter-spacing: .385em; }
   .ln.b { margin-top: 14px; font-size: 74px; line-height: 1; letter-spacing: .01em; }
-  .ln .wide { color: rgba(0, 200, 255, .32); filter: blur(38px); }
-  .ln .bloom { color: rgba(0, 235, 180, .42); filter: blur(16px); }
-  .ln .ghost { color: rgba(150, 255, 225, .22); filter: blur(5px); }
+  /* the site's own green (its headlines: #00ff88, "Best ROI wins."), not aqua: the glow and the cut are green all through,
+     only the top lip goes pale (the operator: "ta barva mi prijde moc takova aqua ... oni spis jsou vic do zelena") */
+  .ln .wide { color: rgba(0, 255, 136, .26); filter: blur(38px); }
+  .ln .bloom { color: rgba(0, 255, 136, .4); filter: blur(16px); }
+  .ln .ghost { color: rgba(150, 255, 200, .22); filter: blur(5px); }
   .ln .cut { color: transparent; -webkit-background-clip: text; background-clip: text;
-    background-image: linear-gradient(180deg, #f2fffb 0%, #b0ffe0 28%, #34f2a6 60%, #00c6ee 100%); filter: url(#cut); }
+    background-image: linear-gradient(180deg, #eafff4 0%, #8dffc6 24%, #00ff88 58%, #00d874 100%); filter: url(#cut); }
 
   /* the message, big, right under it */
   .lede { margin-top: 26px; font: 800 37px/1.28 'JetBrains Mono'; letter-spacing: .005em; color: #f2fbff;
@@ -62,7 +64,7 @@
   .gh { display: flex; align-items: baseline; gap: 14px; }
   .gh .dot { width: 13px; height: 13px; border-radius: 50%; align-self: center; background: var(--rs1); box-shadow: 0 0 16px var(--rs1); }
   .gh b { font: 400 34px 'Archivo Black', sans-serif; letter-spacing: .08em; color: transparent; -webkit-background-clip: text; background-clip: text;
-    background-image: linear-gradient(180deg, #effff8, #4dffb4 50%, #00b4e0); filter: drop-shadow(0 0 12px rgba(0, 207, 255, .5)); }
+    background-image: linear-gradient(180deg, #effff8, #4dffa6 50%, #00e07a); filter: drop-shadow(0 0 12px rgba(0, 255, 136, .45)); }
   .gh .tg { margin-left: auto; font: 800 19px 'JetBrains Mono'; letter-spacing: .2em; color: var(--rs1); text-shadow: 0 0 12px rgba(0, 207, 255, .7); }
   .gsub { margin-top: 10px; font: 500 24px 'JetBrains Mono'; color: #d3e3ec; }
   .gsub b { color: #ffffff; }
@@ -108,7 +110,7 @@
     border-image: linear-gradient(90deg, rgba(255, 255, 255, 0), rgba(0, 255, 136, .5) 20%, rgba(0, 207, 255, .5) 80%, rgba(255, 255, 255, 0)) 1; }
   .guide .g2 { display: block; font: 800 19px 'JetBrains Mono'; letter-spacing: .24em; color: var(--cyan); text-shadow: 0 0 10px rgba(0, 207, 255, .6); text-transform: uppercase; }
   .guide .g1 { display: inline-block; margin-top: 8px; margin-right: 22px; font: 400 38px 'Archivo Black', sans-serif; letter-spacing: .03em; color: transparent; -webkit-background-clip: text; background-clip: text;
-    background-image: linear-gradient(180deg, #f2fffb, #4dffb4 55%, #00d0e8); filter: drop-shadow(0 0 12px rgba(0, 255, 160, .45)); }
+    background-image: linear-gradient(180deg, #f2fffb, #4dffa6 55%, #00e07a); filter: drop-shadow(0 0 12px rgba(0, 255, 136, .45)); }
   .guide .g3 { display: inline-block; font: 800 30px 'JetBrains Mono'; color: var(--cyan); text-shadow: 0 0 10px rgba(0, 207, 255, .6); white-space: nowrap; }
   .guide .g3 i { font-style: normal; color: var(--green); margin-left: 8px; }
 </style>
