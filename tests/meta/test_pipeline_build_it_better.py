@@ -520,7 +520,11 @@ def test_a_build_that_shipped_late_once_does_not_hold_the_verdict_red_for_good()
     def run_with(records, *items):
         answers = {bb.BOARD: _Answer(200, {"items": list(items)})}
         answers.update({f"{bb.BOARD}/{t}": _Answer(200, r) for t, r in records.items()})
-        bb.test_a_build_ships_inside_the_24_hours_it_publishes(_Board(answers))
+        try:
+            bb.test_a_build_ships_inside_the_24_hours_it_publishes(_Board(answers))
+        except Inconclusive as exc:
+            # Raised out of here it would SKIP this test, and every case after it.
+            raise AssertionError(f"inconclusive where a verdict was due: {exc}") from exc
         return CURRENT_MEASUREMENT.get()
 
     def log(*kinds_at):
