@@ -102,8 +102,10 @@
     // brighter on the far side of the view; k scales the dots to this scene (its ball is a third of the Universe's)
     var R = CO.uvRng(5), P = [];
     ORBITS.forEach(function (r, i) {
-      var o = { omega: i ? -0.065 : -0.08, k: 0.5, den: 2.4, col: new T.Color(i ? 0x5cc8f2 : 0x8fe6ea).multiplyScalar(2.2) };
-      U.dustLane(P, R, r, 'thread', o); U.dustLane(P, R, r, 'haze', o); U.dustLane(P, R, r, 'star', o);
+      // (one unit here is about 16 px, on the map about 3.6: k 0.2 makes a dot as small on the screen as there; the first
+      // try, k 0.5 and 2.4 times as many, was "strasne moc bublinkove")
+      var o = { omega: i ? -0.065 : -0.08, k: 0.27, den: 1.3, col: new T.Color(i ? 0x5cc8f2 : 0x8fe6ea).multiplyScalar(3.4) };
+      U.dustLane(P, R, r, 'thread', o); U.dustLane(P, R, r, 'haze', o);
     });
     S.add(U.dustMesh(P, 3.6));
     // the companies, nose first along their orbits; the Universe's ring and pool under each are its pickers, not here
