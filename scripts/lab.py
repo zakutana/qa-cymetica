@@ -3350,13 +3350,22 @@ def bot_grid() -> dict:
     tried = len({r["key"] for r in tried_rows if r["key"] in keys
                  and (r.get("verdict") or r.get("status") != "stopped")})
     trading = _trading_now(clone_rows, samples)
-    slots = max(0, wave.MAX_TRADING - trading)
-    cells = lab.grid_next(tried_rows, species, set(_thrown_cells(clone_rows, samples)),
+    now = _now()
+    cap, slots, capped = _grid_slots(clone_rows, samples, trading, now, wave)
+    # A species whose clone failed for another reason than the cap left no room, so nothing
+    # counted it and the next tick cloned it again (crew-before-c9 point 9).
+    failing = lab.clone_failures(clone_rows, now)
+    held = [f"grid {by_id[sp.lower()].get('name')}: {failing[sp.lower()]}"
+            for sp in species if sp.lower() in failing]
+    cells = lab.grid_next(tried_rows, [sp for sp in species if sp.lower() not in failing],
+                          set(_thrown_cells(clone_rows, samples)),
                           min(lab.GRID_PER_TICK, slots))
-    opened, started, held = 0, 0, []
-    if not slots:
+    opened, started = 0, 0
+    if capped:
+        held.append(f"grid: {capped} -- the next cell waits")
+    elif not slots:
         held.append(f"grid: {trading} bots trading, the platform's cap is "
-                    f"{wave.MAX_TRADING} -- the next cell waits for a slot")
+                    f"{cap} -- the next cell waits for a slot")
     for cell in cells:
         free, deployed, parked = _free_cash(), _deployed(), _parked()
         ok, why = lab.affordable(wave.STAKE_USDC, free, _running_experiments(),
@@ -3373,6 +3382,10 @@ def bot_grid() -> dict:
                  + (", its second window -- the first survived" if cell["second"] else "")))
         if said.get("room"):
             opened += 1
+        if said.get("capacity"):
+            # Their cap answered this clone: the rest of the tick would meet the same 400.
+            held.append(f"grid: cap reached -- {said['capacity']}; the rest waits")
+            break
         if said.get("ok"):
             started += 1
             tried += 0 if cell["second"] else 1
@@ -3380,7 +3393,77 @@ def bot_grid() -> dict:
             held.append(f"grid {bot.get('name')} {cell['label']}: {said.get('why')}")
     return {"rooms": opened, "orders": started, "held": held,
             "grid": {"tried": tried, "of": len(keys), "trading": trading + started,
-                     "cap": wave.MAX_TRADING}}
+                     "cap": cap}}
+
+
+def _capacity_cap(clone_rows: list[dict]) -> dict | None:
+    """The platform's newest word on its cap on our paper bots (`qa.lab.capacity_cap`)."""
+    return lab.capacity_cap(clone_rows)
+
+
+def _owned(clone_rows: list[dict]) -> int:
+    """Our paper clones their side still holds: accepted, not released -- paused or not, which is
+    what "Maximum 50 Paper bots per user including paused ones" counts."""
+    return len(set(_instance_species(clone_rows)) - lab.released(clone_rows))
+
+
+def _stopped_since(clone_rows: list[dict], samples: list[dict], moment: datetime) -> bool:
+    """One of our clones stopped trading after `moment`: its newest sample, later than it, says
+    not trading, or our pause of it was accepted later than it."""
+    ours = set(_instance_species(clone_rows))
+    latest: dict[str, dict] = {}
+    for row in samples or ():
+        if row.get("type") == "sample" and row.get("kind") == "bot":
+            key = str(row.get("instance_id"))
+            if key not in latest or str(row.get("at")) >= str(latest[key].get("at")):
+                latest[key] = row
+    for inst, row in latest.items():
+        at = _moment(row.get("at"))
+        if inst in ours and row.get("is_trading") is False and at and at > moment:
+            return True
+    paused = {row.get("id") for row in clone_rows if row.get("type") == "intent"
+              and row.get("kind") == "disable" and str(row.get("instance_id")) in ours}
+    return any(row.get("type") == "outcome" and row.get("id") in paused
+               and row.get("outcome") == "accepted"
+               and (_moment(row.get("at")) or moment) > moment for row in clone_rows)
+
+
+def _released_since(clone_rows: list[dict], moment: datetime) -> bool:
+    """A release of ours was accepted after `moment`: the one thing that frees a slot under a
+    cap that counts paused bots too."""
+    asked = {row.get("id") for row in clone_rows if row.get("type") == "intent"
+             and row.get("kind") == "release"}
+    return any(row.get("type") == "outcome" and row.get("id") in asked
+               and row.get("outcome") == "accepted"
+               and (_moment(row.get("at")) or moment) > moment for row in clone_rows)
+
+
+def _grid_slots(clone_rows: list[dict], samples: list[dict], trading: int, now: datetime,
+                wave) -> tuple[int, int, str | None]:
+    """(the cap in force, how many clones the grid may start, why it holds -- or None).
+
+    T-0009 (tests/repo/test_grid_capacity.py): with no capacity refusal binding, the documented
+    caps (wave.MAX_TRADING trading, wave.MAX_PAPER in all). A refusal binds its own count --
+    trading against the sampler, "including paused ones" against every clone we own. Younger
+    than CAPACITY_PROBE_AFTER it holds the grid until that count could have moved (one of ours
+    stopped trading since; for the all-cap, a release accepted since -- a pause frees nothing
+    there); older, it lets one clone through as a probe, since a cap can be raised."""
+    owned = _owned(clone_rows)
+    refusal = _capacity_cap(clone_rows)
+    if refusal is None:
+        return wave.MAX_TRADING, max(0, min(wave.MAX_TRADING - trading,
+                                            wave.MAX_PAPER - owned)), None
+    cap = refusal["cap"]
+    occupied = owned if refusal["all"] else trading
+    said = (f"cap reached -- their {refusal['id']}: {refusal['message']} "
+            f"({occupied} of {cap} by our count)")
+    at = _moment(refusal.get("at"))
+    if at is None or now - at >= lab.CAPACITY_PROBE_AFTER:
+        return cap, 1, None
+    moved = (_released_since(clone_rows, at) if refusal["all"]
+             else _stopped_since(clone_rows, samples, at))
+    slots = max(0, cap - occupied) if moved else 0
+    return cap, slots, None if slots else said
 
 
 H2H_DAYS = 7

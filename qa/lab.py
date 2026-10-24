@@ -2982,6 +2982,85 @@ def capacity_refusal(outcome: dict | None) -> bool:
     return bool(_CAPACITY_REFUSAL.search(f"{row.get('response') or ''} {row.get('error') or ''}"))
 
 
+_CAPACITY_SAID = re.compile(r"maximum\s+(\d+)\s+(?:trading\s+)?paper\s+bots[^\"}]*", re.I)
+# A refusal younger than this holds the grid (the sampler can lag their count); an older one lets
+# one clone through, since a cap can be raised (T-0009; tests/repo/test_grid_capacity.py).
+CAPACITY_PROBE_AFTER = timedelta(hours=6)
+
+
+def capacity_cap(clone_rows) -> dict | None:
+    """The platform's cap on our paper bots, as its newest word on it says, or None when a clone
+    of ours was accepted after its newest capacity refusal (crew-before-c9 point 9 a., T-0009).
+
+    {"cap", "id", "at", "all", "message"}: `all` for "Maximum 50 Paper bots per user including
+    paused ones" (every clone we still own counts), not for "Maximum 25 trading Paper bots" (only
+    those trading do). A refusal of the species, not the cap, says nothing about the cap. Newest
+    by time, the record's order breaking ties; a newer refusal naming a LOWER cap is the cap."""
+    kinds = {row.get("id") for row in clone_rows or ()
+             if row.get("type") == "intent" and row.get("kind")}
+    decisive = [(index, row) for index, row in enumerate(clone_rows or ())
+                if row.get("type") == "outcome" and not row.get("kind")
+                and row.get("id") not in kinds
+                and row.get("outcome") in ("accepted", "rejected")]
+    epoch = datetime.min.replace(tzinfo=timezone.utc)
+    decisive.sort(key=lambda pair: (_at(pair[1].get("at")) or epoch, pair[0]))
+    for _, row in reversed(decisive):
+        if row.get("outcome") == "accepted":
+            return None
+        if not capacity_refusal(row):
+            continue
+        text = f"{row.get('response') or ''} {row.get('error') or ''}"
+        said = _CAPACITY_SAID.search(text)
+        if said:
+            return {"cap": int(said.group(1)), "id": row.get("id"), "at": row.get("at"),
+                    "all": bool(re.search(r"including\s+paused", said.group(0), re.I)),
+                    "message": " ".join(said.group(0).split())[:200]}
+    return None
+
+
+# A clone that failed for another reason than the cap -- their 400/409 on the species, or a POST
+# that timed out after it left (`unknown`: it may have landed) -- leaves no room, so the grid's
+# GRID_LAUNCH_TRIES never counted it and the next tick cloned the species again: one more
+# unlinked paper clone every 20 minutes when it had landed (crew-before-c9 point 9).
+CLONE_RETRY_AFTER = timedelta(hours=6)
+
+
+def clone_failures(clone_rows, now: datetime) -> dict[str, str]:
+    """Species (lower case) whose clone failed and is not to be tried yet -> why. Counted since
+    the species' last accepted clone: the newest failure younger than CLONE_RETRY_AFTER holds it,
+    GRID_LAUNCH_TRIES of them hold it until a clone of it is accepted. A capacity refusal is
+    `capacity_cap`'s, and `not_sent` never left our side. Pure."""
+    outcomes = {row.get("id"): row for row in clone_rows or ()
+                if row.get("type") == "outcome" and not row.get("kind")}
+    failed: dict[str, list[tuple[dict, dict | None]]] = {}
+    for row in clone_rows or ():
+        if row.get("type") != "intent" or row.get("kind") or not row.get("source_id"):
+            continue
+        species = str(row["source_id"]).lower()
+        result = outcomes.get(row.get("id"))
+        status = (result or {}).get("outcome")
+        if status == "accepted":
+            failed[species] = []
+        elif status in (None, "unknown") or (status == "rejected"
+                                              and not capacity_refusal(result)):
+            failed.setdefault(species, []).append((row, result))
+    out = {}
+    for species, rows in failed.items():
+        if not rows:
+            continue
+        row, result = rows[-1]
+        what = ("was refused" if (result or {}).get("outcome") == "rejected"
+                else "may have landed (no answer was read)")
+        when = _at((result or {}).get("at") or row.get("at"))
+        if len(rows) >= GRID_LAUNCH_TRIES:
+            out[species] = (f"{len(rows)} clones of it failed since the last accepted one, the "
+                            f"newest {row.get('id')} {what} -- left until a clone of it is accepted")
+        elif when is None or now - when < CLONE_RETRY_AFTER:
+            out[species] = (f"its clone {row.get('id')} {what} -- not cloned again for "
+                            f"{CLONE_RETRY_AFTER.total_seconds() / 3600:g} h")
+    return out
+
+
 def bot_stops(clone_rows, samples) -> list[dict]:
     """Every time a paper bot of ours stopped trading, and why.
 

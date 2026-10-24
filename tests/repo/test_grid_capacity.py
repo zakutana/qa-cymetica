@@ -8,10 +8,8 @@ its held line read "not accepted (HTTP 400, rejected)" instead of saying the cap
 The fixtures are the laboratory loop's own (`tests/meta/test_pipeline_lab_loop.py`): the same
 stubbed clone.py, so nothing reaches their side.
 
-THE FIX IS NOT IN YET: a worker cannot edit scripts/, qa/ or tests/meta, so these tests are the
-spec, written first and marked xfail(strict) so the suite stays green. The session that makes
-the change deletes `pytestmark` below (a strict xfail that passes fails loudly). What they ask
-of `scripts/lab.py`:
+Written first by Bugs as a strict-xfail spec (a worker cannot edit scripts/ or qa/); built on
+2026-10-25 (crew-before-c9 point 9 a.) and the mark deleted. What they ask of `scripts/lab.py`:
 
   * `_capacity_cap(clone_rows) -> {"cap", "id", "at"} | None`: the integer in the NEWEST
     decisive (accepted/rejected) non-`kind` clone outcome whose body `lab.capacity_refusal`
@@ -33,13 +31,8 @@ import importlib.util
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
 
-import pytest
-
 from qa import lab
 from qa.marks import SafetyTier, qa
-
-pytestmark = pytest.mark.xfail(
-    strict=True, reason="T-0009: the grid fix is written by the operator's session, not a worker")
 
 REPO = Path(__file__).resolve().parent.parent.parent
 _SPEC = importlib.util.spec_from_file_location(

@@ -41,14 +41,14 @@ SETTINGS = {"stop_loss_pct": 15.0, "take_profit_pct": 40.0}
 STAKE_USDC = 500.0
 WINDOW_DAYS = 7.0
 STOP_PCT = 10.0
-# The cap on bots trading at once. REPLY-0122 (2026-10-04) said 25 trading and 50 in
-# all; on 2026-10-08 the sampler read 34 of ours trading at once, so 25 is not their
-# limit and held every resume at "no free slot" (deep pass, R01). 50 is the one number of
-# theirs our data does not contradict; past it the platform's own refusal stops a wave.
-# 2026-10-15 (REPLY-0175, verified in llms.txt the same day): a paid NEXUS plan's paper caps are
-# now 100 TRADING and 200 in total including paused ones; at 50 the grid starved at half of it
-# (B09, deep pass 2026-10-15). The total cap is still the platform's refusal to read.
+# The caps on our paper bots, as documented: 2026-10-15 (REPLY-0175, verified in llms.txt the
+# same day) a paid NEXUS plan's are 100 TRADING and 200 in total including paused ones; at 50 the
+# grid starved at half of it (B09, deep pass 2026-10-15). They have moved before (5, then 25 and
+# 50: CLN-0461 "Maximum 25 trading Paper bots", CLN-0465.. "Maximum 50 Paper bots per user
+# including paused ones", 2026-10-12), so what binds is the platform's own newest refusal
+# (`qa.lab.capacity_cap`, read by the grid); these are the numbers when none binds.
 MAX_TRADING = 100
+MAX_PAPER = 200
 BTC_PROXY = "a4a5b71e-de11-4805-b8a3-ed9c3f8f8161"
 
 
@@ -140,6 +140,13 @@ def launch_one(bot: dict, *, clone, rooms, lab, settings: dict, stake: float,
         result["why"] = raised
         return result
     instance = made.get("clone_instance_id")
+    if made.get("outcome") != "accepted" and lab.capacity_refusal(made):
+        # The account's cap, not this bot (T-0009): said as theirs, so the caller stops asking
+        # this tick instead of sending the next clone into the same 400.
+        said = lab.capacity_cap([{"type": "outcome", **made}])
+        result["capacity"] = (said or {}).get("message") or "their cap on paper bots"
+        result["why"] = f"cap reached: {result['capacity']}"
+        return result
     if made.get("outcome") != "accepted" or not instance:
         result["why"] = (f"the paper clone was not accepted (HTTP "
                          f"{made.get('http_status')}, {made.get('outcome')})")
