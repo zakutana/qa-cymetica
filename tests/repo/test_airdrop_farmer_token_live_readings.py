@@ -103,6 +103,16 @@ def test_a_list_that_no_longer_promises_tokenless_farms_is_inconclusive():
 
 
 @qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
+def test_their_reworded_gate_still_holds_them_to_it():
+    # their fix of 2026-10-24 (ET-32684) rewrote the gate's first line; the promise is the same
+    gate = ["Its token has no market yet: no CoinGecko coin of the same project with a price and no DEX pair "
+            "of it trading (re-checked daily)", "No exploit on record"]
+    clean = [f for f in LIVE if _key_of(f) is None]
+    assert _verdict(clean, gate=gate) == "passed"
+    assert _verdict(LIVE, gate=gate) == "failed"
+
+
+@qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
 def test_an_empty_list_is_inconclusive():
     assert _verdict([]) == "inconclusive"
 

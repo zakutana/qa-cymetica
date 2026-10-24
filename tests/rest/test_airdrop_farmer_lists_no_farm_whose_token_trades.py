@@ -80,11 +80,17 @@ def listed(farms: list[dict]) -> list[tuple[dict, dict]]:
     return out
 
 
+def _promises_tokenless(line) -> bool:
+    """'No token live yet' (2026-10-24 morning) or 'Its token has no market yet' (their rewrite, ET-32684)."""
+    text = str(line).lower()
+    return "no token" in text or ("token" in text and "no market" in text)
+
+
 def judge(farms: list[dict], gate: list, markets: dict) -> dict:
     """`markets` is {pin key: 24h volume in USD} for each market read; a key missing means not read."""
     if not farms:
         return {"verdict": "inconclusive", "why": "the farms list was empty", "offenders": [], "unread": []}
-    if not any("no token" in str(line).lower() for line in gate or []):
+    if not any(_promises_tokenless(line) for line in gate or []):
         return {"verdict": "inconclusive", "offenders": [], "unread": [],
                 "why": f"the gate no longer promises tokenless farms: {gate!r}"}
     found = listed(farms)
