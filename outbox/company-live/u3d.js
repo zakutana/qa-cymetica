@@ -1468,25 +1468,26 @@ const FARM = { shell: 0xe0a92e, bezel: 0x2a1a08, bolt: 0x7a4a14, band: 0x4a2c12,
 function strawTex() {
   if (TX.straw) return TX.straw;
   const W = 256, c = document.createElement('canvas'); c.width = c.height = W; const g = c.getContext('2d');
-  g.fillStyle = '#e9b84a'; g.fillRect(0, 0, W, W);
+  g.fillStyle = '#c4923c'; g.fillRect(0, 0, W, W);
   // a weave: squares light and dark in turn, a darker line between the rows
   for (let x = 0; x < W; x += 16) for (let y = 0; y < W; y += 16) { g.fillStyle = (x / 16 + y / 16) % 2 ? 'rgba(255,232,160,.35)' : 'rgba(150,95,25,.28)'; g.fillRect(x + 1, y + 2, 14, 13); }
   g.fillStyle = 'rgba(110,64,16,.45)'; for (let y = 0; y < W; y += 16) g.fillRect(0, y, W, 2);
   const t = new THREE.CanvasTexture(c); t.colorSpace = THREE.SRGBColorSpace; t.wrapS = t.wrapT = THREE.RepeatWrapping; t.repeat.set(6, 2); t.anisotropy = 8; TX.straw = t; return t;
 }
 // The farmer's head is woven willow, a harvest basket (the operator, 2026-10-24: no metal of any kind, "zvol lepsi vice
-// farmarsky material, treba slameny klobouk je top"), stained a chestnut brown so the light straw hat stands off it
-// (golden willow under golden straw: "moc zlute je cele"). A basket weave: pairs of round willow strands laid across, then
+// farmarsky material, treba slameny klobouk je top"), of fresh green willow under a darker straw hat (golden willow
+// under golden straw was "moc zlute je cele"; never brown, which a round head with eyes is read as skin in, as on
+// 2026-10-23: "vypada jak cernoch"). A basket weave: pairs of round willow strands laid across, then
 // pairs laid down, in turn, over the dark gaps; each strand shaded across its width so it reads round. bump: the same
 // strands as height, light in the middle, dark in the gaps.
 function weave(g, W, H, bump) {
-  g.fillStyle = bump ? '#000' : '#140a04'; g.fillRect(0, 0, W, H);
+  g.fillStyle = bump ? '#000' : '#0e1408'; g.fillRect(0, 0, W, H);
   let sd = 7; const R = () => (sd = (sd * 16807) % 2147483647) / 2147483647;
   const C = 32, strand = (x, y, w, h, across) => {
     const gr = across ? g.createLinearGradient(0, y, 0, y + h) : g.createLinearGradient(x, 0, x + w, 0), k = 0.86 + R() * 0.22;
     const tone = (r, gg, b2) => 'rgb(' + Math.min(255, r * k | 0) + ',' + Math.min(255, gg * k | 0) + ',' + Math.min(255, b2 * k | 0) + ')';
     if (bump) { gr.addColorStop(0, '#222'); gr.addColorStop(0.5, '#fff'); gr.addColorStop(1, '#222'); }
-    else { gr.addColorStop(0, tone(50, 28, 13)); gr.addColorStop(0.45, tone(140, 88, 50)); gr.addColorStop(0.6, tone(162, 108, 64)); gr.addColorStop(1, tone(46, 25, 12)); }
+    else { gr.addColorStop(0, tone(40, 74, 32)); gr.addColorStop(0.45, tone(112, 170, 88)); gr.addColorStop(0.6, tone(140, 198, 110)); gr.addColorStop(1, tone(36, 66, 28)); }
     g.fillStyle = gr; g.beginPath(); g.roundRect(x, y, w, h, Math.min(w, h) / 2); g.fill();
   };
   for (let i = 0; i < W / C; i++) for (let j = 0; j < H / C; j++) {
@@ -1535,7 +1536,7 @@ function adFarmer(body, b) {
   // bump); round the face a braid of hemp rope where a metal head had a seam; a peg of walnut on either side where ears
   // would be, a warm light in each; the logo's dotted ring as eighteen small lights shining out of the weave, each in a
   // collar of wood; nothing of metal anywhere ("ja nechci at je to kovove", 2026-10-24).
-  const wicker = new THREE.MeshStandardMaterial({ map: wickerTex(false), bumpMap: wickerTex(true), bumpScale: 2.4, roughness: 0.82, metalness: 0, emissive: 0x1c0d05, emissiveIntensity: 0.22 });
+  const wicker = new THREE.MeshStandardMaterial({ map: wickerTex(false), bumpMap: wickerTex(true), bumpScale: 2.4, roughness: 0.82, metalness: 0, emissive: 0x0c1406, emissiveIntensity: 0.22 });
   const rope = new THREE.MeshStandardMaterial({ map: ropeTex(), bumpMap: ropeTex(), bumpScale: 1.4, roughness: 0.9, metalness: 0 });
   const wood = new THREE.MeshStandardMaterial({ map: woodTex(), roughness: 0.7, metalness: 0, emissive: 0x140902, emissiveIntensity: 0.3 });
   part(new THREE.SphereGeometry(R, 64, 40), wicker, 0, 0, 0, head);
