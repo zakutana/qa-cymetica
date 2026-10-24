@@ -95,7 +95,9 @@
   .st b { display: block; margin-top: 8px; font: 400 29px/1.05 'Archivo Black', sans-serif; color: #f4fbff; }
   .st span { display: block; margin-top: 10px; font: 600 21px/1.25 'JetBrains Mono'; color: #b9cdd9; }
   /* the arrow in a column of its own, clear of both words either side */
-  .ar { padding-top: 50px; text-align: center; font: 800 28px/1 'JetBrains Mono'; color: var(--cyan); text-shadow: 0 0 12px rgba(0, 207, 255, .7); }
+  /* (the step before an arrow is narrower than its column, so the arrow is drawn 18 px left of its column's middle to sit
+     in the middle of the gap the eye sees: "ty cipecky bych dal jeste vic vlevo at jsou uprostred mezi tema kroky") */
+  .ar { padding-top: 50px; text-align: center; font: 800 28px/1 'JetBrains Mono'; color: var(--cyan); text-shadow: 0 0 12px rgba(0, 207, 255, .7); transform: translateX(-18px); }
 
   /* the one link, to the guide (the operator, 2026-10-23: "tlacitko stake your claim smaz ... misto nej dej link na guide
      co udelame ... staci jen jeden link a nejak pekne"). The guide page does not exist yet: cymetica.com/quest is a
