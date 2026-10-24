@@ -353,7 +353,10 @@ CEILINGS = {
     # manager's review and the patrol -- and no flag from a company that never ran.
     # 839 -> 840 on 2026-10-21: one merged guard for three repaired checks
     # (test_pipeline_repaired_checks.py), five written and cut to one.
-    "meta_tests": 840,
+    # 840 -> 841 on 2026-10-25: a FAIL verification says which reading failed
+    # (test_pipeline_verify.py), a new outbound sentence; the four check repairs of the
+    # same day went into existing tests as readings.
+    "meta_tests": 841,
 }
 
 BASH_SCRIPT = re.compile(r"python\s+scripts[/\\]([a-z_]+)\.py")

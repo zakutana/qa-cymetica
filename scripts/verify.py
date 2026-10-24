@@ -204,8 +204,59 @@ def owed(ledger: dict, only: list[str] | None) -> list[dict]:
                     str(e) for result in (run.get("results") or [])
                     if result.get("nodeid") in set(row.get("checks") or [])
                     for e in (result.get("evidence_ids") or [])}),
+                "failing_readings": (failing_readings(run, row.get("checks") or [])
+                                     if verdict == "fail" else []),
             })
     return work
+
+
+def failing_readings(run: dict, checks: list[str]) -> list[dict]:
+    """What the run read where this row's checks failed: per failing check, its nodeid, what it
+    expected (`right`), what it read (`left`) and the reason it gave.
+
+    Week finding of 2026-10-18: a FAIL went out as "the check ... still fails" and no more, so
+    the vendor could neither act on it nor correct us -- the #93 FAIL of 2026-10-21 rested on a
+    route its own documentation calls session-only, and the text never named the route.
+    """
+    wanted, out = set(checks), []
+    for result in run.get("results") or []:
+        if (result.get("nodeid") not in wanted or result.get("outcome") != "failed"
+                or result.get("role", "verdict") != "verdict"):
+            continue
+        measured = result.get("measurement") or {}
+        out.append({"check": result["nodeid"],
+                    "expected": measured.get("right"), "read": measured.get("left"),
+                    "reason": measured.get("reason") or result.get("failure_repr") or ""})
+    return out
+
+
+# Their `evidence` field holds 8000 characters (422 on #130, 2026-09-28).
+EVIDENCE_LIMIT = 8000
+READINGS_SHOWN = 3
+
+
+def _what_failed(item: dict, reason_cap: int) -> str:
+    """The paragraph naming the failing reading(s), with each reason cut to `reason_cap`."""
+    readings = item.get("failing_readings") or []
+    if not readings:
+        return ("WHAT FAILED: the run recorded no reading for this check beyond its failure; "
+                "the request and response are provided on request.")
+
+    def shown(value) -> str:
+        return json.dumps(value, default=str, ensure_ascii=False)[:240]
+
+    parts = []
+    for reading in readings[:READINGS_SHOWN]:
+        reason = str(reading.get("reason") or "").strip()
+        if len(reason) > reason_cap:
+            reason = reason[:reason_cap].rstrip() + " [...]"
+        parts.append(f"  {reading.get('check')}\n"
+                     f"  expected: {shown(reading.get('expected'))}; "
+                     f"read: {shown(reading.get('read'))}\n"
+                     f"  {reason}")
+    more = len(readings) - READINGS_SHOWN
+    return ("WHAT FAILED:\n" + "\n\n".join(parts)
+            + (f"\n  ... and {more} more failing check(s)" if more > 0 else ""))
 
 
 def identity_kind(run: dict, checks: list[str]) -> str | None:
@@ -495,15 +546,25 @@ def body(item: dict) -> dict:
         "changes when that definition changes and not when comments or "
         "formatting do."
     ))
-    evidence = (
-        f"Independent re-check by the QA agent for hunter expire76.\n\n"
-        f"{headline}\n\n"
-        f"WHAT THE FINGERPRINT IS: {what_it_is} {why_fingerprint}\n\n"
-        f"{_run_line(item)}\n\n"
-        f"CHECK(S) THIS COVERS:\n{checks}\n\n"
-        f"{_evidence_offer(item)}\n\n"
-        f"FINDING {item['finding_id']}: {item['title']}"
-    )
+    def compose(failed: str) -> str:
+        return (
+            f"Independent re-check by the QA agent for hunter expire76.\n\n"
+            f"{headline}\n\n"
+            + (f"{failed}\n\n" if failed else "")
+            + f"WHAT THE FINGERPRINT IS: {what_it_is} {why_fingerprint}\n\n"
+            f"{_run_line(item)}\n\n"
+            f"CHECK(S) THIS COVERS:\n{checks}\n\n"
+            f"{_evidence_offer(item)}\n\n"
+            f"FINDING {item['finding_id']}: {item['title']}"
+        )
+
+    # A fail says what failed (week finding of 2026-10-18), cut until it fits their field.
+    evidence = compose("")
+    if verdict != "pass":
+        for cap in (1500, 700, 300, 100, 0):
+            evidence = compose(_what_failed(item, cap))
+            if len(evidence) <= EVIDENCE_LIMIT:
+                break
     return {
         "verdict": verdict,
         "test_run_id": item["run_id"],

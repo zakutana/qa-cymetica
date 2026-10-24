@@ -201,6 +201,57 @@ def test_a_check_with_hundreds_of_captures_still_fits_their_evidence_field():
 
 
 @qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
+def test_a_fail_says_which_reading_failed(monkeypatch):
+    """Week finding of 2026-10-18: a FAIL went to the vendor as "the check that recorded this
+    defect still fails" and nothing else -- not which check, not what it expected, not what it
+    read. They cannot act on that, and we cannot be corrected on it: the #93 FAIL of 2026-10-21
+    rested on a route whose own llms.txt line said "(session JWT)", and the text they got never
+    named the route. So a fail carries, per failing check of the adjudicating run, its nodeid,
+    what it expected, what it read, and the reason it gave -- inside their 8000-character field."""
+    verify = _verify()
+    node = "tests/rest/test_documented_gets_accept_the_agent_key.py::test_every_documented_get"
+    run = {"run_id": "run-f", "git_head": "abc1234", "prereg_id": "PRE-0288", "results": [
+        {"nodeid": node, "role": "verdict", "outcome": "failed", "measurement": {
+            "reason": "1 of 71 GET paths llms.txt documents answer 401: /api/v1/cloned-bots/backtest/quote",
+            "left": ["/api/v1/cloned-bots/backtest/quote"], "right": []}},
+        {"nodeid": "tests/rest/test_other.py::test_z", "role": "verdict", "outcome": "failed",
+         "measurement": {"reason": "another row's failure", "left": 1, "right": 0}}]}
+    ledger = {"schema": 2, "findings": {"CYM-a": {
+        "id": "CYM-a", "title": "t", "checks": [node],
+        "provenance": {"run_id": "run-f", "measured_at": "2026-10-21T09:00:00+00:00"},
+        "check": {"state": "REPRODUCING", "pinned_fingerprint": "fp-1",
+                  "adjudicated_by": {"run_id": "run-f", "at": "2026-10-21T09:00:00+00:00"}},
+        "filing": {"state": "FIX_CLAIMED", "reports": [{"report_id": 93, "status": "paid"}],
+                   "refused": [], "verifications": []},
+        "obligations": {"correction_owed": [93]}}}}
+
+    class Level:
+        level, reasons = "V", []
+
+    monkeypatch.setattr(verify, "load_run", lambda rid: run)
+    monkeypatch.setattr(verify, "admissibility", lambda r: Level())
+    monkeypatch.setattr(verify, "read_events", lambda: [])
+    [item] = verify.owed(ledger, None)
+    sent = verify.body(item)["evidence"]
+    assert "WHAT FAILED" in sent, sent
+    assert node in sent.split("WHAT FAILED")[1], "the failing check is named in what failed"
+    assert "/api/v1/cloned-bots/backtest/quote" in sent.split("WHAT FAILED")[1], "what was read"
+    assert "expected" in sent.split("WHAT FAILED")[1].lower(), "what was expected"
+    assert "another row's failure" not in sent, "only this row's checks are its readings"
+
+    # A fail whose run recorded no reading says so; it does not go out as a bare FAIL.
+    bare = verify.body(_item(verdict="fail", identity="ast"))["evidence"]
+    assert "WHAT FAILED" in bare and "no reading" in bare, bare
+    # A pass has nothing to say here.
+    assert "WHAT FAILED" not in verify.body(_item(helpers_same=True))["evidence"]
+    # And a long reading still fits their field, naming the check.
+    huge = dict(item, failing_readings=[dict(item["failing_readings"][0], reason="x" * 20000)] * 3,
+                evidence_ids=[f"{i:064x}" for i in range(250)])
+    fits = verify.body(huge)["evidence"]
+    assert len(fits) <= 8000 and node in fits, len(fits)
+
+
+@qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
 def test_the_evidence_does_not_describe_a_syntax_tree_hash_it_did_not_send():
     """The sentence explaining the fingerprint was true of only some of them.
 
