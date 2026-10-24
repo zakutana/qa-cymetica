@@ -19,8 +19,13 @@ over all 641 cards were among the cards the page reads.
 the whole default listing is among the cards the page's script reads. Any fix is accepted, but
 only a literal request is read from the text: a script that pages through the listing, or calls
 a dedicated endpoint instead, is Inconclusive until the check is re-pointed at what the page
-really reads -- never passed on the text (C05, 2026-10-18). Since ET-30860 the page calls
-`/api/v1/event-cards/movers?limit=10`, which this check does not read yet.
+really reads -- never passed on the text (C05, 2026-10-18). Since ET-30860 (#189) the page calls
+`/api/v1/event-cards/movers?limit=10` and draws its boards from that answer's `gainers`, `losers`
+and `most_active` (its script concatenates the three), so those are the cards it reads (re-pointed
+2026-10-25: until then the check looked for `cards`/`items` only and read "no card list"). The
+boards then hold ten cards each, and the listing is paged for seconds after /movers was read, so a
+card at the edge can rotate in between: /movers is read once more and a true top-ten card counts
+as missed only when neither read holds it.
 
 NOT asserted: the "Event cards leading the deck" board (it falls back to the size of the move
 when no card has activity, by its own sort), the token rows, or whether "since listing" is
@@ -128,14 +133,38 @@ def outside_the_page(page_cards, all_cards) -> dict[str, list[dict]]:
     return {name: [r for r in rows if r["id"] not in have] for name, rows in boards(all_cards).items()}
 
 
+MOVERS_BOARDS = ("gainers", "losers", "most_active")
+
+
 def _cards(body) -> list[dict] | None:
+    """The cards in an answer: a list, a `cards`/`items` page of the listing, or the
+    /event-cards/movers answer, whose three boards the page's script concatenates."""
     if isinstance(body, list):
         return [c for c in body if isinstance(c, dict)]
     if isinstance(body, dict):
         for key in ("cards", "items"):
             if isinstance(body.get(key), list):
                 return [c for c in body[key] if isinstance(c, dict)]
+        if any(isinstance(body.get(key), list) for key in MOVERS_BOARDS):
+            return [c for key in MOVERS_BOARDS for c in (body.get(key) or [])
+                    if isinstance(c, dict)]
     return None
+
+
+def _read_page_cards(client, urls) -> tuple[dict, list]:
+    """The cards the page's requests answer, by id, and the totals they state."""
+    page_cards, totals = {}, []
+    for url in urls:
+        parts = urlsplit(url)
+        r = _get(client, parts.path, **dict(parse_qsl(parts.query)))
+        cards = _cards(r.json()) if r.status_code == 200 else None
+        if cards is None:
+            raise Inconclusive(f"{url}, which the page reads, answered HTTP {r.status_code} without a card list")
+        page_cards.update({c.get("id"): c for c in cards if c.get("id")})
+        body = r.json()
+        if isinstance(body, dict) and isinstance(body.get("total"), int):
+            totals.append(body["total"])
+    return page_cards, totals
 
 
 def _get(client, path, **params):
@@ -157,20 +186,12 @@ def test_the_movers_boards_rank_every_card_of_the_listing(rest_anon):
     if why:
         raise Inconclusive(why)
 
-    page_cards, totals = {}, []
-    for url in urls:
-        parts = urlsplit(url)
-        r = _get(rest_anon, parts.path, **dict(parse_qsl(parts.query)))
-        cards = _cards(r.json()) if r.status_code == 200 else None
-        if cards is None:
-            raise Inconclusive(f"{url}, which the page reads, answered HTTP {r.status_code} without a card list")
-        page_cards.update({c.get("id"): c for c in cards if c.get("id")})
-        body = r.json()
-        if isinstance(body, dict) and isinstance(body.get("total"), int):
-            totals.append(body["total"])
+    page_cards, totals = _read_page_cards(rest_anon, urls)
     total = max(totals) if totals else None
 
-    base = dict(parse_qsl(urlsplit(urls[0]).query))
+    # The listing's own filters, if the page reads the listing; /movers carries none.
+    on_listing = [u for u in urls if urlsplit(u).path.rstrip("/") == LISTING.rstrip("/")]
+    base = dict(parse_qsl(urlsplit(on_listing[0]).query)) if on_listing else {}
     every, offset = {}, 0
     for _ in range(MAX_PAGES):
         r = _get(rest_anon, LISTING, **dict(base, limit=PAGE_SIZE, offset=offset))
@@ -192,6 +213,14 @@ def test_the_movers_boards_rank_every_card_of_the_listing(rest_anon):
     big = _get(rest_anon, LISTING, limit=500)
 
     missed = outside_the_page(list(page_cards.values()), list(every.values()))
+    reread = None
+    if any(missed.values()):
+        # The boards are ten long and the listing was paged after /movers answered: read what
+        # the page reads once more, and a card is missed only when neither read held it.
+        again, _ = _read_page_cards(rest_anon, urls)
+        reread = sorted(set(again) - set(page_cards))
+        page_cards = {**again, **page_cards}
+        missed = outside_the_page(list(page_cards.values()), list(every.values()))
     on_page = boards(list(page_cards.values()))
     truth = boards(list(every.values()))
     n_missed = sum(len(v) for v in missed.values())
@@ -216,7 +245,8 @@ def test_the_movers_boards_rank_every_card_of_the_listing(rest_anon):
                     "missed": {k: [fmt(r) for r in v] for k, v in missed.items()},
                     "page_boards": {k: [fmt(r) for r in v] for k, v in on_page.items()},
                     "true_boards": {k: [fmt(r) for r in v] for k, v in truth.items()},
-                    "limit_500_status": big.status_code},
+                    "limit_500_status": big.status_code,
+                    "second_read_added": reread},
         sources={"page": PAGE, "listing": LISTING,
                  "contract": "/movers: 'event cards, index funds and platform tokens ranked by move and by "
                              "activity'; llms.txt: 'Biggest gainers, losers and most active across "

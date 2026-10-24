@@ -1127,6 +1127,59 @@ def _the_movers_page_readings():
     assert outside_the_page(first, every + [card(902, 0), {"id": "c903", "index_base": 0, "current_index": 5}])[
         "losers"] == missed["losers"], "a card with no index or no base has no move and is not ranked"
 
+    # 2026-10-25, re-pointed: since ET-30860 (#189) the page reads `/api/v1/event-cards/movers?limit=10`
+    # and draws its boards from that answer's gainers + losers + most_active. The check said "HTTP 200
+    # without a card list" from 2026-10-15 on, because it looked for `cards`/`items` only.
+    check = _load("tests/rest/test_movers_page_ranks_every_card.py", "movers_check_under_test")
+    check.PAUSE_S = 0
+    board = ("var el = document.getElementById('pm-gainers'); function load() { var cards = "
+             "fetch('/api/v1/event-cards/movers?limit=10', { credentials: 'same-origin' }); }")
+    listing = [card(i, 100 + (i - 12) * 3.0) for i in range(25)]
+    ranked = sorted(listing, key=lambda c: float(c["current_index"]))
+
+    class _Page(_Response):
+        def __init__(self, status, text):
+            super().__init__(status, None)
+            self.text = text
+
+    class _Site:
+        def __init__(self, *movers):
+            self.movers = list(movers)
+
+        def get(self, path, params=None, headers=None):
+            params = params or {}
+            if path == check.PAGE:
+                return _Page(200, f"<html><script>{board}</script></html>")
+            if path == "/api/v1/event-cards/movers":
+                return _Response(200, self.movers.pop(0) if len(self.movers) > 1 else self.movers[0])
+            if path == check.LISTING and str(params.get("limit")) == "500":
+                return _Response(422, {"detail": "limit"})
+            if path == check.LISTING:
+                start = int(params.get("offset") or 0)
+                return _Response(200, {"cards": listing[start:start + int(params["limit"])], "total": 25})
+            return _Response(404, {})
+
+    def movers(gainers, losers):
+        return {"total": 25, "ranked": 25, "gainers": gainers, "losers": losers, "most_active": []}
+
+    def passes(site):
+        # An Inconclusive here would SKIP the whole host test and every reading after it.
+        try:
+            check.test_the_movers_boards_rank_every_card_of_the_listing(site)
+        except Inconclusive as exc:
+            raise AssertionError(f"inconclusive where a verdict was due: {exc}") from exc
+
+    whole = movers(ranked[::-1][:10], ranked[:10])
+    passes(_Site(whole))  # the true top tens: passes
+    short = movers(ranked[::-1][1:11], ranked[:10])  # the biggest gainer left off the board
+    with pytest.raises(AssertionError, match="gainers"):
+        check.test_the_movers_boards_rank_every_card_of_the_listing(_Site(short, short))
+    # A card at the edge of a board that rotated between the two reads of /movers is not a miss.
+    edge = movers(ranked[::-1][:9] + [ranked[::-1][10]], ranked[:10])  # the 11th where the 10th is
+    with pytest.raises(AssertionError, match="gainers"):
+        check.test_the_movers_boards_rank_every_card_of_the_listing(_Site(edge, edge))
+    passes(_Site(edge, whole))
+
 
 def _the_clone_summary_readings():
     """The readings behind the clone summary check (2026-10-11): nine perpetual markets printed as
