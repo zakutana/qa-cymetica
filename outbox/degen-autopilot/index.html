@@ -1,0 +1,855 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Degen Autopilot</title>
+<meta name="description" content="Product brainstorm for Cymetica: ideas built like Airdrop Farmer, ten worked out, three to build first.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Archivo+Black&family=Inter:wght@500;700&family=JetBrains+Mono:wght@400;500;700;800&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#0a0e17;--deep:#06090f;--panel:#0d1520;--panel2:#101b2a;--line:#1e3050;--line2:#2a4268;
+  --text:#e6edf7;--muted:#a9b8cc;--dim:#7f93ad;
+  --cyan:#00cfff;--green:#00ff88;--red:#ff4444;--blue:#3b82f6;
+  --head:'Archivo Black',Inter,system-ui,sans-serif;--mono:'JetBrains Mono',ui-monospace,Consolas,monospace;--ui:Inter,system-ui,sans-serif;
+  --s:1;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html{scroll-snap-type:y mandatory;background:var(--deep)}
+body{background:var(--deep);color:var(--text);font-family:var(--mono);-webkit-font-smoothing:antialiased}
+a{color:inherit}
+.slide{position:relative;width:100vw;height:100vh;overflow:hidden;scroll-snap-align:start;background:var(--deep)}
+.stage{position:absolute;left:50%;top:50%;width:1920px;height:1080px;overflow:hidden;background:var(--bg);
+  transform:translate(-50%,-50%) scale(var(--s));transform-origin:center center}
+.stage::before{content:'';position:absolute;inset:0;pointer-events:none;
+  background:radial-gradient(900px 620px at 88% 6%,rgba(0,255,136,.075),transparent 62%),
+             radial-gradient(820px 620px at 4% 100%,rgba(0,207,255,.065),transparent 62%)}
+.stage::after{content:'';position:absolute;inset:0;pointer-events:none;opacity:.7;
+  background-image:repeating-linear-gradient(26.565deg,rgba(0,207,255,.05) 0 1px,transparent 1px 54px),
+                   repeating-linear-gradient(-26.565deg,rgba(0,207,255,.05) 0 1px,transparent 1px 54px);
+  -webkit-mask-image:radial-gradient(1300px 640px at 72% -4%,#000,transparent 72%);
+          mask-image:radial-gradient(1300px 640px at 72% -4%,#000,transparent 72%)}
+.stage>*{position:absolute;z-index:1}
+body.narrow{}
+body.narrow html{scroll-snap-type:none}
+
+/* chrome */
+.chrome{left:80px;right:80px;top:42px;display:flex;justify-content:space-between;align-items:center;
+  font:500 15px var(--mono);letter-spacing:.22em;color:var(--dim)}
+.chrome b{font:400 17px var(--head);letter-spacing:.1em;color:var(--text)}
+.chrome .pg{color:var(--muted)}
+.src{left:80px;right:80px;bottom:34px;font:400 15px/1.45 var(--mono);color:var(--dim)}
+.src a{color:var(--muted);text-decoration:none;border-bottom:1px dotted var(--line2)}
+.kick{font:800 19px var(--mono);letter-spacing:.24em;color:var(--cyan);text-transform:uppercase}
+.g{color:var(--green)}.c{color:var(--cyan)}.r{color:var(--red)}
+.glow{text-shadow:0 0 28px rgba(0,255,136,.45)}
+
+/* chips, toggles, flames */
+.chip{display:inline-flex;align-items:center;gap:6px;font:700 14px/1 var(--mono);letter-spacing:.14em;color:var(--cyan);
+  border:1px solid rgba(0,207,255,.45);background:rgba(0,207,255,.06);border-radius:7px;padding:8px 11px;white-space:nowrap;text-transform:uppercase}
+.chip.g{color:var(--green);border-color:rgba(0,255,136,.5);background:rgba(0,255,136,.07)}
+.chip.r{color:var(--red);border-color:rgba(255,68,68,.55);background:rgba(255,68,68,.08);cursor:help}
+.chip.b{color:var(--blue);border-color:rgba(59,130,246,.6);background:rgba(59,130,246,.10)}
+.chip.m{color:var(--muted);border-color:var(--line2);background:transparent}
+.chip.d{border-style:dashed}
+.chip.lg{font-size:16px;padding:10px 14px}
+.tog{position:relative;width:66px;height:36px;border-radius:18px;background:#14223a;border:1px solid #22385a;flex:none}
+.tog::after{content:'';position:absolute;top:4px;left:5px;width:26px;height:26px;border-radius:50%;background:#7f93ad}
+.tog.on{background:linear-gradient(90deg,#08617d,#00b4e0);border-color:var(--cyan);box-shadow:0 0 18px rgba(0,207,255,.55)}
+.tog.on::after{left:33px;background:radial-gradient(circle,#fff 0 28%,#8beeff 58%,var(--cyan) 100%);box-shadow:0 0 12px var(--cyan)}
+.fl{width:30px;height:30px;color:var(--muted);flex:none}
+
+/* AF-style rows */
+.mock{left:80px;right:80px;top:360px;height:440px;border:1px solid var(--line);border-radius:20px;
+  background:linear-gradient(180deg,rgba(13,21,32,.94),rgba(9,13,21,.94))}
+.mtag{position:absolute;right:26px;top:-15px;font:700 12px var(--mono);letter-spacing:.2em;color:var(--dim);
+  border:1px solid var(--line);border-radius:6px;padding:6px 9px;background:var(--bg);z-index:2}
+.mtag.live{color:var(--green);border-color:rgba(0,255,136,.35)}
+.hdr{display:grid;align-items:center;column-gap:24px;height:46px;padding:0 32px;font:700 12px var(--mono);letter-spacing:.2em;color:var(--dim);
+  border-bottom:1px solid rgba(30,48,80,.7)}
+.row{display:grid;align-items:center;column-gap:24px;height:90px;padding:0 32px;border-bottom:1px solid rgba(30,48,80,.55)}
+.row:last-child{border-bottom:0}
+.row.dim{opacity:.5}
+.heat{display:flex;align-items:center;gap:10px;font:400 30px var(--head);color:var(--muted)}
+.logo{width:62px;height:62px;border-radius:16px;display:grid;place-items:center;font:400 21px var(--head);color:#06090f;
+  background:linear-gradient(135deg,var(--green),var(--cyan))}
+.logo.k{background:#0d1520;color:var(--cyan);border:2px solid rgba(0,207,255,.55)}
+.logo.kg{background:#0d1520;color:var(--green);border:2px solid rgba(0,255,136,.5)}
+.row.on .logo{box-shadow:0 0 0 2px var(--green),0 0 20px rgba(0,255,136,.32)}
+.nm b{display:block;font:400 27px/1.1 var(--head);color:var(--text);white-space:nowrap}
+.nm .chips{display:flex;gap:8px;margin-top:8px}
+.nm .chips .chip{font-size:12px;padding:6px 9px}
+.big{font:400 36px/1 var(--head)}
+.big.g{text-shadow:0 0 18px rgba(0,255,136,.4)}
+.lab{display:block;font:500 13px var(--mono);color:var(--dim);margin-top:6px;letter-spacing:.04em}
+.free{font:400 40px/1 var(--head);color:var(--green);text-shadow:0 0 18px rgba(0,255,136,.45)}
+.plant{display:flex;align-items:center;gap:16px;font:700 18px var(--mono);color:var(--text)}
+.trk{position:relative;width:170px;height:8px;border-radius:4px;background:#14223a}
+.trk i{position:absolute;left:0;top:0;bottom:0;border-radius:4px;background:linear-gradient(90deg,var(--cyan),var(--green));box-shadow:0 0 10px rgba(0,255,136,.4)}
+.trk b{position:absolute;top:50%;width:22px;height:22px;border-radius:50%;background:var(--bg);border:3px solid var(--green);transform:translate(-50%,-50%);box-shadow:0 0 10px rgba(0,255,136,.5)}
+
+/* idea slide frame */
+.ihead{left:80px;right:80px;top:100px;display:flex;justify-content:space-between;align-items:center}
+.ihead .entry{display:flex;gap:10px}
+.ititle{left:80px;top:140px}
+.ititle h2{font:400 100px/1 var(--head);letter-spacing:.005em;white-space:nowrap}
+.scores{right:80px;top:146px;display:flex;gap:14px}
+.score{width:142px;height:108px;border:1px solid var(--line);border-radius:16px;background:rgba(13,21,32,.85);
+  display:flex;flex-direction:column;align-items:center;justify-content:center}
+.score b{font:400 54px/1 var(--head);color:var(--text)}
+.score b.top{color:var(--green);text-shadow:0 0 16px rgba(0,255,136,.4)}
+.score span{font:800 12px var(--mono);letter-spacing:.22em;color:var(--dim);margin-top:8px}
+.tagline{left:80px;width:1260px;top:262px;font:500 28px/1.38 var(--mono);color:var(--text)}
+.three{left:80px;right:80px;top:832px;display:grid;grid-template-columns:1fr 1.3fr 1.3fr;gap:36px}
+.three span{font:800 14px var(--mono);letter-spacing:.24em;color:var(--cyan)}
+.three p{font:500 22px/1.42 var(--mono);color:var(--text);margin-top:10px}
+
+/* title */
+.t-kick{left:80px;top:236px}
+.mega{left:74px;top:282px;font:400 128px/1.02 var(--head);letter-spacing:.005em}
+.lead{left:80px;top:570px;width:1120px;font:500 30px/1.4 var(--mono);color:var(--muted)}
+.nums{left:80px;top:724px;display:flex;gap:70px}
+.nums div{display:flex;flex-direction:column}
+.nums b{font:400 112px/1 var(--head)}
+.nums span{font:700 20px var(--mono);letter-spacing:.2em;color:var(--dim);text-transform:uppercase;margin-top:10px}
+.bigtog{position:relative;width:380px;height:200px;border-radius:100px;background:linear-gradient(90deg,#08617d,#00b4e0);
+  border:2px solid var(--cyan);box-shadow:0 0 70px rgba(0,207,255,.5),inset 0 0 30px rgba(0,0,0,.35)}
+.bigtog::after{content:'';position:absolute;top:18px;right:20px;width:160px;height:160px;border-radius:50%;
+  background:radial-gradient(circle,#fff 0 26%,#8beeff 56%,var(--cyan) 100%);box-shadow:0 0 50px var(--cyan)}
+.t-tog{left:1420px;top:700px;display:flex;flex-direction:column;align-items:center;gap:26px}
+.t-tog span{font:800 22px var(--mono);letter-spacing:.3em;color:var(--cyan)}
+.tickets{left:1380px;top:250px;display:grid;grid-template-columns:repeat(5,66px);gap:20px 22px}
+.tickets .tog{transform:scale(1.0)}
+.tickets-cap{left:1380px;top:390px;font:700 16px var(--mono);letter-spacing:.2em;color:var(--dim)}
+
+/* formula slide */
+.stats{left:80px;right:80px;top:158px;display:grid;grid-template-columns:repeat(4,1fr);gap:22px}
+.stat{height:200px;border:1px solid var(--line);border-radius:20px;background:rgba(13,21,32,.85);padding:26px 30px;display:flex;flex-direction:column;justify-content:space-between}
+.stat b{font:400 104px/1 var(--head)}
+.stat span{font:700 18px var(--mono);letter-spacing:.16em;color:var(--muted);text-transform:uppercase}
+.stat.hot{border-color:rgba(0,255,136,.55);box-shadow:0 0 40px rgba(0,255,136,.14)}
+.hit{left:80px;right:80px;top:398px}
+.hit .kick{font-size:15px;color:var(--green);margin-bottom:12px}
+.hit .panel{border:1px solid rgba(0,255,136,.4);border-radius:18px;background:rgba(13,21,32,.92);box-shadow:0 0 40px rgba(0,255,136,.1)}
+.formula{left:80px;right:80px;top:610px;display:flex;align-items:flex-start;gap:34px}
+.formula .f b{display:block;font:400 54px/1 var(--head);white-space:nowrap}
+.formula .f span{display:block;font:500 21px var(--mono);color:var(--muted);margin-top:12px}
+.formula .x{font:400 54px/1 var(--head);color:var(--dim)}
+.f-cap{left:80px;top:742px;font:500 22px var(--mono);color:var(--dim)}
+.rules{left:80px;right:80px;top:850px}
+.rules .kick{font-size:14px;color:var(--dim);margin-bottom:14px}
+.rules .row2{display:flex;gap:12px;flex-wrap:wrap}
+
+/* picks */
+.picks{left:80px;right:80px;top:182px;display:grid;grid-template-columns:repeat(3,1fr);gap:34px}
+.pick{height:770px;border:1px solid var(--line);border-radius:24px;background:linear-gradient(180deg,rgba(16,27,42,.95),rgba(10,14,23,.95));
+  padding:38px 38px 34px;display:flex;flex-direction:column}
+.pick:first-child{border-color:rgba(0,255,136,.55);box-shadow:0 0 50px rgba(0,255,136,.13)}
+.pick .rank{font:400 104px/1 var(--head);color:var(--green);text-shadow:0 0 24px rgba(0,255,136,.35)}
+.pick h3{font:400 46px/1.05 var(--head);margin-top:26px}
+.pick p{font:500 23px/1.45 var(--mono);color:var(--text);margin-top:22px}
+.pick .pc{display:flex;flex-wrap:wrap;gap:8px;margin-top:22px}
+.pick .fs{margin-top:30px;font:500 20px/1.45 var(--mono);color:var(--muted)}
+.pick .fs b{display:block;font:800 13px var(--mono);letter-spacing:.24em;color:var(--cyan);margin-bottom:8px}
+.pick .ms{display:flex;gap:12px;margin-top:auto}
+.pick .ms div{flex:1;height:96px;border:1px solid var(--line);border-radius:14px;display:flex;flex-direction:column;align-items:center;justify-content:center;background:rgba(6,9,15,.5)}
+.pick .ms b{font:400 44px/1 var(--head)}
+.pick .ms span{font:800 11px var(--mono);letter-spacing:.22em;color:var(--dim);margin-top:8px}
+.veto{font:700 14px var(--mono);letter-spacing:.16em;color:var(--dim);margin-left:18px}
+
+/* map */
+.m-sub{left:80px;top:148px;width:1250px;font:500 22px/1.4 var(--mono);color:var(--muted)}
+#map{left:60px;top:214px;width:1220px;height:790px}
+.legend{left:1330px;top:228px;width:520px}
+.legend h4{font:800 14px var(--mono);letter-spacing:.22em;color:var(--dim);margin:0 0 14px}
+.legend ol{list-style:none;display:flex;flex-direction:column;gap:9px}
+.legend li{display:flex;align-items:center;gap:14px;font:400 21px var(--head);color:var(--text)}
+.legend li i{width:34px;height:34px;border-radius:50%;display:grid;place-items:center;font:800 13px var(--mono);font-style:normal;color:#06090f;flex:none}
+.legend .key{display:flex;flex-direction:column;gap:10px;margin-top:26px;font:500 17px var(--mono);color:var(--muted)}
+.legend .key div{display:flex;align-items:center;gap:12px}
+.dot{width:16px;height:16px;border-radius:50%;display:inline-block;flex:none}
+
+/* sleep */
+.sl-tog{left:80px;top:420px;display:flex;flex-direction:column;align-items:flex-start;gap:24px}
+.sl-tog span{font:800 22px var(--mono);letter-spacing:.24em;color:var(--cyan)}
+.loot{left:640px;right:80px;top:372px;height:600px;border:1px solid rgba(0,255,136,.45);border-radius:24px;
+  background:linear-gradient(180deg,rgba(16,27,42,.96),rgba(10,14,23,.96));box-shadow:0 0 60px rgba(0,255,136,.12);padding:32px 40px}
+.loot h4{font:800 18px var(--mono);letter-spacing:.24em;color:var(--green)}
+.loot ul{list-style:none;margin-top:18px}
+.loot li{display:flex;align-items:center;gap:30px;height:96px;border-bottom:1px solid rgba(30,48,80,.6)}
+.loot li:last-child{border-bottom:0}
+.loot li b{width:110px;font:400 64px/1 var(--head);text-align:right}
+.loot li span{font:500 28px var(--mono);color:var(--text)}
+
+/* wall */
+.w-legend{right:80px;top:96px;display:flex;gap:10px}
+.wall{left:80px;right:80px;top:150px;bottom:84px;display:grid;gap:22px}
+.lane{display:flex;flex-direction:column;gap:10px;min-width:0}
+.lane h4{font:800 14px var(--mono);letter-spacing:.2em;color:var(--cyan);height:22px;white-space:nowrap;text-transform:uppercase}
+.tile{position:relative;border:1px solid var(--line);border-radius:13px;background:rgba(13,21,32,.82);padding:12px 14px 12px}
+.tile.star{border-color:rgba(0,255,136,.6);box-shadow:inset 4px 0 0 var(--green),0 0 22px rgba(0,255,136,.08)}
+.tile b{display:block;font:400 19px/1.15 var(--head);color:var(--text);padding-right:46px}
+.tile .sn{position:absolute;right:12px;top:11px;font:800 12px var(--mono);letter-spacing:.1em;color:var(--green)}
+.tile p{font:500 14px/1.38 var(--mono);color:var(--muted);margin-top:6px}
+.tile .tc{display:flex;flex-wrap:wrap;gap:6px;margin-top:9px;align-items:center}
+.tile .tc .chip{font-size:11px;padding:5px 7px;letter-spacing:.1em}
+.tile .sc{font:700 12px var(--mono);color:var(--dim);letter-spacing:.06em;margin-left:auto}
+.nolist{border:1px solid rgba(255,68,68,.5);border-radius:14px;background:rgba(255,68,68,.05);padding:16px}
+.nolist h4{color:var(--red)}
+.nolist li{font:500 15px/1.4 var(--mono);color:var(--muted);margin:10px 0 0 18px}
+.nolist p{font:500 14px/1.45 var(--mono);color:var(--dim);margin-top:14px}
+
+/* specific mocks */
+.found{display:flex;justify-content:space-between;align-items:center;height:94px;padding:0 32px;border-bottom:1px solid rgba(30,48,80,.7)}
+.found .who{display:flex;gap:10px}
+.found .tot{text-align:right}
+.found .tot span{display:block;font:800 13px var(--mono);letter-spacing:.24em;color:var(--dim)}
+.found .tot b{font:400 52px/1 var(--head);color:var(--green);text-shadow:0 0 22px rgba(0,255,136,.45)}
+.claimbar{display:flex;align-items:center;gap:22px;height:96px;padding:0 32px;border-top:1px solid rgba(30,48,80,.7)}
+.btn{font:700 20px var(--ui);letter-spacing:.06em;color:#06090f;background:var(--green);border-radius:12px;padding:16px 26px;box-shadow:0 0 28px rgba(0,255,136,.4);white-space:nowrap}
+.btn.c{background:var(--cyan);box-shadow:0 0 28px rgba(0,207,255,.4)}
+.flow{display:flex;align-items:center;gap:14px;height:86px;padding:0 32px;border-top:1px solid rgba(30,48,80,.7)}
+.flow i{font-style:normal;color:var(--dim);font:400 22px var(--head)}
+.flow .sep{flex:1}
+.pack{display:flex;align-items:center;justify-content:center;height:100%;padding:0 60px;gap:90px}
+.cards{display:flex;gap:30px;align-items:center}
+.card{width:270px;height:356px;border-radius:22px;background:linear-gradient(160deg,#10213a,#0a111c);border:2px solid #2a4268;
+  display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;position:relative}
+.card .rar{position:absolute;top:22px;font:800 14px var(--mono);letter-spacing:.26em}
+.card .tk{font:400 46px/1 var(--head)}
+.card .cn{font:500 18px var(--mono);color:var(--muted)}
+.card .up{margin-top:18px;text-align:center}
+.card .up b{font:400 40px/1 var(--head)}
+.card .up span{display:block;font:600 12px var(--mono);letter-spacing:.2em;color:var(--dim);margin-top:6px}
+.card.leg{border-color:var(--green);box-shadow:0 0 0 1px rgba(0,255,136,.35),0 0 56px rgba(0,255,136,.34);transform:rotate(-5deg) translateY(10px)}
+.card.leg .rar,.card.leg .up b{color:var(--green)}
+.card.rare{border-color:var(--cyan);box-shadow:0 0 38px rgba(0,207,255,.3);transform:translateY(-10px)}
+.card.rare .rar,.card.rare .up b{color:var(--cyan)}
+.card.com{transform:rotate(5deg) translateY(10px)}
+.card.com .rar{color:var(--muted)}
+.packside{display:flex;flex-direction:column;gap:22px;align-items:flex-start}
+.packside .rl{display:flex;flex-direction:column;gap:10px;font:500 17px var(--mono);color:var(--muted)}
+.jp{display:grid;grid-template-columns:1.1fr 1fr 1fr;height:100%}
+.jp>div{padding:44px 40px;border-right:1px solid rgba(30,48,80,.7);display:flex;flex-direction:column;justify-content:center;gap:16px}
+.jp>div:last-child{border-right:0}
+.jp .kk{font:800 14px var(--mono);letter-spacing:.24em;color:var(--dim)}
+.jp .bb{font:400 120px/1 var(--head);color:var(--green);text-shadow:0 0 30px rgba(0,255,136,.4)}
+.jp .bm{font:400 54px/1.05 var(--head)}
+.jp .ll{font:500 21px/1.5 var(--mono);color:var(--muted)}
+.prop{height:100%;padding:30px 40px;display:flex;flex-direction:column;justify-content:center;gap:32px}
+.prop .top{display:flex;align-items:center;gap:14px}
+.prop .top b{font:400 30px var(--head)}
+.bar{display:grid;grid-template-columns:300px 1fr 90px;align-items:center;gap:24px;font:700 16px var(--mono);letter-spacing:.14em;color:var(--muted)}
+.bar .tr{height:18px;border-radius:9px;background:#14223a;position:relative;overflow:hidden}
+.bar .tr i{position:absolute;left:0;top:0;bottom:0;border-radius:9px}
+.bar .tr i.g{background:linear-gradient(90deg,#00b36b,var(--green));box-shadow:0 0 14px rgba(0,255,136,.5)}
+.bar .tr i.c{background:linear-gradient(90deg,#007fa3,var(--cyan))}
+.bar b{font:400 30px var(--head);color:var(--text);text-align:right}
+.light{width:26px;height:26px;border-radius:50%;margin-left:8px}
+.light.g{background:var(--green);box-shadow:0 0 16px var(--green)}
+.light.r{background:var(--red);box-shadow:0 0 16px var(--red)}
+
+#bar{position:fixed;left:0;bottom:0;height:3px;width:100%;z-index:10;background:rgba(30,48,80,.6)}
+#bar i{display:block;height:100%;width:0;background:var(--green);box-shadow:0 0 10px var(--green);transition:width .25s}
+body.solo #bar{display:none}
+body.solo .slide{display:none}
+body.solo .slide.show{display:block}
+</style>
+</head>
+<body>
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <symbol id="flame" viewBox="0 0 24 24"><path d="M12 2.6c.7 3.3 5 5.6 5 10.5a5 5 0 0 1-10 0c0-2.5 1.3-4.1 2.7-5.1.2 1.6 1 2.5 2.1 2.7-.5-3-.3-5.6.2-8.1z" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/></symbol>
+  <symbol id="hex" viewBox="0 0 24 24"><path d="M12 2.5l8.2 4.75v9.5L12 21.5l-8.2-4.75v-9.5z" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/><circle cx="12" cy="12" r="2.6" fill="currentColor"/></symbol>
+</svg>
+<main id="deck">
+
+<!-- 1 · title -->
+<section class="slide"><div class="stage">
+  <div class="chrome"><span><b>CYMETICA</b> &nbsp;·&nbsp; DEGEN AUTOPILOT</span><span class="pg"></span></div>
+  <div class="t-kick kick">Product brainstorm · 24 Oct 2026</div>
+  <h1 class="mega">DO NOTHING.<br><span class="g glow">MAYBE GET RICH.</span></h1>
+  <p class="lead">Built like Airdrop Farmer: agents do the work, the degen holds the tickets.</p>
+  <div class="nums">
+    <div><b data-count="all">42</b><span>ideas</span></div>
+    <div><b>10</b><span>worked out</span></div>
+    <div><b class="g glow">3</b><span>to build first</span></div>
+  </div>
+  <div class="tickets"><i class="tog on"></i><i class="tog on"></i><i class="tog on"></i><i class="tog on"></i><i class="tog on"></i><i class="tog on"></i><i class="tog on"></i><i class="tog on"></i><i class="tog on"></i><i class="tog on"></i></div>
+  <div class="tickets-cap">10 TICKETS · 10 TOGGLES · 0 WORK</div>
+  <div class="t-tog"><div class="bigtog"></div><span>1 CLICK</span></div>
+</div></section>
+
+<!-- 2 · formula -->
+<section class="slide"><div class="stage">
+  <div class="chrome"><span><b>CYMETICA</b> &nbsp;·&nbsp; DEGEN AUTOPILOT</span><span class="pg"></span></div>
+  <div class="kick" style="left:80px;top:104px">Why Airdrop Farmer hits</div>
+  <div class="stats">
+    <div class="stat"><b>49</b><span>farms live</span></div>
+    <div class="stat hot"><b class="g glow">22</b><span>free · no money needed</span></div>
+    <div class="stat"><b>1</b><span>toggle a farm</span></div>
+    <div class="stat"><b>24/7</b><span>agents doing the tasks</span></div>
+  </div>
+  <div class="hit">
+    <div class="kick">The hit · a live free row</div>
+    <div class="panel">
+      <div class="row on" style="grid-template-columns:110px 62px 1fr 330px 300px 66px;height:104px;border:0">
+        <div class="heat"><svg class="fl"><use href="#flame"/></svg>29</div>
+        <div class="logo kg">R</div>
+        <div class="nm"><b>Rivalz Network</b><div class="chips"><span class="chip">testnet</span><span class="chip">free tasks</span></div></div>
+        <div><span class="chip d">free · no money needed</span></div>
+        <div><div class="free">FREE</div><span class="lab">no money · no estimate</span></div>
+        <i class="tog on"></i>
+      </div>
+    </div>
+  </div>
+  <div class="formula">
+    <div class="f"><b>BORING WORK</b><span>agents do it, 24/7</span></div>
+    <div class="x">×</div>
+    <div class="f"><b>LOTTERY TICKETS</b><span>might pay big one day</span></div>
+    <div class="x">×</div>
+    <div class="f"><b class="g glow">ONE TOGGLE</b><span>$0 to start</span></div>
+  </div>
+  <div class="f-cap">The test every idea in this deck had to pass.</div>
+  <div class="rules">
+    <div class="kick">Rules every idea here keeps</div>
+    <div class="row2"><span class="chip m lg">one wallet per person</span><span class="chip m lg">no sybil</span><span class="chip m lg">no posting as you</span><span class="chip m lg">nothing a project's terms forbid</span><span class="chip m lg">estimates, never promises</span></div>
+  </div>
+  <div class="src">Live read of cymetica.com/api/v1/airdrop-farm/farms, 24 Oct 2026 07:38 UTC: 49 farms; 12 testnets + 10 task farms are free; 23 DeFi + 4 chain farms take a deposit.</div>
+</div></section>
+
+<!-- 3 · our pick -->
+<section class="slide"><div class="stage">
+  <div class="chrome"><span><b>CYMETICA</b> &nbsp;·&nbsp; DEGEN AUTOPILOT</span><span class="pg"></span></div>
+  <div class="kick" style="left:80px;top:104px">Our pick · build these 3 first<span class="veto">YOUR VETO IS OPEN</span></div>
+  <div class="picks">
+    <div class="pick" data-pick="moonbag"><div class="rank">01</div><h3>MOONBAG<br>FARMER</h3>
+      <p>The biggest dream, on rails Cymetica already runs: Gem Screener picks, Team Dump Radar, clone bots. Gem Packs then comes almost free.</p>
+      <div class="pc"><span class="chip">paper free</span><span class="chip b">real from $5</span></div>
+      <div class="fs"><b>FIRST STEP</b>Paper mode on today's 8 picks, scored by the picks ledger.</div><div class="ms"></div></div>
+    <div class="pick" data-pick="longshot"><div class="rank">02</div><h3>LONGSHOT<br>FARMER</h3>
+      <p>The free lane's best: three free tickets a day on real events. Prediction markets traded $50.6B in July 2026.</p>
+      <div class="pc"><span class="chip g">3 free tickets a day</span><span class="chip b">$1 tickets</span></div>
+      <div class="fs"><b>FIRST STEP</b>Mint YES/NO tickets from the headline pipeline; a paper record before real ones.</div><div class="ms"></div></div>
+    <div class="pick" data-pick="lost"><div class="rank">03</div><h3>LOST &amp;<br>FOUND</h3>
+      <p>Free scan, found money. People screenshot found money, and every scan is a door into Airdrop Farmer.</p>
+      <div class="pc"><span class="chip g">free scan</span><span class="chip m">gas only to claim</span></div>
+      <div class="fs"><b>FIRST STEP</b>A read-only scan of one chain for unclaimed airdrops.</div><div class="ms"></div></div>
+  </div>
+  <div class="src">Scores are ours, 1-10. LAZY: one click, nothing after. DREAM: how big it could pay. FIT: how much of it Cymetica already has. Picked on dream, fit and the free lane, the part of Airdrop Farmer that hit.</div>
+</div></section>
+
+<!-- 4 · map -->
+<section class="slide"><div class="stage">
+  <div class="chrome"><span><b>CYMETICA</b> &nbsp;·&nbsp; DEGEN AUTOPILOT</span><span class="pg"></span></div>
+  <div class="kick" style="left:80px;top:104px"><span data-count="all">42</span> ideas on one map</div>
+  <div class="m-sub">All passed the lazy test. What separates them: how big the dream is, and how much of it Cymetica already has.</div>
+  <svg id="map" viewBox="0 0 1220 790" role="img" aria-label="Ideas by dream and fit"></svg>
+  <div class="legend">
+    <h4>WORKED OUT ON THEIR OWN SLIDE</h4>
+    <ol id="mapkey"></ol>
+    <div class="key">
+      <div><span class="dot" style="background:var(--green)"></span>has a free tier</div>
+      <div><span class="dot" style="background:var(--cyan)"></span>needs money (paper first where it can)</div>
+    </div>
+  </div>
+  <div class="src">Scores are ours. Hover any dot for its name and line.</div>
+</div></section>
+
+<!-- 5 · idea 01 moonbag -->
+<section class="slide"><div class="stage">
+  <div class="chrome"><span><b>CYMETICA</b> &nbsp;·&nbsp; DEGEN AUTOPILOT</span><span class="pg"></span></div>
+  <div class="ihead"><div class="kick">Idea 01 / 10 · Ride the gems</div>
+    <div class="entry"><span class="chip">paper free</span><span class="chip b">real from $5 a pick</span><span class="chip r" title="Most picks never reach 2x and some go to zero. The page shows the farmer's own hit rate; the Gem Screener already forward-tests every pick in its picks ledger.">⚠ most picks never double</span></div></div>
+  <div class="ititle"><h2>MOONBAG FARMER</h2></div>
+  <div class="scores" data-scores="moonbag"></div>
+  <p class="tagline">Agents buy every new Degen pick for $10, take your $10 back at 2x, and let a free bag ride.</p>
+  <div class="mock"><span class="mtag live">LIVE · TODAY'S DEGEN PICKS · 24 OCT 05:29 UTC</span>
+    <div class="hdr" style="grid-template-columns:110px 62px 1fr 210px 290px 250px 66px"><span>GATES</span><span></span><span>COIN</span><span>UPSIDE</span><span>PLANT</span><span>RULE</span><span>ON</span></div>
+    <div class="row on" style="grid-template-columns:110px 62px 1fr 210px 290px 250px 66px;height:76px">
+      <div><span class="big g">6/6</span></div><div class="logo">SF</div>
+      <div class="nm"><b>StonkFun</b></div>
+      <div><span class="big g">35x</span></div>
+      <div class="plant"><div class="trk"><i style="width:20%"></i><b style="left:20%"></b></div>$10</div>
+      <div><span class="chip g d">2x → $10 back</span></div><i class="tog on"></i></div>
+    <div class="row on" style="grid-template-columns:110px 62px 1fr 210px 290px 250px 66px;height:76px">
+      <div><span class="big g">6/6</span></div><div class="logo k">CC</div>
+      <div class="nm"><b>Collector Crypt</b></div>
+      <div><span class="big g">9.1x</span></div>
+      <div class="plant"><div class="trk"><i style="width:20%"></i><b style="left:20%"></b></div>$10</div>
+      <div><span class="chip g d">2x → $10 back</span></div><i class="tog on"></i></div>
+    <div class="row on" style="grid-template-columns:110px 62px 1fr 210px 290px 250px 66px;height:76px">
+      <div><span class="big g">6/6</span></div><div class="logo kg">PU</div>
+      <div class="nm"><b>Pump</b></div>
+      <div><span class="big g">6.7x</span></div>
+      <div class="plant"><div class="trk"><i style="width:20%"></i><b style="left:20%"></b></div>$10</div>
+      <div><span class="chip g d">2x → $10 back</span></div><i class="tog on"></i></div>
+    <div class="row on" style="grid-template-columns:110px 62px 1fr 210px 290px 250px 66px;height:76px">
+      <div><span class="big g">6/6</span></div><div class="logo">ME</div>
+      <div class="nm"><b>Meteora</b></div>
+      <div><span class="big g">6.0x</span></div>
+      <div class="plant"><div class="trk"><i style="width:20%"></i><b style="left:20%"></b></div>$10</div>
+      <div><span class="chip g d">2x → $10 back</span></div><i class="tog on"></i></div>
+    <div class="flow"><span class="chip lg">buy $10</span><i>→</i><span class="chip lg">it hits 2x</span><i>→</i><span class="chip g lg">sell $10 · stake back</span><i>→</i><span class="chip g lg">free bag rides</span><span class="sep"></span><span class="chip r lg" style="cursor:default">red light → exit</span></div>
+  </div>
+  <div class="three">
+    <div><span>YOU</span><p>One toggle and a size per pick, $5 to $50.</p></div>
+    <div><span>AGENTS</span><p>Buy each new pick, sell your stake at 2x, keep the rest riding, exit on a red light.</p></div>
+    <div><span>CYMETICA HAS</span><p>Gem Screener picks (6 degen gates) · picks ledger · Team Dump Radar · clone bots · Swap</p></div>
+  </div>
+  <div class="src">Upside is the Gem Screener's: price vs revenue, against Hyperliquid's multiple; a model, not a promise. Picks: GET /api/v1/gem-screener/picks, 24 Oct 05:29 UTC (4 of 8 shown).</div>
+</div></section>
+
+<!-- 6 · idea 02 longshot -->
+<section class="slide"><div class="stage">
+  <div class="chrome"><span><b>CYMETICA</b> &nbsp;·&nbsp; DEGEN AUTOPILOT</span><span class="pg"></span></div>
+  <div class="ihead"><div class="kick">Idea 02 / 10 · Prediction tickets</div>
+    <div class="entry"><span class="chip g">3 free tickets a day</span><span class="chip b">$1 tickets</span><span class="chip r" title="Cheap longshots are overpriced on average. The farmer shows its paper record before any real ticket. Free tickets are Cymetica's marketing budget, like a sportsbook's free bets: the budget and who qualifies are theirs to set.">⚠ longshots lose on average</span></div></div>
+  <div class="ititle"><h2>LONGSHOT FARMER</h2></div>
+  <div class="scores" data-scores="longshot"></div>
+  <p class="tagline">Three free lottery tickets a day on real events. One hit pays 20 to 50 times.</p>
+  <div class="mock"><span class="mtag">EXAMPLE</span>
+    <div class="hdr" style="grid-template-columns:110px 1fr 250px 190px 230px 66px"><span>PRICE</span><span>EVENT</span><span>NEXUS</span><span>PAYS</span><span>TICKET</span><span>ON</span></div>
+    <div class="row on" style="grid-template-columns:110px 1fr 250px 190px 230px 66px;height:98px">
+      <div><span class="big c">3¢</span></div><div class="nm"><b>BTC above $150K on 31 Dec</b></div>
+      <div><span class="chip">underpriced</span></div><div><span class="big g">33x</span><span class="lab">if it hits</span></div>
+      <div><span class="chip g d">free ticket</span></div><i class="tog on"></i></div>
+    <div class="row on" style="grid-template-columns:110px 1fr 250px 190px 230px 66px;height:98px">
+      <div><span class="big c">4¢</span></div><div class="nm"><b>ETH/BTC above 0.05 by 30 Nov</b></div>
+      <div><span class="chip">underpriced</span></div><div><span class="big g">25x</span><span class="lab">if it hits</span></div>
+      <div><span class="chip g d">free ticket</span></div><i class="tog on"></i></div>
+    <div class="row on" style="grid-template-columns:110px 1fr 250px 190px 230px 66px;height:98px">
+      <div><span class="big c">2¢</span></div><div class="nm"><b>SOL beats ETH in DEX volume this week</b></div>
+      <div><span class="chip">underpriced</span></div><div><span class="big g">50x</span><span class="lab">if it hits</span></div>
+      <div><span class="chip g d">free ticket</span></div><i class="tog on"></i></div>
+    <div class="row dim" style="grid-template-columns:110px 1fr 250px 190px 230px 66px;height:98px">
+      <div><span class="big c">5¢</span></div><div class="nm"><b>Fed cuts 50 bp in December</b></div>
+      <div><span class="chip">underpriced</span></div><div><span class="big g">20x</span><span class="lab">if it hits</span></div>
+      <div><span class="chip b">$1 ticket</span></div><i class="tog"></i></div>
+  </div>
+  <div class="three">
+    <div><span>YOU</span><p>One toggle. Three free tickets a day; $1 tickets if you want more.</p></div>
+    <div><span>AGENTS</span><p>Nexus finds longshots it thinks are underpriced, places the tickets, cashes the hits.</p></div>
+    <div><span>CYMETICA HAS</span><p>Nexus · YES/NO markets (9 live) · a headline-to-market pipeline · paper trading</p></div>
+  </div>
+  <div class="src">$50.6B: Kalshi + Polymarket + Polymarket US in July 2026, a monthly record (<a href="https://tangem.com/en/news/markets/35504-prediction-markets-hit-50-6b-record-in-july-2026/" target="_blank" rel="noopener">Tangem, 3 Aug 2026</a>). Cymetica lists 9 YES/NO markets today (GET /api/v1/markets); the farmer needs many more, which its headline pipeline can mint.</div>
+</div></section>
+
+<!-- 7 · idea 03 lost & found -->
+<section class="slide"><div class="stage">
+  <div class="chrome"><span><b>CYMETICA</b> &nbsp;·&nbsp; DEGEN AUTOPILOT</span><span class="pg"></span></div>
+  <div class="ihead"><div class="kick">Idea 03 / 10 · Claim what's yours</div>
+    <div class="entry"><span class="chip g">free scan</span><span class="chip m">gas only to claim</span><span class="chip r" title="'Connect and claim' is the classic wallet-drainer trick. The scan is read-only from a pasted address, and every claim is shown in full before the one signature.">⚠ looks like a drainer</span></div></div>
+  <div class="ititle"><h2>LOST &amp; FOUND</h2></div>
+  <div class="scores" data-scores="lost"></div>
+  <p class="tagline">Paste a wallet. Agents find every airdrop, reward and token it forgot. One signature claims it all.</p>
+  <div class="mock"><span class="mtag">EXAMPLE SCAN</span>
+    <div class="found"><div class="who"><span class="chip m lg">0x7a3f…41c9</span><span class="chip lg">6 chains</span><span class="chip g lg">read-only</span></div>
+      <div class="tot"><span>FOUND</span><b>$214.60</b></div></div>
+    <div class="row" style="grid-template-columns:330px 1fr 200px;height:62px"><div><span class="chip g">unclaimed airdrop</span></div><div class="nm"><b style="font-size:23px">2 claims · Arbitrum, Base</b></div><div style="text-align:right"><span class="big">$128.40</span></div></div>
+    <div class="row" style="grid-template-columns:330px 1fr 200px;height:62px"><div><span class="chip">staking rewards</span></div><div class="nm"><b style="font-size:23px">3 positions · Ethereum</b></div><div style="text-align:right"><span class="big">$41.75</span></div></div>
+    <div class="row" style="grid-template-columns:330px 1fr 200px;height:62px"><div><span class="chip">lp fees</span></div><div class="nm"><b style="font-size:23px">1 pool · Base</b></div><div style="text-align:right"><span class="big">$23.10</span></div></div>
+    <div class="row" style="grid-template-columns:330px 1fr 200px;height:62px"><div><span class="chip m">dust → usdc</span></div><div class="nm"><b style="font-size:23px">37 tokens · 5 chains</b></div><div style="text-align:right"><span class="big">$21.35</span></div></div>
+    <div class="claimbar"><span class="btn">CLAIM ALL · 1 SIGNATURE</span><span class="lab" style="margin:0;font-size:16px">gas shown before you sign</span><span style="flex:1"></span><span class="chip lg d">missed drops? farm the next ones →</span></div>
+  </div>
+  <div class="three">
+    <div><span>YOU</span><p>Paste an address. Sign once.</p></div>
+    <div><span>AGENTS</span><p>Scan every chain, batch every claim, swap the dust to USDC, show it all before you sign.</p></div>
+    <div><span>CYMETICA HAS</span><p>Airdrop Farmer's airdrop catalogue · Swap (0% fee) · the farm wallet</p></div>
+  </div>
+  <div class="src">Forgotten money is real: two years after Uniswap's airdrop, 30,000 wallets still had not claimed (<a href="https://dune.com/blog/uni-airdrop-analysis" target="_blank" rel="noopener">Dune</a>).</div>
+</div></section>
+
+<!-- 8 · idea 04 gem packs -->
+<section class="slide"><div class="stage">
+  <div class="chrome"><span><b>CYMETICA</b> &nbsp;·&nbsp; DEGEN AUTOPILOT</span><span class="pg"></span></div>
+  <div class="ihead"><div class="kick">Idea 04 / 10 · Gacha</div>
+    <div class="entry"><span class="chip b">$10 a pack</span><span class="chip r" title="Gacha rules differ by country. You get the coins themselves, never casino credit, and there is no buyback desk with a house edge.">⚠ gacha rules vary</span></div></div>
+  <div class="ititle"><h2>GEM PACKS</h2></div>
+  <div class="scores" data-scores="packs"></div>
+  <p class="tagline">Open a $10 pack: three random Degen picks. Rarer card, bigger upside. Same engine as Moonbag Farmer.</p>
+  <div class="mock"><span class="mtag live">EXAMPLE PACK · FROM TODAY'S LIVE PICKS</span>
+    <div class="pack">
+      <div class="cards">
+        <div class="card leg"><div class="rar">LEGENDARY</div><div class="tk">STONK</div><div class="cn">StonkFun</div><div class="up"><b>35x</b><span>UPSIDE</span></div></div>
+        <div class="card rare"><div class="rar">RARE</div><div class="tk">CARDS</div><div class="cn">Collector Crypt</div><div class="up"><b>9.1x</b><span>UPSIDE</span></div></div>
+        <div class="card com"><div class="rar">COMMON</div><div class="tk">LISTA</div><div class="cn">Lista DAO</div><div class="up"><b>3.1x</b><span>UPSIDE</span></div></div>
+      </div>
+      <div class="packside">
+        <span class="btn" style="font-size:24px;padding:20px 30px">OPEN A PACK · $10</span>
+        <div class="rl"><span><b class="g">LEGENDARY</b> upside 20x+</span><span><b class="c">RARE</b> upside 5-20x</span><span><b style="color:var(--muted)">COMMON</b> upside under 5x</span></div>
+        <span class="chip m">you own the coins · no buyback desk</span>
+      </div>
+    </div>
+  </div>
+  <div class="three">
+    <div><span>YOU</span><p>One click to open. Nothing after.</p></div>
+    <div><span>AGENTS</span><p>Fill each pack from the live picks, then run it like Moonbag Farmer: stake back at 2x, exit on red.</p></div>
+    <div><span>CYMETICA HAS</span><p>Gem Screener picks and upside · Team Dump Radar · Swap</p></div>
+  </div>
+  <div class="src">$324M spent on on-chain gacha packs in June 2026, a record (<a href="https://cointelegraph.com/news/pokemon-cards-as-rwas-gacha-spending-hits-records-as-crypto-sinks" target="_blank" rel="noopener">Cointelegraph, Blockworks Research</a>). And Collector Crypt, the gacha leader, is one of today's 8 Degen picks.</div>
+</div></section>
+
+<!-- 9 · idea 05 caller scorecard -->
+<section class="slide"><div class="stage">
+  <div class="chrome"><span><b>CYMETICA</b> &nbsp;·&nbsp; DEGEN AUTOPILOT</span><span class="pg"></span></div>
+  <div class="ihead"><div class="kick">Idea 05 / 10 · Copy the top</div>
+    <div class="entry"><span class="chip g">scorecard free</span><span class="chip b">$5 a call</span><span class="chip r" title="Callers sell into their followers. Public channels only and counts only, as Infiltrator reads them; it apes a caller only while their record holds up after that.">⚠ callers sell into followers</span></div></div>
+  <div class="ititle"><h2>CALLER SCORECARD</h2></div>
+  <div class="scores" data-scores="caller"></div>
+  <p class="tagline">Infiltrator already listens to public crypto groups. Score every call, then ape only the callers who really hit.</p>
+  <div class="mock"><span class="mtag">EXAMPLE</span>
+    <div class="hdr" style="grid-template-columns:80px 1fr 200px 230px 200px 66px"><span>#</span><span>PUBLIC CHANNEL</span><span>CALLS · 30 D</span><span>HIT 2x</span><span>APE</span><span>ON</span></div>
+    <div class="row on" style="grid-template-columns:80px 1fr 200px 230px 200px 66px;height:128px">
+      <div><span class="big g">1</span></div><div class="nm"><b>Solana memes · 12K members</b></div>
+      <div><span class="big">41</span></div><div><span class="big g">12</span><span class="lab">29% of calls</span></div>
+      <div><span class="chip b">$5 a call</span></div><i class="tog on"></i></div>
+    <div class="row on" style="grid-template-columns:80px 1fr 200px 230px 200px 66px;height:128px">
+      <div><span class="big g">2</span></div><div class="nm"><b>Base gems · 8K members</b></div>
+      <div><span class="big">28</span></div><div><span class="big g">7</span><span class="lab">25% of calls</span></div>
+      <div><span class="chip b">$5 a call</span></div><i class="tog on"></i></div>
+    <div class="row dim" style="grid-template-columns:80px 1fr 200px 230px 200px 66px;height:128px">
+      <div><span class="big">3</span></div><div class="nm"><b>AI coins · 21K members</b></div>
+      <div><span class="big">63</span></div><div><span class="big">9</span><span class="lab">14% of calls</span></div>
+      <div><span class="chip m">below the bar</span></div><i class="tog"></i></div>
+  </div>
+  <div class="three">
+    <div><span>YOU</span><p>One toggle and $5 a call.</p></div>
+    <div><span>AGENTS</span><p>Log every public call, score it a week later, ape the top callers' next calls, exit on a red light.</p></div>
+    <div><span>CYMETICA HAS</span><p>Infiltrator (public groups, counts only) · Gem Screener checks · Team Dump Radar · Swap</p></div>
+  </div>
+  <div class="src">Channel labels are descriptions, not real channels. Infiltrator's rule holds: public groups only, nothing posted, no member names or message text shown.</div>
+</div></section>
+
+<!-- 10 · idea 06 copy the champion -->
+<section class="slide"><div class="stage">
+  <div class="chrome"><span><b>CYMETICA</b> &nbsp;·&nbsp; DEGEN AUTOPILOT</span><span class="pg"></span></div>
+  <div class="ihead"><div class="kick">Idea 06 / 10 · Copy the top</div>
+    <div class="entry"><span class="chip">paper free</span><span class="chip b">real: your size</span><span class="chip r" title="A one-week winner is mostly luck, so it follows the steadiest record of the last month and switches only when another bot beats it.">⚠ one week is luck</span></div></div>
+  <div class="ititle"><h2>COPY THE CHAMPION</h2></div>
+  <div class="scores" data-scores="champ"></div>
+  <p class="tagline">Every week your money follows the bot with the best record of the last month.</p>
+  <div class="mock"><span class="mtag">EXAMPLE</span>
+    <div class="hdr" style="grid-template-columns:80px 62px 1fr 340px 220px 66px"><span>#</span><span></span><span>BOT</span><span>LAST 4 WEEKS</span><span>STATUS</span><span>ON</span></div>
+    <div class="row on" style="grid-template-columns:80px 62px 1fr 340px 220px 66px;height:128px">
+      <div><span class="big g">1</span></div><div class="logo">B</div><div class="nm"><b>Breakout clone</b><div class="chips"><span class="chip">agent tournaments</span></div></div>
+      <div><span class="big g">4 of 4</span><span class="lab">weeks in the top 3</span></div><div><span class="chip g">following</span></div><i class="tog on"></i></div>
+    <div class="row dim" style="grid-template-columns:80px 62px 1fr 340px 220px 66px;height:128px">
+      <div><span class="big">2</span></div><div class="logo k">M</div><div class="nm"><b>Mean-reversion clone</b><div class="chips"><span class="chip">bot olympics</span></div></div>
+      <div><span class="big">3 of 4</span><span class="lab">weeks in the top 3</span></div><div><span class="chip m">standby</span></div><i class="tog"></i></div>
+    <div class="row dim" style="grid-template-columns:80px 62px 1fr 340px 220px 66px;height:128px">
+      <div><span class="big">3</span></div><div class="logo kg">F</div><div class="nm"><b>Funding clone</b><div class="chips"><span class="chip">agent tournaments</span></div></div>
+      <div><span class="big">2 of 4</span><span class="lab">weeks in the top 3</span></div><div><span class="chip m">standby</span></div><i class="tog"></i></div>
+  </div>
+  <div class="three">
+    <div><span>YOU</span><p>One toggle and a size. Paper first, free.</p></div>
+    <div><span>AGENTS</span><p>Read every table and season, clone the steadiest winner, switch when a better one appears.</p></div>
+    <div><span>CYMETICA HAS</span><p>Agent Tournaments · Bot Olympics · clone bots · copy trade (this adds the auto-switch)</p></div>
+  </div>
+  <div class="src">Bot names are examples.</div>
+</div></section>
+
+<!-- 11 · idea 07 jackpot -->
+<section class="slide"><div class="stage">
+  <div class="chrome"><span><b>CYMETICA</b> &nbsp;·&nbsp; DEGEN AUTOPILOT</span><span class="pg"></span></div>
+  <div class="ihead"><div class="kick">Idea 07 / 10 · Free tickets</div>
+    <div class="entry"><span class="chip g">1 free ticket a day</span><span class="chip b">deposit = more tickets</span><span class="chip r" title="Prize draws are regulated in many countries, and a pooled pot breaks Airdrop Farmer's one-wallet, never-pooled rule. It needs its own legal frame before it ships.">⚠ prize law</span></div></div>
+  <div class="ititle"><h2>JACKPOT FARM</h2></div>
+  <div class="scores" data-scores="jackpot"></div>
+  <p class="tagline">A free ticket every day. Deposit for more; your deposit stays withdrawable. One winner takes the week's pot.</p>
+  <div class="mock"><span class="mtag">EXAMPLE</span>
+    <div class="jp">
+      <div><span class="kk">YOUR TICKETS THIS WEEK</span><span class="bb">19</span><span class="ll"><b class="g">7</b> free · one a day<br><b class="c">12</b> from your deposit</span></div>
+      <div><span class="kk">THE DRAW</span><span class="bm">SUNDAY<br>20:00 UTC</span><span class="ll">on-chain, anyone can check it</span></div>
+      <div><span class="kk">YOUR DEPOSIT</span><span class="bm" style="display:flex;align-items:center;gap:20px">IN <i class="tog on"></i></span><span class="ll">withdraw any time</span><span class="chip m" style="align-self:flex-start;margin-top:10px">pot = the pool's yield + a cut of fees</span></div>
+    </div>
+  </div>
+  <div class="three">
+    <div><span>YOU</span><p>Nothing for the free ticket. Deposit for more, withdraw any time.</p></div>
+    <div><span>AGENTS</span><p>Claim your ticket every day, farm the pool's yield, run the draw on-chain every Sunday.</p></div>
+    <div><span>CYMETICA HAS</span><p>ETLP vault (real yield from platform revenue) · Airdrop Farmer deposit farms · ET10</p></div>
+  </div>
+  <div class="src">The pot never touches a deposit: only the pool's yield and a share of fees are drawn.</div>
+</div></section>
+
+<!-- 12 · idea 08 prop -->
+<section class="slide"><div class="stage">
+  <div class="chrome"><span><b>CYMETICA</b> &nbsp;·&nbsp; DEGEN AUTOPILOT</span><span class="pg"></span></div>
+  <div class="ihead"><div class="kick">Idea 08 / 10 · Agents at work</div>
+    <div class="entry"><span class="chip b">desk tier</span><span class="chip r" title="Prop Desk runs simulated while real_capital_live is false in GET /api/v1/prop/config; real payouts start when Cymetica switches it on.">⚠ desk is simulated today</span></div></div>
+  <div class="ititle"><h2>PROP FARMER</h2></div>
+  <div class="scores" data-scores="prop"></div>
+  <p class="tagline">Your bots sit the funded-trader exam for you. Pass, and you get a funded account and a profit split.</p>
+  <div class="mock"><span class="mtag">EXAMPLE</span>
+    <div class="prop">
+      <div class="top"><b>EVALUATION · DAY 9 OF 30</b><span class="chip">champion clone #2</span><span class="chip g">on track</span></div>
+      <div class="bar"><span>PROFIT TARGET</span><div class="tr"><i class="g" style="width:62%"></i></div><b class="g">62%</b></div>
+      <div class="bar"><span>DAILY LOSS LIMIT</span><div class="tr"><i class="c" style="width:18%"></i></div><b>18%</b></div>
+      <div class="bar"><span>MAX DRAWDOWN</span><div class="tr"><i class="c" style="width:31%"></i></div><b>31%</b></div>
+      <div style="display:flex;gap:14px;margin-top:6px"><span class="chip m lg">fails → the next bot retries</span><span class="chip g lg">passes → funded account + profit split</span></div>
+    </div>
+  </div>
+  <div class="three">
+    <div><span>YOU</span><p>Pick a desk tier. One toggle.</p></div>
+    <div><span>AGENTS</span><p>Run the best clone on the evaluation, keep every desk rule, retry with the next bot if one fails.</p></div>
+    <div><span>CYMETICA HAS</span><p>Prop Desk (evaluation → funded account) · clone bots · backtests</p></div>
+  </div>
+  <div class="src">Desk tiers and rules live at GET /api/v1/prop/config. Bars show how much of each limit is used.</div>
+</div></section>
+
+<!-- 13 · idea 09 node -->
+<section class="slide"><div class="stage">
+  <div class="chrome"><span><b>CYMETICA</b> &nbsp;·&nbsp; DEGEN AUTOPILOT</span><span class="pg"></span></div>
+  <div class="ihead"><div class="kick">Idea 09 / 10 · Agents at work</div>
+    <div class="entry"><span class="chip g">$0 to start</span><span class="chip m">pay only if it drops</span><span class="chip r" title="Many networks ban datacenter nodes. It lists only networks whose own terms allow hosted nodes, the way Airdrop Farmer lists only farms that allow automation.">⚠ hosted nodes must be allowed</span></div></div>
+  <div class="ititle"><h2>NODE FARMER</h2></div>
+  <div class="scores" data-scores="node"></div>
+  <p class="tagline">No hardware, no terminal. Your testnet node runs in the cloud and its points land in your wallet.</p>
+  <div class="mock"><span class="mtag">EXAMPLE</span>
+    <div class="hdr" style="grid-template-columns:110px 62px 1fr 380px 290px 66px"><span>HEAT</span><span></span><span>NODE</span><span>STATUS</span><span>POINTS</span><span>ON</span></div>
+    <div class="row on" style="grid-template-columns:110px 62px 1fr 380px 290px 66px;height:128px">
+      <div class="heat"><svg class="fl"><use href="#flame"/></svg>41</div><div class="logo k"><svg width="34" height="34"><use href="#hex"/></svg></div>
+      <div class="nm"><b>zk prover</b><div class="chips"><span class="chip">testnet</span></div></div>
+      <div><span class="chip g">running · 23 d · 99.8% up</span></div><div><span class="lab" style="font-size:17px;margin:0">synced 5 h ago</span></div><i class="tog on"></i></div>
+    <div class="row on" style="grid-template-columns:110px 62px 1fr 380px 290px 66px;height:128px">
+      <div class="heat"><svg class="fl"><use href="#flame"/></svg>33</div><div class="logo kg"><svg width="34" height="34"><use href="#hex"/></svg></div>
+      <div class="nm"><b>light node</b><div class="chips"><span class="chip">testnet</span></div></div>
+      <div><span class="chip g">running · 12 d · 99.9% up</span></div><div><span class="lab" style="font-size:17px;margin:0">synced 2 h ago</span></div><i class="tog on"></i></div>
+    <div class="row dim" style="grid-template-columns:110px 62px 1fr 380px 290px 66px;height:128px">
+      <div class="heat"><svg class="fl"><use href="#flame"/></svg>18</div><div class="logo k"><svg width="34" height="34"><use href="#hex"/></svg></div>
+      <div class="nm"><b>validator</b><div class="chips"><span class="chip">incentivised testnet</span></div></div>
+      <div><span class="chip m">dry · switched off</span></div><div><span class="lab" style="font-size:17px;margin:0">no points for 14 d</span></div><i class="tog"></i></div>
+  </div>
+  <div class="three">
+    <div><span>YOU</span><p>One toggle per network.</p></div>
+    <div><span>AGENTS</span><p>Start the node, keep it online and updated, sync the points, switch off networks that go dry.</p></div>
+    <div><span>CYMETICA HAS</span><p>Airdrop Farmer's free lane (12 testnets today) · heat · the farm wallet</p></div>
+  </div>
+  <div class="src">Pay only if it drops: a share of the airdrop, like Airdrop Farmer's 10% of realized profit.</div>
+</div></section>
+
+<!-- 14 · idea 10 rug guard -->
+<section class="slide"><div class="stage">
+  <div class="chrome"><span><b>CYMETICA</b> &nbsp;·&nbsp; DEGEN AUTOPILOT</span><span class="pg"></span></div>
+  <div class="ihead"><div class="kick">Idea 10 / 10 · Sleep easy</div>
+    <div class="entry"><span class="chip g">free to watch</span><span class="chip r" title="Selling while you sleep needs a capped permission you grant once (a spending-limited session key). A false alarm costs a sale.">⚠ needs a sell permission</span></div></div>
+  <div class="ititle"><h2>RUG GUARD</h2></div>
+  <div class="scores" data-scores="rug"></div>
+  <p class="tagline">It watches every coin you hold, all night. Team dumping or liquidity pulled: sold before you wake up.</p>
+  <div class="mock"><span class="mtag">EXAMPLE</span>
+    <div class="hdr" style="grid-template-columns:70px 62px 1fr 440px 380px 66px"><span>LIGHT</span><span></span><span>COIN</span><span>STATUS</span><span>TAKE PROFIT</span><span>GUARD</span></div>
+    <div class="row on" style="grid-template-columns:70px 62px 1fr 440px 380px 66px;height:128px">
+      <div><span class="light g" style="display:block"></span></div><div class="logo kg">AD</div><div class="nm"><b>$AIDOG</b></div>
+      <div><span class="chip">watching</span></div><div><span class="chip g">2x ✓</span> <span class="chip m">5x</span> <span class="chip m">10x</span></div><i class="tog on"></i></div>
+    <div class="row on" style="grid-template-columns:70px 62px 1fr 440px 380px 66px;height:128px">
+      <div><span class="light g" style="display:block"></span></div><div class="logo k">FR</div><div class="nm"><b>$FROG</b></div>
+      <div><span class="chip">watching</span></div><div><span class="chip m">2x</span> <span class="chip m">5x</span> <span class="chip m">10x</span></div><i class="tog on"></i></div>
+    <div class="row on" style="grid-template-columns:70px 62px 1fr 440px 380px 66px;height:128px">
+      <div><span class="light r" style="display:block"></span></div><div class="logo k">M2</div><div class="nm"><b>$MOON2</b></div>
+      <div><span class="chip r" style="cursor:default">sold 03:12 · liquidity pulled</span></div><div><span class="lab" style="font-size:17px;margin:0">out before the dump</span></div><i class="tog on"></i></div>
+  </div>
+  <div class="three">
+    <div><span>YOU</span><p>Connect a wallet. Set a sell rule once.</p></div>
+    <div><span>AGENTS</span><p>Watch the dump radar and every pool, sell on a red light, take profit on a ladder.</p></div>
+    <div><span>CYMETICA HAS</span><p>Team Dump Radar (top 500 coins) · Gem Screener exit flags · Agent Wallets</p></div>
+  </div>
+  <div class="src">Coins are examples.</div>
+</div></section>
+
+<!-- 15 · sleep mode -->
+<section class="slide"><div class="stage">
+  <div class="chrome"><span><b>CYMETICA</b> &nbsp;·&nbsp; DEGEN AUTOPILOT</span><span class="pg"></span></div>
+  <div class="ihead"><div class="kick">Wrap it · one switch for all of them</div><div class="entry"><span class="chip g">free</span></div></div>
+  <div class="ititle"><h2>SLEEP MODE</h2></div>
+  <div class="scores" data-scores="sleep"></div>
+  <p class="tagline">One switch before bed. Every agent works the night. The morning brings the loot.</p>
+  <div class="sl-tog"><div class="bigtog" style="width:440px;height:230px;border-radius:115px"></div><span>SLEEP MODE · ON · 23:41</span></div>
+  <div class="loot"><h4>MORNING LOOT · 07:02 · EXAMPLE</h4>
+    <ul>
+      <li><b>14</b><span>farm tasks done</span></li>
+      <li><b>3</b><span>free tickets placed</span></li>
+      <li><b>1</b><span>forgotten claim found</span></li>
+      <li><b>1</b><span>rug dodged</span></li>
+      <li><b class="g glow">0</b><span>things for you to do</span></li>
+    </ul>
+  </div>
+  <div class="src">One night's counts across the ideas in this deck, as an example.</div>
+</div></section>
+
+<!-- 16 · wall 1 -->
+<section class="slide"><div class="stage">
+  <div class="chrome"><span><b>CYMETICA</b> &nbsp;·&nbsp; DEGEN AUTOPILOT</span><span class="pg"></span></div>
+  <div class="kick" style="left:80px;top:104px">All <span data-count="all">42</span> · one line each · 1 of 2</div>
+  <div class="w-legend"><span class="chip g">free</span><span class="chip">paper free</span><span class="chip b">$</span><span class="chip r" style="cursor:default">⚠ rule to clear</span></div>
+  <div class="wall" data-lanes="0,1,2,3,4"></div>
+  <div class="src">Green edge = worked out on its own slide (number top right). L D F = lazy, dream, fit, our scores 1-10. Hover ⚠ for the rule.</div>
+</div></section>
+
+<!-- 17 · wall 2 -->
+<section class="slide"><div class="stage">
+  <div class="chrome"><span><b>CYMETICA</b> &nbsp;·&nbsp; DEGEN AUTOPILOT</span><span class="pg"></span></div>
+  <div class="kick" style="left:80px;top:104px">All <span data-count="all">42</span> · one line each · 2 of 2</div>
+  <div class="w-legend"><span class="chip g">free</span><span class="chip">paper free</span><span class="chip b">$</span><span class="chip r" style="cursor:default">⚠ rule to clear</span></div>
+  <div class="wall" data-lanes="5,6,7,8" data-nolist="1"></div>
+  <div class="src">Green edge = worked out on its own slide (number top right). L D F = lazy, dream, fit, our scores 1-10. Hover ⚠ for the rule.</div>
+</div></section>
+
+</main>
+<div id="bar"><i></i></div>
+
+<script>
+// One model for every number in the deck: the map, the walls, the picks and the score tiles all read IDEAS.
+const LANES = ["Claim what's yours","Free seats & tickets","More farms","Agents at work","Copy the top","Prediction tickets","Ride the gems","Sleep easy","Share it"];
+// [lane, id, name, line, entry, L, D, F, warnShort, warnLong, slide]
+const RAW = [
+ [0,'lost','Lost & Found','Paste a wallet; agents find and claim every airdrop, reward and token it forgot.',['free'],10,7,6,'drainer optics',"'Connect and claim' is the classic drainer trick: the scan is read-only and every claim is shown before the one signature.",'03'],
+ [0,'dust','Dust Sweeper','37 dead tokens become USDC, or a ticket, in one click.',['free'],10,3,8,'','',''],
+ [0,'harvest','Auto-Harvest','Claims the minute a farmed token launches and sells your share by rule.',['free'],10,6,9,'','',''],
+ [0,'mirror','Missed-It Mirror','Shows what farming would have paid a wallet last year, then turns it on.',['free'],9,5,6,'an estimate','What a wallet would have farmed is an estimate, never a promise.',''],
+ [0,'rebate','Rebate Hunter','Collects every fee rebate and refund a wallet qualifies for.',['free'],10,3,4,'','',''],
+ [1,'prize','Prize Farmer','A free seat at every paper table and league puzzle; prizes are real ET10.',['free'],10,4,10,'50K ET10 a month','Agent League and Agent Tournaments share one budget of 50,000 ET10 a month at most; league ties go to the earlier answer.',''],
+ [1,'jackpot','Jackpot Farm','A free ticket a day, more for a deposit you can always withdraw; one winner a week.',['free','money'],10,9,5,'prize law',"Prize draws are regulated, and a pooled pot breaks Airdrop Farmer's never-pooled rule.",'07'],
+ [1,'mint','Free Mint Farmer','Mints every free mint that clears a quality gate.',['free'],9,6,3,'most go to zero','Needs its own quality gate: most free mints end worthless.',''],
+ [1,'airjack','Airdrop Jackpot','Opt in to pool your small airdrops into one weekly pot.',['free'],10,9,6,'prize law','Pooling winnings into a draw is gambling in many countries.',''],
+ [1,'season','Cymetica Season','Every product you use earns points toward ET10 drops.',['free'],10,7,7,'tokenomics call',"Points toward ET10 drops are Cymetica's tokenomics decision.",''],
+ [2,'stack','Points Stacker','One deposit run through 3-4 stacked points programs.',['money'],10,8,7,'stacked risk','Each layer adds a contract that can fail.',''],
+ [2,'hedge','Hedge Farmer','Perp-DEX points farmed long on one venue, short on another.',['money'],10,7,6,'fees and funding','Hedged volume costs fees and funding; the points must beat them.',''],
+ [2,'streak','Streak Keeper','Keeps every daily streak that pays points alive.',['free'],10,4,8,'','',''],
+ [2,'cashout','Points Cash-Out','Sells farmed points before the token exists: cash today.',['free'],8,5,5,'thin markets','Pre-token markets are thin and need a counterparty to trust.',''],
+ [2,'alloc','Allocation Hunter','KYC once; agents enter every token sale that clears the gate.',['money'],6,9,5,'KYC, countries','Token sales need your KYC and exclude some countries; the money is locked until launch.',''],
+ [2,'launch','Launch Seat','$5 at block 0 of every guarded launch on Cymetica\'s launchpads.',['money'],9,9,7,'most fade','Most new launches fade; a guard cuts rugs, not bad luck.',''],
+ [3,'node','Node Farmer','Testnet nodes run in the cloud; the points land in your wallet.',['free'],10,7,4,'hosted nodes','Only networks whose terms allow hosted nodes.','09'],
+ [3,'prop','Prop Farmer','Bots sit the funded-trader exam; pass and you get a funded account.',['money'],10,8,8,'desk simulated','Prop Desk runs simulated until real capital is live.','08'],
+ [3,'bounty','Bounty Hunter','Your agent tests apps and files verified bugs for bounties.',['free'],9,6,8,'noise gets banned','Bounty programmes ban accounts that file unverified reports.',''],
+ [3,'rent','Agent Rent','Your best bot sells its signals to other agents, paid per call.',['free'],9,6,6,'','',''],
+ [3,'dept','Farm Department','A Farm department in /company runs your farms; the top company earns 5% of fees.',['money'],9,8,8,'','',''],
+ [4,'champ','Copy the Champion','Your money follows the bot with the best record of the last month.',['paper','money'],10,8,9,'one week is luck','A week\'s winner is mostly luck; it follows a month.','06'],
+ [4,'caller','Caller Scorecard','Infiltrator scores public call channels; ape only the callers who really hit.',['money'],9,9,7,'callers dump','Callers sell into followers; it apes a caller only while the record holds.','05'],
+ [4,'whale','Whale Shadow','Mirrors the wallets that bought the last winners early.',['money'],9,8,4,'exit liquidity','Known smart wallets get front-run and sold into.',''],
+ [4,'nexus3','Nexus Daily 3','Nexus\'s three trades of the day, placed at your size.',['paper','money'],10,7,9,'','',''],
+ [4,'backbot','Back a Bot','Stake behind a tournament bot and share its pot.',['money'],9,7,7,'it is a bet','Backing a bot is a wager on its result.',''],
+ [5,'longshot','Longshot Farmer','3 free tickets a day on real events; one hit pays 20-50x.',['free','money'],10,9,6,'longshots lose','Cheap longshots are overpriced on average; it shows its paper record first.','02'],
+ [5,'wta','WTA Autopilot','Nexus picks for Winner Takes All markets.',['money'],10,8,5,'','',''],
+ [5,'headline','Headline Sniper','A scored headline lands; the agent trades its event card in seconds.',['money'],10,7,9,'','',''],
+ [5,'card','Event Card Autopilot','The day\'s hottest event card, bought and sold by rule.',['paper','money'],10,6,9,'','',''],
+ [6,'moonbag','Moonbag Farmer','$10 into every new Degen pick, stake back at 2x, a free bag rides.',['paper','money'],9,10,9,'most never double','Most picks never reach 2x; the page shows the hit rate.','01'],
+ [6,'packs','Gem Packs','A $10 pack of 3 random Degen picks; rarer card, bigger upside.',['money'],9,9,8,'gacha rules','Gacha rules differ by country; you own the coins, no buyback desk.','04'],
+ [6,'surfer','Narrative Surfer','Holds the leaders of the hottest theme and rotates weekly.',['money'],10,7,8,'','',''],
+ [6,'altswitch','Altseason Switch','Buys the alt basket the day alts start beating BTC.',['money'],10,8,7,'','',''],
+ [6,'listing','Listing Catcher','Buys on a big-exchange listing headline, sells within the hour.',['money'],10,8,7,'a speed race','Listing pumps are a race against professional bots.',''],
+ [7,'rug','Rug Guard','Watches every coin you hold, all night, and sells on a red light.',['free'],10,4,9,'sell permission','Needs a capped sell permission; a false alarm costs a sale.','10'],
+ [7,'ladder','Moon Ladder','Takes profit at 2x, 5x and 10x so a moon never round-trips.',['free'],10,5,7,'','',''],
+ [7,'unlock','Unlock Guard','Trims a bag before a big token unlock lands on it.',['free'],10,3,7,'','',''],
+ [7,'sleep','Sleep Mode','One switch at night: every agent works, the morning brings the loot.',['free'],10,8,10,'','','W'],
+ [8,'squad','Squad Farms','Farm with 4 friends and race other squads on one leaderboard.',['free'],9,6,6,'','',''],
+ [8,'flex','Flex Card','A monthly card of what your agents farmed, for you to share.',['free'],10,3,8,'','',''],
+ [8,'flip','Agent Flip','A bot with a long record becomes an agent token you can sell.',['money'],8,7,6,'needs rules','Selling an agent with a track record needs clear rules on what the buyer gets.','']
+];
+const IDEAS = RAW.map(r=>({lane:r[0],id:r[1],name:r[2],line:r[3],entry:r[4],L:r[5],D:r[6],F:r[7],ws:r[8],wl:r[9],slide:r[10]}));
+const byId = Object.fromEntries(IDEAS.map(i=>[i.id,i]));
+const esc = s=>String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+const isFree = i=>i.entry.includes('free');
+
+document.querySelectorAll('[data-count="all"]').forEach(e=>e.textContent=IDEAS.length);
+
+// score tiles
+document.querySelectorAll('[data-scores]').forEach(el=>{
+  const i=byId[el.dataset.scores];
+  el.innerHTML=[['LAZY',i.L],['DREAM',i.D],['FIT',i.F]].map(([k,v])=>`<div class="score"><b class="${v>=9?'top':''}">${v}</b><span>${k}</span></div>`).join('');
+});
+document.querySelectorAll('[data-pick]').forEach(el=>{
+  const i=byId[el.dataset.pick];
+  el.querySelector('.ms').innerHTML=[['LAZY',i.L],['DREAM',i.D],['FIT',i.F]].map(([k,v])=>`<div><b class="${v>=9?'g':''}">${v}</b><span>${k}</span></div>`).join('');
+});
+
+// map: x = dream, y = fit
+(function(){
+  const svg=document.getElementById('map');const W=1220,H=790;const L=90,R=1190,T=24,B=700;
+  const x=d=>L+(d-2.5)/8*(R-L), y=f=>B-(f-2.5)/8*(B-T);
+  let s='';
+  // quadrant glow
+  s+=`<rect x="${x(7.5)}" y="${y(10.5)}" width="${x(10.5)-x(7.5)}" height="${y(7.5)-y(10.5)}" rx="18" fill="rgba(0,255,136,.05)" stroke="rgba(0,255,136,.25)" stroke-dasharray="6 6"/>`;
+  s+=`<text x="${x(10.5)-16}" y="${y(10.5)+30}" text-anchor="end" font-family="JetBrains Mono" font-weight="800" font-size="15" letter-spacing="3" fill="#00ff88">BIG DREAM · MOSTLY BUILT</text>`;
+  for(let v=3;v<=10;v++){
+    s+=`<line x1="${x(v)}" y1="${T}" x2="${x(v)}" y2="${B}" stroke="#1e3050" stroke-width="1"/>`;
+    s+=`<text x="${x(v)}" y="${B+30}" text-anchor="middle" font-family="JetBrains Mono" font-size="16" fill="#7f93ad">${v}</text>`;
+    s+=`<line x1="${L}" y1="${y(v)}" x2="${R}" y2="${y(v)}" stroke="#1e3050" stroke-width="1"/>`;
+    s+=`<text x="${L-18}" y="${y(v)+5}" text-anchor="end" font-family="JetBrains Mono" font-size="16" fill="#7f93ad">${v}</text>`;
+  }
+  s+=`<text x="${(L+R)/2}" y="${B+70}" text-anchor="middle" font-family="JetBrains Mono" font-weight="800" font-size="16" letter-spacing="3" fill="#a9b8cc">DREAM: HOW BIG IT COULD PAY →</text>`;
+  s+=`<text transform="translate(26 ${(T+B)/2}) rotate(-90)" text-anchor="middle" font-family="JetBrains Mono" font-weight="800" font-size="16" letter-spacing="3" fill="#a9b8cc">FIT: HOW MUCH CYMETICA HAS →</text>`;
+  // group identical positions, spread them in a small ring
+  const groups={};IDEAS.forEach(i=>{const k=i.D+','+i.F;(groups[k]=groups[k]||[]).push(i);});
+  const dots=[];
+  Object.values(groups).forEach(g=>{
+    g.sort((a,b)=>(b.slide?1:0)-(a.slide?1:0));
+    g.forEach((i,n)=>{let cx=x(i.D),cy=y(i.F);
+      if(g.length>1){const a=-Math.PI/2+n*2*Math.PI/g.length;const rr=g.length===2?20:26;cx+=Math.cos(a)*rr*1.25;cy+=Math.sin(a)*rr;}
+      dots.push({i,cx,cy});});
+  });
+  dots.sort((a,b)=>(a.i.slide?1:0)-(b.i.slide?1:0));
+  dots.forEach(({i,cx,cy})=>{
+    const col=isFree(i)?'#00ff88':'#00cfff';const star=!!i.slide;const r=star?19:9;
+    const ring=`stroke="#0a0e17" stroke-width="2"`;
+    const glow=star?`filter="url(#gl)"`:'';
+    s+=`<g><title>${esc(i.name)}: ${esc(i.line)} (L${i.L} D${i.D} F${i.F})</title><circle cx="${cx.toFixed(1)}" cy="${cy.toFixed(1)}" r="${r}" fill="${col}" fill-opacity="${star?1:.55}" ${ring} ${glow}/>`;
+    if(star)s+=`<text x="${cx.toFixed(1)}" y="${(cy+5).toFixed(1)}" text-anchor="middle" font-family="JetBrains Mono" font-weight="800" font-size="14" fill="#06090f">${i.slide}</text>`;
+    s+='</g>';
+  });
+  svg.innerHTML=`<defs><filter id="gl" x="-80%" y="-80%" width="260%" height="260%"><feGaussianBlur stdDeviation="5" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter></defs>`+s;
+  const key=document.getElementById('mapkey');
+  key.innerHTML=IDEAS.filter(i=>i.slide).sort((a,b)=>(a.slide==='W'?99:+a.slide)-(b.slide==='W'?99:+b.slide)).map(i=>
+    `<li><i style="background:${isFree(i)?'var(--green)':'var(--cyan)'}">${i.slide}</i>${esc(i.name)}</li>`).join('');
+})();
+
+// walls
+document.querySelectorAll('.wall').forEach(w=>{
+  const lanes=w.dataset.lanes.split(',').map(Number);
+  const cols=lanes.length+(w.dataset.nolist?1:0);
+  w.style.gridTemplateColumns=`repeat(${cols},1fr)`;
+  const chip=e=>e==='free'?'<span class="chip g">free</span>':e==='paper'?'<span class="chip">paper free</span>':'<span class="chip b">$</span>';
+  let h='';
+  lanes.forEach(l=>{
+    h+=`<div class="lane"><h4>${esc(LANES[l])}</h4>`;
+    IDEAS.filter(i=>i.lane===l).forEach(i=>{
+      h+=`<div class="tile${i.slide?' star':''}">${i.slide?`<span class="sn">${i.slide==='W'?'WRAP':'#'+i.slide}</span>`:''}<b>${esc(i.name)}</b><p>${esc(i.line)}</p>`+
+         `<div class="tc">${i.entry.map(chip).join('')}${i.ws?`<span class="chip r" title="${esc(i.wl)}">⚠ ${esc(i.ws)}</span>`:''}<span class="sc">L${i.L} D${i.D} F${i.F}</span></div></div>`;
+    });
+    h+='</div>';
+  });
+  if(w.dataset.nolist){
+    h+=`<div class="lane"><h4 style="color:var(--red)">Not on the list</h4><div class="nolist"><ul>
+      <li>Many wallets per person (sybil)</li><li>Wash volume, self-trades</li><li>Posting or replying as you</li><li>Bots in tap-to-earn games</li><li>Auto-launched memecoins</li></ul>
+      <p>Projects cancel them, the law forbids them, or they flood the platform with rugs.</p></div></div>`;
+  }
+  w.innerHTML=h;
+});
+
+// page numbers, scaling, navigation
+const slides=[...document.querySelectorAll('.slide')];
+slides.forEach((sec,n)=>{const pg=sec.querySelector('.pg');if(pg)pg.textContent=String(n+1).padStart(2,'0')+' / '+String(slides.length).padStart(2,'0');});
+const q=new URLSearchParams(location.search);
+if(q.get('s')){document.body.classList.add('solo');const k=Math.max(1,Math.min(slides.length,+q.get('s')))-1;slides[k].classList.add('show');}
+function fit(){
+  const vw=innerWidth,vh=innerHeight,narrow=vw/vh<1.25;
+  const s=narrow?vw/1920:Math.min(vw/1920,vh/1080);
+  document.documentElement.style.setProperty('--s',s);
+  document.documentElement.style.scrollSnapType=narrow?'none':'';
+  slides.forEach(x=>x.style.height=narrow?(1080*s)+'px':'');
+}
+fit();addEventListener('resize',fit);
+const bar=document.querySelector('#bar i');
+function cur(){const h=slides[0].offsetHeight||1;return Math.round(scrollY/h);}
+function go(n){n=Math.max(0,Math.min(slides.length-1,n));slides[n].scrollIntoView({behavior:'smooth'});}
+addEventListener('scroll',()=>{bar.style.width=((cur()+1)/slides.length*100)+'%';},{passive:true});
+bar.style.width=(1/slides.length*100)+'%';
+addEventListener('keydown',e=>{
+  if(['ArrowDown','ArrowRight','PageDown',' '].includes(e.key)){e.preventDefault();go(cur()+1);}
+  else if(['ArrowUp','ArrowLeft','PageUp'].includes(e.key)){e.preventDefault();go(cur()-1);}
+  else if(e.key==='Home'){e.preventDefault();go(0);}
+  else if(e.key==='End'){e.preventDefault();go(slides.length-1);}
+});
+</script>
+</body>
+</html>
