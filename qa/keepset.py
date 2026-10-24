@@ -43,6 +43,7 @@ can say so rather than reporting 23 missing files.
 from __future__ import annotations
 
 import json
+import os
 import re
 import subprocess
 from pathlib import Path
@@ -69,6 +70,22 @@ TRADE_RECORDS = ("paper.jsonl", "clones.jsonl")
 
 # git chokes on a command line of thousands of paths, and Windows sooner.
 GIT_BATCH = 200
+
+# Set by scripts/commit.py in the environment of every git call it makes, so the hook it
+# sets off knows the commit names its own paths. Inside `git commit -- PATH` a `git add` lands
+# in the temporary index the commit is built from: the manifest rode into desk 3280994c
+# (+971 lines) and the page into four commits in nine minutes (T-0038, OP-0016). Under it,
+# `track` writes the manifest and does not add it, the hook renders the page and does not
+# add it, and commit.py commits each on its own. Not GIT_INDEX_FILE -- `git rev-parse
+# --git-path index` returns exactly that, so a comparison never fires, and a session's own
+# `git commit -- PATH` needs the manifest to travel with its state; not QA_CREW_DEPT --
+# `console poll` and a manual run go without it. .githooks/pre-commit spells the name too.
+COMMIT_PY_MARKER = "QA_COMMIT_PY"
+
+
+def under_commit_py() -> bool:
+    """The hook is running for a commit scripts/commit.py makes."""
+    return bool(os.environ.get(COMMIT_PY_MARKER))
 
 
 def evidence_path(evidence_id: str, root: Path | None = None) -> Path:
@@ -352,13 +369,16 @@ def track(quiet: bool = False) -> int:
             print(f"keep: WARNING the manifest was not written: {exc}")
         return 0
 
-    result = subprocess.run(["git", "add", "-f", *wanted], cwd=REPO_ROOT,
-                            capture_output=True, text=True)
-    if result.returncode != 0:
-        if not quiet:
-            print(f"keep: WARNING could not add the manifest: "
-                  f"{result.stderr.strip()[:200]}")
-        return 0
+    # Under scripts/commit.py the manifest is written and not added: an add here is a commit
+    # of it under somebody else's message, and commit.py commits it on its own right after.
+    if not under_commit_py():
+        result = subprocess.run(["git", "add", "-f", *wanted], cwd=REPO_ROOT,
+                                capture_output=True, text=True)
+        if result.returncode != 0:
+            if not quiet:
+                print(f"keep: WARNING could not add the manifest: "
+                      f"{result.stderr.strip()[:200]}")
+            return 0
     if added_lines and not quiet:
         print(f"keep: {added_lines} new capture(s) proved, {total} in the "
               f"manifest; bodies stay on disk for `keep.py archive`")

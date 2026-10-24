@@ -10,7 +10,11 @@ are denied in its argv (`qa.crew.DENY_ALL`) and this is what it has instead:
   * it holds one lock (`state/crew/commit.lock`) for the add and the commit together;
   * it commits only the paths it names (`git commit -- PATH`), whatever else is staged;
   * a worker's commit says which department and ticket wrote it, `Crew: <dept> <ticket>`,
-    so the week can read who did what without a transcript.
+    so the week can read who did what without a transcript;
+  * every git call it makes carries its marker (`qa.keepset.COMMIT_PY_MARKER`), so the
+    pre-commit hook it sets off writes the evidence manifest and renders the page without
+    adding either -- an add there lands in the commit of named paths (T-0038) -- and then
+    each goes in on its own: "manifest", then "render" when state/ is clean.
 
 It never pushes and never tags: those are the operator's and the deep pass's (CLAUDE.md).
 """
@@ -30,6 +34,7 @@ CODE_ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(CODE_ROOT))
 
 from qa.crew import crew_dir  # noqa: E402
+from qa.keepset import COMMIT_PY_MARKER  # noqa: E402
 from qa.state import file_lock  # noqa: E402
 
 LOCK_WAIT_SECONDS = 300
@@ -68,8 +73,11 @@ def message(text: str) -> str:
 
 
 def _git(base: Path, *args: str) -> subprocess.CompletedProcess:
+    """One git call, with the marker in its environment only: `crew.py tidy` calls `commit()`
+    in-process, and a marker left in os.environ would silence the next `keep.py track`."""
     return subprocess.run(["git", "-C", str(base), *args], capture_output=True, text=True,
-                          encoding="utf-8", errors="replace")
+                          encoding="utf-8", errors="replace",
+                          env={**os.environ, COMMIT_PY_MARKER: "1"})
 
 
 def pass_in_flight() -> bool:
@@ -113,30 +121,48 @@ def commit(text: str, paths: list[str]) -> int:
                     print(f"[commit] git add failed: {added.stderr.strip()[:300]}")
                     return 1
                 done = _git(base, "commit", "-m", message(text), "--", *paths)
+                print((done.stdout or done.stderr).strip()[:600])
                 if done.returncode == 0:
-                    _commit_the_page(base)
+                    _follow_ups(base)
             except OSError as exc:
                 print(f"[commit] git could not be run: {exc}")
                 return 1
-            print((done.stdout or done.stderr).strip()[:600])
             return 0 if done.returncode == 0 else 1
 
 
+MANIFEST = "audits/evidence-manifest.jsonl"
 PAGE = "dashboard/index.html"
 
 
-def _commit_the_page(base: Path) -> None:
-    """The pre-commit hook renders the page and stages it; a commit of named paths leaves it
-    out, staged and changed (MM) -- a dirty tree nobody owns, which prereg refuses
-    (crew-before-c9, item 1). The hook stages it only when state/ is clean, so the page is a
-    render of what is committed: it goes in right after, on its own."""
-    staged = _git(base, "diff", "--cached", "--name-only")
-    if staged.returncode != 0 or PAGE not in staged.stdout.split():
-        return
+def _follow_ups(base: Path) -> None:
+    """What the hook wrote and, under the marker, left in the tree: the manifest, then the
+    page. Left there, each is a dirty tree nobody owns, which prereg refuses (crew-before-c9,
+    item 1). The page goes in only when state/ is clean, so it is a render of what is
+    committed."""
+    _on_its_own(base, MANIFEST, "manifest")
     state = _git(base, "status", "--porcelain", "--", "state/")
-    if state.returncode != 0 or state.stdout.strip():
+    if state.returncode == 0 and not state.stdout.strip():
+        _on_its_own(base, PAGE, "render")
+
+
+def _on_its_own(base: Path, path: str, subject: str) -> None:
+    """Commit one file under its own subject, whenever git status names it.
+
+    Added first, always. The state a commit of named paths used to leave -- the index behind
+    HEAD, the tree equal to it (MM) -- is one a bare `git commit -- PATH` cannot fix: it ends
+    in "nothing to commit" and puts the index back. After the add there is either a change
+    to commit or nothing at all, and nothing is not an error here."""
+    status = _git(base, "status", "--porcelain", "--", path)
+    if status.returncode != 0 or not status.stdout.strip():
         return
-    _git(base, "commit", "-m", message("render"), "--", PAGE)
+    if _git(base, "add", "--", path).returncode != 0:
+        print(f"[commit] {path} is changed and could not be added")
+        return
+    if _git(base, "diff", "--cached", "--quiet", "--", path).returncode != 1:
+        return
+    done = _git(base, "commit", "-m", message(subject), "--", path)
+    print(f"[commit] {subject}: " + ("committed on its own" if done.returncode == 0
+                                      else (done.stdout or done.stderr).strip()[:300]))
 
 
 def main(argv: list[str] | None = None) -> int:
