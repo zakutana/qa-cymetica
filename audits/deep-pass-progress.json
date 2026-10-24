@@ -24,9 +24,23 @@
     "parts": "16 parts idle in the patrol's window (the laboratory, its morning page, the league tools, fomo/hot watchers): the operator paused the laboratory and the company; a question for the week, nothing cut",
     "mechanisms": "never_fired: 4 of 57, all exercised by a test; nothing to remove"
   },
-  "gaps": [],
+  "gaps": [
+    {"id": "X01", "nodeid": "qa/fold.py:303", "claim": "an evidence-only result overwrites the row's detail and provenance at any level (above the level-V gate), though it adjudicates nothing; live: CYM-a2a-first-pass-not-grounded's detail reads 'not asked ... QA_ALLOW_A2A_SEND' with provenance a level-R run, which submit.py prints as MEASURED VALUES and verify.py takes as measured_at", "source": "reread", "area": "core", "votes": null, "verdict": null, "fixed": false, "commit": null},
+    {"id": "X02", "nodeid": "qa/fold.py:263", "claim": "results keyed by nodeid keep only the last per check, so a call-phase failure followed by a teardown error (report_plugin emits both) is dropped: a measured regression and its reopen are lost (latent: 0 of 562 records have two)", "source": "reread", "area": "core", "votes": null, "verdict": null, "fixed": false, "commit": null},
+    {"id": "X03", "nodeid": "qa/fold.py:1165", "claim": "a row created by split_report with a nodeid lacking '::' becomes UNVERIFIABLE check_not_a_nodeid with no transition on the second no-run fold (the structural pass runs before _apply_events builds the row): a CHECK move with neither run_id nor event_id, and two folds disagree", "source": "reread", "area": "core", "votes": null, "verdict": null, "fixed": false, "commit": null},
+    {"id": "X04", "nodeid": "qa/fold.py:303", "claim": "roles == {'evidence'} is decided per row: a row with a passing verdict check and an evidence check whose measurement is inconclusive moves to PASSING, against 'adjudicated every check the row declares' (latent: no mixed row today)", "source": "reread", "area": "core", "votes": null, "verdict": null, "fixed": false, "commit": null},
+    {"id": "M01", "nodeid": "scripts/fomo_watch.py:565", "claim": "the 10,000/day ceiling (_Counted) exists only inside run(); the lab's _fomo_round (scripts/lab.py:3812) calls watch.tick(watch._client()) uncounted, a new process every 20 min, ~9,700 quotes/day at the median and ~40,000 at p99; the per-process count cannot cover it (dormant since 2026-10-16)", "source": "reread", "area": "memecoins", "votes": null, "verdict": null, "fixed": false, "commit": null},
+    {"id": "M02", "nodeid": "scripts/fomo_watch.py:443", "claim": "resolve() puts error dicts into written/readings, so 'checked' counts failed reads as checkpoints; a search outage (503 x5) reads as 5 checkpoints with 0 rows written", "source": "reread", "area": "memecoins", "votes": null, "verdict": null, "fixed": false, "commit": null},
+    {"id": "M03", "nodeid": "scripts/fomo_watch.py:274", "claim": "capture() still uses _quote, which returns None on any non-200 (rule 8): a 503 writes the signal row with price_usd None and no error, read later as 'the terminal did not know the coin' and counted unpriced", "source": "reread", "area": "memecoins", "votes": null, "verdict": null, "fixed": false, "commit": null},
+    {"id": "M04", "nodeid": "qa/fomo.py:939", "claim": "compare() counts a path read only partway as a miss (peak over what was read); 72% of hot coins and 62% of controls have no reading past 54 h at the 3x-in-72h readout, so the rates are understated and the lift biased, unlike stop_study and ten_dollars which exclude unfinished paths", "source": "reread", "area": "memecoins", "votes": null, "verdict": null, "fixed": false, "commit": null},
+    {"id": "M05", "nodeid": "scripts/fomo_watch.py:421", "claim": "entry retries call _listing directly, outside the per-round cap the docstring promises and not de-duplicated with the checkpoint quote", "source": "reread", "area": "memecoins", "votes": null, "verdict": null, "fixed": false, "commit": null},
+    {"id": "M06", "nodeid": "scripts/fomo_watch.py:240", "claim": "no lock around a whole round: two overlapping rounds both write the same reading (416 duplicated study rows on 2026-09-24/25, none since); the same race on checkpoints would double-count", "source": "reread", "area": "memecoins", "votes": null, "verdict": null, "fixed": false, "commit": null}
+  ],
   "review": {"done": false, "findings": null},
-  "implemented": [],
+  "implemented": [
+    {"line": "2026-10-12 Kod pro firmu: BTC rozpeti verdiktu (T-0039, T-0050, OP-0018 body 1-6)", "commit": "4403c058"},
+    {"line": "2026-10-12 Kod pro firmu: sampler sleduje benchmark bezicich roomu (OP-0018 bod 5)", "commit": "bad17f14"}
+  ],
   "left": [
     {"line": "2026-10-11 Laborka v3 P3-P7 ceka na tahy", "why": "waits on laboratory ticks and the outsider's claude login; the laboratory is paused"},
     {"line": "2026-10-08 Sledovat #142, #136, #121, #51, FOMO #762, liga od 1. 11., ET-30676, PR #831", "why": "only watching (0b leaves a watching line); 17 days old, so the ceiling guard stays red on it as well"},
