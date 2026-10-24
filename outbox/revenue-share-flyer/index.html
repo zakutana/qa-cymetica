@@ -89,24 +89,26 @@
   .way { margin-top: 10px; padding-top: 20px; border-top: 1px solid transparent;
     border-image: linear-gradient(90deg, rgba(255, 255, 255, 0), rgba(0, 207, 255, .45) 25%, rgba(0, 255, 136, .35) 75%, rgba(255, 255, 255, 0)) 1; }
   .way .lb { font: 800 25px 'JetBrains Mono'; letter-spacing: .22em; color: var(--cyan); text-shadow: 0 0 10px rgba(0, 207, 255, .6); }
-  .steps { display: grid; grid-template-columns: 1fr 30px 1fr 30px 1fr 30px 1fr; align-items: start; margin-top: 18px; }
+  .steps { display: grid; grid-template-columns: 1fr 46px 1fr 46px 1fr 46px 1fr; align-items: start; margin-top: 18px; }
+  .st { min-width: 0; }
   .st i { display: block; font: 800 25px 'JetBrains Mono'; font-style: normal; color: var(--green); }
-  .st b { display: block; margin-top: 8px; font: 400 32px/1.05 'Archivo Black', sans-serif; color: #f4fbff; }
-  .st span { display: block; margin-top: 10px; font: 600 22px/1.25 'JetBrains Mono'; color: #b9cdd9; }
-  .ar { padding-top: 46px; text-align: center; font: 800 34px 'JetBrains Mono'; color: var(--cyan); text-shadow: 0 0 12px rgba(0, 207, 255, .7); }
+  .st b { display: block; margin-top: 8px; font: 400 29px/1.05 'Archivo Black', sans-serif; color: #f4fbff; }
+  .st span { display: block; margin-top: 10px; font: 600 21px/1.25 'JetBrains Mono'; color: #b9cdd9; }
+  /* the arrow in a column of its own, clear of both words either side */
+  .ar { padding-top: 50px; text-align: center; font: 800 28px/1 'JetBrains Mono'; color: var(--cyan); text-shadow: 0 0 12px rgba(0, 207, 255, .7); }
 
   /* the one link, to the guide (the operator, 2026-10-23: "tlacitko stake your claim smaz ... misto nej dej link na guide
      co udelame ... staci jen jeden link a nejak pekne"). The guide page does not exist yet: cymetica.com/quest is a
      placeholder address until it does. A bar of the board's glass, a lit rim in green to cyan, the text, no button. */
-  .guide { position: relative; display: grid; grid-template-columns: auto 1fr auto; align-items: center; gap: 22px; margin-top: 26px; padding: 20px 30px; border-radius: 18px;
-    background: linear-gradient(90deg, rgba(0, 255, 136, .1), rgba(0, 207, 255, .08)); box-shadow: inset 0 1px 0 rgba(255, 255, 255, .22), 0 0 30px rgba(0, 255, 160, .12); }
-  .guide::before { content: ''; position: absolute; inset: 0; border-radius: inherit; padding: 1.5px; pointer-events: none;
-    background: linear-gradient(90deg, #00ff88, #00cfff); -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0); -webkit-mask-composite: xor; mask-composite: exclude; }
-  .guide .g1 { font: 400 30px 'Archivo Black', sans-serif; letter-spacing: .04em; color: transparent; -webkit-background-clip: text; background-clip: text;
+  /* no box round it (glass on glass); a hairline above, then the label small and the address big, in the board's own
+     green-to-cyan */
+  .guide { margin-top: 30px; padding-top: 22px; border-top: 1px solid transparent;
+    border-image: linear-gradient(90deg, rgba(255, 255, 255, 0), rgba(0, 255, 136, .5) 20%, rgba(0, 207, 255, .5) 80%, rgba(255, 255, 255, 0)) 1; }
+  .guide .g2 { display: block; font: 800 19px 'JetBrains Mono'; letter-spacing: .24em; color: var(--cyan); text-shadow: 0 0 10px rgba(0, 207, 255, .6); text-transform: uppercase; }
+  .guide .g1 { display: inline-block; margin-top: 8px; margin-right: 22px; font: 400 38px 'Archivo Black', sans-serif; letter-spacing: .03em; color: transparent; -webkit-background-clip: text; background-clip: text;
     background-image: linear-gradient(180deg, #f2fffb, #4dffb4 55%, #00d0e8); filter: drop-shadow(0 0 12px rgba(0, 255, 160, .45)); }
-  .guide .g2 { font: 600 22px 'JetBrains Mono'; color: #cfe0ea; }
-  .guide .g3 { font: 800 25px 'JetBrains Mono'; color: var(--cyan); text-shadow: 0 0 10px rgba(0, 207, 255, .6); white-space: nowrap; }
-  .guide .g3 i { font-style: normal; color: var(--green); margin-left: 6px; }
+  .guide .g3 { display: inline-block; font: 800 30px 'JetBrains Mono'; color: var(--cyan); text-shadow: 0 0 10px rgba(0, 207, 255, .6); white-space: nowrap; }
+  .guide .g3 i { font-style: normal; color: var(--green); margin-left: 8px; }
 </style>
 </head>
 <body>
@@ -166,7 +168,7 @@
     </div>
   </div>
 
-  <div class="guide"><span class="g1">START HERE</span><span class="g2">The Cymetica Quest guide</span><span class="g3">cymetica.com/quest <i>&rarr;</i></span></div>
+  <div class="guide"><span class="g2">The Cymetica Quest guide</span><span class="g1">START HERE</span><span class="g3">cymetica.com/quest<i>&rarr;</i></span></div>
 </div></div>
 <script>
 (function () {
