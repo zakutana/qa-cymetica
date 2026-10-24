@@ -94,7 +94,14 @@ _DENIED_COMMANDS = ("git push", "git tag", "git commit", "git add", "git revert"
 # may run must not be what it may rewrite.
 _PROTECTED_FILES = ("CLAUDE.md", "NEXT.md", "DEEP-PASS.md", ".claude/**", "scripts/**",
                     "qa/**", ".githooks/**", "components.yaml", "tests/meta/**",
-                    "tests/conftest.py", "pyproject.toml", ".env")
+                    "tests/conftest.py", "pyproject.toml", ".env",
+                    # What runs inside every test session the operator or the deep pass starts:
+                    # a module at the root, a conftest.py at any depth, and pytest's config files
+                    # that outrank pyproject.toml (the week of 2026-10-18). Claude Code's gitignore
+                    # patterns: a CLI rule's leading `/` anchors at the worker's working directory,
+                    # the repository root (run_process), and `*` stays in one segment, so `/*.py`
+                    # leaves Bugs' checks under tests/ alone; a bare `*.py` would deny them all.
+                    "/*.py", "**/conftest.py", "/pytest.ini", "/tox.ini", "/setup.cfg")
 # Both shells: on this Windows host a worker has the PowerShell tool beside Bash, and a
 # deny written for one does not cover the other.
 DENY_ALL = (
