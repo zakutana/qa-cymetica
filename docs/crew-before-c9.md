@@ -16,6 +16,20 @@ skipped tick is a failure, a killed tick's marker goes with it, a dead pid's mar
 note is data; 8 the laborator skill and plan say one thing about gaps and written blocks.
 Tests: `tests/meta/test_pipeline_crew.py`, `tests/repo/test_reminders.py`. Items 9 to 11 stay open.
 
+**2026-10-25, deep pass (NEXT.md 2026-10-12 and 2026-10-18), test first.** 9 a. built, Bugs'
+spec green with its mark deleted (fde3ff82), and a species whose clone failed otherwise (their
+400/409, or `unknown`) waits 6 h, three such since its last accepted clone leave it; 9 b. and d.
+left: b. is a MUTATE delete on their side under the operator's veto, and at 70 owned against the
+200 documented since REPLY-0175 the all-cap does not bind; d. rests on b. 10 done: fomo_watch
+1b636163, the patrol's daily ceiling 87eab758. 11: `outcome()` has read the real CLI since the
+first start -- 81 runs on 10-12/13 in state/crew.jsonl, turns, cost and tokens on every one, three
+`error_max_turns` read "ran out of turns" -- so nothing to build; `run_outsider` reads the act's
+exit (6ddd556f); `metrics` counts stuck from the start (66ae996b); a failed h2h pair is tried
+again after 6 h, three launches at most (0925febb). Rotation left: the bus makes a ticket once
+per key for ever, so a rotated done ticket would open its work again, and `fold()` needs every
+row of an open ticket; 229 KB after two days of running, and `keep.py snapshot` already copies
+both into audits/lab/.
+
 ## Before the first start
 
 1. **Nobody owns a dirty tree, so Bugs never reaches level V** (architecture, high).
