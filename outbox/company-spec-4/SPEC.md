@@ -256,7 +256,9 @@ the Public / Private pill top right and the colour dots standing down its right 
 row, no divider**, each only an icon with its name as a tooltip. Clicking an icon changes the preview; changing the colour changes the **model only**,
 never the icons (they stay one neutral colour, the current one with the selection rim). The plates over the moving 3D are opaque, and the preview
 draws at most 1.2 million pixels a frame (O1). **"Create your company" offers all seventeen too**, its arrows going through the new ten as through
-the seven. Mockup: `app.js` (`uvCard`), `style.css`, `u3d.js` (`Preview`), `builder.html`.
+the seven. Where a browser cannot draw 3D (and for the moment before 3D starts) the ten have no flat picture yet: the mockup shows each one's line
+icon in the company's colour instead of falling back to a Dreadnought (`universe.js`, `iconArt`); a flat drawing of each is yours to add if you
+keep the flat fallback. Mockup: `app.js` (`uvCard`), `style.css`, `u3d.js` (`Preview`), `builder.html`.
 
 **All seventeen are built one way** (the owner: *"ty spodni modely jsou udelane v jinem stylu, nejsou osvetlene, nemaji zari, nejsou tak propracovane ...
 at to udelaji stejne a mame jen jeden zpusob"*): a dark plated steel hull, the company colour only in the lights, windows lit deck by deck while a

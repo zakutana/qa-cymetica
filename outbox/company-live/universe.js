@@ -746,10 +746,23 @@
     return '<ellipse cx="' + f1(c[0]) + '" cy="' + f1(c[1]) + '" rx="' + f1(rx * 1.18) + '" ry="' + f1(ry * 1.18) + '" fill="' + acc + '" opacity=".07"/>' +
       '<ellipse class="rim' + (priv ? ' fence' : '') + '" cx="' + f1(c[0]) + '" cy="' + f1(c[1]) + '" rx="' + f1(rx) + '" ry="' + f1(ry) + '" fill="none" stroke="' + acc + '" stroke-width="1.4"/>';
   }
+  // A station drawn only in 3D (the ten of spec 4 M, stations-a..e.js) has no flat picture: its line icon stands in, in
+  // its colour, about as tall as the seven are drawn, so a browser without 3D and the moment before 3D starts show the station
+  // picked, not a Dreadnought (the fallback below)
+  function iconArt(key) {
+    return function (n, acc) {
+      VB = [0, 66, 0, 66, 66];
+      var top = 5.4, foot = Q(3, 3, 0), head = Q(3, 3, top), s = (foot[1] - head[1]) / 20;
+      Q(0.8, 5.2, 0); Q(5.2, 0.8, 0);
+      VB[0] = Math.min(VB[0], foot[0] - 10 * s); VB[2] = Math.max(VB[2], foot[0] + 10 * s);
+      return vfDone('<g transform="translate(' + f1(foot[0] - 10 * s) + ' ' + f1(head[1]) + ') scale(' + s.toFixed(3) + ')" style="color:' + acc + '" fill="none" stroke="' + acc +
+        '" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round">' + CO.STATION_ICON[key] + '</g>', top, 0);
+    };
+  }
   // the station alone, with or without its ring, in the station's own coordinates (its middle at 3,3)
   CO.skinArt = function (o) {
     var acc = CO.accentHex(o.accent), n = Math.max(1, Math.min(8, o.floors || 1));
-    var b = (SKIN[o.skin] || SKIN.tower)(n, acc, rng(o.seed || 7)), rr = b.foot ? ringOf(b.foot) : Math.max(2.0, Math.min(b.ext, 4.5) * 0.72), zb = b.bot - 0.4;
+    var b = (SKIN[o.skin] || (CO.STATION_ICON && CO.STATION_ICON[o.skin] ? iconArt(o.skin) : SKIN.tower))(n, acc, rng(o.seed || 7)), rr = b.foot ? ringOf(b.foot) : Math.max(2.0, Math.min(b.ext, 4.5) * 0.72), zb = b.bot - 0.4;
     return { svg: (o.plot === false ? '' : holo(o.you ? C.green : acc, o.priv, rr, zb)) + b.svg, top: b.top, bot: zb, ext: b.ext, acc: acc };
   };
   var LOCK = function (x, y, col) {
