@@ -1,0 +1,182 @@
+{
+  "schema": 2,
+  "run_id": "run-20261024T084049Z-1bec54c1",
+  "started_at": "2026-10-24T08:40:58+00:00",
+  "finished_at": "2026-10-24T08:41:12+00:00",
+  "git_head": "1bec54c126e44dbaed9e9a859b20c9f3c71948d1",
+  "git_short": "1bec54c1",
+  "git_dirty": true,
+  "prereg_id": null,
+  "prereg_tag_sha": null,
+  "prereg_commit": null,
+  "platform_fingerprint": "sha256:d8d303473c511ddda1e9dda83d8ea683193772e3fd78e5cb47d8d7a0dafaacf3",
+  "fingerprint_parts": {
+    "/.well-known/mcp.json": "87cfb90996de3984d108ad59b3e62c494d0db4355456f89dba1f67bd69ce0952",
+    "/.well-known/agent-card.json": "140c9170c511fdfb0020ed64a17d94aa930b5a5324b694ee225ecced7f762e88",
+    "/.well-known/agent-skills.json": "b0592b7e51942365f9c61fd46bd233118cabf591f7ff46d7387f9311b5a3a7c6",
+    "/.well-known/ai-plugin.json": "6ab78de3594c4cc3eeac74e02d88e28841bc38ca87933cc14172115bf7c1dded",
+    "/.well-known/udc.json": "1ec34383ede550c71fb3e81b989b8b92b0da3ce7ccbdc497c9edf5a8fcbd6c14",
+    "/openapi.json": "1e1b7e2efeaff813451d647f88f52353e50627b882e63a65842dd1238b8e108c",
+    "/openapi-public.json": "0aff7c1fe6a6f6ab16d26e7f614c448d274da23a22c024819de2e442f385e11f",
+    "/llms.txt": "ebf0f3b86b5af471bfa75e6a288dccce3dabe6e7a77807916d31b8fe43d4979e",
+    "mcp:tools/list:none": "1067e3d4bca4e2848dc2675778a10b89150eb3331f315325dd6db72a5c2d1cc9"
+  },
+  "fingerprint_errors": {},
+  "fingerprint_drifted": false,
+  "fingerprint_changed_parts": [],
+  "identities_present": {
+    "anon": true,
+    "trusted": true,
+    "recognized": false
+  },
+  "python_version": "3.13.13",
+  "pytest_version": "8.3.4",
+  "selector": "tests/rest/test_airdrop_farmer_lists_no_farm_whose_token_trades.py -q -p no:cacheprovider",
+  "selector_full": false,
+  "narrowing": [],
+  "paths": [
+    "tests/rest/test_airdrop_farmer_lists_no_farm_whose_token_trades.py"
+  ],
+  "allow_mutate": false,
+  "collected": [
+    "tests/rest/test_airdrop_farmer_lists_no_farm_whose_token_trades.py::test_airdrop_farmer_lists_no_farm_whose_token_trades"
+  ],
+  "results": [
+    {
+      "nodeid": "tests/rest/test_airdrop_farmer_lists_no_farm_whose_token_trades.py::test_airdrop_farmer_lists_no_farm_whose_token_trades",
+      "component": "rest.airdrop_farmer",
+      "tier": "SAFE",
+      "surface": "rest",
+      "claim_id": null,
+      "ticket_id": null,
+      "volatile": false,
+      "outcome": "failed",
+      "phase": "call",
+      "role": "verdict",
+      "duration_ms": 2418,
+      "evidence_ids": [
+        "58ca2aede16d08a2023386a42514f7596d71cc5624d0bcc0095d47de3ffd1ddf",
+        "49a510a5da9424bf517bb4f00c20f3f838b02db3502522f8a823ae2fc872dfdf",
+        "ce12a73790e191646ac9a74772f4a465a505548d002c42621d8358ee6a8145ba"
+      ],
+      "measurement": {
+        "verdict": "failed",
+        "reason": "6 farm(s) listed under 'No token live yet' have a token that trades: Fables (FABLES, $252,971 traded in 24 h), Zircuit Staking (ZRC, $397,455 traded in 24 h), Travala.com (AVA, $37,891,401 traded in 24 h), Sonic SVM (SONIC, $2,122,401 traded in 24 h), INFINIT (IN, $206,169,848 traded in 24 h), Rivalz Network (RIZ, $11,348 traded in 24 h)",
+        "left": {
+          "listed_with_token_trading": 6
+        },
+        "right": {
+          "listed_with_token_trading": 0
+        },
+        "sources": {
+          "farms": "/api/v1/airdrop-farm/farms",
+          "page": "https://cymetica.com/airdrop-farmer",
+          "markets": "CoinGecko /coins/markets (total_volume); DexScreener pair for FABLES"
+        },
+        "provenance": {},
+        "evidence_ids": [],
+        "fingerprint": null,
+        "claim_id": null,
+        "role": "verdict",
+        "population": {
+          "farms_listed": 49,
+          "generated_at": "2026-10-24T07:38:23.782520+00:00",
+          "gate_first_line": "No token live yet",
+          "pinned_found": [
+            {
+              "key": "fables",
+              "id": "fables",
+              "name": "Fables",
+              "url": "https://www.fables.fi/",
+              "chip": [
+                "POINTS LIVE",
+                "g"
+              ],
+              "volume_24h_usd": 252971.05
+            },
+            {
+              "key": "zircuit",
+              "id": "zircuit-staking",
+              "name": "Zircuit Staking",
+              "url": "https://app.zircuit.com/liquidity-hub",
+              "chip": [
+                "POINTS LIVE",
+                "g"
+              ],
+              "volume_24h_usd": 397455.0
+            },
+            {
+              "key": "travala",
+              "id": "task-travala",
+              "name": "Travala.com",
+              "url": "https://app.galxe.com/quest/Travala",
+              "chip": [
+                "TASK FARM",
+                "c"
+              ],
+              "volume_24h_usd": 37891401.0
+            },
+            {
+              "key": "sonic-svm",
+              "id": "task-sonicsvm",
+              "name": "Sonic SVM",
+              "url": "https://app.galxe.com/quest/SonicSVM",
+              "chip": [
+                "TASK FARM",
+                "c"
+              ],
+              "volume_24h_usd": 2122401.0
+            },
+            {
+              "key": "infinit",
+              "id": "task-infinit",
+              "name": "INFINIT",
+              "url": "https://app.galxe.com/quest/INFINIT",
+              "chip": [
+                "TASK FARM",
+                "c"
+              ],
+              "volume_24h_usd": 206169848.0
+            },
+            {
+              "key": "rivalz",
+              "id": "task-rivalznetwork",
+              "name": "Rivalz Network",
+              "url": "https://app.galxe.com/quest/RivalzNetwork",
+              "chip": [
+                "TESTNET",
+                "c"
+              ],
+              "volume_24h_usd": 11348.27
+            }
+          ],
+          "sources_unread": []
+        }
+      },
+      "check_fingerprint": "ee76f592f4ee8c8aa512d1a494179fe663fc3fe8d00fa8006da4fdb880b23f78",
+      "helpers_fingerprint": "b0c238ea08db003127aef9225b8397254643439f1ba8893cadd535da9f3af938",
+      "helpers_formula": 2,
+      "reason": null,
+      "failure_repr": "tests\\rest\\test_airdrop_farmer_lists_no_farm_whose_token_trades.py:172: in test_airdrop_farmer_lists_no_farm_whose_token_trades\n    conclude(Measurement(\nqa\\measure.py:165: in conclude\n    raise AssertionError(explain(m))\nE   AssertionError: 6 farm(s) listed under 'No token live yet' have a token that trades: Fables (FABLES, $252,971 traded in 24 h), Zircuit Staking (ZRC, $397,455 traded in 24 h), Travala.com (AVA, $37,891,401 traded in 24 h), Sonic SVM (SONIC, $2,122,401 traded in 24 h), INFINIT (IN, $206,169,848 traded in 24 h), Rivalz Network (RIZ, $11,348 traded in 24 h)\nE     left  = {'listed_with_token_trading': 6}\nE     right = {'listed_with_token_trading': 0}"
+    }
+  ],
+  "totals": {
+    "failed": 1
+  },
+  "ratelimit": {
+    "requests": 1,
+    "limit": 2000,
+    "remaining": 1998,
+    "fraction_used": 0.001,
+    "exhausted": false
+  },
+  "record_integrity": {
+    "consistent": true,
+    "results_not_in_collected": [],
+    "collected_not_run": [],
+    "budget_truncated": false
+  },
+  "code_dirty_after": false,
+  "fingerprint_after": "sha256:d8d303473c511ddda1e9dda83d8ea683193772e3fd78e5cb47d8d7a0dafaacf3",
+  "exit_status": 1
+}
