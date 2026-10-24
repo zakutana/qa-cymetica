@@ -718,6 +718,9 @@ def test_a_card_that_is_closed_on_rest_and_open_on_mcp_fails():
     # And the Build a Company routes in the OpenAPI (2026-10-12), the same way.
     _the_company_route_readings()
 
+    # And #93's documented GETs, read against the auth note on their own line (2026-10-25).
+    _the_documented_get_auth_note_readings()
+
     # And a clone's perpetual markets against the live 5-minute markets (2026-10-13).
     from tests.rest.test_a_clone_trades_only_live_epoch_markets import dead_markets, live_symbols
     live = live_symbols({"markets": [{"symbol": s} for s in
@@ -1355,6 +1358,56 @@ def _the_free_table_readings():
         "a live table lent the paper lobby a free seat")
     assert tiers_without_a_free_table(tiers, [], "paper")[0][0]["tables"] == [], (
         "a buy-in with no table at all has no free table")
+
+
+def _the_documented_get_auth_note_readings():
+    """#93 (2026-10-25): the check failed on `/api/v1/cloned-bots/backtest/quote` from PRE-0274 on,
+    and a FAIL went out 2026-10-21. llms.txt's own line for that route says "(session JWT)" -- the
+    capture of 10-21 says it too -- and its 401 body says "Valid JWT token required". The check's
+    claim is a 401 on a route listed WITHOUT an auth note, so a route whose own line documents a
+    session JWT, and names no API key, is named and not judged; one that names the key is."""
+    import json as _json
+
+    class _Doc:
+        def __init__(self, status, body):
+            self.status_code, self._body = status, body
+            self.text = body if isinstance(body, str) else _json.dumps(body)
+
+        def json(self):
+            return self._body
+
+    class _Key:
+        def __init__(self, answers):
+            self.answers = answers
+
+        def get(self, path, **_):
+            return _Doc(*self.answers.get(path, (404, {"detail": "Not Found"})))
+
+    check = _load("tests/rest/test_documented_gets_accept_the_agent_key.py", "documented_gets_under_test")
+    quote = ("- [GET /api/v1/cloned-bots/backtest/quote](/api/v1/cloned-bots/backtest/quote): Cost "
+             "confirmation before a run (session JWT): free runs remaining, BRRR required")
+    me = "- [GET /api/v1/account/me](/api/v1/account/me): Your account"
+    summary = "- [GET /api/v1/rewards/summary](/api/v1/rewards/summary): Your reward totals"
+    keyed = ("- [GET /api/v1/creator/rewards](/api/v1/creator/rewards): Your own post-reward ledger "
+             "(session or X-API-Key)")
+    stats = ("- [GET /api/v1/build-stats](/api/v1/build-stats): commits and development sessions, each "
+             "series with its own period")
+    jwt = (401, {"detail": {"error": {"code": "UNAUTHORIZED", "message": "Valid JWT token required"}}})
+    bare = (401, {"detail": "Not authenticated"})
+
+    def run(lines, answers):
+        rest = _Key({"/llms.txt": (200, "\n".join(lines)), "/api/v1/account/me": (200, {}), **answers})
+        check.test_every_documented_get_accepts_the_key_its_own_document_issues(rest)
+
+    run([quote, me], {"/api/v1/cloned-bots/backtest/quote": jwt})  # documented session JWT: passes
+    with pytest.raises(AssertionError) as caught:
+        run([quote, me, summary], {"/api/v1/cloned-bots/backtest/quote": jwt, "/api/v1/rewards/summary": bare})
+    assert "/api/v1/rewards/summary" in str(caught.value) and "backtest/quote" not in str(caught.value).split(
+        "NOT in the verdict")[0], "the route with no auth note is the defect; the documented one is not"
+    with pytest.raises(AssertionError, match="creator/rewards"):
+        run([me, keyed], {"/api/v1/creator/rewards": bare})  # its note names the key: judged
+    with pytest.raises(AssertionError, match="build-stats"):
+        run([me, stats], {"/api/v1/build-stats": bare})  # "sessions" in prose is not an auth note
 
 
 def _the_idea_template_readings():
