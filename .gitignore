@@ -52,6 +52,13 @@ state/runs/
 state/**/*.tmp
 state/*.tmp
 
+# The same two for the evidence manifest (qa/manifest.py): its writers -- the
+# pre-commit hook, every fold, `keep.py archive` -- take audits/evidence-manifest
+# .jsonl.lock and replace the file through a temporary of their own. Untracked
+# beside it, either would make every tree dirty and every preregistration refuse.
+audits/*.lock
+audits/*.tmp
+
 # What Nexus was asked and how long it took to answer. A deep investigation
 # runs for minutes and this file grows while it polls, so committing it would
 # mean a tree that is dirty exactly while a question is outstanding -- and a

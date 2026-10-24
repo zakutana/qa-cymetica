@@ -206,9 +206,12 @@ def _archive(month: str, release: bool) -> int:
         return 1
 
     stamp = target.name.split(".")[0]
-    manifest.write(manifest.merge(
-        known, {i: {**known.get(i, {"id": i}), "archive": stamp}
-                for i in good}))
+    # Merged into the manifest as it is NOW, under its lock: `known` was read before a
+    # build of minutes, and the pre-commit hook's `track` may have added lines since --
+    # a stamp written over `known` dropped them (tests/repo/test_manifest_lock.py).
+    manifest.update(lambda current: manifest.merge(
+        current, {i: {**current.get(i, {"id": i}), "archive": stamp}
+                  for i in good}))
     print(f"   manifest stamped: {len(good)} now in {stamp}")
 
     if not release:
