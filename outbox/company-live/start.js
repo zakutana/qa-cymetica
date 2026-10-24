@@ -78,16 +78,25 @@
     host.appendChild(ce);
     return ce;
   }
-  // the soft band of light under each lane (the map's dust plane, uvHazeTex, for these two orbits): colour on black, the
-  // plane added to the sky, so it shows as a faint glow along the orbit that the dots ride
+  // the band of light each lane is (the map's streams, for these two orbits): colour on black, the plane added to the
+  // sky. Never a closed even ring: as dustLane's lanes, its light comes in thick arcs and thin gaps, it bends a little off
+  // its radius, and it is brightest on the far side of the view (the canvas's top: the plane's -z)
   function bands(T, U) {
-    var N = 1024, C = N / 2, EXT = 34, c = document.createElement('canvas'); c.width = c.height = N;
-    var g = c.getContext('2d'), px = C / EXT;
-    g.fillStyle = '#000'; g.fillRect(0, 0, N, N);
-    [[ORBITS[0], 1.3, '143,230,234', 0.15], [ORBITS[1], 1.7, '92,200,242', 0.12]].forEach(function (b) {
-      var r = b[0] * px, w = b[1] * px * 3, gr = g.createRadialGradient(C, C, Math.max(0, r - w), C, C, r + w);
-      gr.addColorStop(0, 'rgba(' + b[2] + ',0)'); gr.addColorStop(0.5, 'rgba(' + b[2] + ',' + b[3] + ')'); gr.addColorStop(1, 'rgba(' + b[2] + ',0)');
-      g.globalCompositeOperation = 'lighter'; g.fillStyle = gr; g.fillRect(0, 0, N, N);
+    var N = 1024, C = N / 2, EXT = 34, TAU = Math.PI * 2, c = document.createElement('canvas'); c.width = c.height = N;
+    var g = c.getContext('2d'), px = C / EXT, R = CO.uvRng(9), PEAK = -Math.PI / 2;
+    g.fillStyle = '#000'; g.fillRect(0, 0, N, N); g.globalCompositeOperation = 'lighter';
+    // per orbit a wide soft glow and a narrow bright core in it: [radius, width, colour, alpha]
+    [[0, 3.4, '143,230,234', 0.22], [0, 0.8, '175,242,246', 0.4], [1, 4.2, '92,200,242', 0.2], [1, 1.0, '135,218,250', 0.36]].forEach(function (b, li) {
+      if (li % 2 === 0) { var p = [R() * 6, R() * 6, R() * 6], q = [R() * 6, R() * 6]; b.p = p; b.q = q; bands.last = b; }
+      var s = bands.last, r = ORBITS[b[0]], dens = function (a) { return Math.max(0.1, 0.55 + 0.3 * Math.sin(a * 3 + s.p[0]) + 0.25 * Math.sin(a * 7 + s.p[1]) * Math.sin(a * 2 + s.p[2])); };
+      var off = document.createElement('canvas'); off.width = off.height = N; var o = off.getContext('2d'), K = 360;
+      o.lineWidth = b[1] * px;
+      for (var k = 0; k < K; k++) {
+        var a0 = k / K * TAU, a1 = (k + 1.05) / K * TAU, am = (a0 + a1) / 2, rr = r + 0.35 * Math.sin(am * 2 + s.q[0]) + 0.2 * Math.sin(am * 5 + s.q[1]);
+        o.strokeStyle = 'rgba(' + b[2] + ',' + (b[3] * dens(am) * (0.45 + 0.55 * (0.5 + 0.5 * Math.cos(am - PEAK)))).toFixed(3) + ')';
+        o.beginPath(); o.arc(C, C, rr * px, a0, a1); o.stroke();
+      }
+      g.filter = 'blur(' + (b[1] * px * 0.45).toFixed(1) + 'px)'; g.drawImage(off, 0, 0); g.filter = 'none';
     });
     var t = new T.CanvasTexture(c); t.colorSpace = T.SRGBColorSpace;
     var m = new T.Mesh(new T.PlaneGeometry(EXT * 2, EXT * 2), new T.MeshBasicMaterial({ map: t, transparent: true, blending: T.AdditiveBlending, depthWrite: false, side: T.DoubleSide }));
@@ -120,9 +129,10 @@
     ORBITS.forEach(function (r, i) {
       // (one unit here is about 16 px, on the map about 3.6: k 0.2 makes a dot as small on the screen as there; the first
       // try, k 0.5 and 2.4 times as many, was "strasne moc bublinkove"; the second, k 0.27 with the haze's big soft dots,
-      // still "moc tech bublinek" (2026-10-24). So as the map reads: a dense thread of fine dim dots, no haze dots, and
-      // under it a soft band of light (the map's dust plane), so each lane is a stream and not a string of beads.)
-      var o = { omega: i ? -0.065 : -0.08, k: 0.27, ks: 0.16, den: 2.8, col: new T.Color(i ? 0x5cc8f2 : 0x8fe6ea).multiplyScalar(2.1) };
+      // still "moc tech bublinek" (2026-10-24); the third, a dense thread over a faint band, still "moc tecek ... v
+      // hlavnim univerzu to tak vubec neni". So as the map reads: the band of light carries the lane, a bright core in
+      // a soft glow, and only a sparse sprinkle of fine dots rides it.)
+      var o = { omega: i ? -0.065 : -0.08, k: 0.27, ks: 0.16, den: 0.55, col: new T.Color(i ? 0x5cc8f2 : 0x8fe6ea).multiplyScalar(2.3) };
       U.dustLane(P, R, r, 'thread', o);
     });
     S.add(U.dustMesh(P, 3.6));
