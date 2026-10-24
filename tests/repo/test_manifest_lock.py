@@ -108,7 +108,12 @@ def test_two_writers_at_once_lose_nothing(tmp_path, monkeypatch):
                    for writer in writers]
     finally:
         stop.write_text("stop", encoding="utf-8")
-        reader.wait(timeout=60)
+        for process in (*writers, reader):
+            if process.poll() is None:
+                try:
+                    process.wait(timeout=60)
+                except subprocess.TimeoutExpired:
+                    process.kill()
 
     for out, err, code in results:
         assert code == 0, f"a writer failed: {err.strip()[-600:]}"

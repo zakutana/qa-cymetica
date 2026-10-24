@@ -136,6 +136,9 @@ def test_the_bugs_fold_commit_names_the_record_and_the_lab_commits_its_lesson():
     fold = bugs[bugs.index("After any change to state"):]
     assert "state/runs/" in fold and "scripts/commit.py" in fold, (
         "the fold commit does not name the run record ledger.py staged")
+    assert "audits/evidence-manifest.jsonl" in fold, (
+        "under commit.py the hook no longer adds the manifest, so a fold commit that does not "
+        "name it cites captures its own manifest does not prove until the next commit")
     lab = crew.BODIES["lab"]
     assert "docs/lab-knowledge.md" in lab and "scripts/commit.py" in lab, (
         "the laboratory is not told to commit its own lesson (T-0025's sat uncommitted and "

@@ -457,10 +457,12 @@ A level-V run needs a clean tree while four other departments edit it. Before
 3. Preregister, run, fold; `python scripts/crew.py unhold` once its commit is in, or when
    it fails. Your hold also ends with your run.
 After any change to state: `python scripts/ledger.py --run <id>` and
-`python scripts/render.py`, then the ledger, the journal, the dashboard and the run record the
-fold staged in one commit: `python scripts/commit.py -m "..." -- state/ledger.json
-state/journal/events.jsonl dashboard/index.html state/runs/<id>.json`. The record is yours to
-commit; left staged, it keeps every level-V run out.
+`python scripts/render.py`, then the ledger, the journal, the dashboard, the evidence manifest
+and the run record the fold staged in one commit: `python scripts/commit.py -m "..." --
+state/ledger.json state/journal/events.jsonl dashboard/index.html
+audits/evidence-manifest.jsonl state/runs/<id>.json`. The record is yours to commit; left
+staged, it keeps every level-V run out. The manifest holds the proof of what the fold now
+cites, so a clone of the fold commit can check it.
 """,
     "lab": """\
 Your ticket holds what the laboratory's tick decided (`items` in the details) and the
