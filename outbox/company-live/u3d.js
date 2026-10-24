@@ -2721,10 +2721,14 @@ class Preview {
     // stars with the site's colours glowing very far off, kept at the camera. Not the near glows it had, which on the
     // wide Settings screen stood as blobs of light ("proc tam jsou ty svetla v pozadi? v start strance pri start a
     // company to je mnohem hezci", 2026-10-24). One sky built once, each preview a clone sharing its geometry and
-    // materials (company-perf, spec 4 O1.6).
+    // materials (company-perf, spec 4 O1.6). Its nebulae only: the office's 24,000 stars, on a screen this wide, were
+    // a spatter of dots ("proc tam je tolik tech tecek? jakoby hvezd? to je hrozny", 2026-10-24), so the preview keeps
+    // the sparse field of 1,000 it had before.
     this.scene.background = new THREE.Color(LOOK.sky);
     if (!PV_SKY) {
       PV_SKY = spaceSky(true);
+      PV_SKY.children.filter((c) => c.isPoints || c.isInstancedMesh).forEach((c) => { PV_SKY.remove(c); c.geometry.dispose(); });
+      PV_SKY.add(starField(1000, 140, 90, 0.9, 21));
       [[0x00cfff, 0.16, [-170, 40, -220], 360], [0x00ff88, 0.08, [140, -70, -250], 300], [0x3b82f6, 0.08, [-250, -90, 40], 300]].forEach(([c, o, p, s]) => {
         const sp = glowSprite(c, o, s); sp.position.set(p[0], p[1], p[2]); PV_SKY.add(sp);
       });
