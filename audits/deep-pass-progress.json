@@ -814,5 +814,23 @@
       "a seven-item bug report sent as prose (MSG-0211/0213) and confirmed and fixed by them, with no ledger row",
       "the tests/meta ceiling is met by nesting unrelated guards in one test (17 helpers in test_a_card_that_is_closed_on_rest_and_open_on_mcp_fails, three this week): the first failure masks the rest (C01 is its symptom)"
     ]
-  }
+  },
+  "round2": {
+    "why": "fixes touched qa/fold.py and qa/state.py (X01-X03, R06), so step 7 repeated the review over the fix commits (5504dbf8..HEAD): fold, state, verify, submit read in full",
+    "findings": 1,
+    "notes": "S01 was reproduced by a red test before its fix rather than put to a triad: one finding, its test the reproduction; fold/state/verify changes read sound (results_by_nodeid ranks failed over a teardown error, the split pass cites its event, file_lock's polled wait keeps the default, fail_held holds #217)"
+  },
+  "gaps_round2": [
+    {
+      "id": "S01",
+      "nodeid": "scripts/submit.py:_outcome_of",
+      "claim": "O03's fix reads every non-httpx exception as not_sent, but client.post raises our own OSError after the POST landed (qa/evidence.py write_text of the capture): the finding is freed and filed twice",
+      "source": "review2",
+      "votes": null,
+      "verdict": "real",
+      "fixed": true,
+      "commit": "a98211a9",
+      "test": "tests/repo/test_submit_outcomes.py (the disk case, red on 8bc9bdc6)"
+    }
+  ]
 }
