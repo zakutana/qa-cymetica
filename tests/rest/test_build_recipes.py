@@ -307,7 +307,7 @@ def test_every_card_we_hold_a_position_in_still_resolves(rest_trusted):
     row carries `status` (33 open, 90 closed that day). So only rows whose
     status reads "open" are judged; closed rows are counted, and a row whose
     status does not read is named and not judged (rule 8). A card read that
-    raises is unread, not unresolved.
+    raises, or answers anything but 200 or 404, is unread, not unresolved.
     """
     response = rest_trusted.get(POSITIONS)
     if response.status_code != 200:
@@ -352,8 +352,12 @@ def test_every_card_we_hold_a_position_in_still_resolves(rest_trusted):
         except Exception as exc:  # noqa: BLE001 -- a failed read is not a 404
             unread[card_id] = type(exc).__name__
             continue
-        if status != 200:
+        if status == 404:
             unresolved.append(card_id)
+        elif status != 200:
+            # C06, deep pass 2026-10-25: a 503, a 429 after the retry, a 403 is a read that failed,
+            # not a card that is gone; it was "no longer resolves".
+            unread[card_id] = f"HTTP {status}"
     complete = len(probed) == len(distinct)
     if not unresolved and len(unread) > len(probed) // 4:
         # A pass may not rest on the cards that happened to answer: more than a
