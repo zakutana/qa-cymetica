@@ -41,12 +41,24 @@ from qa.state import file_lock, state_dir  # noqa: E402
 
 BASE = "/api/v1/agent-league"
 PRIZE_LIMIT = 200   # rows asked of /prizes; its default is the newest 50
-# Every row count /prizes has been seen to stop at: its ceiling, and the default it falls back to
-# when `limit` is not honoured. A list exactly that long cannot tell "all of them" from "the
-# newest N", so it is read as cut (R05, deep pass 2026-10-18).
-PRIZE_WINDOWS = (50, PRIZE_LIMIT)
+# The lowest id the prize log is known to hold: on 2026-10-12 it held 90 records from id 1 (ours 4,
+# 5, 9-14 among them). A list is all there is only when it reaches that id: a row count equal to a
+# window seen before (50, 200; R05, deep pass 2026-10-18) missed a cap nobody had seen, 100 say
+# (A06, deep pass 2026-10-25). No length can say a list is everything; its oldest id can.
+PRIZE_LOG_STARTS_AT = 1
 PLAYER_NAME = "qa-cymetica"
 PLAYER_KIND = "api"
+
+
+def prizes_cut(prizes) -> bool:
+    """Whether a /prizes list may be only the newest part of the log: it holds rows and does not
+    reach PRIZE_LOG_STARTS_AT, or its ids cannot be read."""
+    if not isinstance(prizes, list) or not prizes:
+        return False
+    ids = [p.get("id") for p in prizes if isinstance(p, dict)]
+    if len(ids) < len(prizes) or not all(isinstance(i, int) and not isinstance(i, bool) for i in ids):
+        return True
+    return min(ids) > PRIZE_LOG_STARTS_AT
 
 
 def _now() -> str:
@@ -326,7 +338,7 @@ def summary() -> dict:
         client.close()
     seen = ([p for p in prizes if isinstance(p, dict) and p.get("player_id") == pid]
             if isinstance(prizes, list) else None)
-    cut = isinstance(prizes, list) and (len(prizes) >= PRIZE_LIMIT or len(prizes) in PRIZE_WINDOWS)
+    cut = prizes_cut(prizes)
     mine = None if cut else seen
     rows = load()
     sent = sum(1 for r in rows if r.get("type") == "outcome" and r.get("kind") == "answer"

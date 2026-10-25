@@ -129,6 +129,32 @@ def test_a_list_cut_at_its_default_fifty_is_said_unread_not_counted_as_the_total
     assert any("ET10 credited: unread" in line for line in said["lines"]), said
 
 
+class _HundredClient(_Client):
+    """A server with a cap nobody has seen before: 246 records, the newest 100 whatever is asked."""
+
+    def get(self, url, params=None):
+        if url.endswith("/prizes"):
+            rows = [{"id": pid, "player_id": 2 if pid in (4, 5, 9, 10, 11, 12, 13, 14, 150) else 1,
+                     "amount_et10": 1000.0, "status": "credited" if pid < 47 else "capped"}
+                    for pid in range(246, 0, -1)]
+            return _Reply({"terms": {}, "month_committed_et10": 49585.0, "prizes": rows[:100]})
+        return super().get(url, params)
+
+
+@qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
+def test_a_list_cut_at_a_window_never_seen_is_said_unread_not_counted_as_the_total(monkeypatch):
+    """A06, deep pass 2026-10-25: `cut` was a row count equal to a window seen before (50, 200), so a
+    list cut at 100 -- ids 147-246, ours among the older ones -- was printed as the whole: one capped
+    prize, 0 ET10, while eight credited ones lay below it. Only the oldest id can say a list is all."""
+    script = _script()
+    monkeypatch.setattr(script, "_client", lambda write=False: _HundredClient())
+    monkeypatch.setattr(script, "_get", lambda client, url, **params: client.get(url, params))
+    monkeypatch.setattr(script, "load", lambda: [])
+    said = script.summary()
+    assert said.get("prizes") is None and said["et10_credited"] is None, said
+    assert any("ET10 credited: unread" in line for line in said["lines"]), said
+
+
 class _ShortClient(_Client):
     """Fewer rows than any window: the list is all there is, and is counted."""
 
