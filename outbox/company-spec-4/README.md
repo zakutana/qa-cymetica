@@ -1,7 +1,7 @@
 # Build a Company, round 4 (ready to file)
 
 Started 2026-10-22 at the operator's word. The request text is `build-it-better/improvements.txt` (17 lines, 7,967 characters under the
-form's 8,000 since the deep pass of 2026-10-25 cut it from 8,778; items A to O without B, D and G; its links pinned to 1aae2e0a, with items M
+form's 8,000 since the deep pass of 2026-10-25 cut it from 8,778; items A to O without B, D and G; its links pinned to ddd49c66, with items M
 (all seventeen stations in 3D) to O; they open once that commit is pushed). E, F, H, J, K, L and N are drawn in the mockup; A is not (the
 request says A wins where the mockup still shows dollars). When it is filed, its ET number goes here and the verdict is ours to give.
 
