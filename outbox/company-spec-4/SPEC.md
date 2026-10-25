@@ -287,6 +287,20 @@ department works, surface detail, a beacon, slow motion only, and the same glow 
 (`stations-a.js` to `stations-e.js`, on the parts `stations.js` publishes as `CO.ST`), not the flat pictures of `company-skins/index.html`, which stays
 as the sheet to build them from.
 
+**Measured: seventeen is not too many for a weak computer, on two conditions** (an independent test of 114 runs on 2026-10-25: this machine's built-in graphics with
+the processor slowed 4x, against the mockup before the ten; limits fixed before measuring: no frame over 100 ms while a page runs, no first-view freeze over 500 ms,
+the entry page ready within 20 %). On first view the ten freeze nothing over 0.3 s (worst: Rift Hold in Settings, 285 ms); the Universe with 36 companies mixing all
+seventeen draws 5.6 % more calls than with the old seven only, at the same frame time; loading their five files costs nothing measurable; they reuse the old
+materials, so there are no new shaders. The conditions:
+1. **The entry page keeps its six stations** (it loads only the old stations file). With all seventeen on it at once it was ready 30 % later and ran at 19 fps
+   against 30.
+2. **A station is built once and reused.** Our mockup rebuilds a station's 3D shape on every click, even one already shown: Rift Hold takes 105 ms a build on the slow
+   processor (Nautilus 47, Deep Array 42, the old seven 3 to 19), and Settings builds it twice per click (the preview, and the owner's station on the map that is
+   hidden behind it), so a repeated click costs up to 139 to 215 ms. Do not copy that: in the builder and the Settings preview keep each station's built shape per skin,
+   colour and number of decks, and do not rebuild the hidden map's station while the map is not shown.
+
+The test could not run a real weak laptop; first-view freezes there may be longer.
+
 ## N. Products: a tile per product, its panel with the people and the revenue it brought, and its logo (settled, drawn)
 
 (In this item *fees brought* reads *revenue brought* since 2026-10-24, see H; the mockup's tab says *revenue brought*.)
@@ -337,6 +351,8 @@ item above that draws something new obeys its rules:
 5. A weak PC is held up by the processor, not the graphics: every new object is one more draw call, so merge. The ten new stations (M) bake into few meshes, as the seven do.
 6. Share materials across rooms and stations: one material and one TSL node per look, not per room (the office's load is 70% three.js building shaders:
    113 builds for 70 different shaders, package sections 1 and 7).
+7. Build a station once and reuse it (item M, measured): the builder and the Settings preview keep each station's built shape per skin, colour and number of decks
+   instead of rebuilding it on every click, and the hidden map's station is not rebuilt while Settings is open; the entry page keeps its six stations.
 Our local copy of the mockup does not have the package's patch, nor your fix ET-32470 (the Universe's pixel cap); the measuring harness in
 `outbox/company-perf/harness` (`perf.py`, `batch.py`) is the way to measure any of this.
 
