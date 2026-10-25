@@ -1,7 +1,7 @@
 # Deep pass — 2026-10-25 (Opus 5.5 xhigh)
 ## Opraveno
 - **35 chyb opraveno: 34 ze 43 podezření, která potvrdili aspoň dva ze tří posuzovatelů (4 menšinová, 5 zamítnutých), a 1 z druhého kola.** Nejvážnější: falešný FAIL k už zaplacenému #217 neodejde; 18 kontrol už neprojde na tom, co nepřečetly; report se po chybě disku nepodá dvakrát; denní strop dotazů na memecoiny platí pro všechny procesy; příkaz na katalog Cymetiky zase něco vypíše.
-- **Hotová domluvená práce z plánu a ověření celé sady: 1 841 testů prošlo, 16 selhalo (kontroly Cymetiky a hlídač stropů), 117 reportů je ověřeně opraveno.** Laborka čte BTC na začátku a konci okna, commity firmy nenesou cizí soubory, seznam důkazů má zámek, hlídka má denní strop dotazů, firma a outsider mají pět nových pojistek. Z komentářů v kódu mockupu zmizelo slovo, kterým jsi popsal hnědou hlavu farmáře, a hlava je teď zelené proutí, ne hnědé.
+- **Hotová domluvená práce z plánu a ověření celé sady: 1 841 testů prošlo, 16 selhalo (kontroly Cymetiky a hlídač stropů), 117 reportů je ověřeně opraveno.** Minule 130: 10 kontrol teď přizná, že nic nepřečetly, 3 znovu selhávají (FAIL odešel), 4 opravené čekají na připnutí, 3 přibyly. Laborka čte BTC na začátku a konci okna, commity firmy nenesou cizí soubory, seznam důkazů má zámek, hlídka má denní strop dotazů, firma a outsider mají pět nových pojistek. Z komentářů v kódu mockupu zmizelo slovo, kterým jsi popsal hnědou hlavu farmáře, a hlava je teď zelené proutí, ne hnědé.
 ## Co odešlo Cymetice
 - **4 ověření PASS (#222, #132, #137, #220) a 3 FAIL, které tentokrát přesně říkají, co selhalo (#198, #201, #123); všechna přijata.** FAIL k #112/#136 a k #93 jsem zadržel, rozhodnutí je níž.
 ## Změněná pravidla
