@@ -137,6 +137,21 @@ def test_the_cap_is_read_from_the_newest_capacity_refusal(tmp_path, monkeypatch)
                    "outcome": "rejected", "http_status": 400, "response": REFUSAL % 20})
     assert scripts_lab._capacity_cap(clone.load())["cap"] == 20
     assert scripts_lab._capacity_cap(clone.load())["id"] == "CLN-0902"
+    # C07, deep pass 2026-10-25: an accepted outcome that is not a clone -- a release, a pause --
+    # says nothing about the cap, and no fixture had one, so dropping qa/lab.py's kind filters stayed
+    # green. One record per filter, each caught by that filter alone: an outcome carrying `kind`
+    # whose intent does not, and an outcome without one whose intent carries it.
+    clone._append({"id": "CLN-0903", "type": "intent", "at": at(1.31), "instance_id": "inst-old"})
+    clone._append({"id": "CLN-0903", "type": "outcome", "at": at(1.3), "kind": "release",
+                   "outcome": "accepted", "http_status": 200})
+    assert (scripts_lab._capacity_cap(clone.load()) or {}).get("cap") == 20, (
+        "a release, accepted after the refusal, read as an accepted clone: no cap")
+    clone._append({"id": "CLN-0904", "type": "intent", "at": at(1.21), "kind": "disable",
+                   "instance_id": "inst-old"})
+    clone._append({"id": "CLN-0904", "type": "outcome", "at": at(1.2),
+                   "outcome": "accepted", "http_status": 200})
+    assert (scripts_lab._capacity_cap(clone.load()) or {}).get("cap") == 20, (
+        "a pause whose outcome row carries no kind, accepted after the refusal, read as a clone")
     clone._append({"id": "CLN-0901", "type": "intent", "at": at(1),
                    "source_type": "wta_species", "source_id": "y", "paper": True})
     clone._append({"id": "CLN-0901", "type": "outcome", "at": at(0.99),
