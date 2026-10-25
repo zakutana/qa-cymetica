@@ -24,6 +24,15 @@ In [`spec/`](spec/); "picture N" below means these. The look to build to.
 8. [The Universe: the building close up](spec/8-universe-building.webp)
 9. [The Universe: the building at the map's first zoom](spec/9-universe-map.webp)
 10. [Promote: Kits](spec/10-promote-kits.webp), the post kit and the community kit kept from today's page
+11. [Promote: Today](spec/11-promote-today.webp)
+12. [Promote: Briefs I took](spec/12-promote-briefs-i-took.webp)
+13. [Promote: Pages & links](spec/13-promote-pages-links.webp)
+14. [Promote: Rewards](spec/14-promote-rewards.webp)
+15. [Promote: Journalists](spec/15-promote-journalists.webp)
+16. [Promote: Radar apps](spec/16-promote-radar-apps.webp)
+
+The product pictures on the cards are finished SVG files in [`spec/art/`](spec/art/), and every size, colour and
+measurement the look is built from is in [`spec/README.md`](spec/README.md).
 
 ![The market](spec/1-market.webp)
 
