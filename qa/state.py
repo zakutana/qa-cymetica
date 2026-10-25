@@ -27,6 +27,7 @@ import contextlib
 import hashlib
 import json
 import os
+import time
 from collections import Counter
 from dataclasses import dataclass, field
 from pathlib import Path
@@ -922,8 +923,15 @@ def head(path: Path | None = None) -> dict:
 
 
 @contextlib.contextmanager
-def file_lock(path: Path):
+def file_lock(path: Path, poll: float | None = None, timeout: float = 120.0):
     """Hold an exclusive cross-process lock on one state file.
+
+    `poll` (seconds) asks for the lock that often until `timeout`, then raises
+    OSError -- for a writer that contends often and holds briefly. Without it
+    the wait is the OS's own, as it always was: LK_LOCK on Windows retries once
+    a second, so two such writers queue in whole seconds (80 manifest refreshes
+    took 92 s). qa/manifest.py asks for 20 ms; it kept a second implementation
+    of this same lock, same file and byte, until R06 (deep pass of 2026-10-25).
 
     Public, and not journal-specific, because the journal is not the only file
     with a read-modify-write in front of it: scripts/bounty.py reads the whole
@@ -951,18 +959,33 @@ def file_lock(path: Path):
     lock_path = path.with_name(path.name + ".lock")
     lock_path.parent.mkdir(parents=True, exist_ok=True)
     handle = open(lock_path, "a+b")
-    try:
+
+    def take(wait: bool) -> None:
         if os.name == "nt":
             import msvcrt
 
             handle.seek(0)
             # LK_LOCK retries for about ten seconds, then raises. Locking one
             # byte past EOF is legal on Windows and is the usual idiom.
-            msvcrt.locking(handle.fileno(), msvcrt.LK_LOCK, 1)
+            msvcrt.locking(handle.fileno(), msvcrt.LK_LOCK if wait else msvcrt.LK_NBLCK, 1)
         else:
             import fcntl
 
-            fcntl.flock(handle.fileno(), fcntl.LOCK_EX)
+            fcntl.flock(handle.fileno(), fcntl.LOCK_EX | (0 if wait else fcntl.LOCK_NB))
+
+    try:
+        if poll is None:
+            take(wait=True)
+        else:
+            deadline = time.monotonic() + timeout
+            while True:
+                try:
+                    take(wait=False)
+                    break
+                except OSError:
+                    if time.monotonic() > deadline:
+                        raise
+                    time.sleep(poll)
         try:
             yield
         finally:

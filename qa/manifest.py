@@ -28,7 +28,6 @@ the bundle was being built.
 
 from __future__ import annotations
 
-import contextlib
 import json
 import os
 import time
@@ -37,7 +36,7 @@ from typing import Callable
 
 from qa.evidence import call_key
 from qa.keepset import evidence_path
-from qa.state import state_dir
+from qa.state import file_lock, state_dir
 
 # The fields a refresh may overwrite with a fresher reading. Everything else is
 # written once, while the body is on disk, and never contradicted.
@@ -136,58 +135,14 @@ def read(path: Path | None = None) -> dict[str, dict]:
         return {}
 
 
-def _lock_once(handle) -> None:
-    """Take the lock now or raise OSError: never the OS's own wait."""
-    if os.name == "nt":
-        import msvcrt
-
-        handle.seek(0)
-        msvcrt.locking(handle.fileno(), msvcrt.LK_NBLCK, 1)
-    else:
-        import fcntl
-
-        fcntl.flock(handle.fileno(), fcntl.LOCK_EX | fcntl.LOCK_NB)
-
-
-def _unlock(handle) -> None:
-    if os.name == "nt":
-        import msvcrt
-
-        handle.seek(0)
-        msvcrt.locking(handle.fileno(), msvcrt.LK_UNLCK, 1)
-    else:
-        import fcntl
-
-        fcntl.flock(handle.fileno(), fcntl.LOCK_UN)
-
-
-@contextlib.contextmanager
 def _held(target: Path):
-    """The manifest's own lock, `<manifest>.lock` beside it (gitignored), asked for every
-    20 ms until LOCK_WAIT_SECONDS.
-
-    The same lock file and the same byte `qa.state.file_lock` would take, but not its wait:
+    """The manifest's lock, `<manifest>.lock` beside it (gitignored): `qa.state.file_lock`,
+    asked for every 20 ms until LOCK_WAIT_SECONDS rather than with its default wait --
     on Windows that is LK_LOCK, which retries once a SECOND, so two contending writers
-    queue in whole seconds -- 80 refreshes took 92 s in tests/repo/test_manifest_lock.py.
-    """
-    lock_path = target.with_name(target.name + ".lock")
-    handle = open(lock_path, "a+b")
-    try:
-        deadline = time.monotonic() + LOCK_WAIT_SECONDS
-        while True:
-            try:
-                _lock_once(handle)
-                break
-            except OSError:
-                if time.monotonic() > deadline:
-                    raise
-                time.sleep(LOCK_POLL)
-        try:
-            yield
-        finally:
-            _unlock(handle)
-    finally:
-        handle.close()
+    queue in whole seconds (80 refreshes took 92 s in tests/repo/test_manifest_lock.py).
+    One implementation of the lock since R06 (deep pass of 2026-10-25); this module kept
+    its own, on the same file and byte, until then."""
+    return file_lock(target, poll=LOCK_POLL, timeout=LOCK_WAIT_SECONDS)
 
 
 def _text(entries: dict[str, dict]) -> str:
