@@ -27,7 +27,7 @@ from pathlib import Path
 REPO_ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(REPO_ROOT))
 
-from qa.fold import _fingerprint_of, display_state  # noqa: E402
+from qa.fold import _fingerprint_of, display_state, results_by_nodeid  # noqa: E402
 from qa.state import append_event, journal_path, ledger_path  # noqa: E402
 
 
@@ -49,12 +49,13 @@ def fingerprint_from_run(run: dict, checks: list) -> str:
     and the row would read CHECK CHANGED for ever with a justification
     attached to it: a badge nobody can clear, signed.
     """
-    # Built exactly as qa/fold.py:236 builds it -- same comprehension, same
-    # last-wins on a repeated nodeid, and deliberately no filter of its own.
-    # An earlier draft here skipped results carrying no fingerprint, which
-    # would have picked a different object than the fold whenever a nodeid
-    # appeared twice. Two selections is two rules.
-    by_nodeid = {r["nodeid"]: r for r in run.get("results") or []}
+    # Selected exactly as qa/fold.py selects -- the same function, so a repeated
+    # nodeid (a failed call and its teardown's error, X02) resolves the same way,
+    # and deliberately no filter of its own. An earlier draft here skipped
+    # results carrying no fingerprint, which would have picked a different
+    # object than the fold whenever a nodeid appeared twice. Two selections is
+    # two rules.
+    by_nodeid = results_by_nodeid(run)
     missing = [c for c in checks if c not in by_nodeid]
     if missing:
         raise SystemExit(

@@ -70,7 +70,7 @@ sys.path.insert(0, str(REPO_ROOT))
 
 from qa.client import build_client, install_client_guard  # noqa: E402
 from qa.config import identities, load_dotenv  # noqa: E402
-from qa.fold import _fingerprint_of, _instant  # noqa: E402
+from qa.fold import _fingerprint_of, _instant, results_by_nodeid  # noqa: E402
 from qa.fold import correction_reason as fold_correction_reason  # noqa: E402
 from qa.report_plugin import HELPERS_FORMULA  # noqa: E402
 from qa.safety import CURRENT_TIER, EndpointRegistry, SafetyTier  # noqa: E402
@@ -228,8 +228,8 @@ def _ran_under(run: dict, checks: list[str]) -> str | None:
     or None when the record cannot say (a check it did not run, no fingerprint).
     Call phase only: a setup or teardown result carries the AST hash whatever the
     check declares."""
-    results = {r.get("nodeid"): r for r in run.get("results") or []
-               if r.get("phase", "call") == "call"}
+    results = results_by_nodeid({"results": [r for r in run.get("results") or []
+                                             if r.get("phase", "call") == "call"]})
     mine = [results.get(c) for c in checks]
     if not checks or any(r is None for r in mine):
         return None

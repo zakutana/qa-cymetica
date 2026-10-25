@@ -248,6 +248,32 @@ def _standing(row: dict, prior: str) -> str:
     return standing
 
 
+# How bad an outcome is, for choosing one result per check (X02).
+_OUTCOME_RANK = {"failed": 4, "error": 3, "inconclusive": 2, "skipped": 1, "passed": 0}
+
+
+def results_by_nodeid(run: dict) -> dict[str, dict]:
+    """One result per check: the worst outcome its run recorded for it.
+
+    X02 (deep pass of 2026-10-25, 3/3): a dict comprehension kept the LAST
+    result per nodeid, and qa/report_plugin.py records a failed call and then
+    its teardown's `error` for the same nodeid -- so the error won, the fold
+    read "not checked in", and the failure the call measured was lost. A failed
+    call stays failed whatever its teardown did; on a tie the call phase wins,
+    being the one that carries the measurement, then the later result. Any
+    other call-then-teardown pair comes out as last-wins did. scripts/withdraw.py and
+    scripts/verify.py read the same selection, so a pin is what the fold reads.
+    """
+    chosen: dict[str, tuple] = {}
+    for index, result in enumerate(run.get("results") or []):
+        key = (_OUTCOME_RANK.get(result.get("outcome"), 0),
+               result.get("phase", "call") == "call", index)
+        nodeid = result["nodeid"]
+        if nodeid not in chosen or key > chosen[nodeid][0]:
+            chosen[nodeid] = (key, result)
+    return {nodeid: result for nodeid, (_, result) in chosen.items()}
+
+
 def _apply_run(row: dict, run: dict, level: str) -> None:
     """Move the CHECK axis of one row according to one admissible run."""
     check = row["check"]
@@ -260,7 +286,7 @@ def _apply_run(row: dict, run: dict, level: str) -> None:
     if reason:
         _unverifiable(row, reason, {"run_id": run_id}, at)
         return
-    results = {r["nodeid"]: r for r in run.get("results", [])}
+    results = results_by_nodeid(run)
     mine = [results.get(nodeid) for nodeid in checks]
 
     # A run that offered the whole suite and did not COLLECT this check has
