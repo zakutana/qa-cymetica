@@ -1,6 +1,6 @@
 # Build a Company, round 4
 
-Started 2026-10-22, filed 2026-10-23 as one Build it Better request (`build-it-better/improvements.txt`). The clickable mockup is `outbox/company-live`;
+Started 2026-10-22, to be filed as one Build it Better request (`build-it-better/improvements.txt`). The clickable mockup is `outbox/company-live`;
 its look is binding where an item says *drawn*. Where the mockup still shows dollars, item A wins: units.
 
 ## A. Units, not dollars (settled)
@@ -65,14 +65,28 @@ next review's date is shown; the owner can also run one now. Nothing of the engi
 Fixed as the bugs we reported (MSG-0211, MSG-0213): their answer REPLY-0197 (2026-10-23) and the live app.js / live.js (v=6adb7183) have the working
 bubble, replies that say which message they answer and task numbers as links. Nothing asked here.
 
-## E. A countdown to the next pass (settled, drawn)
+## E. How the company runs: the countdown to the next pass, and a Max 5x window that lasts (one item, because the two halves pull against each other; the choice is yours)
 
-The company works in passes (`pass_every_s` 120: every 2 minutes, up to two agent turns a pass), and the owner cannot see when the next one is. The page now
-says *NEXUS answers on the next pass (every 2 minute(s), oldest message first). Approvals that wait do not hold a message. (about 22:37)* under a waiting message,
-which helps once a message is sent. **Show the pulse where the owner looks all the time** (where: below), a small
-*next pass in 1:12* that counts down, becomes *running now* while a pass runs and *paused* / *waiting for the window* when none will start, with *turns today 21 of 40*
-beside it. The data is served: `GET /company/mine` has `heartbeat.last_pass_at`, `heartbeat.next_pass_at` (null while paused) and `heartbeat.pass_every_s`, and
-`run_state.turns_today` and `turns_cap`.
+**What went wrong on Max 5x.** Read from the owner's company on 2026-10-23 (`GET /company/mine`, `budget`, `turn_strip`): the 5-hour window ran out after 11 turns in
+23 minutes (4.94 of 5 units) and the company was blocked for three hours (*"You've hit your session build limit. It resets at 11:55pm UTC"*). 8 of those 11 turns
+were the Manager answering the owner in the chat (2.84 units in all); only 3 were department work. The same price buys Claude Code a day of work on Opus at the
+highest effort. What we ask: (a) a window that carries a real working session on Max 5x; (b) a chat turn that costs a fraction of a department turn (a short
+answer needs no full pass); (c) work that continues while tasks are queued, instead of waiting for the next pass. Asked on Telegram and a2a as MSG-0219; the
+owner's own words are in that message.
+
+**What the owner cannot see today.** The company works in passes (`pass_every_s` 120: every 2 minutes, up to two agent turns a pass, a daily ceiling `turns_cap`),
+and the owner cannot see when the next one is. The page says *NEXUS answers on the next pass (every 2 minute(s), oldest message first)* under a waiting message,
+which helps only once a message is sent. We drew the pulse where the owner looks all the time: a small *next pass in 1:12* that counts down, becomes
+*running now* while a pass runs and *paused* / *waiting for the window* when none will start, with *turns today 21 of 40* beside it. The data is served:
+`GET /company/mine` has `heartbeat.last_pass_at`, `heartbeat.next_pass_at` (null while paused), `heartbeat.pass_every_s`, `run_state.turns_today` and `turns_cap`.
+
+**The two pull against each other, so how the company runs is yours to decide.** The countdown counts passes and turns; (c) removes the wait for a pass, and with it
+the thing to count down to. We do not know which suits your engine:
+1. **You keep passes and turns:** the chip as drawn (below), with *next pass*, the ring and *2/40 turns*.
+2. **You drop them** (work starts when it is queued, limited by the window's units): there is no pass to count and no turn ceiling to show, so apply the same chip
+   with only what stays true: *running now* (green, a pulsing dot), *waiting for the window · 14:05* and *paused* (grey); no ring, no *next pass*, no turns.
+
+Either way the place and the look are binding; what it counts is yours.
 
 **One place only**, never per department: at the foot of the office, first in the bar of the plan's windows (This session, This week; the owner first had it by Pause, then: *"bych dal spis nekde dolu"*) (the owner, 2026-10-23: *"to ma byt nekde na 1 miste"*).
 Drawn in the mockup as one chip (`index.html` `.strip #co-pass`, `app.js` `clock`, `style.css` `.pass`): a small cyan ring that empties as the pass comes,
@@ -309,7 +323,7 @@ rows (`/gem-screener` 177 people, `/gem-screener/app` 162): one product, people 
 `renderProdPanel`), `portfolio.js` (`CO.apps`, `CO.appFees`, `CO.REFERRAL`, `CO.prodLogo`, `CO.readLogo`), `style.css` (`.pf`, `.pflogo`, `.pfp`,
 `.pfwhere`). The vault's apps follow the referral rule (1,000 ET10 a new user), replacing the placeholder per-visitor rate.
 
-## O. Speed on a weak computer, and a plan that lasts a working session (settled, rules)
+## O. Speed on a weak computer (settled, rules; the plan's window is in item E)
 
 **O1. Drawing: rules for everything new in this spec.** Your performance package (`outbox/company-perf`, branch `company-perf`: `SPEC.md`,
 `company-perf.patch`, `request.txt`, the measuring harness) is filed on its own and first; this spec builds on it and changes nothing in it. Every
@@ -326,13 +340,38 @@ item above that draws something new obeys its rules:
 Our local copy of the mockup does not have the package's patch, nor your fix ET-32470 (the Universe's pixel cap); the measuring harness in
 `outbox/company-perf/harness` (`perf.py`, `batch.py`) is the way to measure any of this.
 
-**O2. The plan: a Max 5x window that lasts.** Read from the owner's company on 2026-10-23 (`GET /company/mine`, `budget`, `turn_strip`): on Max 5x the
-5-hour window ran out after 11 turns in 23 minutes (4.94 of 5 units) and the company was blocked for three hours (*"You've hit your session build
-limit. It resets at 11:55pm UTC"*). 8 of those 11 turns were the Manager answering the owner in the chat (2.84 units in all); only 3 were department
-work. The same price buys Claude Code a day of work on Opus at the highest effort. What we ask: (a) a window that carries a real working session
-on Max 5x; (b) a chat turn that costs a fraction of a department turn (a short answer needs no full pass); (c) work that continues while tasks are
-queued, instead of waiting for the next pass (`pass_every_s` 120). Asked on Telegram and a2a as MSG-0219. The owner's own words are in that message;
-how it is solved is yours.
+**O2 moved to item E**: the Max 5x window and the countdown to the next pass pull against each other, so they are one item there, with the choice left to you.
+
+## P. The Universe's new look: orbits as lanes of light-dust, a plate for a few, the entry page the same (settled, drawn)
+
+The live Universe draws the orbits as glowing rings. The mockup's Universe has a new look, binding like every item marked *drawn* (the owner, 2026-10-23:
+*"ty prstence se mi moc nelibi ... vymysli to nejak top"*, then *"neni tam tech prstencu moc?"*; for the entry page *"uprav ty prstence i na uvodni strane"*):
+- **The orbits are lanes of light-dust, not rings.** No line is drawn on the map and no small rings round the sun. Three of the seven orbits (the 2nd, 5th and 7th)
+  are streams of drifting dust: a fine thread in broken arcs, thick and thin, a dim haze, now and then a bright star, bent a little off their circles and
+  tinted by distance from the sun (white-gold, mint, cyan, blue); the other four are only a faint drift. The stations ride all seven. Under them a soft dust plane
+  (written per pixel with its own dither, so zooming in shows no diagonal lines), and the stars of light that ride the orbits carry a tail. Nothing is a closed
+  circle and everything moves slowly. The small ring under each station is unchanged; a swarm of embers round the sun was drawn and taken out (*"smazal bych ty
+  svitici zlute kulicky"*). All of it runs on the graphics card, so it costs the processor nothing (the mockup keeps 144 Hz also on the weak-GPU setting).
+  Compare in the mockup: `?orbits=lines` is the old rings, `?orbits=none` the bare plane; code: `u3d.js`, `dustLane` and `dustMesh`.
+- **Names on the map: a plate only for a few.** The dark riveted plate (item L's plate) shows for Cymetica, the owner's company, every one of Cymetica's own products,
+  land of the owner's, the ten companies that earn most (the revenue share's ranking, where there is room on the screen) and the one under the pointer; every other
+  company has none and its tooltip names it, so a hundred companies are ten plates. A plate carries its place in the ranking as a quiet number in the name's
+  line (10 px, grey; the first three in the board's green, cyan and blue as type only, no box).
+- **The entry page (`start.html`) has the same space and the same lanes.** On the right Cymetica's sun as the Universe has it, two orbits of dust lanes (the outer one
+  paler and flowing against the companies' way) with six companies on them, nose first, in the office's own sky (its navy, nebulae and a sparse sprinkle of dots, not a
+  black void); the *Start a company* tile shows a room turning and *Explore the Universe* the same map seen from above, live. Nothing pulses.
+- The first look of the map, standing further back with the board over open space, is item H.
+
+## Q. Promo Market's building as the mockup draws it: the PROMO airship and its hologram banner (settled, drawn)
+
+The Promo Market stands on Orbit 5 · slot 3 (ET-32484). The live build has its billboard cube but **not the PROMO airship**: the live `u3d.js` has no airship at all (read
+2026-10-25). The mockup draws it (`u3d.js`, the Promo Market's builder, the airship block; the owner, 2026-10-24: *"kolem promo marketu vrat tu PROMO vzducholod ktera
+kolem toho krouzila s nejakym holografickym banerem"*): a white airship circling outside the ad cards, nose first, a lamp on its nose, a lit gondola, a cyan band round
+the hull; behind its tail a banner of light, held to the fins by two lines of light, reading *PROMO MARKET* and *EARN USDC · GET USERS*, magenta and amber in turn with
+the billboard and flickering as it does (two banners back to back, so it reads from both sides). A lap takes 80 seconds (*an airship is slow*), with a slow bob.
+**The colours are magenta (#FF2D95) and amber (#FFB020) exactly as drawn**: the Universe is a game scene, outside the site's palette (the owner's decision of 2026-10-18,
+as for the Agent Casino building). The Promo Market's page and panel have their own brief (`outbox/promo-market`); that brief does not mention the airship, so this item is
+only the airship.
 
 ## What stays as it is
 
