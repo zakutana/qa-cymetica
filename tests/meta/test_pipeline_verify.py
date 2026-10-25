@@ -201,8 +201,10 @@ def test_a_fail_says_which_reading_failed(monkeypatch):
     verify = _verify()
     node = "tests/rest/test_documented_gets_accept_the_agent_key.py::test_every_documented_get"
     run = {"run_id": "run-f", "git_head": "abc1234", "prereg_id": "PRE-0288", "results": [
+        # The reason names neither value (C03, deep pass 2026-10-25): with the route in it, "what
+        # was read" passed off the reason even when failing_readings dropped `left`.
         {"nodeid": node, "role": "verdict", "outcome": "failed", "measurement": {
-            "reason": "1 of 71 GET paths llms.txt documents answer 401: /api/v1/cloned-bots/backtest/quote",
+            "reason": "1 of 71 GET paths llms.txt documents answer 401 to the trusted key",
             "left": ["/api/v1/cloned-bots/backtest/quote"], "right": []}},
         {"nodeid": "tests/rest/test_other.py::test_z", "role": "verdict", "outcome": "failed",
          "measurement": {"reason": "another row's failure", "left": 1, "right": 0}}]}
@@ -225,8 +227,10 @@ def test_a_fail_says_which_reading_failed(monkeypatch):
     sent = verify.body(item)["evidence"]
     assert "WHAT FAILED" in sent, sent
     assert node in sent.split("WHAT FAILED")[1], "the failing check is named in what failed"
-    assert "/api/v1/cloned-bots/backtest/quote" in sent.split("WHAT FAILED")[1], "what was read"
-    assert "expected" in sent.split("WHAT FAILED")[1].lower(), "what was expected"
+    # The values as rendered, each beside its own label: the label word alone matched the label.
+    assert 'read: ["/api/v1/cloned-bots/backtest/quote"]' in sent.split("WHAT FAILED")[1], "what was read"
+    assert "expected: [];" in sent.split("WHAT FAILED")[1], "what was expected"
+    assert "answer 401 to the trusted key" in sent.split("WHAT FAILED")[1], "the reason it gave"
     assert "another row's failure" not in sent, "only this row's checks are its readings"
 
     # A fail whose run recorded no reading says so; it does not go out as a bare FAIL.
