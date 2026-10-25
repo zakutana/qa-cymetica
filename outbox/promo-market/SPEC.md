@@ -48,6 +48,9 @@ that has products of its own lands on My products instead, with Promote one clic
 **1. A brief pays two things, in USDC.** A fixed sum **per post** (one that stays up 7 days, confirmed by the checker
 that confirms displayed posts today) and a sum **per new user** (a new unique user the promoter's link brought, after
 the checks you choose in A5). **Up for grabs** is what is left of the brief's budget.
+**The owner chooses what the "new user" is** (2026-10-25: it is the owner's own money): a new unique visitor (a first-time
+visitor through the link, no sign-up), a registered new user, or a new user with a deposit. Keeping a visitor result
+honest is the platform's job (A5), not the owner's.
 
 **2. A brief's card shows only that** (picture 1): the product's name and its link, Up for grabs in USDC, per post, per new user,
 the days left, and **Take it**. Sorted by most up for grabs, best per new user or ending soon.
