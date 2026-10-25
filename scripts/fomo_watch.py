@@ -377,7 +377,8 @@ def quote_cap(every_seconds) -> int | None:
 
 def resolve(client, now=None, cap: int | None = None) -> dict:
     """One round: whatever has crossed a horizon gets checkpointed -- at most
-    `cap` coins quoted, the windows that close first first."""
+    `cap` coins quoted, each once, entry retries included: the retries first,
+    then the windows that close first."""
     now = now or _now()
     rows = load()
     signals = [r for r in rows if r.get("type") == "signal" and r.get("key")]
@@ -417,15 +418,29 @@ def resolve(client, now=None, cap: int | None = None) -> dict:
     # A signal that fired with no price is quoted once more, as its own
     # `entry` row carrying the moment it was read -- never written onto the
     # signal, whose horizons are counted from when IT fired. A failed read
-    # writes nothing, so the next round inside the hour tries again.
+    # writes nothing, so the next round inside the hour tries again; so does
+    # one the cap held back. First in the round: an entry is worth most the
+    # sooner it is read, and its window is the first hour.
     retried = {r["key"] for r in rows if r.get("type") == "entry" and r.get("key")}
     entries = 0
+    # A failed read is a failure, in its own list. It went into `written` beside
+    # the rows written, so `checked` counted it as a checkpoint taken and an
+    # outage printed as "5 checkpoint(s)" in the lab tick (M02, deep pass of
+    # 2026-10-25). A count of checkpoints counts rows written.
+    failed: list[dict] = []
     for signal in fomo.entry_retries(signals, retried, now=now):
-        # `_listing`, not `_quote`: `_quote` answers None on a 503, and a
-        # retry spent on an outage would be written as a coin with no price.
+        # Through `quote_once`, as every reading of the round: inside the cap
+        # and one search per coin, shared with that coin's checkpoint due in
+        # the same round. It called `_listing` directly, outside both (M05,
+        # deep pass of 2026-10-25). `quote_once` raises on a 503, never None:
+        # a retry spent on an outage is not a coin with no price.
         try:
-            quote = _listing(client, signal.get("token_address"))
-        except Exception:  # noqa: BLE001 -- rule 8: not a coin with no price
+            quote = quote_once(signal.get("token_address"))
+        except _Deferred:
+            deferred += 1
+            continue
+        except Exception as exc:  # noqa: BLE001 -- rule 8: not a coin with no price
+            failed.append({"key": signal["key"], "entry": True, "error": str(exc)[:200]})
             continue
         price = (quote or {}).get("price_usd")
         _append({"type": "entry", "at": now.isoformat(), "key": signal["key"],
@@ -433,11 +448,7 @@ def resolve(client, now=None, cap: int | None = None) -> dict:
                  else None, **_depth(quote)})
         entries += 1
 
-    # A failed read is a failure, in its own list. It went into `written` beside
-    # the rows written, so `checked` counted it as a checkpoint taken and an
-    # outage printed as "5 checkpoint(s)" in the lab tick (M02, deep pass of
-    # 2026-10-25). A count of checkpoints counts rows written.
-    written, failed = [], []
+    written = []
     for signal, horizon in fomo.by_closing(fomo.due_checkpoints(signals, done, now=now)):
         try:
             quote = quote_once(signal.get("token_address"))
