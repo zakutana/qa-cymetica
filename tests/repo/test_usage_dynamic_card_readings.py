@@ -168,6 +168,73 @@ def test_a_helper_that_learns_the_session_passes_unless_it_answers_empty():
     assert _verdict(LIVE, helpers=page_cookie) == "passed", "the page's getAuthToken falls back to the cookie"
 
 
+TOK = ("function tok() { try { return typeof window.getAuthToken === 'function' ? window.getAuthToken() : null; } "
+       "catch (e) { return null; } }")
+
+
+@qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
+def test_a_session_word_the_helper_does_not_return_is_not_a_session():
+    """B04, deep pass 2026-10-25 (3 of 3): a token reader counted as session-aware when a session word
+    stood anywhere in its body, comments and strings included, so the defect with a comment added to its
+    helper passed. What a helper returns decides, and a comment is not code."""
+    commented = HEAD.replace(TOK, "function tok() { /* et_session: a cookie session has no stored token */ "
+                                  "return window.getAuthToken(); }")
+    assert commented != HEAD
+    assert _verdict(_card(LIVE_LOAD, head=commented)) == "failed", "a comment naming the session"
+    logged = HEAD.replace(TOK, "function tok() { console.debug('no et_session check here'); "
+                               "return window.getAuthToken(); }")
+    assert _verdict(_card(LIVE_LOAD, head=logged)) == "failed", "a log line naming the session"
+    page_comment = HELPERS.replace("return localStorage.getItem('accessToken')",
+                                   "// hasSession() is for et_session cookies, Audit #20\n"
+                                   "    return localStorage.getItem('accessToken')")
+    assert page_comment != HELPERS
+    assert _verdict(LIVE, helpers=page_comment) == "failed", "the page's getAuthToken with a comment"
+    gate_comment = LIVE.replace("if (!tok()) {", "if (!tok() /* et_session */) {")
+    assert gate_comment != LIVE
+    assert _verdict(gate_comment) == "failed", "a comment inside the gate's condition"
+    asks = _card("""
+    if (tok()) { call('GET', '').then(function (r) { render(r.j); }); }
+    else { body.innerHTML = '<p>Log in.</p>'; /* fetch('/api/v1/nexus/dynamic') once et_session is read */ }""")
+    assert _verdict(asks) == "failed", "a request written in a comment asks nothing"
+    # The session consulted in what it returns, or in an `if` that returns, still counts.
+    guarded = HEAD.replace(TOK, "function tok() { if (document.cookie.indexOf('et_session=') >= 0) return 'cookie'; "
+                                "return window.getAuthToken(); }")
+    assert _verdict(_card(LIVE_LOAD, head=guarded)) == "passed", "a helper that returns for a cookie session"
+    named = HEAD.replace(TOK, "function tok() { var s = window.hasSessionCookie(); "
+                              "return window.getAuthToken() || (s ? 'cookie' : null); }")
+    assert _verdict(_card(LIVE_LOAD, head=named)) == "passed", "the session read into a local the return reads"
+
+
+@qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
+def test_a_compound_gate_with_the_token_call_in_it_is_judged():
+    """B04, deep pass 2026-10-25 (3 of 3): only a condition that was the token read and nothing else was
+    judged, so `!tok() || !plan` -- signed out whenever there is no token -- passed."""
+    def gate(condition, then="body.innerHTML = '<p>Log in to see your forecast and switch.</p>'; return;"):
+        return _card(f"""
+    var plan = window.__plan;
+    if ({condition}) {{ {then} }}
+    call('GET', '').then(function (r) {{ render(r.j); }});""")
+
+    assert _verdict(gate("!tok() || !plan")) == "failed", "no token is enough to reach the sign-in text"
+    assert _verdict(gate("!plan || !tok()")) == "failed", "the token read second"
+    assert _verdict(gate("!tok() && !plan")) == "failed", "no token and no plan: the session never asked"
+    assert _verdict(gate("!tok() || !window.hasSession()")) == "failed", (
+        "a session read beside an OR does not save it: no token alone still signs out")
+    assert _verdict(gate("!tok() && !window.hasSession()")) == "passed", "no token AND no session: the fix"
+
+    positive = _card("""
+    var plan = window.__plan;
+    if (tok() && plan) { call('GET', '').then(function (r) { render(r.j); }); }
+    else { body.innerHTML = '<p>Log in to see your forecast and switch.</p>'; }""")
+    assert _verdict(positive) == "failed", "asked only with a token"
+    with_cookie = _card("""
+    if (tok() || window.hasSessionCookie()) { call('GET', '').then(function (r) { render(r.j); }); }
+    else { body.innerHTML = '<p>Log in to see your forecast and switch.</p>'; }""")
+    assert _verdict(with_cookie) == "passed", "asked with a token or a cookie session"
+    assert _verdict(gate("!tok() && !plan || !window.__ready")) is None, (
+        "|| and && side by side: not read here, never a verdict")
+
+
 @qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
 def test_what_cannot_be_read_is_never_a_verdict():
     assert judge([], [])[0] is None, "no script draws the card"
