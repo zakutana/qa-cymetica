@@ -296,6 +296,9 @@ def main(argv: list[str] | None = None) -> int:
                              f"(it holds {reports or 'none'})")
         if args.to_id == args.finding_id or args.to_id in (_known_ids() or set()):
             raise SystemExit(f"{args.to_id} already exists; a split makes a new row")
+        if "::" not in args.nodeid:
+            raise SystemExit(f"--check {args.nodeid!r} is no pytest nodeid (path::test); "
+                             f"nothing could ever adjudicate the new row")
         reason = _require_reason(args.reason, "split")
         return _emit({**base, "type": "split_report", "finding_id": args.finding_id,
                       "report_id": args.report, "to_id": args.to_id,

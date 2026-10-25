@@ -133,7 +133,7 @@ Agents and skills carry their own model and effort in frontmatter. What the sess
 
 | Axis | Moved only by | States |
 |---|---|---|
-| CHECK | an admissible run that adjudicated **every** check the row declares -- and, to UNVERIFIABLE only, an operator's retire/rebind event that leaves the row nothing to adjudicate | UNVERIFIED · REPRODUCING · PASSING · PASSING_UNPINNED · CHECK_CHANGED · INCONCLUSIVE · UNVERIFIABLE |
+| CHECK | an admissible run that adjudicated **every** check the row declares -- and, to UNVERIFIABLE only, an operator's retire/rebind event that leaves the row nothing to adjudicate, or the split that made it | UNVERIFIED · REPRODUCING · PASSING · PASSING_UNPINNED · CHECK_CHANGED · INCONCLUSIVE · UNVERIFIABLE |
 | FILING | a journal event | NOT_RAISED · RAISED · REPLIED · FIX_CLAIMED · WITHDRAWN · SUPERSEDED |
 
 The displayed state is the **composition** of the two, computed at render time. It is never stored, so it cannot be assigned.

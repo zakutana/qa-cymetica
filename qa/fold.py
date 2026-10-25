@@ -11,7 +11,8 @@ Two axes, never overwriting each other:
     CHECK    moved only by an admissible run record that adjudicated every
              check the row declares -- and, to UNVERIFIABLE only, by an
              operator's retire/rebind event that leaves the row nothing to
-             adjudicate (RC02, deep pass of 2026-09-24)
+             adjudicate (RC02, deep pass of 2026-09-24), or the split that
+             made a row whose one check is no nodeid (X03, 2026-10-25)
     FILING   moved only by an event in the append-only journal
 
 The state you read on the dashboard is the composition of the two, computed at
@@ -220,6 +221,30 @@ def _structural_reason(checks: Sequence[str]) -> str | None:
     if any("::" not in c for c in checks):
         return "check_not_a_nodeid"
     return None
+
+
+def _structural_pass(rows: Iterable[dict], events: Sequence[dict]) -> None:
+    """Without a run, a row that can never be adjudicated says so.
+
+    Only an event changes what a row declares without a run: a rebind or a
+    retirement, or the split that made the row with its one check (X03, deep
+    pass of 2026-10-25). The last of them for this row is the cause. None means
+    the row was already so from its run, and already here.
+    """
+    for row in rows:
+        reason = _structural_reason(row.get("checks") or [])
+        if not reason:
+            continue
+        defining = [e for e in events
+                    if (e.get("finding_id") == row.get("id")
+                        and e.get("type") in ("rebind_check", "retire_check"))
+                    or (e.get("type") == "split_report" and e.get("to_id") == row.get("id"))]
+        if defining:
+            _unverifiable(row, reason, {"event_id": event_id(defining[-1])},
+                          defining[-1].get("at"))
+        else:
+            row["check"]["state"] = "UNVERIFIABLE"
+            row["check"]["unverifiable_reason"] = reason
 
 
 def _unverifiable(row: dict, reason: str, cause: dict, at) -> None:
@@ -1179,20 +1204,7 @@ def fold(prev: dict | None = None, run: dict | None = None,
         out["run_level"] = level
         out["updated_at"] = at
     else:
-        for row in rows.values():
-            reason = _structural_reason(row.get("checks") or [])
-            if reason:
-                # Without a run, only a check-definition event changes what a
-                # row declares; the last one for this row is the cause. None
-                # means the row was already so from its run, and already here.
-                defining = [e for e in events if e.get("finding_id") == row.get("id")
-                            and e.get("type") in ("rebind_check", "retire_check")]
-                if defining:
-                    _unverifiable(row, reason, {"event_id": event_id(defining[-1])},
-                                  defining[-1].get("at"))
-                else:
-                    row["check"]["state"] = "UNVERIFIABLE"
-                    row["check"]["unverifiable_reason"] = reason
+        _structural_pass(rows.values(), events)
 
         # This fold adjudicated nothing. That does not un-adjudicate what came
         # before, and dropping the attribution said it did: an --events-only
@@ -1216,6 +1228,12 @@ def fold(prev: dict | None = None, run: dict | None = None,
         # REPRODUCING on rule 12's refold (RC03, deep pass of 2026-09-24).
         for fid in set(rows) - before_events:
             _apply_run(rows[fid], run, level)
+    else:
+        # And without a run, by the structural pass, which had already walked
+        # the rows too: a split onto a check that is no nodeid came out
+        # UNVERIFIED once and UNVERIFIABLE on the next fold, with no
+        # transition (X03, deep pass of 2026-10-25).
+        _structural_pass([rows[fid] for fid in sorted(set(rows) - before_events)], events)
     for row in rows.values():
         # Chronological, and deterministically so. The FILING half is rebuilt
         # from the journal on every fold while the CHECK half accumulates, so

@@ -853,6 +853,11 @@ def _validate_event(event: dict) -> None:
             raise JournalError("a split_report event needs the report it moves")
         if event["to_id"] == event["finding_id"]:
             raise JournalError("a split_report cannot move a report onto its own row")
+        # The new row's one check must be one pytest can run (X03, deep pass of
+        # 2026-10-25): a path alone made a row nothing could ever adjudicate.
+        if "::" not in str(event["nodeid"]):
+            raise JournalError(f"a split_report needs a pytest nodeid (path::test) for "
+                               f"the new row's check, not {event['nodeid']!r}")
     if event["type"] in ("telegram_sent", "telegram_reply"):
         # Without an id the natural key is `telegram_sent|None`, so the second
         # id-less message is answered "duplicate" and dropped without a word --
