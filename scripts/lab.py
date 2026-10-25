@@ -5113,6 +5113,11 @@ def main(argv: list[str] | None = None) -> int:
                   f"{row.get('why', '')}")
             for line in row.get("close_failed") or []:
                 print(f"      close failed: {line}")
+    elif args.cmd == "surface":
+        # Restored beside index-at: 4403c058 wrote that branch over this one, and a
+        # registered name with no branch parses, does nothing and exits 0
+        # (tests/repo/test_lab_dispatch.py, deep pass 2026-10-25 R01).
+        print(json.dumps(surface(), ensure_ascii=False, indent=1))
     elif args.cmd == "index-at":
         said = index_at_moments(args.card, args.times)
         if args.json:
