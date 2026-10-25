@@ -1006,12 +1006,15 @@ def entry_retries(signals: list[dict], retried_keys, now=None) -> list[dict]:
 
 
 def entries(rows: list[dict]) -> dict:
-    """How many signals fired with no price, how many were quoted again, how
-    many of those the retry priced, and how long after the signal."""
+    """How many signals fired with no price -- and of those, how many because
+    the read itself failed (`quote_error`, written since M03 of 2026-10-25;
+    the rest their terminal did not know yet) -- how many were quoted again,
+    how many of those the retry priced, and how long after the signal."""
     signals = _signals(rows)
     unpriced = {k for k, s in signals.items()
                 if not (isinstance(s.get("price_usd"), (int, float))
                         and s["price_usd"] > 0)}
+    failed_read = sum(1 for k in unpriced if signals[k].get("quote_error"))
     first: dict[str, dict] = {}
     for row in rows or []:
         if row.get("type") == "entry" and row.get("key") in unpriced:
@@ -1025,6 +1028,7 @@ def entries(rows: list[dict]) -> dict:
         if fired is not None and read is not None:
             delays.append((read - fired).total_seconds() / 60.0)
     return {"signals": len(signals), "unpriced_at_signal": len(unpriced),
+            "failed_read_at_signal": failed_read,
             "retried": len(first), "priced_on_retry": len(priced),
             "median_delay_min": median(delays) if delays else None}
 

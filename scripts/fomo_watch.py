@@ -167,20 +167,17 @@ def _listing(client, token_address: str) -> dict | None:
     return None
 
 
-def _quote(client, token_address: str) -> dict | None:
-    """`search?q=<address>` -- confirmed live 2026-09-13: `{"rows": [{"address",
-    "price_usd", ...}]}`. Matched on `address` because a symbol/name search
-    can answer with more than one token; an address search should not, but a
-    server that changes its mind about that is not this function's problem to
-    guess at -- match, don't assume the first row."""
-    response = client.get(SEARCH_PATH, params={"q": token_address})
-    if response.status_code != 200:
-        return None
-    wanted = str(token_address or "").lower()
-    for row in (response.json() or {}).get("rows") or []:
-        if isinstance(row, dict) and str(row.get("address", "")).lower() == wanted:
-            return row
-    return None
+def _read_quote(client, token_address: str) -> tuple[dict | None, str | None]:
+    """The terminal's row for a coin when a signal fires, and why the read
+    failed when it did. Two answers, never one: `(None, None)` is a coin they
+    answered for and did not know; `(None, "...503...")` is a read that told
+    us nothing. `_quote` answered None for both, so a 503 wrote the row a coin
+    nobody knew yet writes (M03, deep pass of 2026-10-25) -- the defect RM03
+    fixed in `resolve()` a month before."""
+    try:
+        return _listing(client, token_address), None
+    except Exception as exc:  # noqa: BLE001 -- written on the row, not raised
+        return None, str(exc)[:200]
 
 
 # What a price has to carry to be a price somebody could have traded at.
@@ -227,15 +224,13 @@ def _radar(row: dict | None) -> dict:
             if (row or {}).get(k) is not None}
 
 
-def _price(client, token_address: str) -> float | None:
-    price = (_quote(client, token_address) or {}).get("price_usd")
-    return float(price) if isinstance(price, (int, float)) else None
-
-
 def capture(client, now=None) -> dict:
-    """One round. Never raises: a call that fails leaves the diary as it was,
-    which is the safe direction -- a signal missed this poll is caught by the
-    next one, ten minutes later."""
+    """One round. Never raises: a feed read that fails leaves the diary as it
+    was, which is the safe direction -- a signal missed this poll is caught by
+    the next one, ten minutes later. A PRICE read that fails keeps the signal
+    (losing it would cost the study a hot call) and says so on the row,
+    `quote_error`, counted in `quote_failed`: never the row of a coin their
+    terminal did not know (M03, deep pass of 2026-10-25)."""
     now = now or _now()
     rows = load()
     tracked = {r["key"] for r in rows if r.get("type") == "signal" and r.get("key")}
@@ -255,7 +250,7 @@ def capture(client, now=None) -> dict:
     errors: list[dict] = []
     controlled = {r["key"] for r in rows if r.get("type") == "control"
                   and r.get("key")}
-    control = 0
+    control = quote_failed = 0
     for chain in CHAINS:
         try:
             body = _feed(client, chain)
@@ -271,11 +266,8 @@ def capture(client, now=None) -> dict:
         before = len(added)
         for row in fomo.new_signals(hot_rows, tracked, at=now):
             key = fomo.signal_key(row.get("token_address"), now)
-            quote = None
-            try:
-                quote = _quote(client, row.get("token_address"))
-            except Exception:  # noqa: BLE001 -- price stays None, not a crash
-                pass
+            quote, failed_read = _read_quote(client, row.get("token_address"))
+            quote_failed += bool(failed_read)
             price = (quote or {}).get("price_usd")
             price = float(price) if isinstance(price, (int, float)) else None
             signal = _append({
@@ -283,6 +275,7 @@ def capture(client, now=None) -> dict:
                 "token_address": row.get("token_address"),
                 "symbol": row.get("symbol"), "chain": chain,
                 "conviction": row.get("conviction"), "price_usd": price,
+                **({"quote_error": failed_read} if failed_read else {}),
                 **_depth(quote), **_radar(row),
             })
             tracked.add(key)
@@ -302,11 +295,8 @@ def capture(client, now=None) -> dict:
             for row in fomo.pick_control(listed, called, controlled, at=now,
                                          hot_keys=tracked):
                 key = fomo.control_key(row.get("token_address"), now)
-                quote = None
-                try:
-                    quote = _quote(client, row.get("token_address"))
-                except Exception:  # noqa: BLE001 -- price stays None
-                    pass
+                quote, failed_read = _read_quote(client, row.get("token_address"))
+                quote_failed += bool(failed_read)
                 price = (quote or {}).get("price_usd")
                 price = float(price) if isinstance(price, (int, float)) else None
                 _append({
@@ -314,12 +304,14 @@ def capture(client, now=None) -> dict:
                     "token_address": row.get("token_address"),
                     "symbol": row.get("symbol"), "chain": chain,
                     "conviction": row.get("conviction"), "price_usd": price,
+                    **({"quote_error": failed_read} if failed_read else {}),
                     **_depth(quote), **_radar(row),
                 })
                 controlled.add(key)
                 control += 1
     return {"added": len(added), "signals": added, "errors": errors,
-            "unidentified": unidentified, "control": control}
+            "unidentified": unidentified, "control": control,
+            "quote_failed": quote_failed}
 
 
 # How many coins one round may quote, per minute of the round's interval
@@ -403,8 +395,9 @@ def resolve(client, now=None, cap: int | None = None) -> dict:
                 raise _Deferred()
             try:
                 # `_listing`: a 503 raises, so an outage writes nothing and
-                # the hour is read again inside its window. `_quote` answered
-                # None and it was written as the row a delisting writes (RM03,
+                # the hour is read again inside its window. `_quote` (gone
+                # since M03, 2026-10-25) answered None and it was written as
+                # the row a delisting writes (RM03,
                 # deep pass of 2026-09-24, 3/3) -- the case the entry retry
                 # below already knew.
                 quoted[token] = _listing(client, address)
@@ -736,7 +729,10 @@ def say_stops(said: dict) -> list[str]:
     if entry:
         lines.append(
             f"entries: {entry['unpriced_at_signal']} of {entry['signals']} "
-            f"signals had no price when they fired; {entry['retried']} quoted "
+            f"signals had no price when they fired"
+            + (f" ({entry['failed_read_at_signal']} a failed read, not a coin "
+               f"their terminal did not know)" if entry.get("failed_read_at_signal") else "")
+            + f"; {entry['retried']} quoted "
             f"again, {entry['priced_on_retry']} priced"
             + (f" (median {entry['median_delay_min']:.0f} min later)"
                if entry.get("median_delay_min") is not None else "")

@@ -4017,12 +4017,13 @@ def _fomo_round() -> dict:
     finally:
         client.close()
     capture, resolve = said.get("capture") or {}, said.get("resolve") or {}
-    # A read that failed is said as one: the feed's per chain and the
-    # terminal's per reading (M02, deep pass of 2026-10-25 -- an outage used
-    # to print as checkpoints taken).
+    # A read that failed is said as one: the feed's per chain, the price of a
+    # signal or control as it fired (M03), and the terminal's per reading (M02,
+    # deep pass of 2026-10-25 -- an outage used to print as checkpoints taken).
     return {"added": capture.get("added", 0),
             "checked": resolve.get("checked", 0),
-            "failed": len(capture.get("errors") or []) + int(resolve.get("failed") or 0)}
+            "failed": (len(capture.get("errors") or []) + int(capture.get("quote_failed") or 0)
+                       + int(resolve.get("failed") or 0))}
 
 
 def _hot_round() -> dict:
