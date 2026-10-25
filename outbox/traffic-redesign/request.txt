@@ -1,0 +1,21 @@
+Live Traffic (cymetica.com/traffic) and Your Pages (cymetica.com/traffic/mine): the same data, laid out so every number says what it counts and over which days.
+
+Pictures (attached): site-1440.png (/traffic) and mine-1440.png (/traffic/mine). Every figure in them is your own API, read 2026-10-25 23:17 UTC (traffic/public and traffic/activity, 14 days) and 23:34 UTC (traffic/mine).
+
+1. One word, one meaning. Three units, shown as a small tag next to every number: ARRIVAL (first page opened from outside), REQUEST (every page and API call), ACTION (something an account did). Your Pages adds VIEW (a page opened, from outside or from another page of the site). Today "Visits" means arrivals for people, every request for AI agents, and page opens on /traffic/mine, so 3,999 visits on our pages sit next to 2,298 for the whole site.
+
+2. One time window for the whole page. The range buttons set every number, and the dates stand next to them ("Oct 11 – Oct 25 · 15 days"). The last 24 h is a second column beside the range, not a toggle that switches one section while the rest of the page shows 14 days.
+
+3. Every list adds up to its tile. Sources end with "Other sources", landing pages with "Every other page", agent families with "3 more families", each followed by a total row equal to the tile above (2,298 arrivals, 115,359 agent requests). No paragraph is needed to explain why the list is smaller. Where a list does not add up, the gap is a red row of its own (the agents' requests by area, 25,589 short today).
+
+4. People and AI agents as two groups of tiles and two charts, each chart with its own axis, instead of one chart with two axes.
+
+5. Requests by area: named areas first, the two catch-alls last and dimmed ("Other pages", and "All other areas" for today's "Everything else"), each with an (i). A share column, and the last 24 h beside the range.
+
+6. Actions as six cards: the range figure large (customer-participating), platform-only under it, the last 24 h at the bottom of the card.
+
+7. Traded volume per day with its totals on top ($3.28M customer-participating, $69.2K platform-only, $0 event cards, last 24 h). The bars add up to them.
+
+8. Your Pages: page views split into arrivals and views from the site, arrivals as a share of the whole site's (215 = 9.4% of 2,298), and a table sorted by views (arrivals, from site, unique, AI agents, the app counter for apps). The pages without views fold into two lines: 22 seen only by AI agents, 66 with no traffic yet.
+
+Explanations live in (i) tooltips, never in paragraphs on the page. Colours are your cyan, green, red and blue; fonts Archivo Black and JetBrains Mono.
