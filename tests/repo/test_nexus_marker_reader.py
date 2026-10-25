@@ -83,5 +83,22 @@ def test_a_card_id_the_platform_does_not_resolve_is_left_alone():
 
 
 @SELF
+def test_a_marker_just_outside_the_code_span_is_judged_too():
+    """B02, deep pass 2026-10-25 (3 of 3): only a marker right behind the path, inside its backticks, was
+    compared with the document. The same marker written after the closing backtick -- the whole path
+    quoted, then the verdict -- was never judged, and a served route called not served passed."""
+    text = (f"Set it with `PATCH /api/v1/cloned-bots/{CLONE}/settings` {_served('PATCH')} and read it back "
+            f"with `GET /api/v1/cloned-bots/{CLONE}/balance` {_served('GET')}.")
+    found = misfires(text, DOCUMENT, {CLONE})
+    assert found["served_but_marked"] == [
+        f"PATCH /api/v1/cloned-bots/{CLONE}/settings", f"GET /api/v1/cloned-bots/{CLONE}/balance"]
+    assert found["split_paths"] == [] and found["repeated"] == [], "a marker after the span splits no path"
+    assert broken(found)
+    # A true marker outside the span is no misfire: the document serves only DELETE on the prefix.
+    true = f"Do not `GET /api/v1/cloned-bots/{CLONE}` {_served('GET')}; it is DELETE only."
+    assert not broken(misfires(true, DOCUMENT, {CLONE}))
+
+
+@SELF
 def test_a_clean_answer_has_nothing_to_judge():
     assert not has_marker("Keep all four flags off. PATCH /api/v1/cloned-bots/x/settings")
