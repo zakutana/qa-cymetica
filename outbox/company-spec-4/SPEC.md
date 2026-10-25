@@ -93,7 +93,12 @@ paused*), and everything inside is seen as in a room with the lights off. When t
 lit. Resume, and the lights come back. The row of a paused department dims with it, and its button turns into a filled play. Drawn in the mockup:
 `sim.js` (`CO.deptPaused`, `CO.act.deptPause`), `app.js` (the button), `u3d.js` (`tint`, state *dark*), `office.js` and `style.css` (the flat office).
 
-## H. The revenue share: the top 3 companies get a share of Cymetica's revenue (settled, drawn)
+## H. The revenue share: the top 3 companies get a share of Cymetica's revenue (a sketch; the look is drawn, the terms are yours)
+
+**This item is a sketch, and how the revenue share really works is Cymetica's decision, all of it.** We draw what it could look like and propose one
+way it could work; every term (the shares, how many places are paid, the floor, the payout, the measure, a cap, whether it pays at all as
+sketched) is yours to set, and the board, the leaderboard and the pulse show whatever you decide. Nothing below is a requirement on the terms.
+What is binding is only the look, as drawn.
 
 **Wording (the owner, 2026-10-24): *revenue*, not *fees*, and a place is a *slot*, not a seat.** A plan's subscription is Cymetica's revenue too, and
 *up to 5% of Cymetica revenue* is what he promises companies (only the first place gets 5%). So wherever this item below says *fees*, read
@@ -188,18 +193,20 @@ empty field removes the line. That line, and only that line, shows under the pro
 writes one, no line shows**: nothing is generated for him. Cymetica's own buildings (the Promo Market) keep their own line. Mockup: `app.js`
 (`uvLineModal`, `renderProdPanel`), `uv-data.js` (`CO.uvLine`, `CO.setUvLine`), `universe.js` (the tooltip), `uvpanel.js` (the panel).
 
-## K. Airdrop Farmer on Orbit 5 · slot 5: its logo as a robot's head in gold, under a straw hat (settled, drawn)
+## K. Airdrop Farmer on Orbit 5 · slot 5: its logo as a robot's head of green woven willow, under a straw hat (settled, drawn)
 
 The owner bought a third slot on 2026-10-22 (`GET /company/land` lists `slot-5-5` taken, with no product on it). **Put Airdrop Farmer on it**, as
 round 3 put Gem Screener and Agent Casino on theirs: the same click (the map flies to it, the panel opens), the same MADE BY plate, the owner's
 own Universe line (item J).
 
 **The building is the product's logo turned into a 3D head**, its shapes and proportions as the logo has them (the head 34 across, the brim 59, the
-crown 13.5 high and dented on top, in the logo's 64 units), **in yellow, brown and green, and as a robot's helmet, not a face** (the farmer is an
-agent; a round brown head with eyes reads as a person's skin, so do not draw one; and no visor over the face, which reads as a balaclava): a head of
-polished gold with a seam of dark bronze round it (the logo's stroke); a ring of amber lights set in the gold round the face (the logo's dotted ring);
-two pill eyes of warm white light in dark bronze bezels, blinking now and then; a bronze bolt with an amber light on either side where ears would be;
-a straw hat (a woven texture) with a dark-brown band, its brim turned up a little at the edge; a sprout of two leaves on the crown, lime and gold. It floats over a gold ring, leans back a little so the visor shows under the brim from above, and turns
+crown 13.5 high and dented on top, in the logo's 64 units), **a robot's head, not a face, and no metal** (the owner, 2026-10-24: *"ja nechci at je to
+kovove"*, a farmer's material, a straw hat is great; the farmer is an agent, and a round brown head with eyes reads as a person's skin, so do not
+draw one; and no visor over the face, which reads as a balaclava): a head of **green woven willow**, a basket weave in relief; a braid of hemp rope round
+the face, which is also the logo's rim; the logo's dotted ring as eighteen small warm amber lights, each in a wooden collar; two pill eyes of warm
+white light in walnut rims, blinking now and then; a walnut peg with a warm light on either side where ears would be;
+a straw hat (a woven texture, light against the green head) with a dark-brown band, its brim turned up a little at the edge; a sprout of two leaves
+on the crown, lime and gold. It floats over a ring, leans back a little so the face shows under the brim from above, and turns
 toward the viewer, looking about a little. As big as the other two products, smaller than the sun. Mockup: `u3d.js` (`adFarmer`), the flat map `universe.js` (the logo
 itself, recoloured), the data `uv-data.js` (`CO.ADS`).
 
