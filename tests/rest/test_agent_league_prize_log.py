@@ -10,12 +10,17 @@ response's own `month_committed_et10` (49,585) cannot be reconciled against its 
 it shows are all `capped`, 0 ET10). Nexus's REPLY-0182 said "ask for more rows and it is there", which
 holds only while a record is among the newest 200.
 
-Passes when the list comes back shorter than every window the server stops at (50 when `limit` is
-dropped, 200 at the ceiling: then it is the whole log; C02, 2026-10-18), when its oldest id is 1, or
-when any paging parameter or filter we try (offset, before, page, cursor, status=credited, player_id of
-the window's players: every fix #213 names) returns a record older than the window. NOT asserted: which way they
-page, or that ids start at 1 -- only that a full window whose oldest id is above 1 has nothing behind it
-we can reach. SAFE: GETs only, anonymous.
+Passes when the list is the whole log -- its oldest id is the lowest the log is known to hold (1:
+LOG_STARTS_AT) -- or when any paging parameter or filter we try (offset, before, page, cursor,
+status=credited, player_id of the window's players: every fix #213 names) returns a record older than
+the window. How long the list is cannot say it is the whole log: "shorter than every window the server
+stops at" was coded as the windows seen so far (50 when `limit` is dropped, 200 at the ceiling; C02,
+2026-10-18), so a cap at 100 nobody had seen read as everything there is (A06, deep pass 2026-10-25);
+only the oldest id can say it. Failed when a window as long as one the server is known to stop at (50,
+200) has an oldest id above 1 and nothing older is reachable. A shorter window whose oldest id is above
+1, with nothing older reachable, is Inconclusive: a cap not seen before and records removed look the
+same. NOT asserted: which way they page, or that ids start at 1 -- only that a full window whose oldest
+id is above 1 has nothing behind it we can reach. SAFE: GETs only, anonymous.
 """
 
 from __future__ import annotations
@@ -29,17 +34,37 @@ from tests.rest.test_gem_screener_numbers_match_their_sources import get_patient
 PRIZES = "/api/v1/agent-league/prizes"
 CEILING = 200      # the largest `limit` their server takes (201 is a 422)
 # Every row count the list has been seen to stop at: the ceiling, and the default 50 it answers when
-# `limit` is not honoured. A window exactly that long is not known to be the whole log (C02).
+# `limit` is not honoured. A window that long with nothing older reachable is a cut log (C02).
 WINDOWS = (50, CEILING)
+# The lowest id the log is known to hold: on 2026-10-12 it held 90 records from id 1 (ours 4, 5, 9-14
+# among them), and on 2026-10-17 246 records, ids 47-246 in the window.
+LOG_STARTS_AT = 1
 
 
 def whole(count: int, oldest: int | None) -> bool:
-    """Whether a window of `count` rows whose oldest id is `oldest` is the whole log: shorter than
-    every window the server stops at, or reaching id 1. C02, deep pass 2026-10-18: "shorter than 200"
-    alone read a server's default 50 -- `limit` dropped -- as everything there is."""
-    if oldest is None or oldest <= 1:
+    """Whether a window of `count` rows whose oldest id is `oldest` is the whole log: it is when it
+    reaches the lowest id the log is known to hold. No length can say so. C02, deep pass 2026-10-18:
+    "shorter than 200" read a server's default 50 -- `limit` dropped -- as everything there is; A06,
+    deep pass 2026-10-25: "shorter than every window the server stops at" was coded as the windows
+    seen so far, so a cap at 100 nobody had seen read as the whole log. Rows whose ids cannot be read
+    are not known to be all."""
+    if count == 0:
         return True
-    return count < CEILING and count not in WINDOWS
+    if oldest is None:
+        return False
+    return oldest <= LOG_STARTS_AT
+
+
+def verdict_after_paging(count: int, oldest: int, reached: dict) -> str | None:
+    """The verdict on a window that is not the whole log, once every paging parameter was tried:
+    "passed" when one reached an older record; "failed" when none did and the window is as long as one
+    the server is known to stop at; None (Inconclusive) for a shorter window -- a cap not seen before
+    and records removed below it look the same, and this asserts neither (A06)."""
+    if reached:
+        return "passed"
+    if count >= CEILING or count in WINDOWS:
+        return "failed"
+    return None
 
 
 def _rows(client, **params) -> list[dict] | None:
@@ -63,8 +88,8 @@ def _ids(rows: list[dict]) -> list[int]:
 
 @qa(component="rest.agent_league", tier=SafetyTier.SAFE, surface="rest")
 def test_the_prize_log_reaches_every_prize_it_recorded(rest_anon):
-    """A full window at the ceiling whose oldest id is above 1 hides older records; failed unless
-    some paging parameter reaches one of them."""
+    """A full window whose oldest id is above 1 hides older records; failed unless some paging
+    parameter reaches one of them (Inconclusive for a window no server cap is known at)."""
     window = _rows(rest_anon, limit=CEILING)
     if window is None:
         raise Inconclusive(f"{PRIZES}?limit={CEILING} did not answer a prize list")
@@ -96,15 +121,21 @@ def test_the_prize_log_reaches_every_prize_it_recorded(rest_anon):
             older = [i for i in _ids(rows) if i < oldest]
             if older:
                 reached[name] = min(older)
+    verdict = verdict_after_paging(len(window), oldest, reached)
+    if verdict is None:
+        raise Inconclusive(f"the log answers {len(window)} records (ids {oldest}-{newest}; asked for {CEILING}), "
+                           f"shorter than any window it is known to stop at, yet its oldest id is above "
+                           f"{LOG_STARTS_AT} and none of {', '.join(sorted(tried))} reaches older: a cap not "
+                           f"seen before, or records removed, which this cannot tell apart")
     conclude(Measurement(
-        verdict="passed" if reached else "failed",
+        verdict=verdict,
         reason=(f"records older than the window are reachable by {', '.join(sorted(reached))}"
                 if reached else
                 f"the log answers its newest {len(window)} records (ids {oldest}-{newest}; asked for "
-                f"{CEILING}) and no more: "
-                f"{oldest - 1} older records cannot be read, and none of "
+                f"{CEILING}) and no more: the records of ids {LOG_STARTS_AT}-{oldest - 1} (the log is "
+                f"known to start at id {LOG_STARTS_AT}) cannot be read, and none of "
                 f"{', '.join(sorted(tried))} reaches one"),
-        left={"records_out_of_reach": 0 if reached else oldest - 1},
+        left={"records_out_of_reach": 0 if reached else oldest - LOG_STARTS_AT},
         right={"records_out_of_reach": 0},
         population={"window": len(window), "oldest_id": oldest, "newest_id": newest,
                     "paging_tried": sorted(tried), "paging_that_reached": reached,
