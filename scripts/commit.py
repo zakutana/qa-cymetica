@@ -82,6 +82,15 @@ def _git(base: Path, *args: str) -> subprocess.CompletedProcess:
                           env={**os.environ, COMMIT_PY_MARKER: "1"})
 
 
+def _index_name(base: Path, path: str) -> str:
+    """A named path as `git ls-files` lists it: from the repository's root, forward slashes --
+    `./a.txt`, `docs\\x.md` and an absolute path inside the tree all name one entry."""
+    try:
+        return (base / path).resolve().relative_to(base).as_posix()
+    except (OSError, ValueError):
+        return Path(path).as_posix()
+
+
 def _add(base: Path, paths: list[str]) -> str | None:
     """Stage the named paths; why not, or None.
 
@@ -90,9 +99,14 @@ def _add(base: Path, paths: list[str]) -> str | None:
     --run` staged with `git add -f` under the ignored state/runs/ could not be committed by
     any worker: a company sweep failed three times on it (OP-0009, T-0002). What nothing
     staged stays refused -- a debug run's record, a capture body: the reason those folders
-    are ignored at all."""
-    held = [path for path in paths
-            if _git(base, "ls-files", "--error-unmatch", "--", path).returncode == 0]
+    are ignored at all.
+
+    One `git ls-files -z` for every path, not one git process per path under the commit lock
+    every department waits on (deep pass 2026-10-25, R07). `-z` because git quotes a non-ASCII
+    path otherwise; each name is compared the way the index lists it (`_index_name`)."""
+    listed = _git(base, "ls-files", "-z", "--", *paths)
+    in_index = (set(listed.stdout.split("\0")) - {""}) if listed.returncode == 0 else set()
+    held = [path for path in paths if _index_name(base, path) in in_index]
     rest = [path for path in paths if path not in held]
     for flags, group in ((["-f"], held), ([], rest)):
         if group:
