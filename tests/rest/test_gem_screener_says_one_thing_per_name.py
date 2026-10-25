@@ -242,7 +242,9 @@ def test_a_twelve_month_dilution_names_where_its_new_tokens_come_from(rest_anon)
     """Under "Dilution, 12 months" the page prints "N new X a month · " and the tile's `kinds`. A
     row with new tokens in its next 12 months names at least one kind (vesting, emissions, ...).
     The monthly 0 is not judged: it is this month's inflow, as ET-31267 drew it. Passes when every
-    such row names its source; a page that no longer joins `kinds` there is INCONCLUSIVE."""
+    such row names its source -- a non-blank kind, or, for an empty list, the fallback the line
+    draws after the join (A07, deep pass 2026-10-25: that fallback was not read, and kinds ['']
+    counted as a source); a page that no longer joins `kinds` there is INCONCLUSIVE."""
     _, page = read_page(rest_anon)
     said = g.dilution_source_breaches(read_api(rest_anon, SUPPLY_BATCH), page)
     if said["verdict"] == "unread":
@@ -251,12 +253,14 @@ def test_a_twelve_month_dilution_names_where_its_new_tokens_come_from(rest_anon)
     conclude(Measurement(
         verdict="failed" if blank else "passed",
         reason=(f"{len(blank)} of {said['judged']} rows with new tokens in their next 12 months read "
-                f"'N new X a month · ' with no source after the dot (kinds []), batch as_of {said['as_of']}: "
+                f"'N new X a month · ' with no source after the dot (no kind that is a non-blank string, "
+                f"and no fallback the line draws for it), batch as_of {said['as_of']}: "
                 + "; ".join(f"{b['row']} +{b['pct']:g}% from {b['new_tokens_12m'] / 1e6:,.1f}M new tokens, "
                             f"next {b['next_unlock_tokens'] / 1e6 if b['next_unlock_tokens'] else 0:,.1f}M "
                             f"to {b['next_unlock_who']}" for b in blank[:5])
                 if blank else said["why"]),
         left={"rows_without_source": len(blank), "judged": said["judged"]},
         right={"rows_without_source": 0},
-        population={"breaches": blank[:10], "as_of": said["as_of"], "line": said["line"]},
+        population={"breaches": blank[:10], "as_of": said["as_of"], "line": said["line"],
+                    "fallback": said["fallback"], "named_by_fallback": said["by_fallback"][:10]},
         sources={"page": g.APP_PAGE, "batch": SUPPLY_BATCH}))

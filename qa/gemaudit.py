@@ -768,14 +768,110 @@ def sector_click_promise(page_html: str | None) -> dict:
 
 DILUTION_LINE = re.compile(
     r"month_tokens\)\s*\+\s*' new '.{0,80}?' a month\s*·\s*'\s*\+\s*"
-    r"\(\s*[\w$]+\.kinds\s*\|\|\s*\[\]\s*\)\.join\(", re.S)
-"""The served line under the 12-month figure, "N new X a month · " + kinds joined, with no
-fallback for an empty list: the Supply column's tooltip (saDilLine) and the drawer card's tile."""
+    r"(?P<wrap>\(\s*)?\(\s*[\w$]+\.kinds\s*\|\|\s*\[\]\s*\)\.join\(", re.S)
+"""The served line under the 12-month figure, "N new X a month · " + kinds joined: the Supply
+column's tooltip (saDilLine) and the drawer card's tile. What follows the join is read by
+`_dilution_fallback` (A07, deep pass 2026-10-25: the match stopped at `.join(`, so a fallback drawn
+after it was never seen)."""
 MIN_DILUTION_ROWS = 5
 
 
 def _is_number(value) -> bool:
     return isinstance(value, (int, float)) and not isinstance(value, bool)
+
+
+def _js_close(text: str, at: int) -> int:
+    """The index of the bracket closing the one opened at `at` (strings skipped), or -1."""
+    depth, i = 0, at
+    while i < len(text):
+        ch = text[i]
+        if ch in "'\"`":
+            j = i + 1
+            while j < len(text) and text[j] != ch:
+                j += 2 if text[j] == "\\" else 1
+            i = j + 1
+            continue
+        if ch in "([{":
+            depth += 1
+        elif ch in ")]}":
+            depth -= 1
+            if depth == 0:
+                return i
+        i += 1
+    return -1
+
+
+def _js_terms(text: str) -> list[str]:
+    """The `+`-joined terms of the expression `text` starts with, up to where that expression ends
+    (a `;`, `,` or closing bracket at its own level)."""
+    terms, depth, start, i = [], 0, 0, 0
+    while i < len(text):
+        ch = text[i]
+        if ch in "'\"`":
+            j = i + 1
+            while j < len(text) and text[j] != ch:
+                j += 2 if text[j] == "\\" else 1
+            i = j + 1
+            continue
+        if ch in "([{":
+            depth += 1
+        elif ch in ")]}":
+            if depth == 0:
+                break
+            depth -= 1
+        elif depth == 0 and ch in ";,":
+            break
+        elif depth == 0 and ch == "+":
+            terms.append(text[start:i])
+            start = i + 1
+        i += 1
+    terms.append(text[start:i])
+    return terms
+
+
+def _dilution_fallback(page: str, found: re.Match) -> tuple[str | None, str | None]:
+    """What the line prints after the join when `kinds` is empty: ("length", text) for a term like
+    `((d.kinds || []).length ? '' : 'vesting schedule')`, shown when the list is empty; ("or", text)
+    for `((d.kinds || []).join(' + ') || 'text')`, shown when the join is ''; ("unread", None) when
+    something after the join reads `kinds` in a way not read; (None, None) when nothing does -- a
+    blank fallback included, since it names nothing (A07)."""
+    close = _js_close(page, found.end() - 1)
+    if close < 0:
+        return "unread", None
+    tail = page[close + 1:close + 600]
+    if found.group("wrap"):
+        alt = re.match(r"\s*\|\|\s*(['\"])(.*?)\1\s*\)", tail, re.S)
+        if alt:
+            return ("or", alt.group(2)) if alt.group(2).strip() else (None, None)
+        if re.match(r"\s*\|\|", tail):
+            return "unread", None
+        shut = re.match(r"\s*\)", tail)
+        tail = tail[shut.end():] if shut else tail
+    # Unparenthesised, `join(...) || 'x'` binds to the whole non-empty line and never shows.
+    for term in _js_terms(tail)[1:]:
+        if not re.search(r"\bkinds\b", term):
+            continue
+        split = re.fullmatch(r"\s*\(?\s*(.+?)\?\s*(['\"])(.*?)\2\s*:\s*(['\"])(.*?)\4\s*\)?\s*", term, re.S)
+        if not split:
+            return "unread", None
+        cond, yes, no = split.group(1), split.group(3), split.group(5)
+        negated = re.match(r"\s*\(*\s*!", cond) or re.search(r"\.length\s*(?:===?\s*0|<\s*1|<=\s*0)", cond)
+        shown = yes if negated else no
+        return ("length", shown) if shown.strip() else (None, None)
+    return None, None
+
+
+def _prints_nothing(kinds: list, fallback: tuple[str | None, str | None]) -> bool:
+    """Whether a row with `kinds` reads nothing after "a month · " where the line has `fallback`:
+    a kind that is empty, blank or not a string names nothing (A07: [''] passed as a source)."""
+    if any(isinstance(k, str) and k.strip() for k in kinds):
+        return False
+    kind, _ = fallback
+    if kind == "length":
+        return len(kinds) > 0
+    if kind == "or":
+        return " + ".join("" if k is None else str(k) for k in kinds) != ""
+    return True
 
 
 def dilution_source_breaches(batch: dict | None, page_html: str | None) -> dict:
@@ -787,24 +883,40 @@ def dilution_source_breaches(batch: dict | None, page_html: str | None) -> dict:
     `kinds`, like `month_tokens`, counts only the first of the 12 months, which has nothing.
 
       failed  the page joins `kinds` after "a month · " and a row with new tokens in its next 12
-              months has `kinds` empty
-      ok      every such row names at least one kind
-      unread  the line is not on the page in that form (reworded, a fallback for an empty list):
-              what a visitor reads is then a question for a browser; or the batch could not be
-              read, a row's `kinds` is missing, or fewer than MIN_DILUTION_ROWS rows were judged
+              months prints nothing there: no kind that is a non-blank string, and no fallback
+              the line draws after the join for it
+      ok      every such row names at least one kind, or is empty and gets the line's fallback
+      unread  the line is not on the page in that form (reworded, a fallback in place of the
+              join, something after the join that reads `kinds` in a way not read): what a
+              visitor reads is then a question for a browser; or the batch could not be read, a
+              row's `kinds` is missing, or fewer than MIN_DILUTION_ROWS rows were judged
+
+    A07, deep pass 2026-10-25: a fallback drawn after the join (`+ ((d.kinds || []).length ? '' :
+    'vesting schedule')`) was not read, so the repaired page FAILED; and kinds [''] counted as a
+    source while the page printed nothing. Every place the line is drawn is read; a row prints
+    nothing if it does in any of them.
 
     NOT judged: the monthly figure (the 0 is October's inflow, as our ET-31267 mockup drew it),
     whether the 12-month figure is right, a row with no new tokens ("0 new COMP a month · " beside
-    0.0% has nothing to name), or a row with no figure ("—").
+    0.0% has nothing to name), a row with no figure ("—"), or whether a fallback's words are the
+    row's true source.
     """
     out = {"verdict": "unread", "why": "", "judged": 0, "breaches": [], "unread": [],
-           "as_of": (batch or {}).get("as_of") if isinstance(batch, dict) else None, "line": None}
-    found = DILUTION_LINE.search(page_html or "")
-    if not found:
+           "as_of": (batch or {}).get("as_of") if isinstance(batch, dict) else None, "line": None,
+           "fallback": None, "by_fallback": []}
+    places = list(DILUTION_LINE.finditer(page_html or ""))
+    if not places:
         out["why"] = ("the page no longer joins the 12-month tile's kinds after 'a month · ' "
-                      "with no fallback; what the line says is a question for a browser")
+                      "in a form this reads; what the line says is a question for a browser")
         return out
-    out["line"] = found.group(0)
+    out["line"] = places[0].group(0)
+    fallbacks = [_dilution_fallback(page_html, place) for place in places]
+    if any(kind == "unread" for kind, _ in fallbacks):
+        out["why"] = ("after joining the 12-month tile's kinds the page reads them again in a way this "
+                      "does not read; what the line says is a question for a browser")
+        return out
+    shown = {text for kind, text in fallbacks if kind}
+    out["fallback"] = shown.pop() if len(shown) == 1 else (sorted(shown) or None)
     items = (batch or {}).get("items") if isinstance(batch, dict) else None
     items = list(items.values()) if isinstance(items, dict) else list(items or [])
     seen = set()
@@ -825,13 +937,15 @@ def dilution_source_breaches(batch: dict | None, page_html: str | None) -> dict:
         if new <= 0:
             continue
         out["judged"] += 1
-        if not kinds:
+        if any(_prints_nothing(kinds, fallback) for fallback in fallbacks):
             nxt = item.get("next_unlock") or {}
             out["breaches"].append({
                 "row": label, "pct": tile.get("pct"), "new_tokens_12m": new,
                 "month_tokens": tile.get("month_tokens"), "schedule_known": tile.get("schedule_known"),
                 "emissions_known": tile.get("emissions_known"), "next_unlock_ts": nxt.get("ts"),
                 "next_unlock_tokens": nxt.get("tokens"), "next_unlock_who": nxt.get("who")})
+        elif not any(isinstance(k, str) and k.strip() for k in kinds):
+            out["by_fallback"].append(label)            # named by the line's fallback, not by its data
     if out["breaches"]:
         out["verdict"] = "failed"
         out["why"] = (f"{len(out['breaches'])} of {out['judged']} rows with new tokens in their next 12 "
@@ -842,7 +956,9 @@ def dilution_source_breaches(batch: dict | None, page_html: str | None) -> dict:
         out["why"] = f"only {out['judged']} rows have new tokens in their next 12 months"
     else:
         out["verdict"] = "ok"
-        out["why"] = f"all {out['judged']} rows with new tokens in their next 12 months name their source"
+        out["why"] = (f"all {out['judged']} rows with new tokens in their next 12 months name their source"
+                      + (f" ({len(out['by_fallback'])} through the line's fallback {out['fallback']!r}: "
+                         f"{out['by_fallback'][:5]})" if out["by_fallback"] else ""))
     return out
 
 
