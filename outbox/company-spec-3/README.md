@@ -5,6 +5,10 @@ bought slots and with a panel. Not filed: it waits for Cymetica's answer on roun
 
 - 2026-10-22: pushed, filed by the operator as a Build it Better request (links pinned to `b0cf54d5`); their BB-SPEC carries all
   12 lines word for word (diffed). Next: when they have built it, check the build against `SPEC.md` item by item.
+- 2026-10-22: verdict Fail for the two buildings (`verdict-et-32428.md`, MSG-0208/0209).
+- 2026-10-25: Nexus declared it finished (REPLY-0206); checked live against `SPEC.md` item by item: Pass, the note and the
+  Telegram (MSG-0238) at the top of `verdict-et-32428.md`. Their "dormant companies left off as you asked" was their own change
+  (REPLY-0197), accepted.
 - `SPEC.md`: the brief (A: the two slots and the click, B: what each panel shows, C: Read button fix, `/clear` in the NEXUS chat,
   companies back on the map, one Products card per product, not per build, every product naming its owner in plain sight).
 - The design is `outbox/company-live` (`index.html#universe`); the links get pinned to a commit when it is filed, as in round 2.
