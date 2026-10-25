@@ -40,7 +40,18 @@ llms.txt's own line for it reads "Cost confirmation before a run (session
 JWT)", in the capture of that very run, and its 401 says "Valid JWT token
 required". A route whose own line documents a session JWT and names no API key
 has told the agent which credential it takes: it is named, not judged. A line
-that names the key ("session or X-API-Key") is judged like any other.
+that names the key ("session or X-API-Key", "agent key", a bare "Bearer" -- the
+MCP door takes the key as `Authorization: Bearer <key>` -- but not a "Bearer
+JWT", which is the session) is judged like any other.
+
+AND THE SAME DOCUMENT'S OWN PROMISE (deep pass 2026-10-25, A01). llms.txt also
+says, in its Clone Bots section: "All cloned-bots routes accept the same
+credential: a session JWT or your X-API-Key". The quote route is a cloned-bots
+route (it is listed under Backtest). A sentence that promises the key to a
+route's whole family -- "all/every <family> routes", the family being the path
+segment after /api/v1/, wherever the route is listed -- wins over the route's
+own "(session JWT)": the document contradicts itself, an agent holding the key
+acts on the promise, and the verdict quotes both. So the 10-21 FAIL stands.
 """
 
 from __future__ import annotations
@@ -58,7 +69,16 @@ DOCUMENTED_GET = re.compile(r"\[GET (/api/v1/[^\]{}<>]+)\]")
 # "(session JWT, run owner only)", "session-only", "JWT only". Prose that merely says
 # "sessions" is not a note.
 SESSION_NOTE = re.compile(r"\(\s*session JWT\b[^)]*\)|\bsession[- ]only\b|\bJWT[- ]only\b", re.I)
-API_KEY_NOTE = re.compile(r"X-API-Key|\bAPI[- ]key\b", re.I)
+# The agent key, in every way their document names it: "X-API-Key", "API key", "agent key", and
+# "Bearer" -- the MCP door takes the key as `Authorization: Bearer <key>` -- unless it is a "Bearer
+# JWT", which is the session ("the dashboard session (Bearer JWT / cookie)").
+API_KEY_NOTE = re.compile(
+    r"X-API-Key|\bAPI[- ]key\b|\bagent[- ]key\b|\bBearer\b(?![\s_-]*(?:YOUR[\s_-]*)?JWT)", re.I)
+# A sentence that promises the key to a whole family of routes, in their wording (Clone Bots,
+# 2026-10-25): "All cloned-bots routes accept the same credential: a session JWT or your X-API-Key".
+# The family is the first path segment after /api/v1/, wherever a route of it is listed.
+FAMILY_PROMISE = re.compile(
+    r"\b(?:all|every)\s+(?:the\s+)?(?:/?api/v1/)?([a-z0-9][a-z0-9_-]*)\s+(?:routes?|endpoints?)\b", re.I)
 
 
 def documented_session_only(text: str) -> set[str]:
@@ -73,6 +93,22 @@ def documented_session_only(text: str) -> set[str]:
     return {path for path, said in lines.items()
             if all(SESSION_NOTE.search(line) and not API_KEY_NOTE.search(line)
                    for line in said)}
+
+
+def family_of(path: str) -> str:
+    """`/api/v1/cloned-bots/backtest/quote` -> `cloned-bots`."""
+    rest = path[len("/api/v1/"):] if path.startswith("/api/v1/") else ""
+    return re.split(r"[/?#]", rest, maxsplit=1)[0].lower()
+
+
+def promised_the_key(text: str) -> dict[str, str]:
+    """Family -> the first line of llms.txt that promises the agent key to every route of it."""
+    out: dict[str, str] = {}
+    for line in (text or "").splitlines():
+        if API_KEY_NOTE.search(line):
+            for match in FAMILY_PROMISE.finditer(line):
+                out.setdefault(match.group(1).lower(), line.strip().lstrip("-* ").strip())
+    return out
 
 
 def _said(response) -> str:
@@ -102,7 +138,13 @@ def test_every_documented_get_accepts_the_key_its_own_document_issues(rest_trust
         raise Inconclusive(
             f"{LLMS} names no concrete GET path, so there was nothing to call")
 
-    session_only = documented_session_only(document.text)
+    # A route's own "(session JWT)" exempts it -- unless the same document promises the key to
+    # every route of its family; then the document contradicts itself and the route is judged.
+    promises = promised_the_key(document.text)
+    noted = documented_session_only(document.text)
+    contradicted = {path: promises[family_of(path)] for path in noted
+                    if family_of(path) in promises}
+    session_only = noted - set(contradicted)
     refused, served, other, unread = [], 0, {}, {}
     said_401, as_documented = {}, {}
     for path in paths:
@@ -141,16 +183,22 @@ def test_every_documented_get_accepts_the_key_its_own_document_issues(rest_trust
     named = (f". NOT in the verdict: {len(as_documented)} route(s) whose own llms.txt "
              f"line documents a session JWT and names no API key answered 401 as "
              f"documented: {', '.join(sorted(as_documented))}" if as_documented else "")
+    against = {path: contradicted[path] for path in refused if path in contradicted}
+    said_both = "".join(
+        f". {path} says \"(session JWT)\" on its own line, while the same document says "
+        f"\"{promise}\": it contradicts itself, and an agent holding the key acts on the promise"
+        for path, promise in sorted(against.items()))
     conclude(Measurement(
         verdict="failed" if refused else "passed",
         reason=(
-            f"{len(refused)} of {len(paths)} GET paths llms.txt documents "
-            f"with no session-only note answer 401 to the TRUSTED key their own "
-            f"onboarding issues, while {served} answer 200 to the same key in "
-            f"the same session: " + ", ".join(refused)
+            f"{len(refused)} of {len(paths)} GET paths llms.txt documents as "
+            f"reachable with the agent key (no session-only note of their own, or "
+            f"the key promised to every route of their family) answer 401 to the "
+            f"TRUSTED key their own onboarding issues, while {served} answer 200 to "
+            f"the same key in the same session: " + ", ".join(refused)
             + ". 401 says the request carried no credential, so an agent "
               "cannot tell 'you may not' from 'who are you' -- there is no "
-              "scope to request and no tier to reach"
+              "scope to request and no tier to reach" + said_both
             if refused else
             f"all {served} of the documented GET paths that answered read the "
             f"agent key") + named,
@@ -158,6 +206,7 @@ def test_every_documented_get_accepts_the_key_its_own_document_issues(rest_trust
         population={"documented": len(paths), "served": served,
                     "unauthenticated": len(refused), "other": other,
                     "unreachable": unread, "refusals": said_401,
-                    "documented_session_only": as_documented},
+                    "documented_session_only": as_documented,
+                    "session_noted_but_promised_the_key": contradicted},
         sources={"document": LLMS, "credential": "X-API-Key, trusted tier"},
     ))
