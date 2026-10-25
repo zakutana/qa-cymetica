@@ -1,4 +1,7 @@
-# Build a Company, round 4 (ready to file)
+# Build a Company, round 4 (filed as ET-32803)
+
+**Filed 2026-10-25 as ET-32803.** Their BB-SPEC repeated all 19 lines word for word (diffed); the operator sent BB-ACCEPT the same morning, about 10:33 UTC,
+and the 24-hour clock runs to about 10:33 UTC on 2026-10-26. The verdict is ours: check the build against `SPEC.md` item by item, as round 3 was.
 
 Started 2026-10-22 at the operator's word. The request text is `build-it-better/improvements.txt` (19 lines, 7,931 characters of the form's 8,000;
 its links pinned to a19d80ba; they open once that commit is pushed). When it is filed, its ET number goes here and the verdict is ours to give.
