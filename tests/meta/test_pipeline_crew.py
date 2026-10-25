@@ -1015,7 +1015,16 @@ def test_the_auditor_counts_what_each_department_cost_and_produced(company, monk
     procs = _script("processes")
     section = procs.crew_section(company)
     assert "bugs" in section["departments"]
-    assert "crew_section(" in (REPO / "scripts" / "processes.py").read_text(encoding="utf-8")
+    # Through patrol() itself (C04, deep pass 2026-10-25): "crew_section(" in processes.py matched
+    # the function's own `def` line, so deleting the call in patrol() stayed green. Its transcript
+    # and record walks and its git sizes are stubbed (QA_REPO_ROOT is no repository here); the
+    # company is the one read.
+    monkeypatch.setattr(procs, "messages_rows", lambda since: [])
+    monkeypatch.setattr(procs, "records_by_part", lambda base: {})
+    monkeypatch.setattr(procs, "sizes", lambda base: {})
+    walked = procs.patrol(root=company)
+    assert "bugs" in ((walked.get("crew") or {}).get("departments") or {}), (
+        "the patrol does not carry the company's numbers")
 
 
 # -- the loops ------------------------------------------------------------------------------
