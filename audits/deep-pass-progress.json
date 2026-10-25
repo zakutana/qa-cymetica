@@ -47,7 +47,13 @@
     {"line": "2026-10-18 Z ohlednuti: firma nesmi psat korenove *.py a conftest", "commit": "b2870d78"},
     {"line": "2026-10-18 Z ohlednuti: outsider bez holeho MEMORY.md + state/outsider/ do .gitignore", "commit": "2f259031"},
     {"line": "2026-10-12 Kod pro firmu: bod 9 crew-before-c9 (mrizka botu po odmitnutem klonu)", "commit": "7e8f64f7"},
-    {"line": "2026-10-12 Kod pro firmu: bod 11 crew-before-c9 (outsider-act exit, metrics since, h2h znovu)", "commit": "88a0d46e d61bb011 e58bdf27"}
+    {"line": "2026-10-12 Kod pro firmu: bod 11 crew-before-c9 (outsider-act exit, metrics since, h2h znovu)", "commit": "88a0d46e d61bb011 e58bdf27"},
+    {"line": "2026-10-13 Opravit nase kontroly: #112/#136 prvni dodani", "commit": "4ba0ff36"},
+    {"line": "2026-10-13 Opravit nase kontroly: #93 trasa, kterou jejich llms.txt vede jako session JWT (FAIL z 21. 10. byla nase chyba)", "commit": "f0098d59"},
+    {"line": "2026-10-13 Opravit nase kontroly: karta v pozici jen otevrene pozice", "commit": "f0f1a37c"},
+    {"line": "2026-10-13 Opravit nase kontroly: /movers na /event-cards/movers (#189)", "commit": "81185fc1"},
+    {"line": "2026-10-13 Opravit nase kontroly: Inconclusive v ctenich uz neprojde jako SKIP", "commit": "82ad8f20 96667c33"},
+    {"line": "2026-10-18 Z ohlednuti: FAIL overeni rekne proc", "commit": "dc34427b 7e118a43"}
   ],
   "left": [
     {"line": "2026-10-12 Kod pro firmu: OP-0013 cteni H2 desku", "why": "a new read-only study whose result goes to the desk by ticket; the company is stopped, nobody reads the ticket"},
@@ -63,6 +69,6 @@
   ],
   "retrospective": {"last": "2026-10-18", "done": false},
   "rule_changes": [],
-  "meta_tests": {"start": 840, "end": null, "reason": null},
+  "meta_tests": {"start": 840, "end": null, "reason": "0b added tests/meta/test_pipeline_verify.py::test_a_fail_says_which_reading_failed and folded test_a_check_with_hundreds_of_captures_still_fits_their_evidence_field (#130) into it (7e118a43); 0b's lab work replaced test_a_verdict_reads_the_whole_index_history_not_the_last_five_days with test_a_verdict_reads_the_finest_interval_that_reaches_its_window (4403c058)"},
   "finished": false
 }
