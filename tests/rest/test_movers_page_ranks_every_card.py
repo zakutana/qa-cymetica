@@ -25,7 +25,9 @@ and `most_active` (its script concatenates the three), so those are the cards it
 2026-10-25: until then the check looked for `cards`/`items` only and read "no card list"). The
 boards then hold ten cards each, and the listing is paged for seconds after /movers was read, so a
 card at the edge can rotate in between: /movers is read once more and a true top-ten card counts
-as missed only when neither read holds it.
+as missed only when neither read holds it. The listing is paged by its own `total`, and judged only
+when at least 95% of that total came back; what /movers says it ranked bounds nothing (B01, deep
+pass 2026-10-25).
 
 NOT asserted: the "Event cards leading the deck" board (it falls back to the size of the move
 when no card has activity, by its own sort), the token rows, or whether "since listing" is
@@ -187,21 +189,28 @@ def test_the_movers_boards_rank_every_card_of_the_listing(rest_anon):
         raise Inconclusive(why)
 
     page_cards, totals = _read_page_cards(rest_anon, urls)
-    total = max(totals) if totals else None
+    # What the page's own requests say they ranked: recorded, and never the bound of the listing read.
+    # B01, deep pass 2026-10-25: that bound was this number, the endpoint under test, so /movers saying
+    # 600 of a listing of 647 left 47 cards unread and a top-ten card among them passed unseen.
+    stated = max(totals) if totals else None
 
     # The listing's own filters, if the page reads the listing; /movers carries none.
     on_listing = [u for u in urls if urlsplit(u).path.rstrip("/") == LISTING.rstrip("/")]
     base = dict(parse_qsl(urlsplit(on_listing[0]).query)) if on_listing else {}
-    every, offset = {}, 0
+    every, offset, total = {}, 0, None
     for _ in range(MAX_PAGES):
         r = _get(rest_anon, LISTING, **dict(base, limit=PAGE_SIZE, offset=offset))
-        cards = _cards(r.json()) if r.status_code == 200 else None
+        body = r.json() if r.status_code == 200 else None
+        cards = _cards(body)
         if cards is None:
             raise Inconclusive(f"{LISTING} offset {offset} answered HTTP {r.status_code}; the listing could "
                                f"not be read whole")
         if offset and adds_nothing(set(every), cards):
             raise Inconclusive(f"{LISTING} offset {offset} answered only cards already read; the listing "
                                f"cannot be read whole by paging")
+        # The listing's own total, the largest any page states: it bounds the paging and the guard.
+        if isinstance(body, dict) and type(body.get("total")) is int:
+            total = max(total or 0, body["total"])
         every.update({c.get("id"): c for c in cards if c.get("id")})
         offset += PAGE_SIZE
         if not cards or (total is not None and offset >= total):
@@ -241,7 +250,8 @@ def test_the_movers_boards_rank_every_card_of_the_listing(rest_anon):
                 f"{len(page_cards)} cards {PAGE} reads"),
         left={"top_cards_the_page_never_reads": n_missed, "cards_the_page_reads": len(page_cards)},
         right={"top_cards_the_page_never_reads": 0},
-        population={"requests": urls, "listing_total": total, "cards_read": len(every),
+        population={"requests": urls, "listing_total": total, "total_the_page_requests_state": stated,
+                    "cards_read": len(every),
                     "missed": {k: [fmt(r) for r in v] for k, v in missed.items()},
                     "page_boards": {k: [fmt(r) for r in v] for k, v in on_page.items()},
                     "true_boards": {k: [fmt(r) for r in v] for k, v in truth.items()},
