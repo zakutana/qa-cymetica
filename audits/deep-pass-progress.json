@@ -762,8 +762,15 @@
     }
   ],
   "retrospective": {
-    "last": "2026-10-18",
-    "done": false
+    "last": "2026-10-25",
+    "done": true,
+    "answers": {
+      "repeated": "checks passing on what they did not read (18 of tonight's 34 fixes, 7 of 9 on 10-18); FAIL bodies describing the filing's old wording; bugs sent by Telegram instead of submit.py",
+      "overkill_underbuilt": "1,614 tests guard us, 191 measure Cymetica (10-18: 1,555 / 201); 301 of 521 commits the /company mockup; no level-V run for 3.5 days because 97 MB of untracked renders made every tree dirty",
+      "models": "424 Opus 5.5, 68 Sonnet 5.5; no withdrawal this week; the corrections were ours (#93's and #217's FAIL texts) not Sonnet's",
+      "worth": "the triad removed 5 of 43 and left 4 as minority reports (still paying); the laboratory and the company ran nothing all week, paused by the operator: idle, not cut",
+      "outside": "conduct (FAIL texts, #46, the #112/#136 churn), documents (the quote removed, the a2a rule, the outsider and the league), architecture (prereg blocked, repair debt 17, a red guard hides new reds): in DEEP-PASS.md and NEXT.md"
+    }
   },
   "rule_changes": [
     {
@@ -775,17 +782,17 @@
         "t2": "no",
         "t3": "no"
       },
-      "test": "tests/repo/test_fold_split_row_structural.py",
+      "test": "tests/repo/test_fold_split_row_structural.py::test_a_split_row_is_unverifiable_from_its_first_fold_citing_the_split",
       "commit": "4e1b6f24",
       "handover": true
     }
   ],
   "meta_tests": {
     "start": 840,
-    "end": null,
+    "end": 840,
     "reason": "0b added tests/meta/test_pipeline_verify.py::test_a_fail_says_which_reading_failed and folded test_a_check_with_hundreds_of_captures_still_fits_their_evidence_field (#130) into it (7e118a43); 0b's lab work replaced test_a_verdict_reads_the_whole_index_history_not_the_last_five_days with test_a_verdict_reads_the_finest_interval_that_reaches_its_window (4403c058)"
   },
-  "finished": false,
+  "finished": true,
   "week": {
     "numbers": "521 commits in 7 days (424 Opus 5.5, 68 Sonnet 5.5; 301 the /company mockup, 54 journal); tests 1820: 1614 guard us (meta 1149, repo 465), 191 measure Cymetica (rest 163, mcp 24, pinned 4); laboratory 0 sessions, company idle all week; 14 verifications sent (8 PASS, 6 FAIL on 10-21), 5 reports filed",
     "conduct": [
@@ -832,5 +839,42 @@
       "commit": "a98211a9",
       "test": "tests/repo/test_submit_outcomes.py (the disk case, red on 8bc9bdc6)"
     }
-  ]
+  ],
+  "verifying_run": {
+    "run_id": "run-20261025T015225Z-897c9670",
+    "prereg": "PRE-0290",
+    "level": "V",
+    "passed": 1841,
+    "failed": 16,
+    "skipped": 32,
+    "xfailed": 14,
+    "minutes": 107,
+    "ledger": {
+      "VERIFIED FIXED": 117,
+      "STILL REPRODUCIBLE": 13,
+      "OUR CHECK CANNOT TELL": 27,
+      "CHECK CHANGED": 8,
+      "WITHDRAWN": 13,
+      "PASSING, NEVER RAISED": 4,
+      "NOT RAISED YET": 1
+    },
+    "sent": [
+      "PASS #222",
+      "PASS #132",
+      "PASS #137",
+      "PASS #220",
+      "FAIL #198",
+      "FAIL #201",
+      "FAIL #123"
+    ],
+    "held": [
+      "FAIL #112/#136: the build-deadline check judges our own late requests on paid September tickets",
+      "FAIL #93: a new route, the vendor's document contradicts itself; a new report is the operator's call"
+    ],
+    "red_of_ours": "tests/repo/test_process_dna.py::test_no_ceiling_is_set_below_where_we_already_stand, red before the pass (pack, oldest NEXT line, memory index)"
+  },
+  "next": [
+    "Z deep passu: připnout s důvodem 8 opravených kontrol (CHECK CHANGED, #217 mezi nimi) a poslat, co pak dluží; v deníku umět označit neodeslaný koncept Telegramu (6 z týdne); 17 řádků s dluhem opravy kontroly opravit nebo vyřadit; clone.py: chyba po odeslání je unknown."
+  ],
+  "at_finished": "2026-10-25T03:59:36+00:00"
 }
