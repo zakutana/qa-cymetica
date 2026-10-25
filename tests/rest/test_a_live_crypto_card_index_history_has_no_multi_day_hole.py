@@ -35,6 +35,10 @@ judged (it records nothing at all, which is a different question); one point is 
 A pass is the rule holding for the cards the list showed at the moment of the read. `population`
 names every card judged with its widest gap, and for each failing card how many OTHER judged
 cards recorded a point inside its widest gap -- the control that says card-only or platform-wide.
+A pass needs the list to have ended within the pages read, and no more than a quarter of the open
+crypto cards' histories unread (non-200, an unreadable time, no Date header); past either it is
+Inconclusive, naming them (A02, deep pass 2026-10-25). A hole seen on a card that was read fails
+however many others were not read.
 
 **What a pass after about 2026-10-25 means.** The history keeps the hole for as long as its window
 does: 30 days, so the stretch of 09-23..25 leaves `30d` around 10-23 to 10-25. A pass after that
@@ -180,6 +184,14 @@ def tail_hole(points, gaps, now: datetime | None, max_hours: float) -> tuple[flo
     return (hours, raw, now.isoformat(timespec="seconds"))
 
 
+def too_much_unread(subjects: int, unread: list) -> bool:
+    """Whether the cards whose history could not be read are more than a quarter of the open crypto
+    cards: then a pass would rest on what was not read (rule 8). A02, deep pass 2026-10-25: only
+    `if not judged` stopped a pass, so a 500 on 19 of 20 cards passed as "all 1 open crypto card(s)".
+    A hole seen on a card that was read is a defect however many were not."""
+    return len(unread) > subjects // 4
+
+
 def _crypto_share(basket) -> float:
     legs = [leg for leg in basket or [] if isinstance(leg, dict)]
     total = sum(float(leg.get("weight") or 0) for leg in legs)
@@ -208,6 +220,12 @@ def test_live_crypto_card_index_history_has_no_multi_day_hole(rest_anon):
         if len(rows) < PAGE:
             break
         offset += PAGE
+    else:
+        # A02, deep pass 2026-10-25: twelve full pages and no short one -- the list goes on past
+        # what was read, and a pass over the first 1200 cards is not a pass over the list.
+        raise Inconclusive(f"{LIST} answered a full page of {PAGE} at each of {MAX_PAGES} offsets, so "
+                           f"the list goes on past the {MAX_PAGES * PAGE} cards read; a card past them "
+                           f"is not judged, and a pass would not be about the list")
     now = datetime.now(timezone.utc)
     subjects = [c for c in cards if _is_open(c, now) and _crypto_share(c.get("basket")) >= MIN_CRYPTO_WEIGHT]
     if not subjects:
@@ -255,6 +273,10 @@ def test_live_crypto_card_index_history_has_no_multi_day_hole(rest_anon):
 
     declared_holes = [j for j in judged if j["widest_gap_hours"] > MAX_GAP_HOURS and j["declared"]]
     holes = [j for j in judged if not j["declared"]]
+    if not holes and too_much_unread(len(subjects), unread):
+        raise Inconclusive(f"{len(unread)} of {len(subjects)} open crypto cards' 30-day histories could "
+                           f"not be read, more than a quarter: {'; '.join(unread[:12])}; the {len(judged)} "
+                           f"read kept their points, which does not make the rest whole")
     for hole in holes:
         # The card's widest UNDECLARED hole is the one named and controlled for.
         hole["widest_gap_hours"] = hole["undeclared_widest_hours"]
