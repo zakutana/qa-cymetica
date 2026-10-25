@@ -70,6 +70,7 @@ sys.path.insert(0, str(REPO_ROOT))
 
 from qa.client import build_client, install_client_guard  # noqa: E402
 from qa.config import identities, load_dotenv  # noqa: E402
+from qa.fold import _fingerprint_of, _instant  # noqa: E402
 from qa.fold import correction_reason as fold_correction_reason  # noqa: E402
 from qa.report_plugin import HELPERS_FORMULA  # noqa: E402
 from qa.safety import CURRENT_TIER, EndpointRegistry, SafetyTier  # noqa: E402
@@ -154,6 +155,19 @@ def owed(ledger: dict, only: list[str] | None) -> list[dict]:
         run_id = adjudicated.get("run_id")
         if not run_id:
             raise SystemExit(f"{fid} is PASSING with no run that adjudicated it")
+        run = load_run(run_id)
+
+        # A FAIL says our check still fails. Not when our own newer reading
+        # says otherwise (O01, deep pass of 2026-10-25): held, said, and left
+        # owed in the ledger for the run that re-adjudicates the row.
+        held = fail_held(row, run)
+        if held and any(v == "fail" for _, v in due):
+            for report_id, verdict in due:
+                if verdict == "fail":
+                    print(f"  HOLD  {fid} on #{report_id} (fail): {held}. Not sent.")
+            due = [(r, v) for r, v in due if v != "fail"]
+            if not due:
+                continue
 
         # Rule 6, applied where the claim leaves the building. The two verdicts
         # are different claims and need different levels: `pass` verifies a fix
@@ -161,7 +175,6 @@ def owed(ledger: dict, only: list[str] | None) -> list[dict]:
         # `fail` says the defect still reproduces, which is what opens a defect
         # in the first place and needs only R. Sending either on less would be
         # a statement our own rules do not let us make about ourselves.
-        run = load_run(run_id)
         level = admissibility(run).level
         floor = "V" if any(v == "pass" for _, v in due) else "R"
         if not (level == "V" or (floor == "R" and level == "R")):
@@ -208,6 +221,73 @@ def owed(ledger: dict, only: list[str] | None) -> list[dict]:
                                      if verdict == "fail" else []),
             })
     return work
+
+
+def _ran_under(run: dict, checks: list[str]) -> str | None:
+    """The definition `run` ran these checks under, computed as the fold pins it,
+    or None when the record cannot say (a check it did not run, no fingerprint).
+    Call phase only: a setup or teardown result carries the AST hash whatever the
+    check declares."""
+    results = {r.get("nodeid"): r for r in run.get("results") or []
+               if r.get("phase", "call") == "call"}
+    mine = [results.get(c) for c in checks]
+    if not checks or any(r is None for r in mine):
+        return None
+    return _fingerprint_of(mine)
+
+
+def fail_held(row: dict, run: dict) -> str | None:
+    """Why a FAIL on this row must not go out now, or None.
+
+    O01 (deep pass of 2026-10-25, 3/3). The obligation is the fold's, keyed on
+    the pin and the run that adjudicated the row; the fold also records, beside
+    it, runs of ours that touched the row WITHOUT adjudicating it -- a level-R
+    pass (`last_exploratory_pass`, rule 6), a run that could not conclude
+    (`not_checked_in`), an evidence-only reading. Nothing read those here, and
+    #217 owed "our check still fails" a day after our own run passed the check
+    as repaired, under a new fingerprint. Held when
+      * a run of ours newer than the failing one passed the check, or
+      * the definition is not the one that failed: a newer run of ours ran it
+        under another fingerprint, or the pin now is one the failing run did
+        not run (CHECK_CHANGED territory: the repair is verified first).
+    A record we cannot read is not a record that agrees: the pass is still read
+    off the row, and only the comparison it would have allowed is skipped.
+    """
+    check = row.get("check") or {}
+    checks = row.get("checks") or []
+    adjudicated = check.get("adjudicated_by") or {}
+    failed_at = _instant(adjudicated.get("at"))
+    pinned = check.get("pinned_fingerprint")
+    failed_under = _ran_under(run, checks)
+    why: list[str] = []
+
+    if failed_under is not None and pinned and failed_under != pinned:
+        why.append(f"the definition pinned now ({pinned[:12]}) is not the one "
+                   f"{run.get('run_id')} failed under ({failed_under[:12]})")
+
+    explored = check.get("last_exploratory_pass") or {}
+    explored_at = _instant(explored.get("at"))
+    if explored.get("run_id") and explored_at and failed_at and explored_at > failed_at:
+        why.append(f"our own run {explored['run_id']} passed this check at "
+                   f"{explored.get('at')}, after {run.get('run_id')} failed it")
+
+    newer = [check.get(k) for k in ("last_exploratory_pass", "not_checked_in", "evidence_only")]
+    newer = [n.get("run_id") if isinstance(n, dict) else n for n in newer]
+    for other_id in dict.fromkeys(n for n in newer if n and n != run.get("run_id")):
+        try:
+            other = load_run(other_id)
+        except Exception:  # noqa: BLE001 -- pruned or unreadable: cannot compare
+            continue
+        other_at = _instant(other.get("finished_at") or other.get("started_at"))
+        if not (other_at and failed_at and other_at > failed_at):
+            continue
+        ran = _ran_under(other, checks)
+        if ran is not None and ran != (failed_under or pinned):
+            why.append(f"the check's definition changed since: {other_id} ran it "
+                       f"under {ran[:12]}, not the {(failed_under or pinned or '')[:12]} "
+                       f"it failed under -- the repair is verified first")
+            break
+    return "; ".join(why) or None
 
 
 def failing_readings(run: dict, checks: list[str]) -> list[dict]:
@@ -906,7 +986,7 @@ def main(argv: list[str] | None = None) -> int:
     load_dotenv()
     work = owed(load_ledger(), args.only)
     if not work:
-        print("nothing is owed a verification.")
+        print("nothing to send: no verification is owed, or each one owed is held above.")
         return 0
     print(f"{len(work)} verification(s) owed across "
           f"{len({w['report_id'] for w in work})} report(s)")
