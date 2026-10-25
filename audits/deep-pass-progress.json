@@ -40,9 +40,10 @@
       "area": "core",
       "votes": {
         "t1": "real",
-        "t2": "real"
+        "t2": "real",
+        "t3": "real"
       },
-      "verdict": null,
+      "verdict": "real",
       "fixed": false,
       "commit": null
     },
@@ -54,9 +55,10 @@
       "area": "core",
       "votes": {
         "t1": "real",
-        "t2": "real"
+        "t2": "real",
+        "t3": "real"
       },
-      "verdict": null,
+      "verdict": "real",
       "fixed": false,
       "commit": null
     },
@@ -68,9 +70,10 @@
       "area": "core",
       "votes": {
         "t1": "real",
-        "t2": "real"
+        "t2": "real",
+        "t3": "real"
       },
-      "verdict": null,
+      "verdict": "real",
       "fixed": false,
       "commit": null
     },
@@ -82,9 +85,10 @@
       "area": "core",
       "votes": {
         "t1": "false_positive",
-        "t2": "false_positive"
+        "t2": "false_positive",
+        "t3": "false_positive"
       },
-      "verdict": null,
+      "verdict": "dropped",
       "fixed": false,
       "commit": null
     },
@@ -96,9 +100,10 @@
       "area": "memecoins",
       "votes": {
         "t1": "real",
-        "t2": "real"
+        "t2": "real",
+        "t3": "real"
       },
-      "verdict": null,
+      "verdict": "real",
       "fixed": false,
       "commit": null
     },
@@ -110,9 +115,10 @@
       "area": "memecoins",
       "votes": {
         "t1": "real",
-        "t2": "real"
+        "t2": "real",
+        "t3": "real"
       },
-      "verdict": null,
+      "verdict": "real",
       "fixed": false,
       "commit": null
     },
@@ -124,9 +130,10 @@
       "area": "memecoins",
       "votes": {
         "t1": "real",
-        "t2": "real"
+        "t2": "real",
+        "t3": "real"
       },
-      "verdict": null,
+      "verdict": "real",
       "fixed": false,
       "commit": null
     },
@@ -138,9 +145,10 @@
       "area": "memecoins",
       "votes": {
         "t1": "real",
-        "t2": "real"
+        "t2": "real",
+        "t3": "real"
       },
-      "verdict": null,
+      "verdict": "real",
       "fixed": false,
       "commit": null
     },
@@ -152,9 +160,10 @@
       "area": "memecoins",
       "votes": {
         "t1": "real",
-        "t2": "real"
+        "t2": "real",
+        "t3": "real"
       },
-      "verdict": null,
+      "verdict": "real",
       "fixed": false,
       "commit": null
     },
@@ -166,9 +175,10 @@
       "area": "memecoins",
       "votes": {
         "t1": "real",
-        "t2": "real"
+        "t2": "real",
+        "t3": "false_positive"
       },
-      "verdict": null,
+      "verdict": "real",
       "fixed": false,
       "commit": null
     },
@@ -474,9 +484,10 @@
       "area": "outbound",
       "votes": {
         "t1": "real",
-        "t2": "real"
+        "t2": "real",
+        "t3": "real"
       },
-      "verdict": null,
+      "verdict": "real",
       "fixed": false,
       "commit": null
     },
@@ -488,9 +499,10 @@
       "area": "outbound",
       "votes": {
         "t1": "false_positive",
-        "t2": "real"
+        "t2": "real",
+        "t3": "real"
       },
-      "verdict": null,
+      "verdict": "real",
       "fixed": false,
       "commit": null
     },
@@ -502,9 +514,10 @@
       "area": "outbound",
       "votes": {
         "t1": "real",
-        "t2": "real"
+        "t2": "real",
+        "t3": "real"
       },
-      "verdict": null,
+      "verdict": "real",
       "fixed": false,
       "commit": null
     },
@@ -516,9 +529,10 @@
       "area": "outbound",
       "votes": {
         "t1": "false_positive",
-        "t2": "false_positive"
+        "t2": "false_positive",
+        "t3": "false_positive"
       },
-      "verdict": null,
+      "verdict": "dropped",
       "fixed": false,
       "commit": null
     },
@@ -529,9 +543,10 @@
       "source": "review",
       "votes": {
         "t1": "real",
-        "t2": "real"
+        "t2": "real",
+        "t3": "real"
       },
-      "verdict": null,
+      "verdict": "real",
       "fixed": false,
       "commit": null
     },
@@ -542,9 +557,10 @@
       "source": "review",
       "votes": {
         "t1": "real",
-        "t2": "real"
+        "t2": "real",
+        "t3": "real"
       },
-      "verdict": null,
+      "verdict": "real",
       "fixed": false,
       "commit": null
     },
@@ -555,9 +571,10 @@
       "source": "review",
       "votes": {
         "t1": "false_positive",
-        "t2": "false_positive"
+        "t2": "false_positive",
+        "t3": "false_positive"
       },
-      "verdict": null,
+      "verdict": "dropped",
       "fixed": false,
       "commit": null
     },
@@ -568,9 +585,10 @@
       "source": "review",
       "votes": {
         "t1": "false_positive",
-        "t2": "real"
+        "t2": "real",
+        "t3": "false_positive"
       },
-      "verdict": null,
+      "verdict": "minority",
       "fixed": false,
       "commit": null
     },
@@ -581,9 +599,10 @@
       "source": "review",
       "votes": {
         "t1": "false_positive",
-        "t2": "real"
+        "t2": "real",
+        "t3": "false_positive"
       },
-      "verdict": null,
+      "verdict": "minority",
       "fixed": false,
       "commit": null
     },
@@ -594,9 +613,10 @@
       "source": "review",
       "votes": {
         "t1": "real",
-        "t2": "real"
+        "t2": "real",
+        "t3": "real"
       },
-      "verdict": null,
+      "verdict": "real",
       "fixed": false,
       "commit": null
     },
@@ -607,9 +627,10 @@
       "source": "review",
       "votes": {
         "t1": "real",
-        "t2": "real"
+        "t2": "real",
+        "t3": "real"
       },
-      "verdict": null,
+      "verdict": "real",
       "fixed": false,
       "commit": null
     },
@@ -620,9 +641,10 @@
       "source": "review",
       "votes": {
         "t1": "false_positive",
-        "t2": "false_positive"
+        "t2": "false_positive",
+        "t3": "false_positive"
       },
-      "verdict": null,
+      "verdict": "dropped",
       "fixed": false,
       "commit": null
     }
