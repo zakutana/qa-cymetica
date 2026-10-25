@@ -101,19 +101,23 @@ def filed_in_journal(events) -> dict[str, list[str]]:
     (`#id`), an `unknown` one, or an intent with no outcome yet. The ledger's reports are filled
     only by a FOLDED accepted outcome, so between a filing and the fold -- and for ever after an
     unknown one until --reconcile -- the ledger alone said 'never reported' (deep pass
-    2026-10-10, B03). A rejected filing is not a report."""
-    answered = {}
+    2026-10-10, B03). A rejected filing is not a report, nor is one that never left."""
+    # An outcome answers the intent BEFORE it (O03, deep pass of 2026-10-25): a key
+    # refused once and filed again, whose second POST left no outcome, read as answered
+    # by the first refusal -- harmless only while a refusal still blocked the finding.
+    unanswered: dict = {}
+    labelled: list[tuple[str, dict]] = []
     for e in events or ():
-        if e.get("type") == "filing_outcome":
-            answered.setdefault(e.get("key"), []).append(e)
+        if e.get("type") == "filing_intent":
+            unanswered[e.get("key")] = e
+        elif e.get("type") == "filing_outcome":
+            unanswered.pop(e.get("key"), None)
+            if e.get("outcome") in ("accepted", "unknown"):
+                labelled.append((f"#{e['report_id']}" if e.get("report_id")
+                                 else e.get("outcome"), e))
+    labelled += [("no outcome", e) for e in unanswered.values()]
     out: dict[str, list[str]] = {}
-    for e in events or ():
-        if e.get("type") == "filing_outcome" and e.get("outcome") in ("accepted", "unknown"):
-            label = f"#{e['report_id']}" if e.get("report_id") else e.get("outcome")
-        elif e.get("type") == "filing_intent" and not answered.get(e.get("key")):
-            label = "no outcome"
-        else:
-            continue
+    for label, e in labelled:
         for fid in e.get("findings") or []:
             out.setdefault(fid, [])
             if label not in out[fid]:
@@ -347,6 +351,32 @@ def _report_id(body):
             or (body.get("report") or {}).get("id"))
 
 
+def _outcome_of(exc: BaseException) -> str:
+    """What a POST that raised is, in the journal's words (scripts/clone.py's
+    reading). `not_sent` only when the request cannot have left: our own guard
+    refused it (SafetyViolation is raised BEFORE the network), or the connection
+    was never made. A timeout, a reset or a cut stream came after it went out, so
+    they may hold it: `unknown`, settled against my-reports."""
+    import httpx
+
+    never_left = (httpx.ConnectError, httpx.ConnectTimeout, httpx.PoolTimeout)
+    if isinstance(exc, httpx.HTTPError) and not isinstance(exc, never_left):
+        return "unknown"
+    return "not_sent"
+
+
+def outcome_of(status: int, report_id) -> str:
+    """What their answer is, in the journal's words (rule 9)."""
+    if 200 <= status < 300 and report_id is not None:
+        return "accepted"
+    # A 4xx is their refusal: nothing was filed, and my-reports will never list
+    # it, so `unknown` could never be settled (O03, deep pass of 2026-10-25). A
+    # 4xx that names a report is not a plain refusal; that stays unknown.
+    if status == 409 or (400 <= status < 500 and report_id is None):
+        return "rejected"
+    return "unknown"
+
+
 def submit_batch(client, items: list[dict], confirm: bool = False,
                  pause: float = 0.0) -> list[dict]:
     """File each item, recording an intent BEFORE the POST and an outcome after.
@@ -356,11 +386,16 @@ def submit_batch(client, items: list[dict], confirm: bool = False,
     record was written after a response that never arrived -- and the same
     timeout aborted the rest of the batch.
 
-    Three outcomes, and only one of them is a filed report:
+    Four outcomes, and only one of them is a filed report:
       accepted  2xx AND a report id from the server. Anything less cannot be
                 pointed at later, so it is not a filing.
-      rejected  they refused it; 409 for a duplicate is the common case.
-      unknown   we do not know. Settled against my-reports, never guessed.
+      rejected  they refused it: any 4xx without an id, 409 for a duplicate the
+                common case.
+      not_sent  it never left: our own guard refused it, or no connection.
+      unknown   we do not know -- a timeout, a 5xx, a 2xx without an id.
+                Settled against my-reports, never guessed.
+    Only accepted and unknown count as possibly filed (filed_in_journal); a
+    rejected or unsent filing leaves the finding free to be filed again.
     """
     from qa.state import append_event
 
@@ -396,15 +431,19 @@ def submit_batch(client, items: list[dict], confirm: bool = False,
                 response = client.post(ENDPOINT, json=payload)
             except Exception as exc:  # noqa: BLE001
                 # A timeout on a POST does not mean the server refused it. It
-                # means we stopped listening. Record that, and keep going.
+                # means we stopped listening. Record that, and keep going. One
+                # that never left is not that: nothing on their side to settle.
+                outcome = _outcome_of(exc)
                 append_event({
                     "type": "filing_outcome", "at": _now(), "by": "agent",
                     "source": "scripts/submit.py", "key": key,
-                    "outcome": "unknown", "findings": findings, "runs": runs,
-                    "reason": f"{type(exc).__name__}: {exc} -- run submit.py "
-                              f"--reconcile to settle it against my-reports",
+                    "outcome": outcome, "findings": findings, "runs": runs,
+                    "reason": f"{type(exc).__name__}: {exc}" + (
+                        " -- run submit.py --reconcile to settle it against "
+                        "my-reports" if outcome == "unknown" else
+                        " -- it never left; nothing was filed"),
                 })
-                results.append({"key": key, "outcome": "unknown",
+                results.append({"key": key, "outcome": outcome,
                                 "report_id": None, "error": str(exc)})
                 continue
 
@@ -414,13 +453,7 @@ def submit_batch(client, items: list[dict], confirm: bool = False,
             except ValueError:
                 body = {"raw": response.text[:300]}
             report_id = _report_id(body)
-
-            if response.status_code == 409:
-                outcome = "rejected"
-            elif 200 <= response.status_code < 300 and report_id is not None:
-                outcome = "accepted"
-            else:
-                outcome = "unknown"
+            outcome = outcome_of(response.status_code, report_id)
 
             append_event({
                 "type": "filing_outcome", "at": _now(), "by": "agent",
@@ -605,6 +638,8 @@ def main() -> None:
                   f"HTTP {result.get('http_status', '-')}{detail}")
             if result["outcome"] == "unknown":
                 print("        settle it with --reconcile; do not re-send blind")
+            elif result["outcome"] in ("rejected", "not_sent"):
+                print(f"        nothing filed: {result.get('error') or 'they refused it'}")
 
         if args.reconcile:
             wallet = os.environ.get("QA_WALLET_ADDRESS", "")
