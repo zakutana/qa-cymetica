@@ -175,7 +175,11 @@ def test_the_calibration_counts_signals_whose_depth_was_never_read():
     rows = [{"type": "signal", "key": "k", "at": "2026-09-10T00:00:00+00:00",
              "price_usd": 1.0},
             {"type": "checkpoint", "key": "k", "horizon": "6h",
-             "at": "2026-09-10T06:00:00+00:00", "price_usd": 3.5}]
+             "at": "2026-09-10T06:00:00+00:00", "price_usd": 3.5},
+            # Read to the window's end: a path read partway is left out (M04,
+            # deep pass 2026-10-25).
+            {"type": "checkpoint", "key": "k", "horizon": "24h",
+             "at": "2026-09-11T00:00:00+00:00", "price_usd": 1.0}]
     now = datetime(2026, 9, 20, tzinfo=timezone.utc)
     kept = fomo.compare(rows, multiple=3.0, within_hours=24, now=now,
                         min_liquidity=0, min_volume=0)

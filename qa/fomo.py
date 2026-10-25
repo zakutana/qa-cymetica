@@ -853,9 +853,11 @@ def compare(rows: list[dict], multiple: float = 3.0, within_hours: float = 72.0,
     pump.
 
     Only windows that have fully passed: a hit can be seen early and a miss
-    cannot, so counting open windows counts the early hits alone. Only coins
-    somebody could have bought, judged on the depth read when the signal
-    fired. A signal nothing was read for is unread, not a miss.
+    cannot, so counting open windows counts the early hits alone. For the
+    same reason only paths READ to the window's end: one the loop stopped
+    reading partway is `unread_at_end`, not a miss. Only coins somebody could
+    have bought, judged on the depth read when the signal fired. A signal
+    nothing was read for is unread, not a miss.
 
     `require_depth=False` drops that last condition: their calibration block
     is about every hot signal of the feed, not the ones deep enough to buy
@@ -872,15 +874,23 @@ def compare(rows: list[dict], multiple: float = 3.0, within_hours: float = 72.0,
 
     peaks: dict[str, float] = {}
     paths: dict[str, list[tuple[float, dict]]] = {}
+    # How far each path was READ inside the window, priced or not (stop_study's
+    # rule: an end reading with no price is a coin that stopped trading, and
+    # its path did reach the end). The end is the last horizon both groups are
+    # read at inside the window -- 6, 24 or 72 h for the three readouts.
+    read_to: dict[str, float] = {}
+    end = max((h for h in CONTROL_HORIZONS_HOURS if h <= within_hours), default=None)
     for row in in_time(rows):
         kind, key = row.get("type"), row.get("key")
         if kind == "checkpoint" or kind == "study":
             hours = _hours(row.get("horizon"))
             price = row.get("price_usd")
-            if (hours is None or hours > within_hours
-                    or not isinstance(price, (int, float))):
+            if hours is None or hours > within_hours:
                 continue
             if kind == "study" and row.get("group") not in ("hot", "control"):
+                continue
+            read_to[key] = max(read_to.get(key, hours), hours)
+            if not isinstance(price, (int, float)):
                 continue
             peaks[key] = max(peaks.get(key, price), price)
             paths.setdefault(key, []).append((hours, row))
@@ -902,8 +912,8 @@ def compare(rows: list[dict], multiple: float = 3.0, within_hours: float = 72.0,
     hot_keys = set(entries.get("hot") or {})
     for group, signals in entries.items():
         excluded = {"untradeable": 0, "depth_unknown": 0, "window_open": 0,
-                    "unpriced": 0, "unread": 0, "before_period": 0,
-                    "repeat_call": 0, "also_hot": 0}
+                    "unpriced": 0, "unread": 0, "unread_at_end": 0,
+                    "before_period": 0, "repeat_call": 0, "also_hot": 0}
         measured: dict[str, tuple] = {}
         for key, signal in signals.items():
             fired = _at(signal.get("at"))
@@ -938,6 +948,15 @@ def compare(rows: list[dict], multiple: float = 3.0, within_hours: float = 72.0,
                 continue
             if key not in peaks:
                 excluded["unread"] += 1
+                continue
+            # A path the loop stopped reading before the window's end is not a
+            # miss: its peak over twelve hours is no answer to a 24 h question
+            # (M04, deep pass of 2026-10-25; stop_study's RM05, ten_dollars'
+            # unread_at_24h). Left out whatever it read, an early hit too:
+            # keeping the hits seen early and dropping the misses not yet seen
+            # is the open-window bias above.
+            if end is not None and read_to.get(key, 0.0) < end:
+                excluded["unread_at_end"] += 1
                 continue
             ordered = [signal] + [r for _, r in sorted(
                 paths.get(key) or [], key=lambda item: item[0])]

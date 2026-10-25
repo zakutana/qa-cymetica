@@ -126,12 +126,16 @@ def test_a_switched_pair_is_kept_as_a_rug_in_the_stop_study_and_compare(
     assert nets == pytest.approx([-50.0, 0.0]), nets
 
     tripled, never = "0xtri:2026-09-13T12", "0xnev:2026-09-13T12"
+    # Each read to the window's end, as compare counts only such paths (M04,
+    # deep pass 2026-10-25); the 24 h reading is on the other pair too.
     study = [_signal(tripled, age_seconds=100.0, **DEEP),
              _read(tripled, 10, 3.5, age_seconds=36_100.0),
              _read(tripled, 20, 0.2, age_seconds=900_000.0),
+             _read(tripled, 24, 0.2, age_seconds=914_400.0),
              _signal(never, age_seconds=100.0, **DEEP),
              _read(never, 10, 1.2, age_seconds=36_100.0),
-             _read(never, 20, 9.0, age_seconds=900_000.0)]
+             _read(never, 20, 9.0, age_seconds=900_000.0),
+             _read(never, 24, 9.0, age_seconds=914_400.0)]
     hot = fomo.compare(study, multiple=3.0, within_hours=24,
                        now=T0 + timedelta(hours=30))["hot"]
     assert (hot["n"], hot["hits"], hot["switched"]) == (2, 1, 2), hot

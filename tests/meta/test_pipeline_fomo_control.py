@@ -299,11 +299,15 @@ def test_hot_and_control_are_compared_per_coin_over_one_period():
     whose pair switched was left out until V3: every switch on record is a
     rug, so it is kept and its peak read only up to the switch."""
     early = T0 - timedelta(hours=1)
+    # Every path counted is read to the window's end, 72 h: one read partway is
+    # left out since M04 (deep pass 2026-10-25), not judged a miss.
     rows = [
         _row("control", "control:c1:T", T0),
         _read("study", "control:c1:T", 30, 3.5, "control"),
+        _read("study", "control:c1:T", 72, 1.0, "control"),
         _row("control", "control:c2:T", T0),
         _read("study", "control:c2:T", 30, 1.1, "control"),
+        _read("study", "control:c2:T", 72, 1.0, "control"),
         # Before there was a control group: another period.
         _row("signal", "early:T", early),
         {**_read("checkpoint", "early:T", 21, 3.5),
@@ -312,13 +316,18 @@ def test_hot_and_control_are_compared_per_coin_over_one_period():
         # a hit and the second a miss, so keeping the last call reads (2, 0)
         # (deep pass 2026-09-24, B05, 3/3: both were hits, and it passed).
         _row("signal", "twice:T1", T0), _read("checkpoint", "twice:T1", 20, 3.5),
+        _read("study", "twice:T1", 72, 1.0, "hot"),
         _row("signal", "twice:T2", T0 + timedelta(minutes=30)),
         {**_read("checkpoint", "twice:T2", 20, 1.0),
          "at": (T0 + timedelta(minutes=30, hours=20)).isoformat()},
+        {**_read("study", "twice:T2", 72, 1.0, "hot"),
+         "at": (T0 + timedelta(minutes=30, hours=72)).isoformat()},
         _row("signal", "miss:T", T0), _read("checkpoint", "miss:T", 20, 1.2),
+        _read("study", "miss:T", 72, 1.0, "hot"),
         # Their terminal answered another pair: the age jumped by days.
         _row("signal", "switched:T", T0, age_seconds=100.0),
         {**_read("checkpoint", "switched:T", 20, 9.0), "age_seconds": 900_000.0},
+        {**_read("study", "switched:T", 72, 9.0, "hot"), "age_seconds": 1_087_200.0},
     ]
 
     said = fomo.compare(rows, multiple=3.0, within_hours=72,
@@ -358,10 +367,12 @@ def test_a_pump_is_its_peak_inside_a_window_that_has_passed():
     counted either way -- a hit could be seen early but a miss cannot, and
     counting only the early hits inflates the rate. A coin nobody could have
     bought is not counted at all."""
+    # Every path counted is read to 72 h (M04, deep pass 2026-10-25).
     rows = [
         _row("signal", "h1:T", T0), _read("checkpoint", "h1:T", 20, 3.2),
         _read("study", "h1:T", 72, 0.5, "hot"),
         _row("signal", "h2:T", T0), _read("checkpoint", "h2:T", 5, 1.4),
+        _read("study", "h2:T", 72, 1.0, "hot"),
         _row("signal", "thin:T", T0, liquidity_usd=0.02, volume_h24=0.25),
         _read("checkpoint", "thin:T", 3, 40.0),
         # Never quoted for depth (every signal before 2026-09-14): unknown,
@@ -379,7 +390,7 @@ def test_a_pump_is_its_peak_inside_a_window_that_has_passed():
         _read("study", "control:c3:T", 2, 0.9, "control"),
         _row("control", "control:c4:T", T0),
         _read("study", "control:c4:T", 6, 1.1, "control"),
-    ]
+    ] + [_read("study", f"control:c{n}:T", 72, 1.0, "control") for n in (1, 2, 3, 4)]
 
     said = fomo.compare(rows, multiple=3.0, within_hours=72,
                         now=T0 + timedelta(hours=73))
