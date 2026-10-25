@@ -104,8 +104,8 @@
         "t3": "real"
       },
       "verdict": "real",
-      "fixed": false,
-      "commit": null
+      "fixed": true,
+      "commit": "0d5664db"
     },
     {
       "id": "M02",
@@ -119,8 +119,8 @@
         "t3": "real"
       },
       "verdict": "real",
-      "fixed": false,
-      "commit": null
+      "fixed": true,
+      "commit": "8a200300"
     },
     {
       "id": "M03",
@@ -134,8 +134,8 @@
         "t3": "real"
       },
       "verdict": "real",
-      "fixed": false,
-      "commit": null
+      "fixed": true,
+      "commit": "66571284"
     },
     {
       "id": "M04",
@@ -149,8 +149,8 @@
         "t3": "real"
       },
       "verdict": "real",
-      "fixed": false,
-      "commit": null
+      "fixed": true,
+      "commit": "a89a778c"
     },
     {
       "id": "M05",
@@ -164,8 +164,8 @@
         "t3": "real"
       },
       "verdict": "real",
-      "fixed": false,
-      "commit": null
+      "fixed": true,
+      "commit": "e484acaa"
     },
     {
       "id": "M06",
@@ -179,8 +179,8 @@
         "t3": "false_positive"
       },
       "verdict": "real",
-      "fixed": false,
-      "commit": null
+      "fixed": true,
+      "commit": "4a18e851"
     },
     {
       "id": "A01",
@@ -547,8 +547,8 @@
         "t3": "real"
       },
       "verdict": "real",
-      "fixed": false,
-      "commit": null
+      "fixed": true,
+      "commit": "98e756e5"
     },
     {
       "id": "R02",
@@ -561,8 +561,8 @@
         "t3": "real"
       },
       "verdict": "real",
-      "fixed": false,
-      "commit": null
+      "fixed": true,
+      "commit": "50437305"
     },
     {
       "id": "R03",
@@ -631,8 +631,8 @@
         "t3": "real"
       },
       "verdict": "real",
-      "fixed": false,
-      "commit": null
+      "fixed": true,
+      "commit": "50567318"
     },
     {
       "id": "R08",
