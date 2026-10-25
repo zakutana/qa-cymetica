@@ -28,7 +28,7 @@ from pathlib import Path
 
 from qa.evidence import content_id
 from qa.keepset import evidence_path
-from qa.state import state_dir
+from qa.state import file_lock, state_dir
 
 MONTH = re.compile(r"^\d{4}-(0[1-9]|1[0-2])$")
 
@@ -73,6 +73,18 @@ def _id_of(raw: bytes) -> str | None:
 def staged(path: Path) -> Path:
     """Where a bundle is written before it has earned the real name."""
     return path.with_name(path.name + ".new")
+
+
+def running(path: Path):
+    """One run per month: the lock held from build to the manifest's stamp.
+
+    Every run of a month writes the same staged file, so a second run truncates
+    the first one's bundle under its verify (2026-10-25, two sessions obeying
+    one reminder). Asked once and never waited for: a run takes minutes, and a
+    caller queued behind it would rebuild what it has just bundled. OSError
+    when another run holds it.
+    """
+    return file_lock(path, poll=0.05, timeout=0)
 
 
 def members(path: Path) -> set[str]:

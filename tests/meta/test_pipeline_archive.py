@@ -250,6 +250,29 @@ def test_a_second_run_in_the_same_month_keeps_what_the_first_one_bundled(
     assert bad == [] and sorted(good) == sorted(first + second)
     assert not archive.staged(target).exists(), "a staged bundle was left behind"
 
+    # Two sessions, one reminder, one staged file (2026-10-25: the session start
+    # told every session here to run `keep.py archive --month 2026-10 --release`,
+    # two did, and the second truncated the staged bundle under the first's
+    # verify: "Corrupt input data"). While one run holds the month a second
+    # refuses at once and touches nothing, then the month is free again.
+    third = [_capture(state, {"n": n}) for n in range(20, 22)]
+    known = manifest.read()
+    known.update({i: {"id": i, "bytes": 1, "call": "GET /z", "why": "row",
+                      "archive": ""} for i in third})
+    manifest.write(known)
+    before = manifest.read()
+    with archive.running(target):
+        try:
+            code = keep.main(["archive", "--month", "2026-09"])
+        except SystemExit as exc:
+            code = exc.code
+        assert code not in (0, None), "a second archive ran beside the first"
+        assert not archive.staged(target).exists(), "the refused run wrote a staged bundle"
+        assert archive.members(target) == set(first + second), "the refused run rewrote the bundle"
+        assert manifest.read() == before, "the refused run stamped the manifest"
+    assert keep.main(["archive", "--month", "2026-09"]) == 0
+    assert archive.members(target) == set(first + second + third)
+
 
 @qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
 def test_a_body_gone_from_disk_is_carried_out_of_the_old_bundle(

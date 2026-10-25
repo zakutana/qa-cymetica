@@ -30,6 +30,7 @@ two copies of that walk would be free to disagree about what "cited" means.
 from __future__ import annotations
 
 import argparse
+import contextlib
 import json
 import lzma
 import os
@@ -170,6 +171,22 @@ def _archive(month: str, release: bool) -> int:
         target = archive.archive_path(month)
     except ValueError as exc:
         raise SystemExit(f"keep: {exc}")
+
+    # One run per month (archive.running): two sessions given the same reminder
+    # both wrote the one staged file, and the first died verifying the second's.
+    # Only the taking of the lock is caught: an OSError from the run itself is
+    # a different failure and must not read as "another one is running".
+    with contextlib.ExitStack() as held:
+        try:
+            held.enter_context(archive.running(target))
+        except OSError:
+            raise SystemExit(f"keep: another archive of {month} is running; nothing "
+                             "written. Run it again once that one has finished.")
+        return _archive_held(month, release, target)
+
+
+def _archive_held(month: str, release: bool, target) -> int:
+    from qa import archive, manifest
 
     known = manifest.read()
     stamp = target.name.split(".")[0]
