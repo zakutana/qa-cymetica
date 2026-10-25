@@ -185,29 +185,19 @@ def test_the_pin_is_read_from_the_journal_by_id_and_by_value(tmp_path, monkeypat
 
 
 @qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
-def test_a_check_with_hundreds_of_captures_still_fits_their_evidence_field():
-    """2026-09-28, #130: their verification endpoint answered 422 -- the
-    `evidence` field has max_length 8000 -- because the public-pages check
-    cites a capture per page it read and `_evidence_offer` listed every id
-    (~200, 66 characters each). The correction was owed and never arrived.
-    A few ids to name what we hold, and the count, is what fits."""
-    verify = _verify()
-    ids = [f"{i:064x}" for i in range(250)]
-    evidence = verify.body(_item(verdict="fail", identity="ast",
-                                 evidence_ids=ids))["evidence"]
-    assert len(evidence) <= 8000, len(evidence)
-    assert ids[0] in evidence, "the offer still names what we hold"
-    assert "250" in evidence, "and says how many there are"
-
-
-@qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
 def test_a_fail_says_which_reading_failed(monkeypatch):
     """Week finding of 2026-10-18: a FAIL went to the vendor as "the check that recorded this
     defect still fails" and nothing else -- not which check, not what it expected, not what it
     read. They cannot act on that, and we cannot be corrected on it: the #93 FAIL of 2026-10-21
     rested on a route whose own llms.txt line said "(session JWT)", and the text they got never
     named the route. So a fail carries, per failing check of the adjudicating run, its nodeid,
-    what it expected, what it read, and the reason it gave -- inside their 8000-character field."""
+    what it expected, what it read, and the reason it gave -- inside their 8000-character field.
+
+    And it holds the guard it replaced (folded 2026-10-25, deep pass; tests/meta grows only by
+    replacement): 2026-09-28, #130, their endpoint answered 422 -- `evidence` has max_length
+    8000 -- because the public-pages check cites a capture per page it read and the offer
+    listed every id (~200, 66 characters each); the correction was owed and never arrived. A
+    few ids to name what we hold, and the count, is what fits -- now beside three long readings."""
     verify = _verify()
     node = "tests/rest/test_documented_gets_accept_the_agent_key.py::test_every_documented_get"
     run = {"run_id": "run-f", "git_head": "abc1234", "prereg_id": "PRE-0288", "results": [
@@ -245,10 +235,16 @@ def test_a_fail_says_which_reading_failed(monkeypatch):
     # A pass has nothing to say here.
     assert "WHAT FAILED" not in verify.body(_item(helpers_same=True))["evidence"]
     # And a long reading still fits their field, naming the check.
+    ids = [f"{i:064x}" for i in range(250)]
     huge = dict(item, failing_readings=[dict(item["failing_readings"][0], reason="x" * 20000)] * 3,
-                evidence_ids=[f"{i:064x}" for i in range(250)])
+                evidence_ids=ids)
     fits = verify.body(huge)["evidence"]
     assert len(fits) <= 8000 and node in fits, len(fits)
+    assert ids[0] in fits, "the offer still names what we hold"
+    assert "250" in fits, "and says how many there are"
+    # (#130's own shape, a fail with hundreds of captures and no reading of its own, fits too)
+    plain = verify.body(_item(verdict="fail", identity="ast", evidence_ids=ids))["evidence"]
+    assert len(plain) <= 8000 and ids[0] in plain and "250" in plain, len(plain)
 
 
 @qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
