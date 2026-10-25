@@ -1,7 +1,10 @@
 # "Find me a profitable bot" (draft, not filed)
 
-Build it Better request for the Quant Lab button the operator wants (2026-10-25), in the Pro plan. Text: `build-it-better/improvements.txt`
-(2,629 characters of the form's 8,000, 9 lines). App: `https://cymetica.com/my-agents` (where clones live). The operator files it.
+Build it Better request for the Quant Lab doing the search for the owner (2026-10-25), in the Pro plan. Text: `build-it-better/improvements.txt`
+(2,700 characters of the form's 8,000, 8 lines). App: `https://cymetica.com/company/app` (the Quant Lab is a department of Build a Company; the
+platform pieces it needs are owner-only API routes on the cloned bots; the one button on `/my-agents` is a later second door). The operator files it.
+The first draft put the button on My Agents; the operator said the button was only a picture and the Quant Lab department should do it, so the
+request was rewritten around the department (same four-step design, same conditions).
 
 Its design is Nexus's own (REPLY-0216, MSG-0248): every bot model with a backtest setup x every market with enough history, a small grid of
 settings on the earlier part, ranked on a held-back period the search never saw with a much higher bar, the top few handed back as ready
