@@ -418,7 +418,17 @@ _LEVEL_R_SAID = {
     "code_moved_during_run": "our code changed while it ran",
     "prereg_commit_mismatch": "it did not run at the commit the "
                               "preregistration was made at",
+    "budget_truncated": "our own rate-limit budget cut it short",
+    "no_prereg": "it was not preregistered",
 }
+
+
+def _level_r_said(item: dict, leave_out: tuple = ()) -> str:
+    """The reasons a run is level R, in the vendor's words, never our keys."""
+    return "; ".join(_LEVEL_R_SAID.get(r, "it fell short of the level our rules "
+                                          "require to verify")
+                     for r in dict.fromkeys(item.get("level_reasons") or [])
+                     if r not in leave_out)
 
 
 def _run_line(item: dict) -> str:
@@ -431,18 +441,22 @@ def _run_line(item: dict) -> str:
         # R is also a PREREGISTERED run that fell short (RO06, deep pass of
         # 2026-09-24): PRE-0084 and PRE-0092 on a dirty tree, PRE-0128 with
         # our code moving under it. "Not preregistered" was false of those.
-        why = "; ".join(_LEVEL_R_SAID.get(r, r)
-                        for r in item.get("level_reasons") or [])
+        why = _level_r_said(item)
         return (f"RUN: {item['run_id']} at commit {item['tree_sha']}, under "
                 f"preregistration {item['prereg_id']}, but "
                 f"{why or 'it fell short of the level our rules require to verify'}"
                 f" -- so it is a run our rules admit to show that a defect "
                 f"reproduces, not the kind of run that verifies a fix.")
     if item.get("level") == "R":
-        return (f"RUN: {item['run_id']} at commit {item['tree_sha']}. It is a "
-                f"run our rules admit to show that a defect reproduces; it was "
-                f"not preregistered, so it is not the kind of run that "
-                f"verifies a fix.")
+        # And WHY, as the branch above says it (O02, deep pass of 2026-10-25):
+        # "at commit X" alone described a run on a dirty tree -- every level-R
+        # run adjudicating a row that day -- as that commit.
+        why = _level_r_said(item, leave_out=("no_prereg",))
+        return (f"RUN: {item['run_id']} at commit {item['tree_sha']}"
+                + (f", but {why}" if why else "")
+                + ". It is a run our rules admit to show that a defect "
+                  "reproduces; it was not preregistered, so it is not the kind "
+                  "of run that verifies a fix.")
     return (f"RUN: {item['run_id']}, preregistration {item['prereg_id']}, on a "
             f"clean working tree at commit {item['tree_sha']}. The selector was "
             f"frozen and git-tagged BEFORE the run, so the set of checks could "
