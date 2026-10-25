@@ -1,0 +1,176 @@
+{
+  "schema": 2,
+  "run_id": "run-20261025T235003Z-4b5eeb40",
+  "started_at": "2026-10-25T23:50:15+00:00",
+  "finished_at": "2026-10-25T23:50:49+00:00",
+  "git_head": "4b5eeb401cb7542fbf0e7b19d4c358b83a3eb1a0",
+  "git_short": "4b5eeb40",
+  "git_dirty": true,
+  "prereg_id": null,
+  "prereg_tag_sha": null,
+  "prereg_commit": null,
+  "platform_fingerprint": "sha256:a936a323fa6bbd70f23f841be102f904088760a41911d0a60b513420b309a118",
+  "fingerprint_parts": {
+    "/.well-known/mcp.json": "882eee762fe8a86233ef5c31ec09b06cb0ceaf59d84d0ce482dd26e91f80bfb4",
+    "/.well-known/agent-card.json": "ec49fd608fdbe1beccd8b4f771e2db4a1d4e060d6a940946a43280b174b553f7",
+    "/.well-known/agent-skills.json": "b0592b7e51942365f9c61fd46bd233118cabf591f7ff46d7387f9311b5a3a7c6",
+    "/.well-known/ai-plugin.json": "6ab78de3594c4cc3eeac74e02d88e28841bc38ca87933cc14172115bf7c1dded",
+    "/.well-known/udc.json": "1ec34383ede550c71fb3e81b989b8b92b0da3ce7ccbdc497c9edf5a8fcbd6c14",
+    "/openapi.json": "1e1b7e2efeaff813451d647f88f52353e50627b882e63a65842dd1238b8e108c",
+    "/openapi-public.json": "c5f7be7e999c33f52262d164dceb45681fde2c25d6d32b79ce46ad14d69905fb",
+    "/llms.txt": "1ac80148e83730ed2aa0c5a8b60ed08f6032fe54d1b92648da85c2d01b4d4e7c",
+    "mcp:tools/list:none": "b4e37c12cf958cfd7d19fc86970f252e6919134bb6a7d781af48503532ff24bf"
+  },
+  "fingerprint_errors": {},
+  "fingerprint_drifted": false,
+  "fingerprint_changed_parts": [],
+  "identities_present": {
+    "anon": true,
+    "trusted": true,
+    "recognized": false
+  },
+  "python_version": "3.13.13",
+  "pytest_version": "8.3.4",
+  "selector": "tests/rest/test_traffic_agent_visits_are_the_agents_requests.py -q --no-header --tb=line -p no:cacheprovider",
+  "selector_full": false,
+  "narrowing": [],
+  "paths": [
+    "tests/rest/test_traffic_agent_visits_are_the_agents_requests.py"
+  ],
+  "allow_mutate": false,
+  "collected": [
+    "tests/rest/test_traffic_agent_visits_are_the_agents_requests.py::test_traffic_agent_visits_are_the_agents_requests"
+  ],
+  "results": [
+    {
+      "nodeid": "tests/rest/test_traffic_agent_visits_are_the_agents_requests.py::test_traffic_agent_visits_are_the_agents_requests",
+      "component": "rest.traffic",
+      "tier": "SAFE",
+      "surface": "rest",
+      "claim_id": "traffic-agent-visits-are-the-agents-requests",
+      "ticket_id": null,
+      "volatile": false,
+      "outcome": "failed",
+      "phase": "call",
+      "role": "verdict",
+      "duration_ms": 21914,
+      "evidence_ids": [
+        "f30ff9e11359ff9cd2d92391e499406e46914685de60a88fea4da372f4b77dde",
+        "4d3eb7693b4a8d70f6114f4a2e2598733a91f63486ef51b5fea1537842f0ece9",
+        "bef98bd4ace31e6be388ab15481088b0d322e68fc88baa6d5428318e861b020e"
+      ],
+      "measurement": {
+        "verdict": "failed",
+        "reason": "/traffic defines AI-agent visits as \"every request an agent makes (one crawler reading 300 pages is 300 visits).\" and the AI agents requests list as \"Every request, landings AND the pages and API calls after them, grouped by product area. These counts are larger than the landing counts above. Humans and AI agents are counted separately.\", but over the same 14 days (since 2026-10-11T07:00:00+00:00) the tile reads 115,550 and the list, 11 rows ending in \"Everything else\", adds up to 89,910: 25,640 requests (22%) are in one figure and not in the other",
+        "left": {
+          "ai_agent_visits": 115550
+        },
+        "right": {
+          "ai_agent_requests_by_area": 89910
+        },
+        "sources": {
+          "page": "/traffic (#k-agents, #tl-do-agent, the <strong>Visits</strong> = paragraph and the 'grouped by product area' paragraph)",
+          "tile": "/api/v1/traffic/public?days=14 -> ai_agents.total",
+          "list": "/api/v1/traffic/activity?days=14 -> requests.ai_agent.range"
+        },
+        "provenance": {},
+        "evidence_ids": [],
+        "fingerprint": null,
+        "claim_id": "traffic-agent-visits-are-the-agents-requests",
+        "role": "verdict",
+        "population": {
+          "agent_visits": 115550,
+          "agent_requests_by_area": 89910,
+          "gap": 25640,
+          "gap_share": 0.2219,
+          "remainder_row": "Everything else",
+          "rows": 11,
+          "since": [
+            "2026-10-11T07:00:00+00:00",
+            "2026-10-11T07:00:00+00:00"
+          ],
+          "days": [
+            14,
+            14
+          ],
+          "generated_at": [
+            "2026-10-25T23:50:34.307029+00:00",
+            "2026-10-25T23:48:40.702288+00:00"
+          ],
+          "tile_definition": "every request an agent makes (one crawler reading 300 pages is 300 visits).",
+          "list_definition": "Every request, landings AND the pages and API calls after them, grouped by product area. These counts are larger than the landing counts above. Humans and AI agents are counted separately.",
+          "area_rows": [
+            {
+              "area": "MCP (agent protocol)",
+              "requests": 26637
+            },
+            {
+              "area": "Other pages",
+              "requests": 18849
+            },
+            {
+              "area": "Coin dashboards",
+              "requests": 18553
+            },
+            {
+              "area": "Screeners & analyzers",
+              "requests": 7893
+            },
+            {
+              "area": "Feature board",
+              "requests": 3149
+            },
+            {
+              "area": "Funds",
+              "requests": 2737
+            },
+            {
+              "area": "Account",
+              "requests": 2411
+            },
+            {
+              "area": "Build it Better",
+              "requests": 1435
+            },
+            {
+              "area": "Exchange (CLOB)",
+              "requests": 1151
+            },
+            {
+              "area": "Event cards",
+              "requests": 1022
+            },
+            {
+              "area": "Everything else",
+              "requests": 6073
+            }
+          ]
+        }
+      },
+      "check_fingerprint": "e977a7c76b7b46769a5a06ea518b3f043fb05795f3feecb95d94021c17d87f99",
+      "helpers_fingerprint": "2f56f7ae1bab2ce21f2c546b3ad098dff191b0a79930a7694ae7241b65d9026d",
+      "helpers_formula": 2,
+      "reason": null,
+      "failure_repr": "E   AssertionError: /traffic defines AI-agent visits as \"every request an agent makes (one crawler reading 300 pages is 300 visits).\" and the AI agents requests list as \"Every request, landings AND the pages and API calls after them, grouped by product area. These counts are larger than the landing counts above. Humans and AI agents are counted separately.\", but over the same 14 days (since 2026-10-11T07:00:00+00:00) the tile reads 115,550 and the list, 11 rows ending in \"Everything else\", adds up to 89,910: 25,640 requests (22%) are in one figure and not in the other\n      left  = {'ai_agent_visits': 115550}\n      right = {'ai_agent_requests_by_area': 89910}"
+    }
+  ],
+  "totals": {
+    "failed": 1
+  },
+  "ratelimit": {
+    "requests": 3,
+    "limit": 2000,
+    "remaining": 1987,
+    "fraction_used": 0.0065,
+    "exhausted": false
+  },
+  "record_integrity": {
+    "consistent": true,
+    "results_not_in_collected": [],
+    "collected_not_run": [],
+    "budget_truncated": false
+  },
+  "code_dirty_after": false,
+  "fingerprint_after": "sha256:a936a323fa6bbd70f23f841be102f904088760a41911d0a60b513420b309a118",
+  "exit_status": 1
+}

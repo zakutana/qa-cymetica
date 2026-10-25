@@ -6769,6 +6769,45 @@ reports:
       and is inconclusive if the list or a market cannot be read or the gate no longer promises tokenless farms. GET
       requests only.
 
+  - key: traffic-agent-visits-are-not-the-agents-requests-by-area
+    findings: [CYM-traffic-agent-visits-are-the-agents-requests]
+    severity: low
+    category: logic
+    url: https://cymetica.com/traffic
+    title: >-
+      /traffic: "AI-agent visits" and the AI agents' requests by area are both defined as every request an agent
+      makes, but over the same 14 days they read 115,550 and 89,910
+    expected: >
+      On https://cymetica.com/traffic the tile "AI-agent visits" (filled from GET /api/v1/traffic/public ->
+      ai_agents.total) is defined in the AI Agents panel as "Visits = every request an agent makes (one crawler
+      reading 300 pages is 300 visits)". The list "AI agents requests" under "What visitors do" (GET
+      /api/v1/traffic/activity -> requests.ai_agent.range, shown when "Selected range" is chosen) is defined as
+      "Every request, landings AND the pages and API calls after them, grouped by product area", and it ends in
+      an "Everything else" row, so it is the whole and not a top ten. Over the same range the list adds up to the
+      tile, or the page says what one of the two leaves out.
+    actual: >
+      Read on 2026-10-25 at 23:50 UTC, both endpoints with days=14 and the same since (2026-10-11T07:00:00+00:00):
+      ai_agents.total is 115,550, and the 11 rows of requests.ai_agent.range, the last one "Everything else", add
+      up to 89,910. 25,640 agent requests (22 %) are in the tile and in no area of the list. An earlier read the
+      same evening (23:17 UTC, the two endpoints generated four seconds apart) gave 115,359 against 89,770 at
+      days=14, 67,113 against 59,030 at days=7 (12 %) and 195,354 against 133,871 at days=30 (31 %). The gap
+      grows with the older days (September 25 to October 10 alone: 79,995 against 44,101), so it is not the few
+      minutes the two caches can lie apart.
+    steps:
+      - 'GET https://cymetica.com/traffic -> the tile <div class="v" id="k-agents"> labelled "AI-agent visits"; the paragraph "<strong>Visits</strong> = every request an agent makes (one crawler reading 300 pages is 300 visits)."; above <ul id="tl-do-agent">, the paragraph "Every request, landings AND the pages and API calls after them, grouped by product area."'
+      - 'GET https://cymetica.com/api/v1/traffic/public?days=14 -> since "2026-10-11T07:00:00+00:00", ai_agents.total 115550'
+      - 'GET https://cymetica.com/api/v1/traffic/activity?days=14 -> since "2026-10-11T07:00:00+00:00", requests.ai_agent.range: 11 rows, the last "Everything else", whose requests add up to 89910'
+    body: >
+      A reader of the page gets two different counts of what the page says is the same thing, and cannot tell
+      which one to believe. Making the two agree, or saying in either definition what it leaves out, would fix
+      it. Low: a statistics page, nothing is exposed. Our check reads the page's two definitions and both
+      endpoints at days=14. It fails while both definitions say every request without naming an exception and
+      the totals differ by more than 2 %; it passes when they agree within 2 %, or when a definition names what
+      it leaves out or stops claiming every request; it is inconclusive if a read fails, the two ranges differ,
+      the snapshots were generated more than 30 minutes apart or the list has no remainder row. GET requests
+      only.
+
+
 footer: >
   Reported by an independent QA agent. Scope of this work: verification of the
   REST API, MCP, the machine-readable discovery surfaces and the pages built on

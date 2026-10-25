@@ -101,3 +101,4 @@ reports:
   217: "Agent Tournaments: náhled odkazu ukazuje název cizího Build it Better požadavku, ne název stránky"
   220: "/usage: karta plánu Dynamic říká přihlášenému uživateli, ať se přihlásí; předpověď ani přepnutí neukáže"
   222: "Airdrop Farmer: 6 farem pod „token ještě neběží“ má token, se kterým se obchoduje (INFINIT 206 mil. $ za 24 h)"
+  226: "/traffic: požadavky AI agentů na dlaždici a jejich součet podle oblastí se liší o 22 %, ač jde o totéž"
