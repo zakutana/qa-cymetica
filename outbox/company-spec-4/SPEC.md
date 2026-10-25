@@ -292,8 +292,10 @@ the processor slowed 4x, against the mockup before the ten; limits fixed before 
 the entry page ready within 20 %). On first view the ten freeze nothing over 0.3 s (worst: Rift Hold in Settings, 285 ms); the Universe with 36 companies mixing all
 seventeen draws 5.6 % more calls than with the old seven only, at the same frame time; loading their five files costs nothing measurable; they reuse the old
 materials, so there are no new shaders. The conditions:
-1. **The entry page keeps its six stations** (it loads only the old stations file). With all seventeen on it at once it was ready 30 % later and ran at 19 fps
-   against 30.
+1. **The start page's picture keeps its six sample companies.** That picture is decoration, not a choice: the sun with six companies on two orbits behind *Start a
+   company* and *Explore the Universe* (`start.js`; it loads only the old stations file). **The choice stays all seventeen**, in *Create your company* (one at a time, with
+   the arrows) and in Settings (one preview and a row of seventeen icons); both measured fine. Putting all seventeen sample companies on the start picture at once
+   was ready 30 % later and ran at 19 fps against 30, so do not.
 2. **A station is built once and reused.** Our mockup rebuilds a station's 3D shape on every click, even one already shown: Rift Hold takes 105 ms a build on the slow
    processor (Nautilus 47, Deep Array 42, the old seven 3 to 19), and Settings builds it twice per click (the preview, and the owner's station on the map that is
    hidden behind it), so a repeated click costs up to 139 to 215 ms. Do not copy that: in the builder and the Settings preview keep each station's built shape per skin,
@@ -352,7 +354,8 @@ item above that draws something new obeys its rules:
 6. Share materials across rooms and stations: one material and one TSL node per look, not per room (the office's load is 70% three.js building shaders:
    113 builds for 70 different shaders, package sections 1 and 7).
 7. Build a station once and reuse it (item M, measured): the builder and the Settings preview keep each station's built shape per skin, colour and number of decks
-   instead of rebuilding it on every click, and the hidden map's station is not rebuilt while Settings is open; the entry page keeps its six stations.
+   instead of rebuilding it on every click, and the hidden map's station is not rebuilt while Settings is open; the start page's picture keeps its six sample
+   companies (the choice in Create your company stays all seventeen).
 Our local copy of the mockup does not have the package's patch, nor your fix ET-32470 (the Universe's pixel cap); the measuring harness in
 `outbox/company-perf/harness` (`perf.py`, `batch.py`) is the way to measure any of this.
 
