@@ -18,7 +18,10 @@ beside it (nexus-usage.js) asks the server with the cookie and treats a 401 as s
 alone: a gate that tests only a token (`getAuthToken()`, a helper that returns it, or a variable holding it)
 and, when there is none, leaves without asking /api/v1/nexus/dynamic and without consulting the session
 (`hasSession`, `hasSessionCookie`, `et_session`, `document.cookie`, `authManager`, `isAuthenticated`, a 401)
-is the defect. The same for the positive form: the endpoint asked only inside `if (<token>)`.
+is the defect. The same for the positive form: the endpoint asked only inside `if (<token>)`. A compound
+condition counts too, when a missing token reaches the signed-out view without the session being read
+(`!tok() || !plan`, `!tok() && !plan`); and a helper or a branch consults the session only in its code --
+what a helper returns, never a comment (B04, deep pass 2026-10-25).
 
 VERDICTS. failed: such a gate exists in a script that draws the card. passed: no such gate, and the script
 asks the endpoint -- whether the gate went, learned the session, asks the server anyway, or the token
@@ -62,12 +65,18 @@ OPEN, CLOSE = "([{", ")]}"
 
 # ------------------------------------------------------------------ reading JS without running it
 
-def _mask(js: str) -> str:
+def _mask(js: str, comments_only: bool = False) -> str:
     """The script with the inside of every string, template, regex literal and comment blanked, index for
-    index, so braces, parentheses and semicolons can be counted without being fooled by text."""
+    index, so braces, parentheses and semicolons can be counted without being fooled by text.
+
+    `comments_only`: blank the comments and keep every string and regex literal -- the code as it runs,
+    still index for index. A session word in a comment is not a session consult, and `getCookie(
+    'et_session')` is one (B04, deep pass 2026-10-25)."""
     out, i, n, prev = list(js), 0, len(js), ""
 
-    def blank(a: int, b: int) -> None:
+    def blank(a: int, b: int, text: bool = True) -> None:
+        if text and comments_only:
+            return
         for k in range(a, min(b, n)):
             if out[k] != "\n":
                 out[k] = " "
@@ -84,13 +93,13 @@ def _mask(js: str) -> str:
         if c == "/" and js.startswith("//", i):
             j = js.find("\n", i)
             j = n if j < 0 else j
-            blank(i, j)
+            blank(i, j, text=False)
             i = j
             continue
         if c == "/" and js.startswith("/*", i):
             j = js.find("*/", i + 2)
             j = n if j < 0 else j + 2
-            blank(i, j)
+            blank(i, j, text=False)
             i = j
             continue
         if c == "/" and (prev == "" or prev in "(,=:[!&|?{};+-*%<>~^"):
@@ -160,6 +169,23 @@ def _body(m: str, k: int) -> tuple[int, int] | None:
     return None if end is None else (k, end)
 
 
+def _split_top(text: str, masked: str, op: str) -> list[tuple[str, str]]:
+    """`text` cut at every `op` (`||` or `&&`) outside brackets, found on its mask: (text, mask) pieces."""
+    pieces, depth, start, k = [], 0, 0, 0
+    while k < len(masked):
+        if masked[k] in OPEN:
+            depth += 1
+        elif masked[k] in CLOSE:
+            depth -= 1
+        elif depth == 0 and masked.startswith(op, k):
+            pieces.append((text[start:k], masked[start:k]))
+            start = k = k + len(op)
+            continue
+        k += 1
+    pieces.append((text[start:], masked[start:]))
+    return pieces
+
+
 def _top_level_return(m: str) -> bool:
     depth = 0
     for k, ch in enumerate(m):
@@ -210,11 +236,37 @@ def _returns_a_token(js: str, m: str, span: tuple[int, int], calls: str) -> bool
     return False
 
 
+def _session_kind(code: str, masked: str) -> str | None:
+    """Whether a token reader's ANSWER depends on the session, read from what it returns, not from the
+    words its body holds (B04, deep pass 2026-10-25: a comment or a log line naming et_session made the
+    defect's own helper "mixed", and the check passed). `code` is the body with its comments blanked,
+    `masked` the same body fully masked, index for index. The code read: every `return` statement, the
+    condition of every `if` whose branch returns, and the value of a local any of those reads. "mixed"
+    when a session consult is in it, "ambiguous" when it answers '' for one, None when it has none."""
+    returning, read = [], []
+    for r in re.finditer(r"(?<![\w$.])return\b", masked):
+        end = _statement_end(masked, r.end())
+        returning.append(code[r.end():end or len(masked)])
+    for g in re.finditer(r"\bif\s*\(", masked):
+        close = _match(masked, g.end() - 1)
+        branch = None if close is None else _body(masked, close + 1)
+        if branch and re.search(r"(?<![\w$.])return\b", masked[branch[0]:branch[1]]):
+            returning.append(code[g.end():close])
+    for v in re.finditer(r"(?:\bvar|\blet|\bconst|[,;{(])\s*([\w$]+)\s*=(?![=>])", masked):
+        if any(re.search(r"(?<![\w$.])" + re.escape(v.group(1)) + r"(?![\w$])", piece) for piece in returning):
+            end = _statement_end(masked, v.end())
+            read.append(code[v.end():end or len(masked)])
+    said = "\n".join(returning + read)
+    if not SESSION.search(said):
+        return None
+    return "ambiguous" if EMPTY_FOR_SESSION.search(said) else "mixed"
+
+
 def _token_helper_kind(page_js: str) -> str:
     """How the page's own window.getAuthToken answers: "token" (stored bearer tokens only), "mixed" (it
     consults the session too), "ambiguous" (it answers '' for a session). No definition read: "token" --
     the platform's name for a read of the stored token."""
-    m = _mask(page_js)
+    m, code = _mask(page_js), _mask(page_js, comments_only=True)
     kinds = []
     for d in re.finditer(r"getAuthToken\s*=\s*(?:window\.getAuthToken\s*\|\|\s*)?function\s*[\w$]*\s*\(|"
                          r"\bfunction\s+getAuthToken\s*\(", m):
@@ -222,9 +274,9 @@ def _token_helper_kind(page_js: str) -> str:
         span = None if params_end is None else _body(m, params_end + 1)
         if not span:
             continue
-        body = page_js[span[0]:span[1]]
-        if SESSION.search(body):
-            kinds.append("ambiguous" if EMPTY_FOR_SESSION.search(body) else "mixed")
+        kind = _session_kind(code[span[0]:span[1]], m[span[0]:span[1]])
+        if kind:
+            kinds.append(kind)
     return "ambiguous" if "ambiguous" in kinds else "mixed" if kinds else "token"
 
 
@@ -249,6 +301,9 @@ def _sign_in_text(text: str) -> str | None:
 def card_facts(js: str, page_js: str) -> dict | None:
     """What one script that draws the Dynamic card decides about signed-in, read from its code; None when
     the script does not draw the card (it must name both #nxd-body and the endpoint)."""
+    # Its code: comments blanked, strings kept, index for index with the mask. A session word, a request
+    # or a condition written in a comment is not in the script that runs (B04, deep pass 2026-10-25).
+    js = _mask(js, comments_only=True)
     if CARD not in js or ENDPOINT_MARK not in js:
         return None
     m = _mask(js)
@@ -264,7 +319,7 @@ def card_facts(js: str, page_js: str) -> dict | None:
         askers = grown
 
     # A token reader: a function of no arguments that returns the stored token (getAuthToken, or a reader
-    # built on it). Its kind: "token" if nothing in it consults the session, "mixed" if it does,
+    # built on it). Its kind: "token" if what it returns consults no session, "mixed" if it does,
     # "ambiguous" if it answers '' for a session; a reader on a reader inherits.
     helper = _token_helper_kind(page_js)
     kinds: dict[str, str] = {}
@@ -274,14 +329,11 @@ def card_facts(js: str, page_js: str) -> dict | None:
             calls = "|".join([r"(?:window\.)?getAuthToken"] + [re.escape(r) for r in others])
             if not no_args or not _returns_a_token(js, m, (a, b), calls):
                 continue
-            body = js[a:b]
-            inherited = ([helper] if re.search(r"getAuthToken\s*\(", body) else []) + [
+            inherited = ([helper] if re.search(r"getAuthToken\s*\(", js[a:b]) else []) + [
                 kinds[r] for r in others if re.search(r"(?<![\w$.])" + re.escape(r) + r"\s*\(", m[a:b])]
-            if SESSION.search(body):
-                kinds[name] = "ambiguous" if EMPTY_FOR_SESSION.search(body) else "mixed"
-            else:
-                kinds[name] = ("ambiguous" if "ambiguous" in inherited
-                               else "mixed" if "mixed" in inherited else "token")
+            kinds[name] = (_session_kind(js[a:b], m[a:b])
+                           or ("ambiguous" if "ambiguous" in inherited
+                               else "mixed" if "mixed" in inherited else "token"))
     readers = dict(kinds)
     calls_of = "|".join([r"(?:window\.)?getAuthToken"] + [re.escape(r) for r in readers])
     variables = {v.group(1): (helper if "getAuthToken" in v.group(2) else readers[v.group(2)])
@@ -306,19 +358,46 @@ def card_facts(js: str, page_js: str) -> dict | None:
     def stretch(span):
         return js[span[0]:span[1]], m[span[0]:span[1]]
 
+    def gate_role(text: str, masked: str) -> str | None:
+        """How an `if` condition tests a token: "negated" (its branch is reached when there is none),
+        "positive" (its else is), None (it is no token gate, or the session decides with it), or why it
+        cannot be read. A compound condition is judged by its operands (B04, deep pass 2026-10-25:
+        `!tok() || !plan` was never judged). With no token, an OR holding `!tok()` is true whatever else
+        it holds, and an AND holding `tok()` is false; an AND holding `!tok()`, or an OR holding `tok()`,
+        is decided by the other operands too, so a session read among them makes it no token-only gate."""
+        disjuncts = _split_top(text, masked, "||")
+        groups = [_split_top(t, mk, "&&") for t, mk in disjuncts]
+        terms = []
+        for t, _mk in (piece for group in groups for piece in group):
+            t = re.sub(r"\s+", "", t)
+            neg = t.startswith("!") and not t.startswith("!=")
+            terms.append((t, neg, kind_of(t[1:] if neg else t)))
+        tokens = [(neg, kind) for _t, neg, kind in terms if kind is not None]
+        if not tokens or any(kind == "mixed" for _neg, kind in tokens):
+            return None
+        if any(kind == "ambiguous" for _neg, kind in tokens):
+            return "a helper that answers '' for a session"
+        either = len(disjuncts) > 1
+        if either and any(len(group) > 1 for group in groups):
+            return "|| and && side by side around a token read"
+        session = any(kind is None and SESSION.search(t) for t, _neg, kind in terms)
+        if any(neg for neg, _kind in tokens):
+            return "negated" if either or not session else None
+        return "positive" if not either or not session else None
+
     for g in re.finditer(r"\bif\s*\(", m):
         close = _match(m, g.end() - 1)
         if close is None:
             continue
         condition = re.sub(r"\s+", "", js[g.end():close])
-        negated = condition.startswith("!") and not condition.startswith("!=")
-        kind = kind_of(condition[1:] if negated else condition)
-        if kind is None or kind == "mixed":
+        role = gate_role(js[g.end():close], m[g.end():close])
+        if role is None:
             continue
         facts["gates"].append(condition)
-        if kind == "ambiguous":
-            facts["ambiguous"].append(f"if ({condition}): a helper that answers '' for a session")
+        if role not in ("negated", "positive"):
+            facts["ambiguous"].append(f"if ({condition}): {role}")
             continue
+        negated = role == "negated"
         then = _body(m, close + 1)
         if then is None:
             facts["unclosed"].append(f"if ({condition})")
