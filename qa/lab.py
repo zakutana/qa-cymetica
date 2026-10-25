@@ -1676,8 +1676,10 @@ def verdict(acceptance: dict, series: dict, now, closes: dict | None = None,
 
     and a fifth that is no verdict at all: `waiting`, when the window has
     closed but the benchmark has no point within an hour of its end and none
-    after it yet (T-0039). Nothing is written; the next call reads it again,
-    as it does a read that failed (`scripts/lab.py::verdicts`).
+    after it yet (T-0039) -- and the room neither lost nor went past its stop,
+    the two refutations no benchmark can undo (R02, deep pass 2026-10-25).
+    Nothing is written; the next call reads it again, as it does a read that
+    failed (`scripts/lab.py::verdicts`).
 
     The benchmark is the proxy's value AT the window's start and AT its end
     (`index_at`), never the first and last point inside it; a gap over an hour
@@ -1793,7 +1795,7 @@ def verdict(acceptance: dict, series: dict, now, closes: dict | None = None,
         peak = value if peak is None else max(peak, value)
         drawdown = max(drawdown, _from_peak(peak, value))
 
-    benchmark, gap_h, missing = None, None, ""
+    benchmark, gap_h, missing, waiting = None, None, "", None
     card = acceptance.get("benchmark_card")
     if card:
         # Over the stretch the legs were judged on, not the whole window: a
@@ -1810,13 +1812,17 @@ def verdict(acceptance: dict, series: dict, now, closes: dict | None = None,
         elif first["value"] and last["how"] == "before":
             # Its newest point is over an hour before the end and none has come
             # after it yet: the end will be read once one does. It waits, as a
-            # read that failed waits -- neither a gap nor a shorter span.
-            return {"verdict": "waiting",
-                    "why": (f"the benchmark's newest point is {last['gap_h']:.1f} h "
-                            f"before the window's end and none has come after it yet; "
-                            f"judged again on the next call"),
-                    "return_pct": ret, "max_drawdown_pct": drawdown,
-                    "coverage": coverage, "formula": formula_fingerprint()}
+            # read that failed waits -- neither a gap nor a shorter span. But
+            # only for what the benchmark decides: a loss, or a drawdown past
+            # the stop, is refuted below whatever it reads (deep pass
+            # 2026-10-25, R02 -- a losing room waited, for ever if the proxy
+            # stopped publishing).
+            waiting = {"verdict": "waiting",
+                       "why": (f"the benchmark's newest point is {last['gap_h']:.1f} h "
+                               f"before the window's end and none has come after it yet; "
+                               f"judged again on the next call"),
+                       "return_pct": ret, "max_drawdown_pct": drawdown,
+                       "coverage": coverage, "formula": formula_fingerprint()}
         elif first["how"] in ("before", "after"):
             missing = (f"its benchmark has no point within {BENCHMARK_REACH_H:g} h of "
                        f"the window's start (the nearest is {first['gap_h']:.1f} h away)")
@@ -1832,6 +1838,8 @@ def verdict(acceptance: dict, series: dict, now, closes: dict | None = None,
     elif stop_pct is not None and drawdown > stop_pct:
         why, name = (f"its drawdown reached {drawdown:.2f}%, past the "
                      f"{stop_pct:.2f}% it was accepted with"), "refuted"
+    elif waiting is not None:
+        return waiting
     elif card and benchmark is None:
         # Accepted against a benchmark that has no marks over the stretch:
         # beating it cannot be claimed, and a gap is not a loss either (C1,

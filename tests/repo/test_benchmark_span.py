@@ -154,6 +154,31 @@ def test_a_one_sided_end_counts_within_an_hour_and_waits_beyond_it():
 
 
 @qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
+def test_a_refutation_that_needs_no_benchmark_does_not_wait_for_one():
+    """Deep pass 2026-10-25, R02. `waiting` was returned as soon as the benchmark's end was unread,
+    before the two refutations that never read it: a room that LOST waited -- for ever, if the
+    proxy stopped publishing -- though no benchmark value can make a loss survive. Only what the
+    benchmark decides waits for it."""
+    stale = _btc([0, 6, 12, 18, 22])   # newest point 2 h before the close, none after it yet
+    at = START + timedelta(days=1, minutes=20)
+
+    lost = lab.verdict(_acceptance(), {"card-a": _rows(range(25), lambda h: 100.0 - 10.0 * h / 24.0),
+                                       "btc": stale}, at)
+    assert lost["verdict"] == "refuted" and "returned" in lost["why"], lost
+
+    # Up 30 % by noon, back to +10 % at the close: positive, but 15 % off its peak, past a 5 % stop.
+    def climb_and_fall(h):
+        return 100.0 + 30.0 * h / 12.0 if h <= 12 else 130.0 - 20.0 * (h - 12) / 12.0
+    fell = lab.verdict(_acceptance(stop_pct=5.0),
+                       {"card-a": _rows(range(25), climb_and_fall), "btc": stale}, at)
+    assert fell["verdict"] == "refuted" and "drawdown" in fell["why"], fell
+
+    # A room that is up and inside its stop is decided by the benchmark alone: that one waits.
+    up = lab.verdict(_acceptance(), {"card-a": _room(), "btc": stale}, at)
+    assert up["verdict"] == "waiting", up
+
+
+@qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
 def test_a_gap_over_an_hour_is_named_in_why_and_the_verdict_still_counts():
     # The 30d read's 3 h spacing around the window's end: interpolated, said, and judged.
     said = lab.verdict(_acceptance(), {"card-a": _room(), "btc": _btc([0, 6, 12, 18, 22.5, 25.5])}, NOW)
