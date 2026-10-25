@@ -27,8 +27,9 @@ WHAT IT ASSERTS. On the newest recorded answer that carries a marker, re-read fr
 server by its job id (the markers are applied at serve time, so a re-read is what a fix
 changes): no `not available` marker sits on an id that is one of our bot instances (what
 my-clones lists, and every clone our own record says was accepted: C10, 2026-10-18); no `not
-served` marker names a method that the document serves on the path the sentence names; no
-marker sits inside a path, and none is written twice in a row.
+served` marker names a method that the document serves on the path the sentence names (a
+marker right behind the path, inside its code span or just after it); no marker sits inside a
+path, and none is written twice in a row.
 
 WHAT IT DOES NOT. Whether the platform is right to mark a card id that really 404s (that is
 #91's fix working), and whether Nexus's advice is good. A re-read with no marker in it
@@ -57,9 +58,13 @@ METHODS = ("get", "post", "put", "patch", "delete")
 UUID_RE = r"[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}"
 MARK = re.compile(r"\s?\[(not available|not served)([^\]]*)\]")
 # A path with at least one marker right behind it, and whatever of the path comes after the
-# marker: `/api/v1/cloned-bots/<id> [marker] [marker]/settings`.
+# marker: `/api/v1/cloned-bots/<id> [marker] [marker]/settings`. Or the marker just after the
+# path's closing backtick or quote, `PATCH /api/v1/cloned-bots/<id>/settings` [marker]: then the
+# quoted path is the one judged, and nothing after the marker belongs to it (B02, deep pass
+# 2026-10-25: a marker outside the code span was never compared with the document).
 PATH_RUN = re.compile(
     r"(?P<head>/api/v1(?:/[A-Za-z0-9_\-{}<>]+)*)"
+    r"(?P<close>[`'\"])?"
     r"(?P<marks>(?:\s?\[not (?:available|served)[^\]]*\])+)"
     r"(?P<tail>(?:/[A-Za-z0-9_\-{}]+)*)")
 ID_RUN = re.compile(rf"(?P<id>{UUID_RE})(?P<marks>(?:[`'\"]?\s?\[not available[^\]]*\])+)")
@@ -117,9 +122,10 @@ def misfires(text: str, document: dict, instances: set[str]) -> dict:
         if hit["id"].lower() in instances and hit["id"] not in out["marked_instances"]:
             out["marked_instances"].append(hit["id"])
     for hit in PATH_RUN.finditer(text or ""):
-        full = hit["head"] + hit["tail"]
+        inside = not hit["close"]  # a marker after the closing backtick splits no path
+        full = hit["head"] + (hit["tail"] if inside else "")
         marks = MARK.findall(hit["marks"])
-        if hit["tail"] and full not in out["split_paths"]:
+        if inside and hit["tail"] and full not in out["split_paths"]:
             out["split_paths"].append(full)
         if len(marks) != len(set(marks)):
             out["repeated"].append(full)
