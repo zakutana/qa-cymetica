@@ -207,8 +207,8 @@
         "t3": "real"
       },
       "verdict": "real",
-      "fixed": false,
-      "commit": null
+      "fixed": true,
+      "commit": "4e5ba8e0"
     },
     {
       "id": "A03",
@@ -221,8 +221,8 @@
         "t3": "real"
       },
       "verdict": "real",
-      "fixed": false,
-      "commit": null
+      "fixed": true,
+      "commit": "570d779f"
     },
     {
       "id": "A04",
@@ -249,8 +249,8 @@
         "t3": "real"
       },
       "verdict": "real",
-      "fixed": false,
-      "commit": null
+      "fixed": true,
+      "commit": "ea001d6f"
     },
     {
       "id": "A06",
@@ -263,8 +263,8 @@
         "t3": "real"
       },
       "verdict": "real",
-      "fixed": false,
-      "commit": null
+      "fixed": true,
+      "commit": "330a3f15 aa0c2bb6"
     },
     {
       "id": "A07",
@@ -277,8 +277,8 @@
         "t3": "real"
       },
       "verdict": "real",
-      "fixed": false,
-      "commit": null
+      "fixed": true,
+      "commit": "fa71febb"
     },
     {
       "id": "A08",
