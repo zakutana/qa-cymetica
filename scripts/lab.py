@@ -4016,6 +4016,10 @@ def _fomo_round() -> dict:
         said = watch.tick(client)
     finally:
         client.close()
+    if said.get("skipped"):
+        # Another round holds the diary (the console's, a hand run): this one
+        # asked nothing and wrote nothing (M06, deep pass of 2026-10-25).
+        return {"skipped": said["skipped"]}
     capture, resolve = said.get("capture") or {}, said.get("resolve") or {}
     # A read that failed is said as one: the feed's per chain, the price of a
     # signal or control as it fired (M03), and the terminal's per reading (M02,
@@ -4167,6 +4171,7 @@ def _say_tick(said: dict, out) -> None:
     fomo = said.get("fomo") or {}
     hot_ = said.get("hot") or {}
     memecoins = ("memecoins by the console" if fomo.get("by") == "console"
+                 else f"memecoins skipped -- {fomo['skipped']}" if fomo.get("skipped")
                  else f"memecoins +{fomo.get('added', 0)} signal(s) / "
                       f"{fomo.get('checked', 0)} checkpoint(s)"
                       + (f", {fomo['failed']} read(s) failed" if fomo.get("failed") else ""))

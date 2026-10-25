@@ -19,7 +19,9 @@ are absent from /api-docs (told to the operator 2026-09-13; see CLAUDE.md).
 from __future__ import annotations
 
 import argparse
+import contextlib
 import json
+import os
 import sys
 from datetime import datetime, timezone
 from pathlib import Path
@@ -544,10 +546,64 @@ def depth(client, now=None, only_missing: bool = True) -> dict:
             "tokens": len(signals)}
 
 
+def round_lock_path() -> Path:
+    return state_dir() / "fomo_round.lock"
+
+
+ROUND_RUNNING = "another round is running (state/fomo_round.lock)"
+
+
+@contextlib.contextmanager
+def round_lock():
+    """Held for a whole round, by whichever process runs it: the console's
+    thread, the lab tick's process, a hand `capture`/`resolve`/`depth`. Yields
+    whether it is ours; never waits. Two rounds that overlapped both read the
+    diary before either wrote, and both wrote the same signal or checkpoint
+    (M06, deep pass of 2026-10-25). Released by the OS if the process dies,
+    so a killed round never holds the next one off. `crew.py::loop_lock`'s
+    shape; a second handle in the same process is refused too."""
+    path = round_lock_path()
+    path.parent.mkdir(parents=True, exist_ok=True)
+    handle = open(path, "a+b")
+    held = False
+    try:
+        try:
+            if os.name == "nt":
+                import msvcrt
+
+                handle.seek(0)
+                msvcrt.locking(handle.fileno(), msvcrt.LK_NBLCK, 1)
+            else:
+                import fcntl
+
+                fcntl.flock(handle.fileno(), fcntl.LOCK_EX | fcntl.LOCK_NB)
+            held = True
+        except OSError:
+            held = False
+        yield held
+    finally:
+        if held:
+            with contextlib.suppress(OSError):
+                if os.name == "nt":
+                    import msvcrt
+
+                    handle.seek(0)
+                    msvcrt.locking(handle.fileno(), msvcrt.LK_UNLCK, 1)
+                else:
+                    import fcntl
+
+                    fcntl.flock(handle.fileno(), fcntl.LOCK_UN)
+        handle.close()
+
+
 def tick(client, cap: int | None = None) -> dict:
     """One round: capture, then resolve whatever is due. Capture first, so a
     signal that just crossed 1h in the same round it was caught still has to
     wait for the next tick -- never checkpointed against its own birth.
+
+    Every path that runs a round comes through here, so here it holds the
+    round lock: a round that finds another running returns `skipped` and
+    asks their host nothing.
 
     Sets its own SAFE tier, the same way `scripts/sampler.py::tick` does --
     `run()` below is meant to live in a server's background thread, which
@@ -555,11 +611,14 @@ def tick(client, cap: int | None = None) -> dict:
     """
     from qa.safety import CURRENT_TIER, SafetyTier
 
-    token = CURRENT_TIER.set(SafetyTier.SAFE)
-    try:
-        return {"capture": capture(client), "resolve": resolve(client, cap=cap)}
-    finally:
-        CURRENT_TIER.reset(token)
+    with round_lock() as ours:
+        if not ours:
+            return {"skipped": ROUND_RUNNING, "capture": {}, "resolve": {}}
+        token = CURRENT_TIER.set(SafetyTier.SAFE)
+        try:
+            return {"capture": capture(client), "resolve": resolve(client, cap=cap)}
+        finally:
+            CURRENT_TIER.reset(token)
 
 
 def run(stop, every: float, client=None) -> int:
@@ -572,7 +631,7 @@ def run(stop, every: float, client=None) -> int:
     import time
 
     stop = stop or threading.Event()
-    rounds, counted, held = 0, None, False
+    rounds, counted, held, skipped = 0, None, False, False
     while True:
         try:
             if client is None:
@@ -586,7 +645,11 @@ def run(stop, every: float, client=None) -> int:
                 held = True
             else:
                 held = False
-                tick(counted, cap=quote_cap(every))
+                said = tick(counted, cap=quote_cap(every)) or {}
+                # Said once per stretch, not once a minute.
+                if said.get("skipped") and not skipped:
+                    print(f"[fomo] round skipped: {said['skipped']}", file=sys.stderr)
+                skipped = bool(said.get("skipped"))
         except Exception as exc:  # noqa: BLE001 -- the loop outlives any one round
             print(f"[fomo] round failed: {type(exc).__name__}: {exc}",
                  file=sys.stderr)
@@ -605,15 +668,21 @@ def _client():
 
 
 def _run(cmd) -> int:
+    """A hand `capture`, `resolve` or `depth`: a round like any other, so it
+    takes the round lock and skips, saying so, while another round runs."""
     from qa.safety import CURRENT_TIER, SafetyTier
 
-    client = _client()
-    token = CURRENT_TIER.set(SafetyTier.SAFE)
-    try:
-        result = cmd(client)
-    finally:
-        CURRENT_TIER.reset(token)
-        client.close()
+    with round_lock() as ours:
+        if not ours:
+            print(f"[fomo] {ROUND_RUNNING}; nothing done")
+            return 0
+        client = _client()
+        token = CURRENT_TIER.set(SafetyTier.SAFE)
+        try:
+            result = cmd(client)
+        finally:
+            CURRENT_TIER.reset(token)
+            client.close()
     # ensure_ascii=True: a token's own name can carry anything, and the
     # Windows console's default codepage cannot -- this is a status line, not
     # evidence, so ascii-escaping it is cheaper than a crash.
