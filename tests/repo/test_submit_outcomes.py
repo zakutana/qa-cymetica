@@ -53,6 +53,12 @@ def _handler(request):
         raise httpx.ConnectError("connection refused", request=request)
     if title == "timeout":
         raise httpx.ReadTimeout("timed out", request=request)
+    if title == "disk":
+        # Our own code failing AFTER the request left -- writing the capture of their answer
+        # (qa/evidence.py write_text) on a locked or full disk. The POST may have landed, so
+        # this is `unknown`, never `not_sent`: a `not_sent` frees the finding and the next
+        # sweep files it twice (second round of the deep pass of 2026-10-25).
+        raise OSError(28, "No space left on device")
     return {"too-long": httpx.Response(422, json={"detail": "description too long"}),
             "duplicate": httpx.Response(409, json={"detail": "already reported"}),
             "broken": httpx.Response(500, text="boom"),
@@ -60,9 +66,9 @@ def _handler(request):
             "filed": httpx.Response(201, json={"report_id": 301})}[title]
 
 
-KEYS = ("guard", "connect", "timeout", "too-long", "duplicate", "broken", "no-id", "filed")
-EXPECTED = ["not_sent", "not_sent", "unknown", "rejected", "rejected", "unknown", "unknown",
-            "accepted"]
+KEYS = ("guard", "connect", "timeout", "disk", "too-long", "duplicate", "broken", "no-id", "filed")
+EXPECTED = ["not_sent", "not_sent", "unknown", "unknown", "rejected", "rejected", "unknown",
+            "unknown", "accepted"]
 
 
 @qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
@@ -89,7 +95,7 @@ def test_each_answer_is_recorded_as_what_it_was(tmp_path, monkeypatch):
     ready, refused = submit.select_items(payloads, reports, {"findings": []}, seen=set(),
                                          events=events)
     assert sorted(i["key"] for i in ready) == ["connect", "duplicate", "guard", "too-long"], ready
-    assert sorted(k for k, _ in refused) == ["broken", "filed", "no-id", "timeout"], refused
+    assert sorted(k for k, _ in refused) == ["broken", "disk", "filed", "no-id", "timeout"], refused
 
 
 @qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")

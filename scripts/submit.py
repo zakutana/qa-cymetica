@@ -352,17 +352,23 @@ def _report_id(body):
 
 
 def _outcome_of(exc: BaseException) -> str:
-    """What a POST that raised is, in the journal's words (scripts/clone.py's
-    reading). `not_sent` only when the request cannot have left: our own guard
-    refused it (SafetyViolation is raised BEFORE the network), or the connection
-    was never made. A timeout, a reset or a cut stream came after it went out, so
-    they may hold it: `unknown`, settled against my-reports."""
+    """What a POST that raised is, in the journal's words. `not_sent` only when
+    the request cannot have left: our own guard refused it (SafetyViolation is
+    raised BEFORE the network), or the connection was never made. Everything else
+    is `unknown`, settled against my-reports: a timeout, a reset or a cut stream
+    came after it went out, and so can an error of our own -- writing the capture
+    of their answer to a locked or full disk raises OSError after the POST landed,
+    and a `not_sent` there freed the finding to be filed twice (second round of
+    the deep pass of 2026-10-25; scripts/clone.py still reads every non-httpx
+    error as not_sent)."""
     import httpx
 
+    from qa.safety import SafetyViolation
+
     never_left = (httpx.ConnectError, httpx.ConnectTimeout, httpx.PoolTimeout)
-    if isinstance(exc, httpx.HTTPError) and not isinstance(exc, never_left):
-        return "unknown"
-    return "not_sent"
+    if isinstance(exc, (SafetyViolation, *never_left)):
+        return "not_sent"
+    return "unknown"
 
 
 def outcome_of(status: int, report_id) -> str:
