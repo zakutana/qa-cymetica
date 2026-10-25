@@ -331,30 +331,97 @@ QUOTES_PER_MINUTE = 60
 # to cymetica.com, 39,784 of them to the undocumented /clones/memecoin-terminal/search, at a flat
 # ~2,000 an hour, while REPLY-0030 asks for no load or volume testing; QUOTES_PER_MINUTE above only
 # spreads a burst. About a fifth of that day. A round that reaches it finishes, so a day can pass it
-# by at most one round; then no round runs until 00:00 UTC. The count lives in the running process:
-# a restarted console starts a fresh day's count (deep pass 2026-10-18).
+# by at most one round; then no round runs until 00:00 UTC (deep pass 2026-10-18).
+#
+# The count is the DAY's, every process's, in state/fomo_requests.json under its lock. It lived in
+# `run()`'s memory, the console's loop, so the lab's round -- `watch.tick(watch._client())`, a new
+# process every twenty minutes -- and a hand run were never counted: about 9,700 quotes a day at the
+# median round, 40,000 at the p99 (M01, deep pass 2026-10-25). `tick()`, the one entry every round
+# goes through, checks it first and counts every request the round makes.
 DAILY_REQUESTS = 10_000
 
 
+def requests_path() -> Path:
+    return state_dir() / "fomo_requests.json"
+
+
+def _read_count(path: Path, today: str) -> int | None:
+    """The day's count on disk; 0 for another day or no file yet; None when it cannot be read."""
+    try:
+        data = json.loads(path.read_text(encoding="utf-8"))
+    except FileNotFoundError:
+        return 0
+    except (OSError, ValueError):
+        return None
+    if not isinstance(data, dict):
+        return None
+    if data.get("day") != today:
+        return 0
+    made = data.get("made")
+    return made if isinstance(made, int) and not isinstance(made, bool) and made >= 0 else None
+
+
+def _write_count(path: Path, today: str, made: int, **note) -> None:
+    path.write_text(json.dumps({"day": today, "made": made, **note}), encoding="utf-8")
+
+
+def requests_today() -> int:
+    """Every request the collector made today (UTC), in every process. A count that cannot be read
+    is a spent day, never a fresh one (rule 8 on our own file): it is written back as the ceiling,
+    so the day is held and the next one starts clean."""
+    path, today = requests_path(), _now().date().isoformat()
+    path.parent.mkdir(parents=True, exist_ok=True)
+    with file_lock(path):
+        made = _read_count(path, today)
+        if made is None:
+            made = DAILY_REQUESTS
+            with contextlib.suppress(OSError):
+                _write_count(path, today, made, unreadable=True)
+    return made
+
+
+def _count_request() -> None:
+    """One more request today, counted BEFORE it is made: a request that failed was still sent. If
+    the count cannot be written this raises, and the request is not made."""
+    path, today = requests_path(), _now().date().isoformat()
+    path.parent.mkdir(parents=True, exist_ok=True)
+    with file_lock(path):
+        made = _read_count(path, today)
+        _write_count(path, today, (DAILY_REQUESTS if made is None else made) + 1)
+
+
 class _Counted:
-    """The collector's client, counting the requests it makes in the current UTC day. Every request
-    the collector makes is a `get`; anything else is the real client's own."""
+    """The collector's client, counting every request it makes into the day's shared count. Every
+    request the collector makes is a `get`; anything else is the real client's own."""
 
     def __init__(self, client):
-        self._client, self.day, self.made = client, None, 0
+        self._client = client
 
     def get(self, *args, **kwargs):
-        today = _now().date()
-        if today != self.day:
-            self.day, self.made = today, 0
-        self.made += 1
+        _count_request()
         return self._client.get(*args, **kwargs)
 
+    @property
+    def made(self) -> int:
+        return requests_today()
+
     def spent(self) -> bool:
-        return self.day == _now().date() and self.made >= DAILY_REQUESTS
+        return requests_today() >= DAILY_REQUESTS
 
     def __getattr__(self, name):
         return getattr(self._client, name)
+
+
+def _counted(client) -> _Counted:
+    return client if isinstance(client, _Counted) else _Counted(client)
+
+
+def _ceiling_reached() -> str | None:
+    made = requests_today()
+    if made < DAILY_REQUESTS:
+        return None
+    return (f"{made} requests to their host today, the daily ceiling of {DAILY_REQUESTS}: "
+            f"no round until 00:00 UTC")
 
 
 class _Deferred(Exception):
@@ -601,9 +668,12 @@ def tick(client, cap: int | None = None) -> dict:
     signal that just crossed 1h in the same round it was caught still has to
     wait for the next tick -- never checkpointed against its own birth.
 
-    Every path that runs a round comes through here, so here it holds the
-    round lock: a round that finds another running returns `skipped` and
-    asks their host nothing.
+    Every path that runs a round comes through here -- the console's loop,
+    the lab tick's round, a hand run -- so here it holds the round lock (a
+    round that finds another running returns `skipped`), reads the day's
+    shared count (one that finds the ceiling reached returns `held`), and
+    counts every request it makes, whatever client it was handed. Neither a
+    skipped nor a held round asks their host anything.
 
     Sets its own SAFE tier, the same way `scripts/sampler.py::tick` does --
     `run()` below is meant to live in a server's background thread, which
@@ -614,6 +684,10 @@ def tick(client, cap: int | None = None) -> dict:
     with round_lock() as ours:
         if not ours:
             return {"skipped": ROUND_RUNNING, "capture": {}, "resolve": {}}
+        held = _ceiling_reached()
+        if held:
+            return {"held": held, "capture": {}, "resolve": {}}
+        client = _counted(client)
         token = CURRENT_TIER.set(SafetyTier.SAFE)
         try:
             return {"capture": capture(client), "resolve": resolve(client, cap=cap)}
@@ -631,25 +705,18 @@ def run(stop, every: float, client=None) -> int:
     import time
 
     stop = stop or threading.Event()
-    rounds, counted, held, skipped = 0, None, False, False
+    rounds, quiet = 0, None
     while True:
         try:
             if client is None:
                 client = _client()
-            if counted is None:
-                counted = _Counted(client)
-            if counted.spent():
-                if not held:
-                    print(f"[fomo] {counted.made} requests today, the daily ceiling of "
-                          f"{DAILY_REQUESTS}: no round until 00:00 UTC", file=sys.stderr)
-                held = True
-            else:
-                held = False
-                said = tick(counted, cap=quote_cap(every)) or {}
-                # Said once per stretch, not once a minute.
-                if said.get("skipped") and not skipped:
-                    print(f"[fomo] round skipped: {said['skipped']}", file=sys.stderr)
-                skipped = bool(said.get("skipped"))
+            # The ceiling and the lock are tick()'s, as for every other path.
+            said = tick(client, cap=quote_cap(every)) or {}
+            why = said.get("held") or said.get("skipped")
+            # Said once per stretch, not once a minute.
+            if why and why != quiet:
+                print(f"[fomo] no round: {why}", file=sys.stderr)
+            quiet = why
         except Exception as exc:  # noqa: BLE001 -- the loop outlives any one round
             print(f"[fomo] round failed: {type(exc).__name__}: {exc}",
                  file=sys.stderr)
@@ -659,24 +726,31 @@ def run(stop, every: float, client=None) -> int:
 
 
 def _client():
+    """The collector's client, already counted: a caller that reaches past
+    `tick()` with it is still inside the day's count."""
     from qa.client import build_client
     from qa.config import identities, load_dotenv
     from qa.safety import EndpointRegistry
 
     load_dotenv()
-    return build_client(identities()["anon"], EndpointRegistry.load(), timeout=30.0)
+    return _Counted(build_client(identities()["anon"], EndpointRegistry.load(), timeout=30.0))
 
 
 def _run(cmd) -> int:
     """A hand `capture`, `resolve` or `depth`: a round like any other, so it
-    takes the round lock and skips, saying so, while another round runs."""
+    takes the round lock and skips, saying so, while another round runs, and
+    is held by the day's ceiling and counted into it."""
     from qa.safety import CURRENT_TIER, SafetyTier
 
     with round_lock() as ours:
         if not ours:
             print(f"[fomo] {ROUND_RUNNING}; nothing done")
             return 0
-        client = _client()
+        held = _ceiling_reached()
+        if held:
+            print(f"[fomo] {held}; nothing done")
+            return 0
+        client = _counted(_client())
         token = CURRENT_TIER.set(SafetyTier.SAFE)
         try:
             result = cmd(client)

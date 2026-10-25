@@ -101,6 +101,9 @@ state/sampler-run.err
 state/timings.jsonl
 # The request brake's shared slots (qa/ratelimit.py), rewritten on every request.
 state/pace.json
+# The FOMO collector's requests today, every process's (scripts/fomo_watch.py, the daily
+# ceiling), rewritten on every request it makes.
+state/fomo_requests.json
 
 # The laboratory's own notebook: what a session did, what it learned, what the
 # next one should pick up. Outside git for the reason the four above are --
