@@ -4017,9 +4017,12 @@ def _fomo_round() -> dict:
     finally:
         client.close()
     capture, resolve = said.get("capture") or {}, said.get("resolve") or {}
+    # A read that failed is said as one: the feed's per chain and the
+    # terminal's per reading (M02, deep pass of 2026-10-25 -- an outage used
+    # to print as checkpoints taken).
     return {"added": capture.get("added", 0),
             "checked": resolve.get("checked", 0),
-            "failed": len(capture.get("errors") or [])}
+            "failed": len(capture.get("errors") or []) + int(resolve.get("failed") or 0)}
 
 
 def _hot_round() -> dict:
@@ -4164,7 +4167,8 @@ def _say_tick(said: dict, out) -> None:
     hot_ = said.get("hot") or {}
     memecoins = ("memecoins by the console" if fomo.get("by") == "console"
                  else f"memecoins +{fomo.get('added', 0)} signal(s) / "
-                      f"{fomo.get('checked', 0)} checkpoint(s)")
+                      f"{fomo.get('checked', 0)} checkpoint(s)"
+                      + (f", {fomo['failed']} read(s) failed" if fomo.get("failed") else ""))
     hot_said = ("Hot by the console" if hot_.get("by") == "console"
                 else f"Hot {'round' if hot_.get('ok') else 'round FAILED'} "
                      f"(+{hot_.get('headlines', 0)} headline(s), "

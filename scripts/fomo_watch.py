@@ -433,7 +433,11 @@ def resolve(client, now=None, cap: int | None = None) -> dict:
                  else None, **_depth(quote)})
         entries += 1
 
-    written = []
+    # A failed read is a failure, in its own list. It went into `written` beside
+    # the rows written, so `checked` counted it as a checkpoint taken and an
+    # outage printed as "5 checkpoint(s)" in the lab tick (M02, deep pass of
+    # 2026-10-25). A count of checkpoints counts rows written.
+    written, failed = [], []
     for signal, horizon in fomo.by_closing(fomo.due_checkpoints(signals, done, now=now)):
         try:
             quote = quote_once(signal.get("token_address"))
@@ -441,8 +445,8 @@ def resolve(client, now=None, cap: int | None = None) -> dict:
             deferred += 1
             continue
         except Exception as exc:  # noqa: BLE001
-            written.append({"key": signal["key"], "horizon": horizon,
-                            "error": str(exc)[:200]})
+            failed.append({"key": signal["key"], "horizon": horizon,
+                           "error": str(exc)[:200]})
             continue
         price = (quote or {}).get("price_usd")
         price = float(price) if isinstance(price, (int, float)) else None
@@ -477,8 +481,8 @@ def resolve(client, now=None, cap: int | None = None) -> dict:
             deferred += 1
             continue
         except Exception as exc:  # noqa: BLE001
-            readings.append({"key": signal["key"], "horizon": horizon,
-                             "error": str(exc)[:200]})
+            failed.append({"key": signal["key"], "horizon": horizon, "group": group,
+                           "error": str(exc)[:200]})
             continue
         price = (quote or {}).get("price_usd")
         price = float(price) if isinstance(price, (int, float)) else None
@@ -489,8 +493,10 @@ def resolve(client, now=None, cap: int | None = None) -> dict:
                                                    price),
             **_depth(quote),
         }))
+    # The first few failures are named; the count is all of them.
     return {"checked": len(written), "checkpoints": written,
-            "studied": len(readings), "entries": entries, "deferred": deferred}
+            "studied": len(readings), "entries": entries, "deferred": deferred,
+            "failed": len(failed), "failures": failed[:10]}
 
 
 def depth(client, now=None, only_missing: bool = True) -> dict:
