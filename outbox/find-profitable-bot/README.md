@@ -9,5 +9,9 @@ paper clones. Nexus said it is not built, no price, no date, no roadmap statemen
 trade count, the held-back period never shown to the search, every combination tried counted, an owner-only API for the Quant Lab
 department, a visible tag on the 19 models that have a backtest setup, and capacity (25 clones per run for the whole platform is too small).
 
+2026-10-25, MSG-0249 / REPLY-0217: Nexus has no roadmap entry, no date and no plan tier for the button, and says to file a Build it Better request;
+the button's page is `/my-bots`, which is the same page as `/my-agents` (title "My Agents", checked), `/agents` the fallback. So the draft's app stays
+`/my-agents`. When the operator files it, its ET number goes here and the verdict is ours.
+
 Checked with our key on 2026-10-25 (GET only): `GET /api/v1/cloned-bots/{id}/optimizations` answers for all 70 of our clones, levers and
 bounds as Nexus described, Auto-optimize off on all; 7 of the 70 are trading and none has a proposal yet.
