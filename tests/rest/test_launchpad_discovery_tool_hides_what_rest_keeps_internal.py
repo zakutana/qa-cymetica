@@ -16,9 +16,10 @@ with 0-1 holders and volumes of at most 0.0006), each with a `buy_via` hint. The
 unfiltered screener, like REST, lists only RUG on that chain.
 
 **The rule.** The launches the REST list keeps internal by default do not appear in the
-feed an agent is told to read to discover what to buy. A chain is judged only when its
-whole public list fits one REST page (limit 200), so that "not in the public list" is
-known and not a guess about a page that was not read; the MCP tool has no offset, so a
+feed an agent is told to read to discover what to buy. A chain is judged only when both
+its REST lists, the public one and the one with include_internal, fit one page (limit 200),
+so that "not in the public list" and "internal" are known and not a guess about a page that
+was not read (the second list since B05, deep pass 2026-10-25); the MCP tool has no offset, so a
 chain larger than its 100-row window would be judged on that window only.
 
 SAFE. GETs and the read-only MCP tool, anonymous. Measured twice, 20 seconds apart,
@@ -59,8 +60,14 @@ def _rest_addresses(rest, chain: int, internal: bool):
     time.sleep(PAUSE_S)
     r = rest.get(TOKENS, params=params)
     body = r.json() if r.status_code == 200 else None
+    label = f"chain_id={chain}{' +internal' if internal else ''}"
     if not isinstance(body, list):
-        return None, f"chain_id={chain}{' +internal' if internal else ''}: HTTP {r.status_code}"
+        return None, f"{label}: HTTP {r.status_code}"
+    if len(body) >= PAGE:
+        # Either list: a launch past the page is in neither list read, so a feed listing it would pass
+        # (B05, deep pass 2026-10-25: only the public list had this guard).
+        return None, (f"{label}: the list is a full page ({len(body)} rows at limit {PAGE}), "
+                      f"'not in it' cannot be known from one page")
     return [(t.get("address"), t.get("symbol")) for t in body if isinstance(t, dict) and t.get("address")], None
 
 
@@ -131,10 +138,6 @@ def _one_read(rest, mcp, chains):
         public, why = _rest_addresses(rest, chain, False)
         if public is None:
             unmeasured.append(why)
-            continue
-        if len(public) >= PAGE:
-            unmeasured.append(f"chain_id={chain}: the public list is a full page ({len(public)}), "
-                              f"'not in it' cannot be known from one page")
             continue
         internal, why = _rest_addresses(rest, chain, True)
         if internal is None:
