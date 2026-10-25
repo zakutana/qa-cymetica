@@ -1,7 +1,7 @@
 # Build a Company, round 4 (ready to file)
 
-Started 2026-10-22 at the operator's word. The request text is `build-it-better/improvements.txt` (19 lines, 7,947 characters of the form's 8,000;
-its links pinned to 45c32ee6; they open once that commit is pushed). When it is filed, its ET number goes here and the verdict is ours to give.
+Started 2026-10-22 at the operator's word. The request text is `build-it-better/improvements.txt` (19 lines, 7,931 characters of the form's 8,000;
+its links pinned to a19d80ba; they open once that commit is pushed). When it is filed, its ET number goes here and the verdict is ours to give.
 The operator files the request text himself on Build it Better.
 
 2026-10-25, the operator's changes: H is stressed as a sketch, every term Cymetica's to decide; the brief's K now says the willow head the mockup draws
@@ -9,7 +9,8 @@ The operator files the request text himself on Build it Better.
 decides how the company runs, with passes and turns the chip as drawn, without them the same place with only what stays true); new P (the Universe's new
 look: orbits as lanes of light-dust, plates for a few, the entry page the same) and Q (Promo Market's PROMO airship, which neither the live build nor
 the Promo Market brief had). Seventeen stations were measured by an independent agent (114 runs, built-in graphics, processor slowed 4x): fine, on two
-conditions now in M and O (the entry page keeps six; a station is built once, not on every click; Rift Hold is the slow one).
+conditions now in M and O (the start page's picture keeps its six sample companies, the choice in Create your company and Settings stays all
+seventeen; a station is built once, not on every click; Rift Hold is the slow one).
 
 `SPEC.md`, item by item (letters are theirs to quote; there is no B, D or G in the request text):
 - A units instead of dollars, and units per task (settled; evidence read from their API). Not drawn: A wins where the mockup still shows dollars.
