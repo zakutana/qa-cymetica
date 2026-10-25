@@ -141,13 +141,32 @@ def foreign(folder: Path, repo: Path | None = None, home: Path | None = None) ->
                 return f"{place / name} would be loaded into it"
     if (user / ".claude" / "CLAUDE.md").is_file():
         return f"{user / '.claude' / 'CLAUDE.md'} would be loaded into it"
-    index = user / ".claude" / "projects" / slug(folder) / "memory" / "MEMORY.md"
+    for index in memory_indexes(folder, user):
+        try:
+            text = index.read_text(encoding="utf-8")
+        except OSError:
+            continue
+        quoted = [marker for marker in LEAKS if marker.lower() in text.lower()]
+        if quoted:
+            return f"its MEMORY.md ({index}) quotes ours: {', '.join(quoted)}"
+    return None
+
+
+def memory_indexes(folder: Path, user: Path) -> list[Path]:
+    """Every memory index Claude Code may keep for `folder`: its own slug's, and that of every
+    project folder whose name ends with the folder's own name. The desktop app run from its MSIX
+    package keeps a second one under the virtualised path -- on 2026-10-25
+    C--Users-adamz-AppData-Local-Packages-Claude-pzs8sxrjxfjjc-LocalCache-Local-cymetica-outsider
+    beside C--Users-adamz-AppData-Local-cymetica-outsider -- and only the first was read (C08)."""
+    projects = user / ".claude" / "projects"
+    exact, tail = slug(folder), "-" + re.sub(r"[^A-Za-z0-9]", "-", Path(folder).name)
+    names = [exact]
     try:
-        text = index.read_text(encoding="utf-8")
+        names += sorted(entry.name for entry in projects.iterdir()
+                        if entry.is_dir() and entry.name != exact and entry.name.endswith(tail))
     except OSError:
-        return None
-    quoted = [marker for marker in LEAKS if marker.lower() in text.lower()]
-    return (f"its MEMORY.md ({index}) quotes ours: {', '.join(quoted)}" if quoted else None)
+        pass
+    return [projects / name / "memory" / "MEMORY.md" for name in names]
 
 
 def stranger_env(repo: Path | None = None) -> dict:

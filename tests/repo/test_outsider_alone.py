@@ -91,14 +91,39 @@ def test_a_folder_that_would_hand_it_any_of_ours_is_refused(short_tmp):
     user.unlink()
 
     # The memory index Claude Code loads for that folder: the stranger's own notes are its own,
-    # an index carrying ours is a leak handed to it.
-    index = (home / ".claude" / "projects" / mod.slug(folder) / "memory" / "MEMORY.md")
+    # an index carrying ours is a leak handed to it. Its path is spelled here -- every character
+    # but a letter or digit a dash -- not through mod.slug(), the function under test (C08, deep
+    # pass 2026-10-25): a wrong slug then fails this test instead of agreeing with itself.
+    own = "- [Its own](own.md) -- what it learned of their docs\n"
+    ours = "- [Verify a workflow is live before building for it](v.md)\n"
+    projects = home / ".claude" / "projects"
+    spelled = "".join(ch if ch.isascii() and ch.isalnum() else "-" for ch in str(folder.resolve()))
+    assert mod.slug(folder) == spelled, (mod.slug(folder), spelled)
+    index = projects / spelled / "memory" / "MEMORY.md"
     index.parent.mkdir(parents=True)
-    index.write_text("- [Its own](own.md) -- what it learned of their docs\n", encoding="utf-8")
+    index.write_text(own, encoding="utf-8")
     assert mod.foreign(folder, repo=repo, home=home) is None, "its own memory is its own"
-    index.write_text("- [Verify a workflow is live before building for it](v.md)\n",
-                     encoding="utf-8")
+    index.write_text(ours, encoding="utf-8")
     assert "MEMORY.md" in (mod.foreign(folder, repo=repo, home=home) or "")
+    index.write_text(own, encoding="utf-8")
+
+    # And the second project folder Claude Code keeps for the same folder when the desktop app runs
+    # from its MSIX package: on 2026-10-25 ~/.claude/projects held
+    # C--Users-adamz-AppData-Local-Packages-Claude-pzs8sxrjxfjjc-LocalCache-Local-cymetica-outsider
+    # beside C--Users-adamz-AppData-Local-cymetica-outsider, and foreign() read only the second.
+    virtual = projects / "C--Users-x-AppData-Local-Packages-Claude-pzs8sxrjxfjjc-LocalCache-Local-o"
+    (virtual / "memory").mkdir(parents=True)
+    (virtual / "memory" / "MEMORY.md").write_text(own, encoding="utf-8")
+    assert mod.foreign(folder, repo=repo, home=home) is None, "its own memory is its own, there too"
+    (virtual / "memory" / "MEMORY.md").write_text(ours, encoding="utf-8")
+    said = mod.foreign(folder, repo=repo, home=home) or ""
+    assert "MEMORY.md" in said and virtual.name in said, said
+    (virtual / "memory" / "MEMORY.md").write_text(own, encoding="utf-8")
+    # A folder of another name is another project, whatever its memory holds.
+    other = projects / "C--Users-x-AppData-Local-xo" / "memory"
+    other.mkdir(parents=True)
+    (other / "MEMORY.md").write_text(ours, encoding="utf-8")
+    assert mod.foreign(folder, repo=repo, home=home) is None, "another folder's memory was read as its own"
 
 
 @qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
