@@ -1,0 +1,280 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Airdrop Farmer loading</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Archivo+Black&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+<style>
+/* Airdrop Farmer's loading screen (the operator, 2026-10-25: "top loading screen ... neco jak mame v company na
+   universe"). The farm from above wakes up: plots light one by one and their pillars of light grow as the farms are
+   read, the farmer floats over the field and sweeps it with its light, seeds rise. The number is the real work: each
+   request the page waits for (the page, /config, /farms, and signed in /plan and /status) carries a share, and the
+   number creeps inside the share of the one still running, so it never freezes and never reaches 100 early.
+   Everything moves by transform and opacity, so it keeps turning while the page builds. The site's colours only. */
+:root { --bg: #0a0e17; --deep: #06090f; --text: #e6edf7; --text-2: #a9b8cc; --text-3: #7f93ad; --cyan: #00cfff; --green: #00ff88; }
+* { box-sizing: border-box; }
+html, body { margin: 0; height: 100%; background: var(--bg); color: var(--text); }
+
+.afboot { position: fixed; inset: 0; z-index: 300; display: grid; place-items: center; overflow: hidden;
+  background: radial-gradient(ellipse 70% 62% at 50% 46%, #0f1c2e 0%, #0a0e17 58%, #05070c 100%);
+  transition: opacity .7s ease, visibility .7s; }
+.afboot.gone { opacity: 0; visibility: hidden; pointer-events: none; }
+/* a faint field to the horizon: an isometric grid that fades out at the edges, drifting toward the viewer */
+.afboot::before { content: ''; position: absolute; inset: -60% -40% -20%; pointer-events: none; opacity: .5;
+  background-image: linear-gradient(26.57deg, rgba(0, 207, 255, .10) 1px, transparent 1px),
+                    linear-gradient(-26.57deg, rgba(0, 255, 136, .08) 1px, transparent 1px);
+  background-size: 116px 58px;
+  -webkit-mask: radial-gradient(ellipse 50% 42% at 50% 62%, #000 0%, rgba(0,0,0,.5) 45%, transparent 75%);
+          mask: radial-gradient(ellipse 50% 42% at 50% 62%, #000 0%, rgba(0,0,0,.5) 45%, transparent 75%);
+  animation: ab-ground 9s linear infinite; }
+@keyframes ab-ground { to { transform: translate(-58px, 29px); } }
+
+.ab { position: relative; width: 560px; height: 600px; transform: scale(1.12); }
+/* the glow under the field, breathing */
+.ab-halo { position: absolute; left: 50%; top: 330px; width: 620px; height: 360px; margin: -180px 0 0 -310px; border-radius: 50%;
+  background: radial-gradient(ellipse, rgba(0, 207, 255, .22) 0%, rgba(0, 255, 136, .10) 34%, transparent 68%);
+  animation: ab-breathe 3.2s ease-in-out infinite; will-change: transform; }
+@keyframes ab-breathe { 50% { transform: scale(1.07); opacity: .75; } }
+
+/* the field: plots drawn back to front; a plot lights and its pillar grows when its share of the work is in */
+.ab-field { position: absolute; left: 0; top: 0; width: 560px; height: 600px; overflow: visible; }
+.ab-plot { fill: rgba(13, 21, 32, .85); stroke: rgba(30, 48, 80, .95); stroke-width: 1; transition: fill .5s, stroke .5s; }
+.ab-cell.lit .ab-plot { fill: rgba(0, 207, 255, .10); stroke: rgba(0, 207, 255, .55); }
+.ab-pillar { transform-box: fill-box; transform-origin: 50% 100%; transform: scaleY(0); opacity: 0;
+  transition: transform .9s cubic-bezier(.2, .9, .25, 1.15), opacity .4s; }
+.ab-cell.lit .ab-pillar { transform: scaleY(1); opacity: 1; }
+.ab-top { filter: drop-shadow(0 0 6px rgba(0, 255, 136, .9)); }
+.ab-cell.lit .ab-pillar .ab-top { animation: ab-flick 2.2s ease-in-out infinite alternate; }
+@keyframes ab-flick { to { opacity: .7; } }
+.ab-sprout { filter: drop-shadow(0 0 4px rgba(0, 255, 136, .9)); }
+/* the newest pillar sends a ring out over its plot */
+.ab-ring { fill: none; stroke: var(--green); stroke-width: 1.5; opacity: 0; transform-box: fill-box; transform-origin: 50% 50%; }
+.ab-cell.fresh .ab-ring { animation: ab-ring 1.1s ease-out 1; }
+@keyframes ab-ring { 0% { transform: scale(.4); opacity: .95; } 100% { transform: scale(1.7); opacity: 0; } }
+
+/* the farmer over the field, floating, its light sweeping the plots */
+.ab-farmer { position: absolute; left: 50%; top: 4px; width: 104px; height: 104px; margin-left: -52px;
+  animation: ab-bob 2.8s ease-in-out infinite; will-change: transform; }
+.ab-farmer svg { width: 100%; height: 100%; filter: drop-shadow(0 0 16px rgba(0, 207, 255, .55)); }
+@keyframes ab-bob { 50% { transform: translateY(-9px); } }
+.ab-beam { position: absolute; left: 50%; top: 100px; width: 250px; height: 262px; margin-left: -125px; transform-origin: 50% 0;
+  background: linear-gradient(180deg, rgba(0, 255, 136, .30), rgba(0, 207, 255, .10) 60%, transparent);
+  clip-path: polygon(46% 0, 54% 0, 84% 100%, 16% 100%); filter: blur(2px);
+  animation: ab-sweep 3.6s ease-in-out infinite alternate; will-change: transform; }
+@keyframes ab-sweep { from { transform: rotate(-14deg); } to { transform: rotate(14deg); } }
+/* where the light lands: a soft pool on the field, travelling with the beam */
+.ab-spot { position: absolute; left: 50%; top: 352px; width: 170px; height: 56px; margin: -28px 0 0 -85px; border-radius: 50%;
+  background: radial-gradient(ellipse, rgba(125, 255, 196, .42) 0%, rgba(0, 255, 136, .16) 45%, transparent 72%);
+  mix-blend-mode: screen; animation: ab-spot 3.6s ease-in-out infinite alternate; will-change: transform; }
+@keyframes ab-spot { from { transform: translateX(62px); } to { transform: translateX(-62px); } }
+
+/* seeds rising off the field */
+.ab-seed { position: absolute; width: 5px; height: 5px; border-radius: 50%; background: #eafff5; opacity: 0;
+  box-shadow: 0 0 8px 2px rgba(0, 255, 136, .8); animation: ab-rise 4.6s ease-out infinite; will-change: transform, opacity; }
+.ab-seed.c { box-shadow: 0 0 8px 2px rgba(0, 207, 255, .85); background: #e6faff; }
+@keyframes ab-rise { 0% { transform: translateY(0) scale(.6); opacity: 0; } 15% { opacity: 1; }
+  100% { transform: translateY(-210px) scale(1.1); opacity: 0; } }
+
+/* the number first, then one line, then the bar */
+.ab-read { position: absolute; left: 0; right: 0; top: 494px; display: flex; justify-content: center; align-items: baseline; gap: 4px;
+  font: 400 40px/1 'Archivo Black', 'Segoe UI', sans-serif; color: #eaf8ff; text-shadow: 0 0 18px rgba(0, 207, 255, .45); }
+.ab-read span { font-size: 18px; color: var(--cyan); }
+.ab-what { position: absolute; left: 0; right: 0; top: 544px; text-align: center; font: 600 11px/1 'JetBrains Mono', monospace;
+  letter-spacing: .32em; color: var(--text-3); }
+.ab-what b { color: var(--green); font-weight: 600; }
+.ab-bar { position: absolute; left: 130px; right: 130px; top: 570px; height: 2px; border-radius: 2px; background: rgba(0, 207, 255, .13); overflow: hidden; }
+.ab-bar i { position: absolute; inset: 0; transform-origin: 0 50%; transform: scaleX(0); transition: transform .45s ease;
+  background: linear-gradient(90deg, var(--cyan), var(--green)); box-shadow: 0 0 10px rgba(0, 255, 136, .8); }
+.ab-bar::after { content: ''; position: absolute; top: 0; bottom: 0; width: 60px; left: -60px;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, .7), transparent); animation: ab-shim 1.6s ease-in-out infinite; }
+@keyframes ab-shim { to { transform: translateX(360px); } }
+
+@media (max-width: 700px), (max-height: 680px) { .ab { transform: scale(.82); } }
+@media (prefers-reduced-motion: reduce) { .afboot *, .afboot::before { animation-duration: 12s !important; } }
+/* frozen pictures (?shot=1): every animation held, so two renders agree */
+.shot *, .shot *::before, .shot *::after { animation-play-state: paused !important; transition: none !important; }
+
+/* demo only, not part of the design */
+.demo { position: fixed; right: 14px; bottom: 12px; z-index: 400; font: 600 11px 'JetBrains Mono', monospace; color: var(--text-3); }
+.demo button { font: inherit; color: var(--cyan); background: transparent; border: 1px solid rgba(0, 207, 255, .4); border-radius: 8px; padding: 5px 9px; cursor: pointer; margin-left: 6px; }
+.shot .demo { display: none; }
+</style>
+</head>
+<body>
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <defs>
+    <linearGradient id="afg" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#00cfff"/><stop offset="1" stop-color="#3ddc8a"/></linearGradient>
+    <linearGradient id="afh" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#3ddc8a"/><stop offset="1" stop-color="#00cfff"/></linearGradient>
+    <filter id="afglow" x="-50%" y="-50%" width="200%" height="200%"><feGaussianBlur stdDeviation="1.1" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
+    <linearGradient id="abL" x1="0" y1="1" x2="0" y2="0"><stop offset="0" stop-color="#00cfff" stop-opacity=".55"/><stop offset="1" stop-color="#00ff88" stop-opacity=".85"/></linearGradient>
+    <linearGradient id="abR" x1="0" y1="1" x2="0" y2="0"><stop offset="0" stop-color="#00cfff" stop-opacity=".32"/><stop offset="1" stop-color="#00ff88" stop-opacity=".55"/></linearGradient>
+    <!-- the farmer: Airdrop Farmer's own logo as cymetica.com/airdrop-farmer serves it (symbol #aflogo) -->
+    <symbol id="aflogo" viewBox="0 0 64 64">
+      <circle cx="32" cy="41" r="17" fill="#070b10" stroke="url(#afg)" stroke-width="3"/>
+      <circle cx="32" cy="41" r="12" fill="none" stroke="#00cfff" stroke-opacity=".4" stroke-width="1" stroke-dasharray="1.6 2.6"/>
+      <rect x="24.5" y="37" width="5" height="9" rx="2.5" fill="#3ddc8a" filter="url(#afglow)"/>
+      <rect x="34.5" y="37" width="5" height="9" rx="2.5" fill="#3ddc8a" filter="url(#afglow)"/>
+      <path d="M20.5 25.5 L22.6 14.6 Q23.2 12 26 12 Q32 14.2 38 12 Q40.8 12 41.4 14.6 L43.5 25.5 Z" fill="url(#afh)"/>
+      <path d="M21.2 21.6 Q32 19.6 42.8 21.6" stroke="#070b10" stroke-width="2.6" fill="none"/>
+      <path d="M2.5 30 C8 25.2 15 24 22 24 L42 24 C49 24 56 25.2 61.5 30 C50 30.6 40 31.8 32 31.8 C24 31.8 14 30.6 2.5 30 Z" fill="url(#afg)"/>
+      <path d="M32 12.5 V5.8" stroke="#3ddc8a" stroke-width="1.9" stroke-linecap="round"/>
+      <path d="M31.8 8 C27.6 8 25.5 5.8 25 2.6 C28.8 2.6 31.3 4.6 31.8 8 Z" fill="#3ddc8a"/>
+      <path d="M32.2 6.6 C36.4 6.6 38.8 4.1 39.3 0.9 C35.2 0.9 32.7 3 32.2 6.6 Z" fill="#00cfff"/>
+    </symbol>
+  </defs>
+</svg>
+
+<div class="afboot" id="afboot" role="status" aria-live="polite" aria-label="Loading Airdrop Farmer">
+  <div class="ab">
+    <i class="ab-halo"></i>
+    <svg class="ab-field" id="ab-field" viewBox="0 0 560 600" aria-hidden="true"></svg>
+    <div class="ab-beam"></div>
+    <i class="ab-spot"></i>
+    <div class="ab-farmer"><svg viewBox="0 0 64 64"><use href="#aflogo"/></svg></div>
+    <div id="ab-seeds"></div>
+    <div class="ab-read"><b id="ab-pct">0</b><span>%</span></div>
+    <div class="ab-what" id="ab-what">OPENING YOUR FARM</div>
+    <div class="ab-bar"><i id="ab-bar"></i></div>
+  </div>
+</div>
+<div class="demo">MOCKUP <button id="replay">replay</button><button id="cold">cold start (9 s)</button></div>
+
+<script>
+(function () {
+  'use strict';
+  var Q = new URLSearchParams(location.search), SHOT = Q.get('shot') === '1';
+  if (SHOT) document.documentElement.classList.add('shot');
+
+  /* ---------- the field: 4 x 4 plots, isometric, drawn back to front ---------- */
+  var TW = 116, TH = 58, CX = 280, CY = 318, N = 4, HMAX = 104;
+  var svg = document.getElementById('ab-field'), NS = 'http://www.w3.org/2000/svg';
+  function el(name, attrs, parent) { var e = document.createElementNS(NS, name); for (var k in attrs) e.setAttribute(k, attrs[k]); parent.appendChild(e); return e; }
+  function pts(a) { return a.map(function (p) { return p[0].toFixed(1) + ',' + p[1].toFixed(1); }).join(' '); }
+  var cells = [];
+  for (var r = 0; r < N; r++) for (var c = 0; c < N; c++) cells.push({ c: c, r: r });
+  cells.sort(function (a, b) { return (a.c + a.r) - (b.c + b.r) || a.c - b.c; });
+  // heights: a fixed spread, tallest at the back, as the Farms tab draws them
+  var seed = 7;
+  function rnd() { seed = (seed * 9301 + 49297) % 233280; return seed / 233280; }
+  cells.forEach(function (k, i) {
+    var x = CX + (k.c - k.r) * TW / 2, y = CY + (k.c + k.r) * TH / 2 - (N - 1) * TH / 2;
+    var g = el('g', { 'class': 'ab-cell' }, svg);
+    el('polygon', { 'class': 'ab-plot', points: pts([[x, y - TH / 2 + 3], [x + TW / 2 - 4, y], [x, y + TH / 2 - 3], [x - TW / 2 + 4, y]]) }, g);
+    var back = 1 - (k.c + k.r) / (2 * (N - 1));
+    var h = 26 + Math.sqrt(0.25 + 0.75 * rnd()) * (HMAX - 40) * (0.55 + 0.45 * back);
+    var w = 22, d = 11;                                   // the pillar's footprint: half sizes, a little slimmer than the Farms tab
+    var p = el('g', { 'class': 'ab-pillar' }, g);
+    el('polygon', { points: pts([[x - w, y], [x, y + d], [x, y + d - h], [x - w, y - h]]), fill: 'url(#abL)' }, p);
+    el('polygon', { points: pts([[x, y + d], [x + w, y], [x + w, y - h], [x, y + d - h]]), fill: 'url(#abR)' }, p);
+    el('polygon', { 'class': 'ab-top', points: pts([[x, y - d - h], [x + w, y - h], [x, y + d - h], [x - w, y - h]]), fill: '#7dffc4' }, p);
+    var ty = y - h - d;                                   // a sprout on its top: the logo's two leaves
+    var sp = el('g', { 'class': 'ab-sprout', transform: 'translate(' + x.toFixed(1) + ' ' + (ty + 2).toFixed(1) + ')' }, p);
+    el('path', { d: 'M0 0 V-9', stroke: '#3ddc8a', 'stroke-width': 1.6, 'stroke-linecap': 'round' }, sp);
+    el('path', { d: 'M-0.2 -6 C-4 -6 -6 -8 -6.4 -11 C-3 -11 -0.7 -9.2 -0.2 -6 Z', fill: '#3ddc8a' }, sp);
+    el('path', { d: 'M0.2 -7.4 C4 -7.4 6.2 -9.6 6.6 -12.6 C2.9 -12.6 0.6 -10.7 0.2 -7.4 Z', fill: '#00cfff' }, sp);
+    el('ellipse', { 'class': 'ab-ring', cx: x, cy: y, rx: TW / 2 - 8, ry: TH / 2 - 5 }, g);
+    k.g = g;
+  });
+  // the order they light in: scattered over the field, not row by row
+  var order = cells.map(function (k, i) { return i; });
+  seed = 31; for (var i = order.length - 1; i > 0; i--) { var j = Math.floor(rnd() * (i + 1)), t = order[i]; order[i] = order[j]; order[j] = t; }
+
+  /* ---------- seeds rising off the field ---------- */
+  var sbox = document.getElementById('ab-seeds');
+  seed = 11;
+  for (var s = 0; s < 14; s++) {
+    var dot = document.createElement('i');
+    dot.className = 'ab-seed' + (s % 3 === 0 ? ' c' : '');
+    dot.style.left = (110 + rnd() * 340).toFixed(0) + 'px';
+    dot.style.top = (230 + rnd() * 150).toFixed(0) + 'px';
+    dot.style.animationDelay = (-s * 0.33).toFixed(2) + 's';
+    dot.style.animationDuration = (3.8 + rnd() * 2).toFixed(2) + 's';
+    sbox.appendChild(dot);
+  }
+
+  /* ---------- the number: real work, each request a share ---------- */
+  // What cymetica.com/airdrop-farmer waits for before it draws: the page itself, /config, /farms, and when signed in
+  // /plan (the balance read on every network) and /status (the farm wallet). Each carries a share of 100.
+  var STEPS = [
+    { k: 'page',   w: 12, line: 'OPENING YOUR FARM' },
+    { k: 'config', w: 8,  line: 'OPENING YOUR FARM' },
+    { k: 'farms',  w: 48, line: 'READING THE FARMS' },
+    { k: 'plan',   w: 22, line: 'READING YOUR WALLETS' },
+    { k: 'status', w: 10, line: 'CHECKING YOUR FARM WALLET' }
+  ];
+  var done = {}, started = 0, shown = 0, farmsCount = null, lit = 0, raf = 0, finished = false;
+  var pctEl = document.getElementById('ab-pct'), barEl = document.getElementById('ab-bar'), whatEl = document.getElementById('ab-what');
+
+  function target() {
+    var t = 0, pending = null;
+    STEPS.forEach(function (s) { if (done[s.k]) t += s.w; else if (!pending) pending = s; });
+    if (pending) {                                        // creep inside the running share, never past 85 % of it
+      var el = (performance.now() - started) / 1000;
+      t += pending.w * 0.85 * (1 - Math.exp(-el / 2.4));
+    }
+    return { t: Math.min(t, pending ? 99 : 100), pending: pending };
+  }
+  function lineFor(pending) {
+    if (!pending) return 'READY';
+    if (pending.k === 'farms') return farmsCount ? 'READING <b>' + farmsCount + '</b> FARMS' : 'READING THE FARMS';
+    return pending.line;
+  }
+  function paint(p, pending) {
+    var n = Math.round(p);
+    pctEl.textContent = n;
+    barEl.style.transform = 'scaleX(' + (p / 100).toFixed(4) + ')';
+    whatEl.innerHTML = lineFor(pending);
+    var want = Math.min(cells.length, Math.floor(p / 100 * cells.length + 0.0001));
+    while (lit < want) {
+      var k = cells[order[lit]];
+      k.g.classList.add('lit', 'fresh');
+      (function (g) { setTimeout(function () { g.classList.remove('fresh'); }, 1200); })(k.g);
+      lit++;
+    }
+  }
+  function tick() {
+    var tg = target();
+    shown += (tg.t - shown) * 0.08;
+    if (tg.t - shown < 0.3) shown = tg.t;
+    paint(shown, tg.pending);
+    if (!tg.pending && shown >= 100 && !finished) {
+      finished = true;
+      setTimeout(function () { document.getElementById('afboot').classList.add('gone'); }, 650);
+    }
+    raf = requestAnimationFrame(tick);
+  }
+
+  // The page calls AFBoot.done('farms', {count: 43}) as each request returns; this mockup simulates the times
+  // measured on 2026-10-25 (page ~2 s, /config ~0.9 s, /farms 1.5 s warm or ~9 s cold, signed-in reads ~3 s).
+  window.AFBoot = { done: function (k, info) { done[k] = true; if (info && info.count) farmsCount = info.count; } };
+
+  function run(cold) {
+    cancelAnimationFrame(raf);
+    done = {}; shown = 0; lit = 0; farmsCount = null; finished = false; started = performance.now();
+    cells.forEach(function (k) { k.g.classList.remove('lit', 'fresh'); });
+    document.getElementById('afboot').classList.remove('gone');
+    var T = { page: 1900, config: 2800, farms: cold ? 9000 : 3400, plan: cold ? 11500 : 5600, status: cold ? 12200 : 6300 };
+    setTimeout(function () { farmsCount = 43; }, Math.min(T.farms - 600, 2600));
+    Object.keys(T).forEach(function (k) { setTimeout(function () { AFBoot.done(k); }, T[k]); });
+    tick();
+  }
+
+  if (SHOT) {
+    // a frozen picture at a given share of the work: ?shot=1&p=40
+    var p = Math.max(0, Math.min(100, +(Q.get('p') || 40)));
+    farmsCount = 43;
+    var acc = 0, pending = null;
+    STEPS.forEach(function (s) { if (acc + s.w <= p + 0.001 && !pending) { acc += s.w; done[s.k] = true; } else if (!pending) pending = s; });
+    paint(p, p >= 100 ? null : pending);
+    cells.forEach(function (k) { k.g.classList.remove('fresh'); });
+  } else {
+    run(Q.get('cold') === '1');
+    document.getElementById('replay').onclick = function () { run(false); };
+    document.getElementById('cold').onclick = function () { run(true); };
+  }
+})();
+</script>
+</body>
+</html>
