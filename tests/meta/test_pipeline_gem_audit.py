@@ -955,10 +955,14 @@ def _a_twelve_month_dilution_names_its_source():
     assert g.dilution_source_breaches(averaged, page())["verdict"] == "failed", (
         "a monthly figure changed with the source still blank was called fixed")
 
-    # A page whose line no longer joins kinds after "a month · " -- reworded, or with a fallback
-    # for an empty list -- is a rewrite this cannot read: unread, never ok and never failed.
-    for code in (line.replace("(d.kinds || []).join(' + ')", "(d.kinds.length ? d.kinds.join(' + ') : 'schedule')"),
-                 line.replace("' a month · '", "' this month · '"),
+    # A source drawn in place of the join behind a test of the list is read (deep pass 2026-10-25:
+    # the vendor's fix took that form, and this pin held the reader's old blindness to it): an empty
+    # list prints the other branch, here 'schedule'.
+    in_place = line.replace("(d.kinds || []).join(' + ')", "(d.kinds.length ? d.kinds.join(' + ') : 'schedule')")
+    assert g.dilution_source_breaches(batch, page(in_place))["verdict"] == "ok", in_place
+    # A page whose line no longer joins kinds after "a month" -- reworded -- is a rewrite this
+    # cannot read: unread, never ok and never failed.
+    for code in (line.replace("' a month · '", "' this month · '"),
                  line.replace("(d.kinds || [])", "(d.kinds_12m || [])"),
                  "function saDilLine(){ return ''; }"):
         assert g.dilution_source_breaches(batch, page(code))["verdict"] == "unread", code

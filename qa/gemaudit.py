@@ -773,6 +773,14 @@ DILUTION_LINE = re.compile(
 column's tooltip (saDilLine) and the drawer card's tile. What follows the join is read by
 `_dilution_fallback` (A07, deep pass 2026-10-25: the match stopped at `.join(`, so a fallback drawn
 after it was never seen)."""
+DILUTION_GATED = re.compile(
+    r"month_tokens\)\s*\+\s*' new '.{0,80}?' a month(?:\s*·\s*)?'\s*\+\s*(?=\()", re.S)
+"""The same line with the source drawn in place of the join, behind a test of the list -- the form
+the vendor's fix took (served 2026-10-25): `' a month' + ((d.kinds || []).length ? ' · ' +
+d.kinds.join(' + ') : '')`. Read by `_gated_fallback`; a bracket there that is no ternary over
+`kinds` is not this form."""
+_GATED_SOURCE = re.compile(r"\s*(?:(['\"])[^'\"]*\1\s*\+\s*)?\(?\s*[\w$]+\.kinds(?:\s*\|\|\s*\[\]\s*\))?"
+                           r"\s*\.join\(\s*(['\"])[^'\"]*\2\s*\)\s*", re.S)
 MIN_DILUTION_ROWS = 5
 
 
@@ -848,6 +856,11 @@ def _dilution_fallback(page: str, found: re.Match) -> tuple[str | None, str | No
         shut = re.match(r"\s*\)", tail)
         tail = tail[shut.end():] if shut else tail
     # Unparenthesised, `join(...) || 'x'` binds to the whole non-empty line and never shows.
+    return _kinds_after(tail)
+
+
+def _kinds_after(tail: str) -> tuple[str | None, str | None]:
+    """A fallback for an empty `kinds` among the `+` terms of `tail` (see `_dilution_fallback`)."""
     for term in _js_terms(tail)[1:]:
         if not re.search(r"\bkinds\b", term):
             continue
@@ -859,6 +872,61 @@ def _dilution_fallback(page: str, found: re.Match) -> tuple[str | None, str | No
         shown = yes if negated else no
         return ("length", shown) if shown.strip() else (None, None)
     return None, None
+
+
+def _split_ternary(expr: str) -> tuple[str, str, str] | None:
+    """COND, THEN, ELSE of `COND ? THEN : ELSE` at the expression's own level, or None."""
+    depth, i, ask, nested = 0, 0, None, 0
+    while i < len(expr):
+        ch = expr[i]
+        if ch in "'\"`":
+            j = i + 1
+            while j < len(expr) and expr[j] != ch:
+                j += 2 if expr[j] == "\\" else 1
+            i = j + 1
+            continue
+        if ch in "([{":
+            depth += 1
+        elif ch in ")]}":
+            depth -= 1
+        elif depth == 0 and ch == "?" and expr[i + 1:i + 2] not in (".", "?"):
+            if ask is None:
+                ask = i
+            else:
+                nested += 1
+        elif depth == 0 and ch == ":" and ask is not None:
+            if not nested:
+                return expr[:ask], expr[ask + 1:i], expr[i + 1:]
+            nested -= 1
+        i += 1
+    return None
+
+
+def _gated_fallback(page: str, found: re.Match) -> tuple[tuple[str | None, str | None], int] | None:
+    """For DILUTION_GATED's bracket, (fallback, where the bracket closes): the branch shown for a
+    list that is not empty must be the join (with its dot), and the other branch a string -- what an
+    empty list prints, ("length", text), or (None, None) when it is blank. ("unread", None) when the
+    ternary reads `kinds` in a way not read. None when the bracket is no ternary over `kinds`: not
+    this form (the join form's own `(d.kinds || [])` lands here too)."""
+    close = _js_close(page, found.end())
+    if close < 0:
+        return None
+    split = _split_ternary(page[found.end() + 1:close])
+    if split is None or not re.search(r"\bkinds\b", "".join(split)):
+        return None
+    cond, yes, no = split
+    if not (re.search(r"\bkinds\b", cond) and re.search(r"\.length\b", cond)):
+        return ("unread", None), close
+    negated = re.match(r"\s*\(*\s*!", cond) or re.search(r"\.length\s*(?:===?\s*0|<\s*1|<=\s*0)", cond)
+    full, empty = (no, yes) if negated else (yes, no)
+    said = re.fullmatch(r"\s*(['\"])(.*?)\1\s*", empty, re.S)
+    if not _GATED_SOURCE.fullmatch(full) or not said:
+        return ("unread", None), close
+    after = _kinds_after(page[close + 1:close + 600])
+    if after != (None, None):
+        return ("unread", None), close
+    text = said.group(2).strip(" ·")
+    return (("length", text) if text.strip() else (None, None)), close
 
 
 def _prints_nothing(kinds: list, fallback: tuple[str | None, str | None]) -> bool:
@@ -904,13 +972,19 @@ def dilution_source_breaches(batch: dict | None, page_html: str | None) -> dict:
     out = {"verdict": "unread", "why": "", "judged": 0, "breaches": [], "unread": [],
            "as_of": (batch or {}).get("as_of") if isinstance(batch, dict) else None, "line": None,
            "fallback": None, "by_fallback": []}
-    places = list(DILUTION_LINE.finditer(page_html or ""))
+    page_html = page_html or ""
+    places = [(m.start(), m.end(), _dilution_fallback(page_html, m)) for m in DILUTION_LINE.finditer(page_html)]
+    for m in DILUTION_GATED.finditer(page_html):
+        gated = _gated_fallback(page_html, m)
+        if gated is not None:
+            places.append((m.start(), gated[1] + 1, gated[0]))
     if not places:
-        out["why"] = ("the page no longer joins the 12-month tile's kinds after 'a month · ' "
+        out["why"] = ("the page no longer joins the 12-month tile's kinds after 'a month' "
                       "in a form this reads; what the line says is a question for a browser")
         return out
-    out["line"] = places[0].group(0)
-    fallbacks = [_dilution_fallback(page_html, place) for place in places]
+    places.sort()
+    out["line"] = page_html[places[0][0]:places[0][1]]
+    fallbacks = [fallback for _, _, fallback in places]
     if any(kind == "unread" for kind, _ in fallbacks):
         out["why"] = ("after joining the 12-month tile's kinds the page reads them again in a way this "
                       "does not read; what the line says is a question for a browser")
