@@ -325,11 +325,14 @@ def _apply_run(row: dict, run: dict, level: str) -> None:
     # nothing about behaviour. So its "pass" is not evidence of anything and
     # must not establish PASSING: that is a check which passes because of how
     # it asks, which is the whole class this plan exists to stop. It measures
-    # and adjudicates nothing.
+    # and adjudicates nothing -- so its reading does not become the row's
+    # either (X01, deep pass of 2026-10-25): `_measured_here()` here replaced
+    # the row's detail and provenance at any level, and an a2a row read "not
+    # asked ... QA_ALLOW_A2A_SEND" as what a level-R run had measured. The
+    # reading rides beside, in the record `evidence_only` names.
     roles = {(r.get("role") or (r.get("measurement") or {}).get("role") or "verdict")
              for r in mine}
     if roles == {"evidence"}:
-        _measured_here()
         check["evidence_only"] = run_id
         return
     check.pop("evidence_only", None)
