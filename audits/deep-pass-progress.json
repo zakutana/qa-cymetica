@@ -765,7 +765,21 @@
     "last": "2026-10-18",
     "done": false
   },
-  "rule_changes": [],
+  "rule_changes": [
+    {
+      "id": "RC1",
+      "what": "CLAUDE.md's axis table: CHECK moves to UNVERIFIABLE also by 'the split that made it' (beside an operator's retire/rebind event); qa/fold.py runs the structural pass over rows a split created in the same fold, citing the split's event id; the journal and withdraw.py refuse a split whose nodeid lacks '::'",
+      "why": "X03, confirmed by three triage readers: a row a split_report made with a non-nodeid check went UNVERIFIED on one no-run fold and UNVERIFIABLE on the next with no transition and no cause -- a CHECK move with neither a run id nor an event id, and two folds of the same inputs disagreed. The new move cites the split's event id, reaches only rows the split made in that fold, and the journal now refuses such splits.",
+      "votes": {
+        "t1": "no",
+        "t2": "no",
+        "t3": "no"
+      },
+      "test": "tests/repo/test_fold_split_row_structural.py",
+      "commit": "4e1b6f24",
+      "handover": true
+    }
+  ],
   "meta_tests": {
     "start": 840,
     "end": null,
