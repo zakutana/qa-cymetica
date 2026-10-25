@@ -1454,14 +1454,14 @@ function adPromo(body, b) {
 // mock.html, #logo, viewBox 64: a dark head of radius 17 stroked with a gradient, a dotted ring of 12 inside it, two
 // pill eyes glowing, a hat whose brim is 59 wide and whose crown is 13.5 high and dented on top, a dark band round the
 // crown, a sprout of two leaves) in yellow, brown and green. A robot's helmet, not a face: the farmer is an agent, and
-// a round brown head with eyes read as a person's dark skin (the operator, 2026-10-23: "vypada jak cernoch coz je
-// blbe"); a second try, a yellow face with a grin and a stalk of grass, was thrown out ("nahovno"). So the shell is green
+// a round brown head with eyes read as a caricature of a human face (the operator, 2026-10-23); a second try, a
+// yellow face with a grin and a stalk of grass, was thrown out ("nahovno"). So the shell is green
 // metal, the logo's dotted ring is the edge of a dark glass visor, the eyes are yellow LEDs behind it, the rim is gold
 // into lime (the logo's gradient stroke), the hat is straw with a brown band, and the sprout is green. Its face turns to
 // the first look's camera, swaying a little, and blinks. The green shell was thrown out too ("nahovno ta zelena ...
 // udelej ty barvy podle sebe"), so the colours are ours: a head of polished gold (harvest, and a metal: a robot's, not
 // skin), a seam of dark bronze round it, the straw hat with a dark-brown band, the sprout lime and gold. And the visor
-// went: dark glass over the face read as a balaclava ("proc ma takovou debilni kuklu"). So the robot is told by its
+// went: dark glass over the face read as a balaclava. So the robot is told by its
 // parts instead: eyes of warm white light set in dark bronze bezels, the logo's dotted ring as amber lights in the
 // gold, and a bolt of bronze on either side where ears would be.
 const FARM = { shell: 0xe0a92e, bezel: 0x2a1a08, bolt: 0x7a4a14, band: 0x4a2c12, rim: ['#8a5a1c', '#4a2c12'], dots: '#ffb347', eye: '#fff1b0', leaf: ['#c8d64a', '#f0c43c'] };
@@ -1476,8 +1476,8 @@ function strawTex() {
 }
 // The farmer's head is woven willow, a harvest basket (the operator, 2026-10-24: no metal of any kind, "zvol lepsi vice
 // farmarsky material, treba slameny klobouk je top"), of fresh green willow under a darker straw hat (golden willow
-// under golden straw was "moc zlute je cele"; never brown, which a round head with eyes is read as skin in, as on
-// 2026-10-23: "vypada jak cernoch"). A basket weave: pairs of round willow strands laid across, then
+// under golden straw was "moc zlute je cele"; never brown, in which a round head with eyes reads as a human face, as
+// on 2026-10-23). A basket weave: pairs of round willow strands laid across, then
 // pairs laid down, in turn, over the dark gaps; each strand shaded across its width so it reads round. bump: the same
 // strands as height, light in the middle, dark in the gaps.
 function weave(g, W, H, bump) {
