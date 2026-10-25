@@ -10,6 +10,11 @@ network replaced by stubs.
 Not in test_pipeline_check_quality.py: that file judges each reconciliation
 claim against a captured source, one parametrised rule at a time; these are
 decisions made in Python inside a single check, with no capture to read.
+
+Every expected FAIL and every expected pass sits inside `verdict_due()` (deep pass 2026-10-25,
+C01): an Inconclusive there slips past `pytest.raises(AssertionError)` and is recorded as a SKIP,
+and in the test that hosts the `_the_*_readings()` helpers it skipped every reading after it.
+tests/repo/test_meta_verdicts_fail_on_inconclusive.py replays each site with one injected.
 """
 
 from __future__ import annotations
@@ -19,7 +24,7 @@ from pathlib import Path
 
 import pytest
 
-from qa.marks import Inconclusive, SafetyTier, qa
+from qa.marks import Inconclusive, SafetyTier, qa, verdict_due
 
 REPO = Path(__file__).resolve().parent.parent.parent
 
@@ -90,12 +95,13 @@ def test_a_card_that_failed_and_was_never_tried_again_still_fails_117(monkeypatc
     rows = (_buy("TRD-1", A, "17:01:28", 500, "unknown")
             + _buy("TRD-2", B, "17:05:00", 500, "unknown")
             + _buy("TRD-3", B, "17:09:00", 200, "accepted"))
-    with pytest.raises(AssertionError, match=A):
+    with verdict_due(), pytest.raises(AssertionError, match=A):
         _run_buy_check(monkeypatch, rows, {A: _card(True), B: _card(True)})
 
     # A buy of A itself that lands is the fix.
     fixed = rows + _buy("TRD-4", A, "17:20:00", 200, "accepted")
-    _run_buy_check(monkeypatch, fixed, {A: _card(True), B: _card(True)})
+    with verdict_due():
+        _run_buy_check(monkeypatch, fixed, {A: _card(True), B: _card(True)})
 
     # A card that no longer reads tradeable cannot show the defect or its fix.
     with pytest.raises(Inconclusive):
@@ -128,7 +134,7 @@ def test_the_buy_is_judged_by_what_the_card_said_when_it_was_placed_117(
     open_then = _buy("TRD-1", A, "17:01:28", 500, "unknown")
     open_then[0]["card_before"] = {"tradeable_now": True,
                                    "trading_blocked_reason": None}
-    with pytest.raises(AssertionError, match=A):
+    with verdict_due(), pytest.raises(AssertionError, match=A):
         _run_buy_check(monkeypatch, open_then, {A: _card(False)})
 
     # C09, deep pass of 2026-09-22 evening (3/3): paper.py records a card it
@@ -174,18 +180,18 @@ def test_a_denial_of_a_pro_forma_stretch_is_not_a_disclosure_of_one_116():
     a regex looked for "pro forma" anywhere: "nothing backfilled, no
     pro-forma, no backtest" denies the stretch and was read as disclosing it,
     so the rewording passed with the return still starting 14 days early."""
-    with pytest.raises(AssertionError, match="discloses no pro-forma"):
+    with verdict_due(), pytest.raises(AssertionError, match="discloses no pro-forma"):
         _run_fta_check("Return is measured since the fund's own inception from "
                        "real market prices -- nothing backfilled, no pro-forma, "
                        "no backtest.")
-    with pytest.raises(AssertionError, match="discloses no pro-forma"):
+    with verdict_due(), pytest.raises(AssertionError, match="discloses no pro-forma"):
         _run_fta_check("Returns are never pro forma: nothing backfilled.")
     # A02, deep pass of 2026-09-22: "nothing" was not a negation, so the
     # denial their page could write next passed as a disclosure.
-    with pytest.raises(AssertionError, match="discloses no pro-forma"):
+    with verdict_due(), pytest.raises(AssertionError, match="discloses no pro-forma"):
         _run_fta_check("Measured since inception: nothing backfilled or "
                        "pro-forma.")
-    with pytest.raises(AssertionError, match="discloses no pro-forma"):
+    with verdict_due(), pytest.raises(AssertionError, match="discloses no pro-forma"):
         _run_fta_check("Neither backfilled nor pro-forma.")
     # C07, deep pass of 2026-09-22 evening (3/3): a negation AFTER the word
     # denies it just as well, and read as a disclosure.
@@ -193,7 +199,7 @@ def test_a_denial_of_a_pro_forma_stretch_is_not_a_disclosure_of_one_116():
                    "periods are excluded.",
                    "Pro-forma figures are never used; nothing backfilled.",
                    "Returns exclude any pro-forma stretch."):
-        with pytest.raises(AssertionError, match="discloses no pro-forma"):
+        with verdict_due(), pytest.raises(AssertionError, match="discloses no pro-forma"):
             _run_fta_check(denial)
 
     # B01 (deep pass of 2026-09-24, 3/3): the negation window counted words,
@@ -204,16 +210,19 @@ def test_a_denial_of_a_pro_forma_stretch_is_not_a_disclosure_of_one_116():
                    "Returns exclude backfilled, backtested and pro-forma figures.",
                    "The return doesn't include any pro-forma stretch.",
                    "Pro-forma months aren't used."):
-        with pytest.raises(AssertionError, match="discloses no pro-forma"):
+        with verdict_due(), pytest.raises(AssertionError, match="discloses no pro-forma"):
             _run_fta_check(denial)
 
-    _run_fta_check("Return since inception includes a pro-forma period before "
-                   "the first held position: today's composition applied to "
-                   "past closes.")
-    _run_fta_check("The return includes a pro-forma stretch, not a backtest.")
+    with verdict_due():
+        _run_fta_check("Return since inception includes a pro-forma period before "
+                       "the first held position: today's composition applied to "
+                       "past closes.")
+    with verdict_due():
+        _run_fta_check("The return includes a pro-forma stretch, not a backtest.")
     # A negation in the sentence before is not a denial of this one.
-    _run_fta_check("No backfill. Pro-forma: the stretch before the first "
-                   "position applies today's composition to past closes.")
+    with verdict_due():
+        _run_fta_check("No backfill. Pro-forma: the stretch before the first "
+                       "position applies today's composition to past closes.")
 
     with pytest.raises(Inconclusive):
         _run_fta_check("")
@@ -258,11 +267,11 @@ def test_a_clone_refusal_that_asks_for_the_retry_it_refuses_fails(monkeypatch):
             + _cloned("CLN-0014", RSI, "13:39:30", 200, "accepted")
             + _cloned("CLN-0020", PCPN, "17:47:14", 400, "rejected"))
     twice = {"CLN-0017": AGAIN, "CLN-0020": AGAIN}
-    with pytest.raises(AssertionError, match="Please try again"):
+    with verdict_due(), pytest.raises(AssertionError, match="Please try again"):
         _run_clone_check(monkeypatch, rows, twice)
     # Another species cloned AFTER it is not the fix.
     later = rows + _cloned("CLN-0021", RSI, "18:00:00", 200, "accepted")
-    with pytest.raises(AssertionError, match=PCPN):
+    with verdict_due(), pytest.raises(AssertionError, match=PCPN):
         _run_clone_check(monkeypatch, later, twice)
 
     # Refused once, never retried: the advice has not been tested.
@@ -274,15 +283,17 @@ def test_a_clone_refusal_that_asks_for_the_retry_it_refuses_fails(monkeypatch):
         _run_clone_check(monkeypatch, rows, {"CLN-0017": AGAIN})
 
     # A refusal with nothing in it fails on its own.
-    with pytest.raises(AssertionError, match="no detail"):
+    with verdict_due(), pytest.raises(AssertionError, match="no detail"):
         _run_clone_check(monkeypatch, rows, {"CLN-0017": AGAIN, "CLN-0020": {}})
 
     # The fixes: the clone is made, or the refusal names its reason.
     made = rows + _cloned("CLN-0030", PCPN, "18:30:00", 200, "accepted")
-    _run_clone_check(monkeypatch, made, twice)
+    with verdict_due():
+        _run_clone_check(monkeypatch, made, twice)
     named = rows + _cloned("CLN-0031", PCPN, "18:40:00", 409, "rejected")
-    _run_clone_check(monkeypatch, named, {**twice, "CLN-0031": {
-        "detail": "You already hold a paper clone of this species."}})
+    with verdict_due():
+        _run_clone_check(monkeypatch, named, {**twice, "CLN-0031": {
+            "detail": "You already hold a paper clone of this species."}})
 
 
 def _run_clone_check_on_captures(monkeypatch, rows, captured):
@@ -318,13 +329,11 @@ def test_a_clone_refusal_is_read_the_way_it_was_captured(monkeypatch):
     one = _cloned("CLN-0017", PCPN, "13:39:02", 400, "rejected")
 
     # Inconclusive is a skip, so an unmeasured result would read as a skipped
-    # guard, not a red one: caught and failed here.
-    try:
-        with pytest.raises(AssertionError, match="no detail") as silent:
-            _run_clone_check_on_captures(monkeypatch, one, {
-                "ev-CLN-0017": {"encoding": "empty", "value": None}})
-    except Inconclusive as exc:
-        pytest.fail(f"an empty refusal read as an unreadable capture: {exc}")
+    # guard, not a red one: verdict_due fails it here (an empty refusal read
+    # as an unreadable capture).
+    with verdict_due(), pytest.raises(AssertionError, match="no detail") as silent:
+        _run_clone_check_on_captures(monkeypatch, one, {
+            "ev-CLN-0017": {"encoding": "empty", "value": None}})
     assert "asks for a retry" not in str(silent.value), str(silent.value)
 
     # A capture that is not there is still unmeasured, not an empty body.
@@ -332,21 +341,23 @@ def test_a_clone_refusal_is_read_the_way_it_was_captured(monkeypatch):
         _run_clone_check_on_captures(monkeypatch, one, {})
 
     # A reason under their own error envelope is a reason.
-    _run_clone_check_on_captures(monkeypatch, one, {
-        "ev-CLN-0017": {"encoding": "json", "value": {"error": {
-            "code": "CLONE_LIMIT", "message": "one paper clone per species"}}}})
+    with verdict_due():
+        _run_clone_check_on_captures(monkeypatch, one, {
+            "ev-CLN-0017": {"encoding": "json", "value": {"error": {
+                "code": "CLONE_LIMIT", "message": "one paper clone per species"}}}})
 
     # A refusal that tells the caller NOT to try again does not ask for one,
     # retried or not.
     again = one + _cloned("CLN-0020", PCPN, "17:47:14", 400, "rejected")
     told = {"encoding": "json", "value": {
         "detail": "You already hold a paper clone of this species; do not try again."}}
-    _run_clone_check_on_captures(monkeypatch, again, {
-        "ev-CLN-0017": told, "ev-CLN-0020": told})
+    with verdict_due():
+        _run_clone_check_on_captures(monkeypatch, again, {
+            "ev-CLN-0017": told, "ev-CLN-0020": told})
 
     # And the defect as captured still fails, retry sentence and all.
     asked = {"encoding": "json", "value": AGAIN}
-    with pytest.raises(AssertionError, match="asks for a retry"):
+    with verdict_due(), pytest.raises(AssertionError, match="asks for a retry"):
         _run_clone_check_on_captures(monkeypatch, again, {
             "ev-CLN-0017": asked, "ev-CLN-0020": asked})
 
@@ -356,7 +367,7 @@ def test_a_clone_refusal_is_read_the_way_it_was_captured(monkeypatch):
     for reworded in ("Invalid clone request. Please retry.",
                      "Invalid clone request. Please don't hesitate to try again."):
         body = {"encoding": "json", "value": {"detail": reworded}}
-        with pytest.raises(AssertionError, match="asks for a retry"):
+        with verdict_due(), pytest.raises(AssertionError, match="asks for a retry"):
             _run_clone_check_on_captures(monkeypatch, again, {
                 "ev-CLN-0017": body, "ev-CLN-0020": body})
     # A05: a refusal that names its reason and sends the caller ELSEWHERE is
@@ -364,8 +375,9 @@ def test_a_clone_refusal_is_read_the_way_it_was_captured(monkeypatch):
     elsewhere = {"encoding": "json", "value": {"detail": (
         "You already hold a paper clone of this bot. Try again with a "
         "different bot.")}}
-    _run_clone_check_on_captures(monkeypatch, again, {
-        "ev-CLN-0017": elsewhere, "ev-CLN-0020": elsewhere})
+    with verdict_due():
+        _run_clone_check_on_captures(monkeypatch, again, {
+            "ev-CLN-0017": elsewhere, "ev-CLN-0020": elsewhere})
 
 
 # ------------------------------------ /api-docs examples carry what they need -
@@ -427,17 +439,18 @@ def test_an_api_docs_example_missing_a_required_field_fails():
     bad = _page(_curl("/api/v1/cloned-bots/clone",
                       '{"bot_id": "bot_abc123", "is_paper": true}'),
                 _curl("/api/v1/cloned-bots/abc/fund", '{"amount": 1}'))
-    with pytest.raises(AssertionError, match="source_type"):
+    with verdict_due(), pytest.raises(AssertionError, match="source_type"):
         _run_docs_check(bad)
 
     good = _page(_curl("/api/v1/cloned-bots/clone",
                        '{"source_type": "wta_species", "source_id": "s1", '
                        '"paper": true}'),
                  _curl("/api/v1/cloned-bots/abc/fund", '{"amount": 1}'))
-    _run_docs_check(good)
+    with verdict_due():
+        _run_docs_check(good)
 
     # A missing field on the templated route is found as well.
-    with pytest.raises(AssertionError, match="amount"):
+    with verdict_due(), pytest.raises(AssertionError, match="amount"):
         _run_docs_check(_page(_curl("/api/v1/cloned-bots/abc/fund", '{"x": 1}')))
 
     # A route the schema does not publish is not judged; alone, nothing is.
@@ -532,7 +545,7 @@ def test_a_card_that_is_closed_on_rest_and_open_on_mcp_fails():
     open on both, the case this is about was not exercised."""
     a, b, c = (f"{n:08x}-0000-4000-8000-000000000000" for n in (1, 2, 3))
 
-    with pytest.raises(AssertionError, match=a[:8]) as said:
+    with verdict_due(), pytest.raises(AssertionError, match=a[:8]) as said:
         _run_tradeability_check({a: False, b: False}, {a: True, b: False})
     # A06 (deep pass of 2026-09-24, 3/3): the docstring says the reason names
     # BOTH read times, because the pair can straddle a market open or close;
@@ -542,13 +555,14 @@ def test_a_card_that_is_closed_on_rest_and_open_on_mcp_fails():
     assert "can be traded that the trade gate refuses" in str(said.value)
     # The other direction is the same disagreement -- and its reason says
     # THAT direction, not the first one (deep pass 2026-09-24, A06 again).
-    with pytest.raises(AssertionError, match=b[:8]) as other:
+    with verdict_due(), pytest.raises(AssertionError, match=b[:8]) as other:
         _run_tradeability_check({a: False, b: True}, {a: False, b: False})
     assert "cannot be traded that the trade gate accepts" in str(other.value), (
         str(other.value))
 
     # Agreement with a card closed on both is the gate working.
-    _run_tradeability_check({a: False, b: False}, {a: False, b: False})
+    with verdict_due():
+        _run_tradeability_check({a: False, b: False}, {a: False, b: False})
 
     # Every card open on both: the closed case was not exercised.
     with pytest.raises(Inconclusive):
@@ -878,10 +892,11 @@ def test_a_report_created_behind_a_500_fails_and_a_clean_run_of_twelve_passes(
     clean = [row for n in range(12) for row in _filed(f"k{n}", n, 200)]
     masked = _filed("k-late", 30, 500, then_created=122)
 
-    with pytest.raises(AssertionError, match="122"):
+    with verdict_due(), pytest.raises(AssertionError, match="122"):
         _run_filing_check(monkeypatch, clean + masked)
-    _run_filing_check(monkeypatch, masked + [
-        row for n in range(12) for row in _filed(f"k{n}", 40 + n, 200)])
+    with verdict_due():
+        _run_filing_check(monkeypatch, masked + [
+            row for n in range(12) for row in _filed(f"k{n}", 40 + n, 200)])
     with pytest.raises(Inconclusive):
         _run_filing_check(monkeypatch, clean[:10])
     # A 500 whose report does NOT exist is an honest failure, not this defect.
@@ -907,11 +922,12 @@ def test_a_report_created_behind_a_500_fails_and_a_clean_run_of_twelve_passes(
     # night before, so the row read "still fails" on evidence older than the
     # fix. What came before the fix is history, named and never judged.
     before = _filed("k-old", 55, 500, then_created=122, day="2026-09-22")
-    _run_filing_check(monkeypatch, before + clean)
+    with verdict_due():
+        _run_filing_check(monkeypatch, before + clean)
     with pytest.raises(Inconclusive, match="122"):
         _run_filing_check(monkeypatch, before + clean[:10])
     # ...while one after it still fails, however many clean ones surround it.
-    with pytest.raises(AssertionError, match="123"):
+    with verdict_due(), pytest.raises(AssertionError, match="123"):
         _run_filing_check(monkeypatch, before + clean + _filed(
             "k-new", 50, 500, then_created=123))
 
@@ -958,14 +974,15 @@ def test_a_paper_buy_refused_for_a_balance_it_is_not_spending_fails(monkeypatch)
     rows = (_paper_buy("TRD-0039", PRIV, "05:59:13", 409, SHORT)
             + _paper_buy("TRD-0040", PRIV, "06:00:24", 409, SHORT)
             + _paper_buy("TRD-0041", OTHER, "06:01:16", 200, usdc=5.0))
-    with pytest.raises(AssertionError, match=PRIV) as failed:
+    with verdict_due(), pytest.raises(AssertionError, match=PRIV) as failed:
         _run_paper_book_check(monkeypatch, rows)
     assert "7.650006" in str(failed.value) and "88598.91" in str(failed.value), (
         str(failed.value))
 
     # A buy of the refused card that lands is the fix.
-    _run_paper_book_check(monkeypatch, rows + _paper_buy(
-        "TRD-0050", PRIV, "09:00:00", 200))
+    with verdict_due():
+        _run_paper_book_check(monkeypatch, rows + _paper_buy(
+            "TRD-0050", PRIV, "09:00:00", 200))
     # A04 (deep pass of 2026-09-24, 3/3): ...when it is bigger than the
     # balance the refusal quoted. A 5 USDC buy the wrong 7.65 also covers
     # lands whether or not they fixed anything, and passed as the fix.
@@ -1162,23 +1179,18 @@ def _the_movers_page_readings():
     def movers(gainers, losers):
         return {"total": 25, "ranked": 25, "gainers": gainers, "losers": losers, "most_active": []}
 
-    def passes(site):
-        # An Inconclusive here would SKIP the whole host test and every reading after it.
-        try:
-            check.test_the_movers_boards_rank_every_card_of_the_listing(site)
-        except Inconclusive as exc:
-            raise AssertionError(f"inconclusive where a verdict was due: {exc}") from exc
-
     whole = movers(ranked[::-1][:10], ranked[:10])
-    passes(_Site(whole))  # the true top tens: passes
+    with verdict_due():  # the true top tens: passes
+        check.test_the_movers_boards_rank_every_card_of_the_listing(_Site(whole))
     short = movers(ranked[::-1][1:11], ranked[:10])  # the biggest gainer left off the board
-    with pytest.raises(AssertionError, match="gainers"):
+    with verdict_due(), pytest.raises(AssertionError, match="gainers"):
         check.test_the_movers_boards_rank_every_card_of_the_listing(_Site(short, short))
     # A card at the edge of a board that rotated between the two reads of /movers is not a miss.
     edge = movers(ranked[::-1][:9] + [ranked[::-1][10]], ranked[:10])  # the 11th where the 10th is
-    with pytest.raises(AssertionError, match="gainers"):
+    with verdict_due(), pytest.raises(AssertionError, match="gainers"):
         check.test_the_movers_boards_rank_every_card_of_the_listing(_Site(edge, edge))
-    passes(_Site(edge, whole))
+    with verdict_due():
+        check.test_the_movers_boards_rank_every_card_of_the_listing(_Site(edge, whole))
 
 
 def _the_clone_summary_readings():
@@ -1455,17 +1467,15 @@ def _the_documented_get_auth_note_readings():
         rest = _Key({"/llms.txt": (200, "\n".join(lines)), "/api/v1/account/me": (200, {}), **answers})
         check.test_every_documented_get_accepts_the_key_its_own_document_issues(rest)
 
-    try:  # an Inconclusive here would SKIP the host test and every reading after it
+    with verdict_due():
         run([quote, me], {"/api/v1/cloned-bots/backtest/quote": jwt})  # documented session JWT: passes
-    except Inconclusive as exc:
-        raise AssertionError(f"inconclusive where a pass was due: {exc}") from exc
-    with pytest.raises(AssertionError) as caught:
+    with verdict_due(), pytest.raises(AssertionError) as caught:
         run([quote, me, summary], {"/api/v1/cloned-bots/backtest/quote": jwt, "/api/v1/rewards/summary": bare})
     assert "/api/v1/rewards/summary" in str(caught.value) and "backtest/quote" not in str(caught.value).split(
         "NOT in the verdict")[0], "the route with no auth note is the defect; the documented one is not"
-    with pytest.raises(AssertionError, match="creator/rewards"):
+    with verdict_due(), pytest.raises(AssertionError, match="creator/rewards"):
         run([me, keyed], {"/api/v1/creator/rewards": bare})  # its note names the key: judged
-    with pytest.raises(AssertionError, match="build-stats"):
+    with verdict_due(), pytest.raises(AssertionError, match="build-stats"):
         run([me, stats], {"/api/v1/build-stats": bare})  # "sessions" in prose is not an auth note
 
 
@@ -1483,12 +1493,10 @@ def _the_open_position_card_readings():
         check.test_every_card_we_hold_a_position_in_still_resolves(rest)
         return rest
 
-    try:  # an Inconclusive here would SKIP the host test and every reading after it
+    with verdict_due():
         asked = run([pos("live", "open"), pos("deleted", "closed")], ["live"])
-    except Inconclusive as exc:
-        raise AssertionError(f"inconclusive where a pass was due: {exc}") from exc
     assert check.CARD.format(card_id="deleted") not in asked.asked, "a closed row's card is not probed"
-    with pytest.raises(AssertionError, match="gone"):
+    with verdict_due(), pytest.raises(AssertionError, match="gone"):
         run([pos("live", "open"), pos("gone", "open")], ["live"])
     with pytest.raises(Inconclusive):
         run([pos("deleted", "closed")], [])

@@ -7,6 +7,8 @@ forget will be the tier.
 
 from __future__ import annotations
 
+from contextlib import contextmanager
+
 import pytest
 
 from qa.safety import SafetyTier
@@ -61,3 +63,20 @@ class Inconclusive(Exception):
 
 def inconclusive(reason: str):
     raise Inconclusive(reason)
+
+
+@contextmanager
+def verdict_due():
+    """Around a meta test's expected verdict on a check driven whole: an Inconclusive is a failure.
+
+    It is neither an AssertionError nor a return, so it slips past `pytest.raises(AssertionError)`,
+    and qa/report_plugin.py records a test that raises one as SKIPPED, exit 0 -- in a test that
+    hosts many readings, every reading after the site never runs (deep pass 2026-10-25, C01/C02).
+    `pytest.fail` and not an AssertionError: a bare `pytest.raises(AssertionError)` around the
+    site would swallow that and pass. Used as `with verdict_due(), pytest.raises(...):` for an
+    expected FAIL and `with verdict_due():` for an expected pass; guarded by
+    tests/repo/test_meta_verdicts_fail_on_inconclusive.py."""
+    try:
+        yield
+    except Inconclusive as exc:
+        pytest.fail(f"inconclusive where a verdict was due: {exc}")
