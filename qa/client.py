@@ -15,6 +15,7 @@ import httpx
 
 from qa import ratelimit
 from qa.config import DEFAULT_TIMEOUT, USER_AGENT, Identity, base_urls
+from qa.marks import Inconclusive
 from qa.safety import EndpointRegistry, SafetyTransport, SafetyViolation
 
 _FACTORY_SENTINEL = object()
@@ -409,6 +410,15 @@ class McpError(RuntimeError):
         self.payload = payload or {}
 
 
+class McpReadFailed(McpError, Inconclusive):
+    """A read whose reply is not the answer it asked for: rule 8, a failed read is not an empty one.
+
+    An McpError, so every caller that already catches one still does; an Inconclusive, so a check
+    that does not catch it is recorded as unmeasured by report_plugin, never as a pass or a fail.
+    Raising it can only move a verdict towards Inconclusive, never mint one.
+    """
+
+
 class McpClient:
     """JSON-RPC 2.0 client for https://cymetica.com/mcp/v1.
 
@@ -450,10 +460,29 @@ class McpClient:
             ) from exc
 
     def tools_list(self) -> list[dict[str, Any]]:
-        payload = self.raw("tools/list")
+        """The served catalogue, or McpReadFailed: never [] for a reply that listed nothing.
+
+        B03, deep pass 2026-10-25 (3 of 3): anything without an `error` key came back as
+        `.get("result", {}).get("tools", [])`, so a 401/429/5xx `{"detail": ...}` (rpc() does not
+        raise for status) was an empty catalogue. tests/mcp/test_trust_ladder.py then passed an
+        anonymous read nobody made, and called every tool lost when the trusted read failed. The
+        shape is the one `refusal_class` there already names: neither `result` nor `error`.
+        """
+        try:
+            payload = self.raw("tools/list")
+        except McpError as exc:  # a body that is not JSON: a 502 page, a cut connection
+            raise McpReadFailed(f"tools/list could not be read: {exc}") from exc
+        if not isinstance(payload, dict):
+            raise McpReadFailed(f"tools/list answered {type(payload).__name__}, not a JSON-RPC reply")
         if "error" in payload:
-            raise McpError(f"tools/list failed: {payload['error']}", payload)
-        return payload.get("result", {}).get("tools", [])
+            raise McpReadFailed(f"tools/list failed: {payload['error']}", payload)
+        result = payload.get("result")
+        tools = result.get("tools") if isinstance(result, dict) else None
+        if not isinstance(tools, list):
+            raise McpReadFailed(
+                "tools/list answered no JSON-RPC result listing tools: "
+                + json.dumps(payload, ensure_ascii=False, default=str)[:300], payload)
+        return tools
 
     def tool_names(self) -> set[str]:
         return {t["name"] for t in self.tools_list() if "name" in t}
