@@ -1433,7 +1433,9 @@ def _the_documented_get_auth_note_readings():
     and a FAIL went out 2026-10-21. llms.txt's own line for that route says "(session JWT)" -- the
     capture of 10-21 says it too -- and its 401 body says "Valid JWT token required". The check's
     claim is a 401 on a route listed WITHOUT an auth note, so a route whose own line documents a
-    session JWT, and names no API key, is named and not judged; one that names the key is."""
+    session JWT, and names no API key, is named and not judged; one that names the key is. And one
+    whose whole family the document promises the key to is judged too (A01, the same day): live
+    line 736 says every cloned-bots route takes it, so the 10-21 FAIL on the quote route stands."""
     import json as _json
 
     class _Doc:
@@ -1477,6 +1479,30 @@ def _the_documented_get_auth_note_readings():
         run([me, keyed], {"/api/v1/creator/rewards": bare})  # its note names the key: judged
     with verdict_due(), pytest.raises(AssertionError, match="build-stats"):
         run([me, stats], {"/api/v1/build-stats": bare})  # "sessions" in prose is not an auth note
+
+    # Deep pass 2026-10-25, A01 (3/3): the same document also says, in its Clone Bots section (live
+    # line 736), that EVERY cloned-bots route takes the key -- and the quote route is a cloned-bots
+    # route, listed under Backtest. Read only per `[GET` line, that sentence was never seen and the 401
+    # passed. A promise of the key to the route's whole family wins over its own "(session JWT)".
+    family = ("- All cloned-bots routes accept the same credential: a session JWT or your X-API-Key "
+              "(the key from /mcp/v1/register or an account API key)")
+    on_jwt = {"/api/v1/cloned-bots/backtest/quote": jwt}
+    with verdict_due(), pytest.raises(AssertionError, match="backtest/quote") as promised:
+        run(["## REST API — Clone Bots", "", family, "", "## REST API — Backtest", "", quote, me], on_jwt)
+    assert "All cloned-bots routes accept the same credential" in str(promised.value), (
+        "the promise the route breaks is quoted beside it: the document contradicts itself")
+    for unpromised in ("- All creator routes accept the same credential: a session JWT or your X-API-Key",
+                       "- All cloned-bots routes need a session JWT",
+                       "- All cloned-bots-v2 routes accept your X-API-Key"):
+        with verdict_due():  # another family; a family promised no key; a family whose name only begins the same
+            run([unpromised, quote, me], on_jwt)
+    # And a route's own note that names the key in other words is judged: "agent key", "Bearer" (the
+    # MCP door takes the key as `Authorization: Bearer <key>`) -- but not a "Bearer JWT", the session.
+    for own in ("(session JWT or agent key)", "(session JWT or Bearer)"):
+        with verdict_due(), pytest.raises(AssertionError, match="backtest/quote"):
+            run([quote.replace("(session JWT)", own), me], on_jwt)
+    with verdict_due():
+        run([quote.replace("(session JWT)", "(session JWT, Bearer JWT)"), me], on_jwt)
 
 
 def _the_open_position_card_readings():
