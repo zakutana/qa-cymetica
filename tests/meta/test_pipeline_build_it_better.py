@@ -10,6 +10,12 @@ broken again.
 Verbatim from their own log, not paraphrased: a fixture that says roughly what
 happened would agree with whatever the code does, which is the thing a test
 written afterwards is for.
+
+Every expected FAIL and every expected pass of a check driven whole sits inside
+`verdict_due()` (deep pass 2026-10-25, C02): an Inconclusive there slips past
+`pytest.raises(AssertionError)` and is recorded as a SKIP of the test, and every
+case after it never runs. tests/repo/test_meta_verdicts_fail_on_inconclusive.py
+replays each site with one injected.
 """
 
 from __future__ import annotations
@@ -18,7 +24,7 @@ import json
 
 import pytest
 
-from qa.marks import SafetyTier, qa
+from qa.marks import SafetyTier, qa, verdict_due
 
 # The seven lines as filed, from the BB-REQUEST message of 18:29:58 UTC.
 IMPROVEMENTS = "\n".join([
@@ -289,7 +295,7 @@ def test_a_request_whose_gate_was_never_read_is_not_evidence_either_way():
     record = {**base, "funding": early}
     board = _Board({bb.BOARD: _Answer(200, {"items": [{"ticket": "ET-1"}]}),
                     f"{bb.BOARD}/ET-1": _Answer(200, record)})
-    with pytest.raises(AssertionError) as said:
+    with verdict_due(), pytest.raises(AssertionError) as said:
         bb.test_the_spec_s_funding_gate_is_the_one_the_build_actually_waits_on(
             board)
     for read in ("clock_ran_early", "2026-09-19T20:25:59", "waived True",
@@ -481,7 +487,8 @@ def test_a_build_that_shipped_late_once_does_not_hold_the_verdict_red_for_good()
                 "on_time": False}
     on_time = {"ticket": "ET-2", "deadline_at": at(10), "stage": "shipped",
                "our_url": "/x", "resolved_at": at(-2), "on_time": True}
-    said = run(old_late, on_time)
+    with verdict_due():  # C02, deep pass 2026-10-25: an Inconclusive here skipped every case below
+        said = run(old_late, on_time)
     assert said.verdict == "passed", said.reason
     assert "ET-26036" in said.reason, (
         "the late build left the verdict without being named as history: "
@@ -499,13 +506,13 @@ def test_a_build_that_shipped_late_once_does_not_hold_the_verdict_red_for_good()
         run({"ticket": "ET-6", "deadline_at": "not a date", "stage": "funded"})
 
     # A build that shipped late inside the window still fails ...
-    with pytest.raises(AssertionError, match="ET-4"):
+    with verdict_due(), pytest.raises(AssertionError, match="ET-4"):
         run({"ticket": "ET-4", "deadline_at": at(-6), "stage": "shipped",
              "our_url": "/y", "resolved_at": at(-2), "on_time": False},
             on_time)
     # ... and one past its deadline with nothing shipped fails however old
     # it is: that breach is still happening, it is not history.
-    with pytest.raises(AssertionError, match="ET-5"):
+    with verdict_due(), pytest.raises(AssertionError, match="ET-5"):
         run({"ticket": "ET-5", "deadline_at": at(-72), "stage": "funded"},
             old_late, on_time)
 
@@ -520,11 +527,10 @@ def test_a_build_that_shipped_late_once_does_not_hold_the_verdict_red_for_good()
     def run_with(records, *items):
         answers = {bb.BOARD: _Answer(200, {"items": list(items)})}
         answers.update({f"{bb.BOARD}/{t}": _Answer(200, r) for t, r in records.items()})
-        try:
+        # Every case below expects a verdict. Raised out of here an Inconclusive would SKIP this
+        # test and every case after it; as an AssertionError, the pytest.raises below would take it.
+        with verdict_due():
             bb.test_a_build_ships_inside_the_24_hours_it_publishes(_Board(answers))
-        except Inconclusive as exc:
-            # Raised out of here it would SKIP this test, and every case after it.
-            raise AssertionError(f"inconclusive where a verdict was due: {exc}") from exc
         return CURRENT_MEASUREMENT.get()
 
     def log(*kinds_at):
@@ -551,7 +557,7 @@ def test_a_build_that_shipped_late_once_does_not_hold_the_verdict_red_for_good()
     said = run_with({"ET-31818": log(("BB-SHIPPED", -11), ("BB-VERDICT", -4))}, reopened)
     assert said.verdict == "passed", said.reason
     # A first ship that was itself late still fails, by the first ship.
-    with pytest.raises(AssertionError, match="ET-7 shipped 4.0h after"):
+    with verdict_due(), pytest.raises(AssertionError, match="ET-7 shipped 4.0h after"):
         run_with({"ET-7": log(("BB-SHIPPED", -6), ("BB-VERDICT", -5))},
                  {"ticket": "ET-7", "deadline_at": at(-10), "stage": "shipped",
                   "our_url": "/z", "resolved_at": at(-1), "on_time": False,
@@ -593,27 +599,30 @@ def test_the_building_tile_is_judged_by_the_arithmetic_behind_its_name():
             tile.API: _Answer(200, {"stats": {"building": 0, "funded": 1}})}))
 
     # The defect as measured, and the fix it asks for.
-    with pytest.raises(AssertionError, match="funded"):
+    with verdict_due(), pytest.raises(AssertionError, match="funded"):
         run("function paint(s){ text($('bs-building'), "
             "(s.funded || 0) + (s.building || 0)); }")
-    run("function paint(s){ text($('bs-building'), s.building || 0); }")
+    with verdict_due():
+        run("function paint(s){ text($('bs-building'), s.building || 0); }")
 
     # The same two, one name removed.
-    with pytest.raises(AssertionError, match="funded"):
+    with verdict_due(), pytest.raises(AssertionError, match="funded"):
         run("function paint(s){ const nb = s.funded + s.building; "
             "text($('bs-building'), nb); }")
-    run("function paint(s){ const nb = (s.building || 0); "
-        "text($('bs-building'), nb); }")
+    with verdict_due():
+        run("function paint(s){ const nb = (s.building || 0); "
+            "text($('bs-building'), nb); }")
 
     # A14, deep pass of 2026-09-22: only five stage names were looked for,
     # so a tile adding a stage nobody listed -- pending, in_progress -- passed
     # as counting nothing but what is building. Any other field is added.
     for other in ("pending", "in_progress"):
-        with pytest.raises(AssertionError, match=other):
+        with verdict_due(), pytest.raises(AssertionError, match=other):
             run(f"function paint(s){{ text($('bs-building'), "
                 f"(s.building || 0) + (s['{other}'] || 0)); }}")
-    run("function paint(s){ text($('bs-building'), "
-        "(s.building || 0).toLocaleString()); }")
+    with verdict_due():
+        run("function paint(s){ text($('bs-building'), "
+            "(s.building || 0).toLocaleString()); }")
 
     # And what cannot be read is not a pass.
     for script in (
@@ -629,7 +638,7 @@ def test_the_building_tile_is_judged_by_the_arithmetic_behind_its_name():
     # beside s.building passed, and so did a call beside it. Every free name
     # in the expression is followed; a call whose body is elsewhere, or a
     # name with no assignment, is not read.
-    with pytest.raises(AssertionError, match="funded"):
+    with verdict_due(), pytest.raises(AssertionError, match="funded"):
         run("function paint(s){ const nf = (s.funded || 0); "
             "text($('bs-building'), (s.building || 0) + nf); }")
     for script in (
@@ -638,20 +647,22 @@ def test_the_building_tile_is_judged_by_the_arithmetic_behind_its_name():
             "function paint(s){ text($('bs-building'), (s.building || 0) + nf); }"):
         with pytest.raises(Inconclusive):
             run(script)
-    run("function paint(s){ text($('bs-building'), Number(s.building || 0)); }")
+    with verdict_due():
+        run("function paint(s){ text($('bs-building'), Number(s.building || 0)); }")
 
     # Deep pass 2026-09-25 (B08, A11): `nb +=` after the assignment was not
     # followed, and only the FIRST write to the tile was judged, so a refresh
     # adding funded later passed. A compound assignment adds to the name; a
     # second write is judged like the first.
-    with pytest.raises(AssertionError, match="funded"):
+    with verdict_due(), pytest.raises(AssertionError, match="funded"):
         run("function paint(s){ let nb = s.building || 0; nb += s.funded || 0; "
             "text($('bs-building'), nb); }")
-    with pytest.raises(AssertionError, match="funded"):
+    with verdict_due(), pytest.raises(AssertionError, match="funded"):
         run("text($('bs-building'), s.building || 0); function refresh(s){ "
             "text($('bs-building'), (s.funded || 0) + (s.building || 0)); }")
-    run("text($('bs-building'), s.building || 0); function refresh(s){ "
-        "text($('bs-building'), s.building || 0); }")
+    with verdict_due():
+        run("text($('bs-building'), s.building || 0); function refresh(s){ "
+            "text($('bs-building'), s.building || 0); }")
 
     # B05 (deep pass of 2026-09-24): the argument was read up to the first
     # `)` followed by `;`, so a correct tile in minified or semicolon-less
@@ -662,15 +673,18 @@ def test_the_building_tile_is_judged_by_the_arithmetic_behind_its_name():
             "text($('bs-shipped'),s.shipped||0);}",
             "function paint(s){ text($('bs-building'), s.building || 0)\n"
             " text($('bs-funded'), s.funded || 0) }"):
-        run(script)
+        with verdict_due():
+            run(script)
 
     # A02 (deep pass of 2026-09-24, 3/3): every dotted segment was a field, so
     # the API's own nesting -- `d.stats.building || 0` -- read as adding
     # `stats`: a false regression on a FIX_CLAIMED row. A segment that only
     # leads TO building is a path, not a stage; a sibling stage still fails.
-    run("function paint(d){ text($('bs-building'), d.stats.building || 0); }")
-    run("function paint(d){ text($('bs-building'), d['stats']['building'] || 0); }")
-    with pytest.raises(AssertionError, match="funded"):
+    with verdict_due():
+        run("function paint(d){ text($('bs-building'), d.stats.building || 0); }")
+    with verdict_due():
+        run("function paint(d){ text($('bs-building'), d['stats']['building'] || 0); }")
+    with verdict_due(), pytest.raises(AssertionError, match="funded"):
         run("function paint(d){ text($('bs-building'), "
             "(d.stats.building || 0) + (d.stats.funded || 0)); }")
 
@@ -703,7 +717,8 @@ def test_a_socket_named_by_its_path_or_with_a_trailing_slash_is_named():
         board.base_url = httpx.URL("https://cymetica.com")
         CURRENT_MEASUREMENT.set(None)
         try:
-            check(board)
+            with verdict_due():  # every caller of run() expects a verdict
+                check(board)
             return "passed"
         except AssertionError:
             return "failed"

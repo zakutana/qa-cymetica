@@ -28,7 +28,7 @@ import pytest
 from qa.marks import Inconclusive, SafetyTier, qa
 
 REPO = Path(__file__).resolve().parent.parent.parent
-FILES = ["tests/meta/test_pipeline_check_subjects.py"]
+FILES = ["tests/meta/test_pipeline_check_subjects.py", "tests/meta/test_pipeline_build_it_better.py"]
 INJECTED = "injected in place of a verdict by tests/repo/test_meta_verdicts_fail_on_inconclusive.py"
 _RAISED = (Exception, pytest.fail.Exception, pytest.skip.Exception)
 
